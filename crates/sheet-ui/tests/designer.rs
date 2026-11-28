@@ -1294,7 +1294,10 @@ fn the_zoom_steps_go_in_and_out() {
     for m in [Message::ZoomIn, Message::ZoomOut, Message::ZoomOut] {
         let before = d.paper_resets();
         d.update(m.clone());
-        assert!(d.paper_resets() > before, "{m:?} empties the paper's caches");
+        assert!(
+            d.paper_resets() > before,
+            "{m:?} empties the paper's caches"
+        );
         seen.push(d.zoom_percent().unwrap_or_default());
     }
     assert_eq!(seen, [67, 50, 33]);
@@ -1693,7 +1696,9 @@ fn common_viewport_cases_replay_through_the_designer_and_undo() {
         d.update(Message::Tab(1));
         let mut operation = case["operation"].clone();
         operation.as_object_mut().unwrap().remove("op");
-        d.update(Message::MapConfigure(Box::new(serde_json::from_value(operation).unwrap(),)));
+        d.update(Message::MapConfigure(Box::new(
+            serde_json::from_value(operation).unwrap(),
+        )));
         if case["expected"]["error"].is_string() {
             assert!(d.error().is_some(), "{}", case["name"]);
             assert_eq!(d.book(), &book);
@@ -1828,7 +1833,9 @@ fn clipping_cases_replay_in_the_designer_without_changing_camera_or_bypassing_it
         d.update(Message::Tab(1));
         let mut raw = case["operation"].clone();
         raw.as_object_mut().unwrap().remove("op");
-        d.update(Message::MapConfigure(Box::new(serde_json::from_value(raw).unwrap())));
+        d.update(Message::MapConfigure(Box::new(
+            serde_json::from_value(raw).unwrap(),
+        )));
         if case["expected"]["error"].is_string() {
             assert!(d.error().is_some());
             assert_eq!(d.book(), &book);
@@ -1950,9 +1957,8 @@ fn twenty_live_view_links_follow_context_and_inspector_but_keep_the_capture() {
             vec![Effect::ModelScope(true)]
         );
         assert!(
-            (d.active_viewport().unwrap().denominator
-                - c["expected"]["scale"].as_f64().unwrap())
-            .abs()
+            (d.active_viewport().unwrap().denominator - c["expected"]["scale"].as_f64().unwrap())
+                .abs()
                 < 1e-10
         );
         d.update(Message::ReturnPaper);
@@ -1971,21 +1977,49 @@ fn twenty_live_view_links_follow_context_and_inspector_but_keep_the_capture() {
 
 #[test]
 fn twenty_annotation_choices_and_layer_overrides_work_with_locked_camera_and_undo() {
-    let data: serde_json::Value = serde_json::from_str(include_str!("../../../fixtures/sheet/v1/viewport-annotations.json")).unwrap();
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/viewport-annotations.json"
+    ))
+    .unwrap();
     for c in data["cases"].as_array().unwrap() {
-        let mut book=kentos_sheet::SheetBook::default();book.sheets.push(serde_json::from_value(c["sheet"].clone()).unwrap());
-        let mut d=Designer::new(context());d.load(book.clone());d.update(Message::Tab(1));d.update(Message::Select(vec!["viewport".into()]));
-        let mut raw=c["operation"].clone();raw.as_object_mut().unwrap().remove("op");d.update(Message::MapConfigure(Box::new(serde_json::from_value(raw).unwrap())));
-        let m=d.display_list().unwrap().prims.iter().find_map(|p|match p{kentos_sheet::display::Prim::Map(m)=>Some(m),_=>None}).unwrap();
-        assert_eq!(m.view.annotation_denominator(),c["expected"]["annotation"].as_f64().unwrap());assert_eq!(m.view.scale,c["expected"]["physical"].as_f64().unwrap());
-        assert!(matches!(&d.book().item("viewport").unwrap().kind,ItemKind::Map(m) if m.view_locked));
-        d.update(Message::Undo);assert_eq!(d.book(),&book);
+        let mut book = kentos_sheet::SheetBook::default();
+        book.sheets
+            .push(serde_json::from_value(c["sheet"].clone()).unwrap());
+        let mut d = Designer::new(context());
+        d.load(book.clone());
+        d.update(Message::Tab(1));
+        d.update(Message::Select(vec!["viewport".into()]));
+        let mut raw = c["operation"].clone();
+        raw.as_object_mut().unwrap().remove("op");
+        d.update(Message::MapConfigure(Box::new(
+            serde_json::from_value(raw).unwrap(),
+        )));
+        let m = d
+            .display_list()
+            .unwrap()
+            .prims
+            .iter()
+            .find_map(|p| match p {
+                kentos_sheet::display::Prim::Map(m) => Some(m),
+                _ => None,
+            })
+            .unwrap();
+        assert_eq!(
+            m.view.annotation_denominator(),
+            c["expected"]["annotation"].as_f64().unwrap()
+        );
+        assert_eq!(m.view.scale, c["expected"]["physical"].as_f64().unwrap());
+        assert!(
+            matches!(&d.book().item("viewport").unwrap().kind,ItemKind::Map(m) if m.view_locked)
+        );
+        d.update(Message::Undo);
+        assert_eq!(d.book(), &book);
     }
 }
 
 #[test]
 fn named_page_setups_save_apply_to_another_sheet_and_undo_as_one_step() {
-    use kentos_sheet_ui::page_setup::{SetupMessage as P, Area};
+    use kentos_sheet_ui::page_setup::{Area, SetupMessage as P};
     let mut d = designer();
     let initial = d.book().clone();
     for message in [
@@ -2037,8 +2071,7 @@ fn plot_profile_choice_transfer_and_last_sheet_removal_keep_both_libraries() {
     let p: kentos_sheet::plot_profile::PlotProfile =
         serde_json::from_value(data["cases"][10]["exchange"]["profile"].clone()).unwrap();
     let setups: serde_json::Value =
-        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/page-setups.json"))
-            .unwrap();
+        serde_json::from_str(include_str!("../../../fixtures/sheet/v1/page-setups.json")).unwrap();
     let setup = serde_json::from_value(setups["cases"][0]["setup"].clone()).unwrap();
     let mut d = designer();
     assert!(d.apply(
@@ -2061,7 +2094,8 @@ fn plot_profile_choice_transfer_and_last_sheet_removal_keep_both_libraries() {
             .plot
             .as_ref()
             .unwrap()
-            .settings.profile_snapshot,
+            .settings
+            .profile_snapshot,
         Some(p.clone())
     );
     let text = d.kpafta().unwrap();
@@ -2091,18 +2125,56 @@ fn plot_profile_choice_transfer_and_last_sheet_removal_keep_both_libraries() {
 
 #[test]
 fn editing_offsets_or_saving_a_preset_keeps_an_archived_profile_after_library_removal() {
- use kentos_sheet::{ops::Op,plot_profile::SavePlotProfiles};use kentos_sheet_ui::page_setup::SetupMessage as P;
- let data:serde_json::Value=serde_json::from_str(include_str!("../../../fixtures/sheet/v1/plot-profiles.json")).unwrap();let p:kentos_sheet::plot_profile::PlotProfile=serde_json::from_value(data["cases"][10]["exchange"]["profile"].clone()).unwrap();
- let mut d=designer();assert!(d.apply(vec![Op::SavePlotProfiles(SavePlotProfiles{profiles:vec![p.clone()]})],"Profil"));for m in [P::Open,P::Profile(p.id.clone()),P::Apply] {d.update(Message::PageSetup(m));}
- assert!(d.apply(vec![Op::SavePlotProfiles(SavePlotProfiles{profiles:vec![]})],"Kitaplıktan kaldır"));
- for m in [P::Open,P::Offset(0,5.),P::Apply,P::Open,P::Name("Arşiv baskısı".into()),P::Save] {d.update(Message::PageSetup(m));}
- assert!(d.error().is_none(),"{:?}",d.error());assert_eq!(d.open_sheet().unwrap().plot.as_ref().unwrap().settings.profile_snapshot,Some(p.clone()));assert_eq!(d.book().page_setups[0].settings.profile_snapshot,Some(p));
+    use kentos_sheet::{ops::Op, plot_profile::SavePlotProfiles};
+    use kentos_sheet_ui::page_setup::SetupMessage as P;
+    let data: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../fixtures/sheet/v1/plot-profiles.json"
+    ))
+    .unwrap();
+    let p: kentos_sheet::plot_profile::PlotProfile =
+        serde_json::from_value(data["cases"][10]["exchange"]["profile"].clone()).unwrap();
+    let mut d = designer();
+    assert!(d.apply(
+        vec![Op::SavePlotProfiles(SavePlotProfiles {
+            profiles: vec![p.clone()]
+        })],
+        "Profil"
+    ));
+    for m in [P::Open, P::Profile(p.id.clone()), P::Apply] {
+        d.update(Message::PageSetup(m));
+    }
+    assert!(d.apply(
+        vec![Op::SavePlotProfiles(SavePlotProfiles { profiles: vec![] })],
+        "Kitaplıktan kaldır"
+    ));
+    for m in [
+        P::Open,
+        P::Offset(0, 5.),
+        P::Apply,
+        P::Open,
+        P::Name("Arşiv baskısı".into()),
+        P::Save,
+    ] {
+        d.update(Message::PageSetup(m));
+    }
+    assert!(d.error().is_none(), "{:?}", d.error());
+    assert_eq!(
+        d.open_sheet()
+            .unwrap()
+            .plot
+            .as_ref()
+            .unwrap()
+            .settings
+            .profile_snapshot,
+        Some(p.clone())
+    );
+    assert_eq!(d.book().page_setups[0].settings.profile_snapshot, Some(p));
 }
 
 #[test]
 fn twenty_plot_ink_drafts_use_the_same_fields_assignments_capture_and_single_undo() {
-    use kentos_sheet_ui::plot_profiles::{PlotMessage as P, ColorMode};
-    use kentos_sheet::plot_profile::{PlotProfile, PlotColor};
+    use kentos_sheet::plot_profile::{PlotColor, PlotProfile};
+    use kentos_sheet_ui::plot_profiles::{ColorMode, PlotMessage as P};
     let data: serde_json::Value =
         serde_json::from_str(include_str!("../../../fixtures/sheet/v1/plot-ink.json")).unwrap();
     for c in data["cases"].as_array().unwrap() {
@@ -2337,9 +2409,16 @@ fn kat_plani_paftalari_make_a_sheet_per_level() {
             panic!("a fixed map")
         };
         assert_eq!(v.scale, 1000, "the project's scale");
-        assert_eq!(v.center.map(|c| (c.x, c.y)), Some((500_006.0, 4_420_004.0)), "the levels' box");
+        assert_eq!(
+            v.center.map(|c| (c.x, c.y)),
+            Some((500_006.0, 4_420_004.0)),
+            "the levels' box"
+        );
     }
-    assert_eq!(d.open_sheet().map(|s| s.name.as_str()), Some("A-101 Zemin kat planı"));
+    assert_eq!(
+        d.open_sheet().map(|s| s.name.as_str()),
+        Some("A-101 Zemin kat planı")
+    );
     d.update(Message::Undo);
     assert!(d.book().sheets.is_empty(), "one step");
 }
@@ -2388,9 +2467,15 @@ fn a_failed_host_preview_stays_visible_until_retry_or_reopening_output_options()
     d.update(Message::Print);
     let before = d.book().clone();
     d.print_preview_failed("R1C1 · Tablo alanı güncel değil.");
-    assert_eq!(d.error(), Some("Baskı önizlenemedi: R1C1 · Tablo alanı güncel değil."));
+    assert_eq!(
+        d.error(),
+        Some("Baskı önizlenemedi: R1C1 · Tablo alanı güncel değil.")
+    );
     assert_eq!(d.book(), &before);
-    assert_eq!(d.update(Message::Pdf(PdfMessage::Preview)), [Effect::PrintPreview]);
+    assert_eq!(
+        d.update(Message::Pdf(PdfMessage::Preview)),
+        [Effect::PrintPreview]
+    );
     assert!(d.error().is_none());
     d.print_preview_failed("Kaynak okunamıyor.");
     d.update(Message::CloseDialog);
@@ -2438,10 +2523,21 @@ fn a_text_written_and_not_applied_is_kept_when_another_item_is_chosen() {
         .iter()
         .position(|p| *p == "Metin")
         .expect("the text's field");
-    d.update(Message::Inspector(kentos_ui::widget::inspector::Event::Edit { id: field, text: "Ada 101 vaziyet planı".into() }));
+    d.update(Message::Inspector(
+        kentos_ui::widget::inspector::Event::Edit {
+            id: field,
+            text: "Ada 101 vaziyet planı".into(),
+        },
+    ));
     d.update(Message::Select(vec![other]));
-    let item = d.book().sheets[0].items.iter().find(|i| i.id == first).expect("the item");
-    let ItemKind::Text(t) = &item.kind else { panic!("a text") };
+    let item = d.book().sheets[0]
+        .items
+        .iter()
+        .find(|i| i.id == first)
+        .expect("the item");
+    let ItemKind::Text(t) = &item.kind else {
+        panic!("a text")
+    };
     assert_eq!(t.content, "Ada 101 vaziyet planı", "applied, not lost");
 }
 
@@ -2452,7 +2548,10 @@ fn a_chosen_items_handle_wins_over_the_item_under_it() {
     let mut d = designer();
     let map = item(&d, "Harita").clone();
     let at = center(&map);
-    d.update(Message::Tool(Tool::Add { tool: "shape".into(), preset: Some("ellipse".into()) }));
+    d.update(Message::Tool(Tool::Add {
+        tool: "shape".into(),
+        preset: Some("ellipse".into()),
+    }));
     drag(&mut d, at, [at[0] + 40_000.0, at[1] + 30_000.0], true);
     let shape = d.open_sheet().unwrap().items.last().unwrap().clone();
     assert_eq!(d.selection(), std::slice::from_ref(&shape.id));
@@ -2460,17 +2559,45 @@ fn a_chosen_items_handle_wins_over_the_item_under_it() {
         f64::from(shape.frame.left + shape.frame.width),
         f64::from(shape.frame.top + shape.frame.height),
     ];
-    drag(&mut d, corner, [corner[0] + 20_000.0, corner[1] + 15_000.0], true);
-    let after = d.open_sheet().unwrap().items.iter().find(|i| i.id == shape.id).unwrap().clone();
-    assert_eq!(d.selection(), std::slice::from_ref(&shape.id), "still the shape chosen");
-    assert!(after.frame.width > shape.frame.width + 10_000, "{:?} → {:?}", shape.frame, after.frame);
+    drag(
+        &mut d,
+        corner,
+        [corner[0] + 20_000.0, corner[1] + 15_000.0],
+        true,
+    );
+    let after = d
+        .open_sheet()
+        .unwrap()
+        .items
+        .iter()
+        .find(|i| i.id == shape.id)
+        .unwrap()
+        .clone();
+    assert_eq!(
+        d.selection(),
+        std::slice::from_ref(&shape.id),
+        "still the shape chosen"
+    );
+    assert!(
+        after.frame.width > shape.frame.width + 10_000,
+        "{:?} → {:?}",
+        shape.frame,
+        after.frame
+    );
 }
 
 #[test]
 fn a_list_row_clicked_with_shift_or_command_adds_and_takes_away_as_on_the_paper() {
     use iced::keyboard::Modifiers;
     let mut d = designer();
-    let ids: Vec<_> = d.open_sheet().expect("a sheet").items.iter().take(2).map(|i| i.id.clone()).collect();
+    let ids: Vec<_> = d
+        .open_sheet()
+        .expect("a sheet")
+        .items
+        .iter()
+        .take(2)
+        .map(|i| i.id.clone())
+        .collect();
     assert_eq!(ids.len(), 2, "the template's items");
     d.update(Message::TreeClick(ids[0].clone(), false));
     d.set_modifiers(Modifiers::SHIFT);
@@ -2478,10 +2605,18 @@ fn a_list_row_clicked_with_shift_or_command_adds_and_takes_away_as_on_the_paper(
     assert_eq!(d.selection(), ids.as_slice(), "Shift adds the row");
     d.set_modifiers(Modifiers::COMMAND);
     d.update(Message::TreeClick(ids[0].clone(), false));
-    assert_eq!(d.selection(), std::slice::from_ref(&ids[1]), "⌘/Ctrl takes it away");
+    assert_eq!(
+        d.selection(),
+        std::slice::from_ref(&ids[1]),
+        "⌘/Ctrl takes it away"
+    );
     d.set_modifiers(Modifiers::empty());
     d.update(Message::TreeClick(ids[0].clone(), false));
-    assert_eq!(d.selection(), std::slice::from_ref(&ids[0]), "a plain click chooses that row alone");
+    assert_eq!(
+        d.selection(),
+        std::slice::from_ref(&ids[0]),
+        "a plain click chooses that row alone"
+    );
 }
 
 #[test]
@@ -2493,8 +2628,15 @@ fn a_second_sheet_of_one_template_takes_a_name_of_its_own_and_lists_show_its_num
     assert_ne!(names[0], names[1], "{names:?}");
     assert_eq!(names[1], format!("{} 2", names[0]));
     let mut sheet = d.book().sheets[0].clone();
-    sheet.drawing_info = Some(kentos_sheet::drawing_set::DrawingInfo { number: "QA-001".into(), ..Default::default() });
+    sheet.drawing_info = Some(kentos_sheet::drawing_set::DrawingInfo {
+        number: "QA-001".into(),
+        ..Default::default()
+    });
     assert_eq!(sheet.listed_name(), format!("QA-001 · {}", names[0]));
     sheet.name = "QA-001 Kat planı".into();
-    assert_eq!(sheet.listed_name(), "QA-001 Kat planı", "a name that starts with its number is not said twice");
+    assert_eq!(
+        sheet.listed_name(),
+        "QA-001 Kat planı",
+        "a name that starts with its number is not said twice"
+    );
 }

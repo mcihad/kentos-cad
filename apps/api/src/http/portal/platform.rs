@@ -7,9 +7,9 @@ use axum::http::{HeaderMap, StatusCode};
 use kentos_application::AppError;
 use kentos_application::portal::{accounts, catalog, platform};
 use kentos_contracts::{
-    PlatformEventView, PlatformSettings, PlatformSettingsEdit, PlatformSummary, PlatformTenant, PlatformTenantCreate,
-    PlatformTenantDetail, PlatformTenantEdit, PlatformUser, PlatformUserCreate, PlatformUserEdit,
-    ProfessionalReview, ProfessionalView, Signup,
+    PlatformEventView, PlatformSettings, PlatformSettingsEdit, PlatformSummary, PlatformTenant,
+    PlatformTenantCreate, PlatformTenantDetail, PlatformTenantEdit, PlatformUser,
+    PlatformUserCreate, PlatformUserEdit, ProfessionalReview, ProfessionalView, Signup,
 };
 use serde::{Deserialize, Serialize};
 

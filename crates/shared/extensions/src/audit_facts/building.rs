@@ -792,8 +792,11 @@ impl BuildingFacts {
             s.rooms.sort();
             s.rooms.dedup();
         }
-        self.storeys
-            .sort_by(|a, b| a.elevation.total_cmp(&b.elevation).then_with(|| a.level.cmp(&b.level)));
+        self.storeys.sort_by(|a, b| {
+            a.elevation
+                .total_cmp(&b.elevation)
+                .then_with(|| a.level.cmp(&b.level))
+        });
         self.local = self.local.filter(|l| !l.is_empty());
         for n in &mut self.plan_notes {
             n.value = round(n.value, LENGTH);
@@ -871,11 +874,13 @@ impl BuildingFacts {
             x.walls.sort_by(|a, b| a.uid.cmp(&b.uid));
             x.openings.sort_by(|a, b| a.uid.cmp(&b.uid));
         }
-        self.party.sort_by(|a, b| (a.edge, &a.level).cmp(&(b.edge, &b.level)));
+        self.party
+            .sort_by(|a, b| (a.edge, &a.level).cmp(&(b.edge, &b.level)));
         for l in &mut self.links {
             l.area = round(l.area, AREA);
         }
-        self.links.sort_by(|a, b| (&a.below, &a.uid, &a.kind).cmp(&(&b.below, &b.uid, &b.kind)));
+        self.links
+            .sort_by(|a, b| (&a.below, &a.uid, &a.kind).cmp(&(&b.below, &b.uid, &b.kind)));
         self.elements.sort_by(|a, b| a.uid.cmp(&b.uid));
         self.height = round(self.height, LENGTH);
         self.basement_depth = round(self.basement_depth, LENGTH);
@@ -913,7 +918,8 @@ impl BuildingFacts {
             }
         }
         self.projections.sort_by(|a, b| a.room.cmp(&b.room));
-        self.insulations.sort_by(|a, b| (&a.wall, &a.component).cmp(&(&b.wall, &b.component)));
+        self.insulations
+            .sort_by(|a, b| (&a.wall, &a.component).cmp(&(&b.wall, &b.component)));
         for x in &mut self.shafts {
             x.open = round(x.open, LENGTH);
             x.area = round(x.area, AREA);
@@ -938,13 +944,23 @@ mod tests {
     use super::*;
 
     fn storey(level: &str, elevation: f64) -> StoreyHolds {
-        StoreyHolds { level: level.into(), name: level.into(), elevation, ..StoreyHolds::default() }
+        StoreyHolds {
+            level: level.into(),
+            name: level.into(),
+            elevation,
+            ..StoreyHolds::default()
+        }
     }
 
     #[test]
     fn storeys_are_lowest_first_and_their_elevations_rounded() {
         let facts = BuildingFacts {
-            storeys: vec![storey("k1", 3.000_4), storey("b1", -3.000_6), storey("k0", 0.0), storey("a", 0.0)],
+            storeys: vec![
+                storey("k1", 3.000_4),
+                storey("b1", -3.000_6),
+                storey("k0", 0.0),
+                storey("a", 0.0),
+            ],
             units: 6,
             dwellings: 6,
             local: Some(String::new()),
@@ -958,7 +974,12 @@ mod tests {
         assert_eq!(facts.local, None);
         assert_eq!(facts.clone().normalized(), facts);
         let json = serde_json::to_string(&facts).unwrap_or_default();
-        assert!(json.starts_with(r#"{"storeys":[{"level":"b1","name":"b1","elevation":-3.001,"units":0"#), "{json}");
+        assert!(
+            json.starts_with(
+                r#"{"storeys":[{"level":"b1","name":"b1","elevation":-3.001,"units":0"#
+            ),
+            "{json}"
+        );
         assert!(!json.contains("local"), "{json}");
     }
 }

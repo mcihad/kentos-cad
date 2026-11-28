@@ -462,7 +462,9 @@ impl App {
                 .warn("Sistem şablonu silinmez; kopyasını Kitaplığım’a alıp onu düzenleyin.");
         }
         self.template_work.templates_panel.deleting = Some((id.to_owned(), item.name().to_owned()));
-        self.dialog = Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::RemoveTemplate));
+        self.dialog = Some(Dialog::TemplateWork(
+            crate::template_work::TemplateDialogKind::RemoveTemplate,
+        ));
     }
 
     /// The question's Sil: the template goes from its library.
@@ -524,7 +526,8 @@ impl App {
         let mut step = |d: isize| {
             let n = rows.len() as isize;
             let i = at.map_or(0, |i| i as isize + d).clamp(0, n - 1);
-            self.template_work.templates_panel.focused = rows.get(i as usize).map(|(key, _)| key.clone());
+            self.template_work.templates_panel.focused =
+                rows.get(i as usize).map(|(key, _)| key.clone());
         };
         let id = at.map(|i| rows[i].1.clone());
         match press.named()? {
@@ -589,7 +592,9 @@ impl App {
             } else {
                 "Aramayla eşleşen şablon yok. Başka bir ad deneyin."
             };
-            let empty = container(label::caption(words)).padding([8, 12]).width(Fill);
+            let empty = container(label::caption(words))
+                .padding([8, 12])
+                .width(Fill);
             return match self.office_palettes_view() {
                 Some(office) => column![search, office, empty].into(),
                 None => column![search, empty].into(),
@@ -600,7 +605,11 @@ impl App {
             Line::Template { key, .. } => Some(key) == focused.as_ref(),
             Line::Group { .. } => false,
         });
-        let drawing = self.template_work.template.as_ref().map(|run| run.id.clone());
+        let drawing = self
+            .template_work
+            .template
+            .as_ref()
+            .map(|run| run.id.clone());
         let palette = self.style_palette();
         let list = VirtualList::new(
             lines.len(),
@@ -695,9 +704,12 @@ impl App {
                         color: Some(Tokens::of(t).faint),
                     }),
             );
-        let favorite = self
-            .personal_template_key(id)
-            .is_some_and(|key| self.template_work.templates_panel.favorites().contains(&key));
+        let favorite = self.personal_template_key(id).is_some_and(|key| {
+            self.template_work
+                .templates_panel
+                .favorites()
+                .contains(&key)
+        });
         let mut face = row![picture, words];
         if favorite {
             face = face.push(icon(crate::icons::from_web(Some("starOn"))).size(14.0));
@@ -746,9 +758,12 @@ impl App {
         if !selected {
             menu = menu.detail("Önce çizimde nesne seçin.");
         }
-        let favorite = self
-            .personal_template_key(id)
-            .is_some_and(|key| self.template_work.templates_panel.favorites().contains(&key));
+        let favorite = self.personal_template_key(id).is_some_and(|key| {
+            self.template_work
+                .templates_panel
+                .favorites()
+                .contains(&key)
+        });
         menu = menu
             .item(
                 if favorite {
@@ -907,7 +922,9 @@ mod tests {
     }
 
     fn send(app: &mut App, event: Event) {
-        let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(event)));
+        let _ = app.update(Message::TemplateWork(
+            crate::template_work::Event::TemplatesPanel(event),
+        ));
     }
 
     /// The rows as words: “» group (n)” and the templates' ids.
@@ -1100,7 +1117,9 @@ mod tests {
         send(&mut app, Event::Remove("p-ada".into()));
         assert_eq!(
             app.dialog,
-            Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::RemoveTemplate))
+            Some(Dialog::TemplateWork(
+                crate::template_work::TemplateDialogKind::RemoveTemplate
+            ))
         );
         assert!(app.styles.library.get("p-ada").is_some(), "asked, not gone");
         let _ = app.update(Message::DialogConfirmed);

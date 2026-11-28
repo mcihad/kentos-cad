@@ -16,7 +16,12 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work == Some(kentos_commands::CadWork::Road) {
         Ok(())
     } else {
-        Err(fail(codes::NOT_A_ROAD_PROJECT, "Ön güzergâh yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(), ""))
+        Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "Ön güzergâh yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+                .into(),
+            "",
+        ))
     }
 }
 
@@ -41,7 +46,10 @@ fn inside(ring: &[kentos_commands::Vec2], p: [f64; 2]) -> bool {
 fn areas(doc: &Document, layers: &[String]) -> Result<Vec<Vec<Vec<kentos_commands::Vec2>>>, Stop> {
     for (i, id) in layers.iter().enumerate() {
         if doc.layers().get(id).is_none() {
-            return Err(bad(format!("“{id}” kimlikli katman çizimde yok."), &format!("avoid[{i}]")));
+            return Err(bad(
+                format!("“{id}” kimlikli katman çizimde yok."),
+                &format!("avoid[{i}]"),
+            ));
         }
     }
     let mut out = Vec::new();
@@ -50,7 +58,8 @@ fn areas(doc: &Document, layers: &[String]) -> Result<Vec<Vec<Vec<kentos_command
         if !layers.contains(&p.base.layer_id) {
             continue;
         }
-        let ring = |pts: &Vec<kentos_commands::Vec2>, holes: &Option<Vec<kentos_commands::RingGeometry>>| {
+        let ring = |pts: &Vec<kentos_commands::Vec2>,
+                    holes: &Option<Vec<kentos_commands::RingGeometry>>| {
             let mut area = vec![pts.clone()];
             area.extend(holes.iter().flatten().map(|h| h.pts.clone()));
             area
@@ -68,7 +77,12 @@ pub(crate) fn find(doc: &Document, ask: &RouteAsk) -> Result<RouteFound, Stop> {
     road_project(doc)?;
     let id = crate::road_profiles::surface_id(doc, &ask.surface, "surface")?;
     let finite = |v: f64| v.is_finite();
-    for (v, path) in [(ask.from.x, "from"), (ask.from.y, "from"), (ask.to.x, "to"), (ask.to.y, "to")] {
+    for (v, path) in [
+        (ask.from.x, "from"),
+        (ask.from.y, "from"),
+        (ask.to.x, "to"),
+        (ask.to.y, "to"),
+    ] {
         if !finite(v) {
             return Err(bad("Rotanın başı ve sonu sonlu olmalı.".into(), path));
         }
@@ -80,17 +94,33 @@ pub(crate) fn find(doc: &Document, ask: &RouteAsk) -> Result<RouteFound, Stop> {
         return Err(bad("Pay 0 ile 100 000 m arası olur.".into(), "margin"));
     }
     if !(finite(ask.grade) && ask.grade > 0.0 && ask.grade <= 10.0) {
-        return Err(bad("En dik eğim oranla yazılır (0,08 %8'dir): 0'dan büyük, en çok 10 (%1000) olur.".into(), "grade"));
+        return Err(bad(
+            "En dik eğim oranla yazılır (0,08 %8'dir): 0'dan büyük, en çok 10 (%1000) olur.".into(),
+            "grade",
+        ));
     }
     if !(finite(ask.climb) && (0.0..=1000.0).contains(&ask.climb)) {
-        return Err(bad("Tırmanmanın ağırlığı 0 ile 1000 arası olur.".into(), "climb"));
+        return Err(bad(
+            "Tırmanmanın ağırlığı 0 ile 1000 arası olur.".into(),
+            "climb",
+        ));
     }
-    if ask.tolerance.is_some_and(|t| !(finite(t) && (0.0..=1000.0).contains(&t))) {
-        return Err(bad("Sadeleştirme toleransı 0 ile 1000 m arası olur.".into(), "tolerance"));
+    if ask
+        .tolerance
+        .is_some_and(|t| !(finite(t) && (0.0..=1000.0).contains(&t)))
+    {
+        return Err(bad(
+            "Sadeleştirme toleransı 0 ile 1000 m arası olur.".into(),
+            "tolerance",
+        ));
     }
     let (a, b) = ([ask.from.x, ask.from.y], [ask.to.x, ask.to.y]);
-    let grid = Grid::over(a, b, ask.cell, ask.margin)
-        .ok_or_else(|| bad("Izgara iki milyondan çok düğüm olur; hücreyi büyütün ya da payı küçültün.".into(), "cell"))?;
+    let grid = Grid::over(a, b, ask.cell, ask.margin).ok_or_else(|| {
+        bad(
+            "Izgara iki milyondan çok düğüm olur; hücreyi büyütün ya da payı küçültün.".into(),
+            "cell",
+        )
+    })?;
     let avoid = areas(doc, &ask.avoid)?;
     let Some(def) = terrains::surfaces(doc).iter().find(|s| s.id == id) else {
         return Err(Stop::Cancelled);
@@ -104,26 +134,32 @@ pub(crate) fn find(doc: &Document, ask: &RouteAsk) -> Result<RouteFound, Stop> {
         .into_iter()
         .zip(&places)
         .map(|(h, p)| {
-            let free = !avoid.iter().any(|area| inside(&area[0], *p) && !area[1..].iter().any(|hole| inside(hole, *p)));
+            let free = !avoid
+                .iter()
+                .any(|area| inside(&area[0], *p) && !area[1..].iter().any(|hole| inside(hole, *p)));
             h.z.filter(|_| free).map(rounded)
         })
         .collect();
     let (na, nb) = (grid.nearest(a), grid.nearest(b));
-    let found = least_cost(&grid, &heights, na, nb, ask.grade, ask.climb).map_err(|why| match why {
-        NoRoute::Blocked { end } => fail(
-            codes::ROUTE_BLOCKED,
-            format!(
-                "Rotanın {} yüzeyin dışında ya da kaçınılacak bir alanda.",
-                if end { "sonu" } else { "başı" }
+    let found =
+        least_cost(&grid, &heights, na, nb, ask.grade, ask.climb).map_err(|why| match why {
+            NoRoute::Blocked { end } => fail(
+                codes::ROUTE_BLOCKED,
+                format!(
+                    "Rotanın {} yüzeyin dışında ya da kaçınılacak bir alanda.",
+                    if end { "sonu" } else { "başı" }
+                ),
+                if end { "to" } else { "from" },
             ),
-            if end { "to" } else { "from" },
-        ),
-        NoRoute::Unreached => fail(
-            codes::ROUTE_UNREACHED,
-            format!("İki yer arasında %{} eğimi aşmayan yol yok.", crate::road_superelevations::percent(ask.grade)),
-            "grade",
-        ),
-    })?;
+            NoRoute::Unreached => fail(
+                codes::ROUTE_UNREACHED,
+                format!(
+                    "İki yer arasında %{} eğimi aşmayan yol yok.",
+                    crate::road_superelevations::percent(ask.grade)
+                ),
+                "grade",
+            ),
+        })?;
     let mut line: Vec<[f64; 3]> = found
         .nodes
         .iter()
@@ -153,7 +189,14 @@ pub(crate) fn find(doc: &Document, ask: &RouteAsk) -> Result<RouteFound, Stop> {
         }
     }
     Ok(RouteFound {
-        points: kept.iter().map(|p| RoutePoint { x: p[0], y: p[1], z: p[2] }).collect(),
+        points: kept
+            .iter()
+            .map(|p| RoutePoint {
+                x: p[0],
+                y: p[1],
+                z: p[2],
+            })
+            .collect(),
         length,
         climb,
         steepest,

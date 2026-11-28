@@ -13,9 +13,11 @@ use crate::checks::Stop;
 /// The project of the shared cases `cases` (a command's case file) and its first case's input.
 pub(crate) fn project<T: serde::de::DeserializeOwned>(cases: &str) -> (kentos_domain::Document, T) {
     let cases: Value = serde_json::from_str(cases).expect("cases");
-    let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+    let snapshot: DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
     let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
-    let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+    let input =
+        serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
     (doc, input)
 }
 
@@ -35,7 +37,11 @@ pub(crate) fn told_and_stopped<T>(read: impl Fn(&dyn Fn(u64, u64) -> bool) -> Re
     }
     let seen = seen.into_inner();
     assert!(seen.len() > 4, "{} ticks", seen.len());
-    assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1), "{seen:?}");
+    assert!(
+        seen.windows(2)
+            .all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1),
+        "{seen:?}"
+    );
     assert!(seen.iter().all(|(done, total)| done < total), "{seen:?}");
     let asked = Cell::new(0);
     let stopped = read(&|_, _| {

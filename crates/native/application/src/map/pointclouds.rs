@@ -218,7 +218,9 @@ fn extras(cloud: &Cloud) -> Vec<CloudExtra> {
         })
     };
     v.data
-        .as_chunks::<192>().0.iter()
+        .as_chunks::<192>()
+        .0
+        .iter()
         .map(|d| {
             let (t, options) = (d[2], d[3]);
             let name = String::from_utf8_lossy(&d[4..36])
@@ -252,7 +254,9 @@ pub(crate) fn vertical(cloud: &Cloud) -> Option<String> {
     let dir: &Vlr = cloud.crs.geokeys.iter().find(|v| v.record == 34735)?;
     let words: Vec<u16> = dir
         .data
-        .as_chunks::<2>().0.iter()
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|b| u16::from_le_bytes([b[0], b[1]]))
         .collect();
     let keys = usize::from(*words.get(3)?);
@@ -764,7 +768,17 @@ pub(crate) fn query_in(
                             }
                             best = Some((
                                 d,
-                                point_of(uid, si, first + i as u64, &layout, r, scale, offset, pose, d),
+                                point_of(
+                                    uid,
+                                    si,
+                                    first + i as u64,
+                                    &layout,
+                                    r,
+                                    scale,
+                                    offset,
+                                    pose,
+                                    d,
+                                ),
                             ));
                         }
                     }
@@ -823,7 +837,17 @@ pub(crate) fn query_in(
                     }
                     best = Some((
                         d,
-                        point_of(uid, si, run.first + i as u64, &layout, r, scale, offset, pose, d),
+                        point_of(
+                            uid,
+                            si,
+                            run.first + i as u64,
+                            &layout,
+                            r,
+                            scale,
+                            offset,
+                            pose,
+                            d,
+                        ),
                     ));
                 }
             }
@@ -874,21 +898,43 @@ fn point_of(
 
 /// Whether a COPC node's cube (taken through the file's place, docs/adr/5100) meets the square of `reach` round `at`,
 /// in plan.
-fn near(key: Key, info: &kentos_pointcloud::copc::Info, pose: Option<&[f64; 16]>, at: [f64; 2], reach: f64) -> bool {
+fn near(
+    key: Key,
+    info: &kentos_pointcloud::copc::Info,
+    pose: Option<&[f64; 16]>,
+    at: [f64; 2],
+    reach: f64,
+) -> bool {
     let b = cube_box(key, info, pose);
     !(at[0] + reach < b[0] || at[0] - reach > b[3] || at[1] + reach < b[1] || at[1] - reach > b[4])
 }
 
 /// A COPC node's cube as a box, taken through the file's place (docs/adr/5100).
-pub(crate) fn cube_box(key: Key, info: &kentos_pointcloud::copc::Info, pose: Option<&[f64; 16]>) -> [f64; 6] {
+pub(crate) fn cube_box(
+    key: Key,
+    info: &kentos_pointcloud::copc::Info,
+    pose: Option<&[f64; 16]>,
+) -> [f64; 6] {
     let (low, side) = key.cube(info);
-    let b = [low[0], low[1], low[2], low[0] + side, low[1] + side, low[2] + side];
+    let b = [
+        low[0],
+        low[1],
+        low[2],
+        low[0] + side,
+        low[1] + side,
+        low[2] + side,
+    ];
     pose.map_or(b, |m| kentos_commands::pose_box(m, &b))
 }
 
 /// A record's coordinates on its file's grid.
 #[inline]
-pub(crate) fn xyz_of(layout: &kentos_pointcloud::record::Layout, r: &[u8], scale: [f64; 3], offset: [f64; 3]) -> [f64; 3] {
+pub(crate) fn xyz_of(
+    layout: &kentos_pointcloud::record::Layout,
+    r: &[u8],
+    scale: [f64; 3],
+    offset: [f64; 3],
+) -> [f64; 3] {
     [
         f64::from(layout.x(r)) * scale[0] + offset[0],
         f64::from(layout.y(r)) * scale[1] + offset[1],

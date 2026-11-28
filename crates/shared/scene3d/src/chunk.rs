@@ -42,7 +42,10 @@ impl Default for Limits {
     /// 32 768 triangles and 1 000 m: a draw call large enough to be cheap, small enough to cull; and a float32 offset
     /// within 500 m of its origin keeps a half unit in the last place of 0.03 mm (plan/3d.md §5).
     fn default() -> Self {
-        Limits { max_triangles: 32_768, max_extent: 1_000.0 }
+        Limits {
+            max_triangles: 32_768,
+            max_extent: 1_000.0,
+        }
     }
 }
 
@@ -76,7 +79,11 @@ impl Content {
     /// A vertex's position in the source's coordinates, as the GPU has it (its origin plus its float32).
     pub fn world(&self, k: u32) -> V3 {
         let p = self.positions[k as usize];
-        [self.origin[0] + f64::from(p[0]), self.origin[1] + f64::from(p[1]), self.origin[2] + f64::from(p[2])]
+        [
+            self.origin[0] + f64::from(p[0]),
+            self.origin[1] + f64::from(p[1]),
+            self.origin[2] + f64::from(p[2]),
+        ]
     }
 }
 
@@ -194,18 +201,29 @@ impl Cut<'_> {
             content: None,
             children: Vec::new(),
         });
-        let small = tris.len() <= self.limits.max_triangles && bounds.extent() <= self.limits.max_extent;
-        let axis = if small || tris.len() < 2 { None } else { split_axis(tris) };
+        let small =
+            tris.len() <= self.limits.max_triangles && bounds.extent() <= self.limits.max_extent;
+        let axis = if small || tris.len() < 2 {
+            None
+        } else {
+            split_axis(tris)
+        };
         let Some(axis) = axis else {
             let content = self.content(tris, bounds);
-            out.tiles[0].content = Some(ContentRef { id: 0, bytes: content.bytes() });
+            out.tiles[0].content = Some(ContentRef {
+                id: 0,
+                bytes: content.bytes(),
+            });
             out.contents.push(content);
             return out;
         };
         // The median by the total key: the lower half holds the `n / 2` smallest, as a full sort would split them.
         let mid = tris.len() / 2;
         tris.select_nth_unstable_by(mid, |a, b| {
-            a.centroid[axis].total_cmp(&b.centroid[axis]).then(a.mesh.cmp(&b.mesh)).then(a.index.cmp(&b.index))
+            a.centroid[axis]
+                .total_cmp(&b.centroid[axis])
+                .then(a.mesh.cmp(&b.mesh))
+                .then(a.index.cmp(&b.index))
         });
         let (lower, upper) = tris.split_at_mut(mid);
         let (a, b) = self.halves(lower, upper, depth);
@@ -238,30 +256,47 @@ impl Cut<'_> {
     fn content(&self, tris: &mut [Tri], bounds: Aabb) -> Content {
         let origin = bounds.center();
         tris.sort_unstable_by_key(|t| (self.meshes[t.mesh as usize].part, t.mesh, t.index));
-        let (mut positions, mut parts, mut normals, mut indices, mut ranges, mut sources) =
-            (Vec::new(), Vec::new(), Vec::new(), Vec::with_capacity(tris.len() * 3), Vec::new(), Vec::with_capacity(tris.len()));
-        let mut seen: HashMap<u64, u32, BuildHasherDefault<Mix>> = HashMap::with_capacity_and_hasher(tris.len() * 2, Default::default());
+        let (mut positions, mut parts, mut normals, mut indices, mut ranges, mut sources) = (
+            Vec::new(),
+            Vec::new(),
+            Vec::new(),
+            Vec::with_capacity(tris.len() * 3),
+            Vec::new(),
+            Vec::with_capacity(tris.len()),
+        );
+        let mut seen: HashMap<u64, u32, BuildHasherDefault<Mix>> =
+            HashMap::with_capacity_and_hasher(tris.len() * 2, Default::default());
         let mut error: f64 = 0.0;
         for t in tris.iter() {
             let m = &self.meshes[t.mesh as usize];
-            if ranges.last().is_none_or(|r: &(u32, std::ops::Range<u32>)| r.0 != m.part) {
+            if ranges
+                .last()
+                .is_none_or(|r: &(u32, std::ops::Range<u32>)| r.0 != m.part)
+            {
                 let at = indices.len() as u32;
                 ranges.push((m.part, at..at));
             }
             for k in m.triangles[t.index as usize] {
-                let v = *seen.entry((u64::from(t.mesh) << 32) | u64::from(k)).or_insert_with(|| {
-                    let p = m.vertices[k as usize];
-                    let f: [f32; 3] = std::array::from_fn(|a| {
-                        let d = p[a] - origin[a];
-                        let f = d as f32;
-                        error = error.max((f64::from(f) - d).abs());
-                        f
+                let v = *seen
+                    .entry((u64::from(t.mesh) << 32) | u64::from(k))
+                    .or_insert_with(|| {
+                        let p = m.vertices[k as usize];
+                        let f: [f32; 3] = std::array::from_fn(|a| {
+                            let d = p[a] - origin[a];
+                            let f = d as f32;
+                            error = error.max((f64::from(f) - d).abs());
+                            f
+                        });
+                        positions.push(f);
+                        parts.push(m.part);
+                        normals.push(
+                            self.normals[t.mesh as usize]
+                                .get(k as usize)
+                                .copied()
+                                .unwrap_or([0; 4]),
+                        );
+                        (positions.len() - 1) as u32
                     });
-                    positions.push(f);
-                    parts.push(m.part);
-                    normals.push(self.normals[t.mesh as usize].get(k as usize).copied().unwrap_or([0; 4]));
-                    (positions.len() - 1) as u32
-                });
                 indices.push(v);
             }
             if let Some(r) = ranges.last_mut() {
@@ -269,7 +304,18 @@ impl Cut<'_> {
             }
             sources.push((t.mesh, t.index));
         }
-        Content { id: 0, origin, bounds, positions, parts, normals, indices, ranges, sources, encoding_error: error }
+        Content {
+            id: 0,
+            origin,
+            bounds,
+            positions,
+            parts,
+            normals,
+            indices,
+            ranges,
+            sources,
+            encoding_error: error,
+        }
     }
 }
 
@@ -284,7 +330,8 @@ impl Hasher for Mix {
 
     fn write(&mut self, bytes: &[u8]) {
         for b in bytes {
-            self.0 = (self.0.rotate_left(5) ^ u64::from(*b)).wrapping_mul(0x51_7c_c1_b7_27_22_0a_95);
+            self.0 =
+                (self.0.rotate_left(5) ^ u64::from(*b)).wrapping_mul(0x51_7c_c1_b7_27_22_0a_95);
         }
     }
 
@@ -318,16 +365,39 @@ pub fn chunk(meshes: &[SourceMesh<'_>], limits: Limits, first_id: u64) -> Chunke
                 let p = m.vertices[k as usize];
                 [acc[0] + p[0], acc[1] + p[1], acc[2] + p[2]]
             });
-            tris.push(Tri { mesh: mi as u32, index: ti as u32, centroid: c.map(|v| v / 3.0) });
+            tris.push(Tri {
+                mesh: mi as u32,
+                index: ti as u32,
+                centroid: c.map(|v| v / 3.0),
+            });
         }
     }
-    let normals = meshes.iter().map(|m| if m.smooth { vertex_normals(m) } else { Vec::new() }).collect();
-    let cut = Cut { meshes, limits, normals };
+    let normals = meshes
+        .iter()
+        .map(|m| {
+            if m.smooth {
+                vertex_normals(m)
+            } else {
+                Vec::new()
+            }
+        })
+        .collect();
+    let cut = Cut {
+        meshes,
+        limits,
+        normals,
+    };
     if tris.is_empty() {
         return Chunked::default();
     }
     let f = cut.tile(&mut tris, 0);
-    let mut out = Chunked { hierarchy: Hierarchy { tiles: f.tiles, roots: vec![0] }, contents: f.contents };
+    let mut out = Chunked {
+        hierarchy: Hierarchy {
+            tiles: f.tiles,
+            roots: vec![0],
+        },
+        contents: f.contents,
+    };
     for (i, t) in out.hierarchy.tiles.iter_mut().enumerate() {
         t.key = TileKey(i as u64);
         if let Some(c) = &mut t.content {

@@ -39,7 +39,11 @@ pub fn tangent_tangent_radius(
         let (ux, uy) = (dx / l, dy / l);
         let m = Vec2::new((pick1.x + pick2.x) / 2.0, (pick1.y + pick2.y) / 2.0);
         let t = (m.x - a.x) * ux + (m.y - a.y) * uy;
-        let side = if ux * (a2.y - a.y) - uy * (a2.x - a.x) > 0.0 { 1.0 } else { -1.0 };
+        let side = if ux * (a2.y - a.y) - uy * (a2.x - a.x) > 0.0 {
+            1.0
+        } else {
+            -1.0
+        };
         return Some(Circle {
             c: Vec2::new(a.x + ux * t - uy * r * side, a.y + uy * t + ux * r * side),
             r,

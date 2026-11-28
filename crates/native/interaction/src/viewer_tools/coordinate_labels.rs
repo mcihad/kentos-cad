@@ -471,8 +471,7 @@ fn name_at(e: &Entity, at: Vec2) -> Option<String> {
     if label.is_empty() {
         return None;
     }
-    let near =
-        |q: &kentos_commands::Vec2| (q.x - at.x).abs() <= 1e-6 && (q.y - at.y).abs() <= 1e-6;
+    let near = |q: &kentos_commands::Vec2| (q.x - at.x).abs() <= 1e-6 && (q.y - at.y).abs() <= 1e-6;
     if near(&p.p) {
         return Some(label.to_owned());
     }

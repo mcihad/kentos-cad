@@ -199,7 +199,11 @@ fn groups(query: &str, offers: impl Fn(&str) -> bool) -> Vec<(&'static str, Vec<
         };
         let found = query.is_empty()
             || fold_turkish(line.title).contains(query)
-            || line.chords.iter().chain(&line.plain).any(|k| fold_turkish(k).contains(query))
+            || line
+                .chords
+                .iter()
+                .chain(&line.plain)
+                .any(|k| fold_turkish(k).contains(query))
             || line.aliases.iter().any(|a| fold_turkish(a).contains(query));
         if !found {
             continue;

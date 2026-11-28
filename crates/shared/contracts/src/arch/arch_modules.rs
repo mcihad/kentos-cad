@@ -206,7 +206,9 @@ pub struct ArchModule {
 
 /// Whether a member of `modules` stands on a storey above its instance's base level (KCAD 152, docs/adr/0796 §1).
 pub fn modules_have_storeys(modules: &[ArchModule]) -> bool {
-    modules.iter().any(|m| m.members.iter().any(|x| x.storey > 0))
+    modules
+        .iter()
+        .any(|m| m.members.iter().any(|x| x.storey > 0))
 }
 
 /// Whether an instance of `modules` holds one storey only (KCAD 155, docs/adr/0811).

@@ -10,8 +10,8 @@
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-use kentos_contracts::{Entity, TagFields};
 use crate::tag_read::TagRead;
+use kentos_contracts::{Entity, TagFields};
 
 use crate::document::Document;
 use crate::history::ArchOp;
@@ -108,7 +108,9 @@ impl Document {
                 out.push(op);
             }
         }
-        for op in &out { self.apply_op(op); }
+        for op in &out {
+            self.apply_op(op);
+        }
         let settings = ops.iter().any(|op| {
             matches!(
                 op,
@@ -119,13 +121,17 @@ impl Document {
         let spaces = ops.iter().any(|op| match op {
             Op::Add(s) | Op::Remove(s) => matches!(&*s.entity, Entity::Space(_)),
             Op::Update { before, after } => {
-                matches!(&*before.entity, Entity::Space(_)) || matches!(&*after.entity, Entity::Space(_))
+                matches!(&*before.entity, Entity::Space(_))
+                    || matches!(&*after.entity, Entity::Space(_))
             }
             _ => false,
         });
         let sources = ops.iter().any(|op| match op {
             Op::Add(s) | Op::Remove(s) => crate::space_follow::is_source(&s.entity),
-            Op::Update { before, after } => crate::space_follow::is_source(&before.entity) || crate::space_follow::is_source(&after.entity),
+            Op::Update { before, after } => {
+                crate::space_follow::is_source(&before.entity)
+                    || crate::space_follow::is_source(&after.entity)
+            }
             _ => false,
         });
         // A slab moves the floors and ceilings of the rooms over and under it (docs/adr/8040 §3).
@@ -173,7 +179,10 @@ impl Document {
             let mut e = t.clone();
             e.tag.text = text;
             ops.push(Op::Update {
-                after: Stored { uid: current.uid, entity: Arc::new(Entity::Tag(e)) },
+                after: Stored {
+                    uid: current.uid,
+                    entity: Arc::new(Entity::Tag(e)),
+                },
                 before: current,
             });
         }
@@ -197,8 +206,15 @@ impl Document {
                 continue;
             };
             let content = t.tag.content.as_deref().unwrap_or_default();
-            let program = ["{unit}", "{target}", "{targetDiff}", "{share}", "{gross}"].iter().any(|p| content.contains(p));
-            if !(content.contains("{netArea}") || (!net_only && (program || content.contains("{floorElevation}") || content.contains("{ceilingElevation}")))) {
+            let program = ["{unit}", "{target}", "{targetDiff}", "{share}", "{gross}"]
+                .iter()
+                .any(|p| content.contains(p));
+            if !(content.contains("{netArea}")
+                || (!net_only
+                    && (program
+                        || content.contains("{floorElevation}")
+                        || content.contains("{ceilingElevation}"))))
+            {
                 continue;
             }
             let Some(target) = self.tag_target(&t.tag.of) else {
@@ -219,7 +235,9 @@ impl Document {
             };
             ops.push(op);
         }
-        for op in &ops { self.apply_op(op); }
+        for op in &ops {
+            self.apply_op(op);
+        }
         ops
     }
 

@@ -5,10 +5,10 @@
 //! the project's kept or the library's put in their place as the user chose; Kitaplığa yaz writes the project's
 //! materials to a file through `export`.
 
-use crate::arch_ext::*;
 use crate::arch;
-use std::path::{Path, PathBuf};
 use crate::arch::ArchState;
+use crate::arch_ext::*;
+use std::path::{Path, PathBuf};
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
@@ -103,9 +103,10 @@ pub fn status(project: &[ArchMaterial], m: &ArchMaterial) -> Status {
 }
 
 fn name_of(path: &Path) -> String {
-    path.file_stem()
-        .or(path.file_name())
-        .map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned())
+    path.file_stem().or(path.file_name()).map_or_else(
+        || path.display().to_string(),
+        |n| n.to_string_lossy().into_owned(),
+    )
 }
 
 /// A library file's materials, or why they are not read.
@@ -171,7 +172,9 @@ impl Libraries {
                 let read = kentos_native_application::materials_edit::builtin_library(name)
                     .ok_or_else(|| format!("KentOS kitaplığı “{name}” okunamadı."));
                 Entry {
-                    name: read.as_ref().map_or_else(|_| (*name).to_owned(), |f| f.library.clone()),
+                    name: read
+                        .as_ref()
+                        .map_or_else(|_| (*name).to_owned(), |f| f.library.clone()),
                     place: Place::Kentos(name),
                     read,
                 }
@@ -185,17 +188,26 @@ impl Libraries {
                 .flatten()
                 .map(|e| e.path())
                 .filter(|p| {
-                    p.extension().and_then(|e| e.to_str()).is_some_and(|e| e.eq_ignore_ascii_case(EXTENSION))
-                        && !p.file_name().is_some_and(|n| n.to_string_lossy().starts_with('.'))
+                    p.extension()
+                        .and_then(|e| e.to_str())
+                        .is_some_and(|e| e.eq_ignore_ascii_case(EXTENSION))
+                        && !p
+                            .file_name()
+                            .is_some_and(|n| n.to_string_lossy().starts_with('.'))
                 })
                 .collect();
             let names: Vec<String> = files.iter().map(|p| name_of(p)).collect();
             let order = kentos_geometry_core::ops::point_editor::natural_order(&names);
-            files = order.into_iter().map(|i| files[i as usize].clone()).collect();
+            files = order
+                .into_iter()
+                .map(|i| files[i as usize].clone())
+                .collect();
             for path in files {
                 let read = read(&path);
                 out.push(Entry {
-                    name: read.as_ref().map_or_else(|_| name_of(&path), |f| f.library.clone()),
+                    name: read
+                        .as_ref()
+                        .map_or_else(|_| name_of(&path), |f| f.library.clone()),
                     place: Place::File(path),
                     read,
                 });
@@ -252,9 +264,13 @@ pub(crate) trait MaterialLibraryApp {
 
 impl MaterialLibraryApp for App {
     /// The libraries listed again, the chosen one's materials ticked afresh (the new ones) and the take previewed.
-    fn material_library_read(&mut self){
+    fn material_library_read(&mut self) {
         let entries = self.modules.arch_mut().material_libraries.entries();
-        let project = self.document.as_ref().map(|d| d.model.materials().to_vec()).unwrap_or_default();
+        let project = self
+            .document
+            .as_ref()
+            .map(|d| d.model.materials().to_vec())
+            .unwrap_or_default();
         let Some(w) = self.modules.arch_mut().materials.as_mut() else {
             return;
         };
@@ -262,35 +278,50 @@ impl MaterialLibraryApp for App {
         w.picked = entries
             .get(w.entry)
             .and_then(|e| e.read.as_ref().ok())
-            .map(|f| f.materials.iter().map(|m| status(&project, m) == Status::New).collect())
+            .map(|f| {
+                f.materials
+                    .iter()
+                    .map(|m| status(&project, m) == Status::New)
+                    .collect()
+            })
             .unwrap_or_default();
         w.entries = entries;
         self.material_library_preview();
     }
 
     /// What Seçilenleri al would do, nothing written.
-    fn material_library_preview(&mut self){
-        let (Some(w), Some(doc)) = (self.modules.arch().materials.as_ref(), self.document.as_ref()) else {
+    fn material_library_preview(&mut self) {
+        let (Some(w), Some(doc)) = (
+            self.modules.arch().materials.as_ref(),
+            self.document.as_ref(),
+        ) else {
             return;
         };
-        let preview = w.entries.get(w.entry).and_then(|e| import_of(e, &w.picked, w.conflict)).map(|operation| {
-            match kentos_native_application::materials_edit::plan_in(
-                &doc.model,
-                &MaterialsEdit { operation, expected_revision: None },
-            ) {
-                CommandResult::Completed { output, .. } => Ok(output),
-                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                    Err(error.message)
+        let preview = w
+            .entries
+            .get(w.entry)
+            .and_then(|e| import_of(e, &w.picked, w.conflict))
+            .map(|operation| {
+                match kentos_native_application::materials_edit::plan_in(
+                    &doc.model,
+                    &MaterialsEdit {
+                        operation,
+                        expected_revision: None,
+                    },
+                ) {
+                    CommandResult::Completed { output, .. } => Ok(output),
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => Err(error.message),
+                    _ => Err("Önizlenemedi.".into()),
                 }
-                _ => Err("Önizlenemedi.".into()),
-            }
-        });
+            });
         if let Some(w) = self.modules.arch_mut().materials.as_mut() {
             w.take_preview = preview;
         }
     }
 
-    fn material_library_event(&mut self, event: Event) -> Task<Message>{
+    fn material_library_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Tab(t) => {
                 if let Some(w) = self.modules.arch_mut().materials.as_mut() {
@@ -308,7 +339,8 @@ impl MaterialLibraryApp for App {
             }
             Event::Pick(i) => {
                 if let Some(p) = self
-                    .modules.arch_mut()
+                    .modules
+                    .arch_mut()
                     .materials
                     .as_mut()
                     .and_then(|w| w.picked.get_mut(i))
@@ -339,7 +371,10 @@ impl MaterialLibraryApp for App {
                 };
                 let keep = self.materials_chosen().map(|m| m.id);
                 if let Some(done) = self.materials_command(op) {
-                    self.say(Level::Success, format!("Kitaplıktan: {}.", report_words(&done.report)));
+                    self.say(
+                        Level::Success,
+                        format!("Kitaplıktan: {}.", report_words(&done.report)),
+                    );
                 }
                 self.materials_read(keep);
             }
@@ -357,7 +392,13 @@ impl MaterialLibraryApp for App {
             }
             Event::FolderChosen(Some(path)) => {
                 if self.modules.arch_mut().material_libraries.add(&path) {
-                    self.say(Level::Success, format!("Malzemeler: “{}” klasörü kitaplıklara eklendi.", path.display()));
+                    self.say(
+                        Level::Success,
+                        format!(
+                            "Malzemeler: “{}” klasörü kitaplıklara eklendi.",
+                            path.display()
+                        ),
+                    );
                 }
                 self.material_library_read();
             }
@@ -372,7 +413,10 @@ impl MaterialLibraryApp for App {
                     self.modules.arch_mut().material_libraries.remove(&folder);
                     self.say(
                         Level::Info,
-                        format!("Malzemeler: “{}” klasörü listeden çıkarıldı; dosyalarına dokunulmadı.", folder.display()),
+                        format!(
+                            "Malzemeler: “{}” klasörü listeden çıkarıldı; dosyalarına dokunulmadı.",
+                            folder.display()
+                        ),
                     );
                     if let Some(w) = self.modules.arch_mut().materials.as_mut() {
                         w.entry = 0;
@@ -402,12 +446,16 @@ impl MaterialLibraryApp for App {
     }
 
     /// Kitaplığa yaz…: the project's materials as a `.kmalzeme` file named after it.
-    fn export_materials(&mut self, path: &Path){
-        let library = path
-            .file_stem()
-            .map_or_else(|| "Ofis malzemeleri".to_owned(), |s| s.to_string_lossy().into_owned());
+    fn export_materials(&mut self, path: &Path) {
+        let library = path.file_stem().map_or_else(
+            || "Ofis malzemeleri".to_owned(),
+            |s| s.to_string_lossy().into_owned(),
+        );
         let Some(file) = self
-            .materials_command(MaterialsOperation::Export { library, materials: Vec::new() })
+            .materials_command(MaterialsOperation::Export {
+                library,
+                materials: Vec::new(),
+            })
             .and_then(|d| d.library)
         else {
             return;
@@ -415,10 +463,15 @@ impl MaterialLibraryApp for App {
         let text = serde_json::to_string_pretty(&file).unwrap_or_default();
         match std::fs::write(path, text + "\n") {
             Ok(()) => {
-                self.say(Level::Success, format!("{} malzeme kitaplığa yazıldı.", file.materials.len()));
+                self.say(
+                    Level::Success,
+                    format!("{} malzeme kitaplığa yazıldı.", file.materials.len()),
+                );
                 self.material_library_read();
             }
-            Err(e) => self.warn(format!("Kitaplık yazılamadı ({e}); başka bir klasör seçip yeniden deneyin.")),
+            Err(e) => self.warn(format!(
+                "Kitaplık yazılamadı ({e}); başka bir klasör seçip yeniden deneyin."
+            )),
         }
     }
 
@@ -426,14 +479,20 @@ impl MaterialLibraryApp for App {
         &'a self,
         w: &'a crate::materials_window::Window,
         tabs: Element<'a, Message>,
-    ) -> Element<'a, Message>{
-        let project = self.document.as_ref().map(|d| d.model.materials()).unwrap_or(&[]);
+    ) -> Element<'a, Message> {
+        let project = self
+            .document
+            .as_ref()
+            .map(|d| d.model.materials())
+            .unwrap_or(&[]);
         let mut list = Column::new().spacing(4);
         let mut group: Option<String> = None;
         for (i, e) in w.entries.iter().enumerate() {
             let here = match &e.place {
                 Place::Kentos(_) => "KentOS".to_owned(),
-                Place::File(p) => p.parent().map_or_else(String::new, |f| f.display().to_string()),
+                Place::File(p) => p
+                    .parent()
+                    .map_or_else(String::new, |f| f.display().to_string()),
             };
             if group.as_deref() != Some(here.as_str()) {
                 list = list.push(container(label::caption(here.clone())).padding([4, 8]));
@@ -443,11 +502,21 @@ impl MaterialLibraryApp for App {
                 Ok(f) => format!("{} malzeme", f.materials.len()),
                 Err(why) => why.clone(),
             };
-            let glyph = if e.read.is_ok() { "materials" } else { "warning" };
-            let text = Column::new().spacing(2).push(label::body(e.name.clone())).push(label::caption(facts));
-            let entry = row![icon(crate::icons::from_web(Some(glyph))).size(18.0), container(text).width(Fill)]
-                .spacing(8)
-                .align_y(Center);
+            let glyph = if e.read.is_ok() {
+                "materials"
+            } else {
+                "warning"
+            };
+            let text = Column::new()
+                .spacing(2)
+                .push(label::body(e.name.clone()))
+                .push(label::caption(facts));
+            let entry = row![
+                icon(crate::icons::from_web(Some(glyph))).size(18.0),
+                container(text).width(Fill)
+            ]
+            .spacing(8)
+            .align_y(Center);
             list = list.push(
                 button(entry)
                     .on_press(msg(Event::Entry(i)))
@@ -470,13 +539,24 @@ impl MaterialLibraryApp for App {
                     let mut rows = Column::new().spacing(2);
                     for (i, m) in f.materials.iter().enumerate() {
                         let st = status(project, m);
-                        let hatch = m.hatch.as_ref().map_or_else(|| "taramasız".to_owned(), |h| h.pattern.clone());
-                        let facts = format!("{} · {} · {hatch} · {}", m.category.label(), m.quantity.label(), st.words());
+                        let hatch = m
+                            .hatch
+                            .as_ref()
+                            .map_or_else(|| "taramasız".to_owned(), |h| h.pattern.clone());
+                        let facts = format!(
+                            "{} · {} · {hatch} · {}",
+                            m.category.label(),
+                            m.quantity.label(),
+                            st.words()
+                        );
                         let ticked = w.picked.get(i).copied().unwrap_or(false);
                         rows = rows.push(
                             row![
                                 words::check(ticked, "", Some(msg(Event::Pick(i)))),
-                                Column::new().spacing(1).push(label::body(m.name.clone())).push(label::caption(facts)),
+                                Column::new()
+                                    .spacing(1)
+                                    .push(label::body(m.name.clone()))
+                                    .push(label::caption(facts)),
                             ]
                             .spacing(8)
                             .align_y(Center),
@@ -484,15 +564,26 @@ impl MaterialLibraryApp for App {
                     }
                     let mut summary = vec![words::text_line(
                         Kind::Info,
-                        format!("{} · {} malzeme · aynı kimlikli malzeme için seçim aşağıda.", f.library, f.materials.len()),
+                        format!(
+                            "{} · {} malzeme · aynı kimlikli malzeme için seçim aşağıda.",
+                            f.library,
+                            f.materials.len()
+                        ),
                     )];
                     match &w.take_preview {
                         Some(Ok(done)) => summary.push(words::text_line(
-                            if done.report.locked.is_empty() { Kind::Ok } else { Kind::Warn },
+                            if done.report.locked.is_empty() {
+                                Kind::Ok
+                            } else {
+                                Kind::Warn
+                            },
                             format!("Seçilenleri al: {}.", report_words(&done.report)),
                         )),
                         Some(Err(why)) => summary.push(words::text_line(Kind::Warn, why.clone())),
-                        None => summary.push(words::text_line(Kind::Info, "Almak için malzemeleri işaretleyin.")),
+                        None => summary.push(words::text_line(
+                            Kind::Info,
+                            "Almak için malzemeleri işaretleyin.",
+                        )),
                     }
                     let conflict = kentos_ui::widget::Segmented::new(
                         [Conflict::Keep, Conflict::Replace],
@@ -507,22 +598,43 @@ impl MaterialLibraryApp for App {
                     Column::new()
                         .spacing(10)
                         .push(words::summary(summary))
-                        .push(words::field("Projede aynı kimlikli malzeme varsa", conflict, None))
+                        .push(words::field(
+                            "Projede aynı kimlikli malzeme varsa",
+                            conflict,
+                            None,
+                        ))
                         .push(all)
-                        .push(iced::widget::scrollable(container(rows).padding(iced::Padding { right: 16.0, ..iced::Padding::ZERO })).height(Fill))
+                        .push(
+                            iced::widget::scrollable(container(rows).padding(iced::Padding {
+                                right: 16.0,
+                                ..iced::Padding::ZERO
+                            }))
+                            .height(Fill),
+                        )
                         .into()
                 }
             },
         };
-        let body = row![left, container(right).width(Fill)].spacing(16).height(440.0);
-        let in_folder = matches!(w.entries.get(w.entry).map(|e| &e.place), Some(Place::File(_)));
+        let body = row![left, container(right).width(Fill)]
+            .spacing(16)
+            .height(440.0);
+        let in_folder = matches!(
+            w.entries.get(w.entry).map(|e| &e.place),
+            Some(Place::File(_))
+        );
         let can_take = matches!(w.take_preview, Some(Ok(_)));
         Frame::new(TITLE)
             .push(tabs)
             .push(body)
             .action(words::secondary(ADD_FOLDER, Some(msg(Event::AddFolder))))
-            .action(words::secondary(REMOVE_FOLDER, in_folder.then(|| msg(Event::RemoveFolder))))
-            .action(words::secondary(EXPORT, (!project.is_empty()).then(|| msg(Event::Export))))
+            .action(words::secondary(
+                REMOVE_FOLDER,
+                in_folder.then(|| msg(Event::RemoveFolder)),
+            ))
+            .action(words::secondary(
+                EXPORT,
+                (!project.is_empty()).then(|| msg(Event::Export)),
+            ))
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .action(words::primary(TAKE, can_take.then(|| msg(Event::Take))))
             .width(920.0)
@@ -552,8 +664,14 @@ mod tests {
     fn a_library_material_is_said_against_the_project() {
         let project = vec![m("tugla", "Tuğla"), m("beton", "Betonarme")];
         assert_eq!(status(&project, &m("tugla", "Tuğla")), Status::Same);
-        assert_eq!(status(&project, &m("tugla", "Tuğla duvar")), Status::Differs);
-        assert_eq!(status(&project, &m("betonarme", "BETONARME")), Status::NameTaken);
+        assert_eq!(
+            status(&project, &m("tugla", "Tuğla duvar")),
+            Status::Differs
+        );
+        assert_eq!(
+            status(&project, &m("betonarme", "BETONARME")),
+            Status::NameTaken
+        );
         assert_eq!(status(&project, &m("eps", "EPS")), Status::New);
     }
 
@@ -568,7 +686,11 @@ mod tests {
             library: "Ofis".into(),
             materials: vec![m("eps", "EPS")],
         };
-        std::fs::write(lib.join("ofis.kmalzeme"), serde_json::to_string(&file).unwrap()).unwrap();
+        std::fs::write(
+            lib.join("ofis.kmalzeme"),
+            serde_json::to_string(&file).unwrap(),
+        )
+        .unwrap();
         std::fs::write(lib.join("bozuk.kmalzeme"), "{").unwrap();
         std::fs::write(lib.join("not.json"), "{}").unwrap();
         let mut libs = Libraries::open(&dir);

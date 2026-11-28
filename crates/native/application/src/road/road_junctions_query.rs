@@ -7,7 +7,10 @@ use crate::ExecutionContext;
 use crate::checks::Stop;
 use crate::road_junctions as common;
 
-fn answer(doc: &kentos_domain::Document, input: &JunctionsQuery) -> Result<(JunctionsQueried, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &kentos_domain::Document,
+    input: &JunctionsQuery,
+) -> Result<(JunctionsQueried, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let own = doc.road_junctions();
     let Some(name) = input.junction.as_deref() else {
@@ -26,13 +29,21 @@ fn answer(doc: &kentos_domain::Document, input: &JunctionsQuery) -> Result<(Junc
     };
     let (_, def) = common::find(own, name, "junction")?;
     let r = common::read(doc, def)?;
-    Ok((JunctionsQueried { junctions: vec![r.0] }, r.1))
+    Ok((
+        JunctionsQueried {
+            junctions: vec![r.0],
+        },
+        r.1,
+    ))
 }
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &JunctionsQuery) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -46,11 +57,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &JunctionsQuery) -> CommandResult<
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: JunctionsQuery) -> CommandResult<JunctionsQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: JunctionsQuery,
+) -> CommandResult<JunctionsQueried> {
     plan(cx, &input)
 }
 
 /// The junctions for a window, or why they do not read.
-pub fn preview(doc: &kentos_domain::Document, input: &JunctionsQuery) -> Result<(JunctionsQueried, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &kentos_domain::Document,
+    input: &JunctionsQuery,
+) -> Result<(JunctionsQueried, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

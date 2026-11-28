@@ -103,7 +103,10 @@ fn fields_of(n: &NewViewMark) -> ViewMarkFields {
     }
 }
 
-fn check(doc: &Document, input: &ViewMarksCreate) -> Result<(Vec<CommandWarning>, Vec<Entity>), Stop> {
+fn check(
+    doc: &Document,
+    input: &ViewMarksCreate,
+) -> Result<(Vec<CommandWarning>, Vec<Entity>), Stop> {
     if input.marks.is_empty() {
         return Err(fail(
             codes::NO_OBJECTS,
@@ -169,7 +172,10 @@ pub mod create {
         }
     }
 
-    pub fn plan(cx: &ExecutionContext<'_>, input: &ViewMarksCreate) -> CommandResult<ViewMarksPlan> {
+    pub fn plan(
+        cx: &ExecutionContext<'_>,
+        input: &ViewMarksCreate,
+    ) -> CommandResult<ViewMarksPlan> {
         plan_in(cx.doc, input)
     }
 
@@ -261,7 +267,12 @@ fn edit_check(doc: &Document, input: &ViewMarksEdit) -> Result<Vec<(Slot, Entity
             ("Yarıçap", c.radius, "radius"),
         ] {
             if let Some(v) = v {
-                checks::finite(v, what, "Sonlu bir sayı verin.", &format!("operation.{field}"))?;
+                checks::finite(
+                    v,
+                    what,
+                    "Sonlu bir sayı verin.",
+                    &format!("operation.{field}"),
+                )?;
             }
         }
     }
@@ -342,7 +353,10 @@ pub mod edit {
         }
     }
 
-    pub fn plan(cx: &ExecutionContext<'_>, input: &ViewMarksEdit) -> CommandResult<ViewMarksEdited> {
+    pub fn plan(
+        cx: &ExecutionContext<'_>,
+        input: &ViewMarksEdit,
+    ) -> CommandResult<ViewMarksEdited> {
         plan_in(cx.doc, input)
     }
 
@@ -410,7 +424,12 @@ pub fn references_of(doc: &Document) -> ViewMarksReferenced {
             target: m.mark.target.clone(),
             words: m.mark.words.clone(),
             broken: m.mark.broken.is_some(),
-            at: m.mark.points.first().copied().unwrap_or(Vec2 { x: 0.0, y: 0.0 }),
+            at: m
+                .mark
+                .points
+                .first()
+                .copied()
+                .unwrap_or(Vec2 { x: 0.0, y: 0.0 }),
         });
     }
     let pointing = |t: &ViewTarget| -> Vec<String> {

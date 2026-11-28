@@ -196,8 +196,10 @@ impl App {
                 return (lines, rows);
             }
         };
-        let project = kentos_project::crs::system(out.to)
-            .map_or_else(|| format!("EPSG:{}", out.to), |p| format!("{}, EPSG:{}", p.name, out.to));
+        let project = kentos_project::crs::system(out.to).map_or_else(
+            || format!("EPSG:{}", out.to),
+            |p| format!("{}, EPSG:{}", p.name, out.to),
+        );
         lines.push(words::text_line(
             Kind::Info,
             format!(
@@ -223,7 +225,9 @@ impl App {
         for w in warnings {
             lines.push(words::text_line(Kind::Warn, w.message.clone()));
         }
-        if let (Some(mx), Some(my), Some(lo), Some(hi)) = (out.mean_dx, out.mean_dy, out.least, out.most) {
+        if let (Some(mx), Some(my), Some(lo), Some(hi)) =
+            (out.mean_dx, out.mean_dy, out.least, out.most)
+        {
             lines.push(words::text_line(
                 Kind::Info,
                 format!(
@@ -258,7 +262,11 @@ impl App {
                 f.coord(r.dy),
                 f.coord(r.shift),
                 f.coord(r.most),
-                r.notes.iter().map(|n| note_word(n)).collect::<Vec<_>>().join(", "),
+                r.notes
+                    .iter()
+                    .map(|n| note_word(n))
+                    .collect::<Vec<_>>()
+                    .join(", "),
             ]);
         }
         (lines, rows)
@@ -304,7 +312,10 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn reproject_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn reproject_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(APPLY) => Some(msg(Event::Apply)),
             Control::Press(CANCEL) => Some(msg(Event::Close)),

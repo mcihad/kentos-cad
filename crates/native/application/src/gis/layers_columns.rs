@@ -11,8 +11,8 @@
 use std::sync::Arc;
 
 use kentos_commands::{
-    CommandResult, DataLayer, LayerColumnsAction, LayerField, LayerNode, LayerNodeType, LayersColumns,
-    LayersColumnsDone, OutsideValue, RuleOutside, fields_problem, fold,
+    CommandResult, DataLayer, LayerColumnsAction, LayerField, LayerNode, LayerNodeType,
+    LayersColumns, LayersColumnsDone, OutsideValue, RuleOutside, fields_problem, fold,
 };
 use kentos_data::{ColumnRule, Condition, DataError, Op, Request, RuledColumn, Source};
 use kentos_domain::Document;
@@ -35,7 +35,11 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 fn unreachable(e: impl std::fmt::Display) -> Stop {
-    Stop::failed(error(codes::SOURCE_UNREACHABLE, format!("Tablo okunamadı ya da değişikliği reddetti: {e}"), None))
+    Stop::failed(error(
+        codes::SOURCE_UNREACHABLE,
+        format!("Tablo okunamadı ya da değişikliği reddetti: {e}"),
+        None,
+    ))
 }
 
 /// The new columns asked (`add`); none for `refresh`.
@@ -57,16 +61,27 @@ fn needs(input: &LayersColumns) -> Result<(), Stop> {
     }
     let fields = asked(input);
     if input.action == LayerColumnsAction::Add && fields.is_empty() {
-        return Err(fail(codes::NO_COLUMNS, "Tabloya eklenecek sütunları (fields) verin.".into(), "fields"));
+        return Err(fail(
+            codes::NO_COLUMNS,
+            "Tabloya eklenecek sütunları (fields) verin.".into(),
+            "fields",
+        ));
     }
     for (i, f) in fields.iter().enumerate() {
         if let Some(why) = crate::layers_create::name_problem(&f.name) {
-            return Err(fail(codes::INVALID_NAME, format!("Sütunun adı alınamaz: {why}."), &format!("fields.{i}.name")));
+            return Err(fail(
+                codes::INVALID_NAME,
+                format!("Sütunun adı alınamaz: {why}."),
+                &format!("fields.{i}.name"),
+            ));
         }
         if fields[..i].iter().any(|o| fold(&o.name) == fold(&f.name)) {
             return Err(fail(
                 codes::COLUMN_EXISTS,
-                format!("“{}” iki kez verildi; her sütuna ayrı bir ad verin.", f.name),
+                format!(
+                    "“{}” iki kez verildi; her sütuna ayrı bir ad verin.",
+                    f.name
+                ),
                 &format!("fields.{i}.name"),
             ));
         }
@@ -90,19 +105,29 @@ fn checked(doc: &Document, input: &LayersColumns) -> Result<(LayerNode, DataLaye
     if node.kind != LayerNodeType::Layer {
         return Err(fail(
             codes::NOT_A_LAYER,
-            format!("“{}” bir katman grubu; sütunlar bir veri katmanının tablosunun olur.", node.name),
+            format!(
+                "“{}” bir katman grubu; sütunlar bir veri katmanının tablosunun olur.",
+                node.name
+            ),
             "layer",
         ));
     }
     let Some(data) = node.data.clone() else {
         return Err(fail(
             codes::NOT_A_DATA_LAYER,
-            format!("“{}” bir veri katmanı değil; nesneleri çizimdedir, sütunu yoktur. Alanlar penceresinde alan ekleyin.", node.name),
+            format!(
+                "“{}” bir veri katmanı değil; nesneleri çizimdedir, sütunu yoktur. Alanlar penceresinde alan ekleyin.",
+                node.name
+            ),
             "layer",
         ));
     };
     if input.action != LayerColumnsAction::Refresh && data.read_only {
-        let what = if input.action == LayerColumnsAction::Add { "sütun eklenmez" } else { "kural yazılmaz" };
+        let what = if input.action == LayerColumnsAction::Add {
+            "sütun eklenmez"
+        } else {
+            "kural yazılmaz"
+        };
         return Err(fail(
             codes::DATA_LAYER_READ_ONLY,
             format!("“{}” salt okunur tutuluyor; tablosuna {what}.", node.name),
@@ -113,11 +138,17 @@ fn checked(doc: &Document, input: &LayersColumns) -> Result<(LayerNode, DataLaye
     for (i, f) in fields.iter().enumerate() {
         let taken = node.fields.iter().any(|o| fold(&o.name) == fold(&f.name))
             || fold(&f.name) == fold(&data.key)
-            || data.geometry.as_ref().is_some_and(|g| fold(&g.column) == fold(&f.name));
+            || data
+                .geometry
+                .as_ref()
+                .is_some_and(|g| fold(&g.column) == fold(&f.name));
         if taken {
             return Err(fail(
                 codes::COLUMN_EXISTS,
-                format!("“{}” katmanda ya da tablonun anahtarında, geometrisinde var; başka bir ad verin.", f.name),
+                format!(
+                    "“{}” katmanda ya da tablonun anahtarında, geometrisinde var; başka bir ad verin.",
+                    f.name
+                ),
                 &format!("fields.{i}.name"),
             ));
         }
@@ -134,7 +165,9 @@ fn checked(doc: &Document, input: &LayersColumns) -> Result<(LayerNode, DataLaye
 
 /// The table's source, read through its driver.
 fn source_of(data: &DataLayer) -> Result<Arc<dyn Source>, Stop> {
-    kentos_data::registry().source(&data.address).map_err(unreachable)
+    kentos_data::registry()
+        .source(&data.address)
+        .map_err(unreachable)
 }
 
 /// What `add` would do: the table's columns against the new ones, whether its source and the account may add one, and
@@ -192,13 +225,27 @@ fn add_planned(
 
 /// What `refresh` would do: the layer's fields kept where the table still has their column (in the layer's order, its
 /// rules kept), the table's other columns after them as fields (in the table's order), the rest off the layer.
-fn refresh_planned(doc: &Document, node: &LayerNode, data: &DataLayer) -> Result<LayersColumnsDone, Stop> {
+fn refresh_planned(
+    doc: &Document,
+    node: &LayerNode,
+    data: &DataLayer,
+) -> Result<LayersColumnsDone, Stop> {
     let source = source_of(data)?;
     let schema = source.schema(&data.table).map_err(unreachable)?;
     let (columns, _left) = crate::data_describe::fields_of(&schema);
     let has = |name: &str| columns.iter().any(|c| c.name == name);
-    let mut after: Vec<LayerField> = node.fields.iter().filter(|f| has(&f.name)).cloned().collect();
-    let removed: Vec<String> = node.fields.iter().filter(|f| !has(&f.name)).map(|f| f.name.clone()).collect();
+    let mut after: Vec<LayerField> = node
+        .fields
+        .iter()
+        .filter(|f| has(&f.name))
+        .cloned()
+        .collect();
+    let removed: Vec<String> = node
+        .fields
+        .iter()
+        .filter(|f| !has(&f.name))
+        .map(|f| f.name.clone())
+        .collect();
     let mut added = Vec::new();
     for c in columns {
         if !node.fields.iter().any(|f| f.name == c.name) {
@@ -207,7 +254,10 @@ fn refresh_planned(doc: &Document, node: &LayerNode, data: &DataLayer) -> Result
         }
     }
     // A column's rule in the source given to a field without one of its own (docs/adr/9324).
-    crate::data_describe::take_source_rules(&mut after, &source.rules(&data.table).map_err(unreachable)?);
+    crate::data_describe::take_source_rules(
+        &mut after,
+        &source.rules(&data.table).map_err(unreachable)?,
+    );
     Ok(LayersColumnsDone {
         layer: node.id.clone(),
         table: data.table.clone(),
@@ -232,19 +282,31 @@ fn rules_of(node: &LayerNode, data: &DataLayer) -> Vec<RuledColumn> {
             if let Some(values) = f.values.as_ref().filter(|v| !v.is_empty()) {
                 let values = values
                     .iter()
-                    .map(|c| (c.code.clone(), Some(c.label.clone()).filter(|l| !l.is_empty())))
+                    .map(|c| {
+                        (
+                            c.code.clone(),
+                            Some(c.label.clone()).filter(|l| !l.is_empty()),
+                        )
+                    })
                     .collect();
-                return Some(RuledColumn { column: f.name.clone(), rule: Some(ColumnRule::Values(values)) });
+                return Some(RuledColumn {
+                    column: f.name.clone(),
+                    rule: Some(ColumnRule::Values(values)),
+                });
             }
             if f.kind.is_number() && (f.min.is_some() || f.max.is_some()) {
-                let end = |v: &Option<String>| v.as_deref().and_then(|t| t.trim().parse::<f64>().ok());
+                let end =
+                    |v: &Option<String>| v.as_deref().and_then(|t| t.trim().parse::<f64>().ok());
                 let rule = ColumnRule::Range {
                     min: end(&f.min),
                     min_included: !f.min_exclusive,
                     max: end(&f.max),
                     max_included: !f.max_exclusive,
                 };
-                return Some(RuledColumn { column: f.name.clone(), rule: Some(rule) });
+                return Some(RuledColumn {
+                    column: f.name.clone(),
+                    rule: Some(rule),
+                });
             }
             None
         })
@@ -255,7 +317,12 @@ fn rules_of(node: &LayerNode, data: &DataLayer) -> Vec<RuledColumn> {
 fn keeps(rule: &ColumnRule, text: &str) -> bool {
     match rule {
         ColumnRule::Values(values) => values.iter().any(|(v, _)| v == text),
-        ColumnRule::Range { min, min_included, max, max_included } => {
+        ColumnRule::Range {
+            min,
+            min_included,
+            max,
+            max_included,
+        } => {
             let Ok(n) = text.trim().parse::<f64>() else {
                 return false;
             };
@@ -266,28 +333,49 @@ fn keeps(rule: &ColumnRule, text: &str) -> bool {
 }
 
 /// The values the table's rows hold outside the rules, by field, each with its rows (an empty value keeps any rule).
-fn outside_of(source: &dyn Source, table: &str, columns: &[RuledColumn]) -> Result<Vec<RuleOutside>, Stop> {
+fn outside_of(
+    source: &dyn Source,
+    table: &str,
+    columns: &[RuledColumn],
+) -> Result<Vec<RuleOutside>, Stop> {
     let mut out = Vec::new();
     for c in columns {
         let Some(rule) = &c.rule else {
             continue;
         };
         let mut values = Vec::new();
-        for v in source.unique(table, &c.column, None, 1000).map_err(unreachable)? {
+        for v in source
+            .unique(table, &c.column, None, 1000)
+            .map_err(unreachable)?
+        {
             let Some(text) = crate::geopackage::attribute_text(&v) else {
                 continue;
             };
             if keeps(rule, &text) {
                 continue;
             }
-            let condition = Condition::Compare { field: c.column.clone(), op: Op::Eq, value: v };
+            let condition = Condition::Compare {
+                field: c.column.clone(),
+                op: Op::Eq,
+                value: v,
+            };
             let rows = source
-                .count(table, &Request { condition: Some(condition), ..Request::default() }, false)
+                .count(
+                    table,
+                    &Request {
+                        condition: Some(condition),
+                        ..Request::default()
+                    },
+                    false,
+                )
                 .map_err(unreachable)?;
             values.push(OutsideValue { value: text, rows });
         }
         if !values.is_empty() {
-            out.push(RuleOutside { field: c.column.clone(), values });
+            out.push(RuleOutside {
+                field: c.column.clone(),
+                values,
+            });
         }
     }
     Ok(out)
@@ -340,14 +428,22 @@ fn rules_planned(
 
 /// The rules written in their own transaction; refused by the database (an account that does not own the table) as
 /// `columns_not_permitted`, any other failure as `source_unreachable`.
-fn write_rules(source: &dyn Source, node: &LayerNode, data: &DataLayer, columns: &[RuledColumn]) -> Result<(), Stop> {
+fn write_rules(
+    source: &dyn Source,
+    node: &LayerNode,
+    data: &DataLayer,
+    columns: &[RuledColumn],
+) -> Result<(), Stop> {
     let mut tx = source.begin().map_err(unreachable)?;
     if let Err(e) = tx.set_rules(&data.table, columns) {
         let _ = tx.rollback();
         return Err(match e {
             DataError::Denied(why) | DataError::Unsupported(why) => fail(
                 codes::COLUMNS_NOT_PERMITTED,
-                format!("“{}” katmanının tablosuna kural yazılamadı: {why}. Tablo değişmedi.", node.name),
+                format!(
+                    "“{}” katmanının tablosuna kural yazılamadı: {why}. Tablo değişmedi.",
+                    node.name
+                ),
                 "layer",
             ),
             other => unreachable(other),
@@ -367,7 +463,10 @@ fn planned(doc: &Document, input: &LayersColumns) -> Result<LayersColumnsDone, S
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &LayersColumns) -> CommandResult<()> {
     match checked(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -375,13 +474,19 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &LayersColumns) -> CommandResu
 /// What execute would do; the table is read, nothing is written.
 pub fn plan(cx: &ExecutionContext<'_>, input: &LayersColumns) -> CommandResult<LayersColumnsDone> {
     match planned(cx.doc, input) {
-        Ok(done) => CommandResult::Completed { output: done, warnings: Vec::new() },
+        Ok(done) => CommandResult::Completed {
+            output: done,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// Adds the columns (or reads the table again) and writes the layer's fields, one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersColumns) -> CommandResult<LayersColumnsDone> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersColumns,
+) -> CommandResult<LayersColumnsDone> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_LAYERS_COLUMNS,
@@ -393,10 +498,17 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersColumns) -> CommandRe
 
 /// The columns added in their own transaction; refused by the database (an account that does not own the table) as
 /// `columns_not_permitted`, any other failure as `source_unreachable`; the table read again has them.
-fn add_columns(source: &dyn Source, node: &LayerNode, data: &DataLayer, fields: &[LayerField]) -> Result<(), Stop> {
+fn add_columns(
+    source: &dyn Source,
+    node: &LayerNode,
+    data: &DataLayer,
+    fields: &[LayerField],
+) -> Result<(), Stop> {
     let columns: Vec<kentos_data::Field> = fields
         .iter()
-        .map(|f| kentos_data::Field::new(&f.name, crate::layer_export::field_kind(f.kind, f.length)))
+        .map(|f| {
+            kentos_data::Field::new(&f.name, crate::layer_export::field_kind(f.kind, f.length))
+        })
         .collect();
     let mut tx = source.begin().map_err(unreachable)?;
     if let Err(e) = tx.add_columns(&data.table, &columns) {
@@ -404,7 +516,10 @@ fn add_columns(source: &dyn Source, node: &LayerNode, data: &DataLayer, fields: 
         return Err(match e {
             DataError::Denied(why) | DataError::Unsupported(why) => fail(
                 codes::COLUMNS_NOT_PERMITTED,
-                format!("“{}” katmanının tablosuna sütun eklenemedi: {why}. Tablo değişmedi.", node.name),
+                format!(
+                    "“{}” katmanının tablosuna sütun eklenemedi: {why}. Tablo değişmedi.",
+                    node.name
+                ),
                 "layer",
             ),
             other => unreachable(other),
@@ -413,12 +528,18 @@ fn add_columns(source: &dyn Source, node: &LayerNode, data: &DataLayer, fields: 
     tx.commit().map_err(unreachable)?;
     let schema = source.schema(&data.table).map_err(unreachable)?;
     match fields.iter().find(|f| schema.field(&f.name).is_none()) {
-        Some(f) => Err(unreachable(format!("tablo yeniden okunduğunda “{}” sütunu yok", f.name))),
+        Some(f) => Err(unreachable(format!(
+            "tablo yeniden okunduğunda “{}” sütunu yok",
+            f.name
+        ))),
         None => Ok(()),
     }
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersColumns) -> CommandResult<LayersColumnsDone> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersColumns,
+) -> CommandResult<LayersColumnsDone> {
     let (node, data) = match checked(cx.doc, &input) {
         Ok(n) => n,
         Err(stop) => return stop.into(),
@@ -452,18 +573,29 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersColumns) -> Command
             {
                 return stop.into();
             }
-            return CommandResult::Completed { output: done, warnings: Vec::new() };
+            return CommandResult::Completed {
+                output: done,
+                warnings: Vec::new(),
+            };
         }
     };
     if done.fields == node.fields {
-        return CommandResult::Completed { output: done, warnings: Vec::new() };
+        return CommandResult::Completed {
+            output: done,
+            warnings: Vec::new(),
+        };
     }
     let doc = &mut *cx.doc;
     let id = node.id.clone();
     let fields = done.fields.clone();
-    match doc.transact(label(input.action), |doc| doc.set_layer_fields(&id, fields, &[]).map(|_| ())) {
+    match doc.transact(label(input.action), |doc| {
+        doc.set_layer_fields(&id, fields, &[]).map(|_| ())
+    }) {
         Ok(()) => CommandResult::Completed {
-            output: LayersColumnsDone { revision: doc.revision().to_string(), ..done },
+            output: LayersColumnsDone {
+                revision: doc.revision().to_string(),
+                ..done
+            },
             warnings: Vec::new(),
         },
         Err(refusal) => fail(codes::LAYER_REFUSED, refusal.0, "layer").into(),

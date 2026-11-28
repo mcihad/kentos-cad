@@ -53,7 +53,11 @@ impl Loaded {
     /// What its bodies and the file take in memory, about, in bytes: the file, the corners and triangles.
     pub fn memory(&self) -> usize {
         self.bytes.len()
-            + self.bodies.iter().map(|b| b.positions.len() * 24 + b.triangles.len() * 12).sum::<usize>()
+            + self
+                .bodies
+                .iter()
+                .map(|b| b.positions.len() * 24 + b.triangles.len() * 12)
+                .sum::<usize>()
     }
 
     /// The object `owner` as the list says it: its class and its name.
@@ -70,24 +74,45 @@ impl Loaded {
 
 /// The file `file` read, checked against `sha256` and placed `placement` on `project`; why not, in the interface's
 /// words.
-pub fn load(file: &str, sha256: &str, placement: UnderlayPlacement, project: Result<MapFrame, String>) -> Result<Loaded, String> {
+pub fn load(
+    file: &str,
+    sha256: &str,
+    placement: UnderlayPlacement,
+    project: Result<MapFrame, String>,
+) -> Result<Loaded, String> {
     let started = Instant::now();
-    let bytes = std::fs::read(file)
-        .map_err(|_| format!("{file} okunamadı: dosya yok ya da açılamıyor. Yerini Yeniden oku ile verin."))?;
+    let bytes = std::fs::read(file).map_err(|_| {
+        format!("{file} okunamadı: dosya yok ya da açılamıyor. Yerini Yeniden oku ile verin.")
+    })?;
     let digest = sha256_hex(&bytes);
     if digest != sha256 {
         return Err("Dosya eklendiğinden beri değişmiş (SHA-256'sı başka): gösterilen revizyon o değil. Yeniden oku \
                     yeni revizyonu alır."
             .to_owned());
     }
-    let model = read::read(&bytes, &read::Limits::default(), &|| false).map_err(|e| e.to_string())?;
-    let unit = model.summary.units.length.as_ref().map_or(f64::NAN, |u| u.to_si);
-    let frame = model.summary.location.as_ref().and_then(read::Location::frame);
+    let model =
+        read::read(&bytes, &read::Limits::default(), &|| false).map_err(|e| e.to_string())?;
+    let unit = model
+        .summary
+        .units
+        .length
+        .as_ref()
+        .map_or(f64::NAN, |u| u.to_si);
+    let frame = model
+        .summary
+        .location
+        .as_ref()
+        .and_then(read::Location::frame);
     let core = match placement {
         UnderlayPlacement::Map => underlay::Placement::Map,
         UnderlayPlacement::Origin => underlay::Placement::Origin,
     };
-    let t = underlay::place(frame.as_ref(), unit, project.as_ref().map_err(String::as_str), core)?;
+    let t = underlay::place(
+        frame.as_ref(),
+        unit,
+        project.as_ref().map_err(String::as_str),
+        core,
+    )?;
     let made = model.bodies(&bytes, &|| false).map_err(|e| e.to_string())?;
     let mut bounds: Option<[f64; 6]> = None;
     let bodies: Vec<Body> = made
@@ -102,11 +127,28 @@ pub fn load(file: &str, sha256: &str, placement: UnderlayPlacement, project: Res
                     k[i + 3] = k[i + 3].max(p[i]);
                 }
             }
-            Body { owner: u32::try_from(b.object).unwrap_or(u32::MAX), positions: Arc::new(positions), triangles: b.triangles }
+            Body {
+                owner: u32::try_from(b.object).unwrap_or(u32::MAX),
+                positions: Arc::new(positions),
+                triangles: b.triangles,
+            }
         })
         .collect();
-    let not_shown = made.not_shown.into_iter().map(|n| (n.object, n.reason)).collect();
-    Ok(Loaded { sha256: digest, schema: model.summary.schema.clone(), model, bytes, bodies, not_shown, took: started.elapsed(), bounds })
+    let not_shown = made
+        .not_shown
+        .into_iter()
+        .map(|n| (n.object, n.reason))
+        .collect();
+    Ok(Loaded {
+        sha256: digest,
+        schema: model.summary.schema.clone(),
+        model,
+        bytes,
+        bodies,
+        not_shown,
+        took: started.elapsed(),
+        bounds,
+    })
 }
 
 /// The plan of `loaded` at a level: cut at `cut`, the edges under it down to `bottom`.
@@ -114,7 +156,11 @@ pub fn plan_of(loaded: &Loaded, cut: f64, bottom: f64) -> Vec<PlanLine> {
     let meshes: Vec<Mesh<'_>> = loaded
         .bodies
         .iter()
-        .map(|b| Mesh { owner: b.owner, positions: &b.positions, triangles: &b.triangles })
+        .map(|b| Mesh {
+            owner: b.owner,
+            positions: &b.positions,
+            triangles: &b.triangles,
+        })
         .collect();
     underlay::plan(&meshes, cut, bottom)
 }

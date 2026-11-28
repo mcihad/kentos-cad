@@ -46,7 +46,7 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &PolylineCreate) -> CommandRes
 /// What execute would write now, and the revision to expect for exactly
 /// that; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &PolylineCreate) -> CommandResult<PolylinePlan> {
-    plan_in(cx.doc,input)
+    plan_in(cx.doc, input)
 }
 
 /// The same pure plan without a mutable execution context or a document clone.

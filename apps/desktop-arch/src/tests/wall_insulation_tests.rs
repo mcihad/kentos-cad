@@ -9,9 +9,9 @@
 //! - EPS F (kolay alevlenici) fails 20/3's normal alevlenici, one finding for the four walls; Taş yünü A1 holds. EPS
 //!   B-s1,d0 (zor alevlenici): 20/3 holds.
 
+use crate::arch::ArchState;
 use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
 use serde_json::json;
-use crate::arch::ArchState;
 
 use crate::app::App;
 use crate::use_class_tests::{building, checked, p, rect, run, spaces};
@@ -19,7 +19,12 @@ use crate::use_class_tests::{building, checked, p, rect, run, spaces};
 /// The dwelling, its materials, walls and rooms; the exterior walls' persistent ids, then the partition's.
 fn scene() -> (App, Vec<String>) {
     let mut app = building(1, "Konut");
-    let materials = [("Tuğla", "structure"), ("EPS", "insulation"), ("Taş yünü", "insulation"), ("Sıva", "finish")];
+    let materials = [
+        ("Tuğla", "structure"),
+        ("EPS", "insulation"),
+        ("Taş yünü", "insulation"),
+        ("Sıva", "finish"),
+    ];
     for (name, category) in materials {
         run(
             &mut app,
@@ -27,12 +32,32 @@ fn scene() -> (App, Vec<String>) {
             json!({"operation": {"kind": "define", "name": name, "change": {"category": category}}}),
         );
     }
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     // The two wall styles, their layers bound to the materials by name.
     let c = |name: &str, t: f64| json!({"name": name, "material": name, "thickness": t});
     for (id, name, layers) in [
-        ("dis-duvar", "Dış duvar", json!([c("Sıva", 0.02), c("EPS", 0.05), c("Tuğla", 0.20), c("Taş yünü", 0.03)])),
-        ("bolme", "Bölme", json!([c("Sıva", 0.02), c("Taş yünü", 0.16), c("Sıva", 0.02)])),
+        (
+            "dis-duvar",
+            "Dış duvar",
+            json!([
+                c("Sıva", 0.02),
+                c("EPS", 0.05),
+                c("Tuğla", 0.20),
+                c("Taş yünü", 0.03)
+            ]),
+        ),
+        (
+            "bolme",
+            "Bölme",
+            json!([c("Sıva", 0.02), c("Taş yünü", 0.16), c("Sıva", 0.02)]),
+        ),
     ] {
         run(
             &mut app,
@@ -40,9 +65,7 @@ fn scene() -> (App, Vec<String>) {
             json!({"kind": "wall", "operation": "create", "wall": {"id": id, "name": name, "components": layers}}),
         );
     }
-    let wall = |a: (f64, f64), b: (f64, f64), width: f64, style: &str| {
-        json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": width, "style": style, "arch": {"level": "k00"}})
-    };
+    let wall = |a: (f64, f64), b: (f64, f64), width: f64, style: &str| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": width, "style": style, "arch": {"level": "k00"}});
     let made = run(
         &mut app,
         "cad.walls.create",
@@ -71,9 +94,25 @@ fn scene() -> (App, Vec<String>) {
 /// 20/3's row and its inner insulation findings (state, message, objects).
 #[allow(clippy::type_complexity)]
 fn said(app: &App) -> (Option<O>, Vec<(Option<S>, String, usize)>) {
-    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
-    let row = set.rules.iter().find(|r| r.rule == "BYKHY 20/3").map(|r| r.state);
-    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+    let set = app
+        .modules
+        .arch()
+        .arch_audit
+        .rule_set
+        .as_ref()
+        .expect("the rule set");
+    let row = set
+        .rules
+        .iter()
+        .find(|r| r.rule == "BYKHY 20/3")
+        .map(|r| r.state);
+    let audited = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
     let found = audited
         .findings
         .iter()
@@ -111,7 +150,12 @@ fn a_wall_s_insulation_inside_its_load_bearing_layer_is_read_by_20_3() {
     // The facts: five layers, no class declared yet: 20/3 lacks them.
     let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
     assert_eq!(facts.insulations.len(), 5, "{:?}", facts.insulations);
-    assert!(facts.insulations.iter().all(|i| i.reaction.is_none() && !i.unknown_side));
+    assert!(
+        facts
+            .insulations
+            .iter()
+            .all(|i| i.reaction.is_none() && !i.unknown_side)
+    );
     checked(&mut app);
     let (row, found) = said(&app);
     assert_eq!(row, Some(O::MissingData));
@@ -151,9 +195,13 @@ fn screens() {
 
     use crate::app::Message;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ic-yalitim-8151");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ic-yalitim-8151");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1280.0, 800.0), "koyu"),
+    ] {
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
         };
@@ -162,18 +210,32 @@ fn screens() {
         crate::finish_reaction_tests::declared(&mut app, "Taş yünü", "A1");
         app.dialog = None;
         app.modules.arch_mut().materials = None;
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_wall_insulation_reaction");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "bykhy_wall_insulation_reaction");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-ic-yalitim-denetim-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

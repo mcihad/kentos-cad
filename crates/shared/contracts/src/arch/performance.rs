@@ -46,7 +46,10 @@ impl DeclaredBasis {
     pub fn words(&self) -> String {
         match self {
             DeclaredBasis::Author => "müellif beyanı".to_owned(),
-            DeclaredBasis::Document { name, date: Some(d) } => format!("{name} ({d})"),
+            DeclaredBasis::Document {
+                name,
+                date: Some(d),
+            } => format!("{name} ({d})"),
             DeclaredBasis::Document { name, date: None } => name.clone(),
         }
     }
@@ -60,15 +63,22 @@ impl DeclaredBasis {
             return Ok(DeclaredBasis::Author);
         }
         // A day in brackets at its end: `(YYYY-AA-GG)`; brackets holding other words are the name's.
-        let dated = t.strip_suffix(')').and_then(|r| r.rsplit_once('(')).filter(|(_, d)| {
-            let b = d.trim().as_bytes();
-            b.len() == 10 && b[4] == b'-' && b[7] == b'-'
-        });
+        let dated = t
+            .strip_suffix(')')
+            .and_then(|r| r.rsplit_once('('))
+            .filter(|(_, d)| {
+                let b = d.trim().as_bytes();
+                b.len() == 10 && b[4] == b'-' && b[7] == b'-'
+            });
         let basis = match dated {
-            Some((name, day)) => {
-                DeclaredBasis::Document { name: name.trim().to_owned(), date: Some(day.trim().to_owned()) }
-            }
-            None => DeclaredBasis::Document { name: t.to_owned(), date: None },
+            Some((name, day)) => DeclaredBasis::Document {
+                name: name.trim().to_owned(),
+                date: Some(day.trim().to_owned()),
+            },
+            None => DeclaredBasis::Document {
+                name: t.to_owned(),
+                date: None,
+            },
         };
         match basis.problem() {
             Some(why) => Err(why),
@@ -86,9 +96,14 @@ impl DeclaredBasis {
 
     /// What is wrong with it: a document without a name, a name too long, a date that is no day.
     pub fn problem(&self) -> Option<String> {
-        let DeclaredBasis::Document { name, date } = self else { return None };
+        let DeclaredBasis::Document { name, date } = self else {
+            return None;
+        };
         if name.trim().is_empty() {
-            return Some("Dayanak belgesinin adı boş: belgenin adını yazın ya da müellif beyanı seçin.".into());
+            return Some(
+                "Dayanak belgesinin adı boş: belgenin adını yazın ya da müellif beyanı seçin."
+                    .into(),
+            );
         }
         if name.chars().count() > MAX_BASIS_NAME || name.chars().any(char::is_control) {
             return Some(format!(
@@ -98,7 +113,9 @@ impl DeclaredBasis {
         if let Some(d) = date
             && !is_day(d)
         {
-            return Some(format!("“{d}” bir gün değil: tarihi YYYY-AA-GG biçiminde yazın (2026-11-16)."));
+            return Some(format!(
+                "“{d}” bir gün değil: tarihi YYYY-AA-GG biçiminde yazın (2026-11-16)."
+            ));
         }
         None
     }
@@ -110,8 +127,15 @@ fn is_day(s: &str) -> bool {
     if b.len() != 10 || b[4] != b'-' || b[7] != b'-' {
         return false;
     }
-    let num = |r: std::ops::Range<usize>| s.get(r).filter(|t| t.bytes().all(|c| c.is_ascii_digit()))?.parse::<u32>().ok();
-    let (Some(y), Some(m), Some(d)) = (num(0..4), num(5..7), num(8..10)) else { return false };
+    let num = |r: std::ops::Range<usize>| {
+        s.get(r)
+            .filter(|t| t.bytes().all(|c| c.is_ascii_digit()))?
+            .parse::<u32>()
+            .ok()
+    };
+    let (Some(y), Some(m), Some(d)) = (num(0..4), num(5..7), num(8..10)) else {
+        return false;
+    };
     let leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
     let days = match m {
         1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
@@ -137,7 +161,10 @@ pub struct Declared {
 impl Declared {
     /// The author's word.
     pub fn author(value: &str) -> Declared {
-        Declared { value: value.to_owned(), basis: DeclaredBasis::Author }
+        Declared {
+            value: value.to_owned(),
+            basis: DeclaredBasis::Author,
+        }
     }
 
     /// What is wrong with it, `what` naming it (“yangın dayanım sınıfı”): an empty word (a value never says nothing),
@@ -151,10 +178,17 @@ impl Declared {
             ));
         }
         if v != self.value {
-            return Some(format!("{} başında ya da sonunda boşluk var: “{}” yazın.", capital(what), v));
+            return Some(format!(
+                "{} başında ya da sonunda boşluk var: “{}” yazın.",
+                capital(what),
+                v
+            ));
         }
         if self.value.chars().count() > MAX_DECLARED || self.value.chars().any(char::is_control) {
-            return Some(format!("{} en çok {MAX_DECLARED} karakter olur ve satır sonu içermez.", capital(what)));
+            return Some(format!(
+                "{} en çok {MAX_DECLARED} karakter olur ve satır sonu içermez.",
+                capital(what)
+            ));
         }
         self.basis.problem()
     }
@@ -162,7 +196,9 @@ impl Declared {
 
 fn capital(s: &str) -> String {
     let mut c = s.chars();
-    c.next().map(|f| f.to_uppercase().chain(c).collect()).unwrap_or_default()
+    c.next()
+        .map(|f| f.to_uppercase().chain(c).collect())
+        .unwrap_or_default()
 }
 
 /// A declared emergency exit role and its basis.
@@ -216,7 +252,9 @@ impl DeclaredShaftVent {
             }
             Some(a) if !(a.is_finite() && a > 0.0 && a <= MAX_SHAFT_VENT) => {
                 return Some((
-                    format!("Havalandırma bacasının alanı 0'dan büyük ve en çok {MAX_SHAFT_VENT} m² olur."),
+                    format!(
+                        "Havalandırma bacasının alanı 0'dan büyük ve en çok {MAX_SHAFT_VENT} m² olur."
+                    ),
                     "area",
                 ));
             }
@@ -333,8 +371,12 @@ pub fn reaction_problem(s: &str) -> Option<String> {
     let droplets = match rest {
         "" => false,
         r if !floor
-            && (if smoke { r.strip_prefix(",d") } else { r.strip_prefix("-d") })
-                .is_some_and(|d| matches!(d, "0" | "1" | "2")) =>
+            && (if smoke {
+                r.strip_prefix(",d")
+            } else {
+                r.strip_prefix("-d")
+            })
+            .is_some_and(|d| matches!(d, "0" | "1" | "2")) =>
         {
             true
         }
@@ -366,7 +408,11 @@ pub fn strength_problem(s: &str) -> Option<String> {
     if s.is_empty() {
         return Some("Malzemenin dayanımı boş olamaz: bilinmiyorsa silin (null).".into());
     }
-    if s.chars().count() > 16 || !s.chars().all(|c| c.is_alphanumeric() || matches!(c, '/' | '.' | ',' | '-')) {
+    if s.chars().count() > 16
+        || !s
+            .chars()
+            .all(|c| c.is_alphanumeric() || matches!(c, '/' | '.' | ',' | '-'))
+    {
         return Some(format!(
             "“{s}” bir dayanım sınıfı gibi yazılmamış: harf, rakam ve / . , - ile en çok 16 karakter yazın (C25, C30/37, S355)."
         ));
@@ -388,19 +434,52 @@ mod tests {
 
     #[test]
     fn a_declared_word_is_never_empty_and_its_basis_reads() {
-        assert!(Declared::author("REI 120").problem("yangın dayanım sınıfı").is_none());
-        assert!(Declared::author("").problem("yangın dayanım sınıfı").unwrap().starts_with("Yangın dayanım sınıfı boş"));
-        assert!(Declared::author(" EI 60").problem("x").unwrap().contains("“EI 60”"));
+        assert!(
+            Declared::author("REI 120")
+                .problem("yangın dayanım sınıfı")
+                .is_none()
+        );
+        assert!(
+            Declared::author("")
+                .problem("yangın dayanım sınıfı")
+                .unwrap()
+                .starts_with("Yangın dayanım sınıfı boş")
+        );
+        assert!(
+            Declared::author(" EI 60")
+                .problem("x")
+                .unwrap()
+                .contains("“EI 60”")
+        );
         assert!(Declared::author("a\nb").problem("x").is_some());
         let doc = |name: &str, date: Option<&str>| Declared {
             value: "EI 60".into(),
-            basis: DeclaredBasis::Document { name: name.into(), date: date.map(str::to_owned) },
+            basis: DeclaredBasis::Document {
+                name: name.into(),
+                date: date.map(str::to_owned),
+            },
         };
-        assert!(doc("Test raporu 41", Some("2026-02-28")).problem("x").is_none());
-        assert!(doc("Test raporu 41", Some("2025-02-29")).problem("x").unwrap().contains("bir gün değil"));
-        assert!(doc("Test raporu 41", Some("2024-02-29")).problem("x").is_none());
+        assert!(
+            doc("Test raporu 41", Some("2026-02-28"))
+                .problem("x")
+                .is_none()
+        );
+        assert!(
+            doc("Test raporu 41", Some("2025-02-29"))
+                .problem("x")
+                .unwrap()
+                .contains("bir gün değil")
+        );
+        assert!(
+            doc("Test raporu 41", Some("2024-02-29"))
+                .problem("x")
+                .is_none()
+        );
         assert!(doc("  ", None).problem("x").unwrap().contains("adı boş"));
-        assert_eq!(doc("Rapor", Some("2026-01-05")).basis.words(), "Rapor (2026-01-05)");
+        assert_eq!(
+            doc("Rapor", Some("2026-01-05")).basis.words(),
+            "Rapor (2026-01-05)"
+        );
         assert_eq!(DeclaredBasis::Author.words(), "müellif beyanı");
     }
 
@@ -408,11 +487,17 @@ mod tests {
     #[test]
     fn a_basis_reads_from_one_line() {
         assert_eq!(DeclaredBasis::read("").unwrap(), DeclaredBasis::Author);
-        assert_eq!(DeclaredBasis::read("  Müellif beyanı ").unwrap(), DeclaredBasis::Author);
+        assert_eq!(
+            DeclaredBasis::read("  Müellif beyanı ").unwrap(),
+            DeclaredBasis::Author
+        );
         let doc = DeclaredBasis::read("Test raporu 41 (2026-02-28)").unwrap();
         assert_eq!(
             doc,
-            DeclaredBasis::Document { name: "Test raporu 41".into(), date: Some("2026-02-28".into()) }
+            DeclaredBasis::Document {
+                name: "Test raporu 41".into(),
+                date: Some("2026-02-28".into())
+            }
         );
         assert_eq!(DeclaredBasis::read(&doc.words()).unwrap(), doc);
         assert_eq!(doc.field(), "Test raporu 41 (2026-02-28)");
@@ -420,10 +505,21 @@ mod tests {
         // Brackets of other words are the name's.
         assert_eq!(
             DeclaredBasis::read("Ürün beyanı (ek A)").unwrap(),
-            DeclaredBasis::Document { name: "Ürün beyanı (ek A)".into(), date: None }
+            DeclaredBasis::Document {
+                name: "Ürün beyanı (ek A)".into(),
+                date: None
+            }
         );
-        assert!(DeclaredBasis::read("Rapor (2025-02-29)").unwrap_err().contains("bir gün değil"));
-        assert!(DeclaredBasis::read("(2026-01-05)").unwrap_err().contains("adı boş"));
+        assert!(
+            DeclaredBasis::read("Rapor (2025-02-29)")
+                .unwrap_err()
+                .contains("bir gün değil")
+        );
+        assert!(
+            DeclaredBasis::read("(2026-01-05)")
+                .unwrap_err()
+                .contains("adı boş")
+        );
     }
 
     #[test]
@@ -442,14 +538,27 @@ mod tests {
     #[test]
     fn a_reaction_class_is_written_as_ek_2_c_writes_it() {
         for ok in [
-            "A1", "A2-s1,d0", "B-s1,d0", "C-s1,d0", "A2-s2,d0", "C-s3,d0", "B-s1,d1", "A2-s1,d2", "C-s3,d2", "D-s1,d0",
-            "D-s3,d2", "E", "E-d2", "F", "A1fl", "A2fl-s1", "Bfl-s1", "Cfl-s1", "Cfl-s2", "Dfl-s2", "Efl", "Ffl",
+            "A1", "A2-s1,d0", "B-s1,d0", "C-s1,d0", "A2-s2,d0", "C-s3,d0", "B-s1,d1", "A2-s1,d2",
+            "C-s3,d2", "D-s1,d0", "D-s3,d2", "E", "E-d2", "F", "A1fl", "A2fl-s1", "Bfl-s1",
+            "Cfl-s1", "Cfl-s2", "Dfl-s2", "Efl", "Ffl",
         ] {
             assert!(reaction_problem(ok).is_none(), "{ok}");
         }
         for bad in [
-            "", " A1", "A3", "G", "B-s4,d0", "B-s1,d3", "A1-s1,d0", "F-d2", "Bfl-s1,d0", "B s1 d0", "b-s1,d0", "Bfl-d2",
-            "B,d0", "B-s1-d0",
+            "",
+            " A1",
+            "A3",
+            "G",
+            "B-s4,d0",
+            "B-s1,d3",
+            "A1-s1,d0",
+            "F-d2",
+            "Bfl-s1,d0",
+            "B s1 d0",
+            "b-s1,d0",
+            "Bfl-d2",
+            "B,d0",
+            "B-s1-d0",
         ] {
             assert!(reaction_problem(bad).is_some(), "{bad}");
         }
@@ -458,10 +567,32 @@ mod tests {
     /// TS EN 13501-5 as BYKHY 28/2 and Ek-2/Ç write it (docs/adr/8134): a letter B–F, ROOF, the test method or none.
     #[test]
     fn a_roof_class_is_a_letter_roof_and_its_test_method() {
-        for ok in ["BROOF", "BROOF(t1)", "BROOF(t2)", "BROOF(t3)", "BROOF(t4)", "CROOF(t3)", "DROOF(t4)", "EROOF(t3)", "FROOF(t4)"] {
+        for ok in [
+            "BROOF",
+            "BROOF(t1)",
+            "BROOF(t2)",
+            "BROOF(t3)",
+            "BROOF(t4)",
+            "CROOF(t3)",
+            "DROOF(t4)",
+            "EROOF(t3)",
+            "FROOF(t4)",
+        ] {
             assert!(roof_class_problem(ok).is_none(), "{ok}");
         }
-        for bad in ["", "B", "AROOF", "GROOF", "Broof", "BROOF(t5)", "BROOF(T1)", "BROOF (t1)", " BROOF", "BROOF(t1", "B-s1,d0"] {
+        for bad in [
+            "",
+            "B",
+            "AROOF",
+            "GROOF",
+            "Broof",
+            "BROOF(t5)",
+            "BROOF(T1)",
+            "BROOF (t1)",
+            " BROOF",
+            "BROOF(t1",
+            "B-s1,d0",
+        ] {
             assert!(roof_class_problem(bad).is_some(), "{bad}");
         }
     }
@@ -470,12 +601,21 @@ mod tests {
     fn the_basis_is_tagged_by_its_kind() {
         let d = Declared {
             value: "REI 90".into(),
-            basis: DeclaredBasis::Document { name: "Ürün performans beyanı".into(), date: None },
+            basis: DeclaredBasis::Document {
+                name: "Ürün performans beyanı".into(),
+                date: None,
+            },
         };
         let j = serde_json::to_value(&d).unwrap();
-        assert_eq!(j, serde_json::json!({"value": "REI 90", "basis": {"kind": "document", "name": "Ürün performans beyanı"}}));
+        assert_eq!(
+            j,
+            serde_json::json!({"value": "REI 90", "basis": {"kind": "document", "name": "Ürün performans beyanı"}})
+        );
         assert_eq!(serde_json::from_value::<Declared>(j).unwrap(), d);
-        let a: Declared = serde_json::from_value(serde_json::json!({"value": "EI 30", "basis": {"kind": "author"}})).unwrap();
+        let a: Declared = serde_json::from_value(
+            serde_json::json!({"value": "EI 30", "basis": {"kind": "author"}}),
+        )
+        .unwrap();
         assert_eq!(a.basis, DeclaredBasis::Author);
     }
 }

@@ -2,12 +2,12 @@
 //! a click by a wall place the washbasin against it. Moved from the core's fixture_place_tests.rs with the module's
 //! package (docs/adr/9199 §4.11).
 
-use kentos_launch::Module;
-use serde_json::{Value, json};
 use crate::app::{App, Message};
 use crate::files_testing::drive;
 use crate::recovery::Recovery;
 use crate::settings::Settings;
+use kentos_launch::Module;
+use serde_json::{Value, json};
 
 /// A new KentOS Mimari project, as its program opens it.
 fn fresh_mimari() -> App {

@@ -36,9 +36,17 @@ fn calls() -> Vec<(String, u32, Value)> {
                     && step["result"]["status"] == "completed"
                     && step["input"].is_object()
                 {
-                    let actual = step.get("command").and_then(Value::as_str).unwrap_or(command);
+                    let actual = step
+                        .get("command")
+                        .and_then(Value::as_str)
+                        .unwrap_or(command);
                     let version = kentos_native_application::registry::version_of(actual)
-                        .or_else(|| kentos_commands::FILE_COMMANDS.iter().find(|(id, _)| *id == actual).map(|(_, v)| *v))
+                        .or_else(|| {
+                            kentos_commands::FILE_COMMANDS
+                                .iter()
+                                .find(|(id, _)| *id == actual)
+                                .map(|(_, v)| *v)
+                        })
                         .unwrap_or(u32::try_from(version).unwrap_or(1));
                     out.push((actual.to_owned(), version, step["input"].clone()));
                 }
@@ -46,8 +54,15 @@ fn calls() -> Vec<(String, u32, Value)> {
         }
     }
     for command in kentos_commands::catalog().commands {
-        if kentos_commands::FILE_COMMANDS.iter().any(|(id, _)| *id == command.id) {
-            assert!(!command.examples.is_empty(), "{} needs a Python audit example", command.id);
+        if kentos_commands::FILE_COMMANDS
+            .iter()
+            .any(|(id, _)| *id == command.id)
+        {
+            assert!(
+                !command.examples.is_empty(),
+                "{} needs a Python audit example",
+                command.id
+            );
             for example in command.examples {
                 out.push((command.id.clone(), command.version, example.input));
             }
@@ -61,7 +76,10 @@ fn every_completed_call_is_python_that_parses() {
     let calls = calls();
     assert!(calls.len() > 500, "the cases' calls: {}", calls.len());
     for (command, _) in kentos_commands::FILE_COMMANDS {
-        assert!(calls.iter().any(|(id, _, _)| id == command), "file command missing from Python audit: {command}");
+        assert!(
+            calls.iter().any(|(id, _, _)| id == command),
+            "file command missing from Python audit: {command}"
+        );
     }
     let written: Vec<Value> = calls
         .iter()

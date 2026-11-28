@@ -681,7 +681,8 @@ mod export_tests {
         let library = plain.iter().find(|b| b.id == original[3].id).unwrap();
         assert_eq!(library.name, original[3].name);
         assert_eq!(
-            library.entities.len(), 3,
+            library.entities.len(),
+            3,
             "the unused definition also keeps its default Sade appearance"
         );
         assert_eq!(notes.len(), 2);

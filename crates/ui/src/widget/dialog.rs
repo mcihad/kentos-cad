@@ -292,15 +292,19 @@ impl<'a, Message: Clone + 'a> From<Dialog<'a, Message>> for Element<'a, Message>
             };
         }
 
-        let has_footer =
-            !dialog.actions.is_empty() || !dialog.aside.is_empty() || dialog.footer.is_some() || dialog.status.is_some();
+        let has_footer = !dialog.actions.is_empty()
+            || !dialog.aside.is_empty()
+            || dialog.footer.is_some()
+            || dialog.status.is_some();
         // A kept size (resized or full screen): the box takes all its height, the body's scrolling part grows and
         // the buttons sit on the bottom edge (a footer), not under the content.
         content = content.fill(kept).footer(has_footer);
         if let Some(row) = dialog.footer {
             content = content.push(row);
         } else if has_footer {
-            let mut actions = iced::widget::Row::new().spacing(6).align_y(iced::alignment::Vertical::Center);
+            let mut actions = iced::widget::Row::new()
+                .spacing(6)
+                .align_y(iced::alignment::Vertical::Center);
 
             for action in dialog.aside {
                 actions = actions.push(action);
@@ -357,7 +361,9 @@ pub fn unsaved<'a, Message: Clone + 'a>(
     on_stay: Message,
     on_save: Option<Message>,
 ) -> Element<'a, Message> {
-    let answer = |caption: &'static str, on: Option<Message>, look: fn(&Theme, button::Status) -> button::Style| {
+    let answer = |caption: &'static str,
+                  on: Option<Message>,
+                  look: fn(&Theme, button::Status) -> button::Style| {
         button(crate::label::body(caption))
             .on_press_maybe(on)
             .padding(crate::theme::metrics::action())
@@ -615,7 +621,8 @@ impl Answers {
     /// The box's width and whether the risky answer (the confirm beside a safe `keep`) goes on a row of its own.
     fn layout(&self) -> (f32, bool) {
         let gap = 6.0;
-        let safe = self.cancel + self.also.map_or(0.0, |w| w + gap) + self.keep.map_or(0.0, |w| w + gap);
+        let safe =
+            self.cancel + self.also.map_or(0.0, |w| w + gap) + self.keep.map_or(0.0, |w| w + gap);
         let side_by_side = match self.keep {
             Some(_) => self.confirm + ANSWERS_APART + safe,
             None => safe + gap + self.confirm,
@@ -636,7 +643,13 @@ mod confirm_tests {
 
     #[test]
     fn short_answers_keep_the_box_its_own_width() {
-        let (width, stacked) = Answers { confirm: 80.0, cancel: 70.0, also: None, keep: None }.layout();
+        let (width, stacked) = Answers {
+            confirm: 80.0,
+            cancel: 70.0,
+            also: None,
+            keep: None,
+        }
+        .layout();
         assert_eq!(width, super::typography::scaled(CONFIRM_WIDTH));
         assert!(!stacked);
     }
@@ -645,7 +658,12 @@ mod confirm_tests {
     fn long_answers_widen_the_box_rather_than_break_a_label() {
         // “Kaydetmeden yeni proje aç”, “Vazgeç”, “Kaydet ve yeni proje aç”: 556 px side by side with the gap and
         // the padding, more than 420 and less than 640.
-        let answers = Answers { confirm: 210.0, cancel: 72.0, also: None, keep: Some(180.0) };
+        let answers = Answers {
+            confirm: 210.0,
+            cancel: 72.0,
+            also: None,
+            keep: Some(180.0),
+        };
         let (width, stacked) = answers.layout();
         assert!(!stacked);
         assert_eq!(width, 210.0 + 24.0 + 72.0 + 6.0 + 180.0 + 2.0 * CONFIRM_PAD);
@@ -664,16 +682,26 @@ mod confirm_tests {
             .confirm("Kaydetmeden yeni proje aç")
             .destructive()
             .keep("Kaydet ve yeni proje aç", ());
-        let mut snapshot = crate::snapshot::Snapshot::new(Size::new(760.0, 260.0)).expect("a renderer");
-        let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/onay-penceresi");
+        let mut snapshot =
+            crate::snapshot::Snapshot::new(Size::new(760.0, 260.0)).expect("a renderer");
+        let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.run/gui-evidence/onay-penceresi");
         std::fs::create_dir_all(&out).expect("a folder");
         let element: iced::Element<'_, ()> = iced::widget::container(ask).center(iced::Fill).into();
-        snapshot.render(element, &Theme::Light).save(out.join("kaydedilmemis.png")).expect("writes");
+        snapshot
+            .render(element, &Theme::Light)
+            .save(out.join("kaydedilmemis.png"))
+            .expect("writes");
     }
 
     #[test]
     fn answers_too_wide_for_one_row_put_the_risky_one_above() {
-        let answers = Answers { confirm: 330.0, cancel: 72.0, also: Some(150.0), keep: Some(260.0) };
+        let answers = Answers {
+            confirm: 330.0,
+            cancel: 72.0,
+            also: Some(150.0),
+            keep: Some(260.0),
+        };
         let (width, stacked) = answers.layout();
         assert!(stacked, "{width}");
         assert!(width < super::typography::scaled(ANSWERS_MOST) + 1.0);

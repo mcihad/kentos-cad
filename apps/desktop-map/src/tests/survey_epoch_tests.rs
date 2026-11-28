@@ -4,8 +4,8 @@
 //! how far (Bilinen noktalar's Taşınma); a typed epoch wins; a box that is no number says so; Kabul et keeps the
 //! measurement epoch in the adjustment's record. And the pictures.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use kentos_commands::NetworkEpochFrom;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -20,9 +20,14 @@ const CASE: &str = "Ölçme epoku bazların gözlem zamanlarından (2 Kasım 202
 pub(crate) fn grids() {
     let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/geoid/v1");
     for entry in std::fs::read_dir(&dir).into_iter().flatten().flatten() {
-        let Ok(bytes) = std::fs::read(entry.path()) else { continue };
+        let Ok(bytes) = std::fs::read(entry.path()) else {
+            continue;
+        };
         if let Ok(model) = kentos_native_application::crs_models::read(&bytes) {
-            kentos_geometry_core::crs::geoid::register(&kentos_native_application::crs_models::sha256(&bytes), model.grid);
+            kentos_geometry_core::crs::geoid::register(
+                &kentos_native_application::crs_models::sha256(&bytes),
+                model.grid,
+            );
         }
     }
 }
@@ -30,10 +35,19 @@ pub(crate) fn grids() {
 /// The case's drawing: the network with its baselines' times, the campaign with the velocity grid.
 fn opened() -> App {
     grids();
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.survey.network.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == CASE).expect("the case").clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.survey.network.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == CASE)
+        .expect("the case")
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -47,7 +61,8 @@ fn opened() -> App {
 }
 
 fn answer(app: &App) -> kentos_commands::MapSurveyNetworked {
-    app.modules.map()
+    app.modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -66,7 +81,13 @@ fn the_known_points_go_to_the_measurement_epoch_and_the_record_keeps_it() {
     assert_eq!(moved, ["bn-1", "bn-2"]);
     // ~0.54 m in 21.8 years on the synthetic grid: west and north, a little down.
     let m = &a.moved[0];
-    assert!((m.years - 21.837).abs() < 1e-3 && m.shift[0] < -0.5 && m.shift[1] > 0.15 && m.shift[2] < 0.0, "{m:?}");
+    assert!(
+        (m.years - 21.837).abs() < 1e-3
+            && m.shift[0] < -0.5
+            && m.shift[1] > 0.15
+            && m.shift[2] < 0.0,
+        "{m:?}"
+    );
     assert!(a.acceptable, "{:?}", a.why);
     // A typed epoch wins over the baselines' times.
     let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Epoch(
@@ -83,7 +104,8 @@ fn the_known_points_go_to_the_measurement_epoch_and_the_record_keeps_it() {
         "abc".into(),
     ))));
     let why = app
-        .modules.map()
+        .modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -103,9 +125,19 @@ fn the_known_points_go_to_the_measurement_epoch_and_the_record_keeps_it() {
         .expect("the archive");
     assert_eq!(survey.adjustments.len(), 1);
     assert_eq!(survey.adjustments[0].epoch, Some(t));
-    let new = survey.points.iter().filter(|p| p.result.adjustment.as_deref() == Some("da-1")).count();
+    let new = survey
+        .points
+        .iter()
+        .filter(|p| p.result.adjustment.as_deref() == Some("da-1"))
+        .count();
     assert_eq!(new, 3, "N1, N4, N5");
-    assert!(survey.points.iter().all(|p| p.result.target_epoch == Some(2005.0)), "back to the decision");
+    assert!(
+        survey
+            .points
+            .iter()
+            .all(|p| p.result.target_epoch == Some(2005.0)),
+        "back to the decision"
+    );
 }
 
 /// The window at the measurement epoch: the summary's epoch line and Bilinen noktalar with Taşınma; light wide and
@@ -119,11 +151,17 @@ fn the_known_points_go_to_the_measurement_epoch_and_the_record_keeps_it() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ag-epoku-2120");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ag-epoku-2120");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -147,14 +185,24 @@ fn screens() {
 }
 
 const SIMILAR: &str = "Üç bilinen nokta: 15(1)(c) benzerlik dönüşümü; ölçek C1'in ±3 ppm'i içinde, istatistikle uyumlu";
-const STRETCHED: &str = "Bilinen noktalar 5 ppm ölçekli: benzerlik dönüşümünün ölçeği C1'in sınırını aşar";
+const STRETCHED: &str =
+    "Bilinen noktalar 5 ppm ölçekli: benzerlik dönüşümünün ölçeği C1'in sınırını aşar";
 
 /// The window on one of the shared cases' drawings (Madde 15(1)(c), docs/adr/2160), with class C1.
 fn opened_case(name: &str) -> App {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.survey.network.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case").clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.survey.network.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case")
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -170,7 +218,10 @@ fn opened_case(name: &str) -> App {
 fn three_known_points_give_article_15_1_c_s_similarity() {
     let app = opened_case(SIMILAR);
     let a = answer(&app);
-    let s = a.similarity.clone().expect("three known points: the similarity");
+    let s = a
+        .similarity
+        .clone()
+        .expect("three known points: the similarity");
     assert_eq!((s.known.len(), s.dof), (3, 2));
     assert!(s.scale.abs() < 3.0 && s.agrees, "{s:?}");
     assert_eq!(a.rules.as_ref().and_then(|r| r.similarity), Some(true));
@@ -179,7 +230,10 @@ fn three_known_points_give_article_15_1_c_s_similarity() {
     let a = answer(&app);
     let s = a.similarity.clone().expect("the similarity");
     assert!(s.scale > 3.0 && !s.agrees, "{s:?}");
-    assert_eq!(a.rules.as_ref().map(|r| (r.similarity, r.passed)), Some((Some(false), false)));
+    assert_eq!(
+        a.rules.as_ref().map(|r| (r.similarity, r.passed)),
+        Some((Some(false), false))
+    );
 }
 
 /// The window with three known points: the summary's similarity line and Bilinen noktalar's residuals, light wide,
@@ -193,12 +247,15 @@ fn three_known_points_give_article_15_1_c_s_similarity() {
 fn similarity_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ag-benzerlik-2160");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ag-benzerlik-2160");
     std::fs::create_dir_all(&out).expect("a folder");
     for (case, file) in [(SIMILAR, "1-uc-bilinen-nokta"), (STRETCHED, "2-olcek-asar")] {
         let size = Size::new(1440.0, 900.0);
         let mut app = opened_case(case);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from("light"))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from("light"))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(
@@ -210,7 +267,10 @@ fn similarity_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("{file}-acik-genis.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

@@ -28,7 +28,8 @@ use kentos_commands::{
 };
 use kentos_interaction::Level;
 use kentos_native_application::{
-    ExecutionContext, road_terrains, road_terrains_contours, road_terrains_create, road_terrains_edit,
+    ExecutionContext, road_terrains, road_terrains_contours, road_terrains_create,
+    road_terrains_edit,
 };
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Dialog as Frame, Elided};
@@ -66,7 +67,10 @@ impl Row {
     }
 
     fn of(def: TerrainSurfaceDef) -> Self {
-        let text = |v: Option<f64>| v.map(|t| t.to_string().replace('.', ",")).unwrap_or_default();
+        let text = |v: Option<f64>| {
+            v.map(|t| t.to_string().replace('.', ","))
+                .unwrap_or_default()
+        };
         Self {
             max_edge: text(def.max_edge),
             tolerance: text(def.tolerance),
@@ -223,7 +227,8 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         };
-        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work) {
+        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work)
+        {
             self.warn("Arazi yüzeyi Harita ve Yol projelerinde olur.".to_owned());
             return;
         }
@@ -251,14 +256,17 @@ impl App {
             error: None,
             landxml: None,
         });
-        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains));
+        self.dialog = Some(Dialog::TerrainWork(
+            crate::terrain_work::TerrainDialogKind::Terrains,
+        ));
         self.refresh_edit_report();
     }
 
     /// A work that needs a terrain surface found none (UR2-007): it says so by the ribbon's own name, Arazi › Yüzey
     /// oluştur, and the notice's button opens it, so the way the line names is the way it takes.
     pub(crate) fn no_surface(&mut self, work: &str) {
-        let line = format!("{work}: projede arazi yüzeyi yok; önce Arazi › Yüzey oluştur ile kurun.");
+        let line =
+            format!("{work}: projede arazi yüzeyi yok; önce Arazi › Yüzey oluştur ile kurun.");
         self.warn(line.clone());
         self.toast(
             kentos_ui::widget::Toast::warning("Arazi yüzeyi yok")
@@ -309,7 +317,11 @@ impl App {
                 let n = w.rows.len() + 1;
                 w.rows.push(Row::of(TerrainSurfaceDef {
                     id,
-                    name: if n == 1 { "Mevcut zemin".to_owned() } else { format!("Yüzey {n}") },
+                    name: if n == 1 {
+                        "Mevcut zemin".to_owned()
+                    } else {
+                        format!("Yüzey {n}")
+                    },
                     points: SurfaceSources::default(),
                     breaklines: SurfaceSources::default(),
                     boundary: None,
@@ -326,7 +338,8 @@ impl App {
             Event::Remove => {
                 if let Some(i) = w.chosen.filter(|i| *i < w.rows.len()) {
                     w.rows.remove(i);
-                    w.chosen = (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
+                    w.chosen =
+                        (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
                 }
             }
             Event::Name(text) => {
@@ -348,7 +361,11 @@ impl App {
                 if let Some(r) = chosen {
                     match picked.as_slice() {
                         [one] => r.def.boundary = Some(one.clone()),
-                        _ => warning = Some("Sınır için çizimde tek bir alan ya da kapalı çoklu çizgi seçin."),
+                        _ => {
+                            warning = Some(
+                                "Sınır için çizimde tek bir alan ya da kapalı çoklu çizgi seçin.",
+                            )
+                        }
                     }
                 }
             }
@@ -360,7 +377,8 @@ impl App {
             Event::Voids => {
                 if let Some(r) = chosen {
                     if picked.is_empty() {
-                        warning = Some("Boşluk için çizimde alanlar ya da kapalı çoklu çizgiler seçin.");
+                        warning =
+                            Some("Boşluk için çizimde alanlar ya da kapalı çoklu çizgiler seçin.");
                     }
                     for uid in picked {
                         if !r.def.voids.contains(&uid) && r.def.boundary.as_ref() != Some(&uid) {
@@ -400,9 +418,13 @@ impl App {
             Event::PasteFrom(id) => w.paste_from = Some(id),
             Event::Paste => match (chosen, w.paste_from.clone()) {
                 (Some(r), Some(terrain)) if terrain != r.def.id => {
-                    r.def.edits.push(kentos_commands::SurfaceEdit::Paste { terrain });
+                    r.def
+                        .edits
+                        .push(kentos_commands::SurfaceEdit::Paste { terrain });
                 }
-                (Some(_), Some(_)) => warning = Some("Yüzey kendini yapıştıramaz; başka bir yüzey seçin."),
+                (Some(_), Some(_)) => {
+                    warning = Some("Yüzey kendini yapıştıramaz; başka bir yüzey seçin.")
+                }
                 _ => warning = Some("Yapıştırılacak yüzeyi seçin."),
             },
             Event::Interval(text) => w.interval = text,
@@ -432,7 +454,12 @@ impl App {
                     let surfaces: Vec<(String, usize, usize)> = std::fs::read(&path)
                         .ok()
                         .and_then(|b| kentos_formats::landxml::read(&b).ok())
-                        .map(|f| f.surfaces.iter().map(|s| (s.name.clone(), s.points.len(), s.faces.len())).collect())
+                        .map(|f| {
+                            f.surfaces
+                                .iter()
+                                .map(|s| (s.name.clone(), s.points.len(), s.faces.len()))
+                                .collect()
+                        })
                         .unwrap_or_default();
                     if surfaces.len() > 1 {
                         if let Some(w) = self.terrain_work.terrain_window.as_mut() {
@@ -461,18 +488,34 @@ impl App {
                 return Task::none();
             }
             Event::LandXmlTake => {
-                let Some((path, surfaces, chosen)) = self.terrain_work.terrain_window.as_mut().and_then(|w| w.landxml.take()) else {
+                let Some((path, surfaces, chosen)) = self
+                    .terrain_work
+                    .terrain_window
+                    .as_mut()
+                    .and_then(|w| w.landxml.take())
+                else {
                     return Task::none();
                 };
-                let names: Vec<String> =
-                    surfaces.iter().zip(&chosen).filter(|(_, c)| **c).map(|((n, _, _), _)| n.clone()).collect();
-                let left: Vec<String> =
-                    surfaces.iter().zip(&chosen).filter(|(_, c)| !**c).map(|((n, _, _), _)| format!("“{n}”")).collect();
+                let names: Vec<String> = surfaces
+                    .iter()
+                    .zip(&chosen)
+                    .filter(|(_, c)| **c)
+                    .map(|((n, _, _), _)| n.clone())
+                    .collect();
+                let left: Vec<String> = surfaces
+                    .iter()
+                    .zip(&chosen)
+                    .filter(|(_, c)| !**c)
+                    .map(|((n, _, _), _)| format!("“{n}”"))
+                    .collect();
                 for name in &names {
                     self.import_landxml(&path, Some(name.clone()));
                 }
                 if !left.is_empty() && !names.is_empty() {
-                    self.say(Level::Info, format!("LandXML: {} alınmadı.", left.join(", ")));
+                    self.say(
+                        Level::Info,
+                        format!("LandXML: {} alınmadı.", left.join(", ")),
+                    );
                 }
                 return Task::none();
             }
@@ -555,9 +598,13 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
-        let result = road_terrains_contours::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let result =
+            road_terrains_contours::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            self.say(Level::Success, format!("{} eş yükselti eğrisi çizildi.", out.lines.len()));
+            self.say(
+                Level::Success,
+                format!("{} eş yükselti eğrisi çizildi.", out.lines.len()),
+            );
         }
         Task::none()
     }
@@ -578,7 +625,9 @@ impl App {
             name: None,
             expected_revision: None,
         };
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         let result = kentos_native_application::file_import_landxml::execute(
             &mut ExecutionContext::new(&mut doc.model),
             input,
@@ -590,7 +639,10 @@ impl App {
                 w.chosen = (!w.rows.is_empty()).then(|| w.rows.len() - 1);
             }
             let differs = out.differs.map_or(String::new(), |d| {
-                format!("; dosyanın üçgenleriyle en büyük kot farkı {} m", format!("{d:.3}").replace('.', ","))
+                format!(
+                    "; dosyanın üçgenleriyle en büyük kot farkı {} m",
+                    format!("{d:.3}").replace('.', ",")
+                )
             });
             self.say(
                 Level::Success,
@@ -615,7 +667,10 @@ impl App {
             let (Ok(max_edge), Ok(tolerance)) = (number(&r.max_edge), number(&r.tolerance)) else {
                 return self.terrain_refused(
                     i,
-                    format!("“{}” yüzeyinin en uzun dış kenarı ve kot toleransı sayı olmalı (metre).", r.def.name),
+                    format!(
+                        "“{}” yüzeyinin en uzun dış kenarı ve kot toleransı sayı olmalı (metre).",
+                        r.def.name
+                    ),
                 );
             };
             defs.push(TerrainSurfaceDef {
@@ -670,7 +725,9 @@ impl App {
                         expected_revision: None,
                     };
                     let row = w.rows.iter().position(|r| r.def.id == id_of_new);
-                    if let Err(why) = self.terrain_try(|cx| road_terrains_create::execute(cx, create)) {
+                    if let Err(why) =
+                        self.terrain_try(|cx| road_terrains_create::execute(cx, create))
+                    {
                         return self.terrain_refused(row.unwrap_or_default(), why);
                     }
                 }
@@ -716,9 +773,8 @@ impl App {
                 self.refresh_terrains();
                 Err(error.message)
             }
-            kentos_commands::CommandResult::Queued { .. } | kentos_commands::CommandResult::Cancelled => {
-                Err("Yüzey yazılmadı.".into())
-            }
+            kentos_commands::CommandResult::Queued { .. }
+            | kentos_commands::CommandResult::Cancelled => Err("Yüzey yazılmadı.".into()),
         }
     }
 
@@ -785,7 +841,9 @@ impl App {
         .spacing(8);
         // A LandXML file of several surfaces: its surfaces to choose from (UR2-040).
         if let Some((_, surfaces, chosen)) = &w.landxml {
-            let mut pick = Column::new().spacing(4).push(label::caption("Dosyadaki yüzeyler"));
+            let mut pick = Column::new()
+                .spacing(4)
+                .push(label::caption("Dosyadaki yüzeyler"));
             for (k, ((name, points, faces), on)) in surfaces.iter().zip(chosen).enumerate() {
                 pick = pick.push(words::check(
                     *on,
@@ -805,18 +863,31 @@ impl App {
         }
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
-            None => container(label::caption("Bir yüzey seçin ya da yeni bir yüzey oluşturun.")).padding(12).into(),
+            None => container(label::caption(
+                "Bir yüzey seçin ya da yeni bir yüzey oluşturun.",
+            ))
+            .padding(12)
+            .into(),
             Some(r) => self.terrain_editor(r, report_of(&r.def.id), r.saved(&w.kept), w),
         };
         let can_accept = chosen.is_some_and(|r| {
             r.saved(&w.kept)
-                && report_of(&r.def.id).is_some_and(|rep| matches!(rep.state, TerrainState::Stale | TerrainState::New))
+                && report_of(&r.def.id)
+                    .is_some_and(|rep| matches!(rep.state, TerrainState::Stale | TerrainState::New))
         });
-        let ids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let ids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let names: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let layer = kentos_ui::widget::select::Select::new(
-            names.iter().map(|n| kentos_ui::widget::select::Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| ids.iter().position(|id| id == l)),
+            names
+                .iter()
+                .map(|n| kentos_ui::widget::select::Choice::new(n.clone())),
+            w.layer
+                .as_ref()
+                .and_then(|l| ids.iter().position(|id| id == l)),
             move |i| msg(Event::ContourLayer(ids[i].clone())),
         )
         .placeholder("Katman");
@@ -825,7 +896,8 @@ impl App {
             label::strong("Eş yükselti eğrileri"),
             words::field(
                 "Aralık (m)",
-                kentos_ui::widget::text_field("1", &w.interval).on_input(|t| msg(Event::Interval(t))),
+                kentos_ui::widget::text_field("1", &w.interval)
+                    .on_input(|t| msg(Event::Interval(t))),
                 None
             ),
             words::field(
@@ -842,15 +914,20 @@ impl App {
         let body = row![container(left).width(230), container(right).width(Fill)].spacing(16);
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
         let footer = row![
-                words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
-                words::secondary(ACCEPT, can_accept.then(|| msg(Event::Accept))),
-                space::horizontal().width(Fill),
-                words::secondary(CANCEL, Some(msg(Event::Cancel))),
-                words::primary(SAVE, Some(msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(Center);
-        Frame::new(TITLE).scroll(body).push(contours).footer(footer).width(760.0).modal(msg(Event::Cancel))
+            words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
+            words::secondary(ACCEPT, can_accept.then(|| msg(Event::Accept))),
+            space::horizontal().width(Fill),
+            words::secondary(CANCEL, Some(msg(Event::Cancel))),
+            words::primary(SAVE, Some(msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .push(contours)
+            .footer(footer)
+            .width(760.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn terrain_editor<'a>(
@@ -865,30 +942,47 @@ impl App {
         let checks = |chosen: &[String], on: fn(String) -> Event| {
             let mut col = Column::new().spacing(4);
             for (id, name) in &layers {
-                col = col.push(words::check(chosen.contains(id), name.clone(), Some(msg(on(id.clone())))));
+                col = col.push(words::check(
+                    chosen.contains(id),
+                    name.clone(),
+                    Some(msg(on(id.clone()))),
+                ));
             }
             col
         };
-        let count = |n: usize| if n == 0 { "yok".to_owned() } else { format!("{n} nesne") };
+        let count = |n: usize| {
+            if n == 0 {
+                "yok".to_owned()
+            } else {
+                format!("{n} nesne")
+            }
+        };
         let boundary = row![
             label::caption(count(usize::from(d.boundary.is_some()))).width(80),
             words::secondary(BOUNDARY, Some(msg(Event::Boundary))),
-            words::ghost("Sınırı kaldır", d.boundary.as_ref().map(|_| msg(Event::BoundaryClear))),
+            words::ghost(
+                "Sınırı kaldır",
+                d.boundary.as_ref().map(|_| msg(Event::BoundaryClear))
+            ),
         ]
         .spacing(8)
         .align_y(Center);
         let voids = row![
             label::caption(count(d.voids.len())).width(80),
             words::secondary(VOIDS, Some(msg(Event::Voids))),
-            words::ghost("Boşlukları temizle", (!d.voids.is_empty()).then(|| msg(Event::VoidsClear))),
+            words::ghost(
+                "Boşlukları temizle",
+                (!d.voids.is_empty()).then(|| msg(Event::VoidsClear))
+            ),
         ]
         .spacing(8)
         .align_y(Center);
-        let name = kentos_ui::widget::text_field("Yüzeyin adı", &d.name).on_input(|t| msg(Event::Name(t)));
+        let name =
+            kentos_ui::widget::text_field("Yüzeyin adı", &d.name).on_input(|t| msg(Event::Name(t)));
         let max_edge =
             kentos_ui::widget::text_field("yok", &r.max_edge).on_input(|t| msg(Event::MaxEdge(t)));
-        let tolerance =
-            kentos_ui::widget::text_field("0,001", &r.tolerance).on_input(|t| msg(Event::Tolerance(t)));
+        let tolerance = kentos_ui::widget::text_field("0,001", &r.tolerance)
+            .on_input(|t| msg(Event::Tolerance(t)));
         let status = match report {
             Some(rep) if saved => format!("{} · {}", state_words(rep.state), figures_line(rep)),
             Some(_) => "Değişiklik kaydedilince yüzey yeniden kurulur.".to_owned(),
@@ -984,17 +1078,27 @@ impl App {
             Control::Press(crate::terrain_edits::UNDO_EDIT) => Some(msg(Event::EditUndo)),
             Control::Press(crate::terrain_edits::CLEAR_EDITS) => Some(msg(Event::EditClear)),
             Control::Press(crate::terrain_edits::PASTE) => Some(msg(Event::Paste)),
-            Control::Pick(crate::terrain_edits::PASTE_FROM, name) => match w.kept.iter().find(|k| k.name == name) {
-                Some(k) => Some(msg(Event::PasteFrom(k.id.clone()))),
-                None => return Err(format!("“{TITLE}” penceresinde “{name}” adlı kayıtlı yüzey yok")),
-            },
+            Control::Pick(crate::terrain_edits::PASTE_FROM, name) => {
+                match w.kept.iter().find(|k| k.name == name) {
+                    Some(k) => Some(msg(Event::PasteFrom(k.id.clone()))),
+                    None => {
+                        return Err(format!(
+                            "“{TITLE}” penceresinde “{name}” adlı kayıtlı yüzey yok"
+                        ));
+                    }
+                }
+            }
             Control::Press(words) => match w.rows.iter().position(|r| r.def.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),
             },
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
-            Control::Fill("En uzun dış kenar (m)", text) => Some(msg(Event::MaxEdge(text.to_owned()))),
-            Control::Fill("Kot toleransı (m)", text) => Some(msg(Event::Tolerance(text.to_owned()))),
+            Control::Fill("En uzun dış kenar (m)", text) => {
+                Some(msg(Event::MaxEdge(text.to_owned())))
+            }
+            Control::Fill("Kot toleransı (m)", text) => {
+                Some(msg(Event::Tolerance(text.to_owned())))
+            }
             Control::Fill("Aralık (m)", text) => Some(msg(Event::Interval(text.to_owned()))),
             Control::Fill("Kot (m)", text) => Some(msg(Event::EditZ(text.to_owned()))),
 

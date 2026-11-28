@@ -20,18 +20,50 @@ use crate::identity::Actor;
 
 async fn admin_tx(db: &Db, actor: &Actor) -> AppResult<Transaction<'static, Postgres>> {
     let mut tx = db.scoped(user_scope(actor)).await?;
-    let ok: bool = sqlx::query_scalar("select kentos.is_platform_admin()").fetch_one(&mut *tx).await?;
-    if ok { Ok(tx) } else { Err(AppError::forbidden("Bu sayfa yalnız sistem yöneticilerine açık.")) }
+    let ok: bool = sqlx::query_scalar("select kentos.is_platform_admin()")
+        .fetch_one(&mut *tx)
+        .await?;
+    if ok {
+        Ok(tx)
+    } else {
+        Err(AppError::forbidden(
+            "Bu sayfa yalnız sistem yöneticilerine açık.",
+        ))
+    }
 }
 
 fn days(n: i32) -> u32 {
     u32::try_from(n).unwrap_or(0)
 }
 
-type RunRow = (i64, OffsetDateTime, String, Option<String>, i32, i32, i32, i32, i32, i32, Json<RetentionSettings>);
+type RunRow = (
+    i64,
+    OffsetDateTime,
+    String,
+    Option<String>,
+    i32,
+    i32,
+    i32,
+    i32,
+    i32,
+    i32,
+    Json<RetentionSettings>,
+);
 
 fn run_view(r: RunRow) -> RetentionRunView {
-    let (id, at, trigger, actor_name, archived, drafts, files, notes, deliveries, requests, Json(settings)) = r;
+    let (
+        id,
+        at,
+        trigger,
+        actor_name,
+        archived,
+        drafts,
+        files,
+        notes,
+        deliveries,
+        requests,
+        Json(settings),
+    ) = r;
     RetentionRunView {
         id: id.to_string(),
         at: rfc3339(at),
@@ -57,9 +89,11 @@ async fn page_in(tx: &mut Transaction<'static, Postgres>) -> AppResult<Retention
     )
     .fetch_one(&mut **tx)
     .await?;
-    let runs: Vec<RunRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!("{RUN_SELECT} order by id desc limit 20")))
-        .fetch_all(&mut **tx)
-        .await?;
+    let runs: Vec<RunRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "{RUN_SELECT} order by id desc limit 20"
+    )))
+    .fetch_all(&mut **tx)
+    .await?;
     Ok(RetentionPage {
         settings: RetentionSettings {
             archive_after_days: days(a),
@@ -85,7 +119,10 @@ pub async fn set(db: &Db, actor: &Actor, input: &RetentionSettings) -> AppResult
         if (lo..=3650).contains(&v) {
             Ok(i32::try_from(v).unwrap_or(i32::MAX))
         } else {
-            Err(AppError::invalid_at(field, format!("{lo} ile 3650 gün arasında olmalı.")))
+            Err(AppError::invalid_at(
+                field,
+                format!("{lo} ile 3650 gün arasında olmalı."),
+            ))
         }
     };
     let a = check("archiveAfterDays", input.archive_after_days, 30)?;
@@ -93,13 +130,14 @@ pub async fn set(db: &Db, actor: &Actor, input: &RetentionSettings) -> AppResult
     let n = check("notificationKeepDays", input.notification_keep_days, 30)?;
     let t = check("technicalKeepDays", input.technical_keep_days, 7)?;
     let mut tx = admin_tx(db, actor).await?;
-    let code: Option<String> = sqlx::query_scalar("select kentos.platform_set_retention($1, $2, $3, $4)")
-        .bind(a)
-        .bind(d)
-        .bind(n)
-        .bind(t)
-        .fetch_one(&mut *tx)
-        .await?;
+    let code: Option<String> =
+        sqlx::query_scalar("select kentos.platform_set_retention($1, $2, $3, $4)")
+            .bind(a)
+            .bind(d)
+            .bind(n)
+            .bind(t)
+            .fetch_one(&mut *tx)
+            .await?;
     answer(code)?;
     let page = page_in(&mut tx).await?;
     tx.commit().await?;
@@ -109,7 +147,9 @@ pub async fn set(db: &Db, actor: &Actor, input: &RetentionSettings) -> AppResult
 /// The server's daily run: the number of files that left the store.
 pub async fn sweep(db: &Db, blobs: &Blobs) -> AppResult<usize> {
     let keys: Vec<String> =
-        sqlx::query_scalar("select blob_key from kentos.retention_sweep('schedule')").fetch_all(&db.pool).await?;
+        sqlx::query_scalar("select blob_key from kentos.retention_sweep('schedule')")
+            .fetch_all(&db.pool)
+            .await?;
     remove_all(blobs, &keys).await;
     Ok(keys.len())
 }
@@ -118,10 +158,14 @@ pub async fn sweep(db: &Db, blobs: &Blobs) -> AppResult<usize> {
 pub async fn run_now(db: &Db, blobs: &Blobs, actor: &Actor) -> AppResult<RetentionRunView> {
     let mut tx = admin_tx(db, actor).await?;
     let keys: Vec<String> =
-        sqlx::query_scalar("select blob_key from kentos.retention_sweep('manual')").fetch_all(&mut *tx).await?;
-    let run: RunRow = sqlx::query_as(sqlx::AssertSqlSafe(format!("{RUN_SELECT} order by id desc limit 1")))
-        .fetch_one(&mut *tx)
-        .await?;
+        sqlx::query_scalar("select blob_key from kentos.retention_sweep('manual')")
+            .fetch_all(&mut *tx)
+            .await?;
+    let run: RunRow = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "{RUN_SELECT} order by id desc limit 1"
+    )))
+    .fetch_one(&mut *tx)
+    .await?;
     tx.commit().await?;
     // The rows are gone once committed; then their bytes.
     remove_all(blobs, &keys).await;

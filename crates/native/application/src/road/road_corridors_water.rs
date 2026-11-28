@@ -3,7 +3,8 @@
 //! points on the platform's edges. Reads only. The shared cases are `fixtures/commands/v1/road.corridors.water.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CorridorsWater, CorridorsWatered, CrossfallZero, PlatformFlat, PlatformLow,
+    CommandResult, CommandWarning, CorridorsWater, CorridorsWatered, CrossfallZero, PlatformFlat,
+    PlatformLow,
 };
 use kentos_domain::Document;
 use kentos_road::platform_water;
@@ -19,11 +20,18 @@ fn count(n: usize) -> u32 {
 }
 
 /// The water now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &CorridorsWater) -> Result<(CorridorsWatered, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &CorridorsWater,
+) -> Result<(CorridorsWatered, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_corridors(), &input.corridor, "corridor")?;
     if !(input.least.is_finite() && input.least > 0.0) {
-        return Err(fail(codes::INVALID_PLATFORM_WATER, "En küçük eğim (least) 0'dan büyük bir oran olmalı.".into(), "least"));
+        return Err(fail(
+            codes::INVALID_PLATFORM_WATER,
+            "En küçük eğim (least) 0'dan büyük bir oran olmalı.".into(),
+            "least",
+        ));
     }
     let made = common::make(doc, def, false)?;
     let w = platform_water::water(&made.built, input.least);
@@ -51,13 +59,34 @@ pub(crate) fn answer(doc: &Document, input: &CorridorsWater) -> Result<(Corridor
             flats: w
                 .flats
                 .iter()
-                .map(|f| PlatformFlat { region: count(f.region), from: f.from, to: f.to, area: f.area, least: f.least })
+                .map(|f| PlatformFlat {
+                    region: count(f.region),
+                    from: f.from,
+                    to: f.to,
+                    area: f.area,
+                    least: f.least,
+                })
                 .collect(),
-            zeros: w.zeros.iter().map(|z| CrossfallZero { region: count(z.region), right: z.right, station: z.station }).collect(),
+            zeros: w
+                .zeros
+                .iter()
+                .map(|z| CrossfallZero {
+                    region: count(z.region),
+                    right: z.right,
+                    station: z.station,
+                })
+                .collect(),
             lows: w
                 .lows
                 .iter()
-                .map(|l| PlatformLow { code: l.code.clone(), region: count(l.region), station: l.at[0], x: l.at[1], y: l.at[2], z: l.at[3] })
+                .map(|l| PlatformLow {
+                    code: l.code.clone(),
+                    region: count(l.region),
+                    station: l.at[0],
+                    x: l.at[1],
+                    y: l.at[2],
+                    z: l.at[3],
+                })
                 .collect(),
         },
         warnings,
@@ -67,7 +96,10 @@ pub(crate) fn answer(doc: &Document, input: &CorridorsWater) -> Result<(Corridor
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &CorridorsWater) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -81,12 +113,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CorridorsWater) -> CommandResult<
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: CorridorsWater) -> CommandResult<CorridorsWatered> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CorridorsWater,
+) -> CommandResult<CorridorsWatered> {
     plan(cx, &input)
 }
 
 /// The water for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &CorridorsWater) -> Result<(CorridorsWatered, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &CorridorsWater,
+) -> Result<(CorridorsWatered, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }
 
@@ -106,8 +144,15 @@ pub fn picture(doc: &Document, input: &CorridorsWater) -> Result<Vec<PlatformTri
             .iter()
             .zip(&made.built.roles)
             .map(|(t, role)| {
-                let paved = matches!(role, kentos_road::corridor::Role::Lane | kentos_road::corridor::Role::Shoulder);
-                (t.map(|p| [p[0], p[1]]), paved, paved && platform_water::slope(t) < input.least)
+                let paved = matches!(
+                    role,
+                    kentos_road::corridor::Role::Lane | kentos_road::corridor::Role::Shoulder
+                );
+                (
+                    t.map(|p| [p[0], p[1]]),
+                    paved,
+                    paved && platform_water::slope(t) < input.least,
+                )
             })
             .collect())
     };

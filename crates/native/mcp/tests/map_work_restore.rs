@@ -31,25 +31,60 @@ fn the_design_s_line_is_put_back_as_approved_over_mcp() {
         json!({"drawing": drawing, "uids": [LINE], "attrs": {"Kot": "1060"}, "operation": "attributes"}),
     );
     assert_eq!(set["isError"], false, "{set}");
-    let r = call(&mut server, "map.work.restore", json!({"drawing": drawing, "item": "is-3"}));
+    let r = call(
+        &mut server,
+        "map.work.restore",
+        json!({"drawing": drawing, "item": "is-3"}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     let out = &r["structuredContent"]["output"];
-    assert_eq!((out["restored"].clone(), out["reverted"].clone(), out["asApproved"].clone()), (json!([]), json!([LINE]), json!(true)), "{out}");
+    assert_eq!(
+        (
+            out["restored"].clone(),
+            out["reverted"].clone(),
+            out["asApproved"].clone()
+        ),
+        (json!([]), json!([LINE]), json!(true)),
+        "{out}"
+    );
     assert_eq!(design(&mut server)["state"], "current");
     // Deleted, made again with its id.
-    let gone = call(&mut server, "cad.entities.delete", json!({"drawing": drawing, "uids": [LINE]}));
+    let gone = call(
+        &mut server,
+        "cad.entities.delete",
+        json!({"drawing": drawing, "uids": [LINE]}),
+    );
     assert_eq!(gone["isError"], false, "{gone}");
     assert_eq!(design(&mut server)["changes"]["removed"], 1);
-    let r = call(&mut server, "map.work.restore", json!({"drawing": drawing, "item": "is-3"}));
+    let r = call(
+        &mut server,
+        "map.work.restore",
+        json!({"drawing": drawing, "item": "is-3"}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     assert_eq!(r["structuredContent"]["output"]["restored"], json!([LINE]));
     let d = design(&mut server);
-    assert_eq!((d["state"].as_str(), d.get("changes")), (Some("current"), None), "{d}");
+    assert_eq!(
+        (d["state"].as_str(), d.get("changes")),
+        (Some("current"), None),
+        "{d}"
+    );
     // Nothing left to put back; a package without objects is refused.
-    let again = call(&mut server, "map.work.restore", json!({"drawing": drawing, "item": "is-3"}));
+    let again = call(
+        &mut server,
+        "map.work.restore",
+        json!({"drawing": drawing, "item": "is-3"}),
+    );
     assert_eq!(again["isError"], true, "{again}");
     assert!(again.to_string().contains("nothing_to_restore"), "{again}");
-    let package = call(&mut server, "map.work.restore", json!({"drawing": drawing, "item": "is-4"}));
+    let package = call(
+        &mut server,
+        "map.work.restore",
+        json!({"drawing": drawing, "item": "is-4"}),
+    );
     assert_eq!(package["isError"], true, "{package}");
-    assert!(package.to_string().contains("no_approved_values"), "{package}");
+    assert!(
+        package.to_string().contains("no_approved_values"),
+        "{package}"
+    );
 }

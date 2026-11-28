@@ -370,9 +370,11 @@ fn end_point(x: &Wall<'_>, v: usize, frame: &Frame, side: f64) -> Pt {
 fn hidden(p: &Pt, bands: &[[Vec2; 4]], own: &[[Vec2; 4]], frame: &Frame, side: f64) -> bool {
     bands.iter().filter(|q| !own.contains(q)).any(|q| {
         let ts: Vec<f64> = q.iter().map(|c| frame.t(*c)).collect();
-        let (lo, hi) = ts.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), t| {
-            (js_min(lo, *t), js_max(hi, *t))
-        });
+        let (lo, hi) = ts
+            .iter()
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), t| {
+                (js_min(lo, *t), js_max(hi, *t))
+            });
         if !(p.t > lo + SAME && p.t < hi - SAME) {
             return false;
         }
@@ -431,10 +433,16 @@ fn facade(
         match wall_of(*w, frame, recipe.reference) {
             Ok(x) => {
                 if w.chosen
-                    && let Some((_, _, kind)) =
-                        x.edges.iter().find(|(_, _, k)| matches!(k, Edge::Oblique | Edge::Arc))
+                    && let Some((_, _, kind)) = x
+                        .edges
+                        .iter()
+                        .find(|(_, _, k)| matches!(k, Edge::Oblique | Edge::Arc))
                 {
-                    let why = if *kind == Edge::Arc { Why::Arc } else { Why::Oblique };
+                    let why = if *kind == Edge::Arc {
+                        Why::Arc
+                    } else {
+                        Why::Oblique
+                    };
                     return Err(Fault::Unsupported(w.source, why));
                 }
                 read.push(Some(x));
@@ -710,7 +718,12 @@ fn space_rows(
                 return Err(Fault::Unsupported(space.source, Why::Drawn));
             }
             for k in 0..n {
-                let kind = classify(pts[k], pts[(k + 1) % n], bulges.get(k).copied().unwrap_or(0.0), frame);
+                let kind = classify(
+                    pts[k],
+                    pts[(k + 1) % n],
+                    bulges.get(k).copied().unwrap_or(0.0),
+                    frame,
+                );
                 match kind {
                     Edge::Arc => return Err(Fault::Unsupported(space.source, Why::Arc)),
                     Edge::Oblique => return Err(Fault::Unsupported(space.source, Why::Oblique)),
@@ -738,7 +751,11 @@ fn space_rows(
                     continue;
                 }
                 let (sa, sb) = (side * frame.o(pts[from]), side * frame.o(pts[to]));
-                let index = if sb > sa || (sb == sa && to < from) { to } else { from };
+                let index = if sb > sa || (sb == sa && to < from) {
+                    to
+                } else {
+                    from
+                };
                 let at = pts[index];
                 let p = Pt {
                     point: Point {
@@ -750,7 +767,11 @@ fn space_rows(
                     o: frame.o(at),
                     kind: Kind::Line,
                 };
-                if ring == 0 { outer.push(p) } else { holes.push(p) }
+                if ring == 0 {
+                    outer.push(p)
+                } else {
+                    holes.push(p)
+                }
             }
         }
     }
@@ -762,7 +783,9 @@ fn space_rows(
         }
         let on = |a: Vec2, b: Vec2| -> bool {
             space.parts.iter().any(|rings| {
-                let Some((pts, _)) = rings.first() else { return false };
+                let Some((pts, _)) = rings.first() else {
+                    return false;
+                };
                 let n = pts.len();
                 let ccw = (0..n)
                     .map(|i| {
@@ -785,7 +808,11 @@ fn space_rows(
                     };
                     // Outward: right of the edge on a counter-clockwise ring.
                     let (ex, ey) = ((v.x - u.x) / l, (v.y - u.y) / l);
-                    let out = if ccw { Vec2::new(ey, -ex) } else { Vec2::new(-ey, ex) };
+                    let out = if ccw {
+                        Vec2::new(ey, -ex)
+                    } else {
+                        Vec2::new(-ey, ex)
+                    };
                     let facing = side * (out.x * frame.n.x + out.y * frame.n.y) > 0.0;
                     facing && near(a) && near(b)
                 })
@@ -967,7 +994,10 @@ pub fn plan(
             .unwrap_or_else(|| {
                 let target = at_o + side * recipe.gap * slot as f64;
                 let delta = target - at_o;
-                Vec2::new(recipe.at.x + frame.n.x * delta, recipe.at.y + frame.n.y * delta)
+                Vec2::new(
+                    recipe.at.x + frame.n.x * delta,
+                    recipe.at.y + frame.n.y * delta,
+                )
             });
         let mut count = 0;
         for pair in pts.windows(2) {

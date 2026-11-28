@@ -141,7 +141,11 @@ impl App {
         // A type keeps its storage (docs/adr/9196 §2): a CAD type's project goes up as its file, a CBS project into the
         // database, whatever was asked.
         let storages = crate::cloud::kinds::storages_of(project_type);
-        let storage = if storages.contains(&storage) { storage } else { storages[0] };
+        let storage = if storages.contains(&storage) {
+            storage
+        } else {
+            storages[0]
+        };
         self.cloud.upload = Some(Upload {
             tenants,
             tenant,
@@ -507,7 +511,8 @@ impl App {
 
 /// A CBS project's data layers read into the upload's copy (docs/adr/9196 §2, `data_take`): every row or none.
 fn take_rows(snapshot: &mut kentos_commands::DocumentSnapshotV2) -> Result<(), String> {
-    let taken = kentos_native_application::data_take::take_rows(snapshot, &kentos_data::Cancel::new())?;
+    let taken =
+        kentos_native_application::data_take::take_rows(snapshot, &kentos_data::Cancel::new())?;
     if let Some(first) = taken.left.first() {
         return Err(format!(
             "{} satır buluta aktarılamaz (ör. {first}); veri katmanlarının satırları eksiksiz gitmeden yüklenmez. \

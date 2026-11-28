@@ -72,9 +72,12 @@ fn level_mut(e: &mut Entity) -> Option<&mut Option<String>> {
 fn not_levelled(e: &Entity) -> String {
     match e {
         Entity::Opening(_) => {
-            "Kapı, pencere ya da boşluk duvarının katındadır; kendi katı yok. Duvarına kat verin.".into()
+            "Kapı, pencere ya da boşluk duvarının katındadır; kendi katı yok. Duvarına kat verin."
+                .into()
         }
-        Entity::Tag(_) => "Etiket etiketlediği nesnenin katındadır; kendi katı yok. O nesneye kat verin.".into(),
+        Entity::Tag(_) => {
+            "Etiket etiketlediği nesnenin katındadır; kendi katı yok. O nesneye kat verin.".into()
+        }
         Entity::Polyline(_) => {
             "Çoklu çizgi yalnız mahal ayırıcıyken kat alır; bu çizgi mahal ayırıcı değil.".into()
         }
@@ -139,10 +142,14 @@ fn check(doc: &Document, input: &LevelsAssign) -> Result<Work, Stop> {
         && let Some((at, _, e, _)) = locked.first()
     {
         let layer = &e.base().layer_id;
-        let name = layers.get(layer).map_or(layer.as_str(), |n| n.name.as_str());
+        let name = layers
+            .get(layer)
+            .map_or(layer.as_str(), |n| n.name.as_str());
         return Err(Stop::failed(error(
             codes::LAYER_LOCKED,
-            format!("“{name}” katmanı kilitli; üzerindeki nesneye kat verilemez. Kilidi Katmanlar panelinden açın."),
+            format!(
+                "“{name}” katmanı kilitli; üzerindeki nesneye kat verilemez. Kilidi Katmanlar panelinden açın."
+            ),
             at.map(|i| format!("uids[{i}]")),
         )));
     }
@@ -263,7 +270,10 @@ pub fn plan_in(doc: &Document, input: &LevelsAssign) -> CommandResult<LevelsAssi
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: LevelsAssign) -> CommandResult<LevelsAssigned> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LevelsAssign,
+) -> CommandResult<LevelsAssigned> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_LEVELS_ASSIGN,
@@ -273,7 +283,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: LevelsAssign) -> CommandRes
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: LevelsAssign) -> CommandResult<LevelsAssigned> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LevelsAssign,
+) -> CommandResult<LevelsAssigned> {
     let (work, warnings) = match prepared(cx.doc, &input) {
         Ok(prepared) => prepared,
         Err(stop) => return stop.into(),

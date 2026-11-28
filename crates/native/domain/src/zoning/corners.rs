@@ -18,7 +18,11 @@ fn nearest_on(ring: &[Vec2], p: Vec2) -> Option<(Vec2, f64)> {
         let (a, b) = (ring[i], ring[(i + 1) % n]);
         let (dx, dy) = (b.x - a.x, b.y - a.y);
         let len2 = dx * dx + dy * dy;
-        let t = if len2 > 0.0 { (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0) } else { 0.0 };
+        let t = if len2 > 0.0 {
+            (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
         let q = Vec2::new(a.x + dx * t, a.y + dy * t);
         let d = (q.x - p.x).powi(2) + (q.y - p.y).powi(2);
         if best.is_none_or(|(_, e)| d < e) {
@@ -33,14 +37,24 @@ fn nearest(areas: &[Area], p: Vec2) -> Option<Vec2> {
     areas
         .iter()
         .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))
-        .filter_map(|r| nearest_on(&kentos_geometry_core::entity::polygon_ring(&r.pts, r.bulges.as_deref()), p))
+        .filter_map(|r| {
+            nearest_on(
+                &kentos_geometry_core::entity::polygon_ring(&r.pts, r.bulges.as_deref()),
+                p,
+            )
+        })
         .min_by(|x, y| x.1.total_cmp(&y.1))
         .map(|(q, _)| q)
 }
 
 /// The box's middle and its diagonal.
 fn middle(areas: &[Area]) -> Option<(Vec2, f64)> {
-    let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     for a in areas {
         for p in &a.outer.pts {
             b = [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)];
@@ -55,7 +69,11 @@ fn middle(areas: &[Area]) -> Option<(Vec2, f64)> {
 /// The corner `both` two rooms' contours share, split at the wall between them: the part on the first room's side and
 /// the part on the second's, by their net outlines `first` and `second`. None when the sides are not found (no net
 /// outline, the two nearest points one).
-pub(super) fn split(both: &[Area], first: &[Area], second: &[Area]) -> Option<(Vec<Area>, Vec<Area>)> {
+pub(super) fn split(
+    both: &[Area],
+    first: &[Area],
+    second: &[Area],
+) -> Option<(Vec<Area>, Vec<Area>)> {
     let (c, diag) = middle(both)?;
     let (p, q) = (nearest(first, c)?, nearest(second, c)?);
     let (dx, dy) = (q.x - p.x, q.y - p.y);
@@ -64,12 +82,18 @@ pub(super) fn split(both: &[Area], first: &[Area], second: &[Area]) -> Option<(V
         return None;
     }
     // The half-plane on the first room's side of the bisector, as a square far larger than the corner.
-    let (d, u) = (Vec2::new(dx / len, dy / len), Vec2::new(-dy / len, dx / len));
+    let (d, u) = (
+        Vec2::new(dx / len, dy / len),
+        Vec2::new(-dy / len, dx / len),
+    );
     let m = Vec2::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0);
     let r = 10.0 * (diag + len) + 1.0;
     let at = |s: f64, t: f64| Vec2::new(m.x + u.x * s - d.x * t, m.y + u.y * s - d.y * t);
     let half = Area {
-        outer: Ring { pts: vec![at(-r, 0.0), at(r, 0.0), at(r, r), at(-r, r)], bulges: None },
+        outer: Ring {
+            pts: vec![at(-r, 0.0), at(r, 0.0), at(r, r), at(-r, r)],
+            bulges: None,
+        },
         holes: Vec::new(),
     };
     let own = region::intersect_area_sets(&[both.to_vec(), vec![half.clone()]]);
@@ -84,7 +108,12 @@ mod tests {
     fn rect(x0: f64, y0: f64, x1: f64, y1: f64) -> Area {
         Area {
             outer: Ring {
-                pts: vec![Vec2::new(x0, y0), Vec2::new(x1, y0), Vec2::new(x1, y1), Vec2::new(x0, y1)],
+                pts: vec![
+                    Vec2::new(x0, y0),
+                    Vec2::new(x1, y0),
+                    Vec2::new(x1, y1),
+                    Vec2::new(x0, y1),
+                ],
                 bulges: None,
             },
             holes: Vec::new(),
@@ -100,8 +129,14 @@ mod tests {
         let (own, other) = split(&both, &[left], &[right]).expect("split");
         let area = |a: &[Area]| a.iter().map(region::net_area).sum::<f64>();
         assert!((area(&own) - 0.05).abs() < 1e-12 && (area(&other) - 0.05).abs() < 1e-12);
-        let xs: Vec<f64> = own.iter().flat_map(|a| a.outer.pts.iter().map(|p| p.x)).collect();
-        assert!(xs.iter().all(|x| *x <= 5.0 + 1e-12), "the left room's side: {xs:?}");
+        let xs: Vec<f64> = own
+            .iter()
+            .flat_map(|a| a.outer.pts.iter().map(|p| p.x))
+            .collect();
+        assert!(
+            xs.iter().all(|x| *x <= 5.0 + 1e-12),
+            "the left room's side: {xs:?}"
+        );
         assert!(split(&both, &[], &[rect(5.2, 0.5, 9.5, 5.5)]).is_none());
     }
 }

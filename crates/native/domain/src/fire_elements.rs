@@ -50,24 +50,55 @@ impl Document {
                     if let kentos_geometry_core::entity::Shape::Column { at, column } =
                         kentos_formats::arch_elements::core_column(&c.column)
                     {
-                        bodies.push((level.clone(), kentos_geometry_core::geom::arch::column_box(at, &column), None));
+                        bodies.push((
+                            level.clone(),
+                            kentos_geometry_core::geom::arch::column_box(at, &column),
+                            None,
+                        ));
                     }
                     if c.column.member.is_none() {
-                        out.push(FireElement { uid: uid.to_string(), kind: "column", level, frame: c.column.arch.load_bearing.as_ref().is_none_or(|b| b.bearing), exterior: false, outline: false });
+                        out.push(FireElement {
+                            uid: uid.to_string(),
+                            kind: "column",
+                            level,
+                            frame: c
+                                .column
+                                .arch
+                                .load_bearing
+                                .as_ref()
+                                .is_none_or(|b| b.bearing),
+                            exterior: false,
+                            outline: false,
+                        });
                     }
                 }
                 Entity::Beam(b) if b.beam.role == BeamRole::Beam => {
-                    out.push(FireElement { uid: uid.to_string(), kind: "beam", level, frame: true, exterior: false, outline: false });
+                    out.push(FireElement {
+                        uid: uid.to_string(),
+                        kind: "beam",
+                        level,
+                        frame: true,
+                        exterior: false,
+                        outline: false,
+                    });
                 }
                 Entity::Wall(w) => {
                     let k = out.len();
-                    out.push(FireElement { uid: uid.to_string(), kind: "wall", level: level.clone(), frame: false, exterior: false, outline: false });
+                    out.push(FireElement {
+                        uid: uid.to_string(),
+                        kind: "wall",
+                        level: level.clone(),
+                        frame: false,
+                        exterior: false,
+                        outline: false,
+                    });
                     if let Some(x) = &w.wall.arch.external {
                         declared.push((k, x.external));
                     }
                     if let kentos_geometry_core::entity::Shape::Wall { pts, bulges, wall } =
                         kentos_formats::walls::core_wall(&w.wall)
-                        && let Ok((outer, _)) = kentos_geometry_core::geom::wall::body(&pts, bulges.as_deref(), &wall)
+                        && let Ok((outer, _)) =
+                            kentos_geometry_core::geom::wall::body(&pts, bulges.as_deref(), &wall)
                     {
                         // Each side's middle too (docs/adr/8124): the ends of a framed storey's walls stand inside its
                         // columns, so their corners are not on the outline though their outer face is.
@@ -76,27 +107,66 @@ impl Document {
                         for i in 0..n {
                             let (a, b) = (outer[i], outer[(i + 1) % n]);
                             ring.push(a);
-                            ring.push(Vec2 { x: (a.x + b.x) / 2.0, y: (a.y + b.y) / 2.0 });
+                            ring.push(Vec2 {
+                                x: (a.x + b.x) / 2.0,
+                                y: (a.y + b.y) / 2.0,
+                            });
                         }
                         bodies.push((level, ring, Some(k)));
                     }
                 }
                 Entity::Slab(s) if s.slab.covering.is_none() && s.slab.role == SlabRole::Floor => {
-                    out.push(FireElement { uid: uid.to_string(), kind: "slab", level, frame: false, exterior: false, outline: false });
+                    out.push(FireElement {
+                        uid: uid.to_string(),
+                        kind: "slab",
+                        level,
+                        frame: false,
+                        exterior: false,
+                        outline: false,
+                    });
                 }
-                Entity::Slab(s) if s.slab.covering.is_none() && s.slab.role == SlabRole::Terrace => {
-                    out.push(FireElement { uid: uid.to_string(), kind: "terrace", level, frame: false, exterior: false, outline: false });
+                Entity::Slab(s)
+                    if s.slab.covering.is_none() && s.slab.role == SlabRole::Terrace =>
+                {
+                    out.push(FireElement {
+                        uid: uid.to_string(),
+                        kind: "terrace",
+                        level,
+                        frame: false,
+                        exterior: false,
+                        outline: false,
+                    });
                 }
                 Entity::Roof(_) => {
-                    out.push(FireElement { uid: uid.to_string(), kind: "roof", level, frame: false, exterior: false, outline: false });
+                    out.push(FireElement {
+                        uid: uid.to_string(),
+                        kind: "roof",
+                        level,
+                        frame: false,
+                        exterior: false,
+                        outline: false,
+                    });
                 }
-                Entity::Slab(s) if s.slab.covering.as_ref().is_some_and(|c| c.predefined == "CEILING") => {
-                    out.push(FireElement { uid: uid.to_string(), kind: "ceiling", level, frame: false, exterior: false, outline: false });
+                Entity::Slab(s)
+                    if s.slab
+                        .covering
+                        .as_ref()
+                        .is_some_and(|c| c.predefined == "CEILING") =>
+                {
+                    out.push(FireElement {
+                        uid: uid.to_string(),
+                        kind: "ceiling",
+                        level,
+                        frame: false,
+                        exterior: false,
+                        outline: false,
+                    });
                 }
                 _ => {}
             }
         }
-        let levels: std::collections::BTreeSet<Option<String>> = bodies.iter().map(|(l, ..)| l.clone()).collect();
+        let levels: std::collections::BTreeSet<Option<String>> =
+            bodies.iter().map(|(l, ..)| l.clone()).collect();
         for level in levels {
             let here: Vec<&(Option<String>, Vec<Vec2>, Option<usize>)> =
                 bodies.iter().filter(|(l, ..)| *l == level).collect();

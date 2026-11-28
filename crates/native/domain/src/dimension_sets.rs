@@ -101,7 +101,8 @@ type Interval = (&'static str, [(EntityId, i64, i64); 2]);
 type EdgeSpans = (Vec<core::Span>, Vec<EntityId>, [CoreVec2; 2]);
 
 fn interval(row: DimensionSetRow, a: (EntityId, Vec2), b: (EntityId, Vec2)) -> Interval {
-    let at = |(id, p): (EntityId, Vec2)| (id, (p.x * 1e9).round() as i64, (p.y * 1e9).round() as i64);
+    let at =
+        |(id, p): (EntityId, Vec2)| (id, (p.x * 1e9).round() as i64, (p.y * 1e9).round() as i64);
     let (a, b) = (at(a), at(b));
     (row.name(), if a <= b { [a, b] } else { [b, a] })
 }
@@ -154,7 +155,12 @@ fn on_path(w: &WallFields, q: Vec2) -> bool {
     let n = w.pts.len();
     let edges = if w.closed { n } else { n.saturating_sub(1) };
     (0..edges).any(|k| {
-        let bulge = w.bulges.as_ref().and_then(|b| b.get(k)).copied().unwrap_or(0.0);
+        let bulge = w
+            .bulges
+            .as_ref()
+            .and_then(|b| b.get(k))
+            .copied()
+            .unwrap_or(0.0);
         let (a, b) = (w.pts[k], w.pts[(k + 1) % n]);
         let (dx, dy) = (b.x - a.x, b.y - a.y);
         let l2 = dx * dx + dy * dy;
@@ -173,7 +179,12 @@ fn is_turned(before: &WallFields, after: &WallFields) -> bool {
     before.closed == after.closed
         && before.pts.len() == after.pts.len()
         && before.pts.len() >= 2
-        && before.pts.iter().rev().zip(&after.pts).all(|(u, w)| same(*u, *w))
+        && before
+            .pts
+            .iter()
+            .rev()
+            .zip(&after.pts)
+            .all(|(u, w)| same(*u, *w))
 }
 
 /// A turned wall's edge: the same two ends' (an open path's `n − 2 − k`, a closed one's `(2n − 2 − k) mod n`).
@@ -181,7 +192,11 @@ fn turned_edge(before: &WallFields, _after: &WallFields, edge: Option<u32>) -> O
     let n = before.pts.len();
     edge.map(|k| {
         let k = k as usize;
-        (if before.closed { (2 * n - 2 - k) % n } else { n.saturating_sub(2 + k) }) as u32
+        (if before.closed {
+            (2 * n - 2 - k) % n
+        } else {
+            n.saturating_sub(2 + k)
+        }) as u32
     })
 }
 
@@ -229,7 +244,9 @@ fn follow_sources(
         };
         let mut takers: Vec<&EntityId> = walls
             .iter()
-            .filter(|(w, (_, now))| !sources.contains(w) && old.pts.iter().all(|q| on_path(now, *q)))
+            .filter(|(w, (_, now))| {
+                !sources.contains(w) && old.pts.iter().all(|q| on_path(now, *q))
+            })
             .map(|(w, _)| w)
             .collect();
         takers.sort();
@@ -563,7 +580,11 @@ impl Document {
                 .into_iter()
                 .map(|k| k as u32)
                 .collect(),
-            count: if w.wall.closed { n } else { n.saturating_sub(1) },
+            count: if w.wall.closed {
+                n
+            } else {
+                n.saturating_sub(1)
+            },
             closed: w.wall.closed,
             counter_clockwise: area > 0.0,
         })
@@ -718,8 +739,13 @@ impl Document {
     pub fn dimension_span_plan(
         &self,
         set: &DimensionSet,
-    ) -> Result<(Vec<PlannedDimensionSetMember>, crate::dimension_spans::SpanNotes), crate::dimension_spans::SpanRefusal>
-    {
+    ) -> Result<
+        (
+            Vec<PlannedDimensionSetMember>,
+            crate::dimension_spans::SpanNotes,
+        ),
+        crate::dimension_spans::SpanRefusal,
+    > {
         let plan = self.dimension_span_spans(set)?;
         let frame = plan.frame();
         let mut members = self
@@ -854,7 +880,8 @@ impl Document {
         // edge without openings has its openings row its whole length, the overall dimension once (docs/adr/0695's
         // 27 October addendum). What the user removed is not drawn, so the other row's stays.
         let mut drawn: Vec<(SubRef, SubRef)> = Vec::new();
-        let mut kept: Vec<(core::Span, DimensionSetSegment, String)> = Vec::with_capacity(spans.len());
+        let mut kept: Vec<(core::Span, DimensionSetSegment, String)> =
+            Vec::with_capacity(spans.len());
         for span in spans {
             let segment = DimensionSetSegment {
                 row: contract_row(span.row),
@@ -913,26 +940,28 @@ impl Document {
                     claimed.insert(found.uid).then_some(*found)
                 });
             let like = old.and_then(stored);
-            let mut d = like.cloned().unwrap_or_else(|| Box::new(DimensionEntity {
-                base: base(&set.layer_id),
-                a: v(span.a.at),
-                b: v(span.b.at),
-                offset: span.offset,
-                height,
-                text: None,
-                style: Some(DimensionStyle::Linear),
-                angle: Some(span.angle),
-                c: None,
-                mask: false,
-                za: None,
-                zb: None,
-                refs: None,
-                text_shift: None,
-                breaks: Vec::new(),
-                look: look.clone(),
-                annotative: None,
-                level: None,
-            }));
+            let mut d = like.cloned().unwrap_or_else(|| {
+                Box::new(DimensionEntity {
+                    base: base(&set.layer_id),
+                    a: v(span.a.at),
+                    b: v(span.b.at),
+                    offset: span.offset,
+                    height,
+                    text: None,
+                    style: Some(DimensionStyle::Linear),
+                    angle: Some(span.angle),
+                    c: None,
+                    mask: false,
+                    za: None,
+                    zb: None,
+                    refs: None,
+                    text_shift: None,
+                    breaks: Vec::new(),
+                    look: look.clone(),
+                    annotative: None,
+                    level: None,
+                })
+            });
             if appearance_changed && like.is_some() {
                 d.look = set.look.clone();
                 d.height = set.height;
@@ -1073,7 +1102,8 @@ impl Document {
         }
         if set.members.iter().any(|m| {
             !matches!(
-                self.slot_of(Uuid::from_bytes(m.uid.0)).and_then(|slot| self.get(slot)),
+                self.slot_of(Uuid::from_bytes(m.uid.0))
+                    .and_then(|slot| self.get(slot)),
                 Some(Entity::Dimension(_))
             )
         }) {
@@ -1129,7 +1159,11 @@ impl Document {
             };
             let mut after = set;
             after.members = before.members.clone();
-            let mine: HashSet<Uuid> = before.members.iter().map(|m| Uuid::from_bytes(m.uid.0)).collect();
+            let mine: HashSet<Uuid> = before
+                .members
+                .iter()
+                .map(|m| Uuid::from_bytes(m.uid.0))
+                .collect();
             let writes: Vec<_> = owned_writes(&ops)
                 .into_iter()
                 .filter(|(uid, _, _)| mine.contains(uid))
@@ -1612,7 +1646,10 @@ impl Document {
             .collect();
         for set in &self.dimension_sets {
             let touched = authorized(set.id)
-                || set.sources().iter().any(|s| changed.contains(s) || hosts.contains(s))
+                || set
+                    .sources()
+                    .iter()
+                    .any(|s| changed.contains(s) || hosts.contains(s))
                 || set.members.iter().any(|m| changed.contains(&m.uid));
             // A broken set keeps its last members on purpose (docs/adr/0700): its edge may now name another edge
             // the plan would measure, which is no capacity shortfall.

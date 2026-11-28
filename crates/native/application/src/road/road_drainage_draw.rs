@@ -4,8 +4,8 @@
 //! “Drenaj çiz”. The shared cases are `fixtures/commands/v1/road.drainage.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, DrainageDraw, DrainageDrawn, EntitiesCreate, EntityGeometry, NewObject,
-    TextAlign, TextFace, Vec2,
+    CommandResult, CommandWarning, CreateOperation, DrainageDraw, DrainageDrawn, EntitiesCreate,
+    EntityGeometry, NewObject, TextAlign, TextFace, Vec2,
 };
 use kentos_domain::Document;
 
@@ -91,14 +91,31 @@ fn check(doc: &Document, input: &DrainageDraw) -> Result<Checked, Stop> {
             }));
         }
         if input.labels {
-            let peak = c.peak.map_or(String::new(), |p| format!(" · Q {} m³/s", comma(p, 3)));
-            objects.push(text(doc, c.at, format!("Havza {} ha{peak}", comma(c.area / 10_000.0, 3))));
+            let peak = c
+                .peak
+                .map_or(String::new(), |p| format!(" · Q {} m³/s", comma(p, 3)));
+            objects.push(text(
+                doc,
+                c.at,
+                format!("Havza {} ha{peak}", comma(c.area / 10_000.0, 3)),
+            ));
         }
     }
     for p in &q.ponds {
-        objects.push(object(EntityGeometry::Point { p: Vec2 { x: p.bottom[0], y: p.bottom[1] }, z: Some(p.bottom[2]), parts: None }));
+        objects.push(object(EntityGeometry::Point {
+            p: Vec2 {
+                x: p.bottom[0],
+                y: p.bottom[1],
+            },
+            z: Some(p.bottom[2]),
+            parts: None,
+        }));
         if input.labels {
-            objects.push(text(doc, [p.bottom[0], p.bottom[1]], format!("Gölet · derinlik {} m", comma(p.depth, 2))));
+            objects.push(text(
+                doc,
+                [p.bottom[0], p.bottom[1]],
+                format!("Gölet · derinlik {} m", comma(p.depth, 2)),
+            ));
         }
     }
     if objects.is_empty() {
@@ -111,7 +128,11 @@ fn check(doc: &Document, input: &DrainageDraw) -> Result<Checked, Stop> {
     Ok(Checked { objects, warnings })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &DrainageDraw, c: Checked) -> CommandResult<DrainageDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &DrainageDraw,
+    c: Checked,
+) -> CommandResult<DrainageDrawn> {
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects: c.objects,
@@ -123,7 +144,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &DrainageDraw, c: Checked) -> Com
         other => return crate::trim::relay(other),
     };
     CommandResult::Completed {
-        output: DrainageDrawn { uids: created.created, revision: cx.doc.revision().to_string() },
+        output: DrainageDrawn {
+            uids: created.created,
+            revision: cx.doc.revision().to_string(),
+        },
         warnings: c.warnings,
     }
 }
@@ -131,7 +155,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &DrainageDraw, c: Checked) -> Com
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &DrainageDraw) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -152,10 +179,14 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &DrainageDraw) -> CommandResult<Dr
 
 /// Draws the catchment and the ponds: one undo step.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: DrainageDraw) -> CommandResult<DrainageDrawn> {
-    crate::call::recorded(cx, kentos_commands::ROAD_DRAINAGE_DRAW, kentos_commands::ROAD_DRAINAGE_DRAW_VERSION, input, |cx, input| {
-        match check(cx.doc, &input) {
+    crate::call::recorded(
+        cx,
+        kentos_commands::ROAD_DRAINAGE_DRAW,
+        kentos_commands::ROAD_DRAINAGE_DRAW_VERSION,
+        input,
+        |cx, input| match check(cx.doc, &input) {
             Ok(c) => write(cx, &input, c),
             Err(stop) => stop.into(),
-        }
-    })
+        },
+    )
 }

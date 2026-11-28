@@ -398,7 +398,10 @@ impl Tool for Offset {
         // 400.25 m of distance).
         if self.memory().offset_through
             && let Some(slot) = self.target
-            && !matches!(upper_tr(js_trim(text)).as_str(), "Y" | "T" | "N" | "I" | "S")
+            && !matches!(
+                upper_tr(js_trim(text)).as_str(),
+                "Y" | "T" | "N" | "I" | "S"
+            )
             && let Some(p) = cx.typed_point(text, None, None)
         {
             if cx.doc.get(slot).is_none() || self.write(slot, p, cx) {

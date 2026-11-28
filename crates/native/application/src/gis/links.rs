@@ -25,7 +25,12 @@ pub fn find(path: &str, relative: Option<&str>, drawing: Option<&str>, search: &
 }
 
 /// [`find`] from the drawing's folder itself (Paketle's `from`, docs/adr/0350 §4).
-pub fn find_in(path: &str, relative: Option<&str>, folder: Option<&Path>, search: &[String]) -> Found {
+pub fn find_in(
+    path: &str,
+    relative: Option<&str>,
+    folder: Option<&Path>,
+    search: &[String],
+) -> Found {
     let mut tried: Vec<String> = Vec::new();
     let look = |p: PathBuf, tried: &mut Vec<String>| -> Option<PathBuf> {
         let text = p.display().to_string();
@@ -38,17 +43,25 @@ pub fn find_in(path: &str, relative: Option<&str>, folder: Option<&Path>, search
     if kept.is_absolute()
         && let Some(at) = look(kept.to_path_buf(), &mut tried)
     {
-        return Found { at: Some(at), via: AssetVia::Path, tried: Vec::new() };
+        return Found {
+            at: Some(at),
+            via: AssetVia::Path,
+            tried: Vec::new(),
+        };
     }
     let folder: Option<PathBuf> = folder.map(Path::to_path_buf);
     // The relative path: the one kept beside, else the path itself when it is relative.
-    let rel: Option<String> = relative
-        .map(str::to_owned)
-        .or_else(|| (!kept.is_absolute() && !path.trim().is_empty()).then(|| path.replace('\\', "/")));
+    let rel: Option<String> = relative.map(str::to_owned).or_else(|| {
+        (!kept.is_absolute() && !path.trim().is_empty()).then(|| path.replace('\\', "/"))
+    });
     if let (Some(folder), Some(rel)) = (&folder, &rel)
         && let Some(at) = look(resolve(folder, rel), &mut tried)
     {
-        return Found { at: Some(at), via: AssetVia::Relative, tried: Vec::new() };
+        return Found {
+            at: Some(at),
+            via: AssetVia::Relative,
+            tried: Vec::new(),
+        };
     }
     let name = kept.file_name().map(|n| n.to_string_lossy().into_owned());
     for s in search {
@@ -62,13 +75,25 @@ pub fn find_in(path: &str, relative: Option<&str>, folder: Option<&Path>, search
         if let Some(rel) = &rel
             && let Some(at) = look(resolve(&base, rel), &mut tried)
         {
-            return Found { at: Some(at), via: AssetVia::SearchPath, tried: Vec::new() };
+            return Found {
+                at: Some(at),
+                via: AssetVia::SearchPath,
+                tried: Vec::new(),
+            };
         }
         if let Some(name) = &name
             && let Some(at) = look(base.join(name), &mut tried)
         {
-            return Found { at: Some(at), via: AssetVia::SearchPath, tried: Vec::new() };
+            return Found {
+                at: Some(at),
+                via: AssetVia::SearchPath,
+                tried: Vec::new(),
+            };
         }
     }
-    Found { at: None, via: AssetVia::None, tried }
+    Found {
+        at: None,
+        via: AssetVia::None,
+        tried,
+    }
 }

@@ -1,17 +1,19 @@
 //! Tasarım denetimi (design_check_window.rs, plan/road.md Y21): the window reads `road.alignments.check` and
 //! `road.profiles.check` as the shared cases do.
 
-use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::design_check_window::{Event as W, Read};
+use crate::road::RoadState;
 
-const ALIGNMENTS: &str = include_str!("../../../../fixtures/commands/v1/road.alignments.check.json");
+const ALIGNMENTS: &str =
+    include_str!("../../../../fixtures/commands/v1/road.alignments.check.json");
 const PROFILES: &str = include_str!("../../../../fixtures/commands/v1/road.profiles.check.json");
 
 fn check_app() -> App {
     let (mut app, _) = App::boot(None);
     let cases: serde_json::Value = serde_json::from_str(ALIGNMENTS).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -19,7 +21,13 @@ fn check_app() -> App {
 
 fn case(text: &str, name: &str) -> serde_json::Value {
     let cases: serde_json::Value = serde_json::from_str(text).expect("cases");
-    cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case")["steps"][0].clone()
+    cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case")["steps"][0]
+        .clone()
 }
 
 fn send(app: &mut App, e: W) {
@@ -27,7 +35,14 @@ fn send(app: &mut App, e: W) {
 }
 
 fn read(app: &App) -> Read {
-    match &app.modules.road().design_check_window.as_ref().expect("open").preview {
+    match &app
+        .modules
+        .road()
+        .design_check_window
+        .as_ref()
+        .expect("open")
+        .preview
+    {
         Some(Ok(r)) => r.clone(),
         other => panic!("read: {other:?}"),
     }
@@ -51,7 +66,12 @@ fn the_window_checks_an_alignment_and_a_profile() {
         .revision()
         .to_string();
     let _ = app.update(Message::Run("alignment.check"));
-    assert_eq!(app.dialog, Some(crate::road::dialog(crate::road::RoadDialogKind::DesignCheck)));
+    assert_eq!(
+        app.dialog,
+        Some(crate::road::dialog(
+            crate::road::RoadDialogKind::DesignCheck
+        ))
+    );
     send(&mut app, W::Preview);
     assert!(
         matches!(&app.modules.road_mut().design_check_window.as_ref().expect("open").preview, Some(Err(why)) if why.contains("kural"))
@@ -60,9 +80,14 @@ fn the_window_checks_an_alignment_and_a_profile() {
     alignment_rules(&mut app, ["180", "120", "50", "100", "60", "60", "1.2"]);
     send(&mut app, W::Kinks(true));
     send(&mut app, W::Preview);
-    let Read::Alignment(a) = read(&app) else { panic!("an alignment") };
+    let Read::Alignment(a) = read(&app) else {
+        panic!("an alignment")
+    };
     let want = &case(ALIGNMENTS, "Hepsi birden")["result"]["output"];
-    assert_eq!(a.findings.len(), want["findings"].as_array().expect("findings").len());
+    assert_eq!(
+        a.findings.len(),
+        want["findings"].as_array().expect("findings").len()
+    );
     assert_eq!(a.pairs.len(), 1);
     // The profile, its grades in percent.
     send(&mut app, W::Mode(true));
@@ -71,14 +96,17 @@ fn the_window_checks_an_alignment_and_a_profile() {
         send(&mut app, W::ProfileField(k, (*v).to_owned()));
     }
     send(&mut app, W::Preview);
-    let Read::Profile(p) = read(&app) else { panic!("a profile") };
+    let Read::Profile(p) = read(&app) else {
+        panic!("a profile")
+    };
     let want = &case(PROFILES, "Hepsi birden")["result"]["output"];
     assert_eq!(
         p.findings.len(),
         want["findings"].as_array().expect("findings").len()
     );
     assert!(
-        app.modules.road_mut()
+        app.modules
+            .road_mut()
             .design_check_window
             .as_ref()
             .expect("open")
@@ -117,7 +145,9 @@ fn screens() {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = check_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -126,7 +156,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("yol-y21-denetim-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -156,18 +189,34 @@ fn the_profile_rules_take_radii_and_say_the_k_unit() {
     send(&mut app, W::ProfileField(6, "1500".into()));
     send(&mut app, W::ProfileField(7, "2500".into()));
     send(&mut app, W::Preview);
-    let Read::Profile(p) = read(&app) else { panic!("a profile") };
+    let Read::Profile(p) = read(&app) else {
+        panic!("a profile")
+    };
     let want = &case(PROFILES, "Tepe ve çukur yarıçapı")["result"]["output"]["findings"];
     let got: Vec<&str> = p.findings.iter().map(|f| f.message.as_str()).collect();
-    let want: Vec<&str> = want.as_array().expect("findings").iter().map(|f| f["message"].as_str().expect("words")).collect();
+    let want: Vec<&str> = want
+        .as_array()
+        .expect("findings")
+        .iter()
+        .map(|f| f["message"].as_str().expect("words"))
+        .collect();
     assert_eq!(got, want);
-    assert_eq!(got[0], "v1 tepe kurbunun yarıçapı 1000.000 m, en az 1500 m.");
+    assert_eq!(
+        got[0],
+        "v1 tepe kurbunun yarıçapı 1000.000 m, en az 1500 m."
+    );
     send(&mut app, W::ProfileField(6, String::new()));
     send(&mut app, W::ProfileField(7, String::new()));
     send(&mut app, W::ProfileField(2, "15".into()));
     send(&mut app, W::Preview);
-    let Read::Profile(p) = read(&app) else { panic!("a profile") };
-    assert!(p.findings[0].message.contains("10.000 m/%, en az 15 m/%"), "{}", p.findings[0].message);
+    let Read::Profile(p) = read(&app) else {
+        panic!("a profile")
+    };
+    assert!(
+        p.findings[0].message.contains("10.000 m/%, en az 15 m/%"),
+        "{}",
+        p.findings[0].message
+    );
 }
 
 /// The profile's rules with the radii, wide and narrow, light and dark; `.run/gui-evidence/yol-y55/`:
@@ -181,11 +230,17 @@ fn screens_radius() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y55");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y55");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = check_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -194,7 +249,10 @@ fn screens_radius() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y55-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));

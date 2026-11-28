@@ -11,8 +11,8 @@
 //! columns may be round or L, put by any of their box's nine points (§2, §3).
 
 use kentos_commands::{
-    ColumnAnchor, ColumnShape, CommandResult, DEFAULT_GRID_EXTENSION, Entity, GridBubbles, GridSystem, GridsCreate,
-    RadialGridSystem, SystemColumns,
+    ColumnAnchor, ColumnShape, CommandResult, DEFAULT_GRID_EXTENSION, Entity, GridBubbles,
+    GridSystem, GridsCreate, RadialGridSystem, SystemColumns,
 };
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::{ExecutionContext, grids_create};
@@ -22,7 +22,9 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Cursor, Flow, Memory, OptionChoice, Pointer, Preview, Tag, Tone, Tool, Values};
+use crate::tool::{
+    Context, Cursor, Flow, Memory, OptionChoice, Pointer, Preview, Tag, Tone, Tool, Values,
+};
 use crate::tool_settings::{Setting, choices};
 
 pub const ID: &str = "gridSystem";
@@ -127,11 +129,17 @@ impl Default for GridSystemTool {
 /// gaps (docs/adr/0725 §4); none when one does not read or is not above 0.
 pub fn spacings(text: &str, length: impl Fn(&str) -> Option<f64>) -> Option<Vec<f64>> {
     let count_of = |n: &str| {
-        (!n.is_empty() && n.chars().all(|c| c.is_ascii_digit()))
-            .then(|| n.parse::<usize>().ok().filter(|n| (1..=MAX_REPEAT).contains(n)))
+        (!n.is_empty() && n.chars().all(|c| c.is_ascii_digit())).then(|| {
+            n.parse::<usize>()
+                .ok()
+                .filter(|n| (1..=MAX_REPEAT).contains(n))
+        })
     };
     let mut out = Vec::new();
-    for token in text.split(|c: char| c.is_whitespace() || c == ';').filter(|t| !t.is_empty()) {
+    for token in text
+        .split(|c: char| c.is_whitespace() || c == ';')
+        .filter(|t| !t.is_empty())
+    {
         if let Some((whole, n)) = token.rsplit_once('/') {
             let n = count_of(n)??;
             let d = length(whole).filter(|d| d.is_finite() && *d > 0.0)? / n as f64;
@@ -150,7 +158,10 @@ pub fn spacings(text: &str, length: impl Fn(&str) -> Option<f64>) -> Option<Vec<
 
 /// A radial system's turns as the settings show them: degrees, runs of one value as “n*d”.
 fn turns_text(turns: &[f64]) -> String {
-    let degrees: Vec<f64> = turns.iter().map(|t| (t.to_degrees() * 1e6).round() / 1e6).collect();
+    let degrees: Vec<f64> = turns
+        .iter()
+        .map(|t| (t.to_degrees() * 1e6).round() / 1e6)
+        .collect();
     let mut words = Vec::new();
     let mut i = 0;
     while i < degrees.len() {
@@ -158,8 +169,17 @@ fn turns_text(turns: &[f64]) -> String {
         while j < degrees.len() && degrees[j] == degrees[i] {
             j += 1;
         }
-        let value = format!("{}°", crate::fixed(degrees[i], 2).trim_end_matches('0').trim_end_matches(['.', ',']));
-        words.push(if j - i > 1 { format!("{}*{value}", j - i) } else { value });
+        let value = format!(
+            "{}°",
+            crate::fixed(degrees[i], 2)
+                .trim_end_matches('0')
+                .trim_end_matches(['.', ','])
+        );
+        words.push(if j - i > 1 {
+            format!("{}*{value}", j - i)
+        } else {
+            value
+        });
         i = j;
     }
     if words.is_empty() {
@@ -221,7 +241,8 @@ impl GridSystemTool {
         self.columns.then(|| SystemColumns {
             shape: (self.shape != ColumnShape::Rect).then_some(self.shape),
             width: self.width,
-            depth: (self.shape != ColumnShape::Round && self.depth != self.width).then_some(self.depth),
+            depth: (self.shape != ColumnShape::Round && self.depth != self.width)
+                .then_some(self.depth),
             legs: (self.shape == ColumnShape::LShape)
                 .then(|| self.legs.unwrap_or([self.depth / 2.0, self.width / 2.0])),
             anchor: (self.anchor != ColumnAnchor::Center).then_some(self.anchor),
@@ -304,8 +325,16 @@ impl GridSystemTool {
         };
         match grids_create::plan_in(cx.doc, &input) {
             CommandResult::Completed { output, .. } => {
-                crate::arch_tools::flight_drawn(&output.grids, cx.doc.settings().plot_scale, &mut self.drawn);
-                let grids = output.grids.iter().filter(|e| matches!(e, Entity::Grid(_))).count();
+                crate::arch_tools::flight_drawn(
+                    &output.grids,
+                    cx.doc.settings().plot_scale,
+                    &mut self.drawn,
+                );
+                let grids = output
+                    .grids
+                    .iter()
+                    .filter(|e| matches!(e, Entity::Grid(_)))
+                    .count();
                 let columns = output.grids.len() - grids;
                 self.planned = Some(if self.radial {
                     (
@@ -380,7 +409,10 @@ impl GridSystemTool {
             self.see(cx);
             return false;
         }
-        cx.say(Level::Success, format!("Aks ağı çizildi: {}.", words.join("; ")));
+        cx.say(
+            Level::Success,
+            format!("Aks ağı çizildi: {}.", words.join("; ")),
+        );
         self.remember(cx.memory);
         self.origin = None;
         self.see(cx);
@@ -399,11 +431,12 @@ impl GridSystemTool {
                 let turns = if words.is_empty() || words.starts_with("TEK") {
                     Some(Vec::new())
                 } else {
-                    spacings(value, |t| parse_number(js_trim(t).trim_end_matches('°'))).map(|d| {
-                        d.into_iter().map(f64::to_radians).collect::<Vec<_>>()
-                    })
+                    spacings(value, |t| parse_number(js_trim(t).trim_end_matches('°')))
+                        .map(|d| d.into_iter().map(f64::to_radians).collect::<Vec<_>>())
                 };
-                match turns.filter(|t| t.len() <= Values::MAX && t.iter().sum::<f64>() < std::f64::consts::TAU) {
+                match turns.filter(|t| {
+                    t.len() <= Values::MAX && t.iter().sum::<f64>() < std::f64::consts::TAU
+                }) {
                     Some(t) => {
                         self.turns = t;
                         true
@@ -454,14 +487,20 @@ impl GridSystemTool {
                 }
                 None => false,
             },
-            "M" => match ColumnShape::ALL.iter().find(|s| s.name() == value || upper_tr(s.label()) == words) {
+            "M" => match ColumnShape::ALL
+                .iter()
+                .find(|s| s.name() == value || upper_tr(s.label()) == words)
+            {
                 Some(s) => {
                     self.shape = *s;
                     true
                 }
                 None => false,
             },
-            "J" => match ColumnAnchor::ALL.iter().find(|a| a.name() == value || upper_tr(a.label()) == words) {
+            "J" => match ColumnAnchor::ALL
+                .iter()
+                .find(|a| a.name() == value || upper_tr(a.label()) == words)
+            {
                 Some(a) => {
                     self.anchor = *a;
                     true
@@ -512,14 +551,19 @@ impl GridSystemTool {
                 }
                 true
             }
-            "U" => match cx.typed_length(value).filter(|v| v.is_finite() && *v >= 0.0) {
+            "U" => match cx
+                .typed_length(value)
+                .filter(|v| v.is_finite() && *v >= 0.0)
+            {
                 Some(v) => {
                     self.extension = v;
                     true
                 }
                 None => false,
             },
-            "D" => match parse_number(js_trim(value).trim_end_matches('°')).filter(|v| v.is_finite()) {
+            "D" => match parse_number(js_trim(value).trim_end_matches('°'))
+                .filter(|v| v.is_finite())
+            {
                 Some(deg) => {
                     self.angle = deg.to_radians();
                     true
@@ -624,7 +668,9 @@ impl Tool for GridSystemTool {
     fn prompt(&self) -> Prompt {
         if let Some(ask) = self.ask {
             let words = match ask {
-                Ask::X if self.radial => "radyal akslar arası açıları derece olarak yazın (30 30 ya da 3*30 ya da 90/3)",
+                Ask::X if self.radial => {
+                    "radyal akslar arası açıları derece olarak yazın (30 30 ya da 3*30 ya da 90/3)"
+                }
                 Ask::Y if self.radial => "yaylar arası aralıkları yazın (4 4 ya da 2*4)",
                 Ask::X => "x aralıklarını yazın (6 6 4.5, 3*6 ya da 18/3)",
                 Ask::Y => "y aralıklarını yazın (5 5, 2*5 ya da 10/2)",
@@ -636,7 +682,9 @@ impl Tool for GridSystemTool {
                 Ask::Depth => "kolon boyunu yazın",
                 Ask::Tag => "ilk kolonun adını yazın (S1); boş: adsız",
                 Ask::Radius => "ilk yayın yarıçapını yazın",
-                Ask::Ends => "kesik aksların uçlarını kâğıtta mm olarak yazın (boş ya da 0: bütün aks)",
+                Ask::Ends => {
+                    "kesik aksların uçlarını kâğıtta mm olarak yazın (boş ya da 0: bütün aks)"
+                }
             };
             return Prompt::new(LABEL, words).option("Geri", "G");
         }
@@ -649,12 +697,33 @@ impl Tool for GridSystemTool {
         };
         Prompt::new(LABEL, step)
             .option_with("Düzen", "F", if self.radial { "Eğrisel" } else { "Dik" })
-            .option(if self.radial { "Açılar" } else { "X aralıkları" }, "X")
-            .option(if self.radial { "Yay aralıkları" } else { "Y aralıkları" }, "Y")
+            .option(
+                if self.radial {
+                    "Açılar"
+                } else {
+                    "X aralıkları"
+                },
+                "X",
+            )
+            .option(
+                if self.radial {
+                    "Yay aralıkları"
+                } else {
+                    "Y aralıkları"
+                },
+                "Y",
+            )
             .option("Açı", "D")
             .option("Uzatma", "U")
             .option("Kesişimlere kolon", "K")
-            .option(if self.origin.is_some() { "Yerleştir" } else { "Bitir" }, "Enter")
+            .option(
+                if self.origin.is_some() {
+                    "Yerleştir"
+                } else {
+                    "Bitir"
+                },
+                "Enter",
+            )
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -801,26 +870,44 @@ impl Tool for GridSystemTool {
                 "P",
                 "Yerleştirme",
                 choices(
-                    &[("click", "Tek tık, açı sabit"), ("two", "İki nokta: açı imleçten")],
+                    &[
+                        ("click", "Tek tık, açı sabit"),
+                        ("two", "İki nokta: açı imleçten"),
+                    ],
                     if self.two_points { "two" } else { "click" },
                 ),
             ),
         ]);
         if !self.two_points {
-            rows.push(Setting::text("D", "Açı", format!("{}°", crate::fixed(self.angle.to_degrees(), 2))));
+            rows.push(Setting::text(
+                "D",
+                "Açı",
+                format!("{}°", crate::fixed(self.angle.to_degrees(), 2)),
+            ));
         } else if !self.radial {
-            rows.push(Setting::toggle("Q", "Eşit böl (ikinci tıklama x boyunu verir)", self.equal));
+            rows.push(Setting::toggle(
+                "Q",
+                "Eşit böl (ikinci tıklama x boyunu verir)",
+                self.equal,
+            ));
         }
         rows.push(Setting::toggle("K", "Kesişimlere kolon", self.columns));
         if self.columns {
             rows.push(Setting::choice(
                 "M",
                 "Kolon biçimi",
-                choices(&ColumnShape::ALL.map(|s| (s.name(), s.label())), self.shape.name()),
+                choices(
+                    &ColumnShape::ALL.map(|s| (s.name(), s.label())),
+                    self.shape.name(),
+                ),
             ));
             rows.push(Setting::text(
                 "E",
-                if self.shape == ColumnShape::Round { "Kolon çapı" } else { "Kolon eni" },
+                if self.shape == ColumnShape::Round {
+                    "Kolon çapı"
+                } else {
+                    "Kolon eni"
+                },
                 f.length(self.width),
             ));
             if self.shape != ColumnShape::Round {
@@ -841,12 +928,19 @@ impl Tool for GridSystemTool {
             rows.push(Setting::choice(
                 "J",
                 "Kolon hizası",
-                choices(&ColumnAnchor::ALL.map(|a| (a.name(), a.label())), self.anchor.name()),
+                choices(
+                    &ColumnAnchor::ALL.map(|a| (a.name(), a.label())),
+                    self.anchor.name(),
+                ),
             ));
             rows.push(Setting::text(
                 "S",
                 "İlk kolonun adı",
-                if self.tag.is_empty() { "Adsız".into() } else { self.tag.clone() },
+                if self.tag.is_empty() {
+                    "Adsız".into()
+                } else {
+                    self.tag.clone()
+                },
             ));
         }
         let words = self.words(f);
@@ -949,7 +1043,11 @@ impl Tool for GridSystemTool {
             }
             Tag { at, lines }
         });
-        out.tag_tone = if self.why.is_some() { Tone::Danger } else { Tone::Accent };
+        out.tag_tone = if self.why.is_some() {
+            Tone::Danger
+        } else {
+            Tone::Accent
+        };
         out
     }
 }
@@ -973,7 +1071,10 @@ mod tests {
         assert_eq!(spacings("altı", metres), None);
         // L/n: L in n equal gaps (docs/adr/0725 §4).
         assert_eq!(spacings("18/3", metres), Some(vec![6.0, 6.0, 6.0]));
-        assert_eq!(spacings("10/4 3", metres), Some(vec![2.5, 2.5, 2.5, 2.5, 3.0]));
+        assert_eq!(
+            spacings("10/4 3", metres),
+            Some(vec![2.5, 2.5, 2.5, 2.5, 3.0])
+        );
         assert_eq!(spacings("18/0", metres), None);
         assert_eq!(spacings("-6/2", metres), None);
     }

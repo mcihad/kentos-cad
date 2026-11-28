@@ -524,9 +524,24 @@ fn kind(path: &str, item: &Item) -> Result<()> {
     let p = format!("{path}.kind");
     match &item.kind {
         ItemKind::Map(m) => {
-            if m.annotation_scale.is_some_and(|v|!crate::viewport::valid_annotation_scale(v)) {return Err(err("bad_annotation_scale",&format!("{p}.annotationScale"),"Açıklama ölçeği sonlu, pozitif ve en çok 1000000 olmalı."));}
-            if m.level.as_ref().is_some_and(|l| l.id.trim().is_empty() || l.id.chars().count() > 128) {
-                return Err(err("bad_level", &format!("{p}.level.id"), "Haritanın katı boş olmayan, en çok 128 harflik bir kat kimliği olmalı."));
+            if m.annotation_scale
+                .is_some_and(|v| !crate::viewport::valid_annotation_scale(v))
+            {
+                return Err(err(
+                    "bad_annotation_scale",
+                    &format!("{p}.annotationScale"),
+                    "Açıklama ölçeği sonlu, pozitif ve en çok 1000000 olmalı.",
+                ));
+            }
+            if m.level
+                .as_ref()
+                .is_some_and(|l| l.id.trim().is_empty() || l.id.chars().count() > 128)
+            {
+                return Err(err(
+                    "bad_level",
+                    &format!("{p}.level.id"),
+                    "Haritanın katı boş olmayan, en çok 128 harflik bir kat kimliği olmalı.",
+                ));
             }
             m.clip.validate()?;
             if let Some(view) = m.source.captured_view()
@@ -857,7 +872,13 @@ fn kind(path: &str, item: &Item) -> Result<()> {
             }
             if let TableSource::DrawingSet(index) = &t.source {
                 crate::drawing_set::validate_subset(&index.subset, &p)?;
-                if t.columns.len() != 6 { return Err(err("bad_drawing_index", &p, "Pafta/görünüm dizini altı standart sütun taşır: numara, başlık, revizyon, durum, alt küme, görünüm.")); }
+                if t.columns.len() != 6 {
+                    return Err(err(
+                        "bad_drawing_index",
+                        &p,
+                        "Pafta/görünüm dizini altı standart sütun taşır: numara, başlık, revizyon, durum, alt küme, görünüm.",
+                    ));
+                }
             }
             if let TableSource::Fixed(f) = &t.source {
                 for (r, row) in f.rows.iter().enumerate() {

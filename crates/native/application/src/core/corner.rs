@@ -797,7 +797,10 @@ pub fn plan_in(doc: &Document, request: Request<'_>) -> CommandResult<EntitiesCo
                             .ok()
                             .and_then(|uid| copy.slot_of(uid))
                             .and_then(|s| copy.get(s).cloned())
-                            .map(|mut e| { e.base_mut().id = 0; e })
+                            .map(|mut e| {
+                                e.base_mut().id = 0;
+                                e
+                            })
                     })
                     .collect();
                 CommandResult::Completed {

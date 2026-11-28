@@ -86,7 +86,10 @@ pub fn content_rect(item: &Item, m: &MapItem) -> RectUm {
 /// A map's frame as drawn: its view, or an atlas page's.
 pub(crate) fn frame_of(item: &Item, m: &MapItem, inputs: &RenderInputs) -> Option<MapFrame> {
     let (center, scale, view_rot) = match &m.view {
-        MapView::Fixed(_) => { let f=crate::viewport::effective_fixed_view(item,&inputs.named_views).ok()?; (f.center,f.denominator(),f.rotation) },
+        MapView::Fixed(_) => {
+            let f = crate::viewport::effective_fixed_view(item, &inputs.named_views).ok()?;
+            (f.center, f.denominator(), f.rotation)
+        }
         MapView::Atlas(a) => {
             let page = inputs
                 .atlas
@@ -359,7 +362,12 @@ pub(crate) fn feature_clip(mf: &MapFrame, ring: &[[f64; 2]]) -> Option<crate::cl
 fn cut_to_square(pts: &[[f64; 2]], side: f64) -> Vec<[f64; 2]> {
     let mut out = pts.to_vec();
     // Each edge of the square: whether a point is inside, and where an edge meets it.
-    let edges: [(usize, f64, bool); 4] = [(0, 0.0, true), (0, side, false), (1, 0.0, true), (1, side, false)];
+    let edges: [(usize, f64, bool); 4] = [
+        (0, 0.0, true),
+        (0, side, false),
+        (1, 0.0, true),
+        (1, side, false),
+    ];
     for (axis, at, low) in edges {
         let inside = |p: &[f64; 2]| if low { p[axis] >= at } else { p[axis] <= at };
         let input = std::mem::take(&mut out);
@@ -482,15 +490,16 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
         clip,
         rotation: pen.rot,
         view: MapViewPrim {
-                annotation_scale:m.annotation_scale,
+            annotation_scale: m.annotation_scale,
             center: mf.center,
             scale: mf.scale,
             rotation: mf.view_rot,
         },
         // A linked view's recipe draws over the map's own level and layers (docs/adr/0774 §3).
-        layers: recipe
-            .and_then(|r| r.layer_state.as_ref())
-            .map_or_else(|| m.layers.clone(), |name| MapLayers::Theme(crate::kinds::ThemeRef { name: name.clone() })),
+        layers: recipe.and_then(|r| r.layer_state.as_ref()).map_or_else(
+            || m.layers.clone(),
+            |name| MapLayers::Theme(crate::kinds::ThemeRef { name: name.clone() }),
+        ),
         layer_overrides: m.layer_overrides.clone(),
         level: match recipe.and_then(|r| r.level.as_ref()) {
             Some(l) => Some(crate::kinds::MapLevel {
@@ -506,7 +515,10 @@ pub(crate) fn draw(ctx: &Ctx, it: &Item, m: &MapItem, pen: &mut Pen, notes: &mut
         wall_detail: recipe.and_then(|r| r.detail),
         pens: recipe.map(|r| r.pens.clone()).unwrap_or_default(),
         mono: recipe.is_some_and(|r| r.mono),
-        options: recipe.map(|r| r.options.clone()).unwrap_or_default().into_boxed_slice(),
+        options: recipe
+            .map(|r| r.options.clone())
+            .unwrap_or_default()
+            .into_boxed_slice(),
         crs: m.crs.clone(),
         extent: mf.extent(),
         clip_feature,

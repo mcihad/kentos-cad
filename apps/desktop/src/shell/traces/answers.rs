@@ -113,7 +113,9 @@ impl App {
             Dialog::Gis(gis::GisDialogKind::EventLinks) => {
                 crate::event_links_window::TITLE.to_owned()
             }
-            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains) => crate::terrain_window::TITLE.to_owned(),
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains) => {
+                crate::terrain_window::TITLE.to_owned()
+            }
             Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms) => {
                 crate::platform_window::TITLE.to_owned()
             }
@@ -152,7 +154,9 @@ impl App {
             Dialog::Gis(gis::GisDialogKind::FeaturesCode) => {
                 crate::features_window::TITLE.to_owned()
             }
-            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade) => crate::grade_window::TITLE.to_owned(),
+            Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade) => {
+                crate::grade_window::TITLE.to_owned()
+            }
             Dialog::CleanReport => crate::clean_report_window::TITLE.to_owned(),
             Dialog::OpenReport => crate::open_report_window::TITLE.to_owned(),
             Dialog::ExchangeCheck => crate::exchange_check_window::TITLE.to_owned(),
@@ -229,15 +233,25 @@ impl App {
             Some(Dialog::HatchPatterns) => self.hatch_patterns_control(control),
             Some(Dialog::StyleImpact) => self.style_impact_control(control),
             Some(Dialog::BlockReview) => match control {
-                Control::Press("Kapat") => Ok(Some(Message::BlockEditor(crate::block_editor::Event::CloseReview))),
+                Control::Press("Kapat") => Ok(Some(Message::BlockEditor(
+                    crate::block_editor::Event::CloseReview,
+                ))),
                 other => Err(format!("Blok etkisi penceresinde {other} yok")),
             },
             Some(Dialog::BlockFind) => self.block_find_control(control),
             Some(Dialog::ArrayFind) => self.array_find_control(control),
             Some(Dialog::BlockReplace) => match control {
-                Control::Check("Yalnız seçili yerleştirmeler", on) => Ok(Some(Message::BlocksPanel(crate::blocks_panel::Event::Replace(crate::blocks_panel::ReplaceEvent::Scope(on))))),
-                Control::Press("Değiştir") => Ok(Some(Message::BlocksPanel(crate::blocks_panel::Event::Replace(crate::blocks_panel::ReplaceEvent::Apply)))),
-                Control::Press("Vazgeç") => Ok(Some(Message::BlocksPanel(crate::blocks_panel::Event::Replace(crate::blocks_panel::ReplaceEvent::Close)))),
+                Control::Check("Yalnız seçili yerleştirmeler", on) => Ok(Some(
+                    Message::BlocksPanel(crate::blocks_panel::Event::Replace(
+                        crate::blocks_panel::ReplaceEvent::Scope(on),
+                    )),
+                )),
+                Control::Press("Değiştir") => Ok(Some(Message::BlocksPanel(
+                    crate::blocks_panel::Event::Replace(crate::blocks_panel::ReplaceEvent::Apply),
+                ))),
+                Control::Press("Vazgeç") => Ok(Some(Message::BlocksPanel(
+                    crate::blocks_panel::Event::Replace(crate::blocks_panel::ReplaceEvent::Close),
+                ))),
                 other => Err(format!("Blok değiştirme penceresinde {other} yok")),
             },
             Some(Dialog::Gis(gis::GisDialogKind::LayerFields)) => {
@@ -269,12 +283,18 @@ impl App {
             Some(Dialog::Gis(gis::GisDialogKind::Relations)) => self.relations_control(control),
             Some(Dialog::Gis(gis::GisDialogKind::Joins)) => self.joins_control(control),
             Some(Dialog::Gis(gis::GisDialogKind::EventLinks)) => self.event_links_control(control),
-            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains)) => self.terrain_control(control),
-            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms)) => self.platform_control(control),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Terrains)) => {
+                self.terrain_control(control)
+            }
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms)) => {
+                self.platform_control(control)
+            }
             Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::TerrainCloud)) => {
                 self.terrain_cloud_control(control)
             }
-            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Drainage)) => self.drainage_control(control),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Drainage)) => {
+                self.drainage_control(control)
+            }
             Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SurfaceAnalysis)) => {
                 self.surface_analysis_control(control)
             }
@@ -302,7 +322,9 @@ impl App {
             Some(Dialog::Gis(gis::GisDialogKind::FeaturesCode)) => {
                 self.features_code_control(control)
             }
-            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade)) => self.grade_control(control),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade)) => {
+                self.grade_control(control)
+            }
             Some(Dialog::CleanReport) => self.clean_report_control(control),
             Some(Dialog::OpenReport) => self.open_report_control(control),
             Some(Dialog::ExchangeCheck) => self.exchange_check_control(control),
@@ -321,7 +343,9 @@ impl App {
             Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SectionCheck)) => {
                 self.section_check_control(control)
             }
-            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Stockpile)) => self.stockpile_control(control),
+            Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Stockpile)) => {
+                self.stockpile_control(control)
+            }
             Some(Dialog::Gis(gis::GisDialogKind::DataCompare)) => {
                 self.data_compare_control(control)
             }
@@ -329,7 +353,10 @@ impl App {
             Some(Dialog::TableEditor) => self.table_editor_control(control),
             Some(Dialog::Module(d)) => match crate::module_parts::parts(d.module) {
                 Some(parts) => parts.dialog_control(self, d.kind, control),
-                None => Err(format!("{:?} penceresi izden yanıtlanamıyor", Dialog::Module(d))),
+                None => Err(format!(
+                    "{:?} penceresi izden yanıtlanamıyor",
+                    Dialog::Module(d)
+                )),
             },
             Some(Dialog::Project) if self.asking_type() => self.project_type_control(control),
             Some(Dialog::LayerStyle) => self.layer_style_control(control),

@@ -28,11 +28,15 @@ fn a_tagged_space_draws_its_tag_not_its_own_label() {
     b.session.exit();
     let layer = b.doc.layers().active().to_owned();
     let p = |x: f64, y: f64| json!({"x": E + x, "y": N + y});
-    let wall: Entity = serde_json::from_value(json!({"kind":"wall","id":0,"layerId":layer,"attrs":{},"width":0.2,"closed":true,
-        "pts":[p(0., 0.), p(4., 0.), p(4., 3.), p(0., 3.)]}))
+    let wall: Entity = serde_json::from_value(
+        json!({"kind":"wall","id":0,"layerId":layer,"attrs":{},"width":0.2,"closed":true,
+        "pts":[p(0., 0.), p(4., 0.), p(4., 3.), p(0., 3.)]}),
+    )
     .unwrap();
     b.doc.add_many(vec![wall], "Duvar").unwrap();
-    let rooms: SpacesCreate = serde_json::from_value(json!({"layerId": layer, "spaces": [{"seed": p(2., 1.5)}]})).unwrap();
+    let rooms: SpacesCreate =
+        serde_json::from_value(json!({"layerId": layer, "spaces": [{"seed": p(2., 1.5)}]}))
+            .unwrap();
     let made = spaces_create::execute(&mut ExecutionContext::new(&mut b.doc), rooms);
     let kentos_commands::CommandResult::Completed { output, .. } = made else {
         panic!("the room: {made:?}");
@@ -41,7 +45,8 @@ fn a_tagged_space_draws_its_tag_not_its_own_label() {
     let room = b.doc.slot_of(uid.parse().unwrap()).unwrap();
     b.spatial.sync(&b.doc);
     assert_eq!(texts(&b, room.0), 1, "an untagged room shows its own label");
-    let tag: TagsCreate = serde_json::from_value(json!({"layerId": layer, "tags": [{"of": uid}]})).unwrap();
+    let tag: TagsCreate =
+        serde_json::from_value(json!({"layerId": layer, "tags": [{"of": uid}]})).unwrap();
     assert!(matches!(
         tags_create::execute(&mut ExecutionContext::new(&mut b.doc), tag),
         kentos_commands::CommandResult::Completed { .. }

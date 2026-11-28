@@ -776,7 +776,12 @@ pub(super) const ENTRIES: &[Entry] = &[
             &["invalid_density", "not_explodable", "slots_exhausted"],
             REVISION,
         ],
-        warnings: &["layer_locked", "not_explodable", "semantics_lost", "curves_approximated"],
+        warnings: &[
+            "layer_locked",
+            "not_explodable",
+            "semantics_lost",
+            "curves_approximated",
+        ],
         targets: || {
             vec![target(
                 None,
@@ -1029,18 +1034,58 @@ pub(super) const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.drawing.inspect",
-        refusals: &[&["invalid_uid", "entity_not_found", "invalid_gap", "invalid_angle_tolerance", "invalid_limit", "inspection_scope_limit"], REVISION],
-        warnings: &["inspection_truncated"], targets: none,
+        refusals: &[
+            &[
+                "invalid_uid",
+                "entity_not_found",
+                "invalid_gap",
+                "invalid_angle_tolerance",
+                "invalid_limit",
+                "inspection_scope_limit",
+            ],
+            REVISION,
+        ],
+        warnings: &["inspection_truncated"],
+        targets: none,
     },
     Entry {
         id: "cad.arrays.find",
-        refusals: &[&["invalid_uid", "entity_not_found", "invalid_tolerance", "invalid_limit", "recognition_scope_limit", "array_adoption_refused", "layer_locked", "invalid_path", "recognition_unsupported"], REVISION],
-        warnings: &["recognition_truncated"], targets: none,
+        refusals: &[
+            &[
+                "invalid_uid",
+                "entity_not_found",
+                "invalid_tolerance",
+                "invalid_limit",
+                "recognition_scope_limit",
+                "array_adoption_refused",
+                "layer_locked",
+                "invalid_path",
+                "recognition_unsupported",
+            ],
+            REVISION,
+        ],
+        warnings: &["recognition_truncated"],
+        targets: none,
     },
     Entry {
         id: "cad.arrays.adopt",
-        refusals: &[&["array_adoption_refused", "invalid_uid", "not_finite", "invalid_count", "invalid_spacing", "invalid_fill", "invalid_tolerance", "entity_not_found", "layer_locked", "invalid_path"], REVISION],
-        warnings: &[], targets: none,
+        refusals: &[
+            &[
+                "array_adoption_refused",
+                "invalid_uid",
+                "not_finite",
+                "invalid_count",
+                "invalid_spacing",
+                "invalid_fill",
+                "invalid_tolerance",
+                "entity_not_found",
+                "layer_locked",
+                "invalid_path",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
     },
     Entry {
         id: "cad.arrays.edit",
@@ -1290,19 +1335,50 @@ pub(super) const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.blocks.convert",
-        refusals: &[&["empty_name", "recognition_conversion_refused", "invalid_uid", "entity_not_found", "invalid_tolerance", "recognition_unsupported", "recognition_scope_limit", "duplicate_block", "block_refused", "layer_locked", "layer_not_found", "not_a_layer"], REVISION],
-        warnings: &[], targets: none,
+        refusals: &[
+            &[
+                "empty_name",
+                "recognition_conversion_refused",
+                "invalid_uid",
+                "entity_not_found",
+                "invalid_tolerance",
+                "recognition_unsupported",
+                "recognition_scope_limit",
+                "duplicate_block",
+                "block_refused",
+                "layer_locked",
+                "layer_not_found",
+                "not_a_layer",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: none,
     },
     Entry {
         id: "cad.blocks.find",
-        refusals: &[&["no_entities", "invalid_uid", "entity_not_found", "invalid_tolerance", "invalid_limit", "recognition_unsupported", "recognition_source_limit", "recognition_scope_limit"], REVISION],
+        refusals: &[
+            &[
+                "no_entities",
+                "invalid_uid",
+                "entity_not_found",
+                "invalid_tolerance",
+                "invalid_limit",
+                "recognition_unsupported",
+                "recognition_source_limit",
+                "recognition_scope_limit",
+            ],
+            REVISION,
+        ],
         warnings: &["recognition_truncated", "recognition_geometry_only"],
-        targets: || vec![CommandTarget {
+        targets: || {
+            vec![CommandTarget {
             kinds: vec!["line".into(), "polyline".into(), "circle".into(), "arc".into(), "text".into(), "insert".into()],
             refused_with: Some("recognition_unsupported".into()),
             note: Some("Kaynak öğeler; düz tek satırlı yazı ve statik, tekdüze ölçekli iç blok desteklenir. Yazı/öznitelik değer çeşitleri ayrı seçeneklerdir; yeni türlerin biçim ve bağ sınırları ADR0881 içindedir. Sıfır uzunluklu çizgi desteklenmez. Çoklu çizgi tek parçalı, deliksiz, Z/M verisi ve mahal ayırıcı rolü olmadan, en çok 4096 köşedir; açık/kapalı durum, analitik yay ve kenar genişliği karşılaştırılır. Kaynak ve kapsam toplam en çok 200000 çoklu çizgi köşesidir. Desteklenmeyen kaynak öğesi atlanmaz.".into()),
             ..Default::default()
-        }],
+        }]
+        },
     },
     Entry {
         id: "cad.blocks.query",

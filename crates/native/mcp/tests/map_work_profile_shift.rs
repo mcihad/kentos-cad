@@ -12,7 +12,8 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 const LINE: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13";
 
 fn opened(server: &mut Server) -> Value {
-    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/map-work-approved-parts.kcad");
+    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/kcad/v2/map-work-approved-parts.kcad");
     let opened = call(server, "drawing.open", json!({"path": sample}));
     assert_eq!(opened["isError"], false, "{opened}");
     opened["structuredContent"]["drawing"].clone()
@@ -34,14 +35,28 @@ fn an_item_s_profile_and_a_moved_line_s_shift_over_mcp() {
         json!({"drawing": drawing, "operation": {"op": "profile", "item": "is-3", "name": "harita-varliklari", "classes": ["kontrol-noktasi"]}}),
     );
     assert_eq!(r["isError"], false, "{r}");
-    let added = r["structuredContent"]["output"]["layers"].as_array().cloned().unwrap_or_default();
-    assert_eq!(added.len(), 2, "the group and the control points' layer: {r}");
+    let added = r["structuredContent"]["output"]["layers"]
+        .as_array()
+        .cloned()
+        .unwrap_or_default();
+    assert_eq!(
+        added.len(),
+        2,
+        "the group and the control points' layer: {r}"
+    );
     let row = design(&mut server, &drawing);
     assert_eq!(row["profile"]["name"], "harita-varliklari", "{row}");
     assert_eq!(row["profile"]["found"], true, "{row}");
-    assert!(row["layers"].as_array().unwrap().contains(&added[1]), "the class's layer joined the item: {row}");
+    assert!(
+        row["layers"].as_array().unwrap().contains(&added[1]),
+        "the class's layer joined the item: {row}"
+    );
 
-    let r = call(&mut server, "map.work.edit", json!({"drawing": drawing, "operation": {"op": "set", "item": "is-3", "status": "approved"}}));
+    let r = call(
+        &mut server,
+        "map.work.edit",
+        json!({"drawing": drawing, "operation": {"op": "set", "item": "is-3", "status": "approved"}}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     let r = call(
         &mut server,
@@ -50,9 +65,21 @@ fn an_item_s_profile_and_a_moved_line_s_shift_over_mcp() {
     );
     assert_eq!(r["isError"], false, "{r}");
     let row = design(&mut server, &drawing);
-    let changed = row["changes"]["objects"].as_array().unwrap().iter().find(|o| o["uid"] == LINE).cloned().expect("moved");
+    let changed = row["changes"]["objects"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|o| o["uid"] == LINE)
+        .cloned()
+        .expect("moved");
     let shift = &changed["shift"];
     assert_eq!(shift["paired"], true, "{changed}");
-    assert!((shift["largest"]["d"].as_f64().unwrap() - 0.5).abs() < 1e-9, "{changed}");
-    assert!((shift["rms"].as_f64().unwrap() - 0.5).abs() < 1e-9, "{changed}");
+    assert!(
+        (shift["largest"]["d"].as_f64().unwrap() - 0.5).abs() < 1e-9,
+        "{changed}"
+    );
+    assert!(
+        (shift["rms"].as_f64().unwrap() - 0.5).abs() < 1e-9,
+        "{changed}"
+    );
 }

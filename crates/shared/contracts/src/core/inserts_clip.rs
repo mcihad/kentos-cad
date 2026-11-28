@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+use crate::Vec2;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::Vec2;
 
 pub const CAD_INSERTS_CLIP: &str = "cad.inserts.clip";
 pub const CAD_INSERTS_CLIP_VERSION: u32 = 1;
@@ -67,9 +67,15 @@ impl InsertClip {
             return Some("Kırpma sınırının en az üç köşesi olmalı.".into());
         }
         if n > MAX_CLIPPING_CORNERS {
-            return Some(format!("Kırpma sınırı en çok {MAX_CLIPPING_CORNERS} köşeli olabilir."));
+            return Some(format!(
+                "Kırpma sınırı en çok {MAX_CLIPPING_CORNERS} köşeli olabilir."
+            ));
         }
-        if self.boundary.iter().any(|p| !(p.x.is_finite() && p.y.is_finite())) {
+        if self
+            .boundary
+            .iter()
+            .any(|p| !(p.x.is_finite() && p.y.is_finite()))
+        {
             return Some("Kırpma sınırının köşeleri sonlu sayılar olmalı.".into());
         }
         let mut twice = 0.0;
@@ -78,7 +84,9 @@ impl InsertClip {
             twice += a.x * b.y - b.x * a.y;
         }
         if twice.abs().partial_cmp(&1e-12) != Some(std::cmp::Ordering::Greater) {
-            return Some("Kırpma sınırının alanı yok: köşeleri bir doğru üstünde ya da üst üste.".into());
+            return Some(
+                "Kırpma sınırının alanı yok: köşeleri bir doğru üstünde ya da üst üste.".into(),
+            );
         }
         None
     }
@@ -88,7 +96,11 @@ impl InsertClip {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum ClipBoundary {
     /// A rectangle along the drawing's axes, by two opposite corners.
@@ -109,7 +121,11 @@ pub enum ClipBoundary {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum InsertsClipOperation {
     /// The inserts clipped by `boundary` (an earlier boundary replaced); `inverted` keeps the outside.

@@ -15,8 +15,8 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Theme, mouse};
 use kentos_commands::{RoadProfileLengths, RoadProfilesLengths};
@@ -85,7 +85,9 @@ fn comma(v: f64, digits: usize) -> String {
 impl Lengths {
     /// The query from the typed fields; why not, in words.
     pub(crate) fn input(&self, profile: &str) -> Result<RoadProfilesLengths, String> {
-        let read = |k: usize| number(&self.fields[k]).map_err(|()| format!("{} bir sayı olmalı.", FIELDS[k]));
+        let read = |k: usize| {
+            number(&self.fields[k]).map_err(|()| format!("{} bir sayı olmalı.", FIELDS[k]))
+        };
         // Empty: the alignment's design speed (docs/adr/0986); the command says so when it has none.
         let speed = read(0)?;
         Ok(RoadProfilesLengths {
@@ -121,7 +123,11 @@ impl ProfileLengthsWindowApp for App {
             return;
         };
         let kept = w.lengths_kept.clone().unwrap_or_default();
-        w.lengths = Some(Box::new(Lengths { fields: kept.0, grades: kept.1, ..Lengths::default() }));
+        w.lengths = Some(Box::new(Lengths {
+            fields: kept.0,
+            grades: kept.1,
+            ..Lengths::default()
+        }));
         self.refresh_profile_lengths();
     }
 
@@ -142,15 +148,21 @@ impl ProfileLengthsWindowApp for App {
             None => Err("Boykesit penceresinde bir boykesit seçin.".into()),
             Some(Err(e)) => Err(e),
             Some(Ok(def)) => x.input(&def.id).and_then(|q| {
-                kentos_native_application::road_profiles_lengths::preview(&doc.model, &def, &q).map(|(out, warnings)| {
-                    x.warnings = warnings.into_iter().map(|w| w.message).collect();
-                    out
-                })
+                kentos_native_application::road_profiles_lengths::preview(&doc.model, &def, &q).map(
+                    |(out, warnings)| {
+                        x.warnings = warnings.into_iter().map(|w| w.message).collect();
+                        out
+                    },
+                )
             }),
         });
         if let Some(Ok(out)) = &x.result {
-            let short: Vec<(String, f64, f64)> =
-                out.curves.iter().filter(|c| c.short).map(|c| (c.pvi.clone(), c.suggested, c.a)).collect();
+            let short: Vec<(String, f64, f64)> = out
+                .curves
+                .iter()
+                .filter(|c| c.short)
+                .map(|c| (c.pvi.clone(), c.suggested, c.a))
+                .collect();
             x.cut = trial.lengthen(&short).1;
         }
     }
@@ -175,13 +187,19 @@ impl ProfileLengthsWindowApp for App {
             }
             Event::Apply => {
                 let Some(Ok(out)) = &x.result else { return };
-                let short: Vec<(String, f64, f64)> =
-                    out.curves.iter().filter(|c| c.short).map(|c| (c.pvi.clone(), c.suggested, c.a)).collect();
+                let short: Vec<(String, f64, f64)> = out
+                    .curves
+                    .iter()
+                    .filter(|c| c.short)
+                    .map(|c| (c.pvi.clone(), c.suggested, c.a))
+                    .collect();
                 w.lengths_kept = Some((x.fields.clone(), x.grades));
                 w.lengths = None;
                 let (n, cut) = w.lengthen(&short);
                 if cut.is_empty() {
-                    self.output(format!("{n} kurp önerilen boya uzatıldı; Kaydet ile yazılır."));
+                    self.output(format!(
+                        "{n} kurp önerilen boya uzatıldı; Kaydet ile yazılır."
+                    ));
                 } else {
                     self.warn(format!(
                         "{n} kurp uzatıldı; {} PVI'lar arasına sığdığı kadar uzatıldı, öneriye varmadı: PVI'ları uzaklaştırın ya da hızı düşürün. Kaydet ile yazılır.",
@@ -196,7 +214,10 @@ impl ProfileLengthsWindowApp for App {
 
     /// The window over Boykesit's.
     fn profile_lengths_view<'a>(&'a self, x: &'a Lengths) -> Element<'a, Message> {
-        let field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &x.fields[k]).on_input(move |t| msg(Event::Field(k, t)));
+        let field = |k: usize, hint: &'a str| {
+            kentos_ui::widget::text_field(hint, &x.fields[k])
+                .on_input(move |t| msg(Event::Field(k, t)))
+        };
         let form = Form::new()
             .label_width(140.0)
             .section("Hız")
@@ -235,10 +256,17 @@ impl ProfileLengthsWindowApp for App {
                 d = d
                     .figure("Kurp", out.curves.len().to_string())
                     .figure("Kısa", short.to_string())
-                    .figure("Durma görüşü", out.stopping.map_or_else(|| "—".into(), |s| format!("{} m", comma(s, 1))))
+                    .figure(
+                        "Durma görüşü",
+                        out.stopping
+                            .map_or_else(|| "—".into(), |s| format!("{} m", comma(s, 1))),
+                    )
                     .figure(
                         "En uzun gereken",
-                        format!("{} m", comma(out.curves.iter().map(|c| c.required).fold(0.0, f64::max), 1)),
+                        format!(
+                            "{} m",
+                            comma(out.curves.iter().map(|c| c.required).fold(0.0, f64::max), 1)
+                        ),
                     );
                 for w in &x.warnings {
                     d = d.note(Banner::warning(w.clone()));
@@ -262,12 +290,22 @@ impl ProfileLengthsWindowApp for App {
                     .map(|c| {
                         vec![
                             c.pvi.clone(),
-                            if c.crest { "tepe".into() } else { "çukur".into() },
+                            if c.crest {
+                                "tepe".into()
+                            } else {
+                                "çukur".into()
+                            },
                             comma(c.a, 2),
                             c.length.map_or_else(|| "kırık".into(), |l| comma(l, 1)),
-                            c.governing.as_deref().map_or_else(|| "—".into(), |k| kind(k).to_owned()),
+                            c.governing
+                                .as_deref()
+                                .map_or_else(|| "—".into(), |k| kind(k).to_owned()),
                             comma(c.required, 1),
-                            if x.cut.contains(&c.pvi) { format!("{} sığmaz", comma(c.suggested, 1)) } else { comma(c.suggested, 1) },
+                            if x.cut.contains(&c.pvi) {
+                                format!("{} sığmaz", comma(c.suggested, 1))
+                            } else {
+                                comma(c.suggested, 1)
+                            },
                         ]
                     })
                     .collect();
@@ -300,24 +338,67 @@ struct Bars<'a> {
 impl canvas::Program<Message> for Bars<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let t = Tokens::of(theme);
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let word = |frame: &mut canvas::Frame, s: String, at: Point, color: Color| {
-            frame.fill_text(Text { content: s, position: at, color, size: Pixels(typography::caption()), font: typography::ui(), ..Text::default() });
+            frame.fill_text(Text {
+                content: s,
+                position: at,
+                color,
+                size: Pixels(typography::caption()),
+                font: typography::ui(),
+                ..Text::default()
+            });
         };
         let Some(out) = self.out.filter(|o| !o.curves.is_empty()) else {
-            word(&mut frame, "Hızı ve en az bir ölçütü yazınca kurpların boyları burada karşılaştırılır.".into(), Point::new(16.0, 20.0), t.muted);
+            word(
+                &mut frame,
+                "Hızı ve en az bir ölçütü yazınca kurpların boyları burada karşılaştırılır.".into(),
+                Point::new(16.0, 20.0),
+                t.muted,
+            );
             return vec![frame.into_geometry()];
         };
-        let top = out.curves.iter().map(|c| c.required.max(c.length.unwrap_or(0.0))).fold(1.0, f64::max) * 1.1;
-        let plot = Rectangle { x: 48.0, y: 12.0, width: bounds.width - 60.0, height: bounds.height - 34.0 };
+        let top = out
+            .curves
+            .iter()
+            .map(|c| c.required.max(c.length.unwrap_or(0.0)))
+            .fold(1.0, f64::max)
+            * 1.1;
+        let plot = Rectangle {
+            x: 48.0,
+            y: 12.0,
+            width: bounds.width - 60.0,
+            height: bounds.height - 34.0,
+        };
         let y = |v: f64| plot.y + plot.height * (1.0 - (v / top) as f32);
-        let step = [10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0].into_iter().find(|s| top / s <= 6.0).unwrap_or(2000.0);
+        let step = [10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0]
+            .into_iter()
+            .find(|s| top / s <= 6.0)
+            .unwrap_or(2000.0);
         let mut v = 0.0;
         while v <= top {
-            frame.stroke(&Path::line(Point::new(plot.x, y(v)), Point::new(plot.x + plot.width, y(v))), Stroke::default().with_color(t.border).with_width(1.0));
-            word(&mut frame, format!("{v:.0}"), Point::new(4.0, y(v) - 7.0), t.muted);
+            frame.stroke(
+                &Path::line(
+                    Point::new(plot.x, y(v)),
+                    Point::new(plot.x + plot.width, y(v)),
+                ),
+                Stroke::default().with_color(t.border).with_width(1.0),
+            );
+            word(
+                &mut frame,
+                format!("{v:.0}"),
+                Point::new(4.0, y(v) - 7.0),
+                t.muted,
+            );
             v += step;
         }
         let n = out.curves.len() as f32;
@@ -327,13 +408,30 @@ impl canvas::Program<Message> for Bars<'_> {
             let w = (slot * 0.4).min(48.0);
             let now = c.length.unwrap_or(0.0);
             let color = if c.short { t.danger } else { t.success };
-            frame.fill_rectangle(Point::new(cx - w / 2.0, y(now)), iced::Size::new(w, y(0.0) - y(now)), color.scale_alpha(0.5));
+            frame.fill_rectangle(
+                Point::new(cx - w / 2.0, y(now)),
+                iced::Size::new(w, y(0.0) - y(now)),
+                color.scale_alpha(0.5),
+            );
             let need = y(c.required);
-            frame.stroke(&Path::line(Point::new(cx - w * 0.8, need), Point::new(cx + w * 0.8, need)), Stroke::default().with_color(t.text).with_width(2.0));
+            frame.stroke(
+                &Path::line(
+                    Point::new(cx - w * 0.8, need),
+                    Point::new(cx + w * 0.8, need),
+                ),
+                Stroke::default().with_color(t.text).with_width(2.0),
+            );
             // The length asked right of its line.
-            word(&mut frame, format!("{} m", comma(c.required, 1)), Point::new(cx + w * 0.8 + 4.0, need - 7.0), t.text);
+            word(
+                &mut frame,
+                format!("{} m", comma(c.required, 1)),
+                Point::new(cx + w * 0.8 + 4.0, need - 7.0),
+                t.text,
+            );
             // The length now on the bar's left, set right: the asked one is on the right, the two never meet.
-            let now_words = c.length.map_or_else(|| "kırık".to_owned(), |l| format!("{} m", comma(l, 1)));
+            let now_words = c
+                .length
+                .map_or_else(|| "kırık".to_owned(), |l| format!("{} m", comma(l, 1)));
             frame.fill_text(Text {
                 content: now_words,
                 position: Point::new(cx - w * 0.8 - 4.0, (y(now) - 7.0).min(y(0.0) - 14.0)),
@@ -344,7 +442,12 @@ impl canvas::Program<Message> for Bars<'_> {
                 ..Text::default()
             });
             let kind = if c.crest { "tepe" } else { "çukur" };
-            word(&mut frame, format!("{} · {kind}", c.pvi), Point::new(cx - 18.0, plot.y + plot.height + 4.0), t.text);
+            word(
+                &mut frame,
+                format!("{} · {kind}", c.pvi),
+                Point::new(cx - 18.0, plot.y + plot.height + 4.0),
+                t.text,
+            );
         }
         vec![frame.into_geometry()]
     }

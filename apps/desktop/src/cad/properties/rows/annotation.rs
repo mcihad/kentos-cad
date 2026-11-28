@@ -11,7 +11,10 @@ pub(super) fn scale_rows(objects: &[&Entity], slots: &[Slot], locked: bool) -> V
     if objects.iter().all(|e| why_not_annotative(e).is_some()) {
         return Vec::new();
     }
-    let on = objects.iter().filter(|e| annotative_of(e).is_some()).count();
+    let on = objects
+        .iter()
+        .filter(|e| annotative_of(e).is_some())
+        .count();
     let state = match on {
         0 => "Hayır",
         n if n == objects.len() => "Evet",
@@ -158,14 +161,26 @@ pub(super) fn table_style_row(
         message: Message::Properties(Event::TableStyle(slots.to_vec(), id)),
     };
     let items = std::iter::once(pick(none.to_owned(), None))
-        .chain(settings.table_styles.iter().map(|s| pick(s.name.clone(), Some(s.id.clone()))))
+        .chain(
+            settings
+                .table_styles
+                .iter()
+                .map(|s| pick(s.name.clone(), Some(s.id.clone()))),
+        )
         .chain(std::iter::once(Choice::Action {
             label: "Tablo stilleri…",
             icon: "settings",
-            message: Some(Message::TableStyleDefs(crate::table_style_window::Event::Open)),
+            message: Some(Message::TableStyleDefs(
+                crate::table_style_window::Event::Open,
+            )),
         }))
         .collect();
-    let editor = Editor::Select { text: value.clone(), swatch: None, icon: None, items };
+    let editor = Editor::Select {
+        text: value.clone(),
+        swatch: None,
+        icon: None,
+        items,
+    };
     vec![Row::text("Tablo stili", value).editor((!locked).then_some(editor))]
 }
 
@@ -331,17 +346,26 @@ pub(super) fn text_rows(
         None => Row::text("Satır aralığı", MIXED),
     };
     // Its indents, tab stops and columns (docs/adr/0324 §3), the indents and gap in its height.
-    let layout = |t: &kentos_commands::TextEntity| t.paragraph.layout.as_deref().cloned().unwrap_or_default();
+    let layout = |t: &kentos_commands::TextEntity| {
+        t.paragraph.layout.as_deref().cloned().unwrap_or_default()
+    };
     let heights = |label: &'static str, value: Option<String>| match value {
         Some(v) => Row::figure(label, v).unit("× yükseklik"),
         None => Row::text(label, MIXED),
     };
     let number = |v: f64| crate::crs::js_number(fixed_number(v, 3));
-    let indent_row = heights("Girinti", common(&|t| number(layout(t).indent.unwrap_or(0.0))));
-    let left_row = heights("Sol girinti", common(&|t| number(layout(t).left_indent.unwrap_or(0.0))));
+    let indent_row = heights(
+        "Girinti",
+        common(&|t| number(layout(t).indent.unwrap_or(0.0))),
+    );
+    let left_row = heights(
+        "Sol girinti",
+        common(&|t| number(layout(t).left_indent.unwrap_or(0.0))),
+    );
     let tabs_row = Row::text(
         "Sekmeler",
-        common(&|t| kentos_interaction::text_layout::tabs_text(&layout(t).tabs)).unwrap_or_else(|| MIXED.to_owned()),
+        common(&|t| kentos_interaction::text_layout::tabs_text(&layout(t).tabs))
+            .unwrap_or_else(|| MIXED.to_owned()),
     );
     let columns = common(&|t| layout(t).columns.map_or(1, |c| c.count).to_string());
     let columns_row = match &columns {
@@ -360,17 +384,26 @@ pub(super) fn text_rows(
     ];
     // In columns: their height, metres, and the gap between them.
     if columns.as_deref().is_some_and(|n| n != "1") {
-        let tall = common(&|t| layout(t).columns.map_or(String::new(), |c| number(c.height)));
+        let tall = common(&|t| {
+            layout(t)
+                .columns
+                .map_or(String::new(), |c| number(c.height))
+        });
         rows.push(
             match tall {
                 Some(v) => Row::figure("Sütun yüksekliği", v).unit("m"),
                 None => Row::text("Sütun yüksekliği", MIXED),
             }
-            .editor(edit(Editor::Number(Field::TextColumnHeight(slots.to_vec())))),
+            .editor(edit(Editor::Number(Field::TextColumnHeight(
+                slots.to_vec(),
+            )))),
         );
         rows.push(
-            heights("Sütun aralığı", common(&|t| layout(t).columns.map_or(String::new(), |c| number(c.gap))))
-                .editor(edit(Editor::Number(Field::TextColumnGap(slots.to_vec())))),
+            heights(
+                "Sütun aralığı",
+                common(&|t| layout(t).columns.map_or(String::new(), |c| number(c.gap))),
+            )
+            .editor(edit(Editor::Number(Field::TextColumnGap(slots.to_vec())))),
         );
     }
     let engine = |text: &kentos_commands::TextEntity| layout(text).engine;
@@ -507,9 +540,16 @@ pub(super) fn text_field_rows(
                     let of = object.map_or("silinmiş nesne", |(_, e)| kind_title(e.kind()));
                     format!("{of}: {}", named(value.label(), name))
                 }
-                FieldSource::Project { value, name } => format!("Proje: {}", named(value.label(), name)),
+                FieldSource::Project { value, name } => {
+                    format!("Proje: {}", named(value.label(), name))
+                }
             };
-            let letters: String = t.text.chars().skip(f.start as usize).take((f.end - f.start) as usize).collect();
+            let letters: String = t
+                .text
+                .chars()
+                .skip(f.start as usize)
+                .take((f.end - f.start) as usize)
+                .collect();
             // The value first (what the row has room for), the source in the menu's title.
             let value = match f.broken {
                 Some(b) => format!("Kopuk: {}", b.words()),
@@ -535,12 +575,23 @@ pub(super) fn text_field_rows(
                 message: Message::TextTools(crate::text_tools::Event::Close),
             }];
             if let Some((s, _)) = object {
-                items.push(action("Kaynağı seç", Message::Properties(Event::SelectObject(s))));
+                items.push(action(
+                    "Kaynağı seç",
+                    Message::Properties(Event::SelectObject(s)),
+                ));
             }
             if !locked {
-                items.push(action("Alanı kaldır", Message::TextTools(crate::text_tools::Event::Remove(slot, i as u32))));
+                items.push(action(
+                    "Alanı kaldır",
+                    Message::TextTools(crate::text_tools::Event::Remove(slot, i as u32)),
+                ));
             }
-            let editor = (!items.is_empty()).then(|| Editor::Select { text: value.clone(), swatch: None, icon: None, items });
+            let editor = (!items.is_empty()).then(|| Editor::Select {
+                text: value.clone(),
+                swatch: None,
+                icon: None,
+                items,
+            });
             let mut row = Row::text(format!("Alan {}", i + 1), value).editor(editor);
             row.warn = f.broken.is_some();
             row
@@ -559,12 +610,20 @@ pub(super) fn multileader_rows(
     use crate::leader_tools::Event as L;
     let styles = &model.settings().leader_styles;
     let mut rows = Vec::new();
-    let common = leaders.first().map(|l| l.leader_style.clone()).filter(|s| leaders.iter().all(|l| &l.leader_style == s));
+    let common = leaders
+        .first()
+        .map(|l| l.leader_style.clone())
+        .filter(|s| leaders.iter().all(|l| &l.leader_style == s));
     let name_of = |id: &Option<String>| match id {
-        Some(id) => styles.iter().find(|s| &s.id == id).map_or("Silinmiş stil".to_owned(), |s| s.name.clone()),
+        Some(id) => styles
+            .iter()
+            .find(|s| &s.id == id)
+            .map_or("Silinmiş stil".to_owned(), |s| s.name.clone()),
         None => "Yok".to_owned(),
     };
-    let value = common.as_ref().map_or_else(|| "Çeşitli".to_owned(), name_of);
+    let value = common
+        .as_ref()
+        .map_or_else(|| "Çeşitli".to_owned(), name_of);
     if !styles.is_empty() || leaders.iter().any(|l| l.leader_style.is_some()) {
         let pick = |label: String, id: Option<String>| Choice::Pick {
             label,
@@ -576,8 +635,19 @@ pub(super) fn multileader_rows(
             message: Message::LeaderTools(L::Style(slots.to_vec(), id)),
         };
         let mut items = vec![pick("Yok".to_owned(), None)];
-        items.extend(styles.iter().map(|s| pick(s.name.clone(), Some(s.id.clone()))));
-        rows.push(Row::text("Kılavuz stili", value.clone()).editor(Some(Editor::Select { text: value, swatch: None, icon: None, items })));
+        items.extend(
+            styles
+                .iter()
+                .map(|s| pick(s.name.clone(), Some(s.id.clone()))),
+        );
+        rows.push(
+            Row::text("Kılavuz stili", value.clone()).editor(Some(Editor::Select {
+                text: value,
+                swatch: None,
+                icon: None,
+                items,
+            })),
+        );
     }
     let [l] = leaders else {
         return rows;
@@ -587,7 +657,9 @@ pub(super) fn multileader_rows(
     let tips = std::iter::once(l.tip.as_deref()).chain(l.arms.iter().map(|a| a.tip.as_ref()));
     for (k, t) in tips.enumerate() {
         let Some(t) = t else { continue };
-        let of = model.slot_of(kentos_domain::Uuid::from_bytes(t.uid.0)).and_then(|s| model.get(s));
+        let of = model
+            .slot_of(kentos_domain::Uuid::from_bytes(t.uid.0))
+            .and_then(|s| model.get(s));
         let what = match (&t.broken, of) {
             (Some(why), _) => format!("Kopuk: {why}"),
             (None, Some(e)) => format!("Bağlı: {}", kind_title(e.kind())),
@@ -602,8 +674,17 @@ pub(super) fn multileader_rows(
             enabled: !locked,
             message: Message::LeaderTools(L::Unbind(slot, k as u32)),
         }];
-        let label = if k == 0 { "Ucu".to_owned() } else { format!("{}. kolun ucu", k + 1) };
-        let mut row = Row::text(label, what.clone()).editor(Some(Editor::Select { text: what, swatch: None, icon: None, items }));
+        let label = if k == 0 {
+            "Ucu".to_owned()
+        } else {
+            format!("{}. kolun ucu", k + 1)
+        };
+        let mut row = Row::text(label, what.clone()).editor(Some(Editor::Select {
+            text: what,
+            swatch: None,
+            icon: None,
+            items,
+        }));
         row.warn = t.broken.is_some();
         rows.push(row);
     }
@@ -766,9 +847,20 @@ pub(super) fn hatch_rows(
         )],
     });
     rows.push(Row::text("İlişkili", tie).editor(untie));
-    rows.push(Row::text("Sınır izlemesi", if h.assoc.is_some() {"Kaynakları izler"} else {"Bağ yok; mevcut geometri sabit"}));
+    rows.push(Row::text(
+        "Sınır izlemesi",
+        if h.assoc.is_some() {
+            "Kaynakları izler"
+        } else {
+            "Bağ yok; mevcut geometri sabit"
+        },
+    ));
     // Sınır ▾ (docs/adr/0329 §4): exact when it holds an arc or a curve; written again as objects.
-    let exact = if h.boundary.is_some() { "Kesin" } else { "Çizilen halka" };
+    let exact = if h.boundary.is_some() {
+        "Kesin"
+    } else {
+        "Çizilen halka"
+    };
     let recreate = (!locked).then(|| Editor::Select {
         text: exact.to_owned(),
         swatch: None,

@@ -79,7 +79,10 @@ impl QuickDimension {
         // The command measures the same selection again (docs/adr/0622 §9).
         let input = AnnotationsWrite {
             // UR-003: the project's dimension layer when it names one.
-            layer_id: crate::tool_layer::layer_for(cx.doc, kentos_commands::AnnotationTool::Dimension),
+            layer_id: crate::tool_layer::layer_for(
+                cx.doc,
+                kentos_commands::AnnotationTool::Dimension,
+            ),
             work: AnnotationWork::Dimensions {
                 ids: self
                     .slots
@@ -122,7 +125,11 @@ impl QuickDimension {
                         Some(kentos_commands::Entity::Dimension(d)) if d.refs.is_none())
                 })
                 .count();
-            let note = if free > 0 { format!(" {free} {FREE}") } else { String::new() };
+            let note = if free > 0 {
+                format!(" {free} {FREE}")
+            } else {
+                String::new()
+            };
             cx.say(
                 Level::Success,
                 format!("Hızlı ölçü: {} ölçü eklendi{left}; ölçüler kenarlarının köşelerine bağlı.{note}", out.count),

@@ -110,8 +110,8 @@ pub const POLYGON_LABEL: &str = "Kapalı alan";
 /// The polyline tool's id: its command is `tool.polyline`.
 pub const POLYLINE_ID: &str = "polyline";
 pub const POLYLINE_LABEL: &str = "Çoklu çizgi";
-pub const SPACE_SEPARATOR_ID:&str="spaceSeparator";
-pub const SPACE_SEPARATOR_LABEL:&str="Mahal ayırıcı";
+pub const SPACE_SEPARATOR_ID: &str = "spaceSeparator";
+pub const SPACE_SEPARATOR_LABEL: &str = "Mahal ayırıcı";
 /// Mesafe ölç: `tool.measure`.
 pub const MEASURE_ID: &str = "measure";
 pub const MEASURE_LABEL: &str = "Mesafe ölç";
@@ -134,7 +134,9 @@ pub const NO_SQUARE_CLOSE: &str = "Dik kapatılamıyor: ilk kenar ile son kenar 
 
 /// What Esc says when it ends a wall chain and keeps it (docs/adr/8001).
 pub fn esc_kept(segments: usize) -> String {
-    format!("Esc zinciri bitirdi: çizilen {segments} parça duvar kaldı. Araçtan çıkmak için yeniden Esc, geri almak için Ctrl+Z.")
+    format!(
+        "Esc zinciri bitirdi: çizilen {segments} parça duvar kaldı. Araçtan çıkmak için yeniden Esc, geri almak için Ctrl+Z."
+    )
 }
 
 /// What the tool draws.
@@ -297,7 +299,7 @@ fn write_loop_room(pts: &[Vec2], bulges: &[f64], cx: &mut Context<'_>) -> Option
 #[derive(Clone, Debug)]
 pub struct Path {
     shape: Shape,
-    separator_level:Option<crate::architecture_level::Choice>,
+    separator_level: Option<crate::architecture_level::Choice>,
     pts: Vec<Vec2>,
     /// One bulge per drawn segment (pts[i] → pts[i+1]).
     bulges: Vec<f64>,
@@ -386,7 +388,7 @@ impl Path {
     pub fn new(shape: Shape) -> Self {
         Self {
             shape,
-            separator_level:None,
+            separator_level: None,
             pts: Vec::new(),
             bulges: Vec::new(),
             hover: None,
@@ -453,8 +455,10 @@ impl Path {
     }
 
     /// The same analytic path input, with an explicit semantic boundary command.
-    pub fn space_separator()->Self {
-        let mut tool=Self::polyline();tool.separator_level=Some(Default::default());tool
+    pub fn space_separator() -> Self {
+        let mut tool = Self::polyline();
+        tool.separator_level = Some(Default::default());
+        tool
     }
 
     fn closed(&self) -> bool {
@@ -466,7 +470,10 @@ impl Path {
     }
 
     fn see(&mut self, cx: &Context<'_>) {
-        if let Some(level)=&mut self.separator_level {level.see(cx.doc.settings()); level.follow_where_walls(cx.level, cx.doc);}
+        if let Some(level) = &mut self.separator_level {
+            level.see(cx.doc.settings());
+            level.follow_where_walls(cx.level, cx.doc);
+        }
         self.memory = *cx.memory;
         self.offers = cx.draft.offers;
         self.format = cx.format();
@@ -480,9 +487,17 @@ impl Path {
 
     /// A geographic project's measure on its ellipsoid (GIS-040): the path's length and the ring's area; none in a
     /// projected project or beyond the system.
-    fn on_ellipsoid(&self, pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> Option<(f64, Option<f64>)> {
+    fn on_ellipsoid(
+        &self,
+        pts: &[Vec2],
+        bulges: Option<&[f64]>,
+        closed: bool,
+    ) -> Option<(f64, Option<f64>)> {
         let system = self.geographic.as_ref()?;
-        let ring = Ring { pts: pts.to_vec(), bulges: bulges.map(<[f64]>::to_vec) };
+        let ring = Ring {
+            pts: pts.to_vec(),
+            bulges: bulges.map(<[f64]>::to_vec),
+        };
         kentos_geometry_core::crs::ground::ground_measures(system, &[ring], closed, None)
             .ok()
             .map(|m| (m.ellipsoid_length, m.ellipsoid_area))
@@ -497,16 +512,32 @@ impl Path {
     /// Duvar: the wall the path to the cursor would make, from the command's plan.
     fn redraw_wall(&mut self, cx: &Context<'_>) {
         if self.separator_level.is_some() {
-            self.wall_drawn=wall::Drawn::default();
-            let (pts,bulges)=self.preview_path();
-            if pts.len()<2 {return;}
-            let input=self.separator_input(&pts,&bulges,false,cx);
-            match kentos_native_application::spaces_separators::plan_in(cx.doc,&input) {
-                kentos_commands::CommandResult::Completed {output,..}=>for e in output.entities {
-                    self.wall_drawn.strokes.extend(crate::edge::Outline::of(&kentos_native_application::geometry::shape(&e),Some([4.,3.]),1.5,Tone::Accent).strokes);
-                },
-                kentos_commands::CommandResult::Failed {error}|kentos_commands::CommandResult::Conflict {error}|kentos_commands::CommandResult::NeedsInput {error}=>self.wall_drawn.why=Some(error.message),
-                _=>{},
+            self.wall_drawn = wall::Drawn::default();
+            let (pts, bulges) = self.preview_path();
+            if pts.len() < 2 {
+                return;
+            }
+            let input = self.separator_input(&pts, &bulges, false, cx);
+            match kentos_native_application::spaces_separators::plan_in(cx.doc, &input) {
+                kentos_commands::CommandResult::Completed { output, .. } => {
+                    for e in output.entities {
+                        self.wall_drawn.strokes.extend(
+                            crate::edge::Outline::of(
+                                &kentos_native_application::geometry::shape(&e),
+                                Some([4., 3.]),
+                                1.5,
+                                Tone::Accent,
+                            )
+                            .strokes,
+                        );
+                    }
+                }
+                kentos_commands::CommandResult::Failed { error }
+                | kentos_commands::CommandResult::Conflict { error }
+                | kentos_commands::CommandResult::NeedsInput { error } => {
+                    self.wall_drawn.why = Some(error.message)
+                }
+                _ => {}
             }
             return;
         }
@@ -523,7 +554,11 @@ impl Path {
         wall::chips(prompt, &self.memory, &self.format, style, self.curtain).option_with(
             "Kapanınca mahal",
             "M",
-            if self.memory.wall_room { "Açık" } else { "Kapalı" },
+            if self.memory.wall_room {
+                "Açık"
+            } else {
+                "Kapalı"
+            },
         )
     }
 
@@ -1013,8 +1048,12 @@ impl Path {
         self.pts.push(p);
         self.bulges.push(0.0);
         let f = cx.format();
-        let ray = [Ring { pts: vec![first, p], bulges: None }];
-        let length = measured_on_ellipsoid(&ray, false, cx).unwrap_or_else(|| f.length(dist(first, p)));
+        let ray = [Ring {
+            pts: vec![first, p],
+            bulges: None,
+        }];
+        let length =
+            measured_on_ellipsoid(&ray, false, cx).unwrap_or_else(|| f.length(dist(first, p)));
         // The direction as the project's type reads it: a semt, or a CAD project's angle (docs/adr/0165 §4).
         let mut text = format!(
             "{}: {}, {} {}",
@@ -1042,10 +1081,23 @@ impl Path {
             .iter()
             .enumerate()
             .map(|(i, &q)| {
-                let ray = [Ring { pts: vec![first, q], bulges: None }];
-                let length = measured_on_ellipsoid(&ray, false, cx).unwrap_or_else(|| f.length(dist(first, q)));
-                let length = length.trim_start_matches("Elipsoit üstünde: uzunluk ").to_owned();
-                (format!("{}. ışın", i + 1), format!("{length}, {} {}", f.direction_name().to_lowercase(), f.direction(bearing_grad(first, q))))
+                let ray = [Ring {
+                    pts: vec![first, q],
+                    bulges: None,
+                }];
+                let length = measured_on_ellipsoid(&ray, false, cx)
+                    .unwrap_or_else(|| f.length(dist(first, q)));
+                let length = length
+                    .trim_start_matches("Elipsoit üstünde: uzunluk ")
+                    .to_owned();
+                (
+                    format!("{}. ışın", i + 1),
+                    format!(
+                        "{length}, {} {}",
+                        f.direction_name().to_lowercase(),
+                        f.direction(bearing_grad(first, q))
+                    ),
+                )
             })
             .collect();
         *cx.measured = Some(crate::measured::rays(cx.doc.settings(), &f, &rows));
@@ -1063,7 +1115,11 @@ impl Path {
             .cloned()
             .collect();
         let text = measured_on_ellipsoid(&rings, true, cx).unwrap_or_else(|| {
-            format!("Alan {}   Çevre {}", f.area(net_area(&region)), f.length(perimeter(&region)))
+            format!(
+                "Alan {}   Çevre {}",
+                f.area(net_area(&region)),
+                f.length(perimeter(&region))
+            )
         });
         cx.say(Level::Success, text);
         let (area, around) = area_and_perimeter(&rings, net_area(&region), perimeter(&region), cx);
@@ -1418,13 +1474,16 @@ impl Path {
                     Some(said) => format!("{said} ({} kenar)", pts.len() - 1),
                     None => format!(
                         "Toplam uzunluk {} ({} kenar)",
-                        cx.format().length(bulge_path_length(&pts, bulges.as_deref(), false)),
+                        cx.format()
+                            .length(bulge_path_length(&pts, bulges.as_deref(), false)),
                         pts.len() - 1
                     ),
                 };
                 cx.say(Level::Success, text);
-                let mut m = crate::measured::path(cx.doc.settings(), &cx.format(), &pts, bulges.as_deref());
-                m.rows.extend(second_rows(std::slice::from_ref(&path), false, cx));
+                let mut m =
+                    crate::measured::path(cx.doc.settings(), &cx.format(), &pts, bulges.as_deref());
+                m.rows
+                    .extend(second_rows(std::slice::from_ref(&path), false, cx));
                 *cx.measured = Some(m);
                 say_second(&[path], false, cx);
             }
@@ -1433,12 +1492,13 @@ impl Path {
                     pts: pts.clone(),
                     bulges: bulges.clone(),
                 };
-                let text = measured_on_ellipsoid(std::slice::from_ref(&ring), true, cx).unwrap_or_else(|| {
-                    let area = bulge_ring_area(&pts, bulges.as_deref()).abs();
-                    let perimeter = bulge_path_length(&pts, bulges.as_deref(), true);
-                    let f = cx.format();
-                    format!("Alan {}   Çevre {}", f.area(area), f.length(perimeter))
-                });
+                let text = measured_on_ellipsoid(std::slice::from_ref(&ring), true, cx)
+                    .unwrap_or_else(|| {
+                        let area = bulge_ring_area(&pts, bulges.as_deref()).abs();
+                        let perimeter = bulge_path_length(&pts, bulges.as_deref(), true);
+                        let f = cx.format();
+                        format!("Alan {}   Çevre {}", f.area(area), f.length(perimeter))
+                    });
                 cx.say(Level::Success, text);
                 let (area, perimeter) = area_and_perimeter(
                     std::slice::from_ref(&ring),
@@ -1447,7 +1507,8 @@ impl Path {
                     cx,
                 );
                 let mut m = crate::measured::area(cx.doc.settings(), &cx.format(), area, perimeter);
-                m.rows.extend(second_rows(std::slice::from_ref(&ring), true, cx));
+                m.rows
+                    .extend(second_rows(std::slice::from_ref(&ring), true, cx));
                 *cx.measured = Some(m);
                 say_second(&[ring], true, cx);
                 self.measured = Some(Region {
@@ -1458,8 +1519,10 @@ impl Path {
             Shape::Parcel => self.create_parcel(&pts, bulges, cx),
             Shape::Wipeout => self.create_wipeout(&pts, bulges, cx),
             Shape::Closed => {
-                let crossings =
-                    kentos_geometry_core::geom::intersect::ring_self_crossings(&pts, bulges.as_deref());
+                let crossings = kentos_geometry_core::geom::intersect::ring_self_crossings(
+                    &pts,
+                    bulges.as_deref(),
+                );
                 if let Some(area) = self.create_polygon(&pts, bulges, cx) {
                     match crossings.first() {
                         // Its edges cross: drawn as asked, but its area is no area; said, where, and what to do.
@@ -1486,7 +1549,7 @@ impl Path {
             Shape::Open => {
                 let length = bulge_path_length(&pts, bulges.as_deref(), false);
                 if self.create_polyline(&pts, false, cx) {
-                    let text = format!("{} eklendi: {}",self.label(), cx.format().length(length));
+                    let text = format!("{} eklendi: {}", self.label(), cx.format().length(length));
                     cx.say(Level::Success, text);
                 } else if self.separator_level.is_some() {
                     return;
@@ -1545,10 +1608,20 @@ impl Path {
             cx.say(Level::Success, "Maske eklendi.");
             // Words under the mask stay over it (docs/adr/0310 §8): said now, not found later on the sheet.
             let (lo, hi) = pts.iter().fold(
-                (Vec2::new(f64::INFINITY, f64::INFINITY), Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY)),
-                |(lo, hi), p| (Vec2::new(lo.x.min(p.x), lo.y.min(p.y)), Vec2::new(hi.x.max(p.x), hi.y.max(p.y))),
+                (
+                    Vec2::new(f64::INFINITY, f64::INFINITY),
+                    Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY),
+                ),
+                |(lo, hi), p| {
+                    (
+                        Vec2::new(lo.x.min(p.x), lo.y.min(p.y)),
+                        Vec2::new(hi.x.max(p.x), hi.y.max(p.y)),
+                    )
+                },
             );
-            if let Some(note) = crate::draw_order::words_over_mask_note(cx.doc, cx.spatial, lo, hi, false) {
+            if let Some(note) =
+                crate::draw_order::words_over_mask_note(cx.doc, cx.spatial, lo, hi, false)
+            {
                 cx.say(Level::Info, note);
             }
         }
@@ -1654,10 +1727,16 @@ impl Path {
         self.closing = closing;
         let length = bulge_path_length(&pts, Some(&bulges), true);
         if self.create_polyline(&pts, true, cx) {
-            let name=if self.separator_level.is_some(){"Kapalı mahal ayırıcı"}else{"Kapalı çoklu çizgi"};
+            let name = if self.separator_level.is_some() {
+                "Kapalı mahal ayırıcı"
+            } else {
+                "Kapalı çoklu çizgi"
+            };
             let text = format!("{name} eklendi: {}", cx.format().length(length));
             cx.say(Level::Success, text);
-        } else if self.separator_level.is_some() { return; }
+        } else if self.separator_level.is_some() {
+            return;
+        }
         self.reset();
     }
 
@@ -1676,7 +1755,9 @@ impl Path {
 
     /// The band a wide polyline will draw, lightly filled under its line (docs/adr/0258 §2).
     fn band_preview(&self, pts: &[Vec2], bulges: &[f64]) -> Vec<Area> {
-        if self.separator_level.is_some(){return Vec::new();}
+        if self.separator_level.is_some() {
+            return Vec::new();
+        }
         if self.shape != Shape::Open || pts.len() < 2 {
             return Vec::new();
         }
@@ -1708,11 +1789,22 @@ impl Path {
             bulges.push(self.closing);
         }
         if self.separator_level.is_some() {
-            if closed && self.arc_mode && let (Some(t),Some(&last),Some(&first),Some(closing))=(self.tangent(),pts.last(),pts.first(),bulges.last_mut()) {
-                *closing=tangent_bulge(last,t,first).unwrap_or(0.);
+            if closed
+                && self.arc_mode
+                && let (Some(t), Some(&last), Some(&first), Some(closing)) =
+                    (self.tangent(), pts.last(), pts.first(), bulges.last_mut())
+            {
+                *closing = tangent_bulge(last, t, first).unwrap_or(0.);
             }
-            let input=self.separator_input(pts,&bulges,closed,cx);
-            return points::written(kentos_native_application::spaces_separators::execute(&mut ExecutionContext::new(cx.doc),input),cx).is_some();
+            let input = self.separator_input(pts, &bulges, closed, cx);
+            return points::written(
+                kentos_native_application::spaces_separators::execute(
+                    &mut ExecutionContext::new(cx.doc),
+                    input,
+                ),
+                cx,
+            )
+            .is_some();
         }
         let edges = if closed { pts.len() } else { pts.len() - 1 };
         let input = PolylineCreate {
@@ -1733,13 +1825,29 @@ impl Path {
         points::written(result, cx).is_some()
     }
 
-    fn separator_input(&self,pts:&[Vec2],bulges:&[f64],closed:bool,cx:&Context<'_>)->kentos_commands::SpacesSeparators {
-        kentos_commands::SpacesSeparators {expected_revision:None,operation:kentos_commands::SpaceSeparatorOperation::Create {
-            layer_id:cx.doc.layers().active().to_owned(),paths:vec![kentos_commands::NewSpaceSeparator {
-                pts:wire_all(pts),bulges:has_bulges(Some(bulges)).then(||bulges.to_vec()),closed,
-                arch:cx.phased(self.separator_level.as_ref().and_then(|level|level.arch())),
-            }],color:cx.draft.color_text(),line_weight:cx.draft.line_weight,line_type:None,attrs:cx.template_attrs(None),
-        }}
+    fn separator_input(
+        &self,
+        pts: &[Vec2],
+        bulges: &[f64],
+        closed: bool,
+        cx: &Context<'_>,
+    ) -> kentos_commands::SpacesSeparators {
+        kentos_commands::SpacesSeparators {
+            expected_revision: None,
+            operation: kentos_commands::SpaceSeparatorOperation::Create {
+                layer_id: cx.doc.layers().active().to_owned(),
+                paths: vec![kentos_commands::NewSpaceSeparator {
+                    pts: wire_all(pts),
+                    bulges: has_bulges(Some(bulges)).then(|| bulges.to_vec()),
+                    closed,
+                    arch: cx.phased(self.separator_level.as_ref().and_then(|level| level.arch())),
+                }],
+                color: cx.draft.color_text(),
+                line_weight: cx.draft.line_weight,
+                line_type: None,
+                attrs: cx.template_attrs(None),
+            },
+        }
     }
 
     /// Writes the parcel through the product command `cad.entities.create`
@@ -1871,13 +1979,19 @@ impl Path {
 /// perimeter are taken on the system's ellipsoid and said so, in metres; none in a projected project.
 fn measured_on_ellipsoid(rings: &[Ring], closed: bool, cx: &Context<'_>) -> Option<String> {
     let f = cx.format();
-    Some(match ground::on_geographic_ellipsoid(cx.doc.settings(), rings, closed)? {
-        Ok((length, Some(area))) if closed => {
-            format!("Elipsoit üstünde: Alan {}   Çevre {}", f.area(area), f.length(length))
-        }
-        Ok((length, _)) => format!("Elipsoit üstünde: uzunluk {}", f.length(length)),
-        Err(()) => ground::UNREACHED.to_owned(),
-    })
+    Some(
+        match ground::on_geographic_ellipsoid(cx.doc.settings(), rings, closed)? {
+            Ok((length, Some(area))) if closed => {
+                format!(
+                    "Elipsoit üstünde: Alan {}   Çevre {}",
+                    f.area(area),
+                    f.length(length)
+                )
+            }
+            Ok((length, _)) => format!("Elipsoit üstünde: uzunluk {}", f.length(length)),
+            Err(()) => ground::UNREACHED.to_owned(),
+        },
+    )
 }
 
 /// An area and its perimeter as the box says them: on a geographic project's ellipsoid, else on the plane as given.
@@ -2063,7 +2177,13 @@ impl Tool for Path {
         true
     }
     fn id(&self) -> &'static str {
-        if self.separator_level.is_some(){SPACE_SEPARATOR_ID}else if self.curtain{wall::CURTAIN_ID}else{self.shape.id()}
+        if self.separator_level.is_some() {
+            SPACE_SEPARATOR_ID
+        } else if self.curtain {
+            wall::CURTAIN_ID
+        } else {
+            self.shape.id()
+        }
     }
 
     /// Perpendicular and tangent snaps are taken from the last point (the web's `snapFrom`);
@@ -2151,7 +2271,13 @@ impl Tool for Path {
     }
 
     fn label(&self) -> &'static str {
-        if self.separator_level.is_some(){SPACE_SEPARATOR_LABEL}else if self.curtain{wall::CURTAIN_LABEL}else{self.shape.label()}
+        if self.separator_level.is_some() {
+            SPACE_SEPARATOR_LABEL
+        } else if self.curtain {
+            wall::CURTAIN_LABEL
+        } else {
+            self.shape.label()
+        }
     }
 
     fn prompt(&self) -> Prompt {
@@ -2331,39 +2457,72 @@ impl Tool for Path {
 
     /// Duvar's Hiza and Stil menus (docs/adr/0339 §6).
     fn settings(&self, format: &Format) -> Vec<crate::tool_settings::Setting> {
-        if let Some(level)=&self.separator_level {
-            let mut rows=vec![level.setting(),crate::tool_settings::Setting::notice("S","Sınır","Sıfır kalınlıklı mahal sınırı; fiziksel duvar veya duvar metrajı oluşturmaz. Enter tek adımda uygular.")];
-            if let Some(why)=&self.wall_drawn.why {rows.push(crate::tool_settings::Setting::notice("E","Durum",why));}
+        if let Some(level) = &self.separator_level {
+            let mut rows = vec![
+                level.setting(),
+                crate::tool_settings::Setting::notice(
+                    "S",
+                    "Sınır",
+                    "Sıfır kalınlıklı mahal sınırı; fiziksel duvar veya duvar metrajı oluşturmaz. Enter tek adımda uygular.",
+                ),
+            ];
+            if let Some(why) = &self.wall_drawn.why {
+                rows.push(crate::tool_settings::Setting::notice("E", "Durum", why));
+            }
             return rows;
         }
-        if self.shape != Shape::Wall { return Vec::new(); }
+        if self.shape != Shape::Wall {
+            return Vec::new();
+        }
         let mut rows = if self.curtain {
             crate::tool_settings::curtain_rows(&self.memory, format)
         } else {
             crate::tool_settings::wall_rows(&self.memory, &self.wall_offer, format)
         };
         // Kapanınca mahal (docs/adr/8022): Kapat writes the loop's room too.
-        rows.push(crate::tool_settings::Setting::toggle("M", "Kapanınca mahal", self.memory.wall_room));
+        rows.push(crate::tool_settings::Setting::toggle(
+            "M",
+            "Kapanınca mahal",
+            self.memory.wall_room,
+        ));
         rows
     }
     /// Duvar's Kalınlık and Hiza in the value field after its locks (docs/adr/8018).
     fn cursor_settings(&self) -> &'static [&'static str] {
-        if self.shape == Shape::Wall && self.separator_level.is_none() { &["E", "H"] } else { &[] }
+        if self.shape == Shape::Wall && self.separator_level.is_none() {
+            &["E", "H"]
+        } else {
+            &[]
+        }
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
-        if let Some(level)=&mut self.separator_level {
-            if key!="L" || !level.choose(value){return false;}
-            self.see(cx);self.redraw_wall(cx);return true;
+        if let Some(level) = &mut self.separator_level {
+            if key != "L" || !level.choose(value) {
+                return false;
+            }
+            self.see(cx);
+            self.redraw_wall(cx);
+            return true;
         }
-        if self.shape != Shape::Wall { return false; }
+        if self.shape != Shape::Wall {
+            return false;
+        }
         let taken = crate::tool_settings::wall_apply(key, value, cx);
-        if taken { self.wall_ask = None; }
+        if taken {
+            self.wall_ask = None;
+        }
         self.see(cx);
         self.redraw_wall(cx);
         taken
     }
     fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
-        if let Some(level)=&self.separator_level {return if key=="L"{level.setting().choices}else{Vec::new()};}
+        if let Some(level) = &self.separator_level {
+            return if key == "L" {
+                level.setting().choices
+            } else {
+                Vec::new()
+            };
+        }
         if self.shape != Shape::Wall || self.wall_ask.is_some() {
             return Vec::new();
         }
@@ -2371,7 +2530,9 @@ impl Tool for Path {
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
-        if self.separator_level.is_some(){return self.configure(key,typed,cx);}
+        if self.separator_level.is_some() {
+            return self.configure(key, typed, cx);
+        }
         if self.shape != Shape::Wall || !matches!(key, "H" | "S") || (self.curtain && key == "S") {
             return false;
         }
@@ -2472,8 +2633,12 @@ impl Tool for Path {
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         self.see(cx);
         let key = upper_tr(js_trim(text));
-        if key=="L" && let Some(level)=&mut self.separator_level {
-            level.next();self.redraw_wall(cx);return true;
+        if key == "L"
+            && let Some(level) = &mut self.separator_level
+        {
+            level.next();
+            self.redraw_wall(cx);
+            return true;
         }
         // A wall style's name is words, whatever its letters (docs/adr/0339 §6).
         if self.wall_ask == Some(wall::Ask::Style) && key != "G" {
@@ -2593,9 +2758,13 @@ impl Tool for Path {
         if self.pts.is_empty() {
             return Flow::Exit;
         }
-        let revision=cx.doc.revision();
+        let revision = cx.doc.revision();
         self.finish(cx);
-        if self.separator_level.is_some() && cx.doc.revision()!=revision {Flow::Exit}else{Flow::Stay}
+        if self.separator_level.is_some() && cx.doc.revision() != revision {
+            Flow::Exit
+        } else {
+            Flow::Stay
+        }
     }
 
     fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
@@ -2645,7 +2814,11 @@ impl Tool for Path {
         bulges.push(0.0);
         let area_shape = self.closed() && pts.len() >= 3;
         let ring = area_shape.then(|| bulge_path_outline(&pts, Some(&bulges), true, DEFAULT_STEP));
-        let path = if self.separator_level.is_some(){Vec::new()}else{bulge_path_outline(&pts, Some(&bulges), false, DEFAULT_STEP)};
+        let path = if self.separator_level.is_some() {
+            Vec::new()
+        } else {
+            bulge_path_outline(&pts, Some(&bulges), false, DEFAULT_STEP)
+        };
         let last = self.last();
         let mut guides = Vec::new();
         // Helper lines for points given before the end point.
@@ -2677,9 +2850,15 @@ impl Tool for Path {
                         format!("Yay boyu {}", format.length(a.r * a.sweep.abs())),
                     ],
                     (None, None) => vec![
-                        self.on_ellipsoid(&[last, end], None, false)
-                            .map_or_else(|| format.length(dist(last, end)), |(l, _)| format.length(l)),
-                        format!("{} {}", format.direction_name(), format.direction(bearing_grad(last, end))),
+                        self.on_ellipsoid(&[last, end], None, false).map_or_else(
+                            || format.length(dist(last, end)),
+                            |(l, _)| format.length(l),
+                        ),
+                        format!(
+                            "{} {}",
+                            format.direction_name(),
+                            format.direction(bearing_grad(last, end))
+                        ),
                     ],
                 };
                 if self.shape == Shape::MeasureLength {

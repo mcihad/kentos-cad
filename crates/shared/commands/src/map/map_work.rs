@@ -153,7 +153,10 @@ pub struct WorkRow {
     pub profile: Option<WorkProfileRow>,
     /// With `suggest`, for an item without a profile: the profiles whose classes suit its kind (docs/adr/5280).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<WorkProfileSuggestion>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<WorkProfileSuggestion>>", optional)
+    )]
     pub suggested: Vec<WorkProfileSuggestion>,
     pub state: WorkState,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -379,11 +382,17 @@ pub struct WorkProfileRow {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
     pub version: Option<u32>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProfileClassSummary>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::ProfileClassSummary>>", optional)
+    )]
     pub classes: Vec<crate::ProfileClassSummary>,
     /// The classes' findings (`cad.profiles.check`'s), at most [`WORK_CHANGES_LISTED`].
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProfileFinding>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::ProfileFinding>>", optional)
+    )]
     pub findings: Vec<crate::ProfileFinding>,
     /// The item's layers holding objects that no class of it types.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -492,7 +501,12 @@ pub struct MapWorkTree {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "op", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
+#[serde(
+    tag = "op",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum MapWorkOperation {
     /// A new item `is-N`: its kind, name, layers (each in no other item) and, for a file the project rests on, the
@@ -550,7 +564,11 @@ pub enum MapWorkOperation {
     Refresh { item: String },
     /// Objects recorded as made from `source` by `operation`, at its revision now: its file's, or without a file its
     /// content revision (docs/adr/2080 §2); an object its own layers hold is not made from an item without a file.
-    Derive { source: String, uids: Vec<String>, operation: String },
+    Derive {
+        source: String,
+        uids: Vec<String>,
+        operation: String,
+    },
     /// A derivation's record taken away; its objects stay, the user's own drawing.
     Forget { derivation: String },
     /// Objects let go of their derivations (promoted to the user's own drawing, docs/adr/1201 §3): each object out of the derivation
@@ -699,4 +717,3 @@ pub struct MapWorkRestored {
     pub as_approved: bool,
     pub revision: String,
 }
-

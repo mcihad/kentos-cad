@@ -32,8 +32,12 @@ pub struct Presented<'a, Message> {
 }
 
 /// `content`'i, bir olayda geçersiz kılınan yerleşimi hemen çizdirerek sarar ([modül](self)).
-pub fn presented<'a, Message: 'a>(content: impl Into<Element<'a, Message>>) -> Presented<'a, Message> {
-    Presented { content: content.into() }
+pub fn presented<'a, Message: 'a>(
+    content: impl Into<Element<'a, Message>>,
+) -> Presented<'a, Message> {
+    Presented {
+        content: content.into(),
+    }
 }
 
 impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Presented<'a, Message> {
@@ -73,7 +77,9 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Presented<'a, Message
         renderer: &Renderer,
         operation: &mut dyn Operation,
     ) {
-        self.content.as_widget_mut().operate(tree, layout, renderer, operation);
+        self.content
+            .as_widget_mut()
+            .operate(tree, layout, renderer, operation);
     }
 
     fn update(
@@ -87,10 +93,12 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Presented<'a, Message
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
-        self.content
-            .as_widget_mut()
-            .update(tree, event, layout, cursor, renderer, clipboard, shell, viewport);
-        if shell.is_layout_invalid() && !matches!(event, Event::Window(window::Event::RedrawRequested(_))) {
+        self.content.as_widget_mut().update(
+            tree, event, layout, cursor, renderer, clipboard, shell, viewport,
+        );
+        if shell.is_layout_invalid()
+            && !matches!(event, Event::Window(window::Event::RedrawRequested(_)))
+        {
             shell.request_redraw();
         }
     }
@@ -172,7 +180,12 @@ mod tests {
             Size::new(Length::Fixed(100.0), Length::Fixed(20.0))
         }
 
-        fn layout(&mut self, _tree: &mut Tree, _renderer: &Renderer, _limits: &layout::Limits) -> Node {
+        fn layout(
+            &mut self,
+            _tree: &mut Tree,
+            _renderer: &Renderer,
+            _limits: &layout::Limits,
+        ) -> Node {
             Node::new(Size::new(100.0, 20.0))
         }
 
@@ -187,7 +200,8 @@ mod tests {
             shell: &mut Shell<'_, ()>,
             _viewport: &Rectangle,
         ) {
-            if let Event::Keyboard(iced::keyboard::Event::KeyPressed { text: Some(t), .. }) = event {
+            if let Event::Keyboard(iced::keyboard::Event::KeyPressed { text: Some(t), .. }) = event
+            {
                 tree.state.downcast_mut::<String>().push_str(t);
                 shell.invalidate_layout();
             } else if self.always {
@@ -234,7 +248,11 @@ mod tests {
     /// drawn at once (docs/adr/0976).
     #[test]
     fn a_layout_invalidated_on_a_key_is_drawn_at_once_under_presented() {
-        assert_eq!(keys_drawn(bare), [false, false], "without it the key is not drawn: the fault itself");
+        assert_eq!(
+            keys_drawn(bare),
+            [false, false],
+            "without it the key is not drawn: the fault itself"
+        );
         assert_eq!(keys_drawn(wrapped), [true, true]);
     }
 
@@ -244,7 +262,9 @@ mod tests {
     fn a_frame_asks_for_no_other_frame() {
         let mut snapshot = Snapshot::new(Size::new(200.0, 40.0)).expect("a renderer");
         let frame = Event::Window(window::Event::RedrawRequested(iced::time::Instant::now()));
-        let moved = Event::Mouse(mouse::Event::CursorMoved { position: iced::Point::new(5.0, 5.0) });
+        let moved = Event::Mouse(mouse::Event::CursorMoved {
+            position: iced::Point::new(5.0, 5.0),
+        });
         let drawn: Vec<bool> = snapshot
             .drawn_events(&mut (), always, &mut |_, _| {}, vec![frame, moved])
             .into_iter()

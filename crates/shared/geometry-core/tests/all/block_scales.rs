@@ -7,8 +7,8 @@
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::{Blocks, shows_nothing};
 use kentos_geometry_core::entity::{Entity, Shape};
-use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::jsmath::{atan2, cos, js_hypot, js_max, js_min, sin};
+use kentos_geometry_core::ops::curve_cuts::Cut;
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
@@ -72,7 +72,11 @@ fn curve(s: &Shape) -> Option<Curve> {
         }
         Shape::Arc { c, r, a0, a1 } => {
             let (c, r) = (*c, *r);
-            let a1 = if a1 < a0 { a1 + std::f64::consts::TAU } else { *a1 };
+            let a1 = if a1 < a0 {
+                a1 + std::f64::consts::TAU
+            } else {
+                *a1
+            };
             Some(Curve {
                 c,
                 semi: [r, r],
@@ -92,7 +96,11 @@ fn curve(s: &Shape) -> Option<Curve> {
             let (c, mj, ratio) = (*c, *major, *ratio);
             let a = js_hypot(mj.x, mj.y);
             let mn = Vec2::new(-mj.y * ratio, mj.x * ratio);
-            let t1 = if t1 < t0 { t1 + std::f64::consts::TAU } else { *t1 };
+            let t1 = if t1 < t0 {
+                t1 + std::f64::consts::TAU
+            } else {
+                *t1
+            };
             Some(Curve {
                 c,
                 semi: [a, a * ratio],
@@ -133,21 +141,49 @@ fn check_piece(name: &str, got: &Shape, want: &Value) {
         }
         "circle" | "ellipse" | "arc" => {
             if kind == "circle" {
-                assert!(matches!(got, Shape::Circle { .. }), "{name}: daire değil: {got:?}");
+                assert!(
+                    matches!(got, Shape::Circle { .. }),
+                    "{name}: daire değil: {got:?}"
+                );
             } else if kind == "ellipse" {
-                assert!(matches!(got, Shape::Ellipse { .. }), "{name}: elips değil: {got:?}");
+                assert!(
+                    matches!(got, Shape::Ellipse { .. }),
+                    "{name}: elips değil: {got:?}"
+                );
             }
             let c = curve(got).unwrap_or_else(|| panic!("{name}: eğri değil: {got:?}"));
             near(name, "merkez", c.c, pt(&want["center"]), TOL);
-            num(name, "büyük yarı eksen", c.semi[0], want["semi"][0].as_f64().unwrap());
-            num(name, "küçük yarı eksen", c.semi[1], want["semi"][1].as_f64().unwrap());
+            num(
+                name,
+                "büyük yarı eksen",
+                c.semi[0],
+                want["semi"][0].as_f64().unwrap(),
+            );
+            num(
+                name,
+                "küçük yarı eksen",
+                c.semi[1],
+                want["semi"][1].as_f64().unwrap(),
+            );
             if (c.semi[0] - c.semi[1]).abs() > 1e-9 {
-                angle(name, "eksen", c.axis, want["axis"].as_f64().unwrap(), std::f64::consts::PI);
+                angle(
+                    name,
+                    "eksen",
+                    c.axis,
+                    want["axis"].as_f64().unwrap(),
+                    std::f64::consts::PI,
+                );
             }
             if kind == "arc" {
                 near(name, "yayın başı", (c.at)(c.t0), pt(&want["start"]), 1e-9);
                 near(name, "yayın sonu", (c.at)(c.t1), pt(&want["end"]), 1e-9);
-                near(name, "yayın ortası", (c.at)((c.t0 + c.t1) / 2.0), pt(&want["mid"]), 1e-9);
+                near(
+                    name,
+                    "yayın ortası",
+                    (c.at)((c.t0 + c.t1) / 2.0),
+                    pt(&want["mid"]),
+                    1e-9,
+                );
             }
         }
         "text" => {
@@ -169,19 +205,33 @@ fn check_piece(name: &str, got: &Shape, want: &Value) {
                 width_factor.unwrap_or(1.0),
                 want["widthFactor"].as_f64().unwrap(),
             );
-            angle(name, "dönüş", *rotation, want["rotation"].as_f64().unwrap(), 360.0);
+            angle(
+                name,
+                "dönüş",
+                *rotation,
+                want["rotation"].as_f64().unwrap(),
+                360.0,
+            );
         }
         "polyline" => {
             let Shape::Polyline { pts, .. } = got else {
                 panic!("{name}: çoklu çizgi değil: {got:?}")
             };
             near(name, "ilk köşe", pts[0], pt(&want["first"]), TOL);
-            near(name, "son köşe", *pts.last().unwrap(), pt(&want["last"]), TOL);
+            near(
+                name,
+                "son köşe",
+                *pts.last().unwrap(),
+                pt(&want["last"]),
+                TOL,
+            );
             let joint = pt(&want["joint"]);
             let k = pts
                 .iter()
                 .position(|p| (p.x - joint.x).abs() <= TOL && (p.y - joint.y).abs() <= TOL)
-                .unwrap_or_else(|| panic!("{name}: yay ile düz kenarın birleştiği köşe yok: {pts:?}"));
+                .unwrap_or_else(|| {
+                    panic!("{name}: yay ile düz kenarın birleştiği köşe yok: {pts:?}")
+                });
             assert!(k > 1, "{name}: yay kenarı köşelere bölünmedi");
             // Every vertex of the arc edge on its exact image: c + u cos t + v sin t.
             let arc = &want["arc"];
@@ -190,7 +240,8 @@ fn check_piece(name: &str, got: &Shape, want: &Value) {
             for q in &pts[..=k] {
                 let (x, y) = (q.x - c.x, q.y - c.y);
                 let (cs, sn) = ((x * v.y - y * v.x) / d, (u.x * y - u.y * x) / d);
-                let off = (js_hypot(cs, sn) - 1.0).abs() * js_max(js_hypot(u.x, u.y), js_hypot(v.x, v.y));
+                let off =
+                    (js_hypot(cs, sn) - 1.0).abs() * js_max(js_hypot(u.x, u.y), js_hypot(v.x, v.y));
                 assert!(off <= 1e-4, "{name}: köşe {q:?} görüntüden {off} m uzak");
             }
         }
@@ -295,6 +346,9 @@ fn timing() {
         for i in 0..10_000 {
             n += blocks.expand(&shape(sy, i)).len();
         }
-        println!("{what}: 10 000 yerleştirme, {n} parça: {:.1} ms", t.elapsed().as_secs_f64() * 1e3);
+        println!(
+            "{what}: 10 000 yerleştirme, {n} parça: {:.1} ms",
+            t.elapsed().as_secs_f64() * 1e3
+        );
     }
 }

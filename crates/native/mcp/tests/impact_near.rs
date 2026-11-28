@@ -11,7 +11,10 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_nearness_over_mcp_is_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.scenarios.impact.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.scenarios.impact.json"
+    ))
+    .unwrap();
     let case = cases["cases"]
         .as_array()
         .unwrap()
@@ -19,7 +22,8 @@ fn the_nearness_over_mcp_is_the_case_s() {
         .find(|c| c["name"] == "altyapıya yakınlık: kanalizasyon hattına 40 m")
         .unwrap()
         .clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
     let path = std::env::temp_dir().join(format!("kentos-impact-near-{}.kcad", std::process::id()));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
@@ -30,7 +34,11 @@ fn the_nearness_over_mcp_is_the_case_s() {
     let r = call(&mut server, "cad.scenarios.impact", input);
     assert_eq!(r["isError"], false, "{r}");
     let want = &case["steps"][0]["result"]["output"]["near"];
-    assert!(want["alternativeLines"].as_array().is_some_and(|l| !l.is_empty()));
+    assert!(
+        want["alternativeLines"]
+            .as_array()
+            .is_some_and(|l| !l.is_empty())
+    );
     assert_eq!(&r["structuredContent"]["output"]["near"], want);
     let _ = std::fs::remove_file(path);
 }

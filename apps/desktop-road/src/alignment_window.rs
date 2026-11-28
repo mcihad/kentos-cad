@@ -22,17 +22,18 @@
 //! sets) and `road.alignments.create` (the new ones), each one undo step, and closes. Ters çevir reverses a saved
 //! alignment (`road.alignments.edit reverse`).
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task, Theme};
 use kentos_commands::{
-    AlignmentDef, AlignmentOffset, AlignmentPi, AlignmentStationing, AlignmentsCreate, AlignmentsEdit,
-    AlignmentsEditOperation, AlignmentsQuery, StationEquationDef,
+    AlignmentDef, AlignmentOffset, AlignmentPi, AlignmentStationing, AlignmentsCreate,
+    AlignmentsEdit, AlignmentsEditOperation, AlignmentsQuery, StationEquationDef,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{
-    ExecutionContext, road_alignments, road_alignments_create, road_alignments_edit, road_alignments_query,
+    ExecutionContext, road_alignments, road_alignments_create, road_alignments_edit,
+    road_alignments_query,
 };
 use kentos_road::alignment::{self as core, km_text};
 use kentos_ui::theme::{Tokens, typography};
@@ -113,7 +114,11 @@ fn number(text: &str) -> Result<Option<f64>, ()> {
     if text.is_empty() {
         return Ok(None);
     }
-    text.parse::<f64>().ok().filter(|v| v.is_finite()).map(Some).ok_or(())
+    text.parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .map(Some)
+        .ok_or(())
 }
 
 impl Row {
@@ -137,10 +142,21 @@ impl Row {
                         text(p.speed.unwrap_or(0.0)),
                     ],
                     ove: p.ove,
-                    kept: [p.x, p.y, p.radius, p.spiral_in, p.spiral_out, p.speed.unwrap_or(0.0)],
+                    kept: [
+                        p.x,
+                        p.y,
+                        p.radius,
+                        p.spiral_in,
+                        p.spiral_out,
+                        p.speed.unwrap_or(0.0),
+                    ],
                 })
                 .collect(),
-            start: if d.stationing.is_some() { trimmed(st.start) } else { String::new() },
+            start: if d.stationing.is_some() {
+                trimmed(st.start)
+            } else {
+                String::new()
+            },
             equations: st
                 .equations
                 .iter()
@@ -150,9 +166,15 @@ impl Row {
                     increasing: q.increasing,
                 })
                 .collect(),
-            parallel: d.offset_of.as_ref().map(|o| (o.alignment.clone(), trimmed(o.offset))),
+            parallel: d
+                .offset_of
+                .as_ref()
+                .map(|o| (o.alignment.clone(), trimmed(o.offset))),
             speed: text(d.design_speed.unwrap_or(0.0)),
-            places: [d.start_place.clone().unwrap_or_default(), d.end_place.clone().unwrap_or_default()],
+            places: [
+                d.start_place.clone().unwrap_or_default(),
+                d.end_place.clone().unwrap_or_default(),
+            ],
         }
     }
 
@@ -162,7 +184,11 @@ impl Row {
         for (i, p) in self.pis.iter().enumerate() {
             let mut v = [0.0; 6];
             for (j, t) in p.texts.iter().enumerate() {
-                let shown = if j < 2 { trimmed(p.kept[j]) } else { text(p.kept[j]) };
+                let shown = if j < 2 {
+                    trimmed(p.kept[j])
+                } else {
+                    text(p.kept[j])
+                };
                 if *t == shown {
                     v[j] = p.kept[j];
                     continue;
@@ -170,7 +196,13 @@ impl Row {
                 v[j] = match number(t) {
                     Ok(Some(n)) => n,
                     Ok(None) if j >= 2 => 0.0,
-                    _ => return Err(format!("{}. satırın {} değeri sayı olmalı.", i + 1, ["Y", "X", "R", "L giriş", "L çıkış", "V"][j])),
+                    _ => {
+                        return Err(format!(
+                            "{}. satırın {} değeri sayı olmalı.",
+                            i + 1,
+                            ["Y", "X", "R", "L giriş", "L çıkış", "V"][j]
+                        ));
+                    }
                 };
             }
             pis.push(AlignmentPi {
@@ -187,11 +219,15 @@ impl Row {
         let stationing = if self.parallel.is_some() {
             None
         } else {
-            let start = number(&self.start).map_err(|_| "Başlangıç km'si sayı olmalı.".to_owned())?;
+            let start =
+                number(&self.start).map_err(|_| "Başlangıç km'si sayı olmalı.".to_owned())?;
             let mut equations = Vec::new();
             for (i, q) in self.equations.iter().enumerate() {
                 let (Ok(Some(back)), Ok(Some(ahead))) = (number(&q.back), number(&q.ahead)) else {
-                    return Err(format!("{}. km eşitliğinin geri ve ileri km'si sayı olmalı.", i + 1));
+                    return Err(format!(
+                        "{}. km eşitliğinin geri ve ileri km'si sayı olmalı.",
+                        i + 1
+                    ));
                 };
                 equations.push(StationEquationDef {
                     back,
@@ -208,14 +244,19 @@ impl Row {
         let offset_of = match &self.parallel {
             Some((src, off)) => Some(AlignmentOffset {
                 alignment: src.clone(),
-                offset: number(off).ok().flatten().ok_or("Öteleme sayı olmalı (sağa artı, sola eksi).")?,
+                offset: number(off)
+                    .ok()
+                    .flatten()
+                    .ok_or("Öteleme sayı olmalı (sağa artı, sola eksi).")?,
             }),
             None => None,
         };
         let design_speed = if offset_of.is_some() {
             None
         } else {
-            number(&self.speed).map_err(|_| "Proje hızı sayı olmalı (km/sa).".to_owned())?.filter(|v| *v != 0.0)
+            number(&self.speed)
+                .map_err(|_| "Proje hızı sayı olmalı (km/sa).".to_owned())?
+                .filter(|v| *v != 0.0)
         };
         Ok(AlignmentDef {
             id: self.id.clone(),
@@ -226,8 +267,10 @@ impl Row {
             stationing,
             design_speed,
             // Docs/adr/1028: a parallel axis has its source's.
-            start_place: Some(self.places[0].trim().to_owned()).filter(|n| !n.is_empty() && self.parallel.is_none()),
-            end_place: Some(self.places[1].trim().to_owned()).filter(|n| !n.is_empty() && self.parallel.is_none()),
+            start_place: Some(self.places[0].trim().to_owned())
+                .filter(|n| !n.is_empty() && self.parallel.is_none()),
+            end_place: Some(self.places[1].trim().to_owned())
+                .filter(|n| !n.is_empty() && self.parallel.is_none()),
         })
     }
 }
@@ -246,7 +289,15 @@ pub struct Window {
     /// Km'yi çizime yaz: the layer the km goes on.
     layer: Option<String>,
     /// What the PIs typed would do to what hangs on the alignment's stations (docs/adr/0963).
-    pub(crate) impact: Option<Result<(kentos_commands::AlignmentImpact, Vec<kentos_commands::CommandWarning>), String>>,
+    pub(crate) impact: Option<
+        Result<
+            (
+                kentos_commands::AlignmentImpact,
+                Vec<kentos_commands::CommandWarning>,
+            ),
+            String,
+        >,
+    >,
 }
 
 #[derive(Debug, Clone)]
@@ -298,7 +349,12 @@ fn impact_words(imp: &kentos_commands::AlignmentImpact) -> String {
     let mut parts: Vec<String> = Vec::new();
     for r in &imp.removed {
         parts.push(match r.most {
-            Some(m) => format!("km {} – {} yerinden kayar (en çok {} m)", r.from_text, r.to_text, comma(m)),
+            Some(m) => format!(
+                "km {} – {} yerinden kayar (en çok {} m)",
+                r.from_text,
+                r.to_text,
+                comma(m)
+            ),
             None => format!("km {} – {} kalkar", r.from_text, r.to_text),
         });
     }
@@ -306,21 +362,45 @@ fn impact_words(imp: &kentos_commands::AlignmentImpact) -> String {
         parts.push(format!("yeni km {} – {}", r.from_text, r.to_text));
     }
     if let Some(run) = imp.runs.iter().rev().find(|r| r.shift_to.abs() > 1e-6) {
-        parts.push(format!("km {}'den sonra km'ler {} m kayar", run.from_text, comma(run.shift_to)));
+        parts.push(format!(
+            "km {}'den sonra km'ler {} m kayar",
+            run.from_text,
+            comma(run.shift_to)
+        ));
     }
     let mut said = format!("Kaydedilirse: {}.", parts.join("; "));
     let moved = imp.refs.iter().filter(|r| r.to.is_some()).count();
     let lost = imp.refs.len() - moved;
     if !imp.refs.is_empty() {
-        said.push_str(&format!(" Bağlı km'lerden {moved} taşınır, {lost} yerini yitirir."));
+        said.push_str(&format!(
+            " Bağlı km'lerden {moved} taşınır, {lost} yerini yitirir."
+        ));
     }
-    let with = |d: &kentos_commands::ImpactDerived| if d.approved { format!("{} (onaylı)", d.name) } else { d.name.clone() };
-    let stale: Vec<String> = imp.volumes.iter().map(with).chain(imp.hauls.iter().map(with)).collect();
+    let with = |d: &kentos_commands::ImpactDerived| {
+        if d.approved {
+            format!("{} (onaylı)", d.name)
+        } else {
+            d.name.clone()
+        }
+    };
+    let stale: Vec<String> = imp
+        .volumes
+        .iter()
+        .map(with)
+        .chain(imp.hauls.iter().map(with))
+        .collect();
     if !stale.is_empty() {
         said.push_str(&format!(" Eskiyecekler: {}.", stale.join(", ")));
     }
     if !imp.parallels.is_empty() {
-        said.push_str(&format!(" İzleyen paralel akslar: {}.", imp.parallels.iter().map(|p| p.name.as_str()).collect::<Vec<_>>().join(", ")));
+        said.push_str(&format!(
+            " İzleyen paralel akslar: {}.",
+            imp.parallels
+                .iter()
+                .map(|p| p.name.as_str())
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
     }
     said
 }
@@ -329,12 +409,16 @@ fn impact_words(imp: &kentos_commands::AlignmentImpact) -> String {
 /// Whether the chosen row is refused: its status is said in red.
 #[cfg(test)]
 pub(crate) fn refused(w: &Window) -> bool {
-    w.chosen.and_then(|i| w.rows.get(i)).is_some_and(|r| status(&w.rows, r).1)
+    w.chosen
+        .and_then(|i| w.rows.get(i))
+        .is_some_and(|r| status(&w.rows, r).1)
 }
 
 #[cfg(test)]
 pub(crate) fn status_of(w: &Window) -> String {
-    w.chosen.and_then(|i| w.rows.get(i)).map_or_else(String::new, |r| status(&w.rows, r).0)
+    w.chosen
+        .and_then(|i| w.rows.get(i))
+        .map_or_else(String::new, |r| status(&w.rows, r).0)
 }
 
 /// What the chosen row builds to, and whether it is refused (said in red).
@@ -374,16 +458,29 @@ fn status(rows: &[Row], r: &Row) -> (String, bool) {
     let st = road_alignments::stationing_of(source.stationing.as_ref());
     let regions = match st.regions(al.length) {
         Ok(r) => r,
-        Err(_) => return ("Km eşitliği aksın üstünde, bir öncekinden sonra olmalı.".into(), true),
+        Err(_) => {
+            return (
+                "Km eşitliği aksın üstünde, bir öncekinden sonra olmalı.".into(),
+                true,
+            );
+        }
     };
     let comma = |v: f64| format!("{v:.3}").replace('.', ",");
     // The command's own words, with the fix in numbers (docs/adr/0970).
     if let Some(o) = &def.offset_of
         && let Err(e) = core::offset::check(&al, o.offset)
     {
-        return (road_alignments::offset_words(&def.name, &e, o.offset, &|s| core::Stationing::km(&regions, s)), true);
+        return (
+            road_alignments::offset_words(&def.name, &e, o.offset, &|s| {
+                core::Stationing::km(&regions, s)
+            }),
+            true,
+        );
     }
-    let length = def.offset_of.as_ref().map_or(al.length, |o| core::offset::length(&al, o.offset));
+    let length = def
+        .offset_of
+        .as_ref()
+        .map_or(al.length, |o| core::offset::length(&al, o.offset));
     let joins = al.joins.iter().filter(|j| j.reverse).count();
     let mut words = format!(
         "{} m · km {}–{} · {} kurp",
@@ -414,14 +511,22 @@ fn status(rows: &[Row], r: &Row) -> (String, bool) {
     let kinks: Vec<String> = seams
         .iter()
         .filter(|s| s.direction > 1e-9)
-        .map(|s| format!("{} kırık {}°", s.after.split('/').next().unwrap_or(""), comma(s.direction.to_degrees())))
+        .map(|s| {
+            format!(
+                "{} kırık {}°",
+                s.after.split('/').next().unwrap_or(""),
+                comma(s.direction.to_degrees())
+            )
+        })
         .collect();
     let jumps = seams.iter().filter(|s| s.curvature > 1e-9).count();
     if !kinks.is_empty() {
         words.push_str(&format!(" · {}", kinks.join(", ")));
     }
     if jumps > 0 {
-        words.push_str(&format!(" · {jumps} yerde eğrilik sıçrar (klotoidsiz kurp)"));
+        words.push_str(&format!(
+            " · {jumps} yerde eğrilik sıçrar (klotoidsiz kurp)"
+        ));
     }
     if kinks.is_empty() && jumps == 0 && !seams.is_empty() {
         words.push_str(" · konum, doğrultu ve eğrilik sürekli");
@@ -443,12 +548,17 @@ fn chain_words(e: &core::ChainError) -> String {
             "{a}–{b} aliymanına kurplar sığmıyor, {} m taşıyor",
             format!("{excess:.3}").replace('.', ",")
         ),
-        E::BadOve { pi, why } => format!("{pi} noktasında ove olamaz: {}", kentos_native_application::road_alignments::ove_why(*why)),
+        E::BadOve { pi, why } => format!(
+            "{pi} noktasında ove olamaz: {}",
+            kentos_native_application::road_alignments::ove_why(*why)
+        ),
         E::OveTooLong { a, b, excess } => format!(
             "{a}–{b} arasına ove sığmıyor, ortadaki aliyman {} m uzun",
             format!("{excess:.3}").replace('.', ",")
         ),
-        E::OveAmbiguous { a, b, .. } => format!("{a}–{b} arasında birden çok ove var; PI'ları oynatın"),
+        E::OveAmbiguous { a, b, .. } => {
+            format!("{a}–{b} arasında birden çok ove var; PI'ları oynatın")
+        }
     }
 }
 
@@ -516,13 +626,17 @@ impl AlignmentWindowApp for App {
         };
         match doc.model.get(*slot)? {
             Entity::Line(l) => Some(vec![[l.a.x, l.a.y], [l.b.x, l.b.y]]),
-            Entity::Polyline(p) | Entity::Polygon(p) => Some(p.pts.iter().map(|v| [v.x, v.y]).collect()),
+            Entity::Polyline(p) | Entity::Polygon(p) => {
+                Some(p.pts.iter().map(|v| [v.x, v.y]).collect())
+            }
             _ => None,
         }
     }
 
     fn alignment_event(&mut self, event: Event) -> Task<Message> {
-        let path = matches!(event, Event::FromSelection).then(|| self.selected_path()).flatten();
+        let path = matches!(event, Event::FromSelection)
+            .then(|| self.selected_path())
+            .flatten();
         let Some(w) = self.modules.road_mut().alignment_window.as_mut() else {
             return Task::none();
         };
@@ -535,46 +649,65 @@ impl AlignmentWindowApp for App {
             }
             Event::New | Event::Parallel => {
                 let taken: Vec<String> = w.rows.iter().map(|r| r.id.clone()).collect();
-                let id = (1..).map(|n| format!("g-{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
+                let id = (1..)
+                    .map(|n| format!("g-{n}"))
+                    .find(|id| !taken.contains(id))
+                    .unwrap_or_default();
                 let n = w.rows.len() + 1;
                 let parallel = matches!(event, Event::Parallel);
-                let source = w.chosen.and_then(|i| w.rows.get(i)).filter(|r| r.parallel.is_none()).map(|r| r.id.clone());
+                let source = w
+                    .chosen
+                    .and_then(|i| w.rows.get(i))
+                    .filter(|r| r.parallel.is_none())
+                    .map(|r| r.id.clone());
                 if parallel && source.is_none() {
                     warning = Some("Paralel aks için önce PI'larıyla kurulan bir aks seçin.");
                 } else {
-                w.rows.push(Row {
-                    id,
-                    name: if parallel {
-                        format!("Paralel {n}")
-                    } else if n == 1 {
-                        "Ana aks".to_owned()
-                    } else {
-                        format!("Aks {n}")
-                    },
-                    revision: 0,
-                    pis: if parallel {
-                        Vec::new()
-                    } else {
-                        ["a", "b"].iter().map(|id| PiRow { id: (*id).to_owned(), texts: Default::default(), ove: false, kept: [f64::NAN; 6] }).collect()
-                    },
-                    start: String::new(),
-                    equations: Vec::new(),
-                    parallel: source.filter(|_| parallel).map(|s| (s, "7,5".to_owned())),
-                    speed: String::new(),
-                    places: Default::default(),
-                });
-                w.chosen = Some(w.rows.len() - 1);
-                w.pi = None;
+                    w.rows.push(Row {
+                        id,
+                        name: if parallel {
+                            format!("Paralel {n}")
+                        } else if n == 1 {
+                            "Ana aks".to_owned()
+                        } else {
+                            format!("Aks {n}")
+                        },
+                        revision: 0,
+                        pis: if parallel {
+                            Vec::new()
+                        } else {
+                            ["a", "b"]
+                                .iter()
+                                .map(|id| PiRow {
+                                    id: (*id).to_owned(),
+                                    texts: Default::default(),
+                                    ove: false,
+                                    kept: [f64::NAN; 6],
+                                })
+                                .collect()
+                        },
+                        start: String::new(),
+                        equations: Vec::new(),
+                        parallel: source.filter(|_| parallel).map(|s| (s, "7,5".to_owned())),
+                        speed: String::new(),
+                        places: Default::default(),
+                    });
+                    w.chosen = Some(w.rows.len() - 1);
+                    w.pi = None;
                 }
             }
             Event::Remove => {
                 if let Some(i) = w.chosen.filter(|i| *i < w.rows.len()) {
                     let id = w.rows[i].id.clone();
-                    if w.rows.iter().any(|r| r.parallel.as_ref().is_some_and(|(s, _)| *s == id)) {
+                    if w.rows
+                        .iter()
+                        .any(|r| r.parallel.as_ref().is_some_and(|(s, _)| *s == id))
+                    {
                         warning = Some("Bu aksı paralel aks izliyor; önce paralel aksı silin.");
                     } else {
                         w.rows.remove(i);
-                        w.chosen = (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
+                        w.chosen =
+                            (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
                     }
                 }
             }
@@ -601,13 +734,21 @@ impl AlignmentWindowApp for App {
             }
             Event::PiChoose(j) => w.pi = Some(j),
             Event::PiOve(j) => {
-                if let Some(p) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.pis.get_mut(j)) {
+                if let Some(p) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.pis.get_mut(j))
+                {
                     p.ove = !p.ove;
                 }
                 w.pi = Some(j);
             }
             Event::Pi(j, k, t) => {
-                if let Some(p) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.pis.get_mut(j)) {
+                if let Some(p) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.pis.get_mut(j))
+                {
                     if k == PI_ID {
                         p.id = t;
                     } else {
@@ -619,10 +760,25 @@ impl AlignmentWindowApp for App {
             Event::PiAdd => {
                 if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
                     let taken: Vec<String> = r.pis.iter().map(|p| p.id.clone()).collect();
-                    let id = (1..).map(|n| format!("p{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
+                    let id = (1..)
+                        .map(|n| format!("p{n}"))
+                        .find(|id| !taken.contains(id))
+                        .unwrap_or_default();
                     // Before the end, or after the chosen row.
-                    let at = w.pi.map_or(r.pis.len().saturating_sub(1), |j| (j + 1).min(r.pis.len().saturating_sub(1))).max(1);
-                    r.pis.insert(at.min(r.pis.len()), PiRow { id, texts: Default::default(), ove: false, kept: [f64::NAN; 6] });
+                    let at =
+                        w.pi.map_or(r.pis.len().saturating_sub(1), |j| {
+                            (j + 1).min(r.pis.len().saturating_sub(1))
+                        })
+                        .max(1);
+                    r.pis.insert(
+                        at.min(r.pis.len()),
+                        PiRow {
+                            id,
+                            texts: Default::default(),
+                            ove: false,
+                            kept: [f64::NAN; 6],
+                        },
+                    );
                     w.pi = Some(at);
                 }
             }
@@ -648,17 +804,32 @@ impl AlignmentWindowApp for App {
                             } else {
                                 format!("p{i}")
                             },
-                            texts: [trimmed(p[0]), trimmed(p[1]), String::new(), String::new(), String::new(), String::new()],
+                            texts: [
+                                trimmed(p[0]),
+                                trimmed(p[1]),
+                                String::new(),
+                                String::new(),
+                                String::new(),
+                                String::new(),
+                            ],
                             ove: false,
                             kept: [p[0], p[1], 0.0, 0.0, 0.0, 0.0],
                         })
                         .collect();
                 }
-                _ => warning = Some("Çizimde tek bir çizgi, çoklu çizgi ya da alan seçin: köşeleri PI olur."),
+                _ => {
+                    warning = Some(
+                        "Çizimde tek bir çizgi, çoklu çizgi ya da alan seçin: köşeleri PI olur.",
+                    )
+                }
             },
             Event::EquationAdd => {
                 if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
-                    r.equations.push(EquationRow { back: String::new(), ahead: String::new(), increasing: true });
+                    r.equations.push(EquationRow {
+                        back: String::new(),
+                        ahead: String::new(),
+                        increasing: true,
+                    });
                 }
             }
             Event::EquationRemove(j) => {
@@ -669,27 +840,47 @@ impl AlignmentWindowApp for App {
                 }
             }
             Event::Back(j, t) => {
-                if let Some(q) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.equations.get_mut(j)) {
+                if let Some(q) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.equations.get_mut(j))
+                {
                     q.back = t;
                 }
             }
             Event::Ahead(j, t) => {
-                if let Some(q) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.equations.get_mut(j)) {
+                if let Some(q) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.equations.get_mut(j))
+                {
                     q.ahead = t;
                 }
             }
             Event::Increasing(j, on) => {
-                if let Some(q) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.equations.get_mut(j)) {
+                if let Some(q) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.equations.get_mut(j))
+                {
                     q.increasing = on;
                 }
             }
             Event::Source(id) => {
-                if let Some((s, _)) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.parallel.as_mut()) {
+                if let Some((s, _)) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.parallel.as_mut())
+                {
                     *s = id;
                 }
             }
             Event::Offset(t) => {
-                if let Some((_, o)) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.parallel.as_mut()) {
+                if let Some((_, o)) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.parallel.as_mut())
+                {
                     *o = t;
                 }
             }
@@ -745,9 +936,18 @@ impl AlignmentWindowApp for App {
         let Some(w) = self.modules.road_mut().alignment_window.as_mut() else {
             return Task::none();
         };
-        let parts: Vec<Option<f64>> = w.point.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
+        let parts: Vec<Option<f64>> = w
+            .point
+            .split([';', ' '])
+            .filter(|s| !s.is_empty())
+            .map(|s| number(s).ok().flatten())
+            .collect();
         let [Some(x), Some(y)] = parts[..] else {
-            w.answer = if w.point.trim().is_empty() { String::new() } else { "Yeri “Y; X” olarak yazın.".into() };
+            w.answer = if w.point.trim().is_empty() {
+                String::new()
+            } else {
+                "Yeri “Y; X” olarak yazın.".into()
+            };
             return Task::none();
         };
         let Some(r) = w.chosen.and_then(|i| w.rows.get(i)) else {
@@ -764,20 +964,36 @@ impl AlignmentWindowApp for App {
         let mut copy = doc.model.reading_copy();
         let got = road_alignments_query::plan(
             &ExecutionContext::new(&mut copy),
-            &AlignmentsQuery { alignment: Some(id), points: vec![[x, y]], ..AlignmentsQuery::default() },
+            &AlignmentsQuery {
+                alignment: Some(id),
+                points: vec![[x, y]],
+                ..AlignmentsQuery::default()
+            },
         );
         let answer = match got {
-            kentos_commands::CommandResult::Completed { output, .. } => match output.points.first() {
+            kentos_commands::CommandResult::Completed { output, .. } => match output.points.first()
+            {
                 Some(p) => match (&p.nearest, &p.beyond) {
                     (Some(f), _) => format!(
                         "km {} · {} {} m{}",
                         f.at.km_text.replace('.', ","),
                         if f.offset >= 0.0 { "sağ" } else { "sol" },
                         format!("{:.3}", f.offset.abs()).replace('.', ","),
-                        if p.feet.len() > 1 { format!(" · {} ayak", p.feet.len()) } else { String::new() }
+                        if p.feet.len() > 1 {
+                            format!(" · {} ayak", p.feet.len())
+                        } else {
+                            String::new()
+                        }
                     ),
                     (None, Some(end)) => {
-                        format!("Nokta aksın {} ucunun ötesinde.", if end == "start" { "başlangıç" } else { "bitiş" })
+                        format!(
+                            "Nokta aksın {} ucunun ötesinde.",
+                            if end == "start" {
+                                "başlangıç"
+                            } else {
+                                "bitiş"
+                            }
+                        )
                     }
                     _ => String::new(),
                 },
@@ -815,10 +1031,16 @@ impl AlignmentWindowApp for App {
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
-        let result = kentos_native_application::road_alignments_label::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let result = kentos_native_application::road_alignments_label::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
         if let Some(out) = self.answered(result) {
             let words = out.labels.iter().filter(|l| l.text.is_some()).count();
-            self.say(Level::Success, format!("{} işaret ve {words} km yazısı çizildi.", out.labels.len()));
+            self.say(
+                Level::Success,
+                format!("{} işaret ve {words} km yazısı çizildi.", out.labels.len()),
+            );
         }
         Task::none()
     }
@@ -853,19 +1075,38 @@ impl AlignmentWindowApp for App {
         // What does not turn with it, read before (docs/adr/0965): told after it is turned.
         let stale: Vec<String> = kentos_native_application::road_alignments_impact::preview(
             &doc.model,
-            &kentos_commands::AlignmentsImpact { alignment: edit.alignment.clone(), pis: Vec::new(), reverse: true, tolerance: None },
+            &kentos_commands::AlignmentsImpact {
+                alignment: edit.alignment.clone(),
+                pis: Vec::new(),
+                reverse: true,
+                tolerance: None,
+            },
         )
-        .map(|(_, w)| w.into_iter().filter(|w| w.code == "alignment_reverse_stale").map(|w| w.message).collect())
+        .map(|(_, w)| {
+            w.into_iter()
+                .filter(|w| w.code == "alignment_reverse_stale")
+                .map(|w| w.message)
+                .collect()
+        })
         .unwrap_or_default();
-        let result = road_alignments_edit::execute(&mut ExecutionContext::new(&mut doc.model), edit);
+        let result =
+            road_alignments_edit::execute(&mut ExecutionContext::new(&mut doc.model), edit);
         if let Some(out) = self.answered(result) {
             // Its profiles and superelevation schedules turned round with it (docs/adr/0964, 0965): said by name.
             let names: Vec<String> = self.document.as_ref().map_or_else(Vec::new, |d| {
                 let profiles = out.profiles.iter().filter_map(|id| {
-                    d.model.road_profiles().iter().find(|p| p.id == *id).map(|p| format!("“{}” boykesiti", p.name))
+                    d.model
+                        .road_profiles()
+                        .iter()
+                        .find(|p| p.id == *id)
+                        .map(|p| format!("“{}” boykesiti", p.name))
                 });
                 let supers = out.superelevations.iter().filter_map(|id| {
-                    d.model.road_superelevations().iter().find(|s| s.id == *id).map(|s| format!("“{}” dever çizelgesi", s.name))
+                    d.model
+                        .road_superelevations()
+                        .iter()
+                        .find(|s| s.id == *id)
+                        .map(|s| format!("“{}” dever çizelgesi", s.name))
                 });
                 profiles.chain(supers).collect()
             });
@@ -873,7 +1114,13 @@ impl AlignmentWindowApp for App {
             if names.is_empty() {
                 self.say(Level::Success, "Aks ters çevrildi.");
             } else {
-                self.say(Level::Success, format!("Aks ters çevrildi; {} de km'leriyle döndü.", names.join(", ")));
+                self.say(
+                    Level::Success,
+                    format!(
+                        "Aks ters çevrildi; {} de km'leriyle döndü.",
+                        names.join(", ")
+                    ),
+                );
             }
             for words in stale {
                 self.warn(words);
@@ -907,7 +1154,11 @@ impl AlignmentWindowApp for App {
                 }
             }
         }
-        let mut removed: Vec<&AlignmentDef> = w.kept.iter().filter(|k| defs.iter().all(|d| d.id != k.id)).collect();
+        let mut removed: Vec<&AlignmentDef> = w
+            .kept
+            .iter()
+            .filter(|k| defs.iter().all(|d| d.id != k.id))
+            .collect();
         removed.sort_by_key(|k| k.offset_of.is_none());
         for k in removed {
             let edit = AlignmentsEdit {
@@ -938,13 +1189,21 @@ impl AlignmentWindowApp for App {
                         operation: AlignmentsEditOperation::Set,
                         name: (k.name != d.name).then(|| d.name.clone()),
                         pis: (k.pis != d.pis && d.offset_of.is_none()).then(|| d.pis.clone()),
-                        stationing: (k.stationing != d.stationing).then(|| d.stationing.clone().unwrap_or_default()),
-                        offset: d.offset_of.as_ref().filter(|_| k.offset_of != d.offset_of).map(|o| o.offset),
+                        stationing: (k.stationing != d.stationing)
+                            .then(|| d.stationing.clone().unwrap_or_default()),
+                        offset: d
+                            .offset_of
+                            .as_ref()
+                            .filter(|_| k.offset_of != d.offset_of)
+                            .map(|o| o.offset),
                         // 0 clears it (docs/adr/0985).
-                        design_speed: (k.design_speed != d.design_speed).then(|| d.design_speed.unwrap_or(0.0)),
+                        design_speed: (k.design_speed != d.design_speed)
+                            .then(|| d.design_speed.unwrap_or(0.0)),
                         // "" clears one (docs/adr/1028).
-                        start_place: (k.start_place != d.start_place).then(|| d.start_place.clone().unwrap_or_default()),
-                        end_place: (k.end_place != d.end_place).then(|| d.end_place.clone().unwrap_or_default()),
+                        start_place: (k.start_place != d.start_place)
+                            .then(|| d.start_place.clone().unwrap_or_default()),
+                        end_place: (k.end_place != d.end_place)
+                            .then(|| d.end_place.clone().unwrap_or_default()),
                         expected_revision: None,
                     };
                     if !self.alignment_write(|cx| road_alignments_edit::execute(cx, edit)) {
@@ -991,18 +1250,27 @@ impl AlignmentWindowApp for App {
         let Some(w) = &self.modules.road().alignment_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
         let mut list = Column::new().spacing(1).padding(2);
         for (i, r) in w.rows.iter().enumerate() {
             let kind = match &r.parallel {
                 Some((src, off)) => {
-                    let name = w.rows.iter().find(|x| x.id == *src).map_or(src.clone(), |x| x.name.clone());
+                    let name = w
+                        .rows
+                        .iter()
+                        .find(|x| x.id == *src)
+                        .map_or(src.clone(), |x| x.name.clone());
                     format!("paralel · {name} {off} m")
                 }
                 None => format!("{} PI", r.pis.len()),
             };
             let face = column![
-                Elided::new(r.name.clone()).size(typography::body()).font(typography::ui()).width(Fill),
+                Elided::new(r.name.clone())
+                    .size(typography::body())
+                    .font(typography::ui())
+                    .width(Fill),
                 label::caption(kind).style(muted),
             ]
             .spacing(1);
@@ -1022,7 +1290,9 @@ impl AlignmentWindowApp for App {
         }
         let left = column![
             label::strong("Akslar"),
-            container(scrollable(list).height(typography::scaled(300.0))).style(style::container::field_box).width(Fill),
+            container(scrollable(list).height(typography::scaled(300.0)))
+                .style(style::container::field_box)
+                .width(Fill),
             row![
                 words::secondary(NEW, Some(msg(Event::New))),
                 words::secondary(PARALLEL, Some(msg(Event::Parallel))),
@@ -1032,15 +1302,27 @@ impl AlignmentWindowApp for App {
         .spacing(8);
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
-            None => container(label::caption("Bir aks seçin ya da yeni bir aks oluşturun.")).padding(12).into(),
+            None => container(label::caption(
+                "Bir aks seçin ya da yeni bir aks oluşturun.",
+            ))
+            .padding(12)
+            .into(),
             Some(r) => self.alignment_editor(w, r),
         };
         let saved = chosen.is_some_and(|r| w.kept.iter().any(|k| r.def().ok().as_ref() == Some(k)));
-        let ids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let ids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let names: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let layer = kentos_ui::widget::select::Select::new(
-            names.iter().map(|n| kentos_ui::widget::select::Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| ids.iter().position(|id| id == l)),
+            names
+                .iter()
+                .map(|n| kentos_ui::widget::select::Choice::new(n.clone())),
+            w.layer
+                .as_ref()
+                .and_then(|l| ids.iter().position(|id| id == l)),
             move |i| msg(Event::LabelLayer(ids[i].clone())),
         )
         .placeholder("Katman");
@@ -1055,29 +1337,40 @@ impl AlignmentWindowApp for App {
         let body = row![container(left).width(230), container(right).width(Fill)].spacing(16);
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
         let footer = row![
-                words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
-                words::secondary(
-                    REVERSE,
-                    (saved && chosen.is_some_and(|r| r.parallel.is_none())).then(|| msg(Event::Reverse))
-                ),
-                space::horizontal().width(Fill),
-                words::secondary(CANCEL, Some(msg(Event::Cancel))),
-                words::primary(SAVE, Some(msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(Center);
-        Frame::new(TITLE).scroll(body).push(km).footer(footer).width(900.0).modal(msg(Event::Cancel))
+            words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
+            words::secondary(
+                REVERSE,
+                (saved && chosen.is_some_and(|r| r.parallel.is_none()))
+                    .then(|| msg(Event::Reverse))
+            ),
+            space::horizontal().width(Fill),
+            words::secondary(CANCEL, Some(msg(Event::Cancel))),
+            words::primary(SAVE, Some(msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .push(km)
+            .footer(footer)
+            .width(900.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn alignment_editor<'a>(&'a self, w: &'a Window, r: &'a Row) -> Element<'a, Message> {
-        let name = kentos_ui::widget::text_field("Aksın adı", &r.name).on_input(|t| msg(Event::Name(t)));
-        let mut col = Column::new().spacing(10).padding(iced::Padding::default().right(14));
+        let name =
+            kentos_ui::widget::text_field("Aksın adı", &r.name).on_input(|t| msg(Event::Name(t)));
+        let mut col = Column::new()
+            .spacing(10)
+            .padding(iced::Padding::default().right(14));
         match &r.parallel {
             Some((src, off)) => {
                 let sources: Vec<&Row> = w.rows.iter().filter(|x| x.parallel.is_none()).collect();
                 let ids: Vec<String> = sources.iter().map(|x| x.id.clone()).collect();
                 let pick = kentos_ui::widget::select::Select::new(
-                    sources.iter().map(|x| kentos_ui::widget::select::Choice::new(x.name.clone())),
+                    sources
+                        .iter()
+                        .map(|x| kentos_ui::widget::select::Choice::new(x.name.clone())),
                     ids.iter().position(|id| id == src),
                     move |i| msg(Event::Source(ids[i].clone())),
                 )
@@ -1087,7 +1380,8 @@ impl AlignmentWindowApp for App {
                         words::field("Kaynak aks", pick, None),
                         words::field(
                             "Öteleme (m, sağa artı)",
-                            kentos_ui::widget::text_field("7,5", off).on_input(|t| msg(Event::Offset(t))),
+                            kentos_ui::widget::text_field("7,5", off)
+                                .on_input(|t| msg(Event::Offset(t))),
                             None
                         ),
                     ]
@@ -1095,8 +1389,10 @@ impl AlignmentWindowApp for App {
                 );
             }
             None => {
-                let start = kentos_ui::widget::text_field("0", &r.start).on_input(|t| msg(Event::Start(t)));
-                let speed = kentos_ui::widget::text_field("80", &r.speed).on_input(|t| msg(Event::Speed(t)));
+                let start =
+                    kentos_ui::widget::text_field("0", &r.start).on_input(|t| msg(Event::Start(t)));
+                let speed = kentos_ui::widget::text_field("80", &r.speed)
+                    .on_input(|t| msg(Event::Speed(t)));
                 col = col.push(
                     row![
                         words::field("Ad", name, None),
@@ -1106,8 +1402,10 @@ impl AlignmentWindowApp for App {
                     .spacing(12),
                 );
                 // Docs/adr/1028: the places named on the plan's arrows (KGM 2024: "← KAMAN").
-                let before = kentos_ui::widget::text_field("Kaman", &r.places[0]).on_input(|t| msg(Event::Place(0, t)));
-                let after = kentos_ui::widget::text_field("Ankara–Niğde Otoyolu", &r.places[1]).on_input(|t| msg(Event::Place(1, t)));
+                let before = kentos_ui::widget::text_field("Kaman", &r.places[0])
+                    .on_input(|t| msg(Event::Place(0, t)));
+                let after = kentos_ui::widget::text_field("Ankara–Niğde Otoyolu", &r.places[1])
+                    .on_input(|t| msg(Event::Place(1, t)));
                 col = col.push(
                     row![
                         words::field("Başında gidilen yer", before, None),
@@ -1116,7 +1414,11 @@ impl AlignmentWindowApp for App {
                     .spacing(12),
                 );
                 let pis = &r.pis;
-                let fill = |title| road_dialog::Col { title, width: None, number: true };
+                let fill = |title| road_dialog::Col {
+                    title,
+                    width: None,
+                    number: true,
+                };
                 let table = road_dialog::edit_table(
                     vec![
                         road_dialog::col("PI", 80.0),
@@ -1133,19 +1435,27 @@ impl AlignmentWindowApp for App {
                         let p = &pis[j];
                         let end = j == 0 || j + 1 == pis.len();
                         match k {
-                            0 => road_dialog::edit(&p.id, false, move |t| msg(Event::Pi(j, PI_ID, t))),
+                            0 => road_dialog::edit(&p.id, false, move |t| {
+                                msg(Event::Pi(j, PI_ID, t))
+                            }),
                             // The ends have no curve: their R and spirals are not typed; the PI before the end has no
                             // curve after it to run into.
                             k if end && k >= 3 => kentos_ui::widget::table::text("—").into(),
                             7 if j + 2 >= pis.len() => kentos_ui::widget::table::text("—").into(),
                             7 => container(crate::style::fields::check(
-                                if p.ove { kentos_ui::widget::tree_view::Check::Checked } else { kentos_ui::widget::tree_view::Check::Unchecked },
+                                if p.ove {
+                                    kentos_ui::widget::tree_view::Check::Checked
+                                } else {
+                                    kentos_ui::widget::tree_view::Check::Unchecked
+                                },
                                 "",
                                 Some(msg(Event::PiOve(j))),
                             ))
                             .center_x(Fill)
                             .into(),
-                            k => road_dialog::edit(&p.texts[k - 1], true, move |t| msg(Event::Pi(j, k - 1, t))),
+                            k => road_dialog::edit(&p.texts[k - 1], true, move |t| {
+                                msg(Event::Pi(j, k - 1, t))
+                            }),
                         }
                     },
                     w.pi,
@@ -1155,7 +1465,11 @@ impl AlignmentWindowApp for App {
                 col = col.push(words::field("PI'lar", table, None)).push(
                     row![
                         words::secondary(ADD_PI, Some(msg(Event::PiAdd))),
-                        words::ghost(REMOVE_PI, w.pi.filter(|j| *j < r.pis.len()).map(|_| msg(Event::PiRemove))),
+                        words::ghost(
+                            REMOVE_PI,
+                            w.pi.filter(|j| *j < r.pis.len())
+                                .map(|_| msg(Event::PiRemove))
+                        ),
                         words::secondary(FROM_SELECTION, Some(msg(Event::FromSelection))),
                     ]
                     .spacing(8),
@@ -1164,8 +1478,16 @@ impl AlignmentWindowApp for App {
                 let eqs = column![
                     road_dialog::grid_table(
                         vec![
-                            road_dialog::Col { title: "Geri km", width: None, number: true },
-                            road_dialog::Col { title: "İleri km", width: None, number: true },
+                            road_dialog::Col {
+                                title: "Geri km",
+                                width: None,
+                                number: true
+                            },
+                            road_dialog::Col {
+                                title: "İleri km",
+                                width: None,
+                                number: true
+                            },
                             road_dialog::col("Yön", 110.0),
                             road_dialog::col("", 64.0),
                         ],
@@ -1173,12 +1495,22 @@ impl AlignmentWindowApp for App {
                         move |j, k| {
                             let q = &equations[j];
                             match k {
-                                0 => road_dialog::edit(&q.back, true, move |t| msg(Event::Back(j, t))),
-                                1 => road_dialog::edit(&q.ahead, true, move |t| msg(Event::Ahead(j, t))),
-                                2 => road_dialog::pick(["Artan", "Azalan"], Some(usize::from(!q.increasing)), move |i| {
-                                    msg(Event::Increasing(j, i == 0))
+                                0 => road_dialog::edit(&q.back, true, move |t| {
+                                    msg(Event::Back(j, t))
                                 }),
-                                _ => kentos_ui::widget::Cell::padded(words::ghost("Sil", Some(msg(Event::EquationRemove(j))))).into(),
+                                1 => road_dialog::edit(&q.ahead, true, move |t| {
+                                    msg(Event::Ahead(j, t))
+                                }),
+                                2 => road_dialog::pick(
+                                    ["Artan", "Azalan"],
+                                    Some(usize::from(!q.increasing)),
+                                    move |i| msg(Event::Increasing(j, i == 0)),
+                                ),
+                                _ => kentos_ui::widget::Cell::padded(words::ghost(
+                                    "Sil",
+                                    Some(msg(Event::EquationRemove(j))),
+                                ))
+                                .into(),
                             }
                         },
                         "Km eşitliği yok",
@@ -1189,24 +1521,44 @@ impl AlignmentWindowApp for App {
                 col = col.push(words::field("Km eşitlikleri", eqs, None));
             }
         }
-        let point = kentos_ui::widget::text_field("Y; X", &w.point).on_input(|t| msg(Event::Point(t)));
+        let point =
+            kentos_ui::widget::text_field("Y; X", &w.point).on_input(|t| msg(Event::Point(t)));
         let (said, bad) = status(&w.rows, r);
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
-        let mut col = col.push(if bad { label::caption(said).style(danger) } else { label::caption(said) });
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
+        let mut col = col.push(if bad {
+            label::caption(said).style(danger)
+        } else {
+            label::caption(said)
+        });
         // What saving the PIs typed would do (docs/adr/0963).
         if let Some(Ok((imp, warnings))) = &w.impact {
-            let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-            let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+            let warn = |t: &Theme| iced::widget::text::Style {
+                color: Some(Tokens::of(t).warning),
+            };
+            let muted = |t: &Theme| iced::widget::text::Style {
+                color: Some(Tokens::of(t).muted),
+            };
             let said = impact_words(imp);
-            col = col.push(if warnings.is_empty() { label::caption(said).style(muted) } else { label::caption(said).style(warn) });
+            col = col.push(if warnings.is_empty() {
+                label::caption(said).style(muted)
+            } else {
+                label::caption(said).style(warn)
+            });
             for x in warnings {
                 col = col.push(label::caption(x.message.clone()).style(warn));
             }
         }
-        col.push(row![words::field("Noktanın km'si", point.width(260), None), label::caption(w.answer.clone())]
-                .spacing(12)
-                .align_y(iced::alignment::Vertical::Bottom))
-            .into()
+        col.push(
+            row![
+                words::field("Noktanın km'si", point.width(260), None),
+                label::caption(w.answer.clone())
+            ]
+            .spacing(12)
+            .align_y(iced::alignment::Vertical::Bottom),
+        )
+        .into()
     }
 
     fn alignment_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -1231,8 +1583,12 @@ impl AlignmentWindowApp for App {
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
             Control::Fill("Başlangıç km (m)", text) => Some(msg(Event::Start(text.to_owned()))),
             Control::Fill("Proje hızı (km/sa)", text) => Some(msg(Event::Speed(text.to_owned()))),
-            Control::Fill("Başında gidilen yer", text) => Some(msg(Event::Place(0, text.to_owned()))),
-            Control::Fill("Sonunda gidilen yer", text) => Some(msg(Event::Place(1, text.to_owned()))),
+            Control::Fill("Başında gidilen yer", text) => {
+                Some(msg(Event::Place(0, text.to_owned())))
+            }
+            Control::Fill("Sonunda gidilen yer", text) => {
+                Some(msg(Event::Place(1, text.to_owned())))
+            }
             Control::Fill("Noktanın km'si", text) => Some(msg(Event::Point(text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })

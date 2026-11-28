@@ -23,11 +23,23 @@ pub fn source_words(t: &TableEntity) -> String {
                 None => name.clone(),
                 Some(sheet) => format!("{name} › {sheet}"),
             };
-            if path.is_some() { format!("{base} (bağlı)") } else { base }
+            if path.is_some() {
+                format!("{base} (bağlı)")
+            } else {
+                base
+            }
         }
         Some(TableSource::Blocks { names, by, columns }) => {
-            let what = if names.is_empty() { "bütün bloklar".to_owned() } else { names.join(", ") };
-            let with = if columns.is_empty() { String::new() } else { format!("; {}", columns.join(", ")) };
+            let what = if names.is_empty() {
+                "bütün bloklar".to_owned()
+            } else {
+                names.join(", ")
+            };
+            let with = if columns.is_empty() {
+                String::new()
+            } else {
+                format!("; {}", columns.join(", "))
+            };
             match by {
                 Some(b) => format!("Blok çizelgesi: {what} ({b} değerleriyle{with})"),
                 None if columns.is_empty() => format!("Blok çizelgesi: {what}"),
@@ -35,7 +47,11 @@ pub fn source_words(t: &TableEntity) -> String {
             }
         }
         // A units schedule's rows are the building program's groups (docs/adr/0795).
-        Some(TableSource::Schedule { of: kentos_commands::ScheduleOf::Units, units, .. }) => {
+        Some(TableSource::Schedule {
+            of: kentos_commands::ScheduleOf::Units,
+            units,
+            ..
+        }) => {
             format!("Bölüm çizelgesi: {} satır, bina programından", units.len())
         }
         Some(TableSource::Schedule { of, members, .. }) => {
@@ -46,13 +62,25 @@ pub fn source_words(t: &TableEntity) -> String {
             "Emsal ve TAKS tablosu: imar durumundan ve mahallerden".to_owned()
         }
         // Otopark and Sığınak hesabı (docs/adr/8036).
-        Some(TableSource::Parking {}) => "Otopark hesabı: bina programından ve otopark mahallerinden".to_owned(),
-        Some(TableSource::Shelter {}) => "Sığınak hesabı: bina programından ve sığınak mahallerinden".to_owned(),
+        Some(TableSource::Parking {}) => {
+            "Otopark hesabı: bina programından ve otopark mahallerinden".to_owned()
+        }
+        Some(TableSource::Shelter {}) => {
+            "Sığınak hesabı: bina programından ve sığınak mahallerinden".to_owned()
+        }
         // Veri çıkarımı (docs/adr/1030 §6): its recipe, the drawings it reads besides this one.
         Some(TableSource::Extraction(x)) => {
             let others = x.recipe.drawings.len();
-            let from = if others == 0 { "bu çizimden".to_owned() } else { format!("bu ve {others} başka çizimden") };
-            format!("Veri çıkarımı “{}”: {} satır, {from}", x.recipe.name, x.keys.len())
+            let from = if others == 0 {
+                "bu çizimden".to_owned()
+            } else {
+                format!("bu ve {others} başka çizimden")
+            };
+            format!(
+                "Veri çıkarımı “{}”: {} satır, {from}",
+                x.recipe.name,
+                x.keys.len()
+            )
         }
         Some(s) => {
             let what = match s {
@@ -87,7 +115,10 @@ impl crate::app::App {
         }
         let rows = model.blocks_schedule(&names, None, &[]);
         if rows.len() <= 2 && names.is_empty() {
-            self.say(kentos_interaction::Level::Info, "Çizimde blok yerleştirmesi yok: çizelgelenecek bir şey yok.");
+            self.say(
+                kentos_interaction::Level::Info,
+                "Çizimde blok yerleştirmesi yok: çizelgelenecek bir şey yok.",
+            );
             return;
         }
         let scale = model.settings().plot_scale;
@@ -129,7 +160,10 @@ impl crate::app::App {
         }
         let names = vec![kentos_commands::REVISION_BLOCK.to_owned()];
         let by = Some(kentos_commands::REVISION_TAG.to_owned());
-        let columns: Vec<String> = kentos_commands::REVISION_DATA.iter().map(|c| (*c).to_owned()).collect();
+        let columns: Vec<String> = kentos_commands::REVISION_DATA
+            .iter()
+            .map(|c| (*c).to_owned())
+            .collect();
         let rows = model.blocks_schedule(&names, by.as_deref(), &columns);
         let scale = model.settings().plot_scale;
         let look = kentos_interaction::table::Look {
@@ -199,14 +233,21 @@ impl crate::app::App {
         };
         let copy = doc.model.reading_copy();
         let answers = doc.model.form_answers().to_vec();
-        self.say(kentos_interaction::Level::Info, "Model kalite kontrol formu: IFC modeli yazılıp okunuyor…");
+        self.say(
+            kentos_interaction::Level::Info,
+            "Model kalite kontrol formu: IFC modeli yazılıp okunuyor…",
+        );
         iced::Task::perform(
             async move {
                 let (sent, got) = iced::futures::channel::oneshot::channel();
                 std::thread::spawn(move || {
-                    let _ = sent.send(crate::ifc_facts::form_rows_of(crate::ifc_facts::plan(&copy), answers));
+                    let _ = sent.send(crate::ifc_facts::form_rows_of(
+                        crate::ifc_facts::plan(&copy),
+                        answers,
+                    ));
                 });
-                got.await.unwrap_or_else(|_| Err("Kuralın süreci cevap vermeden kapandı.".to_owned()))
+                got.await
+                    .unwrap_or_else(|_| Err("Kuralın süreci cevap vermeden kapandı.".to_owned()))
             },
             crate::app::Message::QualityFormRows,
         )

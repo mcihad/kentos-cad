@@ -92,7 +92,9 @@ pub enum PdfError {
     NotPdf(String),
     Encrypted,
     /// The file has `count` pages and not the one asked for.
-    NoPage { count: u32 },
+    NoPage {
+        count: u32,
+    },
     Broken(String),
 }
 
@@ -123,13 +125,23 @@ fn rect(file: &PdfFile<'_>, o: &Obj) -> Option<[f64; 4]> {
     if a.len() < 4 {
         return None;
     }
-    let v: Vec<f64> = a.iter().map(|x| file.resolve(x).num().unwrap_or(0.0)).collect();
-    Some([v[0].min(v[2]), v[1].min(v[3]), v[0].max(v[2]), v[1].max(v[3])])
+    let v: Vec<f64> = a
+        .iter()
+        .map(|x| file.resolve(x).num().unwrap_or(0.0))
+        .collect();
+    Some([
+        v[0].min(v[2]),
+        v[1].min(v[3]),
+        v[0].max(v[2]),
+        v[1].max(v[3]),
+    ])
 }
 
 fn pages(file: &PdfFile<'_>) -> Result<Vec<PageNode>, PdfError> {
     let root = file.field(&file.trailer, "Root");
-    let root = root.dict().ok_or_else(|| PdfError::Broken("PDF'in kataloğu okunamadı".into()))?;
+    let root = root
+        .dict()
+        .ok_or_else(|| PdfError::Broken("PDF'in kataloğu okunamadı".into()))?;
     let mut out = Vec::new();
     let mut seen = Vec::new();
     #[allow(clippy::too_many_arguments)]
@@ -166,7 +178,17 @@ fn pages(file: &PdfFile<'_>) -> Result<Vec<PageNode>, PdfError> {
         let kids = file.field(d, "Kids");
         if kind.name() == Some("Pages") || (kind.name() != Some("Page") && kids.array().is_some()) {
             for k in kids.array().unwrap_or_default() {
-                walk(file, k, res.clone(), media, crop, rotate, out, seen, depth + 1);
+                walk(
+                    file,
+                    k,
+                    res.clone(),
+                    media,
+                    crop,
+                    rotate,
+                    out,
+                    seen,
+                    depth + 1,
+                );
             }
         } else {
             out.push(PageNode {
@@ -178,7 +200,17 @@ fn pages(file: &PdfFile<'_>) -> Result<Vec<PageNode>, PdfError> {
             });
         }
     }
-    walk(file, &root.get("Pages").cloned().unwrap_or(Obj::Null), None, None, None, 0, &mut out, &mut seen, 0);
+    walk(
+        file,
+        &root.get("Pages").cloned().unwrap_or(Obj::Null),
+        None,
+        None,
+        None,
+        0,
+        &mut out,
+        &mut seen,
+        0,
+    );
     Ok(out)
 }
 
@@ -202,7 +234,9 @@ pub fn page_count(bytes: &[u8]) -> Result<u32, PdfError> {
 
 /// Whether the bytes are a PDF file's (its header in the first kilobyte).
 pub fn is_pdf(bytes: &[u8]) -> bool {
-    bytes[..bytes.len().min(1024)].windows(5).any(|w| w == b"%PDF-")
+    bytes[..bytes.len().min(1024)]
+        .windows(5)
+        .any(|w| w == b"%PDF-")
 }
 
 /// Page `number` (from 1) read.
@@ -216,7 +250,9 @@ pub fn read_page(bytes: &[u8], number: u32) -> Result<PdfPage, PdfError> {
     let page = &list[number as usize - 1];
     // The crop box inside the media box; the page as it shows from its lower left corner.
     let [mx0, my0, mx1, my1] = page.media;
-    let [x0, y0, x1, y1] = page.crop.map_or(page.media, |c| [c[0].max(mx0), c[1].max(my0), c[2].min(mx1), c[3].min(my1)]);
+    let [x0, y0, x1, y1] = page.crop.map_or(page.media, |c| {
+        [c[0].max(mx0), c[1].max(my0), c[2].min(mx1), c[3].min(my1)]
+    });
     let (w, h) = ((x1 - x0).max(0.0), (y1 - y0).max(0.0));
     let shift: M = [1.0, 0.0, 0.0, 1.0, -x0, -y0];
     let (turn, width, height): (M, f64, f64) = match page.rotate.rem_euclid(360) {
@@ -257,7 +293,11 @@ pub fn read_page(bytes: &[u8], number: u32) -> Result<PdfPage, PdfError> {
                 data.push(b'\n');
             }
             Ok(None) => {}
-            Err(e) => return Err(PdfError::Broken(format!("sayfanın içeriği okunamadı: {e:?}"))),
+            Err(e) => {
+                return Err(PdfError::Broken(format!(
+                    "sayfanın içeriği okunamadı: {e:?}"
+                )));
+            }
         }
     }
     run.content(&data, &page.resources, ctm, 0, &mut Vec::new());
@@ -288,16 +328,27 @@ mod tests {
             out.extend_from_slice(format!("{} 0 obj\n{o}\nendobj\n", i + 1).as_bytes());
         }
         let xref = out.len();
-        out.extend_from_slice(format!("xref\n0 {}\n0000000000 65535 f \n", objects.len() + 1).as_bytes());
+        out.extend_from_slice(
+            format!("xref\n0 {}\n0000000000 65535 f \n", objects.len() + 1).as_bytes(),
+        );
         for a in at {
             out.extend_from_slice(format!("{a:010} 00000 n \n").as_bytes());
         }
-        out.extend_from_slice(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n", objects.len() + 1).as_bytes());
+        out.extend_from_slice(
+            format!(
+                "trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n",
+                objects.len() + 1
+            )
+            .as_bytes(),
+        );
         out
     }
 
     fn stream(content: &str) -> String {
-        format!("<< /Length {} >>\nstream\n{content}\nendstream", content.len())
+        format!(
+            "<< /Length {} >>\nstream\n{content}\nendstream",
+            content.len()
+        )
     }
 
     #[test]
@@ -313,8 +364,18 @@ mod tests {
         let page = read_page(&bytes, 1).unwrap();
         assert_eq!((page.width, page.height, page.count), (595.0, 842.0, 1));
         assert_eq!(page.paths.len(), 2);
-        assert_eq!(page.paths[0].parts, vec![(vec![[10.0, 10.0], [110.0, 10.0]], false)]);
-        assert_eq!(page.paths[0].stroke, Some(PdfStroke { color: [255, 0, 0], width: 2.0, dashed: false }));
+        assert_eq!(
+            page.paths[0].parts,
+            vec![(vec![[10.0, 10.0], [110.0, 10.0]], false)]
+        );
+        assert_eq!(
+            page.paths[0].stroke,
+            Some(PdfStroke {
+                color: [255, 0, 0],
+                width: 2.0,
+                dashed: false
+            })
+        );
         assert_eq!(page.paths[1].fill, Some([0, 0, 255]));
         assert_eq!(page.texts.len(), 1);
         assert_eq!(page.texts[0].text, "Ada 101");
@@ -343,15 +404,47 @@ mod tests {
             "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
         ]);
         let page = read_page(&bytes, 1).unwrap();
-        let parts: Vec<Vec<[f64; 2]>> = page.paths.iter().flat_map(|p| p.parts.iter().map(|(pts, _)| pts.clone())).collect();
-        assert_eq!(parts[0], vec![[100.0, 150.0], [300.0, 150.0]], "inside the frame only");
-        assert_eq!(parts[1], vec![[10.0, 50.0], [90.0, 50.0]], "Q: the whole page again");
-        assert_eq!(parts[2], vec![[100.0, 450.0], [200.0, 450.0]], "the first frame");
-        assert_eq!(parts[3], vec![[300.0, 450.0], [400.0, 450.0]], "the second frame");
-        assert_eq!(parts[4], vec![[100.0, 650.0], [200.0, 650.0]], "the even-odd hole cut out");
+        let parts: Vec<Vec<[f64; 2]>> = page
+            .paths
+            .iter()
+            .flat_map(|p| p.parts.iter().map(|(pts, _)| pts.clone()))
+            .collect();
+        assert_eq!(
+            parts[0],
+            vec![[100.0, 150.0], [300.0, 150.0]],
+            "inside the frame only"
+        );
+        assert_eq!(
+            parts[1],
+            vec![[10.0, 50.0], [90.0, 50.0]],
+            "Q: the whole page again"
+        );
+        assert_eq!(
+            parts[2],
+            vec![[100.0, 450.0], [200.0, 450.0]],
+            "the first frame"
+        );
+        assert_eq!(
+            parts[3],
+            vec![[300.0, 450.0], [400.0, 450.0]],
+            "the second frame"
+        );
+        assert_eq!(
+            parts[4],
+            vec![[100.0, 650.0], [200.0, 650.0]],
+            "the even-odd hole cut out"
+        );
         assert_eq!(parts[5], vec![[300.0, 650.0], [400.0, 650.0]]);
-        assert_eq!(parts[6], vec![[200.0, 775.0], [400.0, 775.0]], "nested clips narrow");
-        assert_eq!(parts[7], vec![[500.0, 20.0], [595.0, 20.0]], "the page's own box");
+        assert_eq!(
+            parts[6],
+            vec![[200.0, 775.0], [400.0, 775.0]],
+            "nested clips narrow"
+        );
+        assert_eq!(
+            parts[7],
+            vec![[500.0, 20.0], [595.0, 20.0]],
+            "the page's own box"
+        );
         assert_eq!(parts.len(), 8);
         assert!(page.texts.is_empty(), "the text outside the frame");
     }

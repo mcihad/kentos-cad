@@ -77,8 +77,16 @@ fn level_work(form: &LevelForm) -> AdjustWork {
                 kentos_commands::AdjustLeapfrog {
                     from: cell(r, 0).to_owned(),
                     to: cell(r, 1).to_owned(),
-                    back: kentos_commands::AdjustSight { distance: n(2), zenith: n(3), target: n(4) },
-                    fore: kentos_commands::AdjustSight { distance: n(5), zenith: n(6), target: n(7) },
+                    back: kentos_commands::AdjustSight {
+                        distance: n(2),
+                        zenith: n(3),
+                        target: n(4),
+                    },
+                    fore: kentos_commands::AdjustSight {
+                        distance: n(5),
+                        zenith: n(6),
+                        target: n(7),
+                    },
                 }
             })
             .collect()
@@ -200,7 +208,10 @@ impl App {
         self.selection.set(written);
         self.say(
             Level::Success,
-            format!("{LEVEL_TITLE}: {n} noktanın kotu yazıldı{} (Ctrl+Z geri alır).", kept_words(&done.kept)),
+            format!(
+                "{LEVEL_TITLE}: {n} noktanın kotu yazıldı{} (Ctrl+Z geri alır).",
+                kept_words(&done.kept)
+            ),
         );
         if let Some(absent) = absent {
             self.warn(absent);
@@ -212,5 +223,7 @@ impl App {
 
 /// Docs/adr/5200: the kept adjustment said.
 fn kept_words(kept: &Option<String>) -> String {
-    kept.as_ref().map_or_else(String::new, |n| format!("; sonuç “{n}” adıyla projede saklandı"))
+    kept.as_ref().map_or_else(String::new, |n| {
+        format!("; sonuç “{n}” adıyla projede saklandı")
+    })
 }

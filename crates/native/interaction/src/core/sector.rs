@@ -19,11 +19,11 @@
 //! (`shapes::sector_ring`); with Çakışma or Topoloji changing the area it is
 //! written as any area is (`points::write_area_by`).
 
+use kentos_commands::SectorCreate;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::jsmath::{TAU, atan2};
-use kentos_commands::SectorCreate;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, shapes};
 
@@ -166,7 +166,10 @@ impl Sector {
         let rules = points::area_rules(cx, &input.layer_id);
         input.rules = rules;
         let mut write = |cx: &mut Context<'_>| {
-            let result = shapes::execute_sector(&mut ExecutionContext::with_store(cx.doc, cx.spatial.store()), input.clone());
+            let result = shapes::execute_sector(
+                &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+                input.clone(),
+            );
             points::written(result, cx).map(|out| out.id)
         };
         if points::write_area_by(&mut self.d, cx, &mut write).is_some() {

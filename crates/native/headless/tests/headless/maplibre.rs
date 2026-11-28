@@ -186,16 +186,26 @@ fn layer_looks_go_out_as_maplibre_styles_and_come_back() {
         match *name {
             // The triangle is the sprite's icon (docs/adr/0635 §7): no loss, the sprite beside the style.
             "kentos-nokta" => assert!(
-                out["output"]["sprite"].as_array().is_some_and(|s| !s.is_empty()),
+                out["output"]["sprite"]
+                    .as_array()
+                    .is_some_and(|s| !s.is_empty()),
                 "{out}"
             ),
             "kentos-cizgi" => assert!(lost.contains("metre cinsinden"), "{out}"),
             "kentos-kurallar" => assert!(lost.contains("ölçek aralıkları"), "{out}"),
             "kentos-renk" => {
-                assert!(lost.contains("degrade dolgu") && lost.contains("fill-pattern"), "{out}");
+                assert!(
+                    lost.contains("degrade dolgu") && lost.contains("fill-pattern"),
+                    "{out}"
+                );
             }
             "kentos-yazi" => {
-                assert!(lost.contains("Arial") && lost.contains("SVG işareti") && lost.contains("kalın ve eğik"), "{out}");
+                assert!(
+                    lost.contains("Arial")
+                        && lost.contains("SVG işareti")
+                        && lost.contains("kalın ve eğik"),
+                    "{out}"
+                );
             }
             _ => assert!(out["output"].get("lost").is_none(), "{name}: {out}"),
         }
@@ -257,16 +267,35 @@ fn layer_looks_go_out_as_maplibre_styles_and_come_back() {
             }
             "kentos-renk" => {
                 let l = &r["symbols"]["fill"]["layers"];
-                assert_eq!(l[0]["color"], json!({ "expr": "[renk]", "fallback": "#ff0000" }), "{r}");
-                assert_eq!(l[1]["color"], json!({ "expr": "[kenar]", "fallback": "#000000" }), "{r}");
+                assert_eq!(
+                    l[0]["color"],
+                    json!({ "expr": "[renk]", "fallback": "#ff0000" }),
+                    "{r}"
+                );
+                assert_eq!(
+                    l[1]["color"],
+                    json!({ "expr": "[kenar]", "fallback": "#000000" }),
+                    "{r}"
+                );
             }
             "kentos-yazi" => {
                 let t = &r["symbols"]["marker"]["layers"][0];
-                assert_eq!((t["text"].as_str(), t["font"].as_str(), t["weight"].as_u64()), (Some("A"), Some("Arial"), Some(700)));
-                assert_eq!(t["color"], json!({ "expr": "[renk]", "fallback": "#aa0000" }), "{r}");
+                assert_eq!(
+                    (t["text"].as_str(), t["font"].as_str(), t["weight"].as_u64()),
+                    (Some("A"), Some("Arial"), Some(700))
+                );
+                assert_eq!(
+                    t["color"],
+                    json!({ "expr": "[renk]", "fallback": "#aa0000" }),
+                    "{r}"
+                );
                 assert_eq!(t["rotation"].as_f64(), Some(-15.0));
                 assert_eq!(t["halo"]["color"], "#ffffff");
-                assert_eq!(r["symbols"]["marker"]["layers"].as_array().map(Vec::len), Some(1), "the drawing is not written");
+                assert_eq!(
+                    r["symbols"]["marker"]["layers"].as_array().map(Vec::len),
+                    Some(1),
+                    "the drawing is not written"
+                );
             }
             _ => {}
         }

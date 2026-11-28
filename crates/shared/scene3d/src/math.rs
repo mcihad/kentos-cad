@@ -20,7 +20,11 @@ pub fn dot(a: V3, b: V3) -> f64 {
 }
 
 pub fn cross(a: V3, b: V3) -> V3 {
-    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
 }
 
 pub fn length(a: V3) -> f64 {
@@ -38,7 +42,9 @@ pub fn normalize(a: V3) -> V3 {
 pub struct M4(pub [f64; 16]);
 
 impl M4 {
-    pub const IDENTITY: M4 = M4([1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
+    pub const IDENTITY: M4 = M4([
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+    ]);
 
     /// The matrix of rows.
     pub fn from_rows(r: [[f64; 4]; 4]) -> M4 {
@@ -68,7 +74,9 @@ impl M4 {
 
     /// `self · (v, 1)`.
     pub fn apply(&self, v: V3) -> [f64; 4] {
-        std::array::from_fn(|r| self.at(r, 0) * v[0] + self.at(r, 1) * v[1] + self.at(r, 2) * v[2] + self.at(r, 3))
+        std::array::from_fn(|r| {
+            self.at(r, 0) * v[0] + self.at(r, 1) * v[1] + self.at(r, 2) * v[2] + self.at(r, 3)
+        })
     }
 
     /// The matrix as the GPU takes it.

@@ -65,12 +65,20 @@ pub fn new_row(rows: &[Note]) -> Note {
         .into_iter()
         .find(|k| rows.iter().all(|r| r.key != *k))
         .unwrap_or(PlanNoteKey::ALL[0]);
-    Note { key, value: String::new(), source: String::new() }
+    Note {
+        key,
+        value: String::new(),
+        source: String::new(),
+    }
 }
 
 /// A value as typed, a comma or a point before its decimals.
 fn value(s: &str) -> Option<f64> {
-    s.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite())
+    s.trim()
+        .replace(',', ".")
+        .parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
 }
 
 /// The rows read as the project's notes, or what does not hold.
@@ -78,9 +86,17 @@ pub fn read(rows: &[Note]) -> Result<Vec<PlanNote>, String> {
     let mut notes = Vec::with_capacity(rows.len());
     for r in rows {
         let Some(v) = value(&r.value) else {
-            return Err(format!("“{}” plan notunun değeri bir sayı olmalı ({}).", r.key.label(), r.key.unit()));
+            return Err(format!(
+                "“{}” plan notunun değeri bir sayı olmalı ({}).",
+                r.key.label(),
+                r.key.unit()
+            ));
         };
-        notes.push(PlanNote { key: r.key, value: v, source: r.source.trim().to_owned() });
+        notes.push(PlanNote {
+            key: r.key,
+            value: v,
+            source: r.source.trim().to_owned(),
+        });
     }
     match PlanNote::list_problem(&notes) {
         Some((_, why)) => Err(why),
@@ -155,15 +171,28 @@ pub fn table<'a>(
         let key = Select::new(
             PlanNoteKey::ALL.iter().map(|k| Choice::new(k.label())),
             PlanNoteKey::ALL.iter().position(|k| *k == r.key),
-            move |j| on(i, Edit::Key(PlanNoteKey::ALL.get(j).copied().unwrap_or(PlanNoteKey::ALL[0]))),
+            move |j| {
+                on(
+                    i,
+                    Edit::Key(
+                        PlanNoteKey::ALL
+                            .get(j)
+                            .copied()
+                            .unwrap_or(PlanNoteKey::ALL[0]),
+                    ),
+                )
+            },
         )
         .searchable(false);
         body = body.push(
             row![
                 container(key).width(Length::FillPortion(5)),
-                container(super::arch::field(placeholder(r.key), &r.value, value(&r.value).is_none(), move |t| {
-                    on(i, Edit::Value(t))
-                }))
+                container(super::arch::field(
+                    placeholder(r.key),
+                    &r.value,
+                    value(&r.value).is_none(),
+                    move |t| { on(i, Edit::Value(t)) }
+                ))
                 .width(Length::FillPortion(2)),
                 container(super::arch::field(
                     "UİP 12.3.2019, plan notu 7",
@@ -182,9 +211,12 @@ pub fn table<'a>(
         body = body.push(label::caption(why).style(style::text::danger).width(Fill));
     }
     let add = button(
-        row![icon(crate::icons::from_web(Some("plus"))).size(13.0), label::body("Plan notu ekle")]
-            .spacing(5)
-            .align_y(Center),
+        row![
+            icon(crate::icons::from_web(Some("plus"))).size(13.0),
+            label::body("Plan notu ekle")
+        ]
+        .spacing(5)
+        .align_y(Center),
     )
     .on_press(on_add)
     .padding([4, 10])

@@ -109,7 +109,15 @@ pub fn report(doc: &Document, input: &FontsReport) -> (FontsReported, Vec<Comman
         }
     }
     // The contract's order: KentOS's own faces, then the folder families by name.
-    faces.sort_by_key(|f| (DrawingFont::ALL.iter().position(|x| x == f).unwrap_or(usize::MAX), f.label()));
+    faces.sort_by_key(|f| {
+        (
+            DrawingFont::ALL
+                .iter()
+                .position(|x| x == f)
+                .unwrap_or(usize::MAX),
+            f.label(),
+        )
+    });
     let mut warnings = Vec::new();
     // A folder family this program's folders do not hold is drawn in Arial (docs/adr/9313): said, never silently.
     for f in faces.iter().filter(|f| !crate::font_folders::drawable(**f)) {
@@ -136,8 +144,8 @@ pub fn report(doc: &Document, input: &FontsReport) -> (FontsReported, Vec<Comman
                 None => (Some(s.font.id()), FontMatch::Own),
             };
             // Its embedded SHX font draws it (ADR 1125): not a substitute.
-            let embedded = how == FontMatch::Shx
-                && crate::shx_text::Fonts::of(s, doc.styles()).is_ok();
+            let embedded =
+                how == FontMatch::Shx && crate::shx_text::Fonts::of(s, doc.styles()).is_ok();
             // Drawn in another face than the one named: said, never silently.
             if named != Some(s.font.id()) && !embedded {
                 let what = match how {
@@ -201,7 +209,8 @@ mod tests {
     /// The styles fixture, its project in `font` and its first text in the project's face.
     fn drawing(font: &str) -> Document {
         let mut raw: serde_json::Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/styles.json")).expect("the fixture");
+            serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/styles.json"))
+                .expect("the fixture");
         raw["settings"]["drawingFont"] = serde_json::Value::from(font);
         if let Some(text) = raw["entities"]
             .as_array_mut()
@@ -223,7 +232,12 @@ mod tests {
         let (out, warnings) = report(&drawing("arial"), &FontsReport::default());
         assert_eq!(&out.choices[..9], &DrawingFont::CHOICES);
         assert!(out.faces.contains(&DrawingFont::Arial), "{:?}", out.faces);
-        assert!(warnings.iter().all(|w| !w.message.contains("klasörlerinde yok")), "{warnings:?}");
+        assert!(
+            warnings
+                .iter()
+                .all(|w| !w.message.contains("klasörlerinde yok")),
+            "{warnings:?}"
+        );
     }
 
     /// A folder family this program's folders do not hold is drawn in Arial, and said (docs/adr/9313 §4).
@@ -235,7 +249,10 @@ mod tests {
         assert!(out.faces.contains(&kurum), "{:?}", out.faces);
         // Own faces first, the families after them.
         assert_eq!(out.faces.last(), Some(&kurum));
-        let said: Vec<&CommandWarning> = warnings.iter().filter(|w| w.message.contains("“Kurum Sans”")).collect();
+        let said: Vec<&CommandWarning> = warnings
+            .iter()
+            .filter(|w| w.message.contains("“Kurum Sans”"))
+            .collect();
         assert_eq!(said.len(), 1, "{warnings:?}");
         assert_eq!(said[0].code, codes::FONT_SUBSTITUTED);
         assert!(said[0].message.contains("Arial"));

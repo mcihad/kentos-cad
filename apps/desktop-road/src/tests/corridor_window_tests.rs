@@ -1,17 +1,19 @@
 //! Koridor (corridor_window.rs, plan/road.md Y7): the window builds the corridor as it is typed, writes through
 //! `road.corridors.edit` and draws the slope plan (`road.corridors.draw`), each write one undo step; and its pictures.
 
-use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::corridor_window::Event as W;
 use crate::road;
+use crate::road::RoadState;
 
 /// A road project with `road.corridors.draw`'s drawing: a surface, the main and side alignments, their profiles, two
 /// templates, the superelevation schedules and two corridors.
 fn app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.corridors.draw.json")).expect("cases");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.corridors.draw.json"
+    ))
+    .expect("cases");
     let snapshot: kentos_commands::DocumentSnapshotV2 =
         serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -47,9 +49,15 @@ fn the_slope_plan_is_drawn_in_one_step() {
     let mut app = app();
     let before = model(&mut app).entities().count();
     let drawn = draw(&mut app, "c-1", 5.0);
-    assert!(drawn.lines > 10 && drawn.ticks > 50 && drawn.elevations > 20, "{drawn:?}");
+    assert!(
+        drawn.lines > 10 && drawn.ticks > 50 && drawn.elevations > 20,
+        "{drawn:?}"
+    );
     let doc = model(&mut app);
-    assert_eq!(doc.entities().count(), before + (drawn.lines + drawn.ticks + drawn.elevations) as usize);
+    assert_eq!(
+        doc.entities().count(),
+        before + (drawn.lines + drawn.ticks + drawn.elevations) as usize
+    );
     assert_eq!(doc.undo().as_deref(), Some("Şevli plan"));
     assert_eq!(doc.entities().count(), before);
 }
@@ -128,7 +136,9 @@ fn screens() {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -137,7 +147,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("yol-y7-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("corridor"));
@@ -154,7 +167,9 @@ fn screens() {
         send(&mut app, W::Cancel);
     }
     let mut app = app();
-    let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from("light"))]);
+    let _ = app
+        .settings
+        .choose(&[("appearance.theme", serde_json::Value::from("light"))]);
     app.apply_settings();
     let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
     let mut update = |app: &mut App, message| {
@@ -163,7 +178,10 @@ fn screens() {
     let mut shot = |app: &mut App, file: &str| {
         snapshot.settle(app, App::view, &mut update);
         let file = out.join(format!("yol-y7-{file}-acik-genis.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     };
     draw(&mut app, "c-1", 5.0);
@@ -171,7 +189,12 @@ fn screens() {
     let _ = app.update(Message::Run("view.zoomExtents"));
     shot(&mut app, "sevli-plan");
     // Closer: the curve, its ticks in cut and fill and the red elevations.
-    app.zoom_to_bounds(&kentos_commands::Bounds { min_x: 200.0, min_y: 20.0, max_x: 360.0, max_y: 130.0 });
+    app.zoom_to_bounds(&kentos_commands::Bounds {
+        min_x: 200.0,
+        min_y: 20.0,
+        max_x: 360.0,
+        max_y: 130.0,
+    });
     shot(&mut app, "sevli-plan-yakin");
 }
 
@@ -191,9 +214,16 @@ fn checked(app: &mut App) {
 
 #[test]
 fn the_window_checks_the_sampling_as_the_shared_case_does() {
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.corridors.query.json")).expect("cases");
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Denetim: plan ve kot birlikte, sık aralıkta").expect("the case");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.corridors.query.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "Denetim: plan ve kot birlikte, sık aralıkta")
+        .expect("the case");
     let want = &case["steps"][0]["result"]["output"]["corridors"][0]["sampling"];
     let mut app = app();
     checked(&mut app);
@@ -213,10 +243,17 @@ fn the_window_checks_the_sampling_as_the_shared_case_does() {
         )
     );
     let close = |a: f64, b: &serde_json::Value| (a - b.as_f64().unwrap()).abs() < 1e-6;
-    assert!(close(got.before.plan, &want["before"]["plan"]) && close(got.after.height, &want["after"]["height"]), "{got:?}");
+    assert!(
+        close(got.before.plan, &want["before"]["plan"])
+            && close(got.after.height, &want["after"]["height"]),
+        "{got:?}"
+    );
     assert!(rep.stations.iter().any(|s| s.why == "refine"));
     send(&mut app, W::Save);
-    let r = model(&mut app).road_corridors()[0].refine.clone().expect("saved");
+    let r = model(&mut app).road_corridors()[0]
+        .refine
+        .clone()
+        .expect("saved");
     assert_eq!((r.plan, r.height, r.least), (Some(0.05), Some(0.05), 0.5));
 }
 
@@ -246,7 +283,8 @@ fn screens_sampling() {
     use kentos_ui::snapshot::Snapshot;
     use kentos_ui::widget::sizable::sizes;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y33");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y33");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name, full) in [
         ("light", Size::new(1440.0, 900.0), "acik", false),
@@ -255,12 +293,21 @@ fn screens_sampling() {
     ] {
         for step in ["once", "denetim"] {
             if full {
-                sizes::set(crate::corridor_window::TITLE, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
+                sizes::set(
+                    crate::corridor_window::TITLE,
+                    sizes::Kept {
+                        width: 800.0,
+                        height: 600.0,
+                        maximized: true,
+                    },
+                );
             } else {
                 sizes::forget(crate::corridor_window::TITLE);
             }
             let mut app = app();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::RibbonTab("corridor"));
             checked(&mut app);
@@ -275,7 +322,10 @@ fn screens_sampling() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("y33-{step}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         }
     }
@@ -287,7 +337,11 @@ fn screens_sampling() {
 fn gentle(app: &mut App, h: f64) {
     let templates = model(app).road_templates().to_vec();
     for t in templates {
-        let soft = |s: &kentos_commands::TemplateSideDef| kentos_commands::TemplateSideDef { cut: h, fill: h, ..s.clone() };
+        let soft = |s: &kentos_commands::TemplateSideDef| kentos_commands::TemplateSideDef {
+            cut: h,
+            fill: h,
+            ..s.clone()
+        };
         let edit = kentos_commands::TemplatesEdit {
             operation: kentos_commands::RoadEditOperation::Set,
             template: Some(t.id.clone()),
@@ -299,8 +353,14 @@ fn gentle(app: &mut App, h: f64) {
             remove_pavement: false,
             expected_revision: None,
         };
-        let r = kentos_native_application::road_templates_edit::execute(&mut kentos_native_application::ExecutionContext::new(model(app)), edit);
-        assert!(matches!(r, kentos_commands::CommandResult::Completed { .. }), "{r:?}");
+        let r = kentos_native_application::road_templates_edit::execute(
+            &mut kentos_native_application::ExecutionContext::new(model(app)),
+            edit,
+        );
+        assert!(
+            matches!(r, kentos_commands::CommandResult::Completed { .. }),
+            "{r:?}"
+        );
     }
 }
 
@@ -312,7 +372,8 @@ fn the_daylights_read_the_shared_case() {
     let _ = app.update(Message::Run("corridor.editor"));
     send(&mut app, W::Choose(0));
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .corridor_window
             .as_ref()
             .unwrap()
@@ -325,7 +386,8 @@ fn the_daylights_read_the_shared_case() {
     send(&mut app, W::Daylight(true));
     send(&mut app, W::Sensitive("10".into()));
     let (d, warnings) = app
-        .modules.road()
+        .modules
+        .road()
         .corridor_window
         .as_ref()
         .unwrap()
@@ -357,7 +419,15 @@ fn the_daylights_read_the_shared_case() {
             .any(|w| w.code == "corridor_daylight_crossings")
     );
     send(&mut app, W::Sensitive("sıfır".into()));
-    let why = match app.modules.road().corridor_window.as_ref().unwrap().daylights.clone() {
+    let why = match app
+        .modules
+        .road()
+        .corridor_window
+        .as_ref()
+        .unwrap()
+        .daylights
+        .clone()
+    {
         Some(Err(why)) => why,
         other => panic!("a threshold that is no number: {other:?}"),
     };
@@ -376,7 +446,8 @@ fn screens_daylights() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y45");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y45");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
@@ -387,7 +458,9 @@ fn screens_daylights() {
             if h > 0.0 {
                 gentle(&mut app, h);
             }
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::RibbonTab("corridor"));
             let _ = app.update(Message::Run("corridor.editor"));
@@ -395,14 +468,20 @@ fn screens_daylights() {
             send(&mut app, W::Field(0, "60".into()));
             send(&mut app, W::Field(1, "60".into()));
             send(&mut app, W::Daylight(true));
-            send(&mut app, W::Sensitive(if h > 0.0 { "10" } else { "1,5" }.into()));
+            send(
+                &mut app,
+                W::Sensitive(if h > 0.0 { "10" } else { "1,5" }.into()),
+            );
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("y45-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         }
     }
@@ -411,9 +490,12 @@ fn screens_daylights() {
 /// The drawing of `road.corridors.protected`'s cases: the corridors and five protected areas on two layers.
 fn protected_app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.corridors.protected.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.corridors.protected.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -427,14 +509,23 @@ fn the_protected_areas_read_the_shared_case() {
     let _ = app.update(Message::Run("corridor.editor"));
     send(&mut app, W::Choose(0));
     send(&mut app, W::Protected(true));
-    let why = match app.modules.road().corridor_window.as_ref().unwrap().protected.clone() {
+    let why = match app
+        .modules
+        .road()
+        .corridor_window
+        .as_ref()
+        .unwrap()
+        .protected
+        .clone()
+    {
         Some(Err(why)) => why,
         other => panic!("no layer yet: {other:?}"),
     };
     assert!(why.contains("katman"), "{why}");
     send(&mut app, W::ProtectedLayer("korunan".into()));
     let (z, warnings) = app
-        .modules.road()
+        .modules
+        .road()
         .corridor_window
         .as_ref()
         .unwrap()
@@ -458,14 +549,23 @@ fn the_protected_areas_read_the_shared_case() {
         .clone();
     assert_eq!(z.areas.len(), want.len());
     for (a, w) in z.areas.iter().zip(&want) {
-        assert!((a.covered - w["covered"].as_f64().unwrap()).abs() < 1e-6, "#{} covered", a.entity);
-        assert!((a.reach - w["reach"].as_f64().unwrap()).abs() < 1e-6, "#{} reach", a.entity);
+        assert!(
+            (a.covered - w["covered"].as_f64().unwrap()).abs() < 1e-6,
+            "#{} covered",
+            a.entity
+        );
+        assert!(
+            (a.reach - w["reach"].as_f64().unwrap()).abs() < 1e-6,
+            "#{} reach",
+            a.entity
+        );
     }
     assert!(warnings.iter().any(|w| w.code == "corridor_protected"));
     // Back to the plan: nothing read.
     send(&mut app, W::Daylight(false));
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .corridor_window
             .as_ref()
             .unwrap()
@@ -486,14 +586,17 @@ fn screens_protected() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y46");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y46");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = protected_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::RibbonTab("corridor"));
         let _ = app.update(Message::Run("corridor.editor"));
@@ -506,7 +609,10 @@ fn screens_protected() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y46-korunan-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -514,11 +620,23 @@ fn screens_protected() {
 /// The preflight's shared cases' drawing for case `name` (its own setup, else the file's).
 fn preflight_app(name: &str) -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.corridors.preflight.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case").clone();
-    let setup = case.get("setup").cloned().unwrap_or_else(|| cases["setup"].clone());
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("the drawing reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.corridors.preflight.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case")
+        .clone();
+    let setup = case
+        .get("setup")
+        .cloned()
+        .unwrap_or_else(|| cases["setup"].clone());
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -531,7 +649,8 @@ fn the_preflight_reads_the_shared_cases() {
     let mut app = preflight_app("Dar kurp: katlanma ve üst üste binme");
     let _ = app.update(Message::Run("corridor.editor"));
     let at = app
-        .modules.road()
+        .modules
+        .road()
         .corridor_window
         .as_ref()
         .expect("open")
@@ -576,21 +695,53 @@ fn screens_preflight() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y50");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y50");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (case, corridor, margin, theme, size, name) in [
-        ("Dar kurp: katlanma ve üst üste binme", "c-3", "", "light", Size::new(1440.0, 900.0), "dar-kurp-acik-genis"),
-        ("Ana koridor: iki tip kesitin dikişi", "c-1", "0,95", "light", Size::new(1440.0, 900.0), "dikis-acik-genis"),
-        ("Ana koridor: iki tip kesitin dikişi", "c-1", "0,95", "dark", Size::new(1100.0, 650.0), "dikis-koyu-dar"),
-        ("Yan koridor: düz aks", "c-2", "", "dark", Size::new(1440.0, 900.0), "temiz-koyu-genis"),
+        (
+            "Dar kurp: katlanma ve üst üste binme",
+            "c-3",
+            "",
+            "light",
+            Size::new(1440.0, 900.0),
+            "dar-kurp-acik-genis",
+        ),
+        (
+            "Ana koridor: iki tip kesitin dikişi",
+            "c-1",
+            "0,95",
+            "light",
+            Size::new(1440.0, 900.0),
+            "dikis-acik-genis",
+        ),
+        (
+            "Ana koridor: iki tip kesitin dikişi",
+            "c-1",
+            "0,95",
+            "dark",
+            Size::new(1100.0, 650.0),
+            "dikis-koyu-dar",
+        ),
+        (
+            "Yan koridor: düz aks",
+            "c-2",
+            "",
+            "dark",
+            Size::new(1440.0, 900.0),
+            "temiz-koyu-genis",
+        ),
     ] {
         let mut app = preflight_app(case);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::RibbonTab("corridor"));
         let _ = app.update(Message::Run("corridor.editor"));
         let at = app
-            .modules.road()
+            .modules
+            .road()
             .corridor_window
             .as_ref()
             .expect("open")
@@ -609,7 +760,10 @@ fn screens_preflight() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y50-on-denetim-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -634,15 +788,25 @@ fn a_slope_transition_closes_the_seam_and_is_written() {
     assert!(!before.meets && before.shift > 2.0, "{before:?}");
     send(&mut app, W::Region(1, 2, "40".into()));
     let after = seam(&app);
-    assert!(after.meets && after.shift < 1e-9 && after.step < 1e-9, "{after:?}");
+    assert!(
+        after.meets && after.shift < 1e-9 && after.step < 1e-9,
+        "{after:?}"
+    );
     send(&mut app, W::Save);
-    assert_eq!(model(&mut app).road_corridors()[0].regions[1].transition, Some(40.0));
+    assert_eq!(
+        model(&mut app).road_corridors()[0].regions[1].transition,
+        Some(40.0)
+    );
     // A transition on the first region is refused and the window says why.
     let _ = app.update(Message::Run("corridor.editor"));
     send(&mut app, W::Choose(0));
     send(&mut app, W::Region(0, 2, "10".into()));
     send(&mut app, W::Save);
-    assert_eq!(model(&mut app).road_corridors()[0].regions[0].transition, None, "not written");
+    assert_eq!(
+        model(&mut app).road_corridors()[0].regions[0].transition,
+        None,
+        "not written"
+    );
 }
 
 /// The slope transition typed and checked: the seam apart and met, the regions' table, light and wide, dark and
@@ -657,11 +821,17 @@ fn screens_transition() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y54");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y54");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = preflight_app("Yatık şevli ikize geçişsiz dikiş");
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::RibbonTab("corridor"));
         let _ = app.update(Message::Run("corridor.editor"));
@@ -673,7 +843,10 @@ fn screens_transition() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y54-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         send(&mut app, W::Check(true));
@@ -688,10 +861,18 @@ fn screens_transition() {
 /// A query case's own drawing (its setup), by its name.
 fn app_of_case(name: &str) -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.corridors.query.json")).expect("cases");
-    let c = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).expect("the case");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(c["setup"].clone()).expect("the drawing reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.corridors.query.json"
+    ))
+    .expect("cases");
+    let c = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(c["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -720,7 +901,11 @@ fn the_window_says_the_superelevation_s_stations() {
     let mut app = app_of_case(WIDENING_CASE);
     let _ = app.update(Message::Run("corridor.editor"));
     send(&mut app, W::Choose(0));
-    assert_eq!(said(&app), "Dever km'leri: 2 kritik · 1 genişleme", "the exit is past the region (km 300)");
+    assert_eq!(
+        said(&app),
+        "Dever km'leri: 2 kritik · 1 genişleme",
+        "the exit is past the region (km 300)"
+    );
 }
 
 /// `.run/gui-evidence/yol-y67/`:
@@ -734,12 +919,21 @@ fn screens_superelevation() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y67");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y67");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
-        for (case, chosen, file) in [(PIVOT_CASE, 1, "donme-ekseni"), (WIDENING_CASE, 0, "genisleme")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
+        for (case, chosen, file) in [
+            (PIVOT_CASE, 1, "donme-ekseni"),
+            (WIDENING_CASE, 0, "genisleme"),
+        ] {
             let mut app = app_of_case(case);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, message| {
@@ -750,7 +944,10 @@ fn screens_superelevation() {
             send(&mut app, W::Choose(chosen));
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("y67-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         }
     }

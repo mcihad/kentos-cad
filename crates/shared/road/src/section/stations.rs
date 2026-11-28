@@ -35,7 +35,12 @@ pub fn ground_breaks(surface: &Surface, al: &Alignment, from: f64, to: f64) -> V
     let mut out: Vec<Break> = crate::profile::terrain::terrain(surface, al)
         .into_iter()
         .filter(|p| p.crossing && p.station >= from - 1e-9 && p.station <= to + 1e-9)
-        .filter_map(|p| p.z.map(|z| Break { station: p.station.clamp(from, to), z }))
+        .filter_map(|p| {
+            p.z.map(|z| Break {
+                station: p.station.clamp(from, to),
+                z,
+            })
+        })
         .collect();
     for s in [from, to] {
         if let Some(z) = al.at(s).and_then(|p| surface.height(p.x, p.y).z) {
@@ -67,7 +72,11 @@ pub fn simplify(profile: &[Break], tolerance: f64, most: Option<f64>) -> Vec<usi
         let span = q.station - p.station;
         let mut worst = (0.0f64, 0usize);
         for (k, m) in profile.iter().enumerate().take(j).skip(i + 1) {
-            let line = if span > 0.0 { p.z + (q.z - p.z) * (m.station - p.station) / span } else { p.z };
+            let line = if span > 0.0 {
+                p.z + (q.z - p.z) * (m.station - p.station) / span
+            } else {
+                p.z
+            };
             let d = (m.z - line).abs();
             if d > worst.0 {
                 worst = (d, k);
@@ -124,7 +133,8 @@ fn normal(al: &Alignment, station: f64) -> Option<([f64; 2], [f64; 2])> {
 /// Every pair of square lines at `stations` (each `widths` (left, right) wide) that meet within both, on the same side
 /// of both (a line crossing the alignment itself is not a crossing of sections), by the stations' order.
 pub fn crossings(al: &Alignment, stations: &[f64], widths: &[(f64, f64)]) -> Vec<Crossing> {
-    let lines: Vec<Option<([f64; 2], [f64; 2])>> = stations.iter().map(|s| normal(al, *s)).collect();
+    let lines: Vec<Option<([f64; 2], [f64; 2])>> =
+        stations.iter().map(|s| normal(al, *s)).collect();
     let mut out = Vec::new();
     for i in 0..stations.len() {
         let Some((p, n)) = lines[i] else { continue };
@@ -146,9 +156,16 @@ pub fn crossings(al: &Alignment, stations: &[f64], widths: &[(f64, f64)]) -> Vec
             let t = (d[0] * (-m[1]) - d[1] * (-m[0])) / det;
             let u = (n[0] * d[1] - n[1] * d[0]) / det;
             // Lines that only touch (a clipped line ends at the meeting) do not cross.
-            let within = |x: f64, l: f64, r: f64| x > TOUCH && x < l - TOUCH || x < -TOUCH && -x < r - TOUCH;
+            let within =
+                |x: f64, l: f64, r: f64| x > TOUCH && x < l - TOUCH || x < -TOUCH && -x < r - TOUCH;
             if t * u > 0.0 && within(t, li, ri) && within(u, lj, rj) {
-                out.push(Crossing { first: i, second: j, left: t > 0.0, at_first: t.abs(), at_second: u.abs() });
+                out.push(Crossing {
+                    first: i,
+                    second: j,
+                    left: t > 0.0,
+                    at_first: t.abs(),
+                    at_second: u.abs(),
+                });
             }
         }
     }
@@ -160,13 +177,23 @@ pub fn crossings(al: &Alignment, stations: &[f64], widths: &[(f64, f64)]) -> Vec
 /// shortened to it; a line already shortened short of it leaves the other as it is. One pass leaves no two lines
 /// meeting: a pair meeting on the final widths met on the given ones, and when its turn came either both reached it
 /// (and were shortened to it) or one did not (and widths only shorten).
-pub fn clip(al: &Alignment, stations: &[f64], widths: &[(f64, f64)]) -> (Vec<(f64, f64)>, Vec<Crossing>) {
+pub fn clip(
+    al: &Alignment,
+    stations: &[f64],
+    widths: &[(f64, f64)],
+) -> (Vec<(f64, f64)>, Vec<Crossing>) {
     let mut w = widths.to_vec();
     let found = crossings(al, stations, &w);
     let mut order: Vec<&Crossing> = found.iter().collect();
     // Nearest first by the micrometre: on a circle every pair meets at its centre, and rounding must not decide the
     // order among them (the lines' order does).
-    let key = |c: &Crossing| ((c.at_first.min(c.at_second) * 1e6).round() as i64, c.first, c.second);
+    let key = |c: &Crossing| {
+        (
+            (c.at_first.min(c.at_second) * 1e6).round() as i64,
+            c.first,
+            c.second,
+        )
+    };
     order.sort_by_key(|c| key(c));
     for c in order {
         let side = |w: &[(f64, f64)], k: usize| if c.left { w[k].0 } else { w[k].1 };

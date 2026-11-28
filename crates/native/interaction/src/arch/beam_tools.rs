@@ -136,7 +136,11 @@ impl BeamTool {
 
     /// Its name: its role's, or Kayıt.
     fn name(&self) -> &'static str {
-        if self.rail { "Kayıt" } else { self.role.label() }
+        if self.rail {
+            "Kayıt"
+        } else {
+            self.role.label()
+        }
     }
 
     /// Its role taken, with that role's sizes until changed.
@@ -243,8 +247,10 @@ impl BeamTool {
     fn see(&mut self, cx: &Context<'_>) {
         self.drawn = Preview::default();
         self.why = None;
-        if self.role == BeamRole::Lintel && self.over.is_some_and(|s| self.lintel(s, cx).is_none()) {
-            self.why = Some("Bu açıklığın üstüne lento konamıyor: duvarı ya da söveleri yok.".into());
+        if self.role == BeamRole::Lintel && self.over.is_some_and(|s| self.lintel(s, cx).is_none())
+        {
+            self.why =
+                Some("Bu açıklığın üstüne lento konamıyor: duvarı ya da söveleri yok.".into());
             return;
         }
         let Some(beam) = self.pending(cx) else {
@@ -357,7 +363,11 @@ impl BeamTool {
             // A rail's rise (docs/adr/8130): any length, empty 0.
             "U" if self.rail => {
                 let t = js_trim(value);
-                let v = if t.is_empty() { Some(0.0) } else { cx.typed_length(t).filter(|v| v.is_finite()) };
+                let v = if t.is_empty() {
+                    Some(0.0)
+                } else {
+                    cx.typed_length(t).filter(|v| v.is_finite())
+                };
                 v.map(|v| self.rise = v).is_some()
             }
             "O" => length(cx).map(|v| self.bearing = v).is_some(),
@@ -443,12 +453,16 @@ impl Tool for BeamTool {
             let words = match ask {
                 Ask::Width => "gövde genişliğini yazın",
                 Ask::Height => "yüksekliğini yazın",
-                Ask::Offset => "kirişin tepesinin kot farkını yazın (0: üst döşemenin betonarmesinde)",
+                Ask::Offset => {
+                    "kirişin tepesinin kot farkını yazın (0: üst döşemenin betonarmesinde)"
+                }
                 Ask::Base => "alt yüzünün katın döşemesinden yüksekliğini yazın",
                 Ask::Bearing => "lentonun her iki yanda duvara oturma boyunu yazın (en az 20 cm)",
                 Ask::Tag => "numarasını yazın (K101, L101, H101 gibi; boş: yok)",
                 Ask::Material => "malzemesini yazın (Çelik, Alüminyum, Ahşap gibi; boş: Betonarme)",
-                Ask::Rise => "ucunun başından ne kadar yüksek olduğunu yazın (0: düz; eğimli kayıt iki noktadır)",
+                Ask::Rise => {
+                    "ucunun başından ne kadar yüksek olduğunu yazın (0: düz; eğimli kayıt iki noktadır)"
+                }
             };
             return Prompt::new(name, words).option("Geri", "G");
         }
@@ -480,8 +494,12 @@ impl Tool for BeamTool {
             p.option_with("Kot farkı", "F", n(self.offset))
         };
         let p = if self.rail {
-            p.option_with("Malzeme", "M", self.material.clone().unwrap_or_else(|| "Betonarme".into()))
-                .option_with("Yükselme", "U", n(self.rise))
+            p.option_with(
+                "Malzeme",
+                "M",
+                self.material.clone().unwrap_or_else(|| "Betonarme".into()),
+            )
+            .option_with("Yükselme", "U", n(self.rise))
         } else {
             p
         };
@@ -567,7 +585,9 @@ impl Tool for BeamTool {
                 let next = match self.role {
                     BeamRole::Beam => BeamRole::Lintel,
                     BeamRole::Lintel => BeamRole::BondBeam,
-                    BeamRole::BondBeam | BeamRole::PadFooting | BeamRole::StripFooting => BeamRole::Beam,
+                    BeamRole::BondBeam | BeamRole::PadFooting | BeamRole::StripFooting => {
+                        BeamRole::Beam
+                    }
                 };
                 self.set_role(next);
                 self.see(cx);
@@ -609,7 +629,11 @@ impl Tool for BeamTool {
                 "T",
                 "Tür",
                 crate::tool_settings::choices(
-                    &[("beam", "Kiriş"), ("lintel", "Lento"), ("bondBeam", "Hatıl")],
+                    &[
+                        ("beam", "Kiriş"),
+                        ("lintel", "Lento"),
+                        ("bondBeam", "Hatıl"),
+                    ],
                     role_key(self.role),
                 ),
             ));

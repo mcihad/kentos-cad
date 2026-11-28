@@ -12,20 +12,21 @@
 //! Test code only.
 
 use crate::arch;
+use crate::arch::ArchState;
 use iced::Point;
 use kentos_domain::Slot;
 use kentos_render_wgpu::Vec2;
 use kentos_ui::widget::docking;
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
-use crate::tool_settings::Commit;
 use crate::files_testing::make_cad;
+use crate::tool_settings::Commit;
 use crate::tools_scenes::run;
 use crate::tools_screens::Scene;
 
 const MODEL: &str = include_str!("../../../../fixtures/kcad/v2/multi-slide.json");
-const CASES: &str = include_str!("../../../../fixtures/commands/v1/cad.openings.create.special.json");
+const CASES: &str =
+    include_str!("../../../../fixtures/commands/v1/cad.openings.create.special.json");
 
 fn open_doc(app: &mut App, snapshot: kentos_commands::DocumentSnapshotV2, b: [f64; 4]) {
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -68,7 +69,11 @@ fn near(app: &mut App) {
 /// Kapı, Açılış Sürme, four leaves parting both ways on rails, 3,2 m, by the first wall of the shared cases.
 fn tool(app: &mut App) {
     let file: serde_json::Value = serde_json::from_str(CASES).expect("the cases");
-    open_doc(app, serde_json::from_value(file["setup"].clone()).expect("the drawing"), [2.0, -2.0, 8.0, 1.5]);
+    open_doc(
+        app,
+        serde_json::from_value(file["setup"].clone()).expect("the drawing"),
+        [2.0, -2.0, 8.0, 1.5],
+    );
     app.command_expanded = true;
     let upper = docking::Slot::Docked(docking::Side::Right, 0);
     let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
@@ -79,7 +84,9 @@ fn tool(app: &mut App) {
     set(app, "İ", "on");
     set(app, "H", "on");
     let [x, y] = app.viewport.camera.world_to_screen(Vec2::new(5.0, -0.9));
-    let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(Point::new(x as f32, y as f32))));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(
+        Point::new(x as f32, y as f32),
+    )));
 }
 
 /// S4 selected: Öznitelikler's Ray sayısı, İki yana açılır, Kanat bindirmesi and Kanat düzeni.
@@ -95,7 +102,8 @@ fn types(app: &mut App) {
     plan(app);
     run(app, "arch.openingTypes");
     if let Some(i) = app
-        .modules.arch()
+        .modules
+        .arch()
         .opening_types
         .as_ref()
         .and_then(|w| w.uses.iter().position(|u| u.kind.id == "s3"))

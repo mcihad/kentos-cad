@@ -44,9 +44,9 @@ impl App {
                 Some(Dialog::LayerStyle)
             }
             // Şablon düzenleyici comes back as it was (template_editor.rs).
-            Some(PickTarget::Template) if self.template_work.template_editor.is_some() => {
-                Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor))
-            }
+            Some(PickTarget::Template) if self.template_work.template_editor.is_some() => Some(
+                Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor),
+            ),
             _ => None,
         };
     }

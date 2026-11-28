@@ -123,16 +123,30 @@ fn unit_correction_keeps_current_and_named_frames_on_the_scaled_geometry() {
         let planned = units_change::plan_in(&doc, &input);
         assert!(matches!(planned, CommandResult::Completed { .. }));
         assert_eq!(doc.to_snapshot_v2(), before, "plan writes nothing");
-        assert!(matches!(change(&mut doc, input), CommandResult::Completed { .. }));
-        let factor = if geometry == UnitGeometry::Scale { 1000. } else { 1. };
-        let expected = Vec2 { x: 10. * factor, y: -20. * factor };
+        assert!(matches!(
+            change(&mut doc, input),
+            CommandResult::Completed { .. }
+        ));
+        let factor = if geometry == UnitGeometry::Scale {
+            1000.
+        } else {
+            1.
+        };
+        let expected = Vec2 {
+            x: 10. * factor,
+            y: -20. * factor,
+        };
         assert_eq!(doc.settings().ucs.unwrap().origin, expected);
         assert_eq!(doc.settings().named_ucs[0].origin, expected);
         assert_eq!(doc.settings().ucs.unwrap().angle, frame.angle);
         assert_eq!(doc.settings().named_ucs[0].angle, frame.angle);
         let scaled = doc.to_snapshot_v2();
         assert!(doc.undo().is_some());
-        assert_eq!(doc.to_snapshot_v2(), before, "one Undo restores frames and objects");
+        assert_eq!(
+            doc.to_snapshot_v2(),
+            before,
+            "one Undo restores frames and objects"
+        );
         assert!(!doc.can_undo());
         assert!(doc.redo().is_some());
         assert_eq!(doc.to_snapshot_v2(), scaled);
@@ -145,10 +159,18 @@ fn a_unit_correction_cannot_push_a_frame_outside_the_serializable_range() {
     for named in [false, true] {
         let mut doc = drawing();
         let mut settings = doc.settings().clone();
-        let frame = Ucs::new(Vec2 { x: 100_000., y: 20. }, 0.);
+        let frame = Ucs::new(
+            Vec2 {
+                x: 100_000.,
+                y: 20.,
+            },
+            0.,
+        );
         if named {
             settings.named_ucs = vec![NamedUcs {
-                name: "Uzak aks".into(), origin: frame.origin, angle: frame.angle,
+                name: "Uzak aks".into(),
+                origin: frame.origin,
+                angle: frame.angle,
             }];
         } else {
             settings.ucs = Some(frame);
@@ -156,8 +178,14 @@ fn a_unit_correction_cannot_push_a_frame_outside_the_serializable_range() {
         doc.set_settings(settings);
         let before = doc.to_snapshot_v2();
         let input = scale(DrawingUnit::Mm, DrawingUnit::M);
-        assert!(matches!(units_change::plan_in(&doc, &input), CommandResult::Failed { .. }));
-        assert!(matches!(change(&mut doc, input), CommandResult::Failed { .. }));
+        assert!(matches!(
+            units_change::plan_in(&doc, &input),
+            CommandResult::Failed { .. }
+        ));
+        assert!(matches!(
+            change(&mut doc, input),
+            CommandResult::Failed { .. }
+        ));
         assert_eq!(doc.to_snapshot_v2(), before);
         assert!(!doc.can_undo());
     }
@@ -169,7 +197,10 @@ fn undo_of_display_unit_change_leaves_a_later_ucs_choice_alone() {
     let mut doc = drawing();
     let mut input = scale(DrawingUnit::Mm, DrawingUnit::M);
     input.geometry = UnitGeometry::Keep;
-    assert!(matches!(change(&mut doc, input), CommandResult::Completed { .. }));
+    assert!(matches!(
+        change(&mut doc, input),
+        CommandResult::Completed { .. }
+    ));
     let mut settings = doc.settings().clone();
     let frame = Ucs::new(Vec2 { x: 17., y: 29. }, 0.5);
     settings.ucs = Some(frame);

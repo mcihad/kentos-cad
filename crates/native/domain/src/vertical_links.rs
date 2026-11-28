@@ -93,7 +93,9 @@ fn side_points(r: &Ring) -> Vec<(Vec2, Vec2)> {
     if n < 3 {
         return Vec::new();
     }
-    let twice: f64 = (0..n).map(|i| pts[i].x * pts[(i + 1) % n].y - pts[(i + 1) % n].x * pts[i].y).sum();
+    let twice: f64 = (0..n)
+        .map(|i| pts[i].x * pts[(i + 1) % n].y - pts[(i + 1) % n].x * pts[i].y)
+        .sum();
     let ccw = twice > 0.0;
     let mut out = Vec::new();
     for i in 0..n {
@@ -104,7 +106,11 @@ fn side_points(r: &Ring) -> Vec<(Vec2, Vec2)> {
         }
         let (ux, uy) = ((b.x - a.x) / l, (b.y - a.y) / l);
         // Out of a counter-clockwise ring is to the right of its sides.
-        let out_n = if ccw { Vec2::new(uy, -ux) } else { Vec2::new(-uy, ux) };
+        let out_n = if ccw {
+            Vec2::new(uy, -ux)
+        } else {
+            Vec2::new(-uy, ux)
+        };
         let k = ((l / STEP).floor() as usize).max(1);
         for j in 0..k {
             let t = (j as f64 + 0.5) * l / k as f64;
@@ -127,12 +133,28 @@ impl Document {
             .settings()
             .arch
             .as_ref()
-            .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.elevation)).collect())
+            .map(|a| {
+                a.levels
+                    .iter()
+                    .map(|l| (l.id.clone(), l.elevation))
+                    .collect()
+            })
             .unwrap_or_default();
         levels.sort_by(|a, b| a.1.total_cmp(&b.1).then_with(|| a.0.cmp(&b.0)));
-        let index = |l: &Option<String>| l.as_deref().and_then(|id| levels.iter().position(|(x, _)| x == id));
-        let below = |l: &Option<String>| index(l).and_then(|i| i.checked_sub(1)).map(|i| levels[i].0.clone());
-        let above = |l: &Option<String>| index(l).and_then(|i| levels.get(i + 1)).map(|x| x.0.clone());
+        let index = |l: &Option<String>| {
+            l.as_deref()
+                .and_then(|id| levels.iter().position(|(x, _)| x == id))
+        };
+        let below = |l: &Option<String>| {
+            index(l)
+                .and_then(|i| i.checked_sub(1))
+                .map(|i| levels[i].0.clone())
+        };
+        let above = |l: &Option<String>| {
+            index(l)
+                .and_then(|i| levels.get(i + 1))
+                .map(|x| x.0.clone())
+        };
         let mut rooms: Vec<Room> = Vec::new();
         let mut shafts: Vec<(Option<String>, Vec<Area>)> = Vec::new();
         let mut holes: Vec<Hole> = Vec::new();
@@ -145,14 +167,26 @@ impl Document {
                     let x = &s.space;
                     let areas = core_areas(&x.parts);
                     if !x.void {
-                        rooms.push(Room { uid: uid.to_string(), level, areas });
+                        rooms.push(Room {
+                            uid: uid.to_string(),
+                            level,
+                            areas,
+                        });
                     } else if crate::room_names::shaft(x.name.as_deref(), x.usage.as_deref()) {
                         shafts.push((level, areas));
                     } else {
                         for a in areas {
-                            let middle = kentos_geometry_core::geom::space::label_at(std::slice::from_ref(&a));
+                            let middle = kentos_geometry_core::geom::space::label_at(
+                                std::slice::from_ref(&a),
+                            );
                             if let Some(middle) = middle {
-                                holes.push(Hole { uid: uid.to_string(), kind: "void", level: level.clone(), area: a, middle });
+                                holes.push(Hole {
+                                    uid: uid.to_string(),
+                                    kind: "void",
+                                    level: level.clone(),
+                                    area: a,
+                                    middle,
+                                });
                             }
                         }
                     }
@@ -161,26 +195,47 @@ impl Document {
                     let areas = core_areas(&s.slab.parts);
                     for a in &areas {
                         for h in &a.holes {
-                            let hole = Area { outer: h.clone(), holes: Vec::new() };
-                            if let Some(middle) = kentos_geometry_core::geom::space::label_at(std::slice::from_ref(&hole)) {
-                                holes.push(Hole { uid: uid.to_string(), kind: "hole", level: level.clone(), area: hole, middle });
+                            let hole = Area {
+                                outer: h.clone(),
+                                holes: Vec::new(),
+                            };
+                            if let Some(middle) = kentos_geometry_core::geom::space::label_at(
+                                std::slice::from_ref(&hole),
+                            ) {
+                                holes.push(Hole {
+                                    uid: uid.to_string(),
+                                    kind: "hole",
+                                    level: level.clone(),
+                                    area: hole,
+                                    middle,
+                                });
                             }
                         }
                     }
                     slabs.push((uid.to_string(), level, areas));
                 }
-                Entity::Stair(s) => stairs.push((uid.to_string(), level, s.stair.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect())),
+                Entity::Stair(s) => stairs.push((
+                    uid.to_string(),
+                    level,
+                    s.stair.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect(),
+                )),
                 _ => {}
             }
         }
         // A hole another slab of its storey covers, or a shaft of its storey holds, is no opening.
         holes.retain(|h| {
             h.kind == "void"
-                || !(slabs.iter().any(|(u, l, a)| *u != h.uid && *l == h.level && inside(a, h.middle))
-                    || shafts.iter().any(|(l, a)| *l == h.level && inside(a, h.middle)))
+                || !(slabs
+                    .iter()
+                    .any(|(u, l, a)| *u != h.uid && *l == h.level && inside(a, h.middle))
+                    || shafts
+                        .iter()
+                        .any(|(l, a)| *l == h.level && inside(a, h.middle)))
         });
         let room_at = |level: &Option<String>, p: Vec2| -> Option<&Room> {
-            rooms.iter().find(|r| r.level == *level && inside(&r.areas, p))
+            rooms
+                .iter()
+                .find(|r| r.level == *level && inside(&r.areas, p))
         };
         let mut out: Vec<VerticalLink> = Vec::new();
         for h in &holes {
@@ -197,7 +252,11 @@ impl Document {
             let sides = side_points(&h.area.outer);
             if let Some(low) = &low {
                 let lower = Some(low.clone());
-                for p in std::iter::once(h.middle).chain(sides.iter().map(|(p, n)| Vec2::new(p.x - n.x * INSET, p.y - n.y * INSET))) {
+                for p in std::iter::once(h.middle).chain(
+                    sides
+                        .iter()
+                        .map(|(p, n)| Vec2::new(p.x - n.x * INSET, p.y - n.y * INSET)),
+                ) {
                     if let Some(r) = room_at(&lower, p) {
                         push_once(&mut link.rooms_below, &r.uid);
                     }
@@ -221,7 +280,10 @@ impl Document {
                 *l == low && pts.len() >= 2 && {
                     let (a, b) = (pts[pts.len() - 2], pts[pts.len() - 1]);
                     let len = (b.x - a.x).hypot(b.y - a.y).max(1e-9);
-                    let before = Vec2::new(b.x - (b.x - a.x) / len * BEFORE_HEAD, b.y - (b.y - a.y) / len * BEFORE_HEAD);
+                    let before = Vec2::new(
+                        b.x - (b.x - a.x) / len * BEFORE_HEAD,
+                        b.y - (b.y - a.y) / len * BEFORE_HEAD,
+                    );
                     inside_area(&h.area, b) || inside_area(&h.area, before)
                 }
             });
@@ -242,7 +304,9 @@ impl Document {
                 if i == j || out[j].below.is_none() || out[j].below != out[i].above {
                     continue;
                 }
-                if inside_area(&holes[j].area, holes[i].middle) || inside_area(&holes[i].area, holes[j].middle) {
+                if inside_area(&holes[j].area, holes[i].middle)
+                    || inside_area(&holes[i].area, holes[j].middle)
+                {
                     let (a, b) = (find(&mut root, i), find(&mut root, j));
                     if a != b {
                         root[a.max(b)] = a.min(b);
@@ -255,7 +319,11 @@ impl Document {
             .map(|i| {
                 (0..n)
                     .filter(|&j| rep[j] == rep[i])
-                    .min_by(|&a, &b| index(&out[a].above).cmp(&index(&out[b].above)).then_with(|| out[a].uid.cmp(&out[b].uid)))
+                    .min_by(|&a, &b| {
+                        index(&out[a].above)
+                            .cmp(&index(&out[b].above))
+                            .then_with(|| out[a].uid.cmp(&out[b].uid))
+                    })
                     .map_or_else(|| out[i].uid.clone(), |j| out[j].uid.clone())
             })
             .collect();
@@ -264,7 +332,9 @@ impl Document {
         }
         // The stairs.
         for (uid, level, pts) in &stairs {
-            let (Some(first), Some(last)) = (pts.first().copied(), pts.last().copied()) else { continue };
+            let (Some(first), Some(last)) = (pts.first().copied(), pts.last().copied()) else {
+                continue;
+            };
             let up = above(level);
             let along = |from: Vec2, to: Vec2, lvl: &Option<String>| -> Option<String> {
                 let len = (to.x - from.x).hypot(to.y - from.y).max(1e-9);
@@ -276,7 +346,10 @@ impl Document {
                 })
             };
             let second = pts.get(1).copied().unwrap_or(last);
-            let before_last = pts.get(pts.len().saturating_sub(2)).copied().unwrap_or(first);
+            let before_last = pts
+                .get(pts.len().saturating_sub(2))
+                .copied()
+                .unwrap_or(first);
             let mut link = VerticalLink {
                 uid: uid.clone(),
                 kind: "stair",
@@ -295,7 +368,11 @@ impl Document {
             }
             out.push(link);
         }
-        out.sort_by(|a, b| index(&a.below).cmp(&index(&b.below)).then_with(|| a.uid.cmp(&b.uid)));
+        out.sort_by(|a, b| {
+            index(&a.below)
+                .cmp(&index(&b.below))
+                .then_with(|| a.uid.cmp(&b.uid))
+        });
         out
     }
 }

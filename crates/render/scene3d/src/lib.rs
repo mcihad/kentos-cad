@@ -102,11 +102,27 @@ pub const MAX_PLANES: usize = 6;
 /// normal snorm8 × 4.
 pub(crate) fn vertex_layout() -> wgpu::VertexBufferLayout<'static> {
     const ATTRIBUTES: [wgpu::VertexAttribute; 3] = [
-        wgpu::VertexAttribute { format: wgpu::VertexFormat::Float32x3, offset: 0, shader_location: 0 },
-        wgpu::VertexAttribute { format: wgpu::VertexFormat::Uint32, offset: 12, shader_location: 1 },
-        wgpu::VertexAttribute { format: wgpu::VertexFormat::Snorm8x4, offset: 16, shader_location: 2 },
+        wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Float32x3,
+            offset: 0,
+            shader_location: 0,
+        },
+        wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Uint32,
+            offset: 12,
+            shader_location: 1,
+        },
+        wgpu::VertexAttribute {
+            format: wgpu::VertexFormat::Snorm8x4,
+            offset: 16,
+            shader_location: 2,
+        },
     ];
-    wgpu::VertexBufferLayout { array_stride: 20, step_mode: wgpu::VertexStepMode::Vertex, attributes: &ATTRIBUTES }
+    wgpu::VertexBufferLayout {
+        array_stride: 20,
+        step_mode: wgpu::VertexStepMode::Vertex,
+        attributes: &ATTRIBUTES,
+    }
 }
 
 #[repr(C)]
@@ -197,12 +213,21 @@ impl DepthTarget {
     }
 
     /// The depth buffer for a target of `width` × `height` pixels, kept when it already is that size.
-    pub fn ensure<'a>(this: &'a mut Option<DepthTarget>, device: &wgpu::Device, width: u32, height: u32) -> &'a wgpu::TextureView {
+    pub fn ensure<'a>(
+        this: &'a mut Option<DepthTarget>,
+        device: &wgpu::Device,
+        width: u32,
+        height: u32,
+    ) -> &'a wgpu::TextureView {
         let want = (width.max(1), height.max(1));
         if this.as_ref().is_none_or(|d| d.size != want) {
             let texture = device.create_texture(&wgpu::TextureDescriptor {
                 label: Some("kentos.scene3d.depth"),
-                size: wgpu::Extent3d { width: want.0, height: want.1, depth_or_array_layers: 1 },
+                size: wgpu::Extent3d {
+                    width: want.0,
+                    height: want.1,
+                    depth_or_array_layers: 1,
+                },
                 mip_level_count: 1,
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
@@ -210,7 +235,10 @@ impl DepthTarget {
                 usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
                 view_formats: &[],
             });
-            *this = Some(DepthTarget { view: texture.create_view(&wgpu::TextureViewDescriptor::default()), size: want });
+            *this = Some(DepthTarget {
+                view: texture.create_view(&wgpu::TextureViewDescriptor::default()),
+                size: want,
+            });
         }
         match this {
             Some(d) => &d.view,
@@ -278,7 +306,11 @@ impl Scene3dRenderer {
     }
 
     /// A renderer of `quality`: its pipelines take the quality's samples.
-    pub fn with_quality(device: &wgpu::Device, format: wgpu::TextureFormat, quality: Quality) -> Self {
+    pub fn with_quality(
+        device: &wgpu::Device,
+        format: wgpu::TextureFormat,
+        quality: Quality,
+    ) -> Self {
         let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("kentos.scene3d"),
             source: wgpu::ShaderSource::Wgsl(SCENE3D_WGSL.into()),
@@ -361,14 +393,30 @@ impl Scene3dRenderer {
         let veil = |write: bool| wgpu::ColorTargetState {
             format: offscreen::VEIL_FORMAT,
             blend: Some(wgpu::BlendState {
-                color: wgpu::BlendComponent { src_factor: wgpu::BlendFactor::One, dst_factor: wgpu::BlendFactor::One, operation: wgpu::BlendOperation::Max },
-                alpha: wgpu::BlendComponent { src_factor: wgpu::BlendFactor::One, dst_factor: wgpu::BlendFactor::One, operation: wgpu::BlendOperation::Max },
+                color: wgpu::BlendComponent {
+                    src_factor: wgpu::BlendFactor::One,
+                    dst_factor: wgpu::BlendFactor::One,
+                    operation: wgpu::BlendOperation::Max,
+                },
+                alpha: wgpu::BlendComponent {
+                    src_factor: wgpu::BlendFactor::One,
+                    dst_factor: wgpu::BlendFactor::One,
+                    operation: wgpu::BlendOperation::Max,
+                },
             }),
-            write_mask: if write { wgpu::ColorWrites::ALL } else { wgpu::ColorWrites::empty() },
+            write_mask: if write {
+                wgpu::ColorWrites::ALL
+            } else {
+                wgpu::ColorWrites::empty()
+            },
         };
         let make = |see_through: bool| {
             device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-                label: Some(if see_through { "kentos.scene3d.seeThrough" } else { "kentos.scene3d.opaque" }),
+                label: Some(if see_through {
+                    "kentos.scene3d.seeThrough"
+                } else {
+                    "kentos.scene3d.opaque"
+                }),
                 layout: Some(&layout),
                 vertex: wgpu::VertexState {
                     module: &module,
@@ -376,7 +424,10 @@ impl Scene3dRenderer {
                     compilation_options: wgpu::PipelineCompilationOptions::default(),
                     buffers: &[vertex_layout()],
                 },
-                primitive: wgpu::PrimitiveState { cull_mode: None, ..wgpu::PrimitiveState::default() },
+                primitive: wgpu::PrimitiveState {
+                    cull_mode: None,
+                    ..wgpu::PrimitiveState::default()
+                },
                 depth_stencil: Some(wgpu::DepthStencilState {
                     format: DEPTH_FORMAT,
                     depth_write_enabled: !see_through,
@@ -385,12 +436,19 @@ impl Scene3dRenderer {
                     // A see-through face lying on an opaque one (a room's side on its wall's inner face, its floor on
                     // the slab) a hair nearer: drawn over it evenly, not in patches as their depths' last bits fall.
                     bias: if see_through {
-                        wgpu::DepthBiasState { constant: 4, slope_scale: 2.0, clamp: 0.0 }
+                        wgpu::DepthBiasState {
+                            constant: 4,
+                            slope_scale: 2.0,
+                            clamp: 0.0,
+                        }
                     } else {
                         wgpu::DepthBiasState::default()
                     },
                 }),
-                multisample: wgpu::MultisampleState { count: samples, ..wgpu::MultisampleState::default() },
+                multisample: wgpu::MultisampleState {
+                    count: samples,
+                    ..wgpu::MultisampleState::default()
+                },
                 fragment: Some(wgpu::FragmentState {
                     module: &module,
                     entry_point: Some(if veiled { "meshVeiledFs" } else { "meshFs" }),
@@ -423,7 +481,10 @@ impl Scene3dRenderer {
                     compilation_options: wgpu::PipelineCompilationOptions::default(),
                     buffers: &[vertex_layout()],
                 },
-                primitive: wgpu::PrimitiveState { topology: wgpu::PrimitiveTopology::LineList, ..wgpu::PrimitiveState::default() },
+                primitive: wgpu::PrimitiveState {
+                    topology: wgpu::PrimitiveTopology::LineList,
+                    ..wgpu::PrimitiveState::default()
+                },
                 depth_stencil: Some(wgpu::DepthStencilState {
                     format: DEPTH_FORMAT,
                     depth_write_enabled: false,
@@ -431,13 +492,20 @@ impl Scene3dRenderer {
                     stencil: wgpu::StencilState::default(),
                     bias: wgpu::DepthBiasState::default(),
                 }),
-                multisample: wgpu::MultisampleState { count: samples, ..wgpu::MultisampleState::default() },
+                multisample: wgpu::MultisampleState {
+                    count: samples,
+                    ..wgpu::MultisampleState::default()
+                },
                 fragment: Some(wgpu::FragmentState {
                     module: &module,
                     entry_point: Some("edgeFs"),
                     compilation_options: wgpu::PipelineCompilationOptions::default(),
                     targets: &[
-                        Some(wgpu::ColorTargetState { format, blend: Some(wgpu::BlendState::REPLACE), write_mask: wgpu::ColorWrites::ALL }),
+                        Some(wgpu::ColorTargetState {
+                            format,
+                            blend: Some(wgpu::BlendState::REPLACE),
+                            write_mask: wgpu::ColorWrites::ALL,
+                        }),
                         Some(veil(false)),
                     ][..if veiled { 2 } else { 1 }],
                 }),
@@ -499,32 +567,63 @@ impl Scene3dRenderer {
             label: Some("kentos.scene3d.view"),
             layout,
             entries: &[
-                wgpu::BindGroupEntry { binding: 0, resource: view.as_entire_binding() },
-                wgpu::BindGroupEntry { binding: 1, resource: styles.as_entire_binding() },
-                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::TextureView(shadows.bound()) },
-                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::Sampler(&shadows.sampler) },
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: view.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: styles.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: wgpu::BindingResource::TextureView(shadows.bound()),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: wgpu::BindingResource::Sampler(&shadows.sampler),
+                },
             ],
         })
     }
 
-    fn shadow_bind(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, view: &wgpu::Buffer, styles: &wgpu::Buffer) -> wgpu::BindGroup {
+    fn shadow_bind(
+        device: &wgpu::Device,
+        layout: &wgpu::BindGroupLayout,
+        view: &wgpu::Buffer,
+        styles: &wgpu::Buffer,
+    ) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("kentos.scene3d.shadowView"),
             layout,
             entries: &[
-                wgpu::BindGroupEntry { binding: 0, resource: view.as_entire_binding() },
-                wgpu::BindGroupEntry { binding: 1, resource: styles.as_entire_binding() },
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: view.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: styles.as_entire_binding(),
+                },
             ],
         })
     }
 
-    fn tile_bind(device: &wgpu::Device, layout: &wgpu::BindGroupLayout, tiles: &wgpu::Buffer) -> wgpu::BindGroup {
+    fn tile_bind(
+        device: &wgpu::Device,
+        layout: &wgpu::BindGroupLayout,
+        tiles: &wgpu::Buffer,
+    ) -> wgpu::BindGroup {
         device.create_bind_group(&wgpu::BindGroupDescriptor {
             label: Some("kentos.scene3d.tile"),
             layout,
             entries: &[wgpu::BindGroupEntry {
                 binding: 0,
-                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding { buffer: tiles, offset: 0, size: wgpu::BufferSize::new(16) }),
+                resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                    buffer: tiles,
+                    offset: 0,
+                    size: wgpu::BufferSize::new(16),
+                }),
             }],
         })
     }
@@ -537,7 +636,15 @@ impl Scene3dRenderer {
     /// The view's own targets for `width` × `height` pixels ([`Scene3dRenderer::render_offscreen`]), made again when
     /// the size changes.
     pub fn ensure_targets(&mut self, device: &wgpu::Device, width: u32, height: u32) {
-        offscreen::Targets::ensure(&mut self.targets, device, &self.passes, self.format, self.quality, width, height);
+        offscreen::Targets::ensure(
+            &mut self.targets,
+            device,
+            &self.passes,
+            self.format,
+            self.quality,
+            width,
+            height,
+        );
     }
 
     /// Where the viewport lays the view's targets: the corners of them it shows (0–1; all of them unless the view is
@@ -580,21 +687,30 @@ impl Scene3dRenderer {
         stats.waiting = plan.waiting.len();
         let upload: std::collections::HashSet<u64> = plan.upload.iter().copied().collect();
         for c in asked.iter().filter(|c| upload.contains(&c.id)) {
-            let vertices: Vec<Vertex> =
-                c.positions
-                    .iter()
-                    .zip(&c.parts)
-                    .zip(c.normals.iter().chain(std::iter::repeat(&[0i8; 4])))
-                    .map(|((p, part), n)| Vertex { p: *p, part: *part, n: *n })
-                    .collect();
-            let lines = self.edges.as_ref().map(|_| edges::feature_edges(c, edges::CREASE_DEGREES)).filter(|l| !l.is_empty()).map(|l| {
-                let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                    label: Some("kentos.scene3d.edges"),
-                    contents: bytemuck::cast_slice(&l),
-                    usage: wgpu::BufferUsages::INDEX,
+            let vertices: Vec<Vertex> = c
+                .positions
+                .iter()
+                .zip(&c.parts)
+                .zip(c.normals.iter().chain(std::iter::repeat(&[0i8; 4])))
+                .map(|((p, part), n)| Vertex {
+                    p: *p,
+                    part: *part,
+                    n: *n,
+                })
+                .collect();
+            let lines = self
+                .edges
+                .as_ref()
+                .map(|_| edges::feature_edges(c, edges::CREASE_DEGREES))
+                .filter(|l| !l.is_empty())
+                .map(|l| {
+                    let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: Some("kentos.scene3d.edges"),
+                        contents: bytemuck::cast_slice(&l),
+                        usage: wgpu::BufferUsages::INDEX,
+                    });
+                    (buffer, l.len() as u32)
                 });
-                (buffer, l.len() as u32)
-            });
             let gpu = Gpu {
                 vertices: device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
                     label: Some("kentos.scene3d.vertices"),
@@ -617,7 +733,12 @@ impl Scene3dRenderer {
 
     /// Writes the frame's blocks for `frame.draws` that are resident; without a [`Self::load`] this frame, it first
     /// uploads what the budgets allow of them.
-    pub fn prepare(&mut self, device: &wgpu::Device, queue: &wgpu::Queue, frame: &Frame<'_>) -> Stats {
+    pub fn prepare(
+        &mut self,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        frame: &Frame<'_>,
+    ) -> Stats {
         let mut stats = if std::mem::replace(&mut self.begun, false) {
             Stats::default()
         } else {
@@ -635,23 +756,50 @@ impl Scene3dRenderer {
             let w = p[0] * eye[0] + p[1] * eye[1] + p[2] * eye[2] + p[3];
             *out = [p[0] as f32, p[1] as f32, p[2] as f32, w as f32];
         }
-        let perspective = matches!(frame.camera.projection, kentos_scene3d::Projection::Perspective { .. });
+        let perspective = matches!(
+            frame.camera.projection,
+            kentos_scene3d::Projection::Perspective { .. }
+        );
         // The sun's shadows: its projection fitted to the box as shown; the map made the first time.
         self.shadowing = frame.shadows.is_some();
         let (mut shadow, mut sun) = ([0.0f32; 16], [0.0f32; 4]);
         if let Some([low, high]) = frame.shadows {
-            let (low, high) = (frame.exaggeration.shown(low), frame.exaggeration.shown(high));
+            let (low, high) = (
+                frame.exaggeration.shown(low),
+                frame.exaggeration.shown(high),
+            );
             let p = shadow::projection(low, high, eye, light, self.shadows.side);
             (shadow, sun) = (p.clip, [1.0, p.texel_uv, p.texel_m, p.bias]);
             if self.shadows.ensure(device) {
-                self.view_bind = Self::view_bind(device, &self.view_layout, &self.view, &self.styles, &self.shadows);
+                self.view_bind = Self::view_bind(
+                    device,
+                    &self.view_layout,
+                    &self.view,
+                    &self.styles,
+                    &self.shadows,
+                );
             }
         }
         let block = ViewBlock {
             clip: frame.camera.rotation_projection(aspect).to_f32(),
-            light: [light[0] as f32, light[1] as f32, light[2] as f32, frame.ambient],
-            look: [frame.exaggeration.factor as f32, used as f32, frame.sky, frame.fill],
-            edge: [if perspective { 1.0 } else { 0.0 }, EDGE_NEAR, EDGE_DARK, self.quality.samples() as f32],
+            light: [
+                light[0] as f32,
+                light[1] as f32,
+                light[2] as f32,
+                frame.ambient,
+            ],
+            look: [
+                frame.exaggeration.factor as f32,
+                used as f32,
+                frame.sky,
+                frame.fill,
+            ],
+            edge: [
+                if perspective { 1.0 } else { 0.0 },
+                EDGE_NEAR,
+                EDGE_DARK,
+                self.quality.samples() as f32,
+            ],
             planes,
             shadow,
             sun,
@@ -659,7 +807,8 @@ impl Scene3dRenderer {
         queue.write_buffer(&self.view, 0, bytemuck::bytes_of(&block));
         // The occlusion's lens: a perspective's (an orthographic view has no distance to measure it by).
         self.occluding = false;
-        if let (Some(t), kentos_scene3d::Projection::Perspective { fov_y, near }) = (&self.targets, frame.camera.projection)
+        if let (Some(t), kentos_scene3d::Projection::Perspective { fov_y, near }) =
+            (&self.targets, frame.camera.projection)
             && t.occludes()
         {
             let g = 1.0 / (fov_y / 2.0).tan();
@@ -667,7 +816,12 @@ impl Scene3dRenderer {
                 queue,
                 offscreen::OcclusionBlock {
                     lens: [g as f32, aspect as f32, near as f32, 0.0],
-                    shape: [offscreen::OCCLUSION_RADIUS as f32, offscreen::OCCLUSION_STRENGTH, t.size.0 as f32, t.size.1 as f32],
+                    shape: [
+                        offscreen::OCCLUSION_RADIUS as f32,
+                        offscreen::OCCLUSION_STRENGTH,
+                        t.size.0 as f32,
+                        t.size.1 as f32,
+                    ],
                 },
             );
             self.occluding = true;
@@ -676,8 +830,15 @@ impl Scene3dRenderer {
         if n > self.styles_capacity {
             self.styles_capacity = n.next_power_of_two();
             self.styles = styles_buffer(device, self.styles_capacity);
-            self.view_bind = Self::view_bind(device, &self.view_layout, &self.view, &self.styles, &self.shadows);
-            self.shadow_bind = Self::shadow_bind(device, &self.shadows.layout, &self.view, &self.styles);
+            self.view_bind = Self::view_bind(
+                device,
+                &self.view_layout,
+                &self.view,
+                &self.styles,
+                &self.shadows,
+            );
+            self.shadow_bind =
+                Self::shadow_bind(device, &self.shadows.layout, &self.view, &self.styles);
         }
         let colors: Vec<[f32; 4]> = frame.styles.iter().map(|s| s.gpu()).collect();
         if !colors.is_empty() {
@@ -690,7 +851,10 @@ impl Scene3dRenderer {
             .filter(|c| self.gpu.contains_key(&c.id))
             .map(|c| {
                 let off = frame.camera.offset(c.origin, &frame.exaggeration);
-                let d = math::length(math::sub(frame.exaggeration.shown(c.origin), frame.camera.eye));
+                let d = math::length(math::sub(
+                    frame.exaggeration.shown(c.origin),
+                    frame.camera.eye,
+                ));
                 (*c, off, d)
             })
             .collect();
@@ -707,14 +871,26 @@ impl Scene3dRenderer {
         self.edge_draws.clear();
         for (slot, (c, off, _)) in drawn.iter().enumerate() {
             let at = slot * STRIDE as usize;
-            staged[at..at + 16].copy_from_slice(bytemuck::bytes_of(&[off[0], off[1], off[2], 0.0f32]));
+            staged[at..at + 16]
+                .copy_from_slice(bytemuck::bytes_of(&[off[0], off[1], off[2], 0.0f32]));
             self.residency.touch(c.id);
             stats.tiles += 1;
             stats.triangles += c.indices.len() as u64 / 3;
             for (part, range) in &self.gpu[&c.id].ranges {
-                let clear = frame.styles.get(*part as usize).is_some_and(|s| s.color[3] < 1.0);
-                let d = Draw { content: c.id, slot: slot as u32, range: range.clone() };
-                if clear { self.see_through_draws.push(d) } else { self.opaque_draws.push(d) }
+                let clear = frame
+                    .styles
+                    .get(*part as usize)
+                    .is_some_and(|s| s.color[3] < 1.0);
+                let d = Draw {
+                    content: c.id,
+                    slot: slot as u32,
+                    range: range.clone(),
+                };
+                if clear {
+                    self.see_through_draws.push(d)
+                } else {
+                    self.opaque_draws.push(d)
+                }
             }
             if self.gpu[&c.id].lines.is_some() {
                 self.edge_draws.push((c.id, slot as u32));
@@ -738,7 +914,11 @@ impl Scene3dRenderer {
         {
             pass.set_pipeline(edges);
             for (content, slot) in &self.edge_draws {
-                let Some((g, (lines, count))) = self.gpu.get(content).and_then(|g| Some((g, g.lines.as_ref()?))) else {
+                let Some((g, (lines, count))) = self
+                    .gpu
+                    .get(content)
+                    .and_then(|g| Some((g, g.lines.as_ref()?)))
+                else {
                     continue;
                 };
                 pass.set_vertex_buffer(0, g.vertices.slice(..));
@@ -750,14 +930,21 @@ impl Scene3dRenderer {
         self.faces(pass, &self.see_through, &self.see_through_draws);
     }
 
-    fn faces(&self, pass: &mut wgpu::RenderPass<'_>, pipeline: &wgpu::RenderPipeline, draws: &[Draw]) {
+    fn faces(
+        &self,
+        pass: &mut wgpu::RenderPass<'_>,
+        pipeline: &wgpu::RenderPipeline,
+        draws: &[Draw],
+    ) {
         if draws.is_empty() {
             return;
         }
         pass.set_pipeline(pipeline);
         let mut bound = None;
         for d in draws {
-            let Some(g) = self.gpu.get(&d.content) else { continue };
+            let Some(g) = self.gpu.get(&d.content) else {
+                continue;
+            };
             if bound != Some(d.content) {
                 pass.set_vertex_buffer(0, g.vertices.slice(..));
                 pass.set_index_buffer(g.indices.slice(..), wgpu::IndexFormat::Uint32);
@@ -772,13 +959,18 @@ impl Scene3dRenderer {
     /// reads it. [`Scene3dRenderer::render_offscreen`] draws it itself; a host drawing into its own pass
     /// ([`Scene3dRenderer::render`]) encodes it first.
     pub fn render_shadows(&self, encoder: &mut wgpu::CommandEncoder) {
-        let Some(map) = self.shadows.map.as_ref().filter(|_| self.shadowing) else { return };
+        let Some(map) = self.shadows.map.as_ref().filter(|_| self.shadowing) else {
+            return;
+        };
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("kentos.scene3d.shadow"),
             color_attachments: &[],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                 view: map,
-                depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Clear(1.0), store: wgpu::StoreOp::Store }),
+                depth_ops: Some(wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(1.0),
+                    store: wgpu::StoreOp::Store,
+                }),
                 stencil_ops: None,
             }),
             timestamp_writes: None,
@@ -791,7 +983,13 @@ impl Scene3dRenderer {
     /// Draws the prepared frame into the view's own targets ([`Scene3dRenderer::ensure_targets`]) and lays them over
     /// `output` at `viewport` (pixels: x, y, width, height) within `scissor` (x0, y0, x1, y1), darkened by the
     /// occlusion when the quality asks; the sun's map first when the frame casts shadows.
-    pub fn render_offscreen(&self, encoder: &mut wgpu::CommandEncoder, output: &wgpu::TextureView, viewport: [f32; 4], scissor: [u32; 4]) {
+    pub fn render_offscreen(
+        &self,
+        encoder: &mut wgpu::CommandEncoder,
+        output: &wgpu::TextureView,
+        viewport: [f32; 4],
+        scissor: [u32; 4],
+    ) {
         let Some(t) = &self.targets else { return };
         self.render_shadows(encoder);
         {

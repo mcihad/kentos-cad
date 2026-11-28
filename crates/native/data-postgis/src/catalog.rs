@@ -313,7 +313,12 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
         }
         let generated: String = c.try_get("generated").unwrap_or_default();
         let identity: String = c.try_get("identity").unwrap_or_default();
-        if !identity.is_empty() || c.try_get::<Option<String>, _>("def").ok().flatten().is_some() {
+        if !identity.is_empty()
+            || c.try_get::<Option<String>, _>("def")
+                .ok()
+                .flatten()
+                .is_some()
+        {
             made.push(name.clone());
         }
         fields.push(Field {
@@ -339,10 +344,12 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
     };
     let key_made = made.contains(&key);
     fields.retain(|f| f.name != key);
-    let turkish: bool = sqlx::query_scalar("SELECT EXISTS (SELECT 1 FROM pg_collation WHERE collname = 'tr-x-icu')")
-        .fetch_one(&mut *conn)
-        .await
-        .unwrap_or(false);
+    let turkish: bool = sqlx::query_scalar(
+        "SELECT EXISTS (SELECT 1 FROM pg_collation WHERE collname = 'tr-x-icu')",
+    )
+    .fetch_one(&mut *conn)
+    .await
+    .unwrap_or(false);
     Ok(Shape {
         schema: Schema {
             key,
@@ -355,7 +362,11 @@ pub async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, DataEr
         relation: rel,
         geography,
         writable: writes && pk.is_some() && matches!(kind.as_str(), "r" | "p"),
-        rights: if pk.is_some() && matches!(kind.as_str(), "r" | "p") { granted } else { Rights::default() },
+        rights: if pk.is_some() && matches!(kind.as_str(), "r" | "p") {
+            granted
+        } else {
+            Rights::default()
+        },
         turkish,
         query: false,
     })

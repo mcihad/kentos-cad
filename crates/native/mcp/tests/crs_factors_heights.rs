@@ -36,19 +36,27 @@ fn near(got: &Value, want: &Value, at: &str) {
 #[test]
 fn the_drawing_s_heights_go_through_the_geoid_over_mcp() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
-    let cases: Value =
-        serde_json::from_str(&std::fs::read_to_string(root.join("fixtures/commands/v1/cad.crs.factors.json")).unwrap())
-            .unwrap();
+    let cases: Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("fixtures/commands/v1/cad.crs.factors.json")).unwrap(),
+    )
+    .unwrap();
     let case = cases["cases"]
         .as_array()
         .unwrap()
         .iter()
-        .find(|c| c["name"].as_str().unwrap().starts_with("Ortometrik kotlar ve TG-20 geoidi"))
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .unwrap()
+                .starts_with("Ortometrik kotlar ve TG-20 geoidi")
+        })
         .unwrap()
         .clone();
-    let v1: kentos_commands::DocumentSnapshotV1 = serde_json::from_value(case["setup"].clone()).unwrap();
+    let v1: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
     let snapshot = kentos_commands::migrate_v1(v1).unwrap();
-    let dir = std::env::temp_dir().join(format!("kentos-crs-factors-heights-{}", std::process::id()));
+    let dir =
+        std::env::temp_dir().join(format!("kentos-crs-factors-heights-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("harita.kcad");
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
@@ -61,13 +69,20 @@ fn the_drawing_s_heights_go_through_the_geoid_over_mcp() {
     // Not on this device yet: refused, the model's name said.
     let r = call(&mut server, "cad.crs.factors", input.clone());
     assert_eq!(r["isError"], true, "{r}");
-    assert!(r.to_string().contains("geoid_missing") && r.to_string().contains("TG-20 (sentetik)"), "{r}");
+    assert!(
+        r.to_string().contains("geoid_missing") && r.to_string().contains("TG-20 (sentetik)"),
+        "{r}"
+    );
     // The grid in the device's library under its SHA-256, as Proje ayarları › Izgaralar puts it.
     let bytes = std::fs::read(root.join("fixtures/geoid/v1/tg.gtx")).unwrap();
     let id = kentos_native_application::crs_models::sha256(&bytes);
     std::fs::write(dir.join(format!("{id}.gtx")), &bytes).unwrap();
-    kentos_native_application::crs_models::load(&id, kentos_native_application::crs_models::ModelKind::Geoid, Some(&dir))
-        .unwrap();
+    kentos_native_application::crs_models::load(
+        &id,
+        kentos_native_application::crs_models::ModelKind::Geoid,
+        Some(&dir),
+    )
+    .unwrap();
     let r = call(&mut server, "cad.crs.factors", input);
     assert_eq!(r["isError"], false, "{r}");
     let want = &case["steps"][0]["result"]["output"];

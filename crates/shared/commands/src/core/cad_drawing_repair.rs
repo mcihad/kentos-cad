@@ -159,9 +159,19 @@ pub struct BlocksMerged {
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum RepairStep {
-    Junction { uid: String, end: LineEnd, target: String },
-    Angle { uid: String, pivot: LineEnd },
-    Blocks { keep: String, merge: Vec<String> },
+    Junction {
+        uid: String,
+        end: LineEnd,
+        target: String,
+    },
+    Angle {
+        uid: String,
+        pivot: LineEnd,
+    },
+    Blocks {
+        keep: String,
+        merge: Vec<String>,
+    },
 }
 
 /// The recipe applied (docs/adr/1012): its steps in order, its thresholds and its reach. The journal keeps the input;

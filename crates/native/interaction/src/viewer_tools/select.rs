@@ -431,11 +431,12 @@ impl Select {
                     cx.selection.set(ids);
                 }
                 // The data layers' rows in the box are the host's to read (docs/adr/9103 §5).
-                cx.view_changes.push(ViewChange::DataSelect(DataRegion::Box {
-                    a: start.world,
-                    b: current.world,
-                    crossing,
-                }));
+                cx.view_changes
+                    .push(ViewChange::DataSelect(DataRegion::Box {
+                        a: start.world,
+                        b: current.world,
+                        crossing,
+                    }));
             }
             _ => {
                 // Every object the click could mean, the most specific first (docs/adr/0187 §1):
@@ -463,10 +464,11 @@ impl Select {
                 }
                 // No object of the drawing: the row of a data layer under the click, the host's to read (docs/adr/9103 §5).
                 if missed {
-                    cx.view_changes.push(ViewChange::DataSelect(DataRegion::Point {
-                        at: p.raw,
-                        reach: cx.pick_tolerance(),
-                    }));
+                    cx.view_changes
+                        .push(ViewChange::DataSelect(DataRegion::Point {
+                            at: p.raw,
+                            reach: cx.pick_tolerance(),
+                        }));
                 }
             }
         }
@@ -838,7 +840,10 @@ impl Select {
         }
         if let Some((input, follow)) = grip_input(&moved, copy, &grips, dx, dy, cx) {
             // Kilitli komşuda durdur (docs/adr/1261): the boundary is not split; the grip stays where it was.
-            if let Some(n) = follow.as_ref().filter(|n| cx.draft.topology_stop_on_locked && n.locked > 0) {
+            if let Some(n) = follow
+                .as_ref()
+                .filter(|n| cx.draft.topology_stop_on_locked && n.locked > 0)
+            {
                 cx.say(Level::Warn, neighbours::stopped(n.locked));
                 return;
             }

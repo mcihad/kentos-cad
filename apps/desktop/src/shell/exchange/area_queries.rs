@@ -79,7 +79,11 @@ impl Clouds {
     pub(super) fn uids(&self) -> Vec<String> {
         match self.chosen {
             0 => Vec::new(),
-            i => self.all.get(i - 1).map(|c| vec![c.0.clone()]).unwrap_or_default(),
+            i => self
+                .all
+                .get(i - 1)
+                .map(|c| vec![c.0.clone()])
+                .unwrap_or_default(),
         }
     }
 }
@@ -94,19 +98,35 @@ pub struct Units {
 
 impl Units {
     pub(super) fn area(&self, v: f64) -> String {
-        if self.degrees { format!("{} derece²", degrees(v)) } else { self.f.area(v) }
+        if self.degrees {
+            format!("{} derece²", degrees(v))
+        } else {
+            self.f.area(v)
+        }
     }
 
     pub(super) fn plan(&self, v: f64) -> String {
-        if self.degrees { format!("{}°", degrees(v)) } else { self.f.length(v) }
+        if self.degrees {
+            format!("{}°", degrees(v))
+        } else {
+            self.f.length(v)
+        }
     }
 
     fn plan_bare(&self, v: f64) -> String {
-        if self.degrees { degrees(v) } else { self.f.length_bare(v) }
+        if self.degrees {
+            degrees(v)
+        } else {
+            self.f.length_bare(v)
+        }
     }
 
     fn per_area(&self) -> &'static str {
-        if self.degrees { "nokta/derece²" } else { "nokta/m²" }
+        if self.degrees {
+            "nokta/derece²"
+        } else {
+            "nokta/m²"
+        }
     }
 }
 
@@ -114,7 +134,11 @@ impl Units {
 fn degrees(v: f64) -> String {
     let t = format!("{v:.7}");
     let t = t.trim_end_matches('0').trim_end_matches('.');
-    if t.is_empty() || t == "-" { "0".to_owned() } else { t.to_owned() }
+    if t.is_empty() || t == "-" {
+        "0".to_owned()
+    } else {
+        t.to_owned()
+    }
 }
 
 #[derive(Debug)]
@@ -244,10 +268,13 @@ fn shape_of(app: &App) -> Result<Shape, String> {
 /// The ring's signed area (the shoelace), only to tell a flat ring.
 fn ring_area(pts: &[Vec2]) -> f64 {
     let n = pts.len();
-    (0..n).map(|i| {
-        let (a, b) = (pts[i], pts[(i + 1) % n]);
-        (a.x - pts[0].x) * (b.y - pts[0].y) - (b.x - pts[0].x) * (a.y - pts[0].y)
-    }).sum::<f64>() / 2.0
+    (0..n)
+        .map(|i| {
+            let (a, b) = (pts[i], pts[(i + 1) % n]);
+            (a.x - pts[0].x) * (b.y - pts[0].y) - (b.x - pts[0].x) * (a.y - pts[0].y)
+        })
+        .sum::<f64>()
+        / 2.0
 }
 
 /// The line or polyline the selection holds; why not.
@@ -278,7 +305,12 @@ fn clouds_of(app: &App) -> Clouds {
         .entities_with_uids()
         .filter_map(|(u, e)| match e {
             Entity::PointCloud(c) => {
-                let label = c.base.label.as_deref().map(str::trim).filter(|l| !l.is_empty());
+                let label = c
+                    .base
+                    .label
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|l| !l.is_empty());
                 let file = c.cloud.sources.iter().find_map(|s| {
                     s.file.as_deref().or(s.url.as_deref()).map(|f| {
                         std::path::Path::new(f)
@@ -286,11 +318,16 @@ fn clouds_of(app: &App) -> Clouds {
                             .map_or_else(|| f.to_owned(), |n| n.to_string_lossy().into_owned())
                     })
                 });
-                let name = label
-                    .map(str::to_owned)
-                    .or(file)
-                    .unwrap_or_else(|| doc.model.layers().get(&c.base.layer_id).map_or_else(|| "Nokta bulutu".to_owned(), |l| l.name.clone()));
-                Some((u.to_string(), format!("“{name}” · {} nokta", grouped(c.cloud.count))))
+                let name = label.map(str::to_owned).or(file).unwrap_or_else(|| {
+                    doc.model
+                        .layers()
+                        .get(&c.base.layer_id)
+                        .map_or_else(|| "Nokta bulutu".to_owned(), |l| l.name.clone())
+                });
+                Some((
+                    u.to_string(),
+                    format!("“{name}” · {} nokta", grouped(c.cloud.count)),
+                ))
             }
             _ => None,
         })
@@ -311,16 +348,32 @@ fn meshes_of(app: &App) -> Clouds {
             Entity::Raster(r) => {
                 let set = r.raster.dataset.as_ref()?;
                 let mesh = set.mesh.as_deref()?;
-                let label = r.base.label.as_deref().map(str::trim).filter(|l| !l.is_empty());
-                let file = r.raster.file.as_deref().or(r.raster.url.as_deref()).map(|f| {
-                    std::path::Path::new(f)
-                        .file_name()
-                        .map_or_else(|| f.to_owned(), |n| n.to_string_lossy().into_owned())
-                });
+                let label = r
+                    .base
+                    .label
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|l| !l.is_empty());
+                let file = r
+                    .raster
+                    .file
+                    .as_deref()
+                    .or(r.raster.url.as_deref())
+                    .map(|f| {
+                        std::path::Path::new(f)
+                            .file_name()
+                            .map_or_else(|| f.to_owned(), |n| n.to_string_lossy().into_owned())
+                    });
                 let name = label.map(str::to_owned).or(file).unwrap_or_else(|| {
-                    doc.model.layers().get(&r.base.layer_id).map_or_else(|| "Mesh".to_owned(), |l| l.name.clone())
+                    doc.model
+                        .layers()
+                        .get(&r.base.layer_id)
+                        .map_or_else(|| "Mesh".to_owned(), |l| l.name.clone())
                 });
-                Some((u.to_string(), format!("“{name}” · {} · ağ {mesh}", set.variable)))
+                Some((
+                    u.to_string(),
+                    format!("“{name}” · {} · ağ {mesh}", set.variable),
+                ))
             }
             _ => None,
         })
@@ -432,7 +485,10 @@ impl App {
 
     /// The project's units, as the answers are written; a geographic project's plan in degrees (GIS-041).
     fn area_units(&self) -> Units {
-        let f = self.document.as_ref().map_or_else(Format::default, |d| Format::of(d.settings()));
+        let f = self
+            .document
+            .as_ref()
+            .map_or_else(Format::default, |d| Format::of(d.settings()));
         let degrees = self
             .document
             .as_ref()
@@ -443,7 +499,10 @@ impl App {
 
     /// Back from Sahneden seç (window_pick.rs): the area or the line read from the selection again.
     pub(crate) fn area_after_pick(&mut self) {
-        if matches!(self.exchange, Some(Window::CloudRegion(_) | Window::CloudProfile(_) | Window::MeshQuery(_))) {
+        if matches!(
+            self.exchange,
+            Some(Window::CloudRegion(_) | Window::CloudProfile(_) | Window::MeshQuery(_))
+        ) {
             let _ = self.area_event(Event::Use);
         }
     }
@@ -589,8 +648,12 @@ impl App {
             }
             Event::Copy => {
                 let text = match &self.exchange {
-                    Some(Window::CloudRegion(s)) => s.result.as_ref().map(|r| copy_text(r, &s.units)),
-                    Some(Window::CloudProfile(s)) => s.result.as_ref().map(|r| copy_text(r, &s.units)),
+                    Some(Window::CloudRegion(s)) => {
+                        s.result.as_ref().map(|r| copy_text(r, &s.units))
+                    }
+                    Some(Window::CloudProfile(s)) => {
+                        s.result.as_ref().map(|r| copy_text(r, &s.units))
+                    }
                     Some(Window::MeshQuery(s)) => s.result.as_ref().map(|r| copy_text(r, &s.units)),
                     _ => None,
                 };
@@ -756,7 +819,9 @@ impl App {
                 }
                 let (x, y) = (parse(&s.x), parse(&s.y));
                 let (Some(x), Some(y)) = (x, y) else {
-                    s.result = Some(Outcome::Mesh(Err("Yerin Y'si (doğu) ve X'i (kuzey) sayı olmalı.".into())));
+                    s.result = Some(Outcome::Mesh(Err(
+                        "Yerin Y'si (doğu) ve X'i (kuzey) sayı olmalı.".into(),
+                    )));
                     return Task::none();
                 };
                 let input = MeshesQuery {
@@ -921,7 +986,12 @@ impl App {
             MeshMode::Path => {}
         }
         body = body.push(result_view(s.result.as_ref(), s.running, &s.units));
-        window("Mesh sor", body, ready && has_mesh && !s.running, s.result.is_some())
+        window(
+            "Mesh sor",
+            body,
+            ready && has_mesh && !s.running,
+            s.result.is_some(),
+        )
     }
 }
 
@@ -973,7 +1043,10 @@ fn pick_row<'a>() -> Element<'a, Message> {
 /// Bulut: none said with the way to one, one named, more chosen from (Tüm bulutlar first); whether one is there.
 fn cloud_field(c: &Clouds) -> (bool, Element<'_, Message>) {
     let body: Element<'_, Message> = match c.all.len() {
-        0 => words::text_line(Line::Warn, "Çizimde nokta bulutu yok: önce Ekle › Nokta bulutu ile bir bulut ekleyin."),
+        0 => words::text_line(
+            Line::Warn,
+            "Çizimde nokta bulutu yok: önce Ekle › Nokta bulutu ile bir bulut ekleyin.",
+        ),
         1 => words::text_line(Line::Info, c.all[0].1.clone()),
         n => Select::new(
             std::iter::once(Choice::new(format!("Tüm bulutlar ({n})")))
@@ -1089,8 +1162,11 @@ fn region_texts(o: &PointCloudsRegioned, f: &Units) -> Vec<String> {
         "Alan {}; {} nokta{}; {} nokta okundu.",
         f.area(o.area),
         grouped(o.total.count),
-        o.density
-            .map_or_else(String::new, |d| format!(" ({} {})", density(d), f.per_area())),
+        o.density.map_or_else(String::new, |d| format!(
+            " ({} {})",
+            density(d),
+            f.per_area()
+        )),
         grouped(o.read)
     )];
     out.extend(stats_text(&o.total));
@@ -1285,7 +1361,11 @@ fn mesh_region_texts(o: &MeshesRegioned, u: &Units) -> Vec<String> {
 }
 
 fn mesh_profile_texts(o: &MeshesProfiled, u: &Units) -> Vec<String> {
-    let mut out = vec![format!("Yol {}; {} değer okundu.", u.plan(o.length), o.read)];
+    let mut out = vec![format!(
+        "Yol {}; {} değer okundu.",
+        u.plan(o.length),
+        o.read
+    )];
     for m in &o.meshes {
         let heads: Vec<String> = m
             .datasets

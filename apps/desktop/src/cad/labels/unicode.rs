@@ -95,7 +95,11 @@ pub(super) fn collect(target: &mut Collect<'_>, piece: &Piece<'_>) {
         text: piece.text.clone(),
         scale: piece.camera.scale / target.camera.scale,
         rotation: 0.,
-        colors: piece.runs.iter().map(|c|Some(crate::sheet_pdf::hex_of(*c))).collect(),
+        colors: piece
+            .runs
+            .iter()
+            .map(|c| Some(crate::sheet_pdf::hex_of(*c)))
+            .collect(),
     });
     label.halo = crate::sheet_pdf::hex_of(piece.halo);
     label.mask = piece.text.mask_outline().map(|points| {

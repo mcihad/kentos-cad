@@ -258,15 +258,24 @@ impl Unread {
             let mut drawn = if self.drawn == 0 {
                 "çizimde bu çizgi tipleriyle çizilen nesne yok".to_owned()
             } else {
-                format!("bu çizgi tipleriyle çizilen {} nesne çizgi tipinin kesik deseniyle çizilir", self.drawn)
+                format!(
+                    "bu çizgi tipleriyle çizilen {} nesne çizgi tipinin kesik deseniyle çizilir",
+                    self.drawn
+                )
             };
             if self.unused > 0 {
-                drawn.push_str(&format!("; {} nesne hiç yerleştirilmemiş bloklarda", self.unused));
+                drawn.push_str(&format!(
+                    "; {} nesne hiç yerleştirilmemiş bloklarda",
+                    self.unused
+                ));
             }
             notes.push((
                 "DGN çizgi stili",
                 self.dgn,
-                format!("{} çizgi tipinin DGN çizgi stili kayıtları okunmadı; {drawn}", self.line_types),
+                format!(
+                    "{} çizgi tipinin DGN çizgi stili kayıtları okunmadı; {drawn}",
+                    self.line_types
+                ),
             ));
         }
         if self.proxies > 0 {
@@ -295,7 +304,11 @@ fn unread(doc: &acadrust::CadDocument) -> Unread {
             _ => None,
         })
         .collect();
-    let names: HashMap<acadrust::Handle, &str> = doc.line_types.iter().map(|l| (l.handle, l.name.as_str())).collect();
+    let names: HashMap<acadrust::Handle, &str> = doc
+        .line_types
+        .iter()
+        .map(|l| (l.handle, l.name.as_str()))
+        .collect();
     let mut styled: HashSet<String> = HashSet::new();
     for o in doc.objects.values() {
         let definition = match o {
@@ -303,7 +316,9 @@ fn unread(doc: &acadrust::CadDocument) -> Unread {
                 u.dgn += 1;
                 matches!(d.data, DgnLineStyleData::Definition { .. }).then_some(d.owner)
             }
-            ObjectType::Unknown { type_name, owner, .. } if DGN_LINE_STYLES.contains(&type_name.as_str()) => {
+            ObjectType::Unknown {
+                type_name, owner, ..
+            } if DGN_LINE_STYLES.contains(&type_name.as_str()) => {
                 u.dgn += 1;
                 (type_name == "LSDEFINITION").then_some(*owner)
             }
@@ -313,7 +328,10 @@ fn unread(doc: &acadrust::CadDocument) -> Unread {
             }
             _ => None,
         };
-        if let Some(name) = definition.and_then(|d| owners.get(&d)).and_then(|lt| names.get(lt)) {
+        if let Some(name) = definition
+            .and_then(|d| owners.get(&d))
+            .and_then(|lt| names.get(lt))
+        {
             styled.insert(name.to_uppercase());
         }
     }
@@ -341,7 +359,10 @@ fn unread(doc: &acadrust::CadDocument) -> Unread {
                 *per.entry(key.clone()).or_default() += 1;
             }
             if let EntityType::Insert(i) = e {
-                inserts.entry(key.clone()).or_default().push(i.block_name.to_uppercase());
+                inserts
+                    .entry(key.clone())
+                    .or_default()
+                    .push(i.block_name.to_uppercase());
             }
         }
     }
@@ -382,7 +403,12 @@ pub fn written_by_kentos(bytes: &[u8]) -> bool {
         DxfWriter::new(&outcome.document)
             .with_version(DxfVersion::AC1032)
             .write_to_vec()
-            .map_err(|e| error("import_unreadable", format!("DWG aktarma verisi üretilemedi: {e}")))
+            .map_err(|e| {
+                error(
+                    "import_unreadable",
+                    format!("DWG aktarma verisi üretilemedi: {e}"),
+                )
+            })
     });
     let Ok(dxf) = dxf else { return false };
     let text = String::from_utf8_lossy(&dxf);
@@ -459,7 +485,9 @@ pub fn bridge(bytes: &[u8], watch: &mut dyn Watch) -> Result<Bridge, Error> {
         for entity in outcome.document.entities_mut() {
             if let acadrust::entities::EntityType::LwPolyline(p) = entity
                 && p.constant_width != 0.0
-                && p.vertices.iter().all(|v| v.start_width == 0.0 && v.end_width == 0.0)
+                && p.vertices
+                    .iter()
+                    .all(|v| v.start_width == 0.0 && v.end_width == 0.0)
             {
                 for vertex in &mut p.vertices {
                     vertex.start_width = p.constant_width;
@@ -563,17 +591,22 @@ pub fn read_bridge(
         });
     }
     if regions.taken > 0 {
-        let mut reason = String::from(
-            "sınırlarıyla kapalı alan olarak alındı (bölge kenarlarıyla çizilir)",
-        );
+        let mut reason =
+            String::from("sınırlarıyla kapalı alan olarak alındı (bölge kenarlarıyla çizilir)");
         if regions.holes > 0 {
             reason.push_str(&format!("; {} iç sınır alanın deliği oldu", regions.holes));
         }
         if regions.by_points > 0 {
-            reason.push_str(&format!("; {} elips ve spline kenarı üzerindeki noktalarla", regions.by_points));
+            reason.push_str(&format!(
+                "; {} elips ve spline kenarı üzerindeki noktalarla",
+                regions.by_points
+            ));
         }
         if regions.chords > 0 {
-            reason.push_str(&format!("; tanınmayan {} eğri kenarı kirişiyle", regions.chords));
+            reason.push_str(&format!(
+                "; tanınmayan {} eğri kenarı kirişiyle",
+                regions.chords
+            ));
         }
         if regions.flat > 0 {
             reason.push_str(&format!("; alanı olmayan {} sınır alınmadı", regions.flat));
@@ -793,7 +826,8 @@ mod tests {
             raw_dwg_version: None,
         };
         doc.objects.insert(def, raw("LSDEFINITION", def, dict));
-        doc.objects.insert(part, raw("LSSTROKEPATTERNCOMPONENT", part, def));
+        doc.objects
+            .insert(part, raw("LSSTROKEPATTERNCOMPONENT", part, def));
         let mut edge = acadrust::tables::Layer::new("SINIR");
         edge.line_type = "{ Diamond }".into();
         doc.layers.add(edge).expect("the layer");
@@ -802,7 +836,11 @@ mod tests {
             (l.common.linetype, l.common.layer) = (line_type.into(), layer.into());
             EntityType::Line(l)
         };
-        for (line_type, layer) in [("{ Diamond }", "0"), ("BYLAYER", "SINIR"), ("CONTINUOUS", "0")] {
+        for (line_type, layer) in [
+            ("{ Diamond }", "0"),
+            ("BYLAYER", "SINIR"),
+            ("CONTINUOUS", "0"),
+        ] {
             doc.add_entity(line(line_type, layer)).expect("a line");
         }
         let mut unused = acadrust::tables::BlockRecord::new("KULLANILMAYAN");
@@ -813,7 +851,16 @@ mod tests {
         doc.add_entity(inner).expect("the block's line");
 
         let u = unread(&doc);
-        assert_eq!(u, Unread { dgn: 2, proxies: 0, line_types: 1, drawn: 2, unused: 1 });
+        assert_eq!(
+            u,
+            Unread {
+                dgn: 2,
+                proxies: 0,
+                line_types: 1,
+                drawn: 2,
+                unused: 1
+            }
+        );
         let said = u.said();
         assert_eq!(said.len(), 1);
         assert_eq!(
@@ -825,10 +872,17 @@ mod tests {
                  kesik deseniyle çizilir; 1 nesne hiç yerleştirilmemiş bloklarda"
             )
         );
-        doc.add_entity(EntityType::Insert(Insert::new("KULLANILMAYAN", acadrust::types::Vector3::new(0.0, 0.0, 0.0))))
-            .expect("the insert");
+        doc.add_entity(EntityType::Insert(Insert::new(
+            "KULLANILMAYAN",
+            acadrust::types::Vector3::new(0.0, 0.0, 0.0),
+        )))
+        .expect("the insert");
         assert_eq!((unread(&doc).drawn, unread(&doc).unused), (3, 0));
-        assert_eq!(drop_unread(&mut doc), 2, "the records it counted are the ones dropped");
+        assert_eq!(
+            drop_unread(&mut doc),
+            2,
+            "the records it counted are the ones dropped"
+        );
     }
 
     /// The recovered records are said by their kinds; a DGN line style's is said not to be drawn.

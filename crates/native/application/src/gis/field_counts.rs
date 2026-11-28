@@ -36,7 +36,15 @@ pub struct FieldGroup {
     pub rows: u64,
 }
 
-fn source_of(node: &LayerNode) -> Result<(std::sync::Arc<dyn kentos_data::Source>, &kentos_commands::DataLayer), String> {
+fn source_of(
+    node: &LayerNode,
+) -> Result<
+    (
+        std::sync::Arc<dyn kentos_data::Source>,
+        &kentos_commands::DataLayer,
+    ),
+    String,
+> {
     let Some(data) = &node.data else {
         return Err(format!("“{}” bir veri katmanı değil.", node.name));
     };
@@ -48,28 +56,42 @@ fn source_of(node: &LayerNode) -> Result<(std::sync::Arc<dyn kentos_data::Source
 
 /// The rows the drawing holds, left out of a question to the source.
 fn left_out(leave: &BTreeSet<i64>) -> Option<Condition> {
-    (!leave.is_empty()).then(|| Condition::Not(Box::new(Condition::Fids(leave.iter().copied().collect()))))
+    (!leave.is_empty())
+        .then(|| Condition::Not(Box::new(Condition::Fids(leave.iter().copied().collect()))))
 }
 
 /// `field` of `node`'s table counted by its source, the rows `leave` names left out: its values with their rows, in
 /// the source's order of values (the empty one last). None when the field has more than [`GROUPS_MOST`] values or
 /// `leave` names more than [`HELD_MOST`] rows (the rows are read then); the message of why the source could not
 /// count it.
-pub fn field_counts(node: &LayerNode, field: &str, leave: &BTreeSet<i64>) -> Result<Option<Vec<FieldGroup>>, String> {
+pub fn field_counts(
+    node: &LayerNode,
+    field: &str,
+    leave: &BTreeSet<i64>,
+) -> Result<Option<Vec<FieldGroup>>, String> {
     if leave.len() > HELD_MOST {
         return Ok(None);
     }
     let (source, data) = source_of(node)?;
     let groups = source
         .groups(&data.table, field, left_out(leave).as_ref(), GROUPS_MOST)
-        .map_err(|e| format!("“{}” tablosunun “{field}” alanı sayılamadı: {e}", data.table))?;
+        .map_err(|e| {
+            format!(
+                "“{}” tablosunun “{field}” alanı sayılamadı: {e}",
+                data.table
+            )
+        })?;
     if groups.len() >= GROUPS_MOST {
         return Ok(None);
     }
     Ok(Some(
         groups
             .into_iter()
-            .map(|(value, rows)| FieldGroup { text: attribute_text(&value), value, rows })
+            .map(|(value, rows)| FieldGroup {
+                text: attribute_text(&value),
+                value,
+                rows,
+            })
             .collect(),
     ))
 }
@@ -86,10 +108,17 @@ pub fn value_keys(
     stopped: &dyn Fn() -> bool,
 ) -> Result<(Vec<i64>, bool), String> {
     let (source, data) = source_of(node)?;
-    let given: Vec<Value> = values.iter().filter(|v| !matches!(v, Value::Null)).cloned().collect();
+    let given: Vec<Value> = values
+        .iter()
+        .filter(|v| !matches!(v, Value::Null))
+        .cloned()
+        .collect();
     let mut asks: Vec<Condition> = given
         .chunks(VALUES_AT_ONCE)
-        .map(|part| Condition::In { field: field.to_owned(), values: part.to_vec() })
+        .map(|part| Condition::In {
+            field: field.to_owned(),
+            values: part.to_vec(),
+        })
         .collect();
     if values.iter().any(|v| matches!(v, Value::Null)) {
         asks.push(Condition::IsNull(field.to_owned()));

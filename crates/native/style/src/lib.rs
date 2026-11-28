@@ -36,16 +36,14 @@
 pub use kentos_style_library::{file, library, object_template};
 
 pub mod batches;
-pub mod cells;
 pub mod bitmap;
+pub mod cells;
 pub mod classify;
 pub mod color;
 pub mod cpu;
 pub mod designer;
 // Far levels of plain strokes and solid fills on the model screen (plan/render.md RM-10).
 // SVG symbols as vectors on the model screen (plan/render.md RM-11).
-pub mod svg_marks;
-pub mod vector_tiles;
 pub mod legend;
 pub mod line_types;
 pub mod phases;
@@ -57,12 +55,14 @@ pub mod renderer;
 pub mod shapes;
 pub mod simple;
 pub mod svg;
+pub mod svg_marks;
 pub mod system;
 pub mod table;
 pub mod tally;
 pub mod template_form;
 pub mod thematic;
 pub mod uniform;
+pub mod vector_tiles;
 
 pub use batches::{
     AtlasImage, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, TileMark, Unit,
@@ -70,12 +70,12 @@ pub use batches::{
 pub use color::StylePalette;
 /// An object's geometry as the core takes it (the application's typed turn, docs/adr/0339 §1).
 pub use kentos_scene_query::geometry::shape as entity_shape;
-/// What Görünüm kipleri leave out of a layer build (docs/adr/0195).
-pub use kentos_style_core::style::build::{Deep, View, raster_key};
 /// The limits over which a layer build counts what it left out, to be said (docs/adr/0213 §2.4, plan/render.md RM-11).
 pub use kentos_style_core::style::build::MOST_DOTS;
-pub use kentos_style_core::style::place::{MAX_MARKERS_PER_PATH, MAX_WAVES_PER_PATH};
+/// What Görünüm kipleri leave out of a layer build (docs/adr/0195).
+pub use kentos_style_core::style::build::{Deep, View, raster_key};
 /// The extensions' functions a style may call (docs/adr/8057 §8): what the host registers.
 pub use kentos_style_core::style::externals;
+pub use kentos_style_core::style::place::{MAX_MARKERS_PER_PATH, MAX_WAVES_PER_PATH};
 pub use library::{Item, ItemKind, Source, StyleLibrary};
 pub use program::{BuildOptions, LayerCall, ReadingUnit, reading_unit, symbol_scale_of};

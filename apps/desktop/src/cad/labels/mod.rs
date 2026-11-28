@@ -30,8 +30,8 @@ use kentos_commands::{DrawingFont, Entity, LabelInk};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::labels::engine::{HIDDEN, MASKED, PINNED, UNPLACED};
 use kentos_geometry_core::text::paragraph::{self, Run, Script, advance};
-use kentos_interaction::spatial::{Grow, LabelSize, default_label};
 use kentos_interaction::spatial::LabelParts;
+use kentos_interaction::spatial::{Grow, LabelSize, default_label};
 use kentos_interaction::{Format, LabelSpot, Spatial, Vec2};
 use kentos_native_application::geometry::core_runs;
 use kentos_render_wgpu::Camera;
@@ -45,8 +45,8 @@ use kentos_native_style::color::ColorMode;
 mod gpu;
 mod layer;
 mod unicode;
-pub use gpu::{GlyphSlot, on as gpu_text};
 pub(crate) use gpu::text_run;
+pub use gpu::{GlyphSlot, on as gpu_text};
 #[cfg(test)]
 mod parts_tests;
 
@@ -58,7 +58,12 @@ mod parts_tests;
 /// it is, its labels on their ground, and placed again when the view settles (docs/adr/0597): a large drawing's
 /// overview is not placed every frame.
 #[derive(Default)]
-pub struct Spots(RefCell<Option<Kept>>, Rc<RefCell<BandMemo>>, GlyphSlot, GlyphSlot);
+pub struct Spots(
+    RefCell<Option<Kept>>,
+    Rc<RefCell<BandMemo>>,
+    GlyphSlot,
+    GlyphSlot,
+);
 
 /// The labels asked for, by the key, the drawing's key and the box they were asked for (true sizes only), the
 /// view's scale they were placed at, and which placing they are: a count of placings, which the labels' picture is
@@ -75,7 +80,10 @@ impl Spots {
     /// The labels last placed (this frame's, once the labels' layer was built):
     /// a mask's shapes (docs/adr/0226 §3).
     pub fn last(&self) -> Option<Shown> {
-        self.0.borrow().as_ref().map(|(_, _, spots, _, _, _)| spots.clone())
+        self.0
+            .borrow()
+            .as_ref()
+            .map(|(_, _, spots, _, _, _)| spots.clone())
     }
 
     /// The bands its labels' parts were painted as (docs/adr/0786 §3).
@@ -131,7 +139,9 @@ impl Spots {
         // that, the old places were drawn over a view they no longer fitted until the view stopped).
         let near = |at: f64| at > 0.0 && scale > 0.0 && (scale / at).max(at / scale) <= 1.25;
         match kept.as_ref() {
-            Some((known, _, spots, _, at, placing)) if *known == key => (spots.clone(), *at, *placing),
+            Some((known, _, spots, _, at, placing)) if *known == key => {
+                (spots.clone(), *at, *placing)
+            }
             Some((_, same, spots, asked, at, placing))
                 if moving
                     && *same == content
@@ -280,7 +290,8 @@ pub fn data_layer<'a>(
     engine: Engine,
 ) -> Element<'a, Message> {
     build(
-        doc, read, spatial, kept, camera, canvas, palette, format, None, None, None, mode, size, engine, None,
+        doc, read, spatial, kept, camera, canvas, palette, format, None, None, None, mode, size,
+        engine, None,
     )
 }
 
@@ -290,7 +301,7 @@ pub fn data_layer<'a>(
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Preview {
     /// Session/revision/font of the immutable prepared editor preview, never persisted.
-    pub revision: Option<(u64,u64,DrawingFont)>,
+    pub revision: Option<(u64, u64, DrawingFont)>,
     pub text: String,
     pub runs: Vec<Run>,
     pub records: Vec<f64>,
@@ -395,29 +406,35 @@ fn build<'a>(
         })
     };
     let placed_scale = camera.scale;
-    let (spots, placed_at, placing) = kept.get(key.finish(), content, engine.moving, (view, wide, placed_scale), |view| {
-        let mut spots = spatial.label_parts(
-            Vec2::new(view.min_x, view.min_y),
-            Vec2::new(view.max_x, view.max_y),
-            camera.scale,
-            size,
-            engine.options,
-            engine.keep,
-            shows,
-            true_size.then(|| cells_near(&view)),
-        );
-        // A text or a dimension's value being edited in place (the web's `setEditing`).
-        if let Some(hidden) = hidden {
-            spots.retain(|spot| match spot {
-                LabelSpot::Text { slot, .. }
-                | LabelSpot::Dimension { slot, .. }
-                | LabelSpot::Line { slot, .. }
-                | LabelSpot::ParagraphMask { slot, .. } => *slot != hidden,
-                _ => true,
-            });
-        }
-        spots
-    });
+    let (spots, placed_at, placing) = kept.get(
+        key.finish(),
+        content,
+        engine.moving,
+        (view, wide, placed_scale),
+        |view| {
+            let mut spots = spatial.label_parts(
+                Vec2::new(view.min_x, view.min_y),
+                Vec2::new(view.max_x, view.max_y),
+                camera.scale,
+                size,
+                engine.options,
+                engine.keep,
+                shows,
+                true_size.then(|| cells_near(&view)),
+            );
+            // A text or a dimension's value being edited in place (the web's `setEditing`).
+            if let Some(hidden) = hidden {
+                spots.retain(|spot| match spot {
+                    LabelSpot::Text { slot, .. }
+                    | LabelSpot::Dimension { slot, .. }
+                    | LabelSpot::Line { slot, .. }
+                    | LabelSpot::ParagraphMask { slot, .. } => *slot != hidden,
+                    _ => true,
+                });
+            }
+            spots
+        },
+    );
     // What else the picture depends on, the view aside (`look`): the text being written changes it as it is
     // typed; the colours, the typeface and the number formats (a dimension's text).
     let mut look = DefaultHasher::new();
@@ -925,7 +942,11 @@ fn grown(view: Camera, g: Grow) -> Camera {
 /// number each frame, so its picture is found again; never below the view's scale when `clamp` (Kaybolmasın grows a
 /// text, never shrinks it). A text its placing drew at its true size stays as the view has it.
 fn held_grown(view: Camera, g: Grow, (placed, clamp): (f64, bool)) -> Camera {
-    if g.k == 1.0 || !g.k.is_finite() || g.k <= 0.0 || view.scale.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
+    if g.k == 1.0
+        || !g.k.is_finite()
+        || g.k <= 0.0
+        || view.scale.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater)
+    {
         return view;
     }
     // A pan: the scale is the placing's, the growth as it was, to the bit.
@@ -933,7 +954,11 @@ fn held_grown(view: Camera, g: Grow, (placed, clamp): (f64, bool)) -> Camera {
         return grown(view, g);
     }
     let target = placed * g.k;
-    let target = if clamp && target < view.scale { view.scale } else { target };
+    let target = if clamp && target < view.scale {
+        view.scale
+    } else {
+        target
+    };
     let k = view.scale / target;
     Camera {
         center: kentos_render_wgpu::Vec2::new(
@@ -983,7 +1008,11 @@ impl canvas::Program<Message> for Labels<'_> {
             }
             let sink = self.gpu.as_ref();
             let Some(area) = self.turned else {
-                self.paint(&mut gpu::Split { frame, sink, view: &self.view });
+                self.paint(&mut gpu::Split {
+                    frame,
+                    sink,
+                    view: &self.view,
+                });
                 if let Some(sink) = sink {
                     sink.publish(self.view.map_px());
                 }
@@ -1000,7 +1029,11 @@ impl canvas::Program<Message> for Labels<'_> {
                     -(self.view.width / 2.0) as f32,
                     -(self.view.height / 2.0) as f32,
                 ));
-                self.paint(&mut gpu::Split { frame: f, sink, view: &self.view });
+                self.paint(&mut gpu::Split {
+                    frame: f,
+                    sink,
+                    view: &self.view,
+                });
             });
             if let Some(sink) = sink {
                 sink.publish(self.view.map_px());
@@ -1062,12 +1095,7 @@ fn face_font(
             face.italic || italic_run,
             face.oblique.map_or(0.0, |o| o.to_radians().tan() as f32),
         ),
-        None => (
-            project,
-            if bold_run { 600 } else { 400 },
-            italic_run,
-            0.0,
-        ),
+        None => (project, if bold_run { 600 } else { 400 }, italic_run, 0.0),
     };
     let synthetic = if italic && !drawing_fonts::has_italic(family) {
         drawing_fonts::SYNTHETIC_ITALIC
@@ -1097,10 +1125,18 @@ impl Labels<'_> {
     /// A text in its style's embedded SHX font (ADR 1125): its mask, then the font's own strokes, the PDF's and the
     /// CPU picture's lines. False when it is no such text or the font cannot draw it: it is drawn as before, in its
     /// style's face, and the inspection's `text_shx_unsupported` or `text_font_substituted` says so.
-    fn shx_text(&self, frame: &mut impl Ink, slot: Slot, t: &kentos_commands::TextEntity, color: Color) -> bool {
-        let Some(placed) =
-            kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
-        else {
+    fn shx_text(
+        &self,
+        frame: &mut impl Ink,
+        slot: Slot,
+        t: &kentos_commands::TextEntity,
+        color: Color,
+    ) -> bool {
+        let Some(placed) = kentos_native_application::shx_text::place_cached(
+            self.doc.settings(),
+            self.doc.styles(),
+            t,
+        ) else {
             return false;
         };
         let Ok(placed) = placed.as_ref() else {
@@ -1113,13 +1149,23 @@ impl Labels<'_> {
         }
         // A word of the level drawn faint under the active one (docs/adr/0715 §2), as `draw` fades it.
         let color = if self.faded.contains(&slot.0) {
-            Color { a: color.a * (1.0 - kentos_commands::PHASE_FADED as f32), ..color }
+            Color {
+                a: color.a * (1.0 - kentos_commands::PHASE_FADED as f32),
+                ..color
+            }
         } else {
             color
         };
         if t.mask {
             let ring: Vec<Point> = placed.outline.iter().map(|p| self.screen(*p)).collect();
-            frame.fill_ring(&ring, Color { a: 1.0, ..self.colors.halo }, Some(slot));
+            frame.fill_ring(
+                &ring,
+                Color {
+                    a: 1.0,
+                    ..self.colors.halo
+                },
+                Some(slot),
+            );
         }
         for path in &placed.paths {
             let pts: Vec<Point> = path.iter().map(|p| self.screen(*p)).collect();
@@ -1218,7 +1264,6 @@ impl Labels<'_> {
             layer,
         )
     }
-
 }
 
 /// Text measured at this size; widths and baselines grow with the size.
@@ -1300,7 +1345,8 @@ impl BandMemo {
         };
         let same = Rc::ptr_eq(&k.part, part)
             && k.layer_color == layer_color
-            && (std::sync::Arc::ptr_eq(&k.entity, entity) || k.cells.is_some() && k.cells == cells());
+            && (std::sync::Arc::ptr_eq(&k.entity, entity)
+                || k.cells.is_some() && k.cells == cells());
         if !same {
             self.taken.1 += 1;
             return None;
@@ -1383,7 +1429,10 @@ struct Counted<'f, I: Ink> {
 }
 
 impl<I: Ink> Ink for Counted<'_, I> {
-    fn shaped(&mut self,piece:&unicode::Piece<'_>) {self.ops+=1;self.ink.shaped(piece);}
+    fn shaped(&mut self, piece: &unicode::Piece<'_>) {
+        self.ops += 1;
+        self.ink.shaped(piece);
+    }
     fn size(&self) -> Size {
         self.ink.size()
     }
@@ -1442,7 +1491,12 @@ fn band(piece: &Piece<'_>, length: f32) -> Band {
         Anchor::CenterMiddle => 0.0,
     };
     let (sin, cos) = piece.angle.sin_cos();
-    let at = |x: f32, y: f32| Point::new(piece.at.x + x * cos - y * sin, piece.at.y + x * sin + y * cos);
+    let at = |x: f32, y: f32| {
+        Point::new(
+            piece.at.x + x * cos - y * sin,
+            piece.at.y + x * sin + y * cos,
+        )
+    };
     Band {
         color: Color {
             a: piece.color.a * 0.45,

@@ -24,12 +24,23 @@ fn object_of(r: &NewFeature, layer: &str, id: u32) -> Option<kentos_commands::En
         .filter(|(_, v)| !matches!(v, Value::Null))
         .map(|(n, v)| (n.clone(), serde_json::Value::String(cell(v))))
         .collect();
-    let shape = r.geometry.clone().unwrap_or(kentos_data::Geometry::Point(None));
+    let shape = r
+        .geometry
+        .clone()
+        .unwrap_or(kentos_data::Geometry::Point(None));
     crate::geopackage::object_of(&shape, layer, id, attrs)
 }
 
 /// The project's system and its datum choices: what the WGS 84 writers move the rows from.
-fn wgs84_of(plan: &Plan<'_>) -> Result<(kentos_geometry_core::crs::System, Vec<kentos_geometry_core::crs::Choice>), Stop> {
+fn wgs84_of(
+    plan: &Plan<'_>,
+) -> Result<
+    (
+        kentos_geometry_core::crs::System,
+        Vec<kentos_geometry_core::crs::Choice>,
+    ),
+    Stop,
+> {
     let system = kentos_project::systems::own(plan.settings)
         .and_then(|n| n.system)
         .ok_or_else(|| unreachable("projenin koordinat sistemi WGS 84'e çevrilemiyor"))?;
@@ -47,23 +58,46 @@ fn folder_made(path: &Path) -> Result<(), Stop> {
 pub(crate) fn open(plan: &Plan<'_>, path: PathBuf) -> Result<Box<dyn Sink>, Stop> {
     folder_made(&path)?;
     let fields: Vec<LayerField> = plan.fields.iter().map(|f| f.written()).collect();
-    let name = plan.input.name.clone().unwrap_or_else(|| plan.node.name.clone());
+    let name = plan
+        .input
+        .name
+        .clone()
+        .unwrap_or_else(|| plan.node.name.clone());
     let layer = plan.node.id.clone();
     match plan.input.format {
         ExportFormat::Geojson => {
-            let project_coordinates = plan.input.options.as_ref().and_then(|o| o.project_coordinates) == Some(true);
-            let wgs84 = if project_coordinates || plan.settings.srid == 4326 { None } else { Some(wgs84_of(plan)?) };
+            let project_coordinates = plan
+                .input
+                .options
+                .as_ref()
+                .and_then(|o| o.project_coordinates)
+                == Some(true);
+            let wgs84 = if project_coordinates || plan.settings.srid == 4326 {
+                None
+            } else {
+                Some(wgs84_of(plan)?)
+            };
             let part = part_of(&path);
             let out = BufWriter::new(File::create(&part).map_err(unreachable)?);
             let stream = kentos_formats::geojson::Stream::begin(
                 out,
                 &name,
                 plan.srid.unwrap_or(plan.settings.srid),
-                &[kentos_commands::GeoJsonLayer { id: layer.clone(), name: name.clone(), fields }],
+                &[kentos_commands::GeoJsonLayer {
+                    id: layer.clone(),
+                    name: name.clone(),
+                    fields,
+                }],
                 Placing::new(&[]),
                 wgs84,
             );
-            Ok(Box::new(GeoJson { stream: Some(stream), part, path, layer, made: 0 }))
+            Ok(Box::new(GeoJson {
+                stream: Some(stream),
+                part,
+                path,
+                layer,
+                made: 0,
+            }))
         }
         ExportFormat::Kml => {
             let (system, choices) = wgs84_of(plan)?;
@@ -79,10 +113,19 @@ pub(crate) fn open(plan: &Plan<'_>, path: PathBuf) -> Result<Box<dyn Sink>, Stop
                 choices,
                 Placing::new(&[]),
             );
-            Ok(Box::new(Kml { stream: Some(stream), part, path, layer, made: 0, symbols }))
+            Ok(Box::new(Kml {
+                stream: Some(stream),
+                part,
+                path,
+                layer,
+                made: 0,
+                symbols,
+            }))
         }
         _ => {
-            let stem = path.file_stem().map_or_else(|| "katman".to_owned(), |s| s.to_string_lossy().into_owned());
+            let stem = path
+                .file_stem()
+                .map_or_else(|| "katman".to_owned(), |s| s.to_string_lossy().into_owned());
             let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
             let encoding = match plan.input.encoding.unwrap_or_default() {
                 ExportEncoding::Utf8 => kentos_formats::shp::write::DbfEncoding::Utf8,
@@ -96,12 +139,21 @@ pub(crate) fn open(plan: &Plan<'_>, path: PathBuf) -> Result<Box<dyn Sink>, Stop
                 encoding,
                 Placing::new(&[]),
             );
-            Ok(Box::new(Shapefile { stream: Some(stream), layer, made: 0 }))
+            Ok(Box::new(Shapefile {
+                stream: Some(stream),
+                layer,
+                made: 0,
+            }))
         }
     }
 }
 
-fn written_back(result: (Result<BufWriter<File>, std::io::Error>, kentos_commands::ExportReport)) -> Result<(), String> {
+fn written_back(
+    result: (
+        Result<BufWriter<File>, std::io::Error>,
+        kentos_commands::ExportReport,
+    ),
+) -> Result<(), String> {
     let mut out = result.0.map_err(|e| e.to_string())?;
     out.flush().map_err(|e| e.to_string())
 }
@@ -115,8 +167,14 @@ struct GeoJson {
 }
 
 impl Sink for GeoJson {
-    fn write(&mut self, rows: &[NewFeature], _objects: &[&kentos_commands::Entity]) -> Result<(), String> {
-        let Some(stream) = self.stream.as_mut() else { return Ok(()) };
+    fn write(
+        &mut self,
+        rows: &[NewFeature],
+        _objects: &[&kentos_commands::Entity],
+    ) -> Result<(), String> {
+        let Some(stream) = self.stream.as_mut() else {
+            return Ok(());
+        };
         for r in rows {
             self.made += 1;
             if let Some(e) = object_of(r, &self.layer, self.made) {
@@ -127,7 +185,9 @@ impl Sink for GeoJson {
     }
 
     fn finish(mut self: Box<Self>) -> Result<Vec<String>, String> {
-        let Some(stream) = self.stream.take() else { return Ok(Vec::new()) };
+        let Some(stream) = self.stream.take() else {
+            return Ok(Vec::new());
+        };
         if let Err(why) = written_back(stream.finish()) {
             let _ = std::fs::remove_file(&self.part);
             return Err(why);
@@ -153,8 +213,14 @@ struct Kml {
 }
 
 impl Sink for Kml {
-    fn write(&mut self, rows: &[NewFeature], objects: &[&kentos_commands::Entity]) -> Result<(), String> {
-        let Some(stream) = self.stream.as_mut() else { return Ok(()) };
+    fn write(
+        &mut self,
+        rows: &[NewFeature],
+        objects: &[&kentos_commands::Entity],
+    ) -> Result<(), String> {
+        let Some(stream) = self.stream.as_mut() else {
+            return Ok(());
+        };
         let styles = self.symbols.styles_of(objects);
         for (i, r) in rows.iter().enumerate() {
             self.made += 1;
@@ -166,7 +232,9 @@ impl Sink for Kml {
     }
 
     fn finish(mut self: Box<Self>) -> Result<Vec<String>, String> {
-        let Some(stream) = self.stream.take() else { return Ok(Vec::new()) };
+        let Some(stream) = self.stream.take() else {
+            return Ok(Vec::new());
+        };
         if let Err(why) = written_back(stream.finish()) {
             let _ = std::fs::remove_file(&self.part);
             return Err(why);
@@ -188,8 +256,14 @@ struct Shapefile {
 }
 
 impl Sink for Shapefile {
-    fn write(&mut self, rows: &[NewFeature], _objects: &[&kentos_commands::Entity]) -> Result<(), String> {
-        let Some(stream) = self.stream.as_mut() else { return Ok(()) };
+    fn write(
+        &mut self,
+        rows: &[NewFeature],
+        _objects: &[&kentos_commands::Entity],
+    ) -> Result<(), String> {
+        let Some(stream) = self.stream.as_mut() else {
+            return Ok(());
+        };
         for r in rows {
             self.made += 1;
             if let Some(e) = object_of(r, &self.layer, self.made) {
@@ -200,7 +274,9 @@ impl Sink for Shapefile {
     }
 
     fn finish(mut self: Box<Self>) -> Result<Vec<String>, String> {
-        let Some(stream) = self.stream.take() else { return Ok(Vec::new()) };
+        let Some(stream) = self.stream.take() else {
+            return Ok(Vec::new());
+        };
         let (files, _) = stream.finish()?;
         Ok(files.iter().map(|f| f.display().to_string()).collect())
     }

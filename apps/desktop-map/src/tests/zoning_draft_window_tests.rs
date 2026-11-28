@@ -3,8 +3,8 @@
 //! what m. 26 asks; Taslağı kaydet keeps what the case keeps, the decision areas untouched, in one undo step; a kept
 //! draft loads back into the form and Taslağı sil takes it out. And its pictures, with Sembolü karardan ver's switch.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -12,17 +12,27 @@ use crate::app::{App, Message};
 use crate::zoning_draft_window::{Event as D, Show};
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.zoning.draft.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.zoning.draft.json"
+    ))
+    .expect("cases")
 }
 
 fn case(name: &str) -> Value {
-    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case").clone()
+    cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case")
+        .clone()
 }
 
 const PARK: &str = "Park alanı ticarete dönüyor: alanlar önce ve sonra, m. 26(3) bulgusu; taslak projede, karar alanı değişmez; tek adımda geri alınır";
 
 fn opened() -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases()["setup"].clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases()["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -34,7 +44,12 @@ fn opened() -> App {
 
 fn uid_of(decision: &str) -> String {
     let c = cases();
-    let at = c["setup"]["entities"].as_array().expect("entities").iter().position(|e| e["attrs"]["KararKimlik"] == decision).expect("the area");
+    let at = c["setup"]["entities"]
+        .as_array()
+        .expect("entities")
+        .iter()
+        .position(|e| e["attrs"]["KararKimlik"] == decision)
+        .expect("the area");
     c["setup"]["uids"][at].as_str().expect("uid").to_owned()
 }
 
@@ -46,7 +61,9 @@ fn filled() -> App {
     let _ = app.update(Message::from(map::Event::ZoningDraft(D::Reason(
         input["reason"].as_str().expect("reason").to_owned(),
     ))));
-    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Area(uid_of("K1")))));
+    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Area(uid_of(
+        "K1",
+    )))));
     let _ = app.update(Message::from(map::Event::ZoningDraft(D::Field(
         "Kullanim".into(),
     ))));
@@ -59,7 +76,9 @@ fn filled() -> App {
 
 fn attrs(app: &App) -> Vec<Value> {
     let doc = &app.document.as_ref().expect("a drawing").model;
-    doc.entities().map(|e| serde_json::to_value(&e.base().attrs).expect("json")).collect()
+    doc.entities()
+        .map(|e| serde_json::to_value(&e.base().attrs).expect("json"))
+        .collect()
 }
 
 /// The form's plan is the case's answer; Taslağı kaydet keeps the case's draft and nothing in force changes; one undo.
@@ -73,7 +92,8 @@ fn a_draft_written_in_the_form_is_the_cases() {
     assert_eq!(app.modules.map().zoning_draft.plan, "UİP-1");
     let want = case(PARK);
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning_draft
         .answer
         .clone()
@@ -155,14 +175,24 @@ fn a_kept_draft_loads_and_is_removed() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/plan-taslak-5040");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/plan-taslak-5040");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
-        for (file, step) in
-            [("0-imar-denetimi", 0), ("1-taslak", 1), ("2-kullanimlar", 2), ("3-mevzuat", 3), ("4-sembol-sakla", 4)]
-        {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
+        for (file, step) in [
+            ("0-imar-denetimi", 0),
+            ("1-taslak", 1),
+            ("2-kullanimlar", 2),
+            ("3-mevzuat", 3),
+            ("4-sembol-sakla", 4),
+        ] {
             let mut app = filled();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -172,8 +202,9 @@ fn screens() {
                     let _ = app.update(Message::Run("zoning.check"));
                 }
                 1 => {
-                    let _ =
-                        app.update(Message::from(map::Event::ZoningDraft(D::Area(uid_of("K2")))));
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Area(uid_of(
+                        "K2",
+                    )))));
                     let _ = app.update(Message::from(map::Event::ZoningDraft(D::Field(
                         "KAKS".into(),
                     ))));
@@ -183,8 +214,9 @@ fn screens() {
                     let _ = app.update(Message::from(map::Event::ZoningDraft(D::Add)));
                 }
                 2 | 3 => {
-                    let _ =
-                        app.update(Message::from(map::Event::ZoningDraft(D::Area(uid_of("K2")))));
+                    let _ = app.update(Message::from(map::Event::ZoningDraft(D::Area(uid_of(
+                        "K2",
+                    )))));
                     let _ = app.update(Message::from(map::Event::ZoningDraft(D::Field(
                         "KAKS".into(),
                     ))));
@@ -204,7 +236,8 @@ fn screens() {
                     let _ = app.update(Message::from(map::Event::ZoningDraft(D::Close)));
                     let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Open)));
                     let r = app
-                        .modules.map()
+                        .modules
+                        .map()
                         .zoning_symbols
                         .answer
                         .clone()
@@ -229,7 +262,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }

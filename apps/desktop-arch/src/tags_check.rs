@@ -3,13 +3,13 @@
 //! its words and objects. Göster brings them into view; the drawing is not changed.
 
 use crate::arch;
+use crate::arch::ArchState;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, TagFinding, TagsCheck};
 use kentos_ui::icon::icon;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -55,14 +55,11 @@ pub(crate) trait TagsCheckApp {
     fn open_tags_check(&mut self);
     fn tags_check_event(&mut self, event: Event) -> Task<Message>;
     fn tags_check_view(&self) -> Element<'_, Message>;
-    fn tags_check_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>;
+    fn tags_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
 impl TagsCheckApp for App {
-    fn tags_check_read(&self, missing_space_numbers: bool) -> Option<Window>{
+    fn tags_check_read(&self, missing_space_numbers: bool) -> Option<Window> {
         let doc = self.document.as_ref()?;
         let input = TagsCheck {
             missing_space_numbers: Some(missing_space_numbers),
@@ -78,7 +75,7 @@ impl TagsCheckApp for App {
     }
 
     /// Etiketleri denetle (`arch.tagsCheck`): the window.
-    fn open_tags_check(&mut self){
+    fn open_tags_check(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -87,11 +84,12 @@ impl TagsCheckApp for App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::TagsCheck));
     }
 
-    fn tags_check_event(&mut self, event: Event) -> Task<Message>{
+    fn tags_check_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Show(i) => {
                 let Some(f) = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .tags_check
                     .as_ref()
                     .and_then(|w| w.findings.get(i))
@@ -113,7 +111,8 @@ impl TagsCheckApp for App {
             }
             Event::Refresh => {
                 if let Some(w) = &self.modules.arch().tags_check {
-                    self.modules.arch_mut().tags_check = self.tags_check_read(w.missing_space_numbers);
+                    self.modules.arch_mut().tags_check =
+                        self.tags_check_read(w.missing_space_numbers);
                 }
             }
             Event::Missing(on) => {
@@ -129,7 +128,7 @@ impl TagsCheckApp for App {
         Task::none()
     }
 
-    fn tags_check_view(&self) -> Element<'_, Message>{
+    fn tags_check_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().tags_check else {
             return iced::widget::text("").into();
         };
@@ -214,10 +213,7 @@ impl TagsCheckApp for App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step): the first finding's Göster.
-    fn tags_check_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>{
+    fn tags_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().tags_check.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
@@ -225,7 +221,13 @@ impl TagsCheckApp for App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(REFRESH) => Some(msg(Event::Refresh)),
             Control::Press(MISSING) => Some(msg(Event::Missing(
-                !self.modules.arch().tags_check.as_ref().unwrap().missing_space_numbers,
+                !self
+                    .modules
+                    .arch()
+                    .tags_check
+                    .as_ref()
+                    .unwrap()
+                    .missing_space_numbers,
             ))),
             Control::Press(SHOW) => Some(msg(Event::Show(0))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
@@ -261,7 +263,8 @@ mod tests {
         app
     }
     fn missing(app: &App) -> usize {
-        app.modules.arch()
+        app.modules
+            .arch()
             .tags_check
             .as_ref()
             .unwrap()
@@ -284,7 +287,14 @@ mod tests {
         let _ = app.tags_check_event(Event::Missing(false));
         assert_eq!(missing(&app), 0);
         let _ = app.tags_check_event(Event::Refresh);
-        assert!(!app.modules.arch().tags_check.as_ref().unwrap().missing_space_numbers);
+        assert!(
+            !app.modules
+                .arch()
+                .tags_check
+                .as_ref()
+                .unwrap()
+                .missing_space_numbers
+        );
         let _ = app.tags_check_event(Event::Missing(true));
         assert_eq!(missing(&app), 3);
         let _ = app.tags_check_event(Event::Close);

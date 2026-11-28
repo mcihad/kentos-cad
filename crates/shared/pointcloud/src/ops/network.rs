@@ -76,10 +76,24 @@ pub fn quadratic(n: &M6, r: V6) -> f64 {
 /// rotation `w` (ω, φ, κ) and matrix `r` (its 3 × 3) and translation `t` about `c` give the translation about `to`,
 /// t + (R − I)(to − c); the weight N about `c` becomes Jᵀ·N·J, J = [I, 0; [d]×, I], d = to − c (a small motion's
 /// translation about `c` is its translation about `to` plus d × ω).
-pub fn moved(w: [f64; 3], r: [[f64; 3]; 3], t: [f64; 3], n: &M6, c: [f64; 3], to: [f64; 3]) -> (V6, M6) {
+pub fn moved(
+    w: [f64; 3],
+    r: [[f64; 3]; 3],
+    t: [f64; 3],
+    n: &M6,
+    c: [f64; 3],
+    to: [f64; 3],
+) -> (V6, M6) {
     let d = [to[0] - c[0], to[1] - c[1], to[2] - c[2]];
     let rd: [f64; 3] = std::array::from_fn(|i| r[i][0] * d[0] + r[i][1] * d[1] + r[i][2] * d[2]);
-    let m = [w[0], w[1], w[2], t[0] + rd[0] - d[0], t[1] + rd[1] - d[1], t[2] + rd[2] - d[2]];
+    let m = [
+        w[0],
+        w[1],
+        w[2],
+        t[0] + rd[0] - d[0],
+        t[1] + rd[1] - d[1],
+        t[2] + rd[2] - d[2],
+    ];
     // J: the identity, with [d]× in its lower left block ([d]× ω = d × ω).
     let mut j = [[0.0; 6]; 6];
     for (i, row) in j.iter_mut().enumerate() {
@@ -219,10 +233,22 @@ pub fn adjust(scans: usize, fixed: &[bool], obs: &[Observation]) -> Result<Adjus
         let t = |i: usize, j: usize| cols[j][6 * k + 3 + i];
         let (p, q, d) = (t(0, 0), t(0, 1), t(1, 1));
         let plan_max = (p + d) / 2.0 + (((p - d) / 2.0) * ((p - d) / 2.0) + q * q).sqrt();
-        horizontal[*f] = Some(if plan_max > 0.0 { (t(2, 2).max(0.0) / plan_max).sqrt() } else { 0.0 });
+        horizontal[*f] = Some(if plan_max > 0.0 {
+            (t(2, 2).max(0.0) / plan_max).sqrt()
+        } else {
+            0.0
+        });
     }
-    let residuals = obs.iter().map(|o| minus(minus(x[o.b], x[o.a]), o.m)).collect();
-    Ok(Adjusted { x, residuals, loops, horizontal })
+    let residuals = obs
+        .iter()
+        .map(|o| minus(minus(x[o.b], x[o.a]), o.m))
+        .collect();
+    Ok(Adjusted {
+        x,
+        residuals,
+        loops,
+        horizontal,
+    })
 }
 
 /// A symmetric positive definite matrix's Cholesky factor L (rows in order); none when a pivot is at or under 10⁻¹² of
@@ -282,9 +308,13 @@ pub fn rotation(w: [f64; 3]) -> [[f64; 3]; 3] {
 /// The matrix of a correction about `centre`, row by row: p ↦ R(p − centre) + centre + t.
 pub fn matrix(x: V6, centre: [f64; 3]) -> [f64; 16] {
     let r = rotation([x[0], x[1], x[2]]);
-    let rc: [f64; 3] = std::array::from_fn(|i| r[i][0] * centre[0] + r[i][1] * centre[1] + r[i][2] * centre[2]);
+    let rc: [f64; 3] =
+        std::array::from_fn(|i| r[i][0] * centre[0] + r[i][1] * centre[1] + r[i][2] * centre[2]);
     let t: [f64; 3] = std::array::from_fn(|i| centre[i] + x[3 + i] - rc[i]);
-    [r[0][0], r[0][1], r[0][2], t[0], r[1][0], r[1][1], r[1][2], t[1], r[2][0], r[2][1], r[2][2], t[2], 0.0, 0.0, 0.0, 1.0]
+    [
+        r[0][0], r[0][1], r[0][2], t[0], r[1][0], r[1][1], r[1][2], t[1], r[2][0], r[2][1],
+        r[2][2], t[2], 0.0, 0.0, 0.0, 1.0,
+    ]
 }
 
 #[cfg(test)]
@@ -305,16 +335,35 @@ mod tests {
         let m1 = [0.001, -0.002, 0.003, 0.30, -0.20, 0.06];
         let m2 = [-0.002, 0.001, 0.0, -0.10, 0.25, 0.02];
         let obs = vec![
-            Observation { a: 0, b: 1, m: m1, n: eye(100.0) },
-            Observation { a: 0, b: 2, m: m2, n: eye(100.0) },
-            Observation { a: 1, b: 2, m: minus(m2, m1), n: eye(100.0) },
+            Observation {
+                a: 0,
+                b: 1,
+                m: m1,
+                n: eye(100.0),
+            },
+            Observation {
+                a: 0,
+                b: 2,
+                m: m2,
+                n: eye(100.0),
+            },
+            Observation {
+                a: 1,
+                b: 2,
+                m: minus(m2, m1),
+                n: eye(100.0),
+            },
         ];
         let got = adjust(3, &[true, false, false], &obs).expect("an answer");
         for i in 0..6 {
             assert!((got.x[1][i] - m1[i]).abs() < 1e-12 && (got.x[2][i] - m2[i]).abs() < 1e-12);
         }
         assert_eq!(got.loops.len(), 1);
-        assert!(got.loops[0].w.iter().all(|v| v.abs() < 1e-12), "{:?}", got.loops[0]);
+        assert!(
+            got.loops[0].w.iter().all(|v| v.abs() < 1e-12),
+            "{:?}",
+            got.loops[0]
+        );
         assert_eq!(got.loops[0].path, vec![1, 0, 2]);
     }
 
@@ -322,24 +371,69 @@ mod tests {
     fn a_misclosure_is_shared_by_weight() {
         // The loop fails to close by 0.03 m in x: equal weights share it in thirds.
         let obs = vec![
-            Observation { a: 0, b: 1, m: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0], n: eye(1.0) },
-            Observation { a: 1, b: 2, m: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0], n: eye(1.0) },
-            Observation { a: 0, b: 2, m: [0.0, 0.0, 0.0, 2.03, 0.0, 0.0], n: eye(1.0) },
+            Observation {
+                a: 0,
+                b: 1,
+                m: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                n: eye(1.0),
+            },
+            Observation {
+                a: 1,
+                b: 2,
+                m: [0.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+                n: eye(1.0),
+            },
+            Observation {
+                a: 0,
+                b: 2,
+                m: [0.0, 0.0, 0.0, 2.03, 0.0, 0.0],
+                n: eye(1.0),
+            },
         ];
         let got = adjust(3, &[true, false, false], &obs).expect("an answer");
-        assert!((got.x[1][3] - 1.01).abs() < 1e-12 && (got.x[2][3] - 2.02).abs() < 1e-12, "{:?}", got.x);
-        assert!((got.loops[0].w[3] + 0.03).abs() < 1e-12, "{:?}", got.loops[0].w);
-        assert!(got.residuals.iter().all(|r| (r[3].abs() - 0.01).abs() < 1e-12), "{:?}", got.residuals);
+        assert!(
+            (got.x[1][3] - 1.01).abs() < 1e-12 && (got.x[2][3] - 2.02).abs() < 1e-12,
+            "{:?}",
+            got.x
+        );
+        assert!(
+            (got.loops[0].w[3] + 0.03).abs() < 1e-12,
+            "{:?}",
+            got.loops[0].w
+        );
+        assert!(
+            got.residuals
+                .iter()
+                .all(|r| (r[3].abs() - 0.01).abs() < 1e-12),
+            "{:?}",
+            got.residuals
+        );
     }
 
     #[test]
     fn faults() {
-        let o = |a, b| Observation { a, b, m: [0.0; 6], n: eye(1.0) };
-        assert_eq!(adjust(3, &[true, false, false], &[o(0, 1)]).err(), Some(NetworkFault::Unjoined(2)));
+        let o = |a, b| Observation {
+            a,
+            b,
+            m: [0.0; 6],
+            n: eye(1.0),
+        };
+        assert_eq!(
+            adjust(3, &[true, false, false], &[o(0, 1)]).err(),
+            Some(NetworkFault::Unjoined(2))
+        );
         let mut flat = eye(1.0);
         flat[3][3] = 0.0;
-        let weak = Observation { a: 0, b: 1, m: [0.0; 6], n: flat };
-        assert_eq!(adjust(2, &[true, false], &[weak]).err(), Some(NetworkFault::Undetermined));
+        let weak = Observation {
+            a: 0,
+            b: 1,
+            m: [0.0; 6],
+            n: flat,
+        };
+        assert_eq!(
+            adjust(2, &[true, false], &[weak]).err(),
+            Some(NetworkFault::Undetermined)
+        );
     }
 
     #[test]
@@ -352,9 +446,14 @@ mod tests {
         let p = [13.0, 17.0, 6.0];
         let about = |cc: [f64; 3], tt: [f64; 3]| -> [f64; 3] {
             let d = [p[0] - cc[0], p[1] - cc[1], p[2] - cc[2]];
-            std::array::from_fn(|i| r[i][0] * d[0] + r[i][1] * d[1] + r[i][2] * d[2] + cc[i] + tt[i])
+            std::array::from_fn(|i| {
+                r[i][0] * d[0] + r[i][1] * d[1] + r[i][2] * d[2] + cc[i] + tt[i]
+            })
         };
         let (one, two) = (about(c, t), about(to, [m[3], m[4], m[5]]));
-        assert!((0..3).all(|i| (one[i] - two[i]).abs() < 1e-12), "{one:?} {two:?}");
+        assert!(
+            (0..3).all(|i| (one[i] - two[i]).abs() < 1e-12),
+            "{one:?} {two:?}"
+        );
     }
 }

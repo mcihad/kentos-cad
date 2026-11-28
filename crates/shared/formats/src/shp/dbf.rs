@@ -320,9 +320,19 @@ mod tests {
         );
         let t = Table::open(&b, Encoding::Windows1254).expect("table");
         let (_, a) = t.record(0).expect("row");
-        assert_eq!(a.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect::<Vec<_>>(), vec![("ALAN", "12.5")]);
+        assert_eq!(
+            a.iter()
+                .map(|(k, v)| (k.as_str(), v.as_str()))
+                .collect::<Vec<_>>(),
+            vec![("ALAN", "12.5")]
+        );
         let (_, a) = t.record(1).expect("row");
-        assert_eq!(a.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect::<Vec<_>>(), vec![("NO", "101")]);
+        assert_eq!(
+            a.iter()
+                .map(|(k, v)| (k.as_str(), v.as_str()))
+                .collect::<Vec<_>>(),
+            vec![("NO", "101")]
+        );
     }
 
     #[test]

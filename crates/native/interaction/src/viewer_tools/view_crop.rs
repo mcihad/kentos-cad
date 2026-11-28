@@ -16,17 +16,19 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points;
 use crate::prompt::Prompt;
-use crate::tool::{Context, Cursor, Flow, Label, Marker, MarkerShape, Pointer, Preview, Stroke, Tone, Tool};
+use crate::tool::{
+    Context, Cursor, Flow, Label, Marker, MarkerShape, Pointer, Preview, Stroke, Tone, Tool,
+};
 use crate::tool_settings::Setting;
 
 /// The tool's id: its command is `tool.viewCrop`.
 pub const ID: &str = "viewCrop";
 pub const LABEL: &str = "Kırpma çerçevesi";
 /// No named view to edit.
-pub const NO_VIEWS: &str =
-    "Projede adlı görünüm yok. Görünüm › Görünümler'de çizimi istediğiniz gibi gösterip bir görünüm kaydedin.";
+pub const NO_VIEWS: &str = "Projede adlı görünüm yok. Görünüm › Görünümler'de çizimi istediğiniz gibi gösterip bir görünüm kaydedin.";
 /// A click on no frame.
-pub const NO_FRAME: &str = "Tıklanan yerde bir görünümün çerçevesi yok; bir çerçevenin içine ya da kenarına tıklayın.";
+pub const NO_FRAME: &str =
+    "Tıklanan yerde bir görünümün çerçevesi yok; bir çerçevenin içine ya da kenarına tıklayın.";
 /// How near a grip a press takes it, logical pixels.
 const GRIP_REACH: f64 = 8.0;
 /// A press that moves less than this before it is let go holds the grip for a second press, logical pixels.
@@ -83,7 +85,10 @@ impl Frame {
 
     /// Where a grip is on the ground.
     fn grip_at(&self, g: Grip) -> Vec2 {
-        self.ground(f64::from(g.0) * self.width / 2.0, f64::from(g.1) * self.height / 2.0)
+        self.ground(
+            f64::from(g.0) * self.width / 2.0,
+            f64::from(g.1) * self.height / 2.0,
+        )
     }
 
     /// The frame with grip `g` moved from `from` to `to` (ground points): the opposite edges stay, the middle moves the
@@ -223,7 +228,10 @@ impl ViewCrop {
             ViewsEdit {
                 edit: ViewsOp::Area {
                     name: name.clone(),
-                    center: Wire { x: f.center.x, y: f.center.y },
+                    center: Wire {
+                        x: f.center.x,
+                        y: f.center.y,
+                    },
                     width: f.width,
                     height: f.height,
                     twist: None,
@@ -238,7 +246,11 @@ impl ViewCrop {
                 let fm = cx.format();
                 cx.say(
                     Level::Success,
-                    format!("“{name}” görünümünün alanı: {} × {}.", fm.length(f.width), fm.length(f.height)),
+                    format!(
+                        "“{name}” görünümünün alanı: {} × {}.",
+                        fm.length(f.width),
+                        fm.length(f.height)
+                    ),
                 );
             }
             self.learn(cx);
@@ -330,7 +342,11 @@ impl Tool for ViewCrop {
             self.learn(cx);
         }
         self.hover = Some(p.world);
-        self.near = if self.held.is_none() { self.grip_near(p, cx) } else { None };
+        self.near = if self.held.is_none() {
+            self.grip_near(p, cx)
+        } else {
+            None
+        };
         if let Some(h) = self.held.as_mut() {
             if (p.screen[0] - h.screen[0]).hypot(p.screen[1] - h.screen[1]) > STILL {
                 h.moved = true;
@@ -406,15 +422,30 @@ impl Tool for ViewCrop {
             return false;
         };
         if let Some(f) = self.frame() {
-            self.write(Frame { width: w, height: h, ..f }, cx);
+            self.write(
+                Frame {
+                    width: w,
+                    height: h,
+                    ..f
+                },
+                cx,
+            );
         }
         true
     }
 
     fn settings(&self, f: &Format) -> Vec<Setting> {
-        let names: Vec<(&str, &str)> = self.views.iter().map(|v| (v.name.as_str(), v.name.as_str())).collect();
+        let names: Vec<(&str, &str)> = self
+            .views
+            .iter()
+            .map(|v| (v.name.as_str(), v.name.as_str()))
+            .collect();
         let chosen = self.chosen.clone().unwrap_or_default();
-        let mut rows = vec![Setting::choice("view", "Görünüm", crate::tool_settings::choices(&names, &chosen))];
+        let mut rows = vec![Setting::choice(
+            "view",
+            "Görünüm",
+            crate::tool_settings::choices(&names, &chosen),
+        )];
         if let Some(fr) = self.frame() {
             rows.push(Setting::text("width", "Genişlik", f.length(fr.width)));
             rows.push(Setting::text("height", "Yükseklik", f.length(fr.height)));
@@ -438,7 +469,10 @@ impl Tool for ViewCrop {
             }
             "width" | "height" => {
                 let (Some(size), Some(fr)) = (cx.typed_length(value), self.frame()) else {
-                    cx.say(Level::Warn, "Uzunluğu bir sayıyla yazın; örneğin 12 ya da 1200 cm.");
+                    cx.say(
+                        Level::Warn,
+                        "Uzunluğu bir sayıyla yazın; örneğin 12 ya da 1200 cm.",
+                    );
                     return false;
                 };
                 if size <= 0.0 {
@@ -519,7 +553,11 @@ impl Tool for ViewCrop {
             let hot = held == Some(g) || self.near == Some(g);
             out.markers.push(Marker {
                 at: fr.grip_at(g),
-                shape: if g == Grip::MIDDLE { MarkerShape::Ring(5.0) } else { MarkerShape::Square(4.0) },
+                shape: if g == Grip::MIDDLE {
+                    MarkerShape::Ring(5.0)
+                } else {
+                    MarkerShape::Square(4.0)
+                },
                 tone: if hot { Tone::Danger } else { Tone::Accent },
             });
         }
@@ -539,7 +577,12 @@ mod tests {
     use super::*;
 
     fn frame(twist: f64) -> Frame {
-        Frame { center: Vec2::new(10.0, 20.0), width: 8.0, height: 4.0, twist }
+        Frame {
+            center: Vec2::new(10.0, 20.0),
+            width: 8.0,
+            height: 4.0,
+            twist,
+        }
     }
 
     fn near(a: Vec2, b: Vec2) -> bool {

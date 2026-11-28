@@ -123,23 +123,37 @@ impl PlotStyles {
 /// A style's cells: its colour, screening, width, ends and joins as the profile plots them.
 fn style_cells(style: &serde_json::Value) -> [String; 4] {
     let color = match style["color"]["type"].as_str() {
-        Some("color") => style["color"]["value"].as_str().unwrap_or_default().to_owned(),
+        Some("color") => style["color"]["value"]
+            .as_str()
+            .unwrap_or_default()
+            .to_owned(),
         Some("grayscale") => "Gri".to_owned(),
         Some("black") => "Siyah".to_owned(),
         _ => "Nesnenin".to_owned(),
     };
     let screening = format!("%{}", style["screening"].as_u64().unwrap_or(100));
-    let width = style["lineWeight"]
-        .as_i64()
-        .map_or_else(|| "Nesnenin".to_owned(), |um| road_dialog::grouped(um as f64 / 1000.0, 2));
+    let width = style["lineWeight"].as_i64().map_or_else(
+        || "Nesnenin".to_owned(),
+        |um| road_dialog::grouped(um as f64 / 1000.0, 2),
+    );
     let ends = |k: &str, names: [(&'static str, &'static str); 3]| -> &'static str {
         style[k]
             .as_str()
             .and_then(|v| names.iter().find(|n| n.0 == v).map(|n| n.1))
             .unwrap_or("Nesnenin")
     };
-    let cap = ends("cap", [("butt", "Düz"), ("square", "Kare"), ("round", "Yuvarlak")]);
-    let join = ends("join", [("miter", "Köşeli"), ("bevel", "Pahlı"), ("round", "Yuvarlak")]);
+    let cap = ends(
+        "cap",
+        [("butt", "Düz"), ("square", "Kare"), ("round", "Yuvarlak")],
+    );
+    let join = ends(
+        "join",
+        [
+            ("miter", "Köşeli"),
+            ("bevel", "Pahlı"),
+            ("round", "Yuvarlak"),
+        ],
+    );
     [color, screening, width, format!("{cap} / {join}")]
 }
 
@@ -181,7 +195,11 @@ impl App {
         let mut w = self.plot_styles.take().unwrap_or_default();
         fn walk(nodes: &[kentos_commands::LayerNode], here: &str, out: &mut Vec<(String, String)>) {
             for n in nodes {
-                let path = if here.is_empty() { n.name.clone() } else { format!("{here} / {}", n.name) };
+                let path = if here.is_empty() {
+                    n.name.clone()
+                } else {
+                    format!("{here} / {}", n.name)
+                };
                 if n.kind == kentos_commands::LayerNodeType::Layer {
                     out.push((n.id.clone(), path.clone()));
                 }
@@ -224,16 +242,18 @@ impl App {
         }
         let keys = w.keys();
         let input = w.input(&keys);
-        w.result = Some(match plot_styles_import::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, warnings } => {
-                w.warnings = warnings.into_iter().map(|x| x.message).collect();
-                Ok(output)
-            }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Yapılamadı.".into()),
-        });
+        w.result = Some(
+            match plot_styles_import::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, warnings } => {
+                    w.warnings = warnings.into_iter().map(|x| x.message).collect();
+                    Ok(output)
+                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Yapılamadı.".into()),
+            },
+        );
         // A pen the new table lacks is no longer given.
         let n = w.keys().len();
         for p in &mut w.pens {
@@ -311,7 +331,10 @@ impl App {
         }
         match answer {
             CommandResult::Completed { output, warnings } => {
-                let name = output.profile["name"].as_str().unwrap_or_default().to_owned();
+                let name = output.profile["name"]
+                    .as_str()
+                    .unwrap_or_default()
+                    .to_owned();
                 self.dialog = None;
                 self.plot_styles = Some(PlotStyles::default());
                 self.say_warnings(&warnings);
@@ -328,7 +351,9 @@ impl App {
                     ),
                 );
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.warn(format!("{TITLE}: {}", error.message));
             }
             _ => {}
@@ -341,7 +366,9 @@ impl App {
             return label::body("").into();
         };
         let keys = w.keys();
-        let options: Vec<String> = std::iter::once("—".to_owned()).chain(keys.iter().map(key_words)).collect();
+        let options: Vec<String> = std::iter::once("—".to_owned())
+            .chain(keys.iter().map(key_words))
+            .collect();
         let pick_file = button(
             row![
                 kentos_ui::icon::icon(crate::icons::from_web(Some("fileOpen"))).size(14.0),
@@ -358,12 +385,14 @@ impl App {
             .section("Tablo")
             .field(
                 "Dosya",
-                kentos_ui::widget::text_field(".ctb ya da .stb", &w.path).on_input(|t| msg(Event::Path(t))),
+                kentos_ui::widget::text_field(".ctb ya da .stb", &w.path)
+                    .on_input(|t| msg(Event::Path(t))),
             )
             .row(pick_file)
             .field(
                 "Profilin adı",
-                kentos_ui::widget::text_field("dosyanın adı", &w.name).on_input(|t| msg(Event::Name(t))),
+                kentos_ui::widget::text_field("dosyanın adı", &w.name)
+                    .on_input(|t| msg(Event::Name(t))),
             )
             .help("Dosya yalnız okunur; profil dosyanın SHA-256'sını ve adını taşır.")
             .section("Kalemler");
@@ -372,7 +401,12 @@ impl App {
         } else {
             for (i, (_, path, k)) in w.pens.iter().enumerate() {
                 let o = options.clone();
-                form = form.field(path.clone(), road_dialog::pick(o, Some(k.map_or(0, |k| k + 1)), move |c| msg(Event::Pen(i, c))));
+                form = form.field(
+                    path.clone(),
+                    road_dialog::pick(o, Some(k.map_or(0, |k| k + 1)), move |c| {
+                        msg(Event::Pen(i, c))
+                    }),
+                );
             }
             form = form.help("Kalem katmanın renginden tahmin edilmez; verilmeyen katman nesnenin görünüşüyle basılır.");
         }
@@ -381,7 +415,10 @@ impl App {
             form = form.help("Kitapta pafta yok; profil kitaba yine alınır.");
         }
         for (i, (_, name, on)) in w.sheets.iter().enumerate() {
-            form = form.field(name.clone(), Switch::new(*on, move |v| msg(Event::Sheet(i, v))).label("Uygula"));
+            form = form.field(
+                name.clone(),
+                Switch::new(*on, move |v| msg(Event::Sheet(i, v))).label("Uygula"),
+            );
         }
         let mut d = RoadDialog::new(TITLE, form, msg(Event::Close))
             .form_width(400.0)
@@ -393,7 +430,11 @@ impl App {
             Some(Ok(out)) => {
                 can = true;
                 let lost = |s: &str| {
-                    out.losses.iter().filter(|l| l["severity"] == s).count().to_string()
+                    out.losses
+                        .iter()
+                        .filter(|l| l["severity"] == s)
+                        .count()
+                        .to_string()
                 };
                 d = d
                     .figure("Biçim", out.format.to_uppercase())
@@ -416,9 +457,18 @@ impl App {
                 let list = |l: &serde_json::Value, k: &str, most: usize| {
                     let all: Vec<String> = l[k]
                         .as_array()
-                        .map(|v| v.iter().filter_map(|x| x.as_str().map(str::to_owned)).collect())
+                        .map(|v| {
+                            v.iter()
+                                .filter_map(|x| x.as_str().map(str::to_owned))
+                                .collect()
+                        })
                         .unwrap_or_default();
-                    let mut s = all.iter().take(most).cloned().collect::<Vec<_>>().join(", ");
+                    let mut s = all
+                        .iter()
+                        .take(most)
+                        .cloned()
+                        .collect::<Vec<_>>()
+                        .join(", ");
                     if all.len() > most {
                         s.push_str(&format!(" … (+{})", all.len() - most));
                     }
@@ -475,13 +525,24 @@ impl App {
                 );
                 let shown = match w.view {
                     View::Report => road_dialog::table(
-                        vec![col("Ağırlık", 72.0), col("Konu", 130.0), col("Stiller", 90.0), col("Değerler", 90.0), col("Açıklama", 520.0)],
+                        vec![
+                            col("Ağırlık", 72.0),
+                            col("Konu", 130.0),
+                            col("Stiller", 90.0),
+                            col("Değerler", 90.0),
+                            col("Açıklama", 520.0),
+                        ],
                         report,
                         "Rapor boş: her alan aynen alınır",
                     ),
                     View::Styles => styles,
                 };
-                d = d.detail(road_dialog::detail_choice([View::Report, View::Styles], w.view, |v| msg(Event::View(v)), shown));
+                d = d.detail(road_dialog::detail_choice(
+                    [View::Report, View::Styles],
+                    w.view,
+                    |v| msg(Event::View(v)),
+                    shown,
+                ));
             }
             None => {}
         }

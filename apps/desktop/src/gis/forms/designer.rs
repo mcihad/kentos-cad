@@ -173,7 +173,8 @@ pub enum PreviewRole {
 }
 
 impl PreviewRole {
-    pub const ALL: [PreviewRole; 3] = [PreviewRole::Editor, PreviewRole::Entry, PreviewRole::Viewer];
+    pub const ALL: [PreviewRole; 3] =
+        [PreviewRole::Editor, PreviewRole::Entry, PreviewRole::Viewer];
 
     pub fn label(self) -> &'static str {
         match self {
@@ -915,13 +916,20 @@ impl App {
     /// keeps the form from being published, said with the way out. None where the layer is not a data layer, or its table
     /// cannot be read now (the table's read says that itself). The driver keeps the table's shape: no read a frame.
     pub(crate) fn source_issues(&self, layer: &str, body: &FormBody) -> Vec<FormIssue> {
-        let Some(node) = self.document.as_ref().and_then(|d| d.model.layers().get(layer)) else {
+        let Some(node) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(layer))
+        else {
             return Vec::new();
         };
         let Some(data) = &node.data else {
             return Vec::new();
         };
-        let Ok(schema) = kentos_data::registry().source(&data.address).and_then(|s| s.schema(&data.table)) else {
+        let Ok(schema) = kentos_data::registry()
+            .source(&data.address)
+            .and_then(|s| s.schema(&data.table))
+        else {
             return Vec::new();
         };
         body.walk()
@@ -1267,7 +1275,8 @@ impl App {
             && let Some(e) = self.gis.form_preview.as_mut()
         {
             e.read_only = true;
-            e.read_why = Some("Okuyan rolü kaydı okur; formda hiçbir şeyi değiştiremez.".to_owned());
+            e.read_why =
+                Some("Okuyan rolü kaydı okur; formda hiçbir şeyi değiştiremez.".to_owned());
         }
         if let Some(w) = self.gis.forms_window.as_mut() {
             w.preview_error = error;

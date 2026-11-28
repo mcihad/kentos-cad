@@ -91,7 +91,11 @@ impl App {
                     && kinds
                         .iter()
                         .all(|k| matches!(*k, "pointcloud" | "line" | "polyline" | "polygon"));
-                let kinds = if cloud_inputs { vec!["pointcloud"] } else { kinds };
+                let kinds = if cloud_inputs {
+                    vec!["pointcloud"]
+                } else {
+                    kinds
+                };
                 let id = catalog()
                     .contextual_for(self.work_mode(), self.ribbon_work(), &kinds)
                     .map(|t| t.id);
@@ -122,7 +126,9 @@ impl App {
             // The layer's kind as its menu tells it (layer_entries.rs).
             self.layer_holds_alone(layer)?
         };
-        let id = catalog().contextual_for(self.work_mode(), self.ribbon_work(), &[kind])?.id;
+        let id = catalog()
+            .contextual_for(self.work_mode(), self.ribbon_work(), &[kind])?
+            .id;
         self.contextual_tabs().find(|t| t.id == id)
     }
 
@@ -160,12 +166,16 @@ impl App {
         if self.ribbon_context && self.context_tab().is_none() {
             self.ribbon_context = false;
         }
-        let stamp = self.document.as_ref().map(|d| (d.session, self.selection.version()));
+        let stamp = self
+            .document
+            .as_ref()
+            .map(|d| (d.session, self.selection.version()));
         if stamp == self.ribbon_follows {
             return;
         }
         self.ribbon_follows = stamp;
-        let follow = self.settings.effective("drafting.contextualTabs") != serde_json::Value::Bool(false);
+        let follow =
+            self.settings.effective("drafting.contextualTabs") != serde_json::Value::Bool(false);
         if self.selection.is_empty() {
             self.ribbon_context = false;
         } else if follow && self.regular_tab() == self.starting_tab() {
@@ -210,7 +220,9 @@ impl App {
             return tab.id;
         }
         let first = self.starting_tab();
-        self.ribbon_tabs().find(|t| t.id == self.tab).map_or(first, |t| t.id)
+        self.ribbon_tabs()
+            .find(|t| t.id == self.tab)
+            .map_or(first, |t| t.id)
     }
 
     /// `workspace.*`: the drawing's mode becomes this one.
@@ -247,7 +259,10 @@ impl App {
         }
         let result = kentos_native_application::settings_set::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            kentos_commands::SettingsSet { project_type: Some(mode.id), ..Default::default() },
+            kentos_commands::SettingsSet {
+                project_type: Some(mode.id),
+                ..Default::default()
+            },
         );
         if self.answered(result).is_none() {
             return;
@@ -379,9 +394,16 @@ mod tests {
         // A parked drawing may have the same selection/change counters. Its session must invalidate the cache.
         app.document.as_mut().expect("open").session += 1;
         assert_eq!(app.selection_tab().expect("selected area").id, tab);
-        assert_ne!(app.selection_tab_cache.get().expect("refreshed").0, cached.0);
+        assert_ne!(
+            app.selection_tab_cache.get().expect("refreshed").0,
+            cached.0
+        );
         app.follow_selection_tab();
-        assert_eq!(app.shown_tab(), tab, "another drawing brings its selection's tab forward");
+        assert_eq!(
+            app.shown_tab(),
+            tab,
+            "another drawing brings its selection's tab forward"
+        );
     }
 
     #[test]
@@ -409,7 +431,11 @@ mod tests {
         assert!(app.why_disabled("workspace.gis").is_some());
         run(&mut app, "workspace.gis");
         assert_eq!(app.work_mode(), Workspace::Cad);
-        assert!(last_said(&app).contains("proje türü değiştirilmez"), "{}", last_said(&app));
+        assert!(
+            last_said(&app).contains("proje türü değiştirilmez"),
+            "{}",
+            last_said(&app)
+        );
         // A tab the type lacks gives way to Giriş; one it has stays open.
         app.tab = "analysis";
         assert_eq!(app.shown_tab(), "home");
@@ -427,16 +453,22 @@ mod tab_label_tests {
         crate::files_testing::make_cad(&mut app);
         let doc = &mut app.document.as_mut().unwrap().model;
         let arc = doc
-            .add(serde_json::from_value(serde_json::json!({
-                "kind": "arc", "id": 0, "layerId": "cizim", "attrs": {},
-                "c": {"x": 475.0, "y": 0.0}, "r": 10.0, "a0": 0.0, "a1": 5.0
-            })).unwrap())
+            .add(
+                serde_json::from_value(serde_json::json!({
+                    "kind": "arc", "id": 0, "layerId": "cizim", "attrs": {},
+                    "c": {"x": 475.0, "y": 0.0}, "r": 10.0, "a0": 0.0, "a1": 5.0
+                }))
+                .unwrap(),
+            )
             .expect("a slot");
         let line = doc
-            .add(serde_json::from_value(serde_json::json!({
-                "kind": "line", "id": 0, "layerId": "cizim", "attrs": {},
-                "a": {"x": 0.0, "y": 0.0}, "b": {"x": 10.0, "y": 0.0}
-            })).unwrap())
+            .add(
+                serde_json::from_value(serde_json::json!({
+                    "kind": "line", "id": 0, "layerId": "cizim", "attrs": {},
+                    "a": {"x": 0.0, "y": 0.0}, "b": {"x": 10.0, "y": 0.0}
+                }))
+                .unwrap(),
+            )
             .expect("a slot");
         let label = |app: &crate::app::App| app.selection_tab().map(|t| app.selection_tab_label(t));
         app.selection.set([arc]);

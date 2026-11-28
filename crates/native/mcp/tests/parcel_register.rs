@@ -12,11 +12,22 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn parcel_register_over_mcp() {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.parcels.record.json")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
-    let uid = |slot: usize| cases["setup"]["uids"][slot - 1].as_str().unwrap().to_owned();
-    let path = std::env::temp_dir().join(format!("kentos-parcel-register-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.parcels.record.json"
+    ))
+    .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
+    let uid = |slot: usize| {
+        cases["setup"]["uids"][slot - 1]
+            .as_str()
+            .unwrap()
+            .to_owned()
+    };
+    let path = std::env::temp_dir().join(format!(
+        "kentos-parcel-register-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let open = call(&mut server, "drawing.open", json!({"path": path}));
@@ -32,7 +43,11 @@ fn parcel_register_over_mcp() {
     );
     assert_eq!(first["isError"], false, "{first}");
     let out = &first["structuredContent"]["output"];
-    assert_eq!((out["document"].as_u64(), out["boundariesCreated"].as_u64()), (Some(1), Some(7)), "{out}");
+    assert_eq!(
+        (out["document"].as_u64(), out["boundariesCreated"].as_u64()),
+        (Some(1), Some(7)),
+        "{out}"
+    );
 
     // The ifraz: A11 and A12 (slots 11, 12) from 101/7's halves; its west and east boundaries go on.
     let ifraz = call(
@@ -45,11 +60,27 @@ fn parcel_register_over_mcp() {
     assert_eq!(out["created"], json!([3, 4]), "{out}");
     assert_eq!(out["boundariesShared"].as_u64(), Some(2), "{out}");
 
-    let listed = call(&mut server, "cad.parcels.records", json!({"drawing": drawing, "history": true}));
+    let listed = call(
+        &mut server,
+        "cad.parcels.records",
+        json!({"drawing": drawing, "history": true}),
+    );
     assert_eq!(listed["isError"], false, "{listed}");
-    let parcels = listed["structuredContent"]["output"]["parcels"].as_array().unwrap().clone();
-    let row = |n: u64| parcels.iter().find(|p| p["number"].as_u64() == Some(n)).unwrap().clone();
-    assert_eq!((row(1)["state"].as_str(), row(1)["after"].clone()), (Some("closed"), json!([3, 4])));
+    let parcels = listed["structuredContent"]["output"]["parcels"]
+        .as_array()
+        .unwrap()
+        .clone();
+    let row = |n: u64| {
+        parcels
+            .iter()
+            .find(|p| p["number"].as_u64() == Some(n))
+            .unwrap()
+            .clone()
+    };
+    assert_eq!(
+        (row(1)["state"].as_str(), row(1)["after"].clone()),
+        (Some("closed"), json!([3, 4]))
+    );
     assert_eq!(row(3)["before"], json!([1]));
     // 101/14 (4) shares the east boundary with 101/8 (2) and the middle one with 101/13 (3).
     assert_eq!(row(4)["neighbours"], json!([2, 3]));
@@ -57,7 +88,14 @@ fn parcel_register_over_mcp() {
 
     let undo = call(&mut server, "drawing.undo", json!({"drawing": drawing}));
     assert_eq!(undo["isError"], false, "{undo}");
-    let listed = call(&mut server, "cad.parcels.records", json!({"drawing": drawing}));
-    let docs = listed["structuredContent"]["output"]["documents"].as_array().unwrap().len();
+    let listed = call(
+        &mut server,
+        "cad.parcels.records",
+        json!({"drawing": drawing}),
+    );
+    let docs = listed["structuredContent"]["output"]["documents"]
+        .as_array()
+        .unwrap()
+        .len();
     assert_eq!(docs, 1, "{listed}");
 }

@@ -11,11 +11,26 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn slope_over_mcp() {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.scenarios.impact.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().starts_with("eğim: Zemin yüzeyinde")).unwrap().clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-scenario-slope-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.scenarios.impact.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .unwrap()
+                .starts_with("eğim: Zemin yüzeyinde")
+        })
+        .unwrap()
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
+    let path =
+        std::env::temp_dir().join(format!("kentos-scenario-slope-{}.kcad", std::process::id()));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let open = call(&mut server, "drawing.open", json!({"path": path}));
@@ -23,11 +38,23 @@ fn slope_over_mcp() {
     assert_eq!(open["isError"], false, "{open}");
     let drawing = open["structuredContent"]["drawing"].clone();
 
-    let r = call(&mut server, "cad.scenarios.impact", json!({"drawing": drawing, "scenario": "alt-a", "slope": {"surface": "t-1", "threshold": 10.0}}));
+    let r = call(
+        &mut server,
+        "cad.scenarios.impact",
+        json!({"drawing": drawing, "scenario": "alt-a", "slope": {"surface": "t-1", "threshold": 10.0}}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     let out = &r["structuredContent"]["output"];
     let want = &case["steps"][0]["result"]["output"];
-    let by = |o: &Value, id: &str| o["measures"].as_array().unwrap().iter().find(|m| m["id"] == id).unwrap().clone();
+    let by = |o: &Value, id: &str| {
+        o["measures"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|m| m["id"] == id)
+            .unwrap()
+            .clone()
+    };
     for id in ["slopeMean", "slopeSteep", "slopeSteepShare", "slopeOff"] {
         let (got, wanted) = (by(out, id), by(want, id));
         for side in ["base", "alternative"] {
@@ -36,7 +63,13 @@ fn slope_over_mcp() {
         }
     }
     assert!((by(out, "slopeOff")["alternative"].as_f64().unwrap() - 50.0).abs() < 1e-6);
-    let gaps: Vec<&str> = out["gaps"].as_array().unwrap().iter().filter_map(Value::as_str).filter(|g| g.contains("yüzeyinin dışında")).collect();
+    let gaps: Vec<&str> = out["gaps"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(Value::as_str)
+        .filter(|g| g.contains("yüzeyinin dışında"))
+        .collect();
     assert_eq!(gaps.len(), 1, "{gaps:?}");
     assert!(gaps[0].contains("senaryoda"));
 }

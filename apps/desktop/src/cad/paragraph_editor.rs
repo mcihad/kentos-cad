@@ -17,8 +17,8 @@
 
 use std::cell::RefCell;
 use std::ops::Range;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use unicode_segmentation::UnicodeSegmentation;
 
 use iced::advanced::text::Highlighter;
@@ -46,7 +46,6 @@ use crate::app::{App, Message};
 /// The editor's widget id: focused when it opens.
 pub const ID: &str = "cizim-paragraf";
 static NEXT_PREVIEW: AtomicU64 = AtomicU64::new(1);
-
 
 /// What Simge ▾ puts at the cursor.
 pub const SYMBOLS: [(char, &str); 9] = [
@@ -96,7 +95,7 @@ pub struct Open {
     pub editing: Option<Slot>,
     pub menu: Option<Menu>,
     apply_error: Option<String>,
-    source: Option<(u64,kentos_domain::Uuid,String)>,
+    source: Option<(u64, kentos_domain::Uuid, String)>,
     preview_id: u64,
     preview_revision: u64,
     preview_cache: RefCell<Option<(u64, kentos_commands::DrawingFont, crate::labels::Preview)>>,
@@ -167,7 +166,9 @@ fn perform_edit(content: &mut Content, action: Action) {
         let cursor = content.cursor();
         let byte_at = |p: text_editor::Position| {
             let scalar = letter_at(&text, p.line, p.column);
-            text.char_indices().nth(scalar).map_or(text.len(), |(b, _)| b)
+            text.char_indices()
+                .nth(scalar)
+                .map_or(text.len(), |(b, _)| b)
         };
         let at = byte_at(cursor.position);
         let other = cursor.selection.map_or(at, byte_at);
@@ -875,7 +876,11 @@ impl App {
             // The platform's own spelling, as the command line's (UR-016): ⌘Enter on macOS, Ctrl+Enter elsewhere.
             label::caption(crate::keys::shown(&format!(
                 "Ctrl+Enter: {} · Esc: vazgeç",
-                if open.editing.is_some() { "kaydet" } else { "ekle" }
+                if open.editing.is_some() {
+                    "kaydet"
+                } else {
+                    "ekle"
+                }
             )))
             .wrapping(iced::widget::text::Wrapping::None)
             .width(Fill),
@@ -1317,7 +1322,8 @@ mod tests {
 
     #[test]
     fn deleting_visible_characters_preserves_scalar_run_offsets() {
-        for cluster in ["g\u{306}", "I\u{307}", "👩🏽‍💻", "🇹🇷", "क्\u{200d}ष", "\r\n"] {
+        for cluster in ["g\u{306}", "I\u{307}", "👩🏽‍💻", "🇹🇷", "क्\u{200d}ष", "\r\n"]
+        {
             let text = format!("Ö{cluster}ç");
             let end = 1 + cluster.chars().count();
             for (edit, at) in [(Edit::Backspace, end), (Edit::Delete, 1)] {
@@ -1328,12 +1334,16 @@ mod tests {
                 });
                 perform_edit(&mut content, Action::Edit(edit));
                 assert_eq!(content.text(), "Öç", "cluster {cluster:?}");
-                let runs = retext(&[Run {
-                    start: end as u32,
-                    end: end as u32 + 1,
-                    bold: true,
-                    ..Run::default()
-                }], &text, &content.text());
+                let runs = retext(
+                    &[Run {
+                        start: end as u32,
+                        end: end as u32 + 1,
+                        bold: true,
+                        ..Run::default()
+                    }],
+                    &text,
+                    &content.text(),
+                );
                 assert_eq!(runs.len(), 1);
                 assert_eq!((runs[0].start, runs[0].end, runs[0].bold), (1, 2, true));
             }
@@ -1365,7 +1375,10 @@ mod tests {
             ("g\u{306}", 1, Edit::Backspace, ""),
         ] {
             let mut content = Content::with_text(text);
-            content.move_to(text_editor::Cursor { position: position_of(text, at), selection: None });
+            content.move_to(text_editor::Cursor {
+                position: position_of(text, at),
+                selection: None,
+            });
             perform_edit(&mut content, Action::Edit(edit));
             assert_eq!(content.text(), expected);
         }

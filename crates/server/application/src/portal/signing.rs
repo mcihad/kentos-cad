@@ -11,9 +11,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_contracts::{
-    DossierSide, DossierSignatureView, SigningClientType, SigningFile, SigningFileVerdict, SigningLegalCheck,
-    SigningOutcome, SigningRequestCreate, SigningRequestCreated, SigningSigner, SigningTrust, SigningVerdict,
-    TenantRole,
+    DossierSide, DossierSignatureView, SigningClientType, SigningFile, SigningFileVerdict,
+    SigningLegalCheck, SigningOutcome, SigningRequestCreate, SigningRequestCreated, SigningSigner,
+    SigningTrust, SigningVerdict, TenantRole,
 };
 use kentos_imza_domain::{BatchResult, PayloadFile, PayloadPackage, SignedRequestPayload};
 
@@ -67,23 +67,43 @@ impl std::fmt::Debug for Signer {
 impl Signer {
     /// From the key as configured (PEM, base64 PKCS#8 DER or a base64 32-byte seed); the default issuer
     /// `kentos-server` and audience `kentos-imza` when not given.
-    pub fn from_config(key: &str, issuer: Option<&str>, audience: Option<&str>) -> Result<Self, String> {
-        let key = ServerKey::from_config(key.trim()).map_err(|e| format!("KENTOS_IMZA_SIGNING_KEY okunamadı: {e}"))?;
+    pub fn from_config(
+        key: &str,
+        issuer: Option<&str>,
+        audience: Option<&str>,
+    ) -> Result<Self, String> {
+        let key = ServerKey::from_config(key.trim())
+            .map_err(|e| format!("KENTOS_IMZA_SIGNING_KEY okunamadı: {e}"))?;
         let name = |v: Option<&str>, default: &str| {
-            v.map(str::trim).filter(|s| !s.is_empty()).unwrap_or(default).to_owned()
+            v.map(str::trim)
+                .filter(|s| !s.is_empty())
+                .unwrap_or(default)
+                .to_owned()
         };
-        Ok(Self { key, issuer: name(issuer, DEFAULT_ISSUER), audience: name(audience, DEFAULT_AUDIENCE) })
+        Ok(Self {
+            key,
+            issuer: name(issuer, DEFAULT_ISSUER),
+            audience: name(audience, DEFAULT_AUDIENCE),
+        })
     }
 
     /// A fresh key, for tests.
     pub fn generated() -> Result<Self, String> {
         let key = ServerKey::generate().map_err(|e| e.to_string())?;
-        Ok(Self { key, issuer: DEFAULT_ISSUER.into(), audience: DEFAULT_AUDIENCE.into() })
+        Ok(Self {
+            key,
+            issuer: DEFAULT_ISSUER.into(),
+            audience: DEFAULT_AUDIENCE.into(),
+        })
     }
 
     /// `GET /v1/signing/trust`.
     pub fn trust(&self) -> SigningTrust {
-        SigningTrust { public_key: self.key.public_base64(), issuer: self.issuer.clone(), audience: self.audience.clone() }
+        SigningTrust {
+            public_key: self.key.public_base64(),
+            issuer: self.issuer.clone(),
+            audience: self.audience.clone(),
+        }
     }
 }
 
@@ -97,7 +117,11 @@ pub fn off() -> AppError {
 }
 
 fn conflict(message: impl Into<String>) -> AppError {
-    AppError::Conflict { message: message.into(), conflicts: Vec::new(), revision: None }
+    AppError::Conflict {
+        message: message.into(),
+        conflicts: Vec::new(),
+        revision: None,
+    }
 }
 
 /// The SHA-384 of a stored file, lowercase hex, read in pieces.
@@ -112,11 +136,17 @@ async fn digest_of(blobs: &Blobs, key: &str) -> AppResult<String> {
         }
         hasher.update(&buf[..n]);
     }
-    Ok(hasher.finalize().iter().map(|b| format!("{b:02x}")).collect())
+    Ok(hasher
+        .finalize()
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect())
 }
 
 fn utc(t: OffsetDateTime) -> String {
-    t.to_offset(time::UtcOffset::UTC).format(&Rfc3339).unwrap_or_default()
+    t.to_offset(time::UtcOffset::UTC)
+        .format(&Rfc3339)
+        .unwrap_or_default()
 }
 
 /// Whether `held`'s caller signs its files: the professional's side who prepares it, the municipality's editors and
@@ -131,7 +161,13 @@ fn may_sign(held: &Held) -> AppResult<()> {
         Party::Member(r) => r >= TenantRole::Editor,
         p => p.works_for_professional(),
     };
-    if ok { Ok(()) } else { Err(AppError::forbidden("Belgeleri e-imzalamak düzenleyici ve üstünün işidir.")) }
+    if ok {
+        Ok(())
+    } else {
+        Err(AppError::forbidden(
+            "Belgeleri e-imzalamak düzenleyici ve üstünün işidir.",
+        ))
+    }
 }
 
 type FileRow = (Uuid, String, String, i64, String, String);
@@ -155,7 +191,10 @@ pub async fn request(
         }
     }
     if ids.is_empty() || ids.len() > MAX_FILES {
-        return Err(AppError::invalid_at("fileIds", format!("İmzalanacak 1–{MAX_FILES} belge seçin.")));
+        return Err(AppError::invalid_at(
+            "fileIds",
+            format!("İmzalanacak 1–{MAX_FILES} belge seçin."),
+        ));
     }
     let mut tx = db.scoped(user_scope(actor)).await?;
     let held = hold(&mut tx, actor, dossier, false).await?;
@@ -170,7 +209,9 @@ pub async fn request(
     .await?;
     tx.commit().await?;
     if rows.len() != ids.len() {
-        return Err(AppError::not_found("Seçilen belgelerden biri bu dosyada yok ya da göremiyorsunuz."));
+        return Err(AppError::not_found(
+            "Seçilen belgelerden biri bu dosyada yok ya da göremiyorsunuz.",
+        ));
     }
     let by_id: BTreeMap<Uuid, &FileRow> = rows.iter().map(|r| (r.0, r)).collect();
     let mut files = Vec::new();
@@ -188,7 +229,9 @@ pub async fn request(
             signing_required: true,
         });
     }
-    let now = OffsetDateTime::now_utc().replace_nanosecond(0).unwrap_or_else(|_| OffsetDateTime::now_utc());
+    let now = OffsetDateTime::now_utc()
+        .replace_nanosecond(0)
+        .unwrap_or_else(|_| OffsetDateTime::now_utc());
     let expires = now + REQUEST_LIFETIME;
     let transaction = Uuid::now_v7();
     let batch = Uuid::new_v4();
@@ -220,8 +263,11 @@ pub async fn request(
         issuer: signer.issuer.clone(),
         audience: signer.audience.clone(),
     };
-    let signed_request = issue(&payload, &signer.key, None)
-        .map_err(|e| AppError::Storage(std::io::Error::other(format!("imza isteği imzalanamadı: {e}"))))?;
+    let signed_request = issue(&payload, &signer.key, None).map_err(|e| {
+        AppError::Storage(std::io::Error::other(format!(
+            "imza isteği imzalanamadı: {e}"
+        )))
+    })?;
     let mut tx = db.scoped(user_scope(actor)).await?;
     sqlx::query(
         "insert into kentos.signing_request (id, batch_id, dossier_id, requested_by, requested_by_name, side,
@@ -258,7 +304,13 @@ pub async fn request(
     })
 }
 
-type RequestRow = (Uuid, String, Json<SignedRequestPayload>, OffsetDateTime, String);
+type RequestRow = (
+    Uuid,
+    String,
+    Json<SignedRequestPayload>,
+    OffsetDateTime,
+    String,
+);
 
 async fn held_request(tx: &mut Transaction<'static, Postgres>, id: Uuid) -> AppResult<RequestRow> {
     sqlx::query_as(
@@ -292,7 +344,11 @@ fn verdict_of(v: &kentos_imza_signature::delivery::DeliveryVerdict) -> SigningVe
         files: v
             .files
             .iter()
-            .map(|f| SigningFileVerdict { file_id: f.file_id.clone(), verified: f.verified, error: f.error.clone() })
+            .map(|f| SigningFileVerdict {
+                file_id: f.file_id.clone(),
+                verified: f.verified,
+                error: f.error.clone(),
+            })
             .collect(),
         signer: v.signer.as_ref().map(|s| SigningSigner {
             subject: s.subject.clone(),
@@ -323,7 +379,9 @@ pub async fn deliver(
     result: &BatchResult,
 ) -> AppResult<SigningVerdict> {
     if result.transaction_id != transaction.to_string() {
-        return Err(AppError::invalid("Teslim edilen sonuç bu imza isteğine ait değil."));
+        return Err(AppError::invalid(
+            "Teslim edilen sonuç bu imza isteğine ait değil.",
+        ));
     }
     let mut tx = db.scoped(user_scope(actor)).await?;
     let (dossier, state, Json(issued), expires, side) = held_request(&mut tx, transaction).await?;
@@ -355,7 +413,10 @@ pub async fn deliver(
     for (id, key, _) in &stored {
         now_digest.insert(id.to_string(), digest_of(blobs, key).await?);
     }
-    let file_sha: BTreeMap<String, String> = stored.iter().map(|(id, _, sha)| (id.to_string(), sha.clone())).collect();
+    let file_sha: BTreeMap<String, String> = stored
+        .iter()
+        .map(|(id, _, sha)| (id.to_string(), sha.clone()))
+        .collect();
     let verdict = verify_delivery(&issued, result, |id| now_digest.get(id).cloned());
     let answer = verdict_of(&verdict);
     if let (Some(signer), Some(certificate)) = (&verdict.signer, &result.signer) {
@@ -363,10 +424,16 @@ pub async fn deliver(
             let Some(sig) = result.results.iter().find(|r| r.file_id == f.file_id) else {
                 continue;
             };
-            let Some(issued_file) = issued.packages.iter().flat_map(|p| p.files.iter()).find(|x| x.id == f.file_id) else {
+            let Some(issued_file) = issued
+                .packages
+                .iter()
+                .flat_map(|p| p.files.iter())
+                .find(|x| x.id == f.file_id)
+            else {
                 continue;
             };
-            let signed_at = OffsetDateTime::parse(&sig.signature.signed_at, &Rfc3339).unwrap_or_else(|_| OffsetDateTime::now_utc());
+            let signed_at = OffsetDateTime::parse(&sig.signature.signed_at, &Rfc3339)
+                .unwrap_or_else(|_| OffsetDateTime::now_utc());
             sqlx::query(
                 "insert into kentos.dossier_signature (id, dossier_id, file_id, request_id, side, signer_user_id,
                         signer_name, subject, issuer, serial_number, fingerprint_sha256, key_algorithm,
@@ -406,7 +473,11 @@ pub async fn deliver(
     .execute(&mut *tx)
     .await?;
     if verdict.signed > 0 {
-        let subject = verdict.signer.as_ref().map(|s| common_name(&s.subject)).unwrap_or_default();
+        let subject = verdict
+            .signer
+            .as_ref()
+            .map(|s| common_name(&s.subject))
+            .unwrap_or_default();
         record(
             &mut tx,
             dossier,
@@ -457,7 +528,11 @@ type SignatureRow = (
 );
 
 /// `GET /v1/dossiers/{id}/signatures`: the verified signatures on the dossier's files the caller sees.
-pub async fn signatures(db: &Db, actor: &Actor, dossier: Uuid) -> AppResult<Vec<DossierSignatureView>> {
+pub async fn signatures(
+    db: &Db,
+    actor: &Actor,
+    dossier: Uuid,
+) -> AppResult<Vec<DossierSignatureView>> {
     let mut tx = db.scoped(user_scope(actor)).await?;
     hold(&mut tx, actor, dossier, false).await?;
     let rows: Vec<SignatureRow> = sqlx::query_as(
@@ -478,7 +553,11 @@ pub async fn signatures(db: &Db, actor: &Actor, dossier: Uuid) -> AppResult<Vec<
             file_id: r.1.to_string(),
             file_name: r.2,
             round: r.3.and_then(|n| u32::try_from(n).ok()).unwrap_or(0),
-            side: if r.4 == "municipality" { DossierSide::Municipality } else { DossierSide::Professional },
+            side: if r.4 == "municipality" {
+                DossierSide::Municipality
+            } else {
+                DossierSide::Professional
+            },
             signer_name: r.5,
             subject: r.6,
             issuer: r.7,
@@ -503,12 +582,16 @@ mod tests {
     fn a_signer_names_its_key_and_hides_it() {
         let s = Signer::generated().unwrap();
         let t = s.trust();
-        assert_eq!((t.issuer.as_str(), t.audience.as_str()), ("kentos-server", "kentos-imza"));
+        assert_eq!(
+            (t.issuer.as_str(), t.audience.as_str()),
+            ("kentos-server", "kentos-imza")
+        );
         assert_eq!(t.public_key.len(), 44, "standard base64 of 32 bytes");
         let shown = format!("{s:?}");
         assert!(shown.contains(&t.public_key));
         // The same key read back from its PKCS#8 form names the same public key.
-        let again = Signer::from_config(&s.key.private_pkcs8_base64(), Some("  "), Some("başka")).unwrap();
+        let again =
+            Signer::from_config(&s.key.private_pkcs8_base64(), Some("  "), Some("başka")).unwrap();
         assert_eq!(again.trust().public_key, t.public_key);
         assert_eq!(again.trust().audience, "başka");
         assert!(Signer::from_config("anahtar değil", None, None).is_err());
@@ -516,7 +599,10 @@ mod tests {
 
     #[test]
     fn the_timeline_names_the_certificate_s_holder() {
-        assert_eq!(common_name("CN=Ayşe Yılmaz, SERIALNUMBER=1, C=TR"), "Ayşe Yılmaz");
+        assert_eq!(
+            common_name("CN=Ayşe Yılmaz, SERIALNUMBER=1, C=TR"),
+            "Ayşe Yılmaz"
+        );
         assert_eq!(common_name("O=Kurum"), "O=Kurum");
     }
 }

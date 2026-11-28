@@ -116,7 +116,10 @@ fn ran(app: &App) -> bool {
 
 /// The tool taken out into its own window, the platform having made it.
 fn apart(app: &mut App) -> window::Id {
-    let asked = windows(app.update(Message::Windows(Event::Apart(Surface::ProcessingTool, true))));
+    let asked = windows(app.update(Message::Windows(Event::Apart(
+        Surface::ProcessingTool,
+        true,
+    ))));
     let w = app.windows.of(Surface::ProcessingTool).expect("its window");
     assert_eq!(
         asked,
@@ -160,7 +163,10 @@ fn the_tool_window_goes_into_its_own_window_and_comes_back() {
     assert!(!app.selection.is_empty(), "what it made is selected");
 
     // Ana pencereye al: back over the drawing, its window closed, the main window given the keyboard.
-    let back = windows(app.update(Message::Windows(Event::Apart(Surface::ProcessingTool, false))));
+    let back = windows(app.update(Message::Windows(Event::Apart(
+        Surface::ProcessingTool,
+        false,
+    ))));
     assert_eq!(app.dialog, OVER_DRAWING);
     assert!(app.gis.processing.dialog.is_some());
     assert_eq!(back, [Did::Close(id), Did::Focus(main)]);

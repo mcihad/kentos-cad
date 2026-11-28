@@ -123,9 +123,16 @@ fn wall_dimension_inspector_uses_face_offset_moves_one_row_and_preserves_text() 
 fn a_recipes_sheet_scales_and_tight_values_are_set_from_the_inspector() {
     let (mut app, _, member) = wall_dimension_set();
     let shown: Vec<_> = rows(&app).into_iter().flat_map(|(_, rows)| rows).collect();
-    let scales = shown.iter().find(|row| row.label == "Pafta ölçekleri").expect("the sheets row");
+    let scales = shown
+        .iter()
+        .find(|row| row.label == "Pafta ölçekleri")
+        .expect("the sheets row");
     assert_eq!(scales.value, "Yok");
-    assert!(shown.iter().any(|row| row.label == "Sığmayan yazı" && row.value == "Yerinde"));
+    assert!(
+        shown
+            .iter()
+            .any(|row| row.label == "Sığmayan yazı" && row.value == "Yerinde")
+    );
     event(
         &mut app,
         Event::Commit(Field::DimensionSetScales(member), "1:200, 100".into()),
@@ -135,13 +142,20 @@ fn a_recipes_sheet_scales_and_tight_values_are_set_from_the_inspector() {
     let d = dimension_of(&app, member.0);
     assert_eq!(d.annotative.as_deref().map(|a| a.scales.len()), Some(2));
     let shown: Vec<_> = rows(&app).into_iter().flat_map(|(_, rows)| rows).collect();
-    assert!(shown.iter().any(|row| row.label == "Pafta ölçekleri" && row.value == "1:100, 1:200"));
+    assert!(
+        shown
+            .iter()
+            .any(|row| row.label == "Pafta ölçekleri" && row.value == "1:100, 1:200")
+    );
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     event(
         &mut app,
         Event::Commit(Field::DimensionSetScales(member), "1:0.5".into()),
     );
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
     event(
         &mut app,
         Event::DimensionSetValue(member, "tight", "shift".into()),
@@ -157,7 +171,10 @@ fn a_recipes_sheet_scales_and_tight_values_are_set_from_the_inspector() {
     );
     let model = &app.document.as_ref().unwrap().model;
     assert!(model.dimension_sets()[0].scales.is_empty());
-    assert!(dimension_of(&app, member.0).annotative.is_none(), "the representations go with the scales");
+    assert!(
+        dimension_of(&app, member.0).annotative.is_none(),
+        "the representations go with the scales"
+    );
 }
 
 #[test]
@@ -165,7 +182,11 @@ fn wall_dimension_set_selection_is_read_only_and_release_removes_recipe_ownershi
     let (mut app, wall, member) = wall_dimension_set();
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     event(&mut app, Event::DimensionSet(member, "select"));
-    assert_eq!(app.selection.len(), 3, "the openings row's two and the overall row's one");
+    assert_eq!(
+        app.selection.len(),
+        3,
+        "the openings row's two and the overall row's one"
+    );
     assert!(
         rows(&app)
             .iter()

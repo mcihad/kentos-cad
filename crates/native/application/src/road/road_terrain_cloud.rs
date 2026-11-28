@@ -10,9 +10,10 @@
 use std::collections::HashSet;
 
 use kentos_commands::{
-    CLOUD_TERRAIN_PIECE, CloudHeights, CloudReturns, CommandResult, CommandWarning, CreateOperation, CrsPoint, CrsSide,
-    CrsTransform, EntitiesCreate, Entity, EntityGeometry, HeightKind, HeightReference, MOST_CLOUD_TERRAIN_POINTS, NewObject,
-    PointCloudEntity, PointPart, SurfaceCloudDef, SurfaceSources, TerrainSurfaceDef, TerrainsFromCloud,
+    CLOUD_TERRAIN_PIECE, CloudHeights, CloudReturns, CommandResult, CommandWarning,
+    CreateOperation, CrsPoint, CrsSide, CrsTransform, EntitiesCreate, Entity, EntityGeometry,
+    HeightKind, HeightReference, MOST_CLOUD_TERRAIN_POINTS, NewObject, PointCloudEntity, PointPart,
+    SurfaceCloudDef, SurfaceSources, TerrainSurfaceDef, TerrainsFromCloud,
     TerrainsFromCloudWritten, Vec2,
 };
 use kentos_domain::Document;
@@ -24,7 +25,6 @@ use crate::checks::{self, Stop};
 use crate::codes;
 use crate::pointcloud_areas::{Place, Scan, place_in, ring_box};
 use crate::road_terrains::{self as common, fail};
-
 
 /// Classes that are not the ground and are never merged into it: a bridge deck and an overhead structure.
 const NOT_GROUND: [u8; 2] = [17, 19];
@@ -51,15 +51,27 @@ fn invalid(message: String, path: &str) -> Stop {
 /// An area's outer ring: a polygon's, or a closed polyline's, of straight edges.
 fn area_ring(doc: &Document, uid: &str) -> Result<Vec<P>, Stop> {
     let names = [uid.to_owned()];
-    let named = checks::named(doc, &names).map_err(|_| invalid(format!("Alan “{uid}” çizimde yok."), "area"))?;
-    let (_, _, e, _) = named.into_iter().next().ok_or_else(|| invalid(format!("Alan “{uid}” çizimde yok."), "area"))?;
+    let named = checks::named(doc, &names)
+        .map_err(|_| invalid(format!("Alan “{uid}” çizimde yok."), "area"))?;
+    let (_, _, e, _) = named
+        .into_iter()
+        .next()
+        .ok_or_else(|| invalid(format!("Alan “{uid}” çizimde yok."), "area"))?;
     let path = match e {
         Entity::Polygon(p) => p,
         Entity::Polyline(p) if p.closed => p,
-        _ => return Err(invalid("Alan kapalı bir çoklu çizgi ya da alan olmalı.".into(), "area")),
+        _ => {
+            return Err(invalid(
+                "Alan kapalı bir çoklu çizgi ya da alan olmalı.".into(),
+                "area",
+            ));
+        }
     };
     if path.bulges.iter().flatten().any(|b| *b != 0.0) {
-        return Err(invalid("Alanın kenarları düz olmalı; yaylı kenar alınmaz.".into(), "area"));
+        return Err(invalid(
+            "Alanın kenarları düz olmalı; yaylı kenar alınmaz.".into(),
+            "area",
+        ));
     }
     if path.pts.len() < 3 {
         return Err(invalid("Alanın en az üç köşesi olmalı.".into(), "area"));
@@ -72,31 +84,43 @@ fn ask(doc: &Document, input: &TerrainsFromCloud) -> Result<Asked, Stop> {
     if input.clouds.is_empty() {
         return Err(invalid("En az bir nokta bulutu verin.".into(), "clouds"));
     }
-    let chosen = crate::pointclouds::clouds(doc, &input.clouds).map_err(|s| match s {
-        Stop::Failed(mut e) => {
-            e.path = e.path.map(|p| p.replacen("uids", "clouds", 1));
-            Stop::Failed(e)
-        }
-        other => other,
-    })?
-    .into_iter()
-    .map(|(u, c)| (u, c.clone()))
-    .collect::<Vec<_>>();
+    let chosen = crate::pointclouds::clouds(doc, &input.clouds)
+        .map_err(|s| match s {
+            Stop::Failed(mut e) => {
+                e.path = e.path.map(|p| p.replacen("uids", "clouds", 1));
+                Stop::Failed(e)
+            }
+            other => other,
+        })?
+        .into_iter()
+        .map(|(u, c)| (u, c.clone()))
+        .collect::<Vec<_>>();
     if input.classes.is_empty() {
-        return Err(invalid("En az bir sınıf verin (ASPRS'de 2 zemin).".into(), "classes"));
+        return Err(invalid(
+            "En az bir sınıf verin (ASPRS'de 2 zemin).".into(),
+            "classes",
+        ));
     }
     let mut classes = input.classes.clone();
     classes.sort_unstable();
     classes.dedup();
     if let Some(c) = classes.iter().find(|c| NOT_GROUND.contains(c)) {
-        let what = if *c == 17 { "köprü tabliyesi (17)" } else { "üst yapı (19)" };
+        let what = if *c == 17 {
+            "köprü tabliyesi (17)"
+        } else {
+            "üst yapı (19)"
+        };
         return Err(fail(
             codes::CLOUD_CLASS_NOT_GROUND,
             format!("Sınıf {what} zemin değil; yer yüzeyiyle birleştirilmez. Sınıflardan çıkarın."),
             "classes",
         ));
     }
-    let rule = Thinning { cell: input.cell, z_tolerance: input.z_tolerance, near: input.near };
+    let rule = Thinning {
+        cell: input.cell,
+        z_tolerance: input.z_tolerance,
+        near: input.near,
+    };
     if let Err(e) = Thinner::new(rule.clone(), &[]) {
         let path = match e {
             cloud_ground::ThinningError::Cell => "cell",
@@ -108,7 +132,11 @@ fn ask(doc: &Document, input: &TerrainsFromCloud) -> Result<Asked, Stop> {
     let own = common::surfaces(doc);
     let (list, at, new) = match (&input.surface, &input.name) {
         (Some(_), Some(_)) | (None, None) => {
-            return Err(invalid("Ya surface (projedeki yüzey) ya da name (yeni yüzey) verin, ikisini birden değil.".into(), "surface"));
+            return Err(invalid(
+                "Ya surface (projedeki yüzey) ya da name (yeni yüzey) verin, ikisini birden değil."
+                    .into(),
+                "surface",
+            ));
         }
         (Some(s), None) => {
             if !input.breaklines.is_empty() || input.boundary.is_some() {
@@ -119,7 +147,10 @@ fn ask(doc: &Document, input: &TerrainsFromCloud) -> Result<Asked, Stop> {
             (own.to_vec(), at, false)
         }
         (None, Some(name)) => {
-            let id = (1..).map(|n| format!("t-{n}")).find(|id| own.iter().all(|s| &s.id != id)).unwrap_or_default();
+            let id = (1..)
+                .map(|n| format!("t-{n}"))
+                .find(|id| own.iter().all(|s| &s.id != id))
+                .unwrap_or_default();
             let mut list = own.to_vec();
             list.push(TerrainSurfaceDef {
                 id,
@@ -139,9 +170,17 @@ fn ask(doc: &Document, input: &TerrainsFromCloud) -> Result<Asked, Stop> {
             (list, at, true)
         }
     };
-    let ring = input.area.as_deref().map(|a| area_ring(doc, a)).transpose()?;
+    let ring = input
+        .area
+        .as_deref()
+        .map(|a| area_ring(doc, a))
+        .transpose()?;
     let mut warnings = checks::layer(doc, &input.layer_id)?;
-    let above: Vec<String> = classes.iter().filter(|c| ABOVE_GROUND.contains(c)).map(u8::to_string).collect();
+    let above: Vec<String> = classes
+        .iter()
+        .filter(|c| ABOVE_GROUND.contains(c))
+        .map(u8::to_string)
+        .collect();
     if !above.is_empty() {
         warnings.push(CommandWarning {
             code: codes::CLOUD_CLASS_ABOVE_GROUND.into(),
@@ -152,7 +191,16 @@ fn ask(doc: &Document, input: &TerrainsFromCloud) -> Result<Asked, Stop> {
             path: Some("classes".into()),
         });
     }
-    Ok(Asked { chosen, ring, classes, rule, list, at, new, warnings })
+    Ok(Asked {
+        chosen,
+        ring,
+        classes,
+        rule,
+        list,
+        at,
+        new,
+        warnings,
+    })
 }
 
 /// Whether a record's return is one asked.
@@ -176,9 +224,15 @@ fn scan(
 ) -> Result<u64, Stop> {
     let boxes = match &a.ring {
         Some(r) => vec![ring_box(r)],
-        None => vec![[f64::NEG_INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::INFINITY]],
+        None => vec![[
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+            f64::INFINITY,
+            f64::INFINITY,
+        ]],
     };
-    let chosen: Vec<(String, &PointCloudEntity)> = a.chosen.iter().map(|(u, c)| (u.clone(), c)).collect();
+    let chosen: Vec<(String, &PointCloudEntity)> =
+        a.chosen.iter().map(|(u, c)| (u.clone(), c)).collect();
     let run = Scan {
         doc,
         drawing: input.drawing.as_deref(),
@@ -197,7 +251,13 @@ fn scan(
             return;
         }
         if let Some(r) = &a.ring
-            && place_in(r, P { x: s.xyz[0], y: s.xyz[1] }) == Place::Outside
+            && place_in(
+                r,
+                P {
+                    x: s.xyz[0],
+                    y: s.xyz[1],
+                },
+            ) == Place::Outside
         {
             return;
         }
@@ -213,11 +273,19 @@ fn objects_of(thinned: &Thinned) -> Vec<NewObject> {
         .chunks(CLOUD_TERRAIN_PIECE)
         .map(|piece| {
             let first = piece[0].1;
-            let parts: Vec<PointPart> =
-                piece[1..].iter().map(|(_, p)| PointPart { p: Vec2 { x: p[0], y: p[1] }, z: Some(p[2]) }).collect();
+            let parts: Vec<PointPart> = piece[1..]
+                .iter()
+                .map(|(_, p)| PointPart {
+                    p: Vec2 { x: p[0], y: p[1] },
+                    z: Some(p[2]),
+                })
+                .collect();
             NewObject {
                 geometry: EntityGeometry::Point {
-                    p: Vec2 { x: first[0], y: first[1] },
+                    p: Vec2 {
+                        x: first[0],
+                        y: first[1],
+                    },
                     z: Some(first[2]),
                     parts: (!parts.is_empty()).then_some(parts),
                 },
@@ -240,19 +308,40 @@ fn objects_of(thinned: &Thinned) -> Vec<NewObject> {
 /// The breaklines' paths in plan of `def` now.
 fn breaklines_of(doc: &Document, def: &TerrainSurfaceDef) -> Vec<Vec<[f64; 2]>> {
     let made = common::make(doc, def);
-    made.gathered.input.breaklines.iter().map(|b| b.points.iter().map(|p| [p[0], p[1]]).collect()).collect()
+    made.gathered
+        .input
+        .breaklines
+        .iter()
+        .map(|b| b.points.iter().map(|p| [p[0], p[1]]).collect())
+        .collect()
 }
 
 /// The heights of `points` turned from the clouds' (`from`, as the call said them) into the project's
 /// (docs/adr/1032), as `cad.crs.transform` turns them: the project's horizontal system on both sides, the geoid models
 /// between. With `dry`, points the grids do not reach are not refused (a trial before the scan).
-fn turned(doc: &Document, from: &HeightReference, points: &mut [[f64; 3]], dry: bool) -> Result<(), Stop> {
+fn turned(
+    doc: &Document,
+    from: &HeightReference,
+    points: &mut [[f64; 3]],
+    dry: bool,
+) -> Result<(), Stop> {
     if points.is_empty() {
         return Ok(());
     }
     let input = CrsTransform {
-        points: points.iter().map(|p| CrsPoint { x: p[0], y: p[1], z: Some(p[2]) }).collect(),
-        from: Some(CrsSide { srid: None, heights: Some(from.clone()), epoch: None }),
+        points: points
+            .iter()
+            .map(|p| CrsPoint {
+                x: p[0],
+                y: p[1],
+                z: Some(p[2]),
+            })
+            .collect(),
+        from: Some(CrsSide {
+            srid: None,
+            heights: Some(from.clone()),
+            epoch: None,
+        }),
         to: None,
         uncertainty: None,
         velocity: None,
@@ -281,7 +370,9 @@ fn turned(doc: &Document, from: &HeightReference, points: &mut [[f64; 3]], dry: 
             }
             Ok(())
         }
-        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => {
             Err(fail(&error.code, words(&error.message), "heights"))
         }
         CommandResult::Queued { .. } | CommandResult::Cancelled => Err(Stop::Cancelled),
@@ -290,15 +381,28 @@ fn turned(doc: &Document, from: &HeightReference, points: &mut [[f64; 3]], dry: 
 
 /// The heights the call says are the clouds' (docs/adr/1032), checked before the clouds are read: a known kind, the
 /// project's heights known, the grids the turn needs at hand (tried on the clouds' centre).
-fn stated(doc: &Document, a: &Asked, heights: Option<&HeightReference>) -> Result<Option<CloudHeights>, Stop> {
+fn stated(
+    doc: &Document,
+    a: &Asked,
+    heights: Option<&HeightReference>,
+) -> Result<Option<CloudHeights>, Stop> {
     let Some(h) = heights else { return Ok(None) };
     if h.kind == HeightKind::Unknown {
         return Err(invalid("Bulutun kotlarının ne olduğunu söyleyin (elipsoit ya da ortometrik); bilinmiyorsa heights'ı bırakın.".into(), "heights"));
     }
     if let Some((at, why)) = h.problem() {
-        return Err(fail(codes::INVALID_HEIGHTS, format!("Bulutun kotları: {why}."), &format!("heights.{at}")));
+        return Err(fail(
+            codes::INVALID_HEIGHTS,
+            format!("Bulutun kotları: {why}."),
+            &format!("heights.{at}"),
+        ));
     }
-    let Some(project) = doc.settings().heights.clone().filter(|p| crate::road_heights::System::of_ref(p).is_some()) else {
+    let Some(project) = doc
+        .settings()
+        .heights
+        .clone()
+        .filter(|p| crate::road_heights::System::of_ref(p).is_some())
+    else {
         return Err(fail(
             codes::HEIGHTS_UNKNOWN,
             "Bulutun kotları projenin kotlarına çevrilir; projenin kotlarının düşey sistemi söylenmemiş. Proje ayarları › Kotlar'da seçin.".into(),
@@ -309,13 +413,25 @@ fn stated(doc: &Document, a: &Asked, heights: Option<&HeightReference>) -> Resul
         .chosen
         .iter()
         .take(1)
-        .map(|(_, c)| [(c.cloud.bounds[0] + c.cloud.bounds[3]) / 2.0, (c.cloud.bounds[1] + c.cloud.bounds[4]) / 2.0, 0.0])
+        .map(|(_, c)| {
+            [
+                (c.cloud.bounds[0] + c.cloud.bounds[3]) / 2.0,
+                (c.cloud.bounds[1] + c.cloud.bounds[4]) / 2.0,
+                0.0,
+            ]
+        })
         .collect();
     turned(doc, h, &mut centre.clone(), true)?;
-    Ok(Some(CloudHeights { from: h.clone(), to: project }))
+    Ok(Some(CloudHeights {
+        from: h.clone(),
+        to: project,
+    }))
 }
 
-fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResult<TerrainsFromCloudWritten> {
+fn run(
+    cx: &mut ExecutionContext<'_>,
+    input: &TerrainsFromCloud,
+) -> CommandResult<TerrainsFromCloudWritten> {
     let a = match ask(cx.doc, input) {
         Ok(a) => a,
         Err(stop) => return stop.into(),
@@ -344,7 +460,11 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
         Ok(v) => v,
         Err(stop) => return stop.into(),
     };
-    let lines = if a.rule.near.is_some() { breaklines_of(cx.doc, &a.list[a.at]) } else { Vec::new() };
+    let lines = if a.rule.near.is_some() {
+        breaklines_of(cx.doc, &a.list[a.at])
+    } else {
+        Vec::new()
+    };
     let mut thinner = match Thinner::new(a.rule.clone(), &lines) {
         Ok(t) => t,
         Err(e) => return invalid(format!("Seyreltme: {e}."), "cell").into(),
@@ -357,7 +477,9 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
     // No record read at all because the sources could not be read (UR2-039: a linked LAZ not beside the drawing was
     // said to have no ground points): the file is named, the classes are not blamed.
     if scanned == 0
-        && let Some(unread) = warnings.iter().find(|w| w.code == codes::CLOUD_SOURCE_UNREADABLE)
+        && let Some(unread) = warnings
+            .iter()
+            .find(|w| w.code == codes::CLOUD_SOURCE_UNREADABLE)
     {
         return fail(
             codes::FILE_NOT_FOUND,
@@ -388,7 +510,10 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
         )
         .into();
     }
-    let ring: Option<Vec<[f64; 2]>> = a.ring.as_ref().map(|r| r.iter().map(|p| [p.x, p.y]).collect());
+    let ring: Option<Vec<[f64; 2]>> = a
+        .ring
+        .as_ref()
+        .map(|r| r.iter().map(|p| [p.x, p.y]).collect());
     let Some(cover) = cloud_ground::coverage(&thinned, a.rule.cell, ring.as_deref()) else {
         return Stop::Cancelled.into();
     };
@@ -431,7 +556,9 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
     def.clouds.retain(|c| c.layer != input.layer_id);
     def.clouds.push(record.clone());
     list[a.at] = def.clone();
-    if let Err(stop) = common::judged(&list, a.at, "").and_then(|()| checks::revision(cx.doc, input.expected_revision.as_deref())) {
+    if let Err(stop) = common::judged(&list, a.at, "")
+        .and_then(|()| checks::revision(cx.doc, input.expected_revision.as_deref()))
+    {
         return stop.into();
     }
     let create = EntitiesCreate {
@@ -441,7 +568,10 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
         expected_revision: None,
     };
     let created = match crate::create::write_in(cx, create) {
-        CommandResult::Completed { output, warnings: w } => {
+        CommandResult::Completed {
+            output,
+            warnings: w,
+        } => {
             for x in w {
                 if !warnings.iter().any(|y| y.code == x.code) {
                     warnings.push(x);
@@ -509,13 +639,19 @@ fn run(cx: &mut ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResul
 /// Checks `input` against the document, reading no cloud.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResult<()> {
     match ask(cx.doc, input) {
-        Ok(a) => CommandResult::Completed { output: (), warnings: a.warnings },
+        Ok(a) => CommandResult::Completed {
+            output: (),
+            warnings: a.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What execute would write now, on a reading copy; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResult<TerrainsFromCloudWritten> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &TerrainsFromCloud,
+) -> CommandResult<TerrainsFromCloudWritten> {
     let mut copy = cx.doc.reading_copy();
     let mut planned = run(&mut ExecutionContext::new(&mut copy), input);
     if let CommandResult::Completed { output, .. } = &mut planned {
@@ -525,7 +661,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsFromCloud) -> CommandResu
 }
 
 /// Writes the points (one undo step) and the surface's definition (a setting).
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsFromCloud) -> CommandResult<TerrainsFromCloudWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsFromCloud,
+) -> CommandResult<TerrainsFromCloudWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_TERRAINS_FROM_CLOUD,

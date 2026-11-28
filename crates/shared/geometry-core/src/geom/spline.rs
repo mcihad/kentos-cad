@@ -57,7 +57,10 @@ fn segment_distance(p: Vec2, a: Vec2, c: Vec2) -> f64 {
     let t = if len2 == 0.0 {
         0.0
     } else {
-        js_min(1.0, js_max(0.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2))
+        js_min(
+            1.0,
+            js_max(0.0, ((p.x - a.x) * dx + (p.y - a.y) * dy) / len2),
+        )
     };
     js_hypot(p.x - (a.x + dx * t), p.y - (a.y + dy * t))
 }
@@ -91,8 +94,14 @@ pub fn catmull_rom_in_box(
         pts[i as usize]
     };
     let near = |a: Vec2, c: Vec2, m: Vec2, far: f64| {
-        let lo = Vec2::new(js_min(js_min(a.x, c.x), m.x) - far, js_min(js_min(a.y, c.y), m.y) - far);
-        let hi = Vec2::new(js_max(js_max(a.x, c.x), m.x) + far, js_max(js_max(a.y, c.y), m.y) + far);
+        let lo = Vec2::new(
+            js_min(js_min(a.x, c.x), m.x) - far,
+            js_min(js_min(a.y, c.y), m.y) - far,
+        );
+        let hi = Vec2::new(
+            js_max(js_max(a.x, c.x), m.x) + far,
+            js_max(js_max(a.y, c.y), m.y) + far,
+        );
         !(hi.x < b.min_x || lo.x > b.max_x || hi.y < b.min_y || lo.y > b.max_y)
     };
     #[allow(clippy::too_many_arguments)]
@@ -127,7 +136,11 @@ pub fn catmull_rom_in_box(
         while s < per_span {
             let a = eval(s);
             out.push(a);
-            let end = if s + 1.0 < per_span { eval(s + 1.0) } else { p[2] };
+            let end = if s + 1.0 < per_span {
+                eval(s + 1.0)
+            } else {
+                p[2]
+            };
             halve(&eval, &near, tol, (s, a), (s + 1.0, end), 0, &mut out);
             s += 1.0;
         }
@@ -287,16 +300,41 @@ mod tests {
     /// 4 096-step outline stands in for it), and every outline point kept.
     #[test]
     fn a_spline_in_a_box_is_round_to_the_box_s_tolerance() {
-        let pts = [Vec2::new(0.0, 0.0), Vec2::new(3.0, 2.0), Vec2::new(6.0, -1.0), Vec2::new(9.0, 1.0)];
-        let all = crate::geometry::Bounds { min_x: -1e9, min_y: -1e9, max_x: 1e9, max_y: 1e9 };
-        assert_eq!(catmull_rom_in_box(&pts, false, 16.0, &all, 1.0), catmull_rom(&pts, false, 16.0));
-        let b = crate::geometry::Bounds { min_x: 4.0, min_y: -1.0, max_x: 4.2, max_y: 1.5 };
+        let pts = [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(3.0, 2.0),
+            Vec2::new(6.0, -1.0),
+            Vec2::new(9.0, 1.0),
+        ];
+        let all = crate::geometry::Bounds {
+            min_x: -1e9,
+            min_y: -1e9,
+            max_x: 1e9,
+            max_y: 1e9,
+        };
+        assert_eq!(
+            catmull_rom_in_box(&pts, false, 16.0, &all, 1.0),
+            catmull_rom(&pts, false, 16.0)
+        );
+        let b = crate::geometry::Bounds {
+            min_x: 4.0,
+            min_y: -1.0,
+            max_x: 4.2,
+            max_y: 1.5,
+        };
         let round = catmull_rom_in_box(&pts, false, 16.0, &b, 1e-7);
         let outline = catmull_rom(&pts, false, 16.0);
         assert!(round.len() > outline.len());
-        assert!(outline.iter().all(|p| round.contains(p)), "every outline point kept");
+        assert!(
+            outline.iter().all(|p| round.contains(p)),
+            "every outline point kept"
+        );
         let fine = catmull_rom(&pts, false, 4096.0);
-        let off = |p: Vec2| fine.windows(2).map(|s| segment_distance(p, s[0], s[1])).fold(f64::INFINITY, js_min);
+        let off = |p: Vec2| {
+            fine.windows(2)
+                .map(|s| segment_distance(p, s[0], s[1]))
+                .fold(f64::INFINITY, js_min)
+        };
         for s in round.windows(2) {
             let m = Vec2::new(0.5 * (s[0].x + s[1].x), 0.5 * (s[0].y + s[1].y));
             if m.x >= b.min_x && m.x <= b.max_x && m.y >= b.min_y && m.y <= b.max_y {

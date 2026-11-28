@@ -43,8 +43,10 @@ const SHAFT: usize = 7;
 const OTHER: usize = 8;
 
 /// The colours of the values a scheme takes as written, in turn.
-const PALETTE: [&str; 10] =
-    ["#8DD3C7", "#FFED6F", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#CCEBC5", "#FCCDE5", "#BC80BD", "#E5C494"];
+const PALETTE: [&str; 10] = [
+    "#8DD3C7", "#FFED6F", "#BEBADA", "#FB8072", "#80B1D3", "#FDB462", "#CCEBC5", "#FCCDE5",
+    "#BC80BD", "#E5C494",
+];
 /// Bağımsız bölüm's common areas and outdoor areas.
 const COMMON: &str = "#D9D9D9";
 const OUTDOOR_AREA: &str = "#B3DE69";
@@ -94,7 +96,10 @@ fn group(s: &SpaceFields) -> Option<usize> {
         return Some(PASSAGE);
     }
     let words = room_names::words(name, usage);
-    OUTDOOR_WORDS.iter().any(|w| room_names::has(&words, w)).then_some(OUTDOOR)
+    OUTDOOR_WORDS
+        .iter()
+        .any(|w| room_names::has(&words, w))
+        .then_some(OUTDOOR)
 }
 
 /// A use as written, when one is (its words trimmed).
@@ -119,43 +124,76 @@ impl<'a> Plan<'a> {
                     && group(&s.space).is_none()
                     && let Some(u) = written_use(&s.space)
                 {
-                    uses.entry(room_names::fold(u)).or_insert_with(|| (0, u.to_owned()));
+                    uses.entry(room_names::fold(u))
+                        .or_insert_with(|| (0, u.to_owned()));
                 }
             }
             for (i, v) in uses.values_mut().enumerate() {
                 v.0 = i;
             }
         }
-        Plan { scheme, program, uses }
+        Plan {
+            scheme,
+            program,
+            uses,
+        }
     }
 
     fn category(&self, s: &SpaceFields) -> Category {
         match self.scheme {
             ColorScheme::Usage => {
                 if let Some(g) = group(s) {
-                    return Category { order: (0, g), label: GROUPS[g].0.to_owned(), color: Some(GROUPS[g].1) };
+                    return Category {
+                        order: (0, g),
+                        label: GROUPS[g].0.to_owned(),
+                        color: Some(GROUPS[g].1),
+                    };
                 }
                 match written_use(s) {
                     Some(u) => {
-                        let (i, label) = self.uses.get(&room_names::fold(u)).cloned().unwrap_or_else(|| (0, u.to_owned()));
-                        Category { order: (1, i), label, color: Some(PALETTE[i % PALETTE.len()]) }
+                        let (i, label) = self
+                            .uses
+                            .get(&room_names::fold(u))
+                            .cloned()
+                            .unwrap_or_else(|| (0, u.to_owned()));
+                        Category {
+                            order: (1, i),
+                            label,
+                            color: Some(PALETTE[i % PALETTE.len()]),
+                        }
                     }
-                    None => Category { order: (2, 0), label: GROUPS[OTHER].0.to_owned(), color: Some(GROUPS[OTHER].1) },
+                    None => Category {
+                        order: (2, 0),
+                        label: GROUPS[OTHER].0.to_owned(),
+                        color: Some(GROUPS[OTHER].1),
+                    },
                 }
             }
             ColorScheme::Unit => {
                 let program = self.program;
-                let unit = s.unit.as_deref().and_then(|id| program.unit(id)).map(|u| match u.kind {
-                    UnitKind::Annex => u.annex_of.as_deref().and_then(|o| program.unit(o)).unwrap_or(u),
-                    _ => u,
-                });
+                let unit =
+                    s.unit
+                        .as_deref()
+                        .and_then(|id| program.unit(id))
+                        .map(|u| match u.kind {
+                            UnitKind::Annex => u
+                                .annex_of
+                                .as_deref()
+                                .and_then(|o| program.unit(o))
+                                .unwrap_or(u),
+                            _ => u,
+                        });
                 match unit {
-                    Some(u) if u.kind == UnitKind::Common => {
-                        Category { order: (1, 0), label: "Ortak alanlar".to_owned(), color: Some(COMMON) }
-                    }
-                    Some(u) if u.kind == UnitKind::Outdoor => {
-                        Category { order: (2, 0), label: "Dış alanlar".to_owned(), color: Some(OUTDOOR_AREA) }
-                    }
+                    Some(u) if u.kind == UnitKind::Common => Category {
+                        order: (1, 0),
+                        label: "Ortak alanlar".to_owned(),
+                        color: Some(COMMON),
+                    },
+                    Some(u) if u.kind == UnitKind::Outdoor => Category {
+                        order: (2, 0),
+                        label: "Dış alanlar".to_owned(),
+                        color: Some(OUTDOOR_AREA),
+                    },
                     Some(u) => {
                         let i = program
                             .units
@@ -163,13 +201,22 @@ impl<'a> Plan<'a> {
                             .filter(|x| x.kind == UnitKind::Unit)
                             .position(|x| x.id == u.id)
                             .unwrap_or(0);
-                        let label = match u.name.as_deref().map(str::trim).filter(|n| !n.is_empty()) {
+                        let label = match u.name.as_deref().map(str::trim).filter(|n| !n.is_empty())
+                        {
                             Some(name) => format!("{} — {name}", u.number),
                             None => u.number.clone(),
                         };
-                        Category { order: (0, i), label, color: Some(PALETTE[i % PALETTE.len()]) }
+                        Category {
+                            order: (0, i),
+                            label,
+                            color: Some(PALETTE[i % PALETTE.len()]),
+                        }
                     }
-                    None => Category { order: (3, 0), label: "Bölüme atanmamış".to_owned(), color: None },
+                    None => Category {
+                        order: (3, 0),
+                        label: "Bölüme atanmamış".to_owned(),
+                        color: None,
+                    },
                 }
             }
         }
@@ -214,10 +261,17 @@ impl Document {
                 continue;
             }
             let c = plan.category(&s.space);
-            let area = kentos_geometry_core::geom::space::area(&crate::arch_values::core_areas(&s.space.parts));
+            let area = kentos_geometry_core::geom::space::area(&crate::arch_values::core_areas(
+                &s.space.parts,
+            ));
             let row = rows
                 .entry((c.order, c.label.clone()))
-                .or_insert_with(|| Row { label: c.label.clone(), color: c.color, rooms: 0, area: 0.0 });
+                .or_insert_with(|| Row {
+                    label: c.label.clone(),
+                    color: c.color,
+                    rooms: 0,
+                    area: 0.0,
+                });
             row.rooms += 1;
             row.area += area;
         }
@@ -234,10 +288,15 @@ impl Document {
         let leaves = self.layers().leaves();
         let mut rooms = vec![false; leaves.len()];
         let mut other = vec![false; leaves.len()];
-        let place: std::collections::HashMap<&str, usize> =
-            leaves.iter().enumerate().map(|(i, l)| (l.id.as_str(), i)).collect();
+        let place: std::collections::HashMap<&str, usize> = leaves
+            .iter()
+            .enumerate()
+            .map(|(i, l)| (l.id.as_str(), i))
+            .collect();
         for e in self.entities() {
-            let Some(&i) = place.get(e.base().layer_id.as_str()) else { continue };
+            let Some(&i) = place.get(e.base().layer_id.as_str()) else {
+                continue;
+            };
             match e {
                 Entity::Space(_) => rooms[i] = true,
                 Entity::Slab(_) => {}

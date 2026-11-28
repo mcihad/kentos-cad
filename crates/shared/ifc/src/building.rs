@@ -133,16 +133,18 @@ pub fn flat_rings(rings: &[Vec<[f64; 2]>], bulges: &[Vec<f64>]) -> Vec<Vec<[f64;
     rings
         .iter()
         .enumerate()
-        .map(|(i, r)| match bulges.get(i).filter(|b| has_bulges(Some(b))) {
-            Some(b) => {
-                let pts: Vec<Vec2> = r.iter().map(|p| Vec2::new(p[0], p[1])).collect();
-                bulge_path_outline(&pts, Some(b), true, DEFAULT_STEP)
-                    .into_iter()
-                    .map(|p| [p.x, p.y])
-                    .collect()
-            }
-            None => r.clone(),
-        })
+        .map(
+            |(i, r)| match bulges.get(i).filter(|b| has_bulges(Some(b))) {
+                Some(b) => {
+                    let pts: Vec<Vec2> = r.iter().map(|p| Vec2::new(p[0], p[1])).collect();
+                    bulge_path_outline(&pts, Some(b), true, DEFAULT_STEP)
+                        .into_iter()
+                        .map(|p| [p.x, p.y])
+                        .collect()
+                }
+                None => r.clone(),
+            },
+        )
         .collect()
 }
 
@@ -303,7 +305,12 @@ impl Space {
     /// Its body as written: its pieces under a roof, else its prism.
     pub fn shapes(&self) -> Vec<Shape> {
         if self.body.is_empty() {
-            vec![Shape::Prism { rings: self.rings.clone(), bulges: self.bulges.clone(), bottom: self.bottom, top: self.top }]
+            vec![Shape::Prism {
+                rings: self.rings.clone(),
+                bulges: self.bulges.clone(),
+                bottom: self.bottom,
+                top: self.top,
+            }]
         } else {
             self.body.clone()
         }
@@ -601,7 +608,12 @@ impl Zone {
     /// Its body as written: its pieces under a roof, else its prism.
     pub fn shapes(&self) -> Vec<Shape> {
         if self.body.is_empty() {
-            vec![Shape::Prism { rings: self.rings.clone(), bulges: Vec::new(), bottom: self.bottom, top: self.top }]
+            vec![Shape::Prism {
+                rings: self.rings.clone(),
+                bulges: Vec::new(),
+                bottom: self.bottom,
+                top: self.top,
+            }]
         } else {
             self.body.clone()
         }
@@ -681,7 +693,11 @@ impl Writer {
                 let start = pts.len() + 1;
                 pts.push(corner);
                 let bulge = arc(i);
-                let end = if i + 1 == n { 1 } else { start + 1 + usize::from(bulge.is_some()) };
+                let end = if i + 1 == n {
+                    1
+                } else {
+                    start + 1 + usize::from(bulge.is_some())
+                };
                 match bulge {
                     Some(b) => {
                         if straight.len() >= 2 {
@@ -703,9 +719,17 @@ impl Writer {
             if straight.len() >= 2 {
                 segments.push(Self::line_index(&straight));
             }
-            let coords: Vec<String> = pts.iter().map(|p| format!("({},{})", real(p[0]), real(p[1]))).collect();
-            let list = self.st.add(format!("IFCCARTESIANPOINTLIST2D(({}),$)", coords.join(",")));
-            return self.st.add(format!("IFCINDEXEDPOLYCURVE(#{list},({}),.F.)", segments.join(",")));
+            let coords: Vec<String> = pts
+                .iter()
+                .map(|p| format!("({},{})", real(p[0]), real(p[1])))
+                .collect();
+            let list = self
+                .st
+                .add(format!("IFCCARTESIANPOINTLIST2D(({}),$)", coords.join(",")));
+            return self.st.add(format!(
+                "IFCINDEXEDPOLYCURVE(#{list},({}),.F.)",
+                segments.join(",")
+            ));
         }
         let mut pts: Vec<usize> = ring
             .iter()
@@ -730,13 +754,21 @@ impl Writer {
     /// A shape's items: one extrusion an outer ring (with its holes), or a face set.
     fn items(&mut self, shape: &Shape) -> Vec<usize> {
         match shape {
-            Shape::Prism { rings, bulges, bottom, top } => {
+            Shape::Prism {
+                rings,
+                bulges,
+                bottom,
+                top,
+            } => {
                 // Which ring is in which by the arcs' own outline, not their chords; a ring of two points and two
                 // arcs (a circle) is a ring.
                 let all = flat_rings(rings, bulges);
                 let kept: Vec<usize> = (0..rings.len()).filter(|&i| all[i].len() >= 3).collect();
                 let owned: Vec<Vec<[f64; 2]>> = kept.iter().map(|&i| rings[i].clone()).collect();
-                let arcs: Vec<Vec<f64>> = kept.iter().map(|&i| bulges.get(i).cloned().unwrap_or_default()).collect();
+                let arcs: Vec<Vec<f64>> = kept
+                    .iter()
+                    .map(|&i| bulges.get(i).cloned().unwrap_or_default())
+                    .collect();
                 let flat: Vec<Vec<[f64; 2]>> = kept.iter().map(|&i| all[i].clone()).collect();
                 let mut out = Vec::new();
                 for (outer, holes) in nest(&flat) {
@@ -745,8 +777,10 @@ impl Writer {
                         self.st
                             .add(format!("IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#{o})"))
                     } else {
-                        let inner: Vec<usize> =
-                            holes.iter().map(|&h| self.curve(&owned[h], Some(&arcs[h]))).collect();
+                        let inner: Vec<usize> = holes
+                            .iter()
+                            .map(|&h| self.curve(&owned[h], Some(&arcs[h])))
+                            .collect();
                         self.st.add(format!(
                             "IFCARBITRARYPROFILEDEFWITHVOIDS(.AREA.,$,#{o},({}))",
                             Step::refs(&inner)
@@ -792,53 +826,102 @@ impl Writer {
     /// holes it holds (nested as [`Self::items`] nests them, arcs as their polygons, [`flat_rings`]): the top with the
     /// holes as its voids, the bottom the other way round, the sides outward (an outer ring counterclockwise from above,
     /// a hole clockwise).
-    fn prism_faces(&mut self, rings: &[Vec<[f64; 2]>], bulges: &[Vec<f64>], bottom: f64, top: f64) -> Vec<usize> {
-        let flat: Vec<Vec<[f64; 2]>> = flat_rings(rings, bulges).into_iter().filter(|r| r.len() >= 3).collect();
+    fn prism_faces(
+        &mut self,
+        rings: &[Vec<[f64; 2]>],
+        bulges: &[Vec<f64>],
+        bottom: f64,
+        top: f64,
+    ) -> Vec<usize> {
+        let flat: Vec<Vec<[f64; 2]>> = flat_rings(rings, bulges)
+            .into_iter()
+            .filter(|r| r.len() >= 3)
+            .collect();
         let turned = |r: &[[f64; 2]], ccw: bool| -> Vec<[f64; 2]> {
-            let twice: f64 = (0..r.len()).map(|i| {
-                let (a, b) = (r[i], r[(i + 1) % r.len()]);
-                a[0] * b[1] - b[0] * a[1]
-            }).sum();
-            if (twice > 0.0) == ccw { r.to_vec() } else { r.iter().rev().copied().collect() }
+            let twice: f64 = (0..r.len())
+                .map(|i| {
+                    let (a, b) = (r[i], r[(i + 1) % r.len()]);
+                    a[0] * b[1] - b[0] * a[1]
+                })
+                .sum();
+            if (twice > 0.0) == ccw {
+                r.to_vec()
+            } else {
+                r.iter().rev().copied().collect()
+            }
         };
         let mut out = Vec::new();
         for (outer, holes) in nest(&flat) {
-            let loops: Vec<Vec<[f64; 2]>> =
-                std::iter::once(turned(&flat[outer], true)).chain(holes.iter().map(|&h| turned(&flat[h], false))).collect();
+            let loops: Vec<Vec<[f64; 2]>> = std::iter::once(turned(&flat[outer], true))
+                .chain(holes.iter().map(|&h| turned(&flat[h], false)))
+                .collect();
             // Each loop's corners at the top, then at the bottom.
             let mut coords: Vec<String> = Vec::new();
             let mut starts = Vec::new();
             for l in &loops {
                 starts.push(coords.len());
                 for z in [top, bottom] {
-                    coords.extend(l.iter().map(|p| format!("({},{},{})", real(p[0]), real(p[1]), real(z))));
+                    coords.extend(
+                        l.iter()
+                            .map(|p| format!("({},{},{})", real(p[0]), real(p[1]), real(z))),
+                    );
                 }
             }
-            let list = self.st.add(format!("IFCCARTESIANPOINTLIST3D(({}),$)", coords.join(",")));
-            let at = |k: usize, i: usize, low: bool| starts[k] + if low { loops[k].len() } else { 0 } + i + 1;
-            let words = |idx: &[usize]| idx.iter().map(usize::to_string).collect::<Vec<_>>().join(",");
+            let list = self
+                .st
+                .add(format!("IFCCARTESIANPOINTLIST3D(({}),$)", coords.join(",")));
+            let at = |k: usize, i: usize, low: bool| {
+                starts[k] + if low { loops[k].len() } else { 0 } + i + 1
+            };
+            let words = |idx: &[usize]| {
+                idx.iter()
+                    .map(usize::to_string)
+                    .collect::<Vec<_>>()
+                    .join(",")
+            };
             let mut faces = Vec::new();
             for low in [false, true] {
                 let ring = |k: usize| -> Vec<usize> {
                     let idx: Vec<usize> = (0..loops[k].len()).map(|i| at(k, i, low)).collect();
-                    if low { idx.into_iter().rev().collect() } else { idx }
+                    if low {
+                        idx.into_iter().rev().collect()
+                    } else {
+                        idx
+                    }
                 };
                 let face = if loops.len() == 1 {
                     format!("IFCINDEXEDPOLYGONALFACE(({}))", words(&ring(0)))
                 } else {
-                    let inner: Vec<String> = (1..loops.len()).map(|k| format!("({})", words(&ring(k)))).collect();
-                    format!("IFCINDEXEDPOLYGONALFACEWITHVOIDS(({}),({}))", words(&ring(0)), inner.join(","))
+                    let inner: Vec<String> = (1..loops.len())
+                        .map(|k| format!("({})", words(&ring(k))))
+                        .collect();
+                    format!(
+                        "IFCINDEXEDPOLYGONALFACEWITHVOIDS(({}),({}))",
+                        words(&ring(0)),
+                        inner.join(",")
+                    )
                 };
                 faces.push(self.st.add(face));
             }
             for (k, l) in loops.iter().enumerate() {
                 for i in 0..l.len() {
                     let j = (i + 1) % l.len();
-                    let side = [at(k, i, false), at(k, i, true), at(k, j, true), at(k, j, false)];
-                    faces.push(self.st.add(format!("IFCINDEXEDPOLYGONALFACE(({}))", words(&side))));
+                    let side = [
+                        at(k, i, false),
+                        at(k, i, true),
+                        at(k, j, true),
+                        at(k, j, false),
+                    ];
+                    faces.push(
+                        self.st
+                            .add(format!("IFCINDEXEDPOLYGONALFACE(({}))", words(&side))),
+                    );
                 }
             }
-            out.push(self.st.add(format!("IFCPOLYGONALFACESET(#{list},.T.,({}),$)", Step::refs(&faces))));
+            out.push(self.st.add(format!(
+                "IFCPOLYGONALFACESET(#{list},.T.,({}),$)",
+                Step::refs(&faces)
+            )));
         }
         out
     }
@@ -857,7 +940,12 @@ impl Writer {
             match s {
                 // A body with faces is a tessellation throughout: its prisms closed face sets too, IFC's
                 // representation types not mixing (a ramp's landings beside its sloped runs, docs/adr/8133).
-                Shape::Prism { rings, bulges, bottom, top } if faces => {
+                Shape::Prism {
+                    rings,
+                    bulges,
+                    bottom,
+                    top,
+                } if faces => {
                     items.extend(self.prism_faces(rings, bulges, *bottom, *top));
                 }
                 _ => items.extend(self.items(s)),
@@ -983,7 +1071,9 @@ pub fn write(b: &Building) -> String {
     let angle = st.add("IFCSIUNIT(*,.PLANEANGLEUNIT.,$,.RADIAN.)");
     // The kilogram only where a mass is written (a lift's rated load): a file without one stays as it was.
     let massive = b.elements.iter().any(|e| {
-        e.psets.iter().any(|p| p.props.iter().any(|(_, v)| matches!(v, Value::Mass(_))))
+        e.psets
+            .iter()
+            .any(|p| p.props.iter().any(|(_, v)| matches!(v, Value::Mass(_))))
     });
     let units = if massive {
         let mass = st.add("IFCSIUNIT(*,.MASSUNIT.,.KILO.,.GRAM.)");
@@ -1004,7 +1094,14 @@ pub fn write(b: &Building) -> String {
     // True north as a direction in the model's plane (EK-7 Tablo 7.8); `$`, IFC's default up the y axis, never
     // written in its place when it is not known.
     let north = match b.true_north {
-        Some([x, y]) => format!("#{}", st.add(format!("IFCDIRECTION(({},{}))", crate::step::real(x), crate::step::real(y)))),
+        Some([x, y]) => format!(
+            "#{}",
+            st.add(format!(
+                "IFCDIRECTION(({},{}))",
+                crate::step::real(x),
+                crate::step::real(y)
+            ))
+        ),
         None => "$".to_owned(),
     };
     let model = st.add(format!(
@@ -1061,7 +1158,9 @@ pub fn write(b: &Building) -> String {
                     Writer::opt(&o.identification),
                     text(&o.name)
                 ));
-                w.st.add(format!("IFCPERSONANDORGANIZATION(#{person},#{org},(#{role}))"))
+                w.st.add(format!(
+                    "IFCPERSONANDORGANIZATION(#{person},#{org},(#{role}))"
+                ))
             }
             None => person,
         };
@@ -1133,11 +1232,13 @@ pub fn write(b: &Building) -> String {
     }
     // The elements on their storeys.
     let mut footprint_context = None;
-    let mut footprint = |w: &mut Writer| *footprint_context.get_or_insert_with(|| {
+    let mut footprint = |w: &mut Writer| {
+        *footprint_context.get_or_insert_with(|| {
         w.st.add(format!(
             "IFCGEOMETRICREPRESENTATIONSUBCONTEXT('FootPrint','Model',*,*,*,*,#{model},$,.PLAN_VIEW.,$)"
         ))
-    });
+    })
+    };
     let mut contained: Vec<Vec<usize>> = vec![Vec::new(); b.storeys.len()];
     let mut products = Vec::new();
     let mut materials: Vec<(String, Vec<usize>)> = Vec::new();
@@ -1155,19 +1256,30 @@ pub fn write(b: &Building) -> String {
         let shapes: &[Shape] = match b.view {
             View::DesignTransfer => &e.shapes,
             View::Reference => {
-                let hosted: Vec<&Opening> = b.openings.iter().filter(|o| o.host == i && o.ring.len() >= 2).collect();
+                let hosted: Vec<&Opening> = b
+                    .openings
+                    .iter()
+                    .filter(|o| o.host == i && o.ring.len() >= 2)
+                    .collect();
                 cut = crate::quantities::cut(&e.shapes, &hosted);
                 &cut
             }
         };
-        let shape = w.body(shapes).or_else(|| {
-            let (ring, _) = plan?;
-            if ring.len() < 3 { return None; }
-            let context = footprint(&mut w);
-            let curve = w.curve(ring, None);
-            let rep = w.st.add(format!("IFCSHAPEREPRESENTATION(#{context},'FootPrint','Curve2D',(#{curve}))"));
-            Some(w.st.add(format!("IFCPRODUCTDEFINITIONSHAPE($,$,(#{rep}))")))
-        }).map_or("$".into(), |s| format!("#{s}"));
+        let shape = w
+            .body(shapes)
+            .or_else(|| {
+                let (ring, _) = plan?;
+                if ring.len() < 3 {
+                    return None;
+                }
+                let context = footprint(&mut w);
+                let curve = w.curve(ring, None);
+                let rep = w.st.add(format!(
+                    "IFCSHAPEREPRESENTATION(#{context},'FootPrint','Curve2D',(#{curve}))"
+                ));
+                Some(w.st.add(format!("IFCPRODUCTDEFINITIONSHAPE($,$,(#{rep}))")))
+            })
+            .map_or("$".into(), |s| format!("#{s}"));
         let g = w.id(e.id);
         let head = format!(
             "{g},$,{},{},{},#{place},{shape},{}",
@@ -1223,7 +1335,10 @@ pub fn write(b: &Building) -> String {
     }
     for (parent, parts) in &wholes {
         let g = w.st.derived("aggregates", &[*parent], "parts");
-        w.st.add(format!("IFCRELAGGREGATES({g},$,$,$,#{parent},({}))", Step::refs(parts)));
+        w.st.add(format!(
+            "IFCRELAGGREGATES({g},$,$,$,#{parent},({}))",
+            Step::refs(parts)
+        ));
     }
     // The openings: each voids its wall, a door or a window fills it.
     for o in &b.openings {
@@ -1320,7 +1435,11 @@ pub fn write(b: &Building) -> String {
     }
     // The groups: each its spaces (IfcRelAssignsToGroup); a group with none of its spaces written is left out.
     for gr in &b.groups {
-        let members: Vec<usize> = gr.spaces.iter().filter_map(|i| space_ids.get(*i).copied().flatten()).collect();
+        let members: Vec<usize> = gr
+            .spaces
+            .iter()
+            .filter_map(|i| space_ids.get(*i).copied().flatten())
+            .collect();
         if members.is_empty() {
             continue;
         }
@@ -1340,18 +1459,31 @@ pub fn write(b: &Building) -> String {
     }
     // The rooms' coverings (docs/adr/8127): each room with the coverings that face it, beside their storey's containment.
     for (s, covers) in &b.covers {
-        let Some(space) = space_ids.get(*s).copied().flatten() else { continue };
-        let list: Vec<usize> = covers.iter().filter_map(|k| products.get(*k).copied()).filter(|&n| n != 0).collect();
+        let Some(space) = space_ids.get(*s).copied().flatten() else {
+            continue;
+        };
+        let list: Vec<usize> = covers
+            .iter()
+            .filter_map(|k| products.get(*k).copied())
+            .filter(|&n| n != 0)
+            .collect();
         if list.is_empty() {
             continue;
         }
         let g = w.st.derived("covers", &[space], "");
-        w.st.add(format!("IFCRELCOVERSSPACES({g},$,$,$,#{space},({}))", Step::refs(&list)));
+        w.st.add(format!(
+            "IFCRELCOVERSSPACES({g},$,$,$,#{space},({}))",
+            Step::refs(&list)
+        ));
     }
     // The grids (EK-6 Tablo 6.36; docs/adr/8070 §4, 8169): each axis its tag and its curve, the grid's footprint their
     // curves. A grid on a storey is its storey's, else the building's.
     let mut in_building = Vec::new();
-    for grid in b.grids.iter().filter(|g| !g.u.is_empty() && !g.v.is_empty()) {
+    for grid in b
+        .grids
+        .iter()
+        .filter(|g| !g.u.is_empty() && !g.v.is_empty())
+    {
         let context = footprint(&mut w);
         let parent = grid
             .storey
@@ -1395,9 +1527,8 @@ pub fn write(b: &Building) -> String {
         };
         let u = axes(&mut w, &grid.u);
         let v = axes(&mut w, &grid.v);
-        let set = w
-            .st
-            .add(format!("IFCGEOMETRICCURVESET(({}))", Step::refs(&curves)));
+        let set =
+            w.st.add(format!("IFCGEOMETRICCURVESET(({}))", Step::refs(&curves)));
         let rep = w.st.add(format!(
             "IFCSHAPEREPRESENTATION(#{context},'FootPrint','GeometricCurveSet',(#{set}))"
         ));
@@ -1441,7 +1572,9 @@ pub fn write(b: &Building) -> String {
         if n == 0 || e.part_of.is_some() || e.storey >= b.storeys.len() || !spans_storeys(e.class) {
             continue;
         }
-        let Some((_, hi)) = height_range(&e.shapes) else { continue };
+        let Some((_, hi)) = height_range(&e.shapes) else {
+            continue;
+        };
         let floor = b.storeys[e.storey].elevation;
         let top = floor + hi;
         for (j, s) in b.storeys.iter().enumerate() {
@@ -1468,7 +1601,9 @@ pub fn write(b: &Building) -> String {
         for s in &b.surveys {
             let place = w.placement(Some(site_place), 0.0);
             let p = w.point3(s.at);
-            let rep = w.st.add(format!("IFCSHAPEREPRESENTATION(#{context},'Annotation','Point',(#{p}))"));
+            let rep = w.st.add(format!(
+                "IFCSHAPEREPRESENTATION(#{context},'Annotation','Point',(#{p}))"
+            ));
             let shape = w.st.add(format!("IFCPRODUCTDEFINITIONSHAPE($,$,(#{rep}))"));
             let g = w.id(Some(s.id));
             points.push(w.st.add(format!(
@@ -1478,7 +1613,10 @@ pub fn write(b: &Building) -> String {
             )));
         }
         let g = w.st.derived("contained", &[site], "survey");
-        w.st.add(format!("IFCRELCONTAINEDINSPATIALSTRUCTURE({g},$,$,$,({}),#{site})", Step::refs(&points)));
+        w.st.add(format!(
+            "IFCRELCONTAINEDINSPATIALSTRUCTURE({g},$,$,$,({}),#{site})",
+            Step::refs(&points)
+        ));
     }
     let mut material_ids: Vec<(String, usize)> = Vec::new();
     for (name, list) in &materials {
@@ -1494,8 +1632,15 @@ pub fn write(b: &Building) -> String {
     // its name and its role; a layer's material not given stays unsaid. A set the same as another (its name and layers)
     // is written once and shared (docs/adr/8105: a wall style's type and its walls).
     let mut written_sets: Vec<((String, Vec<Layer>), usize)> = Vec::new();
-    let mut set_of = |w: &mut Writer, name: &str, layers: &[Layer], material_ids: &mut Vec<(String, usize)>| -> usize {
-        if let Some((_, id)) = written_sets.iter().find(|((n, l), _)| n == name && l.as_slice() == layers) {
+    let mut set_of = |w: &mut Writer,
+                      name: &str,
+                      layers: &[Layer],
+                      material_ids: &mut Vec<(String, usize)>|
+     -> usize {
+        if let Some((_, id)) = written_sets
+            .iter()
+            .find(|((n, l), _)| n == name && l.as_slice() == layers)
+        {
             return *id;
         }
         let refs: Vec<usize> = layers
@@ -1520,7 +1665,11 @@ pub fn write(b: &Building) -> String {
                 ))
             })
             .collect();
-        let set = w.st.add(format!("IFCMATERIALLAYERSET(({}),{},$)", Step::refs(&refs), text(name)));
+        let set = w.st.add(format!(
+            "IFCMATERIALLAYERSET(({}),{},$)",
+            Step::refs(&refs),
+            text(name)
+        ));
         written_sets.push(((name.to_owned(), layers.to_vec()), set));
         set
     };
@@ -1534,7 +1683,10 @@ pub fn write(b: &Building) -> String {
         let set = set_of(&mut w, name, layers, &mut material_ids);
         let key = format!("{name}|{layers:?}");
         if let Some(&(_, top)) = b.layer_usages.iter().find(|(k, _)| *k == i) {
-            match by_usage.iter_mut().find(|(s, t, ..)| *s == set && t.to_bits() == top.to_bits()) {
+            match by_usage
+                .iter_mut()
+                .find(|(s, t, ..)| *s == set && t.to_bits() == top.to_bits())
+            {
                 Some((.., list)) => list.push(n),
                 None => by_usage.push((set, top, key, vec![n])),
             }
@@ -1547,12 +1699,22 @@ pub fn write(b: &Building) -> String {
     }
     for (set, key, list) in &by_set {
         let g = w.st.derived("layer-set", &[building], key);
-        w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,({}),#{set})", Step::refs(list)));
+        w.st.add(format!(
+            "IFCRELASSOCIATESMATERIAL({g},$,$,$,({}),#{set})",
+            Step::refs(list)
+        ));
     }
     for (set, top, key, list) in &by_usage {
-        let usage = w.st.add(format!("IFCMATERIALLAYERSETUSAGE(#{set},.AXIS3.,.NEGATIVE.,{},$)", real(*top)));
-        let g = w.st.derived("layer-usage", &[building], &format!("{key}|{top}"));
-        w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,({}),#{usage})", Step::refs(list)));
+        let usage = w.st.add(format!(
+            "IFCMATERIALLAYERSETUSAGE(#{set},.AXIS3.,.NEGATIVE.,{},$)",
+            real(*top)
+        ));
+        let g =
+            w.st.derived("layer-usage", &[building], &format!("{key}|{top}"));
+        w.st.add(format!(
+            "IFCRELASSOCIATESMATERIAL({g},$,$,$,({}),#{usage})",
+            Step::refs(list)
+        ));
     }
     // The element types (docs/adr/8105): each its own GlobalId, its layer set associated, its occurrences typed by it
     // (`IfcRelDefinesByType`), all declared in the project (`IfcRelDeclares`).
@@ -1577,12 +1739,15 @@ pub fn write(b: &Building) -> String {
         if let Some(p) = &t.profile_set {
             let name = text(&p.profile);
             let section = match &p.section {
-                Section::Rectangle { x, y } => {
-                    w.st.add(format!("IFCRECTANGLEPROFILEDEF(.AREA.,{name},$,{},{})", real(*x), real(*y)))
-                }
-                Section::Circle { radius } => {
-                    w.st.add(format!("IFCCIRCLEPROFILEDEF(.AREA.,{name},$,{})", real(*radius)))
-                }
+                Section::Rectangle { x, y } => w.st.add(format!(
+                    "IFCRECTANGLEPROFILEDEF(.AREA.,{name},$,{},{})",
+                    real(*x),
+                    real(*y)
+                )),
+                Section::Circle { radius } => w.st.add(format!(
+                    "IFCCIRCLEPROFILEDEF(.AREA.,{name},$,{})",
+                    real(*radius)
+                )),
                 Section::Outline(pts) => {
                     let c = w.curve(pts, None);
                     w.st.add(format!("IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,{name},#{c})"))
@@ -1600,20 +1765,36 @@ pub fn write(b: &Building) -> String {
                 None => "$".to_owned(),
             };
             let category = p.category.map_or_else(|| "$".to_owned(), text);
-            let profile = w.st.add(format!("IFCMATERIALPROFILE($,$,{material},#{section},$,{category})"));
-            let set = w.st.add(format!("IFCMATERIALPROFILESET({},$,(#{profile}),$)", text(&p.name)));
+            let profile = w.st.add(format!(
+                "IFCMATERIALPROFILE($,$,{material},#{section},$,{category})"
+            ));
+            let set = w.st.add(format!(
+                "IFCMATERIALPROFILESET({},$,(#{profile}),$)",
+                text(&p.name)
+            ));
             let g = w.st.derived("type-profile", &[n], "");
             w.st.add(format!("IFCRELASSOCIATESMATERIAL({g},$,$,$,(#{n}),#{set})"));
         }
-        let members: Vec<usize> = t.members.iter().filter_map(|&i| products.get(i).copied()).filter(|&n| n != 0).collect();
+        let members: Vec<usize> = t
+            .members
+            .iter()
+            .filter_map(|&i| products.get(i).copied())
+            .filter(|&n| n != 0)
+            .collect();
         if !members.is_empty() {
             let g = w.st.derived("types", &[n], "");
-            w.st.add(format!("IFCRELDEFINESBYTYPE({g},$,$,$,({}),#{n})", Step::refs(&members)));
+            w.st.add(format!(
+                "IFCRELDEFINESBYTYPE({g},$,$,$,({}),#{n})",
+                Step::refs(&members)
+            ));
         }
     }
     if !declared.is_empty() {
         let g = w.st.derived("declares", &[project, building], "");
-        w.st.add(format!("IFCRELDECLARES({g},$,$,$,#{project},({}))", Step::refs(&declared)));
+        w.st.add(format!(
+            "IFCRELDECLARES({g},$,$,$,#{project},({}))",
+            Step::refs(&declared)
+        ));
     }
     // The header says what the bodies are (docs/adr/8047, 8071 §4): Design Transfer, an opening's body subtracted from
     // its wall's by the reader (IFC 4.3, IfcRelVoidsElement: a 'Body' opening is a Boolean difference); a Reference View
@@ -1670,9 +1851,18 @@ mod tests {
             file: "Ev".into(),
             stamp: "2026-11-16T12:00:00".into(),
             application: "KentOS".into(),
-            project: Place { name: "Ev".into(), ..Place::default() },
-            site: Place { name: "MM-SAH-Parsel".into(), ..Place::default() },
-            building: Place { name: "MM-BNA-Ev".into(), ..Place::default() },
+            project: Place {
+                name: "Ev".into(),
+                ..Place::default()
+            },
+            site: Place {
+                name: "MM-SAH-Parsel".into(),
+                ..Place::default()
+            },
+            building: Place {
+                name: "MM-BNA-Ev".into(),
+                ..Place::default()
+            },
             storeys: vec![Storey {
                 id: None,
                 name: "MM-BNK-Zemin_kat".into(),
@@ -1713,17 +1903,38 @@ mod tests {
         };
         let f = write(&b);
         let line = |prefix: &str| {
-            f.lines().find(|l| l.split_once('=').is_some_and(|(_, r)| r.starts_with(prefix))).unwrap_or_else(|| panic!("{prefix}"))
+            f.lines()
+                .find(|l| {
+                    l.split_once('=')
+                        .is_some_and(|(_, r)| r.starts_with(prefix))
+                })
+                .unwrap_or_else(|| panic!("{prefix}"))
         };
         let zone = line("IFCSPATIALZONE(");
-        assert!(zone.contains("'EMSAL'") && zone.contains(".USERDEFINED.") && zone.contains("'Zemin kat emsale dahil alan'"), "{zone}");
-        let zone_id = zone.split_once('=').map(|(i, _)| i.trim().to_owned()).expect("an id");
+        assert!(
+            zone.contains("'EMSAL'")
+                && zone.contains(".USERDEFINED.")
+                && zone.contains("'Zemin kat emsale dahil alan'"),
+            "{zone}"
+        );
+        let zone_id = zone
+            .split_once('=')
+            .map(|(i, _)| i.trim().to_owned())
+            .expect("an id");
         assert!(line("IFCRELREFERENCEDINSPATIALSTRUCTURE(").contains(&format!("({zone_id})")));
         assert!(f.contains("'TREpys_EmsalOzellikSeti'") && f.contains("IFCLABEL('DAHIL')"));
-        let space_id = line("IFCSPACE(").split_once('=').map(|(i, _)| i.trim().to_owned()).expect("an id");
+        let space_id = line("IFCSPACE(")
+            .split_once('=')
+            .map(|(i, _)| i.trim().to_owned())
+            .expect("an id");
         let group = line("IFCZONE(");
         // Its object type “Bağımsız bölüm”, its Turkish letters in STEP's \\X2\\ escape.
-        assert!(group.contains("'MM-ZON-1'") && group.contains("'Daire 1'") && group.contains("\\X2\\011F0131\\X0\\"), "{group}");
+        assert!(
+            group.contains("'MM-ZON-1'")
+                && group.contains("'Daire 1'")
+                && group.contains("\\X2\\011F0131\\X0\\"),
+            "{group}"
+        );
         assert!(line("IFCRELASSIGNSTOGROUP(").contains(&format!("({space_id})")));
     }
 
@@ -1770,8 +1981,17 @@ mod tests {
             ..Building::default()
         };
         let f = write(&b);
-        let line = |head: &str| f.lines().find(|l| l.contains(head)).unwrap_or_else(|| panic!("{head}")).to_owned();
-        let id = |l: &str| l.split_once('=').map(|(i, _)| i.trim().to_owned()).expect("an id");
+        let line = |head: &str| {
+            f.lines()
+                .find(|l| l.contains(head))
+                .unwrap_or_else(|| panic!("{head}"))
+                .to_owned()
+        };
+        let id = |l: &str| {
+            l.split_once('=')
+                .map(|(i, _)| i.trim().to_owned())
+                .expect("an id")
+        };
         let curve = line("IFCINDEXEDPOLYCURVE(");
         assert!(
             curve.contains("(IFCARCINDEX((1,2,3)),IFCLINEINDEX((3,4)),IFCARCINDEX((4,5,6)),IFCLINEINDEX((6,1))),.F.)"),
@@ -1779,7 +1999,11 @@ mod tests {
         );
         let list = line("IFCCARTESIANPOINTLIST2D(");
         assert!(curve.contains(&format!("({},", id(&list))), "{curve}");
-        let inside = list.split_once("(((").and_then(|(_, r)| r.split_once("))")).map(|(i, _)| i).expect("its points");
+        let inside = list
+            .split_once("(((")
+            .and_then(|(_, r)| r.split_once("))"))
+            .map(|(i, _)| i)
+            .expect("its points");
         let pts: Vec<[f64; 2]> = inside
             .split("),(")
             .map(|p| {
@@ -1791,9 +2015,15 @@ mod tests {
         // Each arc's middle on its circle, at 45°.
         let h = std::f64::consts::FRAC_1_SQRT_2;
         for (p, r) in [(pts[1], r1), (pts[4], r2)] {
-            assert!((p[0] - r * h).abs() < 1e-9 && (p[1] - r * h).abs() < 1e-9, "{p:?}");
+            assert!(
+                (p[0] - r * h).abs() < 1e-9 && (p[1] - r * h).abs() < 1e-9,
+                "{p:?}"
+            );
         }
-        assert!(line("IFCARBITRARYCLOSEDPROFILEDEF(").contains(&format!("#{})", id(&curve).trim_start_matches('#'))));
+        assert!(
+            line("IFCARBITRARYCLOSEDPROFILEDEF(")
+                .contains(&format!("#{})", id(&curve).trim_start_matches('#')))
+        );
         assert!(!f.contains("IFCPOLYLINE("), "no chords");
     }
 
@@ -1804,14 +2034,43 @@ mod tests {
         let mut b = door_building();
         b.view = View::Reference;
         let f = write(&b);
-        assert!(f.contains("FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"), "{}", &f[..200]);
-        let opening = f.lines().find(|l| l.contains("IFCOPENINGELEMENT(")).expect("the opening");
-        let shape = opening.split(',').nth(6).expect("its shape").trim_start_matches('#').to_owned();
-        let product = f.lines().find(|l| l.starts_with(&format!("#{shape}="))).expect("its product shape");
-        let rep = product.split("(#").nth(1).and_then(|r| r.split(')').next()).expect("its representation");
-        let rep_line = f.lines().find(|l| l.starts_with(&format!("#{rep}="))).expect("the representation");
-        assert!(rep_line.contains(",'Reference','SweptSolid',"), "{rep_line}");
-        assert_eq!(f.matches("IFCEXTRUDEDAREASOLID(").count(), 1 + 3, "the opening's and the wall's three bands");
+        assert!(
+            f.contains("FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"),
+            "{}",
+            &f[..200]
+        );
+        let opening = f
+            .lines()
+            .find(|l| l.contains("IFCOPENINGELEMENT("))
+            .expect("the opening");
+        let shape = opening
+            .split(',')
+            .nth(6)
+            .expect("its shape")
+            .trim_start_matches('#')
+            .to_owned();
+        let product = f
+            .lines()
+            .find(|l| l.starts_with(&format!("#{shape}=")))
+            .expect("its product shape");
+        let rep = product
+            .split("(#")
+            .nth(1)
+            .and_then(|r| r.split(')').next())
+            .expect("its representation");
+        let rep_line = f
+            .lines()
+            .find(|l| l.starts_with(&format!("#{rep}=")))
+            .expect("the representation");
+        assert!(
+            rep_line.contains(",'Reference','SweptSolid',"),
+            "{rep_line}"
+        );
+        assert_eq!(
+            f.matches("IFCEXTRUDEDAREASOLID(").count(),
+            1 + 3,
+            "the opening's and the wall's three bands"
+        );
         // Design Transfer: whole, 'Body'.
         let f = write(&door_building());
         assert!(f.contains("ViewDefinition [DesignTransferView]") && !f.contains("'Reference'"));
@@ -1825,7 +2084,10 @@ mod tests {
         let mut b = door_building();
         b.elements[0].class = Class::Roof;
         b.elements[0].predefined = "NOTDEFINED";
-        let layer = |name: &str, material: Option<&str>, thickness: f64, category: Option<&'static str>| Layer {
+        let layer = |name: &str,
+                     material: Option<&str>,
+                     thickness: f64,
+                     category: Option<&'static str>| Layer {
             name: name.into(),
             material: material.map(Into::into),
             thickness,
@@ -1842,19 +2104,53 @@ mod tests {
             ],
         )];
         let f = write(&b);
-        let layers: Vec<&str> = f.lines().filter(|l| l.contains("IFCMATERIALLAYER(")).collect();
+        let layers: Vec<&str> = f
+            .lines()
+            .filter(|l| l.contains("IFCMATERIALLAYER("))
+            .collect();
         assert_eq!(layers.len(), 4, "{layers:?}");
-        assert!(layers[0].contains(",0.03,$,'Kaplama',$,'Outer finish',$)"), "{}", layers[0]);
-        assert!(layers[1].contains("IFCMATERIALLAYER($,0.03,$,'Lata',$,$,$)"), "{}", layers[1]);
-        assert!(layers[3].contains(",0.125,$,'Mertek',$,'LoadBearing',$)"), "{}", layers[3]);
-        assert_eq!(f.matches(&format!("IFCMATERIAL({},$,$)", text("Çam"))).count(), 1, "Çam once");
-        let set = f.lines().find(|l| l.contains("IFCMATERIALLAYERSET(")).expect("the set");
-        assert!(set.contains(&format!("),{},$)", text("Çatı katmanları"))), "{set}");
+        assert!(
+            layers[0].contains(",0.03,$,'Kaplama',$,'Outer finish',$)"),
+            "{}",
+            layers[0]
+        );
+        assert!(
+            layers[1].contains("IFCMATERIALLAYER($,0.03,$,'Lata',$,$,$)"),
+            "{}",
+            layers[1]
+        );
+        assert!(
+            layers[3].contains(",0.125,$,'Mertek',$,'LoadBearing',$)"),
+            "{}",
+            layers[3]
+        );
+        assert_eq!(
+            f.matches(&format!("IFCMATERIAL({},$,$)", text("Çam")))
+                .count(),
+            1,
+            "Çam once"
+        );
+        let set = f
+            .lines()
+            .find(|l| l.contains("IFCMATERIALLAYERSET("))
+            .expect("the set");
+        assert!(
+            set.contains(&format!("),{},$)", text("Çatı katmanları"))),
+            "{set}"
+        );
         // The roof's own material gives way to the set; the set is the roof's.
         assert!(!f.contains("IFCMATERIAL('Tugla'"));
-        let roof = f.lines().find(|l| l.contains("IFCROOF(")).expect("the roof").split('=').next().unwrap().to_owned();
+        let roof = f
+            .lines()
+            .find(|l| l.contains("IFCROOF("))
+            .expect("the roof")
+            .split('=')
+            .next()
+            .unwrap()
+            .to_owned();
         let set_id = set.split('=').next().unwrap().to_owned();
-        assert!(f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.contains(&format!("({roof}),{set_id})"))));
+        assert!(f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(")
+            && l.contains(&format!("({roof}),{set_id})"))));
     }
 
     /// An element rising into the storey over its own (docs/adr/8168): a wall 6 m tall on the ground storey of two 3 m
@@ -1879,16 +2175,32 @@ mod tests {
         raise(&mut b.elements[0], 0.0, 6.0);
         let f = write(&b);
         let id = |l: &str| l.split('=').next().unwrap().to_owned();
-        let wall = id(f.lines().find(|l| l.contains("IFCWALL(")).expect("the wall"));
-        let upper = f.lines().find(|l| l.contains("IFCBUILDINGSTOREY(") && l.contains("1._kat"));
+        let wall = id(f
+            .lines()
+            .find(|l| l.contains("IFCWALL("))
+            .expect("the wall"));
+        let upper = f
+            .lines()
+            .find(|l| l.contains("IFCBUILDINGSTOREY(") && l.contains("1._kat"));
         let upper = id(upper.expect("the storey"));
-        let spans: Vec<&str> = f.lines().filter(|l| l.contains("IFCRELREFERENCEDINSPATIALSTRUCTURE(")).collect();
+        let spans: Vec<&str> = f
+            .lines()
+            .filter(|l| l.contains("IFCRELREFERENCEDINSPATIALSTRUCTURE("))
+            .collect();
         assert_eq!(spans.len(), 1, "{spans:?}");
-        assert!(spans[0].ends_with(&format!("({wall}),{upper});")), "{}", spans[0]);
+        assert!(
+            spans[0].ends_with(&format!("({wall}),{upper});")),
+            "{}",
+            spans[0]
+        );
         // Built up to the next floor, or within 1 mm of it: no reference; 2 mm over it: it spans the storey.
         for (top, spans) in [(3.0, false), (3.0009, false), (3.002, true)] {
             raise(&mut b.elements[0], 0.0, top);
-            assert_eq!(write(&b).contains("IFCRELREFERENCEDINSPATIALSTRUCTURE("), spans, "{top}");
+            assert_eq!(
+                write(&b).contains("IFCRELREFERENCEDINSPATIALSTRUCTURE("),
+                spans,
+                "{top}"
+            );
         }
         // The upper storey's wall from 7 cm under its floor (on the structure) up to 2.80 m: its own storey's alone.
         b.elements[0].storey = 1;
@@ -1900,8 +2212,13 @@ mod tests {
         {
             raise(&mut b.elements[0], 0.0, 6.0);
             let f = write(&b);
-            let m = crate::read::read(f.as_bytes(), &crate::read::Limits::default(), &|| false).expect("reads");
-            let at = m.objects.iter().position(|o| o.class == "IfcWall").expect("the wall");
+            let m = crate::read::read(f.as_bytes(), &crate::read::Limits::default(), &|| false)
+                .expect("reads");
+            let at = m
+                .objects
+                .iter()
+                .position(|o| o.class == "IfcWall")
+                .expect("the wall");
             let d = m.details(f.as_bytes(), at).expect("the details");
             let said: Vec<(&str, &str)> = d.groups[0]
                 .lines
@@ -1909,14 +2226,27 @@ mod tests {
                 .filter(|l| l.name == "Kat" || l.name == "Uzandığı kat")
                 .map(|l| (l.name.as_str(), l.value.as_str()))
                 .collect();
-            assert_eq!(said, [("Kat", b.storeys[0].name.as_str()), ("Uzandığı kat", "MM-BNK-1._kat")]);
+            assert_eq!(
+                said,
+                [
+                    ("Kat", b.storeys[0].name.as_str()),
+                    ("Uzandığı kat", "MM-BNK-1._kat")
+                ]
+            );
         }
         // A curtain wall over both storeys (IFC 4.3's own example), its panels its body: referenced the same way.
         b.elements[0].class = Class::CurtainWall;
         raise(&mut b.elements[0], 0.0, 6.0);
         let f = write(&b);
-        let wall = id(f.lines().find(|l| l.contains("IFCCURTAINWALL(")).expect("the curtain wall"));
-        assert!(f.lines().any(|l| l.contains("IFCRELREFERENCEDINSPATIALSTRUCTURE(") && l.contains(&format!("({wall}),"))));
+        let wall = id(f
+            .lines()
+            .find(|l| l.contains("IFCCURTAINWALL("))
+            .expect("the curtain wall"));
+        assert!(
+            f.lines()
+                .any(|l| l.contains("IFCRELREFERENCEDINSPATIALSTRUCTURE(")
+                    && l.contains(&format!("({wall}),")))
+        );
         // A slab of the upper storey hanging into the ground storey is the upper storey's alone.
         b.elements[0].class = Class::Slab;
         b.elements[0].storey = 1;
@@ -1933,7 +2263,10 @@ mod tests {
         let c = [512_340.0, 4_412_350.0];
         let at = |r: f64, deg: f64| {
             let t = deg.to_radians();
-            [c[0] + r * crate::math::cos(t), c[1] + r * crate::math::sin(t)]
+            [
+                c[0] + r * crate::math::cos(t),
+                c[1] + r * crate::math::sin(t),
+            ]
         };
         let ray = |tag: &str, deg: f64| Axis {
             id: None,
@@ -1944,7 +2277,13 @@ mod tests {
         };
         let arc = |tag: &str, r: f64, ccw: bool| {
             let (s, e) = if ccw { (-70.0, 70.0) } else { (70.0, -70.0) };
-            Axis { id: None, tag: tag.into(), from: at(r, s), to: at(r, e), through: Some(at(r, 0.0)) }
+            Axis {
+                id: None,
+                tag: tag.into(),
+                from: at(r, s),
+                to: at(r, e),
+                through: Some(at(r, 0.0)),
+            }
         };
         b.grids.push(Grid {
             id: Some(9),
@@ -1955,27 +2294,78 @@ mod tests {
             predefined: "RADIAL",
         });
         let f = write(&b);
-        let lines = |head: &str| f.lines().filter(|l| l.contains(head)).map(str::to_owned).collect::<Vec<_>>();
-        let args = |l: &str| l.split_once('(').map(|(_, r)| r.trim_end_matches(");").to_owned()).unwrap_or_default();
+        let lines = |head: &str| {
+            f.lines()
+                .filter(|l| l.contains(head))
+                .map(str::to_owned)
+                .collect::<Vec<_>>()
+        };
+        let args = |l: &str| {
+            l.split_once('(')
+                .map(|(_, r)| r.trim_end_matches(");").to_owned())
+                .unwrap_or_default()
+        };
         // Each axis's curve: the straight ones polylines, the arcs trimmed curves.
-        let line_of = |id: &str| f.lines().find(|l| l.starts_with(&format!("{id}="))).unwrap_or_default().to_owned();
+        let line_of = |id: &str| {
+            f.lines()
+                .find(|l| l.starts_with(&format!("{id}=")))
+                .unwrap_or_default()
+                .to_owned()
+        };
         let kinds: Vec<String> = lines("IFCGRIDAXIS(")
             .iter()
-            .map(|l| format!("#{}", l.split(",#").nth(1).and_then(|x| x.split(',').next()).unwrap()))
+            .map(|l| {
+                format!(
+                    "#{}",
+                    l.split(",#")
+                        .nth(1)
+                        .and_then(|x| x.split(',').next())
+                        .unwrap()
+                )
+            })
             .map(|id| line_of(&id))
-            .map(|l| l.split('=').nth(1).unwrap().split('(').next().unwrap().to_owned())
+            .map(|l| {
+                l.split('=')
+                    .nth(1)
+                    .unwrap()
+                    .split('(')
+                    .next()
+                    .unwrap()
+                    .to_owned()
+            })
             .collect();
-        assert_eq!(kinds, ["IFCPOLYLINE", "IFCPOLYLINE", "IFCPOLYLINE", "IFCTRIMMEDCURVE", "IFCTRIMMEDCURVE"]);
+        assert_eq!(
+            kinds,
+            [
+                "IFCPOLYLINE",
+                "IFCPOLYLINE",
+                "IFCPOLYLINE",
+                "IFCTRIMMEDCURVE",
+                "IFCTRIMMEDCURVE"
+            ]
+        );
         assert!(lines("IFCGRID(").iter().any(|l| l.ends_with(".RADIAL.);")));
         let circles = lines("IFCCIRCLE(");
-        let radii: Vec<f64> = circles.iter().map(|l| args(l).rsplit(',').next().unwrap().parse().unwrap()).collect();
+        let radii: Vec<f64> = circles
+            .iter()
+            .map(|l| args(l).rsplit(',').next().unwrap().parse().unwrap())
+            .collect();
         assert_eq!(radii.len(), 2);
-        assert!((radii[0] - 4.0).abs() < 1e-9 && (radii[1] - 8.0).abs() < 1e-9, "{radii:?}");
+        assert!(
+            (radii[0] - 4.0).abs() < 1e-9 && (radii[1] - 8.0).abs() < 1e-9,
+            "{radii:?}"
+        );
         let trimmed = lines("IFCTRIMMEDCURVE(");
         assert_eq!(trimmed.len(), 2);
         let tau = std::f64::consts::TAU;
         for (l, ccw) in trimmed.iter().zip([true, false]) {
-            assert!(l.ends_with(&format!(",{},.CARTESIAN.);", if ccw { ".T." } else { ".F." })), "{l}");
+            assert!(
+                l.ends_with(&format!(
+                    ",{},.CARTESIAN.);",
+                    if ccw { ".T." } else { ".F." }
+                )),
+                "{l}"
+            );
             let params: Vec<f64> = l
                 .split("IFCPARAMETERVALUE(")
                 .skip(1)
@@ -1983,20 +2373,43 @@ mod tests {
                 .collect();
             let (low, high) = (70f64.to_radians(), tau - 70f64.to_radians());
             let want = if ccw { [high, low] } else { [low, high] };
-            assert!((params[0] - want[0]).abs() < 1e-9 && (params[1] - want[1]).abs() < 1e-9, "{params:?}");
+            assert!(
+                (params[0] - want[0]).abs() < 1e-9 && (params[1] - want[1]).abs() < 1e-9,
+                "{params:?}"
+            );
         }
         #[cfg(feature = "view")]
         {
-            let m = crate::read::read(f.as_bytes(), &crate::read::Limits::default(), &|| false).expect("reads");
-            let at_grid = m.objects.iter().position(|o| o.class == "IfcGrid").expect("the grid");
+            let m = crate::read::read(f.as_bytes(), &crate::read::Limits::default(), &|| false)
+                .expect("reads");
+            let at_grid = m
+                .objects
+                .iter()
+                .position(|o| o.class == "IfcGrid")
+                .expect("the grid");
             let d = m.details(f.as_bytes(), at_grid).expect("the details");
-            let group = d.groups.iter().find(|g| g.title == "Akslar").expect("its axes");
-            let said: Vec<(&str, &str)> = group.lines.iter().map(|l| (l.name.as_str(), l.value.as_str())).collect();
+            let group = d
+                .groups
+                .iter()
+                .find(|g| g.title == "Akslar")
+                .expect("its axes");
+            let said: Vec<(&str, &str)> = group
+                .lines
+                .iter()
+                .map(|l| (l.name.as_str(), l.value.as_str()))
+                .collect();
             assert_eq!(said, [("U aksları", "4, 5, 6"), ("V aksları", "E, F")]);
             let axes = m.grid_axes(f.as_bytes()).expect("the axes");
-            assert_eq!(axes.iter().map(|a| a.tag.as_str()).collect::<Vec<_>>(), ["4", "5", "6", "E", "F"]);
+            assert_eq!(
+                axes.iter().map(|a| a.tag.as_str()).collect::<Vec<_>>(),
+                ["4", "5", "6", "E", "F"]
+            );
             let (e, end) = (&axes[3], at(4.0, 70.0));
-            assert!((e.b[0] - end[0]).abs() < 1e-6 && (e.b[1] - end[1]).abs() < 1e-6, "{:?}", e.b);
+            assert!(
+                (e.b[0] - end[0]).abs() < 1e-6 && (e.b[1] - end[1]).abs() < 1e-6,
+                "{:?}",
+                e.b
+            );
         }
     }
 
@@ -2026,30 +2439,77 @@ mod tests {
             members: vec![0],
         };
         b.types = vec![
-            typed(1, "S1", set("S1", "40×30", Section::Rectangle { x: 0.4, y: 0.3 })),
+            typed(
+                1,
+                "S1",
+                set("S1", "40×30", Section::Rectangle { x: 0.4, y: 0.3 }),
+            ),
             typed(2, "S2", set("S2", "Ø50", Section::Circle { radius: 0.25 })),
-            typed(3, "S3", set("S3", "L 50×50", Section::Outline(vec![[-0.25, -0.25], [0.25, -0.25], [0.25, -0.05],
-                [-0.05, -0.05], [-0.05, 0.25], [-0.25, 0.25]]))),
+            typed(
+                3,
+                "S3",
+                set(
+                    "S3",
+                    "L 50×50",
+                    Section::Outline(vec![
+                        [-0.25, -0.25],
+                        [0.25, -0.25],
+                        [0.25, -0.05],
+                        [-0.05, -0.05],
+                        [-0.05, 0.25],
+                        [-0.25, 0.25],
+                    ]),
+                ),
+            ),
         ];
         let f = write(&b);
-        let line = |what: &str| f.lines().find(|l| l.contains(what)).unwrap_or_else(|| panic!("{what}")).to_owned();
-        assert!(line("IFCRECTANGLEPROFILEDEF(").ends_with(&format!("(.AREA.,{},$,0.4,0.3);", text("40×30"))));
-        assert!(line("IFCCIRCLEPROFILEDEF(").ends_with(&format!("(.AREA.,{},$,0.25);", text("Ø50"))));
+        let line = |what: &str| {
+            f.lines()
+                .find(|l| l.contains(what))
+                .unwrap_or_else(|| panic!("{what}"))
+                .to_owned()
+        };
+        assert!(
+            line("IFCRECTANGLEPROFILEDEF(")
+                .ends_with(&format!("(.AREA.,{},$,0.4,0.3);", text("40×30")))
+        );
+        assert!(
+            line("IFCCIRCLEPROFILEDEF(").ends_with(&format!("(.AREA.,{},$,0.25);", text("Ø50")))
+        );
         // The bodies' profiles are unnamed; the L's is the section's.
-        assert!(f.contains(&format!("IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,{},#", text("L 50×50"))));
-        assert_eq!(f.matches("IFCMATERIAL('Betonarme',$,$)").count(), 1, "the material once");
+        assert!(f.contains(&format!(
+            "IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,{},#",
+            text("L 50×50")
+        )));
+        assert_eq!(
+            f.matches("IFCMATERIAL('Betonarme',$,$)").count(),
+            1,
+            "the material once"
+        );
         assert_eq!(f.matches("IFCMATERIALPROFILESET(").count(), 3);
-        let profiles: Vec<&str> = f.lines().filter(|l| l.contains("IFCMATERIALPROFILE(")).collect();
-        assert!(profiles.iter().all(|l| l.ends_with(",$,'LoadBearing');")), "{profiles:?}");
+        let profiles: Vec<&str> = f
+            .lines()
+            .filter(|l| l.contains("IFCMATERIALPROFILE("))
+            .collect();
+        assert!(
+            profiles.iter().all(|l| l.ends_with(",$,'LoadBearing');")),
+            "{profiles:?}"
+        );
         // Each set the type's; the column keeps its own material.
         let id = |l: &str| l.split('=').next().unwrap().to_owned();
         let s1 = id(&line("IFCMATERIALPROFILESET('S1'"));
         let t1 = id(&line("IFCCOLUMNTYPE("));
-        assert!(f.contains(&format!("(#{}),{s1});", t1.trim_start_matches('#'))), "S1's set is its type's");
+        assert!(
+            f.contains(&format!("(#{}),{s1});", t1.trim_start_matches('#'))),
+            "S1's set is its type's"
+        );
         let column = id(&line("IFCCOLUMN("));
         let material = id(&line("IFCMATERIAL('Betonarme'"));
         let own = format!("({column}),{material});");
-        assert!(f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.ends_with(&own)));
+        assert!(
+            f.lines()
+                .any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.ends_with(&own))
+        );
     }
 
     /// A level slab's set laid from its top (docs/adr/8166): the slab is associated with one usage of the set, along
@@ -2066,38 +2526,68 @@ mod tests {
             e.id = Some(900 + i as u128);
         }
         let n = b.elements.len();
-        let layer = |name: &str, material: &str, thickness: f64, category: Option<&'static str>| Layer {
-            name: name.into(),
-            material: Some(material.into()),
-            thickness,
-            category,
-        };
+        let layer =
+            |name: &str, material: &str, thickness: f64, category: Option<&'static str>| Layer {
+                name: name.into(),
+                material: Some(material.into()),
+                thickness,
+                category,
+            };
         let layers = vec![
             layer("Kaplama", "Seramik", 0.02, Some("Inner finish")),
             layer("Şap", "Çimento harcı", 0.05, None),
             layer("Taşıyıcı", "Betonarme", 0.15, Some("LoadBearing")),
             layer("Sıva", "Alçı sıva", 0.02, Some("Inner finish")),
         ];
-        let slab_at: Vec<usize> = (0..n).filter(|&k| b.elements[k].class == Class::Slab).collect();
+        let slab_at: Vec<usize> = (0..n)
+            .filter(|&k| b.elements[k].class == Class::Slab)
+            .collect();
         assert_eq!(slab_at.len(), 3);
-        b.layer_sets = slab_at.iter().map(|&k| (k, "Döşeme katmanları".to_owned(), layers.clone())).collect();
+        b.layer_sets = slab_at
+            .iter()
+            .map(|&k| (k, "Döşeme katmanları".to_owned(), layers.clone()))
+            .collect();
         b.layer_usages = vec![(slab_at[0], 0.0), (slab_at[1], 0.0), (slab_at[2], -0.3)];
         let f = write(&b);
-        assert_eq!(f.matches("IFCMATERIALLAYERSET(").count(), 1, "one set shared");
-        let set = f.lines().find(|l| l.contains("IFCMATERIALLAYERSET(")).expect("the set").split('=').next().unwrap();
-        let usages: Vec<&str> = f.lines().filter(|l| l.contains("IFCMATERIALLAYERSETUSAGE(")).collect();
+        assert_eq!(
+            f.matches("IFCMATERIALLAYERSET(").count(),
+            1,
+            "one set shared"
+        );
+        let set = f
+            .lines()
+            .find(|l| l.contains("IFCMATERIALLAYERSET("))
+            .expect("the set")
+            .split('=')
+            .next()
+            .unwrap();
+        let usages: Vec<&str> = f
+            .lines()
+            .filter(|l| l.contains("IFCMATERIALLAYERSETUSAGE("))
+            .collect();
         assert_eq!(usages.len(), 2, "{usages:?}");
-        let laid = |top: &str| format!("IFCMATERIALLAYERSETUSAGE({set},.AXIS3.,.NEGATIVE.,{top},$);");
+        let laid =
+            |top: &str| format!("IFCMATERIALLAYERSETUSAGE({set},.AXIS3.,.NEGATIVE.,{top},$);");
         assert!(usages[0].ends_with(&laid("0.")), "{}", usages[0]);
         assert!(usages[1].ends_with(&laid("-0.3")), "{}", usages[1]);
         // Each slab's one association is its usage's; none is the set's own.
-        let slabs: Vec<String> =
-            f.lines().filter(|l| l.contains("IFCSLAB(")).map(|l| l.split('=').next().unwrap().to_owned()).collect();
+        let slabs: Vec<String> = f
+            .lines()
+            .filter(|l| l.contains("IFCSLAB("))
+            .map(|l| l.split('=').next().unwrap().to_owned())
+            .collect();
         assert_eq!(slabs.len(), 3);
         let usage = |i: usize| usages[i].split('=').next().unwrap().to_owned();
-        assert!(f.contains(&format!("({},{}),{})", slabs[0], slabs[1], usage(0))), "the first two share the usage");
+        assert!(
+            f.contains(&format!("({},{}),{})", slabs[0], slabs[1], usage(0))),
+            "the first two share the usage"
+        );
         assert!(f.contains(&format!("({}),{})", slabs[2], usage(1))));
-        assert!(!f.lines().any(|l| l.contains("IFCRELASSOCIATESMATERIAL(") && l.ends_with(&format!(",{set});"))));
+        assert!(
+            !f.lines()
+                .any(|l| l.contains("IFCRELASSOCIATESMATERIAL(")
+                    && l.ends_with(&format!(",{set});")))
+        );
     }
 
     /// A body with faces and a prism (a ramp's sloped run beside its landing, docs/adr/8133) is one tessellation: the
@@ -2111,12 +2601,25 @@ mod tests {
         b.openings.clear();
         b.elements.truncate(1);
         let v = vec![
-            [3.0, 0.0, 0.0], [4.0, 0.0, 0.0], [4.0, 1.0, 0.0], [3.0, 1.0, 0.0],
-            [3.0, 0.0, 1.0], [4.0, 0.0, 1.0], [4.0, 1.0, 1.0], [3.0, 1.0, 1.0],
+            [3.0, 0.0, 0.0],
+            [4.0, 0.0, 0.0],
+            [4.0, 1.0, 0.0],
+            [3.0, 1.0, 0.0],
+            [3.0, 0.0, 1.0],
+            [4.0, 0.0, 1.0],
+            [4.0, 1.0, 1.0],
+            [3.0, 1.0, 1.0],
         ];
         let cube = Shape::Faces {
             vertices: v,
-            faces: vec![vec![0, 3, 2, 1], vec![4, 5, 6, 7], vec![0, 1, 5, 4], vec![1, 2, 6, 5], vec![2, 3, 7, 6], vec![3, 0, 4, 7]],
+            faces: vec![
+                vec![0, 3, 2, 1],
+                vec![4, 5, 6, 7],
+                vec![0, 1, 5, 4],
+                vec![1, 2, 6, 5],
+                vec![2, 3, 7, 6],
+                vec![3, 0, 4, 7],
+            ],
         };
         let landing = Shape::Prism {
             rings: vec![
@@ -2129,18 +2632,42 @@ mod tests {
         };
         b.elements[0].shapes = vec![landing, cube];
         let f = write(&b);
-        assert!(!f.contains("IFCEXTRUDEDAREASOLID"), "no extrusion in a tessellation");
-        assert!(f.lines().any(|l| l.contains("IFCSHAPEREPRESENTATION(") && l.contains("'Body','Tessellation'")));
-        assert_eq!(f.matches("IFCINDEXEDPOLYGONALFACEWITHVOIDS(").count(), 2, "the landing's top and bottom");
+        assert!(
+            !f.contains("IFCEXTRUDEDAREASOLID"),
+            "no extrusion in a tessellation"
+        );
+        assert!(
+            f.lines()
+                .any(|l| l.contains("IFCSHAPEREPRESENTATION(")
+                    && l.contains("'Body','Tessellation'"))
+        );
+        assert_eq!(
+            f.matches("IFCINDEXEDPOLYGONALFACEWITHVOIDS(").count(),
+            2,
+            "the landing's top and bottom"
+        );
         let bytes = f.as_bytes();
-        let m = crate::read::read(bytes, &crate::read::Limits::default(), &|| false).expect("reads");
+        let m =
+            crate::read::read(bytes, &crate::read::Limits::default(), &|| false).expect("reads");
         let bodies = m.bodies(bytes, &|| false).expect("its bodies");
-        let wall = bodies.bodies.iter().find(|x| m.objects[x.object].class == "IfcWall").expect("the wall's body");
+        let wall = bodies
+            .bodies
+            .iter()
+            .find(|x| m.objects[x.object].class == "IfcWall")
+            .expect("the wall's body");
         let (volume, _) = crate::read::bodies::volume_and_area(wall);
         assert!((volume.abs() - 2.5).abs() < 1e-6, "{volume}");
         let facts = m.facts(bytes, "ev.ifc").expect("the facts");
-        let o = facts["objects"].as_array().expect("objects").iter().find(|o| o["class"] == "IfcWall").expect("the wall");
-        assert_eq!(o["shapes"], serde_json::json!([{ "identifier": "Body", "type": "Tessellation", "closed": true }]));
+        let o = facts["objects"]
+            .as_array()
+            .expect("objects")
+            .iter()
+            .find(|o| o["class"] == "IfcWall")
+            .expect("the wall");
+        assert_eq!(
+            o["shapes"],
+            serde_json::json!([{ "identifier": "Body", "type": "Tessellation", "closed": true }])
+        );
     }
 
     /// A 5 m wall with a 0.9 m door through it, on one storey.
@@ -2256,16 +2783,32 @@ mod tests {
     #[test]
     fn true_north_is_the_model_context_s_direction_and_an_unknown_one_is_not_written() {
         // Sivas on TUREF / TM36: true north 0.0111 rad (0.64°) counter-clockwise from the grid's.
-        let b = Building { file: "Ev".into(), true_north: Some([-0.0111, 0.99993839]), ..Building::default() };
+        let b = Building {
+            file: "Ev".into(),
+            true_north: Some([-0.0111, 0.99993839]),
+            ..Building::default()
+        };
         let text = write(&b);
-        let line = text.lines().find(|l| l.contains("IFCGEOMETRICREPRESENTATIONCONTEXT(")).expect("the context");
-        let north = text.lines().find(|l| l.contains("IFCDIRECTION((-0.0111,0.99993839))")).expect("the direction");
+        let line = text
+            .lines()
+            .find(|l| l.contains("IFCGEOMETRICREPRESENTATIONCONTEXT("))
+            .expect("the context");
+        let north = text
+            .lines()
+            .find(|l| l.contains("IFCDIRECTION((-0.0111,0.99993839))"))
+            .expect("the direction");
         let id = north.split('=').next().unwrap().trim();
         assert!(line.ends_with(&format!(",{id});")), "{line}");
         // Unknown: IFC's default is up the y axis, which would say what is not known; the field stays unset.
-        let b = Building { file: "Ev".into(), ..Building::default() };
+        let b = Building {
+            file: "Ev".into(),
+            ..Building::default()
+        };
         let text = write(&b);
-        let line = text.lines().find(|l| l.contains("IFCGEOMETRICREPRESENTATIONCONTEXT(")).expect("the context");
+        let line = text
+            .lines()
+            .find(|l| l.contains("IFCGEOMETRICREPRESENTATIONCONTEXT("))
+            .expect("the context");
         assert!(line.ends_with(",$);"), "{line}");
     }
 }

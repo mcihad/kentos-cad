@@ -136,9 +136,19 @@ impl App {
             let free = self.gis.topology.running.is_none();
             let recheck = stale.then(|| {
                 if outside.is_empty() {
-                    bar_button("topologyCheck", texts::RECHECK, texts::RECHECK_HINT, free.then(|| msg(Event::Recheck)))
+                    bar_button(
+                        "topologyCheck",
+                        texts::RECHECK,
+                        texts::RECHECK_HINT,
+                        free.then(|| msg(Event::Recheck)),
+                    )
                 } else {
-                    bar_button("topologyCheck", texts::CHECK, texts::CHECK_HINT, free.then(|| msg(Event::Check)))
+                    bar_button(
+                        "topologyCheck",
+                        texts::CHECK,
+                        texts::CHECK_HINT,
+                        free.then(|| msg(Event::Check)),
+                    )
                 }
             });
             container(
@@ -191,12 +201,17 @@ impl App {
             match checked {
                 None if self.gis.topology.running.is_some() => plan::checking(rules),
                 None => plan::not_checked(rules),
-                Some(c) if c.findings.is_empty() && c.g.incomplete.is_empty() && c.g.checked() == 0 => {
+                Some(c)
+                    if c.findings.is_empty() && c.g.incomplete.is_empty() && c.g.checked() == 0 =>
+                {
                     plan::nothing_checked(c.g.rules.len())
                 }
                 Some(c) if c.findings.is_empty() && c.g.incomplete.is_empty() => {
                     let sources: Vec<(String, usize)> =
-                        c.g.sources_read.iter().map(|s| (self.topology_layer_name(&s.layer), s.checked)).collect();
+                        c.g.sources_read
+                            .iter()
+                            .map(|s| (self.topology_layer_name(&s.layer), s.checked))
+                            .collect();
                     plan::no_findings(c.g.rules.len(), c.g.checked(), &sources)
                 }
                 Some(c) if c.findings.is_empty() => plan::not_clean(c.g.rules.len(), c.g.checked()),
@@ -294,7 +309,12 @@ impl App {
                 row![
                     icon(from_web(Some("topologyFix"))).size(14.0),
                     container(label::body(self.topology_recipe_text(r))).width(Fill),
-                    bar_button("close", texts::DROP, texts::DROP_HINT, Some(msg(Event::Drop))),
+                    bar_button(
+                        "close",
+                        texts::DROP,
+                        texts::DROP_HINT,
+                        Some(msg(Event::Drop))
+                    ),
                     tip(
                         button(label::body(texts::APPLY))
                             .style(style::button::primary)
@@ -310,14 +330,23 @@ impl App {
             .padding([4, 10])
             .width(Fill)
             .style(|theme: &iced::Theme| container::Style {
-                background: Some(Background::Color(Tokens::of(theme).accent.scale_alpha(0.10))),
+                background: Some(Background::Color(
+                    Tokens::of(theme).accent.scale_alpha(0.10),
+                )),
                 ..container::Style::default()
             })
         });
         let mut out = Column::new().push(bar);
         // What the last check covered (docs/adr/9146).
-        if let Some(scope) = self.topology_scope().filter(|_| self.gis.topology.running.is_none()) {
-            out = out.push(container(label::caption(scope)).padding([2, 10]).width(Fill));
+        if let Some(scope) = self
+            .topology_scope()
+            .filter(|_| self.gis.topology.running.is_none())
+        {
+            out = out.push(
+                container(label::caption(scope))
+                    .padding([2, 10])
+                    .width(Fill),
+            );
         }
         if let Some(running) = running {
             out = out.push(running);
@@ -358,7 +387,11 @@ impl App {
             // The tolerance as typed in the rules window, not rounded to the drawing's digits.
             &{
                 let f = self.format();
-                format!("{} {}", super::rules::shown(f.from_metres(c.g.tolerance)), f.length_unit_label())
+                format!(
+                    "{} {}",
+                    super::rules::shown(f.from_metres(c.g.tolerance)),
+                    f.length_unit_label()
+                )
             },
         ))
     }

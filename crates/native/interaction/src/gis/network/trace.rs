@@ -25,7 +25,8 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Context, Cursor, Flow, Marker, MarkerShape, OptionChoice, Pointer, Preview, Tone, Tool, ViewChange,
+    Context, Cursor, Flow, Marker, MarkerShape, OptionChoice, Pointer, Preview, Tone, Tool,
+    ViewChange,
 };
 
 /// The tool's id: its command is `tool.netTrace`.
@@ -278,7 +279,12 @@ impl Tool for NetTrace {
 
     /// The network as it is, from the start (docs/adr/9332): its name and how its lines join.
     fn settings(&self, format: &Format) -> Vec<crate::tool_settings::Setting> {
-        Base::settings(self.seen.network.as_ref(), 0, self.seen.offer.as_ref(), format)
+        Base::settings(
+            self.seen.network.as_ref(),
+            0,
+            self.seen.offer.as_ref(),
+            format,
+        )
     }
 
     /// A network defined, changed or removed while the tool runs (docs/adr/9332): seen again; another network, the
@@ -414,7 +420,9 @@ impl Tool for NetTrace {
             cx.say(Level::Success, said.clone());
             said
         } else {
-            let said = format!("{said}. İzleme Denetle'nin bulduğu bağlantı sorunlarından geçiyor; sonuca güvenmeden önce ağı Ağlar › Denetle ile düzeltin.");
+            let said = format!(
+                "{said}. İzleme Denetle'nin bulduğu bağlantı sorunlarından geçiyor; sonuca güvenmeden önce ağı Ağlar › Denetle ile düzeltin."
+            );
             cx.say(Level::Warn, said.clone());
             said
         };
@@ -438,11 +446,12 @@ impl Tool for NetTrace {
     /// the trace comes as it did.
     fn reopen(&mut self, values: &BTreeMap<String, Value>, cx: &mut Context<'_>) -> bool {
         let points = record::reopen_common(values, cx);
-        if let Some(k) = values
-            .get("kind")
-            .and_then(Value::as_str)
-            .and_then(|k| TRACE_KINDS.iter().map(|(t, _)| *t).find(|t| kind_key(*t) == k))
-        {
+        if let Some(k) = values.get("kind").and_then(Value::as_str).and_then(|k| {
+            TRACE_KINDS
+                .iter()
+                .map(|(t, _)| *t)
+                .find(|t| kind_key(*t) == k)
+        }) {
             cx.memory.network_trace = k;
         }
         self.base.reset();

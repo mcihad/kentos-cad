@@ -74,9 +74,18 @@ pub(super) fn body_check(m: &super::Model, bytes: &[u8], r: &serde_json::Value) 
         unexpected: Vec::new(),
     };
     for (gid, t) in &theirs {
-        let Some(ours) = made.bodies.iter().find(|b| &m.objects[b.object].global_id == gid) else {
-            let why = made.not_shown.iter().find(|n| &m.objects[n.object].global_id == gid).map(|n| n.reason.clone());
-            out.unexpected.push(format!("{gid}: the engine made no body ({why:?})"));
+        let Some(ours) = made
+            .bodies
+            .iter()
+            .find(|b| &m.objects[b.object].global_id == gid)
+        else {
+            let why = made
+                .not_shown
+                .iter()
+                .find(|n| &m.objects[n.object].global_id == gid)
+                .map(|n| n.reason.clone());
+            out.unexpected
+                .push(format!("{gid}: the engine made no body ({why:?})"));
             continue;
         };
         let class = &m.objects[ours.object].class;
@@ -86,16 +95,33 @@ pub(super) fn body_check(m: &super::Model, bytes: &[u8], r: &serde_json::Value) 
         }
         let tol = precision + f32_error(ours);
         let b = bbox(ours);
-        let tb: Vec<f64> = t["box"].as_array().expect("box").iter().flat_map(|c| c.as_array().expect("corner").iter().filter_map(|v| v.as_f64())).collect();
-        let box_diff = (0..6).map(|k| (b[k / 3][k % 3] - tb[k]).abs()).fold(0.0, f64::max);
+        let tb: Vec<f64> = t["box"]
+            .as_array()
+            .expect("box")
+            .iter()
+            .flat_map(|c| {
+                c.as_array()
+                    .expect("corner")
+                    .iter()
+                    .filter_map(|v| v.as_f64())
+            })
+            .collect();
+        let box_diff = (0..6)
+            .map(|k| (b[k / 3][k % 3] - tb[k]).abs())
+            .fold(0.0, f64::max);
         let (v, _) = volume_and_area(ours);
-        let (tv, ta) = (t["volume"].as_f64().expect("volume"), t["area"].as_f64().expect("area"));
+        let (tv, ta) = (
+            t["volume"].as_f64().expect("volume"),
+            t["area"].as_f64().expect("area"),
+        );
         let volume_diff = (v - tv).abs();
         let over = box_diff > tol || volume_diff > ta * tol;
         if COARSE_ARCS.contains(&gid.as_str()) {
             out.coarse += 1;
             if !over {
-                out.unexpected.push(format!("{class} {gid} is within the tolerance now: take it off COARSE_ARCS"));
+                out.unexpected.push(format!(
+                    "{class} {gid} is within the tolerance now: take it off COARSE_ARCS"
+                ));
             }
             continue;
         }
@@ -174,7 +200,11 @@ fn only_the_grid_s_lines_are_not_shown() {
         let m = read_ok(bytes);
         let made = m.bodies(bytes, &never).expect("the bodies");
         for n in &made.not_shown {
-            assert_eq!(m.objects[n.object].class, "IfcGrid", "{name}: {} {}", m.objects[n.object].class, n.reason);
+            assert_eq!(
+                m.objects[n.object].class, "IfcGrid",
+                "{name}: {} {}",
+                m.objects[n.object].class, n.reason
+            );
         }
     }
 }
@@ -184,7 +214,10 @@ fn only_the_grid_s_lines_are_not_shown() {
 /// koordinat"). The engine's float32 positions stay about each body's float64 origin.
 #[test]
 fn a_building_on_turef_coordinates_keeps_its_corners() {
-    let (_, bytes) = *WRITTEN.iter().find(|(n, _)| *n == "blok-b").expect("block B");
+    let (_, bytes) = *WRITTEN
+        .iter()
+        .find(|(n, _)| *n == "blok-b")
+        .expect("block B");
     let text = String::from_utf8(bytes.to_vec()).expect("UTF-8");
     let shift = [587_312.345, 4_400_612.789, 1_285.4];
     let moved = text
@@ -192,7 +225,10 @@ fn a_building_on_turef_coordinates_keeps_its_corners() {
         .replace("ENDSEC;\nEND-ISO-10303-21;", "#9999995=IFCCARTESIANPOINT((587312.345,4400612.789,1285.4));\nENDSEC;\nEND-ISO-10303-21;");
     assert_ne!(moved, text, "the site's placement moved");
     let (a, b) = (read_ok(bytes), read_ok(moved.as_bytes()));
-    let (here, there) = (a.bodies(bytes, &never).expect("bodies"), b.bodies(moved.as_bytes(), &never).expect("bodies"));
+    let (here, there) = (
+        a.bodies(bytes, &never).expect("bodies"),
+        b.bodies(moved.as_bytes(), &never).expect("bodies"),
+    );
     assert_eq!(here.bodies.len(), there.bodies.len());
     let mut worst = 0.0f64;
     for (p, q) in here.bodies.iter().zip(&there.bodies) {
@@ -204,8 +240,14 @@ fn a_building_on_turef_coordinates_keeps_its_corners() {
             }
         }
     }
-    println!("TUREF: worst corner {worst:.2e} m over {} bodies", here.bodies.len());
-    assert!(worst <= 1e-5, "a corner {worst:.2e} m off, past the file's precision 1e-5");
+    println!(
+        "TUREF: worst corner {worst:.2e} m over {} bodies",
+        here.bodies.len()
+    );
+    assert!(
+        worst <= 1e-5,
+        "a corner {worst:.2e} m off, past the file's precision 1e-5"
+    );
 }
 
 #[test]
@@ -219,12 +261,28 @@ fn look() {
         let m = read_ok(bytes);
         let made = m.bodies(bytes, &never).expect("the bodies");
         for n in &made.not_shown {
-            println!("{name}: not shown {} #{} {:?}: {}", m.objects[n.object].class, m.objects[n.object].step, m.objects[n.object].name, n.reason);
+            println!(
+                "{name}: not shown {} #{} {:?}: {}",
+                m.objects[n.object].class,
+                m.objects[n.object].step,
+                m.objects[n.object].name,
+                n.reason
+            );
         }
         if *name != "blok-b" {
             for b in &made.bodies {
                 let o = &m.objects[b.object];
-                println!("{name}: {} #{} {:?} box {:?} {} triangles; theirs {}", o.class, o.step, o.name, bbox(b), b.triangles.len(), r["bodies"].get(&o.global_id).map_or("—".to_owned(), |t| t["box"].to_string()));
+                println!(
+                    "{name}: {} #{} {:?} box {:?} {} triangles; theirs {}",
+                    o.class,
+                    o.step,
+                    o.name,
+                    bbox(b),
+                    b.triangles.len(),
+                    r["bodies"]
+                        .get(&o.global_id)
+                        .map_or("—".to_owned(), |t| t["box"].to_string())
+                );
             }
         }
     }

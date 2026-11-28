@@ -79,13 +79,26 @@ struct Network {
 
 impl Network {
     fn new(n: usize) -> Self {
-        Self { edges: Vec::new(), out: vec![Vec::new(); n] }
+        Self {
+            edges: Vec::new(),
+            out: vec![Vec::new(); n],
+        }
     }
 
     fn add(&mut self, a: usize, b: usize, cap: f64, cost: Cost) -> usize {
         let k = self.edges.len();
-        self.edges.push(Edge { to: b, cap, cost, flow: 0.0 });
-        self.edges.push(Edge { to: a, cap: 0.0, cost: [-cost[0], -cost[1]], flow: 0.0 });
+        self.edges.push(Edge {
+            to: b,
+            cap,
+            cost,
+            flow: 0.0,
+        });
+        self.edges.push(Edge {
+            to: a,
+            cap: 0.0,
+            cost: [-cost[0], -cost[1]],
+            flow: 0.0,
+        });
         self.out[a].push(k);
         self.out[b].push(k + 1);
         k
@@ -161,14 +174,23 @@ pub fn plan(points: &[[f64; 2]], sites: &[PlanSite]) -> Plan {
     let tiny = 1e-9 * (cut + fill + gives + takes).max(1.0);
     let shortage = (fill - cut - gives).max(0.0);
     let surplus = (cut - fill - takes).max(0.0);
-    let mut out = Plan { cut, fill, used: vec![0.0; sites.len()], ..Plan::default() };
+    let mut out = Plan {
+        cut,
+        fill,
+        used: vec![0.0; sites.len()],
+        ..Plan::default()
+    };
     if shortage > tiny || surplus > tiny {
         out.shortage = shortage;
         out.surplus = surplus;
         return out;
     }
     out.feasible = true;
-    let mut stations: Vec<f64> = places.iter().map(|p| p.0).chain(sites.iter().map(|s| s.station)).collect();
+    let mut stations: Vec<f64> = places
+        .iter()
+        .map(|p| p.0)
+        .chain(sites.iter().map(|s| s.station))
+        .collect();
     stations.sort_by(f64::total_cmp);
     stations.dedup();
     let at = |s: f64| stations.partition_point(|x| *x < s);
@@ -196,7 +218,11 @@ pub fn plan(points: &[[f64; 2]], sites: &[PlanSite]) -> Plan {
         .iter()
         .map(|p| {
             let cost = [p.access.max(0.0), 0.0];
-            if p.borrow { net.add(s, at(p.station), p.capacity, cost) } else { net.add(at(p.station), t, p.capacity, cost) }
+            if p.borrow {
+                net.add(s, at(p.station), p.capacity, cost)
+            } else {
+                net.add(at(p.station), t, p.capacity, cost)
+            }
         })
         .collect();
     net.least_cost(s, t, tiny);
@@ -211,7 +237,13 @@ pub fn plan(points: &[[f64; 2]], sites: &[PlanSite]) -> Plan {
         out.moment += flow.abs() * length;
         out.segments.push((stations[i], stations[i + 1], flow));
     }
-    out.moved = cut + sites.iter().zip(&out.used).filter(|(p, _)| p.borrow).map(|(_, u)| u).sum::<f64>();
+    out.moved = cut
+        + sites
+            .iter()
+            .zip(&out.used)
+            .filter(|(p, _)| p.borrow)
+            .map(|(_, u)| u)
+            .sum::<f64>();
     out
 }
 
@@ -257,7 +289,15 @@ pub fn plan_priced(points: &[[f64; 2]], sites: &[PlanSite], prices: Prices) -> C
     let tiny = 1e-9 * (cut + fill + gives + takes).max(1.0);
     let shortage = (fill - cut - gives).max(0.0);
     let surplus = (cut - fill - takes).max(0.0);
-    let mut out = Costed { plan: Plan { cut, fill, used: vec![0.0; sites.len()], ..Plan::default() }, ..Costed::default() };
+    let mut out = Costed {
+        plan: Plan {
+            cut,
+            fill,
+            used: vec![0.0; sites.len()],
+            ..Plan::default()
+        },
+        ..Costed::default()
+    };
     if shortage > tiny || surplus > tiny {
         out.plan.shortage = shortage;
         out.plan.surplus = surplus;
@@ -270,21 +310,43 @@ pub fn plan_priced(points: &[[f64; 2]], sites: &[PlanSite], prices: Prices) -> C
         .iter()
         .filter(|p| p.1 > 0.0)
         .map(|p| (p.0, p.1, None))
-        .chain(sites.iter().enumerate().filter(|(_, p)| p.borrow).map(|(j, p)| (p.station, p.capacity, Some(j))))
+        .chain(
+            sites
+                .iter()
+                .enumerate()
+                .filter(|(_, p)| p.borrow)
+                .map(|(j, p)| (p.station, p.capacity, Some(j))),
+        )
         .collect();
     let sinks: Vec<(f64, f64, Option<usize>)> = places
         .iter()
         .filter(|p| p.1 < 0.0)
         .map(|p| (p.0, -p.1, None))
-        .chain(sites.iter().enumerate().filter(|(_, p)| !p.borrow).map(|(j, p)| (p.station, p.capacity, Some(j))))
+        .chain(
+            sites
+                .iter()
+                .enumerate()
+                .filter(|(_, p)| !p.borrow)
+                .map(|(j, p)| (p.station, p.capacity, Some(j))),
+        )
         .collect();
     let (ns, nk) = (sources.len(), sinks.len());
     let (s, t) = (ns + nk, ns + nk + 1);
     let mut net = Network::new(ns + nk + 2);
     let haul = |d: f64| prices.overhaul * (d - prices.free).max(0.0);
-    let span = sources.iter().chain(&sinks).map(|p| p.0).fold(f64::NEG_INFINITY, f64::max)
-        - sources.iter().chain(&sinks).map(|p| p.0).fold(f64::INFINITY, f64::min);
-    let most = haul(span.max(0.0) + 2.0 * longest_access(sites)) + prices.waste.max(0.0) + prices.borrow.max(0.0);
+    let span = sources
+        .iter()
+        .chain(&sinks)
+        .map(|p| p.0)
+        .fold(f64::NEG_INFINITY, f64::max)
+        - sources
+            .iter()
+            .chain(&sinks)
+            .map(|p| p.0)
+            .fold(f64::INFINITY, f64::min);
+    let most = haul(span.max(0.0) + 2.0 * longest_access(sites))
+        + prices.waste.max(0.0)
+        + prices.borrow.max(0.0);
     let earn = -((ns + nk + 2) as f64 * most + 1.0);
     let mut pairs = Vec::new();
     for (i, a) in sources.iter().enumerate() {
@@ -323,9 +385,17 @@ pub fn plan_priced(points: &[[f64; 2]], sites: &[PlanSite], prices: Prices) -> C
         out.plan.moment += f * d;
         out.over_moment += f * (d - prices.free).max(0.0);
     }
-    out.plan.access_moment = sites.iter().zip(&out.plan.used).map(|(p, u)| u * p.access.max(0.0)).sum();
+    out.plan.access_moment = sites
+        .iter()
+        .zip(&out.plan.used)
+        .map(|(p, u)| u * p.access.max(0.0))
+        .sum();
     // The segments along the road: what each place gives (its net, a borrow's use) less what it takes.
-    let mut stations: Vec<f64> = places.iter().map(|p| p.0).chain(sites.iter().map(|s| s.station)).collect();
+    let mut stations: Vec<f64> = places
+        .iter()
+        .map(|p| p.0)
+        .chain(sites.iter().map(|s| s.station))
+        .collect();
     stations.sort_by(f64::total_cmp);
     stations.dedup();
     let at = |x: f64| stations.partition_point(|y| *y < x);
@@ -341,8 +411,18 @@ pub fn plan_priced(points: &[[f64; 2]], sites: &[PlanSite], prices: Prices) -> C
         flow += give[i];
         out.plan.segments.push((stations[i], stations[i + 1], flow));
     }
-    let wasted: f64 = sites.iter().zip(&out.plan.used).filter(|(p, _)| !p.borrow).map(|(_, u)| u).sum();
-    let borrowed: f64 = sites.iter().zip(&out.plan.used).filter(|(p, _)| p.borrow).map(|(_, u)| u).sum();
+    let wasted: f64 = sites
+        .iter()
+        .zip(&out.plan.used)
+        .filter(|(p, _)| !p.borrow)
+        .map(|(_, u)| u)
+        .sum();
+    let borrowed: f64 = sites
+        .iter()
+        .zip(&out.plan.used)
+        .filter(|(p, _)| p.borrow)
+        .map(|(_, u)| u)
+        .sum();
     out.plan.moved = cut + borrowed;
     out.overhaul = prices.overhaul * out.over_moment;
     out.waste = prices.waste * wasted;
@@ -407,12 +487,22 @@ pub struct Sorted {
 /// left out. Placing earns more than any route costs (twice the road and its detours, plus one), so the most is
 /// placed, the unsuitable cut earning twice (it goes first where the waste sites are short); then the least moment. Exact by the same successive shortest paths as [`plan`]: with no unsuitable share
 /// and no barrier, it is [`plan`].
-pub fn plan_sorted(stretches: &[SortedStretch], sites: &[PlanSite], barriers: &[Barrier]) -> Sorted {
+pub fn plan_sorted(
+    stretches: &[SortedStretch],
+    sites: &[PlanSite],
+    barriers: &[Barrier],
+) -> Sorted {
     let mid = |r: &SortedStretch| 0.5 * (r.from + r.to);
-    let kept: Vec<&SortedStretch> = stretches.iter().filter(|r| r.to > r.from && (r.cut > 0.0 || r.fill > 0.0)).collect();
+    let kept: Vec<&SortedStretch> = stretches
+        .iter()
+        .filter(|r| r.to > r.from && (r.cut > 0.0 || r.fill > 0.0))
+        .collect();
     let cut: f64 = kept.iter().map(|r| r.cut).sum();
     let fill: f64 = kept.iter().map(|r| r.fill).sum();
-    let unsuitable: f64 = kept.iter().map(|r| r.cut * r.unsuitable.clamp(0.0, 1.0)).sum();
+    let unsuitable: f64 = kept
+        .iter()
+        .map(|r| r.cut * r.unsuitable.clamp(0.0, 1.0))
+        .sum();
     let gives: f64 = sites.iter().filter(|s| s.borrow).map(|s| s.capacity).sum();
     let takes: f64 = sites.iter().filter(|s| !s.borrow).map(|s| s.capacity).sum();
     let tiny = 1e-9 * (cut + fill + gives + takes).max(1.0);
@@ -425,7 +515,11 @@ pub fn plan_sorted(stretches: &[SortedStretch], sites: &[PlanSite], barriers: &[
         crossed: vec![0.0; barriers.len()],
         ..Sorted::default()
     };
-    let mut stations: Vec<f64> = kept.iter().map(|r| mid(r)).chain(sites.iter().map(|s| s.station)).collect();
+    let mut stations: Vec<f64> = kept
+        .iter()
+        .map(|r| mid(r))
+        .chain(sites.iter().map(|s| s.station))
+        .collect();
     stations.sort_by(f64::total_cmp);
     stations.dedup();
     let n = stations.len();
@@ -441,7 +535,9 @@ pub fn plan_sorted(stretches: &[SortedStretch], sites: &[PlanSite], barriers: &[
     // The barriers on each segment: their detours, and whether one is closed. A barrier at a place's station lies
     // just after it.
     let on = |i: usize, b: &Barrier| stations[i] <= b.station && b.station < stations[i + 1];
-    let span = stations[n - 1] - stations[0] + barriers.iter().filter_map(|b| b.detour).sum::<f64>() + longest_access(sites);
+    let span = stations[n - 1] - stations[0]
+        + barriers.iter().filter_map(|b| b.detour).sum::<f64>()
+        + longest_access(sites);
     let earn = -(2.0 * span + 1.0);
     let mut arcs = Vec::with_capacity(n.saturating_sub(1));
     for i in 0..n.saturating_sub(1) {
@@ -450,7 +546,8 @@ pub fn plan_sorted(stretches: &[SortedStretch], sites: &[PlanSite], barriers: &[
             arcs.push(None);
             continue;
         }
-        let length = stations[i + 1] - stations[i] + crossing.iter().filter_map(|b| b.detour).sum::<f64>();
+        let length =
+            stations[i + 1] - stations[i] + crossing.iter().filter_map(|b| b.detour).sum::<f64>();
         let mut pair = [[0usize; 2]; 2];
         for (layer, base) in [0, n].into_iter().enumerate() {
             pair[layer] = [
@@ -508,7 +605,10 @@ pub fn plan_sorted(stretches: &[SortedStretch], sites: &[PlanSite], barriers: &[
             out.surplus += left;
         }
     }
-    out.shortage = demands.iter().map(|(k, v)| (v - net.edges[*k].flow).max(0.0)).sum();
+    out.shortage = demands
+        .iter()
+        .map(|(k, v)| (v - net.edges[*k].flow).max(0.0))
+        .sum();
     for (i, arc) in arcs.iter().enumerate() {
         let (good, bad) = match arc {
             Some((pair, length)) => {

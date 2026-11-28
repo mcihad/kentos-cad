@@ -7,11 +7,13 @@ use serde_json::{Value, json};
 
 use super::special_doors::{PX, crop};
 
-const CASES: &str = include_str!("../../../../../fixtures/commands/v1/cad.openings.create.arcpocket.json");
+const CASES: &str =
+    include_str!("../../../../../fixtures/commands/v1/cad.openings.create.arcpocket.json");
 
 fn session() -> Session {
     let file: Value = serde_json::from_str(CASES).unwrap();
-    let model: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(file["setup"].clone()).unwrap();
+    let model: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(file["setup"].clone()).unwrap();
     Session::from_bytes(&kentos_kcad::encode_verified(&model).unwrap()).unwrap()
 }
 
@@ -34,12 +36,15 @@ fn an_arc_pocket_door_goes_to_dxf_with_its_curved_leaf_and_comes_back() {
         .filter(|b| b.abs() > 1e-6)
         .collect();
     assert!(bulges.len() >= 2, "the curved leaf's arcs: {bulges:?}");
-    let back = kentos_formats::dxf::read(&std::fs::read(&path).unwrap(), &DxfReadOptions::default())
-        .unwrap()
-        .entities;
+    let back =
+        kentos_formats::dxf::read(&std::fs::read(&path).unwrap(), &DxfReadOptions::default())
+            .unwrap()
+            .entities;
     let pockets = back
         .iter()
-        .filter(|e| matches!(e, Entity::Opening(o) if o.opening.operation == OpeningOperation::Pocket))
+        .filter(
+            |e| matches!(e, Entity::Opening(o) if o.opening.operation == OpeningOperation::Pocket),
+        )
         .count();
     assert_eq!(pockets, 2, "both pocket doors read back");
     let _ = std::fs::remove_dir_all(folder);
@@ -79,7 +84,10 @@ fn an_arc_pocket_prints_at_1_50_with_its_cavity_along_the_arc() {
         for k in 0..=500 {
             let r = 4.75 + 0.001 * f64::from(k);
             let p = on_page(r * a.cos(), r * a.sin());
-            let (x, y) = (((p[0] - (cx - 30.0)) * PX).round() as usize, ((p[1] - (cy - 30.0)) * PX).round() as usize);
+            let (x, y) = (
+                ((p[0] - (cx - 30.0)) * PX).round() as usize,
+                ((p[1] - (cy - 30.0)) * PX).round() as usize,
+            );
             let dark = px[y.min(h - 1) * w + x.min(w - 1)] < 160;
             if dark && !inside {
                 runs += 1;
@@ -88,7 +96,11 @@ fn an_arc_pocket_prints_at_1_50_with_its_cavity_along_the_arc() {
         }
         runs
     };
-    assert_eq!(runs(th), 4, "the faces and the pocket's sides along the arc");
+    assert_eq!(
+        runs(th),
+        4,
+        "the faces and the pocket's sides along the arc"
+    );
     assert_eq!(runs(0.78), 2, "past the pocket only the faces");
     let _ = std::fs::remove_dir_all(folder);
 }

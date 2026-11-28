@@ -3,8 +3,8 @@
 //! `fixtures/commands/v1/road.profiles.sight.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, MAX_ALIGNMENT_PLACES, ProfilesSight, ProfilesSightRead, SightLeast, SightReach,
-    SightRow, SightShort, SightSide, SightUntil,
+    CommandResult, CommandWarning, MAX_ALIGNMENT_PLACES, ProfilesSight, ProfilesSightRead,
+    SightLeast, SightReach, SightRow, SightShort, SightSide, SightUntil,
 };
 use kentos_domain::Document;
 use kentos_road::profile::{SIGHT_RESOLUTION, Seen, Until};
@@ -33,7 +33,11 @@ fn reach_of(s: Seen) -> SightReach {
 
 fn least(rows: &[SightRow], pick: impl Fn(&SightRow) -> Option<&SightReach>) -> Option<SightLeast> {
     rows.iter()
-        .filter_map(|r| pick(r).filter(|x| x.until == SightUntil::Hidden).map(|x| (r.station, x.distance)))
+        .filter_map(|r| {
+            pick(r)
+                .filter(|x| x.until == SightUntil::Hidden)
+                .map(|x| (r.station, x.distance))
+        })
         .fold(None, |best: Option<(f64, f64)>, (s, d)| match best {
             Some((_, b)) if b <= d => best,
             _ => Some((s, d)),
@@ -41,7 +45,12 @@ fn least(rows: &[SightRow], pick: impl Fn(&SightRow) -> Option<&SightReach>) -> 
         .map(|(station, distance)| SightLeast { station, distance })
 }
 
-fn shorts(rows: &[SightRow], side: SightSide, required: f64, pick: impl Fn(&SightRow) -> Option<&SightReach>) -> Vec<SightShort> {
+fn shorts(
+    rows: &[SightRow],
+    side: SightSide,
+    required: f64,
+    pick: impl Fn(&SightRow) -> Option<&SightReach>,
+) -> Vec<SightShort> {
     let mut out: Vec<SightShort> = Vec::new();
     let mut open = false;
     for r in rows {
@@ -52,7 +61,12 @@ fn shorts(rows: &[SightRow], side: SightSide, required: f64, pick: impl Fn(&Sigh
                     last.to = r.station;
                     last.least = last.least.min(x.distance);
                 } else {
-                    out.push(SightShort { side, from: r.station, to: r.station, least: x.distance });
+                    out.push(SightShort {
+                        side,
+                        from: r.station,
+                        to: r.station,
+                        least: x.distance,
+                    });
                 }
                 open = true;
             }
@@ -63,12 +77,18 @@ fn shorts(rows: &[SightRow], side: SightSide, required: f64, pick: impl Fn(&Sigh
 }
 
 /// The sight now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &ProfilesSight) -> Result<(ProfilesSightRead, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &ProfilesSight,
+) -> Result<(ProfilesSightRead, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(common::profiles(doc), &input.profile, "profile")?;
     let positive = |v: f64| v.is_finite() && v > 0.0;
     if !positive(input.eye) {
-        return Err(invalid("Göz yüksekliği (eye) 0'dan büyük olmalı.".into(), "eye"));
+        return Err(invalid(
+            "Göz yüksekliği (eye) 0'dan büyük olmalı.".into(),
+            "eye",
+        ));
     }
     if !positive(input.object) {
         return Err(invalid(
@@ -76,13 +96,22 @@ pub(crate) fn answer(doc: &Document, input: &ProfilesSight) -> Result<(ProfilesS
             "object",
         ));
     }
-    for (v, name, path) in [(input.reach, "Bakılan uzaklık", "reach"), (input.step, "Adım", "step")] {
+    for (v, name, path) in [
+        (input.reach, "Bakılan uzaklık", "reach"),
+        (input.step, "Adım", "step"),
+    ] {
         if !positive(v) {
-            return Err(invalid(format!("{name} ({path}) 0'dan büyük olmalı."), path));
+            return Err(invalid(
+                format!("{name} ({path}) 0'dan büyük olmalı."),
+                path,
+            ));
         }
     }
     if input.required.is_some_and(|r| !positive(r)) {
-        return Err(invalid("Gereken görüş mesafesi (required) 0'dan büyük olmalı.".into(), "required"));
+        return Err(invalid(
+            "Gereken görüş mesafesi (required) 0'dan büyük olmalı.".into(),
+            "required",
+        ));
     }
     let built = common::build(doc, def)?;
     let v = &built.vertical;
@@ -91,14 +120,20 @@ pub(crate) fn answer(doc: &Document, input: &ProfilesSight) -> Result<(ProfilesS
     let on = |s: f64| s.is_finite() && s >= v.start - 1e-9 && s <= v.end + 1e-9;
     if !(on(from) && on(to) && from < to) {
         return Err(invalid(
-            format!("Km aralığı boykesitin üstünde ve ileri olmalı: boykesit {:.3} ile {:.3} m arası.", v.start, v.end),
+            format!(
+                "Km aralığı boykesitin üstünde ve ileri olmalı: boykesit {:.3} ile {:.3} m arası.",
+                v.start, v.end
+            ),
             if on(from) { "to" } else { "from" },
         ));
     }
     let (from, to) = (from.clamp(v.start, v.end), to.clamp(v.start, v.end));
     let count = ((to - from) / input.step).ceil() + 1.0;
     if count > MAX_ALIGNMENT_PLACES as f64 {
-        return Err(invalid(format!("Bir soruda en çok {MAX_ALIGNMENT_PLACES} km olur; adımı büyütün."), "step"));
+        return Err(invalid(
+            format!("Bir soruda en çok {MAX_ALIGNMENT_PLACES} km olur; adımı büyütün."),
+            "step",
+        ));
     }
     let mut stations: Vec<f64> = Vec::new();
     let mut k = 0.0;
@@ -119,7 +154,10 @@ pub(crate) fn answer(doc: &Document, input: &ProfilesSight) -> Result<(ProfilesS
     let rows: Vec<SightRow> = stations
         .iter()
         .map(|&s| {
-            let look = |forward: bool| v.sight(s, forward, input.eye, input.object, input.reach, input.step).map(reach_of);
+            let look = |forward: bool| {
+                v.sight(s, forward, input.eye, input.object, input.reach, input.step)
+                    .map(reach_of)
+            };
             SightRow {
                 station: s,
                 elevation: v.at(s).map_or(f64::NAN, |p| p.0),
@@ -142,8 +180,12 @@ pub(crate) fn answer(doc: &Document, input: &ProfilesSight) -> Result<(ProfilesS
         });
     }
     if let Some(required) = input.required {
-        short.extend(shorts(&rows, SightSide::Forward, required, |r| r.forward.as_ref()));
-        short.extend(shorts(&rows, SightSide::Backward, required, |r| r.backward.as_ref()));
+        short.extend(shorts(&rows, SightSide::Forward, required, |r| {
+            r.forward.as_ref()
+        }));
+        short.extend(shorts(&rows, SightSide::Backward, required, |r| {
+            r.backward.as_ref()
+        }));
         if let Some(worst) = short.iter().min_by(|a, b| a.least.total_cmp(&b.least)) {
             warnings.push(CommandWarning {
                 code: codes::SIGHT_SHORT.into(),
@@ -179,7 +221,10 @@ pub(crate) fn answer(doc: &Document, input: &ProfilesSight) -> Result<(ProfilesS
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ProfilesSight) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -193,11 +238,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesSight) -> CommandResult<P
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ProfilesSight) -> CommandResult<ProfilesSightRead> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProfilesSight,
+) -> CommandResult<ProfilesSightRead> {
     plan(cx, &input)
 }
 
 /// The sight for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &ProfilesSight) -> Result<(ProfilesSightRead, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &ProfilesSight,
+) -> Result<(ProfilesSightRead, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

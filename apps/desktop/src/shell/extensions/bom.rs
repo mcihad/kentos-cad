@@ -69,7 +69,10 @@ impl App {
             self.extensions.envs.get(id).and_then(|s| s.status.as_ref())
             && let Some(venv) = ready.python.parent().and_then(Path::parent)
         {
-            kentos_extensions::sbom::add_licenses(&mut bom, &kentos_extensions::sbom::licenses_in_venv(venv));
+            kentos_extensions::sbom::add_licenses(
+                &mut bom,
+                &kentos_extensions::sbom::licenses_in_venv(venv),
+            );
         }
         let text = serde_json::to_string_pretty(&bom).unwrap_or_default() + "\n";
         Ok((text, format!("{id}-{}.cdx.json", manifest.version)))

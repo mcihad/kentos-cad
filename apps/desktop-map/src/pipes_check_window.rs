@@ -15,21 +15,22 @@
 //! from a system of KentOS's rule package (the 2017 sewer and storm water regulations), each pipe's slope class and
 //! its limits in the table; the profile draws the run's own outer walls.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use std::path::PathBuf;
 
 use iced::widget::{container, row};
-use kentos_ui::widget::grow::Grows;
 use iced::{Center, Element, Task};
 use kentos_commands::{
-    CommandResult, NetworkKind, PipeAbove, PipeCheck, PipeClearanceAsk, PipeCrossing, PipeDiameter, PipeGround,
-    PipeInverts, PipeNear, PipeProfileOther, PipeRulesAsk, PipeUnit, PipesCheck, PipesChecked, PipesProfile,
+    CommandResult, NetworkKind, PipeAbove, PipeCheck, PipeClearanceAsk, PipeCrossing, PipeDiameter,
+    PipeGround, PipeInverts, PipeNear, PipeProfileOther, PipeRulesAsk, PipeUnit, PipesCheck,
+    PipesChecked, PipesProfile,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, pipes_check, pipes_profile};
 use kentos_ui::label;
+use kentos_ui::widget::grow::Grows;
 use kentos_ui::widget::{Dialog as Frame, Form, Segmented};
 
 use crate::app::{App, Message};
@@ -271,7 +272,11 @@ fn limit(text: &str, words: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().ok().filter(|v| v.is_finite()).map(Some).ok_or_else(|| format!("{words} “{text}” bir sayı değil."))
+    t.parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .map(Some)
+        .ok_or_else(|| format!("{words} “{text}” bir sayı değil."))
 }
 
 /// The catalogue's text (sizes apart by spaces, semicolons or slashes; a comma is a decimal point).
@@ -279,7 +284,12 @@ fn catalog(text: &str) -> Result<Vec<f64>, String> {
     text.split([' ', ';', '/'])
         .filter(|t| !t.trim().is_empty())
         .map(|t| {
-            t.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite()).ok_or_else(|| format!("Katalogdaki “{t}” bir sayı değil."))
+            t.trim()
+                .replace(',', ".")
+                .parse::<f64>()
+                .ok()
+                .filter(|v| v.is_finite())
+                .ok_or_else(|| format!("Katalogdaki “{t}” bir sayı değil."))
         })
         .collect()
 }
@@ -309,7 +319,10 @@ fn name_of(app: &App, uid: &str) -> String {
     let doc = app.document.as_ref();
     Uuid::parse_str(uid)
         .ok()
-        .and_then(|u| doc.and_then(|d| d.model.slot_of(u)).and_then(|s| doc.and_then(|d| d.model.get(s))))
+        .and_then(|u| {
+            doc.and_then(|d| d.model.slot_of(u))
+                .and_then(|s| doc.and_then(|d| d.model.get(s)))
+        })
         .and_then(|e| e.base().attrs.get("Ad").cloned())
         .filter(|a| !a.trim().is_empty())
         .unwrap_or_else(|| uid.split('-').next().unwrap_or(uid).to_owned())
@@ -317,7 +330,9 @@ fn name_of(app: &App, uid: &str) -> String {
 
 /// The table as CSV (metres and slopes as computed).
 pub fn csv(r: &PipesChecked, names: &[String]) -> String {
-    let mut out = String::from("Boru;Nesne;Uzunluk (m);Akış;Akar yukarı (m);Akar aşağı (m);Eğim (m/m);Çap (m);En az örtü (m);En çok örtü (m);Bulgular\n");
+    let mut out = String::from(
+        "Boru;Nesne;Uzunluk (m);Akış;Akar yukarı (m);Akar aşağı (m);Eğim (m/m);Çap (m);En az örtü (m);En çok örtü (m);Bulgular\n",
+    );
     let opt = |v: Option<f64>| v.map(|v| v.to_string()).unwrap_or_default();
     for (p, name) in r.pipes.iter().zip(names) {
         out.push_str(&format!(
@@ -325,14 +340,22 @@ pub fn csv(r: &PipesChecked, names: &[String]) -> String {
             name,
             p.uid,
             p.length,
-            if p.reversed { "çizime ters" } else { "çizim yönünde" },
+            if p.reversed {
+                "çizime ters"
+            } else {
+                "çizim yönünde"
+            },
             opt(p.upstream),
             opt(p.downstream),
             opt(p.slope),
             opt(p.diameter),
             opt(p.min_cover),
             opt(p.max_cover),
-            p.findings.iter().map(|k| kind_word(k)).collect::<Vec<_>>().join(", ")
+            p.findings
+                .iter()
+                .map(|k| kind_word(k))
+                .collect::<Vec<_>>()
+                .join(", ")
         ));
     }
     out
@@ -363,7 +386,10 @@ impl PipesCheckWindowApp for App {
             Some(PipeClearanceAsk {
                 network: s.other.clone(),
                 inverts: match s.other_from {
-                    From::Fields => PipeInverts::Fields { start: s.other_start.clone(), end: s.other_end.clone() },
+                    From::Fields => PipeInverts::Fields {
+                        start: s.other_start.clone(),
+                        end: s.other_end.clone(),
+                    },
                     From::Heights => PipeInverts::Heights,
                 },
                 diameter: (!s.other_diameter.trim().is_empty()).then(|| PipeDiameter {
@@ -385,7 +411,10 @@ impl PipesCheckWindowApp for App {
         Ok(PipesCheck {
             network: s.network.clone(),
             inverts: match s.from {
-                From::Fields => PipeInverts::Fields { start: s.start.clone(), end: s.end.clone() },
+                From::Fields => PipeInverts::Fields {
+                    start: s.start.clone(),
+                    end: s.end.clone(),
+                },
                 From::Heights => PipeInverts::Heights,
             },
             diameter: (!s.diameter.trim().is_empty())
@@ -400,8 +429,12 @@ impl PipesCheckWindowApp for App {
                 })
                 .transpose()?,
             ground: match s.ground {
-                Ground::Surface => Some(PipeGround::Surface { surface: s.surface.clone() }),
-                Ground::Structures => Some(PipeGround::Structures { field: s.cover_field.clone() }),
+                Ground::Surface => Some(PipeGround::Surface {
+                    surface: s.surface.clone(),
+                }),
+                Ground::Structures => Some(PipeGround::Structures {
+                    field: s.cover_field.clone(),
+                }),
                 Ground::None => None,
             },
             min_cover: limit(&s.min_cover, "En az örtü")?,
@@ -409,19 +442,24 @@ impl PipesCheckWindowApp for App {
             min_slope: slope(&s.min_slope, "En az eğim")?,
             max_slope: slope(&s.max_slope, "En çok eğim")?,
             clearance,
-            rules: (!s.rules.is_empty()).then(|| PipeRulesAsk { system: s.rules.clone(), package: None }),
+            rules: (!s.rules.is_empty()).then(|| PipeRulesAsk {
+                system: s.rules.clone(),
+                package: None,
+            }),
         })
     }
 
     fn pipes_check_run(&mut self) {
         let input = self.pipes_check_input();
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         self.modules.map_mut().pipes_check.answer = Some(input.and_then(|input| {
             match pipes_check::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
-                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                    Err(error.message)
-                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
                 _ => Err("Denetlenemedi.".to_owned()),
             }
         }));
@@ -442,7 +480,10 @@ impl PipesCheckWindowApp for App {
             .map(|n| (n.id.clone(), n.name.clone()))
             .collect();
         // The selection's own network when every selected object is its part (docs/adr/2480), else the first.
-        let picked = self.selection_roles().network.and_then(|id| networks.iter().find(|n| n.0 == id).cloned());
+        let picked = self
+            .selection_roles()
+            .network
+            .and_then(|id| networks.iter().find(|n| n.0 == id).cloned());
         let Some(first) = picked.or_else(|| networks.first().cloned()) else {
             let why = "Projede altyapı ağı yok. Önce Ağlar'da boruların katmanıyla bir altyapı ağı tanımlayın.";
             self.warn(format!("Boru hattı denetimi: {why}"));
@@ -456,17 +497,32 @@ impl PipesCheckWindowApp for App {
         };
         let first = &first;
         let net = settings.networks.iter().find(|n| n.id == first.0);
-        let edge_layers: Vec<String> = net.map(|n| n.edges.iter().map(|l| l.layer.clone()).collect()).unwrap_or_default();
-        let junction_layers: Vec<String> = net.map(|n| n.junctions.iter().map(|l| l.layer.clone()).collect()).unwrap_or_default();
+        let edge_layers: Vec<String> = net
+            .map(|n| n.edges.iter().map(|l| l.layer.clone()).collect())
+            .unwrap_or_default();
+        let junction_layers: Vec<String> = net
+            .map(|n| n.junctions.iter().map(|l| l.layer.clone()).collect())
+            .unwrap_or_default();
         let has = |layers: &[String], field: &str| {
-            doc.model.entities().any(|e| layers.contains(&e.base().layer_id) && e.base().attrs.contains_key(field))
+            doc.model
+                .entities()
+                .any(|e| layers.contains(&e.base().layer_id) && e.base().attrs.contains_key(field))
         };
         let surfaces: Vec<(String, String)> = settings
             .road
             .as_ref()
-            .map(|r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect())
+            .map(|r| {
+                r.surfaces
+                    .iter()
+                    .map(|s| (s.id.clone(), s.name.clone()))
+                    .collect()
+            })
             .unwrap_or_default();
-        let from = if has(&edge_layers, "Akar baş") { From::Fields } else { From::Heights };
+        let from = if has(&edge_layers, "Akar baş") {
+            From::Fields
+        } else {
+            From::Heights
+        };
         let ground = if !surfaces.is_empty() {
             Ground::Surface
         } else if has(&junction_layers, "Kapak kotu") {
@@ -474,19 +530,33 @@ impl PipesCheckWindowApp for App {
         } else {
             Ground::None
         };
-        let layers: Vec<(String, String)> =
-            doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+        let layers: Vec<(String, String)> = doc
+            .model
+            .layers()
+            .leaves()
+            .iter()
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect();
         let profile_layer = layers
             .iter()
-            .find(|(_, n)| ["profil", "boykesit"].iter().any(|w| n.to_lowercase().contains(w)))
+            .find(|(_, n)| {
+                ["profil", "boykesit"]
+                    .iter()
+                    .any(|w| n.to_lowercase().contains(w))
+            })
             .map_or_else(|| doc.model.layers().active().to_owned(), |l| l.0.clone());
         // The same drawing and network as last time (UR2-025: back from Hat profili every limit was empty): the
         // values typed come back, the lists read again; another network starts afresh, its own guesses shown.
         let session = Some(doc.session);
         let kept = &self.modules.map().pipes_check;
         if kept.session == session && kept.network == first.0 {
-            let layers: Vec<(String, String)> =
-                doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+            let layers: Vec<(String, String)> = doc
+                .model
+                .layers()
+                .leaves()
+                .iter()
+                .map(|n| (n.id.clone(), n.name.clone()))
+                .collect();
             let mut again = kept.clone();
             again.networks = networks;
             again.surfaces = surfaces;
@@ -506,9 +576,20 @@ impl PipesCheckWindowApp for App {
             from,
             start: "Akar baş".into(),
             end: "Akar son".into(),
-            diameter: if has(&edge_layers, "Çap") { "Çap".into() } else { String::new() },
-            wall: ["Et kalınlığı", "Et"].iter().find(|f| has(&edge_layers, f)).map_or_else(String::new, |f| (*f).to_owned()),
-            outer: if has(&edge_layers, "Dış çap") { "Dış çap".into() } else { String::new() },
+            diameter: if has(&edge_layers, "Çap") {
+                "Çap".into()
+            } else {
+                String::new()
+            },
+            wall: ["Et kalınlığı", "Et"]
+                .iter()
+                .find(|f| has(&edge_layers, f))
+                .map_or_else(String::new, |f| (*f).to_owned()),
+            outer: if has(&edge_layers, "Dış çap") {
+                "Dış çap".into()
+            } else {
+                String::new()
+            },
             unit: "mm".into(),
             ground,
             surface: surfaces.first().map(|s| s.0.clone()).unwrap_or_default(),
@@ -543,7 +624,10 @@ impl PipesCheckWindowApp for App {
             end: (!s.profile_end.is_empty()).then(|| s.profile_end.clone()),
             inverts: check.inverts,
             // The catalogue is the check's question, not the profile's.
-            diameter: check.diameter.map(|d| PipeDiameter { catalog: Vec::new(), ..d }),
+            diameter: check.diameter.map(|d| PipeDiameter {
+                catalog: Vec::new(),
+                ..d
+            }),
             ground: check.ground,
             layer_id: s.profile_layer.clone(),
             at: [0.0, 0.0],
@@ -551,25 +635,43 @@ impl PipesCheckWindowApp for App {
             exaggeration: None,
             height: None,
             // The other network of the clearances: its pipes crossing the run drawn in the profile (docs/adr/2760).
-            crossing: check.clearance.filter(|_| s.profile_crossings).map(|c| PipeProfileOther {
-                network: c.network,
-                inverts: c.inverts,
-                diameter: c.diameter.map(|d| PipeDiameter { catalog: Vec::new(), ..d }),
-                hatch: (s.profile_hatch != kentos_commands::CrossingHatch::Wall).then_some(s.profile_hatch),
-            }),
+            crossing: check
+                .clearance
+                .filter(|_| s.profile_crossings)
+                .map(|c| PipeProfileOther {
+                    network: c.network,
+                    inverts: c.inverts,
+                    diameter: c.diameter.map(|d| PipeDiameter {
+                        catalog: Vec::new(),
+                        ..d
+                    }),
+                    hatch: (s.profile_hatch != kentos_commands::CrossingHatch::Wall)
+                        .then_some(s.profile_hatch),
+                }),
             expected_revision: None,
         };
         // Planned at the origin (nothing written), then drawn under the drawing by how far its frame reaches up.
-        let up = match self.document.as_mut().map(|doc| pipes_profile::plan(&ExecutionContext::new(&mut doc.model), &input)) {
-            Some(CommandResult::Completed { output, .. }) => (output.top - output.datum) * output.exaggeration,
+        let up = match self
+            .document
+            .as_mut()
+            .map(|doc| pipes_profile::plan(&ExecutionContext::new(&mut doc.model), &input))
+        {
+            Some(CommandResult::Completed { output, .. }) => {
+                (output.top - output.datum) * output.exaggeration
+            }
             _ => 0.0,
         };
         input.at = self.under_drawing(up);
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         let result = pipes_profile::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             // The crossing pipes (docs/adr/2760): those without an invert there are listed, not drawn.
-            let crossing = match (out.crossings.len(), out.crossings.iter().filter(|c| c.invert.is_none()).count()) {
+            let crossing = match (
+                out.crossings.len(),
+                out.crossings.iter().filter(|c| c.invert.is_none()).count(),
+            ) {
                 (0, _) => String::new(),
                 (n, 0) => format!(", {n} kesişen boru"),
                 (n, k) => format!(", {n} kesişen boru ({k} borunun orada kotu yok, çizilmedi)"),
@@ -578,12 +680,26 @@ impl PipesCheckWindowApp for App {
             let walls = out
                 .crossings
                 .iter()
-                .filter(|c| c.invert.is_some() && c.diameter.is_some() && c.wall.is_some_and(|w| w > 0.0))
+                .filter(|c| {
+                    c.invert.is_some() && c.diameter.is_some() && c.wall.is_some_and(|w| w > 0.0)
+                })
                 .count();
-            let crossing = if walls > 0 { format!("{crossing}, {walls} kesişen borunun dış duvarı") } else { crossing };
+            let crossing = if walls > 0 {
+                format!("{crossing}, {walls} kesişen borunun dış duvarı")
+            } else {
+                crossing
+            };
             // Docs/adr/4780: the run's own pipes drawn with their outer walls.
-            let own = out.pipes.iter().filter(|p| p.wall.is_some_and(|w| w > 0.0)).count();
-            let crossing = if own > 0 { format!(", {own} borunun dış duvarı{crossing}") } else { crossing };
+            let own = out
+                .pipes
+                .iter()
+                .filter(|p| p.wall.is_some_and(|w| w > 0.0))
+                .count();
+            let crossing = if own > 0 {
+                format!(", {own} borunun dış duvarı{crossing}")
+            } else {
+                crossing
+            };
             self.say(
                 Level::Success,
                 format!(
@@ -607,16 +723,39 @@ impl PipesCheckWindowApp for App {
             let net = doc.model.settings().networks.iter().find(|n| n.id == id)?;
             let layers: Vec<&str> = net.edges.iter().map(|l| l.layer.as_str()).collect();
             let has = |field: &str| {
-                doc.model.entities().any(|e| layers.contains(&e.base().layer_id.as_str()) && e.base().attrs.contains_key(field))
+                doc.model.entities().any(|e| {
+                    layers.contains(&e.base().layer_id.as_str())
+                        && e.base().attrs.contains_key(field)
+                })
             };
-            let wall = ["Et kalınlığı", "Et"].iter().find(|f| has(f)).map_or_else(String::new, |f| (*f).to_owned());
-            let outer = if has("Dış çap") { "Dış çap".to_owned() } else { String::new() };
-            Some((if has("Akar baş") { From::Fields } else { From::Heights }, has("Çap"), wall, outer))
+            let wall = ["Et kalınlığı", "Et"]
+                .iter()
+                .find(|f| has(f))
+                .map_or_else(String::new, |f| (*f).to_owned());
+            let outer = if has("Dış çap") {
+                "Dış çap".to_owned()
+            } else {
+                String::new()
+            };
+            Some((
+                if has("Akar baş") {
+                    From::Fields
+                } else {
+                    From::Heights
+                },
+                has("Çap"),
+                wall,
+                outer,
+            ))
         });
         let s = &mut self.modules.map_mut().pipes_check;
         if let Some((from, diameter, wall, outer)) = guess {
             s.other_from = from;
-            s.other_diameter = if diameter { "Çap".into() } else { String::new() };
+            s.other_diameter = if diameter {
+                "Çap".into()
+            } else {
+                String::new()
+            };
             s.other_wall = wall;
             s.other_outer = outer;
         }
@@ -640,8 +779,18 @@ impl PipesCheckWindowApp for App {
             return;
         };
         match std::fs::write(&path, csv(r, &names)) {
-            Ok(()) => self.say(Level::Success, format!("{TITLE}: {} boru {} dosyasına yazıldı.", r.pipes.len(), path.display())),
-            Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.", path.display())),
+            Ok(()) => self.say(
+                Level::Success,
+                format!(
+                    "{TITLE}: {} boru {} dosyasına yazıldı.",
+                    r.pipes.len(),
+                    path.display()
+                ),
+            ),
+            Err(e) => self.warn(format!(
+                "{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.",
+                path.display()
+            )),
         }
     }
 
@@ -705,9 +854,10 @@ impl PipesCheckWindowApp for App {
             Event::Horizontal(v) => s.horizontal = v,
             Event::Above(v) => s.above = v,
             Event::Mark => {
-                let (Ok(input), Some(Ok(r))) =
-                    (self.pipes_check_input(), &self.modules.map().pipes_check.answer)
-                else {
+                let (Ok(input), Some(Ok(r))) = (
+                    self.pipes_check_input(),
+                    &self.modules.map().pipes_check.answer,
+                ) else {
                     return Task::none();
                 };
                 let Some(doc) = self.document.as_ref() else {
@@ -750,14 +900,21 @@ impl PipesCheckWindowApp for App {
                     .pipes
                     .iter()
                     .filter(|p| !p.findings.is_empty())
-                    .filter_map(|p| Uuid::parse_str(&p.uid).ok().and_then(|u| doc.model.slot_of(u)))
+                    .filter_map(|p| {
+                        Uuid::parse_str(&p.uid)
+                            .ok()
+                            .and_then(|u| doc.model.slot_of(u))
+                    })
                     .collect();
                 let n = slots.len();
                 self.selection.set(slots);
                 // The values typed stay for the next opening on this drawing (UR2-025); the answer goes.
                 self.modules.map_mut().pipes_check.answer = None;
                 self.dialog = None;
-                self.say(Level::Info, format!("{TITLE}: bulgusu olan {n} boru seçildi."));
+                self.say(
+                    Level::Info,
+                    format!("{TITLE}: bulgusu olan {n} boru seçildi."),
+                );
                 return Task::none();
             }
             Event::Save => {
@@ -794,46 +951,80 @@ impl PipesCheckWindowApp for App {
         let s = &self.modules.map().pipes_check;
         let f = self.format();
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
-            container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(width)
+            container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v))))
+                .width(width)
         };
-        let units: Vec<(String, String)> = ["mm", "cm", "m"].iter().map(|u| (u.to_string(), u.to_string())).collect();
+        let units: Vec<(String, String)> = ["mm", "cm", "m"]
+            .iter()
+            .map(|u| (u.to_string(), u.to_string()))
+            .collect();
         let inverts: Element<'_, Message> = match s.from {
             From::Fields => row![
-                Segmented::new([From::Fields, From::Heights], s.from, |v| msg(Event::From(v))),
+                Segmented::new([From::Fields, From::Heights], s.from, |v| msg(Event::From(
+                    v
+                ))),
                 text(&s.start, "Baş", Event::Start, 110.0),
                 text(&s.end, "Son", Event::End, 110.0)
             ]
             .spacing(8)
             .align_y(Center)
             .into(),
-            From::Heights => Segmented::new([From::Fields, From::Heights], s.from, |v| msg(Event::From(v))).into(),
+            From::Heights => Segmented::new([From::Fields, From::Heights], s.from, |v| {
+                msg(Event::From(v))
+            })
+            .into(),
         };
         let ground: Element<'_, Message> = match s.ground {
             Ground::Surface => row![
-                Segmented::new([Ground::Surface, Ground::Structures, Ground::None], s.ground, |v| msg(Event::Ground(v))),
-                container(fields::select_owned(s.surfaces.clone(), &s.surface, |v| msg(Event::Surface(v)))).width(170)
+                Segmented::new(
+                    [Ground::Surface, Ground::Structures, Ground::None],
+                    s.ground,
+                    |v| msg(Event::Ground(v))
+                ),
+                container(fields::select_owned(s.surfaces.clone(), &s.surface, |v| {
+                    msg(Event::Surface(v))
+                }))
+                .width(170)
             ]
             .spacing(8)
             .align_y(Center)
             .into(),
             Ground::Structures => row![
-                Segmented::new([Ground::Surface, Ground::Structures, Ground::None], s.ground, |v| msg(Event::Ground(v))),
+                Segmented::new(
+                    [Ground::Surface, Ground::Structures, Ground::None],
+                    s.ground,
+                    |v| msg(Event::Ground(v))
+                ),
                 text(&s.cover_field, "Kapak kotu", Event::CoverField, 170.0)
             ]
             .spacing(8)
             .align_y(Center)
             .into(),
-            Ground::None => Segmented::new([Ground::Surface, Ground::Structures, Ground::None], s.ground, |v| msg(Event::Ground(v))).into(),
+            Ground::None => Segmented::new(
+                [Ground::Surface, Ground::Structures, Ground::None],
+                s.ground,
+                |v| msg(Event::Ground(v)),
+            )
+            .into(),
         };
         let form = Form::new()
             .label_width(110.0)
-            .field("Ağ", container(fields::select_owned(s.networks.clone(), &s.network, |v| msg(Event::Network(v)))).width(240))
+            .field(
+                "Ağ",
+                container(fields::select_owned(s.networks.clone(), &s.network, |v| {
+                    msg(Event::Network(v))
+                }))
+                .width(240),
+            )
             .field("Akar kotu", inverts)
             .field(
                 "Çap",
                 row![
                     text(&s.diameter, "Öznitelik", Event::Diameter, 110.0),
-                    container(fields::select_owned(units, &s.unit, |v| msg(Event::Unit(v)))).width(70),
+                    container(fields::select_owned(units, &s.unit, |v| msg(Event::Unit(
+                        v
+                    ))))
+                    .width(70),
                     label::caption("Et"),
                     text(&s.wall, "Öznitelik", Event::Wall, 100.0),
                     label::caption("Dış çap"),
@@ -871,20 +1062,39 @@ impl PipesCheckWindowApp for App {
             .field(
                 "Kural",
                 row![
-                    container(fields::select_owned(crate::pipes_check_rules::choices(), &s.rules, |v| msg(Event::Rules(v)))).width(170),
-                    label::caption("yazılmayan sınırlar yönetmeliğin ekinden; yazdığınız önce gelir")
+                    container(fields::select_owned(
+                        crate::pipes_check_rules::choices(),
+                        &s.rules,
+                        |v| msg(Event::Rules(v))
+                    ))
+                    .width(170),
+                    label::caption(
+                        "yazılmayan sınırlar yönetmeliğin ekinden; yazdığınız önce gelir"
+                    )
                 ]
                 .spacing(8)
                 .align_y(Center),
             );
         // Diğer ağ (docs/adr/2360): the other utility networks; none chosen, no clearance.
         let others: Vec<(String, String)> = std::iter::once((String::new(), "Yok".to_owned()))
-            .chain(s.networks.iter().filter(|(id, _)| *id != s.network).cloned())
+            .chain(
+                s.networks
+                    .iter()
+                    .filter(|(id, _)| *id != s.network)
+                    .cloned(),
+            )
             .collect();
-        let other_from = Segmented::new([From::Fields, From::Heights], s.other_from, |v| msg(Event::OtherFrom(v)));
-        let mut other = row![container(fields::select_owned(others, &s.other, |v| msg(Event::Other(v)))).width(170)]
-            .spacing(8)
-            .align_y(Center);
+        let other_from = Segmented::new([From::Fields, From::Heights], s.other_from, |v| {
+            msg(Event::OtherFrom(v))
+        });
+        let mut other = row![
+            container(fields::select_owned(others, &s.other, |v| msg(
+                Event::Other(v)
+            )))
+            .width(170)
+        ]
+        .spacing(8)
+        .align_y(Center);
         if !s.other.is_empty() {
             other = other.push(label::caption("akar")).push(other_from);
             if s.other_from == From::Fields {
@@ -897,12 +1107,18 @@ impl PipesCheckWindowApp for App {
         let form = if s.other.is_empty() {
             form
         } else {
-            let units: Vec<(String, String)> = ["mm", "cm", "m"].iter().map(|u| (u.to_string(), u.to_string())).collect();
+            let units: Vec<(String, String)> = ["mm", "cm", "m"]
+                .iter()
+                .map(|u| (u.to_string(), u.to_string()))
+                .collect();
             form.field(
                 "Diğer ağın çapı",
                 row![
                     text(&s.other_diameter, "Öznitelik", Event::OtherDiameter, 110.0),
-                    container(fields::select_owned(units, &s.other_unit, |v| msg(Event::OtherUnit(v)))).width(70),
+                    container(fields::select_owned(units, &s.other_unit, |v| msg(
+                        Event::OtherUnit(v)
+                    )))
+                    .width(70),
                     label::caption("Et"),
                     text(&s.other_wall, "Öznitelik", Event::OtherWall, 100.0),
                     label::caption("Dış çap"),
@@ -919,7 +1135,9 @@ impl PipesCheckWindowApp for App {
                     label::caption("yatay en az"),
                     text(&s.horizontal, "—", Event::Horizontal, 80.0),
                     label::caption("üstte"),
-                    Segmented::new([Above::Either, Above::This, Above::Other], s.above, |v| msg(Event::Above(v)))
+                    Segmented::new([Above::Either, Above::This, Above::Other], s.above, |v| {
+                        msg(Event::Above(v))
+                    })
                 ]
                 .spacing(8)
                 .align_y(Center),
@@ -929,7 +1147,8 @@ impl PipesCheckWindowApp for App {
         let mut rows = Vec::new();
         let mut found = 0;
         // docs/adr/3160: Kesişimleri göster while there is a crossing or a near pass.
-        let crossed = matches!(&s.answer, Some(Ok(r)) if !r.crossings.is_empty() || !r.near.is_empty());
+        let crossed =
+            matches!(&s.answer, Some(Ok(r)) if !r.crossings.is_empty() || !r.near.is_empty());
         match &s.answer {
             Some(Ok(r)) => {
                 found = r.pipes.iter().filter(|p| !p.findings.is_empty()).count();
@@ -948,7 +1167,11 @@ impl PipesCheckWindowApp for App {
                 if !r.counts.is_empty() {
                     lines.push(words::text_line(
                         Kind::Info,
-                        r.counts.iter().map(|c| format!("{} {}", kind_word(&c.kind), c.count)).collect::<Vec<_>>().join(" · "),
+                        r.counts
+                            .iter()
+                            .map(|c| format!("{} {}", kind_word(&c.kind), c.count))
+                            .collect::<Vec<_>>()
+                            .join(" · "),
                     ));
                 }
                 lines.push(words::text_line(
@@ -966,12 +1189,16 @@ impl PipesCheckWindowApp for App {
                     lines.push(words::text_line(Kind::Info, line));
                 }
                 if !s.other.is_empty() {
-                    let walled = r.cover_to == "outside" || !s.other_wall.trim().is_empty() || !s.other_outer.trim().is_empty();
+                    let walled = r.cover_to == "outside"
+                        || !s.other_wall.trim().is_empty()
+                        || !s.other_outer.trim().is_empty();
                     lines.push(words::text_line(Kind::Info, clearance_line(r, walled)));
                 }
                 let names = self.pipes_check_names();
                 match s.show {
-                    Show::Crossings => rows.extend(r.crossings.iter().map(|c| crossing_row(self, c, &f))),
+                    Show::Crossings => {
+                        rows.extend(r.crossings.iter().map(|c| crossing_row(self, c, &f)))
+                    }
                     Show::Near => rows.extend(r.near.iter().map(|n| near_row(self, n, &f))),
                     Show::All | Show::Found => {
                         for (p, name) in r.pipes.iter().zip(names) {
@@ -982,7 +1209,10 @@ impl PipesCheckWindowApp for App {
                             // Docs/adr/4780: the pipe's slope class and its limits, before the findings.
                             if !s.rules.is_empty() {
                                 let class = p.class.clone().unwrap_or_default();
-                                let limits = p.class.as_deref().and_then(|c| crate::pipes_check_rules::limits(&s.rules, c));
+                                let limits = p
+                                    .class
+                                    .as_deref()
+                                    .and_then(|c| crate::pipes_check_rules::limits(&s.rules, c));
                                 row.insert(row.len() - 1, class);
                                 row.insert(row.len() - 1, limits.unwrap_or_default());
                             }
@@ -1057,25 +1287,49 @@ impl PipesCheckWindowApp for App {
             .push(form)
             .push(words::summary(lines))
             .push(if s.other.is_empty() {
-                Segmented::new(vec![Show::All, Show::Found], s.show, |v| msg(Event::Show(v)))
+                Segmented::new(vec![Show::All, Show::Found], s.show, |v| {
+                    msg(Event::Show(v))
+                })
             } else {
-                Segmented::new(vec![Show::All, Show::Found, Show::Crossings, Show::Near], s.show, |v| msg(Event::Show(v)))
+                Segmented::new(
+                    vec![Show::All, Show::Found, Show::Crossings, Show::Near],
+                    s.show,
+                    |v| msg(Event::Show(v)),
+                )
             })
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         let ready = matches!(&s.answer, Some(Ok(r)) if !r.pipes.is_empty());
         // Hat profili (docs/adr/1860): from a pipe along the flow, to a pipe or where the flow ends or splits.
         let pipes: Vec<(String, String)> = match &s.answer {
-            Some(Ok(r)) => r.pipes.iter().zip(self.pipes_check_names()).map(|(p, n)| (p.uid.clone(), n)).collect(),
+            Some(Ok(r)) => r
+                .pipes
+                .iter()
+                .zip(self.pipes_check_names())
+                .map(|(p, n)| (p.uid.clone(), n))
+                .collect(),
             _ => Vec::new(),
         };
         let ends: Vec<(String, String)> =
-            std::iter::once((String::new(), "Akışın sonu".to_owned())).chain(pipes.iter().cloned()).collect();
+            std::iter::once((String::new(), "Akışın sonu".to_owned()))
+                .chain(pipes.iter().cloned())
+                .collect();
         let mut line = row![
-            container(fields::select_owned(pipes, &s.profile_start, |v| msg(Event::ProfileStart(v)))).width(120),
+            container(fields::select_owned(pipes, &s.profile_start, |v| msg(
+                Event::ProfileStart(v)
+            )))
+            .width(120),
             label::caption("bitiş"),
-            container(fields::select_owned(ends, &s.profile_end, |v| msg(Event::ProfileEnd(v)))).width(140),
+            container(fields::select_owned(ends, &s.profile_end, |v| msg(
+                Event::ProfileEnd(v)
+            )))
+            .width(140),
             label::caption("katman"),
-            container(fields::select_owned(s.layers.clone(), &s.profile_layer, |v| msg(Event::ProfileLayer(v)))).width(150),
+            container(fields::select_owned(
+                s.layers.clone(),
+                &s.profile_layer,
+                |v| msg(Event::ProfileLayer(v))
+            ))
+            .width(150),
         ]
         .spacing(8)
         .align_y(Center);
@@ -1087,7 +1341,10 @@ impl PipesCheckWindowApp for App {
                 Some(msg(Event::ProfileCrossings(!s.profile_crossings))),
             ));
         }
-        let line = line.push(words::secondary(DRAW_PROFILE, (ready && !s.profile_start.is_empty()).then(|| msg(Event::DrawProfile))));
+        let line = line.push(words::secondary(
+            DRAW_PROFILE,
+            (ready && !s.profile_start.is_empty()).then(|| msg(Event::DrawProfile)),
+        ));
         let mut profile = Form::new().label_width(110.0).field("Hat profili", line);
         // Docs/adr/5160: how a crossing pipe is filled.
         if !s.other.is_empty() && s.profile_crossings {
@@ -1105,7 +1362,10 @@ impl PipesCheckWindowApp for App {
         Frame::new(TITLE)
             .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
-            .aside(words::secondary(SELECT, (found > 0).then(|| msg(Event::Select))))
+            .aside(words::secondary(
+                SELECT,
+                (found > 0).then(|| msg(Event::Select)),
+            ))
             .aside(words::secondary(SHOW, crossed.then(|| msg(Event::Mark))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(1000.0)
@@ -1127,16 +1387,26 @@ impl PipesCheckWindowApp for App {
 
 /// The clearances' line: the crossings, the clashes and those whose clearance is not known, the near passes.
 fn clearance_line(r: &PipesChecked, walled: bool) -> String {
-    let clash = r.crossings.iter().filter(|c| c.clearance.is_some_and(|v| v < 0.0)).count();
+    let clash = r
+        .crossings
+        .iter()
+        .filter(|c| c.clearance.is_some_and(|v| v < 0.0))
+        .count();
     let unknown = r.crossings.iter().filter(|c| c.clearance.is_none()).count();
     let mut out = format!("Diğer ağ: {} kesişim, {clash} çakışma", r.crossings.len());
     if unknown > 0 {
-        out.push_str(&format!(", {unknown} kesişimde açıklık bilinmiyor (akar ya da çap yok)"));
+        out.push_str(&format!(
+            ", {unknown} kesişimde açıklık bilinmiyor (akar ya da çap yok)"
+        ));
     }
     out.push_str(&format!(
         "; {} yakın geçiş. {} Sınırlar sizin.",
         r.near.len(),
-        if walled { "Açıklık dıştan dışa ölçülür (iç çap ve et)." } else { "Açıklık iç çaplarla ölçülür, et kalınlığı katılmaz." }
+        if walled {
+            "Açıklık dıştan dışa ölçülür (iç çap ve et)."
+        } else {
+            "Açıklık iç çaplarla ölçülür, et kalınlığı katılmaz."
+        }
     ));
     out
 }
@@ -1176,11 +1446,19 @@ fn near_row(app: &App, n: &PipeNear, f: &kentos_interaction::Format) -> Vec<Stri
 
 fn pipe_row(p: &PipeCheck, name: String, f: &kentos_interaction::Format) -> Vec<String> {
     vec![
-        if p.reversed { format!("{name} ⇠") } else { name },
+        if p.reversed {
+            format!("{name} ⇠")
+        } else {
+            name
+        },
         f.length(p.length),
         p.slope.map(per_mille).unwrap_or_default(),
         p.diameter.map(millimetres).unwrap_or_default(),
         p.min_cover.map(|c| f.length(c)).unwrap_or_default(),
-        p.findings.iter().map(|k| kind_word(k)).collect::<Vec<_>>().join(", "),
+        p.findings
+            .iter()
+            .map(|k| kind_word(k))
+            .collect::<Vec<_>>()
+            .join(", "),
     ]
 }

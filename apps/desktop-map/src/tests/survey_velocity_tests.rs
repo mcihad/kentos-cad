@@ -4,8 +4,8 @@
 //! so and Bilinen noktalar's Taşınma names it; with the grid for one of them the summary says both ways. The known point
 //! form takes a velocity (all three components or none). And the pictures.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use kentos_commands::{KnownMovedBy, MapSurveyNetworked};
 use kentos_launch::Module;
 use serde_json::Value;
@@ -18,9 +18,17 @@ const OWN: &str = "Bilinen noktaların kendi hızları, arazi ölçümünün epo
 const BOTH: &str = "BN1 kendi hızıyla, BN2 arazi ölçümünün hız ızgarasıyla taşınır";
 
 fn case(name: &str) -> Value {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.survey.network.json")).expect("cases");
-    cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case").clone()
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.survey.network.json"
+    ))
+    .expect("cases");
+    cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case")
+        .clone()
 }
 
 /// The window on a shared case's drawing.
@@ -41,7 +49,8 @@ fn opened(name: &str) -> App {
 }
 
 fn answer(app: &App) -> MapSurveyNetworked {
-    app.modules.map()
+    app.modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -64,9 +73,18 @@ fn own_velocities_carry_the_known_points_without_a_grid() {
     let mut app = opened(OWN);
     let a = answer(&app);
     let by: Vec<(&str, KnownMovedBy)> = a.moved.iter().map(|m| (m.id.as_str(), m.by)).collect();
-    assert_eq!(by, [("bn-1", KnownMovedBy::Velocity), ("bn-2", KnownMovedBy::Velocity)]);
+    assert_eq!(
+        by,
+        [
+            ("bn-1", KnownMovedBy::Velocity),
+            ("bn-2", KnownMovedBy::Velocity)
+        ]
+    );
     // The case's own answer, within a tenth of a millimetre.
-    let want: Vec<Value> = case(OWN)["steps"][0]["result"]["output"]["moved"].as_array().expect("moved").clone();
+    let want: Vec<Value> = case(OWN)["steps"][0]["result"]["output"]["moved"]
+        .as_array()
+        .expect("moved")
+        .clone();
     for (m, w) in a.moved.iter().zip(&want) {
         for (i, s) in m.shift.iter().enumerate() {
             let w = w["shift"][i].as_f64().expect("a shift");
@@ -95,9 +113,17 @@ fn own_velocities_carry_the_known_points_without_a_grid() {
     // One by its velocity, one along the grid: the summary says both.
     let app = opened(BOTH);
     let a = answer(&app);
-    assert_eq!(a.moved.iter().map(|m| m.by).collect::<Vec<_>>(), [KnownMovedBy::Velocity, KnownMovedBy::Grid]);
+    assert_eq!(
+        a.moved.iter().map(|m| m.by).collect::<Vec<_>>(),
+        [KnownMovedBy::Velocity, KnownMovedBy::Grid]
+    );
     let line = crate::survey_network_window::epoch_line(&a);
-    assert!(line.contains("2 bilinen nokta oraya taşındı: 1 nokta kendi hızıyla, 1 nokta hız ızgarasıyla"), "{line}");
+    assert!(
+        line.contains(
+            "2 bilinen nokta oraya taşındı: 1 nokta kendi hızıyla, 1 nokta hız ızgarasıyla"
+        ),
+        "{line}"
+    );
 }
 
 #[test]
@@ -167,14 +193,18 @@ fn the_known_point_form_takes_a_velocity() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kendi-hizi-2520");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kendi-hizi-2520");
     std::fs::create_dir_all(&out).expect("a folder");
     for (case, stem) in [(OWN, "1-kendi-hizi"), (BOTH, "2-hiz-ve-izgara")] {
-        for (theme, size, name) in
-            [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")]
-        {
+        for (theme, size, name) in [
+            ("light", Size::new(1440.0, 900.0), "acik-genis"),
+            ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+        ] {
             let mut app = opened(case);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::from(map::Event::SurveyNetwork(N::View(
@@ -190,7 +220,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }

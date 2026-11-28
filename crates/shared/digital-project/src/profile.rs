@@ -30,7 +30,11 @@ pub enum LayerKind {
 #[serde(tag = "op", rename_all = "camelCase")]
 pub enum Op {
     /// A code added to a list: an administration's sub-discipline (Md. 11/3), a room the project needs (EK-3 3.3).
-    AddCode { list: String, code: String, name: String },
+    AddCode {
+        list: String,
+        code: String,
+        name: String,
+    },
     /// A row asked more (or less): an optional class's field the administration asks (Md. 12/2).
     SetLevel { row: String, level: Level },
     /// A parameter settled: the view definition, the PDF/A part, the file size limit, the height datum …
@@ -79,7 +83,8 @@ pub struct Resolved {
 impl Resolved {
     /// A list's code: the catalog's or a layer's.
     pub fn has_code(&self, catalog: &Catalog, list: &str, code: &str) -> bool {
-        catalog.code(list, code).is_some() || self.added.iter().any(|a| a.list == list && a.code == code)
+        catalog.code(list, code).is_some()
+            || self.added.iter().any(|a| a.list == list && a.code == code)
     }
 }
 
@@ -87,14 +92,34 @@ impl Resolved {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Refusal {
     /// Layers go base, administrations, project; one out of order.
-    Order { layer: String },
-    UnknownList { layer: String, list: String },
+    Order {
+        layer: String,
+    },
+    UnknownList {
+        layer: String,
+        list: String,
+    },
     /// EK-2 or EK-3 (or a layer below) already gives the code.
-    CodeTaken { layer: String, list: String, code: String },
+    CodeTaken {
+        layer: String,
+        list: String,
+        code: String,
+    },
     /// Not the list's form: four letters for an item or sub-discipline (EK-2 2.5, Md. 11/3), three for a room (EK-3 3.3).
-    BadCode { layer: String, list: String, code: String, form: &'static str },
-    UnknownRow { layer: String, row: String },
-    UnknownParam { layer: String, key: String },
+    BadCode {
+        layer: String,
+        list: String,
+        code: String,
+        form: &'static str,
+    },
+    UnknownRow {
+        layer: String,
+        row: String,
+    },
+    UnknownParam {
+        layer: String,
+        key: String,
+    },
 }
 
 impl Refusal {
@@ -105,17 +130,28 @@ impl Refusal {
                 "“{layer}” katmanı yerinde değil: sıra temel profil, idare profilleri, proje. Katmanı sırasına koyun."
             ),
             Refusal::UnknownList { layer, list } => {
-                format!("“{layer}” katmanı olmayan bir listeye kod ekliyor ({list}). Listenin adını düzeltin.")
+                format!(
+                    "“{layer}” katmanı olmayan bir listeye kod ekliyor ({list}). Listenin adını düzeltin."
+                )
             }
             Refusal::CodeTaken { layer, list, code } => format!(
                 "“{layer}” katmanının eklediği {code} kodu {list} listesinde zaten var; yönetmelik çakışan kod istemez \
                  (Md. 11/3, EK-3 3.3). Başka bir kod seçin."
             ),
-            Refusal::BadCode { layer, list, code, form } => {
-                format!("“{layer}” katmanının {code} kodu {list} listesine uymuyor: {form}. Kodu düzeltin.")
+            Refusal::BadCode {
+                layer,
+                list,
+                code,
+                form,
+            } => {
+                format!(
+                    "“{layer}” katmanının {code} kodu {list} listesine uymuyor: {form}. Kodu düzeltin."
+                )
             }
             Refusal::UnknownRow { layer, row } => {
-                format!("“{layer}” katmanı katalogda olmayan bir satırı değiştiriyor ({row}). Satırın kimliğini düzeltin.")
+                format!(
+                    "“{layer}” katmanı katalogda olmayan bir satırı değiştiriyor ({row}). Satırın kimliğini düzeltin."
+                )
             }
             Refusal::UnknownParam { layer, key } => format!(
                 "“{layer}” katmanı profilde olmayan bir değeri ayarlıyor ({key}). Değerin adını düzeltin."
@@ -140,7 +176,11 @@ fn code_form(list: &str) -> Option<CodeForm> {
         Some((|c| letters(2)(c), "iki büyük harf"))
     } else if list == catalog::FILE_TYPES {
         Some((
-            |c| c.len() == 3 && c.bytes().all(|b| b.is_ascii_uppercase() || b.is_ascii_digit()),
+            |c| {
+                c.len() == 3
+                    && c.bytes()
+                        .all(|b| b.is_ascii_uppercase() || b.is_ascii_digit())
+            },
             "üç büyük harf ya da rakam",
         ))
     } else {
@@ -169,7 +209,8 @@ pub fn resolve(
             );
         }
     }
-    let lists: std::collections::BTreeSet<&str> = catalog.codes.iter().map(|c| c.list.as_str()).collect();
+    let lists: std::collections::BTreeSet<&str> =
+        catalog.codes.iter().map(|c| c.list.as_str()).collect();
     let mut refused = Vec::new();
     let mut last = LayerKind::Base;
     for layer in layers {
@@ -196,7 +237,9 @@ pub fn resolve(
                             list: list.clone(),
                             code: code.clone(),
                         });
-                    } else if let Some(form) = code_form(list).and_then(|(ok, form)| (!ok(code)).then_some(form)) {
+                    } else if let Some(form) =
+                        code_form(list).and_then(|(ok, form)| (!ok(code)).then_some(form))
+                    {
                         refused.push(Refusal::BadCode {
                             layer: layer.id.clone(),
                             list: list.clone(),
@@ -219,7 +262,9 @@ pub fn resolve(
                             row: row.clone(),
                         });
                     } else {
-                        changes.levels.insert(row.clone(), (*level, layer.id.clone()));
+                        changes
+                            .levels
+                            .insert(row.clone(), (*level, layer.id.clone()));
                     }
                 }
                 Op::SetParam { key, value } => match changes.params.get_mut(key) {
@@ -239,7 +284,11 @@ pub fn resolve(
             out.layers.push((layer.id.clone(), layer.kind));
         }
     }
-    if refused.is_empty() { Ok(out) } else { Err(refused) }
+    if refused.is_empty() {
+        Ok(out)
+    } else {
+        Err(refused)
+    }
 }
 
 #[cfg(test)]
@@ -288,11 +337,15 @@ mod tests {
                 name: "Engelli erişimi".into(),
             },
         ]);
-        let r = resolve(catalog::base(), &base_decisions(), &[layer], &rows).expect("the layer applies");
+        let r = resolve(catalog::base(), &base_decisions(), &[layer], &rows)
+            .expect("the layer applies");
         assert_eq!(r.params["pdfa.part"].value.as_deref(), Some("PDF/A-3b"));
         assert_eq!(r.params["pdfa.part"].by, "ornek-idare");
         assert!(r.has_code(catalog::base(), "item:MM", "ENGL"));
-        assert_eq!(r.layers, vec![("ornek-idare".to_owned(), LayerKind::Administration)]);
+        assert_eq!(
+            r.layers,
+            vec![("ornek-idare".to_owned(), LayerKind::Administration)]
+        );
     }
 
     #[test]
@@ -326,7 +379,8 @@ mod tests {
                 value: "mavi".into(),
             },
         ]);
-        let refused = resolve(catalog::base(), &base_decisions(), &[layer], &rows).expect_err("refused");
+        let refused =
+            resolve(catalog::base(), &base_decisions(), &[layer], &rows).expect_err("refused");
         assert_eq!(refused.len(), 5, "{refused:?}");
         assert!(matches!(&refused[0], Refusal::CodeTaken { code, .. } if code == "DUVA"));
         assert!(matches!(&refused[1], Refusal::BadCode { code, .. } if code == "Duv1"));
@@ -357,8 +411,13 @@ mod tests {
         )
         .expect_err("out of order");
         assert!(matches!(&refused[0], Refusal::Order { layer } if layer == "ornek-idare"));
-        let r = resolve(catalog::base(), &base_decisions(), &[administration(vec![]), project], &rows)
-            .expect("in order");
+        let r = resolve(
+            catalog::base(),
+            &base_decisions(),
+            &[administration(vec![]), project],
+            &rows,
+        )
+        .expect("in order");
         assert_eq!(r.added[0].by, "proje");
     }
 }

@@ -4,8 +4,8 @@
 //! Nothing built is kept: every read builds again, so a changed source shows at once (ROAD-MOD-06).
 
 use kentos_commands::{
-    CommandWarning, CorridorDef, CorridorFeature, CorridorLeft, CorridorListed, CorridorReport, CorridorSampling,
-    CorridorStation, CorridorStray, CorridorStretch,
+    CommandWarning, CorridorDef, CorridorFeature, CorridorLeft, CorridorListed, CorridorReport,
+    CorridorSampling, CorridorStation, CorridorStray, CorridorStretch,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -26,21 +26,41 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work == Some(kentos_commands::CadWork::Road) {
         Ok(())
     } else {
-        Err(fail(codes::NOT_A_ROAD_PROJECT, "Koridor yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(), ""))
+        Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "Koridor yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(),
+            "",
+        ))
     }
 }
 
 /// The corridor of `name`: by its id, else by its name (case aside).
-pub(crate) fn find<'a>(list: &'a [CorridorDef], name: &str, path: &str) -> Result<(usize, &'a CorridorDef), Stop> {
+pub(crate) fn find<'a>(
+    list: &'a [CorridorDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a CorridorDef), Stop> {
     list.iter()
         .position(|c| c.id == name)
-        .or_else(|| list.iter().position(|c| c.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .position(|c| c.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|i| (i, &list[i]))
-        .ok_or_else(|| fail(codes::UNKNOWN_CORRIDOR, format!("“{name}” kimlikli ya da adlı koridor projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_CORRIDOR,
+                format!("“{name}” kimlikli ya da adlı koridor projede yok."),
+                path,
+            )
+        })
 }
 
 pub(crate) fn stale(doc: &Document, def: &CorridorDef) -> bool {
-    doc.road_alignments().iter().find(|a| a.id == def.alignment).is_some_and(|a| a.revision != def.alignment_revision)
+    doc.road_alignments()
+        .iter()
+        .find(|a| a.id == def.alignment)
+        .is_some_and(|a| a.revision != def.alignment_revision)
 }
 
 pub(crate) fn listed(doc: &Document, list: &[CorridorDef]) -> Vec<CorridorListed> {
@@ -85,9 +105,17 @@ pub(crate) struct Transition {
 
 /// A region's template as built at station `s`: within its slope transition, its slopes between the region before's
 /// and its own.
-pub(crate) fn region_template<'a>(template: &'a tpl::Template, transition: Option<&Transition>, s: f64) -> std::borrow::Cow<'a, tpl::Template> {
+pub(crate) fn region_template<'a>(
+    template: &'a tpl::Template,
+    transition: Option<&Transition>,
+    s: f64,
+) -> std::borrow::Cow<'a, tpl::Template> {
     match transition {
-        Some(t) if s < t.to => std::borrow::Cow::Owned(tpl::slopes_between(&t.before, template, (s - t.from) / (t.to - t.from))),
+        Some(t) if s < t.to => std::borrow::Cow::Owned(tpl::slopes_between(
+            &t.before,
+            template,
+            (s - t.from) / (t.to - t.from),
+        )),
         _ => std::borrow::Cow::Borrowed(template),
     }
 }
@@ -109,7 +137,11 @@ impl Made {
     /// Region `ri`'s template as built at station `s`, its slope transition counted (docs/adr/0960): every section
     /// taken off the corridor goes through it, as the corridor's own crosses do.
     pub fn template_at(&self, ri: usize, s: f64) -> std::borrow::Cow<'_, tpl::Template> {
-        region_template(&self.regions[ri].template, self.transitions.get(ri).and_then(Option::as_ref), s)
+        region_template(
+            &self.regions[ri].template,
+            self.transitions.get(ri).and_then(Option::as_ref),
+            s,
+        )
     }
 }
 
@@ -119,7 +151,10 @@ pub(crate) struct Sampler {
     pub alignment: Built,
     pub(crate) vertical: kentos_road::profile::vertical::Vertical,
     pub surface: Option<kentos_road::surface::Surface>,
-    schedule: Option<(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
+    schedule: Option<(
+        kentos_road::superelevation::Schedule,
+        kentos_road::superelevation::Crossfall,
+    )>,
     left: f64,
     right: f64,
 }
@@ -145,7 +180,11 @@ impl Sampler {
     }
 
     /// The cross at station `s` with the terrain along its line (empty where there is no surface).
-    pub fn sample(&self, template: &tpl::Template, s: f64) -> Option<(Cross, Vec<kentos_road::section::GroundPoint>)> {
+    pub fn sample(
+        &self,
+        template: &tpl::Template,
+        s: f64,
+    ) -> Option<(Cross, Vec<kentos_road::section::GroundPoint>)> {
         let line = sample_line(&self.alignment.core, s, self.left, self.right)?;
         let mut terrain = Vec::new();
         let section = match (&self.surface, self.vertical.at(s)) {
@@ -169,14 +208,22 @@ impl Sampler {
 }
 
 fn warning(code: &str, message: String) -> CommandWarning {
-    CommandWarning { code: code.into(), message, path: Some("corridor".into()) }
+    CommandWarning {
+        code: code.into(),
+        message,
+        path: Some("corridor".into()),
+    }
 }
 
 /// The alignment a corridor lies on, built.
 pub(crate) fn alignment_of(doc: &Document, def: &CorridorDef) -> Result<Built, Stop> {
     let list = alignments::alignments(doc);
     let a = list.iter().find(|a| a.id == def.alignment).ok_or_else(|| {
-        fail(codes::UNKNOWN_ALIGNMENT, format!("“{}” kimlikli aks projede yok.", def.alignment), "alignment")
+        fail(
+            codes::UNKNOWN_ALIGNMENT,
+            format!("“{}” kimlikli aks projede yok.", def.alignment),
+            "alignment",
+        )
     })?;
     alignments::build(list, a, "")
 }
@@ -198,7 +245,12 @@ pub(crate) const TICKS: u64 = 1000;
 /// [`make`] telling `tick` how far it has come (`done` of `total`) before each section it solves; `tick` answering true
 /// stops it there, cancelled (docs/adr/3640: a job's stop heard between a corridor's sections, not only between the
 /// drawings).
-pub(crate) fn make_ticked(doc: &Document, def: &CorridorDef, points: bool, tick: &dyn Fn(u64, u64) -> bool) -> Result<Made, Stop> {
+pub(crate) fn make_ticked(
+    doc: &Document,
+    def: &CorridorDef,
+    points: bool,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Result<Made, Stop> {
     solve(doc, def, doc.road_templates(), points, tick)
 }
 
@@ -213,41 +265,73 @@ fn solve(
     let length = built.core.length;
     let ranges: Vec<[f64; 2]> = def.regions.iter().map(|r| [r.from, r.to]).collect();
     let gaps = core::check_regions(&ranges, length).map_err(|e| match e {
-        CorridorError::EmptyRegion { index } => {
-            bad(&format!("regions[{index}]"), format!("{}. bölgenin sonu başından en az 1 mm sonra olmalı.", index + 1))
-        }
+        CorridorError::EmptyRegion { index } => bad(
+            &format!("regions[{index}]"),
+            format!(
+                "{}. bölgenin sonu başından en az 1 mm sonra olmalı.",
+                index + 1
+            ),
+        ),
         CorridorError::Outside { index } => bad(
             &format!("regions[{index}]"),
-            format!("{}. bölge aksın dışına taşıyor: aks 0 ile {length:.3} m arası.", index + 1),
+            format!(
+                "{}. bölge aksın dışına taşıyor: aks 0 ile {length:.3} m arası.",
+                index + 1
+            ),
         ),
         CorridorError::Overlap { first, second } => bad(
             &format!("regions[{second}]"),
-            format!("{}. ve {}. bölge kesişiyor; bölgeler en çok uç uca gelir.", first + 1, second + 1),
+            format!(
+                "{}. ve {}. bölge kesişiyor; bölgeler en çok uç uca gelir.",
+                first + 1,
+                second + 1
+            ),
         ),
         _ => bad("regions", "Bölgeler geçerli değil.".into()),
     })?;
     for (i, s) in def.stations.iter().enumerate() {
         if *s < -1e-9 || *s > length + 1e-9 {
-            return Err(bad(&format!("stations[{i}]"), format!("{s} m aksın üstünde değil: aks 0 ile {length:.3} m arası.")));
+            return Err(bad(
+                &format!("stations[{i}]"),
+                format!("{s} m aksın üstünde değil: aks 0 ile {length:.3} m arası."),
+            ));
         }
     }
     let profile = doc
         .road_profiles()
         .iter()
         .find(|p| p.id == def.profile)
-        .ok_or_else(|| fail(codes::UNKNOWN_ROAD_PROFILE, format!("“{}” kimlikli boykesit projede yok.", def.profile), "profile"))?;
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_ROAD_PROFILE,
+                format!("“{}” kimlikli boykesit projede yok.", def.profile),
+                "profile",
+            )
+        })?;
     let vertical = kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(profile))
-        .map_err(|_| bad("profile", format!("“{}” boykesiti kurulamıyor; koridor ondan kot alamaz.", profile.name)))?;
+        .map_err(|_| {
+        bad(
+            "profile",
+            format!(
+                "“{}” boykesiti kurulamıyor; koridor ondan kot alamaz.",
+                profile.name
+            ),
+        )
+    })?;
     let mut warnings = Vec::new();
     // The schedule, its normal slopes and critical stations.
     let schedule = match def.superelevation.as_deref() {
         None => None,
         Some(id) => {
-            let made = doc.road_superelevations().iter().find(|d| d.id == id).and_then(|sd| {
-                let b = crate::road_superelevations::alignment_of(doc, sd).ok()?;
-                let (s, crit) = crate::road_superelevations::schedule(sd, &b).ok()?;
-                Some((s, crate::road_superelevations::normal(sd), crit))
-            });
+            let made = doc
+                .road_superelevations()
+                .iter()
+                .find(|d| d.id == id)
+                .and_then(|sd| {
+                    let b = crate::road_superelevations::alignment_of(doc, sd).ok()?;
+                    let (s, crit) = crate::road_superelevations::schedule(sd, &b).ok()?;
+                    Some((s, crate::road_superelevations::normal(sd), crit))
+                });
             if made.is_none() {
                 warnings.push(warning(
                     codes::CORRIDOR_SUPERELEVATION_GONE,
@@ -257,34 +341,69 @@ fn solve(
             made
         }
     };
-    let mut events: Vec<Station> = def.stations.iter().map(|s| Station { station: *s, why: Why::User }).collect();
+    let mut events: Vec<Station> = def
+        .stations
+        .iter()
+        .map(|s| Station {
+            station: *s,
+            why: Why::User,
+        })
+        .collect();
     if def.profile_points {
-        events.extend(profile.pvis.iter().map(|p| Station { station: p.station, why: Why::Profile }));
+        events.extend(profile.pvis.iter().map(|p| Station {
+            station: p.station,
+            why: Why::Profile,
+        }));
         for c in &vertical.curves {
-            events.push(Station { station: c.start[0], why: Why::Profile });
-            events.push(Station { station: c.end[0], why: Why::Profile });
+            events.push(Station {
+                station: c.start[0],
+                why: Why::Profile,
+            });
+            events.push(Station {
+                station: c.end[0],
+                why: Why::Profile,
+            });
             if let Some(x) = c.extreme {
-                events.push(Station { station: x[0], why: Why::Profile });
+                events.push(Station {
+                    station: x[0],
+                    why: Why::Profile,
+                });
             }
         }
     }
     if let Some(t) = def.vertical_sag {
         // The vertical curves divided by their chord height (docs/adr/0939 §1).
-        let divisions = kentos_road::sampling::vertical_divisions(&vertical.pieces, t, [f64::NEG_INFINITY, f64::INFINITY]);
-        events.extend(divisions.into_iter().map(|s| Station { station: s, why: Why::Vertical }));
+        let divisions = kentos_road::sampling::vertical_divisions(
+            &vertical.pieces,
+            t,
+            [f64::NEG_INFINITY, f64::INFINITY],
+        );
+        events.extend(divisions.into_iter().map(|s| Station {
+            station: s,
+            why: Why::Vertical,
+        }));
     }
     if def.critical
         && let Some((_, _, crit)) = &schedule
     {
-        events.extend(crit.iter().map(|c| Station { station: c.station, why: Why::Critical }));
+        events.extend(crit.iter().map(|c| Station {
+            station: c.station,
+            why: Why::Critical,
+        }));
     }
     // The superelevation's other events (docs/adr/0972; ROAD-DEVER-07): where the widening starts or reaches its
     // target, where an inside- or outside-edge pivot changes sides. Where one falls on a critical station that one stays.
     if def.critical
         && let Some((s, n, _)) = &schedule
     {
-        events.extend(s.widening_stations().into_iter().map(|x| Station { station: x, why: Why::Widening }));
-        events.extend(s.pivot_changes(*n).into_iter().map(|x| Station { station: x, why: Why::Pivot }));
+        events.extend(s.widening_stations().into_iter().map(|x| Station {
+            station: x,
+            why: Why::Widening,
+        }));
+        events.extend(s.pivot_changes(*n).into_iter().map(|x| Station {
+            station: x,
+            why: Why::Pivot,
+        }));
     }
     let surface = match terrains::surfaces(doc).iter().find(|s| s.id == def.surface) {
         None => None,
@@ -305,70 +424,140 @@ fn solve(
         right: def.right,
     };
     let built = &sampler.alignment;
-    let f = Frequency { tangent: def.tangent, curve: def.curve, sag: def.sag };
+    let f = Frequency {
+        tangent: def.tangent,
+        curve: def.curve,
+        sag: def.sag,
+    };
     let mut stations_out = Vec::new();
     let mut regions = Vec::new();
     let mut checks: Vec<Checked> = Vec::new();
     let mut transitions: Vec<Option<Transition>> = Vec::new();
     for (ri, r) in def.regions.iter().enumerate() {
-        let t = templates.iter().find(|t| t.id == r.template).ok_or_else(|| {
-            fail(codes::UNKNOWN_ROAD_TEMPLATE, format!("“{}” kimlikli tip kesit projede yok.", r.template), &format!("regions[{ri}].template"))
-        })?;
+        let t = templates
+            .iter()
+            .find(|t| t.id == r.template)
+            .ok_or_else(|| {
+                fail(
+                    codes::UNKNOWN_ROAD_TEMPLATE,
+                    format!("“{}” kimlikli tip kesit projede yok.", r.template),
+                    &format!("regions[{ri}].template"),
+                )
+            })?;
         let template = core_template(t);
         // The slope transition from the region before (docs/adr/0960): adjoining, its template's slopes; its end sampled.
         let transition = match r.transition {
             None => None,
             Some(l) => {
-                let prev = ri.checked_sub(1).map(|k| &def.regions[k]).filter(|p| (p.to - r.from).abs() <= 1e-3);
-                let (Some(prev), true) = (prev, l.is_finite() && l > 0.0 && l <= r.to - r.from) else {
+                let prev = ri
+                    .checked_sub(1)
+                    .map(|k| &def.regions[k])
+                    .filter(|p| (p.to - r.from).abs() <= 1e-3);
+                let (Some(prev), true) = (prev, l.is_finite() && l > 0.0 && l <= r.to - r.from)
+                else {
                     return Err(bad(
                         &format!("regions[{ri}].transition"),
-                        format!("{}. bölgenin şev geçişi 0'dan uzun, bölgeden kısa olur ve önceki bölgenin bittiği yerde başlar.", ri + 1),
+                        format!(
+                            "{}. bölgenin şev geçişi 0'dan uzun, bölgeden kısa olur ve önceki bölgenin bittiği yerde başlar.",
+                            ri + 1
+                        ),
                     ));
                 };
-                let before = templates.iter().find(|t| t.id == prev.template).map(core_template).ok_or_else(|| {
-                    fail(codes::UNKNOWN_ROAD_TEMPLATE, format!("“{}” kimlikli tip kesit projede yok.", prev.template), &format!("regions[{}].template", ri - 1))
-                })?;
-                Some(Transition { before, from: r.from, to: r.from + l })
+                let before = templates
+                    .iter()
+                    .find(|t| t.id == prev.template)
+                    .map(core_template)
+                    .ok_or_else(|| {
+                        fail(
+                            codes::UNKNOWN_ROAD_TEMPLATE,
+                            format!("“{}” kimlikli tip kesit projede yok.", prev.template),
+                            &format!("regions[{}].template", ri - 1),
+                        )
+                    })?;
+                Some(Transition {
+                    before,
+                    from: r.from,
+                    to: r.from + l,
+                })
             }
         };
         let mut region_events = events.clone();
         if let Some(t) = &transition {
-            region_events.push(Station { station: t.to, why: Why::Transition });
+            region_events.push(Station {
+                station: t.to,
+                why: Why::Transition,
+            });
         }
         let at = |s: f64| sampler.cross(&region_template(&template, transition.as_ref(), s), s);
-        let list = core::stations(&built.core, [r.from, r.to], &f, &region_events).map_err(|e| match e {
-            CorridorError::TooMany => bad(
-                "tangent",
-                format!("Bu aralıklarla {}'den çok km çıkar; tangent ya da curve'ü büyütün.", core::MAX_STATIONS),
-            ),
-            _ => bad("tangent", "Aralıklar ve sapma toleransı 0'dan büyük olmalı.".into()),
-        })?;
+        let list = core::stations(&built.core, [r.from, r.to], &f, &region_events).map_err(
+            |e| match e {
+                CorridorError::TooMany => bad(
+                    "tangent",
+                    format!(
+                        "Bu aralıklarla {}'den çok km çıkar; tangent ya da curve'ü büyütün.",
+                        core::MAX_STATIONS
+                    ),
+                ),
+                _ => bad(
+                    "tangent",
+                    "Aralıklar ve sapma toleransı 0'dan büyük olmalı.".into(),
+                ),
+            },
+        )?;
         // The region's sections, a share of the progress each; a stop heard between them (docs/adr/3640).
         let whole = def.regions.len() as u64 * TICKS;
         let mut sampled: Vec<(Station, Option<Cross>)> = Vec::with_capacity(list.len());
         for (i, st) in list.iter().enumerate() {
-            if tick(ri as u64 * TICKS + i as u64 * TICKS / list.len() as u64, whole) {
+            if tick(
+                ri as u64 * TICKS + i as u64 * TICKS / list.len() as u64,
+                whole,
+            ) {
                 return Err(Stop::Cancelled);
             }
             sampled.push((*st, at(st.station)));
         }
         if let Some(r) = &def.refine {
             // The sections between measured and the stations refined (docs/adr/0939 §2), within the stations left.
-            let tol = kentos_road::sampling::Tolerance { plan: r.plan, height: r.height, least: r.least };
+            let tol = kentos_road::sampling::Tolerance {
+                plan: r.plan,
+                height: r.height,
+                least: r.least,
+            };
             let budget = core::MAX_STATIONS.saturating_sub(stations_out.len() + sampled.len());
-            let given: Vec<(f64, Option<Cross>)> = sampled.iter().map(|(st, c)| (st.station, c.clone())).collect();
+            let given: Vec<(f64, Option<Cross>)> = sampled
+                .iter()
+                .map(|(st, c)| (st.station, c.clone()))
+                .collect();
             let refined = kentos_road::sampling::refine(&given, &tol, budget, at, |c| {
                 c.as_ref().and_then(|c| core::coded_points(&template, c))
             });
-            checks.push((ri, refined.before.clone(), refined.after.clone(), refined.left.clone(), refined.added.len()));
-            sampled.extend(refined.added.into_iter().map(|(s, c)| (Station { station: s, why: Why::Refine }, c)));
+            checks.push((
+                ri,
+                refined.before.clone(),
+                refined.after.clone(),
+                refined.left.clone(),
+                refined.added.len(),
+            ));
+            sampled.extend(refined.added.into_iter().map(|(s, c)| {
+                (
+                    Station {
+                        station: s,
+                        why: Why::Refine,
+                    },
+                    c,
+                )
+            }));
             sampled.sort_by(|a, b| a.0.station.total_cmp(&b.0.station));
         }
         let mut crosses = Vec::with_capacity(sampled.len());
         for (st, cross) in sampled {
             let s = st.station;
-            stations_out.push(CorridorStation { station: s, km_text: km_text(built.km(s), 3), why: why_word(st.why).into(), region: ri as u32 });
+            stations_out.push(CorridorStation {
+                station: s,
+                km_text: km_text(built.km(s), 3),
+                why: why_word(st.why).into(),
+                region: ri as u32,
+            });
             if let Some(cross) = cross {
                 crosses.push(cross);
             }
@@ -399,7 +588,16 @@ fn solve(
         .features
         .iter()
         .map(|f| {
-            let length = f.points.windows(2).map(|w| ((w[1][1] - w[0][1]).powi(2) + (w[1][2] - w[0][2]).powi(2) + (w[1][3] - w[0][3]).powi(2)).sqrt()).sum();
+            let length = f
+                .points
+                .windows(2)
+                .map(|w| {
+                    ((w[1][1] - w[0][1]).powi(2)
+                        + (w[1][2] - w[0][2]).powi(2)
+                        + (w[1][3] - w[0][3]).powi(2))
+                    .sqrt()
+                })
+                .sum();
             CorridorFeature {
                 code: f.code.clone(),
                 region: f.region as u32,
@@ -410,10 +608,25 @@ fn solve(
             }
         })
         .collect();
-    features.sort_by(|a, b| (a.region, &a.code).cmp(&(b.region, &b.code)).then(a.from.total_cmp(&b.from)));
-    let area = made.triangles.iter().map(|t| 0.5 * ((t[1][0] - t[0][0]) * (t[2][1] - t[0][1]) - (t[2][0] - t[0][0]) * (t[1][1] - t[0][1]))).sum();
+    features.sort_by(|a, b| {
+        (a.region, &a.code)
+            .cmp(&(b.region, &b.code))
+            .then(a.from.total_cmp(&b.from))
+    });
+    let area = made
+        .triangles
+        .iter()
+        .map(|t| {
+            0.5 * ((t[1][0] - t[0][0]) * (t[2][1] - t[0][1])
+                - (t[2][0] - t[0][0]) * (t[1][1] - t[0][1]))
+        })
+        .sum();
     if stale(doc, def) {
-        let now = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
+        let now = doc
+            .road_alignments()
+            .iter()
+            .find(|a| a.id == def.alignment)
+            .map_or(0, |a| a.revision);
         warnings.push(warning(
             codes::CORRIDOR_STALE,
             format!(
@@ -423,8 +636,18 @@ fn solve(
         ));
     }
     if !gaps.is_empty() {
-        let words: Vec<String> = gaps.iter().map(|g| format!("{} – {}", text(g[0]), text(g[1]))).collect();
-        warnings.push(warning(codes::CORRIDOR_GAP, format!("“{}” koridorunun bölgeleri arasında kesitsiz aralık var: {}.", def.name, words.join(", "))));
+        let words: Vec<String> = gaps
+            .iter()
+            .map(|g| format!("{} – {}", text(g[0]), text(g[1])))
+            .collect();
+        warnings.push(warning(
+            codes::CORRIDOR_GAP,
+            format!(
+                "“{}” koridorunun bölgeleri arasında kesitsiz aralık var: {}.",
+                def.name,
+                words.join(", ")
+            ),
+        ));
     }
     if !unsolved.is_empty() {
         let words: Vec<String> = unsolved
@@ -432,18 +655,38 @@ fn solve(
             .take(8)
             .map(|u| {
                 let side = if u.side == "right" { "sağ" } else { "sol" };
-                let why = if u.why == "open" { "şev buluşmuyor" } else { "kesit yok" };
-                if u.from == u.to { format!("km {} {side} ({why})", u.from_text) } else { format!("km {} – {} {side} ({why})", u.from_text, u.to_text) }
+                let why = if u.why == "open" {
+                    "şev buluşmuyor"
+                } else {
+                    "kesit yok"
+                };
+                if u.from == u.to {
+                    format!("km {} {side} ({why})", u.from_text)
+                } else {
+                    format!("km {} – {} {side} ({why})", u.from_text, u.to_text)
+                }
             })
             .collect();
-        let more = if unsolved.len() > 8 { format!(" ve {} aralık daha", unsolved.len() - 8) } else { String::new() };
+        let more = if unsolved.len() > 8 {
+            format!(" ve {} aralık daha", unsolved.len() - 8)
+        } else {
+            String::new()
+        };
         warnings.push(warning(
             codes::CORRIDOR_UNSOLVED,
-            format!("“{}” koridorunun çözülmeyen aralıkları: {}{more}.", def.name, words.join(", ")),
+            format!(
+                "“{}” koridorunun çözülmeyen aralıkları: {}{more}.",
+                def.name,
+                words.join(", ")
+            ),
         ));
     }
     if !made.folded.is_empty() {
-        let words: Vec<String> = made.folded.iter().map(|f| format!("km {} – {}", text(f.1), text(f.2))).collect();
+        let words: Vec<String> = made
+            .folded
+            .iter()
+            .map(|f| format!("km {} – {}", text(f.1), text(f.2)))
+            .collect();
         warnings.push(warning(
             codes::CORRIDOR_FOLDED,
             format!("“{}” koridorunda ardışık kesitler planda kesişiyor: {}; orada üst yüzey kurulmadı.", def.name, words.join(", ")),
@@ -457,14 +700,26 @@ fn solve(
                 .iter()
                 .take(8)
                 .map(|l| {
-                    let why = if l.why == "budget" { "km sınırı" } else { "en kısa adımda" };
+                    let why = if l.why == "budget" {
+                        "km sınırı"
+                    } else {
+                        "en kısa adımda"
+                    };
                     format!("km {} – {} ({why})", l.from_text, l.to_text)
                 })
                 .collect();
-            let more = if left.len() > 8 { format!(" ve {} aralık daha", left.len() - 8) } else { String::new() };
+            let more = if left.len() > 8 {
+                format!(" ve {} aralık daha", left.len() - 8)
+            } else {
+                String::new()
+            };
             warnings.push(warning(
                 codes::CORRIDOR_SAMPLING_LEFT,
-                format!("“{}” koridorunda kesitler şu aralıklarda toleransa inmedi: {}{more}.", def.name, words.join(", ")),
+                format!(
+                    "“{}” koridorunda kesitler şu aralıklarda toleransa inmedi: {}{more}.",
+                    def.name,
+                    words.join(", ")
+                ),
             ));
         }
     }
@@ -487,7 +742,14 @@ fn solve(
         problem: None,
         sampling,
     };
-    Ok(Made { report, built: made, warnings, regions, sampler, transitions })
+    Ok(Made {
+        report,
+        built: made,
+        warnings,
+        regions,
+        sampler,
+        transitions,
+    })
 }
 
 /// A region's refinement as it was measured: the region, its first intervals, the ones at the end found within, those
@@ -525,11 +787,13 @@ fn sampling_of(checks: &[Checked], text: &dyn Fn(f64) -> String) -> CorridorSamp
     // Each middle built is either within (a final interval) or strayed and was added.
     let measured = checks.iter().map(|c| c.2.len() + c.4).sum::<usize>();
     let before = worst(checks.iter().flat_map(|c| c.1.iter()));
-    let after = worst(
-        checks
-            .iter()
-            .flat_map(|c| c.2.iter().chain(c.3.iter().filter(|l| l.1 == Left::Least && !l.0.stray.changed).map(|l| &l.0))),
-    );
+    let after = worst(checks.iter().flat_map(|c| {
+        c.2.iter().chain(
+            c.3.iter()
+                .filter(|l| l.1 == Left::Least && !l.0.stray.changed)
+                .map(|l| &l.0),
+        )
+    }));
     let mut left = Vec::new();
     let mut changes = 0u32;
     for (region, _, _, ls, _) in checks {
@@ -616,18 +880,34 @@ pub struct CorridorSections {
 impl CorridorSections {
     /// The corridor `id` built now, or why it does not build.
     pub fn of(doc: &Document, id: &str) -> Result<Self, String> {
-        let def = doc.road_corridors().iter().find(|c| c.id == id).ok_or_else(|| format!("({id}) koridoru projede yok."))?;
+        let def = doc
+            .road_corridors()
+            .iter()
+            .find(|c| c.id == id)
+            .ok_or_else(|| format!("({id}) koridoru projede yok."))?;
         let pavements = def
             .regions
             .iter()
-            .map(|r| doc.road_templates().iter().find(|t| t.id == r.template).and_then(|t| t.pavement.clone()))
+            .map(|r| {
+                doc.road_templates()
+                    .iter()
+                    .find(|t| t.id == r.template)
+                    .and_then(|t| t.pavement.clone())
+            })
             .collect();
-        make(doc, def, false).map(|made| Self { made, pavements }).map_err(words)
+        make(doc, def, false)
+            .map(|made| Self { made, pavements })
+            .map_err(words)
     }
 
     /// The stations the corridor is sampled at, in order.
     pub fn stations(&self) -> Vec<f64> {
-        let mut out: Vec<f64> = self.made.regions.iter().flat_map(|r| r.crosses.iter().map(|c| c.line.station)).collect();
+        let mut out: Vec<f64> = self
+            .made
+            .regions
+            .iter()
+            .flat_map(|r| r.crosses.iter().map(|c| c.line.station))
+            .collect();
         out.sort_by(f64::total_cmp);
         out.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
         out
@@ -637,20 +917,43 @@ impl CorridorSections {
     /// where the sample line does not lie on the alignment.
     pub fn row_at(&self, s: f64) -> Option<kentos_commands::SectionRow> {
         let ri = self.made.regions.iter().position(|r| {
-            let (a, b) = (r.crosses.first().map(|c| c.line.station), r.crosses.last().map(|c| c.line.station));
+            let (a, b) = (
+                r.crosses.first().map(|c| c.line.station),
+                r.crosses.last().map(|c| c.line.station),
+            );
             matches!((a, b), (Some(a), Some(b)) if s >= a - 1e-9 && s <= b + 1e-9)
         })?;
         let template = self.made.template_at(ri, s);
         let sampler = &self.made.sampler;
         let (cross, terrain) = sampler.sample(&template, s)?;
         let km = sampler.alignment.km(s);
-        let paved = match (self.pavements.get(ri).and_then(Option::as_ref), &cross.section) {
-            (Some(p), Some(sec)) => crate::road_sections::pavement_row(p, &sampler.template_at(&template, s), sec, &terrain),
+        let paved = match (
+            self.pavements.get(ri).and_then(Option::as_ref),
+            &cross.section,
+        ) {
+            (Some(p), Some(sec)) => crate::road_sections::pavement_row(
+                p,
+                &sampler.template_at(&template, s),
+                sec,
+                &terrain,
+            ),
             _ => None,
         };
         // The axis as the section has it: risen over the profile grade about an edge (docs/adr/0931 §1).
-        let axis = cross.section.as_ref().map(|x| x.axis).or(sampler.elevation(s));
-        Some(crate::road_sections::row_of(s, km, cross.line.ends, axis, &terrain, cross.section.as_ref(), paved))
+        let axis = cross
+            .section
+            .as_ref()
+            .map(|x| x.axis)
+            .or(sampler.elevation(s));
+        Some(crate::road_sections::row_of(
+            s,
+            km,
+            cross.line.ends,
+            axis,
+            &terrain,
+            cross.section.as_ref(),
+            paved,
+        ))
     }
 }
 
@@ -661,7 +964,14 @@ pub fn made_corridors(doc: &Document) -> Vec<(CorridorDef, MadeCorridor)> {
     }
     doc.road_corridors()
         .iter()
-        .map(|c| (c.clone(), make(doc, c, true).map(|m| (m.report, m.built)).map_err(words)))
+        .map(|c| {
+            (
+                c.clone(),
+                make(doc, c, true)
+                    .map(|m| (m.report, m.built))
+                    .map_err(words),
+            )
+        })
         .collect()
 }
 
@@ -672,5 +982,7 @@ pub fn preview(
     def: &CorridorDef,
     templates: &[kentos_commands::TemplateDef],
 ) -> Result<(CorridorReport, core::Built, Vec<CommandWarning>), String> {
-    make_with(doc, def, templates, true).map(|m| (m.report, m.built, m.warnings)).map_err(words)
+    make_with(doc, def, templates, true)
+        .map(|m| (m.report, m.built, m.warnings))
+        .map_err(words)
 }

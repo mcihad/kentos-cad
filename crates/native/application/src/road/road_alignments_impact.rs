@@ -6,8 +6,9 @@
 //! `fixtures/commands/v1/road.alignments.impact.json`.
 
 use kentos_commands::{
-    AlignmentFollower, AlignmentImpact, AlignmentRun, AlignmentStretch, AlignmentsImpact, CommandResult, CommandWarning,
-    ImpactDerived, SectionStations, StationOwner, StationRef, SuperelevationMethod,
+    AlignmentFollower, AlignmentImpact, AlignmentRun, AlignmentStretch, AlignmentsImpact,
+    CommandResult, CommandWarning, ImpactDerived, SectionStations, StationOwner, StationRef,
+    SuperelevationMethod,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::impact;
@@ -30,7 +31,13 @@ pub const SHIFT: f64 = 1e-6;
 /// “1. uygunsuz aralık başı”, “barrier Dere” → “Dere engeli”, a culvert's “station” → “km”.
 pub fn item_words(owner: StationOwner, item: &str) -> String {
     let n = |rest: &str| rest.split_whitespace().next().unwrap_or("").to_owned();
-    let end = |rest: &str| if rest.ends_with(" from") { "başı" } else { "sonu" };
+    let end = |rest: &str| {
+        if rest.ends_with(" from") {
+            "başı"
+        } else {
+            "sonu"
+        }
+    };
     for (key, words) in [
         ("region ", "bölge"),
         ("factor ", "katsayı satırı"),
@@ -47,7 +54,12 @@ pub fn item_words(owner: StationOwner, item: &str) -> String {
     if let Some(rest) = item.strip_prefix("row ") {
         return format!("{}. satır", n(rest));
     }
-    for (key, words) in [("curve ", "kurbu"), ("crossing ", "kesişmesi"), ("site ", "alanı"), ("barrier ", "engeli")] {
+    for (key, words) in [
+        ("curve ", "kurbu"),
+        ("crossing ", "kesişmesi"),
+        ("site ", "alanı"),
+        ("barrier ", "engeli"),
+    ] {
         if let Some(rest) = item.strip_prefix(key) {
             return format!("{rest} {words}");
         }
@@ -61,7 +73,10 @@ pub fn item_words(owner: StationOwner, item: &str) -> String {
     }
 }
 
-fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &Document,
+    input: &AlignmentsImpact,
+) -> Result<(AlignmentImpact, Vec<CommandWarning>), Stop> {
     crate::road_profiles::road_project(doc)?;
     let own = doc.road_alignments();
     let (at, old) = common::find(own, &input.alignment, "alignment")?;
@@ -74,14 +89,22 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
     }
     let tolerance = input.tolerance.unwrap_or(TOLERANCE);
     if !(tolerance.is_finite() && tolerance > 0.0 && tolerance <= 1.0) {
-        return Err(fail(codes::INVALID_ALIGNMENT_IMPACT, "Etki toleransı 0'dan büyük, en çok 1 m olur.".into(), "tolerance"));
+        return Err(fail(
+            codes::INVALID_ALIGNMENT_IMPACT,
+            "Etki toleransı 0'dan büyük, en çok 1 m olur.".into(),
+            "tolerance",
+        ));
     }
     // The new PIs, or the alignment turned round, judged and built as road.alignments.edit would.
     let before = common::build(own, old, "")?;
     let mut list = own.to_vec();
     if input.reverse {
         if !input.pis.is_empty() {
-            return Err(fail(codes::INVALID_ALIGNMENT_IMPACT, "Ya yeni PI'lar ya ters çevirme sorulur; ikisi birden değil.".into(), "pis"));
+            return Err(fail(
+                codes::INVALID_ALIGNMENT_IMPACT,
+                "Ya yeni PI'lar ya ters çevirme sorulur; ikisi birden değil.".into(),
+                "pis",
+            ));
         }
         let def = &mut list[at];
         def.pis.reverse();
@@ -109,7 +132,14 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
     };
     // Turned round, the line is where it was: every station s is at L − s (docs/adr/0965), nothing leaves the line.
     let (removed, added, runs, mapping) = if input.reverse {
-        let run = AlignmentRun { from: 0.0, to: length, from_text: old_text(0.0), to_text: old_text(length), shift_from: length, shift_to: -length };
+        let run = AlignmentRun {
+            from: 0.0,
+            to: length,
+            from_text: old_text(0.0),
+            to_text: old_text(length),
+            shift_from: length,
+            shift_to: -length,
+        };
         let rows = a
             .elements
             .iter()
@@ -123,8 +153,13 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
         (Vec::new(), Vec::new(), vec![run], rows)
     } else {
         let moved = impact::moved(b, a, tolerance);
-        let removed: Vec<AlignmentStretch> = moved.removed.iter().map(|s| stretch(s, &old_text)).collect();
-        let added: Vec<AlignmentStretch> = moved.added.iter().map(|s| stretch(s, &new_text)).collect();
+        let removed: Vec<AlignmentStretch> = moved
+            .removed
+            .iter()
+            .map(|s| stretch(s, &old_text))
+            .collect();
+        let added: Vec<AlignmentStretch> =
+            moved.added.iter().map(|s| stretch(s, &new_text)).collect();
         let runs: Vec<AlignmentRun> = moved
             .runs
             .iter()
@@ -139,34 +174,89 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
             .collect();
         (removed, added, runs, common::mapping_rows(Some(b), Some(a)))
     };
-    let lands = |s: f64| if input.reverse { Some(length - s) } else { impact::map(b, a, s, tolerance) };
+    let lands = |s: f64| {
+        if input.reverse {
+            Some(length - s)
+        } else {
+            impact::map(b, a, s, tolerance)
+        }
+    };
     // Every station named, kept where it lands on the same station; a reversal writes the profiles' and the
     // schedules' itself (carried).
     let mut refs: Vec<StationRef> = Vec::new();
-    let name = |refs: &mut Vec<StationRef>, owner: StationOwner, id: &str, nm: &str, item: String, s: f64| {
+    let name = |refs: &mut Vec<StationRef>,
+                owner: StationOwner,
+                id: &str,
+                nm: &str,
+                item: String,
+                s: f64| {
         let to = lands(s);
         if to.is_none_or(|t| (t - s).abs() > SHIFT) {
-            let carried = input.reverse && matches!(owner, StationOwner::Profile | StationOwner::Superelevation);
-            refs.push(StationRef { owner, id: id.to_owned(), name: nm.to_owned(), item, station: s, to, carried });
+            let carried = input.reverse
+                && matches!(owner, StationOwner::Profile | StationOwner::Superelevation);
+            refs.push(StationRef {
+                owner,
+                id: id.to_owned(),
+                name: nm.to_owned(),
+                item,
+                station: s,
+                to,
+                carried,
+            });
         }
     };
     for p in doc.road_profiles().iter().filter(|p| p.alignment == old.id) {
         for v in &p.pvis {
-            name(&mut refs, StationOwner::Profile, &p.id, &p.name, v.id.clone(), v.station);
+            name(
+                &mut refs,
+                StationOwner::Profile,
+                &p.id,
+                &p.name,
+                v.id.clone(),
+                v.station,
+            );
         }
         for c in &p.crossings {
-            name(&mut refs, StationOwner::Profile, &p.id, &p.name, format!("crossing {}", c.name), c.station);
+            name(
+                &mut refs,
+                StationOwner::Profile,
+                &p.id,
+                &p.name,
+                format!("crossing {}", c.name),
+                c.station,
+            );
         }
     }
     for d in doc.road_sections().iter().filter(|d| d.alignment == old.id) {
         match &d.stations {
             SectionStations::Range { from, to, .. } | SectionStations::Breaks { from, to, .. } => {
-                name(&mut refs, StationOwner::SectionSet, &d.id, &d.name, "from".into(), *from);
-                name(&mut refs, StationOwner::SectionSet, &d.id, &d.name, "to".into(), *to);
+                name(
+                    &mut refs,
+                    StationOwner::SectionSet,
+                    &d.id,
+                    &d.name,
+                    "from".into(),
+                    *from,
+                );
+                name(
+                    &mut refs,
+                    StationOwner::SectionSet,
+                    &d.id,
+                    &d.name,
+                    "to".into(),
+                    *to,
+                );
             }
             SectionStations::Stations { stations } => {
                 for (k, s) in stations.iter().enumerate() {
-                    name(&mut refs, StationOwner::SectionSet, &d.id, &d.name, format!("station {}", k + 1), *s);
+                    name(
+                        &mut refs,
+                        StationOwner::SectionSet,
+                        &d.id,
+                        &d.name,
+                        format!("station {}", k + 1),
+                        *s,
+                    );
                 }
             }
             // Where drawn lines cross the alignment: they cross the new line where they cross it, no station is named.
@@ -174,17 +264,44 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
         }
     }
     let mut touched: Vec<String> = Vec::new();
-    let mine: Vec<&kentos_commands::CorridorDef> = doc.road_corridors().iter().filter(|c| c.alignment == old.id).collect();
+    let mine: Vec<&kentos_commands::CorridorDef> = doc
+        .road_corridors()
+        .iter()
+        .filter(|c| c.alignment == old.id)
+        .collect();
     for c in &mine {
         let n = refs.len();
         for (k, r) in c.regions.iter().enumerate() {
-            name(&mut refs, StationOwner::Corridor, &c.id, &c.name, format!("region {} from", k + 1), r.from);
-            name(&mut refs, StationOwner::Corridor, &c.id, &c.name, format!("region {} to", k + 1), r.to);
+            name(
+                &mut refs,
+                StationOwner::Corridor,
+                &c.id,
+                &c.name,
+                format!("region {} from", k + 1),
+                r.from,
+            );
+            name(
+                &mut refs,
+                StationOwner::Corridor,
+                &c.id,
+                &c.name,
+                format!("region {} to", k + 1),
+                r.to,
+            );
         }
         for (k, s) in c.stations.iter().enumerate() {
-            name(&mut refs, StationOwner::Corridor, &c.id, &c.name, format!("station {}", k + 1), *s);
+            name(
+                &mut refs,
+                StationOwner::Corridor,
+                &c.id,
+                &c.name,
+                format!("station {}", k + 1),
+                *s,
+            );
         }
-        let over = removed.iter().any(|st| c.regions.iter().any(|r| st.from < r.to && st.to > r.from));
+        let over = removed
+            .iter()
+            .any(|st| c.regions.iter().any(|r| st.from < r.to && st.to > r.from));
         if over || refs.len() > n {
             touched.push(c.id.clone());
         }
@@ -193,44 +310,158 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
     // sites, unsuitable stretches and barriers (docs/adr/0965).
     let on_mine = |corridor: &str| mine.iter().any(|c| c.id == corridor);
     for d in doc.road_culverts().iter().filter(|d| on_mine(&d.corridor)) {
-        name(&mut refs, StationOwner::Culvert, &d.id, &d.name, "station".into(), d.station);
+        name(
+            &mut refs,
+            StationOwner::Culvert,
+            &d.id,
+            &d.name,
+            "station".into(),
+            d.station,
+        );
     }
     for d in doc.road_walls().iter().filter(|d| on_mine(&d.corridor)) {
-        name(&mut refs, StationOwner::Wall, &d.id, &d.name, "from".into(), d.from);
-        name(&mut refs, StationOwner::Wall, &d.id, &d.name, "to".into(), d.to);
+        name(
+            &mut refs,
+            StationOwner::Wall,
+            &d.id,
+            &d.name,
+            "from".into(),
+            d.from,
+        );
+        name(
+            &mut refs,
+            StationOwner::Wall,
+            &d.id,
+            &d.name,
+            "to".into(),
+            d.to,
+        );
     }
-    let volumes_here: Vec<&kentos_commands::VolumeDef> = doc.road_volumes().iter().filter(|v| on_mine(&v.corridor)).collect();
+    let volumes_here: Vec<&kentos_commands::VolumeDef> = doc
+        .road_volumes()
+        .iter()
+        .filter(|v| on_mine(&v.corridor))
+        .collect();
     for v in &volumes_here {
         for (k, f) in v.factors.iter().enumerate() {
-            name(&mut refs, StationOwner::Volume, &v.id, &v.name, format!("factor {} from", k + 1), f.from);
-            name(&mut refs, StationOwner::Volume, &v.id, &v.name, format!("factor {} to", k + 1), f.to);
+            name(
+                &mut refs,
+                StationOwner::Volume,
+                &v.id,
+                &v.name,
+                format!("factor {} from", k + 1),
+                f.from,
+            );
+            name(
+                &mut refs,
+                StationOwner::Volume,
+                &v.id,
+                &v.name,
+                format!("factor {} to", k + 1),
+                f.to,
+            );
         }
         for (k, f) in v.strip.iter().enumerate() {
-            name(&mut refs, StationOwner::Volume, &v.id, &v.name, format!("strip {} from", k + 1), f.from);
-            name(&mut refs, StationOwner::Volume, &v.id, &v.name, format!("strip {} to", k + 1), f.to);
+            name(
+                &mut refs,
+                StationOwner::Volume,
+                &v.id,
+                &v.name,
+                format!("strip {} from", k + 1),
+                f.from,
+            );
+            name(
+                &mut refs,
+                StationOwner::Volume,
+                &v.id,
+                &v.name,
+                format!("strip {} to", k + 1),
+                f.to,
+            );
         }
     }
-    for h in doc.road_hauls().iter().filter(|h| volumes_here.iter().any(|v| v.id == h.volume)) {
+    for h in doc
+        .road_hauls()
+        .iter()
+        .filter(|h| volumes_here.iter().any(|v| v.id == h.volume))
+    {
         for s in &h.sites {
-            name(&mut refs, StationOwner::Haul, &h.id, &h.name, format!("site {}", s.name), s.station);
+            name(
+                &mut refs,
+                StationOwner::Haul,
+                &h.id,
+                &h.name,
+                format!("site {}", s.name),
+                s.station,
+            );
         }
         for (k, u) in h.unsuitable.iter().enumerate() {
-            name(&mut refs, StationOwner::Haul, &h.id, &h.name, format!("unsuitable {} from", k + 1), u.from);
-            name(&mut refs, StationOwner::Haul, &h.id, &h.name, format!("unsuitable {} to", k + 1), u.to);
+            name(
+                &mut refs,
+                StationOwner::Haul,
+                &h.id,
+                &h.name,
+                format!("unsuitable {} from", k + 1),
+                u.from,
+            );
+            name(
+                &mut refs,
+                StationOwner::Haul,
+                &h.id,
+                &h.name,
+                format!("unsuitable {} to", k + 1),
+                u.to,
+            );
         }
         for x in &h.barriers {
-            name(&mut refs, StationOwner::Haul, &h.id, &h.name, format!("barrier {}", x.name), x.station);
+            name(
+                &mut refs,
+                StationOwner::Haul,
+                &h.id,
+                &h.name,
+                format!("barrier {}", x.name),
+                x.station,
+            );
         }
     }
-    for d in doc.road_sheet_sets().iter().filter(|d| d.alignment == old.id) {
-        name(&mut refs, StationOwner::SheetSet, &d.id, &d.name, "from".into(), d.from);
-        name(&mut refs, StationOwner::SheetSet, &d.id, &d.name, "to".into(), d.to);
+    for d in doc
+        .road_sheet_sets()
+        .iter()
+        .filter(|d| d.alignment == old.id)
+    {
+        name(
+            &mut refs,
+            StationOwner::SheetSet,
+            &d.id,
+            &d.name,
+            "from".into(),
+            d.from,
+        );
+        name(
+            &mut refs,
+            StationOwner::SheetSet,
+            &d.id,
+            &d.name,
+            "to".into(),
+            d.to,
+        );
     }
-    for d in doc.road_superelevations().iter().filter(|d| d.alignment == old.id) {
+    for d in doc
+        .road_superelevations()
+        .iter()
+        .filter(|d| d.alignment == old.id)
+    {
         match &d.method {
             SuperelevationMethod::Stations { rows } => {
                 for (k, r) in rows.iter().enumerate() {
-                    name(&mut refs, StationOwner::Superelevation, &d.id, &d.name, format!("row {}", k + 1), r.station);
+                    name(
+                        &mut refs,
+                        StationOwner::Superelevation,
+                        &d.id,
+                        &d.name,
+                        format!("row {}", k + 1),
+                        r.station,
+                    );
                 }
             }
             // A curve's rule follows its PI: told only where the PI had a curve and has none now (a rule on a PI
@@ -257,26 +488,44 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
     let parallels: Vec<AlignmentFollower> = own
         .iter()
         .filter(|d| d.offset_of.as_ref().is_some_and(|o| o.alignment == old.id))
-        .map(|d| AlignmentFollower { id: d.id.clone(), name: d.name.clone() })
+        .map(|d| AlignmentFollower {
+            id: d.id.clone(),
+            name: d.name.clone(),
+        })
         .collect();
     let volumes: Vec<ImpactDerived> = doc
         .road_volumes()
         .iter()
         .filter(|v| touched.contains(&v.corridor))
-        .map(|v| ImpactDerived { id: v.id.clone(), name: v.name.clone(), approved: v.approved.is_some() })
+        .map(|v| ImpactDerived {
+            id: v.id.clone(),
+            name: v.name.clone(),
+            approved: v.approved.is_some(),
+        })
         .collect();
     let hauls: Vec<ImpactDerived> = doc
         .road_hauls()
         .iter()
         .filter(|h| volumes.iter().any(|v| v.id == h.volume))
-        .map(|h| ImpactDerived { id: h.id.clone(), name: h.name.clone(), approved: h.approved.is_some() })
+        .map(|h| ImpactDerived {
+            id: h.id.clone(),
+            name: h.name.clone(),
+            approved: h.approved.is_some(),
+        })
         .collect();
     let mut warnings = Vec::new();
-    let lost: Vec<String> =
-        refs.iter().filter(|r| r.to.is_none()).map(|r| format!("{} {}", r.name, item_words(r.owner, &r.item))).collect();
+    let lost: Vec<String> = refs
+        .iter()
+        .filter(|r| r.to.is_none())
+        .map(|r| format!("{} {}", r.name, item_words(r.owner, &r.item)))
+        .collect();
     if !lost.is_empty() {
         let shown: Vec<String> = lost.iter().take(8).cloned().collect();
-        let more = if lost.len() > 8 { format!(" ve {} yer daha", lost.len() - 8) } else { String::new() };
+        let more = if lost.len() > 8 {
+            format!(" ve {} yer daha", lost.len() - 8)
+        } else {
+            String::new()
+        };
         warnings.push(CommandWarning {
             code: codes::ALIGNMENT_IMPACT_UNRESOLVED.into(),
             message: format!(
@@ -291,7 +540,12 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
         .iter()
         .filter(|v| v.approved)
         .map(|v| format!("“{}” kübajı", v.name))
-        .chain(hauls.iter().filter(|h| h.approved).map(|h| format!("“{}” taşıma planı", h.name)))
+        .chain(
+            hauls
+                .iter()
+                .filter(|h| h.approved)
+                .map(|h| format!("“{}” taşıma planı", h.name)),
+        )
         .collect();
     if !approved.is_empty() {
         warnings.push(CommandWarning {
@@ -344,7 +598,10 @@ fn answer(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &AlignmentsImpact) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -358,11 +615,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsImpact) -> CommandResul
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsImpact) -> CommandResult<AlignmentImpact> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AlignmentsImpact,
+) -> CommandResult<AlignmentImpact> {
     plan(cx, &input)
 }
 
 /// The impact of the PIs a window is typing, or why it does not read.
-pub fn preview(doc: &Document, input: &AlignmentsImpact) -> Result<(AlignmentImpact, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &AlignmentsImpact,
+) -> Result<(AlignmentImpact, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

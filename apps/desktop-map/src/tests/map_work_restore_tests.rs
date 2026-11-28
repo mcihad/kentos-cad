@@ -29,7 +29,8 @@ fn approved_then_changed(app: &mut App) -> (String, serde_json::Value, String) {
     send(app, P::Status("is-4".into(), W::Approved));
     let (changed, gone) = (uid(app, 6), uid(app, 7));
     let doc = app.document.as_ref().expect("a drawing");
-    let mut then = serde_json::to_value(doc.model.get(kentos_domain::Slot(7)).expect("the line")).expect("JSON");
+    let mut then = serde_json::to_value(doc.model.get(kentos_domain::Slot(7)).expect("the line"))
+        .expect("JSON");
     then.as_object_mut().expect("an object").remove("id");
     change_line(app, 6, "1060");
     run(
@@ -55,13 +56,31 @@ fn onayli_haline_getir_puts_back_the_deleted_and_the_changed_line() {
         "{said:?}"
     );
     let doc = app.document.as_ref().expect("a drawing");
-    let back = doc.model.slot_of(kentos_domain::Uuid::parse_str(&gone).expect("a uid")).expect("made again with its id");
+    let back = doc
+        .model
+        .slot_of(kentos_domain::Uuid::parse_str(&gone).expect("a uid"))
+        .expect("made again with its id");
     let mut now = serde_json::to_value(doc.model.get(back).expect("the line")).expect("JSON");
     now.as_object_mut().expect("an object").remove("id");
     assert_eq!(now, then, "the deleted line as approved");
-    let line = doc.model.get(doc.model.slot_of(kentos_domain::Uuid::parse_str(&changed).expect("a uid")).expect("there")).expect("the line");
-    assert!(!serde_json::to_value(line).expect("JSON")["attrs"].as_object().is_some_and(|a| a.contains_key("Kot")), "its height gone again");
-    let c = tree(&app).items[3].changes.clone().expect("the added line is a change still");
+    let line = doc
+        .model
+        .get(
+            doc.model
+                .slot_of(kentos_domain::Uuid::parse_str(&changed).expect("a uid"))
+                .expect("there"),
+        )
+        .expect("the line");
+    assert!(
+        !serde_json::to_value(line).expect("JSON")["attrs"]
+            .as_object()
+            .is_some_and(|a| a.contains_key("Kot")),
+        "its height gone again"
+    );
+    let c = tree(&app).items[3]
+        .changes
+        .clone()
+        .expect("the added line is a change still");
     assert_eq!((c.changed, c.added, c.removed), (0, 1, 0));
     // One undo takes it back.
     let _ = app.update(Message::Run("edit.undo"));
@@ -79,15 +98,25 @@ fn onayli_haline_getir_puts_back_the_deleted_and_the_changed_line() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/onayli-haline-4080");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/onayli-haline-4080");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = opened();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::MapWork));
-        app.docks.update(kentos_ui::widget::docking::Event::Shared(kentos_ui::widget::docking::Side::Right, vec![0.68, 0.32]));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(Panel::MapWork));
+        app.docks.update(kentos_ui::widget::docking::Event::Shared(
+            kentos_ui::widget::docking::Side::Right,
+            vec![0.68, 0.32],
+        ));
         send(&mut app, P::Fold("kind:campaign".into()));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -96,7 +125,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         approved_then_changed(&mut app);

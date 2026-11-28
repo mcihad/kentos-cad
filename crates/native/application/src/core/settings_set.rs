@@ -79,16 +79,30 @@ fn listed(items: &[String]) -> String {
 /// §3): the refusal, said by the level's name with how many of each kind name it, their ids given. The first such
 /// level of the project's order; a level the project lacked before is not looked at (Denetim says those). Proje
 /// ayarları asks it before Kaydet.
-pub fn levels_in_use(doc: &Document, arch: &kentos_commands::ArchSettings) -> Option<kentos_commands::CommandError> {
-    let before = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
-    let mut removed = before.iter().filter(|l| !arch.levels.iter().any(|k| k.id == l.id)).peekable();
+pub fn levels_in_use(
+    doc: &Document,
+    arch: &kentos_commands::ArchSettings,
+) -> Option<kentos_commands::CommandError> {
+    let before = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.levels.as_slice());
+    let mut removed = before
+        .iter()
+        .filter(|l| !arch.levels.iter().any(|k| k.id == l.id))
+        .peekable();
     removed.peek()?;
     // The levels the sheets' maps show (docs/adr/0716), one per map; an unreadable book names none.
     let maps: Vec<String> = doc
         .sheets()
         .and_then(|s| kentos_sheet::project::read_project_sheets(s).ok())
         .map(|(book, _)| {
-            let items = book.sheets.iter().flat_map(|s| &s.items).chain(book.masters.iter().flat_map(|m| &m.items));
+            let items = book
+                .sheets
+                .iter()
+                .flat_map(|s| &s.items)
+                .chain(book.masters.iter().flat_map(|m| &m.items));
             items
                 .filter_map(|it| match &it.kind {
                     kentos_sheet::kinds::ItemKind::Map(m) => m.level.as_ref().map(|l| l.id.clone()),
@@ -103,7 +117,11 @@ pub fn levels_in_use(doc: &Document, arch: &kentos_commands::ArchSettings) -> Op
         for e in doc.entities() {
             // A Kot names its level for its value (docs/adr/0721 §2), not as its own.
             let kind = match e {
-                Entity::Dimension(d) => d.level.as_ref().is_some_and(|l| l.id == level.id).then_some(7),
+                Entity::Dimension(d) => d
+                    .level
+                    .as_ref()
+                    .is_some_and(|l| l.id == level.id)
+                    .then_some(7),
                 _ => levelled_kind(e).filter(|_| e.own_level() == Some(level.id.as_str())),
             };
             let Some(kind) = kind else {
@@ -291,11 +309,20 @@ fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
             }
             match kentos_commands::parse_standard_document(document.text.as_bytes()) {
                 Ok((_, Some(_))) => {}
-                Ok((_, None)) => return Err(fail(codes::INVALID_STANDARD,
-                    "Projeye yalnız sürümlü standart belgesi bağlanabilir.".into(),
-                    &format!("standardDocs[{index}]"))),
-                Err(why) => return Err(fail(codes::INVALID_STANDARD, why,
-                    &format!("standardDocs[{index}]"))),
+                Ok((_, None)) => {
+                    return Err(fail(
+                        codes::INVALID_STANDARD,
+                        "Projeye yalnız sürümlü standart belgesi bağlanabilir.".into(),
+                        &format!("standardDocs[{index}]"),
+                    ));
+                }
+                Err(why) => {
+                    return Err(fail(
+                        codes::INVALID_STANDARD,
+                        why,
+                        &format!("standardDocs[{index}]"),
+                    ));
+                }
             }
         }
     }
@@ -311,7 +338,10 @@ fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
         ));
     }
     // docs/adr/4900: k within [−1, 1].
-    if let Some(k) = input.refraction.filter(|k| !kentos_commands::SurveySettings::refraction_holds(*k)) {
+    if let Some(k) = input
+        .refraction
+        .filter(|k| !kentos_commands::SurveySettings::refraction_holds(*k))
+    {
         return Err(fail(
             codes::INVALID_REFRACTION,
             format!("Kırılma katsayısı k −1 ile 1 arasında olmalı; {k} verildi."),
@@ -321,10 +351,17 @@ fn check_input(doc: &Document, input: &SettingsSet) -> Result<(), Stop> {
     // UR-003: each tool once, each layer one the drawing has.
     if let Some(list) = &input.tool_layers {
         if let Some(why) = kentos_commands::tool_layers_problem(list) {
-            return Err(fail(codes::INVALID_TOOL_LAYERS, format!("Araç katmanları: {why}."), "toolLayers"));
+            return Err(fail(
+                codes::INVALID_TOOL_LAYERS,
+                format!("Araç katmanları: {why}."),
+                "toolLayers",
+            ));
         }
         for (i, t) in list.iter().enumerate() {
-            let is_layer = doc.layers().get(&t.layer).is_some_and(|n| n.kind == kentos_commands::LayerNodeType::Layer);
+            let is_layer = doc
+                .layers()
+                .get(&t.layer)
+                .is_some_and(|n| n.kind == kentos_commands::LayerNodeType::Layer);
             if !is_layer {
                 return Err(fail(
                     codes::INVALID_TOOL_LAYERS,
@@ -673,7 +710,8 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
     );
     key(before.standard_docs != after.standard_docs, "standardDocs");
     key(
-        before.survey.clone().unwrap_or_default().refraction() != after.survey.clone().unwrap_or_default().refraction(),
+        before.survey.clone().unwrap_or_default().refraction()
+            != after.survey.clone().unwrap_or_default().refraction(),
         "refraction",
     );
     key(before.tool_layers != after.tool_layers, "toolLayers");

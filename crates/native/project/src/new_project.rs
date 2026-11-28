@@ -15,9 +15,9 @@ use std::f64::consts::PI;
 
 use kentos_contracts::{
     AngleUnit, ArchSettings, AreaUnit, Bounds, CadWork, DOCUMENT_FORMAT, DOCUMENT_VERSION,
-    DocumentSnapshotV1, DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle, LayerGeometry, LayerNode,
-    LayerNodeType, LayerStyle, LineType, PointStyle, PointSymbol, ProjectSettings, ProjectStyles,
-    Vec2, Workspace, ground_floor,
+    DocumentSnapshotV1, DrawingFont, DrawingUnit, LabelInk, LabelPlacement, LabelStyle,
+    LayerGeometry, LayerNode, LayerNodeType, LayerStyle, LineType, PointStyle, PointSymbol,
+    ProjectSettings, ProjectStyles, Vec2, Workspace, ground_floor,
 };
 use kentos_domain::default_style;
 
@@ -380,10 +380,17 @@ fn group(id: &str, name: &str, children: Vec<LayerNode>) -> LayerNode {
 /// The layers a new CAD project's annotation tools draw on (usage review UR-003): its Ölçü, Yazı and Tarama layers.
 pub fn cad_tool_layers() -> Vec<kentos_contracts::ToolLayer> {
     use kentos_contracts::{AnnotationTool as T, ToolLayer};
-    [(T::Dimension, "olcu"), (T::Text, "yazi"), (T::Hatch, "tarama")]
-        .into_iter()
-        .map(|(tool, layer)| ToolLayer { tool, layer: layer.to_owned() })
-        .collect()
+    [
+        (T::Dimension, "olcu"),
+        (T::Text, "yazi"),
+        (T::Hatch, "tarama"),
+    ]
+    .into_iter()
+    .map(|(tool, layer)| ToolLayer {
+        tool,
+        layer: layer.to_owned(),
+    })
+    .collect()
 }
 
 /// The technical drawing layers a CAD project starts with (docs/adr/0165
@@ -424,8 +431,16 @@ pub fn cad_layers_for(work: Option<CadWork>) -> Vec<LayerNode> {
 /// Harita's Nokta layer (docs/adr/9315): its points drawn as balastros, the general library's symbol, by a single
 /// renderer; its labels off as every new layer's (docs/adr/9311), the names written as texts (docs/adr/9314).
 pub fn point_layer() -> LayerNode {
-    let renderer = serde_json::json!({ "type": "single", "symbols": { "marker": { "ref": BALASTRO } } });
-    node("nokta", "Nokta", LayerStyle { renderer: Some(renderer), ..style("ink", None) })
+    let renderer =
+        serde_json::json!({ "type": "single", "symbols": { "marker": { "ref": BALASTRO } } });
+    node(
+        "nokta",
+        "Nokta",
+        LayerStyle {
+            renderer: Some(renderer),
+            ..style("ink", None)
+        },
+    )
 }
 
 /// A new CBS project's tree (docs/adr/9302, the owner's word of 24 November 2026: a new project comes empty, its layers
@@ -626,9 +641,16 @@ mod tests {
         let map = new_project(&options(CadWork::Map)).expect("builds");
         let point = &map.layers[0];
         assert_eq!((point.id.as_str(), point.name.as_str()), ("nokta", "Nokta"));
-        let symbol = point.style.renderer.as_ref().and_then(|r| r.pointer("/symbols/marker/ref"));
+        let symbol = point
+            .style
+            .renderer
+            .as_ref()
+            .and_then(|r| r.pointer("/symbols/marker/ref"));
         assert_eq!(symbol.and_then(Value::as_str), Some(BALASTRO));
-        assert!(!point.style.labels_on(), "labels off, names written as texts");
+        assert!(
+            !point.style.labels_on(),
+            "labels off, names written as texts"
+        );
         assert_eq!(map.active_layer, CAD_ACTIVE_LAYER);
         assert_eq!(map.layers.len(), cad_layers().len() + 1);
         for work in [CadWork::Architecture, CadWork::Road] {

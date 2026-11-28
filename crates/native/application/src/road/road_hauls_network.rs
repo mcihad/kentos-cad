@@ -7,8 +7,8 @@
 //! `fixtures/commands/v1/road.hauls.network.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, HaulDef, HaulJunction, HaulNetworkIssue, HaulNetworkProblem, HaulNetworkRead,
-    HaulRoadRead, HaulSiteAccess, HaulSiteKind, HaulsNetwork,
+    CommandResult, CommandWarning, Entity, HaulDef, HaulJunction, HaulNetworkIssue,
+    HaulNetworkProblem, HaulNetworkRead, HaulRoadRead, HaulSiteAccess, HaulSiteKind, HaulsNetwork,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -39,16 +39,28 @@ fn roads(doc: &Document, layers: &[String]) -> (Vec<Road>, Vec<String>) {
     for e in doc.entities() {
         match e {
             Entity::Line(l) if layers.contains(&l.base.layer_id) => {
-                out.push(Road { id: u64::from(l.base.id), part: 0, points: vec![[l.a.x, l.a.y], [l.b.x, l.b.y]] });
+                out.push(Road {
+                    id: u64::from(l.base.id),
+                    part: 0,
+                    points: vec![[l.a.x, l.a.y], [l.b.x, l.b.y]],
+                });
                 on.push(l.base.layer_id.clone());
             }
             Entity::Polyline(p) if layers.contains(&p.base.layer_id) => {
                 let bulges = p.bulges.clone().unwrap_or_default();
-                out.push(Road { id: u64::from(p.base.id), part: 0, points: flatten(&pts(&p.pts), &bulges, p.closed) });
+                out.push(Road {
+                    id: u64::from(p.base.id),
+                    part: 0,
+                    points: flatten(&pts(&p.pts), &bulges, p.closed),
+                });
                 on.push(p.base.layer_id.clone());
                 for (k, part) in p.parts.iter().flatten().enumerate() {
                     let b = part.bulges.clone().unwrap_or_default();
-                    out.push(Road { id: u64::from(p.base.id), part: k as u32 + 1, points: flatten(&pts(&part.pts), &b, false) });
+                    out.push(Road {
+                        id: u64::from(p.base.id),
+                        part: k as u32 + 1,
+                        points: flatten(&pts(&part.pts), &b, false),
+                    });
                     on.push(p.base.layer_id.clone());
                 }
             }
@@ -60,26 +72,42 @@ fn roads(doc: &Document, layers: &[String]) -> (Vec<Road>, Vec<String>) {
 
 /// The diagram's network against its alignment, if it has one; a layer not in the drawing is refused.
 pub(crate) fn read(doc: &Document, def: &HaulDef, built: &Built) -> Result<Option<Read>, Stop> {
-    let Some(n) = &def.network else { return Ok(None) };
+    let Some(n) = &def.network else {
+        return Ok(None);
+    };
     for (i, id) in n.layers.iter().enumerate() {
         if doc.layers().get(id).is_none() {
-            return Err(fail(codes::INVALID_HAUL, format!("Taşıma ağının “{id}” kimlikli katmanı çizimde yok."), &format!("network.layers[{i}]")));
+            return Err(fail(
+                codes::INVALID_HAUL,
+                format!("Taşıma ağının “{id}” kimlikli katmanı çizimde yok."),
+                &format!("network.layers[{i}]"),
+            ));
         }
     }
     let (roads, layers) = roads(doc, &n.layers);
     let reach = n.reach.unwrap_or(n.connect);
-    let sites: Vec<[f64; 2]> = def.sites.iter().filter_map(|s| s.at.as_ref().map(|p| [p.x, p.y])).collect();
+    let sites: Vec<[f64; 2]> = def
+        .sites
+        .iter()
+        .filter_map(|s| s.at.as_ref().map(|p| [p.x, p.y]))
+        .collect();
     let net = network(&built.core, built.offset, &roads, &sites, n.connect, reach);
-    Ok(Some(Read { roads, layers, net, connect: n.connect, reach }))
+    Ok(Some(Read {
+        roads,
+        layers,
+        net,
+        connect: n.connect,
+        reach,
+    }))
 }
 
 /// Why a site does not reach the alignment, in words.
 fn why(c: &Connection, connect: f64) -> Option<String> {
     match c {
         Connection::Joined { .. } => None,
-        Connection::NoRoad { nearest: Some(d) } => {
-            Some(format!("en yakın taşıma yolu {d:.2} m uzakta; bağlantı toleransı {connect:.2} m"))
-        }
+        Connection::NoRoad { nearest: Some(d) } => Some(format!(
+            "en yakın taşıma yolu {d:.2} m uzakta; bağlantı toleransı {connect:.2} m"
+        )),
         Connection::NoRoad { nearest: None } => Some("taşıma ağının katmanlarında yol yok".into()),
         Connection::Cut { .. } => Some("bağlandığı yollar aksa ulaşmıyor".into()),
     }
@@ -96,34 +124,68 @@ pub(crate) struct Placed {
 }
 
 pub(crate) fn placed(doc: &Document, def: &HaulDef, built: &Built) -> Result<Placed, Stop> {
-    let read = if def.sites.iter().any(|s| s.at.is_some()) { read(doc, def, built)? } else { None };
-    let mut out = Placed { sites: Vec::new(), access: Vec::new(), unconnected: Vec::new(), warnings: Vec::new() };
+    let read = if def.sites.iter().any(|s| s.at.is_some()) {
+        read(doc, def, built)?
+    } else {
+        None
+    };
+    let mut out = Placed {
+        sites: Vec::new(),
+        access: Vec::new(),
+        unconnected: Vec::new(),
+        warnings: Vec::new(),
+    };
     let mut k = 0;
     for (j, s) in def.sites.iter().enumerate() {
         let borrow = s.kind == HaulSiteKind::Borrow;
-        let base = PlanSite { station: s.station, capacity: s.volume, borrow, access: 0.0 };
+        let base = PlanSite {
+            station: s.station,
+            capacity: s.volume,
+            borrow,
+            access: 0.0,
+        };
         if s.at.is_none() {
             out.sites.push(base);
             out.access.push(None);
             out.unconnected.push(false);
             continue;
         }
-        let c = read.as_ref().and_then(|r| r.net.sites.get(k).cloned().map(|c| (c, r.connect)));
+        let c = read
+            .as_ref()
+            .and_then(|r| r.net.sites.get(k).cloned().map(|c| (c, r.connect)));
         k += 1;
         match c {
-            Some((Connection::Joined { length, station, .. }, _)) => {
-                out.sites.push(PlanSite { station, access: length, ..base });
+            Some((
+                Connection::Joined {
+                    length, station, ..
+                },
+                _,
+            )) => {
+                out.sites.push(PlanSite {
+                    station,
+                    access: length,
+                    ..base
+                });
                 out.access.push(Some(length));
                 out.unconnected.push(false);
             }
             other => {
-                let words = other.as_ref().and_then(|(c, connect)| why(c, *connect)).unwrap_or_else(|| "taşıma ağı yok".into());
+                let words = other
+                    .as_ref()
+                    .and_then(|(c, connect)| why(c, *connect))
+                    .unwrap_or_else(|| "taşıma ağı yok".into());
                 out.warnings.push(CommandWarning {
                     code: codes::HAUL_SITE_UNCONNECTED.into(),
-                    message: format!("“{}” alanı taşıma ağıyla aksa bağlanmıyor ({words}); hesaba katılmadı.", s.name),
+                    message: format!(
+                        "“{}” alanı taşıma ağıyla aksa bağlanmıyor ({words}); hesaba katılmadı.",
+                        s.name
+                    ),
                     path: Some(format!("sites[{j}]")),
                 });
-                out.sites.push(PlanSite { capacity: 0.0, ..base });
+                out.sites.push(PlanSite {
+                    capacity: 0.0,
+                    ..base
+                });
                 out.access.push(None);
                 out.unconnected.push(true);
             }
@@ -133,18 +195,26 @@ pub(crate) fn placed(doc: &Document, def: &HaulDef, built: &Built) -> Result<Pla
 }
 
 /// The network read now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &HaulsNetwork) -> Result<(HaulNetworkRead, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &HaulsNetwork,
+) -> Result<(HaulNetworkRead, Vec<CommandWarning>), Stop> {
     hauls::road_project(doc)?;
     let (_, def) = hauls::find(doc.road_hauls(), &input.haul, "haul")?;
     if def.network.is_none() {
         return Err(fail(
             codes::INVALID_HAUL,
-            format!("“{}” Brüknerinin taşıma ağı yok; önce ağın katmanlarını verin (road.hauls.edit network).", def.name),
+            format!(
+                "“{}” Brüknerinin taşıma ağı yok; önce ağın katmanlarını verin (road.hauls.edit network).",
+                def.name
+            ),
             "haul",
         ));
     }
     let built = hauls::alignment_of(doc, def)?;
-    let Some(r) = read(doc, def, &built)? else { return Err(Stop::Cancelled) };
+    let Some(r) = read(doc, def, &built)? else {
+        return Err(Stop::Cancelled);
+    };
     let km = |s: f64| km_text(built.km(s), 3);
     let index = |i: usize| i as u32;
     let mut warnings = Vec::new();
@@ -200,7 +270,11 @@ pub(crate) fn answer(doc: &Document, input: &HaulsNetwork) -> Result<(HaulNetwor
                 "“{}” taşıma ağında birleşmeyen {} yer var: {}",
                 def.name,
                 problems.len(),
-                problems.iter().map(|p| p.message.clone()).collect::<Vec<_>>().join(" ")
+                problems
+                    .iter()
+                    .map(|p| p.message.clone())
+                    .collect::<Vec<_>>()
+                    .join(" ")
             ),
             path: Some("network".into()),
         });
@@ -224,7 +298,13 @@ pub(crate) fn answer(doc: &Document, input: &HaulsNetwork) -> Result<(HaulNetwor
             roads: Vec::new(),
             why: why(c, r.connect),
         };
-        if let Connection::Joined { length, station, offset, roads } = c {
+        if let Connection::Joined {
+            length,
+            station,
+            offset,
+            roads,
+        } = c
+        {
             row = HaulSiteAccess {
                 joined: true,
                 length: Some(*length),
@@ -237,7 +317,11 @@ pub(crate) fn answer(doc: &Document, input: &HaulsNetwork) -> Result<(HaulNetwor
         } else {
             warnings.push(CommandWarning {
                 code: codes::HAUL_SITE_UNCONNECTED.into(),
-                message: format!("“{}” alanı taşıma ağıyla aksa bağlanmıyor ({}); hesaba katılmadı.", s.name, row.why.clone().unwrap_or_default()),
+                message: format!(
+                    "“{}” alanı taşıma ağıyla aksa bağlanmıyor ({}); hesaba katılmadı.",
+                    s.name,
+                    row.why.clone().unwrap_or_default()
+                ),
                 path: Some(format!("sites[{j}]")),
             });
         }
@@ -252,13 +336,24 @@ pub(crate) fn answer(doc: &Document, input: &HaulsNetwork) -> Result<(HaulNetwor
             .iter()
             .zip(&r.layers)
             .zip(&r.net.lengths)
-            .map(|((x, layer), length)| HaulRoadRead { entity: x.id, part: x.part, layer: layer.clone(), length: *length })
+            .map(|((x, layer), length)| HaulRoadRead {
+                entity: x.id,
+                part: x.part,
+                layer: layer.clone(),
+                length: *length,
+            })
             .collect(),
         junctions: r
             .net
             .junctions
             .iter()
-            .map(|j| HaulJunction { road: index(j.road), end: j.end, station: j.station, km: km(j.station), offset: j.offset })
+            .map(|j| HaulJunction {
+                road: index(j.road),
+                end: j.end,
+                station: j.station,
+                km: km(j.station),
+                offset: j.offset,
+            })
             .collect(),
         joins: r.net.joins.len() as u32,
         problems,
@@ -270,7 +365,10 @@ pub(crate) fn answer(doc: &Document, input: &HaulsNetwork) -> Result<(HaulNetwor
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &HaulsNetwork) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -284,12 +382,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &HaulsNetwork) -> CommandResult<Ha
 }
 
 /// The read, as execute; writes nothing.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: HaulsNetwork) -> CommandResult<HaulNetworkRead> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: HaulsNetwork,
+) -> CommandResult<HaulNetworkRead> {
     plan(cx, &input)
 }
 
 /// For the window: the read, or why not.
-pub fn preview(doc: &Document, input: &HaulsNetwork) -> Result<(HaulNetworkRead, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &HaulsNetwork,
+) -> Result<(HaulNetworkRead, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }
 
@@ -319,5 +423,8 @@ pub fn drawn(doc: &Document, haul: &str) -> Option<Drawn> {
         })
         .collect();
     let (roads, _) = roads(doc, &n.layers);
-    Some(Drawn { axis, roads: roads.into_iter().map(|r| r.points).collect() })
+    Some(Drawn {
+        axis,
+        roads: roads.into_iter().map(|r| r.points).collect(),
+    })
 }

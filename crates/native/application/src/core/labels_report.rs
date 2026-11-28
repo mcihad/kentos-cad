@@ -394,7 +394,9 @@ fn report(
     // parked pins are the report's matter (docs/adr/0578 §1, §3).
     for link in &doc.settings().sources {
         if (link.parked.is_empty() && link.extent.is_none())
-            || wanted.as_ref().is_some_and(|w| !w.contains(link.layer.as_str()))
+            || wanted
+                .as_ref()
+                .is_some_and(|w| !w.contains(link.layer.as_str()))
         {
             continue;
         }

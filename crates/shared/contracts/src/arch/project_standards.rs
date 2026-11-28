@@ -104,7 +104,9 @@ pub const MAX_APPROVED_SHEET_TEMPLATES: usize = 256;
 /// revision 1–128 bytes.
 pub fn approved_sheet_templates_problem(items: &[ApprovedSheetTemplate]) -> Option<String> {
     if items.len() > MAX_APPROVED_SHEET_TEMPLATES {
-        return Some(format!("En çok {MAX_APPROVED_SHEET_TEMPLATES} onaylı pafta şablonu kaydedilir"));
+        return Some(format!(
+            "En çok {MAX_APPROVED_SHEET_TEMPLATES} onaylı pafta şablonu kaydedilir"
+        ));
     }
     let short = |t: &str| {
         !t.trim().is_empty() && t.trim() == t && t.len() <= 128 && !t.chars().any(char::is_control)
@@ -112,13 +114,20 @@ pub fn approved_sheet_templates_problem(items: &[ApprovedSheetTemplate]) -> Opti
     let mut ids = std::collections::BTreeSet::new();
     for item in items {
         if !short(&item.template_id) || item.revision == 0 {
-            return Some("Onaylı pafta şablonunun kimliği 1–128 bayt ve revizyonu en az 1 olmalı".into());
+            return Some(
+                "Onaylı pafta şablonunun kimliği 1–128 bayt ve revizyonu en az 1 olmalı".into(),
+            );
         }
         if !short(&item.standard) || !short(&item.standard_revision) {
-            return Some("Onaylı pafta şablonunun standart kimliği ve revizyonu 1–128 bayt olmalı".into());
+            return Some(
+                "Onaylı pafta şablonunun standart kimliği ve revizyonu 1–128 bayt olmalı".into(),
+            );
         }
         if !ids.insert(item.template_id.to_lowercase()) {
-            return Some(format!("“{}” onaylı pafta şablonu iki kez kayıtlı", item.template_id));
+            return Some(format!(
+                "“{}” onaylı pafta şablonu iki kez kayıtlı",
+                item.template_id
+            ));
         }
     }
     None
@@ -136,7 +145,10 @@ mod tests {
             standard: "ofis-a".into(),
             standard_revision: "2026.1".into(),
         };
-        assert_eq!(approved_sheet_templates_problem(&[item("sys:cad-mimari", 1), item("ofis:a3", 2)]), None);
+        assert_eq!(
+            approved_sheet_templates_problem(&[item("sys:cad-mimari", 1), item("ofis:a3", 2)]),
+            None
+        );
         assert!(approved_sheet_templates_problem(&[item("A", 1), item("a", 2)]).is_some());
         assert!(approved_sheet_templates_problem(&[item(" a", 1)]).is_some());
         assert!(approved_sheet_templates_problem(&[item("a", 0)]).is_some());

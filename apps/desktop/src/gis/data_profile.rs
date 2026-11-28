@@ -843,7 +843,9 @@ impl App {
             .push(self.profile_pickers(w))
             .push(label::caption(about))
             .push(label::caption(basis))
-            .push(Segmented::new(Page::ALL, w.names.page, |p| msg(Event::Page(p))));
+            .push(Segmented::new(Page::ALL, w.names.page, |p| {
+                msg(Event::Page(p))
+            }));
         if w.names.page == Page::Names {
             body = body.push(self.data_profile_names_part(&w.names));
         } else {
@@ -1207,7 +1209,10 @@ fn applied_words(p: &ProfilesApplied) -> String {
         parts.push("adres verisi".to_owned());
     }
     // GIS-051: one step takes all of it back.
-    format!("Veri profili uygulandı: {}. Geri al hepsini tek adımda geri alır.", parts.join(", "))
+    format!(
+        "Veri profili uygulandı: {}. Geri al hepsini tek adımda geri alır.",
+        parts.join(", ")
+    )
 }
 
 /// What a file that came in is, in a sentence.
@@ -1290,7 +1295,19 @@ mod undo_words_tests {
             changed: true,
             ..ProfilesApplied::default()
         };
-        assert!(planned_words(&p).ends_with("4 değer listesi, 2 ilişki, adres verisi. Hepsi tek adımda geri alınır."), "{}", planned_words(&p));
-        assert!(applied_words(&p).ends_with("4 değer listesi, 2 ilişki, adres verisi. Geri al hepsini tek adımda geri alır."), "{}", applied_words(&p));
+        assert!(
+            planned_words(&p).ends_with(
+                "4 değer listesi, 2 ilişki, adres verisi. Hepsi tek adımda geri alınır."
+            ),
+            "{}",
+            planned_words(&p)
+        );
+        assert!(
+            applied_words(&p).ends_with(
+                "4 değer listesi, 2 ilişki, adres verisi. Geri al hepsini tek adımda geri alır."
+            ),
+            "{}",
+            applied_words(&p)
+        );
     }
 }

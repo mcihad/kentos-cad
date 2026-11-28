@@ -96,8 +96,7 @@ impl Decision {
 
     /// Whether it still waits for an answer.
     pub fn open(&self) -> bool {
-        self.kind == Kind::Administration
-            || self.param.as_ref().is_some_and(|p| p.value.is_none())
+        self.kind == Kind::Administration || self.param.as_ref().is_some_and(|p| p.value.is_none())
     }
 }
 
@@ -139,7 +138,11 @@ mod tests {
         let mut ids = std::collections::HashSet::new();
         for x in base() {
             assert!(ids.insert(x.id.clone()), "{} twice", x.id);
-            assert!(!x.sources.is_empty() || x.kind == Kind::Administration, "{} has no source", x.id);
+            assert!(
+                !x.sources.is_empty() || x.kind == Kind::Administration,
+                "{} has no source",
+                x.id
+            );
             for r in &x.rows {
                 assert!(catalog::base().row(r).is_some(), "{}: no row {r}", x.id);
             }

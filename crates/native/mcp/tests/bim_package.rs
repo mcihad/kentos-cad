@@ -8,10 +8,12 @@ use serde_json::{Value, json};
 
 fn call(server: &mut Server, name: &str, args: Value) -> Value {
     let result = server
-        .handle(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
+        .handle(
+            &json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
             "name":name,"arguments":args,"_meta":{"io.modelcontextprotocol/protocolVersion":MODERN,
             "io.modelcontextprotocol/clientInfo":{"name":"bim-package-test","version":"1"},
-            "io.modelcontextprotocol/clientCapabilities":{}}}}))
+            "io.modelcontextprotocol/clientCapabilities":{}}}}),
+        )
         .unwrap()["result"]
         .clone();
     assert_eq!(result["resultType"], "complete", "{result}");
@@ -26,15 +28,20 @@ fn an_agent_answers_the_form_and_publishes_the_bim_package() {
     let source = dir.join("kesit-binasi-tam.kcad");
     // The künye's family name of the architect, which the IFC model's person takes apart from the whole name
     // (docs/adr/8124: no guess is written); no command writes the künye, so the copy is given it here.
-    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/arch/v1/kesit-binasi-tam.kcad"))
-        .expect("the declared drawing");
+    let bytes = std::fs::read(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/arch/v1/kesit-binasi-tam.kcad"
+    ))
+    .expect("the declared drawing");
     let mut snap = kentos_kcad::decode(&bytes).expect("it reads");
-    snap.settings.variables.push(kentos_commands::ProjectVariable {
-        name: "mimar_soyadi".into(),
-        label: "Mimarın soyadı (IFC modelinde)".into(),
-        kind: kentos_commands::VariableKind::Text,
-        value: kentos_commands::VariableValue::Text("Yılmaz".into()),
-    });
+    snap.settings
+        .variables
+        .push(kentos_commands::ProjectVariable {
+            name: "mimar_soyadi".into(),
+            label: "Mimarın soyadı (IFC modelinde)".into(),
+            kind: kentos_commands::VariableKind::Text,
+            value: kentos_commands::VariableValue::Text("Yılmaz".into()),
+        });
     std::fs::write(&source, kentos_kcad::encode(&snap).expect("it writes")).expect("the copy");
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": source}));
@@ -55,7 +62,13 @@ fn an_agent_answers_the_form_and_publishes_the_bim_package() {
     let stopped = publish(&mut server);
     let error = &stopped["structuredContent"]["error"];
     assert_eq!(error["code"], "publish_blocked", "{stopped}");
-    assert!(error["message"].as_str().unwrap().contains("müellifin cevabını bekliyor"), "{stopped}");
+    assert!(
+        error["message"]
+            .as_str()
+            .unwrap()
+            .contains("müellifin cevabını bekliyor"),
+        "{stopped}"
+    );
     assert!(!out.exists());
     // The agent answers them in the drawing.
     let answered = call(
@@ -65,18 +78,46 @@ fn an_agent_answers_the_form_and_publishes_the_bim_package() {
             {"no": 1, "yes": true, "note": "Bakanlığın sınırı yayımlanmadı"}, {"no": 7, "yes": true}, {"no": 10, "yes": true}
         ]}),
     );
-    assert_eq!(answered["structuredContent"]["status"], "completed", "{answered}");
-    assert_eq!(answered["structuredContent"]["output"]["answers"].as_array().map(Vec::len), Some(3));
+    assert_eq!(
+        answered["structuredContent"]["status"], "completed",
+        "{answered}"
+    );
+    assert_eq!(
+        answered["structuredContent"]["output"]["answers"]
+            .as_array()
+            .map(Vec::len),
+        Some(3)
+    );
     // The package whole: its five results, the model in the folder, the record with the drawing's answers.
     let done = publish(&mut server);
     let output = &done["structuredContent"]["output"];
     assert_eq!(output["ready"], true, "{done}");
-    let results: Vec<Value> = output["bim"]["results"].as_array().unwrap().iter().map(|r| r["holds"].clone()).collect();
-    assert_eq!(results, [json!(true), json!(true), json!(true), json!(true), Value::Null], "{done}");
+    let results: Vec<Value> = output["bim"]["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|r| r["holds"].clone())
+        .collect();
+    assert_eq!(
+        results,
+        [
+            json!(true),
+            json!(true),
+            json!(true),
+            json!(true),
+            Value::Null
+        ],
+        "{done}"
+    );
     let model = out.join(output["bim"]["model"].as_str().unwrap());
     assert!(model.is_file(), "{}", model.display());
-    let record: Value =
-        serde_json::from_slice(&std::fs::read(out.join(output["bim"]["form"].as_str().unwrap())).unwrap()).unwrap();
-    assert_eq!(record["answers"][0]["note"], "Bakanlığın sınırı yayımlanmadı");
+    let record: Value = serde_json::from_slice(
+        &std::fs::read(out.join(output["bim"]["form"].as_str().unwrap())).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        record["answers"][0]["note"],
+        "Bakanlığın sınırı yayımlanmadı"
+    );
     let _ = std::fs::remove_dir_all(dir);
 }

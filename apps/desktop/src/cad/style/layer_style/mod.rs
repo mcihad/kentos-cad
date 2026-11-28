@@ -283,7 +283,10 @@ pub enum Event {
     /// Sınıfla.
     Graduate,
     /// A data layer's field values read from its source (docs/adr/9110 §1), and what to do with them.
-    SourceValues(source_values::Then, Result<source_values::SourceValues, String>),
+    SourceValues(
+        source_values::Then,
+        Result<source_values::SourceValues, String>,
+    ),
     ClassMin(usize, String),
     ClassMax(usize, String),
     ClassLabel(usize, String),
@@ -434,7 +437,8 @@ pub struct LayerStyleWindow {
     pub(super) reading: bool,
     /// The layer's fields' value lists (field → code → label, the second round's T23): a category made from a code is
     /// named by its label.
-    pub(super) value_labels: std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>>,
+    pub(super) value_labels:
+        std::collections::BTreeMap<String, std::collections::BTreeMap<String, String>>,
 }
 
 /// The category of the rows without a value (the second round's T23).
@@ -457,7 +461,14 @@ impl LayerStyleWindow {
         }
         // A field's rows without a value: an expression's empty results ($alan of a line) are not rows of a field.
         let bare = !field.is_empty() && field.chars().all(|c| c.is_alphanumeric() || c == '_');
-        if bare && empty > 0 && !self.categorized.categories.iter().any(|k| k.value.is_empty()) {
+        if bare
+            && empty > 0
+            && !self
+                .categorized
+                .categories
+                .iter()
+                .any(|k| k.value.is_empty())
+        {
             let n = self.categorized.categories.len();
             let mut k = kentos_native_style::classify::new_category(n, &self.present);
             k.value = String::new();
@@ -475,7 +486,8 @@ impl LayerStyleWindow {
             .ok_or("Katman stili yalnızca katmanlar için açılır; bir grup seçili.")?;
         let entities: Vec<&Entity> = doc.by_layer(id).collect();
         // A data layer's rows are its source's: its table's geometry says what they are drawn as (docs/adr/9177).
-        let present = kentos_native_style::classify::data_layer_present(node).unwrap_or_else(|| classes_present(&entities));
+        let present = kentos_native_style::classify::data_layer_present(node)
+            .unwrap_or_else(|| classes_present(&entities));
         let classes = present.classes();
         let current = node.style.renderer.clone();
         let compose = node.compose.clone();
@@ -536,7 +548,9 @@ impl LayerStyleWindow {
                 node.data
                     .as_ref()
                     .and_then(|d| d.geometry.as_ref())
-                    .and_then(|g| kentos_native_application::geopackage::layer_geometry_of(&g.type_name))
+                    .and_then(|g| {
+                        kentos_native_application::geopackage::layer_geometry_of(&g.type_name)
+                    })
             }),
             said: None,
             asking: false,
@@ -550,7 +564,12 @@ impl LayerStyleWindow {
                 .iter()
                 .filter_map(|f| {
                     let list = f.values.as_ref().filter(|v| !v.is_empty())?;
-                    Some((f.name.clone(), list.iter().map(|c| (c.code.clone(), c.label.clone())).collect()))
+                    Some((
+                        f.name.clone(),
+                        list.iter()
+                            .map(|c| (c.code.clone(), c.label.clone()))
+                            .collect(),
+                    ))
                 })
                 .collect(),
         };
@@ -623,9 +642,12 @@ impl LayerStyleWindow {
     /// has them, and the one the layer is drawn with whatever it is (docs/adr/0802).
     pub fn kinds(&self) -> Vec<Kind> {
         // Those that fit the layer's geometry first, in the list's order, then the others (docs/adr/9143).
-        let offered: Vec<Kind> =
-            KINDS.into_iter().filter(|k| self.thematic || !k.thematic() || *k == self.own).collect();
-        let (fit, misfit): (Vec<Kind>, Vec<Kind>) = offered.into_iter().partition(|k| self.fits(*k));
+        let offered: Vec<Kind> = KINDS
+            .into_iter()
+            .filter(|k| self.thematic || !k.thematic() || *k == self.own)
+            .collect();
+        let (fit, misfit): (Vec<Kind>, Vec<Kind>) =
+            offered.into_iter().partition(|k| self.fits(*k));
         fit.into_iter().chain(misfit).collect()
     }
 
@@ -638,9 +660,17 @@ impl LayerStyleWindow {
             (self.geometry, kind),
             (
                 Some(G::Line),
-                Kind::DotDensity | Kind::Chart | Kind::Heatmap | Kind::Cluster | Kind::Displacement | Kind::Inverted
+                Kind::DotDensity
+                    | Kind::Chart
+                    | Kind::Heatmap
+                    | Kind::Cluster
+                    | Kind::Displacement
+                    | Kind::Inverted
             ) | (Some(G::Point), Kind::DotDensity | Kind::Inverted)
-                | (Some(G::Area), Kind::Heatmap | Kind::Cluster | Kind::Displacement)
+                | (
+                    Some(G::Area),
+                    Kind::Heatmap | Kind::Cluster | Kind::Displacement
+                )
         )
     }
 
@@ -818,14 +848,24 @@ impl LayerStyleWindow {
         match head {
             "c" => {
                 let i: usize = rest.parse().ok()?;
-                Some((SetAt::Category(i), self.categorized.categories.get(i).map(|k| &k.symbols)))
+                Some((
+                    SetAt::Category(i),
+                    self.categorized.categories.get(i).map(|k| &k.symbols),
+                ))
             }
             "g" => {
                 let i: usize = rest.parse().ok()?;
-                Some((SetAt::Class(i), self.graduated.classes.get(i).map(|k| &k.symbols)))
+                Some((
+                    SetAt::Class(i),
+                    self.graduated.classes.get(i).map(|k| &k.symbols),
+                ))
             }
             "r" => {
-                let path: Vec<usize> = rest.split('.').map(str::parse).collect::<Result<_, _>>().ok()?;
+                let path: Vec<usize> = rest
+                    .split('.')
+                    .map(str::parse)
+                    .collect::<Result<_, _>>()
+                    .ok()?;
                 let mut level: &[Rule] = &self.rules;
                 let mut rule = None;
                 for &i in &path {
@@ -844,26 +884,40 @@ impl LayerStyleWindow {
     pub fn source_category_tally(&self) -> Option<(Vec<usize>, usize)> {
         self.data.as_ref()?;
         let c = &self.categorized;
-        Some(match self.source.as_ref().filter(|s| s.field == c.expr.trim()) {
-            Some(s) => {
-                let (counts, rest) = kentos_native_style::tally::category_tally_grouped(&s.groups, &c.categories);
-                (counts.into_iter().map(|n| n as usize).collect(), rest as usize)
-            }
-            None => (vec![0; c.categories.len()], 0),
-        })
+        Some(
+            match self.source.as_ref().filter(|s| s.field == c.expr.trim()) {
+                Some(s) => {
+                    let (counts, rest) = kentos_native_style::tally::category_tally_grouped(
+                        &s.groups,
+                        &c.categories,
+                    );
+                    (
+                        counts.into_iter().map(|n| n as usize).collect(),
+                        rest as usize,
+                    )
+                }
+                None => (vec![0; c.categories.len()], 0),
+            },
+        )
     }
 
     /// A data layer's classes counted from its source's numbers, as [`Self::source_category_tally`].
     pub fn source_class_tally(&self) -> Option<(Vec<usize>, usize)> {
         self.data.as_ref()?;
         let g = &self.graduated;
-        Some(match self.source.as_ref().filter(|s| s.field == g.expr.trim()) {
-            Some(s) => {
-                let (counts, rest) = kentos_native_style::tally::class_tally_grouped(&s.numbers, &g.classes);
-                (counts.into_iter().map(|n| n as usize).collect(), rest as usize)
-            }
-            None => (vec![0; g.classes.len()], 0),
-        })
+        Some(
+            match self.source.as_ref().filter(|s| s.field == g.expr.trim()) {
+                Some(s) => {
+                    let (counts, rest) =
+                        kentos_native_style::tally::class_tally_grouped(&s.numbers, &g.classes);
+                    (
+                        counts.into_iter().map(|n| n as usize).collect(),
+                        rest as usize,
+                    )
+                }
+                None => (vec![0; g.classes.len()], 0),
+            },
+        )
     }
 
     /// The categorized expression's text per object.
@@ -996,20 +1050,37 @@ impl LayerStyleWindow {
                         self.source = Some(values);
                         match then {
                             source_values::Then::Show => {}
-                            source_values::Then::Classify if found.is_empty() => self.say(texts::NO_VALUES, true),
+                            source_values::Then::Classify if found.is_empty() => {
+                                self.say(texts::NO_VALUES, true)
+                            }
                             source_values::Then::Classify => {
-                                self.categorized.categories =
-                                    categories_of(&found, &self.present, &self.categorized.categories);
-                                let empty: u64 = self
-                                    .source
-                                    .as_ref()
-                                    .map_or(0, |s| s.groups.iter().filter(|(v, _)| v.as_deref().is_none_or(str::is_empty)).map(|(_, n)| n).sum());
+                                self.categorized.categories = categories_of(
+                                    &found,
+                                    &self.present,
+                                    &self.categorized.categories,
+                                );
+                                let empty: u64 = self.source.as_ref().map_or(0, |s| {
+                                    s.groups
+                                        .iter()
+                                        .filter(|(v, _)| v.as_deref().is_none_or(str::is_empty))
+                                        .map(|(_, n)| n)
+                                        .sum()
+                                });
                                 self.name_categories(empty);
                                 self.typed.clear();
                                 let words = texts::found(found.len());
-                                self.say(if more { format!("{words} {}", source_values::MORE) } else { words }, more);
+                                self.say(
+                                    if more {
+                                        format!("{words} {}", source_values::MORE)
+                                    } else {
+                                        words
+                                    },
+                                    more,
+                                );
                             }
-                            source_values::Then::Graduate if numbers.is_empty() => self.say(texts::NO_VALUES, true),
+                            source_values::Then::Graduate if numbers.is_empty() => {
+                                self.say(texts::NO_VALUES, true)
+                            }
                             source_values::Then::Graduate => {
                                 let classes = graduated_of(
                                     &numbers,
@@ -1037,7 +1108,10 @@ impl LayerStyleWindow {
                 } else {
                     self.categorized.categories =
                         categories_of(&found, &self.present, &self.categorized.categories);
-                    let empty = values.iter().filter(|v| v.as_deref().is_none_or(|v| v.trim().is_empty())).count() as u64;
+                    let empty = values
+                        .iter()
+                        .filter(|v| v.as_deref().is_none_or(|v| v.trim().is_empty()))
+                        .count() as u64;
                     self.name_categories(empty);
                     self.typed.clear();
                     self.say(texts::found(found.len()), false);
@@ -1480,7 +1554,12 @@ impl App {
             let Some(node) = layers.get(&e.base().layer_id) else {
                 continue;
             };
-            let Some(renderer) = node.style.renderer.as_ref().and_then(|v| Renderer::from_value(v).ok()) else {
+            let Some(renderer) = node
+                .style
+                .renderer
+                .as_ref()
+                .and_then(|v| Renderer::from_value(v).ok())
+            else {
                 continue;
             };
             let value = match &renderer {
@@ -1521,7 +1600,11 @@ impl App {
             }
         }
         let (layer, value) = missed.first()?;
-        let shown = if value.is_empty() { "boş değer".to_owned() } else { format!("“{value}”") };
+        let shown = if value.is_empty() {
+            "boş değer".to_owned()
+        } else {
+            format!("“{value}”")
+        };
         Some(format!(
             "{} nesne haritada görünmüyor: “{layer}” katmanının stili {shown} için sembol tanımlamıyor (Diğer değerler kapalı). \
              Katman stili'nde değerleri yeniden sınıflandırın ya da Diğer değerler'i açın.",
@@ -1540,8 +1623,7 @@ impl App {
                 // The program's own kinds (module_surfaces.rs), and labels where the layer menu has them
                 // (docs/adr/9316).
                 window.thematic = self.shows_thematic_renderers();
-                window.labels =
-                    self.shows_layer_entry(crate::layer_entries::LayerEntry::Labels);
+                window.labels = self.shows_layer_entry(crate::layer_entries::LayerEntry::Labels);
                 self.styles.layer_style = Some(window);
                 self.dialog = Some(Dialog::LayerStyle);
             }
@@ -1569,7 +1651,10 @@ impl App {
 
     /// Whether the style window is a data layer's: its classes' values come from its source (docs/adr/9110 §1).
     fn layer_style_reads_source(&self) -> bool {
-        self.styles.layer_style.as_ref().is_some_and(|w| w.data.is_some())
+        self.styles
+            .layer_style
+            .as_ref()
+            .is_some_and(|w| w.data.is_some())
     }
 
     /// A data layer's field values read off the interface's thread (docs/adr/9110 §1): the categories' field for
@@ -1584,8 +1669,12 @@ impl App {
             return Task::none();
         };
         let field = match (then, w.kind) {
-            (Then::Classify, _) | (Then::Show, Kind::Categorized) => w.categorized.expr.trim().to_owned(),
-            (Then::Graduate, _) | (Then::Show, Kind::Graduated) => w.graduated.expr.trim().to_owned(),
+            (Then::Classify, _) | (Then::Show, Kind::Categorized) => {
+                w.categorized.expr.trim().to_owned()
+            }
+            (Then::Graduate, _) | (Then::Show, Kind::Graduated) => {
+                w.graduated.expr.trim().to_owned()
+            }
             (Then::Show, _) => return Task::none(),
         };
         let is_field = self
@@ -1660,12 +1749,18 @@ impl App {
                 if window.apply(&mut doc.model) {
                     self.styles.layer_style = None;
                     self.dialog = None;
-                    self.toast_saved("Katman stili uygulandı", &format!("“{path}” katmanına; Ctrl+Z geri alır."));
+                    self.toast_saved(
+                        "Katman stili uygulandı",
+                        &format!("“{path}” katmanına; Ctrl+Z geri alır."),
+                    );
                 }
             }
             Event::CopyPath => {
                 let path = doc.model.layers().path(&window.layer);
-                self.say(kentos_interaction::Level::Success, format!("Katmanın yolu panoya kopyalandı: {path}"));
+                self.say(
+                    kentos_interaction::Level::Success,
+                    format!("Katmanın yolu panoya kopyalandı: {path}"),
+                );
                 return iced::clipboard::write(path);
             }
             e => {

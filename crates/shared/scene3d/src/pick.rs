@@ -96,13 +96,28 @@ pub fn pick<'a>(
         if best.is_some_and(|b| b.distance < enter) {
             break;
         }
-        let Some(c) = h.tiles[i as usize].content.and_then(|r| content(r.id)) else { continue };
+        let Some(c) = h.tiles[i as usize].content.and_then(|r| content(r.id)) else {
+            continue;
+        };
         for &(mesh, triangle) in &c.sources {
-            let Some(t) = source(mesh, triangle) else { continue };
-            let Some(d) = ray_triangle(origin, dir, t.map(|p| ex.shown(p))) else { continue };
-            if best.is_none_or(|b| d < b.distance || (d == b.distance && (mesh, triangle) < (b.mesh, b.triangle))) {
+            let Some(t) = source(mesh, triangle) else {
+                continue;
+            };
+            let Some(d) = ray_triangle(origin, dir, t.map(|p| ex.shown(p))) else {
+                continue;
+            };
+            if best.is_none_or(|b| {
+                d < b.distance || (d == b.distance && (mesh, triangle) < (b.mesh, b.triangle))
+            }) {
                 let shown = math::add(origin, math::scale(dir, d));
-                best = Some(Hit { tile: i, content: c.id, mesh, triangle, distance: d, point: ex.real(shown) });
+                best = Some(Hit {
+                    tile: i,
+                    content: c.id,
+                    mesh,
+                    triangle,
+                    distance: d,
+                    point: ex.real(shown),
+                });
             }
         }
     }

@@ -68,23 +68,37 @@ fn opened(path: &str, mode: Mode) -> Window {
     let openings = model.opening_bodies(&bytes, &never).expect("the openings");
     bodies.bodies.extend(openings.bodies);
     bodies.not_shown.extend(openings.not_shown);
-    let name = Path::new(path).file_name().map_or_else(String::new, |n| n.to_string_lossy().into_owned());
+    let name = Path::new(path)
+        .file_name()
+        .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
     let mut viewer = Viewer::new(name.clone());
-    viewer.load(ifc::view::input(&name, &model, &bodies), vec![(model.summary.schema.clone(), "Dosyanın şeması.".to_owned())]);
-    Window { viewer, file: Some((bytes, model)), mode, quality: Quality::High }
+    viewer.load(
+        ifc::view::input(&name, &model, &bodies),
+        vec![(model.summary.schema.clone(), "Dosyanın şeması.".to_owned())],
+    );
+    Window {
+        viewer,
+        file: Some((bytes, model)),
+        mode,
+        quality: Quality::High,
+    }
 }
 
 fn shot(w: &mut Window, name: &str) {
     let out = root().join(".run/gui-evidence/model-view-ui");
     std::fs::create_dir_all(&out).expect("the folder");
-    let mut snapshot = kentos_ui::snapshot::Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
+    let mut snapshot =
+        kentos_ui::snapshot::Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
     let mut update = |w: &mut Window, m: Message| w.update(m);
     snapshot.settle(w, Window::view, &mut update);
     for _ in 0..3 {
         let _ = snapshot.render(w.view(), &w.theme());
     }
     let file = out.join(format!("{name}.png"));
-    snapshot.render(w.view(), &w.theme()).save(&file).expect("writes the picture");
+    snapshot
+        .render(w.view(), &w.theme())
+        .save(&file)
+        .expect("writes the picture");
     println!("{} ({})", file.display(), snapshot.renderer_name());
 }
 
@@ -99,7 +113,11 @@ fn measured_roof(w: &mut Window) {
     for (m, s) in scene.meshes().iter().enumerate() {
         for (t, tri) in s.triangles.iter().enumerate() {
             let [a, b, c] = tri.map(|k| s.vertices[k as usize]);
-            let n = [(b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]), (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]), (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])];
+            let n = [
+                (b[1] - a[1]) * (c[2] - a[2]) - (b[2] - a[2]) * (c[1] - a[1]),
+                (b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]),
+                (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]),
+            ];
             let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
             if len > 0.0 && (n[2] / len).abs() > 0.999 && top.is_none_or(|(z, _, _)| a[2] > z) {
                 top = Some((a[2], m, t));
@@ -110,30 +128,59 @@ fn measured_roof(w: &mut Window) {
     let s = &scene.meshes()[mesh];
     let face = measure::face(&s.vertices, &s.triangles, triangle).expect("the roof's face");
     let [a, b] = face.outline[0];
-    let next = face.outline.iter().find(|[p, q]| (*p == b || *q == b) && !(*p == a || *q == a)).expect("the next side");
+    let next = face
+        .outline
+        .iter()
+        .find(|[p, q]| (*p == b || *q == b) && !(*p == a || *q == a))
+        .expect("the next side");
     let c = if next[0] == b { next[1] } else { next[0] };
-    let at = face.outline.iter().flatten().fold([0.0; 3], |acc, p| [acc[0] + p[0], acc[1] + p[1], acc[2] + p[2]]);
+    let at = face.outline.iter().flatten().fold([0.0; 3], |acc, p| {
+        [acc[0] + p[0], acc[1] + p[1], acc[2] + p[2]]
+    });
     let at = at.map(|v| v / (2 * face.outline.len()) as f64);
-    let far = *face.outline.iter().flatten().max_by(|p, q| {
-        let d = |r: &[f64; 3]| (r[0] - a[0]).hypot(r[1] - a[1]);
-        d(p).total_cmp(&d(q))
-    }).expect("a corner");
+    let far = *face
+        .outline
+        .iter()
+        .flatten()
+        .max_by(|p, q| {
+            let d = |r: &[f64; 3]| (r[0] - a[0]).hypot(r[1] - a[1]);
+            d(p).total_cmp(&d(q))
+        })
+        .expect("a corner");
     let m = &mut w.viewer.measuring;
-    m.done.push(Measured::Area { face, what: s.name.clone(), at });
+    m.done.push(Measured::Area {
+        face,
+        what: s.name.clone(),
+        at,
+    });
     m.done.push(Measured::Distance { a, b });
     m.done.push(Measured::Angle { a, at: b, b: c });
     // The pointer on the farthest corner, as the scene sees it.
-    let scene_size = Size::new(1400.0 - 300.0 - 300.0 - 2.0 * kentos_ui::widget::sash::THICKNESS, 860.0 - 62.0);
-    let vp = kentos_scene3d::Viewport { width: f64::from(scene_size.width), height: f64::from(scene_size.height) };
+    let scene_size = Size::new(
+        1400.0 - 300.0 - 300.0 - 2.0 * kentos_ui::widget::sash::THICKNESS,
+        860.0 - 62.0,
+    );
+    let vp = kentos_scene3d::Viewport {
+        width: f64::from(scene_size.width),
+        height: f64::from(scene_size.height),
+    };
     if let Some((x, y, _)) = w.viewer.camera().project(far, &vp) {
-        w.update(Message::Gesture(Gesture::Hover(Some((x as f32 + 2.0, y as f32 + 2.0)), scene_size.width, scene_size.height)));
+        w.update(Message::Gesture(Gesture::Hover(
+            Some((x as f32 + 2.0, y as f32 + 2.0)),
+            scene_size.width,
+            scene_size.height,
+        )));
     }
 }
 
 /// The first object of `class` whose label holds `words`.
 fn find(w: &Window, class: &str, words: &str) -> usize {
     let v = w.viewer.view().expect("loaded");
-    v.input().objects.iter().position(|o| o.class == class && o.label.contains(words)).unwrap_or_else(|| panic!("a {class} “{words}”"))
+    v.input()
+        .objects
+        .iter()
+        .position(|o| o.class == class && o.label.contains(words))
+        .unwrap_or_else(|| panic!("a {class} “{words}”"))
 }
 
 #[test]
@@ -143,9 +190,20 @@ fn screens() {
     for (mode, tag) in [(Mode::Light, "acik"), (Mode::Dark, "koyu")] {
         let mut w = opened(building, mode);
         // A click in the scene's middle: the scene is what the two panels leave of the window under the strip.
-        let scene = Size::new(1400.0 - 300.0 - 300.0 - 2.0 * kentos_ui::widget::sash::THICKNESS, 860.0 - 62.0);
-        w.update(Message::Gesture(Gesture::Pick(scene.width * 0.62, scene.height * 0.55, scene.width, scene.height)));
-        assert!(w.viewer.view().and_then(|v| v.selected()).is_some(), "the click chose something");
+        let scene = Size::new(
+            1400.0 - 300.0 - 300.0 - 2.0 * kentos_ui::widget::sash::THICKNESS,
+            860.0 - 62.0,
+        );
+        w.update(Message::Gesture(Gesture::Pick(
+            scene.width * 0.62,
+            scene.height * 0.55,
+            scene.width,
+            scene.height,
+        )));
+        assert!(
+            w.viewer.view().and_then(|v| v.selected()).is_some(),
+            "the click chose something"
+        );
         shot(&mut w, &format!("kesit-binasi-tiklanan-{tag}"));
     }
 
@@ -194,11 +252,19 @@ fn screens() {
     w.update(Message::Pane(kentos_model_view_ui::Side::Details));
     shot(&mut w, "kesit-binasi-paneller-kapali");
 
-    let mut w = opened("fixtures/ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc", Mode::Light);
+    let mut w = opened(
+        "fixtures/ifc/v1/disaridan/bsi-ifc4x3-building-architecture.ifc",
+        Mode::Light,
+    );
     w.update(Message::Spaces);
     shot(&mut w, "disaridan-ifc4x3-bina");
 
-    let mut w = Window { viewer: Viewer::new("buyuk-model.ifc"), file: None, mode: Mode::Light, quality: Quality::High };
+    let mut w = Window {
+        viewer: Viewer::new("buyuk-model.ifc"),
+        file: None,
+        mode: Mode::Light,
+        quality: Quality::High,
+    };
     w.viewer.progress("Gövdeler üçgenleniyor", 1200, 49000);
     shot(&mut w, "okunuyor");
     w.viewer.failed("Dosya bir IFC dosyası değil: başında ISO-10303-21 satırı yok. Dosyanın uzantısı .ifc olsa da içeriği başka bir biçimde; dosyayı yazan programdan IFC olarak yeniden alın.");

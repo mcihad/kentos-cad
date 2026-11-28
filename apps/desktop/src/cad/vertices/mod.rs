@@ -357,7 +357,9 @@ impl App {
     /// The way the shown object's vertices run, for the drawing's arrows (docs/adr/5000 §7): each edge's middle (an
     /// arc's on the arc), its direction from its start vertex to its end and its chord; none while the panel does
     /// not show the table.
-    pub(crate) fn vertex_ways(&self) -> Vec<(kentos_interaction::Vec2, kentos_interaction::Vec2, f64)> {
+    pub(crate) fn vertex_ways(
+        &self,
+    ) -> Vec<(kentos_interaction::Vec2, kentos_interaction::Vec2, f64)> {
         use kentos_geometry_core::geom::bulge::{bulge_at, segment_mid};
         use kentos_interaction::Vec2;
         if !self.command_expanded || self.bottom_tab != crate::bottom::BottomTab::Coords {

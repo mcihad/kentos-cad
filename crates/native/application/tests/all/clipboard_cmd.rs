@@ -4,9 +4,7 @@
 
 use std::time::Instant;
 
-use kentos_commands::{
-    Clip, CommandResult, DocumentSnapshotV1, EntitiesCopy, EntitiesPaste, Vec2,
-};
+use kentos_commands::{Clip, CommandResult, DocumentSnapshotV1, EntitiesCopy, EntitiesPaste, Vec2};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::{ExecutionContext, entities_copy, entities_paste};
 use serde_json::json;

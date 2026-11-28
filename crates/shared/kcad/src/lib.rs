@@ -100,9 +100,15 @@ fn uses_performance_in<'a>(
     use kentos_contracts::Entity;
     let stamped = objects.any(|e| match e {
         Entity::Opening(o) => o.opening.fire_rating.is_some() || o.opening.exit.is_some(),
-        _ => e.arch_info().is_some_and(|a| a.fire_rating.is_some() || a.exit.is_some()),
+        _ => e
+            .arch_info()
+            .is_some_and(|a| a.fire_rating.is_some() || a.exit.is_some()),
     });
-    let styles = doc.settings.wall_styles.iter().any(|s| s.fire_rating.is_some());
+    let styles = doc
+        .settings
+        .wall_styles
+        .iter()
+        .any(|s| s.fire_rating.is_some());
     let arch = doc.settings.arch.as_ref().is_some_and(|a| {
         a.performance.as_ref().is_some_and(|p| !p.is_empty())
             || a.opening_types.iter().any(|t| t.fire_rating.is_some())
@@ -155,7 +161,9 @@ fn uses_members_in<'a>(
     mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
 ) -> bool {
     let member = |e: &kentos_contracts::Entity| match e {
-        kentos_contracts::Entity::Column(c) => c.column.member.is_some() || c.column.height.is_some(),
+        kentos_contracts::Entity::Column(c) => {
+            c.column.member.is_some() || c.column.height.is_some()
+        }
         kentos_contracts::Entity::Beam(b) => b.beam.member.is_some(),
         _ => false,
     };
@@ -171,9 +179,7 @@ pub fn uses_coverings(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     uses_coverings_in(doc.entities.iter())
 }
 
-fn uses_coverings_in<'a>(
-    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
-) -> bool {
+fn uses_coverings_in<'a>(mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>) -> bool {
     objects.any(kentos_contracts::is_covering)
 }
 
@@ -240,7 +246,10 @@ pub const ARCH_WITH_BUILDING_PLACES: u16 = 9;
 
 /// Whether `doc` holds architecture data 9 ([`ARCH_WITH_BUILDING_PLACES`]).
 pub fn uses_building_places(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(|a| a.program.has_building_places())
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.program.has_building_places())
 }
 
 /// Architecture data version 10 (docs/adr/8077): the author's answers to the model quality control form
@@ -249,7 +258,10 @@ pub const ARCH_WITH_FORM_ANSWERS: u16 = 10;
 
 /// Whether `doc` holds architecture data 10 ([`ARCH_WITH_FORM_ANSWERS`]).
 pub fn uses_form_answers(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(|a| !a.form_answers.is_empty())
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| !a.form_answers.is_empty())
 }
 
 /// Architecture data version 11 (docs/adr/8084): the parcel's plan notes the regulation's rules read
@@ -258,7 +270,10 @@ pub const ARCH_WITH_PLAN_NOTES: u16 = 11;
 
 /// Whether `doc` holds architecture data 11 ([`ARCH_WITH_PLAN_NOTES`]).
 pub fn uses_plan_notes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_plan_notes)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_plan_notes)
 }
 
 /// Architecture data version 12 (docs/adr/8085): the parcel's area's use in the plan (`settings.arch.zone`). Version 12
@@ -267,7 +282,10 @@ pub const ARCH_WITH_ZONE: u16 = 12;
 
 /// Whether `doc` holds architecture data 12 ([`ARCH_WITH_ZONE`]).
 pub fn uses_zone(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_zone)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_zone)
 }
 
 /// Architecture data version 13 (docs/adr/8090): a wall's declared load-bearing role (`arch.loadBearing`) and a roof's
@@ -285,7 +303,9 @@ fn uses_declared_roles_in<'a>(
 ) -> bool {
     use kentos_contracts::Entity;
     objects.any(|e| {
-        e.arch_info().is_some_and(|a| a.load_bearing.is_some() || (matches!(e, Entity::Roof(_)) && a.exit.is_some()))
+        e.arch_info().is_some_and(|a| {
+            a.load_bearing.is_some() || (matches!(e, Entity::Roof(_)) && a.exit.is_some())
+        })
     })
 }
 
@@ -295,7 +315,10 @@ pub const ARCH_WITH_MATERIAL_REACTIONS: u16 = 14;
 
 /// Whether `doc` holds architecture data 14 ([`ARCH_WITH_MATERIAL_REACTIONS`]).
 pub fn uses_material_reactions(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(|a| a.materials.iter().any(|m| m.reaction.is_some()))
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.materials.iter().any(|m| m.reaction.is_some()))
 }
 
 /// Architecture data version 15 (docs/adr/8094): the building's declared structural system (`settings.arch.structure`).
@@ -304,7 +327,10 @@ pub const ARCH_WITH_STRUCTURE: u16 = 15;
 
 /// Whether `doc` holds architecture data 15 ([`ARCH_WITH_STRUCTURE`]).
 pub fn uses_structure(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_structure)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_structure)
 }
 
 /// Architecture data version 16 (docs/adr/8098): a plan note of the plan's building height or storey count
@@ -314,7 +340,10 @@ pub const ARCH_WITH_PLAN_LIMITS: u16 = 16;
 
 /// Whether `doc` holds architecture data 16 ([`ARCH_WITH_PLAN_LIMITS`]).
 pub fn uses_plan_limits(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_plan_limits)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_plan_limits)
 }
 
 /// Architecture data version 17 (docs/adr/8099): the delivery record (`settings.arch.deliveries`). Version 17 holds
@@ -323,7 +352,10 @@ pub const ARCH_WITH_DELIVERIES: u16 = 17;
 
 /// Whether `doc` holds architecture data 17 ([`ARCH_WITH_DELIVERIES`]).
 pub fn uses_deliveries(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_deliveries)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_deliveries)
 }
 
 /// Architecture data version 18 (docs/adr/8101): the underlay models (`settings.arch.underlays`). Version 18 holds
@@ -332,7 +364,10 @@ pub const ARCH_WITH_UNDERLAYS: u16 = 18;
 
 /// Whether `doc` holds architecture data 18 ([`ARCH_WITH_UNDERLAYS`]).
 pub fn uses_underlays(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_underlays)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_underlays)
 }
 
 /// Architecture data version 19 (docs/adr/8106): the project's element types (`settings.arch.elementTypes`) and the
@@ -349,7 +384,10 @@ fn uses_element_types_in<'a>(
     doc: &kentos_contracts::DocumentSnapshotV2,
     mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
 ) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_element_types)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_element_types)
         || objects.any(|e| e.arch_info().is_some_and(|a| a.element_type.is_some()))
 }
 
@@ -368,7 +406,9 @@ fn uses_declared_readings_in<'a>(
 ) -> bool {
     use kentos_contracts::Entity;
     objects.any(|e| {
-        e.arch_info().is_some_and(|a| a.external.is_some() || (matches!(e, Entity::Column(_)) && a.load_bearing.is_some()))
+        e.arch_info().is_some_and(|a| {
+            a.external.is_some() || (matches!(e, Entity::Column(_)) && a.load_bearing.is_some())
+        })
     })
 }
 
@@ -381,9 +421,7 @@ pub fn uses_room_emsal(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     uses_room_emsal_in(doc.entities.iter())
 }
 
-fn uses_room_emsal_in<'a>(
-    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
-) -> bool {
+fn uses_room_emsal_in<'a>(mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>) -> bool {
     objects.any(|e| matches!(e, kentos_contracts::Entity::Space(s) if s.space.emsal.is_some()))
 }
 
@@ -401,7 +439,10 @@ fn uses_sloped_members_in<'a>(
     mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
 ) -> bool {
     objects.any(kentos_contracts::is_sloped_member)
-        || doc.blocks.iter().any(|b| b.entities.iter().any(kentos_contracts::is_sloped_member))
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(kentos_contracts::is_sloped_member))
 }
 
 /// Architecture data version 23 (docs/adr/8134): a material's external fire performance class as a roof covering
@@ -411,7 +452,10 @@ pub const ARCH_WITH_ROOF_CLASSES: u16 = 23;
 
 /// Whether `doc` holds architecture data 23 ([`ARCH_WITH_ROOF_CLASSES`]).
 pub fn uses_roof_classes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(|a| a.materials.iter().any(|m| m.roof_class.is_some()))
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.materials.iter().any(|m| m.roof_class.is_some()))
 }
 
 /// Architecture data version 35 (docs/adr/8163): a building of the program giving its own plan notes
@@ -474,7 +518,10 @@ fn uses_masses_in<'a>(mut objects: impl Iterator<Item = &'a kentos_contracts::En
 
 /// Whether `doc` holds architecture data 44 ([`ARCH_WITH_COLOR_PLAN`]): a colour plan.
 pub fn uses_color_plan(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(|a| a.color_plan.is_some())
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.color_plan.is_some())
 }
 
 /// Whether `doc` holds architecture data 43 ([`ARCH_WITH_GROUND`]): a site ground.
@@ -499,9 +546,7 @@ fn uses_rafts_in<'a>(
     doc: &kentos_contracts::DocumentSnapshotV2,
     mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
 ) -> bool {
-    let raft = |e: &kentos_contracts::Entity| {
-        matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.role == kentos_contracts::SlabRole::Raft)
-    };
+    let raft = |e: &kentos_contracts::Entity| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.role == kentos_contracts::SlabRole::Raft);
     objects.any(raft) || doc.blocks.iter().any(|b| b.entities.iter().any(raft))
 }
 
@@ -514,19 +559,37 @@ fn uses_footings_in<'a>(
 }
 
 pub fn uses_casework_placement(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.casework.iter().map(|r| &r.recipe)
-        .chain(doc.settings.arch.iter().flat_map(|a| &a.modules).flat_map(|m| &m.runs).map(|r| &r.recipe))
+    doc.casework
+        .iter()
+        .map(|r| &r.recipe)
+        .chain(
+            doc.settings
+                .arch
+                .iter()
+                .flat_map(|a| &a.modules)
+                .flat_map(|m| &m.runs)
+                .map(|r| &r.recipe),
+        )
         .any(|r| r.level.is_some() || !r.filler_ends.is_empty())
 }
 
 pub fn uses_electric_appliances(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.blocks.iter().filter_map(|b| b.card.as_ref()?.element.as_ref())
+    doc.blocks
+        .iter()
+        .filter_map(|b| b.card.as_ref()?.element.as_ref())
         .any(|e| e.class == kentos_contracts::BlockElementClass::ElectricAppliance)
 }
 
 pub fn uses_ceiling_recipe(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.named_views.iter().any(|v| v.recipe.as_ref().is_some_and(|r| r.ceiling.is_some()))
-        || doc.settings.view_templates.iter().any(|t| t.recipe.ceiling.is_some())
+    doc.settings
+        .named_views
+        .iter()
+        .any(|v| v.recipe.as_ref().is_some_and(|r| r.ceiling.is_some()))
+        || doc
+            .settings
+            .view_templates
+            .iter()
+            .any(|t| t.recipe.ceiling.is_some())
 }
 
 pub fn uses_slab_edge_bindings(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
@@ -543,7 +606,10 @@ fn uses_slab_edge_bindings_in<'a>(
 
 /// Whether `doc` holds architecture data 35 ([`ARCH_WITH_BUILDING_PLAN_NOTES`]).
 pub fn uses_building_plan_notes(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(|a| a.program.has_building_plan_notes())
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.program.has_building_plan_notes())
 }
 
 /// Architecture data version 34 (docs/adr/8162): a plan note giving the plan's projection or basement limit
@@ -553,7 +619,10 @@ pub const ARCH_WITH_PLAN_MASS: u16 = 34;
 
 /// Whether `doc` holds architecture data 34 ([`ARCH_WITH_PLAN_MASS`]).
 pub fn uses_plan_mass(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_plan_mass)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_plan_mass)
 }
 
 /// Architecture data version 33 (docs/adr/8160): a plan note giving the plan's roof ridge, slope or eaves
@@ -563,7 +632,10 @@ pub const ARCH_WITH_PLAN_ROOF: u16 = 33;
 
 /// Whether `doc` holds architecture data 33 ([`ARCH_WITH_PLAN_ROOF`]).
 pub fn uses_plan_roof(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_plan_roof)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_plan_roof)
 }
 
 /// Architecture data version 32 (docs/adr/8158): a plan note giving the plan's subasman (`settings.arch.planNotes[]`
@@ -572,7 +644,10 @@ pub const ARCH_WITH_PLAN_PLINTH: u16 = 32;
 
 /// Whether `doc` holds architecture data 32 ([`ARCH_WITH_PLAN_PLINTH`]).
 pub fn uses_plan_plinth(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_plan_plinth)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_plan_plinth)
 }
 
 /// Architecture data version 31 (docs/adr/8145): a building of the program saying its own structural system
@@ -582,7 +657,10 @@ pub const ARCH_WITH_BUILDING_STRUCTURES: u16 = 31;
 
 /// Whether `doc` holds architecture data 31 ([`ARCH_WITH_BUILDING_STRUCTURES`]).
 pub fn uses_building_structures(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(|a| a.program.has_building_structures())
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.program.has_building_structures())
 }
 
 /// Architecture data version 30 (docs/adr/8144): a building of the program saying its own Bölge
@@ -592,7 +670,10 @@ pub const ARCH_WITH_BUILDING_ZONES: u16 = 30;
 
 /// Whether `doc` holds architecture data 30 ([`ARCH_WITH_BUILDING_ZONES`]).
 pub fn uses_building_zones(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(|a| a.program.has_building_zones())
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.program.has_building_zones())
 }
 
 /// Architecture data version 29 (docs/adr/8142): a site plan's edge against the neighbour's building
@@ -602,7 +683,10 @@ pub const ARCH_WITH_PARTY_EDGES: u16 = 29;
 
 /// Whether `doc` holds architecture data 29 ([`ARCH_WITH_PARTY_EDGES`]).
 pub fn uses_party_edges(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_party_edges)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_party_edges)
 }
 
 /// Architecture data version 28 (docs/adr/8141): the building's layout (yapı nizamı, `settings.arch.layout`). Version 28
@@ -611,7 +695,10 @@ pub const ARCH_WITH_LAYOUT: u16 = 28;
 
 /// Whether `doc` holds architecture data 28 ([`ARCH_WITH_LAYOUT`]).
 pub fn uses_layout(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_layout)
+    doc.settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_layout)
 }
 
 /// Architecture data version 27 (docs/adr/8140): where İmar durumu's emsal and TAKS are read from
@@ -621,7 +708,11 @@ pub const ARCH_WITH_ZONING_SOURCES: u16 = 27;
 
 /// Whether `doc` holds architecture data 27 ([`ARCH_WITH_ZONING_SOURCES`]).
 pub fn uses_zoning_sources(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.arch.as_ref().and_then(|a| a.zoning.as_ref()).is_some_and(kentos_contracts::Zoning::has_sources)
+    doc.settings
+        .arch
+        .as_ref()
+        .and_then(|a| a.zoning.as_ref())
+        .is_some_and(kentos_contracts::Zoning::has_sources)
 }
 
 /// Architecture data version 26 (docs/adr/8137): a wall style's declared load-bearing role
@@ -630,7 +721,10 @@ pub const ARCH_WITH_STYLE_BEARING: u16 = 26;
 
 /// Whether `doc` holds architecture data 26 ([`ARCH_WITH_STYLE_BEARING`]).
 pub fn uses_style_bearing(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
-    doc.settings.wall_styles.iter().any(|s| s.load_bearing.is_some())
+    doc.settings
+        .wall_styles
+        .iter()
+        .any(|s| s.load_bearing.is_some())
 }
 
 /// Architecture data version 25 (docs/adr/8136): a shaft room's declared protected role and a wall's or a slab's declared
@@ -643,10 +737,11 @@ pub fn uses_fire_stops(doc: &kentos_contracts::DocumentSnapshotV2) -> bool {
     uses_fire_stops_in(doc.entities.iter())
 }
 
-fn uses_fire_stops_in<'a>(
-    mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>,
-) -> bool {
-    objects.any(|e| e.arch_info().is_some_and(|a| a.protected.is_some() || a.fire_stop.is_some()))
+fn uses_fire_stops_in<'a>(mut objects: impl Iterator<Item = &'a kentos_contracts::Entity>) -> bool {
+    objects.any(|e| {
+        e.arch_info()
+            .is_some_and(|a| a.protected.is_some() || a.fire_stop.is_some())
+    })
 }
 
 /// Architecture data version 24 (docs/adr/8135): a lift shaft room's declared vent or pressurisation

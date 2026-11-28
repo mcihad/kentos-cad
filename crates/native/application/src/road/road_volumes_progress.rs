@@ -5,7 +5,8 @@
 //! `fixtures/commands/v1/road.volumes.progress.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, ProgressAmounts, StretchProgress, TerrainSurfaceDef, VolumeProgressReport, VolumesProgress,
+    CommandResult, CommandWarning, ProgressAmounts, StretchProgress, TerrainSurfaceDef,
+    VolumeProgressReport, VolumesProgress,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -54,7 +55,10 @@ fn share(done: f64, left: f64) -> Option<f64> {
 }
 
 fn triangles(s: &Surface) -> Vec<Triangle> {
-    s.triangles.iter().map(|t| t.map(|i| s.vertices[i as usize])).collect()
+    s.triangles
+        .iter()
+        .map(|t| t.map(|i| s.vertices[i as usize]))
+        .collect()
 }
 
 /// A quantity as the warnings write it: one decimal, a comma.
@@ -68,11 +72,20 @@ fn survey<'a>(doc: &'a Document, name: &str, path: &str) -> Result<&'a TerrainSu
     terrains::surfaces(doc)
         .iter()
         .find(|s| s.id == id)
-        .ok_or_else(|| fail(codes::UNKNOWN_TERRAIN, format!("“{name}” kimlikli ya da adlı yüzey projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_TERRAIN,
+                format!("“{name}” kimlikli ya da adlı yüzey projede yok."),
+                path,
+            )
+        })
 }
 
 /// The progress now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &VolumesProgress) -> Result<(VolumeProgressReport, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &VolumesProgress,
+) -> Result<(VolumeProgressReport, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_volumes(), &input.volume, "volume")?;
     report(doc, def, input)
@@ -97,23 +110,46 @@ fn report(
     def: &kentos_commands::VolumeDef,
     input: &VolumesProgress,
 ) -> Result<(VolumeProgressReport, Vec<CommandWarning>), Stop> {
-    let cdef = doc.road_corridors().iter().find(|c| c.id == def.corridor).ok_or_else(|| {
-        fail(codes::UNKNOWN_CORRIDOR, format!("“{}” kimlikli koridor projede yok.", def.corridor), "corridor")
-    })?;
+    let cdef = doc
+        .road_corridors()
+        .iter()
+        .find(|c| c.id == def.corridor)
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_CORRIDOR,
+                format!("“{}” kimlikli koridor projede yok.", def.corridor),
+                "corridor",
+            )
+        })?;
     let now_def = survey(doc, &input.survey, "survey")?;
-    let before_def = input.previous.as_deref().map(|p| survey(doc, p, "previous")).transpose()?;
+    let before_def = input
+        .previous
+        .as_deref()
+        .map(|p| survey(doc, p, "previous"))
+        .transpose()?;
     if now_def.id == cdef.surface {
         return Err(bad(
             "survey",
-            format!("“{}” yüzeyi “{}” koridorunun ilk arazisi; ara ölçü başka bir yüzey olmalı.", now_def.name, cdef.name),
+            format!(
+                "“{}” yüzeyi “{}” koridorunun ilk arazisi; ara ölçü başka bir yüzey olmalı.",
+                now_def.name, cdef.name
+            ),
         ));
     }
     if before_def.is_some_and(|b| b.id == now_def.id) {
-        return Err(bad("previous", format!("Önceki ölçü ara ölçünün kendisi (“{}”); daha önceki bir yüzey seçin.", now_def.name)));
+        return Err(bad(
+            "previous",
+            format!(
+                "Önceki ölçü ara ölçünün kendisi (“{}”); daha önceki bir yüzey seçin.",
+                now_def.name
+            ),
+        ));
     }
     // Docs/adr/1029: the design, the original ground and the surveys on one vertical system, or taken as one.
     let mut warnings = Vec::new();
-    let ground = terrains::surfaces(doc).iter().find(|s| s.id == cdef.surface);
+    let ground = terrains::surfaces(doc)
+        .iter()
+        .find(|s| s.id == cdef.surface);
     let mut sides: Vec<crate::road_heights::Side<'_>> = vec![(&cdef.name, None)];
     if let Some(g) = ground {
         sides.push((&g.name, Some(g)));
@@ -124,18 +160,32 @@ fn report(
     }
     crate::road_heights::proven(doc, &sides, input.assume_heights, "survey", &mut warnings)?;
     let made = corridors::make(doc, cdef, false).map_err(|stop| {
-        fail(codes::INVALID_VOLUME, format!("“{}” koridoru kurulamıyor: {}", cdef.name, corridors::words(stop)), "corridor")
+        fail(
+            codes::INVALID_VOLUME,
+            format!(
+                "“{}” koridoru kurulamıyor: {}",
+                cdef.name,
+                corridors::words(stop)
+            ),
+            "corridor",
+        )
     })?;
     let Some(original) = &made.sampler.surface else {
         return Err(fail(
             codes::INVALID_VOLUME,
-            format!("“{}” koridorunun yüzeyi kurulamıyor; ilk arazi okunamaz.", cdef.name),
+            format!(
+                "“{}” koridorunun yüzeyi kurulamıyor; ilk arazi okunamaz.",
+                cdef.name
+            ),
             "corridor",
         ));
     };
     let built = |sd: &TerrainSurfaceDef, path: &str| match terrains::make(doc, sd).surface {
         Ok(s) => Ok(triangles(&s)),
-        Err(_) => Err(bad(path, format!("“{}” yüzeyi kaynaklarından kurulamıyor.", sd.name))),
+        Err(_) => Err(bad(
+            path,
+            format!("“{}” yüzeyi kaynaklarından kurulamıyor.", sd.name),
+        )),
     };
     let now_tris = built(now_def, "survey")?;
     let before_tris = before_def.map(|b| built(b, "previous")).transpose()?;
@@ -143,9 +193,14 @@ fn report(
     let design = &made.built.triangles;
     let base = between_surfaces(design, &original_tris).uncovered;
     let now = progress(design, &original_tris, &now_tris);
-    let before = before_tris.as_ref().map(|b| progress(design, &original_tris, b));
+    let before = before_tris
+        .as_ref()
+        .map(|b| progress(design, &original_tris, b));
     let tolerance = 1e-6 * (now.covered + now.uncovered).max(1.0);
-    for (sd, p, path) in [(Some(now_def), Some(&now), "survey"), (before_def, before.as_ref(), "previous")] {
+    for (sd, p, path) in [
+        (Some(now_def), Some(&now), "survey"),
+        (before_def, before.as_ref(), "previous"),
+    ] {
         if let (Some(sd), Some(p)) = (sd, p)
             && p.uncovered > base + tolerance
         {
@@ -187,12 +242,23 @@ fn report(
         .iter()
         .map(|(_, from, to, range)| {
             let p = progress(&design[range.clone()], &original_tris, &now_tris);
-            StretchProgress { from: *from, to: *to, from_text: text(*from), to_text: text(*to), amounts: amounts(&p), uncovered: p.uncovered }
+            StretchProgress {
+                from: *from,
+                to: *to,
+                from_text: text(*from),
+                to_text: text(*to),
+                amounts: amounts(&p),
+                uncovered: p.uncovered,
+            }
         })
         .collect();
     let digest = |sd: &TerrainSurfaceDef| terrains::sources_digest(doc, sd);
     // The corridor's surface built above, so it is in the project.
-    let original_digest = terrains::surfaces(doc).iter().find(|s| s.id == cdef.surface).map(digest).unwrap_or_default();
+    let original_digest = terrains::surfaces(doc)
+        .iter()
+        .find(|s| s.id == cdef.surface)
+        .map(digest)
+        .unwrap_or_default();
     Ok((
         VolumeProgressReport {
             volume: def.id.clone(),
@@ -217,13 +283,19 @@ fn report(
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &VolumesProgress) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &VolumesProgress) -> CommandResult<VolumeProgressReport> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &VolumesProgress,
+) -> CommandResult<VolumeProgressReport> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -231,6 +303,9 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &VolumesProgress) -> CommandResult
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: VolumesProgress) -> CommandResult<VolumeProgressReport> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: VolumesProgress,
+) -> CommandResult<VolumeProgressReport> {
     plan(cx, &input)
 }

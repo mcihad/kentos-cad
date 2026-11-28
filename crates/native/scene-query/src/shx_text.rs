@@ -2,7 +2,9 @@
 //! (ADR 0930, 1120), so its letters are the font's own strokes, the same open polylines on the screen, the CPU
 //! picture and the PDF. Never a disk or network lookup; every character resolves or the whole text is refused with
 //! the reason, and the caller says so (a finding), never drawing a substitute as if it were the original.
-use kentos_commands::{ProjectSettings, ProjectStyles, TextAlign, TextEntity, TextStyleDef, shape_resource};
+use kentos_commands::{
+    ProjectSettings, ProjectStyles, TextAlign, TextEntity, TextStyleDef, shape_resource,
+};
 use kentos_geometry_core::{
     Vec2,
     jsmath::{cos, sin, tan},
@@ -176,7 +178,11 @@ pub fn style_of<'a>(settings: &'a ProjectSettings, t: &TextEntity) -> Option<&'a
 
 /// `t` in its style's embedded SHX font; none when its style's font is no SHX file. An error says why it cannot be
 /// drawn so (its font or Big Font not embedded, a character the fonts lack, a form SHX text does not take here).
-pub fn place(settings: &ProjectSettings, resources: &ProjectStyles, t: &TextEntity) -> Option<Result<Placed, String>> {
+pub fn place(
+    settings: &ProjectSettings,
+    resources: &ProjectStyles,
+    t: &TextEntity,
+) -> Option<Result<Placed, String>> {
     let style = style_of(settings, t)?;
     Some(Fonts::of(style, resources).and_then(|f| lay_out(&f, t)))
 }
@@ -189,7 +195,9 @@ pub fn piece_text(shape: &kentos_geometry_core::entity::Shape, shown: &str) -> O
         return None;
     };
     // The smallest text the contract reads; its fields then come from the placed piece.
-    let Ok(kentos_commands::Entity::Text(mut base)) = serde_json::from_value::<kentos_commands::Entity>(serde_json::json!(
+    let Ok(kentos_commands::Entity::Text(mut base)) = serde_json::from_value::<
+        kentos_commands::Entity,
+    >(serde_json::json!(
         {"kind": "text", "id": 0, "layerId": "", "attrs": {}, "p": {"x": 0.0, "y": 0.0}, "text": "", "height": 1.0,
          "rotation": 0.0}))
     else {
@@ -197,7 +205,9 @@ pub fn piece_text(shape: &kentos_geometry_core::entity::Shape, shown: &str) -> O
     };
     base.face = crate::geometry::contract_face(face.clone()).into();
     let template = kentos_commands::Entity::Text(base);
-    let kentos_commands::Entity::Text(mut t) = crate::geometry::with_shape(&template, shape.clone())? else {
+    let kentos_commands::Entity::Text(mut t) =
+        crate::geometry::with_shape(&template, shape.clone())?
+    else {
         return None;
     };
     shown.clone_into(&mut t.text);
@@ -223,12 +233,17 @@ pub fn dimension_value(
     height: f64,
     words: &str,
 ) -> Option<TextEntity> {
-    let dim = settings.dimension_styles.iter().find(|s| Some(s.id.as_str()) == dim_style)?;
-    let style = kentos_commands::dimension_text_style(dim, &settings.text_styles).filter(|s| is_shx(s))?;
-    let Ok(kentos_commands::Entity::Text(mut t)) = serde_json::from_value::<kentos_commands::Entity>(serde_json::json!(
+    let dim = settings
+        .dimension_styles
+        .iter()
+        .find(|s| Some(s.id.as_str()) == dim_style)?;
+    let style =
+        kentos_commands::dimension_text_style(dim, &settings.text_styles).filter(|s| is_shx(s))?;
+    let Ok(kentos_commands::Entity::Text(mut t)) = serde_json::from_value::<kentos_commands::Entity>(
+        serde_json::json!(
         {"kind": "text", "id": 0, "layerId": "", "attrs": {}, "p": {"x": at.x, "y": at.y}, "text": words,
-         "height": height, "rotation": rotation, "align": "baselineCenter"}))
-    else {
+         "height": height, "rotation": rotation, "align": "baselineCenter"}),
+    ) else {
         return None;
     };
     t.face.text_style = Some(style.id.clone());
@@ -246,12 +261,17 @@ pub fn leader_note(
     height: f64,
     words: &str,
 ) -> Option<TextEntity> {
-    let leader = settings.leader_styles.iter().find(|s| Some(s.id.as_str()) == leader_style)?;
-    let style = kentos_commands::leader_text_style(leader, &settings.text_styles).filter(|s| is_shx(s))?;
-    let Ok(kentos_commands::Entity::Text(mut t)) = serde_json::from_value::<kentos_commands::Entity>(serde_json::json!(
+    let leader = settings
+        .leader_styles
+        .iter()
+        .find(|s| Some(s.id.as_str()) == leader_style)?;
+    let style =
+        kentos_commands::leader_text_style(leader, &settings.text_styles).filter(|s| is_shx(s))?;
+    let Ok(kentos_commands::Entity::Text(mut t)) = serde_json::from_value::<kentos_commands::Entity>(
+        serde_json::json!(
         {"kind": "text", "id": 0, "layerId": "", "attrs": {}, "p": {"x": at.x, "y": at.y}, "text": words,
-         "height": height, "rotation": rotation}))
-    else {
+         "height": height, "rotation": rotation}),
+    ) else {
         return None;
     };
     t.face.text_style = Some(style.id.clone());
@@ -268,10 +288,11 @@ pub fn words_in(
     height: f64,
     words: &str,
 ) -> Option<TextEntity> {
-    let Ok(kentos_commands::Entity::Text(mut t)) = serde_json::from_value::<kentos_commands::Entity>(serde_json::json!(
+    let Ok(kentos_commands::Entity::Text(mut t)) = serde_json::from_value::<kentos_commands::Entity>(
+        serde_json::json!(
         {"kind": "text", "id": 0, "layerId": "", "attrs": {}, "p": {"x": at.x, "y": at.y}, "text": words,
-         "height": height, "rotation": rotation}))
-    else {
+         "height": height, "rotation": rotation}),
+    ) else {
         return None;
     };
     t.face = face.clone().into();
@@ -308,8 +329,18 @@ pub fn place_cached(
         })
     };
     (&style.name, &style.font_file, &style.big_font_file).hash(&mut h);
-    (sha(style.font_file.as_deref()), sha(style.big_font_file.as_deref())).hash(&mut h);
-    (&t.text, t.align.map(|a| a as u8), t.path.is_some(), t.paragraph.runs.len()).hash(&mut h);
+    (
+        sha(style.font_file.as_deref()),
+        sha(style.big_font_file.as_deref()),
+    )
+        .hash(&mut h);
+    (
+        &t.text,
+        t.align.map(|a| a as u8),
+        t.path.is_some(),
+        t.paragraph.runs.len(),
+    )
+        .hash(&mut h);
     (t.paragraph.layout.is_some(), &t.face.overrides).hash(&mut h);
     for v in [
         t.p.x,
@@ -347,7 +378,10 @@ pub fn lay_out(fonts: &Fonts, t: &TextEntity) -> Result<Placed, String> {
         return Err("Harf biçimli (kalın, eğik, renkli, üst/alt simge) yazı SHX fontuyla çizilmiyor; biçimleri kaldırın.".into());
     }
     if t.paragraph.layout.is_some() {
-        return Err("Girinti, sekme, sütun ya da Unicode yerleşim profilli yazı SHX fontuyla çizilmiyor.".into());
+        return Err(
+            "Girinti, sekme, sütun ya da Unicode yerleşim profilli yazı SHX fontuyla çizilmiyor."
+                .into(),
+        );
     }
     if t.text.contains('\t') {
         return Err("Sekmeli yazı SHX fontuyla çizilmiyor.".into());
@@ -415,14 +449,23 @@ pub fn lay_out(fonts: &Fonts, t: &TextEntity) -> Result<Placed, String> {
         let shift = along * (width - w);
         let base = -(i as f64) * pitch;
         for p in &line.paths {
-            paths.push(p.iter().map(|q| at(shift + q[0] * h * wf, base + q[1] * h)).collect());
+            paths.push(
+                p.iter()
+                    .map(|q| at(shift + q[0] * h * wf, base + q[1] * h))
+                    .collect(),
+            );
         }
     }
     let top = 1.15 * h;
     let bottom = -0.2 * top - (n.saturating_sub(1)) as f64 * pitch;
     Ok(Placed {
         paths,
-        outline: vec![at(0., bottom), at(width, bottom), at(width, top), at(0., top)],
+        outline: vec![
+            at(0., bottom),
+            at(width, bottom),
+            at(width, top),
+            at(0., top),
+        ],
         width,
     })
 }
@@ -506,9 +549,13 @@ mod tests {
         let fonts = Fonts::of(&style(json!({})), &resources()).unwrap();
         for case in cases {
             let name = case["name"].as_str().unwrap();
-            let placed = lay_out(&fonts, &text(&case["text"])).unwrap_or_else(|e| panic!("{name}: {e}"));
+            let placed =
+                lay_out(&fonts, &text(&case["text"])).unwrap_or_else(|e| panic!("{name}: {e}"));
             let tol = 1e-9 * (1. + case["text"]["p"]["x"].as_f64().unwrap().abs());
-            assert!((placed.width - case["width"].as_f64().unwrap()).abs() < 1e-12, "{name}: width");
+            assert!(
+                (placed.width - case["width"].as_f64().unwrap()).abs() < 1e-12,
+                "{name}: width"
+            );
             let want = case["paths"].as_array().unwrap();
             assert_eq!(placed.paths.len(), want.len(), "{name}: strokes");
             for (got, want) in placed.paths.iter().zip(want) {
@@ -516,7 +563,10 @@ mod tests {
                 assert_eq!(got.len(), want.len(), "{name}");
                 for (g, w) in got.iter().zip(want) {
                     let (x, y) = (w[0].as_f64().unwrap(), w[1].as_f64().unwrap());
-                    assert!((g.x - x).abs() < tol && (g.y - y).abs() < tol, "{name}: {g:?} vs [{x}, {y}]");
+                    assert!(
+                        (g.x - x).abs() < tol && (g.y - y).abs() < tol,
+                        "{name}: {g:?} vs [{x}, {y}]"
+                    );
                 }
             }
         }
@@ -540,13 +590,34 @@ mod tests {
         assert!(refused(with(json!({"text":"Sç"}))).contains("kod sayfasını bildirmez"));
         assert!(refused(with(json!({"text":"S\\M+19999"}))).contains("9999"));
         assert!(refused(with(json!({"text":"S\tU"}))).contains("Sekmeli"));
-        assert!(refused(with(json!({"text":"SU","runs":[{"start":0,"end":1,"bold":true}]}))).contains("biçimli"));
-        assert!(refused(with(json!({"text":"SU","path":{"pts":[{"x":5.,"y":1.}]}}))).contains("Eğri"));
+        assert!(
+            refused(with(
+                json!({"text":"SU","runs":[{"start":0,"end":1,"bold":true}]})
+            ))
+            .contains("biçimli")
+        );
+        assert!(
+            refused(with(json!({"text":"SU","path":{"pts":[{"x":5.,"y":1.}]}}))).contains("Eğri")
+        );
         // No Big Font: a `\M+` code is refused; a font not embedded names its file.
         let plain = Fonts::of(&style(json!({"bigFontFile":null})), &r).unwrap();
-        assert!(lay_out(&plain, &with(json!({"text":"\\M+18140"}))).unwrap_err().contains("Big Font'u yok"));
-        assert!(Fonts::of(&style(json!({"fontFile":"romans.shx"})), &r).err().unwrap().contains("romans.shx"));
-        assert!(Fonts::of(&style(json!({"bigFontFile":"chinese.shx"})), &r).err().unwrap().contains("chinese.shx"));
+        assert!(
+            lay_out(&plain, &with(json!({"text":"\\M+18140"})))
+                .unwrap_err()
+                .contains("Big Font'u yok")
+        );
+        assert!(
+            Fonts::of(&style(json!({"fontFile":"romans.shx"})), &r)
+                .err()
+                .unwrap()
+                .contains("romans.shx")
+        );
+        assert!(
+            Fonts::of(&style(json!({"bigFontFile":"chinese.shx"})), &r)
+                .err()
+                .unwrap()
+                .contains("chinese.shx")
+        );
         // A Big Font is no text font, a unifont no Big Font.
         assert!(Fonts::of(&style(json!({"fontFile":"kentos-big.shx"})), &r).is_err());
         assert!(Fonts::of(&style(json!({"bigFontFile":"kentos-uni.shx"})), &r).is_err());
@@ -568,9 +639,23 @@ mod tests {
         let r = resources();
         let mut t = text(&json!({"p":{"x":1.,"y":2.},"height":2.,"rotation":0.,"text":"SU"}));
         let direct = lay_out(&Fonts::of(&settings.text_styles[0], &r).unwrap(), &t).unwrap();
-        assert_eq!(place_cached(&settings, &r, &t).unwrap().as_ref().as_ref().unwrap(), &direct);
+        assert_eq!(
+            place_cached(&settings, &r, &t)
+                .unwrap()
+                .as_ref()
+                .as_ref()
+                .unwrap(),
+            &direct
+        );
         t.text = "US".into();
-        assert_ne!(place_cached(&settings, &r, &t).unwrap().as_ref().as_ref().unwrap(), &direct);
+        assert_ne!(
+            place_cached(&settings, &r, &t)
+                .unwrap()
+                .as_ref()
+                .as_ref()
+                .unwrap(),
+            &direct
+        );
         t.face.text_style = Some("ttf".into());
         assert!(place(&settings, &r, &t).is_none());
         t.face.text_style = Some("shx".into());

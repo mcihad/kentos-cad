@@ -12,9 +12,9 @@
 //! Test code only.
 
 use crate::arch;
+use crate::arch::ArchState;
 use kentos_commands::{ArchPhase, Entity, WallChange, WallsEdit, WallsOperation};
 use kentos_domain::Slot;
-use crate::arch::ArchState;
 
 use crate::app::App;
 use crate::tools_scenes::{hover, run};
@@ -30,7 +30,9 @@ fn template(app: &mut App) {
 
 /// The same preview with the user's largest supported text size.
 fn template_large(app: &mut App) {
-    let _ = app.settings.choose(&[("appearance.textSize", serde_json::json!(18))]);
+    let _ = app
+        .settings
+        .choose(&[("appearance.textSize", serde_json::json!(18))]);
     app.apply_settings();
     template(app);
 }
@@ -99,9 +101,7 @@ fn phased(app: &mut App) {
     fit(app, 7.0, 5.0);
     // The partition across the living room, through the command (no snap moves its ends).
     if let Some(doc) = app.document.as_mut() {
-        let at = |x: f64, y: f64| {
-            serde_json::json!({"x": crate::tools_scenes::E + x, "y": crate::tools_scenes::N + y})
-        };
+        let at = |x: f64, y: f64| serde_json::json!({"x": crate::tools_scenes::E + x, "y": crate::tools_scenes::N + y});
         let layer = doc.model.layers().active().to_owned();
         if let Ok(input) = serde_json::from_value(serde_json::json!({
             "layerId": layer,
@@ -215,12 +215,17 @@ fn set_affected(app: &mut App) {
         .document
         .as_ref()
         .map(|d| {
-            let wall = walls(app).into_iter().find(|(s, _)| !s.contains("dis")).map(|(_, u)| u);
+            let wall = walls(app)
+                .into_iter()
+                .find(|(s, _)| !s.contains("dis"))
+                .map(|(_, u)| u);
             d.model
                 .entities()
                 .filter(|e| match e {
                     Entity::ViewMark(_) => true,
-                    Entity::Wall(_) => d.model.uid(Slot(e.base().id)).map(|u| u.to_string()) == wall,
+                    Entity::Wall(_) => {
+                        d.model.uid(Slot(e.base().id)).map(|u| u.to_string()) == wall
+                    }
                     _ => false,
                 })
                 .map(|e| Slot(e.base().id))
@@ -238,7 +243,8 @@ fn dxf_back(app: &mut App) {
     let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/formats/v1/dxf-arch/mimari.dxf");
     if let Some(doc) = app.document.as_mut()
-        && let Ok(input) = serde_json::from_value(serde_json::json!({ "path": path.display().to_string() }))
+        && let Ok(input) =
+            serde_json::from_value(serde_json::json!({ "path": path.display().to_string() }))
     {
         let _ = kentos_native_application::file_import::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),

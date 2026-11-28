@@ -12,7 +12,9 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::{RoadEditOperation, VolumeBenchDef, VolumeFactorDef, VolumeMethod, VolumeRule, VolumeStripDef};
+use crate::{
+    RoadEditOperation, VolumeBenchDef, VolumeFactorDef, VolumeMethod, VolumeRule, VolumeStripDef,
+};
 
 pub const ROAD_VOLUMES_EDIT: &str = "road.volumes.edit";
 pub const ROAD_VOLUMES_EDIT_VERSION: u32 = 1;
@@ -59,7 +61,11 @@ pub struct VolumesEdit {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub strip: Option<Vec<VolumeStripDef>>,
     /// The fill's foundation benched; null takes it off.
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<VolumeBenchDef>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<VolumeBenchDef>"))]
     pub bench: Option<Option<VolumeBenchDef>>,

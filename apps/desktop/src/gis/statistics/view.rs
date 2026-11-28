@@ -66,10 +66,17 @@ impl App {
         // A chosen field of a data layer its source is counting (docs/adr/9181).
         let waiting = now.counted.is_some()
             && now.detail.is_none()
-            && self.gis.charts.field.as_ref().is_some_and(|f| now.keys.contains(f));
+            && self
+                .gis
+                .charts
+                .field
+                .as_ref()
+                .is_some_and(|f| now.keys.contains(f));
         let detail = match self.whole_pane() {
             Some(whole) => whole,
-            None if waiting => container(label::muted(COUNTING).size(typography::caption())).padding([10, 12]).into(),
+            None if waiting => container(label::muted(COUNTING).size(typography::caption()))
+                .padding([10, 12])
+                .into(),
             None => detail_pane(&now),
         };
         let detail = match self.scope_row() {
@@ -104,10 +111,10 @@ impl App {
         let chosen = current.and_then(|l| ids.iter().position(|id| *id == l));
         let layer = Select::new(
             layers.iter().map(|(id, path, n)| {
-                let label = self
-                    .document
-                    .as_ref()
-                    .map_or_else(|| format!("{path} ({n})"), |d| crate::charts::data::layer_label(d, id, path, *n));
+                let label = self.document.as_ref().map_or_else(
+                    || format!("{path} ({n})"),
+                    |d| crate::charts::data::layer_label(d, id, path, *n),
+                );
                 Choice::new(label).shown(path.clone())
             }),
             chosen,
@@ -438,7 +445,10 @@ impl App {
     /// counted by it (docs/adr/9181), and whether changes not yet written are counted as this device has them.
     pub(crate) fn stats_count_words(&self, now: &StatsNow) -> String {
         // Changes not yet written are counted as this device has them (docs/adr/9130), said so.
-        let pending = || self.chart_layer().is_some_and(|l| self.data_waiting().iter().any(|w| w.layer == l));
+        let pending = || {
+            self.chart_layer()
+                .is_some_and(|l| self.data_waiting().iter().any(|w| w.layer == l))
+        };
         const PENDING: &str = "kaynağa yazılmamış değişiklikler bu cihazdaki hâliyle";
         match (&now.counted, self.layer_rows_from()) {
             // A data layer counted by its source (docs/adr/9181).
@@ -446,12 +456,20 @@ impl App {
             (Some(Counted::Failed(_)), _) => "Kaynak sayamadı".to_owned(),
             (Some(Counted::Ready), _) => {
                 let n = crate::view::thousands(now.objects as f64);
-                if pending() { format!("{n} satır, kaynakta sayıldı; {PENDING}") } else { format!("{n} satır, kaynakta sayıldı") }
+                if pending() {
+                    format!("{n} satır, kaynakta sayıldı; {PENDING}")
+                } else {
+                    format!("{n} satır, kaynakta sayıldı")
+                }
             }
             // A data layer's rows are its source's (docs/adr/9130).
             (None, Some(crate::charts::data::From::Source)) => {
                 let n = now.rows.len();
-                if pending() { format!("{n} satır, kaynaktan; {PENDING}") } else { format!("{n} satır, kaynaktan") }
+                if pending() {
+                    format!("{n} satır, kaynaktan; {PENDING}")
+                } else {
+                    format!("{n} satır, kaynaktan")
+                }
             }
             _ => texts::objects(now.rows.len()),
         }

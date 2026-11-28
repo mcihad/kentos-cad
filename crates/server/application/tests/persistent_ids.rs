@@ -14,7 +14,8 @@ use kentos_application::tenancy::Access;
 use kentos_application::{AppError, admin, changes, events, projects};
 use kentos_contracts::{
     CommitResult, ConflictReason, DocumentSnapshotV1, Entity, FeatureChange, FeatureOp, GrantRole,
-    LayerNode, PROJECT_CHANGES, ProjectChanges, ProjectCreate, TenantRole, v1_identities, ProjectType,
+    LayerNode, PROJECT_CHANGES, ProjectChanges, ProjectCreate, ProjectType, TenantRole,
+    v1_identities,
 };
 use kentos_postgres::testing::TestDb;
 use uuid::Uuid;

@@ -118,10 +118,19 @@ impl Document {
                         p.layer.clone_into(&mut now.base_mut().layer_id);
                         put.push((r.uid, now, r.key, r.row));
                     }
-                    None => erased.push((r.uid, Taken { key: r.key, row: Arc::new(r.row) })),
+                    None => erased.push((
+                        r.uid,
+                        Taken {
+                            key: r.key,
+                            row: Arc::new(r.row),
+                        },
+                    )),
                 }
             }
-            let rows: Vec<(Uuid, i64, Entity)> = put.iter().map(|(u, _, k, row)| (*u, *k, row.clone())).collect();
+            let rows: Vec<(Uuid, i64, Entity)> = put
+                .iter()
+                .map(|(u, _, k, row)| (*u, *k, row.clone()))
+                .collect();
             if !put.is_empty()
                 && let Err(why) = self.apply_external(External {
                     put: put.into_iter().map(|(u, e, _, _)| (u, e)).collect(),
@@ -138,7 +147,13 @@ impl Document {
                     // The row as it came takes the id its object got now, as a row taken from the table does: a change is
                     // what differs from it.
                     row.base_mut().id = stored.entity.base().id;
-                    Some((uid, Taken { key, row: Arc::new(row) }))
+                    Some((
+                        uid,
+                        Taken {
+                            key,
+                            row: Arc::new(row),
+                        },
+                    ))
                 })
                 .collect();
             taken.extend(erased);
@@ -182,7 +197,14 @@ impl Document {
             })
             .copied()
             .collect();
-        if remove.is_empty() || self.apply_external(External { remove: remove.clone(), ..External::default() }).is_err() {
+        if remove.is_empty()
+            || self
+                .apply_external(External {
+                    remove: remove.clone(),
+                    ..External::default()
+                })
+                .is_err()
+        {
             return 0;
         }
         for layer in layers {

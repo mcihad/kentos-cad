@@ -33,7 +33,9 @@ fn through(g: Geometry, srid: Option<u32>) -> Geometry {
     let mut parsed = gml_read::parse(&text, None, None).unwrap_or_else(|e| panic!("{e}\n{text}"));
     assert_eq!(parsed.tables.len(), 1);
     let row = parsed.tables.remove(0).rows.remove(0);
-    row.geometry.expect("a geometry").unwrap_or_else(|e| panic!("{e}\n{text}"))
+    row.geometry
+        .expect("a geometry")
+        .unwrap_or_else(|e| panic!("{e}\n{text}"))
 }
 
 #[test]
@@ -53,7 +55,10 @@ fn every_geometry_reads_back_as_it_was_written() {
         Geometry::Curve(arc.clone()),
         Geometry::Curve(compound.clone()),
         Geometry::MultiCurve(vec![line(&[(0.0, 0.0), (1.0, 1.0)]), arc.clone()]),
-        Geometry::Polygon(vec![ring.clone(), line(&[(1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 1.0)])]),
+        Geometry::Polygon(vec![
+            ring.clone(),
+            line(&[(1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 1.0)]),
+        ]),
         Geometry::Polygon(vec![Curve::Compound(vec![
             Curve::Arc(vec![c(0.0, 0.0), c(5.0, 5.0), c(10.0, 0.0)]),
             line(&[(10.0, 0.0), (0.0, 0.0)]),
@@ -90,7 +95,11 @@ fn the_axes_go_in_the_order_of_the_system() {
     let parsed = gml_read::parse(text, None, None).expect("reads");
     let row = &parsed.tables[0].rows[0];
     assert_eq!(
-        row.geometry.as_ref().expect("a geometry").as_ref().expect("reads"),
+        row.geometry
+            .as_ref()
+            .expect("a geometry")
+            .as_ref()
+            .expect("reads"),
         &g
     );
     assert_eq!(parsed.srid, Some(5256));
@@ -135,8 +144,14 @@ fn what_is_no_gml_is_refused() {
     assert!(gml_read::parse("<a><b></a>", None, None).is_err());
     assert!(gml_read::parse("<kitap><baslik>x</baslik></kitap>", None, None).is_err());
     // A collection with no member is a collection.
-    assert!(gml_read::parse("<gml:FeatureCollection xmlns:gml=\"http://www.opengis.net/gml/3.2\"/>", None, None)
-        .is_ok_and(|p| p.tables.is_empty()));
+    assert!(
+        gml_read::parse(
+            "<gml:FeatureCollection xmlns:gml=\"http://www.opengis.net/gml/3.2\"/>",
+            None,
+            None
+        )
+        .is_ok_and(|p| p.tables.is_empty())
+    );
     // Elements nested deeper than the guard are refused before they are parsed.
     let deep = format!("{}{}", "<a>".repeat(300), "</a>".repeat(300));
     assert!(gml_read::parse(&deep, None, None).is_err());
@@ -150,9 +165,13 @@ fn what_is_no_gml_is_refused() {
         let text = format!(
             "<c xmlns:gml=\"http://www.opengis.net/gml/3.2\"><gml:featureMember><t><g>{body}</g></t></gml:featureMember></c>"
         );
-        let parsed = gml_read::parse(&text, None, None).expect("a file; the feature is the trouble");
+        let parsed =
+            gml_read::parse(&text, None, None).expect("a file; the feature is the trouble");
         assert!(
-            parsed.tables[0].rows[0].geometry.as_ref().is_some_and(Result::is_err),
+            parsed.tables[0].rows[0]
+                .geometry
+                .as_ref()
+                .is_some_and(Result::is_err),
             "{body}"
         );
     }
@@ -177,13 +196,19 @@ fn the_envelope_holds_an_arcs_bulge() {
             kind: ColumnKind::Text(None),
         }],
         features: vec![(
-            Some(Geometry::Curve(Curve::Arc(vec![c(4.0, 3.0), c(3.0, 4.0), c(-3.0, 4.0)]))),
+            Some(Geometry::Curve(Curve::Arc(vec![
+                c(4.0, 3.0),
+                c(3.0, 4.0),
+                c(-3.0, 4.0),
+            ]))),
             vec![Value::Text("x".into())],
         )],
     };
     let text = gml_write::write(&[t], None, None, &mut Notes::default());
     assert!(
-        text.contains("<gml:lowerCorner>-3 3</gml:lowerCorner><gml:upperCorner>4 5</gml:upperCorner>"),
+        text.contains(
+            "<gml:lowerCorner>-3 3</gml:lowerCorner><gml:upperCorner>4 5</gml:upperCorner>"
+        ),
         "{text}"
     );
 }

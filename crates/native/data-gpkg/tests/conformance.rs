@@ -74,7 +74,12 @@ fn a_new_table_writes_its_system_by_name_and_definition() {
         .expect("read");
     assert_eq!(
         rows,
-        vec![("TUREF / TM36".into(), "EPSG".into(), "PROJCS[\"TUREF / TM36\",GEOGCS[\"TUREF\"]]".into(), 5256)]
+        vec![(
+            "TUREF / TM36".into(),
+            "EPSG".into(),
+            "PROJCS[\"TUREF / TM36\",GEOGCS[\"TUREF\"]]".into(),
+            5256
+        )]
     );
     // The second table, titled as the first, is listed under a name of its own (the identifier is unique).
     let ids: Vec<(String, String)> = conn
@@ -88,7 +93,10 @@ fn a_new_table_writes_its_system_by_name_and_definition() {
         ids,
         vec![
             ("parseller".into(), "Uygunluk parselleri".into()),
-            ("parseller_2".into(), "Uygunluk parselleri (parseller_2)".into())
+            (
+                "parseller_2".into(),
+                "Uygunluk parselleri (parseller_2)".into()
+            )
         ]
     );
     drop(conn);
@@ -100,13 +108,16 @@ fn a_table_without_a_system_text_is_named_by_its_code() {
     let path = fresh("kod");
     let source = Gpkg.open(path.to_str().expect("utf-8")).expect("open");
     let mut tx = source.begin().expect("begin");
-    tx.create_table(&conformance::table("parseller", 2320), false).expect("table");
+    tx.create_table(&conformance::table("parseller", 2320), false)
+        .expect("table");
     tx.commit().expect("commit");
     let conn = rusqlite::Connection::open(&path).expect("file");
     let row: (String, String) = conn
-        .query_row("SELECT srs_name, definition FROM gpkg_spatial_ref_sys WHERE srs_id = 2320", [], |r| {
-            Ok((r.get(0)?, r.get(1)?))
-        })
+        .query_row(
+            "SELECT srs_name, definition FROM gpkg_spatial_ref_sys WHERE srs_id = 2320",
+            [],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
         .expect("row");
     assert_eq!(row, ("EPSG:2320".into(), "undefined".into()));
     drop(conn);
@@ -122,10 +133,23 @@ fn a_geopackage_keeps_projects_beside_its_tables() {
     assert!(report.failures.is_empty(), "{}", report.failures.join("\n"));
     let store = source.project_store().expect("a GeoPackage keeps projects");
     let report = conformance::projects(store, None).expect("projects");
-    assert!(report.failures.is_empty(), "{} of {}:\n{}", report.failures.len(), report.checks, report.failures.join("\n"));
+    assert!(
+        report.failures.is_empty(),
+        "{} of {}:\n{}",
+        report.failures.len(),
+        report.checks,
+        report.failures.join("\n")
+    );
     assert!(report.checks >= 14, "{} checks", report.checks);
-    store.write_project(None, "Sivas altyapı", b"KCAD", Some("deneme")).expect("kept");
-    let names: Vec<String> = source.tables().expect("tables").into_iter().map(|t| t.name).collect();
+    store
+        .write_project(None, "Sivas altyapı", b"KCAD", Some("deneme"))
+        .expect("kept");
+    let names: Vec<String> = source
+        .tables()
+        .expect("tables")
+        .into_iter()
+        .map(|t| t.name)
+        .collect();
     assert_eq!(names, ["parseller"]);
     // Registered as an extension; not a layer.
     let conn = rusqlite::Connection::open(&path).expect("file");
@@ -138,7 +162,11 @@ fn a_geopackage_keeps_projects_beside_its_tables() {
         .expect("extension row");
     assert_eq!(ext, 1);
     let listed: i64 = conn
-        .query_row("SELECT count(*) FROM gpkg_contents WHERE table_name = 'kentos_projects'", [], |r| r.get(0))
+        .query_row(
+            "SELECT count(*) FROM gpkg_contents WHERE table_name = 'kentos_projects'",
+            [],
+            |r| r.get(0),
+        )
         .expect("contents");
     assert_eq!(listed, 0);
     drop(conn);

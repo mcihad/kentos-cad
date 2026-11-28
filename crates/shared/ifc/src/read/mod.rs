@@ -18,8 +18,6 @@
 pub mod bodies;
 #[cfg(all(test, feature = "geometry"))]
 mod bodies_tests;
-#[cfg(all(test, feature = "geometry"))]
-mod outside_tests;
 mod checks;
 #[cfg(feature = "geometry")]
 pub mod coordination;
@@ -33,16 +31,18 @@ mod facts_tests;
 mod graph;
 mod header;
 mod material;
+#[cfg(all(test, feature = "geometry"))]
+mod outside_tests;
+#[cfg(test)]
+mod reference_tests;
 mod scan;
 mod sets;
 mod shapes;
+#[cfg(test)]
+mod tests;
 mod units;
 #[cfg(feature = "view")]
 pub mod view;
-#[cfg(test)]
-mod reference_tests;
-#[cfg(test)]
-mod tests;
 
 use std::collections::{BTreeMap, HashMap};
 use std::fmt;
@@ -98,7 +98,11 @@ pub enum ReadError {
     /// More records than the limit.
     TooManyRecords { limit: usize },
     /// A record past one of the per-record limits, at its line.
-    Record { line: usize, what: RecordLimit, limit: usize },
+    Record {
+        line: usize,
+        what: RecordLimit,
+        limit: usize,
+    },
     /// No `DATA;` section, or no record in it.
     NoData,
     /// The host asked the read to stop.
@@ -118,7 +122,10 @@ pub enum RecordLimit {
 impl fmt::Display for ReadError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            ReadError::Empty => write!(f, "Dosya boş: okunacak bir şey yok. Dosyanın tamamının indiğini ya da kaydedildiğini denetleyin."),
+            ReadError::Empty => write!(
+                f,
+                "Dosya boş: okunacak bir şey yok. Dosyanın tamamının indiğini ya da kaydedildiğini denetleyin."
+            ),
             ReadError::NotStep => write!(
                 f,
                 "Bu bir IFC (ISO 10303-21) dosyası değil: “ISO-10303-21;” ile başlamıyor. ifcXML, ifcZIP ya da başka bir biçimse önce IFC-SPF olarak dışa aktarın."
@@ -138,7 +145,10 @@ impl fmt::Display for ReadError {
                 limit / 1_000_000
             ),
             ReadError::TooManyRecords { limit } => {
-                write!(f, "Dosyada {limit} kayıttan fazlası var; okuma sınırı aşıldı. Modeli parçalara bölerek dışa aktarın.")
+                write!(
+                    f,
+                    "Dosyada {limit} kayıttan fazlası var; okuma sınırı aşıldı. Modeli parçalara bölerek dışa aktarın."
+                )
             }
             ReadError::Record { line, what, limit } => {
                 let what = match what {
@@ -146,7 +156,10 @@ impl fmt::Display for ReadError {
                     RecordLimit::Nesting => format!("listeleri {limit} kattan derin iç içe"),
                     RecordLimit::Items => format!("listelerinde {limit} öğeden fazlası var"),
                 };
-                write!(f, "{line}. satırdaki kayıt {what}: dosya bozuk ya da olağan dışı. Dosyayı yazan programla yeniden dışa aktarın.")
+                write!(
+                    f,
+                    "{line}. satırdaki kayıt {what}: dosya bozuk ya da olağan dışı. Dosyayı yazan programla yeniden dışa aktarın."
+                )
             }
             ReadError::NoData => write!(
                 f,
@@ -237,7 +250,10 @@ impl Location {
             crs,
             vertical: self.vertical_datum.clone(),
             origin: [self.eastings, self.northings, self.orthogonal_height],
-            x_axis: [self.x_axis_abscissa.unwrap_or(1.0), self.x_axis_ordinate.unwrap_or(0.0)],
+            x_axis: [
+                self.x_axis_abscissa.unwrap_or(1.0),
+                self.x_axis_ordinate.unwrap_or(0.0),
+            ],
             factors: [s * f[0], s * f[1], s * f[2]],
         })
     }
@@ -353,14 +369,19 @@ pub fn read(bytes: &[u8], limits: &Limits, cancel: &dyn Fn() -> bool) -> Result<
         return Err(ReadError::Empty);
     }
     if bytes.len() as u64 > limits.bytes {
-        return Err(ReadError::TooLarge { bytes: bytes.len() as u64, limit: limits.bytes });
+        return Err(ReadError::TooLarge {
+            bytes: bytes.len() as u64,
+            limit: limits.bytes,
+        });
     }
     if !header::starts_as_step(bytes) {
         return Err(ReadError::NotStep);
     }
     guarded(|| {
         let (header, schema) = header::read(bytes)?;
-        let family = header::family(schema.as_deref()).ok_or(ReadError::Schema { declared: schema.clone() })?;
+        let family = header::family(schema.as_deref()).ok_or(ReadError::Schema {
+            declared: schema.clone(),
+        })?;
         let schema = schema.unwrap_or_default();
         let scanned = scan::scan(bytes, limits, cancel)?;
         graph::build(bytes, limits, cancel, header, schema, family, scanned)

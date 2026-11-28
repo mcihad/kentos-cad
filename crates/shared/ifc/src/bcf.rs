@@ -17,8 +17,20 @@ pub const MAX_TOPICS: usize = 10_000;
 /// the view's height shows (`ViewToWorldScale`), for a perspective one its vertical field of view in degrees.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Camera {
-    Orthogonal { eye: [f64; 3], direction: [f64; 3], up: [f64; 3], scale: f64, aspect: f64 },
-    Perspective { eye: [f64; 3], direction: [f64; 3], up: [f64; 3], field_of_view: f64, aspect: f64 },
+    Orthogonal {
+        eye: [f64; 3],
+        direction: [f64; 3],
+        up: [f64; 3],
+        scale: f64,
+        aspect: f64,
+    },
+    Perspective {
+        eye: [f64; 3],
+        direction: [f64; 3],
+        up: [f64; 3],
+        field_of_view: f64,
+        aspect: f64,
+    },
 }
 
 /// A viewpoint: its GUID, the objects it selects (IFC GlobalIds), whether the rest stays visible, its camera.
@@ -101,30 +113,58 @@ pub fn guid_from(seed: &str, k: u64) -> String {
     let n = crate::step::fnv(seed, k);
     let n = (n & !(0xF << 76) & !(0x3 << 62)) | (0x8 << 76) | (0x2 << 62);
     let h = format!("{n:032x}");
-    format!("{}-{}-{}-{}-{}", &h[0..8], &h[8..12], &h[12..16], &h[16..20], &h[20..32])
+    format!(
+        "{}-{}-{}-{}-{}",
+        &h[0..8],
+        &h[8..12],
+        &h[12..16],
+        &h[16..20],
+        &h[20..32]
+    )
 }
 
 /// An IFC GlobalId: 22 characters of `0-9A-Za-z_$` (BCF-XML's `IfcGuid`).
 pub fn ifc_guid_ok(s: &str) -> bool {
-    s.len() == 22 && s.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'$')
+    s.len() == 22
+        && s.bytes()
+            .all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'$')
 }
 
 /// A camera looking at the box `b` (x, y, z from, x, y, z to; metres): a perspective camera from the south-west and
 /// above, 60° high, at the distance the box's diagonal fills, up along z as near as the direction lets it.
 pub fn camera_for(b: [f64; 6]) -> Camera {
-    let middle = [(b[0] + b[3]) / 2.0, (b[1] + b[4]) / 2.0, (b[2] + b[5]) / 2.0];
-    let diagonal = crate::math::hypot(crate::math::hypot(b[3] - b[0], b[4] - b[1]), b[5] - b[2]).max(1.0);
+    let middle = [
+        (b[0] + b[3]) / 2.0,
+        (b[1] + b[4]) / 2.0,
+        (b[2] + b[5]) / 2.0,
+    ];
+    let diagonal =
+        crate::math::hypot(crate::math::hypot(b[3] - b[0], b[4] - b[1]), b[5] - b[2]).max(1.0);
     // From the south-west, above: (1, 1, −1) normalised.
     let k = 1.0 / 3f64.sqrt();
     let direction = [k, k, -k];
     // The diagonal fills a 60° view at twice its half over tan 30°, and a little more.
     let distance = diagonal / (2.0 * (30f64.to_radians()).tan()) * 1.2;
-    let eye = [middle[0] - direction[0] * distance, middle[1] - direction[1] * distance, middle[2] - direction[2] * distance];
+    let eye = [
+        middle[0] - direction[0] * distance,
+        middle[1] - direction[1] * distance,
+        middle[2] - direction[2] * distance,
+    ];
     // Up: z less its part along the direction.
     let along = direction[2];
-    let up = [-along * direction[0], -along * direction[1], 1.0 - along * direction[2]];
+    let up = [
+        -along * direction[0],
+        -along * direction[1],
+        1.0 - along * direction[2],
+    ];
     let n = crate::math::hypot(crate::math::hypot(up[0], up[1]), up[2]);
-    Camera::Perspective { eye, direction, up: [up[0] / n, up[1] / n, up[2] / n], field_of_view: 60.0, aspect: 16.0 / 9.0 }
+    Camera::Perspective {
+        eye,
+        direction,
+        up: [up[0] / n, up[1] / n, up[2] / n],
+        field_of_view: 60.0,
+        aspect: 16.0 / 9.0,
+    }
 }
 
 /// Text as XML writes it between tags and in attributes.
@@ -146,7 +186,11 @@ fn escaped(s: &str) -> String {
 /// A number as XML writes it: the shortest decimal that reads back to it.
 fn number(v: f64) -> String {
     let s = format!("{v}");
-    if s.contains('.') || s.contains('e') || s.contains("inf") || s.contains("NaN") { s } else { format!("{s}.0") }
+    if s.contains('.') || s.contains('e') || s.contains("inf") || s.contains("NaN") {
+        s
+    } else {
+        format!("{s}.0")
+    }
 }
 
 fn element(out: &mut String, indent: usize, name: &str, text: &str) {
@@ -162,7 +206,13 @@ fn optional(out: &mut String, indent: usize, name: &str, text: Option<&str>) {
 fn point(out: &mut String, indent: usize, name: &str, p: [f64; 3]) {
     let _ = writeln!(out, "{:indent$}<{name}>", "");
     for (axis, v) in ["X", "Y", "Z"].iter().zip(p) {
-        let _ = writeln!(out, "{:w$}<{axis}>{}</{axis}>", "", number(v), w = indent + 2);
+        let _ = writeln!(
+            out,
+            "{:w$}<{axis}>{}</{axis}>",
+            "",
+            number(v),
+            w = indent + 2
+        );
     }
     let _ = writeln!(out, "{:indent$}</{name}>", "");
 }
@@ -176,7 +226,11 @@ fn markup(t: &Topic) -> String {
     if !t.files.is_empty() {
         out.push_str("  <Header>\n    <Files>\n");
         for f in &t.files {
-            let project = f.ifc_project.as_deref().map(|p| format!(" IfcProject=\"{}\"", escaped(p))).unwrap_or_default();
+            let project = f
+                .ifc_project
+                .as_deref()
+                .map(|p| format!(" IfcProject=\"{}\"", escaped(p)))
+                .unwrap_or_default();
             let _ = writeln!(out, "      <File{project} IsExternal=\"true\">");
             optional(&mut out, 8, "Filename", f.filename.as_deref());
             optional(&mut out, 8, "Date", f.date.as_deref());
@@ -246,7 +300,10 @@ fn components(out: &mut String, indent: usize, guids: &[String]) {
 /// A viewpoint's `.bcfv` (BCF 3.0).
 fn visinfo(v: &Viewpoint) -> Result<String, String> {
     let Some(camera) = &v.camera else {
-        return Err(format!("“{}” bakışının kamerası yok: BCF 3.0 her bakışta bir kamera ister.", v.guid));
+        return Err(format!(
+            "“{}” bakışının kamerası yok: BCF 3.0 her bakışta bir kamera ister.",
+            v.guid
+        ));
     };
     let mut out = String::from(XML);
     let _ = writeln!(out, "<VisualizationInfo Guid=\"{}\">", escaped(&v.guid));
@@ -275,12 +332,36 @@ fn visinfo(v: &Viewpoint) -> Result<String, String> {
     }
     out.push_str("  </Components>\n");
     let (name, eye, direction, up, last, value, aspect) = match camera {
-        Camera::Orthogonal { eye, direction, up, scale, aspect } => {
-            ("OrthogonalCamera", eye, direction, up, "ViewToWorldScale", scale, aspect)
-        }
-        Camera::Perspective { eye, direction, up, field_of_view, aspect } => {
-            ("PerspectiveCamera", eye, direction, up, "FieldOfView", field_of_view, aspect)
-        }
+        Camera::Orthogonal {
+            eye,
+            direction,
+            up,
+            scale,
+            aspect,
+        } => (
+            "OrthogonalCamera",
+            eye,
+            direction,
+            up,
+            "ViewToWorldScale",
+            scale,
+            aspect,
+        ),
+        Camera::Perspective {
+            eye,
+            direction,
+            up,
+            field_of_view,
+            aspect,
+        } => (
+            "PerspectiveCamera",
+            eye,
+            direction,
+            up,
+            "FieldOfView",
+            field_of_view,
+            aspect,
+        ),
     };
     let _ = writeln!(out, "  <{name}>");
     point(&mut out, 4, "CameraViewPoint", *eye);
@@ -348,19 +429,39 @@ fn extensions(topics: &[Topic]) -> String {
 pub fn topic_problem(t: &Topic) -> Option<(String, String)> {
     let blank = |s: &str| s.trim().is_empty();
     if !guid_ok(&t.guid) {
-        return Some(("guid".into(), format!("“{}” küçük harfli, tireli bir GUID değil.", t.guid)));
+        return Some((
+            "guid".into(),
+            format!("“{}” küçük harfli, tireli bir GUID değil.", t.guid),
+        ));
     }
-    for (field, value) in [("type", &t.topic_type), ("status", &t.status), ("title", &t.title), ("author", &t.author), ("created", &t.created)] {
+    for (field, value) in [
+        ("type", &t.topic_type),
+        ("status", &t.status),
+        ("title", &t.title),
+        ("author", &t.author),
+        ("created", &t.created),
+    ] {
         if blank(value) {
             return Some((field.into(), "Boş olamaz.".into()));
         }
     }
     for v in &t.viewpoints {
         if !guid_ok(&v.guid) {
-            return Some(("viewpoints".into(), format!("Bakışın GUID'i “{}” geçerli değil.", v.guid)));
+            return Some((
+                "viewpoints".into(),
+                format!("Bakışın GUID'i “{}” geçerli değil.", v.guid),
+            ));
         }
-        if let Some(g) = v.selection.iter().chain(&v.exceptions).find(|g| !ifc_guid_ok(g)) {
-            return Some(("objects".into(), format!("“{g}” bir IFC GlobalId'si değil (22 karakter, 0-9A-Za-z_$).")));
+        if let Some(g) = v
+            .selection
+            .iter()
+            .chain(&v.exceptions)
+            .find(|g| !ifc_guid_ok(g))
+        {
+            return Some((
+                "objects".into(),
+                format!("“{g}” bir IFC GlobalId'si değil (22 karakter, 0-9A-Za-z_$)."),
+            ));
         }
         if v.camera.is_none() {
             return Some(("viewpoints".into(), "Bakışın kamerası yok.".into()));
@@ -368,10 +469,16 @@ pub fn topic_problem(t: &Topic) -> Option<(String, String)> {
     }
     for c in &t.comments {
         if !guid_ok(&c.guid) || blank(&c.date) || blank(&c.author) {
-            return Some(("comments".into(), "Yorumun GUID'i, günü ve yazarı olmalı.".into()));
+            return Some((
+                "comments".into(),
+                "Yorumun GUID'i, günü ve yazarı olmalı.".into(),
+            ));
         }
         if c.text.as_deref().is_none_or(blank) && c.viewpoint.is_none() {
-            return Some(("comments".into(), "Yorumun metni ya da bakışı olmalı.".into()));
+            return Some((
+                "comments".into(),
+                "Yorumun metni ya da bakışı olmalı.".into(),
+            ));
         }
     }
     None
@@ -380,11 +487,15 @@ pub fn topic_problem(t: &Topic) -> Option<(String, String)> {
 /// The BCF 3.0 file of `topics`.
 pub fn write(topics: &[Topic]) -> Result<Vec<u8>, String> {
     if topics.len() > MAX_TOPICS {
-        return Err(format!("Bir BCF dosyasına en çok {MAX_TOPICS} konu yazılır."));
+        return Err(format!(
+            "Bir BCF dosyasına en çok {MAX_TOPICS} konu yazılır."
+        ));
     }
     let version = format!("{XML}<Version VersionId=\"{VERSION}\"/>\n");
-    let mut files: Vec<(String, Vec<u8>)> =
-        vec![("bcf.version".into(), version.into_bytes()), ("extensions.xml".into(), extensions(topics).into_bytes())];
+    let mut files: Vec<(String, Vec<u8>)> = vec![
+        ("bcf.version".into(), version.into_bytes()),
+        ("extensions.xml".into(), extensions(topics).into_bytes()),
+    ];
     for t in topics {
         if let Some((field, why)) = topic_problem(t) {
             return Err(format!("“{}” konusu ({field}): {why}", t.title));
@@ -392,36 +503,57 @@ pub fn write(topics: &[Topic]) -> Result<Vec<u8>, String> {
         files.push((format!("{}/", t.guid), Vec::new()));
         files.push((format!("{}/markup.bcf", t.guid), markup(t).into_bytes()));
         for v in &t.viewpoints {
-            files.push((format!("{}/{}.bcfv", t.guid, v.guid), visinfo(v)?.into_bytes()));
+            files.push((
+                format!("{}/{}.bcfv", t.guid, v.guid),
+                visinfo(v)?.into_bytes(),
+            ));
         }
     }
-    let entries: Vec<(&str, &[u8])> = files.iter().map(|(n, d)| (n.as_str(), d.as_slice())).collect();
+    let entries: Vec<(&str, &[u8])> = files
+        .iter()
+        .map(|(n, d)| (n.as_str(), d.as_slice()))
+        .collect();
     kentos_zip::write(&entries)
 }
 
 // Reading.
 
 fn child<'a, 'i>(n: roxmltree::Node<'a, 'i>, name: &str) -> Option<roxmltree::Node<'a, 'i>> {
-    n.children().find(|c| c.is_element() && c.tag_name().name() == name)
+    n.children()
+        .find(|c| c.is_element() && c.tag_name().name() == name)
 }
 
-fn children<'a, 'i>(n: roxmltree::Node<'a, 'i>, name: &'a str) -> impl Iterator<Item = roxmltree::Node<'a, 'i>> + 'a {
-    n.children().filter(move |c| c.is_element() && c.tag_name().name() == name)
+fn children<'a, 'i>(
+    n: roxmltree::Node<'a, 'i>,
+    name: &'a str,
+) -> impl Iterator<Item = roxmltree::Node<'a, 'i>> + 'a {
+    n.children()
+        .filter(move |c| c.is_element() && c.tag_name().name() == name)
 }
 
 fn text_of(n: roxmltree::Node<'_, '_>, name: &str) -> Option<String> {
-    child(n, name).and_then(|c| c.text()).map(|t| t.trim().to_owned()).filter(|t| !t.is_empty())
+    child(n, name)
+        .and_then(|c| c.text())
+        .map(|t| t.trim().to_owned())
+        .filter(|t| !t.is_empty())
 }
 
 fn point_of(n: roxmltree::Node<'_, '_>, name: &str) -> Option<[f64; 3]> {
     let p = child(n, name)?;
-    let v = |axis: &str| text_of(p, axis).and_then(|t| t.parse::<f64>().ok()).filter(|v| v.is_finite());
+    let v = |axis: &str| {
+        text_of(p, axis)
+            .and_then(|t| t.parse::<f64>().ok())
+            .filter(|v| v.is_finite())
+    };
     Some([v("X")?, v("Y")?, v("Z")?])
 }
 
 fn guids_under(n: Option<roxmltree::Node<'_, '_>>) -> Vec<String> {
     n.map(|n| {
-        children(n, "Component").filter_map(|c| c.attribute("IfcGuid").map(|g| g.trim().to_owned())).filter(|g| !g.is_empty()).collect()
+        children(n, "Component")
+            .filter_map(|c| c.attribute("IfcGuid").map(|g| g.trim().to_owned()))
+            .filter(|g| !g.is_empty())
+            .collect()
     })
     .unwrap_or_default()
 }
@@ -432,7 +564,12 @@ fn parse<'i>(name: &str, bytes: &'i [u8]) -> Result<roxmltree::Document<'i>, Str
     roxmltree::Document::parse(text).map_err(|e| format!("{name} okunamadı: {e}"))
 }
 
-fn viewpoint_of(name: &str, bytes: &[u8], guid: String, snapshot: Option<String>) -> Result<Viewpoint, String> {
+fn viewpoint_of(
+    name: &str,
+    bytes: &[u8],
+    guid: String,
+    snapshot: Option<String>,
+) -> Result<Viewpoint, String> {
     let doc = parse(name, bytes)?;
     let root = doc.root_element();
     if root.tag_name().name() != "VisualizationInfo" {
@@ -440,30 +577,51 @@ fn viewpoint_of(name: &str, bytes: &[u8], guid: String, snapshot: Option<String>
     }
     let comps = child(root, "Components");
     let visibility = comps.and_then(|c| child(c, "Visibility"));
-    let visible = visibility.and_then(|v| v.attribute("DefaultVisibility")).map(|v| v.trim() == "true" || v.trim() == "1");
+    let visible = visibility
+        .and_then(|v| v.attribute("DefaultVisibility"))
+        .map(|v| v.trim() == "true" || v.trim() == "1");
     let coloring = comps
         .and_then(|c| child(c, "Coloring"))
         .map(|c| {
             children(c, "Color")
-                .filter_map(|k| Some((k.attribute("Color")?.trim().to_owned(), guids_under(child(k, "Components")))))
+                .filter_map(|k| {
+                    Some((
+                        k.attribute("Color")?.trim().to_owned(),
+                        guids_under(child(k, "Components")),
+                    ))
+                })
                 .collect()
         })
         .unwrap_or_default();
     let camera = if let Some(c) = child(root, "PerspectiveCamera") {
         Some(Camera::Perspective {
-            eye: point_of(c, "CameraViewPoint").ok_or_else(|| format!("{name}: kameranın yeri okunamadı."))?,
-            direction: point_of(c, "CameraDirection").ok_or_else(|| format!("{name}: kameranın yönü okunamadı."))?,
-            up: point_of(c, "CameraUpVector").ok_or_else(|| format!("{name}: kameranın yukarısı okunamadı."))?,
-            field_of_view: text_of(c, "FieldOfView").and_then(|t| t.parse().ok()).unwrap_or(60.0),
-            aspect: text_of(c, "AspectRatio").and_then(|t| t.parse().ok()).unwrap_or(1.0),
+            eye: point_of(c, "CameraViewPoint")
+                .ok_or_else(|| format!("{name}: kameranın yeri okunamadı."))?,
+            direction: point_of(c, "CameraDirection")
+                .ok_or_else(|| format!("{name}: kameranın yönü okunamadı."))?,
+            up: point_of(c, "CameraUpVector")
+                .ok_or_else(|| format!("{name}: kameranın yukarısı okunamadı."))?,
+            field_of_view: text_of(c, "FieldOfView")
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(60.0),
+            aspect: text_of(c, "AspectRatio")
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(1.0),
         })
     } else if let Some(c) = child(root, "OrthogonalCamera") {
         Some(Camera::Orthogonal {
-            eye: point_of(c, "CameraViewPoint").ok_or_else(|| format!("{name}: kameranın yeri okunamadı."))?,
-            direction: point_of(c, "CameraDirection").ok_or_else(|| format!("{name}: kameranın yönü okunamadı."))?,
-            up: point_of(c, "CameraUpVector").ok_or_else(|| format!("{name}: kameranın yukarısı okunamadı."))?,
-            scale: text_of(c, "ViewToWorldScale").and_then(|t| t.parse().ok()).unwrap_or(1.0),
-            aspect: text_of(c, "AspectRatio").and_then(|t| t.parse().ok()).unwrap_or(1.0),
+            eye: point_of(c, "CameraViewPoint")
+                .ok_or_else(|| format!("{name}: kameranın yeri okunamadı."))?,
+            direction: point_of(c, "CameraDirection")
+                .ok_or_else(|| format!("{name}: kameranın yönü okunamadı."))?,
+            up: point_of(c, "CameraUpVector")
+                .ok_or_else(|| format!("{name}: kameranın yukarısı okunamadı."))?,
+            scale: text_of(c, "ViewToWorldScale")
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(1.0),
+            aspect: text_of(c, "AspectRatio")
+                .and_then(|t| t.parse().ok())
+                .unwrap_or(1.0),
         })
     } else {
         None
@@ -482,27 +640,44 @@ fn viewpoint_of(name: &str, bytes: &[u8], guid: String, snapshot: Option<String>
 
 /// The BCF file in `bytes` (3.0 or 2.1).
 pub fn read(bytes: &[u8]) -> Result<Bcf, String> {
-    let limits = kentos_zip::Limits { entries: 4 * MAX_TOPICS, ..kentos_zip::Limits::default() };
-    let listed = kentos_zip::list(bytes, &limits).map_err(|e| format!("BCF dosyası bir zip arşivi olarak okunamadı: {e}"))?;
+    let limits = kentos_zip::Limits {
+        entries: 4 * MAX_TOPICS,
+        ..kentos_zip::Limits::default()
+    };
+    let listed = kentos_zip::list(bytes, &limits)
+        .map_err(|e| format!("BCF dosyası bir zip arşivi olarak okunamadı: {e}"))?;
     let entries = kentos_zip::unpack(bytes, &listed, &limits, |l| {
         let n = l.name.to_ascii_lowercase();
         n.ends_with(".bcf") || n.ends_with(".bcfv") || n.ends_with("bcf.version")
     })?;
-    let get = |name: &str| entries.iter().find(|e| e.name == name).map(|e| e.data.as_slice());
+    let get = |name: &str| {
+        entries
+            .iter()
+            .find(|e| e.name == name)
+            .map(|e| e.data.as_slice())
+    };
     let version = match get("bcf.version") {
         Some(b) => {
             let doc = parse("bcf.version", b)?;
-            doc.root_element().attribute("VersionId").map(|v| v.trim().to_owned()).unwrap_or_default()
+            doc.root_element()
+                .attribute("VersionId")
+                .map(|v| v.trim().to_owned())
+                .unwrap_or_default()
         }
         None => return Err("BCF dosyasında bcf.version yok: sürümü bilinmiyor.".into()),
     };
     if version != "3.0" && version != "2.1" && version != "2.0" {
-        return Err(format!("BCF sürümü {version} okunmuyor: 3.0 ve 2.1 okunur."));
+        return Err(format!(
+            "BCF sürümü {version} okunmuyor: 3.0 ve 2.1 okunur."
+        ));
     }
     let three = version == "3.0";
     let mut topics = Vec::new();
-    let mut folders: Vec<&str> =
-        entries.iter().filter_map(|e| e.name.strip_suffix("/markup.bcf")).filter(|f| !f.contains('/')).collect();
+    let mut folders: Vec<&str> = entries
+        .iter()
+        .filter_map(|e| e.name.strip_suffix("/markup.bcf"))
+        .filter(|f| !f.contains('/'))
+        .collect();
     folders.sort_unstable();
     if folders.len() > MAX_TOPICS {
         return Err(format!("BCF dosyasında {MAX_TOPICS}'den çok konu var."));
@@ -530,7 +705,9 @@ pub fn read(bytes: &[u8]) -> Result<Bcf, String> {
         // 3.0 keeps comments and viewpoints in the topic; 2.1 beside it.
         let holder = if three { topic } else { root };
         let comment_nodes: Vec<roxmltree::Node<'_, '_>> = if three {
-            child(holder, "Comments").map(|c| children(c, "Comment").collect()).unwrap_or_default()
+            child(holder, "Comments")
+                .map(|c| children(c, "Comment").collect())
+                .unwrap_or_default()
         } else {
             children(holder, "Comment").collect()
         };
@@ -541,11 +718,15 @@ pub fn read(bytes: &[u8]) -> Result<Bcf, String> {
                 date: text_of(c, "Date").unwrap_or_default(),
                 author: text_of(c, "Author").unwrap_or_default(),
                 text: text_of(c, "Comment"),
-                viewpoint: child(c, "Viewpoint").and_then(|v| v.attribute("Guid")).map(str::to_owned),
+                viewpoint: child(c, "Viewpoint")
+                    .and_then(|v| v.attribute("Guid"))
+                    .map(str::to_owned),
             })
             .collect();
         let view_nodes: Vec<roxmltree::Node<'_, '_>> = if three {
-            child(holder, "Viewpoints").map(|v| children(v, "ViewPoint").collect()).unwrap_or_default()
+            child(holder, "Viewpoints")
+                .map(|v| children(v, "ViewPoint").collect())
+                .unwrap_or_default()
         } else {
             children(holder, "Viewpoints").collect()
         };
@@ -562,13 +743,24 @@ pub fn read(bytes: &[u8]) -> Result<Bcf, String> {
         topics.push(Topic {
             guid: topic.attribute("Guid").unwrap_or(folder).to_owned(),
             topic_type: topic.attribute("TopicType").unwrap_or_default().to_owned(),
-            status: topic.attribute("TopicStatus").unwrap_or_default().to_owned(),
+            status: topic
+                .attribute("TopicStatus")
+                .unwrap_or_default()
+                .to_owned(),
             title: text_of(topic, "Title").unwrap_or_default(),
             priority: text_of(topic, "Priority"),
             labels: if three {
-                child(topic, "Labels").map(|l| children(l, "Label").filter_map(|x| x.text().map(|t| t.trim().to_owned())).collect()).unwrap_or_default()
+                child(topic, "Labels")
+                    .map(|l| {
+                        children(l, "Label")
+                            .filter_map(|x| x.text().map(|t| t.trim().to_owned()))
+                            .collect()
+                    })
+                    .unwrap_or_default()
             } else {
-                children(topic, "Labels").filter_map(|x| x.text().map(|t| t.trim().to_owned())).collect()
+                children(topic, "Labels")
+                    .filter_map(|x| x.text().map(|t| t.trim().to_owned()))
+                    .collect()
             },
             created: text_of(topic, "CreationDate").unwrap_or_default(),
             author: text_of(topic, "CreationAuthor").unwrap_or_default(),
@@ -639,20 +831,37 @@ mod tests {
         assert_eq!(back.version, "3.0");
         assert_eq!(back.topics, vec![t]);
         // The folder has its own entry, as BCF asks.
-        let names: Vec<String> =
-            kentos_zip::list_every(&bytes, &kentos_zip::Limits::default()).unwrap().into_iter().map(|l| l.name).collect();
-        assert!(names.contains(&"0192f5a1-8103-7000-8000-000000000001/".to_owned()), "{names:?}");
+        let names: Vec<String> = kentos_zip::list_every(&bytes, &kentos_zip::Limits::default())
+            .unwrap()
+            .into_iter()
+            .map(|l| l.name)
+            .collect();
+        assert!(
+            names.contains(&"0192f5a1-8103-7000-8000-000000000001/".to_owned()),
+            "{names:?}"
+        );
     }
 
     #[test]
     fn a_camera_looks_at_the_box_s_middle_with_z_up() {
-        let Camera::Perspective { eye, direction, up, field_of_view, .. } = camera_for([0.0, 0.0, 0.0, 4.0, 2.0, 3.0]) else {
+        let Camera::Perspective {
+            eye,
+            direction,
+            up,
+            field_of_view,
+            ..
+        } = camera_for([0.0, 0.0, 0.0, 4.0, 2.0, 3.0])
+        else {
             panic!()
         };
         // The middle lies on the line of sight.
         let m = [2.0, 1.0, 1.5];
         let to = [m[0] - eye[0], m[1] - eye[1], m[2] - eye[2]];
-        let cross = [to[1] * direction[2] - to[2] * direction[1], to[2] * direction[0] - to[0] * direction[2], to[0] * direction[1] - to[1] * direction[0]];
+        let cross = [
+            to[1] * direction[2] - to[2] * direction[1],
+            to[2] * direction[0] - to[0] * direction[2],
+            to[0] * direction[1] - to[1] * direction[0],
+        ];
         assert!(cross.iter().all(|c| c.abs() < 1e-9), "{cross:?}");
         let dot = direction[0] * up[0] + direction[1] * up[1] + direction[2] * up[2];
         assert!(dot.abs() < 1e-12 && up[2] > 0.0, "{up:?}");
@@ -703,17 +912,28 @@ mod tests {
         let version = br#"<?xml version="1.0" encoding="UTF-8"?><Version VersionId="2.1"><DetailedVersion>2.1</DetailedVersion></Version>"#;
         let bytes = kentos_zip::write(&[
             ("bcf.version", version.as_slice()),
-            ("0192f5a1-8103-7000-8000-000000000002/markup.bcf", markup.as_slice()),
-            ("0192f5a1-8103-7000-8000-000000000002/viewpoint.bcfv", view.as_slice()),
+            (
+                "0192f5a1-8103-7000-8000-000000000002/markup.bcf",
+                markup.as_slice(),
+            ),
+            (
+                "0192f5a1-8103-7000-8000-000000000002/viewpoint.bcfv",
+                view.as_slice(),
+            ),
         ])
         .unwrap();
         let b = read(&bytes).unwrap();
         assert_eq!(b.version, "2.1");
         let t = &b.topics[0];
-        assert_eq!((t.topic_type.as_str(), t.status.as_str(), t.title.as_str()), ("Clash", "Active", "Kolon kirisi kesiyor"));
+        assert_eq!(
+            (t.topic_type.as_str(), t.status.as_str(), t.title.as_str()),
+            ("Clash", "Active", "Kolon kirisi kesiyor")
+        );
         assert_eq!(t.comments[0].text.as_deref(), Some("Bakiyorum"));
         assert_eq!(t.viewpoints[0].selection, ["0CmAx$J2b4n8dVdl_wLq1s"]);
-        assert!(matches!(t.viewpoints[0].camera, Some(Camera::Orthogonal { scale, aspect, .. }) if scale == 10.0 && aspect == 1.0));
+        assert!(
+            matches!(t.viewpoints[0].camera, Some(Camera::Orthogonal { scale, aspect, .. }) if scale == 10.0 && aspect == 1.0)
+        );
     }
 
     #[test]

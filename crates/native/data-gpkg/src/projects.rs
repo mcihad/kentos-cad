@@ -38,14 +38,18 @@ fn has_table(gp: &GeoPackage) -> Result<bool, DataError> {
 
 impl GpkgSource {
     /// Runs `f` in a transaction on a writable connection of its own: written when it succeeds, nothing otherwise.
-    fn writing<T>(&self, f: impl FnOnce(&rusqlite::Connection) -> Result<T, DataError>) -> Result<T, DataError> {
+    fn writing<T>(
+        &self,
+        f: impl FnOnce(&rusqlite::Connection) -> Result<T, DataError>,
+    ) -> Result<T, DataError> {
         if !self.writable() {
             return Err(DataError::Denied(format!(
                 "“{}” salt okunur; dosyanın izinlerini denetleyin.",
                 self.path().display()
             )));
         }
-        let gp = GeoPackage::open(self.path(), true).map_err(|e| DataError::Denied(e.to_string()))?;
+        let gp =
+            GeoPackage::open(self.path(), true).map_err(|e| DataError::Denied(e.to_string()))?;
         prepare(&gp)?;
         let c = gp.connection();
         c.execute_batch("BEGIN IMMEDIATE").map_err(failed)?;
@@ -96,7 +100,11 @@ impl ProjectStore for GpkgSource {
                 return Err(DataError::NoProject(name.to_owned()));
             }
             gp.connection()
-                .query_row("SELECT content FROM kentos_projects WHERE name = ?1", [name], |r| r.get::<_, Vec<u8>>(0))
+                .query_row(
+                    "SELECT content FROM kentos_projects WHERE name = ?1",
+                    [name],
+                    |r| r.get::<_, Vec<u8>>(0),
+                )
                 .optional()
                 .map_err(failed)?
                 .ok_or_else(|| DataError::NoProject(name.to_owned()))
@@ -135,7 +143,8 @@ impl ProjectStore for GpkgSource {
                 )
                 .map_err(failed)?;
             let gone = if there > 0 {
-                c.execute("DELETE FROM kentos_projects WHERE name = ?1", [name]).map_err(failed)?
+                c.execute("DELETE FROM kentos_projects WHERE name = ?1", [name])
+                    .map_err(failed)?
             } else {
                 0
             };

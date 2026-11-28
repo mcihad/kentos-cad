@@ -18,12 +18,14 @@
 use std::collections::BTreeSet;
 
 use kentos_commands::{
-    ZoningParcelDecided, ZoningParcel, CommandResult, Entity, ParcelDecision, PlanAgainst, PlanConflict,
-    PlanNoteText, PlanSource, PlanValue, ZONING_PROFILE, builtin_profile,
+    CommandResult, Entity, ParcelDecision, PlanAgainst, PlanConflict, PlanNoteText, PlanSource,
+    PlanValue, ZONING_PROFILE, ZoningParcel, ZoningParcelDecided, builtin_profile,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geom::arrangement::Area;
-use kentos_geometry_core::geom::region::{intersect_area_sets, net_area, subtract_areas, union_areas};
+use kentos_geometry_core::geom::region::{
+    intersect_area_sets, net_area, subtract_areas, union_areas,
+};
 use kentos_geometry_core::geom::space::perimeter;
 use kentos_geometry_core::ops::areas::areas_of_entity;
 
@@ -38,11 +40,29 @@ const FIRST_TOLERANCE: f64 = 0.01;
 const LEAST_TOLERANCE: f64 = 1e-6;
 
 /// A decision's fields in the profile's order.
-const FIELDS: [&str; 10] =
-    ["Kullanim", "Nizam", "TAKS", "KAKS", "KatAdedi", "Hmax", "OnCekme", "YanCekme", "ArkaCekme", "Belirtilmeyen"];
+const FIELDS: [&str; 10] = [
+    "Kullanim",
+    "Nizam",
+    "TAKS",
+    "KAKS",
+    "KatAdedi",
+    "Hmax",
+    "OnCekme",
+    "YanCekme",
+    "ArkaCekme",
+    "Belirtilmeyen",
+];
 
 /// The fields compared as numbers.
-const NUMBERS: [&str; 7] = ["TAKS", "KAKS", "KatAdedi", "Hmax", "OnCekme", "YanCekme", "ArkaCekme"];
+const NUMBERS: [&str; 7] = [
+    "TAKS",
+    "KAKS",
+    "KatAdedi",
+    "Hmax",
+    "OnCekme",
+    "YanCekme",
+    "ArkaCekme",
+];
 
 /// The statuses a plan is in force under (the profile's `plan-durum`).
 const IN_FORCE: [&str; 2] = ["onayli", "yururlukte"];
@@ -59,7 +79,12 @@ struct Item<'a> {
 
 impl Item<'_> {
     fn get(&self, k: &str) -> String {
-        self.e.base().attrs.get(k).map(|v| v.trim().to_owned()).unwrap_or_default()
+        self.e
+            .base()
+            .attrs
+            .get(k)
+            .map(|v| v.trim().to_owned())
+            .unwrap_or_default()
     }
 
     fn opt(&self, k: &str) -> Option<String> {
@@ -70,7 +95,11 @@ impl Item<'_> {
 /// A decision's value read as a number (docs/adr/8072 §5, 8140): a comma or a point before its decimals; none for
 /// words ("serbest") or a number with something after it ("3+Ç", "12.50 m").
 pub fn plan_number(text: &str) -> Option<f64> {
-    text.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite())
+    text.trim()
+        .replace(',', ".")
+        .parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
 }
 
 /// Two values as written the same: numbers as numbers, text as text.
@@ -105,7 +134,12 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
             "tolerance",
         ));
     }
-    let site = doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()).and_then(|s| s.parcel.clone());
+    let site = doc
+        .settings()
+        .arch
+        .as_ref()
+        .and_then(|a| a.site.as_ref())
+        .and_then(|s| s.parcel.clone());
     let Some(uid) = input.parcel.clone().or(site) else {
         return Err(fail(
             codes::PARCEL_MISSING,
@@ -137,7 +171,11 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
     }
     let mut notes: Vec<String> = Vec::new();
     let Some(profile) = builtin_profile(ZONING_PROFILE) else {
-        return Err(fail(codes::INVALID_INPUT, "İmar planı profili okunamadı.".into(), "profile"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "İmar planı profili okunamadı.".into(),
+            "profile",
+        ));
     };
     // Each class's objects on its layer, in the drawing's order.
     let order: Vec<&Entity> = doc.entities().collect();
@@ -150,7 +188,13 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
             order
                 .iter()
                 .filter(|e| e.base().layer_id == layer && e.kind() == kind)
-                .map(|e| Item { uid: doc.uid(Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default(), e })
+                .map(|e| Item {
+                    uid: doc
+                        .uid(Slot(e.base().id))
+                        .map(|u| u.to_string())
+                        .unwrap_or_default(),
+                    e,
+                })
                 .collect(),
         )
     };
@@ -175,22 +219,37 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
     // Each decision's share of the parcel.
     let mut found: Vec<(&Item<'_>, Vec<Area>, f64)> = Vec::new();
     for d in &decisions {
-        let (pieces, share) = counted(intersect_area_sets(&[parcel.clone(), areas_of_entity(&shape(d.e))]), t);
+        let (pieces, share) = counted(
+            intersect_area_sets(&[parcel.clone(), areas_of_entity(&shape(d.e))]),
+            t,
+        );
         if !pieces.is_empty() {
             found.push((d, pieces, share));
         }
     }
-    let covered: Vec<Area> = union_areas(&found.iter().flat_map(|(_, p, _)| p.iter().cloned()).collect::<Vec<_>>());
+    let covered: Vec<Area> = union_areas(
+        &found
+            .iter()
+            .flat_map(|(_, p, _)| p.iter().cloned())
+            .collect::<Vec<_>>(),
+    );
     let (_, uncovered) = counted(subtract_areas(&parcel, &covered), t);
     let mut said: BTreeSet<String> = BTreeSet::new();
     let mut out: Vec<ParcelDecision> = Vec::new();
     for (d, _, share) in &found {
         let values: Vec<PlanValue> = FIELDS
             .iter()
-            .filter_map(|f| d.opt(f).map(|v| PlanValue { field: (*f).to_owned(), value: v }))
+            .filter_map(|f| {
+                d.opt(f).map(|v| PlanValue {
+                    field: (*f).to_owned(),
+                    value: v,
+                })
+            })
             .collect();
         let plan_id = d.get("Plan");
-        let plan = plans.iter().find(|p| !plan_id.is_empty() && p.get("PlanKimlik") == plan_id);
+        let plan = plans
+            .iter()
+            .find(|p| !plan_id.is_empty() && p.get("PlanKimlik") == plan_id);
         let source = plan.map(|p| PlanSource {
             uid: p.uid.clone(),
             id: p.get("PlanKimlik"),
@@ -205,7 +264,10 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
             match s.status.as_deref() {
                 Some(st) if IN_FORCE.contains(&st) => {}
                 Some(st) => {
-                    said.insert(format!("{} planının durumu “{st}”; yürürlükte değil.", s.id));
+                    said.insert(format!(
+                        "{} planının durumu “{st}”; yürürlükte değil.",
+                        s.id
+                    ));
                 }
                 None => {
                     said.insert(format!("{} planının durumu yazılmamış.", s.id));
@@ -215,9 +277,15 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
                 said.insert(format!("{} planının onay tarihi yok.", s.id));
             }
         } else if plan_id.is_empty() {
-            said.insert(format!("“{}” kararının planı yazılmamış.", d.get("KararKimlik")));
+            said.insert(format!(
+                "“{}” kararının planı yazılmamış.",
+                d.get("KararKimlik")
+            ));
         } else {
-            said.insert(format!("“{}” kararının planı {plan_id} çizimde yok.", d.get("KararKimlik")));
+            said.insert(format!(
+                "“{}” kararının planı {plan_id} çizimde yok.",
+                d.get("KararKimlik")
+            ));
         }
         // Its notes by number, then its plan's general ones.
         let of_plan = |n: &Item<'_>| {
@@ -225,9 +293,21 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
             p.is_empty() || p == plan_id
         };
         let mut texts: Vec<PlanNoteText> = Vec::new();
-        for no in d.get("PlanNotlari").split([',', ';', ' ']).map(str::trim).filter(|n| !n.is_empty()) {
-            match plan_notes.iter().find(|n| of_plan(n) && n.get("NotNo") == no) {
-                Some(n) => texts.push(PlanNoteText { number: no.to_owned(), text: n.get("Metin"), scope: n.get("Kapsam") }),
+        for no in d
+            .get("PlanNotlari")
+            .split([',', ';', ' '])
+            .map(str::trim)
+            .filter(|n| !n.is_empty())
+        {
+            match plan_notes
+                .iter()
+                .find(|n| of_plan(n) && n.get("NotNo") == no)
+            {
+                Some(n) => texts.push(PlanNoteText {
+                    number: no.to_owned(),
+                    text: n.get("Metin"),
+                    scope: n.get("Kapsam"),
+                }),
                 None => {
                     said.insert(format!(
                         "“{}” kararının andığı {no} numaralı plan notu çizimde yok.",
@@ -236,9 +316,16 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
                 }
             }
         }
-        for n in plan_notes.iter().filter(|n| of_plan(n) && n.get("Kapsam") == "genel") {
+        for n in plan_notes
+            .iter()
+            .filter(|n| of_plan(n) && n.get("Kapsam") == "genel")
+        {
             if !texts.iter().any(|x| x.number == n.get("NotNo")) {
-                texts.push(PlanNoteText { number: n.get("NotNo"), text: n.get("Metin"), scope: n.get("Kapsam") });
+                texts.push(PlanNoteText {
+                    number: n.get("NotNo"),
+                    text: n.get("Metin"),
+                    scope: n.get("Kapsam"),
+                });
             }
         }
         out.push(ParcelDecision {
@@ -295,16 +382,34 @@ fn check(doc: &Document, input: &ZoningParcel) -> Result<ZoningParcelDecided, St
                     plan.push(v.value.clone());
                 }
             }
-            if plan.iter().any(|v| plan_number(v).is_none_or(|x| x != typed)) {
-                against.push(PlanAgainst { field: field.to_owned(), typed, plan });
+            if plan
+                .iter()
+                .any(|v| plan_number(v).is_none_or(|x| x != typed))
+            {
+                against.push(PlanAgainst {
+                    field: field.to_owned(),
+                    typed,
+                    plan,
+                });
             }
         }
     }
-    Ok(ZoningParcelDecided { parcel: uid, area, decisions: out, uncovered, conflicts, against, notes })
+    Ok(ZoningParcelDecided {
+        parcel: uid,
+        area,
+        decisions: out,
+        uncovered,
+        conflicts,
+        against,
+        notes,
+    })
 }
 
 /// Reads the parcel's decisions; writes nothing.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ZoningParcel) -> CommandResult<ZoningParcelDecided> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ZoningParcel,
+) -> CommandResult<ZoningParcelDecided> {
     plan_in(cx.doc, &input)
 }
 
@@ -316,7 +421,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ZoningParcel) -> CommandResult<Zo
 /// The answer read from `doc`.
 pub fn plan_in(doc: &Document, input: &ZoningParcel) -> CommandResult<ZoningParcelDecided> {
     match check(doc, input) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -324,7 +432,10 @@ pub fn plan_in(doc: &Document, input: &ZoningParcel) -> CommandResult<ZoningParc
 /// Checks `input`; writes nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ZoningParcel) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }

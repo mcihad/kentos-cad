@@ -69,9 +69,7 @@ pub(super) fn definitions(r: &mut Reader<'_>, has: Features) -> Result<Definitio
                 BlockFault::UnknownBlock { at }
                 | BlockFault::BadScale { at }
                 | BlockFault::BadValues { at, .. }
-                | BlockFault::BadPlace { at, .. } => {
-                    at.definition.unwrap_or_default()
-                }
+                | BlockFault::BadPlace { at, .. } => at.definition.unwrap_or_default(),
             };
             let said = crate::blocks::said(&fault, &list);
             for seg in said.path {
@@ -127,11 +125,21 @@ fn definition(
             "dynamic" if has.dynamic_blocks => {
                 let at = r.position();
                 let value = r.opaque()?;
-                if !has.block_type_values && (value.get("typeParameters").is_some() || value.get("typeValues").is_some()) {
-                    return Err(r.fail_at(Code::UnknownField, at, "tip parametreleri bu belge şemasında yok"));
+                if !has.block_type_values
+                    && (value.get("typeParameters").is_some() || value.get("typeValues").is_some())
+                {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "tip parametreleri bu belge şemasında yok",
+                    ));
                 }
                 if !has.block_parameter_groups && value.get("parameterGroups").is_some() {
-                    return Err(r.fail_at(Code::UnknownField, at, "parameterGroups bu belge şemasında yok"));
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "parameterGroups bu belge şemasında yok",
+                    ));
                 }
                 if let Some(key) = unknown_key(&value) {
                     return Err(r.fail_at(
@@ -140,8 +148,8 @@ fn definition(
                         &format!("dinamik bölümde bilinmeyen alan: {key}"),
                     ));
                 }
-                let read: kentos_contracts::DynamicBlock =
-                    serde_json::from_value(value.clone()).map_err(|e| {
+                let read: kentos_contracts::DynamicBlock = serde_json::from_value(value.clone())
+                    .map_err(|e| {
                         let words = e.to_string();
                         let code = if words.contains("unknown field") {
                             Code::UnknownField
@@ -163,18 +171,32 @@ fn definition(
             "xref" if has.xrefs => {
                 let at = r.position();
                 let value = r.opaque()?;
-                const KEYS: &[&str] = &["path", "relative", "kind", "digest", "unloaded", "group", "parent", "objects"];
+                const KEYS: &[&str] = &[
+                    "path", "relative", "kind", "digest", "unloaded", "group", "parent", "objects",
+                ];
                 // Schema 85 (docs/adr/0351 §2): a PDF underlay's page and look.
                 const UNDERLAY: &[&str] = &["page", "underlay"];
                 let known = |k: &str| KEYS.contains(&k) || (has.clipping && UNDERLAY.contains(&k));
-                if let Some(key) = value.as_object().and_then(|m| m.keys().find(|k| !known(k.as_str()))) {
-                    return Err(r.fail_at(Code::UnknownField, at, &format!("dış başvuruda bilinmeyen alan: {key}")));
+                if let Some(key) = value
+                    .as_object()
+                    .and_then(|m| m.keys().find(|k| !known(k.as_str())))
+                {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        &format!("dış başvuruda bilinmeyen alan: {key}"),
+                    ));
                 }
-                let read: kentos_contracts::XrefSource = serde_json::from_value(value.clone()).map_err(|e| {
-                    let words = e.to_string();
-                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
-                    r.fail_at(code, at, &format!("dış başvuru okunamadı: {words}"))
-                })?;
+                let read: kentos_contracts::XrefSource = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("dış başvuru okunamadı: {words}"))
+                    })?;
                 if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
                     return Err(r.fail_at(
                         Code::BadValue,
@@ -203,7 +225,9 @@ fn definition(
                         return Err(r.fail_at(
                             Code::BadValue,
                             at,
-                            &format!("“{word}” bir blok birimi değil (mm, cm, m, in, ft, unitless)"),
+                            &format!(
+                                "“{word}” bir blok birimi değil (mm, cm, m, in, ft, unitless)"
+                            ),
                         ));
                     }
                 });
@@ -243,7 +267,10 @@ fn definition(
 }
 
 /// A block's card (docs/adr/0317 §4); its rules are the definitions' (`blocks::card_problem`).
-fn block_card(r: &mut Reader<'_>, publications: bool) -> Result<kentos_contracts::BlockCard, KcadError> {
+fn block_card(
+    r: &mut Reader<'_>,
+    publications: bool,
+) -> Result<kentos_contracts::BlockCard, KcadError> {
     let (mut category, mut tags, mut version) = (None, None, None);
     let (mut publication, mut element) = (None, None);
     map(r, |r, key| {
@@ -251,7 +278,8 @@ fn block_card(r: &mut Reader<'_>, publications: bool) -> Result<kentos_contracts
             // Its building element (architecture data 2, docs/adr/8070 §5): the reader of the document refuses it in a
             // file that does not name that version.
             "element" => {
-                let (mut class, mut predefined, mut height, mut elevation) = (None, None, None, None);
+                let (mut class, mut predefined, mut height, mut elevation) =
+                    (None, None, None, None);
                 map(r, |r, key| {
                     match key {
                         "class" => {
@@ -262,7 +290,11 @@ fn block_card(r: &mut Reader<'_>, publications: bool) -> Result<kentos_contracts
                                     .into_iter()
                                     .find(|c| c.name() == t)
                                     .ok_or_else(|| {
-                                        r.fail_at(Code::BadValue, at, &format!("“{t}” bir yapı elemanı sınıfı değil"))
+                                        r.fail_at(
+                                            Code::BadValue,
+                                            at,
+                                            &format!("“{t}” bir yapı elemanı sınıfı değil"),
+                                        )
                                     })?,
                             );
                         }
@@ -281,7 +313,8 @@ fn block_card(r: &mut Reader<'_>, publications: bool) -> Result<kentos_contracts
                 });
             }
             "publication" if publications => {
-                let (mut family_id, mut type_id, mut type_name, mut release) = (None, None, None, None);
+                let (mut family_id, mut type_id, mut type_name, mut release) =
+                    (None, None, None, None);
                 map(r, |r, key| {
                     match key {
                         "familyId" => family_id = Some(BlockId(id16(r)?)),
@@ -310,7 +343,10 @@ fn block_card(r: &mut Reader<'_>, publications: bool) -> Result<kentos_contracts
             "version" => {
                 let at = r.position();
                 let v = r.uint(u64::from(u32::MAX))?;
-                version = Some(u32::try_from(v).map_err(|_| r.fail_at(Code::BadValue, at, "sürüm çok büyük"))?);
+                version = Some(
+                    u32::try_from(v)
+                        .map_err(|_| r.fail_at(Code::BadValue, at, "sürüm çok büyük"))?,
+                );
             }
             _ => return Err(unknown(r)),
         }
@@ -343,7 +379,9 @@ fn attribute(r: &mut Reader<'_>, has: Features) -> Result<AttributeDefinition, K
             "align" if has.texts => align = Some(text_align(r)?),
             "widthFactor" if has.texts => width_factor = Some(objects::width_factor(r)?),
             // Schema 58 (docs/adr/0317 §1): an option only when on.
-            "invisible" | "constant" | "verify" | "preset" | "movable" | "multiline" if has.block_cards => {
+            "invisible" | "constant" | "verify" | "preset" | "movable" | "multiline"
+                if has.block_cards =>
+            {
                 let at = r.position();
                 if !r.bool()? {
                     return Err(r.fail_at(Code::BadValue, at, "kapalı seçenek yazılmaz"));
@@ -397,7 +435,6 @@ pub(super) fn unknown_block(
     r.fail_at(said.code, at, &said.what)
 }
 
-
 /// A key the dynamic part's contract does not know (docs/adr/0318), at any depth: the readers refuse it as an unknown
 /// field before reading the part.
 fn unknown_key(v: &serde_json::Value) -> Option<String> {
@@ -406,51 +443,72 @@ fn unknown_key(v: &serde_json::Value) -> Option<String> {
         let Value::Object(m) = v else { return None };
         m.keys().find(|k| !keys.contains(&k.as_str())).cloned()
     }
-    fn each<'v>(v: &'v Value, key: &str, check: impl Fn(&'v Value) -> Option<String>) -> Option<String> {
+    fn each<'v>(
+        v: &'v Value,
+        key: &str,
+        check: impl Fn(&'v Value) -> Option<String>,
+    ) -> Option<String> {
         match v.get(key) {
             Some(Value::Array(list)) => list.iter().find_map(check),
             _ => None,
         }
     }
     const POINT: &[&str] = &["x", "y"];
-    let points = |p: &Value, keys: &[&str]| keys.iter().find_map(|k| p.get(*k).and_then(|q| only(q, POINT)));
-    only(v, &["parameters", "actions", "parameterGroups", "typeParameters", "typeValues"])
-        .or_else(|| each(v, "parameterGroups", |g| only(g, &["name", "parameters"])))
-        .or_else(|| {
-            each(v, "parameters", |p| {
-                let kind = p.get("kind").and_then(Value::as_str).unwrap_or("");
-                let (keys, at): (&[&str], &[&str]) = match kind {
-                    "linear" | "polar" => (&["kind", "name", "from", "to", "rule"], &["from", "to"]),
-                    "angle" => (&["kind", "name", "center", "base", "rule"], &["center"]),
-                    "point" => (&["kind", "name", "at"], &["at"]),
-                    "flip" => (&["kind", "name", "a", "b"], &["a", "b"]),
-                    "visibility" => (&["kind", "name", "states"], &[]),
-                    "lookup" => (&["kind", "name", "rows"], &[]),
-                    _ => return None,
-                };
-                only(p, keys)
-                    .or_else(|| points(p, at))
-                    .or_else(|| p.get("rule").and_then(|r| only(r, &["min", "max", "step", "list", "expression"])))
-                    .or_else(|| each(p, "states", |s| only(s, &["name", "hidden"])))
-                    .or_else(|| {
-                        each(p, "rows", |row| {
-                            only(row, &["label", "values"]).or_else(|| match row.get("values") {
-                                Some(Value::Object(m)) => m.values().find_map(|x| x.is_object().then(|| only(x, POINT)).flatten()),
-                                _ => None,
-                            })
+    let points = |p: &Value, keys: &[&str]| {
+        keys.iter()
+            .find_map(|k| p.get(*k).and_then(|q| only(q, POINT)))
+    };
+    only(
+        v,
+        &[
+            "parameters",
+            "actions",
+            "parameterGroups",
+            "typeParameters",
+            "typeValues",
+        ],
+    )
+    .or_else(|| each(v, "parameterGroups", |g| only(g, &["name", "parameters"])))
+    .or_else(|| {
+        each(v, "parameters", |p| {
+            let kind = p.get("kind").and_then(Value::as_str).unwrap_or("");
+            let (keys, at): (&[&str], &[&str]) = match kind {
+                "linear" | "polar" => (&["kind", "name", "from", "to", "rule"], &["from", "to"]),
+                "angle" => (&["kind", "name", "center", "base", "rule"], &["center"]),
+                "point" => (&["kind", "name", "at"], &["at"]),
+                "flip" => (&["kind", "name", "a", "b"], &["a", "b"]),
+                "visibility" => (&["kind", "name", "states"], &[]),
+                "lookup" => (&["kind", "name", "rows"], &[]),
+                _ => return None,
+            };
+            only(p, keys)
+                .or_else(|| points(p, at))
+                .or_else(|| {
+                    p.get("rule")
+                        .and_then(|r| only(r, &["min", "max", "step", "list", "expression"]))
+                })
+                .or_else(|| each(p, "states", |s| only(s, &["name", "hidden"])))
+                .or_else(|| {
+                    each(p, "rows", |row| {
+                        only(row, &["label", "values"]).or_else(|| match row.get("values") {
+                            Some(Value::Object(m)) => m
+                                .values()
+                                .find_map(|x| x.is_object().then(|| only(x, POINT)).flatten()),
+                            _ => None,
                         })
                     })
-            })
+                })
         })
-        .or_else(|| {
-            each(v, "actions", |a| {
-                let kind = a.get("kind").and_then(Value::as_str).unwrap_or("");
-                let keys: &[&str] = match kind {
-                    "stretch" => &["kind", "parameter", "pieces", "min", "max"],
-                    "array" => &["kind", "parameter", "pieces", "spacing"],
-                    _ => &["kind", "parameter", "pieces"],
-                };
-                only(a, keys).or_else(|| points(a, &["min", "max"]))
-            })
+    })
+    .or_else(|| {
+        each(v, "actions", |a| {
+            let kind = a.get("kind").and_then(Value::as_str).unwrap_or("");
+            let keys: &[&str] = match kind {
+                "stretch" => &["kind", "parameter", "pieces", "min", "max"],
+                "array" => &["kind", "parameter", "pieces", "spacing"],
+                _ => &["kind", "parameter", "pieces"],
+            };
+            only(a, keys).or_else(|| points(a, &["min", "max"]))
         })
+    })
 }

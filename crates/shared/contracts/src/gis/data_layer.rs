@@ -163,7 +163,9 @@ impl DataLayer {
             return Some("göreli yol boş, çok uzun ya da / yerine \\ ile yazılmış".into());
         }
         if blank_or_long(&self.table) {
-            return Some(format!("veri katmanının tablosu boş ya da {MAX_DATA_TEXT} karakterden uzun"));
+            return Some(format!(
+                "veri katmanının tablosu boş ya da {MAX_DATA_TEXT} karakterden uzun"
+            ));
         }
         if blank_or_long(&self.key) {
             return Some("veri katmanının anahtar sütunu boş".into());
@@ -171,7 +173,10 @@ impl DataLayer {
         if let Some(b) = &self.extent
             && (b.iter().any(|v| !v.is_finite()) || b[0] > b[2] || b[1] > b[3])
         {
-            return Some("tablonun kutusu dört sonlu sayıdır ve en küçükler en büyüklerden büyük olamaz".into());
+            return Some(
+                "tablonun kutusu dört sonlu sayıdır ve en küçükler en büyüklerden büyük olamaz"
+                    .into(),
+            );
         }
         if self.extent.is_some() && self.geometry.is_none() {
             return Some("geometrisiz tablonun kutusu olmaz".into());
@@ -198,11 +203,19 @@ impl DataLayer {
                 return Some(p);
             }
             if self.family() != Some(crate::LayerGeometry::Point) {
-                return Some("yazıların tablosunun geometrisi nokta olmalı (POINT ya da MULTIPOINT)".into());
+                return Some(
+                    "yazıların tablosunun geometrisi nokta olmalı (POINT ya da MULTIPOINT)".into(),
+                );
             }
             let geometry = self.geometry.as_ref().map(|g| g.column.as_str());
-            if let Some(c) = t.columns().into_iter().find(|c| *c == self.key || Some(*c) == geometry) {
-                return Some(format!("“{c}” sütunu hem yazının parçası hem anahtar ya da geometri olamaz"));
+            if let Some(c) = t
+                .columns()
+                .into_iter()
+                .find(|c| *c == self.key || Some(*c) == geometry)
+            {
+                return Some(format!(
+                    "“{c}” sütunu hem yazının parçası hem anahtar ya da geometri olamaz"
+                ));
             }
         }
         None
@@ -213,9 +226,8 @@ impl DataLayer {
         let g = self.geometry.as_ref()?;
         Some(match g.type_name.as_str() {
             "POINT" | "MULTIPOINT" => crate::LayerGeometry::Point,
-            "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "MULTICURVE" => {
-                crate::LayerGeometry::Line
-            }
+            "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE"
+            | "MULTICURVE" => crate::LayerGeometry::Line,
             "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "MULTISURFACE" => {
                 crate::LayerGeometry::Area
             }
@@ -257,7 +269,11 @@ impl DataLayer {
     /// Its table as the interface says it: a query read as a table (docs/adr/9113 §1: its text begins with
     /// `-- kentos:`) is “SQL sorgusu”, not its text.
     pub fn table_words(&self) -> &str {
-        if self.table.starts_with("-- kentos:") { "SQL sorgusu" } else { &self.table }
+        if self.table.starts_with("-- kentos:") {
+            "SQL sorgusu"
+        } else {
+            &self.table
+        }
     }
 }
 
@@ -324,19 +340,51 @@ mod tests {
 
     #[test]
     fn a_text_table_is_a_table_of_points() {
-        let point = DataGeometry { column: "geom".into(), type_name: "POINT".into(), srid: Some(5256), z: false, m: false };
-        let texts = DataLayer { geometry: Some(point.clone()), text: Some(crate::DataText::written()), ..parcels() };
+        let point = DataGeometry {
+            column: "geom".into(),
+            type_name: "POINT".into(),
+            srid: Some(5256),
+            z: false,
+            m: false,
+        };
+        let texts = DataLayer {
+            geometry: Some(point.clone()),
+            text: Some(crate::DataText::written()),
+            ..parcels()
+        };
         assert_eq!(texts.problem(), None);
         assert_eq!(texts.kind_words(), "Veri katmanı (yazı)");
-        let areas = DataLayer { text: Some(crate::DataText::written()), ..parcels() };
-        assert_eq!(areas.problem().as_deref(), Some("yazıların tablosunun geometrisi nokta olmalı (POINT ya da MULTIPOINT)"));
-        let none = DataLayer { geometry: None, text: Some(crate::DataText::written()), ..parcels() };
+        let areas = DataLayer {
+            text: Some(crate::DataText::written()),
+            ..parcels()
+        };
+        assert_eq!(
+            areas.problem().as_deref(),
+            Some("yazıların tablosunun geometrisi nokta olmalı (POINT ya da MULTIPOINT)")
+        );
+        let none = DataLayer {
+            geometry: None,
+            text: Some(crate::DataText::written()),
+            ..parcels()
+        };
         assert!(none.problem().is_some(), "a text needs its point");
-        let keyed = DataLayer { text: Some(crate::DataText { text: "fid".into(), ..crate::DataText::written() }), ..texts.clone() };
-        assert_eq!(keyed.problem().as_deref(), Some("“fid” sütunu hem yazının parçası hem anahtar ya da geometri olamaz"));
+        let keyed = DataLayer {
+            text: Some(crate::DataText {
+                text: "fid".into(),
+                ..crate::DataText::written()
+            }),
+            ..texts.clone()
+        };
+        assert_eq!(
+            keyed.problem().as_deref(),
+            Some("“fid” sütunu hem yazının parçası hem anahtar ya da geometri olamaz")
+        );
         // Read from the file as written, the mapping kept.
         let json = serde_json::to_value(&texts).expect("json");
         assert_eq!(json["text"]["text"], "metin");
-        assert_eq!(serde_json::from_value::<DataLayer>(json).expect("read"), texts);
+        assert_eq!(
+            serde_json::from_value::<DataLayer>(json).expect("read"),
+            texts
+        );
     }
 }

@@ -10,18 +10,19 @@
 //! seçeneği”); Kapat writes nothing.
 
 use crate::arch;
+use crate::arch::ArchState;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CombosCompared, CommandResult, OptionComboRow, OptionSetRow, OptionsCompare, OptionsCompared, OptionsEdit, OptionsEdited,
-    OptionsCompareCombos, OptionsOperation, OptionsQuery,
+    CombosCompared, CommandResult, OptionComboRow, OptionSetRow, OptionsCompare,
+    OptionsCompareCombos, OptionsCompared, OptionsEdit, OptionsEdited, OptionsOperation,
+    OptionsQuery,
 };
 use kentos_interaction::Level;
 use kentos_ui::icon::icon;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::{Choice, Select};
 use kentos_ui::{label, style};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -121,7 +122,11 @@ fn kind_words(kind: &str) -> &str {
 /// What a comparison says, in one line.
 /// What a comparison of two combinations says, in one line: each set differing, the sets alike, the plans' totals.
 pub(crate) fn combos_words(c: &CombosCompared, rows: &[OptionSetRow]) -> String {
-    let name = |id: &str| rows.iter().find(|s| s.id == id).map_or(id.to_owned(), |s| s.name.clone());
+    let name = |id: &str| {
+        rows.iter()
+            .find(|s| s.id == id)
+            .map_or(id.to_owned(), |s| s.name.clone())
+    };
     let option = |set: &str, id: &str| {
         rows.iter()
             .find(|s| s.id == set)
@@ -137,16 +142,37 @@ pub(crate) fn combos_words(c: &CombosCompared, rows: &[OptionSetRow]) -> String 
                 ws.push(format!("{} değişmiş", s.changed.len()));
             }
             if !s.removed.is_empty() {
-                ws.push(format!("{} yalnız {}'da", s.removed.len(), option(&s.set, &s.a)));
+                ws.push(format!(
+                    "{} yalnız {}'da",
+                    s.removed.len(),
+                    option(&s.set, &s.a)
+                ));
             }
             if !s.added.is_empty() {
-                ws.push(format!("{} yalnız {}'de", s.added.len(), option(&s.set, &s.b)));
+                ws.push(format!(
+                    "{} yalnız {}'de",
+                    s.added.len(),
+                    option(&s.set, &s.b)
+                ));
             }
-            format!("{} {} → {}: {}", name(&s.set), option(&s.set, &s.a), option(&s.set, &s.b), ws.join(", "))
+            format!(
+                "{} {} → {}: {}",
+                name(&s.set),
+                option(&s.set, &s.a),
+                option(&s.set, &s.b),
+                ws.join(", ")
+            )
         })
         .collect();
     if !c.alike.is_empty() {
-        parts.push(format!("aynı: {}", c.alike.iter().map(|s| name(s)).collect::<Vec<_>>().join(", ")));
+        parts.push(format!(
+            "aynı: {}",
+            c.alike
+                .iter()
+                .map(|s| name(s))
+                .collect::<Vec<_>>()
+                .join(", ")
+        ));
     }
     parts.push(format!(
         "plan {} → {} nesne, mahal {} m², duvar {} m",
@@ -164,10 +190,18 @@ pub(crate) fn compared_words(c: &OptionsCompared) -> String {
         parts.push(format!("{} değişmiş", c.changed.len()));
     }
     if !c.removed.is_empty() {
-        parts.push(format!("{} yalnız {}'da", c.removed.len(), c.a.to_uppercase()));
+        parts.push(format!(
+            "{} yalnız {}'da",
+            c.removed.len(),
+            c.a.to_uppercase()
+        ));
     }
     if !c.added.is_empty() {
-        parts.push(format!("{} yalnız {}'de", c.added.len(), c.b.to_uppercase()));
+        parts.push(format!(
+            "{} yalnız {}'de",
+            c.added.len(),
+            c.b.to_uppercase()
+        ));
     }
     parts.push(format!("mahal alanı {} m²", num(c.space_area, true)));
     parts.push(format!("duvar {} m", num(c.wall_length, true)));
@@ -190,27 +224,26 @@ pub(crate) trait DesignOptionsWindowApp {
     fn design_options_event(&mut self, event: Event) -> Task<Message>;
     fn design_options_view(&self) -> Element<'_, Message>;
     fn design_options_combos<'a>(&'a self, w: &'a Window) -> Element<'a, Message>;
-    fn design_options_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>;
+    fn design_options_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
 impl DesignOptionsWindowApp for App {
-    fn design_options_rows(&self) -> (Vec<OptionSetRow>, Vec<OptionComboRow>){
+    fn design_options_rows(&self) -> (Vec<OptionSetRow>, Vec<OptionComboRow>) {
         let Some(doc) = self.document.as_ref() else {
             return (Vec::new(), Vec::new());
         };
-        match kentos_native_application::options_query::query(&doc.model, &OptionsQuery::default()) {
+        match kentos_native_application::options_query::query(&doc.model, &OptionsQuery::default())
+        {
             CommandResult::Completed { output, .. } => (output.sets, output.combos),
             _ => (Vec::new(), Vec::new()),
         }
     }
 
-    fn design_options_read(&mut self, keep: Option<String>){
+    fn design_options_read(&mut self, keep: Option<String>) {
         let (rows, combos) = self.design_options_rows();
         let (combo, combo_name, versus) = self
-            .modules.arch()
+            .modules
+            .arch()
             .design_options
             .as_ref()
             .map(|w| {
@@ -218,12 +251,17 @@ impl DesignOptionsWindowApp for App {
                 (w.combo.min(last), w.combo_name.clone(), w.versus.min(last))
             })
             .unwrap_or_default();
-        let versus = if versus == combo { usize::from(combo == 0 && combos.len() > 1) } else { versus };
+        let versus = if versus == combo {
+            usize::from(combo == 0 && combos.len() > 1)
+        } else {
+            versus
+        };
         let chosen = keep
             .and_then(|id| rows.iter().position(|r| r.id == id))
             .unwrap_or(0);
         let name = self
-            .modules.arch()
+            .modules
+            .arch()
             .design_options
             .as_ref()
             .map(|w| w.name.clone())
@@ -251,16 +289,17 @@ impl DesignOptionsWindowApp for App {
     }
 
     /// Tasarım seçenekleri (`arch.options`): the window, on the set of a selected object when it is in one.
-    fn open_design_options(&mut self){
+    fn open_design_options(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
         }
         let keep = self.selected_option().map(|(s, _)| s);
         self.design_options_read(keep);
-        if let (Some((_, option)), Some(w)) =
-            (self.selected_option(), self.modules.arch_mut().design_options.as_mut())
-            && let Some(set) = w.rows.get(w.chosen)
+        if let (Some((_, option)), Some(w)) = (
+            self.selected_option(),
+            self.modules.arch_mut().design_options.as_mut(),
+        ) && let Some(set) = w.rows.get(w.chosen)
         {
             w.option = set
                 .options
@@ -269,11 +308,13 @@ impl DesignOptionsWindowApp for App {
                 .unwrap_or(w.option);
         }
         self.design_options_preview();
-        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::DesignOptions));
+        self.dialog = Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::DesignOptions,
+        ));
     }
 
     /// The set and option the first selected object is in.
-    fn selected_option(&self) -> Option<(String, String)>{
+    fn selected_option(&self) -> Option<(String, String)> {
         let doc = self.document.as_ref()?;
         let sets = doc.model.arch_options();
         self.selection.ids().iter().find_map(|s| {
@@ -282,7 +323,7 @@ impl DesignOptionsWindowApp for App {
         })
     }
 
-    fn design_options_chosen(&self) -> Option<(String, Option<String>)>{
+    fn design_options_chosen(&self) -> Option<(String, Option<String>)> {
         let w = self.modules.arch().design_options.as_ref()?;
         let set = w.rows.get(w.chosen)?;
         Some((
@@ -292,7 +333,7 @@ impl DesignOptionsWindowApp for App {
     }
 
     /// The comparison of the two options picked, and the plan of Kabul et with the chosen one.
-    fn design_options_preview(&mut self){
+    fn design_options_preview(&mut self) {
         let Some(doc) = self.document.as_ref() else {
             return;
         };
@@ -318,29 +359,36 @@ impl DesignOptionsWindowApp for App {
                         ..Default::default()
                     },
                 ) {
-                    CommandResult::Completed { output, .. } => output.compared.ok_or_else(String::new),
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
+                    CommandResult::Completed { output, .. } => {
+                        output.compared.ok_or_else(String::new)
+                    }
+                    CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                        Err(error.message)
+                    }
                     _ => Err("Karşılaştırılamadı.".into()),
                 },
             ),
             _ => None,
         };
-        let accept = set.options.get(w.option).map(|o| {
-            match kentos_native_application::options_edit::plan_in(
-                &doc.model,
-                &OptionsEdit {
-                    operation: OptionsOperation::Accept {
-                        set: set.id.clone(),
-                        option: Some(o.id.clone()),
+        let accept =
+            set.options.get(w.option).map(
+                |o| match kentos_native_application::options_edit::plan_in(
+                    &doc.model,
+                    &OptionsEdit {
+                        operation: OptionsOperation::Accept {
+                            set: set.id.clone(),
+                            option: Some(o.id.clone()),
+                        },
+                        expected_revision: None,
                     },
-                    expected_revision: None,
+                ) {
+                    CommandResult::Completed { output, .. } => Ok(output),
+                    CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                        Err(error.message)
+                    }
+                    _ => Err("Önizlenemedi.".into()),
                 },
-            ) {
-                CommandResult::Completed { output, .. } => Ok(output),
-                CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
-                _ => Err("Önizlenemedi.".into()),
-            }
-        });
+            );
         let combos_compared = match (w.combos.get(w.combo), w.combos.get(w.versus)) {
             (Some(x), Some(y)) if x.id != y.id => Some(
                 match kentos_native_application::options_query::query(
@@ -355,8 +403,12 @@ impl DesignOptionsWindowApp for App {
                         ..Default::default()
                     },
                 ) {
-                    CommandResult::Completed { output, .. } => output.combos_compared.ok_or_else(String::new),
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
+                    CommandResult::Completed { output, .. } => {
+                        output.combos_compared.ok_or_else(String::new)
+                    }
+                    CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                        Err(error.message)
+                    }
                     _ => Err("Karşılaştırılamadı.".into()),
                 },
             ),
@@ -369,7 +421,7 @@ impl DesignOptionsWindowApp for App {
         }
     }
 
-    fn design_options_command(&mut self, operation: OptionsOperation) -> Option<OptionsEdited>{
+    fn design_options_command(&mut self, operation: OptionsOperation) -> Option<OptionsEdited> {
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::options_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -396,7 +448,7 @@ impl DesignOptionsWindowApp for App {
     }
 
     /// The selection's objects: those in no option, and those of `set`'s options.
-    fn design_options_selection(&self, set: Option<&str>) -> (Vec<String>, Vec<String>){
+    fn design_options_selection(&self, set: Option<&str>) -> (Vec<String>, Vec<String>) {
         let Some(doc) = self.document.as_ref() else {
             return (Vec::new(), Vec::new());
         };
@@ -415,7 +467,7 @@ impl DesignOptionsWindowApp for App {
         (free, members)
     }
 
-    fn design_options_event(&mut self, event: Event) -> Task<Message>{
+    fn design_options_event(&mut self, event: Event) -> Task<Message> {
         let chosen = self.design_options_chosen();
         match event {
             Event::Choose(i) => {
@@ -456,15 +508,22 @@ impl DesignOptionsWindowApp for App {
             }
             Event::Define => {
                 let name = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .design_options
                     .as_ref()
                     .map(|w| w.name.trim().to_owned())
                     .unwrap_or_default();
-                let name = if name.is_empty() { "Mutfak".to_owned() } else { name };
+                let name = if name.is_empty() {
+                    "Mutfak".to_owned()
+                } else {
+                    name
+                };
                 let (uids, _) = self.design_options_selection(None);
                 if uids.is_empty() {
-                    self.warn("Önce seçenek olacak duvarları, kapıları, mahali ve donatıları seçin.");
+                    self.warn(
+                        "Önce seçenek olacak duvarları, kapıları, mahali ve donatıları seçin.",
+                    );
                     return Task::none();
                 }
                 if let Some(done) = self.design_options_command(OptionsOperation::Define {
@@ -515,7 +574,10 @@ impl DesignOptionsWindowApp for App {
                     })
                     .is_some()
                 {
-                    self.say(Level::Success, "Birincil seçenek değişti; çizim ve paftalar onu gösteriyor.");
+                    self.say(
+                        Level::Success,
+                        "Birincil seçenek değişti; çizim ve paftalar onu gösteriyor.",
+                    );
                 }
                 self.design_options_read(Some(set));
             }
@@ -589,7 +651,10 @@ impl DesignOptionsWindowApp for App {
                     set: set.clone(),
                     option,
                 }) {
-                    self.say(Level::Success, format!("Seçenek {} nesnesiyle silindi.", done.deleted.len()));
+                    self.say(
+                        Level::Success,
+                        format!("Seçenek {} nesnesiyle silindi.", done.deleted.len()),
+                    );
                 }
                 self.design_options_read(Some(set));
             }
@@ -616,7 +681,8 @@ impl DesignOptionsWindowApp for App {
             Event::ComboSave => {
                 let keep = chosen.map(|(s, _)| s);
                 let name = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .design_options
                     .as_ref()
                     .map(|w| w.combo_name.trim().to_owned())
@@ -624,7 +690,8 @@ impl DesignOptionsWindowApp for App {
                     .unwrap_or_else(|| {
                         format!(
                             "Teklif {}",
-                            self.modules.arch()
+                            self.modules
+                                .arch()
                                 .design_options
                                 .as_ref()
                                 .map_or(0, |w| w.combos.len())
@@ -636,7 +703,10 @@ impl DesignOptionsWindowApp for App {
                     id: None,
                     choices: None,
                 }) {
-                    self.say(Level::Success, format!("“{name}” bileşimi kümelerin şimdiki birincilleriyle kaydedildi."));
+                    self.say(
+                        Level::Success,
+                        format!("“{name}” bileşimi kümelerin şimdiki birincilleriyle kaydedildi."),
+                    );
                     let id = done.combo.map(|c| c.id);
                     self.design_options_read(keep);
                     if let Some(w) = self.modules.arch_mut().design_options.as_mut() {
@@ -651,7 +721,8 @@ impl DesignOptionsWindowApp for App {
             Event::ComboApply | Event::ComboDelete => {
                 let keep = chosen.map(|(s, _)| s);
                 let Some(c) = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .design_options
                     .as_ref()
                     .and_then(|w| w.combos.get(w.combo).cloned())
@@ -660,15 +731,22 @@ impl DesignOptionsWindowApp for App {
                 };
                 let apply = matches!(event, Event::ComboApply);
                 let operation = if apply {
-                    OptionsOperation::ApplyCombo { combo: c.id.clone() }
+                    OptionsOperation::ApplyCombo {
+                        combo: c.id.clone(),
+                    }
                 } else {
-                    OptionsOperation::DeleteCombo { combo: c.id.clone() }
+                    OptionsOperation::DeleteCombo {
+                        combo: c.id.clone(),
+                    }
                 };
                 if self.design_options_command(operation).is_some() {
                     self.say(
                         Level::Success,
                         if apply {
-                            format!("“{}” uygulandı; çizim ve paftalar onun seçeneklerini gösteriyor.", c.name)
+                            format!(
+                                "“{}” uygulandı; çizim ve paftalar onun seçeneklerini gösteriyor.",
+                                c.name
+                            )
                         } else {
                             format!("“{}” bileşimi silindi.", c.name)
                         },
@@ -688,7 +766,7 @@ impl DesignOptionsWindowApp for App {
         Task::none()
     }
 
-    fn design_options_view(&self) -> Element<'_, Message>{
+    fn design_options_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().design_options else {
             return iced::widget::text("").into();
         };
@@ -702,7 +780,10 @@ impl DesignOptionsWindowApp for App {
             let text = Column::new()
                 .spacing(2)
                 .push(label::body(s.name.clone()))
-                .push(label::caption(format!("{} seçenek · birincil {primary}", s.options.len())));
+                .push(label::caption(format!(
+                    "{} seçenek · birincil {primary}",
+                    s.options.len()
+                )));
             let entry = row![
                 icon(crate::icons::from_web(Some("designOptions"))).size(18.0),
                 container(text).width(Fill)
@@ -756,13 +837,19 @@ impl DesignOptionsWindowApp for App {
             }
             if s.options.len() > 1 {
                 let names = || s.options.iter().map(|o| Choice::new(o.name.clone()));
-                let a = Select::new(names(), Some(w.compare.0), |i| msg(Event::CompareA(i))).searchable(false);
-                let b = Select::new(names(), Some(w.compare.1), |i| msg(Event::CompareB(i))).searchable(false);
+                let a = Select::new(names(), Some(w.compare.0), |i| msg(Event::CompareA(i)))
+                    .searchable(false);
+                let b = Select::new(names(), Some(w.compare.1), |i| msg(Event::CompareB(i)))
+                    .searchable(false);
                 right = right.push(words::field(
                     "Karşılaştır",
-                    row![container(a).width(Fill), label::caption("ile"), container(b).width(Fill)]
-                        .spacing(8)
-                        .align_y(Center),
+                    row![
+                        container(a).width(Fill),
+                        label::caption("ile"),
+                        container(b).width(Fill)
+                    ]
+                    .spacing(8)
+                    .align_y(Center),
                     None,
                 ));
                 let line = match &w.compared {
@@ -840,7 +927,7 @@ impl DesignOptionsWindowApp for App {
 
     /// Bileşimler: the project's combinations, each with what it shows, the one picked applied or deleted, a new one
     /// saved from the primaries.
-    fn design_options_combos<'a>(&'a self, w: &'a Window) -> Element<'a, Message>{
+    fn design_options_combos<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         let mut list = Column::new().spacing(2);
         for (i, c) in w.combos.iter().enumerate() {
             let shown: Vec<String> = c
@@ -895,9 +982,13 @@ impl DesignOptionsWindowApp for App {
             .searchable(false);
             out = out.push(words::field(
                 "Karşılaştır",
-                row![label::caption(c.name.clone()), label::caption("ile"), container(others).width(220.0)]
-                    .spacing(8)
-                    .align_y(Center),
+                row![
+                    label::caption(c.name.clone()),
+                    label::caption("ile"),
+                    container(others).width(220.0)
+                ]
+                .spacing(8)
+                .align_y(Center),
                 None,
             ));
             let line = match &w.combos_compared {
@@ -908,25 +999,24 @@ impl DesignOptionsWindowApp for App {
             out = out.push(words::summary(vec![line]));
         }
         out.push(
-                row![
-                    container(name).width(Fill),
-                    words::secondary(COMBO_SAVE, has_sets.then(|| msg(Event::ComboSave))),
-                    words::secondary(
-                        COMBO_APPLY,
-                        picked.filter(|c| !c.current).map(|_| msg(Event::ComboApply))
-                    ),
-                    words::secondary(COMBO_DELETE, picked.map(|_| msg(Event::ComboDelete))),
-                ]
-                .spacing(8)
-                .align_y(Center),
-            )
-            .into()
+            row![
+                container(name).width(Fill),
+                words::secondary(COMBO_SAVE, has_sets.then(|| msg(Event::ComboSave))),
+                words::secondary(
+                    COMBO_APPLY,
+                    picked
+                        .filter(|c| !c.current)
+                        .map(|_| msg(Event::ComboApply))
+                ),
+                words::secondary(COMBO_DELETE, picked.map(|_| msg(Event::ComboDelete))),
+            ]
+            .spacing(8)
+            .align_y(Center),
+        )
+        .into()
     }
 
-    fn design_options_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>{
+    fn design_options_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().design_options.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

@@ -14,13 +14,24 @@ use crate::map_survey_network::{RAD, ecef, moved_to};
 
 /// The used baselines' sessions in the archive's order: each `bo-N` naming two or more of them, with their places in
 /// `used` in the session's order.
-pub(crate) fn sessions_of(survey: &MapSurvey, used: &[&SurveyBaseline]) -> Vec<(String, Vec<usize>)> {
-    let at: std::collections::HashMap<&str, usize> = used.iter().enumerate().map(|(k, b)| (b.id.as_str(), k)).collect();
+pub(crate) fn sessions_of(
+    survey: &MapSurvey,
+    used: &[&SurveyBaseline],
+) -> Vec<(String, Vec<usize>)> {
+    let at: std::collections::HashMap<&str, usize> = used
+        .iter()
+        .enumerate()
+        .map(|(k, b)| (b.id.as_str(), k))
+        .collect();
     survey
         .baseline_sessions
         .iter()
         .filter_map(|s| {
-            let members: Vec<usize> = s.baselines.iter().filter_map(|b| at.get(b.as_str()).copied()).collect();
+            let members: Vec<usize> = s
+                .baselines
+                .iter()
+                .filter_map(|b| at.get(b.as_str()).copied())
+                .collect();
             (members.len() >= 2).then(|| (s.id.clone(), members))
         })
         .collect()
@@ -35,10 +46,18 @@ pub(crate) fn core_sessions(
     relevant: &[(String, Vec<usize>)],
     refuse: &dyn Fn(&'static str, String) -> Stop,
 ) -> Result<Vec<GnssSession>, Stop> {
-    let sd = |b: &SurveyBaseline| [b.covariance[0].sqrt(), b.covariance[3].sqrt(), b.covariance[5].sqrt()];
+    let sd = |b: &SurveyBaseline| {
+        [
+            b.covariance[0].sqrt(),
+            b.covariance[3].sqrt(),
+            b.covariance[5].sqrt(),
+        ]
+    };
     let mut out = Vec::with_capacity(relevant.len());
     for (id, members) in relevant {
-        let Some(s) = survey.baseline_session(id) else { continue };
+        let Some(s) = survey.baseline_session(id) else {
+            continue;
+        };
         let mut cross = Vec::new();
         for (p, &a) in members.iter().enumerate() {
             for &b in &members[p + 1..] {
@@ -70,7 +89,11 @@ pub(crate) fn core_sessions(
                 cross.push((row, col, cov));
             }
         }
-        out.push(GnssSession { name: id.clone(), baselines: members.clone(), cross });
+        out.push(GnssSession {
+            name: id.clone(),
+            baselines: members.clone(),
+            cross,
+        });
     }
     Ok(out)
 }
@@ -105,8 +128,16 @@ pub(crate) fn no_grid(path: &str) -> Stop {
 /// excluded, by length (the lower id number of equals), each one that joins two marks not yet joined is independent
 /// (Kruskal's shortest spanning tree: n − 1 for n marks tied together), the rest dependent; mark names compared as
 /// written.
-pub(crate) fn independent(survey: &MapSurvey, session: &kentos_commands::SurveyBaselineSession) -> (Vec<String>, Vec<String>) {
-    let number = |id: &str| id.rsplit('-').next().and_then(|n| n.parse::<u64>().ok()).unwrap_or(u64::MAX);
+pub(crate) fn independent(
+    survey: &MapSurvey,
+    session: &kentos_commands::SurveyBaselineSession,
+) -> (Vec<String>, Vec<String>) {
+    let number = |id: &str| {
+        id.rsplit('-')
+            .next()
+            .and_then(|n| n.parse::<u64>().ok())
+            .unwrap_or(u64::MAX)
+    };
     let mut members: Vec<&SurveyBaseline> = session
         .baselines
         .iter()

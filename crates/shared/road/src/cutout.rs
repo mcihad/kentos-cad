@@ -43,7 +43,12 @@ fn ccw(t: [[f64; 3]; 3]) -> Option<[Vec2; 3]> {
 
 fn source(t: &[Vec2; 3]) -> Source {
     Source {
-        edges: (0..3).map(|k| Edge::Seg { a: t[k], b: t[(k + 1) % 3] }).collect(),
+        edges: (0..3)
+            .map(|k| Edge::Seg {
+                a: t[k],
+                b: t[(k + 1) % 3],
+            })
+            .collect(),
         points: Some(t.to_vec()),
         cut: None,
     }
@@ -66,7 +71,12 @@ struct Grid {
 
 impl Grid {
     fn of(tris: &[[Vec2; 3]]) -> Grid {
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for t in tris {
             for p in t {
                 x0 = x0.min(p.x);
@@ -80,7 +90,14 @@ impl Grid {
         let nx = (((x1 - x0) / size).ceil() as usize).clamp(1, 4096);
         let ny = (((y1 - y0) / size).ceil() as usize).clamp(1, 4096);
         let size = ((x1 - x0) / nx as f64).max((y1 - y0) / ny as f64).max(1e-6);
-        let mut g = Grid { x0, y0, size, nx, ny, cells: vec![Vec::new(); nx * ny] };
+        let mut g = Grid {
+            x0,
+            y0,
+            size,
+            nx,
+            ny,
+            cells: vec![Vec::new(); nx * ny],
+        };
         for (i, t) in tris.iter().enumerate() {
             let (a, b) = g.span(bounds(t));
             for y in a.1..=b.1 {
@@ -93,8 +110,12 @@ impl Grid {
     }
 
     fn cell(&self, x: f64, y: f64) -> (usize, usize) {
-        let cx = ((x - self.x0) / self.size).floor().clamp(0.0, (self.nx - 1) as f64) as usize;
-        let cy = ((y - self.y0) / self.size).floor().clamp(0.0, (self.ny - 1) as f64) as usize;
+        let cx = ((x - self.x0) / self.size)
+            .floor()
+            .clamp(0.0, (self.nx - 1) as f64) as usize;
+        let cy = ((y - self.y0) / self.size)
+            .floor()
+            .clamp(0.0, (self.ny - 1) as f64) as usize;
         (cx, cy)
     }
 
@@ -187,7 +208,10 @@ impl Job<'_> {
                 out.kept += 1;
                 continue;
             }
-            if near.iter().any(|&i| t.iter().all(|p| inside(&self.foot[i as usize], *p))) {
+            if near
+                .iter()
+                .any(|&i| t.iter().all(|p| inside(&self.foot[i as usize], *p)))
+            {
                 out.dropped += 1;
                 continue;
             }
@@ -198,7 +222,8 @@ impl Job<'_> {
             let unchanged = areas.len() == 1
                 && areas[0].holes.is_empty()
                 && areas[0].outer.pts.len() == 3
-                && t.iter().all(|p| areas[0].outer.pts.iter().any(|q| q.x == p.x && q.y == p.y));
+                && t.iter()
+                    .all(|p| areas[0].outer.pts.iter().any(|q| q.x == p.x && q.y == p.y));
             if unchanged {
                 out.triangles.push(whole);
                 out.kept += 1;
@@ -220,16 +245,22 @@ impl Job<'_> {
                 triangulate_into(&pts, &rings, &mut idx);
                 let ids: Vec<Corner> = pts
                     .iter()
-                    .map(|p| match (0..3).find(|&k| corners[k][0] == p.x && corners[k][1] == p.y) {
-                        Some(k) => Corner::Terrain(tri[k]),
-                        None => {
-                            out.vertices.push([p.x, p.y, height(corners, *p)]);
-                            Corner::New((out.vertices.len() - 1) as u32)
-                        }
-                    })
+                    .map(
+                        |p| match (0..3).find(|&k| corners[k][0] == p.x && corners[k][1] == p.y) {
+                            Some(k) => Corner::Terrain(tri[k]),
+                            None => {
+                                out.vertices.push([p.x, p.y, height(corners, *p)]);
+                                Corner::New((out.vertices.len() - 1) as u32)
+                            }
+                        },
+                    )
                     .collect();
                 for c in idx.as_chunks::<3>().0.iter() {
-                    out.triangles.push([ids[c[0] as usize], ids[c[1] as usize], ids[c[2] as usize]]);
+                    out.triangles.push([
+                        ids[c[0] as usize],
+                        ids[c[1] as usize],
+                        ids[c[2] as usize],
+                    ]);
                 }
             }
         }
@@ -240,14 +271,22 @@ impl Job<'_> {
     #[cfg(not(target_arch = "wasm32"))]
     fn parts(&self) -> Vec<Part> {
         let n = self.triangles.len();
-        let threads = std::thread::available_parallelism().map_or(1, |k| k.get()).min(16);
+        let threads = std::thread::available_parallelism()
+            .map_or(1, |k| k.get())
+            .min(16);
         if n < 50_000 || threads < 2 {
             return vec![self.run(0..n)];
         }
         let step = n.div_ceil(threads);
         std::thread::scope(|s| {
-            let handles: Vec<_> = (0..n).step_by(step).map(|a| s.spawn(move || self.run(a..(a + step).min(n)))).collect();
-            handles.into_iter().map(|h| h.join().unwrap_or_else(|e| std::panic::resume_unwind(e))).collect()
+            let handles: Vec<_> = (0..n)
+                .step_by(step)
+                .map(|a| s.spawn(move || self.run(a..(a + step).min(n))))
+                .collect();
+            handles
+                .into_iter()
+                .map(|h| h.join().unwrap_or_else(|e| std::panic::resume_unwind(e)))
+                .collect()
         })
     }
 
@@ -260,16 +299,29 @@ impl Job<'_> {
 /// The terrain (`vertices`, `triangles`) less the corridors' triangles `footprint` in plan. The triangles keep the
 /// terrain's order; a clipped one's pieces stand in its place.
 pub fn cut_out(vertices: &[[f64; 3]], triangles: &[[u32; 3]], footprint: &[[[f64; 3]; 3]]) -> Cut {
-    let mut out = Cut { vertices: vertices.to_vec(), ..Cut::default() };
+    let mut out = Cut {
+        vertices: vertices.to_vec(),
+        ..Cut::default()
+    };
     let foot: Vec<[Vec2; 3]> = footprint.iter().filter_map(|t| ccw(*t)).collect();
     if foot.is_empty() {
-        out.triangles = triangles.iter().filter(|t| t.iter().all(|&k| (k as usize) < vertices.len())).copied().collect();
+        out.triangles = triangles
+            .iter()
+            .filter(|t| t.iter().all(|&k| (k as usize) < vertices.len()))
+            .copied()
+            .collect();
         out.kept = out.triangles.len();
         return out;
     }
     let grid = Grid::of(&foot);
     let boxes: Vec<[f64; 4]> = foot.iter().map(bounds).collect();
-    let job = Job { vertices, triangles, foot: &foot, boxes: &boxes, grid: &grid };
+    let job = Job {
+        vertices,
+        triangles,
+        foot: &foot,
+        boxes: &boxes,
+        grid: &grid,
+    };
     for part in job.parts() {
         let base = out.vertices.len() as u32;
         out.vertices.extend(part.vertices);

@@ -413,14 +413,24 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesStretch) -> Resu
     // writes take the carried places, so a T junction two of them share is not split.
     let follow = match input.topology {
         Some(topology) => {
-            let (extra, _) = topology_follow::inside_edges(doc, store, topology.points, &edits, true);
+            let (extra, _) =
+                topology_follow::inside_edges(doc, store, topology.points, &edits, true);
             for (slot, shape) in topology_follow::carry_edited(&edits, &extra, topology.points) {
-                let Some(k) = edits.iter().position(|(s, ..)| *s == slot) else { continue };
-                let (Some(uid), Some(geometry)) = (doc.uid(slot), edit_geometry(shape.clone())) else { continue };
+                let Some(k) = edits.iter().position(|(s, ..)| *s == slot) else {
+                    continue;
+                };
+                let (Some(uid), Some(geometry)) = (doc.uid(slot), edit_geometry(shape.clone()))
+                else {
+                    continue;
+                };
                 edits[k].2 = shape;
-                changes[k] = EntityEdit::Update { uid: uid.to_string(), geometry };
+                changes[k] = EntityEdit::Update {
+                    uid: uid.to_string(),
+                    geometry,
+                };
             }
-            topology_follow::neighbours_with(doc, store, topology.points, &edits, &extra).map(|n| (topology, n))
+            topology_follow::neighbours_with(doc, store, topology.points, &edits, &extra)
+                .map(|n| (topology, n))
         }
         None => None,
     };

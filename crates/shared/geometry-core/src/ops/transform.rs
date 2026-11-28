@@ -68,7 +68,12 @@ pub fn align_swapped_up(align: Option<TextAlign>) -> Option<TextAlign> {
 /// turns back the one that leaves it upright: its baseline when the baseline's image reads upside down (a half
 /// turn more, left and right swapped), else its up (the baseline's image, top and bottom swapped). Mirrored
 /// always turns back the baseline.
-pub fn text_frame(rotation: f64, align: Option<TextAlign>, m: &Affine, policy: TextPolicy) -> (f64, Option<TextAlign>, bool) {
+pub fn text_frame(
+    rotation: f64,
+    align: Option<TextAlign>,
+    m: &Affine,
+    policy: TextPolicy,
+) -> (f64, Option<TextAlign>, bool) {
     let rad = (rotation * PI) / 180.0;
     let dir = apply_linear(m, Vec2::new(cos(rad), sin(rad)));
     let raw = (atan2(dir.y, dir.x) * 180.0) / PI;
@@ -442,7 +447,11 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
             Shape::Hatch {
                 // The exact boundary goes along (docs/adr/0328 §1): arcs, ellipses and curves by `m`.
                 boundary: boundary.as_ref().and_then(|b| {
-                    crate::geom::hatch_boundary::mapped(b, &|p| Some(apply(m, p)), [m[0], m[1], m[2], m[3]])
+                    crate::geom::hatch_boundary::mapped(
+                        b,
+                        &|p| Some(apply(m, p)),
+                        [m[0], m[1], m[2], m[3]],
+                    )
                 }),
                 ring: ring.iter().map(|&p| apply(m, p)).collect(),
                 holes: holes.as_ref().map(|hs| {
@@ -516,20 +525,20 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
         } => {
             let (rotation, align, _) = text_frame(*rotation, *align, m, policy);
             Shape::Text {
-            p: apply(m, *p),
-            text: text.clone(),
-            height: height * s,
-            rotation,
-            align,
-            width_factor: *width_factor,
-            mask: *mask,
-            box_width: box_width.map(|w| w * s),
-            line_spacing: *line_spacing,
-            runs: runs.clone(),
-            flow: flow.as_ref().map(|f| Box::new(f.scaled(s))),
-            face: face.clone(),
-            path: None,
-        }
+                p: apply(m, *p),
+                text: text.clone(),
+                height: height * s,
+                rotation,
+                align,
+                width_factor: *width_factor,
+                mask: *mask,
+                box_width: box_width.map(|w| w * s),
+                line_spacing: *line_spacing,
+                runs: runs.clone(),
+                flow: flow.as_ref().map(|f| Box::new(f.scaled(s))),
+                face: face.clone(),
+                path: None,
+            }
         }
         // Along a curve: its frame moves and turns, its curve scales; mirrored,
         // the curve is turned the other way so that it still reads (docs/adr/0196 §3).
@@ -586,7 +595,9 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
         } => Shape::Leader {
             arms: arms.as_ref().map(|list| {
                 list.iter()
-                    .map(|a| crate::geom::leader::Arm { pts: a.pts.iter().map(|&p| apply(m, p)).collect() })
+                    .map(|a| crate::geom::leader::Arm {
+                        pts: a.pts.iter().map(|&p| apply(m, p)).collect(),
+                    })
                     .collect()
             }),
             blocks: blocks.clone(),
@@ -666,7 +677,8 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
                 return shape.clone();
             };
             let (pts, bulges) = if is_reflection(m) {
-                let r = crate::geom::bulge::reverse_bulge_path(&pts, bulges.as_deref(), wall.closed);
+                let r =
+                    crate::geom::bulge::reverse_bulge_path(&pts, bulges.as_deref(), wall.closed);
                 (r.pts, r.bulges)
             } else {
                 (pts, bulges)
@@ -682,7 +694,11 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
             let ring = |r: &crate::geom::arrangement::Ring| crate::geom::arrangement::Ring {
                 pts: r.pts.iter().map(|q| apply(m, *q)).collect(),
                 bulges: r.bulges.as_ref().map(|b| {
-                    if is_reflection(m) { b.iter().map(|x| -x).collect() } else { b.clone() }
+                    if is_reflection(m) {
+                        b.iter().map(|x| -x).collect()
+                    } else {
+                        b.clone()
+                    }
                 }),
             };
             let mut spec = space.clone();
@@ -694,7 +710,11 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
                 for run in &mut edge.runs {
                     let pts: Vec<Vec2> = run.pts.iter().map(|q| apply(m, *q)).collect();
                     if is_reflection(m) {
-                        let r = crate::geom::bulge::reverse_bulge_path(&pts, run.bulges.as_deref(), false);
+                        let r = crate::geom::bulge::reverse_bulge_path(
+                            &pts,
+                            run.bulges.as_deref(),
+                            false,
+                        );
                         let edges = r.pts.len().saturating_sub(1);
                         run.bulges = r
                             .bulges
@@ -720,9 +740,13 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
         // Their paths map, their sizes scale; a mirror turns a grid's arc over (docs/adr/0343 §2).
         Shape::Grid { pts, bulges, grid } => Shape::Grid {
             pts: pts.iter().map(|q| apply(m, *q)).collect(),
-            bulges: bulges
-                .as_ref()
-                .map(|b| if is_reflection(m) { b.iter().map(|x| -x).collect() } else { b.clone() }),
+            bulges: bulges.as_ref().map(|b| {
+                if is_reflection(m) {
+                    b.iter().map(|x| -x).collect()
+                } else {
+                    b.clone()
+                }
+            }),
             grid: grid.clone(),
         },
         // A mirror flips its box over its depth: a rectangle or a circle onto itself, its anchor to the other side;
@@ -791,7 +815,8 @@ pub fn transform_shape_in(shape: &Shape, m: &Affine, policy: TextPolicy, font: F
             if let Some(a) = &mut mark.angle {
                 let rad = *a * crate::jsmath::PI / 180.0;
                 let (dx, dy) = (crate::jsmath::cos(rad), crate::jsmath::sin(rad));
-                *a = crate::jsmath::atan2(mb * dx + md * dy, ma * dx + mc * dy) * 180.0 / crate::jsmath::PI;
+                *a = crate::jsmath::atan2(mb * dx + md * dy, ma * dx + mc * dy) * 180.0
+                    / crate::jsmath::PI;
             }
             // A mirror turns which side a section looks to.
             if ma * md - mb * mc < 0.0 {
@@ -940,11 +965,8 @@ pub fn transform_entities(list: &[Entity], ms: &[Affine]) -> Vec<Entity> {
 
 pub(crate) static OPS: &[Op] = &[
     // The web's frozen rule for a mirror's texts (docs/adr/0292).
-    op!("transformEntity", |e: Entity, m: Affine| e.with(transform_shape_with(
-        &e.shape,
-        &m,
-        TextPolicy::Web
-    ))),
+    op!("transformEntity", |e: Entity, m: Affine| e
+        .with(transform_shape_with(&e.shape, &m, TextPolicy::Web))),
     op!("translateEntity", |e: Entity, dx: f64, dy: f64| {
         translate_entity(&e, dx, dy)
     }),

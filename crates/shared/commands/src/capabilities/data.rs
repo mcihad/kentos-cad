@@ -27,7 +27,12 @@ pub(super) const ENTRIES: &[Entry] = &[
             &["not_an_underlay", "invalid_underlay"],
             REVISION,
         ],
-        warnings: &["objects_left_out", "layer_hidden", "pdf_left_out", "ties_break"],
+        warnings: &[
+            "objects_left_out",
+            "layer_hidden",
+            "pdf_left_out",
+            "ties_break",
+        ],
         targets: none,
     },
     Entry {
@@ -594,7 +599,12 @@ pub(super) const ENTRIES: &[Entry] = &[
     // Kurumdaki alan adları (plan/map-cad.md MAP-17, docs/adr/5180): read-only.
     Entry {
         id: "cad.profiles.names",
-        refusals: &[&["unknown_profile", "invalid_profile", "unknown_mapping", "invalid_profile_mapping"]],
+        refusals: &[&[
+            "unknown_profile",
+            "invalid_profile",
+            "unknown_mapping",
+            "invalid_profile_mapping",
+        ]],
         warnings: &[],
         targets: none,
     },
@@ -608,8 +618,21 @@ pub(super) const ENTRIES: &[Entry] = &[
     // Kataloğa taşı (plan/map-cad.md MAP-04, docs/adr/5340).
     Entry {
         id: "cad.profiles.carry",
-        refusals: &[REVISION, &["unknown_profile", "invalid_profile", "layer_locked", "layer_refused", "nothing_to_set"]],
-        warnings: &["catalog_objects_left", "profile_field_differs", "profile_domain_differs"],
+        refusals: &[
+            REVISION,
+            &[
+                "unknown_profile",
+                "invalid_profile",
+                "layer_locked",
+                "layer_refused",
+                "nothing_to_set",
+            ],
+        ],
+        warnings: &[
+            "catalog_objects_left",
+            "profile_field_differs",
+            "profile_domain_differs",
+        ],
         targets: none,
     },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.

@@ -519,12 +519,18 @@ fn the_roof_s_measures_are_what_the_rules_read() {
     assert_eq!(measures.len(), 1, "{measures:?}");
     let m = &measures[0];
     assert!(m.sloping && !m.snow_guard, "{m:?}");
-    assert!((m.ridge.expect("a ridge") - 4.47).abs() < 0.005, "{:?}", m.ridge);
+    assert!(
+        (m.ridge.expect("a ridge") - 4.47).abs() < 0.005,
+        "{:?}",
+        m.ridge
+    );
     assert_eq!(m.overhang, Some(1.2));
     assert!(m.slopes.iter().all(|s| *s == Some(75.0)), "{:?}", m.slopes);
     let tops: Vec<Option<f64>> = m.parts.iter().map(|p| p.top).collect();
     assert_eq!(tops, [Some(0.9), Some(0.5), None, None]);
-    let facade = m.parts[2].facade.expect("the first window's facade distance");
+    let facade = m.parts[2]
+        .facade
+        .expect("the first window's facade distance");
     assert!((facade - 0.66).abs() < 0.005, "{facade}");
     assert_eq!(m.window_gaps.len(), 1, "{:?}", m.window_gaps);
     let (a, b, apart) = m.window_gaps[0];
@@ -576,7 +582,13 @@ fn a_flue_in_its_walls_and_the_chimney_over_it_are_one_ifc_chimney_and_a_niche_a
         .find_map(|(u, e)| matches!(e, Entity::Roof(_)).then_some(u))
         .unwrap();
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> serde_json::Value {
-        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).expect("runs");
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .expect("runs");
         assert_eq!(answer["status"], "completed", "{answer}");
         answer
     };
@@ -666,7 +678,12 @@ fn a_flue_in_its_walls_and_the_chimney_over_it_are_one_ifc_chimney_and_a_niche_a
     // Every body closed (docs/adr/8071 §1): the roof's faces, the chimney's stack and hollows, the walls, slabs, stair.
     for e in &b.elements {
         for s in &e.shapes {
-            assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{} {s:?}", e.name);
+            assert_eq!(
+                kentos_ifc::closed::faults(s),
+                Vec::<String>::new(),
+                "{} {s:?}",
+                e.name
+            );
         }
     }
     let lost: Vec<&String> = written.left.iter().map(|l| &l.id).collect();
@@ -698,13 +715,22 @@ fn a_flue_in_its_walls_and_the_chimney_over_it_are_one_ifc_chimney_and_a_niche_a
             other => panic!("{other:?}"),
         })
         .collect();
-    assert!(near(bottoms[0], 0.0) && near(bottoms[1], 3.0) && near(bottoms[2], 6.0), "{bottoms:?}");
-    let hollows: Vec<&kentos_ifc::building::Opening> =
-        b.openings.iter().filter(|o| o.predefined == "OPENING" && o.filler == Some(k)).collect();
+    assert!(
+        near(bottoms[0], 0.0) && near(bottoms[1], 3.0) && near(bottoms[2], 6.0),
+        "{bottoms:?}"
+    );
+    let hollows: Vec<&kentos_ifc::building::Opening> = b
+        .openings
+        .iter()
+        .filter(|o| o.predefined == "OPENING" && o.filler == Some(k))
+        .collect();
     assert_eq!(hollows.len(), 2, "{:?}", b.openings);
     let niche_id = kentos_domain::Uuid::parse_str(&niche).unwrap().as_u128();
-    let recess: Vec<&kentos_ifc::building::Opening> =
-        b.openings.iter().filter(|o| o.predefined == "RECESS").collect();
+    let recess: Vec<&kentos_ifc::building::Opening> = b
+        .openings
+        .iter()
+        .filter(|o| o.predefined == "RECESS")
+        .collect();
     assert_eq!(recess.len(), 1);
     assert_eq!((recess[0].id, recess[0].filler), (Some(niche_id), None));
     assert!(near(recess[0].bottom, 0.9) && near(recess[0].top, 1.5));
@@ -712,7 +738,10 @@ fn a_flue_in_its_walls_and_the_chimney_over_it_are_one_ifc_chimney_and_a_niche_a
     // The text: the chimney fills its hollows.
     let text = kentos_ifc::building::write(&b);
     assert!(text.contains("IFCCHIMNEY("), "the chimney");
-    assert_eq!(text.matches("IFCRELFILLSELEMENT(").count(), b.openings.iter().filter(|o| o.filler.is_some()).count());
+    assert_eq!(
+        text.matches("IFCRELFILLSELEMENT(").count(),
+        b.openings.iter().filter(|o| o.filler.is_some()).count()
+    );
 }
 
 /// Çatı katmanları (docs/adr/8071 §8): the hip roof over the 1. kat at 33 % with its layers top down — kiremit 3 cm, lata
@@ -729,8 +758,13 @@ fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set(
     use kentos_geometry_core::geom::section::Height;
     use kentos_ifc::building::{Class, Layer};
     let mut doc = building();
-    let eaves = roofs::eaves_from_walls(&doc, kentos_commands::Vec2 { x: 6.0, y: 4.5 }, Some("k1"), 0.5)
-        .expect("the walls enclose the point");
+    let eaves = roofs::eaves_from_walls(
+        &doc,
+        kentos_commands::Vec2 { x: 6.0, y: 4.5 },
+        Some("k1"),
+        0.5,
+    )
+    .expect("the walls enclose the point");
     let slopes = vec![33.0; eaves.len()];
     let answer = registry::run(
         &mut ExecutionContext::new(&mut doc),
@@ -749,7 +783,13 @@ fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set(
     assert_eq!(answer["status"], "completed", "{answer}");
     let roof = answer["output"]["uids"][0].as_str().unwrap().to_owned();
     let thick = [0.03, 0.03, 0.025, 0.05, 0.125];
-    let layers = ["MM-CKAP-KIREMIT", "MM-CKAP-GENEL", "MM-CKTA-CAM", "MM-ISYA-GENEL", "MM-CTAS-CAM"];
+    let layers = [
+        "MM-CKAP-KIREMIT",
+        "MM-CKAP-GENEL",
+        "MM-CKTA-CAM",
+        "MM-ISYA-GENEL",
+        "MM-CTAS-CAM",
+    ];
     let k = (1.0_f64 + 0.33 * 0.33).sqrt();
     let near = |a: f64, b: f64| (a - b).abs() < 1e-12;
     // The section model: four faces of five plates each, top down.
@@ -761,22 +801,46 @@ fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set(
     for face in plates.chunks(5) {
         let mut over: Option<(f64, f64)> = None;
         for (n, &i) in face.iter().enumerate() {
-            let Height::Sloped(s) = &m.solids[i].height else { panic!("a sloped plate") };
-            assert!((s.dx * s.dx + s.dy * s.dy - 0.33 * 0.33).abs() < 1e-12, "33 %");
-            assert!(near(s.thickness, thick[n] * k), "{n}: {} upright, {} across", s.thickness, thick[n]);
+            let Height::Sloped(s) = &m.solids[i].height else {
+                panic!("a sloped plate")
+            };
+            assert!(
+                (s.dx * s.dx + s.dy * s.dy - 0.33 * 0.33).abs() < 1e-12,
+                "33 %"
+            );
+            assert!(
+                near(s.thickness, thick[n] * k),
+                "{n}: {} upright, {} across",
+                s.thickness,
+                thick[n]
+            );
             if let Some((top, t)) = over {
                 assert!(near(s.top, top - t), "{n} right under the one over it");
             }
             over = Some((s.top, s.thickness));
             assert_eq!(m.looks[i].layer, layers[n]);
-            assert_eq!(m.looks[i].heavy, n == 4, "the rafters, its structure, heavy");
-            assert_eq!(m.solids[i].finish.is_some(), n == 0, "its covering its top's finish");
+            assert_eq!(
+                m.looks[i].heavy,
+                n == 4,
+                "the rafters, its structure, heavy"
+            );
+            assert_eq!(
+                m.solids[i].finish.is_some(),
+                n == 0,
+                "its covering its top's finish"
+            );
         }
     }
     // B-B cuts every layer: the insulation its zigzag, the rafters hatched as wood, each outlined on its layer.
     let b = mark(&doc, ViewMarkForm::Section, "B");
     let out = derive(&mut doc, b);
-    assert!(!out.left_out.iter().any(|l| l.why == BuildingSectionLeft::Roof), "{:?}", out.left_out);
+    assert!(
+        !out.left_out
+            .iter()
+            .any(|l| l.why == BuildingSectionLeft::Roof),
+        "{:?}",
+        out.left_out
+    );
     let block = doc.block(sections::block_id(b)).unwrap();
     let hatch = |layer: &str| {
         block.entities.iter().find_map(|e| match e {
@@ -810,31 +874,74 @@ fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set(
         } else {
             0.08
         };
-        assert!(sides.iter().all(|d| (d - side(t)).abs() < 1e-9), "{t}: {sides:?}");
+        assert!(
+            sides.iter().all(|d| (d - side(t)).abs() < 1e-9),
+            "{t}: {sides:?}"
+        );
         assert!(z.len() > 100, "{} points", z.len());
     }
-    assert_eq!(roof_zigzags, 2 + 1, "the two long faces' bands and the ground slab's 5 cm insulation");
+    assert_eq!(
+        roof_zigzags,
+        2 + 1,
+        "the two long faces' bands and the ground slab's 5 cm insulation"
+    );
     // The roof's two, from each eaves (+6.00 less the band's depth) up to the ridge (+7.69 less the layers over it).
-    let roof: Vec<&Vec<(f64, f64)>> = zigzags.iter().filter(|z| z.iter().all(|q| q.1 > 5.0)).collect();
+    let roof: Vec<&Vec<(f64, f64)>> = zigzags
+        .iter()
+        .filter(|z| z.iter().all(|q| q.1 > 5.0))
+        .collect();
     assert_eq!(roof.len(), 2 + 1, "and the terrace's, under the eaves");
-    assert_eq!(roof.iter().filter(|z| z.iter().any(|q| q.1 > 7.0)).count(), 2);
+    assert_eq!(
+        roof.iter().filter(|z| z.iter().any(|q| q.1 > 7.0)).count(),
+        2
+    );
     assert!(hatch("mm-isya-genel-t").is_none(), "no tiled rows");
-    assert!(hatch("mm-ctas-cam-t").is_some_and(|p| p.contains("SN23")), "the rafters' hatch");
+    assert!(
+        hatch("mm-ctas-cam-t").is_some_and(|p| p.contains("SN23")),
+        "the rafters' hatch"
+    );
     assert!(hatch("mm-ckap-kiremit-t").is_none(), "tiles are no wood");
-    for layer in ["mm-ckap-kiremit", "mm-ckap-genel", "mm-ckta-cam", "mm-isya-genel", "mm-ctas-cam"] {
+    for layer in [
+        "mm-ckap-kiremit",
+        "mm-ckap-genel",
+        "mm-ckta-cam",
+        "mm-isya-genel",
+        "mm-ctas-cam",
+    ] {
         assert!(
-            block.entities.iter().any(|e| matches!(e, Entity::Polyline(p) if p.base.layer_id == layer)),
+            block
+                .entities
+                .iter()
+                .any(|e| matches!(e, Entity::Polyline(p) if p.base.layer_id == layer)),
             "{layer}'s outline"
         );
     }
-    assert!(!block.entities.iter().any(|e| e.base().layer_id == "mm-cati-kiremit"), "no one-build-up band");
+    assert!(
+        !block
+            .entities
+            .iter()
+            .any(|e| e.base().layer_id == "mm-cati-kiremit"),
+        "no one-build-up band"
+    );
     // The IFC model: one layer set, top down, in place of the roof's material.
-    let (bld, written) = kentos_native_application::arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    let (bld, written) =
+        kentos_native_application::arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new());
-    let at = bld.elements.iter().position(|e| e.class == Class::Roof).expect("the roof");
-    let (_, name, set) = bld.layer_sets.iter().find(|(i, ..)| *i == at).expect("its layer set");
+    let at = bld
+        .elements
+        .iter()
+        .position(|e| e.class == Class::Roof)
+        .expect("the roof");
+    let (_, name, set) = bld
+        .layer_sets
+        .iter()
+        .find(|(i, ..)| *i == at)
+        .expect("its layer set");
     assert_eq!(name, "Çatı katmanları");
-    let layer = |name: &str, material: Option<&str>, thickness: f64, category: Option<&'static str>| Layer {
+    let layer = |name: &str,
+                 material: Option<&str>,
+                 thickness: f64,
+                 category: Option<&'static str>| Layer {
         name: name.into(),
         material: material.map(Into::into),
         thickness,
@@ -850,17 +957,27 @@ fn a_layered_roof_is_its_layers_plates_cut_in_the_section_and_one_ifc_layer_set(
             layer("Mertek", Some("Çam"), 0.125, Some("LoadBearing")),
         ]
     );
-    assert_eq!(kentos_ifc::closed::open_bodies(&bld), Vec::<(String, String)>::new());
+    assert_eq!(
+        kentos_ifc::closed::open_bodies(&bld),
+        Vec::<(String, String)>::new()
+    );
     let f = kentos_ifc::building::write(&bld);
     // The roof's own set (its name “Çatı katmanları”, STEP's \X2\ for its Ç and ı): one, of its five layers. The
     // walls' layer sets (docs/adr/8105) are theirs.
-    let roof_sets: Vec<&str> =
-        f.lines().filter(|l| l.contains("IFCMATERIALLAYERSET(") && l.contains("'\\X2\\00C7\\X0\\at")).collect();
+    let roof_sets: Vec<&str> = f
+        .lines()
+        .filter(|l| l.contains("IFCMATERIALLAYERSET(") && l.contains("'\\X2\\00C7\\X0\\at"))
+        .collect();
     assert_eq!(roof_sets.len(), 1, "{roof_sets:?}");
-    let refs = roof_sets[0].split("((").nth(1).and_then(|r| r.split(')').next()).unwrap_or_default();
+    let refs = roof_sets[0]
+        .split("((")
+        .nth(1)
+        .and_then(|r| r.split(')').next())
+        .unwrap_or_default();
     assert_eq!(refs.split(',').count(), 5, "{}", roof_sets[0]);
     if std::env::var_os("KENTOS_WRITE_IFC_ROOF_LAYERS").is_some() {
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/katmanli-cati.ifc");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/arch/v1/ifc/katmanli-cati.ifc");
         std::fs::write(out, f).expect("the file kept");
     }
 }
@@ -875,7 +992,14 @@ fn an_l_roof_turns_in_with_a_valley_through_the_section_and_the_ifc() {
     use kentos_geometry_core::geom::section::Height;
     use kentos_ifc::building::Class;
     let mut doc = building();
-    let l = [(-0.625, -0.625), (12.625, -0.625), (12.625, 4.0), (6.0, 4.0), (6.0, 9.625), (-0.625, 9.625)];
+    let l = [
+        (-0.625, -0.625),
+        (12.625, -0.625),
+        (12.625, 4.0),
+        (6.0, 4.0),
+        (6.0, 9.625),
+        (-0.625, 9.625),
+    ];
     let pts: Vec<serde_json::Value> = l.iter().map(|(x, y)| json!({"x": x, "y": y})).collect();
     let answer = registry::run(
         &mut ExecutionContext::new(&mut doc),
@@ -887,13 +1011,25 @@ fn an_l_roof_turns_in_with_a_valley_through_the_section_and_the_ifc() {
     assert_eq!(answer["status"], "completed", "{answer}");
     let roof = answer["output"]["uids"][0].as_str().unwrap().to_owned();
     // Its plan: six faces, one valley down to (6, 4).
-    let ring: Vec<kentos_geometry_core::Vec2> = l.iter().map(|(x, y)| kentos_geometry_core::Vec2::new(*x, *y)).collect();
-    let spec = core::RoofSpec { slopes: vec![Some(33.0); 6], ..Default::default() };
+    let ring: Vec<kentos_geometry_core::Vec2> = l
+        .iter()
+        .map(|(x, y)| kentos_geometry_core::Vec2::new(*x, *y))
+        .collect();
+    let spec = core::RoofSpec {
+        slopes: vec![Some(33.0); 6],
+        ..Default::default()
+    };
     assert_eq!(core::faces(&ring, &spec).unwrap().len(), 6);
-    let valleys: Vec<core::RoofLine> =
-        core::lines(&ring, &spec).unwrap().into_iter().filter(|x| x.kind == core::Line::Valley).collect();
+    let valleys: Vec<core::RoofLine> = core::lines(&ring, &spec)
+        .unwrap()
+        .into_iter()
+        .filter(|x| x.kind == core::Line::Valley)
+        .collect();
     assert_eq!(valleys.len(), 1);
-    assert!((valleys[0].b.x - 6.0).abs() < 1e-9 && (valleys[0].b.y - 4.0).abs() < 1e-9, "{valleys:?}");
+    assert!(
+        (valleys[0].b.x - 6.0).abs() < 1e-9 && (valleys[0].b.y - 4.0).abs() < 1e-9,
+        "{valleys:?}"
+    );
     // The section model: a sloped plate for each face, 33 % down to its eaves.
     let m = sections::model(&doc);
     let plates: Vec<usize> = (0..m.solids.len())
@@ -901,18 +1037,36 @@ fn an_l_roof_turns_in_with_a_valley_through_the_section_and_the_ifc() {
         .collect();
     assert_eq!(plates.len(), 6);
     for &i in &plates {
-        let Height::Sloped(s) = &m.solids[i].height else { panic!("a sloped plate") };
+        let Height::Sloped(s) = &m.solids[i].height else {
+            panic!("a sloped plate")
+        };
         assert!(((s.dx * s.dx + s.dy * s.dy).sqrt() - 0.33).abs() < 1e-12);
     }
     let b = mark(&doc, ViewMarkForm::Section, "B");
     let out = derive(&mut doc, b);
-    assert!(!out.left_out.iter().any(|x| x.why == BuildingSectionLeft::Roof), "{:?}", out.left_out);
+    assert!(
+        !out.left_out
+            .iter()
+            .any(|x| x.why == BuildingSectionLeft::Roof),
+        "{:?}",
+        out.left_out
+    );
     // The IFC model: its body closed, its volume the plan's area by its build-up.
-    let (bld, written) = kentos_native_application::arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    let (bld, written) =
+        kentos_native_application::arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new());
-    let e = bld.elements.iter().find(|e| e.class == Class::Roof).expect("the roof");
+    let e = bld
+        .elements
+        .iter()
+        .find(|e| e.class == Class::Roof)
+        .expect("the roof");
     for s in &e.shapes {
-        assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{}", e.name);
+        assert_eq!(
+            kentos_ifc::closed::faults(s),
+            Vec::<String>::new(),
+            "{}",
+            e.name
+        );
     }
     let v: f64 = e.shapes.iter().map(kentos_ifc::quantities::volume).sum();
     let want = (13.25 * 4.625 + 6.625 * 5.625) * 0.25;
@@ -923,8 +1077,16 @@ fn an_l_roof_turns_in_with_a_valley_through_the_section_and_the_ifc() {
 fn a_saved_t_roof_keeps_its_two_valleys_and_is_cut_in_the_section() {
     use kentos_geometry_core::geom::roof as core;
     let mut doc = building();
-    let t = [(-0.625, -0.625), (12.625, -0.625), (12.625, 4.0), (7.625, 4.0),
-        (7.625, 9.625), (2.625, 9.625), (2.625, 4.0), (-0.625, 4.0)];
+    let t = [
+        (-0.625, -0.625),
+        (12.625, -0.625),
+        (12.625, 4.0),
+        (7.625, 4.0),
+        (7.625, 9.625),
+        (2.625, 9.625),
+        (2.625, 4.0),
+        (-0.625, 4.0),
+    ];
     let points: Vec<_> = t.iter().map(|(x, y)| json!({"x": x, "y": y})).collect();
     let created = registry::run(
         &mut ExecutionContext::new(&mut doc),
@@ -934,23 +1096,50 @@ fn a_saved_t_roof_keeps_its_two_valleys_and_is_cut_in_the_section() {
     assert_eq!(created["status"], "completed", "{created}");
     let uid = created["output"]["uids"][0].as_str().expect("roof id");
     let bytes = kentos_kcad::encode(&doc.to_snapshot_v2()).expect("save");
-    let mut reopened = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("read"))
-        .expect("reopen");
-    let slot = reopened.slot_of(uid.parse().expect("roof UUID")).expect("saved roof");
-    let Some(Entity::Roof(roof)) = reopened.get(slot) else { panic!("the saved T roof") };
-    let ring: Vec<_> = roof.roof.pts.iter().map(|p| kentos_geometry_core::Vec2::new(p.x, p.y)).collect();
+    let mut reopened =
+        Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("read")).expect("reopen");
+    let slot = reopened
+        .slot_of(uid.parse().expect("roof UUID"))
+        .expect("saved roof");
+    let Some(Entity::Roof(roof)) = reopened.get(slot) else {
+        panic!("the saved T roof")
+    };
+    let ring: Vec<_> = roof
+        .roof
+        .pts
+        .iter()
+        .map(|p| kentos_geometry_core::Vec2::new(p.x, p.y))
+        .collect();
     assert_eq!(roof.roof.slopes, vec![Some(33.0); 8]);
-    let spec = core::RoofSpec { slopes: roof.roof.slopes.clone(), ..Default::default() };
-    let valleys = core::lines(&ring, &spec).expect("roof lines").into_iter()
-        .filter(|line| line.kind == core::Line::Valley).count();
+    let spec = core::RoofSpec {
+        slopes: roof.roof.slopes.clone(),
+        ..Default::default()
+    };
+    let valleys = core::lines(&ring, &spec)
+        .expect("roof lines")
+        .into_iter()
+        .filter(|line| line.kind == core::Line::Valley)
+        .count();
     assert_eq!(valleys, 2);
     let b = mark(&reopened, ViewMarkForm::Section, "B");
     let model = sections::model(&reopened);
-    assert_eq!(model.owners.iter().zip(&model.parts).filter(|(owner, part)| {
-        owner.as_deref() == Some(uid) && part.is_none()
-    }).count(), 8);
+    assert_eq!(
+        model
+            .owners
+            .iter()
+            .zip(&model.parts)
+            .filter(|(owner, part)| { owner.as_deref() == Some(uid) && part.is_none() })
+            .count(),
+        8
+    );
     let out = derive(&mut reopened, b);
-    assert!(!out.left_out.iter().any(|entry| entry.why == BuildingSectionLeft::Roof), "{:?}", out.left_out);
+    assert!(
+        !out.left_out
+            .iter()
+            .any(|entry| entry.why == BuildingSectionLeft::Roof),
+        "{:?}",
+        out.left_out
+    );
 }
 
 /// Çatı altındaki mahal (docs/adr/8071 §11): the section building without its terrace slab and with its hip roof over
@@ -975,15 +1164,20 @@ fn a_room_with_no_slab_over_it_rises_to_the_roof() {
     let slot = doc.slot_of(terrace).expect("its slot");
     assert_eq!(doc.remove(&[slot]), 1);
     let doc = roofed(&doc);
-    let (b, written) = kentos_native_application::arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
+    let (b, written) =
+        kentos_native_application::arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new());
     let (x0, y0, x1, y1) = (-0.625, -0.625, 12.625, 9.625);
     let under = |x: f64, y: f64| 6.0 - 0.25 + 0.33 * (x - x0).min(x1 - x).min(y - y0).min(y1 - y);
     let quantity = |s: &kentos_ifc::building::Space, k: &str| {
-        s.qtos.iter().flat_map(|q| &q.quantities).find(|(n, _)| n == k).map(|(_, v)| match v {
-            Value::Length(x) | Value::Area(x) | Value::Volume(x) => *x,
-            other => panic!("{other:?}"),
-        })
+        s.qtos
+            .iter()
+            .flat_map(|q| &q.quantities)
+            .find(|(n, _)| n == k)
+            .map(|(_, v)| match v {
+                Value::Length(x) | Value::Area(x) | Value::Volume(x) => *x,
+                other => panic!("{other:?}"),
+            })
     };
     let mut roofed_rooms = 0;
     for s in &b.spaces {
@@ -1013,18 +1207,35 @@ fn a_room_with_no_slab_over_it_rises_to_the_roof() {
             }
         }
         let gross = quantity(s, "GrossVolume").unwrap_or_else(|| panic!("{}: its volume", s.name));
-        assert!((gross - want).abs() <= 1e-5 * want, "{}: {gross}, the grid's {want}", s.name);
+        assert!(
+            (gross - want).abs() <= 1e-5 * want,
+            "{}: {gross}, the grid's {want}",
+            s.name
+        );
         assert_eq!(quantity(s, "NetVolume"), Some(gross), "{}", s.name);
-        assert_eq!(quantity(s, "Height"), None, "{}: no constant height", s.name);
+        assert_eq!(
+            quantity(s, "Height"),
+            None,
+            "{}: no constant height",
+            s.name
+        );
         assert!(!s.body.is_empty(), "{}: its pieces", s.name);
         let v: f64 = s.body.iter().map(kentos_ifc::quantities::volume).sum();
         assert!((v - gross).abs() <= 1e-9 * gross, "{}: {v}", s.name);
         for shape in &s.body {
-            assert_eq!(kentos_ifc::closed::faults(shape), Vec::<String>::new(), "{}", s.name);
+            assert_eq!(
+                kentos_ifc::closed::faults(shape),
+                Vec::<String>::new(),
+                "{}",
+                s.name
+            );
         }
     }
     assert_eq!(roofed_rooms, 5, "the 1. kat's five rooms");
-    assert_eq!(kentos_ifc::closed::open_bodies(&b), Vec::<(String, String)>::new());
+    assert_eq!(
+        kentos_ifc::closed::open_bodies(&b),
+        Vec::<(String, String)>::new()
+    );
     // The 1. kat's emsal zones follow the same underside (docs/adr/8123): their volume is the envelope's over their
     // ground, on the same grid (even-odd over their rings), not a box as tall as the tallest room; their pieces closed.
     // The ground floor's zones, with the 1. kat's floor over them, stay prisms.
@@ -1033,7 +1244,8 @@ fn a_room_with_no_slab_over_it_rises_to_the_roof() {
         for r in rings {
             for k in 0..r.len() {
                 let (a, c) = (r[k], r[(k + 1) % r.len()]);
-                if (a[1] > y) != (c[1] > y) && x < a[0] + (y - a[1]) / (c[1] - a[1]) * (c[0] - a[0]) {
+                if (a[1] > y) != (c[1] > y) && x < a[0] + (y - a[1]) / (c[1] - a[1]) * (c[0] - a[0])
+                {
                     odd = !odd;
                 }
             }
@@ -1069,23 +1281,43 @@ fn a_room_with_no_slab_over_it_rises_to_the_roof() {
         }
         let v: f64 = z.body.iter().map(kentos_ifc::quantities::volume).sum();
         // The grid's cells (about a centimetre) cross the ring's inner corners: half a percent.
-        assert!((v - want).abs() <= 5e-3 * want, "{}: {v}, the grid's {want}", z.name);
-        let box_volume = z.rings.iter().map(|r| {
-            let mut a = 0.0;
-            for k in 0..r.len() {
-                let (p, q) = (r[k], r[(k + 1) % r.len()]);
-                a += p[0] * q[1] - q[0] * p[1];
-            }
-            a / 2.0
-        }).sum::<f64>().abs() * z.top;
-        assert!(v < box_volume, "{}: {v} under the roof, the box would be {box_volume}", z.name);
+        assert!(
+            (v - want).abs() <= 5e-3 * want,
+            "{}: {v}, the grid's {want}",
+            z.name
+        );
+        let box_volume = z
+            .rings
+            .iter()
+            .map(|r| {
+                let mut a = 0.0;
+                for k in 0..r.len() {
+                    let (p, q) = (r[k], r[(k + 1) % r.len()]);
+                    a += p[0] * q[1] - q[0] * p[1];
+                }
+                a / 2.0
+            })
+            .sum::<f64>()
+            .abs()
+            * z.top;
+        assert!(
+            v < box_volume,
+            "{}: {v} under the roof, the box would be {box_volume}",
+            z.name
+        );
         for shape in &z.body {
-            assert_eq!(kentos_ifc::closed::faults(shape), Vec::<String>::new(), "{}", z.name);
+            assert_eq!(
+                kentos_ifc::closed::faults(shape),
+                Vec::<String>::new(),
+                "{}",
+                z.name
+            );
         }
     }
     assert!(roofed_zones >= 1, "the 1. kat's zones");
     if std::env::var_os("KENTOS_WRITE_IFC_UNDER_ROOF").is_some() {
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/cati-alti-mahal.ifc");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/arch/v1/ifc/cati-alti-mahal.ifc");
         std::fs::write(out, kentos_ifc::building::write(&b)).expect("the file kept");
     }
 }

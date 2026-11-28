@@ -82,7 +82,12 @@ fn listed(doc: &Document) -> Listed<'_> {
     doc.entities_with_uids()
         .filter_map(|(u, e)| {
             let slot = doc.slot_of(u)?;
-            Some((u.to_string(), object_bounds(&shape(e), &blocks, font), slot, e))
+            Some((
+                u.to_string(),
+                object_bounds(&shape(e), &blocks, font),
+                slot,
+                e,
+            ))
         })
         .collect()
 }
@@ -99,8 +104,16 @@ fn sheet_uses(
     objects: &Listed<'_>,
     atlas: Option<&[(String, [f64; 4])]>,
 ) -> Option<HashSet<usize>> {
-    let named: Vec<(usize, Slot, &Entity, &String)> = objects.iter().enumerate().map(|(i, (u, _, s, e))| (i, *s, *e, u)).collect();
-    let index: std::collections::HashMap<&str, usize> = objects.iter().enumerate().map(|(i, (u, ..))| (u.as_str(), i)).collect();
+    let named: Vec<(usize, Slot, &Entity, &String)> = objects
+        .iter()
+        .enumerate()
+        .map(|(i, (u, _, s, e))| (i, *s, *e, u))
+        .collect();
+    let index: std::collections::HashMap<&str, usize> = objects
+        .iter()
+        .enumerate()
+        .map(|(i, (u, ..))| (u.as_str(), i))
+        .collect();
     let views = doc.settings().drawn_views();
     let mut uses: HashSet<usize> = HashSet::new();
     for item in &sheet.items {
@@ -111,11 +124,16 @@ fn sheet_uses(
                         Some((_, b)) => *b,
                         None => continue,
                     },
-                    None => kentos_sheet::model_scope::Viewport::of_with_views(item, &views).ok().and_then(|v| {
-                        let corners: Vec<Vec2> =
-                            v.transform().ground_corners(&v.content).map(|p| Vec2 { x: p[0], y: p[1] }).to_vec();
-                        sheets_set::corners_box(&corners)
-                    })?,
+                    None => kentos_sheet::model_scope::Viewport::of_with_views(item, &views)
+                        .ok()
+                        .and_then(|v| {
+                            let corners: Vec<Vec2> = v
+                                .transform()
+                                .ground_corners(&v.content)
+                                .map(|p| Vec2 { x: p[0], y: p[1] })
+                                .to_vec();
+                            sheets_set::corners_box(&corners)
+                        })?,
                 };
                 let draws = sheets_set::drawn_by(doc, &sheet.id, &item.id, Some(book));
                 let target = ViewTarget::sheet(&sheet.id, &item.id);
@@ -161,9 +179,14 @@ pub fn page_sources(
     chosen: &[String],
 ) -> Result<Vec<(String, Option<Vec<String>>)>, (String, String)> {
     let Some(kept) = doc.sheets() else {
-        return Ok(chosen.iter().map(|id| (id.clone(), Some(Vec::new()))).collect());
+        return Ok(chosen
+            .iter()
+            .map(|id| (id.clone(), Some(Vec::new())))
+            .collect());
     };
-    let book = kentos_sheet::project::read_project_sheets(kept).map_err(|e| ("book_unreadable".to_owned(), e.message))?.0;
+    let book = kentos_sheet::project::read_project_sheets(kept)
+        .map_err(|e| ("book_unreadable".to_owned(), e.message))?
+        .0;
     // One pass a viewport over the objects, never an object against every other (cad.sheets.set's list is for a few
     // changed objects).
     let objects = listed(doc);
@@ -196,7 +219,9 @@ pub fn atlas_page_sources(
     let Some(kept) = doc.sheets() else {
         return Ok(pages.iter().map(|_| None).collect());
     };
-    let book = kentos_sheet::project::read_project_sheets(kept).map_err(|e| ("book_unreadable".to_owned(), e.message))?.0;
+    let book = kentos_sheet::project::read_project_sheets(kept)
+        .map_err(|e| ("book_unreadable".to_owned(), e.message))?
+        .0;
     let Some(sheet) = book.sheet(sheet) else {
         return Ok(pages.iter().map(|_| None).collect());
     };
@@ -208,7 +233,12 @@ pub fn atlas_page_sources(
                 let mut order: Vec<usize> = uses.into_iter().collect();
                 order.sort_unstable();
                 std::iter::once(feature.clone())
-                    .chain(order.into_iter().map(|i| objects[i].0.clone()).filter(|u| u != feature))
+                    .chain(
+                        order
+                            .into_iter()
+                            .map(|i| objects[i].0.clone())
+                            .filter(|u| u != feature),
+                    )
                     .collect()
             })
         })

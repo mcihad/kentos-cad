@@ -28,12 +28,19 @@ pub struct Parked {
     pub(crate) selection: Selection,
     views: ViewHistory,
     /// Its Etkin kat and Kat görünümü (docs/adr/0720 §2).
-    level: (crate::active_level::Chosen, kentos_interaction::level_view::LevelView),
+    level: (
+        crate::active_level::Chosen,
+        kentos_interaction::level_view::LevelView,
+    ),
     /// Its Hesap windows' tables, solutions and names (UR2-049: one drawing's levelling went on in the next), its
     /// window closed.
     calc: crate::calc::Calc,
     /// Its Nokta name series, code and height (UR2-060).
-    point: (kentos_interaction::Name, kentos_interaction::Name, Option<f64>),
+    point: (
+        kentos_interaction::Name,
+        kentos_interaction::Name,
+        Option<f64>,
+    ),
 }
 
 /// The drawings set aside, and where the one on screen stands among them.
@@ -68,7 +75,10 @@ impl DocTabs {
 
     /// The set aside drawing of this session.
     pub fn find_mut(&mut self, session: u64) -> Option<&mut Document> {
-        self.parked.iter_mut().map(|p| &mut p.document).find(|d| d.session == session)
+        self.parked
+            .iter_mut()
+            .map(|p| &mut p.document)
+            .find(|d| d.session == session)
     }
 
     /// The set aside drawings with unsaved work, by name.
@@ -100,7 +110,11 @@ impl App {
         if self.opening.is_some() || self.cloud.opening.is_some() {
             return Some("Bir çizim açılıyor; açılış bitince çizim değiştirilebilir.".into());
         }
-        if self.document.as_ref().is_some_and(|d| d.cloud_source().is_some()) {
+        if self
+            .document
+            .as_ref()
+            .is_some_and(|d| d.cloud_source().is_some())
+        {
             return Some(
                 "Bulut projesi sekmede bekletilemez: bağlantısı ekrandaki çizimi izler. Yeni çizimi bu sekmede açın ya da projeyi kapatın."
                     .into(),
@@ -156,8 +170,20 @@ impl App {
             return;
         }
         // Parking put the drawing on screen at `at - 1`: the one asked for shifted when it stood after.
-        let index = if k_parked >= self.doc_tabs.at - 1 { k_parked + 1 } else { k_parked };
-        let Parked { document, camera, selection, views, level, calc, point } = self.doc_tabs.parked.remove(index);
+        let index = if k_parked >= self.doc_tabs.at - 1 {
+            k_parked + 1
+        } else {
+            k_parked
+        };
+        let Parked {
+            document,
+            camera,
+            selection,
+            views,
+            level,
+            calc,
+            point,
+        } = self.doc_tabs.parked.remove(index);
         self.doc_tabs.at = index;
         let name = document.display_name().into_owned();
         self.show_document(document);
@@ -202,7 +228,11 @@ impl App {
                 return iced::Task::none();
             }
         }
-        if let Some(why) = self.tabs_held().filter(|_| self.document.as_ref().is_none_or(|d| d.cloud_source().is_none())) {
+        if let Some(why) = self.tabs_held().filter(|_| {
+            self.document
+                .as_ref()
+                .is_none_or(|d| d.cloud_source().is_none())
+        }) {
             self.warn(why);
             return iced::Task::none();
         }
@@ -222,7 +252,15 @@ impl App {
         };
         match next {
             Some(index) => {
-                let Parked { document, camera, selection, views, level, calc, point } = self.doc_tabs.parked.remove(index);
+                let Parked {
+                    document,
+                    camera,
+                    selection,
+                    views,
+                    level,
+                    calc,
+                    point,
+                } = self.doc_tabs.parked.remove(index);
                 self.doc_tabs.at = index;
                 self.show_document(document);
                 self.gis.calc = calc;
@@ -246,13 +284,21 @@ impl App {
 
     /// The drawing set aside in another tab whose file is `path` (by its canonical place: another folder's file of the
     /// same name is not it, a link to it is): its name and file (UR2-056: Farklı kaydet wrote over it).
-    pub(crate) fn open_in_another_tab(&self, path: &std::path::Path) -> Option<(String, std::path::PathBuf)> {
+    pub(crate) fn open_in_another_tab(
+        &self,
+        path: &std::path::Path,
+    ) -> Option<(String, std::path::PathBuf)> {
         let want = canonical(path);
         self.doc_tabs
             .parked
             .iter()
             .find(|p| is_file(&p.document, &want))
-            .map(|p| (p.document.display_name().into_owned(), p.document.path.clone().unwrap_or_default()))
+            .map(|p| {
+                (
+                    p.document.display_name().into_owned(),
+                    p.document.path.clone().unwrap_or_default(),
+                )
+            })
     }
 
     /// The drawing whose file is `path` (by its canonical place), brought in front if it is open, said; false when
@@ -264,7 +310,11 @@ impl App {
         let at = if front {
             Some(self.doc_tabs.at)
         } else {
-            self.doc_tabs.parked.iter().position(|p| same(&p.document)).map(|k| if k >= self.doc_tabs.at { k + 1 } else { k })
+            self.doc_tabs
+                .parked
+                .iter()
+                .position(|p| same(&p.document))
+                .map(|k| if k >= self.doc_tabs.at { k + 1 } else { k })
         };
         let Some(k) = at else {
             return false;
@@ -272,7 +322,11 @@ impl App {
         if !front {
             self.show_tab(k);
         }
-        let name = self.document.as_ref().map(|d| d.name().to_owned()).unwrap_or_default();
+        let name = self
+            .document
+            .as_ref()
+            .map(|d| d.name().to_owned())
+            .unwrap_or_default();
         self.say(
             Level::Info,
             format!("“{name}” zaten açık; sekmesine geçildi. Aynı dosyanın iki kopyası birbirinin kaydını silerdi."),
@@ -329,7 +383,10 @@ impl App {
         if self.doc_tabs.parked.is_empty() {
             return None;
         }
-        let (before, after) = self.doc_tabs.parked.split_at(self.doc_tabs.at.min(self.doc_tabs.parked.len()));
+        let (before, after) = self
+            .doc_tabs
+            .parked
+            .split_at(self.doc_tabs.at.min(self.doc_tabs.parked.len()));
         let docs: Vec<&Document> = before
             .iter()
             .map(|p| &p.document)
@@ -397,7 +454,12 @@ pub(crate) fn tab_titles(docs: &[&Document]) -> Vec<String> {
     let short = out.clone();
     for (k, doc) in docs.iter().enumerate() {
         if let Some(path) = doc.path.as_deref()
-            && short.iter().filter(|title| *title == &short[k]).take(2).count() == 2
+            && short
+                .iter()
+                .filter(|title| *title == &short[k])
+                .take(2)
+                .count()
+                == 2
         {
             out[k] = path.to_string_lossy().into_owned();
         }
@@ -439,18 +501,30 @@ mod tests {
         assert_eq!(titles[0], "kentos-alan-iliski.dxf");
         assert_eq!(titles[1], "kentos-alan-iliski.dwg");
         assert_eq!(titles[2], c.name());
-        let (d, e) = (named(Some("/tmp/bir/kentos-alan-iliski.kcad")), named(Some("/tmp/iki/kentos-alan-iliski.kcad")));
+        let (d, e) = (
+            named(Some("/tmp/bir/kentos-alan-iliski.kcad")),
+            named(Some("/tmp/iki/kentos-alan-iliski.kcad")),
+        );
         assert_eq!(
             super::tab_titles(&[&d, &e]),
-            ["kentos-alan-iliski.kcad — bir", "kentos-alan-iliski.kcad — iki"]
+            [
+                "kentos-alan-iliski.kcad — bir",
+                "kentos-alan-iliski.kcad — iki"
+            ]
         );
         let h = named(Some("/tmp/baska/bir/kentos-alan-iliski.kcad"));
         assert_eq!(
             super::tab_titles(&[&d, &h]),
-            ["/tmp/bir/kentos-alan-iliski.kcad", "/tmp/baska/bir/kentos-alan-iliski.kcad"]
+            [
+                "/tmp/bir/kentos-alan-iliski.kcad",
+                "/tmp/baska/bir/kentos-alan-iliski.kcad"
+            ]
         );
         let (f, g) = (named(None), named(None));
-        assert_eq!(super::tab_titles(&[&f, &g]), ["kentos-alan-iliski (1)", "kentos-alan-iliski (2)"]);
+        assert_eq!(
+            super::tab_titles(&[&f, &g]),
+            ["kentos-alan-iliski (1)", "kentos-alan-iliski (2)"]
+        );
     }
 
     use super::Event;
@@ -554,7 +628,10 @@ mod tests {
     #[test]
     fn an_attribute_dialog_cannot_place_into_the_next_drawing() {
         let mut app = app_with_drawing();
-        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!("../../../../fixtures/interaction/v1/block-attributes.kcad")).unwrap();
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
+            "../../../../fixtures/interaction/v1/block-attributes.kcad"
+        ))
+        .unwrap();
         app.show_document(crate::document::Document::new(snapshot, None).unwrap());
         let block = app.document.as_ref().unwrap().model.blocks()[0].id;
         app.open_attribute_values(block);
@@ -652,7 +729,11 @@ mod tests {
         // A drawing behind with unsaved work: refused while the command runs.
         let mut app = app_with_drawing();
         let first = front(&app);
-        app.document.as_mut().expect("open").model.set_name("değişti");
+        app.document
+            .as_mut()
+            .expect("open")
+            .model
+            .set_name("değişti");
         assert!(app.document.as_ref().expect("open").dirty(), "unsaved work");
         assert!(app.park_active());
         let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
@@ -675,14 +756,27 @@ mod tests {
         app.memory.point_z = Some(173.625);
         assert!(app.park_active());
         let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
-        assert_eq!((app.memory.point_name, app.memory.point_code, app.memory.point_z), (Name::EMPTY, Name::EMPTY, None));
+        assert_eq!(
+            (
+                app.memory.point_name,
+                app.memory.point_code,
+                app.memory.point_z
+            ),
+            (Name::EMPTY, Name::EMPTY, None)
+        );
         app.memory.point_name = Name::new("B-102").expect("short");
         let _ = app.update(Message::DocTabs(Event::Show(0)));
         assert_eq!(app.memory.point_name, Name::new("BATI-711").expect("short"));
-        assert_eq!(app.memory.point_code, Name::new("BATI-KANAL").expect("short"));
+        assert_eq!(
+            app.memory.point_code,
+            Name::new("BATI-KANAL").expect("short")
+        );
         assert_eq!(app.memory.point_z, Some(173.625));
         let _ = app.update(Message::DocTabs(Event::Show(1)));
-        assert_eq!((app.memory.point_name, app.memory.point_z), (Name::new("B-102").expect("short"), None));
+        assert_eq!(
+            (app.memory.point_name, app.memory.point_z),
+            (Name::new("B-102").expect("short"), None)
+        );
     }
 
     /// UR2-056: Farklı kaydet onto the file of a drawing open in another tab (by its own path or a link to it) is
@@ -712,11 +806,17 @@ mod tests {
             let _ = app.start_save(Target::File(over.clone()));
             assert!(app.saving.is_none(), "nothing is written over {over:?}");
             let said = crate::files_testing::last_said(&app);
-            assert!(said.contains("başka bir sekmede açık") && said.contains("Parsel.kcad"), "{said}");
+            assert!(
+                said.contains("başka bir sekmede açık") && said.contains("Parsel.kcad"),
+                "{said}"
+            );
             let _ = app.start_save(Target::Copy(over));
             assert!(app.saving.is_none());
         }
-        assert_eq!(std::fs::read_to_string(&theirs).expect("kept"), "B'nin dosyası");
+        assert_eq!(
+            std::fs::read_to_string(&theirs).expect("kept"),
+            "B'nin dosyası"
+        );
         // The same name in this drawing's own folder is another file: written.
         let _ = app.start_save(Target::File(a.join("Parsel 2.kcad")));
         assert!(app.saving.is_some());
@@ -731,7 +831,10 @@ mod tests {
         use crate::viewport::Event as View;
         use iced::{Point, Rectangle, Size};
         let sized = |app: &mut App, y: f32, w: f32, h: f32| {
-            let _ = app.update(Message::Viewport(View::Resized(Rectangle::new(Point::new(0.0, y), Size::new(w, h)))));
+            let _ = app.update(Message::Viewport(View::Resized(Rectangle::new(
+                Point::new(0.0, y),
+                Size::new(w, h),
+            ))));
         };
         // One drawing, then a second in a tab: the strip takes 14 px off the area.
         let mut app = app_with_drawing();
@@ -743,7 +846,11 @@ mod tests {
         let _ = app.update(Message::DocTabs(Event::Show(0)));
         let c = app.viewport.camera;
         assert_eq!((c.width, c.height), (1000.0, 786.0), "the area's size now");
-        assert_eq!((c.center, c.scale), (center, scale), "its own middle and scale");
+        assert_eq!(
+            (c.center, c.scale),
+            (center, scale),
+            "its own middle and scale"
+        );
         // Left in a split view (the active view half the width), brought back after the split went.
         let mut app = app_with_drawing();
         sized(&mut app, 14.0, 500.0, 786.0);
@@ -753,7 +860,10 @@ mod tests {
         let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
         sized(&mut app, 14.0, 1000.0, 786.0);
         let _ = app.update(Message::DocTabs(Event::Show(0)));
-        assert!(app.split.is_none(), "the split stays with the drawing it was made on");
+        assert!(
+            app.split.is_none(),
+            "the split stays with the drawing it was made on"
+        );
         let c = app.viewport.camera;
         assert_eq!((c.width, c.height), (1000.0, 786.0));
     }
@@ -767,9 +877,15 @@ mod tests {
         app.viewport.camera.twist = turn;
         assert!(app.park_active());
         let _ = app.update(Message::Opened(Some(Ok(Box::new(drawing(2))))));
-        assert_eq!(app.viewport.camera.twist, 0.0, "the drawing opened is north up");
+        assert_eq!(
+            app.viewport.camera.twist, 0.0,
+            "the drawing opened is north up"
+        );
         let _ = app.update(Message::DocTabs(Event::Show(0)));
-        assert_eq!(app.viewport.camera.twist, turn, "the first drawing keeps its turn");
+        assert_eq!(
+            app.viewport.camera.twist, turn,
+            "the first drawing keeps its turn"
+        );
         let _ = app.update(Message::DocTabs(Event::Show(1)));
         assert_eq!(app.viewport.camera.twist, 0.0, "the second stays north up");
         // Opened in the tab's place, without setting it aside: north up too.
@@ -803,7 +919,12 @@ mod tests {
         let one = app
             .document
             .as_ref()
-            .and_then(|d| d.model.entities().next().map(|e| kentos_domain::Slot(e.base().id)))
+            .and_then(|d| {
+                d.model
+                    .entities()
+                    .next()
+                    .map(|e| kentos_domain::Slot(e.base().id))
+            })
             .expect("an object");
         app.selection.set([one]);
         let camera = app.viewport.camera;
@@ -812,8 +933,14 @@ mod tests {
         let second = front(&app);
         assert_ne!(first, second);
         assert_eq!(app.doc_tabs.count(true), 2);
-        assert!(app.selection.ids().is_empty(), "the selection is the drawing's");
-        assert!(app.doc_tabs_view().is_some(), "the strip shows with two drawings");
+        assert!(
+            app.selection.ids().is_empty(),
+            "the selection is the drawing's"
+        );
+        assert!(
+            app.doc_tabs_view().is_some(),
+            "the strip shows with two drawings"
+        );
         // The first back in front, with its selection and camera.
         let _ = app.update(Message::DocTabs(Event::Show(0)));
         assert_eq!(front(&app), first);
@@ -838,8 +965,14 @@ mod tests {
             path: path.clone(),
             revision: 0,
         }))));
-        assert_eq!(app.doc_tabs.parked[0].document.path.as_deref(), Some(path.as_path()));
-        assert!(app.document.as_ref().is_some_and(|d| d.path.is_none()), "the drawing in front keeps no file");
+        assert_eq!(
+            app.doc_tabs.parked[0].document.path.as_deref(),
+            Some(path.as_path())
+        );
+        assert!(
+            app.document.as_ref().is_some_and(|d| d.path.is_none()),
+            "the drawing in front keeps no file"
+        );
     }
 
     #[test]
@@ -871,11 +1004,21 @@ mod same_file_tests {
         app.picker = crate::app::Picker::File(path.clone());
         let task = app.update(Message::Run("file.save"));
         drive(&mut app, task);
-        assert!(last_said(&app).starts_with("Kaydedildi:"), "{}", last_said(&app));
+        assert!(
+            last_said(&app).starts_with("Kaydedildi:"),
+            "{}",
+            last_said(&app)
+        );
         let tabs = app.doc_tabs.count(true);
-        let _ = app.update(Message::Opening(crate::opening::Event::PickedTab(Some(path.clone()))));
+        let _ = app.update(Message::Opening(crate::opening::Event::PickedTab(Some(
+            path.clone(),
+        ))));
         assert_eq!(app.doc_tabs.count(true), tabs, "no second tab of the file");
-        assert!(last_said(&app).contains("zaten açık"), "{}", last_said(&app));
+        assert!(
+            last_said(&app).contains("zaten açık"),
+            "{}",
+            last_said(&app)
+        );
         // Another program writes the file meanwhile.
         std::thread::sleep(std::time::Duration::from_millis(20));
         let other = std::fs::read(&path).unwrap();
@@ -883,8 +1026,16 @@ mod same_file_tests {
         let before = std::fs::read(&path).unwrap();
         let task = app.update(Message::Run("file.save"));
         drive(&mut app, task);
-        assert!(last_said(&app).contains("diskte değişti"), "{}", last_said(&app));
-        assert_eq!(std::fs::read(&path).unwrap(), before, "the other write is kept");
+        assert!(
+            last_said(&app).contains("diskte değişti"),
+            "{}",
+            last_said(&app)
+        );
+        assert_eq!(
+            std::fs::read(&path).unwrap(),
+            before,
+            "the other write is kept"
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 }

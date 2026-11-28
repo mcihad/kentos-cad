@@ -29,13 +29,13 @@
 //!   full screen, the window gives it the height the rest leaves, never less than its own height.
 
 use iced::widget::{Column, column, container, row, space};
-use kentos_ui::widget::grow::Grows;
 use iced::{Element, Fill, Length};
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::Form;
 use kentos_ui::widget::Banner;
 use kentos_ui::widget::Dialog as Frame;
-use kentos_ui::label;
+use kentos_ui::widget::Form;
+use kentos_ui::widget::grow::Grows;
 
 use crate::app::Message;
 use crate::exchange::words;
@@ -202,7 +202,9 @@ impl<'a> RoadDialog<'a> {
     }
 
     pub fn view(self) -> Element<'a, Message> {
-        let muted = |t: &iced::Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let muted = |t: &iced::Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
         let mut result = Grows::new().spacing(10.0).width(Fill);
         if let Some(over) = self.over {
             result = result.push(over);
@@ -210,7 +212,10 @@ impl<'a> RoadDialog<'a> {
         let has_result = !self.figures.is_empty() || self.detail.is_some();
         if let Some((picture, height)) = self.picture {
             let name = self.picture_name.unwrap_or_else(|| self.title.to_owned());
-            result = result.push_grow(crate::picture::picture(picture, name), typography::scaled(height));
+            result = result.push_grow(
+                crate::picture::picture(picture, name),
+                typography::scaled(height),
+            );
             if let Some(legend) = self.legend {
                 result = result.push(label::caption(legend).style(muted));
             }
@@ -231,7 +236,9 @@ impl<'a> RoadDialog<'a> {
         if let Some(tail) = self.tail {
             result = result.push(tail);
         }
-        let mut left = Column::new().spacing(12).width(typography::scaled(self.form_width));
+        let mut left = Column::new()
+            .spacing(12)
+            .width(typography::scaled(self.form_width));
         if let Some(head) = self.head {
             left = left.push(head);
         }
@@ -244,7 +251,10 @@ impl<'a> RoadDialog<'a> {
         );
         let body = row![left, result].spacing(typography::scaled(20.0));
 
-        let mut frame = Frame::new(self.title).scroll(body).width(self.width).on_close(self.close.clone());
+        let mut frame = Frame::new(self.title)
+            .scroll(body)
+            .width(self.width)
+            .on_close(self.close.clone());
         for (caption, on) in self.ghosts {
             frame = frame.aside(words::ghost(caption, on));
         }
@@ -254,7 +264,10 @@ impl<'a> RoadDialog<'a> {
         for (caption, on) in self.others {
             frame = frame.action(words::secondary(caption, on));
         }
-        frame = frame.action(words::secondary(self.close_caption, Some(self.close.clone())));
+        frame = frame.action(words::secondary(
+            self.close_caption,
+            Some(self.close.clone()),
+        ));
         if let Some((caption, on)) = self.primary {
             frame = frame.action(words::primary(caption, on));
         }
@@ -294,7 +307,11 @@ pub fn chain_words(
         alignment.revision,
         profile.id,
         profile.revision,
-        templates.iter().map(|x| format!("{} ({})", x.id, x.revision)).collect::<Vec<_>>().join(", ")
+        templates
+            .iter()
+            .map(|x| format!("{} ({})", x.id, x.revision))
+            .collect::<Vec<_>>()
+            .join(", ")
     );
     if let Some(d) = superelevation {
         said.push_str(&format!(", dever {} ({})", d.id, d.revision));
@@ -307,7 +324,14 @@ pub fn chain_words(
 
 /// What an earthwork volume is computed from in a line (docs/adr/1040).
 pub fn volume_sources_words(s: &kentos_commands::VolumeSources) -> String {
-    chain_words(&s.corridor, &s.alignment, &s.profile, &s.templates, s.superelevation.as_ref(), Some(&s.surface))
+    chain_words(
+        &s.corridor,
+        &s.alignment,
+        &s.profile,
+        &s.templates,
+        s.superelevation.as_ref(),
+        Some(&s.surface),
+    )
 }
 
 /// The least height a window's table is given before the window scrolls: a head and three rows.
@@ -324,7 +348,10 @@ where
     T: Copy + PartialEq + std::fmt::Display,
 {
     column![
-        row![kentos_ui::widget::Segmented::new(options, selected, on_select), space::horizontal()],
+        row![
+            kentos_ui::widget::Segmented::new(options, selected, on_select),
+            space::horizontal()
+        ],
         container(table.into()).width(Length::Fill),
     ]
     .spacing(6)
@@ -342,22 +369,37 @@ pub struct Col<'a> {
 /// A command's words on heights not shown to rest on one vertical system (docs/adr/1029) as a window says them: its
 /// own choice (`choice`, “Kotlar › Aynı say”) where the command names its field `assumeHeights`.
 pub fn heights_words(text: &str, choice: &str) -> String {
-    text.replace("aynı saymak için assumeHeights verin", &format!("aynı saymak için {choice} seçin"))
-        .replace(" (assumeHeights)", &format!(" ({choice})"))
+    text.replace(
+        "aynı saymak için assumeHeights verin",
+        &format!("aynı saymak için {choice} seçin"),
+    )
+    .replace(" (assumeHeights)", &format!(" ({choice})"))
 }
 
 pub fn col(title: &str, width: f32) -> Col<'_> {
-    Col { title, width: Some(width), number: false }
+    Col {
+        title,
+        width: Some(width),
+        number: false,
+    }
 }
 
 pub fn num(title: &str, width: f32) -> Col<'_> {
-    Col { title, width: Some(width), number: true }
+    Col {
+        title,
+        width: Some(width),
+        number: true,
+    }
 }
 
 /// A result table: the columns and the rows' words (DESIGN.md §7.13: numbers right, the head on its band). Its rows
 /// scroll inside it under its head, so the window keeps its place (a schedule's 24 critical stations made the whole
 /// Dever window scroll, its form and picture with them; docs/adr/0938 §3).
-pub fn table<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str) -> Element<'a, Message> {
+pub fn table<'a>(
+    cols: Vec<Col<'a>>,
+    rows: Vec<Vec<String>>,
+    empty: &'a str,
+) -> Element<'a, Message> {
     use kentos_ui::widget::table;
     if rows.is_empty() {
         return sheet_in(cols, rows, empty, Length::Shrink);
@@ -366,7 +408,8 @@ pub fn table<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str) -> 
     // its detail what the picture leaves (`Grows::push_fit`), the rows scroll inside.
     let shown = rows.len().min(MOST_SHOWN);
     let natural = table::row_height() * (shown + 1) as f32 + 1.0 + 6.0;
-    kentos_ui::widget::grow::Held::natural(sheet_in(cols, rows, empty, Length::Fill), natural).into()
+    kentos_ui::widget::grow::Held::natural(sheet_in(cols, rows, empty, Length::Fill), natural)
+        .into()
 }
 
 /// The most rows a result table asks room for; more scroll inside it.
@@ -374,14 +417,20 @@ pub const MOST_SHOWN: usize = 15;
 
 /// A long result table (a sheet: Kübaj cetveli, an alignment's stakeout): the kit's data table whose head stays while
 /// its rows scroll within `height` (12 px body text), the rows built only as they show.
-pub fn sheet<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str, height: f32) -> Element<'a, Message> {
+pub fn sheet<'a>(
+    cols: Vec<Col<'a>>,
+    rows: Vec<Vec<String>>,
+    empty: &'a str,
+    height: f32,
+) -> Element<'a, Message> {
     use kentos_ui::widget::table;
     if rows.is_empty() {
         return sheet_in(cols, rows, empty, Length::Shrink);
     }
     // At most `height`; a few rows take only their own (the head's band and line, the sideways bar's 6 px); less where
     // the window has less, its rows scrolling inside (docs/adr/0938 §3).
-    let height = typography::scaled(height).min(table::row_height() * (rows.len() + 1) as f32 + 1.0 + 6.0);
+    let height =
+        typography::scaled(height).min(table::row_height() * (rows.len() + 1) as f32 + 1.0 + 6.0);
     kentos_ui::widget::grow::Held::natural(sheet_in(cols, rows, empty, Length::Fill), height).into()
 }
 
@@ -399,30 +448,49 @@ pub fn sheet_chosen<'a>(
     if rows.is_empty() {
         return sheet_in(cols, rows, empty, Length::Shrink);
     }
-    let height = typography::scaled(height).min(table::row_height() * (rows.len() + 1) as f32 + 1.0 + 6.0);
+    let height =
+        typography::scaled(height).min(table::row_height() * (rows.len() + 1) as f32 + 1.0 + 6.0);
     let columns: Vec<table::Column<'a, Message>> = cols
         .iter()
         .map(|c| {
-            let column = table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed));
-            if c.number { column.align_right() } else { column }
+            let column =
+                table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed));
+            if c.number {
+                column.align_right()
+            } else {
+                column
+            }
         })
         .collect();
     let numbers: Vec<bool> = cols.iter().map(|c| c.number).collect();
     let count = rows.len();
-    let table = Table::new(columns).horizontal().height(Length::Fill).virtualized(count, move |i| {
-        table::Row::new(rows[i].iter().zip(numbers.iter().copied()).map(|(t, n)| -> Element<'a, Message> {
-            if n { table::number(t.clone()).into() } else { table::text(t.clone()).into() }
-        }))
-        .selected(chosen == Some(i))
-        .on_press(on_choose(i))
-    });
+    let table = Table::new(columns)
+        .horizontal()
+        .height(Length::Fill)
+        .virtualized(count, move |i| {
+            table::Row::new(rows[i].iter().zip(numbers.iter().copied()).map(
+                |(t, n)| -> Element<'a, Message> {
+                    if n {
+                        table::number(t.clone()).into()
+                    } else {
+                        table::text(t.clone()).into()
+                    }
+                },
+            ))
+            .selected(chosen == Some(i))
+            .on_press(on_choose(i))
+        });
     let table: Element<'a, Message> = table.into();
     kentos_ui::widget::grow::Held::natural(table, height).into()
 }
 
 /// A sheet beside a picture that grows (İstinat duvarı's rows by km): it fills the height and is as wide as its
 /// columns, the picture taking the rest of the row.
-pub fn sheet_fill<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str) -> Element<'a, Message> {
+pub fn sheet_fill<'a>(
+    cols: Vec<Col<'a>>,
+    rows: Vec<Vec<String>>,
+    empty: &'a str,
+) -> Element<'a, Message> {
     // As the kit counts it: each column's text width grown with the text, and its cell's pads.
     let count = cols.len();
     let natural: f32 = cols
@@ -433,21 +501,38 @@ pub fn sheet_fill<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str
             typography::scaled(c.width.unwrap_or(120.0)) + left + right
         })
         .sum();
-    container(sheet_in(cols, rows, empty, Length::Fill)).width(natural.ceil() + 1.0).height(Fill).into()
+    container(sheet_in(cols, rows, empty, Length::Fill))
+        .width(natural.ceil() + 1.0)
+        .height(Fill)
+        .into()
 }
 
 /// A sheet that fills the room it is given both ways (Aplikasyon's points beside their plan, two thirds of the row).
-pub fn sheet_room<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str) -> Element<'a, Message> {
+pub fn sheet_room<'a>(
+    cols: Vec<Col<'a>>,
+    rows: Vec<Vec<String>>,
+    empty: &'a str,
+) -> Element<'a, Message> {
     sheet_in(cols, rows, empty, Length::Fill)
 }
 
-fn sheet_in<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str, height: Length) -> Element<'a, Message> {
+fn sheet_in<'a>(
+    cols: Vec<Col<'a>>,
+    rows: Vec<Vec<String>>,
+    empty: &'a str,
+    height: Length,
+) -> Element<'a, Message> {
     use kentos_ui::widget::table::{self, Table};
     let columns = move |cols: &[Col<'a>]| {
         cols.iter()
             .map(|c| {
-                let column = table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed));
-                if c.number { column.align_right() } else { column }
+                let column =
+                    table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed));
+                if c.number {
+                    column.align_right()
+                } else {
+                    column
+                }
             })
             .collect::<Vec<_>>()
     };
@@ -465,9 +550,15 @@ fn sheet_in<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str, heig
             .min_width(room.width)
             .height(Length::Fill)
             .virtualized(rows.len(), move |i| {
-                table::Row::new(rows[i].iter().zip(numbers.iter().copied()).map(|(t, n)| -> Element<'a, Message> {
-                    if n { table::number(t.clone()).into() } else { table::text(t.clone()).into() }
-                }))
+                table::Row::new(rows[i].iter().zip(numbers.iter().copied()).map(
+                    |(t, n)| -> Element<'a, Message> {
+                        if n {
+                            table::number(t.clone()).into()
+                        } else {
+                            table::text(t.clone()).into()
+                        }
+                    },
+                ))
             })
             .into()
     })
@@ -476,8 +567,14 @@ fn sheet_in<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<String>>, empty: &'a str, heig
 }
 
 /// A value typed in its table cell (the kit's `EditCell`: Enter or leaving the cell commits).
-pub fn edit<'a>(value: &str, numeric: bool, on_commit: impl Fn(String) -> Message + 'a) -> Element<'a, Message> {
-    kentos_ui::widget::EditCell::new(value.to_owned(), on_commit).numeric(numeric).into()
+pub fn edit<'a>(
+    value: &str,
+    numeric: bool,
+    on_commit: impl Fn(String) -> Message + 'a,
+) -> Element<'a, Message> {
+    kentos_ui::widget::EditCell::new(value.to_owned(), on_commit)
+        .numeric(numeric)
+        .into()
 }
 
 /// An edited table (DESIGN.md §7.6): the kit's data table as a grid of writable cells (`cell(row, column)`, mostly
@@ -516,17 +613,29 @@ fn edited<'a>(
 ) -> Element<'a, Message> {
     use kentos_ui::widget::table::{self, Table};
     let n = cols.len();
-    let columns = std::iter::once(table::Column::new("#").width(Length::Fixed(32.0)).align_right())
-        .chain(cols.into_iter().map(|c| table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed))));
+    let columns =
+        std::iter::once(
+            table::Column::new("#")
+                .width(Length::Fixed(32.0))
+                .align_right(),
+        )
+        .chain(cols.into_iter().map(|c| {
+            table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed))
+        }));
     if count == 0 {
         return Table::new(columns).grid().empty(empty).into();
     }
     Table::new(columns)
         .grid()
-        .height(Length::Fixed(table::row_height() * count.min(MOST_EDITED) as f32))
+        .height(Length::Fixed(
+            table::row_height() * count.min(MOST_EDITED) as f32,
+        ))
         .virtualized(count, move |i| {
-            let row = table::Row::new(std::iter::once(table::number((i + 1).to_string()).into()).chain((0..n).map(|k| cell(i, k))))
-                .selected(chosen == Some(i));
+            let row = table::Row::new(
+                std::iter::once(table::number((i + 1).to_string()).into())
+                    .chain((0..n).map(|k| cell(i, k))),
+            )
+            .selected(chosen == Some(i));
             match &on_choose {
                 Some(choose) => row.on_press(choose(i)),
                 None => row,
@@ -546,15 +655,25 @@ pub fn pick<'a, S: Into<String>>(
     on_pick: impl Fn(usize) -> Message + 'a,
 ) -> Element<'a, Message> {
     let options: Vec<String> = options.into_iter().map(Into::into).collect();
-    let shown = chosen.and_then(|i| options.get(i).cloned()).unwrap_or_else(|| "—".to_owned());
+    let shown = chosen
+        .and_then(|i| options.get(i).cloned())
+        .unwrap_or_else(|| "—".to_owned());
     kentos_ui::widget::property_grid::choice(shown, None, move || {
-        options.iter().enumerate().fold(kentos_ui::widget::Menu::new(), |menu, (i, o)| menu.item(o.clone(), on_pick(i)))
+        options
+            .iter()
+            .enumerate()
+            .fold(kentos_ui::widget::Menu::new(), |menu, (i, o)| {
+                menu.item(o.clone(), on_pick(i))
+            })
     })
 }
 
 /// The cell that removes its row (a row of a list each line of which goes on its own: Pozlar, Kurallar).
 pub fn drop_cell<'a>(on_press: Message) -> Element<'a, Message> {
-    let x = iced::widget::button(kentos_ui::label::caption("×")).style(kentos_ui::style::button::ghost).padding([0, 6]).on_press(on_press);
+    let x = iced::widget::button(kentos_ui::label::caption("×"))
+        .style(kentos_ui::style::button::ghost)
+        .padding([0, 6])
+        .on_press(on_press);
     kentos_ui::widget::Cell::padded(container(x).center_x(Fill)).into()
 }
 
@@ -563,7 +682,11 @@ pub fn drop_cell<'a>(on_press: Message) -> Element<'a, Message> {
 pub fn percent_text(grade: f64) -> String {
     let s = format!("{:.6}", 100.0 * grade);
     let s = s.trim_end_matches('0').trim_end_matches('.');
-    if s == "-0" { "0".into() } else { s.replace('.', ",") }
+    if s == "-0" {
+        "0".into()
+    } else {
+        s.replace('.', ",")
+    }
 }
 
 /// A percent field's text as the grade the sources hold (docs/adr/0977): “-2,5” is −0.025; empty is none.
@@ -572,7 +695,11 @@ pub fn grade_of(text: &str) -> Result<Option<f64>, ()> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().ok().filter(|v| v.is_finite()).map(|v| Some(v / 100.0)).ok_or(())
+    t.parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .map(|v| Some(v / 100.0))
+        .ok_or(())
 }
 
 /// A single number typed in a road window: the decimal comma Turkish writes, or a point (UR2-011: `0,5` was refused
@@ -601,18 +728,40 @@ pub fn grouped(v: f64, digits: usize) -> String {
         }
         out.push(c);
     }
-    let sign = if v < 0.0 && text.chars().any(|c| c.is_ascii_digit() && c != '0') { "-" } else { "" };
-    if fraction.is_empty() { format!("{sign}{out}") } else { format!("{sign}{out},{fraction}") }
+    let sign = if v < 0.0 && text.chars().any(|c| c.is_ascii_digit() && c != '0') {
+        "-"
+    } else {
+        ""
+    };
+    if fraction.is_empty() {
+        format!("{sign}{out}")
+    } else {
+        format!("{sign}{out},{fraction}")
+    }
 }
 
 /// A result table whose cells are not only words (a colour swatch before a range): [`table`] with built cells.
-pub fn table_of<'a>(cols: Vec<Col<'a>>, rows: Vec<Vec<Element<'a, Message>>>, empty: &'a str) -> Element<'a, Message> {
+pub fn table_of<'a>(
+    cols: Vec<Col<'a>>,
+    rows: Vec<Vec<Element<'a, Message>>>,
+    empty: &'a str,
+) -> Element<'a, Message> {
     use kentos_ui::widget::table::{self, Table};
     let columns = cols.into_iter().map(|c| {
         let column = table::Column::new(c.title).width(c.width.map_or(Length::Fill, Length::Fixed));
-        if c.number { column.align_right() } else { column }
+        if c.number {
+            column.align_right()
+        } else {
+            column
+        }
     });
     let many = rows.len() > MOST_SHOWN;
-    let t = Table::new(columns).extend(rows.into_iter().map(table::Row::new)).empty(empty);
-    if many { t.height(table::row_height() * MOST_SHOWN as f32).into() } else { t.into() }
+    let t = Table::new(columns)
+        .extend(rows.into_iter().map(table::Row::new))
+        .empty(empty);
+    if many {
+        t.height(table::row_height() * MOST_SHOWN as f32).into()
+    } else {
+        t.into()
+    }
 }

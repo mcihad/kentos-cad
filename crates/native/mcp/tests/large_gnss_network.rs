@@ -14,14 +14,18 @@ const W: usize = 26;
 fn network() -> (Vec<Value>, Vec<Value>) {
     let base = [4_121_000.0, 2_652_000.0, 4_069_000.0];
     let (east, north) = ([-0.54, 0.84, 0.0], [-0.53, -0.34, 0.78]);
-    let at = |r: usize, c: usize| [0, 1, 2].map(|k| base[k] + 1000.0 * (c as f64 * east[k] + r as f64 * north[k]));
+    let at = |r: usize, c: usize| {
+        [0, 1, 2].map(|k| base[k] + 1000.0 * (c as f64 * east[k] + r as f64 * north[k]))
+    };
     let mut stations = Vec::new();
     for r in 0..W {
         for c in 0..W {
             let i = r * W + c;
             stations.push(match i {
                 0 => json!({"name": format!("S{i}"), "xyz": at(r, c), "fixed": true}),
-                _ if i.is_multiple_of(13) => json!({"name": format!("S{i}"), "xyz": at(r, c), "sigma": [0.02, 0.02, 0.02]}),
+                _ if i.is_multiple_of(13) => {
+                    json!({"name": format!("S{i}"), "xyz": at(r, c), "sigma": [0.02, 0.02, 0.02]})
+                }
                 _ => json!({"name": format!("S{i}")}),
             });
         }
@@ -33,7 +37,11 @@ fn network() -> (Vec<Value>, Vec<Value>) {
                 if r + dr < W && c + dc < W {
                     let (a, b) = (at(r, c), at(r + dr, c + dc));
                     let k = baselines.len() as f64;
-                    let noise = [0.003 * (k * 0.7).sin(), 0.003 * (k * 1.3).cos(), 0.006 * (k * 0.9).sin()];
+                    let noise = [
+                        0.003 * (k * 0.7).sin(),
+                        0.003 * (k * 1.3).cos(),
+                        0.006 * (k * 0.9).sin(),
+                    ];
                     let d: [f64; 3] = [0, 1, 2].map(|q| b[q] - a[q] + noise[q]);
                     baselines.push(json!({
                         "from": format!("S{}", r * W + c),
@@ -54,10 +62,23 @@ fn a_network_above_the_old_limit_over_mcp() {
     let d = call(&mut server, "drawing.new", json!({"workspace": "cad"}));
     let drawing = d["structuredContent"]["drawing"].clone();
     let (stations, baselines) = network();
-    let r = call(&mut server, "cad.survey.baselines", json!({"drawing": drawing, "stations": stations, "baselines": baselines}));
-    assert_eq!(r["isError"], false, "{}", r.to_string().chars().take(400).collect::<String>());
+    let r = call(
+        &mut server,
+        "cad.survey.baselines",
+        json!({"drawing": drawing, "stations": stations, "baselines": baselines}),
+    );
+    assert_eq!(
+        r["isError"],
+        false,
+        "{}",
+        r.to_string().chars().take(400).collect::<String>()
+    );
     let out = &r["structuredContent"]["output"];
-    let (n, u, f) = (out["n"].as_u64().unwrap(), out["u"].as_u64().unwrap(), out["f"].as_u64().unwrap());
+    let (n, u, f) = (
+        out["n"].as_u64().unwrap(),
+        out["u"].as_u64().unwrap(),
+        out["f"].as_u64().unwrap(),
+    );
     assert_eq!(u, 3 * (W * W - 1) as u64);
     assert!(u > 1500, "above the old dense limit");
     assert_eq!(n - u, f);
@@ -65,6 +86,15 @@ fn a_network_above_the_old_limit_over_mcp() {
     // A station named twice is refused at its path, as before.
     let mut twice = network().0;
     twice.push(json!({"name": "S5"}));
-    let r = call(&mut server, "cad.survey.baselines", json!({"drawing": drawing, "stations": twice, "baselines": network().1}));
-    assert_eq!(r["structuredContent"]["error"]["code"], "duplicate_station", "{}", r.to_string().chars().take(400).collect::<String>());
+    let r = call(
+        &mut server,
+        "cad.survey.baselines",
+        json!({"drawing": drawing, "stations": twice, "baselines": network().1}),
+    );
+    assert_eq!(
+        r["structuredContent"]["error"]["code"],
+        "duplicate_station",
+        "{}",
+        r.to_string().chars().take(400).collect::<String>()
+    );
 }

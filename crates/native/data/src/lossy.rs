@@ -9,8 +9,8 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
 
 use crate::{
-    Cancel, Capabilities, Change, Condition, DataError, Driver, Feature, NewFeature, NewTable, Read, Receipt, Request,
-    Schema, Source, TableInfo, Transaction, Value,
+    Cancel, Capabilities, Change, Condition, DataError, Driver, Feature, NewFeature, NewTable,
+    Read, Receipt, Request, Schema, Source, TableInfo, Transaction, Value,
 };
 
 /// The address prefix of a lossy source.
@@ -70,9 +70,16 @@ impl Driver for Lossy {
     }
 
     fn open(&self, address: &str) -> Result<Arc<dyn Source>, DataError> {
-        let wrapped = address.trim_start_matches(PREFIX).trim_end_matches(SUFFIX).to_owned();
+        let wrapped = address
+            .trim_start_matches(PREFIX)
+            .trim_end_matches(SUFFIX)
+            .to_owned();
         let inner = crate::registry().source(&wrapped)?;
-        Ok(Arc::new(LossySource { address: address.to_owned(), wrapped, inner }))
+        Ok(Arc::new(LossySource {
+            address: address.to_owned(),
+            wrapped,
+            inner,
+        }))
     }
 }
 
@@ -118,7 +125,13 @@ impl Source for LossySource {
     ) -> Result<Read, DataError> {
         self.inner.features(table, request, cancel, sink)
     }
-    fn unique(&self, table: &str, field: &str, condition: Option<&Condition>, limit: usize) -> Result<Vec<Value>, DataError> {
+    fn unique(
+        &self,
+        table: &str,
+        field: &str,
+        condition: Option<&Condition>,
+        limit: usize,
+    ) -> Result<Vec<Value>, DataError> {
         self.inner.unique(table, field, condition, limit)
     }
     fn groups(
@@ -131,7 +144,10 @@ impl Source for LossySource {
         self.inner.groups(table, field, condition, limit)
     }
     fn begin(&self) -> Result<Box<dyn Transaction>, DataError> {
-        Ok(Box::new(LossyTransaction { wrapped: self.wrapped.clone(), inner: self.inner.begin()? }))
+        Ok(Box::new(LossyTransaction {
+            wrapped: self.wrapped.clone(),
+            inner: self.inner.begin()?,
+        }))
     }
     fn receipts(&self, scope: &str) -> Result<bool, DataError> {
         self.inner.receipts(scope)
@@ -168,11 +184,19 @@ impl Transaction for LossyTransaction {
     fn drop_table(&mut self, table: &str) -> Result<(), DataError> {
         self.inner.drop_table(table)
     }
-    fn add_columns(&mut self, table: &str, fields: &[crate::schema::Field]) -> Result<(), DataError> {
+    fn add_columns(
+        &mut self,
+        table: &str,
+        fields: &[crate::schema::Field],
+    ) -> Result<(), DataError> {
         self.inner.add_columns(table, fields)
     }
 
-    fn set_rules(&mut self, table: &str, columns: &[crate::schema::RuledColumn]) -> Result<(), DataError> {
+    fn set_rules(
+        &mut self,
+        table: &str,
+        columns: &[crate::schema::RuledColumn],
+    ) -> Result<(), DataError> {
         self.inner.set_rules(table, columns)
     }
     fn receipt(&mut self, scope: &str, receipt: &Receipt) -> Result<(), DataError> {

@@ -92,7 +92,11 @@ pub fn check_regions(regions: &[[f64; 2]], length: f64) -> Result<Vec<[f64; 2]>,
     for w in order.windows(2) {
         let (a, b) = (regions[w[0]], regions[w[1]]);
         if b[0] < a[1] - SAME_STATION {
-            let (first, second) = if w[0] < w[1] { (w[0], w[1]) } else { (w[1], w[0]) };
+            let (first, second) = if w[0] < w[1] {
+                (w[0], w[1])
+            } else {
+                (w[1], w[0])
+            };
             return Err(CorridorError::Overlap { first, second });
         }
         if b[0] > a[1] + SAME_STATION {
@@ -107,7 +111,11 @@ pub fn check_regions(regions: &[[f64; 2]], length: f64) -> Result<Vec<[f64; 2]>,
 pub fn curve_step(f: &Frequency, r: f64) -> f64 {
     match f.sag {
         Some(t) if r.is_finite() && r > 0.0 => {
-            let chord = if t >= r { 2.0 * r } else { 2.0 * (2.0 * r * t - t * t).sqrt() };
+            let chord = if t >= r {
+                2.0 * r
+            } else {
+                2.0 * (2.0 * r * t - t * t).sqrt()
+            };
             f.curve.min(chord)
         }
         _ => f.curve,
@@ -117,14 +125,28 @@ pub fn curve_step(f: &Frequency, r: f64) -> f64 {
 /// A region's stations: its ends; the tangents' multiples of the interval (from station 0); each curve and clothoid
 /// divided equally (the whole element, by [`curve_step`] at its smallest radius); the elements' starts and ends; the
 /// `events` given (critical, profile, user stations); within [`SAME_STATION`] the strongest reason stays.
-pub fn stations(al: &Alignment, region: [f64; 2], f: &Frequency, events: &[Station]) -> Result<Vec<Station>, CorridorError> {
+pub fn stations(
+    al: &Alignment,
+    region: [f64; 2],
+    f: &Frequency,
+    events: &[Station],
+) -> Result<Vec<Station>, CorridorError> {
     let ok = |v: f64| v.is_finite() && v > 0.0;
     if !(ok(f.tangent) && ok(f.curve) && f.sag.is_none_or(ok)) {
         return Err(CorridorError::BadFrequency);
     }
     let [a, b] = region;
     let inside = |s: f64| s >= a - 1e-9 && s <= b + 1e-9;
-    let mut all = vec![Station { station: a, why: Why::Region }, Station { station: b, why: Why::Region }];
+    let mut all = vec![
+        Station {
+            station: a,
+            why: Why::Region,
+        },
+        Station {
+            station: b,
+            why: Why::Region,
+        },
+    ];
     for e in &al.elements {
         let (e0, e1) = (e.station, e.station + e.length);
         if e1 < a - 1e-9 || e0 > b + 1e-9 {
@@ -132,7 +154,10 @@ pub fn stations(al: &Alignment, region: [f64; 2], f: &Frequency, events: &[Stati
         }
         for s in [e0, e1] {
             if inside(s) {
-                all.push(Station { station: s, why: Why::Geometry });
+                all.push(Station {
+                    station: s,
+                    why: Why::Geometry,
+                });
             }
         }
         match e.kind {
@@ -144,7 +169,10 @@ pub fn stations(al: &Alignment, region: [f64; 2], f: &Frequency, events: &[Stati
                     return Err(CorridorError::TooMany);
                 }
                 for k in first..=last {
-                    all.push(Station { station: k as f64 * f.tangent, why: Why::Interval });
+                    all.push(Station {
+                        station: k as f64 * f.tangent,
+                        why: Why::Interval,
+                    });
                 }
             }
             ElementKind::Arc | ElementKind::Spiral => {
@@ -157,7 +185,10 @@ pub fn stations(al: &Alignment, region: [f64; 2], f: &Frequency, events: &[Stati
                 for i in 1..n as usize {
                     let s = e0 + e.length * i as f64 / n;
                     if inside(s) {
-                        all.push(Station { station: s, why: Why::Curve });
+                        all.push(Station {
+                            station: s,
+                            why: Why::Curve,
+                        });
                     }
                 }
             }
@@ -287,7 +318,11 @@ pub fn side_codes(side: &Side, built: &SideSection) -> Vec<String> {
     if benched {
         let corners = built.points.len().saturating_sub(out.len() + 1);
         for k in 0..corners {
-            out.push(if k % 2 == 0 { format!("bench{}In", k / 2 + 1) } else { format!("bench{}Out", k / 2 + 1) });
+            out.push(if k % 2 == 0 {
+                format!("bench{}In", k / 2 + 1)
+            } else {
+                format!("bench{}Out", k / 2 + 1)
+            });
         }
     }
     if out.len() < built.points.len() {
@@ -328,11 +363,26 @@ pub struct StakePoint {
 /// A cross's coded points left to right (the axis, then each side's points as the feature lines code them), none where
 /// the cross has no section. Points at the same offset keep the feature lines' order.
 pub fn stake_points(template: &Template, cross: &Cross) -> Vec<StakePoint> {
-    let Some(sec) = &cross.section else { return Vec::new() };
-    let mut out = vec![StakePoint { code: "axis".into(), offset: 0.0, at: place(&cross.line, 0.0), z: sec.axis }];
-    for (side, b, right) in [(&template.left, &sec.left, false), (&template.right, &sec.right, true)] {
+    let Some(sec) = &cross.section else {
+        return Vec::new();
+    };
+    let mut out = vec![StakePoint {
+        code: "axis".into(),
+        offset: 0.0,
+        at: place(&cross.line, 0.0),
+        z: sec.axis,
+    }];
+    for (side, b, right) in [
+        (&template.left, &sec.left, false),
+        (&template.right, &sec.right, true),
+    ] {
         for (code, o, z) in coded(side, b, right) {
-            out.push(StakePoint { code, offset: o, at: place(&cross.line, o), z });
+            out.push(StakePoint {
+                code,
+                offset: o,
+                at: place(&cross.line, o),
+                z,
+            });
         }
     }
     out.sort_by(|a, b| a.offset.total_cmp(&b.offset));
@@ -348,7 +398,11 @@ pub fn top_line_of(line: &SampleLine, section: &Section, components: [usize; 2])
 
 fn top_line(line: &SampleLine, section: &Section, components: [usize; 2]) -> Vec<[f64; 3]> {
     let upto = |s: &SideSection, n: usize| -> Vec<[f64; 2]> {
-        if s.kind == Kind::Open { s.points[..=n.min(s.points.len() - 1)].to_vec() } else { s.points.clone() }
+        if s.kind == Kind::Open {
+            s.points[..=n.min(s.points.len() - 1)].to_vec()
+        } else {
+            s.points.clone()
+        }
     };
     let left = upto(&section.left, components[0]);
     let right = upto(&section.right, components[1]);
@@ -366,7 +420,11 @@ fn top_line(line: &SampleLine, section: &Section, components: [usize; 2]) -> Vec
 /// component while there are components, its slope beyond.
 fn top_roles(template: &Template, section: &Section, components: [usize; 2]) -> Vec<Role> {
     let side = |t: &Side, s: &SideSection, n: usize| -> Vec<Role> {
-        let used = if s.kind == Kind::Open { n.min(s.points.len() - 1) + 1 } else { s.points.len() };
+        let used = if s.kind == Kind::Open {
+            n.min(s.points.len() - 1) + 1
+        } else {
+            s.points.len()
+        };
         (0..used.saturating_sub(1))
             .map(|k| match t.components.get(k) {
                 Some(crate::section::template::Component::Lane { .. }) => Role::Lane,
@@ -376,7 +434,10 @@ fn top_roles(template: &Template, section: &Section, components: [usize; 2]) -> 
             })
             .collect()
     };
-    let mut out: Vec<Role> = side(&template.left, &section.left, components[0]).into_iter().rev().collect();
+    let mut out: Vec<Role> = side(&template.left, &section.left, components[0])
+        .into_iter()
+        .rev()
+        .collect();
     out.extend(side(&template.right, &section.right, components[1]));
     out
 }
@@ -447,8 +508,11 @@ pub fn assemble(regions: &[RegionCrosses]) -> Built {
         let mut open: Vec<Feature> = Vec::new();
         for cross in &region.crosses {
             let s = cross.line.station;
-            let mut here: Vec<(String, [f64; 4])> =
-                coded_points(t, cross).unwrap_or_default().into_iter().map(|(c, p)| (c, [s, p[0], p[1], p[2]])).collect();
+            let mut here: Vec<(String, [f64; 4])> = coded_points(t, cross)
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(c, p)| (c, [s, p[0], p[1], p[2]]))
+                .collect();
             let mut next = Vec::new();
             for f in open.drain(..) {
                 match here.iter().position(|h| h.0 == f.code) {
@@ -463,7 +527,11 @@ pub fn assemble(regions: &[RegionCrosses]) -> Built {
                 }
             }
             for (code, p) in here {
-                next.push(Feature { code, region: ri, points: vec![p] });
+                next.push(Feature {
+                    code,
+                    region: ri,
+                    points: vec![p],
+                });
             }
             open = next;
         }
@@ -483,19 +551,33 @@ pub fn assemble(regions: &[RegionCrosses]) -> Built {
                 run = match (run, why) {
                     (Some((w, from, _)), Some(now)) if w == now => Some((w, from, s)),
                     (Some((w, from, to)), now) => {
-                        built.unsolved.push(Stretch { region: ri, right, why: w, from, to });
+                        built.unsolved.push(Stretch {
+                            region: ri,
+                            right,
+                            why: w,
+                            from,
+                            to,
+                        });
                         now.map(|n| (n, s, s))
                     }
                     (None, now) => now.map(|n| (n, s, s)),
                 };
             }
             if let Some((why, from, to)) = run {
-                built.unsolved.push(Stretch { region: ri, right, why, from, to });
+                built.unsolved.push(Stretch {
+                    region: ri,
+                    right,
+                    why,
+                    from,
+                    to,
+                });
             }
         }
         // The top surface, section to section.
         for w in region.crosses.windows(2) {
-            let (Some(sa), Some(sb)) = (&w[0].section, &w[1].section) else { continue };
+            let (Some(sa), Some(sb)) = (&w[0].section, &w[1].section) else {
+                continue;
+            };
             let a = top_line(&w[0].line, sa, counts);
             let b = top_line(&w[1].line, sb, counts);
             let (ra, rb) = (top_roles(t, sa, counts), top_roles(t, sb, counts));
@@ -529,7 +611,12 @@ pub fn assemble(regions: &[RegionCrosses]) -> Built {
             let at = built.triangles.len();
             built.triangles.extend(tris);
             built.roles.extend(roles);
-            built.strips.push((ri, w[0].line.station, w[1].line.station, at..built.triangles.len()));
+            built.strips.push((
+                ri,
+                w[0].line.station,
+                w[1].line.station,
+                at..built.triangles.len(),
+            ));
         }
     }
     built

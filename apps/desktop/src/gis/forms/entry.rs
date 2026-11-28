@@ -792,7 +792,10 @@ impl Entry {
 
     /// A field's shown name (its alias, else its name), by its name.
     pub(crate) fn field_label(&self, name: &str) -> Option<String> {
-        self.fields.iter().find(|f| f.name == name).map(|f| f.label().to_owned())
+        self.fields
+            .iter()
+            .find(|f| f.name == name)
+            .map(|f| f.label().to_owned())
     }
 
     /// A value typed: the last refusal no longer stands.
@@ -823,7 +826,11 @@ impl Entry {
 
     /// Its record as a message names it: the form's name and its id's start.
     pub(crate) fn record_words(&self) -> String {
-        format!("{}, {}", self.name, self.uid.chars().take(8).collect::<String>())
+        format!(
+            "{}, {}",
+            self.name,
+            self.uid.chars().take(8).collect::<String>()
+        )
     }
 
     pub(crate) fn dirty_now(&self) -> bool {

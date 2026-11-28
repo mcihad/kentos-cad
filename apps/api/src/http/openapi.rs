@@ -23,8 +23,14 @@ fn text(body: &'static str, kind: &'static str) -> Response {
     let mut r = body.into_response();
     let h = r.headers_mut();
     h.insert(header::CONTENT_TYPE, HeaderValue::from_static(kind));
-    h.insert(header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=300"));
-    h.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, HeaderValue::from_static("*"));
+    h.insert(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("public, max-age=300"),
+    );
+    h.insert(
+        header::ACCESS_CONTROL_ALLOW_ORIGIN,
+        HeaderValue::from_static("*"),
+    );
     r
 }
 

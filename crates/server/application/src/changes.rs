@@ -732,11 +732,14 @@ async fn check_dimension_rows(
     let ids: HashSet<Uuid> = sets
         .iter()
         .flat_map(|set| {
-            set.sources().into_iter().map(|id| Uuid::from_bytes(id.0)).chain(
-                set.members
-                    .iter()
-                    .map(|member| Uuid::from_bytes(member.uid.0)),
-            )
+            set.sources()
+                .into_iter()
+                .map(|id| Uuid::from_bytes(id.0))
+                .chain(
+                    set.members
+                        .iter()
+                        .map(|member| Uuid::from_bytes(member.uid.0)),
+                )
         })
         .collect();
     let records = current_copies(tx, access, &ids.into_iter().collect::<Vec<_>>()).await?;
@@ -763,7 +766,10 @@ async fn check_dimension_rows(
             EntityId::parse(&entity.opening.host),
             EntityId::parse(&record.id),
         ) {
-            by_host.entry(host).or_default().push((uid, *entity.opening));
+            by_host
+                .entry(host)
+                .or_default()
+                .push((uid, *entity.opening));
         }
     }
     let p = |point: kentos_contracts::Vec2| Vec2::new(point.x, point.y);
@@ -1160,7 +1166,8 @@ async fn check_span_rows(
         .into_iter()
         .map(|row| {
             let r = record(row)?;
-            let id = EntityId::parse(&r.id).ok_or_else(|| AppError::invalid("Nesne kimliği UUID değil."))?;
+            let id = EntityId::parse(&r.id)
+                .ok_or_else(|| AppError::invalid("Nesne kimliği UUID değil."))?;
             Ok((id, r))
         })
         .collect::<AppResult<_>>()?;
@@ -1184,18 +1191,26 @@ async fn check_span_rows(
         path: Vec::new(),
         broken: None,
     };
-    let key = |segment: &DimensionSetSegment| serde_json::to_string(segment).expect("finite source places");
+    let key = |segment: &DimensionSetSegment| {
+        serde_json::to_string(segment).expect("finite source places")
+    };
     let close = |a: f64, b: f64| (a - b).abs() <= 1e-9 + 16. * f64::EPSILON * a.abs().max(b.abs());
-    let at = |p: kentos_contracts::Vec2, q: kentos_geometry_core::vec2::Vec2| close(p.x, q.x) && close(p.y, q.y);
+    let at = |p: kentos_contracts::Vec2, q: kentos_geometry_core::vec2::Vec2| {
+        close(p.x, q.x) && close(p.y, q.y)
+    };
     let old: HashMap<String, EntityId> = previous
         .into_iter()
         .flat_map(|old| &old.members)
         .map(|m| (key(&m.segment()), m.uid))
         .collect();
-    let mut members: HashMap<String, (usize, &kentos_contracts::DimensionSetMember)> = HashMap::new();
+    let mut members: HashMap<String, (usize, &kentos_contracts::DimensionSetMember)> =
+        HashMap::new();
     for (k, member) in set.members.iter().enumerate() {
         let segment = member.segment();
-        if old.get(&key(&segment)).is_some_and(|uid| *uid != member.uid) {
+        if old
+            .get(&key(&segment))
+            .is_some_and(|uid| *uid != member.uid)
+        {
             return Err(AppError::invalid_at(
                 format!("project.dimensionSets[{i}].members[{k}].uid"),
                 "Değişmeyen aktif kaynak çiftinin ölçü kimliği korunmalı.",
@@ -1220,7 +1235,10 @@ async fn check_span_rows(
                 "Güncel kaynakların ölçü üyeliği eksik. Cephenin ya da mahalin ölçülerini tam tariften aynı işlemde yeniden üretin.",
             ));
         };
-        let Some(Entity::Dimension(d)) = records.get(&Uuid::from_bytes(member.uid.0)).map(|r| &r.entity) else {
+        let Some(Entity::Dimension(d)) = records
+            .get(&Uuid::from_bytes(member.uid.0))
+            .map(|r| &r.entity)
+        else {
             continue;
         };
         let field = if !at(d.a, span.a.at) {
@@ -1236,7 +1254,13 @@ async fn check_span_rows(
             || d.zb.is_some()
         {
             Some("style")
-        } else if !spans::scales_agree(set, d, span.offset, spans::row_delta(&planned, span.at), scale) {
+        } else if !spans::scales_agree(
+            set,
+            d,
+            span.offset,
+            spans::row_delta(&planned, span.at),
+            scale,
+        ) {
             // The sheet scales' representations (docs/adr/0730 §5).
             Some("annotative")
         } else {

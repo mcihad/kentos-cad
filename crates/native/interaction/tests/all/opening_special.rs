@@ -127,8 +127,16 @@ fn a_multi_leaf_sliding_door_takes_its_tracks_and_parts_both_ways() {
     assert_eq!(row(&b, "V"), None, "no tracks for one leaf");
     assert!(set(&mut b, "E", "3.2"));
     assert!(set(&mut b, "K", "3"));
-    assert_eq!(row(&b, "V").as_deref(), Some("2"), "two tracks unless given");
-    assert_eq!(row(&b, "İ").as_deref(), Some("Hayır"), "three leaves may slide over a fixed middle (XOX)");
+    assert_eq!(
+        row(&b, "V").as_deref(),
+        Some("2"),
+        "two tracks unless given"
+    );
+    assert_eq!(
+        row(&b, "İ").as_deref(),
+        Some("Hayır"),
+        "three leaves may slide over a fixed middle (XOX)"
+    );
     assert!(set(&mut b, "V", "3"));
     assert!(!set(&mut b, "V", "4"), "two or three tracks");
     b.click(3., 0.3);

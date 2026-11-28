@@ -31,7 +31,10 @@ pub(super) const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.topology.exceptions",
-        refusals: &[&["invalid_input", "reason_required", "finding_not_found"], REVISION],
+        refusals: &[
+            &["invalid_input", "reason_required", "finding_not_found"],
+            REVISION,
+        ],
         warnings: &[],
         targets: none,
     },
@@ -173,8 +176,19 @@ pub(super) const ENTRIES: &[Entry] = &[
         id: "cad.layers.export",
         refusals: &[
             &["no_layer", "no_target", "invalid_option", "invalid_name"],
-            &["layer_not_found", "not_a_layer", "service_layer", "field_not_found"],
-            &["invalid_expression", "unknown_srid", "target_exists", "source_unreachable", "nothing_to_export"],
+            &[
+                "layer_not_found",
+                "not_a_layer",
+                "service_layer",
+                "field_not_found",
+            ],
+            &[
+                "invalid_expression",
+                "unknown_srid",
+                "target_exists",
+                "source_unreachable",
+                "nothing_to_export",
+            ],
         ],
         warnings: &["export_skipped", "field_left_out"],
         targets: none,
@@ -185,7 +199,12 @@ pub(super) const ENTRIES: &[Entry] = &[
         refusals: &[
             &["no_layer", "no_target", "invalid_name", "layer_not_found"],
             &["not_a_layer", "service_layer", "data_layer", "layer_locked"],
-            &["target_exists", "source_unreachable", "nothing_to_export", "unwritable_objects"],
+            &[
+                "target_exists",
+                "source_unreachable",
+                "nothing_to_export",
+                "unwritable_objects",
+            ],
         ],
         // docs/adr/9114 §2: a text's details its table has no column for.
         warnings: &["text_details_left"],
@@ -206,8 +225,18 @@ pub(super) const ENTRIES: &[Entry] = &[
         id: "cad.layers.columns",
         refusals: &[
             &["no_layer", "no_columns", "invalid_name", "column_exists"],
-            &["layer_not_found", "not_a_layer", "not_a_data_layer", "data_layer_read_only", "invalid_fields"],
-            &["no_field_rules", "source_unreachable", "columns_not_permitted"],
+            &[
+                "layer_not_found",
+                "not_a_layer",
+                "not_a_data_layer",
+                "data_layer_read_only",
+                "invalid_fields",
+            ],
+            &[
+                "no_field_rules",
+                "source_unreachable",
+                "columns_not_permitted",
+            ],
         ],
         warnings: &[],
         targets: none,
@@ -217,9 +246,18 @@ pub(super) const ENTRIES: &[Entry] = &[
         id: "cad.layers.session",
         refusals: &[
             &["no_layer", "one_layer", "no_keys", "invalid_count"],
-            &["layer_not_found", "not_a_data_layer", "data_layer_read_only"],
+            &[
+                "layer_not_found",
+                "not_a_data_layer",
+                "data_layer_read_only",
+            ],
             &["data_layer_not_editing", "data_edits_unsaved"],
-            &["source_unreachable", "data_save_failed", "rows_changed", "clash_choice"],
+            &[
+                "source_unreachable",
+                "data_save_failed",
+                "rows_changed",
+                "clash_choice",
+            ],
         ],
         warnings: &["data_save_failed"],
         targets: none,

@@ -44,7 +44,11 @@ struct Live {
 
 impl LiveView {
     pub fn new(camera: Camera) -> Self {
-        Self(Arc::new(Mutex::new(Live { camera, gesture: None, dragged: None })))
+        Self(Arc::new(Mutex::new(Live {
+            camera,
+            gesture: None,
+            dragged: None,
+        })))
     }
 
     fn with<T>(&self, f: impl FnOnce(&mut Live) -> T) -> T {
@@ -120,15 +124,31 @@ mod tests {
         let start = live.camera();
         let t0 = Instant::now();
         live.zoom(1.15, Point::new(100.0, 100.0), t0);
-        live.pan(Vector::new(30.0, -10.0), Point::new(130.0, 90.0), t0 + Duration::from_millis(40));
+        live.pan(
+            Vector::new(30.0, -10.0),
+            Point::new(130.0, 90.0),
+            t0 + Duration::from_millis(40),
+        );
         assert!(live.moving());
-        assert_eq!(live.settles_at(), Some(t0 + Duration::from_millis(40) + SETTLE), "the last move counts");
+        assert_eq!(
+            live.settles_at(),
+            Some(t0 + Duration::from_millis(40) + SETTLE),
+            "the last move counts"
+        );
         let mut expected = start;
         expected.zoom_at(1.15, 100.0, 100.0);
         expected.pan_by(30.0, -10.0);
         let (from, to, dragged) = live.take().expect("a gesture");
-        assert_eq!((from, to), (start, expected), "the camera's own math, from where the gesture started");
-        assert_eq!(dragged, Some(Point::new(130.0, 90.0)), "where the drag left the pointer");
+        assert_eq!(
+            (from, to),
+            (start, expected),
+            "the camera's own math, from where the gesture started"
+        );
+        assert_eq!(
+            dragged,
+            Some(Point::new(130.0, 90.0)),
+            "where the drag left the pointer"
+        );
         assert!(!live.moving() && live.take().is_none(), "told once");
     }
 

@@ -23,7 +23,12 @@ const STEP: [f64; 2] = [14.0, 12.0];
 fn bind(value: &Value, names: &BTreeMap<String, String>) -> Value {
     match value {
         Value::String(s) if s.starts_with('$') => json!(names[&s[1..]]),
-        Value::Object(fields) => Value::Object(fields.iter().map(|(k, v)| (k.clone(), bind(v, names))).collect()),
+        Value::Object(fields) => Value::Object(
+            fields
+                .iter()
+                .map(|(k, v)| (k.clone(), bind(v, names)))
+                .collect(),
+        ),
         Value::Array(items) => Value::Array(items.iter().map(|v| bind(v, names)).collect()),
         other => other.clone(),
     }
@@ -40,7 +45,10 @@ fn bound(output: &Value, key: &Value, names: &mut BTreeMap<String, String>) {
             names.insert(name.clone(), text(uid));
         }
         Value::Array(keys) => {
-            let ids = output["created"].as_array().or(output["uids"].as_array()).expect("ids");
+            let ids = output["created"]
+                .as_array()
+                .or(output["uids"].as_array())
+                .expect("ids");
             for (k, u) in keys.iter().zip(ids) {
                 names.insert(text(k), text(u));
             }
@@ -50,7 +58,9 @@ fn bound(output: &Value, key: &Value, names: &mut BTreeMap<String, String>) {
 }
 
 fn run(s: &mut Session, command: &str, op: Op, input: Value) -> Value {
-    let answer = s.run(command, None, op, input).unwrap_or_else(|e| panic!("{command}: {e:?}"));
+    let answer = s
+        .run(command, None, op, input)
+        .unwrap_or_else(|e| panic!("{command}: {e:?}"));
     assert_eq!(answer["status"], "completed", "{command}: {answer}");
     answer
 }
@@ -61,9 +71,17 @@ pub(crate) fn drawn() -> (Session, BTreeMap<String, String>) {
     let choices = kentos_headless::new_drawing(&scenario["project"]).expect("a project");
     let mut s = Session::new(&choices).expect("a drawing");
     let mut names = BTreeMap::new();
-    names.insert("layer".to_owned(), s.summary()["activeLayer"].as_str().expect("a layer").to_owned());
+    names.insert(
+        "layer".to_owned(),
+        s.summary()["activeLayer"]
+            .as_str()
+            .expect("a layer")
+            .to_owned(),
+    );
     for step in scenario["steps"].as_array().expect("steps") {
-        let Some(command) = step["command"].as_str() else { continue };
+        let Some(command) = step["command"].as_str() else {
+            continue;
+        };
         if step["label"] == "Duvarı düzenle" {
             break;
         }
@@ -89,13 +107,23 @@ fn uids(s: &Session, tables: bool) -> Vec<String> {
 pub(crate) fn copied_with(s: &mut Session, n: usize, tables: bool) {
     let one = uids(s, tables);
     for c in 1..n.min(10) {
-        run(s, "cad.entities.transform", Op::Execute, json!({ "uids": one,
-            "transform": { "kind": "move", "dx": STEP[0] * c as f64, "dy": 0.0 }, "copy": true }));
+        run(
+            s,
+            "cad.entities.transform",
+            Op::Execute,
+            json!({ "uids": one,
+            "transform": { "kind": "move", "dx": STEP[0] * c as f64, "dy": 0.0 }, "copy": true }),
+        );
     }
     let row = uids(s, tables);
     for r in 1..n.div_ceil(10) {
-        run(s, "cad.entities.transform", Op::Execute, json!({ "uids": row,
-            "transform": { "kind": "move", "dx": 0.0, "dy": STEP[1] * r as f64 }, "copy": true }));
+        run(
+            s,
+            "cad.entities.transform",
+            Op::Execute,
+            json!({ "uids": row,
+            "transform": { "kind": "move", "dx": 0.0, "dy": STEP[1] * r as f64 }, "copy": true }),
+        );
     }
 }
 
@@ -148,7 +176,10 @@ fn flat_timing() {
         .split(',')
         .filter_map(|s| s.trim().parse().ok())
         .collect();
-    let repeat: usize = std::env::var("KENTOS_PERF_REPEAT").ok().and_then(|s| s.parse().ok()).unwrap_or(3);
+    let repeat: usize = std::env::var("KENTOS_PERF_REPEAT")
+        .ok()
+        .and_then(|s| s.parse().ok())
+        .unwrap_or(3);
     for n in counts {
         let (mut s, names) = drawn();
         let each = std::env::var("KENTOS_PERF_SCHEDULES").is_ok_and(|v| v == "each");
@@ -164,25 +195,44 @@ fn flat_timing() {
         let mut rows = serde_json::Map::new();
         rows.insert("residentMb".into(), json!(resident()));
         let runs: [(&str, &str, Op, Value); 4] = [
-            ("distanceMs", "cad.walls.edit", Op::Execute,
-                json!({ "uids": [p3], "operation": { "kind": "distance", "side": "right", "distance": 3.7 } })),
-            ("planMs", "cad.walls.edit", Op::Plan,
-                json!({ "uids": [p3], "operation": { "kind": "distance", "side": "right", "distance": 3.7 } })),
-            ("shiftMs", "cad.walls.edit", Op::Execute, json!({ "uids": [p3], "operation": { "kind": "shift", "by": 0.05 } })),
-            ("attributeMs", "cad.entities.set", Op::Execute,
-                json!({ "uids": [p3], "operation": "attributes", "attrs": { "Not": "x" } })),
+            (
+                "distanceMs",
+                "cad.walls.edit",
+                Op::Execute,
+                json!({ "uids": [p3], "operation": { "kind": "distance", "side": "right", "distance": 3.7 } }),
+            ),
+            (
+                "planMs",
+                "cad.walls.edit",
+                Op::Plan,
+                json!({ "uids": [p3], "operation": { "kind": "distance", "side": "right", "distance": 3.7 } }),
+            ),
+            (
+                "shiftMs",
+                "cad.walls.edit",
+                Op::Execute,
+                json!({ "uids": [p3], "operation": { "kind": "shift", "by": 0.05 } }),
+            ),
+            (
+                "attributeMs",
+                "cad.entities.set",
+                Op::Execute,
+                json!({ "uids": [p3], "operation": "attributes", "attrs": { "Not": "x" } }),
+            ),
         ];
         for (name, command, op, input) in runs {
             let mut took = Vec::new();
             let mut undo = Vec::new();
-            let ((), most) = peak(|| for _ in 0..repeat {
-                let t = Instant::now();
-                run(&mut s, command, op, input.clone());
-                took.push(t.elapsed().as_secs_f64() * 1e3);
-                if op == Op::Execute {
+            let ((), most) = peak(|| {
+                for _ in 0..repeat {
                     let t = Instant::now();
-                    s.undo();
-                    undo.push(t.elapsed().as_secs_f64() * 1e3);
+                    run(&mut s, command, op, input.clone());
+                    took.push(t.elapsed().as_secs_f64() * 1e3);
+                    if op == Op::Execute {
+                        let t = Instant::now();
+                        s.undo();
+                        undo.push(t.elapsed().as_secs_f64() * 1e3);
+                    }
                 }
             });
             rows.insert(name.into(), json!(median(took)));
@@ -191,7 +241,14 @@ fn flat_timing() {
                 rows.insert(format!("{name}Undo"), json!(median(undo)));
             }
         }
-        let tables = s.document().entities().filter(|e| matches!(e, kentos_commands::Entity::Table(_))).count();
-        println!("FLAT {n} ({objects} objects, {tables} tables): {}", Value::Object(rows));
+        let tables = s
+            .document()
+            .entities()
+            .filter(|e| matches!(e, kentos_commands::Entity::Table(_)))
+            .count();
+        println!(
+            "FLAT {n} ({objects} objects, {tables} tables): {}",
+            Value::Object(rows)
+        );
     }
 }

@@ -56,7 +56,10 @@ impl SignupGuard {
     }
 
     fn mac(&self, issued: u64, nonce: &str) -> String {
-        hex(&hmac_sha256(&self.secret, format!("signup:{issued}.{nonce}").as_bytes()))
+        hex(&hmac_sha256(
+            &self.secret,
+            format!("signup:{issued}.{nonce}").as_bytes(),
+        ))
     }
 
     /// A ticket issued at `now` (Unix seconds).
@@ -68,16 +71,24 @@ impl SignupGuard {
     /// Takes the ticket back at `now`: why not, in the person's words, when it does not do.
     pub fn redeem(&self, ticket: Option<&str>, now: u64) -> Result<(), &'static str> {
         const REOPEN: &str = "Kayıt formunu yeniden açın (sayfayı yenileyin).";
-        let ticket = ticket.map(str::trim).filter(|t| !t.is_empty()).ok_or(REOPEN)?;
+        let ticket = ticket
+            .map(str::trim)
+            .filter(|t| !t.is_empty())
+            .ok_or(REOPEN)?;
         let mut parts = ticket.splitn(3, '.');
-        let (Some(issued), Some(nonce), Some(mac)) = (parts.next(), parts.next(), parts.next()) else {
+        let (Some(issued), Some(nonce), Some(mac)) = (parts.next(), parts.next(), parts.next())
+        else {
             return Err(REOPEN);
         };
         let issued: u64 = issued.parse().map_err(|_| REOPEN)?;
         let expected = self.mac(issued, nonce);
         // Every byte compared, so the time taken says nothing about where it differs.
         let same = expected.len() == mac.len()
-            && expected.bytes().zip(mac.bytes()).fold(0u8, |acc, (a, b)| acc | (a ^ b)) == 0;
+            && expected
+                .bytes()
+                .zip(mac.bytes())
+                .fold(0u8, |acc, (a, b)| acc | (a ^ b))
+                == 0;
         if !same {
             return Err(REOPEN);
         }
@@ -107,7 +118,8 @@ pub struct ClientAddr(pub Option<IpAddr>);
 impl ClientAddr {
     /// The key a limit counts under.
     pub fn key(&self) -> String {
-        self.0.map_or_else(|| "bilinmeyen".to_owned(), |ip| ip.to_string())
+        self.0
+            .map_or_else(|| "bilinmeyen".to_owned(), |ip| ip.to_string())
     }
 }
 
@@ -115,7 +127,10 @@ impl<S: Send + Sync> FromRequestParts<S> for ClientAddr {
     type Rejection = std::convert::Infallible;
 
     async fn from_request_parts(parts: &mut Parts, _: &S) -> Result<Self, Self::Rejection> {
-        let peer = parts.extensions.get::<ConnectInfo<SocketAddr>>().map(|c| c.0.ip());
+        let peer = parts
+            .extensions
+            .get::<ConnectInfo<SocketAddr>>()
+            .map(|c| c.0.ip());
         let forwarded = peer.filter(IpAddr::is_loopback).and_then(|_| {
             parts
                 .headers
@@ -144,10 +159,18 @@ mod tests {
         assert_eq!(g.redeem(Some(&t), 1_000 + MIN_FILL), Ok(()));
         assert!(g.redeem(Some(&t), 1_010).is_err(), "only once");
         let old = g.ticket(1_000);
-        assert!(g.redeem(Some(&old), 1_000 + MAX_AGE + 1).unwrap_err().contains("süresi doldu"));
+        assert!(
+            g.redeem(Some(&old), 1_000 + MAX_AGE + 1)
+                .unwrap_err()
+                .contains("süresi doldu")
+        );
         // Another server's ticket, a changed one, none at all.
         let other = SignupGuard::default().ticket(1_000);
-        assert!(g.redeem(Some(&other), 1_010).unwrap_err().contains("yeniden açın"));
+        assert!(
+            g.redeem(Some(&other), 1_010)
+                .unwrap_err()
+                .contains("yeniden açın")
+        );
         let forged = g.ticket(1_000).replacen("1000.", "900.", 1);
         assert!(g.redeem(Some(&forged), 1_010).is_err());
         assert!(g.redeem(None, 1_010).is_err() && g.redeem(Some(""), 1_010).is_err());

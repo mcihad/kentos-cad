@@ -15,10 +15,10 @@
 //!
 //! Test code only.
 
-use crate::arch_ext::*;
 use crate::arch;
-use serde_json::Value;
 use crate::arch::ArchState;
+use crate::arch_ext::*;
+use serde_json::Value;
 
 use crate::app::{App, Message};
 use crate::arch_audit::Event;
@@ -37,7 +37,8 @@ fn setup() -> Value {
 pub(crate) fn open_flat(app: &mut App, edit: impl FnOnce(&mut Value)) {
     let mut d = setup();
     edit(&mut d);
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(d).expect("the drawing reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(d).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     make_cad(app);
@@ -60,7 +61,8 @@ fn event(app: &mut App, e: Event) {
 pub(crate) fn row_of(app: &App, code: &str) -> usize {
     let shown = app.arch_audit_shown();
     let findings = &app
-        .modules.arch()
+        .modules
+        .arch()
         .arch_audit
         .audited
         .as_ref()
@@ -100,7 +102,10 @@ fn undone(app: &mut App) {
 /// One group: the spaces' findings alone.
 fn spaces(app: &mut App) {
     audited(app);
-    event(app, Event::Group(Some(kentos_commands::ArchAuditCheck::Spaces)));
+    event(
+        app,
+        Event::Group(Some(kentos_commands::ArchAuditCheck::Spaces)),
+    );
     let row = row_of(app, "arch_space_narrow");
     event(app, Event::Press(row));
 }
@@ -108,7 +113,8 @@ fn spaces(app: &mut App) {
 /// A drawing with nothing to say: the room and its partitions alone.
 fn clean(app: &mut App) {
     open_flat(app, |d| {
-        let keep = |e: &Value| e["kind"] == "wall" && [1, 2, 4].contains(&e["id"].as_u64().unwrap_or(0));
+        let keep =
+            |e: &Value| e["kind"] == "wall" && [1, 2, 4].contains(&e["id"].as_u64().unwrap_or(0));
         let ents: Vec<Value> = d["entities"].as_array().expect("entities").clone();
         let uids: Vec<Value> = d["uids"].as_array().expect("uids").clone();
         let (ents, uids): (Vec<Value>, Vec<Value>) =
@@ -123,7 +129,10 @@ fn clean(app: &mut App) {
 /// The Katlar group (docs/adr/0717 §3): the objects without a level, the first one pressed, Düzelt giving Etkin kat.
 fn levels(app: &mut App) {
     audited(app);
-    event(app, Event::Group(Some(kentos_commands::ArchAuditCheck::Levels)));
+    event(
+        app,
+        Event::Group(Some(kentos_commands::ArchAuditCheck::Levels)),
+    );
     let row = row_of(app, "arch_level_missing");
     event(app, Event::Press(row));
 }
@@ -168,7 +177,8 @@ fn kata_ver_gives_every_object_without_a_level_one() {
     let (mut app, _) = App::boot(None);
     audited(&mut app);
     let lacking = |app: &App| {
-        app.modules.arch()
+        app.modules
+            .arch()
             .arch_audit
             .audited
             .as_ref()
@@ -182,16 +192,31 @@ fn kata_ver_gives_every_object_without_a_level_one() {
     let before = lacking(&app);
     assert_eq!(before.len(), 5, "{before:?}");
     // Etkin kat is Zemin kat (the level at 0): each Düzelt gives it.
-    assert!(before.iter().all(|(_, fix)| fix.as_deref() == Some("Katını Zemin kat yap")), "{before:?}");
+    assert!(
+        before
+            .iter()
+            .all(|(_, fix)| fix.as_deref() == Some("Katını Zemin kat yap")),
+        "{before:?}"
+    );
     event(&mut app, Event::ShowLevelless);
-    assert_eq!(app.selection.ids().len(), 5, "Seç ve göster selects them all");
+    assert_eq!(
+        app.selection.ids().len(),
+        5,
+        "Seç ve göster selects them all"
+    );
     let revision = app.document.as_ref().expect("a drawing").model.revision();
     event(&mut app, Event::AssignLevel("kat-1".into()));
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert!(doc.revision() > revision);
     for (uid, _) in &before {
-        let slot = doc.slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid")).expect("there");
-        assert_eq!(doc.get(slot).and_then(|e| e.own_level()), Some("kat-1"), "{uid}");
+        let slot = doc
+            .slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))
+            .expect("there");
+        assert_eq!(
+            doc.get(slot).and_then(|e| e.own_level()),
+            Some("kat-1"),
+            "{uid}"
+        );
     }
     assert!(lacking(&app).is_empty(), "checked again");
     assert_eq!(app.selection.ids().len(), 5, "the objects stay selected");
@@ -200,11 +225,16 @@ fn kata_ver_gives_every_object_without_a_level_one() {
     let back: Vec<Option<String>> = before
         .iter()
         .map(|(uid, _)| {
-            let slot = doc.slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid")).expect("there");
+            let slot = doc
+                .slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))
+                .expect("there");
             doc.get(slot).and_then(|e| e.own_level()).map(str::to_owned)
         })
         .collect();
-    assert!(back.iter().all(|l| l.as_deref() != Some("kat-1")), "one step: {back:?}");
+    assert!(
+        back.iter().all(|l| l.as_deref() != Some("kat-1")),
+        "one step: {back:?}"
+    );
 }
 
 /// UR-025: the broken dimension's finding says its value is the old geometry's and offers Yeniden bağla first; the
@@ -215,13 +245,36 @@ fn freeing_a_broken_dimension_is_said_as_what_it_does() {
     audited(&mut app);
     let row = row_of(&app, "arch_dimension_broken");
     let shown = app.arch_audit_shown();
-    let finding = &app.modules.arch().arch_audit.audited.as_ref().expect("audited").findings[shown[row]];
-    assert!(finding.message.contains("değeri nesnenin bugünkü ölçüsü değil"), "{}", finding.message);
-    assert!(finding.repair.starts_with("Yeniden bağla"), "{}", finding.repair);
-    assert_eq!(finding.fix.as_ref().map(|f| f.label.as_str()), Some("Bağı çöz (noktalar eski yerinde, değer değişmez)"));
+    let finding = &app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("audited")
+        .findings[shown[row]];
+    assert!(
+        finding
+            .message
+            .contains("değeri nesnenin bugünkü ölçüsü değil"),
+        "{}",
+        finding.message
+    );
+    assert!(
+        finding.repair.starts_with("Yeniden bağla"),
+        "{}",
+        finding.repair
+    );
+    assert_eq!(
+        finding.fix.as_ref().map(|f| f.label.as_str()),
+        Some("Bağı çöz (noktalar eski yerinde, değer değişmez)")
+    );
     event(&mut app, Event::Press(row));
     event(&mut app, Event::Fix);
     let said = crate::files_testing::last_said(&app);
-    assert!(said.starts_with("Bağ çözüldü: ölçü eski noktalarından ölçmeye devam ediyor"), "{said}");
+    assert!(
+        said.starts_with("Bağ çözüldü: ölçü eski noktalarından ölçmeye devam ediyor"),
+        "{said}"
+    );
     assert!(!said.starts_with("Düzeltildi"));
 }

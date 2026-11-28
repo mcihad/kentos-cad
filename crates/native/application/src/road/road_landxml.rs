@@ -6,10 +6,11 @@
 pub(crate) use crate::exchange_files::{now, stamp_of};
 use std::path::{Path, PathBuf};
 
-use kentos_commands::{
-    CommandResult, CommandWarning, ExportLandxml, LandxmlAlignmentWritten, LandxmlExported, LandxmlSurfaceWritten,
-};
 use kentos_commands::{AlignmentDef, ProfileDef};
+use kentos_commands::{
+    CommandResult, CommandWarning, ExportLandxml, LandxmlAlignmentWritten, LandxmlExported,
+    LandxmlSurfaceWritten,
+};
 use kentos_domain::Document;
 use kentos_formats::landxml_write::{
     WAlignment, WCurve, WElement, WEquation, WGeom, WLandXml, WProfile, WPvi, WSurface, write,
@@ -29,7 +30,11 @@ fn bad(path: &str, words: String) -> Stop {
 }
 
 fn losses(message: String, path: &str) -> CommandWarning {
-    CommandWarning { code: codes::EXPORT_LOSSES.into(), message, path: Some(path.into()) }
+    CommandWarning {
+        code: codes::EXPORT_LOSSES.into(),
+        message,
+        path: Some(path.into()),
+    }
 }
 
 /// An element's LandXML geometry (docs/adr/0908 §6): a curve's centre on its inner side and its PI where the
@@ -39,7 +44,10 @@ pub fn element_geometry(e: &Element) -> WGeom {
     let end = e.point(e.length);
     let (c0, s0) = (e.theta0.cos(), e.theta0.sin());
     match e.kind {
-        Kind::Tangent => WGeom::Line { start: e.start, end },
+        Kind::Tangent => WGeom::Line {
+            start: e.start,
+            end,
+        },
         Kind::Arc => {
             let k = e.k0;
             let r = 1.0 / k.abs();
@@ -49,7 +57,14 @@ pub fn element_geometry(e: &Element) -> WGeom {
                 let t = r * (0.5 * delta).tan();
                 [e.start[0] + t * c0, e.start[1] + t * s0]
             });
-            WGeom::Curve { start: e.start, end, center, pi, radius: r, clockwise: k < 0.0 }
+            WGeom::Curve {
+                start: e.start,
+                end,
+                center,
+                pi,
+                radius: r,
+                clockwise: k < 0.0,
+            }
         }
         Kind::Spiral => {
             let th1 = e.theta(e.length);
@@ -128,7 +143,10 @@ pub(crate) fn alignment_written(
     let mut written_profiles = Vec::new();
     for p in profiles {
         let Ok(v) = kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(p)) else {
-            warnings.push(losses(format!("“{}” boykesiti kurulamıyor; yazılmadı.", p.name), "alignments"));
+            warnings.push(losses(
+                format!("“{}” boykesiti kurulamıyor; yazılmadı.", p.name),
+                "alignments",
+            ));
             continue;
         };
         let pvis = p
@@ -139,32 +157,53 @@ pub(crate) fn alignment_written(
                 let curve = match found.map(|c| (c.curve, c.end[0] - c.start[0])) {
                     Some((VCurve::Circle { radius }, length)) => WCurve::Circle { length, radius },
                     Some((VCurve::Parabola { length }, _)) => WCurve::Parabola { length },
-                    Some((VCurve::Asymmetric { length_in, length_out }, _)) => {
-                        WCurve::Unsymmetric { length_in, length_out }
-                    }
+                    Some((
+                        VCurve::Asymmetric {
+                            length_in,
+                            length_out,
+                        },
+                        _,
+                    )) => WCurve::Unsymmetric {
+                        length_in,
+                        length_out,
+                    },
                     _ => WCurve::None,
                 };
-                WPvi { station: sta_start + q.station, elevation: q.elevation, curve }
+                WPvi {
+                    station: sta_start + q.station,
+                    elevation: q.elevation,
+                    curve,
+                }
             })
             .collect();
         written.profiles.push(p.name.clone());
-        written_profiles.push(WProfile { name: p.name.clone(), pvis });
+        written_profiles.push(WProfile {
+            name: p.name.clone(),
+            pvis,
+        });
     }
     let speeds = speeds_written(def, b, sta_start);
-    (WAlignment {
-        name: def.name.clone(),
-        sta_start,
-        length: b.core.length,
-        elements,
-        equations: eqs,
-        profiles: written_profiles,
-        speeds,
-    }, written)
+    (
+        WAlignment {
+            name: def.name.clone(),
+            sta_start,
+            length: b.core.length,
+            elements,
+            equations: eqs,
+            profiles: written_profiles,
+            speeds,
+        },
+        written,
+    )
 }
 
 /// An alignment's design speeds over stations (docs/adr/0988): each curve with a speed of its own over its TS–ST, the
 /// alignment's in the rest; none for a parallel axis (its source's are written with the source).
-fn speeds_written(def: &AlignmentDef, b: &Built, sta_start: f64) -> Vec<kentos_formats::landxml_write::WSpeed> {
+fn speeds_written(
+    def: &AlignmentDef,
+    b: &Built,
+    sta_start: f64,
+) -> Vec<kentos_formats::landxml_write::WSpeed> {
     use kentos_formats::landxml_write::WSpeed;
     if def.offset_of.is_some() {
         return Vec::new();
@@ -183,13 +222,25 @@ fn speeds_written(def: &AlignmentDef, b: &Built, sta_start: f64) -> Vec<kentos_f
     let mut at = 0.0;
     for (a, z, v) in own {
         if let Some(d) = def.design_speed.filter(|_| a > at + 1e-9) {
-            out.push(WSpeed { sta_start: sta_start + at, sta_end: sta_start + a, speed: d });
+            out.push(WSpeed {
+                sta_start: sta_start + at,
+                sta_end: sta_start + a,
+                speed: d,
+            });
         }
-        out.push(WSpeed { sta_start: sta_start + a, sta_end: sta_start + z, speed: v });
+        out.push(WSpeed {
+            sta_start: sta_start + a,
+            sta_end: sta_start + z,
+            speed: v,
+        });
         at = z;
     }
     if let Some(d) = def.design_speed.filter(|_| b.core.length > at + 1e-9) {
-        out.push(WSpeed { sta_start: sta_start + at, sta_end: sta_start + b.core.length, speed: d });
+        out.push(WSpeed {
+            sta_start: sta_start + at,
+            sta_end: sta_start + b.core.length,
+            speed: d,
+        });
     }
     out
 }
@@ -206,22 +257,40 @@ fn check(doc: &Document, input: &ExportLandxml) -> Result<Planned, Stop> {
     alignments::road_project(doc)?;
     let text = input.path.trim();
     if text.is_empty() || !Path::new(text).is_absolute() {
-        return Err(fail(codes::INVALID_FILE_PATH, "LandXML'in yolu boş ya da göreli; mutlak bir .xml yolu verin.".into(), "path"));
+        return Err(fail(
+            codes::INVALID_FILE_PATH,
+            "LandXML'in yolu boş ya da göreli; mutlak bir .xml yolu verin.".into(),
+            "path",
+        ));
     }
     if !text.to_ascii_lowercase().ends_with(".xml") {
-        return Err(fail(codes::INVALID_FILE_PATH, format!("“{text}” bir .xml dosyası değil."), "path"));
+        return Err(fail(
+            codes::INVALID_FILE_PATH,
+            format!("“{text}” bir .xml dosyası değil."),
+            "path",
+        ));
     }
     let path = PathBuf::from(text);
     let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
     if !folder.is_dir() {
         return Err(fail(
             codes::INVALID_FILE_PATH,
-            format!("“{}” klasörü yok; dosya var olan bir klasöre yazılır.", folder.display()),
+            format!(
+                "“{}” klasörü yok; dosya var olan bir klasöre yazılır.",
+                folder.display()
+            ),
             "path",
         ));
     }
     if path.exists() && !input.overwrite {
-        return Err(fail(codes::FILE_EXISTS, format!("{} var; üzerine yazmak için overwrite verin.", path.display()), "path"));
+        return Err(fail(
+            codes::FILE_EXISTS,
+            format!(
+                "{} var; üzerine yazmak için overwrite verin.",
+                path.display()
+            ),
+            "path",
+        ));
     }
     let mut warnings = Vec::new();
     // The surfaces chosen (or every one); a chosen one must build.
@@ -234,9 +303,16 @@ fn check(doc: &Document, input: &ExportLandxml) -> Result<Planned, Stop> {
                 let at = own
                     .iter()
                     .position(|s| s.id == *n)
-                    .or_else(|| own.iter().position(|s| s.name.to_lowercase() == n.to_lowercase()))
+                    .or_else(|| {
+                        own.iter()
+                            .position(|s| s.name.to_lowercase() == n.to_lowercase())
+                    })
                     .ok_or_else(|| {
-                        fail(codes::UNKNOWN_TERRAIN, format!("“{n}” kimlikli ya da adlı yüzey projede yok."), &format!("surfaces[{i}]"))
+                        fail(
+                            codes::UNKNOWN_TERRAIN,
+                            format!("“{n}” kimlikli ya da adlı yüzey projede yok."),
+                            &format!("surfaces[{i}]"),
+                        )
                     })?;
                 if !out.iter().any(|(j, _)| *j == at) {
                     out.push((at, true));
@@ -262,7 +338,10 @@ fn check(doc: &Document, input: &ExportLandxml) -> Result<Planned, Stop> {
     let (date, time) = match input.stamp.as_deref() {
         None => now(),
         Some(s) => stamp_of(s).ok_or_else(|| {
-            bad("stamp", format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın."))
+            bad(
+                "stamp",
+                format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın."),
+            )
         })?,
     };
     // Docs/adr/1031: a design for machine control rests on the project's heights, said.
@@ -281,17 +360,33 @@ fn check(doc: &Document, input: &ExportLandxml) -> Result<Planned, Stop> {
         coordinate_system: crate::road_field::coordinate_system(doc),
         ..WLandXml::default()
     };
-    let mut out = LandxmlExported { path: path.display().to_string(), surfaces: Vec::new(), alignments: Vec::new(), bytes: 0, sha256: String::new() };
+    let mut out = LandxmlExported {
+        path: path.display().to_string(),
+        surfaces: Vec::new(),
+        alignments: Vec::new(),
+        bytes: 0,
+        sha256: String::new(),
+    };
     for (i, asked) in picked {
         let def = &own[i];
         let made = terrains::make(doc, def);
         let s = match made.built() {
             Ok(s) => s,
             Err(stop) if asked => {
-                return Err(bad("surfaces", format!("“{}” yüzeyi kurulamıyor: {}", def.name, crate::road_corridors::words(stop))));
+                return Err(bad(
+                    "surfaces",
+                    format!(
+                        "“{}” yüzeyi kurulamıyor: {}",
+                        def.name,
+                        crate::road_corridors::words(stop)
+                    ),
+                ));
             }
             Err(_) => {
-                warnings.push(losses(format!("“{}” yüzeyi kurulamıyor; yazılmadı.", def.name), "surfaces"));
+                warnings.push(losses(
+                    format!("“{}” yüzeyi kurulamıyor; yazılmadı.", def.name),
+                    "surfaces",
+                ));
                 continue;
             }
         };
@@ -301,14 +396,21 @@ fn check(doc: &Document, input: &ExportLandxml) -> Result<Planned, Stop> {
             points: s.vertices.len() as u32,
             triangles: s.triangles.len() as u32,
         });
-        file.surfaces.push(WSurface { name: def.name.clone(), vertices: s.vertices.clone(), triangles: s.triangles.clone() });
+        file.surfaces.push(WSurface {
+            name: def.name.clone(),
+            vertices: s.vertices.clone(),
+            triangles: s.triangles.clone(),
+        });
     }
     let names: Vec<&str> = chosen.iter().map(|(i, _)| list[*i].id.as_str()).collect();
     for (i, asked) in chosen {
         let def = &list[i];
         if def.offset_of.is_some() {
             warnings.push(losses(
-                format!("“{}” paralel bir aks; LandXML'in paralel aks türü yok, yazılmadı.", def.name),
+                format!(
+                    "“{}” paralel bir aks; LandXML'in paralel aks türü yok, yazılmadı.",
+                    def.name
+                ),
                 "alignments",
             ));
             continue;
@@ -316,40 +418,72 @@ fn check(doc: &Document, input: &ExportLandxml) -> Result<Planned, Stop> {
         let b = match alignments::build(list, def, "") {
             Ok(b) => b,
             Err(stop) if asked => {
-                return Err(bad("alignments", format!("“{}” aksı kurulamıyor: {}", def.name, crate::road_corridors::words(stop))));
+                return Err(bad(
+                    "alignments",
+                    format!(
+                        "“{}” aksı kurulamıyor: {}",
+                        def.name,
+                        crate::road_corridors::words(stop)
+                    ),
+                ));
             }
             Err(_) => {
-                warnings.push(losses(format!("“{}” aksı kurulamıyor; yazılmadı.", def.name), "alignments"));
+                warnings.push(losses(
+                    format!("“{}” aksı kurulamıyor; yazılmadı.", def.name),
+                    "alignments",
+                ));
                 continue;
             }
         };
         let profiles: Vec<&ProfileDef> = if input.without_profiles {
             Vec::new()
         } else {
-            doc.road_profiles().iter().filter(|p| p.alignment == def.id).collect()
+            doc.road_profiles()
+                .iter()
+                .filter(|p| p.alignment == def.id)
+                .collect()
         };
         let (a, written) = alignment_written(def, &b, &profiles, &mut warnings);
         out.alignments.push(written);
         file.alignments.push(a);
     }
     if !input.without_profiles {
-        for p in doc.road_profiles().iter().filter(|p| !names.contains(&p.alignment.as_str())) {
+        for p in doc
+            .road_profiles()
+            .iter()
+            .filter(|p| !names.contains(&p.alignment.as_str()))
+        {
             if input.alignments.is_some() {
                 continue;
             }
             warnings.push(losses(
-                format!("“{}” boykesitinin aksı yazılmadı; boykesit de yazılmadı.", p.name),
+                format!(
+                    "“{}” boykesitinin aksı yazılmadı; boykesit de yazılmadı.",
+                    p.name
+                ),
                 "alignments",
             ));
         }
     }
     if file.surfaces.is_empty() && file.alignments.is_empty() {
-        return Err(bad("", "Yazılacak bir şey yok: seçilen yüzey ya da aks yok.".into()));
+        return Err(bad(
+            "",
+            "Yazılacak bir şey yok: seçilen yüzey ya da aks yok.".into(),
+        ));
     }
     let text = write(&file);
     out.bytes = text.len() as u64;
-    out.sha256 = Sha256::digest(text.as_bytes()).iter().map(|b| format!("{b:02x}")).collect();
-    Ok(Planned { path, file, out, text, warnings })
+    out.sha256 = Sha256::digest(text.as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
+    Ok(Planned {
+        path,
+        file,
+        out,
+        text,
+        warnings,
+    })
 }
 
 /// The text written at `path` whole or not at all: beside it, read back by the LandXML reader (the same surfaces),
@@ -359,11 +493,15 @@ fn write_file(path: &Path, text: &str, file: &WLandXml) -> Result<(), String> {
     tmp.push(".kentos-yaziliyor");
     let tmp = PathBuf::from(tmp);
     let done = (|| -> Result<(), String> {
-        std::fs::write(&tmp, text.as_bytes()).map_err(|e| format!("{} yazılamadı: {e}", tmp.display()))?;
-        let back = std::fs::read(&tmp).map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
+        std::fs::write(&tmp, text.as_bytes())
+            .map_err(|e| format!("{} yazılamadı: {e}", tmp.display()))?;
+        let back =
+            std::fs::read(&tmp).map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
         let read = kentos_formats::landxml::read(&back).map_err(|e| e.words().to_owned())?;
         let same = read.surfaces.len() == file.surfaces.len()
-            && read.surfaces.iter().zip(&file.surfaces).all(|(r, w)| r.points.len() == w.vertices.len() && r.faces.len() == w.triangles.len());
+            && read.surfaces.iter().zip(&file.surfaces).all(|(r, w)| {
+                r.points.len() == w.vertices.len() && r.faces.len() == w.triangles.len()
+            });
         if !same {
             return Err("yazılan dosya geri okununca aynı yüzeyleri vermedi".into());
         }
@@ -378,7 +516,10 @@ fn write_file(path: &Path, text: &str, file: &WLandXml) -> Result<(), String> {
 /// Checks `input` against the document; writes nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ExportLandxml) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: (), warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: (),
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -386,13 +527,19 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ExportLandxml) -> CommandResu
 /// What the file would hold; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ExportLandxml) -> CommandResult<LandxmlExported> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: p.out, warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: p.out,
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// Writes the file; the drawing does not change.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ExportLandxml) -> CommandResult<LandxmlExported> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ExportLandxml,
+) -> CommandResult<LandxmlExported> {
     let p = match check(cx.doc, &input) {
         Ok(p) => p,
         Err(stop) => return stop.into(),
@@ -405,10 +552,18 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ExportLandxml) -> CommandRe
         ))
         .into();
     }
-    CommandResult::Completed { output: p.out, warnings: p.warnings }
+    CommandResult::Completed {
+        output: p.out,
+        warnings: p.warnings,
+    }
 }
 
 /// The file's text for a window or a test.
-pub fn text(doc: &Document, input: &ExportLandxml) -> Result<(String, LandxmlExported, Vec<CommandWarning>), String> {
-    check(doc, input).map(|p| (p.text, p.out, p.warnings)).map_err(crate::road_corridors::words)
+pub fn text(
+    doc: &Document,
+    input: &ExportLandxml,
+) -> Result<(String, LandxmlExported, Vec<CommandWarning>), String> {
+    check(doc, input)
+        .map(|p| (p.text, p.out, p.warnings))
+        .map_err(crate::road_corridors::words)
 }

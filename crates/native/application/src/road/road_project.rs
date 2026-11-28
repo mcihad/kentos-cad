@@ -5,7 +5,10 @@
 //! objects then and now (`road_drawings`). Deep, the surfaces and corridors are made and the approved volumes and the
 //! mass haul diagrams computed: what does not build, what leaves stretches unsolved and what changed since approved.
 
-use kentos_commands::{RoadDrawingDef, RoadNode, RoadNodeKind as N, RoadNodeState as S, RoadProjectTree, RoadSourceKind as K};
+use kentos_commands::{
+    RoadDrawingDef, RoadNode, RoadNodeKind as N, RoadNodeState as S, RoadProjectTree,
+    RoadSourceKind as K,
+};
 use kentos_domain::Document;
 use kentos_road::sources::{self, SourceObject, SurfaceState};
 
@@ -106,7 +109,10 @@ pub(crate) fn drawing_state(doc: &Document, d: &RoadDrawingDef) -> (S, Vec<Strin
     let gone = main.is_none_or(|m| road_drawings::stamp_now(doc, m.kind, &m.id).is_none());
     if gone {
         let what = main.map_or("kaynağı", |m| kind_words(m.kind));
-        why.push(format!("Çizildiği {what} ({}) projede yok.", main.map_or("", |m| m.id.as_str())));
+        why.push(format!(
+            "Çizildiği {what} ({}) projede yok.",
+            main.map_or("", |m| m.id.as_str())
+        ));
     }
     let mut stale = false;
     for s in d.sources.iter().skip(usize::from(gone)) {
@@ -114,22 +120,36 @@ pub(crate) fn drawing_state(doc: &Document, d: &RoadDrawingDef) -> (S, Vec<Strin
             Some(now) if now == s.digest => {}
             Some(_) => {
                 stale = true;
-                let name = road_drawings::name_of(doc, s.kind, &s.id).unwrap_or_else(|| s.id.clone());
-                why.push(format!("“{name}” {} çizildiğinden beri değişti.", kind_named(s.kind)));
+                let name =
+                    road_drawings::name_of(doc, s.kind, &s.id).unwrap_or_else(|| s.id.clone());
+                why.push(format!(
+                    "“{name}” {} çizildiğinden beri değişti.",
+                    kind_named(s.kind)
+                ));
             }
             None => {
                 stale = true;
-                why.push(format!("Dayandığı {} ({}) projede yok.", kind_words(s.kind), s.id));
+                why.push(format!(
+                    "Dayandığı {} ({}) projede yok.",
+                    kind_words(s.kind),
+                    s.id
+                ));
             }
         }
     }
     let (digest, present) = road_drawings::objects_stamp(doc, &d.uids);
     let missing = present < d.uids.len();
     if missing {
-        why.push(format!("{} nesnesinden {} tanesi çizimde yok.", d.uids.len(), d.uids.len() - present));
+        why.push(format!(
+            "{} nesnesinden {} tanesi çizimde yok.",
+            d.uids.len(),
+            d.uids.len() - present
+        ));
     }
     // A record kept before docs/adr/3560 stamped its objects with their numbers in the document: it matches that way.
-    let edited = !missing && digest != d.digest && road_drawings::objects_stamp_numbered(doc, &d.uids) != d.digest;
+    let edited = !missing
+        && digest != d.digest
+        && road_drawings::objects_stamp_numbered(doc, &d.uids) != d.digest;
     if edited {
         why.push("Nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler.".into());
     }
@@ -154,7 +174,15 @@ struct Tree<'a> {
 }
 
 impl Tree<'_> {
-    fn push(&mut self, kind: N, id: &str, name: &str, parent: Option<u32>, state: S, why: Vec<String>) -> u32 {
+    fn push(
+        &mut self,
+        kind: N,
+        id: &str,
+        name: &str,
+        parent: Option<u32>,
+        state: S,
+        why: Vec<String>,
+    ) -> u32 {
         self.nodes.push(RoadNode {
             kind,
             id: id.to_owned(),
@@ -171,15 +199,27 @@ impl Tree<'_> {
     /// The drawings made from the source `kind` `id`, under `parent`.
     fn drawings(&mut self, kind: K, id: &str, parent: u32) {
         let doc = self.doc;
-        for d in doc.road_drawings().iter().filter(|d| d.sources.first().is_some_and(|m| m.kind == kind && m.id == id)) {
+        for d in doc.road_drawings().iter().filter(|d| {
+            d.sources
+                .first()
+                .is_some_and(|m| m.kind == kind && m.id == id)
+        }) {
             self.drawing(d, Some(parent));
         }
     }
 
     fn drawing(&mut self, d: &RoadDrawingDef, parent: Option<u32>) {
         let (state, why, present) = drawing_state(self.doc, d);
-        let layer = d.input.get("layerId").and_then(serde_json::Value::as_str).unwrap_or("");
-        let layer_name = self.doc.layers().get(layer).map_or(layer, |l| l.name.as_str());
+        let layer = d
+            .input
+            .get("layerId")
+            .and_then(serde_json::Value::as_str)
+            .unwrap_or("");
+        let layer_name = self
+            .doc
+            .layers()
+            .get(layer)
+            .map_or(layer, |l| l.name.as_str());
         let name = format!("{} · {layer_name}", drawing_words(&d.command));
         let at = self.push(N::Drawing, &d.id, &name, parent, state, why);
         let node = &mut self.nodes[at as usize];
@@ -192,23 +232,44 @@ impl Tree<'_> {
     }
 
     fn alignment_revision(&self, id: &str) -> Option<u32> {
-        self.doc.road_alignments().iter().find(|a| a.id == id).map(|a| a.revision)
+        self.doc
+            .road_alignments()
+            .iter()
+            .find(|a| a.id == id)
+            .map(|a| a.revision)
     }
 
     fn corridor_changed(&self, corridor: &str, then: u32) -> Option<String> {
-        let c = self.doc.road_corridors().iter().find(|c| c.id == corridor)?;
-        (c.revision != then).then(|| format!("“{}” koridoru değişti; koridora yeniden bağlayın.", c.name))
+        let c = self
+            .doc
+            .road_corridors()
+            .iter()
+            .find(|c| c.id == corridor)?;
+        (c.revision != then)
+            .then(|| format!("“{}” koridoru değişti; koridora yeniden bağlayın.", c.name))
     }
 
     fn surfaces(&mut self) {
         let doc = self.doc;
-        let uids: Vec<(String, &kentos_commands::Entity)> = doc.entities_with_uids().map(|(u, e)| (u.to_string(), e)).collect();
+        let uids: Vec<(String, &kentos_commands::Entity)> = doc
+            .entities_with_uids()
+            .map(|(u, e)| (u.to_string(), e))
+            .collect();
         for def in crate::road_terrains::surfaces(doc) {
             let all = crate::road_terrains::surfaces(doc);
-            let g = sources::gather_among(def, all, doc.layers().nodes(), uids.iter().map(|(uid, entity)| SourceObject { uid, entity }));
+            let g = sources::gather_among(
+                def,
+                all,
+                doc.layers().nodes(),
+                uids.iter()
+                    .map(|(uid, entity)| SourceObject { uid, entity }),
+            );
             let (mut state, mut why) = match g.state(def) {
                 SurfaceState::Current => (S::Current, Vec::new()),
-                SurfaceState::Stale => (S::Stale, vec!["Yüzeyin kaynakları kabul edildiğinden beri değişti.".to_owned()]),
+                SurfaceState::Stale => (
+                    S::Stale,
+                    vec!["Yüzeyin kaynakları kabul edildiğinden beri değişti.".to_owned()],
+                ),
                 SurfaceState::New => (S::New, vec!["Yüzey henüz kabul edilmedi.".to_owned()]),
             };
             if self.deep
@@ -226,7 +287,10 @@ impl Tree<'_> {
                     match crate::road_platforms::read(doc, p) {
                         Ok(r) if r.report.open > 0 => {
                             st = S::Unsolved;
-                            w.push(format!("{} şev çizgisi araziyle buluşmuyor.", r.report.open));
+                            w.push(format!(
+                                "{} şev çizgisi araziyle buluşmuyor.",
+                                r.report.open
+                            ));
                         }
                         Ok(_) => {}
                         Err(stop) => {
@@ -263,17 +327,33 @@ impl Tree<'_> {
                 let n = self.push(N::Sections, &s.id, &s.name, Some(at), state, why);
                 self.drawings(K::Sections, &s.id, n);
             }
-            for e in doc.road_superelevations().iter().filter(|e| e.alignment == a.id) {
+            for e in doc
+                .road_superelevations()
+                .iter()
+                .filter(|e| e.alignment == a.id)
+            {
                 let why: Vec<String> = changed(e.alignment_revision).into_iter().collect();
                 let state = if why.is_empty() { S::Current } else { S::Stale };
                 self.push(N::Superelevation, &e.id, &e.name, Some(at), state, why);
             }
-            for j in doc.road_junctions().iter().filter(|j| j.legs.first().is_some_and(|l| l.alignment == a.id)) {
+            for j in doc
+                .road_junctions()
+                .iter()
+                .filter(|j| j.legs.first().is_some_and(|l| l.alignment == a.id))
+            {
                 let why: Vec<String> = j
                     .legs
                     .iter()
-                    .filter(|l| self.alignment_revision(&l.alignment).is_some_and(|r| r != l.alignment_revision))
-                    .map(|l| format!("Kolunun aksı “{}” değişti; kavşağı yeniden bağlayın.", self.alignment_name(&l.alignment)))
+                    .filter(|l| {
+                        self.alignment_revision(&l.alignment)
+                            .is_some_and(|r| r != l.alignment_revision)
+                    })
+                    .map(|l| {
+                        format!(
+                            "Kolunun aksı “{}” değişti; kavşağı yeniden bağlayın.",
+                            self.alignment_name(&l.alignment)
+                        )
+                    })
                     .collect();
                 let state = if why.is_empty() { S::Current } else { S::Stale };
                 let n = self.push(N::Junction, &j.id, &j.name, Some(at), state, why);
@@ -292,7 +372,10 @@ impl Tree<'_> {
             let mut state = S::Current;
             if crate::road_corridors::stale(doc, c) {
                 state = S::Stale;
-                why.push(format!("“{}” aksı değişti; koridoru aksa yeniden bağlayın.", self.alignment_name(&c.alignment)));
+                why.push(format!(
+                    "“{}” aksı değişti; koridoru aksa yeniden bağlayın.",
+                    self.alignment_name(&c.alignment)
+                ));
             }
             if self.deep {
                 let r = crate::road_corridors::report(doc, c);
@@ -303,7 +386,10 @@ impl Tree<'_> {
                     if state == S::Current {
                         state = S::Unsolved;
                     }
-                    why.push(format!("{} kesitte şev araziyle buluşmuyor ya da kesit çözülmüyor.", r.unsolved.len()));
+                    why.push(format!(
+                        "{} kesitte şev araziyle buluşmuyor ya da kesit çözülmüyor.",
+                        r.unsolved.len()
+                    ));
                 }
             }
             let at = self.push(N::Corridor, &c.id, &c.name, None, state, why);
@@ -340,19 +426,28 @@ impl Tree<'_> {
                 }
             }
             for g in doc.road_guardrails().iter().filter(|g| g.corridor == c.id) {
-                let why: Vec<String> = self.corridor_changed(&c.id, g.corridor_revision).into_iter().collect();
+                let why: Vec<String> = self
+                    .corridor_changed(&c.id, g.corridor_revision)
+                    .into_iter()
+                    .collect();
                 let state = if why.is_empty() { S::Current } else { S::Stale };
                 let n = self.push(N::Guardrail, &g.id, &g.name, Some(at), state, why);
                 self.drawings(K::Guardrail, &g.id, n);
             }
             for u in doc.road_culverts().iter().filter(|u| u.corridor == c.id) {
-                let why: Vec<String> = self.corridor_changed(&c.id, u.corridor_revision).into_iter().collect();
+                let why: Vec<String> = self
+                    .corridor_changed(&c.id, u.corridor_revision)
+                    .into_iter()
+                    .collect();
                 let state = if why.is_empty() { S::Current } else { S::Stale };
                 let n = self.push(N::Culvert, &u.id, &u.name, Some(at), state, why);
                 self.drawings(K::Culvert, &u.id, n);
             }
             for w in doc.road_walls().iter().filter(|w| w.corridor == c.id) {
-                let why: Vec<String> = self.corridor_changed(&c.id, w.corridor_revision).into_iter().collect();
+                let why: Vec<String> = self
+                    .corridor_changed(&c.id, w.corridor_revision)
+                    .into_iter()
+                    .collect();
                 let state = if why.is_empty() { S::Current } else { S::Stale };
                 let n = self.push(N::Wall, &w.id, &w.name, Some(at), state, why);
                 self.drawings(K::Wall, &w.id, n);
@@ -364,20 +459,32 @@ impl Tree<'_> {
         let doc = self.doc;
         for s in doc.road_sheet_sets() {
             let mut why = Vec::new();
-            if self.alignment_revision(&s.alignment).is_some_and(|r| r != s.alignment_revision) {
-                why.push(format!("“{}” aksı paftalar yapıldığından beri değişti.", self.alignment_name(&s.alignment)));
+            if self
+                .alignment_revision(&s.alignment)
+                .is_some_and(|r| r != s.alignment_revision)
+            {
+                why.push(format!(
+                    "“{}” aksı paftalar yapıldığından beri değişti.",
+                    self.alignment_name(&s.alignment)
+                ));
             }
             if let Some(p) = s.profile.as_deref()
                 && let Some(def) = doc.road_profiles().iter().find(|x| x.id == p)
                 && def.revision != s.profile_revision
             {
-                why.push(format!("“{}” boykesiti paftalar yapıldığından beri değişti.", def.name));
+                why.push(format!(
+                    "“{}” boykesiti paftalar yapıldığından beri değişti.",
+                    def.name
+                ));
             }
             if let Some(k) = s.sections.as_deref()
                 && let Some(def) = doc.road_sections().iter().find(|x| x.id == k)
                 && def.revision != s.sections_revision
             {
-                why.push(format!("“{}” kesit takımı paftalar yapıldığından beri değişti.", def.name));
+                why.push(format!(
+                    "“{}” kesit takımı paftalar yapıldığından beri değişti.",
+                    def.name
+                ));
             }
             let state = if why.is_empty() { S::Current } else { S::Stale };
             self.push(N::SheetSet, &s.id, &s.name, None, state, why);
@@ -401,7 +508,11 @@ impl Tree<'_> {
     fn networks(&mut self) {
         let doc = self.doc;
         for n in &doc.settings().networks {
-            if doc.road_drawings().iter().any(|d| d.sources.first().is_some_and(|m| m.kind == K::Network && m.id == n.id)) {
+            if doc.road_drawings().iter().any(|d| {
+                d.sources
+                    .first()
+                    .is_some_and(|m| m.kind == K::Network && m.id == n.id)
+            }) {
                 let at = self.push(N::Network, &n.id, &n.name, None, S::Current, Vec::new());
                 self.drawings(K::Network, &n.id, at);
             }
@@ -412,7 +523,10 @@ impl Tree<'_> {
     fn orphans(&mut self) {
         let doc = self.doc;
         for d in doc.road_drawings() {
-            let placed = self.nodes.iter().any(|n| n.kind == N::Drawing && n.id == d.id);
+            let placed = self
+                .nodes
+                .iter()
+                .any(|n| n.kind == N::Drawing && n.id == d.id);
             if !placed {
                 self.drawing(d, None);
             }
@@ -423,7 +537,10 @@ impl Tree<'_> {
 /// Refuses a drawing that is neither a road project's nor a map project's: a map project's tree holds its surfaces,
 /// pads and what was drawn from them (docs/adr/1720).
 pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
-    if !matches!(doc.settings().cad_work, Some(kentos_commands::CadWork::Road | kentos_commands::CadWork::Map)) {
+    if !matches!(
+        doc.settings().cad_work,
+        Some(kentos_commands::CadWork::Road | kentos_commands::CadWork::Map)
+    ) {
         return Err(crate::road_terrains::fail(
             crate::codes::NOT_A_ROAD_PROJECT,
             "Proje ağacı yol ve harita projesinde (KentOS Yol, KentOS Harita) olur; bu çizim ikisinden biri değil.".into(),
@@ -436,17 +553,26 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
 /// The project's tree now.
 pub(crate) fn tree(doc: &Document, deep: bool) -> Result<RoadProjectTree, Stop> {
     road_project(doc)?;
-    let mut t = Tree { doc, deep, nodes: Vec::new() };
+    let mut t = Tree {
+        doc,
+        deep,
+        nodes: Vec::new(),
+    };
     t.surfaces();
     t.alignments();
     t.corridors();
     t.sheets_and_pay();
     t.networks();
     t.orphans();
-    let count = |f: &dyn Fn(&RoadNode) -> bool| u32::try_from(t.nodes.iter().filter(|n| f(n)).count()).unwrap_or(u32::MAX);
+    let count = |f: &dyn Fn(&RoadNode) -> bool| {
+        u32::try_from(t.nodes.iter().filter(|n| f(n)).count()).unwrap_or(u32::MAX)
+    };
     let stale = count(&|n| n.state == S::Stale);
     let problems = count(&|n| {
-        matches!(n.state, S::Unbuildable | S::Unsolved | S::Changed | S::Missing | S::Edited | S::Gone)
+        matches!(
+            n.state,
+            S::Unbuildable | S::Unsolved | S::Changed | S::Missing | S::Edited | S::Gone
+        )
     });
     let rebuildable = count(&|n| n.kind == N::Drawing && matches!(n.state, S::Stale | S::Missing));
     Ok(RoadProjectTree {

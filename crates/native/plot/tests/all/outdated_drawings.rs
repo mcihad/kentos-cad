@@ -12,7 +12,8 @@ use serde_json::{Value, json};
 
 fn run(doc: &mut Document, command: &str, input: Value) {
     let mut cx = ExecutionContext::new(doc);
-    let out = kentos_native_application::registry::run(&mut cx, command, CallOp::Execute, input).expect("runs");
+    let out = kentos_native_application::registry::run(&mut cx, command, CallOp::Execute, input)
+        .expect("runs");
     assert_eq!(out["status"], "completed", "{command}: {out}");
 }
 
@@ -22,31 +23,52 @@ fn map(id: &str, x: f64, y: f64) -> Value {
 }
 
 fn drawing() -> Document {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.terrains.zeroline.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["setup"]["settings"]["cadWork"] == "map").expect("a map case");
-    let snapshot: DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/road.terrains.zeroline.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["setup"]["settings"]["cadWork"] == "map")
+        .expect("a map case");
+    let snapshot: DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).expect("reads");
     let mut doc = Document::from_snapshot_v2(snapshot).expect("opens");
-    run(&mut doc, "road.terrains.zeroline", json!({"base": "Düz", "comparison": "Tümsek", "layerId": "sifir"}));
+    run(
+        &mut doc,
+        "road.terrains.zeroline",
+        json!({"base": "Düz", "comparison": "Tümsek", "layerId": "sifir"}),
+    );
     let ops: Vec<kentos_sheet::ops::Op> = serde_json::from_value(json!([{"op": "addSheet", "sheet": {
         "id": "pafta", "name": "Pafta",
         "page": {"paper": "a3", "orientation": "landscape", "size": {"width": 420000, "height": 297000},
                  "margins": {"top": 10000, "right": 10000, "bottom": 10000, "left": 20000}},
         "items": [map("tumsek", 6005.0, 5.0), map("uzak", 2500.0, 500.0)]}}]))
     .expect("ops");
-    let book = kentos_sheet::ops::apply_all(&SheetBook::default(), &ops).expect("the sheet").book;
-    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept")).expect("the book");
+    let book = kentos_sheet::ops::apply_all(&SheetBook::default(), &ops)
+        .expect("the sheet")
+        .book;
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept"))
+        .expect("the book");
     doc
 }
 
 fn outdated(doc: &Document) -> Vec<(String, bool)> {
-    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets")).expect("the book");
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets"))
+        .expect("the book");
     let inputs = base_inputs(doc, "Ayşe", "2026-11-07");
     kentos_plot::preflight::inspect(doc, &book, "pafta", &inputs, None)
         .expect("checked")
         .into_iter()
         .filter(|f| f.code == "outdated_drawing")
-        .map(|f| (f.item.unwrap_or_default(), f.severity == kentos_sheet::preflight::Severity::Error))
+        .map(|f| {
+            (
+                f.item.unwrap_or_default(),
+                f.severity == kentos_sheet::preflight::Severity::Error,
+            )
+        })
         .collect()
 }
 
@@ -56,10 +78,19 @@ fn a_stale_zero_line_on_a_sheet_stops_its_delivery_until_drawn_again() {
     assert!(outdated(&doc).is_empty(), "drawn now: up to date");
     let surface = json!({"id": "t-10", "name": "Tümsek", "points": {"layers": ["tumsek"]},
                          "edits": [{"op": "setHeight", "x": 6000.0, "y": 0.0, "z": 119.0}]});
-    run(&mut doc, "road.terrains.edit", json!({"operation": "set", "surface": surface}));
-    assert_eq!(outdated(&doc), [("tumsek".to_owned(), true)], "the map over it, an error; the map elsewhere, nothing");
+    run(
+        &mut doc,
+        "road.terrains.edit",
+        json!({"operation": "set", "surface": surface}),
+    );
+    assert_eq!(
+        outdated(&doc),
+        [("tumsek".to_owned(), true)],
+        "the map over it, an error; the map elsewhere, nothing"
+    );
     // The book's PDF is refused as a stale table field's is.
-    let refused = kentos_plot::book::book_pdf(&doc, &[], "Ayşe", "2026-11-07").expect_err("not delivered");
+    let refused =
+        kentos_plot::book::book_pdf(&doc, &[], "Ayşe", "2026-11-07").expect_err("not delivered");
     assert_eq!(refused.code, "outdated_drawing", "{}", refused.message);
     run(&mut doc, "road.project.rebuild", json!({}));
     assert!(outdated(&doc).is_empty(), "drawn again: delivered");

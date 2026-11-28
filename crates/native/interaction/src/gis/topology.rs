@@ -26,8 +26,8 @@ use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::topology::{TopoObject, TopoResult, TopoWorks, topology_clean};
 use kentos_native_application::geometry::{entity_of, shape};
 // The objects as the core takes them and the geometries they come back as are the command's (docs/adr/1262).
-pub use kentos_native_application::topology_clean::{geometry_of, object};
 use kentos_native_application::topology_clean::{corrected, takes_part};
+pub use kentos_native_application::topology_clean::{geometry_of, object};
 
 use crate::Vec2;
 use crate::edge::{self, Outline};

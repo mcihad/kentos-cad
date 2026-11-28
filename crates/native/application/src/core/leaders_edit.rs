@@ -140,9 +140,16 @@ fn tip_point(doc: &Document, tip: &SubRef, path: &str) -> Result<Vec2, Stop> {
     crate::blocks::place_point(doc.blocks(), e, &tip.path, tip.place)
         .map(|p| Vec2 { x: p.x, y: p.y })
         .map_err(|miss| match miss {
-            crate::blocks::PlaceMiss::Piece => fail(codes::NO_SUCH_PLACE, crate::blocks::NO_PIECE.into(), &format!("{path}.path")),
-            crate::blocks::PlaceMiss::Place => fail(codes::NO_SUCH_PLACE,
-                "Nesnenin böyle bir yeri yok: köşe, uç ya da merkez nesnede olmalı.".into(), &format!("{path}.place")),
+            crate::blocks::PlaceMiss::Piece => fail(
+                codes::NO_SUCH_PLACE,
+                crate::blocks::NO_PIECE.into(),
+                &format!("{path}.path"),
+            ),
+            crate::blocks::PlaceMiss::Place => fail(
+                codes::NO_SUCH_PLACE,
+                "Nesnenin böyle bir yeri yok: köşe, uç ya da merkez nesnede olmalı.".into(),
+                &format!("{path}.place"),
+            ),
         })
 }
 

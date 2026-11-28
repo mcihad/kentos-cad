@@ -1,9 +1,9 @@
 //! Model tool aids on the active viewport. The session, selection and ids are the model's own.
-use iced::{Point, Color};
-use iced::widget::canvas::{Frame, Path, Stroke};
-use kentos_sheet_ui::MapRequest;
-use kentos_render_wgpu::{scene, Vec2};
 use crate::app::App;
+use iced::widget::canvas::{Frame, Path, Stroke};
+use iced::{Color, Point};
+use kentos_render_wgpu::{Vec2, scene};
+use kentos_sheet_ui::MapRequest;
 pub(crate) fn paint(app: Option<&App>, r: &MapRequest<'_>, frame: &mut Frame) {
     let Some(app) = app.filter(|a| a.sheets.model_scope() == Some(r.item)) else {
         return;

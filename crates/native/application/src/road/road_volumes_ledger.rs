@@ -5,8 +5,8 @@
 //! against the rounded total. Reads only. The shared cases are `fixtures/commands/v1/road.volumes.ledger.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, LedgerBy, LedgerColumn, LedgerConcentration, LedgerGroup, LedgerStretch, LedgerTop,
-    VolumeLedgerRead, VolumesLedger,
+    CommandResult, CommandWarning, LedgerBy, LedgerColumn, LedgerConcentration, LedgerGroup,
+    LedgerStretch, LedgerTop, VolumeLedgerRead, VolumesLedger,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -19,10 +19,17 @@ use crate::road_terrains::fail;
 use crate::road_volumes as common;
 
 fn bad(path: &str, words: &str) -> Stop {
-    fail(codes::INVALID_VOLUME_LEDGER, format!("Kübaj defteri sorusu geçerli değil: {words}."), path)
+    fail(
+        codes::INVALID_VOLUME_LEDGER,
+        format!("Kübaj defteri sorusu geçerli değil: {words}."),
+        path,
+    )
 }
 
-fn answer(doc: &Document, input: &VolumesLedger) -> Result<(VolumeLedgerRead, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &Document,
+    input: &VolumesLedger,
+) -> Result<(VolumeLedgerRead, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (top, decimals) = judged(input)?;
     let (_, def) = common::find(doc.road_volumes(), &input.volume, "volume")?;
@@ -38,7 +45,10 @@ fn judged(input: &VolumesLedger) -> Result<(u32, u32), Stop> {
     }
     let top = input.top.unwrap_or(10);
     if !(1..=100).contains(&top) {
-        return Err(bad("top", "en büyük aralıkların sayısı 1 ile 100 arası olur"));
+        return Err(bad(
+            "top",
+            "en büyük aralıkların sayısı 1 ile 100 arası olur",
+        ));
     }
     let decimals = input.decimals.unwrap_or(2);
     if decimals > 3 {
@@ -92,29 +102,51 @@ fn ledger(
             for k in 0..report.layers.len() {
                 values.push(r.layers.get(k).copied().flatten());
             }
-            Stretch { from: r.from, to: r.to, values }
+            Stretch {
+                from: r.from,
+                to: r.to,
+                values,
+            }
         })
         .collect();
     let width = columns.len();
-    let totals: Vec<f64> = (0..width).map(|k| sum(stretches.iter().filter_map(|s| s.values[k]))).collect();
+    let totals: Vec<f64> = (0..width)
+        .map(|k| sum(stretches.iter().filter_map(|s| s.values[k])))
+        .collect();
     let columns_out: Vec<LedgerColumn> = columns
         .iter()
         .enumerate()
         .map(|(k, (key, words))| {
             let present: Vec<f64> = stretches.iter().filter_map(|s| s.values[k]).collect();
             let (rows_rounded, total_rounded, residue) = rounding(&present, decimals);
-            LedgerColumn { key: key.clone(), words: words.clone(), total: totals[k], rows_rounded, total_rounded, residue }
+            LedgerColumn {
+                key: key.clone(),
+                words: words.clone(),
+                total: totals[k],
+                rows_rounded,
+                total_rounded,
+                residue,
+            }
         })
         .collect();
     // The groups' ranges and words.
     let (first, last) = (
-        stretches.iter().map(|s| s.from).fold(f64::INFINITY, f64::min),
-        stretches.iter().map(|s| s.to).fold(f64::NEG_INFINITY, f64::max),
+        stretches
+            .iter()
+            .map(|s| s.from)
+            .fold(f64::INFINITY, f64::min),
+        stretches
+            .iter()
+            .map(|s| s.to)
+            .fold(f64::NEG_INFINITY, f64::max),
     );
     let (ranges, names): (Vec<(f64, f64)>, Vec<String>) = match input.by {
         LedgerBy::Stations { step } if !stretches.is_empty() => {
             let r = steps(first, last, step);
-            let n = r.iter().map(|(a, b)| format!("{} – {}", text(*a), text(*b))).collect();
+            let n = r
+                .iter()
+                .map(|(a, b)| format!("{} – {}", text(*a), text(*b)))
+                .collect();
             (r, n)
         }
         LedgerBy::Stations { .. } => (Vec::new(), Vec::new()),
@@ -122,11 +154,25 @@ fn ledger(
             .factors
             .iter()
             .map(|f| {
-                let factor = |w: &str, v: Option<f64>| v.map_or_else(String::new, |v| format!(" · {w} {v}"));
+                let factor =
+                    |w: &str, v: Option<f64>| v.map_or_else(String::new, |v| format!(" · {w} {v}"));
                 let name = match &f.densities {
                     // Docs/adr/0957: a row of densities is named by them.
-                    Some(d) => format!("{} – {} · yoğunluk {}/{}/{} t/m³", text(f.from), text(f.to), d.bank, d.loose, d.compacted),
-                    None => format!("{} – {}{}{}", text(f.from), text(f.to), factor("kabarma", f.cut), factor("sıkışma", f.fill)),
+                    Some(d) => format!(
+                        "{} – {} · yoğunluk {}/{}/{} t/m³",
+                        text(f.from),
+                        text(f.to),
+                        d.bank,
+                        d.loose,
+                        d.compacted
+                    ),
+                    None => format!(
+                        "{} – {}{}{}",
+                        text(f.from),
+                        text(f.to),
+                        factor("kabarma", f.cut),
+                        factor("sıkışma", f.fill)
+                    ),
                 };
                 ((f.from, f.to), name)
             })
@@ -140,7 +186,11 @@ fn ledger(
                         .iter()
                         .enumerate()
                         .map(|(k, r)| {
-                            let template = doc.road_templates().iter().find(|t| t.id == r.template).map_or(r.template.as_str(), |t| t.name.as_str());
+                            let template = doc
+                                .road_templates()
+                                .iter()
+                                .find(|t| t.id == r.template)
+                                .map_or(r.template.as_str(), |t| t.name.as_str());
                             ((r.from, r.to), format!("Bölge {} · {template}", k + 1))
                         })
                         .unzip()
@@ -152,13 +202,31 @@ fn ledger(
     let mut names = names;
     // By the factor rows, the stretches under none are a group of their own (ROAD-VOL-21): their factored volume is raw.
     if input.by == LedgerBy::Factors {
-        let taken: std::collections::BTreeSet<usize> = grouped.iter().flat_map(|g| g.members.iter().copied()).collect();
-        let rest: Vec<usize> = (0..stretches.len()).filter(|i| !taken.contains(i)).collect();
+        let taken: std::collections::BTreeSet<usize> = grouped
+            .iter()
+            .flat_map(|g| g.members.iter().copied())
+            .collect();
+        let rest: Vec<usize> = (0..stretches.len())
+            .filter(|i| !taken.contains(i))
+            .collect();
         if !rest.is_empty() {
-            let values = (0..width).map(|k| sum(rest.iter().filter_map(|&i| stretches[i].values[k]))).collect();
-            let from = rest.iter().map(|&i| stretches[i].from).fold(f64::INFINITY, f64::min);
-            let to = rest.iter().map(|&i| stretches[i].to).fold(f64::NEG_INFINITY, f64::max);
-            grouped.push(kentos_road::volume_ledger::Group { from, to, members: rest, values });
+            let values = (0..width)
+                .map(|k| sum(rest.iter().filter_map(|&i| stretches[i].values[k])))
+                .collect();
+            let from = rest
+                .iter()
+                .map(|&i| stretches[i].from)
+                .fold(f64::INFINITY, f64::min);
+            let to = rest
+                .iter()
+                .map(|&i| stretches[i].to)
+                .fold(f64::NEG_INFINITY, f64::max);
+            grouped.push(kentos_road::volume_ledger::Group {
+                from,
+                to,
+                members: rest,
+                values,
+            });
             names.push("Katsayısız".into());
         }
     }
@@ -180,22 +248,34 @@ fn ledger(
                 to_text: text(g.to),
                 stretches: g.members.len() as u32,
                 values: g.values.clone(),
-                shares: g.values.iter().zip(&totals).map(|(v, t)| (*t > 0.0).then(|| v / t)).collect(),
+                shares: g
+                    .values
+                    .iter()
+                    .zip(&totals)
+                    .map(|(v, t)| (*t > 0.0).then(|| v / t))
+                    .collect(),
             }
         })
         .collect();
-    let residual: Vec<f64> = (0..width).map(|k| sum(grouped.iter().map(|g| g.values[k])) - totals[k]).collect();
+    let residual: Vec<f64> = (0..width)
+        .map(|k| sum(grouped.iter().map(|g| g.values[k])) - totals[k])
+        .collect();
     // The cut's and the fill's largest stretches and concentration.
     let lengths: Vec<f64> = stretches.iter().map(|s| s.to - s.from).collect();
     let mut tops = Vec::new();
     let mut crowding = Vec::new();
     for (k, key) in [(0usize, "cut"), (1, "fill")] {
-        let vols: Vec<f64> = stretches.iter().map(|s| s.values[k].unwrap_or(0.0)).collect();
+        let vols: Vec<f64> = stretches
+            .iter()
+            .map(|s| s.values[k].unwrap_or(0.0))
+            .collect();
         if totals[k] <= 0.0 {
             continue;
         }
         let why = reasons(&lengths, &vols);
-        let mut order: Vec<usize> = (0..vols.len()).filter(|&i| vols[i] > kentos_road::volume_ledger::NONE).collect();
+        let mut order: Vec<usize> = (0..vols.len())
+            .filter(|&i| vols[i] > kentos_road::volume_ledger::NONE)
+            .collect();
         order.sort_by(|&a, &b| vols[b].total_cmp(&vols[a]).then(a.cmp(&b)));
         let mut running = Vec::new();
         let list = order
@@ -217,11 +297,19 @@ fn ledger(
                     mean_area: vols[i] / lengths[i],
                     length_factor: r.length,
                     area_factor: r.area,
-                    reason: if r.area >= r.length { "section" } else { "length" }.into(),
+                    reason: if r.area >= r.length {
+                        "section"
+                    } else {
+                        "length"
+                    }
+                    .into(),
                 })
             })
             .collect();
-        tops.push(LedgerTop { column: key.into(), stretches: list });
+        tops.push(LedgerTop {
+            column: key.into(),
+            stretches: list,
+        });
         if let Some(c) = concentration(&lengths, &vols) {
             crowding.push(LedgerConcentration {
                 column: key.into(),
@@ -251,7 +339,10 @@ fn ledger(
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &VolumesLedger) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -265,12 +356,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &VolumesLedger) -> CommandResult<V
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: VolumesLedger) -> CommandResult<VolumeLedgerRead> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: VolumesLedger,
+) -> CommandResult<VolumeLedgerRead> {
     plan(cx, &input)
 }
 
 /// The ledger for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &VolumesLedger) -> Result<(VolumeLedgerRead, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &VolumesLedger,
+) -> Result<(VolumeLedgerRead, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }
 
@@ -280,5 +377,7 @@ pub fn preview_of(
     def: &kentos_commands::VolumeDef,
     input: &VolumesLedger,
 ) -> Result<(VolumeLedgerRead, Vec<CommandWarning>), String> {
-    judged(input).and_then(|(top, decimals)| ledger(doc, def, input, top, decimals)).map_err(crate::road_corridors::words)
+    judged(input)
+        .and_then(|(top, decimals)| ledger(doc, def, input, top, decimals))
+        .map_err(crate::road_corridors::words)
 }

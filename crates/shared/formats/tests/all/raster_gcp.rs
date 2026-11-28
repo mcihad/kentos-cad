@@ -13,7 +13,8 @@ fn dir() -> PathBuf {
 }
 
 fn cases() -> Value {
-    serde_json::from_str(&std::fs::read_to_string(dir().join("cases.json")).expect("cases.json")).expect("JSON")
+    serde_json::from_str(&std::fs::read_to_string(dir().join("cases.json")).expect("cases.json"))
+        .expect("JSON")
 }
 
 #[test]
@@ -21,8 +22,10 @@ fn points_files_read_as_csv_reads_them() {
     let cases = cases();
     for case in cases["reads"].as_array().expect("reads") {
         let file = case["file"].as_str().expect("file");
-        let read = gcp::read(&std::fs::read_to_string(dir().join(file)).expect("file")).expect(file);
-        let want: Vec<GeorefPoint> = serde_json::from_value(case["points"].clone()).expect("points");
+        let read =
+            gcp::read(&std::fs::read_to_string(dir().join(file)).expect("file")).expect(file);
+        let want: Vec<GeorefPoint> =
+            serde_json::from_value(case["points"].clone()).expect("points");
         assert_eq!(read.points, want, "{file}");
         assert_eq!(read.crs.as_deref(), case["crs"].as_str(), "{file}");
     }
@@ -32,8 +35,10 @@ fn points_files_read_as_csv_reads_them() {
 fn points_are_written_as_the_reference_writes_them() {
     let cases = cases();
     for case in cases["writes"].as_array().expect("writes") {
-        let points: Vec<GeorefPoint> = serde_json::from_value(case["points"].clone()).expect("points");
-        let residuals: Vec<Option<[f64; 2]>> = serde_json::from_value(case["residuals"].clone()).expect("residuals");
+        let points: Vec<GeorefPoint> =
+            serde_json::from_value(case["points"].clone()).expect("points");
+        let residuals: Vec<Option<[f64; 2]>> =
+            serde_json::from_value(case["residuals"].clone()).expect("residuals");
         let crs = case["crs"].as_str();
         let text = gcp::write(&points, &residuals, crs);
         assert_eq!(text, case["text"].as_str().expect("text"));
@@ -46,15 +51,30 @@ fn points_are_written_as_the_reference_writes_them() {
             crs.map(|c| c.split_whitespace().collect::<Vec<_>>().join(" "))
         );
         for (a, b) in back.points.iter().zip(&points) {
-            assert_eq!((a.pixel, a.target, a.check, a.off), (b.pixel, b.target, b.check, b.off));
+            assert_eq!(
+                (a.pixel, a.target, a.check, a.off),
+                (b.pixel, b.target, b.check, b.off)
+            );
         }
     }
 }
 
 #[test]
 fn broken_files_say_their_line() {
-    assert!(gcp::read("mapX,mapY,sourceX,sourceY\n").unwrap_err().contains("kontrol noktası yok"));
-    assert!(gcp::read("mapX,mapY,sourceX,sourceY\n1,2,x,4\n").unwrap_err().starts_with("2. satır"));
+    assert!(
+        gcp::read("mapX,mapY,sourceX,sourceY\n")
+            .unwrap_err()
+            .contains("kontrol noktası yok")
+    );
+    assert!(
+        gcp::read("mapX,mapY,sourceX,sourceY\n1,2,x,4\n")
+            .unwrap_err()
+            .starts_with("2. satır")
+    );
     assert!(gcp::read("1,2,3\n").unwrap_err().contains("sourceY yok"));
-    assert!(gcp::read("mapX,mapY,sourceX,sourceY,role\n1,2,3,4,kontrol\n").unwrap_err().contains("rolü bilinmiyor"));
+    assert!(
+        gcp::read("mapX,mapY,sourceX,sourceY,role\n1,2,3,4,kontrol\n")
+            .unwrap_err()
+            .contains("rolü bilinmiyor")
+    );
 }

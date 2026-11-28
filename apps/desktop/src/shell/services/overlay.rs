@@ -222,17 +222,27 @@ fn work_out(doc: &Document, area: &Camera, colors: &Colors) -> Marks {
 
 /// The labels' layer over the drawing area, under the drawing's own text;
 /// none while no vector service shows.
-pub fn layer<'a>(marks: Rc<Marks>, key: u64, camera: Camera, slot: &crate::labels::GlyphSlot) -> Option<Element<'a, Message>> {
+pub fn layer<'a>(
+    marks: Rc<Marks>,
+    key: u64,
+    camera: Camera,
+    slot: &crate::labels::GlyphSlot,
+) -> Option<Element<'a, Message>> {
     if marks.labels.is_empty() {
         slot.clear();
         return None;
     }
     let gpu = crate::labels::gpu_text().then(|| slot.clone());
     Some(
-        canvas::Canvas::new(Labels { marks, key, camera, gpu })
-            .width(Fill)
-            .height(Fill)
-            .into(),
+        canvas::Canvas::new(Labels {
+            marks,
+            key,
+            camera,
+            gpu,
+        })
+        .width(Fill)
+        .height(Fill)
+        .into(),
     )
 }
 
@@ -284,14 +294,20 @@ impl canvas::Program<Message> for Labels {
     ) -> Vec<canvas::Geometry> {
         if let Some(slot) = &self.gpu {
             // A twisted view's turn is drawn with them, as on the canvas: their points are the area's own.
-            crate::gpu_frame::publish(slot, self.key, self.camera, bounds.size(), |f| self.paint_all(f));
+            crate::gpu_frame::publish(slot, self.key, self.camera, bounds.size(), |f| {
+                self.paint_all(f)
+            });
             return Vec::new();
         }
         if state.key.get() != self.key {
             state.cache.clear();
             state.key.set(self.key);
         }
-        vec![state.cache.draw(renderer, bounds.size(), |frame| self.paint_all(frame))]
+        vec![
+            state
+                .cache
+                .draw(renderer, bounds.size(), |frame| self.paint_all(frame)),
+        ]
     }
 }
 

@@ -3,8 +3,8 @@
 //! tag's of docs/adr/0344 §5, written through `cad.tags.edit`.
 
 use kentos_commands::{
-    ArchChange, ArchInfo, ArchOperation, ArchPhase, ColumnAnchor, ColumnShape, Entity, GridBubbles, TagChange,
-    TagShape,
+    ArchChange, ArchInfo, ArchOperation, ArchPhase, ColumnAnchor, ColumnShape, Entity, GridBubbles,
+    TagChange, TagShape,
 };
 use kentos_domain::Slot;
 use kentos_interaction::{Format, fixed};
@@ -52,7 +52,11 @@ fn member_rows(
         .iter()
         .map(|&t| {
             let name = if t == "USERDEFINED" {
-                Some(m.name.clone().unwrap_or_else(|| Member::word(&m.predefined).to_owned()))
+                Some(
+                    m.name
+                        .clone()
+                        .unwrap_or_else(|| Member::word(&m.predefined).to_owned()),
+                )
             } else {
                 m.name.clone()
             };
@@ -74,8 +78,10 @@ fn member_rows(
         })
         .collect();
     vec![
-        Row::text("Eleman tipi", shown(&m.predefined)).editor(edit(select(shown(&m.predefined), types))),
-        Row::text("Eleman adı", m.words()).editor(edit(Editor::Text(Field::Arch(slot, ArchField::MemberName)))),
+        Row::text("Eleman tipi", shown(&m.predefined))
+            .editor(edit(select(shown(&m.predefined), types))),
+        Row::text("Eleman adı", m.words())
+            .editor(edit(Editor::Text(Field::Arch(slot, ArchField::MemberName)))),
     ]
 }
 
@@ -122,33 +128,41 @@ fn railings_row(
 /// its storey's outline, a column of the frame carrying) is said with why, and the object's own declaration changes it.
 pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: bool) -> Vec<Row> {
     use kentos_native_application::arch_performance::{
-        Carried, exit_of, exit_rated, external_of, external_rated, fire_rating_of, fire_rated, fire_stop_of,
-        fire_stop_rated, load_bearing_of, load_bearing_rated,
+        Carried, exit_of, exit_rated, external_of, external_rated, fire_rated, fire_rating_of,
+        fire_stop_of, fire_stop_rated, load_bearing_of, load_bearing_rated,
     };
     if !fire_rated(e) {
         return Vec::new();
     }
     let carried = fire_rating_of(doc.settings(), e);
     let own = carried.filter(|(_, c)| *c == Carried::Own).map(|(d, _)| d);
-    let mut rows = vec![Row::text("Yangın dayanımı", own.map_or_else(String::new, |d| d.value.clone()))
-        .editor((!locked).then_some(Editor::Text(Field::Arch(slot, ArchField::FireRating))))];
+    let mut rows = vec![
+        Row::text(
+            "Yangın dayanımı",
+            own.map_or_else(String::new, |d| d.value.clone()),
+        )
+        .editor((!locked).then_some(Editor::Text(Field::Arch(slot, ArchField::FireRating)))),
+    ];
     match carried {
         // Its own class's basis, typed as one line: a document's name and day; empty, the author's statement.
         Some((d, Carried::Own)) => {
-            rows.push(
-                Row::text("Dayanak belgesi", d.basis.field())
-                    .editor((!locked).then_some(Editor::Text(Field::Arch(slot, ArchField::FireBasis)))),
-            );
+            rows.push(Row::text("Dayanak belgesi", d.basis.field()).editor(
+                (!locked).then_some(Editor::Text(Field::Arch(slot, ArchField::FireBasis))),
+            ));
             // The field shows a document; empty, it is the author's statement, which the note says.
             if d.basis == kentos_commands::DeclaredBasis::Author {
-                rows.push(Row::note("Boş: müellif beyanı. Belgeyse adı ve günü: Rapor 41 (2026-02-28)."));
+                rows.push(Row::note(
+                    "Boş: müellif beyanı. Belgeyse adı ve günü: Rapor 41 (2026-02-28).",
+                ));
             }
         }
         Some((d, Carried::Type)) if matches!(e, Entity::Wall(_)) => {
             rows.push(Row::note(&format!("Duvar stilinden: {}", d.value)));
         }
         Some((d, Carried::Type)) => rows.push(Row::note(&format!("Tipinden: {}", d.value))),
-        None => rows.push(Row::note("Yok: modelde eksik (TS EN 13501-2: REI 120, EI 60).")),
+        None => rows.push(Row::note(
+            "Yok: modelde eksik (TS EN 13501-2: REI 120, EI 60).",
+        )),
     }
     if exit_rated(e) {
         let now = exit_of(e).map(|x| x.exit);
@@ -157,13 +171,30 @@ pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: b
             Some(false) => "Hayır",
             None => "Bilinmiyor",
         };
-        let items = [(Some(true), "Evet"), (Some(false), "Hayır"), (None, "Bilinmiyor")]
-            .into_iter()
-            .map(|(v, label)| pick(label.to_owned(), now == v, Message::Properties(Event::Exit(slot, v)), None))
-            .collect();
+        let items = [
+            (Some(true), "Evet"),
+            (Some(false), "Hayır"),
+            (None, "Bilinmiyor"),
+        ]
+        .into_iter()
+        .map(|(v, label)| {
+            pick(
+                label.to_owned(),
+                now == v,
+                Message::Properties(Event::Exit(slot, v)),
+                None,
+            )
+        })
+        .collect();
         // A roof is an escape route (BYKHY Ek-3/B 4-a), a door or a stair an exit.
-        let label = if matches!(e, Entity::Roof(_)) { "Kaçış yolu" } else { "Acil çıkış" };
-        rows.push(Row::text(label, words).editor((!locked).then(|| select(words.to_owned(), items))));
+        let label = if matches!(e, Entity::Roof(_)) {
+            "Kaçış yolu"
+        } else {
+            "Acil çıkış"
+        };
+        rows.push(
+            Row::text(label, words).editor((!locked).then(|| select(words.to_owned(), items))),
+        );
     }
     let yes_no = |v: bool| if v { "Evet" } else { "Hayır" };
     if load_bearing_rated(e) {
@@ -187,11 +218,24 @@ pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: b
             (None, None) => "Bilinmiyor".to_owned(),
         };
         let words = now.map_or_else(|| unset.clone(), |v| yes_no(v).to_owned());
-        let items = [(Some(true), "Evet".to_owned()), (Some(false), "Hayır".to_owned()), (None, unset)]
-            .into_iter()
-            .map(|(v, label)| pick(label, now == v, Message::Properties(Event::LoadBearing(slot, v)), None))
-            .collect();
-        rows.push(Row::text("Taşıyıcı", &words).editor((!locked).then(|| select(words.clone(), items))));
+        let items = [
+            (Some(true), "Evet".to_owned()),
+            (Some(false), "Hayır".to_owned()),
+            (None, unset),
+        ]
+        .into_iter()
+        .map(|(v, label)| {
+            pick(
+                label,
+                now == v,
+                Message::Properties(Event::LoadBearing(slot, v)),
+                None,
+            )
+        })
+        .collect();
+        rows.push(
+            Row::text("Taşıyıcı", &words).editor((!locked).then(|| select(words.clone(), items))),
+        );
         if let Some(v) = style {
             rows.push(Row::note(match (now, v) {
                 (None, true) => "Duvar stilinden: taşıyıcı.",
@@ -201,23 +245,50 @@ pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: b
             }));
         }
         if let Some(r) = read {
-            let read_as = if r.value { "taşıyıcı" } else { "taşıyıcı değil" };
+            let read_as = if r.value {
+                "taşıyıcı"
+            } else {
+                "taşıyıcı değil"
+            };
             rows.push(Row::note(&reading_note(r.value, r.why, now, read_as)));
         }
     }
     // Dışarıda: a wall's or a slab's is changed on it; a door's or a window's is its wall's, a roof always outside.
-    let uid = doc.model.uid(slot).map(|u| u.to_string()).unwrap_or_default();
+    let uid = doc
+        .model
+        .uid(slot)
+        .map(|u| u.to_string())
+        .unwrap_or_default();
     if let Some(r) = doc.model.outside_reading(&uid, e) {
         if external_rated(e) {
             let now = external_of(e).map(|x| x.external);
             let unset = format!("Kendiliğinden ({})", yes_no(r.value));
             let words = now.map_or_else(|| unset.clone(), |v| yes_no(v).to_owned());
-            let items = [(Some(true), "Evet".to_owned()), (Some(false), "Hayır".to_owned()), (None, unset)]
-                .into_iter()
-                .map(|(v, label)| pick(label, now == v, Message::Properties(Event::External(slot, v)), None))
-                .collect();
-            rows.push(Row::text("Dışarıda", &words).editor((!locked).then(|| select(words.clone(), items))));
-            rows.push(Row::note(&reading_note(r.value, r.why, now, if r.value { "dışarıda" } else { "içeride" })));
+            let items = [
+                (Some(true), "Evet".to_owned()),
+                (Some(false), "Hayır".to_owned()),
+                (None, unset),
+            ]
+            .into_iter()
+            .map(|(v, label)| {
+                pick(
+                    label,
+                    now == v,
+                    Message::Properties(Event::External(slot, v)),
+                    None,
+                )
+            })
+            .collect();
+            rows.push(
+                Row::text("Dışarıda", &words)
+                    .editor((!locked).then(|| select(words.clone(), items))),
+            );
+            rows.push(Row::note(&reading_note(
+                r.value,
+                r.why,
+                now,
+                if r.value { "dışarıda" } else { "içeride" },
+            )));
         } else {
             rows.push(Row::text("Dışarıda", yes_no(r.value)));
             rows.push(Row::note(&format!("Kendiliğinden: {}.", r.why)));
@@ -231,11 +302,25 @@ pub(crate) fn performance_rows(doc: &Document, slot: Slot, e: &Entity, locked: b
             Some(false) => "Hayır",
             None => "Bilinmiyor",
         };
-        let items = [(Some(true), "Evet"), (Some(false), "Hayır"), (None, "Bilinmiyor")]
-            .into_iter()
-            .map(|(v, label)| pick(label.to_owned(), now == v, Message::Properties(Event::FireStop(slot, v)), None))
-            .collect();
-        rows.push(Row::text("Yangın kesici", words).editor((!locked).then(|| select(words.to_owned(), items))));
+        let items = [
+            (Some(true), "Evet"),
+            (Some(false), "Hayır"),
+            (None, "Bilinmiyor"),
+        ]
+        .into_iter()
+        .map(|(v, label)| {
+            pick(
+                label.to_owned(),
+                now == v,
+                Message::Properties(Event::FireStop(slot, v)),
+                None,
+            )
+        })
+        .collect();
+        rows.push(
+            Row::text("Yangın kesici", words)
+                .editor((!locked).then(|| select(words.to_owned(), items))),
+        );
         if now == Some(true) {
             rows.push(Row::note("Ek-3/B 10: en az EI 30, her yüzü."));
         }
@@ -341,13 +426,32 @@ pub(super) fn arch_rows(
     ]
 }
 
-pub(super) fn separator_rows(doc:&Document,slot:Slot,p:&kentos_commands::PathEntity,locked:bool)->Vec<Row> {
-    let on=p.space_separator.is_some();
-    let items=[true,false].into_iter().map(|value|pick((if value{"Evet"}else{"Hayır"}).into(),value==on,
-        Message::Properties(Event::SpaceSeparator(slot,value)),None)).collect();
-    let mut rows=vec![Row::text("Mahal ayırıcı",if on{"Evet"}else{"Hayır"}).editor((!locked).then(||select((if on{"Evet"}else{"Hayır"}).into(),items)))];
-    if let Some(info)=&p.space_separator {
-        rows.extend(arch_rows(doc,slot,info,&|editor|(!locked).then_some(editor)));
+pub(super) fn separator_rows(
+    doc: &Document,
+    slot: Slot,
+    p: &kentos_commands::PathEntity,
+    locked: bool,
+) -> Vec<Row> {
+    let on = p.space_separator.is_some();
+    let items = [true, false]
+        .into_iter()
+        .map(|value| {
+            pick(
+                (if value { "Evet" } else { "Hayır" }).into(),
+                value == on,
+                Message::Properties(Event::SpaceSeparator(slot, value)),
+                None,
+            )
+        })
+        .collect();
+    let mut rows = vec![
+        Row::text("Mahal ayırıcı", if on { "Evet" } else { "Hayır" })
+            .editor((!locked).then(|| select((if on { "Evet" } else { "Hayır" }).into(), items))),
+    ];
+    if let Some(info) = &p.space_separator {
+        rows.extend(arch_rows(doc, slot, info, &|editor| {
+            (!locked).then_some(editor)
+        }));
         rows.push(Row::note("Sınır kalınlığı sıfır."));
         rows.push(Row::note("Duvar metrajı yok."));
     }
@@ -428,11 +532,13 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                     )))),
             );
             // Kesik aks (docs/adr/0725 §5): its ends on paper; empty or 0 the whole grid.
-            out.push(match x.ends {
-                Some(v) => Row::figure("Kesik uçlar", fixed(v, 1)).unit("mm"),
-                None => Row::text("Kesik uçlar", "Yok"),
-            }
-            .editor(edit(Editor::Number(Field::Arch(slot, ArchField::Ends)))));
+            out.push(
+                match x.ends {
+                    Some(v) => Row::figure("Kesik uçlar", fixed(v, 1)).unit("mm"),
+                    None => Row::text("Kesik uçlar", "Yok"),
+                }
+                .editor(edit(Editor::Number(Field::Arch(slot, ArchField::Ends)))),
+            );
             if let [a, b] = x.pts.as_slice() {
                 out.push(
                     Row::figure("Uzunluk", f.length_bare((b.x - a.x).hypot(b.y - a.y)))
@@ -445,24 +551,27 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             let x = &c.column;
             // Kolon or Dikme (docs/adr/8070 §8): a post is a member, written as an IfcMember.
             let kind = if x.member.is_some() { "Dikme" } else { "Kolon" };
-            let kinds = [("Kolon", None), ("Dikme", Some(kentos_commands::Member::post()))]
-                .into_iter()
-                .map(|(label, member)| {
-                    let chosen = member.is_some() == x.member.is_some();
-                    pick(
-                        label.to_owned(),
-                        chosen,
-                        set(
-                            slot,
-                            ArchChange {
-                                member: Some(member),
-                                ..Default::default()
-                            },
-                        ),
-                        None,
-                    )
-                })
-                .collect();
+            let kinds = [
+                ("Kolon", None),
+                ("Dikme", Some(kentos_commands::Member::post())),
+            ]
+            .into_iter()
+            .map(|(label, member)| {
+                let chosen = member.is_some() == x.member.is_some();
+                pick(
+                    label.to_owned(),
+                    chosen,
+                    set(
+                        slot,
+                        ArchChange {
+                            member: Some(member),
+                            ..Default::default()
+                        },
+                    ),
+                    None,
+                )
+            })
+            .collect();
             out.push(Row::text("Tür", kind).editor(edit(select(kind.to_owned(), kinds))));
             if let Some(m) = &x.member {
                 out.extend(member_rows(slot, m, &edit));
@@ -505,9 +614,15 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             }
             // Its own height (docs/adr/8070 §8); empty: its storey's.
             out.push(
-                Row::figure("Yükseklik", x.height.map_or_else(String::new, |v| f.length_bare(v)))
-                    .unit(f.length_unit_label())
-                    .editor(edit(Editor::Number(Field::Arch(slot, ArchField::OwnHeight)))),
+                Row::figure(
+                    "Yükseklik",
+                    x.height.map_or_else(String::new, |v| f.length_bare(v)),
+                )
+                .unit(f.length_unit_label())
+                .editor(edit(Editor::Number(Field::Arch(
+                    slot,
+                    ArchField::OwnHeight,
+                )))),
             );
             if x.height.is_none() {
                 out.push(Row::note("Boş: katın yüksekliği"));
@@ -541,7 +656,10 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                     )
                 })
                 .collect();
-            out.push(Row::text("Hiza", x.anchor.label()).editor(edit(select(x.anchor.label().to_owned(), anchors))));
+            out.push(
+                Row::text("Hiza", x.anchor.label())
+                    .editor(edit(select(x.anchor.label().to_owned(), anchors))),
+            );
             out.push(text(
                 "Kolon türü",
                 x.kind.clone().unwrap_or_default(),
@@ -570,7 +688,11 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 ],
             ))));
             // Its material (docs/adr/8041 §2): one section with a wall's layer of the same material.
-            out.push(text("Malzeme", x.material_name().to_owned(), ArchField::Material));
+            out.push(text(
+                "Malzeme",
+                x.material_name().to_owned(),
+                ArchField::Material,
+            ));
             let tied = if x.grids.is_some() {
                 x.place.clone().unwrap_or_else(|| "Bağlı".into())
             } else {
@@ -637,8 +759,11 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 // Measured on its walking line; shorter on its inner side, no landings (no turns).
                 Some(a) => {
                     out.push(
-                        Row::figure("İç basamak", f.length_bare(x.tread * (a.r - x.width / 2.0) / a.r))
-                            .unit(f.length_unit_label()),
+                        Row::figure(
+                            "İç basamak",
+                            f.length_bare(x.tread * (a.r - x.width / 2.0) / a.r),
+                        )
+                        .unit(f.length_unit_label()),
                     );
                     // Its centre post (docs/adr/0724 §3): empty removes it.
                     out.push(match x.post {
@@ -729,11 +854,20 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                         },
                     )
                 };
-                let shown = if x.height_from_level { "Kat yüksekliği" } else { "Kendi" };
+                let shown = if x.height_from_level {
+                    "Kat yüksekliği"
+                } else {
+                    "Kendi"
+                };
                 out.push(Row::text("Yükseklik", shown).editor(edit(select(
                     shown.to_owned(),
                     vec![
-                        pick("Kat yüksekliği".into(), x.height_from_level, bind(true), None),
+                        pick(
+                            "Kat yüksekliği".into(),
+                            x.height_from_level,
+                            bind(true),
+                            None,
+                        ),
                         pick("Kendi".into(), !x.height_from_level, bind(false), None),
                     ],
                 ))));
@@ -767,8 +901,9 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             if x.arch.level.is_some() {
                 out.push(match x.base_offset {
                     Some(o) => length("Kata göre", o, ArchField::BaseOffset),
-                    None => Row::text("Kata göre", "Bağlı değil")
-                        .editor(edit(Editor::Number(Field::Arch(slot, ArchField::BaseOffset)))),
+                    None => Row::text("Kata göre", "Bağlı değil").editor(edit(Editor::Number(
+                        Field::Arch(slot, ArchField::BaseOffset),
+                    ))),
                 });
             }
             out.push(length("Sahanlık", x.landing(), ArchField::Landing));
@@ -813,14 +948,19 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 set(
                     slot,
                     ArchChange {
-                        role: (x.role != kentos_commands::BeamRole::Beam).then_some(kentos_commands::BeamRole::Beam),
+                        role: (x.role != kentos_commands::BeamRole::Beam)
+                            .then_some(kentos_commands::BeamRole::Beam),
                         member: Some(Some(kentos_commands::Member::rail())),
                         ..Default::default()
                     },
                 ),
                 None,
             ));
-            let kind = if x.member.is_some() { "Kayıt" } else { x.role.label() };
+            let kind = if x.member.is_some() {
+                "Kayıt"
+            } else {
+                x.role.label()
+            };
             out.push(Row::text("Tür", kind).editor(edit(select(kind.to_owned(), roles))));
             if let Some(m) = &x.member {
                 out.extend(member_rows(slot, m, &edit));
@@ -869,14 +1009,24 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             // A rail's rise (docs/adr/8130): a sloped member's end over its start, with its slope.
             if x.member.is_some() {
                 out.push(
-                    Row::figure("Yükselme", x.rise.map_or_else(String::new, |v| f.length_bare(v)))
-                        .unit(f.length_unit_label())
-                        .editor(edit(Editor::Number(Field::Arch(slot, ArchField::MemberRise)))),
+                    Row::figure(
+                        "Yükselme",
+                        x.rise.map_or_else(String::new, |v| f.length_bare(v)),
+                    )
+                    .unit(f.length_unit_label())
+                    .editor(edit(Editor::Number(Field::Arch(
+                        slot,
+                        ArchField::MemberRise,
+                    )))),
                 );
                 match x.rise {
                     Some(_) => out.push(Row::text(
                         "Eğim",
-                        format!("{} (%{})", f.angle(x.grade().abs().atan()), f.percent(x.grade().abs() * 100.0)),
+                        format!(
+                            "{} (%{})",
+                            f.angle(x.grade().abs().atan()),
+                            f.percent(x.grade().abs() * 100.0)
+                        ),
                     )),
                     None => out.push(Row::note("Boş: düz; eğimli eleman iki noktadır")),
                 }
@@ -884,7 +1034,8 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             if let Some(top) = doc.model.beam_top(x) {
                 out.push(Row::figure("Üst kot", f.length_bare(top)).unit(f.length_unit_label()));
                 out.push(
-                    Row::figure("Alt kot", f.length_bare(top - x.height)).unit(f.length_unit_label()),
+                    Row::figure("Alt kot", f.length_bare(top - x.height))
+                        .unit(f.length_unit_label()),
                 );
             }
             out.push(text(
@@ -900,21 +1051,52 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
         // its footprint's area, its volume, its bottom's and top's elevations, its storey.
         Entity::Mass(m) => {
             let x = &m.mass;
-            out.push(text("Ad", x.name.clone().unwrap_or_default(), ArchField::Label));
+            out.push(text(
+                "Ad",
+                x.name.clone().unwrap_or_default(),
+                ArchField::Label,
+            ));
             out.push(length("Yükseklik", x.height, ArchField::BeamHeight));
             out.push(length("Kot farkı", x.offset, ArchField::BeamOffset));
             let ring = |r: &kentos_commands::SpaceRing| {
                 let p = &r.pts;
                 let n = p.len();
-                ((0..n).map(|i| p[i].x * p[(i + 1) % n].y - p[(i + 1) % n].x * p[i].y).sum::<f64>() / 2.0).abs()
+                ((0..n)
+                    .map(|i| p[i].x * p[(i + 1) % n].y - p[(i + 1) % n].x * p[i].y)
+                    .sum::<f64>()
+                    / 2.0)
+                    .abs()
             };
-            let footprint: f64 = x.parts.iter().map(|p| ring(&p.outer) - p.holes.iter().map(ring).sum::<f64>()).sum();
+            let footprint: f64 = x
+                .parts
+                .iter()
+                .map(|p| ring(&p.outer) - p.holes.iter().map(ring).sum::<f64>())
+                .sum();
             out.push(Row::figure("Oturum alanı", f.area_bare(footprint)).unit(f.area_unit_label()));
-            out.push(Row::figure("Hacim", format!("{:.2}", footprint * x.height).replace('.', ",")).unit("m³"));
-            let levels = doc.model.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
-            if let Some(l) = x.arch.level.as_deref().and_then(|id| levels.iter().find(|l| l.id == id)) {
+            out.push(
+                Row::figure(
+                    "Hacim",
+                    format!("{:.2}", footprint * x.height).replace('.', ","),
+                )
+                .unit("m³"),
+            );
+            let levels = doc
+                .model
+                .settings()
+                .arch
+                .as_ref()
+                .map(|a| a.levels.clone())
+                .unwrap_or_default();
+            if let Some(l) = x
+                .arch
+                .level
+                .as_deref()
+                .and_then(|id| levels.iter().find(|l| l.id == id))
+            {
                 let (bottom, top) = x.span(l.elevation);
-                out.push(Row::figure("Taban kotu", f.length_bare(bottom)).unit(f.length_unit_label()));
+                out.push(
+                    Row::figure("Taban kotu", f.length_bare(bottom)).unit(f.length_unit_label()),
+                );
                 out.push(Row::figure("Üst kot", f.length_bare(top)).unit(f.length_unit_label()));
             }
             out.extend(arch_rows(doc, slot, &x.arch, &edit));
@@ -1019,7 +1201,10 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                     )
                 })
                 .collect();
-            out.push(Row::text("Çerçeve", x.shape.label()).editor(edit(select(x.shape.label().to_owned(), shapes))));
+            out.push(
+                Row::text("Çerçeve", x.shape.label())
+                    .editor(edit(select(x.shape.label().to_owned(), shapes))),
+            );
             out.push(
                 Row::figure("Yazı yüksekliği", fixed(x.size(), 1))
                     .unit("mm")
@@ -1029,8 +1214,24 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             out.push(Row::text("Kol", lead).editor(edit(select(
                 lead.to_owned(),
                 vec![
-                    pick("Var".into(), x.leader, tag(TagChange { leader: Some(true), ..Default::default() }), None),
-                    pick("Yok".into(), !x.leader, tag(TagChange { leader: Some(false), ..Default::default() }), None),
+                    pick(
+                        "Var".into(),
+                        x.leader,
+                        tag(TagChange {
+                            leader: Some(true),
+                            ..Default::default()
+                        }),
+                        None,
+                    ),
+                    pick(
+                        "Yok".into(),
+                        !x.leader,
+                        tag(TagChange {
+                            leader: Some(false),
+                            ..Default::default()
+                        }),
+                        None,
+                    ),
                 ],
             ))));
             if let Some(b) = x.broken {
@@ -1046,35 +1247,71 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             let op = |o: ViewMarksOperation| Message::Properties(Event::ViewMark(slot, o));
             out.push(Row::text("Biçim", x.form.label()));
             out.push(
-                Row::text("Numara", if x.mark.is_empty() { "Pencerenin sırası" } else { &x.mark })
-                    .editor(edit(Editor::Text(Field::Arch(slot, ArchField::MarkNumber)))),
+                Row::text(
+                    "Numara",
+                    if x.mark.is_empty() {
+                        "Pencerenin sırası"
+                    } else {
+                        &x.mark
+                    },
+                )
+                .editor(edit(Editor::Text(Field::Arch(slot, ArchField::MarkNumber)))),
             );
             // The project's targets, none first; the mark's own marked.
             let refs = kentos_native_application::viewmarks::references_of(&doc.model);
-            let own = refs.targets.iter().find(|t| Some(&t.target) == x.target.as_ref());
+            let own = refs
+                .targets
+                .iter()
+                .find(|t| Some(&t.target) == x.target.as_ref());
             let now = match (&x.target, own) {
                 (None, _) => "Yok".to_owned(),
                 (Some(_), Some(t)) => t.name.clone(),
                 (Some(_), None) => "Kayıp".to_owned(),
             };
-            let mut targets = vec![pick("Yok".into(), x.target.is_none(), op(ViewMarksOperation::Detach), None)];
+            let mut targets = vec![pick(
+                "Yok".into(),
+                x.target.is_none(),
+                op(ViewMarksOperation::Detach),
+                None,
+            )];
             for t in &refs.targets {
                 targets.push(pick(
                     t.name.clone(),
                     Some(&t.target) == x.target.as_ref(),
-                    op(ViewMarksOperation::Retarget { target: t.target.clone() }),
+                    op(ViewMarksOperation::Retarget {
+                        target: t.target.clone(),
+                    }),
                     None,
                 ));
             }
             out.push(Row::text("Hedef", now.clone()).editor(edit(select(now, targets))));
-            out.push(Row::text("Yazısı", format!("{} / {}", x.words.top, x.words.bottom)));
+            out.push(Row::text(
+                "Yazısı",
+                format!("{} / {}", x.words.top, x.words.bottom),
+            ));
             if x.form == ViewMarkForm::Section {
                 let side = if x.flip { "Sağa" } else { "Sola" };
                 out.push(Row::text("Bakış", side).editor(edit(select(
                     side.to_owned(),
                     vec![
-                        pick("Sola".into(), !x.flip, op(ViewMarksOperation::Set(Box::new(ViewMarkChange { flip: Some(false), ..Default::default() }))), None),
-                        pick("Sağa".into(), x.flip, op(ViewMarksOperation::Set(Box::new(ViewMarkChange { flip: Some(true), ..Default::default() }))), None),
+                        pick(
+                            "Sola".into(),
+                            !x.flip,
+                            op(ViewMarksOperation::Set(Box::new(ViewMarkChange {
+                                flip: Some(false),
+                                ..Default::default()
+                            }))),
+                            None,
+                        ),
+                        pick(
+                            "Sağa".into(),
+                            x.flip,
+                            op(ViewMarksOperation::Set(Box::new(ViewMarkChange {
+                                flip: Some(true),
+                                ..Default::default()
+                            }))),
+                            None,
+                        ),
                     ],
                 ))));
             }

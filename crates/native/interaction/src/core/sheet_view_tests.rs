@@ -1,6 +1,6 @@
 use crate::{Spatial, Vec2};
+use kentos_commands::{CallOp, DocumentSnapshotV1};
 use kentos_domain::{Document, Slot};
-use kentos_commands::{DocumentSnapshotV1, CallOp};
 use kentos_geometry_core::store::snap::{SnapExtras, SnapKind};
 use serde_json::{Value, json};
 #[test]

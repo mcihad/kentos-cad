@@ -11,7 +11,12 @@ pub(super) fn plan(widths: &[f32], keep: &[bool], more: f32, available: f32) -> 
     if total <= available {
         return Some(vec![true; widths.len()]);
     }
-    let kept: f32 = widths.iter().zip(keep).filter(|(_, k)| **k).map(|(w, _)| w).sum();
+    let kept: f32 = widths
+        .iter()
+        .zip(keep)
+        .filter(|(_, k)| **k)
+        .map(|(w, _)| w)
+        .sum();
     let mut room = available - kept - more;
     if room < 0.0 {
         return None;
@@ -37,31 +42,61 @@ mod tests {
 
     #[test]
     fn tabs_that_fit_all_show() {
-        assert_eq!(plan(&[50.0, 60.0, 70.0], &[false, true, false], 30.0, 180.0), Some(vec![true; 3]));
+        assert_eq!(
+            plan(&[50.0, 60.0, 70.0], &[false, true, false], 30.0, 180.0),
+            Some(vec![true; 3])
+        );
     }
 
     #[test]
     fn the_open_and_contextual_tabs_stay_and_the_trailing_others_go_into_the_menu() {
         // Dosya Giriş Ekle Açıklama Değiştir Mimari(open) Görünüm Yönet Çıktı Duvar(contextual)
         let widths = [60.0, 55.0, 50.0, 85.0, 80.0, 70.0, 85.0, 60.0, 55.0, 90.0];
-        let keep = [false, false, false, false, false, true, false, false, false, true];
+        let keep = [
+            false, false, false, false, false, true, false, false, false, true,
+        ];
         let shown = plan(&widths, &keep, 32.0, 560.0).expect("the kept tabs fit");
-        assert!(shown[5] && shown[9], "the open tab and the contextual one stay");
-        assert_eq!(&shown[..5], &[true, true, true, true, true], "the leading tabs fit: {shown:?}");
-        assert_eq!(&shown[6..9], &[false, false, false], "Görünüm, Yönet and Çıktı go into ⋯");
-        let used: f32 = widths.iter().zip(&shown).filter(|(_, s)| **s).map(|(w, _)| w).sum();
+        assert!(
+            shown[5] && shown[9],
+            "the open tab and the contextual one stay"
+        );
+        assert_eq!(
+            &shown[..5],
+            &[true, true, true, true, true],
+            "the leading tabs fit: {shown:?}"
+        );
+        assert_eq!(
+            &shown[6..9],
+            &[false, false, false],
+            "Görünüm, Yönet and Çıktı go into ⋯"
+        );
+        let used: f32 = widths
+            .iter()
+            .zip(&shown)
+            .filter(|(_, s)| **s)
+            .map(|(w, _)| w)
+            .sum();
         assert!(used + 32.0 <= 560.0);
     }
 
     #[test]
     fn the_menu_takes_a_run_not_a_tab_here_and_there() {
         // The third does not fit: the fourth, small enough, goes into the menu too.
-        let shown = plan(&[40.0, 40.0, 90.0, 20.0, 50.0], &[false, false, false, false, true], 20.0, 160.0).unwrap();
+        let shown = plan(
+            &[40.0, 40.0, 90.0, 20.0, 50.0],
+            &[false, false, false, false, true],
+            20.0,
+            160.0,
+        )
+        .unwrap();
         assert_eq!(shown, vec![true, true, false, false, true]);
     }
 
     #[test]
     fn a_strip_too_narrow_for_its_kept_tabs_scrolls() {
-        assert_eq!(plan(&[60.0, 90.0, 90.0], &[false, true, true], 30.0, 150.0), None);
+        assert_eq!(
+            plan(&[60.0, 90.0, 90.0], &[false, true, true], 30.0, 150.0),
+            None
+        );
     }
 }

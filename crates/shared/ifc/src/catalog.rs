@@ -144,7 +144,12 @@ impl Requirement {
     }
 
     pub fn source(&self) -> Source {
-        Source::table(annex_of(&self.table), &self.table, Some(self.row), self.page)
+        Source::table(
+            annex_of(&self.table),
+            &self.table,
+            Some(self.row),
+            self.page,
+        )
     }
 }
 
@@ -272,7 +277,12 @@ impl Row<'_> {
     pub fn text(&self) -> String {
         match self {
             Row::Clause(c) => c.text.clone(),
-            Row::Template(t) => t.fields.iter().map(|f| f.name.clone()).collect::<Vec<_>>().join(" - "),
+            Row::Template(t) => t
+                .fields
+                .iter()
+                .map(|f| f.name.clone())
+                .collect::<Vec<_>>()
+                .join(" - "),
             Row::Class(c) => format!("{} · {}", c.class, c.level.named()),
             Row::Table(t) => {
                 let mut s = t.definition.clone().unwrap_or_default();
@@ -303,11 +313,16 @@ impl Catalog {
 
     /// A class's EK-6 or EK-7 table of a level (mandatory: 6.1–6.68, 7.1–7.9; optional: 6.69–6.135, 7.10–7.12).
     pub fn table_of(&self, class: &str, level: Level) -> Option<&Table> {
-        self.tables.iter().find(|t| t.class == class && t.level == level)
+        self.tables
+            .iter()
+            .find(|t| t.class == class && t.level == level)
     }
 
     /// A class's rows, mandatory ones first.
-    pub fn requirements_of<'a>(&'a self, class: &'a str) -> impl Iterator<Item = &'a Requirement> + 'a {
+    pub fn requirements_of<'a>(
+        &'a self,
+        class: &'a str,
+    ) -> impl Iterator<Item = &'a Requirement> + 'a {
         let mandatory = self
             .requirements
             .iter()
@@ -324,14 +339,24 @@ impl Catalog {
     pub fn rows(&self) -> Vec<Row<'_>> {
         let mut out = Vec::new();
         for annex in [5u8, 6, 7, 9] {
-            out.extend(self.clauses.iter().filter(|c| c.annex == annex).map(Row::Clause));
+            out.extend(
+                self.clauses
+                    .iter()
+                    .filter(|c| c.annex == annex)
+                    .map(Row::Clause),
+            );
             if annex == 5 {
                 out.extend(self.classes.iter().map(Row::Class));
                 out.extend(self.template.iter().map(Row::Template));
             }
             for t in self.tables.iter().filter(|t| annex_of(&t.table) == annex) {
                 out.push(Row::Table(t));
-                out.extend(self.requirements.iter().filter(|r| r.table == t.table).map(Row::Requirement));
+                out.extend(
+                    self.requirements
+                        .iter()
+                        .filter(|r| r.table == t.table)
+                        .map(Row::Requirement),
+                );
             }
             if annex == 9 {
                 out.extend(self.questions.iter().map(Row::Question));
@@ -347,7 +372,10 @@ impl Catalog {
 
     /// A requirement row's level (for the profile's layers: an administration may ask an optional row, Md. 12/2).
     pub fn level_of(&self, id: &str) -> Option<Level> {
-        self.requirements.iter().find(|r| r.id == id).map(|r| r.level)
+        self.requirements
+            .iter()
+            .find(|r| r.id == id)
+            .map(|r| r.level)
     }
 }
 
@@ -360,8 +388,18 @@ mod tests {
     fn the_ifc_annexes_read_whole() {
         let c: Catalog = serde_json::from_str(BASE_JSON).expect("the IFC annexes' text reads");
         assert_eq!(c.format, 1);
-        assert_eq!(c.classes.len(), 136, "EK-5: 69 mandatory and 67 optional classes");
-        assert_eq!(c.classes.iter().filter(|x| x.level == Level::Mandatory).count(), 69);
+        assert_eq!(
+            c.classes.len(),
+            136,
+            "EK-5: 69 mandatory and 67 optional classes"
+        );
+        assert_eq!(
+            c.classes
+                .iter()
+                .filter(|x| x.level == Level::Mandatory)
+                .count(),
+            69
+        );
         assert_eq!(c.tables.len(), 147, "EK-6 6.1–6.135 and EK-7 7.1–7.12");
         assert_eq!(c.questions.iter().filter(|q| q.form == "9.1").count(), 21);
         assert_eq!(c.questions.iter().filter(|q| q.form == "9.2").count(), 16);
@@ -376,7 +414,12 @@ mod tests {
             assert!(ids.insert(r.id().to_owned()), "{} twice", r.id());
             let s = r.source();
             assert!(!s.pages.is_empty(), "{}", r.id());
-            assert!(s.pages.iter().all(|p| (29..=241).contains(p)), "{}: {:?}", r.id(), s.pages);
+            assert!(
+                s.pages.iter().all(|p| (29..=241).contains(p)),
+                "{}: {:?}",
+                r.id(),
+                s.pages
+            );
         }
     }
 
@@ -384,10 +427,16 @@ mod tests {
     fn the_wall_s_rows_are_ek_6_s() {
         let c = base();
         let wall = c.class("IfcWall").expect("IfcWall");
-        assert_eq!((wall.code.as_str(), wall.table.as_str(), wall.level), ("DVR", "5.1", Level::Mandatory));
+        assert_eq!(
+            (wall.code.as_str(), wall.table.as_str(), wall.level),
+            ("DVR", "5.1", Level::Mandatory)
+        );
         let t = c.table_of("IfcWall", Level::Mandatory).expect("Tablo 6.66");
         assert_eq!(t.table, "6.66");
-        assert!(t.predefined.iter().any(|p| p == "ELEMENTED WALL"), "printed with its space");
+        assert!(
+            t.predefined.iter().any(|p| p == "ELEMENTED WALL"),
+            "printed with its space"
+        );
         let rows: Vec<String> = c
             .requirements_of("IfcWall")
             .filter(|r| r.level == Level::Mandatory)
@@ -395,9 +444,18 @@ mod tests {
             .collect();
         assert_eq!(
             rows,
-            ["PredefinedType", "Name", "Tag", "IfcMaterial.Name", "Pset_WallCommon.IsExternal", "Pset_WallCommon.FireRating"]
+            [
+                "PredefinedType",
+                "Name",
+                "Tag",
+                "IfcMaterial.Name",
+                "Pset_WallCommon.IsExternal",
+                "Pset_WallCommon.FireRating"
+            ]
         );
-        let fire = c.row("T6.66/Pset_WallCommon.FireRating").expect("the wall's fire rating");
+        let fire = c
+            .row("T6.66/Pset_WallCommon.FireRating")
+            .expect("the wall's fire rating");
         assert_eq!(fire.source().cite(), "EK-6 Tablo 6.66 satır 6 · PDF s. 107");
     }
 
@@ -423,7 +481,9 @@ mod tests {
             building::Class::Ramp,
         ] {
             let name = ifc_name(class.entity());
-            let row = base().class(&name).unwrap_or_else(|| panic!("{name} is not EK-5's"));
+            let row = base()
+                .class(&name)
+                .unwrap_or_else(|| panic!("{name} is not EK-5's"));
             assert_eq!(row.code, class.code(), "{name}");
         }
         for name in ARCHITECTURE {

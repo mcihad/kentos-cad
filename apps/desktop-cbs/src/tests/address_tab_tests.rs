@@ -1,12 +1,12 @@
 //! address › tests's tests that need the CBS module's surfaces (its project's bottom tabs and panels; docs/adr/9199
 //! §4.14): moved from the core's gis/address/tests.rs with the module's package; the work they test is the core's.
 
-use crate::gis;
-use kentos_interaction::Vec2;
 use crate::address::{Event, Question, texts};
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
 use crate::files_testing::drive;
+use crate::gis;
+use kentos_interaction::Vec2;
 
 const DRAWING: &str = include_str!("../../../../fixtures/interaction/v1/addresses.kcad");
 
@@ -103,7 +103,12 @@ fn a_tie_names_its_neighbourhoods_and_no_candidate_is_said_apart() {
     find(&mut app, "Atatürk Bulvarı No:2");
     let (line, _) = app.address_seen().expect("the tab is open");
     assert!(line.contains("aday aynı puanda (100): "), "{line}");
-    assert!(line.contains("Cumhuriyet") && line.contains("Kızılay") && line.contains("mahalleyi ekleyerek ayırın"), "{line}");
+    assert!(
+        line.contains("Cumhuriyet")
+            && line.contains("Kızılay")
+            && line.contains("mahalleyi ekleyerek ayırın"),
+        "{line}"
+    );
     find(&mut app, "Kızılay Atatürk Bulvarı No:4");
     let (line, _) = app.address_seen().expect("the tab is open");
     assert!(line.contains("En iyisi: Eşleşti (100)"), "{line}");

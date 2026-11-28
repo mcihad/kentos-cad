@@ -7,8 +7,8 @@
 //! where they lay.
 
 use kentos_commands::{
-    AlignmentDef, AlignmentsEdit, AlignmentsEditOperation, AlignmentsWritten, CommandResult, CommandWarning,
-    StationMapRow,
+    AlignmentDef, AlignmentsEdit, AlignmentsEditOperation, AlignmentsWritten, CommandResult,
+    CommandWarning, StationMapRow,
 };
 
 use crate::ExecutionContext;
@@ -33,15 +33,30 @@ struct Checked {
 /// Whether the alignment changed as its dependents see it: its name, geometry or km. A design speed is not (docs/adr/0985):
 /// a profile or a schedule on it does not go stale for it.
 fn changed(a: &AlignmentDef, b: &AlignmentDef) -> bool {
-    let geometry = |d: &AlignmentDef| d.pis.iter().map(|p| kentos_commands::AlignmentPi { speed: None, ..p.clone() }).collect::<Vec<_>>();
-    a.name != b.name || geometry(a) != geometry(b) || a.offset_of != b.offset_of || a.stationing != b.stationing
+    let geometry = |d: &AlignmentDef| {
+        d.pis
+            .iter()
+            .map(|p| kentos_commands::AlignmentPi {
+                speed: None,
+                ..p.clone()
+            })
+            .collect::<Vec<_>>()
+    };
+    a.name != b.name
+        || geometry(a) != geometry(b)
+        || a.offset_of != b.offset_of
+        || a.stationing != b.stationing
 }
 
 fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checked, Stop> {
     common::road_project(doc)?;
     let own = common::alignments(doc);
     let (at, old) = common::find(own, &input.alignment, "alignment")?;
-    let old_core = if old.offset_of.is_none() { common::build(own, old, "").ok().map(|b| b.core) } else { None };
+    let old_core = if old.offset_of.is_none() {
+        common::build(own, old, "").ok().map(|b| b.core)
+    } else {
+        None
+    };
     let mut list = own.to_vec();
     let mut warnings = Vec::new();
     let mut mapping = Vec::new();
@@ -134,7 +149,8 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
                 st.equations.clear();
                 warnings.push(CommandWarning {
                     code: codes::EQUATIONS_DROPPED.into(),
-                    message: "Aks ters çevrildi: km eşitlikleri kaldırıldı, başlangıç km'si kaldı.".into(),
+                    message: "Aks ters çevrildi: km eşitlikleri kaldırıldı, başlangıç km'si kaldı."
+                        .into(),
                     path: Some("alignment".into()),
                 });
             }
@@ -159,7 +175,13 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
                 supers = Some(
                     doc.road_superelevations()
                         .iter()
-                        .map(|d| if d.alignment == id { crate::road_superelevations::reversed(d, length, now) } else { d.clone() })
+                        .map(|d| {
+                            if d.alignment == id {
+                                crate::road_superelevations::reversed(d, length, now)
+                            } else {
+                                d.clone()
+                            }
+                        })
                         .collect(),
                 );
             }
@@ -168,7 +190,13 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
                 profiles = Some(
                     doc.road_profiles()
                         .iter()
-                        .map(|d| if d.alignment == id { crate::road_profiles::reversed(d, length, now) } else { d.clone() })
+                        .map(|d| {
+                            if d.alignment == id {
+                                crate::road_profiles::reversed(d, length, now)
+                            } else {
+                                d.clone()
+                            }
+                        })
                         .collect(),
                 );
             }
@@ -190,43 +218,79 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsEdit) -> Result<Checke
             if !users.is_empty() {
                 return Err(fail(
                     codes::ALIGNMENT_IN_USE,
-                    format!("“{}” aksını şu paralel akslar izliyor: {}. Önce onları silin.", old.name, users.join(", ")),
+                    format!(
+                        "“{}” aksını şu paralel akslar izliyor: {}. Önce onları silin.",
+                        old.name,
+                        users.join(", ")
+                    ),
                     "alignment",
                 ));
             }
-            let profiles: Vec<&str> =
-                doc.road_profiles().iter().filter(|p| p.alignment == old.id).map(|p| p.name.as_str()).collect();
+            let profiles: Vec<&str> = doc
+                .road_profiles()
+                .iter()
+                .filter(|p| p.alignment == old.id)
+                .map(|p| p.name.as_str())
+                .collect();
             if !profiles.is_empty() {
                 return Err(fail(
                     codes::ALIGNMENT_IN_USE,
-                    format!("“{}” aksına şu boykesitler bağlı: {}. Önce onları silin.", old.name, profiles.join(", ")),
+                    format!(
+                        "“{}” aksına şu boykesitler bağlı: {}. Önce onları silin.",
+                        old.name,
+                        profiles.join(", ")
+                    ),
                     "alignment",
                 ));
             }
-            let sets: Vec<&str> =
-                doc.road_sections().iter().filter(|s| s.alignment == old.id).map(|s| s.name.as_str()).collect();
+            let sets: Vec<&str> = doc
+                .road_sections()
+                .iter()
+                .filter(|s| s.alignment == old.id)
+                .map(|s| s.name.as_str())
+                .collect();
             if !sets.is_empty() {
                 return Err(fail(
                     codes::ALIGNMENT_IN_USE,
-                    format!("“{}” aksına şu kesit takımları bağlı: {}. Önce onları silin.", old.name, sets.join(", ")),
+                    format!(
+                        "“{}” aksına şu kesit takımları bağlı: {}. Önce onları silin.",
+                        old.name,
+                        sets.join(", ")
+                    ),
                     "alignment",
                 ));
             }
-            let supers: Vec<&str> =
-                doc.road_superelevations().iter().filter(|s| s.alignment == old.id).map(|s| s.name.as_str()).collect();
+            let supers: Vec<&str> = doc
+                .road_superelevations()
+                .iter()
+                .filter(|s| s.alignment == old.id)
+                .map(|s| s.name.as_str())
+                .collect();
             if !supers.is_empty() {
                 return Err(fail(
                     codes::ALIGNMENT_IN_USE,
-                    format!("“{}” aksına şu dever çizelgeleri bağlı: {}. Önce onları silin.", old.name, supers.join(", ")),
+                    format!(
+                        "“{}” aksına şu dever çizelgeleri bağlı: {}. Önce onları silin.",
+                        old.name,
+                        supers.join(", ")
+                    ),
                     "alignment",
                 ));
             }
-            let corridors: Vec<&str> =
-                doc.road_corridors().iter().filter(|c| c.alignment == old.id).map(|c| c.name.as_str()).collect();
+            let corridors: Vec<&str> = doc
+                .road_corridors()
+                .iter()
+                .filter(|c| c.alignment == old.id)
+                .map(|c| c.name.as_str())
+                .collect();
             if !corridors.is_empty() {
                 return Err(fail(
                     codes::ALIGNMENT_IN_USE,
-                    format!("“{}” aksına şu koridorlar bağlı: {}. Önce onları silin.", old.name, corridors.join(", ")),
+                    format!(
+                        "“{}” aksına şu koridorlar bağlı: {}. Önce onları silin.",
+                        old.name,
+                        corridors.join(", ")
+                    ),
                     "alignment",
                 ));
             }
@@ -272,7 +336,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsEdit) -> CommandResult<
 }
 
 /// Writes the edit: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsEdit) -> CommandResult<AlignmentsWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AlignmentsEdit,
+) -> CommandResult<AlignmentsWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_ALIGNMENTS_EDIT,
@@ -289,10 +356,20 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<AlignmentsW
     // The alignment, its profiles and its schedules in one step: written in one transaction, the report read after.
     let changed = |new: &[String]| new.to_vec();
     let turned_supers: Vec<String> = c.supers.as_ref().map_or_else(Vec::new, |s| {
-        changed(&s.iter().zip(cx.doc.road_superelevations()).filter(|(n, o)| n != o).map(|(n, _)| n.id.clone()).collect::<Vec<_>>())
+        changed(
+            &s.iter()
+                .zip(cx.doc.road_superelevations())
+                .filter(|(n, o)| n != o)
+                .map(|(n, _)| n.id.clone())
+                .collect::<Vec<_>>(),
+        )
     });
     let turned_profiles: Vec<String> = c.profiles.as_ref().map_or_else(Vec::new, |s| {
-        s.iter().zip(cx.doc.road_profiles()).filter(|(n, o)| n != o).map(|(n, _)| n.id.clone()).collect()
+        s.iter()
+            .zip(cx.doc.road_profiles())
+            .filter(|(n, o)| n != o)
+            .map(|(n, _)| n.id.clone())
+            .collect()
     });
     let (list, supers, profiles) = (c.list.clone(), c.supers, c.profiles);
     let written = cx.doc.transact(STEP, |doc| {
@@ -306,7 +383,12 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<AlignmentsW
         Ok::<(), kentos_domain::Refusal>(())
     });
     if let Err(r) = written {
-        return fail(codes::INVALID_ALIGNMENT, format!("Aks kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_ALIGNMENT,
+            format!("Aks kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
     let mut out = common::write(cx, c.list, STEP, c.target.as_deref(), c.mapping, c.warnings);
     if let CommandResult::Completed { output, .. } = &mut out {
@@ -316,7 +398,10 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<AlignmentsW
     out
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: AlignmentsEdit) -> CommandResult<AlignmentsWritten> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AlignmentsEdit,
+) -> CommandResult<AlignmentsWritten> {
     match check(cx.doc, &input) {
         Ok(c) => write(cx, c),
         Err(stop) => stop.into(),

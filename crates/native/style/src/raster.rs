@@ -155,7 +155,12 @@ fn bitmap(width: u32, height: u32, rgba: &[u8]) -> Option<Pixmap> {
     if data.len() != rgba.len() {
         return None;
     }
-    for (out, px) in data.as_chunks_mut::<4>().0.iter_mut().zip(rgba.as_chunks::<4>().0.iter()) {
+    for (out, px) in data
+        .as_chunks_mut::<4>()
+        .0
+        .iter_mut()
+        .zip(rgba.as_chunks::<4>().0.iter())
+    {
         let a = u32::from(px[3]);
         out[0] = ((u32::from(px[0]) * a + 127) / 255) as u8;
         out[1] = ((u32::from(px[1]) * a + 127) / 255) as u8;
@@ -506,7 +511,9 @@ mod tests {
 
     fn coverage(p: &Painted) -> f64 {
         p.data
-            .as_chunks::<4>().0.iter()
+            .as_chunks::<4>()
+            .0
+            .iter()
             .map(|px| f64::from(px[3]))
             .sum::<f64>()
             / 255.0

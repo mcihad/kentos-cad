@@ -158,7 +158,9 @@ fn a_viewer_is_told_once_and_leaving_asks() {
     let _ = app.run("file.open");
     assert_eq!(app.dialog, None, "nothing asked before a file is chosen");
     let chosen = dir.join("baska.kcad");
-    let _ = app.update(crate::app::Message::Opening(crate::opening::Event::Picked(Some(chosen.clone()))));
+    let _ = app.update(crate::app::Message::Opening(crate::opening::Event::Picked(
+        Some(chosen.clone()),
+    )));
     assert_eq!(app.dialog, Some(Dialog::Unsaved(Then::Open)));
     assert_eq!(app.open_after_leave.as_deref(), Some(chosen.as_path()));
     let q = app.unsaved_question(Then::Open);
@@ -250,7 +252,11 @@ fn the_upload_offers_only_workspaces_where_projects_can_be_opened() {
     assert_eq!(u.tenants.len(), 1);
     assert_eq!(u.tenants[0].tenant_id, PERSONAL);
     // The type's storage (docs/adr/9196 §2): a general CAD drawing's project is its file.
-    assert_eq!(u.storage, ProjectStorage::File, "a general CAD project's file");
+    assert_eq!(
+        u.storage,
+        ProjectStorage::File,
+        "a general CAD project's file"
+    );
 
     cloud(&mut app, Event::UploadName("  ".into()));
     cloud(&mut app, Event::UploadSubmit);
@@ -448,7 +454,10 @@ fn a_drawing_changed_while_it_went_up_stays_as_it_is() {
     )))));
     let _ = app.run("cloud.upload");
     // The database keeps a CBS project alone (docs/adr/9196 §2).
-    cloud(&mut app, Event::UploadType(kentos_commands::ProjectType::Gis));
+    cloud(
+        &mut app,
+        Event::UploadType(kentos_commands::ProjectType::Gis),
+    );
     cloud(&mut app, Event::UploadStorage(ProjectStorage::Database));
     cloud(&mut app, Event::UploadName("Pafta 12".into()));
     let _ = app.update(crate::cloud::msg(Event::UploadSubmit));

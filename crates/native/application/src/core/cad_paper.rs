@@ -345,9 +345,10 @@ mod tests {
     };
     #[test]
     fn independent_paper_curves_keep_source_and_roundtrip_analytic_entities() {
-        let fixture: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/paper-cad.json"))
-                .unwrap();
+        let fixture: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/sheet/v1/paper-cad.json"
+        ))
+        .unwrap();
         for case in fixture["cases"].as_array().unwrap() {
             let e: Entity = serde_json::from_value(case["entity"].clone()).unwrap();
             let (frame, cad) = read(&e, 297.).unwrap_or_else(|| panic!("{}", case["name"]));
@@ -449,9 +450,10 @@ mod tests {
         };
         assert!((e.major.x.hypot(e.major.y) - 0.02).abs() < 1e-12);
         assert!((e.ratio - 0.5).abs() < 1e-12);
-        let fixture: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/paper-cad.json"))
-                .unwrap();
+        let fixture: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/sheet/v1/paper-cad.json"
+        ))
+        .unwrap();
         let e: Entity = serde_json::from_value(
             fixture["cases"].as_array().unwrap().last().unwrap()["entity"].clone(),
         )

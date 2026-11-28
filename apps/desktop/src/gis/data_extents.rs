@@ -92,8 +92,18 @@ pub(crate) struct DataExtents {
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    Extent { layer: String, stamp: Stamp, table: Table, read: Result<Option<TableBox>, String> },
-    Outline { layer: String, stamp: Stamp, table: Table, read: Result<Shapes, String> },
+    Extent {
+        layer: String,
+        stamp: Stamp,
+        table: Table,
+        read: Result<Option<TableBox>, String>,
+    },
+    Outline {
+        layer: String,
+        stamp: Stamp,
+        table: Table,
+        read: Result<Shapes, String>,
+    },
 }
 
 fn message(e: Event) -> Message {
@@ -147,7 +157,11 @@ impl App {
         {
             return Some(k.extent.clone());
         }
-        self.gis.data_extents.wanted.borrow_mut().insert(layer.to_owned());
+        self.gis
+            .data_extents
+            .wanted
+            .borrow_mut()
+            .insert(layer.to_owned());
         Some(Extent::Reading)
     }
 
@@ -156,10 +170,21 @@ impl App {
         let Some(Extent::Read(Some(_))) = self.data_extent_of(layer) else {
             return None;
         };
-        if let Some(outline) = self.gis.data_extents.kept.borrow().get(layer).and_then(|k| k.outline.clone()) {
+        if let Some(outline) = self
+            .gis
+            .data_extents
+            .kept
+            .borrow()
+            .get(layer)
+            .and_then(|k| k.outline.clone())
+        {
             return Some(outline);
         }
-        self.gis.data_extents.outlines_wanted.borrow_mut().insert(layer.to_owned());
+        self.gis
+            .data_extents
+            .outlines_wanted
+            .borrow_mut()
+            .insert(layer.to_owned());
         Some(Outlined::Reading)
     }
 
@@ -260,7 +285,13 @@ impl App {
     /// After every message: the boxes and outlines asked for, read off the interface's thread.
     pub(crate) fn data_extents_tasks(&mut self) -> Task<Message> {
         let boxes: Vec<String> = self.gis.data_extents.wanted.borrow_mut().drain().collect();
-        let outlines: Vec<String> = self.gis.data_extents.outlines_wanted.borrow_mut().drain().collect();
+        let outlines: Vec<String> = self
+            .gis
+            .data_extents
+            .outlines_wanted
+            .borrow_mut()
+            .drain()
+            .collect();
         let (Some(doc), Some(stamp)) = (self.document.as_ref(), self.extents_stamp()) else {
             return Task::none();
         };
@@ -272,17 +303,32 @@ impl App {
             };
             let table = table_of(&data);
             let mut kept = self.gis.data_extents.kept.borrow_mut();
-            let asked = kept
-                .get(&layer)
-                .is_some_and(|k| k.stamp == stamp && k.table == table && k.extent == Extent::Reading);
+            let asked = kept.get(&layer).is_some_and(|k| {
+                k.stamp == stamp && k.table == table && k.extent == Extent::Reading
+            });
             if asked {
                 continue;
             }
-            kept.insert(layer.clone(), Kept { stamp, table: table.clone(), extent: Extent::Reading, outline: None });
+            kept.insert(
+                layer.clone(),
+                Kept {
+                    stamp,
+                    table: table.clone(),
+                    extent: Extent::Reading,
+                    outline: None,
+                },
+            );
             let settings = settings.clone();
             tasks.push(crate::db_connections::off_thread(
                 move || data_extent(&settings, &data),
-                move |read| message(Event::Extent { layer, stamp, table, read }),
+                move |read| {
+                    message(Event::Extent {
+                        layer,
+                        stamp,
+                        table,
+                        read,
+                    })
+                },
             ));
         }
         for layer in outlines {
@@ -294,7 +340,10 @@ impl App {
             };
             let table = table_of(&data);
             let mut kept = self.gis.data_extents.kept.borrow_mut();
-            let Some(k) = kept.get_mut(&layer).filter(|k| k.stamp == stamp && k.table == table) else {
+            let Some(k) = kept
+                .get_mut(&layer)
+                .filter(|k| k.stamp == stamp && k.table == table)
+            else {
                 continue;
             };
             let (Extent::Read(Some(b)), None) = (&k.extent, &k.outline) else {
@@ -306,10 +355,25 @@ impl App {
             let id = layer.clone();
             tasks.push(crate::db_connections::off_thread(
                 move || {
-                    data_outline(&settings, &data, &id, &within, OUTLINE_PIXELS, OUTLINE_ROWS, &Cancel::new())
-                        .map(|o| Shapes(Arc::new(o.store)))
+                    data_outline(
+                        &settings,
+                        &data,
+                        &id,
+                        &within,
+                        OUTLINE_PIXELS,
+                        OUTLINE_ROWS,
+                        &Cancel::new(),
+                    )
+                    .map(|o| Shapes(Arc::new(o.store)))
                 },
-                move |read| message(Event::Outline { layer, stamp, table, read }),
+                move |read| {
+                    message(Event::Outline {
+                        layer,
+                        stamp,
+                        table,
+                        read,
+                    })
+                },
             ));
         }
         Task::batch(tasks)
@@ -325,7 +389,12 @@ impl App {
                     .is_some_and(|t| &t == table)
         };
         match event {
-            Event::Extent { layer, stamp, table, read } => {
+            Event::Extent {
+                layer,
+                stamp,
+                table,
+                read,
+            } => {
                 if !fresh(self, &layer, stamp, &table) {
                     return Task::none();
                 }
@@ -333,9 +402,22 @@ impl App {
                     Ok(b) => Extent::Read(b),
                     Err(why) => Extent::Failed(why),
                 };
-                self.gis.data_extents.kept.borrow_mut().insert(layer, Kept { stamp, table, extent, outline: None });
+                self.gis.data_extents.kept.borrow_mut().insert(
+                    layer,
+                    Kept {
+                        stamp,
+                        table,
+                        extent,
+                        outline: None,
+                    },
+                );
             }
-            Event::Outline { layer, stamp, table, read } => {
+            Event::Outline {
+                layer,
+                stamp,
+                table,
+                read,
+            } => {
                 if !fresh(self, &layer, stamp, &table) {
                     return Task::none();
                 }
@@ -360,11 +442,19 @@ impl App {
         let Some((layer, left)) = self.gis.data_extents.zoom_after.borrow().clone() else {
             return;
         };
-        let Some(node) = self.document.as_ref().and_then(|d| d.model.layers().get(&layer).cloned()) else {
+        let Some(node) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(&layer).cloned())
+        else {
             *self.gis.data_extents.zoom_after.borrow_mut() = None;
             return;
         };
-        if self.data_layers_below(&node).iter().any(|n| matches!(self.data_extent_of(&n.id), Some(Extent::Reading))) {
+        if self
+            .data_layers_below(&node)
+            .iter()
+            .any(|n| matches!(self.data_extent_of(&n.id), Some(Extent::Reading)))
+        {
             return;
         }
         *self.gis.data_extents.zoom_after.borrow_mut() = None;
@@ -403,11 +493,15 @@ impl App {
                 Some(Extent::Reading) => reading.push(n.name.clone()),
                 Some(Extent::Read(None)) => self.say(
                     Level::Info,
-                    format!("“{}” tablosunda geometrili satır yok; yakınlaştırılacak kapsam yok.", n.name),
+                    format!(
+                        "“{}” tablosunda geometrili satır yok; yakınlaştırılacak kapsam yok.",
+                        n.name
+                    ),
                 ),
-                Some(Extent::Failed(why)) => {
-                    self.say(Level::Warn, format!("“{}” katmanının kapsamı okunamadı: {why}", n.name))
-                }
+                Some(Extent::Failed(why)) => self.say(
+                    Level::Warn,
+                    format!("“{}” katmanının kapsamı okunamadı: {why}", n.name),
+                ),
                 _ => {}
             }
         }
@@ -416,7 +510,10 @@ impl App {
         }
         self.say(
             Level::Info,
-            format!("“{}” kapsamı kaynaktan okunuyor; gelince yakınlaştırılır.", reading.join("”, “")),
+            format!(
+                "“{}” kapsamı kaynaktan okunuyor; gelince yakınlaştırılır.",
+                reading.join("”, “")
+            ),
         );
         *self.gis.data_extents.zoom_after.borrow_mut() = Some((node.id.clone(), self.viewpoint()));
         true
@@ -448,7 +545,10 @@ impl App {
     pub(crate) fn extents_shown(&mut self, shown: &ShownBoxes, last: bool) -> bool {
         let (shown_any, far) = self.show_extents(&shown.boxes);
         for (name, why) in &shown.failed {
-            self.say(Level::Warn, format!("“{name}” katmanının kapsamı okunamadı: {why}"));
+            self.say(
+                Level::Warn,
+                format!("“{name}” katmanının kapsamı okunamadı: {why}"),
+            );
         }
         if last && !shown_any && shown.failed.is_empty() {
             self.say(Level::Info, NOTHING_SHOWN);

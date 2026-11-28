@@ -13,9 +13,9 @@
 //! as on the web. The rings' points are the shared core's (`donut_rings`).
 
 use kentos_commands::DonutCreate;
-use kentos_native_application::{ExecutionContext, donut_create};
 use kentos_geometry_core::tools::drawing::donut_rings;
 use kentos_geometry_core::tools::point_text::js_trim;
+use kentos_native_application::{ExecutionContext, donut_create};
 
 use crate::Vec2;
 use crate::format::Format;
@@ -72,10 +72,17 @@ impl Donut {
             return;
         }
         let input = DonutCreate {
-            layer_id: cx.doc.layers().active().to_owned(), center: wire(p),
-            inner: cx.memory.donut_inner, outer: cx.memory.donut_outer,
-            color: cx.draft.color_text(), line_weight: cx.draft.line_weight, line_type: cx.draft.line_type,
-            attrs: cx.template_attrs(None), label: cx.template_label(), symbol: cx.template_symbol(), expected_revision: None,
+            layer_id: cx.doc.layers().active().to_owned(),
+            center: wire(p),
+            inner: cx.memory.donut_inner,
+            outer: cx.memory.donut_outer,
+            color: cx.draft.color_text(),
+            line_weight: cx.draft.line_weight,
+            line_type: cx.draft.line_type,
+            attrs: cx.template_attrs(None),
+            label: cx.template_label(),
+            symbol: cx.template_symbol(),
+            expected_revision: None,
         };
         let result = donut_create::execute(&mut ExecutionContext::new(cx.doc), input);
         if let Some(out) = points::written(result, cx)

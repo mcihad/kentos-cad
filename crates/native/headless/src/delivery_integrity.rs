@@ -1,12 +1,12 @@
 //! A replayed publication means its complete recorded delivery still exists, with no path/symlink escape.
+use kentos_commands::{
+    CallAnswer, CommandError, CommandResult, SheetsPublished,
+    encoding::{sha256_hex, sha256_reader_hex},
+};
 use std::{
     collections::BTreeSet,
     fs,
-    path::{Path, Component},
-};
-use kentos_commands::{
-    SheetsPublished, CommandError, CommandResult, CallAnswer,
-    encoding::{sha256_hex, sha256_reader_hex},
+    path::{Component, Path},
 };
 pub(crate) fn portable_relative(path: &str) -> bool {
     !path.is_empty()
@@ -129,7 +129,7 @@ pub(crate) fn checked_replay(command: &str, mut answer: CallAnswer) -> CallAnswe
 
 /// Recipe replay verifies an existing artifact separately from recomputing a past rendering context.
 pub(crate) fn replay_row(row: &kentos_commands::CallRecord) -> kentos_commands::ReplayStep {
-    use kentos_commands::{ReplayStep, ReplayOutcome};
+    use kentos_commands::{ReplayOutcome, ReplayStep};
     let checked = (|| -> Result<(), String> {
         let effect = row
             .effects

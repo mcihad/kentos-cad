@@ -170,8 +170,16 @@ fn a_hidden_piece_hides_its_array_copies_too() {
         .expect("an insert");
         drawn(&b, &e.shape)
     };
-    assert_eq!(at(json!({ "Genişlik": 2.4 })).len(), 4, "the frame and three dividers");
-    assert_eq!(at(json!({ "Genişlik": 2.4, "Görünüm": "Boş" })), ["çizgi (0, 0) (1.2, 0)"], "no divider, no copy");
+    assert_eq!(
+        at(json!({ "Genişlik": 2.4 })).len(),
+        4,
+        "the frame and three dividers"
+    );
+    assert_eq!(
+        at(json!({ "Genişlik": 2.4, "Görünüm": "Boş" })),
+        ["çizgi (0, 0) (1.2, 0)"],
+        "no divider, no copy"
+    );
 }
 
 #[test]

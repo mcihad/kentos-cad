@@ -104,10 +104,11 @@ fn work(
             digests(&captured, &present, geo, layers, progress)?
         };
         // What each page's sources did since the delivery (docs/adr/1320 §2).
-        let resources = published
-            .as_ref()
-            .is_some_and(|p| p.resources_sha256.is_some() && p.resources_sha256 != current.resources_sha256);
-        let changes = crate::publish_update::changes(doc, &book, &m["sources"], &present, resources);
+        let resources = published.as_ref().is_some_and(|p| {
+            p.resources_sha256.is_some() && p.resources_sha256 != current.resources_sha256
+        });
+        let changes =
+            crate::publish_update::changes(doc, &book, &m["sources"], &present, resources);
         let name_of = |id: &str| {
             m["drawingSet"]
                 .as_array()
@@ -134,7 +135,10 @@ fn work(
                 date: page
                     .and_then(|p| p.date.clone())
                     .or_else(|| m["date"].as_str().map(str::to_owned)),
-                changes: changes.iter().find(|(s, _)| s == id).map(|(_, c)| c.clone()),
+                changes: changes
+                    .iter()
+                    .find(|(s, _)| s == id)
+                    .map(|(_, c)| c.clone()),
             };
             row.state = if book.sheet(id).is_none() {
                 SheetPublishState::Removed

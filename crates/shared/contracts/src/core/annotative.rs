@@ -163,7 +163,9 @@ pub fn why_not_annotative(e: &Entity) -> Option<&'static str> {
                 crate::HatchPatternType::Solid | crate::HatchPatternType::Gradient
             ) =>
         {
-            Some("Dolu ve degrade taramanın ölçeklenecek deseni yok; yalnız çizgili ve desenli tarama ölçekli olur.")
+            Some(
+                "Dolu ve degrade taramanın ölçeklenecek deseni yok; yalnız çizgili ve desenli tarama ölçekli olur.",
+            )
         }
         Entity::Text(_) | Entity::Dimension(_) | Entity::Leader(_) | Entity::Hatch(_) => None,
         _ => Some("Yalnız yazı, ölçü, kılavuz ve tarama ölçekli olur."),

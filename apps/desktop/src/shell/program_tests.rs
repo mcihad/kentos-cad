@@ -56,7 +56,12 @@ fn a_project_belongs_by_its_type_and_work() {
     assert!(works_of(Module::Gis).is_empty());
     assert_eq!(
         Module::ALL.map(type_of),
-        [Workspace::Cad, Workspace::Cad, Workspace::Gis, Workspace::Cad]
+        [
+            Workspace::Cad,
+            Workspace::Cad,
+            Workspace::Gis,
+            Workspace::Cad
+        ]
     );
 }
 
@@ -71,8 +76,8 @@ fn a_module_program_takes_only_its_own_module_and_one_file() {
         fixed_launch(Module::Gis, os(&["--modul", "cbs", "/a/ada.kcad"])),
         Ok(Some(PathBuf::from("/a/ada.kcad")))
     );
-    let e = fixed_launch(Module::Gis, os(&["--modul=mimari", "x.kcad"]))
-        .expect_err("another module");
+    let e =
+        fixed_launch(Module::Gis, os(&["--modul=mimari", "x.kcad"])).expect_err("another module");
     assert!(
         e.contains("kentos-gis yalnız KentOS GIS olarak çalışır")
             && e.contains("kentos-mimari")

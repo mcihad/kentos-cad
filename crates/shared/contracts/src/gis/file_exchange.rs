@@ -61,7 +61,14 @@ pub enum ExchangeFormat {
 }
 
 impl ExchangeFormat {
-    pub const ALL: [ExchangeFormat; 6] = [Self::Gpkg, Self::Parquet, Self::Fgb, Self::Gml, Self::Shp, Self::Dxf];
+    pub const ALL: [ExchangeFormat; 6] = [
+        Self::Gpkg,
+        Self::Parquet,
+        Self::Fgb,
+        Self::Gml,
+        Self::Shp,
+        Self::Dxf,
+    ];
 
     /// The file's extension.
     pub fn extension(self) -> &'static str {

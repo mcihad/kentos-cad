@@ -42,8 +42,18 @@ impl Document {
     /// Gives the named view of key `key` the area `area` as one change named `label` (into the open transaction, else
     /// an undo step of its own). Refused with nothing changed: no such view, or an area that does not hold
     /// (`view_holds`). Whether anything changed.
-    pub fn set_view_area(&mut self, key: &str, area: ViewArea, label: &str) -> Result<bool, Refusal> {
-        let Some(v) = self.settings.named_views.iter().find(|v| view_key(v) == key) else {
+    pub fn set_view_area(
+        &mut self,
+        key: &str,
+        area: ViewArea,
+        label: &str,
+    ) -> Result<bool, Refusal> {
+        let Some(v) = self
+            .settings
+            .named_views
+            .iter()
+            .find(|v| view_key(v) == key)
+        else {
             return Err(Refusal(format!("“{key}” kimlikli bir adlı görünüm yok.")));
         };
         let mut next = v.clone();

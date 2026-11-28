@@ -386,7 +386,10 @@ fn written(
         neighbours_in(doc, t.spatial, t.points, &[(slot, shape(&e), after)])
     });
     // Kilitli komşuda durdur (docs/adr/1261): the boundary is not split; nothing is written.
-    if let Some(n) = follow.as_ref().filter(|n| topology.is_some_and(|t| t.stop_on_locked) && n.locked > 0) {
+    if let Some(n) = follow
+        .as_ref()
+        .filter(|n| topology.is_some_and(|t| t.stop_on_locked) && n.locked > 0)
+    {
         return Outcome {
             said: vec![kentos_interaction::neighbours::stopped(n.locked)],
             ..Outcome::default()
@@ -677,7 +680,8 @@ pub fn remove(
         return Outcome::default();
     };
     let at: Vec<[usize; 2]> = at.iter().map(|a| [a.path, a.index]).collect();
-    let answer = removed_joining(kind, &elevated_paths(&e), &at, join).map(|paths| Edited { kind, paths });
+    let answer =
+        removed_joining(kind, &elevated_paths(&e), &at, join).map(|paths| Edited { kind, paths });
     // Nothing to keep open: a removal has no cell.
     Outcome {
         stay: false,

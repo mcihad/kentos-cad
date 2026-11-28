@@ -168,13 +168,11 @@ fn place(app: &mut App) {
     two(app);
     fit(app, [-1.5, -4.5, 32.0, 6.0]);
     run(app, "tool.modulePlace");
-    let _ = app.update(Message::ToolSetting(
-        crate::tool_settings::Commit {
-            tool: "modulePlace",
-            key: "B",
-            value: "d3".into(),
-        },
-    ));
+    let _ = app.update(Message::ToolSetting(crate::tool_settings::Commit {
+        tool: "modulePlace",
+        key: "B",
+        value: "d3".into(),
+    }));
     hover(app, [24.5 - E, 0.0 - N]);
 }
 

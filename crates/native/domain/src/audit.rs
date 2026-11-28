@@ -294,7 +294,9 @@ impl Document {
             s.text_styles
                 .iter()
                 .filter(|t| {
-                    !text.contains(t.id.as_str()) && !line_types.contains_key(&t.id) && !by_table_style(t)
+                    !text.contains(t.id.as_str())
+                        && !line_types.contains_key(&t.id)
+                        && !by_table_style(t)
                 })
                 .map(|t| t.id.clone())
                 .collect(),
@@ -331,6 +333,10 @@ mod table_style_tests {
         .unwrap();
         let doc = Document::from_snapshot(snap).unwrap();
         assert_eq!(doc.unused_table_styles(), vec!["bos".to_owned()]);
-        assert_eq!(doc.unused_styles().0, vec!["bos".to_owned()], "A-TABLO stays: a table style's cell names it");
+        assert_eq!(
+            doc.unused_styles().0,
+            vec!["bos".to_owned()],
+            "A-TABLO stays: a table style's cell names it"
+        );
     }
 }

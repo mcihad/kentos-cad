@@ -8,7 +8,10 @@
 
 use iced::widget::{Column, container};
 use iced::{Element, Task};
-use kentos_commands::{CallOp, CommandResult, ExchangeCheck, ExchangeChecked, ExchangeFormat, ExchangeMatrix, ExchangeMatrixed};
+use kentos_commands::{
+    CallOp, CommandResult, ExchangeCheck, ExchangeChecked, ExchangeFormat, ExchangeMatrix,
+    ExchangeMatrixed,
+};
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_ui::widget::{Dialog as Frame, Form};
@@ -41,7 +44,12 @@ pub struct State {
 
 impl Default for State {
     fn default() -> Self {
-        Self { format: ExchangeFormat::Gpkg, tolerance: "0,001".into(), answer: None, matrix: None }
+        Self {
+            format: ExchangeFormat::Gpkg,
+            tolerance: "0,001".into(),
+            answer: None,
+            matrix: None,
+        }
     }
 }
 
@@ -84,39 +92,73 @@ impl App {
     /// Denetle: the trip on the open drawing (a test calls it as the button does).
     pub(crate) fn exchange_check_run(&mut self) {
         let t = self.exchange_check.tolerance.trim().replace(',', ".");
-        let tolerance = if t.is_empty() { None } else { t.parse::<f64>().ok() };
+        let tolerance = if t.is_empty() {
+            None
+        } else {
+            t.parse::<f64>().ok()
+        };
         if !t.is_empty() && tolerance.is_none() {
-            self.exchange_check.answer = Some(Err(format!("Tolerans “{}” bir sayı değil.", self.exchange_check.tolerance)));
+            self.exchange_check.answer = Some(Err(format!(
+                "Tolerans “{}” bir sayı değil.",
+                self.exchange_check.tolerance
+            )));
             return;
         }
-        let Some(doc) = self.document.as_ref() else { return };
-        let input = ExchangeCheck { format: self.exchange_check.format, layers: Vec::new(), tolerance };
-        self.exchange_check.answer = Some(match kentos_headless::exchange_check::run(&doc.model, &input, CallOp::Execute) {
-            CommandResult::Completed { output, .. } => serde_json::from_value(output).map_err(|e| e.to_string()),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Denetlenemedi.".into()),
-        });
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let input = ExchangeCheck {
+            format: self.exchange_check.format,
+            layers: Vec::new(),
+            tolerance,
+        };
+        self.exchange_check.answer = Some(
+            match kentos_headless::exchange_check::run(&doc.model, &input, CallOp::Execute) {
+                CommandResult::Completed { output, .. } => {
+                    serde_json::from_value(output).map_err(|e| e.to_string())
+                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Denetlenemedi.".into()),
+            },
+        );
     }
 
     /// Tüm biçimler: the trip through all six formats, read as the support matrix (a test calls it as the button does).
     pub(crate) fn exchange_matrix_run(&mut self) {
         let t = self.exchange_check.tolerance.trim().replace(',', ".");
-        let tolerance = if t.is_empty() { None } else { t.parse::<f64>().ok() };
+        let tolerance = if t.is_empty() {
+            None
+        } else {
+            t.parse::<f64>().ok()
+        };
         if !t.is_empty() && tolerance.is_none() {
-            self.exchange_check.matrix = Some(Err(format!("Tolerans “{}” bir sayı değil.", self.exchange_check.tolerance)));
+            self.exchange_check.matrix = Some(Err(format!(
+                "Tolerans “{}” bir sayı değil.",
+                self.exchange_check.tolerance
+            )));
             return;
         }
-        let Some(doc) = self.document.as_ref() else { return };
-        let input = ExchangeMatrix { formats: Vec::new(), layers: Vec::new(), tolerance };
-        self.exchange_check.matrix = Some(match kentos_headless::exchange_matrix::run(&doc.model, &input, CallOp::Execute) {
-            CommandResult::Completed { output, .. } => serde_json::from_value(output).map_err(|e| e.to_string()),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Denetlenemedi.".into()),
-        });
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let input = ExchangeMatrix {
+            formats: Vec::new(),
+            layers: Vec::new(),
+            tolerance,
+        };
+        self.exchange_check.matrix = Some(
+            match kentos_headless::exchange_matrix::run(&doc.model, &input, CallOp::Execute) {
+                CommandResult::Completed { output, .. } => {
+                    serde_json::from_value(output).map_err(|e| e.to_string())
+                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Denetlenemedi.".into()),
+            },
+        );
     }
 
     pub(crate) fn exchange_check_event(&mut self, event: Event) -> Task<Message> {
@@ -134,8 +176,12 @@ impl App {
             }
             Event::Matrix => self.exchange_matrix_run(),
             Event::Select => {
-                let Some(Ok(r)) = &self.exchange_check.answer else { return Task::none() };
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let Some(Ok(r)) = &self.exchange_check.answer else {
+                    return Task::none();
+                };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
                 let n = &r.numeric;
                 // The numeric differences' worst objects too (GIS-039).
                 let numeric = [
@@ -158,7 +204,10 @@ impl App {
                 self.selection.set(slots);
                 self.exchange_check = State::default();
                 self.dialog = None;
-                self.say(Level::Info, format!("{TITLE}: kaybı olan {n} nesne seçildi."));
+                self.say(
+                    Level::Info,
+                    format!("{TITLE}: kaybı olan {n} nesne seçildi."),
+                );
             }
             Event::Close => {
                 self.exchange_check = State::default();
@@ -170,27 +219,55 @@ impl App {
 
     /// An object of the drawing by its label (else its kind) and its layer: “P7” (Parsel).
     fn exchange_object(&self, uid: &str) -> String {
-        let Some(doc) = self.document.as_ref() else { return String::new() };
-        let Some(e) = Uuid::parse_str(uid).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s)) else {
+        let Some(doc) = self.document.as_ref() else {
             return String::new();
         };
-        let label = e.base().label.as_deref().map(str::trim).filter(|l| !l.is_empty());
+        let Some(e) = Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| doc.model.slot_of(u))
+            .and_then(|s| doc.model.get(s))
+        else {
+            return String::new();
+        };
+        let label = e
+            .base()
+            .label
+            .as_deref()
+            .map(str::trim)
+            .filter(|l| !l.is_empty());
         let name = label.map_or_else(|| kind_word(e.kind()).to_lowercase(), |l| format!("“{l}”"));
-        let layer = doc.model.layers().get(&e.base().layer_id).map(|l| l.name.clone()).unwrap_or_default();
+        let layer = doc
+            .model
+            .layers()
+            .get(&e.base().layer_id)
+            .map(|l| l.name.clone())
+            .unwrap_or_default();
         format!("{name} ({layer} katmanı)")
     }
 
     pub(crate) fn exchange_check_view(&self) -> Element<'_, Message> {
         let s = &self.exchange_check;
         let f = self.format();
-        let formats: Vec<(String, String)> =
-            ExchangeFormat::ALL.iter().map(|x| (key(*x).to_owned(), x.title().to_owned())).collect();
+        let formats: Vec<(String, String)> = ExchangeFormat::ALL
+            .iter()
+            .map(|x| (key(*x).to_owned(), x.title().to_owned()))
+            .collect();
         let form = Form::new()
             .label_width(110.0)
-            .field("Biçim", container(fields::select_owned(formats, key(s.format), |v| msg(Event::Format(v)))).width(200))
+            .field(
+                "Biçim",
+                container(fields::select_owned(formats, key(s.format), |v| {
+                    msg(Event::Format(v))
+                }))
+                .width(200),
+            )
             .field(
                 "Tolerans (m)",
-                container(fields::input(None, "0,001", &s.tolerance, false, false).on_input(|v| msg(Event::Tolerance(v)))).width(200),
+                container(
+                    fields::input(None, "0,001", &s.tolerance, false, false)
+                        .on_input(|v| msg(Event::Tolerance(v))),
+                )
+                .width(200),
             );
         // Tüm biçimler's matrix (docs/adr/1880), until Denetle runs one format again.
         if let Some(m) = &s.matrix {
@@ -216,7 +293,11 @@ impl App {
             let mut columns = vec![col("Özellik", 120.0)];
             columns.extend(ExchangeFormat::ALL.iter().map(|x| col(x.title(), 140.0)));
             let table = sheet(columns, rows, "Matris yok.", 360.0);
-            let body = Column::new().spacing(12).push(form).push(words::summary(lines)).push(table);
+            let body = Column::new()
+                .spacing(12)
+                .push(form)
+                .push(words::summary(lines))
+                .push(table);
             return Frame::new(TITLE)
                 .push(body)
                 .aside(words::secondary(MATRIX, Some(msg(Event::Matrix))))
@@ -327,23 +408,37 @@ impl App {
             )),
         }
         let table = sheet(
-            vec![col("Anlamsal kayıp", 220.0), col("Ayrıntı", 220.0), num("Nesne", 80.0)],
+            vec![
+                col("Anlamsal kayıp", 220.0),
+                col("Ayrıntı", 220.0),
+                num("Nesne", 80.0),
+            ],
             rows,
             "Anlamsal kayıp yok.",
             260.0,
         );
-        let body = Column::new().spacing(12).push(form).push(words::summary(lines)).push(table);
+        let body = Column::new()
+            .spacing(12)
+            .push(form)
+            .push(words::summary(lines))
+            .push(table);
         Frame::new(TITLE)
             .push(body)
             .aside(words::secondary(MATRIX, Some(msg(Event::Matrix))))
-            .aside(words::secondary(SELECT, (lost > 0).then(|| msg(Event::Select))))
+            .aside(words::secondary(
+                SELECT,
+                (lost > 0).then(|| msg(Event::Select)),
+            ))
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .action(words::primary(RUN, Some(msg(Event::Run))))
             .width(760.0)
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn exchange_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn exchange_check_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(RUN) => Some(msg(Event::Run)),

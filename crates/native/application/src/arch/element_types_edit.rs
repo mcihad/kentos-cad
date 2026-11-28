@@ -6,9 +6,10 @@
 //! (`scripts/fixtures/element_types_cases.py`).
 
 use kentos_commands::{
-    CommandResult, CommandWarning, ElementKept, ElementLeft, ElementLeftWhy, ElementType, ElementTypeKind,
-    ElementTypeRefused, ElementTypeReport, ElementTypesEdit, ElementTypesEdited, ElementTypesOperation, Entity,
-    element_type_name_ok, element_type_values, element_types_problem, follow_type, opening_type_id_of, type_link,
+    CommandResult, CommandWarning, ElementKept, ElementLeft, ElementLeftWhy, ElementType,
+    ElementTypeKind, ElementTypeRefused, ElementTypeReport, ElementTypesEdit, ElementTypesEdited,
+    ElementTypesOperation, Entity, element_type_name_ok, element_type_values,
+    element_types_problem, follow_type, opening_type_id_of, type_link,
 };
 use kentos_domain::{Document, Slot};
 use serde_json::{Map, Value};
@@ -42,26 +43,42 @@ fn find(types: &[ElementType], key: &str, path: &str) -> Result<usize, Stop> {
         return Ok(i);
     }
     let folded = key.trim().to_lowercase();
-    let named: Vec<usize> = (0..types.len()).filter(|&i| types[i].name.to_lowercase() == folded).collect();
+    let named: Vec<usize> = (0..types.len())
+        .filter(|&i| types[i].name.to_lowercase() == folded)
+        .collect();
     match named.as_slice() {
         [i] => Ok(*i),
         [] => {
-            let there: Vec<String> = types.iter().map(|t| format!("{} ({})", t.name, t.kind.words())).collect();
+            let there: Vec<String> = types
+                .iter()
+                .map(|t| format!("{} ({})", t.name, t.kind.words()))
+                .collect();
             Err(fail(
                 codes::ELEMENT_TYPE_NOT_FOUND,
                 if there.is_empty() {
-                    format!("“{key}” adında ya da kimliğinde eleman tipi yok; projede eleman tipi yok.")
+                    format!(
+                        "“{key}” adında ya da kimliğinde eleman tipi yok; projede eleman tipi yok."
+                    )
                 } else {
-                    format!("“{key}” adında ya da kimliğinde eleman tipi yok. Var olanlar: {}.", there.join(", "))
+                    format!(
+                        "“{key}” adında ya da kimliğinde eleman tipi yok. Var olanlar: {}.",
+                        there.join(", ")
+                    )
                 },
                 path,
             ))
         }
         many => {
-            let ids: Vec<String> = many.iter().map(|&i| format!("{} ({})", types[i].id, types[i].kind.words())).collect();
+            let ids: Vec<String> = many
+                .iter()
+                .map(|&i| format!("{} ({})", types[i].id, types[i].kind.words()))
+                .collect();
             Err(fail(
                 codes::ELEMENT_TYPE_NOT_FOUND,
-                format!("“{key}” adında birden çok tip var; kimliğiyle verin: {}.", ids.join(", ")),
+                format!(
+                    "“{key}” adında birden çok tip var; kimliğiyle verin: {}.",
+                    ids.join(", ")
+                ),
                 path,
             ))
         }
@@ -70,20 +87,37 @@ fn find(types: &[ElementType], key: &str, path: &str) -> Result<usize, Stop> {
 
 /// Why `id` or `name` cannot be a new `kind` type's, or another's than `but`: the id taken, or the name among the
 /// kind's.
-fn taken(types: &[ElementType], kind: ElementTypeKind, id: &str, name: &str, but: Option<usize>) -> Option<(String, &'static str)> {
+fn taken(
+    types: &[ElementType],
+    kind: ElementTypeKind,
+    id: &str,
+    name: &str,
+    but: Option<usize>,
+) -> Option<(String, &'static str)> {
     let folded = name.to_lowercase();
-    types.iter().enumerate().filter(|(i, _)| Some(*i) != but).find_map(|(_, t)| {
-        if t.id == id {
-            Some((format!("Projede “{id}” kimlikli bir tip (“{}”) zaten var.", t.name), "operation.id"))
-        } else if t.kind == kind && t.name.to_lowercase() == folded {
-            Some((
-                format!("Projede “{}” adında bir {} tipi zaten var; başka bir ad verin.", t.name, kind.words()),
-                "operation.name",
-            ))
-        } else {
-            None
-        }
-    })
+    types
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| Some(*i) != but)
+        .find_map(|(_, t)| {
+            if t.id == id {
+                Some((
+                    format!("Projede “{id}” kimlikli bir tip (“{}”) zaten var.", t.name),
+                    "operation.id",
+                ))
+            } else if t.kind == kind && t.name.to_lowercase() == folded {
+                Some((
+                    format!(
+                        "Projede “{}” adında bir {} tipi zaten var; başka bir ad verin.",
+                        t.name,
+                        kind.words()
+                    ),
+                    "operation.name",
+                ))
+            } else {
+                None
+            }
+        })
 }
 
 /// A free id for `name`: from its name, then with `-2`, `-3` ….
@@ -130,10 +164,14 @@ fn locked(doc: &Document, e: &Entity) -> bool {
 fn locked_stop(doc: &Document, e: &Entity, path: &str) -> Stop {
     let layer = &e.base().layer_id;
     let layers = doc.layers();
-    let name = layers.get(layer).map_or(layer.as_str(), |n| n.name.as_str());
+    let name = layers
+        .get(layer)
+        .map_or(layer.as_str(), |n| n.name.as_str());
     fail(
         codes::LAYER_LOCKED,
-        format!("“{name}” katmanı kilitli; üzerindeki eleman düzenlenemez. Kilidi Katmanlar panelinden açın."),
+        format!(
+            "“{name}” katmanı kilitli; üzerindeki eleman düzenlenemez. Kilidi Katmanlar panelinden açın."
+        ),
         path,
     )
 }
@@ -174,19 +212,30 @@ fn follow(
             work.report.skipped.push(ElementLeft {
                 uid,
                 why: ElementLeftWhy::Locked,
-                message: "Kilitli katmanda; eski sürümde kaldı. Kilidi açıp tipi yeniden uygulayın.".into(),
+                message:
+                    "Kilitli katmanda; eski sürümde kaldı. Kilidi açıp tipi yeniden uygulayın."
+                        .into(),
             });
             continue;
         }
         let keep = match &own {
             Some((s, _, keep)) if *s == slot => keep.clone(),
-            _ => type_link(&e).map(|l| l.overrides.clone()).unwrap_or_default(),
+            _ => type_link(&e)
+                .map(|l| l.overrides.clone())
+                .unwrap_or_default(),
         };
         match follow_type(&e, new, &keep) {
             Ok(typed) => {
-                let kept: Vec<String> = fields.iter().filter(|f| keep.contains(f)).cloned().collect();
+                let kept: Vec<String> = fields
+                    .iter()
+                    .filter(|f| keep.contains(f))
+                    .cloned()
+                    .collect();
                 if !kept.is_empty() {
-                    work.report.kept.push(ElementKept { uid: uid.clone(), fields: kept });
+                    work.report.kept.push(ElementKept {
+                        uid: uid.clone(),
+                        fields: kept,
+                    });
                 }
                 work.report.applied.push(uid);
                 work.updates.push((slot, typed));
@@ -205,7 +254,11 @@ fn follow(
                         "operation",
                     ));
                 }
-                work.report.refused.push(ElementLeft { uid, why: ElementLeftWhy::Invalid, message: why });
+                work.report.refused.push(ElementLeft {
+                    uid,
+                    why: ElementLeftWhy::Invalid,
+                    message: why,
+                });
             }
         }
     }
@@ -214,7 +267,11 @@ fn follow(
 
 /// The elements an instance operation names, each once: where the input names it, its slot, itself, its id. Each must
 /// be of a kind a type serves and on an open layer.
-fn elements<'a>(doc: &'a Document, uids: &'a [String], nothing: &str) -> Result<Vec<(usize, Slot, &'a Entity, String)>, Stop> {
+fn elements<'a>(
+    doc: &'a Document,
+    uids: &'a [String],
+    nothing: &str,
+) -> Result<Vec<(usize, Slot, &'a Entity, String)>, Stop> {
     checks::uids(uids, nothing)?;
     let found = checks::named(doc, uids)?;
     let mut out = Vec::with_capacity(found.len());
@@ -223,7 +280,9 @@ fn elements<'a>(doc: &'a Document, uids: &'a [String], nothing: &str) -> Result<
         if ElementTypeKind::of(e).is_none() {
             return Err(fail(
                 codes::ELEMENT_TYPE_KIND,
-                format!("“{uid}” kimlikli nesne kolon, kiriş, döşeme, çatı, korkuluk ya da merdiven değil; eleman tipi yalnız bunlara verilir."),
+                format!(
+                    "“{uid}” kimlikli nesne kolon, kiriş, döşeme, çatı, korkuluk ya da merdiven değil; eleman tipi yalnız bunlara verilir."
+                ),
                 &path,
             ));
         }
@@ -237,9 +296,18 @@ fn elements<'a>(doc: &'a Document, uids: &'a [String], nothing: &str) -> Result<
 
 /// The type an element follows, from `types`; `element_not_typed` when it follows none, `element_type_not_found` when
 /// its type is gone.
-fn its_type<'t>(types: &'t [ElementType], e: &Entity, uid: &str, path: &str) -> Result<(usize, &'t ElementType), Stop> {
+fn its_type<'t>(
+    types: &'t [ElementType],
+    e: &Entity,
+    uid: &str,
+    path: &str,
+) -> Result<(usize, &'t ElementType), Stop> {
     let Some(link) = type_link(e) else {
-        return Err(fail(codes::ELEMENT_NOT_TYPED, format!("“{uid}” kimlikli eleman bir proje tipini izlemiyor."), path));
+        return Err(fail(
+            codes::ELEMENT_NOT_TYPED,
+            format!("“{uid}” kimlikli eleman bir proje tipini izlemiyor."),
+            path,
+        ));
     };
     types.iter().position(|t| t.id == link.id).map(|i| (i, &types[i])).ok_or_else(|| {
         fail(
@@ -257,7 +325,11 @@ fn fields_of(kind: ElementTypeKind, fields: &[String]) -> Result<(), Stop> {
             let known: Vec<&str> = kind.fields().iter().map(|f| f.key).collect();
             return Err(invalid(
                 &format!("operation.fields[{k}]"),
-                format!("“{key}” {} tipinin alanı değil; alanlar: {}.", kind.words(), known.join(", ")),
+                format!(
+                    "“{key}” {} tipinin alanı değil; alanlar: {}.",
+                    kind.words(),
+                    known.join(", ")
+                ),
             ));
         }
     }
@@ -266,9 +338,21 @@ fn fields_of(kind: ElementTypeKind, fields: &[String]) -> Result<(), Stop> {
 
 fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
     let mut list = doc.element_types().to_vec();
-    let mut work = Work { types: Vec::new(), id: None, updates: Vec::new(), report: ElementTypeReport::default() };
+    let mut work = Work {
+        types: Vec::new(),
+        id: None,
+        updates: Vec::new(),
+        report: ElementTypeReport::default(),
+    };
     match &input.operation {
-        ElementTypesOperation::Define { name, id, element, copy_of, from, values } => {
+        ElementTypesOperation::Define {
+            name,
+            id,
+            element,
+            copy_of,
+            from,
+            values,
+        } => {
             name_ok(name, "operation.name")?;
             let mut kind = *element;
             let mut base: Map<String, Value> = Map::new();
@@ -285,7 +369,12 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
                 if kind.is_some_and(|k| k != list[i].kind) {
                     return Err(fail(
                         codes::ELEMENT_TYPE_KIND,
-                        format!("“{}” bir {} tipi; yeni tipin türü ({}) onunla aynı olmalı.", list[i].name, list[i].kind.words(), kind.map_or("", ElementTypeKind::words)),
+                        format!(
+                            "“{}” bir {} tipi; yeni tipin türü ({}) onunla aynı olmalı.",
+                            list[i].name,
+                            list[i].kind.words(),
+                            kind.map_or("", ElementTypeKind::words)
+                        ),
                         "operation.element",
                     ));
                 }
@@ -293,15 +382,24 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
             }
             if let Some(uid) = from {
                 let one = std::slice::from_ref(uid);
-                let found = elements(doc, one, "Tipe çevrilecek eleman verilmedi.").map_err(|s| s.at("operation.from"))?;
+                let found = elements(doc, one, "Tipe çevrilecek eleman verilmedi.")
+                    .map_err(|s| s.at("operation.from"))?;
                 let (_, slot, e, uid) = &found[0];
                 let Some((k, values)) = element_type_values(e) else {
-                    return Err(fail(codes::ELEMENT_TYPE_KIND, format!("“{uid}” kimlikli nesnenin tipi olmaz."), "operation.from"));
+                    return Err(fail(
+                        codes::ELEMENT_TYPE_KIND,
+                        format!("“{uid}” kimlikli nesnenin tipi olmaz."),
+                        "operation.from",
+                    ));
                 };
                 if kind.is_some_and(|x| x != k) {
                     return Err(fail(
                         codes::ELEMENT_TYPE_KIND,
-                        format!("“{uid}” kimlikli eleman bir {}; yeni tipin türü ({}) onunla aynı olmalı.", k.words(), kind.map_or("", ElementTypeKind::words)),
+                        format!(
+                            "“{uid}” kimlikli eleman bir {}; yeni tipin türü ({}) onunla aynı olmalı.",
+                            k.words(),
+                            kind.map_or("", ElementTypeKind::words)
+                        ),
                         "operation.element",
                     ));
                 }
@@ -329,13 +427,20 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
             if let Some((why, path)) = taken(&list, kind, &new_id, name, None) {
                 return Err(fail(codes::ELEMENT_TYPE_EXISTS, why, path));
             }
-            let mut t = ElementType { id: new_id.clone(), name: name.clone(), kind, version: 1, values: base };
+            let mut t = ElementType {
+                id: new_id.clone(),
+                name: name.clone(),
+                kind,
+                version: 1,
+                values: base,
+            };
             if let Some((at, why)) = t.problem() {
                 return Err(invalid(&format!("operation.{at}"), why));
             }
             canonical(&mut t);
             if let Some((slot, e, uid)) = drawn {
-                let typed = follow_type(&e, &t, &[]).map_err(|(_, why)| invalid("operation.from", why))?;
+                let typed =
+                    follow_type(&e, &t, &[]).map_err(|(_, why)| invalid("operation.from", why))?;
                 work.report.applied.push(uid);
                 work.updates.push((slot, typed));
             }
@@ -360,7 +465,10 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
             if t.values == old.values {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    format!("“{}” tipinin değerleri değişmedi; değişecek bir değer verin.", old.name),
+                    format!(
+                        "“{}” tipinin değerleri değişmedi; değişecek bir değer verin.",
+                        old.name
+                    ),
                     "operation.values",
                 ));
             }
@@ -374,7 +482,11 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
             name_ok(name, "operation.name")?;
             let i = find(&list, key, "operation.type")?;
             if list[i].name == *name {
-                return Err(fail(codes::NOTHING_TO_SET, format!("Tipin adı zaten “{name}”."), "operation.name"));
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    format!("Tipin adı zaten “{name}”."),
+                    "operation.name",
+                ));
             }
             if let Some((why, path)) = taken(&list, list[i].kind, &list[i].id, name, Some(i)) {
                 return Err(fail(codes::ELEMENT_TYPE_EXISTS, why, path));
@@ -383,7 +495,8 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
             // A column following it takes the name as its type, unless that is its own (its exception).
             if list[i].kind == ElementTypeKind::Column {
                 for (slot, mut e) in followers(doc, &list[i].id) {
-                    let own = type_link(&e).is_some_and(|l| l.overrides.iter().any(|k| k == "type"));
+                    let own =
+                        type_link(&e).is_some_and(|l| l.overrides.iter().any(|k| k == "type"));
                     if own || locked(doc, &e) {
                         continue;
                     }
@@ -440,7 +553,8 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
                         &path,
                     ));
                 }
-                let typed = follow_type(e, t, &[]).map_err(|(_, why)| fail(codes::ELEMENT_TYPE_REFUSED, why, &path))?;
+                let typed = follow_type(e, t, &[])
+                    .map_err(|(_, why)| fail(codes::ELEMENT_TYPE_REFUSED, why, &path))?;
                 work.report.applied.push(uid);
                 work.updates.push((slot, typed));
             }
@@ -464,65 +578,95 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
             }
         }
         ElementTypesOperation::Reset { uids, fields } => {
-            for (at, slot, e, uid) in elements(doc, uids, "Tipe döndürülecek eleman verilmedi.")? {
+            for (at, slot, e, uid) in elements(doc, uids, "Tipe döndürülecek eleman verilmedi.")?
+            {
                 let path = format!("uids[{at}]");
                 let (_, t) = its_type(&list, e, &uid, &path)?;
                 fields_of(t.kind, fields)?;
-                let link = type_link(e).cloned().unwrap_or_else(|| kentos_commands::TypeLink {
-                    id: t.id.clone(),
-                    version: t.version,
-                    overrides: Vec::new(),
-                });
+                let link = type_link(e)
+                    .cloned()
+                    .unwrap_or_else(|| kentos_commands::TypeLink {
+                        id: t.id.clone(),
+                        version: t.version,
+                        overrides: Vec::new(),
+                    });
                 let keep: Vec<String> = if fields.is_empty() {
                     Vec::new()
                 } else {
-                    link.overrides.iter().filter(|k| !fields.contains(k)).cloned().collect()
+                    link.overrides
+                        .iter()
+                        .filter(|k| !fields.contains(k))
+                        .cloned()
+                        .collect()
                 };
                 if keep == link.overrides && link.version >= t.version {
                     return Err(fail(
                         codes::NOTHING_TO_SET,
-                        format!("“{uid}” kimlikli eleman zaten “{}” tipinin son sürümünde ve bu alanlarda tipi izliyor.", t.name),
+                        format!(
+                            "“{uid}” kimlikli eleman zaten “{}” tipinin son sürümünde ve bu alanlarda tipi izliyor.",
+                            t.name
+                        ),
                         &path,
                     ));
                 }
-                let typed = follow_type(e, t, &keep).map_err(|(_, why)| fail(codes::ELEMENT_TYPE_REFUSED, why, &path))?;
+                let typed = follow_type(e, t, &keep)
+                    .map_err(|(_, why)| fail(codes::ELEMENT_TYPE_REFUSED, why, &path))?;
                 work.report.applied.push(uid);
                 work.updates.push((slot, typed));
             }
         }
         ElementTypesOperation::Push { uid, fields } => {
             let one = std::slice::from_ref(uid);
-            let found = elements(doc, one, "Değerleri tipe uygulanacak eleman verilmedi.").map_err(|s| s.at("operation.uid"))?;
+            let found = elements(doc, one, "Değerleri tipe uygulanacak eleman verilmedi.")
+                .map_err(|s| s.at("operation.uid"))?;
             let (_, slot, e, uid) = &found[0];
             let (i, t) = its_type(&list, e, uid, "operation.uid")?;
             fields_of(t.kind, fields).map_err(|s| s.at("operation.fields"))?;
-            let link = type_link(e).cloned().unwrap_or_else(|| kentos_commands::TypeLink {
-                id: t.id.clone(),
-                version: t.version,
-                overrides: Vec::new(),
-            });
-            if let Some(f) = fields.iter().filter_map(|k| t.kind.field(k)).find(|f| f.named) {
+            let link = type_link(e)
+                .cloned()
+                .unwrap_or_else(|| kentos_commands::TypeLink {
+                    id: t.id.clone(),
+                    version: t.version,
+                    overrides: Vec::new(),
+                });
+            if let Some(f) = fields
+                .iter()
+                .filter_map(|k| t.kind.field(k))
+                .find(|f| f.named)
+            {
                 return Err(invalid(
                     "operation.fields",
-                    format!("{} tipin adıdır; tipe uygulanmaz, tipi yeniden adlandırın.", f.label),
+                    format!(
+                        "{} tipin adıdır; tipe uygulanmaz, tipi yeniden adlandırın.",
+                        f.label
+                    ),
                 ));
             }
             let pushed: Vec<String> = if fields.is_empty() {
-                link.overrides.iter().filter(|k| t.kind.field(k).is_some_and(|f| !f.named)).cloned().collect()
+                link.overrides
+                    .iter()
+                    .filter(|k| t.kind.field(k).is_some_and(|f| !f.named))
+                    .cloned()
+                    .collect()
             } else {
                 fields.clone()
             };
             if pushed.is_empty() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    format!("“{uid}” kimlikli elemanın “{}” tipinden ayrılan değeri yok; tipe uygulanacak bir şey yok.", t.name),
+                    format!(
+                        "“{uid}” kimlikli elemanın “{}” tipinden ayrılan değeri yok; tipe uygulanacak bir şey yok.",
+                        t.name
+                    ),
                     "operation.uid",
                 ));
             }
             let old = t.clone();
             let mut next = t.clone();
             for key in &pushed {
-                let Some(f) = next.kind.field(key) else { continue };
+                let Some(f) = next.kind.field(key) else {
+                    continue;
+                };
                 match kentos_commands::element_value(e, f) {
                     Some(v) => {
                         next.values.insert(key.clone(), v);
@@ -539,14 +683,29 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
             if next.values == old.values {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    format!("“{uid}” kimlikli elemanın bu değerleri zaten “{}” tipinin.", t.name),
+                    format!(
+                        "“{uid}” kimlikli elemanın bu değerleri zaten “{}” tipinin.",
+                        t.name
+                    ),
                     "operation.uid",
                 ));
             }
             next.version += 1;
             let fields = changed_fields(&old, &next);
-            let keep: Vec<String> = link.overrides.iter().filter(|k| !pushed.contains(k)).cloned().collect();
-            follow(doc, &next, &fields, input.on_refused, Some((*slot, (*e).clone(), keep)), &mut work)?;
+            let keep: Vec<String> = link
+                .overrides
+                .iter()
+                .filter(|k| !pushed.contains(k))
+                .cloned()
+                .collect();
+            follow(
+                doc,
+                &next,
+                &fields,
+                input.on_refused,
+                Some((*slot, (*e).clone(), keep)),
+                &mut work,
+            )?;
             work.id = Some(next.id.clone());
             list[i] = next;
         }
@@ -555,13 +714,18 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
             if uids.is_empty() {
                 for e in doc.entities() {
                     let Some(link) = type_link(e) else { continue };
-                    if list.iter().any(|t| t.id == link.id && link.version < t.version) {
+                    if list
+                        .iter()
+                        .any(|t| t.id == link.id && link.version < t.version)
+                    {
                         let slot = Slot(e.base().id);
                         those.push(("operation".into(), slot, e.clone(), uid_of(doc, slot)));
                     }
                 }
             } else {
-                for (at, slot, e, uid) in elements(doc, uids, "Tipi yeniden uygulanacak eleman verilmedi.")? {
+                for (at, slot, e, uid) in
+                    elements(doc, uids, "Tipi yeniden uygulanacak eleman verilmedi.")?
+                {
                     let path = format!("uids[{at}]");
                     let (_, t) = its_type(&list, e, &uid, &path)?;
                     if type_link(e).is_some_and(|l| l.version < t.version) {
@@ -577,8 +741,12 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
                 ));
             }
             for (_, slot, e, uid) in those {
-                let Some(link) = type_link(&e).cloned() else { continue };
-                let Some(t) = list.iter().find(|t| t.id == link.id) else { continue };
+                let Some(link) = type_link(&e).cloned() else {
+                    continue;
+                };
+                let Some(t) = list.iter().find(|t| t.id == link.id) else {
+                    continue;
+                };
                 if locked(doc, &e) {
                     work.report.skipped.push(ElementLeft {
                         uid,
@@ -593,12 +761,19 @@ fn check(doc: &Document, input: &ElementTypesEdit) -> Result<Work, Stop> {
                         work.updates.push((slot, typed));
                     }
                     Err((_, why)) if input.on_refused == ElementTypeRefused::Skip => {
-                        work.report.refused.push(ElementLeft { uid, why: ElementLeftWhy::Invalid, message: why });
+                        work.report.refused.push(ElementLeft {
+                            uid,
+                            why: ElementLeftWhy::Invalid,
+                            message: why,
+                        });
                     }
                     Err((_, why)) => {
                         return Err(fail(
                             codes::ELEMENT_TYPE_REFUSED,
-                            format!("“{uid}” kimlikli eleman “{}” tipinin son sürümüyle geçersiz oluyor: {why} Hiçbir şey yazılmadı.", t.name),
+                            format!(
+                                "“{uid}” kimlikli eleman “{}” tipinin son sürümüyle geçersiz oluyor: {why} Hiçbir şey yazılmadı.",
+                                t.name
+                            ),
                             "operation",
                         ));
                     }
@@ -645,12 +820,18 @@ fn warnings(report: &ElementTypeReport) -> Vec<CommandWarning> {
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ElementTypesEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, input: &ElementTypesEdit) -> CommandResult<ElementTypesEdited> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &ElementTypesEdit,
+) -> CommandResult<ElementTypesEdited> {
     plan_in(cx.doc, input)
 }
 
@@ -670,7 +851,10 @@ pub fn plan_in(doc: &Document, input: &ElementTypesEdit) -> CommandResult<Elemen
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ElementTypesEdit) -> CommandResult<ElementTypesEdited> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ElementTypesEdit,
+) -> CommandResult<ElementTypesEdited> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_ELEMENT_TYPES_EDIT,
@@ -680,7 +864,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ElementTypesEdit) -> Comman
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: ElementTypesEdit) -> CommandResult<ElementTypesEdited> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ElementTypesEdit,
+) -> CommandResult<ElementTypesEdited> {
     let work = match check(cx.doc, &input) {
         Ok(work) => work,
         Err(stop) => return stop.into(),
@@ -692,7 +879,9 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ElementTypesEdit) -> Comm
         Ok::<(), kentos_domain::Refusal>(())
     });
     if let Err(e) = result {
-        return CommandResult::Failed { error: error(codes::INVALID_ELEMENT_TYPE, e.0, Some("operation".into())) };
+        return CommandResult::Failed {
+            error: error(codes::INVALID_ELEMENT_TYPE, e.0, Some("operation".into())),
+        };
     }
     CommandResult::Completed {
         warnings: warnings(&work.report),

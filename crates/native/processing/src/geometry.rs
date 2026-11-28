@@ -135,7 +135,9 @@ impl RunGeometry {
         let existing: Vec<CoreVec2> = existing.iter().copied().map(core).collect();
         self.store
             .number_corners(&ids(slots), walk, &existing)
-            .as_chunks::<CORNER_STRIDE>().0.iter()
+            .as_chunks::<CORNER_STRIDE>()
+            .0
+            .iter()
             .map(|r| CoreCorner {
                 p: Vec2 { x: r[0], y: r[1] },
                 out: Vec2 { x: r[2], y: r[3] },
@@ -173,7 +175,9 @@ impl RunGeometry {
     ) -> Vec<(usize, usize)> {
         self.store
             .relate_pairs(&ids(inputs), &ids(references), relation, within)
-            .as_chunks::<2>().0.iter()
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|p| (p[0] as usize, p[1] as usize))
             .collect()
     }
@@ -191,7 +195,9 @@ impl RunGeometry {
     ) -> Vec<NearestFound> {
         self.store
             .nearest(&ids(inputs), &ids(targets), k, max, measure)
-            .as_chunks::<NEAREST_STRIDE>().0.iter()
+            .as_chunks::<NEAREST_STRIDE>()
+            .0
+            .iter()
             .map(|r| NearestFound {
                 input: r[0] as usize,
                 target: r[1] as usize,
@@ -213,7 +219,9 @@ impl RunGeometry {
     ) -> Vec<NeighborFound> {
         self.store
             .neighbors(&ids(slots), tolerance, corners, overlaps)
-            .as_chunks::<NEIGHBOR_STRIDE>().0.iter()
+            .as_chunks::<NEIGHBOR_STRIDE>()
+            .0
+            .iter()
             .map(|r| NeighborFound {
                 area: r[0] as usize,
                 neighbor: r[1] as usize,
@@ -247,7 +255,9 @@ impl RunGeometry {
         let labels = r
             .get(1..)
             .unwrap_or(&[])
-            .as_chunks::<EDGE_LABEL_STRIDE>().0.iter()
+            .as_chunks::<EDGE_LABEL_STRIDE>()
+            .0
+            .iter()
             .map(|l| EdgeLabel {
                 id: Slot(l[0] as u32),
                 p: Vec2 { x: l[1], y: l[2] },

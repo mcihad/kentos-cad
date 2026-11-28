@@ -10,10 +10,10 @@ use kentos_native_application::{ExecutionContext, entities_order};
 
 use crate::Vec2;
 use crate::format::Format;
-use crate::spatial::Spatial;
 use crate::log::Level;
 use crate::modify::{Modify, Stages};
 use crate::prompt::Prompt;
+use crate::spatial::Spatial;
 use crate::tool::{Context, Flow, Pointer};
 
 /// Nesnenin üstüne's id: its command is `tool.drawOrderAbove`.
@@ -195,8 +195,14 @@ fn found_in(
     let query = kentos_commands::EntitiesSelect {
         model_scope: spatial.sheet_model_scope(),
         region: kentos_commands::SelectRegion::Crossing {
-            a: kentos_commands::Vec2 { x: a.x.min(b.x), y: a.y.min(b.y) },
-            b: kentos_commands::Vec2 { x: a.x.max(b.x), y: a.y.max(b.y) },
+            a: kentos_commands::Vec2 {
+                x: a.x.min(b.x),
+                y: a.y.min(b.y),
+            },
+            b: kentos_commands::Vec2 {
+                x: a.x.max(b.x),
+                y: a.y.max(b.y),
+            },
         },
         kinds: Some(kinds),
         layers: None,
@@ -220,10 +226,16 @@ pub fn words_over_mask_note(
         return None;
     }
     if need_mask {
-        let masked = found_in(doc, spatial, a, b, vec![kentos_commands::SelectKind::Polygon])
-            .iter()
-            .filter_map(|s| doc.get(*s))
-            .any(|e| matches!(e, kentos_commands::Entity::Polygon(p) if p.base.look.wipeout.is_some()));
+        let masked = found_in(
+            doc,
+            spatial,
+            a,
+            b,
+            vec![kentos_commands::SelectKind::Polygon],
+        )
+        .iter()
+        .filter_map(|s| doc.get(*s))
+        .any(|e| matches!(e, kentos_commands::Entity::Polygon(p) if p.base.look.wipeout.is_some()));
         if !masked {
             return None;
         }
@@ -237,5 +249,8 @@ pub fn words_over_mask_note(
 /// Whether the object carries words drawn over the scene (a text, dimension, leader, table or tag).
 pub fn carries_words(e: &kentos_commands::Entity) -> bool {
     use kentos_commands::Entity as E;
-    matches!(e, E::Text(_) | E::Dimension(_) | E::Leader(_) | E::Table(_) | E::Tag(_))
+    matches!(
+        e,
+        E::Text(_) | E::Dimension(_) | E::Leader(_) | E::Table(_) | E::Tag(_)
+    )
 }

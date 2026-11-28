@@ -11,8 +11,8 @@ use std::path::{Path, PathBuf};
 
 use kentos_commands::exchange_words::{aspect_word, cell_words};
 use kentos_commands::{
-    CommandError, CommandResult, CommandWarning, EXCHANGE_TOLERANCE, ExchangeCheck, ExchangeFormat, ExchangeMatrix,
-    ExchangeMatrixed, ExchangeState, codes,
+    CommandError, CommandResult, CommandWarning, EXCHANGE_TOLERANCE, ExchangeCheck, ExchangeFormat,
+    ExchangeMatrix, ExchangeMatrixed, ExchangeState, codes,
 };
 use kentos_domain::Document;
 use serde_json::Value;
@@ -36,7 +36,9 @@ pub(crate) struct Made {
 /// A check's refusal, its path under `under`.
 fn failed(result: CommandResult<Value>, under: &str) -> Refused {
     let mut error = match result {
-        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => error,
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => error,
         _ => CommandError {
             code: codes::EXCHANGE_UNREADABLE.into(),
             message: "Devir dosyası denetlenemedi.".into(),
@@ -62,7 +64,11 @@ fn unwritable(message: String) -> Refused {
 /// The formats asked, once each, in their order; none: all six.
 fn formats(ask: &ExchangeMatrix) -> Vec<ExchangeFormat> {
     let mut out: Vec<ExchangeFormat> = Vec::new();
-    for f in if ask.formats.is_empty() { ExchangeFormat::ALL.to_vec() } else { ask.formats.clone() } {
+    for f in if ask.formats.is_empty() {
+        ExchangeFormat::ALL.to_vec()
+    } else {
+        ask.formats.clone()
+    } {
         if !out.contains(&f) {
             out.push(f);
         }
@@ -71,7 +77,11 @@ fn formats(ask: &ExchangeMatrix) -> Vec<ExchangeFormat> {
 }
 
 fn check_of(ask: &ExchangeMatrix, format: ExchangeFormat) -> ExchangeCheck {
-    ExchangeCheck { format, layers: ask.layers.clone(), tolerance: ask.tolerance }
+    ExchangeCheck {
+        format,
+        layers: ask.layers.clone(),
+        tolerance: ask.tolerance,
+    }
 }
 
 /// The question's own refusals as the check says them (the tolerance, then the layers), under `exchange.`.
@@ -96,26 +106,43 @@ fn listed(folder: &Path) -> BTreeSet<String> {
 
 /// Each format asked written into `scratch/devir/` as `stem.<extension>` and tried back there; the matrix of the checks
 /// and its words. A writer's or the reader's refusal is the package's, under `exchange.formats[i]`.
-pub(crate) fn make(doc: &Document, ask: &ExchangeMatrix, scratch: &Path, stem: &str) -> Result<Made, Refused> {
+pub(crate) fn make(
+    doc: &Document,
+    ask: &ExchangeMatrix,
+    scratch: &Path,
+    stem: &str,
+) -> Result<Made, Refused> {
     let folder = scratch.join(FOLDER);
-    fs::create_dir_all(&folder).map_err(|e| unwritable(format!("{} açılamadı: {e}", folder.display())))?;
+    fs::create_dir_all(&folder)
+        .map_err(|e| unwritable(format!("{} açılamadı: {e}", folder.display())))?;
     let mut checks = Vec::new();
     let mut files = Vec::new();
     for (i, f) in formats(ask).into_iter().enumerate() {
         let before = listed(&folder);
         let file = folder.join(format!("{stem}.{}", f.extension()));
-        let checked =
-            crate::exchange_check::trip(doc, &check_of(ask, f), &file).map_err(|r| failed(r, &format!("exchange.formats[{i}]")))?;
+        let checked = crate::exchange_check::trip(doc, &check_of(ask, f), &file)
+            .map_err(|r| failed(r, &format!("exchange.formats[{i}]")))?;
         checks.push(checked);
         // Every file the writer made, by name.
         for name in listed(&folder).difference(&before) {
-            files.push((folder.join(name), format!("{FOLDER}/{name}"), f.commands().0.to_owned()));
+            files.push((
+                folder.join(name),
+                format!("{FOLDER}/{name}"),
+                f.commands().0.to_owned(),
+            ));
         }
     }
-    let tolerance = checks.first().map_or(ask.tolerance.unwrap_or(EXCHANGE_TOLERANCE), |c| c.tolerance);
-    let matrix = ExchangeMatrixed { tolerance, rows: crate::exchange_matrix::rows(&checks), checks };
+    let tolerance = checks
+        .first()
+        .map_or(ask.tolerance.unwrap_or(EXCHANGE_TOLERANCE), |c| c.tolerance);
+    let matrix = ExchangeMatrixed {
+        tolerance,
+        rows: crate::exchange_matrix::rows(&checks),
+        checks,
+    };
     let report = folder.join(REPORT);
-    fs::write(&report, words(&matrix)).map_err(|e| unwritable(format!("{} yazılamadı: {e}", report.display())))?;
+    fs::write(&report, words(&matrix))
+        .map_err(|e| unwritable(format!("{} yazılamadı: {e}", report.display())))?;
     files.push((report, format!("{FOLDER}/{REPORT}"), MATRIX.to_owned()));
     Ok(Made { matrix, files })
 }
@@ -133,8 +160,9 @@ fn field(text: &str) -> String {
 /// cells as Dışa aktarma kaybı denetimi says them; `;` between cells as a Turkish spreadsheet takes them, UTF-8.
 pub(crate) fn words(m: &ExchangeMatrixed) -> String {
     let mut out = String::new();
-    let head: Vec<String> =
-        std::iter::once("Özellik".to_owned()).chain(m.checks.iter().map(|c| c.format.title().to_owned())).collect();
+    let head: Vec<String> = std::iter::once("Özellik".to_owned())
+        .chain(m.checks.iter().map(|c| c.format.title().to_owned()))
+        .collect();
     out.push_str(&head.iter().map(|c| field(c)).collect::<Vec<_>>().join(";"));
     out.push('\n');
     for r in &m.rows {
@@ -157,10 +185,20 @@ pub(crate) fn losses(m: &ExchangeMatrixed) -> Option<CommandWarning> {
             let changed: Vec<&str> = m
                 .rows
                 .iter()
-                .filter(|r| r.cells.get(i).is_some_and(|x| x.state != ExchangeState::Kept))
+                .filter(|r| {
+                    r.cells
+                        .get(i)
+                        .is_some_and(|x| x.state != ExchangeState::Kept)
+                })
                 .map(|r| aspect_word(&r.aspect))
                 .collect();
-            (!changed.is_empty()).then(|| format!("{}: {}", c.format.title(), changed.join(", ").to_lowercase()))
+            (!changed.is_empty()).then(|| {
+                format!(
+                    "{}: {}",
+                    c.format.title(),
+                    changed.join(", ").to_lowercase()
+                )
+            })
         })
         .collect();
     (!said.is_empty()).then(|| CommandWarning {
@@ -200,22 +238,46 @@ mod tests {
             rows: vec![ExchangeRow {
                 aspect: "objects".into(),
                 cells: vec![
-                    ExchangeCell { format: ExchangeFormat::Gpkg, state: ExchangeState::Lost, count: 1, detail: Some("text 1".into()) },
-                    ExchangeCell { format: ExchangeFormat::Dxf, state: ExchangeState::Kept, count: 0, detail: None },
+                    ExchangeCell {
+                        format: ExchangeFormat::Gpkg,
+                        state: ExchangeState::Lost,
+                        count: 1,
+                        detail: Some("text 1".into()),
+                    },
+                    ExchangeCell {
+                        format: ExchangeFormat::Dxf,
+                        state: ExchangeState::Kept,
+                        count: 0,
+                        detail: None,
+                    },
                 ],
             }],
             checks: vec![checked(ExchangeFormat::Gpkg), checked(ExchangeFormat::Dxf)],
         };
-        assert_eq!(words(&m), "Özellik;GeoPackage;DXF\nNesneler;Kaybolur: yazı 1;Korunur\n");
+        assert_eq!(
+            words(&m),
+            "Özellik;GeoPackage;DXF\nNesneler;Kaybolur: yazı 1;Korunur\n"
+        );
         let w = losses(&m).expect("a loss");
         assert_eq!(w.code, "export_losses");
-        assert!(w.message.contains("(GeoPackage: nesneler)"), "{}", w.message);
+        assert!(
+            w.message.contains("(GeoPackage: nesneler)"),
+            "{}",
+            w.message
+        );
         assert_eq!(field("a;b \"c\""), "\"a;b \"\"c\"\"\"");
     }
 
     #[test]
     fn a_format_asked_twice_is_written_once() {
-        let ask = ExchangeMatrix { formats: vec![ExchangeFormat::Dxf, ExchangeFormat::Gpkg, ExchangeFormat::Dxf], ..Default::default() };
+        let ask = ExchangeMatrix {
+            formats: vec![
+                ExchangeFormat::Dxf,
+                ExchangeFormat::Gpkg,
+                ExchangeFormat::Dxf,
+            ],
+            ..Default::default()
+        };
         assert_eq!(formats(&ask), [ExchangeFormat::Dxf, ExchangeFormat::Gpkg]);
         assert_eq!(formats(&ExchangeMatrix::default()), ExchangeFormat::ALL);
     }

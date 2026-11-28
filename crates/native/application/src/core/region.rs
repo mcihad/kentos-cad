@@ -15,10 +15,9 @@
 
 use kentos_commands::{
     CommandResult, CommandWarning, CreateOperation, EntitiesBoundary, EntitiesCreate,
-    EntitiesCreatePlan, EntitiesCreated, EntitiesHatch, EntityGeometry, EntityId, HatchAssoc,
-    HatchPattern as ContractPattern, HatchPatternSpec, HatchPatternType, HatchRegion, HatchWay,
-    TrimBoundaries, Vec2 as Point,
-    Entity, HatchDrawOrder, IslandStyle,
+    EntitiesCreatePlan, EntitiesCreated, EntitiesHatch, Entity, EntityGeometry, EntityId,
+    HatchAssoc, HatchDrawOrder, HatchPattern as ContractPattern, HatchPatternSpec,
+    HatchPatternType, HatchRegion, HatchWay, IslandStyle, TrimBoundaries, Vec2 as Point,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, polygon_ring};
@@ -656,7 +655,10 @@ pub(crate) fn pattern_of_spec(
         })?,
     };
     if spec.annotative == Some(true)
-        && matches!(pattern.kind, HatchPatternType::Solid | HatchPatternType::Gradient)
+        && matches!(
+            pattern.kind,
+            HatchPatternType::Solid | HatchPatternType::Gradient
+        )
     {
         return Err(refuse(
             codes::NOT_ANNOTATIVE,
@@ -664,7 +666,12 @@ pub(crate) fn pattern_of_spec(
             "pattern.annotative",
         ));
     }
-    if spec.origin.is_some() && matches!(pattern.kind, HatchPatternType::Solid | HatchPatternType::Gradient) {
+    if spec.origin.is_some()
+        && matches!(
+            pattern.kind,
+            HatchPatternType::Solid | HatchPatternType::Gradient
+        )
+    {
         return Err(refuse(
             codes::INVALID_SCALE,
             "Dolu ve degrade taramanın başlangıç noktası olmaz; yalnız çizgili ve desenli taramanın olur.".into(),
@@ -772,7 +779,8 @@ pub(crate) fn regions(
             if lines && style == IslandStyle::Normal {
                 warnings.push(CommandWarning {
                     code: codes::ISLANDS_NOT_NESTED.into(),
-                    message: "Çizgiler yolunda iç içe adalar taranmaz; adalar boş bırakıldı (Dış).".into(),
+                    message: "Çizgiler yolunda iç içe adalar taranmaz; adalar boş bırakıldı (Dış)."
+                        .into(),
                     path: Some("region.islandStyle".into()),
                 });
             }
@@ -1017,12 +1025,22 @@ fn children(own: Slot, area: &Area, bounds: &Bounds, store: &Store) -> Vec<(Slot
 
 /// İç içe below an open island `own` (docs/adr/0329 §1): each closed object directly inside it hatched, its own
 /// islands open, and below each of those again.
-fn nested(own: Slot, area: &Area, bounds: &Bounds, by: Cutting, store: &Store, depth: u32, out: &mut Vec<Planned>) {
+fn nested(
+    own: Slot,
+    area: &Area,
+    bounds: &Bounds,
+    by: Cutting,
+    store: &Store,
+    depth: u32,
+    out: &mut Vec<Planned>,
+) {
     if depth > NESTING {
         return;
     }
     for (k, karea, kb) in children(own, area, bounds, store) {
-        let Some(seed) = seed_of(&karea) else { continue };
+        let Some(seed) = seed_of(&karea) else {
+            continue;
+        };
         if let Some(mut p) = cut_part(k, &karea, &kb, seed, by, store) {
             p.seed = seed_of(&p.area).unwrap_or(seed);
             out.push(p);
@@ -1062,11 +1080,7 @@ pub(crate) fn gaps_said(doc: &Document, p: &Planned) -> Option<CommandWarning> {
     }
     let f = kentos_project::format::Format::of(doc.settings());
     let total: f64 = p.bridges.iter().map(|b| b.length).sum();
-    let longest = p
-        .bridges
-        .iter()
-        .map(|b| b.length)
-        .fold(0.0_f64, f64::max);
+    let longest = p.bridges.iter().map(|b| b.length).fold(0.0_f64, f64::max);
     let area: f64 = net_area(&p.area);
     Some(CommandWarning {
         code: codes::GAPS_CLOSED.into(),
@@ -1327,8 +1341,13 @@ fn check_hatch(
             &own
         }
     };
-    let (planned, mut warnings) =
-        regions(doc, store, &input.region, &mut RegionCache::default(), &stopped)?;
+    let (planned, mut warnings) = regions(
+        doc,
+        store,
+        &input.region,
+        &mut RegionCache::default(),
+        &stopped,
+    )?;
     warnings.extend(planned.iter().filter_map(|p| gaps_said(doc, p)));
     let core = core_pattern(&pattern);
     let rings: Vec<Vec<Vec2>> = planned.iter().map(|p| ring_points(&p.area.outer)).collect();
@@ -1354,7 +1373,11 @@ fn check_hatch(
         }
         let holes: Vec<Vec<Vec2>> = p.area.holes.iter().map(ring_points).collect();
         let mut pattern = pattern.clone();
-        pattern.origin = origin_of(input.pattern.origin.as_ref(), box_of([ring.as_slice()]), all);
+        pattern.origin = origin_of(
+            input.pattern.origin.as_ref(),
+            box_of([ring.as_slice()]),
+            all,
+        );
         if too_dense(&ring, &core) || dense_lines(&ring, &holes, &pattern) {
             return Err(refuse(
                 codes::PATTERN_TOO_DENSE,
@@ -1394,7 +1417,13 @@ fn check_hatch(
         &input.look,
         CreateOperation::Hatch,
     );
-    let orders = hatch_orders(doc, &input.layer_id, input.draw_order, &bounding, &mut warnings)?;
+    let orders = hatch_orders(
+        doc,
+        &input.layer_id,
+        input.draw_order,
+        &bounding,
+        &mut warnings,
+    )?;
     for (o, order) in objects.objects.iter_mut().zip(orders) {
         o.transparency = input.transparency.filter(|x| *x > 0.0);
         o.order = order;
@@ -1503,7 +1532,11 @@ fn hatch_orders(
 
 /// The checks of a point region given elsewhere (Sınırı yeniden seç, docs/adr/0329 §4), its paths under `at`: the
 /// point, the gap, the boundary set and layer; one point only (`invalid_region`).
-pub(crate) fn point_region_checks(doc: &Document, region: &HatchRegion, at: &str) -> Result<(), Stop> {
+pub(crate) fn point_region_checks(
+    doc: &Document,
+    region: &HatchRegion,
+    at: &str,
+) -> Result<(), Stop> {
     let HatchRegion::Point {
         at: p,
         also_at,
@@ -1745,10 +1778,19 @@ mod budget_tests {
         let progress = crate::jobs::Progress::default();
         progress.stop();
         let answer = crate::call::call_in_job(&mut doc, envelope.clone(), &progress);
-        assert!(matches!(answer.result, CommandResult::Cancelled), "{:?}", answer.result);
+        assert!(
+            matches!(answer.result, CommandResult::Cancelled),
+            "{:?}",
+            answer.result
+        );
         assert_eq!(doc.revision(), at, "nothing written");
         // Not asked to stop, it writes.
-        let answer = crate::call::call_in_job(&mut doc, envelope, &crate::jobs::Progress::default());
-        assert!(matches!(answer.result, CommandResult::Completed { .. }), "{:?}", answer.result);
+        let answer =
+            crate::call::call_in_job(&mut doc, envelope, &crate::jobs::Progress::default());
+        assert!(
+            matches!(answer.result, CommandResult::Completed { .. }),
+            "{:?}",
+            answer.result
+        );
     }
 }

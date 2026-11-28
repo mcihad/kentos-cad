@@ -1,8 +1,8 @@
 //! Çizgiden aks (road_alignment_fit_window.rs, plan/road.md Y10.6): the window reads the alignment as it is typed,
 //! makes it as one undo step; and its pictures.
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use kentos_domain::Slot;
 
 use crate::app::{App, Message};
@@ -12,9 +12,12 @@ use kentos_commands::AlignmentFitMethod;
 /// A road project with `road.alignments.fit`'s drawing: an alignment and the lines it is fitted to.
 fn app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.alignments.fit.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.alignments.fit.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -45,7 +48,12 @@ fn the_window_makes_the_alignment_as_one_step() {
         Some(crate::road::dialog(road::RoadDialogKind::RoadAlignmentFit))
     );
     // Element by element the sampled axis is a long run of short tangents: many PIs.
-    let w = app.modules.road().road_alignment_fit_window.as_ref().expect("open");
+    let w = app
+        .modules
+        .road()
+        .road_alignment_fit_window
+        .as_ref()
+        .expect("open");
     let fitted = w
         .preview
         .fitted
@@ -54,14 +62,20 @@ fn the_window_makes_the_alignment_as_one_step() {
     assert!(fitted.pis.len() > 10, "{}", fitted.pis.len());
     send(&mut app, W::Method(AlignmentFitMethod::BestFit));
     let why = app
-        .modules.road()
+        .modules
+        .road()
         .road_alignment_fit_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
         .expect("refused");
     assert!(why.contains("maxRadius"), "{why}");
     send(&mut app, W::Field(2, "500".into()));
-    let w = app.modules.road().road_alignment_fit_window.as_ref().expect("open");
+    let w = app
+        .modules
+        .road()
+        .road_alignment_fit_window
+        .as_ref()
+        .expect("open");
     let fitted = w
         .preview
         .fitted
@@ -76,7 +90,8 @@ fn the_window_makes_the_alignment_as_one_step() {
     assert!(w.preview.line.len() > 100);
     send(&mut app, W::Field(0, "Ana aks".into()));
     let why = app
-        .modules.road()
+        .modules
+        .road()
         .road_alignment_fit_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -99,7 +114,15 @@ fn the_window_makes_the_alignment_as_one_step() {
         Some("Köy yolu")
     );
     let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(app.document.as_ref().expect("a drawing").model.road_alignments().len(), before);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .road_alignments()
+            .len(),
+        before
+    );
 }
 
 /// The window on an arced polyline and on a sampled axis, wide and narrow, light and dark;
@@ -121,7 +144,9 @@ fn screens() {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -130,7 +155,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("yol-y10-cizgiden-aks-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));

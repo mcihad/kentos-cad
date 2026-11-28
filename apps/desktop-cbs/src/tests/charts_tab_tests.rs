@@ -1,13 +1,13 @@
 //! charts › tests's tests that need the CBS module's surfaces (its project's bottom tabs and panels; docs/adr/9199
 //! §4.14): moved from the core's gis/charts/tests.rs with the module's package; the work they test is the core's.
 
-use crate::gis;
-use kentos_domain::Slot;
-use kentos_geometry_core::ops::charts::model::{Aggregate, ChartKind, Spec};
-use crate::charts::{ChartTable, Event, Setting, Source, View};
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
 use crate::chart_scenes::{open_charts, parcels_of};
+use crate::charts::{ChartTable, Event, Setting, Source, View};
+use crate::gis;
+use kentos_domain::Slot;
+use kentos_geometry_core::ops::charts::model::{Aggregate, ChartKind, Spec};
 
 fn opened() -> App {
     let (mut app, _) = App::boot(None);

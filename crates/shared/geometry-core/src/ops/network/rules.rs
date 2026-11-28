@@ -336,7 +336,9 @@ impl Rules {
                                 },
                             })
                         }
-                        _ => Err("ağın zaman profilinin dönemi from < to dakika olmalı".to_string()),
+                        _ => {
+                            Err("ağın zaman profilinin dönemi from < to dakika olmalı".to_string())
+                        }
                     })
                     .collect::<Result<Vec<_>, _>>()?,
                 _ => return Err("ağın zaman profili yalnız hızla maliyette bir liste olur".into()),
@@ -356,7 +358,9 @@ impl Rules {
                 let delay = |key: &str| match t.get(key) {
                     Json::Num(x) if x.is_finite() && *x >= 0.0 => Ok(*x / 60.0),
                     Json::Null => Ok(0.0),
-                    _ => Err(format!("ağın {key} gecikmesi sıfır ya da artı saniye olmalı")),
+                    _ => Err(format!(
+                        "ağın {key} gecikmesi sıfır ya da artı saniye olmalı"
+                    )),
                 };
                 Some(TurnRule {
                     u_turns,

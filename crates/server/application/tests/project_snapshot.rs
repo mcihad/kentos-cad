@@ -12,7 +12,7 @@ use common::{a_point, envelope, member, new_project, open};
 use kentos_application::{AppError, admin, changes, projects, snapshot};
 use kentos_contracts::{
     DocumentSnapshotV2, EntityId, FeatureChange, GrantRole, LayerNode, ProjectChanges,
-    ProjectCreate, ProjectId, ProjectPatch, ProjectStorage, TenantRole, ProjectType,
+    ProjectCreate, ProjectId, ProjectPatch, ProjectStorage, ProjectType, TenantRole,
 };
 use kentos_postgres::testing::TestDb;
 use serde_json::Value;

@@ -51,13 +51,23 @@ pub const KEY_CHECKED: u64 = 1_000_000;
 /// A query read as a data layer (docs/adr/9113 §3): its shape as a table's, read-only, named `name` (none: after its
 /// first table). Its key is checked to tell its rows apart (counted at the source, up to [`KEY_CHECKED`] rows): a key
 /// two rows share would pick, label and show the wrong row.
-pub fn describe_query(address: &str, q: &kentos_data::QueryTable, name: Option<&str>) -> Result<Described, String> {
+pub fn describe_query(
+    address: &str,
+    q: &kentos_data::QueryTable,
+    name: Option<&str>,
+) -> Result<Described, String> {
     let text = q.text();
-    let source = kentos_data::registry().source(address).map_err(|e| e.to_string())?;
+    let source = kentos_data::registry()
+        .source(address)
+        .map_err(|e| e.to_string())?;
     let mut described = describe(address, &text)?;
-    let rows = source.count(&text, &kentos_data::Request::all(), false).map_err(|e| e.to_string())?;
+    let rows = source
+        .count(&text, &kentos_data::Request::all(), false)
+        .map_err(|e| e.to_string())?;
     if rows <= KEY_CHECKED {
-        let distinct = source.unique(&text, &q.key, None, rows as usize + 1).map_err(|e| e.to_string())?;
+        let distinct = source
+            .unique(&text, &q.key, None, rows as usize + 1)
+            .map_err(|e| e.to_string())?;
         if (distinct.len() as u64) < rows {
             return Err(format!(
                 "“{}” sütunu benzersiz değil: sorgunun {rows} satırında {} farklı değeri var. Anahtar olarak her satırda başka olan bir tam sayı sütunu seçin.",
@@ -66,7 +76,10 @@ pub fn describe_query(address: &str, q: &kentos_data::QueryTable, name: Option<&
             ));
         }
     }
-    described.name = name.map(str::trim).filter(|n| !n.is_empty()).map_or_else(|| q.shown(), str::to_owned);
+    described.name = name
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+        .map_or_else(|| q.shown(), str::to_owned);
     described.data.read_only = true;
     Ok(described)
 }
@@ -106,7 +119,12 @@ impl App {
     }
 
     /// A query added as a data layer (docs/adr/9113 §3), read and checked off the interface's thread.
-    pub(crate) fn add_query(&mut self, address: String, q: kentos_data::QueryTable, name: String) -> Task<Message> {
+    pub(crate) fn add_query(
+        &mut self,
+        address: String,
+        q: kentos_data::QueryTable,
+        name: String,
+    ) -> Task<Message> {
         self.say(kentos_interaction::Level::Info, "Sorgu okunuyor…");
         crate::db_connections::off_thread(
             move || vec![describe_query(&address, &q, Some(&name))],
@@ -170,7 +188,9 @@ impl App {
     /// Adds described tables as data layers, each one undo step; their names in a sentence, or why one could not be.
     pub fn add_data_layers(&mut self, tables: Vec<Described>) -> Result<Vec<String>, String> {
         let Some(doc) = &mut self.document else {
-            return Err("Açık çizim yok. Önce bir çizim açın ya da yeni bir proje başlatın.".into());
+            return Err(
+                "Açık çizim yok. Önce bir çizim açın ya da yeni bir proje başlatın.".into(),
+            );
         };
         let mut added = Vec::new();
         for t in tables {

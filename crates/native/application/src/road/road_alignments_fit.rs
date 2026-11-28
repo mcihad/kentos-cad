@@ -5,8 +5,8 @@
 //! shared cases are `fixtures/commands/v1/road.alignments.fit.json`.
 
 use kentos_commands::{
-    AlignmentDef, AlignmentFitMethod, AlignmentFitted, AlignmentPi, AlignmentStationing, AlignmentsFit, CommandResult,
-    CommandWarning, Entity,
+    AlignmentDef, AlignmentFitMethod, AlignmentFitted, AlignmentPi, AlignmentStationing,
+    AlignmentsFit, CommandResult, CommandWarning, Entity,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::trace::{TraceError, best_fit, from_elements};
@@ -38,23 +38,48 @@ struct Checked {
 
 /// The line's points and bulges, in the order asked.
 fn line_of(doc: &Document, uid: &str, reverse: bool) -> Result<(Vec<[f64; 2]>, Vec<f64>), Stop> {
-    let entity = doc.entities_with_uids().find(|(u, _)| u.to_string() == uid).map(|(_, e)| e);
+    let entity = doc
+        .entities_with_uids()
+        .find(|(u, _)| u.to_string() == uid)
+        .map(|(_, e)| e);
     let (mut pts, mut bulges): (Vec<[f64; 2]>, Vec<f64>) = match entity {
-        None => return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), "uid")),
+        None => {
+            return Err(fail(
+                codes::ENTITY_NOT_FOUND,
+                format!("“{uid}” kimlikli nesne çizimde yok."),
+                "uid",
+            ));
+        }
         Some(Entity::Line(l)) => (vec![[l.a.x, l.a.y], [l.b.x, l.b.y]], vec![0.0]),
         Some(Entity::Polyline(p)) if p.closed => {
-            return Err(bad("uid", format!("“{uid}” kapalı bir çoklu çizgi; aks açık bir çizgiden kurulur.")));
+            return Err(bad(
+                "uid",
+                format!("“{uid}” kapalı bir çoklu çizgi; aks açık bir çizgiden kurulur."),
+            ));
         }
         Some(Entity::Polyline(p)) if p.parts.as_ref().is_some_and(|q| !q.is_empty()) => {
-            return Err(bad("uid", format!("“{uid}” çok parçalı bir çoklu çizgi; aks tek parçalı bir çizgiden kurulur.")));
+            return Err(bad(
+                "uid",
+                format!(
+                    "“{uid}” çok parçalı bir çoklu çizgi; aks tek parçalı bir çizgiden kurulur."
+                ),
+            ));
         }
         Some(Entity::Polyline(p)) => {
             let pts: Vec<[f64; 2]> = p.pts.iter().map(|v| [v.x, v.y]).collect();
             let n = pts.len().saturating_sub(1);
             let b = p.bulges.clone().unwrap_or_default();
-            (pts, (0..n).map(|i| b.get(i).copied().unwrap_or(0.0)).collect())
+            (
+                pts,
+                (0..n).map(|i| b.get(i).copied().unwrap_or(0.0)).collect(),
+            )
         }
-        Some(_) => return Err(bad("uid", format!("“{uid}” bir çizgi ya da çoklu çizgi değil."))),
+        Some(_) => {
+            return Err(bad(
+                "uid",
+                format!("“{uid}” bir çizgi ya da çoklu çizgi değil."),
+            ));
+        }
     };
     if reverse {
         pts.reverse();
@@ -122,35 +147,68 @@ fn check(doc: &Document, input: &AlignmentsFit) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     alignments::road_project(doc)?;
     let positive = |v: Option<f64>, field: &str, what: &str| match v {
-        Some(r) if !(r.is_finite() && r > 0.0) => Err(bad(field, format!("{what} 0'dan büyük olmalı."))),
+        Some(r) if !(r.is_finite() && r > 0.0) => {
+            Err(bad(field, format!("{what} 0'dan büyük olmalı.")))
+        }
         _ => Ok(()),
     };
-    positive(input.radius, "radius", "Teğetler arasındaki kurbun yarıçapı (radius)")?;
-    positive(input.max_radius, "maxRadius", "En büyük yarıçap (maxRadius)")?;
+    positive(
+        input.radius,
+        "radius",
+        "Teğetler arasındaki kurbun yarıçapı (radius)",
+    )?;
+    positive(
+        input.max_radius,
+        "maxRadius",
+        "En büyük yarıçap (maxRadius)",
+    )?;
     positive(input.tolerance, "tolerance", "Tolerans (tolerance)")?;
     let (pts, bulges) = line_of(doc, &input.uid, input.reverse)?;
     let pis: Vec<PiInput> = match input.method {
         AlignmentFitMethod::Elements => from_elements(&pts, &bulges, input.radius.unwrap_or(0.0)),
         AlignmentFitMethod::BestFit => {
             let Some(most) = input.max_radius else {
-                return Err(bad("maxRadius", "En iyi uyumda kurpları ayıran en büyük yarıçap (maxRadius) verilmeli.".into()));
+                return Err(bad(
+                    "maxRadius",
+                    "En iyi uyumda kurpları ayıran en büyük yarıçap (maxRadius) verilmeli.".into(),
+                ));
             };
             best_fit(&pts, most)
         }
     }
-    .map_err(|e| bad("uid", format!("Çizgiden aks kurulamıyor: {}.", trace_words(e))))?;
+    .map_err(|e| {
+        bad(
+            "uid",
+            format!("Çizgiden aks kurulamıyor: {}.", trace_words(e)),
+        )
+    })?;
     let mut list = alignments::alignments(doc).to_vec();
-    let id = (1..).map(|n| format!("g-{n}")).find(|i| list.iter().all(|d| &d.id != i)).unwrap_or_default();
+    let id = (1..)
+        .map(|n| format!("g-{n}"))
+        .find(|i| list.iter().all(|d| &d.id != i))
+        .unwrap_or_default();
     let name = match input.name.as_deref().map(str::trim) {
         Some(n) if !n.is_empty() => n.to_owned(),
-        _ => (1..).map(|k| format!("{k}. aks")).find(|n| list.iter().all(|d| d.name.to_lowercase() != n.to_lowercase())).unwrap_or_default(),
+        _ => (1..)
+            .map(|k| format!("{k}. aks"))
+            .find(|n| {
+                list.iter()
+                    .all(|d| d.name.to_lowercase() != n.to_lowercase())
+            })
+            .unwrap_or_default(),
     };
-    if list.iter().any(|d| d.name.to_lowercase() == name.to_lowercase()) {
+    if list
+        .iter()
+        .any(|d| d.name.to_lowercase() == name.to_lowercase())
+    {
         return Err(bad("name", format!("Projede “{name}” adlı bir aks var.")));
     }
     let start = input.start.unwrap_or(0.0);
     if !start.is_finite() {
-        return Err(bad("start", "Başlangıç km'si sonlu bir sayı olmalı.".into()));
+        return Err(bad(
+            "start",
+            "Başlangıç km'si sonlu bir sayı olmalı.".into(),
+        ));
     }
     let def = AlignmentDef {
         id: id.clone(),
@@ -158,17 +216,35 @@ fn check(doc: &Document, input: &AlignmentsFit) -> Result<Checked, Stop> {
         revision: 1,
         pis: pis
             .iter()
-            .map(|p| AlignmentPi { id: p.id.clone(), x: p.x, y: p.y, radius: p.radius, spiral_in: 0.0, spiral_out: 0.0, ove: false, speed: None })
+            .map(|p| AlignmentPi {
+                id: p.id.clone(),
+                x: p.x,
+                y: p.y,
+                radius: p.radius,
+                spiral_in: 0.0,
+                spiral_out: 0.0,
+                ove: false,
+                speed: None,
+            })
             .collect(),
         offset_of: None,
-        stationing: (start != 0.0).then(|| AlignmentStationing { start, equations: Vec::new() }),
+        stationing: (start != 0.0).then(|| AlignmentStationing {
+            start,
+            equations: Vec::new(),
+        }),
         design_speed: None,
         start_place: None,
         end_place: None,
     };
     list.push(def.clone());
     let built = alignments::build(&list, &def, "").map_err(|stop| {
-        bad("uid", format!("Çizgiden aks kurulamıyor: {}", crate::road_corridors::words(stop)))
+        bad(
+            "uid",
+            format!(
+                "Çizgiden aks kurulamıyor: {}",
+                crate::road_corridors::words(stop)
+            ),
+        )
     })?;
     let (dev, worst) = deviation(&built, &probes(&pts, &bulges));
     let (mut tangents, mut curves) = (0u32, 0u32);
@@ -207,22 +283,38 @@ fn check(doc: &Document, input: &AlignmentsFit) -> Result<Checked, Stop> {
         worst,
         revision: doc.revision().to_string(),
     };
-    Ok(Checked { list, out, warnings, built })
+    Ok(Checked {
+        list,
+        out,
+        warnings,
+        built,
+    })
 }
 
 fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<AlignmentFitted> {
-    let Checked { list, mut out, warnings, .. } = c;
+    let Checked {
+        list,
+        mut out,
+        warnings,
+        ..
+    } = c;
     if let Err(r) = cx.doc.set_road_alignments(list, STEP) {
         return bad("", format!("Aks kurallarına uymuyor: {}.", r.0)).into();
     }
     out.revision = cx.doc.revision().to_string();
-    CommandResult::Completed { output: out, warnings }
+    CommandResult::Completed {
+        output: out,
+        warnings,
+    }
 }
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &AlignmentsFit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -230,13 +322,19 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &AlignmentsFit) -> CommandResu
 /// The alignment that would be made; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsFit) -> CommandResult<AlignmentFitted> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: c.out, warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: c.out,
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// Makes the alignment: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsFit) -> CommandResult<AlignmentFitted> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AlignmentsFit,
+) -> CommandResult<AlignmentFitted> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_ALIGNMENTS_FIT,
@@ -258,7 +356,10 @@ pub fn preview(doc: &Document, input: &AlignmentsFit, n: usize) -> Result<Fitted
         .map(|c| {
             let core = &c.built.core;
             let n = n.max(1);
-            let line = (0..=n).filter_map(|i| core.at(core.length * i as f64 / n as f64)).map(|p| [p.x, p.y]).collect();
+            let line = (0..=n)
+                .filter_map(|i| core.at(core.length * i as f64 / n as f64))
+                .map(|p| [p.x, p.y])
+                .collect();
             (c.out, c.warnings, line)
         })
         .map_err(crate::road_corridors::words)

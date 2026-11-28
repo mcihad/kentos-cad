@@ -42,7 +42,10 @@ fn a_folder_family_comes_back_by_its_name() {
     let bytes = kentos_kcad::encode(&doc).expect("writes");
     let back = kentos_kcad::decode(&bytes).expect("reads");
     assert_eq!(json(&back), json(&doc));
-    assert_eq!(back.settings.drawing_font.map(DrawingFont::id), Some("Kurum Sans"));
+    assert_eq!(
+        back.settings.drawing_font.map(DrawingFont::id),
+        Some("Kurum Sans")
+    );
     // The name is in the file as it is written, beside the own faces' ids.
     let named = |name: &str| bytes.windows(name.len()).any(|w| w == name.as_bytes());
     assert!(named("Source Sans 3") && named("Roboto") && named("Kurum Sans"));
@@ -55,7 +58,9 @@ fn the_typed_columns_carry_a_folder_family() {
     let (entities, uids) = kentos_kcad::columns::unpack(&cols).expect("unpacks");
     assert_eq!(uids, doc.uids);
     assert_eq!(json(&entities), json(&doc.entities));
-    let texts = entities.iter().filter(|e| matches!(e, Entity::Text(t) if t.face.font == Some(family("Source Sans 3"))));
+    let texts = entities
+        .iter()
+        .filter(|e| matches!(e, Entity::Text(t) if t.face.font == Some(family("Source Sans 3"))));
     assert!(texts.count() > 0, "the fixture has texts");
 }
 

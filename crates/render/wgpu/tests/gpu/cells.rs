@@ -4,7 +4,9 @@
 //! of the batch overlap a pixel (a far view) it may land a step or two apart.
 use std::sync::Arc;
 
-use kentos_native_style::batches::{BatchKind, Cap, FillPaintBatch, Instances, MarkerLook, StyledBatch, StyledLayer, Unit};
+use kentos_native_style::batches::{
+    BatchKind, Cap, FillPaintBatch, Instances, MarkerLook, StyledBatch, StyledLayer, Unit,
+};
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
 use kentos_render_wgpu::{Camera, RenderSettings, Rgba8, Vec2};
 
@@ -13,7 +15,9 @@ use super::Gpu;
 const SIDE: f64 = 4_000.0;
 
 fn scatter(seed: &mut u64) -> f64 {
-    *seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+    *seed = seed
+        .wrapping_mul(6_364_136_223_846_793_005)
+        .wrapping_add(1_442_695_040_888_963_407);
     (*seed >> 11) as f64 / (1u64 << 53) as f64
 }
 
@@ -50,14 +54,27 @@ fn layer() -> StyledLayer {
     let away = 0..data.len();
     for i in 0..30_000 {
         let (x, y) = (scatter(&mut seed) * SIDE, scatter(&mut seed) * SIDE);
-        let (dx, dy) = (scatter(&mut seed) * 16.0 - 8.0, scatter(&mut seed) * 16.0 - 8.0);
-        data.extend([x as f32, y as f32, (x + dx) as f32, (y + dy) as f32, (i % 7) as f32, 3.0]);
+        let (dx, dy) = (
+            scatter(&mut seed) * 16.0 - 8.0,
+            scatter(&mut seed) * 16.0 - 8.0,
+        );
+        data.extend([
+            x as f32,
+            y as f32,
+            (x + dx) as f32,
+            (y + dy) as f32,
+            (i % 7) as f32,
+            3.0,
+        ]);
     }
     let strokes = away.end..data.len();
     for _ in 0..12_000 {
         let (x, y) = (scatter(&mut seed) * SIDE, scatter(&mut seed) * SIDE);
         for _ in 0..3 {
-            data.extend([(x + scatter(&mut seed) * 6.0) as f32, (y + scatter(&mut seed) * 6.0) as f32]);
+            data.extend([
+                (x + scatter(&mut seed) * 6.0) as f32,
+                (y + scatter(&mut seed) * 6.0) as f32,
+            ]);
         }
     }
     let fills = strokes.end..data.len();
@@ -70,7 +87,11 @@ fn layer() -> StyledLayer {
         cap: Cap::Butt,
         blur: 0.0,
     };
-    let fill = BatchKind::Fill { paint: FillPaintBatch::Solid { color: [0.8, 0.2, 0.1, 0.5] } };
+    let fill = BatchKind::Fill {
+        paint: FillPaintBatch::Solid {
+            color: [0.8, 0.2, 0.1, 0.5],
+        },
+    };
     let mut far = batch(stroke.clone(), away, 3);
     far.bounds = [100_000.0, 100_000.0, 100_010.0, 100_001.0];
     StyledLayer {
@@ -81,7 +102,10 @@ fn layer() -> StyledLayer {
 }
 
 fn scene(id: u64, layer: &StyledLayer) -> StyledScene {
-    StyledScene { layers: vec![Arc::new(StyledLayerPart::new(id, layer.clone()))], ..Default::default() }
+    StyledScene {
+        layers: vec![Arc::new(StyledLayerPart::new(id, layer.clone()))],
+        ..Default::default()
+    }
 }
 
 pub(super) fn a_view_draws_its_cells_as_the_batch_drawn_whole(gpu: &mut Gpu) {
@@ -93,8 +117,14 @@ pub(super) fn a_view_draws_its_cells_as_the_batch_drawn_whole(gpu: &mut Gpu) {
     let whole = layer();
     let mut sorted = whole.clone();
     kentos_native_style::cells::add(&mut sorted);
-    assert!(sorted.cells.len() == 3 && sorted.cells[0].is_none(), "the far batch is too small for cells");
-    assert!(sorted.cells[1..].iter().all(Option::is_some), "both large batches have cells");
+    assert!(
+        sorted.cells.len() == 3 && sorted.cells[0].is_none(),
+        "the far batch is too small for cells"
+    );
+    assert!(
+        sorted.cells[1..].iter().all(Option::is_some),
+        "both large batches have cells"
+    );
     let px = 256;
     for samples in [1, 4] {
         settings.samples = samples;
@@ -122,25 +152,47 @@ pub(super) fn a_view_draws_its_cells_as_the_batch_drawn_whole(gpu: &mut Gpu) {
             gpu.styled = Some(scene(id + 1, &sorted));
             let b = gpu.draw(&[], &camera, &settings, px, px);
             let cell_items = gpu.renderer.stats(1).expect("the view").styled_items;
-            let most = a.iter().zip(&b).map(|(p, q)| p.abs_diff(*q)).max().unwrap_or(0);
+            let most = a
+                .iter()
+                .zip(&b)
+                .map(|(p, q)| p.abs_diff(*q))
+                .max()
+                .unwrap_or(0);
             let differ = a.chunks(4).zip(b.chunks(4)).filter(|(p, q)| p != q).count();
-            eprintln!("cells case {case}, {samples} samples: items {whole_items} -> {cell_items}, {differ} px differ, most {most}");
+            eprintln!(
+                "cells case {case}, {samples} samples: items {whole_items} -> {cell_items}, {differ} px differ, most {most}"
+            );
             match case {
                 // Near the ground: a few cells' items, the same picture.
                 0 | 1 => {
-                    assert!(cell_items * 4 < whole_items, "case {case}: {cell_items} of {whole_items} items drawn");
+                    assert!(
+                        cell_items * 4 < whole_items,
+                        "case {case}: {cell_items} of {whole_items} items drawn"
+                    );
                     assert_eq!(differ, 0, "case {case}: {differ} pixels differ");
                 }
                 // Everything in view, in the cells' order: where many half-transparent items overlap a pixel the
                 // eight-bit rounding of each blend may land a step or two apart.
                 2 => {
-                    assert_eq!(cell_items, whole_items, "a view over everything draws everything");
-                    assert!(most <= 2 && differ * 100 < 3 * (a.len() / 4), "far: {differ} pixels differ, most {most} steps");
+                    assert_eq!(
+                        cell_items, whole_items,
+                        "a view over everything draws everything"
+                    );
+                    assert!(
+                        most <= 2 && differ * 100 < 3 * (a.len() / 4),
+                        "far: {differ} pixels differ, most {most} steps"
+                    );
                 }
                 // Part of the drawing, items a few pixels long: an edge left out would differ by far more than a step.
                 _ => {
-                    assert!(cell_items * 4 < whole_items, "case {case}: {cell_items} of {whole_items} items drawn");
-                    assert!(most <= 2, "case {case}: {differ} pixels differ, most {most} steps");
+                    assert!(
+                        cell_items * 4 < whole_items,
+                        "case {case}: {cell_items} of {whole_items} items drawn"
+                    );
+                    assert!(
+                        most <= 2,
+                        "case {case}: {differ} pixels differ, most {most} steps"
+                    );
                 }
             }
         }
@@ -154,12 +206,27 @@ pub(super) fn a_view_draws_its_cells_as_the_batch_drawn_whole(gpu: &mut Gpu) {
 /// A block's 20 000 inserts over 2 km, in blocks of 250 m as a drawing lays them, each turned: a 6 m square and its
 /// diagonal, half-transparent, 0.6 m wide; where two inserts overlap their order shows.
 fn inserts() -> StyledLayer {
-    let square = [[0.0, 0.0, 6.0, 0.0], [6.0, 0.0, 6.0, 6.0], [6.0, 6.0, 0.0, 6.0], [0.0, 6.0, 0.0, 0.0], [0.0, 0.0, 6.0, 6.0]];
-    let mut data: Vec<f32> = square.iter().flat_map(|s| [s[0], s[1], s[2], s[3], 0.0, 3.0]).collect();
+    let square = [
+        [0.0, 0.0, 6.0, 0.0],
+        [6.0, 0.0, 6.0, 6.0],
+        [6.0, 6.0, 0.0, 6.0],
+        [0.0, 6.0, 0.0, 0.0],
+        [0.0, 0.0, 6.0, 6.0],
+    ];
+    let mut data: Vec<f32> = square
+        .iter()
+        .flat_map(|s| [s[0], s[1], s[2], s[3], 0.0, 3.0])
+        .collect();
     let mesh = data.len();
     let mut seed = 23u64;
     let mut places: Vec<(f64, f64, f64)> = (0..20_000)
-        .map(|_| (scatter(&mut seed) * 2_000.0, scatter(&mut seed) * 2_000.0, scatter(&mut seed) * 6.0))
+        .map(|_| {
+            (
+                scatter(&mut seed) * 2_000.0,
+                scatter(&mut seed) * 2_000.0,
+                scatter(&mut seed) * 6.0,
+            )
+        })
         .collect();
     places.sort_by_key(|&(x, y, _)| ((y / 250.0) as u32, (x / 250.0) as u32));
     for (x, y, turn) in places {
@@ -178,21 +245,38 @@ fn inserts() -> StyledLayer {
     let mut b = batch(stroke, 0..data.len(), 6);
     b.bounds = [-10.0, -10.0, 2_010.0, 2_010.0];
     b.reach = 1.6;
-    b.instances = Some(Instances { mesh, count: 20_000, scale: 1.0, proxy: None, mark: None });
-    StyledLayer { data, batches: vec![b], ..Default::default() }
+    b.instances = Some(Instances {
+        mesh,
+        count: 20_000,
+        scale: 1.0,
+        proxy: None,
+        mark: None,
+    });
+    StyledLayer {
+        data,
+        batches: vec![b],
+        ..Default::default()
+    }
 }
 
 /// An instanced batch's placements keep their order (cells.rs, docs/adr/9244): a view draws the runs of those its
 /// cells hold, so the picture is every insert drawn, near the ground and far out.
 fn placements_keep_their_order(gpu: &mut Gpu, settings: &mut RenderSettings) {
-    use std::sync::atomic::Ordering;
     use kentos_render_wgpu::styled::gpu::DRAWN_INSTANCES;
+    use std::sync::atomic::Ordering;
     let whole = inserts();
     let mut kept = whole.clone();
     kentos_native_style::cells::add(&mut kept);
     assert_eq!(kept.data, whole.data, "the placements where they were");
     let px = 256u32;
-    for (case, (centre, scale)) in [((700.0, 1_300.0), 4.0), ((1_650.0, 300.0), 12.0), ((1_000.0, 1_000.0), 0.12)].into_iter().enumerate() {
+    for (case, (centre, scale)) in [
+        ((700.0, 1_300.0), 4.0),
+        ((1_650.0, 300.0), 12.0),
+        ((1_000.0, 1_000.0), 0.12),
+    ]
+    .into_iter()
+    .enumerate()
+    {
         let camera = Camera {
             center: Vec2::new(centre.0, centre.1),
             width: f64::from(px),
@@ -209,10 +293,16 @@ fn placements_keep_their_order(gpu: &mut Gpu, settings: &mut RenderSettings) {
         let b = gpu.draw(&[], &camera, settings, px, px);
         let drawn = DRAWN_INSTANCES.swap(0, Ordering::Relaxed);
         let differ = a.chunks(4).zip(b.chunks(4)).filter(|(p, q)| p != q).count();
-        eprintln!("cells inserts case {case}, {} samples: placements {all} -> {drawn}, {differ} px differ", settings.samples);
+        eprintln!(
+            "cells inserts case {case}, {} samples: placements {all} -> {drawn}, {differ} px differ",
+            settings.samples
+        );
         assert_eq!(differ, 0, "case {case}: {differ} pixels differ");
         if case < 2 {
-            assert!(drawn * 10 < all, "case {case}: {drawn} of {all} placements drawn");
+            assert!(
+                drawn * 10 < all,
+                "case {case}: {drawn} of {all} placements drawn"
+            );
         } else {
             assert_eq!(drawn, all, "far out every insert is drawn");
         }
@@ -223,10 +313,14 @@ fn placements_keep_their_order(gpu: &mut Gpu, settings: &mut RenderSettings) {
 /// drawing lays them: where two overlap, which is on top shows.
 fn rings() -> StyledLayer {
     let mut seed = 11u64;
-    let mut places: Vec<(f64, f64)> =
-        (0..20_000).map(|_| (scatter(&mut seed) * 2_000.0, scatter(&mut seed) * 2_000.0)).collect();
+    let mut places: Vec<(f64, f64)> = (0..20_000)
+        .map(|_| (scatter(&mut seed) * 2_000.0, scatter(&mut seed) * 2_000.0))
+        .collect();
     places.sort_by_key(|&(x, y)| ((y / 250.0) as u32, (x / 250.0) as u32));
-    let data: Vec<f32> = places.iter().flat_map(|&(x, y)| [x as f32, y as f32, 0.0, 6.0, 6.0]).collect();
+    let data: Vec<f32> = places
+        .iter()
+        .flat_map(|&(x, y)| [x as f32, y as f32, 0.0, 6.0, 6.0])
+        .collect();
     let kind = BatchKind::Marker {
         unit: Unit::World,
         look: MarkerLook::Shape {
@@ -246,7 +340,11 @@ fn rings() -> StyledLayer {
     b.bounds = [0.0, 0.0, 2_000.0, 2_000.0];
     // As a marker's decoding gives it: its symbol's extent and a half, two units more.
     b.reach = 11.0;
-    StyledLayer { data, batches: vec![b], ..Default::default() }
+    StyledLayer {
+        data,
+        batches: vec![b],
+        ..Default::default()
+    }
 }
 
 /// A marker batch keeps its order (cells.rs): a view draws the runs of the items its cells hold, so the picture is the
@@ -255,10 +353,25 @@ fn markers_keep_their_order(gpu: &mut Gpu, settings: &mut RenderSettings) {
     let whole = rings();
     let mut kept = whole.clone();
     kentos_native_style::cells::add(&mut kept);
-    assert_eq!(kept.data, whole.data, "the markers' numbers where they were");
-    assert!(kept.cells[0].as_ref().is_some_and(|c| c.parts[0].order.is_some()), "cells in the markers' order");
+    assert_eq!(
+        kept.data, whole.data,
+        "the markers' numbers where they were"
+    );
+    assert!(
+        kept.cells[0]
+            .as_ref()
+            .is_some_and(|c| c.parts[0].order.is_some()),
+        "cells in the markers' order"
+    );
     let px = 256u32;
-    for (case, (centre, scale)) in [((700.0, 1_300.0), 4.0), ((1_650.0, 300.0), 12.0), ((1_000.0, 1_000.0), 0.12)].into_iter().enumerate() {
+    for (case, (centre, scale)) in [
+        ((700.0, 1_300.0), 4.0),
+        ((1_650.0, 300.0), 12.0),
+        ((1_000.0, 1_000.0), 0.12),
+    ]
+    .into_iter()
+    .enumerate()
+    {
         let camera = Camera {
             center: Vec2::new(centre.0, centre.1),
             width: f64::from(px),
@@ -274,10 +387,16 @@ fn markers_keep_their_order(gpu: &mut Gpu, settings: &mut RenderSettings) {
         let b = gpu.draw(&[], &camera, settings, px, px);
         let kept_items = gpu.renderer.stats(1).expect("the view").styled_items;
         let differ = a.chunks(4).zip(b.chunks(4)).filter(|(p, q)| p != q).count();
-        eprintln!("cells markers case {case}, {} samples: items {whole_items} -> {kept_items}, {differ} px differ", settings.samples);
+        eprintln!(
+            "cells markers case {case}, {} samples: items {whole_items} -> {kept_items}, {differ} px differ",
+            settings.samples
+        );
         assert_eq!(differ, 0, "case {case}: {differ} pixels differ");
         if case < 2 {
-            assert!(kept_items * 10 < whole_items, "case {case}: {kept_items} of {whole_items} markers drawn");
+            assert!(
+                kept_items * 10 < whole_items,
+                "case {case}: {kept_items} of {whole_items} markers drawn"
+            );
         }
     }
 }
@@ -305,7 +424,11 @@ fn lattice() -> StyledLayer {
     b.bounds = [0.0, 0.0, 1_550.0, 1_570.0];
     // The batch's reach as a stroke's decoding gives it: its width and a unit.
     b.reach = 1.8;
-    StyledLayer { data, batches: vec![b], ..Default::default() }
+    StyledLayer {
+        data,
+        batches: vec![b],
+        ..Default::default()
+    }
 }
 
 /// 10 m a pixel, the view's left edge 3 m (0.3 px) right of the first cells' last lines: past the batch's reach (1.8 m),
@@ -314,9 +437,15 @@ fn an_edge_cell_whose_lines_reach_the_view_is_drawn(gpu: &mut Gpu, settings: &mu
     let whole = lattice();
     let mut sorted = whole.clone();
     kentos_native_style::cells::add(&mut sorted);
-    let part = &sorted.cells[0].as_ref().expect("the lattice has cells").parts[0];
+    let part = &sorted.cells[0]
+        .as_ref()
+        .expect("the lattice has cells")
+        .parts[0];
     assert_eq!((part.nx, part.ny), (4, 4), "four by four cells");
-    assert!((part.boxes[0][2] - 350.0).abs() < 0.01, "the first column of cells ends at 350 m");
+    assert!(
+        (part.boxes[0][2] - 350.0).abs() < 0.01,
+        "the first column of cells ends at 350 m"
+    );
     let px = 256u32;
     let scale = 0.1;
     let left = 353.0;
@@ -332,10 +461,25 @@ fn an_edge_cell_whose_lines_reach_the_view_is_drawn(gpu: &mut Gpu, settings: &mu
     let a = gpu.draw(&[], &camera, settings, px, px);
     gpu.styled = Some(scene(id + 1, &sorted));
     let b = gpu.draw(&[], &camera, settings, px, px);
-    let edge = (0..px as usize).any(|y| a[y * px as usize * 4..y * px as usize * 4 + 3].iter().any(|&v| v < 250));
+    let edge = (0..px as usize).any(|y| {
+        a[y * px as usize * 4..y * px as usize * 4 + 3]
+            .iter()
+            .any(|&v| v < 250)
+    });
     assert!(edge, "the first cells' lines tint the view's first column");
-    let most = a.iter().zip(&b).map(|(p, q)| p.abs_diff(*q)).max().unwrap_or(0);
+    let most = a
+        .iter()
+        .zip(&b)
+        .map(|(p, q)| p.abs_diff(*q))
+        .max()
+        .unwrap_or(0);
     let differ = a.chunks(4).zip(b.chunks(4)).filter(|(p, q)| p != q).count();
-    eprintln!("cells edge, {} samples: {differ} px differ, most {most}", settings.samples);
-    assert_eq!(differ, 0, "the view's edge: {differ} pixels differ, most {most} steps");
+    eprintln!(
+        "cells edge, {} samples: {differ} px differ, most {most}",
+        settings.samples
+    );
+    assert_eq!(
+        differ, 0,
+        "the view's edge: {differ} pixels differ, most {most} steps"
+    );
 }

@@ -45,7 +45,10 @@ impl Unmade {
 /// The geoid's height above the ellipsoid at each point (none for a point beyond the system or outside the geoid's
 /// grid), and the geoid model's name when the heights are orthometric; or why the drawing's heights cannot be made
 /// ellipsoidal.
-pub fn undulations(settings: &ProjectSettings, points: &[Vec2]) -> Result<(Vec<Option<f64>>, Option<String>), Unmade> {
+pub fn undulations(
+    settings: &ProjectSettings,
+    points: &[Vec2],
+) -> Result<(Vec<Option<f64>>, Option<String>), Unmade> {
     let Some(heights) = settings.heights.as_ref() else {
         return Err(Unmade::Unknown);
     };
@@ -57,7 +60,11 @@ pub fn undulations(settings: &ProjectSettings, points: &[Vec2]) -> Result<(Vec<O
         HeightKind::Unknown => Err(Unmade::Unknown),
         HeightKind::Ellipsoidal => Ok((vec![Some(0.0); points.len()], None)),
         HeightKind::Orthometric => {
-            let Some((name, id)) = heights.geoid.as_ref().and_then(|g| Some((g.name.clone(), g.sha256.clone()?))) else {
+            let Some((name, id)) = heights
+                .geoid
+                .as_ref()
+                .and_then(|g| Some((g.name.clone(), g.sha256.clone()?)))
+            else {
                 return Err(Unmade::NoModel);
             };
             crs_models::load(&id, ModelKind::Geoid, None).map_err(|why| {
@@ -71,8 +78,12 @@ pub fn undulations(settings: &ProjectSettings, points: &[Vec2]) -> Result<(Vec<O
                     &id[..id.len().min(12)]
                 ))
             })?;
-            let grid = geoid::get(&id).ok_or_else(|| Unmade::Missing(format!("“{name}” geoit modelinin ızgarası okunamadı.")))?;
-            let system = kentos_project::systems::own(settings).and_then(|n| n.system).ok_or(Unmade::NoSystem)?;
+            let grid = geoid::get(&id).ok_or_else(|| {
+                Unmade::Missing(format!("“{name}” geoit modelinin ızgarası okunamadı."))
+            })?;
+            let system = kentos_project::systems::own(settings)
+                .and_then(|n| n.system)
+                .ok_or(Unmade::NoSystem)?;
             let ns = points
                 .iter()
                 .map(|&p| {
@@ -90,11 +101,20 @@ pub fn undulations(settings: &ProjectSettings, points: &[Vec2]) -> Result<(Vec<O
 /// point (the points found first by the grid's mean height: a few millimetres from the last, where N is the same to
 /// far below a micrometre) with the geoid model's name, or why not, said in the window.
 #[allow(clippy::type_complexity)]
-pub fn polar_undulations(settings: &ProjectSettings, input: &PolarInput) -> Option<Result<(Vec<f64>, Option<String>), String>> {
-    if input.grid.is_none() || input.station_z.is_none() || input.shots.iter().all(|s| s.zenith.is_none()) {
+pub fn polar_undulations(
+    settings: &ProjectSettings,
+    input: &PolarInput,
+) -> Option<Result<(Vec<f64>, Option<String>), String>> {
+    if input.grid.is_none()
+        || input.station_z.is_none()
+        || input.shots.iter().all(|s| s.zenith.is_none())
+    {
         return None;
     }
-    let first = PolarInput { undulations: None, ..input.clone() };
+    let first = PolarInput {
+        undulations: None,
+        ..input.clone()
+    };
     let points = polar_survey(&first).ok()?;
     let mut at = vec![input.station];
     at.extend(points.iter().map(|p| p.p));
@@ -120,7 +140,12 @@ pub fn traverse_undulations(
         return None;
     }
     let first = kentos_geometry_core::survey::traverse::TraverseInput {
-        heights: input.heights.clone().map(|h| kentos_geometry_core::survey::traverse::TraverseHeights { undulations: None, ..h }),
+        heights: input.heights.clone().map(|h| {
+            kentos_geometry_core::survey::traverse::TraverseHeights {
+                undulations: None,
+                ..h
+            }
+        }),
         ..input.clone()
     };
     let r = kentos_geometry_core::survey::traverse::traverse(&first).ok()?;
@@ -144,8 +169,14 @@ pub fn traverse_undulations(
 /// station height, no target with a height); else the undulations at the station and at each target, with the geoid
 /// model's name, or why not, said in the window. The targets are known points: no first pass is needed.
 #[allow(clippy::type_complexity)]
-pub fn stakeout_undulations(settings: &ProjectSettings, input: &StakeoutInput) -> Option<Result<(Vec<f64>, Option<String>), String>> {
-    let any_target = input.target_zs.as_ref().is_some_and(|zs| zs.iter().any(Option::is_some));
+pub fn stakeout_undulations(
+    settings: &ProjectSettings,
+    input: &StakeoutInput,
+) -> Option<Result<(Vec<f64>, Option<String>), String>> {
+    let any_target = input
+        .target_zs
+        .as_ref()
+        .is_some_and(|zs| zs.iter().any(Option::is_some));
     if input.grid.is_none() || input.station_z.is_none() || !any_target {
         return None;
     }

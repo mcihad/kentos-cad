@@ -79,7 +79,8 @@ impl App {
             sel.stale = false;
         }
         sel.asked += 1;
-        let (Some(node), Some((layer, keys)), Some(doc)) = (node, wanted, self.document.as_ref()) else {
+        let (Some(node), Some((layer, keys)), Some(doc)) = (node, wanted, self.document.as_ref())
+        else {
             return Task::none();
         };
         let settings = doc.model.settings().clone();
@@ -93,7 +94,10 @@ impl App {
         };
         crate::db_connections::off_thread(
             move || {
-                let rows = kentos_native_application::layers_rows::read(&node, &settings, &input, &|| false)
+                let rows =
+                    kentos_native_application::layers_rows::read(&node, &settings, &input, &|| {
+                        false
+                    })
                     .map(|a| a.rows)
                     .unwrap_or_default();
                 rows.into_iter()
@@ -103,11 +107,21 @@ impl App {
                             .iter()
                             .map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone())))
                             .collect();
-                        let object = r.wkt.as_deref().and_then(|w| kentos_data::wkt::read_wkt(w).ok()).and_then(|g| {
-                            let id = u32::try_from(r.key).unwrap_or(1);
-                            kentos_native_application::geopackage::object_of(&g, &node.id, id, attrs)
-                        });
-                        SourceRow { key: r.key, attrs: r.attrs, object }
+                        let object = r
+                            .wkt
+                            .as_deref()
+                            .and_then(|w| kentos_data::wkt::read_wkt(w).ok())
+                            .and_then(|g| {
+                                let id = u32::try_from(r.key).unwrap_or(1);
+                                kentos_native_application::geopackage::object_of(
+                                    &g, &node.id, id, attrs,
+                                )
+                            });
+                        SourceRow {
+                            key: r.key,
+                            attrs: r.attrs,
+                            object,
+                        }
                     })
                     .collect::<Vec<_>>()
             },
@@ -119,7 +133,8 @@ impl App {
         match event {
             Event::Read(asked, rows) => {
                 if asked == self.gis.data_selection.asked {
-                    let objects: Vec<kentos_commands::Entity> = rows.iter().filter_map(|r| r.object.clone()).collect();
+                    let objects: Vec<kentos_commands::Entity> =
+                        rows.iter().filter_map(|r| r.object.clone()).collect();
                     self.gis.data_selection.outlines = Some(Approved::of(&objects, asked));
                     self.gis.data_selection.rows = rows;
                     self.gis.data_selection.stale = false;
@@ -133,10 +148,15 @@ impl App {
 
     /// The rows chosen in a data layer's table for an export's Seçili (docs/adr/9338): the layer and its rows' objects
     /// as read, none while they are read; none at all without a chosen row.
-    pub(crate) fn chosen_source_rows(&self) -> Option<(String, Option<Vec<kentos_commands::Entity>>)> {
+    pub(crate) fn chosen_source_rows(
+        &self,
+    ) -> Option<(String, Option<Vec<kentos_commands::Entity>>)> {
         let sel = &self.gis.data_selection;
         let (layer, _) = sel.of.as_ref()?;
-        let read = sel.outlines.is_some().then(|| sel.rows.iter().filter_map(|r| r.object.clone()).collect());
+        let read = sel
+            .outlines
+            .is_some()
+            .then(|| sel.rows.iter().filter_map(|r| r.object.clone()).collect());
         Some((layer.clone(), read))
     }
 
@@ -164,10 +184,15 @@ impl App {
             .map(|(_, e)| e.base().attrs.clone())
             .filter(|now| *now != first.attrs);
         let deleted = doc.deleted_keys(layer).contains(&first.key)
-            || doc.taken_uid(layer, first.key).is_some_and(|u| doc.slot_of(u).is_none());
+            || doc
+                .taken_uid(layer, first.key)
+                .is_some_and(|u| doc.slot_of(u).is_none());
         let attrs = waiting.as_ref().unwrap_or(&first.attrs);
         let key = node.data.as_ref().map_or("anahtar", |d| d.key.as_str());
-        let mut lines = vec![("Katman".to_owned(), node.name.clone()), (key.to_owned(), first.key.to_string())];
+        let mut lines = vec![
+            ("Katman".to_owned(), node.name.clone()),
+            (key.to_owned(), first.key.to_string()),
+        ];
         for f in &node.fields {
             let raw = attrs.get(&f.name).cloned().unwrap_or_default();
             let shown = if f.values.as_ref().is_some_and(|v| !v.is_empty()) && !raw.is_empty() {
@@ -177,7 +202,11 @@ impl App {
             };
             lines.push((f.label().to_owned(), shown));
         }
-        let many = if rows.len() > 1 { "İlki gösteriliyor. " } else { "" };
+        let many = if rows.len() > 1 {
+            "İlki gösteriliyor. "
+        } else {
+            ""
+        };
         let state = if self.gis.data_selection.stale {
             "Kaynaktan yeniden okunuyor…"
         } else if deleted {
@@ -187,12 +216,20 @@ impl App {
         } else {
             "Kaynaktan okundu; çizime alınmadı."
         };
-        Some((format!("Veri satırı ({})", rows.len()), lines, format!("{many}{state}")))
+        Some((
+            format!("Veri satırı ({})", rows.len()),
+            lines,
+            format!("{many}{state}"),
+        ))
     }
 
     /// Whether a data layer's selected rows are outlined on the map (Seçime yakınlaştır frames them).
     pub(crate) fn data_rows_outlined(&self) -> bool {
-        self.gis.data_selection.outlines.as_ref().is_some_and(|o| o.objects > 0)
+        self.gis
+            .data_selection
+            .outlines
+            .as_ref()
+            .is_some_and(|o| o.objects > 0)
     }
 
     /// Seçime yakınlaş on a data layer's table: the selected rows framed.
@@ -200,9 +237,19 @@ impl App {
         let Some(o) = self.gis.data_selection.outlines.as_ref() else {
             return;
         };
-        let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        let mut b = [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ];
         for p in o.lines.iter().flatten().chain(&o.points) {
-            b = [b[0].min(p[0]), b[1].min(p[1]), b[2].max(p[0]), b[3].max(p[1])];
+            b = [
+                b[0].min(p[0]),
+                b[1].min(p[1]),
+                b[2].max(p[0]),
+                b[3].max(p[1]),
+            ];
         }
         if !b.iter().all(|v| v.is_finite()) {
             return;
@@ -222,7 +269,13 @@ impl App {
     /// The selected rows' outlines over the drawing, while the table shows their layer.
     pub(crate) fn data_selection_layer(&self, color: Color) -> Option<Element<'_, Message>> {
         let slot = &self.gpu_layers.selection;
-        let Some(outlines) = self.gis.data_selection.outlines.as_ref().filter(|o| o.objects > 0) else {
+        let Some(outlines) = self
+            .gis
+            .data_selection
+            .outlines
+            .as_ref()
+            .filter(|o| o.objects > 0)
+        else {
             slot.clear();
             return None;
         };
@@ -281,13 +334,29 @@ impl Layer<'_> {
     fn key(&self, bounds: Rectangle) -> u64 {
         use std::hash::{Hash, Hasher};
         let mut h = std::collections::hash_map::DefaultHasher::new();
-        (self.outlines.version, self.outlines.objects, self.outlines.lines.len()).hash(&mut h);
-        for p in [Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)] {
+        (
+            self.outlines.version,
+            self.outlines.objects,
+            self.outlines.lines.len(),
+        )
+            .hash(&mut h);
+        for p in [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(1.0, 0.0),
+            Vec2::new(0.0, 1.0),
+        ] {
             for c in self.camera.world_to_screen(p) {
                 c.to_bits().hash(&mut h);
             }
         }
-        for c in [bounds.width, bounds.height, self.color.r, self.color.g, self.color.b, self.color.a] {
+        for c in [
+            bounds.width,
+            bounds.height,
+            self.color.r,
+            self.color.g,
+            self.color.b,
+            self.color.a,
+        ] {
             c.to_bits().hash(&mut h);
         }
         h.finish()
@@ -297,9 +366,18 @@ impl Layer<'_> {
 impl canvas::Program<Message> for Layer<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, _: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        _: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         if let Some(slot) = &self.gpu {
-            crate::gpu_frame::publish(slot, self.key(bounds), self.camera, bounds.size(), |f| self.paint(f));
+            crate::gpu_frame::publish(slot, self.key(bounds), self.camera, bounds.size(), |f| {
+                self.paint(f)
+            });
             return Vec::new();
         }
         let mut frame = canvas::Frame::new(renderer, bounds.size());

@@ -47,7 +47,9 @@ pub struct Reach<'a, Message> {
 
 impl<'a, Message: 'a> Reach<'a, Message> {
     pub fn new(content: impl Into<Element<'a, Message>>) -> Self {
-        Self { content: content.into() }
+        Self {
+            content: content.into(),
+        }
     }
 }
 
@@ -69,20 +71,34 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Reach<'a, Message> {
         let exact = max.height.is_finite() && (max.height - min.height).abs() < 0.5;
         let fills = max.height.is_finite() && self.content.as_widget().size().height.is_fill();
         let previous = ROOM.with(|room| room.replace((exact || fills).then_some(max.height)));
-        let mut node = self.content.as_widget_mut().layout(&mut tree.children[0], renderer, limits);
+        let mut node = self
+            .content
+            .as_widget_mut()
+            .layout(&mut tree.children[0], renderer, limits);
         // A body that does not fit is at its most already and scrolls: its pictures may take the height shown (a tall
         // form beside a picture in a full screen window left the picture at its least, docs/adr/0937 §2).
         if !(exact || fills) && max.height.is_finite() && node.size().height >= max.height - 0.5 {
             ROOM.with(|room| room.set(Some(max.height)));
-            node = self.content.as_widget_mut().layout(&mut tree.children[0], renderer, limits);
+            node = self
+                .content
+                .as_widget_mut()
+                .layout(&mut tree.children[0], renderer, limits);
         }
         ROOM.with(|room| room.set(previous));
         Node::with_children(node.size(), vec![node])
     }
 
-    fn operate(&mut self, tree: &mut Tree, layout: Layout<'_>, renderer: &Renderer, operation: &mut dyn Operation) {
+    fn operate(
+        &mut self,
+        tree: &mut Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn Operation,
+    ) {
         if let Some(child) = layout.children().next() {
-            self.content.as_widget_mut().operate(&mut tree.children[0], child, renderer, operation);
+            self.content
+                .as_widget_mut()
+                .operate(&mut tree.children[0], child, renderer, operation);
         }
     }
 
@@ -98,9 +114,16 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Reach<'a, Message> {
         viewport: &Rectangle,
     ) {
         if let Some(child) = layout.children().next() {
-            self.content
-                .as_widget_mut()
-                .update(&mut tree.children[0], event, child, cursor, renderer, clipboard, shell, viewport);
+            self.content.as_widget_mut().update(
+                &mut tree.children[0],
+                event,
+                child,
+                cursor,
+                renderer,
+                clipboard,
+                shell,
+                viewport,
+            );
         }
     }
 
@@ -112,9 +135,18 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Reach<'a, Message> {
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
-        layout.children().next().map_or_else(mouse::Interaction::default, |child| {
-            self.content.as_widget().mouse_interaction(&tree.children[0], child, cursor, viewport, renderer)
-        })
+        layout
+            .children()
+            .next()
+            .map_or_else(mouse::Interaction::default, |child| {
+                self.content.as_widget().mouse_interaction(
+                    &tree.children[0],
+                    child,
+                    cursor,
+                    viewport,
+                    renderer,
+                )
+            })
     }
 
     fn draw(
@@ -128,7 +160,15 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Reach<'a, Message> {
         viewport: &Rectangle,
     ) {
         if let Some(child) = layout.children().next() {
-            self.content.as_widget().draw(&tree.children[0], renderer, theme, style, child, cursor, viewport);
+            self.content.as_widget().draw(
+                &tree.children[0],
+                renderer,
+                theme,
+                style,
+                child,
+                cursor,
+                viewport,
+            );
         }
     }
 
@@ -141,7 +181,13 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Reach<'a, Message> {
         translation: Vector,
     ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
         let child = layout.children().next()?;
-        self.content.as_widget_mut().overlay(&mut tree.children[0], child, renderer, viewport, translation)
+        self.content.as_widget_mut().overlay(
+            &mut tree.children[0],
+            child,
+            renderer,
+            viewport,
+            translation,
+        )
     }
 }
 
@@ -164,11 +210,17 @@ pub struct Held<'a, Message> {
 
 impl<'a, Message: 'a> Held<'a, Message> {
     pub fn within_room(content: impl Into<Element<'a, Message>>) -> Self {
-        Self { content: content.into(), natural: None }
+        Self {
+            content: content.into(),
+            natural: None,
+        }
     }
 
     pub fn natural(content: impl Into<Element<'a, Message>>, natural: f32) -> Self {
-        Self { content: content.into(), natural: Some(natural.max(0.0)) }
+        Self {
+            content: content.into(),
+            natural: Some(natural.max(0.0)),
+        }
     }
 }
 
@@ -195,20 +247,35 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Held<'a, Message> {
             Some(n) => {
                 let h = n.min(max.height).max(min.height.min(n));
                 let exact = Limits::new(Size::new(min.width, h), Size::new(max.width, h));
-                self.content.as_widget_mut().layout(&mut tree.children[0], renderer, &exact)
+                self.content
+                    .as_widget_mut()
+                    .layout(&mut tree.children[0], renderer, &exact)
             }
             None => {
                 let h = room().map_or(max.height, |r| r.min(max.height));
-                let held = Limits::new(Size::new(min.width, min.height.min(h)), Size::new(max.width, h));
-                self.content.as_widget_mut().layout(&mut tree.children[0], renderer, &held)
+                let held = Limits::new(
+                    Size::new(min.width, min.height.min(h)),
+                    Size::new(max.width, h),
+                );
+                self.content
+                    .as_widget_mut()
+                    .layout(&mut tree.children[0], renderer, &held)
             }
         };
         Node::with_children(node.size(), vec![node])
     }
 
-    fn operate(&mut self, tree: &mut Tree, layout: Layout<'_>, renderer: &Renderer, operation: &mut dyn Operation) {
+    fn operate(
+        &mut self,
+        tree: &mut Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn Operation,
+    ) {
         if let Some(child) = layout.children().next() {
-            self.content.as_widget_mut().operate(&mut tree.children[0], child, renderer, operation);
+            self.content
+                .as_widget_mut()
+                .operate(&mut tree.children[0], child, renderer, operation);
         }
     }
 
@@ -224,9 +291,16 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Held<'a, Message> {
         viewport: &Rectangle,
     ) {
         if let Some(child) = layout.children().next() {
-            self.content
-                .as_widget_mut()
-                .update(&mut tree.children[0], event, child, cursor, renderer, clipboard, shell, viewport);
+            self.content.as_widget_mut().update(
+                &mut tree.children[0],
+                event,
+                child,
+                cursor,
+                renderer,
+                clipboard,
+                shell,
+                viewport,
+            );
         }
     }
 
@@ -238,9 +312,18 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Held<'a, Message> {
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
-        layout.children().next().map_or_else(mouse::Interaction::default, |child| {
-            self.content.as_widget().mouse_interaction(&tree.children[0], child, cursor, viewport, renderer)
-        })
+        layout
+            .children()
+            .next()
+            .map_or_else(mouse::Interaction::default, |child| {
+                self.content.as_widget().mouse_interaction(
+                    &tree.children[0],
+                    child,
+                    cursor,
+                    viewport,
+                    renderer,
+                )
+            })
     }
 
     fn draw(
@@ -254,7 +337,15 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Held<'a, Message> {
         viewport: &Rectangle,
     ) {
         if let Some(child) = layout.children().next() {
-            self.content.as_widget().draw(&tree.children[0], renderer, theme, style, child, cursor, viewport);
+            self.content.as_widget().draw(
+                &tree.children[0],
+                renderer,
+                theme,
+                style,
+                child,
+                cursor,
+                viewport,
+            );
         }
     }
 
@@ -267,7 +358,13 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Held<'a, Message> {
         translation: Vector,
     ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
         let child = layout.children().next()?;
-        self.content.as_widget_mut().overlay(&mut tree.children[0], child, renderer, viewport, translation)
+        self.content.as_widget_mut().overlay(
+            &mut tree.children[0],
+            child,
+            renderer,
+            viewport,
+            translation,
+        )
     }
 }
 
@@ -297,7 +394,13 @@ impl<'a, Message: 'a> Default for Grows<'a, Message> {
 
 impl<'a, Message: 'a> Grows<'a, Message> {
     pub fn new() -> Self {
-        Self { children: Vec::new(), least: Vec::new(), fits: Vec::new(), spacing: 0.0, width: Length::Fill }
+        Self {
+            children: Vec::new(),
+            least: Vec::new(),
+            fits: Vec::new(),
+            spacing: 0.0,
+            width: Length::Fill,
+        }
     }
 
     pub fn push(mut self, child: impl Into<Element<'a, Message>>) -> Self {
@@ -350,7 +453,11 @@ pub fn shares_capped(least: &[f32], most: &[f32], used: f32, room: Option<f32>) 
         let mut given = 0.0;
         let mut still = Vec::new();
         for &i in &open {
-            let share = if weight > 0.0 { least[i] / weight } else { 1.0 / open.len() as f32 };
+            let share = if weight > 0.0 {
+                least[i] / weight
+            } else {
+                1.0 / open.len() as f32
+            };
             let take = (over * share).min(most[i] - out[i]);
             out[i] += take;
             given += take;
@@ -375,7 +482,11 @@ pub fn shares(least: &[f32], used: f32, room: Option<f32>) -> Vec<f32> {
     least
         .iter()
         .map(|m| {
-            let share = if sum > 0.0 { m / sum } else { 1.0 / least.len().max(1) as f32 };
+            let share = if sum > 0.0 {
+                m / sum
+            } else {
+                1.0 / least.len().max(1) as f32
+            };
             m + over * share
         })
         .collect()
@@ -419,14 +530,25 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Grows<'a, Message> {
                     return f32::INFINITY;
                 }
                 let free = Limits::new(Size::ZERO, Size::new(width, f32::INFINITY));
-                self.children[i].as_widget_mut().layout(&mut tree.children[i], renderer, &free).size().height
+                self.children[i]
+                    .as_widget_mut()
+                    .layout(&mut tree.children[i], renderer, &free)
+                    .size()
+                    .height
             })
             .collect();
-        let least: Vec<f32> = growing.iter().map(|i| self.least[*i].unwrap_or(0.0)).collect();
+        let least: Vec<f32> = growing
+            .iter()
+            .map(|i| self.least[*i].unwrap_or(0.0))
+            .collect();
         // Without a room a fitting child is its own height (the body grows with it until it reaches the window and the
         // Reach lays it out again with a room); a picture its least.
         let heights: Vec<f32> = if room.is_none() {
-            least.iter().zip(&most).map(|(l, m)| if m.is_finite() { *m } else { *l }).collect()
+            least
+                .iter()
+                .zip(&most)
+                .map(|(l, m)| if m.is_finite() { *m } else { *l })
+                .collect()
         } else {
             // A pixel kept over: the others' heights are fractional (text), and a body over its room by a rounding
             // shows a scrollbar for nothing (Kübaj, docs/adr/0938 §3).
@@ -452,12 +574,24 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Grows<'a, Message> {
         Node::with_children(size, nodes)
     }
 
-    fn operate(&mut self, tree: &mut Tree, layout: Layout<'_>, renderer: &Renderer, operation: &mut dyn Operation) {
+    fn operate(
+        &mut self,
+        tree: &mut Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn Operation,
+    ) {
         operation.container(None, layout.bounds());
         operation.traverse(&mut |operation| {
-            self.children.iter_mut().zip(&mut tree.children).zip(layout.children()).for_each(|((child, state), layout)| {
-                child.as_widget_mut().operate(state, layout, renderer, operation);
-            });
+            self.children
+                .iter_mut()
+                .zip(&mut tree.children)
+                .zip(layout.children())
+                .for_each(|((child, state), layout)| {
+                    child
+                        .as_widget_mut()
+                        .operate(state, layout, renderer, operation);
+                });
         });
     }
 
@@ -472,8 +606,15 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Grows<'a, Message> {
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
-        for ((child, tree), layout) in self.children.iter_mut().zip(&mut tree.children).zip(layout.children()) {
-            child.as_widget_mut().update(tree, event, layout, cursor, renderer, clipboard, shell, viewport);
+        for ((child, tree), layout) in self
+            .children
+            .iter_mut()
+            .zip(&mut tree.children)
+            .zip(layout.children())
+        {
+            child.as_widget_mut().update(
+                tree, event, layout, cursor, renderer, clipboard, shell, viewport,
+            );
         }
     }
 
@@ -489,7 +630,11 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Grows<'a, Message> {
             .iter()
             .zip(&tree.children)
             .zip(layout.children())
-            .map(|((child, tree), layout)| child.as_widget().mouse_interaction(tree, layout, cursor, viewport, renderer))
+            .map(|((child, tree), layout)| {
+                child
+                    .as_widget()
+                    .mouse_interaction(tree, layout, cursor, viewport, renderer)
+            })
             .max()
             .unwrap_or_default()
     }
@@ -511,7 +656,9 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Grows<'a, Message> {
             .zip(layout.children())
             .filter(|(_, layout)| layout.bounds().intersects(viewport))
         {
-            child.as_widget().draw(tree, renderer, theme, style, layout, cursor, viewport);
+            child
+                .as_widget()
+                .draw(tree, renderer, theme, style, layout, cursor, viewport);
         }
     }
 
@@ -523,7 +670,14 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Grows<'a, Message> {
         viewport: &Rectangle,
         translation: Vector,
     ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
-        overlay::from_children(&mut self.children, tree, layout, renderer, viewport, translation)
+        overlay::from_children(
+            &mut self.children,
+            tree,
+            layout,
+            renderer,
+            viewport,
+            translation,
+        )
     }
 }
 
@@ -548,14 +702,23 @@ mod tests {
     }
 
     fn picture<'a>() -> Element<'a, ()> {
-        space::vertical().width(Length::Fill).height(Length::Fill).into()
+        space::vertical()
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
     }
 
     /// The body: a scrolling area round a column with a picture (least 100) and a table 50 high, 10 apart.
     fn body<'a>() -> Element<'a, ()> {
         Reach::new(
-            scrollable(Grows::new().spacing(10.0).push(block(30.0)).push_grow(picture(), 100.0).push(block(50.0)))
-                .height(Length::Shrink),
+            scrollable(
+                Grows::new()
+                    .spacing(10.0)
+                    .push(block(30.0))
+                    .push_grow(picture(), 100.0)
+                    .push(block(50.0)),
+            )
+            .height(Length::Shrink),
         )
         .into()
     }
@@ -564,10 +727,15 @@ mod tests {
     fn heights(mut element: Element<'_, ()>, limits: Limits) -> (f32, Vec<f32>) {
         let snapshot = Snapshot::new(Size::new(400.0, 800.0)).expect("çizici kurulamadı");
         let mut tree = Tree::new(&element);
-        let node = element.as_widget_mut().layout(&mut tree, snapshot.renderer(), &limits);
+        let node = element
+            .as_widget_mut()
+            .layout(&mut tree, snapshot.renderer(), &limits);
         // Reach › scrollable › Grows › children.
         let column = &node.children()[0].children()[0];
-        (node.size().height, column.children().iter().map(|c| c.size().height).collect())
+        (
+            node.size().height,
+            column.children().iter().map(|c| c.size().height).collect(),
+        )
     }
 
     #[test]
@@ -593,12 +761,14 @@ mod tests {
     #[test]
     fn a_body_that_scrolls_gives_its_picture_the_height_shown() {
         let tall = Reach::new(
-            scrollable(
-                iced::widget::row![
-                    block(2000.0),
-                    Grows::new().spacing(10.0).push(block(30.0)).push_grow(picture(), 100.0).push(block(50.0)),
-                ],
-            )
+            scrollable(iced::widget::row![
+                block(2000.0),
+                Grows::new()
+                    .spacing(10.0)
+                    .push(block(30.0))
+                    .push_grow(picture(), 100.0)
+                    .push(block(50.0)),
+            ])
             .height(Length::Shrink),
         );
         let snapshot = Snapshot::new(Size::new(400.0, 800.0)).expect("çizici kurulamadı");
@@ -612,7 +782,10 @@ mod tests {
         // Reach › scrollable › row › [block, Grows › children].
         let column = &node.children()[0].children()[0].children()[1];
         assert_eq!(node.size().height, 600.0);
-        assert_eq!(column.children()[1].size().height, 600.0 - 30.0 - 50.0 - 20.0 - 1.0);
+        assert_eq!(
+            column.children()[1].size().height,
+            600.0 - 30.0 - 50.0 - 20.0 - 1.0
+        );
     }
 
     #[test]
@@ -628,11 +801,23 @@ mod tests {
         use super::shares_capped;
         // A picture (least 100) and a table (least 60, its rows 150): room enough, the table its rows, the picture the
         // rest; little room, both in proportion; less than the least, the least.
-        assert_eq!(shares_capped(&[100.0, 60.0], &[f32::INFINITY, 150.0], 50.0, Some(850.0)), [650.0, 150.0]);
-        assert_eq!(shares_capped(&[100.0, 60.0], &[f32::INFINITY, 150.0], 50.0, Some(290.0)), [150.0, 90.0]);
-        assert_eq!(shares_capped(&[100.0, 60.0], &[f32::INFINITY, 150.0], 50.0, Some(100.0)), [100.0, 60.0]);
+        assert_eq!(
+            shares_capped(&[100.0, 60.0], &[f32::INFINITY, 150.0], 50.0, Some(850.0)),
+            [650.0, 150.0]
+        );
+        assert_eq!(
+            shares_capped(&[100.0, 60.0], &[f32::INFINITY, 150.0], 50.0, Some(290.0)),
+            [150.0, 90.0]
+        );
+        assert_eq!(
+            shares_capped(&[100.0, 60.0], &[f32::INFINITY, 150.0], 50.0, Some(100.0)),
+            [100.0, 60.0]
+        );
         // A table shorter than its least keeps its own height.
-        assert_eq!(shares_capped(&[100.0, 60.0], &[f32::INFINITY, 40.0], 0.0, Some(500.0)), [460.0, 40.0]);
+        assert_eq!(
+            shares_capped(&[100.0, 60.0], &[f32::INFINITY, 40.0], 0.0, Some(500.0)),
+            [460.0, 40.0]
+        );
     }
 
     /// A body taller than the window: its form scrolls by itself, the table takes what the picture leaves, and the
@@ -641,11 +826,18 @@ mod tests {
     fn a_long_table_scrolls_inside_and_the_body_keeps_the_window() {
         use super::Held;
         let rows = 2000.0;
-        let table = Held::natural(space::vertical().width(Length::Fill).height(Length::Fill), rows);
+        let table = Held::natural(
+            space::vertical().width(Length::Fill).height(Length::Fill),
+            rows,
+        );
         let tall = Reach::new(
             scrollable(iced::widget::row![
                 Held::within_room(scrollable(block(1500.0)).height(Length::Shrink)),
-                Grows::new().spacing(10.0).push(block(30.0)).push_grow(picture(), 100.0).push_fit(table, 60.0),
+                Grows::new()
+                    .spacing(10.0)
+                    .push(block(30.0))
+                    .push_grow(picture(), 100.0)
+                    .push_fit(table, 60.0),
             ])
             .height(Length::Shrink),
         );
@@ -660,10 +852,20 @@ mod tests {
         let row = &node.children()[0].children()[0];
         assert_eq!(node.size().height, 600.0);
         assert_eq!(row.size().height, 600.0, "the body does not scroll");
-        assert_eq!(row.children()[0].size().height, 600.0, "the form is held to the window");
+        assert_eq!(
+            row.children()[0].size().height,
+            600.0,
+            "the form is held to the window"
+        );
         let column = &row.children()[1];
-        let (picture_h, table_h) = (column.children()[1].size().height, column.children()[2].size().height);
-        assert!((picture_h + table_h - (600.0 - 30.0 - 20.0 - 1.0)).abs() < 0.01, "{picture_h} + {table_h}");
+        let (picture_h, table_h) = (
+            column.children()[1].size().height,
+            column.children()[2].size().height,
+        );
+        assert!(
+            (picture_h + table_h - (600.0 - 30.0 - 20.0 - 1.0)).abs() < 0.01,
+            "{picture_h} + {table_h}"
+        );
         assert!(table_h < rows && picture_h >= 100.0);
     }
 
@@ -678,7 +880,10 @@ mod tests {
     #[test]
     fn outside_a_reach_the_picture_keeps_its_least() {
         let snapshot = Snapshot::new(Size::new(400.0, 800.0)).expect("çizici kurulamadı");
-        let mut element: Element<'_, ()> = Grows::new().push_grow(picture(), 80.0).push(block(20.0)).into();
+        let mut element: Element<'_, ()> = Grows::new()
+            .push_grow(picture(), 80.0)
+            .push(block(20.0))
+            .into();
         let mut tree = Tree::new(&element);
         let node = element.as_widget_mut().layout(
             &mut tree,

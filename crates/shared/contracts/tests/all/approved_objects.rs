@@ -3,7 +3,9 @@
 //! list whose compact JSON's SHA-256 is the stamp. Every other list is refused at `items[i].approvedObjects`.
 
 use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{EntityId, MAX_APPROVED_OBJECTS, MapWork, WorkFile, WorkItem, WorkKind, WorkStatus};
+use kentos_contracts::{
+    EntityId, MAX_APPROVED_OBJECTS, MapWork, WorkFile, WorkItem, WorkKind, WorkStatus,
+};
 
 fn uid(n: u32) -> EntityId {
     let mut b = [0u8; 16];
@@ -51,15 +53,27 @@ fn the_objects_an_approval_kept_are_its_stamp() {
     assert!(w.has_approved_objects());
     // The same list as JSON: pairs of the id's text and the digest.
     let json = serde_json::to_value(&w.items[0]).expect("writes");
-    assert_eq!(json["approvedObjects"][0][0], "00000000-0000-0000-0000-000000000003");
+    assert_eq!(
+        json["approvedObjects"][0][0],
+        "00000000-0000-0000-0000-000000000003"
+    );
     // None kept: nothing written, nothing judged.
     let w = approved(Vec::new(), Some(stamp.clone()));
     assert!(!w.has_approved_objects() && w.problem().is_none());
-    assert!(serde_json::to_value(&w.items[0]).expect("writes").get("approvedObjects").is_none());
+    assert!(
+        serde_json::to_value(&w.items[0])
+            .expect("writes")
+            .get("approvedObjects")
+            .is_none()
+    );
     // Without the stamp; on an item with a file.
     assert!(refused(&approved(pairs.clone(), None)).is_some_and(|w| w.contains("onay damgası")));
     let mut w = approved(pairs.clone(), Some(stamp.clone()));
-    w.items[0].file = Some(WorkFile { path: "/veri/tasarim.dxf".into(), revision: "e".repeat(64), relative: None });
+    w.items[0].file = Some(WorkFile {
+        path: "/veri/tasarim.dxf".into(),
+        revision: "e".repeat(64),
+        relative: None,
+    });
     assert!(refused(&w).is_some_and(|w| w.contains("dosyası olan")));
     // Out of order, written twice, a nil id, a digest that is not one.
     let reversed: Vec<_> = pairs.iter().rev().cloned().collect();
@@ -68,7 +82,11 @@ fn the_objects_an_approval_kept_are_its_stamp() {
         let s = stamp_of(&list);
         assert!(refused(&approved(list, Some(s))).is_some_and(|w| w.contains("sıralı")));
     }
-    for list in [vec![(EntityId([0; 16]), "c".repeat(64))], vec![(uid(3), "C".repeat(64))], vec![(uid(3), "c".repeat(63))]] {
+    for list in [
+        vec![(EntityId([0; 16]), "c".repeat(64))],
+        vec![(uid(3), "C".repeat(64))],
+        vec![(uid(3), "c".repeat(63))],
+    ] {
         let s = stamp_of(&list);
         assert!(refused(&approved(list, Some(s))).is_some_and(|w| w.contains("boş olmayan")));
     }
@@ -76,7 +94,9 @@ fn the_objects_an_approval_kept_are_its_stamp() {
     let one = vec![pairs[0].clone()];
     assert!(refused(&approved(one, Some(stamp))).is_some_and(|w| w.contains("damgasını vermiyor")));
     // One more than the most.
-    let many: Vec<_> = (1..=MAX_APPROVED_OBJECTS as u32 + 1).map(|k| (uid(k), "c".repeat(64))).collect();
+    let many: Vec<_> = (1..=MAX_APPROVED_OBJECTS as u32 + 1)
+        .map(|k| (uid(k), "c".repeat(64)))
+        .collect();
     let s = stamp_of(&many);
     assert!(refused(&approved(many, Some(s))).is_some_and(|w| w.contains("en çok")));
 }
@@ -88,7 +108,14 @@ fn the_parts_an_approval_kept_are_one_to_one_with_its_objects() {
     use kentos_contracts::{OBJECT_PARTS, object_parts};
     let pairs = vec![(uid(3), "c".repeat(64)), (uid(4), "d".repeat(64))];
     let stamp = stamp_of(&pairs);
-    let four = || ["0123456789abcdef".to_owned(), "1".repeat(16), "2".repeat(16), "3".repeat(16)];
+    let four = || {
+        [
+            "0123456789abcdef".to_owned(),
+            "1".repeat(16),
+            "2".repeat(16),
+            "3".repeat(16),
+        ]
+    };
     let mut w = approved(pairs.clone(), Some(stamp.clone()));
     w.items[0].approved_parts = vec![four(), four()];
     assert_eq!(w.problem(), None);
@@ -106,7 +133,10 @@ fn the_parts_an_approval_kept_are_one_to_one_with_its_objects() {
         let mut one = four();
         one[2] = bad.to_owned();
         w.items[0].approved_parts = vec![four(), one];
-        assert!(at(&w).is_some_and(|(p, why)| p == "items[0].approvedParts" && why.contains("16")), "{bad}");
+        assert!(
+            at(&w).is_some_and(|(p, why)| p == "items[0].approvedParts" && why.contains("16")),
+            "{bad}"
+        );
     }
     // Parts without the list.
     let mut w = approved(Vec::new(), Some(stamp));
@@ -121,9 +151,16 @@ fn the_parts_an_approval_kept_are_one_to_one_with_its_objects() {
         let mut v = line.clone();
         f(&mut v);
         let now = object_parts(&v);
-        (0..4).filter(|k| now[*k] != base[*k]).map(|k| OBJECT_PARTS[k]).collect::<Vec<_>>()
+        (0..4)
+            .filter(|k| now[*k] != base[*k])
+            .map(|k| OBJECT_PARTS[k])
+            .collect::<Vec<_>>()
     };
-    assert_eq!(changed(&|v| v["id"] = 9.into()), Vec::<&str>::new(), "the slot is not a part");
+    assert_eq!(
+        changed(&|v| v["id"] = 9.into()),
+        Vec::<&str>::new(),
+        "the slot is not a part"
+    );
     assert_eq!(changed(&|v| v["b"]["x"] = 3.5.into()), ["geometry"]);
     assert_eq!(changed(&|v| v["attrs"]["Ad"] = "D2".into()), ["attributes"]);
     assert_eq!(changed(&|v| v["layerId"] = "yol".into()), ["layer"]);

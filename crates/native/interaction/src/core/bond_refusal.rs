@@ -69,8 +69,14 @@ pub fn way_through(bonds: &[BondInTheWay]) -> Option<(Vec<String>, String)> {
     }
     let set: Vec<&BondInTheWay> = bonds.iter().filter(|b| !b.frees_with.is_empty()).collect();
     match set.len() {
-        2 => Some((set.iter().map(|b| b.id.to_string()).collect(), "Bu iki bağı kaldır".into())),
-        3 => Some((set.iter().map(|b| b.id.to_string()).collect(), "Bu üç bağı kaldır".into())),
+        2 => Some((
+            set.iter().map(|b| b.id.to_string()).collect(),
+            "Bu iki bağı kaldır".into(),
+        )),
+        3 => Some((
+            set.iter().map(|b| b.id.to_string()).collect(),
+            "Bu üç bağı kaldır".into(),
+        )),
         _ => None,
     }
 }

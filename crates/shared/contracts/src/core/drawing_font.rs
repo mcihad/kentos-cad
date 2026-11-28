@@ -35,7 +35,10 @@ impl FontFamily {
     /// - a new name past [`MAX_FONT_FAMILIES`].
     pub fn new(name: &str) -> Option<FontFamily> {
         let name = name.trim();
-        if name.is_empty() || name.chars().count() > MAX_FONT_FAMILY || name.chars().any(char::is_control) {
+        if name.is_empty()
+            || name.chars().count() > MAX_FONT_FAMILY
+            || name.chars().any(char::is_control)
+        {
             return None;
         }
         if DrawingFont::own(name).is_some() {
@@ -59,7 +62,9 @@ impl std::fmt::Debug for FontFamily {
 /// Keeps each family name once for the program's life (a `FontFamily` is `Copy`, as the typeface always was).
 fn intern(name: &str) -> Option<&'static str> {
     static NAMES: Mutex<Vec<&'static str>> = Mutex::new(Vec::new());
-    let mut names = NAMES.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let mut names = NAMES
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     if let Some(kept) = names.iter().find(|n| **n == name) {
         return Some(kept);
     }
@@ -150,7 +155,11 @@ impl DrawingFont {
 
     /// The own face by its id or its name in any case (`times-new-roman`, `Times New Roman`).
     pub fn own(name: &str) -> Option<DrawingFont> {
-        Self::from_id(name).or_else(|| Self::ALL.into_iter().find(|f| f.label().eq_ignore_ascii_case(name)))
+        Self::from_id(name).or_else(|| {
+            Self::ALL
+                .into_iter()
+                .find(|f| f.label().eq_ignore_ascii_case(name))
+        })
     }
 
     /// The typeface a string names: an own face by its id or name, else a folder family by its name. None for a
@@ -242,16 +251,31 @@ mod tests {
         }
         let roboto = DrawingFont::from_name(" Roboto ");
         assert_eq!(roboto.map(DrawingFont::id), Some("Roboto"));
-        assert_eq!(roboto.and_then(DrawingFont::family).map(FontFamily::name), Some("Roboto"));
-        assert_eq!(serde_json::to_string(&roboto).ok().as_deref(), Some("\"Roboto\""));
-        assert_eq!(serde_json::from_str::<DrawingFont>("\"Roboto\"").ok(), roboto);
+        assert_eq!(
+            roboto.and_then(DrawingFont::family).map(FontFamily::name),
+            Some("Roboto")
+        );
+        assert_eq!(
+            serde_json::to_string(&roboto).ok().as_deref(),
+            Some("\"Roboto\"")
+        );
+        assert_eq!(
+            serde_json::from_str::<DrawingFont>("\"Roboto\"").ok(),
+            roboto
+        );
     }
 
     #[test]
     fn an_own_face_by_its_name_is_the_own_face() {
-        assert_eq!(DrawingFont::from_name("Times New Roman"), Some(DrawingFont::TimesNewRoman));
+        assert_eq!(
+            DrawingFont::from_name("Times New Roman"),
+            Some(DrawingFont::TimesNewRoman)
+        );
         assert_eq!(DrawingFont::from_name("arial"), Some(DrawingFont::Arial));
-        assert_eq!(DrawingFont::from_name("IBM PLEX MONO"), Some(DrawingFont::PlexMono));
+        assert_eq!(
+            DrawingFont::from_name("IBM PLEX MONO"),
+            Some(DrawingFont::PlexMono)
+        );
         assert_eq!(FontFamily::new("Arial"), None);
     }
 
@@ -261,7 +285,10 @@ mod tests {
         for bad in ["", "   ", "A\u{7}B", long.as_str()] {
             assert_eq!(DrawingFont::from_name(bad), None, "{bad:?}");
             let text = serde_json::to_string(bad).unwrap_or_default();
-            let err = serde_json::from_str::<DrawingFont>(&text).err().map(|e| e.to_string()).unwrap_or_default();
+            let err = serde_json::from_str::<DrawingFont>(&text)
+                .err()
+                .map(|e| e.to_string())
+                .unwrap_or_default();
             assert!(err.contains("bir yazı tipi değil"), "{err}");
         }
         assert!(DrawingFont::from_name(&"x".repeat(MAX_FONT_FAMILY)).is_some());

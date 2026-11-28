@@ -95,7 +95,12 @@ pub fn named(settings: &ProjectSettings) -> Vec<(String, String, GridKind, Strin
     };
     for (i, t) in settings.datum_transforms.iter().enumerate() {
         if let Some(g) = &t.grid {
-            put(&g.id, &g.file, GridKind::Ntv2, format!("datumTransforms[{i}].grid"));
+            put(
+                &g.id,
+                &g.file,
+                GridKind::Ntv2,
+                format!("datumTransforms[{i}].grid"),
+            );
         }
     }
     if let Some(g) = settings.heights.as_ref().and_then(|h| h.geoid.as_ref())
@@ -106,7 +111,12 @@ pub fn named(settings: &ProjectSettings) -> Vec<(String, String, GridKind, Strin
     if let Some(s) = &settings.map_survey {
         for (i, c) in s.campaigns.iter().enumerate() {
             if let Some(v) = &c.velocity {
-                put(&v.sha256, &v.name, GridKind::Velocity, format!("mapSurvey.campaigns[{i}].velocity"));
+                put(
+                    &v.sha256,
+                    &v.name,
+                    GridKind::Velocity,
+                    format!("mapSurvey.campaigns[{i}].velocity"),
+                );
             }
         }
     }
@@ -123,12 +133,17 @@ fn in_core(id: &str, kind: GridKind) -> bool {
 
 /// The file of grid `id` of `kind` in `dir`, by the extensions such a grid is kept with.
 fn file_in(dir: &Path, id: &str, kind: GridKind) -> Option<PathBuf> {
-    kind.extensions().iter().map(|ext| dir.join(format!("{id}.{ext}"))).find(|p| p.is_file())
+    kind.extensions()
+        .iter()
+        .map(|ext| dir.join(format!("{id}.{ext}")))
+        .find(|p| p.is_file())
 }
 
 /// Grid `id` of `kind` read from `path` into the core, its SHA-256 checked.
 fn read_in(path: &Path, id: &str, kind: GridKind) -> GridPlace {
-    let Ok(bytes) = std::fs::read(path) else { return GridPlace::Missing };
+    let Ok(bytes) = std::fs::read(path) else {
+        return GridPlace::Missing;
+    };
     if crs_models::sha256(&bytes) != id {
         return GridPlace::Changed;
     }
@@ -141,13 +156,24 @@ fn read_in(path: &Path, id: &str, kind: GridKind) -> GridPlace {
             Err(e) => GridPlace::Unread(format!("{e:?}")),
         },
         GridKind::Geoid | GridKind::Velocity => {
-            let want = if kind == GridKind::Geoid { ModelKind::Geoid } else { ModelKind::Velocity };
+            let want = if kind == GridKind::Geoid {
+                ModelKind::Geoid
+            } else {
+                ModelKind::Velocity
+            };
             match crs_models::read(&bytes) {
                 Ok(model) if model.kind == want => {
                     geoid::register(id, model.grid);
                     GridPlace::Package
                 }
-                Ok(_) => GridPlace::Unread(format!("{} değil", if want == ModelKind::Geoid { "geoit modeli" } else { "hız ızgarası" })),
+                Ok(_) => GridPlace::Unread(format!(
+                    "{} değil",
+                    if want == ModelKind::Geoid {
+                        "geoit modeli"
+                    } else {
+                        "hız ızgarası"
+                    }
+                )),
                 Err(why) => GridPlace::Unread(why),
             }
         }
@@ -157,14 +183,20 @@ fn read_in(path: &Path, id: &str, kind: GridKind) -> GridPlace {
 /// Each grid `doc` names and where it was found, opened from `project_file`: the core, this device's library (`library`:
 /// the device's folder when none), or `izgaralar/` beside the file (read into the core now); else missing.
 pub fn find_in(doc: &Document, project_file: &Path, library: Option<&Path>) -> Vec<GridFound> {
-    let device = library.map(Path::to_path_buf).or_else(crs_models::device_dir);
+    let device = library
+        .map(Path::to_path_buf)
+        .or_else(crs_models::device_dir);
     let folder = project_file.parent().map(|p| p.join(FOLDER));
     named(doc.settings())
         .into_iter()
         .map(|(sha256, name, kind, setting)| {
             let place = if in_core(&sha256, kind) {
                 GridPlace::Core
-            } else if device.as_deref().and_then(|d| file_in(d, &sha256, kind)).is_some() {
+            } else if device
+                .as_deref()
+                .and_then(|d| file_in(d, &sha256, kind))
+                .is_some()
+            {
                 GridPlace::Library
             } else {
                 match folder.as_deref().and_then(|d| file_in(d, &sha256, kind)) {
@@ -172,7 +204,13 @@ pub fn find_in(doc: &Document, project_file: &Path, library: Option<&Path>) -> V
                     None => GridPlace::Missing,
                 }
             };
-            GridFound { sha256, name, kind, setting, place }
+            GridFound {
+                sha256,
+                name,
+                kind,
+                setting,
+                place,
+            }
         })
         .collect()
 }
@@ -185,7 +223,11 @@ pub fn find(doc: &Document, project_file: &Path) -> Vec<GridFound> {
 /// What opening said of the grids found beside the file: none when no grid came from there or is missing.
 pub fn said(found: &[GridFound]) -> Option<String> {
     let names = |place: &str| -> Vec<String> {
-        found.iter().filter(|g| g.place.name() == place).map(|g| format!("“{}”", g.name)).collect()
+        found
+            .iter()
+            .filter(|g| g.place.name() == place)
+            .map(|g| format!("“{}”", g.name))
+            .collect()
     };
     let (taken, missing, changed) = (names("package"), names("missing"), names("changed"));
     let mut parts = Vec::new();
@@ -197,10 +239,16 @@ pub fn said(found: &[GridFound]) -> Option<String> {
         ));
     }
     if !changed.is_empty() {
-        parts.push(format!("{FOLDER}/ klasöründeki {} dosyası değişmiş (SHA-256'sı tutmuyor), kullanılmadı.", changed.join(", ")));
+        parts.push(format!(
+            "{FOLDER}/ klasöründeki {} dosyası değişmiş (SHA-256'sı tutmuyor), kullanılmadı.",
+            changed.join(", ")
+        ));
     }
     if !missing.is_empty() {
-        parts.push(format!("Projenin adladığı {} ızgarası ne bu cihazda ne {FOLDER}/ klasöründe var.", missing.join(", ")));
+        parts.push(format!(
+            "Projenin adladığı {} ızgarası ne bu cihazda ne {FOLDER}/ klasöründe var.",
+            missing.join(", ")
+        ));
     }
     (!parts.is_empty()).then(|| parts.join(" "))
 }
@@ -214,18 +262,25 @@ mod tests {
         let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../..");
         let mut bytes = std::fs::read(root.join("fixtures/geoid/v1/tg.gtx")).expect("the geoid");
         let n = bytes.len();
-        let last = f32::from_be_bytes([bytes[n - 4], bytes[n - 3], bytes[n - 2], bytes[n - 1]]) + 0.001;
+        let last =
+            f32::from_be_bytes([bytes[n - 4], bytes[n - 3], bytes[n - 2], bytes[n - 1]]) + 0.001;
         bytes[n - 4..].copy_from_slice(&last.to_be_bytes());
         let id = crs_models::sha256(&bytes);
         (bytes, id)
     }
 
     fn project(id: &str) -> Document {
-        let mut snapshot = kentos_kcad::decode(include_bytes!("../../../../../fixtures/kcad/v2/minimal.kcad")).expect("the minimal drawing");
+        let mut snapshot = kentos_kcad::decode(include_bytes!(
+            "../../../../../fixtures/kcad/v2/minimal.kcad"
+        ))
+        .expect("the minimal drawing");
         snapshot.settings.heights = Some(kentos_commands::HeightReference {
             kind: kentos_commands::HeightKind::Orthometric,
             vertical_srid: Some(5775),
-            geoid: Some(kentos_commands::GeoidModel { name: "TG-20 (paket)".into(), sha256: Some(id.into()) }),
+            geoid: Some(kentos_commands::GeoidModel {
+                name: "TG-20 (paket)".into(),
+                sha256: Some(id.into()),
+            }),
         });
         Document::from_snapshot_v2(snapshot).expect("opens")
     }
@@ -245,15 +300,33 @@ mod tests {
         let mut other = bytes.clone();
         other[0] ^= 1;
         std::fs::write(dir.join(FOLDER).join(format!("{id}.gtx")), &other).expect("writes");
-        assert_eq!(find_in(&doc, &dir.join("ada.kcad"), Some(&empty))[0].place, GridPlace::Changed);
+        assert_eq!(
+            find_in(&doc, &dir.join("ada.kcad"), Some(&empty))[0].place,
+            GridPlace::Changed
+        );
         assert!(geoid::get(&id).is_none());
         // The right file: read into the core; the next look finds it there.
         std::fs::write(dir.join(FOLDER).join(format!("{id}.gtx")), &bytes).expect("writes");
         let found = find_in(&doc, &dir.join("ada.kcad"), Some(&empty));
-        assert_eq!((found[0].place.clone(), found[0].setting.as_str(), found[0].kind), (GridPlace::Package, "heights.geoid", GridKind::Geoid));
-        assert!(said(&found).is_some_and(|w| w.contains("1 ızgara") && w.contains("TG-20 (paket)")));
-        assert!(crs_models::load(&id, ModelKind::Geoid, Some(&empty)).is_ok(), "a command finds it in the core");
-        assert_eq!(find_in(&doc, &dir.join("ada.kcad"), Some(&empty))[0].place, GridPlace::Core);
+        assert_eq!(
+            (
+                found[0].place.clone(),
+                found[0].setting.as_str(),
+                found[0].kind
+            ),
+            (GridPlace::Package, "heights.geoid", GridKind::Geoid)
+        );
+        assert!(
+            said(&found).is_some_and(|w| w.contains("1 ızgara") && w.contains("TG-20 (paket)"))
+        );
+        assert!(
+            crs_models::load(&id, ModelKind::Geoid, Some(&empty)).is_ok(),
+            "a command finds it in the core"
+        );
+        assert_eq!(
+            find_in(&doc, &dir.join("ada.kcad"), Some(&empty))[0].place,
+            GridPlace::Core
+        );
         let _ = std::fs::remove_dir_all(dir);
     }
 }

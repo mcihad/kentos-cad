@@ -101,5 +101,11 @@ fn typed_region_corners_can_be_corrected_and_empty_search_creates_no_layer() {
     assert_eq!(b.points(), 1);
     assert!(b.type_text("@9,14"));
     b.confirm();
-    assert_eq!(b.doc.entities().filter(|e| matches!(e, Entity::Space(_))).count(), 1);
+    assert_eq!(
+        b.doc
+            .entities()
+            .filter(|e| matches!(e, Entity::Space(_)))
+            .count(),
+        1
+    );
 }

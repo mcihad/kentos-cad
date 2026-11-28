@@ -5,7 +5,9 @@
 //! code is found by the print check; one that names the project's datum beside another (a conversion note) is not; a
 //! project's own variable `datum` comes before the fact.
 
-use kentos_contracts::{DocumentSnapshotV1, DrawingFont, GeoidModel, HeightKind, HeightReference, Workspace};
+use kentos_contracts::{
+    DocumentSnapshotV1, DrawingFont, GeoidModel, HeightKind, HeightReference, Workspace,
+};
 use kentos_domain::Document;
 use kentos_plot::book::base_inputs;
 use kentos_project::new_project::{NewProject, new_project};
@@ -35,7 +37,10 @@ fn drawing(own_datum: bool) -> Document {
     snapshot.settings.heights = Some(HeightReference {
         kind: HeightKind::Orthometric,
         vertical_srid: None,
-        geoid: Some(GeoidModel { name: "TG-20".into(), sha256: None }),
+        geoid: Some(GeoidModel {
+            name: "TG-20".into(),
+            sha256: None,
+        }),
     });
     snapshot.settings.coordinate_epoch = Some(2005.0);
     if own_datum {
@@ -61,14 +66,19 @@ fn drawing(own_datum: bool) -> Document {
             text("kod-eski", 180000, "Sistem: EPSG 2320")
         ]}}]))
     .expect("ops");
-    let book = kentos_sheet::ops::apply_all(&SheetBook::default(), &ops).expect("the sheet").book;
-    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept")).expect("the book");
+    let book = kentos_sheet::ops::apply_all(&SheetBook::default(), &ops)
+        .expect("the sheet")
+        .book;
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept"))
+        .expect("the book");
     doc
 }
 
 fn texts(doc: &Document) -> Vec<(String, String)> {
-    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets")).expect("the book");
-    let list = display_list(&book, "pafta", &base_inputs(doc, "Ayşe", "2026-11-07")).expect("drawn");
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets"))
+        .expect("the book");
+    let list =
+        display_list(&book, "pafta", &base_inputs(doc, "Ayşe", "2026-11-07")).expect("drawn");
     let mut out: Vec<(String, String)> = Vec::new();
     for p in &list.prims {
         if let Prim::Text(t) = p {
@@ -85,7 +95,9 @@ fn texts(doc: &Document) -> Vec<(String, String)> {
 }
 
 fn said<'a>(all: &'a [(String, String)], id: &str) -> &'a str {
-    all.iter().find(|(i, _)| i == id).map_or("", |(_, w)| w.as_str())
+    all.iter()
+        .find(|(i, _)| i == id)
+        .map_or("", |(_, w)| w.as_str())
 }
 
 #[test]
@@ -94,9 +106,16 @@ fn a_sheet_reads_the_project_s_datum_projection_heights_and_epoch() {
     assert_eq!(said(&all, "datum"), "Datum: TUREF (ITRF96)");
     assert_eq!(said(&all, "elipsoit"), "Elipsoit: GRS80");
     // Words the sheet's faces draw (a subscript zero would be “?”).
-    assert_eq!(said(&all, "projeksiyon"), "Transverse Mercator, DOM 36°, ölçek katsayısı 1");
+    assert_eq!(
+        said(&all, "projeksiyon"),
+        "Transverse Mercator, DOM 36°, ölçek katsayısı 1"
+    );
     assert_eq!(said(&all, "kot"), "Kot: Ortometrik yükseklik (geoit TG-20)");
-    assert!(said(&all, "epok").starts_with("Epok: 2005"), "{}", said(&all, "epok"));
+    assert!(
+        said(&all, "epok").starts_with("Epok: 2005"),
+        "{}",
+        said(&all, "epok")
+    );
     assert_eq!(said(&all, "kod"), "TUREF / TM36 (EPSG:5256)");
 }
 
@@ -109,13 +128,22 @@ fn a_project_s_own_variable_comes_first() {
 #[test]
 fn the_print_check_finds_a_text_that_names_another_system() {
     let doc = drawing(false);
-    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets")).expect("the book");
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets"))
+        .expect("the book");
     let inputs = base_inputs(&doc, "Ayşe", "2026-11-07");
-    let found = kentos_plot::preflight::inspect(&doc, &book, "pafta", &inputs, None).expect("checked");
-    let mut wrong: Vec<&str> =
-        found.iter().filter(|f| f.code == "crs_text_mismatch").filter_map(|f| f.item.as_deref()).collect();
+    let found =
+        kentos_plot::preflight::inspect(&doc, &book, "pafta", &inputs, None).expect("checked");
+    let mut wrong: Vec<&str> = found
+        .iter()
+        .filter(|f| f.code == "crs_text_mismatch")
+        .filter_map(|f| f.item.as_deref())
+        .collect();
     wrong.sort();
-    assert_eq!(wrong, ["eski", "kod-eski"], "the conversion note names TUREF too; the @ texts read the project");
+    assert_eq!(
+        wrong,
+        ["eski", "kod-eski"],
+        "the conversion note names TUREF too; the @ texts read the project"
+    );
 }
 
 /// docs/adr/1900: a sheet's texts read the north at its map's centre, the north diagram's three lines: `@yakinsama`
@@ -149,17 +177,23 @@ fn north_drawing() -> Document {
             linked("orta", 240000, "[% @yakinsama %]", "ikinci")
         ]}}]))
     .expect("ops");
-    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets")).expect("the book");
-    let book = kentos_sheet::ops::apply_all(&book, &ops).expect("the sheet").book;
-    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept")).expect("the book");
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets"))
+        .expect("the book");
+    let book = kentos_sheet::ops::apply_all(&book, &ops)
+        .expect("the sheet")
+        .book;
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept"))
+        .expect("the book");
     doc
 }
 
 #[test]
 fn a_sheet_reads_the_north_at_its_map_s_centre() {
     let doc = north_drawing();
-    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets")).expect("the book");
-    let list = display_list(&book, "kuzey", &base_inputs(&doc, "Ayşe", "2026-11-07")).expect("drawn");
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets"))
+        .expect("the book");
+    let list =
+        display_list(&book, "kuzey", &base_inputs(&doc, "Ayşe", "2026-11-07")).expect("drawn");
     let mut all: Vec<(String, String)> = Vec::new();
     for p in &list.prims {
         if let Prim::Text(t) = p {
@@ -173,7 +207,10 @@ fn a_sheet_reads_the_north_at_its_map_s_centre() {
         }
     }
     assert_eq!(said(&all, "yakinsama"), "GK–CK yakınsama −0°23'");
-    assert_eq!(said(&all, "sapma"), "CK–MK manyetik sapma 6°18' D (WMM2025, 2026-11)");
+    assert_eq!(
+        said(&all, "sapma"),
+        "CK–MK manyetik sapma 6°18' D (WMM2025, 2026-11)"
+    );
     assert_eq!(said(&all, "grid"), "GK–MK açısı 6°41' D");
     // On the central meridian the convergence is nought: the text tied to the second map reads that one.
     assert_eq!(said(&all, "orta"), "+0°00'");
@@ -187,12 +224,17 @@ fn a_sheet_reads_the_north_at_its_map_s_centre() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn picture() {
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence/pafta-koordinat-1680");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../.run/gui-evidence/pafta-koordinat-1680");
     std::fs::create_dir_all(&out).expect("a folder");
-    let made = kentos_plot::book::book_pdf(&drawing(false), &[], "Ayşe", "2026-11-07").expect("a PDF");
+    let made =
+        kentos_plot::book::book_pdf(&drawing(false), &[], "Ayşe", "2026-11-07").expect("a PDF");
     std::fs::write(out.join("pafta.pdf"), &made.bytes).expect("writes");
-    let words: Vec<String> =
-        made.sheet_findings.iter().map(|(s, f)| format!("{s} {} {:?}: {}", f.code, f.item, f.message)).collect();
+    let words: Vec<String> = made
+        .sheet_findings
+        .iter()
+        .map(|(s, f)| format!("{s} {} {:?}: {}", f.code, f.item, f.message))
+        .collect();
     std::fs::write(out.join("bulgular.txt"), words.join("\n")).expect("writes");
     println!("{}", out.join("pafta.pdf").display());
 }
@@ -205,9 +247,11 @@ fn picture() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn north_picture() {
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence/pafta-kuzey-1900");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../.run/gui-evidence/pafta-kuzey-1900");
     std::fs::create_dir_all(&out).expect("a folder");
-    let made = kentos_plot::book::book_pdf(&north_drawing(), &[], "Ayşe", "2026-11-07").expect("a PDF");
+    let made =
+        kentos_plot::book::book_pdf(&north_drawing(), &[], "Ayşe", "2026-11-07").expect("a PDF");
     std::fs::write(out.join("kuzey.pdf"), &made.bytes).expect("writes");
     println!("{}", out.join("kuzey.pdf").display());
 }

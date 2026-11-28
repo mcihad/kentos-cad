@@ -20,9 +20,9 @@
 //! - Aksları numarala: Başlangıç (B), then the grids clicked in order; Enter writes.
 
 use kentos_commands::{
-    ArchEdit, ArchOperation, ColumnAnchor, ColumnCrossings, ColumnShape, ColumnsCreate, CommandResult, Entity,
-    GridSeries, GridsCreate, NewColumn, NewGrid, NewRamp, NewStair, RampsCreate, Railings,
-    SeriesSide, StairsCreate,
+    ArchEdit, ArchOperation, ColumnAnchor, ColumnCrossings, ColumnShape, ColumnsCreate,
+    CommandResult, Entity, GridSeries, GridsCreate, NewColumn, NewGrid, NewRamp, NewStair,
+    Railings, RampsCreate, SeriesSide, StairsCreate,
 };
 use kentos_domain::Slot;
 use kentos_domain::arch_follow::grid_edge;
@@ -39,7 +39,10 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Cursor, Flow, Label, Marker, MarkerShape, OptionChoice, Pointer, Preview, Tag, TextGhost, Tone, Tool};
+use crate::tool::{
+    Context, Cursor, Flow, Label, Marker, MarkerShape, OptionChoice, Pointer, Preview, Tag,
+    TextGhost, Tone, Tool,
+};
 use crate::tool_settings::Setting;
 
 pub const GRID_ID: &str = "grid";
@@ -153,7 +156,9 @@ fn ask_words(ask: Ask) -> &'static str {
         Ask::Tread => "basamak derinliğini yazın",
         Ask::Landing => "sahanlığın boyunu yazın",
         Ask::RampRun => "en uzun eğimli kolu yazın (boş: sahanlık yalnız dönüşlerde)",
-        Ask::RampBase => "başlangıç kotunu yazın (boş ya da kat: katın kotu; kat+0.15: kattan fark; sayı: kendi kotu)",
+        Ask::RampBase => {
+            "başlangıç kotunu yazın (boş ya da kat: katın kotu; kat+0.15: kattan fark; sayı: kendi kotu)"
+        }
         Ask::Rise => "yükseklik farkını yazın",
         Ask::Slope => "eğimi yüzde olarak yazın",
         Ask::Post => "merkez direğinin çapını yazın (0: yok)",
@@ -370,7 +375,11 @@ impl Tool for GridTool {
 
     fn settings(&self, f: &Format) -> Vec<Setting> {
         vec![
-            Setting::text("E", "Etiket", self.label.clone().unwrap_or_else(|| "Sıradaki".into())),
+            Setting::text(
+                "E",
+                "Etiket",
+                self.label.clone().unwrap_or_else(|| "Sıradaki".into()),
+            ),
             Setting::text(
                 "S",
                 "Seri aralıkları",
@@ -609,7 +618,11 @@ impl ColumnTool {
     }
 
     fn depth_option(&self) -> (&'static str, &'static str) {
-        if self.post { ("Kesit boyu", "O") } else { ("Boy", "Y") }
+        if self.post {
+            ("Kesit boyu", "O")
+        } else {
+            ("Boy", "Y")
+        }
     }
 
     /// Dikme (docs/adr/8070 §8): 10/10 Çelik until changed, KentOS's own first values; its storey's height until one is
@@ -739,7 +752,10 @@ impl ColumnTool {
         });
         if let Some(out) = out {
             let n = out.ids.len();
-            cx.say(Level::Success, format!("{n} {} konuldu.", self.kind().what()));
+            cx.say(
+                Level::Success,
+                format!("{n} {} konuldu.", self.kind().what()),
+            );
             if let Some(t) = &self.tag {
                 let mut next = t.clone();
                 for _ in 0..n {
@@ -804,8 +820,16 @@ impl Tool for ColumnTool {
         if self.post {
             // A post's own height and material (docs/adr/8070 §8).
             p = p
-                .option_with("Yükseklik", "Y", self.height.map_or_else(|| "Kat".into(), fmt))
-                .option_with("Malzeme", "M", self.material.clone().unwrap_or_else(|| "Betonarme".into()));
+                .option_with(
+                    "Yükseklik",
+                    "Y",
+                    self.height.map_or_else(|| "Kat".into(), fmt),
+                )
+                .option_with(
+                    "Malzeme",
+                    "M",
+                    self.material.clone().unwrap_or_else(|| "Betonarme".into()),
+                );
         }
         p = p.option_with(
             "İlk etiket",
@@ -955,11 +979,19 @@ impl Tool for ColumnTool {
                     self.shape.name(),
                 ),
             ),
-            Setting::text("E", if self.round() { "Çap" } else { "En" }, f.length(self.width)),
+            Setting::text(
+                "E",
+                if self.round() { "Çap" } else { "En" },
+                f.length(self.width),
+            ),
         ];
         if !self.round() {
             let (label, key) = self.depth_option();
-            rows.push(Setting::text(key, label, f.length(self.depth.unwrap_or(self.width))));
+            rows.push(Setting::text(
+                key,
+                label,
+                f.length(self.depth.unwrap_or(self.width)),
+            ));
         }
         if let Some([a, b]) = self.legs_now() {
             rows.push(Setting::text(
@@ -973,22 +1005,38 @@ impl Tool for ColumnTool {
             ));
         }
         if !self.round() {
-            rows.push(Setting::text("D", "Açı", format!("{}°", crate::fixed(self.turn.to_degrees(), 2))));
+            rows.push(Setting::text(
+                "D",
+                "Açı",
+                format!("{}°", crate::fixed(self.turn.to_degrees(), 2)),
+            ));
         }
         rows.push(Setting::choice(
             "H",
             "Hiza",
-            crate::tool_settings::choices(&ColumnAnchor::ALL.map(|a| (a.name(), a.label())), self.anchor.name()),
+            crate::tool_settings::choices(
+                &ColumnAnchor::ALL.map(|a| (a.name(), a.label())),
+                self.anchor.name(),
+            ),
         ));
         if self.post {
             rows.push(Setting::text(
                 "Y",
                 "Yükseklik",
-                self.height.map_or_else(|| "Katın yüksekliği".into(), |h| f.length(h)),
+                self.height
+                    .map_or_else(|| "Katın yüksekliği".into(), |h| f.length(h)),
             ));
-            rows.push(Setting::text("M", "Malzeme", self.material.clone().unwrap_or_else(|| "Betonarme".into())));
+            rows.push(Setting::text(
+                "M",
+                "Malzeme",
+                self.material.clone().unwrap_or_else(|| "Betonarme".into()),
+            ));
         }
-        rows.push(Setting::text("K", "İlk etiket", self.tag.clone().unwrap_or_else(|| "Yok".into())));
+        rows.push(Setting::text(
+            "K",
+            "İlk etiket",
+            self.tag.clone().unwrap_or_else(|| "Yok".into()),
+        ));
         rows.push(if self.post {
             Setting::hint(
                 "T",
@@ -1024,31 +1072,39 @@ impl Tool for ColumnTool {
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let words = upper_tr(js_trim(value));
         let ok = match key {
-            "B" => match ColumnShape::ALL.iter().find(|s| s.name() == value || upper_tr(s.label()) == words) {
+            "B" => match ColumnShape::ALL
+                .iter()
+                .find(|s| s.name() == value || upper_tr(s.label()) == words)
+            {
                 Some(s) => {
                     self.shape = *s;
                     true
                 }
                 None => false,
             },
-            "H" => match ColumnAnchor::ALL.iter().find(|a| a.name() == value || upper_tr(a.label()) == words) {
+            "H" => match ColumnAnchor::ALL
+                .iter()
+                .find(|a| a.name() == value || upper_tr(a.label()) == words)
+            {
                 Some(a) => {
                     self.anchor = *a;
                     true
                 }
                 None => false,
             },
-            key if key == "E" || key == self.depth_option().1 => match cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0) {
-                Some(v) if key == "E" => {
-                    self.width = v;
-                    true
+            key if key == "E" || key == self.depth_option().1 => {
+                match cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0) {
+                    Some(v) if key == "E" => {
+                        self.width = v;
+                        true
+                    }
+                    Some(v) => {
+                        self.depth = Some(v);
+                        true
+                    }
+                    None => false,
                 }
-                Some(v) => {
-                    self.depth = Some(v);
-                    true
-                }
-                None => false,
-            },
+            }
             "L" => {
                 if words.is_empty() || words.starts_with("YARI") {
                     self.legs = None;
@@ -1072,7 +1128,9 @@ impl Tool for ColumnTool {
                     }
                 }
             }
-            "D" => match parse_number(js_trim(value).trim_end_matches('°')).filter(|v| v.is_finite()) {
+            "D" => match parse_number(js_trim(value).trim_end_matches('°'))
+                .filter(|v| v.is_finite())
+            {
                 Some(d) => {
                     self.turn = d.to_radians();
                     true
@@ -1220,7 +1278,12 @@ fn railings_setting(on: Option<Railings>) -> Setting {
         "O",
         "Korkuluk",
         crate::tool_settings::choices(
-            &[("none", "Yok"), ("left", "Sol"), ("right", "Sağ"), ("both", "İki yan")],
+            &[
+                ("none", "Yok"),
+                ("left", "Sol"),
+                ("right", "Sağ"),
+                ("both", "İki yan"),
+            ],
             on.map_or("none", Railings::as_str),
         ),
     )
@@ -1245,8 +1308,10 @@ pub(crate) fn flight_drawn(entities: &[Entity], scale: f64, out: &mut Preview) {
                     width_factor: 1.0,
                 }),
                 other => {
-                    let dash = (piece.stroke.line_type.as_deref() == Some("dashed")).then_some([5.0, 4.0]);
-                    out.strokes.extend(Outline::of(other, dash, 1.5, Tone::Accent).strokes);
+                    let dash =
+                        (piece.stroke.line_type.as_deref() == Some("dashed")).then_some([5.0, 4.0]);
+                    out.strokes
+                        .extend(Outline::of(other, dash, 1.5, Tone::Accent).strokes);
                 }
             }
         }
@@ -1324,13 +1389,24 @@ impl FlightTool {
 
     /// Etkin kat's height while the stair follows it.
     fn followed_height(&self) -> Option<f64> {
-        if self.height_typed { None } else { self.level_height }
+        if self.height_typed {
+            None
+        } else {
+            self.level_height
+        }
     }
 
     /// Sees Etkin kat's height (a positive, finite floor to floor) and its elevation.
     fn see_level(&mut self, cx: &Context<'_>) {
         self.level_elevation = cx.level.and_then(|id| {
-            cx.doc.settings().arch.as_ref()?.levels.iter().find(|l| l.id == id).map(|l| l.elevation)
+            cx.doc
+                .settings()
+                .arch
+                .as_ref()?
+                .levels
+                .iter()
+                .find(|l| l.id == id)
+                .map(|l| l.elevation)
         });
         self.level_height = cx
             .level
@@ -1440,7 +1516,10 @@ impl FlightTool {
         };
         let r = (a.x - c.x).hypot(a.y - c.y);
         let t = (a.y - c.y).atan2(a.x - c.x) + sweep;
-        Some((vec![a, Vec2::new(c.x + r * t.cos(), c.y + r * t.sin())], vec![(sweep / 4.0).tan(), 0.0]))
+        Some((
+            vec![a, Vec2::new(c.x + r * t.cos(), c.y + r * t.sin())],
+            vec![(sweep / 4.0).tan(), 0.0],
+        ))
     }
 
     /// Writes the curved stair the pointer has turned; says so when it has not turned yet.
@@ -1464,8 +1543,11 @@ impl FlightTool {
         let mut pts = self.pts.clone();
         // The pointer still on the point just given is no next point (UR-018): the preview is the path given so far,
         // not a turn of no length the path check would call an error.
-        if with_hover && let Some(h) = self.hover
-            && pts.last().is_none_or(|l| (l.x - h.x).hypot(l.y - h.y) > 1e-6)
+        if with_hover
+            && let Some(h) = self.hover
+            && pts
+                .last()
+                .is_none_or(|l| (l.x - h.x).hypot(l.y - h.y) > 1e-6)
         {
             if pts.len() == kentos_commands::MAX_FLIGHT_POINTS {
                 pts.pop();
@@ -1557,7 +1639,10 @@ impl FlightTool {
                     risers: self.risers,
                     tread: self.tread,
                     // Following Etkin kat's height: bound to it, its rise follows the level (docs/adr/0724 §1).
-                    height: self.followed_height().is_none().then(|| self.stair_height()),
+                    height: self
+                        .followed_height()
+                        .is_none()
+                        .then(|| self.stair_height()),
                     height_from_level: self.followed_height().is_some().then_some(true),
                     max_riser: Some(self.max_riser),
                     cut_height: self.cut,
@@ -1621,7 +1706,10 @@ impl FlightTool {
         }
         let (made, why, notes) = self.run(&pts, bulges, cx, false);
         flight_drawn(&made, cx.doc.settings().plot_scale, &mut self.drawn);
-        if self.fit && !self.spiralling() && let Some(entity) = made.first() {
+        if self.fit
+            && !self.spiralling()
+            && let Some(entity) = made.first()
+        {
             self.mark_fitted_end(&pts, entity);
         }
         self.arc_design = made.iter().find_map(|e| match e {
@@ -1672,7 +1760,11 @@ impl FlightTool {
                     return None;
                 };
                 let run = arch::ramp_run(&arch::Walk::of(pts), ramp);
-                let slope = r.ramp.slope.unwrap_or(if run > 0.0 { r.ramp.rise / run * 100.0 } else { 0.0 });
+                let slope = r.ramp.slope.unwrap_or(if run > 0.0 {
+                    r.ramp.rise / run * 100.0
+                } else {
+                    0.0
+                });
                 let base = r.ramp.base.unwrap_or(0.0);
                 Some((slope, run, base, base + r.ramp.rise))
             }
@@ -1688,7 +1780,9 @@ impl FlightTool {
             Entity::Ramp(r) => r.ramp.pts.last(),
             _ => None,
         };
-        let ([.., turn, entered], Some(end)) = (path, end) else { return };
+        let ([.., turn, entered], Some(end)) = (path, end) else {
+            return;
+        };
         let fitted = Vec2::new(end.x, end.y);
         let delta = (fitted.x - turn.x).hypot(fitted.y - turn.y)
             - (entered.x - turn.x).hypot(entered.y - turn.y);
@@ -1697,8 +1791,16 @@ impl FlightTool {
         }
         self.fitted_path = Some((arch::Walk::of(path).length(), delta));
         self.drawn.markers.extend([
-            Marker { at: *entered, shape: MarkerShape::Ring(5.0), tone: Tone::Accent },
-            Marker { at: fitted, shape: MarkerShape::Square(3.0), tone: Tone::Snap },
+            Marker {
+                at: *entered,
+                shape: MarkerShape::Ring(5.0),
+                tone: Tone::Accent,
+            },
+            Marker {
+                at: fitted,
+                shape: MarkerShape::Square(3.0),
+                tone: Tone::Snap,
+            },
         ]);
         self.drawn.labels.push(Label {
             at: fitted,
@@ -1712,18 +1814,26 @@ impl FlightTool {
     /// half its width in and out, dashed.
     fn circles(&mut self) {
         let Some(&c) = self.pts.first() else { return };
-        let Some(at) = self.pts.get(1).copied().or(self.hover) else { return };
+        let Some(at) = self.pts.get(1).copied().or(self.hover) else {
+            return;
+        };
         let r = (at.x - c.x).hypot(at.y - c.y);
         if r <= 0.0 {
             return;
         }
-        for (radius, dash) in [(r, None), (r - self.width / 2.0, Some([5.0, 4.0])), (r + self.width / 2.0, Some([5.0, 4.0]))] {
+        for (radius, dash) in [
+            (r, None),
+            (r - self.width / 2.0, Some([5.0, 4.0])),
+            (r + self.width / 2.0, Some([5.0, 4.0])),
+        ] {
             if radius > 0.0 {
                 let circle = kentos_geometry_core::entity::Shape::Circle {
                     c: kentos_geometry_core::vec2::Vec2::new(c.x, c.y),
                     r: radius,
                 };
-                self.drawn.strokes.extend(Outline::of(&circle, dash, 1.5, Tone::Accent).strokes);
+                self.drawn
+                    .strokes
+                    .extend(Outline::of(&circle, dash, 1.5, Tone::Accent).strokes);
             }
         }
     }
@@ -1731,13 +1841,21 @@ impl FlightTool {
     /// The planned stair in words: its risers and their height, its tread, the step rule, its walking line; a ramp's
     /// slope, sloped length and levels.
     fn design_words(&self, f: &Format) -> Vec<String> {
-        let end_note = self.fitted_path.map(|(entered, delta)| format!(
-            "Girilen hat {} · bitiş {} {}",
-            f.length(entered), f.length(delta.abs()), if delta > 0.0 { "ileride" } else { "geride" }
-        ));
+        let end_note = self.fitted_path.map(|(entered, delta)| {
+            format!(
+                "Girilen hat {} · bitiş {} {}",
+                f.length(entered),
+                f.length(delta.abs()),
+                if delta > 0.0 { "ileride" } else { "geride" }
+            )
+        });
         if let Some((slope, run, from, to)) = self.ramp_design {
             let mut words = vec![
-                format!("Eğim %{} · eğimli kolların yatay boyu {}", crate::fixed(slope, 2), f.length(run)),
+                format!(
+                    "Eğim %{} · eğimli kolların yatay boyu {}",
+                    crate::fixed(slope, 2),
+                    f.length(run)
+                ),
                 format!("Kot {} → {}", arch::level_text(from), arch::level_text(to)),
             ];
             words.extend(end_note);
@@ -1747,8 +1865,16 @@ impl FlightTool {
             return Vec::new();
         };
         let mut out = vec![
-            format!("{risers} rıht × {}, basamak {}", f.length(riser), f.length(tread)),
-            format!("2R+G {} · yürüme çizgisi {}", f.length(2.0 * riser + tread), f.length(run)),
+            format!(
+                "{risers} rıht × {}, basamak {}",
+                f.length(riser),
+                f.length(tread)
+            ),
+            format!(
+                "2R+G {} · yürüme çizgisi {}",
+                f.length(2.0 * riser + tread),
+                f.length(run)
+            ),
         ];
         out.extend(end_note);
         // A curved stair's tread is measured on its walking line; on its inner side it is shorter (docs/adr/0709).
@@ -1782,7 +1908,8 @@ impl FlightTool {
     /// Applies one setting's value: the stair's or the ramp's own; false when it does not read.
     fn apply(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let words = upper_tr(js_trim(value));
-        let length = |cx: &mut Context<'_>| cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0);
+        let length =
+            |cx: &mut Context<'_>| cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0);
         match key {
             // Genişlik is E in every Mimari tool (docs/adr/8003); G is Geri.
             "E" => length(cx).map(|v| self.width = v).is_some(),
@@ -1813,7 +1940,11 @@ impl FlightTool {
             "Z" if self.ramp && (words.is_empty() || words.starts_with("KAT")) => {
                 let rest = js_trim(value).get(3..).unwrap_or("").trim();
                 let rest = rest.strip_prefix('+').unwrap_or(rest).trim();
-                let offset = if rest.is_empty() { Some(0.0) } else { cx.typed_length(rest).filter(|v| v.is_finite()) };
+                let offset = if rest.is_empty() {
+                    Some(0.0)
+                } else {
+                    cx.typed_length(rest).filter(|v| v.is_finite())
+                };
                 offset
                     .map(|o| {
                         self.ramp_base = None;
@@ -1821,8 +1952,16 @@ impl FlightTool {
                     })
                     .is_some()
             }
-            "Z" if self.ramp => cx.typed_length(value).filter(|v| v.is_finite()).map(|v| self.ramp_base = Some(v)).is_some(),
-            "Y" if self.ramp => cx.typed_length(value).filter(|v| v.is_finite()).map(|v| self.rise = v).is_some(),
+            "Z" if self.ramp => cx
+                .typed_length(value)
+                .filter(|v| v.is_finite())
+                .map(|v| self.ramp_base = Some(v))
+                .is_some(),
+            "Y" if self.ramp => cx
+                .typed_length(value)
+                .filter(|v| v.is_finite())
+                .map(|v| self.rise = v)
+                .is_some(),
             "M" if self.ramp && (words.is_empty() || words.starts_with("HES")) => {
                 self.slope = None;
                 true
@@ -1848,7 +1987,9 @@ impl FlightTool {
                 true
             }
             "S" => parse_number(value)
-                .filter(|v| *v >= 0.0 && *v <= f64::from(kentos_commands::MAX_RISERS) && v.fract() == 0.0)
+                .filter(|v| {
+                    *v >= 0.0 && *v <= f64::from(kentos_commands::MAX_RISERS) && v.fract() == 0.0
+                })
                 .map(|v| self.risers = v as u32)
                 .is_some(),
             "D" => length(cx).map(|v| self.tread = v).is_some(),
@@ -1864,7 +2005,9 @@ impl FlightTool {
                 })
                 .is_some(),
             // Merkez direği (docs/adr/0724 §3): empty, Yok or 0 none.
-            "M" if !self.ramp && (words.is_empty() || words == "YOK" || parse_number(value) == Some(0.0)) => {
+            "M" if !self.ramp
+                && (words.is_empty() || words == "YOK" || parse_number(value) == Some(0.0)) =>
+            {
                 self.post = None;
                 true
             }
@@ -1892,7 +2035,13 @@ impl FlightTool {
             "B" if !self.ramp => {
                 let curved = match words.as_str() {
                     w if w == "CURVED" || w.starts_with("DÖNER") => true,
-                    w if w == "STRAIGHT" || w == "STRAİGHT" || w.starts_with("DÜZ") || w.starts_with("YOL") => false,
+                    w if w == "STRAIGHT"
+                        || w == "STRAİGHT"
+                        || w.starts_with("DÜZ")
+                        || w.starts_with("YOL") =>
+                    {
+                        false
+                    }
                     _ => return false,
                 };
                 self.shape(curved);
@@ -1900,7 +2049,12 @@ impl FlightTool {
             }
             "U" => match words.as_str() {
                 // The settings pane's `fit` and `clicked` in Turkish capitals are FİT and CLİCKED.
-                w if w == "FIT" || w == "FİT" || w.starts_with("RIHT") || w.starts_with("EĞİM") || w.starts_with("YAY") => {
+                w if w == "FIT"
+                    || w == "FİT"
+                    || w.starts_with("RIHT")
+                    || w.starts_with("EĞİM")
+                    || w.starts_with("YAY") =>
+                {
                     self.fit = true;
                     true
                 }
@@ -1934,24 +2088,39 @@ impl FlightTool {
             ("M", true) => {
                 return format!(
                     "Değer uygulanmadı: Eğim (%) sıfırdan büyük bir yüzde olmalı (ör. 6); boş ya da Hesaplanır yükseklik farkından hesaplar. Eğim {} kaldı.",
-                    self.slope.map_or_else(|| "hesaplanır".into(), |v| format!("%{v}"))
+                    self.slope
+                        .map_or_else(|| "hesaplanır".into(), |v| format!("%{v}"))
                 );
             }
             ("E", _) => "Genişlik sıfırdan büyük bir uzunluk olmalı".into(),
-            ("H", _) => "Sahanlık sıfırdan büyük bir uzunluk olmalı; boş ya da Genel genişliği alır".into(),
-            ("A", false) => "Balansman 1 ya da daha büyük bir tam sayı olmalı; Yok her dönüşte sahanlık koyar".into(),
+            ("H", _) => {
+                "Sahanlık sıfırdan büyük bir uzunluk olmalı; boş ya da Genel genişliği alır".into()
+            }
+            ("A", false) => {
+                "Balansman 1 ya da daha büyük bir tam sayı olmalı; Yok her dönüşte sahanlık koyar"
+                    .into()
+            }
             ("L", true) => "En uzun kol sıfırdan büyük bir uzunluk olmalı; Yok kolu bölmez".into(),
             ("Z", true) => "Başlangıç kotu bir sayı ya da Kat, Kat+0.15 gibi olmalı".into(),
             ("Y", true) => "Yükseklik farkı bir sayı olmalı".into(),
-            ("Y", false) => "Yükseklik sıfırdan büyük bir uzunluk olmalı; boş ya da Kat etkin katınkini alır".into(),
+            ("Y", false) => {
+                "Yükseklik sıfırdan büyük bir uzunluk olmalı; boş ya da Kat etkin katınkini alır"
+                    .into()
+            }
             ("R", _) => "En fazla rıht sıfırdan büyük bir uzunluk olmalı".into(),
             ("S", _) => format!(
                 "Rıht sayısı 0 (hesaplanır) ile {} arası bir tam sayı olmalı",
                 kentos_commands::MAX_RISERS
             ),
             ("D", _) => "Basamak sıfırdan büyük bir uzunluk olmalı".into(),
-            ("K", _) => "Kesme yüksekliği sıfırdan büyük bir uzunluk olmalı; 0 ya da Yok kesmeyi kapatır".into(),
-            ("M", false) => "Merkez direği sıfırdan büyük bir uzunluk olmalı; 0 ya da Yok direksiz bırakır".into(),
+            ("K", _) => {
+                "Kesme yüksekliği sıfırdan büyük bir uzunluk olmalı; 0 ya da Yok kesmeyi kapatır"
+                    .into()
+            }
+            ("M", false) => {
+                "Merkez direği sıfırdan büyük bir uzunluk olmalı; 0 ya da Yok direksiz bırakır"
+                    .into()
+            }
             ("O", _) => "Korkuluk Yok, Sol, Sağ ya da İki yan olmalı".into(),
             ("B", _) => "Biçim Düz ya da Döner olmalı".into(),
             ("U", _) => "Son kol Eğime/Rıhtlara göre ya da Tıklanan yerde biter olmalı".into(),
@@ -2035,7 +2204,9 @@ impl Tool for FlightTool {
             let step = match self.pts.len() {
                 0 => "döner merdivenin merkezine tıklayın",
                 1 => "yürüme çizgisinin başına tıklayın (merkeze uzaklığı yarıçap; çıkış buradan)",
-                _ if self.fit => "imleci merdivenin döneceği yana götürüp tıklayın; yay son rıhtta biter",
+                _ if self.fit => {
+                    "imleci merdivenin döneceği yana götürüp tıklayın; yay son rıhtta biter"
+                }
                 _ => "yayın bitişine tıklayın ya da dönüşü derece yazın (eksi: saat yönünde)",
             };
             return Prompt::new(self.name(), step)
@@ -2043,21 +2214,46 @@ impl Tool for FlightTool {
                 .option_with(
                     "Yükseklik",
                     "Y",
-                    self.followed_height().map_or_else(|| n(self.height), |h| format!("{} (katın)", n(h))),
+                    self.followed_height()
+                        .map_or_else(|| n(self.height), |h| format!("{} (katın)", n(h))),
                 )
                 .option_with("En fazla rıht", "R", n(self.max_riser))
                 .option_with(
                     "Rıht sayısı",
                     "S",
-                    if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
+                    if self.risers == 0 {
+                        "Hesaplanır".into()
+                    } else {
+                        self.risers.to_string()
+                    },
                 )
                 .option_with("Basamak", "D", n(self.tread))
                 .option_with("Genişlik", "E", n(self.width))
-                .option_with("Kesme yüksekliği", "K", self.cut.map_or_else(|| "Yok".into(), n))
-                .option_with("Merkez direği", "M", self.post.map_or_else(|| "Yok".into(), n))
-                .option_with("Basamak numaraları", "N", if self.numbering { "Açık" } else { "Kapalı" })
+                .option_with(
+                    "Kesme yüksekliği",
+                    "K",
+                    self.cut.map_or_else(|| "Yok".into(), n),
+                )
+                .option_with(
+                    "Merkez direği",
+                    "M",
+                    self.post.map_or_else(|| "Yok".into(), n),
+                )
+                .option_with(
+                    "Basamak numaraları",
+                    "N",
+                    if self.numbering { "Açık" } else { "Kapalı" },
+                )
                 .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
-                .option_with("Yay boyu", "U", if self.fit { "Rıhtlara göre" } else { "Tıklanan yerde" });
+                .option_with(
+                    "Yay boyu",
+                    "U",
+                    if self.fit {
+                        "Rıhtlara göre"
+                    } else {
+                        "Tıklanan yerde"
+                    },
+                );
         }
         let n = |v: f64| v.to_string();
         if self.ramp {
@@ -2065,7 +2261,9 @@ impl Tool for FlightTool {
                 0 => "orta çizginin başına tıklayın",
                 1 if self.fit => "çıkış yönüne ya da dönüşe tıklayın; son kol eğime göre biter",
                 1 => "sonraki noktaya tıklayın",
-                kentos_commands::MAX_FLIGHT_POINTS => "son noktayı değiştirin ya da ayarları düzeltip Enter ile bitirin",
+                kentos_commands::MAX_FLIGHT_POINTS => {
+                    "son noktayı değiştirin ya da ayarları düzeltip Enter ile bitirin"
+                }
                 _ => "sonraki noktaya tıklayın ya da Enter ile yazın",
             };
             return Prompt::new(self.name(), step)
@@ -2073,35 +2271,59 @@ impl Tool for FlightTool {
                 .option_with(
                     "Eğim",
                     "M",
-                    self.slope.map_or_else(|| "Hesaplanır".into(), |s| format!("%{s}")),
+                    self.slope
+                        .map_or_else(|| "Hesaplanır".into(), |s| format!("%{s}")),
                 )
                 .option_with("Genişlik", "E", n(self.width))
-                .option_with("Sahanlık", "H", self.landing.map_or_else(|| "Genişlik kadar".into(), n))
-                .option_with("En uzun kol", "L", self.max_run.map_or_else(|| "Yok".into(), n))
+                .option_with(
+                    "Sahanlık",
+                    "H",
+                    self.landing.map_or_else(|| "Genişlik kadar".into(), n),
+                )
+                .option_with(
+                    "En uzun kol",
+                    "L",
+                    self.max_run.map_or_else(|| "Yok".into(), n),
+                )
                 .option_with("Başlangıç kotu", "Z", self.base_option())
                 .option_with("Korkuluk", "O", self.railings.map_or("Yok", railing_words))
-                .option_with("Son kol", "U", if self.fit { "Eğime göre" } else { "Tıklanan yerde" })
+                .option_with(
+                    "Son kol",
+                    "U",
+                    if self.fit {
+                        "Eğime göre"
+                    } else {
+                        "Tıklanan yerde"
+                    },
+                )
                 .option("Bitir", "Enter");
         }
         let step = match self.pts.len() {
             0 => "yürüme çizgisinin başına tıklayın (çıkış buradan)",
             1 if self.fit => "çıkış yönüne ya da dönüşe tıklayın; son kol rıhtlara göre biter",
             1 => "çıkış yönüne ya da dönüşe tıklayın",
-            kentos_commands::MAX_FLIGHT_POINTS => "son noktayı değiştirin ya da ayarları düzeltip Enter ile bitirin",
+            kentos_commands::MAX_FLIGHT_POINTS => {
+                "son noktayı değiştirin ya da ayarları düzeltip Enter ile bitirin"
+            }
             _ => "dönüşe tıklayın ya da Enter ile bitirin",
         };
         Prompt::new(self.name(), step)
             .option_with("Biçim", "B", "Düz, L, U")
             .option_with(
-                    "Yükseklik",
-                    "Y",
-                    self.followed_height().map_or_else(|| n(self.height), |h| format!("{} (katın)", n(h))),
-                )
+                "Yükseklik",
+                "Y",
+                self.followed_height()
+                    .map_or_else(|| n(self.height), |h| format!("{} (katın)", n(h))),
+            )
             .option_with("En fazla rıht", "R", n(self.max_riser))
             .option_with(
                 "Rıht sayısı",
                 "S",
-                if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
+                if self.risers == 0 {
+                    "Hesaplanır".into()
+                } else {
+                    self.risers.to_string()
+                },
             )
             .option_with("Basamak", "D", n(self.tread))
             .option_with("Genişlik", "E", n(self.width))
@@ -2153,7 +2375,10 @@ impl Tool for FlightTool {
         self.hover = Some(p);
         if self.pts.last() == Some(&p) && !(self.spiralling() && self.pts.len() == 2) {
             if self.spiralling() && self.pts.len() == 1 {
-                cx.say(Level::Warn, "Yürüme çizgisinin başlangıcı merkezden farklı bir nokta olmalı.");
+                cx.say(
+                    Level::Warn,
+                    "Yürüme çizgisinin başlangıcı merkezden farklı bir nokta olmalı.",
+                );
             }
             return true;
         }
@@ -2177,7 +2402,9 @@ impl Tool for FlightTool {
             self.pts.pop();
         }
         self.pts.push(p);
-        if self.pts.len() == kentos_commands::MAX_FLIGHT_POINTS && self.write_run(&self.pts, None, cx) {
+        if self.pts.len() == kentos_commands::MAX_FLIGHT_POINTS
+            && self.write_run(&self.pts, None, cx)
+        {
             self.pts.clear();
         }
         self.see(cx);
@@ -2261,7 +2488,10 @@ impl Tool for FlightTool {
                     && let Some(n) = parse_number(text)
                 {
                     let tau = std::f64::consts::TAU;
-                    self.turned = cx.format().turn_from_typed(n).clamp(-(tau - 1e-6), tau - 1e-6);
+                    self.turned = cx
+                        .format()
+                        .turn_from_typed(n)
+                        .clamp(-(tau - 1e-6), tau - 1e-6);
                     self.write_arc(cx);
                     self.see(cx);
                     return true;
@@ -2276,25 +2506,35 @@ impl Tool for FlightTool {
     }
 
     fn settings(&self, f: &Format) -> Vec<Setting> {
-        let landing = self.landing.map_or_else(|| "Genişlik kadar".into(), |v| f.length(v));
+        let landing = self
+            .landing
+            .map_or_else(|| "Genişlik kadar".into(), |v| f.length(v));
         if self.ramp {
             let mut rows = vec![
                 Setting::text("Y", "Yükseklik farkı", f.length(self.rise)),
                 Setting::text(
                     "M",
                     "Eğim (%)",
-                    self.slope.map_or_else(|| "Hesaplanır".into(), |s| s.to_string()),
+                    self.slope
+                        .map_or_else(|| "Hesaplanır".into(), |s| s.to_string()),
                 ),
                 Setting::text("E", "Genişlik", f.length(self.width)),
                 Setting::text("H", "Sahanlık", landing),
-                Setting::text("L", "En uzun kol", self.max_run.map_or_else(|| "Yok".into(), |v| f.length(v))),
+                Setting::text(
+                    "L",
+                    "En uzun kol",
+                    self.max_run.map_or_else(|| "Yok".into(), |v| f.length(v)),
+                ),
                 Setting::text("Z", "Başlangıç kotu", self.base_words(f)),
                 railings_setting(self.railings),
                 Setting::choice(
                     "U",
                     "Son kol",
                     crate::tool_settings::choices(
-                        &[("fit", "Eğime göre biter"), ("clicked", "Tıklanan yerde biter")],
+                        &[
+                            ("fit", "Eğime göre biter"),
+                            ("clicked", "Tıklanan yerde biter"),
+                        ],
                         if self.fit { "fit" } else { "clicked" },
                     ),
                 ),
@@ -2324,7 +2564,11 @@ impl Tool for FlightTool {
             Setting::text(
                 "S",
                 "Rıht sayısı",
-                if self.risers == 0 { "Hesaplanır".into() } else { self.risers.to_string() },
+                if self.risers == 0 {
+                    "Hesaplanır".into()
+                } else {
+                    self.risers.to_string()
+                },
             ),
             Setting::text("D", "Basamak", f.length(self.tread)),
             Setting::text("E", "Genişlik", f.length(self.width)),
@@ -2346,7 +2590,10 @@ impl Tool for FlightTool {
                 "U",
                 if self.curved { "Yay boyu" } else { "Son kol" },
                 crate::tool_settings::choices(
-                    &[("fit", "Rıhtlara göre biter"), ("clicked", "Tıklanan yerde biter")],
+                    &[
+                        ("fit", "Rıhtlara göre biter"),
+                        ("clicked", "Tıklanan yerde biter"),
+                    ],
                     if self.fit { "fit" } else { "clicked" },
                 ),
             ),

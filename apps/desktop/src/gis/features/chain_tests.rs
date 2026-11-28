@@ -24,7 +24,13 @@ fn processing(app: &mut App, e: Processing) {
 fn choose(app: &mut App, layer: &str, condition: &str) -> BTreeSet<i64> {
     let task = app.update(Message::Run("processing.run.selection.byExpression"));
     drive(app, task);
-    processing(app, Processing::Value("input".into(), json!({ "scope": "layer", "layerId": layer })));
+    processing(
+        app,
+        Processing::Value(
+            "input".into(),
+            json!({ "scope": "layer", "layerId": layer }),
+        ),
+    );
     processing(app, Processing::Text("condition".into(), condition.into()));
     processing(app, Processing::Value("mode".into(), json!("new")));
     processing(app, Processing::Run);
@@ -43,7 +49,10 @@ fn report(tag: &str, extra: bool) -> (App, String, String) {
             "bakim",
             &[kentos_data::NewFeature {
                 fid: None,
-                geometry: Some(kentos_data::Geometry::Point(Some(kentos_data::Coord::xy(484_070.0, 4_420_000.0)))),
+                geometry: Some(kentos_data::Geometry::Point(Some(kentos_data::Coord::xy(
+                    484_070.0,
+                    4_420_000.0,
+                )))),
                 values: vec![
                     ("kod".into(), kentos_data::Value::Text("B07".into())),
                     ("bedel".into(), kentos_data::Value::Real(0.0)),
@@ -79,27 +88,75 @@ fn table_on(app: &mut App, layer: &str) {
 fn choose_card_form_filter_clear_keep_the_layer_and_the_key() {
     let (mut app, bakim, _) = report("zincir", false);
     // Seç: NULL is its own.
-    assert_eq!(choose(&mut app, &bakim, "bedel IS NULL"), BTreeSet::from([4]));
-    assert_eq!(app.gis.features.data.selected_of_for_test(), Some(bakim.as_str()));
+    assert_eq!(
+        choose(&mut app, &bakim, "bedel IS NULL"),
+        BTreeSet::from([4])
+    );
+    assert_eq!(
+        app.gis.features.data.selected_of_for_test(),
+        Some(bakim.as_str())
+    );
     // Kart: the chosen row under Bilgi: its layer, its file's table and its key; NULL said so (docs/adr/9188), the code
     // kept.
     let n = node(&app, "bakim").expect("bakim").clone();
-    let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
-    let input = kentos_commands::LayersRows { layer: bakim.clone(), keys: Some(vec![4]), geometry: Some(true), ..Default::default() };
-    let row = kentos_native_application::layers_rows::read(&n, &settings, &input, &|| false).expect("read").rows;
+    let settings = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .clone();
+    let input = kentos_commands::LayersRows {
+        layer: bakim.clone(),
+        keys: Some(vec![4]),
+        geometry: Some(true),
+        ..Default::default()
+    };
+    let row = kentos_native_application::layers_rows::read(&n, &settings, &input, &|| false)
+        .expect("read")
+        .rows;
     let p = kentos_data::wkt::read_wkt(row[0].wkt.as_deref().expect("a shape")).expect("wkt");
-    let kentos_data::Geometry::Point(Some(c)) = p else { panic!("{p:?}") };
-    let (found, said) = crate::data_info::ask(&[n.clone()], &settings, kentos_interaction::Vec2::new(c.x, c.y), 0.5);
+    let kentos_data::Geometry::Point(Some(c)) = p else {
+        panic!("{p:?}")
+    };
+    let (found, said) = crate::data_info::ask(
+        &[n.clone()],
+        &settings,
+        kentos_interaction::Vec2::new(c.x, c.y),
+        0.5,
+    );
     assert!(said.is_empty(), "{said:?}");
     let asked = app.gis.data_info.asked;
-    let _ = app.data_info_event(crate::data_info::Event::Answered(asked, found.into_iter().collect(), Vec::new(), Vec::new(), false));
+    let _ = app.data_info_event(crate::data_info::Event::Answered(
+        asked,
+        found.into_iter().collect(),
+        Vec::new(),
+        Vec::new(),
+        false,
+    ));
     let (card, _, _) = app.data_card().expect("its card");
-    assert!(card.source.as_ref().is_some_and(|(l, _)| l.ends_with("› bakim · fid 4")), "{:?}", card.source);
-    let cell = |name: &str| card.rows.iter().find(|(k, _)| k == name).map(|(_, v)| v.clone());
-    assert_eq!(cell("bedel").as_deref(), Some("NULL"), "a value never written says so, apart from an empty text");
+    assert!(
+        card.source
+            .as_ref()
+            .is_some_and(|(l, _)| l.ends_with("› bakim · fid 4")),
+        "{:?}",
+        card.source
+    );
+    let cell = |name: &str| {
+        card.rows
+            .iter()
+            .find(|(k, _)| k == name)
+            .map(|(_, v)| v.clone())
+    };
+    assert_eq!(
+        cell("bedel").as_deref(),
+        Some("NULL"),
+        "a value never written says so, apart from an empty text"
+    );
     assert_eq!(cell("mahalle").as_deref(), Some("M2"));
     // Form: the chosen row's form, by its key.
-    let body = json!({ "revision": 1, "items": [{ "type": "field", "id": "kod", "field": "kod" }] });
+    let body =
+        json!({ "revision": 1, "items": [{ "type": "field", "id": "kod", "field": "kod" }] });
     let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     let form = json!({
         "id": "bakim-formu", "name": "Bakım formu", "layer": bakim, "draft": body.clone(),
@@ -123,29 +180,63 @@ fn choose_card_form_filter_clear_keep_the_layer_and_the_key() {
     let _ = app.data_table_event(DataEvent::Apply);
     answer_pages(&mut app);
     assert_eq!(app.gis.features.data.total_rows(), Some(2));
-    assert_eq!(app.gis.features.data.selected_of(&bakim), [4], "the choice and its layer kept");
+    assert_eq!(
+        app.gis.features.data.selected_of(&bakim),
+        [4],
+        "the choice and its layer kept"
+    );
     // Seçimi kaldır: no row chosen, the table on its layer still.
     assert!(app.available("edit.deselect"));
     let _ = app.update(Message::Run("edit.deselect"));
     assert!(app.gis.features.data.selected.is_empty());
-    assert_eq!(app.gis.features.data.selected_of_for_test(), Some(bakim.as_str()));
+    assert_eq!(
+        app.gis.features.data.selected_of_for_test(),
+        Some(bakim.as_str())
+    );
     assert!(!app.available("edit.deselect"));
 }
 
 #[test]
 fn zero_is_a_value_null_and_an_empty_text_are_empty_and_turkish_search_and_order_hold() {
     let (mut app, bakim, mahalleler) = report("ornekler", true);
-    assert_eq!(choose(&mut app, &bakim, "bedel = 0"), BTreeSet::from([1, 7]), "0 is a value");
-    assert_eq!(choose(&mut app, &bakim, "bedel IS NULL"), BTreeSet::from([4]), "NULL is not 0");
+    assert_eq!(
+        choose(&mut app, &bakim, "bedel = 0"),
+        BTreeSet::from([1, 7]),
+        "0 is a value"
+    );
+    assert_eq!(
+        choose(&mut app, &bakim, "bedel IS NULL"),
+        BTreeSet::from([4]),
+        "NULL is not 0"
+    );
     // The language holds a NULL and an empty text as one empty value (docs/adr/0581 §3, 9109): either asks both.
-    assert_eq!(choose(&mut app, &bakim, "mahalle IS NULL"), BTreeSet::from([6, 7]));
-    assert_eq!(choose(&mut app, &bakim, "mahalle = ''"), BTreeSet::from([6, 7]));
+    assert_eq!(
+        choose(&mut app, &bakim, "mahalle IS NULL"),
+        BTreeSet::from([6, 7])
+    );
+    assert_eq!(
+        choose(&mut app, &bakim, "mahalle = ''"),
+        BTreeSet::from([6, 7])
+    );
     // Turkish order: Çınar before İstasyon before Kale (not the letters' code order).
     table_on(&mut app, &mahalleler);
     let _ = app.data_table_event(DataEvent::Sort("ad".into()));
     answer_pages(&mut app);
-    let ad = |app: &App, at: usize| app.gis.features.data.row(at).and_then(|r| r.attrs.get("ad").cloned());
-    assert_eq!([ad(&app, 0), ad(&app, 1), ad(&app, 2)], [Some("Çınar".into()), Some("İstasyon".into()), Some("Kale".into())]);
+    let ad = |app: &App, at: usize| {
+        app.gis
+            .features
+            .data
+            .row(at)
+            .and_then(|r| r.attrs.get("ad").cloned())
+    };
+    assert_eq!(
+        [ad(&app, 0), ad(&app, 1), ad(&app, 2)],
+        [
+            Some("Çınar".into()),
+            Some("İstasyon".into()),
+            Some("Kale".into())
+        ]
+    );
     // Turkish search: “istasyon” finds İstasyon.
     app.gis.features.search = "istasyon".into();
     let _ = app.data_table_event(DataEvent::Apply);

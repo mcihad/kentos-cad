@@ -2,7 +2,9 @@
 //! replacing its), rebound to its alignment's present revision, or removed; one undo step “Koridor”. The shared cases
 //! are `fixtures/commands/v1/road.corridors.edit.json`.
 
-use kentos_commands::{CommandResult, CorridorDef, CorridorsEdit, CorridorsWritten, RoadEditOperation};
+use kentos_commands::{
+    CommandResult, CorridorDef, CorridorsEdit, CorridorsWritten, RoadEditOperation,
+};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -24,17 +26,35 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
     common::road_project(doc)?;
     let own = doc.road_corridors();
     let mut list = own.to_vec();
-    let found = input.corridor.as_deref().and_then(|t| common::find(own, t, "corridor").ok());
-    if matches!(input.operation, RoadEditOperation::Remove | RoadEditOperation::Rebind) && found.is_none() {
+    let found = input
+        .corridor
+        .as_deref()
+        .and_then(|t| common::find(own, t, "corridor").ok());
+    if matches!(
+        input.operation,
+        RoadEditOperation::Remove | RoadEditOperation::Rebind
+    ) && found.is_none()
+    {
         let name = input.corridor.clone().unwrap_or_default();
-        return Err(common::find(own, &name, "corridor").err().unwrap_or(Stop::Cancelled));
+        return Err(common::find(own, &name, "corridor")
+            .err()
+            .unwrap_or(Stop::Cancelled));
     }
     let alignment = match input.alignment.as_deref() {
-        Some(a) => Some(alignments::find(doc.road_alignments(), a, "alignment")?.1.clone()),
+        Some(a) => Some(
+            alignments::find(doc.road_alignments(), a, "alignment")?
+                .1
+                .clone(),
+        ),
         None => None,
     };
     let profile = match input.profile.as_deref() {
-        Some(p) => Some(profiles::find(doc.road_profiles(), p, "profile")?.1.id.clone()),
+        Some(p) => Some(
+            profiles::find(doc.road_profiles(), p, "profile")?
+                .1
+                .id
+                .clone(),
+        ),
         None => None,
     };
     let surface = match input.surface.as_deref() {
@@ -45,7 +65,10 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
         None => None,
         Some("") => Some(None),
         Some(e) => Some(Some(
-            crate::road_superelevations::find(doc.road_superelevations(), e, "superelevation")?.1.id.clone(),
+            crate::road_superelevations::find(doc.road_superelevations(), e, "superelevation")?
+                .1
+                .id
+                .clone(),
         )),
     };
     let regions = match &input.regions {
@@ -53,7 +76,14 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
         Some(rs) => {
             let mut out = rs.clone();
             for (i, r) in out.iter_mut().enumerate() {
-                r.template = find_template(doc.road_templates(), &r.template, &format!("regions[{i}].template"))?.1.id.clone();
+                r.template = find_template(
+                    doc.road_templates(),
+                    &r.template,
+                    &format!("regions[{i}].template"),
+                )?
+                .1
+                .id
+                .clone();
             }
             Some(out)
         }
@@ -62,14 +92,24 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
     let vertical_sag = input.vertical_sag.map(|t| (t != 0.0).then_some(t));
     let refine = input.refine.clone().map(|r| (r.least != 0.0).then_some(r));
     let target = match (input.operation, found) {
-        (RoadEditOperation::Remove | RoadEditOperation::Rebind, None) => return Err(Stop::Cancelled),
+        (RoadEditOperation::Remove | RoadEditOperation::Rebind, None) => {
+            return Err(Stop::Cancelled);
+        }
         (RoadEditOperation::Remove, Some((at, old))) => {
-            let users: Vec<&str> =
-                doc.road_volumes().iter().filter(|v| v.corridor == old.id).map(|v| v.name.as_str()).collect();
+            let users: Vec<&str> = doc
+                .road_volumes()
+                .iter()
+                .filter(|v| v.corridor == old.id)
+                .map(|v| v.name.as_str())
+                .collect();
             if !users.is_empty() {
                 return Err(fail(
                     codes::CORRIDOR_IN_USE,
-                    format!("“{}” koridorunu şu kübaj hesapları kullanıyor: {}; önce onları silin.", old.name, users.join(", ")),
+                    format!(
+                        "“{}” koridorunu şu kübaj hesapları kullanıyor: {}; önce onları silin.",
+                        old.name,
+                        users.join(", ")
+                    ),
                     "corridor",
                 ));
             }
@@ -77,7 +117,11 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
             None
         }
         (RoadEditOperation::Rebind, Some((at, old))) => {
-            let now = doc.road_alignments().iter().find(|a| a.id == old.alignment).map_or(0, |a| a.revision);
+            let now = doc
+                .road_alignments()
+                .iter()
+                .find(|a| a.id == old.alignment)
+                .map_or(0, |a| a.revision);
             let mut d = old.clone();
             if d.alignment_revision != now {
                 d.alignment_revision = now;
@@ -180,7 +224,18 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
             ]
             .into_iter()
             .find(|(_, m)| *m);
-            let (Some(name), Some(a), Some(p), Some(s), Some(l), Some(r), Some(t), Some(c), Some(rs), None) = (
+            let (
+                Some(name),
+                Some(a),
+                Some(p),
+                Some(s),
+                Some(l),
+                Some(r),
+                Some(t),
+                Some(c),
+                Some(rs),
+                None,
+            ) = (
                 &input.name,
                 alignment,
                 profile,
@@ -191,7 +246,8 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
                 input.curve,
                 regions,
                 missing,
-            ) else {
+            )
+            else {
                 return Err(fail(
                     codes::INVALID_ROAD_CORRIDOR,
                     "Yeni koridor için name, alignment, profile, surface, left, right, tangent, curve ve regions verilmeli.".into(),
@@ -199,7 +255,10 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
                 ));
             };
             let id = input.corridor.clone().unwrap_or_else(|| {
-                (1..).map(|n| format!("c-{n}")).find(|id| own.iter().all(|s| &s.id != id)).unwrap_or_default()
+                (1..)
+                    .map(|n| format!("c-{n}"))
+                    .find(|id| own.iter().all(|s| &s.id != id))
+                    .unwrap_or_default()
             });
             list.push(CorridorDef {
                 id: id.clone(),
@@ -228,7 +287,10 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
     let mut road = doc.settings().road.clone().unwrap_or_default();
     road.corridors = list.clone();
     judged(&road, codes::INVALID_ROAD_CORRIDOR, "Koridor")?;
-    if let Some(d) = target.as_ref().and_then(|id| list.iter().find(|s| &s.id == id)) {
+    if let Some(d) = target
+        .as_ref()
+        .and_then(|id| list.iter().find(|s| &s.id == id))
+    {
         common::make(doc, d, false)?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -238,9 +300,18 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsEdit) -> Result<Checked
 fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<CorridorsWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_corridors(c.list.clone(), STEP) {
-        return fail(codes::INVALID_ROAD_CORRIDOR, format!("Koridor kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_ROAD_CORRIDOR,
+            format!("Koridor kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
-    let corridor = c.target.as_ref().and_then(|id| c.list.iter().find(|s| &s.id == id)).map(|d| common::report(doc, d));
+    let corridor = c
+        .target
+        .as_ref()
+        .and_then(|id| c.list.iter().find(|s| &s.id == id))
+        .map(|d| common::report(doc, d));
     CommandResult::Completed {
         output: CorridorsWritten {
             corridor,
@@ -254,7 +325,10 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<CorridorsWr
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &CorridorsEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: vec![] },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -274,7 +348,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CorridorsEdit) -> CommandResult<C
 }
 
 /// Writes the corridor: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: CorridorsEdit) -> CommandResult<CorridorsWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CorridorsEdit,
+) -> CommandResult<CorridorsWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_CORRIDORS_EDIT,

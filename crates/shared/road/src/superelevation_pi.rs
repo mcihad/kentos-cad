@@ -49,7 +49,9 @@ pub struct CurveSuper {
 
 /// The value of piecewise linear break points at `s`, the end value beyond them (as the schedule reads it).
 fn along(points: &[[f64; 2]], s: f64, none: f64) -> f64 {
-    let (Some(first), Some(last)) = (points.first(), points.last()) else { return none };
+    let (Some(first), Some(last)) = (points.first(), points.last()) else {
+        return none;
+    };
     if s <= first[0] {
         return first[1];
     }
@@ -58,7 +60,11 @@ fn along(points: &[[f64; 2]], s: f64, none: f64) -> f64 {
     }
     let i = points.partition_point(|p| p[0] <= s);
     let (a, b) = (points[i - 1], points[i]);
-    if b[0] == a[0] { b[1] } else { a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0]) }
+    if b[0] == a[0] {
+        b[1]
+    } else {
+        a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0])
+    }
 }
 
 /// Where the walk first meets `v` going from `from` on (stations and values in walking order): the station, by linear
@@ -66,9 +72,17 @@ fn along(points: &[[f64; 2]], s: f64, none: f64) -> f64 {
 fn first_at(walk: &[[f64; 2]], from: usize, v: f64, falling: bool) -> Option<(usize, f64)> {
     for i in from..walk.len().saturating_sub(1) {
         let (a, b) = (walk[i], walk[i + 1]);
-        let met = if falling { a[1] >= v - EPS && b[1] <= v + EPS } else { a[1] <= v + EPS && b[1] >= v - EPS };
+        let met = if falling {
+            a[1] >= v - EPS && b[1] <= v + EPS
+        } else {
+            a[1] <= v + EPS && b[1] >= v - EPS
+        };
         if met {
-            let s = if (b[1] - a[1]).abs() < EPS { a[0] } else { a[0] + (v - a[1]) * (b[0] - a[0]) / (b[1] - a[1]) };
+            let s = if (b[1] - a[1]).abs() < EPS {
+                a[0]
+            } else {
+                a[0] + (v - a[1]) * (b[0] - a[0]) / (b[1] - a[1])
+            };
             return Some((i, s));
         }
     }
@@ -85,7 +99,11 @@ fn end(points: &[[f64; 2]], normal: f64, mid: f64, dir: f64, edge: f64) -> Optio
         return None;
     }
     let mut walk = vec![[mid, full]];
-    let mut beyond: Vec<[f64; 2]> = points.iter().copied().filter(|p| dir * (p[0] - mid) > EPS).collect();
+    let mut beyond: Vec<[f64; 2]> = points
+        .iter()
+        .copied()
+        .filter(|p| dir * (p[0] - mid) > EPS)
+        .collect();
     if dir < 0.0 {
         beyond.reverse();
     }
@@ -101,7 +119,11 @@ fn end(points: &[[f64; 2]], normal: f64, mid: f64, dir: f64, edge: f64) -> Optio
     let mut rest = vec![[lc, 0.0]];
     rest.extend_from_slice(&walk[j + 1..]);
     let (_, nc) = first_at(&rest, 0, normal, true)?;
-    Some(TransitionEnd { runoff: (fs - lc).abs(), runout: (lc - nc).abs(), on_tangent: (dir * (nc - edge)).max(0.0) })
+    Some(TransitionEnd {
+        runoff: (fs - lc).abs(),
+        runout: (lc - nc).abs(),
+        on_tangent: (dir * (nc - edge)).max(0.0),
+    })
 }
 
 /// The curve's superelevation from a schedule built on its alignment with `normal` slopes.

@@ -75,7 +75,9 @@ fn the_words_are_the_webs() {
     assert_eq!(
         plan::COLUMNS,
         // Durum (docs/adr/1260 §1) is the desktop's ahead of the web (TODOS.md §0.2).
-        ["Sıra", "Katman", "Kural", "Sorun", "Durum", "Nesneler", "Ölçü"]
+        [
+            "Sıra", "Katman", "Kural", "Sorun", "Durum", "Nesneler", "Ölçü"
+        ]
     );
     assert_eq!(plan::count_text(2, 2, 2), "2 bulgu (açık 2, istisna 2)");
     let b = kentos_geometry_core::geometry::Bounds {
@@ -168,8 +170,8 @@ fn part(extent: [f64; 4]) -> App {
                     "children": []}],
         "activeLayer": "cizim", "entities": [], "styles": {"items": [], "categories": []}
     });
-    let snapshot =
-        kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("the drawing reads");
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string())
+        .expect("the drawing reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -234,7 +236,11 @@ fn a_part_reaching_out_of_its_band_is_not_said_clean() {
     let c = app.topology_checked().expect("checked");
     assert_eq!(c.g.incomplete.len(), 1);
     assert!(c.findings.is_empty());
-    assert!(c.g.incomplete[0].reason.starts_with("parçanın 1 nesnesi okunan bandın dışına uzanıyor"));
+    assert!(
+        c.g.incomplete[0]
+            .reason
+            .starts_with("parçanın 1 nesnesi okunan bandın dışına uzanıyor")
+    );
     assert!(plan::not_clean(1, 1).starts_with("Bulgu yok ama denetim eksik"));
 }
 
@@ -327,10 +333,16 @@ fn screens() {
                     // The review (docs/adr/1260 §1): the overlap confirmed as an error with its reason, the gap left
                     // on purpose with another; every finding shown with its state.
                     ev(&mut app, Event::Press(0));
-                    ev(&mut app, Event::Reason("Sayısallaştırma hatası; ölçüyle düzeltilecek".into()));
+                    ev(
+                        &mut app,
+                        Event::Reason("Sayısallaştırma hatası; ölçüyle düzeltilecek".into()),
+                    );
                     ev(&mut app, Event::Error);
                     ev(&mut app, Event::Press(1));
-                    ev(&mut app, Event::Reason("Ortak duvar, tapuda kayıtlı".into()));
+                    ev(
+                        &mut app,
+                        Event::Reason("Ortak duvar, tapuda kayıtlı".into()),
+                    );
                     ev(&mut app, Event::Exception(true));
                     ev(&mut app, Event::Filter(Filter::All));
                     ev(&mut app, Event::Press(0));
@@ -341,7 +353,13 @@ fn screens() {
                 } else if name != "eksik" {
                     ev(
                         &mut app,
-                        Event::Press(if matches!(name, "bulgular" | "dustu" | "parca" | "parca-duzelt") { 0 } else { 1 }),
+                        Event::Press(
+                            if matches!(name, "bulgular" | "dustu" | "parca" | "parca-duzelt") {
+                                0
+                            } else {
+                                1
+                            },
+                        ),
                     );
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
@@ -400,4 +418,3 @@ fn move_road(app: &mut App) {
     );
     assert!(answer.is_ok());
 }
-

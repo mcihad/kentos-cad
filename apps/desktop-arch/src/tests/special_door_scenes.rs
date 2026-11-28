@@ -12,20 +12,21 @@
 //! Test code only.
 
 use crate::arch;
+use crate::arch::ArchState;
 use iced::Point;
 use kentos_domain::Slot;
 use kentos_render_wgpu::Vec2;
 use kentos_ui::widget::docking;
 use serde_json::Value;
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
-use crate::tool_settings::Commit;
 use crate::files_testing::make_cad;
+use crate::tool_settings::Commit;
 use crate::tools_scenes::run;
 use crate::tools_screens::Scene;
 
-const CASES: &str = include_str!("../../../../fixtures/commands/v1/cad.openings.create.special.json");
+const CASES: &str =
+    include_str!("../../../../fixtures/commands/v1/cad.openings.create.special.json");
 
 fn open(app: &mut App, bounds: [f64; 4]) {
     let file: Value = serde_json::from_str(CASES).expect("the cases");
@@ -101,7 +102,8 @@ fn types(app: &mut App) {
     plan(app);
     run(app, "arch.openingTypes");
     if let Some(i) = app
-        .modules.arch()
+        .modules
+        .arch()
         .opening_types
         .as_ref()
         .and_then(|w| w.uses.iter().position(|u| u.kind.id == "cg1"))

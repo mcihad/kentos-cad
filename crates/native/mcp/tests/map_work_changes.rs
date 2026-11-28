@@ -29,7 +29,11 @@ fn the_design_s_changed_and_added_lines_are_listed_and_saved_over_mcp() {
         r["structuredContent"]["output"]["items"][2].clone()
     };
     let d = design(&mut server);
-    assert_eq!((d["state"].as_str(), d.get("changes")), (Some("current"), None), "{d}");
+    assert_eq!(
+        (d["state"].as_str(), d.get("changes")),
+        (Some("current"), None),
+        "{d}"
+    );
     let set = call(
         &mut server,
         "cad.entities.set",
@@ -43,24 +47,50 @@ fn the_design_s_changed_and_added_lines_are_listed_and_saved_over_mcp() {
             "kind": "line", "a": {"x": 500000.0, "y": 4400005.0}, "b": {"x": 500010.0, "y": 4400005.0}}}]}),
     );
     assert_eq!(made["isError"], false, "{made}");
-    let new = made["structuredContent"]["output"]["created"][0].as_str().unwrap().to_owned();
+    let new = made["structuredContent"]["output"]["created"][0]
+        .as_str()
+        .unwrap()
+        .to_owned();
     let d = design(&mut server);
     assert_eq!(d["state"], "revised", "{d}");
     let c = &d["changes"];
-    assert_eq!((c["added"].as_u64(), c["removed"].as_u64(), c["changed"].as_u64()), (Some(1), Some(0), Some(1)), "{d}");
-    let mut listed: Vec<&str> = c["uids"].as_array().unwrap().iter().filter_map(Value::as_str).collect();
+    assert_eq!(
+        (
+            c["added"].as_u64(),
+            c["removed"].as_u64(),
+            c["changed"].as_u64()
+        ),
+        (Some(1), Some(0), Some(1)),
+        "{d}"
+    );
+    let mut listed: Vec<&str> = c["uids"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(Value::as_str)
+        .collect();
     listed.sort_unstable();
     let mut both = vec![LINE, new.as_str()];
     both.sort_unstable();
     assert_eq!(listed, both);
     let saved_pairs = |server: &mut Server, name: &str, schema: u8| {
-        let dir = std::env::temp_dir().join(format!("kentos-map-work-changes-{}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("kentos-map-work-changes-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let path = dir.join(name);
-        let s = call(server, "drawing.save", json!({"drawing": drawing, "path": path}));
+        let s = call(
+            server,
+            "drawing.save",
+            json!({"drawing": drawing, "path": path}),
+        );
         assert_eq!(s["isError"], false, "{s}");
         let bytes = std::fs::read(&path).unwrap();
-        assert!(bytes.windows(10).any(|w| w == [b"\x67version\x18".as_slice(), &[schema]].concat()), "the file's schema {schema}");
+        assert!(
+            bytes
+                .windows(10)
+                .any(|w| w == [b"\x67version\x18".as_slice(), &[schema]].concat()),
+            "the file's schema {schema}"
+        );
         let back = serde_json::to_value(kentos_kcad::decode(&bytes).unwrap()).unwrap();
         let _ = std::fs::remove_dir_all(dir);
         back["settings"]["mapWork"]["items"][2]["approvedObjects"].clone()
@@ -77,9 +107,18 @@ fn the_design_s_changed_and_added_lines_are_listed_and_saved_over_mcp() {
     );
     assert_eq!(r["isError"], false, "{r}");
     let d = design(&mut server);
-    assert_eq!((d["state"].as_str(), d.get("changes")), (Some("current"), None), "{d}");
+    assert_eq!(
+        (d["state"].as_str(), d.get("changes")),
+        (Some("current"), None),
+        "{d}"
+    );
     let pairs = saved_pairs(&mut server, "yeniden-onaylandi.kcad", 213);
-    let ids: Vec<&str> = pairs.as_array().unwrap().iter().filter_map(|p| p[0].as_str()).collect();
+    let ids: Vec<&str> = pairs
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|p| p[0].as_str())
+        .collect();
     assert_eq!(ids, both, "sorted by id");
     assert_ne!(pairs[0][1], pairs[1][1]);
 }
@@ -102,8 +141,16 @@ fn the_changed_line_s_part_is_said_over_mcp() {
     assert_eq!(set["isError"], false, "{set}");
     let r = call(&mut server, "map.work.query", json!({"drawing": drawing}));
     let c = r["structuredContent"]["output"]["items"][2]["changes"].clone();
-    assert_eq!(c["parts"], json!({"geometry": 0, "attributes": 1, "layer": 0, "look": 0}), "{c}");
-    assert_eq!(c["objects"], json!([{"uid": LINE, "parts": ["attributes"]}]), "{c}");
+    assert_eq!(
+        c["parts"],
+        json!({"geometry": 0, "attributes": 1, "layer": 0, "look": 0}),
+        "{c}"
+    );
+    assert_eq!(
+        c["objects"],
+        json!([{"uid": LINE, "parts": ["attributes"]}]),
+        "{c}"
+    );
 }
 
 /// docs/adr/3680: the schema 213 sample (its approval keeps the line's value) opened over MCP; the line's height set,
@@ -113,8 +160,14 @@ fn the_changed_line_s_part_is_said_over_mcp() {
 fn the_changed_attribute_and_the_deleted_line_are_said_over_mcp() {
     let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../../fixtures/kcad/v2/map-work-approved-values.kcad");
-    let kept: Value = serde_json::from_str(include_str!("../../../../fixtures/kcad/v2/map-work-approved-values.json")).unwrap();
-    let text = kept["settings"]["mapWork"]["items"][2]["approvedValues"][0].as_str().unwrap().to_owned();
+    let kept: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/kcad/v2/map-work-approved-values.json"
+    ))
+    .unwrap();
+    let text = kept["settings"]["mapWork"]["items"][2]["approvedValues"][0]
+        .as_str()
+        .unwrap()
+        .to_owned();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": sample}));
     assert_eq!(opened["isError"], false, "{opened}");
@@ -130,10 +183,22 @@ fn the_changed_attribute_and_the_deleted_line_are_said_over_mcp() {
         r["structuredContent"]["output"]["items"][2]["changes"].clone()
     };
     let c = changes(&mut server);
-    assert_eq!(c["objects"], json!([{"uid": LINE, "parts": ["attributes"], "attributes": [{"name": "Kot", "now": "1060"}]}]), "{c}");
-    let gone = call(&mut server, "cad.entities.delete", json!({"drawing": drawing, "uids": [LINE]}));
+    assert_eq!(
+        c["objects"],
+        json!([{"uid": LINE, "parts": ["attributes"], "attributes": [{"name": "Kot", "now": "1060"}]}]),
+        "{c}"
+    );
+    let gone = call(
+        &mut server,
+        "cad.entities.delete",
+        json!({"drawing": drawing, "uids": [LINE]}),
+    );
     assert_eq!(gone["isError"], false, "{gone}");
     let c = changes(&mut server);
     let approved: Value = serde_json::from_str(&text).unwrap();
-    assert_eq!(c["removedObjects"], json!([{"uid": LINE, "approved": approved}]), "{c}");
+    assert_eq!(
+        c["removedObjects"],
+        json!([{"uid": LINE, "approved": approved}]),
+        "{c}"
+    );
 }

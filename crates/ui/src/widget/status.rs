@@ -66,18 +66,26 @@ fn mix(c: Color, a: f32) -> Color {
 }
 
 fn face<'a, Message: 'a>(status: Status, words: String) -> iced::widget::Row<'a, Message> {
-    let dot = container(text("").size(1)).width(6).height(6).style(move |t: &Theme| container::Style {
-        background: Some(Background::Color(status.color(&Tokens::of(t)))),
-        border: Border { radius: 3.0.into(), ..Border::default() },
-        ..container::Style::default()
-    });
+    let dot = container(text("").size(1))
+        .width(6)
+        .height(6)
+        .style(move |t: &Theme| container::Style {
+            background: Some(Background::Color(status.color(&Tokens::of(t)))),
+            border: Border {
+                radius: 3.0.into(),
+                ..Border::default()
+            },
+            ..container::Style::default()
+        });
     row![
         dot,
         text(words)
             .size(typography::caption())
             .font(typography::ui())
             .wrapping(text::Wrapping::None)
-            .style(move |t: &Theme| text::Style { color: Some(status.color(&Tokens::of(t))) }),
+            .style(move |t: &Theme| text::Style {
+                color: Some(status.color(&Tokens::of(t)))
+            }),
     ]
     .spacing(5)
     .align_y(Center)
@@ -88,15 +96,25 @@ fn pill_style(status: Status, strong: bool) -> impl Fn(&Theme) -> container::Sty
         let c = status.color(&Tokens::of(t));
         container::Style {
             background: Some(Background::Color(mix(c, if strong { 0.24 } else { 0.14 }))),
-            border: Border { color: mix(c, if strong { 0.9 } else { 0.35 }), width: 1.0, radius: 9.0.into() },
+            border: Border {
+                color: mix(c, if strong { 0.9 } else { 0.35 }),
+                width: 1.0,
+                radius: 9.0.into(),
+            },
             ..container::Style::default()
         }
     }
 }
 
 /// Durum hapı: tonun noktası ve kısa sözü.
-pub fn status_pill<'a, Message: 'a>(status: Status, words: impl Into<String>) -> Element<'a, Message> {
-    container(face(status, words.into())).padding([1, 7]).style(pill_style(status, false)).into()
+pub fn status_pill<'a, Message: 'a>(
+    status: Status,
+    words: impl Into<String>,
+) -> Element<'a, Message> {
+    container(face(status, words.into()))
+        .padding([1, 7])
+        .style(pill_style(status, false))
+        .into()
 }
 
 /// Süzgeç hapı: sözü ve sayısıyla basılan durum hapı; `active` seçili olandır.
@@ -112,13 +130,19 @@ pub fn status_filter<'a, Message: Clone + 'a>(
         text(count.to_string())
             .size(typography::caption())
             .font(typography::mono())
-            .style(move |t: &Theme| text::Style { color: Some(status.color(&Tokens::of(t))) }),
+            .style(move |t: &Theme| text::Style {
+                color: Some(status.color(&Tokens::of(t)))
+            }),
     ]
     .spacing(6)
     .align_y(Center);
-    button(container(body).padding([1, 8]).style(pill_style(status, active)))
-        .padding(0)
-        .style(|_: &Theme, _| button::Style::default())
-        .on_press(on_press)
-        .into()
+    button(
+        container(body)
+            .padding([1, 8])
+            .style(pill_style(status, active)),
+    )
+    .padding(0)
+    .style(|_: &Theme, _| button::Style::default())
+    .on_press(on_press)
+    .into()
 }

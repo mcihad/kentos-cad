@@ -25,9 +25,19 @@ pub(crate) fn notes(doc: &Document, report: &StepReport) -> Vec<CommandWarning> 
         let (Entity::Hatch(b), Entity::Hatch(a)) = (&**before, &**after) else {
             continue;
         };
-        if let Some(was)=&b.assoc && a.assoc.is_none() {
-            let source_changed=was.objects().any(|id| report.objects.iter().any(|change|change.uid==Uuid::from_bytes(id.0)));
-            if source_changed || b.ring!=a.ring || b.holes!=a.holes || b.boundary!=a.boundary {detached.push(c.uid.to_string());}
+        if let Some(was) = &b.assoc
+            && a.assoc.is_none()
+        {
+            let source_changed = was.objects().any(|id| {
+                report
+                    .objects
+                    .iter()
+                    .any(|change| change.uid == Uuid::from_bytes(id.0))
+            });
+            if source_changed || b.ring != a.ring || b.holes != a.holes || b.boundary != a.boundary
+            {
+                detached.push(c.uid.to_string());
+            }
         }
         let (Some(was), Some(now)) = (&b.assoc, &a.assoc) else {
             continue;

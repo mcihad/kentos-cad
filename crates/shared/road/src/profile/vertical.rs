@@ -30,15 +30,30 @@ pub enum Piece {
     /// z = z0 + g·(s − s0).
     Grade { s0: f64, s1: f64, z0: f64, g: f64 },
     /// z = z0 + g0·t + r·t²/2, t = s − s0.
-    Parabola { s0: f64, s1: f64, z0: f64, g0: f64, r: f64 },
+    Parabola {
+        s0: f64,
+        s1: f64,
+        z0: f64,
+        g0: f64,
+        r: f64,
+    },
     /// On the circle of centre (sc, zc) and radius R; `sag`: the centre above.
-    Circle { s0: f64, s1: f64, sc: f64, zc: f64, radius: f64, sag: bool },
+    Circle {
+        s0: f64,
+        s1: f64,
+        sc: f64,
+        zc: f64,
+        radius: f64,
+        sag: bool,
+    },
 }
 
 impl Piece {
     pub fn range(&self) -> (f64, f64) {
         match *self {
-            Piece::Grade { s0, s1, .. } | Piece::Parabola { s0, s1, .. } | Piece::Circle { s0, s1, .. } => (s0, s1),
+            Piece::Grade { s0, s1, .. }
+            | Piece::Parabola { s0, s1, .. }
+            | Piece::Circle { s0, s1, .. } => (s0, s1),
         }
     }
 
@@ -50,7 +65,13 @@ impl Piece {
                 let t = s - s0;
                 (z0 + g0 * t + 0.5 * r * t * t, g0 + r * t, r)
             }
-            Piece::Circle { sc, zc, radius, sag, .. } => {
+            Piece::Circle {
+                sc,
+                zc,
+                radius,
+                sag,
+                ..
+            } => {
                 let d = s - sc;
                 let h = (radius * radius - d * d).max(0.0).sqrt();
                 let sign = if sag { -1.0 } else { 1.0 };
@@ -78,10 +99,26 @@ impl Piece {
                     let f = |u: f64| 0.5 * (u * u.hypot(1.0) + u.asinh());
                     (f(u1) - f(u0)) / r
                 } else {
-                    const X: [f64; 5] = [0.0, -0.538_469_310_105_683_1, 0.538_469_310_105_683_1, -0.906_179_845_938_664, 0.906_179_845_938_664];
-                    const W: [f64; 5] = [0.568_888_888_888_888_9, 0.478_628_670_499_366_5, 0.478_628_670_499_366_5, 0.236_926_885_056_189_1, 0.236_926_885_056_189_1];
+                    const X: [f64; 5] = [
+                        0.0,
+                        -0.538_469_310_105_683_1,
+                        0.538_469_310_105_683_1,
+                        -0.906_179_845_938_664,
+                        0.906_179_845_938_664,
+                    ];
+                    const W: [f64; 5] = [
+                        0.568_888_888_888_888_9,
+                        0.478_628_670_499_366_5,
+                        0.478_628_670_499_366_5,
+                        0.236_926_885_056_189_1,
+                        0.236_926_885_056_189_1,
+                    ];
                     let h = 0.5 * t;
-                    X.iter().zip(W).map(|(x, w)| w * (g0 + r * h * (1.0 + x)).hypot(1.0)).sum::<f64>() * h
+                    X.iter()
+                        .zip(W)
+                        .map(|(x, w)| w * (g0 + r * h * (1.0 + x)).hypot(1.0))
+                        .sum::<f64>()
+                        * h
                 }
             }
             Piece::Circle { s0, sc, radius, .. } => {
@@ -129,14 +166,26 @@ pub struct Vertical {
 #[derive(Clone, Debug, PartialEq)]
 pub enum VerticalError {
     TooFewPoints,
-    DuplicateId { pvi: String },
-    NotFinite { pvi: String },
+    DuplicateId {
+        pvi: String,
+    },
+    NotFinite {
+        pvi: String,
+    },
     /// A PVI not after the one before it.
-    NotIncreasing { pvi: String },
+    NotIncreasing {
+        pvi: String,
+    },
     /// A curve on the first or the last PVI, a length or radius not above 0, a curve where the grade does not change.
-    BadCurve { pvi: String },
+    BadCurve {
+        pvi: String,
+    },
     /// Two curves (or a curve and an end) overlap: by how much along the station.
-    Overlap { a: String, b: String, excess: f64 },
+    Overlap {
+        a: String,
+        b: String,
+        excess: f64,
+    },
 }
 
 /// A curve's reach (start and end stations), its pieces and its report.
@@ -155,10 +204,16 @@ pub fn build(pvis: &[Pvi]) -> Result<Vertical, VerticalError> {
         let numbers: Vec<f64> = match p.curve {
             VCurve::None => vec![],
             VCurve::Parabola { length } => vec![length],
-            VCurve::Asymmetric { length_in, length_out } => vec![length_in, length_out],
+            VCurve::Asymmetric {
+                length_in,
+                length_out,
+            } => vec![length_in, length_out],
             VCurve::Circle { radius } => vec![radius],
         };
-        if !(p.station.is_finite() && p.elevation.is_finite() && numbers.iter().all(|v| v.is_finite())) {
+        if !(p.station.is_finite()
+            && p.elevation.is_finite()
+            && numbers.iter().all(|v| v.is_finite()))
+        {
             return Err(VerticalError::NotFinite { pvi: p.id.clone() });
         }
         if i > 0 && p.station <= pvis[i - 1].station {
@@ -169,14 +224,19 @@ pub fn build(pvis: &[Pvi]) -> Result<Vertical, VerticalError> {
             VCurve::None => false,
             _ if end => true,
             VCurve::Parabola { length } => length <= 0.0,
-            VCurve::Asymmetric { length_in, length_out } => length_in <= 0.0 || length_out <= 0.0,
+            VCurve::Asymmetric {
+                length_in,
+                length_out,
+            } => length_in <= 0.0 || length_out <= 0.0,
             VCurve::Circle { radius } => radius <= 0.0,
         };
         if bad {
             return Err(VerticalError::BadCurve { pvi: p.id.clone() });
         }
     }
-    let grade = |i: usize| (pvis[i + 1].elevation - pvis[i].elevation) / (pvis[i + 1].station - pvis[i].station);
+    let grade = |i: usize| {
+        (pvis[i + 1].elevation - pvis[i].elevation) / (pvis[i + 1].station - pvis[i].station)
+    };
     // Each PVI's curve: its pieces and its reach (start, end stations).
     let mut spans: Vec<Option<Span>> = vec![None; pvis.len()];
     for i in 1..pvis.len() - 1 {
@@ -193,12 +253,21 @@ pub fn build(pvis: &[Pvi]) -> Result<Vertical, VerticalError> {
             VCurve::Parabola { length } => {
                 let b = s - length / 2.0;
                 (
-                    vec![Piece::Parabola { s0: b, s1: s + length / 2.0, z0: z - g1 * length / 2.0, g0: g1, r: (g2 - g1) / length }],
+                    vec![Piece::Parabola {
+                        s0: b,
+                        s1: s + length / 2.0,
+                        z0: z - g1 * length / 2.0,
+                        g0: g1,
+                        r: (g2 - g1) / length,
+                    }],
                     b,
                     s + length / 2.0,
                 )
             }
-            VCurve::Asymmetric { length_in: l1, length_out: l2 } => {
+            VCurve::Asymmetric {
+                length_in: l1,
+                length_out: l2,
+            } => {
                 let r1 = (g2 - g1) * l2 / (l1 * (l1 + l2));
                 let r2 = r1 * l1 * l1 / (l2 * l2);
                 let zb = z - g1 * l1;
@@ -206,8 +275,20 @@ pub fn build(pvis: &[Pvi]) -> Result<Vertical, VerticalError> {
                 let gm = (l1 * g1 + l2 * g2) / (l1 + l2);
                 (
                     vec![
-                        Piece::Parabola { s0: s - l1, s1: s, z0: zb, g0: g1, r: r1 },
-                        Piece::Parabola { s0: s, s1: s + l2, z0: zm, g0: gm, r: r2 },
+                        Piece::Parabola {
+                            s0: s - l1,
+                            s1: s,
+                            z0: zb,
+                            g0: g1,
+                            r: r1,
+                        },
+                        Piece::Parabola {
+                            s0: s,
+                            s1: s + l2,
+                            z0: zm,
+                            g0: gm,
+                            r: r2,
+                        },
                     ],
                     s - l1,
                     s + l2,
@@ -221,7 +302,18 @@ pub fn build(pvis: &[Pvi]) -> Result<Vertical, VerticalError> {
                 let es = s + tl * t2.cos();
                 let sign = if sag { 1.0 } else { -1.0 };
                 let (sc, zc) = (bs - sign * radius * t1.sin(), bz + sign * radius * t1.cos());
-                (vec![Piece::Circle { s0: bs, s1: es, sc, zc, radius, sag }], bs, es)
+                (
+                    vec![Piece::Circle {
+                        s0: bs,
+                        s1: es,
+                        sc,
+                        zc,
+                        radius,
+                        sag,
+                    }],
+                    bs,
+                    es,
+                )
             }
             VCurve::None => continue,
         };
@@ -269,7 +361,11 @@ pub fn build(pvis: &[Pvi]) -> Result<Vertical, VerticalError> {
     for (i, sp) in spans.iter().enumerate() {
         if let Some((b, e, _, _)) = sp {
             if *b < reach.0 - 1e-9 {
-                return Err(VerticalError::Overlap { a: reach.1.clone(), b: pvis[i].id.clone(), excess: reach.0 - b });
+                return Err(VerticalError::Overlap {
+                    a: reach.1.clone(),
+                    b: pvis[i].id.clone(),
+                    excess: reach.0 - b,
+                });
             }
             reach = (*e, pvis[i].id.clone());
         }
@@ -294,7 +390,12 @@ pub fn build(pvis: &[Pvi]) -> Result<Vertical, VerticalError> {
             None => pvis[i + 1].station,
         };
         if next > at + 1e-12 {
-            pieces.push(Piece::Grade { s0: at, s1: next, z0: z_line(at), g });
+            pieces.push(Piece::Grade {
+                s0: at,
+                s1: next,
+                z0: z_line(at),
+                g,
+            });
         }
         if let Some((_, e, ps, report)) = &spans[i + 1] {
             pieces.extend(ps.iter().copied());
@@ -318,7 +419,10 @@ impl Vertical {
         if !(self.start..=self.end).contains(&s) {
             return None;
         }
-        let i = self.pieces.partition_point(|p| p.range().0 <= s).saturating_sub(1);
+        let i = self
+            .pieces
+            .partition_point(|p| p.range().0 <= s)
+            .saturating_sub(1);
         self.pieces.get(i).map(|p| p.at(s))
     }
 

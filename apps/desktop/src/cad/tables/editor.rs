@@ -13,11 +13,13 @@
 //! one step (“Tabloyu düzenle”).
 
 use iced::keyboard::key::Named;
-use iced::widget::{Id, Space, button, column, container, mouse_area, pin, row, scrollable, stack, text_editor};
+use iced::widget::{
+    Id, Space, button, column, container, mouse_area, pin, row, scrollable, stack, text_editor,
+};
 use iced::{Center, Element, Fill, Length, Padding, Task, Theme};
 use kentos_commands::{
-    CommandResult, Entity, FieldSource, ProjectValue, SourceOverrides, TableAlign, TableEdit, TableEntity,
-    TableGrid, TablesEdit, TablesOperation,
+    CommandResult, Entity, FieldSource, ProjectValue, SourceOverrides, TableAlign, TableEdit,
+    TableEntity, TableGrid, TablesEdit, TablesOperation,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::entity::CellRange;
@@ -226,7 +228,8 @@ impl Editor {
     /// The bar's words and its editor set together, the cursor at their end.
     fn set_words(&mut self, words: String) {
         self.bar = text_editor::Content::with_text(&words);
-        self.bar.perform(text_editor::Action::Move(text_editor::Motion::DocumentEnd));
+        self.bar
+            .perform(text_editor::Action::Move(text_editor::Motion::DocumentEnd));
         self.words = words;
     }
 
@@ -398,7 +401,10 @@ impl App {
         let Some(doc) = &self.document else {
             return Err("Çizim yok.".to_owned());
         };
-        if matches!(saved.source, Some(kentos_commands::TableSource::Schedule { .. })) {
+        if matches!(
+            saved.source,
+            Some(kentos_commands::TableSource::Schedule { .. })
+        ) {
             return schedule_planned(&doc.model, uid, edits, saved);
         }
         let input = TablesEdit {
@@ -1238,7 +1244,11 @@ impl App {
                 let active = top == e.active;
                 let chosen = in_range(i, j);
                 // A cell's lines on its one row, a ↵ where each breaks.
-                let shown = if words.contains('\n') { words.replace('\n', " ↵ ") } else { words };
+                let shown = if words.contains('\n') {
+                    words.replace('\n', " ↵ ")
+                } else {
+                    words
+                };
                 let mut text = label::body(shown).wrapping(iced::widget::text::Wrapping::None);
                 if look.bold.unwrap_or(heading) {
                     text = text.font(typography::ui_strong());
@@ -1393,15 +1403,17 @@ impl App {
                 .spacing(8)
                 .align_y(Center);
                 let detail: Element<'_, Message> = match s {
-                    kentos_commands::TableSource::File { key_column, copy, overrides, .. } => {
+                    kentos_commands::TableSource::File {
+                        key_column,
+                        copy,
+                        overrides,
+                        ..
+                    } => {
                         let key_row: Element<'_, Message> = if copy.is_some() && e.draft.header {
                             let mut choices = vec![Choice::new("Satır sırası (anahtar yok)")];
-                            choices.extend(
-                                e.draft.cells[0]
-                                    .iter()
-                                    .enumerate()
-                                    .map(|(c, title)| Choice::new(format!("{} — {title}", column_name(c)))),
-                            );
+                            choices.extend(e.draft.cells[0].iter().enumerate().map(
+                                |(c, title)| Choice::new(format!("{} — {title}", column_name(c))),
+                            ));
                             row![
                                 label::caption("Satır anahtarı"),
                                 container(Select::new(choices, Some(key_column.map_or(0, |c| c as usize + 1)), |i| {
@@ -1414,7 +1426,10 @@ impl App {
                             .align_y(Center)
                             .into()
                         } else {
-                            label::caption("Satır anahtarı için başlık satırı ve bağlı dosya gerekir.").into()
+                            label::caption(
+                                "Satır anahtarı için başlık satırı ve bağlı dosya gerekir.",
+                            )
+                            .into()
                         };
                         let rule_row = row![
                             label::caption("Yenilemede elle değişen hücre"),
@@ -1543,7 +1558,9 @@ fn bar_keys(press: text_editor::KeyPress) -> Option<text_editor::Binding<Message
     use iced::keyboard::Key;
     match press.key.as_ref() {
         // Shift+Enter, or Alt+Enter as table cells commonly take it.
-        Key::Named(Named::Enter) if press.modifiers.shift() || press.modifiers.alt() => Some(text_editor::Binding::Enter),
+        Key::Named(Named::Enter) if press.modifiers.shift() || press.modifiers.alt() => {
+            Some(text_editor::Binding::Enter)
+        }
         Key::Named(Named::Enter) => Some(text_editor::Binding::Custom(msg(Event::Commit))),
         Key::Named(Named::Tab | Named::Escape) => None,
         _ => text_editor::Binding::from_key_press(press),
@@ -1845,7 +1862,13 @@ fn gutter_style(theme: &Theme, on: bool) -> container::Style {
 /// A grid cell: the selection's colour when chosen, else its fill; use a readable default ink
 /// against either a light or a dark fill when the user did not choose a text colour.
 fn contrast_ink(fill: iced::Color) -> iced::Color {
-    let linear = |v: f32| if v <= 0.04045 { v / 12.92 } else { ((v + 0.055) / 1.055).powf(2.4) };
+    let linear = |v: f32| {
+        if v <= 0.04045 {
+            v / 12.92
+        } else {
+            ((v + 0.055) / 1.055).powf(2.4)
+        }
+    };
     let luminance = 0.2126 * linear(fill.r) + 0.7152 * linear(fill.g) + 0.0722 * linear(fill.b);
     if luminance < 0.179 {
         iced::Color::WHITE
@@ -1897,7 +1920,10 @@ mod contrast_tests {
 
     #[test]
     fn table_fill_without_explicit_ink_remains_readable() {
-        assert_eq!(contrast_ink(iced::Color::from_rgb8(0x54, 0x38, 0x38)), iced::Color::WHITE);
+        assert_eq!(
+            contrast_ink(iced::Color::from_rgb8(0x54, 0x38, 0x38)),
+            iced::Color::WHITE
+        );
         assert_eq!(
             contrast_ink(iced::Color::from_rgb8(0xe7, 0xdf, 0xcc)),
             iced::Color::from_rgb8(0x1b, 0x1f, 0x24)

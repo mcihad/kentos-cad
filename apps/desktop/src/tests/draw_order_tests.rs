@@ -10,7 +10,11 @@ use crate::tools_scenes::{Objects, open};
 fn app() -> App {
     let (mut app, _) = App::boot(None);
     let mut o = Objects::new();
-    let m = o.path("cizim", &[[6.0, 4.0], [14.0, 4.0], [14.0, 12.0], [6.0, 12.0]], true);
+    let m = o.path(
+        "cizim",
+        &[[6.0, 4.0], [14.0, 4.0], [14.0, 12.0], [6.0, 12.0]],
+        true,
+    );
     o.fields(m, json!({ "wipeout": { "frame": true } }));
     o.line("yol", [0.0, 8.0], [20.0, 8.0]);
     o.text("cizim", [8.0, 9.0], "TEST", 1.0, 0.0);
@@ -20,7 +24,13 @@ fn app() -> App {
 }
 
 fn said(app: &App, n: usize) -> String {
-    app.log.lines().rev().take(n).map(|l| l.text.clone()).collect::<Vec<_>>().join(" | ")
+    app.log
+        .lines()
+        .rev()
+        .take(n)
+        .map(|l| l.text.clone())
+        .collect::<Vec<_>>()
+        .join(" | ")
 }
 
 /// UR-059: the mask brought to the front says the Yol line over it is drawn by the layers' order.
@@ -30,7 +40,10 @@ fn bringing_a_mask_forward_says_the_other_layers_object() {
     app.selection.set([kentos_domain::Slot(1)]);
     let _ = app.update(Message::Run("edit.bringToFront"));
     let words = said(&app, 3);
-    assert!(words.contains("kendi katmanı içinde") && words.contains("1 nesne başka katmanda"), "{words}");
+    assert!(
+        words.contains("kendi katmanı içinde") && words.contains("1 nesne başka katmanda"),
+        "{words}"
+    );
     // An object alone in its place says nothing more.
     app.selection.set([kentos_domain::Slot(4)]);
     let _ = app.update(Message::Run("edit.bringToFront"));

@@ -137,10 +137,7 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersData) -> CommandResult<Laye
                 .name
                 .as_deref()
                 .map_or_else(|| n.name.clone(), |s| s.trim().to_owned()),
-            geometry: input
-                .data
-                .as_ref()
-                .map_or(n.geometry, |d| d.family()),
+            geometry: input.data.as_ref().map_or(n.geometry, |d| d.family()),
             data: input.data.clone().or_else(|| n.data.clone()),
             fields: input.fields.clone().unwrap_or_else(|| n.fields.clone()),
             ..n

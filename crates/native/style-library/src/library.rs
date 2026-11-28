@@ -778,7 +778,11 @@ impl StyleLibrary {
 
     /// What `item` draws with besides itself: a template's symbol, a symbol's drawings and the items it refers to.
     fn needs_of(item: &Item) -> Vec<String> {
-        let mut out: Vec<String> = item.template_symbol().map(str::to_owned).into_iter().collect();
+        let mut out: Vec<String> = item
+            .template_symbol()
+            .map(str::to_owned)
+            .into_iter()
+            .collect();
         if let Some(symbol) = item.symbol() {
             out.extend(assets_of_symbol(symbol));
             out.extend(refs_in(symbol));
@@ -799,9 +803,16 @@ impl StyleLibrary {
         fn content(i: &Item) -> [Option<&Value>; 3] {
             [i.symbol(), i.template(), i.value.get("data")]
         }
-        let (name, path, own) = (item.name().to_owned(), item.path().join("\u{0}"), content(item));
+        let (name, path, own) = (
+            item.name().to_owned(),
+            item.path().join("\u{0}"),
+            content(item),
+        );
         let found = self.project.items.iter().find(|p| {
-            p.kind == item.kind && p.name() == name && p.path().join("\u{0}") == path && content(p) == own
+            p.kind == item.kind
+                && p.name() == name
+                && p.path().join("\u{0}") == path
+                && content(p) == own
         });
         if let Some(found) = found {
             return Ok(found.id.clone());
@@ -954,10 +965,26 @@ mod tests {
         let mut lib = lib();
         let copy = lib.project_copy("s-u").unwrap();
         assert!(copy.starts_with("p-"), "{copy}");
-        assert_eq!(lib.get(&copy).unwrap().0.name(), "Benim sembolüm", "the copy keeps its name");
-        assert_eq!(lib.get("a-u").unwrap().1, Source::Project, "its drawing came along");
-        assert_eq!(lib.project_copy("s-u").unwrap(), copy, "one copy for the same symbol");
-        assert_eq!(lib.project_copy("s-sys").unwrap(), "s-sys", "a system item is used as it is");
+        assert_eq!(
+            lib.get(&copy).unwrap().0.name(),
+            "Benim sembolüm",
+            "the copy keeps its name"
+        );
+        assert_eq!(
+            lib.get("a-u").unwrap().1,
+            Source::Project,
+            "its drawing came along"
+        );
+        assert_eq!(
+            lib.project_copy("s-u").unwrap(),
+            copy,
+            "one copy for the same symbol"
+        );
+        assert_eq!(
+            lib.project_copy("s-sys").unwrap(),
+            "s-sys",
+            "a system item is used as it is"
+        );
         assert!(lib.project_copy("yok").is_err());
 
         let mut lib = self::lib();
@@ -972,10 +999,22 @@ mod tests {
             &[],
         );
         let taken = lib.take_along(["f-u".to_owned(), "s-sys".to_owned(), "yok".to_owned()]);
-        assert_eq!(taken, ["f-u", "s-u", "a-u"], "the symbol, the marker it refers to and that marker's drawing");
-        assert!(lib.get("x-u").is_some_and(|(_, s)| s == Source::User), "an item not used stays the user's alone");
-        assert!(lib.take_along(["f-u".to_owned()]).is_empty(), "held already");
-        let mut refs = refs_in(&json!({ "symbols": { "fill": { "ref": "a" }, "line": { "ref": "a" } }, "classes": [{ "symbols": { "marker": { "ref": "b" } } }] }));
+        assert_eq!(
+            taken,
+            ["f-u", "s-u", "a-u"],
+            "the symbol, the marker it refers to and that marker's drawing"
+        );
+        assert!(
+            lib.get("x-u").is_some_and(|(_, s)| s == Source::User),
+            "an item not used stays the user's alone"
+        );
+        assert!(
+            lib.take_along(["f-u".to_owned()]).is_empty(),
+            "held already"
+        );
+        let mut refs = refs_in(
+            &json!({ "symbols": { "fill": { "ref": "a" }, "line": { "ref": "a" } }, "classes": [{ "symbols": { "marker": { "ref": "b" } } }] }),
+        );
         refs.sort();
         assert_eq!(refs, ["a", "b"], "every reference once");
     }

@@ -170,7 +170,9 @@ pub(crate) fn placed(
         o
     };
     let p = opening_follow::placed_on(o, Some(line), false);
-    if opening_follow::is_pocket(o) && let Some(stop) = pocket_refused(o, &p, line, path) {
+    if opening_follow::is_pocket(o)
+        && let Some(stop) = pocket_refused(o, &p, line, path)
+    {
         return Err(stop);
     }
     if p.broken == Some(kentos_commands::OpeningBreak::TooDeep) {
@@ -209,7 +211,12 @@ pub(crate) fn placed(
 
 /// A pocket door its wall cannot take (docs/adr/0777 §2): `opening_pocket_thin` when the wall is thinner than its pocket
 /// needs, `opening_pocket_short` when its pocket runs off the wall's edge though the door itself does not.
-fn pocket_refused(o: &OpeningFields, p: &OpeningFields, line: &WallLine, path: &str) -> Option<Stop> {
+fn pocket_refused(
+    o: &OpeningFields,
+    p: &OpeningFields,
+    line: &WallLine,
+    path: &str,
+) -> Option<Stop> {
     let at = |field: &str| {
         if path.is_empty() {
             field.to_owned()
@@ -385,7 +392,10 @@ pub(crate) fn set_build(f: &mut OpeningFields, given: Option<&kentos_commands::O
         return;
     };
     for (k, v) in map {
-        if let Some(field) = kentos_commands::OpeningTypeField::ALL.into_iter().find(|x| x.name() == k) {
+        if let Some(field) = kentos_commands::OpeningTypeField::ALL
+            .into_iter()
+            .find(|x| x.name() == k)
+        {
             let _ = f.set_value(field, &v);
         }
     }
@@ -406,18 +416,20 @@ pub(crate) fn clear_of_others(
     let changed_slots: Vec<Slot> = changed.iter().map(|(s, ..)| *s).collect();
     for (_, f, at) in changed {
         if f.broken.is_none() {
-            by_host
-                .entry(&f.host)
-                .or_default()
-                .push((opening_follow::reach(f), Some(at.as_str()), (*f).clone()));
+            by_host.entry(&f.host).or_default().push((
+                opening_follow::reach(f),
+                Some(at.as_str()),
+                (*f).clone(),
+            ));
         }
     }
     for (f, at) in new {
         if f.broken.is_none() {
-            by_host
-                .entry(&f.host)
-                .or_default()
-                .push((opening_follow::reach(f), Some(at.as_str()), (*f).clone()));
+            by_host.entry(&f.host).or_default().push((
+                opening_follow::reach(f),
+                Some(at.as_str()),
+                (*f).clone(),
+            ));
         }
     }
     // At the project's plan cut height (docs/adr/8012).
@@ -435,7 +447,10 @@ pub(crate) fn clear_of_others(
             }) {
                 let (a, b) = (list[i].0, list[j].0);
                 // Only a pocket door's pocket runs into the other (docs/adr/0777 §2).
-                if !opening_follow::overlap(opening_follow::span(&list[i].2), opening_follow::span(&list[j].2)) {
+                if !opening_follow::overlap(
+                    opening_follow::span(&list[i].2),
+                    opening_follow::span(&list[j].2),
+                ) {
                     return Err(fail(
                         codes::OPENING_POCKET_SHORT,
                         format!(
@@ -466,5 +481,8 @@ pub(crate) fn clear_of_others(
 
 /// An opening as the document stores it, given its base.
 pub(crate) fn entity(base: kentos_commands::EntityBase, opening: OpeningFields) -> Entity {
-    Entity::Opening(OpeningEntity { base, opening: Box::new(opening) })
+    Entity::Opening(OpeningEntity {
+        base,
+        opening: Box::new(opening),
+    })
 }

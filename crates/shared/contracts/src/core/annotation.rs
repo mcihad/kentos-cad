@@ -726,11 +726,16 @@ impl LeaderStyleDef {
     pub fn problem(&self) -> Option<(&'static str, String)> {
         let name = &self.name;
         if let Some(t) = &self.text_style
-            && (t.trim().is_empty() || t.trim() != t || t.len() > 256 || t.chars().any(char::is_control))
+            && (t.trim().is_empty()
+                || t.trim() != t
+                || t.len() > 256
+                || t.chars().any(char::is_control))
         {
             return Some((
                 "textStyle",
-                format!("“{name}” kılavuz stilinin yazı stili adı “{t}” geçersiz: boş olmayan, kenarı boşluksuz, en çok 256 bayt olmalı"),
+                format!(
+                    "“{name}” kılavuz stilinin yazı stili adı “{t}” geçersiz: boş olmayan, kenarı boşluksuz, en çok 256 bayt olmalı"
+                ),
             ));
         }
         if !mm_holds(self.height, true) {
@@ -971,7 +976,10 @@ impl DimensionStyleDef {
     pub fn problem(&self) -> Option<String> {
         let name = &self.name;
         if let Some(t) = &self.text_style
-            && (t.trim().is_empty() || t.trim() != t || t.len() > 256 || t.chars().any(char::is_control))
+            && (t.trim().is_empty()
+                || t.trim() != t
+                || t.len() > 256
+                || t.chars().any(char::is_control))
         {
             return Some(format!(
                 "“{name}” ölçü stilinin yazı stili adı “{t}” geçersiz: boş olmayan, kenarı boşluksuz, en çok 256 bayt olmalı"
@@ -1106,13 +1114,22 @@ pub fn leader_styles_problem(styles: &[LeaderStyleDef]) -> Option<String> {
         "kılavuz stili",
         styles.iter().map(|s| (s.id.as_str(), s.name.as_str())),
     )
-    .or_else(|| styles.iter().find_map(|s| s.problem().map(|(_, words)| words)))
+    .or_else(|| {
+        styles
+            .iter()
+            .find_map(|s| s.problem().map(|(_, words)| words))
+    })
 }
 
 /// A leader's look as leader style `now` gives it where it held `old`'s values (docs/adr/0326 §4): each of its
 /// arrowhead, arrowhead size, note height (the style's paper mm at the plot scale) and mask that was the old style's
 /// takes the new one's; one set apart stays.
-pub fn follow_leader_style(old: &LeaderStyleDef, now: &LeaderStyleDef, l: &crate::LeaderEntity, plot_scale: f64) -> crate::LeaderEntity {
+pub fn follow_leader_style(
+    old: &LeaderStyleDef,
+    now: &LeaderStyleDef,
+    l: &crate::LeaderEntity,
+    plot_scale: f64,
+) -> crate::LeaderEntity {
     let mut out = l.clone();
     let height = |s: &LeaderStyleDef| s.height / 1000.0 * plot_scale;
     if l.arrow == old.arrow {
@@ -1131,7 +1148,11 @@ pub fn follow_leader_style(old: &LeaderStyleDef, now: &LeaderStyleDef, l: &crate
 }
 
 /// The leader as leader style `s` writes it, its other fields kept.
-pub fn apply_leader_style(s: &LeaderStyleDef, l: &crate::LeaderEntity, plot_scale: f64) -> crate::LeaderEntity {
+pub fn apply_leader_style(
+    s: &LeaderStyleDef,
+    l: &crate::LeaderEntity,
+    plot_scale: f64,
+) -> crate::LeaderEntity {
     crate::LeaderEntity {
         arrow: s.arrow,
         arrow_size: s.arrow_size,
@@ -1161,7 +1182,10 @@ pub fn dimension_text_style<'a>(
 }
 
 /// The project text style a leader style writes its note in (docs/adr/1025), as [`dimension_text_style`].
-pub fn leader_text_style<'a>(leader: &LeaderStyleDef, texts: &'a [TextStyleDef]) -> Option<&'a TextStyleDef> {
+pub fn leader_text_style<'a>(
+    leader: &LeaderStyleDef,
+    texts: &'a [TextStyleDef],
+) -> Option<&'a TextStyleDef> {
     let name = leader.text_style.as_deref()?;
     texts.iter().find(|s| s.name.eq_ignore_ascii_case(name))
 }

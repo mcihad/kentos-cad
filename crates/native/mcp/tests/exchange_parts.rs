@@ -11,31 +11,73 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn blocks_tables_and_relations_over_mcp() {
-    let snapshot: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_str(include_str!("../../../../fixtures/exchange/v1/devir-blok.json")).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-exchange-parts-{}.kcad", std::process::id()));
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../fixtures/exchange/v1/devir-blok.json"
+    ))
+    .unwrap();
+    let path =
+        std::env::temp_dir().join(format!("kentos-exchange-parts-{}.kcad", std::process::id()));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
-    let r = call(&mut server, "file.exchange.matrix", json!({"drawing": drawing}));
+    let r = call(
+        &mut server,
+        "file.exchange.matrix",
+        json!({"drawing": drawing}),
+    );
     assert_eq!(r["isError"], false, "{r}");
-    let rows = r["structuredContent"]["output"]["rows"].as_array().unwrap().clone();
+    let rows = r["structuredContent"]["output"]["rows"]
+        .as_array()
+        .unwrap()
+        .clone();
     let state = |aspect: &str, format: &str| -> String {
         let row = rows.iter().find(|x| x["aspect"] == aspect).unwrap();
-        row["cells"].as_array().unwrap().iter().find(|c| c["format"] == format).unwrap()["state"].as_str().unwrap().to_owned()
+        row["cells"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["format"] == format)
+            .unwrap()["state"]
+            .as_str()
+            .unwrap()
+            .to_owned()
     };
     for f in ["gpkg", "parquet", "fgb", "gml", "shp", "dxf"] {
-        assert_eq!(state("blocks", f), if f == "dxf" { "kept" } else { "lost" }, "{f}");
-        assert_eq!(state("tables", f), if f == "dxf" { "kept" } else { "lost" }, "{f}");
-        assert_eq!(state("relations", f), if f == "gpkg" { "kept" } else { "lost" }, "{f}");
+        assert_eq!(
+            state("blocks", f),
+            if f == "dxf" { "kept" } else { "lost" },
+            "{f}"
+        );
+        assert_eq!(
+            state("tables", f),
+            if f == "dxf" { "kept" } else { "lost" },
+            "{f}"
+        );
+        assert_eq!(
+            state("relations", f),
+            if f == "gpkg" { "kept" } else { "lost" },
+            "{f}"
+        );
     }
-    let c = call(&mut server, "file.exchange.check", json!({"drawing": drawing, "format": "dxf"}));
+    let c = call(
+        &mut server,
+        "file.exchange.check",
+        json!({"drawing": drawing, "format": "dxf"}),
+    );
     assert_eq!(c["isError"], false, "{c}");
-    let losses = c["structuredContent"]["output"]["losses"].as_array().unwrap().clone();
+    let losses = c["structuredContent"]["output"]["losses"]
+        .as_array()
+        .unwrap()
+        .clone();
     let lost = losses.iter().find(|l| l["kind"] == "relationLost").unwrap();
     assert_eq!(lost["detail"], "Parselin malikleri");
-    assert!(losses.iter().all(|l| l["kind"] != "blockChanged" && l["kind"] != "tableChanged"), "{losses:?}");
+    assert!(
+        losses
+            .iter()
+            .all(|l| l["kind"] != "blockChanged" && l["kind"] != "tableChanged"),
+        "{losses:?}"
+    );
     let _ = std::fs::remove_file(path);
 }

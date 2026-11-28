@@ -11,11 +11,24 @@ const SAMPLE: &str = include_str!("../../../../../fixtures/kcad/v2/road-work.jso
 const BREAKLINE: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e16";
 
 /// The pad: its toe and its top as closed breaklines on `dolgu`.
-const TOE: [[f64; 3]; 4] = [[10.0, 6.0, 101.0], [30.0, 7.0, 101.5], [29.0, 24.0, 102.5], [11.0, 23.0, 102.0]];
-const TOP: [[f64; 3]; 4] = [[15.0, 11.0, 103.0], [25.0, 11.5, 103.0], [24.0, 19.0, 103.0], [16.0, 18.5, 103.0]];
+const TOE: [[f64; 3]; 4] = [
+    [10.0, 6.0, 101.0],
+    [30.0, 7.0, 101.5],
+    [29.0, 24.0, 102.5],
+    [11.0, 23.0, 102.0],
+];
+const TOP: [[f64; 3]; 4] = [
+    [15.0, 11.0, 103.0],
+    [25.0, 11.5, 103.0],
+    [24.0, 19.0, 103.0],
+    [16.0, 18.5, 103.0],
+];
 
 fn ring(id: u32, uid_tail: &str, corners: &[[f64; 3]; 4]) -> (Value, String) {
-    let pts: Vec<Value> = corners.iter().map(|c| json!({"x": c[0], "y": c[1]})).collect();
+    let pts: Vec<Value> = corners
+        .iter()
+        .map(|c| json!({"x": c[0], "y": c[1]}))
+        .collect();
     let zs: Vec<Value> = corners.iter().map(|c| json!(c[2])).collect();
     (
         json!({"kind": "polygon", "id": id, "layerId": "dolgu", "attrs": {}, "pts": pts, "zs": zs}),
@@ -31,14 +44,20 @@ fn drawing(son_edits: Value, pad_edits: Value) -> Value {
     layer["name"] = json!("Dolgu");
     doc["layers"].as_array_mut().expect("layers").push(layer);
     for (entity, uid) in [ring(8, "21", &TOE), ring(9, "22", &TOP)] {
-        doc["entities"].as_array_mut().expect("entities").push(entity);
+        doc["entities"]
+            .as_array_mut()
+            .expect("entities")
+            .push(entity);
         doc["uids"].as_array_mut().expect("uids").push(json!(uid));
     }
     let surfaces = &mut doc["settings"]["road"]["surfaces"];
     let pad = json!({"id": "t-dolgu", "name": "Dolgu", "breaklines": {"layers": ["dolgu"]}, "edits": pad_edits});
     let son = json!({"id": "t-son", "name": "Son zemin", "points": {"layers": ["zemin"]},
                      "breaklines": {"uids": [BREAKLINE]}, "edits": son_edits});
-    surfaces.as_array_mut().expect("surfaces").extend([pad, son]);
+    surfaces
+        .as_array_mut()
+        .expect("surfaces")
+        .extend([pad, son]);
     doc
 }
 
@@ -52,7 +71,10 @@ fn gathered(doc: &Value, id: &str) -> (TerrainSurfaceDef, Gathered) {
         &def,
         &all,
         &snap.layers,
-        snap.entities.iter().zip(&uids).map(|(entity, uid)| SourceObject { uid, entity }),
+        snap.entities
+            .iter()
+            .zip(&uids)
+            .map(|(entity, uid)| SourceObject { uid, entity }),
     );
     (def, got)
 }
@@ -77,7 +99,11 @@ fn triangles(s: &Surface) -> Vec<[[u64; 2]; 3]> {
 }
 
 fn left(id: &str, why: &'static str) -> Left {
-    Left { id: id.into(), role: "edits", why }
+    Left {
+        id: id.into(),
+        role: "edits",
+        why,
+    }
 }
 
 #[test]
@@ -92,19 +118,32 @@ fn the_pasted_pads_triangles_come_in_as_they_are_and_the_ground_under_it_goes() 
     assert_eq!(got.left, vec![]);
     // The ground's four corners stay (outside the toe); the pad's eight corners come in, by place.
     assert_eq!(got.input.points.len(), 12);
-    let pasted: Vec<[f64; 3]> =
-        got.input.points.iter().filter(|p| p.source.as_deref() == Some("edits[0]")).map(|p| [p.x, p.y, p.z]).collect();
+    let pasted: Vec<[f64; 3]> = got
+        .input
+        .points
+        .iter()
+        .filter(|p| p.source.as_deref() == Some("edits[0]"))
+        .map(|p| [p.x, p.y, p.z])
+        .collect();
     let mut corners: Vec<[f64; 3]> = TOE.iter().chain(TOP.iter()).copied().collect();
     corners.sort_by(|a, b| a[0].total_cmp(&b[0]).then(a[1].total_cmp(&b[1])));
     assert_eq!(pasted, corners);
     // The ground's breakline crosses the pad: it goes whole (one piece). The pad's 17 edges come in, one breakline each.
-    assert!(got.input.breaklines.iter().all(|b| b.source.as_deref() == Some("edits[0]") && b.points.len() == 2));
+    assert!(
+        got.input
+            .breaklines
+            .iter()
+            .all(|b| b.source.as_deref() == Some("edits[0]") && b.points.len() == 2)
+    );
     assert_eq!(got.input.breaklines.len(), 17);
 
     let son = build(&got.input).expect("the pasted ground is made");
     let all = triangles(&son);
     for t in triangles(&pad) {
-        assert!(all.binary_search(&t).is_ok(), "the pad's triangle {t:?} is the ground's");
+        assert!(
+            all.binary_search(&t).is_ok(),
+            "the pad's triangle {t:?} is the ground's"
+        );
     }
     // On the pad's top its height (read off a triangle: to the last bit or so); at the ground's corner its own.
     let top = son.height(20.0, 15.0).z.expect("on the pad");
@@ -118,21 +157,48 @@ fn the_pasted_pads_triangles_come_in_as_they_are_and_the_ground_under_it_goes() 
 fn a_breakline_beside_the_pad_stays_and_one_touching_it_goes() {
     // The ground's breakline moved below the toe (y = 3): neither end covered, it meets no toe edge.
     let mut doc = drawing(json!([{"op": "paste", "terrain": "t-dolgu"}]), json!([]));
-    let bl = doc["entities"].as_array_mut().expect("entities").iter_mut().find(|e| e["id"] == 6).expect("breakline");
+    let bl = doc["entities"]
+        .as_array_mut()
+        .expect("entities")
+        .iter_mut()
+        .find(|e| e["id"] == 6)
+        .expect("breakline");
     bl["pts"] = json!([{"x": 5.0, "y": 3.0}, {"x": 35.0, "y": 3.0}]);
     let (_, got) = gathered(&doc, "t-son");
-    assert_eq!(got.input.breaklines.iter().filter(|b| b.source.as_deref() == Some(BREAKLINE)).count(), 1);
+    assert_eq!(
+        got.input
+            .breaklines
+            .iter()
+            .filter(|b| b.source.as_deref() == Some(BREAKLINE))
+            .count(),
+        1
+    );
     // Through the toe's corner (10, 6): touching counts, it goes.
-    let bl = doc["entities"].as_array_mut().expect("entities").iter_mut().find(|e| e["id"] == 6).expect("breakline");
+    let bl = doc["entities"]
+        .as_array_mut()
+        .expect("entities")
+        .iter_mut()
+        .find(|e| e["id"] == 6)
+        .expect("breakline");
     bl["pts"] = json!([{"x": 5.0, "y": 3.0}, {"x": 15.0, "y": 9.0}]);
     let (_, got) = gathered(&doc, "t-son");
-    assert_eq!(got.input.breaklines.iter().filter(|b| b.source.as_deref() == Some(BREAKLINE)).count(), 0);
+    assert_eq!(
+        got.input
+            .breaklines
+            .iter()
+            .filter(|b| b.source.as_deref() == Some(BREAKLINE))
+            .count(),
+        0
+    );
 }
 
 #[test]
 fn a_paste_that_comes_back_names_no_surface_or_one_not_made_is_said_and_pastes_nothing() {
     // The pad pastes the pasted ground back: each says the cycle and keeps its own sources.
-    let doc = drawing(json!([{"op": "paste", "terrain": "t-dolgu"}]), json!([{"op": "paste", "terrain": "t-son"}]));
+    let doc = drawing(
+        json!([{"op": "paste", "terrain": "t-dolgu"}]),
+        json!([{"op": "paste", "terrain": "t-son"}]),
+    );
     let (_, son) = gathered(&doc, "t-son");
     assert_eq!(son.left, vec![left("edits[0]", "cycle")]);
     assert_eq!(son.input.points.len(), 4);
@@ -141,11 +207,17 @@ fn a_paste_that_comes_back_names_no_surface_or_one_not_made_is_said_and_pastes_n
     assert_eq!(pad.left, vec![left("edits[0]", "cycle")]);
     // No such surface.
     let doc = drawing(json!([{"op": "paste", "terrain": "t-yok"}]), json!([]));
-    assert_eq!(gathered(&doc, "t-son").1.left, vec![left("edits[0]", "no_surface")]);
+    assert_eq!(
+        gathered(&doc, "t-son").1.left,
+        vec![left("edits[0]", "no_surface")]
+    );
     // A pad of no heights is not made.
     let mut doc = drawing(json!([{"op": "paste", "terrain": "t-dolgu"}]), json!([]));
     doc["settings"]["road"]["surfaces"][1]["breaklines"] = json!({"layers": ["0"]});
-    assert_eq!(gathered(&doc, "t-son").1.left, vec![left("edits[0]", "unbuildable")]);
+    assert_eq!(
+        gathered(&doc, "t-son").1.left,
+        vec![left("edits[0]", "unbuildable")]
+    );
 }
 
 #[test]
@@ -165,6 +237,18 @@ fn the_pasted_ground_goes_out_of_date_when_the_pad_changes() {
     );
     let (_, got) = gathered(&doc, "t-son");
     assert_eq!(got.left, vec![]);
-    assert!(got.input.points.iter().any(|p| (p.x, p.y, p.z) == (15.0, 11.0, 103.25)));
-    assert!(got.input.breaklines.iter().flat_map(|b| &b.points).filter(|p| (p[0], p[1]) == (15.0, 11.0)).all(|p| p[2] == 103.25));
+    assert!(
+        got.input
+            .points
+            .iter()
+            .any(|p| (p.x, p.y, p.z) == (15.0, 11.0, 103.25))
+    );
+    assert!(
+        got.input
+            .breaklines
+            .iter()
+            .flat_map(|b| &b.points)
+            .filter(|p| (p[0], p[1]) == (15.0, 11.0))
+            .all(|p| p[2] == 103.25)
+    );
 }

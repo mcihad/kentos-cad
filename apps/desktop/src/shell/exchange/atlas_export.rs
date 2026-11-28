@@ -18,7 +18,8 @@ use std::path::PathBuf;
 use iced::widget::{Column, container, row, scrollable};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
-    AtlasChanges, AtlasExported, AtlasLook, AtlasPageState, AtlasRecord, CommandResult, CommandWarning, ExportAtlas,
+    AtlasChanges, AtlasExported, AtlasLook, AtlasPageState, AtlasRecord, CommandResult,
+    CommandWarning, ExportAtlas,
 };
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
@@ -348,9 +349,16 @@ impl App {
                     // Docs/adr/3600: each page's sources on its own ground, as the command's answer gives them.
                     if let Ok(grounds) = planned.page_grounds(&doc.model) {
                         #[allow(clippy::type_complexity)]
-                        let asked: Vec<(Vec<(String, [f64; 4])>, String)> =
-                            grounds.into_iter().zip(&planned.pages).map(|(g, p)| (g, p.feature.clone())).collect();
-                        if let Ok(listed) = kentos_native_application::sheets_sources::atlas_page_sources(&doc.model, &row.id, &asked) {
+                        let asked: Vec<(Vec<(String, [f64; 4])>, String)> = grounds
+                            .into_iter()
+                            .zip(&planned.pages)
+                            .map(|(g, p)| (g, p.feature.clone()))
+                            .collect();
+                        if let Ok(listed) =
+                            kentos_native_application::sheets_sources::atlas_page_sources(
+                                &doc.model, &row.id, &asked,
+                            )
+                        {
                             for (page, sources) in planned.pages.iter_mut().zip(listed) {
                                 page.sources = sources.unwrap_or_default();
                             }
@@ -369,7 +377,12 @@ impl App {
                         &doc.model,
                         planned.pages.iter().flat_map(|p| p.sources.iter()),
                     );
-                    Some(kentos_headless::file_commands::atlas_changes(record, &planned.pages, &objects, &planned.pin))
+                    Some(kentos_headless::file_commands::atlas_changes(
+                        record,
+                        &planned.pages,
+                        &objects,
+                        &planned.pin,
+                    ))
                 }
                 _ => None,
             },
@@ -538,7 +551,12 @@ impl App {
                         format!("{} sayfa", out.pages.len())
                     } else {
                         let numbers: Vec<String> = out.written.iter().map(u32::to_string).collect();
-                        format!("güncelleme, {} sayfanın {}'i (sayfa {})", out.pages.len(), out.written.len(), numbers.join(", "))
+                        format!(
+                            "güncelleme, {} sayfanın {}'i (sayfa {})",
+                            out.pages.len(),
+                            out.written.len(),
+                            numbers.join(", ")
+                        )
                     };
                     // Docs/adr/4820: of the pages changed since the previous atlas, those that also look other.
                     let looks = out.changes.as_ref().map(look_words).unwrap_or_default();
@@ -587,11 +605,18 @@ impl App {
             Event::PreviousPicked(None) => {}
             Event::PreviousPicked(Some(path)) => {
                 if let Some(Window::AtlasExport(s)) = &mut self.exchange {
-                    let sheet = s.sheets.get(s.sheet).map(|r| r.id.clone()).unwrap_or_default();
+                    let sheet = s
+                        .sheets
+                        .get(s.sheet)
+                        .map(|r| r.id.clone())
+                        .unwrap_or_default();
                     s.previous = Some(
-                        kentos_headless::file_commands::previous_record(&path.display().to_string(), &sheet)
-                            .map(|r| (path.clone(), r))
-                            .map_err(|e| e.message),
+                        kentos_headless::file_commands::previous_record(
+                            &path.display().to_string(),
+                            &sheet,
+                        )
+                        .map(|r| (path.clone(), r))
+                        .map_err(|e| e.message),
                     );
                 }
                 self.atlas_replan();
@@ -790,7 +815,10 @@ impl App {
         let mut lines = Vec::new();
         // A definition changed but not applied (GIS-030): the pages are the applied one's, so its warnings (an empty
         // coverage) are not said over the choice on screen; the summary asks for Tanımı uygula, its button beside it.
-        let applied = Definition::of(s.sheets.get(s.sheet).and_then(|r| r.atlas.as_ref()), &s.layers);
+        let applied = Definition::of(
+            s.sheets.get(s.sheet).and_then(|r| r.atlas.as_ref()),
+            &s.layers,
+        );
         let pending = s.definition != applied;
         if pending {
             lines.push(words::text_line(
@@ -926,11 +954,18 @@ impl App {
         let mut previous = iced::widget::Row::new()
             .spacing(8)
             .align_y(iced::Alignment::Center)
-            .push(words::secondary("Önceki kayıt…", Some(event(Event::Previous))));
+            .push(words::secondary(
+                "Önceki kayıt…",
+                Some(event(Event::Previous)),
+            ));
         match &s.previous {
             Some(Ok((path, _))) => {
                 previous = previous
-                    .push(label::caption(path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()))
+                    .push(label::caption(
+                        path.file_name()
+                            .map(|n| n.to_string_lossy().into_owned())
+                            .unwrap_or_default(),
+                    ))
                     .push(words::ghost("Kaldır", Some(event(Event::PreviousClear))))
                     // Docs/adr/4400: the update's PDF.
                     .push(words::check(
@@ -953,7 +988,15 @@ impl App {
                 count(AtlasPageState::Same)
             );
             if !c.gone.is_empty() {
-                said.push_str(&format!("; {} sayfa artık yok ({})", c.gone.len(), c.gone.iter().map(|g| g.name.as_str()).collect::<Vec<_>>().join(", ")));
+                said.push_str(&format!(
+                    "; {} sayfa artık yok ({})",
+                    c.gone.len(),
+                    c.gone
+                        .iter()
+                        .map(|g| g.name.as_str())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ));
             }
             if !c.parts.is_empty() {
                 let words: Vec<&str> = c
@@ -966,10 +1009,20 @@ impl App {
                         _ => "paftalar",
                     })
                     .collect();
-                said.push_str(&format!("; değişen parçalar: {} (her sayfa değişmiş sayılır)", words.join(", ")));
+                said.push_str(&format!(
+                    "; değişen parçalar: {} (her sayfa değişmiş sayılır)",
+                    words.join(", ")
+                ));
             }
             said.push('.');
-            lines.push(words::text_line(if count(AtlasPageState::Same) == c.pages.len() { Line::Ok } else { Line::Info }, said));
+            lines.push(words::text_line(
+                if count(AtlasPageState::Same) == c.pages.len() {
+                    Line::Ok
+                } else {
+                    Line::Info
+                },
+                said,
+            ));
         }
         preview = preview.push(words::summary(lines));
         if pending {
@@ -1010,7 +1063,8 @@ impl App {
                         )))
                         .width(200),
                         container(label::body(page.sources.len().to_string())).width(60),
-                        container(label::body(change_word(s.changes.as_ref(), page.index))).width(80),
+                        container(label::body(change_word(s.changes.as_ref(), page.index)))
+                            .width(80),
                     ]
                     .spacing(8),
                 );
@@ -1064,7 +1118,12 @@ impl App {
 /// Docs/adr/4820: how the changed pages look against the previous atlas, in words: empty when no changed page's look
 /// is known (a previous record written before looks were kept).
 pub(crate) fn look_words(c: &AtlasChanges) -> String {
-    let known = |look: AtlasLook| c.pages.iter().filter(|p| p.state == AtlasPageState::Changed && p.look == Some(look)).count();
+    let known = |look: AtlasLook| {
+        c.pages
+            .iter()
+            .filter(|p| p.state == AtlasPageState::Changed && p.look == Some(look))
+            .count()
+    };
     let (other, same) = (known(AtlasLook::Changed), known(AtlasLook::Same));
     if other + same == 0 {
         return String::new();
@@ -1076,13 +1135,19 @@ pub(crate) fn look_words(c: &AtlasChanges) -> String {
 
 /// A page's change in words (docs/adr/4000): empty without a previous record.
 fn change_word(changes: Option<&AtlasChanges>, index: u32) -> String {
-    let Some(c) = changes.and_then(|c| c.pages.iter().find(|p| p.index == index)) else { return String::new() };
+    let Some(c) = changes.and_then(|c| c.pages.iter().find(|p| p.index == index)) else {
+        return String::new();
+    };
     match c.state {
         AtlasPageState::Same => "aynı".into(),
         AtlasPageState::New => "yeni".into(),
         AtlasPageState::Changed => {
             let n = c.changed.len() + c.added.len() + c.removed.len();
-            if n == 0 { "değişti".into() } else { format!("değişti ({n})") }
+            if n == 0 {
+                "değişti".into()
+            } else {
+                format!("değişti ({n})")
+            }
         }
     }
 }

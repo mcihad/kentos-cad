@@ -29,7 +29,8 @@ fn files(dir: &Path, out: &mut Vec<PathBuf>) {
 #[test]
 #[ignore = "samples downloaded for a measurement, by hand"]
 fn downloaded_samples_read_as_the_other_reader_reads_them() {
-    let dir = std::env::var("KENTOS_IFC_ORNEKLER").expect("KENTOS_IFC_ORNEKLER: the downloaded samples' folder");
+    let dir = std::env::var("KENTOS_IFC_ORNEKLER")
+        .expect("KENTOS_IFC_ORNEKLER: the downloaded samples' folder");
     let mut all = Vec::new();
     files(Path::new(&dir), &mut all);
     all.sort();
@@ -38,7 +39,8 @@ fn downloaded_samples_read_as_the_other_reader_reads_them() {
     for f in &all {
         let name = f.strip_prefix(&dir).unwrap_or(f).display().to_string();
         let reference: serde_json::Value = serde_json::from_str(
-            &std::fs::read_to_string(f.with_extension("okuma.json")).expect("the other reader's reading beside it"),
+            &std::fs::read_to_string(f.with_extension("okuma.json"))
+                .expect("the other reader's reading beside it"),
         )
         .expect("it reads");
         let bytes = std::fs::read(f).expect("the file");
@@ -55,7 +57,11 @@ fn downloaded_samples_read_as_the_other_reader_reads_them() {
         println!(
             "{name}: {} {}; {} objects, {} findings; graph {} differences; {sets} objects' sets, {} differences; {} bodies (the other reader {}), {} not shown, worst box {:.2e} m, worst volume {:.2e}, {} unexpected",
             m.summary.schema,
-            m.summary.header.originating_system.as_deref().unwrap_or("?"),
+            m.summary
+                .header
+                .originating_system
+                .as_deref()
+                .unwrap_or("?"),
             m.objects.len(),
             m.findings.len(),
             graph.len(),
@@ -67,7 +73,18 @@ fn downloaded_samples_read_as_the_other_reader_reads_them() {
             b.worst_volume,
             b.unexpected.len()
         );
-        differences.extend(graph.into_iter().chain(set_diffs).chain(b.unexpected).map(|d| format!("{name}: {d}")));
+        differences.extend(
+            graph
+                .into_iter()
+                .chain(set_diffs)
+                .chain(b.unexpected)
+                .map(|d| format!("{name}: {d}")),
+        );
     }
-    assert!(differences.is_empty(), "{} differences:\n{}", differences.len(), differences.join("\n"));
+    assert!(
+        differences.is_empty(),
+        "{} differences:\n{}",
+        differences.len(),
+        differences.join("\n")
+    );
 }

@@ -86,6 +86,10 @@ fn yok_leaves_it_unnumbered_and_otomatik_comes_back() {
     assert_eq!(number(&b), None);
     assert!(set(&mut b, "N", ""));
     b.click(5., 0.3);
-    assert_eq!(number(&b).as_deref(), Some("K1"), "the unnumbered one does not count");
+    assert_eq!(
+        number(&b).as_deref(),
+        Some("K1"),
+        "the unnumbered one does not count"
+    );
     assert!(!set(&mut b, "N", &"K".repeat(129)), "too long");
 }

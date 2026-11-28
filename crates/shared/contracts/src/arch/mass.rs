@@ -73,34 +73,49 @@ impl MassFields {
     /// What is wrong with it, the field and the words; none when nothing is.
     pub fn problem(&self) -> Option<(String, String)> {
         if self.parts.is_empty() {
-            return Some(("parts".into(), "Kütlenin oturumu yok: en az bir halka verin.".into()));
+            return Some((
+                "parts".into(),
+                "Kütlenin oturumu yok: en az bir halka verin.".into(),
+            ));
         }
         let mut total = 0;
         for (i, p) in self.parts.iter().enumerate() {
-            if let Some(found) = ring_problem_of(&p.outer, &format!("parts[{i}].outer"), "Kütlenin") {
+            if let Some(found) = ring_problem_of(&p.outer, &format!("parts[{i}].outer"), "Kütlenin")
+            {
                 return Some(found);
             }
             total += p.outer.pts.len();
             for (k, h) in p.holes.iter().enumerate() {
-                if let Some(found) = ring_problem_of(h, &format!("parts[{i}].holes[{k}]"), "Kütlenin") {
+                if let Some(found) =
+                    ring_problem_of(h, &format!("parts[{i}].holes[{k}]"), "Kütlenin")
+                {
                     return Some(found);
                 }
                 total += h.pts.len();
             }
         }
         if total > MAX_SPACE_POINTS {
-            return Some(("parts".into(), format!("Kütlenin halkalarında {total} köşe var; en çok {MAX_SPACE_POINTS}.")));
+            return Some((
+                "parts".into(),
+                format!("Kütlenin halkalarında {total} köşe var; en çok {MAX_SPACE_POINTS}."),
+            ));
         }
         if !(self.height.is_finite() && self.height > 0.0 && self.height <= MAX_MASS_HEIGHT) {
             return Some((
                 "height".into(),
-                format!("Kütlenin yüksekliği sıfırdan büyük, en çok {MAX_MASS_HEIGHT} m olmalı; {} verildi.", self.height),
+                format!(
+                    "Kütlenin yüksekliği sıfırdan büyük, en çok {MAX_MASS_HEIGHT} m olmalı; {} verildi.",
+                    self.height
+                ),
             ));
         }
         if !(self.offset.is_finite() && self.offset.abs() <= MAX_MASS_OFFSET) {
             return Some((
                 "offset".into(),
-                format!("Kütlenin kata göre tabanı sonlu, en çok ±{MAX_MASS_OFFSET} m olmalı; {} verildi.", self.offset),
+                format!(
+                    "Kütlenin kata göre tabanı sonlu, en çok ±{MAX_MASS_OFFSET} m olmalı; {} verildi.",
+                    self.offset
+                ),
             ));
         }
         if let Some(name) = self.name.as_deref()
@@ -111,7 +126,9 @@ impl MassFields {
         {
             return Some((
                 "name".into(),
-                format!("Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok {MAX_MASS_NAME} karakter."),
+                format!(
+                    "Kütlenin adı boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok {MAX_MASS_NAME} karakter."
+                ),
             ));
         }
         None

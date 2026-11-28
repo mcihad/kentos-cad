@@ -14,7 +14,7 @@ use kentos_application::{AppError, admin, changes, files, listing, projects, sna
 use kentos_contracts::{
     CommandEnvelope, DocumentSnapshotV1, DocumentSnapshotV2, EntityId, FileUploadBegin, GrantRole,
     PROJECT_CONVERT, PROJECT_FILE_COMMIT, ProjectCreate, ProjectDuplicated, ProjectStorage,
-    TenantRole, ProjectType,
+    ProjectType, TenantRole,
 };
 use kentos_postgres::testing::TestDb;
 use serde_json::{Value, json};
@@ -75,7 +75,11 @@ async fn file_project(
         description: None,
         // A CBS project is kept in the database and a new one is never a file (docs/adr/9196 §2): an old CBS file
         // project, whose way out is `project.convert`, is a CAD file project given CBS's type afterwards.
-        project_type: Some(if project_type == ProjectType::Gis { ProjectType::Cad } else { project_type }),
+        project_type: Some(if project_type == ProjectType::Gis {
+            ProjectType::Cad
+        } else {
+            project_type
+        }),
         tags: None,
         storage: Some(ProjectStorage::File),
     };

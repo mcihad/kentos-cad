@@ -413,8 +413,13 @@ mod tests {
         assert!(report.unterminated.is_empty());
         // Without terminals in the definition every edge connects.
         let (plain, _) = device(false, false);
-        let loc = plain.locate(Vec2::new(100.0, 40.0), 1.0).expect("on an edge");
-        assert_eq!(trace(&plain, &[loc], &[], TraceKind::Connected).edges.len(), 3);
+        let loc = plain
+            .locate(Vec2::new(100.0, 40.0), 1.0)
+            .expect("on an edge");
+        assert_eq!(
+            trace(&plain, &[loc], &[], TraceKind::Connected).edges.len(),
+            3
+        );
     }
 
     /// An end that names no terminal passes to every terminal, both ways: it is said, and a trace over it is not one

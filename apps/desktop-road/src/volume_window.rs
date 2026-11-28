@@ -20,20 +20,22 @@
 //! sets), each one undo step, and closes. Cetveli yaz writes the chosen volume's sheet as typed (an Excel workbook, an
 //! OpenDocument spreadsheet or a CSV file, docs/adr/0223's writer). The factors are the user's: nothing is filled in.
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, RoadEditOperation, VolumeApprovalDef, VolumeBenchDef, VolumeDef, VolumeFactorDef, VolumeMethod, VolumeReport,
-    VolumeStripDef, VolumesEdit, WorkbookFormat,
+    CommandWarning, RoadEditOperation, VolumeApprovalDef, VolumeBenchDef, VolumeDef,
+    VolumeFactorDef, VolumeMethod, VolumeReport, VolumeStripDef, VolumesEdit, WorkbookFormat,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, road_volumes, road_volumes_approve, road_volumes_edit};
+use kentos_native_application::{
+    ExecutionContext, road_volumes, road_volumes_approve, road_volumes_edit,
+};
 use kentos_ui::theme::{Tokens, typography};
-use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::Elided;
+use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
@@ -96,9 +98,18 @@ pub(crate) const CURVE: &str = "Kesitlerin ağırlık merkeziyle düzelt";
 const RULES: [(Option<kentos_commands::VolumeRule>, &str); 5] = [
     (None, "Kuralsız (sıyırma varsa bitkisel toprağa göre)"),
     (Some(kentos_commands::VolumeRule::RoadGround), "Yol–Zemin"),
-    (Some(kentos_commands::VolumeRule::FormationGround), "Formasyon–Zemin"),
-    (Some(kentos_commands::VolumeRule::RoadTopsoil), "Yol–Bitkisel Toprak"),
-    (Some(kentos_commands::VolumeRule::FormationTopsoil), "Formasyon–Bitkisel Toprak"),
+    (
+        Some(kentos_commands::VolumeRule::FormationGround),
+        "Formasyon–Zemin",
+    ),
+    (
+        Some(kentos_commands::VolumeRule::RoadTopsoil),
+        "Yol–Bitkisel Toprak",
+    ),
+    (
+        Some(kentos_commands::VolumeRule::FormationTopsoil),
+        "Formasyon–Bitkisel Toprak",
+    ),
 ];
 
 /// What the window shows under its figures.
@@ -150,7 +161,10 @@ const METHODS: [(VolumeMethod, &str); 4] = [
 /// The method and the sampling step it used (docs/adr/0974; ROAD-VOL-03): the grid's cell, else the largest interval
 /// between two sections.
 pub(crate) fn method_words(rep: &VolumeReport) -> String {
-    let name = METHODS.iter().find(|m| m.0 == rep.method).map_or("", |m| m.1);
+    let name = METHODS
+        .iter()
+        .find(|m| m.0 == rep.method)
+        .map_or("", |m| m.1);
     // Docs/adr/1040: the method's algorithm by name and version, where it computed.
     let name = match road_volumes::basis_of(rep) {
         Some(b) => format!("{name} ({})", b.algorithm),
@@ -180,13 +194,25 @@ fn grouped(v: f64, digits: usize) -> String {
         }
         out.push(c);
     }
-    let sign = if v < 0.0 && text.chars().any(|c| c.is_ascii_digit() && c != '0') { "-" } else { "" };
-    if fraction.is_empty() { format!("{sign}{out}") } else { format!("{sign}{out},{fraction}") }
+    let sign = if v < 0.0 && text.chars().any(|c| c.is_ascii_digit() && c != '0') {
+        "-"
+    } else {
+        ""
+    };
+    if fraction.is_empty() {
+        format!("{sign}{out}")
+    } else {
+        format!("{sign}{out},{fraction}")
+    }
 }
 
 /// A change with its sign: “+12,5”, “−3,0”.
 fn signed(v: f64) -> String {
-    if v < -0.05 { format!("−{}", grouped(-v, 1)) } else { format!("+{}", grouped(v.max(0.0), 1)) }
+    if v < -0.05 {
+        format!("−{}", grouped(-v, 1))
+    } else {
+        format!("+{}", grouped(v.max(0.0), 1))
+    }
 }
 
 fn number(text: &str) -> Result<Option<f64>, ()> {
@@ -236,7 +262,12 @@ impl Row {
                 .factors
                 .iter()
                 .map(|f| {
-                    let d = |g: fn(&kentos_commands::VolumeDensities) -> f64| f.densities.as_ref().map(|x| trimmed(g(x))).unwrap_or_default();
+                    let d = |g: fn(&kentos_commands::VolumeDensities) -> f64| {
+                        f.densities
+                            .as_ref()
+                            .map(|x| trimmed(g(x)))
+                            .unwrap_or_default()
+                    };
                     [
                         trimmed(f.from),
                         trimmed(f.to),
@@ -249,8 +280,14 @@ impl Row {
                     ]
                 })
                 .collect(),
-            strip: d.strip.iter().map(|f| [trimmed(f.from), trimmed(f.to), trimmed(f.depth)]).collect(),
-            bench: d.bench.as_ref().map_or_else(Default::default, |b| [crate::road_dialog::percent_text(b.slope), trimmed(b.height)]),
+            strip: d
+                .strip
+                .iter()
+                .map(|f| [trimmed(f.from), trimmed(f.to), trimmed(f.depth)])
+                .collect(),
+            bench: d.bench.as_ref().map_or_else(Default::default, |b| {
+                [crate::road_dialog::percent_text(b.slope), trimmed(b.height)]
+            }),
             approved: d.approved.clone(),
             history: d.history.clone(),
             rule: d.rule,
@@ -260,7 +297,10 @@ impl Row {
     }
 
     fn def(&self) -> Result<VolumeDef, String> {
-        let corridor = self.corridor.clone().ok_or("Bir koridor seçin: kübaj onun kesitlerinden ve üst yüzeyinden hesaplanır.")?;
+        let corridor = self
+            .corridor
+            .clone()
+            .ok_or("Bir koridor seçin: kübaj onun kesitlerinden ve üst yüzeyinden hesaplanır.")?;
         let mut factors = Vec::new();
         for (i, f) in self.factors.iter().enumerate() {
             let n = i + 1;
@@ -268,13 +308,29 @@ impl Row {
                 Ok(Some(v)) => Ok(v),
                 _ => Err(format!("{n}. katsayı satırının {what} bir sayı olmalı.")),
             };
-            let may = |t: &str, what: &str| number(t).map_err(|()| format!("{n}. katsayı satırının {what} bir sayı olmalı."));
+            let may = |t: &str, what: &str| {
+                number(t).map_err(|()| format!("{n}. katsayı satırının {what} bir sayı olmalı."))
+            };
             // The densities, all three or none (docs/adr/0957).
-            let dens = [may(&f[4], "yerinde yoğunluğu")?, may(&f[5], "gevşek yoğunluğu")?, may(&f[6], "sıkışık yoğunluğu")?];
+            let dens = [
+                may(&f[4], "yerinde yoğunluğu")?,
+                may(&f[5], "gevşek yoğunluğu")?,
+                may(&f[6], "sıkışık yoğunluğu")?,
+            ];
             let densities = match dens {
-                [Some(bank), Some(loose), Some(compacted)] => Some(kentos_commands::VolumeDensities { bank, loose, compacted }),
+                [Some(bank), Some(loose), Some(compacted)] => {
+                    Some(kentos_commands::VolumeDensities {
+                        bank,
+                        loose,
+                        compacted,
+                    })
+                }
                 [None, None, None] => None,
-                _ => return Err(format!("{n}. satırın yoğunlukları üçü birlikte yazılır: yerinde, gevşek, sıkışık.")),
+                _ => {
+                    return Err(format!(
+                        "{n}. satırın yoğunlukları üçü birlikte yazılır: yerinde, gevşek, sıkışık."
+                    ));
+                }
             };
             let source = f[7].trim();
             factors.push(VolumeFactorDef {
@@ -293,18 +349,31 @@ impl Row {
                 Ok(Some(v)) => Ok(v),
                 _ => Err(format!("{n}. sıyırma satırının {what} bir sayı olmalı.")),
             };
-            strip.push(VolumeStripDef { from: need(&f[0], "başı")?, to: need(&f[1], "sonu")?, depth: need(&f[2], "kalınlığı")? });
+            strip.push(VolumeStripDef {
+                from: need(&f[0], "başı")?,
+                to: need(&f[1], "sonu")?,
+                depth: need(&f[2], "kalınlığı")?,
+            });
         }
         // The slope's field is percent, the bench's slope a grade (docs/adr/0977).
-        let bench = match (crate::road_dialog::grade_of(&self.bench[0]), number(&self.bench[1])) {
-            (Ok(None), Ok(None)) => None,
-            (Ok(Some(slope)), Ok(Some(height))) => Some(VolumeBenchDef { slope, height }),
-            _ => return Err("Diş kazısı için eğimi (%) ve basamak yüksekliğini sayı olarak birlikte yazın.".into()),
-        };
+        let bench =
+            match (
+                crate::road_dialog::grade_of(&self.bench[0]),
+                number(&self.bench[1]),
+            ) {
+                (Ok(None), Ok(None)) => None,
+                (Ok(Some(slope)), Ok(Some(height))) => Some(VolumeBenchDef { slope, height }),
+                _ => return Err(
+                    "Diş kazısı için eğimi (%) ve basamak yüksekliğini sayı olarak birlikte yazın."
+                        .into(),
+                ),
+            };
         // Docs/adr/0974: the grid's cell, the user's; KentOS gives none.
         let cell = match (self.method, number(&self.cell)) {
             (VolumeMethod::Grid, Ok(Some(c))) => Some(c),
-            (VolumeMethod::Grid, _) => return Err("Izgara yöntemi için hücre boyunu (m) yazın.".into()),
+            (VolumeMethod::Grid, _) => {
+                return Err("Izgara yöntemi için hücre boyunu (m) yazın.".into());
+            }
             _ => None,
         };
         Ok(VolumeDef {
@@ -349,14 +418,23 @@ pub struct Window {
     /// The uncertainty asked (docs/adr/0941): σ, the shift, the share accepted; the window's, not the volume's.
     pub(crate) uncertainty: [String; 3],
     /// The budget read on the volume as typed, when σ is written.
-    pub(crate) budget: Option<Result<(kentos_commands::VolumeUncertaintyReport, Vec<CommandWarning>), String>>,
+    pub(crate) budget: Option<
+        Result<
+            (
+                kentos_commands::VolumeUncertaintyReport,
+                Vec<CommandWarning>,
+            ),
+            String,
+        >,
+    >,
     /// The survey now and the one before it (docs/adr/0942): terrain surfaces' ids; the window's, not the volume's.
     pub(crate) survey: Option<String>,
     pub(crate) previous: Option<String>,
     /// The heights taken as one vertical system when not shown to be (docs/adr/1029): the progress is a draft.
     pub(crate) assume_heights: bool,
     /// The progress read on the volume as typed, when a survey is chosen.
-    pub(crate) progress: Option<Result<(kentos_commands::VolumeProgressReport, Vec<CommandWarning>), String>>,
+    pub(crate) progress:
+        Option<Result<(kentos_commands::VolumeProgressReport, Vec<CommandWarning>), String>>,
     /// The saved volumes compared with the chosen one (docs/adr/0943), and the comparison with each one's alignment
     /// drawn in plan.
     pub(crate) alternatives: Vec<String>,
@@ -368,13 +446,15 @@ pub struct Window {
     /// The ledger by the volume's factor rows (ROAD-VOL-21), over the regions.
     pub(crate) ledger_factors: bool,
     pub(crate) ledger_decimals: u32,
-    pub(crate) ledger: Option<Result<(kentos_commands::VolumeLedgerRead, Vec<CommandWarning>), String>>,
+    pub(crate) ledger:
+        Option<Result<(kentos_commands::VolumeLedgerRead, Vec<CommandWarning>), String>>,
     /// The note the next approval or revocation is written with (docs/adr/0950).
     pub(crate) approval_note: String,
     /// The chosen volume's approvals as saved, read while shown.
     pub(crate) history: Option<kentos_commands::VolumeHistoryRead>,
     /// The earthwork's three states while shown (docs/adr/0957).
-    pub(crate) states: Option<Result<(kentos_commands::VolumeStatesRead, Vec<CommandWarning>), String>>,
+    pub(crate) states:
+        Option<Result<(kentos_commands::VolumeStatesRead, Vec<CommandWarning>), String>>,
 }
 
 #[derive(Debug, Clone)]
@@ -456,7 +536,12 @@ pub(crate) trait VolumeWindowApp {
     fn write_volume_sheet(&mut self) -> Task<Message>;
     fn save_volumes(&mut self) -> Task<Message>;
     fn road_volume_view(&self) -> Element<'_, Message>;
-    fn volume_form<'a>(&'a self, w: &'a Window, r: &'a Row, corridors: &[(String, String)]) -> kentos_ui::widget::Form<'a, Message>;
+    fn volume_form<'a>(
+        &'a self,
+        w: &'a Window,
+        r: &'a Row,
+        corridors: &[(String, String)],
+    ) -> kentos_ui::widget::Form<'a, Message>;
     fn volume_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
@@ -534,22 +619,34 @@ impl VolumeWindowApp for App {
                 (report, warnings)
             })
         }) {
-            Err(e) => Preview { why: Some(e), ..Preview::default() },
-            Ok((report, warnings)) => Preview { report: Some(report), warnings, why: None },
+            Err(e) => Preview {
+                why: Some(e),
+                ..Preview::default()
+            },
+            Ok((report, warnings)) => Preview {
+                report: Some(report),
+                warnings,
+                why: None,
+            },
         };
         // The budget, when σ is written and the volume computes.
         w.budget = match (number(&w.uncertainty[0]), &w.preview.report, def) {
             (Ok(None), _, _) | (_, None, _) | (_, _, Err(_)) => None,
             (Err(()), _, _) => Some(Err(format!("{} bir sayı olmalı.", UNCERTAINTY[0]))),
             (Ok(Some(sigma)), Some(_), Ok(def)) => Some((|| {
-                let read = |k: usize| number(&w.uncertainty[k]).map_err(|()| format!("{} bir sayı olmalı.", UNCERTAINTY[k]));
+                let read = |k: usize| {
+                    number(&w.uncertainty[k])
+                        .map_err(|()| format!("{} bir sayı olmalı.", UNCERTAINTY[k]))
+                };
                 let input = kentos_commands::VolumesUncertainty {
                     volume: def.id.clone(),
                     sigma,
                     systematic: read(1)?,
                     accept: read(2)?,
                 };
-                kentos_native_application::road_volumes_uncertainty::preview(&doc.model, &def, &input)
+                kentos_native_application::road_volumes_uncertainty::preview(
+                    &doc.model, &def, &input,
+                )
             })()),
         };
         // The progress, when a survey is chosen and the volume computes.
@@ -562,40 +659,62 @@ impl VolumeWindowApp for App {
                     assume_heights: w.assume_heights,
                 };
                 let words = |t: &str| crate::road_dialog::heights_words(t, "“Kotlar › Aynı say”");
-                Some(match kentos_native_application::road_volumes_progress::preview(&doc.model, &def, &input) {
-                    Ok((p, warnings)) => Ok((
-                        p,
-                        warnings.into_iter().map(|w| CommandWarning { message: words(&w.message), ..w }).collect(),
-                    )),
-                    Err(why) => Err(words(&why)),
-                })
+                Some(
+                    match kentos_native_application::road_volumes_progress::preview(
+                        &doc.model, &def, &input,
+                    ) {
+                        Ok((p, warnings)) => Ok((
+                            p,
+                            warnings
+                                .into_iter()
+                                .map(|w| CommandWarning {
+                                    message: words(&w.message),
+                                    ..w
+                                })
+                                .collect(),
+                        )),
+                        Err(why) => Err(words(&why)),
+                    },
+                )
             }
             _ => None,
         };
         // The comparison, of the chosen volume as saved with the alternatives picked.
         let chosen_id = r.id.clone();
         let saved = w.kept.iter().any(|k| k.id == chosen_id);
-        let others: Vec<String> = w.alternatives.iter().filter(|a| **a != chosen_id && w.kept.iter().any(|k| &k.id == *a)).cloned().collect();
+        let others: Vec<String> = w
+            .alternatives
+            .iter()
+            .filter(|a| **a != chosen_id && w.kept.iter().any(|k| &k.id == *a))
+            .cloned()
+            .collect();
         let input = kentos_commands::VolumesCompare {
             volumes: std::iter::once(chosen_id).chain(others).collect(),
             tolerance: None,
             height: None,
         };
         let asked = saved && input.volumes.len() > 1;
-        w.comparison = asked.then(|| kentos_native_application::road_volumes_compare::preview(&doc.model, &input));
+        w.comparison = asked
+            .then(|| kentos_native_application::road_volumes_compare::preview(&doc.model, &input));
         w.traces = match &w.comparison {
-            Some(Ok(_)) => kentos_native_application::road_volumes_compare::traces(&doc.model, &input),
+            Some(Ok(_)) => {
+                kentos_native_application::road_volumes_compare::traces(&doc.model, &input)
+            }
             _ => Vec::new(),
         };
         // The approvals of the volume as saved, while shown.
         let kept = w.kept.iter().find(|k| k.id == r.id).cloned();
         w.history = match (w.shown == Shown::History, kept) {
-            (true, Some(def)) => Some(kentos_native_application::road_volumes_history::preview_of(&doc.model, &def)),
+            (true, Some(def)) => Some(kentos_native_application::road_volumes_history::preview_of(
+                &doc.model, &def,
+            )),
             _ => None,
         };
         // The states, while shown: the volume as typed (docs/adr/0957).
         w.states = match (w.shown == Shown::States, &w.preview.report, r.def()) {
-            (true, Some(_), Ok(def)) => Some(kentos_native_application::road_volumes_states::preview_of(&doc.model, &def)),
+            (true, Some(_), Ok(def)) => Some(
+                kentos_native_application::road_volumes_states::preview_of(&doc.model, &def),
+            ),
             _ => None,
         };
         // The ledger, while it is shown: it computes the volume once more.
@@ -611,12 +730,16 @@ impl VolumeWindowApp for App {
                         } else if w.ledger_regions {
                             kentos_commands::LedgerBy::Regions
                         } else {
-                            kentos_commands::LedgerBy::Stations { step: step.unwrap_or(100.0) }
+                            kentos_commands::LedgerBy::Stations {
+                                step: step.unwrap_or(100.0),
+                            }
                         },
                         top: Some(10),
                         decimals: Some(w.ledger_decimals),
                     };
-                    kentos_native_application::road_volumes_ledger::preview_of(&doc.model, &def, &input)
+                    kentos_native_application::road_volumes_ledger::preview_of(
+                        &doc.model, &def, &input,
+                    )
                 }
             }),
             _ => None,
@@ -638,15 +761,24 @@ impl VolumeWindowApp for App {
     /// The project's terrain surfaces: id and name.
     fn volume_surfaces(&self) -> Vec<(String, String)> {
         self.document.as_ref().map_or_else(Vec::new, |d| {
-            d.model.settings().road.as_ref().map_or_else(Vec::new, |r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect())
+            d.model.settings().road.as_ref().map_or_else(Vec::new, |r| {
+                r.surfaces
+                    .iter()
+                    .map(|s| (s.id.clone(), s.name.clone()))
+                    .collect()
+            })
         })
     }
 
     /// The project's corridors: id and name.
     fn volume_corridors(&self) -> Vec<(String, String)> {
-        self.document
-            .as_ref()
-            .map_or_else(Vec::new, |d| d.model.road_corridors().iter().map(|c| (c.id.clone(), c.name.clone())).collect())
+        self.document.as_ref().map_or_else(Vec::new, |d| {
+            d.model
+                .road_corridors()
+                .iter()
+                .map(|c| (c.id.clone(), c.name.clone()))
+                .collect()
+        })
     }
 
     fn volume_event(&mut self, event: Event) -> Task<Message> {
@@ -661,15 +793,25 @@ impl VolumeWindowApp for App {
                 w.line = None;
             }
             Event::New => match corridors.first() {
-                None => warning = Some("Kübaj bir koridorun hacmidir: önce Koridor'da bir koridor oluşturun."),
+                None => {
+                    warning =
+                        Some("Kübaj bir koridorun hacmidir: önce Koridor'da bir koridor oluşturun.")
+                }
                 Some((id, _)) => {
                     let taken: Vec<String> = w.rows.iter().map(|r| r.id.clone()).collect();
-                    let new_id = (1..).map(|n| format!("v-{n}")).find(|x| !taken.contains(x)).unwrap_or_default();
+                    let new_id = (1..)
+                        .map(|n| format!("v-{n}"))
+                        .find(|x| !taken.contains(x))
+                        .unwrap_or_default();
                     let n = w.rows.len() + 1;
                     // The first corridor and the average end area; the factors are the user's.
                     w.rows.push(Row {
                         id: new_id,
-                        name: if n == 1 { "Kübaj".to_owned() } else { format!("Kübaj {n}") },
+                        name: if n == 1 {
+                            "Kübaj".to_owned()
+                        } else {
+                            format!("Kübaj {n}")
+                        },
                         revision: 0,
                         corridor: Some(id.clone()),
                         method: VolumeMethod::EndArea,
@@ -689,7 +831,8 @@ impl VolumeWindowApp for App {
             Event::Remove => {
                 if let Some(i) = w.chosen.filter(|i| *i < w.rows.len()) {
                     w.rows.remove(i);
-                    w.chosen = (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
+                    w.chosen =
+                        (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
                 }
             }
             Event::Name(t) => {
@@ -698,9 +841,14 @@ impl VolumeWindowApp for App {
                 }
             }
             Event::Corridor(id) => {
-                let saved = w.chosen.and_then(|i| w.rows.get(i)).is_some_and(|r| w.kept.iter().any(|k| k.id == r.id));
+                let saved = w
+                    .chosen
+                    .and_then(|i| w.rows.get(i))
+                    .is_some_and(|r| w.kept.iter().any(|k| k.id == r.id));
                 if saved {
-                    warning = Some("Kaydedilmiş kübajın koridoru değişmez; başka koridor için yeni bir kübaj oluşturun.");
+                    warning = Some(
+                        "Kaydedilmiş kübajın koridoru değişmez; başka koridor için yeni bir kübaj oluşturun.",
+                    );
                 } else if let Some(r) = chosen_row(w) {
                     r.corridor = Some(id);
                 }
@@ -725,8 +873,21 @@ impl VolumeWindowApp for App {
             Event::Add => {
                 if let Some(r) = chosen_row(w) {
                     // A new row starts where the last ends; its end and factors are the user's.
-                    let from = r.factors.last().map(|x| x[1].clone()).unwrap_or_else(|| "0".into());
-                    r.factors.push([from, String::new(), String::new(), String::new(), String::new(), String::new(), String::new(), String::new()]);
+                    let from = r
+                        .factors
+                        .last()
+                        .map(|x| x[1].clone())
+                        .unwrap_or_else(|| "0".into());
+                    r.factors.push([
+                        from,
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                        String::new(),
+                    ]);
                     let n = r.factors.len() - 1;
                     w.line = Some(n);
                 }
@@ -740,7 +901,11 @@ impl VolumeWindowApp for App {
             Event::StripLine(j) => w.strip_line = Some(j),
             Event::AddStrip => {
                 if let Some(r) = chosen_row(w) {
-                    let from = r.strip.last().map(|x| x[1].clone()).unwrap_or_else(|| "0".into());
+                    let from = r
+                        .strip
+                        .last()
+                        .map(|x| x[1].clone())
+                        .unwrap_or_else(|| "0".into());
                     r.strip.push([from, String::new(), String::new()]);
                     let n = r.strip.len() - 1;
                     w.strip_line = Some(n);
@@ -783,24 +948,40 @@ impl VolumeWindowApp for App {
                 }
             }
             Event::Survey(id) => {
-                w.shown = if id.is_some() { Shown::Progress } else { w.shown };
+                w.shown = if id.is_some() {
+                    Shown::Progress
+                } else {
+                    w.shown
+                };
                 w.survey = id;
             }
             Event::Previous(id) => w.previous = id,
             Event::AssumeHeights(b) => w.assume_heights = b,
             Event::LedgerStep(t) => {
                 w.ledger_step = t;
-                w.shown = if w.shown == Shown::Largest { Shown::Largest } else { Shown::Ledger };
+                w.shown = if w.shown == Shown::Largest {
+                    Shown::Largest
+                } else {
+                    Shown::Ledger
+                };
             }
             Event::LedgerRegions(on) => {
                 w.ledger_regions = on;
                 w.ledger_factors = false;
-                w.shown = if w.shown == Shown::Largest { Shown::Largest } else { Shown::Ledger };
+                w.shown = if w.shown == Shown::Largest {
+                    Shown::Largest
+                } else {
+                    Shown::Ledger
+                };
             }
             Event::LedgerFactors => {
                 w.ledger_factors = true;
                 w.ledger_regions = false;
-                w.shown = if w.shown == Shown::Largest { Shown::Largest } else { Shown::Ledger };
+                w.shown = if w.shown == Shown::Largest {
+                    Shown::Largest
+                } else {
+                    Shown::Ledger
+                };
             }
             Event::ApprovalNote(t) => w.approval_note = t,
             Event::LedgerDecimals(d) => {
@@ -862,7 +1043,9 @@ impl VolumeWindowApp for App {
     }
 
     fn volume_write(&mut self, edit: VolumesEdit) -> bool {
-        let Some(doc) = self.document.as_mut() else { return false };
+        let Some(doc) = self.document.as_mut() else {
+            return false;
+        };
         let result = road_volumes_edit::execute(&mut ExecutionContext::new(&mut doc.model), edit);
         self.answered(result).is_some()
     }
@@ -880,9 +1063,15 @@ impl VolumeWindowApp for App {
             self.warn("Önce kübajı kaydedin; kaydedilmiş kübaj onaylanır.".to_owned());
             return Task::none();
         }
-        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |d| d.as_secs());
         let zone = crate::cloud::local_time::Zone::system();
-        let day: String = crate::cloud::local_time::iso_local(i64::try_from(now).unwrap_or(0), zone).chars().take(10).collect();
+        let day: String =
+            crate::cloud::local_time::iso_local(i64::try_from(now).unwrap_or(0), zone)
+                .chars()
+                .take(10)
+                .collect();
         let input = kentos_commands::VolumesApprove {
             volume: r.id.clone(),
             revoke: !on,
@@ -891,8 +1080,11 @@ impl VolumeWindowApp for App {
             note: (!w.approval_note.trim().is_empty()).then(|| w.approval_note.trim().to_owned()),
             expected_revision: None,
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let result = road_volumes_approve::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result =
+            road_volumes_approve::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
             let kept = doc_volumes(self);
             if let Some(w) = self.modules.road_mut().volume_window.as_mut() {
@@ -903,7 +1095,14 @@ impl VolumeWindowApp for App {
             if let Some(w) = self.modules.road_mut().volume_window.as_mut() {
                 w.approval_note.clear();
             }
-            self.say(Level::Success, if on { "Kübaj onaylandı; önceki onayı varsa geçmişte." } else { "Kübajın onayı kaldırıldı; onay geçmişte." });
+            self.say(
+                Level::Success,
+                if on {
+                    "Kübaj onaylandı; önceki onayı varsa geçmişte."
+                } else {
+                    "Kübajın onayı kaldırıldı; onay geçmişte."
+                },
+            );
         }
         Task::none()
     }
@@ -914,11 +1113,19 @@ impl VolumeWindowApp for App {
             return Task::none();
         };
         let Some(report) = &w.preview.report else {
-            let why = w.preview.why.clone().unwrap_or_else(|| "Bir kübaj seçin.".into());
+            let why = w
+                .preview
+                .why
+                .clone()
+                .unwrap_or_else(|| "Bir kübaj seçin.".into());
             self.warn(format!("Cetvel yazılamaz: {why}"));
             return Task::none();
         };
-        crate::table_write::save(vec![road_volumes::sheet(report)], w.format, format!("{} cetveli", report.name))
+        crate::table_write::save(
+            vec![road_volumes::sheet(report)],
+            w.format,
+            format!("{} cetveli", report.name),
+        )
     }
 
     fn save_volumes(&mut self) -> Task<Message> {
@@ -972,15 +1179,23 @@ impl VolumeWindowApp for App {
         let Some(w) = &self.modules.road().volume_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
         let corridors = self.volume_corridors();
         // The volumes, over the form.
         let mut list = Column::new().spacing(1).padding(2);
         for (i, r) in w.rows.iter().enumerate() {
-            let on = corridors.iter().find(|c| Some(&c.0) == r.corridor.as_ref()).map_or_else(String::new, |c| c.1.clone());
+            let on = corridors
+                .iter()
+                .find(|c| Some(&c.0) == r.corridor.as_ref())
+                .map_or_else(String::new, |c| c.1.clone());
             let how = METHODS.iter().find(|m| m.0 == r.method).map_or("", |m| m.1);
             let face = column![
-                Elided::new(r.name.clone()).size(typography::body()).font(typography::ui()).width(Fill),
+                Elided::new(r.name.clone())
+                    .size(typography::body())
+                    .font(typography::ui())
+                    .width(Fill),
                 label::caption(format!("{on} · {how}")).style(muted),
             ]
             .spacing(1);
@@ -993,19 +1208,30 @@ impl VolumeWindowApp for App {
             );
         }
         if w.rows.is_empty() {
-            list = list.push(label::caption("Kübaj yok. Yeni kübaj ile bir koridorun hacmini hesaplayın.").style(muted));
+            list = list.push(
+                label::caption("Kübaj yok. Yeni kübaj ile bir koridorun hacmini hesaplayın.")
+                    .style(muted),
+            );
         }
         let head = column![
-            row![label::strong("Kübaj hesapları"), space::horizontal().width(Fill), words::secondary(NEW, Some(msg(Event::New)))]
-                .align_y(Center),
-            container(scrollable(list).height(typography::scaled(96.0))).style(style::container::field_box).width(Fill),
+            row![
+                label::strong("Kübaj hesapları"),
+                space::horizontal().width(Fill),
+                words::secondary(NEW, Some(msg(Event::New)))
+            ]
+            .align_y(Center),
+            container(scrollable(list).height(typography::scaled(96.0)))
+                .style(style::container::field_box)
+                .width(Fill),
         ]
         .spacing(6);
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let saved = chosen.is_some_and(|r| r.def().is_ok_and(|d| w.kept.contains(&d)));
         let approved = chosen.is_some_and(|r| r.approved.is_some());
         let form = match chosen {
-            None => Form::new().row(label::caption("Bir kübaj seçin ya da yeni bir kübaj oluşturun.").style(muted)),
+            None => Form::new().row(
+                label::caption("Bir kübaj seçin ya da yeni bir kübaj oluşturun.").style(muted),
+            ),
             Some(r) => self.volume_form(w, r, &corridors),
         };
         let mut d = RoadDialog::new(TITLE, form, msg(Event::Cancel))
@@ -1014,24 +1240,60 @@ impl VolumeWindowApp for App {
             .width(1180.0)
             .close_caption(CANCEL)
             .ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove)))
-            .ghost(APPROVE, (saved && !approved).then(|| msg(Event::Approve(true))))
+            .ghost(
+                APPROVE,
+                (saved && !approved).then(|| msg(Event::Approve(true))),
+            )
             .ghost(REVOKE, approved.then(|| msg(Event::Approve(false))));
-        let works = w.progress.as_ref().and_then(|p| p.as_ref().ok()).filter(|_| w.shown == Shown::Progress);
+        let works = w
+            .progress
+            .as_ref()
+            .and_then(|p| p.as_ref().ok())
+            .filter(|_| w.shown == Shown::Progress);
         let plans = (w.shown == Shown::Compare && !w.traces.is_empty()).then_some(&w.traces);
-        let book = w.ledger.as_ref().and_then(|l| l.as_ref().ok()).filter(|_| matches!(w.shown, Shown::Ledger | Shown::Largest));
+        let book = w
+            .ledger
+            .as_ref()
+            .and_then(|l| l.as_ref().ok())
+            .filter(|_| matches!(w.shown, Shown::Ledger | Shown::Largest));
         if chosen.is_some() {
             d = match (works, plans) {
                 _ if w.shown == Shown::History && w.history.is_some() => {
                     let read = w.history.as_ref().expect("checked");
-                    d.picture(iced::widget::canvas(Approvals { read }).width(Fill).height(Fill), 190.0)
+                    d.picture(
+                        iced::widget::canvas(Approvals { read })
+                            .width(Fill)
+                            .height(Fill),
+                        190.0,
+                    )
                 }
                 _ if book.is_some() => {
                     let (read, _) = book.expect("checked");
-                    d.picture(iced::widget::canvas(Book { read }).width(Fill).height(Fill), 190.0)
+                    d.picture(
+                        iced::widget::canvas(Book { read }).width(Fill).height(Fill),
+                        190.0,
+                    )
                 }
-                (Some((p, _)), _) => d.picture(iced::widget::canvas(Works { report: p }).width(Fill).height(Fill), 190.0),
-                (None, Some(tr)) => d.picture(iced::widget::canvas(Departures { traces: tr }).width(Fill).height(Fill), 190.0),
-                _ => d.picture(iced::widget::canvas(Mass { preview: &w.preview }).width(Fill).height(Fill), 190.0),
+                (Some((p, _)), _) => d.picture(
+                    iced::widget::canvas(Works { report: p })
+                        .width(Fill)
+                        .height(Fill),
+                    190.0,
+                ),
+                (None, Some(tr)) => d.picture(
+                    iced::widget::canvas(Departures { traces: tr })
+                        .width(Fill)
+                        .height(Fill),
+                    190.0,
+                ),
+                _ => d.picture(
+                    iced::widget::canvas(Mass {
+                        preview: &w.preview,
+                    })
+                    .width(Fill)
+                    .height(Fill),
+                    190.0,
+                ),
             };
             match (&w.preview.why, &w.preview.report) {
                 (Some(e), _) => d = d.note(Banner::error(e.clone())),
@@ -1042,13 +1304,24 @@ impl VolumeWindowApp for App {
                         // Docs/adr/1037: the cut in place, the fill compacted.
                         .figure("Kazı (yerinde)", format!("{} m³", grouped(rep.cut, 1)))
                         .figure("Dolgu (sıkışmış)", format!("{} m³", grouped(rep.fill, 1)))
-                        .figure("Düzeltilmiş fark", format!("{} m³", grouped(rep.factored_cut - rep.factored_fill, 1)))
                         .figure(
-                            if rep.layers.is_empty() { "Bitkisel toprak" } else { "Üstyapı" },
+                            "Düzeltilmiş fark",
+                            format!("{} m³", grouped(rep.factored_cut - rep.factored_fill, 1)),
+                        )
+                        .figure(
                             if rep.layers.is_empty() {
-                                rep.strip.map_or_else(|| "—".into(), |v| format!("{} m³", grouped(v, 1)))
+                                "Bitkisel toprak"
                             } else {
-                                format!("{} m³", grouped(rep.layers.iter().map(|l| l.volume).sum(), 1))
+                                "Üstyapı"
+                            },
+                            if rep.layers.is_empty() {
+                                rep.strip
+                                    .map_or_else(|| "—".into(), |v| format!("{} m³", grouped(v, 1)))
+                            } else {
+                                format!(
+                                    "{} m³",
+                                    grouped(rep.layers.iter().map(|l| l.volume).sum(), 1)
+                                )
                             },
                         );
                     if let Some(c) = rep.curve.as_ref() {
@@ -1060,7 +1333,11 @@ impl VolumeWindowApp for App {
                         )));
                     }
                     if let Some(a) = rep.approval.as_ref() {
-                        let note = a.approved.note.as_ref().map_or_else(String::new, |n| format!(" · {n}"));
+                        let note = a
+                            .approved
+                            .note
+                            .as_ref()
+                            .map_or_else(String::new, |n| format!(" · {n}"));
                         // Docs/adr/1041: what moved since, where the approval keeps its sources.
                         let since = approval_sources_words(a);
                         d = d.note(if a.changed {
@@ -1086,7 +1363,10 @@ impl VolumeWindowApp for App {
                         Some(Err(e)) => d = d.note(Banner::info(e.clone())),
                         Some(Ok((b, warnings))) => {
                             d = d.note(Banner::info(budget_words(b)));
-                            for wn in warnings.iter().filter(|x| x.code.starts_with("volume_uncertainty")) {
+                            for wn in warnings
+                                .iter()
+                                .filter(|x| x.code.starts_with("volume_uncertainty"))
+                            {
                                 d = d.note(Banner::warning(wn.message.clone()));
                             }
                         }
@@ -1122,7 +1402,10 @@ impl VolumeWindowApp for App {
                     // The states (docs/adr/0957): the totals in a sentence; what the soil cannot do as a warning.
                     if let Some(Ok((st, warnings))) = &w.states {
                         d = d.note(Banner::info(states_words(st)));
-                        for wn in warnings.iter().filter(|x| x.code == "volume_factor_physics") {
+                        for wn in warnings
+                            .iter()
+                            .filter(|x| x.code == "volume_factor_physics")
+                        {
                             d = d.note(Banner::warning(wn.message.clone()));
                         }
                     }
@@ -1142,13 +1425,22 @@ impl VolumeWindowApp for App {
                     options.push(Shown::Ledger);
                     options.push(Shown::Largest);
                     options.push(Shown::States);
-                    if w.kept.iter().any(|k| k.id == chosen.map_or("", |c| c.id.as_str()) && (k.approved.is_some() || !k.history.is_empty())) {
+                    if w.kept.iter().any(|k| {
+                        k.id == chosen.map_or("", |c| c.id.as_str())
+                            && (k.approved.is_some() || !k.history.is_empty())
+                    }) {
                         options.push(Shown::History);
                     }
-                    let now = if options.contains(&w.shown) { w.shown } else { Shown::Sheet };
+                    let now = if options.contains(&w.shown) {
+                        w.shown
+                    } else {
+                        Shown::Sheet
+                    };
                     let list: Element<'_, Message> = match (now, budget, progress, comparison) {
                         (Shown::Ledger | Shown::Largest, _, _, _) => match &w.ledger {
-                            Some(Ok((l, _))) if now == Shown::Ledger => ledger_table(l, w.ledger_factors),
+                            Some(Ok((l, _))) if now == Shown::Ledger => {
+                                ledger_table(l, w.ledger_factors)
+                            }
                             Some(Ok((l, _))) => largest_table(l),
                             _ => label::caption("Defter okunamadı; nedeni yukarıda.").into(),
                         },
@@ -1159,7 +1451,9 @@ impl VolumeWindowApp for App {
                         },
                         (Shown::History, _, _, _) => match &w.history {
                             Some(h) => history_table(h),
-                            None => label::caption("Onay geçmişi kaydedilmiş kübajda okunur.").into(),
+                            None => {
+                                label::caption("Onay geçmişi kaydedilmiş kübajda okunur.").into()
+                            }
                         },
                         (Shown::Layers, _, _, _) => layers_table(rep),
                         (Shown::Budget, Some((b, _)), _, _) => budget_table(b),
@@ -1167,13 +1461,23 @@ impl VolumeWindowApp for App {
                         (Shown::Compare, _, _, Some((c, _))) => compare_table(c),
                         _ => sheet_table(rep),
                     };
-                    d = d.detail(road_dialog::detail_choice(options, now, |v| msg(Event::View(v)), list));
+                    d = d.detail(road_dialog::detail_choice(
+                        options,
+                        now,
+                        |v| msg(Event::View(v)),
+                        list,
+                    ));
                 }
                 _ => {}
             }
-            let formats: Vec<WorkbookFormat> = crate::table_write::FORMATS.iter().map(|c| c.format).collect();
+            let formats: Vec<WorkbookFormat> = crate::table_write::FORMATS
+                .iter()
+                .map(|c| c.format)
+                .collect();
             let format = Select::new(
-                crate::table_write::FORMATS.iter().map(|c| Choice::new(c.label.to_owned())),
+                crate::table_write::FORMATS
+                    .iter()
+                    .map(|c| Choice::new(c.label.to_owned())),
                 formats.iter().position(|f| *f == w.format),
                 move |i| msg(Event::Format(formats[i])),
             );
@@ -1191,13 +1495,22 @@ impl VolumeWindowApp for App {
     }
 
     /// The chosen volume's definition as a grouped form (DESIGN.md §7.19).
-    fn volume_form<'a>(&'a self, w: &'a Window, r: &'a Row, corridors: &[(String, String)]) -> kentos_ui::widget::Form<'a, Message> {
+    fn volume_form<'a>(
+        &'a self,
+        w: &'a Window,
+        r: &'a Row,
+        corridors: &[(String, String)],
+    ) -> kentos_ui::widget::Form<'a, Message> {
         use kentos_ui::widget::Form;
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
         let ids: Vec<String> = corridors.iter().map(|c| c.0.clone()).collect();
         let on_corridor = Select::new(
             corridors.iter().map(|c| Choice::new(c.1.clone())),
-            r.corridor.as_ref().and_then(|c| ids.iter().position(|i| i == c)),
+            r.corridor
+                .as_ref()
+                .and_then(|c| ids.iter().position(|i| i == c)),
             move |i| msg(Event::Corridor(ids[i].clone())),
         )
         .placeholder("Koridor");
@@ -1206,24 +1519,50 @@ impl VolumeWindowApp for App {
             METHODS.iter().position(|m| m.0 == r.method),
             |i| msg(Event::Method(METHODS[i].0)),
         );
-        let on_rule = Select::new(RULES.iter().map(|m| Choice::new(m.1.to_owned())), RULES.iter().position(|m| m.0 == r.rule), |i| {
-            msg(Event::Rule(RULES[i].0))
-        });
+        let on_rule = Select::new(
+            RULES.iter().map(|m| Choice::new(m.1.to_owned())),
+            RULES.iter().position(|m| m.0 == r.rule),
+            |i| msg(Event::Rule(RULES[i].0)),
+        );
         let sections = matches!(r.method, VolumeMethod::EndArea | VolumeMethod::Prismoidal);
-        let fill = |title| road_dialog::Col { title, width: None, number: true };
+        let fill = |title| road_dialog::Col {
+            title,
+            width: None,
+            number: true,
+        };
         let factors = road_dialog::edit_table(
-            vec![fill("Baş (m)"), fill("Son (m)"), fill("Kabarma"), fill("Sıkışma")],
+            vec![
+                fill("Baş (m)"),
+                fill("Son (m)"),
+                fill("Kabarma"),
+                fill("Sıkışma"),
+            ],
             r.factors.len(),
-            move |j, k| road_dialog::edit(&r.factors[j][k], true, move |v| msg(Event::Factor(j, k, v))),
+            move |j, k| {
+                road_dialog::edit(&r.factors[j][k], true, move |v| msg(Event::Factor(j, k, v)))
+            },
             w.line,
             |j| msg(Event::Line(j)),
             "Katsayı satırı yok",
         );
         // The soil's densities and the source, row by row with the factors (docs/adr/0957).
         let densities = road_dialog::edit_table(
-            vec![fill("Yerinde (t/m³)"), fill("Gevşek (t/m³)"), fill("Sıkışık (t/m³)"), road_dialog::Col { title: "Kaynak", width: None, number: false }],
+            vec![
+                fill("Yerinde (t/m³)"),
+                fill("Gevşek (t/m³)"),
+                fill("Sıkışık (t/m³)"),
+                road_dialog::Col {
+                    title: "Kaynak",
+                    width: None,
+                    number: false,
+                },
+            ],
             r.factors.len(),
-            move |j, k| road_dialog::edit(&r.factors[j][k + 4], k < 3, move |v| msg(Event::Factor(j, k + 4, v))),
+            move |j, k| {
+                road_dialog::edit(&r.factors[j][k + 4], k < 3, move |v| {
+                    msg(Event::Factor(j, k + 4, v))
+                })
+            },
             w.line,
             |j| msg(Event::Line(j)),
             "Katsayı satırı yok",
@@ -1231,21 +1570,35 @@ impl VolumeWindowApp for App {
         let strips = road_dialog::edit_table(
             vec![fill("Baş (m)"), fill("Son (m)"), fill("Kalınlık (m)")],
             r.strip.len(),
-            move |j, k| road_dialog::edit(&r.strip[j][k], true, move |v| msg(Event::Strip(j, k, v))),
+            move |j, k| {
+                road_dialog::edit(&r.strip[j][k], true, move |v| msg(Event::Strip(j, k, v)))
+            },
             w.strip_line,
             |j| msg(Event::StripLine(j)),
             "Sıyırma satırı yok",
         );
-        let bench_field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &r.bench[k]).on_input(move |v| msg(Event::Bench(k, v)));
+        let bench_field = |k: usize, hint: &'a str| {
+            kentos_ui::widget::text_field(hint, &r.bench[k])
+                .on_input(move |v| msg(Event::Bench(k, v)))
+        };
         let mut form = Form::new()
             .label_width(110.0)
             .section("Tanım")
-            .field("Ad", kentos_ui::widget::text_field("Kübajın adı", &r.name).on_input(|t| msg(Event::Name(t))))
+            .field(
+                "Ad",
+                kentos_ui::widget::text_field("Kübajın adı", &r.name)
+                    .on_input(|t| msg(Event::Name(t))),
+            )
             .field("Koridor", on_corridor);
         // Docs/adr/1040: what the volume is computed from, each as it is now, under its corridor: in the form's column,
         // which scrolls by itself, not under the picture, whose room full screen is the sheet's and the diagram's
         // (picture_tests, full screen at 1920 × 1080: 453 px, 428 with the line there, under its least of 440).
-        if let Some(s) = w.preview.report.as_ref().and_then(|rep| rep.sources.as_ref()) {
+        if let Some(s) = w
+            .preview
+            .report
+            .as_ref()
+            .and_then(|rep| rep.sources.as_ref())
+        {
             form = form.help(road_dialog::volume_sources_words(s));
         }
         let mut form = form.field("Yöntem", on_method);
@@ -1293,10 +1646,14 @@ impl VolumeWindowApp for App {
                 .field("Basamak (m)", bench_field(1, ""))
                 .help("Arazinin enine eğimi bu yüzdeden dikken dolgunun altında basamak kazılır.");
         } else {
-            form = form.row(label::caption("Sıyırma ve diş kazısı yalnız kesit yöntemleriyle hesaplanır.").style(muted));
+            form = form.row(
+                label::caption("Sıyırma ve diş kazısı yalnız kesit yöntemleriyle hesaplanır.")
+                    .style(muted),
+            );
         }
         let field = |k: usize, hint: &'a str| {
-            kentos_ui::widget::text_field(hint, &w.uncertainty[k]).on_input(move |v| msg(Event::Uncertainty(k, v)))
+            kentos_ui::widget::text_field(hint, &w.uncertainty[k])
+                .on_input(move |v| msg(Event::Uncertainty(k, v)))
         };
         form = form
             .section("Belirsizlik")
@@ -1307,22 +1664,39 @@ impl VolumeWindowApp for App {
             .field(UNCERTAINTY[2], field(2, "yok"))
             .help("Her hacmin %95 sınırının hacme oranı bunun altında kalmalı (sözleşmeden). KentOS sayı vermez.");
         // The surveys: any terrain surface but the corridor's own (its original ground).
-        let original = r
-            .corridor
-            .as_ref()
-            .and_then(|c| self.document.as_ref()?.model.road_corridors().iter().find(|x| &x.id == c).map(|x| x.surface.clone()));
-        let surveys: Vec<(String, String)> =
-            self.volume_surfaces().into_iter().filter(|s| Some(&s.0) != original.as_ref()).collect();
-        let now_ids: Vec<Option<String>> = std::iter::once(None).chain(surveys.iter().map(|s| Some(s.0.clone()))).collect();
+        let original = r.corridor.as_ref().and_then(|c| {
+            self.document
+                .as_ref()?
+                .model
+                .road_corridors()
+                .iter()
+                .find(|x| &x.id == c)
+                .map(|x| x.surface.clone())
+        });
+        let surveys: Vec<(String, String)> = self
+            .volume_surfaces()
+            .into_iter()
+            .filter(|s| Some(&s.0) != original.as_ref())
+            .collect();
+        let now_ids: Vec<Option<String>> = std::iter::once(None)
+            .chain(surveys.iter().map(|s| Some(s.0.clone())))
+            .collect();
         let on_survey = Select::new(
-            std::iter::once(Choice::new("Yok".to_owned())).chain(surveys.iter().map(|s| Choice::new(s.1.clone()))),
+            std::iter::once(Choice::new("Yok".to_owned()))
+                .chain(surveys.iter().map(|s| Choice::new(s.1.clone()))),
             now_ids.iter().position(|i| i == &w.survey),
             move |i| msg(Event::Survey(now_ids[i].clone())),
         );
-        let before: Vec<&(String, String)> = surveys.iter().filter(|s| Some(&s.0) != w.survey.as_ref()).collect();
-        let before_ids: Vec<Option<String>> = std::iter::once(None).chain(before.iter().map(|s| Some(s.0.clone()))).collect();
+        let before: Vec<&(String, String)> = surveys
+            .iter()
+            .filter(|s| Some(&s.0) != w.survey.as_ref())
+            .collect();
+        let before_ids: Vec<Option<String>> = std::iter::once(None)
+            .chain(before.iter().map(|s| Some(s.0.clone())))
+            .collect();
         let on_previous = Select::new(
-            std::iter::once(Choice::new(NO_PREVIOUS.to_owned())).chain(before.iter().map(|s| Choice::new(s.1.clone()))),
+            std::iter::once(Choice::new(NO_PREVIOUS.to_owned()))
+                .chain(before.iter().map(|s| Choice::new(s.1.clone()))),
             before_ids.iter().position(|i| i == &w.previous),
             move |i| msg(Event::Previous(before_ids[i].clone())),
         );
@@ -1352,18 +1726,26 @@ impl VolumeWindowApp for App {
             )
             .help("Onayla ya da Onayı kaldır bu notla, bugünün günüyle yazar. Biten onay silinmez, onay geçmişine geçer.");
         // The ledger (docs/adr/0949): how the total is taken apart.
-        let by_now = if w.ledger_factors { 2 } else { usize::from(w.ledger_regions) };
+        let by_now = if w.ledger_factors {
+            2
+        } else {
+            usize::from(w.ledger_regions)
+        };
         let on_by = Select::new(GROUPINGS.map(Choice::new), Some(by_now), |i| match i {
             2 => msg(Event::LedgerFactors),
             i => msg(Event::LedgerRegions(i == 1)),
         });
-        let on_decimals =
-            Select::new(DECIMALS.map(Choice::new), Some(w.ledger_decimals as usize), |i| msg(Event::LedgerDecimals(i as u32)));
+        let on_decimals = Select::new(
+            DECIMALS.map(Choice::new),
+            Some(w.ledger_decimals as usize),
+            |i| msg(Event::LedgerDecimals(i as u32)),
+        );
         form = form.section(LEDGER).field(LEDGER_BY, on_by);
         if !w.ledger_regions && !w.ledger_factors {
             form = form.field(
                 LEDGER_STEP,
-                kentos_ui::widget::text_field("100", &w.ledger_step).on_input(|t| msg(Event::LedgerStep(t))),
+                kentos_ui::widget::text_field("100", &w.ledger_step)
+                    .on_input(|t| msg(Event::LedgerStep(t))),
             );
         }
         form = form
@@ -1374,7 +1756,10 @@ impl VolumeWindowApp for App {
         let saved = w.kept.iter().any(|k| k.id == r.id);
         let others: Vec<&VolumeDef> = w.kept.iter().filter(|k| k.id != r.id).collect();
         if !saved {
-            form = form.row(label::caption("Kaydedilmiş kübajlar karşılaştırılır; önce bu kübajı kaydedin.").style(muted));
+            form = form.row(
+                label::caption("Kaydedilmiş kübajlar karşılaştırılır; önce bu kübajı kaydedin.")
+                    .style(muted),
+            );
         } else if others.is_empty() {
             form = form.row(label::caption("Karşılaştırmak için başka bir koridorun ya da aynı koridorun başka bir kübajını oluşturun.").style(muted));
         } else {
@@ -1383,7 +1768,10 @@ impl VolumeWindowApp for App {
                 let on = w.alternatives.contains(&k.id);
                 form = form.field(
                     k.name.as_str(),
-                    kentos_ui::widget::Switch::new(on, move |v| msg(Event::Alternative(id.clone(), v))).label("Karşılaştır"),
+                    kentos_ui::widget::Switch::new(on, move |v| {
+                        msg(Event::Alternative(id.clone(), v))
+                    })
+                    .label("Karşılaştır"),
                 );
             }
             form = form.help("Seçili kübaj taban sayılır. Aksın planda 1 cm, kırmızı kotun 1 cm'den çok ayrıldığı km aralıkları bulunur.");
@@ -1397,7 +1785,11 @@ impl VolumeWindowApp for App {
         };
         Ok(match control {
             Control::Press(SAVE) => Some(msg(Event::Save)),
-            Control::Press(CURVE) => Some(msg(Event::Curve(!w.rows.get(w.chosen.unwrap_or(usize::MAX)).is_some_and(|r| r.curve)))),
+            Control::Press(CURVE) => Some(msg(Event::Curve(
+                !w.rows
+                    .get(w.chosen.unwrap_or(usize::MAX))
+                    .is_some_and(|r| r.curve),
+            ))),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(NEW) => Some(msg(Event::New)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
@@ -1419,24 +1811,46 @@ impl VolumeWindowApp for App {
             Control::Fill(APPROVAL_NOTE, text) => Some(msg(Event::ApprovalNote(text.to_owned()))),
             Control::Press(LARGEST) => Some(msg(Event::View(Shown::Largest))),
             Control::Fill(LEDGER_STEP, text) => Some(msg(Event::LedgerStep(text.to_owned()))),
-            Control::Pick(LEDGER_BY, words) if words == GROUPINGS[2] => Some(msg(Event::LedgerFactors)),
-            Control::Pick(LEDGER_BY, words) => Some(msg(Event::LedgerRegions(words == GROUPINGS[1]))),
+            Control::Pick(LEDGER_BY, words) if words == GROUPINGS[2] => {
+                Some(msg(Event::LedgerFactors))
+            }
+            Control::Pick(LEDGER_BY, words) => {
+                Some(msg(Event::LedgerRegions(words == GROUPINGS[1])))
+            }
             Control::Pick(ROUNDING, words) => {
-                let k = DECIMALS.iter().position(|d| *d == words).ok_or_else(|| format!("“{words}” diye bir yuvarlama yok"))?;
+                let k = DECIMALS
+                    .iter()
+                    .position(|d| *d == words)
+                    .ok_or_else(|| format!("“{words}” diye bir yuvarlama yok"))?;
                 Some(msg(Event::LedgerDecimals(k as u32)))
             }
             Control::Fill(name, on) if w.kept.iter().any(|k| k.name == name) => {
-                let id = w.kept.iter().find(|k| k.name == name).map(|k| k.id.clone()).unwrap_or_default();
+                let id = w
+                    .kept
+                    .iter()
+                    .find(|k| k.name == name)
+                    .map(|k| k.id.clone())
+                    .unwrap_or_default();
                 Some(msg(Event::Alternative(id, on == "açık")))
             }
-            Control::Pick(SURVEY, name) => Some(msg(Event::Survey(self.volume_surface_named(name)?))),
-            Control::Pick(PREVIOUS, name) => Some(msg(Event::Previous(self.volume_surface_named(name)?))),
+            Control::Pick(SURVEY, name) => {
+                Some(msg(Event::Survey(self.volume_surface_named(name)?)))
+            }
+            Control::Pick(PREVIOUS, name) => {
+                Some(msg(Event::Previous(self.volume_surface_named(name)?)))
+            }
             Control::Pick(HEIGHTS, words) => {
-                let at = HEIGHTS_CHOICES.iter().position(|c| *c == words).ok_or_else(|| format!("“{HEIGHTS}” için “{words}” yok"))?;
+                let at = HEIGHTS_CHOICES
+                    .iter()
+                    .position(|c| *c == words)
+                    .ok_or_else(|| format!("“{HEIGHTS}” için “{words}” yok"))?;
                 Some(msg(Event::AssumeHeights(at == 1)))
             }
             Control::Fill(name, text) if UNCERTAINTY.contains(&name) => {
-                Some(msg(Event::Uncertainty(UNCERTAINTY.iter().position(|f| *f == name).unwrap_or(0), text.to_owned())))
+                Some(msg(Event::Uncertainty(
+                    UNCERTAINTY.iter().position(|f| *f == name).unwrap_or(0),
+                    text.to_owned(),
+                )))
             }
             Control::Press(words) => match w.rows.iter().position(|r| r.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
@@ -1474,16 +1888,50 @@ struct Departures<'a> {
 impl canvas::Program<Message> for Departures<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let t = Tokens::of(theme);
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let caption = |frame: &mut canvas::Frame, words: String, p: Point, color: Color| {
-            frame.fill_text(Text { content: words, position: p, color, size: Pixels(typography::caption()), font: typography::ui(), ..Text::default() });
+            frame.fill_text(Text {
+                content: words,
+                position: p,
+                color,
+                size: Pixels(typography::caption()),
+                font: typography::ui(),
+                ..Text::default()
+            });
         };
-        let colours = [t.accent, Color::from_rgb8(0xea, 0x58, 0x0c), Color::from_rgb8(0x16, 0xa3, 0x4a), Color::from_rgb8(0x93, 0x33, 0xea), t.danger];
-        let s1 = self.traces.iter().flat_map(|r| r.plan.last().map(|p| p.0)).fold(1.0, f64::max);
-        let top_plan = self.traces.iter().flat_map(|r| r.plan.iter().map(|p| p.1)).fold(0.05, f64::max) * 1.1;
-        let top_z = self.traces.iter().flat_map(|r| r.height.iter().filter_map(|p| p.1.map(f64::abs))).fold(0.05, f64::max) * 1.1;
+        let colours = [
+            t.accent,
+            Color::from_rgb8(0xea, 0x58, 0x0c),
+            Color::from_rgb8(0x16, 0xa3, 0x4a),
+            Color::from_rgb8(0x93, 0x33, 0xea),
+            t.danger,
+        ];
+        let s1 = self
+            .traces
+            .iter()
+            .flat_map(|r| r.plan.last().map(|p| p.0))
+            .fold(1.0, f64::max);
+        let top_plan = self
+            .traces
+            .iter()
+            .flat_map(|r| r.plan.iter().map(|p| p.1))
+            .fold(0.05, f64::max)
+            * 1.1;
+        let top_z = self
+            .traces
+            .iter()
+            .flat_map(|r| r.height.iter().filter_map(|p| p.1.map(f64::abs)))
+            .fold(0.05, f64::max)
+            * 1.1;
         let (left, right, top, gap) = (64.0f64, 12.0f64, 18.0f64, 22.0f64);
         let usable = bounds.height as f64 - top - 22.0 - gap;
         let band = usable / 2.0;
@@ -1493,19 +1941,67 @@ impl canvas::Program<Message> for Departures<'_> {
         let y_plan = |v: f64| (top + band - v / top_plan * band) as f32;
         let z0 = top + band + gap + band / 2.0;
         let y_z = |v: f64| (z0 - v / top_z * band / 2.0) as f32;
-        let grid = Stroke::default().with_color(Color { a: 0.35, ..t.border }).with_width(1.0);
+        let grid = Stroke::default()
+            .with_color(Color {
+                a: 0.35,
+                ..t.border
+            })
+            .with_width(1.0);
         let axis = Stroke::default().with_color(t.muted).with_width(1.0);
-        frame.stroke(&Path::line(Point::new(x(0.0), y_plan(0.0)), Point::new(x(s1), y_plan(0.0))), axis);
-        frame.stroke(&Path::line(Point::new(x(0.0), z0 as f32), Point::new(x(s1), z0 as f32)), axis);
-        for (v, y) in [(top_plan / 1.1, y_plan(top_plan / 1.1)), (top_z / 1.1, y_z(top_z / 1.1)), (-top_z / 1.1, y_z(-top_z / 1.1))] {
-            frame.stroke(&Path::line(Point::new(x(0.0), y), Point::new(x(s1), y)), grid);
-            caption(&mut frame, format!("{} m", grouped(v, if v.abs() < 1.0 { 2 } else { 1 })), Point::new(4.0, y - 7.0), t.muted);
+        frame.stroke(
+            &Path::line(
+                Point::new(x(0.0), y_plan(0.0)),
+                Point::new(x(s1), y_plan(0.0)),
+            ),
+            axis,
+        );
+        frame.stroke(
+            &Path::line(Point::new(x(0.0), z0 as f32), Point::new(x(s1), z0 as f32)),
+            axis,
+        );
+        for (v, y) in [
+            (top_plan / 1.1, y_plan(top_plan / 1.1)),
+            (top_z / 1.1, y_z(top_z / 1.1)),
+            (-top_z / 1.1, y_z(-top_z / 1.1)),
+        ] {
+            frame.stroke(
+                &Path::line(Point::new(x(0.0), y), Point::new(x(s1), y)),
+                grid,
+            );
+            caption(
+                &mut frame,
+                format!("{} m", grouped(v, if v.abs() < 1.0 { 2 } else { 1 })),
+                Point::new(4.0, y - 7.0),
+                t.muted,
+            );
         }
-        caption(&mut frame, "Planda uzaklık".into(), Point::new(left as f32 + 6.0, top as f32 - 16.0), t.muted);
-        caption(&mut frame, "Kot farkı".into(), Point::new(left as f32 + 6.0, (top + band + gap) as f32 - 16.0), t.muted);
+        caption(
+            &mut frame,
+            "Planda uzaklık".into(),
+            Point::new(left as f32 + 6.0, top as f32 - 16.0),
+            t.muted,
+        );
+        caption(
+            &mut frame,
+            "Kot farkı".into(),
+            Point::new(left as f32 + 6.0, (top + band + gap) as f32 - 16.0),
+            t.muted,
+        );
         // The tolerance, dashed, in the plan band.
-        let dashed = Stroke { line_dash: canvas::LineDash { segments: &[4.0, 4.0], offset: 0 }, ..Stroke::default().with_color(t.muted).with_width(1.0) };
-        frame.stroke(&Path::line(Point::new(x(0.0), y_plan(0.01)), Point::new(x(s1), y_plan(0.01))), dashed);
+        let dashed = Stroke {
+            line_dash: canvas::LineDash {
+                segments: &[4.0, 4.0],
+                offset: 0,
+            },
+            ..Stroke::default().with_color(t.muted).with_width(1.0)
+        };
+        frame.stroke(
+            &Path::line(
+                Point::new(x(0.0), y_plan(0.01)),
+                Point::new(x(s1), y_plan(0.01)),
+            ),
+            dashed,
+        );
         for (i, r) in self.traces.iter().enumerate() {
             let colour = colours[i % colours.len()];
             let line = Path::new(|b| {
@@ -1521,7 +2017,11 @@ impl canvas::Program<Message> for Departures<'_> {
                     match dz {
                         Some(v) => {
                             let p = Point::new(x(*s), y_z(*v));
-                            if on { b.line_to(p) } else { b.move_to(p) }
+                            if on {
+                                b.line_to(p)
+                            } else {
+                                b.move_to(p)
+                            }
                             on = true;
                         }
                         None => on = false,
@@ -1534,11 +2034,25 @@ impl canvas::Program<Message> for Departures<'_> {
         let mut lx = left as f32;
         for (i, r) in self.traces.iter().enumerate() {
             let colour = colours[i % colours.len()];
-            frame.fill_rectangle(Point::new(lx, base + 5.0), iced::Size::new(14.0, 3.0), colour);
-            caption(&mut frame, r.name.clone(), Point::new(lx + 18.0, base), t.text);
+            frame.fill_rectangle(
+                Point::new(lx, base + 5.0),
+                iced::Size::new(14.0, 3.0),
+                colour,
+            );
+            caption(
+                &mut frame,
+                r.name.clone(),
+                Point::new(lx + 18.0, base),
+                t.text,
+            );
             lx += 18.0 + 6.4 * r.name.chars().count() as f32 + 24.0;
         }
-        caption(&mut frame, "Kesikli: 1 cm tolerans · yatay: alternatifin istasyonu".into(), Point::new(lx, base), t.muted);
+        caption(
+            &mut frame,
+            "Kesikli: 1 cm tolerans · yatay: alternatifin istasyonu".into(),
+            Point::new(lx, base),
+            t.muted,
+        );
         vec![frame.into_geometry()]
     }
 }

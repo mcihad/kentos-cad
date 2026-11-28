@@ -4,13 +4,15 @@
 //! [`crate::road_alignments_edit`] and [`crate::road_alignments_query`].
 
 use kentos_commands::{
-    AlignmentCurveRow, AlignmentDef, AlignmentElementRow, AlignmentJoinRow, AlignmentListed, AlignmentPlace,
-    AlignmentReport, AlignmentStationing, AlignmentsWritten, CommandResult, RoadSettings, StationMapRow,
+    AlignmentCurveRow, AlignmentDef, AlignmentElementRow, AlignmentJoinRow, AlignmentListed,
+    AlignmentPlace, AlignmentReport, AlignmentStationing, AlignmentsWritten, CommandResult,
+    RoadSettings, StationMapRow,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::crs::ground::{Grid, grid_factor};
 use kentos_road::alignment::{
-    self as core, Alignment, ChainError, Equation, Kind, PiInput, Region, Stationing, StationingError, km_text, offset,
+    self as core, Alignment, ChainError, Equation, Kind, PiInput, Region, Stationing,
+    StationingError, km_text, offset,
 };
 
 use crate::ExecutionContext;
@@ -32,12 +34,25 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
 }
 
 /// The alignment of an id, else of a name (case aside).
-pub(crate) fn find<'a>(list: &'a [AlignmentDef], name: &str, path: &str) -> Result<(usize, &'a AlignmentDef), Stop> {
+pub(crate) fn find<'a>(
+    list: &'a [AlignmentDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a AlignmentDef), Stop> {
     list.iter()
         .position(|a| a.id == name)
-        .or_else(|| list.iter().position(|a| a.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .position(|a| a.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|i| (i, &list[i]))
-        .ok_or_else(|| fail(codes::UNKNOWN_ALIGNMENT, format!("“{name}” kimlikli ya da adlı aks projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_ALIGNMENT,
+                format!("“{name}” kimlikli ya da adlı aks projede yok."),
+                path,
+            )
+        })
 }
 
 /// The alignments judged by the contract's rules; a refusal's path is the input's `field`'s for the one at `at`.
@@ -53,7 +68,11 @@ pub(crate) fn judged(list: &[AlignmentDef], at: usize, field: &str) -> Result<()
             Some(rest) => format!("{field}.{rest}"),
             None => field.to_owned(),
         };
-        return Err(fail(codes::INVALID_ALIGNMENT, format!("Aks kurallarına uymuyor: {words}."), &path));
+        return Err(fail(
+            codes::INVALID_ALIGNMENT,
+            format!("Aks kurallarına uymuyor: {words}."),
+            &path,
+        ));
     }
     Ok(())
 }
@@ -67,20 +86,32 @@ pub struct Built {
 
 fn chain_stop(e: ChainError, field: &str, pis: &[PiInput]) -> Stop {
     let at = |pi: &str| {
-        let head = if field.is_empty() { "pis".to_owned() } else { format!("{field}.pis") };
+        let head = if field.is_empty() {
+            "pis".to_owned()
+        } else {
+            format!("{field}.pis")
+        };
         match pis.iter().position(|p| p.id == pi) {
             Some(i) if !pi.is_empty() => format!("{head}[{i}]"),
             _ => head,
         }
     };
     match e {
-        ChainError::TooFewPoints => fail(codes::INVALID_ALIGNMENT, "Aksın en az iki noktası olur.".into(), &at("")),
-        ChainError::DuplicateId { pi } => {
-            fail(codes::INVALID_ALIGNMENT, format!("“{pi}” kimliği aksta iki kez var."), &at(&pi))
-        }
-        ChainError::NotFinite { pi } => {
-            fail(codes::INVALID_ALIGNMENT, format!("{pi} noktasının sayıları sonlu değil."), &at(&pi))
-        }
+        ChainError::TooFewPoints => fail(
+            codes::INVALID_ALIGNMENT,
+            "Aksın en az iki noktası olur.".into(),
+            &at(""),
+        ),
+        ChainError::DuplicateId { pi } => fail(
+            codes::INVALID_ALIGNMENT,
+            format!("“{pi}” kimliği aksta iki kez var."),
+            &at(&pi),
+        ),
+        ChainError::NotFinite { pi } => fail(
+            codes::INVALID_ALIGNMENT,
+            format!("{pi} noktasının sayıları sonlu değil."),
+            &at(&pi),
+        ),
         ChainError::SamePlace { pi } => fail(
             codes::INVALID_ALIGNMENT,
             format!("{pi} noktası bir öncekiyle aynı yerde; PI'lar ayrı yerlerde olmalı."),
@@ -130,7 +161,11 @@ fn chain_stop(e: ChainError, field: &str, pis: &[PiInput]) -> Stop {
             codes::INVALID_ALIGNMENT,
             format!(
                 "{a}–{b} arasında birden çok ove var (A = {}); hangisi istendiği PI'lar oynatılarak seçilmeli.",
-                parameters.iter().map(|v| format!("{v:.3}")).collect::<Vec<_>>().join(", ")
+                parameters
+                    .iter()
+                    .map(|v| format!("{v:.3}"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ),
             &at(&b),
         ),
@@ -144,7 +179,9 @@ pub fn ove_why(why: kentos_road::alignment::chain::OveWhy) -> &'static str {
         W::NoNextCurve => "kendisinin ve sonraki PI'nın kurpu olmalı, sonraki bitiş olamaz",
         W::Reverse => "iki kurp aynı yöne dönmeli (ters kurpta ove olmaz)",
         W::EqualRadii => "iki kurbun yarıçapı farklı olmalı",
-        W::SpiralOnSharedSide => "ilk kurbun çıkış ve ikincinin giriş klotoidi olmamalı, ove onların yerine geçer",
+        W::SpiralOnSharedSide => {
+            "ilk kurbun çıkış ve ikincinin giriş klotoidi olmamalı, ove onların yerine geçer"
+        }
         W::Chained => "art arda iki ove henüz kurulmuyor",
     }
 }
@@ -181,15 +218,30 @@ pub fn stationing_of(st: Option<&AlignmentStationing>) -> Stationing {
 
 /// Builds `def` (from `list`, which holds its source); refusals' paths under `field`.
 pub(crate) fn build(list: &[AlignmentDef], def: &AlignmentDef, field: &str) -> Result<Built, Stop> {
-    let join = |rest: &str| if field.is_empty() { rest.to_owned() } else { format!("{field}.{rest}") };
+    let join = |rest: &str| {
+        if field.is_empty() {
+            rest.to_owned()
+        } else {
+            format!("{field}.{rest}")
+        }
+    };
     if let Some(o) = &def.offset_of {
-        let source = list
-            .iter()
-            .find(|a| a.id == o.alignment)
-            .ok_or_else(|| fail(codes::INVALID_ALIGNMENT, "Paralel aksın kaynağı projede yok.".into(), &join("offsetOf")))?;
+        let source = list.iter().find(|a| a.id == o.alignment).ok_or_else(|| {
+            fail(
+                codes::INVALID_ALIGNMENT,
+                "Paralel aksın kaynağı projede yok.".into(),
+                &join("offsetOf"),
+            )
+        })?;
         let mut built = build(list, source, &join("offsetOf"))?;
         if let Err(e) = offset::check(&built.core, o.offset) {
-            return Err(cusp_stop(&def.name, e, o.offset, &built, &join("offsetOf.offset")));
+            return Err(cusp_stop(
+                &def.name,
+                e,
+                o.offset,
+                &built,
+                &join("offsetOf.offset"),
+            ));
         }
         built.offset = o.offset;
         return Ok(built);
@@ -217,17 +269,37 @@ pub(crate) fn build(list: &[AlignmentDef], def: &AlignmentDef, field: &str) -> R
     })
 }
 
-pub(crate) fn cusp_stop(name: &str, e: offset::OffsetError, d: f64, built: &Built, path: &str) -> Stop {
-    fail(codes::OFFSET_CUSP, offset_words(name, &e, d, &|s| built.km(s)), path)
+pub(crate) fn cusp_stop(
+    name: &str,
+    e: offset::OffsetError,
+    d: f64,
+    built: &Built,
+    path: &str,
+) -> Stop {
+    fail(
+        codes::OFFSET_CUSP,
+        offset_words(name, &e, d, &|s| built.km(s)),
+        path,
+    )
 }
 
 /// Why a parallel axis does not hold, with its fix in numbers (docs/adr/0970): the command's refusal and the
 /// Güzergâh window's status say these same words. Stations are said as the source's kms (`km`).
-pub fn offset_words(name: &str, e: &offset::OffsetError, d: f64, km: &dyn Fn(f64) -> f64) -> String {
+pub fn offset_words(
+    name: &str,
+    e: &offset::OffsetError,
+    d: f64,
+    km: &dyn Fn(f64) -> f64,
+) -> String {
     let d = d.abs();
     let k = |s: f64| km_text(km(s), 3);
     match e {
-        offset::OffsetError::Cusp { from, to, element, radius } => {
+        offset::OffsetError::Cusp {
+            from,
+            to,
+            element,
+            radius,
+        } => {
             let pi = element.split('/').next().unwrap_or(element);
             let (from, to) = (k(*from), k(*to));
             format!(
@@ -236,7 +308,11 @@ pub fn offset_words(name: &str, e: &offset::OffsetError, d: f64, km: &dyn Fn(f64
                  {radius:.3} m'nin altına indirin."
             )
         }
-        offset::OffsetError::Crosses { a, b, kink: Some(pi) } => format!(
+        offset::OffsetError::Crosses {
+            a,
+            b,
+            kink: Some(pi),
+        } => format!(
             "“{name}” paralel aksı km {} ile km {} arasında kendini kesiyor: {pi} kurpsuz bir kırık ve iç yanında \
              her öteleme kendini keser. {pi} noktasına yarıçapı {d:.3} m'nin üstünde bir kurp koyun.",
             k(*a),
@@ -280,7 +356,11 @@ impl Built {
 
     /// The length: the source's, or the parallel axis's own.
     pub fn length(&self) -> f64 {
-        if self.offset == 0.0 { self.core.length } else { offset::length(&self.core, self.offset) }
+        if self.offset == 0.0 {
+            self.core.length
+        } else {
+            offset::length(&self.core, self.offset)
+        }
     }
 }
 
@@ -350,7 +430,10 @@ fn ground(doc: &Document, built: &Built) -> (Option<f64>, String) {
         return (None, "Zemin boyu için projenin ortalama elipsoit yüksekliği yazılmalı (Proje ayarları › Ölçme).".into());
     };
     let Some(system) = kentos_project::systems::own(settings).and_then(|n| n.system) else {
-        return (None, "Projenin koordinat sistemi yok: zemin boyu hesaplanamaz.".into());
+        return (
+            None,
+            "Projenin koordinat sistemi yok: zemin boyu hesaplanamaz.".into(),
+        );
     };
     let grid = Grid { system, height };
     let mut total = 0.0;
@@ -358,7 +441,10 @@ fn ground(doc: &Document, built: &Built) -> (Option<f64>, String) {
         let turn = e.k0.abs().max(e.k1.abs()) * e.length;
         let n = ((e.length / 50.0).ceil().max((turn / 0.05).ceil()) as usize).max(1);
         for i in 0..n {
-            let (s0, s1) = (e.length * i as f64 / n as f64, e.length * (i + 1) as f64 / n as f64);
+            let (s0, s1) = (
+                e.length * i as f64 / n as f64,
+                e.length * (i + 1) as f64 / n as f64,
+            );
             let (a, b) = (e.point(s0), e.point(s1));
             let place = |p: [f64; 2], s: f64| {
                 let th = e.theta(s);
@@ -367,7 +453,8 @@ fn ground(doc: &Document, built: &Built) -> (Option<f64>, String) {
                     y: p[1] - built.offset * th.cos(),
                 }
             };
-            let grid_piece = (s1 - s0) * (1.0 + 0.5 * (e.curvature(s0) + e.curvature(s1)) * built.offset);
+            let grid_piece =
+                (s1 - s0) * (1.0 + 0.5 * (e.curvature(s0) + e.curvature(s1)) * built.offset);
             match grid_factor(&grid, place(a, s0), place(b, s1)) {
                 Ok(f) => total += grid_piece / f.combined(),
                 Err(why) => return (None, why),
@@ -440,7 +527,12 @@ pub(crate) fn report(doc: &Document, def: &AlignmentDef, built: &Built) -> Align
             .map(|j| AlignmentJoinRow {
                 between: j.between.clone(),
                 reverse: j.reverse,
-                ove: j.ove.map(|o| kentos_commands::AlignmentOveRow { a: o.a, length: o.length, station: o.station, gap: o.gap }),
+                ove: j.ove.map(|o| kentos_commands::AlignmentOveRow {
+                    a: o.a,
+                    length: o.length,
+                    station: o.station,
+                    gap: o.gap,
+                }),
             })
             .collect(),
         residual: c.residual.place,
@@ -483,9 +575,17 @@ pub(crate) fn design_speed(doc: &Document, alignment: &str) -> Option<f64> {
 
 /// Each curve's design speed by its PI's id (docs/adr/0985, docs/adr/0986): the PI's own, else the alignment's; a PI
 /// with neither is left out.
-pub(crate) fn curve_speeds(doc: &Document, alignment: &str) -> std::collections::BTreeMap<String, f64> {
-    let Some(a) = speed_source(doc, alignment) else { return Default::default() };
-    a.pis.iter().filter_map(|p| p.speed.or(a.design_speed).map(|v| (p.id.clone(), v))).collect()
+pub(crate) fn curve_speeds(
+    doc: &Document,
+    alignment: &str,
+) -> std::collections::BTreeMap<String, f64> {
+    let Some(a) = speed_source(doc, alignment) else {
+        return Default::default();
+    };
+    a.pis
+        .iter()
+        .filter_map(|p| p.speed.or(a.design_speed).map(|v| (p.id.clone(), v)))
+        .collect()
 }
 
 pub(crate) fn listed(list: &[AlignmentDef]) -> Vec<AlignmentListed> {
@@ -524,7 +624,10 @@ pub(crate) fn dependents_hold(list: &[AlignmentDef], id: &str, path: &str) -> Re
 }
 
 /// The mapping rows of `before` → `after`.
-pub(crate) fn mapping_rows(before: Option<&Alignment>, after: Option<&Alignment>) -> Vec<StationMapRow> {
+pub(crate) fn mapping_rows(
+    before: Option<&Alignment>,
+    after: Option<&Alignment>,
+) -> Vec<StationMapRow> {
     let empty = Alignment {
         elements: vec![],
         length: 0.0,
@@ -554,7 +657,12 @@ pub(crate) fn write(
 ) -> CommandResult<AlignmentsWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_alignments(next.clone(), label) {
-        return fail(codes::INVALID_ALIGNMENT, format!("Aks kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_ALIGNMENT,
+            format!("Aks kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
     let alignment = match target.and_then(|id| next.iter().find(|a| a.id == id)) {
         Some(def) => match build(&next, def, "") {

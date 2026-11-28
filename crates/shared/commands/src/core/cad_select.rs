@@ -329,9 +329,9 @@ impl SelectKind {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesSelect {
     /// Explicit paper viewport context; world coordinates and returned ids remain those of the one model.
-    #[serde(default,skip_serializing_if="Option::is_none")]
-    #[cfg_attr(feature="ts",ts(optional))]
-    pub model_scope:Option<crate::SheetModelScope>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub model_scope: Option<crate::SheetModelScope>,
     pub region: SelectRegion,
     /// Seçim süzgeci: only these kinds; absent: every kind.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -394,9 +394,9 @@ pub const CAD_ENTITIES_PICK_VERSION: u32 = 1;
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct EntitiesPick {
     /// Explicit paper viewport; results keep original model identities.
-    #[serde(default,skip_serializing_if="Option::is_none")]
-    #[cfg_attr(feature="ts",ts(optional))]
-    pub model_scope:Option<crate::SheetModelScope>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub model_scope: Option<crate::SheetModelScope>,
     /// Where the click is.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub at: Vec2,
@@ -533,7 +533,6 @@ pub struct EntitiesRelated {
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
-
 
 /// Session-only object visibility; never changes layers, saved files or geometry Undo.
 pub const CAD_ENTITIES_ISOLATE: &str = "cad.entities.isolate";

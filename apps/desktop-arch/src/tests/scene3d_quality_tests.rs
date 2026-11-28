@@ -13,20 +13,32 @@ use crate::app::{App, Message};
 use crate::scene3d_building_tests::{building, open};
 
 fn choose(app: &mut App, value: &str) {
-    let _ = app.settings.choose(&[("graphics.scene3dQuality", Value::from(value))]);
+    let _ = app
+        .settings
+        .choose(&[("graphics.scene3dQuality", Value::from(value))]);
     app.apply_settings();
 }
 
 #[test]
 fn the_quality_follows_the_setting_kaliteli_by_default() {
     let (mut app, _) = App::boot(None);
-    assert_eq!(app.scene3d_quality(), Quality::High, "Kaliteli unless asked");
-    for (value, quality) in [("fast", Quality::Fast), ("balanced", Quality::Balanced), ("high", Quality::High)] {
+    assert_eq!(
+        app.scene3d_quality(),
+        Quality::High,
+        "Kaliteli unless asked"
+    );
+    for (value, quality) in [
+        ("fast", Quality::Fast),
+        ("balanced", Quality::Balanced),
+        ("high", Quality::High),
+    ] {
         choose(&mut app, value);
         assert_eq!(app.scene3d_quality(), quality, "{value}");
     }
     // The schema offers the three by their Turkish names.
-    let d = crate::settings::schema().get("graphics.scene3dQuality").expect("the setting");
+    let d = crate::settings::schema()
+        .get("graphics.scene3dQuality")
+        .expect("the setting");
     let names: Vec<&str> = d.choices.iter().map(|c| c.label.as_str()).collect();
     assert_eq!(names, ["Hızlı", "Dengeli", "Kaliteli"]);
 }
@@ -37,15 +49,25 @@ fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/3b-kalite-8120");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/3b-kalite-8120");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
-    for (theme, size, tag) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
-        for (value, name) in [("fast", "hizli"), ("balanced", "dengeli"), ("high", "kaliteli")] {
+    for (theme, size, tag) in [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1100.0, 700.0), "koyu"),
+    ] {
+        for (value, name) in [
+            ("fast", "hizli"),
+            ("balanced", "dengeli"),
+            ("high", "kaliteli"),
+        ] {
             let mut app = open(building());
-            let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", Value::from(theme))]);
             choose(&mut app, value);
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("scene3d.view"));
@@ -53,7 +75,10 @@ fn screens() {
             snapshot.settle(&mut app, App::scene3d_shown, &mut update);
             snapshot.settle(&mut app, App::scene3d_shown, &mut update);
             let file = out.join(format!("bina-{name}-{tag}.png"));
-            snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.scene3d_shown(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         }
     }
@@ -61,7 +86,9 @@ fn screens() {
     // panes folded, the card to its head.
     let size = Size::new(1440.0, 900.0);
     let mut app = open(building());
-    let _ = app.settings.choose(&[("appearance.theme", Value::from("light"))]);
+    let _ = app
+        .settings
+        .choose(&[("appearance.theme", Value::from("light"))]);
     app.apply_settings();
     let _ = app.update(Message::WindowResized(size));
     let _ = app.update(Message::Run("scene3d.view"));
@@ -70,7 +97,10 @@ fn screens() {
     snapshot.settle(&mut app, App::scene3d_shown, &mut update);
     snapshot.settle(&mut app, App::scene3d_shown, &mut update);
     let file = out.join("bina-olcum-acik.png");
-    snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+    snapshot
+        .render(app.scene3d_shown(), &app.theme())
+        .save(&file)
+        .expect("writes the picture");
     println!("{}", file.display());
     use kentos_model_view_ui::{Message as V, Side};
     for m in [V::Pane(Side::Tree), V::Pane(Side::Details), V::MeasureFold] {
@@ -78,21 +108,31 @@ fn screens() {
     }
     snapshot.settle(&mut app, App::scene3d_shown, &mut update);
     let file = out.join("bina-paneller-kapali-acik.png");
-    snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+    snapshot
+        .render(app.scene3d_shown(), &app.theme())
+        .save(&file)
+        .expect("writes the picture");
     println!("{}", file.display());
 
     // The setting in Uygulama ayarları › Çizim motoru.
     let size = Size::new(1440.0, 900.0);
     let mut app = open(building());
-    let _ = app.settings.choose(&[("appearance.theme", Value::from("light"))]);
+    let _ = app
+        .settings
+        .choose(&[("appearance.theme", Value::from("light"))]);
     app.apply_settings();
     let mut snapshot = Snapshot::new(size).expect("a renderer");
     let _ = app.update(Message::WindowResized(size));
     let _ = app.run("tools.options");
-    let _ = app.update(Message::Settings(crate::settings_view::Edit::Section(crate::settings_sections::Section::Engine)));
+    let _ = app.update(Message::Settings(crate::settings_view::Edit::Section(
+        crate::settings_sections::Section::Engine,
+    )));
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("ayar-3b-kalite-acik.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes the picture");
     println!("{}", file.display());
 }
 
@@ -101,15 +141,28 @@ fn screens() {
 fn measured_roof(app: &mut App) {
     use kentos_model_view::measure;
     use kentos_model_view_ui::{Measured, Message as V};
-    let _ = app.update(Message::Scene3d(crate::scene3d_window::Event::Viewer(V::Measure)));
-    let b = app.scene3d_window.as_mut().and_then(|w| w.building.as_mut()).expect("a building");
+    let _ = app.update(Message::Scene3d(crate::scene3d_window::Event::Viewer(
+        V::Measure,
+    )));
+    let b = app
+        .scene3d_window
+        .as_mut()
+        .and_then(|w| w.building.as_mut())
+        .expect("a building");
     let scene = b.viewer.scene().clone();
     let mut top: Option<(f64, usize, usize)> = None;
     for (m, s) in scene.meshes().iter().enumerate() {
         for (t, tri) in s.triangles.iter().enumerate() {
             let [p, q, r] = tri.map(|k| s.vertices[k as usize]);
-            let (u, v) = ([q[0] - p[0], q[1] - p[1], q[2] - p[2]], [r[0] - p[0], r[1] - p[1], r[2] - p[2]]);
-            let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+            let (u, v) = (
+                [q[0] - p[0], q[1] - p[1], q[2] - p[2]],
+                [r[0] - p[0], r[1] - p[1], r[2] - p[2]],
+            );
+            let n = [
+                u[1] * v[2] - u[2] * v[1],
+                u[2] * v[0] - u[0] * v[2],
+                u[0] * v[1] - u[1] * v[0],
+            ];
             let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
             if len > 0.0 && (n[2] / len).abs() > 0.999 && top.is_none_or(|(z, _, _)| p[2] > z) {
                 top = Some((p[2], m, t));
@@ -120,11 +173,26 @@ fn measured_roof(app: &mut App) {
     let s = &scene.meshes()[mesh];
     let face = measure::face(&s.vertices, &s.triangles, triangle).expect("the roof's face");
     let [a, c] = face.outline[0];
-    let next = face.outline.iter().find(|[p, q]| (*p == c || *q == c) && !(*p == a || *q == a)).expect("the next side");
+    let next = face
+        .outline
+        .iter()
+        .find(|[p, q]| (*p == c || *q == c) && !(*p == a || *q == a))
+        .expect("the next side");
     let d = if next[0] == c { next[1] } else { next[0] };
-    let at = face.outline.iter().flatten().fold([0.0; 3], |acc, p| [acc[0] + p[0], acc[1] + p[1], acc[2] + p[2]]).map(|v| v / (2 * face.outline.len()) as f64);
+    let at = face
+        .outline
+        .iter()
+        .flatten()
+        .fold([0.0; 3], |acc, p| {
+            [acc[0] + p[0], acc[1] + p[1], acc[2] + p[2]]
+        })
+        .map(|v| v / (2 * face.outline.len()) as f64);
     let m = &mut b.viewer.measuring;
-    m.done.push(Measured::Area { face, what: s.name.clone(), at });
+    m.done.push(Measured::Area {
+        face,
+        what: s.name.clone(),
+        at,
+    });
     m.done.push(Measured::Distance { a, b: c });
     m.done.push(Measured::Angle { a, at: c, b: d });
 }
@@ -133,7 +201,9 @@ fn measured_roof(app: &mut App) {
 #[test]
 #[ignore = "a probe of a drawing given by hand"]
 fn probe_bodies() {
-    let Ok(path) = std::env::var("KENTOS_PROBE_KCAD") else { return };
+    let Ok(path) = std::env::var("KENTOS_PROBE_KCAD") else {
+        return;
+    };
     let snapshot = kentos_kcad::decode(&std::fs::read(&path).expect("the file")).expect("decodes");
     let mut app = open(snapshot);
     let doc = &app.document.as_ref().expect("the drawing").model;
@@ -142,7 +212,11 @@ fn probe_bodies() {
     std::fs::write(&out, kentos_ifc::building::write(&building)).expect("writes");
     println!("IFC: {}", out.display());
     let _ = app.update(Message::Run("scene3d.view"));
-    let b = app.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).expect("a building");
+    let b = app
+        .scene3d_window
+        .as_ref()
+        .and_then(|w| w.building.as_ref())
+        .expect("a building");
     let v = b.viewer.view().expect("the model");
     let input = v.input();
     let mut rows: Vec<(f64, String)> = input
@@ -158,7 +232,9 @@ fn probe_bodies() {
             }
             let size = [hi[0] - lo[0], hi[1] - lo[1], hi[2] - lo[2]];
             let o = &input.objects[body.object];
-            let storey = o.storey.map_or(String::new(), |s| input.objects[s].label.clone());
+            let storey = o
+                .storey
+                .map_or(String::new(), |s| input.objects[s].label.clone());
             (
                 size[0] * size[1] * size[2],
                 format!(
@@ -206,13 +282,21 @@ fn probe_bodies() {
                 bottom += area;
             }
         }
-        println!("{} “{}”: alt yüz üçgenleri {bottom:.3} m², üst yüz üçgenleri {top:.3} m², {} üçgen", o.class, o.label, body.triangles.len());
+        println!(
+            "{} “{}”: alt yüz üçgenleri {bottom:.3} m², üst yüz üçgenleri {top:.3} m², {} üçgen",
+            o.class,
+            o.label,
+            body.triangles.len()
+        );
     }
     // Pictures: the north-east view, a level cut at 2 m and at 3.6 m.
     use iced::Size;
-    use kentos_ui::snapshot::Snapshot;
     use kentos_model_view_ui::Message as V;
-    let out = std::path::PathBuf::from(std::env::var("KENTOS_PROBE_OUT").unwrap_or_else(|_| std::env::temp_dir().display().to_string()));
+    use kentos_ui::snapshot::Snapshot;
+    let out = std::path::PathBuf::from(
+        std::env::var("KENTOS_PROBE_OUT")
+            .unwrap_or_else(|_| std::env::temp_dir().display().to_string()),
+    );
     let size = Size::new(1440.0, 900.0);
     let _ = app.update(Message::WindowResized(size));
     let mut update = |app: &mut App, message| {
@@ -223,13 +307,20 @@ fn probe_bodies() {
         snapshot.settle(app, App::scene3d_shown, &mut update);
         snapshot.settle(app, App::scene3d_shown, &mut update);
         let file = out.join(format!("{name}.png"));
-        snapshot.render(app.scene3d_shown(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.scene3d_shown(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     };
     shot(&mut app, "probe-kuzeydogu");
     for (at, name) in [(2.0, "probe-kesit-2m"), (3.6, "probe-kesit-3-6m")] {
-        let _ = app.update(Message::Scene3d(crate::scene3d_window::Event::Viewer(V::Cut(kentos_model_view::Cut::Level))));
-        let _ = app.update(Message::Scene3d(crate::scene3d_window::Event::Viewer(V::At(at))));
+        let _ = app.update(Message::Scene3d(crate::scene3d_window::Event::Viewer(
+            V::Cut(kentos_model_view::Cut::Level),
+        )));
+        let _ = app.update(Message::Scene3d(crate::scene3d_window::Event::Viewer(
+            V::At(at),
+        )));
         shot(&mut app, name);
     }
 }

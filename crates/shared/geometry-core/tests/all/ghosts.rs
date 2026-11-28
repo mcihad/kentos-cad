@@ -55,7 +55,9 @@ fn middle(s: &Store) -> [f64; 2] {
     );
     let r = shown
         .records
-        .as_chunks::<LABEL_STRIDE>().0.iter()
+        .as_chunks::<LABEL_STRIDE>()
+        .0
+        .iter()
         .find(|r| r[1] == LABEL_PLACED && (r[8] as u32 & 6) == 0)
         .expect("the label is placed");
     [r[2], r[3]]

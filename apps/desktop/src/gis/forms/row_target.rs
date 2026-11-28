@@ -18,19 +18,22 @@ use crate::app::{App, Message};
 use crate::gis;
 
 /// What a record opened for reading says (Öznitelik formunu aç).
-pub(crate) const VIEWED: &str = "Kayıt okumak için açıldı; Düzenle aynı formu bu kayıtta düzenlemeye açar.";
+pub(crate) const VIEWED: &str =
+    "Kayıt okumak için açıldı; Düzenle aynı formu bu kayıtta düzenlemeye açar.";
 
 /// What a record shown through its layer's default form says.
-pub(crate) const DEFAULT_FORM: &str =
-    "Katmanın formu yok: kayıt alanlarından kurulan varsayılan formla gösteriliyor. Düzenle aynı formla düzenlemeye \
+pub(crate) const DEFAULT_FORM: &str = "Katmanın formu yok: kayıt alanlarından kurulan varsayılan formla gösteriliyor. Düzenle aynı formla düzenlemeye \
      açar, katmana form eklenmez; katmanın kendi formu Veri › Formlar'da oluşturulur.";
 
 /// What the one-record actions say without one row or object chosen (Formu aç, Formla düzenle, the table's Form).
 pub(crate) fn choose_one(rows: usize) -> String {
     if rows > 1 {
-        format!("{rows} satır seçili: formu açmak için tabloda tek bir satır ya da çizimde tek bir nesne seçin.")
+        format!(
+            "{rows} satır seçili: formu açmak için tabloda tek bir satır ya da çizimde tek bir nesne seçin."
+        )
     } else {
-        "Formu açmak için tek bir kayıt seçin: tabloda bir satır ya da çizimde bir nesne.".to_owned()
+        "Formu açmak için tek bir kayıt seçin: tabloda bir satır ya da çizimde bir nesne."
+            .to_owned()
     }
 }
 
@@ -69,18 +72,30 @@ impl App {
 
     /// How many rows the table has chosen (for the words when not one).
     pub(crate) fn data_rows_chosen(&self) -> usize {
-        self.gis.features.data.selected_layer().map_or(0, |l| self.gis.features.data.selected_of(l).len())
+        self.gis
+            .features
+            .data
+            .selected_layer()
+            .map_or(0, |l| self.gis.features.data.selected_of(l).len())
     }
 
     /// The layer's default form in a copy of the drawing (see the module): the copy and the form; none without the
     /// drawing or the layer.
-    pub(crate) fn default_form_copy(&self, layer: &str) -> Option<(kentos_domain::Document, kentos_commands::ProjectForm)> {
+    pub(crate) fn default_form_copy(
+        &self,
+        layer: &str,
+    ) -> Option<(kentos_domain::Document, kentos_commands::ProjectForm)> {
         let mut copy = self.document.as_ref()?.model.clone();
         let name = format!("{} (alanlardan)", copy.layers().get(layer)?.name);
         let answer = kentos_native_application::forms_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut copy),
             kentos_commands::FormsEdit {
-                edit: kentos_commands::FormsOp::Create { id: None, name, layer: layer.to_owned(), body: None },
+                edit: kentos_commands::FormsOp::Create {
+                    id: None,
+                    name,
+                    layer: layer.to_owned(),
+                    body: None,
+                },
                 expected_revision: None,
             },
         );
@@ -96,7 +111,12 @@ impl App {
     }
 
     /// The row's form; `view` (Öznitelik formunu aç): for reading whatever its layer's session, Düzenle offered.
-    pub(crate) fn open_form_on_row_as(&mut self, layer: String, key: i64, view: bool) -> Task<Message> {
+    pub(crate) fn open_form_on_row_as(
+        &mut self,
+        layer: String,
+        key: i64,
+        view: bool,
+    ) -> Task<Message> {
         // Without a form: shown, and edited, through the default form; the layer gets no form (T17).
         let (form, default) = match self.form_of_layer(&layer) {
             Some(form) => (form, false),
@@ -109,11 +129,23 @@ impl App {
             return Task::none();
         };
         // Taken already: its object's record, the same pending change (only read when asked to view it).
-        if let Some(slot) = doc.model.taken_uid(&layer, key).and_then(|u| doc.model.slot_of(u)) {
-            let task = if default { self.open_entry_default(slot, &layer) } else { self.open_entry(slot, &form) };
+        if let Some(slot) = doc
+            .model
+            .taken_uid(&layer, key)
+            .and_then(|u| doc.model.slot_of(u))
+        {
+            let task = if default {
+                self.open_entry_default(slot, &layer)
+            } else {
+                self.open_entry(slot, &form)
+            };
             if view && let Some(e) = self.gis.form_entry.as_mut() {
                 e.read_only = true;
-                e.read_why = Some(if default { format!("{DEFAULT_FORM} {VIEWED}") } else { VIEWED.into() });
+                e.read_why = Some(if default {
+                    format!("{DEFAULT_FORM} {VIEWED}")
+                } else {
+                    VIEWED.into()
+                });
                 e.edit_slot = Some(slot);
             }
             return task;
@@ -140,7 +172,14 @@ impl App {
         let asked = self.gis.form_row_asked;
         let settings = doc.model.settings().clone();
         crate::db_connections::off_thread(
-            move || kentos_native_application::data_write::rows_to_take(&node, &settings, &[key], &|| false),
+            move || {
+                kentos_native_application::data_write::rows_to_take(
+                    &node,
+                    &settings,
+                    &[key],
+                    &|| false,
+                )
+            },
             move |rows| {
                 Message::Gis(gis::Event::FormRow(Box::new(RowTaken {
                     asked,

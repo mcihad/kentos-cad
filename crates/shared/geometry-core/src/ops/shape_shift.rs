@@ -113,12 +113,20 @@ fn nearest_on(e: &Edge, p: Vec2) -> Vec2 {
             if k > 0.0 {
                 let t = atan2(p.y - c.y, p.x - c.x);
                 // How far round from the start, in the arc's own direction.
-                let u = if sweep >= 0.0 { (t - a0).rem_euclid(TAU) } else { (a0 - t).rem_euclid(TAU) };
+                let u = if sweep >= 0.0 {
+                    (t - a0).rem_euclid(TAU)
+                } else {
+                    (a0 - t).rem_euclid(TAU)
+                };
                 if u <= sweep.abs() {
                     return Vec2::new(c.x + (p.x - c.x) * r / k, c.y + (p.y - c.y) * r / k);
                 }
             }
-            if dist(p, start) <= dist(p, end) { start } else { end }
+            if dist(p, start) <= dist(p, end) {
+                start
+            } else {
+                end
+            }
         }
     }
 }
@@ -132,7 +140,11 @@ struct Outline {
 impl Outline {
     fn of(s: &Shape) -> Self {
         let edges = entity_edges(s);
-        let points = if edges.is_empty() { entity_vertices(s) } else { Vec::new() };
+        let points = if edges.is_empty() {
+            entity_vertices(s)
+        } else {
+            Vec::new()
+        };
         Outline { edges, points }
     }
 
@@ -143,7 +155,12 @@ impl Outline {
     /// The distance from `p` to the outline and its nearest point.
     fn nearest(&self, p: Vec2) -> (f64, Vec2) {
         let mut best = (f64::INFINITY, p);
-        for q in self.edges.iter().map(|e| nearest_on(e, p)).chain(self.points.iter().copied()) {
+        for q in self
+            .edges
+            .iter()
+            .map(|e| nearest_on(e, p))
+            .chain(self.points.iter().copied())
+        {
             let d = dist(p, q);
             if d < best.0 {
                 best = (d, q);
@@ -182,7 +199,11 @@ impl Ord for Stretch {
 
 /// The farthest a point of `a` is from `b` (the directed Hausdorff distance), with the two points.
 fn directed(a: &Outline, b: &Outline) -> Farthest {
-    let mut best = Farthest { d: -1.0, from: Vec2::default(), to: Vec2::default() };
+    let mut best = Farthest {
+        d: -1.0,
+        from: Vec2::default(),
+        to: Vec2::default(),
+    };
     let take = |p: Vec2, best: &mut Farthest| -> f64 {
         let (d, q) = b.nearest(p);
         if d > best.d {
@@ -198,7 +219,14 @@ fn directed(a: &Outline, b: &Outline) -> Farthest {
         let l = length(e);
         let f0 = take(point_at(e, 0.0), &mut best);
         let f1 = take(point_at(e, l), &mut best);
-        heap.push(Stretch { bound: (f0 + f1 + l) / 2.0, edge: i, s0: 0.0, s1: l, f0, f1 });
+        heap.push(Stretch {
+            bound: (f0 + f1 + l) / 2.0,
+            edge: i,
+            s0: 0.0,
+            s1: l,
+            f0,
+            f1,
+        });
     }
     let mut measured = 0usize;
     while let Some(st) = heap.pop() {
@@ -215,7 +243,14 @@ fn directed(a: &Outline, b: &Outline) -> Farthest {
         for (s0, s1, f0, f1) in [(st.s0, mid, st.f0, fm), (mid, st.s1, fm, st.f1)] {
             let bound = (f0 + f1 + (s1 - s0)) / 2.0;
             if bound > best.d + HAUSDORFF_TOLERANCE {
-                heap.push(Stretch { bound, edge: st.edge, s0, s1, f0, f1 });
+                heap.push(Stretch {
+                    bound,
+                    edge: st.edge,
+                    s0,
+                    s1,
+                    f0,
+                    f1,
+                });
             }
         }
     }
@@ -231,7 +266,15 @@ pub fn hausdorff(then: &Shape, now: &Shape) -> Option<Farthest> {
     let ab = directed(&a, &b);
     let ba = directed(&b, &a);
     // The way from the approved outline first; the other way only when it is farther.
-    Some(if ba.d > ab.d { Farthest { d: ba.d, from: ba.to, to: ba.from } } else { ab })
+    Some(if ba.d > ab.d {
+        Farthest {
+            d: ba.d,
+            from: ba.to,
+            to: ba.from,
+        }
+    } else {
+        ab
+    })
 }
 
 /// Whether two shapes are of one kind (their tag).
@@ -258,7 +301,13 @@ pub fn shift(then: &Shape, now: &Shape) -> Shift {
         largest = top;
         rms = Some((sum / va.len() as f64).sqrt());
     }
-    Shift { paired, vertices: [va.len(), vb.len()], largest, rms, hausdorff: hausdorff(then, now) }
+    Shift {
+        paired,
+        vertices: [va.len(), vb.len()],
+        largest,
+        rms,
+        hausdorff: hausdorff(then, now),
+    }
 }
 
 /// How many vertices moved farther than `limit` (docs/adr/5280), when they pair one to one; none otherwise.
@@ -312,7 +361,10 @@ mod tests {
         assert!(!s.paired && s.largest.is_none());
         let h = s.hausdorff.expect("outlines");
         assert!((h.d - 2.0).abs() < 1e-9, "{h:?}");
-        assert!((h.from.x - 5.0).abs() < 1e-6 && h.from.y.abs() < 1e-9, "on the approved line: {h:?}");
+        assert!(
+            (h.from.x - 5.0).abs() < 1e-6 && h.from.y.abs() < 1e-9,
+            "on the approved line: {h:?}"
+        );
         assert!((h.to.x - 5.0).abs() < 1e-9 && (h.to.y - 2.0).abs() < 1e-9);
     }
 
@@ -330,14 +382,23 @@ mod tests {
 
     #[test]
     fn concentric_arcs_are_their_radii_apart() {
-        let arc = |r: f64| Shape::Arc { c: Vec2::new(100.0, 50.0), r, a0: 0.3, a1: 1.9 };
+        let arc = |r: f64| Shape::Arc {
+            c: Vec2::new(100.0, 50.0),
+            r,
+            a0: 0.3,
+            a1: 1.9,
+        };
         let h = hausdorff(&arc(20.0), &arc(20.25)).expect("outlines");
         assert!((h.d - 0.25).abs() < 1e-9, "{h:?}");
     }
 
     #[test]
     fn points_are_their_distance_apart() {
-        let p = |x: f64, y: f64| Shape::Point { p: Vec2::new(x, y), z: None, parts: None };
+        let p = |x: f64, y: f64| Shape::Point {
+            p: Vec2::new(x, y),
+            z: None,
+            parts: None,
+        };
         let s = shift(&p(1.0, 1.0), &p(4.0, 5.0));
         assert!(s.paired);
         assert!((s.largest.expect("paired").d - 5.0).abs() < 1e-12);

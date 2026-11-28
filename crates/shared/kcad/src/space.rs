@@ -2,7 +2,8 @@
 //! is not its default, so a file has one way to say a space.
 
 use kentos_contracts::{
-    ArchInfo, SpaceBreak, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart, SpaceScope, Vec2,
+    ArchInfo, SpaceBreak, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart,
+    SpaceScope, Vec2,
 };
 use serde::{Deserialize, Serialize};
 

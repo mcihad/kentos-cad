@@ -70,5 +70,8 @@ fn every_input_that_cannot_run_is_said_together() {
         panic!("{outcome:?}");
     };
     let params: Vec<&str> = issues.iter().filter_map(|i| i.param.as_deref()).collect();
-    assert!(params.contains(&"input") && params.contains(&"cut"), "{issues:?}");
+    assert!(
+        params.contains(&"input") && params.contains(&"cut"),
+        "{issues:?}"
+    );
 }

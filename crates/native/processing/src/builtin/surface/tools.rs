@@ -103,7 +103,14 @@ pub fn slope() -> Tool {
                 fb,
                 json!({"kind": "slope", "method": r.text("method"), "unit": r.text("unit"), "zFactor": r.number("zFactor")}),
                 // The unit in the name (GIS-012): a percent slope never takes a degree one's file.
-                (if r.text("unit") == "percent" { "-egim-yuzde" } else { "-egim" }, "Eğim hesaplanıyor"),
+                (
+                    if r.text("unit") == "percent" {
+                        "-egim-yuzde"
+                    } else {
+                        "-egim"
+                    },
+                    "Eğim hesaplanıyor",
+                ),
             )
         },
     )

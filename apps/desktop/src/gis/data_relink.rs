@@ -12,18 +12,31 @@ use kentos_native_application::ExecutionContext;
 use crate::app::App;
 
 /// What the table at the new place lacks to be the layer's, each said; none when it is the layer's.
-pub(crate) fn mismatch(layer: &LayerNode, data: &DataLayer, found: &kentos_native_application::data_describe::Described) -> Vec<String> {
+pub(crate) fn mismatch(
+    layer: &LayerNode,
+    data: &DataLayer,
+    found: &kentos_native_application::data_describe::Described,
+) -> Vec<String> {
     let mut out = Vec::new();
     if found.data.key != data.key {
-        out.push(format!("anahtar sütunu “{}” değil “{}”", data.key, found.data.key));
+        out.push(format!(
+            "anahtar sütunu “{}” değil “{}”",
+            data.key, found.data.key
+        ));
     }
     match (&data.geometry, &found.data.geometry) {
         (Some(a), Some(b)) => {
             if a.column != b.column {
-                out.push(format!("geometri sütunu “{}” değil “{}”", a.column, b.column));
+                out.push(format!(
+                    "geometri sütunu “{}” değil “{}”",
+                    a.column, b.column
+                ));
             }
             if a.type_name != b.type_name {
-                out.push(format!("geometri türü {} değil {}", a.type_name, b.type_name));
+                out.push(format!(
+                    "geometri türü {} değil {}",
+                    a.type_name, b.type_name
+                ));
             }
             if a.srid != b.srid {
                 let s = |v: Option<u32>| v.map_or_else(|| "yok".to_owned(), |n| n.to_string());
@@ -37,9 +50,12 @@ pub(crate) fn mismatch(layer: &LayerNode, data: &DataLayer, found: &kentos_nativ
     for f in &layer.fields {
         match found.fields.iter().find(|g| g.name == f.name) {
             None => out.push(format!("“{}” alanı yok", f.name)),
-            Some(g) if g.kind != f.kind => {
-                out.push(format!("“{}” alanı {} değil {}", f.name, f.kind.label(), g.kind.label()))
-            }
+            Some(g) if g.kind != f.kind => out.push(format!(
+                "“{}” alanı {} değil {}",
+                f.name,
+                f.kind.label(),
+                g.kind.label()
+            )),
             Some(_) => {}
         }
     }
@@ -50,7 +66,12 @@ impl App {
     /// The data layers of `layer`'s file pointed at `path` (see the module): the layers relinked, or why none was.
     pub fn relink_data_layers(&mut self, layer: &str, path: &Path) -> Result<Vec<String>, String> {
         let doc = self.document.as_ref().ok_or("Açık çizim yok.")?;
-        let node = doc.model.layers().get(layer).cloned().ok_or("Katman yok.")?;
+        let node = doc
+            .model
+            .layers()
+            .get(layer)
+            .cloned()
+            .ok_or("Katman yok.")?;
         let data = node.data.clone().ok_or("Katman bir veri katmanı değil.")?;
         if data.driver == "postgis" {
             return Err("Veritabanı katmanı bağlantısından yeniden yönlendirilir; Yeniden bağla dosyalar içindir.".into());
@@ -63,15 +84,23 @@ impl App {
                 .layers()
                 .leaves()
                 .into_iter()
-                .filter(|n| n.id != node.id && n.data.as_ref().is_some_and(|d| d.address == data.address))
+                .filter(|n| {
+                    n.id != node.id && n.data.as_ref().is_some_and(|d| d.address == data.address)
+                })
                 .cloned(),
         );
         // Each table checked first: nothing is bound unless all are the layers'.
         let mut planned: Vec<(LayerNode, DataLayer)> = Vec::new();
         for n in &same {
             let d = n.data.clone().unwrap_or_else(|| data.clone());
-            let found = crate::data_layers::describe(&address, &d.table)
-                .map_err(|why| format!("“{}”: {} dosyasında “{}” tablosu okunamadı: {why}", n.name, path.display(), d.table))?;
+            let found = crate::data_layers::describe(&address, &d.table).map_err(|why| {
+                format!(
+                    "“{}”: {} dosyasında “{}” tablosu okunamadı: {why}",
+                    n.name,
+                    path.display(),
+                    d.table
+                )
+            })?;
             let wrong = mismatch(n, &d, &found);
             if !wrong.is_empty() {
                 return Err(format!(
@@ -103,10 +132,18 @@ impl App {
                 fields: None,
                 expected_revision: None,
             };
-            match kentos_native_application::layers_data::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            match kentos_native_application::layers_data::execute(
+                &mut ExecutionContext::new(&mut doc.model),
+                input,
+            ) {
                 CommandResult::Completed { .. } => done.push(n.id.clone()),
-                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                    return Err(format!("“{}” yeniden bağlanmadı: {}", n.name, error.message));
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => {
+                    return Err(format!(
+                        "“{}” yeniden bağlanmadı: {}",
+                        n.name, error.message
+                    ));
                 }
                 _ => {}
             }

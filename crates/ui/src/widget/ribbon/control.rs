@@ -639,26 +639,25 @@ impl<'a, Message: Clone + 'a> From<AppButton<'a, Message>> for Element<'a, Messa
             );
         }
         let face_content = if app_button.wordmark {
-            row![crate::widget::brand_logo(typography::scaled(100.0)), icon(Icon::ChevronDown).size(12.0)]
+            row![
+                crate::widget::brand_logo(typography::scaled(100.0)),
+                icon(Icon::ChevronDown).size(12.0)
+            ]
         } else {
             row![brand_mark(20.0), word, icon(Icon::ChevronDown).size(12.0)]
         };
-        let face: Element<'a, Message> = button(
-            face_content
-                .spacing(7)
-                .height(Fill)
-                .align_y(Center),
-        )
-        .on_press_maybe(app_button.on_press)
-        .height(typography::scaled(26.0))
-        .padding(Padding {
-            top: 0.0,
-            right: 6.0,
-            bottom: 0.0,
-            left: 3.0,
-        })
-        .style(style::button::brand(app_button.open))
-        .into();
+        let face: Element<'a, Message> =
+            button(face_content.spacing(7).height(Fill).align_y(Center))
+                .on_press_maybe(app_button.on_press)
+                .height(typography::scaled(26.0))
+                .padding(Padding {
+                    top: 0.0,
+                    right: 6.0,
+                    bottom: 0.0,
+                    left: 3.0,
+                })
+                .style(style::button::brand(app_button.open))
+                .into();
         let face = match app_button.tip {
             Some(hint) if !app_button.open => tip(face, hint, tooltip::Position::Bottom),
             _ => face,

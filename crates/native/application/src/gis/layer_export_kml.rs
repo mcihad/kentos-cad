@@ -30,7 +30,12 @@ enum Kind {
 }
 
 fn kind_of(plan: &Plan<'_>) -> Kind {
-    let name = plan.schema.geometry.as_ref().map(|g| g.type_name.to_ascii_uppercase()).unwrap_or_default();
+    let name = plan
+        .schema
+        .geometry
+        .as_ref()
+        .map(|g| g.type_name.to_ascii_uppercase())
+        .unwrap_or_default();
     if name.contains("POLYGON") {
         Kind::Area
     } else if name.contains("POINT") {
@@ -41,7 +46,11 @@ fn kind_of(plan: &Plan<'_>) -> Kind {
 }
 
 fn symbols_of(plan: &Plan<'_>) -> ExportSymbols {
-    plan.input.options.as_ref().and_then(|o| o.symbols).unwrap_or_default()
+    plan.input
+        .options
+        .as_ref()
+        .and_then(|o| o.symbols)
+        .unwrap_or_default()
 }
 
 /// The fields the classes read when the file takes the layer's style: a data layer's rows are read with them.
@@ -91,13 +100,20 @@ impl KmlSymbols {
                 match renderer.filter(|r| classes_kind(r).is_some()) {
                     Some(r) => {
                         for class in style_classes(r) {
-                            let style = class.symbols.as_ref().filter(|_| class.enabled).map(|s| set_style(s, kind, &color));
+                            let style = class
+                                .symbols
+                                .as_ref()
+                                .filter(|_| class.enabled)
+                                .map(|s| set_style(s, kind, &color));
                             out.by_class.push(style.map(|s| {
                                 out.styles.push(s);
                                 out.styles.len() - 1
                             }));
                         }
-                        out.reader = ClassReader::new(r, crate::expression_unit::reading_unit(plan.settings));
+                        out.reader = ClassReader::new(
+                            r,
+                            crate::expression_unit::reading_unit(plan.settings),
+                        );
                     }
                     None => {
                         let style = renderer
@@ -182,17 +198,24 @@ fn set_style(set: &Value, kind: Kind, fallback: &PlaceStyle) -> PlaceStyle {
     let layers: Vec<&Value> = symbol
         .get("layers")
         .and_then(Value::as_array)
-        .map(|l| l.iter().filter(|l| l.get("enabled") != Some(&Value::Bool(false))).collect())
+        .map(|l| {
+            l.iter()
+                .filter(|l| l.get("enabled") != Some(&Value::Bool(false)))
+                .collect()
+        })
         .unwrap_or_default();
     let colored = |l: &Value, field: &str| {
         let opacity = whole * number(l, "opacity").unwrap_or(1.0);
-        l.get(field).and_then(Value::as_str).and_then(|c| to_kml(c, alpha(opacity)))
+        l.get(field)
+            .and_then(Value::as_str)
+            .and_then(|c| to_kml(c, alpha(opacity)))
     };
     let of_type = |types: &[&str]| {
-        layers
-            .iter()
-            .copied()
-            .find(|l| l.get("type").and_then(Value::as_str).is_some_and(|t| types.contains(&t)))
+        layers.iter().copied().find(|l| {
+            l.get("type")
+                .and_then(Value::as_str)
+                .is_some_and(|t| types.contains(&t))
+        })
     };
     let line = of_type(&["simpleLine"]).and_then(|l| {
         let width = number(l, "width").unwrap_or(0.25);
@@ -202,19 +225,35 @@ fn set_style(set: &Value, kind: Kind, fallback: &PlaceStyle) -> PlaceStyle {
         Kind::Area => PlaceStyle {
             icon: None,
             icon_scale: None,
-            fill: of_type(&["simpleFill", "hatchFill", "gradientFill"]).and_then(|l| colored(l, "color")),
+            fill: of_type(&["simpleFill", "hatchFill", "gradientFill"])
+                .and_then(|l| colored(l, "color")),
             line,
             area: true,
         },
-        Kind::Line => PlaceStyle { icon: None, icon_scale: None, fill: None, line, area: false },
+        Kind::Line => PlaceStyle {
+            icon: None,
+            icon_scale: None,
+            fill: None,
+            line,
+            area: false,
+        },
         Kind::Point => {
             let marker = of_type(&["shape", "svg"]);
             let icon = marker.and_then(|l| colored(l, "fill").or_else(|| colored(l, "color")));
             let icon_scale = marker.and_then(|l| number(l, "size")).map(|mm| {
-                let scale = pixels(mm, marker.and_then(|l| l.get("unit")).and_then(Value::as_str)) / 32.0;
+                let scale = pixels(
+                    mm,
+                    marker.and_then(|l| l.get("unit")).and_then(Value::as_str),
+                ) / 32.0;
                 (scale.clamp(0.1, 10.0) * 100.0).round() / 100.0
             });
-            PlaceStyle { icon, icon_scale, fill: None, line: None, area: false }
+            PlaceStyle {
+                icon,
+                icon_scale,
+                fill: None,
+                line: None,
+                area: false,
+            }
         }
     };
     let empty = style.icon.is_none() && style.fill.is_none() && style.line.is_none();
@@ -269,6 +308,9 @@ mod tests {
             { "type": "simpleFill", "color": "#ffffff", "enabled": false },
             { "type": "simpleFill", "color": "#123456" }
         ] } });
-        assert_eq!(set_style(&set, Kind::Area, &fallback()).fill.as_deref(), Some("ff563412"));
+        assert_eq!(
+            set_style(&set, Kind::Area, &fallback()).fill.as_deref(),
+            Some("ff563412")
+        );
     }
 }

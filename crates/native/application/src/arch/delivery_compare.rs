@@ -68,9 +68,17 @@ pub fn read(folder: &Path) -> Result<Publication, String> {
         };
         let sheets = f["sheets"]
             .as_array()
-            .map(|s| s.iter().filter_map(|x| x.as_str().map(str::to_owned)).collect())
+            .map(|s| {
+                s.iter()
+                    .filter_map(|x| x.as_str().map(str::to_owned))
+                    .collect()
+            })
             .unwrap_or_default();
-        files.push(PackageFile { name: name.to_owned(), sheets, sha256: sha256.to_owned() });
+        files.push(PackageFile {
+            name: name.to_owned(),
+            sheets,
+            sha256: sha256.to_owned(),
+        });
     }
     let drawing = folder.join(DRAWING);
     Ok(Publication {
@@ -116,7 +124,9 @@ pub struct FileCompared {
 }
 
 fn extension(name: &str) -> Option<String> {
-    Path::new(name).extension().map(|e| e.to_string_lossy().to_lowercase())
+    Path::new(name)
+        .extension()
+        .map(|e| e.to_string_lossy().to_lowercase())
 }
 
 /// The files paired (by the sheets they hold, by name, by content, by an extension one file on each side is left
@@ -143,14 +153,20 @@ pub fn files(old: &[PackageFile], new: &[PackageFile]) -> Vec<FileCompared> {
     }
     // The model's EK-2 name carries the revision: of the files that hold no sheet, one left on each side with an
     // extension is that file. A sheet's file has its sheet to pair by.
-    let loose = |f: &PackageFile, ext: &str| f.sheets.is_empty() && extension(&f.name).as_deref() == Some(ext);
+    let loose = |f: &PackageFile, ext: &str| {
+        f.sheets.is_empty() && extension(&f.name).as_deref() == Some(ext)
+    };
     for (k, n) in new.iter().enumerate() {
         if pair[k].is_some() || !n.sheets.is_empty() {
             continue;
         }
-        let Some(ext) = extension(&n.name) else { continue };
+        let Some(ext) = extension(&n.name) else {
+            continue;
+        };
         let left_new = (0..new.len()).filter(|&j| pair[j].is_none() && loose(&new[j], &ext));
-        let left_old: Vec<usize> = (0..old.len()).filter(|&i| !used[i] && loose(&old[i], &ext)).collect();
+        let left_old: Vec<usize> = (0..old.len())
+            .filter(|&i| !used[i] && loose(&old[i], &ext))
+            .collect();
         if left_new.count() == 1 && left_old.len() == 1 {
             pair[k] = Some(left_old[0]);
             used[left_old[0]] = true;
@@ -167,16 +183,28 @@ pub fn files(old: &[PackageFile], new: &[PackageFile]) -> Vec<FileCompared> {
                     (true, false) => FileChange::Renamed,
                     (false, _) => FileChange::Changed,
                 };
-                FileCompared { old: Some(o.name.clone()), new: Some(n.name.clone()), change }
+                FileCompared {
+                    old: Some(o.name.clone()),
+                    new: Some(n.name.clone()),
+                    change,
+                }
             }
-            None => FileCompared { old: None, new: Some(n.name.clone()), change: FileChange::Added },
+            None => FileCompared {
+                old: None,
+                new: Some(n.name.clone()),
+                change: FileChange::Added,
+            },
         })
         .collect();
     out.extend(
         old.iter()
             .zip(&used)
             .filter(|(_, u)| !**u)
-            .map(|(o, _)| FileCompared { old: Some(o.name.clone()), new: None, change: FileChange::Removed }),
+            .map(|(o, _)| FileCompared {
+                old: Some(o.name.clone()),
+                new: None,
+                change: FileChange::Removed,
+            }),
     );
     out
 }
@@ -219,7 +247,10 @@ pub struct Compared {
 /// The package `d` names, read from its folder and checked against the record.
 fn package_of(d: &Delivery) -> Result<Publication, String> {
     let Some(path) = d.package.path.as_deref() else {
-        return Err(format!("{}. teslimin paket klasörü kayıtlı değil; karşılaştırma klasörü okur.", d.number));
+        return Err(format!(
+            "{}. teslimin paket klasörü kayıtlı değil; karşılaştırma klasörü okur.",
+            d.number
+        ));
     };
     let read = read(Path::new(path)).map_err(|why| format!("{}. teslim: {why}", d.number))?;
     if read.package.manifest != d.package.manifest {
@@ -234,14 +265,21 @@ fn package_of(d: &Delivery) -> Result<Publication, String> {
 
 fn load(path: &Path) -> Result<Document, String> {
     let name = path.display();
-    let bytes = std::fs::read(path).map_err(|_| format!("{name} okunamadı: dosya yok ya da açılamıyor."))?;
-    let snapshot = read_drawing(&bytes).map_err(|why| format!("{name} bir KentOS çizimi olarak okunamadı: {why}"))?;
-    Document::from_snapshot_v2(snapshot).map_err(|why| format!("{name} bir KentOS çizimi olarak okunamadı: {why}"))
+    let bytes = std::fs::read(path)
+        .map_err(|_| format!("{name} okunamadı: dosya yok ya da açılamıyor."))?;
+    let snapshot = read_drawing(&bytes)
+        .map_err(|why| format!("{name} bir KentOS çizimi olarak okunamadı: {why}"))?;
+    Document::from_snapshot_v2(snapshot)
+        .map_err(|why| format!("{name} bir KentOS çizimi olarak okunamadı: {why}"))
 }
 
 /// `chosen`'s package beside `previous`'s, the previous answer's notes found among `notes` (the drawing's review
 /// notes); why not (a folder missing or changed).
-pub fn compare(chosen: &Delivery, previous: &Delivery, notes: &[ReviewNote]) -> Result<Compared, String> {
+pub fn compare(
+    chosen: &Delivery,
+    previous: &Delivery,
+    notes: &[ReviewNote],
+) -> Result<Compared, String> {
     let old = package_of(previous)?;
     let new = package_of(chosen)?;
     let files = files(&old.files, &new.files);
@@ -268,7 +306,11 @@ pub fn compare(chosen: &Delivery, previous: &Delivery, notes: &[ReviewNote]) -> 
                 removed: diff.removed.len(),
                 project: drawing_compare::project_diff(&o, &n).len(),
             };
-            let answered = previous.response.as_ref().map(|r| r.notes.as_slice()).unwrap_or_default();
+            let answered = previous
+                .response
+                .as_ref()
+                .map(|r| r.notes.as_slice())
+                .unwrap_or_default();
             let bound = answered
                 .iter()
                 .filter_map(|id| notes.iter().find(|x| &x.id == id))
@@ -289,7 +331,9 @@ pub fn compare(chosen: &Delivery, previous: &Delivery, notes: &[ReviewNote]) -> 
                         match (was, now) {
                             (None, _) => c.unknown += 1,
                             (Some(_), None) => c.removed += 1,
-                            (Some(w), Some(_)) if diff.changed.iter().any(|x| x.old == w) => c.changed += 1,
+                            (Some(w), Some(_)) if diff.changed.iter().any(|x| x.old == w) => {
+                                c.changed += 1
+                            }
                             _ => {}
                         }
                     }
@@ -301,7 +345,11 @@ pub fn compare(chosen: &Delivery, previous: &Delivery, notes: &[ReviewNote]) -> 
         Err(why) => (Err(why), Vec::new()),
     };
     Ok(Compared {
-        previous: (previous.id.clone(), previous.number, previous.revision.clone()),
+        previous: (
+            previous.id.clone(),
+            previous.number,
+            previous.revision.clone(),
+        ),
         files,
         drawing,
         notes,
@@ -313,7 +361,11 @@ mod tests {
     use super::*;
 
     fn file(name: &str, sheets: &[&str], sha: &str) -> PackageFile {
-        PackageFile { name: name.into(), sheets: sheets.iter().map(|s| (*s).to_owned()).collect(), sha256: sha.into() }
+        PackageFile {
+            name: name.into(),
+            sheets: sheets.iter().map(|s| (*s).to_owned()).collect(),
+            sha256: sha.into(),
+        }
     }
 
     #[test]
@@ -341,21 +393,35 @@ mod tests {
             file("aciklama.txt", &[], "t"),
         ];
         let paired = files(&old, &new);
-        let got: Vec<(Option<&str>, Option<&str>, FileChange)> =
-            paired.iter().map(|f| (f.old.as_deref(), f.new.as_deref(), f.change)).collect();
+        let got: Vec<(Option<&str>, Option<&str>, FileChange)> = paired
+            .iter()
+            .map(|f| (f.old.as_deref(), f.new.as_deref(), f.change))
+            .collect();
         assert_eq!(
             got,
             vec![
-                (Some("001-A01.pdf"), Some("001-A01-R1.pdf"), FileChange::Changed),
+                (
+                    Some("001-A01.pdf"),
+                    Some("001-A01-R1.pdf"),
+                    FileChange::Changed
+                ),
                 (Some("002-A02.pdf"), Some("002-A02.pdf"), FileChange::Same),
                 (
                     Some("260123_00_MM_0001_MD_MIM_001_01_000.ifc"),
                     Some("260123_00_MM_0001_MD_MIM_001_01_001.ifc"),
                     FileChange::Changed
                 ),
-                (Some("teslim-listesi.csv"), Some("teslim-listesi.csv"), FileChange::Changed),
+                (
+                    Some("teslim-listesi.csv"),
+                    Some("teslim-listesi.csv"),
+                    FileChange::Changed
+                ),
                 (None, Some("004-A04.pdf"), FileChange::Added),
-                (Some("notlar.txt"), Some("aciklama.txt"), FileChange::Renamed),
+                (
+                    Some("notlar.txt"),
+                    Some("aciklama.txt"),
+                    FileChange::Renamed
+                ),
                 (Some("003-A03.pdf"), None, FileChange::Removed),
             ]
         );
@@ -363,7 +429,10 @@ mod tests {
         let old = [file("a.ifc", &[], "1"), file("b.ifc", &[], "2")];
         let new = [file("c.ifc", &[], "3")];
         let got: Vec<FileChange> = files(&old, &new).iter().map(|f| f.change).collect();
-        assert_eq!(got, vec![FileChange::Added, FileChange::Removed, FileChange::Removed]);
+        assert_eq!(
+            got,
+            vec![FileChange::Added, FileChange::Removed, FileChange::Removed]
+        );
     }
 
     #[test]
@@ -373,15 +442,25 @@ mod tests {
         std::fs::create_dir_all(dir.join("kaynaklar")).unwrap();
         assert!(read(&dir).unwrap_err().contains("yayin.json yok"));
         std::fs::write(dir.join(MANIFEST), b"{\"format\":\"other\"}").unwrap();
-        assert!(read(&dir).unwrap_err().contains("KentOS yayınının dosyası değil"));
+        assert!(
+            read(&dir)
+                .unwrap_err()
+                .contains("KentOS yayınının dosyası değil")
+        );
         let manifest = br#"{"format":"kentos.publish/1","source":{"revision":"37","sha256":"x"},
             "files":[{"name":"001-A01.pdf","sheets":["s1"],"bytes":10,"sha256":"aa"},
                      {"name":"m.ifc","sheets":[],"bytes":5,"sha256":"bb"}]}"#;
         std::fs::write(dir.join(MANIFEST), manifest).unwrap();
         let p = read(&dir).unwrap();
         assert_eq!(p.package.manifest, sha256_hex(manifest));
-        assert_eq!((p.package.files, p.package.source.as_deref()), (2, Some("37")));
-        assert_eq!(p.package.path.as_deref(), Some(dir.display().to_string().as_str()));
+        assert_eq!(
+            (p.package.files, p.package.source.as_deref()),
+            (2, Some("37"))
+        );
+        assert_eq!(
+            p.package.path.as_deref(),
+            Some(dir.display().to_string().as_str())
+        );
         assert_eq!(p.files[0], file("001-A01.pdf", &["s1"], "aa"));
         assert_eq!(p.drawing, None);
         std::fs::write(dir.join(DRAWING), b"x").unwrap();

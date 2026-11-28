@@ -254,9 +254,13 @@ fn changed(
     }
     if let Some(label) = &input.label {
         base.label.clone_from(label);
-    } else if map && matches!(e, Entity::Point(_))
+    } else if map
+        && matches!(e, Entity::Point(_))
         && let Some(name) = attrs.and_then(|fields| fields.get("Ad"))
-        && base.attrs.get("Ad").is_some_and(|old| base.label.as_ref().is_none_or(|label| label == old))
+        && base
+            .attrs
+            .get("Ad")
+            .is_some_and(|old| base.label.as_ref().is_none_or(|label| label == old))
     {
         // The imported name may also appear as a typed or shared attribute in the Inspector.
         base.label.clone_from(name);
@@ -435,9 +439,11 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             let Some(block) = doc.block(i.block) else {
                 continue;
             };
-            if let Some(a) = block.attributes.iter().find(|a| {
-                a.options.constant && attrs.get(&a.tag).is_some_and(Option::is_some)
-            }) {
+            if let Some(a) = block
+                .attributes
+                .iter()
+                .find(|a| a.options.constant && attrs.get(&a.tag).is_some_and(Option::is_some))
+            {
                 return Err(Stop::failed(error(
                     codes::CONSTANT_ATTRIBUTE,
                     format!(
@@ -512,7 +518,13 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             }
             // The layer's record rules and unique fields (docs/adr/0438 §1, §3).
             let object = crate::forms::object(doc, c.slot, &c.entity);
-            for w in rules.fit(&after.layer_id, before, &after.attrs, Some(&object), "attrs")? {
+            for w in rules.fit(
+                &after.layer_id,
+                before,
+                &after.attrs,
+                Some(&object),
+                "attrs",
+            )? {
                 if !misfits.iter().any(|m| m.code == w.code && m.path == w.path) {
                     misfits.push(w);
                 }
@@ -561,7 +573,11 @@ fn name_texts(doc: &Document, changes: &[Change]) -> Vec<Entity> {
             let Entity::Point(point) = &c.entity else {
                 return None;
             };
-            let name = point.base.label.as_deref().filter(|l| !l.trim().is_empty())?;
+            let name = point
+                .base
+                .label
+                .as_deref()
+                .filter(|l| !l.trim().is_empty())?;
             let renamed = doc.get(c.slot)?.base().label.as_deref() != Some(name);
             (renamed && !doc.has_name_text(c.slot)).then(|| {
                 crate::point::name_text_at(

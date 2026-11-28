@@ -85,8 +85,13 @@ async fn retention_sweep(db: Db, blobs: Blobs) {
     loop {
         every.tick().await;
         match kentos_application::portal::retention::sweep(&db, &blobs).await {
-            Ok(files) => tracing::info!(silinen_dosya = files, "kişisel verilerin periyodik imhası çalıştı"),
-            Err(e) => tracing::warn!(error = ?e, "periyodik imha çalışamadı; ertesi gün yeniden denenecek"),
+            Ok(files) => tracing::info!(
+                silinen_dosya = files,
+                "kişisel verilerin periyodik imhası çalıştı"
+            ),
+            Err(e) => {
+                tracing::warn!(error = ?e, "periyodik imha çalışamadı; ertesi gün yeniden denenecek")
+            }
         }
     }
 }
@@ -113,7 +118,9 @@ async fn clean_store(db: Db, blobs: Blobs, job_retention: Duration) {
             }
         }
         // Finished server jobs and their artifacts past the retention (docs/adr/0547).
-        match kentos_application::job_upkeep::expire(&db, &blobs, job_retention, JOB_EXPIRE_BATCH).await {
+        match kentos_application::job_upkeep::expire(&db, &blobs, job_retention, JOB_EXPIRE_BATCH)
+            .await
+        {
             Ok(done) if done != Default::default() => tracing::info!(
                 is = done.jobs,
                 sonuc_dosyasi = done.objects,
@@ -217,7 +224,9 @@ async fn serve(config: Config) -> Result<(), String> {
     if let Some(db) = &database {
         // The religious holidays the legal deadlines are counted over (docs/adr/9000 §19); the fixed ones are code.
         if let Err(e) = kentos_application::portal::holidays::load(db).await {
-            tracing::warn!("Tatil takvimi okunamadı; yalnız sabit tatiller ve hafta sonu sayılır: {e}");
+            tracing::warn!(
+                "Tatil takvimi okunamadı; yalnız sabit tatiller ve hafta sonu sayılır: {e}"
+            );
         }
         tokio::spawn(prune_events(db.clone(), config.event_retention));
         tokio::spawn(purge_trash(db.clone()));
@@ -255,10 +264,13 @@ async fn serve(config: Config) -> Result<(), String> {
         .map_err(|e| format!("KentOS API {addr} adresini açamadı: {e}"))?;
     println!("KentOS API: http://{addr}/v1/health");
     // The connection's address reaches the handlers (the sign-up's limit per address, docs/adr/9000 §20).
-    axum::serve(listener, http::router(state).into_make_service_with_connect_info::<SocketAddr>())
-        .with_graceful_shutdown(shutdown())
-        .await
-        .map_err(|e| format!("KentOS API durdu: {e}"))
+    axum::serve(
+        listener,
+        http::router(state).into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown())
+    .await
+    .map_err(|e| format!("KentOS API durdu: {e}"))
 }
 
 /// The extension catalog on its persistent store when `KENTOS_EXTENSION_CATALOG=on` (docs/adr/8059 §13): the routes

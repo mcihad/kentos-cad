@@ -142,5 +142,8 @@ fn repeated_block_name_does_not_double_count_schedule() {
     let name = doc.blocks()[0].name.clone();
     let once = doc.blocks_schedule(std::slice::from_ref(&name), None, &["TYPE".to_owned()]);
     let repeated = doc.blocks_schedule(&[name.clone(), name], None, &["TYPE".to_owned()]);
-    assert_eq!(repeated, once, "column layout must not change when a name repeats");
+    assert_eq!(
+        repeated, once,
+        "column layout must not change when a name repeats"
+    );
 }

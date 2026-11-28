@@ -4,9 +4,10 @@
 //! change goes through a security-definer function that checks the caller and records the change (migration 0043).
 
 use kentos_contracts::{
-    MemberView, NewOwner, PlatformEventView, PlatformSettings, PlatformSettingsEdit, PlatformSummary, PlatformTenant,
-    PlatformTenantCreate, PlatformTenantDetail, PlatformTenantEdit, PlatformUser,
-    PlatformUserCreate, PlatformUserEdit, ProfessionalReview, ProfessionalStatus, ProfessionalView,
+    MemberView, NewOwner, PlatformEventView, PlatformSettings, PlatformSettingsEdit,
+    PlatformSummary, PlatformTenant, PlatformTenantCreate, PlatformTenantDetail,
+    PlatformTenantEdit, PlatformUser, PlatformUserCreate, PlatformUserEdit, ProfessionalReview,
+    ProfessionalStatus, ProfessionalView,
 };
 use kentos_postgres::Db;
 use serde::Deserialize;
@@ -553,12 +554,21 @@ fn event_text(action: &str, actor: &str, label: &str, detail: &serde_json::Value
         "setting.signup" => format!("{actor}, meslek mensubu kaydını kapattı."),
         "setting.notifications" => {
             let on = |k: &str| if flag(k) { "açık" } else { "kapalı" };
-            format!("{actor}, bildirim kanallarını değiştirdi: e-posta {}, SMS {}.", on("email"), on("sms"))
+            format!(
+                "{actor}, bildirim kanallarını değiştirdi: e-posta {}, SMS {}.",
+                on("email"),
+                on("sms")
+            )
         }
         "file.refused" => {
-            let why = detail.get("reason").and_then(serde_json::Value::as_str).unwrap_or("türü alınmıyor");
+            let why = detail
+                .get("reason")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("türü alınmıyor");
             if detail.get("verdict").and_then(serde_json::Value::as_str) == Some("infected") {
-                format!("{actor}, zararlı yazılım taşıyan “{label}” dosyasını gönderdi; dosya alınmadı ({why}).")
+                format!(
+                    "{actor}, zararlı yazılım taşıyan “{label}” dosyasını gönderdi; dosya alınmadı ({why})."
+                )
             } else {
                 format!("{actor}, “{label}” dosyasını gönderdi; alınmadı: {why}")
             }

@@ -272,7 +272,10 @@ fn own_findings(doc: &Document, uid: Uuid, e: &Entity) -> Vec<InspectionFinding>
                 && let Some(t) = crate::shx_text::leader_note(
                     doc.settings(),
                     l.leader_style.as_deref(),
-                    l.pts.last().copied().unwrap_or(kentos_commands::Vec2 { x: 0.0, y: 0.0 }),
+                    l.pts
+                        .last()
+                        .copied()
+                        .unwrap_or(kentos_commands::Vec2 { x: 0.0, y: 0.0 }),
                     l.rotation,
                     l.height,
                     note,

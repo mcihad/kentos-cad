@@ -37,7 +37,11 @@ impl Journals {
     /// `~/Library/Application Support/kentos-cad/veri-oturumlari` on macOS, else `$XDG_STATE_HOME/kentos-cad/veri-oturumlari`
     /// (`~/.local/state/…`).
     pub(crate) fn device() -> Self {
-        let env = |name: &str| std::env::var_os(name).filter(|v| !v.is_empty()).map(PathBuf::from);
+        let env = |name: &str| {
+            std::env::var_os(name)
+                .filter(|v| !v.is_empty())
+                .map(PathBuf::from)
+        };
         let base = if cfg!(target_os = "windows") {
             env("LOCALAPPDATA").or_else(|| env("APPDATA"))
         } else if cfg!(target_os = "macos") {
@@ -45,17 +49,23 @@ impl Journals {
         } else {
             env("XDG_STATE_HOME").or_else(|| env("HOME").map(|h| h.join(".local").join("state")))
         };
-        Self { dir: base.map(|b| b.join("kentos-cad").join("veri-oturumlari")) }
+        Self {
+            dir: base.map(|b| b.join("kentos-cad").join("veri-oturumlari")),
+        }
     }
 
     #[cfg(test)]
     pub(crate) fn at(dir: &Path) -> Self {
-        Self { dir: Some(dir.to_path_buf()) }
+        Self {
+            dir: Some(dir.to_path_buf()),
+        }
     }
 
     /// A project's journal file: the place's FNV-1a hash, which does not change between the program's versions.
     pub(crate) fn file(&self, place: &str) -> Option<PathBuf> {
-        let hash = place.bytes().fold(0xcbf2_9ce4_8422_2325_u64, |h, b| (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3));
+        let hash = place.bytes().fold(0xcbf2_9ce4_8422_2325_u64, |h, b| {
+            (h ^ u64::from(b)).wrapping_mul(0x0100_0000_01b3)
+        });
         Some(self.dir.as_ref()?.join(format!("{hash:016x}.json")))
     }
 
@@ -134,7 +144,10 @@ pub struct Kept {
 }
 
 /// When the layers of `layers` last had their source answer (docs/adr/9163): the journal keeps theirs only.
-pub(crate) fn verified_of(edits: &crate::data_edits::DataEdits, layers: &[PendingLayer]) -> BTreeMap<String, u64> {
+pub(crate) fn verified_of(
+    edits: &crate::data_edits::DataEdits,
+    layers: &[PendingLayer],
+) -> BTreeMap<String, u64> {
     edits
         .verified
         .iter()
@@ -144,7 +157,9 @@ pub(crate) fn verified_of(edits: &crate::data_edits::DataEdits, layers: &[Pendin
 }
 
 /// The uncertain writes of the edit sessions, one each (a write of several layers is kept under each of them).
-pub(crate) fn uncertain_of(edits: &crate::data_edits::DataEdits) -> Vec<crate::data_edits::Uncertain> {
+pub(crate) fn uncertain_of(
+    edits: &crate::data_edits::DataEdits,
+) -> Vec<crate::data_edits::Uncertain> {
     let mut out: Vec<crate::data_edits::Uncertain> = Vec::new();
     for u in edits.uncertain.values() {
         if !out.contains(u) {
@@ -160,15 +175,26 @@ pub(crate) fn uncertain_of(edits: &crate::data_edits::DataEdits) -> Vec<crate::d
 pub(crate) fn file_place(path: &Path) -> String {
     let resolved = std::fs::canonicalize(path).ok().or_else(|| {
         let name = path.file_name()?;
-        let folder = path.parent().filter(|f| !f.as_os_str().is_empty()).unwrap_or(Path::new("."));
+        let folder = path
+            .parent()
+            .filter(|f| !f.as_os_str().is_empty())
+            .unwrap_or(Path::new("."));
         Some(std::fs::canonicalize(folder).ok()?.join(name))
     });
-    resolved.unwrap_or_else(|| path.to_path_buf()).display().to_string()
+    resolved
+        .unwrap_or_else(|| path.to_path_buf())
+        .display()
+        .to_string()
 }
 
 /// A project's place in a data source.
 pub(crate) fn source_place(at: &StoredSource) -> String {
-    format!("kaynak:{}|{}|{}", at.address, at.schema.as_deref().unwrap_or(""), at.name)
+    format!(
+        "kaynak:{}|{}|{}",
+        at.address,
+        at.schema.as_deref().unwrap_or(""),
+        at.name
+    )
 }
 
 /// An open drawing's place, when it has one a journal goes with: its file or its project in a source; a cloud project
@@ -177,7 +203,10 @@ pub(crate) fn place_of(doc: &Document) -> Option<String> {
     if doc.cloud_source().is_some() {
         return None;
     }
-    doc.path.as_deref().map(file_place).or_else(|| doc.stored_source().map(source_place))
+    doc.path
+        .as_deref()
+        .map(file_place)
+        .or_else(|| doc.stored_source().map(source_place))
 }
 
 /// What a save of `model` to `place` keeps beside it: taken when the save starts, with the drawing it writes.
@@ -252,7 +281,12 @@ impl Written {
                     taken: p
                         .taken
                         .iter()
-                        .map(|r| WrittenRow { uid: r.uid.to_string(), key: r.key, row: r.row.clone(), now: r.now.clone() })
+                        .map(|r| WrittenRow {
+                            uid: r.uid.to_string(),
+                            key: r.key,
+                            row: r.row.clone(),
+                            now: r.now.clone(),
+                        })
                         .collect(),
                     deleted: p.deleted.clone(),
                 })
@@ -274,13 +308,22 @@ impl Written {
                     .taken
                     .into_iter()
                     .filter_map(|r| {
-                        Some(PendingRow { uid: Uuid::parse_str(&r.uid).ok()?, key: r.key, row: r.row, now: r.now })
+                        Some(PendingRow {
+                            uid: Uuid::parse_str(&r.uid).ok()?,
+                            key: r.key,
+                            row: r.row,
+                            now: r.now,
+                        })
                     })
                     .collect(),
                 deleted: l.deleted,
             })
             .collect();
-        let gone = self.gone.iter().filter_map(|u| Uuid::parse_str(u).ok()).collect();
+        let gone = self
+            .gone
+            .iter()
+            .filter_map(|u| Uuid::parse_str(u).ok())
+            .collect();
         (layers, gone)
     }
 }
@@ -288,7 +331,11 @@ impl Written {
 impl App {
     /// A project saved to its place: its journal written beside it (or removed when nothing waits), and kept by its
     /// drawing to follow its tables. What to say of it, when anything: said after the save's own sentence.
-    pub(crate) fn journal_saved(&mut self, session: u64, kept: Kept) -> Option<(kentos_interaction::Level, String)> {
+    pub(crate) fn journal_saved(
+        &mut self,
+        session: u64,
+        kept: Kept,
+    ) -> Option<(kentos_interaction::Level, String)> {
         let journals = self.gis.data_journal.clone();
         let doc = match self.document.as_mut().filter(|d| d.session == session) {
             Some(doc) => Some(doc),
@@ -315,7 +362,11 @@ impl App {
                 kentos_interaction::Level::Info,
                 format!(
                     "Proje kaydedildi; katmanlardaki {rows} satır kaynağa yazılmadı ({}). Bu satırlar bu cihazda taslak olarak saklandı, proje burada açılınca geri gelir. Kaynağa yazmak için durum çubuğundaki “Kaynağa yazılmadı”ya tıklayın.",
-                    waiting.iter().map(|(name, n)| format!("{name}: {n}")).collect::<Vec<_>>().join(", ")
+                    waiting
+                        .iter()
+                        .map(|(name, n)| format!("{name}: {n}"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 ),
             )),
             Ok(()) => None,
@@ -335,7 +386,10 @@ impl App {
             return;
         };
         let journals = self.gis.data_journal.clone();
-        let mut kept = Kept { place: place.clone(), ..Kept::default() };
+        let mut kept = Kept {
+            place: place.clone(),
+            ..Kept::default()
+        };
         let read = journals.read(&place);
         let finish = |doc: &mut Document, mut kept: Kept| {
             kept.left_from = doc.model.data_left().len();
@@ -346,7 +400,9 @@ impl App {
             Ok(Some(written)) => written,
             Ok(None) => return finish(doc, kept),
             Err(why) => {
-                self.warn(format!("Bekleyen veri düzenlemeleri okunamadı ({why}); proje onlarsız açıldı."));
+                self.warn(format!(
+                    "Bekleyen veri düzenlemeleri okunamadı ({why}); proje onlarsız açıldı."
+                ));
                 return finish(doc, kept);
             }
         };
@@ -371,8 +427,19 @@ impl App {
             .iter()
             .map(|p| {
                 let c = doc.model.data_changes(&p.layer);
-                let name = doc.model.layers().get(&p.layer).map_or(p.layer.as_str(), |n| n.name.as_str());
-                format!("{name}: {}", crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len()))
+                let name = doc
+                    .model
+                    .layers()
+                    .get(&p.layer)
+                    .map_or(p.layer.as_str(), |n| n.name.as_str());
+                format!(
+                    "{name}: {}",
+                    crate::data_edits::counts_words(
+                        c.added.len(),
+                        c.changed.len(),
+                        c.deleted.len()
+                    )
+                )
             })
             .collect();
         // When the sources last answered comes back too (docs/adr/9163): an unread table says how old its check is.
@@ -382,7 +449,10 @@ impl App {
         kept.uncertain = uncertain.clone();
         for u in &uncertain {
             for l in u.layers() {
-                self.gis.data_edits.failed.insert(l.clone(), u.words.clone());
+                self.gis
+                    .data_edits
+                    .failed
+                    .insert(l.clone(), u.words.clone());
                 self.gis.data_edits.uncertain.insert(l, u.clone());
             }
         }
@@ -429,7 +499,9 @@ impl App {
         }
         kept.uncertain = uncertain;
         if let Err(e) = journals.write(kept, project) {
-            self.warn(format!("Sonucu bilinmeyen yazım bu cihazda saklanamadı ({e})."));
+            self.warn(format!(
+                "Sonucu bilinmeyen yazım bu cihazda saklanamadı ({e})."
+            ));
         }
     }
 
@@ -451,14 +523,15 @@ impl App {
         kept.written = written;
         for p in &mut kept.layers {
             let layer = p.layer.clone();
-            p.taken.retain_mut(|r| match model.taken_row(&layer, r.uid) {
-                // Still taken: a save that wrote it while it changed keeps it against the row as written.
-                Some(row) if model.taken_key(&layer, r.uid) == Some(r.key) => {
-                    r.row = (*row).clone();
-                    true
-                }
-                _ => false,
-            });
+            p.taken
+                .retain_mut(|r| match model.taken_row(&layer, r.uid) {
+                    // Still taken: a save that wrote it while it changed keeps it against the row as written.
+                    Some(row) if model.taken_key(&layer, r.uid) == Some(r.key) => {
+                        r.row = (*row).clone();
+                        true
+                    }
+                    _ => false,
+                });
             let still: BTreeSet<i64> = model.deleted_keys(&layer).into_iter().collect();
             p.deleted.retain(|k| still.contains(k));
         }
@@ -472,7 +545,9 @@ impl App {
         written_kept.verified = verified_of(&self.gis.data_edits, &written_kept.layers);
         let project = model.project_id();
         if let Err(e) = journals.write(&written_kept, project) {
-            self.warn(format!("Bekleyen veri düzenlemelerinin günlüğü güncellenemedi ({e})."));
+            self.warn(format!(
+                "Bekleyen veri düzenlemelerinin günlüğü güncellenemedi ({e})."
+            ));
         }
     }
 }

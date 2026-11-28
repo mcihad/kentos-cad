@@ -5,8 +5,8 @@
 //! are `fixtures/commands/v1/cad.walls.distances.json`, `cad.walls.edit.shift.json` and `cad.walls.edit.length.json`.
 
 use kentos_commands::{
-    CommandResult, DimensionSetFace, Entity, Vec2, WallEntity, WallGap, WallGaps, WallLength, WallsDistances,
-    WallsDistancesInput,
+    CommandResult, DimensionSetFace, Entity, Vec2, WallEntity, WallGap, WallGaps, WallLength,
+    WallsDistances, WallsDistancesInput,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;

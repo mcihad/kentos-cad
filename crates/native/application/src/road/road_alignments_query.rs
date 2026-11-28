@@ -3,7 +3,8 @@
 //! cases are `fixtures/commands/v1/road.alignments.query.json`.
 
 use kentos_commands::{
-    AlignmentFoot, AlignmentsQueried, AlignmentsQuery, CommandResult, KmPlaces, MAX_ALIGNMENT_PLACES, PointStation,
+    AlignmentFoot, AlignmentsQueried, AlignmentsQuery, CommandResult, KmPlaces,
+    MAX_ALIGNMENT_PLACES, PointStation,
 };
 use kentos_road::alignment::{End, Stationing};
 
@@ -13,22 +14,35 @@ use crate::codes;
 use crate::road_alignments::{self as common, Built};
 use crate::road_terrains::fail;
 
-fn place_at(built: &Built, station: f64, path: &str) -> Result<kentos_commands::AlignmentPlace, Stop> {
+fn place_at(
+    built: &Built,
+    station: f64,
+    path: &str,
+) -> Result<kentos_commands::AlignmentPlace, Stop> {
     built.place(station).ok_or_else(|| {
         fail(
             codes::STATION_OUTSIDE,
-            format!("{station} m aksın üstünde değil (aks {:.3} m).", built.core.length),
+            format!(
+                "{station} m aksın üstünde değil (aks {:.3} m).",
+                built.core.length
+            ),
             path,
         )
     })
 }
 
-fn answer(doc: &kentos_domain::Document, input: &AlignmentsQuery) -> Result<AlignmentsQueried, Stop> {
+fn answer(
+    doc: &kentos_domain::Document,
+    input: &AlignmentsQuery,
+) -> Result<AlignmentsQueried, Stop> {
     common::road_project(doc)?;
     let own = common::alignments(doc);
     let finite = input.stations.iter().all(|s| s.is_finite())
         && input.kms.iter().all(|k| k.km.is_finite())
-        && input.points.iter().all(|p| p[0].is_finite() && p[1].is_finite())
+        && input
+            .points
+            .iter()
+            .all(|p| p[0].is_finite() && p[1].is_finite())
         && input.every.is_none_or(|e| e.is_finite() && e > 0.0);
     if !finite {
         return Err(fail(
@@ -44,12 +58,16 @@ fn answer(doc: &kentos_domain::Document, input: &AlignmentsQuery) -> Result<Alig
             "stations",
         ));
     }
-    let asks = !input.stations.is_empty() || !input.kms.is_empty() || !input.points.is_empty() || input.every.is_some();
+    let asks = !input.stations.is_empty()
+        || !input.kms.is_empty()
+        || !input.points.is_empty()
+        || input.every.is_some();
     let Some(name) = input.alignment.as_deref() else {
         if asks {
             return Err(fail(
                 codes::INVALID_PLACES,
-                "Km ve yer bir aksta sorulur: aksın kimliğini ya da adını (alignment) verin.".into(),
+                "Km ve yer bir aksta sorulur: aksın kimliğini ya da adını (alignment) verin."
+                    .into(),
                 "alignment",
             ));
         }
@@ -80,7 +98,10 @@ fn answer(doc: &kentos_domain::Document, input: &AlignmentsQuery) -> Result<Alig
         let path = format!("kms[{i}]");
         let found = Stationing::stations(&built.regions, k.km);
         let chosen: Vec<_> = match k.region {
-            Some(r) => found.into_iter().filter(|(region, _)| *region as u32 == r).collect(),
+            Some(r) => found
+                .into_iter()
+                .filter(|(region, _)| *region as u32 == r)
+                .collect(),
             None if found.len() > 1 => {
                 let regions: Vec<String> = found.iter().map(|(r, _)| r.to_string()).collect();
                 return Err(fail(
@@ -99,11 +120,17 @@ fn answer(doc: &kentos_domain::Document, input: &AlignmentsQuery) -> Result<Alig
         if chosen.is_empty() {
             return Err(fail(
                 codes::STATION_OUTSIDE,
-                format!("{} km'si aksın üstünde değil.", kentos_road::alignment::km_text(k.km, 3)),
+                format!(
+                    "{} km'si aksın üstünde değil.",
+                    kentos_road::alignment::km_text(k.km, 3)
+                ),
                 &path,
             ));
         }
-        let places = chosen.iter().map(|(_, s)| place_at(&built, *s, &path)).collect::<Result<Vec<_>, _>>()?;
+        let places = chosen
+            .iter()
+            .map(|(_, s)| place_at(&built, *s, &path))
+            .collect::<Result<Vec<_>, _>>()?;
         kms.push(KmPlaces { km: k.km, places });
     }
     let mut ticks = Vec::new();
@@ -159,7 +186,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &AlignmentsQuery) -> CommandRe
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsQuery) -> CommandResult<AlignmentsQueried> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &AlignmentsQuery,
+) -> CommandResult<AlignmentsQueried> {
     match answer(cx.doc, input) {
         Ok(output) => CommandResult::Completed {
             output,
@@ -170,6 +200,9 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsQuery) -> CommandResult
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsQuery) -> CommandResult<AlignmentsQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AlignmentsQuery,
+) -> CommandResult<AlignmentsQueried> {
     plan(cx, &input)
 }

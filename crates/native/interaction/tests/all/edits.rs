@@ -32,9 +32,14 @@ fn corner_refusals_keep_the_specific_locked_layer_or_curve_reason_without_writin
     let before = b.doc.to_snapshot_v2();
     b.click(8., -15.);
     let message = b.last_text().unwrap();
-    assert!(message.contains("kilitli") && message.contains("Katmanlar"), "{message}");
+    assert!(
+        message.contains("kilitli") && message.contains("Katmanlar"),
+        "{message}"
+    );
     assert_eq!(b.doc.to_snapshot_v2(), before);
-    let mut b = Bench::on(include_str!("../../../../../fixtures/interaction/v1/tools.kcad"));
+    let mut b = Bench::on(include_str!(
+        "../../../../../fixtures/interaction/v1/tools.kcad"
+    ));
     b.draft.snap = false;
     b.start("fillet");
     // Circles now participate in fillets; a legacy fit spline still refuses
@@ -423,20 +428,41 @@ fn a_fillet_rounds_a_polyline_corner_by_a_typed_radius() {
 
 #[test]
 fn asymmetric_chamfer_distances_follow_the_numbered_picked_edges_and_undo_together() {
-    for reverse in [false,true] {
-        let mut b=bench(&[]);let before=b.doc.to_snapshot_v2();
+    for reverse in [false, true] {
+        let mut b = bench(&[]);
+        let before = b.doc.to_snapshot_v2();
         b.start("chamfer");
-        let (a,c)=if reverse {((14.,10.),(20.,4.))} else {((20.,4.),(14.,10.))};
-        b.click(a.0,a.1);b.click(c.0,c.1);
-        let preview=b.session.preview(&Default::default()).unwrap();
-        assert_eq!(preview.labels.iter().map(|l|l.text.as_str()).collect::<Vec<_>>(),["1. kenar","2. kenar"]);
+        let (a, c) = if reverse {
+            ((14., 10.), (20., 4.))
+        } else {
+            ((20., 4.), (14., 10.))
+        };
+        b.click(a.0, a.1);
+        b.click(c.0, c.1);
+        let preview = b.session.preview(&Default::default()).unwrap();
+        assert_eq!(
+            preview
+                .labels
+                .iter()
+                .map(|l| l.text.as_str())
+                .collect::<Vec<_>>(),
+            ["1. kenar", "2. kenar"]
+        );
         assert!(b.type_text("10cm;20cm"));
-        let (dx,dy)=if reverse {(0.2,0.1)} else {(0.1,0.2)};
-        assert!(near(&line(&b,5),&[[14.+dx,4.],[26.,4.]]));
-        assert!(near(&line(&b,6),&[[14.,16.],[14.,4.+dy]]));
-        assert!(near(&line(&b,14),&if reverse {[[14.,4.+dy],[14.+dx,4.]]} else {[[14.+dx,4.],[14.,4.+dy]]}));
-        assert_eq!(b.memory.chamfer,Some((0.1,0.2)));
-        assert_eq!(b.doc.undo().as_deref(),Some("Pah"));assert_eq!(b.doc.to_snapshot_v2(),before);
+        let (dx, dy) = if reverse { (0.2, 0.1) } else { (0.1, 0.2) };
+        assert!(near(&line(&b, 5), &[[14. + dx, 4.], [26., 4.]]));
+        assert!(near(&line(&b, 6), &[[14., 16.], [14., 4. + dy]]));
+        assert!(near(
+            &line(&b, 14),
+            &if reverse {
+                [[14., 4. + dy], [14. + dx, 4.]]
+            } else {
+                [[14. + dx, 4.], [14., 4. + dy]]
+            }
+        ));
+        assert_eq!(b.memory.chamfer, Some((0.1, 0.2)));
+        assert_eq!(b.doc.undo().as_deref(), Some("Pah"));
+        assert_eq!(b.doc.to_snapshot_v2(), before);
     }
 }
 
@@ -915,45 +941,86 @@ fn an_associative_array_is_edited_through_one_of_its_items() {
 
 #[test]
 fn line_array_spacing_is_visible_unit_aware_and_preserves_direction_ids_fit_and_one_undo() {
-    use kentos_commands::{ArrayLayout,CommandResult,EntitiesArray,Entity};
-    use kentos_native_application::{ExecutionContext,array};
-    for fit in [false,true] {
-        let mut b=bench(&[]);
-        let source=b.add_circle("cizim",[-40.,20.],1.);
-        let source_uid=b.doc.uid(source).unwrap().to_string();
-        let result=array::execute(&mut ExecutionContext::new(&mut b.doc),EntitiesArray {
-            uids:vec![source_uid],
-            layout:ArrayLayout::Line {count:4,dx:4.,dy:3.,fit},associative:true,expected_revision:None,
-        });
-        assert!(matches!(result,CommandResult::Completed {..}),"{result:?}");
-        let before=b.doc.to_snapshot_v2();
-        let ids=b.doc.arrays()[0].items.clone();
-        b.start("arrayEdit");b.click(-39.,20.);
-        assert!(b.options().contains(&"A"),"{}",b.session.prompt().text());
+    use kentos_commands::{ArrayLayout, CommandResult, EntitiesArray, Entity};
+    use kentos_native_application::{ExecutionContext, array};
+    for fit in [false, true] {
+        let mut b = bench(&[]);
+        let source = b.add_circle("cizim", [-40., 20.], 1.);
+        let source_uid = b.doc.uid(source).unwrap().to_string();
+        let result = array::execute(
+            &mut ExecutionContext::new(&mut b.doc),
+            EntitiesArray {
+                uids: vec![source_uid],
+                layout: ArrayLayout::Line {
+                    count: 4,
+                    dx: 4.,
+                    dy: 3.,
+                    fit,
+                },
+                associative: true,
+                expected_revision: None,
+            },
+        );
+        assert!(
+            matches!(result, CommandResult::Completed { .. }),
+            "{result:?}"
+        );
+        let before = b.doc.to_snapshot_v2();
+        let ids = b.doc.arrays()[0].items.clone();
+        b.start("arrayEdit");
+        b.click(-39., 20.);
+        assert!(b.options().contains(&"A"), "{}", b.session.prompt().text());
         assert!(b.type_text("A"));
-        assert_eq!(b.session.prompt().text(),"Diziyi düzenle: öğeler arasındaki aralığı yazın");
+        assert_eq!(
+            b.session.prompt().text(),
+            "Diziyi düzenle: öğeler arasındaki aralığı yazın"
+        );
         assert!(b.type_text("3000 mm"));
-        let a=&b.doc.arrays()[0];
-        assert_eq!(a.items,ids);
-        let ArrayLayout::Line {count,dx,dy,fit:actual_fit}=a.layout else {panic!("line")};
-        assert_eq!((count,actual_fit),(4,fit));
-        let factor=if fit {3.} else {1.};
-        assert!((dx-2.4*factor).abs()<1e-12 && (dy-1.8*factor).abs()<1e-12);
+        let a = &b.doc.arrays()[0];
+        assert_eq!(a.items, ids);
+        let ArrayLayout::Line {
+            count,
+            dx,
+            dy,
+            fit: actual_fit,
+        } = a.layout
+        else {
+            panic!("line")
+        };
+        assert_eq!((count, actual_fit), (4, fit));
+        let factor = if fit { 3. } else { 1. };
+        assert!((dx - 2.4 * factor).abs() < 1e-12 && (dy - 1.8 * factor).abs() < 1e-12);
         // Bench coordinates are around E=487000, N=4420000 metres. Compare
         // absolute poses within four Float64 rounding units at that origin.
-        let pose_tolerance=4.*f64::EPSILON*a.p.x.abs().max(a.p.y.abs()).max(1.);
-        for (k,item) in a.items.iter().enumerate() {
-            let uid=kentos_domain::Uuid::from_bytes(item.uid.unwrap().0);
-            let Entity::Insert(i)=b.doc.get(b.doc.slot_of(uid).unwrap()).unwrap() else {panic!("insert")};
-            assert!((i.p.x-a.p.x-k as f64*2.4).abs()<pose_tolerance,"fit={fit}, item={k}, x={}",i.p.x);
-            assert!((i.p.y-a.p.y-k as f64*1.8).abs()<pose_tolerance,"fit={fit}, item={k}, y={}",i.p.y);
+        let pose_tolerance = 4. * f64::EPSILON * a.p.x.abs().max(a.p.y.abs()).max(1.);
+        for (k, item) in a.items.iter().enumerate() {
+            let uid = kentos_domain::Uuid::from_bytes(item.uid.unwrap().0);
+            let Entity::Insert(i) = b.doc.get(b.doc.slot_of(uid).unwrap()).unwrap() else {
+                panic!("insert")
+            };
+            assert!(
+                (i.p.x - a.p.x - k as f64 * 2.4).abs() < pose_tolerance,
+                "fit={fit}, item={k}, x={}",
+                i.p.x
+            );
+            assert!(
+                (i.p.y - a.p.y - k as f64 * 1.8).abs() < pose_tolerance,
+                "fit={fit}, item={k}, y={}",
+                i.p.y
+            );
         }
-        let after=b.doc.to_snapshot_v2();
-        assert!(b.type_text("A"));assert!(b.type_text("0"));
-        assert_eq!(b.doc.to_snapshot_v2(),after,"zero spacing is refused without writing");
-        assert_eq!(b.doc.undo().as_deref(),Some("Diziyi düzenle"));
-        assert_eq!(b.doc.to_snapshot_v2(),before);
-        b.doc.redo();assert_eq!(b.doc.to_snapshot_v2(),after);
+        let after = b.doc.to_snapshot_v2();
+        assert!(b.type_text("A"));
+        assert!(b.type_text("0"));
+        assert_eq!(
+            b.doc.to_snapshot_v2(),
+            after,
+            "zero spacing is refused without writing"
+        );
+        assert_eq!(b.doc.undo().as_deref(), Some("Diziyi düzenle"));
+        assert_eq!(b.doc.to_snapshot_v2(), before);
+        b.doc.redo();
+        assert_eq!(b.doc.to_snapshot_v2(), after);
     }
 }
 
@@ -1091,23 +1158,54 @@ fn nurbs_break_uses_the_semantic_target_filter_and_keeps_exact_curve_pieces() {
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
 
-
 #[test]
 fn lattice_axis_input_is_explicit_degrees_and_every_edit_is_one_undo() {
-    use kentos_commands::{ArrayLayout,CommandResult,EntitiesArray};
-    use kentos_native_application::{ExecutionContext,array};
-    let mut b=bench(&[]);let source=b.add_circle("cizim",[-40.,20.],1.);
-    let source_uid=b.doc.uid(source).unwrap().to_string();
-    assert!(matches!(array::execute(&mut ExecutionContext::new(&mut b.doc),EntitiesArray {
-        uids:vec![source_uid],layout:ArrayLayout::Lattice {rows:2,cols:3,dx:5.,dy:6.,column_angle:20.,row_angle:90.},
-        associative:true,expected_revision:None}),CommandResult::Completed {..}));
-    b.start("arrayEdit");b.click(-39.,20.);assert!(b.options().contains(&"Y")&&b.options().contains(&"N"));
-    assert!(b.type_text("Y"));let before=b.doc.to_snapshot_v2();
-    assert!(b.type_text("30mm"));assert_eq!(b.doc.to_snapshot_v2(),before);
-    assert!(b.type_text("30°"));let after=b.doc.to_snapshot_v2();
-    assert!(matches!(b.doc.arrays()[0].layout,ArrayLayout::Lattice {column_angle:30.,row_angle:90.,..}));
-    assert_eq!(b.doc.arrays()[0].items,before.arrays[0].items);
-    b.doc.undo();assert_eq!(b.doc.to_snapshot_v2(),before);b.doc.redo();assert_eq!(b.doc.to_snapshot_v2(),after);
+    use kentos_commands::{ArrayLayout, CommandResult, EntitiesArray};
+    use kentos_native_application::{ExecutionContext, array};
+    let mut b = bench(&[]);
+    let source = b.add_circle("cizim", [-40., 20.], 1.);
+    let source_uid = b.doc.uid(source).unwrap().to_string();
+    assert!(matches!(
+        array::execute(
+            &mut ExecutionContext::new(&mut b.doc),
+            EntitiesArray {
+                uids: vec![source_uid],
+                layout: ArrayLayout::Lattice {
+                    rows: 2,
+                    cols: 3,
+                    dx: 5.,
+                    dy: 6.,
+                    column_angle: 20.,
+                    row_angle: 90.
+                },
+                associative: true,
+                expected_revision: None
+            }
+        ),
+        CommandResult::Completed { .. }
+    ));
+    b.start("arrayEdit");
+    b.click(-39., 20.);
+    assert!(b.options().contains(&"Y") && b.options().contains(&"N"));
+    assert!(b.type_text("Y"));
+    let before = b.doc.to_snapshot_v2();
+    assert!(b.type_text("30mm"));
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    assert!(b.type_text("30°"));
+    let after = b.doc.to_snapshot_v2();
+    assert!(matches!(
+        b.doc.arrays()[0].layout,
+        ArrayLayout::Lattice {
+            column_angle: 30.,
+            row_angle: 90.,
+            ..
+        }
+    ));
+    assert_eq!(b.doc.arrays()[0].items, before.arrays[0].items);
+    b.doc.undo();
+    assert_eq!(b.doc.to_snapshot_v2(), before);
+    b.doc.redo();
+    assert_eq!(b.doc.to_snapshot_v2(), after);
 }
 
 /// UR-111, UR-112: a distance of 0 is said and the one before kept; with Noktadan geç and an object picked, a typed
@@ -1119,13 +1217,19 @@ fn offset_says_a_zero_distance_and_takes_a_typed_through_point() {
     assert!(b.type_text("2"));
     assert!(b.run(|s, cx| s.configure("distance", "0", cx)));
     assert_eq!(b.memory.offset_distance, 2.0);
-    assert_eq!(b.last_text(), Some("Mesafe sıfırdan büyük olmalı; mesafe 2.000 m kaldı."));
+    assert_eq!(
+        b.last_text(),
+        Some("Mesafe sıfırdan büyük olmalı; mesafe 2.000 m kaldı.")
+    );
     assert!(b.type_text("n"));
     b.click(-20.0, 10.0);
     let through = format!("{},{}", common::E - 17.0, common::N + 9.0);
     assert!(b.type_text(&through));
     assert!(b.memory.offset_through, "Noktadan geç stays on");
-    assert!(near(&line(&b, 14), &[[-17.0, 6.0], [-17.0, 18.0]]), "the copy through the typed point");
+    assert!(
+        near(&line(&b, 14), &[[-17.0, 6.0], [-17.0, 18.0]]),
+        "the copy through the typed point"
+    );
 }
 
 /// UR-114: an arc of radius 10 offset 12 to both sides with Kaynağı sil: the inner side cannot be made, so the source
@@ -1147,10 +1251,17 @@ fn a_failed_side_keeps_the_source() {
         &mut kentos_native_application::ExecutionContext::new(&mut b.doc),
         input,
     );
-    let kentos_commands::CommandResult::Completed { warnings, .. } = result else { panic!("{result:?}") };
+    let kentos_commands::CommandResult::Completed { warnings, .. } = result else {
+        panic!("{result:?}")
+    };
     assert!(b.doc.get(arc).is_some(), "the source stays");
     assert_eq!(b.doc.len(), before + 1, "the outer copy only");
-    assert!(warnings.iter().any(|w| w.message.starts_with("Kaynağı sil açıktı, ama bir yanın kopyası yapılamadığı")), "{warnings:?}");
+    assert!(
+        warnings.iter().any(|w| w
+            .message
+            .starts_with("Kaynağı sil açıktı, ama bir yanın kopyası yapılamadığı")),
+        "{warnings:?}"
+    );
 }
 
 /// UR-103: Kır on a circle says which way round is cut (counter-clockwise from the first point to the second), and
@@ -1162,11 +1273,26 @@ fn breaking_a_circle_says_which_part_goes() {
     b.spatial.sync(&b.doc);
     b.start("break");
     b.click(120.0, 8.0);
-    assert!(b.session.prompt().text().contains("saat yönünün tersine ikinciye kadar olan kısım silinir"), "{}", b.session.prompt().text());
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .contains("saat yönünün tersine ikinciye kadar olan kısım silinir"),
+        "{}",
+        b.session.prompt().text()
+    );
     b.click(123.0, 5.0);
-    let Entity::Arc(a) = b.doc.get(circle).or_else(|| Some(b.newest())).expect("the arc") else {
+    let Entity::Arc(a) = b
+        .doc
+        .get(circle)
+        .or_else(|| Some(b.newest()))
+        .expect("the arc")
+    else {
         panic!("an arc: {:?}", b.newest())
     };
     let sweep = (a.a1 - a.a0).rem_euclid(std::f64::consts::TAU);
-    assert!((sweep - std::f64::consts::FRAC_PI_2).abs() < 1e-9, "{sweep}");
+    assert!(
+        (sweep - std::f64::consts::FRAC_PI_2).abs() < 1e-9,
+        "{sweep}"
+    );
 }

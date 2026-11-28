@@ -45,7 +45,11 @@ fn variables(d: &DynamicBlock, values: &BTreeMap<String, ParamValue>) -> Vec<Var
         .filter_map(|p| {
             let n = match (
                 p,
-                values.get(p.name()).or_else(|| d.type_values.get(p.name())).cloned().or_else(|| p.default_value()),
+                values
+                    .get(p.name())
+                    .or_else(|| d.type_values.get(p.name()))
+                    .cloned()
+                    .or_else(|| p.default_value()),
             ) {
                 (
                     BlockParameter::Linear { .. } | BlockParameter::Angle { .. },
@@ -148,8 +152,16 @@ fn formula_order(d: &DynamicBlock) -> Result<Vec<usize>, (String, String)> {
             if let Tok::At(name) = token.t
                 && let Some(&j) = numeric.get(&fold_turkish(&name))
             {
-                if d.is_type_parameter(d.parameters[i].name()) && !d.is_type_parameter(d.parameters[j].name()) {
-                    return Err((d.parameters[i].name().to_owned(), format!("tip formülü örneğe özel “{}” girdisini okuyamaz", d.parameters[j].name())));
+                if d.is_type_parameter(d.parameters[i].name())
+                    && !d.is_type_parameter(d.parameters[j].name())
+                {
+                    return Err((
+                        d.parameters[i].name().to_owned(),
+                        format!(
+                            "tip formülü örneğe özel “{}” girdisini okuyamaz",
+                            d.parameters[j].name()
+                        ),
+                    ));
                 }
                 if derived.contains(&j) && dependencies[i].insert(j) {
                     readers[j].push(i);
@@ -176,7 +188,10 @@ fn formula_order(d: &DynamicBlock) -> Result<Vec<usize>, (String, String)> {
     if order.len() != derived.len() {
         // Following an unresolved dependency necessarily reaches a real cycle;
         // do not blame an acyclic downstream reader in the displayed chain.
-        let mut at = derived.iter().copied().find(|&i| remaining[i] > 0)
+        let mut at = derived
+            .iter()
+            .copied()
+            .find(|&i| remaining[i] > 0)
             .ok_or_else(|| (String::new(), "formül bağımlılıkları sıralanamadı".into()))?;
         let mut path = Vec::new();
         loop {
@@ -197,7 +212,12 @@ fn formula_order(d: &DynamicBlock) -> Result<Vec<usize>, (String, String)> {
                 .iter()
                 .copied()
                 .find(|&i| remaining[i] > 0)
-                .ok_or_else(|| (d.parameters[at].name().to_owned(), "formül bağımlılığı çözümlenemedi".into()))?;
+                .ok_or_else(|| {
+                    (
+                        d.parameters[at].name().to_owned(),
+                        "formül bağımlılığı çözümlenemedi".into(),
+                    )
+                })?;
         }
     }
     Ok(order)
@@ -210,8 +230,18 @@ fn derive(
 ) -> Result<(), (String, String)> {
     for i in formula_order(d)? {
         let parameter = &d.parameters[i];
-        let rule = parameter.rule().ok_or_else(|| (parameter.name().to_owned(), "formülün sayı kuralı bulunamadı".into()))?;
-        let source = rule.expression.as_deref().ok_or_else(|| (parameter.name().to_owned(), "parametrenin formülü bulunamadı".into()))?;
+        let rule = parameter.rule().ok_or_else(|| {
+            (
+                parameter.name().to_owned(),
+                "formülün sayı kuralı bulunamadı".into(),
+            )
+        })?;
+        let source = rule.expression.as_deref().ok_or_else(|| {
+            (
+                parameter.name().to_owned(),
+                "parametrenin formülü bulunamadı".into(),
+            )
+        })?;
         let name = parameter.name();
         let x = computed(source, variables(d, values)).map_err(|m| (name.to_string(), m))?;
         if let Some(m) = number_problem(rule, x) {
@@ -570,22 +600,37 @@ pub(crate) fn refresh_definitions(
 /// Whether expressions, their geometric reference, or defaults they read changed.
 /// Unchanged formula dependencies retain the established fitting policy;
 /// presentation groups and unrelated parameters do not trigger a migration.
-pub(crate) fn formula_inputs_changed(old: Option<&DynamicBlock>, next: Option<&DynamicBlock>) -> bool {
+pub(crate) fn formula_inputs_changed(
+    old: Option<&DynamicBlock>,
+    next: Option<&DynamicBlock>,
+) -> bool {
     fn parameters(d: Option<&DynamicBlock>) -> Vec<&BlockParameter> {
-        d.into_iter().flat_map(|d| &d.parameters)
-            .filter(|p| p.rule().is_some_and(|r| r.expression.is_some())).collect()
+        d.into_iter()
+            .flat_map(|d| &d.parameters)
+            .filter(|p| p.rule().is_some_and(|r| r.expression.is_some()))
+            .collect()
     }
     fn inputs(d: Option<&DynamicBlock>) -> BTreeMap<String, Option<ParamValue>> {
         use kentos_expression::lexer::{Tok, tokenize};
-        let Some(d) = d else { return BTreeMap::new(); };
-        let schema = Schema { variables: variables(d, &BTreeMap::new()), ..Schema::default() };
+        let Some(d) = d else {
+            return BTreeMap::new();
+        };
+        let schema = Schema {
+            variables: variables(d, &BTreeMap::new()),
+            ..Schema::default()
+        };
         let mut out = BTreeMap::new();
-        for source in d.parameters.iter().filter_map(|p| p.rule()?.expression.as_deref()) {
+        for source in d
+            .parameters
+            .iter()
+            .filter_map(|p| p.rule()?.expression.as_deref())
+        {
             if let Ok(tokens) = tokenize(source) {
                 for token in tokens {
                     if let Tok::At(name) = token.t {
                         let value = schema.variable(&name).and_then(|v| match v.value {
-                            Value::Num(n) => Some(ParamValue::Number(n)), _ => None,
+                            Value::Num(n) => Some(ParamValue::Number(n)),
+                            _ => None,
                         });
                         out.insert(name, value);
                     }
@@ -594,8 +639,13 @@ pub(crate) fn formula_inputs_changed(old: Option<&DynamicBlock>, next: Option<&D
         }
         out
     }
-    let common = |d: Option<&DynamicBlock>| d.map(|d| (d.type_parameters.clone(), d.type_values.clone())).unwrap_or_default();
-    parameters(old) != parameters(next) || inputs(old) != inputs(next) || common(old) != common(next)
+    let common = |d: Option<&DynamicBlock>| {
+        d.map(|d| (d.type_parameters.clone(), d.type_values.clone()))
+            .unwrap_or_default()
+    };
+    parameters(old) != parameters(next)
+        || inputs(old) != inputs(next)
+        || common(old) != common(next)
 }
 
 /// A direct formula-definition edit uses the same complete-graph refresh as a
@@ -605,16 +655,34 @@ pub(crate) fn prepare_formula_edit(
     doc: &Document,
     next: &BlockDefinition,
 ) -> Result<(BlockDefinition, crate::blocks_edit::DefinitionChanges), Stop> {
-    let mut blocks: Vec<_> = doc.blocks().iter()
-        .map(|b| if b.id == next.id { next.clone() } else { (**b).clone() }).collect();
+    let mut blocks: Vec<_> = doc
+        .blocks()
+        .iter()
+        .map(|b| {
+            if b.id == next.id {
+                next.clone()
+            } else {
+                (**b).clone()
+            }
+        })
+        .collect();
     let entities = refresh_definitions(doc, &mut blocks, &HashSet::from([next.id]))?;
     let mut primary = next.clone();
     let mut related = Vec::new();
     for b in blocks {
-        if b.id == next.id { primary = b; }
-        else if doc.block(b.id).is_some_and(|old| old != &b) { related.push(b); }
+        if b.id == next.id {
+            primary = b;
+        } else if doc.block(b.id).is_some_and(|old| old != &b) {
+            related.push(b);
+        }
     }
-    Ok((primary, crate::blocks_edit::DefinitionChanges { blocks: related, entities }))
+    Ok((
+        primary,
+        crate::blocks_edit::DefinitionChanges {
+            blocks: related,
+            entities,
+        },
+    ))
 }
 
 /// Every parameter's value as an insert shows it: its kept value, else its default; a lookup's the label of the
@@ -625,7 +693,13 @@ pub fn current(
 ) -> BTreeMap<String, ParamValue> {
     let mut out = BTreeMap::new();
     for p in &d.parameters {
-        if let Some(v) = d.type_values.get(p.name()).or_else(|| kept.get(p.name())).cloned().or_else(|| p.default_value()) {
+        if let Some(v) = d
+            .type_values
+            .get(p.name())
+            .or_else(|| kept.get(p.name()))
+            .cloned()
+            .or_else(|| p.default_value())
+        {
             out.insert(p.name().to_owned(), v);
         }
     }
@@ -783,8 +857,13 @@ fn check(doc: &Document, input: &BlocksParameters) -> Result<Checked, Stop> {
                                 )));
                             }
                             if d.is_type_parameter(name) {
-                                return Err(Stop::failed(error(codes::INVALID_PARAMETER_VALUE,
-                                    format!("“{name}” ortak tip değeri; örnek sıfırlama işlemiyle değiştirilemez."), Some(format!("names[{k}]")))));
+                                return Err(Stop::failed(error(
+                                    codes::INVALID_PARAMETER_VALUE,
+                                    format!(
+                                        "“{name}” ortak tip değeri; örnek sıfırlama işlemiyle değiştirilemez."
+                                    ),
+                                    Some(format!("names[{k}]")),
+                                )));
                             }
                             // A lookup's reset is its rows' parameters'.
                             match d.parameters.iter().find(|p| p.name() == name) {

@@ -49,7 +49,8 @@ pub fn follow_annotation_change(doc: &mut Document, change: &ScaleChange) -> Fol
             locked += 1;
             continue;
         }
-        let (Some(uid), Some(geometry)) = (doc.uid(slot), edit_geometry_of(&next, shape(&next))) else {
+        let (Some(uid), Some(geometry)) = (doc.uid(slot), edit_geometry_of(&next, shape(&next)))
+        else {
             continue;
         };
         changes.push(EntityEdit::Update {

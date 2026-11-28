@@ -136,7 +136,9 @@ impl MosaicPart {
     fn level_for(&self, level: usize) -> usize {
         let ratio = self.sx.min(self.sy) * f64::from(1u32 << level.min(31));
         let mut k = 0usize;
-        while k + 1 < self.reader.levels.len() && f64::from(1u32 << (k + 1).min(31)) <= ratio * (1.0 + 1e-9) {
+        while k + 1 < self.reader.levels.len()
+            && f64::from(1u32 << (k + 1).min(31)) <= ratio * (1.0 + 1e-9)
+        {
             k += 1;
         }
         k
@@ -146,7 +148,10 @@ impl MosaicPart {
     /// (`f` the level's pixel in level-0 pixels).
     fn covered(&self, f: f64, x0: u32, y0: u32, x1: u32, y1: u32) -> Option<(u32, u32, u32, u32)> {
         let lo = |s: f64| (s / f - 0.5).ceil();
-        let (fw, fh) = (f64::from(self.reader.info.width), f64::from(self.reader.info.height));
+        let (fw, fh) = (
+            f64::from(self.reader.info.width),
+            f64::from(self.reader.info.height),
+        );
         // The file's own extent as mosaic level-0 pixels.
         let (sx0, sx1) = (-self.ox / self.sx, (fw - self.ox) / self.sx);
         let (sy0, sy1) = (-self.oy / self.sy, (fh - self.oy) / self.sy);
@@ -161,15 +166,28 @@ impl MosaicPart {
     /// The file's level-`k` pixel under the mosaic's level-0 coordinate (x, y).
     fn pixel(&self, k: usize, x: f64, y: f64) -> (i64, i64) {
         let g = f64::from(1u32 << k.min(31));
-        (((self.sx * x + self.ox) / g).floor() as i64, ((self.sy * y + self.oy) / g).floor() as i64)
+        (
+            ((self.sx * x + self.ox) / g).floor() as i64,
+            ((self.sy * y + self.oy) / g).floor() as i64,
+        )
     }
 
     /// The file's level-`k` rectangle the mosaic's level-`level` pixels `[i₀, i₁) × [j₀, j₁)` read.
-    fn source_rect(&self, level: usize, k: usize, (i0, j0, i1, j1): (u32, u32, u32, u32)) -> (i64, i64, u32, u32) {
+    fn source_rect(
+        &self,
+        level: usize,
+        k: usize,
+        (i0, j0, i1, j1): (u32, u32, u32, u32),
+    ) -> (i64, i64, u32, u32) {
         let f = f64::from(1u32 << level.min(31));
         let (ax, ay) = self.pixel(k, (f64::from(i0) + 0.5) * f, (f64::from(j0) + 0.5) * f);
         let (bx, by) = self.pixel(k, (f64::from(i1) - 0.5) * f, (f64::from(j1) - 0.5) * f);
-        (ax, ay, (bx - ax + 1).max(1) as u32, (by - ay + 1).max(1) as u32)
+        (
+            ax,
+            ay,
+            (bx - ax + 1).max(1) as u32,
+            (by - ay + 1).max(1) as u32,
+        )
     }
 }
 
@@ -625,17 +643,25 @@ impl Reader {
     /// them; every level is the files laid over each other at that level, so
     /// a coarse view reads each file's own overviews. Why not when a file
     /// does not fit the VRT (another data type, a band it has not, a mosaic).
-    pub fn mosaic(vrt: &Vrt, files: Vec<(Member, Reader)>, budget: usize) -> Result<Reader, RasterError> {
+    pub fn mosaic(
+        vrt: &Vrt,
+        files: Vec<(Member, Reader)>,
+        budget: usize,
+    ) -> Result<Reader, RasterError> {
         let bands = u32::try_from(vrt.bands.len()).unwrap_or(u32::MAX);
         let sample = vrt.bands[0].sample;
         let mut parts = Vec::with_capacity(files.len());
         for (m, r) in files {
             let name = &m.file;
             if !r.mosaic.is_empty() {
-                return Err(RasterError::new(format!("“{name}” kendisi bir mozaik; mozaiğin içinde mozaik açılmaz.")));
+                return Err(RasterError::new(format!(
+                    "“{name}” kendisi bir mozaik; mozaiğin içinde mozaik açılmaz."
+                )));
             }
             if r.mesh_levels().is_some() {
-                return Err(RasterError::new(format!("“{name}” bir mesh; mozaiğe konmaz.")));
+                return Err(RasterError::new(format!(
+                    "“{name}” bir mesh; mozaiğe konmaz."
+                )));
             }
             if r.info.sample != sample {
                 return Err(RasterError::new(format!(
@@ -645,7 +671,9 @@ impl Reader {
                 )));
             }
             if let Some(&b) = m.bands.iter().find(|&&b| b == 0 || b > r.info.bands) {
-                return Err(RasterError::new(format!("“{name}” dosyasında {b}. band yok.")));
+                return Err(RasterError::new(format!(
+                    "“{name}” dosyasında {b}. band yok."
+                )));
             }
             let sx = m.src[2] / m.dst[2];
             let sy = m.src[3] / m.dst[3];
@@ -665,7 +693,11 @@ impl Reader {
             .ok_or_else(|| RasterError::new("Mozaikte dosya yok."))?;
         let levels: Vec<Level> = level_sizes(vrt.width, vrt.height)
             .into_iter()
-            .map(|(width, height)| Level { width, height, from: LevelFrom::Mosaic })
+            .map(|(width, height)| Level {
+                width,
+                height,
+                from: LevelFrom::Mosaic,
+            })
             .collect();
         let palette = (bands == 1).then(|| first.reader.palette.clone()).flatten();
         let color = match (bands, &palette) {
@@ -674,7 +706,11 @@ impl Reader {
             _ => "gray",
         };
         let alpha = vrt.bands.len() > 1
-            && vrt.bands.last().and_then(|b| b.color.as_deref()).is_some_and(|c| c.eq_ignore_ascii_case("alpha"));
+            && vrt
+                .bands
+                .last()
+                .and_then(|b| b.color.as_deref())
+                .is_some_and(|c| c.eq_ignore_ascii_case("alpha"));
         let geographic = first.reader.info.geographic && first.reader.info.epsg == vrt.epsg;
         let nodata = vrt.bands[0].nodata;
         let info = RasterInfo {
@@ -1118,7 +1154,9 @@ impl Reader {
             (3, 1) => pixels.as_chunks::<3>().0.iter().map(|c| c[0]).collect(),
             // A browser's decoder gives RGBA: its alpha (always opaque for a JPEG) goes.
             (4, 3) => pixels
-                .as_chunks::<4>().0.iter()
+                .as_chunks::<4>()
+                .0
+                .iter()
                 .flat_map(|c| [c[0], c[1], c[2]])
                 .collect(),
             (4, 1) => pixels.as_chunks::<4>().0.iter().map(|c| c[0]).collect(),
@@ -1238,7 +1276,8 @@ impl Reader {
                                     continue;
                                 }
                                 let to = (oy as usize * out.width as usize + ox as usize) * b;
-                                out.samples.copy_run(to, block, from, (cx1 - cx0) as usize * b);
+                                out.samples
+                                    .copy_run(to, block, from, (cx1 - cx0) as usize * b);
                             }
                         }
                     }
@@ -1277,11 +1316,20 @@ impl Reader {
     /// A mosaic level's pixels `[x₀, x₁) × [y₀, y₁)` into `out`: the files bottom first, each pixel's centre
     /// looked up in the file's level nearest the mosaic's (nearest neighbour, as GDAL reads a VRT's sources),
     /// a file's nodata or NaN leaving what is below; what no file covers the mosaic's nodata (or 0).
-    fn mosaic_region(&mut self, level: usize, x0: u32, y0: u32, x1: u32, y1: u32, out: &mut Region) -> Option<()> {
+    fn mosaic_region(
+        &mut self,
+        level: usize,
+        x0: u32,
+        y0: u32,
+        x1: u32,
+        y1: u32,
+        out: &mut Region,
+    ) -> Option<()> {
         let bands = out.bands as usize;
         let fill = self.nodata.unwrap_or(0.0);
         let index = |out: &Region, i: u32, j: u32| {
-            (((i64::from(j) - out.y) * i64::from(out.width) + (i64::from(i) - out.x)) as usize) * bands
+            (((i64::from(j) - out.y) * i64::from(out.width) + (i64::from(i) - out.x)) as usize)
+                * bands
         };
         for j in y0..y1 {
             for i in x0..x1 {

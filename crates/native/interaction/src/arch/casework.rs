@@ -145,7 +145,11 @@ impl Casework {
     }
 
     fn fixed_points(&self) -> &[Vec2] {
-        if self.correcting_end() { &self.pts[..self.pts.len() - 1] } else { &self.pts }
+        if self.correcting_end() {
+            &self.pts[..self.pts.len() - 1]
+        } else {
+            &self.pts
+        }
     }
 
     /// The path now: the points placed, then the pointer while one is still to place.
@@ -239,7 +243,8 @@ impl Casework {
         // A module in a blind corner (its front behind the next leg's cabinets) takes nothing Otomatik: the run as it
         // would be with `k` there, whether module `k` is clear (docs/adr/0727 §7).
         let clear = |probe: &CaseworkRun, k: u32| {
-            laid(probe, cx).is_some_and(|m| m.iter().any(|q| q.number == k && q.blind != Some(true)))
+            laid(probe, cx)
+                .is_some_and(|m| m.iter().any(|q| q.number == k && q.blind != Some(true)))
         };
         run.sink = match self.sink {
             Spot::None => None,
@@ -390,7 +395,10 @@ impl Casework {
             "O" => (self.cooktop, CaseworkModuleKind::Cooktop),
             _ => (self.washer, CaseworkModuleKind::Dishwasher),
         };
-        let now = self.planned.as_ref().and_then(|p| number_of(&p.modules, kind));
+        let now = self
+            .planned
+            .as_ref()
+            .and_then(|p| number_of(&p.modules, kind));
         let count = self.planned.as_ref().map_or(0, |p| p.modules.len());
         let auto = match (spot, now) {
             (Spot::Auto, Some(k)) => format!("Otomatik ({k}. modül)"),
@@ -413,7 +421,9 @@ impl Casework {
         if let Spot::At(k) = spot {
             top = top.max(k);
         }
-        out.extend((1..=top).map(|k| choice(k.to_string(), format!("{k}. modül"), spot == Spot::At(k))));
+        out.extend(
+            (1..=top).map(|k| choice(k.to_string(), format!("{k}. modül"), spot == Spot::At(k))),
+        );
         out
     }
 
@@ -451,7 +461,8 @@ impl Casework {
                 };
                 self.corners = corners;
                 cx.memory.casework_corners = corners;
-                self.pts.truncate(self.needed().saturating_sub(1).min(self.pts.len()));
+                self.pts
+                    .truncate(self.needed().saturating_sub(1).min(self.pts.len()));
                 true
             }
             "K" => {
@@ -578,7 +589,9 @@ impl Tool for Casework {
                 Ask::Depth => "tezgâh derinliğini yazın (30–120 cm)",
                 Ask::Sink => "evyenin modülünü yazın (Yok, Otomatik ya da sıra numarası)",
                 Ask::Cooktop => "ocağın modülünü yazın (Yok, Otomatik ya da sıra numarası)",
-                Ask::Washer => "bulaşık makinesinin modülünü yazın (Yok, Otomatik ya da sıra numarası)",
+                Ask::Washer => {
+                    "bulaşık makinesinin modülünü yazın (Yok, Otomatik ya da sıra numarası)"
+                }
             };
             return Prompt::new(LABEL, words).option("Geri", "G");
         }
@@ -589,7 +602,8 @@ impl Tool for Casework {
             format!("{}. köşeye tıklayın ya da kolun boyunu yazın", n)
         } else if n < self.needed() {
             if self.corners > 0 {
-                "dizinin sonuna tıklayın ya da kolun boyunu yazın (dizi köşenin döndüğü yanda)".to_owned()
+                "dizinin sonuna tıklayın ya da kolun boyunu yazın (dizi köşenin döndüğü yanda)"
+                    .to_owned()
             } else {
                 "dizinin sonuna tıklayın ya da boyunu yazın".to_owned()
             }
@@ -681,7 +695,10 @@ impl Tool for Casework {
         }
         let p = self.squared(p);
         if self.fixed_points().last() == Some(&p) {
-            cx.say(Level::Info, "Bu nokta bir öncekiyle aynı; başka bir noktaya tıklayın.");
+            cx.say(
+                Level::Info,
+                "Bu nokta bir öncekiyle aynı; başka bir noktaya tıklayın.",
+            );
             return true;
         }
         if self.correcting_end() {
@@ -775,8 +792,7 @@ impl Tool for Casework {
                 return true;
             }
             _ => {
-                if let Some(p) = cx.typed_point(text, self.snap_from(), self.hover)
-                {
+                if let Some(p) = cx.typed_point(text, self.snap_from(), self.hover) {
                     return self.accept_point(p, cx);
                 }
                 return false;
@@ -932,7 +948,9 @@ impl Tool for Casework {
             return Flow::Stay;
         }
         if self.pts.len() >= self.needed() {
-            if self.correcting_end() && let Some(p) = self.hover {
+            if self.correcting_end()
+                && let Some(p) = self.hover
+            {
                 self.accept_point(p, cx);
                 return Flow::Stay;
             }
@@ -984,7 +1002,11 @@ impl Tool for Casework {
 /// and its fridge.
 fn run_words(p: &Planned, fridge: Option<CaseworkEnd>, f: &Format) -> Vec<String> {
     let mut first = format!("{} modül", p.modules.len());
-    if let Some(m) = p.modules.iter().find(|m| m.kind == CaseworkModuleKind::Base) {
+    if let Some(m) = p
+        .modules
+        .iter()
+        .find(|m| m.kind == CaseworkModuleKind::Base)
+    {
         first.push_str(&format!(" · {}", centimetres(m.width)));
     }
     let mut rows = vec![first];
@@ -992,7 +1014,11 @@ fn run_words(p: &Planned, fridge: Option<CaseworkEnd>, f: &Format) -> Vec<String
     if let Some(k) = number_of(&p.modules, CaseworkModuleKind::Sink) {
         parts.push(format!("evye {k}."));
     }
-    if let Some(m) = p.modules.iter().find(|m| m.kind == CaseworkModuleKind::Cooktop) {
+    if let Some(m) = p
+        .modules
+        .iter()
+        .find(|m| m.kind == CaseworkModuleKind::Cooktop)
+    {
         parts.push(if m.oven == Some(true) {
             format!("ocak ve fırın {}.", m.number)
         } else {
@@ -1012,7 +1038,10 @@ fn run_words(p: &Planned, fridge: Option<CaseworkEnd>, f: &Format) -> Vec<String
         .map(|m| format!("{}.", m.number))
         .collect();
     if !blind.is_empty() {
-        rows.push(format!("Kör köşede: {} modül; önü kapalı", blind.join(", ")));
+        rows.push(format!(
+            "Kör köşede: {} modül; önü kapalı",
+            blind.join(", ")
+        ));
     }
     let mut last = format!("Tezgâh {} × {}", f.length(p.length), f.length(p.depth));
     if p.filler > 0.0 {

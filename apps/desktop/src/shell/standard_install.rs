@@ -13,8 +13,8 @@ use std::fmt;
 use iced::widget::{column, container, row};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, StandardInstallAction as Action, StandardInstallChoice, StandardResourceKind as Kind,
-    StandardsInstall, StandardsInstalled,
+    CommandResult, StandardInstallAction as Action, StandardInstallChoice,
+    StandardResourceKind as Kind, StandardsInstall, StandardsInstalled,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, standards_install};
@@ -118,7 +118,12 @@ impl Window {
                 })
                 .collect(),
             // The last added is searched first.
-            libraries: self.libraries.iter().rev().map(|(path, _)| path.display().to_string()).collect(),
+            libraries: self
+                .libraries
+                .iter()
+                .rev()
+                .map(|(path, _)| path.display().to_string())
+                .collect(),
             expected_revision: None,
         }
     }
@@ -147,7 +152,9 @@ impl App {
         let mut copy = doc.model.reading_copy();
         match standards_install::plan(&ExecutionContext::new(&mut copy), &w.input()) {
             CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } => Err(error.message),
+            CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                Err(error.message)
+            }
             _ => Err("Önizleme hazırlanamadı.".into()),
         }
     }
@@ -183,7 +190,8 @@ impl App {
                 let Some(doc) = self.document.as_mut() else {
                     return Task::none();
                 };
-                let result = standards_install::execute(&mut ExecutionContext::new(&mut doc.model), input);
+                let result =
+                    standards_install::execute(&mut ExecutionContext::new(&mut doc.model), input);
                 if let Some(done) = self.answered(result) {
                     self.say(
                         Level::Success,
@@ -200,8 +208,15 @@ impl App {
                             }
                         ),
                     );
-                    let kept = self.standard_install.take().map(|w| w.libraries).unwrap_or_default();
-                    self.standard_install = Some(Window { libraries: kept, ..Window::default() });
+                    let kept = self
+                        .standard_install
+                        .take()
+                        .map(|w| w.libraries)
+                        .unwrap_or_default();
+                    self.standard_install = Some(Window {
+                        libraries: kept,
+                        ..Window::default()
+                    });
                 }
             }
             Event::AddLibrary => {
@@ -223,17 +238,27 @@ impl App {
             }
             Event::LibraryPicked(None) => {}
             Event::LibraryPicked(Some(path)) => {
-                let name = path.file_stem().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+                let name = path
+                    .file_stem()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_default();
                 let read = std::fs::read_to_string(&path)
                     .map_err(|e| e.to_string())
-                    .and_then(|text| kentos_native_application::standard_libraries::read_block_library(&name, &text));
+                    .and_then(|text| {
+                        kentos_native_application::standard_libraries::read_block_library(
+                            &name, &text,
+                        )
+                    });
                 match (read, self.standard_install.as_mut()) {
                     (Ok(library), Some(w)) => {
                         let n = library.blocks.len();
                         w.libraries.push((path.clone(), library.name));
                         self.say(Level::Success, format!("“{name}” kitaplığı eklendi ({n} blok); KentOS kitaplıklarından önce aranır."));
                     }
-                    (Err(e), _) => self.warn(format!("“{}” blok kitaplığı olarak okunamadı: {e}", path.display())),
+                    (Err(e), _) => self.warn(format!(
+                        "“{}” blok kitaplığı olarak okunamadı: {e}",
+                        path.display()
+                    )),
                     _ => {}
                 }
             }
@@ -261,7 +286,11 @@ impl App {
                     p.replaced,
                     p.renamed,
                     p.kept,
-                    if p.unavailable > 0 { format!(" · {} kitaplıkta yok", p.unavailable) } else { String::new() }
+                    if p.unavailable > 0 {
+                        format!(" · {} kitaplıkta yok", p.unavailable)
+                    } else {
+                        String::new()
+                    }
                 )));
                 let columns = [
                     table::Column::new("Tür").width(96.0),
@@ -283,12 +312,24 @@ impl App {
                         } else if r.status == "unavailable" {
                             label::caption("Kurulamaz; çizimdeki kalır").into()
                         } else {
-                            Segmented::new(choices, Choice(r.action), move |c| msg(Event::Pick(kind, name.clone(), c)))
-                                .compact()
-                                .into()
+                            Segmented::new(choices, Choice(r.action), move |c| {
+                                msg(Event::Pick(kind, name.clone(), c))
+                            })
+                            .compact()
+                            .into()
                         };
-                        let status = if matches!(r.status.as_str(), "differs" | "unavailable") && !r.fields.is_empty() {
-                            format!("{} ({})", status_words(&r.status), r.fields.iter().map(|f| field_words(f)).collect::<Vec<_>>().join(", "))
+                        let status = if matches!(r.status.as_str(), "differs" | "unavailable")
+                            && !r.fields.is_empty()
+                        {
+                            format!(
+                                "{} ({})",
+                                status_words(&r.status),
+                                r.fields
+                                    .iter()
+                                    .map(|f| field_words(f))
+                                    .collect::<Vec<_>>()
+                                    .join(", ")
+                            )
                         } else {
                             status_words(&r.status).to_owned()
                         };
@@ -303,15 +344,21 @@ impl App {
                             action,
                             label::caption(r.library.clone().unwrap_or_else(|| "—".into())).into(),
                             label::caption(uses_words(r.kind, r.uses)).into(),
-                            label::caption(format!("{} · {}", r.source.id, r.source.revision)).into(),
+                            label::caption(format!("{} · {}", r.source.id, r.source.revision))
+                                .into(),
                         ];
                         table::Row::new(cells)
                     })
                     .collect();
                 body = body.push(
-                    container(Table::new(columns).extend(rows).min_width(868.0).height(280.0))
-                        .width(Fill)
-                        .style(style::container::field_box),
+                    container(
+                        Table::new(columns)
+                            .extend(rows)
+                            .min_width(868.0)
+                            .height(280.0),
+                    )
+                    .width(Fill)
+                    .style(style::container::field_box),
                 );
                 for ((kind, name), (action, new_name)) in &w.choices {
                     if *action == Action::RenameIncoming {
@@ -336,15 +383,26 @@ impl App {
         } else {
             format!(
                 "Bloklar önce {} kitaplığında, sonra KentOS kitaplıklarında aranır.",
-                w.libraries.iter().rev().map(|(_, name)| format!("“{name}”")).collect::<Vec<_>>().join(", ")
+                w.libraries
+                    .iter()
+                    .rev()
+                    .map(|(_, name)| format!("“{name}”"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             )
         };
         let body = body.push(label::muted(libraries));
         Frame::new("Standart kaynaklarını kur")
             .scroll(body)
-            .action(words::secondary("Kitaplık ekle…", Some(msg(Event::AddLibrary))))
+            .action(words::secondary(
+                "Kitaplık ekle…",
+                Some(msg(Event::AddLibrary)),
+            ))
             .action(words::secondary("Kapat", Some(Message::DialogClosed)))
-            .action(words::primary("Kur", (plan.is_ok() && changes > 0).then(|| msg(Event::Install))))
+            .action(words::primary(
+                "Kur",
+                (plan.is_ok() && changes > 0).then(|| msg(Event::Install)),
+            ))
             .width(920.0)
             .modal(Message::DialogClosed)
     }
@@ -359,7 +417,9 @@ pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {
         crate::files_testing::make_cad(app);
         let doc = app.document.as_mut().expect("a drawing");
         let mut settings = doc.settings().clone();
-        settings.standard_docs = vec![kentos_commands::ProjectStandardDocument { text: tests::package() }];
+        settings.standard_docs = vec![kentos_commands::ProjectStandardDocument {
+            text: tests::package(),
+        }];
         doc.model.set_settings(settings);
         let _ = app.standard_install_event(Event::Open);
         let dir = crate::files_testing::scratch("proje-kitaplik-resim");
@@ -403,15 +463,34 @@ pub(crate) mod tests {
         doc.model.set_settings(settings);
         let _ = app.standard_install_event(Event::Open);
         let plan = app.install_plan().expect("a plan");
-        let row = plan.rows.iter().find(|r| r.name == "PROJE-KAPI").expect("the block's row");
-        assert_eq!(row.status, "unavailable", "KentOS's libraries do not hold it");
+        let row = plan
+            .rows
+            .iter()
+            .find(|r| r.name == "PROJE-KAPI")
+            .expect("the block's row");
+        assert_eq!(
+            row.status, "unavailable",
+            "KentOS's libraries do not hold it"
+        );
         let dir = crate::files_testing::scratch("proje-kitaplik");
         let _ = app.standard_install_event(Event::LibraryPicked(Some(library(&dir))));
         let plan = app.install_plan().expect("a plan");
-        let row = plan.rows.iter().find(|r| r.name == "PROJE-KAPI").expect("the block's row");
+        let row = plan
+            .rows
+            .iter()
+            .find(|r| r.name == "PROJE-KAPI")
+            .expect("the block's row");
         assert_eq!(row.status, "missing", "found in the added library: {row:?}");
         assert_eq!(row.library.as_deref(), Some("proje"));
         let _ = app.standard_install_event(Event::Install);
-        assert!(app.document.as_ref().unwrap().model.block_named("PROJE-KAPI").is_some(), "installed from it");
+        assert!(
+            app.document
+                .as_ref()
+                .unwrap()
+                .model
+                .block_named("PROJE-KAPI")
+                .is_some(),
+            "installed from it"
+        );
     }
 }

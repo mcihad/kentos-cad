@@ -35,7 +35,10 @@ pub const SYSTEM_IDS: [&str; 15] = [
 
 /// CAD templates for projects that may have no coordinate system.
 fn georeferenced(id: &str) -> bool {
-    !matches!(id, "sys:cad-teknik" | "sys:cad-mimari" | "sys:baski-kalibrasyonu")
+    !matches!(
+        id,
+        "sys:cad-teknik" | "sys:cad-mimari" | "sys:baski-kalibrasyonu"
+    )
 }
 
 /// A sheet from a template, as a host makes it: ids from the template's, the sample answers, the sample place.
@@ -676,7 +679,10 @@ fn template_matrix_shots() {
 /// layer the drawing's map cannot draw, on the map, as a warning; the sheet still prints. With them back nothing is said.
 #[test]
 fn a_reprint_says_the_layers_out_of_reach_on_the_drawings_map() {
-    let t = system_templates().iter().find(|t| t.meta.id == "sys:gis-tematik").expect("the thematic map");
+    let t = system_templates()
+        .iter()
+        .find(|t| t.meta.id == "sys:gis-tematik")
+        .expect("the thematic map");
     let book = instance(t, t.meta.papers.first().copied(), true);
     let mut inputs = sample_inputs(&book, "s1", true);
     let said = |inputs: &RenderInputs| -> Vec<(Severity, String, String)> {
@@ -702,8 +708,15 @@ fn a_reprint_says_the_layers_out_of_reach_on_the_drawings_map() {
     assert_eq!(found.len(), 2, "{found:?}");
     assert!(found.iter().all(|(s, _, _)| *s == Severity::Warning));
     let map = &found[0].1;
-    let drawing_map = book.sheets[0].items.iter().find(|i| &i.id == map).expect("on an item");
-    assert!(matches!(&drawing_map.kind, ItemKind::Map(m) if m.source.is_drawing()), "on the drawing's map");
+    let drawing_map = book.sheets[0]
+        .items
+        .iter()
+        .find(|i| &i.id == map)
+        .expect("on an item");
+    assert!(
+        matches!(&drawing_map.kind, ItemKind::Map(m) if m.source.is_drawing()),
+        "on the drawing's map"
+    );
     assert_eq!(
         found.iter().map(|(_, _, m)| m.as_str()).collect::<Vec<_>>(),
         [
@@ -712,5 +725,10 @@ fn a_reprint_says_the_layers_out_of_reach_on_the_drawings_map() {
         ]
     );
     // Still printable: a warning holds nothing back.
-    assert!(preflight(&book, "s1", &inputs).unwrap().iter().all(|f| f.code != "layer_unreachable" || f.severity != Severity::Error));
+    assert!(
+        preflight(&book, "s1", &inputs)
+            .unwrap()
+            .iter()
+            .all(|f| f.code != "layer_unreachable" || f.severity != Severity::Error)
+    );
 }

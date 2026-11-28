@@ -31,7 +31,11 @@ impl App {
             } else {
                 Subscription::none()
             },
-            if self.sheet_publish_running(){Subscription::run(crate::exchange::sheet_publish::ticks)}else{Subscription::none()},
+            if self.sheet_publish_running() {
+                Subscription::run(crate::exchange::sheet_publish::ticks)
+            } else {
+                Subscription::none()
+            },
             // Veri çıkarımı's preview of a large drawing running on its own thread (docs/adr/1131 §3).
             if self.extract.as_ref().is_some_and(|x| x.running.is_some()) {
                 Subscription::run(crate::tables::extract::ticks)
@@ -196,8 +200,11 @@ impl App {
         let in_file = watch.then(|| self.data_held_in_file());
         let task = self.handle(message);
         if let Some(before) = in_file {
-            let new: Vec<(String, String)> =
-                self.data_held_in_file().into_iter().filter(|l| !before.contains(l)).collect();
+            let new: Vec<(String, String)> = self
+                .data_held_in_file()
+                .into_iter()
+                .filter(|l| !before.contains(l))
+                .collect();
             self.data_into_tables(new);
         }
         // A window resized since the last message keeps its size (dialog_sizes.rs, docs/adr/0746).
@@ -355,7 +362,8 @@ impl App {
         self.spatial.sync(&doc.model);
         self.styles.follow_project(Some(doc.model.styles()));
         let model = &doc.model;
-        self.selection.retain(|slot| model.get(slot).is_some() && model.isolation_shown(slot));
+        self.selection
+            .retain(|slot| model.get(slot).is_some() && model.isolation_shown(slot));
         // The slider's range follows the drawing (docs/adr/0210 §5).
         self.time_refresh();
         // A new object its layer's filter leaves out is said (docs/adr/0211 §3).
@@ -427,7 +435,11 @@ impl App {
             if module_closes
                 || matches!(
                     self.dialog,
-                    Some(Dialog::Gis(gis::GisDialogKind::AttributeValues) | Dialog::BlockDefine | Dialog::Shortcuts)
+                    Some(
+                        Dialog::Gis(gis::GisDialogKind::AttributeValues)
+                            | Dialog::BlockDefine
+                            | Dialog::Shortcuts
+                    )
                 )
             {
                 self.close_dialog();
@@ -648,7 +660,11 @@ impl App {
             Message::GridsLooked(looked) => self.grids_looked(looked),
             Message::Module(event) => return self.module_event(event),
             Message::Key(press) => return self.key(press),
-            Message::CursorValueInput { token, text, pasted } => {
+            Message::CursorValueInput {
+                token,
+                text,
+                pasted,
+            } => {
                 return self.value_field_input(token, text, pasted);
             }
             Message::CursorValueSubmit(token) => return self.value_field_submit(token),
@@ -667,7 +683,10 @@ impl App {
                 return self.alt_released(modifiers);
             }
             Message::Dock(event) => {
-                if matches!(event, kentos_ui::widget::docking::Event::Closed(Panel::Blocks)) {
+                if matches!(
+                    event,
+                    kentos_ui::widget::docking::Event::Closed(Panel::Blocks)
+                ) {
                     self.close_block_find();
                 }
                 self.docks.update(event.clone());
@@ -707,7 +726,9 @@ impl App {
             Message::TemplateWork(inner) => return self.template_work_event(inner),
             Message::BlockAttributes(event) => return self.block_attributes_event(event),
             Message::BlockCard(event) => return self.block_card_event(event),
-            Message::BlockParameterGroups(event) => return self.block_parameter_groups_event(event),
+            Message::BlockParameterGroups(event) => {
+                return self.block_parameter_groups_event(event);
+            }
             Message::BlockTypeValues(event) => return self.block_type_values_event(event),
             Message::BlockSchedule(event) => return self.block_schedule_event(event),
             Message::FindReplace(event) => return self.find_replace_event(event),
@@ -796,7 +817,10 @@ impl App {
                 }
                 // Bound GeoPackages moved with the project are found again (docs/adr/0506); a project kept in a
                 // GeoPackage finds its layers' files from that file (docs/adr/9107 §3).
-                let place = doc.path.clone().or_else(|| doc.stored_source().and_then(|s| s.file()));
+                let place = doc
+                    .path
+                    .clone()
+                    .or_else(|| doc.stored_source().and_then(|s| s.file()));
                 let located = match place {
                     Some(path) if doc.cloud_source().is_none() => {
                         kentos_native_application::source_places::relocate(&mut doc.model, &path)
@@ -805,7 +829,9 @@ impl App {
                 };
                 // The grids it names found beside it too: a delivery package's izgaralar/ (docs/adr/3580).
                 let grids = match doc.path.clone() {
-                    Some(path) if doc.cloud_source().is_none() => kentos_native_application::project_grids::find(&doc.model, &path),
+                    Some(path) if doc.cloud_source().is_none() => {
+                        kentos_native_application::project_grids::find(&doc.model, &path)
+                    }
                     _ => Vec::new(),
                 };
                 match doc.cloud_source() {
@@ -847,7 +873,9 @@ impl App {
                 self.say_located(&located);
                 // Docs/adr/3580: the grids taken from beside the file, and any it names that are nowhere.
                 if let Some(words) = kentos_native_application::project_grids::said(&grids) {
-                    let lost = grids.iter().any(|g| matches!(g.place.name(), "missing" | "changed" | "unread"));
+                    let lost = grids
+                        .iter()
+                        .any(|g| matches!(g.place.name(), "missing" | "changed" | "unread"));
                     self.say(if lost { Level::Warn } else { Level::Info }, words);
                 }
                 // A drawing opened from a file goes first in the recent files (a recovered one has none).
@@ -860,63 +888,65 @@ impl App {
                 self.error(error);
                 self.save_then_dropped();
             }
-            Message::Saved(Some(Ok(written))) => match &mut self.document {
-                Some(doc) if doc.session == written.session => {
-                    // “Yerel dosyaya kaydet” (cloud/file_follow.rs): the work is in the
-                    // file now, so a save of it kept for the project goes, and the
-                    // drawing leaves the project, which stays as it is.
-                    let detached = self
-                        .cloud
-                        .detaching
-                        .take()
-                        .filter(|(session, _)| {
-                            *session == doc.session && doc.cloud_source().is_some()
-                        })
-                        .map(|(_, name)| name);
-                    if detached.is_some()
-                        && let Some(held) = self
+            Message::Saved(Some(Ok(written))) => {
+                match &mut self.document {
+                    Some(doc) if doc.session == written.session => {
+                        // “Yerel dosyaya kaydet” (cloud/file_follow.rs): the work is in the
+                        // file now, so a save of it kept for the project goes, and the
+                        // drawing leaves the project, which stays as it is.
+                        let detached = self
                             .cloud
-                            .held
-                            .as_mut()
-                            .filter(|h| h.session == doc.session && h.kept_save)
-                        && held.replica.clear_save().is_ok()
-                    {
-                        held.kept_save = false;
-                    }
-                    doc.saved(written.path.clone(), written.revision);
-                    let later = if doc.dirty() {
-                        " Kayıt sürerken yapılan değişiklikler kaydedilmedi."
-                    } else {
-                        ""
-                    };
-                    self.output(format!("Kaydedildi: {}.{later}", written.path.display()));
-                    if let Some(name) = detached {
-                        self.cloud.file_conflict = None;
-                        self.output(crate::cloud::revisions::texts::detached(&name));
-                    }
-                    self.recovery_saved();
-                    self.remember_file();
-                    // UR-001: “Kaydet ve …” goes on once its drawing is saved whole.
-                    if let Some((session, then)) = self.save_then
-                        && session == written.session
-                    {
-                        self.save_then = None;
-                        if self.document.as_ref().is_some_and(|d| !d.dirty()) {
-                            return self.proceed(then);
+                            .detaching
+                            .take()
+                            .filter(|(session, _)| {
+                                *session == doc.session && doc.cloud_source().is_some()
+                            })
+                            .map(|(_, name)| name);
+                        if detached.is_some()
+                            && let Some(held) = self
+                                .cloud
+                                .held
+                                .as_mut()
+                                .filter(|h| h.session == doc.session && h.kept_save)
+                            && held.replica.clear_save().is_ok()
+                        {
+                            held.kept_save = false;
                         }
-                        self.warn("Kayıt sürerken yapılan değişiklikler kaydedilmedi; çizim açık kaldı.");
+                        doc.saved(written.path.clone(), written.revision);
+                        let later = if doc.dirty() {
+                            " Kayıt sürerken yapılan değişiklikler kaydedilmedi."
+                        } else {
+                            ""
+                        };
+                        self.output(format!("Kaydedildi: {}.{later}", written.path.display()));
+                        if let Some(name) = detached {
+                            self.cloud.file_conflict = None;
+                            self.output(crate::cloud::revisions::texts::detached(&name));
+                        }
+                        self.recovery_saved();
+                        self.remember_file();
+                        // UR-001: “Kaydet ve …” goes on once its drawing is saved whole.
+                        if let Some((session, then)) = self.save_then
+                            && session == written.session
+                        {
+                            self.save_then = None;
+                            if self.document.as_ref().is_some_and(|d| !d.dirty()) {
+                                return self.proceed(then);
+                            }
+                            self.warn("Kayıt sürerken yapılan değişiklikler kaydedilmedi; çizim açık kaldı.");
+                        }
                     }
+                    // Its drawing set aside in its tab meanwhile (doc_tabs.rs, docs/adr/0351 §3): the file is
+                    // its file all the same.
+                    _ if let Some(doc) = self.doc_tabs.find_mut(written.session) => {
+                        doc.saved(written.path.clone(), written.revision);
+                        self.output(format!("Kaydedildi: {}.", written.path.display()));
+                    }
+                    // Another drawing was opened meanwhile: the file is written, but it is
+                    // not the open drawing's file, which keeps its path and its state.
+                    _ => self.output(format!("Kaydedildi: {}.", written.path.display())),
                 }
-                // Its drawing set aside in its tab meanwhile (doc_tabs.rs, docs/adr/0351 §3): the file is
-                // its file all the same.
-                _ if let Some(doc) = self.doc_tabs.find_mut(written.session) => {
-                    doc.saved(written.path.clone(), written.revision);
-                    self.output(format!("Kaydedildi: {}.", written.path.display()));
-                }
-                // Another drawing was opened meanwhile: the file is written, but it is
-                // not the open drawing's file, which keeps its path and its state.
-                _ => self.output(format!("Kaydedildi: {}.", written.path.display())),
-            },
+            }
             // A key of a secondary window, past the waits above (windows/routing.rs).
             Message::Windows(event) => return self.windows_event(event),
             Message::CloseRequested(_) if self.block_editor.is_some() => {
@@ -954,7 +984,9 @@ impl App {
                         self.remove_layer(&id);
                     }
                 }
-                Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::RemoveTemplate)) => self.remove_template(),
+                Some(Dialog::TemplateWork(
+                    crate::template_work::TemplateDialogKind::RemoveTemplate,
+                )) => self.remove_template(),
                 // A module's question (Mahalleri birleştir, quantities.rs).
                 Some(Dialog::Module(d)) => {
                     if let Some(parts) = crate::module_parts::parts(d.module) {

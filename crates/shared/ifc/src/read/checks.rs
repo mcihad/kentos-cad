@@ -7,11 +7,18 @@ use super::graph::Counted;
 use super::{Finding, Limits, Object, Severity};
 
 /// Cycles in the tree (an object above itself through its parents and containers): one finding a cycle.
-pub(super) fn cycles(objects: &[Object], line_of: &HashMap<u32, usize>, findings: &mut Vec<Finding>) {
+pub(super) fn cycles(
+    objects: &[Object],
+    line_of: &HashMap<u32, usize>,
+    findings: &mut Vec<Finding>,
+) {
     let up = |i: usize| objects[i].parent.or(objects[i].container);
     for members in functional_cycles(objects.len(), up) {
         let first = objects[members[0]].step;
-        let steps: Vec<String> = members.iter().map(|&i| format!("#{}", objects[i].step)).collect();
+        let steps: Vec<String> = members
+            .iter()
+            .map(|&i| format!("#{}", objects[i].step))
+            .collect();
         findings.push(Finding {
             code: "tree_cycle",
             severity: Severity::Error,
@@ -75,7 +82,10 @@ pub(super) fn placement_cycles(
                 severity: Severity::Warning,
                 step: Some(s),
                 line: line_of.get(&s).copied(),
-                message: format!("#{s} yerleşiminin zinciri {} kattan derin; olağan dışı bir model.", limits.depth),
+                message: format!(
+                    "#{s} yerleşiminin zinciri {} kattan derin; olağan dışı bir model.",
+                    limits.depth
+                ),
             });
             break;
         }
@@ -117,30 +127,59 @@ fn functional_cycles(n: usize, up: impl Fn(usize) -> Option<usize>) -> Vec<Vec<u
 }
 
 /// GlobalIds missing, malformed (22 characters of IFC's base 64, the first 0–3) or said twice.
-pub(super) fn global_ids(objects: &[Object], line_of: &HashMap<u32, usize>, findings: &mut Vec<Finding>) {
+pub(super) fn global_ids(
+    objects: &[Object],
+    line_of: &HashMap<u32, usize>,
+    findings: &mut Vec<Finding>,
+) {
     let mut seen: HashMap<&str, u32> = HashMap::new();
     let mut said = Counted::default();
     for o in objects {
         let line = line_of.get(&o.step).copied();
         let g = o.global_id.as_str();
         let (code, message) = if g.is_empty() {
-            ("global_id_missing", format!("{} #{} kaydının GlobalId'si yok.", o.class, o.step))
+            (
+                "global_id_missing",
+                format!("{} #{} kaydının GlobalId'si yok.", o.class, o.step),
+            )
         } else if !valid_global_id(g) {
-            ("global_id_invalid", format!("{} #{} kaydının GlobalId'si “{g}” biçimsiz (22 karakter, IFC'nin 64'lük alfabesi).", o.class, o.step))
+            (
+                "global_id_invalid",
+                format!(
+                    "{} #{} kaydının GlobalId'si “{g}” biçimsiz (22 karakter, IFC'nin 64'lük alfabesi).",
+                    o.class, o.step
+                ),
+            )
         } else if let Some(first) = seen.insert(g, o.step) {
-            ("global_id_duplicate", format!("“{g}” GlobalId'si iki nesnede: #{first} ve #{}. Kimlik her nesnede tek olmalı.", o.step))
+            (
+                "global_id_duplicate",
+                format!(
+                    "“{g}” GlobalId'si iki nesnede: #{first} ve #{}. Kimlik her nesnede tek olmalı.",
+                    o.step
+                ),
+            )
         } else {
             continue;
         };
-        said.add(findings, || Finding { code, severity: Severity::Error, step: Some(o.step), line, message });
+        said.add(findings, || Finding {
+            code,
+            severity: Severity::Error,
+            step: Some(o.step),
+            line,
+            message,
+        });
     }
-    said.close(findings, "global_id_more", "nesnenin GlobalId'sinde sorun var");
+    said.close(
+        findings,
+        "global_id_more",
+        "nesnenin GlobalId'sinde sorun var",
+    );
 }
 
 /// Whether `g` is a GlobalId as IFC writes it: 22 characters of `0-9A-Za-z_$`, the first 0–3 (128 bits).
 pub(crate) fn valid_global_id(g: &str) -> bool {
     g.len() == 22
-        && g.bytes().all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'$')
+        && g.bytes()
+            .all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'$')
         && matches!(g.as_bytes()[0], b'0'..=b'3')
 }
-

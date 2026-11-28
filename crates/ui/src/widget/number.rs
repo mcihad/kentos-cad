@@ -902,7 +902,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for NumberInput<'
         // için mesaj göndermez; yalnız geçersiz kılınan yerleşim çizilmiyor, harf imlecin sonraki yanıp sönmesini ya da
         // bir zamanlayıcıyı bekliyordu (reactive.rs, docs/adr/0976). İmlecin yürümesi ve yanıp sönmesi alanın kendi
         // karesidir: düzenlenirken her olayda (imlecin her kıpırtısı, her kare) pencereyi yeniden yerleştirmek boşunaydı.
-        if (state.buffer.as_str(), &state.error, state.editing) != (before.0.as_str(), &before.1, before.2) {
+        if (state.buffer.as_str(), &state.error, state.editing)
+            != (before.0.as_str(), &before.1, before.2)
+        {
             self.build(state);
             super::reactive::changed(shell);
         }

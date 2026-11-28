@@ -55,7 +55,10 @@ fn twenty_six_page_sets_keep_each_master_map_and_architectural_view_in_its_own_p
             }
         }
         assert_eq!(doc.to_snapshot_v2(), before);
-        assert_eq!(doc.entities().count(), c["expected"]["sourceCount"].as_u64().unwrap() as usize);
+        assert_eq!(
+            doc.entities().count(),
+            c["expected"]["sourceCount"].as_u64().unwrap() as usize
+        );
     }
     std::fs::remove_dir_all(out).unwrap();
 }

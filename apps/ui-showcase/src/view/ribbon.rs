@@ -106,7 +106,13 @@ impl Showcase {
                 ))
                 .group(self.gallery_group(
                     "CBS ve CAD",
-                    &[Page::Attributes, Page::Spatial, Page::Library, Page::City, Page::Model],
+                    &[
+                        Page::Attributes,
+                        Page::Spatial,
+                        Page::Library,
+                        Page::City,
+                        Page::Model,
+                    ],
                 ))
                 .group(self.interface_group())
                 .into();

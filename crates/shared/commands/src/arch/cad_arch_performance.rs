@@ -14,7 +14,8 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::{
-    Declared, DeclaredBearing, DeclaredExit, DeclaredExternal, DeclaredFireStop, DeclaredProtected, DeclaredShaftVent,
+    Declared, DeclaredBearing, DeclaredExit, DeclaredExternal, DeclaredFireStop, DeclaredProtected,
+    DeclaredShaftVent,
 };
 
 /// The command's name.

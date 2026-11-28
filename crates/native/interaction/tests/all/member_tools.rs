@@ -21,8 +21,17 @@ fn bench(tool: &str) -> Bench {
 fn the_post_tool_writes_a_post_of_its_own_height() {
     let mut b = bench("post");
     assert_eq!(b.session.tool_id(), "post");
-    let chips: Vec<String> = b.session.prompt().options.iter().map(|o| o.label.to_string()).collect();
-    assert!(chips.iter().any(|c| c == "Yükseklik") && chips.iter().any(|c| c == "Malzeme"), "{chips:?}");
+    let chips: Vec<String> = b
+        .session
+        .prompt()
+        .options
+        .iter()
+        .map(|o| o.label.to_string())
+        .collect();
+    assert!(
+        chips.iter().any(|c| c == "Yükseklik") && chips.iter().any(|c| c == "Malzeme"),
+        "{chips:?}"
+    );
     assert!(!chips.iter().any(|c| c == "Aks kesişimleri"), "{chips:?}");
     // Its storey's height first: none of its own.
     b.click(1.0, 1.0);
@@ -30,11 +39,20 @@ fn the_post_tool_writes_a_post_of_its_own_height() {
         panic!("a column")
     };
     assert_eq!(c.column.member, Some(kentos_commands::Member::post()));
-    assert_eq!((c.column.width, c.column.depth, c.column.height), (0.1, Some(0.1), None));
+    assert_eq!(
+        (c.column.width, c.column.depth, c.column.height),
+        (0.1, Some(0.1), None)
+    );
     assert_eq!(c.column.material.as_deref(), Some("Çelik"));
     assert!(!c.column.fill, "a post is not the frame's: not darkened");
     assert_eq!((c.column.at.x - E, c.column.at.y - N), (1.0, 1.0));
-    assert_eq!(b.doc.layers().get(&c.base.layer_id).map(|l| l.name.as_str()), Some("MM-DIGR-DIKME"));
+    assert_eq!(
+        b.doc
+            .layers()
+            .get(&c.base.layer_id)
+            .map(|l| l.name.as_str()),
+        Some("MM-DIGR-DIKME")
+    );
     assert_eq!(b.last_text(), Some("1 dikme konuldu."));
     // 2.40 m and Ahşap typed; a height of 0 is refused and the old one stays.
     assert!(b.run(|s, cx| s.input("Y", cx)));
@@ -63,11 +81,26 @@ fn the_post_tool_writes_a_post_of_its_own_height() {
 fn the_rail_tool_writes_a_rail_at_its_base() {
     let mut b = bench("rail");
     assert_eq!(b.session.tool_id(), "rail");
-    let chips: Vec<String> = b.session.prompt().options.iter().map(|o| o.label.to_string()).collect();
-    assert!(chips.iter().any(|c| c == "Kattan yükseklik") && chips.iter().any(|c| c == "Malzeme"), "{chips:?}");
-    assert!(!chips.iter().any(|c| c == "Tür" || c == "Kot farkı"), "{chips:?}");
+    let chips: Vec<String> = b
+        .session
+        .prompt()
+        .options
+        .iter()
+        .map(|o| o.label.to_string())
+        .collect();
+    assert!(
+        chips.iter().any(|c| c == "Kattan yükseklik") && chips.iter().any(|c| c == "Malzeme"),
+        "{chips:?}"
+    );
+    assert!(
+        !chips.iter().any(|c| c == "Tür" || c == "Kot farkı"),
+        "{chips:?}"
+    );
     assert!(b.run(|s, cx| s.configure("A", "0.9", cx)));
-    assert!(!b.run(|s, cx| s.configure("T", "lintel", cx)), "a rail has no Tür");
+    assert!(
+        !b.run(|s, cx| s.configure("T", "lintel", cx)),
+        "a rail has no Tür"
+    );
     b.click(0.0, 0.0);
     b.click(6.0, 0.0);
     b.confirm();
@@ -76,9 +109,21 @@ fn the_rail_tool_writes_a_rail_at_its_base() {
     };
     assert_eq!(k.beam.member, Some(kentos_commands::Member::rail()));
     assert_eq!(k.beam.role, kentos_commands::BeamRole::Beam);
-    assert_eq!((k.beam.width, k.beam.height, k.beam.base_offset), (0.05, 0.1, Some(0.9)));
-    assert_eq!((k.beam.offset, k.beam.material.as_deref()), (0.0, Some("Çelik")));
-    assert_eq!(b.doc.layers().get(&k.base.layer_id).map(|l| l.name.as_str()), Some("MM-DIGR-KAYIT"));
+    assert_eq!(
+        (k.beam.width, k.beam.height, k.beam.base_offset),
+        (0.05, 0.1, Some(0.9))
+    );
+    assert_eq!(
+        (k.beam.offset, k.beam.material.as_deref()),
+        (0.0, Some("Çelik"))
+    );
+    assert_eq!(
+        b.doc
+            .layers()
+            .get(&k.base.layer_id)
+            .map(|l| l.name.as_str()),
+        Some("MM-DIGR-KAYIT")
+    );
     assert_eq!(b.last_text(), Some("Kayıt çizildi: 5/10."));
     assert_eq!(b.session.tool_id(), "rail");
 }
@@ -89,7 +134,13 @@ fn the_rail_tool_writes_a_rail_at_its_base() {
 #[test]
 fn the_rail_tool_writes_a_sloped_member_on_two_points() {
     let mut b = bench("rail");
-    let chips: Vec<String> = b.session.prompt().options.iter().map(|o| o.label.to_string()).collect();
+    let chips: Vec<String> = b
+        .session
+        .prompt()
+        .options
+        .iter()
+        .map(|o| o.label.to_string())
+        .collect();
     assert!(chips.iter().any(|c| c == "Yükselme"), "{chips:?}");
     assert!(b.run(|s, cx| s.configure("U", "1.5", cx)));
     b.click(0.0, 0.0);
@@ -99,14 +150,24 @@ fn the_rail_tool_writes_a_sloped_member_on_two_points() {
         panic!("a beam")
     };
     assert_eq!((k.beam.rise, k.beam.pts.len()), (Some(1.5), 2));
-    let count = |b: &Bench| b.doc.entities().filter(|e| matches!(e, Entity::Beam(_))).count();
+    let count = |b: &Bench| {
+        b.doc
+            .entities()
+            .filter(|e| matches!(e, Entity::Beam(_)))
+            .count()
+    };
     let before = count(&b);
     b.click(0.0, 2.0);
     b.click(4.0, 2.0);
     b.click(4.0, 5.0);
     b.confirm();
     assert_eq!(count(&b), before, "a bent sloped member is not written");
-    assert!(b.last_text().is_some_and(|t| t.contains("iki noktası olur")), "{:?}", b.last_text());
+    assert!(
+        b.last_text()
+            .is_some_and(|t| t.contains("iki noktası olur")),
+        "{:?}",
+        b.last_text()
+    );
     assert!(b.run(|s, cx| s.configure("U", "0", cx)));
     b.click(0.0, 8.0);
     b.click(4.0, 8.0);

@@ -56,10 +56,16 @@ impl ModuleParts for Architecture {
             // Mimari denetim (arch_audit.rs, docs/adr/0703).
             "arch.audit" => return Some(app.open_arch_audit()),
             // IFC dışa aktar (bina) (arch_ifc.rs, docs/adr/8047).
-            "arch.ifcExport" => return Some(app.export_ifc_building(kentos_commands::IfcView::DesignTransfer)),
-            "arch.ifcExportCut" => return Some(app.export_ifc_building(kentos_commands::IfcView::Reference)),
+            "arch.ifcExport" => {
+                return Some(app.export_ifc_building(kentos_commands::IfcView::DesignTransfer));
+            }
+            "arch.ifcExportCut" => {
+                return Some(app.export_ifc_building(kentos_commands::IfcView::Reference));
+            }
             "arch.elementTypeFrom" => {
-                return Some(app.element_types_event(crate::element_types_window::Event::FromSelection));
+                return Some(
+                    app.element_types_event(crate::element_types_window::Event::FromSelection),
+                );
             }
             _ => {}
         }
@@ -83,12 +89,18 @@ impl ModuleParts for Architecture {
             "arch.moduleAddMembers" => app.room_module_add_selection(None),
             "arch.moduleRemoveMembers" => app.room_module_remove_selection(None),
             "arch.openingSameType" => app.select_same_opening_type(),
-            "arch.openingDetach" => app.opening_type_action(kentos_commands::OpeningsOperation::Detach),
+            "arch.openingDetach" => {
+                app.opening_type_action(kentos_commands::OpeningsOperation::Detach)
+            }
             "arch.openingPush" => {
-                app.opening_type_action(kentos_commands::OpeningsOperation::Push { fields: Vec::new() });
+                app.opening_type_action(kentos_commands::OpeningsOperation::Push {
+                    fields: Vec::new(),
+                });
             }
             "arch.openingReset" => {
-                app.opening_type_action(kentos_commands::OpeningsOperation::Reset { fields: Vec::new() });
+                app.opening_type_action(kentos_commands::OpeningsOperation::Reset {
+                    fields: Vec::new(),
+                });
             }
             "arch.tagsCheck" => app.open_tags_check(),
             "arch.viewRefs" => app.open_view_refs(),
@@ -155,7 +167,12 @@ impl ModuleParts for Architecture {
         .to_owned()
     }
 
-    fn dialog_control(&self, app: &App, kind: u16, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn dialog_control(
+        &self,
+        app: &App,
+        kind: u16,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         let Some(kind) = K::of(kind) else {
             return Err(format!("Mimari penceresi {kind} izden yanıtlanamıyor"));
         };
@@ -177,7 +194,10 @@ impl ModuleParts for Architecture {
             K::ElementTypes => app.element_types_control(control),
             K::Quantities => app.quantities_control(control),
             K::ArchTemplate | K::SpaceMerge | K::WallStyles | K::Schedule | K::ScheduleExport => {
-                Err(format!("{} penceresi izden yanıtlanamıyor", self.dialog_title(kind.number())))
+                Err(format!(
+                    "{} penceresi izden yanıtlanamıyor",
+                    self.dialog_title(kind.number())
+                ))
             }
         }
     }
@@ -271,7 +291,8 @@ impl ModuleParts for Architecture {
 
     fn device(&self, app: &mut App, history: &std::path::Path) {
         // Malzemeler's library folders, beside the program's history (docs/adr/0791).
-        app.modules.arch_mut().material_libraries = crate::material_library::Libraries::open(history);
+        app.modules.arch_mut().material_libraries =
+            crate::material_library::Libraries::open(history);
     }
 
     fn follow(&self, app: &mut App) -> Task<Message> {
@@ -281,7 +302,10 @@ impl ModuleParts for Architecture {
 
     fn escape_closes(&self, kind: u16) -> bool {
         // The editors with their own save ask first (docs/adr/8006).
-        matches!(K::of(kind), Some(K::WallStyles | K::Program | K::OpeningTypes | K::Materials))
+        matches!(
+            K::of(kind),
+            Some(K::WallStyles | K::Program | K::OpeningTypes | K::Materials)
+        )
     }
 
     fn dialog_confirmed(&self, app: &mut App, kind: u16) {
@@ -348,11 +372,17 @@ impl ModuleParts for Architecture {
 impl Building3dParts for Architecture {
     fn beside(&self, app: &App) -> Vec<(String, String, Arc<crate::underlay_model::Loaded>)> {
         // The underlay models shown (underlays.rs, docs/adr/8101).
-        app.underlays_shown().into_iter().map(|(u, l)| (u.id, u.name, l)).collect()
+        app.underlays_shown()
+            .into_iter()
+            .map(|(u, l)| (u.id, u.name, l))
+            .collect()
     }
 
     fn choose_beside(&self, app: &mut App, id: &str, object: usize) -> bool {
-        let known = app.document.as_ref().is_some_and(|d| d.model.underlays().iter().any(|u| u.id == id));
+        let known = app
+            .document
+            .as_ref()
+            .is_some_and(|d| d.model.underlays().iter().any(|u| u.id == id));
         if !known {
             return false;
         }
@@ -373,7 +403,10 @@ impl Building3dParts for Architecture {
         use std::hash::{Hash, Hasher};
         let a = &app.modules.arch().arch_audit;
         let mut h = std::collections::hash_map::DefaultHasher::new();
-        a.audited.as_ref().map(|x| (x.generation, x.revision, x.findings.len())).hash(&mut h);
+        a.audited
+            .as_ref()
+            .map(|x| (x.generation, x.revision, x.findings.len()))
+            .hash(&mut h);
         a.selected.hash(&mut h);
         a.chosen.hash(&mut h);
         a.group.hash(&mut h);
@@ -389,9 +422,18 @@ impl Building3dParts for Architecture {
         }
         let chosen = app.arch_audit_chosen();
         if !chosen.is_empty() {
-            return chosen.into_iter().flat_map(|f| f.uids.iter().cloned()).collect();
+            return chosen
+                .into_iter()
+                .flat_map(|f| f.uids.iter().cloned())
+                .collect();
         }
-        let Some(a) = app.modules.arch().arch_audit.audited.as_ref() else { return BTreeSet::new() };
-        app.arch_audit_shown().into_iter().filter_map(|i| a.findings.get(i)).flat_map(|f| f.uids.iter().cloned()).collect()
+        let Some(a) = app.modules.arch().arch_audit.audited.as_ref() else {
+            return BTreeSet::new();
+        };
+        app.arch_audit_shown()
+            .into_iter()
+            .filter_map(|i| a.findings.get(i))
+            .flat_map(|f| f.uids.iter().cloned())
+            .collect()
     }
 }

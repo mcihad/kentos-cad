@@ -48,7 +48,12 @@ pub enum Section {
     /// A plane parallel to a clicked face, not along an axis (docs/adr/8132): `origin` the point clicked, `normal` the
     /// face's (unit, towards where it was seen from); the plane `depth` behind the face along it (negative: in front),
     /// the side behind the plane kept, the other when `flip`.
-    Face { origin: [f64; 3], normal: [f64; 3], depth: f64, flip: bool },
+    Face {
+        origin: [f64; 3],
+        normal: [f64; 3],
+        depth: f64,
+        flip: bool,
+    },
     /// A box, what is outside it cut away.
     Box(Aabb),
 }
@@ -74,7 +79,12 @@ impl Section {
                 vec![[n[0], n[1], n[2], -s * at]]
             }
             // The plane n·x = n·origin − depth; behind it n·x is less.
-            Section::Face { origin, normal: n, depth, flip } => {
+            Section::Face {
+                origin,
+                normal: n,
+                depth,
+                flip,
+            } => {
                 let c = dot(n, origin) - depth;
                 let s = if flip { 1.0 } else { -1.0 };
                 vec![[s * n[0], s * n[1], s * n[2], -s * c]]
@@ -98,7 +108,12 @@ impl Section {
     /// side behind kept; `point` the point clicked, `normal` the face's (either way), `eye` where it is seen from and
     /// `bounds` the model's box. A face along an axis, leaning off it by less than half the gap across the model, makes
     /// that axis's plane (a level cut, a north–south or an east–west one); none for a face without a normal.
-    pub fn from_face(point: [f64; 3], normal: [f64; 3], eye: [f64; 3], bounds: &Aabb) -> Option<Section> {
+    pub fn from_face(
+        point: [f64; 3],
+        normal: [f64; 3],
+        eye: [f64; 3],
+        bounds: &Aabb,
+    ) -> Option<Section> {
         let l = length(normal);
         if !(l > 0.0 && l.is_finite()) {
             return None;
@@ -123,7 +138,12 @@ impl Section {
                 return Some(Section::Plane { cut, at, flip: !up });
             }
         }
-        Some(Section::Face { origin: point, normal: n, depth: -FACE_GAP, flip: false })
+        Some(Section::Face {
+            origin: point,
+            normal: n,
+            depth: -FACE_GAP,
+            flip: false,
+        })
     }
 
     /// A plane's place, as its card's slider gives it: a plane's along its axis, a face's depth.
@@ -153,10 +173,13 @@ impl Section {
         match *self {
             Section::Plane { cut, .. } => Some((bounds.min[cut.axis()], bounds.max[cut.axis()])),
             Section::Face { origin, normal, .. } => {
-                let (lo, hi) = corners(bounds).iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), c| {
-                    let d = dot(normal, sub(*c, origin));
-                    (lo.min(d), hi.max(d))
-                });
+                let (lo, hi) = corners(bounds).iter().fold(
+                    (f64::INFINITY, f64::NEG_INFINITY),
+                    |(lo, hi), c| {
+                        let d = dot(normal, sub(*c, origin));
+                        (lo.min(d), hi.max(d))
+                    },
+                );
                 Some((-hi, -lo))
             }
             Section::None | Section::Box(_) => None,
@@ -179,9 +202,17 @@ impl Section {
                 dir[k] = if flip { -1.0 } else { 1.0 };
                 vec![Handle { at: on, dir }]
             }
-            Section::Face { origin, normal, depth, flip } => {
+            Section::Face {
+                origin,
+                normal,
+                depth,
+                flip,
+            } => {
                 let off = dot(normal, sub(middle, origin)) + depth;
-                vec![Handle { at: sub(middle, scale(normal, off)), dir: if flip { scale(normal, -1.0) } else { normal } }]
+                vec![Handle {
+                    at: sub(middle, scale(normal, off)),
+                    dir: if flip { scale(normal, -1.0) } else { normal },
+                }]
             }
             Section::Box(b) => {
                 let centre = b.center();
@@ -235,7 +266,11 @@ impl Section {
 /// A box's eight corners.
 fn corners(b: &Aabb) -> [[f64; 3]; 8] {
     std::array::from_fn(|i| {
-        [if i & 1 == 0 { b.min[0] } else { b.max[0] }, if i & 2 == 0 { b.min[1] } else { b.max[1] }, if i & 4 == 0 { b.min[2] } else { b.max[2] }]
+        [
+            if i & 1 == 0 { b.min[0] } else { b.max[0] },
+            if i & 2 == 0 { b.min[1] } else { b.max[1] },
+            if i & 4 == 0 { b.min[2] } else { b.max[2] },
+        ]
     })
 }
 
@@ -286,7 +321,10 @@ pub fn kept(planes: &[[f64; 4]], o: [f64; 3], d: [f64; 3]) -> Option<(f64, f64)>
 /// faces are not cut (a view's choice, not a measure).
 pub fn about(b: &Aabb) -> Aabb {
     let m = b.diagonal() / 20.0;
-    Aabb { min: [b.min[0] - m, b.min[1] - m, b.min[2] - m], max: [b.max[0] + m, b.max[1] + m, b.max[2] + m] }
+    Aabb {
+        min: [b.min[0] - m, b.min[1] - m, b.min[2] - m],
+        max: [b.max[0] + m, b.max[1] + m, b.max[2] + m],
+    }
 }
 
 #[cfg(test)]
@@ -294,44 +332,93 @@ mod tests {
     use super::*;
 
     fn keeps(planes: &[[f64; 4]], p: [f64; 3]) -> bool {
-        planes.iter().all(|q| q[0] * p[0] + q[1] * p[1] + q[2] * p[2] + q[3] >= 0.0)
+        planes
+            .iter()
+            .all(|q| q[0] * p[0] + q[1] * p[1] + q[2] * p[2] + q[3] >= 0.0)
     }
 
     #[test]
     fn a_level_cut_keeps_what_is_below_it_and_flipped_what_is_above() {
-        let below = Section::Plane { cut: Cut::Level, at: 3.0, flip: false }.planes();
+        let below = Section::Plane {
+            cut: Cut::Level,
+            at: 3.0,
+            flip: false,
+        }
+        .planes();
         assert!(keeps(&below, [0.0, 0.0, 2.9]) && !keeps(&below, [0.0, 0.0, 3.1]));
-        let above = Section::Plane { cut: Cut::Level, at: 3.0, flip: true }.planes();
+        let above = Section::Plane {
+            cut: Cut::Level,
+            at: 3.0,
+            flip: true,
+        }
+        .planes();
         assert!(!keeps(&above, [0.0, 0.0, 2.9]) && keeps(&above, [0.0, 0.0, 3.1]));
-        let west = Section::Plane { cut: Cut::NorthSouth, at: 10.0, flip: false }.planes();
+        let west = Section::Plane {
+            cut: Cut::NorthSouth,
+            at: 10.0,
+            flip: false,
+        }
+        .planes();
         assert!(keeps(&west, [9.0, 50.0, 0.0]) && !keeps(&west, [11.0, 50.0, 0.0]));
-        let south = Section::Plane { cut: Cut::EastWest, at: -4.0, flip: false }.planes();
+        let south = Section::Plane {
+            cut: Cut::EastWest,
+            at: -4.0,
+            flip: false,
+        }
+        .planes();
         assert!(keeps(&south, [100.0, -5.0, 0.0]) && !keeps(&south, [100.0, -3.0, 0.0]));
     }
 
     #[test]
     fn a_box_keeps_its_inside_and_a_ray_s_kept_part_is_inside_it() {
-        let b = Aabb { min: [0.0, 0.0, 0.0], max: [10.0, 4.0, 3.0] };
+        let b = Aabb {
+            min: [0.0, 0.0, 0.0],
+            max: [10.0, 4.0, 3.0],
+        };
         let planes = Section::Box(b).planes();
         assert_eq!(planes.len(), 6);
-        assert!(keeps(&planes, [5.0, 2.0, 1.0]) && !keeps(&planes, [11.0, 2.0, 1.0]) && !keeps(&planes, [5.0, 2.0, -0.1]));
+        assert!(
+            keeps(&planes, [5.0, 2.0, 1.0])
+                && !keeps(&planes, [11.0, 2.0, 1.0])
+                && !keeps(&planes, [5.0, 2.0, -0.1])
+        );
         // Along east from x = −5: inside from 5 to 15.
         let (t0, t1) = kept(&planes, [-5.0, 2.0, 1.0], [1.0, 0.0, 0.0]).expect("it passes through");
         assert!((t0 - 5.0).abs() < 1e-12 && (t1 - 15.0).abs() < 1e-12);
-        assert_eq!(kept(&planes, [-5.0, 9.0, 1.0], [1.0, 0.0, 0.0]), None, "it passes beside the box");
-        assert_eq!(kept(&[], [0.0; 3], [1.0, 0.0, 0.0]), Some((0.0, f64::INFINITY)));
+        assert_eq!(
+            kept(&planes, [-5.0, 9.0, 1.0], [1.0, 0.0, 0.0]),
+            None,
+            "it passes beside the box"
+        );
+        assert_eq!(
+            kept(&[], [0.0; 3], [1.0, 0.0, 0.0]),
+            Some((0.0, f64::INFINITY))
+        );
         let a = about(&b);
         assert!(a.min[0] < 0.0 && a.max[2] > 3.0);
     }
 
     #[test]
     fn a_plane_in_the_shown_space_cuts_where_the_source_s_did() {
-        let ex = Exaggeration { factor: 3.0, datum: 100.0 };
-        let p = Section::Plane { cut: Cut::Level, at: 104.0, flip: false }.planes()[0];
+        let ex = Exaggeration {
+            factor: 3.0,
+            datum: 100.0,
+        };
+        let p = Section::Plane {
+            cut: Cut::Level,
+            at: 104.0,
+            flip: false,
+        }
+        .planes()[0];
         let s = shown(p, &ex);
         // 104 is shown at 112; the shown plane keeps 111.9, not 112.1.
         assert!(keeps(&[s], [0.0, 0.0, 111.9]) && !keeps(&[s], [0.0, 0.0, 112.1]));
-        let v = Section::Plane { cut: Cut::NorthSouth, at: 5.0, flip: true }.planes()[0];
+        let v = Section::Plane {
+            cut: Cut::NorthSouth,
+            at: 5.0,
+            flip: true,
+        }
+        .planes()[0];
         assert_eq!(shown(v, &ex), v, "a vertical plane is the same shown");
     }
 
@@ -342,26 +429,83 @@ mod tests {
     /// makes none.
     #[test]
     fn a_click_on_a_face_makes_a_plane_parallel_to_it_a_hair_in_front() {
-        let model = Aabb { min: [0.0, 0.0, 0.0], max: [20.0, 20.0, 9.0] };
-        let top = Section::from_face([4.0, 4.0, 3.0], [0.0, 0.0, -1.0], [4.0, 4.0, 50.0], &model).expect("a plane");
-        assert_eq!(top, Section::Plane { cut: Cut::Level, at: 3.0 + FACE_GAP, flip: false });
-        let west = Section::from_face([0.0, 7.0, 1.0], [1.0, 0.0, 0.0], [-30.0, 7.0, 1.0], &model).expect("a plane");
-        assert_eq!(west, Section::Plane { cut: Cut::NorthSouth, at: -FACE_GAP, flip: true });
+        let model = Aabb {
+            min: [0.0, 0.0, 0.0],
+            max: [20.0, 20.0, 9.0],
+        };
+        let top = Section::from_face([4.0, 4.0, 3.0], [0.0, 0.0, -1.0], [4.0, 4.0, 50.0], &model)
+            .expect("a plane");
+        assert_eq!(
+            top,
+            Section::Plane {
+                cut: Cut::Level,
+                at: 3.0 + FACE_GAP,
+                flip: false
+            }
+        );
+        let west = Section::from_face([0.0, 7.0, 1.0], [1.0, 0.0, 0.0], [-30.0, 7.0, 1.0], &model)
+            .expect("a plane");
+        assert_eq!(
+            west,
+            Section::Plane {
+                cut: Cut::NorthSouth,
+                at: -FACE_GAP,
+                flip: true
+            }
+        );
         let p = west.planes();
-        assert!(keeps(&p, [0.0, 7.0, 1.0]) && keeps(&p, [3.0, 7.0, 1.0]) && !keeps(&p, [-0.01, 7.0, 1.0]));
+        assert!(
+            keeps(&p, [0.0, 7.0, 1.0])
+                && keeps(&p, [3.0, 7.0, 1.0])
+                && !keeps(&p, [-0.01, 7.0, 1.0])
+        );
         let r = std::f64::consts::FRAC_1_SQRT_2;
-        let turned = Section::from_face([10.0, 10.0, 2.0], [-r, -r, 0.0], [40.0, 40.0, 10.0], &model).expect("a plane");
-        let Section::Face { normal, depth, flip, .. } = turned else { panic!("a face's plane: {turned:?}") };
-        assert!((normal[0] - r).abs() < 1e-12 && (normal[1] - r).abs() < 1e-12 && depth == -FACE_GAP && !flip);
+        let turned =
+            Section::from_face([10.0, 10.0, 2.0], [-r, -r, 0.0], [40.0, 40.0, 10.0], &model)
+                .expect("a plane");
+        let Section::Face {
+            normal,
+            depth,
+            flip,
+            ..
+        } = turned
+        else {
+            panic!("a face's plane: {turned:?}")
+        };
+        assert!(
+            (normal[0] - r).abs() < 1e-12
+                && (normal[1] - r).abs() < 1e-12
+                && depth == -FACE_GAP
+                && !flip
+        );
         let p = turned.planes();
-        assert!(keeps(&p, [10.0, 10.0, 2.0]) && keeps(&p, [9.0, 9.0, 0.0]) && !keeps(&p, [10.01, 10.01, 2.0]));
+        assert!(
+            keeps(&p, [10.0, 10.0, 2.0])
+                && keeps(&p, [9.0, 9.0, 0.0])
+                && !keeps(&p, [10.01, 10.01, 2.0])
+        );
         let lean = |a: f64| [a.sin(), 0.0, a.cos()];
         let nearly = Section::from_face([1.0, 1.0, 3.0], lean(1e-6), [1.0, 1.0, 50.0], &model);
-        assert!(matches!(nearly, Some(Section::Plane { cut: Cut::Level, .. })), "{nearly:?}");
+        assert!(
+            matches!(
+                nearly,
+                Some(Section::Plane {
+                    cut: Cut::Level,
+                    ..
+                })
+            ),
+            "{nearly:?}"
+        );
         let leaning = Section::from_face([1.0, 1.0, 3.0], lean(1e-3), [1.0, 1.0, 50.0], &model);
         assert!(matches!(leaning, Some(Section::Face { .. })), "{leaning:?}");
-        assert_eq!(Section::from_face([0.0; 3], [0.0; 3], [1.0; 3], &model), None);
-        assert_eq!(normal_of([0.0; 3], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]), Some([0.0, 0.0, 1.0]));
+        assert_eq!(
+            Section::from_face([0.0; 3], [0.0; 3], [1.0; 3], &model),
+            None
+        );
+        assert_eq!(
+            normal_of([0.0; 3], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
+            Some([0.0, 0.0, 1.0])
+        );
         assert_eq!(normal_of([0.0; 3], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0]), None);
     }
 
@@ -369,9 +513,13 @@ mod tests {
     /// handle pointing to the viewer's side; flipped, the other side is kept and the handle points away.
     #[test]
     fn a_face_s_plane_moves_along_its_normal_within_the_model_and_flips() {
-        let model = Aabb { min: [0.0, 0.0, 0.0], max: [10.0, 10.0, 3.0] };
+        let model = Aabb {
+            min: [0.0, 0.0, 0.0],
+            max: [10.0, 10.0, 3.0],
+        };
         let r = std::f64::consts::FRAC_1_SQRT_2;
-        let mut s = Section::from_face([5.0, 5.0, 1.0], [r, r, 0.0], [30.0, 30.0, 5.0], &model).expect("a plane");
+        let mut s = Section::from_face([5.0, 5.0, 1.0], [r, r, 0.0], [30.0, 30.0, 5.0], &model)
+            .expect("a plane");
         // Corners from (0, 0) to (10, 10): n·(c − origin) from −5√2 to 5√2.
         let (lo, hi) = s.range(&model).expect("a range");
         assert!((lo + 5.0 * 2f64.sqrt()).abs() < 1e-12 && (hi - 5.0 * 2f64.sqrt()).abs() < 1e-12);
@@ -379,7 +527,9 @@ mod tests {
         assert_eq!(h.len(), 1);
         assert!((h[0].dir[0] - r).abs() < 1e-12, "towards the viewer");
         // The model's middle (5, 5, 1.5) is on the face's line: the handle stands a gap in front of it.
-        assert!((h[0].at[0] - (5.0 + FACE_GAP * r)).abs() < 1e-9 && (h[0].at[2] - 1.5).abs() < 1e-12);
+        assert!(
+            (h[0].at[0] - (5.0 + FACE_GAP * r)).abs() < 1e-9 && (h[0].at[2] - 1.5).abs() < 1e-12
+        );
         // Two metres back along its arrow: two metres deeper, then no deeper than the far corner.
         s.moved(0, -2.0, &model);
         assert!((s.place().expect("a place") - (2.0 - FACE_GAP)).abs() < 1e-12);
@@ -388,13 +538,24 @@ mod tests {
         s.moved(0, -100.0, &model);
         assert!((s.place().expect("a place") - hi).abs() < 1e-12);
         s.set_place(0.5);
-        let Section::Face { flip, .. } = &mut s else { panic!("a face's plane") };
+        let Section::Face { flip, .. } = &mut s else {
+            panic!("a face's plane")
+        };
         *flip = true;
         let p = s.planes();
-        assert!(!keeps(&p, [3.0, 3.0, 1.0]) && keeps(&p, [5.0, 5.0, 1.0]), "flipped: the viewer's side kept");
-        assert!((s.handles(&model)[0].dir[0] + r).abs() < 1e-12, "flipped: pointing away");
+        assert!(
+            !keeps(&p, [3.0, 3.0, 1.0]) && keeps(&p, [5.0, 5.0, 1.0]),
+            "flipped: the viewer's side kept"
+        );
+        assert!(
+            (s.handles(&model)[0].dir[0] + r).abs() < 1e-12,
+            "flipped: pointing away"
+        );
         s.moved(0, 1.0, &model);
-        assert!((s.place().expect("a place") - 1.5).abs() < 1e-12, "flipped, along its arrow it goes deeper");
+        assert!(
+            (s.place().expect("a place") - 1.5).abs() < 1e-12,
+            "flipped, along its arrow it goes deeper"
+        );
     }
 
     /// A level cut's handle stands at the model's middle on the plane, pointing up (what it cuts away), and moves the
@@ -402,27 +563,68 @@ mod tests {
     /// thinner than a centimetre.
     #[test]
     fn handles_stand_on_the_plane_or_the_box_s_faces_and_move_them() {
-        let model = Aabb { min: [0.0, 0.0, 0.0], max: [10.0, 4.0, 6.0] };
-        let mut level = Section::Plane { cut: Cut::Level, at: 2.0, flip: false };
-        assert_eq!(level.handles(&model), vec![Handle { at: [5.0, 2.0, 2.0], dir: [0.0, 0.0, 1.0] }]);
+        let model = Aabb {
+            min: [0.0, 0.0, 0.0],
+            max: [10.0, 4.0, 6.0],
+        };
+        let mut level = Section::Plane {
+            cut: Cut::Level,
+            at: 2.0,
+            flip: false,
+        };
+        assert_eq!(
+            level.handles(&model),
+            vec![Handle {
+                at: [5.0, 2.0, 2.0],
+                dir: [0.0, 0.0, 1.0]
+            }]
+        );
         level.moved(0, 1.5, &model);
         assert_eq!(level.place(), Some(3.5));
         level.moved(0, 10.0, &model);
         assert_eq!(level.place(), Some(6.0), "within the model");
-        let mut above = Section::Plane { cut: Cut::Level, at: 2.0, flip: true };
+        let mut above = Section::Plane {
+            cut: Cut::Level,
+            at: 2.0,
+            flip: true,
+        };
         assert_eq!(above.handles(&model)[0].dir, [0.0, 0.0, -1.0]);
         above.moved(0, 0.5, &model);
-        assert_eq!(above.place(), Some(1.5), "flipped, along its arrow it goes down");
-        let mut b = Section::Box(Aabb { min: [1.0, 1.0, 0.0], max: [3.0, 2.0, 3.0] });
+        assert_eq!(
+            above.place(),
+            Some(1.5),
+            "flipped, along its arrow it goes down"
+        );
+        let mut b = Section::Box(Aabb {
+            min: [1.0, 1.0, 0.0],
+            max: [3.0, 2.0, 3.0],
+        });
         let h = b.handles(&model);
         assert_eq!(h.len(), 6);
-        assert_eq!(h[0], Handle { at: [1.0, 1.5, 1.5], dir: [-1.0, 0.0, 0.0] });
-        assert_eq!(h[5], Handle { at: [2.0, 1.5, 3.0], dir: [0.0, 0.0, 1.0] });
+        assert_eq!(
+            h[0],
+            Handle {
+                at: [1.0, 1.5, 1.5],
+                dir: [-1.0, 0.0, 0.0]
+            }
+        );
+        assert_eq!(
+            h[5],
+            Handle {
+                at: [2.0, 1.5, 3.0],
+                dir: [0.0, 0.0, 1.0]
+            }
+        );
         b.moved(1, 2.0, &model);
         b.moved(0, -5.0, &model);
-        let Section::Box(after) = b else { panic!("a box") };
+        let Section::Box(after) = b else {
+            panic!("a box")
+        };
         assert_eq!(after.max[0], 5.0);
-        assert!((after.min[0] - (5.0 - THINNEST_BOX)).abs() < 1e-12, "no thinner than a centimetre");
+        assert!(
+            (after.min[0] - (5.0 - THINNEST_BOX)).abs() < 1e-12,
+            "no thinner than a centimetre"
+        );
         assert!(Section::None.handles(&model).is_empty() && level.handles(&Aabb::EMPTY).is_empty());
     }
 }

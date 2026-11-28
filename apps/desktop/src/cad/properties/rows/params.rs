@@ -168,12 +168,25 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
     // Display order is explicit metadata; evaluation still uses d.parameters unchanged.
     let parameters: std::collections::HashMap<_, _> = if d.parameter_groups.is_empty() {
         std::collections::HashMap::new()
-    } else { d.parameters.iter().map(|p| (p.name(), p)).collect() };
-    let membership: std::collections::HashMap<_, _> = d.parameter_groups.iter().enumerate()
-        .flat_map(|(i, g)| g.parameters.iter().map(move |name| (name.as_str(), i))).collect();
-    let ordered = d.parameter_groups.iter().flat_map(|g| g.parameters.iter())
+    } else {
+        d.parameters.iter().map(|p| (p.name(), p)).collect()
+    };
+    let membership: std::collections::HashMap<_, _> = d
+        .parameter_groups
+        .iter()
+        .enumerate()
+        .flat_map(|(i, g)| g.parameters.iter().map(move |name| (name.as_str(), i)))
+        .collect();
+    let ordered = d
+        .parameter_groups
+        .iter()
+        .flat_map(|g| g.parameters.iter())
         .filter_map(|name| parameters.get(name.as_str()).copied())
-        .chain(d.parameters.iter().filter(|p| !membership.contains_key(p.name())));
+        .chain(
+            d.parameters
+                .iter()
+                .filter(|p| !membership.contains_key(p.name())),
+        );
     for p in ordered {
         let out = match membership.get(p.name()) {
             Some(&index) => &mut custom[index],
@@ -236,9 +249,18 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
                 .rule()
                 .and_then(|r| r.expression.as_deref())
                 .unwrap_or_default();
-            out.push(Row::note(&format!("{}Hesaplanan · {expression}", if d.is_type_parameter(name) { "Tip değeri · " } else { "" })));
+            out.push(Row::note(&format!(
+                "{}Hesaplanan · {expression}",
+                if d.is_type_parameter(name) {
+                    "Tip değeri · "
+                } else {
+                    ""
+                }
+            )));
         } else {
-            let source = if d.is_type_parameter(name) { "Tip değeri · bütün kullanımlarda ortak" } else if matches!(p, BlockParameter::Lookup { .. }) {
+            let source = if d.is_type_parameter(name) {
+                "Tip değeri · bütün kullanımlarda ortak"
+            } else if matches!(p, BlockParameter::Lookup { .. }) {
                 if value.is_some() {
                     "Eşleşen katalog satırı"
                 } else {
@@ -284,8 +306,11 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
     }
     reset_items.push(Choice::Separator);
     reset_items.push(Choice::Action {
-        label: "Tip değerleri…", icon: "blockCard",
-        message: Some(Message::BlocksPanel(crate::blocks_panel::Event::TypeValues(block.id))),
+        label: "Tip değerleri…",
+        icon: "blockCard",
+        message: Some(Message::BlocksPanel(
+            crate::blocks_panel::Event::TypeValues(block.id),
+        )),
     });
     let reset = Editor::Select {
         text: said.clone(),
@@ -338,7 +363,11 @@ pub(super) fn sections(doc: &Document, slot: Slot, i: &InsertEntity, locked: boo
         if !rows.is_empty() {
             sections.push(Section {
                 id: id.into(),
-                title: if d.parameter_groups.is_empty() { title.into() } else { format!("{title} · Otomatik").into() },
+                title: if d.parameter_groups.is_empty() {
+                    title.into()
+                } else {
+                    format!("{title} · Otomatik").into()
+                },
                 rows,
             });
         }

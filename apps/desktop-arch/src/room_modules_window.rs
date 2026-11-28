@@ -18,6 +18,7 @@
 //! Hedefte aynısı olanı da kopyala is on, the plan saying how many are there already (docs/adr/0810).
 
 use crate::arch;
+use crate::arch::ArchState;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -28,7 +29,6 @@ use kentos_interaction::Level;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::{Choice, Select};
 use kentos_ui::{label, style};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -186,16 +186,13 @@ pub(crate) trait RoomModulesWindowApp {
     fn room_modules_new<'a>(&self, w: &'a Window) -> Element<'a, Message>;
     fn room_module_selection_words(&self) -> String;
     fn room_modules_details<'a>(&'a self, w: &'a Window) -> Element<'a, Message>;
-    fn room_modules_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>;
+    fn room_modules_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
     fn room_modules_repeat_view<'a>(&self, w: &'a Window) -> Element<'a, Message>;
     fn room_module_selection_action(&mut self, restore: bool);
 }
 
 impl RoomModulesWindowApp for App {
-    fn room_modules_rows(&self) -> Vec<ModuleRow>{
+    fn room_modules_rows(&self) -> Vec<ModuleRow> {
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
@@ -206,26 +203,29 @@ impl RoomModulesWindowApp for App {
         }
     }
 
-    fn room_modules_read(&mut self, keep: Option<String>){
+    fn room_modules_read(&mut self, keep: Option<String>) {
         let rows = self.room_modules_rows();
         let chosen = keep
             .and_then(|id| rows.iter().position(|r| r.id == id))
             .unwrap_or(0);
         let name = self
-            .modules.arch()
+            .modules
+            .arch()
             .room_modules
             .as_ref()
             .map(|w| w.name.clone())
             .unwrap_or_default();
         // The part the window shows stays as it is read again (after a write).
         let part = self
-            .modules.arch()
+            .modules
+            .arch()
             .room_modules
             .as_ref()
             .map(|w| w.part)
             .unwrap_or_default();
         let (repeat_from, repeat_to, repeat_loose, repeat_again) = self
-            .modules.arch()
+            .modules
+            .arch()
             .room_modules
             .as_ref()
             .map(|w| {
@@ -257,7 +257,7 @@ impl RoomModulesWindowApp for App {
 
     /// The project's levels for Katları tekrarla: the source the first level with a linked instance (else the first),
     /// the others its targets, their choices and prefixes kept.
-    fn room_modules_levels(&mut self){
+    fn room_modules_levels(&mut self) {
         let levels: Vec<(String, String)> = self
             .document
             .as_ref()
@@ -307,7 +307,7 @@ impl RoomModulesWindowApp for App {
     }
 
     /// The input Katları tekrarla writes; none without a chosen level.
-    fn room_modules_repeat_input(&self) -> Option<ModulesOperation>{
+    fn room_modules_repeat_input(&self) -> Option<ModulesOperation> {
         let w = self.modules.arch().room_modules.as_ref()?;
         let from = w.repeat_from.clone()?;
         let to: Vec<ModuleLevelTarget> = w
@@ -334,7 +334,7 @@ impl RoomModulesWindowApp for App {
     }
 
     /// The plan of Katları tekrarla.
-    fn room_modules_repeat_preview(&mut self){
+    fn room_modules_repeat_preview(&mut self) {
         let preview = match (self.room_modules_repeat_input(), self.document.as_ref()) {
             (Some(operation), Some(doc)) => Some(
                 match kentos_native_application::modules_edit::plan_in(
@@ -359,25 +359,28 @@ impl RoomModulesWindowApp for App {
     }
 
     /// Oda modülleri (`arch.modules`): the window, on the module of a selected object when it is in one.
-    fn open_room_modules(&mut self){
+    fn open_room_modules(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
         }
         let keep = self.selected_module().map(|(m, _)| m);
         self.room_modules_read(keep);
-        if let (Some((_, inst)), Some(w)) =
-            (self.selected_module(), self.modules.arch_mut().room_modules.as_mut())
-            && let Some(row) = w.rows.get(w.chosen)
+        if let (Some((_, inst)), Some(w)) = (
+            self.selected_module(),
+            self.modules.arch_mut().room_modules.as_mut(),
+        ) && let Some(row) = w.rows.get(w.chosen)
         {
             w.instance = row.instances.iter().position(|i| i.id == inst).unwrap_or(0);
         }
         self.room_modules_preview();
-        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::RoomModules));
+        self.dialog = Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::RoomModules,
+        ));
     }
 
     /// The module and instance the first selected object is in.
-    fn selected_module(&self) -> Option<(String, String)>{
+    fn selected_module(&self) -> Option<(String, String)> {
         let doc = self.document.as_ref()?;
         let arch = doc.model.settings().arch.as_ref()?;
         self.selection.ids().iter().find_map(|s| {
@@ -391,7 +394,7 @@ impl RoomModulesWindowApp for App {
         })
     }
 
-    fn room_modules_chosen(&self) -> Option<(String, Option<String>)>{
+    fn room_modules_chosen(&self) -> Option<(String, Option<String>)> {
         let w = self.modules.arch().room_modules.as_ref()?;
         let row = w.rows.get(w.chosen)?;
         Some((
@@ -401,7 +404,7 @@ impl RoomModulesWindowApp for App {
     }
 
     /// The plan of Kaynağı güncelle from the chosen instance.
-    fn room_modules_preview(&mut self){
+    fn room_modules_preview(&mut self) {
         let preview = match (self.room_modules_chosen(), self.document.as_ref()) {
             (Some((module, Some(from))), Some(doc)) => {
                 let input = ModulesEdit {
@@ -433,7 +436,7 @@ impl RoomModulesWindowApp for App {
         self.room_modules_repeat_preview();
     }
 
-    fn room_modules_command(&mut self, operation: ModulesOperation) -> Option<ModulesEdited>{
+    fn room_modules_command(&mut self, operation: ModulesOperation) -> Option<ModulesEdited> {
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::modules_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -460,7 +463,7 @@ impl RoomModulesWindowApp for App {
     }
 
     /// The selection's objects and the lower left corner of their walls (else of the first point found).
-    fn room_module_selection(&self) -> (Vec<String>, Vec2){
+    fn room_module_selection(&self) -> (Vec<String>, Vec2) {
         let Some(doc) = self.document.as_ref() else {
             return (Vec::new(), Vec2 { x: 0.0, y: 0.0 });
         };
@@ -505,7 +508,7 @@ impl RoomModulesWindowApp for App {
     }
 
     /// The selection's objects in no module, and those in an instance of `module`.
-    fn room_module_split(&self, module: &str) -> (Vec<String>, Vec<String>){
+    fn room_module_split(&self, module: &str) -> (Vec<String>, Vec<String>) {
         let Some(doc) = self.document.as_ref() else {
             return (Vec::new(), Vec::new());
         };
@@ -531,7 +534,7 @@ impl RoomModulesWindowApp for App {
 
     /// Seçimi örneğe ekle: the selection's free objects join the instance of the selection's members (or the window's
     /// chosen instance).
-    fn room_module_add_selection(&mut self, chosen: Option<(String, String)>){
+    fn room_module_add_selection(&mut self, chosen: Option<(String, String)>) {
         let Some((module, instance)) = chosen.or_else(|| self.selected_module()) else {
             self.warn("Seçimde bir modül örneğinin nesnesi yok: eklenecek nesnelerle birlikte örneğin bir nesnesini de seçin.");
             return;
@@ -558,7 +561,7 @@ impl RoomModulesWindowApp for App {
     }
 
     /// Seçimi modülden çıkar: the selection's members leave the definition; the other instances' copies go.
-    fn room_module_remove_selection(&mut self, module: Option<String>){
+    fn room_module_remove_selection(&mut self, module: Option<String>) {
         let Some(module) = module.or_else(|| self.selected_module().map(|(m, _)| m)) else {
             self.warn("Seçimde bir modül örneğinin nesnesi yok.");
             return;
@@ -585,7 +588,7 @@ impl RoomModulesWindowApp for App {
         }
     }
 
-    fn room_modules_event(&mut self, event: Event) -> Task<Message>{
+    fn room_modules_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Part(p) => {
                 if let Some(w) = self.modules.arch_mut().room_modules.as_mut() {
@@ -612,7 +615,8 @@ impl RoomModulesWindowApp for App {
             }
             Event::Define => {
                 let name = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .room_modules
                     .as_ref()
                     .map(|w| w.name.trim().to_owned())
@@ -719,7 +723,9 @@ impl RoomModulesWindowApp for App {
                     .and_then(|d| d.model.settings().arch.as_ref())
                     .map(|a| a.levels.iter().map(|l| l.id.clone()).collect())
                     .unwrap_or_default();
-                if let (Some(w), Some(l)) = (self.modules.arch_mut().room_modules.as_mut(), levels.get(i)) {
+                if let (Some(w), Some(l)) =
+                    (self.modules.arch_mut().room_modules.as_mut(), levels.get(i))
+                {
                     w.repeat_from = Some(l.clone());
                 }
                 self.room_modules_levels();
@@ -727,7 +733,8 @@ impl RoomModulesWindowApp for App {
             }
             Event::RepeatChoose(i, on) => {
                 if let Some(t) = self
-                    .modules.arch_mut()
+                    .modules
+                    .arch_mut()
                     .room_modules
                     .as_mut()
                     .and_then(|w| w.repeat_to.get_mut(i))
@@ -738,7 +745,8 @@ impl RoomModulesWindowApp for App {
             }
             Event::RepeatPrefix(i, text) => {
                 if let Some(t) = self
-                    .modules.arch_mut()
+                    .modules
+                    .arch_mut()
                     .room_modules
                     .as_mut()
                     .and_then(|w| w.repeat_to.get_mut(i))
@@ -806,7 +814,7 @@ impl RoomModulesWindowApp for App {
     /// The window (docs/adr/8050 §6): Modüller's list and the chosen module's details side by side (the list/details
     /// pattern, `kentos_ui::widget::ListDetails`), each module's and each instance's actions beside what
     /// they act on; Katları tekrarla in a part of its own. The footer keeps the window's own: Çizimden seç and Kapat.
-    fn room_modules_view(&self) -> Element<'_, Message>{
+    fn room_modules_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().room_modules else {
             return iced::widget::text("").into();
         };
@@ -836,7 +844,7 @@ impl RoomModulesWindowApp for App {
     }
 
     /// The project's modules: each one's name and how many instances it has.
-    fn room_modules_list<'a>(&self, w: &'a Window) -> Element<'a, Message>{
+    fn room_modules_list<'a>(&self, w: &'a Window) -> Element<'a, Message> {
         use kentos_ui::widget::table::{Column as Col, Row, Table};
         let mut table = Table::new([
             Col::new("Modül").width(Fill),
@@ -864,7 +872,7 @@ impl RoomModulesWindowApp for App {
     }
 
     /// Seçimden yeni modül, under the list: its name and the button beside it.
-    fn room_modules_new<'a>(&self, w: &'a Window) -> Element<'a, Message>{
+    fn room_modules_new<'a>(&self, w: &'a Window) -> Element<'a, Message> {
         let name = kentos_ui::widget::text_field("Yeni modülün adı", &w.name)
             .on_input(|t| msg(Event::Name(t)));
         Column::new()
@@ -884,7 +892,7 @@ impl RoomModulesWindowApp for App {
 
     /// What Seçimden tanımla would take from the current selection: that one is needed, how many objects it holds, and
     /// which of them a module cannot take (the definition is refused whole while any is selected).
-    fn room_module_selection_words(&self) -> String{
+    fn room_module_selection_words(&self) -> String {
         let ids = self.selection.ids();
         let Some(doc) = self.document.as_ref().filter(|_| !ids.is_empty()) else {
             return "Önce çizimde odanın nesnelerini seçin.".into();
@@ -928,7 +936,7 @@ impl RoomModulesWindowApp for App {
 
     /// The chosen module's details: what it is (name and values), its own actions, its instances in a table, and the
     /// chosen instance's state and actions.
-    fn room_modules_details<'a>(&'a self, w: &'a Window) -> Element<'a, Message>{
+    fn room_modules_details<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         use kentos_ui::widget::table::{Column as Col, Row, Table};
         let Some(m) = w.rows.get(w.chosen) else {
             // No module yet: what one is and how to make the first (DESIGN.md §7.5: no empty pane without a way on).
@@ -1103,10 +1111,7 @@ impl RoomModulesWindowApp for App {
             .into()
     }
 
-    fn room_modules_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>{
+    fn room_modules_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().room_modules.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
@@ -1124,7 +1129,7 @@ impl RoomModulesWindowApp for App {
     }
 
     /// Katları tekrarla: the source level, the target levels with their prefixes, the plan's words, the button.
-    fn room_modules_repeat_view<'a>(&self, w: &'a Window) -> Element<'a, Message>{
+    fn room_modules_repeat_view<'a>(&self, w: &'a Window) -> Element<'a, Message> {
         let levels: Vec<(String, String)> = self
             .document
             .as_ref()
@@ -1187,10 +1192,7 @@ impl RoomModulesWindowApp for App {
                     done.created.len() - done.copied.len()
                 );
                 if w.repeat_loose {
-                    said += &format!(
-                        " {} modülsüz nesne düz kopya olur",
-                        done.copied.len()
-                    );
+                    said += &format!(" {} modülsüz nesne düz kopya olur", done.copied.len());
                     said += &if done.report.left.is_empty() {
                         ".".to_owned()
                     } else {
@@ -1236,7 +1238,8 @@ impl RoomModulesWindowApp for App {
             .push(words::check(
                 w.repeat_again,
                 "Hedefte aynısı olanı da kopyala",
-                w.repeat_loose.then(|| msg(Event::RepeatAgain(!w.repeat_again))),
+                w.repeat_loose
+                    .then(|| msg(Event::RepeatAgain(!w.repeat_again))),
             ))
             .push(words::summary(vec![summary]))
             .push(words::primary(REPEAT, can.then(|| msg(Event::Repeat))));
@@ -1250,7 +1253,7 @@ impl RoomModulesWindowApp for App {
     }
 
     /// Yerel istisna yap and Kaynağa döndür on the selection's objects, through `cad.modules.edit`.
-    fn room_module_selection_action(&mut self, restore: bool){
+    fn room_module_selection_action(&mut self, restore: bool) {
         let Some((module, _)) = self.selected_module() else {
             self.warn("Seçimde bir modül örneğinin nesnesi yok.");
             return;

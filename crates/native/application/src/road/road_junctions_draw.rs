@@ -4,8 +4,8 @@
 //! `fixtures/commands/v1/road.junctions.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, JunctionKind, JunctionsDraw,
-    JunctionsDrawn, NewObject, TextAlign, TextFace, Vec2,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, JunctionKind,
+    JunctionsDraw, JunctionsDrawn, NewObject, TextAlign, TextFace, Vec2,
 };
 use kentos_domain::Document;
 
@@ -41,14 +41,21 @@ fn object(geometry: EntityGeometry) -> NewObject {
     }
 }
 
-fn check(doc: &Document, input: &JunctionsDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
+fn check(
+    doc: &Document,
+    input: &JunctionsDraw,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_junctions(), &input.junction, "junction")?;
     if def.kind == JunctionKind::Separated {
         return Err(fail(
             codes::INVALID_JUNCTION,
-            format!("“{}” katlı bir kavşak; kolları birleşmez, dönüş yayı yok.", def.name),
+            format!(
+                "“{}” katlı bir kavşak; kolları birleşmez, dönüş yayı yok.",
+                def.name
+            ),
             "junction",
         ));
     }
@@ -60,7 +67,16 @@ fn check(doc: &Document, input: &JunctionsDraw, told: &dyn Fn(u64, u64) -> bool)
         .iter()
         .map(|q| {
             object(EntityGeometry::Polyline {
-                pts: vec![Vec2 { x: q.on_a.x, y: q.on_a.y }, Vec2 { x: q.on_b.x, y: q.on_b.y }],
+                pts: vec![
+                    Vec2 {
+                        x: q.on_a.x,
+                        y: q.on_a.y,
+                    },
+                    Vec2 {
+                        x: q.on_b.x,
+                        y: q.on_b.y,
+                    },
+                ],
                 bulges: Some(vec![(q.sweep.to_radians() / 4.0).tan(), 0.0]),
                 zs: None,
                 ms: None,
@@ -89,10 +105,18 @@ fn check(doc: &Document, input: &JunctionsDraw, told: &dyn Fn(u64, u64) -> bool)
             path: None,
         }));
     }
-    Ok(Checked { id: def.id.clone(), objects, warnings })
+    Ok(Checked {
+        id: def.id.clone(),
+        objects,
+        warnings,
+    })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &JunctionsDraw, c: Checked) -> CommandResult<JunctionsDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &JunctionsDraw,
+    c: Checked,
+) -> CommandResult<JunctionsDrawn> {
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects: c.objects,
@@ -104,7 +128,11 @@ fn write(cx: &mut ExecutionContext<'_>, input: &JunctionsDraw, c: Checked) -> Co
         other => return crate::trim::relay(other),
     };
     CommandResult::Completed {
-        output: JunctionsDrawn { junction: c.id, uids: created.created, revision: cx.doc.revision().to_string() },
+        output: JunctionsDrawn {
+            junction: c.id,
+            uids: created.created,
+            revision: cx.doc.revision().to_string(),
+        },
         warnings: c.warnings,
     }
 }
@@ -112,7 +140,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &JunctionsDraw, c: Checked) -> Co
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &JunctionsDraw) -> CommandResult<()> {
     match check(cx.doc, input, &cx.stop_only()) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -135,7 +166,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &JunctionsDraw) -> CommandResult<J
 /// Draws the returns: one undo step.
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::JunctionsDraw) -> CommandResult<kentos_commands::JunctionsDrawn> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &kentos_commands::JunctionsDraw,
+) -> CommandResult<kentos_commands::JunctionsDrawn> {
     let checked = check(cx.doc, input, &cx.told());
     match checked {
         Ok(c) => write(cx, input, c),
@@ -143,7 +177,10 @@ pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::Junct
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: JunctionsDraw) -> CommandResult<JunctionsDrawn> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: JunctionsDraw,
+) -> CommandResult<JunctionsDrawn> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_JUNCTIONS_DRAW,
@@ -155,7 +192,14 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: JunctionsDraw) -> CommandRe
                 Ok(c) => write(cx, &input, c),
                 Err(stop) => stop.into(),
             };
-            crate::road_drawings::kept(cx, kentos_commands::ROAD_JUNCTIONS_DRAW, &input, (kentos_commands::RoadSourceKind::Junction, "junction"), r, |o| &o.uids)
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_JUNCTIONS_DRAW,
+                &input,
+                (kentos_commands::RoadSourceKind::Junction, "junction"),
+                r,
+                |o| &o.uids,
+            )
         },
     )
 }
@@ -165,17 +209,20 @@ mod stop_tests {
     //! Docs/adr/4860: the search for the legs' crossing told and a stop heard within (`crate::told_tests`), on the shared cases' project.
     use super::*;
 
-    const CASES: &str = include_str!("../../../../../fixtures/commands/v1/road.junctions.draw.json");
+    const CASES: &str =
+        include_str!("../../../../../fixtures/commands/v1/road.junctions.draw.json");
 
     #[test]
     fn its_reckoning_is_told_and_hears_a_stop() {
-        let (doc, input): (kentos_domain::Document, kentos_commands::JunctionsDraw) = crate::told_tests::project(CASES);
+        let (doc, input): (kentos_domain::Document, kentos_commands::JunctionsDraw) =
+            crate::told_tests::project(CASES);
         crate::told_tests::told_and_stopped(|told| check(&doc, &input, told));
     }
 
     #[test]
     fn a_stopped_job_draws_nothing() {
-        let (mut doc, input): (kentos_domain::Document, kentos_commands::JunctionsDraw) = crate::told_tests::project(CASES);
+        let (mut doc, input): (kentos_domain::Document, kentos_commands::JunctionsDraw) =
+            crate::told_tests::project(CASES);
         crate::told_tests::stopped_job_draws_nothing(&mut doc, |cx| draw(cx, &input));
     }
 }

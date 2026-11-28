@@ -29,9 +29,9 @@ use crate::jsmath::{js_hypot, js_max, js_min};
 use crate::ops::curve_cuts::{Cut, Geometry};
 use crate::ops::edges::{entity_edges, entity_edges_in};
 use crate::ops::stretch::stretch_entity;
-use crate::ops::transform::{transform_shape_in, TextPolicy};
 #[cfg(test)]
 use crate::ops::transform::transform_shape;
+use crate::ops::transform::{TextPolicy, transform_shape_in};
 use crate::ops::trim::{extend_entity, extended_edges, trim_entity};
 use crate::vec2::Vec2;
 
@@ -398,7 +398,10 @@ impl Store {
                 }
                 // An insert's ghost is its pieces (docs/adr/0144).
                 for s in it.shapes() {
-                    outline_paths(&transform_shape_in(s, m, TextPolicy::Readable, self.font), &mut out);
+                    outline_paths(
+                        &transform_shape_in(s, m, TextPolicy::Readable, self.font),
+                        &mut out,
+                    );
                 }
             }
         }
@@ -500,7 +503,12 @@ impl Store {
             for &id in ids {
                 let Some(it) = self.get(id) else { continue };
                 let layer = names.get(it.layer as usize).copied().unwrap_or("");
-                out.object(it.id, layer, it.label, &transform_shape_in(&it.shape, m, TextPolicy::Readable, self.font));
+                out.object(
+                    it.id,
+                    layer,
+                    it.label,
+                    &transform_shape_in(&it.shape, m, TextPolicy::Readable, self.font),
+                );
             }
         }
         out

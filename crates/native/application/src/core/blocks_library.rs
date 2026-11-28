@@ -21,8 +21,14 @@ use crate::codes;
 /// The block libraries KentOS gives (docs/adr/0318 §4), by name: its own drawings, free to give out. `kentos-ofis`
 /// carries publication identities an office standard's block references resolve against (docs/adr/1100 §2).
 pub const BUILTIN_LIBRARIES: &[(&str, &str)] = &[
-    ("kentos-temel", include_str!("../../../../../catalog/v1/blocks/kentos-temel.kblok")),
-    ("kentos-ofis", include_str!("../../../../../catalog/v1/blocks/kentos-ofis.kblok")),
+    (
+        "kentos-temel",
+        include_str!("../../../../../catalog/v1/blocks/kentos-temel.kblok"),
+    ),
+    (
+        "kentos-ofis",
+        include_str!("../../../../../catalog/v1/blocks/kentos-ofis.kblok"),
+    ),
 ];
 
 /// The undo steps' names.
@@ -148,14 +154,20 @@ fn check(
                         let names: Vec<&str> = BUILTIN_LIBRARIES.iter().map(|(n, _)| *n).collect();
                         return Err(Stop::failed(error(
                             codes::INVALID_LIBRARY,
-                            format!("“{name}” adında KentOS blok kitaplığı yok. Kitaplıklar: {}.", names.join(", ")),
+                            format!(
+                                "“{name}” adında KentOS blok kitaplığı yok. Kitaplıklar: {}.",
+                                names.join(", ")
+                            ),
                             Some("name".into()),
                         )));
                     }
                 },
                 _ => None,
             };
-            let Some(text) = builtin.or(input.library.as_deref()).filter(|t| !t.trim().is_empty()) else {
+            let Some(text) = builtin
+                .or(input.library.as_deref())
+                .filter(|t| !t.trim().is_empty())
+            else {
                 return Err(Stop::failed(error(
                     codes::NO_LIBRARY,
                     "Alınacak blok dosyasının metnini (library) ya da KentOS kitaplığının adını (name: kentos-temel) verin.".into(),
@@ -168,7 +180,12 @@ fn check(
                 return Err(invalid("biçimi kentos.blocks değil".into()));
             }
             let version = match file.get("version").and_then(serde_json::Value::as_u64) {
-                Some(v) if (u64::from(BLOCKS_VERSION)..=u64::from(BLOCKS_APPLIANCE_VERSION)).contains(&v) => v,
+                Some(v)
+                    if (u64::from(BLOCKS_VERSION)..=u64::from(BLOCKS_APPLIANCE_VERSION))
+                        .contains(&v) =>
+                {
+                    v
+                }
                 Some(v) => {
                     return Err(invalid(format!(
                         "sürümü {v}; bu KentOS {BLOCKS_VERSION}–{BLOCKS_APPLIANCE_VERSION}. sürümleri okur"
@@ -183,9 +200,13 @@ fn check(
             )
             .map_err(|e| invalid(format!("blokları okunmuyor ({e})")))?;
             if version == u64::from(BLOCKS_VERSION)
-                && blocks.iter().any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some()))
+                && blocks
+                    .iter()
+                    .any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some()))
             {
-                return Err(invalid("bileşen yayın kimliği içeren kitaplık 2. sürüm olmalı".into()));
+                return Err(invalid(
+                    "bileşen yayın kimliği içeren kitaplık 2. sürüm olmalı".into(),
+                ));
             }
             let needed = kentos_commands::block_library_version(&blocks);
             if version < u64::from(needed) {
@@ -273,8 +294,8 @@ fn take(
         .collect();
     next.extend(taken.iter().filter(|(_, put)| !put).map(|(b, _)| b.clone()));
     let incoming: HashSet<_> = taken.iter().map(|(b, _)| b.id).collect();
-    planned.changes = crate::block_params::refresh_definitions(doc, &mut next, &incoming)
-        .map_err(|stop| {
+    planned.changes =
+        crate::block_params::refresh_definitions(doc, &mut next, &incoming).map_err(|stop| {
             let mut e = stop.into_error();
             e.path = Some("library".into());
             Stop::failed(e)

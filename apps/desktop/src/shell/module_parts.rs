@@ -35,13 +35,20 @@ pub struct ModuleEvent {
 impl ModuleEvent {
     /// `event` of `module`.
     pub fn new<E: Any + Send + Sync + fmt::Debug>(module: Module, event: E) -> Self {
-        fn debug<E: Any + fmt::Debug>(e: &(dyn Any + Send + Sync), f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn debug<E: Any + fmt::Debug>(
+            e: &(dyn Any + Send + Sync),
+            f: &mut fmt::Formatter<'_>,
+        ) -> fmt::Result {
             match e.downcast_ref::<E>() {
                 Some(e) => e.fmt(f),
                 None => f.write_str("?"),
             }
         }
-        Self { module, event: Arc::new(event), debug: debug::<E> }
+        Self {
+            module,
+            event: Arc::new(event),
+            debug: debug::<E>,
+        }
     }
 
     /// The event as its module's type, taken out (cloned when the message was cloned before).
@@ -88,7 +95,13 @@ impl ModuleStates {
 
 /// A module's marks over the drawing (cad/marks.rs), drawn after the shell's own and before a topology finding.
 pub trait ModuleMarks: Send + Sync {
-    fn draw(&self, frame: &mut canvas::Frame, camera: &Camera, colors: &MarkColors, tokens: &Tokens);
+    fn draw(
+        &self,
+        frame: &mut canvas::Frame,
+        camera: &Camera,
+        colors: &MarkColors,
+        tokens: &Tokens,
+    );
 }
 
 /// What a module gives 3B görünüm beside the drawing's building (scene3d_building.rs) and the IFC viewer (ifc_viewer.rs):
@@ -153,7 +166,12 @@ pub trait ModuleParts: Sync {
     /// A window's title, as a usage trace names it.
     fn dialog_title(&self, kind: u16) -> String;
     /// The message a usage trace's `control` on a window of the module sends.
-    fn dialog_control(&self, app: &App, kind: u16, control: Control<'_>) -> Result<Option<Message>, String>;
+    fn dialog_control(
+        &self,
+        app: &App,
+        kind: u16,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String>;
     /// A window of the module closed by the shell (leaving the drawing on screen): what it keeps open goes.
     fn dialog_closed(&self, app: &mut App, kind: u16);
     /// The drawing changed (an undo, a redo, a script's write): a window that follows it reads it again.
@@ -208,7 +226,9 @@ pub fn register(parts: &'static dyn ModuleParts) -> bool {
     if ALL.get().is_some() {
         return false;
     }
-    let mut registered = REGISTERED.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let mut registered = REGISTERED
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     if !registered.iter().any(|p| p.module() == parts.module()) {
         registered.push(parts);
     }
@@ -218,7 +238,9 @@ pub fn register(parts: &'static dyn ModuleParts) -> bool {
 /// The modules' parts in this program.
 pub fn all() -> &'static [&'static dyn ModuleParts] {
     ALL.get_or_init(|| {
-        let registered = REGISTERED.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let registered = REGISTERED
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let mut list: Vec<&'static dyn ModuleParts> = registered.clone();
         // The modules still in the core's package (module_profile.rs).
         for parts in crate::module_profile::IN_CORE {
@@ -289,14 +311,23 @@ impl App {
     }
 
     /// The models the modules show beside the drawing's building in 3B görünüm.
-    pub(crate) fn modules_beside(&self) -> Vec<(String, String, Arc<crate::underlay_model::Loaded>)> {
-        all().iter().filter_map(|p| p.building3d()).flat_map(|b| b.beside(self)).collect()
+    pub(crate) fn modules_beside(
+        &self,
+    ) -> Vec<(String, String, Arc<crate::underlay_model::Loaded>)> {
+        all()
+            .iter()
+            .filter_map(|p| p.building3d())
+            .flat_map(|b| b.beside(self))
+            .collect()
     }
 
     /// An object of a model beside the drawing's chosen in 3D, to the module whose model it is.
     pub(crate) fn module_choose_beside(&mut self, id: &str, object: usize) {
         for parts in all() {
-            if parts.building3d().is_some_and(|b| b.choose_beside(self, id, object)) {
+            if parts
+                .building3d()
+                .is_some_and(|b| b.choose_beside(self, id, object))
+            {
                 return;
             }
         }
@@ -314,7 +345,11 @@ impl App {
 
     /// The objects the modules mark in 3D, by their keys.
     pub(crate) fn modules_marked(&self) -> BTreeSet<String> {
-        all().iter().filter_map(|p| p.building3d()).flat_map(|b| b.marked(self)).collect()
+        all()
+            .iter()
+            .filter_map(|p| p.building3d())
+            .flat_map(|b| b.marked(self))
+            .collect()
     }
 
     /// A dock panel of a module; empty when no module of this program has it.

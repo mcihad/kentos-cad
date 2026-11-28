@@ -317,7 +317,8 @@ fn check_doc(doc: &Document, input: &LayersEdit) -> Result<(), Stop> {
                     }
                 }
                 if !misfits.is_empty() {
-                    let said: Vec<String> = misfits.iter().map(|(w, k)| format!("{k} {w}")).collect();
+                    let said: Vec<String> =
+                        misfits.iter().map(|(w, k)| format!("{k} {w}")).collect();
                     return Err(fail(
                         codes::LAYER_GEOMETRY_MISMATCH,
                         format!(

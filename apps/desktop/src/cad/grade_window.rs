@@ -18,7 +18,10 @@
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_commands::{CommandResult, EntitiesGrade, EntitiesGraded, EntitiesRaised, Entity, GradePointKind, GradedPoint};
+use kentos_commands::{
+    CommandResult, EntitiesGrade, EntitiesGraded, EntitiesRaised, Entity, GradePointKind,
+    GradedPoint,
+};
 use kentos_interaction::Level;
 use kentos_interaction::pick::PickPoint;
 use kentos_native_application::{ExecutionContext, entities_grade};
@@ -217,7 +220,10 @@ impl App {
         };
         let (n, z0) = match e {
             Entity::Line(l) => (2, l.za),
-            Entity::Polyline(p) | Entity::Polygon(p) => (p.pts.len(), p.zs.as_ref().and_then(|z| z.first().copied().flatten())),
+            Entity::Polyline(p) | Entity::Polygon(p) => (
+                p.pts.len(),
+                p.zs.as_ref().and_then(|z| z.first().copied().flatten()),
+            ),
             _ => {
                 self.warn("Eğimle kot ver: seçili nesne çizgi, çoklu çizgi ya da alan değil.");
                 return Task::none();
@@ -231,7 +237,11 @@ impl App {
             from: 1.0,
             to: n as f64,
             start: z0.unwrap_or(0.0),
-            target: if kept.is_some() { Target::Reference } else { Target::Grade },
+            target: if kept.is_some() {
+                Target::Reference
+            } else {
+                Target::Grade
+            },
             end: z0.unwrap_or(0.0),
             percent: kept.as_ref().map_or(2.0, |k| k.percent),
             ahead: 2.0,
@@ -246,7 +256,11 @@ impl App {
             by: kept.as_ref().map_or(By::Grade, |k| k.by),
             difference: kept.as_ref().map_or(0.0, |k| k.difference),
             raised: None,
-            surface: self.grade_surfaces().first().map(|(id, _)| id.clone()).unwrap_or_default(),
+            surface: self
+                .grade_surfaces()
+                .first()
+                .map(|(id, _)| id.clone())
+                .unwrap_or_default(),
             breaks: false,
             above: 0.0,
             partial: false,
@@ -254,7 +268,9 @@ impl App {
             draped: None,
         };
         self.grade_plan();
-        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade));
+        self.dialog = Some(Dialog::TerrainWork(
+            crate::terrain_work::TerrainDialogKind::Grade,
+        ));
         Task::none()
     }
 
@@ -269,9 +285,24 @@ impl App {
             Event::Ahead(v) => self.terrain_work.grade.ahead = v,
             Event::Back(v) => self.terrain_work.grade.back = v,
             Event::At(v) => self.terrain_work.grade.at = v.round(),
-            Event::East(v) => (self.terrain_work.grade.east, self.terrain_work.grade.referenced) = (v, true),
-            Event::North(v) => (self.terrain_work.grade.north, self.terrain_work.grade.referenced) = (v, true),
-            Event::Height(v) => (self.terrain_work.grade.height, self.terrain_work.grade.referenced) = (v, true),
+            Event::East(v) => {
+                (
+                    self.terrain_work.grade.east,
+                    self.terrain_work.grade.referenced,
+                ) = (v, true)
+            }
+            Event::North(v) => {
+                (
+                    self.terrain_work.grade.north,
+                    self.terrain_work.grade.referenced,
+                ) = (v, true)
+            }
+            Event::Height(v) => {
+                (
+                    self.terrain_work.grade.height,
+                    self.terrain_work.grade.referenced,
+                ) = (v, true)
+            }
             Event::By(b) => self.terrain_work.grade.by = b,
             Event::Difference(v) => self.terrain_work.grade.difference = v,
             Event::Surface(id) => self.terrain_work.grade.surface = id,
@@ -279,7 +310,10 @@ impl App {
             Event::Above(v) => self.terrain_work.grade.above = v,
             Event::Partial(on) => self.terrain_work.grade.partial = on,
             Event::Ring(id) => {
-                if let Some((part, ring)) = id.split_once(':').and_then(|(a, b)| Some((a.parse().ok()?, b.parse().ok()?))) {
+                if let Some((part, ring)) = id
+                    .split_once(':')
+                    .and_then(|(a, b)| Some((a.parse().ok()?, b.parse().ok()?)))
+                {
                     self.terrain_work.grade.ring = (part, ring);
                     // The new ring's vertices from its first to its last; Referanstan's its first.
                     self.terrain_work.grade.from = 1.0;
@@ -306,7 +340,9 @@ impl App {
             }
             Event::Apply => {
                 let input = self.grade_input();
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
                 match entities_grade::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { output, .. } => {
                         let f = self.format();
@@ -332,7 +368,9 @@ impl App {
                         self.terrain_work.grade = State::default();
                         self.dialog = None;
                     }
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
                         self.warn(format!("{TITLE}: {}", error.message));
                     }
                     _ => {}
@@ -357,9 +395,14 @@ impl App {
 
     /// The ring the window works on: its vertices and bulges (see `grade_vertices`).
     fn grade_ring(&self) -> (Vec<kentos_commands::Vec2>, Option<Vec<f64>>) {
-        let Some(e) = self.grade_object() else { return (Vec::new(), None) };
+        let Some(e) = self.grade_object() else {
+            return (Vec::new(), None);
+        };
         let at = self.terrain_work.grade.ring;
-        crate::grade_surface::rings(e).into_iter().find(|r| r.0 == at).map_or((Vec::new(), None), |r| (r.1, r.2))
+        crate::grade_surface::rings(e)
+            .into_iter()
+            .find(|r| r.0 == at)
+            .map_or((Vec::new(), None), |r| (r.1, r.2))
     }
 
     /// The object the window was opened on.
@@ -375,7 +418,10 @@ impl App {
     /// and the two vertices; while the end is being picked the start alone, while the start is, nothing. Nothing when
     /// Eğimle kot ver is not open or the range does not hold.
     pub(crate) fn grade_marks(&self) -> (Vec<kentos_commands::Vec2>, Vec<kentos_commands::Vec2>) {
-        let open = self.dialog == Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade))
+        let open = self.dialog
+            == Some(Dialog::TerrainWork(
+                crate::terrain_work::TerrainDialogKind::Grade,
+            ))
             || self.terrain_work.grade.picking.is_some();
         if open && self.terrain_work.grade.target == Target::Reference {
             return self.reference_marks();
@@ -398,13 +444,21 @@ impl App {
             None if from < to && to < pts.len() => {
                 let span = &pts[from..=to];
                 let bent = bulges.as_deref().and_then(|b| b.get(from..to));
-                let size = span.windows(2).map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y)).sum::<f64>();
+                let size = span
+                    .windows(2)
+                    .map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y))
+                    .sum::<f64>();
                 let to_core = |p: &kentos_commands::Vec2| kentos_geometry_core::Vec2::new(p.x, p.y);
                 let core: Vec<_> = span.iter().map(to_core).collect();
-                let path = kentos_geometry_core::tessellate::bulge_path(&core, bent, false, (size / 2000.0).max(1e-6))
-                    .into_iter()
-                    .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
-                    .collect();
+                let path = kentos_geometry_core::tessellate::bulge_path(
+                    &core,
+                    bent,
+                    false,
+                    (size / 2000.0).max(1e-6),
+                )
+                .into_iter()
+                .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
+                .collect();
                 // The high or low point the preview found, ringed with the range's ends (docs/adr/3380).
                 let point = match &self.terrain_work.grade.plan {
                     Some(Ok(EntitiesGraded { point: Some(p), .. }))
@@ -414,7 +468,10 @@ impl App {
                     }
                     _ => None,
                 };
-                (path, [pts[from], pts[to]].into_iter().chain(point).collect())
+                (
+                    path,
+                    [pts[from], pts[to]].into_iter().chain(point).collect(),
+                )
             }
             None => (Vec::new(), Vec::new()),
         }
@@ -444,7 +501,9 @@ impl App {
         let Some(end) = self.terrain_work.grade.picking.take() else {
             return false;
         };
-        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Grade));
+        self.dialog = Some(Dialog::TerrainWork(
+            crate::terrain_work::TerrainDialogKind::Grade,
+        ));
         let Some(p) = p else {
             return true;
         };
@@ -456,10 +515,17 @@ impl App {
         // The range starts, and Referanstan's vertex is, on whichever ring the click is nearest (docs/adr/4980); the
         // range's end on the same ring.
         if matches!(end, Pick::Start | Pick::Vertex) {
-            let rings = self.grade_object().map(crate::grade_surface::rings).unwrap_or_default();
+            let rings = self
+                .grade_object()
+                .map(crate::grade_surface::rings)
+                .unwrap_or_default();
             let nearest = rings
                 .iter()
-                .flat_map(|r| r.1.iter().enumerate().map(move |(i, v)| (r.0, i, (v.x - p.x).hypot(v.y - p.y))))
+                .flat_map(|r| {
+                    r.1.iter()
+                        .enumerate()
+                        .map(move |(i, v)| (r.0, i, (v.x - p.x).hypot(v.y - p.y)))
+                })
                 .filter(|(_, _, d)| *d <= reach)
                 .min_by(|a, b| a.2.total_cmp(&b.2));
             if let Some((at, i, _)) = nearest {
@@ -507,25 +573,60 @@ impl App {
         let s = &self.terrain_work.grade;
         // One label column, every box the same width (the owner: a form's fields line up).
         const BOX: f32 = 140.0;
-        let end = || NumberInput::new(s.end, |v| msg(Event::End(v))).step(0.1).decimals(3).point().width(BOX);
-        let percent = |v: f64, on: fn(f64) -> Event| NumberInput::new(v, move |x| msg(on(x))).step(0.1).decimals(3).point().width(BOX);
+        let end = || {
+            NumberInput::new(s.end, |v| msg(Event::End(v)))
+                .step(0.1)
+                .decimals(3)
+                .point()
+                .width(BOX)
+        };
+        let percent = |v: f64, on: fn(f64) -> Event| {
+            NumberInput::new(v, move |x| msg(on(x)))
+                .step(0.1)
+                .decimals(3)
+                .point()
+                .width(BOX)
+        };
         // The chosen vertices where they are, as the drawing writes coordinates (Y, X).
         let pts = self.grade_vertices();
         let f = self.format();
         let at = |n: f64| {
             let i = (n.max(1.0) as usize) - 1;
-            pts.get(i).map_or(String::new(), |v| format!(" (Y {}, X {})", f.coord(v.x), f.coord(v.y)))
+            pts.get(i).map_or(String::new(), |v| {
+                format!(" (Y {}, X {})", f.coord(v.x), f.coord(v.y))
+            })
         };
         // Hedef first: what is done decides the rows under it (docs/adr/3780).
-        let targets = [Target::Grade, Target::End, Target::Peak, Target::Reference, Target::Surface];
-        let form = Form::new().label_width(130.0).field("Hedef", Segmented::new(targets, s.target, |t| msg(Event::Target(t))));
+        let targets = [
+            Target::Grade,
+            Target::End,
+            Target::Peak,
+            Target::Reference,
+            Target::Surface,
+        ];
+        let form = Form::new().label_width(130.0).field(
+            "Hedef",
+            Segmented::new(targets, s.target, |t| msg(Event::Target(t))),
+        );
         if s.target == Target::Reference {
             let (form, lines, ready) = self.reference_form(form, BOX);
-            return frame(Column::new().spacing(12).push(form).push(words::summary(lines)), ready);
+            return frame(
+                Column::new()
+                    .spacing(12)
+                    .push(form)
+                    .push(words::summary(lines)),
+                ready,
+            );
         }
         if s.target == Target::Surface {
             let (form, lines, ready) = self.surface_form(form);
-            return frame(Column::new().spacing(12).push(form).push(words::summary(lines)), ready);
+            return frame(
+                Column::new()
+                    .spacing(12)
+                    .push(form)
+                    .push(words::summary(lines)),
+                ready,
+            );
         }
         // Docs/adr/4980: the ring the range is on, when the object has more than one.
         let form = self.ring_field(form);
@@ -559,7 +660,11 @@ impl App {
                 .help("Her eğim kendi köşesinden aralığın içine doğrudur, artı yukarı; ikisinin kesiştiği yere köşe eklenir."),
         };
         let line = match &s.plan {
-            Some(Ok(EntitiesGraded { point: Some(at), zs, .. })) => words::text_line(
+            Some(Ok(EntitiesGraded {
+                point: Some(at),
+                zs,
+                ..
+            })) => words::text_line(
                 Kind::Ok,
                 format!(
                     "{}: {} (Y {}, X {}), başlangıçtan {}, kot {}; {} köşenin kotu değişecek.",
@@ -594,7 +699,10 @@ impl App {
                 "Aradaki köşeler yol boyunca yatay uzaklıklarına göre (yaylı kenar yayı boyunca) kot alır; aralığın dışındakiler kotlarını korur."
             },
         );
-        let body = Column::new().spacing(12).push(form).push(words::summary(vec![about, line]));
+        let body = Column::new()
+            .spacing(12)
+            .push(form)
+            .push(words::summary(vec![about, line]));
         frame(body, matches!(s.plan, Some(Ok(_))))
     }
 

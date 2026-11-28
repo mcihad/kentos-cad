@@ -34,7 +34,11 @@ pub(crate) fn rings(e: &Entity) -> Vec<Ring> {
             for (k, q) in p.parts.iter().flatten().enumerate() {
                 out.push(((k as u32 + 1, 0), q.pts.clone(), q.bulges.clone()));
                 for (h, r) in q.holes.iter().flatten().enumerate() {
-                    out.push(((k as u32 + 1, h as u32 + 1), r.pts.clone(), r.bulges.clone()));
+                    out.push((
+                        (k as u32 + 1, h as u32 + 1),
+                        r.pts.clone(),
+                        r.bulges.clone(),
+                    ));
                 }
             }
             out
@@ -57,7 +61,12 @@ impl App {
         self.document
             .as_ref()
             .and_then(|d| d.model.settings().road.as_ref())
-            .map(|r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect())
+            .map(|r| {
+                r.surfaces
+                    .iter()
+                    .map(|s| (s.id.clone(), s.name.clone()))
+                    .collect()
+            })
             .unwrap_or_default()
     }
 
@@ -102,14 +111,24 @@ impl App {
     /// Uygula: one undo step; the message says what was done.
     pub(crate) fn drape_apply(&mut self) {
         let input = self.drape_input();
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         match entities_drape::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => {
-                self.say(Level::Success, format!("Yüzeyden kot verildi: {} (tek adımda geri alınır).", drape_words(&output)));
+                self.say(
+                    Level::Success,
+                    format!(
+                        "Yüzeyden kot verildi: {} (tek adımda geri alınır).",
+                        drape_words(&output)
+                    ),
+                );
                 self.terrain_work.grade = State::default();
                 self.dialog = None;
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.warn(format!("{TITLE}: {}", error.message));
             }
             _ => {}
@@ -123,8 +142,16 @@ impl App {
             return form;
         }
         let at = self.terrain_work.grade.ring;
-        let choices = all.iter().map(|r| (format!("{}:{}", r.0.0, r.0.1), ring_name(r.0))).collect();
-        form.field("Halka", fields::select_owned(choices, &format!("{}:{}", at.0, at.1), |id| msg(Event::Ring(id))))
+        let choices = all
+            .iter()
+            .map(|r| (format!("{}:{}", r.0.0, r.0.1), ring_name(r.0)))
+            .collect();
+        form.field(
+            "Halka",
+            fields::select_owned(choices, &format!("{}:{}", at.0, at.1), |id| {
+                msg(Event::Ring(id))
+            }),
+        )
     }
 
     /// The ring's name for the vertices' help line, “ (2. parça, 1. delik)”; nothing for an object of one ring.
@@ -138,7 +165,10 @@ impl App {
     }
 
     /// Yüzeyden's rows: the surface and the break points; the summary's lines; whether Uygula may go.
-    pub(crate) fn surface_form<'a>(&'a self, form: Form<'a, Message>) -> (Form<'a, Message>, Vec<Element<'a, Message>>, bool) {
+    pub(crate) fn surface_form<'a>(
+        &'a self,
+        form: Form<'a, Message>,
+    ) -> (Form<'a, Message>, Vec<Element<'a, Message>>, bool) {
         let s = &self.terrain_work.grade;
         let surfaces = self.grade_surfaces();
         if surfaces.is_empty() {
@@ -219,7 +249,10 @@ impl App {
 fn drape_words(d: &EntitiesDraped) -> String {
     let mut out = format!("{} köşe yüzeyden kot alır", d.set);
     if d.outside > 0 {
-        out.push_str(&format!(", {} köşe yüzeyin dışında, kendi kotunu korur", d.outside));
+        out.push_str(&format!(
+            ", {} köşe yüzeyin dışında, kendi kotunu korur",
+            d.outside
+        ));
     }
     if d.inserted > 0 {
         out.push_str(&format!("; {} ara kırık noktası eklenir", d.inserted));

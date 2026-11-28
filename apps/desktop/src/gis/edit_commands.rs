@@ -44,8 +44,15 @@ impl App {
                 }
                 let (node, _) = self.edit_target()?;
                 let layer = node.id.clone();
-                let editing = self.document.as_ref().is_some_and(|d| d.model.editing(&layer));
-                self.data_edits_event(if editing { Event::Stop(layer) } else { Event::Start(layer) })
+                let editing = self
+                    .document
+                    .as_ref()
+                    .is_some_and(|d| d.model.editing(&layer));
+                self.data_edits_event(if editing {
+                    Event::Stop(layer)
+                } else {
+                    Event::Start(layer)
+                })
             }
             SAVE => self.data_edits_event(Event::Save(Vec::new())),
             ROLLBACK => {
@@ -133,12 +140,21 @@ impl App {
             } else {
                 format!("{waiting} kaydı kaynağa yazılmadı")
             };
-            format!("Etkin katman “{}” düzenleniyor; {rows}. Düzenlemeyi bitir yalnız bu katmanı kapatır.", node.name)
+            format!(
+                "Etkin katman “{}” düzenleniyor; {rows}. Düzenlemeyi bitir yalnız bu katmanı kapatır.",
+                node.name
+            )
         } else {
-            format!("Etkin katman “{}” düzenlemeye kapalı. Düzenlemeyi başlat onu açar.", node.name)
+            format!(
+                "Etkin katman “{}” düzenlemeye kapalı. Düzenlemeyi başlat onu açar.",
+                node.name
+            )
         };
         if !others.is_empty() {
-            out.push_str(&format!(" Düzenlenen öbür katmanlar açık kalır: {}.", others.join(", ")));
+            out.push_str(&format!(
+                " Düzenlenen öbür katmanlar açık kalır: {}.",
+                others.join(", ")
+            ));
         }
         Some(out)
     }
@@ -146,8 +162,11 @@ impl App {
     /// Whether the active layer is being edited: Düzenlemeyi başlat's lit state; none for any other command.
     pub(crate) fn edit_checked(&self, id: &str) -> Option<bool> {
         (id == TOGGLE).then(|| {
-            self.edit_target()
-                .is_some_and(|(node, _)| self.document.as_ref().is_some_and(|d| d.model.editing(&node.id)))
+            self.edit_target().is_some_and(|(node, _)| {
+                self.document
+                    .as_ref()
+                    .is_some_and(|d| d.model.editing(&node.id))
+            })
         })
     }
 
@@ -155,7 +174,11 @@ impl App {
     /// the large button writes it (its first line, and so its width, the same); none for any other command.
     pub(crate) fn edit_face(&self, id: &str) -> Option<&'static str> {
         (id == TOGGLE).then(|| {
-            if self.edit_checked(TOGGLE) == Some(true) { "Düzenlemeyi\nbitir" } else { "Düzenlemeyi\nbaşlat" }
+            if self.edit_checked(TOGGLE) == Some(true) {
+                "Düzenlemeyi\nbitir"
+            } else {
+                "Düzenlemeyi\nbaşlat"
+            }
         })
     }
 }

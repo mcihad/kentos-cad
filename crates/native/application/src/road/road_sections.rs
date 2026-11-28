@@ -4,8 +4,9 @@
 //! commands are [`crate::road_templates_edit`], [`crate::road_sections_edit`] and [`crate::road_sections_query`].
 
 use kentos_commands::{
-    CommandWarning, Entity, RoadSettings, SectionGround, SectionRow, SectionSetDef, SectionSetReport, SectionSide,
-    SectionStations, TemplateComponentKind, TemplateDef, TemplateListed, TemplateSideDef,
+    CommandWarning, Entity, RoadSettings, SectionGround, SectionRow, SectionSetDef,
+    SectionSetReport, SectionSide, SectionStations, TemplateComponentKind, TemplateDef,
+    TemplateListed, TemplateSideDef,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -35,35 +36,71 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
 }
 
 /// The index of a definition by its id, else by its name (case aside).
-fn by_name<T>(list: &[T], name: &str, id: impl Fn(&T) -> &str, words: impl Fn(&T) -> &str) -> Option<usize> {
-    list.iter()
-        .position(|t| id(t) == name)
-        .or_else(|| list.iter().position(|t| words(t).to_lowercase() == name.to_lowercase()))
-}
-
-pub(crate) fn find_template<'a>(list: &'a [TemplateDef], name: &str, path: &str) -> Result<(usize, &'a TemplateDef), Stop> {
-    by_name(list, name, |t| &t.id, |t| &t.name).map(|i| (i, &list[i])).ok_or_else(|| {
-        fail(codes::UNKNOWN_ROAD_TEMPLATE, format!("“{name}” kimlikli ya da adlı tip kesit projede yok."), path)
+fn by_name<T>(
+    list: &[T],
+    name: &str,
+    id: impl Fn(&T) -> &str,
+    words: impl Fn(&T) -> &str,
+) -> Option<usize> {
+    list.iter().position(|t| id(t) == name).or_else(|| {
+        list.iter()
+            .position(|t| words(t).to_lowercase() == name.to_lowercase())
     })
 }
 
-pub(crate) fn find_set<'a>(list: &'a [SectionSetDef], name: &str, path: &str) -> Result<(usize, &'a SectionSetDef), Stop> {
-    by_name(list, name, |t| &t.id, |t| &t.name).map(|i| (i, &list[i])).ok_or_else(|| {
-        fail(codes::UNKNOWN_SECTION_SET, format!("“{name}” kimlikli ya da adlı kesit takımı projede yok."), path)
-    })
+pub(crate) fn find_template<'a>(
+    list: &'a [TemplateDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a TemplateDef), Stop> {
+    by_name(list, name, |t| &t.id, |t| &t.name)
+        .map(|i| (i, &list[i]))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_ROAD_TEMPLATE,
+                format!("“{name}” kimlikli ya da adlı tip kesit projede yok."),
+                path,
+            )
+        })
+}
+
+pub(crate) fn find_set<'a>(
+    list: &'a [SectionSetDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a SectionSetDef), Stop> {
+    by_name(list, name, |t| &t.id, |t| &t.name)
+        .map(|i| (i, &list[i]))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_SECTION_SET,
+                format!("“{name}” kimlikli ya da adlı kesit takımı projede yok."),
+                path,
+            )
+        })
 }
 
 /// The road settings judged by the contract's rules; a refusal (`code`) at the field of the list item it names.
 pub(crate) fn judged(road: &RoadSettings, code: &str, what: &str) -> Result<(), Stop> {
     if let Some((path, words)) = road.problem() {
-        let path = path.split_once("].").map_or_else(String::new, |(_, field)| field.to_owned());
-        return Err(fail(code, format!("{what} kurallarına uymuyor: {words}."), &path));
+        let path = path
+            .split_once("].")
+            .map_or_else(String::new, |(_, field)| field.to_owned());
+        return Err(fail(
+            code,
+            format!("{what} kurallarına uymuyor: {words}."),
+            &path,
+        ));
     }
     Ok(())
 }
 
 /// The project's road settings with these templates and sets.
-pub(crate) fn road_with(doc: &Document, templates: Option<&[TemplateDef]>, sets: Option<&[SectionSetDef]>) -> RoadSettings {
+pub(crate) fn road_with(
+    doc: &Document,
+    templates: Option<&[TemplateDef]>,
+    sets: Option<&[SectionSetDef]>,
+) -> RoadSettings {
     let mut road = doc.settings().road.clone().unwrap_or_default();
     if let Some(t) = templates {
         road.templates = t.to_vec();
@@ -81,17 +118,40 @@ pub fn core_template(def: &TemplateDef) -> Template {
             .components
             .iter()
             .map(|c| match c.kind {
-                TemplateComponentKind::Lane => Component::Lane { width: c.width, slope: c.slope },
-                TemplateComponentKind::Shoulder => Component::Shoulder { width: c.width, slope: c.slope },
+                TemplateComponentKind::Lane => Component::Lane {
+                    width: c.width,
+                    slope: c.slope,
+                },
+                TemplateComponentKind::Shoulder => Component::Shoulder {
+                    width: c.width,
+                    slope: c.slope,
+                },
             })
             .collect(),
         cut: s.cut,
         fill: s.fill,
-        ditch: s.ditch.as_ref().map(|d| Ditch { fore: d.fore, depth: d.depth, bottom: d.bottom }),
-        bench: s.bench.map(|b| kentos_road::section::template::SlopeBench { height: b.height, width: b.width, fall: b.fall }),
-        fill_bench: s.fill_bench.map(|b| kentos_road::section::template::SlopeBench { height: b.height, width: b.width, fall: b.fall }),
+        ditch: s.ditch.as_ref().map(|d| Ditch {
+            fore: d.fore,
+            depth: d.depth,
+            bottom: d.bottom,
+        }),
+        bench: s.bench.map(|b| kentos_road::section::template::SlopeBench {
+            height: b.height,
+            width: b.width,
+            fall: b.fall,
+        }),
+        fill_bench: s
+            .fill_bench
+            .map(|b| kentos_road::section::template::SlopeBench {
+                height: b.height,
+                width: b.width,
+                fall: b.fall,
+            }),
     };
-    Template { left: side(&def.left), right: side(def.right.as_ref().unwrap_or(&def.left)) }
+    Template {
+        left: side(&def.left),
+        right: side(def.right.as_ref().unwrap_or(&def.left)),
+    }
 }
 
 pub(crate) fn listed_templates(doc: &Document, list: &[TemplateDef]) -> Vec<TemplateListed> {
@@ -100,17 +160,31 @@ pub(crate) fn listed_templates(doc: &Document, list: &[TemplateDef]) -> Vec<Temp
             id: t.id.clone(),
             name: t.name.clone(),
             revision: t.revision,
-            used_by: doc.road_sections().iter().filter(|s| s.template.as_deref() == Some(&t.id)).map(|s| s.id.clone()).collect(),
+            used_by: doc
+                .road_sections()
+                .iter()
+                .filter(|s| s.template.as_deref() == Some(&t.id))
+                .map(|s| s.id.clone())
+                .collect(),
         })
         .collect()
 }
 
 /// Where a path first crosses the alignment: the station of the first place its offset changes sign, found by halving.
 fn crossing(built: &Built, path: &[[f64; 2]]) -> Option<f64> {
-    let offset = |p: [f64; 2]| built.core.locate(p).feet.first().map(|f| (f.at.station, f.offset));
+    let offset = |p: [f64; 2]| {
+        built
+            .core
+            .locate(p)
+            .feet
+            .first()
+            .map(|f| (f.at.station, f.offset))
+    };
     for w in path.windows(2) {
         let (a, b) = (w[0], w[1]);
-        let (Some((_, oa)), Some((_, ob))) = (offset(a), offset(b)) else { continue };
+        let (Some((_, oa)), Some((_, ob))) = (offset(a), offset(b)) else {
+            continue;
+        };
         if oa == 0.0 {
             return offset(a).map(|f| f.0);
         }
@@ -133,49 +207,104 @@ fn crossing(built: &Built, path: &[[f64; 2]]) -> Option<f64> {
 }
 
 /// A set's stations by its method, in order, those within [`SAME_STATION`] one.
-pub(crate) fn stations_of(doc: &Document, def: &SectionSetDef, built: &Built) -> Result<Vec<f64>, Stop> {
+pub(crate) fn stations_of(
+    doc: &Document,
+    def: &SectionSetDef,
+    built: &Built,
+) -> Result<Vec<f64>, Stop> {
     let length = built.core.length;
     let off = |path: &str, words: String| fail(codes::INVALID_SECTION_SET, words, path);
     let mut out: Vec<f64> = match &def.stations {
-        SectionStations::Breaks { from, to, tolerance, most, geometry } => {
+        SectionStations::Breaks {
+            from,
+            to,
+            tolerance,
+            most,
+            geometry,
+        } => {
             if *from < -1e-9 || *to > length + 1e-9 {
-                return Err(off("stations.from", format!("Km aralığı aksın üstünde olmalı: aks 0 ile {length:.3} m arası.")));
+                return Err(off(
+                    "stations.from",
+                    format!("Km aralığı aksın üstünde olmalı: aks 0 ile {length:.3} m arası."),
+                ));
             }
             let surface = match surface_of(doc, def) {
                 Some(Ok(s)) => s,
-                _ => return Err(off("surface", "Arazi kırıklarında kesit için kesit takımının yüzeyi kurulabilmeli.".into())),
+                _ => {
+                    return Err(off(
+                        "surface",
+                        "Arazi kırıklarında kesit için kesit takımının yüzeyi kurulabilmeli."
+                            .into(),
+                    ));
+                }
             };
-            let breaks = kentos_road::section::stations::ground_breaks(&surface, &built.core, *from, *to);
-            let mut s: Vec<f64> = kentos_road::section::stations::simplify(&breaks, *tolerance, *most)
-                .into_iter()
-                .map(|k| breaks[k].station)
-                .collect();
+            let breaks =
+                kentos_road::section::stations::ground_breaks(&surface, &built.core, *from, *to);
+            let mut s: Vec<f64> =
+                kentos_road::section::stations::simplify(&breaks, *tolerance, *most)
+                    .into_iter()
+                    .map(|k| breaks[k].station)
+                    .collect();
             s.extend([*from, *to]);
             if *geometry {
-                s.extend(built.core.elements.iter().map(|e| e.station).filter(|s| *s > *from && *s < *to));
-                if let Some(p) = def.profile.as_ref().and_then(|p| doc.road_profiles().iter().find(|q| q.id == *p)) {
-                    s.extend(p.pvis.iter().map(|v| v.station).filter(|s| *s > *from && *s < *to));
+                s.extend(
+                    built
+                        .core
+                        .elements
+                        .iter()
+                        .map(|e| e.station)
+                        .filter(|s| *s > *from && *s < *to),
+                );
+                if let Some(p) = def
+                    .profile
+                    .as_ref()
+                    .and_then(|p| doc.road_profiles().iter().find(|q| q.id == *p))
+                {
+                    s.extend(
+                        p.pvis
+                            .iter()
+                            .map(|v| v.station)
+                            .filter(|s| *s > *from && *s < *to),
+                    );
                 }
             }
             if s.len() > kentos_commands::MAX_SECTION_STATIONS {
                 return Err(off(
                     "stations.tolerance",
-                    format!("Bu toleransla {}'den çok kesit çıkar; toleransı büyütün.", kentos_commands::MAX_SECTION_STATIONS),
+                    format!(
+                        "Bu toleransla {}'den çok kesit çıkar; toleransı büyütün.",
+                        kentos_commands::MAX_SECTION_STATIONS
+                    ),
                 ));
             }
             s
         }
-        SectionStations::Range { from, to, every, geometry, curve } => {
+        SectionStations::Range {
+            from,
+            to,
+            every,
+            geometry,
+            curve,
+        } => {
             if *from < -1e-9 {
-                return Err(off("stations.from", format!("Km aralığı aksın üstünde olmalı: aks 0 ile {length:.3} m arası.")));
+                return Err(off(
+                    "stations.from",
+                    format!("Km aralığı aksın üstünde olmalı: aks 0 ile {length:.3} m arası."),
+                ));
             }
             if *to > length + 1e-9 {
-                return Err(off("stations.to", format!("Km aralığı aksın üstünde olmalı: aks 0 ile {length:.3} m arası.")));
+                return Err(off(
+                    "stations.to",
+                    format!("Km aralığı aksın üstünde olmalı: aks 0 ile {length:.3} m arası."),
+                ));
             }
             if (to - from) / every > kentos_commands::MAX_SECTION_STATIONS as f64 {
                 return Err(off(
                     "stations.every",
-                    format!("Bu aralıkla {}'den çok kesit çıkar; every'yi büyütün.", kentos_commands::MAX_SECTION_STATIONS),
+                    format!(
+                        "Bu aralıkla {}'den çok kesit çıkar; every'yi büyütün.",
+                        kentos_commands::MAX_SECTION_STATIONS
+                    ),
                 ));
             }
             let mut s: Vec<f64> = alignments::tick_stations(built, *every)?
@@ -184,9 +313,25 @@ pub(crate) fn stations_of(doc: &Document, def: &SectionSetDef, built: &Built) ->
                 .collect();
             s.extend([*from, *to]);
             if *geometry {
-                s.extend(built.core.elements.iter().map(|e| e.station).filter(|s| *s > *from && *s < *to));
-                if let Some(p) = def.profile.as_ref().and_then(|p| doc.road_profiles().iter().find(|q| q.id == *p)) {
-                    s.extend(p.pvis.iter().map(|v| v.station).filter(|s| *s > *from && *s < *to));
+                s.extend(
+                    built
+                        .core
+                        .elements
+                        .iter()
+                        .map(|e| e.station)
+                        .filter(|s| *s > *from && *s < *to),
+                );
+                if let Some(p) = def
+                    .profile
+                    .as_ref()
+                    .and_then(|p| doc.road_profiles().iter().find(|q| q.id == *p))
+                {
+                    s.extend(
+                        p.pvis
+                            .iter()
+                            .map(|v| v.station)
+                            .filter(|s| *s > *from && *s < *to),
+                    );
                 }
             }
             // On the curves (TS to ST, the clothoids with them) every round `curve` metres too.
@@ -194,10 +339,19 @@ pub(crate) fn stations_of(doc: &Document, def: &SectionSetDef, built: &Built) ->
                 if (to - from) / c > kentos_commands::MAX_SECTION_STATIONS as f64 {
                     return Err(off(
                         "stations.curve",
-                        format!("Bu aralıkla {}'den çok kesit çıkar; curve'ü büyütün.", kentos_commands::MAX_SECTION_STATIONS),
+                        format!(
+                            "Bu aralıkla {}'den çok kesit çıkar; curve'ü büyütün.",
+                            kentos_commands::MAX_SECTION_STATIONS
+                        ),
                     ));
                 }
-                let on_curve = |x: f64| built.core.curves.iter().any(|k| x >= k.stations[0] - 1e-9 && x <= k.stations[3] + 1e-9);
+                let on_curve = |x: f64| {
+                    built
+                        .core
+                        .curves
+                        .iter()
+                        .any(|k| x >= k.stations[0] - 1e-9 && x <= k.stations[3] + 1e-9)
+                };
                 s.extend(
                     alignments::tick_stations(built, *c)?
                         .into_iter()
@@ -221,12 +375,20 @@ pub(crate) fn stations_of(doc: &Document, def: &SectionSetDef, built: &Built) ->
             let mut out = Vec::new();
             for (i, uid) in uids.iter().enumerate() {
                 let path = format!("stations.uids[{i}]");
-                let entity = doc.entities_with_uids().find(|(u, _)| u.to_string() == *uid).map(|(_, e)| e);
+                let entity = doc
+                    .entities_with_uids()
+                    .find(|(u, _)| u.to_string() == *uid)
+                    .map(|(_, e)| e);
                 let pts: Vec<[f64; 2]> = match entity {
                     None => return Err(off(&path, format!("“{uid}” kimlikli nesne çizimde yok."))),
                     Some(Entity::Line(l)) => vec![[l.a.x, l.a.y], [l.b.x, l.b.y]],
                     Some(Entity::Polyline(p)) => p.pts.iter().map(|v| [v.x, v.y]).collect(),
-                    Some(_) => return Err(off(&path, format!("“{uid}” bir çizgi ya da çoklu çizgi değil."))),
+                    Some(_) => {
+                        return Err(off(
+                            &path,
+                            format!("“{uid}” bir çizgi ya da çoklu çizgi değil."),
+                        ));
+                    }
                 };
                 match crossing(built, &pts) {
                     Some(s) => out.push(s),
@@ -253,17 +415,26 @@ pub(crate) fn stations_of(doc: &Document, def: &SectionSetDef, built: &Built) ->
 pub(crate) fn alignment_of(doc: &Document, def: &SectionSetDef) -> Result<Built, Stop> {
     let list = alignments::alignments(doc);
     let a = list.iter().find(|a| a.id == def.alignment).ok_or_else(|| {
-        fail(codes::UNKNOWN_ALIGNMENT, format!("“{}” kimlikli aks projede yok.", def.alignment), "alignment")
+        fail(
+            codes::UNKNOWN_ALIGNMENT,
+            format!("“{}” kimlikli aks projede yok.", def.alignment),
+            "alignment",
+        )
     })?;
     alignments::build(list, a, "")
 }
 
 pub(crate) fn stale(doc: &Document, def: &SectionSetDef) -> bool {
-    doc.road_alignments().iter().find(|a| a.id == def.alignment).is_some_and(|a| a.revision != def.alignment_revision)
+    doc.road_alignments()
+        .iter()
+        .find(|a| a.id == def.alignment)
+        .is_some_and(|a| a.revision != def.alignment_revision)
 }
 
 pub(crate) fn report(doc: &Document, def: &SectionSetDef, stations: Vec<f64>) -> SectionSetReport {
-    let crossings = alignment_of(doc, def).map(|b| widths_of(def, &b, &stations).1).unwrap_or_default();
+    let crossings = alignment_of(doc, def)
+        .map(|b| widths_of(def, &b, &stations).1)
+        .unwrap_or_default();
     SectionSetReport {
         clip: def.clip,
         crossings: crossings
@@ -294,7 +465,9 @@ pub(crate) fn report(doc: &Document, def: &SectionSetDef, stations: Vec<f64>) ->
 pub(crate) fn reports(doc: &Document, list: &[SectionSetDef]) -> Vec<SectionSetReport> {
     list.iter()
         .map(|d| {
-            let stations = alignment_of(doc, d).and_then(|b| stations_of(doc, d, &b)).unwrap_or_default();
+            let stations = alignment_of(doc, d)
+                .and_then(|b| stations_of(doc, d, &b))
+                .unwrap_or_default();
             report(doc, d, stations)
         })
         .collect()
@@ -306,7 +479,10 @@ pub(crate) fn widths_of(
     def: &SectionSetDef,
     built: &Built,
     stations: &[f64],
-) -> (Vec<(f64, f64)>, Vec<kentos_road::section::stations::Crossing>) {
+) -> (
+    Vec<(f64, f64)>,
+    Vec<kentos_road::section::stations::Crossing>,
+) {
     let full = vec![(def.left, def.right); stations.len()];
     if def.clip {
         kentos_road::section::stations::clip(&built.core, stations, &full)
@@ -339,22 +515,35 @@ fn crossing_warning(
 }
 
 /// The set's surface made now, or the warning `section_surface_gone`; none for a set without one.
-pub(crate) fn surface_of(doc: &Document, def: &SectionSetDef) -> Option<Result<Surface, CommandWarning>> {
+pub(crate) fn surface_of(
+    doc: &Document,
+    def: &SectionSetDef,
+) -> Option<Result<Surface, CommandWarning>> {
     let id = def.surface.as_deref()?;
     let gone = |why: String| CommandWarning {
         code: codes::SECTION_SURFACE_GONE.into(),
-        message: format!("“{}” kesit takımının yüzeyi {why}; arazi kesiti verilmedi.", def.name),
+        message: format!(
+            "“{}” kesit takımının yüzeyi {why}; arazi kesiti verilmedi.",
+            def.name
+        ),
         path: Some("set".into()),
     };
     let Some(sdef) = terrains::surfaces(doc).iter().find(|s| s.id == id) else {
         return Some(Err(gone(format!("({id}) projede yok"))));
     };
-    Some(terrains::make(doc, sdef).surface.map_err(|_| gone(format!("“{}” kurulamıyor", sdef.name))))
+    Some(
+        terrains::make(doc, sdef)
+            .surface
+            .map_err(|_| gone(format!("“{}” kurulamıyor", sdef.name))),
+    )
 }
 
 /// The swath's offset ranges off the surface (docs/adr/1034): each stretch from a place to the next one flagged a gap.
 pub(crate) fn missing_of(g: &[kentos_road::section::GroundPoint]) -> Vec<[f64; 2]> {
-    g.windows(2).filter(|w| w[1].gap).map(|w| [w[0].offset, w[1].offset]).collect()
+    g.windows(2)
+        .filter(|w| w[1].gap)
+        .map(|w| [w[0].offset, w[1].offset])
+        .collect()
 }
 
 /// A section as a row: its station and km, its sample line's ends, the axis's elevation, the terrain along it, and
@@ -374,7 +563,14 @@ pub(crate) fn row_of(
         km_text: km_text(km, 3),
         ends,
         axis,
-        ground: g.iter().map(|p| SectionGround { offset: p.offset, z: p.z, gap: p.gap }).collect(),
+        ground: g
+            .iter()
+            .map(|p| SectionGround {
+                offset: p.offset,
+                z: p.z,
+                gap: p.gap,
+            })
+            .collect(),
         missing: missing_of(g),
         left: section.map(|x| side_row(&x.left)),
         right: section.map(|x| side_row(&x.right)),
@@ -392,13 +588,22 @@ pub(crate) fn pavement_row(
     section: &tpl::Section,
     g: &[kentos_road::section::GroundPoint],
 ) -> Option<kentos_commands::SectionPavement> {
-    let built = kentos_road::section::pavement::build(template, section, &crate::road_volumes::core_pavement(def), g).ok()?;
+    let built = kentos_road::section::pavement::build(
+        template,
+        section,
+        &crate::road_volumes::core_pavement(def),
+        g,
+    )
+    .ok()?;
     Some(kentos_commands::SectionPavement {
         layers: def
             .layers
             .iter()
             .zip(&built.layers)
-            .map(|(l, a)| kentos_commands::SectionLayer { name: l.name.clone(), area: *a })
+            .map(|(l, a)| kentos_commands::SectionLayer {
+                name: l.name.clone(),
+                area: *a,
+            })
             .collect(),
         below: built.below,
         above: built.above,
@@ -425,7 +630,18 @@ fn side_row(s: &tpl::SideSection) -> SectionSide {
 
 /// The traveled way's widths (left, right): the lanes' (docs/adr/0931 §1), the edge an axis of rotation holds.
 pub fn lane_widths(t: &Template) -> (f64, f64) {
-    let lanes = |side: &Side| side.components.iter().map(|c| if let Component::Lane { width, .. } = c { *width } else { 0.0 }).sum();
+    let lanes = |side: &Side| {
+        side.components
+            .iter()
+            .map(|c| {
+                if let Component::Lane { width, .. } = c {
+                    *width
+                } else {
+                    0.0
+                }
+            })
+            .sum()
+    };
     (lanes(&t.left), lanes(&t.right))
 }
 
@@ -441,7 +657,10 @@ pub fn superelevated(
     let (wl, wr) = schedule.widening(s);
     let side = |side: &Side, slope: f64, wide: f64| {
         let mut out = side.clone();
-        let last = out.components.iter().rposition(|c| matches!(c, Component::Lane { .. }));
+        let last = out
+            .components
+            .iter()
+            .rposition(|c| matches!(c, Component::Lane { .. }));
         for (i, comp) in out.components.iter_mut().enumerate() {
             if let Component::Lane { width, slope: sl } = comp {
                 *sl = slope;
@@ -452,7 +671,10 @@ pub fn superelevated(
         }
         out
     };
-    Template { left: side(&t.left, c.left, wl), right: side(&t.right, c.right, wr) }
+    Template {
+        left: side(&t.left, c.left, wl),
+        right: side(&t.right, c.right, wr),
+    }
 }
 
 /// A set's sections at `stations`, and the warnings they give (the surface gone, the open sides).
@@ -475,7 +697,10 @@ pub(crate) fn sections_told(
     stations: &[f64],
     tick: &dyn Fn(u64, u64) -> bool,
 ) -> Option<(Vec<SectionRow>, Vec<CommandWarning>)> {
-    let template = def.template.as_ref().and_then(|t| doc.road_templates().iter().find(|q| q.id == *t));
+    let template = def
+        .template
+        .as_ref()
+        .and_then(|t| doc.road_templates().iter().find(|q| q.id == *t));
     sections_with(doc, def, built, stations, template, tick)
 }
 
@@ -516,12 +741,18 @@ fn sections_with(
         .profile
         .as_ref()
         .and_then(|p| doc.road_profiles().iter().find(|q| q.id == *p))
-        .and_then(|p| kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(p)).ok());
+        .and_then(|p| {
+            kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(p)).ok()
+        });
     let paving = template.and_then(|t| t.pavement.as_ref());
     let mut unpaved: Vec<String> = Vec::new();
     let template = template.map(core_template);
     // The lanes' cross slopes and the inside widening from the set's superelevation schedule (docs/adr/0904 §3).
-    let schedule = match def.superelevation.as_deref().map(|id| crate::road_superelevations::schedule_of(doc, id, &def.name)) {
+    let schedule = match def
+        .superelevation
+        .as_deref()
+        .map(|id| crate::road_superelevations::schedule_of(doc, id, &def.name))
+    {
         Some(Ok(s)) => Some(s),
         Some(Err(w)) => {
             warnings.push(w);
@@ -542,9 +773,14 @@ fn sections_with(
             return None;
         }
         let (left, right) = widths[k];
-        let Some(line) = sample_line(&built.core, s, left, right) else { continue };
+        let Some(line) = sample_line(&built.core, s, left, right) else {
+            continue;
+        };
         let km = built.km(s);
-        let g = surface.as_ref().map(|surf| ground(surf, &line)).unwrap_or_default();
+        let g = surface
+            .as_ref()
+            .map(|surf| ground(surf, &line))
+            .unwrap_or_default();
         let axis = vertical.as_ref().and_then(|v| v.at(s)).map(|r| r.0);
         let at = template.as_ref().map(|t| match &schedule {
             Some((sch, normal)) => superelevated(t, sch, *normal, s),
@@ -552,7 +788,9 @@ fn sections_with(
         });
         // About an edge the axis rises over the profile grade (docs/adr/0931 §1).
         let axis = match (&schedule, &at, axis) {
-            (Some((sch, normal)), Some(t), Some(z)) => Some(z + sch.lift(s, *normal, lane_widths(t))),
+            (Some((sch, normal)), Some(t), Some(z)) => {
+                Some(z + sch.lift(s, *normal, lane_widths(t)))
+            }
             _ => axis,
         };
         let built_section = match (&at, axis, surface.is_some()) {
@@ -576,14 +814,25 @@ fn sections_with(
                 }
             }
             // Docs/adr/1034: the design's span, outermost left to outermost right, over ground the surface does not give.
-            let ends = (sec.left.points.last().map(|p| p[0]), sec.right.points.last().map(|p| p[0]));
+            let ends = (
+                sec.left.points.last().map(|p| p[0]),
+                sec.right.points.last().map(|p| p[0]),
+            );
             if let (Some(lo), Some(hi)) = ends
                 && missing_of(&g).iter().any(|m| m[0] < hi && m[1] > lo)
             {
                 under.push(format!("km {}", km_text(km, 3)));
             }
         }
-        rows.push(row_of(s, km, line.ends, axis, &g, built_section.as_ref(), paved));
+        rows.push(row_of(
+            s,
+            km,
+            line.ends,
+            axis,
+            &g,
+            built_section.as_ref(),
+            paved,
+        ));
     }
     if !unpaved.is_empty() {
         warnings.push(CommandWarning {
@@ -620,7 +869,11 @@ fn sections_with(
 
 /// The set-stale warning.
 pub(crate) fn stale_warning(doc: &Document, def: &SectionSetDef) -> Option<CommandWarning> {
-    let now = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
+    let now = doc
+        .road_alignments()
+        .iter()
+        .find(|a| a.id == def.alignment)
+        .map_or(0, |a| a.revision);
     stale(doc, def).then(|| CommandWarning {
         code: codes::SECTION_SET_STALE.into(),
         message: format!(

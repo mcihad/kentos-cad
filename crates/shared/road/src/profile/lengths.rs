@@ -25,7 +25,11 @@
 /// (`a/9.81 + G ≤ 0`) or a value is not positive.
 pub fn stopping(speed: f64, time: f64, decel: f64, grade: f64) -> Option<f64> {
     let brake = decel + G * grade;
-    let ok = speed > 0.0 && time >= 0.0 && decel > 0.0 && brake > 0.0 && [speed, time, decel, grade].iter().all(|v| v.is_finite());
+    let ok = speed > 0.0
+        && time >= 0.0
+        && decel > 0.0
+        && brake > 0.0
+        && [speed, time, decel, grade].iter().all(|v| v.is_finite());
     let v = speed / 3.6;
     ok.then(|| v * time + v * v / (2.0 * brake))
 }
@@ -42,7 +46,11 @@ pub fn crest(a: f64, s: f64, eye: f64, object: f64) -> f64 {
     }
     let h = (eye.sqrt() + object.sqrt()).powi(2);
     let within = a * s * s / (200.0 * h);
-    if within <= s { (2.0 * s - 200.0 * h / a).max(0.0).min(within) } else { within }
+    if within <= s {
+        (2.0 * s - 200.0 * h / a).max(0.0).min(within)
+    } else {
+        within
+    }
 }
 
 /// The least sag length (m) for the headlight sight `s` (m) over the grade change `a` (percent) with the headlights
@@ -54,7 +62,11 @@ pub fn headlight(a: f64, s: f64, height: f64, beam: f64) -> f64 {
     }
     let lift = height + s * beam.to_radians().tan();
     let within = a * s * s / (200.0 * lift);
-    if within <= s { (2.0 * s - 200.0 * lift / a).max(0.0).min(within) } else { within }
+    if within <= s {
+        (2.0 * s - 200.0 * lift / a).max(0.0).min(within)
+    } else {
+        within
+    }
 }
 
 /// The least sag length (m) for the vertical acceleration `accel` (m/s²) at `speed` (km/h): `A·V²/(1296·a)`.
@@ -64,5 +76,9 @@ pub fn comfort(a: f64, speed: f64, accel: f64) -> f64 {
 
 /// The least length (m) for the bisector (the curve's middle from the PVI) `external` (m): `800·E/A`.
 pub fn bisector(a: f64, external: f64) -> f64 {
-    if a == 0.0 { 0.0 } else { 800.0 * external / a.abs() }
+    if a == 0.0 {
+        0.0
+    } else {
+        800.0 * external / a.abs()
+    }
 }

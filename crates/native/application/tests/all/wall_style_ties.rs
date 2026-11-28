@@ -19,11 +19,18 @@ fn room() -> Document {
         {"kind":"wall","id":2,"layerId":"a","attrs":{},"width":0.15,"justify":"center",
          "pts":[{"x":4.075,"y":0},{"x":4.075,"y":9}]}],
         "styles":{"items":[],"categories":[]}});
-    Document::from_snapshot(DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("reads")).expect("opens")
+    Document::from_snapshot(DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("reads"))
+        .expect("opens")
 }
 
 fn done(doc: &mut Document, name: &str, input: Value) -> Value {
-    let result = registry::run(&mut ExecutionContext::new(doc), name, kentos_commands::CallOp::Execute, input).unwrap();
+    let result = registry::run(
+        &mut ExecutionContext::new(doc),
+        name,
+        kentos_commands::CallOp::Execute,
+        input,
+    )
+    .unwrap();
     assert_eq!(result["status"], "completed", "{name}: {result}");
     result["output"].clone()
 }
@@ -36,7 +43,12 @@ fn dimensions(doc: &Document) -> Vec<(f64, Vec<Option<String>>)> {
                 (d.b.x - d.a.x).hypot(d.b.y - d.a.y),
                 d.refs
                     .as_ref()
-                    .map(|r| [&r.a, &r.b].iter().map(|s| s.as_ref().and_then(|s| s.broken.clone())).collect())
+                    .map(|r| {
+                        [&r.a, &r.b]
+                            .iter()
+                            .map(|s| s.as_ref().and_then(|s| s.broken.clone()))
+                            .collect()
+                    })
                     .unwrap_or_default(),
             )),
             _ => None,
@@ -47,16 +59,28 @@ fn dimensions(doc: &Document) -> Vec<(f64, Vec<Option<String>>)> {
 #[test]
 fn an_interior_chain_stays_bound_when_its_walls_take_a_style() {
     let mut doc = room();
-    done(&mut doc, "cad.dimensions.interior", json!({
-        "from": {"x": -1.0, "y": 4.5}, "to": {"x": 13.0, "y": 4.5}, "layerId": "a"
-    }));
+    done(
+        &mut doc,
+        "cad.dimensions.interior",
+        json!({
+            "from": {"x": -1.0, "y": 4.5}, "to": {"x": 13.0, "y": 4.5}, "layerId": "a"
+        }),
+    );
     let before = dimensions(&doc);
     // The shell, the west room, the partition, the east room, the shell.
     assert_eq!(before.len(), 5, "{before:?}");
     let shell = doc.uid(Slot(1)).expect("the shell").to_string();
     let partition = doc.uid(Slot(2)).expect("the partition").to_string();
-    done(&mut doc, "cad.walls.edit", json!({"uids": [shell], "operation": {"kind": "set", "style": "Dış duvar 25"}}));
-    done(&mut doc, "cad.walls.edit", json!({"uids": [partition], "operation": {"kind": "set", "style": "İç duvar 15"}}));
+    done(
+        &mut doc,
+        "cad.walls.edit",
+        json!({"uids": [shell], "operation": {"kind": "set", "style": "Dış duvar 25"}}),
+    );
+    done(
+        &mut doc,
+        "cad.walls.edit",
+        json!({"uids": [partition], "operation": {"kind": "set", "style": "İç duvar 15"}}),
+    );
     let after = dimensions(&doc);
     assert_eq!(after.len(), before.len());
     for ((was, _), (now, broken)) in before.iter().zip(&after) {

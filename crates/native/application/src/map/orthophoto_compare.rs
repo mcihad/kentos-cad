@@ -7,8 +7,8 @@
 //! The shared cases are `fixtures/commands/v1/cad.orthophoto.compare.json`.
 
 use kentos_commands::{
-    CommandResult, Entity, LayerNodeType, OrthoPair, OrthoPoint, OrthoRules, OrthophotoCheck, OrthophotoChecked,
-    OrthophotoCompare, OrthophotoCompared, ortho_rules_default,
+    CommandResult, Entity, LayerNodeType, OrthoPair, OrthoPoint, OrthoRules, OrthophotoCheck,
+    OrthophotoChecked, OrthophotoCompare, OrthophotoCompared, ortho_rules_default,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -25,13 +25,28 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 pub(crate) fn raster(doc: &Document, uid: &str, path: &str) -> Result<(Uuid, f64), Stop> {
     let uid = uid.trim();
     if !checks::is_uid_text(uid) {
-        return Err(fail(codes::INVALID_UID, format!("“{uid}” geçerli bir nesne kimliği değil."), path));
+        return Err(fail(
+            codes::INVALID_UID,
+            format!("“{uid}” geçerli bir nesne kimliği değil."),
+            path,
+        ));
     }
-    let Some((id, e)) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u).and_then(|s| doc.get(s)).map(|e| (u, e))) else {
-        return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), path));
+    let Some((id, e)) = Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u).and_then(|s| doc.get(s)).map(|e| (u, e)))
+    else {
+        return Err(fail(
+            codes::ENTITY_NOT_FOUND,
+            format!("“{uid}” kimlikli nesne çizimde yok."),
+            path,
+        ));
     };
     let Entity::Raster(r) = e else {
-        return Err(fail(codes::NOT_A_RASTER, format!("“{uid}” bir raster değil; ortofotoyu seçin."), path));
+        return Err(fail(
+            codes::NOT_A_RASTER,
+            format!("“{uid}” bir raster değil; ortofotoyu seçin."),
+            path,
+        ));
     };
     let project = doc.settings().srid;
     if r.raster.srid != 0 && r.raster.srid != project {
@@ -57,26 +72,51 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
     let (u1, g1) = raster(doc, &input.first, "first")?;
     let (u2, g2) = raster(doc, &input.second, "second")?;
     if u1 == u2 {
-        return Err(fail(codes::INVALID_INPUT, "Aynı ortofoto iki kez verilmiş; iki ayrı görüntü seçin.".into(), "second"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Aynı ortofoto iki kez verilmiş; iki ayrı görüntü seçin.".into(),
+            "second",
+        ));
     }
-    let mut layers = vec![(&input.first_points, "firstPoints"), (&input.second_points, "secondPoints")];
+    let mut layers = vec![
+        (&input.first_points, "firstPoints"),
+        (&input.second_points, "secondPoints"),
+    ];
     if let Some(k) = &input.known {
         layers.push((k, "known"));
     }
     for (layer, path) in layers {
-        if !doc.layers().get(layer.trim()).is_some_and(|n| n.kind == LayerNodeType::Layer) {
-            return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", layer.trim()), path));
+        if !doc
+            .layers()
+            .get(layer.trim())
+            .is_some_and(|n| n.kind == LayerNodeType::Layer)
+        {
+            return Err(fail(
+                codes::LAYER_NOT_FOUND,
+                format!("“{}” katmanı çizimde yok.", layer.trim()),
+                path,
+            ));
         }
     }
     if input.scale == Some(0) {
-        return Err(fail(codes::INVALID_INPUT, "Ölçek paydası 0 olamaz.".into(), "scale"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Ölçek paydası 0 olamaz.".into(),
+            "scale",
+        ));
     }
     if let Some(seam) = &input.seam {
         crate::orthophoto_seams::asked(seam)?;
     }
     let rules: OrthoRules = match &input.rules {
         Some(r) => r.clone(),
-        None => ortho_rules_default().ok_or_else(|| fail(codes::INVALID_INPUT, "Yerleşik kural paketi okunamadı.".into(), "rules"))?,
+        None => ortho_rules_default().ok_or_else(|| {
+            fail(
+                codes::INVALID_INPUT,
+                "Yerleşik kural paketi okunamadı.".into(),
+                "rules",
+            )
+        })?,
     };
     if rules.id.trim().is_empty() || rules.source.trim().is_empty() {
         return Err(fail(codes::INVALID_INPUT, "Kural paketinin kimliği ya da kaynağı boş; sınırın dayanağı yazılmadan karşılaştırma yapılmaz.".into(), "rules"));
@@ -88,7 +128,12 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
             "rules",
         ));
     };
-    let field = input.field.as_deref().map(str::trim).filter(|f| !f.is_empty()).unwrap_or("Ad");
+    let field = input
+        .field
+        .as_deref()
+        .map(str::trim)
+        .filter(|f| !f.is_empty())
+        .unwrap_or("Ad");
     let first = named_points(doc, input.first_points.trim(), field);
     let second = named_points(doc, input.second_points.trim(), field);
     // BÖHHBÜY 67(6) speaks of one mosaic's images; for two of different pixels the coarser one's GSD (KentOS's reading).
@@ -101,8 +146,21 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
             Some((_, sx, sy, _)) => {
                 let (dx, dy) = (sx - x, sy - y);
                 let d = dx.hypot(dy);
-                pairs.push(OrthoPair { name: name.clone(), dx, dy, d, over: d > limit });
-                shifts.push(OrthoPoint { name: name.clone(), role: "check".into(), dx, dy, dz: None, d });
+                pairs.push(OrthoPair {
+                    name: name.clone(),
+                    dx,
+                    dy,
+                    d,
+                    over: d > limit,
+                });
+                shifts.push(OrthoPoint {
+                    name: name.clone(),
+                    role: "check".into(),
+                    dx,
+                    dy,
+                    dz: None,
+                    d,
+                });
             }
             None => unmatched.push(name.clone()),
         }
@@ -115,7 +173,9 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
     let shift = stats(&shifts.iter().collect::<Vec<_>>());
     // Each image against the ground's points: `cad.orthophoto.check`'s answer, with this input's scale and package.
     let each = |raster: &str, observed: &str| -> Result<Option<OrthophotoChecked>, Stop> {
-        let Some(known) = &input.known else { return Ok(None) };
+        let Some(known) = &input.known else {
+            return Ok(None);
+        };
         let check = OrthophotoCheck {
             raster: raster.to_owned(),
             known: known.clone(),
@@ -135,7 +195,9 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
                 Some(Entity::Raster(r)) => Some(r.clone()),
                 _ => None,
             };
-            let (Some(r1), Some(r2)) = (entity(u1), entity(u2)) else { return Err(Stop::Cancelled) };
+            let (Some(r1), Some(r2)) = (entity(u1), entity(u2)) else {
+                return Err(Stop::Cancelled);
+            };
             Some(crate::orthophoto_seams::measure(doc, &r1, &r2, ask, limit)?)
         }
         None => None,
@@ -149,7 +211,10 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
         "Ortalama kayma görüntüler arasındaki sistematik farktır; iki zamanın farkı kendiliğinden deformasyon ya da yer değiştirme değildir, görüntülerin kendi doğruluğuyla birlikte okunur.".to_owned(),
     ];
     if !unmatched.is_empty() {
-        notes.push(format!("Eşi bulunmayan noktalar: {}.", unmatched.join(", ")));
+        notes.push(format!(
+            "Eşi bulunmayan noktalar: {}.",
+            unmatched.join(", ")
+        ));
     }
     if input.known.is_none() {
         notes.push("Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.".into());
@@ -218,20 +283,32 @@ fn run(doc: &Document, input: &OrthophotoCompare) -> Result<OrthophotoCompared, 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &OrthophotoCompare) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &OrthophotoCompare) -> CommandResult<OrthophotoCompared> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &OrthophotoCompare,
+) -> CommandResult<OrthophotoCompared> {
     match run(cx.doc, input) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: OrthophotoCompare) -> CommandResult<OrthophotoCompared> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: OrthophotoCompare,
+) -> CommandResult<OrthophotoCompared> {
     plan(cx, &input)
 }

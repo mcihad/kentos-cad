@@ -18,8 +18,8 @@ use iced::futures::channel::mpsc;
 use iced::widget::{Column, column, container, row, scrollable};
 use iced::{Element, Length, Task};
 use kentos_commands::{
-    CommandWarning, ExportEncoding, ExportExisting, ExportField, ExportFormat, ExportGeometry, ExportOptions, ExportSymbols,
-    LayersData, LayersExport, LayersExported,
+    CommandWarning, ExportEncoding, ExportExisting, ExportField, ExportFormat, ExportGeometry,
+    ExportOptions, ExportSymbols, LayersData, LayersExport, LayersExported,
 };
 use kentos_native_application::ExecutionContext;
 use kentos_native_application::layer_export::ExportProgress;
@@ -32,7 +32,9 @@ use kentos_ui::widget::{Dialog, Form, overlay};
 
 use crate::app::{App, Message};
 use crate::exchange::words;
-use crate::layer_export_extent::{BAD_BOX, EXTENTS, Extent, Sides, box_of, extent_label, sides_view};
+use crate::layer_export_extent::{
+    BAD_BOX, EXTENTS, Extent, Sides, box_of, extent_label, sides_view,
+};
 
 /// The exports started: a late answer of one the window no longer waits for is dropped.
 static RUNS: AtomicU64 = AtomicU64::new(0);
@@ -113,10 +115,11 @@ fn existing_label(e: ExportExisting) -> &'static str {
 
 /// Where it was written, short: a GeoPackage's file and table, PostGIS's table, a file's name.
 fn place_of(out: &LayersExported) -> String {
-    let file = out
-        .files
-        .first()
-        .map(|f| Path::new(f).file_name().map_or_else(|| f.clone(), |n| n.to_string_lossy().into_owned()));
+    let file = out.files.first().map(|f| {
+        Path::new(f)
+            .file_name()
+            .map_or_else(|| f.clone(), |n| n.to_string_lossy().into_owned())
+    });
     match (out.table.clone(), file) {
         (Some(t), Some(f)) => format!("{f} › {t}"),
         (Some(t), None) => t,
@@ -142,7 +145,11 @@ fn geometry_words(written: Option<&str>) -> String {
         "POLYGON" | "SURFACE" => "alan",
         _ => "karışık geometri",
     };
-    let mut out = if multi { format!("çok parçalı {word}") } else { word.to_owned() };
+    let mut out = if multi {
+        format!("çok parçalı {word}")
+    } else {
+        word.to_owned()
+    };
     if let Some(dims) = parts.next() {
         out.push_str(", ");
         out.push_str(dims);
@@ -331,17 +338,33 @@ impl App {
             .and_then(|d| d.geometry.as_ref())
             .and_then(|g| g.srid);
         let project = doc.model.settings().srid;
-        let named = |srid: u32| kentos_project::crs::system(srid).map_or_else(|| format!("EPSG:{srid}"), |s| format!("{} (EPSG:{srid})", s.name));
+        let named = |srid: u32| {
+            kentos_project::crs::system(srid).map_or_else(
+                || format!("EPSG:{srid}"),
+                |s| format!("{} (EPSG:{srid})", s.name),
+            )
+        };
         match own {
             Some(srid) => (format!("Katmanın sistemi · {}", named(srid)), Some(srid)),
-            None if project > 0 => (format!("Projenin sistemi · {}", named(project)), Some(project)),
-            None => ("Projenin sistemi (yerel, koordinat sistemi yok)".to_owned(), None),
+            None if project > 0 => (
+                format!("Projenin sistemi · {}", named(project)),
+                Some(project),
+            ),
+            None => (
+                "Projenin sistemi (yerel, koordinat sistemi yok)".to_owned(),
+                None,
+            ),
         }
     }
 
     /// Farklı kaydet… (`selected`: Seçilenleri farklı kaydet…) on a layer.
     pub(crate) fn open_layer_export(&mut self, layer: &str, selected: bool) {
-        let Some(node) = self.document.as_ref().and_then(|d| d.model.layers().get(layer)).cloned() else {
+        let Some(node) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(layer))
+            .cloned()
+        else {
             return;
         };
         let fields = node
@@ -395,7 +418,9 @@ impl App {
             said: None,
             said_stopped: false,
         });
-        self.dialog = Some(crate::app::Dialog::Gis(crate::gis::GisDialogKind::LayerExport));
+        self.dialog = Some(crate::app::Dialog::Gis(
+            crate::gis::GisDialogKind::LayerExport,
+        ));
     }
 
     /// The selected objects' ids (a drawing layer) or the table's selected rows' keys (a data layer).
@@ -413,7 +438,11 @@ impl App {
             .selection
             .ids()
             .iter()
-            .filter(|s| doc.model.get(**s).is_some_and(|e| e.base().layer_id == layer))
+            .filter(|s| {
+                doc.model
+                    .get(**s)
+                    .is_some_and(|e| e.base().layer_id == layer)
+            })
             .filter_map(|s| doc.model.uid(*s))
             .map(|u| u.to_string())
             .collect();
@@ -425,18 +454,28 @@ impl App {
         let Some(doc) = &self.document else {
             return false;
         };
-        if doc.model.layers().get(layer).is_some_and(|n| n.data.is_some()) {
+        if doc
+            .model
+            .layers()
+            .get(layer)
+            .is_some_and(|n| n.data.is_some())
+        {
             return self.gis.features.data.any_selected_of(layer);
         }
-        self.selection
-            .ids()
-            .iter()
-            .any(|s| doc.model.get(*s).is_some_and(|e| e.base().layer_id == layer))
+        self.selection.ids().iter().any(|s| {
+            doc.model
+                .get(*s)
+                .is_some_and(|e| e.base().layer_id == layer)
+        })
     }
 
     /// The command's input for the window as it is.
     pub(crate) fn export_input(&self, w: &ExportWindow) -> LayersExport {
-        let (uids, keys) = if w.selected { self.export_selection(&w.layer) } else { (None, None) };
+        let (uids, keys) = if w.selected {
+            self.export_selection(&w.layer)
+        } else {
+            (None, None)
+        };
         let bbox = match w.extent {
             Extent::All => None,
             Extent::View => {
@@ -447,8 +486,12 @@ impl App {
         };
         let address = (w.format == ExportFormat::Postgis)
             .then(|| {
-                w.connection
-                    .and_then(|i| kentos_postgis::connections::store().list().get(i).map(|c| c.address()))
+                w.connection.and_then(|i| {
+                    kentos_postgis::connections::store()
+                        .list()
+                        .get(i)
+                        .map(|c| c.address())
+                })
             })
             .flatten();
         let fields: Vec<ExportField> = w
@@ -457,21 +500,29 @@ impl App {
             .filter(|f| f.on)
             .map(|f| ExportField {
                 name: f.name.clone(),
-                to: (f.to.trim() != f.name && !f.to.trim().is_empty()).then(|| f.to.trim().to_owned()),
+                to: (f.to.trim() != f.name && !f.to.trim().is_empty())
+                    .then(|| f.to.trim().to_owned()),
                 labels: (f.listed && f.labels).then_some(true),
             })
             .collect();
         let table = w.table();
         let options = ExportOptions {
-            description: (table && !w.description.trim().is_empty()).then(|| w.description.trim().to_owned()),
-            key: (table && w.key.trim() != "fid" && !w.key.trim().is_empty()).then(|| w.key.trim().to_owned()),
-            geometry_column: (table && w.geometry_column.trim() != "geom" && !w.geometry_column.trim().is_empty())
-                .then(|| w.geometry_column.trim().to_owned()),
+            description: (table && !w.description.trim().is_empty())
+                .then(|| w.description.trim().to_owned()),
+            key: (table && w.key.trim() != "fid" && !w.key.trim().is_empty())
+                .then(|| w.key.trim().to_owned()),
+            geometry_column: (table
+                && w.geometry_column.trim() != "geom"
+                && !w.geometry_column.trim().is_empty())
+            .then(|| w.geometry_column.trim().to_owned()),
             no_spatial_index: (table && !w.spatial_index).then_some(true),
-            separator: (w.format == ExportFormat::Csv && w.separator != ",").then(|| w.separator.clone()),
+            separator: (w.format == ExportFormat::Csv && w.separator != ",")
+                .then(|| w.separator.clone()),
             xy: (w.format == ExportFormat::Csv && w.xy).then_some(true),
-            project_coordinates: (w.format == ExportFormat::Geojson && w.project_coordinates).then_some(true),
-            symbols: (w.format == ExportFormat::Kml && w.symbols != ExportSymbols::Color).then_some(w.symbols),
+            project_coordinates: (w.format == ExportFormat::Geojson && w.project_coordinates)
+                .then_some(true),
+            symbols: (w.format == ExportFormat::Kml && w.symbols != ExportSymbols::Color)
+                .then_some(w.symbols),
         };
         let empty = options == ExportOptions::default();
         LayersExport {
@@ -480,7 +531,9 @@ impl App {
             path: (w.format != ExportFormat::Postgis).then(|| w.path.trim().to_owned()),
             address,
             schema: (w.format == ExportFormat::Postgis).then(|| w.schema.trim().to_owned()),
-            name: (table || w.format == ExportFormat::Kml).then(|| w.name.trim().to_owned()).filter(|n| !n.is_empty()),
+            name: (table || w.format == ExportFormat::Kml)
+                .then(|| w.name.trim().to_owned())
+                .filter(|n| !n.is_empty()),
             srid: w.srid.filter(|_| !wgs84_only(w)),
             encoding: matches!(w.format, ExportFormat::Shapefile | ExportFormat::Csv)
                 .then_some(w.encoding)
@@ -512,7 +565,12 @@ impl App {
         match event {
             Event::Format(i) => {
                 w.format = FORMATS[i.min(FORMATS.len() - 1)];
-                if !w.table() && matches!(w.existing, ExportExisting::ReplaceLayer | ExportExisting::Append) {
+                if !w.table()
+                    && matches!(
+                        w.existing,
+                        ExportExisting::ReplaceLayer | ExportExisting::Append
+                    )
+                {
                     w.existing = ExportExisting::Refuse;
                 }
                 // The file's extension follows the format.
@@ -548,7 +606,11 @@ impl App {
             Event::Name(n) => w.name = n,
             Event::Srid(s) => w.srid = s,
             Event::Encoding(i) => {
-                w.encoding = if i == 1 { ExportEncoding::Windows1254 } else { ExportEncoding::Utf8 }
+                w.encoding = if i == 1 {
+                    ExportEncoding::Windows1254
+                } else {
+                    ExportEncoding::Utf8
+                }
             }
             Event::Selected(on) => w.selected = on,
             Event::Extent(i) => {
@@ -589,7 +651,9 @@ impl App {
             Event::Key(k) => w.key = k,
             Event::GeometryColumn(g) => w.geometry_column = g,
             Event::SpatialIndex(on) => w.spatial_index = on,
-            Event::Separator(s) => w.separator = s.chars().last().map(String::from).unwrap_or_default(),
+            Event::Separator(s) => {
+                w.separator = s.chars().last().map(String::from).unwrap_or_default()
+            }
             Event::Xy(on) => w.xy = on,
             Event::ProjectCoordinates(on) => w.project_coordinates = on,
             Event::Symbols(i) => w.symbols = SYMBOLS[i.min(SYMBOLS.len() - 1)].0,
@@ -643,7 +707,10 @@ impl App {
             return Task::none();
         };
         if let kentos_commands::CommandResult::Failed { error } =
-            kentos_native_application::layer_export::validate(&ExecutionContext::new(&mut doc.model), &input)
+            kentos_native_application::layer_export::validate(
+                &ExecutionContext::new(&mut doc.model),
+                &input,
+            )
         {
             if let Some(w) = self.gis.layer_export.as_mut() {
                 w.said = Some(error.message);
@@ -664,28 +731,35 @@ impl App {
             w.said_stopped = false;
         }
         let (out, replies) = mpsc::unbounded::<Event>();
-        let spawned = std::thread::Builder::new().name("kentos-disa-aktar".into()).spawn(move || {
-            let told = out.clone();
-            let last: std::cell::Cell<Option<Instant>> = std::cell::Cell::new(None);
-            let answer = kentos_native_application::layer_export::written(
-                &copy,
-                &input,
-                &|| stop.load(Ordering::Relaxed),
-                &|p| {
-                    let now = Instant::now();
-                    if last.get().is_none_or(|t| now.duration_since(t) >= PROGRESS_EVERY) {
-                        last.set(Some(now));
-                        let _ = told.unbounded_send(Event::Progress(run, p));
-                    }
-                },
-            );
-            let _ = out.unbounded_send(Event::Done(run, Box::new(answer)));
-        });
+        let spawned = std::thread::Builder::new()
+            .name("kentos-disa-aktar".into())
+            .spawn(move || {
+                let told = out.clone();
+                let last: std::cell::Cell<Option<Instant>> = std::cell::Cell::new(None);
+                let answer = kentos_native_application::layer_export::written(
+                    &copy,
+                    &input,
+                    &|| stop.load(Ordering::Relaxed),
+                    &|p| {
+                        let now = Instant::now();
+                        if last
+                            .get()
+                            .is_none_or(|t| now.duration_since(t) >= PROGRESS_EVERY)
+                        {
+                            last.set(Some(now));
+                            let _ = told.unbounded_send(Event::Progress(run, p));
+                        }
+                    },
+                );
+                let _ = out.unbounded_send(Event::Done(run, Box::new(answer)));
+            });
         match spawned {
             Ok(_) => Task::run(replies, message),
             Err(e) => Task::done(message(Event::Done(
                 run,
-                Box::new(Err(format!("Dışa aktarılamadı: iş parçacığı başlatılamadı ({e})."))),
+                Box::new(Err(format!(
+                    "Dışa aktarılamadı: iş parçacığı başlatılamadı ({e})."
+                ))),
             ))),
         }
     }
@@ -707,8 +781,10 @@ impl App {
                 if let Some(input) = add
                     && let Some(doc) = self.document.as_mut()
                 {
-                    let result =
-                        kentos_native_application::layers_data::execute(&mut ExecutionContext::new(&mut doc.model), input);
+                    let result = kentos_native_application::layers_data::execute(
+                        &mut ExecutionContext::new(&mut doc.model),
+                        input,
+                    );
                     self.answered(result);
                 }
                 self.say(kentos_interaction::Level::Success, words.clone());
@@ -735,20 +811,38 @@ impl App {
         let Some(w) = &self.gis.layer_export else {
             return column![].into();
         };
-        let text = |placeholder: &str, value: &str, on: fn(String) -> Event| -> Element<'_, Message> {
-            kentos_ui::widget::text_field(placeholder, value).on_input(move |t| message(on(t))).into()
-        };
-        let switch = |on: bool, label: &'static str, event: fn(bool) -> Event| -> Element<'_, Message> {
-            Switch::new(on, move |b| message(event(b))).label(label).into()
-        };
-        let select = |choices: Vec<&'static str>, at: Option<usize>, event: fn(usize) -> Event| -> Element<'_, Message> {
-            container(Select::new(choices.into_iter().map(Choice::new), at, move |i| message(event(i))).searchable(false))
-                .width(320)
-                .into()
+        let text =
+            |placeholder: &str, value: &str, on: fn(String) -> Event| -> Element<'_, Message> {
+                kentos_ui::widget::text_field(placeholder, value)
+                    .on_input(move |t| message(on(t)))
+                    .into()
+            };
+        let switch =
+            |on: bool, label: &'static str, event: fn(bool) -> Event| -> Element<'_, Message> {
+                Switch::new(on, move |b| message(event(b)))
+                    .label(label)
+                    .into()
+            };
+        let select = |choices: Vec<&'static str>,
+                      at: Option<usize>,
+                      event: fn(usize) -> Event|
+         -> Element<'_, Message> {
+            container(
+                Select::new(choices.into_iter().map(Choice::new), at, move |i| {
+                    message(event(i))
+                })
+                .searchable(false),
+            )
+            .width(320)
+            .into()
         };
         let mut form = Form::new().label_width(170.0).field(
             "Biçim",
-            select(FORMATS.iter().map(|f| format_label(*f)).collect(), FORMATS.iter().position(|f| *f == w.format), Event::Format),
+            select(
+                FORMATS.iter().map(|f| format_label(*f)).collect(),
+                FORMATS.iter().position(|f| *f == w.format),
+                Event::Format,
+            ),
         );
         if w.format == ExportFormat::Postgis {
             let list = kentos_postgis::connections::store().list();
@@ -757,18 +851,23 @@ impl App {
                 kentos_ui::label::muted("Kayıtlı bağlantı yok: önce Katman ekle › PostGIS'e bağlan ile bir bağlantı kurun.").into()
             } else {
                 container(
-                    Select::new(names.into_iter().map(Choice::new), w.connection, |i| message(Event::Connection(i)))
-                        .searchable(false),
+                    Select::new(names.into_iter().map(Choice::new), w.connection, |i| {
+                        message(Event::Connection(i))
+                    })
+                    .searchable(false),
                 )
                 .width(320)
                 .into()
             };
-            form = form.field("Bağlantı", picker).field("Şema", text("public", &w.schema, Event::Schema));
+            form = form
+                .field("Bağlantı", picker)
+                .field("Şema", text("public", &w.schema, Event::Schema));
         } else {
             form = form.field(
                 "Dosya",
                 row![
-                    container(text("Yazılacak dosyanın yolu", &w.path, Event::Path)).width(Length::Fill),
+                    container(text("Yazılacak dosyanın yolu", &w.path, Event::Path))
+                        .width(Length::Fill),
                     words::secondary("Gözat…", Some(message(Event::Browse))),
                 ]
                 .spacing(8)
@@ -776,7 +875,14 @@ impl App {
             );
         }
         if w.table() || w.format == ExportFormat::Kml {
-            form = form.field(if w.table() { "Tablo adı" } else { "Belge adı" }, text("", &w.name, Event::Name));
+            form = form.field(
+                if w.table() {
+                    "Tablo adı"
+                } else {
+                    "Belge adı"
+                },
+                text("", &w.name, Event::Name),
+            );
         }
         if wgs84_only(w) {
             let why = if w.format == ExportFormat::Kml {
@@ -784,19 +890,27 @@ impl App {
             } else {
                 "GeoJSON WGS 84 (boylam, enlem) yazılır; başka bir sistem için aşağıdaki Proje koordinatları seçeneğini açın."
             };
-            form = form.field("Koordinat sistemi", kentos_ui::label::muted("WGS 84 (EPSG:4326)")).help(why);
+            form = form
+                .field(
+                    "Koordinat sistemi",
+                    kentos_ui::label::muted("WGS 84 (EPSG:4326)"),
+                )
+                .help(why);
         } else {
             let (label, own) = self.export_default_system(w);
-            let project = self.document.as_ref().map_or(0, |d| d.model.settings().srid);
+            let project = self
+                .document
+                .as_ref()
+                .map_or(0, |d| d.model.settings().srid);
             let picker = container(crate::system_select::select(
                 crate::system_select::rows(label, own, project),
                 w.srid,
                 |s| message(Event::Srid(s)),
             ))
             .width(420);
-            form = form
-                .field("Koordinat sistemi", picker)
-                .help("Satırlar yazılırken bu sisteme çevrilir; varsayılan katmanın kendi sistemidir.");
+            form = form.field("Koordinat sistemi", picker).help(
+                "Satırlar yazılırken bu sisteme çevrilir; varsayılan katmanın kendi sistemidir.",
+            );
         }
         if matches!(w.format, ExportFormat::Shapefile | ExportFormat::Csv) {
             form = form.field(
@@ -810,10 +924,18 @@ impl App {
         }
         form = form
             .section("Yazılacak nesneler")
-            .row(switch(w.selected, "Yalnız seçilenleri yaz", Event::Selected))
+            .row(switch(
+                w.selected,
+                "Yalnız seçilenleri yaz",
+                Event::Selected,
+            ))
             .field(
                 "Kapsam",
-                select(EXTENTS.iter().map(|e| extent_label(*e)).collect(), EXTENTS.iter().position(|e| *e == w.extent), Event::Extent),
+                select(
+                    EXTENTS.iter().map(|e| extent_label(*e)).collect(),
+                    EXTENTS.iter().position(|e| *e == w.extent),
+                    Event::Extent,
+                ),
             );
         if w.extent == Extent::Box {
             form = form.wide(sides_view(
@@ -825,16 +947,23 @@ impl App {
                 message(Event::DrawBox),
             ));
         }
-        form = form.field("Süzgeç (İfadeyle seç'in dili)", text("örn. kullanim = 'Konut'", &w.filter, Event::Filter));
+        form = form.field(
+            "Süzgeç (İfadeyle seç'in dili)",
+            text("örn. kullanim = 'Konut'", &w.filter, Event::Filter),
+        );
         // Alanlar: each on or off, its kind, its written name, its labels when it has a list. The heads stay; the
         // rows scroll in a list of their own height, so a layer of many fields does not stretch the window.
         let on = w.fields.iter().filter(|f| f.on).count();
         let tools = row![
             words::ghost("Tümünü seç", Some(message(Event::AllFields(true)))),
             words::ghost("Hiçbirini seçme", Some(message(Event::AllFields(false)))),
-            container(kentos_ui::label::muted(format!("{} alandan {} tanesi yazılacak", w.fields.len(), on)))
-                .width(Length::Fill)
-                .align_x(iced::alignment::Horizontal::Right),
+            container(kentos_ui::label::muted(format!(
+                "{} alandan {} tanesi yazılacak",
+                w.fields.len(),
+                on
+            )))
+            .width(Length::Fill)
+            .align_x(iced::alignment::Horizontal::Right),
         ]
         .spacing(8)
         .align_y(iced::Alignment::Center);
@@ -856,15 +985,25 @@ impl App {
         });
         for (i, f) in w.fields.iter().enumerate() {
             let mut line = row![
-                container(Switch::new(f.on, move |b| message(Event::FieldOn(i, b))).label(f.name.as_str())).width(200),
+                container(
+                    Switch::new(f.on, move |b| message(Event::FieldOn(i, b)))
+                        .label(f.name.as_str())
+                )
+                .width(200),
                 container(kentos_ui::label::muted(f.kind)).width(110),
-                container(kentos_ui::widget::text_field("Yazılacak adı", &f.to).on_input(move |t| message(Event::FieldTo(i, t))))
-                    .width(200),
+                container(
+                    kentos_ui::widget::text_field("Yazılacak adı", &f.to)
+                        .on_input(move |t| message(Event::FieldTo(i, t)))
+                )
+                .width(200),
             ]
             .spacing(12)
             .align_y(iced::Alignment::Center);
             if f.listed {
-                line = line.push(Switch::new(f.labels, move |b| message(Event::FieldLabels(i, b))).label("Görünen değer"));
+                line = line.push(
+                    Switch::new(f.labels, move |b| message(Event::FieldLabels(i, b)))
+                        .label("Görünen değer"),
+                );
             }
             rows = rows.push(line);
         }
@@ -882,12 +1021,18 @@ impl App {
         .width(Length::Fill)
         .padding(1)
         .style(style::container::bordered);
-        form = form.section("Alanlar").wide(column![tools, list].spacing(6));
+        form = form
+            .section("Alanlar")
+            .wide(column![tools, list].spacing(6));
         form = form
             .section("Geometri")
             .field(
                 "Geometri türü",
-                select(GEOMETRIES.iter().map(|g| geometry_label(*g)).collect(), GEOMETRIES.iter().position(|g| *g == w.geometry), Event::Geometry),
+                select(
+                    GEOMETRIES.iter().map(|g| geometry_label(*g)).collect(),
+                    GEOMETRIES.iter().position(|g| *g == w.geometry),
+                    Event::Geometry,
+                ),
             )
             .row(switch(w.multi, "Çok parçalıya zorla", Event::Multi))
             .row(switch(w.z, "Z boyutunu yaz (kotsuz nesne 0)", Event::Z))
@@ -898,19 +1043,32 @@ impl App {
                     .section("Tablo seçenekleri")
                     .field("Açıklama", text("", &w.description, Event::Description))
                     .field("Anahtar sütunu", text("fid", &w.key, Event::Key))
-                    .field("Geometri sütunu", text("geom", &w.geometry_column, Event::GeometryColumn))
-                    .row(switch(w.spatial_index, "Mekânsal dizin yap", Event::SpatialIndex));
+                    .field(
+                        "Geometri sütunu",
+                        text("geom", &w.geometry_column, Event::GeometryColumn),
+                    )
+                    .row(switch(
+                        w.spatial_index,
+                        "Mekânsal dizin yap",
+                        Event::SpatialIndex,
+                    ));
             }
             ExportFormat::Csv => {
                 form = form
                     .section("CSV seçenekleri")
                     .field("Ayırıcı", text(",", &w.separator, Event::Separator))
-                    .row(switch(w.xy, "Noktaları X ve Y sütunlarıyla yaz (WKT yerine)", Event::Xy));
+                    .row(switch(
+                        w.xy,
+                        "Noktaları X ve Y sütunlarıyla yaz (WKT yerine)",
+                        Event::Xy,
+                    ));
             }
             ExportFormat::Geojson => {
-                form = form
-                    .section("GeoJSON seçenekleri")
-                    .row(switch(w.project_coordinates, "Proje koordinatlarıyla yaz (eski crs üyesiyle)", Event::ProjectCoordinates));
+                form = form.section("GeoJSON seçenekleri").row(switch(
+                    w.project_coordinates,
+                    "Proje koordinatlarıyla yaz (eski crs üyesiyle)",
+                    Event::ProjectCoordinates,
+                ));
             }
             ExportFormat::Kml => {
                 form = form
@@ -925,28 +1083,49 @@ impl App {
         }
         let existing: Vec<&'static str> = EXISTING
             .iter()
-            .filter(|e| w.table() || !matches!(e, ExportExisting::ReplaceLayer | ExportExisting::Append))
-            .filter(|e| !(w.format == ExportFormat::Postgis && **e == ExportExisting::OverwriteFile))
+            .filter(|e| {
+                w.table() || !matches!(e, ExportExisting::ReplaceLayer | ExportExisting::Append)
+            })
+            .filter(|e| {
+                !(w.format == ExportFormat::Postgis && **e == ExportExisting::OverwriteFile)
+            })
             .map(|e| existing_label(*e))
             .collect();
-        let at = existing.iter().position(|l| *l == existing_label(w.existing));
+        let at = existing
+            .iter()
+            .position(|l| *l == existing_label(w.existing));
         form = form.section("Hedef varsa").field(
             "Ne yapılsın",
             container(
-                Select::new(existing.clone().into_iter().map(Choice::new), at, move |i| {
-                    let label = existing.get(i).copied().unwrap_or_default();
-                    let pos = EXISTING.iter().position(|e| existing_label(*e) == label).unwrap_or(0);
-                    message(Event::Existing(pos))
-                })
+                Select::new(
+                    existing.clone().into_iter().map(Choice::new),
+                    at,
+                    move |i| {
+                        let label = existing.get(i).copied().unwrap_or_default();
+                        let pos = EXISTING
+                            .iter()
+                            .position(|e| existing_label(*e) == label)
+                            .unwrap_or(0);
+                        message(Event::Existing(pos))
+                    },
+                )
                 .searchable(false),
             )
             .width(320),
         );
         if w.format == ExportFormat::Gpkg {
-            form = form.row(switch(w.metadata, "Katmanın veri kümesi bilgisini üst veri olarak yaz", Event::Metadata));
+            form = form.row(switch(
+                w.metadata,
+                "Katmanın veri kümesi bilgisini üst veri olarak yaz",
+                Event::Metadata,
+            ));
         }
         if w.table() {
-            form = form.row(switch(w.add_to_map, "Yazılan tabloyu haritaya ekle", Event::AddToMap));
+            form = form.row(switch(
+                w.add_to_map,
+                "Yazılan tabloyu haritaya ekle",
+                Event::AddToMap,
+            ));
         }
         let title = if w.selected {
             format!("Seçilenleri farklı kaydet — {}", w.title)
@@ -959,18 +1138,30 @@ impl App {
         if w.running {
             dialog = dialog
                 .status(running_status(w))
-                .action(words::secondary("Durdur", (!w.stopping).then(|| message(Event::Stop))))
+                .action(words::secondary(
+                    "Durdur",
+                    (!w.stopping).then(|| message(Event::Stop)),
+                ))
                 .action(words::primary("Dışa aktar", None));
         } else {
             if let Some(said) = &w.said {
-                let kind = if w.said_stopped { words::Kind::Info } else { words::Kind::Error };
+                let kind = if w.said_stopped {
+                    words::Kind::Info
+                } else {
+                    words::Kind::Error
+                };
                 dialog = dialog.status(words::text_line(kind, said.clone()));
             }
             dialog = dialog
                 .action(words::secondary("Vazgeç", Some(message(Event::Close))))
                 .action(words::primary("Dışa aktar", Some(message(Event::Run))));
         }
-        overlay::blocking(dialog.width(760.0).max_height(820.0).on_close(Some(message(Event::Close))))
+        overlay::blocking(
+            dialog
+                .width(760.0)
+                .max_height(820.0)
+                .on_close(Some(message(Event::Close))),
+        )
     }
 }
 
@@ -997,6 +1188,8 @@ fn running_status(w: &ExportWindow) -> Element<'_, Message> {
             None => (format!("{} nesne yazıldı", thousands(p.written)), None),
         },
     };
-    column![kentos_ui::label::caption(said), progress::bar(share)].spacing(4).width(Length::Fill).into()
+    column![kentos_ui::label::caption(said), progress::bar(share)]
+        .spacing(4)
+        .width(Length::Fill)
+        .into()
 }
-

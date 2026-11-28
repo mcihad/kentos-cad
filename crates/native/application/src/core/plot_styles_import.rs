@@ -5,7 +5,9 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_commands::{CommandResult, CommandWarning, PlotStylesImport, PlotStylesImported, SheetsEdit};
+use kentos_commands::{
+    CommandResult, CommandWarning, PlotStylesImport, PlotStylesImported, SheetsEdit,
+};
 use kentos_sheet::{
     ops::Op,
     plot_profile::{self, Assignment, SavePlotProfiles, Target, acad},
@@ -41,7 +43,11 @@ struct Prepared {
 fn prepare(cx: &ExecutionContext<'_>, input: &PlotStylesImport) -> Result<Prepared, Stop> {
     checks::revision(cx.doc, input.expected_revision.as_deref())?;
     if input.path.trim().is_empty() {
-        return Err(fail(codes::INVALID_INPUT, "Okunacak .ctb ya da .stb dosyasının yolunu verin.".into(), "path"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Okunacak .ctb ya da .stb dosyasının yolunu verin.".into(),
+            "path",
+        ));
     }
     let at = resolved(&input.path, input.base.as_deref());
     let file = at
@@ -78,16 +84,23 @@ fn prepare(cx: &ExecutionContext<'_>, input: &PlotStylesImport) -> Result<Prepar
     let bytes = std::fs::read(&at).map_err(|e| {
         fail(
             codes::FILE_UNREADABLE,
-            format!("“{}” okunamadı: {e}. Dosyanın izinlerini denetleyin.", at.display()),
+            format!(
+                "“{}” okunamadı: {e}. Dosyanın izinlerini denetleyin.",
+                at.display()
+            ),
             "path",
         )
     })?;
     // The profile's id comes from the file's bytes: the same file is the same profile.
     let digest = kentos_sheet::template::sha256_hex(&bytes);
-    let format = if bytes.starts_with(b"PIAFILEVERSION_2.0,STBVER1") { "stb" } else { "ctb" };
+    let format = if bytes.starts_with(b"PIAFILEVERSION_2.0,STBVER1") {
+        "stb"
+    } else {
+        "ctb"
+    };
     let id = format!("{format}-{}", &digest[..12]);
-    let mut read = acad::read(&bytes, &id, &name, &file)
-        .map_err(|e| fail(&e.code, e.message, "path"))?;
+    let mut read =
+        acad::read(&bytes, &id, &name, &file).map_err(|e| fail(&e.code, e.message, "path"))?;
     let (book, _) = match cx.doc.sheets() {
         Some(s) => kentos_sheet::project::read_project_sheets(s)
             .map_err(|e| Stop::failed(error(codes::BOOK_UNREADABLE, e.message, None)))?,
@@ -96,22 +109,27 @@ fn prepare(cx: &ExecutionContext<'_>, input: &PlotStylesImport) -> Result<Prepar
     if let Some(p) = book.plot_profiles.iter().find(|p| p.name == name) {
         return Err(fail(
             "duplicate_plot_profile",
-            format!("Kitapta “{}” adlı bir baskı profili var; başka bir ad verin ya da önce onu kaldırın.", p.name),
+            format!(
+                "Kitapta “{}” adlı bir baskı profili var; başka bir ad verin ya da önce onu kaldırın.",
+                p.name
+            ),
             "name",
         ));
     }
     if let Some(p) = book.plot_profiles.iter().find(|p| p.id == id) {
         return Err(fail(
             "duplicate_plot_profile",
-            format!("Bu dosya kitapta “{}” adıyla zaten var; aynı tablo ikinci kez alınmaz.", p.name),
+            format!(
+                "Bu dosya kitapta “{}” adıyla zaten var; aynı tablo ikinci kez alınmaz.",
+                p.name
+            ),
             "path",
         ));
     }
     for (i, v) in input.assignments.iter().enumerate() {
         let path = format!("assignments[{i}]");
-        let a: Assignment = serde_json::from_value(v.clone()).map_err(|e| {
-            fail(codes::INVALID_INPUT, format!("Atama okunamadı: {e}"), &path)
-        })?;
+        let a: Assignment = serde_json::from_value(v.clone())
+            .map_err(|e| fail(codes::INVALID_INPUT, format!("Atama okunamadı: {e}"), &path))?;
         match &a.target {
             Target::ModelLayer { id } => {
                 let is_layer = cx
@@ -122,7 +140,9 @@ fn prepare(cx: &ExecutionContext<'_>, input: &PlotStylesImport) -> Result<Prepar
                 if !is_layer {
                     return Err(fail(
                         codes::LAYER_NOT_FOUND,
-                        format!("“{id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin."),
+                        format!(
+                            "“{id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin."
+                        ),
                         &format!("{path}.target.id"),
                     ));
                 }
@@ -169,7 +189,9 @@ fn prepare(cx: &ExecutionContext<'_>, input: &PlotStylesImport) -> Result<Prepar
         ops.push(Op::SetSheetPlot(SetSheetPlot {
             sheet: id.clone(),
             plot: Some(AppliedPageSetup {
-                source: sheet.and_then(|s| s.plot.as_ref()).and_then(|p| p.source.clone()),
+                source: sheet
+                    .and_then(|s| s.plot.as_ref())
+                    .and_then(|p| p.source.clone()),
                 settings,
             }),
         }));
@@ -183,13 +205,20 @@ fn prepare(cx: &ExecutionContext<'_>, input: &PlotStylesImport) -> Result<Prepar
         replace_pictures: false,
         expected_revision: input.expected_revision.clone(),
     };
-    Ok(Prepared { edit, read, applied })
+    Ok(Prepared {
+        edit,
+        read,
+        applied,
+    })
 }
 
 /// The report's warning: how many lines lose or approximate what AutoCAD plots.
 fn warnings_of(read: &acad::Read) -> Vec<CommandWarning> {
     let count = |s: acad::Severity| read.losses.iter().filter(|l| l.severity == s).count();
-    let (lost, near) = (count(acad::Severity::Lost), count(acad::Severity::Approximate));
+    let (lost, near) = (
+        count(acad::Severity::Lost),
+        count(acad::Severity::Approximate),
+    );
     if lost + near == 0 {
         return Vec::new();
     }
@@ -203,9 +232,15 @@ fn warnings_of(read: &acad::Read) -> Vec<CommandWarning> {
     }]
 }
 
-fn imported(result: CommandResult<kentos_commands::SheetsEdited>, p: Prepared) -> CommandResult<PlotStylesImported> {
+fn imported(
+    result: CommandResult<kentos_commands::SheetsEdited>,
+    p: Prepared,
+) -> CommandResult<PlotStylesImported> {
     match result {
-        CommandResult::Completed { output, mut warnings } => {
+        CommandResult::Completed {
+            output,
+            mut warnings,
+        } => {
             warnings.extend(warnings_of(&p.read));
             CommandResult::Completed {
                 output: PlotStylesImported {
@@ -245,7 +280,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &PlotStylesImport) -> CommandR
     }
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, input: &PlotStylesImport) -> CommandResult<PlotStylesImported> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &PlotStylesImport,
+) -> CommandResult<PlotStylesImported> {
     match prepare(cx, input) {
         Ok(p) => {
             let planned = sheets_edit::plan(cx, &p.edit);
@@ -255,7 +293,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PlotStylesImport) -> CommandResul
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: PlotStylesImport) -> CommandResult<PlotStylesImported> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: PlotStylesImport,
+) -> CommandResult<PlotStylesImported> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_PLOTSTYLES_IMPORT,

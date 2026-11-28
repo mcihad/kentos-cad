@@ -9,12 +9,12 @@
 //! choices in the project in the same undo step, so the next run and the zoning check read them; Seçimi kaldır takes
 //! the pressed row's choice back to KentOS's table.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use iced::{Element, Task};
 use kentos_commands::{
-    CommandResult, ZONING_PROFILE, ZoningSymbolPick, ZoningSymbolize, ZoningSymbolized, ZoningSymbols, builtin_profile,
-    builtin_zoning_symbols,
+    CommandResult, ZONING_PROFILE, ZoningSymbolPick, ZoningSymbolize, ZoningSymbolized,
+    ZoningSymbols, builtin_profile, builtin_zoning_symbols,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, zoning_symbolize};
@@ -83,8 +83,15 @@ pub struct Pair {
 /// in the order the areas first show them.
 pub fn pairs(r: &ZoningSymbolized) -> Vec<Pair> {
     let mut out: Vec<Pair> = Vec::new();
-    for a in r.areas.iter().filter(|a| matches!(a.state.as_str(), "set" | "same" | "unmapped")) {
-        let at = match out.iter().position(|p| p.level == a.level && p.usage == a.usage) {
+    for a in r
+        .areas
+        .iter()
+        .filter(|a| matches!(a.state.as_str(), "set" | "same" | "unmapped"))
+    {
+        let at = match out
+            .iter()
+            .position(|p| p.level == a.level && p.usage == a.usage)
+        {
             Some(at) => at,
             None => {
                 out.push(Pair {
@@ -113,19 +120,29 @@ fn label(domain: &str, code: &str) -> String {
 }
 
 fn symbol_name(t: &ZoningSymbols, level: &str, id: &str) -> String {
-    t.level(level).and_then(|l| l.choices.iter().find(|c| c.id == id)).map_or_else(|| id.to_owned(), |c| c.name.clone())
+    t.level(level)
+        .and_then(|l| l.choices.iter().find(|c| c.id == id))
+        .map_or_else(|| id.to_owned(), |c| c.name.clone())
 }
 
 /// The table's rows; a choice the project keeps as it is says Projede.
-pub fn rows(r: &ZoningSymbolized, t: &ZoningSymbols, kept: &[ZoningSymbolPick]) -> Vec<Vec<String>> {
+pub fn rows(
+    r: &ZoningSymbolized,
+    t: &ZoningSymbols,
+    kept: &[ZoningSymbolPick],
+) -> Vec<Vec<String>> {
     pairs(r)
         .into_iter()
         .map(|p| {
-            let held = kept.iter().any(|k| k.level == p.level && k.usage == p.usage && Some(&k.symbol) == p.symbol.as_ref());
+            let held = kept.iter().any(|k| {
+                k.level == p.level && k.usage == p.usage && Some(&k.symbol) == p.symbol.as_ref()
+            });
             vec![
                 label("plan-seviye", &p.level),
                 label("plan-kullanim", &p.usage),
-                p.symbol.as_deref().map_or_else(|| "— seçilmedi".to_owned(), |s| symbol_name(t, &p.level, s)),
+                p.symbol
+                    .as_deref()
+                    .map_or_else(|| "— seçilmedi".to_owned(), |s| symbol_name(t, &p.level, s)),
                 match p.from.as_deref() {
                     Some("project") => "Projede".to_owned(),
                     Some("user") if held => "Projede".to_owned(),
@@ -154,13 +171,19 @@ pub(crate) trait ZoningSymbolsWindowApp {
 impl ZoningSymbolsWindowApp for App {
     fn zoning_symbols_input(&self) -> ZoningSymbolize {
         let s = &self.modules.map().zoning_symbols;
-        ZoningSymbolize { uids: None, symbols: s.picks.clone(), keep: s.keep, expected_revision: None }
+        ZoningSymbolize {
+            uids: None,
+            symbols: s.picks.clone(),
+            keep: s.keep,
+            expected_revision: None,
+        }
     }
 
     /// Whether Sembolleri ver has something to write: a symbol, or a choice to keep.
     fn zoning_symbols_ready(&self) -> bool {
         let s = &self.modules.map().zoning_symbols;
-        matches!(&s.answer, Some(Ok(r)) if r.set > 0) || (s.keep && s.picks != s.kept && matches!(s.answer, Some(Ok(_))))
+        matches!(&s.answer, Some(Ok(r)) if r.set > 0)
+            || (s.keep && s.picks != s.kept && matches!(s.answer, Some(Ok(_))))
     }
 
     fn zoning_symbols_run(&mut self) {
@@ -210,7 +233,8 @@ impl ZoningSymbolsWindowApp for App {
                     return Task::none();
                 };
                 let Some(p) = self
-                    .modules.map()
+                    .modules
+                    .map()
                     .zoning_symbols
                     .chosen
                     .and_then(|i| pairs(r).into_iter().nth(i))
@@ -219,7 +243,11 @@ impl ZoningSymbolsWindowApp for App {
                 };
                 let picks = &mut self.modules.map_mut().zoning_symbols.picks;
                 picks.retain(|k| !(k.level == p.level && k.usage == p.usage));
-                picks.push(ZoningSymbolPick { level: p.level, usage: p.usage, symbol: id });
+                picks.push(ZoningSymbolPick {
+                    level: p.level,
+                    usage: p.usage,
+                    symbol: id,
+                });
                 self.zoning_symbols_run();
             }
             Event::Unpick => {
@@ -227,14 +255,16 @@ impl ZoningSymbolsWindowApp for App {
                     return Task::none();
                 };
                 let Some(p) = self
-                    .modules.map()
+                    .modules
+                    .map()
                     .zoning_symbols
                     .chosen
                     .and_then(|i| pairs(r).into_iter().nth(i))
                 else {
                     return Task::none();
                 };
-                self.modules.map_mut()
+                self.modules
+                    .map_mut()
                     .zoning_symbols
                     .picks
                     .retain(|k| !(k.level == p.level && k.usage == p.usage));
@@ -246,7 +276,9 @@ impl ZoningSymbolsWindowApp for App {
             }
             Event::Write => {
                 let input = self.zoning_symbols_input();
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
                 match zoning_symbolize::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { output, .. } => {
                         let kept = output.kept.as_ref().map_or_else(String::new, |k| {
@@ -262,7 +294,9 @@ impl ZoningSymbolsWindowApp for App {
                         self.modules.map_mut().zoning_symbols = State::default();
                         self.dialog = None;
                     }
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
                         self.warn(format!("{TITLE}: {}", error.message));
                     }
                     _ => {}
@@ -290,7 +324,11 @@ impl ZoningSymbolsWindowApp for App {
         match (&s.answer, &table) {
             (Some(Ok(r)), Some(t)) => {
                 ready = self.zoning_symbols_ready();
-                let open = pairs(r).iter().filter(|p| p.symbol.is_none()).map(|p| p.areas).sum::<usize>();
+                let open = pairs(r)
+                    .iter()
+                    .filter(|p| p.symbol.is_none())
+                    .map(|p| p.areas)
+                    .sum::<usize>();
                 lines.push(words::text_line(
                     if r.set > 0 { Kind::Ok } else { Kind::Info },
                     format!(
@@ -305,14 +343,26 @@ impl ZoningSymbolsWindowApp for App {
                 if !s.kept.is_empty() {
                     lines.push(words::text_line(
                         Kind::Info,
-                        format!("Projede {} sembol seçimi saklı; KentOS'un tablosundan önce okunur.", s.kept.len()),
+                        format!(
+                            "Projede {} sembol seçimi saklı; KentOS'un tablosundan önce okunur.",
+                            s.kept.len()
+                        ),
                     ));
                 }
                 if let Some(p) = s.chosen.and_then(|i| pairs(r).into_iter().nth(i)) {
-                    picked = s.picks.iter().any(|k| k.level == p.level && k.usage == p.usage);
+                    picked = s
+                        .picks
+                        .iter()
+                        .any(|k| k.level == p.level && k.usage == p.usage);
                     picker = t.level(&p.level).map(|lv| {
-                        let options: Vec<(String, String)> = lv.choices.iter().map(|c| (c.id.clone(), c.name.clone())).collect();
-                        fields::select_owned(options, p.symbol.as_deref().unwrap_or(""), |id| msg(Event::Pick(id)))
+                        let options: Vec<(String, String)> = lv
+                            .choices
+                            .iter()
+                            .map(|c| (c.id.clone(), c.name.clone()))
+                            .collect();
+                        fields::select_owned(options, p.symbol.as_deref().unwrap_or(""), |id| {
+                            msg(Event::Pick(id))
+                        })
                     });
                     if picker.is_none() {
                         lines.push(words::text_line(
@@ -333,7 +383,14 @@ impl ZoningSymbolsWindowApp for App {
             num("Alan", 60.0),
             num("Verilecek", 80.0),
         ];
-        let sheet = sheet_chosen(cols, table_rows, "Karar alanı yok.", 260.0, s.chosen, |i| msg(Event::Choose(i)));
+        let sheet = sheet_chosen(
+            cols,
+            table_rows,
+            "Karar alanı yok.",
+            260.0,
+            s.chosen,
+            |i| msg(Event::Choose(i)),
+        );
         let mut form = Form::new().label_width(150.0).section("Seçili satır");
         form = match picker {
             Some(p) => form.field(SYMBOL, p).help("Kademenin MPYY alan sembolleri; seçim bu kademe ve kullanımın bütün alanlarına verilir."),

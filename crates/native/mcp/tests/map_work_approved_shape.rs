@@ -12,11 +12,16 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 const LINE: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e13";
 
 fn opened(server: &mut Server) -> Value {
-    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/map-work-approved-parts.kcad");
+    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/kcad/v2/map-work-approved-parts.kcad");
     let opened = call(server, "drawing.open", json!({"path": sample}));
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
-    let r = call(server, "map.work.edit", json!({"drawing": drawing, "operation": {"op": "set", "item": "is-3", "status": "approved"}}));
+    let r = call(
+        server,
+        "map.work.edit",
+        json!({"drawing": drawing, "operation": {"op": "set", "item": "is-3", "status": "approved"}}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     drawing
 }
@@ -25,15 +30,28 @@ fn line_change(server: &mut Server, drawing: &Value) -> Value {
     let r = call(server, "map.work.query", json!({"drawing": drawing}));
     assert_eq!(r["isError"], false, "{r}");
     let objects = r["structuredContent"]["output"]["items"][2]["changes"]["objects"].clone();
-    objects.as_array().unwrap().iter().find(|o| o["uid"] == LINE).cloned().expect("the line changed")
+    objects
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|o| o["uid"] == LINE)
+        .cloned()
+        .expect("the line changed")
 }
 
 #[test]
 fn a_moved_line_s_approved_shape_over_mcp() {
     // The line's ends as the sample keeps them.
-    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/map-work-approved-parts.kcad");
-    let read = serde_json::to_value(kentos_kcad::decode(&std::fs::read(sample).unwrap()).unwrap()).unwrap();
-    let at = read["uids"].as_array().unwrap().iter().position(|u| u == LINE).expect("the line");
+    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/kcad/v2/map-work-approved-parts.kcad");
+    let read = serde_json::to_value(kentos_kcad::decode(&std::fs::read(sample).unwrap()).unwrap())
+        .unwrap();
+    let at = read["uids"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .position(|u| u == LINE)
+        .expect("the line");
     let before = read["entities"][at].clone();
     let mut server = Server::new();
     let drawing = opened(&mut server);
@@ -54,7 +72,11 @@ fn a_moved_line_s_approved_shape_over_mcp() {
     // Its height alone: no shape.
     let mut server = Server::new();
     let drawing = opened(&mut server);
-    let r = call(&mut server, "cad.entities.set", json!({"drawing": drawing, "uids": [LINE], "attrs": {"Kot": "1060"}, "operation": "attributes"}));
+    let r = call(
+        &mut server,
+        "cad.entities.set",
+        json!({"drawing": drawing, "uids": [LINE], "attrs": {"Kot": "1060"}, "operation": "attributes"}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     let changed = line_change(&mut server, &drawing);
     assert_eq!(changed["parts"], json!(["attributes"]), "{changed}");

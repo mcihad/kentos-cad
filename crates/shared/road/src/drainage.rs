@@ -73,7 +73,13 @@ impl<'s> Tin<'s> {
                 v
             })
             .collect();
-        Tin { surface, across, around, corners, edge }
+        Tin {
+            surface,
+            across,
+            around,
+            corners,
+            edge,
+        }
     }
 
     fn v(&self, i: u32) -> [f64; 3] {
@@ -151,7 +157,11 @@ const STEPS: usize = 200_000;
 /// The steepest way down from a place on the surface.
 pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
     let Some(t0) = tin.triangle_at(start[0], start[1]) else {
-        return Drop { path: Vec::new(), length: 0.0, end: DropEnd::Outside };
+        return Drop {
+            path: Vec::new(),
+            length: 0.0,
+            end: DropEnd::Outside,
+        };
     };
     let mut path = vec![[start[0], start[1], tin.z_on(t0, start[0], start[1])]];
     let mut at = At::In(t0, start);
@@ -176,7 +186,10 @@ pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
                     let w = [a[0] - p[0], a[1] - p[1]];
                     let s = cross(w, e) / den;
                     let u = cross(w, d) / den;
-                    if s > 1e-12 && (-1e-9..=1.0 + 1e-9).contains(&u) && best.is_none_or(|(bs, _)| s < bs) {
+                    if s > 1e-12
+                        && (-1e-9..=1.0 + 1e-9).contains(&u)
+                        && best.is_none_or(|(bs, _)| s < bs)
+                    {
                         best = Some((s, i));
                     }
                 }
@@ -256,7 +269,10 @@ pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
                     let k = tri.iter().position(|x| *x == v).unwrap_or(0);
                     let (p1, p2) = (tin.v(tri[(k + 1) % 3]), tin.v(tri[(k + 2) % 3]));
                     let (e1, e2) = ([p1[0] - c[0], p1[1] - c[1]], [p2[0] - c[0], p2[1] - c[1]]);
-                    if cross(e1, d) > 1e-12 && cross(d, e2) > 1e-12 && best.is_none_or(|(bg, _, _)| g > bg) {
+                    if cross(e1, d) > 1e-12
+                        && cross(d, e2) > 1e-12
+                        && best.is_none_or(|(bg, _, _)| g > bg)
+                    {
                         best = Some((g, Some(t), None));
                     }
                 }
@@ -272,7 +288,11 @@ pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
                 }
                 match best {
                     None => {
-                        let end = if tin.edge[v as usize] { DropEnd::Edge } else { DropEnd::LowPoint };
+                        let end = if tin.edge[v as usize] {
+                            DropEnd::Edge
+                        } else {
+                            DropEnd::LowPoint
+                        };
                         return finish(path, end);
                     }
                     Some((_, Some(t), _)) => {
@@ -284,7 +304,11 @@ pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
                         let e = [p2[0] - p1[0], p2[1] - p1[1]];
                         let den = cross(d, e);
                         let w = [p1[0] - c[0], p1[1] - c[1]];
-                        let s = if den.abs() > 1e-15 { cross(w, e) / den } else { 0.0 };
+                        let s = if den.abs() > 1e-15 {
+                            cross(w, e) / den
+                        } else {
+                            0.0
+                        };
                         let q = [c[0] + s * d[0], c[1] + s * d[1]];
                         path.push([q[0], q[1], tin.z_on(t, q[0], q[1])]);
                         // Past the opposite edge: across it, or the edge's end, or off the surface.
@@ -303,7 +327,8 @@ pub fn water_drop(tin: &Tin<'_>, start: [f64; 2]) -> Drop {
                             Some(u) => {
                                 let (ea, eb) = (tin.v(a), tin.v(b));
                                 let edge = [eb[0] - ea[0], eb[1] - ea[1]];
-                                let into_u = tin.down(u).is_some_and(|(du, _)| cross(edge, du) < -1e-12);
+                                let into_u =
+                                    tin.down(u).is_some_and(|(du, _)| cross(edge, du) < -1e-12);
                                 if into_u {
                                     at = At::In(u, q);
                                 } else if (ea[2] - eb[2]).abs() < 1e-12 {
@@ -349,7 +374,10 @@ fn cross_edge(tin: &Tin<'_>, t: u32, i: usize, q: [f64; 2]) -> Result<At, DropEn
 
 fn finish(mut path: Vec<[f64; 3]>, end: DropEnd) -> Drop {
     path.dedup_by(|a, b| (a[0] - b[0]).hypot(a[1] - b[1]) < 1e-12);
-    let length = path.windows(2).map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1])).sum();
+    let length = path
+        .windows(2)
+        .map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]))
+        .sum();
     Drop { path, length, end }
 }
 
@@ -455,7 +483,9 @@ pub fn ponds(tin: &Tin<'_>, min_depth: f64) -> Vec<Pond> {
     let level = spill_levels(tin);
     let n = level.len();
     let z = |v: usize| tin.surface.vertices[v][2];
-    let wet: Vec<bool> = (0..n).map(|v| level[v].is_finite() && level[v] > z(v) + 1e-12).collect();
+    let wet: Vec<bool> = (0..n)
+        .map(|v| level[v].is_finite() && level[v] > z(v) + 1e-12)
+        .collect();
     let mut group = vec![usize::MAX; n];
     let mut out = Vec::new();
     for start in 0..n {
@@ -476,8 +506,14 @@ pub fn ponds(tin: &Tin<'_>, min_depth: f64) -> Vec<Pond> {
                 }
             }
         }
-        let l = members.iter().map(|&v| level[v]).fold(f64::NEG_INFINITY, f64::max);
-        let bottom = *members.iter().min_by(|&&a, &&b| z(a).total_cmp(&z(b)).then(a.cmp(&b))).unwrap_or(&start);
+        let l = members
+            .iter()
+            .map(|&v| level[v])
+            .fold(f64::NEG_INFINITY, f64::max);
+        let bottom = *members
+            .iter()
+            .min_by(|&&a, &&b| z(a).total_cmp(&z(b)).then(a.cmp(&b)))
+            .unwrap_or(&start);
         // The outlet: a neighbouring dry corner at the level, the lowest index.
         let outlet = members
             .iter()
@@ -509,7 +545,12 @@ pub fn ponds(tin: &Tin<'_>, min_depth: f64) -> Vec<Pond> {
         });
     }
     out.retain(|p| p.depth >= min_depth);
-    out.sort_by(|a, b| b.depth.total_cmp(&a.depth).then(a.bottom[0].total_cmp(&b.bottom[0])).then(a.bottom[1].total_cmp(&b.bottom[1])));
+    out.sort_by(|a, b| {
+        b.depth
+            .total_cmp(&a.depth)
+            .then(a.bottom[0].total_cmp(&b.bottom[0]))
+            .then(a.bottom[1].total_cmp(&b.bottom[1]))
+    });
     out
 }
 
@@ -532,7 +573,11 @@ fn nearest_on(path: &[[f64; 3]], p: [f64; 2]) -> Option<(f64, usize, [f64; 3])> 
         let (a, b) = (w[0], w[1]);
         let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
         let len2 = dx * dx + dy * dy;
-        let t = if len2 > 0.0 { (((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2).clamp(0.0, 1.0) } else { 0.0 };
+        let t = if len2 > 0.0 {
+            (((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
         let q = [a[0] + t * dx, a[1] + t * dy, a[2] + t * (b[2] - a[2])];
         let d = (q[0] - p[0]).hypot(q[1] - p[1]);
         if best.is_none_or(|(bd, _, _)| d < bd) {
@@ -550,7 +595,12 @@ fn nearest_on(path: &[[f64; 3]], p: [f64; 2]) -> Option<(f64, usize, [f64; 3])> 
 /// The catchment of `discharge` on a grid of `cell` metres over the surface (cells centred on its multiples): the cells
 /// whose centre's drop passes within `radius` of it. None when no cell's does.
 pub fn catchment(tin: &Tin<'_>, discharge: [f64; 2], cell: f64, radius: f64) -> Option<Catchment> {
-    let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+    let (mut x0, mut y0, mut x1, mut y1) = (
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    );
     for t in &tin.surface.triangles {
         for &i in t {
             let v = tin.v(i);
@@ -572,14 +622,19 @@ pub fn catchment(tin: &Tin<'_>, discharge: [f64; 2], cell: f64, radius: f64) -> 
             if drop.end == DropEnd::Outside {
                 continue;
             }
-            let Some((d, at, q)) = nearest_on(&drop.path, discharge) else { continue };
+            let Some((d, at, q)) = nearest_on(&drop.path, discharge) else {
+                continue;
+            };
             if d > radius {
                 continue;
             }
             taken.insert((i, j));
             let mut part: Vec<[f64; 3]> = drop.path[..=at].to_vec();
             part.push(q);
-            let length: f64 = part.windows(2).map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1])).sum();
+            let length: f64 = part
+                .windows(2)
+                .map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]))
+                .sum();
             if longest.as_ref().is_none_or(|(l, _)| length > *l) {
                 longest = Some((length, part));
             }
@@ -587,7 +642,14 @@ pub fn catchment(tin: &Tin<'_>, discharge: [f64; 2], cell: f64, radius: f64) -> 
     }
     let (length, path) = longest?;
     let fall = path.first().map_or(0.0, |a| a[2]) - path.last().map_or(0.0, |b| b[2]);
-    Some(Catchment { cells: taken.len(), area: taken.len() as f64 * cell * cell, outline: outline(&taken, cell), path, length, fall })
+    Some(Catchment {
+        cells: taken.len(),
+        area: taken.len() as f64 * cell * cell,
+        outline: outline(&taken, cell),
+        path,
+        length,
+        fall,
+    })
 }
 
 /// The outline of a set of grid cells: rings of their outer edges, counter-clockwise outside and clockwise around holes.
@@ -597,7 +659,12 @@ fn outline(cells: &HashSet<(i64, i64)>, cell: f64) -> Vec<Vec<[f64; 2]>> {
     let mut sorted: Vec<&(i64, i64)> = cells.iter().collect();
     sorted.sort_unstable();
     for &&(i, j) in &sorted {
-        let sides = [((i, j), (i + 1, j), (i, j - 1)), ((i + 1, j), (i + 1, j + 1), (i + 1, j)), ((i + 1, j + 1), (i, j + 1), (i, j + 1)), ((i, j + 1), (i, j), (i - 1, j))];
+        let sides = [
+            ((i, j), (i + 1, j), (i, j - 1)),
+            ((i + 1, j), (i + 1, j + 1), (i + 1, j)),
+            ((i + 1, j + 1), (i, j + 1), (i, j + 1)),
+            ((i, j + 1), (i, j), (i - 1, j)),
+        ];
         for (a, b, other) in sides {
             if !cells.contains(&other) {
                 next.entry(a).or_default().push(b);
@@ -619,7 +686,9 @@ fn outline(cells: &HashSet<(i64, i64)>, cell: f64) -> Vec<Vec<[f64; 2]>> {
                 let pick = if list.len() > 1 {
                     let d = (b.0 - a.0, b.1 - a.1);
                     let left = (-d.1, d.0);
-                    list.iter().position(|n| (n.0 - b.0, n.1 - b.1) == left).unwrap_or(0)
+                    list.iter()
+                        .position(|n| (n.0 - b.0, n.1 - b.1) == left)
+                        .unwrap_or(0)
                 } else {
                     0
                 };
@@ -639,7 +708,11 @@ fn outline(cells: &HashSet<(i64, i64)>, cell: f64) -> Vec<Vec<[f64; 2]>> {
                     pts.push(c);
                 }
             }
-            rings.push(pts.iter().map(|&(i, j)| [i as f64 * cell, j as f64 * cell]).collect());
+            rings.push(
+                pts.iter()
+                    .map(|&(i, j)| [i as f64 * cell, j as f64 * cell])
+                    .collect(),
+            );
         }
     }
     rings
@@ -649,9 +722,19 @@ fn outline(cells: &HashSet<(i64, i64)>, cell: f64) -> Vec<Vec<[f64; 2]>> {
 /// a depth and its two sides' slopes (horizontal per vertical).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Channel {
-    Pipe { diameter: f64 },
-    Box { width: f64, height: f64 },
-    Trapezoid { bottom: f64, depth: f64, left: f64, right: f64 },
+    Pipe {
+        diameter: f64,
+    },
+    Box {
+        width: f64,
+        height: f64,
+    },
+    Trapezoid {
+        bottom: f64,
+        depth: f64,
+        left: f64,
+        right: f64,
+    },
 }
 
 /// A channel's flow by Manning's equation.
@@ -672,11 +755,19 @@ pub fn manning(channel: Channel, slope: f64, n: f64) -> Option<Flow> {
         return None;
     }
     let (area, perimeter) = match channel {
-        Channel::Pipe { diameter } if diameter > 0.0 => {
-            (std::f64::consts::PI * diameter * diameter / 4.0, std::f64::consts::PI * diameter)
+        Channel::Pipe { diameter } if diameter > 0.0 => (
+            std::f64::consts::PI * diameter * diameter / 4.0,
+            std::f64::consts::PI * diameter,
+        ),
+        Channel::Box { width, height } if width > 0.0 && height > 0.0 => {
+            (width * height, 2.0 * (width + height))
         }
-        Channel::Box { width, height } if width > 0.0 && height > 0.0 => (width * height, 2.0 * (width + height)),
-        Channel::Trapezoid { bottom, depth, left, right } if depth > 0.0 && bottom >= 0.0 && left >= 0.0 && right >= 0.0 => (
+        Channel::Trapezoid {
+            bottom,
+            depth,
+            left,
+            right,
+        } if depth > 0.0 && bottom >= 0.0 && left >= 0.0 && right >= 0.0 => (
             bottom * depth + 0.5 * (left + right) * depth * depth,
             bottom + depth * ((1.0 + left * left).sqrt() + (1.0 + right * right).sqrt()),
         ),
@@ -684,7 +775,13 @@ pub fn manning(channel: Channel, slope: f64, n: f64) -> Option<Flow> {
     };
     let radius = area / perimeter;
     let velocity = radius.powf(2.0 / 3.0) * slope.sqrt() / n;
-    Some(Flow { area, perimeter, radius, velocity, discharge: velocity * area })
+    Some(Flow {
+        area,
+        perimeter,
+        radius,
+        velocity,
+        discharge: velocity * area,
+    })
 }
 
 /// The Rational method's peak flow (m³/s) of a catchment of `area` m² with runoff coefficient `c` and rainfall

@@ -176,7 +176,9 @@ impl Launcher {
         launcher.reload();
         let theme = iced::system::theme().map(Message::SystemTheme);
         // The window's device pixels per logical pixel: the brand's pictures are chosen by it.
-        let scale = iced::window::oldest().and_then(iced::window::scale_factor).map(Message::DeviceScale);
+        let scale = iced::window::oldest()
+            .and_then(iced::window::scale_factor)
+            .map(Message::DeviceScale);
         (launcher, Task::batch([theme, scale]))
     }
 
@@ -896,9 +898,15 @@ fn ticks() -> impl Stream<Item = Message> {
 }
 
 /// The window's device pixels per logical pixel when it changes (moved to another screen), for the brand's sizes.
-fn device_scale(event: iced::Event, _: iced::event::Status, _: iced::window::Id) -> Option<Message> {
+fn device_scale(
+    event: iced::Event,
+    _: iced::event::Status,
+    _: iced::window::Id,
+) -> Option<Message> {
     match event {
-        iced::Event::Window(iced::window::Event::Rescaled(scale)) => Some(Message::DeviceScale(scale)),
+        iced::Event::Window(iced::window::Event::Rescaled(scale)) => {
+            Some(Message::DeviceScale(scale))
+        }
         _ => None,
     }
 }

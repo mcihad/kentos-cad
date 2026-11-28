@@ -50,8 +50,8 @@ use iced::keyboard;
 use iced::time::Instant;
 use iced::widget::container;
 use iced::{
-    Background, Border, Element, Event, Length, Pixels, Point, Rectangle, Renderer, Shadow, Size, Theme, Vector,
-    mouse,
+    Background, Border, Element, Event, Length, Pixels, Point, Rectangle, Renderer, Shadow, Size,
+    Theme, Vector, mouse,
 };
 
 use crate::icon::{Icon, icon};
@@ -117,7 +117,10 @@ pub struct View {
 
 impl Default for View {
     fn default() -> Self {
-        Self { zoom: 1.0, offset: Vector::ZERO }
+        Self {
+            zoom: 1.0,
+            offset: Vector::ZERO,
+        }
     }
 }
 
@@ -126,14 +129,23 @@ impl Default for View {
 pub fn zoomed(view: View, size: Size, factor: f32, at: Vector) -> View {
     let zoom = (view.zoom * factor).clamp(1.0, MAX_ZOOM);
     let k = zoom / view.zoom;
-    let offset = Vector::new((view.offset.x + at.x) * k - at.x, (view.offset.y + at.y) * k - at.y);
-    View { zoom, offset: clamped(offset, size, zoom) }
+    let offset = Vector::new(
+        (view.offset.x + at.x) * k - at.x,
+        (view.offset.y + at.y) * k - at.y,
+    );
+    View {
+        zoom,
+        offset: clamped(offset, size, zoom),
+    }
 }
 
 /// `offset` kept on the content: from 0 to the zoomed size less the view's.
 pub fn clamped(offset: Vector, size: Size, zoom: f32) -> Vector {
     let most = |side: f32| (side * (zoom - 1.0)).max(0.0);
-    Vector::new(offset.x.clamp(0.0, most(size.width)), offset.y.clamp(0.0, most(size.height)))
+    Vector::new(
+        offset.x.clamp(0.0, most(size.width)),
+        offset.y.clamp(0.0, most(size.height)),
+    )
 }
 
 /// What a wheel's turn does.
@@ -172,7 +184,14 @@ pub struct Saved {
 
 impl fmt::Debug for Saved {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Saved({:?}, {}×{}, {} bayt)", self.name, self.width, self.height, self.png.len())
+        write!(
+            f,
+            "Saved({:?}, {}×{}, {} bayt)",
+            self.name,
+            self.width,
+            self.height,
+            self.png.len()
+        )
     }
 }
 
@@ -190,7 +209,9 @@ impl Button {
     fn tip(self) -> &'static str {
         match self {
             Button::Out => "Uzaklaştır",
-            Button::Zoom => "Tekerlek yakınlaştırır · Shift+tekerlek ve sürükleme kaydırır · çift tık sığdırır",
+            Button::Zoom => {
+                "Tekerlek yakınlaştırır · Shift+tekerlek ve sürükleme kaydırır · çift tık sığdırır"
+            }
             Button::In => "Yakınlaştır",
             Button::Fit => "Sığdır",
             Button::Save => "Resim olarak kaydet (PNG)",
@@ -252,7 +273,10 @@ fn cells(items: &[Item], compact: bool) -> (Vec<Rectangle>, Size) {
 
 /// The bar's corner in a picture of `size`: its top right, `MARGIN` in; at the left edge where it does not fit.
 fn bar_at(size: Size, bar: Size) -> Point {
-    Point::new((size.width - MARGIN - bar.width).max(MARGIN.min(size.width - bar.width).max(0.0)), MARGIN)
+    Point::new(
+        (size.width - MARGIN - bar.width).max(MARGIN.min(size.width - bar.width).max(0.0)),
+        MARGIN,
+    )
 }
 
 /// The centre of `button` on the bar of a picture at `bounds` that saves (a picture of a window).
@@ -260,9 +284,15 @@ pub fn button_at(bounds: Rectangle, button: Button) -> Point {
     let items = items(true);
     let (cells, bar) = cells(&items, bounds.width < COMPACT);
     let corner = bar_at(bounds.size(), bar);
-    let index = items.iter().position(|it| *it == Item::Button(button)).unwrap_or(0);
+    let index = items
+        .iter()
+        .position(|it| *it == Item::Button(button))
+        .unwrap_or(0);
     let cell = cells[index];
-    Point::new(bounds.x + corner.x + cell.center_x(), bounds.y + corner.y + cell.center_y())
+    Point::new(
+        bounds.x + corner.x + cell.center_x(),
+        bounds.y + corner.y + cell.center_y(),
+    )
 }
 
 /// An axis of the view.
@@ -274,7 +304,12 @@ pub enum Axis {
 
 /// A zoomed picture's scrollbar along `axis` in the picture at `bounds`, the vertical one under `below` (the bar's
 /// bottom): its track and its thumb. None while fitted or where there is no room.
-pub fn scrollbar(bounds: Rectangle, below: f32, view: View, axis: Axis) -> Option<(Rectangle, Rectangle)> {
+pub fn scrollbar(
+    bounds: Rectangle,
+    below: f32,
+    view: View,
+    axis: Axis,
+) -> Option<(Rectangle, Rectangle)> {
     if view.zoom <= 1.0 + 1e-4 {
         return None;
     }
@@ -292,7 +327,10 @@ pub fn scrollbar(bounds: Rectangle, below: f32, view: View, axis: Axis) -> Optio
             (
                 Rectangle::new(
                     Point::new(bounds.x + bounds.width - EDGE - THICK, top),
-                    Size::new(THICK, (bounds.y + bounds.height - 2.0 * EDGE - THICK - top).max(0.0)),
+                    Size::new(
+                        THICK,
+                        (bounds.y + bounds.height - 2.0 * EDGE - THICK - top).max(0.0),
+                    ),
                 ),
                 bounds.height,
                 view.offset.y,
@@ -305,7 +343,11 @@ pub fn scrollbar(bounds: Rectangle, below: f32, view: View, axis: Axis) -> Optio
     }
     let thumb = (length / view.zoom).max(MIN_THUMB).min(length);
     let most = extent * (view.zoom - 1.0);
-    let at = if most > 0.0 { offset / most * (length - thumb) } else { 0.0 };
+    let at = if most > 0.0 {
+        offset / most * (length - thumb)
+    } else {
+        0.0
+    };
     let thumb = match axis {
         Axis::X => Rectangle::new(Point::new(track.x + at, track.y), Size::new(thumb, THICK)),
         Axis::Y => Rectangle::new(Point::new(track.x, track.y + at), Size::new(THICK, thumb)),
@@ -329,7 +371,14 @@ fn coordinate(point: Point, axis: Axis) -> f32 {
 }
 
 /// The offset along `axis` that puts the thumb's start `at` from the track's start.
-fn offset_for(track: Rectangle, thumb: Rectangle, extent: f32, zoom: f32, at: f32, axis: Axis) -> f32 {
+fn offset_for(
+    track: Rectangle,
+    thumb: Rectangle,
+    extent: f32,
+    zoom: f32,
+    at: f32,
+    axis: Axis,
+) -> f32 {
     let room = (along(track.size(), axis) - along(thumb.size(), axis)).max(1e-6);
     (at / room).clamp(0.0, 1.0) * extent * (zoom - 1.0)
 }
@@ -391,8 +440,17 @@ impl<'a, Message: Clone + 'a> Picture<'a, Message> {
 impl<'a, Message: Clone + 'a> From<Picture<'a, Message>> for Element<'a, Message> {
     fn from(mut picture: Picture<'a, Message>) -> Self {
         picture.items = items(picture.on_save.is_some() && cfg!(feature = "snapshot"));
-        let buttons: Vec<Button> =
-            picture.items.iter().filter_map(|it| if let Item::Button(b) = it { Some(*b) } else { None }).collect();
+        let buttons: Vec<Button> = picture
+            .items
+            .iter()
+            .filter_map(|it| {
+                if let Item::Button(b) = it {
+                    Some(*b)
+                } else {
+                    None
+                }
+            })
+            .collect();
         for button in buttons {
             let glyph: Element<'a, Message> = match button.glyph() {
                 Some(g) => icon(g).size(15.0).into(),
@@ -441,8 +499,12 @@ struct Thumb {
 impl<'a, Message: Clone + 'a> Picture<'a, Message> {
     /// The button's index among the buttons (its glyph is `1 + 2k`, its tip `2 + 2k`).
     fn button_index(&self, item: usize) -> Option<usize> {
-        matches!(self.items.get(item), Some(Item::Button(_)))
-            .then(|| self.items[..item].iter().filter(|it| matches!(it, Item::Button(_))).count())
+        matches!(self.items.get(item), Some(Item::Button(_))).then(|| {
+            self.items[..item]
+                .iter()
+                .filter(|it| matches!(it, Item::Button(_)))
+                .count()
+        })
     }
 
     fn enabled(&self, button: Button, view: View) -> bool {
@@ -465,12 +527,22 @@ impl<'a, Message: Clone + 'a> Picture<'a, Message> {
     /// Draws the view again as an image: what is shown, at twice the pixels, in the light theme on its plain ground.
     #[cfg(feature = "snapshot")]
     fn export(&mut self, view: View, size: Size) -> Option<Saved> {
-        let mut snapshot = crate::snapshot::Snapshot::software(size).ok()?.scale(EXPORT_SCALE);
+        let mut snapshot = crate::snapshot::Snapshot::software(size)
+            .ok()?
+            .scale(EXPORT_SCALE);
         let theme = crate::theme::theme(crate::theme::Mode::Light, crate::theme::Accent::default());
-        let shown = Element::new(Shown { content: &mut self.elements[0], view });
+        let shown = Element::new(Shown {
+            content: &mut self.elements[0],
+            view,
+        });
         let image = snapshot.render(shown, &theme);
         let png = image.png().ok()?;
-        Some(Saved { name: self.name.clone(), width: image.width, height: image.height, png: Arc::new(png) })
+        Some(Saved {
+            name: self.name.clone(),
+            width: image.width,
+            height: image.height,
+            png: Arc::new(png),
+        })
     }
 
     #[cfg(not(feature = "snapshot"))]
@@ -490,8 +562,10 @@ fn scrollbar_under(
     [Axis::X, Axis::Y].into_iter().find_map(|axis| {
         let (track, thumb) = scrollbar(bounds, below, view, axis)?;
         // A little wider than drawn: a 6 px bar is hard to catch.
-        let catch =
-            Rectangle::new(Point::new(track.x - 2.0, track.y - 2.0), Size::new(track.width + 4.0, track.height + 4.0));
+        let catch = Rectangle::new(
+            Point::new(track.x - 2.0, track.y - 2.0),
+            Size::new(track.width + 4.0, track.height + 4.0),
+        );
         catch.contains(point).then_some((axis, track, thumb))
     })
 }
@@ -533,8 +607,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
         // to the least and a zoom about a point low in a full screen window jumped up (1600 → 815, docs/adr/0937 §1).
         let zoom = tree.state.downcast_ref::<State>().view.zoom;
         let zoomed = Size::new(size.width * zoom, size.height * zoom);
-        let content =
-            self.elements[0].as_widget_mut().layout(&mut tree.children[0], renderer, &Limits::new(zoomed, zoomed));
+        let content = self.elements[0].as_widget_mut().layout(
+            &mut tree.children[0],
+            renderer,
+            &Limits::new(zoomed, zoomed),
+        );
         let (cells, bar) = cells(&self.items, size.width < COMPACT);
         let mut nodes = vec![content];
         let mut bar_cells = Vec::with_capacity(cells.len());
@@ -548,9 +625,14 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                         &Limits::new(Size::ZERO, cell.size()),
                     );
                     let g = glyph.size();
-                    let at =
-                        Point::new(((cell.width - g.width) / 2.0).round(), ((cell.height - g.height) / 2.0).round());
-                    bar_cells.push(Node::with_children(cell.size(), vec![glyph.move_to(at)]).move_to(cell.position()));
+                    let at = Point::new(
+                        ((cell.width - g.width) / 2.0).round(),
+                        ((cell.height - g.height) / 2.0).round(),
+                    );
+                    bar_cells.push(
+                        Node::with_children(cell.size(), vec![glyph.move_to(at)])
+                            .move_to(cell.position()),
+                    );
                     tips.push(self.elements[2 + 2 * k].as_widget_mut().layout(
                         &mut tree.children[2 + 2 * k],
                         renderer,
@@ -565,7 +647,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
         Node::with_children(size, nodes)
     }
 
-    fn operate(&mut self, tree: &mut Tree, layout: Layout<'_>, renderer: &Renderer, operation: &mut dyn Operation) {
+    fn operate(
+        &mut self,
+        tree: &mut Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn Operation,
+    ) {
         let state = tree.state.downcast_mut::<State>();
         let before = state.view;
         operation.custom(self.id.as_ref(), layout.bounds(), &mut state.view);
@@ -574,7 +662,12 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
             state.view.offset = clamped(state.view.offset, layout.bounds().size(), state.view.zoom);
         }
         if let Some(content) = layout.children().next() {
-            self.elements[0].as_widget_mut().operate(&mut tree.children[0], content, renderer, operation);
+            self.elements[0].as_widget_mut().operate(
+                &mut tree.children[0],
+                content,
+                renderer,
+                operation,
+            );
         }
     }
 
@@ -604,7 +697,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
             tree.state.downcast_mut::<State>().modifiers = *modifiers;
         }
         let over_bar = cursor.is_over(bar.bounds());
-        let hit = if over_bar { self.hit(bar, cursor) } else { None };
+        let hit = if over_bar {
+            self.hit(bar, cursor)
+        } else {
+            None
+        };
         // The bar first: its buttons, and nothing under it reaches the content.
         {
             let state = tree.state.downcast_mut::<State>();
@@ -626,7 +723,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                     shell.request_redraw();
                     return;
                 }
-                Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) if state.pressed.is_some() => {
+                Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
+                    if state.pressed.is_some() =>
+                {
                     let pressed = state.pressed.take();
                     let view = state.view;
                     let size = bounds.size();
@@ -635,7 +734,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                     if pressed != hit {
                         return;
                     }
-                    let Some(Item::Button(button)) = pressed.and_then(|i| self.items.get(i)).copied() else {
+                    let Some(Item::Button(button)) =
+                        pressed.and_then(|i| self.items.get(i)).copied()
+                    else {
                         return;
                     };
                     if !self.enabled(button, view) {
@@ -682,7 +783,14 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                             let at = coordinate(*position, thumb.axis)
                                 - coordinate(track.position(), thumb.axis)
                                 - thumb.grab;
-                            let value = offset_for(track, held, along(size, thumb.axis), view.zoom, at, thumb.axis);
+                            let value = offset_for(
+                                track,
+                                held,
+                                along(size, thumb.axis),
+                                view.zoom,
+                                at,
+                                thumb.axis,
+                            );
                             let offset = match thumb.axis {
                                 Axis::X => Vector::new(value, view.offset.y),
                                 Axis::Y => Vector::new(view.offset.x, value),
@@ -708,9 +816,14 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                         let along_thumb = coordinate(p, axis) - coordinate(thumb.position(), axis);
                         let length = along(thumb.size(), axis);
                         // On the thumb: held where it was taken; on the track: the thumb's middle jumps there.
-                        let grab = if (0.0..=length).contains(&along_thumb) { along_thumb } else { length / 2.0 };
+                        let grab = if (0.0..=length).contains(&along_thumb) {
+                            along_thumb
+                        } else {
+                            length / 2.0
+                        };
                         let at = coordinate(p, axis) - coordinate(track.position(), axis) - grab;
-                        let value = offset_for(track, thumb, along(size, axis), view.zoom, at, axis);
+                        let value =
+                            offset_for(track, thumb, along(size, axis), view.zoom, at, axis);
                         state.view.offset = match axis {
                             Axis::X => Vector::new(value, view.offset.y),
                             Axis::Y => Vector::new(view.offset.x, value),
@@ -722,7 +835,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                         return;
                     }
                 }
-                Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) if state.thumb.is_some() => {
+                Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left))
+                    if state.thumb.is_some() =>
+                {
                     state.thumb = None;
                     shell.capture_event();
                     shell.request_redraw();
@@ -753,7 +868,10 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
         let at = |p: Point| Vector::new(p.x - bounds.x, p.y - bounds.y);
         match event {
             Event::Mouse(mouse::Event::WheelScrolled { delta }) => {
-                let Some(p) = cursor.position_over(bounds).filter(|_| !cursor.is_levitating()) else {
+                let Some(p) = cursor
+                    .position_over(bounds)
+                    .filter(|_| !cursor.is_levitating())
+                else {
                     return;
                 };
                 let next = match turn(*delta, state.modifiers.shift()) {
@@ -772,16 +890,21 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                     shell.request_redraw();
                 }
             }
-            Event::Mouse(mouse::Event::ButtonPressed(button @ (mouse::Button::Left | mouse::Button::Middle))) => {
-                let Some(p) = cursor.position_over(bounds).filter(|_| !cursor.is_levitating()) else {
+            Event::Mouse(mouse::Event::ButtonPressed(
+                button @ (mouse::Button::Left | mouse::Button::Middle),
+            )) => {
+                let Some(p) = cursor
+                    .position_over(bounds)
+                    .filter(|_| !cursor.is_levitating())
+                else {
                     return;
                 };
                 shell.capture_event();
                 if *button == mouse::Button::Left {
                     let now = crate::clock::now();
-                    let double = state
-                        .click
-                        .is_some_and(|(then, q)| now.duration_since(then) <= DOUBLE && p.distance(q) <= SLOP);
+                    let double = state.click.is_some_and(|(then, q)| {
+                        now.duration_since(then) <= DOUBLE && p.distance(q) <= SLOP
+                    });
                     if double {
                         state.click = None;
                         if state.view != View::default() {
@@ -794,7 +917,10 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                     state.click = Some((now, p));
                 }
                 if state.view.zoom > 1.0 {
-                    state.drag = Some(Drag { from: p, offset: state.view.offset });
+                    state.drag = Some(Drag {
+                        from: p,
+                        offset: state.view.offset,
+                    });
                     shell.request_redraw();
                 }
             }
@@ -809,9 +935,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                     shell.capture_event();
                 }
             }
-            Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left | mouse::Button::Middle))
-                if state.drag.is_some() =>
-            {
+            Event::Mouse(mouse::Event::ButtonReleased(
+                mouse::Button::Left | mouse::Button::Middle,
+            )) if state.drag.is_some() => {
                 state.drag = None;
                 shell.capture_event();
                 shell.request_redraw();
@@ -835,7 +961,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
         };
         if cursor.is_over(bar.bounds()) {
             return match self.hit(bar, cursor).and_then(|i| self.items.get(i)) {
-                Some(Item::Button(button)) if self.enabled(*button, state.view) => mouse::Interaction::Pointer,
+                Some(Item::Button(button)) if self.enabled(*button, state.view) => {
+                    mouse::Interaction::Pointer
+                }
                 _ => mouse::Interaction::Idle,
             };
         }
@@ -913,34 +1041,60 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
         let hovered = if over_bar { state.hovered } else { None };
         // Out of the picture the bar is only the zoom's pill at its right end: the drawing is not covered, the pill says
         // it zooms and how far. The cursor in, the whole group opens (as a plotting library's mode bar).
-        let open = cursor.is_over(bounds) || state.pressed.is_some() || state.drag.is_some() || state.thumb.is_some();
+        let open = cursor.is_over(bounds)
+            || state.pressed.is_some()
+            || state.drag.is_some()
+            || state.thumb.is_some();
         let zoom_words = format!("%{}", (state.view.zoom * 100.0).round() as i64);
-        let zoom_color = if state.view.zoom > 1.0 + 1e-4 { t.text } else { t.muted };
+        let zoom_color = if state.view.zoom > 1.0 + 1e-4 {
+            t.text
+        } else {
+            t.muted
+        };
         renderer.with_layer(clip, |renderer| {
             // Where the view is on the zoomed content: a quiet bar along the bottom and the right edge.
             for axis in [Axis::X, Axis::Y] {
                 let Some((track, thumb)) = scrollbar(bounds, below, state.view, axis) else {
                     continue;
                 };
-                let active = state.thumb.is_some_and(|h| h.axis == axis) || state.over_scrollbar == Some(axis);
-                let round = Border { radius: (THICK / 2.0).into(), ..Border::default() };
+                let active = state.thumb.is_some_and(|h| h.axis == axis)
+                    || state.over_scrollbar == Some(axis);
+                let round = Border {
+                    radius: (THICK / 2.0).into(),
+                    ..Border::default()
+                };
                 renderer.fill_quad(
-                    Quad { bounds: track, border: round, ..Quad::default() },
+                    Quad {
+                        bounds: track,
+                        border: round,
+                        ..Quad::default()
+                    },
                     Background::Color(t.text.scale_alpha(if active { 0.10 } else { 0.05 })),
                 );
                 renderer.fill_quad(
-                    Quad { bounds: thumb, border: round, ..Quad::default() },
+                    Quad {
+                        bounds: thumb,
+                        border: round,
+                        ..Quad::default()
+                    },
                     Background::Color(t.text.scale_alpha(if active { 0.55 } else { 0.32 })),
                 );
             }
             if !open {
                 let label = typography::scaled(LABEL).round();
                 let b = bar.bounds();
-                let pill = Rectangle::new(Point::new(b.x + b.width - label, b.y), Size::new(label, b.height));
+                let pill = Rectangle::new(
+                    Point::new(b.x + b.width - label, b.y),
+                    Size::new(label, b.height),
+                );
                 renderer.fill_quad(
                     Quad {
                         bounds: pill,
-                        border: Border { color: t.border, width: 1.0, radius: crate::theme::shape::radius(6.0).into() },
+                        border: Border {
+                            color: t.border,
+                            width: 1.0,
+                            radius: crate::theme::shape::radius(6.0).into(),
+                        },
                         shadow: Shadow {
                             color: t.shadow().scale_alpha(0.4),
                             offset: Vector::new(0.0, 1.0),
@@ -971,7 +1125,11 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
             renderer.fill_quad(
                 Quad {
                     bounds: bar.bounds(),
-                    border: Border { color: t.border, width: 1.0, radius: crate::theme::shape::radius(6.0).into() },
+                    border: Border {
+                        color: t.border,
+                        width: 1.0,
+                        radius: crate::theme::shape::radius(6.0).into(),
+                    },
                     shadow: Shadow {
                         color: t.shadow().scale_alpha(0.6),
                         offset: Vector::new(0.0, 1.0),
@@ -1024,10 +1182,17 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
                     renderer.fill_quad(
                         Quad {
                             bounds: b,
-                            border: Border { radius: crate::theme::shape::radius(4.0).into(), ..Border::default() },
+                            border: Border {
+                                radius: crate::theme::shape::radius(4.0).into(),
+                                ..Border::default()
+                            },
                             ..Quad::default()
                         },
-                        Background::Color(if pressed { t.layer(0.14) } else { t.surface_hover }),
+                        Background::Color(if pressed {
+                            t.layer(0.14)
+                        } else {
+                            t.surface_hover
+                        }),
                     );
                 }
                 let color = if enabled { t.text } else { t.disabled() };
@@ -1088,7 +1253,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Picture<'a, M
         let view = tree.state.downcast_ref::<State>().view;
         let offset = clamped(view.offset, layout.bounds().size(), view.zoom);
         let content = layout.children().next()?;
-        self.elements[0].as_widget_mut().overlay(&mut tree.children[0], content, renderer, viewport, translation - offset)
+        self.elements[0].as_widget_mut().overlay(
+            &mut tree.children[0],
+            content,
+            renderer,
+            viewport,
+            translation - offset,
+        )
     }
 }
 
@@ -1115,8 +1286,11 @@ impl<'a, Message> Widget<Message, Theme, Renderer> for Shown<'_, 'a, Message> {
     fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &Limits) -> Node {
         let size = limits.max();
         let zoomed = Size::new(size.width * self.view.zoom, size.height * self.view.zoom);
-        let content =
-            self.content.as_widget_mut().layout(&mut tree.children[0], renderer, &Limits::new(zoomed, zoomed));
+        let content = self.content.as_widget_mut().layout(
+            &mut tree.children[0],
+            renderer,
+            &Limits::new(zoomed, zoomed),
+        );
         Node::with_children(size, vec![content])
     }
 
@@ -1161,11 +1335,13 @@ mod tests {
 
     use iced::advanced::widget::{Id, Operation};
     use iced::widget::canvas::{self, Path};
-    use iced::{Color, Element, Event, Point, Rectangle, Renderer, Size, Theme, Vector, keyboard, mouse};
+    use iced::{
+        Color, Element, Event, Point, Rectangle, Renderer, Size, Theme, Vector, keyboard, mouse,
+    };
 
     use super::{
-        Axis, Button, MAX_ZOOM, Picture, Saved, Turn, View, bar_at, button_at, cells, clamped, items, scrollbar, turn,
-        zoomed,
+        Axis, Button, MAX_ZOOM, Picture, Saved, Turn, View, bar_at, button_at, cells, clamped,
+        items, scrollbar, turn, zoomed,
     };
     use crate::snapshot::{Input, Snapshot};
 
@@ -1181,8 +1357,23 @@ mod tests {
         assert_eq!(zoomed(v, size, 0.5, at), View::default());
         // Never under 1, never over the most; the view stays on the content.
         assert_eq!(zoomed(View::default(), size, 0.5, at).zoom, 1.0);
-        assert_eq!(zoomed(View { zoom: 30.0, offset: Vector::ZERO }, size, 2.0, Vector::ZERO).zoom, MAX_ZOOM);
-        assert_eq!(clamped(Vector::new(-5.0, 900.0), size, 2.0), Vector::new(0.0, 200.0));
+        assert_eq!(
+            zoomed(
+                View {
+                    zoom: 30.0,
+                    offset: Vector::ZERO
+                },
+                size,
+                2.0,
+                Vector::ZERO
+            )
+            .zoom,
+            MAX_ZOOM
+        );
+        assert_eq!(
+            clamped(Vector::new(-5.0, 900.0), size, 2.0),
+            Vector::new(0.0, 200.0)
+        );
     }
 
     #[test]
@@ -1191,9 +1382,18 @@ mod tests {
         assert_eq!(turn(lines(0.0, 1.0), false), Turn::Zoom(1.2));
         assert!(matches!(turn(lines(0.0, -1.0), false), Turn::Zoom(f) if f < 1.0));
         // Shift with the wheel, a tilted wheel, a touchpad's horizontal scroll: sideways, as a scrollable reads them.
-        assert_eq!(turn(lines(0.0, -1.0), true), Turn::Pan(Vector::new(48.0, 0.0)));
-        assert_eq!(turn(lines(-1.0, 0.0), false), Turn::Pan(Vector::new(48.0, 0.0)));
-        assert_eq!(turn(mouse::ScrollDelta::Pixels { x: -30.0, y: 2.0 }, false), Turn::Pan(Vector::new(30.0, -2.0)));
+        assert_eq!(
+            turn(lines(0.0, -1.0), true),
+            Turn::Pan(Vector::new(48.0, 0.0))
+        );
+        assert_eq!(
+            turn(lines(-1.0, 0.0), false),
+            Turn::Pan(Vector::new(48.0, 0.0))
+        );
+        assert_eq!(
+            turn(mouse::ScrollDelta::Pixels { x: -30.0, y: 2.0 }, false),
+            Turn::Pan(Vector::new(30.0, -2.0))
+        );
     }
 
     #[test]
@@ -1201,7 +1401,10 @@ mod tests {
         let (cells, bar) = cells(&items(true), false);
         assert_eq!(cells.len(), 7);
         assert!(bar.width > 150.0 && bar.width < 220.0, "{bar:?}");
-        assert_eq!(bar_at(Size::new(600.0, 300.0), bar), Point::new(600.0 - 8.0 - bar.width, 8.0));
+        assert_eq!(
+            bar_at(Size::new(600.0, 300.0), bar),
+            Point::new(600.0 - 8.0 - bar.width, 8.0)
+        );
         // Too narrow for the bar: at the left edge.
         assert_eq!(bar_at(Size::new(100.0, 300.0), bar).x, 0.0);
         // A narrow picture's bar leaves the zoom's label out (the pill shows it when the cursor is away).
@@ -1216,11 +1419,17 @@ mod tests {
         // Fitted: none.
         assert!(scrollbar(bounds, 60.0, View::default(), Axis::X).is_none());
         // Zoomed 2 at the middle: the thumb is half the track, in its middle.
-        let view = View { zoom: 2.0, offset: Vector::new(300.0, 150.0) };
+        let view = View {
+            zoom: 2.0,
+            offset: Vector::new(300.0, 150.0),
+        };
         let (track, thumb) = scrollbar(bounds, 60.0, view, Axis::X).expect("a bar");
         assert_eq!(track.width, 600.0 - 15.0);
         assert!((thumb.width - track.width / 2.0).abs() < 1e-3);
-        assert!((thumb.x - (track.x + track.width / 4.0)).abs() < 1e-3, "{thumb:?}");
+        assert!(
+            (thumb.x - (track.x + track.width / 4.0)).abs() < 1e-3,
+            "{thumb:?}"
+        );
         // The vertical one starts under the bar.
         let (track, _) = scrollbar(bounds, 60.0, view, Axis::Y).expect("a bar");
         assert_eq!(track.y, 63.0);
@@ -1245,7 +1454,10 @@ mod tests {
             let c = Point::new(bounds.width / 2.0, bounds.height / 2.0);
             let half = bounds.width / 20.0;
             frame.fill(
-                &Path::rectangle(Point::new(c.x - half, c.y - half), Size::new(2.0 * half, 2.0 * half)),
+                &Path::rectangle(
+                    Point::new(c.x - half, c.y - half),
+                    Size::new(2.0 * half, 2.0 * half),
+                ),
                 Color::from_rgb(1.0, 0.0, 0.0),
             );
             vec![frame.into_geometry()]
@@ -1275,11 +1487,15 @@ mod tests {
     }
 
     fn view(_: &App) -> Element<'_, Saved> {
-        Picture::new(canvas::Canvas::new(Mark).width(iced::Fill).height(iced::Fill))
-            .name("Deneme")
-            .id(Id::new("p"))
-            .on_save(|s| s)
-            .into()
+        Picture::new(
+            canvas::Canvas::new(Mark)
+                .width(iced::Fill)
+                .height(iced::Fill),
+        )
+        .name("Deneme")
+        .id(Id::new("p"))
+        .on_save(|s| s)
+        .into()
     }
 
     fn read(snapshot: &mut Snapshot, app: &App) -> (View, Rectangle) {
@@ -1295,35 +1511,77 @@ mod tests {
         let mut update = |app: &mut App, saved: Saved| app.saved.push(saved);
         snapshot.settle(&mut app, view, &mut update);
         let (v, bounds) = read(&mut snapshot, &app);
-        assert_eq!((v, bounds.size()), (View::default(), Size::new(600.0, 300.0)));
+        assert_eq!(
+            (v, bounds.size()),
+            (View::default(), Size::new(600.0, 300.0))
+        );
         // Two wheel lines at (150, 100): ×1,44, the point under the cursor stays.
-        snapshot.input(&mut app, view, &mut update, Input::Scroll(Point::new(150.0, 100.0), 2.0));
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Scroll(Point::new(150.0, 100.0), 2.0),
+        );
         let (v, _) = read(&mut snapshot, &app);
         assert!((v.zoom - 1.44).abs() < 1e-4, "{v:?}");
-        assert!((v.offset.x - 150.0 * 0.44).abs() < 1e-3 && (v.offset.y - 100.0 * 0.44).abs() < 1e-3, "{v:?}");
+        assert!(
+            (v.offset.x - 150.0 * 0.44).abs() < 1e-3 && (v.offset.y - 100.0 * 0.44).abs() < 1e-3,
+            "{v:?}"
+        );
         // A drag of (−40, −20) moves the view by (40, 20) over the content.
         let before = v.offset;
-        snapshot.input(&mut app, view, &mut update, Input::Drag(Point::new(300.0, 200.0), Point::new(260.0, 180.0)));
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Drag(Point::new(300.0, 200.0), Point::new(260.0, 180.0)),
+        );
         let (v, _) = read(&mut snapshot, &app);
         assert!(
-            (v.offset.x - (before.x + 40.0)).abs() < 1e-3 && (v.offset.y - (before.y + 20.0)).abs() < 1e-3,
+            (v.offset.x - (before.x + 40.0)).abs() < 1e-3
+                && (v.offset.y - (before.y + 20.0)).abs() < 1e-3,
             "{v:?}"
         );
         // A double click fits.
-        snapshot.input(&mut app, view, &mut update, Input::Click(Point::new(300.0, 250.0)));
-        snapshot.input(&mut app, view, &mut update, Input::Click(Point::new(300.0, 250.0)));
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Click(Point::new(300.0, 250.0)),
+        );
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Click(Point::new(300.0, 250.0)),
+        );
         assert_eq!(read(&mut snapshot, &app).0, View::default());
         // The bar's last button saves the picture: twice the pixels, a PNG.
-        snapshot.input(&mut app, view, &mut update, Input::Click(button_at(bounds, Button::Save)));
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Click(button_at(bounds, Button::Save)),
+        );
         assert_eq!(app.saved.len(), 1, "saved once");
         let saved = &app.saved[0];
-        assert_eq!((saved.name.as_str(), saved.width, saved.height), ("Deneme", 1200, 600));
+        assert_eq!(
+            (saved.name.as_str(), saved.width, saved.height),
+            ("Deneme", 1200, 600)
+        );
         assert_eq!(&saved.png[1..4], b"PNG");
         // Its plus zooms in by 1,5 about the centre.
-        snapshot.input(&mut app, view, &mut update, Input::Click(button_at(bounds, Button::In)));
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Click(button_at(bounds, Button::In)),
+        );
         let (v, _) = read(&mut snapshot, &app);
         assert!(
-            (v.zoom - 1.5).abs() < 1e-5 && (v.offset.x - 150.0).abs() < 1e-3 && (v.offset.y - 75.0).abs() < 1e-3,
+            (v.zoom - 1.5).abs() < 1e-5
+                && (v.offset.x - 150.0).abs() < 1e-3
+                && (v.offset.y - 75.0).abs() < 1e-3,
             "{v:?}"
         );
     }
@@ -1335,27 +1593,47 @@ mod tests {
         let mut update = |app: &mut App, saved: Saved| app.saved.push(saved);
         snapshot.settle(&mut app, view, &mut update);
         let (_, bounds) = read(&mut snapshot, &app);
-        snapshot.input(&mut app, view, &mut update, Input::Click(button_at(bounds, Button::In)));
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Click(button_at(bounds, Button::In)),
+        );
         let (v, _) = read(&mut snapshot, &app);
         assert_eq!(v.offset, Vector::new(150.0, 75.0));
         // Shift and the wheel down: 48 px to the right, the zoom as it was.
-        let shift = Event::Keyboard(keyboard::Event::ModifiersChanged(keyboard::Modifiers::SHIFT));
+        let shift = Event::Keyboard(keyboard::Event::ModifiersChanged(
+            keyboard::Modifiers::SHIFT,
+        ));
         let _ = snapshot.deliver(view(&app), &shift);
-        snapshot.input(&mut app, view, &mut update, Input::Scroll(Point::new(300.0, 150.0), -1.0));
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Scroll(Point::new(300.0, 150.0), -1.0),
+        );
         let (v, _) = read(&mut snapshot, &app);
         assert_eq!((v.zoom, v.offset), (1.5, Vector::new(198.0, 75.0)));
-        let plain = Event::Keyboard(keyboard::Event::ModifiersChanged(keyboard::Modifiers::default()));
+        let plain = Event::Keyboard(keyboard::Event::ModifiersChanged(
+            keyboard::Modifiers::default(),
+        ));
         let _ = snapshot.deliver(view(&app), &plain);
         // A touchpad's horizontal scroll: 30 px further.
-        let swipe =
-            Event::Mouse(mouse::Event::WheelScrolled { delta: mouse::ScrollDelta::Pixels { x: -30.0, y: 0.0 } });
+        let swipe = Event::Mouse(mouse::Event::WheelScrolled {
+            delta: mouse::ScrollDelta::Pixels { x: -30.0, y: 0.0 },
+        });
         let _ = snapshot.deliver(view(&app), &swipe);
         let (v, _) = read(&mut snapshot, &app);
         assert_eq!((v.zoom, v.offset), (1.5, Vector::new(228.0, 75.0)));
         // The horizontal thumb dragged to the track's start: the view at the content's left edge.
         let (track, thumb) = scrollbar(bounds, 40.0, v, Axis::X).expect("a bar");
         let held = Point::new(thumb.center_x(), thumb.center_y());
-        snapshot.input(&mut app, view, &mut update, Input::Drag(held, Point::new(held.x - 1000.0, held.y)));
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Drag(held, Point::new(held.x - 1000.0, held.y)),
+        );
         let (v, _) = read(&mut snapshot, &app);
         assert_eq!((v.zoom, v.offset), (1.5, Vector::new(0.0, 75.0)));
         // A press on the track's far end: the view at the content's right edge.
@@ -1377,17 +1655,40 @@ mod tests {
         let mut update = |app: &mut App, saved: Saved| app.saved.push(saved);
         snapshot.settle(&mut app, view, &mut update);
         let bounds = Rectangle::new(Point::ORIGIN, Size::new(200.0, 100.0));
-        snapshot.input(&mut app, view, &mut update, Input::Click(button_at(bounds, Button::Save)));
-        snapshot.input(&mut app, view, &mut update, Input::Click(button_at(bounds, Button::In)));
-        snapshot.input(&mut app, view, &mut update, Input::Click(button_at(bounds, Button::In)));
-        snapshot.input(&mut app, view, &mut update, Input::Click(button_at(bounds, Button::Save)));
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Click(button_at(bounds, Button::Save)),
+        );
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Click(button_at(bounds, Button::In)),
+        );
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Click(button_at(bounds, Button::In)),
+        );
+        snapshot.input(
+            &mut app,
+            view,
+            &mut update,
+            Input::Click(button_at(bounds, Button::Save)),
+        );
         assert_eq!(app.saved.len(), 2);
         let red = |s: &Saved| {
             let decoder = png::Decoder::new(std::io::Cursor::new(s.png.as_slice()));
             let mut reader = decoder.read_info().expect("a png");
             let mut buf = vec![0; reader.output_buffer_size().expect("its size")];
             let info = reader.next_frame(&mut buf).expect("a frame");
-            buf[..info.buffer_size()].chunks(4).filter(|p| p[0] > 200 && p[1] < 60 && p[2] < 60).count()
+            buf[..info.buffer_size()]
+                .chunks(4)
+                .filter(|p| p[0] > 200 && p[1] < 60 && p[2] < 60)
+                .count()
         };
         // 20×20 at twice the pixels: 1600; laid out 2,25 times larger: about 5,06 times more.
         let (a, b) = (red(&app.saved[0]), red(&app.saved[1]));

@@ -46,7 +46,10 @@ impl Keymap {
             Ok(chord) => chord,
             Err(e) => return KeyCheck::Unreadable(e.message()),
         };
-        if let Some(why) = reserved_key(&chord).map(|r| r.message()).or_else(|| system_key(&chord)) {
+        if let Some(why) = reserved_key(&chord)
+            .map(|r| r.message())
+            .or_else(|| system_key(&chord))
+        {
             return KeyCheck::Kept(why);
         }
         if let Some(owner) = self.taken.get(&chord) {
@@ -57,7 +60,9 @@ impl Keymap {
         }
         // Another command's own key, the sheet designer's aside (its keys are its own while a sheet is in front).
         let owner = catalog().commands().iter().find(|c| {
-            !sheet_command(c.id) && !self.user.contains_key(c.id) && c.shortcuts.contains(&chord.as_str())
+            !sheet_command(c.id)
+                && !self.user.contains_key(c.id)
+                && c.shortcuts.contains(&chord.as_str())
         });
         match owner {
             Some(c) if c.id != id => KeyCheck::Taken(c, Source::Default),
@@ -92,7 +97,14 @@ impl Keymap {
     pub fn shortcuts_with(&self, id: &'static str, chord: &str) -> Value {
         let mut map = self.shortcut_map();
         if let Some(owner) = self.taken.get(chord).filter(|o| **o != id) {
-            let rest: Vec<String> = self.user.get(owner).into_iter().flatten().filter(|k| *k != chord).cloned().collect();
+            let rest: Vec<String> = self
+                .user
+                .get(owner)
+                .into_iter()
+                .flatten()
+                .filter(|k| *k != chord)
+                .cloned()
+                .collect();
             put_keys(&mut map, owner, rest);
         }
         let mut keys: Vec<String> = catalog()
@@ -111,7 +123,13 @@ impl Keymap {
         let mut map = self.shortcut_map();
         let keys: Vec<String> = catalog()
             .get(id)
-            .map(|c| self.keys_of(c).into_iter().filter(|k| *k != chord).map(str::to_owned).collect())
+            .map(|c| {
+                self.keys_of(c)
+                    .into_iter()
+                    .filter(|k| *k != chord)
+                    .map(str::to_owned)
+                    .collect()
+            })
             .unwrap_or_default();
         put_keys(&mut map, id, keys);
         Value::Object(map)
@@ -158,7 +176,9 @@ impl Keymap {
 
 /// A command's keys into the setting: none when they are the command's own, as they were.
 fn put_keys(map: &mut Map<String, Value>, id: &str, keys: Vec<String>) {
-    let own = catalog().get(id).is_some_and(|c| c.shortcuts.len() == keys.len() && c.shortcuts.iter().zip(&keys).all(|(a, b)| a == b));
+    let own = catalog().get(id).is_some_and(|c| {
+        c.shortcuts.len() == keys.len() && c.shortcuts.iter().zip(&keys).all(|(a, b)| a == b)
+    });
     if own {
         map.remove(id);
     } else {

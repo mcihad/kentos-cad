@@ -549,15 +549,21 @@ fn input_settings<'a>(
             };
             let control = if text_of("widget") == "color" {
                 let name = name.clone();
-                crate::processing::fields::color_choice(&text, flag("colorInheritance"), color, move |value| {
-                    ev(Event::Input(name.clone(),InputField::Text(value.unwrap_or_default())))
-                })
-            } else { text_field("", &text, set(InputField::Text)) };
-            rows.push(field_row(
-                words::input::DEFAULT,
-                control,
-                None,
-            ));
+                crate::processing::fields::color_choice(
+                    &text,
+                    flag("colorInheritance"),
+                    color,
+                    move |value| {
+                        ev(Event::Input(
+                            name.clone(),
+                            InputField::Text(value.unwrap_or_default()),
+                        ))
+                    },
+                )
+            } else {
+                text_field("", &text, set(InputField::Text))
+            };
+            rows.push(field_row(words::input::DEFAULT, control, None));
             rows.push(field_row(
                 words::input::ALLOW_EMPTY,
                 Switch::new(flag("allowEmpty"), toggle(InputField::AllowEmpty)).into(),

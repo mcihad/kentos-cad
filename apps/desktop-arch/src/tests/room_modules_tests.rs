@@ -1,7 +1,7 @@
 use super::*;
 use crate::arch;
-use crate::files_testing::{app_with_drawing, make_cad};
 use crate::arch::ArchState;
+use crate::files_testing::{app_with_drawing, make_cad};
 
 const CASES: &str = include_str!("../../../../fixtures/commands/v1/cad.modules.edit.json");
 
@@ -45,7 +45,9 @@ fn the_window_defines_the_selection_and_closing_writes_nothing() {
     let _ = app.update(Message::Run("arch.modules"));
     assert_eq!(
         app.dialog,
-        Some(crate::arch::dialog(crate::arch::ArchDialogKind::RoomModules))
+        Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::RoomModules
+        ))
     );
     let _ = app.update(Message::from(arch::Event::RoomModules(Event::Close)));
     assert_eq!(
@@ -209,10 +211,22 @@ fn the_window_repeats_the_ground_floor_with_its_prefixes_in_one_step() {
     let _ = app.update(Message::from(arch::Event::RoomModules(
         Event::RepeatChoose(1, true),
     )));
-    let Some(Ok(plan)) = &app.modules.arch().room_modules.as_ref().unwrap().repeat_preview else {
+    let Some(Ok(plan)) = &app
+        .modules
+        .arch()
+        .room_modules
+        .as_ref()
+        .unwrap()
+        .repeat_preview
+    else {
         panic!(
             "{:?}",
-            app.modules.arch().room_modules.as_ref().unwrap().repeat_preview
+            app.modules
+                .arch()
+                .room_modules
+                .as_ref()
+                .unwrap()
+                .repeat_preview
         )
     };
     assert_eq!(plan.placed.len(), 2);
@@ -262,7 +276,8 @@ fn an_object_moved_by_hand_is_said_drifted_and_restore_gives_it_back() {
     assert!((b.p.x - 4.5).abs() < 1e-12);
 }
 
-const STOREYS: &str = include_str!("../../../../fixtures/commands/v1/cad.modules.edit.storeys.json");
+const STOREYS: &str =
+    include_str!("../../../../fixtures/commands/v1/cad.modules.edit.storeys.json");
 
 /// The shared cases' duplex (objects 1–11 on two levels) defined from the window, and its hall in no module beside it
 /// (docs/adr/0796).
@@ -307,17 +322,36 @@ fn the_window_repeats_a_floor_with_its_loose_objects_in_one_step() {
     let _ = app.update(Message::from(arch::Event::RoomModules(
         Event::RepeatChoose(k1, true),
     )));
-    let Some(Ok(plan)) = &app.modules.arch().room_modules.as_ref().unwrap().repeat_preview else {
+    let Some(Ok(plan)) = &app
+        .modules
+        .arch()
+        .room_modules
+        .as_ref()
+        .unwrap()
+        .repeat_preview
+    else {
         panic!()
     };
     assert!(plan.copied.is_empty(), "without Modülsüz nesneler de");
     let _ = app.update(Message::from(arch::Event::RoomModules(Event::RepeatLoose(
         true,
     ))));
-    let Some(Ok(plan)) = &app.modules.arch().room_modules.as_ref().unwrap().repeat_preview else {
+    let Some(Ok(plan)) = &app
+        .modules
+        .arch()
+        .room_modules
+        .as_ref()
+        .unwrap()
+        .repeat_preview
+    else {
         panic!(
             "{:?}",
-            app.modules.arch().room_modules.as_ref().unwrap().repeat_preview
+            app.modules
+                .arch()
+                .room_modules
+                .as_ref()
+                .unwrap()
+                .repeat_preview
         )
     };
     assert_eq!(plan.copied.len(), 8);
@@ -387,11 +421,16 @@ fn the_new_module_help_follows_the_selection() {
         .set([1, 5, 12].into_iter().map(kentos_domain::Slot));
     let mixed = app.room_module_selection_words();
     assert!(
-        mixed.contains("3 nesne") && mixed.contains("2 tanesi modüle alınabilir") && mixed.contains("çizgi"),
+        mixed.contains("3 nesne")
+            && mixed.contains("2 tanesi modüle alınabilir")
+            && mixed.contains("çizgi"),
         "{mixed}"
     );
     app.selection.set([kentos_domain::Slot(12)]);
-    assert!(app.room_module_selection_words().contains("modüle alınamaz (çizgi)"));
+    assert!(
+        app.room_module_selection_words()
+            .contains("modüle alınamaz (çizgi)")
+    );
 }
 
 /// UR-053's pictures: the window with no selection, the bathroom selected and a line among it,
@@ -399,7 +438,11 @@ fn the_new_module_help_follows_the_selection() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {
-    for (name, slots) in [("secimsiz", vec![]), ("gecerli", (1..=9).collect()), ("karma", vec![1, 5, 12])] {
+    for (name, slots) in [
+        ("secimsiz", vec![]),
+        ("gecerli", (1..=9).collect()),
+        ("karma", vec![1, 5, 12]),
+    ] {
         crate::files_testing::usage_shots("053", name, || {
             let mut app = app();
             app.selection

@@ -46,26 +46,41 @@ pub struct PlatformWater {
 
 /// A triangle's steepest slope (rise over run).
 pub fn slope(t: &[[f64; 3]; 3]) -> f64 {
-    let (u, v) = ([t[1][0] - t[0][0], t[1][1] - t[0][1], t[1][2] - t[0][2]], [t[2][0] - t[0][0], t[2][1] - t[0][1], t[2][2] - t[0][2]]);
-    let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    let (u, v) = (
+        [t[1][0] - t[0][0], t[1][1] - t[0][1], t[1][2] - t[0][2]],
+        [t[2][0] - t[0][0], t[2][1] - t[0][1], t[2][2] - t[0][2]],
+    );
+    let n = [
+        u[1] * v[2] - u[2] * v[1],
+        u[2] * v[0] - u[0] * v[2],
+        u[0] * v[1] - u[1] * v[0],
+    ];
     n[0].hypot(n[1]) / n[2].abs()
 }
 
 fn plan_area(t: &[[f64; 3]; 3]) -> f64 {
-    0.5 * ((t[1][0] - t[0][0]) * (t[2][1] - t[0][1]) - (t[2][0] - t[0][0]) * (t[1][1] - t[0][1])).abs()
+    0.5 * ((t[1][0] - t[0][0]) * (t[2][1] - t[0][1]) - (t[2][0] - t[0][0]) * (t[1][1] - t[0][1]))
+        .abs()
 }
 
 /// Whether `code` is a platform edge: the axis or a component's edge (`left.c1`, `right.c2` …).
 pub fn platform_edge(code: &str) -> bool {
     code == "axis"
-        || code
-            .split_once('.')
-            .is_some_and(|(side, rest)| (side == "left" || side == "right") && rest.strip_prefix('c').is_some_and(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit())))
+        || code.split_once('.').is_some_and(|(side, rest)| {
+            (side == "left" || side == "right")
+                && rest
+                    .strip_prefix('c')
+                    .is_some_and(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
+        })
 }
 
 fn crossfalls(features: &[Feature], region: usize, right: bool) -> Vec<(f64, f64)> {
     let edge = if right { "right.c1" } else { "left.c1" };
-    let axis: Vec<&[f64; 4]> = features.iter().filter(|f| f.region == region && f.code == "axis").flat_map(|f| f.points.iter()).collect();
+    let axis: Vec<&[f64; 4]> = features
+        .iter()
+        .filter(|f| f.region == region && f.code == "axis")
+        .flat_map(|f| f.points.iter())
+        .collect();
     let mut out: Vec<(f64, f64)> = features
         .iter()
         .filter(|f| f.region == region && f.code == edge)
@@ -104,22 +119,41 @@ pub fn water(built: &Built, least: f64) -> PlatformWater {
                     last.area += area;
                     last.least = last.least.min(low);
                 }
-                _ => out.flats.push(FlatStretch { region: *region, from: *from, to: *to, area, least: low }),
+                _ => out.flats.push(FlatStretch {
+                    region: *region,
+                    from: *from,
+                    to: *to,
+                    area,
+                    least: low,
+                }),
             }
         }
     }
-    let regions = built.features.iter().map(|f| f.region + 1).max().unwrap_or(0);
+    let regions = built
+        .features
+        .iter()
+        .map(|f| f.region + 1)
+        .max()
+        .unwrap_or(0);
     for region in 0..regions {
         for right in [false, true] {
             let cf = crossfalls(&built.features, region, right);
             for (k, &(s, c)) in cf.iter().enumerate() {
                 if c == 0.0 {
-                    out.zeros.push(ZeroCrossfall { region, right, station: s });
+                    out.zeros.push(ZeroCrossfall {
+                        region,
+                        right,
+                        station: s,
+                    });
                 }
                 if let Some(&(s1, c1)) = cf.get(k + 1)
                     && c * c1 < 0.0
                 {
-                    out.zeros.push(ZeroCrossfall { region, right, station: s + (s1 - s) * c / (c - c1) });
+                    out.zeros.push(ZeroCrossfall {
+                        region,
+                        right,
+                        station: s + (s1 - s) * c / (c - c1),
+                    });
                 }
             }
         }
@@ -127,11 +161,24 @@ pub fn water(built: &Built, least: f64) -> PlatformWater {
     for f in built.features.iter().filter(|f| platform_edge(&f.code)) {
         for w in f.points.windows(3) {
             if w[1][3] < w[0][3] && w[1][3] < w[2][3] {
-                out.lows.push(LowPoint { code: f.code.clone(), region: f.region, at: w[1] });
+                out.lows.push(LowPoint {
+                    code: f.code.clone(),
+                    region: f.region,
+                    at: w[1],
+                });
             }
         }
     }
-    out.zeros.sort_by(|a, b| (a.region, a.right).cmp(&(b.region, b.right)).then(a.station.total_cmp(&b.station)));
-    out.lows.sort_by(|a, b| a.region.cmp(&b.region).then(a.at[0].total_cmp(&b.at[0])).then(a.code.cmp(&b.code)));
+    out.zeros.sort_by(|a, b| {
+        (a.region, a.right)
+            .cmp(&(b.region, b.right))
+            .then(a.station.total_cmp(&b.station))
+    });
+    out.lows.sort_by(|a, b| {
+        a.region
+            .cmp(&b.region)
+            .then(a.at[0].total_cmp(&b.at[0]))
+            .then(a.code.cmp(&b.code))
+    });
     out
 }

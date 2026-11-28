@@ -3,8 +3,8 @@
 //! Reads only. The shared cases are `fixtures/commands/v1/road.terrains.query.json`.
 
 use kentos_commands::{
-    CommandResult, MAX_TERRAIN_PLACES, TerrainHeight, TerrainInterpolation, TerrainPlace, TerrainSectionPoint, TerrainsQueried,
-    TerrainsQuery,
+    CommandResult, MAX_TERRAIN_PLACES, TerrainHeight, TerrainInterpolation, TerrainPlace,
+    TerrainSectionPoint, TerrainsQueried, TerrainsQuery,
 };
 use kentos_road::surface::Place;
 
@@ -18,10 +18,18 @@ fn answer(doc: &kentos_domain::Document, input: &TerrainsQuery) -> Result<Terrai
     let own = common::surfaces(doc);
     let places = || input.at.iter().chain(&input.along);
     if places().any(|p| !(p[0].is_finite() && p[1].is_finite())) {
-        return Err(fail(codes::INVALID_PLACES, "Yerlerin koordinatları sonlu sayılar olmalı.".into(), "at"));
+        return Err(fail(
+            codes::INVALID_PLACES,
+            "Yerlerin koordinatları sonlu sayılar olmalı.".into(),
+            "at",
+        ));
     }
     if input.along.len() == 1 {
-        return Err(fail(codes::INVALID_PLACES, "Kesit hattı en az iki yerden oluşur.".into(), "along"));
+        return Err(fail(
+            codes::INVALID_PLACES,
+            "Kesit hattı en az iki yerden oluşur.".into(),
+            "along",
+        ));
     }
     if input.at.len() + input.along.len() > MAX_TERRAIN_PLACES {
         return Err(fail(
@@ -34,22 +42,25 @@ fn answer(doc: &kentos_domain::Document, input: &TerrainsQuery) -> Result<Terrai
         if !input.at.is_empty() || !input.along.is_empty() {
             return Err(fail(
                 codes::NO_TERRAIN,
-                "Kot ve kesit bir yüzeyde sorulur: yüzeyin kimliğini ya da adını (surface) verin.".into(),
+                "Kot ve kesit bir yüzeyde sorulur: yüzeyin kimliğini ya da adını (surface) verin."
+                    .into(),
                 "surface",
             ));
         }
         return Ok(TerrainsQueried {
-            surfaces: own.iter().map(|def| common::make(doc, def).report(def)).collect(),
+            surfaces: own
+                .iter()
+                .map(|def| common::make(doc, def).report(def))
+                .collect(),
             heights: vec![],
             section: vec![],
             interpolation: None,
         });
     };
-    let Some(def) = own
-        .iter()
-        .find(|s| s.id == name)
-        .or_else(|| own.iter().find(|s| s.name.to_lowercase() == name.to_lowercase()))
-    else {
+    let Some(def) = own.iter().find(|s| s.id == name).or_else(|| {
+        own.iter()
+            .find(|s| s.name.to_lowercase() == name.to_lowercase())
+    }) else {
         return Err(fail(
             codes::UNKNOWN_TERRAIN,
             format!("“{name}” kimlikli ya da adlı yüzey projede yok."),
@@ -83,9 +94,17 @@ fn answer(doc: &kentos_domain::Document, input: &TerrainsQuery) -> Result<Terrai
                             Place::Void => TerrainPlace::Void,
                         },
                         longest: corners.map(|c| {
-                            (0..3).map(|k| (c[k][0] - c[(k + 1) % 3][0]).hypot(c[k][1] - c[(k + 1) % 3][1])).fold(0.0, f64::max)
+                            (0..3)
+                                .map(|k| {
+                                    (c[k][0] - c[(k + 1) % 3][0]).hypot(c[k][1] - c[(k + 1) % 3][1])
+                                })
+                                .fold(0.0, f64::max)
                         }),
-                        corner: corners.map(|c| c.iter().map(|v| (v[0] - p[0]).hypot(v[1] - p[1])).fold(f64::INFINITY, f64::min)),
+                        corner: corners.map(|c| {
+                            c.iter()
+                                .map(|v| (v[0] - p[0]).hypot(v[1] - p[1]))
+                                .fold(f64::INFINITY, f64::min)
+                        }),
                         corners,
                     }
                 })
@@ -139,6 +158,9 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsQuery) -> CommandResult<T
 }
 
 /// The answer; writes nothing.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsQuery) -> CommandResult<TerrainsQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsQuery,
+) -> CommandResult<TerrainsQueried> {
     plan(cx, &input)
 }

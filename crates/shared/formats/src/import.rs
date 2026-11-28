@@ -83,12 +83,33 @@ pub fn defining_bounds(e: &Entity) -> Option<Bounds> {
         Entity::Record(_) => {}
         Entity::Wall(e) => e.wall.pts.iter().for_each(&mut add),
         Entity::Opening(e) => e.opening.place.iter().for_each(&mut add),
-        Entity::Space(e) => e.space.parts.iter().for_each(|p| p.outer.pts.iter().for_each(&mut add)),
-        Entity::Slab(e) => e.slab.parts.iter().for_each(|p| p.outer.pts.iter().for_each(&mut add)),
-        Entity::Mass(e) => e.mass.parts.iter().for_each(|p| p.outer.pts.iter().for_each(&mut add)),
-        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) | Entity::Roof(_) | Entity::Railing(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
-            crate::arch_elements::outline_points(e).unwrap_or_default().iter().for_each(&mut add)
-        }
+        Entity::Space(e) => e
+            .space
+            .parts
+            .iter()
+            .for_each(|p| p.outer.pts.iter().for_each(&mut add)),
+        Entity::Slab(e) => e
+            .slab
+            .parts
+            .iter()
+            .for_each(|p| p.outer.pts.iter().for_each(&mut add)),
+        Entity::Mass(e) => e
+            .mass
+            .parts
+            .iter()
+            .for_each(|p| p.outer.pts.iter().for_each(&mut add)),
+        Entity::Grid(_)
+        | Entity::Column(_)
+        | Entity::Stair(_)
+        | Entity::Ramp(_)
+        | Entity::Beam(_)
+        | Entity::Roof(_)
+        | Entity::Railing(_)
+        | Entity::Tag(_)
+        | Entity::ViewMark(_) => crate::arch_elements::outline_points(e)
+            .unwrap_or_default()
+            .iter()
+            .for_each(&mut add),
     }
     b
 }
@@ -267,24 +288,34 @@ pub fn view_of<'a>(
 }
 
 /// Conservative physical boxes of placed model objects, sharing CAD preview and desktop framing rules.
-pub fn placed_boxes<'a>(objects:impl IntoIterator<Item=&'a Entity>,blocks:impl IntoIterator<Item=&'a kentos_contracts::BlockDefinition>)->Vec<Bounds>{
-    let mut measured=crate::import_bounds::ModelBounds::new(blocks);
-    objects.into_iter().filter_map(|e|measured.entity(e)).collect()
+pub fn placed_boxes<'a>(
+    objects: impl IntoIterator<Item = &'a Entity>,
+    blocks: impl IntoIterator<Item = &'a kentos_contracts::BlockDefinition>,
+) -> Vec<Bounds> {
+    let mut measured = crate::import_bounds::ModelBounds::new(blocks);
+    objects
+        .into_iter()
+        .filter_map(|e| measured.entity(e))
+        .collect()
 }
 
 /// Fills in each layer's objects by kind and their box, and where the view
 /// shows the objects (`ImportLayer.kinds`, `ImportLayer.bounds`,
 /// `ImportResult.view`).
-pub fn summarise(result: &mut ImportResult) { summarise_with(result,false); }
+pub fn summarise(result: &mut ImportResult) {
+    summarise_with(result, false);
+}
 /// CAD has no authoritative model extent: derive it from placed model content, never paper or unplaced definitions.
-pub(crate) fn summarise_cad(result:&mut ImportResult){summarise_with(result,true);}
-fn summarise_with(result:&mut ImportResult,replace_bounds:bool){
+pub(crate) fn summarise_cad(result: &mut ImportResult) {
+    summarise_with(result, true);
+}
+fn summarise_with(result: &mut ImportResult, replace_bounds: bool) {
     #[derive(Default)]
     struct Layer {
         kinds: HashMap<&'static str, u32>,
         bounds: Option<Bounds>,
     }
-    let mut measured=crate::import_bounds::ModelBounds::new(&result.blocks);
+    let mut measured = crate::import_bounds::ModelBounds::new(&result.blocks);
     let mut per: HashMap<&str, Layer> = HashMap::new();
     let mut boxes = Vec::with_capacity(result.entities.len());
     let mut on = Vec::with_capacity(result.entities.len());
@@ -311,7 +342,9 @@ fn summarise_with(result:&mut ImportResult,replace_bounds:bool){
             layer.bounds = l.bounds;
         }
     }
-    if replace_bounds{result.bounds=union(boxes.iter());}
+    if replace_bounds {
+        result.bounds = union(boxes.iter());
+    }
     result.view = union_but(&boxes, &far);
     result.report.notes.extend(note);
     // A CAD drawing opens on where its objects crowd (`crowded`); the rest is a Tümünü göster away, and said.
@@ -364,8 +397,8 @@ fn stray_note(boxes: &[Bounds], on: &[&str], far: &[usize]) -> Option<ReportItem
     }
     let (x, y) = centre(first);
     Some(ReportItem {
-                severity: None,
-                details: Vec::new(),
+        severity: None,
+        details: Vec::new(),
         what: "Uzaktaki nesne".into(),
         count: u32::try_from(far.len()).unwrap_or(u32::MAX),
         // `+ 0.0` writes a negative zero as 0.

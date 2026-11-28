@@ -692,9 +692,7 @@ impl Tree {
             return f64::INFINITY;
         }
         match self.time {
-            None => {
-                g.cost(piece, self.cost, real) * (d / g.pieces[piece as usize].len)
-            }
+            None => g.cost(piece, self.cost, real) * (d / g.pieces[piece as usize].len),
             Some(t) => g.travel(
                 piece,
                 self.cost,
@@ -864,7 +862,13 @@ pub fn way_cost(g: &Graph, spans: &[Span], c: usize, at: Option<f64>, arrive: bo
                 total += turn(k);
             }
             let s = &spans[k];
-            total += g.travel(s.piece, c, s.b >= s.a, len(s), at.map(|t| (t - total, true)));
+            total += g.travel(
+                s.piece,
+                c,
+                s.b >= s.a,
+                len(s),
+                at.map(|t| (t - total, true)),
+            );
         }
         return total;
     }

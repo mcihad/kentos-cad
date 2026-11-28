@@ -21,7 +21,8 @@ fn union_cover(segments: &[[[f64; 2]; 2]], half: f64, p: [f64; 2]) -> f64 {
         .iter()
         .map(|&[a, b]| {
             let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
-            let t = (((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
+            let t =
+                (((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
             (p[0] - a[0] - t * dx).hypot(p[1] - a[1] - t * dy)
         })
         .fold(f64::INFINITY, f64::min);
@@ -40,7 +41,14 @@ pub(super) fn seen_through_joints_are_drawn_once(gpu: &mut Gpu) {
     // long at a pixel four metres, cut into 16 pieces of 125 m: five joints in view, none within a hundredth of a
     // pixel of a pixel's middle (-62.575, -31.325, -0.075, 31.175, 62.425 px). The same line from -1000 m: its joints at
     // -62.5 and 62.5 px, on pixels' middles (columns 17 and 142).
-    let zigzag = [[-66., -30.], [-36., 30.], [-6., -30.], [24., 30.], [54., -30.], [70., 30.]];
+    let zigzag = [
+        [-66., -30.],
+        [-36., 30.],
+        [-6., -30.],
+        [24., 30.],
+        [54., -30.],
+        [70., 30.],
+    ];
     let cases: [Case; 3] = [
         (zigzag.windows(2).map(|w| [w[0], w[1]]).collect(), 1.0, &[]),
         (vec![[[-1000.3, 7.], [999.7, 7.]]], 0.25, &[]),
@@ -50,16 +58,28 @@ pub(super) fn seen_through_joints_are_drawn_once(gpu: &mut Gpu) {
     for samples in [1, 4] {
         settings.samples = samples;
         for (k, (lines, scale, on_middles)) in cases.iter().enumerate() {
-            let camera = Camera { width: f64::from(size), height: f64::from(size), scale: *scale, ..Default::default() };
-            let pairs: Vec<[Vec2; 2]> =
-                lines.iter().map(|[p, q]| [Vec2::new(p[0], p[1]), Vec2::new(q[0], q[1])]).collect();
+            let camera = Camera {
+                width: f64::from(size),
+                height: f64::from(size),
+                scale: *scale,
+                ..Default::default()
+            };
+            let pairs: Vec<[Vec2; 2]> = lines
+                .iter()
+                .map(|[p, q]| [Vec2::new(p[0], p[1]), Vec2::new(q[0], q[1])])
+                .collect();
             let part = build_lines(Vec2::new(0.0, 0.0), &[(&pairs, red)]);
             // Each pixel's ink as the union of the capsules gives it: the line drawn once everywhere.
-            let on_screen: Vec<[[f64; 2]; 2]> =
-                lines.iter().map(|[p, q]| [[p[0] * scale, p[1] * scale], [q[0] * scale, q[1] * scale]]).collect();
+            let on_screen: Vec<[[f64; 2]; 2]> = lines
+                .iter()
+                .map(|[p, q]| [[p[0] * scale, p[1] * scale], [q[0] * scale, q[1] * scale]])
+                .collect();
             let want: Vec<f64> = (0..size * size)
                 .map(|i| {
-                    let (x, y) = (f64::from(i % size) + 0.5 - half, half - (f64::from(i / size) + 0.5));
+                    let (x, y) = (
+                        f64::from(i % size) + 0.5 - half,
+                        half - (f64::from(i / size) + 0.5),
+                    );
                     union_cover(&on_screen, 6.0, [x, y])
                 })
                 .collect();
@@ -82,9 +102,17 @@ pub(super) fn seen_through_joints_are_drawn_once(gpu: &mut Gpu) {
                 at % size,
                 at / size
             );
-            assert!(most <= 3.0, "case {k}, {samples} samples: a pixel {most} off the union at ({}, {})", at % size, at / size);
+            assert!(
+                most <= 3.0,
+                "case {k}, {samples} samples: a pixel {most} off the union at ({}, {})",
+                at % size,
+                at / size
+            );
             // A joint on pixels' middles: that column drawn by both sides, twice the ink at most (255 a (1 - a): 64).
-            assert!(middles <= 64.0 + 3.0, "case {k}: {middles} off on the joints' columns");
+            assert!(
+                middles <= 64.0 + 3.0,
+                "case {k}: {middles} off on the joints' columns"
+            );
             // Every end round, as before the joins: twice the ink where two ends overlap.
             let mut old = part.clone();
             old.id = u64::MAX - (k as u64 + 10 * u64::from(samples));
@@ -92,7 +120,10 @@ pub(super) fn seen_through_joints_are_drawn_once(gpu: &mut Gpu) {
                 s.joins = 0;
             }
             let [(most, _), _] = off(&old);
-            assert!(most > 40.0, "case {k}: round ends overlap at the joints: {most}");
+            assert!(
+                most > 40.0,
+                "case {k}: round ends overlap at the joints: {most}"
+            );
         }
     }
     gpu.keep = keep;

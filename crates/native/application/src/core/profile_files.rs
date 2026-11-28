@@ -18,11 +18,10 @@ use kentos_commands::{
     LayerField, LossKind, MAPPING_FORMAT, MAPPING_SUFFIX, MAX_LOSS_UIDS, MAX_MAPPING_ITEMS,
     MAX_PROFILE_TEXT_BYTES, MAX_PROJECT_PROFILE_FILES, MULTIPLE_JOIN, MappingClass, MigratedStep,
     MigrationLoss, MigrationStep, PROFILE_FOLDER, PROFILE_FORMAT, PROFILE_SUFFIX, ProfileClass,
-    ProfileFileKind, ProfileImported, ProfileListed, ProfileMapping, ProfileRemoved,
-    ProfileSource, ProfileStore, ProfilesImport, ProfilesList, ProfilesListed, ProfilesMigrate,
-    ProfilesMigrated, ProfilesRemove, ProjectProfileFile, builtin_profile, check_value, fold_name,
-    follow_domains, js_trim, mapping_problem, profile_file_name_ok, profile_problem,
-    with_profile_file,
+    ProfileFileKind, ProfileImported, ProfileListed, ProfileMapping, ProfileRemoved, ProfileSource,
+    ProfileStore, ProfilesImport, ProfilesList, ProfilesListed, ProfilesMigrate, ProfilesMigrated,
+    ProfilesRemove, ProjectProfileFile, builtin_profile, check_value, fold_name, follow_domains,
+    js_trim, mapping_problem, profile_file_name_ok, profile_problem, with_profile_file,
 };
 use kentos_domain::{Document, Slot};
 
@@ -290,7 +289,10 @@ fn read_carried(f: &ProjectProfileFile) -> Result<Parsed, String> {
         ProfileFileKind::Mapping => "eşlemesi",
     };
     let value: serde_json::Value = serde_json::from_str(&f.text).map_err(|e| {
-        format!("Çizimin içindeki “{}” {what} JSON olarak okunamadı: {e}", f.name)
+        format!(
+            "Çizimin içindeki “{}” {what} JSON olarak okunamadı: {e}",
+            f.name
+        )
     })?;
     let parsed = parse(value).map_err(|(_, why)| why)?;
     match (&parsed, f.kind) {
@@ -776,7 +778,11 @@ pub mod import {
             }
         };
         // The release of the one kept already, when it is a profile that reads; whether one is kept at all.
-        let held = |release_of: Option<u32>, exists: bool, place: &str, kept: &str| -> Result<(Option<u32>, bool), Stop> {
+        let held = |release_of: Option<u32>,
+                    exists: bool,
+                    place: &str,
+                    kept: &str|
+         -> Result<(Option<u32>, bool), Stop> {
             if !exists {
                 return Ok((None, false));
             }
@@ -819,7 +825,10 @@ pub mod import {
                 let only_folder = Shelf::folder(drawing);
                 let release_of = match kind {
                     ProfileFileKind::Profile if target.is_file() => {
-                        load_profile(only_folder, &name).ok().flatten().map(|h| h.release)
+                        load_profile(only_folder, &name)
+                            .ok()
+                            .flatten()
+                            .map(|h| h.release)
                     }
                     _ => None,
                 };
@@ -948,7 +957,10 @@ pub mod import {
     }
 
     /// What execute would write; writes nothing.
-    pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesImport) -> CommandResult<ProfileImported> {
+    pub fn plan(
+        cx: &ExecutionContext<'_>,
+        input: &ProfilesImport,
+    ) -> CommandResult<ProfileImported> {
         let shelf = Shelf::of(cx.doc, input.drawing.as_deref());
         match check(shelf, cx.doc, input) {
             Ok(p) => CommandResult::Completed {
@@ -1142,7 +1154,10 @@ pub mod remove {
         }
     }
 
-    pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesRemove) -> CommandResult<ProfileRemoved> {
+    pub fn plan(
+        cx: &ExecutionContext<'_>,
+        input: &ProfilesRemove,
+    ) -> CommandResult<ProfileRemoved> {
         match check(cx.doc, input) {
             Ok(p) => CommandResult::Completed {
                 output: p.out,

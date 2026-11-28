@@ -219,14 +219,37 @@ impl App {
         if let Some(e) = store.overview_extent() {
             boxes.push([e.min_x, e.min_y, e.max_x, e.max_y]);
         }
-        let extent = boxes.into_iter().reduce(|a, b| [a[0].min(b[0]), a[1].min(b[1]), a[2].max(b[2]), a[3].max(b[3])]);
+        let extent = boxes.into_iter().reduce(|a, b| {
+            [
+                a[0].min(b[0]),
+                a[1].min(b[1]),
+                a[2].max(b[2]),
+                a[3].max(b[3]),
+            ]
+        });
         let picture = extent.map(|[min_x, min_y, max_x, max_y]| {
-            let extent = Bounds { min_x, min_y, max_x, max_y };
+            let extent = Bounds {
+                min_x,
+                min_y,
+                max_x,
+                max_y,
+            };
             // A data layer's rows as dots of a few pixels, as small as its symbols on the map; the drawing's by §3.
-            let mut stores: Vec<OverviewLayer<'_>> =
-                data.outlines.iter().map(|s| OverviewLayer { store: s.as_ref(), dot: DATA_DOT }).collect();
+            let mut stores: Vec<OverviewLayer<'_>> = data
+                .outlines
+                .iter()
+                .map(|s| OverviewLayer {
+                    store: s.as_ref(),
+                    dot: DATA_DOT,
+                })
+                .collect();
             stores.push(OverviewLayer { store, dot: 1.0 });
-            let request = OverviewRequest { width: OVERVIEW.0, height: OVERVIEW.1, dpr, colors: &colors };
+            let request = OverviewRequest {
+                width: OVERVIEW.0,
+                height: OVERVIEW.1,
+                dpr,
+                colors: &colors,
+            };
             (overview_picture_of(&stores, &extent, &request), extent)
         });
         // Without a picture, why: read still, not readable, hidden, or nothing at all.
@@ -359,7 +382,8 @@ impl App {
     /// What the overview says while it shows no picture.
     #[cfg(test)]
     pub(crate) fn overview_words(&self) -> Option<&'static str> {
-        (self.overview_shown() && self.navigation.picture.is_none()).then_some(self.navigation.empty)
+        (self.overview_shown() && self.navigation.picture.is_none())
+            .then_some(self.navigation.empty)
     }
 
     /// The overview's picture's pixel under a drawing point, RGBA; none outside it or without a picture.

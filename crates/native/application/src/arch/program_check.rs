@@ -12,9 +12,10 @@
 use std::collections::{BTreeMap, HashMap};
 
 use kentos_commands::{
-    ArchAuditCheck, ArchAuditFinding, ArchAuditFix, BuildingProgram, ChangesetStep, CommandResult, CommandWarning, Entity,
-    ProgramCheck, ProgramChecked, ProgramLink, ProgramSpaceRow, ProgramTotals, ProgramUnitRow, SpaceEntity, UnitKind,
-    Vec2, ADJACENT_GAP, ADJACENT_OVERLAP, OPEN_GAP,
+    ADJACENT_GAP, ADJACENT_OVERLAP, ArchAuditCheck, ArchAuditFinding, ArchAuditFix,
+    BuildingProgram, ChangesetStep, CommandResult, CommandWarning, Entity, OPEN_GAP, ProgramCheck,
+    ProgramChecked, ProgramLink, ProgramSpaceRow, ProgramTotals, ProgramUnitRow, SpaceEntity,
+    UnitKind, Vec2,
 };
 use kentos_domain::passages::{self, Passage};
 use kentos_domain::{Document, Slot};
@@ -80,12 +81,19 @@ fn sides_of(parts: &[kentos_commands::SpacePart]) -> Vec<(V, V)> {
         for (h, ring) in std::iter::once(&part.outer).chain(&part.holes).enumerate() {
             let n = ring.pts.len();
             let signed: f64 = (0..n)
-                .map(|i| ring.pts[i].x * ring.pts[(i + 1) % n].y - ring.pts[(i + 1) % n].x * ring.pts[i].y)
+                .map(|i| {
+                    ring.pts[i].x * ring.pts[(i + 1) % n].y
+                        - ring.pts[(i + 1) % n].x * ring.pts[i].y
+                })
                 .sum();
             // An outer ring counter-clockwise, a hole clockwise: the inside on the left.
             let keep = (signed > 0.0) == (h == 0);
             for i in 0..n {
-                if ring.bulges.as_ref().is_some_and(|b| b.get(i).copied().unwrap_or(0.0) != 0.0) {
+                if ring
+                    .bulges
+                    .as_ref()
+                    .is_some_and(|b| b.get(i).copied().unwrap_or(0.0) != 0.0)
+                {
                     continue;
                 }
                 let (a, b) = (core(&ring.pts[i]), core(&ring.pts[(i + 1) % n]));
@@ -120,7 +128,10 @@ fn facing(a: &[(V, V)], b: &[(V, V)], gap: f64) -> Option<(V, V)> {
             if !(-OPEN_GAP..=gap + 1e-9).contains(&off) {
                 continue;
             }
-            let (k0, k1) = (ux * (p.x - s.x) + uy * (p.y - s.y), ux * (q.x - s.x) + uy * (q.y - s.y));
+            let (k0, k1) = (
+                ux * (p.x - s.x) + uy * (p.y - s.y),
+                ux * (q.x - s.x) + uy * (q.y - s.y),
+            );
             let (lo, hi) = (k0.min(k1).max(0.0), k0.max(k1).min(len));
             let over = hi - lo;
             if over + 1e-9 < ADJACENT_OVERLAP {
@@ -188,7 +199,11 @@ fn distance_to(area: &Area, s: (V, V)) -> f64 {
 /// as `w` touches each door and goes from one to another.
 fn passes(areas: &[Area], doors: &[(V, V)], w: f64) -> bool {
     let r = w / 2.0;
-    let eroded = if r <= 0.0 { areas.to_vec() } else { buffer(&Class::Areas(areas.to_vec()), -r, Side::Both) };
+    let eroded = if r <= 0.0 {
+        areas.to_vec()
+    } else {
+        buffer(&Class::Areas(areas.to_vec()), -r, Side::Both)
+    };
     if eroded.is_empty() {
         return false;
     }
@@ -246,16 +261,28 @@ fn closest(a: (V, V), b: (V, V)) -> (f64, V, V) {
         if hi >= lo {
             let k = (lo + hi) / 2.0;
             let p = V::new(a.0.x + ux * k, a.0.y + uy * k);
-            let c = closest_on_edge(&kentos_geometry_core::geom::intersect::Edge::Seg { a: b.0, b: b.1 }, p);
+            let c = closest_on_edge(
+                &kentos_geometry_core::geom::intersect::Edge::Seg { a: b.0, b: b.1 },
+                p,
+            );
             return (c.d, p, c.p);
         }
     }
     let seg = |s: (V, V)| kentos_geometry_core::geom::intersect::Edge::Seg { a: s.0, b: s.1 };
     let mut best = (f64::INFINITY, a.0, b.0);
-    for (from, to, flip) in [(a.0, b, false), (a.1, b, false), (b.0, a, true), (b.1, a, true)] {
+    for (from, to, flip) in [
+        (a.0, b, false),
+        (a.1, b, false),
+        (b.0, a, true),
+        (b.1, a, true),
+    ] {
         let c = closest_on_edge(&seg(to), from);
         if c.d < best.0 {
-            best = if flip { (c.d, c.p, from) } else { (c.d, from, c.p) };
+            best = if flip {
+                (c.d, c.p, from)
+            } else {
+                (c.d, from, c.p)
+            };
         }
     }
     best
@@ -275,7 +302,9 @@ pub fn pinch(sides: &[(V, V)], width: f64) -> Option<V> {
                 continue;
             }
             // Facing: each lies on the other's inside (its left).
-            let left = |s: (V, V), x: V| (s.1.x - s.0.x) * (x.y - s.0.y) - (s.1.y - s.0.y) * (x.x - s.0.x) > 1e-12;
+            let left = |s: (V, V), x: V| {
+                (s.1.x - s.0.x) * (x.y - s.0.y) - (s.1.y - s.0.y) * (x.x - s.0.x) > 1e-12
+            };
             if !(left(a, q) && left(b, p)) {
                 continue;
             }
@@ -302,12 +331,19 @@ fn m(v: f64) -> String {
 }
 
 fn signed(v: f64) -> String {
-    if v > 0.0 { format!("+{}", m2(v)) } else { m2(v) }
+    if v > 0.0 {
+        format!("+{}", m2(v))
+    } else {
+        m2(v)
+    }
 }
 
 fn space_words(s: &SpaceEntity) -> String {
     let f = &s.space;
-    match (f.number.as_deref(), f.name.as_deref().or(f.usage.as_deref())) {
+    match (
+        f.number.as_deref(),
+        f.name.as_deref().or(f.usage.as_deref()),
+    ) {
         (Some(n), Some(w)) => format!("“{n} {w}”"),
         (Some(n), None) => format!("“{n}”"),
         (None, Some(w)) => format!("“{w}”"),
@@ -319,11 +355,21 @@ struct Found {
     finding: ArchAuditFinding,
 }
 
-fn finding(code: &str, uids: Vec<String>, at: V, message: String, repair: String, fix: Option<ArchAuditFix>) -> Found {
+fn finding(
+    code: &str,
+    uids: Vec<String>,
+    at: V,
+    message: String,
+    repair: String,
+    fix: Option<ArchAuditFix>,
+) -> Found {
     let key = format!("{code}:{}", uids.join(","));
     // To the centimetre: an exception holds while a move under it changes neither the words nor the place
     // (docs/adr/0773 §5); a meaningful change of the geometry lets it lapse.
-    let at = V::new((at.x * 100.0).round() / 100.0, (at.y * 100.0).round() / 100.0);
+    let at = V::new(
+        (at.x * 100.0).round() / 100.0,
+        (at.y * 100.0).round() / 100.0,
+    );
     Found {
         finding: ArchAuditFinding {
             key,
@@ -348,7 +394,12 @@ fn finding(code: &str, uids: Vec<String>, at: V, message: String, repair: String
 /// The block's own box (its base at the origin), and the insert's placement.
 fn fixture_box(doc: &Document, i: &kentos_commands::InsertEntity) -> Option<[V; 4]> {
     let [x0, y0, x1, y1] = doc.block_box(i.block)?;
-    Some([V::new(x0, y0), V::new(x1, y0), V::new(x1, y1), V::new(x0, y1)])
+    Some([
+        V::new(x0, y0),
+        V::new(x1, y0),
+        V::new(x1, y1),
+        V::new(x0, y1),
+    ])
 }
 
 fn placed(i: &kentos_commands::InsertEntity, p: V) -> V {
@@ -359,34 +410,58 @@ fn placed(i: &kentos_commands::InsertEntity, p: V) -> V {
         i.rotation,
         i.mirror,
     );
-    V::new(m[0] * p.x + m[2] * p.y + m[4], m[1] * p.x + m[3] * p.y + m[5])
+    V::new(
+        m[0] * p.x + m[2] * p.y + m[4],
+        m[1] * p.x + m[3] * p.y + m[5],
+    )
 }
 
 fn quad_area(pts: [V; 4]) -> Area {
     use kentos_geometry_core::geom::arrangement::Ring;
     let mut pts = pts.to_vec();
-    let signed: f64 = (0..4).map(|k| pts[k].x * pts[(k + 1) % 4].y - pts[(k + 1) % 4].x * pts[k].y).sum();
+    let signed: f64 = (0..4)
+        .map(|k| pts[k].x * pts[(k + 1) % 4].y - pts[(k + 1) % 4].x * pts[k].y)
+        .sum();
     if signed < 0.0 {
         pts.reverse();
     }
-    Area { outer: Ring { pts, bulges: None }, holes: Vec::new() }
+    Area {
+        outer: Ring { pts, bulges: None },
+        holes: Vec::new(),
+    }
 }
 
 /// What is read: the check's input checked, the rooms and the program.
-fn read<'a>(doc: &'a Document, input: &ProgramCheck) -> Result<(BuildingProgram, Vec<Room<'a>>), Stop> {
+fn read<'a>(
+    doc: &'a Document,
+    input: &ProgramCheck,
+) -> Result<(BuildingProgram, Vec<Room<'a>>), Stop> {
     let program = doc.program();
     if let Some(units) = &input.units {
         for (i, u) in units.iter().enumerate() {
             if program.unit(u).is_none() {
-                return Err(fail(codes::UNIT_NOT_FOUND, format!("“{u}” bölümü bina programında yok."), &format!("units[{i}]")));
+                return Err(fail(
+                    codes::UNIT_NOT_FOUND,
+                    format!("“{u}” bölümü bina programında yok."),
+                    &format!("units[{i}]"),
+                ));
             }
         }
     }
     if let Some(levels) = &input.levels {
-        let known = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
+        let known = doc
+            .settings()
+            .arch
+            .as_ref()
+            .map(|a| a.levels.clone())
+            .unwrap_or_default();
         for (i, l) in levels.iter().enumerate() {
             if !known.iter().any(|k| &k.id == l) {
-                return Err(fail(codes::LEVEL_NOT_FOUND, format!("“{l}” katı projede yok."), &format!("levels[{i}]")));
+                return Err(fail(
+                    codes::LEVEL_NOT_FOUND,
+                    format!("“{l}” katı projede yok."),
+                    &format!("levels[{i}]"),
+                ));
             }
         }
     }
@@ -428,7 +503,9 @@ fn relation_subjects(room: &Room<'_>, usage: &str, rooms: &[Room<'_>]) -> Vec<St
             && !candidate.s.space.void
             && candidate.s.space.usage.as_deref() == Some(usage)
     });
-    let mut same_unit = matches.clone().filter(|candidate| candidate.s.space.unit == room.s.space.unit);
+    let mut same_unit = matches
+        .clone()
+        .filter(|candidate| candidate.s.space.unit == room.s.space.unit);
     let mut subjects = vec![room.uid.clone()];
     if let (Some(candidate), None) = (same_unit.next(), same_unit.next()) {
         subjects.push(candidate.uid.clone());
@@ -513,13 +590,22 @@ pub(crate) fn checked(
         .settings()
         .arch
         .as_ref()
-        .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect())
+        .map(|a| {
+            a.levels
+                .iter()
+                .map(|l| (l.id.clone(), l.name.clone()))
+                .collect()
+        })
         .unwrap_or_default();
     for (ri, r) in rooms.iter().enumerate() {
         let f = &r.s.space;
         let brief = f.usage.as_deref().and_then(|u| program.brief(u));
         let (width, middle) = width_of(&f.parts);
-        let points: Vec<(V, V)> = doors[ri].iter().map(|d| d.1).chain(open[ri].iter().map(|o| o.1)).collect();
+        let points: Vec<(V, V)> = doors[ri]
+            .iter()
+            .map(|d| d.1)
+            .chain(open[ri].iter().map(|o| o.1))
+            .collect();
         let count = points.len() as u32;
         let (passage_w, passage_at) = match brief.and_then(|b| b.min_passage) {
             Some(_) if with_findings && points.len() >= 2 && !f.void => {
@@ -528,7 +614,9 @@ pub(crate) fn checked(
             }
             _ => (None, None),
         };
-        let difference = brief.and_then(|b| b.area_difference(r.area)).filter(|_| !f.void);
+        let difference = brief
+            .and_then(|b| b.area_difference(r.area))
+            .filter(|_| !f.void);
         let links = |list: &[String], among: &[usize]| -> Vec<ProgramLink> {
             list.iter()
                 .map(|usage| ProgramLink {
@@ -544,9 +632,15 @@ pub(crate) fn checked(
                 })
                 .collect()
         };
-        let adjacent = brief.map(|b| links(&b.adjacent, &near[ri])).unwrap_or_default();
-        let reach = brief.map(|b| links(&b.reach, &connected[ri])).unwrap_or_default();
-        let at = middle.or_else(|| spaces::label_point(&f.parts).map(|p| core(&p))).unwrap_or(V::new(0.0, 0.0));
+        let adjacent = brief
+            .map(|b| links(&b.adjacent, &near[ri]))
+            .unwrap_or_default();
+        let reach = brief
+            .map(|b| links(&b.reach, &connected[ri]))
+            .unwrap_or_default();
+        let at = middle
+            .or_else(|| spaces::label_point(&f.parts).map(|p| core(&p)))
+            .unwrap_or(V::new(0.0, 0.0));
         let words = space_words(r.s);
         if with_findings {
             if let Some(u) = &f.unit
@@ -579,9 +673,15 @@ pub(crate) fn checked(
                     (None, None) => String::new(),
                 };
                 let (code, repair) = if d < 0.0 {
-                    (codes::PROGRAM_AREA_BELOW, "Mahali büyütün ya da tasarım hedefini değiştirin.")
+                    (
+                        codes::PROGRAM_AREA_BELOW,
+                        "Mahali büyütün ya da tasarım hedefini değiştirin.",
+                    )
                 } else {
-                    (codes::PROGRAM_AREA_ABOVE, "Mahali küçültün ya da tasarım hedefini değiştirin.")
+                    (
+                        codes::PROGRAM_AREA_ABOVE,
+                        "Mahali küçültün ya da tasarım hedefini değiştirin.",
+                    )
                 };
                 found.push(finding(
                     code,
@@ -605,7 +705,12 @@ pub(crate) fn checked(
                     codes::PROGRAM_WIDTH_NARROW,
                     vec![r.uid.clone()],
                     at,
-                    format!("{words}: net en {}; tasarım hedefi en az {}, fark {} ({rule}).", m(width), m(min), m(width - min)),
+                    format!(
+                        "{words}: net en {}; tasarım hedefi en az {}, fark {} ({rule}).",
+                        m(width),
+                        m(min),
+                        m(width - min)
+                    ),
                     "Mahali genişletin ya da tasarım hedefini değiştirin.".into(),
                     None,
                 ));
@@ -651,7 +756,11 @@ pub(crate) fn checked(
                     ));
                 }
             }
-            let grouped = f.unit.as_deref().and_then(|u| program.unit(u)).is_some_and(|u| u.kind != UnitKind::Outdoor);
+            let grouped = f
+                .unit
+                .as_deref()
+                .and_then(|u| program.unit(u))
+                .is_some_and(|u| u.kind != UnitKind::Outdoor);
             if grouped && !f.void && count == 0 {
                 found.push(finding(
                     codes::PROGRAM_NO_DOOR,
@@ -663,13 +772,28 @@ pub(crate) fn checked(
                 ));
             }
             // A space on a level its group's building or wing does not span (docs/adr/0784 §1).
-            if let (Some(u), Some(level)) = (f.unit.as_deref().and_then(|u| program.unit(u)), r.level.as_deref()) {
+            if let (Some(u), Some(level)) = (
+                f.unit.as_deref().and_then(|u| program.unit(u)),
+                r.level.as_deref(),
+            ) {
                 let spans = program.levels_of(u);
                 if !spans.is_empty() && !spans.iter().any(|l| l == level) {
-                    let level_name = level_names.iter().find(|(id, _)| id == level).map_or(level, |(_, n)| n.as_str());
-                    let whose = match (u.building.as_deref().and_then(|b| program.building(b)), u.wing.as_deref()) {
-                        (Some(b), Some(w)) if b.wings.iter().any(|x| x.id == w && !x.levels.is_empty()) => {
-                            let name = b.wings.iter().find(|x| x.id == w).map_or(w, |x| x.name.as_str());
+                    let level_name = level_names
+                        .iter()
+                        .find(|(id, _)| id == level)
+                        .map_or(level, |(_, n)| n.as_str());
+                    let whose = match (
+                        u.building.as_deref().and_then(|b| program.building(b)),
+                        u.wing.as_deref(),
+                    ) {
+                        (Some(b), Some(w))
+                            if b.wings.iter().any(|x| x.id == w && !x.levels.is_empty()) =>
+                        {
+                            let name = b
+                                .wings
+                                .iter()
+                                .find(|x| x.id == w)
+                                .map_or(w, |x| x.name.as_str());
                             format!("kanadı “{name}”")
                         }
                         (Some(b), _) => format!("binası “{}”", b.name),
@@ -704,7 +828,9 @@ pub(crate) fn checked(
             target_min: brief.and_then(|b| b.area_min),
             target_max: brief.and_then(|b| b.area_max),
             target_difference: difference,
-            passage_difference: passage_w.zip(brief.and_then(|b| b.min_passage)).map(|(w, m)| w - m),
+            passage_difference: passage_w
+                .zip(brief.and_then(|b| b.min_passage))
+                .map(|(w, m)| w - m),
             adjacent,
             reach,
         });
@@ -716,31 +842,63 @@ pub(crate) fn checked(
         let mut boxes: Vec<FixtureBox> = Vec::new();
         for e in doc.entities() {
             let Entity::Insert(i) = e else { continue };
-            let Some(name) = doc.blocks().iter().find(|b| b.id == i.block).map(|b| b.name.clone()) else { continue };
-            let Some(local) = fixture_box(doc, i) else { continue };
+            let Some(name) = doc
+                .blocks()
+                .iter()
+                .find(|b| b.id == i.block)
+                .map(|b| b.name.clone())
+            else {
+                continue;
+            };
+            let Some(local) = fixture_box(doc, i) else {
+                continue;
+            };
             let foot = quad_area(local.map(|p| placed(i, p)));
             let zone = program.clearance(&name).map(|c| {
                 let (x0, x1, y1) = (local[0].x, local[1].x, local[2].y);
                 let cx = (x0 + x1) / 2.0;
-                let (sx, sy) = (i.scale.abs().max(1e-12), i.y_scale.unwrap_or(i.scale).abs().max(1e-12));
+                let (sx, sy) = (
+                    i.scale.abs().max(1e-12),
+                    i.y_scale.unwrap_or(i.scale).abs().max(1e-12),
+                );
                 // The clearance is in the drawing's lengths: in the block's own frame it is divided by its scale.
                 let (hw, d) = (c.width / 2.0 / sx, c.depth / sy);
-                quad_area([V::new(cx - hw, y1), V::new(cx + hw, y1), V::new(cx + hw, y1 + d), V::new(cx - hw, y1 + d)].map(|p| placed(i, p)))
+                quad_area(
+                    [
+                        V::new(cx - hw, y1),
+                        V::new(cx + hw, y1),
+                        V::new(cx + hw, y1 + d),
+                        V::new(cx - hw, y1 + d),
+                    ]
+                    .map(|p| placed(i, p)),
+                )
             });
-            let uid = doc.uid(Slot(i.base.id)).map(|u| u.to_string()).unwrap_or_default();
+            let uid = doc
+                .uid(Slot(i.base.id))
+                .map(|u| u.to_string())
+                .unwrap_or_default();
             let middle = doc.fixture_middle(i);
             boxes.push((uid, i.arch.level.clone(), foot, zone, core(&middle)));
         }
         for (k, (uid, level, _, zone, middle)) in boxes.iter().enumerate() {
             let Some(zone) = zone else { continue };
-            let Some(room) = rooms.iter().find(|r| r.level == *level && !r.s.space.void && r.areas.iter().any(|a| inside_area(a, *middle))) else {
+            let Some(room) = rooms.iter().find(|r| {
+                r.level == *level
+                    && !r.s.space.void
+                    && r.areas.iter().any(|a| inside_area(a, *middle))
+            }) else {
                 continue;
             };
             let whole = net_area(zone);
             let within: f64 = room
                 .areas
                 .iter()
-                .map(|a| intersect_areas(&[zone.clone(), a.clone()]).iter().map(net_area).sum::<f64>())
+                .map(|a| {
+                    intersect_areas(&[zone.clone(), a.clone()])
+                        .iter()
+                        .map(net_area)
+                        .sum::<f64>()
+                })
                 .sum();
             let out = (whole - within).max(0.0);
             let mut others: Vec<String> = Vec::new();
@@ -748,7 +906,10 @@ pub(crate) fn checked(
                 if j == k || olevel != level {
                     continue;
                 }
-                let over: f64 = intersect_areas(&[zone.clone(), foot.clone()]).iter().map(net_area).sum();
+                let over: f64 = intersect_areas(&[zone.clone(), foot.clone()])
+                    .iter()
+                    .map(net_area)
+                    .sum();
                 if over > 1e-6 {
                     others.push(other.clone());
                 }
@@ -758,7 +919,10 @@ pub(crate) fn checked(
                 uids.extend(others.iter().cloned());
                 let centre = {
                     let p = &zone.outer.pts;
-                    V::new(p.iter().map(|q| q.x).sum::<f64>() / 4.0, p.iter().map(|q| q.y).sum::<f64>() / 4.0)
+                    V::new(
+                        p.iter().map(|q| q.x).sum::<f64>() / 4.0,
+                        p.iter().map(|q| q.y).sum::<f64>() / 4.0,
+                    )
                 };
                 let mut words = Vec::new();
                 if out > 1e-6 {
@@ -807,9 +971,18 @@ pub(crate) fn checked(
         })
         .collect();
     let mut totals = ProgramTotals::default();
-    let order: Vec<String> = doc.settings().arch.as_ref().map(|a| a.levels.iter().map(|l| l.id.clone()).collect()).unwrap_or_default();
+    let order: Vec<String> = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.iter().map(|l| l.id.clone()).collect())
+        .unwrap_or_default();
     for (r, row) in rooms.iter().zip(&rows) {
-        let group = r.s.space.unit.as_deref().and_then(|u| units.iter().position(|x| x.id == u));
+        let group =
+            r.s.space
+                .unit
+                .as_deref()
+                .and_then(|u| units.iter().position(|x| x.id == u));
         if !row.void {
             totals.all += row.area;
         }
@@ -850,7 +1023,8 @@ pub(crate) fn checked(
         }
     }
     for u in &mut units {
-        u.levels.sort_by_key(|l| order.iter().position(|o| o == l).unwrap_or(usize::MAX));
+        u.levels
+            .sort_by_key(|l| order.iter().position(|o| o == l).unwrap_or(usize::MAX));
         u.recorded_difference = u.recorded_area.map(|a| u.rooms - a);
     }
     // The shares (docs/adr/0784 §2): the whole program's, whatever this check reads.
@@ -883,7 +1057,15 @@ pub(crate) fn checked(
             f.key = format!("{}#{n}", f.key);
         }
     }
-    Ok(ProgramChecked { rule, units, totals, spaces: rows, findings, shares, revision: doc.revision().to_string() })
+    Ok(ProgramChecked {
+        rule,
+        units,
+        totals,
+        spaces: rows,
+        findings,
+        shares,
+        revision: doc.revision().to_string(),
+    })
 }
 
 /// A common area not shared out, said as a warning (docs/adr/0784 §2).
@@ -906,12 +1088,17 @@ pub fn findings(doc: &Document) -> Vec<ArchAuditFinding> {
     if doc.program().is_empty() {
         return Vec::new();
     }
-    checked(doc, &ProgramCheck::default(), &|_, _| false).map(|c| c.findings).unwrap_or_default()
+    checked(doc, &ProgramCheck::default(), &|_, _| false)
+        .map(|c| c.findings)
+        .unwrap_or_default()
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ProgramCheck) -> CommandResult<()> {
     match read(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -920,7 +1107,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProgramCheck) -> CommandResult<Pr
     run(cx, input)
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ProgramCheck) -> CommandResult<ProgramChecked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProgramCheck,
+) -> CommandResult<ProgramChecked> {
     run(cx, &input)
 }
 
@@ -930,7 +1120,10 @@ fn run(cx: &ExecutionContext<'_>, input: &ProgramCheck) -> CommandResult<Program
         cx.stopped()
     };
     match checked(cx.doc, input, &stopped) {
-        Ok(out) => CommandResult::Completed { warnings: warnings_of(&out), output: out },
+        Ok(out) => CommandResult::Completed {
+            warnings: warnings_of(&out),
+            output: out,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -942,7 +1135,10 @@ pub fn check_watched(
     stopped: &dyn Fn(u64, u64) -> bool,
 ) -> CommandResult<ProgramChecked> {
     match checked(doc, input, stopped) {
-        Ok(out) => CommandResult::Completed { warnings: warnings_of(&out), output: out },
+        Ok(out) => CommandResult::Completed {
+            warnings: warnings_of(&out),
+            output: out,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -950,8 +1146,10 @@ pub fn check_watched(
 /// [`checked`] on a document with nothing watching.
 pub fn check_in(doc: &Document, input: &ProgramCheck) -> CommandResult<ProgramChecked> {
     match checked(doc, input, &|_, _| false) {
-        Ok(out) => CommandResult::Completed { warnings: warnings_of(&out), output: out },
+        Ok(out) => CommandResult::Completed {
+            warnings: warnings_of(&out),
+            output: out,
+        },
         Err(stop) => stop.into(),
     }
 }
-

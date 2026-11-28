@@ -253,9 +253,19 @@ impl App {
         };
         // A data layer's rows are its source's (docs/adr/9130): counted over them, said while they are read.
         let counted = match self.data_layer_rows(&w.layer) {
-            Some(Ok(Some(rows))) => Ok(layers_filter::count_rows(&doc.model, &rows, Some(&compiled))),
-            Some(Ok(None)) => Err((Kind::Info, "Kaynağın satırları okunuyor; sayı birazdan.".to_owned())),
-            Some(Err(why)) => Err((Kind::Warn, format!("Kaynağın satırları okunamadı, sayılamadı: {why}"))),
+            Some(Ok(Some(rows))) => Ok(layers_filter::count_rows(
+                &doc.model,
+                &rows,
+                Some(&compiled),
+            )),
+            Some(Ok(None)) => Err((
+                Kind::Info,
+                "Kaynağın satırları okunuyor; sayı birazdan.".to_owned(),
+            )),
+            Some(Err(why)) => Err((
+                Kind::Warn,
+                format!("Kaynağın satırları okunamadı, sayılamadı: {why}"),
+            )),
             None => Ok(layers_filter::count(&doc.model, &w.layer, Some(&compiled))),
         };
         let mut lines = match counted {
@@ -395,10 +405,13 @@ impl App {
                             let compiled = self
                                 .document
                                 .as_ref()
-                                .and_then(|d| d.model.layers().get(layer).and_then(|n| n.filter.clone()))
+                                .and_then(|d| {
+                                    d.model.layers().get(layer).and_then(|n| n.filter.clone())
+                                })
                                 .and_then(|f| compile_filter(&f, self.reading_unit()).ok());
                             if let Some(doc) = self.document.as_ref() {
-                                let (passed, total) = layers_filter::count_rows(&doc.model, &rows, compiled.as_ref());
+                                let (passed, total) =
+                                    layers_filter::count_rows(&doc.model, &rows, compiled.as_ref());
                                 output.passed = passed;
                                 output.total = total;
                             }
@@ -419,7 +432,11 @@ impl App {
                         format!(
                             "“{name}” katmanının süzgeci kaldırıldı; {} {} hepsi görünür.",
                             output.total,
-                            if what == "satır" { "satırın" } else { "nesnesinin" }
+                            if what == "satır" {
+                                "satırın"
+                            } else {
+                                "nesnesinin"
+                            }
                         ),
                     ),
                     (false, false) => (

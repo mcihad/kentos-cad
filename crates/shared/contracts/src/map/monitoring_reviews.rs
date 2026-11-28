@@ -227,7 +227,12 @@ pub fn review_day_ok(text: &str) -> bool {
     if b.len() != 10 || b[4] != b'-' || b[7] != b'-' {
         return false;
     }
-    let num = |r: std::ops::Range<usize>| text.get(r).filter(|s| s.bytes().all(|c| c.is_ascii_digit()))?.parse::<u32>().ok();
+    let num = |r: std::ops::Range<usize>| {
+        text.get(r)
+            .filter(|s| s.bytes().all(|c| c.is_ascii_digit()))?
+            .parse::<u32>()
+            .ok()
+    };
     let (Some(y), Some(m), Some(d)) = (num(0..4), num(5..7), num(8..10)) else {
         return false;
     };
@@ -251,10 +256,15 @@ pub fn reviewer_problem(r: &MonitoringReviewer) -> Option<String> {
         return Some("İnceleyenin adı boş, çok uzun ya da kenarında boşluk var".into());
     }
     if !review_day_ok(&r.date) {
-        return Some(format!("İncelemenin günü “{}” YYYY-AA-GG biçiminde bir gün değil", r.date));
+        return Some(format!(
+            "İncelemenin günü “{}” YYYY-AA-GG biçiminde bir gün değil",
+            r.date
+        ));
     }
     if r.note.as_deref().is_some_and(|n| !text_ok(n)) {
-        return Some(format!("İncelemenin notu boş ya da {MAX_MONITORING_TEXT} karakterden uzun"));
+        return Some(format!(
+            "İncelemenin notu boş ya da {MAX_MONITORING_TEXT} karakterden uzun"
+        ));
     }
     None
 }
@@ -268,7 +278,10 @@ pub fn text_ok(text: &str) -> bool {
 }
 
 fn level_ok(l: &ReviewedLevel) -> bool {
-    [l.horizontal, l.vertical, l.horizontal_rate, l.vertical_rate].iter().flatten().all(|v| v.is_finite() && *v > 0.0)
+    [l.horizontal, l.vertical, l.horizontal_rate, l.vertical_rate]
+        .iter()
+        .flatten()
+        .all(|v| v.is_finite() && *v > 0.0)
 }
 
 fn job_problem(j: &ReviewedJob) -> Option<&'static str> {
@@ -277,14 +290,19 @@ fn job_problem(j: &ReviewedJob) -> Option<&'static str> {
     let ok = label(&j.measured)
         && label(&j.design)
         && j.epochs.len() <= MAX_REVIEWED_EPOCHS
-        && j.epochs.iter().all(|e| label(&e.layer) && e.date.as_deref().is_none_or(review_day_ok))
+        && j.epochs
+            .iter()
+            .all(|e| label(&e.layer) && e.date.as_deref().is_none_or(review_day_ok))
         && j.date.as_deref().is_none_or(review_day_ok)
         && j.field.as_deref().is_none_or(label)
         && j.control.iter().all(|c| label(c))
         && positive(j.horizontal)
         && positive(j.vertical)
-        && j.confidence.is_none_or(|c| c.is_finite() && c > 0.0 && c < 1.0)
-        && j.thresholds.as_ref().is_none_or(|t| level_ok(&t.warning) && level_ok(&t.alarm) && text_ok(&t.source));
+        && j.confidence
+            .is_none_or(|c| c.is_finite() && c > 0.0 && c < 1.0)
+        && j.thresholds
+            .as_ref()
+            .is_none_or(|t| level_ok(&t.warning) && level_ok(&t.alarm) && text_ok(&t.source));
     (!ok).then_some("işi (katmanları, günleri, sınırları ya da eşikleri) geçersiz")
 }
 
@@ -294,21 +312,37 @@ fn job_problem(j: &ReviewedJob) -> Option<&'static str> {
 /// labels, their numbers finite (movement and speed not below nought); the reviewer's statement reads.
 pub fn monitoring_reviews_problem(list: &[MonitoringReview]) -> Option<String> {
     if list.len() > MAX_MONITORING_REVIEWS {
-        return Some(format!("Proje en çok {MAX_MONITORING_REVIEWS} izleme incelemesi tutar"));
+        return Some(format!(
+            "Proje en çok {MAX_MONITORING_REVIEWS} izleme incelemesi tutar"
+        ));
     }
     let mut names = HashSet::new();
     for r in list {
         if !review_label_ok(&r.name, MAX_MONITORING_LABEL) || !names.insert(r.name.as_str()) {
-            return Some(format!("“{}” izleme incelemesinin adı geçersiz ya da iki kez yazılmış", r.name));
+            return Some(format!(
+                "“{}” izleme incelemesinin adı geçersiz ya da iki kez yazılmış",
+                r.name
+            ));
         }
         if let Some(p) = job_problem(&r.job) {
             return Some(format!("“{}” izleme incelemesinin {p}", r.name));
         }
-        if r.digest.len() != 64 || !r.digest.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)) {
-            return Some(format!("“{}” izleme incelemesinin özeti 64 küçük onaltılık hane değil", r.name));
+        if r.digest.len() != 64
+            || !r
+                .digest
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        {
+            return Some(format!(
+                "“{}” izleme incelemesinin özeti 64 küçük onaltılık hane değil",
+                r.name
+            ));
         }
         if r.marks.len() > MAX_REVIEWED_MARKS {
-            return Some(format!("“{}” izleme incelemesi en çok {MAX_REVIEWED_MARKS} nokta tutar", r.name));
+            return Some(format!(
+                "“{}” izleme incelemesi en çok {MAX_REVIEWED_MARKS} nokta tutar",
+                r.name
+            ));
         }
         let mut marks = HashSet::new();
         for m in &r.marks {
@@ -319,9 +353,15 @@ pub fn monitoring_reviews_problem(list: &[MonitoringReview]) -> Option<String> {
                 || !m.vertical.is_none_or(f64::is_finite)
                 || !m.speed.is_none_or(fine)
                 || (m.state.is_none() && !m.exceeded.is_empty())
-                || !m.exceeded.iter().all(|k| ["horizontal", "vertical", "horizontalRate", "verticalRate"].contains(&k.as_str()))
+                || !m.exceeded.iter().all(|k| {
+                    ["horizontal", "vertical", "horizontalRate", "verticalRate"]
+                        .contains(&k.as_str())
+                })
             {
-                return Some(format!("“{}” izleme incelemesinin “{}” noktası geçersiz", r.name, m.name));
+                return Some(format!(
+                    "“{}” izleme incelemesinin “{}” noktası geçersiz",
+                    r.name, m.name
+                ));
             }
         }
         if let Some(p) = reviewer_problem(&r.reviewer) {
@@ -341,7 +381,10 @@ mod tests {
             job: ReviewedJob {
                 measured: "Dönem 4".into(),
                 design: "Dönem 3".into(),
-                epochs: vec![ReviewedEpoch { layer: "Dönem 1".into(), date: Some("2026-01-15".into()) }],
+                epochs: vec![ReviewedEpoch {
+                    layer: "Dönem 1".into(),
+                    date: Some("2026-01-15".into()),
+                }],
                 date: Some("2026-10-15".into()),
                 field: None,
                 control: vec![],
@@ -349,8 +392,14 @@ mod tests {
                 vertical: None,
                 confidence: Some(0.95),
                 thresholds: Some(ReviewedThresholds {
-                    warning: ReviewedLevel { horizontal: Some(0.01), ..ReviewedLevel::default() },
-                    alarm: ReviewedLevel { horizontal: Some(0.02), ..ReviewedLevel::default() },
+                    warning: ReviewedLevel {
+                        horizontal: Some(0.01),
+                        ..ReviewedLevel::default()
+                    },
+                    alarm: ReviewedLevel {
+                        horizontal: Some(0.02),
+                        ..ReviewedLevel::default()
+                    },
                     source: "Proje şartnamesi".into(),
                 }),
             },
@@ -389,6 +438,10 @@ mod tests {
         assert!(broken(&|r| r.marks[0].exceeded = vec!["far".into()]).is_some());
         assert!(broken(&|r| r.job.confidence = Some(1.0)).is_some());
         assert!(monitoring_reviews_problem(&[review(), review()]).is_some());
-        assert!(review_day_ok("2028-02-29") && !review_day_ok("2026-13-01") && !review_day_ok("2026-1-01"));
+        assert!(
+            review_day_ok("2028-02-29")
+                && !review_day_ok("2026-13-01")
+                && !review_day_ok("2026-1-01")
+        );
     }
 }

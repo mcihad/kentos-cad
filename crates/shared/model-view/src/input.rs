@@ -36,7 +36,10 @@ pub enum Category {
 impl Category {
     /// Whether it is a place of the spatial structure, not a body among bodies.
     pub fn is_place(self) -> bool {
-        matches!(self, Category::Project | Category::Site | Category::Building | Category::Storey)
+        matches!(
+            self,
+            Category::Project | Category::Site | Category::Building | Category::Storey
+        )
     }
 
     /// Whether it is a see-through volume a click goes through (a space, a zone, an opening).
@@ -95,7 +98,8 @@ impl Input {
             b.object += base;
             b
         }));
-        self.not_shown.extend(other.not_shown.into_iter().map(|(o, why)| (o + base, why)));
+        self.not_shown
+            .extend(other.not_shown.into_iter().map(|(o, why)| (o + base, why)));
     }
 
     /// Appends `other`'s objects and bodies as the source's own, not apart: what the drawing holds beside its file

@@ -64,7 +64,10 @@ impl Tool for ColorLegendTool {
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         if cx.doc.color_plan().is_none() {
-            cx.say(Level::Info, "Renk planı kapalı: önce Mahal ▸ Renk planı'ndan bir şema seçin.");
+            cx.say(
+                Level::Info,
+                "Renk planı kapalı: önce Mahal ▸ Renk planı'ndan bir şema seçin.",
+            );
             return Flow::Exit;
         }
         Flow::Stay
@@ -73,7 +76,10 @@ impl Tool for ColorLegendTool {
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         self.hover = Some(p.world);
         let level = Self::level(cx);
-        self.rows = cx.doc.color_plan().map(|_| cx.doc.color_legend(level.as_deref()).len());
+        self.rows = cx
+            .doc
+            .color_plan()
+            .map(|_| cx.doc.color_legend(level.as_deref()).len());
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -81,14 +87,18 @@ impl Tool for ColorLegendTool {
         let at = wire(p.world);
         let group = cx.doc.begin_group(color_legend::STEP);
         let mut out = Err(String::new());
-        let written = crate::arch_layer::writing(&crate::arch_layer::Kind::Legend, cx, |layer, cx| {
-            out = color_legend::draw(cx.doc, level.as_deref(), at, layer);
-            out.is_ok()
-        });
+        let written =
+            crate::arch_layer::writing(&crate::arch_layer::Kind::Legend, cx, |layer, cx| {
+                out = color_legend::draw(cx.doc, level.as_deref(), at, layer);
+                out.is_ok()
+            });
         match (written, out) {
             (true, Ok(n)) => {
                 cx.doc.end_group(group);
-                cx.say(Level::Success, format!("Renk planı lejandı yerleşti: {n} satır."));
+                cx.say(
+                    Level::Success,
+                    format!("Renk planı lejandı yerleşti: {n} satır."),
+                );
                 self.done = true;
             }
             (_, Err(why)) => {
@@ -132,7 +142,11 @@ impl Tool for ColorLegendTool {
                     None => "Renk planı kapalı".to_owned(),
                 }],
             }),
-            tag_tone: if self.rows.is_some_and(|n| n > 0) { Tone::Accent } else { Tone::Danger },
+            tag_tone: if self.rows.is_some_and(|n| n > 0) {
+                Tone::Accent
+            } else {
+                Tone::Danger
+            },
             ..Preview::default()
         }
     }

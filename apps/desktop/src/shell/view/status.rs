@@ -453,9 +453,13 @@ impl App {
         if id == "draft.topology" {
             return ContextMenu::new(toggle, move |_| {
                 let mut menu = Menu::new();
-                for (id, words) in [("draft.topologyPoints", "Noktalar da"), ("draft.topologyStopOnLocked", "Kilitli komşuda durdur")] {
+                for (id, words) in [
+                    ("draft.topologyPoints", "Noktalar da"),
+                    ("draft.topologyStopOnLocked", "Kilitli komşuda durdur"),
+                ] {
                     if let Some(command) = catalog().get(id) {
-                        menu = menu.check(words, self.checked(id).unwrap_or(false), enabled(command));
+                        menu =
+                            menu.check(words, self.checked(id).unwrap_or(false), enabled(command));
                     }
                 }
                 menu
@@ -492,7 +496,9 @@ impl App {
             let command = catalog().get(id);
             // The layers are in this menu (GIS-050): Seçili katmanlarda önle here sets the mode without asking them.
             let on_press = if id == "draft.overlap.layers" {
-                command.and_then(enabled).map(|_| Message::OverlapLayersMode)
+                command
+                    .and_then(enabled)
+                    .map(|_| Message::OverlapLayersMode)
             } else {
                 command.and_then(enabled)
             };

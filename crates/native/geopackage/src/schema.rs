@@ -63,7 +63,12 @@ pub fn ensure_schema_in(conn: &rusqlite::Connection) -> rusqlite::Result<()> {
 /// The rows of `rule` under `name`, added (an earlier row of the same name, type and value is kept).
 fn insert_rule(conn: &rusqlite::Connection, name: &str, rule: &Rule) -> rusqlite::Result<()> {
     match rule {
-        Rule::Range { min, min_included, max, max_included } => {
+        Rule::Range {
+            min,
+            min_included,
+            max,
+            max_included,
+        } => {
             conn.execute(
                 &format!(
                     "INSERT OR IGNORE INTO {CONSTRAINTS} (constraint_name, constraint_type, value, min,
@@ -97,7 +102,10 @@ pub fn replace_rule_in(
     rule: Option<&Rule>,
 ) -> rusqlite::Result<()> {
     ensure_schema_in(conn)?;
-    conn.execute(&format!("DELETE FROM {CONSTRAINTS} WHERE constraint_name = ?1"), [name])?;
+    conn.execute(
+        &format!("DELETE FROM {CONSTRAINTS} WHERE constraint_name = ?1"),
+        [name],
+    )?;
     match rule {
         Some(rule) => {
             insert_rule(conn, name, rule)?;
@@ -193,13 +201,31 @@ impl GeoPackage {
                FROM {CONSTRAINTS} WHERE constraint_name = ?1 ORDER BY rowid"
         ))?;
         /// A constraint's row: its type, value, least and whether it is in, most and whether it is in, description.
-        type Row = (String, Option<String>, Option<f64>, Option<bool>, Option<f64>, Option<bool>, Option<String>);
-        let rows: Vec<Row> =
-            st.query_map([name], |r| {
-                Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?, r.get(4)?, r.get(5)?, r.get(6)?))
+        type Row = (
+            String,
+            Option<String>,
+            Option<f64>,
+            Option<bool>,
+            Option<f64>,
+            Option<bool>,
+            Option<String>,
+        );
+        let rows: Vec<Row> = st
+            .query_map([name], |r| {
+                Ok((
+                    r.get(0)?,
+                    r.get(1)?,
+                    r.get(2)?,
+                    r.get(3)?,
+                    r.get(4)?,
+                    r.get(5)?,
+                    r.get(6)?,
+                ))
             })?
             .collect::<rusqlite::Result<_>>()?;
-        if let Some((_, _, min, min_in, max, max_in, _)) = rows.iter().find(|r| r.0.eq_ignore_ascii_case("range")) {
+        if let Some((_, _, min, min_in, max, max_in, _)) =
+            rows.iter().find(|r| r.0.eq_ignore_ascii_case("range"))
+        {
             return Ok(Some(Rule::Range {
                 min: *min,
                 min_included: min_in.unwrap_or(true),

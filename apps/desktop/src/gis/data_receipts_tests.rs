@@ -19,7 +19,9 @@ use crate::pg_testing::{Cut, Relay};
 /// The rows of `parseller` as a reader of its own counts them.
 fn rows(path: &std::path::Path) -> i64 {
     let gp = kentos_geopackage::GeoPackage::open(path, false).expect("the file");
-    gp.connection().query_row("SELECT count(*) FROM parseller", [], |r| r.get(0)).expect("count")
+    gp.connection()
+        .query_row("SELECT count(*) FROM parseller", [], |r| r.get(0))
+        .expect("count")
 }
 
 /// A parcel drawn on `layer` at (x, y): a new row.
@@ -34,13 +36,28 @@ fn draw(app: &mut App, layer: &str, x: f64, y: f64) {
     }))
     .expect("an input");
     let doc = app.document.as_mut().expect("a drawing");
-    let done = kentos_native_application::create::execute(&mut ExecutionContext::new(&mut doc.model), input);
-    assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+    let done = kentos_native_application::create::execute(
+        &mut ExecutionContext::new(&mut doc.model),
+        input,
+    );
+    assert!(
+        matches!(done, kentos_commands::CommandResult::Completed { .. }),
+        "{done:?}"
+    );
 }
 
 /// A drawing with the lossy source over a GeoPackage of three parcels as a data layer being edited; its receipts set
 /// up when `receipts`.
-fn app_over(tag: &str, receipts: bool) -> (App, std::path::PathBuf, String, Journals, std::path::PathBuf) {
+fn app_over(
+    tag: &str,
+    receipts: bool,
+) -> (
+    App,
+    std::path::PathBuf,
+    String,
+    Journals,
+    std::path::PathBuf,
+) {
     crate::data_layers::register();
     lossy::register();
     let path = parcels(tag, 3);
@@ -49,11 +66,16 @@ fn app_over(tag: &str, receipts: bool) -> (App, std::path::PathBuf, String, Jour
     let mut app = app_with_drawing();
     app.gis.data_journal = journals.clone();
     let address = lossy::address_of(&path.display().to_string());
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")]).expect("added");
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "parseller").expect("described"),
+    ])
+    .expect("added");
     let layer = node(&app, "parseller").expect("the layer").id.clone();
     let _ = app.data_edits_event(crate::data_edits::Event::Start(layer.clone()));
     if receipts {
-        let data = node(&app, "parseller").and_then(|n| n.data.clone()).expect("a data layer");
+        let data = node(&app, "parseller")
+            .and_then(|n| n.data.clone())
+            .expect("a data layer");
         kentos_native_application::data_write::set_up_receipts(&data).expect("set up");
     }
     (app, path, layer, journals, dir.join("proje.kcad"))
@@ -75,19 +97,35 @@ fn a_lost_answer_is_asked_by_its_receipt_and_the_row_is_not_written_twice() {
     lossy::lose(&path.display().to_string(), Loss::AfterCommit);
     kaynaga_yaz(&mut app);
     assert_eq!(rows(&path), 4, "the commit was made");
-    assert!(app.gis.data_edits.uncertain.get(&layer).is_some_and(|u| u.receipt.is_some()));
+    assert!(
+        app.gis
+            .data_edits
+            .uncertain
+            .get(&layer)
+            .is_some_and(|u| u.receipt.is_some())
+    );
     assert_eq!(
         app.data_pending_words(0).map(|w| w.0).as_deref(),
         Some("Yazımın sonucu bilinmiyor: 1 katmanda 1 satır"),
         "neither success nor failure"
     );
-    assert!(!said(&app).iter().any(|t| t.contains("kaynağa yazıldı")), "no success said: {:#?}", said(&app));
+    assert!(
+        !said(&app).iter().any(|t| t.contains("kaynağa yazıldı")),
+        "no success said: {:#?}",
+        said(&app)
+    );
     // Kaynağa yaz again: the receipt found, the row taken out of the drawing, nothing written a second time.
     kaynaga_yaz(&mut app);
     assert_eq!(rows(&path), 4, "one row");
     assert!(app.data_pending_words(0).is_none(), "nothing waits");
     assert!(app.gis.data_edits.uncertain.is_empty());
-    assert!(said(&app).iter().any(|t| t.starts_with("Önceki yazım kaynağa ulaşmıştı")), "{:#?}", said(&app));
+    assert!(
+        said(&app)
+            .iter()
+            .any(|t| t.starts_with("Önceki yazım kaynağa ulaşmıştı")),
+        "{:#?}",
+        said(&app)
+    );
 }
 
 #[test]
@@ -119,7 +157,11 @@ fn the_question_survives_the_program_closing_and_the_project_opened_again() {
     again.gis.data_journal = journals;
     let doc = crate::document::Document::read(&file).expect("the file reads");
     let _ = again.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    assert!(!again.gis.data_edits.uncertain.is_empty(), "{:#?}", said(&again));
+    assert!(
+        !again.gis.data_edits.uncertain.is_empty(),
+        "{:#?}",
+        said(&again)
+    );
     kaynaga_yaz(&mut again);
     assert_eq!(rows(&path), 4, "still one row");
     assert!(again.data_pending_words(0).is_none(), "{:#?}", said(&again));
@@ -132,11 +174,23 @@ fn without_receipts_nothing_is_sent_again_until_yeniden_gonder() {
     lossy::lose(&path.display().to_string(), Loss::AfterCommit);
     kaynaga_yaz(&mut app);
     assert_eq!(rows(&path), 4);
-    assert!(app.gis.data_edits.uncertain.get(&layer).is_some_and(|u| u.receipt.is_none()));
+    assert!(
+        app.gis
+            .data_edits
+            .uncertain
+            .get(&layer)
+            .is_some_and(|u| u.receipt.is_none())
+    );
     // Kaynağa yaz does not send it again by itself.
     kaynaga_yaz(&mut app);
     assert_eq!(rows(&path), 4, "not sent again");
-    assert!(said(&app).iter().any(|t| t.contains("kendiliğinden yeniden gönderilmedi")), "{:#?}", said(&app));
+    assert!(
+        said(&app)
+            .iter()
+            .any(|t| t.contains("kendiliğinden yeniden gönderilmedi")),
+        "{:#?}",
+        said(&app)
+    );
     // The owner looked at the source and sends it again at Yeniden gönder's second press.
     let _ = app.data_pending_event(Pending::Resend(layer.clone()));
     assert_eq!(rows(&path), 4, "the first press only asks");
@@ -162,22 +216,46 @@ fn the_transaction_records_table_is_made_from_katman_degisiklikleri() {
     draw(&mut app, &layer, 486_400.0, 4_420_100.0);
     as_a_database_without_records(&mut app, &layer);
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
-    assert!(crate::files_testing::find_text(&mut shot, &app, SET_UP).is_some(), "the button is shown");
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, SET_UP).is_some(),
+        "the button is shown"
+    );
     let task = app.data_pending_event(Pending::SetUpReceipts(layer.clone()));
     drive(&mut app, task);
-    let data = node(&app, "parseller").and_then(|n| n.data.clone()).expect("a data layer");
-    assert_eq!(kentos_native_application::data_write::receipts_ready(&data), Ok(true), "the table is in the source");
-    assert!(said(&app).iter().any(|t| t.contains("işlem kaydı tablosu oluşturuldu")), "{:#?}", said(&app));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
-    assert!(crate::files_testing::find_text(&mut shot, &app, SET_UP).is_none(), "made: the button goes");
+    let data = node(&app, "parseller")
+        .and_then(|n| n.data.clone())
+        .expect("a data layer");
+    assert_eq!(
+        kentos_native_application::data_write::receipts_ready(&data),
+        Ok(true),
+        "the table is in the source"
+    );
+    assert!(
+        said(&app)
+            .iter()
+            .any(|t| t.contains("işlem kaydı tablosu oluşturuldu")),
+        "{:#?}",
+        said(&app)
+    );
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, SET_UP).is_none(),
+        "made: the button goes"
+    );
 }
 
 /// Katman değişiklikleri open on `layer` as for a database that keeps no transaction records: the lossy file stands for
 /// one here, since only a database's source is asked whether it keeps them (a file's commit has a sure answer).
 fn as_a_database_without_records(app: &mut App, layer: &str) {
     let _ = app.data_pending_event(Pending::Open(Some(layer.to_owned())));
-    let data = node(app, "parseller").and_then(|n| n.data.clone()).expect("a data layer");
+    let data = node(app, "parseller")
+        .and_then(|n| n.data.clone())
+        .expect("a data layer");
     let known = kentos_native_application::data_write::receipts_ready(&data);
     assert_eq!(known, Ok(false), "no table yet");
     let _ = app.data_pending_event(Pending::Receipts(layer.to_owned(), known));
@@ -185,7 +263,11 @@ fn as_a_database_without_records(app: &mut App, layer: &str) {
 
 /// A drawing with `table` of the database at `address` as a data layer being edited, its transaction records set up:
 /// the app, the layer's id, the journals and the project's file.
-fn app_over_database(tag: &str, address: &str, table: &str) -> (App, String, Journals, std::path::PathBuf) {
+fn app_over_database(
+    tag: &str,
+    address: &str,
+    table: &str,
+) -> (App, String, Journals, std::path::PathBuf) {
     crate::data_layers::register();
     let mut app = app_with_drawing();
     let dir = scratch(tag);
@@ -196,7 +278,9 @@ fn app_over_database(tag: &str, address: &str, table: &str) -> (App, String, Jou
     app.add_data_layers(vec![described]).expect("added");
     let layer = node(&app, &name).expect("the layer").id.clone();
     let _ = app.data_edits_event(crate::data_edits::Event::Start(layer.clone()));
-    let data = node(&app, &name).and_then(|n| n.data.clone()).expect("a data layer");
+    let data = node(&app, &name)
+        .and_then(|n| n.data.clone())
+        .expect("a data layer");
     kentos_native_application::data_write::set_up_receipts(&data).expect("set up");
     (app, layer, journals, dir.join("proje.kcad"))
 }
@@ -222,7 +306,15 @@ fn on_postgresql_a_commit_cut_at_the_server_is_asked_by_its_receipt() {
     relay.cut(Cut::AfterCommit);
     kaynaga_yaz(&mut app);
     assert_eq!(rows(), 4, "the commit was made");
-    assert!(app.gis.data_edits.uncertain.get(&layer).is_some_and(|u| u.receipt.is_some()), "{:#?}", said(&app));
+    assert!(
+        app.gis
+            .data_edits
+            .uncertain
+            .get(&layer)
+            .is_some_and(|u| u.receipt.is_some()),
+        "{:#?}",
+        said(&app)
+    );
     assert_eq!(
         app.data_pending_words(0).map(|w| w.0).as_deref(),
         Some("Yazımın sonucu bilinmiyor: 1 katmanda 1 satır"),
@@ -237,11 +329,25 @@ fn on_postgresql_a_commit_cut_at_the_server_is_asked_by_its_receipt() {
     app.gis.data_journal = journals;
     let doc = crate::document::Document::read(&file).expect("the file reads");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    assert!(!app.gis.data_edits.uncertain.is_empty(), "the question comes back: {:#?}", said(&app));
+    assert!(
+        !app.gis.data_edits.uncertain.is_empty(),
+        "the question comes back: {:#?}",
+        said(&app)
+    );
     kaynaga_yaz(&mut app);
     assert_eq!(rows(), 4, "one row");
-    assert!(app.data_pending_words(0).is_none(), "nothing waits: {:#?}", said(&app));
-    assert!(said(&app).iter().any(|t| t.starts_with("Önceki yazım kaynağa ulaşmıştı")), "{:#?}", said(&app));
+    assert!(
+        app.data_pending_words(0).is_none(),
+        "nothing waits: {:#?}",
+        said(&app)
+    );
+    assert!(
+        said(&app)
+            .iter()
+            .any(|t| t.starts_with("Önceki yazım kaynağa ulaşmıştı")),
+        "{:#?}",
+        said(&app)
+    );
     draw(&mut app, &layer, 486_450.0, 4_420_100.0);
     relay.cut(Cut::BeforeCommit);
     kaynaga_yaz(&mut app);

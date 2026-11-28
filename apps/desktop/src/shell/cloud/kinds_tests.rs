@@ -477,7 +477,10 @@ fn the_upload_and_the_projects_form_offer_the_programs_types() {
     // database is not taken.
     assert_eq!(u.storage, ProjectStorage::File);
     cloud(&mut app, Event::UploadStorage(ProjectStorage::Database));
-    assert_eq!(app.cloud.upload.as_ref().map(|u| u.storage), Some(ProjectStorage::File));
+    assert_eq!(
+        app.cloud.upload.as_ref().map(|u| u.storage),
+        Some(ProjectStorage::File)
+    );
     cloud(&mut app, Event::UploadType(ProjectType::Gis));
     assert_eq!(
         app.cloud.upload.as_ref().map(|u| u.project_type),

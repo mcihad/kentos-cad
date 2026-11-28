@@ -66,14 +66,21 @@ impl App {
         {
             return Some(rows.clone());
         }
-        self.gis.data_rows.wanted.borrow_mut().insert(layer.to_owned());
+        self.gis
+            .data_rows
+            .wanted
+            .borrow_mut()
+            .insert(layer.to_owned());
         Some(Rows::Reading)
     }
 
     /// A data layer's rows as read, for the shell's exports (shell/exchange, docs/adr/9344) without naming this core's
     /// types: `Some(Ok(rows))` read, `Some(Err(why))` unreadable, `None` while read (asked: read after this message) and
     /// for another layer.
-    pub(crate) fn data_rows_read(&self, layer: &str) -> Option<Result<Arc<Vec<(i64, Entity)>>, String>> {
+    pub(crate) fn data_rows_read(
+        &self,
+        layer: &str,
+    ) -> Option<Result<Arc<Vec<(i64, Entity)>>, String>> {
         match self.data_rows_of(layer)? {
             Rows::Ready(rows) => Some(Ok(rows)),
             Rows::Failed(why) => Some(Err(why)),
@@ -83,7 +90,10 @@ impl App {
 
     /// A data layer's rows as the drawing has them now: the source's rows it does not hold, then its own (taken and new
     /// in the edit session); none while they are read, why when they could not be; none at all for another layer.
-    pub(crate) fn data_layer_rows(&self, layer: &str) -> Option<Result<Option<Vec<Entity>>, String>> {
+    pub(crate) fn data_layer_rows(
+        &self,
+        layer: &str,
+    ) -> Option<Result<Option<Vec<Entity>>, String>> {
         let rows = self.data_rows_of(layer)?;
         let doc = self.document.as_ref()?;
         Some(match rows {
@@ -91,8 +101,11 @@ impl App {
             Rows::Failed(why) => Err(why),
             Rows::Ready(read) => {
                 let held = doc.model.data_hidden(layer);
-                let mut out: Vec<Entity> =
-                    read.iter().filter(|(k, _)| !held.contains(k)).map(|(_, e)| e.clone()).collect();
+                let mut out: Vec<Entity> = read
+                    .iter()
+                    .filter(|(k, _)| !held.contains(k))
+                    .map(|(_, e)| e.clone())
+                    .collect();
                 out.extend(doc.model.by_layer(layer).cloned());
                 Ok(Some(out))
             }
@@ -101,7 +114,10 @@ impl App {
 
     /// [`App::data_layer_rows`] with each row's key and slot (docs/adr/9156): a source row its key and no slot; an object
     /// of the drawing (a taken row, a new one) its slot and, taken, its key.
-    pub(crate) fn data_layer_rows_keyed(&self, layer: &str) -> Option<Result<Option<Vec<KeyedRow>>, String>> {
+    pub(crate) fn data_layer_rows_keyed(
+        &self,
+        layer: &str,
+    ) -> Option<Result<Option<Vec<KeyedRow>>, String>> {
         let rows = self.data_rows_of(layer)?;
         let doc = self.document.as_ref()?;
         Some(match rows {
@@ -115,7 +131,11 @@ impl App {
                     .map(|(k, e)| (Some(*k), None, e.clone()))
                     .collect();
                 for (uid, e) in doc.model.by_layer_with_uids(layer) {
-                    out.push((doc.model.taken_key(layer, uid), Some(kentos_domain::Slot(e.base().id)), e.clone()));
+                    out.push((
+                        doc.model.taken_key(layer, uid),
+                        Some(kentos_domain::Slot(e.base().id)),
+                        e.clone(),
+                    ));
                 }
                 Ok(Some(out))
             }
@@ -131,20 +151,35 @@ impl App {
         let settings = doc.model.settings().clone();
         let mut tasks = Vec::new();
         for layer in wanted {
-            let reading = self.gis.data_rows.kept.borrow().get(&layer).is_some_and(|(at, r)| *at == stamp && matches!(r, Rows::Reading));
+            let reading = self
+                .gis
+                .data_rows
+                .kept
+                .borrow()
+                .get(&layer)
+                .is_some_and(|(at, r)| *at == stamp && matches!(r, Rows::Reading));
             if reading {
                 continue;
             }
             let Some(node) = doc.model.layers().get(&layer).cloned() else {
                 continue;
             };
-            self.gis.data_rows.kept.borrow_mut().insert(layer.clone(), (stamp, Rows::Reading));
+            self.gis
+                .data_rows
+                .kept
+                .borrow_mut()
+                .insert(layer.clone(), (stamp, Rows::Reading));
             let settings = settings.clone();
             tasks.push(crate::db_connections::off_thread(
                 move || {
                     // A row without geometry is a row of the table too (docs/adr/9134).
-                    kentos_native_application::data_write::all_records(&node, &settings, &Default::default(), &|| false)
-                        .map(|read| read.rows)
+                    kentos_native_application::data_write::all_records(
+                        &node,
+                        &settings,
+                        &Default::default(),
+                        &|| false,
+                    )
+                    .map(|read| read.rows)
                 },
                 move |read| message(Event::Read(layer, stamp, read)),
             ));
@@ -161,7 +196,11 @@ impl App {
             Ok(rows) => Rows::Ready(Arc::new(rows)),
             Err(why) => Rows::Failed(why),
         };
-        self.gis.data_rows.kept.borrow_mut().insert(layer.clone(), (stamp, rows));
+        self.gis
+            .data_rows
+            .kept
+            .borrow_mut()
+            .insert(layer.clone(), (stamp, rows));
         // Katman süzgeci on the layer counts again over them.
         self.layer_filter_rows_read(&layer);
         // İfade oluşturucu waiting for them previews on them (expression/mod.rs, docs/adr/9348).

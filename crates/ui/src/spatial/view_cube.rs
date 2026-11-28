@@ -234,7 +234,8 @@ impl shader::Primitive for CubePrimitive {
         // eksende döner.
         let eye = Vec3::new(3.0, 2.5, 3.8);
 
-        let projection = glam::camera::rh::proj::directx::perspective(42f32.to_radians(), aspect, 0.1, 100.0);
+        let projection =
+            glam::camera::rh::proj::directx::perspective(42f32.to_radians(), aspect, 0.1, 100.0);
         let view = glam::camera::rh::view::look_at_mat4(eye, Vec3::ZERO, Vec3::Y);
         let model = Mat4::from_rotation_y(self.rotation);
 

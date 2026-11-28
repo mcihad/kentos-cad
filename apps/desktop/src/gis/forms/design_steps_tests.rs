@@ -23,7 +23,10 @@ fn opened() -> App {
         serde_json::json!({ "operation": "add", "name": "Saha" }),
     )
     .expect("runs");
-    let layer = done["output"]["layer"].as_str().expect("the layer").to_owned();
+    let layer = done["output"]["layer"]
+        .as_str()
+        .expect("the layer")
+        .to_owned();
     let task = app.update(Message::Run("data.forms"));
     drive(&mut app, task);
     ev(&mut app, Event::NewForm);
@@ -41,29 +44,47 @@ fn the_steps_are_said_done_as_the_form_goes_to_its_release() {
     let w = app.gis.forms_window.as_ref().expect("the designer");
     assert!(w.dirty && !w.tried, "placed, not tried, not saved");
     ev(&mut app, Event::Preview(true));
-    assert!(app.gis.forms_window.as_ref().is_some_and(|w| w.tried), "Örnek kayıtla dene done");
+    assert!(
+        app.gis.forms_window.as_ref().is_some_and(|w| w.tried),
+        "Örnek kayıtla dene done"
+    );
     ev(&mut app, Event::Preview(false));
     ev(&mut app, Event::Save);
-    assert!(app.gis.forms_window.as_ref().is_some_and(|w| !w.dirty), "Taslağı kaydet done");
+    assert!(
+        app.gis.forms_window.as_ref().is_some_and(|w| !w.dirty),
+        "Taslağı kaydet done"
+    );
     let form = app.project_forms().first().cloned().expect("the form");
     assert!(form.releases.is_empty(), "not published yet");
     ev(&mut app, Event::Publish);
     let form = app.project_forms().first().cloned().expect("the form");
     let release = form.releases.last().expect("Formu yayınla done");
-    assert!(crate::forms::designer::same_form(&release.body, &form.draft));
+    assert!(crate::forms::designer::same_form(
+        &release.body,
+        &form.draft
+    ));
 }
 
 #[test]
 fn okuyan_sees_the_preview_read_only() {
     let mut app = opened();
     ev(&mut app, Event::Preview(true));
-    assert!(app.gis.form_preview.as_ref().is_some_and(|e| !e.read_only), "Düzenleyen edits");
+    assert!(
+        app.gis.form_preview.as_ref().is_some_and(|e| !e.read_only),
+        "Düzenleyen edits"
+    );
     ev(&mut app, Event::PreviewRole(PreviewRole::Viewer));
     let e = app.gis.form_preview.as_ref().expect("the preview");
     assert!(e.read_only);
-    assert_eq!(e.read_why.as_deref(), Some("Okuyan rolü kaydı okur; formda hiçbir şeyi değiştiremez."));
+    assert_eq!(
+        e.read_why.as_deref(),
+        Some("Okuyan rolü kaydı okur; formda hiçbir şeyi değiştiremez.")
+    );
     ev(&mut app, Event::PreviewRole(PreviewRole::Entry));
-    assert!(app.gis.form_preview.as_ref().is_some_and(|e| !e.read_only), "Veri girişi edits the attributes");
+    assert!(
+        app.gis.form_preview.as_ref().is_some_and(|e| !e.read_only),
+        "Veri girişi edits the attributes"
+    );
 }
 
 /// The pictures (`.run/gui-evidence/kullanim-9325/`): the steps over a form placed and not saved, with Taslağı kaydet

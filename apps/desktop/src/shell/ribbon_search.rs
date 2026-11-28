@@ -66,7 +66,10 @@ pub fn search_in(query: &str, names: Option<&crate::module_names::Names>) -> Vec
 
 /// Every command the folded text finds, with its rank (lower is better); a module's program reads a command's
 /// names as its own names say (module_names.rs, docs/adr/8002: PENCERE is the window in KentOS Mimari).
-fn scored_commands(q: &str, names: Option<&crate::module_names::Names>) -> Vec<(f64, &'static Command)> {
+fn scored_commands(
+    q: &str,
+    names: Option<&crate::module_names::Names>,
+) -> Vec<(f64, &'static Command)> {
     if q.is_empty() {
         return Vec::new();
     }
@@ -225,15 +228,21 @@ impl App {
                 let runs = command.standing == Standing::Ported && self.available(command.id);
                 let detail = if let Some(why) = self.why_disabled(command.id).filter(|_| !runs) {
                     why
-                } else { match (command.standing, &home) {
-                    (Standing::Pending, _) => command
-                        .pending_note
-                        .unwrap_or("Geliştirme aşamasında")
-                        .to_owned(),
-                    (Standing::OnTheWeb, _) => "Web'de var; masaüstüne henüz taşınmadı".to_owned(),
-                    (Standing::Ported, Some((_, tab, panel))) => format!("{tab} › {}", panel.label),
-                    (Standing::Ported, None) => command.category.to_owned(),
-                }};
+                } else {
+                    match (command.standing, &home) {
+                        (Standing::Pending, _) => command
+                            .pending_note
+                            .unwrap_or("Geliştirme aşamasında")
+                            .to_owned(),
+                        (Standing::OnTheWeb, _) => {
+                            "Web'de var; masaüstüne henüz taşınmadı".to_owned()
+                        }
+                        (Standing::Ported, Some((_, tab, panel))) => {
+                            format!("{tab} › {}", panel.label)
+                        }
+                        (Standing::Ported, None) => command.category.to_owned(),
+                    }
+                };
                 Found {
                     icon: command.icon,
                     title: command.title.into(),
@@ -518,7 +527,9 @@ mod tests {
         assert!(app.home_of("processing.run.geometry.buffer").is_none());
         app.selection.set([kentos_domain::Slot(4)]);
         let _ = app.update(Message::DialogClosed);
-        let home = app.home_of("processing.run.geometry.buffer").expect("the area contextual tab");
+        let home = app
+            .home_of("processing.run.geometry.buffer")
+            .expect("the area contextual tab");
         assert_eq!(home.0, app.selection_tab().expect("selected area").id);
         let _ = app.update(Message::Run("edit.deselect"));
         assert!(app.home_of("processing.run.geometry.buffer").is_none());

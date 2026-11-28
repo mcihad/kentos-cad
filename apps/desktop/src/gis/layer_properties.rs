@@ -50,8 +50,14 @@ pub enum Section {
 }
 
 impl Section {
-    const ALL: [Section; 6] =
-        [Section::General, Section::Source, Section::Crs, Section::Style, Section::Fields, Section::Forms];
+    const ALL: [Section; 6] = [
+        Section::General,
+        Section::Source,
+        Section::Crs,
+        Section::Style,
+        Section::Fields,
+        Section::Forms,
+    ];
 
     fn title(self) -> &'static str {
         match self {
@@ -212,7 +218,9 @@ fn renderer_words(kind: Option<&str>) -> &'static str {
 fn shown_address(address: &str) -> String {
     match address.split_once("://") {
         Some((scheme, rest)) => match rest.split_once('@') {
-            Some((who, host)) => format!("{scheme}://{}@{host}", who.split(':').next().unwrap_or(who)),
+            Some((who, host)) => {
+                format!("{scheme}://{}@{host}", who.split(':').next().unwrap_or(who))
+            }
             None => address.to_owned(),
         },
         None => address.strip_prefix("gpkg:").unwrap_or(address).to_owned(),
@@ -223,7 +231,11 @@ impl App {
     pub(crate) fn layer_properties_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open(layer) => {
-                self.gis.layer_properties = Some(Window { layer, section: Section::General, focus: Focus::List });
+                self.gis.layer_properties = Some(Window {
+                    layer,
+                    section: Section::General,
+                    focus: Focus::List,
+                });
                 self.dialog = Some(Dialog::Gis(gis::GisDialogKind::LayerProperties));
             }
             Event::Show(section) => {
@@ -263,7 +275,10 @@ impl App {
             let Some(path) = self.layer_properties_path(&id) else {
                 return Task::none();
             };
-            self.say(kentos_interaction::Level::Success, format!("Yol panoya kopyalandı: {path}"));
+            self.say(
+                kentos_interaction::Level::Success,
+                format!("Yol panoya kopyalandı: {path}"),
+            );
             return iced::clipboard::write(path);
         }
         self.layer_properties_close(false);
@@ -292,8 +307,10 @@ impl App {
         let last = Section::ALL.len() - 1;
         let to = |i: usize| Section::ALL[i.min(last)];
         let ring = |f: Focus, back: bool| {
-            let order: Vec<Focus> =
-                [Focus::List, Focus::Action, Focus::Close].into_iter().filter(|f| *f != Focus::Action || action.is_some()).collect();
+            let order: Vec<Focus> = [Focus::List, Focus::Action, Focus::Close]
+                .into_iter()
+                .filter(|f| *f != Focus::Action || action.is_some())
+                .collect();
             let i = order.iter().position(|o| *o == f).unwrap_or(0);
             let n = order.len();
             order[if back { (i + n - 1) % n } else { (i + 1) % n }]
@@ -317,7 +334,9 @@ impl App {
                 }
             }
             Key::Enter => match focus {
-                Focus::Action => return action.map_or_else(Task::none, |a| self.layer_properties_act(a)),
+                Focus::Action => {
+                    return action.map_or_else(Task::none, |a| self.layer_properties_act(a));
+                }
                 Focus::Close => self.layer_properties_close(true),
                 Focus::List => {}
             },
@@ -346,7 +365,12 @@ impl App {
         if let Some(s) = &node.service {
             return Some(shown_address(&s.url));
         }
-        doc.model.settings().sources.iter().find(|s| s.layer == layer).map(|s| shown_address(&s.path))
+        doc.model
+            .settings()
+            .sources
+            .iter()
+            .find(|s| s.layer == layer)
+            .map(|s| shown_address(&s.path))
     }
 
     pub(crate) fn layer_properties_view(&self) -> Element<'_, Message> {
@@ -356,15 +380,28 @@ impl App {
         let Some(node) = doc.model.layers().get(&w.layer) else {
             return Frame::new(TITLE)
                 .push(label::muted("Katman artık projede yok."))
-                .action(crate::exchange::words::secondary("Kapat", Some(msg(Event::Close))))
+                .action(crate::exchange::words::secondary(
+                    "Kapat",
+                    Some(msg(Event::Close)),
+                ))
                 .modal(msg(Event::Close));
         };
         let kind = self.layer_kind(node);
         // The head: the layer, its kind and where its data is.
-        let chip = |words: String| container(label::caption(words)).padding([1, 8]).style(style::container::badge);
-        let mut chips = row![chip(kind_words(kind).to_owned())].spacing(6).align_y(Center);
+        let chip = |words: String| {
+            container(label::caption(words))
+                .padding([1, 8])
+                .style(style::container::badge)
+        };
+        let mut chips = row![chip(kind_words(kind).to_owned())]
+            .spacing(6)
+            .align_y(Center);
         if let Some(d) = &node.data {
-            chips = chips.push(chip(if d.driver == "gpkg" { "GeoPackage".to_owned() } else { "PostgreSQL".to_owned() }));
+            chips = chips.push(chip(if d.driver == "gpkg" {
+                "GeoPackage".to_owned()
+            } else {
+                "PostgreSQL".to_owned()
+            }));
             if d.read_only {
                 chips = chips.push(chip("Salt okunur".to_owned()));
             }
@@ -373,7 +410,12 @@ impl App {
             chips = chips.push(chip("Düzenleniyor".to_owned()));
         }
         let head = row![
-            container(icon(from_web(Some(Section::General.glyph()))).size(22.0).tone(Tone::Accent)).padding([2, 4]),
+            container(
+                icon(from_web(Some(Section::General.glyph())))
+                    .size(22.0)
+                    .tone(Tone::Accent)
+            )
+            .padding([2, 4]),
             column![label::title(node.name.clone()), chips].spacing(6),
         ]
         .spacing(12)
@@ -383,27 +425,39 @@ impl App {
         let ring = |on: bool| {
             move |theme: &iced::Theme| {
                 let t = kentos_ui::theme::Tokens::of(theme);
-                style::container::outline(if on { t.accent } else { iced::Color::TRANSPARENT }, 2.0)(theme)
+                style::container::outline(
+                    if on {
+                        t.accent
+                    } else {
+                        iced::Color::TRANSPARENT
+                    },
+                    2.0,
+                )(theme)
             }
         };
-        let list = Section::ALL.iter().fold(Column::new().spacing(2).padding([6, 6]), |list, s| {
-            let chosen = w.section == *s;
-            list.push(
-                container(
-                    button(
-                        row![icon(from_web(Some(s.glyph()))).size(15.0).tone(Tone::Muted), label::body(s.title())]
+        let list = Section::ALL
+            .iter()
+            .fold(Column::new().spacing(2).padding([6, 6]), |list, s| {
+                let chosen = w.section == *s;
+                list.push(
+                    container(
+                        button(
+                            row![
+                                icon(from_web(Some(s.glyph()))).size(15.0).tone(Tone::Muted),
+                                label::body(s.title())
+                            ]
                             .spacing(10)
                             .align_y(Center),
+                        )
+                        .width(Fill)
+                        .padding([7, 10])
+                        .style(style::button::list_item(chosen))
+                        .on_press(msg(Event::Show(*s))),
                     )
-                    .width(Fill)
-                    .padding([7, 10])
-                    .style(style::button::list_item(chosen))
-                    .on_press(msg(Event::Show(*s))),
+                    .padding(1)
+                    .style(ring(chosen && w.focus == Focus::List)),
                 )
-                .padding(1)
-                .style(ring(chosen && w.focus == Focus::List)),
-            )
-        });
+            });
         let list = column![
             list,
             space::vertical(),
@@ -424,14 +478,19 @@ impl App {
             Section::Forms => self.properties_forms(node),
         };
         // The section's one way on, beside its title (T19).
-        let mut title = row![container(label::strong(w.section.title())).width(Fill)].spacing(8).align_y(Center);
+        let mut title = row![container(label::strong(w.section.title())).width(Fill)]
+            .spacing(8)
+            .align_y(Center);
         if let Some(a) = self.layer_properties_action(w.section, &w.layer) {
             title = title.push(
                 container(
                     button(
-                        row![icon(from_web(Some(a.glyph()))).size(14.0), label::caption(a.words())]
-                            .spacing(6)
-                            .align_y(Center),
+                        row![
+                            icon(from_web(Some(a.glyph()))).size(14.0),
+                            label::caption(a.words())
+                        ]
+                        .spacing(6)
+                        .align_y(Center),
                     )
                     .padding(kentos_ui::theme::metrics::action_small())
                     .style(style::button::secondary)
@@ -442,12 +501,28 @@ impl App {
             );
         }
         let details = column![title, details].spacing(12).padding([10, 18]);
-        let close = container(crate::exchange::words::secondary("Kapat", Some(msg(Event::Close))))
-            .padding(1)
-            .style(ring(w.focus == Focus::Close));
+        let close = container(crate::exchange::words::secondary(
+            "Kapat",
+            Some(msg(Event::Close)),
+        ))
+        .padding(1)
+        .style(ring(w.focus == Focus::Close));
         Frame::new(TITLE)
-            .push(column![head, ListDetails::new(list, details).list_width(200.0).height(380.0)].spacing(16))
-            .status(label::caption("Bilgi içindir; her bölümün eylemi kendi penceresini bu katmanda açar.").style(style::text::muted))
+            .push(
+                column![
+                    head,
+                    ListDetails::new(list, details)
+                        .list_width(200.0)
+                        .height(380.0)
+                ]
+                .spacing(16),
+            )
+            .status(
+                label::caption(
+                    "Bilgi içindir; her bölümün eylemi kendi penceresini bu katmanda açar.",
+                )
+                .style(style::text::muted),
+            )
             .action(close)
             .width(760.0)
             .modal(msg(Event::Close))
@@ -478,8 +553,14 @@ impl App {
                     (true, n) => format!("Açık; {n} kayıt kaynağa yazılmadı"),
                 }),
             );
-        } else if matches!(kind, LayerKind::Drawing | LayerKind::Annotation | LayerKind::Bound) {
-            pairs = pairs.push(name("Nesne sayısı"), value(doc.model.by_layer(&node.id).count().to_string()));
+        } else if matches!(
+            kind,
+            LayerKind::Drawing | LayerKind::Annotation | LayerKind::Bound
+        ) {
+            pairs = pairs.push(
+                name("Nesne sayısı"),
+                value(doc.model.by_layer(&node.id).count().to_string()),
+            );
         }
         pairs.into()
     }
@@ -493,8 +574,22 @@ impl App {
                 crate::source_counts::Counted::Failed(why) => format!("sayılamadı: {why}"),
             };
             pairs = pairs
-                .push(name("Bağlantı"), value(if d.driver == "gpkg" { "GeoPackage dosyası" } else { "PostgreSQL / PostGIS veritabanı" }))
-                .push(name(if d.driver == "gpkg" { "Dosya" } else { "Veritabanı" }), value(shown_address(&d.address)))
+                .push(
+                    name("Bağlantı"),
+                    value(if d.driver == "gpkg" {
+                        "GeoPackage dosyası"
+                    } else {
+                        "PostgreSQL / PostGIS veritabanı"
+                    }),
+                )
+                .push(
+                    name(if d.driver == "gpkg" {
+                        "Dosya"
+                    } else {
+                        "Veritabanı"
+                    }),
+                    value(shown_address(&d.address)),
+                )
                 .push(name("Tablo"), value(d.table.clone()))
                 .push(name("Anahtar sütunu"), value(d.key.clone()))
                 .push(
@@ -505,7 +600,14 @@ impl App {
                     )),
                 )
                 .push(name("Satır"), value(rows))
-                .push(name("Yazma"), value(if d.read_only { "Salt okunur" } else { "Düzenleme oturumuyla yazılır" }));
+                .push(
+                    name("Yazma"),
+                    value(if d.read_only {
+                        "Salt okunur"
+                    } else {
+                        "Düzenleme oturumuyla yazılır"
+                    }),
+                );
             if let Some(rel) = &d.relative {
                 pairs = pairs.push(name("Projeye göre yolu"), value(rel.clone()));
             }
@@ -513,17 +615,30 @@ impl App {
         }
         if let Some(s) = &node.service {
             pairs = pairs
-                .push(name("Bağlantı"), value(format!("Harita servisi · {}", s.kind.label())))
+                .push(
+                    name("Bağlantı"),
+                    value(format!("Harita servisi · {}", s.kind.label())),
+                )
                 .push(name("Adres"), value(shown_address(&s.url)));
             if !s.layers.is_empty() {
                 pairs = pairs.push(name("Servis katmanları"), value(s.layers.join(", ")));
             }
             return pairs.into();
         }
-        let link = self.document.as_ref().and_then(|d| d.model.settings().sources.iter().find(|s| s.layer == node.id).cloned());
+        let link = self.document.as_ref().and_then(|d| {
+            d.model
+                .settings()
+                .sources
+                .iter()
+                .find(|s| s.layer == node.id)
+                .cloned()
+        });
         if let Some(link) = link {
             return pairs
-                .push(name("Bağlantı"), value("Bağlı tablo: nesneler projede, tabloya yazılır"))
+                .push(
+                    name("Bağlantı"),
+                    value("Bağlı tablo: nesneler projede, tabloya yazılır"),
+                )
                 .push(name("Kaynak"), value(shown_address(&link.path)))
                 .push(name("Tablo"), value(link.table.clone()))
                 .into();
@@ -532,7 +647,9 @@ impl App {
             .push(
                 name("Bağlantı"),
                 value(match kind {
-                    LayerKind::Annotation => "Proje dosyası: yazılar, ölçüler ve paftalar projeyle saklanır",
+                    LayerKind::Annotation => {
+                        "Proje dosyası: yazılar, ölçüler ve paftalar projeyle saklanır"
+                    }
                     _ => "Proje dosyası: nesneler projeyle saklanır",
                 }),
             )
@@ -548,19 +665,26 @@ impl App {
         let mut pairs = Pairs::new().push(name("Projenin sistemi"), value(project));
         match node.data.as_ref().and_then(|d| d.geometry.as_ref()) {
             Some(g) => {
-                let table = g.srid.map_or_else(|| "Tabloda yazılı değil".to_owned(), srid_title);
+                let table = g
+                    .srid
+                    .map_or_else(|| "Tabloda yazılı değil".to_owned(), srid_title);
                 let carried = match g.srid {
                     Some(srid) if srid == settings.srid => "Aynı sistem: satırlar olduğu gibi çizilir".to_owned(),
                     Some(_) => "Satırlar çizilirken projenin sistemine dönüştürülür; kaynaktaki koordinatlar değişmez".to_owned(),
                     None => "Tablonun sistemi bilinmiyor: satırlar projenin sisteminde sayılır".to_owned(),
                 };
-                pairs = pairs.push(name("Tablonun sistemi"), value(table)).push(name("Çizim"), value(carried));
+                pairs = pairs
+                    .push(name("Tablonun sistemi"), value(table))
+                    .push(name("Çizim"), value(carried));
             }
             None if node.data.is_some() => {
                 pairs = pairs.push(name("Tablonun sistemi"), value("Geometrisiz tablo"));
             }
             None => {
-                pairs = pairs.push(name("Katmanın sistemi"), value("Projenin sistemi (nesneler projeyle saklanır)"));
+                pairs = pairs.push(
+                    name("Katmanın sistemi"),
+                    value("Projenin sistemi (nesneler projeyle saklanır)"),
+                );
             }
         }
         pairs.into()
@@ -568,14 +692,21 @@ impl App {
 
     fn properties_style<'a>(&self, node: &LayerNode) -> Element<'a, Message> {
         let s = &node.style;
-        let kind = s.renderer.as_ref().and_then(|r| r.get("type")).and_then(|t| t.as_str());
+        let kind = s
+            .renderer
+            .as_ref()
+            .and_then(|r| r.get("type"))
+            .and_then(|t| t.as_str());
         // A theme's colour by its name with the colour it is now, a colour of its own by its hex (T20): the swatch is the
         // drawing's own colour on this canvas.
         let palette = crate::viewport::palette(self.canvas());
         let swatch = |c: &str| {
             let resolved = palette.resolve(c);
             let color = resolved.map_or_else(|| crate::view::hex_color(c), crate::view::rgba_color);
-            let hex = resolved.map_or_else(|| c.to_uppercase(), |r| format!("#{:02X}{:02X}{:02X}", r.0[0], r.0[1], r.0[2]));
+            let hex = resolved.map_or_else(
+                || c.to_uppercase(),
+                |r| format!("#{:02X}{:02X}{:02X}", r.0[0], r.0[1], r.0[2]),
+            );
             let words = match theme_color_words(c) {
                 Some(name) => format!("{name} ({hex}, temaya göre değişir)"),
                 None => hex,
@@ -593,7 +724,10 @@ impl App {
             pairs = pairs.push(name("Dolgu"), swatch(fill));
         }
         pairs = pairs
-            .push(name("Etiketler"), value(if s.labels_on() { "Açık" } else { "Kapalı" }))
+            .push(
+                name("Etiketler"),
+                value(if s.labels_on() { "Açık" } else { "Kapalı" }),
+            )
             .push(
                 name("Süzgeç"),
                 value(
@@ -627,7 +761,9 @@ impl App {
                 marks.push("aralık".into());
             }
             let kind = match f.kind {
-                LayerFieldKind::Text => f.length.map_or_else(|| "Metin".to_owned(), |n| format!("Metin ({n})")),
+                LayerFieldKind::Text => f
+                    .length
+                    .map_or_else(|| "Metin".to_owned(), |n| format!("Metin ({n})")),
                 k => k.label().to_owned(),
             };
             list = list.push(
@@ -640,8 +776,10 @@ impl App {
                             }
                             names.width(Length::FillPortion(3))
                         },
-                        container(label::caption(kind).style(style::text::muted)).width(Length::FillPortion(2)),
-                        container(label::caption(marks.join(" · ")).style(style::text::accent)).width(Length::FillPortion(3)),
+                        container(label::caption(kind).style(style::text::muted))
+                            .width(Length::FillPortion(2)),
+                        container(label::caption(marks.join(" · ")).style(style::text::accent))
+                            .width(Length::FillPortion(3)),
                     ]
                     .spacing(10)
                     .align_y(Center),
@@ -649,13 +787,20 @@ impl App {
                 .padding([5, 8]),
             );
         }
-        column![label::caption(format!("{} alan", node.fields.len())).style(style::text::muted), list]
-            .spacing(6)
-            .into()
+        column![
+            label::caption(format!("{} alan", node.fields.len())).style(style::text::muted),
+            list
+        ]
+        .spacing(6)
+        .into()
     }
 
     fn properties_forms<'a>(&self, node: &LayerNode) -> Element<'a, Message> {
-        let forms: Vec<&kentos_commands::ProjectForm> = self.project_forms().iter().filter(|f| f.layer == node.id).collect();
+        let forms: Vec<&kentos_commands::ProjectForm> = self
+            .project_forms()
+            .iter()
+            .filter(|f| f.layer == node.id)
+            .collect();
         if forms.is_empty() {
             return label::muted(
                 "Katmanın formu yok. Kayıtlar alanlarından kurulan varsayılan formla açılır; Veri › Formlar'da form yapılır.",
@@ -680,12 +825,17 @@ impl App {
 
 /// A system by its SRID as a sentence names it (the shared core's words): “TUREF / TM36 (EPSG:5256)”.
 fn srid_title(srid: u32) -> String {
-    kentos_project::crs::system(srid).map_or_else(|| format!("EPSG:{srid}"), kentos_project::crs::title)
+    kentos_project::crs::system(srid)
+        .map_or_else(|| format!("EPSG:{srid}"), kentos_project::crs::title)
 }
 
 /// The project's system: its own definition's name, else by its SRID.
 fn system_title(settings: &kentos_commands::ProjectSettings) -> String {
-    match settings.custom_crs.as_ref().filter(|_| settings.srid == kentos_project::crs::LOCAL_SRID) {
+    match settings
+        .custom_crs
+        .as_ref()
+        .filter(|_| settings.srid == kentos_project::crs::LOCAL_SRID)
+    {
         Some(d) => kentos_project::systems::definition_title(d),
         None => srid_title(settings.srid),
     }
@@ -693,12 +843,16 @@ fn system_title(settings: &kentos_commands::ProjectSettings) -> String {
 
 /// A pair's name, muted.
 fn name<'a>(words: impl Into<String>) -> Element<'a, Message> {
-    label::caption(words.into()).style(style::text::muted).into()
+    label::caption(words.into())
+        .style(style::text::muted)
+        .into()
 }
 
 /// A pair's value, wrapping.
 fn value<'a>(words: impl Into<String>) -> Element<'a, Message> {
-    label::body(words.into()).wrapping(iced::widget::text::Wrapping::WordOrGlyph).into()
+    label::body(words.into())
+        .wrapping(iced::widget::text::Wrapping::WordOrGlyph)
+        .into()
 }
 
 #[cfg(test)]

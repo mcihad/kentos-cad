@@ -44,7 +44,11 @@ pub(super) fn supported(s: &Shape) -> bool {
                 && y_scale.is_none()
                 && rotation.is_finite()
                 && attrs.as_ref().is_none_or(|a| {
-                    a.0.len() <= 128 && a.0.iter().all(|(k, v)| k.len() <= 128 && matches!(v, crate::api::json::Json::Str(s) if s.len() <= 4096))
+                    a.0.len() <= 128
+                        && a.0.iter().all(|(k, v)| {
+                            k.len() <= 128
+                                && matches!(v, crate::api::json::Json::Str(s) if s.len() <= 4096)
+                        })
                 })
                 && clip.is_none()
                 && params.as_ref().is_none_or(|p| p.0.is_empty())
@@ -72,7 +76,14 @@ pub(super) fn work(s: &Shape) -> usize {
         Shape::Insert { attrs, .. } => {
             1 + attrs.as_ref().map_or(0, |a| {
                 a.0.iter()
-                    .map(|(k, v)| 1 + (k.len() + match v {crate::api::json::Json::Str(s) => s.len(), _ => 4096}) / 128)
+                    .map(|(k, v)| {
+                        1 + (k.len()
+                            + match v {
+                                crate::api::json::Json::Str(s) => s.len(),
+                                _ => 4096,
+                            })
+                            / 128
+                    })
                     .sum::<usize>()
             })
         }
@@ -80,9 +91,10 @@ pub(super) fn work(s: &Shape) -> usize {
     }
 }
 fn angle(a: f64, b: f64) -> bool {
-    crate::jsmath::js_min((a - b).rem_euclid(std::f64::consts::TAU),
-        (b - a).rem_euclid(std::f64::consts::TAU))
-        <= 1e-10
+    crate::jsmath::js_min(
+        (a - b).rem_euclid(std::f64::consts::TAU),
+        (b - a).rem_euclid(std::f64::consts::TAU),
+    ) <= 1e-10
 }
 pub(super) fn equal(
     a: &Shape,

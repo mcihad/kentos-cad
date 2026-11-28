@@ -39,8 +39,14 @@ pub const ORDERS: [(&str, kentos_commands::HatchDrawOrder); 5] = [
     ("atama", kentos_commands::HatchDrawOrder::None),
     ("arkaya", kentos_commands::HatchDrawOrder::Back),
     ("öne", kentos_commands::HatchDrawOrder::Front),
-    ("sınırın arkasına", kentos_commands::HatchDrawOrder::BehindBoundary),
-    ("sınırın önüne", kentos_commands::HatchDrawOrder::AboveBoundary),
+    (
+        "sınırın arkasına",
+        kentos_commands::HatchDrawOrder::BehindBoundary,
+    ),
+    (
+        "sınırın önüne",
+        kentos_commands::HatchDrawOrder::AboveBoundary,
+    ),
 ];
 
 /// The next hatches' Saydamlık and Sıra as the command takes them.
@@ -58,7 +64,15 @@ fn percent(m: &Memory) -> String {
 }
 
 /// Başlangıç's rules (docs/adr/0331 §2), `Memory::hatch_origin`'s order: their words and what the command takes.
-pub const ORIGINS: [&str; 7] = ["dünya", "sol alt", "sağ alt", "sol üst", "sağ üst", "orta", "nokta"];
+pub const ORIGINS: [&str; 7] = [
+    "dünya",
+    "sol alt",
+    "sağ alt",
+    "sol üst",
+    "sağ üst",
+    "orta",
+    "nokta",
+];
 
 /// The project's own patterns' names (docs/adr/0331 §1), in their order.
 pub fn user_names(cx: &Context<'_>) -> Vec<String> {
@@ -85,8 +99,7 @@ pub fn user_of<'a>(m: &Memory, user: &'a [String]) -> Option<&'a str> {
 
 /// Whether the pattern chosen draws lines (Ölçek, Başlangıç and Ölçekli read).
 pub fn lined(m: &Memory, user: &[String]) -> bool {
-    user_of(m, user).is_some()
-        || !matches!(choice(m).kind, Kind::Solid | Kind::Gradient(_))
+    user_of(m, user).is_some() || !matches!(choice(m).kind, Kind::Solid | Kind::Gradient(_))
 }
 
 /// Başlangıç as the command takes it.
@@ -199,8 +212,20 @@ pub fn with_pattern_options(prompt: Prompt, m: &Memory, user: &[String]) -> Prom
     // docs/adr/0331: what Ölçek is of, where the lines are anchored, Ölçekli; and Özellik al.
     if lined(m, user) {
         prompt = prompt
-            .option_with("Ölçek tabanı", "E", if m.hatch_world { "çizimde" } else { "kâğıtta" })
-            .option_with("Başlangıç", "S", ORIGINS[usize::from(m.hatch_origin.min(6))])
+            .option_with(
+                "Ölçek tabanı",
+                "E",
+                if m.hatch_world {
+                    "çizimde"
+                } else {
+                    "kâğıtta"
+                },
+            )
+            .option_with(
+                "Başlangıç",
+                "S",
+                ORIGINS[usize::from(m.hatch_origin.min(6))],
+            )
             .option_if(!m.hatch_world, "Ölçekli", "L", on(m.hatch_annotative));
     }
     prompt
@@ -250,9 +275,14 @@ pub fn asking_prompt(label: &'static str, asking: Asking) -> Prompt {
             "ikinci rengi yazın (#RRGGBB ya da renk adı) ya da menüden seçin",
         )
         .option("İkinci renk", "R"),
-        Asking::Origin => Prompt::new(label, "desenin başlangıç noktasına tıklayın ya da Y,X yazın"),
+        Asking::Origin => Prompt::new(
+            label,
+            "desenin başlangıç noktasına tıklayın ya da Y,X yazın",
+        ),
         Asking::Inherit => Prompt::new(label, "özelliklerini alacağınız taramaya tıklayın"),
-        Asking::Transparency => Prompt::new(label, "saydamlığı yüzde olarak yazın (0: opak, en çok 90)"),
+        Asking::Transparency => {
+            Prompt::new(label, "saydamlığı yüzde olarak yazın (0: opak, en çok 90)")
+        }
     }
 }
 
@@ -278,9 +308,15 @@ pub fn clicked(asking: &mut Option<Asking>, at: Vec2, raw: Vec2, cx: &mut Contex
                     let plot = cx.doc.settings().plot_scale;
                     inherit(&h, cx.memory, &user, plot);
                     *asking = None;
-                    cx.say(Level::Success, "Taramanın deseni, ölçeği, açısı ve başlangıcı alındı.");
+                    cx.say(
+                        Level::Success,
+                        "Taramanın deseni, ölçeği, açısı ve başlangıcı alındı.",
+                    );
                 }
-                None => cx.say(Level::Warn, "Özelliklerini alacağınız bir taramaya tıklayın."),
+                None => cx.say(
+                    Level::Warn,
+                    "Özelliklerini alacağınız bir taramaya tıklayın.",
+                ),
             }
             true
         }
@@ -297,7 +333,10 @@ pub fn inherit(h: &kentos_commands::HatchEntity, m: &mut Memory, user: &[String]
     let own = (p.kind == T::Pattern)
         .then_some(p.name.as_deref())
         .flatten()
-        .and_then(|n| user.iter().position(|u| kentos_commands::same_hatch_pattern_name(u, n)));
+        .and_then(|n| {
+            user.iter()
+                .position(|u| kentos_commands::same_hatch_pattern_name(u, n))
+        });
     m.hatch_user = own.and_then(|k| u16::try_from(k).ok());
     if own.is_none()
         && let Some(k) = choice_of(p)
@@ -321,7 +360,8 @@ pub fn inherit(h: &kentos_commands::HatchEntity, m: &mut Memory, user: &[String]
         _ => p.angle,
     };
     if let Some(g) = &p.gradient {
-        m.hatch_color2 = u32::from_str_radix(g.color2.trim_start_matches('#'), 16).unwrap_or(0xFF_FF_FF);
+        m.hatch_color2 =
+            u32::from_str_radix(g.color2.trim_start_matches('#'), 16).unwrap_or(0xFF_FF_FF);
         m.hatch_inverted = g.inverted;
     }
     m.hatch_world = false;
@@ -501,32 +541,46 @@ pub fn choices_of(key: &str, m: &Memory, user: &[String]) -> Vec<OptionChoice> {
                 command: None,
             }))
             .collect(),
-        "S" => ["Dünya başlangıcı", "Sol alt", "Sağ alt", "Sol üst", "Sağ üst", "Orta", "Nokta…"]
-            .iter()
-            .zip(ORIGINS)
-            .enumerate()
-            .map(|(k, (label, typed))| OptionChoice {
-                label: (*label).to_owned(),
-                typed: typed.to_owned(),
-                icon: None,
-                preview: None,
-                checked: usize::from(m.hatch_origin) == k,
-                command: None,
-            })
-            .collect(),
-        "O" => ["Atama", "Arkaya gönder", "Öne getir", "Sınırın arkasına", "Sınırın önüne"]
-            .iter()
-            .zip(ORDERS)
-            .enumerate()
-            .map(|(k, (label, (typed, _)))| OptionChoice {
-                label: (*label).to_owned(),
-                typed: typed.to_owned(),
-                icon: None,
-                preview: None,
-                checked: usize::from(m.hatch_order) == k,
-                command: None,
-            })
-            .collect(),
+        "S" => [
+            "Dünya başlangıcı",
+            "Sol alt",
+            "Sağ alt",
+            "Sol üst",
+            "Sağ üst",
+            "Orta",
+            "Nokta…",
+        ]
+        .iter()
+        .zip(ORIGINS)
+        .enumerate()
+        .map(|(k, (label, typed))| OptionChoice {
+            label: (*label).to_owned(),
+            typed: typed.to_owned(),
+            icon: None,
+            preview: None,
+            checked: usize::from(m.hatch_origin) == k,
+            command: None,
+        })
+        .collect(),
+        "O" => [
+            "Atama",
+            "Arkaya gönder",
+            "Öne getir",
+            "Sınırın arkasına",
+            "Sınırın önüne",
+        ]
+        .iter()
+        .zip(ORDERS)
+        .enumerate()
+        .map(|(k, (label, (typed, _)))| OptionChoice {
+            label: (*label).to_owned(),
+            typed: typed.to_owned(),
+            icon: None,
+            preview: None,
+            checked: usize::from(m.hatch_order) == k,
+            command: None,
+        })
+        .collect(),
         "R" => {
             let now = colour_text(m);
             COLOURS

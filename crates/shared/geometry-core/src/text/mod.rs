@@ -8,14 +8,14 @@ pub mod along;
 pub mod edit;
 pub mod face;
 // The fonts folders' families after the tables' faces (docs/adr/9313).
-pub mod families;
 pub mod face_info;
-pub mod fonts;
+pub mod families;
 pub mod font_data;
-pub mod shaping;
-pub mod shx;
+pub mod fonts;
 pub mod natural;
 pub mod paragraph;
+pub mod shaping;
+pub mod shx;
 #[rustfmt::skip]
 mod metrics;
 // The typefaces the desktop added after the web paused (Arial, Times New Roman; docs/adr/9311), after the web's seven.

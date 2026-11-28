@@ -9,22 +9,22 @@ use kentos_commands::{DrawingFont, Workspace};
 use kentos_headless::{NewDrawing, Op, Session, catalog};
 use serde_json::{Value, json};
 
-#[path = "headless/dwg.rs"]
-mod dwg;
 #[path = "headless/agent_tools.rs"]
 mod agent_tools;
+#[path = "headless/block_families.rs"]
+mod block_families;
+#[path = "headless/coverage.rs"]
+mod coverage;
+#[path = "headless/dwg.rs"]
+mod dwg;
+#[path = "headless/pens.rs"]
+mod pens;
 #[path = "headless/processing_doors.rs"]
 mod processing_doors;
 #[path = "headless/processing_model.rs"]
 mod processing_model;
-#[path = "headless/coverage.rs"]
-mod coverage;
-#[path = "headless/pens.rs"]
-mod pens;
 #[path = "headless/scales.rs"]
 mod scales;
-#[path = "headless/block_families.rs"]
-mod block_families;
 
 #[path = "headless/cad_open.rs"]
 mod cad_open;
@@ -35,23 +35,23 @@ mod walls_rectangle;
 #[path = "headless/renovation_dxf.rs"]
 mod renovation_dxf;
 
-#[path = "headless/dimension_set_exports.rs"]
-mod dimension_set_exports;
-#[path = "headless/room_modules.rs"]
-mod room_modules;
-#[path = "headless/flat_modules.rs"]
-mod flat_modules;
 #[path = "headless/design_options.rs"]
 mod design_options;
+#[path = "headless/dimension_set_exports.rs"]
+mod dimension_set_exports;
+#[path = "headless/flat_modules.rs"]
+mod flat_modules;
+#[path = "headless/room_modules.rs"]
+mod room_modules;
 #[path = "headless/storey_modules.rs"]
 mod storey_modules;
 
-#[path = "headless/special_doors.rs"]
-mod special_doors;
 #[path = "headless/arc_pockets.rs"]
 mod arc_pockets;
 #[path = "headless/multi_slide.rs"]
 mod multi_slide;
+#[path = "headless/special_doors.rs"]
+mod special_doors;
 
 #[path = "headless/atlas_cases.rs"]
 mod atlas_cases;
@@ -66,10 +66,10 @@ mod own_file;
 mod exchange_set;
 #[path = "headless/package_cases.rs"]
 mod package_cases;
-#[path = "headless/package_resources.rs"]
-mod package_resources;
 #[path = "headless/package_exchange.rs"]
 mod package_exchange;
+#[path = "headless/package_resources.rs"]
+mod package_resources;
 
 #[path = "headless/recover_cases.rs"]
 mod recover_cases;
@@ -144,17 +144,38 @@ fn created(answer: &Value) -> String {
 #[test]
 fn a_cbs_projects_file_takes_no_drawing_layers_objects() {
     let mut s = new_drawing();
-    let active = s.summary()["activeLayer"].as_str().expect("an active layer").to_owned();
-    let uid = created(&s.run("cad.polygon.create", None, Op::Execute, square(&active)).expect("runs"));
+    let active = s.summary()["activeLayer"]
+        .as_str()
+        .expect("an active layer")
+        .to_owned();
+    let uid = created(
+        &s.run("cad.polygon.create", None, Op::Execute, square(&active))
+            .expect("runs"),
+    );
     let dir = scratch("cbs-save");
     let path = dir.join("kent.kcad");
     let refused = s.save(Some(&path)).expect_err("refused");
     assert_eq!(refused.code, "data_held_in_file");
-    assert!(refused.message.starts_with("Kaydedilmedi: bu bir CBS projesi"), "{}", refused.message);
-    assert!(refused.message.contains("cad.layers.migrate"), "{}", refused.message);
+    assert!(
+        refused
+            .message
+            .starts_with("Kaydedilmedi: bu bir CBS projesi"),
+        "{}",
+        refused.message
+    );
+    assert!(
+        refused.message.contains("cad.layers.migrate"),
+        "{}",
+        refused.message
+    );
     assert!(!path.exists());
     let gone = s
-        .run("cad.entities.delete", None, Op::Execute, json!({ "uids": [uid] }))
+        .run(
+            "cad.entities.delete",
+            None,
+            Op::Execute,
+            json!({ "uids": [uid] }),
+        )
         .expect("runs");
     assert_eq!(gone["status"], "completed", "{gone}");
     s.save(Some(&path)).expect("saves");
@@ -1287,7 +1308,11 @@ fn a_geopackage_carries_its_relations_and_styles_both_ways() {
         .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
         .expect("answers");
     assert_eq!(took["status"], "completed", "{took}");
-    assert_eq!(took["output"]["relations"], json!(["parsel-malik"]), "{took}");
+    assert_eq!(
+        took["output"]["relations"],
+        json!(["parsel-malik"]),
+        "{took}"
+    );
     assert_eq!(took["output"]["styles"], 1, "{took}");
     let first = objects_by_uid(&s);
     let out = dir.join("profil.gpkg");
@@ -1307,13 +1332,19 @@ fn a_geopackage_carries_its_relations_and_styles_both_ways() {
         .call(json!({ "command": "file.import.gpkg", "input": { "path": p } }))
         .expect("answers");
     assert_eq!(back["status"], "completed", "{back}");
-    assert_eq!(back["output"]["relations"], json!(["parsel-malik"]), "{back}");
+    assert_eq!(
+        back["output"]["relations"],
+        json!(["parsel-malik"]),
+        "{back}"
+    );
     assert_eq!(back["output"]["styles"], 1, "{back}");
     // The relation's field holds the same owners' ids, the objects their own.
     let second = objects_by_uid(&t);
     assert_eq!(first.len(), second.len());
     for (uid, a) in &first {
-        let b = second.get(uid).unwrap_or_else(|| panic!("{uid} geri gelmedi"));
+        let b = second
+            .get(uid)
+            .unwrap_or_else(|| panic!("{uid} geri gelmedi"));
         assert_eq!(a["entity"]["attrs"], b["entity"]["attrs"], "{uid}");
     }
     if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
@@ -1447,7 +1478,11 @@ fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
     if !unreadable {
         want.push(("profiller/kilitli.profil.json".into(), "profile".into(), 0));
     }
-    want.push(("profiller/park-bahce.profil.json".into(), "profile".into(), 0));
+    want.push((
+        "profiller/park-bahce.profil.json".into(),
+        "profile".into(),
+        0,
+    ));
     want.push(("profiller/sivas-bel.eslem.json".into(), "mapping".into(), 0));
     assert_eq!(files, want, "{done}");
     let left: Vec<String> = done["output"]["left"]
@@ -1596,10 +1631,15 @@ fn a_package_carries_the_references_sources_and_says_the_fonts() {
     std::fs::create_dir_all(dir.join("ortak")).expect("folders");
     let plan = work.join("mimari/plan.kcad");
     std::fs::copy(fixtures.join("xref/v1/plan.kcad"), &plan).expect("copied");
-    std::fs::copy(fixtures.join("interaction/v1/logo.png"), dir.join("ortak/logo.png")).expect("copied");
+    std::fs::copy(
+        fixtures.join("interaction/v1/logo.png"),
+        dir.join("ortak/logo.png"),
+    )
+    .expect("copied");
     let project = work.join("ofis.kcad");
     let mut s = new_drawing();
-    let layer = serde_json::to_value(s.document().to_snapshot_v2()).expect("json")["activeLayer"].clone();
+    let layer =
+        serde_json::to_value(s.document().to_snapshot_v2()).expect("json")["activeLayer"].clone();
     let attached = s
         .call(json!({ "command": "cad.xrefs.edit", "input": {
             "operation": { "kind": "attach", "path": plan.display().to_string(), "layerId": layer },
@@ -1611,11 +1651,20 @@ fn a_package_carries_the_references_sources_and_says_the_fonts() {
     snapshot["entities"].as_array_mut().expect("entities").push(json!({ "kind": "image", "id": next,
         "layerId": layer, "attrs": {}, "p": { "x": 0.0, "y": 0.0 }, "width": 4.0, "height": 3.0, "rotation": 0.0,
         "file": "/eski/makine/logo.png" }));
-    snapshot["uids"].as_array_mut().expect("uids").push(json!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3100"));
+    snapshot["uids"]
+        .as_array_mut()
+        .expect("uids")
+        .push(json!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3100"));
     snapshot["settings"]["xrefPaths"] = json!(["../ortak"]);
-    snapshot["settings"]["textStyles"] = json!([{ "id": "s1", "name": "Pafta", "font": "barlow", "fontFile": "romans.shx" }]);
-    let typed: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(snapshot).expect("a snapshot");
-    std::fs::write(&project, kentos_kcad::encode_verified(&typed).expect("encoded")).expect("written");
+    snapshot["settings"]["textStyles"] =
+        json!([{ "id": "s1", "name": "Pafta", "font": "barlow", "fontFile": "romans.shx" }]);
+    let typed: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(snapshot).expect("a snapshot");
+    std::fs::write(
+        &project,
+        kentos_kcad::encode_verified(&typed).expect("encoded"),
+    )
+    .expect("written");
     let mut s = Session::open(&project).expect("opens");
     let out = dir.join("teslim");
     let done = s
@@ -1627,11 +1676,19 @@ fn a_package_carries_the_references_sources_and_says_the_fonts() {
         .as_array()
         .expect("files")
         .iter()
-        .map(|f| (f["path"].as_str().unwrap_or_default().to_owned(), f["kind"].as_str().unwrap_or_default().to_owned()))
+        .map(|f| {
+            (
+                f["path"].as_str().unwrap_or_default().to_owned(),
+                f["kind"].as_str().unwrap_or_default().to_owned(),
+            )
+        })
         .collect();
     assert_eq!(
         kinds,
-        [("veri/logo.png".to_owned(), "picture".to_owned()), ("veri/plan.kcad".to_owned(), "xref".to_owned())],
+        [
+            ("veri/logo.png".to_owned(), "picture".to_owned()),
+            ("veri/plan.kcad".to_owned(), "xref".to_owned())
+        ],
         "{done}"
     );
     // The plan's own nested reference's source is not on this computer: said, as the font drawn in another face.
@@ -1647,7 +1704,10 @@ fn a_package_carries_the_references_sources_and_says_the_fonts() {
     let manifest = out.join("paket.json");
     assert_eq!(done["output"]["manifest"], manifest.display().to_string());
     let text = std::fs::read(&manifest).expect("the manifest");
-    assert_eq!(done["output"]["manifestSha256"], kentos_commands::encoding::sha256_hex(&text));
+    assert_eq!(
+        done["output"]["manifestSha256"],
+        kentos_commands::encoding::sha256_hex(&text)
+    );
     // Moved elsewhere, the reference is found where the package put it, its digest the same.
     let moved = dir.join("baska-bilgisayar");
     std::fs::rename(&out, &moved).expect("moved");
@@ -1679,7 +1739,11 @@ fn a_package_carries_the_references_sources_and_says_the_fonts() {
     );
     // scripts/fixtures/package_cases.py reads this package too.
     if let Ok(out) = std::env::var("KENTOS_TRANSMIT_OUT") {
-        std::fs::write(out, json!({ "package": moved.display().to_string() }).to_string()).expect("written");
+        std::fs::write(
+            out,
+            json!({ "package": moved.display().to_string() }).to_string(),
+        )
+        .expect("written");
     }
 }
 
@@ -1700,36 +1764,76 @@ fn arch_room() -> Session {
         heights: None,
     })
     .expect("a new project");
-    let layer = s.summary()["activeLayer"].as_str().expect("a layer").to_owned();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
     let mut call = |command: &str, input: Value| -> Value {
-        let answer = s.call(json!({ "command": command, "input": input })).expect("answers");
+        let answer = s
+            .call(json!({ "command": command, "input": input }))
+            .expect("answers");
         assert_eq!(answer["status"], "completed", "{command}: {answer}");
         answer["output"].clone()
     };
     let p = |x: f64, y: f64| json!({ "x": x, "y": y });
-    let grids = call("cad.grids.create", json!({ "layerId": layer, "grids": [
+    let grids = call(
+        "cad.grids.create",
+        json!({ "layerId": layer, "grids": [
         { "label": "A", "pts": [p(0.0, -1.5), p(0.0, 5.5)] },
-        { "label": "1", "pts": [p(-1.5, 0.0), p(7.5, 0.0)] } ] }));
-    let g: Vec<String> = grids["uids"].as_array().expect("ids").iter().map(|u| u.as_str().expect("an id").to_owned()).collect();
-    call("cad.columns.create", json!({ "layerId": layer, "crossings": { "grids": g, "width": 0.3, "depth": 0.3 } }));
-    let walls = call("cad.walls.create", json!({ "layerId": layer, "walls": [
-        { "pts": [p(0.0, 0.0), p(6.0, 0.0), p(6.0, 4.0), p(0.0, 4.0)], "closed": true, "width": 0.2 } ] }));
+        { "label": "1", "pts": [p(-1.5, 0.0), p(7.5, 0.0)] } ] }),
+    );
+    let g: Vec<String> = grids["uids"]
+        .as_array()
+        .expect("ids")
+        .iter()
+        .map(|u| u.as_str().expect("an id").to_owned())
+        .collect();
+    call(
+        "cad.columns.create",
+        json!({ "layerId": layer, "crossings": { "grids": g, "width": 0.3, "depth": 0.3 } }),
+    );
+    let walls = call(
+        "cad.walls.create",
+        json!({ "layerId": layer, "walls": [
+        { "pts": [p(0.0, 0.0), p(6.0, 0.0), p(6.0, 4.0), p(0.0, 4.0)], "closed": true, "width": 0.2 } ] }),
+    );
     let wall = walls["uids"][0].as_str().expect("a wall").to_owned();
-    let door = call("cad.openings.create", json!({ "layerId": layer, "openings": [
-        { "host": wall, "at": 2.0, "type": "Kapı 90", "number": "K1" } ] }));
+    let door = call(
+        "cad.openings.create",
+        json!({ "layerId": layer, "openings": [
+        { "host": wall, "at": 2.0, "type": "Kapı 90", "number": "K1" } ] }),
+    );
     let door = door["uids"][0].as_str().expect("a door").to_owned();
-    call("cad.spaces.create", json!({ "layerId": layer, "spaces": [
-        { "seed": p(3.0, 2.0), "number": "Z-01", "name": "Salon" } ] }));
-    call("cad.tags.create", json!({ "layerId": layer, "tags": [{ "of": door }] }));
-    call("cad.viewmarks.create", json!({ "layerId": layer, "marks": [
-        { "form": "section", "mark": "A", "points": [p(-1.0, 2.0), p(7.0, 2.0)] } ] }));
-    call("cad.stairs.create", json!({ "layerId": layer, "stairs": [
-        { "pts": [p(1.0, 1.0), p(4.0, 1.0)], "width": 1.0, "risers": 10, "riserHeight": 0.17, "tread": 0.28 } ] }));
-    call("cad.ramps.create", json!({ "layerId": layer, "ramps": [
-        { "pts": [p(8.0, 0.0), p(14.0, 0.0)], "width": 1.5, "rise": 0.3, "slope": 5.0 } ] }));
-    call("cad.slabs.create", json!({ "layerId": layer, "slabs": [
+    call(
+        "cad.spaces.create",
+        json!({ "layerId": layer, "spaces": [
+        { "seed": p(3.0, 2.0), "number": "Z-01", "name": "Salon" } ] }),
+    );
+    call(
+        "cad.tags.create",
+        json!({ "layerId": layer, "tags": [{ "of": door }] }),
+    );
+    call(
+        "cad.viewmarks.create",
+        json!({ "layerId": layer, "marks": [
+        { "form": "section", "mark": "A", "points": [p(-1.0, 2.0), p(7.0, 2.0)] } ] }),
+    );
+    call(
+        "cad.stairs.create",
+        json!({ "layerId": layer, "stairs": [
+        { "pts": [p(1.0, 1.0), p(4.0, 1.0)], "width": 1.0, "risers": 10, "riserHeight": 0.17, "tread": 0.28 } ] }),
+    );
+    call(
+        "cad.ramps.create",
+        json!({ "layerId": layer, "ramps": [
+        { "pts": [p(8.0, 0.0), p(14.0, 0.0)], "width": 1.5, "rise": 0.3, "slope": 5.0 } ] }),
+    );
+    call(
+        "cad.slabs.create",
+        json!({ "layerId": layer, "slabs": [
         { "parts": [{ "outer": { "pts": [p(1.0, 4.1), p(5.0, 4.1), p(5.0, 5.6), p(1.0, 5.6)] } }],
-          "role": "balcony", "edge": { "kind": "railing" }, "material": "Betonarme" } ] }));
+          "role": "balcony", "edge": { "kind": "railing" }, "material": "Betonarme" } ] }),
+    );
     s
 }
 
@@ -1776,7 +1880,9 @@ fn arch_dxf_goes_round() {
         .expect("answers");
     assert_eq!(answer["status"], "completed", "{answer}");
     let uid = |d: &kentos_domain::Document, e: &kentos_commands::Entity| {
-        d.uid(kentos_domain::Slot(e.base().id)).map(|u| u.to_string()).expect("an id")
+        d.uid(kentos_domain::Slot(e.base().id))
+            .map(|u| u.to_string())
+            .expect("an id")
     };
     let before: Vec<(String, Value)> = s
         .document()
@@ -1788,14 +1894,25 @@ fn arch_dxf_goes_round() {
         .document()
         .entities()
         .filter(|e| arch_kind(e))
-        .map(|e| (uid(back.document(), e), serde_json::to_value(e).expect("json")))
+        .map(|e| {
+            (
+                uid(back.document(), e),
+                serde_json::to_value(e).expect("json"),
+            )
+        })
         .collect();
-    let kinds: std::collections::BTreeSet<&str> = before.iter().filter_map(|(_, e)| e["kind"].as_str()).collect();
+    let kinds: std::collections::BTreeSet<&str> = before
+        .iter()
+        .filter_map(|(_, e)| e["kind"].as_str())
+        .collect();
     assert_eq!(kinds.len(), 10, "every architectural kind: {kinds:?}");
     assert_eq!(before.len(), after.len(), "{answer}");
     // The ids in the writing drawing → in the reading one, by the objects' order.
-    let ids: std::collections::HashMap<&str, &str> =
-        before.iter().zip(&after).map(|((a, _), (b, _))| (a.as_str(), b.as_str())).collect();
+    let ids: std::collections::HashMap<&str, &str> = before
+        .iter()
+        .zip(&after)
+        .map(|((a, _), (b, _))| (a.as_str(), b.as_str()))
+        .collect();
     for ((_, a), (_, b)) in before.iter().zip(&after) {
         let mut want = a.clone();
         let map = want.as_object_mut().expect("an object");
@@ -1817,7 +1934,8 @@ fn arch_dxf_goes_round() {
     }
     // The pair the independent check reads (scripts/fixtures/arch_dxf_cases.py).
     if std::env::var_os("KENTOS_WRITE_DXF").is_some() {
-        let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/formats/v1/dxf-arch");
+        let root =
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/formats/v1/dxf-arch");
         std::fs::create_dir_all(&root).expect("the folder");
         std::fs::copy(&file, root.join("mimari.dxf")).expect("kept");
         s.save(Some(&root.join("mimari.kcad"))).expect("saved");
@@ -2148,18 +2266,32 @@ fn layer_looks_go_out_as_sld_and_come_back() {
             // The data-defined colour said; the hatch is the area's, not written for a line layer.
             let lost = out["output"]["lost"].to_string();
             assert!(lost.contains("alan adı olarak yazıldı"), "{out}");
-            assert!(text.contains("<ogc:PropertyName>renk</ogc:PropertyName>"), "{text}");
+            assert!(
+                text.contains("<ogc:PropertyName>renk</ogc:PropertyName>"),
+                "{text}"
+            );
             assert!(!text.contains("PolygonSymbolizer"), "{text}");
             assert_eq!(out["warnings"][0]["code"], "export_losses", "{out}");
         } else if *kind == "pattern" {
             let lost = out["output"]["lost"].to_string();
-            assert!(lost.contains("degrade") && lost.contains("hücre aralığı"), "{out}");
+            assert!(
+                lost.contains("degrade") && lost.contains("hücre aralığı"),
+                "{out}"
+            );
             assert!(text.contains("<se:GraphicFill>"), "{text}");
         } else if *kind == "dd" {
-            assert!(out["output"]["lost"].to_string().contains("her SLD okuyucusu alana bağlı rengi okumaz"), "{out}");
+            assert!(
+                out["output"]["lost"]
+                    .to_string()
+                    .contains("her SLD okuyucusu alana bağlı rengi okumaz"),
+                "{out}"
+            );
         } else if *kind == "marks" {
             assert!(out["output"].get("lost").is_none(), "{out}");
-            assert!(text.contains("image/svg+xml") && text.contains("ttf://Arial"), "{text}");
+            assert!(
+                text.contains("image/svg+xml") && text.contains("ttf://Arial"),
+                "{text}"
+            );
         } else {
             assert!(out["output"].get("lost").is_none(), "{out}");
         }
@@ -2181,15 +2313,34 @@ fn layer_looks_go_out_as_sld_and_come_back() {
             }
             "marks" => {
                 let m = &r["symbols"]["marker"]["layers"];
-                assert_eq!((m[0]["type"].as_str(), m[0]["asset"].as_str()), (Some("svg"), Some(drawing.as_str())), "{r}");
+                assert_eq!(
+                    (m[0]["type"].as_str(), m[0]["asset"].as_str()),
+                    (Some("svg"), Some(drawing.as_str())),
+                    "{r}"
+                );
                 assert_eq!(m[0]["rotation"].as_f64(), Some(-20.0));
-                assert_eq!((m[1]["type"].as_str(), m[1]["text"].as_str(), m[1]["font"].as_str()), (Some("text"), Some("A"), Some("Arial")));
+                assert_eq!(
+                    (
+                        m[1]["type"].as_str(),
+                        m[1]["text"].as_str(),
+                        m[1]["font"].as_str()
+                    ),
+                    (Some("text"), Some("A"), Some("Arial"))
+                );
                 assert_eq!(m[1]["halo"]["color"], "#ffffff");
             }
             "dd" => {
                 let l = &r["symbols"]["fill"]["layers"];
-                assert_eq!(l[0]["color"], json!({ "expr": "[renk]", "fallback": "#808080" }), "{r}");
-                assert_eq!(l[1]["color"], json!({ "expr": "[kenar]", "fallback": "#000000" }), "{r}");
+                assert_eq!(
+                    l[0]["color"],
+                    json!({ "expr": "[renk]", "fallback": "#808080" }),
+                    "{r}"
+                );
+                assert_eq!(
+                    l[1]["color"],
+                    json!({ "expr": "[kenar]", "fallback": "#000000" }),
+                    "{r}"
+                );
             }
             _ => {}
         }
@@ -2253,10 +2404,11 @@ fn layer_looks_go_out_as_qml_and_come_back() {
             "path": format!("{}/../../../fixtures/qml/v1/qgis-svg.qml", env!("CARGO_MANIFEST_DIR")) } }))
         .expect("answers");
     assert_eq!(svg["status"], "completed", "{svg}");
-    let drawing = svg["output"]["renderer"]["categories"][0]["symbols"]["marker"]["layers"][0]["asset"]
-        .as_str()
-        .expect("an asset")
-        .to_owned();
+    let drawing =
+        svg["output"]["renderer"]["categories"][0]["symbols"]["marker"]["layers"][0]["asset"]
+            .as_str()
+            .expect("an asset")
+            .to_owned();
     let fill = |c: &str| {
         json!({ "fill": { "type": "fill", "layers": [
             { "id": "f", "type": "simpleFill", "color": c },
@@ -2423,7 +2575,10 @@ fn layer_looks_go_out_as_qml_and_come_back() {
             "kentos-kategorili.qml" => {
                 assert_eq!(r["categories"][1]["value"], "B");
                 assert_eq!(r["other"]["fill"]["layers"][0]["color"], "#99999980");
-                assert_eq!(r["categories"][0]["symbols"]["fill"]["layers"][1]["width"], 0.4);
+                assert_eq!(
+                    r["categories"][0]["symbols"]["fill"]["layers"][1]["width"],
+                    0.4
+                );
             }
             "kentos-kurallar.qml" => {
                 assert_eq!(r["rules"][0]["filter"], "[tapulu] = 1");
@@ -2451,19 +2606,39 @@ fn layer_looks_go_out_as_qml_and_come_back() {
                 assert_eq!(l[1]["angle"], 30.0);
                 assert_eq!(l[1]["spacing"], 2.5);
                 assert_eq!(l[1]["offset"], 0.5);
-                assert_eq!(l[2]["width"], json!({ "expr": "[alan] / 1000", "fallback": 0.5 }));
+                assert_eq!(
+                    l[2]["width"],
+                    json!({ "expr": "[alan] / 1000", "fallback": 0.5 })
+                );
             }
             "kentos-degrade.qml" => {
                 let g = |i: usize| &r["categories"][i]["symbols"]["fill"]["layers"][0];
-                assert_eq!((g(0)["shape"].as_str(), g(0)["angle"].as_f64()), (Some("linear"), Some(30.0)), "{r}");
-                assert_eq!((g(0)["color"].as_str(), g(0)["color2"].as_str()), (Some("#ff0000"), Some("#0000ff")));
-                assert_eq!((g(1)["shape"].as_str(), g(1)["color"].as_str()), (Some("spherical"), Some("#ffff00")));
-                assert_eq!((g(2)["shape"].as_str(), g(2)["angle"].as_f64()), (Some("cylinder"), Some(90.0)), "{r}");
+                assert_eq!(
+                    (g(0)["shape"].as_str(), g(0)["angle"].as_f64()),
+                    (Some("linear"), Some(30.0)),
+                    "{r}"
+                );
+                assert_eq!(
+                    (g(0)["color"].as_str(), g(0)["color2"].as_str()),
+                    (Some("#ff0000"), Some("#0000ff"))
+                );
+                assert_eq!(
+                    (g(1)["shape"].as_str(), g(1)["color"].as_str()),
+                    (Some("spherical"), Some("#ffff00"))
+                );
+                assert_eq!(
+                    (g(2)["shape"].as_str(), g(2)["angle"].as_f64()),
+                    (Some("cylinder"), Some(90.0)),
+                    "{r}"
+                );
             }
             "kentos-desen.qml" => {
                 let p = &r["symbols"]["fill"]["layers"][0];
                 assert_eq!(p["type"], "patternFill", "{r}");
-                assert_eq!((p["spacingX"].as_f64(), p["spacingY"].as_f64()), (Some(5.0), Some(6.0)));
+                assert_eq!(
+                    (p["spacingX"].as_f64(), p["spacingY"].as_f64()),
+                    (Some(5.0), Some(6.0))
+                );
                 assert_eq!(p["stagger"], true);
                 assert_eq!(p["angle"].as_f64(), Some(30.0));
                 assert_eq!(p["offset"], json!([1.0, 2.0]));
@@ -2472,21 +2647,35 @@ fn layer_looks_go_out_as_qml_and_come_back() {
             "kentos-svg.qml" => {
                 let v = &r["symbols"]["marker"]["layers"][0];
                 assert_eq!(v["type"], "svg", "{r}");
-                assert_eq!(v["asset"], drawing, "the drawing the file carried is the library's");
+                assert_eq!(
+                    v["asset"], drawing,
+                    "the drawing the file carried is the library's"
+                );
                 assert_eq!(v["rotation"].as_f64(), Some(-20.0));
                 assert!(text.contains("base64:"), "{text}");
             }
             "kentos-yazi.qml" => {
                 let t = &r["symbols"]["marker"]["layers"][0];
-                assert_eq!((t["text"].as_str(), t["font"].as_str(), t["weight"].as_u64()), (Some("A"), Some("Arial"), Some(700)));
+                assert_eq!(
+                    (t["text"].as_str(), t["font"].as_str(), t["weight"].as_u64()),
+                    (Some("A"), Some("Arial"), Some(700))
+                );
                 assert_eq!(t["italic"], true);
                 assert_eq!(t["halo"]["color"], "#ffffff");
                 assert_eq!(t["rotation"].as_f64(), Some(-15.0));
             }
             "kentos-renkler.qml" => {
                 let l = &r["symbols"]["fill"]["layers"];
-                assert_eq!(l[0]["color"], json!({ "expr": "[renk]", "fallback": "#ff0000" }), "{r}");
-                assert_eq!(l[1]["color"], json!({ "expr": "[kenar]", "fallback": "#000000" }), "{r}");
+                assert_eq!(
+                    l[0]["color"],
+                    json!({ "expr": "[renk]", "fallback": "#ff0000" }),
+                    "{r}"
+                );
+                assert_eq!(
+                    l[1]["color"],
+                    json!({ "expr": "[kenar]", "fallback": "#000000" }),
+                    "{r}"
+                );
             }
             "kentos-isaretli.qml" => {
                 let m = &r["symbols"]["line"]["layers"][1];
@@ -2494,7 +2683,10 @@ fn layer_looks_go_out_as_qml_and_come_back() {
                 assert_eq!(m["interval"], 4.0);
                 assert_eq!(m["offsetAlong"], 1.0);
                 let p = &m["marker"]["layers"][0];
-                assert_eq!(p["size"], json!({ "expr": "[kat] * 2 + 1", "fallback": 2.0 }));
+                assert_eq!(
+                    p["size"],
+                    json!({ "expr": "[kat] * 2 + 1", "fallback": 2.0 })
+                );
                 // Turned twice, the angle comes back as written; a zero angle is the format's default and not written.
                 assert_eq!(p["rotation"], json!({ "expr": "[yon]" }));
             }
@@ -2579,7 +2771,10 @@ fn csv_tables_go_out_and_come_back() {
             "{name}: {got}"
         );
         if std::env::var_os("KENTOS_WRITE_CSV").is_some() {
-            let out_dir = format!("{}/../../../fixtures/csv/v1/out", env!("CARGO_MANIFEST_DIR"));
+            let out_dir = format!(
+                "{}/../../../fixtures/csv/v1/out",
+                env!("CARGO_MANIFEST_DIR")
+            );
             std::fs::create_dir_all(&out_dir).expect("a folder");
             for ext in ["csv", "csvt", "prj"] {
                 std::fs::copy(
@@ -2598,7 +2793,10 @@ fn csv_tables_go_out_and_come_back() {
         .expect("answers");
     assert_eq!(out["status"], "completed", "{out}");
     assert_eq!(out["output"]["columns"][0], "X");
-    assert!(out["output"]["left"]["alan"].as_u64().unwrap_or(0) > 0, "{out}");
+    assert!(
+        out["output"]["left"]["alan"].as_u64().unwrap_or(0) > 0,
+        "{out}"
+    );
     assert_eq!(out["warnings"][0]["code"], "export_losses", "{out}");
     let again = s
         .call(json!({ "command": "file.export.csv",
@@ -2655,17 +2853,26 @@ fn flatgeobufs_go_out_and_come_back() {
                 "input": { "path": path.display().to_string(), "layers": layers } }))
             .expect("answers");
         assert_eq!(out["status"], "completed", "{out}");
-        assert_eq!(out["output"], planned["output"], "plan says what execute writes");
+        assert_eq!(
+            out["output"], planned["output"],
+            "plan says what execute writes"
+        );
         let mut back = new_drawing();
         let got = back
             .call(json!({ "command": "file.import.fgb", "input": { "path": path.display().to_string() } }))
             .expect("answers");
         assert_eq!(got["status"], "completed", "{got}");
-        assert_eq!(got["output"]["objects"], out["output"]["features"], "{name}: {got}");
+        assert_eq!(
+            got["output"]["objects"], out["output"]["features"],
+            "{name}: {got}"
+        );
         written.push((name, path));
     }
     if std::env::var_os("KENTOS_WRITE_FGB").is_some() {
-        let out_dir = format!("{}/../../../fixtures/fgb/v1/out", env!("CARGO_MANIFEST_DIR"));
+        let out_dir = format!(
+            "{}/../../../fixtures/fgb/v1/out",
+            env!("CARGO_MANIFEST_DIR")
+        );
         std::fs::create_dir_all(&out_dir).expect("a folder");
         for (name, path) in &written {
             std::fs::copy(path, format!("{out_dir}/kentos-{name}.fgb")).expect("kept");
@@ -2686,7 +2893,10 @@ fn flatgeobufs_go_out_and_come_back() {
 }
 
 fn gml_fixture(name: &str) -> String {
-    format!("{}/../../../fixtures/gml/v1/{name}", env!("CARGO_MANIFEST_DIR"))
+    format!(
+        "{}/../../../fixtures/gml/v1/{name}",
+        env!("CARGO_MANIFEST_DIR")
+    )
 }
 
 fn wgs_drawing() -> Session {
@@ -2753,14 +2963,23 @@ fn gmls_go_out_and_come_back() {
                 "input": { "path": path.display().to_string(), "layers": layers } }))
             .expect("answers");
         assert_eq!(out["status"], "completed", "{out}");
-        assert_eq!(out["output"], planned["output"], "plan says what execute writes");
-        assert!(path.with_extension("xsd").exists(), "the schema is beside the file");
+        assert_eq!(
+            out["output"], planned["output"],
+            "plan says what execute writes"
+        );
+        assert!(
+            path.with_extension("xsd").exists(),
+            "the schema is beside the file"
+        );
         let mut back = new_drawing();
         let got = back
             .call(json!({ "command": "file.import.gml", "input": { "path": path.display().to_string() } }))
             .expect("answers");
         assert_eq!(got["status"], "completed", "{got}");
-        assert_eq!(got["output"]["objects"], out["output"]["features"], "{name}: {got}");
+        assert_eq!(
+            got["output"]["objects"], out["output"]["features"],
+            "{name}: {got}"
+        );
         if name == "hepsi" {
             assert_eq!(
                 got["output"]["tables"].as_array().map(Vec::len),
@@ -2787,7 +3006,10 @@ fn gmls_go_out_and_come_back() {
     assert_eq!(out["status"], "completed", "{out}");
     let text = std::fs::read_to_string(&path).expect("written");
     assert!(text.contains("urn:ogc:def:crs:EPSG::4326"), "{text}");
-    assert!(text.contains("<gml:pos>39.9208 32.8541</gml:pos>"), "latitude first: {text}");
+    assert!(
+        text.contains("<gml:pos>39.9208 32.8541</gml:pos>"),
+        "latitude first: {text}"
+    );
     let back = wgs_drawing()
         .call(json!({ "command": "file.import.gml", "input": { "path": path.display().to_string() } }))
         .expect("answers");
@@ -2797,12 +3019,26 @@ fn gmls_go_out_and_come_back() {
     let mut redone: Vec<(String, std::path::PathBuf)> = Vec::new();
     for entry in std::fs::read_dir(gml_fixture("")).expect("the fixtures") {
         let p = entry.expect("an entry").path();
-        let name = p.file_name().and_then(|n| n.to_str()).unwrap_or_default().to_owned();
-        let skip = ["bozuk.gml", "xml-degil.gml", "kesik.gml", "crs84.gml", "bos.gml"];
+        let name = p
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or_default()
+            .to_owned();
+        let skip = [
+            "bozuk.gml",
+            "xml-degil.gml",
+            "kesik.gml",
+            "crs84.gml",
+            "bos.gml",
+        ];
         if p.extension().is_none_or(|e| e != "gml") || skip.contains(&name.as_str()) {
             continue;
         }
-        let mut drawing = if name == "yer.gml" { wgs_drawing() } else { new_drawing() };
+        let mut drawing = if name == "yer.gml" {
+            wgs_drawing()
+        } else {
+            new_drawing()
+        };
         let got = drawing
             .call(json!({ "command": "file.import.gml", "input": { "path": p.display().to_string() } }))
             .expect("answers");
@@ -2826,7 +3062,8 @@ fn gmls_go_out_and_come_back() {
                     name.trim_end_matches(".gml").to_owned()
                 };
                 std::fs::copy(path, format!("{to}/{stem}.gml")).expect("kept");
-                std::fs::copy(path.with_extension("xsd"), format!("{to}/{stem}.xsd")).expect("kept");
+                std::fs::copy(path.with_extension("xsd"), format!("{to}/{stem}.xsd"))
+                    .expect("kept");
             }
         }
     }
@@ -2841,8 +3078,15 @@ fn gmls_go_out_and_come_back() {
             "input": { "path": noschema.display().to_string(), "layers": [id("nokta")], "schema": false } }))
         .expect("answers");
     assert_eq!(out["status"], "completed", "{out}");
-    assert!(!noschema.with_extension("xsd").exists(), "no schema was asked for");
-    assert!(!std::fs::read_to_string(&noschema).expect("written").contains("schemaLocation"));
+    assert!(
+        !noschema.with_extension("xsd").exists(),
+        "no schema was asked for"
+    );
+    assert!(
+        !std::fs::read_to_string(&noschema)
+            .expect("written")
+            .contains("schemaLocation")
+    );
     let as_schema = dir.join("ad.xsd");
     let refused = s
         .call(json!({ "command": "file.export.gml", "input": { "path": as_schema.display().to_string() } }))
@@ -2892,11 +3136,23 @@ fn xyz_files_go_out() {
             "yol",
             json!({ "layers": [id("yol")], "vertices": "all", "separator": "comma", "decimals": 3, "header": true }),
         ),
-        ("parsel", json!({ "layers": [id("parsel")], "vertices": "all" })),
-        ("egri", json!({ "layers": [id("egri")], "vertices": "all", "separator": "semicolon" })),
-        ("egri_yol", json!({ "layers": [id("egri_yol")], "vertices": "all", "separator": "tab" })),
+        (
+            "parsel",
+            json!({ "layers": [id("parsel")], "vertices": "all" }),
+        ),
+        (
+            "egri",
+            json!({ "layers": [id("egri")], "vertices": "all", "separator": "semicolon" }),
+        ),
+        (
+            "egri_yol",
+            json!({ "layers": [id("egri_yol")], "vertices": "all", "separator": "tab" }),
+        ),
         ("hepsi", json!({ "vertices": "all" })),
-        ("hepsi-kotlu", json!({ "vertices": "all", "withoutZ": "skip" })),
+        (
+            "hepsi-kotlu",
+            json!({ "vertices": "all", "withoutZ": "skip" }),
+        ),
     ];
     let mut written = Vec::new();
     for (name, extra) in cases {
@@ -2912,7 +3168,10 @@ fn xyz_files_go_out() {
             .call(json!({ "command": "file.export.xyz", "input": input }))
             .expect("answers");
         assert_eq!(out["status"], "completed", "{out}");
-        assert_eq!(out["output"], planned["output"], "plan says what execute writes");
+        assert_eq!(
+            out["output"], planned["output"],
+            "plan says what execute writes"
+        );
         let text = std::fs::read_to_string(&path).expect("written");
         let lines = text.lines().count() as u64 - u64::from(input["header"] == true);
         assert_eq!(out["output"]["points"], lines, "{name}");
@@ -2936,7 +3195,10 @@ fn xyz_files_go_out() {
         .expect("answers");
     assert_eq!(again["error"]["code"], "file_exists", "{again}");
     if std::env::var_os("KENTOS_WRITE_XYZ").is_some() {
-        let to = format!("{}/../../../fixtures/xyz/v1/out", env!("CARGO_MANIFEST_DIR"));
+        let to = format!(
+            "{}/../../../fixtures/xyz/v1/out",
+            env!("CARGO_MANIFEST_DIR")
+        );
         std::fs::create_dir_all(&to).expect("a folder");
         for (name, path) in &written {
             std::fs::copy(path, format!("{to}/kentos-{name}.xyz")).expect("kept");
@@ -2946,7 +3208,10 @@ fn xyz_files_go_out() {
 }
 
 fn gis_fixture(name: &str) -> String {
-    format!("{}/../../../fixtures/gis-import/v1/{name}", env!("CARGO_MANIFEST_DIR"))
+    format!(
+        "{}/../../../fixtures/gis-import/v1/{name}",
+        env!("CARGO_MANIFEST_DIR")
+    )
 }
 
 /// A Shapefile, a GeoJSON file and a KML go into a drawing as the product commands (docs/adr/0563): each is one
@@ -2959,7 +3224,12 @@ fn gis_files_are_taken_in_by_their_commands() {
         ("file.import.shp", "nokta.shp", None, 1),
         ("file.import.shp", "katmanlar.zip", None, 5),
         ("file.import.geojson", "katmanli.geojson", None, 3),
-        ("file.import.geojson", "parsel-rfc7946.geojson", Some(4326), 2),
+        (
+            "file.import.geojson",
+            "parsel-rfc7946.geojson",
+            Some(4326),
+            2,
+        ),
         ("file.import.kml", "nokta.kml", Some(4326), 1),
     ] {
         let mut input = json!({ "path": gis_fixture(name) });
@@ -2975,8 +3245,15 @@ fn gis_files_are_taken_in_by_their_commands() {
             .expect("answers");
         assert_eq!(took["status"], "completed", "{name}: {took}");
         assert_eq!(took["output"]["objects"], objects, "{name}: {took}");
-        assert_eq!(took["output"]["objects"], planned["output"]["objects"], "{name}");
-        assert_eq!(took["output"]["moved"].is_object(), srid.is_some(), "{name}: {took}");
+        assert_eq!(
+            took["output"]["objects"], planned["output"]["objects"],
+            "{name}"
+        );
+        assert_eq!(
+            took["output"]["moved"].is_object(),
+            srid.is_some(),
+            "{name}: {took}"
+        );
     }
     // The system is a question: WGS 84 coordinates are not moved unless asked.
     let refused = s
@@ -3011,7 +3288,9 @@ fn gis_files_are_taken_in_by_their_commands() {
             .as_array()
             .expect("steps")
             .iter()
-            .filter(|r| r["command"].as_str().is_some_and(|c| c.starts_with("file.import.")))
+            .filter(|r| r["command"]
+                .as_str()
+                .is_some_and(|c| c.starts_with("file.import.")))
             .all(|r| r["outcome"] == "same"),
         "{report}"
     );
@@ -3039,24 +3318,45 @@ mod sheet_update;
 #[path = "headless/sheet_preflight.rs"]
 mod sheet_preflight;
 
-#[path="headless/sheet_snapshot.rs"]
+#[path = "headless/sheet_snapshot.rs"]
 mod sheet_snapshot;
 
 #[test]
 fn explicit_selection_is_atomic_and_never_an_edit() {
     let mut s = new_drawing();
-    let active = s.summary()["activeLayer"].as_str().expect("active").to_owned();
-    let uid = created(&s.run("cad.polygon.create", None, Op::Execute, square(&active)).expect("created"));
+    let active = s.summary()["activeLayer"]
+        .as_str()
+        .expect("active")
+        .to_owned();
+    let uid = created(
+        &s.run("cad.polygon.create", None, Op::Execute, square(&active))
+            .expect("created"),
+    );
     let before = s.summary();
-    assert_eq!(s.select(&json!([uid,uid])).expect("select"), 1);
+    assert_eq!(s.select(&json!([uid, uid])).expect("select"), 1);
     assert_eq!(s.selection(), vec![uid.clone()]);
-    for bad in [Value::Null, json!("bad"), json!([uid,17]), json!([uid,"missing"])] {
+    for bad in [
+        Value::Null,
+        json!("bad"),
+        json!([uid, 17]),
+        json!([uid, "missing"]),
+    ] {
         assert!(s.select(&bad).is_err());
         assert_eq!(s.selection(), vec![uid.clone()]);
     }
     assert_eq!(s.summary(), before, "selection changes no document state");
-    assert!(new_drawing().selection().is_empty(), "sessions are isolated");
-    let _ = s.run("cad.entities.delete", None, Op::Execute, json!({"uids":[uid]})).expect("delete");
+    assert!(
+        new_drawing().selection().is_empty(),
+        "sessions are isolated"
+    );
+    let _ = s
+        .run(
+            "cad.entities.delete",
+            None,
+            Op::Execute,
+            json!({"uids":[uid]}),
+        )
+        .expect("delete");
     assert!(s.selection().is_empty());
 }
 

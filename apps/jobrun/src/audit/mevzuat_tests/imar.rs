@@ -38,16 +38,24 @@ fn the_emsal_and_taks_are_read_against_the_zoning() {
     // Where İmar durumu's emsal and TAKS are read from is said with the article (docs/adr/8140); none said, the words
     // are as above.
     let mut sourced = zoned(Some(1.5), Some(0.4), 486.0, 130.0);
-    sourced["project"]["architecture"]["zoning"]["farSource"] = json!("UIP-1 Merkez uygulama imar planı, karar K1");
-    sourced["project"]["architecture"]["zoning"]["coverageSource"] = json!("İmar durum belgesi 12.3.2025/1234");
+    sourced["project"]["architecture"]["zoning"]["farSource"] =
+        json!("UIP-1 Merkez uygulama imar planı, karar K1");
+    sourced["project"]["architecture"]["zoning"]["coverageSource"] =
+        json!("İmar durum belgesi 12.3.2025/1234");
     let found = findings(&python, RULE, sourced);
     assert!(
-        says(&found[0], &["PAİY md. 4/1-tt ve 5/5; imar durumu (UIP-1 Merkez uygulama imar planı, karar K1)."]),
+        says(
+            &found[0],
+            &["PAİY md. 4/1-tt ve 5/5; imar durumu (UIP-1 Merkez uygulama imar planı, karar K1)."]
+        ),
         "{}",
         found[0].message
     );
     assert!(
-        says(&found[1], &["PAİY md. 4/1-cccc ve 5/5; imar durumu (İmar durum belgesi 12.3.2025/1234)."]),
+        says(
+            &found[1],
+            &["PAİY md. 4/1-cccc ve 5/5; imar durumu (İmar durum belgesi 12.3.2025/1234)."]
+        ),
         "{}",
         found[1].message
     );
@@ -70,7 +78,11 @@ fn the_emsal_and_taks_are_read_against_the_zoning() {
     for layout in ["detached", "block", "twin"] {
         let found = findings(&python, RULE, laid(layout));
         assert_eq!(said(&found), [(Severity::Error, None)], "{layout}");
-        assert!(says(&found[0], &["5/6'ya göre %40'ı geçemez"]), "{}", found[0].message);
+        assert!(
+            says(&found[0], &["5/6'ya göre %40'ı geçemez"]),
+            "{}",
+            found[0].message
+        );
     }
     assert!(findings(&python, RULE, laid("attached")).is_empty());
     // The sample building as drawn writes no İmar durumu: nothing said.

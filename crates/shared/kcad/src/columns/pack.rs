@@ -834,7 +834,11 @@ impl Packer {
                 // Schema 69's exact boundary and a face's bounds (docs/adr/0328): one JSON object.
                 let bounds = assoc.as_ref().map_or(&[][..], |a| &a.bounds[..]);
                 let gap = assoc.as_ref().and_then(|a| a.gap);
-                if boundary.is_some() || !bounds.is_empty() || gap.is_some() || origin.is_some() || annotative.is_some()
+                if boundary.is_some()
+                    || !bounds.is_empty()
+                    || gap.is_some()
+                    || origin.is_some()
+                    || annotative.is_some()
                 {
                     flags |= OPT[6];
                     let mut more = serde_json::Map::new();
@@ -843,13 +847,22 @@ impl Packer {
                         more.insert("origin".into(), serde_json::to_value(o).unwrap_or_default());
                     }
                     if let Some(a) = annotative {
-                        more.insert("annotative".into(), serde_json::to_value(a).unwrap_or_default());
+                        more.insert(
+                            "annotative".into(),
+                            serde_json::to_value(a).unwrap_or_default(),
+                        );
                     }
                     if let Some(b) = boundary {
-                        more.insert("boundary".into(), serde_json::to_value(b).unwrap_or_default());
+                        more.insert(
+                            "boundary".into(),
+                            serde_json::to_value(b).unwrap_or_default(),
+                        );
                     }
                     if !bounds.is_empty() {
-                        more.insert("bounds".into(), serde_json::to_value(bounds).unwrap_or_default());
+                        more.insert(
+                            "bounds".into(),
+                            serde_json::to_value(bounds).unwrap_or_default(),
+                        );
                     }
                     if let Some(g) = gap {
                         more.insert("gap".into(), serde_json::json!(g));
@@ -942,10 +955,7 @@ impl Packer {
                     self.float(*o);
                 }
             }
-            Entity::Raster(RasterEntity {
-                base: _,
-                raster,
-            }) => {
+            Entity::Raster(RasterEntity { base: _, raster }) => {
                 let RasterFields {
                     affine,
                     width,
@@ -1090,12 +1100,30 @@ impl Packer {
                 self.text(&rest.to_string());
             }
             // A grid, a column, a stair or a ramp (docs/adr/0343 §1): its fields as one JSON text.
-            Entity::Grid(e) => self.text(&serde_json::to_value(&e.grid).unwrap_or_default().to_string()),
-            Entity::Column(e) => self.text(&serde_json::to_value(&e.column).unwrap_or_default().to_string()),
-            Entity::Stair(e) => self.text(&serde_json::to_value(&e.stair).unwrap_or_default().to_string()),
-            Entity::Ramp(e) => self.text(&serde_json::to_value(&e.ramp).unwrap_or_default().to_string()),
+            Entity::Grid(e) => self.text(
+                &serde_json::to_value(&e.grid)
+                    .unwrap_or_default()
+                    .to_string(),
+            ),
+            Entity::Column(e) => self.text(
+                &serde_json::to_value(&e.column)
+                    .unwrap_or_default()
+                    .to_string(),
+            ),
+            Entity::Stair(e) => self.text(
+                &serde_json::to_value(&e.stair)
+                    .unwrap_or_default()
+                    .to_string(),
+            ),
+            Entity::Ramp(e) => self.text(
+                &serde_json::to_value(&e.ramp)
+                    .unwrap_or_default()
+                    .to_string(),
+            ),
             // A tag (docs/adr/0344 §1): its fields as one JSON text.
-            Entity::Tag(e) => self.text(&serde_json::to_value(&e.tag).unwrap_or_default().to_string()),
+            Entity::Tag(e) => {
+                self.text(&serde_json::to_value(&e.tag).unwrap_or_default().to_string())
+            }
             // A view mark (docs/adr/0345 §1): its fields as one JSON text.
             Entity::ViewMark(e) => self.text(
                 &serde_json::to_value(&e.mark)
@@ -1120,7 +1148,11 @@ impl Packer {
                     .to_string(),
             ),
             // A mass (docs/adr/8178): its fields as one JSON text.
-            Entity::Mass(e) => self.text(&serde_json::to_value(&e.mass).unwrap_or_default().to_string()),
+            Entity::Mass(e) => self.text(
+                &serde_json::to_value(&e.mass)
+                    .unwrap_or_default()
+                    .to_string(),
+            ),
             // A railing (docs/adr/8045 §3): its fields as one JSON text.
             Entity::Railing(e) => self.text(
                 &serde_json::to_value(&e.railing)
@@ -1140,10 +1172,7 @@ impl Packer {
                 }
                 self.text(&rest.to_string());
             }
-            Entity::PointCloud(kentos_contracts::PointCloudEntity {
-                base: _,
-                cloud,
-            }) => {
+            Entity::PointCloud(kentos_contracts::PointCloudEntity { base: _, cloud }) => {
                 let kentos_contracts::PointCloudFields {
                     sources,
                     bounds,
@@ -1265,9 +1294,15 @@ impl Packer {
                     self.text(&serde_json::to_string(a).unwrap_or_default());
                 }
                 // Its arms, tip, blocks and style (docs/adr/0326), as one JSON object of those it has.
-                if !arms.is_empty() || tip.is_some() || !blocks.is_empty() || leader_style.is_some() {
+                if !arms.is_empty() || tip.is_some() || !blocks.is_empty() || leader_style.is_some()
+                {
                     flags |= OPT[5];
-                    self.text(&multileader_json(arms, tip.as_deref(), blocks, leader_style.as_deref()));
+                    self.text(&multileader_json(
+                        arms,
+                        tip.as_deref(),
+                        blocks,
+                        leader_style.as_deref(),
+                    ));
                 }
             }
             Entity::Table(table) => {
@@ -1391,7 +1426,14 @@ impl Packer {
                     }
                 }
                 // Schema 68's styles, formulas, fields, linked file and block schedule (docs/adr/0327): one JSON object.
-                if let Some(j) = table_cells_json(styles, formulas, fields, source.as_ref(), breaks.as_ref(), table_style.as_deref()) {
+                if let Some(j) = table_cells_json(
+                    styles,
+                    formulas,
+                    fields,
+                    source.as_ref(),
+                    breaks.as_ref(),
+                    table_style.as_deref(),
+                ) {
                     flags |= OPT[11];
                     self.text(&j);
                 }

@@ -90,7 +90,8 @@ const MODES: [(Mode, &str); 10] = [
 ];
 
 /// What a point given again where the last one is says.
-pub const SAME_POINT: &str = "Bu nokta bir öncekiyle aynı yerde; ölçünün noktaları farklı olmalı. Başka bir nokta gösterin.";
+pub const SAME_POINT: &str =
+    "Bu nokta bir öncekiyle aynı yerde; ölçünün noktaları farklı olmalı. Başka bir nokta gösterin.";
 
 impl Mode {
     /// The style's name (the web's `DIMENSION_STYLE_LABEL`).
@@ -637,7 +638,10 @@ impl Dimension {
             at: wire(at),
             offset: typed,
             // UR-003: the project's dimension layer when it names one.
-            layer_id: crate::tool_layer::layer_for(cx.doc, kentos_commands::AnnotationTool::Dimension),
+            layer_id: crate::tool_layer::layer_for(
+                cx.doc,
+                kentos_commands::AnnotationTool::Dimension,
+            ),
             dimension_style: styles::dimension_style(cx.memory, settings)
                 .filter(|_| styles::shown(settings))
                 .map(|s| s.name.clone()),
@@ -680,7 +684,8 @@ impl Dimension {
             .and_then(|i| measured_in(cx.doc, &i).ok())
             .map(|m| m.geom);
         if let Some(l) = self.shown.as_ref().and_then(layout_dimension) {
-            self.overlap = crate::dimension_preview::overlap(cx, &self.value_ghost(&l, &cx.format()));
+            self.overlap =
+                crate::dimension_preview::overlap(cx, &self.value_ghost(&l, &cx.format()));
         }
     }
 
@@ -1048,8 +1053,22 @@ impl Tool for Dimension {
             };
             let cad = self.format.axes == crate::format::Axes::Cad;
             prompt = prompt
-                .option(if cad { "X koordinatı" } else { "Y koordinatı" }, east)
-                .option(if cad { "Y koordinatı" } else { "X koordinatı" }, north)
+                .option(
+                    if cad {
+                        "X koordinatı"
+                    } else {
+                        "Y koordinatı"
+                    },
+                    east,
+                )
+                .option(
+                    if cad {
+                        "Y koordinatı"
+                    } else {
+                        "X koordinatı"
+                    },
+                    north,
+                )
                 .option_with("Eksen", "O", way);
         }
         if self.fresh() {
@@ -1320,7 +1339,12 @@ impl Tool for Dimension {
                     lines: vec![format.dimension_in(l.prefix, l.unit, l.value, &self.look)],
                 });
             }
-            let mut preview = Preview { strokes, tag, texts, ..Preview::default() };
+            let mut preview = Preview {
+                strokes,
+                tag,
+                texts,
+                ..Preview::default()
+            };
             crate::dimension_preview::warn(&mut preview, &self.overlap);
             return preview;
         }

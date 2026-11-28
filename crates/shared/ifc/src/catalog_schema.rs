@@ -50,9 +50,11 @@ impl SetDef {
     }
 
     pub fn names(&self) -> impl Iterator<Item = &str> {
-        self.items
-            .iter()
-            .filter_map(|i| i.as_array().and_then(|a| a.first()).and_then(|n| n.as_str()))
+        self.items.iter().filter_map(|i| {
+            i.as_array()
+                .and_then(|a| a.first())
+                .and_then(|n| n.as_str())
+        })
     }
 }
 
@@ -138,13 +140,17 @@ pub fn mistyped(b: &crate::building::Building) -> Vec<(String, String, &'static 
         .map(|p| (&p.name, &p.props))
         .chain(qtos.iter().map(|q| (&q.name, &q.quantities)));
     for (set, items) in sets {
-        let Some(def) = d.sets.get(set.as_str()) else { continue };
+        let Some(def) = d.sets.get(set.as_str()) else {
+            continue;
+        };
         for (item, value) in items {
             let Some((kind, measure)) = def.item(item) else {
                 out.push((set.clone(), item.clone(), value.ifc_type(), String::new()));
                 continue;
             };
-            let Some(want) = measure.or_else(|| quantity_measure(&kind).map(str::to_owned)) else { continue };
+            let Some(want) = measure.or_else(|| quantity_measure(&kind).map(str::to_owned)) else {
+                continue;
+            };
             if !want.eq_ignore_ascii_case(value.ifc_type()) {
                 out.push((set.clone(), item.clone(), value.ifc_type(), want));
             }
@@ -159,23 +165,61 @@ pub fn mistyped(b: &crate::building::Building) -> Vec<(String, String, &'static 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Finding {
     /// A class the schema does not have (Tablo 6.92's title spells IfcDistributionSystem otherwise).
-    UnknownClass { class: String, rows: Vec<String>, nearest: Option<String> },
+    UnknownClass {
+        class: String,
+        rows: Vec<String>,
+        nearest: Option<String>,
+    },
     /// An attribute the class does not have (Tablo 6.37's IfcGroup.Tag).
-    UnknownAttribute { class: String, name: String, rows: Vec<String> },
+    UnknownAttribute {
+        class: String,
+        name: String,
+        rows: Vec<String>,
+    },
     /// A property or quantity set the templates do not have.
-    UnknownSet { set: String, rows: Vec<String>, nearest: Option<String> },
+    UnknownSet {
+        set: String,
+        rows: Vec<String>,
+        nearest: Option<String>,
+    },
     /// A property or quantity its set does not have.
-    UnknownItem { set: String, name: String, rows: Vec<String>, nearest: Option<String> },
+    UnknownItem {
+        set: String,
+        name: String,
+        rows: Vec<String>,
+        nearest: Option<String>,
+    },
     /// A set whose template does not apply to the class (nor to its type or a supertype).
-    NotApplicable { set: String, class: String, rows: Vec<String> },
+    NotApplicable {
+        set: String,
+        class: String,
+        rows: Vec<String>,
+    },
     /// A predefined type printed otherwise than the enumeration spells it (“ELEMENTED WALL”, ELEMENTEDWALL).
-    PredefinedSpelling { class: String, printed: String, schema: String, tables: Vec<String> },
+    PredefinedSpelling {
+        class: String,
+        printed: String,
+        schema: String,
+        tables: Vec<String>,
+    },
     /// A predefined type the class's enumeration does not have.
-    UnknownPredefined { class: String, printed: String, tables: Vec<String> },
+    UnknownPredefined {
+        class: String,
+        printed: String,
+        tables: Vec<String>,
+    },
     /// The table's data type (for information) is not the kind of the schema's type.
-    DataType { row: String, printed: String, schema: String },
+    DataType {
+        row: String,
+        printed: String,
+        schema: String,
+    },
     /// A national set spelled otherwise than its other rows spell it.
-    NationalSpelling { set: String, rows: Vec<String>, nearest: String },
+    NationalSpelling {
+        set: String,
+        rows: Vec<String>,
+        nearest: String,
+    },
 }
 
 impl Finding {
@@ -187,8 +231,12 @@ impl Finding {
             Finding::UnknownSet { set, .. } => format!("set:{set}"),
             Finding::UnknownItem { set, name, .. } => format!("item:{set}.{name}"),
             Finding::NotApplicable { set, class, .. } => format!("applies:{set}:{class}"),
-            Finding::PredefinedSpelling { class, printed, .. } => format!("predefined-spelling:{class}:{printed}"),
-            Finding::UnknownPredefined { class, printed, .. } => format!("predefined:{class}:{printed}"),
+            Finding::PredefinedSpelling { class, printed, .. } => {
+                format!("predefined-spelling:{class}:{printed}")
+            }
+            Finding::UnknownPredefined { class, printed, .. } => {
+                format!("predefined:{class}:{printed}")
+            }
             Finding::DataType { row, .. } => format!("datatype:{row}"),
             Finding::NationalSpelling { set, .. } => format!("national:{set}"),
         }
@@ -196,22 +244,46 @@ impl Finding {
 
     /// What the rules window says of it.
     pub fn message(&self) -> String {
-        let near = |n: &Option<String>| n.as_ref().map(|n| format!("; şemadaki en yakın ad {n}")).unwrap_or_default();
+        let near = |n: &Option<String>| {
+            n.as_ref()
+                .map(|n| format!("; şemadaki en yakın ad {n}"))
+                .unwrap_or_default()
+        };
         match self {
-            Finding::UnknownClass { class, nearest, .. } => format!("IFC 4.3'te {class} sınıfı yok{}", near(nearest)),
-            Finding::UnknownAttribute { class, name, .. } => format!("IFC 4.3'te {class} sınıfının {name} özniteliği yok"),
-            Finding::UnknownSet { set, nearest, .. } => format!("IFC 4.3 şablonlarında {set} seti yok{}", near(nearest)),
-            Finding::UnknownItem { set, name, nearest, .. } => {
-                format!("IFC 4.3 şablonunda {set} setinin {name} özelliği yok{}", near(nearest))
+            Finding::UnknownClass { class, nearest, .. } => {
+                format!("IFC 4.3'te {class} sınıfı yok{}", near(nearest))
             }
-            Finding::NotApplicable { set, class, .. } => format!("{set} şablonu {class} sınıfına uygulanmıyor"),
-            Finding::PredefinedSpelling { class, printed, schema, .. } => {
+            Finding::UnknownAttribute { class, name, .. } => {
+                format!("IFC 4.3'te {class} sınıfının {name} özniteliği yok")
+            }
+            Finding::UnknownSet { set, nearest, .. } => {
+                format!("IFC 4.3 şablonlarında {set} seti yok{}", near(nearest))
+            }
+            Finding::UnknownItem {
+                set, name, nearest, ..
+            } => {
+                format!(
+                    "IFC 4.3 şablonunda {set} setinin {name} özelliği yok{}",
+                    near(nearest)
+                )
+            }
+            Finding::NotApplicable { set, class, .. } => {
+                format!("{set} şablonu {class} sınıfına uygulanmıyor")
+            }
+            Finding::PredefinedSpelling {
+                class,
+                printed,
+                schema,
+                ..
+            } => {
                 format!("{class} ön tanımlı tipi ekte “{printed}”, şemada {schema}")
             }
             Finding::UnknownPredefined { class, printed, .. } => {
                 format!("{class} sınıfının ön tanımlı tipleri arasında “{printed}” yok")
             }
-            Finding::DataType { printed, schema, .. } => {
+            Finding::DataType {
+                printed, schema, ..
+            } => {
                 format!("Ekteki veri tipi “{printed}”, şemadaki tür {schema}")
             }
             Finding::NationalSpelling { set, nearest, .. } => {
@@ -230,7 +302,8 @@ impl Finding {
             | Finding::UnknownItem { rows, .. }
             | Finding::NotApplicable { rows, .. } => rows.clone(),
             Finding::DataType { row, .. } => vec![row.clone()],
-            Finding::PredefinedSpelling { tables, .. } | Finding::UnknownPredefined { tables, .. } => {
+            Finding::PredefinedSpelling { tables, .. }
+            | Finding::UnknownPredefined { tables, .. } => {
                 tables.iter().map(|t| format!("T{t}")).collect()
             }
         }
@@ -246,9 +319,11 @@ impl Finding {
             | Finding::UnknownAttribute { rows, .. }
             | Finding::UnknownItem { rows, .. }
             | Finding::NotApplicable { rows, .. } => rows.extend(more),
-            Finding::PredefinedSpelling { tables, .. } | Finding::UnknownPredefined { tables, .. } => {
-                tables.extend(more.into_iter().map(|t| t.trim_start_matches('T').to_owned()))
-            }
+            Finding::PredefinedSpelling { tables, .. }
+            | Finding::UnknownPredefined { tables, .. } => tables.extend(
+                more.into_iter()
+                    .map(|t| t.trim_start_matches('T').to_owned()),
+            ),
             Finding::DataType { .. } => {}
         }
     }
@@ -278,7 +353,9 @@ fn distance(a: &str, b: &str) -> usize {
     for (i, ca) in a.iter().enumerate() {
         let mut cur = vec![i + 1; b.len() + 1];
         for (j, cb) in b.iter().enumerate() {
-            cur[j + 1] = (prev[j] + usize::from(ca != cb)).min(prev[j + 1] + 1).min(cur[j] + 1);
+            cur[j + 1] = (prev[j] + usize::from(ca != cb))
+                .min(prev[j + 1] + 1)
+                .min(cur[j] + 1);
         }
         prev = cur;
     }
@@ -298,11 +375,23 @@ fn nearest<'a>(name: &str, names: impl Iterator<Item = &'a str>) -> Option<Strin
 fn kind_of(schema_type: &str) -> &'static str {
     match schema_type {
         "IfcBoolean" | "IfcLogical" => "bool",
-        "IfcLabel" | "IfcText" | "IfcIdentifier" | "IfcGloballyUniqueId" | "IfcURIReference" | "IfcDate"
-        | "IfcDateTime" | "IfcTime" => "text",
+        "IfcLabel"
+        | "IfcText"
+        | "IfcIdentifier"
+        | "IfcGloballyUniqueId"
+        | "IfcURIReference"
+        | "IfcDate"
+        | "IfcDateTime"
+        | "IfcTime" => "text",
         t if t.starts_with("Q_") => "number",
         t if t.ends_with("Enum") || t == "P_ENUMERATEDVALUE" => "text",
-        t if t.ends_with("Measure") || t == "IfcInteger" || t == "IfcReal" || t == "IfcPositiveInteger" => "number",
+        t if t.ends_with("Measure")
+            || t == "IfcInteger"
+            || t == "IfcReal"
+            || t == "IfcPositiveInteger" =>
+        {
+            "number"
+        }
         _ => "other",
     }
 }
@@ -334,17 +423,27 @@ pub fn compare(c: &Catalog, d: &Dictionary) -> Vec<Finding> {
     let mut unknown: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for x in &c.classes {
         if !d.classes.contains_key(&x.class) {
-            unknown.entry(x.class.clone()).or_default().push(x.id.clone());
+            unknown
+                .entry(x.class.clone())
+                .or_default()
+                .push(x.id.clone());
         }
     }
     for t in &c.tables {
         if !d.classes.contains_key(&t.class) {
-            unknown.entry(t.class.clone()).or_default().push(t.id.clone());
+            unknown
+                .entry(t.class.clone())
+                .or_default()
+                .push(t.id.clone());
         }
     }
     for (class, rows) in unknown {
         let near = nearest(&class, d.classes.keys().map(String::as_str));
-        out.push(Finding::UnknownClass { class, rows, nearest: near });
+        out.push(Finding::UnknownClass {
+            class,
+            rows,
+            nearest: near,
+        });
     }
     // Predefined types.
     for t in &c.tables {
@@ -358,7 +457,12 @@ pub fn compare(c: &Catalog, d: &Dictionary) -> Vec<Finding> {
             }
             // The schema joins a type's words with “_” or nothing (FLAT_ROOF, ELEMENTEDWALL, LAYBY); the tables
             // print spaces and hyphens. Letters and digits alone are compared.
-            let canon = |s: &str| s.chars().filter(|ch| ch.is_alphanumeric()).collect::<String>().to_uppercase();
+            let canon = |s: &str| {
+                s.chars()
+                    .filter(|ch| ch.is_alphanumeric())
+                    .collect::<String>()
+                    .to_uppercase()
+            };
             let squeezed = canon(printed);
             match items.iter().find(|i| canon(i) == squeezed) {
                 Some(schema) => out.push(Finding::PredefinedSpelling {
@@ -402,13 +506,21 @@ pub fn compare(c: &Catalog, d: &Dictionary) -> Vec<Finding> {
                 }
             }
             Kind::Property | Kind::Quantity => {
-                let Some(set) = r.set.as_deref() else { continue };
+                let Some(set) = r.set.as_deref() else {
+                    continue;
+                };
                 if set.starts_with("TREpys_") {
-                    national.entry(set.to_owned()).or_default().push(r.id.clone());
+                    national
+                        .entry(set.to_owned())
+                        .or_default()
+                        .push(r.id.clone());
                     continue;
                 }
                 let Some(sd) = d.sets.get(set) else {
-                    missing_sets.entry(set.to_owned()).or_default().push(r.id.clone());
+                    missing_sets
+                        .entry(set.to_owned())
+                        .or_default()
+                        .push(r.id.clone());
                     continue;
                 };
                 match sd.item(&r.name) {
@@ -469,7 +581,11 @@ pub fn compare(c: &Catalog, d: &Dictionary) -> Vec<Finding> {
     }
     for (set, rows) in missing_sets {
         let near = nearest(&set, d.set_names.iter().map(String::as_str));
-        out.push(Finding::UnknownSet { set, rows, nearest: near });
+        out.push(Finding::UnknownSet {
+            set,
+            rows,
+            nearest: near,
+        });
     }
     // A national set used by few rows and near a more used one is a misspelling of it.
     let counts: Vec<(String, usize)> = national.iter().map(|(s, r)| (s.clone(), r.len())).collect();
@@ -523,7 +639,12 @@ mod tests {
     fn the_dictionary_reads_whole() {
         let d: Dictionary = serde_json::from_str(DICTIONARY_JSON).expect("the dictionary reads");
         assert_eq!(d.schema, "IFC4X3_ADD2");
-        assert!(d.classes["IfcWall"].attributes.iter().any(|a| a.0 == "PredefinedType"));
+        assert!(
+            d.classes["IfcWall"]
+                .attributes
+                .iter()
+                .any(|a| a.0 == "PredefinedType")
+        );
         assert!(d.sets["Pset_WallCommon"].item("FireRating").is_some());
     }
 
@@ -534,7 +655,10 @@ mod tests {
         assert!(
             open.is_empty(),
             "findings no decision settles:\n{}",
-            open.iter().map(|f| format!("{}  {}", f.key(), f.message())).collect::<Vec<_>>().join("\n")
+            open.iter()
+                .map(|f| format!("{}  {}", f.key(), f.message()))
+                .collect::<Vec<_>>()
+                .join("\n")
         );
         assert_eq!(stale(&findings, catalog::decisions()), Vec::<String>::new());
     }
@@ -560,7 +684,10 @@ mod tests {
 
     #[test]
     fn the_source_s_own_misspellings_are_found() {
-        let keys: Vec<String> = compare(catalog::base(), dictionary()).iter().map(Finding::key).collect();
+        let keys: Vec<String> = compare(catalog::base(), dictionary())
+            .iter()
+            .map(Finding::key)
+            .collect();
         for k in [
             "item:Pset_CoolingTowerTypeCommon.NumberofCells",
             "class:IfcDistrubitionSystem",
@@ -570,7 +697,14 @@ mod tests {
         ] {
             assert!(keys.iter().any(|x| x == k), "{k} not found");
         }
-        assert_eq!(nearest("Qto_BuildingBaseQuantity", ["Qto_BuildingBaseQuantities", "Qto_Other"].into_iter()).as_deref(), Some("Qto_BuildingBaseQuantities"));
+        assert_eq!(
+            nearest(
+                "Qto_BuildingBaseQuantity",
+                ["Qto_BuildingBaseQuantities", "Qto_Other"].into_iter()
+            )
+            .as_deref(),
+            Some("Qto_BuildingBaseQuantities")
+        );
     }
 
     /// A label where the template asks an identifier is found, and an item the template does not have; the
@@ -580,27 +714,55 @@ mod tests {
         use crate::building::{Building, Place, Pset, Value};
         let site = |id: Value| Place {
             psets: vec![
-                Pset { name: "Pset_LandRegistration".into(), props: vec![("LandID".into(), id)] },
-                Pset { name: "TREpys_ParselOzellikSeti".into(), props: vec![("TAKS".into(), Value::Label("0.4".into()))] },
-                Pset { name: "Pset_LandRegistration".into(), props: vec![("LandTitleID".into(), Value::Id("12/345".into()))] },
+                Pset {
+                    name: "Pset_LandRegistration".into(),
+                    props: vec![("LandID".into(), id)],
+                },
+                Pset {
+                    name: "TREpys_ParselOzellikSeti".into(),
+                    props: vec![("TAKS".into(), Value::Label("0.4".into()))],
+                },
+                Pset {
+                    name: "Pset_LandRegistration".into(),
+                    props: vec![("LandTitleID".into(), Value::Id("12/345".into()))],
+                },
             ],
             ..Place::default()
         };
-        let b = Building { site: site(Value::Label("1234/5".into())), ..Building::default() };
+        let b = Building {
+            site: site(Value::Label("1234/5".into())),
+            ..Building::default()
+        };
         assert_eq!(
             mistyped(&b),
-            [("Pset_LandRegistration".to_owned(), "LandID".to_owned(), "IfcLabel", "IfcIdentifier".to_owned())]
+            [(
+                "Pset_LandRegistration".to_owned(),
+                "LandID".to_owned(),
+                "IfcLabel",
+                "IfcIdentifier".to_owned()
+            )]
         );
-        let b = Building { site: site(Value::Id("1234/5".into())), ..Building::default() };
+        let b = Building {
+            site: site(Value::Id("1234/5".into())),
+            ..Building::default()
+        };
         assert_eq!(mistyped(&b), Vec::new());
         let mut b = b;
         b.building.qtos.push(crate::building::Qto {
             name: "Qto_BuildingBaseQuantities".into(),
-            quantities: vec![("FootprintArea".into(), Value::Area(120.0)), ("FootPrintArea".into(), Value::Area(120.0))],
+            quantities: vec![
+                ("FootprintArea".into(), Value::Area(120.0)),
+                ("FootPrintArea".into(), Value::Area(120.0)),
+            ],
         });
         assert_eq!(
             mistyped(&b),
-            [("Qto_BuildingBaseQuantities".to_owned(), "FootprintArea".to_owned(), "IfcAreaMeasure", String::new())]
+            [(
+                "Qto_BuildingBaseQuantities".to_owned(),
+                "FootprintArea".to_owned(),
+                "IfcAreaMeasure",
+                String::new()
+            )]
         );
     }
 }

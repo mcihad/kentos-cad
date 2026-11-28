@@ -24,7 +24,12 @@ fn open(app: &mut App) {
 
 fn condition(app: &App) -> String {
     let window = app.gis.processing.dialog.as_ref().expect("open");
-    window.values.get("condition").and_then(serde_json::Value::as_str).unwrap_or_default().to_owned()
+    window
+        .values
+        .get("condition")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or_default()
+        .to_owned()
 }
 
 #[test]
@@ -32,16 +37,28 @@ fn the_last_condition_is_offered_not_written_in() {
     let mut app = app_with_drawing();
     open(&mut app);
     assert_eq!(condition(&app), "$alan > 500", "the tool's own first");
-    event(&mut app, Event::Value("input".into(), json!({ "scope": "all" })));
-    event(&mut app, Event::Text("condition".into(), "bedel >= 100".into()));
+    event(
+        &mut app,
+        Event::Value("input".into(), json!({ "scope": "all" })),
+    );
+    event(
+        &mut app,
+        Event::Text("condition".into(), "bedel >= 100".into()),
+    );
     event(&mut app, Event::Run);
     event(&mut app, Event::Close);
     open(&mut app);
     assert_eq!(condition(&app), "$alan > 500", "not the last one");
     let window = app.gis.processing.dialog.as_ref().expect("open");
-    assert_eq!(window.recalled.get("condition").map(String::as_str), Some("bedel >= 100"));
+    assert_eq!(
+        window.recalled.get("condition").map(String::as_str),
+        Some("bedel >= 100")
+    );
     // Son ifade writes it in.
-    event(&mut app, Event::Text("condition".into(), "bedel >= 100".into()));
+    event(
+        &mut app,
+        Event::Text("condition".into(), "bedel >= 100".into()),
+    );
     assert_eq!(condition(&app), "bedel >= 100");
 }
 
@@ -49,7 +66,10 @@ fn the_last_condition_is_offered_not_written_in() {
 fn the_inspector_names_the_layer_by_its_group_path() {
     let mut app = app_with_drawing();
     let doc = &app.document.as_ref().expect("a drawing").model;
-    let parcel = doc.entities().find(|e| e.base().layer_id == "parsel").map(|e| kentos_domain::Slot(e.base().id));
+    let parcel = doc
+        .entities()
+        .find(|e| e.base().layer_id == "parsel")
+        .map(|e| kentos_domain::Slot(e.base().id));
     let slot = parcel.expect("a parcel");
     app.selection.set([slot]);
     let doc = app.document.as_ref().expect("a drawing");
@@ -89,7 +109,10 @@ fn screens() {
     crate::files_testing::usage_shots("9341", "02-ifadeyle-sec-son-ifade", || {
         let mut app = app_with_drawing();
         open(&mut app);
-        event(&mut app, Event::Text("condition".into(), "bedel >= 100".into()));
+        event(
+            &mut app,
+            Event::Text("condition".into(), "bedel >= 100".into()),
+        );
         event(&mut app, Event::Run);
         event(&mut app, Event::Close);
         open(&mut app);

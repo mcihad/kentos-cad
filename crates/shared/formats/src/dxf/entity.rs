@@ -393,7 +393,8 @@ fn common(list: &[Pair<'_>], dec: Decoder) -> Result<Common, Unreadable> {
             g.num_or(220, 0.0)?,
             g.num_or(230, 1.0)?,
         ],
-        paper: g.int(67) == 1 || (!g.string(410).is_empty() && !g.string(410).eq_ignore_ascii_case("Model")),
+        paper: g.int(67) == 1
+            || (!g.string(410).is_empty() && !g.string(410).eq_ignore_ascii_case("Model")),
         layout: g.string(410),
         owner: u64::from_str_radix(g.string(330).trim(), 16).ok(),
         invisible: g.int(60) == 1,

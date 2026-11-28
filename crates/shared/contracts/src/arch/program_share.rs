@@ -152,7 +152,11 @@ pub fn steps_of(x: f64) -> i128 {
     let bits = x.abs().to_bits();
     let exp = ((bits >> 52) & 0x7ff) as i32;
     let frac = (bits & ((1u64 << 52) - 1)) as i128;
-    let (m, e) = if exp == 0 { (frac, -1074) } else { (frac | (1i128 << 52), exp - 1075) };
+    let (m, e) = if exp == 0 {
+        (frac, -1074)
+    } else {
+        (frac | (1i128 << 52), exp - 1075)
+    };
     let num = m * SHARE_STEPS;
     let q = if e >= 0 {
         num << e.min(60)
@@ -164,7 +168,11 @@ pub fn steps_of(x: f64) -> i128 {
             let q = num >> k;
             let r = num - (q << k);
             let half = 1i128 << (k - 1);
-            if r > half || (r == half && q & 1 == 1) { q + 1 } else { q }
+            if r > half || (r == half && q & 1 == 1) {
+                q + 1
+            } else {
+                q
+            }
         }
     };
     if x < 0.0 { -q } else { q }
@@ -180,13 +188,17 @@ pub fn steps_text(n: i128) -> String {
 /// A weight's text read exactly, in millionths; the words when it does not read.
 pub fn weight_units(t: &str) -> Result<i128, String> {
     let bad = || {
-        format!("Pay ağırlığı “{t}” okunamadı: noktadan önce en çok 12, sonra en çok 6 basamaklı bir sayı yazın (120, 1.5).")
+        format!(
+            "Pay ağırlığı “{t}” okunamadı: noktadan önce en çok 12, sonra en çok 6 basamaklı bir sayı yazın (120, 1.5)."
+        )
     };
     let (whole, frac) = match t.split_once('.') {
         Some((w, f)) => (w, Some(f)),
         None => (t, None),
     };
-    let digits = |s: &str, most: usize| !s.is_empty() && s.len() <= most && s.bytes().all(|b| b.is_ascii_digit());
+    let digits = |s: &str, most: usize| {
+        !s.is_empty() && s.len() <= most && s.bytes().all(|b| b.is_ascii_digit())
+    };
     if !digits(whole, 12) || frac.is_some_and(|f| !digits(f, 6)) {
         return Err(bad());
     }
@@ -219,11 +231,19 @@ fn gcd(mut a: i128, mut b: i128) -> i128 {
 fn fraction(num: i128, den: i128) -> String {
     let g = gcd(num, den).max(1);
     let (n, d) = (num / g, den / g);
-    if d == 1 { n.to_string() } else { format!("{n}/{d}") }
+    if d == 1 {
+        n.to_string()
+    } else {
+        format!("{n}/{d}")
+    }
 }
 
 fn quoted(numbers: &[&str]) -> String {
-    numbers.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ")
+    numbers
+        .iter()
+        .map(|n| format!("“{n}”"))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 /// The common areas shared out by the program's rule, each group's rooms (m², summed in the drawing's order) given by
@@ -234,8 +254,12 @@ pub fn shares(
     rooms: &dyn Fn(&str) -> f64,
 ) -> Option<(ProgramShares, Vec<(String, ProgramUnitShare)>)> {
     let rule = program.share_rule?;
-    let units: Vec<(usize, &crate::ProgramUnit)> =
-        program.units.iter().enumerate().filter(|(_, u)| u.kind == UnitKind::Unit).collect();
+    let units: Vec<(usize, &crate::ProgramUnit)> = program
+        .units
+        .iter()
+        .enumerate()
+        .filter(|(_, u)| u.kind == UnitKind::Unit)
+        .collect();
     let mut got: Vec<i128> = vec![0; program.units.len()];
     let mut pools = Vec::new();
     let (mut shared, mut unshared) = (0i128, 0i128);
@@ -268,7 +292,10 @@ pub fn shares(
                         .map_or(w.as_str(), |x| x.name.as_str());
                     format!("“{name}” kanadında")
                 }
-                (None, Some(b)) => format!("“{}” binasında", program.building(b).map_or(b.as_str(), |x| x.name.as_str())),
+                (None, Some(b)) => format!(
+                    "“{}” binasında",
+                    program.building(b).map_or(b.as_str(), |x| x.name.as_str())
+                ),
                 _ => "Programda".into(),
             };
             Err(refused(format!("{place} bağımsız bölüm yok")))
@@ -277,15 +304,26 @@ pub fn shares(
                 ShareRule::Equal => Ok(scope.iter().map(|_| 1).collect()),
                 ShareRule::Net => Ok(scope.iter().map(|(_, u)| steps_of(rooms(&u.id))).collect()),
                 ShareRule::Weight => {
-                    let missing: Vec<&str> =
-                        scope.iter().filter(|(_, u)| u.share_weight.is_none()).map(|(_, u)| u.number.as_str()).collect();
+                    let missing: Vec<&str> = scope
+                        .iter()
+                        .filter(|(_, u)| u.share_weight.is_none())
+                        .map(|(_, u)| u.number.as_str())
+                        .collect();
                     if missing.is_empty() {
                         Ok(scope
                             .iter()
-                            .map(|(_, u)| u.share_weight.as_deref().and_then(|w| weight_units(w).ok()).unwrap_or(0))
+                            .map(|(_, u)| {
+                                u.share_weight
+                                    .as_deref()
+                                    .and_then(|w| weight_units(w).ok())
+                                    .unwrap_or(0)
+                            })
                             .collect())
                     } else {
-                        Err(refused(format!("{} bölümünün pay ağırlığı yok", quoted(&missing))))
+                        Err(refused(format!(
+                            "{} bölümünün pay ağırlığı yok",
+                            quoted(&missing)
+                        )))
                     }
                 }
             }
@@ -310,7 +348,11 @@ pub fn shares(
                 let mut part: Vec<i128> = ws.iter().map(|w| total * w / whole).collect();
                 let left = total - part.iter().sum::<i128>();
                 let mut order: Vec<usize> = (0..ws.len()).collect();
-                order.sort_by(|&a, &b| (total * ws[b] % whole).cmp(&(total * ws[a] % whole)).then(a.cmp(&b)));
+                order.sort_by(|&a, &b| {
+                    (total * ws[b] % whole)
+                        .cmp(&(total * ws[a] % whole))
+                        .then(a.cmp(&b))
+                });
                 for &k in order.iter().take(left as usize) {
                     part[k] += 1;
                 }
@@ -339,7 +381,11 @@ pub fn shares(
         net += own;
         parts.push((
             u.id.clone(),
-            ProgramUnitShare { net: steps_text(own), share: steps_text(got[*i]), gross: steps_text(own + got[*i]) },
+            ProgramUnitShare {
+                net: steps_text(own),
+                share: steps_text(got[*i]),
+                gross: steps_text(own + got[*i]),
+            },
         ));
     }
     Some((
@@ -384,7 +430,13 @@ mod tests {
         assert!(weight_units(".5").is_err());
     }
 
-    fn unit(id: &str, number: &str, kind: UnitKind, building: Option<&str>, wing: Option<&str>) -> ProgramUnit {
+    fn unit(
+        id: &str,
+        number: &str,
+        kind: UnitKind,
+        building: Option<&str>,
+        wing: Option<&str>,
+    ) -> ProgramUnit {
         ProgramUnit {
             id: id.into(),
             number: number.into(),
@@ -401,7 +453,11 @@ mod tests {
             buildings: vec![ProgramBuilding {
                 id: "a".into(),
                 name: "A".into(),
-                wings: vec![ProgramWing { id: "d".into(), name: "Doğu".into(), levels: vec![] }],
+                wings: vec![ProgramWing {
+                    id: "d".into(),
+                    name: "Doğu".into(),
+                    levels: vec![],
+                }],
                 levels: vec![],
                 ..Default::default()
             }],
@@ -422,11 +478,26 @@ mod tests {
         };
         let (report, parts) = shares(&program, &rooms).expect("shared");
         let o = &report.pools[0];
-        assert_eq!(o.shares.iter().map(|s| s.share.as_str()).collect::<Vec<_>>(), ["0.34", "0.33", "0.33"]);
+        assert_eq!(
+            o.shares
+                .iter()
+                .map(|s| s.share.as_str())
+                .collect::<Vec<_>>(),
+            ["0.34", "0.33", "0.33"]
+        );
         assert_eq!(o.shares[0].exact, "1/3");
         let k = &report.pools[1];
-        assert_eq!(k.shares.iter().map(|s| s.share.as_str()).collect::<Vec<_>>(), ["0.03", "0.02"]);
+        assert_eq!(
+            k.shares
+                .iter()
+                .map(|s| s.share.as_str())
+                .collect::<Vec<_>>(),
+            ["0.03", "0.02"]
+        );
         assert_eq!(parts[1].1.gross, "10.36");
-        assert_eq!((report.shared.as_str(), report.gross.as_str()), ("1.05", "31.05"));
+        assert_eq!(
+            (report.shared.as_str(), report.gross.as_str()),
+            ("1.05", "31.05")
+        );
     }
 }

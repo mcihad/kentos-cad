@@ -115,9 +115,19 @@ pub fn passage(name: Option<&str>, usage: Option<&str>) -> bool {
 /// Yönetmeliği 34/1 does not count a basement by.
 pub fn technical(name: Option<&str>, usage: Option<&str>) -> bool {
     let w = words(name, usage);
-    ["KAZAN", "ELEKTRIK", "JENERATOR", "IKLIMLENDIRME", "TEKNIK", "HIDROFOR", "TRAFO", "MAKINE", "POMPA"]
-        .iter()
-        .any(|p| has(&w, p))
+    [
+        "KAZAN",
+        "ELEKTRIK",
+        "JENERATOR",
+        "IKLIMLENDIRME",
+        "TEKNIK",
+        "HIDROFOR",
+        "TRAFO",
+        "MAKINE",
+        "POMPA",
+    ]
+    .iter()
+    .any(|p| has(&w, p))
         || is(&w, "ISI")
         || (is(&w, "SU") && has(&w, "DEPO"))
 }

@@ -3,7 +3,8 @@
 use std::borrow::Cow;
 
 use kentos_commands::{
-    CaseworkBreak, CaseworkCorner, CaseworkDoor, CaseworkEnd, CaseworkHand, CaseworkModuleKind, CaseworkPart,
+    CaseworkBreak, CaseworkCorner, CaseworkDoor, CaseworkEnd, CaseworkHand, CaseworkModuleKind,
+    CaseworkPart,
 };
 use kentos_domain::Slot;
 
@@ -91,13 +92,25 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
         rows.push(Row::text("Köşe", text).editor(select(
             text,
             vec![
-                pick("Kör".into(), "corner", "blind", corner == CaseworkCorner::Blind),
-                pick("Açık".into(), "corner", "open", corner == CaseworkCorner::Open),
+                pick(
+                    "Kör".into(),
+                    "corner",
+                    "blind",
+                    corner == CaseworkCorner::Blind,
+                ),
+                pick(
+                    "Açık".into(),
+                    "corner",
+                    "open",
+                    corner == CaseworkCorner::Open,
+                ),
             ],
         )));
     }
     let f = kentos_interaction::Format::of(doc.settings());
-    let depth = recipe.depth.unwrap_or(kentos_commands::DEFAULT_CASEWORK_DEPTH);
+    let depth = recipe
+        .depth
+        .unwrap_or(kentos_commands::DEFAULT_CASEWORK_DEPTH);
     rows.push(
         Row::figure("Tezgâh derinliği", f.length_bare(depth))
             .unit(f.length_unit_label())
@@ -131,25 +144,59 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
         fridge,
         vec![
             pick("Yok".into(), "fridge", "none", recipe.fridge.is_none()),
-            pick("Başta".into(), "fridge", "start", recipe.fridge == Some(CaseworkEnd::Start)),
-            pick("Sonda".into(), "fridge", "end", recipe.fridge == Some(CaseworkEnd::End)),
+            pick(
+                "Başta".into(),
+                "fridge",
+                "start",
+                recipe.fridge == Some(CaseworkEnd::Start),
+            ),
+            pick(
+                "Sonda".into(),
+                "fridge",
+                "end",
+                recipe.fridge == Some(CaseworkEnd::End),
+            ),
         ],
     )));
     if let Some(l) = &laid {
         rows.push(Row::figure("Dolgu", f.length_bare(l.filler)).unit(f.length_unit_label()));
-        for (leg, _) in l.legs.iter().enumerate().filter(|(_, leg)| leg.filler > 0.0) {
+        for (leg, _) in l
+            .legs
+            .iter()
+            .enumerate()
+            .filter(|(_, leg)| leg.filler > 0.0)
+        {
             let custom = recipe.filler_ends.get(leg).copied().flatten();
-            let automatic = if corners > 0 && leg == 0 { "Başta" } else { "Sonda" };
+            let automatic = if corners > 0 && leg == 0 {
+                "Başta"
+            } else {
+                "Sonda"
+            };
             let value = match custom {
                 Some(CaseworkEnd::Start) => "Başta".into(),
                 Some(CaseworkEnd::End) => "Sonda".into(),
                 None => format!("Otomatik · {automatic}"),
             };
-            let choices = [("Otomatik", "auto", None), ("Başta", "start", Some(CaseworkEnd::Start)),
-                           ("Sonda", "end", Some(CaseworkEnd::End))].into_iter()
-                .map(|(name, end, selected)| pick(name.into(), "filler", &format!("{leg}/{end}"), selected == custom))
-                .collect();
-            let title = if corners == 0 { "Dolgu ucu".into() } else { format!("{}. kol dolgu ucu", leg + 1) };
+            let choices = [
+                ("Otomatik", "auto", None),
+                ("Başta", "start", Some(CaseworkEnd::Start)),
+                ("Sonda", "end", Some(CaseworkEnd::End)),
+            ]
+            .into_iter()
+            .map(|(name, end, selected)| {
+                pick(
+                    name.into(),
+                    "filler",
+                    &format!("{leg}/{end}"),
+                    selected == custom,
+                )
+            })
+            .collect();
+            let title = if corners == 0 {
+                "Dolgu ucu".into()
+            } else {
+                format!("{}. kol dolgu ucu", leg + 1)
+            };
             rows.push(Row::text(title, &value).editor(select(&value, choices)));
         }
     }
@@ -191,13 +238,17 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
             (CaseworkModuleKind::Cooktop, "cooktop"),
             (CaseworkModuleKind::Dishwasher, "dishwasher"),
         ];
-        rows.push(Row::text("Tür", kind_text(m.kind)).editor(select(
-            kind_text(m.kind),
-            kinds
-                .iter()
-                .map(|&(kind, value)| pick(kind_text(kind).into(), "holds", value, kind == m.kind))
-                .collect(),
-        )));
+        rows.push(
+            Row::text("Tür", kind_text(m.kind)).editor(select(
+                kind_text(m.kind),
+                kinds
+                    .iter()
+                    .map(|&(kind, value)| {
+                        pick(kind_text(kind).into(), "holds", value, kind == m.kind)
+                    })
+                    .collect(),
+            )),
+        );
         let width = centimetres(m.width);
         // An appliance's width is the appliance's (a dishwasher, a cooktop over its oven).
         let appliance = m.kind == CaseworkModuleKind::Dishwasher || m.oven == Some(true);
@@ -206,7 +257,14 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
         } else {
             WIDTHS
                 .iter()
-                .map(|&w| pick(centimetres(w), "width", &w.to_string(), (w - m.width).abs() <= 1e-9))
+                .map(|&w| {
+                    pick(
+                        centimetres(w),
+                        "width",
+                        &w.to_string(),
+                        (w - m.width).abs() <= 1e-9,
+                    )
+                })
                 .collect()
         };
         let mut row = Row::text("Modül eni", width.clone());
@@ -226,7 +284,12 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
                     text,
                     vec![
                         pick("Soldan".into(), "hand", "left", hand == CaseworkHand::Left),
-                        pick("Sağdan".into(), "hand", "right", hand == CaseworkHand::Right),
+                        pick(
+                            "Sağdan".into(),
+                            "hand",
+                            "right",
+                            hand == CaseworkHand::Right,
+                        ),
                     ],
                 ));
             }

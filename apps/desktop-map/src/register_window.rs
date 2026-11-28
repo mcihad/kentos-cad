@@ -11,13 +11,16 @@
 //! Buluta uygula (docs/adr/3100) selects the moving scan and opens Dönüşüm uygula (`pointcloud.transform`) with the
 //! answer's matrix: the cloud is moved only when that tool runs, into a new file beside the source.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{CommandResult, Entity, PointCloudsRegister, PointCloudsRegistered, RegisterReject, RegisterRobust};
+use kentos_commands::{
+    CommandResult, Entity, PointCloudsRegister, PointCloudsRegistered, RegisterReject,
+    RegisterRobust,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, pointcloud_register};
 use kentos_ui::label;
@@ -25,8 +28,8 @@ use kentos_ui::widget::tree_view::Check;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented};
 
 use crate::app::{App, Message};
-use crate::numbers::small_angle_text;
 use crate::exchange::words::{self, Kind};
+use crate::numbers::small_angle_text;
 use crate::road_dialog::{col, num, sheet};
 use crate::style::fields;
 use crate::traces::Control;
@@ -168,10 +171,19 @@ pub fn csv(r: &PointCloudsRegistered) -> String {
     for c in &r.worst {
         out.push_str(&format!("{};{};{};{}\n", c.x, c.y, c.n, c.rms));
     }
-    out.push_str("\nKontrol noktası;Kot (m);Sabit − kontrol (m);Önce − kontrol (m);Sonra − kontrol (m)\n");
+    out.push_str(
+        "\nKontrol noktası;Kot (m);Sabit − kontrol (m);Önce − kontrol (m);Sonra − kontrol (m)\n",
+    );
     let o = |v: Option<f64>| v.map(|x| x.to_string()).unwrap_or_default();
     for c in &r.control {
-        out.push_str(&format!("{};{};{};{};{}\n", c.name, c.z, o(c.dz_fixed), o(c.dz_before), o(c.dz_after)));
+        out.push_str(&format!(
+            "{};{};{};{};{}\n",
+            c.name,
+            c.z,
+            o(c.dz_fixed),
+            o(c.dz_before),
+            o(c.dz_after)
+        ));
     }
     out
 }
@@ -203,13 +215,28 @@ impl RegisterWindowApp for App {
             control: (!s.control.is_empty()).then(|| s.control.clone()),
             radius: Some(s.radius),
             scale: Some(s.scale.max(1.0) as u32),
-            drawing: self.document.as_ref().and_then(|d| d.path.as_ref()).map(|p| p.to_string_lossy().into_owned()),
+            drawing: self
+                .document
+                .as_ref()
+                .and_then(|d| d.path.as_ref())
+                .map(|p| p.to_string_lossy().into_owned()),
             robust: match s.weights {
                 Weights::Plain => None,
-                Weights::Huber => Some(RegisterRobust { kind: "huber".into(), k: Some(s.k), ratio: None }),
-                Weights::Trimmed => Some(RegisterRobust { kind: "trimmed".into(), k: None, ratio: Some(s.ratio) }),
+                Weights::Huber => Some(RegisterRobust {
+                    kind: "huber".into(),
+                    k: Some(s.k),
+                    ratio: None,
+                }),
+                Weights::Trimmed => Some(RegisterRobust {
+                    kind: "trimmed".into(),
+                    k: None,
+                    ratio: Some(s.ratio),
+                }),
             },
-            reject: (s.edges || s.by_angle).then(|| RegisterReject { edges: s.edges, angle: s.by_angle.then_some(s.angle) }),
+            reject: (s.edges || s.by_angle).then(|| RegisterReject {
+                edges: s.edges,
+                angle: s.by_angle.then_some(s.angle),
+            }),
             ..Default::default()
         };
         let Some(doc) = self.document.as_mut() else {
@@ -238,10 +265,15 @@ impl RegisterWindowApp for App {
             .entities_with_uids()
             .filter_map(|(u, e)| match e {
                 Entity::PointCloud(c) => {
-                    let name = c.cloud.sources.first().and_then(|s| s.file.as_deref()).map_or_else(
-                        || format!("Bulut #{}", e.base().id),
-                        |f| f.rsplit(['/', '\\']).next().unwrap_or(f).to_owned(),
-                    );
+                    let name = c
+                        .cloud
+                        .sources
+                        .first()
+                        .and_then(|s| s.file.as_deref())
+                        .map_or_else(
+                            || format!("Bulut #{}", e.base().id),
+                            |f| f.rsplit(['/', '\\']).next().unwrap_or(f).to_owned(),
+                        );
                     Some((u.to_string(), name))
                 }
                 _ => None,
@@ -268,12 +300,21 @@ impl RegisterWindowApp for App {
                 .layers()
                 .leaves()
                 .iter()
-                .filter(|n| doc.model.entities().any(|e| e.base().layer_id == n.id && matches!(e, Entity::Point(_))))
+                .filter(|n| {
+                    doc.model
+                        .entities()
+                        .any(|e| e.base().layer_id == n.id && matches!(e, Entity::Point(_)))
+                })
                 .map(|n| (n.id.clone(), n.name.clone())),
         );
         let control = layers
             .iter()
-            .find(|(id, n)| !id.is_empty() && ["gnss", "kontrol"].iter().any(|w| n.to_lowercase().contains(w)))
+            .find(|(id, n)| {
+                !id.is_empty()
+                    && ["gnss", "kontrol"]
+                        .iter()
+                        .any(|w| n.to_lowercase().contains(w))
+            })
             .map(|(id, _)| id.clone())
             .unwrap_or_default();
         self.modules.map_mut().register = State {
@@ -335,7 +376,10 @@ impl RegisterWindowApp for App {
             return;
         };
         match std::fs::write(&path, csv(r)) {
-            Ok(()) => self.say(Level::Success, format!("{TITLE}: sonuç {} dosyasına yazıldı.", path.display())),
+            Ok(()) => self.say(
+                Level::Success,
+                format!("{TITLE}: sonuç {} dosyasına yazıldı.", path.display()),
+            ),
             Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
         }
     }
@@ -397,10 +441,22 @@ impl RegisterWindowApp for App {
     fn register_lines(&self, r: &PointCloudsRegistered) -> Vec<Element<'_, Message>> {
         let format = self.format();
         let degrees = format.angle_unit_label() == "°";
-        let angle = |rad: f64| small_angle_text(&format, if degrees { rad.to_degrees() } else { rad * 200.0 / std::f64::consts::PI });
+        let angle = |rad: f64| {
+            small_angle_text(
+                &format,
+                if degrees {
+                    rad.to_degrees()
+                } else {
+                    rad * 200.0 / std::f64::consts::PI
+                },
+            )
+        };
         let mut lines = Vec::new();
         if r.pairs == 0 {
-            lines.push(words::text_line(Kind::Warn, "Eşleşen nokta yok: bulutlar erişim içinde örtüşmüyor; erişimi büyütün."));
+            lines.push(words::text_line(
+                Kind::Warn,
+                "Eşleşen nokta yok: bulutlar erişim içinde örtüşmüyor; erişimi büyütün.",
+            ));
         } else {
             lines.push(words::text_line(
                 if r.converged { Kind::Ok } else { Kind::Warn },
@@ -427,16 +483,28 @@ impl RegisterWindowApp for App {
                 ),
             ));
             lines.push(words::text_line(
-                if r.horizontal < 0.1 { Kind::Warn } else { Kind::Ok },
+                if r.horizontal < 0.1 {
+                    Kind::Warn
+                } else {
+                    Kind::Ok
+                },
                 format!(
                     "Geometri gücü {:.2}, yatay öteleme gücü {:.2}{}.",
                     r.strength,
                     r.horizontal,
-                    if r.horizontal < 0.1 { ": düz zemin, yatay kayma bilinmez" } else { "" }
+                    if r.horizontal < 0.1 {
+                        ": düz zemin, yatay kayma bilinmez"
+                    } else {
+                        ""
+                    }
                 ),
             ));
             lines.push(words::text_line(
-                if r.reliable >= r.covered { Kind::Ok } else { Kind::Warn },
+                if r.reliable >= r.covered {
+                    Kind::Ok
+                } else {
+                    Kind::Warn
+                },
                 format!(
                     "Güvenilir kapsam {:.0} m² / {:.0} m² (hücre RMS ≤ {} cm, {}).",
                     r.reliable,
@@ -446,7 +514,11 @@ impl RegisterWindowApp for App {
                 ),
             ));
         }
-        for (which, st) in [("Sabit tarama", &r.control_fixed), ("Oturtulan, önce", &r.control_before), ("Oturtulan, sonra", &r.control_after)] {
+        for (which, st) in [
+            ("Sabit tarama", &r.control_fixed),
+            ("Oturtulan, önce", &r.control_before),
+            ("Oturtulan, sonra", &r.control_after),
+        ] {
             if let Some(st) = st {
                 lines.push(match st.passed {
                     Some(ok) => words::text_line(
@@ -493,7 +565,12 @@ impl RegisterWindowApp for App {
         }
         lines.push(words::text_line(Kind::Info, r.notes[0].clone()));
         // The rejections' own note is said by the line above.
-        for n in r.notes.iter().skip(3).filter(|n| !(r.rejected.is_some() && n.starts_with("Ayıklanan eşleşmeler"))) {
+        for n in r
+            .notes
+            .iter()
+            .skip(3)
+            .filter(|n| !(r.rejected.is_some() && n.starts_with("Ayıklanan eşleşmeler")))
+        {
             lines.push(words::text_line(Kind::Info, n.clone()));
         }
         lines
@@ -501,18 +578,43 @@ impl RegisterWindowApp for App {
 
     fn register_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().register;
-        let pick = |v: &str, on: fn(String) -> Event| container(fields::select_owned(s.clouds.clone(), v, move |x| msg(on(x)))).width(230);
+        let pick = |v: &str, on: fn(String) -> Event| {
+            container(fields::select_owned(s.clouds.clone(), v, move |x| {
+                msg(on(x))
+            }))
+            .width(230)
+        };
         let form = Form::new()
             .label_width(120.0)
-            .field("Sabit tarama", row![pick(&s.fixed, Event::Fixed), label::caption("Oturtulacak"), pick(&s.moving, Event::Moving)].spacing(10).align_y(Center))
+            .field(
+                "Sabit tarama",
+                row![
+                    pick(&s.fixed, Event::Fixed),
+                    label::caption("Oturtulacak"),
+                    pick(&s.moving, Event::Moving)
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
             .field(
                 "Voksel (m)",
                 row![
-                    NumberInput::new(s.spacing, |v| msg(Event::Spacing(v))).step(0.25).decimals(2).point().width(100),
+                    NumberInput::new(s.spacing, |v| msg(Event::Spacing(v)))
+                        .step(0.25)
+                        .decimals(2)
+                        .point()
+                        .width(100),
                     label::caption("Erişim (m)"),
-                    NumberInput::new(s.reach, |v| msg(Event::Reach(v))).step(0.5).decimals(2).point().width(80),
+                    NumberInput::new(s.reach, |v| msg(Event::Reach(v)))
+                        .step(0.5)
+                        .decimals(2)
+                        .point()
+                        .width(80),
                     label::caption("En çok adım"),
-                    NumberInput::new(s.iterations, |v| msg(Event::Iterations(v))).step(5.0).decimals(0).width(80)
+                    NumberInput::new(s.iterations, |v| msg(Event::Iterations(v)))
+                        .step(5.0)
+                        .decimals(0)
+                        .width(80)
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -520,28 +622,50 @@ impl RegisterWindowApp for App {
             .field(
                 "Kontrol",
                 row![
-                    container(fields::select_owned(s.layers.clone(), &s.control, |v| msg(Event::Control(v)))).width(230),
+                    container(fields::select_owned(s.layers.clone(), &s.control, |v| msg(
+                        Event::Control(v)
+                    )))
+                    .width(230),
                     label::caption("Çevre (m)"),
-                    NumberInput::new(s.radius, |v| msg(Event::Radius(v))).step(0.5).decimals(2).point().width(80),
+                    NumberInput::new(s.radius, |v| msg(Event::Radius(v)))
+                        .step(0.5)
+                        .decimals(2)
+                        .point()
+                        .width(80),
                     label::caption("Ölçek 1/"),
-                    NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(500.0).decimals(0).width(90)
+                    NumberInput::new(s.scale, |v| msg(Event::Scale(v)))
+                        .step(500.0)
+                        .decimals(0)
+                        .width(90)
                 ]
                 .spacing(10)
                 .align_y(Center),
             )
             .field("Ağırlık", {
-                let choice = Segmented::new([Weights::Plain, Weights::Huber, Weights::Trimmed], s.weights, |v| msg(Event::Weights(v)));
+                let choice = Segmented::new(
+                    [Weights::Plain, Weights::Huber, Weights::Trimmed],
+                    s.weights,
+                    |v| msg(Event::Weights(v)),
+                );
                 match s.weights {
                     Weights::Plain => row![choice],
                     Weights::Huber => row![
                         choice,
                         label::caption("k"),
-                        NumberInput::new(s.k, |v| msg(Event::K(v))).step(0.1).decimals(3).point().width(90)
+                        NumberInput::new(s.k, |v| msg(Event::K(v)))
+                            .step(0.1)
+                            .decimals(3)
+                            .point()
+                            .width(90)
                     ],
                     Weights::Trimmed => row![
                         choice,
                         label::caption("Tutulan pay"),
-                        NumberInput::new(s.ratio, |v| msg(Event::Ratio(v))).step(0.05).decimals(2).point().width(90)
+                        NumberInput::new(s.ratio, |v| msg(Event::Ratio(v)))
+                            .step(0.05)
+                            .decimals(2)
+                            .point()
+                            .width(90)
                     ],
                 }
                 .spacing(10)
@@ -550,13 +674,26 @@ impl RegisterWindowApp for App {
             .field("Ayıkla", {
                 let mark = |on: bool| if on { Check::Checked } else { Check::Unchecked };
                 let angle: Element<'_, Message> = if s.by_angle {
-                    NumberInput::new(s.angle, |v| msg(Event::Angle(v))).step(5.0).decimals(1).point().width(90).into()
+                    NumberInput::new(s.angle, |v| msg(Event::Angle(v)))
+                        .step(5.0)
+                        .decimals(1)
+                        .point()
+                        .width(90)
+                        .into()
                 } else {
                     label::caption("").into()
                 };
                 row![
-                    fields::check(mark(s.edges), "Kenardaki eşleşmeler", Some(msg(Event::Edges(!s.edges)))),
-                    fields::check(mark(s.by_angle), "Normal açısı (°)", Some(msg(Event::ByAngle(!s.by_angle)))),
+                    fields::check(
+                        mark(s.edges),
+                        "Kenardaki eşleşmeler",
+                        Some(msg(Event::Edges(!s.edges)))
+                    ),
+                    fields::check(
+                        mark(s.by_angle),
+                        "Normal açısı (°)",
+                        Some(msg(Event::ByAngle(!s.by_angle)))
+                    ),
                     angle
                 ]
                 .spacing(14)
@@ -569,8 +706,23 @@ impl RegisterWindowApp for App {
                 lines = self.register_lines(r);
                 table = match s.view {
                     View::Worst => sheet(
-                        vec![num("Hücre Y (doğu)", 150.0), num("Hücre X (kuzey)", 150.0), num("Eşleşme", 90.0), num("RMS (cm)", 100.0)],
-                        r.worst.iter().map(|c| vec![format!("{:.2}", c.x), format!("{:.2}", c.y), c.n.to_string(), cm(c.rms)]).collect(),
+                        vec![
+                            num("Hücre Y (doğu)", 150.0),
+                            num("Hücre X (kuzey)", 150.0),
+                            num("Eşleşme", 90.0),
+                            num("RMS (cm)", 100.0),
+                        ],
+                        r.worst
+                            .iter()
+                            .map(|c| {
+                                vec![
+                                    format!("{:.2}", c.x),
+                                    format!("{:.2}", c.y),
+                                    c.n.to_string(),
+                                    cm(c.rms),
+                                ]
+                            })
+                            .collect(),
                         "Kapsam hücresi yok.",
                         220.0,
                     ),
@@ -606,7 +758,9 @@ impl RegisterWindowApp for App {
             .spacing(12)
             .push(form)
             .push(words::summary(lines))
-            .push(Segmented::new([View::Worst, View::Control], s.view, |v| msg(Event::View(v))))
+            .push(Segmented::new([View::Worst, View::Control], s.view, |v| {
+                msg(Event::View(v))
+            }))
             .push(table);
         let ready = matches!(s.answer, Some(Ok(_)));
         // The body scrolls; the actions keep their row whatever the window's height (UR2-030: at 1440 × 860 with a

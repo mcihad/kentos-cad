@@ -235,7 +235,9 @@ pub fn object_parts(object: &serde_json::Value) -> [String; 4] {
 
 /// Whether a part's digest is 16 lower-case hex digits.
 fn is_part_digest(d: &str) -> bool {
-    d.len() == 16 && d.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    d.len() == 16
+        && d.bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
 /// Objects made from an item: the item, its revision then, the operation that made them and the objects.
@@ -284,7 +286,9 @@ impl MapWork {
 
     /// Whether an item's file keeps its relative path (schema 193, docs/adr/1201 §1).
     pub fn has_relative(&self) -> bool {
-        self.items.iter().any(|i| i.file.as_ref().is_some_and(|f| f.relative.is_some()))
+        self.items
+            .iter()
+            .any(|i| i.file.as_ref().is_some_and(|f| f.relative.is_some()))
     }
 
     /// Whether an approval keeps its objects' digests (schema 210, docs/adr/2880).
@@ -311,7 +315,10 @@ impl MapWork {
     /// a file.
     pub fn has_stamps(&self) -> bool {
         self.items.iter().any(|i| i.approved.is_some())
-            || self.derivations.iter().any(|d| self.item(&d.source).is_some_and(|i| i.file.is_none()))
+            || self
+                .derivations
+                .iter()
+                .any(|d| self.item(&d.source).is_some_and(|i| i.file.is_none()))
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -323,7 +330,10 @@ impl MapWork {
 /// `prefix-N` with N a positive number written without leading zeros.
 fn numbered(id: &str, prefix: &str) -> bool {
     id.strip_prefix(prefix).is_some_and(|n| {
-        !n.is_empty() && !n.starts_with('0') && n.len() <= 9 && n.bytes().all(|b| b.is_ascii_digit())
+        !n.is_empty()
+            && !n.starts_with('0')
+            && n.len() <= 9
+            && n.bytes().all(|b| b.is_ascii_digit())
     })
 }
 
@@ -345,7 +355,10 @@ pub fn next_numbered<'a>(ids: impl Iterator<Item = &'a str>, prefix: &str) -> St
 pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_owned()));
     if work.items.len() > MAX_WORK_ITEMS {
-        return fail("items".into(), &format!("en çok {MAX_WORK_ITEMS} iş öğesi olur"));
+        return fail(
+            "items".into(),
+            &format!("en çok {MAX_WORK_ITEMS} iş öğesi olur"),
+        );
     }
     let mut ids = std::collections::BTreeSet::new();
     let mut layers = std::collections::BTreeSet::new();
@@ -364,37 +377,64 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
             );
         }
         if item.layers.len() > MAX_ITEM_LAYERS {
-            return fail(at("layers"), &format!("bir öğede en çok {MAX_ITEM_LAYERS} katman olur"));
+            return fail(
+                at("layers"),
+                &format!("bir öğede en çok {MAX_ITEM_LAYERS} katman olur"),
+            );
         }
         for layer in &item.layers {
             if layer.is_empty() {
                 return fail(at("layers"), "katmanın kimliği boş olamaz");
             }
             if !layers.insert(layer.as_str()) {
-                return fail(at("layers"), &format!("“{layer}” katmanı iki öğede ya da iki kez yazılmış"));
+                return fail(
+                    at("layers"),
+                    &format!("“{layer}” katmanı iki öğede ya da iki kez yazılmış"),
+                );
             }
         }
         if let Some(p) = &item.profile {
             if !text_ok(&p.name) {
-                return fail(at("profile.name"), &format!("profilin adı boşluksuz başlayıp biten 1–{MOST_WORK_TEXT} karakter olmalı"));
+                return fail(
+                    at("profile.name"),
+                    &format!(
+                        "profilin adı boşluksuz başlayıp biten 1–{MOST_WORK_TEXT} karakter olmalı"
+                    ),
+                );
             }
             if p.classes.len() > MAX_PROFILE_CLASS_IDS {
-                return fail(at("profile.classes"), &format!("bir öğenin profilinde en çok {MAX_PROFILE_CLASS_IDS} sınıf olur"));
+                return fail(
+                    at("profile.classes"),
+                    &format!("bir öğenin profilinde en çok {MAX_PROFILE_CLASS_IDS} sınıf olur"),
+                );
             }
             for (k, c) in p.classes.iter().enumerate() {
                 if !text_ok(c) || p.classes[..k].contains(c) {
-                    return fail(at("profile.classes"), "her sınıf boş olmayan, boşluksuz başlayıp biten bir kimliktir ve bir kez yazılır");
+                    return fail(
+                        at("profile.classes"),
+                        "her sınıf boş olmayan, boşluksuz başlayıp biten bir kimliktir ve bir kez yazılır",
+                    );
                 }
             }
         }
         if let Some(file) = &item.file {
             if file.path.trim().is_empty() || file.path.trim() != file.path {
-                return fail(at("file.path"), "dosyanın yolu boş olamaz, başında ve sonunda boşluk olmaz");
+                return fail(
+                    at("file.path"),
+                    "dosyanın yolu boş olamaz, başında ve sonunda boşluk olmaz",
+                );
             }
             if !is_sha256_text(&file.revision) {
-                return fail(at("file.revision"), "dosyanın revizyonu 64 küçük onaltılık haneli SHA-256 olmalı");
+                return fail(
+                    at("file.revision"),
+                    "dosyanın revizyonu 64 küçük onaltılık haneli SHA-256 olmalı",
+                );
             }
-            if let Some(why) = file.relative.as_deref().and_then(crate::sources::relative_problem) {
+            if let Some(why) = file
+                .relative
+                .as_deref()
+                .and_then(crate::sources::relative_problem)
+            {
                 return fail(at("file.relative"), &format!("dosyanın göreli yolu {why}"));
             }
         }
@@ -403,7 +443,10 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
                 return fail(at("approved"), "onay damgası yalnız onaylı öğede olur");
             }
             if !is_sha256_text(stamp) {
-                return fail(at("approved"), "onay damgası 64 küçük onaltılık haneli SHA-256 olmalı");
+                return fail(
+                    at("approved"),
+                    "onay damgası 64 küçük onaltılık haneli SHA-256 olmalı",
+                );
             }
         }
         // Docs/adr/2880: the objects an approval stamped, the list its stamp is the digest of.
@@ -413,14 +456,23 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
                 return fail(objects, "nesne başına özet yalnız onay damgasıyla olur");
             };
             if item.file.is_some() {
-                return fail(objects, "dosyası olan öğe nesne başına özet tutmaz; onayı dosyanın revizyonudur");
+                return fail(
+                    objects,
+                    "dosyası olan öğe nesne başına özet tutmaz; onayı dosyanın revizyonudur",
+                );
             }
             if item.approved_objects.len() > MAX_APPROVED_OBJECTS {
-                return fail(objects, &format!("onay en çok {MAX_APPROVED_OBJECTS} nesnenin özetini tutar"));
+                return fail(
+                    objects,
+                    &format!("onay en çok {MAX_APPROVED_OBJECTS} nesnenin özetini tutar"),
+                );
             }
             for (k, (uid, digest)) in item.approved_objects.iter().enumerate() {
                 if uid.is_nil() || !is_sha256_text(digest) {
-                    return fail(objects, "her nesne boş olmayan bir kimlik ve 64 küçük onaltılık haneli özettir");
+                    return fail(
+                        objects,
+                        "her nesne boş olmayan bir kimlik ve 64 küçük onaltılık haneli özettir",
+                    );
                 }
                 if k > 0 && item.approved_objects[k - 1].0 >= *uid {
                     return fail(objects, "nesneler kimliğe göre sıralı ve birer kez yazılır");
@@ -428,16 +480,27 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
             }
             let text = serde_json::to_vec(&item.approved_objects).unwrap_or_default();
             if crate::encoding::sha256_hex(&text) != *stamp {
-                return fail(objects, "nesnelerin listesi onay damgasını vermiyor (damga listenin SHA-256'sı olmalı)");
+                return fail(
+                    objects,
+                    "nesnelerin listesi onay damgasını vermiyor (damga listenin SHA-256'sı olmalı)",
+                );
             }
         }
         // Docs/adr/3280: each approved object's parts, one to one with the list.
         if !item.approved_parts.is_empty() {
             let parts = at("approvedParts");
             if item.approved_parts.len() != item.approved_objects.len() {
-                return fail(parts, "nesnelerin parçaları onaylanan nesnelerle bire birdir (aynı sayı, aynı sıra)");
+                return fail(
+                    parts,
+                    "nesnelerin parçaları onaylanan nesnelerle bire birdir (aynı sayı, aynı sıra)",
+                );
             }
-            if item.approved_parts.iter().flatten().any(|d| !is_part_digest(d)) {
+            if item
+                .approved_parts
+                .iter()
+                .flatten()
+                .any(|d| !is_part_digest(d))
+            {
                 return fail(parts, "her parçanın özeti 16 küçük onaltılık hanedir");
             }
         }
@@ -445,20 +508,36 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
         if !item.approved_values.is_empty() {
             let values = at("approvedValues");
             if item.approved_values.len() != item.approved_objects.len() {
-                return fail(values, "onaylı değerler onaylanan nesnelerle bire birdir (aynı sayı, aynı sıra)");
+                return fail(
+                    values,
+                    "onaylı değerler onaylanan nesnelerle bire birdir (aynı sayı, aynı sıra)",
+                );
             }
-            if item.approved_values.iter().map(String::len).sum::<usize>() > MAX_APPROVED_VALUES_BYTES {
-                return fail(values, &format!("onay nesnelerin değerlerinden en çok {MAX_APPROVED_VALUES_BYTES} bayt tutar"));
+            if item.approved_values.iter().map(String::len).sum::<usize>()
+                > MAX_APPROVED_VALUES_BYTES
+            {
+                return fail(
+                    values,
+                    &format!(
+                        "onay nesnelerin değerlerinden en çok {MAX_APPROVED_VALUES_BYTES} bayt tutar"
+                    ),
+                );
             }
             for (value, (_, digest)) in item.approved_values.iter().zip(&item.approved_objects) {
                 if crate::encoding::sha256_hex(value.as_bytes()) != *digest {
-                    return fail(values, "her onaylı değerin SHA-256'sı nesnenin onaylanan özetidir");
+                    return fail(
+                        values,
+                        "her onaylı değerin SHA-256'sı nesnenin onaylanan özetidir",
+                    );
                 }
             }
         }
     }
     if work.derivations.len() > MAX_DERIVATIONS {
-        return fail("derivations".into(), &format!("en çok {MAX_DERIVATIONS} türetme kaydı olur"));
+        return fail(
+            "derivations".into(),
+            &format!("en çok {MAX_DERIVATIONS} türetme kaydı olur"),
+        );
     }
     let mut dids = std::collections::BTreeSet::new();
     let mut objects = std::collections::HashSet::new();
@@ -474,23 +553,34 @@ pub fn map_work_problem(work: &MapWork) -> Option<(String, String)> {
             return fail(at("source"), "türetmenin kaynağı projenin bir öğesi olmalı");
         }
         if !is_sha256_text(&d.revision) {
-            return fail(at("revision"), "kaynağın revizyonu 64 küçük onaltılık haneli SHA-256 olmalı");
+            return fail(
+                at("revision"),
+                "kaynağın revizyonu 64 küçük onaltılık haneli SHA-256 olmalı",
+            );
         }
         if !text_ok(&d.operation) {
             return fail(
                 at("operation"),
-                &format!("üretim işlemi boşluksuz başlayıp biten 1–{MOST_WORK_TEXT} karakter olmalı"),
+                &format!(
+                    "üretim işlemi boşluksuz başlayıp biten 1–{MOST_WORK_TEXT} karakter olmalı"
+                ),
             );
         }
         if d.uids.is_empty() || d.uids.len() > MAX_DERIVED_OBJECTS {
-            return fail(at("uids"), &format!("türetmede 1 ile {MAX_DERIVED_OBJECTS} arasında nesne olur"));
+            return fail(
+                at("uids"),
+                &format!("türetmede 1 ile {MAX_DERIVED_OBJECTS} arasında nesne olur"),
+            );
         }
         for u in &d.uids {
             if u.is_nil() {
                 return fail(at("uids"), "nesnenin kimliği boş olamaz");
             }
             if !objects.insert(*u) {
-                return fail(at("uids"), &format!("“{u}” nesnesi iki türetmede ya da iki kez yazılmış"));
+                return fail(
+                    at("uids"),
+                    &format!("“{u}” nesnesi iki türetmede ya da iki kez yazılmış"),
+                );
             }
         }
     }
@@ -516,7 +606,11 @@ mod tests {
                     name: "GNSS 2026-10".into(),
                     status: WorkStatus::Draft,
                     layers: vec!["gnss".into()],
-                    file: Some(WorkFile { path: "/veri/kampanya.nmea".into(), revision: "a".repeat(64), relative: None }),
+                    file: Some(WorkFile {
+                        path: "/veri/kampanya.nmea".into(),
+                        revision: "a".repeat(64),
+                        relative: None,
+                    }),
                     approved: None,
                     approved_objects: Vec::new(),
                     approved_parts: Vec::new(),
@@ -562,7 +656,10 @@ mod tests {
         assert_eq!(w.problem(), None);
         assert!(w.has_stamps());
         w.derivations[0].source = "is-3".into();
-        assert_eq!(w.problem().map(|p| p.0), Some("derivations[0].source".into()));
+        assert_eq!(
+            w.problem().map(|p| p.0),
+            Some("derivations[0].source".into())
+        );
         // An approval's stamp: only on an approved item, a SHA-256 (docs/adr/2080 §3).
         let mut w = work();
         assert!(!w.has_stamps());
@@ -580,7 +677,10 @@ mod tests {
         if let Some(f) = w.items[0].file.as_mut() {
             f.revision = "A".repeat(64);
         }
-        assert_eq!(w.problem().map(|p| p.0), Some("items[0].file.revision".into()));
+        assert_eq!(
+            w.problem().map(|p| p.0),
+            Some("items[0].file.revision".into())
+        );
         let mut w = work();
         w.items[0].name = " GNSS".into();
         assert_eq!(w.problem().map(|p| p.0), Some("items[0].name".into()));
@@ -588,7 +688,10 @@ mod tests {
 
     #[test]
     fn the_next_id_follows_the_largest() {
-        assert_eq!(next_numbered(["is-1", "is-7", "x"].into_iter(), "is-"), "is-8");
+        assert_eq!(
+            next_numbered(["is-1", "is-7", "x"].into_iter(), "is-"),
+            "is-8"
+        );
         assert_eq!(next_numbered(std::iter::empty(), "tr-"), "tr-1");
     }
 }

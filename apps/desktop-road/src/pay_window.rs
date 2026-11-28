@@ -16,8 +16,8 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Task, Theme};
 use kentos_commands::{
@@ -25,9 +25,9 @@ use kentos_commands::{
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_pay_edit};
+use kentos_ui::label;
 use kentos_ui::theme::Tokens;
 use kentos_ui::widget::Dialog as Frame;
-use kentos_ui::label;
 
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -117,7 +117,10 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.replace(',', ".")
+        .parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 impl Window {
@@ -180,11 +183,22 @@ impl PayWindowApp for App {
         let window = match doc.model.road_pay() {
             Some(b) => Window {
                 saved: true,
-                fields: [b.source.clone(), b.version.clone(), b.currency.clone().unwrap_or_default()],
+                fields: [
+                    b.source.clone(),
+                    b.version.clone(),
+                    b.currency.clone().unwrap_or_default(),
+                ],
                 items: b
                     .items
                     .iter()
-                    .map(|i| [i.code.clone(), i.name.clone(), i.unit.clone(), i.price.map(trimmed).unwrap_or_default()])
+                    .map(|i| {
+                        [
+                            i.code.clone(),
+                            i.name.clone(),
+                            i.unit.clone(),
+                            i.price.map(trimmed).unwrap_or_default(),
+                        ]
+                    })
                     .collect(),
                 rules: b
                     .rules
@@ -199,7 +213,13 @@ impl PayWindowApp for App {
                 preview: Preview::default(),
             },
             // A new book: its source, items and prices are the agency's; nothing is filled in.
-            None => Window { saved: false, fields: Default::default(), items: vec![Default::default()], rules: Vec::new(), preview: Preview::default() },
+            None => Window {
+                saved: false,
+                fields: Default::default(),
+                items: vec![Default::default()],
+                rules: Vec::new(),
+                preview: Preview::default(),
+            },
         };
         self.modules.road_mut().pay_window = Some(Box::new(window));
         self.dialog = Some(crate::road::dialog(road::RoadDialogKind::Pay));
@@ -271,8 +291,17 @@ impl PayWindowApp for App {
                 }
             }
             Event::AddRule => {
-                let item = w.items.first().map(|i| i[0].trim().to_owned()).unwrap_or_default();
-                w.rules.push(RuleRow { measure: PayMeasure::GuardrailLength, item, factor: "1".into(), material: String::new() });
+                let item = w
+                    .items
+                    .first()
+                    .map(|i| i[0].trim().to_owned())
+                    .unwrap_or_default();
+                w.rules.push(RuleRow {
+                    measure: PayMeasure::GuardrailLength,
+                    item,
+                    factor: "1".into(),
+                    material: String::new(),
+                });
             }
             Event::DropRule(i) => {
                 if i < w.rules.len() {
@@ -302,11 +331,20 @@ impl PayWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let result = road_pay_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             if let Some(b) = &out.book {
-                self.say(Level::Success, format!("Poz defteri yazıldı: {} pozla, {} kuralla.", b.items.len(), b.rules.len()));
+                self.say(
+                    Level::Success,
+                    format!(
+                        "Poz defteri yazıldı: {} pozla, {} kuralla.",
+                        b.items.len(),
+                        b.rules.len()
+                    ),
+                );
             }
             if let Some(w) = self.modules.road_mut().pay_window.as_mut() {
                 w.saved = true;
@@ -317,7 +355,9 @@ impl PayWindowApp for App {
     }
 
     fn remove_pay(&mut self) -> Task<Message> {
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let input = PayEdit {
             operation: RoadEditOperation::Remove,
             source: None,
@@ -340,28 +380,51 @@ impl PayWindowApp for App {
         let Some(w) = &self.modules.road().pay_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let field = |k: usize, hint: &'static str, width: f32| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(width),
                 None,
             )
         };
-        let top = row![field(0, "Listenin adı ve yılı", 360.0), field(1, "2026", 110.0), field(2, "TRY", 90.0)]
-            .spacing(10)
-            .align_y(iced::alignment::Vertical::Bottom);
-        let fill = |title| road_dialog::Col { title, width: None, number: false };
+        let top = row![
+            field(0, "Listenin adı ve yılı", 360.0),
+            field(1, "2026", 110.0),
+            field(2, "TRY", 90.0)
+        ]
+        .spacing(10)
+        .align_y(iced::alignment::Vertical::Bottom);
+        let fill = |title| road_dialog::Col {
+            title,
+            width: None,
+            number: false,
+        };
         let items = &w.items;
         let items = iced::widget::column![
             road_dialog::grid_table(
-                vec![road_dialog::col("Numara", 80.0), fill("Ad"), road_dialog::col("Birim", 64.0), road_dialog::col("Birim fiyat", 96.0), road_dialog::col("", 36.0)],
+                vec![
+                    road_dialog::col("Numara", 80.0),
+                    fill("Ad"),
+                    road_dialog::col("Birim", 64.0),
+                    road_dialog::col("Birim fiyat", 96.0),
+                    road_dialog::col("", 36.0)
+                ],
                 items.len(),
                 move |i, k| match k {
                     4 => road_dialog::drop_cell(msg(Event::DropItem(i))),
-                    k => road_dialog::edit(&items[i][k], k == 3, move |t| msg(Event::Item(i, k, t))),
+                    k =>
+                        road_dialog::edit(&items[i][k], k == 3, move |t| msg(Event::Item(i, k, t))),
                 },
                 "Poz yok",
             ),
@@ -369,24 +432,43 @@ impl PayWindowApp for App {
         ]
         .spacing(6);
 
-        let codes: Vec<String> = w.items.iter().map(|i| i[0].trim().to_owned()).filter(|c| !c.is_empty()).collect();
+        let codes: Vec<String> = w
+            .items
+            .iter()
+            .map(|i| i[0].trim().to_owned())
+            .filter(|c| !c.is_empty())
+            .collect();
         let rules = &w.rules;
         let rules = iced::widget::column![
             road_dialog::grid_table(
-                vec![fill("Ölçü"), road_dialog::col("Poz", 84.0), road_dialog::col("Çarpan", 64.0), road_dialog::col("Malzeme", 96.0), road_dialog::col("", 36.0)],
+                vec![
+                    fill("Ölçü"),
+                    road_dialog::col("Poz", 84.0),
+                    road_dialog::col("Çarpan", 64.0),
+                    road_dialog::col("Malzeme", 96.0),
+                    road_dialog::col("", 36.0)
+                ],
                 rules.len(),
                 move |i, k| {
                     let r = &rules[i];
                     match k {
-                        0 => road_dialog::pick(MEASURES.map(|m| m.1), MEASURES.iter().position(|m| m.0 == r.measure), move |k| {
-                            msg(Event::Measure(i, MEASURES[k].0))
-                        }),
+                        0 => road_dialog::pick(
+                            MEASURES.map(|m| m.1),
+                            MEASURES.iter().position(|m| m.0 == r.measure),
+                            move |k| msg(Event::Measure(i, MEASURES[k].0)),
+                        ),
                         1 => {
                             let list = codes.clone();
-                            road_dialog::pick(codes.clone(), codes.iter().position(|c| *c == r.item), move |k| msg(Event::RuleItem(i, list[k].clone())))
+                            road_dialog::pick(
+                                codes.clone(),
+                                codes.iter().position(|c| *c == r.item),
+                                move |k| msg(Event::RuleItem(i, list[k].clone())),
+                            )
                         }
                         2 => road_dialog::edit(&r.factor, true, move |t| msg(Event::Factor(i, t))),
-                        3 => road_dialog::edit(&r.material, false, move |t| msg(Event::Material(i, t))),
+                        3 => road_dialog::edit(&r.material, false, move |t| {
+                            msg(Event::Material(i, t))
+                        }),
                         _ => road_dialog::drop_cell(msg(Event::DropRule(i))),
                     }
                 },
@@ -397,7 +479,11 @@ impl PayWindowApp for App {
         .spacing(6);
         let book = row![container(items).width(Fill), container(rules).width(Fill)].spacing(12);
         let mut body = Column::new().spacing(10).push(top).push(
-            row![label::caption("Pozlar").style(muted).width(Fill), label::caption("Kurallar").style(muted).width(Fill)].spacing(12),
+            row![
+                label::caption("Pozlar").style(muted).width(Fill),
+                label::caption("Kurallar").style(muted).width(Fill)
+            ]
+            .spacing(12),
         );
         body = body.push(book);
         match (&w.preview.why, &w.preview.answer) {
@@ -421,7 +507,10 @@ impl PayWindowApp for App {
                             r.unit.clone(),
                             grouped(r.quantity, 2),
                             r.price.map_or_else(|| "—".into(), |p| grouped(p, 2)),
-                            r.amount.map_or_else(|| "—".into(), |p| format!("{} {money}", grouped(p, 2))),
+                            r.amount.map_or_else(
+                                || "—".into(),
+                                |p| format!("{} {money}", grouped(p, 2)),
+                            ),
                             sources,
                         ]
                     })
@@ -434,7 +523,11 @@ impl PayWindowApp for App {
                         num("Miktar", 110.0),
                         num("Birim fiyat", 110.0),
                         num("Tutar", 140.0),
-                        road_dialog::Col { title: "Kaynaklar", width: None, number: false },
+                        road_dialog::Col {
+                            title: "Kaynaklar",
+                            width: None,
+                            number: false,
+                        },
                     ],
                     rows,
                     "Poz tutarı yok",
@@ -445,10 +538,20 @@ impl PayWindowApp for App {
                     a.source,
                     a.version,
                     road_dialog::grouped(a.total, 2),
-                    if a.unpriced > 0 { format!(" · {} pozun fiyatı yok", a.unpriced) } else { String::new() }
+                    if a.unpriced > 0 {
+                        format!(" · {} pozun fiyatı yok", a.unpriced)
+                    } else {
+                        String::new()
+                    }
                 )));
                 if !w.preview.warnings.is_empty() {
-                    let all = w.preview.warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                    let all = w
+                        .preview
+                        .warnings
+                        .iter()
+                        .map(|x| x.message.as_str())
+                        .collect::<Vec<_>>()
+                        .join(" ");
                     body = body.push(label::caption(all).style(warn));
                 }
                 body = body.push(table);
@@ -456,16 +559,19 @@ impl PayWindowApp for App {
             _ => {}
         }
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                words::secondary(REMOVE, w.saved.then(|| msg(Event::Remove))),
-                space::horizontal().width(Fill),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-                words::primary(SAVE, w.preview.answer.as_ref().map(|_| msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
+        let footer = row![
+            words::secondary(REMOVE, w.saved.then(|| msg(Event::Remove))),
+            space::horizontal().width(Fill),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+            words::primary(SAVE, w.preview.answer.as_ref().map(|_| msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1080.0)
+            .modal(msg(Event::Close))
     }
 
     fn pay_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

@@ -30,7 +30,10 @@ pub fn sample_line(al: &Alignment, station: f64, left: f64, right: f64) -> Optio
         station,
         left,
         right,
-        ends: [[p.x - rx * left, p.y - ry * left], [p.x + rx * right, p.y + ry * right]],
+        ends: [
+            [p.x - rx * left, p.y - ry * left],
+            [p.x + rx * right, p.y + ry * right],
+        ],
         at: [p.x, p.y],
         direction: p.direction,
     })

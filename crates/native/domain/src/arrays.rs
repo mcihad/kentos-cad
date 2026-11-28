@@ -62,8 +62,20 @@ pub fn placements(array: &AssocArray, path: Option<&Entity>) -> Option<Vec<Place
             dx: *dx,
             dy: *dy,
         },
-        ArrayLayout::Lattice {rows,cols,dx,dy,column_angle,row_angle} => Layout::Lattice {
-            rows:*rows,cols:*cols,dx:*dx,dy:*dy,column_angle:*column_angle,row_angle:*row_angle,
+        ArrayLayout::Lattice {
+            rows,
+            cols,
+            dx,
+            dy,
+            column_angle,
+            row_angle,
+        } => Layout::Lattice {
+            rows: *rows,
+            cols: *cols,
+            dx: *dx,
+            dy: *dy,
+            column_angle: *column_angle,
+            row_angle: *row_angle,
         },
         ArrayLayout::Line { count, dx, dy, fit } => Layout::Line {
             count: *count,

@@ -7,17 +7,27 @@ use iced::Element;
 use kentos_ui::widget::select::{Choice, Select};
 
 /// The rows: the system each stands for (none: the default) and its words.
-pub(crate) fn rows(default_label: String, default_srid: Option<u32>, project: u32) -> Vec<(Option<u32>, String)> {
+pub(crate) fn rows(
+    default_label: String,
+    default_srid: Option<u32>,
+    project: u32,
+) -> Vec<(Option<u32>, String)> {
     let mut rows = vec![(None, default_label)];
     if project > 0
         && default_srid != Some(project)
         && let Some(s) = kentos_project::crs::system(project)
     {
-        rows.push((Some(project), format!("Projenin sistemi · {} (EPSG:{project})", s.name)));
+        rows.push((
+            Some(project),
+            format!("Projenin sistemi · {} (EPSG:{project})", s.name),
+        ));
     }
     for (datum, systems) in kentos_project::crs::others_by_datum(project) {
         for s in systems.into_iter().filter(|s| Some(s.srid) != default_srid) {
-            rows.push((Some(s.srid), format!("{datum} · {} (EPSG:{})", s.name, s.srid)));
+            rows.push((
+                Some(s.srid),
+                format!("{datum} · {} (EPSG:{})", s.name, s.srid),
+            ));
         }
     }
     rows
@@ -31,7 +41,11 @@ pub(crate) fn select<'a, Message: Clone + 'a>(
 ) -> Element<'a, Message> {
     let at = rows.iter().position(|(s, _)| *s == chosen).unwrap_or(0);
     let ids: Vec<Option<u32>> = rows.iter().map(|(s, _)| *s).collect();
-    Select::new(rows.into_iter().map(|(_, n)| Choice::new(n)), Some(at), move |i| on_pick(ids.get(i).copied().flatten()))
-        .placeholder("Sistem ara: ad, datum ya da EPSG kodu")
-        .into()
+    Select::new(
+        rows.into_iter().map(|(_, n)| Choice::new(n)),
+        Some(at),
+        move |i| on_pick(ids.get(i).copied().flatten()),
+    )
+    .placeholder("Sistem ara: ad, datum ya da EPSG kodu")
+    .into()
 }

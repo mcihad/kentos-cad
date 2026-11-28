@@ -1,8 +1,8 @@
 use super::*;
 use crate::arch;
+use crate::arch::ArchState;
 use crate::files_testing::{app_with_drawing, make_cad};
 use kentos_ui::snapshot::{Input, Snapshot};
-use crate::arch::ArchState;
 fn app() -> App {
     let mut app = app_with_drawing();
     make_cad(&mut app);
@@ -32,7 +32,9 @@ fn opening_changing_policy_and_cancelling_a_template_write_nothing() {
     let _ = app.update(Message::Run("arch.template"));
     assert_eq!(
         app.dialog,
-        Some(crate::arch::dialog(crate::arch::ArchDialogKind::ArchTemplate))
+        Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::ArchTemplate
+        ))
     );
     let w = app.modules.arch().arch_template.as_ref().unwrap();
     assert_eq!(w.input.settings_mode, Some(TemplateSettingsMode::Keep));
@@ -98,9 +100,18 @@ fn changed_revisions_refresh_the_review_without_applying_and_old_documents_canno
         app.document.as_ref().unwrap().model.to_snapshot_v2(),
         before
     );
-    assert!(app.modules.arch().arch_template.as_ref().unwrap().notice.is_some());
+    assert!(
+        app.modules
+            .arch()
+            .arch_template
+            .as_ref()
+            .unwrap()
+            .notice
+            .is_some()
+    );
     assert_eq!(
-        app.modules.arch()
+        app.modules
+            .arch()
             .arch_template
             .as_ref()
             .unwrap()

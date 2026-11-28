@@ -2,8 +2,8 @@
 //! 100 000 objects, a tenth of them duplicates, a tenth pieces of longer lines, and 10 000 paths with straight
 //! vertices. The shared cases are `fixtures/commands/v1/cad.entities.cleanup.json`.
 
-use kentos_domain::Document;
 use kentos_commands::{CommandResult, DocumentSnapshotV1, EntitiesCleanup};
+use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, entities_cleanup};
 use serde_json::json;
 

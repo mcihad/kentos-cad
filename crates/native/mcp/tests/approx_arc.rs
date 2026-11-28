@@ -11,11 +11,23 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn an_arc_drawn_with_chords_over_mcp_is_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.parcels.boundaries.json")).unwrap();
-    let case = |start: &str| cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(start))).unwrap().clone();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.parcels.boundaries.json"
+    ))
+    .unwrap();
+    let case = |start: &str| {
+        cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(start)))
+            .unwrap()
+            .clone()
+    };
     let with = case("santimetreye yuvarlanmış köşeler 1 cm");
     let without = case("santimetreye yuvarlanmış köşeler uzaklık");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(with["setup"].clone()).unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(with["setup"].clone()).unwrap();
     let path = std::env::temp_dir().join(format!("kentos-approx-arc-{}.kcad", std::process::id()));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
@@ -28,10 +40,19 @@ fn an_arc_drawn_with_chords_over_mcp_is_the_case_s() {
         args["drawing"] = drawing.clone();
         let r = call(&mut server, "cad.parcels.boundaries", args);
         assert_eq!(r["isError"], false, "{r}");
-        let got = r["structuredContent"]["output"]["problems"].as_array().unwrap().clone();
-        let want = step["result"]["output"]["problems"].as_array().unwrap().clone();
+        let got = r["structuredContent"]["output"]["problems"]
+            .as_array()
+            .unwrap()
+            .clone();
+        let want = step["result"]["output"]["problems"]
+            .as_array()
+            .unwrap()
+            .clone();
         assert_eq!(got.len(), 1, "{r}");
-        assert_eq!((got[0]["kind"].as_str(), &got[0]["boundaries"]), (Some(kind), &want[0]["boundaries"]));
+        assert_eq!(
+            (got[0]["kind"].as_str(), &got[0]["boundaries"]),
+            (Some(kind), &want[0]["boundaries"])
+        );
         for key in ["area", "gap"] {
             if let (Some(a), Some(b)) = (got[0][key].as_f64(), want[0][key].as_f64()) {
                 assert!((a - b).abs() < 1e-9, "{key}: {a} != {b}");

@@ -70,7 +70,8 @@ fn pad(bytes: &mut Vec<u8>, with: u8) {
 /// The scene as a GLB file.
 pub fn write(scene: &Scene) -> Vec<u8> {
     let mut bin: Vec<u8> = Vec::new();
-    let (mut views, mut accessors, mut meshes, mut nodes) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let (mut views, mut accessors, mut meshes, mut nodes) =
+        (Vec::new(), Vec::new(), Vec::new(), Vec::new());
     for (k, m) in scene.meshes.iter().enumerate() {
         let gl: Vec<[f32; 3]> = m.positions.iter().map(|p| to_gltf(*p)).collect();
         let mut lo = [f32::INFINITY; 3];
@@ -97,10 +98,14 @@ pub fn write(scene: &Scene) -> Vec<u8> {
             }
         }
         views.push(json!({"buffer": 0, "byteOffset": at, "byteLength": bin.len() - at, "target": ELEMENT_ARRAY_BUFFER}));
-        accessors.push(json!({"bufferView": views.len() - 1, "componentType": UNSIGNED_INT,
-                              "count": m.triangles.len() * 3, "type": "SCALAR"}));
-        meshes.push(json!({"name": m.name, "primitives": [{"attributes": {"POSITION": accessors.len() - 2},
-                           "indices": accessors.len() - 1, "material": m.material, "mode": 4}]}));
+        accessors.push(
+            json!({"bufferView": views.len() - 1, "componentType": UNSIGNED_INT,
+                              "count": m.triangles.len() * 3, "type": "SCALAR"}),
+        );
+        meshes.push(
+            json!({"name": m.name, "primitives": [{"attributes": {"POSITION": accessors.len() - 2},
+                           "indices": accessors.len() - 1, "material": m.material, "mode": 4}]}),
+        );
         let mut node = json!({"name": m.name, "mesh": k});
         if !m.extras.is_null() {
             node["extras"] = m.extras.clone();
@@ -198,18 +203,39 @@ pub fn read(bytes: &[u8]) -> Result<([f64; 3], Vec<ReadMesh>), String> {
         let v = &doc["bufferViews"][acc["bufferView"].as_u64().ok_or("görünüm yok")? as usize];
         let at = v["byteOffset"].as_u64().unwrap_or(0) as usize;
         let len = v["byteLength"].as_u64().ok_or("boy yok")? as usize;
-        bin.get(at..at + len).ok_or_else(|| "görünüm taşıyor".to_owned())
+        bin.get(at..at + len)
+            .ok_or_else(|| "görünüm taşıyor".to_owned())
     };
     let mut out = Vec::new();
     for m in doc["meshes"].as_array().ok_or("ağ yok")? {
         let p = &m["primitives"][0];
-        let pa = &doc["accessors"][p["attributes"]["POSITION"].as_u64().ok_or("konum yok")? as usize];
+        let pa =
+            &doc["accessors"][p["attributes"]["POSITION"].as_u64().ok_or("konum yok")? as usize];
         let ia = &doc["accessors"][p["indices"].as_u64().ok_or("dizin yok")? as usize];
         let f = |c: &[u8]| f32::from_le_bytes([c[0], c[1], c[2], c[3]]);
-        let positions = view(pa)?.as_chunks::<12>().0.iter().map(|c| from_gltf([f(&c[0..4]), f(&c[4..8]), f(&c[8..12])])).collect();
-        let idx: Vec<u32> = view(ia)?.as_chunks::<4>().0.iter().map(|c| u32::from_le_bytes([c[0], c[1], c[2], c[3]])).collect();
-        let triangles = idx.as_chunks::<3>().0.iter().map(|t| [t[0], t[1], t[2]]).collect();
-        out.push(ReadMesh { name: m["name"].as_str().unwrap_or_default().to_owned(), positions, triangles });
+        let positions = view(pa)?
+            .as_chunks::<12>()
+            .0
+            .iter()
+            .map(|c| from_gltf([f(&c[0..4]), f(&c[4..8]), f(&c[8..12])]))
+            .collect();
+        let idx: Vec<u32> = view(ia)?
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|c| u32::from_le_bytes([c[0], c[1], c[2], c[3]]))
+            .collect();
+        let triangles = idx
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .map(|t| [t[0], t[1], t[2]])
+            .collect();
+        out.push(ReadMesh {
+            name: m["name"].as_str().unwrap_or_default().to_owned(),
+            positions,
+            triangles,
+        });
     }
     Ok((origin, out))
 }
@@ -225,7 +251,11 @@ mod tests {
             root: "Yol".into(),
             origin: [500_123.25, 4_400_456.5, 1_001.125],
             extras: json!({"crs": "EPSG:5254"}),
-            materials: vec![Material { name: "Arazi".into(), color: [0.5, 0.6, 0.4, 1.0], double_sided: true }],
+            materials: vec![Material {
+                name: "Arazi".into(),
+                color: [0.5, 0.6, 0.4, 1.0],
+                double_sided: true,
+            }],
             meshes: vec![Mesh {
                 name: "Zemin".into(),
                 positions: vec![[0.0, 0.0, 0.0], [10.0, 0.0, 1.0], [0.0, 10.0, -1.5]],
@@ -242,8 +272,11 @@ mod tests {
         assert_eq!(meshes[0].positions, scene.meshes[0].positions);
         assert_eq!(meshes[0].triangles, scene.meshes[0].triangles);
         // Seen from glTF's +Y (up) the triangle stays counterclockwise: (x, -z) keeps the plan's orientation.
-        let text = String::from_utf8_lossy(&bytes[20..20 + u32::from_le_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]) as usize])
-            .into_owned();
+        let text = String::from_utf8_lossy(
+            &bytes[20..20
+                + u32::from_le_bytes([bytes[12], bytes[13], bytes[14], bytes[15]]) as usize],
+        )
+        .into_owned();
         let doc: Value = serde_json::from_str(text.trim_end()).unwrap();
         assert_eq!(doc["accessors"][0]["max"], json!([10.0, 1.0, 0.0]));
         assert_eq!(doc["accessors"][0]["min"], json!([0.0, -1.5, -10.0]));

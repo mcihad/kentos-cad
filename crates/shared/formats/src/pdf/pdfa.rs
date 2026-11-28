@@ -614,10 +614,19 @@ mod tests {
     #[test]
     #[ignore]
     fn pdfa_files() {
-        let Some(dir) = std::env::var_os("KENTOS_PDFA_DIR") else { return };
-        let mut names: Vec<_> = std::fs::read_dir(&dir).unwrap().flatten().map(|e| e.path()).collect();
+        let Some(dir) = std::env::var_os("KENTOS_PDFA_DIR") else {
+            return;
+        };
+        let mut names: Vec<_> = std::fs::read_dir(&dir)
+            .unwrap()
+            .flatten()
+            .map(|e| e.path())
+            .collect();
         names.sort();
-        for path in names.iter().filter(|p| p.extension().is_some_and(|e| e == "pdf")) {
+        for path in names
+            .iter()
+            .filter(|p| p.extension().is_some_and(|e| e == "pdf"))
+        {
             let bytes = std::fs::read(path).unwrap();
             let r = pdfa2_report(&bytes).unwrap();
             println!(
@@ -625,7 +634,11 @@ mod tests {
                 path.file_name().unwrap().to_string_lossy(),
                 r.part.map_or("?".into(), |p| p.to_string()),
                 r.conformance.as_deref().unwrap_or("?").to_lowercase(),
-                if r.conforms() { "uygun" } else { "uygun değil" },
+                if r.conforms() {
+                    "uygun"
+                } else {
+                    "uygun değil"
+                },
                 r.findings.len()
             );
             for f in &r.findings {

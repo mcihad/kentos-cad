@@ -52,8 +52,14 @@ pub(crate) fn event_text(
     };
     let application = direction == DossierDirection::Application;
     match action {
-        "office_shared" => format!("{actor} dosyayı {} ile paylaştı; büronun meslektaşları da çalışır.", text("office")),
-        "office_unshared" => format!("{actor} dosyanın {} ile paylaşımını kaldırdı.", text("office")),
+        "office_shared" => format!(
+            "{actor} dosyayı {} ile paylaştı; büronun meslektaşları da çalışır.",
+            text("office")
+        ),
+        "office_unshared" => format!(
+            "{actor} dosyanın {} ile paylaşımını kaldırdı.",
+            text("office")
+        ),
         "created" if application => format!("{actor} başvuruyu taslak olarak açtı."),
         "created" => format!("{actor} aktarımı taslak olarak hazırlamaya başladı."),
         "send" if application && round <= 1 => {
@@ -82,18 +88,35 @@ pub(crate) fn event_text(
         "edited" => format!("{actor} dosyanın bilgilerini değiştirdi."),
         "imported" => format!("{actor}, “{}” dosyasını proje olarak açtı.", text("file")),
         "fee_issued" => format!("{actor} harç ve ücret tahakkuk ettirdi: {}.", text("total")),
-        "fee_paid" => format!("{actor} {} tutarındaki ödemeyi kaydetti (makbuz {}).", text("total"), text("receipt")),
-        "fee_cancelled" if detail.get("wasPaid").and_then(serde_json::Value::as_bool) == Some(true) => format!(
-            "{actor} ödenmiş {} tutarındaki tahakkuku iptal etti: {} (iadesi veznenin işi).",
+        "fee_paid" => format!(
+            "{actor} {} tutarındaki ödemeyi kaydetti (makbuz {}).",
+            text("total"),
+            text("receipt")
+        ),
+        "fee_cancelled"
+            if detail.get("wasPaid").and_then(serde_json::Value::as_bool) == Some(true) =>
+        {
+            format!(
+                "{actor} ödenmiş {} tutarındaki tahakkuku iptal etti: {} (iadesi veznenin işi).",
+                text("total"),
+                text("reason")
+            )
+        }
+        "fee_cancelled" => format!(
+            "{actor} {} tutarındaki tahakkuku iptal etti: {}.",
             text("total"),
             text("reason")
         ),
-        "fee_cancelled" => format!("{actor} {} tutarındaki tahakkuku iptal etti: {}.", text("total"), text("reason")),
-        "live_project_linked" => format!("{actor} işi kurumun canlı projesine bağladı; üstlenen düzenleyici olarak çalışır."),
+        "live_project_linked" => format!(
+            "{actor} işi kurumun canlı projesine bağladı; üstlenen düzenleyici olarak çalışır."
+        ),
         "live_project_unlinked" => format!("{actor} canlı proje bağlantısını kaldırdı."),
         "signed" => format!(
             "{actor} {} dosyayı e-imzaladı ({}).",
-            detail.get("files").and_then(serde_json::Value::as_u64).unwrap_or(0),
+            detail
+                .get("files")
+                .and_then(serde_json::Value::as_u64)
+                .unwrap_or(0),
             text("subject")
         ),
         other => format!("{actor}: {other}"),
@@ -153,16 +176,18 @@ pub(crate) async fn assemble(
     .bind(id)
     .fetch_all(&mut **tx)
     .await?;
-    let live: Option<(Uuid, Uuid, String, bool)> =
-        sqlx::query_as("select tenant_id, project_id, name, granted from kentos.dossier_live_project($1)")
-            .bind(id)
-            .fetch_optional(&mut **tx)
-            .await?;
-    let fee_count: i64 =
-        sqlx::query_scalar("select count(*) from kentos.dossier_fee where dossier_id = $1 and state <> 'cancelled'")
-            .bind(id)
-            .fetch_one(&mut **tx)
-            .await?;
+    let live: Option<(Uuid, Uuid, String, bool)> = sqlx::query_as(
+        "select tenant_id, project_id, name, granted from kentos.dossier_live_project($1)",
+    )
+    .bind(id)
+    .fetch_optional(&mut **tx)
+    .await?;
+    let fee_count: i64 = sqlx::query_scalar(
+        "select count(*) from kentos.dossier_fee where dossier_id = $1 and state <> 'cancelled'",
+    )
+    .bind(id)
+    .fetch_one(&mut **tx)
+    .await?;
     // Each round's sending: the step that sent it.
     let sent_at: BTreeMap<u32, String> = events
         .iter()
@@ -293,11 +318,13 @@ pub(crate) async fn assemble(
                 Party::Member(r) => r >= kentos_contracts::TenantRole::Editor,
                 p => p.works_for_professional(),
             },
-        live_project: live.map(|(tenant, project, name, granted)| kentos_contracts::LiveProjectView {
-            tenant_id: tenant.to_string(),
-            project_id: project.to_string(),
-            name,
-            granted,
+        live_project: live.map(|(tenant, project, name, granted)| {
+            kentos_contracts::LiveProjectView {
+                tenant_id: tenant.to_string(),
+                project_id: project.to_string(),
+                name,
+                granted,
+            }
         }),
         can_link_live_project: direction == DossierDirection::Transfer
             && matches!(party, Party::Member(r) if r >= kentos_contracts::TenantRole::ProjectManager)

@@ -275,7 +275,7 @@ pub fn used_assets(items: &[Item]) -> Vec<String> {
 /// The book a template stands for (its sheet, master and pictures), for the book's rules.
 fn as_book(t: &Template) -> SheetBook {
     SheetBook {
-        plot_profiles:Vec::new(),
+        plot_profiles: Vec::new(),
         page_setups: Vec::new(),
         schema: BOOK_SCHEMA.to_owned(),
         sheets: vec![t.sheet.clone()],
@@ -543,11 +543,7 @@ fn id_map(items: &[Item], new: &[ItemId], what: &str) -> Result<BTreeMap<String,
 }
 
 /// A new sheet from a template: new ids from the host, links kept, the paper chosen (items follow their constraints), the questions answered.
-pub fn instantiate(
-    t: &Template,
-    ids: &InstanceIds,
-    options: &InstanceOptions,
-) -> Result<Instance> {
+pub fn instantiate(t: &Template, ids: &InstanceIds, options: &InstanceOptions) -> Result<Instance> {
     let mut sheet = t.sheet.clone();
     let mut master = t.master.clone();
     let map = id_map(&sheet.items, &ids.items, "Paftanın öğeleri")?;
@@ -562,7 +558,9 @@ pub fn instantiate(
     crate::variants::remap(&mut sheet.variants, &mut sheet.base_layout, &map);
     sheet.id = ids.sheet.clone();
     // A template creates a new drawing, never a second issued sheet with the same number.
-    if let Some(info) = &mut sheet.drawing_info { info.number.clear(); }
+    if let Some(info) = &mut sheet.drawing_info {
+        info.number.clear();
+    }
     if let Some(m) = &mut master {
         let mid = ids.master.clone().ok_or_else(|| {
             SheetError::new(
@@ -676,7 +674,8 @@ pub fn extract(
     let mut sheet = src.clone();
     if let Some(plot) = &mut sheet.plot {
         if plot.settings.profile_snapshot.is_none() {
-            plot.settings.profile_snapshot = crate::plot_profile::for_sheet(book, sheet_id)?.cloned();
+            plot.settings.profile_snapshot =
+                crate::plot_profile::for_sheet(book, sheet_id)?.cloned();
         }
         plot.source = None;
     }

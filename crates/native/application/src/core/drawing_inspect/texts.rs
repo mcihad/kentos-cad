@@ -16,11 +16,20 @@ pub(super) fn findings(doc: &Document, uid: Uuid, text: &TextEntity) -> Vec<Insp
 }
 
 /// Anonymous block text is owned by an insert, not by a fabricated text UUID.
-pub(super) fn placed_findings(doc: &Document, owner: Uuid, text: &TextEntity) -> Vec<InspectionFinding> {
+pub(super) fn placed_findings(
+    doc: &Document,
+    owner: Uuid,
+    text: &TextEntity,
+) -> Vec<InspectionFinding> {
     inspect_text(doc, owner, text, false)
 }
 
-fn inspect_text(doc: &Document, uid: Uuid, text: &TextEntity, owns_uid: bool) -> Vec<InspectionFinding> {
+fn inspect_text(
+    doc: &Document,
+    uid: Uuid,
+    text: &TextEntity,
+    owns_uid: bool,
+) -> Vec<InspectionFinding> {
     let mut out = Vec::new();
     let sources: Vec<_> = text
         .paragraph
@@ -51,10 +60,10 @@ fn inspect_text(doc: &Document, uid: Uuid, text: &TextEntity, owns_uid: bool) ->
             "SHX kaynağını Çizgi tipleri › SHX ekle… ya da cad.library.edit ile projeye ekleyin; yazılar o zaman özgün fontla çizilir."));
     } else if shx.is_none()
         && let Some(style) = text
-        .face
-        .text_style
-        .as_ref()
-        .and_then(|id| doc.settings().text_styles.iter().find(|s| &s.id == id))
+            .face
+            .text_style
+            .as_ref()
+            .and_then(|id| doc.settings().text_styles.iter().find(|s| &s.id == id))
         && let Some(file) = &style.font_file
         && kentos_geometry_core::text::fonts::resolve(file).0 != Some(style.font.id())
     {
@@ -62,10 +71,15 @@ fn inspect_text(doc: &Document, uid: Uuid, text: &TextEntity, owns_uid: bool) ->
             format!("Özgün font: {file} · Çizilen font: {}. Özgün fontun metrikleriyle eşdeğerlik doğrulanmadı.", style.font.label()),
             "Yazı stilini ve cad.fonts.report sonucunu inceleyin; desteklenen fonta dönüşümü açıkça onaylayın."));
     }
-    if text.paragraph.layout.as_ref().is_some_and(|l|l.engine.is_some()) {
-        let shape=crate::geometry::shape(&Entity::Text(text.clone()));
-        if let Some(place)=kentos_geometry_core::entity::TextPlace::of(&shape) {
-            let font=crate::geometry::drawing_font(doc.settings().drawing_font);
+    if text
+        .paragraph
+        .layout
+        .as_ref()
+        .is_some_and(|l| l.engine.is_some())
+    {
+        let shape = crate::geometry::shape(&Entity::Text(text.clone()));
+        if let Some(place) = kentos_geometry_core::entity::TextPlace::of(&shape) {
+            let font = crate::geometry::drawing_font(doc.settings().drawing_font);
             match place.unicode_plan(font).and_then(|p|p.contours().map(|_|p)) {
                 Err(error)=>out.push(emit("text_layout_unsupported",InspectionSeverity::Error,
                     format!("{} Metin kısmen çizilemez veya farklı metrikle ölçülemez.",error.message(&text.text)),
@@ -88,15 +102,37 @@ fn inspect_text(doc: &Document, uid: Uuid, text: &TextEntity, owns_uid: bool) ->
     out
 }
 
-fn field_findings(doc: &Document, uid: Uuid, text: &TextEntity, owns_uid: bool) -> Vec<InspectionFinding> {
+fn field_findings(
+    doc: &Document,
+    uid: Uuid,
+    text: &TextEntity,
+    owns_uid: bool,
+) -> Vec<InspectionFinding> {
     let mut out = Vec::new();
-    if text.paragraph.fields.is_empty() { return out; }
-    let mut sources: Vec<_> = text.paragraph.fields.iter().filter_map(|f| f.source.object())
-        .map(|u| Uuid::from_bytes(u.0).to_string()).collect();
-    let reads = |text: &TextEntity| text.paragraph.fields.iter().filter_map(|f| match f.source {
-        FieldSource::Object { uid, value: ObjectValue::Text, .. } => Some(Uuid::from_bytes(uid.0)),
-        _ => None,
-    }).collect::<Vec<_>>();
+    if text.paragraph.fields.is_empty() {
+        return out;
+    }
+    let mut sources: Vec<_> = text
+        .paragraph
+        .fields
+        .iter()
+        .filter_map(|f| f.source.object())
+        .map(|u| Uuid::from_bytes(u.0).to_string())
+        .collect();
+    let reads = |text: &TextEntity| {
+        text.paragraph
+            .fields
+            .iter()
+            .filter_map(|f| match f.source {
+                FieldSource::Object {
+                    uid,
+                    value: ObjectValue::Text,
+                    ..
+                } => Some(Uuid::from_bytes(uid.0)),
+                _ => None,
+            })
+            .collect::<Vec<_>>()
+    };
     let mut pending = reads(text);
     let mut seen = HashSet::new();
     let mut graph = HashMap::new();
@@ -137,7 +173,15 @@ fn field_findings(doc: &Document, uid: Uuid, text: &TextEntity, owns_uid: bool) 
         Some(Entity::Text(t)) => Some(t.text.clone()),
         _ => None,
     };
-    let own = doc.fields_written(text, if owns_uid && cyclic.contains(&uid) { &cyclic } else { &empty }, &letters);
+    let own = doc.fields_written(
+        text,
+        if owns_uid && cyclic.contains(&uid) {
+            &cyclic
+        } else {
+            &empty
+        },
+        &letters,
+    );
     stale |= own.text != text.text || own.paragraph.fields != text.paragraph.fields;
     broken |= own.paragraph.fields.iter().any(|f| f.broken.is_some());
     let own_now = Some(own.text);
@@ -192,10 +236,15 @@ pub(super) fn table_findings(
     // Its words in its face's SHX text style (docs/adr/1026), as a text's (ADR 1125): the first cell the font cannot
     // draw is said; a font the project does not embed is a named substitute.
     let drawn = kentos_commands::styled(table, doc.settings());
-    let first_cell = drawn.cells.iter().enumerate().flat_map(|(r, row)| row.iter().enumerate().map(move |(c, w)| (r, c, w)))
+    let first_cell = drawn
+        .cells
+        .iter()
+        .enumerate()
+        .flat_map(|(r, row)| row.iter().enumerate().map(move |(c, w)| (r, c, w)))
         .find(|(_, _, w)| !w.trim().is_empty());
     if let Some((_, _, w)) = first_cell
-        && let Some(t) = crate::shx_text::words_in(doc.settings(), &drawn.face, table.p, 0.0, table.height, w)
+        && let Some(t) =
+            crate::shx_text::words_in(doc.settings(), &drawn.face, table.p, 0.0, table.height, w)
         && let Some(style) = crate::shx_text::style_of(doc.settings(), &t)
     {
         match crate::shx_text::Fonts::of(style, doc.styles()) {
@@ -245,10 +294,7 @@ pub(super) fn table_findings(
         let sources: Vec<_> = source.into_iter().map(|u| u.to_string()).collect();
         let (now, broken) = match doc.cell_field_value(&field.source, field.format.as_ref()) {
             Ok(value) => (value, None),
-            Err(error) => (
-                kentos_commands::BROKEN_FIELD.to_owned(),
-                Some(error),
-            ),
+            Err(error) => (kentos_commands::BROKEN_FIELD.to_owned(), Some(error)),
         };
         if cached != &now || field.broken != broken {
             out.push(finding(uid,&sources,"table_field_stale",InspectionSeverity::Error,vec![at],

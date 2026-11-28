@@ -135,7 +135,11 @@ impl Document {
             )));
         };
         let name = &node.name;
-        let Some(data) = node.data.as_ref().filter(|_| node.kind == LayerNodeType::Layer) else {
+        let Some(data) = node
+            .data
+            .as_ref()
+            .filter(|_| node.kind == LayerNodeType::Layer)
+        else {
             return Err(Refusal(format!(
                 "“{name}” bir veri katmanı değil; düzenlemeye yalnız bir tablodan gelen katman açılır. Çizim katmanlarının nesneleri her zaman düzenlenir."
             )));
@@ -194,7 +198,13 @@ impl Document {
             .into_iter()
             .filter_map(|(uid, key)| {
                 let stored = self.store.get(self.store.slot_of(uid)?)?;
-                Some((uid, Taken { key, row: stored.entity.clone() }))
+                Some((
+                    uid,
+                    Taken {
+                        key,
+                        row: stored.entity.clone(),
+                    },
+                ))
             })
             .collect();
         if let Some(edit) = Arc::make_mut(&mut self.data_edits).get_mut(layer) {
@@ -363,7 +373,13 @@ impl Document {
             if now(self, *uid).is_some_and(|e| *e == **as_written) {
                 remove.push(*uid);
             } else {
-                taken.push((*uid, Taken { key: *key, row: as_written.clone() }));
+                taken.push((
+                    *uid,
+                    Taken {
+                        key: *key,
+                        row: as_written.clone(),
+                    },
+                ));
             }
         }
         let mut changed: Vec<(Uuid, Option<Arc<Entity>>)> = Vec::new();
@@ -448,12 +464,23 @@ impl Document {
             .slot_of(uid)
             .and_then(|s| self.store.get(s))
             .map(|s| s.entity.base().id)
-            .or_else(|| self.data_edits.get(layer)?.taken.get(&uid).map(|t| t.row.base().id))
+            .or_else(|| {
+                self.data_edits
+                    .get(layer)?
+                    .taken
+                    .get(&uid)
+                    .map(|t| t.row.base().id)
+            })
             .ok_or_else(|| format!("“{layer}” katmanında {uid} kimlikli alınmış satır yok."))?;
         row.base_mut().id = id;
         layer.clone_into(&mut row.base_mut().layer_id);
-        let Some(t) = Arc::make_mut(&mut self.data_edits).get_mut(layer).and_then(|e| e.taken.get_mut(&uid)) else {
-            return Err(format!("“{layer}” katmanında {uid} kimlikli alınmış satır yok."));
+        let Some(t) = Arc::make_mut(&mut self.data_edits)
+            .get_mut(layer)
+            .and_then(|e| e.taken.get_mut(&uid))
+        else {
+            return Err(format!(
+                "“{layer}” katmanında {uid} kimlikli alınmış satır yok."
+            ));
         };
         t.row = Arc::new(row);
         Ok(())

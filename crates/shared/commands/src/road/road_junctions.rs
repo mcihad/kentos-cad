@@ -58,7 +58,11 @@ pub struct JunctionsEdit {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub radius: Option<f64>,
     /// Each quadrant's radius; null takes them off.
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<Vec<f64>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<f64>>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]

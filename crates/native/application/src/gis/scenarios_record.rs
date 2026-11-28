@@ -10,9 +10,10 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    AnnotationKind, CommandResult, CreateOperation, EntitiesCreate, Entity, EntityBase, EntityGeometry, ImpactRecord,
-    LayerNodeType, NewObject, RECORD_SCENARIO, RECORD_SCENARIO_STAMP, RECORD_STAMP, ScenariosImpacted, ScenariosRecord,
-    ScenariosRecorded, TableAlign, TableEntity, Vec2,
+    AnnotationKind, CommandResult, CreateOperation, EntitiesCreate, Entity, EntityBase,
+    EntityGeometry, ImpactRecord, LayerNodeType, NewObject, RECORD_SCENARIO, RECORD_SCENARIO_STAMP,
+    RECORD_STAMP, ScenariosImpacted, ScenariosRecord, ScenariosRecorded, TableAlign, TableEntity,
+    Vec2,
 };
 use kentos_domain::Document;
 
@@ -25,7 +26,12 @@ const HEADING: [&str; 4] = ["Birim", "Mevcut durum", "Senaryo", "Fark"];
 
 /// The tables of scenario `id` written in the drawing, in its order, each with whether the base's or the scenario's
 /// stamp has changed since it was written.
-pub(crate) fn records(doc: &Document, id: &str, stamp: &str, scenario_stamp: &str) -> Vec<ImpactRecord> {
+pub(crate) fn records(
+    doc: &Document,
+    id: &str,
+    stamp: &str,
+    scenario_stamp: &str,
+) -> Vec<ImpactRecord> {
     doc.entities_with_uids()
         .filter(|(_, e)| e.base().attrs.get(RECORD_SCENARIO).is_some_and(|s| s == id))
         .filter_map(|(uid, e)| {
@@ -49,7 +55,15 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
 /// A number as the table writes it: `decimals` places, a minus zero as zero.
 fn fixed(v: f64, decimals: usize) -> String {
     let text = format!("{v:.decimals$}");
-    if text.trim_start_matches('-').chars().all(|c| c == '0' || c == '.') { text.trim_start_matches('-').to_owned() } else { text }
+    if text
+        .trim_start_matches('-')
+        .chars()
+        .all(|c| c == '0' || c == '.')
+    {
+        text.trim_start_matches('-').to_owned()
+    } else {
+        text
+    }
 }
 
 /// The table's cells: the heading, a row a measure, the stamps' row.
@@ -68,21 +82,48 @@ fn cells(doc: &Document, r: &ScenariosImpacted) -> Vec<Vec<String>> {
         "%" => "%",
         _ => "adet",
     };
-    let mut rows = vec![std::iter::once(format!("Ölçü ({})", r.name)).chain(HEADING.iter().map(|h| (*h).to_owned())).collect()];
+    let mut rows = vec![
+        std::iter::once(format!("Ölçü ({})", r.name))
+            .chain(HEADING.iter().map(|h| (*h).to_owned()))
+            .collect(),
+    ];
     for m in &r.measures {
         let d = value(&m.unit, m.difference);
-        let signed = if m.difference > 0.0 && d.chars().any(|c| c.is_ascii_digit() && c != '0') { format!("+{d}") } else { d };
-        rows.push(vec![m.label.clone(), unit(&m.unit).to_owned(), value(&m.unit, m.base), value(&m.unit, m.alternative), signed]);
+        let signed = if m.difference > 0.0 && d.chars().any(|c| c.is_ascii_digit() && c != '0') {
+            format!("+{d}")
+        } else {
+            d
+        };
+        rows.push(vec![
+            m.label.clone(),
+            unit(&m.unit).to_owned(),
+            value(&m.unit, m.base),
+            value(&m.unit, m.alternative),
+            signed,
+        ]);
     }
-    rows.push(vec!["Damga".to_owned(), String::new(), r.stamp.clone(), r.scenario_stamp.clone(), String::new()]);
+    rows.push(vec![
+        "Damga".to_owned(),
+        String::new(),
+        r.stamp.clone(),
+        r.scenario_stamp.clone(),
+        String::new(),
+    ]);
     rows
 }
 
 /// The compared layers' objects' box: their vertices, both sides.
 fn compared_box(doc: &Document, r: &ScenariosImpacted) -> Option<[f64; 4]> {
-    let layers: Vec<&str> = r.layers.iter().flat_map(|l| [l.base.as_str(), l.layer.as_str()]).collect();
+    let layers: Vec<&str> = r
+        .layers
+        .iter()
+        .flat_map(|l| [l.base.as_str(), l.layer.as_str()])
+        .collect();
     let mut b: Option<[f64; 4]> = None;
-    for e in doc.entities().filter(|e| layers.contains(&e.base().layer_id.as_str())) {
+    for e in doc
+        .entities()
+        .filter(|e| layers.contains(&e.base().layer_id.as_str()))
+    {
         let pts: Vec<(f64, f64)> = match e {
             Entity::Line(l) => vec![(l.a.x, l.a.y), (l.b.x, l.b.y)],
             Entity::Polyline(p) | Entity::Polygon(p) => p.pts.iter().map(|v| (v.x, v.y)).collect(),
@@ -90,7 +131,9 @@ fn compared_box(doc: &Document, r: &ScenariosImpacted) -> Option<[f64; 4]> {
             _ => Vec::new(),
         };
         for (x, y) in pts {
-            b = Some(b.map_or([x, y, x, y], |b| [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]));
+            b = Some(b.map_or([x, y, x, y], |b| {
+                [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]
+            }));
         }
     }
     b
@@ -100,16 +143,25 @@ fn compared_box(doc: &Document, r: &ScenariosImpacted) -> Option<[f64; 4]> {
 fn check(doc: &Document, input: &ScenariosRecord) -> Result<(ScenariosImpacted, NewObject), Stop> {
     let r = crate::scenarios_impact::run(doc, &input.impact).map_err(|stop| match stop {
         Stop::Failed(mut e) => {
-            e.path = Some(e.path.map_or_else(|| "impact".to_owned(), |p| format!("impact.{p}")));
+            e.path = Some(
+                e.path
+                    .map_or_else(|| "impact".to_owned(), |p| format!("impact.{p}")),
+            );
             Stop::Failed(e)
         }
         other => other,
     })?;
     let id = input.layer_id.trim();
-    let Some(node) = doc.layers().get(id).filter(|n| n.kind != LayerNodeType::Group) else {
+    let Some(node) = doc
+        .layers()
+        .get(id)
+        .filter(|n| n.kind != LayerNodeType::Group)
+    else {
         return Err(refuse(
             codes::INVALID_INPUT,
-            format!("“{id}” kimlikli katman çizimde yok; tablonun yazılacağı bir katmanın kimliğini verin."),
+            format!(
+                "“{id}” kimlikli katman çizimde yok; tablonun yazılacağı bir katmanın kimliğini verin."
+            ),
             "layerId",
         ));
     };
@@ -126,17 +178,32 @@ fn check(doc: &Document, input: &ScenariosRecord) -> Result<(ScenariosImpacted, 
     if let Some(at) = input.at
         && !(at[0].is_finite() && at[1].is_finite())
     {
-        return Err(refuse(codes::INVALID_INPUT, "Tablonun köşesi sonlu iki koordinat olmalı.".into(), "at"));
+        return Err(refuse(
+            codes::INVALID_INPUT,
+            "Tablonun köşesi sonlu iki koordinat olmalı.".into(),
+            "at",
+        ));
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     let h = doc.settings().annotation_height(AnnotationKind::Table);
     let p = match (input.at, compared_box(doc, &r)) {
         (Some(at), _) => Vec2 { x: at[0], y: at[1] },
-        (None, Some(b)) => Vec2 { x: b[2] + 2.0 * h, y: b[3] },
+        (None, Some(b)) => Vec2 {
+            x: b[2] + 2.0 * h,
+            y: b[3],
+        },
         (None, None) => Vec2 { x: 0.0, y: 0.0 },
     };
     let rows = cells(doc, &r);
-    let aligns: Vec<TableAlign> = (0..5).map(|j| if j < 2 { TableAlign::Left } else { TableAlign::Right }).collect();
+    let aligns: Vec<TableAlign> = (0..5)
+        .map(|j| {
+            if j < 2 {
+                TableAlign::Left
+            } else {
+                TableAlign::Right
+            }
+        })
+        .collect();
     let mut t = TableEntity {
         base: EntityBase {
             look: Default::default(),
@@ -215,13 +282,19 @@ fn check(doc: &Document, input: &ScenariosRecord) -> Result<(ScenariosImpacted, 
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ScenariosRecord) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What the write would be: the stamps and the cells, no table yet.
-pub fn plan(cx: &ExecutionContext<'_>, input: &ScenariosRecord) -> CommandResult<ScenariosRecorded> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &ScenariosRecord,
+) -> CommandResult<ScenariosRecorded> {
     match check(cx.doc, input) {
         Ok((r, table)) => CommandResult::Completed {
             output: ScenariosRecorded {
@@ -245,11 +318,23 @@ fn table_cells(o: &NewObject) -> Vec<Vec<String>> {
 }
 
 /// Writes the table, one undo step “Ölçüleri çizime yaz”.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ScenariosRecord) -> CommandResult<ScenariosRecorded> {
-    crate::call::recorded(cx, kentos_commands::CAD_SCENARIOS_RECORD, kentos_commands::CAD_SCENARIOS_RECORD_VERSION, input, write)
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ScenariosRecord,
+) -> CommandResult<ScenariosRecorded> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_SCENARIOS_RECORD,
+        kentos_commands::CAD_SCENARIOS_RECORD_VERSION,
+        input,
+        write,
+    )
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: ScenariosRecord) -> CommandResult<ScenariosRecorded> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: ScenariosRecord,
+) -> CommandResult<ScenariosRecorded> {
     let (r, table) = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),

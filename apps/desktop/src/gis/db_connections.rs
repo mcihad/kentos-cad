@@ -735,7 +735,13 @@ impl App {
         // The server and its port on one line: each had its own line and a line of help under it, which the
         // placeholder and the 5432 already in the field said.
         let host_port = row![
-            container(input("db.belediye.local ya da 10.0.0.5", &e.host, Event::Host, Some(Field::Host))).width(Fill),
+            container(input(
+                "db.belediye.local ya da 10.0.0.5",
+                &e.host,
+                Event::Host,
+                Some(Field::Host)
+            ))
+            .width(Fill),
             label::body("Bağlantı noktası"),
             input("5432", &e.port, Event::Port, Some(Field::Port)).width(80.0),
         ]
@@ -744,18 +750,32 @@ impl App {
         let mut form = Form::new()
             .label_width(130.0)
             .section("Bağlantı")
-            .field("Ad", input("Örneğin Belediye", &e.name, Event::Name, Some(Field::Name)))
+            .field(
+                "Ad",
+                input("Örneğin Belediye", &e.name, Event::Name, Some(Field::Name)),
+            )
             .required()
             .help("Listelerde bu adla görünür.")
             .error(e.problem(Field::Name))
             .field("Sunucu", host_port)
             .required()
             .error(e.problem(Field::Host).or_else(|| e.problem(Field::Port)))
-            .field("Veritabanı", input("Örneğin kent", &e.database, Event::Database, Some(Field::Database)))
+            .field(
+                "Veritabanı",
+                input(
+                    "Örneğin kent",
+                    &e.database,
+                    Event::Database,
+                    Some(Field::Database),
+                ),
+            )
             .required()
             .error(e.problem(Field::Database))
             .section("Kimlik")
-            .field("Kullanıcı adı", input("Örneğin ali", &e.user, Event::User, Some(Field::User)))
+            .field(
+                "Kullanıcı adı",
+                input("Örneğin ali", &e.user, Event::User, Some(Field::User)),
+            )
             .error(e.problem(Field::User))
             .field(
                 "Parola",
@@ -789,7 +809,9 @@ impl App {
                 .field(
                     "SSL",
                     Select::new(
-                        SSL_MODES.iter().map(|m| Choice::new(m.label()).detail(m.libpq())),
+                        SSL_MODES
+                            .iter()
+                            .map(|m| Choice::new(m.label()).detail(m.libpq())),
                         SSL_MODES.iter().position(|m| *m == e.ssl),
                         |i| msg(Event::Ssl(i)),
                     )
@@ -850,7 +872,10 @@ impl App {
         let tested: Element<'a, Message> = match (&e.tested, e.testing) {
             (_, true) => words::text_line(Line::Info, "Bağlanılıyor…"),
             (Some(Ok(facts)), _) => {
-                let mut lines = vec![words::text_line(Line::Ok, format!("Bağlandı: {}", facts.line()))];
+                let mut lines = vec![words::text_line(
+                    Line::Ok,
+                    format!("Bağlandı: {}", facts.line()),
+                )];
                 if facts.postgis.is_none() {
                     lines.push(words::text_line(
                         Line::Warn,

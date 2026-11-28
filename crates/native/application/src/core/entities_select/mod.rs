@@ -24,16 +24,26 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_uid_text};
 use crate::codes;
 
-mod properties;
 pub mod isolation;
+mod properties;
 
 /// The picked piece's own assignment and resolved CAD paint; the owning insert remains the edit target.
 pub fn block_piece_colors(doc: &Document, slot: Slot, path: &[u32]) -> Option<(String, String)> {
-    properties::piece_colors(doc, &crate::blocks::drawing_blocks(doc), doc.get(slot)?, path)
+    properties::piece_colors(
+        doc,
+        &crate::blocks::drawing_blocks(doc),
+        doc.get(slot)?,
+        path,
+    )
 }
 
 /// Property refinement for Processing, over its already resolved scope, with the exact command checks.
-pub fn refine_properties(doc: &Document, store: &Store, ids: Vec<Slot>, query: &kentos_commands::SelectProperties) -> Result<Vec<Slot>, Box<CommandError>> {
+pub fn refine_properties(
+    doc: &Document,
+    store: &Store,
+    ids: Vec<Slot>,
+    query: &kentos_commands::SelectProperties,
+) -> Result<Vec<Slot>, Box<CommandError>> {
     properties::check(doc, query).map_err(|stop| Box::new(stop.into_error()))?;
     Ok(properties::filter(doc, store, ids, query))
 }
@@ -47,7 +57,15 @@ pub struct Selected {
 
 /// Checks `input`.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesSelect) -> CommandResult<()> {
-    match check(cx.doc, input).and_then(|_|input.model_scope.as_ref().map(|s|crate::viewport_scope::resolve(cx.doc,s)).transpose().map(|_|()).map_err(|e|Stop::failed(*e))) {
+    match check(cx.doc, input).and_then(|_| {
+        input
+            .model_scope
+            .as_ref()
+            .map(|s| crate::viewport_scope::resolve(cx.doc, s))
+            .transpose()
+            .map(|_| ())
+            .map_err(|e| Stop::failed(*e))
+    }) {
         Ok(()) => CommandResult::Completed {
             output: (),
             warnings: Vec::new(),
@@ -75,7 +93,9 @@ pub fn answer(
     store: Option<&Store>,
     input: &EntitiesSelect,
 ) -> CommandResult<EntitiesSelected> {
-    if let Err(stop)=check(doc,input) {return stop.into();}
+    if let Err(stop) = check(doc, input) {
+        return stop.into();
+    }
     let scope = match input
         .model_scope
         .as_ref()
@@ -83,7 +103,7 @@ pub fn answer(
         .transpose()
     {
         Ok(s) => s,
-        Err(error) => return CommandResult::Failed { error:*error },
+        Err(error) => return CommandResult::Failed { error: *error },
     };
     let own;
     let store = if let Some(scope) = &scope {
@@ -362,10 +382,20 @@ pub fn similar_to(objects: &[Facts], examples: &[Facts], c: SimilarCriteria) -> 
 fn check(doc: &Document, input: &EntitiesSelect) -> Result<(), Stop> {
     if let SelectRegion::Properties { source, query } = &input.region {
         if matches!(source.as_ref(), SelectRegion::Properties { .. }) {
-            return Err(Stop::failed(error(codes::INVALID_INPUT, "İç içe seçim süzgeci kullanılamaz.".into(), Some("region.source".into()))));
+            return Err(Stop::failed(error(
+                codes::INVALID_INPUT,
+                "İç içe seçim süzgeci kullanılamaz.".into(),
+                Some("region.source".into()),
+            )));
         }
         properties::check(doc, query)?;
-        return check(doc, &EntitiesSelect { region: *source.clone(), ..input.clone() });
+        return check(
+            doc,
+            &EntitiesSelect {
+                region: *source.clone(),
+                ..input.clone()
+            },
+        );
     }
     let finite = |value: f64, what: &str, path: &str| {
         checks::finite(value, what, "Metre olarak bir sayı verin.", path)

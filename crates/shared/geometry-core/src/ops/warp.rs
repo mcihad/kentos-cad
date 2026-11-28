@@ -687,7 +687,11 @@ fn common<M: Map + ?Sized>(
                     let mut out = Vec::with_capacity(list.len());
                     for a in list {
                         out.push(crate::geom::leader::Arm {
-                            pts: a.pts.iter().map(|&p| m.at(p)).collect::<Result<Vec<_>, _>>()?,
+                            pts: a
+                                .pts
+                                .iter()
+                                .map(|&p| m.at(p))
+                                .collect::<Result<Vec<_>, _>>()?,
                         });
                     }
                     Some(out)
@@ -836,7 +840,9 @@ fn common<M: Map + ?Sized>(
             let linear = m.linear_part();
             kept(Shape::Hatch {
                 boundary: match (boundary, linear) {
-                    (Some(b), Some(j)) => crate::geom::hatch_boundary::mapped(b, &|p| m.at(p).ok(), j),
+                    (Some(b), Some(j)) => {
+                        crate::geom::hatch_boundary::mapped(b, &|p| m.at(p).ok(), j)
+                    }
                     _ => None,
                 },
                 ring: map(ring)?,

@@ -7,8 +7,8 @@
 //! `fixtures/commands/v1/road.corridors.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CorridorsDraw, CorridorsDrawn, CreateOperation, EntitiesCreate, EntityGeometry,
-    NewObject, TextAlign, TextFace, Vec2,
+    CommandResult, CommandWarning, CorridorsDraw, CorridorsDrawn, CreateOperation, EntitiesCreate,
+    EntityGeometry, NewObject, TextAlign, TextFace, Vec2,
 };
 use kentos_road::corridor::{RegionCrosses, place};
 use kentos_road::section::template::{Kind, SideSection};
@@ -31,23 +31,42 @@ struct Checked {
 }
 
 /// Checks `input`, `told` the corridor's sections and answering whether to stop (docs/adr/3640).
-fn check(doc: &kentos_domain::Document, input: &CorridorsDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
+fn check(
+    doc: &kentos_domain::Document,
+    input: &CorridorsDraw,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Checked, Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_corridors(), &input.corridor, "corridor")?;
     let tick = input.tick.unwrap_or(5.0);
     let height = input.height.unwrap_or(2.5);
     let positive = |v: f64| v.is_finite() && v > 0.0;
     if !positive(tick) {
-        return Err(fail(codes::INVALID_LABEL, "Şev taramasının aralığı (tick) 0'dan büyük olmalı.".into(), "tick"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            "Şev taramasının aralığı (tick) 0'dan büyük olmalı.".into(),
+            "tick",
+        ));
     }
     if !positive(height) {
-        return Err(fail(codes::INVALID_LABEL, "Yazı yüksekliği (height) 0'dan büyük olmalı.".into(), "height"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            "Yazı yüksekliği (height) 0'dan büyük olmalı.".into(),
+            "height",
+        ));
     }
     let made = common::make_ticked(doc, def, true, told)?;
-    if made.regions.iter().all(|r| r.crosses.iter().all(|c| c.section.is_none())) {
+    if made
+        .regions
+        .iter()
+        .all(|r| r.crosses.iter().all(|c| c.section.is_none()))
+    {
         return Err(fail(
             codes::NO_TERRAIN,
-            format!("“{}” koridorunda hiçbir kesit çözülmedi: yüzeyi ve boykesiti denetleyin.", def.name),
+            format!(
+                "“{}” koridorunda hiçbir kesit çözülmedi: yüzeyi ve boykesiti denetleyin.",
+                def.name
+            ),
             "corridor",
         ));
     }
@@ -60,8 +79,19 @@ fn check(doc: &kentos_domain::Document, input: &CorridorsDraw, told: &dyn Fn(u64
         .collect();
     let mut warnings = checks::layer(doc, &input.layer_id)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
-    warnings.extend(made.warnings.into_iter().filter(|w| w.code != codes::CORRIDOR_SURFACE_GONE));
-    Ok(Checked { id: def.id.clone(), tick, height, lines, regions: made.regions, warnings })
+    warnings.extend(
+        made.warnings
+            .into_iter()
+            .filter(|w| w.code != codes::CORRIDOR_SURFACE_GONE),
+    );
+    Ok(Checked {
+        id: def.id.clone(),
+        tick,
+        height,
+        lines,
+        regions: made.regions,
+        warnings,
+    })
 }
 
 fn object(geometry: EntityGeometry, color: Option<&str>, weight: Option<f64>) -> NewObject {
@@ -90,7 +120,9 @@ fn ticks(
     out: &mut Vec<[[f64; 2]; 2]>,
 ) {
     let [a, b] = sides;
-    let (Some(da), Some(db)) = (a.daylight, b.daylight) else { return };
+    let (Some(da), Some(db)) = (a.daylight, b.daylight) else {
+        return;
+    };
     if a.kind == Kind::Open || b.kind == Kind::Open {
         return;
     }
@@ -102,10 +134,24 @@ fn ticks(
         let t = (k * tick - s0) / (s1 - s0);
         let lerp = |p: [f64; 2], q: [f64; 2]| [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t];
         let (h, d) = (lerp(ha, hb), lerp(ya, yb));
-        let cut = if t < 0.5 { a.kind == Kind::Cut } else { b.kind == Kind::Cut };
+        let cut = if t < 0.5 {
+            a.kind == Kind::Cut
+        } else {
+            b.kind == Kind::Cut
+        };
         let (top, foot) = if cut { (d, h) } else { (h, d) };
-        let share = if (k as i64).rem_euclid(2) == 0 { 1.0 } else { 0.5 };
-        out.push([top, [top[0] + (foot[0] - top[0]) * share, top[1] + (foot[1] - top[1]) * share]]);
+        let share = if (k as i64).rem_euclid(2) == 0 {
+            1.0
+        } else {
+            0.5
+        };
+        out.push([
+            top,
+            [
+                top[0] + (foot[0] - top[0]) * share,
+                top[1] + (foot[1] - top[1]) * share,
+            ],
+        ]);
         k += 1.0;
     }
 }
@@ -133,18 +179,37 @@ fn objects(c: &Checked, h: f64) -> (Vec<NewObject>, u32, u32) {
     let mut marks: Vec<[[f64; 2]; 2]> = Vec::new();
     for region in &c.regions {
         for w in region.crosses.windows(2) {
-            let (Some(sa), Some(sb)) = (&w[0].section, &w[1].section) else { continue };
+            let (Some(sa), Some(sb)) = (&w[0].section, &w[1].section) else {
+                continue;
+            };
             let pa = |o: f64| place(&w[0].line, o);
             let pb = |o: f64| place(&w[1].line, o);
             let stations = [w[0].line.station, w[1].line.station];
-            ticks([&sa.left, &sb.left], [&pa, &pb], stations, c.tick, &mut marks);
-            ticks([&sa.right, &sb.right], [&pa, &pb], stations, c.tick, &mut marks);
+            ticks(
+                [&sa.left, &sb.left],
+                [&pa, &pb],
+                stations,
+                c.tick,
+                &mut marks,
+            );
+            ticks(
+                [&sa.right, &sb.right],
+                [&pa, &pb],
+                stations,
+                c.tick,
+                &mut marks,
+            );
         }
     }
     let ticks = marks.len() as u32;
     for [a, b] in marks {
         out.push(object(
-            EntityGeometry::Line { a: Vec2 { x: a[0], y: a[1] }, b: Vec2 { x: b[0], y: b[1] }, zs: None, ms: None },
+            EntityGeometry::Line {
+                a: Vec2 { x: a[0], y: a[1] },
+                b: Vec2 { x: b[0], y: b[1] },
+                zs: None,
+                ms: None,
+            },
             None,
             Some(0.13),
         ));
@@ -187,7 +252,11 @@ fn objects(c: &Checked, h: f64) -> (Vec<NewObject>, u32, u32) {
     (out, ticks, elevations)
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &CorridorsDraw, c: Checked) -> CommandResult<CorridorsDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &CorridorsDraw,
+    c: Checked,
+) -> CommandResult<CorridorsDrawn> {
     let h = c.height * cx.doc.settings().plot_scale / 1000.0;
     let (objects, ticks, elevations) = objects(&c, h);
     let create = EntitiesCreate {
@@ -217,7 +286,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &CorridorsDraw, c: Checked) -> Co
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &CorridorsDraw) -> CommandResult<()> {
     match check(cx.doc, input, &cx.stop_only()) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -240,7 +312,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CorridorsDraw) -> CommandResult<C
 /// Writes the slope plan: one undo step.
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::CorridorsDraw) -> CommandResult<kentos_commands::CorridorsDrawn> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &kentos_commands::CorridorsDraw,
+) -> CommandResult<kentos_commands::CorridorsDrawn> {
     match checked(cx, input) {
         Ok(c) => write(cx, input, c),
         Err(stop) => stop.into(),
@@ -252,7 +327,10 @@ fn checked(cx: &ExecutionContext<'_>, input: &CorridorsDraw) -> Result<Checked, 
     check(cx.doc, input, &cx.told())
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: CorridorsDraw) -> CommandResult<CorridorsDrawn> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CorridorsDraw,
+) -> CommandResult<CorridorsDrawn> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_CORRIDORS_DRAW,
@@ -263,7 +341,14 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: CorridorsDraw) -> CommandRe
                 Ok(c) => write(cx, &input, c),
                 Err(stop) => stop.into(),
             };
-            crate::road_drawings::kept(cx, kentos_commands::ROAD_CORRIDORS_DRAW, &input, (kentos_commands::RoadSourceKind::Corridor, "corridor"), r, |o| &o.uids)
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_CORRIDORS_DRAW,
+                &input,
+                (kentos_commands::RoadSourceKind::Corridor, "corridor"),
+                r,
+                |o| &o.uids,
+            )
         },
     )
 }
@@ -280,11 +365,16 @@ mod tests {
 
     /// The shared cases' project and their first slope plan (`c-1` on layer 0).
     fn project() -> (kentos_domain::Document, CorridorsDraw) {
-        let cases: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.corridors.draw.json")).expect("cases");
-        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let cases: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/commands/v1/road.corridors.draw.json"
+        ))
+        .expect("cases");
+        let snapshot: DocumentSnapshotV2 =
+            serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
         let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
-        let input: CorridorsDraw = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+        let input: CorridorsDraw =
+            serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone())
+                .expect("an input");
         (doc, input)
     }
 
@@ -301,7 +391,11 @@ mod tests {
         assert!(whole.is_ok());
         let seen = seen.into_inner();
         assert!(seen.len() > 4, "{} sections", seen.len());
-        assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1), "{seen:?}");
+        assert!(
+            seen.windows(2)
+                .all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1),
+            "{seen:?}"
+        );
         let asked = Cell::new(0);
         let stopped = check(&doc, &input, &|_, _| {
             asked.set(asked.get() + 1);

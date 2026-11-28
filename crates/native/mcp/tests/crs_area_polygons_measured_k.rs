@@ -12,7 +12,8 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 #[test]
 fn a_marmara_point_and_a_measured_k_over_mcp() {
     let mut server = Server::new();
-    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/drawing.kcad");
+    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/kcad/v2/drawing.kcad");
     let opened = call(&mut server, "drawing.open", json!({"path": sample}));
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
@@ -25,12 +26,28 @@ fn a_marmara_point_and_a_measured_k_over_mcp() {
     );
     assert_eq!(r["isError"], false, "{r}");
     let flagged = &r["structuredContent"]["output"]["flagged"];
-    assert_eq!(flagged, &json!([{"index": 1, "notes": ["outside_source_area"]}]), "{r}");
+    assert_eq!(
+        flagged,
+        &json!([{"index": 1, "notes": ["outside_source_area"]}]),
+        "{r}"
+    );
 
-    let r = call(&mut server, "cad.settings.set", json!({"drawing": drawing, "refraction": 0.1625}));
+    let r = call(
+        &mut server,
+        "cad.settings.set",
+        json!({"drawing": drawing, "refraction": 0.1625}),
+    );
     assert_eq!(r["isError"], false, "{r}");
-    assert_eq!(r["structuredContent"]["output"]["changed"], json!(["refraction"]), "{r}");
-    let r = call(&mut server, "cad.settings.set", json!({"drawing": drawing, "refraction": 1.5}));
+    assert_eq!(
+        r["structuredContent"]["output"]["changed"],
+        json!(["refraction"]),
+        "{r}"
+    );
+    let r = call(
+        &mut server,
+        "cad.settings.set",
+        json!({"drawing": drawing, "refraction": 1.5}),
+    );
     assert_eq!(r["isError"], true, "{r}");
     assert!(r.to_string().contains("invalid_refraction"), "{r}");
 }

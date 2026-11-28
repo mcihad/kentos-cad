@@ -6,11 +6,11 @@
 
 use std::time::Instant;
 
-use kentos_domain::Document;
 use kentos_commands::{
     CommandResult, DocumentSnapshotV1, EntitiesSetProperties, FormsAudit, FormsRecompute,
     FormsValidate,
 };
+use kentos_domain::Document;
 use kentos_native_application::{
     ExecutionContext, forms_audit, forms_recompute, forms_validate, set,
 };
@@ -112,8 +112,7 @@ fn drawing() -> Document {
                       "Kat": (i % 9).to_string(), "A1": "x"}}));
     }
     let b = body();
-    let typed: kentos_commands::FormBody =
-        serde_json::from_value(b.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(b.clone()).expect("a body");
     let form = json!({"id": "bina", "name": "Bina", "layer": "bina", "draft": b.clone(),
         "releases": [{"version": 1, "digest": kentos_commands::body_digest(&typed), "body": b}]});
     let snapshot = json!({"format":"kentos.document","version":1,"name":"Büyük form","settings":{"srid":0,

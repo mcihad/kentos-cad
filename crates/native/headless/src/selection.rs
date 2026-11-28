@@ -1,9 +1,9 @@
 //! A session's explicit selection, shared by Python, MCP and the desktop's links.
 //! This is view state: it never changes the document, revision, undo stack or saved file.
-use std::collections::HashSet;
+use crate::HeadlessError;
 use kentos_domain::{Document, Slot, Uuid};
 use serde_json::Value;
-use crate::HeadlessError;
+use std::collections::HashSet;
 
 /// Resolve the complete list before changing anything. Duplicates keep their first place.
 pub fn resolve(doc: &Document, given: &Value) -> Result<Vec<Slot>, HeadlessError> {

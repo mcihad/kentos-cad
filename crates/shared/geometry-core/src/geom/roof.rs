@@ -366,7 +366,8 @@ fn checked(pts: &[Vec2], spec: &RoofSpec) -> Result<(Vec<Vec2>, Edges), Problem>
     let n = ring.len();
     for i in 0..n {
         let (a, b, c) = (ring[(i + n - 1) % n], ring[i], ring[(i + 1) % n]);
-        let straight = crate::predicates::orient2d(a, b, c) == 0.0 && (b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y) > 0.0;
+        let straight = crate::predicates::orient2d(a, b, c) == 0.0
+            && (b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y) > 0.0;
         if straight && edges[(i + n - 1) % n].1 != edges[i].1 {
             return Err(Problem::Collinear);
         }
@@ -380,7 +381,12 @@ fn convex(ring: &[Vec2]) -> bool {
     (0..n).all(|i| {
         let (a, b, c) = (ring[(i + n - 1) % n], ring[i], ring[(i + 1) % n]);
         let cross = (b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x);
-        cross >= -EPS * js_max(1.0, js_hypot(b.x - a.x, b.y - a.y) * js_hypot(c.x - b.x, c.y - b.y))
+        cross
+            >= -EPS
+                * js_max(
+                    1.0,
+                    js_hypot(b.x - a.x, b.y - a.y) * js_hypot(c.x - b.x, c.y - b.y),
+                )
     })
 }
 
@@ -390,10 +396,19 @@ fn crosses(ring: &[Vec2]) -> bool {
     let n = ring.len();
     let side = |a: Vec2, b: Vec2, c: Vec2| {
         let o = orient2d(a, b, c);
-        if o > 0.0 { 1 } else if o < 0.0 { -1 } else { 0 }
+        if o > 0.0 {
+            1
+        } else if o < 0.0 {
+            -1
+        } else {
+            0
+        }
     };
     let on = |a: Vec2, b: Vec2, c: Vec2| {
-        c.x >= crate::jsmath::js_min(a.x, b.x) && c.x <= crate::jsmath::js_max(a.x, b.x) && c.y >= crate::jsmath::js_min(a.y, b.y) && c.y <= crate::jsmath::js_max(a.y, b.y)
+        c.x >= crate::jsmath::js_min(a.x, b.x)
+            && c.x <= crate::jsmath::js_max(a.x, b.x)
+            && c.y >= crate::jsmath::js_min(a.y, b.y)
+            && c.y <= crate::jsmath::js_max(a.y, b.y)
     };
     let meet = |a: Vec2, b: Vec2, c: Vec2, d: Vec2| {
         let (d1, d2, d3, d4) = (side(c, d, a), side(c, d, b), side(a, b, c), side(a, b, d));
@@ -411,7 +426,10 @@ fn crosses(ring: &[Vec2]) -> bool {
                 // Neighbours share a corner: they cross only by folding back over each other.
                 let (shared, far_a, far_b) = if j == i + 1 { (b, a, d) } else { (a, b, c) };
                 if side(far_a, shared, far_b) == 0 {
-                    let (u, v) = (Vec2::new(far_a.x - shared.x, far_a.y - shared.y), Vec2::new(far_b.x - shared.x, far_b.y - shared.y));
+                    let (u, v) = (
+                        Vec2::new(far_a.x - shared.x, far_a.y - shared.y),
+                        Vec2::new(far_b.x - shared.x, far_b.y - shared.y),
+                    );
                     if u.x * v.x + u.y * v.y > 0.0 {
                         return true;
                     }
@@ -469,7 +487,10 @@ pub fn faces(pts: &[Vec2], spec: &RoofSpec) -> Result<Vec<Face>, Problem> {
 /// `1 / slope` a metre of rise, a gable end's standing.
 fn skeleton_faces(ring: &[Vec2], edges: &Edges) -> Result<Vec<Face>, Problem> {
     use crate::geom::roof_skeleton::{Fail, faces};
-    let speeds: Vec<f64> = edges.iter().map(|(_, s)| s.filter(|s| *s > 0.0).map_or(0.0, |s| 100.0 / s)).collect();
+    let speeds: Vec<f64> = edges
+        .iter()
+        .map(|(_, s)| s.filter(|s| *s > 0.0).map_or(0.0, |s| 100.0 / s))
+        .collect();
     if speeds.iter().all(|v| *v == 0.0) {
         return Ok(Vec::new());
     }
@@ -483,7 +504,11 @@ fn skeleton_faces(ring: &[Vec2], edges: &Edges) -> Result<Vec<Face>, Problem> {
         .filter_map(|(k, f)| {
             let face: Vec<Vec2> = f?.into_iter().map(|(q, _)| q).collect();
             let slope = edges[k].1?;
-            (face.len() >= 3 && area2(&face) / 2.0 > EPS).then_some(Face { edge: edges[k].0, ring: face, slope })
+            (face.len() >= 3 && area2(&face) / 2.0 > EPS).then_some(Face {
+                edge: edges[k].0,
+                ring: face,
+                slope,
+            })
         })
         .collect();
     out.sort_by_key(|f| f.edge);
@@ -519,7 +544,10 @@ pub fn height_at(pts: &[Vec2], spec: &RoofSpec, p: Vec2) -> Result<f64, Problem>
             .find(|f| inside(&f.ring, p))
             .and_then(|f| {
                 let k = edges.iter().position(|e| e.0 == f.edge)?;
-                Some(js_max(0.0, at(plane(ring[k], ring[(k + 1) % n], f.slope), p)))
+                Some(js_max(
+                    0.0,
+                    at(plane(ring[k], ring[(k + 1) % n], f.slope), p),
+                ))
             })
             .unwrap_or(0.0));
     }
@@ -698,7 +726,10 @@ fn text(p: Vec2, words: String, height: f64, rotation: f64, align: TextAlign) ->
 /// L or T) where that mean falls outside, halfway in from its edge's middle to its far side.
 fn face_middle(f: &Face, a: Vec2, b: Vec2, inward: Vec2) -> Vec2 {
     let m = f.ring.len() as f64;
-    let c = Vec2::new(f.ring.iter().map(|q| q.x).sum::<f64>() / m, f.ring.iter().map(|q| q.y).sum::<f64>() / m);
+    let c = Vec2::new(
+        f.ring.iter().map(|q| q.x).sum::<f64>() / m,
+        f.ring.iter().map(|q| q.y).sum::<f64>() / m,
+    );
     if crate::geometry::point_in_polygon(c, &f.ring) {
         return c;
     }
@@ -720,7 +751,10 @@ fn face_middle(f: &Face, a: Vec2, b: Vec2, inward: Vec2) -> Vec2 {
         })
         .fold(f64::INFINITY, js_min);
     if reach.is_finite() {
-        Vec2::new(mid.x + inward.x * reach / 2.0, mid.y + inward.y * reach / 2.0)
+        Vec2::new(
+            mid.x + inward.x * reach / 2.0,
+            mid.y + inward.y * reach / 2.0,
+        )
     } else {
         c
     }
@@ -1570,16 +1604,33 @@ mod tests {
         let total: f64 = f.iter().map(|x| area2(&x.ring) / 2.0).sum();
         assert!((total - 64.0).abs() < 1e-9, "{total}");
         assert!((ridge_rise(&l, &s).unwrap() - 0.66).abs() < 1e-9);
-        for (q, z) in [((2.0, 2.0), 0.66), ((7.0, 2.0), 0.66), ((7.0, 1.0), 0.33), ((6.0, 3.5), 0.165), ((2.0, 9.0), 0.33)] {
+        for (q, z) in [
+            ((2.0, 2.0), 0.66),
+            ((7.0, 2.0), 0.66),
+            ((7.0, 1.0), 0.33),
+            ((6.0, 3.5), 0.165),
+            ((2.0, 9.0), 0.33),
+        ] {
             let got = height_at(&l, &s, Vec2::new(q.0, q.1)).unwrap();
             assert!((got - z).abs() < 1e-9, "{q:?}: {got}");
         }
         let lines = lines(&l, &s).unwrap();
         let valleys: Vec<&RoofLine> = lines.iter().filter(|x| x.kind == Line::Valley).collect();
         assert_eq!(valleys.len(), 1, "{lines:?}");
-        assert!(same(valleys[0].a, Vec2::new(2.0, 2.0)) && same(valleys[0].b, Vec2::new(4.0, 4.0)), "{valleys:?}");
-        assert_eq!(lines.iter().filter(|x| x.kind == Line::Ridge).count(), 2, "{lines:?}");
-        assert_eq!(lines.iter().filter(|x| x.kind == Line::Hip).count(), 5, "{lines:?}");
+        assert!(
+            same(valleys[0].a, Vec2::new(2.0, 2.0)) && same(valleys[0].b, Vec2::new(4.0, 4.0)),
+            "{valleys:?}"
+        );
+        assert_eq!(
+            lines.iter().filter(|x| x.kind == Line::Ridge).count(),
+            2,
+            "{lines:?}"
+        );
+        assert_eq!(
+            lines.iter().filter(|x| x.kind == Line::Hip).count(),
+            5,
+            "{lines:?}"
+        );
         let pieces = pieces_at(&l, &s, 100.0, Level::Whole);
         let arrows: Vec<Vec2> = pieces
             .iter()
@@ -1590,8 +1641,16 @@ mod tests {
             .collect();
         assert_eq!(arrows.len(), 6);
         // A line crossing itself (its two loops of unequal area).
-        let tie = vec![Vec2::new(0.0, 0.0), Vec2::new(6.0, 4.0), Vec2::new(6.0, 0.0), Vec2::new(0.0, 6.0)];
-        let s4 = RoofSpec { slopes: vec![Some(33.0); 4], ..Default::default() };
+        let tie = vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(6.0, 4.0),
+            Vec2::new(6.0, 0.0),
+            Vec2::new(0.0, 6.0),
+        ];
+        let s4 = RoofSpec {
+            slopes: vec![Some(33.0); 4],
+            ..Default::default()
+        };
         assert_eq!(faces(&tie, &s4), Err(Problem::Crossing));
     }
 
@@ -1634,15 +1693,54 @@ mod tests {
         let cases: Vec<(Vec<Vec2>, Vec<Option<f64>>)> = vec![
             (rect(12.0, 9.0), vec![Some(33.0); 4]),
             (rect(12.0, 9.0), vec![Some(33.0), None, Some(45.0), None]),
-            (rect(12.0, 9.0), vec![Some(20.0), Some(35.0), Some(50.0), Some(25.0)]),
-            (vec![v(0.0, 0.0), v(8.0, -1.0), v(11.0, 4.0), v(6.0, 9.0), v(-1.0, 6.0)], vec![Some(30.0); 5]),
-            (vec![v(0.0, 0.0), v(8.0, -1.0), v(11.0, 4.0), v(6.0, 9.0), v(-1.0, 6.0)],
-             vec![Some(30.0), Some(45.0), None, Some(60.0), Some(25.0)]),
-            (vec![v(0.0, 0.0), v(10.0, 0.0), v(13.0, 3.0), v(10.0, 7.0), v(2.0, 8.0), v(-2.0, 4.0)],
-             vec![Some(40.0), Some(30.0), Some(30.0), Some(50.0), None, Some(35.0)]),
+            (
+                rect(12.0, 9.0),
+                vec![Some(20.0), Some(35.0), Some(50.0), Some(25.0)],
+            ),
+            (
+                vec![
+                    v(0.0, 0.0),
+                    v(8.0, -1.0),
+                    v(11.0, 4.0),
+                    v(6.0, 9.0),
+                    v(-1.0, 6.0),
+                ],
+                vec![Some(30.0); 5],
+            ),
+            (
+                vec![
+                    v(0.0, 0.0),
+                    v(8.0, -1.0),
+                    v(11.0, 4.0),
+                    v(6.0, 9.0),
+                    v(-1.0, 6.0),
+                ],
+                vec![Some(30.0), Some(45.0), None, Some(60.0), Some(25.0)],
+            ),
+            (
+                vec![
+                    v(0.0, 0.0),
+                    v(10.0, 0.0),
+                    v(13.0, 3.0),
+                    v(10.0, 7.0),
+                    v(2.0, 8.0),
+                    v(-2.0, 4.0),
+                ],
+                vec![
+                    Some(40.0),
+                    Some(30.0),
+                    Some(30.0),
+                    Some(50.0),
+                    None,
+                    Some(35.0),
+                ],
+            ),
         ];
         for (pts, slopes) in cases {
-            let s = RoofSpec { slopes: slopes.clone(), ..Default::default() };
+            let s = RoofSpec {
+                slopes: slopes.clone(),
+                ..Default::default()
+            };
             let envelope = faces(&pts, &s).unwrap();
             let (ring, edges) = checked(&pts, &s).unwrap();
             let skeleton = skeleton_faces(&ring, &edges).unwrap();
@@ -1650,13 +1748,21 @@ mod tests {
             for (e, k) in envelope.iter().zip(&skeleton) {
                 assert_eq!(e.edge, k.edge);
                 let (ae, ak) = (area2(&e.ring) / 2.0, area2(&k.ring) / 2.0);
-                assert!((ae - ak).abs() < 1e-9, "{slopes:?} edge {}: {ae} by the envelope, {ak} by the skeleton", e.edge);
+                assert!(
+                    (ae - ak).abs() < 1e-9,
+                    "{slopes:?} edge {}: {ae} by the envelope, {ak} by the skeleton",
+                    e.edge
+                );
                 for q in &k.ring {
                     let low = height_at(&pts, &s, *q).unwrap();
                     let n = ring.len();
                     let j = edges.iter().position(|x| x.0 == k.edge).unwrap();
                     let mine = at(plane(ring[j], ring[(j + 1) % n], k.slope), *q);
-                    assert!((low - mine).abs() < 1e-9, "{slopes:?} edge {} at {q:?}: {mine}, the envelope {low}", k.edge);
+                    assert!(
+                        (low - mine).abs() < 1e-9,
+                        "{slopes:?} edge {} at {q:?}: {mine}, the envelope {low}",
+                        k.edge
+                    );
                 }
             }
         }

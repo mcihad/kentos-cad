@@ -88,7 +88,10 @@ fn catalog(
     Ok(p)
 }
 
-pub(crate) fn catalogs(doc: &Document, input: &ProfilesCompare) -> Result<(DataProfile, DataProfile), Stop> {
+pub(crate) fn catalogs(
+    doc: &Document,
+    input: &ProfilesCompare,
+) -> Result<(DataProfile, DataProfile), Stop> {
     let shelf = Shelf::of(doc, input.drawing.as_deref());
     let old = catalog(
         input.from.as_deref(),

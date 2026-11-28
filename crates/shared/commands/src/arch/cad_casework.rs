@@ -11,8 +11,8 @@ use ts_rs::TS;
 use crate::cad::REVISION_TEXT;
 use crate::entity::Entity;
 use crate::{
-    CaseworkBreak, CaseworkDoor, CaseworkFridge, CaseworkLeg, CaseworkMember, CaseworkModule, CaseworkModuleKind,
-    CaseworkRun,
+    CaseworkBreak, CaseworkDoor, CaseworkFridge, CaseworkLeg, CaseworkMember, CaseworkModule,
+    CaseworkModuleKind, CaseworkRun,
 };
 
 /// The command's name.
@@ -81,7 +81,12 @@ pub struct CaseworkBuilt {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum CaseworkChange {
     /// A module's own values become `width` and `hand` (absent: the run's); `holds`, when given, what it holds.

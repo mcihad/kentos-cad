@@ -19,9 +19,9 @@ pub mod cell_info;
 pub mod jobs;
 pub mod look;
 pub mod mosaic;
-pub mod stac;
 pub mod multidim;
 pub mod pyramid;
+pub mod stac;
 #[cfg(test)]
 mod tests;
 pub mod tiles;
@@ -177,7 +177,10 @@ pub fn origin_of(key: &str, model: &Model, folder: Option<&Path>) -> Option<tile
     if let Some(rest) = key.strip_prefix("gpkg:") {
         // The file, then `#` and what opens the table (its JSON is last; a `#{` in the path is passed over).
         let (file, open) = rest.match_indices("#{").find_map(|(at, _)| {
-            let open = serde_json::from_str::<kentos_native_application::gpkg_tiles::TableOpen>(&rest[at + 1..]).ok()?;
+            let open = serde_json::from_str::<kentos_native_application::gpkg_tiles::TableOpen>(
+                &rest[at + 1..],
+            )
+            .ok()?;
             Some((&rest[..at], open))
         })?;
         let path = crate::pictures::locate(file, folder, &model.settings().xref_paths);
@@ -185,7 +188,11 @@ pub fn origin_of(key: &str, model: &Model, folder: Option<&Path>) -> Option<tile
     }
     let (key, _) = split_key(key);
     if let Some(file) = key.strip_prefix("file:") {
-        Some(tiles::Origin::File(crate::pictures::locate(file, folder, &model.settings().xref_paths)))
+        Some(tiles::Origin::File(crate::pictures::locate(
+            file,
+            folder,
+            &model.settings().xref_paths,
+        )))
     } else if let Some(id) = key.strip_prefix("asset:") {
         asset_bytes(model, id).map(|b| tiles::Origin::Bytes(Arc::new(b)))
     } else {

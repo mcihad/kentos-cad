@@ -39,8 +39,8 @@ mod frame;
 mod ground;
 #[path = "sections/mass.rs"]
 mod mass;
-use frame::{SlabAt, beam, column};
 pub use frame::{MEMBER_ELEMENT, model, unjoined_model};
+use frame::{SlabAt, beam, column};
 
 /// The scale a section is drawn for (docs/adr/8042 §4, §6): the drawing's own (Çizim ölçeği), as its plans' words
 /// are; Mimarlar Odası's uygulama projesi 1/50 when the drawing has none. A section printed at another scale prints
@@ -259,7 +259,10 @@ fn material_look(element: &str, material: Option<&str>, fill: Option<Fill>) -> L
 /// light and unhatched: a thin plate, no mass to hatch.
 fn covering_look(c: &kentos_commands::Covering, material: Option<&str>) -> Look {
     let element = kentos_commands::Covering::element(&c.predefined);
-    let m = material.map(str::trim).filter(|m| !m.is_empty()).unwrap_or_default();
+    let m = material
+        .map(str::trim)
+        .filter(|m| !m.is_empty())
+        .unwrap_or_default();
     Look {
         key: format!("{element}:{}", fold(m)),
         layer: kentos_commands::ek4_layer(element, m),
@@ -332,7 +335,9 @@ fn build(doc: &Document, joined: bool) -> Model {
     if !doc.entities().any(|e| matches!(e, Entity::Roof(_))) {
         m.left.insert((Left::Roof, None));
     }
-    if !ground::natural_known(doc) { m.left.insert((Left::NaturalGround, None)); }
+    if !ground::natural_known(doc) {
+        m.left.insert((Left::NaturalGround, None));
+    }
     let entities: Vec<(Uuid, &Entity)> = doc.entities_with_uids().collect();
     // The building's floors: a covering is none (docs/adr/8070 §10).
     let slabs: Vec<SlabAt> = entities
@@ -381,8 +386,12 @@ fn build(doc: &Document, joined: bool) -> Model {
             _ => {}
         }
     }
-    for rain in std::mem::take(&mut m.rain) { rain_water(&rain, &mut m); }
-    if joined { frame::joins(doc, &mut m); }
+    for rain in std::mem::take(&mut m.rain) {
+        rain_water(&rain, &mut m);
+    }
+    if joined {
+        frame::joins(doc, &mut m);
+    }
     m
 }
 
@@ -401,7 +410,13 @@ fn push_part(m: &mut Model, solid: Solid, look: Look, owner: Option<String>, par
 
 /// [`push`] of a solid whose footprint has arcs (docs/adr/8071 §1): `exact` its rings with them, `solid`'s rings the
 /// same flattened.
-fn push_exact(m: &mut Model, solid: Solid, look: Look, owner: Option<String>, exact: Vec<ExactRing>) {
+fn push_exact(
+    m: &mut Model,
+    solid: Solid,
+    look: Look,
+    owner: Option<String>,
+    exact: Vec<ExactRing>,
+) {
     push(m, solid, look, owner);
     if let Some(last) = m.exact.last_mut() {
         *last = Some(exact);
@@ -426,7 +441,11 @@ fn circles_of(s: &kentos_geometry_core::entity::Shape) -> Vec<(P, f64)> {
         let n = l.pts.len();
         let segs = if wall.closed { n } else { n.saturating_sub(1) };
         for i in 0..segs {
-            if let Some(arc) = bulge_arc(l.pts[i], l.pts[(i + 1) % n], l.bulges.get(i).copied().unwrap_or(0.0)) {
+            if let Some(arc) = bulge_arc(
+                l.pts[i],
+                l.pts[(i + 1) % n],
+                l.bulges.get(i).copied().unwrap_or(0.0),
+            ) {
                 add_circle(&mut out, (arc.c, arc.r));
             }
         }
@@ -435,7 +454,9 @@ fn circles_of(s: &kentos_geometry_core::entity::Shape) -> Vec<(P, f64)> {
 }
 
 fn add_circle(list: &mut Vec<(P, f64)>, c: (P, f64)) {
-    let same = |d: &(P, f64)| (d.0.x - c.0.x).abs() < 1e-9 && (d.0.y - c.0.y).abs() < 1e-9 && (d.1 - c.1).abs() < 1e-9;
+    let same = |d: &(P, f64)| {
+        (d.0.x - c.0.x).abs() < 1e-9 && (d.0.y - c.0.y).abs() < 1e-9 && (d.1 - c.1).abs() < 1e-9
+    };
     if !list.iter().any(same) {
         list.push(c);
     }
@@ -443,7 +464,13 @@ fn add_circle(list: &mut Vec<(P, f64)>, c: (P, f64)) {
 
 /// The circles every wall's lines run on where they are arcs (docs/adr/8071 §1): what a wall's flattened rings are taken
 /// back to, a wall's end cut along another's curved face too.
-fn wall_circles(walls: &[(Uuid, &kentos_commands::WallFields, kentos_geometry_core::entity::Shape)]) -> Vec<(P, f64)> {
+fn wall_circles(
+    walls: &[(
+        Uuid,
+        &kentos_commands::WallFields,
+        kentos_geometry_core::entity::Shape,
+    )],
+) -> Vec<(P, f64)> {
     let mut out: Vec<(P, f64)> = Vec::new();
     for (_, _, s) in walls {
         for c in circles_of(s) {
@@ -597,7 +624,11 @@ fn walls(doc: &Document, entities: &[(Uuid, &Entity)], m: &mut Model) {
             // Through a curved wall its edges along the faces are the faces' arcs (docs/adr/8071 §1).
             let bulges = kentos_geometry_core::geom::arc_recover::along(&ring, &own);
             m.gaps.push(Gap {
-                bulges: if bulges.iter().any(|b| *b != 0.0) { bulges } else { Vec::new() },
+                bulges: if bulges.iter().any(|b| *b != 0.0) {
+                    bulges
+                } else {
+                    Vec::new()
+                },
                 ring,
                 sill,
                 head,
@@ -689,7 +720,11 @@ fn opening_lines(
                 let t = f / len;
                 a2 = P::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
                 b2 = P::new(b.x - (b.x - a.x) * t, b.y - (b.y - a.y) * t);
-                low = if o.form == OpeningForm::Door { sill } else { sill + f };
+                low = if o.form == OpeningForm::Door {
+                    sill
+                } else {
+                    sill + f
+                };
                 high = head - f;
                 outline(&mut lines, a2, b2, low, high);
             }
@@ -767,18 +802,40 @@ fn curtain(
     // Its doors, windows and bare openings in place of panels (docs/adr/8129): each along its base line and between
     // its sill and head (over the storey's floor), its jambs on the faces.
     #[allow(clippy::type_complexity)]
-    let filled: Vec<(&Uuid, &kentos_commands::OpeningFields, (f64, f64), (f64, f64), [Vec2; 4])> = openings
+    let filled: Vec<(
+        &Uuid,
+        &kentos_commands::OpeningFields,
+        (f64, f64),
+        (f64, f64),
+        [Vec2; 4],
+    )> = openings
         .iter()
-        .filter(|(_, o)| matches!(o.form, OpeningForm::Door | OpeningForm::Window | OpeningForm::Opening))
+        .filter(|(_, o)| {
+            matches!(
+                o.form,
+                OpeningForm::Door | OpeningForm::Window | OpeningForm::Opening
+            )
+        })
         .filter(|(_, o)| o.broken.is_none())
         .filter_map(|(u, o)| {
             let place = <[Vec2; 4]>::try_from(o.place.clone()).ok()?;
-            let (z0, z1) = (floor + o.sill.unwrap_or(0.0), o.head.map_or(top, |h| floor + h));
-            (z1 > z0).then_some((u, *o, kentos_domain::opening_follow::span(o), (z0, z1), place))
+            let (z0, z1) = (
+                floor + o.sill.unwrap_or(0.0),
+                o.head.map_or(top, |h| floor + h),
+            );
+            (z1 > z0).then_some((
+                u,
+                *o,
+                kentos_domain::opening_follow::span(o),
+                (z0, z1),
+                place,
+            ))
         })
         .collect();
     let within = |s: f64, z: f64| {
-        filled.iter().any(|(_, _, (s0, s1), (z0, z1), _)| s > s0 + 1e-9 && s < s1 - 1e-9 && z > z0 + 1e-9 && z < z1 - 1e-9)
+        filled.iter().any(|(_, _, (s0, s1), (z0, z1), _)| {
+            s > s0 + 1e-9 && s < s1 - 1e-9 && z > z0 + 1e-9 && z < z1 - 1e-9
+        })
     };
     let n = w.pts.len();
     let stretches = if w.closed { n } else { n.saturating_sub(1) };
@@ -793,8 +850,15 @@ fn curtain(
         }
         let u = P::new((b.x - a.x) / length, (b.y - a.y) / length);
         let normal = P::new(-u.y, u.x);
-        let at = |s: f64, off: f64| P::new(a.x + u.x * s + normal.x * off, a.y + u.y * s + normal.y * off);
-        let band = |s0: f64, s1: f64, near: f64, far: f64| vec![at(s0, near), at(s1, near), at(s1, far), at(s0, far)];
+        let at = |s: f64, off: f64| {
+            P::new(
+                a.x + u.x * s + normal.x * off,
+                a.y + u.y * s + normal.y * off,
+            )
+        };
+        let band = |s0: f64, s1: f64, near: f64, far: f64| {
+            vec![at(s0, near), at(s1, near), at(s1, far), at(s0, far)]
+        };
         let bays = divisions(length, grid.spacing);
         // A stretch's first mullion stands at a corner the stretch before already has, but for the line's start.
         for k in 0..bays.len() {
@@ -818,7 +882,13 @@ fn curtain(
                 }
             }
             for (lo, hi) in pieces {
-                push_part(m, block(band(s0, s1, left, right), lo, hi), frames.clone(), owner.clone(), Some(Part::Mullion(mullions)));
+                push_part(
+                    m,
+                    block(band(s0, s1, left, right), lo, hi),
+                    frames.clone(),
+                    owner.clone(),
+                    Some(Part::Mullion(mullions)),
+                );
                 mullions += 1;
             }
         }
@@ -851,7 +921,11 @@ fn curtain(
                 let t = PANEL.min(w.width / 2.0);
                 push_part(
                     m,
-                    block(band(s0, s1, middle + t / 2.0, middle - t / 2.0), foot + z0, foot + z1),
+                    block(
+                        band(s0, s1, middle + t / 2.0, middle - t / 2.0),
+                        foot + z0,
+                        foot + z1,
+                    ),
                     glass.clone(),
                     owner.clone(),
                     Some(Part::Panel),
@@ -866,7 +940,10 @@ fn curtain(
             let lines = opening_lines(o, [(p(l0), p(l1)), (p(r0), p(r1))], (z0, z1));
             let solid = Solid {
                 rings: Vec::new(),
-                height: Height::Prism { bottom: z0, top: z1 },
+                height: Height::Prism {
+                    bottom: z0,
+                    top: z1,
+                },
                 voids: Vec::new(),
                 marks: lines,
                 finish: None,
@@ -956,22 +1033,41 @@ fn slab(
     let ring = |r: &kentos_commands::SpaceRing| -> ExactRing {
         let pts: Vec<P> = r.pts.iter().map(|q| p(*q)).collect();
         let n = pts.len();
-        let b: Vec<f64> = (0..n).map(|i| r.bulges.as_ref().and_then(|b| b.get(i)).copied().unwrap_or(0.0)).collect();
+        let b: Vec<f64> = (0..n)
+            .map(|i| {
+                r.bulges
+                    .as_ref()
+                    .and_then(|b| b.get(i))
+                    .copied()
+                    .unwrap_or(0.0)
+            })
+            .collect();
         (pts, b)
     };
     let area = |part: &kentos_commands::SpacePart| -> Area {
         let r = |x: &kentos_commands::SpaceRing| {
             let (pts, b) = ring(x);
-            Ring { bulges: b.iter().any(|v| *v != 0.0).then_some(b), pts }
+            Ring {
+                bulges: b.iter().any(|v| *v != 0.0).then_some(b),
+                pts,
+            }
         };
-        Area { outer: r(&part.outer), holes: part.holes.iter().map(r).collect() }
+        Area {
+            outer: r(&part.outer),
+            holes: part.holes.iter().map(r).collect(),
+        }
     };
-    let mut exact: Vec<ExactRing> =
-        s.parts.iter().flat_map(|part| std::iter::once(&part.outer).chain(&part.holes)).map(ring).collect();
+    let mut exact: Vec<ExactRing> = s
+        .parts
+        .iter()
+        .flat_map(|part| std::iter::once(&part.outer).chain(&part.holes))
+        .map(ring)
+        .collect();
     // The voids it reads take their outlines out of it (docs/adr/8071 §5; docs/adr/0708 "no floor in it"), as the
     // quantities read them (docs/adr/0722 §5): those of its storey, every one when it has none. A covering is no floor;
     // a sloped slab has no hole. Each void's part over it is kept for the IFC's opening.
-    let reads = |v: &kentos_commands::SpaceFields| s.arch.level.is_none() || v.arch.level == s.arch.level;
+    let reads =
+        |v: &kentos_commands::SpaceFields| s.arch.level.is_none() || v.arch.level == s.arch.level;
     let on: Vec<&(String, &kentos_commands::SpaceFields)> = voids
         .iter()
         .filter(|(_, v)| s.covering.is_none() && s.slope.is_none() && reads(v))
@@ -994,13 +1090,19 @@ fn slab(
             }
         }
         if cut_any {
-            let shafts: Vec<Area> = on.iter().flat_map(|(_, v)| v.parts.iter().map(area)).collect();
+            let shafts: Vec<Area> = on
+                .iter()
+                .flat_map(|(_, v)| v.parts.iter().map(area))
+                .collect();
             exact = subtract_areas(&own, &shafts)
                 .iter()
                 .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))
                 .map(|r| {
                     let n = r.pts.len();
-                    (r.pts.clone(), r.bulges.clone().unwrap_or_else(|| vec![0.0; n]))
+                    (
+                        r.pts.clone(),
+                        r.bulges.clone().unwrap_or_else(|| vec![0.0; n]),
+                    )
                 })
                 .collect();
         }
@@ -1052,7 +1154,11 @@ fn slab(
         }
     };
     for l in &s.layers.over {
-        put(m, solid(z - l.thickness * k, z), slab_layer_look(l.kind, l.material.as_deref()));
+        put(
+            m,
+            solid(z - l.thickness * k, z),
+            slab_layer_look(l.kind, l.material.as_deref()),
+        );
         z -= l.thickness * k;
     }
     // A covering's plate on its type's EK-2 element (docs/adr/8070 §10).
@@ -1066,7 +1172,11 @@ fn slab(
     }
     z -= s.thickness * k;
     for l in &s.layers.under {
-        put(m, solid(z - l.thickness * k, z), slab_layer_look(l.kind, l.material.as_deref()));
+        put(
+            m,
+            solid(z - l.thickness * k, z),
+            slab_layer_look(l.kind, l.material.as_deref()),
+        );
         z -= l.thickness * k;
     }
 }
@@ -1314,23 +1424,29 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
     // thick, across its face (upright on a face sloping g: × √(1 + g²)), its look and its finish; none: one build-up of
     // its thickness, upright (docs/adr/8044 §1).
     #[allow(clippy::type_complexity)]
-    let (layered, plates): (bool, Vec<(f64, f64, Look, Option<String>)>) = if r.roof.layers.is_empty() {
-        (false, vec![(0.0, thickness, look.clone(), finish.clone())])
-    } else {
-        let mut down = 0.0;
-        let plates = r
-            .roof
-            .layers
-            .iter()
-            .enumerate()
-            .map(|(n, l)| {
-                let plate = (down, l.thickness, roof_layer_look(l, &r.roof), if n == 0 { finish.clone() } else { None });
-                down += l.thickness;
-                plate
-            })
-            .collect();
-        (true, plates)
-    };
+    let (layered, plates): (bool, Vec<(f64, f64, Look, Option<String>)>) =
+        if r.roof.layers.is_empty() {
+            (false, vec![(0.0, thickness, look.clone(), finish.clone())])
+        } else {
+            let mut down = 0.0;
+            let plates = r
+                .roof
+                .layers
+                .iter()
+                .enumerate()
+                .map(|(n, l)| {
+                    let plate = (
+                        down,
+                        l.thickness,
+                        roof_layer_look(l, &r.roof),
+                        if n == 0 { finish.clone() } else { None },
+                    );
+                    down += l.thickness;
+                    plate
+                })
+                .collect();
+            (true, plates)
+        };
     if faces.is_empty() {
         for (down, t, look, finish) in &plates {
             at.solids.push(m.solids.len());
@@ -1376,7 +1492,11 @@ fn roof(doc: &Document, r: &kentos_commands::RoofEntity, owner: Option<String>, 
                     .map(|(_, [a, b])| [(*a, plane(*a)), (*b, plane(*b))]),
             );
             // A layer's thickness across the face, upright on it.
-            let upright = if layered { (1.0 + dx * dx + dy * dy).sqrt() } else { 1.0 };
+            let upright = if layered {
+                (1.0 + dx * dx + dy * dy).sqrt()
+            } else {
+                1.0
+            };
             for (n, (down, t, look, finish)) in plates.iter().enumerate() {
                 at.solids.push(m.solids.len());
                 let sloped = sec::Sloped {
@@ -1672,7 +1792,11 @@ fn stair(doc: &Document, s: &kentos_commands::StairFields, owner: Option<String>
 /// piece's walking plane (sloped with it over a flight or a ramp's run); its balusters lines of a solid without a
 /// footprint, each from its foot to the top rail's underside. Parts of their side's railing, not the stair's or the
 /// ramp's body.
-fn push_rails(m: &mut Model, runs: Vec<kentos_geometry_core::geom::stair_rails::RailRun>, owner: Option<String>) {
+fn push_rails(
+    m: &mut Model,
+    runs: Vec<kentos_geometry_core::geom::stair_rails::RailRun>,
+    owner: Option<String>,
+) {
     use kentos_commands::RailingInfill;
     let (h, d) = (kentos_commands::RAILING_HEIGHT, TOP_RAIL_DEPTH);
     let look = Look {
@@ -1697,7 +1821,10 @@ fn push_rails(m: &mut Model, runs: Vec<kentos_geometry_core::geom::stair_rails::
             P::new(run.a.x + nx, run.a.y + ny),
         ];
         let height = if run.plane.is_flat() {
-            Height::Prism { bottom: run.plane.top + h - d, top: run.plane.top + h }
+            Height::Prism {
+                bottom: run.plane.top + h - d,
+                top: run.plane.top + h,
+            }
         } else {
             Height::Sloped(sec::Sloped {
                 top: run.plane.top + h,
@@ -1709,16 +1836,40 @@ fn push_rails(m: &mut Model, runs: Vec<kentos_geometry_core::geom::stair_rails::
                 roof: RAMP_FACES + m.solids.len(),
             })
         };
-        let rail = Solid { rings: vec![band], height, voids: Vec::new(), marks: Vec::new(), finish: None };
+        let rail = Solid {
+            rings: vec![band],
+            height,
+            voids: Vec::new(),
+            marks: Vec::new(),
+            finish: None,
+        };
         push_part(m, rail, look.clone(), owner.clone(), part);
         if run.balusters.is_empty() {
             continue;
         }
         let head = |q: P| run.plane.z(q) + h - d;
-        let marks: Vec<[(P, f64); 2]> = run.balusters.iter().map(|&(q, foot)| [(q, foot), (q, head(q))]).collect();
-        let bottom = run.balusters.iter().map(|b| b.1).fold(f64::INFINITY, f64::min);
-        let top = run.balusters.iter().map(|b| head(b.0)).fold(f64::NEG_INFINITY, f64::max);
-        let lines = Solid { rings: Vec::new(), height: Height::Prism { bottom, top }, voids: Vec::new(), marks, finish: None };
+        let marks: Vec<[(P, f64); 2]> = run
+            .balusters
+            .iter()
+            .map(|&(q, foot)| [(q, foot), (q, head(q))])
+            .collect();
+        let bottom = run
+            .balusters
+            .iter()
+            .map(|b| b.1)
+            .fold(f64::INFINITY, f64::min);
+        let top = run
+            .balusters
+            .iter()
+            .map(|b| head(b.0))
+            .fold(f64::NEG_INFINITY, f64::max);
+        let lines = Solid {
+            rings: Vec::new(),
+            height: Height::Prism { bottom, top },
+            voids: Vec::new(),
+            marks,
+            finish: None,
+        };
         push_part(m, lines, look.clone(), owner.clone(), part);
     }
 }
@@ -1747,7 +1898,12 @@ pub fn fixture_outline(doc: &Document, i: &kentos_commands::InsertEntity) -> Opt
 /// storey's floor up its height, outlined light on its class's EK-2 element (Tefriş's Mobilya and Vitrifiye, Asansör);
 /// cut where the line crosses it, seen past it. A block that is no building element, or has no height, is not in the
 /// model.
-fn fixture(doc: &Document, i: &kentos_commands::InsertEntity, owner: Option<String>, m: &mut Model) {
+fn fixture(
+    doc: &Document,
+    i: &kentos_commands::InsertEntity,
+    owner: Option<String>,
+    m: &mut Model,
+) {
     use kentos_commands::BlockElementClass as C;
     let Some(el) = doc
         .block(i.block)
@@ -1889,7 +2045,11 @@ fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>
             from: lo,
             to: hi,
             segment: Some(k),
-            plane: Plane { top: sloped.top, dx, dy },
+            plane: Plane {
+                top: sloped.top,
+                dx,
+                dy,
+            },
             steps: Vec::new(),
         });
         push(
@@ -1908,8 +2068,15 @@ fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>
     let outline = band(&pts, half);
     for (x, y) in &landings {
         let top = height(*x);
-        stretches.push(Stretch { from: *x, to: *y, segment: None, plane: Plane::flat(top), steps: Vec::new() });
-        let Some(ring) = kentos_geometry_core::geom::stair_body::band_cut(&walk, &outline, *x, *y) else {
+        stretches.push(Stretch {
+            from: *x,
+            to: *y,
+            segment: None,
+            plane: Plane::flat(top),
+            steps: Vec::new(),
+        });
+        let Some(ring) = kentos_geometry_core::geom::stair_body::band_cut(&walk, &outline, *x, *y)
+        else {
             continue;
         };
         push(
@@ -1930,7 +2097,11 @@ fn ramp(r: &kentos_commands::RampFields, slabs: &[SlabAt], owner: Option<String>
     }
     // Its railings over it (docs/adr/8128): over each run its surface, over each landing its floor.
     let step = kentos_commands::RAILING_GAP + BALUSTER_WIDTH;
-    push_rails(m, rail_runs(&walk, spec.railings, half, &stretches, step), owner);
+    push_rails(
+        m,
+        rail_runs(&walk, spec.railings, half, &stretches, step),
+        owner,
+    );
 }
 
 /// The block a section mark's section is drawn into: its id from the mark's (a section is its mark's), the same in
@@ -2230,7 +2401,10 @@ pub fn facade_marks(doc: &Document) -> Vec<kentos_commands::NewViewMark> {
 /// Where a facade stands among [`FACINGS`] (north first, clockwise): the order Tümü draws them in.
 pub fn facing_rank(doc: &Document, mark: &kentos_commands::ViewMarkFields) -> usize {
     let code = facing(doc, mark).code;
-    FACINGS.iter().position(|f| f.code == code).unwrap_or(FACINGS.len())
+    FACINGS
+        .iter()
+        .position(|f| f.code == code)
+        .unwrap_or(FACINGS.len())
 }
 
 /// How a mark's drawing is called: "B-B kesiti", "Kuzey görünüşü".
@@ -2354,11 +2528,10 @@ pub fn draw_view(doc: &Document, m: &Model, frame: &Frame, view: &View) -> Drawn
             .or_insert_with(|| (look.clone(), Vec::new()))
             .1
             .push(area.clone());
-        if let Some(f) = look
-            .fill
-            .as_ref()
-            .filter(|f| f.pattern.eq_ignore_ascii_case(kentos_geometry_core::geom::wall::FITTED_INSULATION))
-        {
+        if let Some(f) = look.fill.as_ref().filter(|f| {
+            f.pattern
+                .eq_ignore_ascii_case(kentos_geometry_core::geom::wall::FITTED_INSULATION)
+        }) {
             for line in kentos_geometry_core::geom::zigzag::fitted(&c.ring, least) {
                 zigzags.push((format!("{}-T", look.layer), f.color.clone(), line));
             }

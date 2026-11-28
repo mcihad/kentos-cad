@@ -9,8 +9,8 @@
 //! extension lines from the measured points to it) where an object's edge crosses it (`intersect_edges`).
 
 use kentos_commands::{
-    BreakLine, CommandResult, CommandWarning, DimensionBreak, DimensionEdit, DimensionEntity, DimensionStyle,
-    DimensionsEdit, DimensionsEditPlan, DimensionsEdited, Entity, TextShift,
+    BreakLine, CommandResult, CommandWarning, DimensionBreak, DimensionEdit, DimensionEntity,
+    DimensionStyle, DimensionsEdit, DimensionsEditPlan, DimensionsEdited, Entity, TextShift,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::dimension_geom;
@@ -77,7 +77,10 @@ fn frame(d: &DimensionEntity) -> Option<(Vec2, Vec2, Vec2)> {
         }
         Some(DimensionStyle::Linear) => {
             let t = d.angle.unwrap_or(0.0) * kentos_geometry_core::jsmath::PI / 180.0;
-            Vec2::new(kentos_geometry_core::jsmath::cos(t), kentos_geometry_core::jsmath::sin(t))
+            Vec2::new(
+                kentos_geometry_core::jsmath::cos(t),
+                kentos_geometry_core::jsmath::sin(t),
+            )
         }
         _ => return None,
     };
@@ -139,18 +142,35 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
         DimensionEdit::Space {
             spacing: Some(s), ..
         } => {
-            checks::finite(*s, "Aralık", "Aralığı metre olarak sonlu bir sayıyla verin.", "edit.spacing")?;
+            checks::finite(
+                *s,
+                "Aralık",
+                "Aralığı metre olarak sonlu bir sayıyla verin.",
+                "edit.spacing",
+            )?;
             if *s < 0.0 {
                 return Err(fail(
                     codes::INVALID_OFFSET,
-                    format!("Aralık {s}; 0 ya da büyük olmalı (0 ölçüleri temelin çizgisine dizer)."),
+                    format!(
+                        "Aralık {s}; 0 ya da büyük olmalı (0 ölçüleri temelin çizgisine dizer)."
+                    ),
                     "edit.spacing".into(),
                 ));
             }
         }
         DimensionEdit::MoveText { along, across, .. } => {
-            checks::finite(*along, "Kayma", "Kaymayı metre olarak sonlu bir sayıyla verin.", "edit.along")?;
-            checks::finite(*across, "Kayma", "Kaymayı metre olarak sonlu bir sayıyla verin.", "edit.across")?;
+            checks::finite(
+                *along,
+                "Kayma",
+                "Kaymayı metre olarak sonlu bir sayıyla verin.",
+                "edit.along",
+            )?;
+            checks::finite(
+                *across,
+                "Kayma",
+                "Kaymayı metre olarak sonlu bir sayıyla verin.",
+                "edit.across",
+            )?;
         }
         DimensionEdit::Text { text: Some(t), .. } if t.trim().is_empty() => {
             return Err(fail(
@@ -234,7 +254,9 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
                 .map_or(d.base.layer_id.as_str(), |n| n.name.as_str());
             return Err(fail(
                 codes::LAYER_LOCKED,
-                format!("“{name}” katmanı kilitli; üzerindeki ölçü değişmez. Kilidi Katmanlar panelinden açın."),
+                format!(
+                    "“{name}” katmanı kilitli; üzerindeki ölçü değişmez. Kilidi Katmanlar panelinden açın."
+                ),
                 path.clone(),
             ));
         }
@@ -253,9 +275,16 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
     let mut changed = Vec::new();
     match e {
         DimensionEdit::Space { spacing, .. } => {
-            let base = base.as_ref().map(|b| (b, straight(b, "edit.base"))).ok_or_else(|| {
-                fail(codes::NOT_A_DIMENSION, "Temel ölçü yok.".into(), "edit.base".into())
-            })?;
+            let base = base
+                .as_ref()
+                .map(|b| (b, straight(b, "edit.base")))
+                .ok_or_else(|| {
+                    fail(
+                        codes::NOT_A_DIMENSION,
+                        "Temel ölçü yok.".into(),
+                        "edit.base".into(),
+                    )
+                })?;
             let (b, frame0) = (base.0, base.1?);
             let (u0, n0, line0) = frame0;
             let pos0 = dot(line0, n0);
@@ -269,7 +298,8 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
                 if (u.x * u0.y - u.y * u0.x).abs() > 1e-9 {
                     return Err(fail(
                         codes::NOT_PARALLEL,
-                        "Ölçü temel ölçüye paralel değil; aralık yalnız paralel ölçülerde verilir.".into(),
+                        "Ölçü temel ölçüye paralel değil; aralık yalnız paralel ölçülerde verilir."
+                            .into(),
                         path.clone(),
                     ));
                 }
@@ -332,14 +362,28 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
                     });
                 }
                 if breaks != d.breaks {
-                    changed.push((*slot, *uid, DimensionEntity { breaks, ..d.clone() }));
+                    changed.push((
+                        *slot,
+                        *uid,
+                        DimensionEntity {
+                            breaks,
+                            ..d.clone()
+                        },
+                    ));
                 }
             }
         }
         DimensionEdit::Unbreak { .. } => {
             for (slot, uid, _, d) in &list {
                 if !d.breaks.is_empty() {
-                    changed.push((*slot, *uid, DimensionEntity { breaks: Vec::new(), ..d.clone() }));
+                    changed.push((
+                        *slot,
+                        *uid,
+                        DimensionEntity {
+                            breaks: Vec::new(),
+                            ..d.clone()
+                        },
+                    ));
                 }
             }
         }
@@ -350,14 +394,28 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
             });
             for (slot, uid, _, d) in &list {
                 if d.text_shift != shift {
-                    changed.push((*slot, *uid, DimensionEntity { text_shift: shift, ..d.clone() }));
+                    changed.push((
+                        *slot,
+                        *uid,
+                        DimensionEntity {
+                            text_shift: shift,
+                            ..d.clone()
+                        },
+                    ));
                 }
             }
         }
         DimensionEdit::Text { text, .. } => {
             for (slot, uid, _, d) in &list {
                 if d.text != *text {
-                    changed.push((*slot, *uid, DimensionEntity { text: text.clone(), ..d.clone() }));
+                    changed.push((
+                        *slot,
+                        *uid,
+                        DimensionEntity {
+                            text: text.clone(),
+                            ..d.clone()
+                        },
+                    ));
                 }
             }
         }
@@ -382,12 +440,19 @@ fn check(doc: &Document, input: &DimensionsEdit) -> Result<Checked, Stop> {
                     ));
                 }
             }
-            let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+            let levels = doc
+                .settings()
+                .arch
+                .as_ref()
+                .map_or(&[][..], |a| a.levels.as_slice());
             let value = match level {
                 Some(l) => Some(l.value(levels).ok_or_else(|| {
                     fail(
                         codes::LEVEL_NOT_FOUND,
-                        format!("Projede “{}” kimlikli kat yok. Var olan bir katın kimliğini verin.", l.id),
+                        format!(
+                            "Projede “{}” kimlikli kat yok. Var olan bir katın kimliğini verin.",
+                            l.id
+                        ),
                         "edit.level.id".into(),
                     )
                 })?),
@@ -426,7 +491,10 @@ fn crossings(d: &DimensionEntity, own: Slot, edges: &[(Slot, Vec<Edge>)]) -> Vec
         (BreakLine::First, a, l.d1),
         (BreakLine::Second, b, l.d2),
     ] {
-        let ll = dot(Vec2::new(to.x - from.x, to.y - from.y), Vec2::new(to.x - from.x, to.y - from.y));
+        let ll = dot(
+            Vec2::new(to.x - from.x, to.y - from.y),
+            Vec2::new(to.x - from.x, to.y - from.y),
+        );
         if ll < 1e-18 {
             continue;
         }
@@ -444,7 +512,10 @@ fn crossings(d: &DimensionEntity, own: Slot, edges: &[(Slot, Vec<Edge>)]) -> Vec
             }
             for edge in list {
                 for hit in intersect_edges(&seg, edge) {
-                    let t = dot(Vec2::new(hit.p.x - from.x, hit.p.y - from.y), Vec2::new(to.x - from.x, to.y - from.y)) / ll;
+                    let t = dot(
+                        Vec2::new(hit.p.x - from.x, hit.p.y - from.y),
+                        Vec2::new(to.x - from.x, to.y - from.y),
+                    ) / ll;
                     if (-1e-9..=1.0 + 1e-9).contains(&t) && t > skip + 1e-9 {
                         ts.push(t.clamp(0.0, 1.0));
                     }
@@ -469,7 +540,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &DimensionsEdit) -> CommandRes
     }
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, input: &DimensionsEdit) -> CommandResult<DimensionsEditPlan> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &DimensionsEdit,
+) -> CommandResult<DimensionsEditPlan> {
     plan_in(cx.doc, input)
 }
 
@@ -478,7 +552,11 @@ pub fn plan_in(doc: &Document, input: &DimensionsEdit) -> CommandResult<Dimensio
     match check(doc, input) {
         Ok(c) => CommandResult::Completed {
             output: DimensionsEditPlan {
-                dimensions: c.changed.into_iter().map(|(_, _, d)| Entity::Dimension(Box::new(d))).collect(),
+                dimensions: c
+                    .changed
+                    .into_iter()
+                    .map(|(_, _, d)| Entity::Dimension(Box::new(d)))
+                    .collect(),
                 revision: doc.revision().to_string(),
             },
             warnings: c.warnings,
@@ -487,7 +565,10 @@ pub fn plan_in(doc: &Document, input: &DimensionsEdit) -> CommandResult<Dimensio
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: DimensionsEdit) -> CommandResult<DimensionsEdited> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: DimensionsEdit,
+) -> CommandResult<DimensionsEdited> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_DIMENSIONS_EDIT,
@@ -497,7 +578,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: DimensionsEdit) -> CommandR
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: DimensionsEdit) -> CommandResult<DimensionsEdited> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: DimensionsEdit,
+) -> CommandResult<DimensionsEdited> {
     let c = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),

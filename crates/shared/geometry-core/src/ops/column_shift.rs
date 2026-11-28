@@ -30,7 +30,11 @@ pub struct ColumnIn<'a> {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Target {
     /// A wall (its index in the walls given), its path's edge, and whether its left face is the one facing.
-    Wall { wall: usize, edge: usize, left_face: bool },
+    Wall {
+        wall: usize,
+        edge: usize,
+        left_face: bool,
+    },
     /// Another column (its index in the columns given) and its side.
     Column { column: usize, side: usize },
 }
@@ -116,10 +120,17 @@ pub fn gaps(walls: &[WallIn<'_>], columns: &[ColumnIn<'_>], k: usize) -> [Option
                     continue;
                 };
                 // The wall's faces as distances outward from the side: its left face is to its own left.
-                let sgn = if dot(Vec2::new(-v.y, v.x), n) > 0.0 { 1.0 } else { -1.0 };
+                let sgn = if dot(Vec2::new(-v.y, v.x), n) > 0.0 {
+                    1.0
+                } else {
+                    -1.0
+                };
                 let sd = dot(sub(c, a), n);
                 let lf = left_face(w.spec);
-                let faces = [(sd + sgn * lf, true), (sd + sgn * (lf - w.spec.width), false)];
+                let faces = [
+                    (sd + sgn * lf, true),
+                    (sd + sgn * (lf - w.spec.width), false),
+                ];
                 let Some((near, left)) = faces
                     .into_iter()
                     .filter(|(f, _)| *f >= -TIE)
@@ -132,7 +143,11 @@ pub fn gaps(walls: &[WallIn<'_>], columns: &[ColumnIn<'_>], k: usize) -> [Option
                     &mut best[side],
                     Gap {
                         side,
-                        target: Target::Wall { wall: j, edge: e, left_face: left },
+                        target: Target::Wall {
+                            wall: j,
+                            edge: e,
+                            left_face: left,
+                        },
                         distance: js_max(0.0, near),
                         from: base,
                         to: along(base, n, near),
@@ -182,7 +197,9 @@ pub fn moved(
     distance: f64,
 ) -> Result<Vec2, String> {
     if side > 3 {
-        return Err(format!("Kolonun {side}. yanı yok; yanları 0 ile 3 arasında."));
+        return Err(format!(
+            "Kolonun {side}. yanı yok; yanları 0 ile 3 arasında."
+        ));
     }
     let me = columns.get(k).ok_or_else(|| "Kolon yok.".to_owned())?;
     let Some(g) = gaps(walls, columns, k)[side] else {
@@ -224,7 +241,9 @@ pub fn moved_to_grid(
     distance: f64,
 ) -> Result<Vec2, String> {
     if side > 3 {
-        return Err(format!("Kolonun {side}. yanı yok; yanları 0 ile 3 arasında."));
+        return Err(format!(
+            "Kolonun {side}. yanı yok; yanları 0 ile 3 arasında."
+        ));
     }
     let me = columns.get(k).ok_or_else(|| "Kolon yok.".to_owned())?;
     let Some(g) = grid_gaps(columns, grids, k)[side] else {

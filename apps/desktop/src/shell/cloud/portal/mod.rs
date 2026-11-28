@@ -427,9 +427,14 @@ impl App {
                     Ok(d) => {
                         let dossier = d.summary.id.clone();
                         let on = p.esign_on;
-                        let application = d.summary.direction == kentos_commands::DossierDirection::Application;
+                        let application =
+                            d.summary.direction == kentos_commands::DossierDirection::Application;
                         p.detail = Some(*d);
-                        let fees = if application { self.portal_fees(dossier.clone()) } else { Task::none() };
+                        let fees = if application {
+                            self.portal_fees(dossier.clone())
+                        } else {
+                            Task::none()
+                        };
                         if on {
                             return Task::batch([self.esign_signatures(dossier), fees]);
                         }
@@ -507,6 +512,11 @@ impl App {
         let Some(id) = crate::cloud::uuid(&dossier) else {
             return Task::none();
         };
-        Task::perform(client.dossier_fees(id), move |result| msg(Event::Fees { dossier: dossier.clone(), result }))
+        Task::perform(client.dossier_fees(id), move |result| {
+            msg(Event::Fees {
+                dossier: dossier.clone(),
+                result,
+            })
+        })
     }
 }

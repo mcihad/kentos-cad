@@ -14,13 +14,13 @@
 //! drawing, so everyone who opens the project sees them). The web keeps the
 //! same three sources (`style/library.ts`).
 
-pub mod designer;
-pub mod fields;
-pub mod images;
 #[cfg(test)]
 mod bohhbuy_screens;
+pub mod designer;
+pub mod fields;
 #[cfg(test)]
 mod general_screens;
+pub mod images;
 pub mod layer_style;
 pub mod legend;
 pub mod manager;
@@ -164,7 +164,7 @@ impl Styles {
             line_weights: settings.bool("graphics.lineWeights"),
             view_build: kentos_native_style::View {
                 position_low: true,
-                plot_precision:false,
+                plot_precision: false,
                 fills: settings.bool("graphics.fills"),
                 area_edges: settings.bool("graphics.areaEdges"),
                 // The drawing area puts its map's system in (docs/adr/0583 §3).

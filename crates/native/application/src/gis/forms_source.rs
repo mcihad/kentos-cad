@@ -47,27 +47,45 @@ pub fn source_key(id: &str) -> Option<i64> {
 pub fn source_asks(doc: &Document, body: &FormBody, parent: &str, attrs: &Attrs) -> Vec<SourceAsk> {
     let mut out: Vec<SourceAsk> = Vec::new();
     for (_, item) in body.walk() {
-        let FormItem::Related { layer, field, .. } = item else { continue };
-        let Some(child) = doc.layers().get(layer).filter(|n| n.data.is_some()) else { continue };
-        let Some(relation) = doc
-            .settings()
-            .relations
-            .iter()
-            .find(|r| r.parent == parent && r.child == *layer && r.field == *field && r.parent_key.is_some())
-        else {
+        let FormItem::Related { layer, field, .. } = item else {
             continue;
         };
-        let Some(by) = relation.parent_key.as_deref() else { continue };
+        let Some(child) = doc.layers().get(layer).filter(|n| n.data.is_some()) else {
+            continue;
+        };
+        let Some(relation) = doc.settings().relations.iter().find(|r| {
+            r.parent == parent && r.child == *layer && r.field == *field && r.parent_key.is_some()
+        }) else {
+            continue;
+        };
+        let Some(by) = relation.parent_key.as_deref() else {
+            continue;
+        };
         let parent_field = doc
             .layers()
             .get(parent)
             .and_then(|n| n.fields.iter().find(|f| f.key() == by))
             .map_or_else(|| by.to_owned(), |f| f.name.clone());
-        let Some(value) = attrs.get(&parent_field).map(|v| v.trim()).filter(|v| !v.is_empty()) else { continue };
-        let Some(child_field) = child.fields.iter().find(|f| f.key() == field).map(|f| f.name.clone()) else {
+        let Some(value) = attrs
+            .get(&parent_field)
+            .map(|v| v.trim())
+            .filter(|v| !v.is_empty())
+        else {
             continue;
         };
-        let ask = SourceAsk { layer: layer.clone(), field: child_field, value: value.to_owned() };
+        let Some(child_field) = child
+            .fields
+            .iter()
+            .find(|f| f.key() == field)
+            .map(|f| f.name.clone())
+        else {
+            continue;
+        };
+        let ask = SourceAsk {
+            layer: layer.clone(),
+            field: child_field,
+            value: value.to_owned(),
+        };
         if !out.contains(&ask) {
             out.push(ask);
         }
@@ -77,7 +95,12 @@ pub fn source_asks(doc: &Document, body: &FormBody, parent: &str, attrs: &Attrs)
 
 /// The rows of the data layer `node` whose `field` holds `value`, at most [`MOST_ROWS`], by key: their keys and values
 /// as the drawing's texts. Read from the source: off the interface's thread.
-pub fn read_related(node: &LayerNode, _settings: &ProjectSettings, field: &str, value: &str) -> Result<Vec<(i64, Attrs)>, String> {
+pub fn read_related(
+    node: &LayerNode,
+    _settings: &ProjectSettings,
+    field: &str,
+    value: &str,
+) -> Result<Vec<(i64, Attrs)>, String> {
     let Some(data) = &node.data else {
         return Err(format!("“{}” bir veri katmanı değil.", node.name));
     };
@@ -87,7 +110,9 @@ pub fn read_related(node: &LayerNode, _settings: &ProjectSettings, field: &str, 
     // The code compared as the field holds it: a number field's code as a number.
     let kind = node.fields.iter().find(|f| f.name == field).map(|f| f.kind);
     let compared = match kind {
-        Some(LayerFieldKind::Integer | LayerFieldKind::BigInt) => value.parse::<i64>().map(Value::Int).ok(),
+        Some(LayerFieldKind::Integer | LayerFieldKind::BigInt) => {
+            value.parse::<i64>().map(Value::Int).ok()
+        }
         Some(LayerFieldKind::Decimal) => value.parse::<f64>().map(Value::Real).ok(),
         _ => Some(Value::Text(value.to_owned())),
     };
@@ -96,7 +121,11 @@ pub fn read_related(node: &LayerNode, _settings: &ProjectSettings, field: &str, 
     };
     let fields: Vec<String> = node.fields.iter().map(|f| f.name.clone()).collect();
     let request = Request {
-        condition: Some(Condition::Compare { field: field.to_owned(), op: Op::Eq, value: compared }),
+        condition: Some(Condition::Compare {
+            field: field.to_owned(),
+            op: Op::Eq,
+            value: compared,
+        }),
         columns: Some(fields.clone()),
         geometry: false,
         limit: Some(MOST_ROWS),
@@ -126,7 +155,9 @@ pub fn read_related(node: &LayerNode, _settings: &ProjectSettings, field: &str, 
 pub fn world_with(doc: &Document, body: &FormBody, rows: &SourceRows) -> World {
     let mut world = doc.form_world(body);
     for (layer, list) in rows {
-        let Some(other) = world.get_mut(layer) else { continue };
+        let Some(other) = world.get_mut(layer) else {
+            continue;
+        };
         for (key, attrs) in list {
             if doc.taken_uid(layer, *key).is_none() {
                 other.rows.push((source_id(*key), attrs.clone()));

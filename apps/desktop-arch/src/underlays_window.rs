@@ -19,13 +19,15 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use std::path::PathBuf;
-use crate::arch::ArchState;
 
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_commands::{CommandResult, ModelUnderlay, UnderlayChange, UnderlayEdit, UnderlayPlacement};
+use kentos_commands::{
+    CommandResult, ModelUnderlay, UnderlayChange, UnderlayEdit, UnderlayPlacement,
+};
 use kentos_interaction::pick::PickPoint;
 use kentos_native_application::{ExecutionContext, underlay_edit};
 use kentos_ui::label;
@@ -130,32 +132,54 @@ pub(crate) trait UnderlaysWindowApp {
     fn underlay_list(&self) -> Vec<ModelUnderlay>;
     fn open_underlays(&mut self);
     fn underlays_said(&mut self, kind: Kind, words: impl Into<String>);
-    fn underlay_edit(&mut self, change: UnderlayChange) -> Result<kentos_commands::UnderlayEdited, (String, String)>;
+    fn underlay_edit(
+        &mut self,
+        change: UnderlayChange,
+    ) -> Result<kentos_commands::UnderlayEdited, (String, String)>;
     fn underlay_add(&mut self, file: String, placement: UnderlayPlacement);
     fn underlays_event(&mut self, event: Event) -> Task<Message>;
     fn underlays_picked(&mut self, p: Option<kentos_interaction::Vec2>) -> bool;
     fn underlays_view(&self) -> Element<'_, Message>;
     fn underlay_status(&self, u: &ModelUnderlay) -> &'static str;
-    fn underlays_table<'a>(&'a self, list: &[ModelUnderlay], w: &'a Window) -> Element<'a, Message>;
-    fn underlay_details<'a>(&'a self, w: &'a Window, list: &[ModelUnderlay]) -> Element<'a, Message>;
-    fn underlay_object<'a>(&'a self, w: &'a Window, u: &ModelUnderlay, l: &crate::underlays::Loaded) -> Element<'a, Message>;
+    fn underlays_table<'a>(&'a self, list: &[ModelUnderlay], w: &'a Window)
+    -> Element<'a, Message>;
+    fn underlay_details<'a>(
+        &'a self,
+        w: &'a Window,
+        list: &[ModelUnderlay],
+    ) -> Element<'a, Message>;
+    fn underlay_object<'a>(
+        &'a self,
+        w: &'a Window,
+        u: &ModelUnderlay,
+        l: &crate::underlays::Loaded,
+    ) -> Element<'a, Message>;
     fn underlays_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
 impl UnderlaysWindowApp for App {
-    fn underlay_list(&self) -> Vec<ModelUnderlay>{
-        self.document.as_ref().map(|d| d.model.underlays().to_vec()).unwrap_or_default()
+    fn underlay_list(&self) -> Vec<ModelUnderlay> {
+        self.document
+            .as_ref()
+            .map(|d| d.model.underlays().to_vec())
+            .unwrap_or_default()
     }
 
     /// Altlık modeller (`arch.underlays`): the drawing's underlays, the first chosen.
-    fn open_underlays(&mut self){
+    fn open_underlays(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
         }
         let list = self.underlay_list();
         let first = list.first();
-        let (keep, check) = self.modules.arch_mut().underlays_window.take().map(|w| (w.object, w.check)).unwrap_or_default();
+        let (keep, check) = self
+            .modules
+            .arch_mut()
+            .underlays_window
+            .take()
+            .map(|w| (w.object, w.check))
+            .unwrap_or_default();
         self.modules.arch_mut().underlays_window = Some(Window {
             chosen: first.map(|u| u.id.clone()),
             typed: Typed::of(first),
@@ -166,29 +190,37 @@ impl UnderlaysWindowApp for App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Underlays));
     }
 
-    fn underlays_said(&mut self, kind: Kind, words: impl Into<String>){
+    fn underlays_said(&mut self, kind: Kind, words: impl Into<String>) {
         if let Some(w) = self.modules.arch_mut().underlays_window.as_mut() {
             w.said = Some((kind, words.into()));
         }
     }
 
     /// `cad.underlay.edit` on the open drawing; its refusal's code and words.
-    fn underlay_edit(&mut self, change: UnderlayChange) -> Result<kentos_commands::UnderlayEdited, (String, String)>{
+    fn underlay_edit(
+        &mut self,
+        change: UnderlayChange,
+    ) -> Result<kentos_commands::UnderlayEdited, (String, String)> {
         let Some(doc) = self.document.as_mut() else {
             return Err((String::new(), "Açık çizim yok.".into()));
         };
-        let input = UnderlayEdit { change, expected_revision: None };
+        let input = UnderlayEdit {
+            change,
+            expected_revision: None,
+        };
         match underlay_edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err((error.code, error.message))
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => Err((error.code, error.message)),
+            CommandResult::Queued { .. } | CommandResult::Cancelled => {
+                Err((String::new(), "Yazılmadı.".into()))
             }
-            CommandResult::Queued { .. } | CommandResult::Cancelled => Err((String::new(), "Yazılmadı.".into())),
         }
     }
 
     /// A file added `placement`; a map conversion that cannot place it kept with its reason for Başlangıç noktasına.
-    fn underlay_add(&mut self, file: String, placement: UnderlayPlacement){
+    fn underlay_add(&mut self, file: String, placement: UnderlayPlacement) {
         let change = UnderlayChange::Add {
             id: None,
             file: file.clone(),
@@ -204,7 +236,13 @@ impl UnderlaysWindowApp for App {
                     w.unplaced = None;
                     w.typed = Typed::of(added.as_ref());
                     w.chosen = Some(done.id);
-                    w.said = Some((Kind::Ok, format!("“{}” altlık olarak eklendi.", added.map(|u| u.name).unwrap_or_default())));
+                    w.said = Some((
+                        Kind::Ok,
+                        format!(
+                            "“{}” altlık olarak eklendi.",
+                            added.map(|u| u.name).unwrap_or_default()
+                        ),
+                    ));
                 }
             }
             Err((code, why)) if code == kentos_commands::codes::MODEL_UNDERLAY_NOT_PLACED => {
@@ -217,7 +255,7 @@ impl UnderlaysWindowApp for App {
         }
     }
 
-    fn underlays_event(&mut self, event: Event) -> Task<Message>{
+    fn underlays_event(&mut self, event: Event) -> Task<Message> {
         let list = self.underlay_list();
         let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else {
             return Task::none();
@@ -250,7 +288,9 @@ impl UnderlaysWindowApp for App {
                 );
             }
             Event::Picked(None) => {}
-            Event::Picked(Some(path)) => self.underlay_add(path.display().to_string(), UnderlayPlacement::Map),
+            Event::Picked(Some(path)) => {
+                self.underlay_add(path.display().to_string(), UnderlayPlacement::Map)
+            }
             Event::Origin => {
                 if let Some((file, _)) = w.unplaced.clone() {
                     self.underlay_add(file, UnderlayPlacement::Origin);
@@ -261,10 +301,16 @@ impl UnderlaysWindowApp for App {
             Event::Discipline(t) => w.typed.discipline = t,
             Event::Revision(t) => w.typed.revision = t,
             Event::Apply => {
-                let Some(id) = chosen else { return Task::none() };
-                let Some(u) = list.iter().find(|u| u.id == id) else { return Task::none() };
+                let Some(id) = chosen else {
+                    return Task::none();
+                };
+                let Some(u) = list.iter().find(|u| u.id == id) else {
+                    return Task::none();
+                };
                 let t = w.typed.clone();
-                let differs = |now: &str, was: Option<&str>| (now.trim() != was.unwrap_or("")).then(|| now.to_owned());
+                let differs = |now: &str, was: Option<&str>| {
+                    (now.trim() != was.unwrap_or("")).then(|| now.to_owned())
+                };
                 let change = UnderlayChange::Set {
                     id,
                     name: (t.name.trim() != u.name).then(|| t.name.clone()),
@@ -274,7 +320,8 @@ impl UnderlaysWindowApp for App {
                     shown: None,
                 };
                 match self.underlay_edit(change) {
-                    Ok(_) => self.underlays_said(Kind::Ok, "Altlığın adı, disiplini ve revizyonu yazıldı."),
+                    Ok(_) => self
+                        .underlays_said(Kind::Ok, "Altlığın adı, disiplini ve revizyonu yazıldı."),
                     Err((code, _)) if code == kentos_commands::codes::NOTHING_TO_SET => {
                         self.underlays_said(Kind::Info, "Değişen bir şey yok.");
                     }
@@ -282,21 +329,34 @@ impl UnderlaysWindowApp for App {
                 }
             }
             Event::Shown(on) => {
-                let Some(id) = chosen else { return Task::none() };
-                let change = UnderlayChange::Set { id, name: None, discipline: None, revision: None, placement: None, shown: Some(on) };
+                let Some(id) = chosen else {
+                    return Task::none();
+                };
+                let change = UnderlayChange::Set {
+                    id,
+                    name: None,
+                    discipline: None,
+                    revision: None,
+                    placement: None,
+                    shown: Some(on),
+                };
                 if let Err((_, why)) = self.underlay_edit(change) {
                     self.underlays_said(Kind::Warn, why);
                 }
             }
             Event::Reload => {
-                let Some(id) = chosen else { return Task::none() };
+                let Some(id) = chosen else {
+                    return Task::none();
+                };
                 match self.underlay_edit(UnderlayChange::Reload { id, file: None }) {
                     Ok(_) => self.underlays_said(Kind::Ok, "Dosya yeniden okundu."),
                     Err((_, why)) => self.underlays_said(Kind::Warn, why),
                 }
             }
             Event::Remove => {
-                let Some(id) = chosen else { return Task::none() };
+                let Some(id) = chosen else {
+                    return Task::none();
+                };
                 match self.underlay_edit(UnderlayChange::Remove { id }) {
                     Ok(done) => {
                         let first = done.underlays.first().cloned();
@@ -313,7 +373,10 @@ impl UnderlaysWindowApp for App {
             Event::Pick => {
                 self.modules.arch_mut().underlay_picking = true;
                 self.dialog = None;
-                self.session.run(Box::new(PickPoint::new("Altlık nesnesi", "Altlığın plandaki çizgisine tıklayın")));
+                self.session.run(Box::new(PickPoint::new(
+                    "Altlık nesnesi",
+                    "Altlığın plandaki çizgisine tıklayın",
+                )));
             }
             Event::Tolerance(t) => w.check.tolerance = t,
             Event::Check => return self.underlay_check_start(),
@@ -325,7 +388,7 @@ impl UnderlaysWindowApp for App {
     }
 
     /// The point picked for an underlay object (none: given up; the window comes back); false when it was another's.
-    fn underlays_picked(&mut self, p: Option<kentos_interaction::Vec2>) -> bool{
+    fn underlays_picked(&mut self, p: Option<kentos_interaction::Vec2>) -> bool {
         if !std::mem::take(&mut self.modules.arch_mut().underlay_picking) {
             return false;
         }
@@ -340,7 +403,9 @@ impl UnderlaysWindowApp for App {
                         w.object = Some((id, object));
                         w.said = None;
                     }
-                    None => w.said = Some((Kind::Info, "Tıklanan yerde altlık çizgisi yok.".into())),
+                    None => {
+                        w.said = Some((Kind::Info, "Tıklanan yerde altlık çizgisi yok.".into()))
+                    }
                 }
             }
         }
@@ -348,21 +413,27 @@ impl UnderlaysWindowApp for App {
         true
     }
 
-    fn underlays_view(&self) -> Element<'_, Message>{
+    fn underlays_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().underlays_window else {
             return space::horizontal().into();
         };
         let list = self.underlay_list();
-        let body: Element<'_, Message> = ListDetails::new(self.underlays_table(&list, w), self.underlay_details(w, &list))
-            .list_foot(words::secondary(ADD, Some(msg(Event::Add))))
-            .list_width(LIST)
-            .height(BODY)
-            .into();
+        let body: Element<'_, Message> = ListDetails::new(
+            self.underlays_table(&list, w),
+            self.underlay_details(w, &list),
+        )
+        .list_foot(words::secondary(ADD, Some(msg(Event::Add))))
+        .list_width(LIST)
+        .height(BODY)
+        .into();
         let mut foot = row![].spacing(8).align_y(Center);
         if let Some((kind, said)) = &w.said {
-            foot = foot.push(container(words::text_line(*kind, said.clone())).width(Length::Shrink));
+            foot =
+                foot.push(container(words::text_line(*kind, said.clone())).width(Length::Shrink));
         }
-        let foot = foot.push(space::horizontal().width(Fill)).push(words::secondary(CLOSE, Some(msg(Event::Close))));
+        let foot = foot
+            .push(space::horizontal().width(Fill))
+            .push(words::secondary(CLOSE, Some(msg(Event::Close))));
         let mut frame = Frame::new(TITLE).push(label::caption(LEAD));
         if let Some((file, why)) = &w.unplaced {
             frame = frame.push(
@@ -384,11 +455,22 @@ impl UnderlaysWindowApp for App {
                 .style(style::container::field_box),
             );
         }
-        frame.scroll(body).footer(foot).width(1160.0).modal(msg(Event::Close))
+        frame
+            .scroll(body)
+            .footer(foot)
+            .width(1160.0)
+            .modal(msg(Event::Close))
     }
 
-    fn underlay_status(&self, u: &ModelUnderlay) -> &'static str{
-        match self.modules.arch().underlays.states.get(&u.id).map(|s| &s.1) {
+    fn underlay_status(&self, u: &ModelUnderlay) -> &'static str {
+        match self
+            .modules
+            .arch()
+            .underlays
+            .states
+            .get(&u.id)
+            .map(|s| &s.1)
+        {
             _ if !u.shown => "Gizli",
             Some(State::Ready(_)) => "Gösteriliyor",
             Some(State::Reading) | None => "Okunuyor…",
@@ -396,7 +478,11 @@ impl UnderlaysWindowApp for App {
         }
     }
 
-    fn underlays_table<'a>(&'a self, list: &[ModelUnderlay], w: &'a Window) -> Element<'a, Message>{
+    fn underlays_table<'a>(
+        &'a self,
+        list: &[ModelUnderlay],
+        w: &'a Window,
+    ) -> Element<'a, Message> {
         let mut t = Table::new([
             Col::new("Ad").width(Fill),
             Col::new("Disiplin").width(scaled(80.0)),
@@ -419,8 +505,17 @@ impl UnderlaysWindowApp for App {
         t.into()
     }
 
-    fn underlay_details<'a>(&'a self, w: &'a Window, list: &[ModelUnderlay]) -> Element<'a, Message>{
-        let Some(u) = w.chosen.as_ref().and_then(|id| list.iter().find(|u| &u.id == id)).cloned() else {
+    fn underlay_details<'a>(
+        &'a self,
+        w: &'a Window,
+        list: &[ModelUnderlay],
+    ) -> Element<'a, Message> {
+        let Some(u) = w
+            .chosen
+            .as_ref()
+            .and_then(|id| list.iter().find(|u| &u.id == id))
+            .cloned()
+        else {
             return steps();
         };
         let head = row![
@@ -433,13 +528,24 @@ impl UnderlaysWindowApp for App {
         ]
         .spacing(8)
         .align_y(Center);
-        let state = self.modules.arch().underlays.states.get(&u.id).map(|s| s.1.clone());
+        let state = self
+            .modules
+            .arch()
+            .underlays
+            .states
+            .get(&u.id)
+            .map(|s| s.1.clone());
         let mut facts = Form::new()
             .label_width(scaled(LABELS))
             .field("Dosya", label::body(u.file.clone()))
             .field(
                 "Revizyonu",
-                label::body(format!("SHA-256 {}… · {} · {}", &u.sha256[..12], size_words(u.bytes), u.schema)),
+                label::body(format!(
+                    "SHA-256 {}… · {} · {}",
+                    &u.sha256[..12],
+                    size_words(u.bytes),
+                    u.schema
+                )),
             )
             .field("Yerleşim", label::body(u.placement.label()));
         facts = match &state {
@@ -460,25 +566,43 @@ impl UnderlaysWindowApp for App {
                         "Kutusu",
                         label::body(l.bounds.map_or_else(
                             || "—".to_owned(),
-                            |b| format!("{:.2} × {:.2} × {:.2} m", b[3] - b[0], b[4] - b[1], b[5] - b[2]).replace('.', ","),
+                            |b| {
+                                format!(
+                                    "{:.2} × {:.2} × {:.2} m",
+                                    b[3] - b[0],
+                                    b[4] - b[1],
+                                    b[5] - b[2]
+                                )
+                                .replace('.', ",")
+                            },
                         )),
                     )
                     .field(
                         "Süre ve bellek",
-                        label::body(format!(
-                            "{:.2} s · yaklaşık {}",
-                            l.took.as_secs_f64(),
-                            size_words(l.memory() as u64)
-                        ).replace('.', ",")),
+                        label::body(
+                            format!(
+                                "{:.2} s · yaklaşık {}",
+                                l.took.as_secs_f64(),
+                                size_words(l.memory() as u64)
+                            )
+                            .replace('.', ","),
+                        ),
                     )
             }
-            Some(State::Failed(why)) => facts.field("Okuma", words::text_line(Kind::Warn, why.clone())),
+            Some(State::Failed(why)) => {
+                facts.field("Okuma", words::text_line(Kind::Warn, why.clone()))
+            }
             _ => facts.field("Okuma", label::body("Okunuyor…")),
         };
         let form = Form::new()
             .label_width(scaled(LABELS))
             .section("Altlık")
-            .field("Ad", text_field("Dosyanın adı", &w.typed.name).on_input(|t| msg(Event::Name(t))).width(scaled(300.0)))
+            .field(
+                "Ad",
+                text_field("Dosyanın adı", &w.typed.name)
+                    .on_input(|t| msg(Event::Name(t)))
+                    .width(scaled(300.0)),
+            )
             .field(
                 "Disiplin",
                 text_field("Statik, Mekanik, Elektrik…", &w.typed.discipline)
@@ -487,9 +611,15 @@ impl UnderlaysWindowApp for App {
             )
             .field(
                 "Revizyon",
-                text_field("—", &w.typed.revision).on_input(|t| msg(Event::Revision(t))).width(scaled(140.0)),
+                text_field("—", &w.typed.revision)
+                    .on_input(|t| msg(Event::Revision(t)))
+                    .width(scaled(140.0)),
             )
-            .row(words::check(u.shown, "Çizimin altında göster", Some(msg(Event::Shown(!u.shown)))))
+            .row(words::check(
+                u.shown,
+                "Çizimin altında göster",
+                Some(msg(Event::Shown(!u.shown))),
+            ))
             .row(
                 row![
                     words::primary(APPLY, Some(msg(Event::Apply))),
@@ -498,30 +628,51 @@ impl UnderlaysWindowApp for App {
                 .spacing(8),
             );
         // What the file holds first (the object chosen, what has no body), then the underlay's own boxes.
-        let mut out = Column::new().spacing(14).push(head).push(facts).push(self.underlay_check_section(w, &u));
+        let mut out = Column::new()
+            .spacing(14)
+            .push(head)
+            .push(facts)
+            .push(self.underlay_check_section(w, &u));
         if let Some(State::Ready(l)) = &state {
             out = out.push(self.underlay_object(w, &u, l));
             if !l.not_shown.is_empty() {
-                let mut t = Table::new([Col::new("Gösterilemeyen nesne").width(scaled(220.0)), Col::new("Neden").width(Fill)]);
+                let mut t = Table::new([
+                    Col::new("Gösterilemeyen nesne").width(scaled(220.0)),
+                    Col::new("Neden").width(Fill),
+                ]);
                 for (owner, why) in &l.not_shown {
-                    t = t.push(Row::new([table::text(l.object_words(*owner)).into(), table::text(why.clone()).into()]));
+                    t = t.push(Row::new([
+                        table::text(l.object_words(*owner)).into(),
+                        table::text(why.clone()).into(),
+                    ]));
                 }
                 let rows = l.not_shown.len().clamp(1, 6) as f32 + 1.0;
                 out = out.push(t.height(rows * table::row_height() + 2.0));
             }
         }
         let out = out.push(form);
-        scrollable(container(out).padding(iced::Padding::ZERO.right(14))).height(Fill).into()
+        scrollable(container(out).padding(iced::Padding::ZERO.right(14)))
+            .height(Fill)
+            .into()
     }
 
     /// The object chosen in the plan or in 3B görünüm: its details as the file writes them.
-    fn underlay_object<'a>(&'a self, w: &'a Window, u: &ModelUnderlay, l: &crate::underlays::Loaded) -> Element<'a, Message>{
+    fn underlay_object<'a>(
+        &'a self,
+        w: &'a Window,
+        u: &ModelUnderlay,
+        l: &crate::underlays::Loaded,
+    ) -> Element<'a, Message> {
         let mut form = Form::new()
             .label_width(scaled(LABELS))
             .section("Seçilen nesne")
             .row(words::secondary(PICK, Some(msg(Event::Pick))));
         match w.object.as_ref().filter(|(id, _)| *id == u.id) {
-            None => form = form.wide(label::caption("Planda altlığın bir çizgisine ya da 3B görünümde gövdesine tıklayın.")),
+            None => {
+                form = form.wide(label::caption(
+                    "Planda altlığın bir çizgisine ya da 3B görünümde gövdesine tıklayın.",
+                ))
+            }
             Some((_, object)) => {
                 // The file's own words: its groups (the object, its place, its sets) as the viewer shows them.
                 match l.model.details(&l.bytes, *object) {
@@ -540,8 +691,14 @@ impl UnderlaysWindowApp for App {
                     Err(e) => {
                         let o = l.model.objects.get(*object);
                         form = form
-                            .field("Sınıf", label::body(o.map(|o| o.class.clone()).unwrap_or_default()))
-                            .field("GlobalId", label::body(o.map(|o| o.global_id.clone()).unwrap_or_default()))
+                            .field(
+                                "Sınıf",
+                                label::body(o.map(|o| o.class.clone()).unwrap_or_default()),
+                            )
+                            .field(
+                                "GlobalId",
+                                label::body(o.map(|o| o.global_id.clone()).unwrap_or_default()),
+                            )
                             .wide(words::text_line(Kind::Warn, e.to_string()));
                     }
                 }
@@ -551,7 +708,7 @@ impl UnderlaysWindowApp for App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    fn underlays_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
+    fn underlays_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().underlays_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
@@ -581,11 +738,16 @@ fn steps<'a>() -> Element<'a, Message> {
     let mut out = Column::new()
         .spacing(10)
         .push(label::strong("Altlık model yok"))
-        .push(label::caption("Model çizime kopyalanmaz: dosyasından salt okunur gösterilir."));
+        .push(label::caption(
+            "Model çizime kopyalanmaz: dosyasından salt okunur gösterilir.",
+        ));
     for (k, s) in list.iter().enumerate() {
         out = out.push(
-            row![container(label::strong((k + 1).to_string())).width(scaled(18.0)), container(label::body(*s)).width(Fill)]
-                .spacing(6),
+            row![
+                container(label::strong((k + 1).to_string())).width(scaled(18.0)),
+                container(label::body(*s)).width(Fill)
+            ]
+            .spacing(6),
         );
     }
     out.into()

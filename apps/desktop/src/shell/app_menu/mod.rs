@@ -109,7 +109,12 @@ struct Format {
 }
 
 const IMPORTS: [Format; 9] = [
-    Format { id: "file.import.dwg", label: "DWG", detail: "R14–2018 binary biçimleri; temel 2D kapsamı ve kayıp raporu", badge: "DWG" },
+    Format {
+        id: "file.import.dwg",
+        label: "DWG",
+        detail: "R14–2018 binary biçimleri; temel 2D kapsamı ve kayıp raporu",
+        badge: "DWG",
+    },
     Format {
         id: "file.import.dxf",
         label: "DXF",
@@ -163,7 +168,12 @@ const IMPORTS: [Format; 9] = [
 ];
 
 const EXPORTS: [Format; 7] = [
-    Format { id: "file.export.dwg", label: "DWG", detail: "Seçilen DWG biçim sürümünde; doğrulanan dosya tek adımda yazılır", badge: "DWG" },
+    Format {
+        id: "file.export.dwg",
+        label: "DWG",
+        detail: "Seçilen DWG biçim sürümünde; doğrulanan dosya tek adımda yazılır",
+        badge: "DWG",
+    },
     Format {
         id: "file.export.dxf",
         label: "DXF",
@@ -431,7 +441,10 @@ impl App {
 
     /// Whether the program keeps projects in data sources (docs/adr/9107): one with data layers (CBS, Harita).
     pub(crate) fn stores_projects(&self) -> bool {
-        matches!(self.program, None | Some(kentos_launch::Module::Gis) | Some(kentos_launch::Module::Map))
+        matches!(
+            self.program,
+            None | Some(kentos_launch::Module::Gis) | Some(kentos_launch::Module::Map)
+        )
     }
 
     /// Whether a command runs from the menu: on the desktop, possible now,

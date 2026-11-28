@@ -98,8 +98,14 @@ impl App {
         let query = EntitiesSelect {
             model_scope: self.spatial.sheet_model_scope(),
             region: SelectRegion::Crossing {
-                a: kentos_commands::Vec2 { x: b.min_x, y: b.min_y },
-                b: kentos_commands::Vec2 { x: b.max_x, y: b.max_y },
+                a: kentos_commands::Vec2 {
+                    x: b.min_x,
+                    y: b.min_y,
+                },
+                b: kentos_commands::Vec2 {
+                    x: b.max_x,
+                    y: b.max_y,
+                },
             },
             kinds: None,
             layers: None,
@@ -123,7 +129,7 @@ impl App {
             return;
         };
         let query = EntitiesSelect {
-            model_scope:self.spatial.sheet_model_scope(),
+            model_scope: self.spatial.sheet_model_scope(),
             region: SelectRegion::All,
             kinds: Some(kinds.to_vec()),
             layers: None,

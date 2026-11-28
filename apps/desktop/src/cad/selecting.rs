@@ -145,7 +145,12 @@ impl App {
         let Some(b) = crate::layering::union(&boxes) else {
             return (false, far);
         };
-        self.viewport.show(&kentos_render_wgpu::Bounds { min_x: b[0], min_y: b[1], max_x: b[2], max_y: b[3] });
+        self.viewport.show(&kentos_render_wgpu::Bounds {
+            min_x: b[0],
+            min_y: b[1],
+            max_x: b[2],
+            max_y: b[3],
+        });
         (true, far)
     }
 
@@ -214,13 +219,17 @@ fn objects_box(
 ) -> (Option<kentos_render_wgpu::Bounds>, usize) {
     spatial.sync(&doc.model);
     let tree = doc.model.layers();
-    let counted: Option<Vec<f64>> = tree.leaves().iter().any(|l| tree.is_frozen(&l.id)).then(|| {
-        doc.model
-            .entities()
-            .filter(|e| !tree.is_frozen(&e.base().layer_id))
-            .map(|e| f64::from(e.base().id))
-            .collect()
-    });
+    let counted: Option<Vec<f64>> =
+        tree.leaves()
+            .iter()
+            .any(|l| tree.is_frozen(&l.id))
+            .then(|| {
+                doc.model
+                    .entities()
+                    .filter(|e| !tree.is_frozen(&e.base().layer_id))
+                    .map(|e| f64::from(e.base().id))
+                    .collect()
+            });
     let store = spatial.store();
     let far = store.extent_outliers_of(counted.as_deref());
     let bounds = if far.is_empty() {
@@ -228,7 +237,12 @@ fn objects_box(
     } else {
         let left: std::collections::HashSet<u64> = far.iter().map(|id| id.to_bits()).collect();
         let near: Vec<f64> = counted
-            .unwrap_or_else(|| doc.model.entities().map(|e| f64::from(e.base().id)).collect())
+            .unwrap_or_else(|| {
+                doc.model
+                    .entities()
+                    .map(|e| f64::from(e.base().id))
+                    .collect()
+            })
             .into_iter()
             .filter(|id| !left.contains(&id.to_bits()))
             .collect();
@@ -419,8 +433,14 @@ pub(crate) mod tests {
         assert!(!app.auto_select_on());
         let (title, body, action) = {
             let (_, toast, _) = app.toasts.iter().last().expect("a notice");
-            let action = toast.action_of().map(|(label, m)| (label.to_owned(), m.clone()));
-            (toast.title().to_owned(), toast.description().map(str::to_owned), action)
+            let action = toast
+                .action_of()
+                .map(|(label, m)| (label.to_owned(), m.clone()));
+            (
+                toast.title().to_owned(),
+                toast.description().map(str::to_owned),
+                action,
+            )
         };
         assert_eq!(title, "Otomatik seçim kapandı");
         assert_eq!(
@@ -442,7 +462,9 @@ pub(crate) mod tests {
         assert!(selected(&app).is_empty());
         let (title, action) = {
             let (_, toast, _) = app.toasts.iter().last().expect("a notice");
-            let action = toast.action_of().map(|(label, m)| (label.to_owned(), m.clone()));
+            let action = toast
+                .action_of()
+                .map(|(label, m)| (label.to_owned(), m.clone()));
             (toast.title().to_owned(), action)
         };
         assert_eq!(title, "Başka katmandaki nesne seçilmedi");

@@ -23,10 +23,22 @@ use kentos_contracts::{MapSurvey, ProjectSettings, SurveyPoint};
 /// The facts' variable names and what each holds. Not reserved: a project's or a sheet's own variable of a name comes
 /// first.
 pub const SURVEY_VARIABLES: [(&str, &str); 4] = [
-    ("konum_dogrulugu", "Kabul edilen GNSS noktalarının en büyük nokta konum hatası (1σ, √(σK² + σD²))"),
-    ("yukseklik_dogrulugu", "Kabul edilen GNSS noktalarının en büyük yükseklik hatası (1σ)"),
-    ("ag_dengelemesi", "Noktaların dayandığı ağ dengelemeleri: sınıf, kural paketi, m0, serbestlik"),
-    ("olcme_kalitesi", "Ölçme kalite notu: nokta sayısı, konum ve yükseklik hatası, ağ dengelemesi"),
+    (
+        "konum_dogrulugu",
+        "Kabul edilen GNSS noktalarının en büyük nokta konum hatası (1σ, √(σK² + σD²))",
+    ),
+    (
+        "yukseklik_dogrulugu",
+        "Kabul edilen GNSS noktalarının en büyük yükseklik hatası (1σ)",
+    ),
+    (
+        "ag_dengelemesi",
+        "Noktaların dayandığı ağ dengelemeleri: sınıf, kural paketi, m0, serbestlik",
+    ),
+    (
+        "olcme_kalitesi",
+        "Ölçme kalite notu: nokta sayısı, konum ve yükseklik hatası, ağ dengelemesi",
+    ),
 ];
 
 /// The facts; an empty text where the project does not say it.
@@ -61,13 +73,23 @@ pub fn survey_facts(settings: &ProjectSettings) -> SurveyFacts {
 
 /// The survey facts of the accepted points `shown` takes (docs/adr/2800: those a map's frame shows). With accepted
 /// points but none taken, the note is [`NONE_SHOWN`] and the values are empty; without accepted points, nothing.
-pub fn survey_facts_where(settings: &ProjectSettings, shown: impl Fn(&SurveyPoint) -> bool) -> SurveyFacts {
-    let Some(survey) = settings.map_survey.as_ref().filter(|s| !s.points.is_empty()) else {
+pub fn survey_facts_where(
+    settings: &ProjectSettings,
+    shown: impl Fn(&SurveyPoint) -> bool,
+) -> SurveyFacts {
+    let Some(survey) = settings
+        .map_survey
+        .as_ref()
+        .filter(|s| !s.points.is_empty())
+    else {
         return SurveyFacts::default();
     };
     let points: Vec<&SurveyPoint> = survey.points.iter().filter(|p| shown(p)).collect();
     if points.is_empty() {
-        return SurveyFacts { note: NONE_SHOWN.to_owned(), ..SurveyFacts::default() };
+        return SurveyFacts {
+            note: NONE_SHOWN.to_owned(),
+            ..SurveyFacts::default()
+        };
     }
     let sigmas: Vec<[f64; 3]> = points.iter().filter_map(|p| p.result.sigma).collect();
     let position = sigmas.iter().map(|s| s[0].hypot(s[1])).reduce(f64::max);
@@ -76,7 +98,11 @@ pub fn survey_facts_where(settings: &ProjectSettings, shown: impl Fn(&SurveyPoin
     let mut note = format!("GNSS ile {} nokta", points.len());
     match (position, height) {
         (Some(p), Some(h)) => {
-            note.push_str(&format!(": en büyük nokta konum hatası {}, yükseklik hatası {} (ortalama hata)", centimetres(p), centimetres(h)));
+            note.push_str(&format!(
+                ": en büyük nokta konum hatası {}, yükseklik hatası {} (ortalama hata)",
+                centimetres(p),
+                centimetres(h)
+            ));
         }
         _ => note.push_str(": doğrulukları kayıtlı değil"),
     }
@@ -98,15 +124,25 @@ pub fn survey_facts_where(settings: &ProjectSettings, shown: impl Fn(&SurveyPoin
 }
 
 /// The adjustments the points name, in the archive's order.
-fn used<'a>(survey: &'a MapSurvey, points: &'a [&SurveyPoint]) -> impl Iterator<Item = &'a kentos_contracts::SurveyAdjustment> {
-    survey
-        .adjustments
-        .iter()
-        .filter(move |a| points.iter().any(|p| p.result.adjustment.as_deref() == Some(a.id.as_str())))
+fn used<'a>(
+    survey: &'a MapSurvey,
+    points: &'a [&SurveyPoint],
+) -> impl Iterator<Item = &'a kentos_contracts::SurveyAdjustment> {
+    survey.adjustments.iter().filter(move |a| {
+        points
+            .iter()
+            .any(|p| p.result.adjustment.as_deref() == Some(a.id.as_str()))
+    })
 }
 
 fn rules_word(passed: Option<bool>) -> Option<&'static str> {
-    passed.map(|ok| if ok { "kurallar sağlandı" } else { "kurallar sağlanmadı" })
+    passed.map(|ok| {
+        if ok {
+            "kurallar sağlandı"
+        } else {
+            "kurallar sağlanmadı"
+        }
+    })
 }
 
 /// “da-1, C3 sınıfı, kurallar sağlandı (bohhbuy-2018-gnss@1), m0 0,98, serbestlik 3; da-2, …”.
@@ -137,9 +173,17 @@ fn networks(survey: &MapSurvey, points: &[&SurveyPoint]) -> String {
 fn short_networks(survey: &MapSurvey, points: &[&SurveyPoint]) -> String {
     used(survey, points)
         .map(|a| {
-            let more: Vec<String> =
-                a.class.iter().cloned().chain(rules_word(a.rules_passed).map(str::to_owned)).collect();
-            if more.is_empty() { a.id.clone() } else { format!("{} ({})", a.id, more.join(", ")) }
+            let more: Vec<String> = a
+                .class
+                .iter()
+                .cloned()
+                .chain(rules_word(a.rules_passed).map(str::to_owned))
+                .collect();
+            if more.is_empty() {
+                a.id.clone()
+            } else {
+                format!("{} ({})", a.id, more.join(", "))
+            }
         })
         .collect::<Vec<_>>()
         .join(", ")
@@ -153,8 +197,10 @@ mod tests {
     /// network adjustment da-1 (σ 4.0, 3.5, 9.0 mm; C3, the rules held, m0 0.98, 3 degrees of freedom). By hand:
     /// √(4.0² + 3.5²) = 5.315 mm.
     fn settings() -> ProjectSettings {
-        let v: serde_json::Value =
-            serde_json::from_str(include_str!("../../../../fixtures/kcad/v2/map-survey-network.json")).expect("the file");
+        let v: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../fixtures/kcad/v2/map-survey-network.json"
+        ))
+        .expect("the file");
         serde_json::from_value(v["settings"].clone()).expect("settings")
     }
 
@@ -163,7 +209,10 @@ mod tests {
         let f = survey_facts(&settings());
         assert_eq!(f.position, "±0,5 cm");
         assert_eq!(f.height, "±0,9 cm");
-        assert_eq!(f.network, "da-1, C3 sınıfı, kurallar sağlandı (bohhbuy-2018-gnss@1), m0 0,98, serbestlik 3");
+        assert_eq!(
+            f.network,
+            "da-1, C3 sınıfı, kurallar sağlandı (bohhbuy-2018-gnss@1), m0 0,98, serbestlik 3"
+        );
         assert_eq!(
             f.note,
             "GNSS ile 2 nokta: en büyük nokta konum hatası ±0,5 cm, yükseklik hatası ±0,9 cm (ortalama hata); ağ dengelemesi da-1 \
@@ -178,7 +227,10 @@ mod tests {
             m.points.retain(|p| p.result.sigma.is_none());
         }
         let f = survey_facts(&s);
-        assert_eq!((f.position.as_str(), f.height.as_str(), f.network.as_str()), ("", "", ""));
+        assert_eq!(
+            (f.position.as_str(), f.height.as_str(), f.network.as_str()),
+            ("", "", "")
+        );
         assert_eq!(f.note, "GNSS ile 1 nokta: doğrulukları kayıtlı değil.");
         s.map_survey = None;
         assert_eq!(survey_facts(&s), SurveyFacts::default());
@@ -191,13 +243,29 @@ mod tests {
         let s = settings();
         let only = |id: &'static str| move |p: &SurveyPoint| p.id == id;
         let f = survey_facts_where(&s, only("kn-2"));
-        assert_eq!((f.position.as_str(), f.height.as_str()), ("±0,5 cm", "±0,9 cm"));
-        assert_eq!(f.note, "GNSS ile 1 nokta: en büyük nokta konum hatası ±0,5 cm, yükseklik hatası ±0,9 cm (ortalama hata); \
-                            ağ dengelemesi da-1 (C3, kurallar sağlandı).");
+        assert_eq!(
+            (f.position.as_str(), f.height.as_str()),
+            ("±0,5 cm", "±0,9 cm")
+        );
+        assert_eq!(
+            f.note,
+            "GNSS ile 1 nokta: en büyük nokta konum hatası ±0,5 cm, yükseklik hatası ±0,9 cm (ortalama hata); \
+                            ağ dengelemesi da-1 (C3, kurallar sağlandı)."
+        );
         let f = survey_facts_where(&s, only("kn-1"));
-        assert_eq!((f.position.as_str(), f.network.as_str()), ("", ""), "no σ, no adjustment");
+        assert_eq!(
+            (f.position.as_str(), f.network.as_str()),
+            ("", ""),
+            "no σ, no adjustment"
+        );
         assert_eq!(f.note, "GNSS ile 1 nokta: doğrulukları kayıtlı değil.");
         let f = survey_facts_where(&s, |_| false);
-        assert_eq!(f, SurveyFacts { note: NONE_SHOWN.to_owned(), ..SurveyFacts::default() });
+        assert_eq!(
+            f,
+            SurveyFacts {
+                note: NONE_SHOWN.to_owned(),
+                ..SurveyFacts::default()
+            }
+        );
     }
 }

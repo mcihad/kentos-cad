@@ -197,7 +197,12 @@ impl Writer {
 
 /// GDAL's metadata of the first band: its unit type and description (XML, escaped).
 fn gdal_metadata(unit: &str, description: &str) -> String {
-    let esc = |t: &str| t.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;");
+    let esc = |t: &str| {
+        t.replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('"', "&quot;")
+    };
     format!(
         "<GDALMetadata>\n  <Item name=\"DESCRIPTION\" sample=\"0\" role=\"description\">{}</Item>\n  <Item name=\"UNITTYPE\" sample=\"0\" role=\"unittype\">{}</Item>\n</GDALMetadata>",
         esc(description),

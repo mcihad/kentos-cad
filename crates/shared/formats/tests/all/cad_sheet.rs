@@ -94,7 +94,21 @@ fn calibrated_block_units_keep_physical_definitions_and_existing_nested_world_ge
         let bytes = std::fs::read(dir.join(at)).unwrap();
         let options = DxfReadOptions {
             unit: Some(DrawingUnit::M),
-            scale_reference:Some(kentos_contracts::CadImportScale{source_length:1.,real_length:match case["fileUnit"].as_str().or_else(||case["drawing"].as_str()).unwrap(){"mm"=>0.001,"cm"=>0.01,"m"=>1.,"in"=>0.0254,"ft"=>0.3048,_=>panic!("unit")}}),
+            scale_reference: Some(kentos_contracts::CadImportScale {
+                source_length: 1.,
+                real_length: match case["fileUnit"]
+                    .as_str()
+                    .or_else(|| case["drawing"].as_str())
+                    .unwrap()
+                {
+                    "mm" => 0.001,
+                    "cm" => 0.01,
+                    "m" => 1.,
+                    "in" => 0.0254,
+                    "ft" => 0.3048,
+                    _ => panic!("unit"),
+                },
+            }),
             ..Default::default()
         };
         let read = dxf::read_checked(&bytes, &options).unwrap();
@@ -130,11 +144,44 @@ fn calibrated_block_units_keep_physical_definitions_and_existing_nested_world_ge
 }
 
 #[test]
-fn import_scale_bounds_use_the_arc_span_and_exclude_unused_definitions_and_paper(){
+fn import_scale_bounds_use_the_arc_span_and_exclude_unused_definitions_and_paper() {
     let source=b"0\nSECTION\n2\nHEADER\n9\n$INSUNITS\n70\n6\n0\nENDSEC\n0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n2\nUNUSED\n10\n0\n20\n0\n0\nLINE\n8\n0\n10\n-1000000\n20\n-1000000\n11\n1000000\n21\n1000000\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nARC\n8\n0\n10\n0\n20\n0\n40\n2\n50\n0\n51\n90\n0\nLINE\n8\n0\n67\n1\n410\nLayout1\n10\n100000\n20\n100000\n11\n100001\n21\n100001\n0\nENDSEC\n0\nEOF\n";
-    let read=dxf::read_checked(source,&DxfReadOptions{unit:Some(DrawingUnit::M),..Default::default()}).unwrap();
-    let bounds=read.bounds.unwrap();assert!(bounds.min_x.abs()<1e-12 && bounds.min_y.abs()<1e-12);assert_eq!((bounds.max_x,bounds.max_y),(2.,2.));assert_eq!(read.view,read.bounds);
-    let calibrated=dxf::read_checked(source,&DxfReadOptions{unit:Some(DrawingUnit::M),scale_reference:Some(kentos_contracts::CadImportScale{source_length:1.,real_length:0.01}),..Default::default()}).unwrap();
-    let b=calibrated.bounds.unwrap();assert!(b.min_x.abs()<1e-12 && b.min_y.abs()<1e-12);assert_eq!((b.max_x,b.max_y),(0.02,0.02));
-    assert_eq!(read.layouts.iter().map(|p|(p.width_mm,p.height_mm)).collect::<Vec<_>>(),calibrated.layouts.iter().map(|p|(p.width_mm,p.height_mm)).collect::<Vec<_>>());
+    let read = dxf::read_checked(
+        source,
+        &DxfReadOptions {
+            unit: Some(DrawingUnit::M),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let bounds = read.bounds.unwrap();
+    assert!(bounds.min_x.abs() < 1e-12 && bounds.min_y.abs() < 1e-12);
+    assert_eq!((bounds.max_x, bounds.max_y), (2., 2.));
+    assert_eq!(read.view, read.bounds);
+    let calibrated = dxf::read_checked(
+        source,
+        &DxfReadOptions {
+            unit: Some(DrawingUnit::M),
+            scale_reference: Some(kentos_contracts::CadImportScale {
+                source_length: 1.,
+                real_length: 0.01,
+            }),
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let b = calibrated.bounds.unwrap();
+    assert!(b.min_x.abs() < 1e-12 && b.min_y.abs() < 1e-12);
+    assert_eq!((b.max_x, b.max_y), (0.02, 0.02));
+    assert_eq!(
+        read.layouts
+            .iter()
+            .map(|p| (p.width_mm, p.height_mm))
+            .collect::<Vec<_>>(),
+        calibrated
+            .layouts
+            .iter()
+            .map(|p| (p.width_mm, p.height_mm))
+            .collect::<Vec<_>>()
+    );
 }

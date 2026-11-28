@@ -513,7 +513,9 @@ impl App {
             let answer = extract_run::plan_watched(&copy, &input, &watch);
             let _ = done.send((answer, started.elapsed()));
         });
-        Task::perform(wait, move |answer| msg(Event::Previewed(generation, Box::new(answer.ok()))))
+        Task::perform(wait, move |answer| {
+            msg(Event::Previewed(generation, Box::new(answer.ok())))
+        })
     }
 
     pub(crate) fn extract_event(&mut self, event: Event) -> Task<Message> {
@@ -689,7 +691,8 @@ impl App {
                 if let Some((_, w)) = x.running.take() {
                     w.stop.store(true, Ordering::Relaxed);
                     x.result = Some(Err(
-                        "Önizleme durduruldu; çizim değişmedi. Kapsamı daraltıp yeniden deneyin.".into(),
+                        "Önizleme durduruldu; çizim değişmedi. Kapsamı daraltıp yeniden deneyin."
+                            .into(),
                     ));
                 }
                 return Task::none();
@@ -852,7 +855,10 @@ impl App {
                 .note(Banner::info(words))
                 .secondary(STOP, Some(msg(Event::Stop)));
         } else if let Some(t) = x.took {
-            d = d.status(format!("Önizleme {} ms sürdü.", road_dialog::grouped(t.as_secs_f64() * 1000.0, 1)));
+            d = d.status(format!(
+                "Önizleme {} ms sürdü.",
+                road_dialog::grouped(t.as_secs_f64() * 1000.0, 1)
+            ));
         }
         match &x.result {
             Some(Err(why)) => d = d.note(Banner::info(why.clone())),

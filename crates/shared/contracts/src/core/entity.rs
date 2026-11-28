@@ -209,7 +209,11 @@ pub struct PathEntity {
     /// Explicit virtual room boundary; absent keeps an ordinary path. Only a
     /// single planar, widthless polyline may carry the architectural role.
     // Boxed: else 512 bytes on every path (plan/render.md RM-19).
-    #[serde(rename = "spaceSeparator", default, skip_serializing_if = "Option::is_none")]
+    #[serde(
+        rename = "spaceSeparator",
+        default,
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub space_separator: Option<Box<crate::ArchInfo>>,
     #[serde(flatten)]
@@ -567,19 +571,29 @@ impl PathEntity {
     /// [`path_extras_problem`] of this path, an area's (`area`) or a polyline's.
     pub fn extras_problem(&self, area: bool) -> Option<String> {
         if self.space_separator.is_some() {
-            let n=self.pts.len();
+            let n = self.pts.len();
             if !(2..=10_000).contains(&n)
-                || self.pts.iter().any(|p|!p.x.is_finite() || !p.y.is_finite())
-                || self.pts.windows(2).any(|p|p[0]==p[1])
-                || (self.closed && self.pts.first()==self.pts.last())
-                || self.bulges.as_ref().is_some_and(|b|b.len()!=n || b.iter().any(|x|!x.is_finite()))
+                || self
+                    .pts
+                    .iter()
+                    .any(|p| !p.x.is_finite() || !p.y.is_finite())
+                || self.pts.windows(2).any(|p| p[0] == p[1])
+                || (self.closed && self.pts.first() == self.pts.last())
+                || self
+                    .bulges
+                    .as_ref()
+                    .is_some_and(|b| b.len() != n || b.iter().any(|x| !x.is_finite()))
             {
                 return Some("Mahal ayırıcı 2–10000 sonlu köşe ve uzunluğu sıfır olmayan kenarlar içermeli; bükümler varsa köşe sayısıyla eşleşmeli.".into());
             }
         }
         if self.space_separator.is_some()
-            && (area || self.holes.is_some() || self.parts.is_some() || self.widths.is_some()
-                || self.zs.is_some() || self.ms.is_some())
+            && (area
+                || self.holes.is_some()
+                || self.parts.is_some()
+                || self.widths.is_some()
+                || self.zs.is_some()
+                || self.ms.is_some())
         {
             return Some("Mahal ayırıcı tek parçalı, düzlemsel ve genişliksiz çoklu çizgi olmalı; polygon, delik, kot veya M verisi içeremez.".into());
         }
@@ -711,7 +725,8 @@ pub const MAX_TABS: usize = 32;
 impl ParagraphLayout {
     /// Nothing set: none at all.
     pub fn is_plain(&self) -> bool {
-        self.engine.is_none() && self.indent.is_none_or(|i| i == 0.0)
+        self.engine.is_none()
+            && self.indent.is_none_or(|i| i == 0.0)
             && self.left_indent.is_none_or(|i| i == 0.0)
             && self.tabs.is_empty()
             && self.columns.is_none()
@@ -724,7 +739,9 @@ impl ParagraphLayout {
         if !fits(left) || left < 0.0 {
             return Some((
                 "layout.leftIndent",
-                format!("Sol girinti 0 ile {MAX_PARAGRAPH_HEIGHTS} yükseklik arasında olmalı; {left} verildi."),
+                format!(
+                    "Sol girinti 0 ile {MAX_PARAGRAPH_HEIGHTS} yükseklik arasında olmalı; {left} verildi."
+                ),
             ));
         }
         let first = self.indent.unwrap_or(0.0);
@@ -737,17 +754,27 @@ impl ParagraphLayout {
             ));
         }
         if self.indent == Some(0.0) || self.left_indent == Some(0.0) {
-            return Some(("layout", "Sıfır girinti yazılmaz; alanı kaldırın.".to_owned()));
+            return Some((
+                "layout",
+                "Sıfır girinti yazılmaz; alanı kaldırın.".to_owned(),
+            ));
         }
         if self.tabs.len() > MAX_TABS {
-            return Some(("layout.tabs", format!("En çok {MAX_TABS} sekme durağı olur; {} verildi.", self.tabs.len())));
+            return Some((
+                "layout.tabs",
+                format!(
+                    "En çok {MAX_TABS} sekme durağı olur; {} verildi.",
+                    self.tabs.len()
+                ),
+            ));
         }
         let mut last = 0.0;
         for t in &self.tabs {
             if !fits(*t) || *t <= last {
                 return Some((
                     "layout.tabs",
-                    "Sekme durakları sıfırdan büyük, küçükten büyüğe ve birer kez olmalı.".to_owned(),
+                    "Sekme durakları sıfırdan büyük, küçükten büyüğe ve birer kez olmalı."
+                        .to_owned(),
                 ));
             }
             last = *t;
@@ -760,15 +787,30 @@ impl ParagraphLayout {
                 ));
             }
             if !(2..=16).contains(&c.count) {
-                return Some(("layout.columns.count", format!("Sütun sayısı 2 ile 16 arasında olmalı; {} verildi.", c.count)));
+                return Some((
+                    "layout.columns.count",
+                    format!(
+                        "Sütun sayısı 2 ile 16 arasında olmalı; {} verildi.",
+                        c.count
+                    ),
+                ));
             }
             if !fits(c.gap) || c.gap < 0.0 {
-                return Some(("layout.columns.gap", format!("Sütun aralığı sıfır ya da pozitif olmalı; {} verildi.", c.gap)));
+                return Some((
+                    "layout.columns.gap",
+                    format!(
+                        "Sütun aralığı sıfır ya da pozitif olmalı; {} verildi.",
+                        c.gap
+                    ),
+                ));
             }
             if !(c.height.is_finite() && c.height > 0.0) {
                 return Some((
                     "layout.columns.height",
-                    format!("Sütun yüksekliği sıfırdan büyük olmalı; {} verildi.", c.height),
+                    format!(
+                        "Sütun yüksekliği sıfırdan büyük olmalı; {} verildi.",
+                        c.height
+                    ),
                 ));
             }
         }
@@ -814,7 +856,10 @@ impl Paragraph {
         }
         if let Some(l) = &self.layout {
             if l.is_plain() {
-                return Some(("layout", "Boş paragraf düzeni yazılmaz; alanı kaldırın.".to_owned()));
+                return Some((
+                    "layout",
+                    "Boş paragraf düzeni yazılmaz; alanı kaldırın.".to_owned(),
+                ));
             }
             if let Some(p) = l.problem(self.box_width.is_some()) {
                 return Some(p);
@@ -1175,7 +1220,10 @@ impl BlockDefinition {
     /// definition; otherwise the insert's value takes precedence over the definition's default.
     /// `None` means this tag is not defined by the block (it may be an insert datum instead).
     pub fn attribute_value<'a>(&'a self, insert: &'a InsertEntity, tag: &str) -> Option<&'a str> {
-        let definition = self.attributes.iter().find(|attribute| attribute.tag == tag)?;
+        let definition = self
+            .attributes
+            .iter()
+            .find(|attribute| attribute.tag == tag)?;
         if definition.options.constant {
             return Some(definition.value.as_deref().unwrap_or(""));
         }
@@ -1299,22 +1347,56 @@ impl BlockElementClass {
     pub fn types(self) -> &'static [&'static str] {
         match self {
             BlockElementClass::Furniture => &[
-                "BED", "CHAIR", "DESK", "FILECABINET", "SHELF", "SOFA", "TABLE", "TECHNICALCABINET", "USERDEFINED",
+                "BED",
+                "CHAIR",
+                "DESK",
+                "FILECABINET",
+                "SHELF",
+                "SOFA",
+                "TABLE",
+                "TECHNICALCABINET",
+                "USERDEFINED",
             ],
             BlockElementClass::SanitaryTerminal => &[
-                "BATH", "BIDET", "CISTERN", "SANITARYFOUNTAIN", "SHOWER", "SINK", "TOILETPAN", "URINAL",
-                "WASHHANDBASIN", "WCSEAT", "USERDEFINED",
+                "BATH",
+                "BIDET",
+                "CISTERN",
+                "SANITARYFOUNTAIN",
+                "SHOWER",
+                "SINK",
+                "TOILETPAN",
+                "URINAL",
+                "WASHHANDBASIN",
+                "WCSEAT",
+                "USERDEFINED",
             ],
             BlockElementClass::ElectricAppliance => &[
-                "DISHWASHER", "ELECTRICCOOKER", "FREESTANDINGELECTRICHEATER",
-                "FREESTANDINGFAN", "FREESTANDINGWATERCOOLER", "FREESTANDINGWATERHEATER",
-                "FREEZER", "FRIDGE_FREEZER", "HANDDRYER",
-                "KITCHENMACHINE", "MICROWAVE", "PHOTOCOPIER",
-                "REFRIGERATOR", "TUMBLEDRYER", "VENDINGMACHINE",
-                "WASHINGMACHINE", "USERDEFINED",
+                "DISHWASHER",
+                "ELECTRICCOOKER",
+                "FREESTANDINGELECTRICHEATER",
+                "FREESTANDINGFAN",
+                "FREESTANDINGWATERCOOLER",
+                "FREESTANDINGWATERHEATER",
+                "FREEZER",
+                "FRIDGE_FREEZER",
+                "HANDDRYER",
+                "KITCHENMACHINE",
+                "MICROWAVE",
+                "PHOTOCOPIER",
+                "REFRIGERATOR",
+                "TUMBLEDRYER",
+                "VENDINGMACHINE",
+                "WASHINGMACHINE",
+                "USERDEFINED",
             ],
             BlockElementClass::TransportElement => &[
-                "CRANEWAY", "ELEVATOR", "ESCALATOR", "HAULINGGEAR", "LIFTINGGEAR", "MOVINGWALKWAY", "USERDEFINED",
+                "CRANEWAY",
+                "ELEVATOR",
+                "ESCALATOR",
+                "HAULINGGEAR",
+                "LIFTINGGEAR",
+                "MOVINGWALKWAY",
+                "USERDEFINED",
             ],
         }
     }
@@ -1339,12 +1421,18 @@ impl BlockElement {
         if let Some(h) = self.height
             && !(h.is_finite() && h > 0.0 && h <= Self::MAX)
         {
-            return Some(format!("gövdenin yüksekliği {h}; sıfırdan büyük, en çok {} m olmalı.", Self::MAX));
+            return Some(format!(
+                "gövdenin yüksekliği {h}; sıfırdan büyük, en çok {} m olmalı.",
+                Self::MAX
+            ));
         }
         if let Some(z) = self.elevation
             && !(z.is_finite() && (0.0..=Self::MAX).contains(&z))
         {
-            return Some(format!("gövdenin alt kotu {z}; 0 ile {} m arasında olmalı.", Self::MAX));
+            return Some(format!(
+                "gövdenin alt kotu {z}; 0 ile {} m arasında olmalı.",
+                Self::MAX
+            ));
         }
         None
     }
@@ -1780,7 +1868,10 @@ pub struct LeaderEntity {
     /// Its content blocks (docs/adr/0326 §2): inserts standing in a row at its landing's end, by persistent id; a
     /// leader with blocks has no note.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::identity::EntityId>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::identity::EntityId>>", optional)
+    )]
     pub blocks: Vec<crate::identity::EntityId>,
     /// The leader style it follows (docs/adr/0326 §4), by its id.
     #[serde(default, skip_serializing_if = "Option::is_none")]

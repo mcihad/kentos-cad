@@ -507,7 +507,10 @@ impl CurveEditTool {
         // arcs and polylines only, and would be left where it was. Said, nothing written.
         if matches!(key, "E" | "N" | "R")
             && matches!(kind, Kind::Polyline { .. })
-            && let Some(n) = self.picked.and_then(|s| arrays_along(cx.doc, s)).filter(|n| *n > 0)
+            && let Some(n) = self
+                .picked
+                .and_then(|s| arrays_along(cx.doc, s))
+                .filter(|n| *n > 0)
         {
             cx.say(
                 Level::Warn,
@@ -872,7 +875,14 @@ impl Tool for CurveEditTool {
                     .pick(p.raw, cx.pick_tolerance())
                     .and_then(|s| cx.doc.get(s))
                     .is_some_and(|e| matches!(e, Entity::Spline(_)));
-                cx.say(Level::Warn, if spline { SPLINE_WORDS } else { "Kilitsiz katmanda bir çoklu çizgiye ya da NURBS eğrisine tıklayın." });
+                cx.say(
+                    Level::Warn,
+                    if spline {
+                        SPLINE_WORDS
+                    } else {
+                        "Kilitsiz katmanda bir çoklu çizgiye ya da NURBS eğrisine tıklayın."
+                    },
+                );
             }
             return;
         };

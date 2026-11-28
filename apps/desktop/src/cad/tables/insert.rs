@@ -434,7 +434,8 @@ impl App {
             Event::FileRead(None) => {}
             Event::FileRead(Some((name, path, bytes))) => {
                 let read = kentos_formats::table_file::read(&bytes);
-                w.file_link = path.map(|p| (p, kentos_native_application::tables_edit::digest_of(&bytes)));
+                w.file_link =
+                    path.map(|p| (p, kentos_native_application::tables_edit::digest_of(&bytes)));
                 w.file = Some((name, read));
                 w.sheet = 0;
             }
@@ -1000,12 +1001,13 @@ fn lined_preview<'a>(
         .width(Fill)
         .style(move |theme: &Theme| {
             let t = Tokens::of(theme);
-            container::Style::default().background(t.field).border(iced::Border {
-                color: if outline { t.text } else { t.border },
-                width: if outline { width } else { 1.0 },
-                radius: 0.0.into(),
-            })
+            container::Style::default()
+                .background(t.field)
+                .border(iced::Border {
+                    color: if outline { t.text } else { t.border },
+                    width: if outline { width } else { 1.0 },
+                    radius: 0.0.into(),
+                })
         })
         .into()
 }
-

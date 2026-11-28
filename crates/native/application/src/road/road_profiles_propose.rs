@@ -4,7 +4,8 @@
 //! `fixtures/commands/v1/road.profiles.propose.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, GradeLimit, ProfileProposed, ProfilesPropose, ProposedGrade, ProposedPvi,
+    CommandResult, CommandWarning, GradeLimit, ProfileProposed, ProfilesPropose, ProposedGrade,
+    ProposedPvi,
 };
 use kentos_domain::Document;
 use kentos_road::profile::propose::{ProposeError, Rules, propose};
@@ -20,33 +21,52 @@ fn invalid(message: String, path: &str) -> Stop {
 }
 
 /// A proposal, its warnings and the terrain profile it read (station, black).
-pub type Proposed = (ProfileProposed, Vec<CommandWarning>, Vec<(f64, Option<f64>)>);
+pub type Proposed = (
+    ProfileProposed,
+    Vec<CommandWarning>,
+    Vec<(f64, Option<f64>)>,
+);
 
 /// The proposal now, its warnings and the terrain profile it read (station, black), for a window.
-pub(crate) fn answer(
-    doc: &Document,
-    input: &ProfilesPropose,
-) -> Result<Proposed, Stop> {
+pub(crate) fn answer(doc: &Document, input: &ProfilesPropose) -> Result<Proposed, Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(common::profiles(doc), &input.profile, "profile")?;
     for (j, id) in input.hold.iter().enumerate() {
         if !def.pvis.iter().any(|p| &p.id == id) {
-            return Err(invalid(format!("“{}” boykesitinde “{id}” PVI'si yok.", def.name), &format!("hold[{j}]")));
+            return Err(invalid(
+                format!("“{}” boykesitinde “{id}” PVI'si yok.", def.name),
+                &format!("hold[{j}]"),
+            ));
         }
     }
-    if input.most_grade.is_some_and(|g| !(g.is_finite() && g > 0.0)) {
-        return Err(invalid("En büyük eğim (mostGrade) 0'dan büyük bir oran olmalı.".into(), "mostGrade"));
+    if input
+        .most_grade
+        .is_some_and(|g| !(g.is_finite() && g > 0.0))
+    {
+        return Err(invalid(
+            "En büyük eğim (mostGrade) 0'dan büyük bir oran olmalı.".into(),
+            "mostGrade",
+        ));
     }
     let mut warnings = Vec::new();
     let surface = match common::surface(doc, def) {
         None => {
             return Err(invalid(
-                format!("“{}” boykesitinin yüzeyi yok; öneri arazi boykesitine göre kurulur.", def.name),
+                format!(
+                    "“{}” boykesitinin yüzeyi yok; öneri arazi boykesitine göre kurulur.",
+                    def.name
+                ),
                 "profile",
             ));
         }
         Some(Err(_)) => {
-            return Err(invalid(format!("“{}” boykesitinin yüzeyi kurulamıyor; öneri arazi boykesitine göre kurulur.", def.name), "profile"));
+            return Err(invalid(
+                format!(
+                    "“{}” boykesitinin yüzeyi kurulamıyor; öneri arazi boykesitine göre kurulur.",
+                    def.name
+                ),
+                "profile",
+            ));
         }
         Some(Ok(s)) => s,
     };
@@ -65,10 +85,17 @@ pub(crate) fn answer(
     let ground = kentos_road::profile::terrain(&surface, &built.alignment.core);
     let pvis = common::pvis_of(def);
     let rules = Rules {
-        held: def.pvis.iter().map(|p| input.hold.contains(&p.id)).collect(),
+        held: def
+            .pvis
+            .iter()
+            .map(|p| input.hold.contains(&p.id))
+            .collect(),
         most_grade: input.most_grade,
         balanced: input.balanced,
-        bounds: common::crossings_of(def).iter().map(|c| c.bound()).collect(),
+        bounds: common::crossings_of(def)
+            .iter()
+            .map(|c| c.bound())
+            .collect(),
     };
     let p = propose(&pvis, &ground, &rules).map_err(|e| {
         invalid(
@@ -91,8 +118,14 @@ pub(crate) fn answer(
         )
     })?;
     // The crossings against the proposed line (docs/adr/0946).
-    let proposed: Vec<kentos_road::profile::vertical::Pvi> =
-        pvis.iter().zip(&p.elevations).map(|(q, z)| kentos_road::profile::vertical::Pvi { elevation: *z, ..q.clone() }).collect();
+    let proposed: Vec<kentos_road::profile::vertical::Pvi> = pvis
+        .iter()
+        .zip(&p.elevations)
+        .map(|(q, z)| kentos_road::profile::vertical::Pvi {
+            elevation: *z,
+            ..q.clone()
+        })
+        .collect();
     let crossings = match kentos_road::profile::vertical::build(&proposed) {
         Ok(line) => common::crossing_margins(def, &line, &p.bound),
         Err(_) => Vec::new(),
@@ -104,7 +137,13 @@ pub(crate) fn answer(
             .iter()
             .zip(&p.elevations)
             .zip(&rules.held)
-            .map(|((d, z), held)| ProposedPvi { id: d.id.clone(), station: d.station, elevation: *z, was: d.elevation, held: *held })
+            .map(|((d, z), held)| ProposedPvi {
+                id: d.id.clone(),
+                station: d.station,
+                elevation: *z,
+                was: d.elevation,
+                held: *held,
+            })
             .collect(),
         grades: def
             .pvis
@@ -127,13 +166,20 @@ pub(crate) fn answer(
         fill: p.fill,
         crossings,
     };
-    Ok((out, warnings, ground.iter().map(|q| (q.station, q.z)).collect()))
+    Ok((
+        out,
+        warnings,
+        ground.iter().map(|q| (q.station, q.z)).collect(),
+    ))
 }
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ProfilesPropose) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings, _)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings, _)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -147,7 +193,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesPropose) -> CommandResult
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ProfilesPropose) -> CommandResult<ProfileProposed> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProfilesPropose,
+) -> CommandResult<ProfileProposed> {
     plan(cx, &input)
 }
 

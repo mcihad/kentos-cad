@@ -258,11 +258,16 @@ impl App {
             .enumerate()
             .map(|(index, a)| {
                 let kind = a.kind();
-                let linked = a.asset.is_none().then_some(()).and(a.file.as_ref()).map(|file| {
-                    let path = crate::pictures::resolve(file, folder.as_deref());
-                    let missing = !path.exists();
-                    (path, missing)
-                });
+                let linked = a
+                    .asset
+                    .is_none()
+                    .then_some(())
+                    .and(a.file.as_ref())
+                    .map(|file| {
+                        let path = crate::pictures::resolve(file, folder.as_deref());
+                        let missing = !path.exists();
+                        (path, missing)
+                    });
                 let source = if let Some(asset) = &a.asset {
                     let item = doc.model.styles().items.iter().find(|it| {
                         it.get("kind").and_then(|k| k.as_str()) == Some("asset")
@@ -682,7 +687,10 @@ impl App {
             return;
         }
         if self.write_attachments(slot, list) {
-            self.say(kentos_interaction::Level::Success, format!("“{name}” yeniden bağlandı: {}.", path.display()));
+            self.say(
+                kentos_interaction::Level::Success,
+                format!("“{name}” yeniden bağlandı: {}.", path.display()),
+            );
         }
     }
 
@@ -1052,10 +1060,8 @@ impl App {
 /// A linked file's path as the attachment keeps it: under the drawing's folder relative, so the folder moves with it;
 /// elsewhere whole.
 fn link_of(path: &Path, folder: Option<&Path>) -> String {
-    folder
-        .and_then(|f| path.strip_prefix(f).ok())
-        .map_or_else(
-            || path.to_string_lossy().into_owned(),
-            |r| r.to_string_lossy().replace('\\', "/"),
-        )
+    folder.and_then(|f| path.strip_prefix(f).ok()).map_or_else(
+        || path.to_string_lossy().into_owned(),
+        |r| r.to_string_lossy().replace('\\', "/"),
+    )
 }

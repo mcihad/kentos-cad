@@ -20,14 +20,18 @@ fn bench(plan: bool) -> Bench {
             .unwrap(),
     );
     if plan {
-        s.arch.as_mut().unwrap().color_plan = Some(ColorPlan { scheme: ColorScheme::Usage });
+        s.arch.as_mut().unwrap().color_plan = Some(ColorPlan {
+            scheme: ColorScheme::Usage,
+        });
     }
     b.doc.set_settings(s);
     for (x, name) in [(0.0, "Salon"), (4.0, "Banyo")] {
         let p = |x: f64, y: f64| json!({"x": E + x, "y": N + y});
-        let e: Entity = serde_json::from_value(json!({"kind": "space", "id": 0, "layerId": "cizim", "attrs": {},
+        let e: Entity = serde_json::from_value(
+            json!({"kind": "space", "id": 0, "layerId": "cizim", "attrs": {},
             "parts": [{"outer": {"pts": [p(x, 0.0), p(x + 4.0, 0.0), p(x + 4.0, 3.0), p(x, 3.0)]}}],
-            "name": name, "arch": {"level": "zemin"}}))
+            "name": name, "arch": {"level": "zemin"}}),
+        )
         .unwrap();
         b.doc.add(e).expect("a slot");
     }
@@ -38,7 +42,10 @@ fn bench(plan: bool) -> Bench {
 }
 
 fn legend_objects(b: &Bench) -> Vec<&Entity> {
-    b.doc.entities().filter(|e| e.base().attrs.contains_key("Renk planı")).collect()
+    b.doc
+        .entities()
+        .filter(|e| e.base().attrs.contains_key("Renk planı"))
+        .collect()
 }
 
 #[test]
@@ -49,12 +56,24 @@ fn a_click_places_the_legend_on_its_layer_in_one_step() {
     assert_eq!(b.last_level(), Some(Level::Success));
     assert_eq!(b.last_text(), Some("Renk planı lejandı yerleşti: 2 satır."));
     let objects = legend_objects(&b);
-    assert_eq!(objects.len(), 1 + 2 * 3 + 1, "the title, each row's swatch, outline and words, the total");
+    assert_eq!(
+        objects.len(),
+        1 + 2 * 3 + 1,
+        "the title, each row's swatch, outline and words, the total"
+    );
     for e in &objects {
-        let name = b.doc.layers().get(&e.base().layer_id).map(|l| l.name.clone());
+        let name = b
+            .doc
+            .layers()
+            .get(&e.base().layer_id)
+            .map(|l| l.name.clone());
         assert_eq!(name.as_deref(), Some("MM-XXXX-LEJANT"));
     }
-    assert_ne!(b.session.tool_id(), "colorLegend", "the tool leaves once it is placed");
+    assert_ne!(
+        b.session.tool_id(),
+        "colorLegend",
+        "the tool leaves once it is placed"
+    );
     assert_eq!(b.doc.undo().as_deref(), Some("Renk planı lejandı"));
     assert!(legend_objects(&b).is_empty(), "one undo step");
 }
@@ -62,7 +81,10 @@ fn a_click_places_the_legend_on_its_layer_in_one_step() {
 #[test]
 fn without_a_colour_plan_it_says_where_to_choose_one() {
     let b = bench(false);
-    assert_eq!(b.last_text(), Some("Renk planı kapalı: önce Mahal ▸ Renk planı'ndan bir şema seçin."));
+    assert_eq!(
+        b.last_text(),
+        Some("Renk planı kapalı: önce Mahal ▸ Renk planı'ndan bir şema seçin.")
+    );
     assert_ne!(b.session.tool_id(), "colorLegend");
     assert!(legend_objects(&b).is_empty());
 }

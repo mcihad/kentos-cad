@@ -67,7 +67,12 @@ fn take(slot: &mut Option<GridGap>, g: GridGap) {
 
 /// The nearest grids parallel to direction `u` on each side of the axis through `at` (its left `n = left(u)`):
 /// `[left, right]`.
-pub fn beside(grids: &[GridIn<'_>], level: Option<&str>, at: Vec2, u: Vec2) -> [Option<GridGap>; 2] {
+pub fn beside(
+    grids: &[GridIn<'_>],
+    level: Option<&str>,
+    at: Vec2,
+    u: Vec2,
+) -> [Option<GridGap>; 2] {
     let n = Vec2::new(-u.y, u.x);
     let mut best = [None, None];
     for (i, g) in grids.iter().enumerate() {
@@ -163,7 +168,9 @@ pub fn crossing_at(
         if !on_level(g, level) {
             continue;
         }
-        let Some(t) = crossing(a, b, g.a, g.b) else { continue };
+        let Some(t) = crossing(a, b, g.a, g.b) else {
+            continue;
+        };
         let before = t <= s + TIE;
         take(
             &mut best[usize::from(!before)],
@@ -199,10 +206,18 @@ mod tests {
             g((0.0, 3.0), (1.0, 3.0)),
         ];
         let [left, right] = beside(&grids, None, Vec2::new(4.0, 0.0), Vec2::new(1.0, 0.0));
-        assert_eq!(left.map(|x| (x.grid, x.distance)), Some((2, 0.0)), "on the axis: left");
+        assert_eq!(
+            left.map(|x| (x.grid, x.distance)),
+            Some((2, 0.0)),
+            "on the axis: left"
+        );
         assert_eq!(right.map(|x| (x.grid, x.distance)), Some((1, 1.5)));
         let [left, _] = beside(&grids[..2], None, Vec2::new(4.0, 0.0), Vec2::new(1.0, 0.0));
-        assert_eq!(left.map(|x| x.to), Some(Vec2::new(4.0, 2.0)), "endless: measured at the point");
+        assert_eq!(
+            left.map(|x| x.to),
+            Some(Vec2::new(4.0, 2.0)),
+            "endless: measured at the point"
+        );
     }
 
     #[test]
@@ -234,11 +249,25 @@ mod tests {
             g((8.0, 0.0), (9.0, 0.0)),
             g((5.0, 1.0), (5.0, 2.0)),
         ];
-        let [before, after] = crossing_at(&grids, None, Vec2::new(0.0, 0.0), Vec2::new(6.0, 0.0), 3.0);
-        assert_eq!(before.map(|x| (x.grid, x.distance)), Some((1, 0.0)), "at the point: before; endless line");
+        let [before, after] =
+            crossing_at(&grids, None, Vec2::new(0.0, 0.0), Vec2::new(6.0, 0.0), 3.0);
+        assert_eq!(
+            before.map(|x| (x.grid, x.distance)),
+            Some((1, 0.0)),
+            "at the point: before; endless line"
+        );
         assert_eq!(after.map(|x| (x.grid, x.distance)), Some((3, 2.0)));
-        let [before, _] =
-            crossing_at(&grids[..1], Some("zemin"), Vec2::new(0.0, 0.0), Vec2::new(6.0, 0.0), 3.0);
-        assert_eq!(before.map(|x| x.distance), Some(2.0), "a grid of no level counts on every level");
+        let [before, _] = crossing_at(
+            &grids[..1],
+            Some("zemin"),
+            Vec2::new(0.0, 0.0),
+            Vec2::new(6.0, 0.0),
+            3.0,
+        );
+        assert_eq!(
+            before.map(|x| x.distance),
+            Some(2.0),
+            "a grid of no level counts on every level"
+        );
     }
 }

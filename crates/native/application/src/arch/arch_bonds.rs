@@ -573,10 +573,9 @@ pub(crate) fn solve(
     let without = |gone: &[usize]| -> Option<Vec<usize>> {
         match &read {
             None => {
-                if let Some(still) = late
-                    .as_ref()
-                    .and_then(|(k, shifts, all)| refused_again(doc, all, *k, shifts, gone, &view, holds, before))
-                {
+                if let Some(still) = late.as_ref().and_then(|(k, shifts, all)| {
+                    refused_again(doc, all, *k, shifts, gone, &view, holds, before)
+                }) {
                     return Some(still);
                 }
                 let kept: Vec<usize> = (0..set.constraints.len())
@@ -664,7 +663,10 @@ fn refused_again(
 /// The smallest set of bonds whose taking away lets a write through when none alone does (docs/adr/0790 §2): each
 /// bond with what still conflicts without it (`alone`, in the refusal's order), grown to pairs, then the pairs to
 /// triples, in the order the conflicts name them; the set in the drawing's order, or empty past [`SET_TRIES`].
-fn smallest(alone: &[(usize, Vec<usize>)], without: &dyn Fn(&[usize]) -> Option<Vec<usize>>) -> Vec<usize> {
+fn smallest(
+    alone: &[(usize, Vec<usize>)],
+    without: &dyn Fn(&[usize]) -> Option<Vec<usize>>,
+) -> Vec<usize> {
     let mut tried: Vec<Vec<usize>> = Vec::new();
     let mut pairs: Vec<(Vec<usize>, Vec<usize>)> = Vec::new();
     // Each set tried once: Ok(the set) when it frees, Err(what still conflicts) when not, None when tried already
@@ -1212,7 +1214,9 @@ fn boundary_shift(
     index: u32,
     by: f64,
 ) -> Result<Entity, String> {
-    let e = view.entity(slot).ok_or("Bağlı kenarın nesnesi çizimde yok")?;
+    let e = view
+        .entity(slot)
+        .ok_or("Bağlı kenarın nesnesi çizimde yok")?;
     let layer = &e.base().layer_id;
     if view.doc.layers().is_locked(layer) {
         let name = view

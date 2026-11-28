@@ -8,7 +8,9 @@
 
 use iced::widget::{container, row};
 use iced::{Center, Element};
-use kentos_commands::{AsbuiltLevel, AsbuiltState, AsbuiltThresholds, AsbuiltTrack, AsbuiltTrendAsk};
+use kentos_commands::{
+    AsbuiltLevel, AsbuiltState, AsbuiltThresholds, AsbuiltTrack, AsbuiltTrendAsk,
+};
 use kentos_ui::label;
 
 use crate::app::Message;
@@ -72,7 +74,10 @@ impl std::fmt::Display for View {
 impl TrendForm {
     /// As the window opens: the line off, its confidence 95 % ready (the user's to change), no threshold.
     pub fn new() -> TrendForm {
-        TrendForm { confidence: "95".into(), ..TrendForm::default() }
+        TrendForm {
+            confidence: "95".into(),
+            ..TrendForm::default()
+        }
     }
 
     pub fn apply(&mut self, c: Change) {
@@ -90,7 +95,12 @@ impl TrendForm {
 }
 
 /// The limits' words, in the boxes' order.
-const WORDS: [&str; 4] = ["yatay hareketi", "düşey hareketi", "yatay hızı", "düşey hızı"];
+const WORDS: [&str; 4] = [
+    "yatay hareketi",
+    "düşey hareketi",
+    "yatay hızı",
+    "düşey hızı",
+];
 
 /// A box's number: empty is none, a comma is a point; other text is the field's error.
 fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
@@ -98,57 +108,104 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().ok().filter(|v| v.is_finite()).map(Some).ok_or_else(|| format!("{what} “{text}” bir sayı değil."))
+    t.parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .map(Some)
+        .ok_or_else(|| format!("{what} “{text}” bir sayı değil."))
 }
 
 /// A level from its four boxes (m, m a year).
 fn level(boxes: &[String; 4], name: &str) -> Result<AsbuiltLevel, String> {
     let m = |k: usize| number(&boxes[k], &format!("{name} eşiğinin {}", WORDS[k]));
-    Ok(AsbuiltLevel { horizontal: m(0)?, vertical: m(1)?, horizontal_rate: m(2)?, vertical_rate: m(3)? })
+    Ok(AsbuiltLevel {
+        horizontal: m(0)?,
+        vertical: m(1)?,
+        horizontal_rate: m(2)?,
+        vertical_rate: m(3)?,
+    })
 }
 
 /// The command's `trend` and `thresholds` from the form (a monitoring job with a series only; the caller asks).
 pub fn ask(f: &TrendForm) -> Result<(Option<AsbuiltTrendAsk>, Option<AsbuiltThresholds>), String> {
     let trend = if f.on {
-        let c = number(&f.confidence, "Güven düzeyi")?.ok_or("Güven düzeyini yüzde olarak yazın (ör. 95).")?;
-        Some(AsbuiltTrendAsk { confidence: c / 100.0 })
+        let c = number(&f.confidence, "Güven düzeyi")?
+            .ok_or("Güven düzeyini yüzde olarak yazın (ör. 95).")?;
+        Some(AsbuiltTrendAsk {
+            confidence: c / 100.0,
+        })
     } else {
         None
     };
-    let any = f.warning.iter().chain(&f.alarm).any(|v| !v.trim().is_empty());
-    let thresholds =
-        if any { Some(AsbuiltThresholds { warning: level(&f.warning, "Uyarı")?, alarm: level(&f.alarm, "Alarm")? }) } else { None };
+    let any = f
+        .warning
+        .iter()
+        .chain(&f.alarm)
+        .any(|v| !v.trim().is_empty());
+    let thresholds = if any {
+        Some(AsbuiltThresholds {
+            warning: level(&f.warning, "Uyarı")?,
+            alarm: level(&f.alarm, "Alarm")?,
+        })
+    } else {
+        None
+    };
     Ok((trend, thresholds))
 }
 
 /// A number box of the window's width (the movement limits' 80 px).
 fn number_box<'a>(value: &'a str, to: impl Fn(String) -> Message + 'a) -> Element<'a, Message> {
-    container(fields::input(None, "—", value, false, false).on_input(to)).width(80).into()
+    container(fields::input(None, "—", value, false, false).on_input(to))
+        .width(80)
+        .into()
 }
 
 /// The form's rows: Doğru uydurma, then each level's horizontal and vertical movement (m) and, after a caption, its
 /// horizontal and vertical speed (m a year). Every row starts with its box; two values of one thing share a row.
-pub fn rows<'a>(f: &'a TrendForm, on: fn(Change) -> Message) -> Vec<(&'static str, Element<'a, Message>)> {
+pub fn rows<'a>(
+    f: &'a TrendForm,
+    on: fn(Change) -> Message,
+) -> Vec<(&'static str, Element<'a, Message>)> {
     let line = row![
-        words::check(f.on, "noktanın günlü dönemlerinden en küçük karelerle", Some(on(Change::On(!f.on)))),
+        words::check(
+            f.on,
+            "noktanın günlü dönemlerinden en küçük karelerle",
+            Some(on(Change::On(!f.on)))
+        ),
         label::caption("güven %"),
         number_box(&f.confidence, move |v| on(Change::Confidence(v)))
     ]
     .spacing(8)
     .align_y(Center);
-    let level = |boxes: &'a [String; 4], change: fn(usize, String) -> Change| -> Element<'a, Message> {
-        let b = |k: usize| number_box(&boxes[k], move |v| on(change(k, v)));
-        row![b(0), b(1), label::caption("hız (m/yıl)"), b(2), b(3)].spacing(8).align_y(Center).into()
-    };
+    let level =
+        |boxes: &'a [String; 4], change: fn(usize, String) -> Change| -> Element<'a, Message> {
+            let b = |k: usize| number_box(&boxes[k], move |v| on(change(k, v)));
+            row![b(0), b(1), label::caption("hız (m/yıl)"), b(2), b(3)]
+                .spacing(8)
+                .align_y(Center)
+                .into()
+        };
     vec![
         ("Doğru uydurma", line.into()),
-        ("Uyarı eşiği yatay / düşey (m)", level(&f.warning, Change::Warning)),
-        ("Alarm eşiği yatay / düşey (m)", level(&f.alarm, Change::Alarm)),
+        (
+            "Uyarı eşiği yatay / düşey (m)",
+            level(&f.warning, Change::Warning),
+        ),
+        (
+            "Alarm eşiği yatay / düşey (m)",
+            level(&f.alarm, Change::Alarm),
+        ),
         (
             "Eşiklerin kaynağı",
             container(
-                fields::input(None, "Kim, hangi belge ya da kararla, ne zaman", &f.source, false, false)
-                    .on_input(move |v| on(Change::Source(v))),
+                fields::input(
+                    None,
+                    "Kim, hangi belge ya da kararla, ne zaman",
+                    &f.source,
+                    false,
+                    false,
+                )
+                .on_input(move |v| on(Change::Source(v))),
             )
             .width(520)
             .into(),
@@ -190,14 +247,25 @@ pub fn table(tracks: &[AsbuiltTrack]) -> Element<'_, Message> {
         col("Anlamlı hareket", 110.0),
         col("Durum", 150.0),
     ];
-    crate::road_dialog::sheet(columns, tracks.iter().map(cells).collect(), "İzlenen nokta yok.", 200.0)
+    crate::road_dialog::sheet(
+        columns,
+        tracks.iter().map(cells).collect(),
+        "İzlenen nokta yok.",
+        200.0,
+    )
 }
 
 /// A mark's row of [`table`].
 pub fn cells(t: &AsbuiltTrack) -> Vec<String> {
     let comma = |s: String| s.replace('.', ",");
     // Signed as the movements are, a velocity under half the last digit unsigned (no “−0,0000”).
-    let signed = |v: f64| if v.abs() < 0.00005 { "0,0000".to_owned() } else { comma(format!("{v:+.4}")) };
+    let signed = |v: f64| {
+        if v.abs() < 0.00005 {
+            "0,0000".to_owned()
+        } else {
+            comma(format!("{v:+.4}"))
+        }
+    };
     let pm = |v: f64, s: f64| format!("{} ±{}", signed(v), comma(format!("{s:.4}")));
     let speed = t.fit.as_ref().map(|f| f.speed).or(t.rate_horizontal);
     let mut row = vec![t.name.clone()];
@@ -216,9 +284,15 @@ pub fn cells(t: &AsbuiltTrack) -> Vec<String> {
                 f.epochs.to_string(),
                 pm(f.east, f.sigma_east),
                 pm(f.north, f.sigma_north),
-                f.up.zip(f.sigma_up).map(|(v, s)| pm(v, s)).unwrap_or_default(),
+                f.up.zip(f.sigma_up)
+                    .map(|(v, s)| pm(v, s))
+                    .unwrap_or_default(),
                 speed.map(|v| comma(format!("{v:.4}"))).unwrap_or_default(),
-                if moving.is_empty() { "yok".into() } else { moving.join(", ") },
+                if moving.is_empty() {
+                    "yok".into()
+                } else {
+                    moving.join(", ")
+                },
             ]);
         }
         None => row.extend([

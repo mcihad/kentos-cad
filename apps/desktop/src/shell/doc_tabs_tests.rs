@@ -8,7 +8,11 @@ use crate::files_testing::{app_with_drawing, drive, saved, scratch};
 
 /// A line written on the drawing on screen: an unsaved change.
 fn change(app: &mut crate::app::App) {
-    let layer = app.document.as_ref().map(|d| d.model.layers().active().to_owned()).expect("a drawing");
+    let layer = app
+        .document
+        .as_ref()
+        .map(|d| d.model.layers().active().to_owned())
+        .expect("a drawing");
     let out = crate::files_testing::command(
         app,
         "cad.entities.create",
@@ -28,31 +32,55 @@ fn a_new_tab_asks_nothing_aç_asks_after_the_file_and_closing_names_the_unsaved_
     let a = app.document.as_ref().map(|d| d.session).expect("A");
     assert!(app.document.as_ref().is_some_and(|d| d.dirty()));
     // Yeni sekmede aç: B opens beside A, no question.
-    let task = app.update(Message::Opening(crate::opening::Event::PickedTab(Some(b.clone()))));
+    let task = app.update(Message::Opening(crate::opening::Event::PickedTab(Some(
+        b.clone(),
+    ))));
     drive(&mut app, task);
     // No question about A (a project type to choose for the bare file may open; not this test's).
-    assert!(!matches!(app.dialog, Some(Dialog::Unsaved(_))), "{:?}", app.dialog);
+    assert!(
+        !matches!(app.dialog, Some(Dialog::Unsaved(_))),
+        "{:?}",
+        app.dialog
+    );
     app.dialog = None;
-    assert_ne!(app.document.as_ref().map(|d| d.session), Some(a), "B in front");
+    assert_ne!(
+        app.document.as_ref().map(|d| d.session),
+        Some(a),
+        "B in front"
+    );
     let kept = app.doc_tabs.find_mut(a).expect("A in its tab");
     assert!(kept.dirty(), "A keeps its change");
     // Aç on a changed B: the question comes after C is chosen, and Vazgeç leaves B as it was.
     change(&mut app);
     let front = app.document.as_ref().map(|d| d.session);
     let _ = app.run("file.open");
-    assert!(app.dialog.is_none(), "nothing asked before a file is chosen");
-    let _ = app.update(Message::Opening(crate::opening::Event::Picked(Some(c.clone()))));
+    assert!(
+        app.dialog.is_none(),
+        "nothing asked before a file is chosen"
+    );
+    let _ = app.update(Message::Opening(crate::opening::Event::Picked(Some(
+        c.clone(),
+    ))));
     assert_eq!(app.dialog, Some(Dialog::Unsaved(Then::Open)));
     let _ = app.update(Message::DialogClosed);
     assert!(app.open_after_leave.is_none());
-    assert_eq!(app.document.as_ref().map(|d| d.session), front, "the drawing stays");
+    assert_eq!(
+        app.document.as_ref().map(|d| d.session),
+        front,
+        "the drawing stays"
+    );
     // Closing the window: one question naming both unsaved drawings.
     let _ = app.update(Message::CloseRequested(iced::window::Id::unique()));
     let Some(Dialog::Unsaved(then @ Then::Close(_))) = app.dialog.clone() else {
         panic!("{:?}", app.dialog);
     };
     let q = app.unsaved_question(then);
-    assert!(q.message.starts_with("2 çizimde kaydedilmemiş değişiklik var:"), "{}", q.message);
+    assert!(
+        q.message
+            .starts_with("2 çizimde kaydedilmemiş değişiklik var:"),
+        "{}",
+        q.message
+    );
     assert_eq!(q.confirm, "Kaydetmeden çık");
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -67,7 +95,9 @@ fn screens() {
     crate::files_testing::usage_shots("9347", "02-kapatma-sorusu", || {
         let mut app = app_with_drawing();
         change(&mut app);
-        let task = app.update(Message::Opening(crate::opening::Event::PickedTab(Some(b.clone()))));
+        let task = app.update(Message::Opening(crate::opening::Event::PickedTab(Some(
+            b.clone(),
+        ))));
         drive(&mut app, task);
         app.dialog = None;
         change(&mut app);

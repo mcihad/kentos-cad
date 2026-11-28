@@ -57,7 +57,9 @@ pub fn incomplete_beta(a: f64, b: f64, x: f64) -> f64 {
     if !(x < 1.0) {
         return 1.0;
     }
-    let front = exp(libm::lgamma(a + b) - libm::lgamma(a) - libm::lgamma(b) + a * log(x) + b * log(1.0 - x));
+    let front = exp(libm::lgamma(a + b) - libm::lgamma(a) - libm::lgamma(b)
+        + a * log(x)
+        + b * log(1.0 - x));
     if x < (a + 1.0) / (a + b + 2.0) {
         front * fraction(a, b, x) / a
     } else {
@@ -108,9 +110,15 @@ mod tests {
             (5.0, 0.95, 2.015048373333023),
         ] {
             let got = t_quantile(f, p);
-            assert!((got - want).abs() < 1e-9, "t({p}, {f}) = {got}, scipy {want}");
+            assert!(
+                (got - want).abs() < 1e-9,
+                "t({p}, {f}) = {got}, scipy {want}"
+            );
         }
         assert!((t_cdf(4.0, 0.0) - 0.5).abs() < 1e-15);
-        assert!((incomplete_beta(2.0, 3.0, 0.4) - 0.5247999999999999).abs() < 1e-12, "I_0.4(2, 3)");
+        assert!(
+            (incomplete_beta(2.0, 3.0, 0.4) - 0.5247999999999999).abs() < 1e-12,
+            "I_0.4(2, 3)"
+        );
     }
 }

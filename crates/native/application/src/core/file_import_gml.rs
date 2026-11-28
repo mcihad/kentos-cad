@@ -17,7 +17,11 @@ fn refuse(code: &str, message: impl Into<String>, path: &str) -> Stop {
     Stop::failed(error(code, message.into(), Some(path.into())))
 }
 
-fn run(doc: &mut Document, input: &ImportGml, write: bool) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
+fn run(
+    doc: &mut Document,
+    input: &ImportGml,
+    write: bool,
+) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
     let path = Path::new(&input.path);
     if input.path.trim().is_empty() || !path.is_absolute() || path.is_dir() {
         return Err(refuse(

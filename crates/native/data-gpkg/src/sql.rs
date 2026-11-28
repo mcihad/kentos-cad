@@ -28,7 +28,9 @@ pub fn register_fold(conn: &Connection) -> rusqlite::Result<()> {
                 // A number in a text column orders below the texts, as SQLite orders it.
                 rusqlite::types::ValueRef::Integer(i) => Some(rusqlite::types::Value::Integer(i)),
                 rusqlite::types::ValueRef::Real(r) => Some(rusqlite::types::Value::Real(r)),
-                rusqlite::types::ValueRef::Blob(b) => Some(rusqlite::types::Value::Blob(b.to_vec())),
+                rusqlite::types::ValueRef::Blob(b) => {
+                    Some(rusqlite::types::Value::Blob(b.to_vec()))
+                }
             })
         },
     )?;
@@ -243,7 +245,11 @@ pub fn order_and_page(
             .fields
             .iter()
             .any(|f| f.name == o.field && matches!(f.kind, FieldKind::Text { .. }));
-        let by_what = if text { format!("kentos_order({col})") } else { col };
+        let by_what = if text {
+            format!("kentos_order({col})")
+        } else {
+            col
+        };
         by.push(format!(
             "{by_what} {} NULLS LAST",
             if o.descending { "DESC" } else { "ASC" }

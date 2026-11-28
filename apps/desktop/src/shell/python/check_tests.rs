@@ -25,8 +25,16 @@ fn the_head_says_where_python_comes_from_and_offers_the_way_to_set_it_up() {
     assert_eq!(Console::default().head(), None);
     // The user's own Python without kentos: said as theirs, with the way to set one up.
     let mut c = console(S::System, "python3");
-    assert_eq!(c.head(), Some(("Sistemdeki python3 (kendi Python'unuz) (python3) denetleniyor…".to_owned(), false)));
-    c.check = Some(Err("ModuleNotFoundError: No module named 'kentos'".to_owned()));
+    assert_eq!(
+        c.head(),
+        Some((
+            "Sistemdeki python3 (kendi Python'unuz) (python3) denetleniyor…".to_owned(),
+            false
+        ))
+    );
+    c.check = Some(Err(
+        "ModuleNotFoundError: No module named 'kentos'".to_owned()
+    ));
     let (words, setup) = c.head().expect("a head");
     assert!(setup);
     assert_eq!(
@@ -44,16 +52,28 @@ fn the_head_says_where_python_comes_from_and_offers_the_way_to_set_it_up() {
     );
     c.failed = Some("KentOS oturumu açılmadı".to_owned());
     let (words, setup) = c.head().expect("a head");
-    assert!(setup && words.contains("Ortamı Python ve eklentiler'den yeniden kurun."), "{words}");
+    assert!(
+        setup && words.contains("Ortamı Python ve eklentiler'den yeniden kurun."),
+        "{words}"
+    );
     // Ready: the session's versions.
     c.failed = None;
     c.ready = Some("Python 3.12.13 · kentos 0.1.0".to_owned());
-    assert_eq!(c.head(), Some(("KentOS'un yönettiği kişisel ortam · Python 3.12.13 · kentos 0.1.0".to_owned(), false)));
+    assert_eq!(
+        c.head(),
+        Some((
+            "KentOS'un yönettiği kişisel ortam · Python 3.12.13 · kentos 0.1.0".to_owned(),
+            false
+        ))
+    );
 }
 
 #[test]
 fn a_python_that_does_not_open_is_said_and_the_checkouts_holds_kentos() {
-    assert!(look_at(Path::new("/olmayan/klasor/python")).is_err_and(|why| why.starts_with("açılamadı (")));
+    assert!(
+        look_at(Path::new("/olmayan/klasor/python"))
+            .is_err_and(|why| why.starts_with("açılamadı ("))
+    );
     // This checkout's own environment (the tests' Python, found from as deep as the test's program) holds the package.
     let (python, source) = kentos_standards::interpreter_choice();
     let checkout = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/py/bin/python");
@@ -62,7 +82,10 @@ fn a_python_that_does_not_open_is_said_and_the_checkouts_holds_kentos() {
     }
     if source == S::Checkout || source == S::Env {
         let seen = look_at(&python).expect("the checkout's Python holds kentos");
-        assert!(seen.starts_with("Python 3.") && seen.contains(" · kentos "), "{seen}");
+        assert!(
+            seen.starts_with("Python 3.") && seen.contains(" · kentos "),
+            "{seen}"
+        );
     }
 }
 
@@ -70,7 +93,10 @@ fn a_python_that_does_not_open_is_said_and_the_checkouts_holds_kentos() {
 fn the_python_tab_looks_at_the_chosen_python_once() {
     let (mut app, _) = App::boot(None);
     let task = app.update(Message::BottomTab(crate::bottom::BottomTab::Python));
-    assert!(app.python.source.is_some(), "where it comes from is known at once");
+    assert!(
+        app.python.source.is_some(),
+        "where it comes from is known at once"
+    );
     drive(&mut app, task);
     assert!(app.python.check.is_some(), "looked at");
     assert!(!app.python.started(), "nothing kept running");
@@ -94,7 +120,9 @@ fn screens() {
         let mut app = crate::files_testing::app_with_drawing();
         app.python.source = Some(S::System);
         app.python.python = PathBuf::from("python3");
-        app.python.check = Some(Err("ModuleNotFoundError: No module named 'kentos'".to_owned()));
+        app.python.check = Some(Err(
+            "ModuleNotFoundError: No module named 'kentos'".to_owned()
+        ));
         app.show_bottom(crate::bottom::BottomTab::Python);
         let _ = app.update(Message::BottomResized(300.0));
         app
@@ -105,7 +133,11 @@ fn screens() {
         drive(&mut app, task);
         let _ = app.update(Message::BottomResized(300.0));
         let mut heard = None;
-        super::tests::run_real(&mut app, "print([k.name for k in doc.layers()])", &mut heard);
+        super::tests::run_real(
+            &mut app,
+            "print([k.name for k in doc.layers()])",
+            &mut heard,
+        );
         app
     });
 }

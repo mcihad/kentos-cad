@@ -29,12 +29,23 @@ struct System {
 }
 
 fn read() -> System {
-    let mut system = System { items: Vec::new(), categories: Vec::new() };
+    let mut system = System {
+        items: Vec::new(),
+        categories: Vec::new(),
+    };
     for file in [FILE, GENERAL, BOHHBUY] {
         // The files ship with the program and a test reads them: they are well formed.
         let value: Value = serde_json::from_str(file).unwrap_or(Value::Null);
-        let list = |k: &str| value.get(k).and_then(Value::as_array).cloned().unwrap_or_default();
-        system.items.extend(list("items").into_iter().filter_map(Item::from_value));
+        let list = |k: &str| {
+            value
+                .get(k)
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default()
+        };
+        system
+            .items
+            .extend(list("items").into_iter().filter_map(Item::from_value));
         system.categories.extend(list("categories"));
     }
     system

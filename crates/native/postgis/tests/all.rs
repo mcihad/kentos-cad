@@ -1820,15 +1820,29 @@ fn a_connection_is_tried_and_its_tables_listed_from_the_catalogue() {
         .iter()
         .find(|r| r.schema == "kadastro" && r.name == "parsel")
         .expect("kadastro.parsel listed");
-    assert!(parsel.geometry.as_deref().is_some_and(|g| g.contains("POLYGON")), "{parsel:?}");
+    assert!(
+        parsel
+            .geometry
+            .as_deref()
+            .is_some_and(|g| g.contains("POLYGON")),
+        "{parsel:?}"
+    );
     assert!(parsel.srid.is_some());
     assert_eq!(parsel.key.as_deref(), Some("fid"));
     assert!(parsel.why_not().is_none());
     assert!(parsel.readable && parsel.writable);
     assert_eq!(catalog.facts.tables, catalog.relations.len());
     // What the catalogue says can be bound, the provider binds; what it says cannot, the provider refuses.
-    let bindable = catalog.relations.iter().filter(|r| r.why_not().is_none()).take(6);
-    let not = catalog.relations.iter().filter(|r| r.why_not().is_some()).take(3);
+    let bindable = catalog
+        .relations
+        .iter()
+        .filter(|r| r.why_not().is_none())
+        .take(6);
+    let not = catalog
+        .relations
+        .iter()
+        .filter(|r| r.why_not().is_some())
+        .take(3);
     for r in bindable.chain(not) {
         let mut doc = doc();
         let answer = run(
@@ -1851,17 +1865,26 @@ fn a_connection_is_tried_and_its_tables_listed_from_the_catalogue() {
         database: "boyle_bir_veritabani_yok".into(),
         ..c.clone()
     };
-    assert_eq!(probe::probe(&none, None).unwrap_err().problem, Problem::Database);
+    assert_eq!(
+        probe::probe(&none, None).unwrap_err().problem,
+        Problem::Database
+    );
     let closed = kentos_postgis::connections::DbConnection {
         port: 1,
         ..c.clone()
     };
-    assert_eq!(probe::probe(&closed, None).unwrap_err().problem, Problem::Refused);
+    assert_eq!(
+        probe::probe(&closed, None).unwrap_err().problem,
+        Problem::Refused
+    );
     let nowhere = kentos_postgis::connections::DbConnection {
         host: "boyle-bir-sunucu-yok.invalid".into(),
         ..c.clone()
     };
-    assert_eq!(probe::probe(&nowhere, None).unwrap_err().problem, Problem::Host);
+    assert_eq!(
+        probe::probe(&nowhere, None).unwrap_err().problem,
+        Problem::Host
+    );
     // The throwaway server offers no TLS: Zorunlu says so.
     let tls = kentos_postgis::connections::DbConnection {
         ssl: kentos_postgis::connections::SslMode::Require,
@@ -1887,12 +1910,19 @@ fn a_password_typed_for_the_session_reaches_the_bound_layer() {
     let owner = window_connection(&url);
     let admin = kentos_postgis::probe::browse(&owner, Some(&password));
     assert!(admin.is_ok(), "{admin:?}");
-    let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().expect("runtime");
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("runtime");
     runtime.block_on(async {
         use sqlx::{Connection, Executor};
         use std::str::FromStr;
-        let options = sqlx::postgres::PgConnectOptions::from_str(&url).expect("url").password(&password);
-        let mut conn = sqlx::postgres::PgConnection::connect_with(&options).await.expect("owner");
+        let options = sqlx::postgres::PgConnectOptions::from_str(&url)
+            .expect("url")
+            .password(&password);
+        let mut conn = sqlx::postgres::PgConnection::connect_with(&options)
+            .await
+            .expect("owner");
         for sql in [
             "DROP OWNED BY kentos_oturum",
             "DROP ROLE IF EXISTS kentos_oturum",
@@ -1924,7 +1954,11 @@ fn a_password_typed_for_the_session_reaches_the_bound_layer() {
         json!({ "edit": { "kind": "link", "path": c.address(), "table": "kadastro.parsel", "reproject": true } }),
     );
     assert_eq!(bound["status"], "completed", "{bound}");
-    assert!(!serde_json::to_string(&doc.to_snapshot_v2()).unwrap().contains("oturum-sifresi"));
+    assert!(
+        !serde_json::to_string(&doc.to_snapshot_v2())
+            .unwrap()
+            .contains("oturum-sifresi")
+    );
     kentos_postgis::connections::forget(&c);
 }
 
@@ -1978,7 +2012,10 @@ fn wide_kinds_come_from_postgis() {
         "{attrs:?}"
     );
     assert_eq!(attrs["cihaz"], "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001");
-    assert_eq!(attrs["ek"], r#"{"kot":[1.25,12345678901234567890],"not":"ç"}"#);
+    assert_eq!(
+        attrs["ek"],
+        r#"{"kot":[1.25,12345678901234567890],"not":"ç"}"#
+    );
     assert_eq!(attrs["imza"], "QUJD");
     assert_eq!(attrs["tutar"], "12345678901234567890.1234567890");
     let fresh = run(
@@ -2026,7 +2063,11 @@ fn psql(url: &str, sql: &str) -> String {
         .args(["-At", "-v", "ON_ERROR_STOP=1", "-c", sql])
         .output()
         .expect("psql");
-    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     String::from_utf8_lossy(&out.stdout).trim().to_owned()
 }
 
@@ -2065,8 +2106,14 @@ fn a_drawing_goes_to_postgis_as_a_derived_dataset() {
     assert_eq!(checked["output"]["current"], 17, "{checked}");
     assert_eq!(checked["output"]["file"], json!(url));
     // A GIS renames a road in the database; it is taken back to its source.
-    let uid = psql(&url, "SELECT kentos_uid FROM turev.\"Yol\" WHERE ad = 'D-200'");
-    psql(&url, "UPDATE turev.\"Yol\" SET ad = 'E-200' WHERE ad = 'D-200'");
+    let uid = psql(
+        &url,
+        "SELECT kentos_uid FROM turev.\"Yol\" WHERE ad = 'D-200'",
+    );
+    psql(
+        &url,
+        "UPDATE turev.\"Yol\" SET ad = 'E-200' WHERE ad = 'D-200'",
+    );
     let edited = call("cad.gis.derivation", json!({ "path": url }));
     assert_eq!(edited["output"]["edited"], 1, "{edited}");
     let taken = call(
@@ -2085,18 +2132,31 @@ fn a_drawing_goes_to_postgis_as_a_derived_dataset() {
         s.call(json!({ "command": command, "input": input }))
             .expect("answers")
     };
-    let detached = call("cad.gis.detach", json!({ "path": url, "tables": ["turev.Parsel"], "reason": "GIS'te sürecek" }));
+    let detached = call(
+        "cad.gis.detach",
+        json!({ "path": url, "tables": ["turev.Parsel"], "reason": "GIS'te sürecek" }),
+    );
     assert_eq!(detached["output"]["linked"], 5, "{detached}");
     assert_eq!(
-        psql(&url, "SELECT count(*) FROM turev.kentos_uids WHERE table_name = 'turev.Parsel'"),
+        psql(
+            &url,
+            "SELECT count(*) FROM turev.kentos_uids WHERE table_name = 'turev.Parsel'"
+        ),
         "0"
     );
-    let note = psql(&url, "SELECT obj_description('turev.\"Parsel\"'::regclass, 'pg_class')");
+    let note = psql(
+        &url,
+        "SELECT obj_description('turev.\"Parsel\"'::regclass, 'pg_class')",
+    );
     let note: Value = serde_json::from_str(&note).expect("the note");
     assert_eq!(note["format"], "kentos.derivation-detached", "{note}");
     assert_eq!(note["reason"], "GIS'te sürecek");
     let rest = call("cad.gis.detach", json!({ "path": url }));
-    assert_eq!(rest["output"]["tables"].as_array().map(Vec::len), Some(5), "{rest}");
+    assert_eq!(
+        rest["output"]["tables"].as_array().map(Vec::len),
+        Some(5),
+        "{rest}"
+    );
     let gone = call("cad.gis.derivation", json!({ "path": url }));
     assert_eq!(gone["error"]["code"], "not_a_derivation", "{gone}");
 }
@@ -2134,12 +2194,19 @@ fn a_column_renamed_in_postgis_is_followed() {
         json!({ "layer": layer, "direction": "read" }),
     );
     let out = ok(&read);
-    assert_eq!(out["renamed"], json!([{ "from": "ada", "to": "ada_no" }]), "{read}");
+    assert_eq!(
+        out["renamed"],
+        json!([{ "from": "ada", "to": "ada_no" }]),
+        "{read}"
+    );
     let node = d.layers().get(&layer).expect("the layer");
     assert!(node.fields.iter().any(|f| f.name == "ada_no"));
     assert!(node.fields.iter().all(|f| f.name != "ada"));
     assert_eq!(
-        node.filter.as_ref().and_then(|f| f.expression.clone()).as_deref(),
+        node.filter
+            .as_ref()
+            .and_then(|f| f.expression.clone())
+            .as_deref(),
         Some("ada_no = '101'")
     );
     assert!(
@@ -2230,7 +2297,11 @@ fn a_postgis_part_has_its_band() {
     ))
     .clone();
     let layer = linked["link"]["layer"].as_str().expect("layer").to_owned();
-    assert_eq!(d.by_layer(&layer).count(), 1, "the part holds the middle parcel");
+    assert_eq!(
+        d.by_layer(&layer).count(),
+        1,
+        "the part holds the middle parcel"
+    );
     let report = |d: &mut Document| {
         ok(&run(
             d,
@@ -2274,8 +2345,12 @@ fn the_parcels_scenario_goes_to_postgis_and_comes_back() {
     let mut names: std::collections::HashMap<String, String> = Default::default();
     fn bind(v: &Value, names: &std::collections::HashMap<String, String>) -> Value {
         match v {
-            Value::String(t) if t.starts_with('$') && !t.starts_with("$out:") => json!(names[&t[1..]]),
-            Value::Object(m) => Value::Object(m.iter().map(|(k, v)| (k.clone(), bind(v, names))).collect()),
+            Value::String(t) if t.starts_with('$') && !t.starts_with("$out:") => {
+                json!(names[&t[1..]])
+            }
+            Value::Object(m) => {
+                Value::Object(m.iter().map(|(k, v)| (k.clone(), bind(v, names))).collect())
+            }
             Value::Array(a) => Value::Array(a.iter().map(|v| bind(v, names)).collect()),
             other => other.clone(),
         }
@@ -2295,10 +2370,15 @@ fn the_parcels_scenario_goes_to_postgis_and_comes_back() {
             .expect("answers");
         assert_eq!(answer["status"], "completed", "{}: {answer}", step["name"]);
         if let Some(key) = step["as"].as_str() {
-            names.insert(key.into(), answer["output"]["uid"].as_str().expect("uid").into());
+            names.insert(
+                key.into(),
+                answer["output"]["uid"].as_str().expect("uid").into(),
+            );
         }
         for (key, field) in step["bind"].as_object().into_iter().flatten() {
-            let value = answer["output"][field.as_str().expect("a field")].as_str().expect("bound");
+            let value = answer["output"][field.as_str().expect("a field")]
+                .as_str()
+                .expect("bound");
             names.insert(key.clone(), value.into());
         }
     }
@@ -2308,7 +2388,10 @@ fn the_parcels_scenario_goes_to_postgis_and_comes_back() {
         .expect("answers");
     assert_eq!(made["status"], "completed", "{made}");
     let mut d = doc();
-    for (layer, spec) in scenario["files"]["gpkg"]["layers"].as_object().expect("layers") {
+    for (layer, spec) in scenario["files"]["gpkg"]["layers"]
+        .as_object()
+        .expect("layers")
+    {
         let key = spec["key"].as_str().expect("a key");
         let want = spec["rows"].as_object().expect("rows");
         let answer = run(
@@ -2325,7 +2408,10 @@ fn the_parcels_scenario_goes_to_postgis_and_comes_back() {
             for (field, value) in w["attrs"].as_object().expect("attrs") {
                 let have = r["attrs"][field.as_str()].as_str().unwrap_or_default();
                 let same = have == value.as_str().unwrap_or_default()
-                    || have.parse::<f64>().ok().zip(value.as_str().and_then(|v| v.parse::<f64>().ok()))
+                    || have
+                        .parse::<f64>()
+                        .ok()
+                        .zip(value.as_str().and_then(|v| v.parse::<f64>().ok()))
                         .is_some_and(|(a, b)| a == b);
                 assert!(same, "{layer}/{k}.{field}: {have:?}, beklenen {value}");
             }

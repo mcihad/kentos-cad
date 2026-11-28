@@ -92,7 +92,9 @@ pub fn ring_self_crossings(pts: &[Vec2], bulges: Option<&[f64]>) -> Vec<Vec2> {
             }
             let (a, b, c, d) = (ring[i], ring[(i + 1) % n], ring[j], ring[(j + 1) % n]);
             // Strictly inside both edges: a corner on another edge is a touch, not a crossing.
-            if let Some(h) = line_line(a, b, c, d).filter(|h| h.t > 1e-9 && h.t < 1.0 - 1e-9 && h.u > 1e-9 && h.u < 1.0 - 1e-9) {
+            if let Some(h) = line_line(a, b, c, d)
+                .filter(|h| h.t > 1e-9 && h.t < 1.0 - 1e-9 && h.u > 1e-9 && h.u < 1.0 - 1e-9)
+            {
                 out.push(h.p);
             }
         }
@@ -424,17 +426,34 @@ mod tests {
         let v = |x: f64, y: f64| Vec2::new(x, y);
         // Top left, bottom right, bottom left, top right: the middle at (2, 2), large coordinates too.
         for (ox, oy) in [(0.0, 0.0), (500_000.0, 4_400_000.0)] {
-            let tie = [v(ox, oy + 4.0), v(ox + 4.0, oy), v(ox, oy), v(ox + 4.0, oy + 4.0)];
+            let tie = [
+                v(ox, oy + 4.0),
+                v(ox + 4.0, oy),
+                v(ox, oy),
+                v(ox + 4.0, oy + 4.0),
+            ];
             let hits = super::ring_self_crossings(&tie, None);
             assert_eq!(hits.len(), 1, "{hits:?}");
             assert!((hits[0].x - ox - 2.0).abs() < 1e-6 && (hits[0].y - oy - 2.0).abs() < 1e-6);
         }
         let square = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0), v(0.0, 4.0)];
         assert!(super::ring_self_crossings(&square, None).is_empty());
-        let concave = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0), v(2.0, 1.0), v(0.0, 4.0)];
+        let concave = [
+            v(0.0, 0.0),
+            v(4.0, 0.0),
+            v(4.0, 4.0),
+            v(2.0, 1.0),
+            v(0.0, 4.0),
+        ];
         assert!(super::ring_self_crossings(&concave, None).is_empty());
         // A corner touching another edge is no crossing.
-        let touching = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0), v(2.0, 0.0), v(0.0, 4.0)];
+        let touching = [
+            v(0.0, 0.0),
+            v(4.0, 0.0),
+            v(4.0, 4.0),
+            v(2.0, 0.0),
+            v(0.0, 4.0),
+        ];
         assert!(super::ring_self_crossings(&touching, None).is_empty());
     }
 

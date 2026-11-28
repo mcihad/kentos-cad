@@ -33,7 +33,11 @@ pub struct Margin {
 /// Each solved cross's margin; `curvature(s)` the alignment's curvature at `s` (left positive), `shift` its own offset
 /// (right positive, 0 for an alignment of its own). The curvature is read just before and just after the station
 /// ([`SIDE`]) and the smaller margin kept: a cross where a curve meets a tangent belongs to both.
-pub fn margins(regions: &[RegionCrosses], curvature: &dyn Fn(f64) -> Option<f64>, shift: f64) -> Vec<Margin> {
+pub fn margins(
+    regions: &[RegionCrosses],
+    curvature: &dyn Fn(f64) -> Option<f64>,
+    shift: f64,
+) -> Vec<Margin> {
     let mut out = Vec::new();
     for (ri, region) in regions.iter().enumerate() {
         let t = &region.template;
@@ -42,7 +46,10 @@ pub fn margins(regions: &[RegionCrosses], curvature: &dyn Fn(f64) -> Option<f64>
             let Some(sec) = &cross.section else { continue };
             let line = &cross.line;
             let s = line.station;
-            let sides: Vec<f64> = [s - SIDE, s + SIDE].into_iter().filter_map(curvature).collect();
+            let sides: Vec<f64> = [s - SIDE, s + SIDE]
+                .into_iter()
+                .filter_map(curvature)
+                .collect();
             if sides.is_empty() {
                 continue;
             }
@@ -58,7 +65,13 @@ pub fn margins(regions: &[RegionCrosses], curvature: &dyn Fn(f64) -> Option<f64>
                 }
             }
             if let Some((margin, offset, curvature)) = best {
-                out.push(Margin { region: ri, station: s, margin, offset, curvature });
+                out.push(Margin {
+                    region: ri,
+                    station: s,
+                    margin,
+                    offset,
+                    curvature,
+                });
             }
         }
     }
@@ -84,7 +97,10 @@ pub const LEAST_OVERLAP: f64 = 1e-6;
 
 fn signed2(ring: &[[f64; 2]]) -> f64 {
     let n = ring.len();
-    (0..n).map(|i| ring[i][0] * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * ring[i][1]).sum::<f64>() * 0.5
+    (0..n)
+        .map(|i| ring[i][0] * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * ring[i][1])
+        .sum::<f64>()
+        * 0.5
 }
 
 /// The part of convex `subject` inside convex counterclockwise `clip` (Sutherland–Hodgman).
@@ -144,14 +160,29 @@ pub fn overlaps(built: &Built) -> Vec<Overlap> {
     let boxes: Vec<[f64; 4]> = strips
         .iter()
         .map(|s| {
-            built.triangles[s.3.clone()].iter().flatten().fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| {
-                [b[0].min(p[0]), b[1].min(p[1]), b[2].max(p[0]), b[3].max(p[1])]
-            })
+            built.triangles[s.3.clone()].iter().flatten().fold(
+                [
+                    f64::INFINITY,
+                    f64::INFINITY,
+                    f64::NEG_INFINITY,
+                    f64::NEG_INFINITY,
+                ],
+                |b, p| {
+                    [
+                        b[0].min(p[0]),
+                        b[1].min(p[1]),
+                        b[2].max(p[0]),
+                        b[3].max(p[1]),
+                    ]
+                },
+            )
         })
         .collect();
     let touch = |a: usize, b: usize| {
         let (x, y) = (&strips[a], &strips[b]);
-        (x.1 - y.2).abs() < SAME_STATION || (x.2 - y.1).abs() < SAME_STATION || (x.1 - y.1).abs() < SAME_STATION
+        (x.1 - y.2).abs() < SAME_STATION
+            || (x.2 - y.1).abs() < SAME_STATION
+            || (x.1 - y.1).abs() < SAME_STATION
     };
     let mut pairs: Vec<(usize, usize, f64, f64, f64)> = Vec::new();
     for a in 0..strips.len() {
@@ -165,9 +196,17 @@ pub fn overlaps(built: &Built) -> Vec<Overlap> {
             }
             let (mut area, mut least, mut most) = (0.0, f64::INFINITY, f64::NEG_INFINITY);
             for ta in &built.triangles[strips[a].3.clone()] {
-                let pa = [[ta[0][0], ta[0][1]], [ta[1][0], ta[1][1]], [ta[2][0], ta[2][1]]];
+                let pa = [
+                    [ta[0][0], ta[0][1]],
+                    [ta[1][0], ta[1][1]],
+                    [ta[2][0], ta[2][1]],
+                ];
                 for tb in &built.triangles[strips[b].3.clone()] {
-                    let pb = [[tb[0][0], tb[0][1]], [tb[1][0], tb[1][1]], [tb[2][0], tb[2][1]]];
+                    let pb = [
+                        [tb[0][0], tb[0][1]],
+                        [tb[1][0], tb[1][1]],
+                        [tb[2][0], tb[2][1]],
+                    ];
                     let piece = clip(&pa, &pb);
                     if piece.len() < 3 {
                         continue;
@@ -191,7 +230,10 @@ pub fn overlaps(built: &Built) -> Vec<Overlap> {
     // Merge pairs whose first strips touch and whose second strips touch: one overlap of two stretches.
     let mut out: Vec<MergedOverlap> = Vec::new();
     for (a, b, area, least, most) in pairs {
-        match out.iter_mut().find(|o| o.0.iter().any(|x| *x == a || touch(*x, a)) && o.1.iter().any(|y| *y == b || touch(*y, b))) {
+        match out.iter_mut().find(|o| {
+            o.0.iter().any(|x| *x == a || touch(*x, a))
+                && o.1.iter().any(|y| *y == b || touch(*y, b))
+        }) {
             Some(o) => {
                 if !o.0.contains(&a) {
                     o.0.push(a);
@@ -207,10 +249,18 @@ pub fn overlaps(built: &Built) -> Vec<Overlap> {
         }
     }
     let span = |ids: &[usize]| {
-        ids.iter().fold([f64::INFINITY, f64::NEG_INFINITY], |r, i| [r[0].min(strips[*i].1), r[1].max(strips[*i].2)])
+        ids.iter().fold([f64::INFINITY, f64::NEG_INFINITY], |r, i| {
+            [r[0].min(strips[*i].1), r[1].max(strips[*i].2)]
+        })
     };
     out.into_iter()
-        .map(|(a, b, area, least, most)| Overlap { first: span(&a), second: span(&b), area, least, most })
+        .map(|(a, b, area, least, most)| Overlap {
+            first: span(&a),
+            second: span(&b),
+            area,
+            least,
+            most,
+        })
         .collect()
 }
 
@@ -234,11 +284,18 @@ pub struct Seam {
 pub fn seams(regions: &[RegionCrosses]) -> Vec<Seam> {
     let mut out = Vec::new();
     for (i, w) in regions.windows(2).enumerate() {
-        let (Some(a), Some(b)) = (w[0].crosses.last(), w[1].crosses.first()) else { continue };
+        let (Some(a), Some(b)) = (w[0].crosses.last(), w[1].crosses.first()) else {
+            continue;
+        };
         if (a.line.station - b.line.station).abs() >= SAME_STATION {
             continue;
         }
-        let (Some(pa), Some(pb)) = (coded_points(&w[0].template, a), coded_points(&w[1].template, b)) else { continue };
+        let (Some(pa), Some(pb)) = (
+            coded_points(&w[0].template, a),
+            coded_points(&w[1].template, b),
+        ) else {
+            continue;
+        };
         let mut seam = Seam {
             station: a.line.station,
             before: i,
@@ -267,7 +324,11 @@ pub fn seams(regions: &[RegionCrosses]) -> Vec<Seam> {
                 None => seam.only_before.push(code.clone()),
             }
         }
-        seam.only_after = pb.iter().filter(|(c, _)| !pa.iter().any(|(d, _)| d == c)).map(|(c, _)| c.clone()).collect();
+        seam.only_after = pb
+            .iter()
+            .filter(|(c, _)| !pa.iter().any(|(d, _)| d == c))
+            .map(|(c, _)| c.clone())
+            .collect();
         out.push(seam);
     }
     out

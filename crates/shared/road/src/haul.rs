@@ -76,7 +76,9 @@ fn value(points: &[[f64; 2]], s: f64, after: bool) -> f64 {
     if let (Some(&i), Some(&j)) = (at.first(), at.last()) {
         return points[if after { j } else { i }][1];
     }
-    let i = points.partition_point(|p| p[0] < s).clamp(1, points.len() - 1);
+    let i = points
+        .partition_point(|p| p[0] < s)
+        .clamp(1, points.len() - 1);
     let (p, q) = (points[i - 1], points[i]);
     p[1] + (q[1] - p[1]) * (s - p[0]) / (q[0] - p[0])
 }
@@ -85,14 +87,24 @@ fn value(points: &[[f64; 2]], s: f64, after: bool) -> f64 {
 /// strictly between, its value before any step at `c`.
 fn piece(points: &[[f64; 2]], b: f64, sign: f64, a: f64, c: f64) -> Vec<[f64; 2]> {
     let mut out = vec![[a, sign * (value(points, a, true) - b)]];
-    out.extend(points.iter().filter(|p| p[0] > a && p[0] < c).map(|p| [p[0], sign * (p[1] - b)]));
+    out.extend(
+        points
+            .iter()
+            .filter(|p| p[0] > a && p[0] < c)
+            .map(|p| [p[0], sign * (p[1] - b)]),
+    );
     out.push([c, sign * (value(points, c, false) - b)]);
     out
 }
 
 /// The layers of `g ≥ 0` (a polyline along the stations): the balanced volume and moment, the overhaul past `free`,
 /// and the volume of the layers that reach an open end (`open_start`, `open_end`).
-fn layers(g: &[[f64; 2]], free: f64, open_start: bool, open_end: bool) -> (f64, f64, f64, f64, f64) {
+fn layers(
+    g: &[[f64; 2]],
+    free: f64,
+    open_start: bool,
+    open_end: bool,
+) -> (f64, f64, f64, f64, f64) {
     let mut levels: Vec<f64> = g.iter().map(|p| p[1].max(0.0)).collect();
     levels.push(0.0);
     levels.sort_by(f64::total_cmp);
@@ -101,7 +113,11 @@ fn layers(g: &[[f64; 2]], free: f64, open_start: bool, open_end: bool) -> (f64, 
     // A layer's end: on a segment (linear in y) or at a boundary station.
     let cross = |i: usize, y: f64| -> f64 {
         let (p, q) = (g[i], g[i + 1]);
-        if q[1] == p[1] { p[0] } else { p[0] + (q[0] - p[0]) * (y - p[1]) / (q[1] - p[1]) }
+        if q[1] == p[1] {
+            p[0]
+        } else {
+            p[0] + (q[0] - p[0]) * (y - p[1]) / (q[1] - p[1])
+        }
     };
     for w in levels.windows(2) {
         let (y0, y1) = (w[0], w[1]);
@@ -176,7 +192,10 @@ pub fn diagram(points: &[[f64; 2]], b: f64, free: f64) -> Diagram {
         }
         // The loop's side: the sign of f in its middle.
         let probe = piece(points, b, 1.0, a, c);
-        let mid = probe.iter().map(|p| p[1]).fold(0.0, |m: f64, v| if v.abs() > m.abs() { v } else { m });
+        let mid = probe
+            .iter()
+            .map(|p| p[1])
+            .fold(0.0, |m: f64, v| if v.abs() > m.abs() { v } else { m });
         if mid == 0.0 {
             continue;
         }
@@ -184,7 +203,8 @@ pub fn diagram(points: &[[f64; 2]], b: f64, free: f64) -> Diagram {
         let g = piece(points, b, if forward { 1.0 } else { -1.0 }, a, c);
         let open_start = k == 0 && g[0][1] > 0.0;
         let open_end = k + 2 == cuts.len() && g[g.len() - 1][1] > 0.0;
-        let (volume, moment, over_volume, over_moment, unbalanced) = layers(&g, free, open_start, open_end);
+        let (volume, moment, over_volume, over_moment, unbalanced) =
+            layers(&g, free, open_start, open_end);
         out.volume += volume;
         out.moment += moment;
         out.over_volume += over_volume;
@@ -194,7 +214,16 @@ pub fn diagram(points: &[[f64; 2]], b: f64, free: f64) -> Diagram {
         } else {
             out.borrow += unbalanced;
         }
-        out.loops.push(Loop { from: a, to: c, forward, volume, moment, over_volume, over_moment, unbalanced });
+        out.loops.push(Loop {
+            from: a,
+            to: c,
+            forward,
+            volume,
+            moment,
+            over_volume,
+            over_moment,
+            unbalanced,
+        });
     }
     out.balance = balance;
     out

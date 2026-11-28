@@ -111,12 +111,30 @@ pub fn allowance(speed: f64, radius: f64) -> f64 {
 }
 
 /// The widening of a curve of radius `radius` (m, the traveled way's centreline) for `vehicle` on `road`.
-pub fn widening(radius: f64, vehicle: &WideningVehicle, road: &WideningRoad) -> Result<Widening, WideningError> {
-    let finite = [radius, vehicle.track, vehicle.front, vehicle.wheelbase, road.tangent, road.clearance]
-        .iter()
-        .chain(vehicle.trailer.as_ref().map(|t| [t.0, t.1]).iter().flatten())
-        .chain(road.speed.iter())
-        .all(|v| v.is_finite());
+pub fn widening(
+    radius: f64,
+    vehicle: &WideningVehicle,
+    road: &WideningRoad,
+) -> Result<Widening, WideningError> {
+    let finite = [
+        radius,
+        vehicle.track,
+        vehicle.front,
+        vehicle.wheelbase,
+        road.tangent,
+        road.clearance,
+    ]
+    .iter()
+    .chain(
+        vehicle
+            .trailer
+            .as_ref()
+            .map(|t| [t.0, t.1])
+            .iter()
+            .flatten(),
+    )
+    .chain(road.speed.iter())
+    .all(|v| v.is_finite());
     let trailer_ok = vehicle.trailer.is_none_or(|(_, l2)| l2 > 0.0);
     if !finite
         || !trailer_ok
@@ -135,19 +153,29 @@ pub fn widening(radius: f64, vehicle: &WideningVehicle, road: &WideningRoad) -> 
     let track = vehicle.track + off;
     let n = f64::from(road.lanes);
     let (overhang, extra) = match road.method {
-        WideningMethod::Standard => {
-            (front_overhang(radius, vehicle.front, vehicle.wheelbase), road.speed.map_or(0.0, |v| allowance(v, radius)))
-        }
+        WideningMethod::Standard => (
+            front_overhang(radius, vehicle.front, vehicle.wheelbase),
+            road.speed.map_or(0.0, |v| allowance(v, radius)),
+        ),
         WideningMethod::Simple => (0.0, 0.0),
     };
     let width = n * (track + road.clearance) + (n - 1.0) * overhang + extra;
-    Ok(Widening { offtracking: off, track, overhang, allowance: extra, width, widening: width - road.tangent })
+    Ok(Widening {
+        offtracking: off,
+        track,
+        overhang,
+        allowance: extra,
+        width,
+        widening: width - road.tangent,
+    })
 }
 
 /// The widening as written in a schedule: none below `least` (m; an agency disregards small amounts), else rounded up
 /// to a multiple of `step` (m). None of the two given: the widening as it is, none when not positive.
 pub fn rounded(widening: f64, step: Option<f64>, least: Option<f64>) -> f64 {
-    if widening.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) || least.is_some_and(|l| widening < l) {
+    if widening.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater)
+        || least.is_some_and(|l| widening < l)
+    {
         return 0.0;
     }
     match step.filter(|s| *s > 0.0) {

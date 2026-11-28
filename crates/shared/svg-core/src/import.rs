@@ -1183,7 +1183,9 @@ impl<'a> Importer<'a> {
             "polyline" | "polygon" => {
                 let p = nums(node.attr("points"));
                 let pts: Vec<String> = p
-                    .as_chunks::<2>().0.iter()
+                    .as_chunks::<2>()
+                    .0
+                    .iter()
                     .map(|q| format!("{} {}", t(q[0]), t(q[1])))
                     .collect();
                 if pts.len() > 1 {

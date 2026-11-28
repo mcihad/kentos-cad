@@ -1,11 +1,11 @@
 //! Independent complete-delivery reference: actual file bytes, relocation, strict omissions and replay tampering.
+use kentos_commands::{CallEnvelope, CallOp, CommandResult, SheetsPublished, encoding::sha256_hex};
+use kentos_domain::Document;
+use serde_json::{Value, json};
 use std::{
     fs,
     path::{Path, PathBuf},
 };
-use kentos_commands::{CallEnvelope, CallOp, CommandResult, SheetsPublished, encoding::sha256_hex};
-use kentos_domain::Document;
-use serde_json::{Value, json};
 const FX: &str = include_str!("../../../../../fixtures/sheet/v1/delivery.json");
 fn root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..")
@@ -225,13 +225,19 @@ fn sheet_package_independent_complete_deliveries_keep_resources_hashes_and_repla
             let call = answer.call;
             let issued = report(answer);
             inventory(&fx, c, &target, &issued);
-            let repeated=publish(&mut doc, &input, CallOp::Execute, request.clone());
+            let repeated = publish(&mut doc, &input, CallOp::Execute, request.clone());
             assert!(repeated.replayed);
-            assert!(matches!(repeated.result, CommandResult::Completed {..}), "{repeated:?}");
-            let row=doc.journal_row(call.unwrap()).unwrap().clone();
-            let replay=kentos_headless::file_commands::replay_row(&mut doc,&row).unwrap();
-            assert!(replay.error.is_none(),"{replay:?}");
-            assert!(matches!(replay.outcome,kentos_commands::ReplayOutcome::Skipped));
+            assert!(
+                matches!(repeated.result, CommandResult::Completed { .. }),
+                "{repeated:?}"
+            );
+            let row = doc.journal_row(call.unwrap()).unwrap().clone();
+            let replay = kentos_headless::file_commands::replay_row(&mut doc, &row).unwrap();
+            assert!(replay.error.is_none(), "{replay:?}");
+            assert!(matches!(
+                replay.outcome,
+                kentos_commands::ReplayOutcome::Skipped
+            ));
             if let Some(kind) = c["tamper"].as_str() {
                 use kentos_commands::SheetResourceKind as K;
                 let resources = issued.resources.as_ref().unwrap();

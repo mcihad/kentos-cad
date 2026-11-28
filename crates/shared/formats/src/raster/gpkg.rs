@@ -298,10 +298,14 @@ fn rgba(pixels: &[u8], channels: usize) -> Vec<u8> {
             .iter()
             .for_each(|&g| out.extend_from_slice(&[g, g, g, 255])),
         2 => pixels
-            .as_chunks::<2>().0.iter()
+            .as_chunks::<2>()
+            .0
+            .iter()
             .for_each(|c| out.extend_from_slice(&[c[0], c[0], c[0], c[1]])),
         3 => pixels
-            .as_chunks::<3>().0.iter()
+            .as_chunks::<3>()
+            .0
+            .iter()
             .for_each(|c| out.extend_from_slice(&[c[0], c[1], c[2], 255])),
         _ => out.extend_from_slice(pixels),
     }

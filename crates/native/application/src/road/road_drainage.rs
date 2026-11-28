@@ -4,8 +4,9 @@
 //! `fixtures/commands/v1/road.drainage.query.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CulvertShapeDef, DrainageCapacity, DrainageCatchment, DrainageDrop, DrainageDropEnd,
-    DrainagePond, DrainageQueried, DrainageQuery, MOST_CATCHMENT_CELLS, MOST_DRAINAGE_DROPS,
+    CommandResult, CommandWarning, CulvertShapeDef, DrainageCapacity, DrainageCatchment,
+    DrainageDrop, DrainageDropEnd, DrainagePond, DrainageQueried, DrainageQuery,
+    MOST_CATCHMENT_CELLS, MOST_DRAINAGE_DROPS,
 };
 use kentos_domain::Document;
 use kentos_road::drainage::{self, Channel, DropEnd, Tin};
@@ -25,38 +26,76 @@ fn judged(input: &DrainageQuery) -> Result<(), Stop> {
         return Err(invalid("Bir şey sorun: ponds, drops ya da catchment.", ""));
     }
     if input.drops.len() > MOST_DRAINAGE_DROPS {
-        return Err(invalid(&format!("Bir soruda en çok {MOST_DRAINAGE_DROPS} su damlası okunur."), "drops"));
+        return Err(invalid(
+            &format!("Bir soruda en çok {MOST_DRAINAGE_DROPS} su damlası okunur."),
+            "drops",
+        ));
     }
-    if let Some(k) = input.drops.iter().position(|p| !(p[0].is_finite() && p[1].is_finite())) {
-        return Err(invalid("Su damlasının yeri sonlu iki sayı olmalı.", &format!("drops[{k}]")));
+    if let Some(k) = input
+        .drops
+        .iter()
+        .position(|p| !(p[0].is_finite() && p[1].is_finite()))
+    {
+        return Err(invalid(
+            "Su damlasının yeri sonlu iki sayı olmalı.",
+            &format!("drops[{k}]"),
+        ));
     }
     if let Some(p) = &input.ponds
         && (p.min_depth.is_nan() || p.min_depth < 0.0 || p.min_depth.is_infinite())
     {
-        return Err(invalid("Göletin en az derinliği eksi olmayan bir sayı olmalı.", "ponds.minDepth"));
+        return Err(invalid(
+            "Göletin en az derinliği eksi olmayan bir sayı olmalı.",
+            "ponds.minDepth",
+        ));
     }
     if let Some(c) = &input.catchment {
         let positive = |v: f64| v.is_finite() && v > 0.0;
         if !positive(c.cell) {
-            return Err(invalid("Havzanın ızgara aralığı sıfırdan büyük olmalı.", "catchment.cell"));
+            return Err(invalid(
+                "Havzanın ızgara aralığı sıfırdan büyük olmalı.",
+                "catchment.cell",
+            ));
         }
         if !positive(c.radius) {
-            return Err(invalid("Boşaltım noktasının erimi sıfırdan büyük olmalı.", "catchment.radius"));
+            return Err(invalid(
+                "Boşaltım noktasının erimi sıfırdan büyük olmalı.",
+                "catchment.radius",
+            ));
         }
         if c.at.is_none() && c.culvert.is_none() {
-            return Err(invalid("Boşaltım noktasını verin: at ya da bir menfez (culvert).", "catchment.at"));
+            return Err(invalid(
+                "Boşaltım noktasını verin: at ya da bir menfez (culvert).",
+                "catchment.at",
+            ));
         }
-        if c.at.is_some_and(|p| !(p[0].is_finite() && p[1].is_finite())) {
-            return Err(invalid("Boşaltım noktası sonlu iki sayı olmalı.", "catchment.at"));
+        if c.at
+            .is_some_and(|p| !(p[0].is_finite() && p[1].is_finite()))
+        {
+            return Err(invalid(
+                "Boşaltım noktası sonlu iki sayı olmalı.",
+                "catchment.at",
+            ));
         }
         if c.runoff.is_some() != c.intensity.is_some() {
-            return Err(invalid("Akış katsayısı (runoff) ile yağış şiddeti (intensity) birlikte verilir.", "catchment.runoff"));
+            return Err(invalid(
+                "Akış katsayısı (runoff) ile yağış şiddeti (intensity) birlikte verilir.",
+                "catchment.runoff",
+            ));
         }
-        if c.runoff.is_some_and(|r| !(r.is_finite() && (0.0..=1.0).contains(&r))) {
-            return Err(invalid("Akış katsayısı 0 ile 1 arası olmalı.", "catchment.runoff"));
+        if c.runoff
+            .is_some_and(|r| !(r.is_finite() && (0.0..=1.0).contains(&r)))
+        {
+            return Err(invalid(
+                "Akış katsayısı 0 ile 1 arası olmalı.",
+                "catchment.runoff",
+            ));
         }
         if c.intensity.is_some_and(|i| !positive(i)) {
-            return Err(invalid("Yağış şiddeti sıfırdan büyük olmalı.", "catchment.intensity"));
+            return Err(invalid(
+                "Yağış şiddeti sıfırdan büyük olmalı.",
+                "catchment.intensity",
+            ));
         }
     }
     Ok(())
@@ -77,8 +116,15 @@ fn capacity(def: &kentos_commands::CulvertDef) -> Option<(f64, f64)> {
     let n = def.roughness?;
     let slope = def.slope;
     let (channel, count) = match def.shape {
-        CulvertShapeDef::Pipe { diameter, count, .. } => (Channel::Pipe { diameter }, count),
-        CulvertShapeDef::Box { width, height, cells, .. } => (Channel::Box { width, height }, cells),
+        CulvertShapeDef::Pipe {
+            diameter, count, ..
+        } => (Channel::Pipe { diameter }, count),
+        CulvertShapeDef::Box {
+            width,
+            height,
+            cells,
+            ..
+        } => (Channel::Box { width, height }, cells),
     };
     if slope <= 0.0 {
         return Some((0.0, 0.0));
@@ -88,16 +134,27 @@ fn capacity(def: &kentos_commands::CulvertDef) -> Option<(f64, f64)> {
 }
 
 /// The query answered now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &DrainageQuery) -> Result<(DrainageQueried, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &DrainageQuery,
+) -> Result<(DrainageQueried, Vec<CommandWarning>), Stop> {
     // A map project's surface drains as a road project's does (docs/adr/1580).
     terrains::terrain_project(doc)?;
     judged(input)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
     let culvert = match input.catchment.as_ref().and_then(|c| c.culvert.as_deref()) {
-        Some(name) => Some(crate::road_culverts::find(doc.road_culverts(), name, "catchment.culvert")?.1.clone()),
+        Some(name) => Some(
+            crate::road_culverts::find(doc.road_culverts(), name, "catchment.culvert")?
+                .1
+                .clone(),
+        ),
         None => None,
     };
-    let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+    let def = terrains::surfaces(doc)
+        .iter()
+        .find(|s| s.id == id)
+        .cloned()
+        .ok_or(Stop::Cancelled)?;
     let made = terrains::make(doc, &def);
     let surface = made.built()?;
     let tin = Tin::new(surface);
@@ -122,7 +179,13 @@ pub(crate) fn answer(doc: &Document, input: &DrainageQuery) -> Result<(DrainageQ
         .iter()
         .map(|&from| {
             let d = drainage::water_drop(&tin, from);
-            DrainageDrop { from, to: d.path.last().copied(), path: d.path, length: d.length, end: end_of(d.end) }
+            DrainageDrop {
+                from,
+                to: d.path.last().copied(),
+                path: d.path,
+                length: d.length,
+                end: end_of(d.end),
+            }
         })
         .collect();
     let catchment = match &input.catchment {
@@ -133,22 +196,35 @@ pub(crate) fn answer(doc: &Document, input: &DrainageQuery) -> Result<(DrainageQ
                 (None, Some(c)) => {
                     let read = crate::road_culverts::read(doc, c)?;
                     let r = &read.report;
-                    let end = r.ends.iter().find(|e| e.side == r.inlet).or(r.ends.first()).ok_or(Stop::Cancelled)?;
+                    let end = r
+                        .ends
+                        .iter()
+                        .find(|e| e.side == r.inlet)
+                        .or(r.ends.first())
+                        .ok_or(Stop::Cancelled)?;
                     [end.x, end.y]
                 }
                 (None, None) => return Err(invalid("Boşaltım noktasını verin.", "catchment.at")),
             };
-            let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+            let (mut x0, mut y0, mut x1, mut y1) = (
+                f64::INFINITY,
+                f64::INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+            );
             for v in &surface.vertices {
                 x0 = x0.min(v[0]);
                 y0 = y0.min(v[1]);
                 x1 = x1.max(v[0]);
                 y1 = y1.max(v[1]);
             }
-            let cells = (((x1 - x0) / ask.cell).floor() + 2.0) * (((y1 - y0) / ask.cell).floor() + 2.0);
+            let cells =
+                (((x1 - x0) / ask.cell).floor() + 2.0) * (((y1 - y0) / ask.cell).floor() + 2.0);
             if !(cells.is_finite() && cells <= MOST_CATCHMENT_CELLS as f64) {
                 return Err(invalid(
-                    &format!("Havzanın ızgarası {MOST_CATCHMENT_CELLS} hücreyi aşar; aralığı büyütün."),
+                    &format!(
+                        "Havzanın ızgarası {MOST_CATCHMENT_CELLS} hücreyi aşar; aralığı büyütün."
+                    ),
                     "catchment.cell",
                 ));
             }
@@ -165,22 +241,27 @@ pub(crate) fn answer(doc: &Document, input: &DrainageQuery) -> Result<(DrainageQ
                     None
                 }
                 Some(c) => {
-                    let peak = ask.runoff.zip(ask.intensity).map(|(r, i)| drainage::rational(r, i, c.area));
+                    let peak = ask
+                        .runoff
+                        .zip(ask.intensity)
+                        .map(|(r, i)| drainage::rational(r, i, c.area));
                     let capacity = match &culvert {
                         None => None,
-                        Some(def) => match capacity(def) {
-                            None => {
-                                warnings.push(CommandWarning {
+                        Some(def) => {
+                            match capacity(def) {
+                                None => {
+                                    warnings.push(CommandWarning {
                                     code: codes::CULVERT_NO_ROUGHNESS.into(),
                                     message: format!("“{}” menfezinin pürüzlülüğü yok; kapasitesi verilmedi.", def.name),
                                     path: Some("catchment.culvert".into()),
                                 });
-                                None
-                            }
-                            Some((discharge, velocity)) => {
-                                let ratio = peak.filter(|_| discharge > 0.0).map(|p| p / discharge);
-                                if let (Some(p), true) = (peak, ratio.is_none_or(|r| r > 1.0)) {
-                                    warnings.push(CommandWarning {
+                                    None
+                                }
+                                Some((discharge, velocity)) => {
+                                    let ratio =
+                                        peak.filter(|_| discharge > 0.0).map(|p| p / discharge);
+                                    if let (Some(p), true) = (peak, ratio.is_none_or(|r| r > 1.0)) {
+                                        warnings.push(CommandWarning {
                                         code: codes::CULVERT_OVER_CAPACITY.into(),
                                         message: format!(
                                             "Havzanın en yüksek debisi {:.3} m³/s, “{}” menfezinin dolu akış kapasitesi {:.3} m³/s.",
@@ -188,10 +269,16 @@ pub(crate) fn answer(doc: &Document, input: &DrainageQuery) -> Result<(DrainageQ
                                         ),
                                         path: Some("catchment.culvert".into()),
                                     });
+                                    }
+                                    Some(DrainageCapacity {
+                                        culvert: def.id.clone(),
+                                        discharge,
+                                        velocity,
+                                        ratio,
+                                    })
                                 }
-                                Some(DrainageCapacity { culvert: def.id.clone(), discharge, velocity, ratio })
                             }
-                        },
+                        }
                     };
                     Some(DrainageCatchment {
                         at,
@@ -199,7 +286,11 @@ pub(crate) fn answer(doc: &Document, input: &DrainageQuery) -> Result<(DrainageQ
                         cell: ask.cell,
                         area: c.area,
                         outline: c.outline,
-                        slope: if c.length > 0.0 { c.fall / c.length } else { 0.0 },
+                        slope: if c.length > 0.0 {
+                            c.fall / c.length
+                        } else {
+                            0.0
+                        },
                         path: c.path,
                         length: c.length,
                         fall: c.fall,
@@ -210,13 +301,24 @@ pub(crate) fn answer(doc: &Document, input: &DrainageQuery) -> Result<(DrainageQ
             }
         }
     };
-    Ok((DrainageQueried { surface: id, ponds, drops, catchment }, warnings))
+    Ok((
+        DrainageQueried {
+            surface: id,
+            ponds,
+            drops,
+            catchment,
+        },
+        warnings,
+    ))
 }
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &DrainageQuery) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -230,11 +332,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &DrainageQuery) -> CommandResult<D
 }
 
 /// The answer now; writes nothing.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: DrainageQuery) -> CommandResult<DrainageQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: DrainageQuery,
+) -> CommandResult<DrainageQueried> {
     plan(cx, &input)
 }
 
 /// The answer for a window: the query's output and warnings, or why not.
-pub fn preview(doc: &Document, input: &DrainageQuery) -> Result<(DrainageQueried, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &DrainageQuery,
+) -> Result<(DrainageQueried, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

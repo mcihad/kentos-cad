@@ -5,9 +5,9 @@
 //! undo step and selects them, and Ortofoto karşılaştırması's Seçili mozaik elemanlarını al then measures along their
 //! shared boundary, which is the line. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -18,12 +18,21 @@ use crate::ortho_compare_window_tests::{open, with_fixtures};
 use crate::ortho_seamlines_window::{Event as E, Method, Prints, Show};
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.orthophoto.seamlines.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.orthophoto.seamlines.json"
+    ))
+    .expect("cases")
 }
 
 /// A shared case by the start of its name.
 fn case(name: &str) -> Value {
-    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(name))).cloned().expect(name)
+    cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(name)))
+        .cloned()
+        .expect(name)
 }
 
 /// The same JSON, numbers within the cases' 10⁻⁷, the revision left out (the window's drawing has its own).
@@ -40,11 +49,19 @@ fn near(got: &Value, want: &Value, at: &str) {
             }
         }
         (Value::Object(a), Value::Object(b)) => {
-            let mut keys: Vec<&String> = a.keys().chain(b.keys()).filter(|k| *k != "revision").collect();
+            let mut keys: Vec<&String> = a
+                .keys()
+                .chain(b.keys())
+                .filter(|k| *k != "revision")
+                .collect();
             keys.sort();
             keys.dedup();
             for k in keys {
-                near(a.get(k).unwrap_or(&Value::Null), b.get(k).unwrap_or(&Value::Null), &format!("{at}.{k}"));
+                near(
+                    a.get(k).unwrap_or(&Value::Null),
+                    b.get(k).unwrap_or(&Value::Null),
+                    &format!("{at}.{k}"),
+                );
             }
         }
         _ => assert_eq!(got, want, "{at}"),
@@ -53,7 +70,8 @@ fn near(got: &Value, want: &Value, at: &str) {
 
 fn planned(app: &App) -> Value {
     serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_seamlines
             .answer
             .clone()
@@ -134,7 +152,13 @@ fn written_polygons_are_selected_and_measured_along_by_the_comparison() {
     assert_eq!(app.dialog, None, "closed after writing");
     let doc = app.document.as_ref().expect("a drawing");
     assert_eq!(doc.model.entities().count(), before + 2);
-    assert!(doc.model.layers().get(kentos_commands::SEAMLINE_LAYER).is_some(), "the layer made");
+    assert!(
+        doc.model
+            .layers()
+            .get(kentos_commands::SEAMLINE_LAYER)
+            .is_some(),
+        "the layer made"
+    );
     let chosen = app.selection.ids().to_vec();
     assert_eq!(chosen.len(), 2, "the two polygons selected");
     // Ortofoto karşılaştırması takes them: its shared boundary is the seam.
@@ -150,7 +174,8 @@ fn written_polygons_are_selected_and_measured_along_by_the_comparison() {
     }
     let _ = app.update(Message::from(map::Event::OrthoCompare(C::TakePolygons)));
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -167,7 +192,13 @@ fn written_polygons_are_selected_and_measured_along_by_the_comparison() {
     let _ = app.update(Message::Run("edit.undo"));
     let doc = app.document.as_ref().expect("a drawing");
     assert_eq!(doc.model.entities().count(), before);
-    assert!(doc.model.layers().get(kentos_commands::SEAMLINE_LAYER).is_none(), "the layer undone");
+    assert!(
+        doc.model
+            .layers()
+            .get(kentos_commands::SEAMLINE_LAYER)
+            .is_none(),
+        "the layer undone"
+    );
 }
 
 /// `.run/gui-evidence/birlesme-cizgisi-4700/`:
@@ -180,7 +211,8 @@ fn written_polygons_are_selected_and_measured_along_by_the_comparison() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/birlesme-cizgisi-4700");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/birlesme-cizgisi-4700");
     std::fs::create_dir_all(&out).expect("a folder");
     let shoot = |app: &mut App, size: Size, file: &str| {
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -189,11 +221,16 @@ fn screens() {
         };
         snapshot.settle(app, App::view, &mut update);
         let file = out.join(file);
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     };
     let theme = |app: &mut App, theme: &str, size: Size| {
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));

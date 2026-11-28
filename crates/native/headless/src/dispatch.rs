@@ -117,21 +117,24 @@ pub fn run(
     #[cfg(feature = "mod-gis")]
     let unzoned = crate::regulation::compartments(doc, command, &mut input);
     let mut cx = ExecutionContext::new(doc);
-    let answer = registry::run(&mut cx, command, op.call_op(), input).map_err(|unrun| match unrun.code {
-        "unknown_command" => refusal(command),
-        _ => HeadlessError::new("invalid_input", unrun.message),
-    })?;
+    let answer =
+        registry::run(&mut cx, command, op.call_op(), input).map_err(|unrun| match unrun.code {
+            "unknown_command" => refusal(command),
+            _ => HeadlessError::new("invalid_input", unrun.message),
+        })?;
     drop(cx);
     #[cfg(feature = "mod-gis")]
     if let Some(warning) = unzoned
-        && let Ok(mut result) = serde_json::from_value::<kentos_commands::CommandResult<Value>>(answer.clone())
+        && let Ok(mut result) =
+            serde_json::from_value::<kentos_commands::CommandResult<Value>>(answer.clone())
     {
         crate::regulation::warn(&mut result, warning);
         return Ok(serde_json::to_value(result).unwrap_or(answer));
     }
     #[cfg(feature = "mod-gis")]
     if let Some(input) = asked
-        && let Ok(mut result) = serde_json::from_value::<kentos_commands::CommandResult<Value>>(answer.clone())
+        && let Ok(mut result) =
+            serde_json::from_value::<kentos_commands::CommandResult<Value>>(answer.clone())
     {
         crate::regulation::add(doc, command, &input, &mut result);
         return Ok(serde_json::to_value(result).unwrap_or(answer));

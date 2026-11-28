@@ -90,12 +90,18 @@ impl Tool for IdentifyTool {
         if let Some(first) = hit {
             // The click's objects, the card's first: the pick's own first, then the others in the hits' order.
             let mut hits = vec![first];
-            hits.extend(cx.spatial.hits(p.raw, reach).into_iter().filter(|s| *s != first));
+            hits.extend(
+                cx.spatial
+                    .hits(p.raw, reach)
+                    .into_iter()
+                    .filter(|s| *s != first),
+            );
             cx.view_changes.push(ViewChange::InfoHits(hits, reach));
         }
         self.show(hit.map(|s| (s, p.raw)), cx);
         if hit.is_none() {
-            cx.view_changes.push(ViewChange::DataInfo { at: p.raw, reach });
+            cx.view_changes
+                .push(ViewChange::DataInfo { at: p.raw, reach });
         }
     }
 

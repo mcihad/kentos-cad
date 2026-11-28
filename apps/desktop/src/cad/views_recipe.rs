@@ -9,7 +9,8 @@
 use iced::widget::{Column, container, row};
 use iced::{Element, Fill};
 use kentos_commands::{
-    CeilingRange, PenCategory, PhaseView, RecipeLevel, RecipePen, ViewCategory, ViewRecipe, ViewTemplate, ViewsOp, WallDetail,
+    CeilingRange, PenCategory, PhaseView, RecipeLevel, RecipePen, ViewCategory, ViewRecipe,
+    ViewTemplate, ViewsOp, WallDetail,
 };
 use kentos_interaction::Level;
 use kentos_ui::label;
@@ -66,12 +67,18 @@ pub const PRESETS: [Preset; 6] = [
         detail: None,
     },
     Preset {
-        name: "Yansıtılmış tavan planı 1:50", scale: 50, phase: None, hidden: &[], detail: Some(WallDetail::Standard),
+        name: "Yansıtılmış tavan planı 1:50",
+        scale: 50,
+        phase: None,
+        hidden: &[],
+        detail: Some(WallDetail::Standard),
     },
 ];
 
 const CEILING_PRESET: usize = 5;
-const HEIGHTS: [f64; 14] = [0.0, 1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.5, 5.0, 10.0];
+const HEIGHTS: [f64; 14] = [
+    0.0, 1.0, 1.2, 1.5, 1.8, 2.0, 2.2, 2.4, 2.6, 2.8, 3.0, 3.5, 5.0, 10.0,
+];
 
 /// The scales the window offers; none: the view's box fitted to the map.
 const SCALES: [Option<u32>; 7] = [
@@ -134,7 +141,9 @@ pub fn recipe_caption(app: &App, r: &ViewRecipe) -> String {
     if let Some(s) = r.scale {
         parts.push(format!("1:{s}"));
     }
-    if let Some(c) = r.ceiling { parts.push(format!("Tavan · {:.2}–{:.2} m", c.low, c.high)); }
+    if let Some(c) = r.ceiling {
+        parts.push(format!("Tavan · {:.2}–{:.2} m", c.low, c.high));
+    }
     if let Some(l) = &r.level {
         parts.push(app.recipe_level_name(&l.id).unwrap_or_else(|| l.id.clone()));
     }
@@ -154,7 +163,11 @@ pub fn recipe_caption(app: &App, r: &ViewRecipe) -> String {
         parts.push("kırpılmış".to_owned());
     }
     if let Some(t) = &r.template {
-        let name = app.view_templates().iter().find(|x| &x.id == t).map_or(t.clone(), |x| x.name.clone());
+        let name = app
+            .view_templates()
+            .iter()
+            .find(|x| &x.id == t)
+            .map_or(t.clone(), |x| x.name.clone());
         parts.push(format!("şablon {name}"));
     }
     if !r.pens.is_empty() {
@@ -164,19 +177,35 @@ pub fn recipe_caption(app: &App, r: &ViewRecipe) -> String {
         parts.push("siyah beyaz".to_owned());
     }
     // The design options it shows (docs/adr/0788 §3), by their names.
-    let sets = app.document.as_ref().map_or(&[][..], |d| d.model.arch_options());
+    let sets = app
+        .document
+        .as_ref()
+        .map_or(&[][..], |d| d.model.arch_options());
     for c in &r.options {
         let words = sets
             .iter()
             .find(|s| s.id == c.set)
-            .and_then(|s| s.options.iter().find(|o| o.id == c.option).map(|o| format!("{} {}", s.name, o.name)))
+            .and_then(|s| {
+                s.options
+                    .iter()
+                    .find(|o| o.id == c.option)
+                    .map(|o| format!("{} {}", s.name, o.name))
+            })
             .unwrap_or_else(|| format!("{} {}", c.set, c.option));
         parts.push(words);
     }
     // The combination it shows (docs/adr/0808 §3), by its name.
     if let Some(id) = &r.combo {
-        let combos = app.document.as_ref().map_or(&[][..], |d| d.model.option_combos());
-        parts.push(combos.iter().find(|c| &c.id == id).map_or_else(|| id.clone(), |c| c.name.clone()));
+        let combos = app
+            .document
+            .as_ref()
+            .map_or(&[][..], |d| d.model.option_combos());
+        parts.push(
+            combos
+                .iter()
+                .find(|c| &c.id == id)
+                .map_or_else(|| id.clone(), |c| c.name.clone()),
+        );
     }
     parts.push(format!("sürüm {}", r.version));
     parts.join(" · ")
@@ -259,7 +288,9 @@ impl App {
                 return;
             }
             Event::TemplateSave => {
-                let Some(w) = self.views_window.as_ref() else { return };
+                let Some(w) = self.views_window.as_ref() else {
+                    return;
+                };
                 let tname = w.template_name.trim().to_owned();
                 if tname.is_empty() {
                     self.warn("Şablona bir ad verin.");
@@ -324,7 +355,13 @@ impl App {
         let combos: Vec<String> = self
             .document
             .as_ref()
-            .map(|d| d.model.option_combos().iter().map(|c| c.id.clone()).collect())
+            .map(|d| {
+                d.model
+                    .option_combos()
+                    .iter()
+                    .map(|c| c.id.clone())
+                    .collect()
+            })
             .unwrap_or_default();
         let active = self.active_level();
         let Some(w) = self.views_window.as_mut() else {
@@ -346,11 +383,17 @@ impl App {
             }
             Event::RecipeCeiling(on) => {
                 r.ceiling = on.then(CeilingRange::default);
-                if on && r.level.is_none() { r.level = active.map(|id| RecipeLevel { id, below: false }); }
+                if on && r.level.is_none() {
+                    r.level = active.map(|id| RecipeLevel { id, below: false });
+                }
             }
             Event::RecipeCeilingBound { low, metres } => {
                 if let Some(c) = &mut r.ceiling {
-                    if low { c.low = metres; } else { c.high = metres; }
+                    if low {
+                        c.low = metres;
+                    } else {
+                        c.high = metres;
+                    }
                 }
             }
             Event::RecipeLevel(i) => {
@@ -388,7 +431,11 @@ impl App {
                     }
                     // Leaving it: the template's fields stay as the view's own.
                     None => {
-                        if let Some(t) = r.template.as_ref().and_then(|id| templates.iter().find(|t| &t.id == id)) {
+                        if let Some(t) = r
+                            .template
+                            .as_ref()
+                            .and_then(|id| templates.iter().find(|t| &t.id == id))
+                        {
                             *r = ViewRecipe {
                                 version,
                                 level,
@@ -410,7 +457,11 @@ impl App {
                 r.pens.retain(|p| p.of != c);
                 let weight = i.and_then(|i| PEN_WEIGHTS.get(i)).copied();
                 if weight.is_some() || color.is_some() {
-                    r.pens.push(RecipePen { of: c, weight, color });
+                    r.pens.push(RecipePen {
+                        of: c,
+                        weight,
+                        color,
+                    });
                     r.pens.sort_by_key(|p| p.of);
                 }
             }
@@ -425,7 +476,8 @@ impl App {
                             option: o.id.clone(),
                         });
                         // Kept in the sets' own order.
-                        r.options.sort_by_key(|c| sets.iter().position(|s| s.id == c.set));
+                        r.options
+                            .sort_by_key(|c| sets.iter().position(|s| s.id == c.set));
                     }
                 }
             }
@@ -522,12 +574,23 @@ impl App {
             "Bağlı haritaları görünümün alanına kırp",
             Some(m(Event::RecipeCrop(!r.crop))),
         );
-        let reflected = words::check(r.ceiling.is_some(), "Yansıtılmış tavan planı", Some(m(Event::RecipeCeiling(r.ceiling.is_none()))));
+        let reflected = words::check(
+            r.ceiling.is_some(),
+            "Yansıtılmış tavan planı",
+            Some(m(Event::RecipeCeiling(r.ceiling.is_none()))),
+        );
         // A design option set's choice each (docs/adr/0788 §3): its primary unless another is chosen.
-        let sets = self.document.as_ref().map_or(&[][..], |d| d.model.arch_options());
+        let sets = self
+            .document
+            .as_ref()
+            .map_or(&[][..], |d| d.model.arch_options());
         let mut options = Column::new().spacing(6);
         for (i, s) in sets.iter().enumerate() {
-            let primary = s.options.iter().find(|o| o.id == s.primary).map_or("", |o| o.name.as_str());
+            let primary = s
+                .options
+                .iter()
+                .find(|o| o.id == s.primary)
+                .map_or("", |o| o.name.as_str());
             let chosen = r
                 .options
                 .iter()
@@ -543,14 +606,20 @@ impl App {
             .searchable(false);
             options = options.push(words::field(
                 if i == 0 { "Tasarım seçeneği" } else { "" },
-                row![container(label::caption(s.name.clone())).width(120.0), container(select).width(Fill)]
-                    .spacing(8)
-                    .align_y(iced::Center),
+                row![
+                    container(label::caption(s.name.clone())).width(120.0),
+                    container(select).width(Fill)
+                ]
+                .spacing(8)
+                .align_y(iced::Center),
                 None,
             ));
         }
         // A combination of the options (docs/adr/0808 §3): its choices for the sets not chosen above.
-        let combos = self.document.as_ref().map_or(&[][..], |d| d.model.option_combos());
+        let combos = self
+            .document
+            .as_ref()
+            .map_or(&[][..], |d| d.model.option_combos());
         if !combos.is_empty() {
             let chosen = r
                 .combo
@@ -580,7 +649,8 @@ impl App {
                     Some(m(Event::RecipeHide(*c, !on))),
                 ))
             })
-            .wrap().vertical_spacing(6);
+            .wrap()
+            .vertical_spacing(6);
         let templates = self.view_templates();
         let template = Select::new(
             std::iter::once(Choice::new("Yok".to_owned()))
@@ -618,15 +688,16 @@ impl App {
                     move |i| m(Event::RecipePen(c, i.checked_sub(1))),
                 )
                 .searchable(false);
-                acc.push(
-                    container(words::field(c.label(), pick, None)).width(150),
-                )
+                acc.push(container(words::field(c.label(), pick, None)).width(150))
             })
-            .wrap().vertical_spacing(6);
+            .wrap()
+            .vertical_spacing(6);
         let save = row![
-            container(kentos_ui::widget::text_field("Şablonun adı", &w.template_name)
-                .on_input(move |t| m(Event::TemplateName(t)))
-                .on_submit(m(Event::TemplateSave)))
+            container(
+                kentos_ui::widget::text_field("Şablonun adı", &w.template_name)
+                    .on_input(move |t| m(Event::TemplateName(t)))
+                    .on_submit(m(Event::TemplateSave))
+            )
             .width(Fill),
             words::secondary(
                 "Şablon olarak kaydet",
@@ -647,7 +718,8 @@ impl App {
         let actions = row![
             words::primary(
                 "Tarifi uygula",
-                (editable && !r.is_empty() && r.ceiling.is_none_or(CeilingRange::valid)).then(|| m(Event::RecipeApply))
+                (editable && !r.is_empty() && r.ceiling.is_none_or(CeilingRange::valid))
+                    .then(|| m(Event::RecipeApply))
             ),
             words::secondary(
                 "Tarifi kaldır",
@@ -663,9 +735,10 @@ impl App {
         // tavan planı, Tadilat görünümü, Duvar ayrıntısı, the building's pens — are not offered (GIS-029); the map's
         // own, Katman durumu, Ölçek, the crop and what is hidden, stay.
         let building = !levels.is_empty();
-        let mut body = Column::new()
-            .spacing(10)
-            .push(words::field("Görünüş tarifi", preset, Some(version)));
+        let mut body =
+            Column::new()
+                .spacing(10)
+                .push(words::field("Görünüş tarifi", preset, Some(version)));
         body = if building {
             body.push(row![cell("Şablon", template.into()), cell("Kat", level.into())].spacing(12))
                 .push(below)
@@ -686,7 +759,13 @@ impl App {
             }
             None if !building => {
                 body = body
-                    .push(row![cell("Katman durumu", state.into()), cell("Ölçek", scale.into())].spacing(12))
+                    .push(
+                        row![
+                            cell("Katman durumu", state.into()),
+                            cell("Ölçek", scale.into())
+                        ]
+                        .spacing(12),
+                    )
                     .push(container(crop).width(Fill))
                     .push(words::field("Gizlenen türler", hide, None))
                     .push(mono);
@@ -696,17 +775,34 @@ impl App {
                 body = body.push(reflected);
                 if let Some(range) = r.ceiling {
                     let height = |low, value| {
-                        let mut values: Vec<f64> = HEIGHTS.into_iter().filter(|v| if low { *v < range.high } else { *v > range.low }).collect();
-                        if !values.contains(&value) { values.push(value); values.sort_by(f64::total_cmp); }
+                        let mut values: Vec<f64> = HEIGHTS
+                            .into_iter()
+                            .filter(|v| if low { *v < range.high } else { *v > range.low })
+                            .collect();
+                        if !values.contains(&value) {
+                            values.push(value);
+                            values.sort_by(f64::total_cmp);
+                        }
                         let selected = values.iter().position(|v| *v == value);
-                        let options: Vec<_> = values.iter().map(|v| Choice::new(format!("{v:.2} m"))).collect();
-                        Select::new(options, selected,
-                            move |i| m(Event::RecipeCeilingBound { low, metres: values[i] })).searchable(false)
+                        let options: Vec<_> = values
+                            .iter()
+                            .map(|v| Choice::new(format!("{v:.2} m")))
+                            .collect();
+                        Select::new(options, selected, move |i| {
+                            m(Event::RecipeCeilingBound {
+                                low,
+                                metres: values[i],
+                            })
+                        })
+                        .searchable(false)
                     };
-                    body = body.push(row![
-                        cell("Alt kot", height(true, range.low).into()),
-                        cell("Üst kot", height(false, range.high).into()),
-                    ].spacing(12));
+                    body = body.push(
+                        row![
+                            cell("Alt kot", height(true, range.low).into()),
+                            cell("Üst kot", height(false, range.high).into()),
+                        ]
+                        .spacing(12),
+                    );
                 }
                 body = body
                     .push(

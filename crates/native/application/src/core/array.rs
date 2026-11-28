@@ -131,25 +131,34 @@ fn write_execute(
         };
     }
     // Each item's group: a space's sources and an opening's wall go onto their copies (docs/adr/0730 §4).
-    let origins: Vec<_> =
-        checked.sources.iter().filter_map(|id| kentos_domain::Uuid::parse_str(id).ok()).collect();
-    let (slots,detached) = match cx.doc.add_room_copies(checked.copies, &origins, label(&input.layout)) {
-        Ok(done) => done,
-        Err(full) => {
-            return CommandResult::Failed {
-                error: CommandError {
-                    code: codes::SLOTS_EXHAUSTED.into(),
-                    message: full.to_string(),
-                    path: None,
-                    revision: None,
-                    ..Default::default()
-                },
-            };
-        }
-    };
+    let origins: Vec<_> = checked
+        .sources
+        .iter()
+        .filter_map(|id| kentos_domain::Uuid::parse_str(id).ok())
+        .collect();
+    let (slots, detached) =
+        match cx
+            .doc
+            .add_room_copies(checked.copies, &origins, label(&input.layout))
+        {
+            Ok(done) => done,
+            Err(full) => {
+                return CommandResult::Failed {
+                    error: CommandError {
+                        code: codes::SLOTS_EXHAUSTED.into(),
+                        message: full.to_string(),
+                        path: None,
+                        revision: None,
+                        ..Default::default()
+                    },
+                };
+            }
+        };
     // The constraints among the copied objects, onto each item's copies (docs/adr/0337 §3).
     let mut warnings = checked.warnings;
-    if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
+    if detached > 0 {
+        warnings.push(crate::spaces::uncopied_sources(detached));
+    }
     let per = checked.sources.len().max(1);
     let groups: Vec<_> = slots
         .chunks(per)
@@ -227,7 +236,24 @@ pub fn array_numbers(layout: &ArrayLayout) -> (&'static str, Vec<f64>) {
         ArrayLayout::Grid { rows, cols, dx, dy } => {
             ("grid", vec![f64::from(rows), f64::from(cols), dx, dy])
         }
-        ArrayLayout::Lattice {rows,cols,dx,dy,column_angle,row_angle} => ("lattice",vec![f64::from(rows),f64::from(cols),dx,dy,column_angle,row_angle]),
+        ArrayLayout::Lattice {
+            rows,
+            cols,
+            dx,
+            dy,
+            column_angle,
+            row_angle,
+        } => (
+            "lattice",
+            vec![
+                f64::from(rows),
+                f64::from(cols),
+                dx,
+                dy,
+                column_angle,
+                row_angle,
+            ],
+        ),
         ArrayLayout::Line { count, dx, dy, fit } => (
             "line",
             vec![f64::from(count), dx, dy, if fit { 1.0 } else { 0.0 }],
@@ -306,12 +332,38 @@ pub(crate) fn check_layout(layout: &ArrayLayout) -> Result<(), Stop> {
                 ));
             }
         }
-        ArrayLayout::Lattice {rows,cols,dx,dy,column_angle,row_angle} => {
-            check_layout(&ArrayLayout::Grid {rows,cols,dx,dy})?;
-            checks::finite(column_angle,"Sütun yönü","Sonlu bir açı verin.","layout.columnAngle")?;
-            checks::finite(row_angle,"Satır yönü","Sonlu bir açı verin.","layout.rowAngle")?;
-            if (row_angle.rem_euclid(360.)-column_angle.rem_euclid(360.)).to_radians().sin().abs()<1e-6 {
-                return Err(refuse(codes::INVALID_SPACING,"Satır ve sütun eksenleri paralel olamaz; iki farklı yön verin.","layout"));
+        ArrayLayout::Lattice {
+            rows,
+            cols,
+            dx,
+            dy,
+            column_angle,
+            row_angle,
+        } => {
+            check_layout(&ArrayLayout::Grid { rows, cols, dx, dy })?;
+            checks::finite(
+                column_angle,
+                "Sütun yönü",
+                "Sonlu bir açı verin.",
+                "layout.columnAngle",
+            )?;
+            checks::finite(
+                row_angle,
+                "Satır yönü",
+                "Sonlu bir açı verin.",
+                "layout.rowAngle",
+            )?;
+            if (row_angle.rem_euclid(360.) - column_angle.rem_euclid(360.))
+                .to_radians()
+                .sin()
+                .abs()
+                < 1e-6
+            {
+                return Err(refuse(
+                    codes::INVALID_SPACING,
+                    "Satır ve sütun eksenleri paralel olamaz; iki farklı yön verin.",
+                    "layout",
+                ));
             }
         }
         ArrayLayout::Line { count, dx, dy, .. } => {
@@ -535,7 +587,9 @@ fn check(doc: &Document, input: &EntitiesArray) -> Result<Checked, Stop> {
         });
     }
     let detached = kentos_domain::space_follow::prepare_source_copies(&mut copies, &sources);
-    if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
+    if detached > 0 {
+        warnings.push(crate::spaces::uncopied_sources(detached));
+    }
     Ok(Checked {
         sources,
         copies,

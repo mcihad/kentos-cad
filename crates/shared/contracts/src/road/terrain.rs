@@ -135,9 +135,15 @@ impl SurfaceEdit {
             Self::AddEdge { ax, ay, bx, by } if !finite(&[*ax, *ay, *bx, *by]) => {
                 Some("kenarın iki ucu sonlu sayılar olmalı")
             }
-            Self::AddEdge { ax, ay, bx, by } if ax == bx && ay == by => Some("kenarın iki ucu aynı yerde"),
-            Self::RemoveTriangle { x, y } if !finite(&[*x, *y]) => Some("silinen üçgenin yeri sonlu iki sayı olmalı"),
-            Self::Paste { terrain } if terrain.trim().is_empty() => Some("yapıştırılacak yüzeyin kimliği boş"),
+            Self::AddEdge { ax, ay, bx, by } if ax == bx && ay == by => {
+                Some("kenarın iki ucu aynı yerde")
+            }
+            Self::RemoveTriangle { x, y } if !finite(&[*x, *y]) => {
+                Some("silinen üçgenin yeri sonlu iki sayı olmalı")
+            }
+            Self::Paste { terrain } if terrain.trim().is_empty() => {
+                Some("yapıştırılacak yüzeyin kimliği boş")
+            }
             _ => None,
         }
     }
@@ -272,7 +278,10 @@ pub(super) fn clouds_problem(list: &[SurfaceCloudDef]) -> Option<String> {
         if !word_ok(&c.layer) || !layers.insert(c.layer.as_str()) {
             return Some(at("katmanı bir katmanın kimliği olmalı ve bir kez geçmeli"));
         }
-        if c.clouds.is_empty() || c.clouds.len() > MAX_SURFACE_CLOUDS || c.clouds.iter().any(|u| !word_ok(u)) {
+        if c.clouds.is_empty()
+            || c.clouds.len() > MAX_SURFACE_CLOUDS
+            || c.clouds.iter().any(|u| !word_ok(u))
+        {
             return Some(at("bulutları 1 ile 64 arası nesne kimliği olmalı"));
         }
         if c.classes.is_empty() || c.classes.len() > 256 {
@@ -282,30 +291,47 @@ pub(super) fn clouds_problem(list: &[SurfaceCloudDef]) -> Option<String> {
             return Some(at("alanı bir nesnenin kimliği olmalı"));
         }
         let positive = |v: f64| v.is_finite() && v > 0.0;
-        if !positive(c.cell) || c.z_tolerance.is_some_and(|v| !positive(v)) || c.near.is_some_and(|v| !positive(v)) {
-            return Some(at("hücresi, kot toleransı ve kırık hat erimi sıfırdan büyük olmalı"));
+        if !positive(c.cell)
+            || c.z_tolerance.is_some_and(|v| !positive(v))
+            || c.near.is_some_and(|v| !positive(v))
+        {
+            return Some(at(
+                "hücresi, kot toleransı ve kırık hat erimi sıfırdan büyük olmalı",
+            ));
         }
         if c.kept > c.read
             || !(0.0..=1.0).contains(&c.coverage)
             || !(c.density.is_finite() && c.density >= 0.0)
-            || [c.error_max, c.error_rms].iter().flatten().any(|v| !(v.is_finite() && *v >= 0.0))
+            || [c.error_max, c.error_rms]
+                .iter()
+                .flatten()
+                .any(|v| !(v.is_finite() && *v >= 0.0))
         {
-            return Some(at("sayıları tutarlı olmalı (kalan okunandan çok değil, kapsama 0–1)"));
+            return Some(at(
+                "sayıları tutarlı olmalı (kalan okunandan çok değil, kapsama 0–1)",
+            ));
         }
         if let Some((side, why)) = c.heights.as_ref().and_then(|h| {
-            [("from", &h.from), ("to", &h.to)].into_iter().find_map(|(side, r)| {
-                if r.kind == crate::HeightKind::Unknown {
-                    return Some((side, "bilinen bir yükseklik olmalı".to_owned()));
-                }
-                r.problem().map(|(_, why)| (side, why))
-            })
+            [("from", &h.from), ("to", &h.to)]
+                .into_iter()
+                .find_map(|(side, r)| {
+                    if r.kind == crate::HeightKind::Unknown {
+                        return Some((side, "bilinen bir yükseklik olmalı".to_owned()));
+                    }
+                    r.problem().map(|(_, why)| (side, why))
+                })
         }) {
             return Some(at(&format!("kotlarının {side} tarafı: {why}")));
         }
         if c.vertical.as_deref().is_some_and(|v| {
-            v.is_empty() || v.trim() != v || v.chars().count() > MAX_CLOUD_VERTICAL_CHARS || v.chars().any(char::is_control)
+            v.is_empty()
+                || v.trim() != v
+                || v.chars().count() > MAX_CLOUD_VERTICAL_CHARS
+                || v.chars().any(char::is_control)
         }) {
-            return Some(at("düşey sistemi boş olmayan, kenarında boşluk olmayan, en çok 200 harf olmalı"));
+            return Some(at(
+                "düşey sistemi boş olmayan, kenarında boşluk olmayan, en çok 200 harf olmalı",
+            ));
         }
     }
     None

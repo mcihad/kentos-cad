@@ -5,9 +5,9 @@
 //! ağ measures the clearances to the water network as the shared cases do (docs/adr/2360); with it, the profile draws
 //! the water pipes crossing the run (docs/adr/2760). And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -15,13 +15,17 @@ use crate::app::{App, Message};
 use crate::pipes_check_window::{Above, Event as P, Ground, Show};
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pipes.check.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.pipes.check.json"
+    ))
+    .expect("cases")
 }
 
 fn opened(program: Option<Module>) -> App {
     // The network is built by İşlemler's tools, as the app registers them at its start.
     kentos_processing::command::register_as("desktop");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases()["setup"].clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases()["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -31,7 +35,8 @@ fn opened(program: Option<Module>) -> App {
 
 fn kinds(app: &App) -> Vec<(String, u32)> {
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .pipes_check
         .answer
         .clone()
@@ -121,7 +126,8 @@ fn the_storm_network_reads_the_structures() {
     ))));
     let _ = app.update(Message::from(map::Event::PipesCheck(P::Unit("m".into()))));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .pipes_check
         .answer
         .clone()
@@ -152,14 +158,27 @@ fn csv_kaydet_writes_the_table() {
     let text = std::fs::read_to_string(&file).expect("written");
     let lines: Vec<&str> = text.lines().collect();
     assert_eq!(lines.len(), 10, "a head and nine pipes");
-    assert!(lines[2].starts_with("P2;") && lines[2].ends_with(";Ters eğim"), "{}", lines[2]);
+    assert!(
+        lines[2].starts_with("P2;") && lines[2].ends_with(";Ters eğim"),
+        "{}",
+        lines[2]
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
 
 #[test]
 fn harita_yol_and_gis_offer_it_mimari_does_not() {
-    for (module, yes) in [(Module::Map, true), (Module::Road, true), (Module::Gis, true), (Module::Architecture, false)] {
-        assert_eq!(opened(Some(module)).offers("pipes.check"), yes, "{module:?}");
+    for (module, yes) in [
+        (Module::Map, true),
+        (Module::Road, true),
+        (Module::Gis, true),
+        (Module::Architecture, false),
+    ] {
+        assert_eq!(
+            opened(Some(module)).offers("pipes.check"),
+            yes,
+            "{module:?}"
+        );
     }
 }
 
@@ -173,11 +192,17 @@ fn harita_yol_and_gis_offer_it_mimari_does_not() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/boru-denetimi-1640");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/boru-denetimi-1640");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -199,14 +224,20 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-denetim-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
         // The ribbon's place: Arazi › Drenaj.
         let _ = app.update(Message::from(map::Event::PipesCheck(P::Close)));
         let _ = app.update(Message::RibbonTab("terrain"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-serit-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -217,11 +248,15 @@ fn screens() {
 fn the_profile_of_the_run_is_drawn_in_one_step() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pipes.check"));
-    let profile: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pipes.profile.json")).expect("cases");
+    let profile: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.pipes.profile.json"
+    ))
+    .expect("cases");
     let want = &profile["cases"][0]["steps"][0]["result"]["output"];
     let p1 = want["pipes"][0]["uid"].as_str().expect("P1").to_owned();
     assert_eq!(
-        app.modules.map().pipes_check.profile_start, p1,
+        app.modules.map().pipes_check.profile_start,
+        p1,
         "the first pipe checked"
     );
     let before = app
@@ -263,13 +298,26 @@ fn the_limits_typed_come_back_after_the_profile() {
     ] {
         let _ = app.update(Message::from(map::Event::PipesCheck(e)));
     }
-    let before = app.modules.map().pipes_check.answer.clone().expect("an answer").expect("checked");
+    let before = app
+        .modules
+        .map()
+        .pipes_check
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     let _ = app.update(Message::from(map::Event::PipesCheck(P::DrawProfile)));
     assert_eq!(app.dialog, None);
     let _ = app.update(Message::Run("pipes.check"));
     let s = &app.modules.map().pipes_check;
     assert_eq!(
-        (s.min_cover.as_str(), s.max_cover.as_str(), s.min_slope.as_str(), s.max_slope.as_str(), s.catalog.as_str()),
+        (
+            s.min_cover.as_str(),
+            s.max_cover.as_str(),
+            s.min_slope.as_str(),
+            s.max_slope.as_str(),
+            s.catalog.as_str()
+        ),
         ("0,8", "2,5", "3", "50", "200 300 400")
     );
     let again = s.answer.clone().expect("an answer").expect("checked");
@@ -278,10 +326,16 @@ fn the_limits_typed_come_back_after_the_profile() {
 }
 
 fn profile_output(name: &str) -> Value {
-    let profile: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pipes.profile.json")).expect("cases");
-    profile["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect(name)["steps"][0]["result"]
-        ["output"]
+    let profile: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.pipes.profile.json"
+    ))
+    .expect("cases");
+    profile["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect(name)["steps"][0]["result"]["output"]
         .clone()
 }
 
@@ -313,10 +367,18 @@ fn the_profile_draws_the_water_pipes_crossing_the_run() {
     );
     let doc = &app.document.as_ref().expect("a drawing").model;
     let drawn: Vec<&Entity> = doc.entities().skip(before).collect();
-    assert_eq!(drawn.len(), want["uids"].as_array().map(Vec::len).unwrap_or(0), "{said}");
+    assert_eq!(
+        drawn.len(),
+        want["uids"].as_array().map(Vec::len).unwrap_or(0),
+        "{said}"
+    );
     let exaggeration = want["exaggeration"].as_f64().expect("the exaggeration");
-    let known: Vec<&Value> =
-        want["crossings"].as_array().expect("crossings").iter().filter(|c| c["invert"].is_number()).collect();
+    let known: Vec<&Value> = want["crossings"]
+        .as_array()
+        .expect("crossings")
+        .iter()
+        .filter(|c| c["invert"].is_number())
+        .collect();
     let ellipses: Vec<(f64, f64)> = drawn
         .iter()
         .filter_map(|e| match e {
@@ -338,10 +400,17 @@ fn the_profile_draws_the_water_pipes_crossing_the_run() {
         })
         .collect();
     for c in &known {
-        let words = format!("{} {:.2}", c["name"].as_str().unwrap_or(""), c["invert"].as_f64().unwrap_or(0.0));
+        let words = format!(
+            "{} {:.2}",
+            c["name"].as_str().unwrap_or(""),
+            c["invert"].as_f64().unwrap_or(0.0)
+        );
         assert!(texts.contains(&words.as_str()), "{words}");
     }
-    assert!(!texts.iter().any(|t| t.starts_with("W7")), "W7 has no invert there");
+    assert!(
+        !texts.iter().any(|t| t.starts_with("W7")),
+        "W7 has no invert there"
+    );
     let undone = app.document.as_mut().and_then(|d| d.model.undo());
     assert_eq!(undone.as_deref(), Some("Hat profili"));
     // Kesişen borular off: the sewer's main case.
@@ -379,11 +448,17 @@ fn the_profile_draws_the_water_pipes_crossing_the_run() {
 fn crossing_profile_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesisen-borular-2760");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kesisen-borular-2760");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -395,7 +470,10 @@ fn crossing_profile_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
         let before = app
             .document
@@ -415,18 +493,45 @@ fn crossing_profile_screens() {
                 _ => None,
             })
             .collect();
-        let (x0, x1) = centres.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), c| (a.min(c[0]), b.max(c[0])));
-        let (y0, y1) = centres.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), c| (a.min(c[1]), b.max(c[1])));
+        let (x0, x1) = centres
+            .iter()
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), c| {
+                (a.min(c[0]), b.max(c[0]))
+            });
+        let (y0, y1) = centres
+            .iter()
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), c| {
+                (a.min(c[1]), b.max(c[1]))
+            });
         // The three crossings with the run's lines around them, then W1 (the second) on P2's body.
         let w1 = centres.get(1).copied().expect("W1");
         for (bounds, file) in [
-            (kentos_render_wgpu::Bounds { min_x: x0 - 15.0, min_y: y0 - 45.0, max_x: x1 + 15.0, max_y: y1 + 45.0 }, "2-profil"),
-            (kentos_render_wgpu::Bounds { min_x: w1[0] - 15.0, min_y: w1[1] - 8.0, max_x: w1[0] + 15.0, max_y: w1[1] + 12.0 }, "3-w1-yakin"),
+            (
+                kentos_render_wgpu::Bounds {
+                    min_x: x0 - 15.0,
+                    min_y: y0 - 45.0,
+                    max_x: x1 + 15.0,
+                    max_y: y1 + 45.0,
+                },
+                "2-profil",
+            ),
+            (
+                kentos_render_wgpu::Bounds {
+                    min_x: w1[0] - 15.0,
+                    min_y: w1[1] - 8.0,
+                    max_x: w1[0] + 15.0,
+                    max_y: w1[1] + 12.0,
+                },
+                "3-w1-yakin",
+            ),
         ] {
             app.viewport.camera.fit(&bounds, 12.0);
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -438,11 +543,17 @@ fn crossing_profile_screens() {
 fn profile_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/hat-profili-1860");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/hat-profili-1860");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -462,21 +573,32 @@ fn profile_screens() {
         // Framed on the profile: the objects written last.
         let doc = &app.document.as_ref().expect("a drawing").model;
         let n = doc.entities().count();
-        let slots: Vec<kentos_domain::Slot> =
-            doc.entities().skip(n.saturating_sub(400)).filter(|e| e.base().id > 264).map(|e| kentos_domain::Slot(e.base().id)).collect();
+        let slots: Vec<kentos_domain::Slot> = doc
+            .entities()
+            .skip(n.saturating_sub(400))
+            .filter(|e| e.base().id > 264)
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .collect();
         app.selection.set(slots);
         let _ = app.update(Message::Run("view.zoomSelection"));
         app.selection.clear();
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-profil-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
 
 fn case_output(name: &str) -> Value {
-    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect(name)["steps"][0]["result"]
-        ["output"]
+    cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect(name)["steps"][0]["result"]["output"]
         .clone()
 }
 
@@ -496,7 +618,10 @@ fn with_case_limits(app: &mut App) {
 }
 
 fn same_list(got: &Value, want: &Value, what: &str) {
-    let (g, w) = (got.as_array().cloned().unwrap_or_default(), want.as_array().cloned().unwrap_or_default());
+    let (g, w) = (
+        got.as_array().cloned().unwrap_or_default(),
+        want.as_array().cloned().unwrap_or_default(),
+    );
     assert_eq!(g.len(), w.len(), "{what}: {got}");
     for (g, w) in g.iter().zip(&w) {
         for key in ["pipe", "other", "above"] {
@@ -530,9 +655,12 @@ fn the_clearances_to_the_water_network_are_the_shared_cases() {
     let _ = app.update(Message::from(map::Event::PipesCheck(P::Vertical(
         "0,5".into(),
     ))));
-    let _ = app.update(Message::from(map::Event::PipesCheck(P::Above(Above::Other))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Above(
+        Above::Other,
+    ))));
     let r = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .pipes_check
             .answer
             .clone()
@@ -560,7 +688,8 @@ fn the_clearances_to_the_water_network_are_the_shared_cases() {
         let _ = app.update(Message::from(map::Event::PipesCheck(e)));
     }
     let r = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .pipes_check
             .answer
             .clone()
@@ -573,12 +702,13 @@ fn the_clearances_to_the_water_network_are_the_shared_cases() {
     assert_eq!(r["counts"], want["counts"]);
     // No other network: no clearance, the table back to the pipes.
     let _ = app.update(Message::from(map::Event::PipesCheck(P::Show(Show::Near))));
-    let _ = app.update(Message::from(map::Event::PipesCheck(
-        P::Other(String::new()),
-    )));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Other(
+        String::new(),
+    ))));
     assert_eq!(app.modules.map().pipes_check.show, Show::All);
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .pipes_check
         .answer
         .clone()
@@ -610,7 +740,8 @@ fn the_crossings_are_marked_on_the_drawing() {
         let _ = app.update(Message::from(map::Event::PipesCheck(e)));
     }
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .pipes_check
         .answer
         .clone()
@@ -623,11 +754,22 @@ fn the_crossings_are_marked_on_the_drawing() {
     assert_eq!(m.near.len(), r.near.len());
     for (mark, c) in m.crossings.iter().zip(&r.crossings) {
         assert_eq!(mark.at, c.at);
-        let fails = r.findings.iter().any(|f| ["clash", "closeCrossing", "wrongSide"].contains(&f.kind.as_str()) && f.at == c.at);
-        let want = if fails { Verdict::Fails } else if c.clearance.is_none() { Verdict::Unknown } else { Verdict::Holds };
+        let fails = r.findings.iter().any(|f| {
+            ["clash", "closeCrossing", "wrongSide"].contains(&f.kind.as_str()) && f.at == c.at
+        });
+        let want = if fails {
+            Verdict::Fails
+        } else if c.clearance.is_none() {
+            Verdict::Unknown
+        } else {
+            Verdict::Holds
+        };
         assert_eq!(mark.verdict, want, "{c:?}");
     }
-    assert!(m.crossings.iter().any(|c| c.verdict == Verdict::Fails), "the case has a failing crossing");
+    assert!(
+        m.crossings.iter().any(|c| c.verdict == Verdict::Fails),
+        "the case has a failing crossing"
+    );
     assert!(app.offers("data.unmark"));
     // The water network's pipes moved far away: no crossing, no mark.
     let doc = &mut app.document.as_mut().expect("open").model;
@@ -637,7 +779,9 @@ fn the_crossings_are_marked_on_the_drawing() {
         .filter_map(|(u, e)| {
             let mut e = e.clone();
             match &mut e {
-                kentos_commands::Entity::Polyline(p) => p.pts.iter_mut().for_each(|v| v.y += 10_000.0),
+                kentos_commands::Entity::Polyline(p) => {
+                    p.pts.iter_mut().for_each(|v| v.y += 10_000.0)
+                }
                 kentos_commands::Entity::Line(l) => {
                     l.a.y += 10_000.0;
                     l.b.y += 10_000.0;
@@ -679,9 +823,13 @@ fn a_clearance_that_is_no_number_is_said() {
 fn marks_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesisimler-3160");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kesisimler-3160");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
         let _ = app
             .settings
@@ -786,10 +934,15 @@ fn walled(program: Option<Module>) -> App {
         .as_array()
         .expect("cases")
         .iter()
-        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("et kalınlığı: örtü")))
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("et kalınlığı: örtü"))
+        })
         .expect("the walls case")
         .clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -806,7 +959,8 @@ fn the_walls_are_read_from_the_pipes_and_the_answers_are_the_shared_cases() {
     assert_eq!(app.modules.map().pipes_check.wall, "Et");
     with_case_limits(&mut app);
     let r = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .pipes_check
             .answer
             .clone()
@@ -819,7 +973,12 @@ fn the_walls_are_read_from_the_pipes_and_the_answers_are_the_shared_cases() {
     );
     assert_eq!(r["coverTo"], "outside");
     assert_eq!(r["counts"], want["counts"]);
-    for (g, w) in r["pipes"].as_array().expect("pipes").iter().zip(want["pipes"].as_array().expect("pipes")) {
+    for (g, w) in r["pipes"]
+        .as_array()
+        .expect("pipes")
+        .iter()
+        .zip(want["pipes"].as_array().expect("pipes"))
+    {
         for key in ["wall", "minCover", "maxCover"] {
             match (g[key].as_f64(), w[key].as_f64()) {
                 (Some(a), Some(b)) => assert!((a - b).abs() < 1e-9, "{key}: {a} {b}"),
@@ -829,7 +988,8 @@ fn the_walls_are_read_from_the_pipes_and_the_answers_are_the_shared_cases() {
     }
     let _ = app.update(Message::from(map::Event::PipesCheck(P::Other("su".into()))));
     assert_eq!(
-        app.modules.map().pipes_check.other_wall, "Et",
+        app.modules.map().pipes_check.other_wall,
+        "Et",
         "the water pipes' wall guessed too"
     );
     let _ = app.update(Message::from(map::Event::PipesCheck(P::Vertical(
@@ -839,7 +999,8 @@ fn the_walls_are_read_from_the_pipes_and_the_answers_are_the_shared_cases() {
         "3".into(),
     ))));
     let r = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .pipes_check
             .answer
             .clone()
@@ -851,9 +1012,12 @@ fn the_walls_are_read_from_the_pipes_and_the_answers_are_the_shared_cases() {
     same_list(&r["crossings"], &want["crossings"], "crossings");
     same_list(&r["near"], &want["near"], "near");
     // Without the attribute: the crown again.
-    let _ = app.update(Message::from(map::Event::PipesCheck(P::Wall(String::new()))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(
+        P::Wall(String::new()),
+    )));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .pipes_check
         .answer
         .clone()
@@ -872,11 +1036,17 @@ fn the_walls_are_read_from_the_pipes_and_the_answers_are_the_shared_cases() {
 fn wall_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/et-kalinligi-3960");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/et-kalinligi-3960");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = walled(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -893,7 +1063,10 @@ fn wall_screens() {
         let mut shot = |app: &mut App, stem: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         };
         shot(&mut app, "1-boru-hatti");
@@ -935,7 +1108,12 @@ fn the_crossing_pipes_fill_is_chosen() {
             _ => None,
         })
         .collect();
-    let known = want["crossings"].as_array().expect("crossings").iter().filter(|c| c["invert"].is_number()).count();
+    let known = want["crossings"]
+        .as_array()
+        .expect("crossings")
+        .iter()
+        .filter(|c| c["invert"].is_number())
+        .count();
     assert_eq!(loops, vec![1; known]);
 }
 
@@ -950,11 +1128,17 @@ fn the_crossing_pipes_fill_is_chosen() {
 fn fill_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesisen-boru-taramasi-5160");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kesisen-boru-taramasi-5160");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -969,7 +1153,10 @@ fn fill_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
         let before = app
             .document
@@ -991,12 +1178,20 @@ fn fill_screens() {
             .nth(1)
             .expect("W1");
         app.viewport.camera.fit(
-            &kentos_render_wgpu::Bounds { min_x: w1[0] - 1.2, min_y: w1[1] - 0.8, max_x: w1[0] + 1.2, max_y: w1[1] + 1.0 },
+            &kentos_render_wgpu::Bounds {
+                min_x: w1[0] - 1.2,
+                min_y: w1[1] - 0.8,
+                max_x: w1[0] + 1.2,
+                max_y: w1[1] + 1.0,
+            },
             12.0,
         );
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-w1-yakin-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

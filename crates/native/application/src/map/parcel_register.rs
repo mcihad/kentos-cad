@@ -10,11 +10,13 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 use kentos_commands::{
-    BOUNDARY_BULGE_TOLERANCE, BoundaryLengthRow, CommandResult, Entity, MAX_PARCEL_DOCUMENTS, MAX_PARCEL_LABEL,
-    MAX_PARCEL_NAME, MAX_RECORDED_PARCELS, ParcelDocument, ParcelDocumentInput, ParcelDocumentRow, ParcelDraftRow,
-    ParcelRegister, ParcelToRecord, ParcelsRecord, ParcelsRecorded, ParcelsRecords, ParcelsRecordsListed, PathEntity,
-    RecordedBoundary, RecordedBoundaryRow, RecordedLength, RecordedParcel, RecordedParcelRow, RecordedRing,
-    StatedLength, Vec2, parcel_register_problem, plain_decimal, positive_decimal, review_label_ok, review_text_ok,
+    BOUNDARY_BULGE_TOLERANCE, BoundaryLengthRow, CommandResult, Entity, MAX_PARCEL_DOCUMENTS,
+    MAX_PARCEL_LABEL, MAX_PARCEL_NAME, MAX_RECORDED_PARCELS, ParcelDocument, ParcelDocumentInput,
+    ParcelDocumentRow, ParcelDraftRow, ParcelRegister, ParcelToRecord, ParcelsRecord,
+    ParcelsRecorded, ParcelsRecords, ParcelsRecordsListed, PathEntity, RecordedBoundary,
+    RecordedBoundaryRow, RecordedLength, RecordedParcel, RecordedParcelRow, RecordedRing,
+    StatedLength, Vec2, parcel_register_problem, plain_decimal, positive_decimal, review_label_ok,
+    review_text_ok,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::entity::entity_area;
@@ -39,7 +41,9 @@ pub(crate) type AreaRing = (u32, bool, Vec<Vec2>, Vec<f64>);
 /// An area's rings, part by part, each part's outline before its holes.
 fn area_rings(a: &PathEntity) -> Vec<AreaRing> {
     let bulged = |pts: &[Vec2], bulges: Option<&Vec<f64>>| -> Vec<f64> {
-        (0..pts.len()).map(|k| bulges.and_then(|b| b.get(k)).copied().unwrap_or(0.0)).collect()
+        (0..pts.len())
+            .map(|k| bulges.and_then(|b| b.get(k)).copied().unwrap_or(0.0))
+            .collect()
     };
     let mut out = vec![(0, false, a.pts.clone(), bulged(&a.pts, a.bulges.as_ref()))];
     for h in a.holes.iter().flatten() {
@@ -47,7 +51,12 @@ fn area_rings(a: &PathEntity) -> Vec<AreaRing> {
     }
     for (k, part) in a.parts.iter().flatten().enumerate() {
         let n = k as u32 + 1;
-        out.push((n, false, part.pts.clone(), bulged(&part.pts, part.bulges.as_ref())));
+        out.push((
+            n,
+            false,
+            part.pts.clone(),
+            bulged(&part.pts, part.bulges.as_ref()),
+        ));
         for h in part.holes.iter().flatten() {
             out.push((n, true, h.pts.clone(), bulged(&h.pts, h.bulges.as_ref())));
         }
@@ -58,11 +67,20 @@ fn area_rings(a: &PathEntity) -> Vec<AreaRing> {
 /// An edge in a boundary's own direction: the lesser corner (by east, then north) first, the bulge turned with it;
 /// and whether the ring runs it the other way.
 fn canonical(p: Vec2, q: Vec2, bulge: f64) -> (Vec2, Vec2, f64, bool) {
-    if (p.x, p.y) <= (q.x, q.y) { (p, q, bulge, false) } else { (q, p, -bulge, true) }
+    if (p.x, p.y) <= (q.x, q.y) {
+        (p, q, bulge, false)
+    } else {
+        (q, p, -bulge, true)
+    }
 }
 
 fn corners_key(from: Vec2, to: Vec2) -> [u64; 4] {
-    [from.x.to_bits(), from.y.to_bits(), to.x.to_bits(), to.y.to_bits()]
+    [
+        from.x.to_bits(),
+        from.y.to_bits(),
+        to.x.to_bits(),
+        to.y.to_bits(),
+    ]
 }
 
 /// A trimmed optional text, empty when absent.
@@ -84,14 +102,21 @@ pub(crate) fn document_fields(d: &ParcelDocumentInput) -> Result<ParcelDocument,
     if !review_label_ok(&name, MAX_PARCEL_NAME) {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Belgenin adı boş olmaz; en çok {MAX_PARCEL_NAME} karakterdir, denetim karakteri taşımaz."),
+            format!(
+                "Belgenin adı boş olmaz; en çok {MAX_PARCEL_NAME} karakterdir, denetim karakteri taşımaz."
+            ),
             "document.name",
         ));
     }
-    let (kind, date, note) = (trimmed(d.kind.as_ref()), trimmed(d.date.as_ref()), trimmed(d.note.as_ref()));
-    for (text, most, path, what) in
-        [(&kind, MAX_PARCEL_NAME, "document.kind", "türü"), (&date, MAX_PARCEL_LABEL, "document.date", "tarihi")]
-    {
+    let (kind, date, note) = (
+        trimmed(d.kind.as_ref()),
+        trimmed(d.date.as_ref()),
+        trimmed(d.note.as_ref()),
+    );
+    for (text, most, path, what) in [
+        (&kind, MAX_PARCEL_NAME, "document.kind", "türü"),
+        (&date, MAX_PARCEL_LABEL, "document.date", "tarihi"),
+    ] {
         if !text.is_empty() && !review_label_ok(text, most) {
             return Err(fail(
                 codes::INVALID_INPUT,
@@ -107,7 +132,14 @@ pub(crate) fn document_fields(d: &ParcelDocumentInput) -> Result<ParcelDocument,
             "document.note",
         ));
     }
-    Ok(ParcelDocument { number: 0, name, kind, date, note, approval: None })
+    Ok(ParcelDocument {
+        number: 0,
+        name,
+        kind,
+        date,
+        note,
+        approval: None,
+    })
 }
 
 /// Refused when a document or a draft of the register has the name.
@@ -131,16 +163,27 @@ fn closing_of(reg: &ParcelRegister, close: &[u32]) -> Result<Vec<u32>, Stop> {
     for (i, n) in close.iter().enumerate() {
         let path = format!("close[{i}]");
         if closing.contains(n) {
-            return Err(fail(codes::INVALID_INPUT, format!("{n} numaralı parsel iki kez verildi."), &path));
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!("{n} numaralı parsel iki kez verildi."),
+                &path,
+            ));
         }
         let Some(p) = reg.parcel(*n) else {
-            return Err(fail(codes::UNKNOWN_PARCEL_RECORD, format!("Parsel kayıtlarında {n} numaralı parsel yok."), &path));
+            return Err(fail(
+                codes::UNKNOWN_PARCEL_RECORD,
+                format!("Parsel kayıtlarında {n} numaralı parsel yok."),
+                &path,
+            ));
         };
         if let Some(c) = p.closed_by {
             let by = reg.document(c).map(|x| x.name.clone()).unwrap_or_default();
             return Err(fail(
                 codes::PARCEL_CLOSED,
-                format!("{n} numaralı parsel ({}) “{by}” belgesiyle kapatılmış; ancak güncel bir parsel kapatılır.", p.label()),
+                format!(
+                    "{n} numaralı parsel ({}) “{by}” belgesiyle kapatılmış; ancak güncel bir parsel kapatılır.",
+                    p.label()
+                ),
                 &path,
             ));
         }
@@ -189,7 +232,9 @@ fn lengths_of(
                 if out.iter().any(|x| x.0 == ring && x.1 == edge) {
                     return Err(fail(
                         codes::INVALID_INPUT,
-                        format!("{ring} numaralı halkanın {edge} numaralı kenarının ölçüsü iki kez verildi."),
+                        format!(
+                            "{ring} numaralı halkanın {edge} numaralı kenarının ölçüsü iki kez verildi."
+                        ),
                         &path,
                     ));
                 }
@@ -249,13 +294,17 @@ fn lengths_of(
 
 /// Refused when the parcel's area draws a current parcel the document does not close, or its identity is a current
 /// parcel's the document does not close, or another's the document makes.
-pub(crate) fn free_of(reg: &ParcelRegister, closing: &[u32], made: &[Made], m: &Made, path: &str) -> Result<(), Stop> {
+pub(crate) fn free_of(
+    reg: &ParcelRegister,
+    closing: &[u32],
+    made: &[Made],
+    m: &Made,
+    path: &str,
+) -> Result<(), Stop> {
     let uid = m.parcel.uid.as_deref().unwrap_or_default();
-    if let Some(p) = reg
-        .parcels
-        .iter()
-        .find(|p| p.closed_by.is_none() && p.uid.as_deref() == Some(uid) && !closing.contains(&p.number))
-    {
+    if let Some(p) = reg.parcels.iter().find(|p| {
+        p.closed_by.is_none() && p.uid.as_deref() == Some(uid) && !closing.contains(&p.number)
+    }) {
         return Err(fail(
             codes::PARCEL_RECORDED,
             format!(
@@ -267,21 +316,37 @@ pub(crate) fn free_of(reg: &ParcelRegister, closing: &[u32], made: &[Made], m: &
         ));
     }
     let key = m.parcel.key();
-    if let Some(p) = reg.parcels.iter().find(|p| p.closed_by.is_none() && !closing.contains(&p.number) && p.key() == key) {
+    if let Some(p) = reg
+        .parcels
+        .iter()
+        .find(|p| p.closed_by.is_none() && !closing.contains(&p.number) && p.key() == key)
+    {
         return Err(fail(
             codes::PARCEL_IDENTITY_TAKEN,
-            format!("{key} kimlikli güncel bir parsel var ({} numaralı); belge önce onu kapatmalı (close).", p.number),
+            format!(
+                "{key} kimlikli güncel bir parsel var ({} numaralı); belge önce onu kapatmalı (close).",
+                p.number
+            ),
             path,
         ));
     }
     if made.iter().any(|x| x.parcel.key() == key) {
-        return Err(fail(codes::PARCEL_IDENTITY_TAKEN, format!("{key} kimliği bu belgede iki alanda var."), path));
+        return Err(fail(
+            codes::PARCEL_IDENTITY_TAKEN,
+            format!("{key} kimliği bu belgede iki alanda var."),
+            path,
+        ));
     }
     Ok(())
 }
 
 /// The parcels a document makes from the drawing's areas.
-fn made_of(doc: &Document, reg: &ParcelRegister, closing: &[u32], create: &[ParcelToRecord]) -> Result<Vec<Made>, Stop> {
+fn made_of(
+    doc: &Document,
+    reg: &ParcelRegister,
+    closing: &[u32],
+    create: &[ParcelToRecord],
+) -> Result<Vec<Made>, Stop> {
     let mut made: Vec<Made> = Vec::new();
     for (i, item) in create.iter().enumerate() {
         let path = format!("create[{i}].uid");
@@ -289,12 +354,22 @@ fn made_of(doc: &Document, reg: &ParcelRegister, closing: &[u32], create: &[Parc
         if !checks::is_uid_text(uid) {
             return Err(fail(
                 codes::INVALID_UID,
-                format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+                format!(
+                    "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+                ),
                 &path,
             ));
         }
-        let Some(e) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)) else {
-            return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), &path));
+        let Some(e) = Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+        else {
+            return Err(fail(
+                codes::ENTITY_NOT_FOUND,
+                format!("“{uid}” kimlikli nesne çizimde yok."),
+                &path,
+            ));
         };
         let Entity::Polygon(area) = e else {
             return Err(fail(
@@ -303,8 +378,20 @@ fn made_of(doc: &Document, reg: &ParcelRegister, closing: &[u32], create: &[Parc
                 &path,
             ));
         };
-        let attr = |k: &str| e.base().attrs.get(k).map(|v| v.trim().to_owned()).unwrap_or_default();
-        let (il, ilce, mahalle, ada, parsel) = (attr("İl"), attr("İlçe"), attr("Mahalle"), attr("Ada"), attr("Parsel"));
+        let attr = |k: &str| {
+            e.base()
+                .attrs
+                .get(k)
+                .map(|v| v.trim().to_owned())
+                .unwrap_or_default()
+        };
+        let (il, ilce, mahalle, ada, parsel) = (
+            attr("İl"),
+            attr("İlçe"),
+            attr("Mahalle"),
+            attr("Ada"),
+            attr("Parsel"),
+        );
         if ada.is_empty() || parsel.is_empty() {
             return Err(fail(
                 codes::NO_PARCEL_IDENTITY,
@@ -316,7 +403,11 @@ fn made_of(doc: &Document, reg: &ParcelRegister, closing: &[u32], create: &[Parc
             ));
         }
         if made.iter().any(|m| m.parcel.uid.as_deref() == Some(uid)) {
-            return Err(fail(codes::INVALID_INPUT, format!("“{uid}” alanı iki kez verildi."), &path));
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!("“{uid}” alanı iki kez verildi."),
+                &path,
+            ));
         }
         for part in [&il, &ilce, &mahalle, &ada, &parsel] {
             if !part.is_empty() && !review_label_ok(part, MAX_PARCEL_NAME) {
@@ -331,7 +422,9 @@ fn made_of(doc: &Document, reg: &ParcelRegister, closing: &[u32], create: &[Parc
             }
         }
         let rings = area_rings(area);
-        let doubled = rings.iter().any(|(_, _, pts, _)| (0..pts.len()).any(|k| pts[k] == pts[(k + 1) % pts.len()]));
+        let doubled = rings
+            .iter()
+            .any(|(_, _, pts, _)| (0..pts.len()).any(|k| pts[k] == pts[(k + 1) % pts.len()]));
         if doubled {
             return Err(fail(
                 codes::INVALID_INPUT,
@@ -387,7 +480,11 @@ fn made_of(doc: &Document, reg: &ParcelRegister, closing: &[u32], create: &[Parc
             uid: Some(uid.to_owned()),
             rings: Vec::new(),
         };
-        let m = Made { parcel, rings, lengths };
+        let m = Made {
+            parcel,
+            rings,
+            lengths,
+        };
         free_of(reg, closing, &made, &m, &path)?;
         made.push(m);
     }
@@ -404,10 +501,14 @@ pub(crate) fn apply(
     closing: Vec<u32>,
     path: &str,
 ) -> Result<ParcelsRecorded, Stop> {
-    if reg.documents.len() + reg.drafts.len() >= MAX_PARCEL_DOCUMENTS || reg.parcels.len() + made.len() > MAX_RECORDED_PARCELS {
+    if reg.documents.len() + reg.drafts.len() >= MAX_PARCEL_DOCUMENTS
+        || reg.parcels.len() + made.len() > MAX_RECORDED_PARCELS
+    {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Parsel kayıtları en çok {MAX_PARCEL_DOCUMENTS} belge ve {MAX_RECORDED_PARCELS} parsel taşır."),
+            format!(
+                "Parsel kayıtları en çok {MAX_PARCEL_DOCUMENTS} belge ve {MAX_RECORDED_PARCELS} parsel taşır."
+            ),
             path,
         ));
     }
@@ -416,7 +517,12 @@ pub(crate) fn apply(
 
     // The boundaries current before this document, by their corners; a new edge on one of them is that boundary.
     let mut index: HashMap<[u64; 4], Vec<usize>> = HashMap::new();
-    for (k, b) in reg.boundaries.iter().enumerate().filter(|(_, b)| b.closed_by.is_none()) {
+    for (k, b) in reg
+        .boundaries
+        .iter()
+        .enumerate()
+        .filter(|(_, b)| b.closed_by.is_none())
+    {
         index.entry(corners_key(b.from, b.to)).or_default().push(k);
     }
     let earlier = reg.boundaries.len();
@@ -435,7 +541,9 @@ pub(crate) fn apply(
                 let (from, to, bulge, reversed) = canonical(pts[k], pts[(k + 1) % n], bulges[k]);
                 let key = corners_key(from, to);
                 let found = index.get(&key).and_then(|list| {
-                    list.iter().copied().find(|&j| (reg.boundaries[j].bulge - bulge).abs() <= BOUNDARY_BULGE_TOLERANCE)
+                    list.iter().copied().find(|&j| {
+                        (reg.boundaries[j].bulge - bulge).abs() <= BOUNDARY_BULGE_TOLERANCE
+                    })
                 });
                 let at = match found {
                     Some(j) => {
@@ -488,9 +596,21 @@ pub(crate) fn apply(
         reg.parcels.push(parcel);
     }
     let lengths = stated.len() as u32;
-    reg.lengths.extend(stated.into_iter().map(|(boundary, length, _)| RecordedLength { boundary, document: number, length }));
+    reg.lengths.extend(
+        stated
+            .into_iter()
+            .map(|(boundary, length, _)| RecordedLength {
+                boundary,
+                document: number,
+                length,
+            }),
+    );
     let (boundaries_split, neighbours) = split_neighbours(reg, earlier, &closing, &created, &index);
-    for p in reg.parcels.iter_mut().filter(|p| closing.contains(&p.number)) {
+    for p in reg
+        .parcels
+        .iter_mut()
+        .filter(|p| closing.contains(&p.number))
+    {
         p.closed_by = Some(number);
         p.uid = None;
     }
@@ -499,15 +619,27 @@ pub(crate) fn apply(
         .parcels
         .iter()
         .filter(|p| p.closed_by.is_none())
-        .flat_map(|p| p.rings.iter().flat_map(|r| r.edges.iter().map(|e| e.unsigned_abs())))
+        .flat_map(|p| {
+            p.rings
+                .iter()
+                .flat_map(|r| r.edges.iter().map(|e| e.unsigned_abs()))
+        })
         .collect();
     let mut boundaries_closed = 0;
-    for b in reg.boundaries.iter_mut().filter(|b| b.closed_by.is_none() && !used_now.contains(&b.number)) {
+    for b in reg
+        .boundaries
+        .iter_mut()
+        .filter(|b| b.closed_by.is_none() && !used_now.contains(&b.number))
+    {
         b.closed_by = Some(number);
         boundaries_closed += 1;
     }
     if let Some(problem) = parcel_register_problem(reg) {
-        return Err(fail(codes::INVALID_INPUT, format!("Parsel kayıtları yazılamıyor: {problem}."), path));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Parsel kayıtları yazılamıyor: {problem}."),
+            path,
+        ));
     }
     Ok(ParcelsRecorded {
         document: number,
@@ -558,7 +690,11 @@ fn run(doc: &Document, input: &ParcelsRecord) -> Result<(ParcelRegister, Parcels
     let mut out = apply(&mut copy, document, made, closing, "create")?;
     reg.drafts.push(draft);
     if let Some(problem) = parcel_register_problem(&reg) {
-        return Err(fail(codes::INVALID_INPUT, format!("Parsel kayıtları yazılamıyor: {problem}."), "create"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Parsel kayıtları yazılamıyor: {problem}."),
+            "create",
+        ));
     }
     out.document = reg.drafts.last().map_or(0, |d| d.number);
     out.draft = true;
@@ -587,8 +723,16 @@ fn arc_of(from: Vec2, to: Vec2, bulge: f64) -> Arc {
     // The centre lies off the chord's middle, on its left for a counter-clockwise arc: (1 − b²) / (4b) of the chord's
     // left normal (−dy, dx).
     let k = (1.0 - bulge * bulge) / (4.0 * bulge);
-    let centre = Vec2 { x: (from.x + to.x) / 2.0 - dy * k, y: (from.y + to.y) / 2.0 + dx * k };
-    Arc { centre, radius, start: (from.y - centre.y).atan2(from.x - centre.x), sweep }
+    let centre = Vec2 {
+        x: (from.x + to.x) / 2.0 - dy * k,
+        y: (from.y + to.y) / 2.0 + dx * k,
+    };
+    Arc {
+        centre,
+        radius,
+        start: (from.y - centre.y).atan2(from.x - centre.x),
+        sweep,
+    }
 }
 
 impl Arc {
@@ -603,20 +747,27 @@ impl Arc {
     fn inside(&self, q: Vec2) -> Option<f64> {
         let off = ((q.x - self.centre.x).hypot(q.y - self.centre.y) - self.radius).abs();
         let t = self.turn(q);
-        (off <= INSIDE && t * self.radius > INSIDE && (self.sweep.abs() - t) * self.radius > INSIDE).then_some(t)
+        (off <= INSIDE && t * self.radius > INSIDE && (self.sweep.abs() - t) * self.radius > INSIDE)
+            .then_some(t)
     }
 
     /// The middle of the arc between two turns.
     fn at(&self, t: f64) -> Vec2 {
         let a = self.start + self.sweep.signum() * t;
-        Vec2 { x: self.centre.x + self.radius * a.cos(), y: self.centre.y + self.radius * a.sin() }
+        Vec2 {
+            x: self.centre.x + self.radius * a.cos(),
+            y: self.centre.y + self.radius * a.sin(),
+        }
     }
 }
 
 /// The middle of an edge's arc: the chord's middle moved by the sagitta to the arc's side, (dy, −dx)·b/2.
 fn arc_middle(from: Vec2, to: Vec2, bulge: f64) -> Vec2 {
     let (dx, dy) = (to.x - from.x, to.y - from.y);
-    Vec2 { x: (from.x + to.x) / 2.0 + dy * bulge / 2.0, y: (from.y + to.y) / 2.0 - dx * bulge / 2.0 }
+    Vec2 {
+        x: (from.x + to.x) / 2.0 + dy * bulge / 2.0,
+        y: (from.y + to.y) / 2.0 - dx * bulge / 2.0,
+    }
 }
 
 /// Docs/adr/4620 and 5020: an earlier current boundary, straight or an arc, that a parcel current before the document,
@@ -636,7 +787,12 @@ fn split_neighbours(
     let shut: HashSet<u32> = closing.iter().copied().collect();
     // The new parcels' corners, each once.
     let mut corners: Vec<Vec2> = Vec::new();
-    let by_number: HashMap<u32, usize> = reg.boundaries.iter().enumerate().map(|(k, b)| (b.number, k)).collect();
+    let by_number: HashMap<u32, usize> = reg
+        .boundaries
+        .iter()
+        .enumerate()
+        .map(|(k, b)| (b.number, k))
+        .collect();
     for p in reg.parcels.iter().filter(|p| made.contains(&p.number)) {
         for e in p.rings.iter().flat_map(|r| &r.edges) {
             if let Some(&k) = by_number.get(&e.unsigned_abs()) {
@@ -662,9 +818,18 @@ fn split_neighbours(
         }
     }
     let mut splits: Vec<(u32, Vec<i32>, Vec<usize>)> = Vec::new();
-    for b in reg.boundaries[..earlier].iter().filter(|b| b.closed_by.is_none()) {
-        let Some(holders) = users.get(&b.number) else { continue };
-        let pieces = if b.bulge == 0.0 { straight_pieces(reg, b, &corners, index) } else { arc_pieces(reg, b, &corners, index) };
+    for b in reg.boundaries[..earlier]
+        .iter()
+        .filter(|b| b.closed_by.is_none())
+    {
+        let Some(holders) = users.get(&b.number) else {
+            continue;
+        };
+        let pieces = if b.bulge == 0.0 {
+            straight_pieces(reg, b, &corners, index)
+        } else {
+            arc_pieces(reg, b, &corners, index)
+        };
         if let Some(pieces) = pieces {
             splits.push((b.number, pieces, holders.clone()));
         }
@@ -718,7 +883,10 @@ fn straight_pieces(
         return None;
     }
     inside.sort_by(|a, b| a.0.total_cmp(&b.0));
-    let chain: Vec<Vec2> = std::iter::once(b.from).chain(inside.iter().map(|&(_, c)| c)).chain(std::iter::once(b.to)).collect();
+    let chain: Vec<Vec2> = std::iter::once(b.from)
+        .chain(inside.iter().map(|&(_, c)| c))
+        .chain(std::iter::once(b.to))
+        .collect();
     chain
         .windows(2)
         .map(|w| {
@@ -726,7 +894,9 @@ fn straight_pieces(
             index.get(&corners_key(from, to)).and_then(|list| {
                 list.iter()
                     .copied()
-                    .find(|&k| reg.boundaries[k].bulge == 0.0 && reg.boundaries[k].closed_by.is_none())
+                    .find(|&k| {
+                        reg.boundaries[k].bulge == 0.0 && reg.boundaries[k].closed_by.is_none()
+                    })
                     .map(|k| {
                         let n = reg.boundaries[k].number as i32;
                         if reversed { -n } else { n }
@@ -749,7 +919,10 @@ fn arc_pieces(
     if !(arc.radius.is_finite() && arc.radius > 0.0) {
         return None;
     }
-    let mut inside: Vec<(f64, Vec2)> = corners.iter().filter_map(|&c| arc.inside(c).map(|t| (t, c))).collect();
+    let mut inside: Vec<(f64, Vec2)> = corners
+        .iter()
+        .filter_map(|&c| arc.inside(c).map(|t| (t, c)))
+        .collect();
     if inside.is_empty() {
         return None;
     }
@@ -775,7 +948,8 @@ fn arc_pieces(
                         // Its middle on the circle and on this side of the two corners (the other side's middle is
                         // a diameter away): the same arc, drawn either way.
                         let mid = arc_middle(c.from, c.to, c.bulge);
-                        let off = ((mid.x - arc.centre.x).hypot(mid.y - arc.centre.y) - arc.radius).abs();
+                        let off =
+                            ((mid.x - arc.centre.x).hypot(mid.y - arc.centre.y) - arc.radius).abs();
                         off <= INSIDE && (mid.x - expected.x).hypot(mid.y - expected.y) < arc.radius
                     })
                     .map(|k| {
@@ -790,7 +964,10 @@ fn arc_pieces(
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ParcelsRecord) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -798,7 +975,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ParcelsRecord) -> CommandResu
 /// What execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ParcelsRecord) -> CommandResult<ParcelsRecorded> {
     match run(cx.doc, input) {
-        Ok((_, out)) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok((_, out)) => CommandResult::Completed {
+            output: out,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -810,11 +990,23 @@ fn write(cx: &mut ExecutionContext<'_>, input: ParcelsRecord) -> CommandResult<P
     };
     cx.doc.set_parcel_register(Some(reg), STEP);
     out.revision = cx.doc.revision().to_string();
-    CommandResult::Completed { output: out, warnings: Vec::new() }
+    CommandResult::Completed {
+        output: out,
+        warnings: Vec::new(),
+    }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ParcelsRecord) -> CommandResult<ParcelsRecorded> {
-    crate::call::recorded(cx, kentos_commands::CAD_PARCELS_RECORD, kentos_commands::CAD_PARCELS_RECORD_VERSION, input, write)
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ParcelsRecord,
+) -> CommandResult<ParcelsRecorded> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_PARCELS_RECORD,
+        kentos_commands::CAD_PARCELS_RECORD_VERSION,
+        input,
+        write,
+    )
 }
 
 /// A stated length against the boundary's length now (docs/adr/5020): the difference (the boundary's less the stated)
@@ -852,7 +1044,11 @@ pub(crate) fn recorded_area(paths: &[(u32, bool, Vec<Vec2>, Vec<f64>)]) -> f64 {
 fn length(b: &RecordedBoundary) -> f64 {
     let c = (b.to.x - b.from.x).hypot(b.to.y - b.from.y);
     let theta = (4.0 * b.bulge.atan()).abs();
-    if theta <= 1e-12 { c } else { c * theta / (2.0 * (theta / 2.0).sin()) }
+    if theta <= 1e-12 {
+        c
+    } else {
+        c * theta / (2.0 * (theta / 2.0).sin())
+    }
 }
 
 /// Whether one of an area's ring edges is the boundary, either way round.
@@ -873,12 +1069,17 @@ fn drawn_as(rings: &[AreaRing], p: &RecordedParcel, by: &HashMap<u32, &RecordedB
     let edges: usize = rings.iter().map(|r| r.2.len()).sum();
     let recorded: usize = p.rings.iter().map(|r| r.edges.len()).sum();
     edges == recorded
-        && p.rings.iter().flat_map(|r| &r.edges).all(|e| by.get(&e.unsigned_abs()).is_some_and(|b| draws(rings, b)))
+        && p.rings
+            .iter()
+            .flat_map(|r| &r.edges)
+            .all(|e| by.get(&e.unsigned_abs()).is_some_and(|b| draws(rings, b)))
 }
 
 /// The register read against the drawing (`cad.parcels.records`); empty lists without one.
 pub fn list(doc: &Document, input: &ParcelsRecords) -> ParcelsRecordsListed {
-    let Some(reg) = doc.parcel_register() else { return ParcelsRecordsListed::default() };
+    let Some(reg) = doc.parcel_register() else {
+        return ParcelsRecordsListed::default();
+    };
     let documents = reg
         .documents
         .iter()
@@ -889,19 +1090,33 @@ pub fn list(doc: &Document, input: &ParcelsRecords) -> ParcelsRecordsListed {
             date: d.date.clone(),
             note: d.note.clone(),
             approval: d.approval.clone(),
-            created: reg.parcels.iter().filter(|p| p.created_by == d.number).map(|p| p.number).collect(),
-            closed: reg.parcels.iter().filter(|p| p.closed_by == Some(d.number)).map(|p| p.number).collect(),
+            created: reg
+                .parcels
+                .iter()
+                .filter(|p| p.created_by == d.number)
+                .map(|p| p.number)
+                .collect(),
+            closed: reg
+                .parcels
+                .iter()
+                .filter(|p| p.closed_by == Some(d.number))
+                .map(|p| p.number)
+                .collect(),
         })
         .collect();
     // Each parcel's boundaries in ring order, its recorded rings, and its area's rings and geometric area now.
-    let by: HashMap<u32, &RecordedBoundary> = reg.boundaries.iter().map(|b| (b.number, b)).collect();
+    let by: HashMap<u32, &RecordedBoundary> =
+        reg.boundaries.iter().map(|b| (b.number, b)).collect();
     let mut drawn: HashMap<u32, (Vec<AreaRing>, f64)> = HashMap::new();
     let mut rows = Vec::new();
     for p in &reg.parcels {
         let recorded: Vec<AreaRing> = p
             .rings
             .iter()
-            .filter_map(|r| reg.ring_path(r).map(|(pts, bulges)| (r.part, r.hole, pts, bulges)))
+            .filter_map(|r| {
+                reg.ring_path(r)
+                    .map(|(pts, bulges)| (r.part, r.hole, pts, bulges))
+            })
             .collect();
         let mut boundaries = Vec::new();
         for e in p.rings.iter().flat_map(|r| &r.edges) {
@@ -911,7 +1126,10 @@ pub fn list(doc: &Document, input: &ParcelsRecords) -> ParcelsRecordsListed {
             }
         }
         let area_now = p.uid.as_deref().and_then(|uid| {
-            let e = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s))?;
+            let e = Uuid::parse_str(uid)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s))?;
             let Entity::Polygon(a) = e else { return None };
             Some((area_rings(a), entity_area(&shape(e)).unwrap_or(0.0)))
         });
@@ -940,10 +1158,21 @@ pub fn list(doc: &Document, input: &ParcelsRecords) -> ParcelsRecordsListed {
             state: state.to_owned(),
             boundaries,
             neighbours: Vec::new(),
-            before: reg.parcels.iter().filter(|q| q.closed_by == Some(p.created_by)).map(|q| q.number).collect(),
+            before: reg
+                .parcels
+                .iter()
+                .filter(|q| q.closed_by == Some(p.created_by))
+                .map(|q| q.number)
+                .collect(),
             after: p
                 .closed_by
-                .map(|c| reg.parcels.iter().filter(|q| q.created_by == c).map(|q| q.number).collect())
+                .map(|c| {
+                    reg.parcels
+                        .iter()
+                        .filter(|q| q.created_by == c)
+                        .map(|q| q.number)
+                        .collect()
+                })
                 .unwrap_or_default(),
         });
     }
@@ -974,9 +1203,17 @@ pub fn list(doc: &Document, input: &ParcelsRecords) -> ParcelsRecordsListed {
         .iter()
         .map(|b| {
             let current = b.closed_by.is_none();
-            let parcels = if current { users.get(&b.number) } else { all_users.get(&b.number) }.cloned().unwrap_or_default();
+            let parcels = if current {
+                users.get(&b.number)
+            } else {
+                all_users.get(&b.number)
+            }
+            .cloned()
+            .unwrap_or_default();
             let is_drawn = current
-                && parcels.iter().all(|n| drawn.get(n).is_some_and(|(rings, _)| draws(rings, b)));
+                && parcels
+                    .iter()
+                    .all(|n| drawn.get(n).is_some_and(|(rings, _)| draws(rings, b)));
             RecordedBoundaryRow {
                 number: b.number,
                 from: [b.from.x, b.from.y],
@@ -987,14 +1224,25 @@ pub fn list(doc: &Document, input: &ParcelsRecords) -> ParcelsRecordsListed {
                 closed_by: b.closed_by,
                 parcels,
                 drawn: is_drawn,
-                lengths: reg.lengths.iter().filter(|l| l.boundary == b.number).map(|l| length_row(b, l)).collect(),
+                lengths: reg
+                    .lengths
+                    .iter()
+                    .filter(|l| l.boundary == b.number)
+                    .map(|l| length_row(b, l))
+                    .collect(),
             }
         })
         .collect();
-    let count = |f: &dyn Fn(&RecordedParcelRow) -> bool| rows.iter().filter(|r| f(r)).count() as u32;
-    let moved = boundaries.iter().filter(|b| b.closed_by.is_none() && !b.drawn).count() as u32;
-    let over_limit =
-        boundaries.iter().filter(|b| b.closed_by.is_none() && b.lengths.iter().any(|l| !l.within)).count() as u32;
+    let count =
+        |f: &dyn Fn(&RecordedParcelRow) -> bool| rows.iter().filter(|r| f(r)).count() as u32;
+    let moved = boundaries
+        .iter()
+        .filter(|b| b.closed_by.is_none() && !b.drawn)
+        .count() as u32;
+    let over_limit = boundaries
+        .iter()
+        .filter(|b| b.closed_by.is_none() && b.lengths.iter().any(|l| !l.within))
+        .count() as u32;
     let drafts = reg
         .drafts
         .iter()
@@ -1003,7 +1251,11 @@ pub fn list(doc: &Document, input: &ParcelsRecords) -> ParcelsRecordsListed {
             name: d.name.clone(),
             kind: d.kind.clone(),
             date: d.date.clone(),
-            create: d.create.iter().map(|p| format!("{}/{}", p.ada, p.parsel)).collect(),
+            create: d
+                .create
+                .iter()
+                .map(|p| format!("{}/{}", p.ada, p.parsel))
+                .collect(),
             close: d.close.clone(),
             lengths: d.create.iter().map(|p| p.lengths.len() as u32).sum(),
         })
@@ -1017,8 +1269,14 @@ pub fn list(doc: &Document, input: &ParcelsRecords) -> ParcelsRecordsListed {
         missing: count(&|r| r.state == "missing"),
         moved,
         documents,
-        parcels: rows.into_iter().filter(|r| input.history || r.closed_by.is_none()).collect(),
-        boundaries: boundaries.into_iter().filter(|b| input.history || b.closed_by.is_none()).collect(),
+        parcels: rows
+            .into_iter()
+            .filter(|r| input.history || r.closed_by.is_none())
+            .collect(),
+        boundaries: boundaries
+            .into_iter()
+            .filter(|b| input.history || b.closed_by.is_none())
+            .collect(),
     }
 }
 
@@ -1027,15 +1285,30 @@ pub mod list_cmd {
     use super::*;
 
     pub fn validate(_cx: &ExecutionContext<'_>, _input: &ParcelsRecords) -> CommandResult<()> {
-        CommandResult::Completed { output: (), warnings: Vec::new() }
+        CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        }
     }
 
-    pub fn plan(cx: &ExecutionContext<'_>, input: &ParcelsRecords) -> CommandResult<ParcelsRecordsListed> {
-        CommandResult::Completed { output: list(cx.doc, input), warnings: Vec::new() }
+    pub fn plan(
+        cx: &ExecutionContext<'_>,
+        input: &ParcelsRecords,
+    ) -> CommandResult<ParcelsRecordsListed> {
+        CommandResult::Completed {
+            output: list(cx.doc, input),
+            warnings: Vec::new(),
+        }
     }
 
-    pub fn execute(cx: &mut ExecutionContext<'_>, input: ParcelsRecords) -> CommandResult<ParcelsRecordsListed> {
-        CommandResult::Completed { output: list(cx.doc, &input), warnings: Vec::new() }
+    pub fn execute(
+        cx: &mut ExecutionContext<'_>,
+        input: ParcelsRecords,
+    ) -> CommandResult<ParcelsRecordsListed> {
+        CommandResult::Completed {
+            output: list(cx.doc, &input),
+            warnings: Vec::new(),
+        }
     }
 }
 
@@ -1049,13 +1322,26 @@ mod tests {
 
     #[test]
     fn an_edge_runs_its_boundary_from_the_lesser_corner() {
-        assert_eq!(canonical(v(10.0, 0.0), v(0.0, 0.0), 0.25), (v(0.0, 0.0), v(10.0, 0.0), -0.25, true));
-        assert_eq!(canonical(v(0.0, 5.0), v(0.0, 9.0), 0.0), (v(0.0, 5.0), v(0.0, 9.0), 0.0, false));
+        assert_eq!(
+            canonical(v(10.0, 0.0), v(0.0, 0.0), 0.25),
+            (v(0.0, 0.0), v(10.0, 0.0), -0.25, true)
+        );
+        assert_eq!(
+            canonical(v(0.0, 5.0), v(0.0, 9.0), 0.0),
+            (v(0.0, 5.0), v(0.0, 9.0), 0.0, false)
+        );
     }
 
     #[test]
     fn a_semicircle_s_length_is_half_its_circle() {
-        let b = RecordedBoundary { number: 1, from: v(0.0, 0.0), to: v(20.0, 0.0), bulge: 1.0, created_by: 1, closed_by: None };
+        let b = RecordedBoundary {
+            number: 1,
+            from: v(0.0, 0.0),
+            to: v(20.0, 0.0),
+            bulge: 1.0,
+            created_by: 1,
+            closed_by: None,
+        };
         assert!((length(&b) - std::f64::consts::PI * 10.0).abs() < 1e-12);
     }
 }

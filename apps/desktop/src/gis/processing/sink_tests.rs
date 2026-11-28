@@ -267,11 +267,17 @@ fn a_file_there_is_said_in_the_windows_words_and_each_run_goes_into_the_history(
     sink(&mut app, SinkEvent::Place(Place::File));
     sink(&mut app, SinkEvent::Path(out.display().to_string()));
     finish_asked(&mut app);
-    assert!(matches!(window(&app).status, RunStatus::Ok { .. }), "{:?}", window(&app).status);
+    assert!(
+        matches!(window(&app).status, RunStatus::Ok { .. }),
+        "{:?}",
+        window(&app).status
+    );
     let written = window(&app).sink.written.clone().expect("what it wrote");
     assert!(written.file);
     assert_eq!(written.tables, [("Merkezler".to_owned(), 4)]);
-    let kept = std::fs::metadata(&out).and_then(|m| m.modified()).expect("the file");
+    let kept = std::fs::metadata(&out)
+        .and_then(|m| m.modified())
+        .expect("the file");
     // Again with Varsa üzerine yaz off: the file is there, said in the window's words; the first file is kept.
     finish_asked(&mut app);
     let RunStatus::Error(why) = window(&app).status.clone() else {
@@ -281,7 +287,12 @@ fn a_file_there_is_said_in_the_windows_words_and_each_run_goes_into_the_history(
         why,
         "Bu GeoPackage zaten var: sonuc.gpkg. Başka dosya seçin ya da Varsa üzerine yaz'ı açın. Dosyaya dokunulmadı."
     );
-    assert_eq!(std::fs::metadata(&out).and_then(|m| m.modified()).expect("the file"), kept);
+    assert_eq!(
+        std::fs::metadata(&out)
+            .and_then(|m| m.modified())
+            .expect("the file"),
+        kept
+    );
     assert!(window(&app).sink.written.is_none(), "no card for a refusal");
     // Tablo ekle into it: the table is there, told from the file by the provider's code.
     sink(&mut app, SinkEvent::Mode(SinkMode::AddTables));
@@ -290,18 +301,25 @@ fn a_file_there_is_said_in_the_windows_words_and_each_run_goes_into_the_history(
         panic!("{:?}", window(&app).status);
     };
     assert!(
-        why.starts_with("“Merkezler” tablosu sonuc.gpkg dosyasında var. Tablolar'da Tabloyu değiştir'i seçin"),
+        why.starts_with(
+            "“Merkezler” tablosu sonuc.gpkg dosyasında var. Tablolar'da Tabloyu değiştir'i seçin"
+        ),
         "{why}"
     );
     // Written once more over it, then Katman olarak ekle: the table is a data layer of the drawing.
     sink(&mut app, SinkEvent::Mode(SinkMode::ReplaceTables));
     finish_asked(&mut app);
-    let task = app.update(Message::Gis(gis::Event::Processing(Event::Sink(SinkEvent::AddLayer))));
+    let task = app.update(Message::Gis(gis::Event::Processing(Event::Sink(
+        SinkEvent::AddLayer,
+    ))));
     crate::files_testing::drive(&mut app, task);
     assert!(window(&app).sink.written.as_ref().is_some_and(|w| w.added));
     let layers = app.document.as_ref().expect("a drawing").model.layers();
     assert!(
-        layers.leaves().iter().any(|l| l.name == "Merkezler" && l.data.is_some()),
+        layers
+            .leaves()
+            .iter()
+            .any(|l| l.name == "Merkezler" && l.data.is_some()),
         "the written table added as a data layer"
     );
     // Dosya konumunu aç: the file's folder.
@@ -310,22 +328,54 @@ fn a_file_there_is_said_in_the_windows_words_and_each_run_goes_into_the_history(
     assert_eq!(opened.last(), Some(&dir), "{opened:?}");
     // To the drawing: a layer of 4 points.
     sink(&mut app, SinkEvent::Place(Place::Drawing));
-    event(&mut app, Event::LayerName("layer".into(), "Çizimdeki merkezler".into()));
+    event(
+        &mut app,
+        Event::LayerName("layer".into(), "Çizimdeki merkezler".into()),
+    );
     event(&mut app, Event::Run);
-    assert!(matches!(window(&app).status, RunStatus::Ok { .. }), "{:?}", window(&app).status);
+    assert!(
+        matches!(window(&app).status, RunStatus::Ok { .. }),
+        "{:?}",
+        window(&app).status
+    );
     let runs = history(&app);
     let states: Vec<kentos_processing::Status> = runs.iter().map(|r| r.status).collect();
     use kentos_processing::Status::{Error, Ok};
     assert_eq!(states, [Ok, Ok, Error, Error, Ok], "newest first");
     let first = runs.last().expect("the first run");
-    assert!(first.words.iter().any(|w| w == "Sonucun yeri: sonuc.gpkg (GeoPackage dosyası)"), "{:?}", first.words);
-    assert!(first.words.iter().any(|w| w == "Yazılan tablolar: Merkezler (4 satır)"), "{:?}", first.words);
-    assert!(runs[3].summary.starts_with("Yazılmadı: Bu GeoPackage zaten var"), "{}", runs[3].summary);
+    assert!(
+        first
+            .words
+            .iter()
+            .any(|w| w == "Sonucun yeri: sonuc.gpkg (GeoPackage dosyası)"),
+        "{:?}",
+        first.words
+    );
+    assert!(
+        first
+            .words
+            .iter()
+            .any(|w| w == "Yazılan tablolar: Merkezler (4 satır)"),
+        "{:?}",
+        first.words
+    );
+    assert!(
+        runs[3]
+            .summary
+            .starts_with("Yazılmadı: Bu GeoPackage zaten var"),
+        "{}",
+        runs[3].summary
+    );
     // Geri al: the drawn run's points are gone, its record says so with its layer.
     assert_eq!(app.run_gone(&runs[0], app.alive(&runs[0]).len()), None);
     let _ = app.update(Message::Run("edit.undo"));
-    let gone = app.run_gone(&runs[0], app.alive(&runs[0]).len()).expect("taken back");
-    assert_eq!(gone, "Geri alındı: eklediği nesneler çizimde yok, “Çizimdeki merkezler” katmanı kaldırıldı.");
+    let gone = app
+        .run_gone(&runs[0], app.alive(&runs[0]).len())
+        .expect("taken back");
+    assert_eq!(
+        gone,
+        "Geri alındı: eklediği nesneler çizimde yok, “Çizimdeki merkezler” katmanı kaldırıldı."
+    );
     // One of the four squares deleted, the first run opened again: the window says it read 4 and reads 3 now.
     {
         let model = &mut app.document.as_mut().expect("a drawing").model;
@@ -336,12 +386,21 @@ fn a_file_there_is_said_in_the_windows_words_and_each_run_goes_into_the_history(
             .expect("a square");
         model.remove(&[square]);
     }
-    event(&mut app, Event::Panel(super::panel::Event::Reopen(first.seq)));
+    event(
+        &mut app,
+        Event::Panel(super::panel::Event::Reopen(first.seq)),
+    );
     let note = window(&app).reopen_note.clone().expect("a note");
-    assert!(note.contains("önceki çalıştırma 4 nesne okudu, girdi şimdi 3 nesne"), "{note}");
+    assert!(
+        note.contains("önceki çalıştırma 4 nesne okudu, girdi şimdi 3 nesne"),
+        "{note}"
+    );
     // Its target came back with it: the same file, Yeni.
     let s = &window(&app).sink;
-    assert_eq!((s.place, s.path.as_str(), s.mode), (Place::File, out.to_str().expect("a path"), SinkMode::New));
+    assert_eq!(
+        (s.place, s.path.as_str(), s.mode),
+        (Place::File, out.to_str().expect("a path"), SinkMode::New)
+    );
 }
 
 #[test]
@@ -442,12 +501,21 @@ fn screens() {
 fn a_result_moved_to_a_source_or_deleted_is_not_taken_for_undone() {
     let (mut app, dir) = scene("sonuc-tasindi");
     crate::data_layers::register();
-    event(&mut app, Event::LayerName("layer".into(), "Merkezler".into()));
+    event(
+        &mut app,
+        Event::LayerName("layer".into(), "Merkezler".into()),
+    );
     event(&mut app, Event::Run);
     let r = history(&app)[0].clone();
     let layer = {
         let model = &app.document.as_ref().expect("a drawing").model;
-        model.layers().leaves().into_iter().find(|l| l.name == "Merkezler").map(|l| l.id.clone()).expect("its layer")
+        model
+            .layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == "Merkezler")
+            .map(|l| l.id.clone())
+            .expect("its layer")
     };
     // Deleted from its layer: not taken back.
     let snapshot = app.document.as_ref().expect("a drawing").model.clone();
@@ -456,7 +524,10 @@ fn a_result_moved_to_a_source_or_deleted_is_not_taken_for_undone() {
         model.remove(&r.added);
     }
     assert!(!app.run_undone(&r));
-    assert_eq!(app.run_gone(&r, 0).as_deref(), Some("Eklediği nesneler çizimde yok: silindi."));
+    assert_eq!(
+        app.run_gone(&r, 0).as_deref(),
+        Some("Eklediği nesneler çizimde yok: silindi.")
+    );
     // Moved to a GeoPackage's table: said so.
     app.document.as_mut().expect("a drawing").model = snapshot;
     let input = kentos_commands::LayersMigrate {
@@ -469,8 +540,14 @@ fn a_result_moved_to_a_source_or_deleted_is_not_taken_for_undone() {
         existing: None,
     };
     let model = &mut app.document.as_mut().expect("a drawing").model;
-    let done = kentos_native_application::layers_migrate::execute(&mut ExecutionContext::new(model), input);
-    assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+    let done = kentos_native_application::layers_migrate::execute(
+        &mut ExecutionContext::new(model),
+        input,
+    );
+    assert!(
+        matches!(done, kentos_commands::CommandResult::Completed { .. }),
+        "{done:?}"
+    );
     assert_eq!(app.alive(&r).len(), 0, "its objects left the drawing");
     assert!(!app.run_undone(&r));
     assert_eq!(
@@ -490,11 +567,17 @@ fn usage_pictures() {
     let to_file = |tag: &str| {
         let (mut app, dir) = scene(tag);
         sink(&mut app, SinkEvent::Place(Place::File));
-        sink(&mut app, SinkEvent::Path(dir.join("sonuc.gpkg").display().to_string()));
+        sink(
+            &mut app,
+            SinkEvent::Path(dir.join("sonuc.gpkg").display().to_string()),
+        );
         app
     };
     // The form scrolled to its end: Sonucun yeri, then Çıktı's Tablo adı.
-    for (theme, size) in [("light", iced::Size::new(1440.0, 900.0)), ("dark", iced::Size::new(1100.0, 760.0))] {
+    for (theme, size) in [
+        ("light", iced::Size::new(1440.0, 900.0)),
+        ("dark", iced::Size::new(1100.0, 760.0)),
+    ] {
         let mut app = to_file("resim-9354-hedef");
         crate::files_testing::themed(&mut app, theme);
         let _ = app.update(Message::WindowResized(size));
@@ -506,9 +589,13 @@ fn usage_pictures() {
         snapshot.operate(app.view(), Box::new(crate::files_testing::SnapDown));
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = snapshot.render(app.view(), &app.theme());
-        let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join(format!("../../.run/gui-evidence/kullanim-9354/01-dosya-hedefi-{theme}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(format!(
+            "../../.run/gui-evidence/kullanim-9354/01-dosya-hedefi-{theme}.png"
+        ));
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
     crate::files_testing::usage_shots("9354", "02-yazildi", || {
@@ -527,7 +614,10 @@ fn usage_pictures() {
         finish_asked(&mut app);
         finish_asked(&mut app);
         sink(&mut app, SinkEvent::Place(Place::Drawing));
-        event(&mut app, Event::LayerName("layer".into(), "Çizimdeki merkezler".into()));
+        event(
+            &mut app,
+            Event::LayerName("layer".into(), "Çizimdeki merkezler".into()),
+        );
         event(&mut app, Event::Run);
         let _ = app.update(Message::Run("edit.undo"));
         app

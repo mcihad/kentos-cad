@@ -139,7 +139,10 @@ pub struct Listed {
 #[derive(Clone)]
 pub struct RowsOf {
     pub layer: String,
-    pub read: Result<Option<std::sync::Arc<(kentos_domain::Document, kentos_geometry_core::store::Store)>>, String>,
+    pub read: Result<
+        Option<std::sync::Arc<(kentos_domain::Document, kentos_geometry_core::store::Store)>>,
+        String,
+    >,
 }
 
 /// What the builder says of a data layer's rows.
@@ -715,7 +718,11 @@ impl Builder {
 
     /// [`Self::preview_on`] over the data layer's rows when the builder reads them (docs/adr/9348): while they are
     /// read, or when they cannot be, said so; the drawing's objects otherwise.
-    pub fn preview_with(&mut self, doc: Option<&kentos_domain::Document>, store: &kentos_geometry_core::store::Store) {
+    pub fn preview_with(
+        &mut self,
+        doc: Option<&kentos_domain::Document>,
+        store: &kentos_geometry_core::store::Store,
+    ) {
         match self.rows.as_ref().map(|r| r.read.clone()) {
             Some(Ok(Some(copy))) => self.preview_on(Some(&copy.0), &copy.1),
             Some(Ok(None)) => self.preview = Preview::Note(rows_words::READING.into()),
@@ -1014,7 +1021,14 @@ impl App {
                 let (rows, slots) = self.builder_rows(layer);
                 (Some(rows), slots)
             }
-            None => (None, doc.model.by_layer(layer).take(5000).map(|e| Slot(e.base().id)).collect()),
+            None => (
+                None,
+                doc.model
+                    .by_layer(layer)
+                    .take(5000)
+                    .map(|e| Slot(e.base().id))
+                    .collect(),
+            ),
         };
         let Some(doc) = &self.document else {
             return Task::none();
@@ -1035,7 +1049,12 @@ impl App {
         builder.choices = node
             .iter()
             .flat_map(|n| n.fields.iter())
-            .filter_map(|f| f.values.clone().filter(|v| !v.is_empty()).map(|v| (f.name.clone(), v)))
+            .filter_map(|f| {
+                f.values
+                    .clone()
+                    .filter(|v| !v.is_empty())
+                    .map(|v| (f.name.clone(), v))
+            })
             .collect();
         builder.preview_with(Some(&doc.model), self.spatial.store());
         self.show_builder(builder)
@@ -1047,29 +1066,69 @@ impl App {
     fn builder_rows(&self, layer: &str) -> (RowsOf, Vec<Slot>) {
         let read = self.data_rows_of(layer);
         let Some(doc) = self.document.as_ref() else {
-            return (RowsOf { layer: layer.to_owned(), read: Ok(None) }, Vec::new());
+            return (
+                RowsOf {
+                    layer: layer.to_owned(),
+                    read: Ok(None),
+                },
+                Vec::new(),
+            );
         };
         let all = match read {
             Some(crate::data_rows::Rows::Ready(all)) => all,
             Some(crate::data_rows::Rows::Failed(why)) => {
-                return (RowsOf { layer: layer.to_owned(), read: Err(why) }, Vec::new());
+                return (
+                    RowsOf {
+                        layer: layer.to_owned(),
+                        read: Err(why),
+                    },
+                    Vec::new(),
+                );
             }
-            _ => return (RowsOf { layer: layer.to_owned(), read: Ok(None) }, Vec::new()),
+            _ => {
+                return (
+                    RowsOf {
+                        layer: layer.to_owned(),
+                        read: Ok(None),
+                    },
+                    Vec::new(),
+                );
+            }
         };
         let held = doc.model.data_hidden(layer);
         let mut copy = doc.model.clone();
         let mut slots: Vec<Slot> = copy.by_layer(layer).map(|e| Slot(e.base().id)).collect();
-        let objects: Vec<kentos_commands::Entity> =
-            all.iter().filter(|(k, _)| !held.contains(k)).map(|(_, e)| e.clone()).take(5000).collect();
+        let objects: Vec<kentos_commands::Entity> = all
+            .iter()
+            .filter(|(k, _)| !held.contains(k))
+            .map(|(_, e)| e.clone())
+            .take(5000)
+            .collect();
         if let Ok(added) = copy.add_many(objects, "İfade") {
             slots.extend(added);
         }
         slots.truncate(5000);
         let mut store = kentos_geometry_core::store::Store::new();
-        store.put_many(slots.iter().filter_map(|s| copy.get(*s).map(|e| (*s, e))).map(|(s, e)| {
-            (f64::from(s.0), layer, false, kentos_processing::geometry::record(e).3)
-        }));
-        (RowsOf { layer: layer.to_owned(), read: Ok(Some(std::sync::Arc::new((copy, store)))) }, slots)
+        store.put_many(
+            slots
+                .iter()
+                .filter_map(|s| copy.get(*s).map(|e| (*s, e)))
+                .map(|(s, e)| {
+                    (
+                        f64::from(s.0),
+                        layer,
+                        false,
+                        kentos_processing::geometry::record(e).3,
+                    )
+                }),
+        );
+        (
+            RowsOf {
+                layer: layer.to_owned(),
+                read: Ok(Some(std::sync::Arc::new((copy, store)))),
+            },
+            slots,
+        )
     }
 
     /// A data layer's rows came (data_rows.rs): the builder waiting for them counts and previews on them.

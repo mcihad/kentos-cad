@@ -47,7 +47,8 @@ fn core(e: &Entity) -> Option<CoreEntity> {
     {
         for part in parts {
             if let Some(o) = part.as_object_mut() {
-                o.entry("holes").or_insert_with(|| serde_json::Value::Array(Vec::new()));
+                o.entry("holes")
+                    .or_insert_with(|| serde_json::Value::Array(Vec::new()));
             }
         }
     }
@@ -321,8 +322,8 @@ impl Document {
                 continue;
             };
             let next = self
-                    .retied(h, &shifts, Some(current.uid))
-                    .unwrap_or_else(|| untied(h));
+                .retied(h, &shifts, Some(current.uid))
+                .unwrap_or_else(|| untied(h));
             if next != *h {
                 out.push(updated(current, next));
             }

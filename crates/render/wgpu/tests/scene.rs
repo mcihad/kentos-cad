@@ -557,24 +557,63 @@ fn a_grid_over_a_box_it_cannot_count_is_empty() {
     let colors = [Rgba8([255, 255, 255, 0x0a]), Rgba8([255, 255, 255, 0x17])];
     let origin = Vec2::new(0.0, 0.0);
     let boxes = [
-        kentos_render_wgpu::Bounds { min_x: -1.0, min_y: -1.0, max_x: f64::INFINITY, max_y: 1.0 },
-        kentos_render_wgpu::Bounds { min_x: f64::NAN, min_y: -1.0, max_x: 1.0, max_y: 1.0 },
-        kentos_render_wgpu::Bounds { min_x: -1e300, min_y: -1.0, max_x: 1e300, max_y: 1.0 },
+        kentos_render_wgpu::Bounds {
+            min_x: -1.0,
+            min_y: -1.0,
+            max_x: f64::INFINITY,
+            max_y: 1.0,
+        },
+        kentos_render_wgpu::Bounds {
+            min_x: f64::NAN,
+            min_y: -1.0,
+            max_x: 1.0,
+            max_y: 1.0,
+        },
+        kentos_render_wgpu::Bounds {
+            min_x: -1e300,
+            min_y: -1.0,
+            max_x: 1e300,
+            max_y: 1.0,
+        },
         // A spacing below the numbers' precision: x0 + i·minor never moves.
-        kentos_render_wgpu::Bounds { min_x: 4.5e15, min_y: 0.0, max_x: 4.5e15 + 64.0, max_y: 1.0 },
+        kentos_render_wgpu::Bounds {
+            min_x: 4.5e15,
+            min_y: 0.0,
+            max_x: 4.5e15 + 64.0,
+            max_y: 1.0,
+        },
     ];
     for (k, area) in boxes.iter().enumerate() {
         let spacing = if k == 3 { (0.1, 0.5) } else { (1.0, 5.0) };
         let part = scene::build_grid(area, spacing, origin, colors);
         assert!(part.segments.is_empty(), "box {k}: no grid");
-        let turned = scene::build_grid_framed(area, spacing, origin, colors, Vec2::new(1.0, 1.0), 0.3);
+        let turned =
+            scene::build_grid_framed(area, spacing, origin, colors, Vec2::new(1.0, 1.0), 0.3);
         assert!(turned.segments.is_empty(), "box {k}: no turned grid");
     }
     // Twenty thousand lines are still drawn; more are not.
-    let wide = kentos_render_wgpu::Bounds { min_x: 0.0, min_y: 0.0, max_x: 19_990.0, max_y: 1.0 };
-    assert!(!scene::build_grid(&wide, (1.0, 5.0), origin, colors).segments.is_empty());
-    let wider = kentos_render_wgpu::Bounds { min_x: 0.0, min_y: 0.0, max_x: 20_010.0, max_y: 1.0 };
-    assert!(scene::build_grid(&wider, (1.0, 5.0), origin, colors).segments.is_empty());
+    let wide = kentos_render_wgpu::Bounds {
+        min_x: 0.0,
+        min_y: 0.0,
+        max_x: 19_990.0,
+        max_y: 1.0,
+    };
+    assert!(
+        !scene::build_grid(&wide, (1.0, 5.0), origin, colors)
+            .segments
+            .is_empty()
+    );
+    let wider = kentos_render_wgpu::Bounds {
+        min_x: 0.0,
+        min_y: 0.0,
+        max_x: 20_010.0,
+        max_y: 1.0,
+    };
+    assert!(
+        scene::build_grid(&wider, (1.0, 5.0), origin, colors)
+            .segments
+            .is_empty()
+    );
 }
 
 /// A large selection's highlight (docs/adr/0123) built on several cores is
@@ -610,10 +649,19 @@ fn a_highlight_built_side_by_side_is_the_one_built_in_turn() {
         tolerance: 1e-4,
     };
     for deep in [None, Some(&deep)] {
-        let whole = build_highlight(objects.iter().copied(), &style, origin, 0.05, 3, &clip, deep);
+        let whole = build_highlight(
+            objects.iter().copied(),
+            &style,
+            origin,
+            0.05,
+            3,
+            &clip,
+            deep,
+        );
         assert!(!whole.segments.is_empty() && !whole.fills.is_empty() && !whole.markers.is_empty());
         for threads in [1, 2, 3, 7, 8, objects.len() + 5] {
-            let side = build_highlight_parallel(&objects, &style, origin, 0.05, 3, &clip, deep, threads);
+            let side =
+                build_highlight_parallel(&objects, &style, origin, 0.05, 3, &clip, deep, threads);
             assert_eq!(side.layers, whole.layers, "{threads} runs: the layers");
             assert_eq!(side.segments, whole.segments, "{threads} runs: the strokes");
             assert_eq!(side.fills, whole.fills, "{threads} runs: the fills");
@@ -643,9 +691,19 @@ fn a_deep_view_s_highlight_is_split_at_its_box_and_round_in_it() {
         mark_shape: 1,
     };
     let o = Vec2::new(0.0, 0.0);
-    let clip = kentos_render_wgpu::Bounds { min_x: -1e6, min_y: -1e6, max_x: 1e6, max_y: 1e6 };
+    let clip = kentos_render_wgpu::Bounds {
+        min_x: -1e6,
+        min_y: -1e6,
+        max_x: 1e6,
+        max_y: 1e6,
+    };
     let deep = Deep {
-        bounds: kentos_render_wgpu::Bounds { min_x: -1.0, min_y: -1.0, max_x: 1.0, max_y: 1.0 },
+        bounds: kentos_render_wgpu::Bounds {
+            min_x: -1.0,
+            min_y: -1.0,
+            max_x: 1.0,
+            max_y: 1.0,
+        },
         tolerance: 1e-4,
     };
     let plain = scene::build_highlight(objects.iter(), &style, o, 0.05, 0, &clip, None);
@@ -655,7 +713,10 @@ fn a_deep_view_s_highlight_is_split_at_its_box_and_round_in_it() {
     // Every stroke reaching into the box has both its ends in it.
     for (a, c) in &pieces {
         if inside(Vec2::new((a.x + c.x) / 2.0, (a.y + c.y) / 2.0)) {
-            assert!(inside(*a) && inside(*c), "{a:?} → {c:?} reaches into the box from outside it");
+            assert!(
+                inside(*a) && inside(*c),
+                "{a:?} → {c:?} reaches into the box from outside it"
+            );
         }
     }
     // The line: one piece from edge to edge of the box.
@@ -680,7 +741,10 @@ fn a_deep_view_s_highlight_is_split_at_its_box_and_round_in_it() {
             (o.x + p[0] - x).abs() < 1e-9 && (o.y + p[1] - 0.5).abs() < 1e-9
         })
     };
-    assert!(fill_at(&part, 1.0) && fill_at(&part, -1.0), "the fill's ring split at the box");
+    assert!(
+        fill_at(&part, 1.0) && fill_at(&part, -1.0),
+        "the fill's ring split at the box"
+    );
     assert!(!fill_at(&plain, 1.0), "without the box as before");
     assert!(part.segments.len() > plain.segments.len());
 }
@@ -692,14 +756,23 @@ fn a_deep_view_s_highlight_is_split_at_its_box_and_round_in_it() {
 fn a_rings_pieces_and_corners_carry_their_joins() {
     use kentos_render_wgpu::layout::join_code;
     let mut doc = sample();
-    let Some(Entity::Polygon(mut square)) = doc.entities.iter().find(|e| matches!(e, Entity::Polygon(_))).cloned()
+    let Some(Entity::Polygon(mut square)) = doc
+        .entities
+        .iter()
+        .find(|e| matches!(e, Entity::Polygon(_)))
+        .cloned()
     else {
         panic!("a polygon");
     };
     let (x, y) = (486_000.0, 4_415_000.0);
-    square.pts = [(x, y), (x + 1_000.0, y), (x + 1_000.0, y + 1_000.0), (x, y + 1_000.0)]
-        .map(|(x, y)| kentos_contracts::Vec2 { x, y })
-        .to_vec();
+    square.pts = [
+        (x, y),
+        (x + 1_000.0, y),
+        (x + 1_000.0, y + 1_000.0),
+        (x, y + 1_000.0),
+    ]
+    .map(|(x, y)| kentos_contracts::Vec2 { x, y })
+    .to_vec();
     square.bulges = None;
     square.holes = None;
     doc.entities = vec![Entity::Polygon(square)];
@@ -707,11 +780,25 @@ fn a_rings_pieces_and_corners_carry_their_joins() {
     let per_side = (1_000.0 / MAX_SEGMENT_LENGTH).ceil() as usize;
     assert_eq!(fixed.segments.len(), 4 * per_side);
     let left = join_code([1.0, 0.0], [0.0, 1.0]);
-    assert_eq!((left, join_code([1.0, 0.0], [1.0, 0.0]), join_code([0.0, 1.0], [1.0, 0.0])), (1536, 1024, 512));
-    assert_eq!(join_code([1.0, 0.0], [-1.0, 0.0]), 0, "a turn back on itself has no join");
+    assert_eq!(
+        (
+            left,
+            join_code([1.0, 0.0], [1.0, 0.0]),
+            join_code([0.0, 1.0], [1.0, 0.0])
+        ),
+        (1536, 1024, 512)
+    );
+    assert_eq!(
+        join_code([1.0, 0.0], [-1.0, 0.0]),
+        0,
+        "a turn back on itself has no join"
+    );
     for (k, s) in fixed.segments.iter().enumerate() {
         let at = k % per_side;
-        let want = (if at == 0 { left } else { 1024 }, if at + 1 == per_side { left } else { 1024 });
+        let want = (
+            if at == 0 { left } else { 1024 },
+            if at + 1 == per_side { left } else { 1024 },
+        );
         assert_eq!((s.joins & 2047, (s.joins >> 11) & 2047), want, "piece {k}");
     }
 }
@@ -723,10 +810,17 @@ fn plain_lines_that_follow_one_another_meet() {
     let p = |x: f64, y: f64| Vec2::new(x, y);
     let codes = |lines: &[[Vec2; 2]]| -> Vec<(u32, u32)> {
         let part = scene::build_lines(p(0.0, 0.0), &[(lines, Rgba8::rgb(1, 2, 3))]);
-        part.segments.iter().map(|s| (s.joins & 2047, (s.joins >> 11) & 2047)).collect()
+        part.segments
+            .iter()
+            .map(|s| (s.joins & 2047, (s.joins >> 11) & 2047))
+            .collect()
     };
     // Up a corner, then a line apart.
-    let apart = [[p(0., 0.), p(10., 0.)], [p(10., 0.), p(10., 10.)], [p(20., 0.), p(30., 0.)]];
+    let apart = [
+        [p(0., 0.), p(10., 0.)],
+        [p(10., 0.), p(10., 10.)],
+        [p(20., 0.), p(30., 0.)],
+    ];
     assert_eq!(codes(&apart), vec![(0, 1536), (1536, 0), (0, 0)]);
     // A square's four lines back to their start, one of no length in between: four corners.
     let square = [
@@ -738,7 +832,12 @@ fn plain_lines_that_follow_one_another_meet() {
     ];
     assert_eq!(codes(&square), vec![(1536, 1536); 4]);
     // Broken by a point that is no number: nothing meets across it.
-    let broken = [[p(0., 0.), p(10., 0.)], [p(10., 0.), p(f64::NAN, 0.)], [p(f64::NAN, 0.), p(10., 10.)], [p(10., 10.), p(0., 10.)]];
+    let broken = [
+        [p(0., 0.), p(10., 0.)],
+        [p(10., 0.), p(f64::NAN, 0.)],
+        [p(f64::NAN, 0.), p(10., 10.)],
+        [p(10., 10.), p(0., 10.)],
+    ];
     assert_eq!(codes(&broken), vec![(0, 0), (0, 0)]);
 }
 
@@ -747,13 +846,22 @@ fn plain_lines_that_follow_one_another_meet() {
 #[test]
 fn a_hatch_patterns_dots_are_drawn() {
     let mut doc = sample();
-    let Some(Entity::Hatch(mut hatch)) = doc.entities.iter().find(|e| matches!(e, Entity::Hatch(_))).cloned() else {
+    let Some(Entity::Hatch(mut hatch)) = doc
+        .entities
+        .iter()
+        .find(|e| matches!(e, Entity::Hatch(_)))
+        .cloned()
+    else {
         panic!("a hatch");
     };
     hatch.pattern.kind = kentos_contracts::HatchPatternType::Pattern;
     hatch.pattern.scale = Some(1.0);
-    hatch.pattern.lines =
-        Some(vec![kentos_contracts::PatternLine { angle: 0.0, origin: [0.0, 0.0], offset: [0.0, 1.0], dashes: vec![0.0, -1.0] }]);
+    hatch.pattern.lines = Some(vec![kentos_contracts::PatternLine {
+        angle: 0.0,
+        origin: [0.0, 0.0],
+        offset: [0.0, 1.0],
+        dashes: vec![0.0, -1.0],
+    }]);
     doc.entities = vec![Entity::Hatch(hatch)];
     let fixed = scene::build_fixed(&doc, &palette(), origin(&doc));
     let dots = segments(&fixed).iter().filter(|(a, b)| a == b).count();

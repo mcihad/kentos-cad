@@ -181,7 +181,12 @@ impl LabelMemo {
             .filter(|p| olds.contains(&p.records.as_ptr()))
             .count();
         self.made += 1;
-        if plain && table.is_none() && parts.iter().all(|p| p.records.is_empty() && p.outlines.is_empty()) {
+        if plain
+            && table.is_none()
+            && parts
+                .iter()
+                .all(|p| p.records.is_empty() && p.outlines.is_empty())
+        {
             self.kept.remove(&key);
             self.blank.insert(
                 key,

@@ -8,7 +8,10 @@
 
 use std::collections::BTreeSet;
 
-use kentos_data::{Coord, Curve, Driver as _, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value};
+use kentos_data::{
+    Coord, Curve, Driver as _, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable,
+    Value,
+};
 use kentos_interaction::Vec2;
 
 use crate::app::{App, Message};
@@ -22,7 +25,9 @@ const C: (f64, f64) = (487_200.0, 4_420_100.0);
 fn roads(tag: &str) -> std::path::PathBuf {
     let path = scratch(tag).join("qa.gpkg");
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
-    let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+    let source = kentos_data_gpkg::Gpkg
+        .open(path.to_str().expect("utf-8"))
+        .expect("open");
     let mut tx = source.begin().expect("begin");
     for table in ["qa_yollar", "qa_secim"] {
         tx.create_table(
@@ -32,7 +37,13 @@ fn roads(tag: &str) -> std::path::PathBuf {
                 description: None,
                 key: "fid".into(),
                 fields: vec![Field::new("ad", FieldKind::Text { max: Some(16) })],
-                geometry: Some(GeometryField { name: "geom".into(), type_name: "LINESTRING".into(), z: false, m: false, srid: Some(5256) }),
+                geometry: Some(GeometryField {
+                    name: "geom".into(),
+                    type_name: "LINESTRING".into(),
+                    z: false,
+                    m: false,
+                    srid: Some(5256),
+                }),
                 spatial_index: true,
                 system: None,
             },
@@ -42,10 +53,17 @@ fn roads(tag: &str) -> std::path::PathBuf {
     }
     let line = |ad: &str, a: (f64, f64), b: (f64, f64)| NewFeature {
         fid: None,
-        geometry: Some(Geometry::Curve(Curve::Line(vec![Coord::xy(a.0, a.1), Coord::xy(b.0, b.1)]))),
+        geometry: Some(Geometry::Curve(Curve::Line(vec![
+            Coord::xy(a.0, a.1),
+            Coord::xy(b.0, b.1),
+        ]))),
         values: vec![("ad".into(), Value::Text(ad.into()))],
     };
-    tx.insert("qa_yollar", &[line("AB", A, B), line("BC", B, C), line("CB", C, B)]).expect("roads");
+    tx.insert(
+        "qa_yollar",
+        &[line("AB", A, B), line("BC", B, C), line("CB", C, B)],
+    )
+    .expect("roads");
     tx.insert("qa_secim", &[line("AB", A, B)]).expect("chosen");
     tx.commit().expect("commit");
     path
@@ -57,12 +75,18 @@ fn scene(tag: &str) -> (App, String) {
     let mut app = app_with_drawing();
     {
         let model = &mut app.document.as_mut().expect("a drawing").model;
-        let all: Vec<kentos_domain::Slot> = model.entities().map(|e| kentos_domain::Slot(e.base().id)).collect();
+        let all: Vec<kentos_domain::Slot> = model
+            .entities()
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .collect();
         model.remove(&all);
     }
     let ids = app
         .add_data_layers(
-            ["qa_yollar", "qa_secim"].into_iter().map(|t| crate::data_layers::describe(&address, t).expect("described")).collect(),
+            ["qa_yollar", "qa_secim"]
+                .into_iter()
+                .map(|t| crate::data_layers::describe(&address, t).expect("described"))
+                .collect(),
         )
         .expect("added");
     let task = app.update(Message::Run("tool.identify"));
@@ -78,7 +102,11 @@ fn click(app: &mut App, at: (f64, f64)) {
 }
 
 fn card(app: &App) -> Option<(String, i64)> {
-    app.gis.data_info.card.as_ref().map(|f| (f.layer.clone(), f.key))
+    app.gis
+        .data_info
+        .card
+        .as_ref()
+        .map(|f| (f.layer.clone(), f.key))
 }
 
 fn press(app: &mut App, e: Card) {
@@ -90,10 +118,20 @@ fn press(app: &mut App, e: Card) {
 fn every_row_under_a_click_is_a_candidate_in_one_order() {
     let (mut app, yollar) = scene("bilgi-adaylar");
     click(&mut app, C);
-    let rows: Vec<(String, i64)> = app.gis.data_info.rows.iter().map(|f| (f.layer.clone(), f.key)).collect();
+    let rows: Vec<(String, i64)> = app
+        .gis
+        .data_info
+        .rows
+        .iter()
+        .map(|f| (f.layer.clone(), f.key))
+        .collect();
     assert_eq!(rows, [(yollar.clone(), 2), (yollar.clone(), 3)]);
     assert_eq!(card(&app), Some((yollar.clone(), 2)));
-    assert_eq!(app.info_place(), Some((0, 2)), "Bu noktada 2 veri satırı · 1/2");
+    assert_eq!(
+        app.info_place(),
+        Some((0, 2)),
+        "Bu noktada 2 veri satırı · 1/2"
+    );
     press(&mut app, Card::Next);
     assert_eq!(card(&app), Some((yollar.clone(), 3)));
     press(&mut app, Card::Next);
@@ -114,14 +152,28 @@ fn the_card_chooses_its_row_and_shows_it_in_the_table() {
     press(&mut app, Card::Next);
     assert_eq!(card(&app), Some((yollar.clone(), 3)), "CB");
     assert_eq!(app.info_card_layer().as_deref(), Some(yollar.as_str()));
-    assert!(app.form_of_layer(&yollar).is_none(), "no form: Formu göster is off");
+    assert!(
+        app.form_of_layer(&yollar).is_none(),
+        "no form: Formu göster is off"
+    );
     press(&mut app, Card::Choose);
-    assert_eq!(app.gis.features.data.selected_layer(), Some(yollar.as_str()));
+    assert_eq!(
+        app.gis.features.data.selected_layer(),
+        Some(yollar.as_str())
+    );
     assert_eq!(app.gis.features.data.selected, BTreeSet::from([3]));
-    assert_eq!(app.data_table_layer().map(|n| n.id), Some(yollar.clone()), "the table on the row's layer");
+    assert_eq!(
+        app.data_table_layer().map(|n| n.id),
+        Some(yollar.clone()),
+        "the table on the row's layer"
+    );
     assert!(app.selection.is_empty(), "no object of the drawing chosen");
     press(&mut app, Card::Table);
-    assert_eq!(app.gis.features.show, crate::features::Show::Selected, "the chosen row shown");
+    assert_eq!(
+        app.gis.features.show,
+        crate::features::Show::Selected,
+        "the chosen row shown"
+    );
     assert_eq!(app.gis.features.data.selected, BTreeSet::from([3]));
 }
 
@@ -130,11 +182,15 @@ fn the_card_chooses_its_row_and_shows_it_in_the_table() {
 fn screens() {
     crate::files_testing::usage_shots("9341", "01-bilgi-karti-eylemler", || {
         let (mut app, _) = scene("bilgi-resim");
-        let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(iced::Rectangle::new(
-            iced::Point::ORIGIN,
-            iced::Size::new(1000.0, 700.0),
-        ))));
-        app.zoom_to_bounds(&kentos_commands::Bounds { min_x: A.0 - 60.0, min_y: A.1 - 60.0, max_x: C.0 + 60.0, max_y: C.1 + 60.0 });
+        let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
+            iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0)),
+        )));
+        app.zoom_to_bounds(&kentos_commands::Bounds {
+            min_x: A.0 - 60.0,
+            min_y: A.1 - 60.0,
+            max_x: C.0 + 60.0,
+            max_y: C.1 + 60.0,
+        });
         click(&mut app, C);
         app
     });

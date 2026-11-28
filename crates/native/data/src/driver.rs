@@ -149,7 +149,9 @@ pub trait Source: Send + Sync {
     /// geometry; the query is not run past its first row. A driver that reads no queries refuses.
     fn query_columns(&self, sql: &str) -> Result<Vec<crate::query::QueryColumn>, DataError> {
         let _ = sql;
-        Err(DataError::Unsupported("Bu kaynak sorgu katmanı okumaz.".to_owned()))
+        Err(DataError::Unsupported(
+            "Bu kaynak sorgu katmanı okumaz.".to_owned(),
+        ))
     }
     /// Starts a transaction.
     fn begin(&self) -> Result<Box<dyn Transaction>, DataError>;
@@ -163,12 +165,16 @@ pub trait Source: Send + Sync {
     /// Makes the write receipts' table in `scope`, if it is not there; the source's other tables stay as they are.
     fn set_up_receipts(&self, scope: &str) -> Result<(), DataError> {
         let _ = scope;
-        Err(DataError::Unsupported("Bu kaynak işlem kaydı tutmaz.".to_owned()))
+        Err(DataError::Unsupported(
+            "Bu kaynak işlem kaydı tutmaz.".to_owned(),
+        ))
     }
     /// The receipt of the write `id` in `scope`, read outside any transaction; none when no such write committed.
     fn receipt(&self, scope: &str, id: &str) -> Result<Option<Receipt>, DataError> {
         let _ = (scope, id);
-        Err(DataError::Unsupported("Bu kaynak işlem kaydı tutmaz.".to_owned()))
+        Err(DataError::Unsupported(
+            "Bu kaynak işlem kaydı tutmaz.".to_owned(),
+        ))
     }
     /// Where it keeps projects with its data (docs/adr/9107); none for a source that cannot keep them.
     fn project_store(&self) -> Option<&dyn ProjectStore> {
@@ -211,20 +217,30 @@ pub trait Transaction: Send {
     /// says so; nothing of the transaction is written then.
     fn add_columns(&mut self, table: &str, fields: &[Field]) -> Result<(), DataError> {
         let _ = (table, fields);
-        Err(DataError::Unsupported("Bu kaynağın tablosuna sütun eklenemez.".to_owned()))
+        Err(DataError::Unsupported(
+            "Bu kaynağın tablosuna sütun eklenemez.".to_owned(),
+        ))
     }
     /// Writes the columns' rules into the source (docs/adr/9324), each replacing the column's rule there; a column
     /// given none loses its rule. Rows already there are not checked against them. A source that cannot says so;
     /// nothing of the transaction is written then.
-    fn set_rules(&mut self, table: &str, columns: &[crate::schema::RuledColumn]) -> Result<(), DataError> {
+    fn set_rules(
+        &mut self,
+        table: &str,
+        columns: &[crate::schema::RuledColumn],
+    ) -> Result<(), DataError> {
         let _ = (table, columns);
-        Err(DataError::Unsupported("Bu kaynağın tablosuna kural yazılamaz.".to_owned()))
+        Err(DataError::Unsupported(
+            "Bu kaynağın tablosuna kural yazılamaz.".to_owned(),
+        ))
     }
     /// Writes a write's receipt into `scope`'s receipts table, inside the transaction: it commits with the rows or not
     /// at all (docs/adr/9126). A receipt of the same id already there is refused (its primary key).
     fn receipt(&mut self, scope: &str, receipt: &Receipt) -> Result<(), DataError> {
         let _ = (scope, receipt);
-        Err(DataError::Unsupported("Bu kaynak işlem kaydı tutmaz.".to_owned()))
+        Err(DataError::Unsupported(
+            "Bu kaynak işlem kaydı tutmaz.".to_owned(),
+        ))
     }
     /// Writes it all.
     fn commit(self: Box<Self>) -> Result<(), DataError>;

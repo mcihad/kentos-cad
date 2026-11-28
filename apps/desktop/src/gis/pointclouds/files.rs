@@ -103,7 +103,6 @@ impl DesktopFiles {
     }
 }
 
-
 impl Files for DesktopFiles {
     fn open_cloud(&self, source: &CloudSource) -> Result<Box<dyn CloudRead + '_>, String> {
         let (bytes, key) = self.bytes_of(source)?;
@@ -137,9 +136,11 @@ impl Files for DesktopFiles {
         .or_else(|| std::env::var_os("HOME").map(PathBuf::from))
         .ok_or("Çıktının klasörü bulunamadı: bir çıktı dosyası seçin.")?;
         // A name no file and no running job has (GIS-012): an earlier result is never written over.
-        Ok(kentos_processing::files::free_output(&folder, &stem, suffix, ext)
-            .to_string_lossy()
-            .into_owned())
+        Ok(
+            kentos_processing::files::free_output(&folder, &stem, suffix, ext)
+                .to_string_lossy()
+                .into_owned(),
+        )
     }
 
     /// The headless server's writer (docs/adr/8057 §120): a piece is not left beside the result.

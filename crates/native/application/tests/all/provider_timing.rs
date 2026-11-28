@@ -281,7 +281,11 @@ fn provider_timing() {
         assert_eq!(a["status"], "completed", "{a}");
         let o = &a["output"];
         report(
-            &format!("{what} ({} okundu, {} satır)", o["read"], o["rows"].as_array().map_or(0, Vec::len)),
+            &format!(
+                "{what} ({} okundu, {} satır)",
+                o["read"],
+                o["rows"].as_array().map_or(0, Vec::len)
+            ),
             t.elapsed().as_secs_f64() * 1000.0,
         );
     };

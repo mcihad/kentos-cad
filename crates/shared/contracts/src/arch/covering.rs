@@ -124,12 +124,18 @@ impl Covering {
 
     /// A facade moulding (cephe silmesi, docs/adr/8173): `MOLDING` "Cephe silmesi".
     pub fn facade_moulding() -> Self {
-        Covering { predefined: "MOLDING".into(), name: Some(Self::FACADE_MOULDING.into()) }
+        Covering {
+            predefined: "MOLDING".into(),
+            name: Some(Self::FACADE_MOULDING.into()),
+        }
     }
 
     /// A coping (harpuşta, docs/adr/8173): `COPING`, its type's word.
     pub fn coping() -> Self {
-        Covering { predefined: "COPING".into(), name: None }
+        Covering {
+            predefined: "COPING".into(),
+            name: None,
+        }
     }
 
     /// The words its IFC name takes: its name, else its type's word.
@@ -203,11 +209,17 @@ mod tests {
             predefined: "NOTDEFINED".into(),
             name: None,
         };
-        assert_eq!(bad.problem().map(|p| p.0).as_deref(), Some("covering.predefined"));
+        assert_eq!(
+            bad.problem().map(|p| p.0).as_deref(),
+            Some("covering.predefined")
+        );
         let nameless = Covering {
             predefined: "USERDEFINED".into(),
             name: None,
         };
-        assert_eq!(nameless.problem().map(|p| p.0).as_deref(), Some("covering.name"));
+        assert_eq!(
+            nameless.problem().map(|p| p.0).as_deref(),
+            Some("covering.name")
+        );
     }
 }

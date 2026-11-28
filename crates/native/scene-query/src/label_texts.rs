@@ -108,7 +108,9 @@ fn text_class(style: &LabelStyle, when: Option<&str>, unit: Unit) -> TextClass {
 /// A layer's classes as the desktop asks them, their expressions in `unit`.
 pub fn layer_texts(node: Option<&LayerNode>, unit: Unit) -> LayerTexts {
     let style = node.map(|n| &n.style);
-    let fields: Vec<String> = node.map(|n| n.fields.iter().map(|f| f.name.clone()).collect()).unwrap_or_default();
+    let fields: Vec<String> = node
+        .map(|n| n.fields.iter().map(|f| f.name.clone()).collect())
+        .unwrap_or_default();
     match style.and_then(|s| s.labels.as_ref()) {
         Some(l) if l.mode == LabelsMode::Off => LayerTexts::Off,
         Some(l) if l.mode == LabelsMode::Rules => LayerTexts::Classes {
@@ -273,7 +275,12 @@ pub fn object_texts<'s>(
 ) -> Vec<(Vec<(u16, String)>, f64)> {
     let mut out: Vec<(Vec<(u16, String)>, f64)> =
         list.iter().map(|_| (Vec::new(), f64::NAN)).collect();
-    let LayerTexts::Classes { classes, defaults, fields } = t else {
+    let LayerTexts::Classes {
+        classes,
+        defaults,
+        fields,
+    } = t
+    else {
         return out;
     };
     if *defaults {
@@ -411,7 +418,10 @@ mod tests {
             }))
             .expect("an area");
             let base = e.base_mut();
-            base.attrs = attrs.iter().map(|(k, v)| ((*k).to_owned(), (*v).to_owned())).collect();
+            base.attrs = attrs
+                .iter()
+                .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+                .collect();
             base.label = label.map(str::to_owned);
             e
         };
@@ -433,18 +443,36 @@ mod tests {
         let name = |id: &str| id.to_owned();
         let none = |_: usize| None;
         let texts = |t: &LayerTexts| -> Vec<Vec<String>> {
-            object_texts(&list, t, &name, &none).into_iter().map(|(v, _)| v.into_iter().map(|(_, s)| s).collect()).collect()
+            object_texts(&list, t, &name, &none)
+                .into_iter()
+                .map(|(v, _)| v.into_iter().map(|(_, s)| s).collect())
+                .collect()
         };
-        assert_eq!(texts(&class("{ad}")), [vec!["Deneme parseli".to_owned()], vec!["Test alanı".to_owned()]]);
+        assert_eq!(
+            texts(&class("{ad}")),
+            [
+                vec!["Deneme parseli".to_owned()],
+                vec!["Test alanı".to_owned()]
+            ]
+        );
         assert_eq!(
             texts(&class("{label} · {No} · {yok}")),
-            [vec![" · {No} · {yok}".to_owned()], vec!["101/7 · 7 · {yok}".to_owned()]]
+            [
+                vec![" · {No} · {yok}".to_owned()],
+                vec!["101/7 · 7 · {yok}".to_owned()]
+            ]
         );
-        assert_eq!(texts(&class("{label} m²")), [Vec::<String>::new(), vec!["101/7 m²".to_owned()]]);
+        assert_eq!(
+            texts(&class("{label} m²")),
+            [Vec::<String>::new(), vec!["101/7 m²".to_owned()]]
+        );
         // docs/adr/9110 §5: a field of the layer without a value is empty; a name that is no field still shows.
         assert_eq!(
             texts(&with("{ad}/{No} {yok}", &["ad", "No"])),
-            [vec!["Deneme parseli/ {yok}".to_owned()], vec!["Test alanı/7 {yok}".to_owned()]]
+            [
+                vec!["Deneme parseli/ {yok}".to_owned()],
+                vec!["Test alanı/7 {yok}".to_owned()]
+            ]
         );
     }
 }

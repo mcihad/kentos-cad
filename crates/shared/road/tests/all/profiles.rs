@@ -40,29 +40,53 @@ fn every_profile_crosses_where_the_reference_says() {
         let want = c["crossings"].as_array().unwrap();
         assert_eq!(crossings.len(), want.len(), "{name}: crossings");
         for (g, w) in crossings.iter().zip(want) {
-            assert!((g.station - n(&w["station"])).abs() < 1e-7, "{name}: {} vs {}", g.station, w["station"]);
+            assert!(
+                (g.station - n(&w["station"])).abs() < 1e-7,
+                "{name}: {} vs {}",
+                g.station,
+                w["station"]
+            );
             let z = g.z.expect("a crossing has a height");
             assert!((z - n(&w["z"])).abs() < 1e-7, "{name}: {z} vs {}", w["z"]);
         }
         // The stretches off the surface: each mark's `gap` (the stretch before it).
-        let off: Vec<bool> = c["off"].as_array().unwrap().iter().map(|v| v.as_bool().unwrap()).collect();
-        let marks: Vec<_> = got.iter().filter(|p| p.crossing || p.station == 0.0 || p.station == al.length).collect();
+        let off: Vec<bool> = c["off"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_bool().unwrap())
+            .collect();
+        let marks: Vec<_> = got
+            .iter()
+            .filter(|p| p.crossing || p.station == 0.0 || p.station == al.length)
+            .collect();
         assert_eq!(marks.len(), off.len() + 1, "{name}: marks");
         for (m, o) in marks[1..].iter().zip(&off) {
             assert_eq!(m.gap, *o, "{name}: the stretch before {}", m.station);
         }
-        assert!(got.windows(2).all(|w| w[0].station < w[1].station), "{name}: in order");
+        assert!(
+            got.windows(2).all(|w| w[0].station < w[1].station),
+            "{name}: in order"
+        );
         // A linear reading is within the tolerance of the true height.
         for w in c["checks"].as_array().unwrap() {
             let s = n(&w["station"]);
-            let i = got.partition_point(|p| p.station <= s).clamp(1, got.len() - 1);
+            let i = got
+                .partition_point(|p| p.station <= s)
+                .clamp(1, got.len() - 1);
             let (a, b) = (got[i - 1], got[i]);
             match (w["z"].as_f64(), a.z, b.z, b.gap) {
                 (Some(z), Some(za), Some(zb), false) => {
                     let lin = za + (zb - za) * (s - a.station) / (b.station - a.station);
-                    assert!((lin - z).abs() <= TOLERANCE + 1e-9, "{name}: at {s}: {lin} vs {z}");
+                    assert!(
+                        (lin - z).abs() <= TOLERANCE + 1e-9,
+                        "{name}: at {s}: {lin} vs {z}"
+                    );
                 }
-                (None, _, _, gap) => assert!(gap || a.z.is_none() || b.z.is_none(), "{name}: {s} off the surface"),
+                (None, _, _, gap) => assert!(
+                    gap || a.z.is_none() || b.z.is_none(),
+                    "{name}: {s} off the surface"
+                ),
                 other => panic!("{name}: at {s}: {other:?}"),
             }
         }
@@ -95,14 +119,30 @@ fn picture() {
     let al = align(&pis).unwrap();
     let ground = terrain(&surface, &al);
     let zs: Vec<f64> = ground.iter().filter_map(|p| p.z).collect();
-    let (lo, hi) = (zs.iter().cloned().fold(f64::INFINITY, f64::min), zs.iter().cloned().fold(f64::NEG_INFINITY, f64::max));
+    let (lo, hi) = (
+        zs.iter().cloned().fold(f64::INFINITY, f64::min),
+        zs.iter().cloned().fold(f64::NEG_INFINITY, f64::max),
+    );
     let l = al.length;
-    let pv = |id: &str, s: f64, z: f64, curve| Pvi { id: id.into(), station: s, elevation: z, curve };
+    let pv = |id: &str, s: f64, z: f64, curve| Pvi {
+        id: id.into(),
+        station: s,
+        elevation: z,
+        curve,
+    };
     let v = vbuild(&[
         pv("a", 0.0, ground[0].z.unwrap_or(lo) + 1.0, VCurve::None),
         pv("v1", l * 0.3, lo + 1.5, VCurve::Parabola { length: 80.0 }),
         pv("v2", l * 0.62, hi - 1.0, VCurve::Circle { radius: 1200.0 }),
-        pv("v3", l * 0.85, lo + 3.0, VCurve::Asymmetric { length_in: 50.0, length_out: 35.0 }),
+        pv(
+            "v3",
+            l * 0.85,
+            lo + 3.0,
+            VCurve::Asymmetric {
+                length_in: 50.0,
+                length_out: 35.0,
+            },
+        ),
         pv("b", l, hi - 2.0, VCurve::None),
     ])
     .expect("a vertical alignment");
@@ -114,28 +154,54 @@ fn picture() {
     let sx = |s: f64| m + s * xs;
     let sy = |z: f64| h - 140.0 - (z - base) * ys;
     let poly = |pts: &[(f64, f64)], color: &str, width: f64| {
-        let p: String = pts.iter().map(|(s, z)| format!("{:.2},{:.2} ", sx(*s), sy(*z))).collect();
+        let p: String = pts
+            .iter()
+            .map(|(s, z)| format!("{:.2},{:.2} ", sx(*s), sy(*z)))
+            .collect();
         format!("<polyline points='{p}' fill='none' stroke='{color}' stroke-width='{width}'/>")
     };
-    let mut svg = format!("<svg xmlns='http://www.w3.org/2000/svg' width='{w}' height='{w}' viewBox='0 0 {w} {w}' style='background:#fff;font-family:Helvetica'>");
+    let mut svg = format!(
+        "<svg xmlns='http://www.w3.org/2000/svg' width='{w}' height='{w}' viewBox='0 0 {w} {w}' style='background:#fff;font-family:Helvetica'>"
+    );
     // The grid: every 50 m and every metre of height.
     let mut s = 0.0;
     while s <= l {
-        svg += &format!("<line x1='{0:.1}' y1='{1:.1}' x2='{0:.1}' y2='{2:.1}' stroke='#e4e4e4'/>", sx(s), sy(base), sy(hi + 3.0));
+        svg += &format!(
+            "<line x1='{0:.1}' y1='{1:.1}' x2='{0:.1}' y2='{2:.1}' stroke='#e4e4e4'/>",
+            sx(s),
+            sy(base),
+            sy(hi + 3.0)
+        );
         s += 50.0;
     }
     let mut z = base.ceil();
     while z <= hi + 3.0 {
-        svg += &format!("<line x1='{0:.1}' y1='{1:.1}' x2='{2:.1}' y2='{1:.1}' stroke='#eeeeee'/><text x='8' y='{3:.1}' font-size='11' fill='#777'>{z:.0}</text>", sx(0.0), sy(z), sx(l), sy(z) + 4.0);
+        svg += &format!(
+            "<line x1='{0:.1}' y1='{1:.1}' x2='{2:.1}' y2='{1:.1}' stroke='#eeeeee'/><text x='8' y='{3:.1}' font-size='11' fill='#777'>{z:.0}</text>",
+            sx(0.0),
+            sy(z),
+            sx(l),
+            sy(z) + 4.0
+        );
         z += 1.0;
     }
-    let g: Vec<(f64, f64)> = ground.iter().filter_map(|p| p.z.map(|z| (p.station, z))).collect();
+    let g: Vec<(f64, f64)> = ground
+        .iter()
+        .filter_map(|p| p.z.map(|z| (p.station, z)))
+        .collect();
     svg += &poly(&g, "#222", 1.4);
-    let red: Vec<(f64, f64)> = (0..=800).map(|i| l * i as f64 / 800.0).filter_map(|s| v.at(s).map(|(z, _, _)| (s, z))).collect();
+    let red: Vec<(f64, f64)> = (0..=800)
+        .map(|i| l * i as f64 / 800.0)
+        .filter_map(|s| v.at(s).map(|(z, _, _)| (s, z)))
+        .collect();
     svg += &poly(&red, "#d22", 2.2);
     for c in &v.curves {
         for p in [c.start, c.end] {
-            svg += &format!("<circle cx='{:.1}' cy='{:.1}' r='3' fill='#d22'/>", sx(p[0]), sy(p[1]));
+            svg += &format!(
+                "<circle cx='{:.1}' cy='{:.1}' r='3' fill='#d22'/>",
+                sx(p[0]),
+                sy(p[1])
+            );
         }
         let kind = match c.curve {
             VCurve::Parabola { .. } => "parabol",
@@ -154,7 +220,12 @@ fn picture() {
     // The bands: km, black and red elevations every 50 m.
     let mut s = 0.0;
     let y0 = h - 110.0;
-    svg += &format!("<text x='8' y='{:.1}' font-size='12'>Km</text><text x='8' y='{:.1}' font-size='12'>Siyah kot</text><text x='8' y='{:.1}' font-size='12' fill='#d22'>Kırmızı kot</text>", y0, y0 + 30.0, y0 + 60.0);
+    svg += &format!(
+        "<text x='8' y='{:.1}' font-size='12'>Km</text><text x='8' y='{:.1}' font-size='12'>Siyah kot</text><text x='8' y='{:.1}' font-size='12' fill='#d22'>Kırmızı kot</text>",
+        y0,
+        y0 + 30.0,
+        y0 + 60.0
+    );
     while s <= l {
         let black = al.at(s).and_then(|p| surface.height(p.x, p.y).z);
         let red = v.at(s).map(|(z, _, _)| z);
@@ -212,9 +283,16 @@ fn the_walk_told_is_the_walk_and_hears_a_stop() {
     assert_eq!(told, terrain(&surface, &al));
     let seen = seen.into_inner();
     assert!(seen.len() > 4, "{} ticks", seen.len());
-    assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1), "{seen:?}");
+    assert!(
+        seen.windows(2)
+            .all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1),
+        "{seen:?}"
+    );
     assert!(seen.iter().all(|(d, t)| d < t), "{seen:?}");
-    assert!(seen.iter().any(|(d, t)| *d >= t / 2), "the heights' half: {seen:?}");
+    assert!(
+        seen.iter().any(|(d, t)| *d >= t / 2),
+        "the heights' half: {seen:?}"
+    );
     let asked = Cell::new(0);
     let stopped = kentos_road::profile::terrain_told(&surface, &al, &|_, _| {
         asked.set(asked.get() + 1);

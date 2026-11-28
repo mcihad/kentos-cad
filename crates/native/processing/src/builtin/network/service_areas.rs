@@ -166,7 +166,10 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     let number = |x: f64| cost_value(Some(x), cost, ctx.units.length_decimals);
     // The breaks' unit in the columns' names (docs/adr/9355): “Bitiş (m)”, “Aralık (dk)”.
     let unit = def.breaks_unit(cost).map(str::to_owned);
-    let column = |n: &str| unit.as_ref().map_or_else(|| n.to_owned(), |u| format!("{n} ({u})"));
+    let column = |n: &str| {
+        unit.as_ref()
+            .map_or_else(|| n.to_owned(), |u| format!("{n} ({u})"))
+    };
     let layer = v.layer("layer").id.clone();
     let mut add = Vec::new();
     for a in &served.areas {

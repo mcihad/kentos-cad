@@ -14,9 +14,10 @@ use std::borrow::Cow;
 use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_contracts::{
-    DossierSide, FeeAssess, FeeAssessment, FeeAssessmentState, FeeCancel, FeeChoice, FeeDefinition, FeeInputs, FeeItem,
-    FeeLine, FeePaid, FeeParameter, FeeParameterKind, FeePreview, FeeRounding, FeeRule, FeeSchedule, FeeScheduleCopy,
-    FeeScheduleEdit, FeeScheduleState, FeeTable, FeeTableRow, FeeTry, TenantRole,
+    DossierSide, FeeAssess, FeeAssessment, FeeAssessmentState, FeeCancel, FeeChoice, FeeDefinition,
+    FeeInputs, FeeItem, FeeLine, FeePaid, FeeParameter, FeeParameterKind, FeePreview, FeeRounding,
+    FeeRule, FeeSchedule, FeeScheduleCopy, FeeScheduleEdit, FeeScheduleState, FeeTable,
+    FeeTableRow, FeeTry, TenantRole,
 };
 use kentos_expression::{Schema, Scope as ExprScope, Value, Variable, compile_with};
 use kentos_postgres::Db;
@@ -124,7 +125,9 @@ fn typed_number(text: &str) -> Option<f64> {
     let t: String = text.chars().filter(|c| !c.is_whitespace()).collect();
     let grouped_thousands = |s: &str| {
         let mut parts = s.split('.');
-        parts.next().is_some_and(|h| (1..=3).contains(&h.len()) && h.chars().all(|c| c.is_ascii_digit()))
+        parts
+            .next()
+            .is_some_and(|h| (1..=3).contains(&h.len()) && h.chars().all(|c| c.is_ascii_digit()))
             && s.contains('.')
             && parts.all(|g| g.len() == 3 && g.chars().all(|c| c.is_ascii_digit()))
     };
@@ -158,44 +161,77 @@ pub fn validate(def: &FeeDefinition) -> AppResult<()> {
     for (i, p) in def.parameters.iter().enumerate() {
         let at = |f: &str| format!("definition.parameters[{i}].{f}");
         if !key_ok(&p.key) {
-            return Err(invalid(at("key"), format!("“{}”: anahtar küçük harf, rakam ve _ olmalı, harfle başlamalı.", p.key)));
+            return Err(invalid(
+                at("key"),
+                format!(
+                    "“{}”: anahtar küçük harf, rakam ve _ olmalı, harfle başlamalı.",
+                    p.key
+                ),
+            ));
         }
         if !seen.insert(p.key.clone()) {
-            return Err(invalid(at("key"), format!("“{}” anahtarı iki kez kullanılmış.", p.key)));
+            return Err(invalid(
+                at("key"),
+                format!("“{}” anahtarı iki kez kullanılmış.", p.key),
+            ));
         }
         if p.label.trim().is_empty() {
             return Err(invalid(at("label"), "Girdinin adı yok."));
         }
         if p.kind == FeeParameterKind::Choice && p.choices.is_empty() {
-            return Err(invalid(at("choices"), format!("“{}” seçmeli bir girdi; seçenekleri yazın.", p.label)));
+            return Err(invalid(
+                at("choices"),
+                format!("“{}” seçmeli bir girdi; seçenekleri yazın.", p.label),
+            ));
         }
     }
     let param = |k: &str| def.parameters.iter().find(|p| p.key == k);
     for (i, t) in def.tables.iter().enumerate() {
         let at = |f: &str| format!("definition.tables[{i}].{f}");
         if !key_ok(&t.key) {
-            return Err(invalid(at("key"), format!("“{}”: tablo anahtarı küçük harf, rakam ve _ olmalı.", t.key)));
+            return Err(invalid(
+                at("key"),
+                format!("“{}”: tablo anahtarı küçük harf, rakam ve _ olmalı.", t.key),
+            ));
         }
         if !seen.insert(t.key.clone()) {
-            return Err(invalid(at("key"), format!("“{}” anahtarı bir girdiyle ya da başka bir tabloyla aynı.", t.key)));
+            return Err(invalid(
+                at("key"),
+                format!(
+                    "“{}” anahtarı bir girdiyle ya da başka bir tabloyla aynı.",
+                    t.key
+                ),
+            ));
         }
         if let Some(by) = &t.by
             && param(by).map(|p| p.kind) != Some(FeeParameterKind::Choice)
         {
-            return Err(invalid(at("by"), format!("“{by}” seçmeli bir girdi değil.")));
+            return Err(invalid(
+                at("by"),
+                format!("“{by}” seçmeli bir girdi değil."),
+            ));
         }
         if let Some(q) = &t.quantity
             && param(q).map(|p| p.kind) != Some(FeeParameterKind::Number)
         {
-            return Err(invalid(at("quantity"), format!("“{q}” sayı girdisi değil.")));
+            return Err(invalid(
+                at("quantity"),
+                format!("“{q}” sayı girdisi değil."),
+            ));
         }
         if t.rows.is_empty() {
-            return Err(invalid(at("rows"), format!("“{}” tablosunda satır yok.", t.label)));
+            return Err(invalid(
+                at("rows"),
+                format!("“{}” tablosunda satır yok.", t.label),
+            ));
         }
         for (j, r) in t.rows.iter().enumerate() {
             let rat = format!("definition.tables[{i}].rows[{j}]");
             if !r.rate.is_finite() || r.rate < 0.0 {
-                return Err(invalid(format!("{rat}.rate"), "Birim tutar sıfır ya da artı bir sayı olmalı."));
+                return Err(invalid(
+                    format!("{rat}.rate"),
+                    "Birim tutar sıfır ya da artı bir sayı olmalı.",
+                ));
             }
             if let (Some(a), Some(b)) = (r.from, r.to)
                 && a > b
@@ -223,21 +259,35 @@ pub fn validate(def: &FeeDefinition) -> AppResult<()> {
     let variables: Vec<Variable> = def
         .parameters
         .iter()
-        .map(|p| Variable { name: p.key.clone(), value: placeholder(p.kind), description: String::new() })
+        .map(|p| Variable {
+            name: p.key.clone(),
+            value: placeholder(p.kind),
+            description: String::new(),
+        })
         .chain(def.tables.iter().map(|t| Variable {
             name: t.key.clone(),
             value: Value::Num(1.0),
             description: String::new(),
         }))
         .collect();
-    let schema = Schema { variables, ..Schema::default() };
+    let schema = Schema {
+        variables,
+        ..Schema::default()
+    };
     let compiles = |source: &str, path: String| -> AppResult<()> {
-        let e = compile_with(source, &schema).map_err(|e| invalid(path.clone(), format!("İfade okunamadı: {}", e.message)))?;
+        let e = compile_with(source, &schema)
+            .map_err(|e| invalid(path.clone(), format!("İfade okunamadı: {}", e.message)))?;
         if let Some(name) = e.unknown_variables.first() {
-            return Err(invalid(path, format!("“@{name}” tarifede bir girdi ya da tablo değil.")));
+            return Err(invalid(
+                path,
+                format!("“@{name}” tarifede bir girdi ya da tablo değil."),
+            ));
         }
         if !e.fields.is_empty() {
-            return Err(invalid(path, "İfade yalnız tarifenin girdilerini ve tablolarını (@ad) okur."));
+            return Err(invalid(
+                path,
+                "İfade yalnız tarifenin girdilerini ve tablolarını (@ad) okur.",
+            ));
         }
         Ok(())
     };
@@ -245,10 +295,16 @@ pub fn validate(def: &FeeDefinition) -> AppResult<()> {
     for (i, item) in def.items.iter().enumerate() {
         let at = |f: &str| format!("definition.items[{i}].{f}");
         if !key_ok(&item.code) {
-            return Err(invalid(at("code"), format!("“{}”: kod küçük harf, rakam ve _ olmalı.", item.code)));
+            return Err(invalid(
+                at("code"),
+                format!("“{}”: kod küçük harf, rakam ve _ olmalı.", item.code),
+            ));
         }
         if !codes.insert(item.code.clone()) {
-            return Err(invalid(at("code"), format!("“{}” kodu iki kez kullanılmış.", item.code)));
+            return Err(invalid(
+                at("code"),
+                format!("“{}” kodu iki kez kullanılmış.", item.code),
+            ));
         }
         if item.label.trim().is_empty() {
             return Err(invalid(at("label"), "Kalemin adı yok."));
@@ -256,22 +312,41 @@ pub fn validate(def: &FeeDefinition) -> AppResult<()> {
         match &item.rule {
             FeeRule::Fixed { amount } => {
                 if !amount.is_finite() || *amount < 0.0 {
-                    return Err(invalid(at("rule.amount"), "Tutar sıfır ya da artı bir sayı olmalı."));
+                    return Err(invalid(
+                        at("rule.amount"),
+                        "Tutar sıfır ya da artı bir sayı olmalı.",
+                    ));
                 }
             }
-            FeeRule::PerUnit { quantity, table: t, rate } => {
+            FeeRule::PerUnit {
+                quantity,
+                table: t,
+                rate,
+            } => {
                 if param(quantity).map(|p| p.kind) != Some(FeeParameterKind::Number) {
-                    return Err(invalid(at("rule.quantity"), format!("“{quantity}” sayı girdisi değil.")));
+                    return Err(invalid(
+                        at("rule.quantity"),
+                        format!("“{quantity}” sayı girdisi değil."),
+                    ));
                 }
                 match (t, rate) {
                     (Some(k), _) if table(k).is_none() => {
-                        return Err(invalid(at("rule.table"), format!("“{k}” diye bir tablo yok.")));
+                        return Err(invalid(
+                            at("rule.table"),
+                            format!("“{k}” diye bir tablo yok."),
+                        ));
                     }
                     (None, None) => {
-                        return Err(invalid(at("rule"), "Birim başına kalem bir tablo ya da bir birim tutar ister."));
+                        return Err(invalid(
+                            at("rule"),
+                            "Birim başına kalem bir tablo ya da bir birim tutar ister.",
+                        ));
                     }
                     (None, Some(r)) if !r.is_finite() || *r < 0.0 => {
-                        return Err(invalid(at("rule.rate"), "Birim tutar sıfır ya da artı bir sayı olmalı."));
+                        return Err(invalid(
+                            at("rule.rate"),
+                            "Birim tutar sıfır ya da artı bir sayı olmalı.",
+                        ));
                     }
                     _ => {}
                 }
@@ -287,7 +362,10 @@ pub fn validate(def: &FeeDefinition) -> AppResult<()> {
             return Err(invalid(at("maximum"), "En çok tutar en az tutardan küçük."));
         }
         if !(0.0..=100.0).contains(&item.vat_percent) {
-            return Err(invalid(at("vatPercent"), "KDV oranı 0 ile 100 arasında olmalı."));
+            return Err(invalid(
+                at("vatPercent"),
+                "KDV oranı 0 ile 100 arasında olmalı.",
+            ));
         }
     }
     Ok(())
@@ -338,7 +416,10 @@ impl ExprScope for NoObject {
 
 /// An input's value as given (JSON), checked against its kind: a number (text with a decimal comma passes), one of
 /// the choices, or a flag.
-fn value_of(p: &FeeParameter, given: Option<&serde_json::Value>) -> Result<Option<Value<'static>>, String> {
+fn value_of(
+    p: &FeeParameter,
+    given: Option<&serde_json::Value>,
+) -> Result<Option<Value<'static>>, String> {
     let Some(v) = given.filter(|v| !v.is_null() && v.as_str() != Some("")) else {
         return match p.kind {
             FeeParameterKind::Flag => Ok(Some(Value::Bool(false))),
@@ -355,7 +436,9 @@ fn value_of(p: &FeeParameter, given: Option<&serde_json::Value>) -> Result<Optio
             }
         }
         FeeParameterKind::Choice => match v.as_str() {
-            Some(s) if p.choices.iter().any(|c| c.value == s) => Ok(Some(Value::Text(Cow::Owned(s.to_owned())))),
+            Some(s) if p.choices.iter().any(|c| c.value == s) => {
+                Ok(Some(Value::Text(Cow::Owned(s.to_owned()))))
+            }
             _ => Err("seçeneklerden biri olmalı".into()),
         },
         FeeParameterKind::Flag => match v.as_bool() {
@@ -366,8 +449,13 @@ fn value_of(p: &FeeParameter, given: Option<&serde_json::Value>) -> Result<Optio
 }
 
 fn choice_label<'a>(p: Option<&'a FeeParameter>, value: &'a str) -> &'a str {
-    p.and_then(|p| p.choices.iter().find(|c| c.value == value).map(|c| c.label.as_str()))
-        .unwrap_or(value)
+    p.and_then(|p| {
+        p.choices
+            .iter()
+            .find(|c| c.value == value)
+            .map(|c| c.label.as_str())
+    })
+    .unwrap_or(value)
 }
 
 /// The row of `t` the inputs match, and how it reads (“Konut, 151–200 m²”).
@@ -388,7 +476,9 @@ fn row_of<'a>(
     let quantity = quantity.transpose()?;
     let fits = |q: Option<f64>| {
         t.rows.iter().find(|r| {
-            r.when.as_deref().is_none_or(|w| chosen.as_deref() == Some(w))
+            r.when
+                .as_deref()
+                .is_none_or(|w| chosen.as_deref() == Some(w))
                 && r.from.is_none_or(|a| q.is_some_and(|q| q >= a - 1e-9))
                 && r.to.is_none_or(|b| q.is_some_and(|q| q <= b + 1e-9))
         })
@@ -397,14 +487,23 @@ fn row_of<'a>(
     let row = fits(quantity)
         .or_else(|| fits(quantity.map(f64::ceil)))
         .ok_or_else(|| format!("“{}” tablosunda bu değerlere uyan satır yok", t.label))?;
-    let param = |k: &Option<String>| k.as_ref().and_then(|k| def.parameters.iter().find(|p| &p.key == k));
-    let unit = param(&t.quantity).and_then(|p| p.unit.clone()).unwrap_or_default();
+    let param = |k: &Option<String>| {
+        k.as_ref()
+            .and_then(|k| def.parameters.iter().find(|p| &p.key == k))
+    };
+    let unit = param(&t.quantity)
+        .and_then(|p| p.unit.clone())
+        .unwrap_or_default();
     let mut said = Vec::new();
     if let (Some(_), Some(c)) = (&row.when, &chosen) {
         said.push(choice_label(param(&t.by), c).to_owned());
     }
     match (row.from, row.to) {
-        (Some(a), Some(b)) => said.push(format!("{}–{} {unit}", number(a), number(b)).trim().to_owned()),
+        (Some(a), Some(b)) => said.push(
+            format!("{}–{} {unit}", number(a), number(b))
+                .trim()
+                .to_owned(),
+        ),
         (Some(a), None) => said.push(format!("{} {unit} ve üstü", number(a)).trim().to_owned()),
         (None, Some(b)) => said.push(format!("{} {unit}e kadar", number(b)).trim().to_owned()),
         (None, None) => {}
@@ -417,7 +516,9 @@ fn needs_of(item: &FeeItem) -> BTreeSet<String> {
     let mut out = BTreeSet::new();
     match &item.rule {
         FeeRule::Fixed { .. } => {}
-        FeeRule::PerUnit { quantity, table, .. } => {
+        FeeRule::PerUnit {
+            quantity, table, ..
+        } => {
             out.insert(quantity.clone());
             out.extend(table.iter().cloned());
         }
@@ -446,7 +547,12 @@ pub fn evaluate(def: &FeeDefinition, kind: &str, inputs: &FeeInputs) -> Evaluate
         }
     }
     // Only the inputs these items read: an occupancy permit is not asked the building's use.
-    let parameters: Vec<FeeParameter> = def.parameters.iter().filter(|p| used.contains(&p.key)).cloned().collect();
+    let parameters: Vec<FeeParameter> = def
+        .parameters
+        .iter()
+        .filter(|p| used.contains(&p.key))
+        .cloned()
+        .collect();
     let mut missing = BTreeMap::new();
     let mut values: BTreeMap<String, Value<'static>> = BTreeMap::new();
     for p in &parameters {
@@ -466,7 +572,13 @@ pub fn evaluate(def: &FeeDefinition, kind: &str, inputs: &FeeInputs) -> Evaluate
             Ok((row, said)) => {
                 rates.insert(t.key.clone(), (row.rate, said));
             }
-            Err(why) if !t.by.iter().chain(t.quantity.iter()).any(|k| missing.contains_key(k)) => {
+            Err(why)
+                if !t
+                    .by
+                    .iter()
+                    .chain(t.quantity.iter())
+                    .any(|k| missing.contains_key(k)) =>
+            {
                 missing.insert(t.key.clone(), why);
             }
             Err(_) => {}
@@ -474,14 +586,21 @@ pub fn evaluate(def: &FeeDefinition, kind: &str, inputs: &FeeInputs) -> Evaluate
     }
     let variables: Vec<Variable> = values
         .iter()
-        .map(|(k, v)| Variable { name: k.clone(), value: v.clone(), description: String::new() })
+        .map(|(k, v)| Variable {
+            name: k.clone(),
+            value: v.clone(),
+            description: String::new(),
+        })
         .chain(rates.iter().map(|(k, (r, _))| Variable {
             name: k.clone(),
             value: Value::Num(*r),
             description: String::new(),
         }))
         .collect();
-    let schema = Schema { variables, ..Schema::default() };
+    let schema = Schema {
+        variables,
+        ..Schema::default()
+    };
     let run = |source: &str| -> Result<Value<'static>, String> {
         let e = compile_with(source, &schema).map_err(|e| e.message)?;
         if let Some(name) = e.unknown_variables.first() {
@@ -501,7 +620,9 @@ pub fn evaluate(def: &FeeDefinition, kind: &str, inputs: &FeeInputs) -> Evaluate
     for (item, needs) in items.into_iter().zip(&needs) {
         // A wrong or missing required input is said once, at the input; an optional one not given leaves its items out.
         if needs.iter().any(|k| missing.contains_key(k))
-            || !needs.iter().all(|k| values.contains_key(k) || rates.contains_key(k))
+            || !needs
+                .iter()
+                .all(|k| values.contains_key(k) || rates.contains_key(k))
         {
             continue;
         }
@@ -510,14 +631,21 @@ pub fn evaluate(def: &FeeDefinition, kind: &str, inputs: &FeeInputs) -> Evaluate
                 Ok(v) if kentos_expression::value::truthy(&v) => {}
                 Ok(_) => continue,
                 Err(why) => {
-                    missing.insert(item.code.clone(), format!("{}: koşul hesaplanamadı ({why})", item.label));
+                    missing.insert(
+                        item.code.clone(),
+                        format!("{}: koşul hesaplanamadı ({why})", item.label),
+                    );
                     continue;
                 }
             }
         }
         let (raw, basis) = match &item.rule {
             FeeRule::Fixed { amount } => (*amount, "Maktu".to_owned()),
-            FeeRule::PerUnit { quantity, table, rate } => {
+            FeeRule::PerUnit {
+                quantity,
+                table,
+                rate,
+            } => {
                 let q = match values.get(quantity) {
                     Some(Value::Num(q)) => *q,
                     _ => continue,
@@ -529,12 +657,23 @@ pub fn evaluate(def: &FeeDefinition, kind: &str, inputs: &FeeInputs) -> Evaluate
                     },
                     None => (rate.unwrap_or(0.0), String::new()),
                 };
-                (q * r, format!("{}{} × {} TL{said}", number(q), unit_of(quantity), number(r)))
+                (
+                    q * r,
+                    format!(
+                        "{}{} × {} TL{said}",
+                        number(q),
+                        unit_of(quantity),
+                        number(r)
+                    ),
+                )
             }
             FeeRule::Formula { expression } => match run(expression) {
                 Ok(Value::Num(x)) if x.is_finite() => (x, format!("Formül: {expression}")),
                 Ok(_) | Err(_) => {
-                    missing.insert(item.code.clone(), format!("{}: formül bir tutar vermedi", item.label));
+                    missing.insert(
+                        item.code.clone(),
+                        format!("{}: formül bir tutar vermedi", item.label),
+                    );
                     continue;
                 }
             },
@@ -555,14 +694,21 @@ pub fn evaluate(def: &FeeDefinition, kind: &str, inputs: &FeeInputs) -> Evaluate
         }
         let amount = rounded(amount_tl, def.rounding);
         let vat = if item.vat_percent > 0.0 {
-            rounded(amount as f64 / 100.0 * item.vat_percent / 100.0, FeeRounding::Kurus)
+            rounded(
+                amount as f64 / 100.0 * item.vat_percent / 100.0,
+                FeeRounding::Kurus,
+            )
         } else {
             0
         };
         lines.push(FeeLine {
             code: item.code.clone(),
             label: item.label.clone(),
-            group: if item.group.trim().is_empty() { "Harç".into() } else { item.group.clone() },
+            group: if item.group.trim().is_empty() {
+                "Harç".into()
+            } else {
+                item.group.clone()
+            },
             legal_basis: item.legal_basis.clone(),
             basis,
             amount,
@@ -571,7 +717,12 @@ pub fn evaluate(def: &FeeDefinition, kind: &str, inputs: &FeeInputs) -> Evaluate
         });
     }
     let total = lines.iter().map(|l| l.amount + l.vat).sum();
-    Evaluated { parameters, lines, total, missing }
+    Evaluated {
+        parameters,
+        lines,
+        total,
+        missing,
+    }
 }
 
 /// A tariff's structure as 2464 sayılı Kanun lays it out, for a municipality to start from: the inputs, the building
@@ -579,8 +730,16 @@ pub fn evaluate(def: &FeeDefinition, kind: &str, inputs: &FeeInputs) -> Evaluate
 /// fee. Every rate is 0: the fees' amounts are the law's, as decided for the municipality's group (2464 m.95, m.96/A;
 /// 2005/8730 sayılı BKK) and revalued each year; the charges' are its council's tariff (m.97).
 pub fn template() -> FeeDefinition {
-    let choice = |value: &str, label: &str| FeeChoice { value: value.into(), label: label.into() };
-    let p = |key: &str, label: &str, kind: FeeParameterKind, unit: Option<&str>, choices: Vec<FeeChoice>, help: &str| {
+    let choice = |value: &str, label: &str| FeeChoice {
+        value: value.into(),
+        label: label.into(),
+    };
+    let p = |key: &str,
+             label: &str,
+             kind: FeeParameterKind,
+             unit: Option<&str>,
+             choices: Vec<FeeChoice>,
+             help: &str| {
         FeeParameter {
             key: key.into(),
             label: label.into(),
@@ -599,19 +758,22 @@ pub fn template() -> FeeDefinition {
         min_rate: None,
         max_rate: None,
     };
-    let item = |code: &str, label: &str, basis: &str, rule: FeeRule, kinds: &[&str], before: bool| FeeItem {
-        code: code.into(),
-        label: label.into(),
-        legal_basis: basis.into(),
-        group: "Harç".into(),
-        rule,
-        applies_to: kinds.iter().map(|k| (*k).to_owned()).collect(),
-        condition: Some("değil @kamu_istisnasi".into()),
-        minimum: None,
-        maximum: None,
-        vat_percent: 0.0,
-        before_decision: before,
-    };
+    let item =
+        |code: &str, label: &str, basis: &str, rule: FeeRule, kinds: &[&str], before: bool| {
+            FeeItem {
+                code: code.into(),
+                label: label.into(),
+                legal_basis: basis.into(),
+                group: "Harç".into(),
+                rule,
+                applies_to: kinds.iter().map(|k| (*k).to_owned()).collect(),
+                condition: Some("değil @kamu_istisnasi".into()),
+                minimum: None,
+                maximum: None,
+                vat_percent: 0.0,
+                before_decision: before,
+            }
+        };
     let per = |quantity: &str, table: &str| FeeRule::PerUnit {
         quantity: quantity.into(),
         table: Some(table.into()),
@@ -619,14 +781,41 @@ pub fn template() -> FeeDefinition {
     };
     FeeDefinition {
         parameters: vec![
-            p("yapi_turu", "Yapının kullanımı", FeeParameterKind::Choice, None,
-                vec![choice("konut", "Konut"), choice("isyeri", "İşyeri")], "Bina inşaat harcı konut ve işyeri için ayrı tarifelidir."),
-            p("insaat_alani", "İnşaat alanı", FeeParameterKind::Number, Some("m²"), Vec::new(),
-                "Ruhsata esas toplam inşaat alanı (ilavede yalnız ilave edilen kısım)."),
-            p("bolge", "İmar bölgesi", FeeParameterKind::Choice, None,
-                vec![choice("konut", "Konut bölgesi"), choice("ticaret", "Ticaret bölgesi")], "İmarla ilgili harçlar bölgeye göre ayrıdır."),
-            p("kamu_istisnasi", "Harçtan istisna yapı", FeeParameterKind::Flag, None, Vec::new(),
-                "Kamu bütçesinden yapılan, sağlık, sanayi ve organize sanayi yapıları (2464 Ek Madde 2, m.80)."),
+            p(
+                "yapi_turu",
+                "Yapının kullanımı",
+                FeeParameterKind::Choice,
+                None,
+                vec![choice("konut", "Konut"), choice("isyeri", "İşyeri")],
+                "Bina inşaat harcı konut ve işyeri için ayrı tarifelidir.",
+            ),
+            p(
+                "insaat_alani",
+                "İnşaat alanı",
+                FeeParameterKind::Number,
+                Some("m²"),
+                Vec::new(),
+                "Ruhsata esas toplam inşaat alanı (ilavede yalnız ilave edilen kısım).",
+            ),
+            p(
+                "bolge",
+                "İmar bölgesi",
+                FeeParameterKind::Choice,
+                None,
+                vec![
+                    choice("konut", "Konut bölgesi"),
+                    choice("ticaret", "Ticaret bölgesi"),
+                ],
+                "İmarla ilgili harçlar bölgeye göre ayrıdır.",
+            ),
+            p(
+                "kamu_istisnasi",
+                "Harçtan istisna yapı",
+                FeeParameterKind::Flag,
+                None,
+                Vec::new(),
+                "Kamu bütçesinden yapılan, sağlık, sanayi ve organize sanayi yapıları (2464 Ek Madde 2, m.80).",
+            ),
         ],
         tables: vec![
             FeeTable {
@@ -662,13 +851,36 @@ pub fn template() -> FeeDefinition {
             },
         ],
         items: vec![
-            item("bina_insaat_harci", "Bina inşaat harcı", "2464 sayılı Kanun Ek Madde 1, 5 ve 6",
-                per("insaat_alani", "bina_insaat_birim"), &["building_permit", "architectural_project"], true),
-            item("proje_tasdik_harci", "Plan ve proje tasdik harcı", "2464 sayılı Kanun m.80/c ve m.84",
+            item(
+                "bina_insaat_harci",
+                "Bina inşaat harcı",
+                "2464 sayılı Kanun Ek Madde 1, 5 ve 6",
+                per("insaat_alani", "bina_insaat_birim"),
+                &["building_permit", "architectural_project"],
+                true,
+            ),
+            item(
+                "proje_tasdik_harci",
+                "Plan ve proje tasdik harcı",
+                "2464 sayılı Kanun m.80/c ve m.84",
                 per("insaat_alani", "proje_tasdik_birim"),
-                &["building_permit", "architectural_project", "structural_project", "mechanical_project", "electrical_project"], true),
-            item("yapi_kullanma_harci", "Yapı kullanma izni harcı", "2464 sayılı Kanun m.80/f ve m.84",
-                per("insaat_alani", "yapi_kullanma_birim"), &["occupancy_permit"], true),
+                &[
+                    "building_permit",
+                    "architectural_project",
+                    "structural_project",
+                    "mechanical_project",
+                    "electrical_project",
+                ],
+                true,
+            ),
+            item(
+                "yapi_kullanma_harci",
+                "Yapı kullanma izni harcı",
+                "2464 sayılı Kanun m.80/f ve m.84",
+                per("insaat_alani", "yapi_kullanma_birim"),
+                &["occupancy_permit"],
+                true,
+            ),
         ],
         rounding: FeeRounding::Kurus,
         payment_note: None,
@@ -689,7 +901,9 @@ pub fn revalued(def: &FeeDefinition, factor: f64) -> FeeDefinition {
     for item in &mut out.items {
         match &mut item.rule {
             FeeRule::Fixed { amount } => *amount = r(*amount),
-            FeeRule::PerUnit { rate: Some(rate), .. } => *rate = r(*rate),
+            FeeRule::PerUnit {
+                rate: Some(rate), ..
+            } => *rate = r(*rate),
             _ => {}
         }
         item.minimum = item.minimum.map(r);
@@ -727,7 +941,8 @@ type ScheduleRow = (
     String,
 );
 
-const SCHEDULE_SELECT: &str = "select id, name, year, valid_from, valid_to, state, decision, definition,
+const SCHEDULE_SELECT: &str =
+    "select id, name, year, valid_from, valid_to, state, decision, definition,
         updated_at, updated_by_name from kentos.fee_schedule";
 
 fn state_of(code: &str) -> FeeScheduleState {
@@ -773,9 +988,17 @@ fn edit_fields(edit: &FeeScheduleEdit) -> AppResult<(String, Date, Option<Date>,
     if to.is_some_and(|t| t < from) {
         return Err(invalid("validTo", "Bitiş başlangıçtan önce olamaz."));
     }
-    let decision = edit.decision.as_deref().map(str::trim).filter(|s| !s.is_empty()).map(str::to_owned);
+    let decision = edit
+        .decision
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_owned);
     if decision.as_ref().is_some_and(|d| d.chars().count() > 300) {
-        return Err(invalid("decision", "Dayanak karar en çok 300 karakter olabilir."));
+        return Err(invalid(
+            "decision",
+            "Dayanak karar en çok 300 karakter olabilir.",
+        ));
     }
     validate(&edit.definition)?;
     Ok((name, from, to, decision))
@@ -794,13 +1017,19 @@ pub async fn schedules(db: &Db, access: &Access) -> AppResult<Vec<FeeSchedule>> 
     Ok(rows.into_iter().map(schedule_view).collect())
 }
 
-async fn one(tx: &mut Transaction<'static, Postgres>, tenant: Uuid, id: Uuid) -> AppResult<ScheduleRow> {
-    sqlx::query_as(sqlx::AssertSqlSafe(format!("{SCHEDULE_SELECT} where tenant_id = $1 and id = $2")))
-        .bind(tenant)
-        .bind(id)
-        .fetch_optional(&mut **tx)
-        .await?
-        .ok_or_else(schedule_missing)
+async fn one(
+    tx: &mut Transaction<'static, Postgres>,
+    tenant: Uuid,
+    id: Uuid,
+) -> AppResult<ScheduleRow> {
+    sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "{SCHEDULE_SELECT} where tenant_id = $1 and id = $2"
+    )))
+    .bind(tenant)
+    .bind(id)
+    .fetch_optional(&mut **tx)
+    .await?
+    .ok_or_else(schedule_missing)
 }
 
 pub async fn schedule(db: &Db, access: &Access, id: Uuid) -> AppResult<FeeSchedule> {
@@ -811,7 +1040,11 @@ pub async fn schedule(db: &Db, access: &Access, id: Uuid) -> AppResult<FeeSchedu
 }
 
 /// `POST /v1/tenants/{tenant}/fees/schedules`: a new draft (the admins').
-pub async fn create_schedule(db: &Db, access: &Access, edit: &FeeScheduleEdit) -> AppResult<FeeSchedule> {
+pub async fn create_schedule(
+    db: &Db,
+    access: &Access,
+    edit: &FeeScheduleEdit,
+) -> AppResult<FeeSchedule> {
     require_role(access, TenantRole::Admin, "Ücret tarifesi yazmak")?;
     let (name, from, to, decision) = edit_fields(edit)?;
     let mut tx = db.scoped(access.scope()).await?;
@@ -839,7 +1072,12 @@ pub async fn create_schedule(db: &Db, access: &Access, edit: &FeeScheduleEdit) -
 }
 
 /// `PUT …/fees/schedules/{id}`: a draft changes; an active or retired tariff does not (copy it to a new draft).
-pub async fn update_schedule(db: &Db, access: &Access, id: Uuid, edit: &FeeScheduleEdit) -> AppResult<FeeSchedule> {
+pub async fn update_schedule(
+    db: &Db,
+    access: &Access,
+    id: Uuid,
+    edit: &FeeScheduleEdit,
+) -> AppResult<FeeSchedule> {
     require_role(access, TenantRole::Admin, "Ücret tarifesi yazmak")?;
     let (name, from, to, decision) = edit_fields(edit)?;
     let mut tx = db.scoped(access.scope()).await?;
@@ -875,11 +1113,13 @@ pub async fn update_schedule(db: &Db, access: &Access, id: Uuid, edit: &FeeSched
 pub async fn delete_schedule(db: &Db, access: &Access, id: Uuid) -> AppResult<()> {
     require_role(access, TenantRole::Admin, "Ücret tarifesi silmek")?;
     let mut tx = db.scoped(access.scope()).await?;
-    let gone = sqlx::query("delete from kentos.fee_schedule where tenant_id = $1 and id = $2 and state = 'draft'")
-        .bind(access.tenant)
-        .bind(id)
-        .execute(&mut *tx)
-        .await?;
+    let gone = sqlx::query(
+        "delete from kentos.fee_schedule where tenant_id = $1 and id = $2 and state = 'draft'",
+    )
+    .bind(access.tenant)
+    .bind(id)
+    .execute(&mut *tx)
+    .await?;
     tx.commit().await?;
     if gone.rows_affected() == 0 {
         return Err(AppError::invalid("Yalnız taslak bir tarife silinir."));
@@ -889,15 +1129,23 @@ pub async fn delete_schedule(db: &Db, access: &Access, id: Uuid) -> AppResult<()
 
 /// `POST …/fees/schedules/{id}/activate`: the draft becomes the active tariff; the one it replaces is retired.
 pub async fn activate(db: &Db, access: &Access, id: Uuid) -> AppResult<FeeSchedule> {
-    require_role(access, TenantRole::Admin, "Ücret tarifesini yürürlüğe koymak")?;
+    require_role(
+        access,
+        TenantRole::Admin,
+        "Ücret tarifesini yürürlüğe koymak",
+    )?;
     let mut tx = db.scoped(access.scope()).await?;
     let now = one(&mut tx, access.tenant, id).await?;
     if now.5 != "draft" {
-        return Err(AppError::invalid("Yalnız taslak bir tarife yürürlüğe girer."));
+        return Err(AppError::invalid(
+            "Yalnız taslak bir tarife yürürlüğe girer.",
+        ));
     }
     validate(&now.7.0)?;
     if now.7.0.items.is_empty() {
-        return Err(AppError::invalid("Tarifede kalem yok; önce harç ve ücret kalemlerini yazın."));
+        return Err(AppError::invalid(
+            "Tarifede kalem yok; önce harç ve ücret kalemlerini yazın.",
+        ));
     }
     sqlx::query("update kentos.fee_schedule set state = 'retired', updated_at = now() where tenant_id = $1 and state = 'active'")
         .bind(access.tenant)
@@ -919,9 +1167,17 @@ pub async fn activate(db: &Db, access: &Access, id: Uuid) -> AppResult<FeeSchedu
 }
 
 /// `POST …/fees/schedules/{id}/copy`: next year's draft, every amount revalued by the factor.
-pub async fn copy_schedule(db: &Db, access: &Access, id: Uuid, copy: &FeeScheduleCopy) -> AppResult<FeeSchedule> {
+pub async fn copy_schedule(
+    db: &Db,
+    access: &Access,
+    id: Uuid,
+    copy: &FeeScheduleCopy,
+) -> AppResult<FeeSchedule> {
     if !copy.factor.is_finite() || copy.factor <= 0.0 || copy.factor > 100.0 {
-        return Err(invalid("factor", "Yeniden değerleme katsayısı 0 ile 100 arasında olmalı (yüzde 25 artış için 1,25)."));
+        return Err(invalid(
+            "factor",
+            "Yeniden değerleme katsayısı 0 ile 100 arasında olmalı (yüzde 25 artış için 1,25).",
+        ));
     }
     let mut tx = db.scoped(access.scope()).await?;
     let from = schedule_view(one(&mut tx, access.tenant, id).await?);
@@ -961,8 +1217,23 @@ const FEE_SELECT: &str = "select id, schedule_id, schedule_name, inputs, lines, 
         issued_at, paid_at, receipt_no, paid_recorded_by_name, cancel_reason, payment_note from kentos.dossier_fee";
 
 fn fee_view(r: FeeRow) -> FeeAssessment {
-    let (id, schedule, name, Json(inputs), Json(lines), total, state, due, by, at, paid, receipt, recorder, reason, note) =
-        r;
+    let (
+        id,
+        schedule,
+        name,
+        Json(inputs),
+        Json(lines),
+        total,
+        state,
+        due,
+        by,
+        at,
+        paid,
+        receipt,
+        recorder,
+        reason,
+        note,
+    ) = r;
     FeeAssessment {
         id: id.to_string(),
         schedule_id: schedule.to_string(),
@@ -987,7 +1258,10 @@ fn fee_view(r: FeeRow) -> FeeAssessment {
 }
 
 /// The tariff in force today for the dossier's municipality, if it has one.
-async fn in_force(tx: &mut Transaction<'static, Postgres>, tenant: Uuid) -> AppResult<Option<FeeSchedule>> {
+async fn in_force(
+    tx: &mut Transaction<'static, Postgres>,
+    tenant: Uuid,
+) -> AppResult<Option<FeeSchedule>> {
     let row: Option<ScheduleRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "{SCHEDULE_SELECT} where tenant_id = $1 and state = 'active' and valid_from <= current_date
            and (valid_to is null or valid_to >= current_date)"
@@ -1009,10 +1283,14 @@ async fn held_by_staff(
     match held.party {
         Party::Member(r) if r >= role => Ok(held),
         Party::Member(_) => Err(AppError::forbidden(match role {
-            TenantRole::ProjectManager => "Tahakkuku iptal etmek kurumunuzda proje yöneticisi ve üstünün işidir.",
+            TenantRole::ProjectManager => {
+                "Tahakkuku iptal etmek kurumunuzda proje yöneticisi ve üstünün işidir."
+            }
             _ => "Harç ve ücret işlemleri kurumunuzda en az düzenleyicinin işidir.",
         })),
-        _ => Err(AppError::forbidden("Harç ve ücreti belediye tahakkuk ettirir.")),
+        _ => Err(AppError::forbidden(
+            "Harç ve ücreti belediye tahakkuk ettirir.",
+        )),
     }
 }
 
@@ -1048,32 +1326,50 @@ fn no_tariff() -> AppError {
 }
 
 /// `POST /v1/dossiers/{id}/fees/preview`: what the tariff in force makes of these inputs; nothing is saved.
-pub async fn preview(db: &Db, actor: &Actor, dossier: Uuid, input: &FeeAssess) -> AppResult<FeePreview> {
+pub async fn preview(
+    db: &Db,
+    actor: &Actor,
+    dossier: Uuid,
+    input: &FeeAssess,
+) -> AppResult<FeePreview> {
     let mut tx = db.scoped(user_scope(actor)).await?;
     let held = held_by_staff(&mut tx, actor, dossier, TenantRole::Editor).await?;
-    let schedule = in_force(&mut tx, held.row.tenant_id).await?.ok_or_else(no_tariff)?;
+    let schedule = in_force(&mut tx, held.row.tenant_id)
+        .await?
+        .ok_or_else(no_tariff)?;
     tx.commit().await?;
     let e = evaluate(&schedule.definition, &held.row.kind, &input.inputs);
     Ok(preview_of(&schedule, e))
 }
 
 /// `POST /v1/dossiers/{id}/fees`: issues the tariff's assessment (tahakkuk); the professional is told the total.
-pub async fn issue(db: &Db, actor: &Actor, dossier: Uuid, input: &FeeAssess) -> AppResult<FeeAssessment> {
+pub async fn issue(
+    db: &Db,
+    actor: &Actor,
+    dossier: Uuid,
+    input: &FeeAssess,
+) -> AppResult<FeeAssessment> {
     let mut tx = db.scoped(user_scope(actor)).await?;
     let held = held_by_staff(&mut tx, actor, dossier, TenantRole::Editor).await?;
     if held.direction() != kentos_contracts::DossierDirection::Application {
-        return Err(AppError::invalid("Harç ve ücret başvurulara tahakkuk eder; aktarılan işe değil."));
+        return Err(AppError::invalid(
+            "Harç ve ücret başvurulara tahakkuk eder; aktarılan işe değil.",
+        ));
     }
     if flow::closed(held.status()) {
         return Err(AppError::invalid("Kapanmış dosyaya tahakkuk yapılmaz."));
     }
-    let schedule = in_force(&mut tx, held.row.tenant_id).await?.ok_or_else(no_tariff)?;
+    let schedule = in_force(&mut tx, held.row.tenant_id)
+        .await?
+        .ok_or_else(no_tariff)?;
     let e = evaluate(&schedule.definition, &held.row.kind, &input.inputs);
     if let Some((key, why)) = e.missing.iter().next() {
         return Err(invalid(format!("inputs.{key}"), why.clone()));
     }
     if e.lines.is_empty() {
-        return Err(AppError::invalid("Bu dosyaya tarifenin hiçbir kalemi uymuyor; tahakkuk edilecek tutar yok."));
+        return Err(AppError::invalid(
+            "Bu dosyaya tarifenin hiçbir kalemi uymuyor; tahakkuk edilecek tutar yok.",
+        ));
     }
     let due = date_at("dueOn", input.due_on.as_deref())?;
     if due.is_some_and(|d| d < today()) {
@@ -1109,8 +1405,16 @@ pub async fn issue(db: &Db, actor: &Actor, dossier: Uuid, input: &FeeAssess) -> 
     .fetch_one(&mut *tx)
     .await?;
     let side = held.party.side();
-    record(&mut tx, dossier, actor, side, "fee_issued", held.row.round(), serde_json::json!({ "total": tl(e.total) }))
-        .await?;
+    record(
+        &mut tx,
+        dossier,
+        actor,
+        side,
+        "fee_issued",
+        held.row.round(),
+        serde_json::json!({ "total": tl(e.total) }),
+    )
+    .await?;
     tell(
         &mut tx,
         dossier,
@@ -1124,20 +1428,35 @@ pub async fn issue(db: &Db, actor: &Actor, dossier: Uuid, input: &FeeAssess) -> 
     Ok(fee_view(row))
 }
 
-async fn held_fee(tx: &mut Transaction<'static, Postgres>, dossier: Uuid, fee: Uuid) -> AppResult<FeeRow> {
-    sqlx::query_as(sqlx::AssertSqlSafe(format!("{FEE_SELECT} where dossier_id = $1 and id = $2 for update")))
-        .bind(dossier)
-        .bind(fee)
-        .fetch_optional(&mut **tx)
-        .await?
-        .ok_or_else(|| AppError::not_found("Böyle bir tahakkuk yok."))
+async fn held_fee(
+    tx: &mut Transaction<'static, Postgres>,
+    dossier: Uuid,
+    fee: Uuid,
+) -> AppResult<FeeRow> {
+    sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "{FEE_SELECT} where dossier_id = $1 and id = $2 for update"
+    )))
+    .bind(dossier)
+    .bind(fee)
+    .fetch_optional(&mut **tx)
+    .await?
+    .ok_or_else(|| AppError::not_found("Böyle bir tahakkuk yok."))
 }
 
 /// `POST /v1/dossiers/{id}/fees/{fee}/paid`: the receipt that it was paid.
-pub async fn paid(db: &Db, actor: &Actor, dossier: Uuid, fee: Uuid, input: &FeePaid) -> AppResult<FeeAssessment> {
+pub async fn paid(
+    db: &Db,
+    actor: &Actor,
+    dossier: Uuid,
+    fee: Uuid,
+    input: &FeePaid,
+) -> AppResult<FeeAssessment> {
     let receipt = input.receipt_no.trim();
     if !(1..=60).contains(&receipt.chars().count()) {
-        return Err(invalid("receiptNo", "Makbuz numarasını yazın (en çok 60 karakter)."));
+        return Err(invalid(
+            "receiptNo",
+            "Makbuz numarasını yazın (en çok 60 karakter).",
+        ));
     }
     let on = date_at("paidOn", input.paid_on.as_deref())?.unwrap_or_else(today);
     if on > today() {
@@ -1147,7 +1466,9 @@ pub async fn paid(db: &Db, actor: &Actor, dossier: Uuid, fee: Uuid, input: &FeeP
     let held = held_by_staff(&mut tx, actor, dossier, TenantRole::Editor).await?;
     let now = held_fee(&mut tx, dossier, fee).await?;
     if now.6 != "issued" {
-        return Err(AppError::invalid("Bu tahakkuk ödenecek durumda değil (ödenmiş ya da iptal edilmiş)."));
+        return Err(AppError::invalid(
+            "Bu tahakkuk ödenecek durumda değil (ödenmiş ya da iptal edilmiş).",
+        ));
     }
     let row: FeeRow = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "with done as (
@@ -1187,7 +1508,13 @@ pub async fn paid(db: &Db, actor: &Actor, dossier: Uuid, fee: Uuid, input: &FeeP
 }
 
 /// `POST /v1/dossiers/{id}/fees/{fee}/cancel`: with a reason; a paid one too (its refund is the cash office's).
-pub async fn cancel(db: &Db, actor: &Actor, dossier: Uuid, fee: Uuid, input: &FeeCancel) -> AppResult<FeeAssessment> {
+pub async fn cancel(
+    db: &Db,
+    actor: &Actor,
+    dossier: Uuid,
+    fee: Uuid,
+    input: &FeeCancel,
+) -> AppResult<FeeAssessment> {
     let reason = input.reason.trim();
     if !(3..=1000).contains(&reason.chars().count()) {
         return Err(invalid("reason", "İptalin gerekçesini yazın."));
@@ -1227,13 +1554,19 @@ pub async fn cancel(db: &Db, actor: &Actor, dossier: Uuid, fee: Uuid, input: &Fe
 
 /// Why an application may not be decided yet for its fees, if so: a line to be paid before the decision is issued and
 /// not paid, or the tariff in force has such an item for the dossier's kind and nothing was issued.
-pub(crate) async fn decision_refusal(tx: &mut Transaction<'static, Postgres>, held: &Held) -> AppResult<Option<String>> {
+pub(crate) async fn decision_refusal(
+    tx: &mut Transaction<'static, Postgres>,
+    held: &Held,
+) -> AppResult<Option<String>> {
     let open: Vec<(Json<Vec<FeeLine>>, String)> =
         sqlx::query_as("select lines, state from kentos.dossier_fee where dossier_id = $1 and state <> 'cancelled'")
             .bind(held.id())
             .fetch_all(&mut **tx)
             .await?;
-    if open.iter().any(|(lines, state)| state == "issued" && lines.0.iter().any(|l| l.before_decision)) {
+    if open
+        .iter()
+        .any(|(lines, state)| state == "issued" && lines.0.iter().any(|l| l.before_decision))
+    {
         return Ok(Some(
             "Onaydan önce ödenmesi gereken harç ödenmedi (2464 sayılı Kanun Ek Madde 5); ödeme kaydedilince onaylayın."
                 .into(),
@@ -1242,7 +1575,8 @@ pub(crate) async fn decision_refusal(tx: &mut Transaction<'static, Postgres>, he
     if open.is_empty()
         && let Some(s) = in_force(tx, held.row.tenant_id).await?
         && s.definition.items.iter().any(|i| {
-            i.before_decision && (i.applies_to.is_empty() || i.applies_to.iter().any(|k| k == &held.row.kind))
+            i.before_decision
+                && (i.applies_to.is_empty() || i.applies_to.iter().any(|k| k == &held.row.kind))
         })
     {
         return Ok(Some(
@@ -1271,7 +1605,10 @@ mod tests {
     }
 
     fn inputs(pairs: &[(&str, serde_json::Value)]) -> FeeInputs {
-        pairs.iter().map(|(k, v)| ((*k).to_owned(), v.clone())).collect()
+        pairs
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), v.clone()))
+            .collect()
     }
 
     #[test]
@@ -1297,8 +1634,18 @@ mod tests {
         assert_eq!(e.total, 732_000 + 57_188);
         assert_eq!(tl(e.total), "7.891,88 TL");
         // An occupancy permit takes only its own item.
-        let e = evaluate(&d, "occupancy_permit", &inputs(&[("insaat_alani", serde_json::json!(200)), ("bolge", serde_json::json!("konut"))]));
-        assert_eq!(e.lines.iter().map(|l| l.code.as_str()).collect::<Vec<_>>(), ["yapi_kullanma_harci"]);
+        let e = evaluate(
+            &d,
+            "occupancy_permit",
+            &inputs(&[
+                ("insaat_alani", serde_json::json!(200)),
+                ("bolge", serde_json::json!("konut")),
+            ]),
+        );
+        assert_eq!(
+            e.lines.iter().map(|l| l.code.as_str()).collect::<Vec<_>>(),
+            ["yapi_kullanma_harci"]
+        );
         assert_eq!(e.lines[0].amount, 25_000);
     }
 
@@ -1310,7 +1657,9 @@ mod tests {
             label: "Kat irtifakı proje onay ücreti".into(),
             legal_basis: "2464 sayılı Kanun m.97, meclis tarifesi".into(),
             group: "Ücret".into(),
-            rule: FeeRule::Formula { expression: "@insaat_alani * 2 + 150".into() },
+            rule: FeeRule::Formula {
+                expression: "@insaat_alani * 2 + 150".into(),
+            },
             applies_to: Vec::new(),
             condition: Some("@yapi_turu = 'konut'".into()),
             minimum: Some(500.0),
@@ -1319,9 +1668,17 @@ mod tests {
             before_decision: false,
         });
         validate(&d).unwrap();
-        let base = [("yapi_turu", serde_json::json!("konut")), ("insaat_alani", serde_json::json!(100)), ("bolge", serde_json::json!("konut"))];
+        let base = [
+            ("yapi_turu", serde_json::json!("konut")),
+            ("insaat_alani", serde_json::json!(100)),
+            ("bolge", serde_json::json!("konut")),
+        ];
         let e = evaluate(&d, "building_permit", &inputs(&base));
-        let fee = e.lines.iter().find(|l| l.code == "kat_irtifaki_ucreti").unwrap();
+        let fee = e
+            .lines
+            .iter()
+            .find(|l| l.code == "kat_irtifaki_ucreti")
+            .unwrap();
         // 100 × 2 + 150 = 350, raised to the minimum 500 TL, with 20% VAT.
         assert_eq!((fee.amount, fee.vat), (50_000, 10_000));
         assert!(fee.basis.ends_with("; en az 500 TL"), "{}", fee.basis);
@@ -1329,22 +1686,40 @@ mod tests {
         let mut exempt = inputs(&base);
         exempt.insert("kamu_istisnasi".into(), serde_json::json!(true));
         let e = evaluate(&d, "building_permit", &exempt);
-        assert_eq!(e.lines.iter().map(|l| l.code.as_str()).collect::<Vec<_>>(), ["kat_irtifaki_ucreti"]);
+        assert_eq!(
+            e.lines.iter().map(|l| l.code.as_str()).collect::<Vec<_>>(),
+            ["kat_irtifaki_ucreti"]
+        );
         // Missing and wrong inputs are named, and their lines are not made.
-        let e = evaluate(&d, "building_permit", &inputs(&[("yapi_turu", serde_json::json!("ahır"))]));
-        assert!(e.missing.contains_key("yapi_turu") && e.missing.contains_key("insaat_alani"), "{:?}", e.missing);
+        let e = evaluate(
+            &d,
+            "building_permit",
+            &inputs(&[("yapi_turu", serde_json::json!("ahır"))]),
+        );
+        assert!(
+            e.missing.contains_key("yapi_turu") && e.missing.contains_key("insaat_alani"),
+            "{:?}",
+            e.missing
+        );
         assert!(e.lines.is_empty());
     }
 
     #[test]
     fn a_tariff_that_could_not_be_applied_is_refused_where_it_is_wrong() {
         let mut d = priced();
-        d.items[0].rule = FeeRule::Formula { expression: "@alan * @olmayan".into() };
+        d.items[0].rule = FeeRule::Formula {
+            expression: "@alan * @olmayan".into(),
+        };
         let e = validate(&d).unwrap_err();
         assert_eq!(e.path(), Some("definition.items[0].rule.expression"));
         let mut d = priced();
         d.tables[0].rows[0].min_rate = Some(20.0);
-        assert!(validate(&d).unwrap_err().to_string().contains("sınırların dışında (en az 20 TL)"));
+        assert!(
+            validate(&d)
+                .unwrap_err()
+                .to_string()
+                .contains("sınırların dışında (en az 20 TL)")
+        );
         let mut d = priced();
         d.parameters[1].key = "İnşaat".into();
         assert!(validate(&d).is_err());
@@ -1354,7 +1729,10 @@ mod tests {
     fn a_year_is_revalued_and_halves_round_up() {
         let d = revalued(&priced(), 1.4393);
         assert_eq!(d.tables[0].rows[0].rate, 17.27, "12 × 1,4393 = 17,2716");
-        assert_eq!(d.tables[1].rows[1].rate, 5.4, "3,75 × 1,4393 = 5,397375 → 5,40");
+        assert_eq!(
+            d.tables[1].rows[1].rate, 5.4,
+            "3,75 × 1,4393 = 5,397375 → 5,40"
+        );
         assert_eq!(rounded(1.005, FeeRounding::Kurus), 101);
         assert_eq!(rounded(2.675, FeeRounding::Kurus), 268);
         assert_eq!(rounded(1234.5, FeeRounding::Lira), 123_500);

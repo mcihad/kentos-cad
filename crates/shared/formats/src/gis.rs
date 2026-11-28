@@ -477,8 +477,8 @@ impl Collect {
             }
         }
         let mut result = ImportResult {
-        layouts: Vec::new(),
-        source_handles: Vec::new(),
+            layouts: Vec::new(),
+            source_handles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             entities: self.entities,

@@ -52,7 +52,9 @@ fn check(doc: &Document, input: &TopologyExceptions) -> Result<Checked, Stop> {
             if let Some(why) = reason_problem(r) {
                 return Err(Stop::failed(error(
                     codes::INVALID_INPUT,
-                    format!("İşaretin {why}; 1 ile 500 karakter arasında, boş olmayan bir gerekçe yazın."),
+                    format!(
+                        "İşaretin {why}; 1 ile 500 karakter arasında, boş olmayan bir gerekçe yazın."
+                    ),
                     Some("reason".into()),
                 )));
             }

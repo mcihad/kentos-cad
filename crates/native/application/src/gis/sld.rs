@@ -72,11 +72,19 @@ pub fn kinds_of(doc: &Document, layer: &str) -> Kinds {
         line: false,
         area: false,
     };
-    if let Some(g) = doc.layers().get(layer).and_then(|n| n.data.as_ref()).and_then(|d| d.geometry.as_ref()) {
+    if let Some(g) = doc
+        .layers()
+        .get(layer)
+        .and_then(|n| n.data.as_ref())
+        .and_then(|d| d.geometry.as_ref())
+    {
         match g.type_name.as_str() {
             "POINT" | "MULTIPOINT" => k.point = true,
-            "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "MULTICURVE" | "CURVE" => k.line = true,
-            "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "MULTISURFACE" | "SURFACE" => k.area = true,
+            "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE"
+            | "MULTICURVE" | "CURVE" => k.line = true,
+            "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "MULTISURFACE" | "SURFACE" => {
+                k.area = true
+            }
             _ => return Kinds::ALL,
         }
         return k;

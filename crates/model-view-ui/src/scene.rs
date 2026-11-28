@@ -14,10 +14,13 @@ use std::sync::{Arc, Mutex};
 
 use iced::widget::{canvas, shader, stack};
 use iced::{Color, Element, Fill, Rectangle, Theme, mouse, wgpu};
-pub use kentos_render_scene3d::Quality;
 use kentos_model_view::section::Handle;
+pub use kentos_render_scene3d::Quality;
 use kentos_render_scene3d::{Frame as Scene3dFrame, Scene3dRenderer, Style};
-use kentos_scene3d::{Aabb, Camera, Chunked, Content, Exaggeration, Limits, Settings, SourceMesh, Viewport, chunk, select};
+use kentos_scene3d::{
+    Aabb, Camera, Chunked, Content, Exaggeration, Limits, Settings, SourceMesh, Viewport, chunk,
+    select,
+};
 use kentos_ui::theme::Tokens;
 
 /// Refined above 16 pixels of error: the usual default of tiled 3D streaming.
@@ -58,7 +61,9 @@ static NEXT_CONTENT: AtomicU64 = AtomicU64::new(1);
 
 impl fmt::Debug for Scene {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Scene").field("tiles", &self.chunked.hierarchy.tiles.len()).finish_non_exhaustive()
+        f.debug_struct("Scene")
+            .field("tiles", &self.chunked.hierarchy.tiles.len())
+            .finish_non_exhaustive()
     }
 }
 
@@ -75,7 +80,12 @@ impl Scene {
         let mut chunked = {
             let meshes: Vec<SourceMesh> = sources
                 .iter()
-                .map(|s| SourceMesh { part: s.part, vertices: &s.vertices, triangles: &s.triangles, smooth: s.smooth })
+                .map(|s| SourceMesh {
+                    part: s.part,
+                    vertices: &s.vertices,
+                    triangles: &s.triangles,
+                    smooth: s.smooth,
+                })
                 .collect();
             chunk(&meshes, Limits::default(), first)
         };
@@ -89,7 +99,9 @@ impl Scene {
             }
             for (k, c) in chunked.contents.iter_mut().enumerate() {
                 let same = by_digest.get(&digests[k]).and_then(|list| {
-                    list.iter().map(|&j| &b.chunked.contents[j]).find(|o| !used.contains(&o.id) && drawn_alike(o, c))
+                    list.iter()
+                        .map(|&j| &b.chunked.contents[j])
+                        .find(|o| !used.contains(&o.id) && drawn_alike(o, c))
                 });
                 if let Some(o) = same {
                     used.insert(o.id);
@@ -105,10 +117,28 @@ impl Scene {
                 }
             }
         }
-        let index = chunked.contents.iter().enumerate().map(|(k, c)| (c.id, k)).collect();
-        let bounds = chunked.hierarchy.roots.first().map_or(Aabb::EMPTY, |&r| chunked.hierarchy.tiles[r as usize].bounds);
+        let index = chunked
+            .contents
+            .iter()
+            .enumerate()
+            .map(|(k, c)| (c.id, k))
+            .collect();
+        let bounds = chunked
+            .hierarchy
+            .roots
+            .first()
+            .map_or(Aabb::EMPTY, |&r| chunked.hierarchy.tiles[r as usize].bounds);
         let triangles = sources.iter().map(|s| s.triangles.len()).sum();
-        Scene { chunked, first, bounds, sources: count, triangles, meshes: sources, index, digests }
+        Scene {
+            chunked,
+            first,
+            bounds,
+            sources: count,
+            triangles,
+            meshes: sources,
+            index,
+            digests,
+        }
     }
 
     /// Its contents' ids.
@@ -143,7 +173,12 @@ impl Scene {
 
     /// The parts its tiles carry.
     pub fn parts(&self) -> Vec<u32> {
-        let mut out: Vec<u32> = self.chunked.contents.iter().flat_map(|c| c.ranges.iter().map(|r| r.0)).collect();
+        let mut out: Vec<u32> = self
+            .chunked
+            .contents
+            .iter()
+            .flat_map(|c| c.ranges.iter().map(|r| r.0))
+            .collect();
         out.sort_unstable();
         out.dedup();
         out
@@ -152,14 +187,39 @@ impl Scene {
     /// The point a ray (in the shown space) meets first among the tiles `select` draws for `camera`: the source's
     /// coordinates, its height real, what it is on and its object. A click goes through a source made to be seen
     /// through to what is behind it; it meets that source only when nothing else is there.
-    pub fn pick(&self, camera: &Camera, vp: &Viewport, ex: &Exaggeration, x: f64, y: f64) -> Option<Picked> {
+    pub fn pick(
+        &self,
+        camera: &Camera,
+        vp: &Viewport,
+        ex: &Exaggeration,
+        x: f64,
+        y: f64,
+    ) -> Option<Picked> {
         self.pick_cut(camera, vp, ex, x, y, &[])
     }
 
     /// As [`Scene::pick`] in a scene a section cuts (`planes`, in the shown space): only the part of the ray the
     /// planes keep meets anything, so a click never meets what is cut away.
-    pub fn pick_cut(&self, camera: &Camera, vp: &Viewport, ex: &Exaggeration, x: f64, y: f64, planes: &[[f64; 4]]) -> Option<Picked> {
-        let drawn = select(&self.chunked.hierarchy, camera, vp, ex, Settings { max_screen_error: MAX_SCREEN_ERROR }, |_| true).draw;
+    pub fn pick_cut(
+        &self,
+        camera: &Camera,
+        vp: &Viewport,
+        ex: &Exaggeration,
+        x: f64,
+        y: f64,
+        planes: &[[f64; 4]],
+    ) -> Option<Picked> {
+        let drawn = select(
+            &self.chunked.hierarchy,
+            camera,
+            vp,
+            ex,
+            Settings {
+                max_screen_error: MAX_SCREEN_ERROR,
+            },
+            |_| true,
+        )
+        .draw;
         let (o, d) = camera.ray(x, y, vp);
         let (t0, t1) = kentos_model_view::section::kept(planes, o, d)?;
         // From where the kept part begins; a hit past its end is cut away.
@@ -170,9 +230,16 @@ impl Scene {
                 &drawn,
                 |id| self.content(id),
                 |m, t| {
-                    let s = self.meshes.get(m as usize).filter(|s| through || !s.through)?;
+                    let s = self
+                        .meshes
+                        .get(m as usize)
+                        .filter(|s| through || !s.through)?;
                     let tri = s.triangles.get(t as usize)?;
-                    Some([s.vertices.get(tri[0] as usize).copied()?, s.vertices.get(tri[1] as usize).copied()?, s.vertices.get(tri[2] as usize).copied()?])
+                    Some([
+                        s.vertices.get(tri[0] as usize).copied()?,
+                        s.vertices.get(tri[1] as usize).copied()?,
+                        s.vertices.get(tri[2] as usize).copied()?,
+                    ])
                 },
                 o,
                 d,
@@ -180,7 +247,9 @@ impl Scene {
             )
         };
         let within = |h: &kentos_scene3d::Hit| t0 + h.distance <= t1;
-        let hit = meet(false).filter(within).or_else(|| meet(true).filter(within))?;
+        let hit = meet(false)
+            .filter(within)
+            .or_else(|| meet(true).filter(within))?;
         let s = &self.meshes[hit.mesh as usize];
         Some(Picked {
             point: hit.point,
@@ -267,10 +336,17 @@ pub enum Gesture {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Mark {
     /// A measured line; faint: a component along an axis, an outline, the line to the pointer.
-    Line { a: [f64; 3], b: [f64; 3], faint: bool },
+    Line {
+        a: [f64; 3],
+        b: [f64; 3],
+        faint: bool,
+    },
     /// A point measured; with a snap, the pointer's: its symbol (a square at a corner, a triangle at an edge's middle,
     /// a diamond on an edge, a ring on a face) and its name beside it.
-    Point { at: [f64; 3], snap: Option<kentos_model_view::measure::Snap> },
+    Point {
+        at: [f64; 3],
+        snap: Option<kentos_model_view::measure::Snap>,
+    },
     /// A value on a plate at a point.
     Value { at: [f64; 3], text: String },
 }
@@ -308,9 +384,15 @@ pub struct SceneView {
 /// The scene drawn and its gestures sent through `on`.
 pub fn view<'a, M: Clone + 'a>(v: SceneView, on: impl Fn(Gesture) -> M + 'a) -> Element<'a, M> {
     let handles = Arc::new(v.handles);
-    let marker = canvas(Marker { camera: v.camera, point: v.marked, marks: v.marks, handles: handles.clone(), active: v.active })
-        .width(Fill)
-        .height(Fill);
+    let marker = canvas(Marker {
+        camera: v.camera,
+        point: v.marked,
+        marks: v.marks,
+        handles: handles.clone(),
+        active: v.active,
+    })
+    .width(Fill)
+    .height(Fill);
     let program = Program {
         scene: v.scene,
         caps: v.caps,
@@ -385,7 +467,14 @@ static RETIRED: Mutex<Vec<u64>> = Mutex::new(Vec::new());
 
 impl Default for State {
     fn default() -> Self {
-        State { view: NEXT_VIEW.fetch_add(1, Ordering::Relaxed), drag: None, shift: false, size: (0.0, 0.0), over: None, hot: None }
+        State {
+            view: NEXT_VIEW.fetch_add(1, Ordering::Relaxed),
+            drag: None,
+            shift: false,
+            size: (0.0, 0.0),
+            over: None,
+            hot: None,
+        }
     }
 }
 
@@ -401,7 +490,13 @@ impl<M> shader::Program<M> for Program<'_, M> {
     type State = State;
     type Primitive = Frame3d;
 
-    fn update(&self, state: &mut State, event: &iced::Event, bounds: Rectangle, cursor: mouse::Cursor) -> Option<shader::Action<M>> {
+    fn update(
+        &self,
+        state: &mut State,
+        event: &iced::Event,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> Option<shader::Action<M>> {
         use iced::keyboard;
         match event {
             // The view's size told when it changed (the message draws the next frame); else contents still waiting for
@@ -410,34 +505,60 @@ impl<M> shader::Program<M> for Program<'_, M> {
                 let size = (bounds.width, bounds.height);
                 if size != state.size && size.0 >= 1.0 && size.1 >= 1.0 {
                     state.size = size;
-                    return Some(shader::Action::publish((self.on)(Gesture::Size(size.0, size.1))));
+                    return Some(shader::Action::publish((self.on)(Gesture::Size(
+                        size.0, size.1,
+                    ))));
                 }
-                self.pending.load(Ordering::Relaxed).then(shader::Action::request_redraw)
+                self.pending
+                    .load(Ordering::Relaxed)
+                    .then(shader::Action::request_redraw)
             }
             iced::Event::Keyboard(keyboard::Event::ModifiersChanged(m)) => {
                 state.shift = m.shift();
                 None
             }
-            iced::Event::Mouse(mouse::Event::ButtonPressed(b @ (mouse::Button::Left | mouse::Button::Right))) => {
+            iced::Event::Mouse(mouse::Event::ButtonPressed(
+                b @ (mouse::Button::Left | mouse::Button::Right),
+            )) => {
                 let at = cursor.position_in(bounds)?;
                 // A left press on a section's handle takes it (docs/adr/8132).
-                let handle = (*b == mouse::Button::Left).then(|| self.handle_at(bounds, at)).flatten();
-                state.drag = Some(Press { last: at, pan: *b == mouse::Button::Right || state.shift, down: at, moved: false, handle });
+                let handle = (*b == mouse::Button::Left)
+                    .then(|| self.handle_at(bounds, at))
+                    .flatten();
+                state.drag = Some(Press {
+                    last: at,
+                    pan: *b == mouse::Button::Right || state.shift,
+                    down: at,
+                    moved: false,
+                    handle,
+                });
                 Some(shader::Action::capture())
             }
             iced::Event::Mouse(mouse::Event::ButtonReleased(_)) => {
                 let p = state.drag.take()?;
                 if let Some(i) = p.handle {
-                    return Some(shader::Action::publish((self.on)(Gesture::HandleDone(i))).and_capture());
+                    return Some(
+                        shader::Action::publish((self.on)(Gesture::HandleDone(i))).and_capture(),
+                    );
                 }
                 if p.moved || p.pan {
                     return Some(shader::Action::capture());
                 }
-                Some(shader::Action::publish((self.on)(Gesture::Pick(p.down.x, p.down.y, bounds.width, bounds.height))).and_capture())
+                Some(
+                    shader::Action::publish((self.on)(Gesture::Pick(
+                        p.down.x,
+                        p.down.y,
+                        bounds.width,
+                        bounds.height,
+                    )))
+                    .and_capture(),
+                )
             }
             iced::Event::Mouse(mouse::Event::CursorMoved { position }) if state.drag.is_none() => {
                 // Over a section's handle or off it: drawn again, lit or not (the marks' layer reads the pointer).
-                let hot = cursor.position_in(bounds).and_then(|p| self.handle_at(bounds, p));
+                let hot = cursor
+                    .position_in(bounds)
+                    .and_then(|p| self.handle_at(bounds, p));
                 let relit = hot != state.hot;
                 state.hot = hot;
                 // While the host measures: the pointer's place when it moved a pixel, and once when it left.
@@ -455,11 +576,19 @@ impl<M> shader::Program<M> for Program<'_, M> {
                     return None;
                 }
                 state.over = at;
-                Some(shader::Action::publish((self.on)(Gesture::Hover(at, bounds.width, bounds.height))))
+                Some(shader::Action::publish((self.on)(Gesture::Hover(
+                    at,
+                    bounds.width,
+                    bounds.height,
+                ))))
             }
             iced::Event::Mouse(mouse::Event::CursorLeft) if self.hover && state.over.is_some() => {
                 state.over = None;
-                Some(shader::Action::publish((self.on)(Gesture::Hover(None, bounds.width, bounds.height))))
+                Some(shader::Action::publish((self.on)(Gesture::Hover(
+                    None,
+                    bounds.width,
+                    bounds.height,
+                ))))
             }
             iced::Event::Mouse(mouse::Event::CursorMoved { position }) => {
                 let mut p = state.drag?;
@@ -474,8 +603,13 @@ impl<M> shader::Program<M> for Program<'_, M> {
                 let g = match p.handle {
                     // The handle's plane follows the pointer along its arrow.
                     Some(i) => {
-                        let vp = Viewport { width: f64::from(bounds.width), height: f64::from(bounds.height) };
-                        let Some(h) = self.handles.get(i) else { return Some(shader::Action::capture()) };
+                        let vp = Viewport {
+                            width: f64::from(bounds.width),
+                            height: f64::from(bounds.height),
+                        };
+                        let Some(h) = self.handles.get(i) else {
+                            return Some(shader::Action::capture());
+                        };
                         Gesture::Handle(i, crate::handles::along(h, &self.camera, &vp, dx, dy))
                     }
                     None if p.pan => Gesture::Pan(dx, dy),
@@ -511,24 +645,40 @@ impl<M> shader::Program<M> for Program<'_, M> {
             seen: self.seen.clone(),
             pending: self.pending.clone(),
             // The box the sun's shadows are cast within: the scene's and its caps'.
-            shadows: self.sun.then(|| {
-                let mut b = self.scene.bounds();
-                if let Some(c) = &self.caps {
-                    let o = c.bounds();
-                    for i in 0..3 {
-                        b.min[i] = b.min[i].min(o.min[i]);
-                        b.max[i] = b.max[i].max(o.max[i]);
+            shadows: self
+                .sun
+                .then(|| {
+                    let mut b = self.scene.bounds();
+                    if let Some(c) = &self.caps {
+                        let o = c.bounds();
+                        for i in 0..3 {
+                            b.min[i] = b.min[i].min(o.min[i]);
+                            b.max[i] = b.max[i].max(o.max[i]);
+                        }
                     }
-                }
-                [b.min, b.max]
-            }).filter(|[lo, hi]| (0..3).all(|i| lo[i].is_finite() && hi[i].is_finite() && lo[i] <= hi[i])),
+                    [b.min, b.max]
+                })
+                .filter(|[lo, hi]| {
+                    (0..3).all(|i| lo[i].is_finite() && hi[i].is_finite() && lo[i] <= hi[i])
+                }),
         }
     }
 
-    fn mouse_interaction(&self, state: &State, bounds: Rectangle, cursor: mouse::Cursor) -> mouse::Interaction {
+    fn mouse_interaction(
+        &self,
+        state: &State,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> mouse::Interaction {
         match state.drag {
             Some(_) => mouse::Interaction::Grabbing,
-            None if cursor.position_in(bounds).and_then(|p| self.handle_at(bounds, p)).is_some() => mouse::Interaction::Pointer,
+            None if cursor
+                .position_in(bounds)
+                .and_then(|p| self.handle_at(bounds, p))
+                .is_some() =>
+            {
+                mouse::Interaction::Pointer
+            }
             None if cursor.is_over(bounds) => mouse::Interaction::Grab,
             None => mouse::Interaction::default(),
         }
@@ -541,7 +691,10 @@ impl<M> Program<'_, M> {
         if self.handles.is_empty() {
             return None;
         }
-        let vp = Viewport { width: f64::from(bounds.width), height: f64::from(bounds.height) };
+        let vp = Viewport {
+            width: f64::from(bounds.width),
+            height: f64::from(bounds.height),
+        };
         crate::handles::at(&self.handles, &self.camera, &vp, at)
     }
 }
@@ -566,7 +719,9 @@ pub struct Frame3d {
 
 impl fmt::Debug for Frame3d {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Frame3d").field("view", &self.view).finish_non_exhaustive()
+        f.debug_struct("Frame3d")
+            .field("view", &self.view)
+            .finish_non_exhaustive()
     }
 }
 
@@ -590,7 +745,13 @@ pub struct Pipeline {
 
 impl shader::Pipeline for Pipeline {
     fn new(_device: &wgpu::Device, _queue: &wgpu::Queue, format: wgpu::TextureFormat) -> Self {
-        Pipeline { format, renderers: HashMap::new(), placed: HashMap::new(), drawn: HashMap::new(), grounds: HashMap::new() }
+        Pipeline {
+            format,
+            renderers: HashMap::new(),
+            placed: HashMap::new(),
+            drawn: HashMap::new(),
+            grounds: HashMap::new(),
+        }
     }
 }
 
@@ -613,20 +774,47 @@ const GROUND_STYLE: Style = Style::of([0.80, 0.78, 0.74, 1.0]);
 impl Ground {
     /// Its height for the scene's box `lo`–`hi`.
     fn height(lo: [f64; 3], hi: [f64; 3]) -> f64 {
-        if lo[2] <= 0.0 && hi[2] >= 0.0 { -0.02 } else { lo[2] - 0.02 }
+        if lo[2] <= 0.0 && hi[2] >= 0.0 {
+            -0.02
+        } else {
+            lo[2] - 0.02
+        }
     }
 
     fn of(lo: [f64; 3], hi: [f64; 3], part: u32) -> Option<Ground> {
         let (cx, cy) = ((lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0);
         let half = (1.5 * (hi[0] - lo[0]).max(hi[1] - lo[1])).max(20.0);
         let z = Ground::height(lo, hi);
-        let key = [cx.to_bits(), cy.to_bits(), half.to_bits(), z.to_bits(), u64::from(part)];
-        let vertices = [[cx - half, cy - half, z], [cx + half, cy - half, z], [cx + half, cy + half, z], [cx - half, cy + half, z]];
-        let mesh = kentos_scene3d::SourceMesh { part, vertices: &vertices, triangles: &[[0, 1, 2], [0, 2, 3]], smooth: false };
-        let content = kentos_scene3d::chunk(&[mesh], kentos_scene3d::Limits { max_triangles: 8, max_extent: f64::MAX }, GROUND_ID)
-            .contents
-            .into_iter()
-            .next()?;
+        let key = [
+            cx.to_bits(),
+            cy.to_bits(),
+            half.to_bits(),
+            z.to_bits(),
+            u64::from(part),
+        ];
+        let vertices = [
+            [cx - half, cy - half, z],
+            [cx + half, cy - half, z],
+            [cx + half, cy + half, z],
+            [cx - half, cy + half, z],
+        ];
+        let mesh = kentos_scene3d::SourceMesh {
+            part,
+            vertices: &vertices,
+            triangles: &[[0, 1, 2], [0, 2, 3]],
+            smooth: false,
+        };
+        let content = kentos_scene3d::chunk(
+            &[mesh],
+            kentos_scene3d::Limits {
+                max_triangles: 8,
+                max_extent: f64::MAX,
+            },
+            GROUND_ID,
+        )
+        .contents
+        .into_iter()
+        .next()?;
         Some(Ground { key, content })
     }
 }
@@ -634,7 +822,14 @@ impl Ground {
 impl shader::Primitive for Frame3d {
     type Pipeline = Pipeline;
 
-    fn prepare(&self, pipeline: &mut Pipeline, device: &wgpu::Device, queue: &wgpu::Queue, bounds: &Rectangle, viewport: &shader::Viewport) {
+    fn prepare(
+        &self,
+        pipeline: &mut Pipeline,
+        device: &wgpu::Device,
+        queue: &wgpu::Queue,
+        bounds: &Rectangle,
+        viewport: &shader::Viewport,
+    ) {
         if let Ok(mut retired) = RETIRED.lock() {
             for view in retired.drain(..) {
                 pipeline.renderers.remove(&view);
@@ -645,19 +840,45 @@ impl shader::Primitive for Frame3d {
         let size = viewport.physical_size();
         let format = pipeline.format;
         // A quality changed in the settings: the view's renderer made again at it (its contents uploaded again).
-        if pipeline.renderers.get(&self.view).is_some_and(|r| r.quality() != self.quality) {
+        if pipeline
+            .renderers
+            .get(&self.view)
+            .is_some_and(|r| r.quality() != self.quality)
+        {
             pipeline.renderers.remove(&self.view);
         }
-        let r = pipeline.renderers.entry(self.view).or_insert_with(|| Scene3dRenderer::with_quality(device, format, self.quality));
+        let r = pipeline
+            .renderers
+            .entry(self.view)
+            .or_insert_with(|| Scene3dRenderer::with_quality(device, format, self.quality));
         let s = viewport.scale_factor();
-        let (bx, by, bw, bh) = (bounds.x * s, bounds.y * s, bounds.width * s, bounds.height * s);
-        r.ensure_targets(device, bw.round().max(1.0) as u32, bh.round().max(1.0) as u32);
-        let vp = Viewport { width: f64::from(bw.max(1.0)), height: f64::from(bh.max(1.0)) };
-        let scenes: Vec<&Scene> = std::iter::once(&*self.scene).chain(self.caps.as_deref()).collect();
+        let (bx, by, bw, bh) = (
+            bounds.x * s,
+            bounds.y * s,
+            bounds.width * s,
+            bounds.height * s,
+        );
+        r.ensure_targets(
+            device,
+            bw.round().max(1.0) as u32,
+            bh.round().max(1.0) as u32,
+        );
+        let vp = Viewport {
+            width: f64::from(bw.max(1.0)),
+            height: f64::from(bh.max(1.0)),
+        };
+        let scenes: Vec<&Scene> = std::iter::once(&*self.scene)
+            .chain(self.caps.as_deref())
+            .collect();
         // The contents of the scenes this view drew before and draws no more: let go.
         let firsts: Vec<u64> = scenes.iter().map(|s| s.first).collect();
-        if pipeline.drawn.get(&self.view).is_none_or(|(f, _)| *f != firsts) {
-            let ids: std::collections::HashSet<u64> = scenes.iter().flat_map(|s| s.content_ids()).collect();
+        if pipeline
+            .drawn
+            .get(&self.view)
+            .is_none_or(|(f, _)| *f != firsts)
+        {
+            let ids: std::collections::HashSet<u64> =
+                scenes.iter().flat_map(|s| s.content_ids()).collect();
             if let Some((_, before)) = pipeline.drawn.insert(self.view, (firsts, ids.clone())) {
                 for id in before.difference(&ids) {
                     r.forget(*id);
@@ -665,7 +886,9 @@ impl shader::Primitive for Frame3d {
             }
         }
         // The ground while the sun lights the scene, made again when the scene's box or parts change.
-        let ground = self.shadows.and_then(|[lo, hi]| Ground::of(lo, hi, self.styles.len() as u32));
+        let ground = self
+            .shadows
+            .and_then(|[lo, hi]| Ground::of(lo, hi, self.styles.len() as u32));
         if pipeline.grounds.get(&self.view).map(|g| g.key) != ground.as_ref().map(|g| g.key) {
             r.forget(GROUND_ID);
             match ground {
@@ -674,41 +897,75 @@ impl shader::Primitive for Frame3d {
             };
         }
         let ground = pipeline.grounds.get(&self.view).map(|g| &g.content);
-        let settings = Settings { max_screen_error: MAX_SCREEN_ERROR };
+        let settings = Settings {
+            max_screen_error: MAX_SCREEN_ERROR,
+        };
         let content = |id: u64| scenes.iter().find_map(|s| s.content(id));
         // Select with what is resident, upload what it draws and asks for within the budgets, select again with what
         // is resident now, and draw that.
         let first: Vec<_> = scenes
             .iter()
-            .map(|s| select(&s.chunked.hierarchy, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id)))
+            .map(|s| {
+                select(
+                    &s.chunked.hierarchy,
+                    &self.camera,
+                    &vp,
+                    &self.exaggeration,
+                    settings,
+                    |c| r.is_resident(c.id),
+                )
+            })
             .collect();
         let mut asked: Vec<&Content> = scenes
             .iter()
             .zip(&first)
             .flat_map(|(s, sel)| {
                 let h = &s.chunked.hierarchy;
-                sel.draw.iter().chain(&sel.wanted).filter_map(move |&i| h.tiles[i as usize].content).filter_map(|c| content(c.id))
+                sel.draw
+                    .iter()
+                    .chain(&sel.wanted)
+                    .filter_map(move |&i| h.tiles[i as usize].content)
+                    .filter_map(|c| content(c.id))
             })
             .collect();
         asked.extend(ground);
         r.load(device, &asked);
         let now: Vec<_> = scenes
             .iter()
-            .map(|s| select(&s.chunked.hierarchy, &self.camera, &vp, &self.exaggeration, settings, |c| r.is_resident(c.id)))
+            .map(|s| {
+                select(
+                    &s.chunked.hierarchy,
+                    &self.camera,
+                    &vp,
+                    &self.exaggeration,
+                    settings,
+                    |c| r.is_resident(c.id),
+                )
+            })
             .collect();
         let mut draws: Vec<&Content> = scenes
             .iter()
             .zip(&now)
             .flat_map(|(s, sel)| {
                 let h = &s.chunked.hierarchy;
-                sel.draw.iter().filter_map(move |&i| h.tiles[i as usize].content).filter_map(|c| content(c.id))
+                sel.draw
+                    .iter()
+                    .filter_map(move |&i| h.tiles[i as usize].content)
+                    .filter_map(|c| content(c.id))
             })
             .collect();
         draws.extend(ground.filter(|g| r.is_resident(g.id)));
         let wanted: usize = now.iter().map(|sel| sel.wanted.len()).sum();
         // The ground's style after the scene's; the shadows' box down to the ground.
-        let styles: Vec<Style> = self.styles.iter().copied().chain(ground.map(|_| GROUND_STYLE)).collect();
-        let shadows = self.shadows.map(|[lo, hi]| [[lo[0], lo[1], lo[2].min(Ground::height(lo, hi))], hi]);
+        let styles: Vec<Style> = self
+            .styles
+            .iter()
+            .copied()
+            .chain(ground.map(|_| GROUND_STYLE))
+            .collect();
+        let shadows = self
+            .shadows
+            .map(|[lo, hi]| [[lo[0], lo[1], lo[2].min(Ground::height(lo, hi))], hi]);
         let stats = r.prepare(
             device,
             queue,
@@ -728,10 +985,18 @@ impl shader::Primitive for Frame3d {
         );
         self.pending.store(wanted > 0, Ordering::Relaxed);
         if let Ok(mut seen) = self.seen.lock() {
-            *seen = Seen { tiles: stats.tiles, triangles: stats.triangles, waiting: wanted, resident: stats.resident_bytes };
+            *seen = Seen {
+                tiles: stats.tiles,
+                triangles: stats.triangles,
+                waiting: wanted,
+                resident: stats.resident_bytes,
+            };
         }
         let (vx, vy) = (bx.max(0.0), by.max(0.0));
-        let (x1, y1) = ((bx + bw).min(size.width as f32), (by + bh).min(size.height as f32));
+        let (x1, y1) = (
+            (bx + bw).min(size.width as f32),
+            (by + bh).min(size.height as f32),
+        );
         if x1 <= vx || y1 <= vy {
             pipeline.placed.remove(&self.view);
             return;
@@ -739,17 +1004,39 @@ impl shader::Primitive for Frame3d {
         // The view's own targets are the whole box (the projection is the box's); wgpu keeps a viewport inside the
         // window, so a box partly off it lays the part of its targets on it.
         let (bw, bh) = (bw.max(1.0), bh.max(1.0));
-        let uv = [(vx - bx) / bw, (vy - by) / bh, (x1 - bx) / bw, (y1 - by) / bh];
+        let uv = [
+            (vx - bx) / bw,
+            (vy - by) / bh,
+            (x1 - bx) / bw,
+            (y1 - by) / bh,
+        ];
         r.place(queue, uv);
-        pipeline.placed.insert(self.view, Placed { viewport: [vx, vy, x1 - vx, y1 - vy], scissor: [vx as u32, vy as u32, x1 as u32, y1 as u32] });
+        pipeline.placed.insert(
+            self.view,
+            Placed {
+                viewport: [vx, vy, x1 - vx, y1 - vy],
+                scissor: [vx as u32, vy as u32, x1 as u32, y1 as u32],
+            },
+        );
     }
 
     fn draw(&self, _pipeline: &Pipeline, _render_pass: &mut wgpu::RenderPass<'_>) -> bool {
         false
     }
 
-    fn render(&self, pipeline: &Pipeline, encoder: &mut wgpu::CommandEncoder, target: &wgpu::TextureView, clip: &Rectangle<u32>) {
-        let (Some(p), Some(r)) = (pipeline.placed.get(&self.view), pipeline.renderers.get(&self.view)) else { return };
+    fn render(
+        &self,
+        pipeline: &Pipeline,
+        encoder: &mut wgpu::CommandEncoder,
+        target: &wgpu::TextureView,
+        clip: &Rectangle<u32>,
+    ) {
+        let (Some(p), Some(r)) = (
+            pipeline.placed.get(&self.view),
+            pipeline.renderers.get(&self.view),
+        ) else {
+            return;
+        };
         let x0 = p.scissor[0].max(clip.x);
         let y0 = p.scissor[1].max(clip.y);
         let x1 = p.scissor[2].min(clip.x + clip.width);
@@ -776,19 +1063,37 @@ struct Marker {
 impl<M> canvas::Program<M> for Marker {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &iced::Renderer, theme: &Theme, bounds: Rectangle, cursor: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &iced::Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         use iced::widget::canvas::{Frame, LineDash, Path, Stroke, Text};
         use kentos_model_view::measure::Snap;
         if self.point.is_none() && self.marks.is_empty() && self.handles.is_empty() {
             return Vec::new();
         }
-        let vp = Viewport { width: f64::from(bounds.width), height: f64::from(bounds.height) };
-        let on_screen = |p: [f64; 3]| self.camera.project(p, &vp).map(|(x, y, _)| iced::Point::new(x as f32, y as f32));
+        let vp = Viewport {
+            width: f64::from(bounds.width),
+            height: f64::from(bounds.height),
+        };
+        let on_screen = |p: [f64; 3]| {
+            self.camera
+                .project(p, &vp)
+                .map(|(x, y, _)| iced::Point::new(x as f32, y as f32))
+        };
         let mut frame = Frame::new(renderer, bounds.size());
         let t = Tokens::of(theme);
         let accent = t.accent;
         // A section's handles under the marks; the one dragged, else the one under the pointer, lit.
-        let hot = self.active.or_else(|| cursor.position_in(bounds).and_then(|p| crate::handles::at(&self.handles, &self.camera, &vp, p)));
+        let hot = self.active.or_else(|| {
+            cursor
+                .position_in(bounds)
+                .and_then(|p| crate::handles::at(&self.handles, &self.camera, &vp, p))
+        });
         crate::handles::draw(&mut frame, &self.handles, &self.camera, &vp, hot, &t);
         // Lines first, then points, then the values over them.
         for m in &self.marks {
@@ -797,16 +1102,32 @@ impl<M> canvas::Program<M> for Marker {
             {
                 let path = Path::line(a, b);
                 if *faint {
-                    let dash = Stroke { line_dash: LineDash { segments: &[5.0, 4.0], offset: 0 }, ..Stroke::default() };
-                    frame.stroke(&path, dash.with_color(accent.scale_alpha(0.75)).with_width(1.2));
+                    let dash = Stroke {
+                        line_dash: LineDash {
+                            segments: &[5.0, 4.0],
+                            offset: 0,
+                        },
+                        ..Stroke::default()
+                    };
+                    frame.stroke(
+                        &path,
+                        dash.with_color(accent.scale_alpha(0.75)).with_width(1.2),
+                    );
                 } else {
-                    frame.stroke(&path, Stroke::default().with_color(Color::WHITE.scale_alpha(0.85)).with_width(4.0));
+                    frame.stroke(
+                        &path,
+                        Stroke::default()
+                            .with_color(Color::WHITE.scale_alpha(0.85))
+                            .with_width(4.0),
+                    );
                     frame.stroke(&path, Stroke::default().with_color(accent).with_width(2.0));
                 }
             }
         }
         for m in &self.marks {
-            let Mark::Point { at, snap } = m else { continue };
+            let Mark::Point { at, snap } = m else {
+                continue;
+            };
             let Some(c) = on_screen(*at) else { continue };
             match snap {
                 None => {
@@ -815,7 +1136,10 @@ impl<M> canvas::Program<M> for Marker {
                 }
                 Some(s) => {
                     let symbol = match s {
-                        Snap::Corner => Path::rectangle(iced::Point::new(c.x - 6.0, c.y - 6.0), iced::Size::new(12.0, 12.0)),
+                        Snap::Corner => Path::rectangle(
+                            iced::Point::new(c.x - 6.0, c.y - 6.0),
+                            iced::Size::new(12.0, 12.0),
+                        ),
                         Snap::Middle => Path::new(|p| {
                             p.move_to(iced::Point::new(c.x, c.y - 7.0));
                             p.line_to(iced::Point::new(c.x + 7.0, c.y + 5.0));
@@ -831,10 +1155,24 @@ impl<M> canvas::Program<M> for Marker {
                         }),
                         Snap::Face => Path::circle(c, 6.0),
                     };
-                    frame.stroke(&symbol, Stroke::default().with_color(Color::WHITE.scale_alpha(0.9)).with_width(4.0));
-                    frame.stroke(&symbol, Stroke::default().with_color(accent).with_width(1.8));
+                    frame.stroke(
+                        &symbol,
+                        Stroke::default()
+                            .with_color(Color::WHITE.scale_alpha(0.9))
+                            .with_width(4.0),
+                    );
+                    frame.stroke(
+                        &symbol,
+                        Stroke::default().with_color(accent).with_width(1.8),
+                    );
                     frame.fill(&Path::circle(c, 1.8), accent);
-                    plate(&mut frame, s.name(), iced::Point::new(c.x + 12.0, c.y - 14.0), &t, false);
+                    plate(
+                        &mut frame,
+                        s.name(),
+                        iced::Point::new(c.x + 12.0, c.y - 14.0),
+                        &t,
+                        false,
+                    );
                 }
             }
         }
@@ -842,12 +1180,24 @@ impl<M> canvas::Program<M> for Marker {
             if let Mark::Value { at, text } = m
                 && let Some(c) = on_screen(*at)
             {
-                plate(&mut frame, text, iced::Point::new(c.x, c.y - 14.0), &t, true);
+                plate(
+                    &mut frame,
+                    text,
+                    iced::Point::new(c.x, c.y - 14.0),
+                    &t,
+                    true,
+                );
             }
         }
         if let Some(c) = self.point.and_then(on_screen) {
-            frame.stroke(&Path::circle(c, 7.0), Stroke::default().with_color(Color::WHITE).with_width(4.0));
-            frame.stroke(&Path::circle(c, 7.0), Stroke::default().with_color(accent).with_width(2.0));
+            frame.stroke(
+                &Path::circle(c, 7.0),
+                Stroke::default().with_color(Color::WHITE).with_width(4.0),
+            );
+            frame.stroke(
+                &Path::circle(c, 7.0),
+                Stroke::default().with_color(accent).with_width(2.0),
+            );
             frame.fill(&Path::circle(c, 2.0), accent);
         }
         let _ = Text::default;
@@ -857,7 +1207,13 @@ impl<M> canvas::Program<M> for Marker {
 
 /// Words on a plate of the field's colour, centred on `at` (a value) or starting at it (a snap's name); kept within the
 /// scene, so a value at its edge is read whole.
-fn plate(frame: &mut iced::widget::canvas::Frame, words: &str, at: iced::Point, t: &Tokens, centred: bool) {
+fn plate(
+    frame: &mut iced::widget::canvas::Frame,
+    words: &str,
+    at: iced::Point,
+    t: &Tokens,
+    centred: bool,
+) {
     use iced::widget::canvas::{Path, Stroke, Text};
     let size = 12.0;
     // The UI font's digits and letters are about 0.56 of its size wide.
@@ -865,9 +1221,18 @@ fn plate(frame: &mut iced::widget::canvas::Frame, words: &str, at: iced::Point, 
     let left = if centred { at.x - width / 2.0 } else { at.x };
     let left = left.clamp(4.0, (frame.width() - width - 4.0).max(4.0));
     let at = iced::Point::new(at.x, at.y.clamp(14.0, (frame.height() - 14.0).max(14.0)));
-    let body = Path::rounded_rectangle(iced::Point::new(left, at.y - 10.0), iced::Size::new(width, 20.0), iced::border::Radius::from(4.0));
+    let body = Path::rounded_rectangle(
+        iced::Point::new(left, at.y - 10.0),
+        iced::Size::new(width, 20.0),
+        iced::border::Radius::from(4.0),
+    );
     frame.fill(&body, t.field.scale_alpha(0.94));
-    frame.stroke(&body, Stroke::default().with_color(if centred { t.accent } else { t.border }).with_width(1.0));
+    frame.stroke(
+        &body,
+        Stroke::default()
+            .with_color(if centred { t.accent } else { t.border })
+            .with_width(1.0),
+    );
     frame.fill_text(Text {
         content: words.to_owned(),
         position: iced::Point::new(left + width / 2.0, at.y),
@@ -886,15 +1251,36 @@ mod tests {
 
     /// A box of side 1 at `x` as a body's source of `part`.
     fn cube(x: f64, part: u32) -> Source {
-        let c = |i: usize| [x + (i & 1) as f64, ((i >> 1) & 1) as f64, ((i >> 2) & 1) as f64];
-        let faces = [[0, 2, 3, 1], [4, 5, 7, 6], [0, 1, 5, 4], [2, 6, 7, 3], [0, 4, 6, 2], [1, 3, 7, 5]];
+        let c = |i: usize| {
+            [
+                x + (i & 1) as f64,
+                ((i >> 1) & 1) as f64,
+                ((i >> 2) & 1) as f64,
+            ]
+        };
+        let faces = [
+            [0, 2, 3, 1],
+            [4, 5, 7, 6],
+            [0, 1, 5, 4],
+            [2, 6, 7, 3],
+            [0, 4, 6, 2],
+            [1, 3, 7, 5],
+        ];
         let (mut vertices, mut triangles) = (Vec::new(), Vec::new());
         for f in faces {
             let at = vertices.len() as u32;
             vertices.extend(f.map(c));
             triangles.extend([[at, at + 1, at + 2], [at, at + 2, at + 3]]);
         }
-        Source { part, name: "kutu".into(), owner: None, vertices: Arc::new(vertices), triangles, smooth: false, through: false }
+        Source {
+            part,
+            name: "kutu".into(),
+            owner: None,
+            vertices: Arc::new(vertices),
+            triangles,
+            smooth: false,
+            through: false,
+        }
     }
 
     /// Two boxes 2 km apart, a tile each (a tile spans at most 1 km): made again as it was, every content keeps its id;
@@ -905,10 +1291,23 @@ mod tests {
         let ids = |s: &Scene| -> Vec<u64> { s.content_ids().collect() };
         assert_eq!(a.contents(), 2);
         let same = Scene::after(vec![cube(0.0, 0), cube(2000.0, 0)], 2, Some(&a));
-        assert_eq!(ids(&same), ids(&a), "nothing changed: nothing uploaded again");
+        assert_eq!(
+            ids(&same),
+            ids(&a),
+            "nothing changed: nothing uploaded again"
+        );
         let chosen = Scene::after(vec![cube(0.0, 0), cube(2000.0, 7)], 2, Some(&same));
-        let kept: Vec<u64> = ids(&chosen).into_iter().filter(|id| ids(&same).contains(id)).collect();
-        assert_eq!(kept.len(), 1, "the first box's tile kept, the chosen one's new: {:?} → {:?}", ids(&same), ids(&chosen));
+        let kept: Vec<u64> = ids(&chosen)
+            .into_iter()
+            .filter(|id| ids(&same).contains(id))
+            .collect();
+        assert_eq!(
+            kept.len(),
+            1,
+            "the first box's tile kept, the chosen one's new: {:?} → {:?}",
+            ids(&same),
+            ids(&chosen)
+        );
         // Every tile finds its content by its id, kept or new.
         for t in &chosen.chunked.hierarchy.tiles {
             if let Some(c) = &t.content {

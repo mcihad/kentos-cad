@@ -60,22 +60,37 @@ const LEASE_SECS: i32 = 300;
 
 impl Delivery {
     /// From the server's settings (see the module comment).
-    pub fn configured(get: impl Fn(&str) -> Option<String>, public_url: &str) -> Result<Option<Self>, String> {
-        let get = |k: &str| get(k).map(|v| v.trim().to_owned()).filter(|v| !v.is_empty());
+    pub fn configured(
+        get: impl Fn(&str) -> Option<String>,
+        public_url: &str,
+    ) -> Result<Option<Self>, String> {
+        let get = |k: &str| {
+            get(k)
+                .map(|v| v.trim().to_owned())
+                .filter(|v| !v.is_empty())
+        };
         let hook = || -> Result<Way, String> {
             let url = get("KENTOS_NOTIFY_WEBHOOK").ok_or("KENTOS_NOTIFY_WEBHOOK verilmedi.")?;
             let local = url.starts_with("http://127.0.0.1") || url.starts_with("http://localhost");
             if !url.starts_with("https://") && !local {
-                return Err("KENTOS_NOTIFY_WEBHOOK https:// ile başlamalı (yerel sınama dışında).".into());
+                return Err(
+                    "KENTOS_NOTIFY_WEBHOOK https:// ile başlamalı (yerel sınama dışında).".into(),
+                );
             }
-            let secret = get("KENTOS_NOTIFY_WEBHOOK_SECRET").ok_or("KENTOS_NOTIFY_WEBHOOK_SECRET verilmedi.")?;
+            let secret = get("KENTOS_NOTIFY_WEBHOOK_SECRET")
+                .ok_or("KENTOS_NOTIFY_WEBHOOK_SECRET verilmedi.")?;
             if secret.len() < 16 {
                 return Err("KENTOS_NOTIFY_WEBHOOK_SECRET en az 16 karakter olmalı.".into());
             }
-            Ok(Way::Webhook(Hook { url, secret: secret.into_bytes() }))
+            Ok(Way::Webhook(Hook {
+                url,
+                secret: secret.into_bytes(),
+            }))
         };
         let folder = || -> Result<Way, String> {
-            Ok(Way::Folder(PathBuf::from(get("KENTOS_NOTIFY_FOLDER").ok_or("KENTOS_NOTIFY_FOLDER verilmedi.")?)))
+            Ok(Way::Folder(PathBuf::from(
+                get("KENTOS_NOTIFY_FOLDER").ok_or("KENTOS_NOTIFY_FOLDER verilmedi.")?,
+            )))
         };
         let mail = match get("KENTOS_MAIL_TRANSPORT").as_deref() {
             None | Some("off") => None,
@@ -84,25 +99,40 @@ impl Delivery {
             ))),
             Some("webhook") => Some(hook()?),
             Some("folder") => Some(folder()?),
-            Some(other) => return Err(format!("KENTOS_MAIL_TRANSPORT anlaşılmadı: {other} (sendmail, webhook, folder)")),
+            Some(other) => {
+                return Err(format!(
+                    "KENTOS_MAIL_TRANSPORT anlaşılmadı: {other} (sendmail, webhook, folder)"
+                ));
+            }
         };
         let sms = match get("KENTOS_SMS_TRANSPORT").as_deref() {
             None | Some("off") => None,
             Some("webhook") => Some(hook()?),
             Some("folder") => Some(folder()?),
-            Some(other) => return Err(format!("KENTOS_SMS_TRANSPORT anlaşılmadı: {other} (webhook, folder)")),
+            Some(other) => {
+                return Err(format!(
+                    "KENTOS_SMS_TRANSPORT anlaşılmadı: {other} (webhook, folder)"
+                ));
+            }
         };
         if mail.is_none() && sms.is_none() {
             return Ok(None);
         }
         let from = match (&mail, get("KENTOS_MAIL_FROM")) {
-            (Some(_), None) => return Err("E-posta gönderimi için KENTOS_MAIL_FROM verilmeli.".into()),
+            (Some(_), None) => {
+                return Err("E-posta gönderimi için KENTOS_MAIL_FROM verilmeli.".into());
+            }
             (_, from) => from.unwrap_or_default(),
         };
         if from.contains(['\r', '\n']) {
             return Err("KENTOS_MAIL_FROM tek satır olmalı.".into());
         }
-        Ok(Some(Self { mail, sms, from, public_url: public_url.trim_end_matches('/').to_owned() }))
+        Ok(Some(Self {
+            mail,
+            sms,
+            from,
+            public_url: public_url.trim_end_matches('/').to_owned(),
+        }))
     }
 
     /// For tests: e-mail and SMS written to `folder`.
@@ -119,19 +149,35 @@ impl Delivery {
     /// For tests: both channels to a webhook.
     #[cfg(test)]
     pub fn to_webhook(url: &str, secret: &str, public_url: &str) -> Self {
-        let hook = Way::Webhook(Hook { url: url.into(), secret: secret.as_bytes().to_vec() });
-        Self { mail: Some(hook.clone()), sms: Some(hook), from: "KentOS Bulut <bildirim@ornek.test>".into(), public_url: public_url.into() }
+        let hook = Way::Webhook(Hook {
+            url: url.into(),
+            secret: secret.as_bytes().to_vec(),
+        });
+        Self {
+            mail: Some(hook.clone()),
+            sms: Some(hook),
+            from: "KentOS Bulut <bildirim@ornek.test>".into(),
+            public_url: public_url.into(),
+        }
     }
 
     /// For tests: e-mail through `program`, as through the machine's sendmail.
     #[cfg(test)]
     pub fn to_sendmail(program: &Path, public_url: &str) -> Self {
-        Self { mail: Some(Way::Sendmail(program.to_owned())), sms: None, from: "KentOS Bulut <bildirim@ornek.test>".into(), public_url: public_url.into() }
+        Self {
+            mail: Some(Way::Sendmail(program.to_owned())),
+            sms: None,
+            from: "KentOS Bulut <bildirim@ornek.test>".into(),
+            public_url: public_url.into(),
+        }
     }
 
     /// What the e-mail and SMS go by, for the platform's settings page.
     pub fn ways(&self) -> (Option<String>, Option<String>) {
-        (self.mail.as_ref().map(|w| w.name().into()), self.sms.as_ref().map(|w| w.name().into()))
+        (
+            self.mail.as_ref().map(|w| w.name().into()),
+            self.sms.as_ref().map(|w| w.name().into()),
+        )
     }
 
     fn channels(&self) -> Vec<&'static str> {
@@ -147,7 +193,10 @@ impl Delivery {
 
     /// Reads the outbox for ever (the server's background task).
     pub async fn run(self, db: Db) {
-        let client = reqwest::Client::builder().timeout(Duration::from_secs(15)).build().unwrap_or_default();
+        let client = reqwest::Client::builder()
+            .timeout(Duration::from_secs(15))
+            .build()
+            .unwrap_or_default();
         let mut every = tokio::time::interval(EVERY);
         every.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
         loop {
@@ -155,13 +204,19 @@ impl Delivery {
             match self.once(&db, &client).await {
                 Ok(0) => {}
                 Ok(n) => tracing::info!(gonderim = n, "bildirimler gönderildi"),
-                Err(e) => tracing::warn!(error = ?e, "bildirim kutusu okunamadı; birazdan yeniden denenecek"),
+                Err(e) => {
+                    tracing::warn!(error = ?e, "bildirim kutusu okunamadı; birazdan yeniden denenecek")
+                }
             }
         }
     }
 
     /// One reading of the outbox: how many deliveries it handled (sent or not).
-    pub async fn once(&self, db: &Db, client: &reqwest::Client) -> Result<usize, kentos_application::AppError> {
+    pub async fn once(
+        &self,
+        db: &Db,
+        client: &reqwest::Client,
+    ) -> Result<usize, kentos_application::AppError> {
         let due = outbox::take(db, &self.channels(), BATCH, LEASE_SECS).await?;
         for d in &due {
             let result = self.send(client, d).await;
@@ -209,7 +264,10 @@ impl Delivery {
                 let (name, bytes) = if email {
                     (format!("{}.eml", d.id), self.message(d))
                 } else {
-                    (format!("{}.sms.txt", d.id), format!("Kime: {}\n\n{}\n", d.address, self.sms_text(d)).into_bytes())
+                    (
+                        format!("{}.sms.txt", d.id),
+                        format!("Kime: {}\n\n{}\n", d.address, self.sms_text(d)).into_bytes(),
+                    )
                 };
                 write_atomically(folder, &name, &bytes).await
             }
@@ -230,7 +288,13 @@ impl Delivery {
                     .post(&hook.url)
                     .header("content-type", "application/json")
                     .header("x-kentos-delivery", d.id.to_string())
-                    .header("x-kentos-signature", format!("sha256={}", hex(&hmac_sha256(&hook.secret, body.as_bytes()))))
+                    .header(
+                        "x-kentos-signature",
+                        format!(
+                            "sha256={}",
+                            hex(&hmac_sha256(&hook.secret, body.as_bytes()))
+                        ),
+                    )
                     .body(body)
                     .send()
                     .await
@@ -249,10 +313,16 @@ impl Delivery {
         let date = time::OffsetDateTime::now_utc()
             .format(&time::format_description::well_known::Rfc2822)
             .unwrap_or_default();
-        let domain = self.from.rsplit_once('@').map_or("kentos.local", |(_, d)| d.trim_end_matches('>'));
+        let domain = self
+            .from
+            .rsplit_once('@')
+            .map_or("kentos.local", |(_, d)| d.trim_end_matches('>'));
         let mut m = String::new();
         m.push_str(&format!("From: {}\r\n", mailbox(&self.from)));
-        m.push_str(&format!("To: {}\r\n", mailbox(&format!("{} <{}>", d.recipient, d.address))));
+        m.push_str(&format!(
+            "To: {}\r\n",
+            mailbox(&format!("{} <{}>", d.recipient, d.address))
+        ));
         m.push_str(&format!("Subject: {}\r\n", encoded_words(&d.title)));
         m.push_str(&format!("Date: {date}\r\n"));
         m.push_str(&format!("Message-ID: <{}@{domain}>\r\n", d.id));
@@ -277,7 +347,10 @@ async fn sendmail(program: &Path, message: &[u8]) -> Result<(), String> {
         .spawn()
         .map_err(|e| format!("{} başlatılamadı: {e}", program.display()))?;
     let mut stdin = child.stdin.take().ok_or("sendmail'in girdisi açılamadı")?;
-    stdin.write_all(message).await.map_err(|e| format!("ileti sendmail'e yazılamadı: {e}"))?;
+    stdin
+        .write_all(message)
+        .await
+        .map_err(|e| format!("ileti sendmail'e yazılamadı: {e}"))?;
     drop(stdin);
     let out = tokio::time::timeout(Duration::from_secs(30), child.wait_with_output())
         .await
@@ -286,16 +359,29 @@ async fn sendmail(program: &Path, message: &[u8]) -> Result<(), String> {
     if out.status.success() {
         Ok(())
     } else {
-        let said: String = String::from_utf8_lossy(&out.stderr).chars().take(200).collect();
-        Err(format!("sendmail {} ile bitti: {}", out.status, said.trim()))
+        let said: String = String::from_utf8_lossy(&out.stderr)
+            .chars()
+            .take(200)
+            .collect();
+        Err(format!(
+            "sendmail {} ile bitti: {}",
+            out.status,
+            said.trim()
+        ))
     }
 }
 
 async fn write_atomically(folder: &Path, name: &str, bytes: &[u8]) -> Result<(), String> {
-    tokio::fs::create_dir_all(folder).await.map_err(|e| format!("klasör açılamadı: {e}"))?;
+    tokio::fs::create_dir_all(folder)
+        .await
+        .map_err(|e| format!("klasör açılamadı: {e}"))?;
     let part = folder.join(format!(".{name}.yaziliyor"));
-    tokio::fs::write(&part, bytes).await.map_err(|e| format!("yazılamadı: {e}"))?;
-    tokio::fs::rename(&part, folder.join(name)).await.map_err(|e| format!("yerine konamadı: {e}"))
+    tokio::fs::write(&part, bytes)
+        .await
+        .map_err(|e| format!("yazılamadı: {e}"))?;
+    tokio::fs::rename(&part, folder.join(name))
+        .await
+        .map_err(|e| format!("yerine konamadı: {e}"))
 }
 
 /// `Ad Soyad <adres>` with the name as encoded words when it is not plain ASCII (RFC 5322 headers are ASCII; RFC 2047).
@@ -340,11 +426,21 @@ fn base64(bytes: &[u8]) -> String {
     const ABC: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut out = String::with_capacity(bytes.len().div_ceil(3) * 4);
     for c in bytes.chunks(3) {
-        let n = (u32::from(c[0]) << 16) | (u32::from(*c.get(1).unwrap_or(&0)) << 8) | u32::from(*c.get(2).unwrap_or(&0));
+        let n = (u32::from(c[0]) << 16)
+            | (u32::from(*c.get(1).unwrap_or(&0)) << 8)
+            | u32::from(*c.get(2).unwrap_or(&0));
         out.push(ABC[(n >> 18) as usize & 63] as char);
         out.push(ABC[(n >> 12) as usize & 63] as char);
-        out.push(if c.len() > 1 { ABC[(n >> 6) as usize & 63] as char } else { '=' });
-        out.push(if c.len() > 2 { ABC[n as usize & 63] as char } else { '=' });
+        out.push(if c.len() > 1 {
+            ABC[(n >> 6) as usize & 63] as char
+        } else {
+            '='
+        });
+        out.push(if c.len() > 2 {
+            ABC[n as usize & 63] as char
+        } else {
+            '='
+        });
     }
     out
 }
@@ -358,8 +454,15 @@ pub fn hmac_sha256(key: &[u8], message: &[u8]) -> [u8; 32] {
         block[..key.len()].copy_from_slice(key);
     }
     let pad = |byte: u8| block.map(|b| b ^ byte);
-    let inner = Sha256::new().chain_update(pad(0x36)).chain_update(message).finalize();
-    Sha256::new().chain_update(pad(0x5c)).chain_update(inner).finalize().into()
+    let inner = Sha256::new()
+        .chain_update(pad(0x36))
+        .chain_update(message)
+        .finalize();
+    Sha256::new()
+        .chain_update(pad(0x5c))
+        .chain_update(inner)
+        .finalize()
+        .into()
 }
 
 pub fn hex(bytes: &[u8]) -> String {
@@ -380,31 +483,64 @@ mod tests {
         assert_eq!(base64(b"Man"), "TWFu");
         assert_eq!(base64(b"Ma"), "TWE=");
         assert_eq!(base64("ş".as_bytes()), "xZ8=");
-        assert_eq!(encoded_words("Dosya gönderildi"), "=?UTF-8?B?RG9zeWEgZ8O2bmRlcmlsZGk=?=");
+        assert_eq!(
+            encoded_words("Dosya gönderildi"),
+            "=?UTF-8?B?RG9zeWEgZ8O2bmRlcmlsZGk=?="
+        );
         assert_eq!(encoded_words("Plain subject"), "Plain subject");
-        assert_eq!(mailbox("Ayşe Yılmaz <ayse@ornek.test>"), "=?UTF-8?B?QXnFn2UgWcSxbG1heg==?= <ayse@ornek.test>");
-        assert_eq!(mailbox("KentOS Bulut <bildirim@ornek.test>"), "\"KentOS Bulut\" <bildirim@ornek.test>");
+        assert_eq!(
+            mailbox("Ayşe Yılmaz <ayse@ornek.test>"),
+            "=?UTF-8?B?QXnFn2UgWcSxbG1heg==?= <ayse@ornek.test>"
+        );
+        assert_eq!(
+            mailbox("KentOS Bulut <bildirim@ornek.test>"),
+            "\"KentOS Bulut\" <bildirim@ornek.test>"
+        );
         assert_eq!(mailbox("bildirim@ornek.test"), "bildirim@ornek.test");
         let long = encoded_words(&"Başvurunuz için düzeltme istendi: ".repeat(4));
-        assert!(long.split("\r\n ").all(|w| w.len() <= 75 && w.starts_with("=?UTF-8?B?")), "{long}");
+        assert!(
+            long.split("\r\n ")
+                .all(|w| w.len() <= 75 && w.starts_with("=?UTF-8?B?")),
+            "{long}"
+        );
     }
 
     #[test]
     fn settings_say_how_the_server_sends_or_why_not() {
         let env = |pairs: &'static [(&'static str, &'static str)]| {
-            move |k: &str| pairs.iter().find(|(n, _)| *n == k).map(|(_, v)| (*v).to_owned())
+            move |k: &str| {
+                pairs
+                    .iter()
+                    .find(|(n, _)| *n == k)
+                    .map(|(_, v)| (*v).to_owned())
+            }
         };
-        assert!(Delivery::configured(env(&[]), "https://bulut.test").unwrap().is_none());
+        assert!(
+            Delivery::configured(env(&[]), "https://bulut.test")
+                .unwrap()
+                .is_none()
+        );
         let d = Delivery::configured(
-            env(&[("KENTOS_MAIL_TRANSPORT", "sendmail"), ("KENTOS_MAIL_FROM", "Bulut <bildirim@ornek.test>")]),
+            env(&[
+                ("KENTOS_MAIL_TRANSPORT", "sendmail"),
+                ("KENTOS_MAIL_FROM", "Bulut <bildirim@ornek.test>"),
+            ]),
             "https://bulut.test/",
         )
         .unwrap()
         .unwrap();
         assert_eq!(d.ways(), (Some("sendmail".into()), None));
-        assert!(Delivery::configured(env(&[("KENTOS_MAIL_TRANSPORT", "sendmail")]), "x").unwrap_err().contains("KENTOS_MAIL_FROM"));
+        assert!(
+            Delivery::configured(env(&[("KENTOS_MAIL_TRANSPORT", "sendmail")]), "x")
+                .unwrap_err()
+                .contains("KENTOS_MAIL_FROM")
+        );
         let e = Delivery::configured(
-            env(&[("KENTOS_SMS_TRANSPORT", "webhook"), ("KENTOS_NOTIFY_WEBHOOK", "http://ornek.test/sms"), ("KENTOS_NOTIFY_WEBHOOK_SECRET", "uzun-bir-gizli-anahtar")]),
+            env(&[
+                ("KENTOS_SMS_TRANSPORT", "webhook"),
+                ("KENTOS_NOTIFY_WEBHOOK", "http://ornek.test/sms"),
+                ("KENTOS_NOTIFY_WEBHOOK_SECRET", "uzun-bir-gizli-anahtar"),
+            ]),
             "x",
         )
         .unwrap_err();

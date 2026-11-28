@@ -37,7 +37,9 @@ pub fn field_kind(kind: &FieldKind, native: &str) -> Option<LayerFieldKind> {
         FieldKind::Real | FieldKind::Decimal { .. } => LayerFieldKind::Decimal,
         FieldKind::Text { .. } | FieldKind::Other => LayerFieldKind::Text,
         FieldKind::Date => LayerFieldKind::Date,
-        FieldKind::DateTime if n.contains("with time zone") || n == "timestamptz" => LayerFieldKind::Instant,
+        FieldKind::DateTime if n.contains("with time zone") || n == "timestamptz" => {
+            LayerFieldKind::Instant
+        }
         FieldKind::DateTime => LayerFieldKind::DateTime,
         FieldKind::Time => LayerFieldKind::Time,
         FieldKind::Json => LayerFieldKind::Json,
@@ -77,12 +79,18 @@ pub fn fields_of(schema: &Schema) -> (Vec<LayerField>, Vec<String>) {
 
 /// Reads a table's shape through its driver (the catalogue only, no row) for a data layer.
 pub fn describe(address: &str, table: &str) -> Result<Described, String> {
-    let source = kentos_data::registry().source(address).map_err(|e| e.to_string())?;
+    let source = kentos_data::registry()
+        .source(address)
+        .map_err(|e| e.to_string())?;
     describe_in(source.as_ref(), address, table)
 }
 
 /// [`describe`] with the source already open.
-pub fn describe_in(source: &dyn kentos_data::Source, address: &str, table: &str) -> Result<Described, String> {
+pub fn describe_in(
+    source: &dyn kentos_data::Source,
+    address: &str,
+    table: &str,
+) -> Result<Described, String> {
     let schema = source.schema(table).map_err(|e| e.to_string())?;
     let (mut fields, left) = fields_of(&schema);
     // The columns' rules the source keeps, read back as the fields' lists and ranges (docs/adr/9324).
@@ -105,12 +113,21 @@ pub fn describe_in(source: &dyn kentos_data::Source, address: &str, table: &str)
         text: None,
     };
     let extent = source.extent(table, true).ok().flatten();
-    let data = DataLayer { extent: extent.filter(|_| data.geometry.is_some()), ..data };
+    let data = DataLayer {
+        extent: extent.filter(|_| data.geometry.is_some()),
+        ..data
+    };
     if let Some(problem) = data.problem() {
         return Err(problem);
     }
     let name = table.rsplit('.').next().unwrap_or(table).to_owned();
-    Ok(Described { data, fields, left, extent, name })
+    Ok(Described {
+        data,
+        fields,
+        left,
+        extent,
+        name,
+    })
 }
 
 /// The rules a source keeps given to the fields that have none of their own (docs/adr/9324): a list of values as the
@@ -120,20 +137,29 @@ pub fn take_source_rules(fields: &mut [LayerField], rules: &[kentos_data::RuledC
         let Some(f) = fields.iter_mut().find(|f| f.name == r.column) else {
             continue;
         };
-        let own = f.values.as_ref().is_some_and(|v| !v.is_empty()) || f.min.is_some() || f.max.is_some();
+        let own =
+            f.values.as_ref().is_some_and(|v| !v.is_empty()) || f.min.is_some() || f.max.is_some();
         match (&r.rule, own) {
             (_, true) | (None, _) => {}
             (Some(kentos_data::ColumnRule::Values(values)), false) => {
                 f.values = Some(
                     values
                         .iter()
-                        .map(|(v, l)| kentos_commands::FieldChoice::new(v, l.as_deref().unwrap_or(v)))
+                        .map(|(v, l)| {
+                            kentos_commands::FieldChoice::new(v, l.as_deref().unwrap_or(v))
+                        })
                         .collect(),
                 );
             }
-            (Some(kentos_data::ColumnRule::Range { min, min_included, max, max_included }), false)
-                if f.kind.is_number() =>
-            {
+            (
+                Some(kentos_data::ColumnRule::Range {
+                    min,
+                    min_included,
+                    max,
+                    max_included,
+                }),
+                false,
+            ) if f.kind.is_number() => {
                 f.min = min.map(|v| format!("{v}"));
                 f.min_exclusive = min.is_some() && !min_included;
                 f.max = max.map(|v| format!("{v}"));
@@ -152,9 +178,18 @@ mod tests {
     fn columns_become_fields_and_types_their_names() {
         assert_eq!(type_name("MultiPolygon"), "MULTIPOLYGON");
         assert_eq!(type_name("TIN"), "GEOMETRY");
-        assert_eq!(field_kind(&FieldKind::INT, "bigint"), Some(LayerFieldKind::BigInt));
-        assert_eq!(field_kind(&FieldKind::INT32, "MEDIUMINT"), Some(LayerFieldKind::Integer));
-        assert_eq!(field_kind(&FieldKind::DateTime, "timestamp with time zone"), Some(LayerFieldKind::Instant));
+        assert_eq!(
+            field_kind(&FieldKind::INT, "bigint"),
+            Some(LayerFieldKind::BigInt)
+        );
+        assert_eq!(
+            field_kind(&FieldKind::INT32, "MEDIUMINT"),
+            Some(LayerFieldKind::Integer)
+        );
+        assert_eq!(
+            field_kind(&FieldKind::DateTime, "timestamp with time zone"),
+            Some(LayerFieldKind::Instant)
+        );
         let schema = Schema {
             key: "fid".into(),
             key_made: true,
@@ -166,7 +201,10 @@ mod tests {
             geometry: None,
         };
         let (fields, left) = fields_of(&schema);
-        assert_eq!(fields.iter().map(|f| f.name.as_str()).collect::<Vec<_>>(), ["ad", "alan"]);
+        assert_eq!(
+            fields.iter().map(|f| f.name.as_str()).collect::<Vec<_>>(),
+            ["ad", "alan"]
+        );
         assert_eq!(fields[0].length, Some(40));
         assert_eq!(left.len(), 1, "{left:?}");
     }

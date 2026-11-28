@@ -16,7 +16,8 @@ use std::path::PathBuf;
 use iced::widget::container;
 use iced::{Element, Task};
 use kentos_commands::{
-    CommandResult, ImpactAccess, ImpactInfrastructure, ImpactSlope, LayerNode, LayerNodeType, ScenariosImpact, ScenariosImpacted,
+    CommandResult, ImpactAccess, ImpactInfrastructure, ImpactSlope, LayerNode, LayerNodeType,
+    ScenariosImpact, ScenariosImpacted,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, scenarios_impact};
@@ -184,7 +185,10 @@ pub fn shares_of(text: &str) -> Result<Option<BTreeMap<String, f64>>, String> {
         let (code, value) = part.rsplit_once(char::is_whitespace).ok_or_else(|| {
             format!("Geçirimsizlik payı “{part}” okunamadı; “konut 0,6; park 0,1” gibi kullanım ve pay yazın.")
         })?;
-        let v = value.replace(',', ".").parse::<f64>().map_err(|_| format!("“{value}” bir sayı değil (geçirimsizlik payı)."))?;
+        let v = value
+            .replace(',', ".")
+            .parse::<f64>()
+            .map_err(|_| format!("“{value}” bir sayı değil (geçirimsizlik payı)."))?;
         out.insert(code.trim().to_owned(), v);
     }
     Ok((!out.is_empty()).then_some(out))
@@ -194,7 +198,11 @@ pub fn shares_of(text: &str) -> Result<Option<BTreeMap<String, f64>>, String> {
 pub fn layer_choices(nodes: &[LayerNode]) -> Vec<(String, String)> {
     fn walk(nodes: &[LayerNode], path: &str, out: &mut Vec<(String, String)>) {
         for n in nodes {
-            let name = if path.is_empty() { n.name.clone() } else { format!("{path} › {}", n.name) };
+            let name = if path.is_empty() {
+                n.name.clone()
+            } else {
+                format!("{path} › {}", n.name)
+            };
             if n.kind == LayerNodeType::Group {
                 walk(&n.children, &name, out);
             } else {
@@ -209,19 +217,32 @@ pub fn layer_choices(nodes: &[LayerNode]) -> Vec<(String, String)> {
 
 /// The uses as typed, “park, yesil”.
 fn uses_of(text: &str) -> Vec<String> {
-    text.split([',', ';']).map(str::trim).filter(|u| !u.is_empty()).map(str::to_owned).collect()
+    text.split([',', ';'])
+        .map(str::trim)
+        .filter(|u| !u.is_empty())
+        .map(str::to_owned)
+        .collect()
 }
 
 /// The report as CSV: the stamp, the measures, the uses, the changes, the gaps and the assumptions (numbers as
 /// computed, not rounded).
 pub fn csv(r: &ScenariosImpacted) -> String {
-    let mut out = format!("Senaryo;{};Taban damgası;{}\n\nÖlçü;Birim;Mevcut durum;Senaryo;Fark;Yöntem\n", r.name, r.stamp);
+    let mut out = format!(
+        "Senaryo;{};Taban damgası;{}\n\nÖlçü;Birim;Mevcut durum;Senaryo;Fark;Yöntem\n",
+        r.name, r.stamp
+    );
     for m in &r.measures {
-        out.push_str(&format!("{};{};{};{};{};{}\n", m.label, m.unit, m.base, m.alternative, m.difference, m.method));
+        out.push_str(&format!(
+            "{};{};{};{};{};{}\n",
+            m.label, m.unit, m.base, m.alternative, m.difference, m.method
+        ));
     }
     out.push_str("\nKullanım;Mevcut durum (m²);Senaryo (m²);Fark (m²)\n");
     for u in &r.uses {
-        out.push_str(&format!("{};{};{};{}\n", u.code, u.base, u.alternative, u.difference));
+        out.push_str(&format!(
+            "{};{};{};{}\n",
+            u.code, u.base, u.alternative, u.difference
+        ));
     }
     out.push_str("\nKarar;Değişim;Önce kullanım;Sonra kullanım;Önce alan;Sonra alan;Önce inşaat alanı;Sonra inşaat alanı\n");
     let o = |v: Option<f64>| v.map(|x| x.to_string()).unwrap_or_default();
@@ -269,12 +290,28 @@ impl App {
                 match s.connect.trim().replace(',', ".").parse::<f64>() {
                     Ok(c) => (Some(s.network.clone()), Some(c)),
                     Err(_) if s.connect.trim().is_empty() => (Some(s.network.clone()), None),
-                    Err(_) => return Err(format!("Ağa bağlanma uzaklığı “{}” bir sayı değil.", s.connect.trim())),
+                    Err(_) => {
+                        return Err(format!(
+                            "Ağa bağlanma uzaklığı “{}” bir sayı değil.",
+                            s.connect.trim()
+                        ));
+                    }
                 }
             };
             match s.distance.trim().replace(',', ".").parse::<f64>() {
-                Ok(distance) => Some(ImpactAccess { distance, from: uses_of(&s.from), to: uses_of(&s.to), network, connect }),
-                Err(_) => return Err(format!("Erişim uzaklığı “{}” bir sayı değil.", s.distance.trim())),
+                Ok(distance) => Some(ImpactAccess {
+                    distance,
+                    from: uses_of(&s.from),
+                    to: uses_of(&s.to),
+                    network,
+                    connect,
+                }),
+                Err(_) => {
+                    return Err(format!(
+                        "Erişim uzaklığı “{}” bir sayı değil.",
+                        s.distance.trim()
+                    ));
+                }
             }
         };
         // docs/adr/2660: asked once a layer and a distance are given.
@@ -282,10 +319,17 @@ impl App {
             None
         } else {
             match s.infra_distance.trim().replace(',', ".").parse::<f64>() {
-                Ok(distance) => {
-                    Some(ImpactInfrastructure { layer: s.infra_layer.clone(), distance, from: uses_of(&s.infra_from) })
+                Ok(distance) => Some(ImpactInfrastructure {
+                    layer: s.infra_layer.clone(),
+                    distance,
+                    from: uses_of(&s.infra_from),
+                }),
+                Err(_) => {
+                    return Err(format!(
+                        "Altyapı uzaklığı “{}” bir sayı değil.",
+                        s.infra_distance.trim()
+                    ));
                 }
-                Err(_) => return Err(format!("Altyapı uzaklığı “{}” bir sayı değil.", s.infra_distance.trim())),
             }
         };
         // docs/adr/4260: asked once a surface and a threshold are given.
@@ -294,10 +338,19 @@ impl App {
         } else {
             // docs/adr/4660: the breaks between semicolons (a comma is a decimal point).
             let mut classes = Vec::new();
-            for part in s.slope_classes.split(';').map(str::trim).filter(|p| !p.is_empty()) {
+            for part in s
+                .slope_classes
+                .split(';')
+                .map(str::trim)
+                .filter(|p| !p.is_empty())
+            {
                 match part.replace(',', ".").parse::<f64>() {
                     Ok(v) => classes.push(v),
-                    Err(_) => return Err(format!("Eğim sınıfı sınırı “{part}” bir sayı değil; sınırları noktalı virgülle ayırın (5; 15; 30).")),
+                    Err(_) => {
+                        return Err(format!(
+                            "Eğim sınıfı sınırı “{part}” bir sayı değil; sınırları noktalı virgülle ayırın (5; 15; 30)."
+                        ));
+                    }
                 }
             }
             match s.slope_threshold.trim().replace(',', ".").parse::<f64>() {
@@ -309,7 +362,12 @@ impl App {
                     aspect: s.slope_aspect,
                     map: false,
                 }),
-                Err(_) => return Err(format!("Dik eğim eşiği “{}” bir sayı değil.", s.slope_threshold.trim())),
+                Err(_) => {
+                    return Err(format!(
+                        "Dik eğim eşiği “{}” bir sayı değil.",
+                        s.slope_threshold.trim()
+                    ));
+                }
             }
         };
         Ok(ScenariosImpact {
@@ -351,22 +409,39 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         };
-        let scenarios: Vec<(String, String)> = crate::temporal::scenario_groups(doc.model.layers().nodes())
-            .into_iter()
-            .map(|n| (n.id.clone(), n.name.clone()))
-            .collect();
-        let Some(first) = self.scenario_at_hand().or_else(|| scenarios.first().map(|(id, _)| id.clone())) else {
+        let scenarios: Vec<(String, String)> =
+            crate::temporal::scenario_groups(doc.model.layers().nodes())
+                .into_iter()
+                .map(|n| (n.id.clone(), n.name.clone()))
+                .collect();
+        let Some(first) = self
+            .scenario_at_hand()
+            .or_else(|| scenarios.first().map(|(id, _)| id.clone()))
+        else {
             self.warn("Projede senaryo yok; önce Senaryo oluştur ile tasarım katmanlarından bir senaryo kurun.");
             return Task::none();
         };
         let layers = layer_choices(doc.model.layers().nodes());
         // docs/adr/4260: the project's terrain surfaces, “—” first (the slope not asked).
         let surfaces = std::iter::once((String::new(), "—".to_owned()))
-            .chain(doc.model.settings().road.iter().flat_map(|r| r.surfaces.iter()).map(|s| (s.id.clone(), s.name.clone())))
+            .chain(
+                doc.model
+                    .settings()
+                    .road
+                    .iter()
+                    .flat_map(|r| r.surfaces.iter())
+                    .map(|s| (s.id.clone(), s.name.clone())),
+            )
             .collect();
         // Docs/adr/5060: the project's networks, straight first.
         let networks = std::iter::once((String::new(), "düz uzaklık".to_owned()))
-            .chain(doc.model.settings().networks.iter().map(|n| (n.id.clone(), n.name.clone())))
+            .chain(
+                doc.model
+                    .settings()
+                    .networks
+                    .iter()
+                    .map(|n| (n.id.clone(), n.name.clone())),
+            )
             .collect();
         self.gis.impact = State {
             scenarios,
@@ -391,10 +466,19 @@ impl App {
         match std::fs::write(&path, text) {
             Ok(()) => {
                 self.gis.impact_stamps.insert(scenario, stamp);
-                self.say(Level::Success, format!("{TITLE}: rapor {} dosyasına yazıldı; taban damgası saklandı.", path.display()));
+                self.say(
+                    Level::Success,
+                    format!(
+                        "{TITLE}: rapor {} dosyasına yazıldı; taban damgası saklandı.",
+                        path.display()
+                    ),
+                );
                 self.impact_run();
             }
-            Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.", path.display())),
+            Err(e) => self.warn(format!(
+                "{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.",
+                path.display()
+            )),
         }
     }
 
@@ -493,7 +577,12 @@ impl App {
                 // The view on the scenario's areas, a tenth wider each way.
                 if let Some([x0, y0, x1, y1]) = marks.bounds() {
                     let (mx, my) = ((x1 - x0).max(1.0) * 0.1, (y1 - y0).max(1.0) * 0.1);
-                    let b = kentos_commands::Bounds { min_x: x0 - mx, min_y: y0 - my, max_x: x1 + mx, max_y: y1 + my };
+                    let b = kentos_commands::Bounds {
+                        min_x: x0 - mx,
+                        min_y: y0 - my,
+                        max_x: x1 + mx,
+                        max_y: y1 + my,
+                    };
                     self.navigating(|app| app.zoom_to_bounds(&b));
                 }
                 self.say(
@@ -526,7 +615,12 @@ impl App {
                 self.dialog = None;
                 if let Some([x0, y0, x1, y1]) = marks.bounds() {
                     let (mx, my) = ((x1 - x0).max(1.0) * 0.1, (y1 - y0).max(1.0) * 0.1);
-                    let b = kentos_commands::Bounds { min_x: x0 - mx, min_y: y0 - my, max_x: x1 + mx, max_y: y1 + my };
+                    let b = kentos_commands::Bounds {
+                        min_x: x0 - mx,
+                        min_y: y0 - my,
+                        max_x: x1 + mx,
+                        max_y: y1 + my,
+                    };
                     self.navigating(|app| app.zoom_to_bounds(&b));
                 }
                 self.say(
@@ -563,7 +657,9 @@ impl App {
         if !answer.measures.iter().any(|m| m.id == "slopeMean") {
             return;
         }
-        let Some(doc) = self.document.as_ref() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         let shown = crate::impact_reach_marks::Shown::slope(doc.session, input);
         let marks = scenarios_impact::preview(&doc.model, &shown.input)
             .ok()
@@ -574,7 +670,12 @@ impl App {
         self.dialog = None;
         if let Some([x0, y0, x1, y1]) = marks.as_ref().and_then(|m| m.bounds()) {
             let (mx, my) = ((x1 - x0).max(1.0) * 0.1, (y1 - y0).max(1.0) * 0.1);
-            let b = kentos_commands::Bounds { min_x: x0 - mx, min_y: y0 - my, max_x: x1 + mx, max_y: y1 + my };
+            let b = kentos_commands::Bounds {
+                min_x: x0 - mx,
+                min_y: y0 - my,
+                max_x: x1 + mx,
+                max_y: y1 + my,
+            };
             self.navigating(|app| app.zoom_to_bounds(&b));
         }
         self.say(
@@ -588,25 +689,47 @@ impl App {
     /// Ölçüleri çizime yaz (docs/adr/5060): the comparison as a table on “Senaryo ölçüleri” (made when missing), right
     /// of the compared objects, one undo step; the window stays and reads the table back.
     pub(crate) fn impact_record(&mut self) {
-        let Ok(impact) = self.impact_input() else { return };
-        let impact = ScenariosImpact { since: None, ..impact };
-        let Some(doc) = self.document.as_mut() else { return };
+        let Ok(impact) = self.impact_input() else {
+            return;
+        };
+        let impact = ScenariosImpact {
+            since: None,
+            ..impact
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         let model = &mut doc.model;
         let step = model.begin_group(RECORD);
-        let existing = model.layers().leaves().into_iter().find(|l| l.name == RECORD_LAYER).map(|l| l.id.clone());
+        let existing = model
+            .layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == RECORD_LAYER)
+            .map(|l| l.id.clone());
         let layer = match existing {
             Some(id) => id,
-            None => match model.add_layer(kentos_domain::NewLayer::layer(RECORD_LAYER), None, false) {
-                Ok(id) => id,
-                Err(refused) => {
-                    model.cancel_group(step);
-                    self.warn(refused.to_string());
-                    return;
+            None => {
+                match model.add_layer(kentos_domain::NewLayer::layer(RECORD_LAYER), None, false) {
+                    Ok(id) => id,
+                    Err(refused) => {
+                        model.cancel_group(step);
+                        self.warn(refused.to_string());
+                        return;
+                    }
                 }
-            },
+            }
         };
-        let input = kentos_commands::ScenariosRecord { impact, layer_id: layer, at: None, expected_revision: None };
-        match kentos_native_application::scenarios_record::execute(&mut ExecutionContext::new(model), input) {
+        let input = kentos_commands::ScenariosRecord {
+            impact,
+            layer_id: layer,
+            at: None,
+            expected_revision: None,
+        };
+        match kentos_native_application::scenarios_record::execute(
+            &mut ExecutionContext::new(model),
+            input,
+        ) {
             CommandResult::Completed { output, .. } => {
                 model.end_group(step);
                 self.say(
@@ -622,9 +745,9 @@ impl App {
             other => {
                 model.cancel_group(step);
                 let why = match other {
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                        error.message
-                    }
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => error.message,
                     _ => "Ölçü tablosu yazılamadı.".to_owned(),
                 };
                 self.warn(why);
@@ -635,19 +758,41 @@ impl App {
     pub(crate) fn impact_view(&self) -> Element<'_, Message> {
         let s = &self.gis.impact;
         let f = self.format();
-        let pick = crate::style::fields::select_owned(s.scenarios.clone(), &s.scenario, |id| msg(Event::Scenario(id)));
+        let pick = crate::style::fields::select_owned(s.scenarios.clone(), &s.scenario, |id| {
+            msg(Event::Scenario(id))
+        });
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
-            container(crate::style::fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(width)
+            container(
+                crate::style::fields::input(None, hint, value, false, false)
+                    .on_input(move |v| msg(on(v))),
+            )
+            .width(width)
         };
         // docs/adr/2040: the measures that take the user's values; empty ones are not computed. One measure's values at a
         // time, chosen above them, so the window stays short; the others keep theirs.
-        let pair = |a: Element<'static, Message>, b: Element<'static, Message>| -> Element<'static, Message> {
-            iced::widget::row![a, b].spacing(10).align_y(iced::Center).into()
+        let pair = |a: Element<'static, Message>,
+                    b: Element<'static, Message>|
+         -> Element<'static, Message> {
+            iced::widget::row![a, b]
+                .spacing(10)
+                .align_y(iced::Center)
+                .into()
         };
-        let choice = |list: &[(String, String)], value: &str, on: fn(String) -> Event| -> Element<'static, Message> {
-            container(crate::style::fields::select_owned(list.to_vec(), value, move |id| msg(on(id)))).width(290).into()
+        let choice = |list: &[(String, String)],
+                      value: &str,
+                      on: fn(String) -> Event|
+         -> Element<'static, Message> {
+            container(crate::style::fields::select_owned(
+                list.to_vec(),
+                value,
+                move |id| msg(on(id)),
+            ))
+            .width(290)
+            .into()
         };
-        let form = Form::new().label_width(170.0).field("Senaryo", container(pick).width(300));
+        let form = Form::new()
+            .label_width(170.0)
+            .field("Senaryo", container(pick).width(300));
         let groups = [Group::Access, Group::Infra, Group::Slope, Group::Shares];
         let tabs = Segmented::new(groups, s.group, |g| msg(Event::Group(g)));
         let values = match s.group {
@@ -688,16 +833,43 @@ impl App {
             Some(Ok(r)) => {
                 let layers: Vec<&str> = r.layers.iter().map(|l| l.name.as_str()).collect();
                 let (kind, stamp) = match r.stale {
-                    Some(true) => (Kind::Error, format!("Taban, kaydedilen rapordan sonra değişti: senaryo eski tabana göre (damga {}). Senaryoyu gözden geçirin; kendiliğinden yeni veriye uymuş sayılmaz.", r.stamp)),
-                    Some(false) => (Kind::Ok, format!("Taban kaydedilen rapordan beri aynı (damga {}).", r.stamp)),
-                    None => (Kind::Info, format!("Taban damgası {}; raporu kaydedince sonraki karşılaştırma tabanın değişip değişmediğini söyler.", r.stamp)),
+                    Some(true) => (
+                        Kind::Error,
+                        format!(
+                            "Taban, kaydedilen rapordan sonra değişti: senaryo eski tabana göre (damga {}). Senaryoyu gözden geçirin; kendiliğinden yeni veriye uymuş sayılmaz.",
+                            r.stamp
+                        ),
+                    ),
+                    Some(false) => (
+                        Kind::Ok,
+                        format!("Taban kaydedilen rapordan beri aynı (damga {}).", r.stamp),
+                    ),
+                    None => (
+                        Kind::Info,
+                        format!(
+                            "Taban damgası {}; raporu kaydedince sonraki karşılaştırma tabanın değişip değişmediğini söyler.",
+                            r.stamp
+                        ),
+                    ),
                 };
-                lines.push(words::text_line(Kind::Info, format!("Mevcut durumla karşılaştırılan katmanlar: {}.", layers.join(", "))));
+                lines.push(words::text_line(
+                    Kind::Info,
+                    format!(
+                        "Mevcut durumla karşılaştırılan katmanlar: {}.",
+                        layers.join(", ")
+                    ),
+                ));
                 lines.push(words::text_line(kind, stamp));
                 // Docs/adr/5060: the scenario's tables in the drawing.
                 for rec in &r.records {
                     let (kind, said) = match (rec.base_changed, rec.scenario_changed) {
-                        (false, false) => (Kind::Ok, format!("Çizimdeki ölçü tablosu güncel (taban {}, senaryo {}).", rec.stamp, rec.scenario_stamp)),
+                        (false, false) => (
+                            Kind::Ok,
+                            format!(
+                                "Çizimdeki ölçü tablosu güncel (taban {}, senaryo {}).",
+                                rec.stamp, rec.scenario_stamp
+                            ),
+                        ),
                         (b, a) => (
                             Kind::Error,
                             format!(
@@ -722,34 +894,80 @@ impl App {
                     "%" => format!("{:.1} %", v).replace('.', ","),
                     _ => format!("{v}"),
                 };
-                let signed = |unit: &str, v: f64| if v > 0.0 { format!("+{}", fmt(unit, v)) } else { fmt(unit, v) };
+                let signed = |unit: &str, v: f64| {
+                    if v > 0.0 {
+                        format!("+{}", fmt(unit, v))
+                    } else {
+                        fmt(unit, v)
+                    }
+                };
                 table = match s.view {
                     View::Measures => sheet(
-                        vec![col("Ölçü", 270.0), num("Mevcut durum", 120.0), num("Senaryo", 120.0), num("Fark", 120.0), col("Birim", 50.0)],
+                        vec![
+                            col("Ölçü", 270.0),
+                            num("Mevcut durum", 120.0),
+                            num("Senaryo", 120.0),
+                            num("Fark", 120.0),
+                            col("Birim", 50.0),
+                        ],
                         r.measures
                             .iter()
-                            .map(|m| vec![m.label.clone(), fmt(&m.unit, m.base), fmt(&m.unit, m.alternative), signed(&m.unit, m.difference), unit_word(&m.unit).to_owned()])
+                            .map(|m| {
+                                vec![
+                                    m.label.clone(),
+                                    fmt(&m.unit, m.base),
+                                    fmt(&m.unit, m.alternative),
+                                    signed(&m.unit, m.difference),
+                                    unit_word(&m.unit).to_owned(),
+                                ]
+                            })
                             .collect(),
                         "Ölçü yok.",
                         260.0,
                     ),
                     View::Uses => sheet(
-                        vec![col("Kullanım", 190.0), num("Mevcut durum", 120.0), num("Senaryo", 120.0), num("Fark", 120.0)],
+                        vec![
+                            col("Kullanım", 190.0),
+                            num("Mevcut durum", 120.0),
+                            num("Senaryo", 120.0),
+                            num("Fark", 120.0),
+                        ],
                         r.uses
                             .iter()
-                            .map(|u| vec![if u.code.is_empty() { "(yok)".to_owned() } else { u.code.clone() }, f.area(u.base), f.area(u.alternative), signed("m2", u.difference)])
+                            .map(|u| {
+                                vec![
+                                    if u.code.is_empty() {
+                                        "(yok)".to_owned()
+                                    } else {
+                                        u.code.clone()
+                                    },
+                                    f.area(u.base),
+                                    f.area(u.alternative),
+                                    signed("m2", u.difference),
+                                ]
+                            })
                             .collect(),
                         "Kullanım yok.",
                         260.0,
                     ),
                     View::Changes => sheet(
-                        vec![col("Karar", 50.0), col("Değişim", 115.0), col("Kullanım", 130.0), num("Alan", 185.0), num("İnşaat alanı", 185.0)],
+                        vec![
+                            col("Karar", 50.0),
+                            col("Değişim", 115.0),
+                            col("Kullanım", 130.0),
+                            num("Alan", 185.0),
+                            num("İnşaat alanı", 185.0),
+                        ],
                         r.changes
                             .iter()
                             .map(|c| {
                                 let pair = |a: Option<String>, b: Option<String>| match (a, b) {
                                     (Some(a), Some(b)) if a == b => a,
-                                    (a, b) => format!("{} → {}", a.unwrap_or_else(|| "—".into()), b.unwrap_or_else(|| "—".into())),
+                                    (a, b) => format!(
+                                        "{} → {}",
+                                        a.unwrap_or_else(|| "—".into()),
+                                        b.unwrap_or_else(|| "—".into())
+                                    ),
                                 };
                                 let area = |v: Option<f64>| v.map(|x| f.area(x));
                                 vec![
@@ -776,7 +994,9 @@ impl App {
             .width(iced::Fill)
             .push(kentos_ui::label::caption(LEAD))
             .push(form)
-            .push(kentos_ui::label::caption("Ölçülerin değerleri sizindir; boş bırakılan ölçü hesaplanmaz."))
+            .push(kentos_ui::label::caption(
+                "Ölçülerin değerleri sizindir; boş bırakılan ölçü hesaplanmaz.",
+            ))
             .push(tabs)
             .push(values)
             .push(words::summary(lines))
@@ -785,14 +1005,24 @@ impl App {
         let ready = matches!(s.answer, Some(Ok(_)));
         let reached = matches!(&s.answer, Some(Ok(r)) if r.reach.is_some());
         let near = matches!(&s.answer, Some(Ok(r)) if r.near.is_some());
-        let sloped = matches!(&s.answer, Some(Ok(r)) if r.measures.iter().any(|m| m.id == "slopeMean"));
+        let sloped =
+            matches!(&s.answer, Some(Ok(r)) if r.measures.iter().any(|m| m.id == "slopeMean"));
         Frame::new(TITLE)
             .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
             .aside(words::secondary(RECORD, ready.then(|| msg(Event::Record))))
-            .aside(words::secondary(SHOW_ACCESS, reached.then(|| msg(Event::DrawAccess))))
-            .aside(words::secondary(SHOW_NEAR, near.then(|| msg(Event::DrawNear))))
-            .aside(words::secondary(SHOW_SLOPE, sloped.then(|| msg(Event::DrawSlope))))
+            .aside(words::secondary(
+                SHOW_ACCESS,
+                reached.then(|| msg(Event::DrawAccess)),
+            ))
+            .aside(words::secondary(
+                SHOW_NEAR,
+                near.then(|| msg(Event::DrawNear)),
+            ))
+            .aside(words::secondary(
+                SHOW_SLOPE,
+                sloped.then(|| msg(Event::DrawSlope)),
+            ))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(900.0)
             .modal(msg(Event::Close))

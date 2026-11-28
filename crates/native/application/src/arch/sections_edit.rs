@@ -83,7 +83,8 @@ pub(crate) fn mark_of(
     if v.mark.points.is_empty() {
         return Err(fail(
             codes::NOT_A_SECTION_MARK,
-            "Görünüş işaretinin noktası yok; görünüş, işaretin balonundan baktığı yöne çıkarılır.".into(),
+            "Görünüş işaretinin noktası yok; görünüş, işaretin balonundan baktığı yöne çıkarılır."
+                .into(),
             path,
         ));
     }
@@ -443,7 +444,11 @@ fn write_execute(
             at,
         } => {
             let facade = fields.form == ViewMarkForm::Elevation;
-            let step = if facade { FACADE_DERIVE_STEP } else { SECTION_DERIVE_STEP };
+            let step = if facade {
+                FACADE_DERIVE_STEP
+            } else {
+                SECTION_DERIVE_STEP
+            };
             let group = doc.begin_group(step);
             if let Err(why) = open_layers(doc, &ids) {
                 return refused(doc, group, why);
@@ -455,7 +460,11 @@ fn write_execute(
             // Its placement on a layer of its own (EK-4's form, the general element: MM-XXXX-KESIT, an elevation's
             // MM-XXXX-GORUNUS), so a set's plan and site maps leave the sections and elevations drawn beside the
             // building out (docs/adr/8042 §6, 8043).
-            let name = if facade { "MM-XXXX-GORUNUS" } else { "MM-XXXX-KESIT" };
+            let name = if facade {
+                "MM-XXXX-GORUNUS"
+            } else {
+                "MM-XXXX-KESIT"
+            };
             let mut one = BTreeMap::new();
             one.insert(
                 name.to_owned(),
@@ -552,21 +561,27 @@ fn write_execute(
 /// ([`sections::facade_marks`]). The number of marks placed and the facades' names in order; the first refusal's words
 /// when one is refused, nothing written.
 pub fn derive_facades(doc: &mut Document, layer: &str) -> Result<(usize, Vec<String>), String> {
-    let elevations = |doc: &Document| -> Vec<(kentos_domain::Uuid, kentos_commands::ViewMarkFields)> {
-        doc.entities_with_uids()
-            .filter_map(|(u, e)| match e {
-                Entity::ViewMark(v) if v.mark.form == ViewMarkForm::Elevation => Some((u, (*v.mark).clone())),
-                _ => None,
-            })
-            .collect()
-    };
+    let elevations =
+        |doc: &Document| -> Vec<(kentos_domain::Uuid, kentos_commands::ViewMarkFields)> {
+            doc.entities_with_uids()
+                .filter_map(|(u, e)| match e {
+                    Entity::ViewMark(v) if v.mark.form == ViewMarkForm::Elevation => {
+                        Some((u, (*v.mark).clone()))
+                    }
+                    _ => None,
+                })
+                .collect()
+        };
     let group = doc.begin_group(kentos_commands::FACADES_DERIVE_STEP);
     let mut placed = 0;
     if elevations(doc).is_empty() {
         let marks = sections::facade_marks(doc);
         if marks.is_empty() {
             doc.cancel_group(group);
-            return Err("Çizimde görünüşü çıkarılacak bir yapı yok: önce duvar, döşeme ya da kolon çizin.".into());
+            return Err(
+                "Çizimde görünüşü çıkarılacak bir yapı yok: önce duvar, döşeme ya da kolon çizin."
+                    .into(),
+            );
         }
         placed = marks.len();
         let input = kentos_commands::ViewMarksCreate {

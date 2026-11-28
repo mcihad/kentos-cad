@@ -20,7 +20,10 @@ fn identifying() -> App {
 /// Between the building's circle (r 3.25) and its arc (r 4) round the same centre, inside the parcel.
 fn between() -> [f64; 2] {
     let r = 3.625_f64;
-    [486_524.34 + r * 1f64.cos() - E, 4_420_199.52 + r * 1f64.sin() - N]
+    [
+        486_524.34 + r * 1f64.cos() - E,
+        4_420_199.52 + r * 1f64.sin() - N,
+    ]
 }
 
 fn shown(app: &App) -> Option<kentos_domain::Slot> {
@@ -31,10 +34,21 @@ fn shown(app: &App) -> Option<kentos_domain::Slot> {
 fn bilgis_card_names_the_layer_and_the_key_under_its_title() {
     let app = app_with_drawing();
     let doc = app.document.as_ref().expect("open");
-    let slot = doc.model.by_layer("parsel").next().map(|e| kentos_domain::Slot(e.base().id)).expect("a parcel");
+    let slot = doc
+        .model
+        .by_layer("parsel")
+        .next()
+        .map(|e| kentos_domain::Slot(e.base().id))
+        .expect("a parcel");
     let uid = doc.model.uid(slot).expect("a uid").to_string();
     let card = app.slot_card(slot).expect("its card");
-    assert_eq!(card.source.map(|(l, _)| l), Some(format!("Parsel katmanı · kimlik …{}", &uid[uid.len() - 8..])));
+    assert_eq!(
+        card.source.map(|(l, _)| l),
+        Some(format!(
+            "Parsel katmanı · kimlik …{}",
+            &uid[uid.len() - 8..]
+        ))
+    );
 }
 
 #[test]
@@ -42,12 +56,25 @@ fn a_click_over_overlapping_objects_counts_them_and_goes_to_the_next() {
     let mut app = identifying();
     click(&mut app, between());
     let hits = app.gis.data_info.hits.clone();
-    assert!(hits.len() >= 2, "the circle and the arc under the click: {hits:?}");
+    assert!(
+        hits.len() >= 2,
+        "the circle and the arc under the click: {hits:?}"
+    );
     assert_eq!(shown(&app), Some(hits[0]), "the card is the click's first");
     let doc = app.document.as_ref().expect("open");
-    let layers: Vec<String> = hits.iter().filter_map(|s| doc.model.get(*s)).map(|e| e.base().layer_id.clone()).collect();
-    assert!(layers.iter().filter(|l| *l == "bina").count() >= 2, "{layers:?}");
-    assert_eq!(crate::info_card::hits_words(1, hits.len()), format!("Bu noktada {0} nesne · 1/{0}", hits.len()));
+    let layers: Vec<String> = hits
+        .iter()
+        .filter_map(|s| doc.model.get(*s))
+        .map(|e| e.base().layer_id.clone())
+        .collect();
+    assert!(
+        layers.iter().filter(|l| *l == "bina").count() >= 2,
+        "{layers:?}"
+    );
+    assert_eq!(
+        crate::info_card::hits_words(1, hits.len()),
+        format!("Bu noktada {0} nesne · 1/{0}", hits.len())
+    );
     // Sonraki: the next, then round to the first.
     let _ = app.update(Message::InfoCard(crate::info_card::Event::Next));
     assert_eq!(shown(&app), Some(hits[1]));
@@ -65,14 +92,23 @@ fn a_click_over_overlapping_objects_counts_them_and_goes_to_the_next() {
 fn name(app: &mut App, slot: kentos_domain::Slot) {
     let doc = app.document.as_mut().expect("open");
     let mut e = doc.model.get(slot).cloned().expect("it");
-    e.base_mut().attrs = [("Kat".to_owned(), "3".to_owned()), ("Ad".to_owned(), "Kent Kitaplığı".to_owned())].into();
+    e.base_mut().attrs = [
+        ("Kat".to_owned(), "3".to_owned()),
+        ("Ad".to_owned(), "Kent Kitaplığı".to_owned()),
+    ]
+    .into();
     assert!(doc.model.update(slot, e));
 }
 
 /// The first building of the sample drawing, named.
 fn named_building(app: &mut App) -> kentos_domain::Slot {
     let doc = app.document.as_ref().expect("open");
-    let slot = doc.model.by_layer("bina").next().map(|e| kentos_domain::Slot(e.base().id)).expect("a building");
+    let slot = doc
+        .model
+        .by_layer("bina")
+        .next()
+        .map(|e| kentos_domain::Slot(e.base().id))
+        .expect("a building");
     name(app, slot);
     slot
 }
@@ -99,7 +135,10 @@ fn the_cards_title_names_the_record_by_its_display_field() {
     // A field the role does not read never names it.
     let e = doc.model.get(slot).expect("it");
     assert_eq!(app.display_value(e, &["Ad".to_owned()]), None);
-    assert_eq!(app.display_value(e, &[]), Some(("Ad".to_owned(), "Kent Kitaplığı".to_owned())));
+    assert_eq!(
+        app.display_value(e, &[]),
+        Some(("Ad".to_owned(), "Kent Kitaplığı".to_owned()))
+    );
 }
 
 /// A data row's card without a title of its own (docs/adr/9160): the layer's name and the row's, from the table's
@@ -107,18 +146,38 @@ fn the_cards_title_names_the_record_by_its_display_field() {
 #[test]
 fn a_data_rows_card_is_titled_with_its_layers_name_and_its_own() {
     crate::data_layers::register();
-    let address = crate::data_layers_tests::municipal("kart-gorunen-ad").display().to_string();
+    let address = crate::data_layers_tests::municipal("kart-gorunen-ad")
+        .display()
+        .to_string();
     let mut app = app_with_drawing();
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "mahalleler").expect("described")])
-        .expect("added");
-    let id = crate::data_layers_tests::node(&app, "mahalleler").expect("the layer").id.clone();
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "mahalleler").expect("described"),
+    ])
+    .expect("added");
+    let id = crate::data_layers_tests::node(&app, "mahalleler")
+        .expect("the layer")
+        .id
+        .clone();
     let doc = app.document.as_ref().expect("open");
-    let mut object = doc.model.by_layer("cizim").next().cloned().expect("a point");
+    let mut object = doc
+        .model
+        .by_layer("cizim")
+        .next()
+        .cloned()
+        .expect("a point");
     object.base_mut().layer_id = id.clone();
     object.base_mut().label = None;
-    object.base_mut().attrs = [("mahalle".to_owned(), "M1".to_owned()), ("ad".to_owned(), "Çınar".to_owned())].into();
-    app.gis.data_info.card =
-        Some(crate::data_info::Found { layer: id, key: 1, object, at: kentos_interaction::Vec2 { x: 0.0, y: 0.0 } });
+    object.base_mut().attrs = [
+        ("mahalle".to_owned(), "M1".to_owned()),
+        ("ad".to_owned(), "Çınar".to_owned()),
+    ]
+    .into();
+    app.gis.data_info.card = Some(crate::data_info::Found {
+        layer: id,
+        key: 1,
+        object,
+        at: kentos_interaction::Vec2 { x: 0.0, y: 0.0 },
+    });
     let (card, _, _) = app.data_card().expect("the row's card");
     assert_eq!(card.title, "mahalleler · Çınar");
 }
@@ -127,10 +186,14 @@ fn a_data_rows_card_is_titled_with_its_layers_name_and_its_own() {
 /// and the table's first row (x 486 500–486 525, y 4 420 200–4 420 225) with what lies beside it read.
 fn clicked_over_both(tag: &str) -> App {
     crate::data_layers::register();
-    let address = crate::data_layers_tests::parcels(tag, 40).display().to_string();
+    let address = crate::data_layers_tests::parcels(tag, 40)
+        .display()
+        .to_string();
     let mut app = identifying();
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
-        .expect("added");
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "parseller").expect("described"),
+    ])
+    .expect("added");
     click(&mut app, [486_520.0 - E, 4_420_210.0 - N]);
     // The click's work beside the object, as the update after it starts it (the helper drops its tasks).
     let at = app.info_card.map(|(_, at)| at).expect("the object's card");
@@ -150,7 +213,10 @@ fn a_click_counts_the_objects_and_the_data_rows_under_it_together() {
     let rows: Vec<i64> = app.gis.data_info.rows.iter().map(|r| r.key).collect();
     assert_eq!(rows, [1], "the table's first row under the same click");
     assert_eq!(app.info_place(), Some((0, 2)));
-    assert_eq!(crate::info_card::place_words(1, 1, 1), "Bu noktada 1 nesne, 1 veri satırı · 1/2");
+    assert_eq!(
+        crate::info_card::place_words(1, 1, 1),
+        "Bu noktada 1 nesne, 1 veri satırı · 1/2"
+    );
     // Sonraki: the row's card.
     let _ = app.update(Message::InfoCard(crate::info_card::Event::Next));
     assert_eq!(shown(&app), None);

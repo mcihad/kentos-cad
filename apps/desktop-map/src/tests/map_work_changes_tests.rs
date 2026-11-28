@@ -6,7 +6,9 @@
 //! docs/adr/3280: the changed line's part is its attributes, said in the row's tip; docs/adr/3680: the status bar names
 //! the attribute with its values then and now, and the deleted line as it was approved. And the pictures.
 
-use kentos_commands::{WorkChangedObject, WorkChangedParts, WorkChanges, WorkState as S, WorkStatus as W};
+use kentos_commands::{
+    WorkChangedObject, WorkChangedParts, WorkChanges, WorkState as S, WorkStatus as W,
+};
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::json;
@@ -39,11 +41,16 @@ fn approved_then_changed(app: &mut App) -> Slot {
         json!({"layerId": "tasarim", "objects": [{"geometry": {
             "kind": "line", "a": {"x": 500000.0, "y": 4400015.0}, "b": {"x": 500010.0, "y": 4400015.0}}}]}),
     );
-    let new = made["output"]["created"][0].as_str().expect("its id").to_owned();
+    let new = made["output"]["created"][0]
+        .as_str()
+        .expect("its id")
+        .to_owned();
     let gone = uid(app, 7);
     run(app, "cad.entities.delete", json!({"uids": [gone]}));
     let doc = app.document.as_ref().expect("a drawing");
-    doc.model.slot_of(kentos_domain::Uuid::parse_str(&new).expect("a uid")).expect("drawn")
+    doc.model
+        .slot_of(kentos_domain::Uuid::parse_str(&new).expect("a uid"))
+        .expect("drawn")
 }
 
 fn said(app: &App) -> Vec<String> {
@@ -54,11 +61,22 @@ fn said(app: &App) -> Vec<String> {
 fn an_approved_design_counts_its_changed_objects_and_selects_them() {
     let mut app = opened();
     send(&mut app, P::Status("is-4".into(), W::Approved));
-    let kept = app.document.as_ref().expect("a drawing").model.map_work().expect("a map project").items[3]
+    let kept = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .map_work()
+        .expect("a map project")
+        .items[3]
         .approved_objects
         .clone();
     assert_eq!(kept.len(), 2, "the stamp's two lines, each with its digest");
-    assert_eq!(tree(&app).items[3].changes, None, "approved and unchanged: nothing to say");
+    assert_eq!(
+        tree(&app).items[3].changes,
+        None,
+        "approved and unchanged: nothing to say"
+    );
     send(&mut app, P::Status("is-4".into(), W::Draft));
     let new = approved_then_changed(&mut app);
     let t = tree(&app);
@@ -66,16 +84,39 @@ fn an_approved_design_counts_its_changed_objects_and_selects_them() {
     let mut listed = vec![uid(&app, 6), uid(&app, new.0)];
     listed.sort();
     // Docs/adr/3280: the changed line's height attribute: its attributes part, and only it.
-    let parts = Some(WorkChangedParts { attributes: 1, ..WorkChangedParts::default() });
+    let parts = Some(WorkChangedParts {
+        attributes: 1,
+        ..WorkChangedParts::default()
+    });
     // Docs/adr/3680: the approval kept the values: the height by name, none then and “1060” now; the deleted line as it
     // was approved.
-    let attributes = vec![kentos_commands::WorkChangedAttribute { name: "Kot".into(), approved: None, now: Some(json!("1060")) }];
-    let objects = vec![WorkChangedObject { uid: uid(&app, 6), parts: vec!["attributes".into()], attributes, attachments: false, approved: None, shift: None }];
+    let attributes = vec![kentos_commands::WorkChangedAttribute {
+        name: "Kot".into(),
+        approved: None,
+        now: Some(json!("1060")),
+    }];
+    let objects = vec![WorkChangedObject {
+        uid: uid(&app, 6),
+        parts: vec!["attributes".into()],
+        attributes,
+        attachments: false,
+        approved: None,
+        shift: None,
+    }];
     let got = t.items[3].changes.clone().expect("changes");
     assert_eq!(got.removed_objects.len(), 1);
     assert_eq!(got.removed_objects[0].approved["kind"], "line");
     let removed_objects = got.removed_objects.clone();
-    let changes = WorkChanges { added: 1, removed: 1, changed: 1, uids: listed, parts, objects, removed_objects, beyond: None };
+    let changes = WorkChanges {
+        added: 1,
+        removed: 1,
+        changed: 1,
+        uids: listed,
+        parts,
+        objects,
+        removed_objects,
+        beyond: None,
+    };
     assert_eq!(t.items[3].changes.as_ref(), Some(&changes));
     assert_eq!(
         crate::map_work_panel::changes_words(&changes),
@@ -89,18 +130,40 @@ fn an_approved_design_counts_its_changed_objects_and_selects_them() {
     assert_eq!(selected, [Slot(6), new]);
     assert_eq!(
         said(&app).last().map(String::as_str),
-        Some("Onaydan sonra değişen ya da eklenen 2 nesne seçildi; değişen: 1 nesnenin öznitelikleri (Kot: yok → “1060”); silinen 1 nesne çizimde yok, onaylanan hâli: Çizgi (tasarim). Silinen 1 nesnenin onaylanan şekli kesik çizgiyle gösteriliyor.")
+        Some(
+            "Onaydan sonra değişen ya da eklenen 2 nesne seçildi; değişen: 1 nesnenin öznitelikleri (Kot: yok → “1060”); silinen 1 nesne çizimde yok, onaylanan hâli: Çizgi (tasarim). Silinen 1 nesnenin onaylanan şekli kesik çizgiyle gösteriliyor."
+        )
     );
     // Yeniden onayla: today's objects kept, nothing changed since; one undo step back to the count.
     send(&mut app, P::Status("is-4".into(), W::Approved));
     let t = tree(&app);
-    assert_eq!((t.items[3].state, t.items[3].changes.as_ref()), (S::Current, None));
+    assert_eq!(
+        (t.items[3].state, t.items[3].changes.as_ref()),
+        (S::Current, None)
+    );
     let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(tree(&app).items[3].changes.as_ref().map(|c| (c.added, c.removed, c.changed)), Some((1, 1, 1)));
+    assert_eq!(
+        tree(&app).items[3]
+            .changes
+            .as_ref()
+            .map(|c| (c.added, c.removed, c.changed)),
+        Some((1, 1, 1))
+    );
     // Back to draft: the digests go with the stamp.
     send(&mut app, P::Status("is-4".into(), W::Draft));
-    let item = &app.document.as_ref().expect("a drawing").model.map_work().expect("a map project").items[3];
-    assert!(item.approved.is_none() && item.approved_objects.is_empty() && item.approved_parts.is_empty());
+    let item = &app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .map_work()
+        .expect("a map project")
+        .items[3];
+    assert!(
+        item.approved.is_none()
+            && item.approved_objects.is_empty()
+            && item.approved_parts.is_empty()
+    );
     assert!(item.approved_values.is_empty());
 }
 
@@ -111,9 +174,16 @@ fn the_digests_are_saved_and_the_count_is_the_same_opened_again() {
     let before = tree(&app);
     let model = &app.document.as_ref().expect("a drawing").model;
     let bytes = kentos_kcad::encode(&model.to_snapshot_v2()).expect("encodes");
-    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\xd5"), "the file is schema 213 (docs/adr/3680)");
+    assert!(
+        bytes.windows(10).any(|w| w == b"\x67version\x18\xd5"),
+        "the file is schema 213 (docs/adr/3680)"
+    );
     let back = kentos_kcad::decode(&bytes).expect("reads");
-    assert_eq!(back.settings.map_work, model.map_work().cloned(), "the digests are saved whole");
+    assert_eq!(
+        back.settings.map_work,
+        model.map_work().cloned(),
+        "the digests are saved whole"
+    );
     let (mut again, _) = App::boot(None);
     again.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(back, None).expect("opens");
@@ -135,16 +205,26 @@ fn the_digests_are_saved_and_the_count_is_the_same_opened_again() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/onaylanan-degerler-3680");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/onaylanan-degerler-3680");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = opened();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::MapWork));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(Panel::MapWork));
         // The tree's room: Harita işi taller than Öznitelikler, the campaign's branch folded.
-        app.docks.update(kentos_ui::widget::docking::Event::Shared(kentos_ui::widget::docking::Side::Right, vec![0.68, 0.32]));
+        app.docks.update(kentos_ui::widget::docking::Event::Shared(
+            kentos_ui::widget::docking::Side::Right,
+            vec![0.68, 0.32],
+        ));
         send(&mut app, P::Fold("kind:campaign".into()));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -153,11 +233,18 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         approved_then_changed(&mut app);
-        run(&mut app, "cad.layers.set", json!({"operation": "visible", "layer": "ortofoto", "value": false}));
+        run(
+            &mut app,
+            "cad.layers.set",
+            json!({"operation": "visible", "layer": "ortofoto", "value": false}),
+        );
         app.selection.set(Vec::new());
         // The edits went straight to the drawing: fitted again, the scene draws them.
         let _ = app.update(Message::Run("view.zoomExtents"));

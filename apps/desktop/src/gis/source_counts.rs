@@ -44,7 +44,11 @@ impl App {
     fn source_counts_stamp(&self, layer: &str) -> Option<Stamp> {
         let doc = self.document.as_ref()?;
         let data = doc.model.layers().get(layer)?.data.as_ref()?;
-        Some((doc.session, doc.model.data_written(), format!("{}\u{0}{}", data.address, data.table)))
+        Some((
+            doc.session,
+            doc.model.data_written(),
+            format!("{}\u{0}{}", data.address, data.table),
+        ))
     }
 
     /// A data layer's rows as its source counts them: kept, or being counted (asked: counted after this message).
@@ -57,7 +61,11 @@ impl App {
         {
             return c.clone();
         }
-        self.gis.source_counts.wanted.borrow_mut().insert(layer.to_owned());
+        self.gis
+            .source_counts
+            .wanted
+            .borrow_mut()
+            .insert(layer.to_owned());
         Counted::Counting
     }
 
@@ -72,15 +80,35 @@ impl App {
             let Some(stamp) = self.source_counts_stamp(&layer) else {
                 continue;
             };
-            let counting = self.gis.source_counts.kept.borrow().get(&layer).is_some_and(|(at, c)| *at == stamp && *c == Counted::Counting);
-            let Some(data) = doc.model.layers().get(&layer).and_then(|n| n.data.clone()).filter(|_| !counting) else {
+            let counting = self
+                .gis
+                .source_counts
+                .kept
+                .borrow()
+                .get(&layer)
+                .is_some_and(|(at, c)| *at == stamp && *c == Counted::Counting);
+            let Some(data) = doc
+                .model
+                .layers()
+                .get(&layer)
+                .and_then(|n| n.data.clone())
+                .filter(|_| !counting)
+            else {
                 continue;
             };
-            self.gis.source_counts.kept.borrow_mut().insert(layer.clone(), (stamp.clone(), Counted::Counting));
+            self.gis
+                .source_counts
+                .kept
+                .borrow_mut()
+                .insert(layer.clone(), (stamp.clone(), Counted::Counting));
             tasks.push(crate::db_connections::off_thread(
                 move || {
-                    let source = kentos_data::registry().source(&data.address).map_err(|e| e.to_string())?;
-                    source.count(&data.table, &kentos_data::Request::all(), false).map_err(|e| e.to_string())
+                    let source = kentos_data::registry()
+                        .source(&data.address)
+                        .map_err(|e| e.to_string())?;
+                    source
+                        .count(&data.table, &kentos_data::Request::all(), false)
+                        .map_err(|e| e.to_string())
                 },
                 move |n| message(Event::Counted(layer, stamp, n)),
             ));
@@ -95,7 +123,11 @@ impl App {
                 Ok(n) => Counted::Ready(n),
                 Err(why) => Counted::Failed(why),
             };
-            self.gis.source_counts.kept.borrow_mut().insert(layer, (stamp, c));
+            self.gis
+                .source_counts
+                .kept
+                .borrow_mut()
+                .insert(layer, (stamp, c));
         }
         Task::none()
     }
@@ -115,14 +147,32 @@ impl App {
         if layers.is_empty() {
             return None;
         }
-        let counted: Vec<(String, Counted)> = layers.iter().map(|(id, name)| (name.clone(), self.source_count_of(id))).collect();
-        let ready: u64 = counted.iter().filter_map(|(_, c)| if let Counted::Ready(n) = c { Some(*n) } else { None }).sum();
+        let counted: Vec<(String, Counted)> = layers
+            .iter()
+            .map(|(id, name)| (name.clone(), self.source_count_of(id)))
+            .collect();
+        let ready: u64 = counted
+            .iter()
+            .filter_map(|(_, c)| {
+                if let Counted::Ready(n) = c {
+                    Some(*n)
+                } else {
+                    None
+                }
+            })
+            .sum();
         let counting = counted.iter().any(|(_, c)| *c == Counted::Counting);
-        let failed = counted.iter().filter(|(_, c)| matches!(c, Counted::Failed(_))).count();
+        let failed = counted
+            .iter()
+            .filter(|(_, c)| matches!(c, Counted::Failed(_)))
+            .count();
         let total = if counting {
             "sayılıyor…".to_owned()
         } else if failed > 0 {
-            format!("{} (+ {failed} katman sayılamadı)", crate::view::thousands(ready as f64))
+            format!(
+                "{} (+ {failed} katman sayılamadı)",
+                crate::view::thousands(ready as f64)
+            )
         } else {
             crate::view::thousands(ready as f64)
         };
@@ -140,7 +190,10 @@ impl App {
             })
             .collect();
         if counted.len() > SHOWN {
-            each.push(("…".to_owned(), format!("{} katman daha", counted.len() - SHOWN)));
+            each.push((
+                "…".to_owned(),
+                format!("{} katman daha", counted.len() - SHOWN),
+            ));
         }
         Some((total, format!("{} katman", layers.len()), each))
     }

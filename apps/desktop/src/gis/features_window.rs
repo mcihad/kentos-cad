@@ -56,7 +56,8 @@ impl App {
         FeaturesCode {
             name: self.gis.features_code.profile.clone(),
             drawing: self.features_drawing(),
-            field: (!field.is_empty() && field != kentos_commands::DEFAULT_CODE_FIELD).then(|| field.to_owned()),
+            field: (!field.is_empty() && field != kentos_commands::DEFAULT_CODE_FIELD)
+                .then(|| field.to_owned()),
             uids: self.gis.features_code.uids.clone(),
             expected_revision: None,
         }
@@ -64,7 +65,12 @@ impl App {
 
     /// The open drawing's file, absolute: the profiles beside it are found.
     fn features_drawing(&self) -> Option<String> {
-        self.document.as_ref()?.path.as_ref().filter(|p| p.is_absolute()).map(|p| p.display().to_string())
+        self.document
+            .as_ref()?
+            .path
+            .as_ref()
+            .filter(|p| p.is_absolute())
+            .map(|p| p.display().to_string())
     }
 
     fn features_plan(&mut self) {
@@ -99,7 +105,11 @@ impl App {
             .filter_map(|s| doc.model.uid(*s))
             .map(|u| u.to_string())
             .collect();
-        let drawing = doc.path.as_ref().filter(|p| p.is_absolute()).map(|p| p.display().to_string());
+        let drawing = doc
+            .path
+            .as_ref()
+            .filter(|p| p.is_absolute())
+            .map(|p| p.display().to_string());
         let listed = match profile_files::list::plan(
             &ExecutionContext::new(&mut doc.model),
             &ProfilesList { drawing },
@@ -110,7 +120,12 @@ impl App {
         let profiles: Vec<(String, String)> = listed
             .into_iter()
             .filter(|i| i.kind == kentos_commands::ProfileFileKind::Profile && i.problem.is_none())
-            .map(|i| (i.name.clone(), if i.title.is_empty() { i.name } else { i.title }))
+            .map(|i| {
+                (
+                    i.name.clone(),
+                    if i.title.is_empty() { i.name } else { i.title },
+                )
+            })
             .collect();
         self.gis.features_code = State {
             profile: FIRST_PROFILE.to_owned(),
@@ -143,7 +158,9 @@ impl App {
                     drawing: self.features_drawing(),
                     expected_revision: None,
                 };
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
                 match profiles::apply::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { .. } => {
                         self.say(
@@ -154,7 +171,9 @@ impl App {
                             ),
                         );
                     }
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
                         self.warn(format!("{TITLE}: {}", error.message));
                     }
                     _ => {}
@@ -163,7 +182,9 @@ impl App {
             }
             Event::Apply => {
                 let input = self.features_input();
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
                 match map_features::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { output, warnings } => {
                         let moved: u32 = output.classes.iter().map(|c| c.moved).sum();
@@ -179,7 +200,9 @@ impl App {
                         self.gis.features_code = State::default();
                         self.dialog = None;
                     }
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
                         self.warn(format!("{TITLE}: {}", error.message));
                     }
                     _ => {}
@@ -196,8 +219,10 @@ impl App {
     pub(crate) fn features_code_view(&self) -> Element<'_, Message> {
         let s = &self.gis.features_code;
         let choices: Vec<(String, String)> = s.profiles.clone();
-        let pick = crate::style::fields::select_owned(choices, &s.profile, |n| msg(Event::Profile(n)));
-        let field = crate::style::fields::input(None, "Kod", &s.field, false, false).on_input(|f| msg(Event::Field(f)));
+        let pick =
+            crate::style::fields::select_owned(choices, &s.profile, |n| msg(Event::Profile(n)));
+        let field = crate::style::fields::input(None, "Kod", &s.field, false, false)
+            .on_input(|f| msg(Event::Field(f)));
         // One label column, the boxes the same width (the owner: a form's fields line up).
         let head = Form::new()
             .label_width(110.0)
@@ -205,7 +230,8 @@ impl App {
             .field("Kod alanı", iced::widget::container(field).width(300));
         let scope = match &s.uids {
             Some(u) => format!("Seçili {} nokta, seçim sırasıyla.", u.len()),
-            None => "Görünen ve kilitsiz katmanlardaki bütün kodlu noktalar, çizimin sırasıyla.".to_owned(),
+            None => "Görünen ve kilitsiz katmanlardaki bütün kodlu noktalar, çizimin sırasıyla."
+                .to_owned(),
         };
         let mut lines = vec![words::text_line(
             Kind::Info,
@@ -237,16 +263,28 @@ impl App {
             }
             None => lines.push(words::text_line(Kind::Info, "Önizleme yok.")),
         }
-        let body = Column::new().spacing(12).push(head).push(label::caption(scope)).push(words::summary(lines));
+        let body = Column::new()
+            .spacing(12)
+            .push(head)
+            .push(label::caption(scope))
+            .push(words::summary(lines));
         let ready = matches!(s.plan, Some(Ok((ref p, _))) if p.classes.iter().any(|c| c.moved + c.lines + c.areas > 0));
-        let mut frame = Frame::new(TITLE).push(body).aside(words::ghost(CANCEL, Some(msg(Event::Close))));
+        let mut frame = Frame::new(TITLE)
+            .push(body)
+            .aside(words::ghost(CANCEL, Some(msg(Event::Close))));
         if missing_layer {
             frame = frame.aside(words::ghost(APPLY_PROFILE, Some(msg(Event::ApplyProfile))));
         }
-        frame.action(words::primary(APPLY, ready.then(|| msg(Event::Apply)))).width(620.0).modal(msg(Event::Close))
+        frame
+            .action(words::primary(APPLY, ready.then(|| msg(Event::Apply))))
+            .width(620.0)
+            .modal(msg(Event::Close))
     }
 
-    pub(crate) fn features_code_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn features_code_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(APPLY) => Some(msg(Event::Apply)),
             Control::Press(APPLY_PROFILE) => Some(msg(Event::ApplyProfile)),

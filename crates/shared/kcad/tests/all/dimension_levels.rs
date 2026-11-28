@@ -21,11 +21,21 @@ fn a_kot_bound_to_a_level_opts_into_schema_121() {
         .collect();
     assert_eq!(
         levels,
-        [Some(("kat-1".into(), None)), Some(("kat-1".into(), Some(-0.02))), Some(("zemin".into(), None)), None]
+        [
+            Some(("kat-1".into(), None)),
+            Some(("kat-1".into(), Some(-0.02))),
+            Some(("zemin".into(), None)),
+            None
+        ]
     );
     assert!(BYTES.windows(10).any(|w| w == b"\x67version\x18\x79"));
-    let old = include_bytes!("../../../../../fixtures/kcad/v2/broken/dimension-levels-in-schema-120.kcad");
-    assert_eq!(kentos_kcad::decode(old).expect_err("refused").code, kentos_kcad::Code::UnknownField);
+    let old = include_bytes!(
+        "../../../../../fixtures/kcad/v2/broken/dimension-levels-in-schema-120.kcad"
+    );
+    assert_eq!(
+        kentos_kcad::decode(old).expect_err("refused").code,
+        kentos_kcad::Code::UnknownField
+    );
     let mut plain = model;
     for e in &mut plain.entities {
         if let Entity::Dimension(d) = e {
@@ -33,7 +43,10 @@ fn a_kot_bound_to_a_level_opts_into_schema_121() {
         }
     }
     let bytes = kentos_kcad::encode_verified(&plain).unwrap();
-    assert!(!bytes.windows(10).any(|w| w == b"\x67version\x18\x79"), "no level, no schema 121");
+    assert!(
+        !bytes.windows(10).any(|w| w == b"\x67version\x18\x79"),
+        "no level, no schema 121"
+    );
 }
 
 #[test]
@@ -50,6 +63,10 @@ fn a_level_only_an_elevation_mark_takes_and_its_rules_hold() {
             env!("CARGO_MANIFEST_DIR")
         ))
         .unwrap();
-        assert_eq!(kentos_kcad::decode(&bytes).expect_err(name).code, code, "{name}");
+        assert_eq!(
+            kentos_kcad::decode(&bytes).expect_err(name).code,
+            code,
+            "{name}"
+        );
     }
 }

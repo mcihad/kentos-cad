@@ -10,18 +10,44 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_confidence_regions_over_mcp_are_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.survey.network.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().starts_with("Bazların sapmaları 1,5 ve 4 mm")).unwrap().clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-network-region-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.survey.network.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .unwrap()
+                .starts_with("Bazların sapmaları 1,5 ve 4 mm")
+        })
+        .unwrap()
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
+    let path =
+        std::env::temp_dir().join(format!("kentos-network-region-{}.kcad", std::process::id()));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
-    let r = call(&mut server, "map.survey.network", json!({"drawing": opened["structuredContent"]["drawing"]}));
+    let r = call(
+        &mut server,
+        "map.survey.network",
+        json!({"drawing": opened["structuredContent"]["drawing"]}),
+    );
     assert_eq!(r["isError"], false, "{r}");
-    let got = r["structuredContent"]["output"]["stations"].as_array().unwrap().clone();
-    let want = case["steps"][0]["result"]["output"]["stations"].as_array().unwrap().clone();
+    let got = r["structuredContent"]["output"]["stations"]
+        .as_array()
+        .unwrap()
+        .clone();
+    let want = case["steps"][0]["result"]["output"]["stations"]
+        .as_array()
+        .unwrap()
+        .clone();
     assert_eq!(got.len(), want.len());
     for (g, w) in got.iter().zip(&want) {
         match (g.get("ellipse"), w.get("ellipse")) {

@@ -10,8 +10,8 @@
 //! - Delik (D): the room clicked (or the area drawn) is cut out of the slab under it: a shaft, a lowered wet room.
 
 use kentos_commands::{
-    CommandResult, Entity, NewSlab, NewSlabEdge, SlabBoundary, SlabEdgeKind, SlabRole, SlabsCreate, SlabsEdit,
-    SlabsOperation, SpacePart, SpaceRing,
+    CommandResult, Entity, NewSlab, NewSlabEdge, SlabBoundary, SlabEdgeKind, SlabRole, SlabsCreate,
+    SlabsEdit, SlabsOperation, SpacePart, SpaceRing,
 };
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
@@ -86,7 +86,10 @@ pub(crate) fn rings_of(parts: &[SpacePart]) -> Vec<Vec<Vec2>> {
         let pts: Vec<Vec2> = r.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
         kentos_geometry_core::entity::polygon_ring(&pts, r.bulges.as_deref())
     };
-    parts.iter().flat_map(|p| std::iter::once(ring(&p.outer)).chain(p.holes.iter().map(ring))).collect()
+    parts
+        .iter()
+        .flat_map(|p| std::iter::once(ring(&p.outer)).chain(p.holes.iter().map(ring)))
+        .collect()
 }
 
 /// Whether a point lies inside the rings (even-odd).
@@ -109,10 +112,17 @@ pub fn drawn_slab(e: &Entity, tone: Tone, out: &mut Preview) {
     let Entity::Slab(s) = e else { return };
     if let Shape::Space { parts, space } = shape(e) {
         for piece in kentos_geometry_core::geom::space::pieces_with(&parts, &space, 1.0, false) {
-            out.strokes.extend(Outline::of(&piece, None, 1.5, tone).strokes);
+            out.strokes
+                .extend(Outline::of(&piece, None, 1.5, tone).strokes);
         }
     }
-    out.areas.push(Area { rings: rings_of(&s.slab.parts), fill: 0.14, width: 0.0, dash: None, fill_tone: tone });
+    out.areas.push(Area {
+        rings: rings_of(&s.slab.parts),
+        fill: 0.14,
+        width: 0.0,
+        dash: None,
+        fill_tone: tone,
+    });
 }
 
 /// The length of a slab's edge's runs, metres.
@@ -122,7 +132,11 @@ pub fn edge_length(s: &kentos_commands::SlabFields) -> f64 {
             .iter()
             .map(|r| {
                 let pts: Vec<Vec2> = r.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
-                kentos_geometry_core::geom::bulge::bulge_path_length(&pts, r.bulges.as_deref(), false)
+                kentos_geometry_core::geom::bulge::bulge_path_length(
+                    &pts,
+                    r.bulges.as_deref(),
+                    false,
+                )
             })
             .sum()
     })
@@ -204,14 +218,19 @@ impl SlabTool {
             (self.thickness, self.offset, self.edge_offset) = RAFT;
             self.edge = None;
         } else if self.role == SlabRole::Raft {
-            (self.thickness, self.offset, self.edge_offset) = (kentos_commands::SLAB_THICKNESS, 0.0, 0.0);
+            (self.thickness, self.offset, self.edge_offset) =
+                (kentos_commands::SLAB_THICKNESS, 0.0, 0.0);
         }
         self.role = role;
     }
 
     /// Its name: Radye for a raft, else Döşeme.
     fn name(&self) -> &'static str {
-        if self.role == SlabRole::Raft { "Radye" } else { "Döşeme" }
+        if self.role == SlabRole::Raft {
+            "Radye"
+        } else {
+            "Döşeme"
+        }
     }
 
     fn draws(&self) -> bool {
@@ -220,11 +239,21 @@ impl SlabTool {
 
     /// The boundary a click finds: Delik cuts a room, never the whole outline.
     fn boundary(&self) -> SlabBoundary {
-        if self.hole || self.bound == Bound::Room { SlabBoundary::Room } else { SlabBoundary::Outline }
+        if self.hole || self.bound == Bound::Room {
+            SlabBoundary::Room
+        } else {
+            SlabBoundary::Outline
+        }
     }
 
     fn corners_part(corners: &[Vec2]) -> Vec<SpacePart> {
-        vec![SpacePart { outer: SpaceRing { pts: points::wire_all(corners), bulges: None }, holes: Vec::new() }]
+        vec![SpacePart {
+            outer: SpaceRing {
+                pts: points::wire_all(corners),
+                bulges: None,
+            },
+            holes: Vec::new(),
+        }]
     }
 
     fn new_slab(&self, seed: Option<Vec2>, corners: Option<&[Vec2]>) -> NewSlab {
@@ -238,7 +267,10 @@ impl SlabTool {
             offset: (self.offset != 0.0).then_some(self.offset),
             arch: self.level.arch(),
             material: self.material.clone(),
-            edge: self.edge.map(|kind| NewSlabEdge { kind, width: self.edge_width }),
+            edge: self.edge.map(|kind| NewSlabEdge {
+                kind,
+                width: self.edge_width,
+            }),
             excluded: self.excluded.then_some(true),
             attrs: None,
             bound: (self.bind && seed.is_some()).then_some(true),
@@ -294,9 +326,17 @@ impl SlabTool {
         best.map(|(_, s)| s)
     }
 
-    fn hole_input(&self, seed: Option<Vec2>, corners: Option<&[Vec2]>, cx: &Context<'_>) -> Result<(SlabsEdit, Slot), String> {
-        let at = seed.or_else(|| corners.and_then(|c| c.first().copied())).ok_or_else(String::new)?;
-        let slot = Self::slab_at(at, cx).ok_or_else(|| "Altında döşeme yok; deliği bir döşemenin içinde açın.".to_owned())?;
+    fn hole_input(
+        &self,
+        seed: Option<Vec2>,
+        corners: Option<&[Vec2]>,
+        cx: &Context<'_>,
+    ) -> Result<(SlabsEdit, Slot), String> {
+        let at = seed
+            .or_else(|| corners.and_then(|c| c.first().copied()))
+            .ok_or_else(String::new)?;
+        let slot = Self::slab_at(at, cx)
+            .ok_or_else(|| "Altında döşeme yok; deliği bir döşemenin içinde açın.".to_owned())?;
         let uid = cx.doc.uid(slot).ok_or_else(String::new)?.to_string();
         Ok((
             SlabsEdit {
@@ -368,9 +408,9 @@ impl SlabTool {
                         }
                     }
                 }
-                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                    self.why = Some(error.message)
-                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => self.why = Some(error.message),
                 CommandResult::Queued { .. } | CommandResult::Cancelled => {}
             }
             return;
@@ -386,15 +426,20 @@ impl SlabTool {
                     }
                 }
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                self.why = Some(error.message)
-            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.why = Some(error.message),
             CommandResult::Queued { .. } | CommandResult::Cancelled => {}
         }
     }
 
     /// Writes the slab (or cuts the hole) at the click or the corners drawn.
-    fn write(&mut self, seed: Option<Vec2>, corners: Option<&[Vec2]>, cx: &mut Context<'_>) -> bool {
+    fn write(
+        &mut self,
+        seed: Option<Vec2>,
+        corners: Option<&[Vec2]>,
+        cx: &mut Context<'_>,
+    ) -> bool {
         if self.hole {
             let input = match self.hole_input(seed, corners, cx) {
                 Ok((input, _)) => input,
@@ -456,7 +501,8 @@ impl SlabTool {
                     Bound::Draw => "revcloudPolygon",
                 }),
                 preview: None,
-                checked: *b == self.bound || (self.hole && self.bound == Bound::Outline && *b == Bound::Room),
+                checked: *b == self.bound
+                    || (self.hole && self.bound == Bound::Outline && *b == Bound::Room),
                 command: None,
             })
             .collect()
@@ -491,7 +537,9 @@ impl SlabTool {
     }
 
     fn edge_width(&self) -> f64 {
-        self.edge_width.or_else(|| self.edge.map(SlabEdgeKind::width)).unwrap_or(0.0)
+        self.edge_width
+            .or_else(|| self.edge.map(SlabEdgeKind::width))
+            .unwrap_or(0.0)
     }
 
     fn cycle_bound(&mut self) {
@@ -507,7 +555,10 @@ impl SlabTool {
     /// A typed length set; false (and said) when it is no length.
     fn set_length(&mut self, ask: Ask, text: &str, cx: &mut Context<'_>) -> bool {
         let Some(v) = cx.typed_length(text) else {
-            cx.say(Level::Warn, format!("“{text}” bir uzunluk değil; 15 cm ya da 0.15 gibi yazın."));
+            cx.say(
+                Level::Warn,
+                format!("“{text}” bir uzunluk değil; 15 cm ya da 0.15 gibi yazın."),
+            );
             return false;
         };
         match ask {
@@ -538,7 +589,11 @@ impl Tool for SlabTool {
     }
 
     fn id(&self) -> &'static str {
-        if self.role == SlabRole::Raft { RAFT_ID } else { SLAB_ID }
+        if self.role == SlabRole::Raft {
+            RAFT_ID
+        } else {
+            SLAB_ID
+        }
     }
 
     fn label(&self) -> &'static str {
@@ -573,8 +628,12 @@ impl Tool for SlabTool {
         let words = |label: &'static str| Prompt::new(self.name(), label).option("Geri", "G");
         match self.ask {
             Some(Ask::Thickness) => return words("döşemenin kalınlığını yazın (15 cm gibi)"),
-            Some(Ask::Offset) => return words("üst yüzün katın kotuna göre farkını yazın (-5 cm gibi)"),
-            Some(Ask::EdgeOffset) => return words("kenarların ötelemesini yazın: artı dışa, eksi içe"),
+            Some(Ask::Offset) => {
+                return words("üst yüzün katın kotuna göre farkını yazın (-5 cm gibi)");
+            }
+            Some(Ask::EdgeOffset) => {
+                return words("kenarların ötelemesini yazın: artı dışa, eksi içe");
+            }
             Some(Ask::EdgeWidth) => return words("kenarın enini yazın"),
             Some(Ask::Material) => return words("malzemeyi yazın (Betonarme gibi)"),
             None => {}
@@ -584,14 +643,24 @@ impl Tool for SlabTool {
             (true, false) => "döşemeden kesilecek odaya tıklayın",
             (true, true) if self.pts.len() < 3 => "kesilecek alanın köşelerine tıklayın",
             (false, false) if self.bound == Bound::Room => "döşemesi yapılacak odaya tıklayın",
-            (false, false) if self.role == SlabRole::Raft => "duvarların içine tıklayın: dış konturdan, ötelemesi kadar taşan radye",
+            (false, false) if self.role == SlabRole::Raft => {
+                "duvarların içine tıklayın: dış konturdan, ötelemesi kadar taşan radye"
+            }
             (false, false) => "duvarların içine tıklayın: dış konturdan döşeme",
             (_, true) if self.pts.len() < 3 => "döşemenin köşelerine tıklayın",
             _ => "köşelere tıklayın, Enter ile kapatın",
         };
         let f = &self.format;
         let mut p = Prompt::new(self.name(), step)
-            .option_with("Sınır", "S", if self.hole && self.bound == Bound::Outline { "Oda" } else { self.bound.label() })
+            .option_with(
+                "Sınır",
+                "S",
+                if self.hole && self.bound == Bound::Outline {
+                    "Oda"
+                } else {
+                    self.bound.label()
+                },
+            )
             .option_with("Tür", "T", self.role.label())
             .option_with("Kalınlık", "E", f.length(self.thickness))
             .option_with("Kot farkı", "F", f.length(self.offset))
@@ -606,7 +675,11 @@ impl Tool for SlabTool {
         if self.edge.is_some() {
             p = p.option_with("Kenar eni", "W", f.length(self.edge_width()));
         }
-        p = p.option_with("Malzeme", "M", self.material.clone().unwrap_or_else(|| "Yok".into()));
+        p = p.option_with(
+            "Malzeme",
+            "M",
+            self.material.clone().unwrap_or_else(|| "Yok".into()),
+        );
         if self.draws() && !self.pts.is_empty() {
             p = p.option("Geri al", "G");
         }
@@ -724,7 +797,11 @@ impl Tool for SlabTool {
             Setting::text("M", "Malzeme", self.material.clone().unwrap_or_default()),
             self.level.setting(),
             Setting::toggle("X", "Metraj dışı", self.excluded),
-            Setting::toggle("B", "Kaynağa bağlı (duvarlar değişince sınır izler)", self.bind),
+            Setting::toggle(
+                "B",
+                "Kaynağa bağlı (duvarlar değişince sınır izler)",
+                self.bind,
+            ),
             Setting::toggle("D", "Delik (döşemeden kes)", self.hole),
         ]);
         if self.hole {
@@ -769,7 +846,9 @@ impl Tool for SlabTool {
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
         match key {
             "S" => {
-                let Some(b) = [Bound::Outline, Bound::Room, Bound::Draw].into_iter().find(|b| b.name() == typed || b.label() == typed)
+                let Some(b) = [Bound::Outline, Bound::Room, Bound::Draw]
+                    .into_iter()
+                    .find(|b| b.name() == typed || b.label() == typed)
                 else {
                     return false;
                 };
@@ -779,7 +858,10 @@ impl Tool for SlabTool {
                 self.bound = b;
             }
             "T" => {
-                let Some(r) = SlabRole::ALL.into_iter().find(|r| r.name() == typed || r.label() == typed) else {
+                let Some(r) = SlabRole::ALL
+                    .into_iter()
+                    .find(|r| r.name() == typed || r.label() == typed)
+                else {
                     return false;
                 };
                 self.set_role(r);
@@ -787,7 +869,10 @@ impl Tool for SlabTool {
             "N" => {
                 self.edge = match typed {
                     "none" | "Yok" => None,
-                    _ => match SlabEdgeKind::ALL.into_iter().find(|k| k.name() == typed || k.label() == typed) {
+                    _ => match SlabEdgeKind::ALL
+                        .into_iter()
+                        .find(|k| k.name() == typed || k.label() == typed)
+                    {
                         Some(k) => Some(k),
                         None => return false,
                     },
@@ -836,14 +921,24 @@ impl Tool for SlabTool {
     }
 
     fn preview(&self, format: &Format) -> Preview {
-        let title = if self.hole { "Delik" } else { self.role.label() };
+        let title = if self.hole {
+            "Delik"
+        } else {
+            self.role.label()
+        };
         let tag = self.hover.map(|at| Tag {
             at,
             lines: match (&self.why, self.area) {
-                (Some(why), _) if !self.draws() || self.pts.len() >= 2 => vec![title.to_owned(), why.clone()],
+                (Some(why), _) if !self.draws() || self.pts.len() >= 2 => {
+                    vec![title.to_owned(), why.clone()]
+                }
                 (_, Some(a)) if self.hole => vec![format!("Delik · {}", format.area(a))],
                 (_, Some(a)) => {
-                    let mut lines = vec![format!("{title} · {} · {}", format.area(a), format.length(self.thickness))];
+                    let mut lines = vec![format!(
+                        "{title} · {} · {}",
+                        format.area(a),
+                        format.length(self.thickness)
+                    )];
                     if let Some(k) = self.edge {
                         lines.push(if self.edge_len > 0.0 {
                             format!("{} · {}", k.label(), format.length(self.edge_len))
@@ -861,7 +956,11 @@ impl Tool for SlabTool {
         });
         Preview {
             tag,
-            tag_tone: if self.why.is_some() && self.area.is_none() && !self.draws() { Tone::Danger } else { Tone::Accent },
+            tag_tone: if self.why.is_some() && self.area.is_none() && !self.draws() {
+                Tone::Danger
+            } else {
+                Tone::Accent
+            },
             ..self.drawn.clone()
         }
     }

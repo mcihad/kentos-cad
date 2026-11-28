@@ -68,7 +68,9 @@ impl ChordError {
     /// What is wrong and how to write it, in Turkish.
     pub fn message(self) -> &'static str {
         match self {
-            Self::NoKey => "Kısayolun tuşu yok; bir harf, rakam ya da F1 gibi bir tuş ekleyin (ör. Ctrl+Shift+L).",
+            Self::NoKey => {
+                "Kısayolun tuşu yok; bir harf, rakam ya da F1 gibi bir tuş ekleyin (ör. Ctrl+Shift+L)."
+            }
             Self::UnknownKey => {
                 "Bu tuş kısayol olamaz; A–Z, 0–9, F1–F24, Delete, Home, End, Page Up, Page Down, ok tuşları, + − ve virgülden birini seçin."
             }
@@ -192,7 +194,9 @@ impl ReservedKey {
     /// Why the key is KentOS's, in Turkish.
     pub fn message(self) -> &'static str {
         match self {
-            Self::Escape => "Esc çalışan komutu ve seçimi bırakır, pencereyi kapatır; her zaman böyle kalır.",
+            Self::Escape => {
+                "Esc çalışan komutu ve seçimi bırakır, pencereyi kapatır; her zaman böyle kalır."
+            }
             Self::Enter => {
                 "Enter komutu onaylar ya da bitirir, satırda ve alanlarda yazılanı alır; her zaman böyle kalır."
             }
@@ -214,7 +218,11 @@ impl ReservedKey {
 /// Whether a chord (as [`normalize_chord`] writes it) is one KentOS keeps for itself.
 pub fn reserved_key(chord: &str) -> Option<ReservedKey> {
     let key = chord.rsplit('+').next().unwrap_or(chord);
-    let key = if chord.ends_with("++") || chord == "+" { "+" } else { key };
+    let key = if chord.ends_with("++") || chord == "+" {
+        "+"
+    } else {
+        key
+    };
     match key {
         "Esc" => return Some(ReservedKey::Escape),
         "Enter" => return Some(ReservedKey::Enter),
@@ -228,7 +236,8 @@ pub fn reserved_key(chord: &str) -> Option<ReservedKey> {
         "+" | "-" | "," => Some(ReservedKey::Value),
         _ => {
             let digit = |k: &str| k.len() == 1 && k.as_bytes()[0].is_ascii_digit();
-            (digit(chord) || chord.strip_prefix("Shift+").is_some_and(digit)).then_some(ReservedKey::Value)
+            (digit(chord) || chord.strip_prefix("Shift+").is_some_and(digit))
+                .then_some(ReservedKey::Value)
         }
     }
 }

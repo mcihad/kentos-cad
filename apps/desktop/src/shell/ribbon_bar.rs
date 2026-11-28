@@ -45,8 +45,11 @@ impl App {
         // A family member running shows itself on top, however it started (R from the keyboard while Düzgün çokgen was
         // last chosen, UR2-002): the face, the light and the tool at work agree. The kept choice comes back after.
         if self.session.is_running() {
-            let active = |entry: &Entry| entry.id.strip_prefix("tool.") == Some(self.session.tool_id());
-            if !active(kept) && let Some(entry) = entries.iter().find(|entry| active(entry)) {
+            let active =
+                |entry: &Entry| entry.id.strip_prefix("tool.") == Some(self.session.tool_id());
+            if !active(kept)
+                && let Some(entry) = entries.iter().find(|entry| active(entry))
+            {
                 return Some(entry);
             }
         }
@@ -132,7 +135,10 @@ pub(crate) fn split_entry(e: &Entry) -> SplitEntry<'static> {
 /// A split button's list: its entries, each off as its command is (`off`, [`crate::app::App::rows_off`]), the reason
 /// under the first that gives it.
 pub(crate) fn split_list(
-    key: &'static str, entries: &[Entry], off: &[Option<String>], current: Option<usize>,
+    key: &'static str,
+    entries: &[Entry],
+    off: &[Option<String>],
+    current: Option<usize>,
 ) -> Menu<Message> {
     let plan_entries: Vec<SplitEntry> = entries.iter().map(split_entry).collect();
     let (header, rows) = plan::split_menu(&plan_entries);
@@ -141,39 +147,44 @@ pub(crate) fn split_list(
         None => Menu::new(),
     };
     let mut said = Vec::new();
-    entries.iter().zip(rows).enumerate().fold(menu, |menu, (k, (entry, row))| {
-        let Some(command) = catalog().get(entry.id) else {
-            return menu;
-        };
-        let is_off = matches!(off.get(k), Some(Some(_)));
-        let run = (command.standing == crate::catalog::Standing::Ported && !is_off).then_some(
-            Message::SplitChosen {
-                key,
-                id: entry.id,
-                option: entry.option,
-                label: entry.label,
-            },
-        );
-        // A method with its own drawing shows it (Ölçülendirme's kinds); else the command's.
-        let icon = row
-            .icon
-            .map_or(command.icon, |name| crate::icons::from_web(Some(name)));
-        let menu = match current {
-            Some(index) => menu.radio(row.label, k == index, run),
-            None => menu.item(row.label, run),
-        }.icon(icon);
-        let menu = match row.hint {
-            Some(hint) => menu.hint(hint),
-            None => menu,
-        };
-        // A shortcut starts its command as it is, so only the command's own row shows it: a method row is the command
-        // with an option given (UR2-003: Shift+L beside Merkez and Eliptik yay started neither).
-        let menu = match crate::keymap::first_key(command).filter(|_| entry.option.is_none()) {
-            Some(keys) => menu.shortcut(keys),
-            None => menu,
-        };
-        crate::view::row_off(menu, off.get(k), &mut said).0
-    })
+    entries
+        .iter()
+        .zip(rows)
+        .enumerate()
+        .fold(menu, |menu, (k, (entry, row))| {
+            let Some(command) = catalog().get(entry.id) else {
+                return menu;
+            };
+            let is_off = matches!(off.get(k), Some(Some(_)));
+            let run = (command.standing == crate::catalog::Standing::Ported && !is_off).then_some(
+                Message::SplitChosen {
+                    key,
+                    id: entry.id,
+                    option: entry.option,
+                    label: entry.label,
+                },
+            );
+            // A method with its own drawing shows it (Ölçülendirme's kinds); else the command's.
+            let icon = row
+                .icon
+                .map_or(command.icon, |name| crate::icons::from_web(Some(name)));
+            let menu = match current {
+                Some(index) => menu.radio(row.label, k == index, run),
+                None => menu.item(row.label, run),
+            }
+            .icon(icon);
+            let menu = match row.hint {
+                Some(hint) => menu.hint(hint),
+                None => menu,
+            };
+            // A shortcut starts its command as it is, so only the command's own row shows it: a method row is the command
+            // with an option given (UR2-003: Shift+L beside Merkez and Eliptik yay started neither).
+            let menu = match crate::keymap::first_key(command).filter(|_| entry.option.is_none()) {
+                Some(keys) => menu.shortcut(keys),
+                None => menu,
+            };
+            crate::view::row_off(menu, off.get(k), &mut said).0
+        })
 }
 
 #[cfg(test)]
@@ -210,7 +221,14 @@ mod tests {
         let doc = &mut app.document.as_mut().expect("a drawing").model;
         let active = doc.layers().active().to_owned();
         // The drawing's active layer holds points only (its objects fit or the type is refused).
-        if doc.set_layer_geometry(&active, Some(kentos_commands::LayerGeometry::Point), "Katman türü").is_err() {
+        if doc
+            .set_layer_geometry(
+                &active,
+                Some(kentos_commands::LayerGeometry::Point),
+                "Katman türü",
+            )
+            .is_err()
+        {
             app.new_typed_layer(kentos_commands::LayerGeometry::Point);
         }
         assert!(!app.available("tool.circle"));
@@ -220,7 +238,11 @@ mod tests {
         assert!(why.contains("nokta katmanı"), "{why}");
         let menu = format!("{:?}", super::split_list(key, &entries, &off, None));
         assert!(!menu.contains("SplitChosen"), "no row runs: {menu}");
-        assert_eq!(menu.matches(why.as_str()).count(), 1, "the reason once: {menu}");
+        assert_eq!(
+            menu.matches(why.as_str()).count(),
+            1,
+            "the reason once: {menu}"
+        );
         // Düzgün çokgen, on Çizim's own list, is off too.
         assert!(!app.available("tool.regularPolygon"));
     }
@@ -294,19 +316,30 @@ mod tests {
         let mut app = app_with_drawing();
         crate::files_testing::make_cad(&mut app);
         app.program = Some(kentos_launch::Module::Architecture);
-        let entries = catalog().tabs_in(kentos_commands::Workspace::Cad)
+        let entries = catalog()
+            .tabs_in(kentos_commands::Workspace::Cad)
             .flat_map(|tab| &tab.panels)
             .flat_map(|panel| &panel.items)
             .find_map(|item| match item {
-                Item::Split { key: "archStairs", entries, .. } => Some(entries),
+                Item::Split {
+                    key: "archStairs",
+                    entries,
+                    ..
+                } => Some(entries),
                 _ => None,
             })
             .unwrap();
         let _ = app.split_chosen("archStairs", "tool.stairCurved", None, "Döner merdiven");
         let _ = app.run("tool.ramp");
-        assert_eq!(app.split_on_top("archStairs", entries).unwrap().id, "tool.ramp");
+        assert_eq!(
+            app.split_on_top("archStairs", entries).unwrap().id,
+            "tool.ramp"
+        );
         app.session.exit();
-        assert_eq!(app.split_on_top("archStairs", entries).unwrap().id, "tool.stairCurved");
+        assert_eq!(
+            app.split_on_top("archStairs", entries).unwrap().id,
+            "tool.stairCurved"
+        );
     }
 
     /// UR2-002: Düzgün çokgen last chosen from the list, then R from the keyboard: the face shows Dikdörtgen while it
@@ -320,21 +353,32 @@ mod tests {
             .flat_map(|tab| tab.panels.iter().map(move |panel| (tab, panel)))
             .flat_map(|(tab, panel)| panel.items.iter().map(move |item| (tab, item)))
             .find_map(|(tab, item)| match item {
-                Item::Split { key, entries, .. } if entries.iter().any(|e| e.id == "tool.regularPolygon") => {
+                Item::Split { key, entries, .. }
+                    if entries.iter().any(|e| e.id == "tool.regularPolygon") =>
+                {
                     Some((tab.id, *key, entries))
                 }
                 _ => None,
             })
             .expect("the shapes' split");
         let _ = app.update(Message::RibbonTab(tab));
-        let _ = app.split_chosen(key, "tool.regularPolygon", Some("İÇ"), "Düzgün çokgen, çember içinde");
+        let _ = app.split_chosen(
+            key,
+            "tool.regularPolygon",
+            Some("İÇ"),
+            "Düzgün çokgen, çember içinde",
+        );
         app.session.exit();
-        assert_eq!(app.split_on_top(key, entries).unwrap().id, "tool.regularPolygon");
+        assert_eq!(
+            app.split_on_top(key, entries).unwrap().id,
+            "tool.regularPolygon"
+        );
         let _ = app.run("tool.rectangle");
         assert_eq!(app.session.tool_id(), "rectangle");
         assert_eq!(app.split_on_top(key, entries).unwrap().id, "tool.rectangle");
         if std::env::var_os("KENTOS_SHOTS").is_some() {
-            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0))
+                .expect("a renderer");
             let mut update = |app: &mut crate::app::App, message| {
                 let _ = app.update(message);
             };
@@ -342,7 +386,10 @@ mod tests {
             crate::files_testing::evidence(&mut snapshot, &app, "ur2-002", "r-dikdortgen");
         }
         app.session.exit();
-        assert_eq!(app.split_on_top(key, entries).unwrap().id, "tool.regularPolygon");
+        assert_eq!(
+            app.split_on_top(key, entries).unwrap().id,
+            "tool.regularPolygon"
+        );
     }
 
     /// UR2-003: a shortcut is shown once in a family's list, beside the command it starts as it is; a method row
@@ -352,20 +399,34 @@ mod tests {
         let (mut checked, mut seen) = (0, 0);
         for tab in catalog().tabs() {
             for item in tab.panels.iter().flat_map(|p| p.items.iter()) {
-                let Item::Split { key, entries, .. } = item else { continue };
+                let Item::Split { key, entries, .. } = item else {
+                    continue;
+                };
                 let off = vec![None; entries.len()];
                 let menu = format!("{:?}", super::split_list(key, entries, &off, None));
                 for entry in entries.iter() {
-                    let Some(keys) = catalog().get(entry.id).and_then(|c| c.shortcuts.first()) else { continue };
-                    let plain = entries.iter().filter(|e| e.id == entry.id && e.option.is_none()).count();
+                    let Some(keys) = catalog().get(entry.id).and_then(|c| c.shortcuts.first())
+                    else {
+                        continue;
+                    };
+                    let plain = entries
+                        .iter()
+                        .filter(|e| e.id == entry.id && e.option.is_none())
+                        .count();
                     let shown = menu.matches(&format!("{keys:?}")).count();
-                    assert!(shown <= plain, "{key}: {keys} shown {shown} times for {plain} plain rows: {menu}");
+                    assert!(
+                        shown <= plain,
+                        "{key}: {keys} shown {shown} times for {plain} plain rows: {menu}"
+                    );
                     checked += 1;
                     seen += usize::from(shown > 0);
                 }
             }
         }
-        assert!(checked > 10 && seen > 3, "the families with shortcuts were looked at ({checked}, {seen} shown)");
+        assert!(
+            checked > 10 && seen > 3,
+            "the families with shortcuts were looked at ({checked}, {seen} shown)"
+        );
         if std::env::var_os("KENTOS_SHOTS").is_none() {
             return;
         }
@@ -380,9 +441,15 @@ mod tests {
                 let _ = app.update(message);
             };
             snapshot.settle(&mut app, crate::app::App::view, &mut update);
-            let at = crate::files_testing::find_text(&mut snapshot, &app, face).expect("the split's face");
+            let at = crate::files_testing::find_text(&mut snapshot, &app, face)
+                .expect("the split's face");
             let arrow = iced::Point::new(at.x + at.width + 16.0, at.center_y());
-            snapshot.input(&mut app, crate::app::App::view, &mut update, Input::Click(arrow));
+            snapshot.input(
+                &mut app,
+                crate::app::App::view,
+                &mut update,
+                Input::Click(arrow),
+            );
             crate::files_testing::evidence(&mut snapshot, &app, "ur2-003", name);
         }
     }
@@ -411,13 +478,20 @@ mod tests {
                     .flat_map(|t| t.panels.iter())
                     .flat_map(|p| p.items.iter())
                     .find_map(|item| match item {
-                        Item::Split { key, entries, .. } if entries.iter().any(|e| e.id == "tool.regularPolygon") => {
+                        Item::Split { key, entries, .. }
+                            if entries.iter().any(|e| e.id == "tool.regularPolygon") =>
+                        {
                             Some(*key)
                         }
                         _ => None,
                     })
                     .expect("the shapes' split");
-                let _ = app.split_chosen(key, "tool.regularPolygon", Some("İÇ"), "Düzgün çokgen, çember içinde");
+                let _ = app.split_chosen(
+                    key,
+                    "tool.regularPolygon",
+                    Some("İÇ"),
+                    "Düzgün çokgen, çember içinde",
+                );
                 app.session.exit();
             }
             let mut snapshot: Snapshot = crate::files_testing::offscreen(size);
@@ -430,14 +504,20 @@ mod tests {
             } else {
                 crate::files_testing::evidence(&mut snapshot, &app, "ur2-004", "acilis");
             }
-            let face = crate::files_testing::find_text(&mut snapshot, &app, "Düzgün çokgen").is_some();
-            let places = ["Çizgi", "Çoklu çizgi", "Nokta"]
-                .map(|caption| crate::files_testing::find_text(&mut snapshot, &app, caption).map(|r| (r.x, r.y, r.width)));
+            let face =
+                crate::files_testing::find_text(&mut snapshot, &app, "Düzgün çokgen").is_some();
+            let places = ["Çizgi", "Çoklu çizgi", "Nokta"].map(|caption| {
+                crate::files_testing::find_text(&mut snapshot, &app, caption)
+                    .map(|r| (r.x, r.y, r.width))
+            });
             (face, places)
         };
         let ((named_before, before), (named_after, after)) = (places(false), places(true));
         assert!(before.iter().all(Option::is_some), "{before:?}");
-        assert!(!named_before && named_after, "the face names the member chosen");
+        assert!(
+            !named_before && named_after,
+            "the face names the member chosen"
+        );
         assert_eq!(before, after, "Çizim's large tools stay where they were");
     }
 
@@ -599,11 +679,14 @@ mod screens {
     #[test]
     #[ignore = "pictures for the owner, run by hand"]
     fn point_layer_screens() {
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-062");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.run/gui-evidence/kullanim-062");
         std::fs::create_dir_all(&out).expect("a folder");
         for (mode, width, height) in [("light", 1440.0, 900.0), ("dark", 1100.0, 760.0)] {
             let mut app = app_with_drawing();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(Size::new(width, height)));
             app.new_typed_layer(kentos_commands::LayerGeometry::Point);
@@ -626,7 +709,10 @@ mod screens {
             let at = find_text(&mut snapshot, &app, "Daire").expect("Daire");
             press(&mut snapshot, &mut app, at.center(), mouse::Button::Left);
             let file = out.join(format!("daire-listesi-nokta-katmani-{mode}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         }
     }

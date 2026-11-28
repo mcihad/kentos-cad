@@ -1,7 +1,7 @@
 //! Explicit access to the one model through a paper viewport. All lengths here are µm/metres.
-use crate::{GroundPoint, Item, ItemKind, MapView, Result, SheetError, SheetBook};
 use crate::projection::Transform;
 use crate::units::{RectUm, sin_cos};
+use crate::{GroundPoint, Item, ItemKind, MapView, Result, SheetBook, SheetError};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Viewport {
@@ -75,9 +75,14 @@ impl Viewport {
             annotation_scale: map.annotation_scale.unwrap_or(view.denominator()),
             layers: map.layers.clone(),
             layer_overrides: map.layer_overrides.clone(),
-            level: recipe.and_then(|r| r.level.as_ref()).map(|l| crate::kinds::MapLevel {
-                id: l.id.clone(), below: l.below, roof: false,
-            }).or_else(|| map.level.clone()),
+            level: recipe
+                .and_then(|r| r.level.as_ref())
+                .map(|l| crate::kinds::MapLevel {
+                    id: l.id.clone(),
+                    below: l.below,
+                    roof: false,
+                })
+                .or_else(|| map.level.clone()),
             ceiling: recipe.and_then(|r| r.ceiling),
             rotation: view.rotation,
             pivot: item.frame.center(),

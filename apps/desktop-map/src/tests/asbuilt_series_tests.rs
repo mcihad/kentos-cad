@@ -2,8 +2,8 @@
 //! layers, oldest first; each epoch's day is its layer's Veri kümesi bilgisi (Güncelleme günü); the answer's tracks are
 //! the shared case's, and the window's series table shows them. A name no layer has is said. And its pictures.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 
@@ -11,18 +11,30 @@ use crate::app::{App, Message};
 use crate::asbuilt_window::Event as A;
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.asbuilt.check.series.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.asbuilt.check.series.json"
+    ))
+    .expect("cases")
 }
 
 /// The series cases' drawing, each epoch's layer given its day as its Veri kümesi bilgisi.
 fn opened() -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases()["setup"].clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases()["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    for (layer, day) in [("donem1", "2026-01-15"), ("donem2", "2026-04-15"), ("donem3", "2026-07-15")] {
-        crate::files_testing::command(&mut app, "cad.datasets.edit", json!({"layer": layer, "dataset": {"updated": day}}));
+    for (layer, day) in [
+        ("donem1", "2026-01-15"),
+        ("donem2", "2026-04-15"),
+        ("donem3", "2026-07-15"),
+    ] {
+        crate::files_testing::command(
+            &mut app,
+            "cad.datasets.edit",
+            json!({"layer": layer, "dataset": {"updated": day}}),
+        );
     }
     app
 }
@@ -47,20 +59,38 @@ fn onceki_donemler_track_each_mark_as_the_shared_case() {
     let _ = app.update(Message::Run("asbuilt.check"));
     series(&mut app, "Birinci dönem, İkinci dönem");
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
         .expect("an answer")
         .expect("checked");
     let all = cases();
-    let want = &all["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("dizi: üç dönem"))).expect("the case")["steps"][0]["result"]["output"]["tracks"];
+    let want = &all["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("dizi: üç dönem"))
+        })
+        .expect("the case")["steps"][0]["result"]["output"]["tracks"];
     let got = serde_json::to_value(&r.tracks).expect("json");
     assert_eq!(got.as_array().map(Vec::len), want.as_array().map(Vec::len));
-    for (g, w) in got.as_array().expect("tracks").iter().zip(want.as_array().expect("tracks")) {
+    for (g, w) in got
+        .as_array()
+        .expect("tracks")
+        .iter()
+        .zip(want.as_array().expect("tracks"))
+    {
         assert_eq!((&g["name"], &g["from"]), (&w["name"], &w["from"]));
         for key in ["rateHorizontal", "rateVertical"] {
-            assert!((g[key].as_f64().expect("a rate") - w[key].as_f64().expect("a rate")).abs() < 1e-9, "{key} {g}");
+            assert!(
+                (g[key].as_f64().expect("a rate") - w[key].as_f64().expect("a rate")).abs() < 1e-9,
+                "{key} {g}"
+            );
         }
     }
     assert_eq!(
@@ -70,7 +100,8 @@ fn onceki_donemler_track_each_mark_as_the_shared_case() {
     // A name no layer has is said.
     series(&mut app, "Birinci dönem, Yok");
     let said = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -89,11 +120,17 @@ fn onceki_donemler_track_each_mark_as_the_shared_case() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/donem-dizisi-4420");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/donem-dizisi-4420");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 1000.0), "acik-genis"), ("dark", Size::new(1100.0, 800.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 1000.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 800.0), "koyu-dar"),
+    ] {
         let mut app = opened();
-        let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("asbuilt.check"));
@@ -104,7 +141,10 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("izleme-dizisi-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

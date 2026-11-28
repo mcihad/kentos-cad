@@ -53,8 +53,13 @@ pub enum BeamRole {
 }
 
 impl BeamRole {
-    pub const ALL: [BeamRole; 5] =
-        [BeamRole::Beam, BeamRole::Lintel, BeamRole::BondBeam, BeamRole::PadFooting, BeamRole::StripFooting];
+    pub const ALL: [BeamRole; 5] = [
+        BeamRole::Beam,
+        BeamRole::Lintel,
+        BeamRole::BondBeam,
+        BeamRole::PadFooting,
+        BeamRole::StripFooting,
+    ];
 
     /// Its name in the interface.
     pub fn label(self) -> &'static str {
@@ -256,7 +261,8 @@ impl BeamFields {
             if self.offset != 0.0 {
                 return Some((
                     "offset".into(),
-                    "Kattan yüksekliği olan kirişin kot farkı olmaz: biri ya da öbürü verilir.".into(),
+                    "Kattan yüksekliği olan kirişin kot farkı olmaz: biri ya da öbürü verilir."
+                        .into(),
                 ));
             }
         }
@@ -274,7 +280,10 @@ impl BeamFields {
                 return Some(found);
             }
             if self.role.is_footing() {
-                return Some(("member".into(), "Temel eleman (kayıt) olamaz; türü Kiriş olmalı.".into()));
+                return Some((
+                    "member".into(),
+                    "Temel eleman (kayıt) olamaz; türü Kiriş olmalı.".into(),
+                ));
             }
             if self.role != BeamRole::Beam {
                 return Some((
@@ -289,7 +298,10 @@ impl BeamFields {
                 return Some(found);
             }
             if self.member.is_some() {
-                return Some(("covering".into(), "Profil eleman (kayıt) olamaz: biri ya da öbürü verilir.".into()));
+                return Some((
+                    "covering".into(),
+                    "Profil eleman (kayıt) olamaz: biri ya da öbürü verilir.".into(),
+                ));
             }
             if self.role != BeamRole::Beam {
                 return Some((
@@ -387,17 +399,47 @@ mod tests {
             pts: vec![Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 4.0, y: 0.0 }],
             width: 0.05,
             height: 0.1,
-            member: Some(crate::Member { predefined: "RAFTER".into(), name: None }),
+            member: Some(crate::Member {
+                predefined: "RAFTER".into(),
+                name: None,
+            }),
             rise: Some(3.0),
             ..Default::default()
         };
         assert_eq!(rafter.problem(), None);
-        assert_eq!((rafter.length(), rafter.plan_length(), rafter.grade()), (5.0, 4.0, 0.75));
+        assert_eq!(
+            (rafter.length(), rafter.plan_length(), rafter.grade()),
+            (5.0, 4.0, 0.75)
+        );
         let refused = |b: BeamFields| b.problem().map(|p| p.0);
-        assert_eq!(refused(BeamFields { member: None, ..rafter.clone() }), Some("rise".into()));
-        assert_eq!(refused(BeamFields { rise: Some(0.0), ..rafter.clone() }), Some("rise".into()));
-        assert_eq!(refused(BeamFields { rise: Some(10.5), ..rafter.clone() }), Some("rise".into()));
-        assert_eq!(refused(BeamFields { rise: Some(f64::NAN), ..rafter.clone() }), Some("rise".into()));
+        assert_eq!(
+            refused(BeamFields {
+                member: None,
+                ..rafter.clone()
+            }),
+            Some("rise".into())
+        );
+        assert_eq!(
+            refused(BeamFields {
+                rise: Some(0.0),
+                ..rafter.clone()
+            }),
+            Some("rise".into())
+        );
+        assert_eq!(
+            refused(BeamFields {
+                rise: Some(10.5),
+                ..rafter.clone()
+            }),
+            Some("rise".into())
+        );
+        assert_eq!(
+            refused(BeamFields {
+                rise: Some(f64::NAN),
+                ..rafter.clone()
+            }),
+            Some("rise".into())
+        );
         let mut bent = rafter.clone();
         bent.pts.push(Vec2 { x: 4.0, y: 3.0 });
         assert_eq!(refused(bent), Some("rise".into()));
@@ -472,7 +514,12 @@ mod tests {
         };
         assert_eq!(lintel.problem(), None);
         assert_eq!(
-            BeamFields { offset: 0.1, ..lintel.clone() }.problem().map(|p| p.0),
+            BeamFields {
+                offset: 0.1,
+                ..lintel.clone()
+            }
+            .problem()
+            .map(|p| p.0),
             Some("offset".to_owned())
         );
         assert_eq!(

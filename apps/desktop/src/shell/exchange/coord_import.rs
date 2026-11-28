@@ -260,7 +260,10 @@ impl App {
         let id = READS.fetch_add(1, Ordering::Relaxed) + 1;
         // A name no layer has (docs/adr/9329).
         let base = words::base_name(&file.name);
-        let name = self.document.as_ref().map_or_else(|| base.clone(), |d| apply::free_layer_name(&d.model, &base));
+        let name = self
+            .document
+            .as_ref()
+            .map_or_else(|| base.clone(), |d| apply::free_layer_name(&d.model, &base));
         let state = State {
             name,
             file,
@@ -480,7 +483,11 @@ impl App {
         // The new layer keeps the file it came from (docs/adr/9192, 9329).
         let driver = new_layer::format_word(&file.name);
         let origin = match (&file.path, &driver) {
-            (Some(path), Some(driver)) => Some(apply::FileOrigin { driver, path, bytes: &file.bytes }),
+            (Some(path), Some(driver)) => Some(apply::FileOrigin {
+                driver,
+                path,
+                bytes: &file.bytes,
+            }),
             _ => None,
         };
         let Some(doc) = &mut self.document else {
@@ -688,7 +695,9 @@ impl App {
             // green tick while both columns read Alınmaz).
             let mapped = r.columns.contains(&CoordColumn::Y) && r.columns.contains(&CoordColumn::X);
             let status: Element<'a, Message> = match &p.error {
-                _ if !mapped => label::caption("Sütun eşlemesi bekleniyor").style(kentos_ui::style::text::muted).into(),
+                _ if !mapped => label::caption("Sütun eşlemesi bekleniyor")
+                    .style(kentos_ui::style::text::muted)
+                    .into(),
                 Some(error) => row![
                     icon(Icon::Warning).size(14.0).tone(Tone::Warning),
                     label::caption(error.clone()),
@@ -821,7 +830,12 @@ impl App {
                     "Yeni katmanın adı",
                     name,
                     // A name a layer has is said with the way to it (docs/adr/9329).
-                    Some(self.coord_target(s).err().filter(|why| !why.is_empty()).unwrap_or_else(|| new_layer::help("Hedef katman'dan"))),
+                    Some(
+                        self.coord_target(s)
+                            .err()
+                            .filter(|why| !why.is_empty())
+                            .unwrap_or_else(|| new_layer::help("Hedef katman'dan")),
+                    ),
                 ))
                 .width(Length::FillPortion(2)),
             );
@@ -836,9 +850,17 @@ mod tests {
 
     /// The window's file read as the off-thread task would read it, answered to the window.
     fn answer(app: &mut App) {
-        let Some(Window::CoordImport(s)) = &app.exchange else { panic!("the window") };
-        let (id, read) = (s.reading_id, kentos_formats::coords::read(&s.file.bytes, &s.options()));
-        let _ = app.update(message(Exchange::CoordImport(Event::Read { id, read: Arc::new(read) })));
+        let Some(Window::CoordImport(s)) = &app.exchange else {
+            panic!("the window")
+        };
+        let (id, read) = (
+            s.reading_id,
+            kentos_formats::coords::read(&s.file.bytes, &s.options()),
+        );
+        let _ = app.update(message(Exchange::CoordImport(Event::Read {
+            id,
+            read: Arc::new(read),
+        })));
     }
 
     /// UR2-021: `noktalar.csv` (a header, three data lines, `abc` in the last): the file's lines and its data are said
@@ -846,8 +868,16 @@ mod tests {
     #[test]
     fn rows_wait_for_their_columns_and_the_header_is_not_data() {
         let mut app = crate::files_testing::app_with_drawing();
-        let bytes: Arc<[u8]> = Arc::from(&include_bytes!("../../../../../fixtures/processing/v1/noktalar.csv")[..]);
-        let _ = app.coord_import_picked(Picked { name: "noktalar.csv".into(), bytes, path: None }, false);
+        let bytes: Arc<[u8]> =
+            Arc::from(&include_bytes!("../../../../../fixtures/processing/v1/noktalar.csv")[..]);
+        let _ = app.coord_import_picked(
+            Picked {
+                name: "noktalar.csv".into(),
+                bytes,
+                path: None,
+            },
+            false,
+        );
         answer(&mut app);
         let size = iced::Size::new(1440.0, 900.0);
         let mut snapshot = crate::files_testing::offscreen(size);
@@ -858,17 +888,30 @@ mod tests {
         let file_line = |snapshot: &mut kentos_ui::snapshot::Snapshot, app: &App, t: &str| {
             !crate::files_testing::find_texts(snapshot, app, t).is_empty()
         };
-        assert!(file_line(&mut snapshot, &app, "4 satır: başlık ve 3 veri satırı, UTF-8"), "the lines and the data apart");
+        assert!(
+            file_line(
+                &mut snapshot,
+                &app,
+                "4 satır: başlık ve 3 veri satırı, UTF-8"
+            ),
+            "the lines and the data apart"
+        );
         assert!(file_line(&mut snapshot, &app, "2 nokta alınacak."));
         crate::files_testing::evidence(&mut snapshot, &app, "ur2-021", "baslikli");
         let _ = app.update(message(Exchange::CoordImport(Event::Header(false))));
         answer(&mut app);
         snapshot.settle(&mut app, App::view, &mut update);
         crate::files_testing::evidence(&mut snapshot, &app, "ur2-021", "basliksiz");
-        let Some(Window::CoordImport(s)) = &app.exchange else { panic!("the window") };
+        let Some(Window::CoordImport(s)) = &app.exchange else {
+            panic!("the window")
+        };
         let r = s.read.as_deref().expect("read");
         if !(r.columns.contains(&CoordColumn::Y) && r.columns.contains(&CoordColumn::X)) {
-            assert_eq!(crate::files_testing::find_texts(&mut snapshot, &app, "Sütun eşlemesi bekleniyor").len(), r.preview.len());
+            assert_eq!(
+                crate::files_testing::find_texts(&mut snapshot, &app, "Sütun eşlemesi bekleniyor")
+                    .len(),
+                r.preview.len()
+            );
         }
     }
 

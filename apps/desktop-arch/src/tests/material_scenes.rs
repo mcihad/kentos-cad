@@ -30,7 +30,8 @@ fn setup() -> Value {
 }
 
 fn open(app: &mut App, doc: Value, bounds: [f64; 4]) {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(doc).expect("the drawing reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(doc).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     make_cad(app);
@@ -75,7 +76,12 @@ fn applied(app: &mut App) {
     event(app, Event::Apply);
     event(app, Event::Close);
     app.viewport.camera.fit(
-        &kentos_render_wgpu::Bounds { min_x: -0.5, min_y: -0.6, max_x: 14.5, max_y: 8.6 },
+        &kentos_render_wgpu::Bounds {
+            min_x: -0.5,
+            min_y: -0.6,
+            max_x: 14.5,
+            max_y: 8.6,
+        },
         24.0,
     );
 }
@@ -86,8 +92,12 @@ fn props(app: &mut App) {
     app.selection.set([Slot(3)]);
     let upper = docking::Slot::Docked(docking::Side::Right, 0);
     let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
-    let _ = app.update(Message::Properties(crate::properties::Event::Toggle("general")));
-    let _ = app.update(Message::Properties(crate::properties::Event::Toggle("geometry")));
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+        "general",
+    )));
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+        "geometry",
+    )));
 }
 
 /// Metraj by material: Tuğla, Betonarme and the text materials, with their walls, slabs, areas and volumes.
@@ -109,7 +119,10 @@ fn framed(app: &mut App) {
             c["wrap"] = json!(true);
         }
     };
-    for c in doc["settings"]["wallStyles"][0]["components"].as_array_mut().unwrap() {
+    for c in doc["settings"]["wallStyles"][0]["components"]
+        .as_array_mut()
+        .unwrap()
+    {
         wrap(c);
     }
     let entities = doc["entities"].as_array_mut().unwrap();
@@ -124,7 +137,11 @@ fn framed(app: &mut App) {
                "build": build,
                "place": [{"x": s0, "y": 0.125}, {"x": s0, "y": -0.125}, {"x": s1, "y": 0.125}, {"x": s1, "y": -0.125}]})
     };
-    entities.push(window(9, 1.6, json!({"frameDepth": 0.07, "frameOffset": 0.05, "sillBoard": 0.05})));
+    entities.push(window(
+        9,
+        1.6,
+        json!({"frameDepth": 0.07, "frameOffset": 0.05, "sillBoard": 0.05}),
+    ));
     entities.push(window(10, 4.4, json!({"sillBoard": 0.05})));
     doc["uids"].as_array_mut().unwrap().extend([
         json!("0192f5a1-7850-7000-8000-000000000009"),

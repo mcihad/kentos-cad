@@ -17,16 +17,18 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
     let mut geo = Vec::new();
     use kentos_commands::{SpaceChange, SpaceColumns, SpaceMethod, SpaceScope, SpacesOperation};
     let x = &sp.space;
-    let set = |c: SpaceChange| Message::Properties(Event::Space(slot, Box::new(SpacesOperation::Set(c))));
-    let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
-        label,
-        swatch: None,
-        icon,
-        wide: false,
-        chosen,
-        enabled: true,
-        message,
-    };
+    let set =
+        |c: SpaceChange| Message::Properties(Event::Space(slot, Box::new(SpacesOperation::Set(c))));
+    let pick =
+        |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
+            label,
+            swatch: None,
+            icon,
+            wide: false,
+            chosen,
+            enabled: true,
+            message,
+        };
     let select = |text: String, items: Vec<Choice>| {
         edit(Editor::Select {
             text,
@@ -44,8 +46,17 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
     // Emsal durumu (docs/adr/8125): how it counts now and why; its own state over its brief's and its words'.
     if !x.void {
         use kentos_commands::{EmsalCount, SpaceEmsal};
-        let uid = doc.model.uid(slot).map(|u| u.to_string()).unwrap_or_default();
-        let counted = doc.model.zoning_rooms().into_iter().find(|r| r.uid == uid).map(|r| r.count);
+        let uid = doc
+            .model
+            .uid(slot)
+            .map(|u| u.to_string())
+            .unwrap_or_default();
+        let counted = doc
+            .model
+            .zoning_rooms()
+            .into_iter()
+            .find(|r| r.uid == uid)
+            .map(|r| r.count);
         let own = x.emsal.as_ref();
         let shown = match (own, counted) {
             (Some(o), _) => o.count.label().to_owned(),
@@ -56,7 +67,10 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
         let mut items = vec![pick(
             "Kendiliğinden".to_owned(),
             own.is_none(),
-            set(SpaceChange { emsal: Some(None), ..Default::default() }),
+            set(SpaceChange {
+                emsal: Some(None),
+                ..Default::default()
+            }),
             None,
         )];
         items.extend(EmsalCount::ROOM.iter().map(|c| {
@@ -64,7 +78,10 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
                 c.label().to_owned(),
                 own.is_some_and(|o| o.count == *c),
                 set(SpaceChange {
-                    emsal: Some(Some(SpaceEmsal { count: *c, basis: basis.clone() })),
+                    emsal: Some(Some(SpaceEmsal {
+                        count: *c,
+                        basis: basis.clone(),
+                    })),
                     ..Default::default()
                 }),
                 None,
@@ -77,7 +94,8 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
             "Kendiliğinden: kullanımından ve adından (Planlı Alanlar İmar Yönetmeliği 22)."
         }));
         geo.push(
-            Row::text("Emsal dayanağı", basis.unwrap_or_default()).editor(edit(Editor::Text(Field::SpaceEmsalBasis(slot)))),
+            Row::text("Emsal dayanağı", basis.unwrap_or_default())
+                .editor(edit(Editor::Text(Field::SpaceEmsalBasis(slot)))),
         );
     }
     if let Some(arch) = &doc.settings().arch {
@@ -124,7 +142,9 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
             None => u.number.clone(),
         };
         let shown = match x.unit.as_deref() {
-            Some(id) => program.unit(id).map_or_else(|| format!("{id} (programda yok)"), named),
+            Some(id) => program
+                .unit(id)
+                .map_or_else(|| format!("{id} (programda yok)"), named),
             None => "Bölümsüz".to_owned(),
         };
         let mut items: Vec<Choice> = program
@@ -134,7 +154,10 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
                 pick(
                     named(u),
                     x.unit.as_deref() == Some(u.id.as_str()),
-                    set(SpaceChange { unit: Some(Some(u.id.clone())), ..Default::default() }),
+                    set(SpaceChange {
+                        unit: Some(Some(u.id.clone())),
+                        ..Default::default()
+                    }),
                     Some("archProgram"),
                 )
             })
@@ -142,7 +165,10 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
         items.push(pick(
             "Bölümsüz".into(),
             x.unit.is_none(),
-            set(SpaceChange { unit: Some(None), ..Default::default() }),
+            set(SpaceChange {
+                unit: Some(None),
+                ..Default::default()
+            }),
             None,
         ));
         geo.push(Row::text("Bölüm", shown.clone()).editor(select(shown, items)));
@@ -158,10 +184,24 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
         }
     }
     // Boşluk (docs/adr/0708): a shaft or an opening in the floor, drawn crossed, its area summed apart.
-    let void_words = if x.void { "Evet (şaft)" } else { "Hayır (oda)" };
+    let void_words = if x.void {
+        "Evet (şaft)"
+    } else {
+        "Hayır (oda)"
+    };
     let voids = [(true, "Evet (şaft)"), (false, "Hayır (oda)")]
         .into_iter()
-        .map(|(v, label)| pick(label.into(), v == x.void, set(SpaceChange { void: Some(v), ..Default::default() }), None))
+        .map(|(v, label)| {
+            pick(
+                label.into(),
+                v == x.void,
+                set(SpaceChange {
+                    void: Some(v),
+                    ..Default::default()
+                }),
+                None,
+            )
+        })
         .collect();
     geo.push(Row::text("Döşeme boşluğu", void_words).editor(select(void_words.into(), voids)));
     // Korunumlu (docs/adr/8136, BYKHY Ek-3/B 8): a shaft's declared protected role, said on one of its storeys for the
@@ -173,32 +213,66 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
             Some(false) => "Hayır",
             None => "Bilinmiyor",
         };
-        let items = [(Some(true), "Evet"), (Some(false), "Hayır"), (None, "Bilinmiyor")]
-            .into_iter()
-            .map(|(v, label)| pick(label.into(), now == v, Message::Properties(Event::Protected(slot, v)), None))
-            .collect();
+        let items = [
+            (Some(true), "Evet"),
+            (Some(false), "Hayır"),
+            (None, "Bilinmiyor"),
+        ]
+        .into_iter()
+        .map(|(v, label)| {
+            pick(
+                label.into(),
+                now == v,
+                Message::Properties(Event::Protected(slot, v)),
+                None,
+            )
+        })
+        .collect();
         geo.push(Row::text("Korunumlu", said).editor(select(said.into(), items)));
         if now == Some(true) {
-            geo.push(Row::note("Ek-3/B 8: duvarları en az REI 120; bir katta beyan yeter."));
+            geo.push(Row::note(
+                "Ek-3/B 8: duvarları en az REI 120; bir katta beyan yeter.",
+            ));
         }
     }
     // Kuyu havalandırması (docs/adr/8135, BYKHY 62/4): a lift shaft's ventilation and smoke vent or its pressurisation,
     // declared on one of its storeys for the whole shaft.
     if kentos_native_application::arch_performance::shaft_vent_rated(e) {
         let own = kentos_native_application::arch_performance::shaft_vent_of(e);
-        let m2 = |a: f64| fixed(a, 3).trim_end_matches('0').trim_end_matches('.').to_owned();
+        let m2 = |a: f64| {
+            fixed(a, 3)
+                .trim_end_matches('0')
+                .trim_end_matches('.')
+                .to_owned()
+        };
         let vent = own.and_then(|v| v.area).map_or_else(String::new, m2);
-        geo.push(Row::figure("Baca alanı", vent).unit("m²").editor(number(Field::Arch(slot, ArchField::ShaftVent))));
+        geo.push(
+            Row::figure("Baca alanı", vent)
+                .unit("m²")
+                .editor(number(Field::Arch(slot, ArchField::ShaftVent))),
+        );
         let on = own.is_some_and(|v| v.pressurized);
         let said = if on { "Evet" } else { "Hayır" };
         let items = [(true, "Evet"), (false, "Hayır")]
             .into_iter()
-            .map(|(v, label)| pick(label.into(), v == on, Message::Properties(Event::ShaftPressurized(slot, v)), None))
+            .map(|(v, label)| {
+                pick(
+                    label.into(),
+                    v == on,
+                    Message::Properties(Event::ShaftPressurized(slot, v)),
+                    None,
+                )
+            })
             .collect();
         geo.push(Row::text("Basınçlandırılır", said).editor(select(said.into(), items)));
         // A panel's note is two lines: the shaft's area here, then the regulation's words; the rule computes.
-        let here = kentos_geometry_core::geom::space::area(&kentos_domain::arch_values::core_areas(&x.parts));
-        geo.push(Row::note(&format!("Kuyu bu katta {} m²; bir katta beyan yeter.", m2(here))));
+        let here = kentos_geometry_core::geom::space::area(
+            &kentos_domain::arch_values::core_areas(&x.parts),
+        );
+        geo.push(Row::note(&format!(
+            "Kuyu bu katta {} m²; bir katta beyan yeter.",
+            m2(here)
+        )));
         geo.push(Row::note("62/4: alanın 0,025 katı, en az 0,1 m²."));
     }
     let methods = SpaceMethod::ALL
@@ -207,43 +281,101 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
             pick(
                 m.label().to_owned(),
                 m == x.method,
-                set(SpaceChange { method: Some(m), ..Default::default() }),
+                set(SpaceChange {
+                    method: Some(m),
+                    ..Default::default()
+                }),
                 Some(kentos_interaction::space_tools::method_icon(Some(m))),
             )
         })
         .collect();
     // Alan yöntemi, as the Mahal tool names it (docs/adr/8003).
-    geo.push(Row::text("Alan yöntemi", x.method.label()).editor(select(x.method.label().to_owned(), methods)));
+    geo.push(
+        Row::text("Alan yöntemi", x.method.label())
+            .editor(select(x.method.label().to_owned(), methods)),
+    );
     if x.seed.is_some() {
-        let items=SpaceColumns::ALL.iter().map(|&m|pick(m.choice().into(),m==x.columns,
-            set(SpaceChange {columns:Some(m),..Default::default()}),None)).collect();
-        geo.push(Row::text("Kolon alanı",x.columns.choice()).editor(select(x.columns.choice().into(),items)));
+        let items = SpaceColumns::ALL
+            .iter()
+            .map(|&m| {
+                pick(
+                    m.choice().into(),
+                    m == x.columns,
+                    set(SpaceChange {
+                        columns: Some(m),
+                        ..Default::default()
+                    }),
+                    None,
+                )
+            })
+            .collect();
+        geo.push(
+            Row::text("Kolon alanı", x.columns.choice())
+                .editor(select(x.columns.choice().into(), items)),
+        );
     } else {
-        geo.push(Row::text("Kolon alanı","Çizilen sınır korunur"));
+        geo.push(Row::text("Kolon alanı", "Çizilen sınır korunur"));
     }
-    let levels = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
+    let levels = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.clone())
+        .unwrap_or_default();
     let level_name = x
         .arch
         .level
         .as_deref()
-        .map(|id| levels.iter().find(|l| l.id == id).map_or_else(|| id.to_owned(), |l| l.name.clone()))
-        .unwrap_or_else(|| if x.scope==SpaceScope::Unassigned { "Atanmamış".into() }
-            else if x.seed.is_some() { "Tüm katlar".into() } else { "Yok".into() });
+        .map(|id| {
+            levels
+                .iter()
+                .find(|l| l.id == id)
+                .map_or_else(|| id.to_owned(), |l| l.name.clone())
+        })
+        .unwrap_or_else(|| {
+            if x.scope == SpaceScope::Unassigned {
+                "Atanmamış".into()
+            } else if x.seed.is_some() {
+                "Tüm katlar".into()
+            } else {
+                "Yok".into()
+            }
+        });
     let mut level_items = vec![pick(
-        if x.seed.is_some() { "Tüm katlar".into() } else { "Yok".into() },
+        if x.seed.is_some() {
+            "Tüm katlar".into()
+        } else {
+            "Yok".into()
+        },
         x.arch.level.is_none() && x.scope.is_project(),
-        set(SpaceChange { level: Some(None), scope:Some(SpaceScope::Project), ..Default::default() }),
+        set(SpaceChange {
+            level: Some(None),
+            scope: Some(SpaceScope::Project),
+            ..Default::default()
+        }),
         None,
     )];
     if x.seed.is_some() {
-        level_items.push(pick("Yalnız atanmamış".into(),x.scope==SpaceScope::Unassigned,
-            set(SpaceChange {level:Some(None),scope:Some(SpaceScope::Unassigned),..Default::default()}),None));
+        level_items.push(pick(
+            "Yalnız atanmamış".into(),
+            x.scope == SpaceScope::Unassigned,
+            set(SpaceChange {
+                level: Some(None),
+                scope: Some(SpaceScope::Unassigned),
+                ..Default::default()
+            }),
+            None,
+        ));
     }
     level_items.extend(levels.iter().map(|l| {
         pick(
             l.name.clone(),
             x.arch.level.as_deref() == Some(l.id.as_str()),
-            set(SpaceChange { level: Some(Some(l.id.clone())), scope:Some(SpaceScope::Project), ..Default::default() }),
+            set(SpaceChange {
+                level: Some(Some(l.id.clone())),
+                scope: Some(SpaceScope::Project),
+                ..Default::default()
+            }),
             None,
         )
     }));
@@ -254,25 +386,31 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
         id: "arch.settings",
     });
     geo.push(Row::text("Kat", level_name.clone()).editor(select(level_name, level_items)));
-    let phase_name = x.arch.phase.map_or("Yok", kentos_commands::ArchPhase::label);
+    let phase_name = x
+        .arch
+        .phase
+        .map_or("Yok", kentos_commands::ArchPhase::label);
     let mut phases = vec![pick(
         "Yok".to_owned(),
         x.arch.phase.is_none(),
-        set(SpaceChange { phase: Some(None), ..Default::default() }),
+        set(SpaceChange {
+            phase: Some(None),
+            ..Default::default()
+        }),
         None,
     )];
     phases.extend(kentos_commands::ArchPhase::ALL.iter().map(|&p| {
         pick(
             p.label().to_owned(),
             x.arch.phase == Some(p),
-            set(SpaceChange { phase: Some(Some(p)), ..Default::default() }),
+            set(SpaceChange {
+                phase: Some(Some(p)),
+                ..Default::default()
+            }),
             None,
         )
     }));
-    geo.push(
-        Row::text("Tadilat durumu", phase_name)
-            .editor(select(phase_name.to_owned(), phases)),
-    );
+    geo.push(Row::text("Tadilat durumu", phase_name).editor(select(phase_name.to_owned(), phases)));
     // Its floor, its asma tavan and its inside height (docs/adr/8040 §3; PAİY 4(1)(ıı): from the floor's finish
     // to the ceiling's): each number in its cell, where it comes from in a note under it (docs/adr/0687: a
     // decorated number does not fit a numeric cell).
@@ -331,11 +469,17 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
     // and the schedules', not “Zemin” (the ground's).
     // A floor's, wall's or ceiling's finish is the project material of its name (docs/adr/8138; BYKHY 20/3, 26/2,
     // 26/4): the note says which class the fire rules read, or that no material is named so.
-    let materials = doc.settings().arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+    let materials = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.materials.as_slice());
     let read = |name: &Option<String>| -> Option<Row> {
         let name = name.as_deref().map(str::trim).filter(|n| !n.is_empty())?;
         let folded = name.to_lowercase();
-        let found = materials.iter().find(|m| m.id == name || m.name.to_lowercase() == folded);
+        let found = materials
+            .iter()
+            .find(|m| m.id == name || m.name.to_lowercase() == folded);
         Some(Row::note(&match found.map(|m| m.reaction.as_ref()) {
             Some(Some(d)) => format!("Malzemelerden: {}.", d.value),
             Some(None) => "Malzemelerde; yanıcılık sınıfı beyan edilmemiş.".to_owned(),
@@ -389,32 +533,62 @@ pub(super) fn rows(k: &Kit, sp: &kentos_commands::SpaceEntity) -> Vec<Row> {
     if let Some(h) = height {
         geo.push(Row::figure("Hacim", fixed(a * h, decimals)).unit("m³"));
     }
-    let bound = if x.seed.is_some() { "Duvarlardan" } else { "Çizilmiş" };
-    let source_items=vec![Choice::Command {label:"Kaynakları seç…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceSources"}];
+    let bound = if x.seed.is_some() {
+        "Duvarlardan"
+    } else {
+        "Çizilmiş"
+    };
+    let source_items = vec![Choice::Command {
+        label: "Kaynakları seç…",
+        icon: crate::icons::from_web(Some("space")),
+        id: "tool.spaceSources",
+    }];
     let source_summary: String = x.sources.as_ref().map_or_else(
         || "Tüm uygun kaynaklar".into(),
         |ids| format!("Seçilen {} kaynak", ids.len()),
     );
-    geo.push(Row::text("Kaynaklar", source_summary.clone())
-        .editor(select(source_summary, source_items)));
-    let rebound = vec![Choice::Command {label:"Mahali yeniden sınırla…",icon:crate::icons::from_web(Some("space")),id:"tool.spaceRebound"},pick(
-        "Duvarlardan yeniden bul".to_owned(),
-        false,
-        Message::Properties(Event::Space(slot, Box::new(SpacesOperation::Rebound { seed: None }))),
-        Some("space"),
-    )];
+    geo.push(
+        Row::text("Kaynaklar", source_summary.clone()).editor(select(source_summary, source_items)),
+    );
+    let rebound = vec![
+        Choice::Command {
+            label: "Mahali yeniden sınırla…",
+            icon: crate::icons::from_web(Some("space")),
+            id: "tool.spaceRebound",
+        },
+        pick(
+            "Duvarlardan yeniden bul".to_owned(),
+            false,
+            Message::Properties(Event::Space(
+                slot,
+                Box::new(SpacesOperation::Rebound { seed: None }),
+            )),
+            Some("space"),
+        ),
+    ];
     geo.push(Row::text("Sınır", bound).editor(select(bound.to_owned(), rebound)));
     if let Some(b) = x.broken {
         match b {
             kentos_commands::SpaceBreak::LostEnclosure if !x.scope.is_project() => {
-                geo.push(Row::text("Durum","Oda bulunamadı"));
-                let mut note=Row::note("Seçilen kaynaklarda mahalın iç noktasını çevreleyen kullanılabilir oda bulunamadı. Son sınır korunuyor. Duvarları ve iç noktayı kontrol edin.");
-                note.warn=true;
+                geo.push(Row::text("Durum", "Oda bulunamadı"));
+                let mut note = Row::note(
+                    "Seçilen kaynaklarda mahalın iç noktasını çevreleyen kullanılabilir oda bulunamadı. Son sınır korunuyor. Duvarları ve iç noktayı kontrol edin.",
+                );
+                note.warn = true;
                 geo.push(note);
             }
             kentos_commands::SpaceBreak::LostEnclosure => geo.push(Row::text("Durum", b.words())),
-            kentos_commands::SpaceBreak::NoFreeArea | kentos_commands::SpaceBreak::InvalidBoundarySource | kentos_commands::SpaceBreak::SourceUnavailable => {
-                geo.push(Row::text("Durum", if b == kentos_commands::SpaceBreak::NoFreeArea { "Alan kalmadı" } else { "Kaynak hatalı" }));
+            kentos_commands::SpaceBreak::NoFreeArea
+            | kentos_commands::SpaceBreak::InvalidBoundarySource
+            | kentos_commands::SpaceBreak::SourceUnavailable => {
+                geo.push(Row::text(
+                    "Durum",
+                    if b == kentos_commands::SpaceBreak::NoFreeArea {
+                        "Alan kalmadı"
+                    } else {
+                        "Kaynak hatalı"
+                    },
+                ));
                 let mut note = Row::note(b.words());
                 note.warn = true;
                 geo.push(note);

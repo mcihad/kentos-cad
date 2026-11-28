@@ -9,8 +9,8 @@ use std::path::Path;
 
 use kentos_commands::encoding::{base64_encode, sha256_hex};
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, ImageSourced, ImagesEdit, ImagesEdited, ImagesOperation, MAX_IMAGE_BYTES,
-    codes,
+    CommandResult, CommandWarning, Entity, ImageSourced, ImagesEdit, ImagesEdited, ImagesOperation,
+    MAX_IMAGE_BYTES, codes,
 };
 use kentos_domain::{Document, Slot};
 use serde_json::{Value, json};
@@ -22,8 +22,15 @@ use crate::links::find;
 /// A picture's format and its size in pixels, read from its header: a PNG's IHDR, a JPEG's frame header. None when
 /// the bytes are neither, or say no size.
 pub fn picture_size(bytes: &[u8]) -> Option<(&'static str, u32, u32)> {
-    let be16 = |i: usize| -> Option<u32> { Some(u32::from(u16::from_be_bytes([*bytes.get(i)?, *bytes.get(i + 1)?]))) };
-    let be32 = |i: usize| -> Option<u32> { Some(u32::from_be_bytes(bytes.get(i..i + 4)?.try_into().ok()?)) };
+    let be16 = |i: usize| -> Option<u32> {
+        Some(u32::from(u16::from_be_bytes([
+            *bytes.get(i)?,
+            *bytes.get(i + 1)?,
+        ])))
+    };
+    let be32 = |i: usize| -> Option<u32> {
+        Some(u32::from_be_bytes(bytes.get(i..i + 4)?.try_into().ok()?))
+    };
     if bytes.starts_with(&[0x89, b'P', b'N', b'G', 0x0D, 0x0A, 0x1A, 0x0A]) {
         if bytes.get(12..16)? != b"IHDR" {
             return None;
@@ -70,11 +77,19 @@ pub fn picture_id(bytes: &[u8]) -> String {
 }
 
 /// A PNG's or JPEG's bytes as an image of the project's library, under Resimler, named by the file's stem.
-pub fn library_item(name: &str, bytes: &[u8], format: &str, width: u32, height: u32) -> (String, Value) {
+pub fn library_item(
+    name: &str,
+    bytes: &[u8],
+    format: &str,
+    width: u32,
+    height: u32,
+) -> (String, Value) {
     let stem = name
         .rsplit_once('.')
         .map_or(name, |(stem, ext)| {
-            if matches!(ext.to_ascii_lowercase().as_str(), "png" | "jpg" | "jpeg") && !stem.is_empty() {
+            if matches!(ext.to_ascii_lowercase().as_str(), "png" | "jpg" | "jpeg")
+                && !stem.is_empty()
+            {
                 stem
             } else {
                 name
@@ -100,7 +115,9 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
 }
 
 fn file_name(path: &str) -> String {
-    Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned())
+    Path::new(path)
+        .file_name()
+        .map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned())
 }
 
 /// A file read for an image: where from, its bytes, format and size.
@@ -116,12 +133,18 @@ struct Read {
 fn read(file: &str, drawing: Option<&str>, search: &[String], at: &str) -> Result<Read, Stop> {
     let text = file.trim();
     if text.is_empty() {
-        return Err(refuse(codes::INVALID_FILE_PATH, "Resmin dosya yolu boş; bir PNG ya da JPEG dosyasının yolunu verin.".into(), at));
+        return Err(refuse(
+            codes::INVALID_FILE_PATH,
+            "Resmin dosya yolu boş; bir PNG ya da JPEG dosyasının yolunu verin.".into(),
+            at,
+        ));
     }
     if Path::new(text).is_relative() && drawing.is_none() {
         return Err(refuse(
             codes::INVALID_FILE_PATH,
-            format!("“{text}” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin."),
+            format!(
+                "“{text}” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin."
+            ),
             at,
         ));
     }
@@ -129,7 +152,11 @@ fn read(file: &str, drawing: Option<&str>, search: &[String], at: &str) -> Resul
     let Some(p) = found.at else {
         return Err(refuse(
             codes::FILE_NOT_FOUND,
-            format!("{} bulunamadı. Bakılan yerler: {}.", file_name(text), found.tried.join(", ")),
+            format!(
+                "{} bulunamadı. Bakılan yerler: {}.",
+                file_name(text),
+                found.tried.join(", ")
+            ),
             at,
         ));
     };
@@ -147,16 +174,30 @@ fn read(file: &str, drawing: Option<&str>, search: &[String], at: &str) -> Resul
             at,
         ));
     }
-    let bytes = std::fs::read(&p)
-        .map_err(|e| refuse(codes::FILE_NOT_FOUND, format!("{shown} okunamadı: {e}."), at))?;
+    let bytes = std::fs::read(&p).map_err(|e| {
+        refuse(
+            codes::FILE_NOT_FOUND,
+            format!("{shown} okunamadı: {e}."),
+            at,
+        )
+    })?;
     let Some((format, width, height)) = picture_size(&bytes) else {
         return Err(refuse(
             codes::IMPORT_UNREADABLE,
-            format!("{} PNG ya da JPEG değil ya da bozuk; resim olarak okunamadı.", file_name(text)),
+            format!(
+                "{} PNG ya da JPEG değil ya da bozuk; resim olarak okunamadı.",
+                file_name(text)
+            ),
             at,
         ));
     };
-    Ok(Read { at: shown, bytes, format, width, height })
+    Ok(Read {
+        at: shown,
+        bytes,
+        format,
+        width,
+        height,
+    })
 }
 
 /// What the command writes: the library's new pictures, then each image as it will be.
@@ -226,9 +267,14 @@ fn check(doc: &Document, input: &ImagesEdit) -> Result<Planned, Stop> {
             for (at, slot, e, uid) in linked {
                 let Entity::Image(im) = e else { continue };
                 let file = im.image.file.clone().unwrap_or_default();
-                let place = if given.is_some() { format!("uids[{at}]") } else { "operation".to_owned() };
+                let place = if given.is_some() {
+                    format!("uids[{at}]")
+                } else {
+                    "operation".to_owned()
+                };
                 let r = read(&file, drawing, &search, &place)?;
-                let (id, item) = library_item(&file_name(&file), &r.bytes, r.format, r.width, r.height);
+                let (id, item) =
+                    library_item(&file_name(&file), &r.bytes, r.format, r.width, r.height);
                 if !crate::edit::has_picture(doc, &id) && !assets.iter().any(|(a, _)| *a == id) {
                     assets.push((id.clone(), item));
                 }
@@ -273,7 +319,11 @@ fn check(doc: &Document, input: &ImagesEdit) -> Result<Planned, Stop> {
         }
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
-    Ok(Planned { assets, images, warnings })
+    Ok(Planned {
+        assets,
+        images,
+        warnings,
+    })
 }
 
 /// The images in the drawing's order.
@@ -284,7 +334,10 @@ fn in_order(mut images: Vec<(Slot, Entity, ImageSourced)>) -> Vec<(Slot, Entity,
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ImagesEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: (), warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: (),
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -316,7 +369,11 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ImagesEdit) -> CommandResul
 }
 
 fn write_execute(cx: &mut ExecutionContext<'_>, input: ImagesEdit) -> CommandResult<ImagesEdited> {
-    let Planned { assets, images, warnings } = match check(cx.doc, &input) {
+    let Planned {
+        assets,
+        images,
+        warnings,
+    } = match check(cx.doc, &input) {
         Ok(p) => p,
         Err(stop) => return stop.into(),
     };
@@ -326,7 +383,9 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ImagesEdit) -> CommandRes
     };
     if !assets.is_empty() {
         let mut styles = cx.doc.styles().clone();
-        styles.items.extend(assets.iter().map(|(_, item)| item.clone()));
+        styles
+            .items
+            .extend(assets.iter().map(|(_, item)| item.clone()));
         cx.doc.set_styles(styles);
     }
     let images = in_order(images);

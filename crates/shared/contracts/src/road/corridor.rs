@@ -776,7 +776,10 @@ impl VolumeRule {
     }
 
     pub fn formation(self) -> bool {
-        matches!(self, VolumeRule::FormationGround | VolumeRule::FormationTopsoil)
+        matches!(
+            self,
+            VolumeRule::FormationGround | VolumeRule::FormationTopsoil
+        )
     }
 
     pub fn topsoil(self) -> bool {
@@ -1009,33 +1012,61 @@ pub struct HaulBarrierDef {
 pub(super) fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     if s.components.len() > MAX_TEMPLATE_COMPONENTS {
-        return fail(format!("{at}.components"), &format!("bir yanda en çok {MAX_TEMPLATE_COMPONENTS} bileşen olur"));
+        return fail(
+            format!("{at}.components"),
+            &format!("bir yanda en çok {MAX_TEMPLATE_COMPONENTS} bileşen olur"),
+        );
     }
     for (j, c) in s.components.iter().enumerate() {
         if !(c.width.is_finite() && c.width > 0.0) {
-            return fail(format!("{at}.components[{j}].width"), "bileşenin genişliği 0'dan büyük olmalı");
+            return fail(
+                format!("{at}.components[{j}].width"),
+                "bileşenin genişliği 0'dan büyük olmalı",
+            );
         }
         if !c.slope.is_finite() || c.slope.abs() > 1.0 {
-            return fail(format!("{at}.components[{j}].slope"), "enine eğim oranla yazılır (−0,025 %−2,5'tir), en çok 1 (%100) olur");
+            return fail(
+                format!("{at}.components[{j}].slope"),
+                "enine eğim oranla yazılır (−0,025 %−2,5'tir), en çok 1 (%100) olur",
+            );
         }
     }
     let positive = |v: f64| v.is_finite() && v > 0.0;
     if !positive(s.cut) {
-        return fail(format!("{at}.cut"), "yarma şevi 0'dan büyük olmalı (bir düşeye yatay)");
+        return fail(
+            format!("{at}.cut"),
+            "yarma şevi 0'dan büyük olmalı (bir düşeye yatay)",
+        );
     }
     if !positive(s.fill) {
-        return fail(format!("{at}.fill"), "dolgu şevi 0'dan büyük olmalı (bir düşeye yatay)");
+        return fail(
+            format!("{at}.fill"),
+            "dolgu şevi 0'dan büyük olmalı (bir düşeye yatay)",
+        );
     }
     if let Some(d) = &s.ditch
         && !(positive(d.fore) && positive(d.depth) && d.bottom.is_finite() && d.bottom >= 0.0)
     {
-        return fail(format!("{at}.ditch"), "hendeğin iç şevi ve derinliği 0'dan büyük, tabanı eksi olmamalı");
+        return fail(
+            format!("{at}.ditch"),
+            "hendeğin iç şevi ve derinliği 0'dan büyük, tabanı eksi olmamalı",
+        );
     }
     for (b, path) in [(&s.bench, "bench"), (&s.fill_bench, "fillBench")] {
         if let Some(b) = b
-            && !(b.height.is_finite() && b.height > 0.0 && b.height <= 100.0 && b.width.is_finite() && b.width > 0.0 && b.width <= 50.0 && b.fall.is_finite() && (0.0..=0.5).contains(&b.fall))
+            && !(b.height.is_finite()
+                && b.height > 0.0
+                && b.height <= 100.0
+                && b.width.is_finite()
+                && b.width > 0.0
+                && b.width <= 50.0
+                && b.fall.is_finite()
+                && (0.0..=0.5).contains(&b.fall))
         {
-            return fail(format!("{at}.{path}"), "basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi oranla 0–0,5 (%0–50) olur");
+            return fail(
+                format!("{at}.{path}"),
+                "basamağın yüksekliği (0, 100], genişliği (0, 50] m, eğimi oranla 0–0,5 (%0–50) olur",
+            );
         }
     }
     None
@@ -1045,21 +1076,30 @@ pub(super) fn side_problem(s: &TemplateSideDef, at: &str) -> Option<(String, Str
 pub(super) fn templates_problem(list: &[TemplateDef]) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     if list.len() > MAX_TEMPLATES {
-        return fail("templates".into(), &format!("en çok {MAX_TEMPLATES} tip kesit olur"));
+        return fail(
+            "templates".into(),
+            &format!("en çok {MAX_TEMPLATES} tip kesit olur"),
+        );
     }
     let mut ids = std::collections::BTreeSet::new();
     let mut names = std::collections::BTreeSet::new();
     for (i, t) in list.iter().enumerate() {
         let at = |field: &str| format!("templates[{i}].{field}");
         if !word_ok(&t.id) {
-            return fail(at("id"), "tip kesitin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+            return fail(
+                at("id"),
+                "tip kesitin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı",
+            );
         }
         if !ids.insert(t.id.as_str()) {
             return fail(at("id"), "bu kimlikte başka bir tip kesit var");
         }
         let name = t.name.trim();
         if name.is_empty() || name != t.name || t.name.chars().count() > 120 {
-            return fail(at("name"), "tip kesitin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            return fail(
+                at("name"),
+                "tip kesitin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter",
+            );
         }
         if !names.insert(name.to_lowercase()) {
             return fail(at("name"), "bu adda başka bir tip kesit var");
@@ -1070,7 +1110,11 @@ pub(super) fn templates_problem(list: &[TemplateDef]) -> Option<(String, String)
         if let Some(p) = t.right.as_ref().and_then(|r| side_problem(r, &at("right"))) {
             return Some(p);
         }
-        if let Some(p) = t.pavement.as_ref().and_then(|p| pavement_problem(p, &at("pavement"))) {
+        if let Some(p) = t
+            .pavement
+            .as_ref()
+            .and_then(|p| pavement_problem(p, &at("pavement")))
+        {
             return Some(p);
         }
     }
@@ -1087,29 +1131,50 @@ pub const MAX_PAVEMENT_DEPTH: f64 = 5.0;
 pub(super) fn pavement_problem(p: &PavementDef, at: &str) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     if p.layers.is_empty() || p.layers.len() > MAX_PAVEMENT_LAYERS {
-        return fail(format!("{at}.layers"), &format!("üstyapının 1 ile {MAX_PAVEMENT_LAYERS} arasında tabakası olur"));
+        return fail(
+            format!("{at}.layers"),
+            &format!("üstyapının 1 ile {MAX_PAVEMENT_LAYERS} arasında tabakası olur"),
+        );
     }
     let mut depth = 0.0;
     for (i, l) in p.layers.iter().enumerate() {
         let name = l.name.trim();
         if name.is_empty() || name != l.name || l.name.chars().count() > 60 {
-            return fail(format!("{at}.layers[{i}].name"), "tabakanın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 60 karakter");
+            return fail(
+                format!("{at}.layers[{i}].name"),
+                "tabakanın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 60 karakter",
+            );
         }
         if !(l.thickness.is_finite() && l.thickness > 0.0 && l.thickness <= 2.0) {
-            return fail(format!("{at}.layers[{i}].thickness"), "tabakanın kalınlığı 0'dan büyük, en çok 2 m olmalı");
+            return fail(
+                format!("{at}.layers[{i}].thickness"),
+                "tabakanın kalınlığı 0'dan büyük, en çok 2 m olmalı",
+            );
         }
-        if l.material.as_ref().is_some_and(|m| m.trim().is_empty() || m.chars().count() > 64) {
-            return fail(format!("{at}.layers[{i}].material"), "malzeme kodu boş olmamalı, en çok 64 karakter");
+        if l.material
+            .as_ref()
+            .is_some_and(|m| m.trim().is_empty() || m.chars().count() > 64)
+        {
+            return fail(
+                format!("{at}.layers[{i}].material"),
+                "malzeme kodu boş olmamalı, en çok 64 karakter",
+            );
         }
         depth += l.thickness;
     }
     if depth > MAX_PAVEMENT_DEPTH {
-        return fail(format!("{at}.layers"), "üstyapının toplam kalınlığı en çok 5 m olur");
+        return fail(
+            format!("{at}.layers"),
+            "üstyapının toplam kalınlığı en çok 5 m olur",
+        );
     }
     if let PavementEdge::Slope { h } = p.edge
         && !(h.is_finite() && h > 0.0 && h <= 100.0)
     {
-        return fail(format!("{at}.edge.h"), "kenar şevi 0'dan büyük, en çok 100 olmalı (yatay / 1 düşey)");
+        return fail(
+            format!("{at}.edge.h"),
+            "kenar şevi 0'dan büyük, en çok 100 olmalı (yatay / 1 düşey)",
+        );
     }
     None
 }
@@ -1120,21 +1185,30 @@ pub(super) fn sections_problem(road: &RoadSettings) -> Option<(String, String)> 
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     let list = &road.sections;
     if list.len() > MAX_SECTION_SETS {
-        return fail("sections".into(), &format!("en çok {MAX_SECTION_SETS} kesit takımı olur"));
+        return fail(
+            "sections".into(),
+            &format!("en çok {MAX_SECTION_SETS} kesit takımı olur"),
+        );
     }
     let mut ids = std::collections::BTreeSet::new();
     let mut names = std::collections::BTreeSet::new();
     for (i, s) in list.iter().enumerate() {
         let at = |field: &str| format!("sections[{i}].{field}");
         if !word_ok(&s.id) {
-            return fail(at("id"), "kesit takımının kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+            return fail(
+                at("id"),
+                "kesit takımının kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı",
+            );
         }
         if !ids.insert(s.id.as_str()) {
             return fail(at("id"), "bu kimlikte başka bir kesit takımı var");
         }
         let name = s.name.trim();
         if name.is_empty() || name != s.name || s.name.chars().count() > 120 {
-            return fail(at("name"), "kesit takımının adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            return fail(
+                at("name"),
+                "kesit takımının adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter",
+            );
         }
         if !names.insert(name.to_lowercase()) {
             return fail(at("name"), "bu adda başka bir kesit takımı var");
@@ -1142,7 +1216,10 @@ pub(super) fn sections_problem(road: &RoadSettings) -> Option<(String, String)> 
         match road.alignments.iter().find(|a| a.id == s.alignment) {
             None => return fail(at("alignment"), "kesit takımının aksı projede yok"),
             Some(a) if a.offset_of.is_some() => {
-                return fail(at("alignment"), "kesit takımı yalnız PI'larıyla kurulan aksa bağlanır");
+                return fail(
+                    at("alignment"),
+                    "kesit takımı yalnız PI'larıyla kurulan aksa bağlanır",
+                );
             }
             _ => {}
         }
@@ -1155,14 +1232,25 @@ pub(super) fn sections_problem(road: &RoadSettings) -> Option<(String, String)> 
                 _ => {}
             }
         }
-        if s.template.as_ref().is_some_and(|t| road.templates.iter().all(|q| q.id != *t)) {
+        if s.template
+            .as_ref()
+            .is_some_and(|t| road.templates.iter().all(|q| q.id != *t))
+        {
             return fail(at("template"), "kesit takımının tip kesiti projede yok");
         }
         if let Some(e) = &s.superelevation {
             match road.superelevations.iter().find(|q| q.id == *e) {
-                None => return fail(at("superelevation"), "kesit takımının dever çizelgesi projede yok"),
+                None => {
+                    return fail(
+                        at("superelevation"),
+                        "kesit takımının dever çizelgesi projede yok",
+                    );
+                }
                 Some(q) if q.alignment != s.alignment => {
-                    return fail(at("superelevation"), "dever çizelgesi kesit takımının aksında değil");
+                    return fail(
+                        at("superelevation"),
+                        "dever çizelgesi kesit takımının aksında değil",
+                    );
                 }
                 _ => {}
             }
@@ -1172,13 +1260,25 @@ pub(super) fn sections_problem(road: &RoadSettings) -> Option<(String, String)> 
         }
         for (field, v) in [("left", s.left), ("right", s.right)] {
             if !(v.is_finite() && v > 0.0 && v <= MAX_SWATH) {
-                return fail(at(field), &format!("şerit genişliği 0'dan büyük, en çok {MAX_SWATH} m olmalı"));
+                return fail(
+                    at(field),
+                    &format!("şerit genişliği 0'dan büyük, en çok {MAX_SWATH} m olmalı"),
+                );
             }
         }
         match &s.stations {
-            SectionStations::Range { from, to, every, curve, .. } => {
+            SectionStations::Range {
+                from,
+                to,
+                every,
+                curve,
+                ..
+            } => {
                 if !(from.is_finite() && to.is_finite() && from < to) {
-                    return fail(at("stations.from"), "km aralığının başı sonundan küçük olmalı");
+                    return fail(
+                        at("stations.from"),
+                        "km aralığının başı sonundan küçük olmalı",
+                    );
                 }
                 if !(every.is_finite() && *every > 0.0) {
                     return fail(at("stations.every"), "km aralığı 0'dan büyük olmalı");
@@ -1187,12 +1287,24 @@ pub(super) fn sections_problem(road: &RoadSettings) -> Option<(String, String)> 
                     return fail(at("stations.curve"), "kurptaki aralık 0'dan büyük olmalı");
                 }
             }
-            SectionStations::Breaks { from, to, tolerance, most, .. } => {
+            SectionStations::Breaks {
+                from,
+                to,
+                tolerance,
+                most,
+                ..
+            } => {
                 if !(from.is_finite() && to.is_finite() && from < to) {
-                    return fail(at("stations.from"), "km aralığının başı sonundan küçük olmalı");
+                    return fail(
+                        at("stations.from"),
+                        "km aralığının başı sonundan küçük olmalı",
+                    );
                 }
                 if !(tolerance.is_finite() && *tolerance >= 0.0) {
-                    return fail(at("stations.tolerance"), "kot toleransı eksi olmayan bir sayı olmalı");
+                    return fail(
+                        at("stations.tolerance"),
+                        "kot toleransı eksi olmayan bir sayı olmalı",
+                    );
                 }
                 if most.is_some_and(|m| !(m.is_finite() && m > 0.0)) {
                     return fail(at("stations.most"), "en büyük aralık 0'dan büyük olmalı");
@@ -1203,7 +1315,10 @@ pub(super) fn sections_problem(road: &RoadSettings) -> Option<(String, String)> 
             }
             SectionStations::Stations { stations } => {
                 if stations.is_empty() || stations.len() > MAX_SECTION_STATIONS {
-                    return fail(at("stations.stations"), &format!("1 ile {MAX_SECTION_STATIONS} arası km olur"));
+                    return fail(
+                        at("stations.stations"),
+                        &format!("1 ile {MAX_SECTION_STATIONS} arası km olur"),
+                    );
                 }
                 if !stations.iter().all(|v| v.is_finite()) {
                     return fail(at("stations.stations"), "km'ler sonlu olmalı");
@@ -1211,7 +1326,10 @@ pub(super) fn sections_problem(road: &RoadSettings) -> Option<(String, String)> 
             }
             SectionStations::Lines { uids } => {
                 if uids.is_empty() || uids.len() > MAX_SECTION_STATIONS {
-                    return fail(at("stations.uids"), &format!("1 ile {MAX_SECTION_STATIONS} arası çizgi olur"));
+                    return fail(
+                        at("stations.uids"),
+                        &format!("1 ile {MAX_SECTION_STATIONS} arası çizgi olur"),
+                    );
                 }
                 if let Some(words) = list_problem(uids) {
                     return fail(at("stations.uids"), &words);
@@ -1228,21 +1346,30 @@ pub(super) fn superelevations_problem(road: &RoadSettings) -> Option<(String, St
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     let list = &road.superelevations;
     if list.len() > MAX_SUPERELEVATIONS {
-        return fail("superelevations".into(), &format!("en çok {MAX_SUPERELEVATIONS} dever çizelgesi olur"));
+        return fail(
+            "superelevations".into(),
+            &format!("en çok {MAX_SUPERELEVATIONS} dever çizelgesi olur"),
+        );
     }
     let mut ids = std::collections::BTreeSet::new();
     let mut names = std::collections::BTreeSet::new();
     for (i, d) in list.iter().enumerate() {
         let at = |field: &str| format!("superelevations[{i}].{field}");
         if !word_ok(&d.id) {
-            return fail(at("id"), "dever çizelgesinin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+            return fail(
+                at("id"),
+                "dever çizelgesinin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı",
+            );
         }
         if !ids.insert(d.id.as_str()) {
             return fail(at("id"), "bu kimlikte başka bir dever çizelgesi var");
         }
         let name = d.name.trim();
         if name.is_empty() || name != d.name || d.name.chars().count() > 120 {
-            return fail(at("name"), "dever çizelgesinin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            return fail(
+                at("name"),
+                "dever çizelgesinin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter",
+            );
         }
         if !names.insert(name.to_lowercase()) {
             return fail(at("name"), "bu adda başka bir dever çizelgesi var");
@@ -1250,33 +1377,59 @@ pub(super) fn superelevations_problem(road: &RoadSettings) -> Option<(String, St
         match road.alignments.iter().find(|a| a.id == d.alignment) {
             None => return fail(at("alignment"), "dever çizelgesinin aksı projede yok"),
             Some(a) if a.offset_of.is_some() => {
-                return fail(at("alignment"), "dever çizelgesi yalnız PI'larıyla kurulan aksa bağlanır");
+                return fail(
+                    at("alignment"),
+                    "dever çizelgesi yalnız PI'larıyla kurulan aksa bağlanır",
+                );
             }
             _ => {}
         }
-        for (field, v) in [("normalLeft", d.normal_left), ("normalRight", d.normal_right)] {
+        for (field, v) in [
+            ("normalLeft", d.normal_left),
+            ("normalRight", d.normal_right),
+        ] {
             if !(v.is_finite() && v.abs() <= 1.0) {
-                return fail(at(field), "normal enine eğim oranla yazılır (−0,025 %−2,5'tir), en çok 1 (%100) olur");
+                return fail(
+                    at(field),
+                    "normal enine eğim oranla yazılır (−0,025 %−2,5'tir), en çok 1 (%100) olur",
+                );
             }
         }
         match &d.method {
             SuperelevationMethod::Curves { curves } => {
                 if curves.is_empty() || curves.len() > MAX_SUPERELEVATION_ROWS {
-                    return fail(at("method.curves"), &format!("1 ile {MAX_SUPERELEVATION_ROWS} arası kurp olur"));
+                    return fail(
+                        at("method.curves"),
+                        &format!("1 ile {MAX_SUPERELEVATION_ROWS} arası kurp olur"),
+                    );
                 }
                 for (j, c) in curves.iter().enumerate() {
-                    let ok = [c.rate, c.runoff, c.on_tangent, c.widening].iter().all(|v| v.is_finite());
+                    let ok = [c.rate, c.runoff, c.on_tangent, c.widening]
+                        .iter()
+                        .all(|v| v.is_finite());
                     if !word_ok(&c.pi) || !ok {
-                        return fail(at(&format!("method.curves[{j}]")), "kurbun PI'si bir sözcük, değerleri sonlu sayılar olmalı");
+                        return fail(
+                            at(&format!("method.curves[{j}]")),
+                            "kurbun PI'si bir sözcük, değerleri sonlu sayılar olmalı",
+                        );
                     }
                 }
             }
             SuperelevationMethod::Stations { rows } => {
                 if rows.is_empty() || rows.len() > MAX_SUPERELEVATION_ROWS {
-                    return fail(at("method.rows"), &format!("1 ile {MAX_SUPERELEVATION_ROWS} arası satır olur"));
+                    return fail(
+                        at("method.rows"),
+                        &format!("1 ile {MAX_SUPERELEVATION_ROWS} arası satır olur"),
+                    );
                 }
-                if !rows.iter().all(|r| r.station.is_finite() && r.left.is_finite() && r.right.is_finite()) {
-                    return fail(at("method.rows"), "satırların km'si ve eğimleri sonlu sayılar olmalı");
+                if !rows
+                    .iter()
+                    .all(|r| r.station.is_finite() && r.left.is_finite() && r.right.is_finite())
+                {
+                    return fail(
+                        at("method.rows"),
+                        "satırların km'si ve eğimleri sonlu sayılar olmalı",
+                    );
                 }
             }
         }
@@ -1301,18 +1454,41 @@ pub(super) fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {
         // the numbers rising.
         let day = |d: &str| {
             let b = d.as_bytes();
-            b.len() == 10 && b.iter().enumerate().all(|(k, c)| if k == 4 || k == 7 { *c == b'-' } else { c.is_ascii_digit() })
+            b.len() == 10
+                && b.iter().enumerate().all(|(k, c)| {
+                    if k == 4 || k == 7 {
+                        *c == b'-'
+                    } else {
+                        c.is_ascii_digit()
+                    }
+                })
         };
         let approval = |a: &HaulApprovalDef, path: String| -> Option<(String, String)> {
-            if !day(&a.at) || a.ended.as_ref().and_then(|e| e.at.as_deref()).is_some_and(|d| !day(d)) {
+            if !day(&a.at)
+                || a.ended
+                    .as_ref()
+                    .and_then(|e| e.at.as_deref())
+                    .is_some_and(|d| !day(d))
+            {
                 return fail(path, "onay ve bitiş günleri YYYY-AA-GG biçiminde olmalı");
             }
-            if a.note.as_ref().is_some_and(|n| n.chars().count() > 500) || a.ended.as_ref().and_then(|e| e.note.as_ref()).is_some_and(|n| n.chars().count() > 500) {
+            if a.note.as_ref().is_some_and(|n| n.chars().count() > 500)
+                || a.ended
+                    .as_ref()
+                    .and_then(|e| e.note.as_ref())
+                    .is_some_and(|n| n.chars().count() > 500)
+            {
                 return fail(path, "onay ve bitiş notları en çok 500 karakter olur");
             }
-            let figures = [a.moment, a.moved].into_iter().chain(a.total).chain(a.sites.iter().flat_map(|s| [s.capacity, s.used]));
+            let figures = [a.moment, a.moved]
+                .into_iter()
+                .chain(a.total)
+                .chain(a.sites.iter().flat_map(|s| [s.capacity, s.used]));
             if a.number == 0 || a.sites.len() > 1000 || !figures.into_iter().all(f64::is_finite) {
-                return fail(path, "onaylı planın numarası 1'den başlar, sayıları sonlu, en çok 1000 alanı olur");
+                return fail(
+                    path,
+                    "onaylı planın numarası 1'den başlar, sayıları sonlu, en çok 1000 alanı olur",
+                );
             }
             None
         };
@@ -1321,7 +1497,10 @@ pub(super) fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {
                 return Some(p);
             }
             if a.ended.is_some() {
-                return fail(at("approved"), "geçerli onayın bitişi olmaz; biten onay geçmişe yazılır");
+                return fail(
+                    at("approved"),
+                    "geçerli onayın bitişi olmaz; biten onay geçmişe yazılır",
+                );
             }
         }
         if h.history.len() > 200 {
@@ -1334,22 +1513,34 @@ pub(super) fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {
                 return Some(p);
             }
             if a.ended.is_none() || a.number <= last {
-                return fail(path, "geçmişteki onayların bitişi yazılır, numaraları artarak gider");
+                return fail(
+                    path,
+                    "geçmişteki onayların bitişi yazılır, numaraları artarak gider",
+                );
             }
             last = a.number;
         }
         if h.approved.as_ref().is_some_and(|a| a.number <= last) {
-            return fail(at("approved"), "geçerli onayın numarası geçmiştekilerden büyük olur");
+            return fail(
+                at("approved"),
+                "geçerli onayın numarası geçmiştekilerden büyük olur",
+            );
         }
         if !word_ok(&h.id) {
-            return fail(at("id"), "Brüknerin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+            return fail(
+                at("id"),
+                "Brüknerin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı",
+            );
         }
         if !ids.insert(h.id.as_str()) {
             return fail(at("id"), "bu kimlikte başka bir Brükner var");
         }
         let name = h.name.trim();
         if name.is_empty() || name != h.name || h.name.chars().count() > 120 {
-            return fail(at("name"), "Brüknerin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            return fail(
+                at("name"),
+                "Brüknerin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter",
+            );
         }
         if !names.insert(name.to_lowercase()) {
             return fail(at("name"), "bu adda başka bir Brükner var");
@@ -1360,17 +1551,28 @@ pub(super) fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {
         if !h.balance.is_finite() || h.balance.abs() > 1e12 {
             return fail(at("balance"), "denge çizgisi sonlu bir hacim olmalı");
         }
-        if h.free.is_some_and(|f| !(f.is_finite() && f > 0.0 && f <= 100_000.0)) {
-            return fail(at("free"), "serbest taşıma uzaklığı 0'dan büyük, en çok 100 km olur");
+        if h.free
+            .is_some_and(|f| !(f.is_finite() && f > 0.0 && f <= 100_000.0))
+        {
+            return fail(
+                at("free"),
+                "serbest taşıma uzaklığı 0'dan büyük, en çok 100 km olur",
+            );
         }
         if h.sites.len() > MAX_HAUL_SITES {
-            return fail(at("sites"), &format!("en çok {MAX_HAUL_SITES} ödünç ve döküm alanı olur"));
+            return fail(
+                at("sites"),
+                &format!("en çok {MAX_HAUL_SITES} ödünç ve döküm alanı olur"),
+            );
         }
         for (j, site) in h.sites.iter().enumerate() {
             let path = at(&format!("sites[{j}]"));
             let nm = site.name.trim();
             if nm.is_empty() || nm != site.name || site.name.chars().count() > 120 {
-                return fail(path, "alanın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+                return fail(
+                    path,
+                    "alanın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter",
+                );
             }
             if !site.station.is_finite() {
                 return fail(path, "alanın km'si sonlu olmalı");
@@ -1384,61 +1586,103 @@ pub(super) fn hauls_problem(road: &RoadSettings) -> Option<(String, String)> {
                     return fail(path, "alanın konumu sonlu olmalı");
                 }
                 if h.network.is_none() {
-                    return fail(path, "konumu verilen alana taşıma ağıyla gidilir; önce taşıma ağının katmanlarını verin");
+                    return fail(
+                        path,
+                        "konumu verilen alana taşıma ağıyla gidilir; önce taşıma ağının katmanlarını verin",
+                    );
                 }
             }
         }
         if let Some(n) = &h.network {
-            if n.layers.is_empty() || n.layers.len() > 20 || n.layers.iter().any(|l| l.is_empty() || l.chars().count() > 128) {
+            if n.layers.is_empty()
+                || n.layers.len() > 20
+                || n.layers
+                    .iter()
+                    .any(|l| l.is_empty() || l.chars().count() > 128)
+            {
                 return fail(at("network"), "taşıma ağının 1 ile 20 arası katmanı olur");
             }
             if !(n.connect.is_finite() && n.connect > 0.0 && n.connect <= 50.0) {
-                return fail(at("network"), "bağlantı toleransı 0'dan büyük, en çok 50 m olur");
+                return fail(
+                    at("network"),
+                    "bağlantı toleransı 0'dan büyük, en çok 50 m olur",
+                );
             }
-            if n.reach.is_some_and(|r| !(r.is_finite() && r > 0.0 && r <= 200.0)) {
-                return fail(at("network"), "aksa erişim uzaklığı 0'dan büyük, en çok 200 m olur");
+            if n.reach
+                .is_some_and(|r| !(r.is_finite() && r > 0.0 && r <= 200.0))
+            {
+                return fail(
+                    at("network"),
+                    "aksa erişim uzaklığı 0'dan büyük, en çok 200 m olur",
+                );
             }
         }
         if let Some(c) = &h.cost {
             let cur = c.currency.trim();
             if cur.is_empty() || cur != c.currency || c.currency.chars().count() > 12 {
-                return fail(at("cost"), "para birimi boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 12 karakter");
+                return fail(
+                    at("cost"),
+                    "para birimi boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 12 karakter",
+                );
             }
-            if [c.overhaul, c.waste, c.borrow].into_iter().flatten().any(|p| !(p.is_finite() && (0.0..=1e9).contains(&p))) {
+            if [c.overhaul, c.waste, c.borrow]
+                .into_iter()
+                .flatten()
+                .any(|p| !(p.is_finite() && (0.0..=1e9).contains(&p)))
+            {
                 return fail(at("cost"), "birim fiyat 0 ya da daha büyük, sonlu olmalı");
             }
-            if c.payload.is_some_and(|p| !(p.is_finite() && p > 0.0 && p <= 1000.0)) {
+            if c.payload
+                .is_some_and(|p| !(p.is_finite() && p > 0.0 && p <= 1000.0))
+            {
                 return fail(at("cost"), "kamyon yükü 0'dan büyük, en çok 1000 m³ olur");
             }
         }
         if h.unsuitable.len() > MAX_HAUL_SITES {
-            return fail(at("unsuitable"), &format!("en çok {MAX_HAUL_SITES} uygunsuz malzeme satırı olur"));
+            return fail(
+                at("unsuitable"),
+                &format!("en çok {MAX_HAUL_SITES} uygunsuz malzeme satırı olur"),
+            );
         }
         for (j, u) in h.unsuitable.iter().enumerate() {
             let path = at(&format!("unsuitable[{j}]"));
             if !(u.from.is_finite() && u.to.is_finite() && u.to > u.from) {
-                return fail(path, "uygunsuz malzeme satırının sonu başından sonra olmalı");
+                return fail(
+                    path,
+                    "uygunsuz malzeme satırının sonu başından sonra olmalı",
+                );
             }
             if !(u.share.is_finite() && (0.0..=100.0).contains(&u.share)) {
                 return fail(path, "uygunsuz malzemenin payı yüzde 0 ile 100 arası olur");
             }
-            if h.unsuitable[..j].iter().any(|o| o.from < u.to && u.from < o.to) {
+            if h.unsuitable[..j]
+                .iter()
+                .any(|o| o.from < u.to && u.from < o.to)
+            {
                 return fail(path, "uygunsuz malzeme satırları kesişmemeli");
             }
         }
         if h.barriers.len() > MAX_HAUL_SITES {
-            return fail(at("barriers"), &format!("en çok {MAX_HAUL_SITES} engel olur"));
+            return fail(
+                at("barriers"),
+                &format!("en çok {MAX_HAUL_SITES} engel olur"),
+            );
         }
         for (j, b) in h.barriers.iter().enumerate() {
             let path = at(&format!("barriers[{j}]"));
             let nm = b.name.trim();
             if nm.is_empty() || nm != b.name || b.name.chars().count() > 120 {
-                return fail(path, "engelin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+                return fail(
+                    path,
+                    "engelin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter",
+                );
             }
             if !b.station.is_finite() {
                 return fail(path, "engelin km'si sonlu olmalı");
             }
-            if b.detour.is_some_and(|d| !(d.is_finite() && (0.0..=100_000.0).contains(&d))) {
+            if b.detour
+                .is_some_and(|d| !(d.is_finite() && (0.0..=100_000.0).contains(&d)))
+            {
                 return fail(path, "dolaşma uzunluğu 0 ile 100 km arası olur");
             }
         }
@@ -1450,21 +1694,30 @@ pub(super) fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     let list = &road.volumes;
     if list.len() > MAX_VOLUMES {
-        return fail("volumes".into(), &format!("en çok {MAX_VOLUMES} kübaj hesabı olur"));
+        return fail(
+            "volumes".into(),
+            &format!("en çok {MAX_VOLUMES} kübaj hesabı olur"),
+        );
     }
     let mut ids = std::collections::BTreeSet::new();
     let mut names = std::collections::BTreeSet::new();
     for (i, v) in list.iter().enumerate() {
         let at = |field: &str| format!("volumes[{i}].{field}");
         if !word_ok(&v.id) {
-            return fail(at("id"), "kübaj hesabının kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+            return fail(
+                at("id"),
+                "kübaj hesabının kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı",
+            );
         }
         if !ids.insert(v.id.as_str()) {
             return fail(at("id"), "bu kimlikte başka bir kübaj hesabı var");
         }
         let name = v.name.trim();
         if name.is_empty() || name != v.name || v.name.chars().count() > 120 {
-            return fail(at("name"), "kübaj hesabının adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            return fail(
+                at("name"),
+                "kübaj hesabının adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter",
+            );
         }
         if !names.insert(name.to_lowercase()) {
             return fail(at("name"), "bu adda başka bir kübaj hesabı var");
@@ -1473,7 +1726,10 @@ pub(super) fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
             return fail(at("corridor"), "kübaj hesabının koridoru projede yok");
         }
         if v.factors.len() > MAX_VOLUME_FACTORS {
-            return fail(at("factors"), &format!("en çok {MAX_VOLUME_FACTORS} katsayı satırı olur"));
+            return fail(
+                at("factors"),
+                &format!("en çok {MAX_VOLUME_FACTORS} katsayı satırı olur"),
+            );
         }
         for (j, f) in v.factors.iter().enumerate() {
             let path = at(&format!("factors[{j}]"));
@@ -1481,21 +1737,37 @@ pub(super) fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
                 return fail(path, "katsayı satırının sonu başından sonra olmalı");
             }
             if j > 0 && f.from < v.factors[j - 1].to {
-                return fail(path, "katsayı satırları artan km'lerle, birbirine binmeden yazılır");
+                return fail(
+                    path,
+                    "katsayı satırları artan km'lerle, birbirine binmeden yazılır",
+                );
             }
-            if [f.cut, f.fill].iter().flatten().any(|k| !(k.is_finite() && *k > 0.0 && *k <= 10.0)) {
+            if [f.cut, f.fill]
+                .iter()
+                .flatten()
+                .any(|k| !(k.is_finite() && *k > 0.0 && *k <= 10.0))
+            {
                 return fail(path, "katsayı 0'dan büyük, en çok 10 olur");
             }
             // Docs/adr/0957: densities make the factors; a row has one or the other.
             if let Some(d) = &f.densities {
                 if f.cut.is_some() || f.fill.is_some() {
-                    return fail(path, "yoğunluk verilen satıra katsayı yazılmaz; katsayılar yoğunluklardan çıkar");
+                    return fail(
+                        path,
+                        "yoğunluk verilen satıra katsayı yazılmaz; katsayılar yoğunluklardan çıkar",
+                    );
                 }
-                if [d.bank, d.loose, d.compacted].iter().any(|r| !(r.is_finite() && *r >= 0.5 && *r <= 4.0)) {
+                if [d.bank, d.loose, d.compacted]
+                    .iter()
+                    .any(|r| !(r.is_finite() && *r >= 0.5 && *r <= 4.0))
+                {
                     return fail(path, "yoğunluk 0,5 ile 4 t/m³ arası olur");
                 }
             }
-            if f.source.as_ref().is_some_and(|t| t.trim().is_empty() || t.chars().count() > 200) {
+            if f.source
+                .as_ref()
+                .is_some_and(|t| t.trim().is_empty() || t.chars().count() > 200)
+            {
                 return fail(path, "katsayının kaynağı boş olmaz, en çok 200 karakter");
             }
         }
@@ -1503,26 +1775,52 @@ pub(super) fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
         // Docs/adr/0974: the grid's cell, the grid method's only.
         match (v.method, v.cell) {
             (VolumeMethod::Grid, Some(c)) if c.is_finite() && (0.01..=1000.0).contains(&c) => {}
-            (VolumeMethod::Grid, _) => return fail(at("cell"), "ızgara yöntemi 0,01 ile 1000 m arası bir hücre boyu (cell) ister"),
+            (VolumeMethod::Grid, _) => {
+                return fail(
+                    at("cell"),
+                    "ızgara yöntemi 0,01 ile 1000 m arası bir hücre boyu (cell) ister",
+                );
+            }
             (_, Some(_)) => return fail(at("cell"), "hücre boyu yalnız ızgara yönteminin"),
             _ => {}
         }
         if v.curve && v.method != VolumeMethod::EndArea {
-            return fail(at("curve"), "kurp düzeltmesi yalnız ortalama alan yönteminde olur");
+            return fail(
+                at("curve"),
+                "kurp düzeltmesi yalnız ortalama alan yönteminde olur",
+            );
         }
         if !sections && (!v.strip.is_empty() || v.bench.is_some()) {
-            return fail(at("method"), "sıyırma ve diş kazısı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır");
+            return fail(
+                at("method"),
+                "sıyırma ve diş kazısı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır",
+            );
         }
         if let Some(r) = v.rule {
             if !sections && r != VolumeRule::RoadGround {
-                return fail(at("rule"), &format!("{} kuralı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır", r.words()));
+                return fail(
+                    at("rule"),
+                    &format!(
+                        "{} kuralı yalnız kesit yöntemleriyle (ortalama alan, prizmoidal) hesaplanır",
+                        r.words()
+                    ),
+                );
             }
             if r.topsoil() && v.strip.is_empty() {
-                return fail(at("rule"), &format!("{} kuralı bitkisel toprak sıyırması ister: önce sıyırma kalınlıklarını (strip) verin", r.words()));
+                return fail(
+                    at("rule"),
+                    &format!(
+                        "{} kuralı bitkisel toprak sıyırması ister: önce sıyırma kalınlıklarını (strip) verin",
+                        r.words()
+                    ),
+                );
             }
         }
         if v.strip.len() > MAX_VOLUME_FACTORS {
-            return fail(at("strip"), &format!("en çok {MAX_VOLUME_FACTORS} sıyırma satırı olur"));
+            return fail(
+                at("strip"),
+                &format!("en çok {MAX_VOLUME_FACTORS} sıyırma satırı olur"),
+            );
         }
         for (j, f) in v.strip.iter().enumerate() {
             let path = at(&format!("strip[{j}]"));
@@ -1530,20 +1828,41 @@ pub(super) fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
                 return fail(path, "sıyırma satırının sonu başından sonra olmalı");
             }
             if j > 0 && f.from < v.strip[j - 1].to {
-                return fail(path, "sıyırma satırları artan km'lerle, birbirine binmeden yazılır");
+                return fail(
+                    path,
+                    "sıyırma satırları artan km'lerle, birbirine binmeden yazılır",
+                );
             }
             if !(f.depth.is_finite() && f.depth > 0.0 && f.depth <= 5.0) {
-                return fail(path, "bitkisel toprak kalınlığı 0'dan büyük, en çok 5 m olur");
+                return fail(
+                    path,
+                    "bitkisel toprak kalınlığı 0'dan büyük, en çok 5 m olur",
+                );
             }
         }
         if let Some(b) = &v.bench
-            && !(b.slope.is_finite() && b.slope > 0.0 && b.slope <= 10.0 && b.height.is_finite() && b.height > 0.0 && b.height <= 10.0)
+            && !(b.slope.is_finite()
+                && b.slope > 0.0
+                && b.slope <= 10.0
+                && b.height.is_finite()
+                && b.height > 0.0
+                && b.height <= 10.0)
         {
-            return fail(at("bench"), "diş kazısının eğimi oranla 0'dan büyük, en çok 10 (%1000); basamak yüksekliği 0'dan büyük, en çok 10 m olur");
+            return fail(
+                at("bench"),
+                "diş kazısının eğimi oranla 0'dan büyük, en çok 10 (%1000); basamak yüksekliği 0'dan büyük, en çok 10 m olur",
+            );
         }
         let is_day = |d: &str| {
             let day = d.as_bytes();
-            day.len() == 10 && day.iter().enumerate().all(|(i, c)| if i == 4 || i == 7 { *c == b'-' } else { c.is_ascii_digit() })
+            day.len() == 10
+                && day.iter().enumerate().all(|(i, c)| {
+                    if i == 4 || i == 7 {
+                        *c == b'-'
+                    } else {
+                        c.is_ascii_digit()
+                    }
+                })
         };
         let approval = |a: &VolumeApprovalDef, path: String| -> Option<(String, String)> {
             if !is_day(&a.at) {
@@ -1552,9 +1871,19 @@ pub(super) fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
             if a.note.as_ref().is_some_and(|n| n.chars().count() > 500) {
                 return fail(path, "onay notu en çok 500 karakter olur");
             }
-            let numbers = [a.cut, a.fill, a.factored_cut, a.factored_fill].into_iter().chain(a.strip).chain(a.bench);
-            if a.rows.len() > MAX_VOLUME_ROWS || !numbers.chain(a.rows.iter().flatten().copied()).all(f64::is_finite) {
-                return fail(path, &format!("onaylı kübajın sayıları sonlu, en çok {MAX_VOLUME_ROWS} satır olur"));
+            let numbers = [a.cut, a.fill, a.factored_cut, a.factored_fill]
+                .into_iter()
+                .chain(a.strip)
+                .chain(a.bench);
+            if a.rows.len() > MAX_VOLUME_ROWS
+                || !numbers
+                    .chain(a.rows.iter().flatten().copied())
+                    .all(f64::is_finite)
+            {
+                return fail(
+                    path,
+                    &format!("onaylı kübajın sayıları sonlu, en çok {MAX_VOLUME_ROWS} satır olur"),
+                );
             }
             if let Some(e) = &a.ended {
                 if e.at.as_deref().is_some_and(|d| !is_day(d)) {
@@ -1583,11 +1912,17 @@ pub(super) fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
                 return Some(p);
             }
             if a.ended.is_some() {
-                return fail(at("approved"), "geçerli onayın bitişi olmaz; biten onay geçmişe yazılır");
+                return fail(
+                    at("approved"),
+                    "geçerli onayın bitişi olmaz; biten onay geçmişe yazılır",
+                );
             }
         }
         if v.history.len() > MAX_VOLUME_HISTORY {
-            return fail(at("history"), &format!("onay geçmişi en çok {MAX_VOLUME_HISTORY} onay olur"));
+            return fail(
+                at("history"),
+                &format!("onay geçmişi en çok {MAX_VOLUME_HISTORY} onay olur"),
+            );
         }
         let mut last = 0;
         for (j, a) in v.history.iter().enumerate() {
@@ -1603,8 +1938,14 @@ pub(super) fn volumes_problem(road: &RoadSettings) -> Option<(String, String)> {
             }
             last = last.max(a.number);
         }
-        if v.approved.as_ref().is_some_and(|a| a.number != 0 && a.number <= last) {
-            return fail(at("approved"), "geçerli onayın numarası geçmiştekilerden büyük olur");
+        if v.approved
+            .as_ref()
+            .is_some_and(|a| a.number != 0 && a.number <= last)
+        {
+            return fail(
+                at("approved"),
+                "geçerli onayın numarası geçmiştekilerden büyük olur",
+            );
         }
     }
     None
@@ -1617,33 +1958,49 @@ pub(super) fn corridors_problem(road: &RoadSettings) -> Option<(String, String)>
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     let list = &road.corridors;
     if list.len() > MAX_CORRIDORS {
-        return fail("corridors".into(), &format!("en çok {MAX_CORRIDORS} koridor olur"));
+        return fail(
+            "corridors".into(),
+            &format!("en çok {MAX_CORRIDORS} koridor olur"),
+        );
     }
     let mut ids = std::collections::BTreeSet::new();
     let mut names = std::collections::BTreeSet::new();
     for (i, c) in list.iter().enumerate() {
         let at = |field: &str| format!("corridors[{i}].{field}");
         if !word_ok(&c.id) {
-            return fail(at("id"), "koridorun kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+            return fail(
+                at("id"),
+                "koridorun kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı",
+            );
         }
         if !ids.insert(c.id.as_str()) {
             return fail(at("id"), "bu kimlikte başka bir koridor var");
         }
         let name = c.name.trim();
         if name.is_empty() || name != c.name || c.name.chars().count() > 120 {
-            return fail(at("name"), "koridorun adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            return fail(
+                at("name"),
+                "koridorun adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter",
+            );
         }
         if !names.insert(name.to_lowercase()) {
             return fail(at("name"), "bu adda başka bir koridor var");
         }
         match road.alignments.iter().find(|a| a.id == c.alignment) {
             None => return fail(at("alignment"), "koridorun aksı projede yok"),
-            Some(a) if a.offset_of.is_some() => return fail(at("alignment"), "koridor yalnız PI'larıyla kurulan aksa bağlanır"),
+            Some(a) if a.offset_of.is_some() => {
+                return fail(
+                    at("alignment"),
+                    "koridor yalnız PI'larıyla kurulan aksa bağlanır",
+                );
+            }
             _ => {}
         }
         match road.profiles.iter().find(|q| q.id == c.profile) {
             None => return fail(at("profile"), "koridorun boykesiti projede yok"),
-            Some(q) if q.alignment != c.alignment => return fail(at("profile"), "boykesit koridorun aksında değil"),
+            Some(q) if q.alignment != c.alignment => {
+                return fail(at("profile"), "boykesit koridorun aksında değil");
+            }
             _ => {}
         }
         if !word_ok(&c.surface) {
@@ -1651,16 +2008,27 @@ pub(super) fn corridors_problem(road: &RoadSettings) -> Option<(String, String)>
         }
         if let Some(e) = &c.superelevation {
             match road.superelevations.iter().find(|q| q.id == *e) {
-                None => return fail(at("superelevation"), "koridorun dever çizelgesi projede yok"),
+                None => {
+                    return fail(
+                        at("superelevation"),
+                        "koridorun dever çizelgesi projede yok",
+                    );
+                }
                 Some(q) if q.alignment != c.alignment => {
-                    return fail(at("superelevation"), "dever çizelgesi koridorun aksında değil");
+                    return fail(
+                        at("superelevation"),
+                        "dever çizelgesi koridorun aksında değil",
+                    );
                 }
                 _ => {}
             }
         }
         for (field, v) in [("left", c.left), ("right", c.right)] {
             if !(v.is_finite() && v > 0.0 && v <= MAX_SWATH) {
-                return fail(at(field), &format!("arama genişliği 0'dan büyük, en çok {MAX_SWATH} m olur"));
+                return fail(
+                    at(field),
+                    &format!("arama genişliği 0'dan büyük, en çok {MAX_SWATH} m olur"),
+                );
             }
         }
         for (field, v) in [("tangent", c.tangent), ("curve", c.curve)] {
@@ -1668,19 +2036,32 @@ pub(super) fn corridors_problem(road: &RoadSettings) -> Option<(String, String)>
                 return fail(at(field), "aralık 0'dan büyük, en çok 1000 m olur");
             }
         }
-        if c.sag.is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 10.0)) {
+        if c.sag
+            .is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 10.0))
+        {
             return fail(at("sag"), "sapma toleransı 0'dan büyük, en çok 10 m olur");
         }
         if c.stations.len() > MAX_SECTION_STATIONS || !c.stations.iter().all(|s| s.is_finite()) {
-            return fail(at("stations"), &format!("en çok {MAX_SECTION_STATIONS} sonlu km yazılır"));
+            return fail(
+                at("stations"),
+                &format!("en çok {MAX_SECTION_STATIONS} sonlu km yazılır"),
+            );
         }
-        if c.vertical_sag.is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 10.0)) {
-            return fail(at("verticalSag"), "düşey kiriş yüksekliği 0'dan büyük, en çok 10 m olur");
+        if c.vertical_sag
+            .is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 10.0))
+        {
+            return fail(
+                at("verticalSag"),
+                "düşey kiriş yüksekliği 0'dan büyük, en çok 10 m olur",
+            );
         }
         if let Some(r) = &c.refine {
             for (field, v) in [("plan", r.plan), ("height", r.height)] {
                 if v.is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 10.0)) {
-                    return fail(at(&format!("refine.{field}")), "sapma toleransı 0'dan büyük, en çok 10 m olur");
+                    return fail(
+                        at(&format!("refine.{field}")),
+                        "sapma toleransı 0'dan büyük, en çok 10 m olur",
+                    );
                 }
             }
             if !(r.least.is_finite() && r.least >= 0.01 && r.least <= 100.0) {
@@ -1688,21 +2069,36 @@ pub(super) fn corridors_problem(road: &RoadSettings) -> Option<(String, String)>
             }
         }
         if c.regions.is_empty() || c.regions.len() > MAX_CORRIDOR_REGIONS {
-            return fail(at("regions"), &format!("1 ile {MAX_CORRIDOR_REGIONS} arası bölge olur"));
+            return fail(
+                at("regions"),
+                &format!("1 ile {MAX_CORRIDOR_REGIONS} arası bölge olur"),
+            );
         }
         for (j, r) in c.regions.iter().enumerate() {
             if !(r.from.is_finite() && r.to.is_finite()) {
-                return fail(at(&format!("regions[{j}]")), "bölgenin başı ve sonu sonlu sayılar olmalı");
+                return fail(
+                    at(&format!("regions[{j}]")),
+                    "bölgenin başı ve sonu sonlu sayılar olmalı",
+                );
             }
             if road.templates.iter().all(|t| t.id != r.template) {
-                return fail(at(&format!("regions[{j}].template")), "bölgenin tip kesiti projede yok");
+                return fail(
+                    at(&format!("regions[{j}].template")),
+                    "bölgenin tip kesiti projede yok",
+                );
             }
             if let Some(l) = r.transition {
                 if !(l.is_finite() && l > 0.0 && l <= r.to - r.from) {
-                    return fail(at(&format!("regions[{j}].transition")), "şev geçişi 0'dan uzun, bölgeden kısa olur");
+                    return fail(
+                        at(&format!("regions[{j}].transition")),
+                        "şev geçişi 0'dan uzun, bölgeden kısa olur",
+                    );
                 }
                 if j == 0 || (c.regions[j - 1].to - r.from).abs() > 1e-3 {
-                    return fail(at(&format!("regions[{j}].transition")), "şev geçişi ancak önceki bölgenin bittiği yerde başlayan bölgede olur");
+                    return fail(
+                        at(&format!("regions[{j}].transition")),
+                        "şev geçişi ancak önceki bölgenin bittiği yerde başlayan bölgede olur",
+                    );
                 }
             }
         }
@@ -1713,14 +2109,23 @@ pub(super) fn corridors_problem(road: &RoadSettings) -> Option<(String, String)>
 /// What is wrong with a volume's sources as an approval keeps them (docs/adr/1041): ids are words, the templates at
 /// most a corridor's regions, the surface's digests 64 lower-case hex digits.
 pub(super) fn volume_sources_problem(s: &VolumeSources) -> Option<String> {
-    let named = [&s.corridor, &s.alignment, &s.profile].into_iter().chain(&s.templates).chain(&s.superelevation);
+    let named = [&s.corridor, &s.alignment, &s.profile]
+        .into_iter()
+        .chain(&s.templates)
+        .chain(&s.superelevation);
     if named.into_iter().any(|r| !word_ok(&r.id)) || !word_ok(&s.surface.id) {
-        return Some("kaynağın kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı".into());
+        return Some(
+            "kaynağın kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı".into(),
+        );
     }
     if s.templates.len() > MAX_CORRIDOR_REGIONS {
         return Some(format!("en çok {MAX_CORRIDOR_REGIONS} tip kesit olur"));
     }
-    if [&s.surface.digest, &s.surface.built].into_iter().flatten().any(|d| !digest_ok(d)) {
+    if [&s.surface.digest, &s.surface.built]
+        .into_iter()
+        .flatten()
+        .any(|d| !digest_ok(d))
+    {
         return Some("arazinin özeti 64 küçük onaltılık rakam olmalı".into());
     }
     None

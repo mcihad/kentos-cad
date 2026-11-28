@@ -403,11 +403,7 @@ impl canvas::Program<Message> for Draft {
         // donut; holes left out (even-odd), outlined solid (docs/adr/0057) or
         // dashed, as the region a hatch will fill (docs/adr/0062).
         for area in &self.preview.areas {
-            let rings: Vec<Path> = area
-                .rings
-                .iter()
-                .filter_map(|r| path(r, true))
-                .collect();
+            let rings: Vec<Path> = area.rings.iter().filter_map(|r| path(r, true)).collect();
             if rings.is_empty() {
                 continue;
             }
@@ -459,12 +455,7 @@ impl canvas::Program<Message> for Draft {
             );
         }
         // The closed shape once it has three corners: dashed, lightly filled.
-        if let Some(ring) = self
-            .preview
-            .ring
-            .as_deref()
-            .and_then(|r| path(r, true))
-        {
+        if let Some(ring) = self.preview.ring.as_deref().and_then(|r| path(r, true)) {
             frame.fill(&ring, accent.scale_alpha(0.08));
             frame.stroke(&ring, dashed(&[4.0, 4.0]));
         }

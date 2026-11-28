@@ -29,8 +29,15 @@ pub(super) fn wall_styles(
     if !has.building_parts && l.iter().any(|s| s.components.iter().any(|c| c.wrap)) {
         return Err(r.fail_at(Code::UnknownField, at, "uçta dönen bileşen şema 138 ister"));
     }
-    if !has.materials && l.iter().any(|s| s.components.iter().any(|c| c.material_id.is_some())) {
-        return Err(r.fail_at(Code::UnknownField, at, "malzemeye bağlı bileşen şema 148 ister"));
+    if !has.materials
+        && l.iter()
+            .any(|s| s.components.iter().any(|c| c.material_id.is_some()))
+    {
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            "malzemeye bağlı bileşen şema 148 ister",
+        ));
     }
     Ok(l)
 }
@@ -125,7 +132,11 @@ pub(super) fn arch(
         ));
     }
     if !has.materials && a.has_materials() {
-        return Err(r.fail_at(Code::UnknownField, at, "projenin malzemeleri şema 148 ister"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            "projenin malzemeleri şema 148 ister",
+        ));
     }
     if !has.sprinklers && a.has_sprinklers() {
         return Err(r.fail_at(
@@ -228,9 +239,7 @@ pub(super) fn arch(
             "projenin tadilat görünümü şema 82'den beri yazılır",
         ));
     }
-    if !has.renovation_view
-        && a.phase_view == Some(kentos_contracts::PhaseView::Renovation)
-    {
+    if !has.renovation_view && a.phase_view == Some(kentos_contracts::PhaseView::Renovation) {
         return Err(r.fail_at(
             Code::BadValue,
             at,

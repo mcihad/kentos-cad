@@ -163,18 +163,32 @@ impl FormAnswer {
     /// (a form's cell is one line). The field and the words.
     pub fn problem(&self) -> Option<(String, String)> {
         if !(1..=21).contains(&self.no) {
-            return Some(("no".into(), format!("Sorunun numarası 1 ile 21 arasında olmalı (EK-9 Tablo 9.1); {} verildi.", self.no)));
+            return Some((
+                "no".into(),
+                format!(
+                    "Sorunun numarası 1 ile 21 arasında olmalı (EK-9 Tablo 9.1); {} verildi.",
+                    self.no
+                ),
+            ));
         }
         if self.note.chars().count() > MAX_FORM_NOTE {
-            return Some(("note".into(), format!("Not en çok {MAX_FORM_NOTE} karakter olabilir; formun bir hücresidir.")));
+            return Some((
+                "note".into(),
+                format!("Not en çok {MAX_FORM_NOTE} karakter olabilir; formun bir hücresidir."),
+            ));
         }
         if self.note.chars().any(char::is_control) {
-            return Some(("note".into(), "Not satır sonu ya da denetim karakteri içeremez; formun bir hücresidir.".into()));
+            return Some((
+                "note".into(),
+                "Not satır sonu ya da denetim karakteri içeremez; formun bir hücresidir.".into(),
+            ));
         }
         if self.basis.chars().count() > MAX_FORM_BASIS || self.basis.chars().any(char::is_control) {
             return Some((
                 "basis".into(),
-                format!("Cevabın dayandığı kanıt en çok {MAX_FORM_BASIS} karakterlik tek satır olur: formun notudur."),
+                format!(
+                    "Cevabın dayandığı kanıt en çok {MAX_FORM_BASIS} karakterlik tek satır olur: formun notudur."
+                ),
             ));
         }
         None
@@ -187,7 +201,13 @@ impl FormAnswer {
                 return Some((format!("{i}.{field}"), why));
             }
             if list[..i].iter().any(|b| b.no == a.no) {
-                return Some((format!("{i}.no"), format!("{}. soru iki kez cevaplanmış; her sorunun bir cevabı olur.", a.no)));
+                return Some((
+                    format!("{i}.no"),
+                    format!(
+                        "{}. soru iki kez cevaplanmış; her sorunun bir cevabı olur.",
+                        a.no
+                    ),
+                ));
             }
         }
         None
@@ -600,7 +620,6 @@ pub struct PublishStatusReport {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub stopped: Option<StoppedPublication>,
 }
-
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

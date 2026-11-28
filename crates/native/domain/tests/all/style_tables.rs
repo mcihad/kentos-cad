@@ -25,8 +25,8 @@ fn drawing() -> Document {
         "layers":[{"id":"a","name":"A","type":"layer","visible":true,"locked":false,"expanded":true,
         "style":{"color":"fg","lineType":"continuous","lineWeight":0.18},"children":[]}],
         "activeLayer":"a","entities":[],"styles":{"items":[],"categories":[]}}"#;
-    let mut doc =
-        Document::from_snapshot(DocumentSnapshotV1::from_json(text).expect("reads")).expect("opens");
+    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(text).expect("reads"))
+        .expect("opens");
     let mut settings = doc.settings().clone();
     settings.wall_styles = vec![
         style("s1", "Dış 25", 0.25),
@@ -59,7 +59,9 @@ fn edit(doc: &mut Document, change: impl FnOnce(&mut ProjectSettings)) {
 fn a_name_alone_is_one_step_and_comes_back_on_undo() {
     let mut doc = drawing();
     assert!(!doc.can_undo());
-    edit(&mut doc, |s| s.wall_styles[0].name = "Dış duvar 25 QA".into());
+    edit(&mut doc, |s| {
+        s.wall_styles[0].name = "Dış duvar 25 QA".into()
+    });
     assert_eq!(names(&doc), ["Dış duvar 25 QA", "Bölme 10", "Perde 20"]);
     assert!(doc.can_undo(), "a renamed style is an undo step");
     assert_eq!(doc.undo().as_deref(), Some("Duvar stili"));

@@ -132,11 +132,11 @@ fn constant_and_tapered_widths_survive_all_binary_targets_without_zero_override_
         closed_polylines: kentos_contracts::ClosedPolylines::Line,
         ..Default::default()
     };
-    let expected = kentos_formats::dxf::read_checked(&source,&options).unwrap();
+    let expected = kentos_formats::dxf::read_checked(&source, &options).unwrap();
     for target in DwgVersion::ALL {
-        let bytes = kentos_dwg::encode(&source,target).unwrap();
-        let got = kentos_dwg::read(&bytes,&options).unwrap();
-        assert_eq!(got.entities,expected.entities,"{target:?}");
+        let bytes = kentos_dwg::encode(&source, target).unwrap();
+        let got = kentos_dwg::read(&bytes, &options).unwrap();
+        assert_eq!(got.entities, expected.entities, "{target:?}");
     }
 }
 

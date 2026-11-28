@@ -90,12 +90,19 @@ pub enum GradingError {
     TooFewCorners,
     NotFinite,
     /// Two corners at the same place, or edges crossing.
-    SamePlace { corner: usize },
-    Crossing { a: usize, b: usize },
+    SamePlace {
+        corner: usize,
+    },
+    Crossing {
+        a: usize,
+        b: usize,
+    },
     /// No area.
     NoArea,
     /// A slope, the step, the fan or the reach not positive (or the fan above 90°).
-    BadValue { what: &'static str },
+    BadValue {
+        what: &'static str,
+    },
     /// [`grade_told`]'s `tick` asked it to stop (docs/adr/4860): nothing graded.
     Stopped,
 }
@@ -105,8 +112,17 @@ impl std::fmt::Display for GradingError {
         match self {
             Self::TooFewCorners => f.write_str("Platformun sınırı en az üç köşedir."),
             Self::NotFinite => f.write_str("Platformun bir değeri sayı değil."),
-            Self::SamePlace { corner } => write!(f, "Platformun {}. köşesi bir öncekiyle aynı yerde.", corner + 1),
-            Self::Crossing { a, b } => write!(f, "Platformun sınırı kendini kesiyor: {}. ve {}. kenar.", a + 1, b + 1),
+            Self::SamePlace { corner } => write!(
+                f,
+                "Platformun {}. köşesi bir öncekiyle aynı yerde.",
+                corner + 1
+            ),
+            Self::Crossing { a, b } => write!(
+                f,
+                "Platformun sınırı kendini kesiyor: {}. ve {}. kenar.",
+                a + 1,
+                b + 1
+            ),
             Self::NoArea => f.write_str("Platformun sınırının alanı yok."),
             Self::BadValue { what } => write!(f, "Platformun {what} sıfırdan büyük olmalı."),
             Self::Stopped => f.write_str("Platformun tesviyesi durduruldu."),
@@ -122,22 +138,31 @@ pub fn plane_z(p: &Platform, x: f64, y: f64, offset: f64) -> f64 {
 
 fn area2(ring: &[[f64; 2]]) -> f64 {
     let n = ring.len();
-    (0..n).map(|i| {
-        let (a, b) = (ring[i], ring[(i + 1) % n]);
-        a[0] * b[1] - b[0] * a[1]
-    })
-    .sum()
+    (0..n)
+        .map(|i| {
+            let (a, b) = (ring[i], ring[(i + 1) % n]);
+            a[0] * b[1] - b[0] * a[1]
+        })
+        .sum()
 }
 
 /// Whether segments ab and cd cross or touch (sharing no end).
 fn cross(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> bool {
-    let o = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
+    let o = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| {
+        (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+    };
     let (d1, d2, d3, d4) = (o(c, d, a), o(c, d, b), o(a, b, c), o(a, b, d));
-    if ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0)) && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0)) {
+    if ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0))
+        && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
+    {
         return true;
     }
     let on = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| {
-        o(p, q, r) == 0.0 && r[0] >= p[0].min(q[0]) && r[0] <= p[0].max(q[0]) && r[1] >= p[1].min(q[1]) && r[1] <= p[1].max(q[1])
+        o(p, q, r) == 0.0
+            && r[0] >= p[0].min(q[0])
+            && r[0] <= p[0].max(q[0])
+            && r[1] >= p[1].min(q[1])
+            && r[1] <= p[1].max(q[1])
     };
     on(c, d, a) || on(c, d, b) || on(a, b, c) || on(a, b, d)
 }
@@ -148,23 +173,38 @@ pub fn ring_of(p: &Platform) -> Result<Vec<[f64; 2]>, GradingError> {
     if n < 3 {
         return Err(GradingError::TooFewCorners);
     }
-    let finite = p.corners.iter().all(|c| c[0].is_finite() && c[1].is_finite())
+    let finite = p
+        .corners
+        .iter()
+        .all(|c| c[0].is_finite() && c[1].is_finite())
         && p.base.iter().all(|v| v.is_finite())
-        && [p.grade, p.direction, p.cut, p.fill, p.step, p.fan, p.reach].iter().all(|v| v.is_finite());
+        && [p.grade, p.direction, p.cut, p.fill, p.step, p.fan, p.reach]
+            .iter()
+            .all(|v| v.is_finite());
     if !finite {
         return Err(GradingError::NotFinite);
     }
-    for (what, v) in [("şev kazı eğimi", p.cut), ("şev dolgu eğimi", p.fill), ("şev çizgisi aralığı", p.step), ("köşe yelpazesi açısı", p.fan), ("şev erimi", p.reach)] {
+    for (what, v) in [
+        ("şev kazı eğimi", p.cut),
+        ("şev dolgu eğimi", p.fill),
+        ("şev çizgisi aralığı", p.step),
+        ("köşe yelpazesi açısı", p.fan),
+        ("şev erimi", p.reach),
+    ] {
         if v <= 0.0 {
             return Err(GradingError::BadValue { what });
         }
     }
     if p.fan > 90.0 {
-        return Err(GradingError::BadValue { what: "köşe yelpazesi açısı (en çok 90°)" });
+        return Err(GradingError::BadValue {
+            what: "köşe yelpazesi açısı (en çok 90°)",
+        });
     }
     for i in 0..n {
         if p.corners[i] == p.corners[(i + 1) % n] {
-            return Err(GradingError::SamePlace { corner: (i + 1) % n });
+            return Err(GradingError::SamePlace {
+                corner: (i + 1) % n,
+            });
         }
     }
     for i in 0..n {
@@ -173,7 +213,12 @@ pub fn ring_of(p: &Platform) -> Result<Vec<[f64; 2]>, GradingError> {
             if j == i + 1 || (i == 0 && j == n - 1) {
                 continue;
             }
-            if cross(p.corners[i], p.corners[(i + 1) % n], p.corners[j], p.corners[(j + 1) % n]) {
+            if cross(
+                p.corners[i],
+                p.corners[(i + 1) % n],
+                p.corners[j],
+                p.corners[(j + 1) % n],
+            ) {
                 return Err(GradingError::Crossing { a: i, b: j });
             }
         }
@@ -198,13 +243,23 @@ fn outward(a: [f64; 2], b: [f64; 2]) -> [f64; 2] {
 
 /// Where the line from (0, z0) on the pad's edge, along `dir`, first meets the terrain: its side and the meeting
 /// (distance, height).
-fn daylight(terrain: &Surface, from: [f64; 2], dir: [f64; 2], z0: f64, p: &Platform) -> (Side, Option<[f64; 2]>) {
+fn daylight(
+    terrain: &Surface,
+    from: [f64; 2],
+    dir: [f64; 2],
+    z0: f64,
+    p: &Platform,
+) -> (Side, Option<[f64; 2]>) {
     let to = [from[0] + p.reach * dir[0], from[1] + p.reach * dir[1]];
     let t = terrain.section(&[from, to]);
     let Some(first) = t.first().and_then(|q| q.z) else {
         return (Side::Open, None);
     };
-    let (side, m) = if first > z0 { (Side::Cut, 1.0 / p.cut) } else { (Side::Fill, -1.0 / p.fill) };
+    let (side, m) = if first > z0 {
+        (Side::Cut, 1.0 / p.cut)
+    } else {
+        (Side::Fill, -1.0 / p.fill)
+    };
     if first == z0 {
         return (side, Some([0.0, z0]));
     }
@@ -214,7 +269,9 @@ fn daylight(terrain: &Surface, from: [f64; 2], dir: [f64; 2], z0: f64, p: &Platf
         if b.gap {
             return (Side::Open, None);
         }
-        let (Some(za), Some(zb)) = (a.z, b.z) else { return (Side::Open, None) };
+        let (Some(za), Some(zb)) = (a.z, b.z) else {
+            return (Side::Open, None);
+        };
         let (fa, fb) = (line(a.station) - za, line(b.station) - zb);
         if fa == 0.0 {
             return (side, Some([a.station, za]));
@@ -236,7 +293,12 @@ pub fn grade(p: &Platform, terrain: &Surface, offset: f64) -> Result<Graded, Gra
 /// [`grade`] telling `tick` how far it has come (docs/adr/4860): `done` of the corners and two, a corner's slope lines
 /// at a time, then the design surface, then its volumes against the terrain; `tick` answering true stops it there,
 /// [`GradingError::Stopped`]. The pad graded is [`grade`]'s.
-pub fn grade_told(p: &Platform, terrain: &Surface, offset: f64, tick: &dyn Fn(u64, u64) -> bool) -> Result<Graded, GradingError> {
+pub fn grade_told(
+    p: &Platform,
+    terrain: &Surface,
+    offset: f64,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Result<Graded, GradingError> {
     let ring = ring_of(p)?;
     let n = ring.len();
     let whole = n as u64 + 2;
@@ -260,7 +322,8 @@ pub fn grade_told(p: &Platform, terrain: &Surface, offset: f64, tick: &dyn Fn(u6
         }
         let (prev, here, next) = (ring[(i + n - 1) % n], ring[i], ring[(i + 1) % n]);
         let (n1, n2) = (outward(prev, here), outward(here, next));
-        let turn = (here[0] - prev[0]) * (next[1] - here[1]) - (here[1] - prev[1]) * (next[0] - here[0]);
+        let turn =
+            (here[0] - prev[0]) * (next[1] - here[1]) - (here[1] - prev[1]) * (next[0] - here[0]);
         if turn > 0.0 {
             // Convex: a fan from the incoming edge's square to the outgoing one's, counterclockwise.
             let (a1, mut a2) = (n1[1].atan2(n1[0]), n2[1].atan2(n2[0]));
@@ -284,15 +347,34 @@ pub fn grade_told(p: &Platform, terrain: &Surface, offset: f64, tick: &dyn Fn(u6
         let k = (length / p.step).ceil() as usize;
         for j in 1..k {
             let t = j as f64 / k as f64;
-            push([here[0] + t * (next[0] - here[0]), here[1] + t * (next[1] - here[1])], n2, i, false);
+            push(
+                [
+                    here[0] + t * (next[0] - here[0]),
+                    here[1] + t * (next[1] - here[1]),
+                ],
+                n2,
+                i,
+                false,
+            );
         }
     }
     let top: Vec<[f64; 3]> = ring.iter().map(|q| [q[0], q[1], z(*q)]).collect();
     let top_area = area2(&ring) / 2.0;
     let open = lines.iter().filter(|l| l.side == Side::Open).count();
-    let mut graded = Graded { top, lines, open, top_area, footprint: None, design: None, volumes: None, why: None };
+    let mut graded = Graded {
+        top,
+        lines,
+        open,
+        top_area,
+        footprint: None,
+        design: None,
+        volumes: None,
+        why: None,
+    };
     if open > 0 {
-        graded.why = Some(format!("{open} şev çizgisi araziyle buluşmuyor: erimi büyütün ya da yüzeyi genişletin."));
+        graded.why = Some(format!(
+            "{open} şev çizgisi araziyle buluşmuyor: erimi büyütün ya da yüzeyi genişletin."
+        ));
         return Ok(graded);
     }
     // The daylight ring; a corner's fan meeting the terrain at the corner itself is one place.
@@ -302,26 +384,43 @@ pub fn grade_told(p: &Platform, terrain: &Surface, offset: f64, tick: &dyn Fn(u6
             ring_day.push(d);
         }
     }
-    while ring_day.len() > 1 && ring_day.first().map(|q| [q[0], q[1]]) == ring_day.last().map(|q| [q[0], q[1]]) {
+    while ring_day.len() > 1
+        && ring_day.first().map(|q| [q[0], q[1]]) == ring_day.last().map(|q| [q[0], q[1]])
+    {
         ring_day.pop();
     }
     let flat: Vec<[f64; 2]> = ring_day.iter().map(|q| [q[0], q[1]]).collect();
     graded.footprint = Some(area2(&flat).abs() / 2.0);
     let mut breaklines = vec![
-        Breakline { points: graded.top.clone(), closed: true, source: None },
-        Breakline { points: ring_day.clone(), closed: true, source: None },
+        Breakline {
+            points: graded.top.clone(),
+            closed: true,
+            source: None,
+        },
+        Breakline {
+            points: ring_day.clone(),
+            closed: true,
+            source: None,
+        },
     ];
     for l in &graded.lines {
         if let Some(d) = l.daylight
             && (d[0] - l.from[0]).hypot(d[1] - l.from[1]) > 1e-9
         {
-            breaklines.push(Breakline { points: vec![l.from, d], closed: false, source: None });
+            breaklines.push(Breakline {
+                points: vec![l.from, d],
+                closed: false,
+                source: None,
+            });
         }
     }
     let input = SurfaceInput {
         points: Vec::new(),
         breaklines,
-        boundary: Some(Ring { points: flat, source: None }),
+        boundary: Some(Ring {
+            points: flat,
+            source: None,
+        }),
         voids: Vec::new(),
         tolerance: None,
         edge: Default::default(),
@@ -334,7 +433,10 @@ pub fn grade_told(p: &Platform, terrain: &Surface, offset: f64, tick: &dyn Fn(u6
     match surface::build(&input) {
         Ok(design) => {
             let tris = |s: &Surface| -> Vec<Triangle> {
-                s.triangles.iter().map(|t| t.map(|i| s.vertices[i as usize])).collect()
+                s.triangles
+                    .iter()
+                    .map(|t| t.map(|i| s.vertices[i as usize]))
+                    .collect()
             };
             if tick(n as u64 + 1, whole) {
                 return Err(GradingError::Stopped);
@@ -361,9 +463,15 @@ pub struct Balance {
 pub enum BalanceError {
     Grading(GradingError),
     /// At an end of the bracket the pad does not grade whole (an open line, a design that does not build).
-    NotGraded { offset: f64, why: String },
+    NotGraded {
+        offset: f64,
+        why: String,
+    },
     /// The net keeps its sign over the bracket: more cut (or fill) at both ends.
-    NoSignChange { low: f64, high: f64 },
+    NoSignChange {
+        low: f64,
+        high: f64,
+    },
     /// The bracket is empty or not finite, or the tolerance not positive.
     BadBracket,
 }
@@ -372,25 +480,47 @@ fn net_at(p: &Platform, terrain: &Surface, offset: f64) -> Result<f64, BalanceEr
     let g = grade(p, terrain, offset).map_err(BalanceError::Grading)?;
     match g.volumes {
         Some(v) => Ok(v.cut - v.fill),
-        None => Err(BalanceError::NotGraded { offset, why: g.why.unwrap_or_default() }),
+        None => Err(BalanceError::NotGraded {
+            offset,
+            why: g.why.unwrap_or_default(),
+        }),
     }
 }
 
 /// The offset in [`low`, `high`] where cut and fill meet within `tolerance` m³, by bisection; at most 60 steps.
-pub fn balance(p: &Platform, terrain: &Surface, low: f64, high: f64, tolerance: f64) -> Result<Balance, BalanceError> {
+pub fn balance(
+    p: &Platform,
+    terrain: &Surface,
+    low: f64,
+    high: f64,
+    tolerance: f64,
+) -> Result<Balance, BalanceError> {
     if !(low.is_finite() && high.is_finite() && low < high && tolerance > 0.0) {
         return Err(BalanceError::BadBracket);
     }
     let (mut lo, mut hi) = (low, high);
     let (mut flo, fhi) = (net_at(p, terrain, lo)?, net_at(p, terrain, hi)?);
     if flo == 0.0 {
-        return Ok(Balance { offset: lo, net: 0.0, iterations: 0, converged: true });
+        return Ok(Balance {
+            offset: lo,
+            net: 0.0,
+            iterations: 0,
+            converged: true,
+        });
     }
     if fhi == 0.0 {
-        return Ok(Balance { offset: hi, net: 0.0, iterations: 0, converged: true });
+        return Ok(Balance {
+            offset: hi,
+            net: 0.0,
+            iterations: 0,
+            converged: true,
+        });
     }
     if (flo > 0.0) == (fhi > 0.0) {
-        return Err(BalanceError::NoSignChange { low: flo, high: fhi });
+        return Err(BalanceError::NoSignChange {
+            low: flo,
+            high: fhi,
+        });
     }
     let mut best = (lo, flo);
     for k in 1..=60 {
@@ -400,7 +530,12 @@ pub fn balance(p: &Platform, terrain: &Surface, low: f64, high: f64, tolerance: 
             best = (mid, f);
         }
         if f.abs() <= tolerance {
-            return Ok(Balance { offset: mid, net: f, iterations: k, converged: true });
+            return Ok(Balance {
+                offset: mid,
+                net: f,
+                iterations: k,
+                converged: true,
+            });
         }
         if (f > 0.0) == (flo > 0.0) {
             lo = mid;
@@ -409,5 +544,10 @@ pub fn balance(p: &Platform, terrain: &Surface, low: f64, high: f64, tolerance: 
             hi = mid;
         }
     }
-    Ok(Balance { offset: best.0, net: best.1, iterations: 60, converged: false })
+    Ok(Balance {
+        offset: best.0,
+        net: best.1,
+        iterations: 60,
+        converged: false,
+    })
 }

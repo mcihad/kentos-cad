@@ -17,8 +17,10 @@ fn on_table(name: &str) -> (App, String) {
     crate::data_layers::register();
     let address = parcels(name, 30).display().to_string();
     let mut app = app_with_drawing();
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
-        .expect("added");
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "parseller").expect("described"),
+    ])
+    .expect("added");
     let id = node(&app, "parseller").expect("the layer").id.clone();
     app.gis.features.layer = Some(id.clone());
     app.command_expanded = true;
@@ -33,7 +35,12 @@ fn form_says_how_a_rows_form_opens_and_the_table_stays() {
     assert_eq!(app.gis.features.pane, crate::features::Pane::Table);
     let said = crate::files_testing::last_said(&app);
     // No row chosen: the way to a row's form is said (the CBS review's 2nd item opens a chosen row's form).
-    assert!(said.contains("Formu açmak için tek bir kayıt seçin: tabloda bir satır ya da çizimde bir nesne"), "{said}");
+    assert!(
+        said.contains(
+            "Formu açmak için tek bir kayıt seçin: tabloda bir satır ya da çizimde bir nesne"
+        ),
+        "{said}"
+    );
 }
 
 #[test]
@@ -41,7 +48,10 @@ fn sutunlar_hides_a_field_of_the_data_layers_table() {
     let (mut app, id) = on_table("cubuk-sutun");
     let layer = node(&app, "parseller").expect("the layer").clone();
     assert_eq!(app.data_shown_fields(&layer), ["ada", "kullanim", "alan"]);
-    ev(&mut app, Event::Columns(ColumnsEvent::Toggle("kullanim".into())));
+    ev(
+        &mut app,
+        Event::Columns(ColumnsEvent::Toggle("kullanim".into())),
+    );
     assert!(app.hidden_columns(Some(&id)).contains("kullanim"));
     assert_eq!(app.data_shown_fields(&layer), ["ada", "alan"]);
     ev(&mut app, Event::Columns(ColumnsEvent::ShowAll));
@@ -51,7 +61,10 @@ fn sutunlar_hides_a_field_of_the_data_layers_table() {
 #[test]
 fn incele_opens_istatistik_on_the_data_layer() {
     let (mut app, id) = on_table("cubuk-incele");
-    ev(&mut app, Event::Analyse(crate::features::outgoing::Analyse::Statistics));
+    ev(
+        &mut app,
+        Event::Analyse(crate::features::outgoing::Analyse::Statistics),
+    );
     assert_eq!(app.bottom_tab, crate::bottom::BottomTab::Statistics);
     assert_eq!(app.gis.charts.layer.as_deref(), Some(id.as_str()));
 }
@@ -80,19 +93,28 @@ fn two_sessions_are_named_and_one_press_goes_to_either() {
     let address = path.display().to_string();
     let mut app = crate::files_testing::app_with_drawing();
     for table in ["bakim", "mahalleler"] {
-        app.add_data_layers(vec![crate::data_layers::describe(&address, table).expect("described")]).expect("added");
+        app.add_data_layers(vec![
+            crate::data_layers::describe(&address, table).expect("described"),
+        ])
+        .expect("added");
     }
     let bakim = node(&app, "bakim").expect("bakim").id.clone();
     let mahalleler = node(&app, "mahalleler").expect("mahalleler").id.clone();
     let _ = app.data_edits_event(crate::data_edits::Event::Start(bakim.clone()));
     let tip = app.edit_tip("layer.edit").expect("its tip");
-    assert!(tip.starts_with("Etkin katman “bakim” düzenleniyor; kaynağa yazılmamış kaydı yok."), "{tip}");
+    assert!(
+        tip.starts_with("Etkin katman “bakim” düzenleniyor; kaynağa yazılmamış kaydı yok."),
+        "{tip}"
+    );
     let _ = app.data_edits_event(crate::data_edits::Event::Start(mahalleler.clone()));
     let tip = app.edit_tip("layer.edit").expect("its tip");
     assert!(tip.contains("Düzenlemeyi bitir yalnız bu katmanı kapatır. Düzenlenen öbür katmanlar açık kalır: “bakim”."), "{tip}");
     // Düzenlenen katmanlar: bakim one press away, the active layer and the table's.
     ev(&mut app, Event::EditedLayer(bakim.clone()));
-    let active = app.document.as_ref().map(|d| d.model.layers().active().to_owned());
+    let active = app
+        .document
+        .as_ref()
+        .map(|d| d.model.layers().active().to_owned());
     assert_eq!(active.as_deref(), Some(bakim.as_str()));
     assert_eq!(app.gis.features.layer.as_deref(), Some(bakim.as_str()));
     let _ = std::fs::remove_file(&path);
@@ -109,7 +131,10 @@ fn sessions_screens() {
         let address = path.display().to_string();
         let mut app = crate::files_testing::app_with_drawing();
         for table in ["bakim", "mahalleler"] {
-            app.add_data_layers(vec![crate::data_layers::describe(&address, table).expect("described")]).expect("added");
+            app.add_data_layers(vec![
+                crate::data_layers::describe(&address, table).expect("described"),
+            ])
+            .expect("added");
         }
         let bakim = node(&app, "bakim").expect("bakim").id.clone();
         let mahalleler = node(&app, "mahalleler").expect("mahalleler").id.clone();

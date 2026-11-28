@@ -12,7 +12,11 @@ use kentos_ui::widget::table::{Column as TableColumn, Row as TableRow, Table};
 use kentos_ui::{
     label, style,
     theme::typography,
-    widget::{Elided, NumberInput, number::units, select::{Choice, Select}},
+    widget::{
+        Elided, NumberInput,
+        number::units,
+        select::{Choice, Select},
+    },
 };
 use std::sync::{
     Arc,
@@ -117,7 +121,13 @@ pub enum Event {
     Hidden(bool),
     Ready(u64, u64, u64, Box<CommandResult<DrawingInspected>>),
     /// The check on opening answered (docs/adr/1009).
-    Opened(u64, u64, u64, Option<crate::open_health::Key>, Box<CommandResult<DrawingInspected>>),
+    Opened(
+        u64,
+        u64,
+        u64,
+        Option<crate::open_health::Key>,
+        Box<CommandResult<DrawingInspected>>,
+    ),
     Show(usize),
     Near,
     Repair,
@@ -276,9 +286,8 @@ impl App {
                         self.cad_inspection.message = Some(error.message)
                     }
                     CommandResult::Queued { .. } => {
-                        self.cad_inspection.message = Some(
-                            "Denetim sonucu henüz hazır değil; yeniden deneyin.".into(),
-                        )
+                        self.cad_inspection.message =
+                            Some("Denetim sonucu henüz hazır değil; yeniden deneyin.".into())
                     }
                 }
             }
@@ -336,7 +345,11 @@ impl App {
                 let slots: Vec<Slot> = f
                     .uids
                     .iter()
-                    .take(if f.group == InspectionGroup::Annotations { 1 } else { usize::MAX })
+                    .take(if f.group == InspectionGroup::Annotations {
+                        1
+                    } else {
+                        usize::MAX
+                    })
                     .filter_map(|u| Uuid::parse_str(u).ok())
                     .filter_map(|u| doc.model.slot_of(u))
                     .collect();
@@ -377,25 +390,63 @@ impl App {
                 }
             }
             Event::Sources => {
-                if !self.cad_inspection_current() { return Task::none(); }
-                let Some(f) = self.cad_inspection.selected.and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i)) else { return Task::none(); };
-                let doc = &self.document.as_ref().unwrap().model;
-                let slots: Vec<_> = f.uids.iter().skip(1).filter_map(|u| Uuid::parse_str(u).ok()).filter_map(|u| doc.slot_of(u)).collect();
-                if slots.is_empty() { self.warn("Bu bulgunun çizimde kalan kaynak nesnesi yok."); }
+                if !self.cad_inspection_current() {
+                    return Task::none();
+                }
+                let Some(f) = self
+                    .cad_inspection
+                    .selected
+                    .and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i))
                 else {
+                    return Task::none();
+                };
+                let doc = &self.document.as_ref().unwrap().model;
+                let slots: Vec<_> = f
+                    .uids
+                    .iter()
+                    .skip(1)
+                    .filter_map(|u| Uuid::parse_str(u).ok())
+                    .filter_map(|u| doc.slot_of(u))
+                    .collect();
+                if slots.is_empty() {
+                    self.warn("Bu bulgunun çizimde kalan kaynak nesnesi yok.");
+                } else {
                     let ids: Vec<_> = slots.iter().map(|s| f64::from(s.0)).collect();
                     self.selection.set(slots);
                     self.navigating(|app| app.zoom_to_objects(&ids));
                 }
             }
             Event::Repair => {
-                if !self.cad_inspection_current() { return Task::none(); }
-                let Some(f) = self.cad_inspection.selected.and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i)).cloned() else { return Task::none(); };
+                if !self.cad_inspection_current() {
+                    return Task::none();
+                }
+                let Some(f) = self
+                    .cad_inspection
+                    .selected
+                    .and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i))
+                    .cloned()
+                else {
+                    return Task::none();
+                };
                 if f.group == InspectionGroup::Annotations {
-                    if f.code.starts_with("block_") || f.code.starts_with("table_field_source_") || f.code == "table_field_unverified" || f.code.starts_with("text_font_") || matches!(f.code.as_str(),"text_field_unverified"|"text_layout_unsupported") { return Task::none(); }
+                    if f.code.starts_with("block_")
+                        || f.code.starts_with("table_field_source_")
+                        || f.code == "table_field_unverified"
+                        || f.code.starts_with("text_font_")
+                        || matches!(
+                            f.code.as_str(),
+                            "text_field_unverified" | "text_layout_unsupported"
+                        )
+                    {
+                        return Task::none();
+                    }
                     if f.code.starts_with("table_field_") {
-                        if let Some(slot) = f.uids.first().and_then(|u| Uuid::parse_str(u).ok())
-                            .and_then(|u| self.document.as_ref()?.model.slot_of(u)) {
+                        if let Some(slot) = f
+                            .uids
+                            .first()
+                            .and_then(|u| Uuid::parse_str(u).ok())
+                            .and_then(|u| self.document.as_ref()?.model.slot_of(u))
+                        {
                             self.selection.set([slot]);
                             return self.run("table.update");
                         }
@@ -403,18 +454,31 @@ impl App {
                     }
                     if f.code.starts_with("text_field_") {
                         let doc = &self.document.as_ref().unwrap().model;
-                        let slots = f.uids.iter().filter_map(|u| Uuid::parse_str(u).ok())
+                        let slots = f
+                            .uids
+                            .iter()
+                            .filter_map(|u| Uuid::parse_str(u).ok())
                             .filter_map(|u| doc.slot_of(u))
-                            .filter(|&s| matches!(doc.get(s), Some(kentos_commands::Entity::Text(_))))
+                            .filter(|&s| {
+                                matches!(doc.get(s), Some(kentos_commands::Entity::Text(_)))
+                            })
                             .collect::<Vec<_>>();
                         self.selection.set(slots);
                         return self.run("text.fieldsUpdate");
                     }
-                    if let Some(slot) = f.uids.first().and_then(|u| Uuid::parse_str(u).ok()).and_then(|u| self.document.as_ref()?.model.slot_of(u)) {
+                    if let Some(slot) = f
+                        .uids
+                        .first()
+                        .and_then(|u| Uuid::parse_str(u).ok())
+                        .and_then(|u| self.document.as_ref()?.model.slot_of(u))
+                    {
                         self.selection.set([slot]);
                     }
-                    return self.run(if f.code.starts_with("leader_") { "leader.bindTip" }
-                        else { "tool.dimensionReassociate" });
+                    return self.run(if f.code.starts_with("leader_") {
+                        "leader.bindTip"
+                    } else {
+                        "tool.dimensionReassociate"
+                    });
                 }
                 if f.code.starts_with("t_junction_") {
                     return self.repair_junction(&f);
@@ -456,26 +520,56 @@ impl App {
             button(label::body("Denetle"))
                 .padding(kentos_ui::theme::metrics::action())
                 .style(style::button::primary)
-                .on_press_maybe((!p.busy && (p.boundaries || p.hatches || p.annotations || p.health)).then(|| msg(Event::Run))),
-            button(label::body("Durdur")).padding(kentos_ui::theme::metrics::action())
-                .style(style::button::secondary).on_press_maybe(p.busy.then(|| msg(Event::Stop))),
-            container(Select::new(SCOPES.map(Choice::new), Some(p.scope), |i| msg(Event::Scope(i)))).width(220),
+                .on_press_maybe(
+                    (!p.busy && (p.boundaries || p.hatches || p.annotations || p.health))
+                        .then(|| msg(Event::Run))
+                ),
+            button(label::body("Durdur"))
+                .padding(kentos_ui::theme::metrics::action())
+                .style(style::button::secondary)
+                .on_press_maybe(p.busy.then(|| msg(Event::Stop))),
+            container(Select::new(
+                SCOPES.map(Choice::new),
+                Some(p.scope),
+                |i| msg(Event::Scope(i))
+            ))
+            .width(220),
             label::muted(count)
         ]
         .spacing(8)
         .align_y(iced::Center);
         let options = row![
-            crate::exchange::words::check(p.boundaries, "Sınırlar", Some(msg(Event::Boundaries(!p.boundaries)))),
-            crate::exchange::words::check(p.hatches, "Taramalar", Some(msg(Event::Hatches(!p.hatches)))),
-            crate::exchange::words::check(p.annotations, "Yazı, ölçü, kılavuz", Some(msg(Event::Annotations(!p.annotations)))),
-            crate::exchange::words::check(p.health, "Çizim sağlığı", Some(msg(Event::Health(!p.health)))),
+            crate::exchange::words::check(
+                p.boundaries,
+                "Sınırlar",
+                Some(msg(Event::Boundaries(!p.boundaries)))
+            ),
+            crate::exchange::words::check(
+                p.hatches,
+                "Taramalar",
+                Some(msg(Event::Hatches(!p.hatches)))
+            ),
+            crate::exchange::words::check(
+                p.annotations,
+                "Yazı, ölçü, kılavuz",
+                Some(msg(Event::Annotations(!p.annotations)))
+            ),
+            crate::exchange::words::check(
+                p.health,
+                "Çizim sağlığı",
+                Some(msg(Event::Health(!p.health)))
+            ),
             label::muted("Boşluk eşiği"),
             NumberInput::new(p.gap, |n| msg(Event::Gap(n)))
                 .units(units::MILLIMETRE)
                 .range(0.0..=1000.0)
                 .decimals(2)
                 .width(120),
-            crate::exchange::words::check(p.hidden, "Gizli katmanlar", Some(msg(Event::Hidden(!p.hidden))))
+            crate::exchange::words::check(
+                p.hidden,
+                "Gizli katmanlar",
+                Some(msg(Event::Hidden(!p.hidden)))
+            )
         ]
         .spacing(12)
         .align_y(iced::Center);
@@ -551,32 +645,76 @@ impl App {
         }
         body = body.push(table);
         if let Some(finding) = p.selected.and_then(|i| p.output.as_ref()?.findings.get(i)) {
-            body = body.push(label::body(finding.message.clone())).push(label::body(finding.repair.clone())).push(
-                row![
-                    button(label::body("Konuma yakınlaş")).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary).on_press_maybe(current.then(|| msg(Event::Near))),
-                    button(label::body("Kaynağa git")).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary)
-                        .on_press_maybe((current && finding.group == InspectionGroup::Annotations && finding.uids.len() > 1).then(|| msg(Event::Sources))),
-                    button(label::body(if finding.code.starts_with("t_junction_") { "Ucu kenara getir" }
-                        else if finding.code == "angle_deviation" { "Eksene döndür" }
-                        else if finding.code == "block_definition_duplicate" { "Tek tanımda birleştir" }
-                        else if finding.group == InspectionGroup::Health { "Elle inceleyin" }
-                        else if finding.group == InspectionGroup::Hatches { "Taramayı düzenle…" }
-                        else if finding.code.starts_with("leader_") { "Kılavuz ucunu bağla…" }
-                        else if finding.code.starts_with("block_") { "Blok tanımını inceleyin" }
-                        else if finding.code.starts_with("table_field_source_") { "Kaynak yazıyı inceleyin" }
-                        else if finding.code.starts_with("table_field_") { "Tabloyu güncelle" }
-                        else if finding.code.starts_with("text_field_") { "Alanları yenile" }
-                        else if finding.code.starts_with("text_font_") { "Yazı stilini inceleyin" }
-                        else if finding.code == "text_layout_unsupported" { "Yazı biçimini inceleyin" }
-                        else { "Ölçüyü yeniden bağla…" })).on_press_maybe(
-                        (current && (finding.code.starts_with("t_junction_") || matches!(finding.code.as_str(), "angle_deviation" | "block_definition_duplicate") || (finding.group != InspectionGroup::Health && finding.group != InspectionGroup::Boundaries)) && finding.code != "dimension_override"
-                            && !finding.code.starts_with("block_") && !finding.code.starts_with("table_field_source_") && finding.code != "table_field_unverified"
-                            && !finding.code.starts_with("text_font_") && !matches!(finding.code.as_str(),"text_field_unverified"|"text_layout_unsupported"))
+            body = body
+                .push(label::body(finding.message.clone()))
+                .push(label::body(finding.repair.clone()))
+                .push(
+                    row![
+                        button(label::body("Konuma yakınlaş"))
+                            .padding(kentos_ui::theme::metrics::action())
+                            .style(style::button::secondary)
+                            .on_press_maybe(current.then(|| msg(Event::Near))),
+                        button(label::body("Kaynağa git"))
+                            .padding(kentos_ui::theme::metrics::action())
+                            .style(style::button::secondary)
+                            .on_press_maybe(
+                                (current
+                                    && finding.group == InspectionGroup::Annotations
+                                    && finding.uids.len() > 1)
+                                    .then(|| msg(Event::Sources))
+                            ),
+                        button(label::body(if finding.code.starts_with("t_junction_") {
+                            "Ucu kenara getir"
+                        } else if finding.code == "angle_deviation" {
+                            "Eksene döndür"
+                        } else if finding.code == "block_definition_duplicate" {
+                            "Tek tanımda birleştir"
+                        } else if finding.group == InspectionGroup::Health {
+                            "Elle inceleyin"
+                        } else if finding.group == InspectionGroup::Hatches {
+                            "Taramayı düzenle…"
+                        } else if finding.code.starts_with("leader_") {
+                            "Kılavuz ucunu bağla…"
+                        } else if finding.code.starts_with("block_") {
+                            "Blok tanımını inceleyin"
+                        } else if finding.code.starts_with("table_field_source_") {
+                            "Kaynak yazıyı inceleyin"
+                        } else if finding.code.starts_with("table_field_") {
+                            "Tabloyu güncelle"
+                        } else if finding.code.starts_with("text_field_") {
+                            "Alanları yenile"
+                        } else if finding.code.starts_with("text_font_") {
+                            "Yazı stilini inceleyin"
+                        } else if finding.code == "text_layout_unsupported" {
+                            "Yazı biçimini inceleyin"
+                        } else {
+                            "Ölçüyü yeniden bağla…"
+                        }))
+                        .on_press_maybe(
+                            (current
+                                && (finding.code.starts_with("t_junction_")
+                                    || matches!(
+                                        finding.code.as_str(),
+                                        "angle_deviation" | "block_definition_duplicate"
+                                    )
+                                    || (finding.group != InspectionGroup::Health
+                                        && finding.group != InspectionGroup::Boundaries))
+                                && finding.code != "dimension_override"
+                                && !finding.code.starts_with("block_")
+                                && !finding.code.starts_with("table_field_source_")
+                                && finding.code != "table_field_unverified"
+                                && !finding.code.starts_with("text_font_")
+                                && !matches!(
+                                    finding.code.as_str(),
+                                    "text_field_unverified" | "text_layout_unsupported"
+                                ))
                             .then(|| msg(Event::Repair))
-                    ).padding(kentos_ui::theme::metrics::action()).style(style::button::secondary)
-                ]
-                .spacing(8),
-            );
+                        )
+                        .padding(kentos_ui::theme::metrics::action())
+                        .style(style::button::secondary)
+                    ]
+                    .spacing(8),
+                );
         }
         container(body).padding(10).height(Fill).into()
     }
@@ -591,7 +729,11 @@ impl App {
             .cad_inspection
             .selected
             .and_then(|i| self.cad_inspection.output.as_ref()?.findings.get(i))?;
-        let tone = if f.severity == kentos_commands::InspectionSeverity::Info {Tone::Accent} else {Tone::Danger};
+        let tone = if f.severity == kentos_commands::InspectionSeverity::Info {
+            Tone::Accent
+        } else {
+            Tone::Danger
+        };
         let points: Vec<_> = f.points.iter().map(|p| Vec2::new(p.x, p.y)).collect();
         let markers = points
             .iter()
@@ -629,7 +771,9 @@ fn finding_title(code: &str) -> &'static str {
         "block_definition_duplicate" => return "Aynı içerikli blok tanımları",
         _ => {}
     }
-    if let Some(leaf) = code.strip_prefix("block_") { return finding_title(leaf); }
+    if let Some(leaf) = code.strip_prefix("block_") {
+        return finding_title(leaf);
+    }
     match code {
         "boundary_open_end" => "Açık uç",
         "boundary_gap" => "Sınırda açıklık",
@@ -668,7 +812,9 @@ impl App {
     /// Onar (docs/adr/1005 §2): the finding's line end brought onto its target's edge by `cad.drawing.repair`, by at
     /// most the inspection's own gap; a measured or locked line is refused by the command and said.
     fn repair_junction(&mut self, f: &kentos_commands::InspectionFinding) -> Task<Message> {
-        let (Some(line), Some(target), Some(end)) = (f.uids.first(), f.uids.get(1), f.points.first()) else {
+        let (Some(line), Some(target), Some(end)) =
+            (f.uids.first(), f.uids.get(1), f.points.first())
+        else {
             return Task::none();
         };
         let Some(doc) = self.document.as_mut() else {
@@ -682,13 +828,21 @@ impl App {
         let input = kentos_commands::DrawingRepair {
             fixes: vec![kentos_commands::JunctionFix {
                 uid: line.clone(),
-                end: if at_start { kentos_commands::LineEnd::Start } else { kentos_commands::LineEnd::End },
+                end: if at_start {
+                    kentos_commands::LineEnd::Start
+                } else {
+                    kentos_commands::LineEnd::End
+                },
                 target: target.clone(),
             }],
             angles: Vec::new(),
             blocks: Vec::new(),
             max_angle: None,
-            max_gap: Some(self.cad_inspection.gap.max(f.distance.unwrap_or(0.0) * (1.0 + 1e-9))),
+            max_gap: Some(
+                self.cad_inspection
+                    .gap
+                    .max(f.distance.unwrap_or(0.0) * (1.0 + 1e-9)),
+            ),
             expected_revision: Some(doc.model.revision().to_string()),
         };
         let result = kentos_native_application::drawing_repair::execute(
@@ -699,7 +853,10 @@ impl App {
             let f = self.format();
             self.say(
                 kentos_interaction::Level::Success,
-                format!("Çizginin ucu {} kaydırılarak kenara getirildi. Geri almak için Geri al.", f.length(done.max_moved)),
+                format!(
+                    "Çizginin ucu {} kaydırılarak kenara getirildi. Geri almak için Geri al.",
+                    f.length(done.max_moved)
+                ),
             );
             return self.cad_inspection_event(Event::Run);
         }
@@ -725,16 +882,25 @@ impl App {
             let Some(uid) = f.uids.first() else {
                 return Task::none();
             };
-            input.angles.push(kentos_commands::AngleFix { uid: uid.clone(), pivot: kentos_commands::LineEnd::Start });
+            input.angles.push(kentos_commands::AngleFix {
+                uid: uid.clone(),
+                pivot: kentos_commands::LineEnd::Start,
+            });
         } else {
             // The finding names its definitions in its words; the group is found again from the drawing.
-            let Some(names) = kentos_native_application::drawing_inspect::duplicate_blocks(&doc.model)
-                .into_iter()
-                .find(|names| f.message == format!("Aynı içerikli blok tanımları: {}.", names.join(", ")))
+            let Some(names) =
+                kentos_native_application::drawing_inspect::duplicate_blocks(&doc.model)
+                    .into_iter()
+                    .find(|names| {
+                        f.message == format!("Aynı içerikli blok tanımları: {}.", names.join(", "))
+                    })
             else {
                 return Task::none();
             };
-            input.blocks.push(kentos_commands::BlockMerge { keep: names[0].clone(), merge: names[1..].to_vec() });
+            input.blocks.push(kentos_commands::BlockMerge {
+                keep: names[0].clone(),
+                merge: names[1..].to_vec(),
+            });
         }
         let result = kentos_native_application::drawing_repair::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -742,7 +908,11 @@ impl App {
         );
         if let Some(done) = self.answered(result) {
             let words = if let Some(s) = done.straightened.first() {
-                format!("Kenar {:.4}° döndürülerek eksene getirildi; ucu {} kaydı. Geri almak için Geri al.", s.deviation, self.format().length(s.moved))
+                format!(
+                    "Kenar {:.4}° döndürülerek eksene getirildi; ucu {} kaydı. Geri almak için Geri al.",
+                    s.deviation,
+                    self.format().length(s.moved)
+                )
             } else if let Some(m) = done.merged.first() {
                 format!(
                     "{} tanımı “{}” tanımında birleşti; {} yerleştirme ona bağlandı. Geri almak için Geri al.",
@@ -785,11 +955,16 @@ mod tests {
     #[test]
     fn diagnosis_reaches_the_main_scene_but_never_replaces_an_active_tool() {
         let mut app = inspected();
-        let preview = app.drawing_preview(&app.format()).expect("main scene diagnosis");
+        let preview = app
+            .drawing_preview(&app.format())
+            .expect("main scene diagnosis");
         assert_eq!(preview.markers.len(), 1);
         assert_eq!(preview.tag.unwrap().lines, vec!["Açık uç"]);
         assert!(app.session.start("line"));
-        assert!(app.drawing_preview(&app.format()).is_none_or(|p| p.tag.is_none()));
+        assert!(
+            app.drawing_preview(&app.format())
+                .is_none_or(|p| p.tag.is_none())
+        );
     }
 
     #[test]

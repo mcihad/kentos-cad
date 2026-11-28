@@ -115,7 +115,11 @@ pub fn edge_face(
 
 /// The straight edges a wall path has, in order; arcs left out.
 pub fn straight_edges(count: usize, bulges: &[f64], closed: bool) -> Vec<usize> {
-    let edges = if closed { count } else { count.saturating_sub(1) };
+    let edges = if closed {
+        count
+    } else {
+        count.saturating_sub(1)
+    };
     (0..edges)
         .filter(|&k| bulges.get(k).is_none_or(|b| *b == 0.0))
         .collect()

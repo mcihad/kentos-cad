@@ -19,7 +19,11 @@ pub const MAX_IMAGE_BYTES: u64 = 32 * 1024 * 1024;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum ImagesOperation {
     /// Göm: the images' files read into the project's library, the images made embedded; none given: every linked

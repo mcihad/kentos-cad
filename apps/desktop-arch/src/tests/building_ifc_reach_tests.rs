@@ -3,11 +3,11 @@
 //! Model in Mimari. Moved from the core's gis_visibility_tests.rs with the module's package (docs/adr/9199 §4.11);
 //! CBS is still in the core, so its side runs here too.
 
-use kentos_commands::Workspace;
-use kentos_ui::widget::Menu;
 use crate::app::{App, Message};
 use crate::files_testing::{app_with_drawing, last_said};
 use crate::ribbon_search::Hit;
+use kentos_commands::Workspace;
+use kentos_ui::widget::Menu;
 
 fn gis_app() -> App {
     let mut app = app_with_drawing();
@@ -65,8 +65,15 @@ fn the_buildings_ifc_is_out_of_reach_in_cbs_and_in_reach_in_a_buildings_cad_proj
     assert!(cad.offers("arch.ifcExport") && in_menus(&cad, "arch.ifcExport"));
     assert!(found(&mut cad, "ifc").contains(&"arch.ifcExport"));
     assert!(cad.shows_aid("view.lineWeights"));
-    assert_eq!(kentos_sheet_ui::status::model_name(Some(cad.work_mode())), "Model");
+    assert_eq!(
+        kentos_sheet_ui::status::model_name(Some(cad.work_mode())),
+        "Model"
+    );
     cad.layer_pressed("cizim".into());
     cad.layer_pressed("cizim".into());
-    assert_ne!(context(&cad), Some("ctx.network"), "the network's tab is CBS's");
+    assert_ne!(
+        context(&cad),
+        Some("ctx.network"),
+        "the network's tab is CBS's"
+    );
 }

@@ -994,9 +994,19 @@ impl Parser<'_, '_> {
                 }
                 let c = |k: usize| u32::from(self.data[item + k]);
                 self.header.layer_colors.push(to_argb(c(0), c(1), c(2)));
-                let byte = |k: usize| self.data.get(item + k).copied().filter(|_| item + k < block_end);
-                let symbol = (byte(19) == Some(1)).then(|| byte(17)).flatten().filter(|&n| n != 0);
-                self.header.layer_styles.push((byte(5).unwrap_or(0), symbol));
+                let byte = |k: usize| {
+                    self.data
+                        .get(item + k)
+                        .copied()
+                        .filter(|_| item + k < block_end)
+                };
+                let symbol = (byte(19) == Some(1))
+                    .then(|| byte(17))
+                    .flatten()
+                    .filter(|&n| n != 0);
+                self.header
+                    .layer_styles
+                    .push((byte(5).unwrap_or(0), symbol));
             }
         }
     }
@@ -1110,7 +1120,10 @@ impl Parser<'_, '_> {
                 if self.mode == Mode::Entities {
                     // A record with nothing past its header holds no object (the city plan NCZ: three of type 0 and
                     // the file's last, of type 14; plan/render.md RM-17): not a loss.
-                    let body = self.data.get(offset + 7..(offset + block_size + 1).min(self.size())).unwrap_or(&[]);
+                    let body = self
+                        .data
+                        .get(offset + 7..(offset + block_size + 1).min(self.size()))
+                        .unwrap_or(&[]);
                     if body.iter().all(|&b| b == 0) {
                         self.header.empty[usize::from(t)] += 1;
                     } else {
@@ -1988,7 +2001,10 @@ mod tests {
             b.extend(body);
             b
         };
-        for (t, body, empty) in [(14u8, vec![0u8; 79], true), (0, vec![0, 0, 0x1e, 0, 0x35, 0x0d], false)] {
+        for (t, body, empty) in [
+            (14u8, vec![0u8; 79], true),
+            (0, vec![0, 0, 0x1e, 0, 0x35, 0x0d], false),
+        ] {
             let data = block(t, &body);
             let mut header = Header::default();
             let mut parser = Parser {
@@ -2005,7 +2021,11 @@ mod tests {
             };
             parser.parse_geometry(0, 6 + body.len(), 0);
             let t = usize::from(t);
-            assert_eq!((header.empty[t], header.unsupported[t]), if empty { (1, 0) } else { (0, 1) }, "type {t}");
+            assert_eq!(
+                (header.empty[t], header.unsupported[t]),
+                if empty { (1, 0) } else { (0, 1) },
+                "type {t}"
+            );
         }
     }
 

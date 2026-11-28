@@ -17,15 +17,16 @@ use std::path::{Path, PathBuf};
 use kentos_contracts::{Entity, LayerField};
 
 use super::write::{
-    DbfEncoding, Family, NO_M, SHAPEFILE, Shape, Written, content, curved, dbf_head, dbf_record, file_name, header,
-    left_kind, shape_type, sort,
+    DbfEncoding, Family, NO_M, SHAPEFILE, Shape, Written, content, curved, dbf_head, dbf_record,
+    file_name, header, left_kind, shape_type, sort,
 };
 use crate::blocks::Placing;
 use crate::export_geom::geometry;
 use crate::gis::Ring;
 use crate::report::Report;
 
-const TOO_BIG: &str = "Shapefile'ın bir dosyası 2 GB'ı aşıyor; katmanı bölün ya da GeoPackage'a yazın.";
+const TOO_BIG: &str =
+    "Shapefile'ın bir dosyası 2 GB'ı aşıyor; katmanı bölün ya da GeoPackage'a yazın.";
 
 /// The least and greatest of values seen; (0, 0) when none was.
 #[derive(Clone, Copy, Debug)]
@@ -44,7 +45,11 @@ impl Span {
     }
 
     fn get(self) -> (f64, f64) {
-        if self.0 > self.1 { (0.0, 0.0) } else { (self.0, self.1) }
+        if self.0 > self.1 {
+            (0.0, 0.0)
+        } else {
+            (self.0, self.1)
+        }
     }
 }
 
@@ -105,7 +110,12 @@ impl Spool {
     }
 
     /// Keeps a row: its shape (none: a null shape) and its attributes; what decides the head is gathered.
-    fn put(&mut self, family: Option<Family>, shape: Option<&Shape>, attrs: &BTreeMap<String, String>) -> std::io::Result<()> {
+    fn put(
+        &mut self,
+        family: Option<Family>,
+        shape: Option<&Shape>,
+        attrs: &BTreeMap<String, String>,
+    ) -> std::io::Result<()> {
         let Some(out) = self.file.as_mut() else {
             return Ok(());
         };
@@ -118,7 +128,10 @@ impl Spool {
             if s.parts.iter().any(|r| has(&r.ms)) {
                 self.m = true;
             }
-            if s.parts.iter().any(|r| r.zs.as_ref().is_none_or(|z| z.iter().any(Option::is_none))) {
+            if s.parts
+                .iter()
+                .any(|r| r.zs.as_ref().is_none_or(|z| z.iter().any(Option::is_none)))
+            {
                 self.missing_z += 1;
             }
             if family == Some(Family::Point) && s.parts.len() > 1 {
@@ -213,7 +226,9 @@ fn read_heights(r: &mut impl Read, n: usize) -> std::io::Result<Vec<Option<f64>>
 
 impl Back {
     fn open(path: &Path) -> std::io::Result<Back> {
-        Ok(Back { file: BufReader::new(File::open(path)?) })
+        Ok(Back {
+            file: BufReader::new(File::open(path)?),
+        })
     }
 
     /// The next row: its shape and attributes; none at the end.
@@ -225,7 +240,9 @@ impl Back {
         let r = &mut self.file;
         let shape = if flag[0] != 0 {
             let parts = read_u32(r)?;
-            let mut s = Shape { parts: Vec::with_capacity(parts) };
+            let mut s = Shape {
+                parts: Vec::with_capacity(parts),
+            };
             for _ in 0..parts {
                 let n = read_u32(r)?;
                 let mut has = [0u8; 1];
@@ -236,8 +253,16 @@ impl Back {
                     let y = read_f64(r)?;
                     pts.push(kentos_contracts::Vec2 { x, y });
                 }
-                let zs = if has[0] & 1 != 0 { Some(read_heights(r, n)?) } else { None };
-                let ms = if has[0] & 2 != 0 { Some(read_heights(r, n)?) } else { None };
+                let zs = if has[0] & 1 != 0 {
+                    Some(read_heights(r, n)?)
+                } else {
+                    None
+                };
+                let ms = if has[0] & 2 != 0 {
+                    Some(read_heights(r, n)?)
+                } else {
+                    None
+                };
                 s.parts.push(Ring { pts, zs, ms });
             }
             Some(s)
@@ -291,7 +316,14 @@ pub struct Stream {
 impl Stream {
     /// Begins the layer's sets in `folder`, named after `name` (`_nokta`, `_cizgi`, `_alan` after it when the layer has
     /// several geometry families), its fields as given, `prj` the system's text (none writes no .prj).
-    pub fn begin(folder: &Path, name: &str, fields: &[LayerField], prj: Option<String>, encoding: DbfEncoding, blocks: Placing) -> Stream {
+    pub fn begin(
+        folder: &Path,
+        name: &str,
+        fields: &[LayerField],
+        prj: Option<String>,
+        encoding: DbfEncoding,
+        blocks: Placing,
+    ) -> Stream {
         Stream {
             folder: folder.to_path_buf(),
             base: file_name(name),
@@ -309,7 +341,8 @@ impl Stream {
     }
 
     fn spool_path(&self, tag: &str) -> PathBuf {
-        self.folder.join(format!(".{}{tag}.kentos-gecici", self.base))
+        self.folder
+            .join(format!(".{}{tag}.kentos-gecici", self.base))
     }
 
     /// Writes an object: its shapes into their families' sets, a record without a geometry as a null shape; one the
@@ -371,10 +404,16 @@ impl Stream {
     /// Writes the sets and puts them in place: their files; what could not be written as it was is in what comes back.
     pub fn finish(mut self) -> Result<(Vec<PathBuf>, Written), String> {
         let result = self.write_sets();
-        let spools: Vec<PathBuf> = self.families.values().map(|s| s.path.clone()).chain(self.nulls.iter().map(|s| s.path.clone())).collect();
+        let spools: Vec<PathBuf> = self
+            .families
+            .values()
+            .map(|s| s.path.clone())
+            .chain(self.nulls.iter().map(|s| s.path.clone()))
+            .collect();
         let finished = result.and_then(|files| {
             for p in &self.parts {
-                std::fs::rename(&p.part, &p.path).map_err(|e| format!("{}: {e}", p.path.display()))?;
+                std::fs::rename(&p.part, &p.path)
+                    .map_err(|e| format!("{}: {e}", p.path.display()))?;
             }
             Ok(files)
         });
@@ -427,28 +466,36 @@ impl Stream {
                 Some(f) if several => format!("{}{}", self.base, f.suffix()),
                 _ => self.base.clone(),
             };
-            let mut spools: Vec<&Spool> = family.and_then(|f| self.families.get(&f)).into_iter().collect();
+            let mut spools: Vec<&Spool> = family
+                .and_then(|f| self.families.get(&f))
+                .into_iter()
+                .collect();
             if i == 0
                 && let Some(n) = &self.nulls
             {
                 spools.push(n);
             }
             let rows: usize = spools.iter().map(|s| s.rows).sum();
-            let keys: BTreeSet<String> = spools.iter().flat_map(|s| s.keys.iter().cloned()).collect();
+            let keys: BTreeSet<String> =
+                spools.iter().flat_map(|s| s.keys.iter().cloned()).collect();
             let enc = self.encoding;
             let mut out = std::mem::take(&mut self.out);
-            let cols = super::columns::columns(&name, &self.fields, &keys, enc, &mut out, &mut |each| {
-                walk_spools(&spools, &mut |_, attrs| {
-                    each(attrs);
-                    Ok(())
-                })
-            });
+            let cols =
+                super::columns::columns(&name, &self.fields, &keys, enc, &mut out, &mut |each| {
+                    walk_spools(&spools, &mut |_, attrs| {
+                        each(attrs);
+                        Ok(())
+                    })
+                });
             self.out = out;
             let cols = cols?;
-            let family_spool = family.and_then(|f| self.families.get(&f)).map(|s| (s.z, s.m, s.multi, s.missing_z, s.x, s.y, s.zs, s.ms));
+            let family_spool = family
+                .and_then(|f| self.families.get(&f))
+                .map(|s| (s.z, s.m, s.multi, s.missing_z, s.x, s.y, s.zs, s.ms));
             let spool_paths: Vec<PathBuf> = spools.iter().map(|s| s.path.clone()).collect();
             let mut set_files = Vec::new();
-            if let (Some(f), Some((z, m, multi, missing_z, x, y, zs, ms))) = (family, family_spool) {
+            if let (Some(f), Some((z, m, multi, missing_z, x, y, zs, ms))) = (family, family_spool)
+            {
                 if z {
                     zero_z += missing_z;
                 }
@@ -496,10 +543,30 @@ impl Stream {
             0,
             out.blank_text,
         );
-        rep.note_n("Sondaki boşluk", "metnin sonundaki boşlukları dBASE okuyucuları siler", 0, out.trailing_spaces);
-        rep.note_n("Kısaltılan metin", "dBASE metin sütunu en çok 254 bayt alır; uzun metin kesildi", 0, out.cut);
-        rep.note_n("Kod sayfasında olmayan harf", "Windows-1254'te olmayan harfler ? olarak yazıldı", 0, out.replaced);
-        rep.note_n("Sütun", "dBASE en çok 255 sütun alır; fazlası yazılmadı", 0, out.columns_left);
+        rep.note_n(
+            "Sondaki boşluk",
+            "metnin sonundaki boşlukları dBASE okuyucuları siler",
+            0,
+            out.trailing_spaces,
+        );
+        rep.note_n(
+            "Kısaltılan metin",
+            "dBASE metin sütunu en çok 254 bayt alır; uzun metin kesildi",
+            0,
+            out.cut,
+        );
+        rep.note_n(
+            "Kod sayfasında olmayan harf",
+            "Windows-1254'te olmayan harfler ? olarak yazıldı",
+            0,
+            out.replaced,
+        );
+        rep.note_n(
+            "Sütun",
+            "dBASE en çok 255 sütun alır; fazlası yazılmadı",
+            0,
+            out.columns_left,
+        );
         for r in &out.renamed {
             rep.note(
                 "Sütun adı",
@@ -530,7 +597,9 @@ fn write_shapes(
     let mut main = BufWriter::new(shp);
     let mut index = BufWriter::new(shx);
     main.write_all(&[0u8; 100]).map_err(io)?;
-    index.write_all(&header(t, 100 + 8 * rows, bounds)?).map_err(io)?;
+    index
+        .write_all(&header(t, 100 + 8 * rows, bounds)?)
+        .map_err(io)?;
     let mut offset = 100usize;
     let mut number = 0usize;
     for path in spools {
@@ -538,8 +607,11 @@ fn write_shapes(
         while let Some((shape, _)) = back.next().map_err(io)? {
             number += 1;
             let c = content(t, shape.as_ref(), z, m);
-            let (Ok(n), Ok(words), Ok(at)) = (i32::try_from(number), i32::try_from(c.len() / 2), i32::try_from(offset / 2))
-            else {
+            let (Ok(n), Ok(words), Ok(at)) = (
+                i32::try_from(number),
+                i32::try_from(c.len() / 2),
+                i32::try_from(offset / 2),
+            ) else {
                 return Err(TOO_BIG.into());
             };
             main.write_all(&n.to_be_bytes()).map_err(io)?;
@@ -587,7 +659,8 @@ mod tests {
     use crate::shp::write::{Input, Layer, write};
 
     fn scratch(name: &str) -> PathBuf {
-        let dir = std::env::temp_dir().join(format!("kentos-shp-stream-{name}-{}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("kentos-shp-stream-{name}-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("a folder");
         dir
@@ -602,10 +675,17 @@ mod tests {
           {"kind":"point","id":3,"layerId":"p","attrs":{"ada":"7","ad":"Direk"},"p":{"x":3,"y":4},"z":12.0},
           {"kind":"line","id":5,"layerId":"p","attrs":{"ad":"Yol çok uzun bir ad"},"a":{"x":0,"y":0},"b":{"x":5,"y":5}}
         ]"#;
-        let mut objects = serde_json::from_str::<crate::wire::Objects>(text).expect("objects").0;
+        let mut objects = serde_json::from_str::<crate::wire::Objects>(text)
+            .expect("objects")
+            .0;
         // A record without a geometry (its attributes a refused integer and a name).
         let mut base = objects[2].base().clone();
-        base.attrs = [("ada".to_owned(), "x12".to_owned()), ("ad".to_owned(), "Kayıt".to_owned())].into_iter().collect();
+        base.attrs = [
+            ("ada".to_owned(), "x12".to_owned()),
+            ("ad".to_owned(), "Kayıt".to_owned()),
+        ]
+        .into_iter()
+        .collect();
         objects.insert(3, Entity::Record(kentos_contracts::RecordEntity { base }));
         objects
     }
@@ -623,13 +703,25 @@ mod tests {
         let objects = objects();
         let fields = fields();
         let whole = write(&Input {
-            layers: vec![Layer { id: "p", name: "parseller", fields: &fields, objects: objects.iter().collect() }],
+            layers: vec![Layer {
+                id: "p",
+                name: "parseller",
+                fields: &fields,
+                objects: objects.iter().collect(),
+            }],
             blocks: &[],
             prj: Some("PROJCS[\"x\"]".into()),
             encoding: DbfEncoding::Windows1254,
         })
         .expect("written whole");
-        let mut s = Stream::begin(&dir, "parseller", &fields, Some("PROJCS[\"x\"]".into()), DbfEncoding::Windows1254, Placing::new(&[]));
+        let mut s = Stream::begin(
+            &dir,
+            "parseller",
+            &fields,
+            Some("PROJCS[\"x\"]".into()),
+            DbfEncoding::Windows1254,
+            Placing::new(&[]),
+        );
         for e in &objects {
             s.put(e);
         }
@@ -639,13 +731,22 @@ mod tests {
             for (ext, bytes) in &set.files {
                 let path = dir.join(format!("{}.{ext}", set.name));
                 assert!(files.contains(&path), "{path:?} in {files:?}");
-                assert_eq!(&std::fs::read(&path).expect("a file"), bytes, "{}.{ext}", set.name);
+                assert_eq!(
+                    &std::fs::read(&path).expect("a file"),
+                    bytes,
+                    "{}.{ext}",
+                    set.name
+                );
                 expected += 1;
             }
         }
         assert_eq!(files.len(), expected);
         assert_eq!(out.report, whole.report);
-        let left: Vec<_> = std::fs::read_dir(&dir).expect("the folder").filter_map(|e| e.ok()).map(|e| e.file_name()).collect();
+        let left: Vec<_> = std::fs::read_dir(&dir)
+            .expect("the folder")
+            .filter_map(|e| e.ok())
+            .map(|e| e.file_name())
+            .collect();
         assert_eq!(left.len(), expected, "no spool and no part left: {left:?}");
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -655,7 +756,14 @@ mod tests {
     fn a_stream_let_go_leaves_nothing() {
         let dir = scratch("birak");
         let fields = fields();
-        let mut s = Stream::begin(&dir, "parseller", &fields, None, DbfEncoding::Utf8, Placing::new(&[]));
+        let mut s = Stream::begin(
+            &dir,
+            "parseller",
+            &fields,
+            None,
+            DbfEncoding::Utf8,
+            Placing::new(&[]),
+        );
         for e in &objects() {
             s.put(e);
         }

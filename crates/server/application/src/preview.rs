@@ -12,7 +12,8 @@ use std::collections::BTreeMap;
 use std::fmt::Write as _;
 
 use kentos_contracts::{
-    BlockDefinition, BlockId, DocumentSnapshotV2, Entity, LayerNode, ProjectPermission, ProjectStorage, Vec2, WallJustify,
+    BlockDefinition, BlockId, DocumentSnapshotV2, Entity, LayerNode, ProjectPermission,
+    ProjectStorage, Vec2, WallJustify,
 };
 use kentos_postgres::Db;
 use uuid::Uuid;
@@ -81,10 +82,23 @@ impl Place {
 }
 
 enum Mark {
-    Stroke { pts: Vec<Vec2>, closed: bool, width: Option<f64> },
-    Fill { rings: Vec<Vec<Vec2>> },
-    Text { at: Vec2, text: String, height: f64, turn_deg: f64 },
-    Dot { at: Vec2 },
+    Stroke {
+        pts: Vec<Vec2>,
+        closed: bool,
+        width: Option<f64>,
+    },
+    Fill {
+        rings: Vec<Vec<Vec2>>,
+    },
+    Text {
+        at: Vec2,
+        text: String,
+        height: f64,
+        turn_deg: f64,
+    },
+    Dot {
+        at: Vec2,
+    },
 }
 
 struct Drawn {
@@ -167,14 +181,26 @@ fn to_left(pts: &[Vec2], d: f64, closed: bool) -> Vec<Vec2> {
     };
     (0..n)
         .map(|i| {
-            let before = (i > 0 || closed).then(|| normal(pts[(i + n - 1) % n], pts[i])).flatten();
-            let after = (i + 1 < n || closed).then(|| normal(pts[i], pts[(i + 1) % n])).flatten();
+            let before = (i > 0 || closed)
+                .then(|| normal(pts[(i + n - 1) % n], pts[i]))
+                .flatten();
+            let after = (i + 1 < n || closed)
+                .then(|| normal(pts[i], pts[(i + 1) % n]))
+                .flatten();
             let (nx, ny) = match (before, after) {
                 (Some(a), Some(b)) => {
                     let (mx, my) = (a.0 + b.0, a.1 + b.1);
                     let len = (mx * mx + my * my).sqrt();
-                    let cos = if len > 1e-12 { (mx * a.0 + my * a.1) / len } else { 0.0 };
-                    if cos > 0.5 { (mx / len / cos, my / len / cos) } else { a }
+                    let cos = if len > 1e-12 {
+                        (mx * a.0 + my * a.1) / len
+                    } else {
+                        0.0
+                    };
+                    if cos > 0.5 {
+                        (mx / len / cos, my / len / cos)
+                    } else {
+                        a
+                    }
                 }
                 (Some(a), None) | (None, Some(a)) => a,
                 (None, None) => (0.0, 0.0),
@@ -213,7 +239,11 @@ struct Walk<'a> {
 
 impl Walk<'_> {
     fn color(&self, layer: &str, own: Option<&String>) -> Option<String> {
-        let layer_color = self.layers.get(layer).cloned().unwrap_or(Some("#1e2833".into()))?;
+        let layer_color = self
+            .layers
+            .get(layer)
+            .cloned()
+            .unwrap_or(Some("#1e2833".into()))?;
         Some(
             own.filter(|c| c.starts_with('#') && (c.len() == 7 || c.len() == 4))
                 .cloned()
@@ -234,7 +264,12 @@ impl Walk<'_> {
                     .map(|r| r.into_iter().map(|p| place.at(p)).collect())
                     .collect(),
             },
-            Mark::Text { at, text, height, turn_deg } => Mark::Text {
+            Mark::Text {
+                at,
+                text,
+                height,
+                turn_deg,
+            } => Mark::Text {
                 at: place.at(at),
                 text,
                 height: height * place.scale(),
@@ -242,11 +277,18 @@ impl Walk<'_> {
             },
             Mark::Dot { at } => Mark::Dot { at: place.at(at) },
         };
-        self.out.push(Drawn { color: color.to_owned(), mark });
+        self.out.push(Drawn {
+            color: color.to_owned(),
+            mark,
+        });
     }
 
     fn entity(&mut self, e: &Entity, place: &Place, depth: u8) {
-        let stroke = |pts: Vec<Vec2>, closed: bool| Mark::Stroke { pts, closed, width: None };
+        let stroke = |pts: Vec<Vec2>, closed: bool| Mark::Stroke {
+            pts,
+            closed,
+            width: None,
+        };
         macro_rules! colored {
             ($base:expr) => {
                 match self.color(&$base.layer_id, $base.color.as_ref()) {
@@ -267,17 +309,29 @@ impl Walk<'_> {
             Entity::Polyline(p) | Entity::Polygon(p) => {
                 let c = colored!(p.base);
                 let closed = p.closed || matches!(e, Entity::Polygon(_));
-                self.push(&c, place, stroke(bulged(&p.pts, p.bulges.as_ref(), closed), closed));
+                self.push(
+                    &c,
+                    place,
+                    stroke(bulged(&p.pts, p.bulges.as_ref(), closed), closed),
+                );
                 for hole in p.holes.iter().flatten() {
                     self.push(&c, place, stroke(hole.pts.clone(), true));
                 }
                 for part in p.parts.iter().flatten() {
-                    self.push(&c, place, stroke(bulged(&part.pts, part.bulges.as_ref(), true), true));
+                    self.push(
+                        &c,
+                        place,
+                        stroke(bulged(&part.pts, part.bulges.as_ref(), true), true),
+                    );
                 }
             }
             Entity::Circle(ci) => {
                 let c = colored!(ci.base);
-                self.push(&c, place, stroke(arc(ci.c, ci.r, 0.0, std::f64::consts::TAU), true));
+                self.push(
+                    &c,
+                    place,
+                    stroke(arc(ci.c, ci.r, 0.0, std::f64::consts::TAU), true),
+                );
             }
             Entity::Arc(a) => {
                 let c = colored!(a.base);
@@ -386,7 +440,11 @@ impl Walk<'_> {
                 let c = colored!(s.base);
                 for part in &s.space.parts {
                     let mut rings = vec![bulged(&part.outer.pts, part.outer.bulges.as_ref(), true)];
-                    rings.extend(part.holes.iter().map(|h| bulged(&h.pts, h.bulges.as_ref(), true)));
+                    rings.extend(
+                        part.holes
+                            .iter()
+                            .map(|h| bulged(&h.pts, h.bulges.as_ref(), true)),
+                    );
                     self.push(&c, place, Mark::Fill { rings });
                 }
                 if let (Some(name), Some(seed)) = (&s.space.name, s.space.seed) {
@@ -415,7 +473,12 @@ impl Walk<'_> {
                     &c,
                     place,
                     Mark::Fill {
-                        rings: vec![vec![corner(-hw, -hd), corner(hw, -hd), corner(hw, hd), corner(-hw, hd)]],
+                        rings: vec![vec![
+                            corner(-hw, -hd),
+                            corner(hw, -hd),
+                            corner(hw, hd),
+                            corner(-hw, hd),
+                        ]],
                     },
                 );
             }
@@ -512,7 +575,11 @@ pub fn svg(doc: &DocumentSnapshotV2, width: u32) -> Preview {
     for d in &out {
         match &d.mark {
             Mark::Fill { rings } => {
-                let path: String = rings.iter().filter(|r| r.len() > 2).map(|r| path_of(r, true)).collect();
+                let path: String = rings
+                    .iter()
+                    .filter(|r| r.len() > 2)
+                    .map(|r| path_of(r, true))
+                    .collect();
                 if !path.is_empty() {
                     let _ = write!(
                         svg,
@@ -530,11 +597,20 @@ pub fn svg(doc: &DocumentSnapshotV2, width: u32) -> Preview {
                     d.color,
                     w,
                     if width.is_some() { "butt" } else { "round" },
-                    if width.is_some() { " stroke-opacity=\"0.85\"" } else { "" }
+                    if width.is_some() {
+                        " stroke-opacity=\"0.85\""
+                    } else {
+                        ""
+                    }
                 );
             }
             Mark::Stroke { .. } => {}
-            Mark::Text { at, text, height, turn_deg } if !text.trim().is_empty() && *height > 0.0 => {
+            Mark::Text {
+                at,
+                text,
+                height,
+                turn_deg,
+            } if !text.trim().is_empty() && *height > 0.0 => {
                 let _ = write!(
                     svg,
                     "<text x=\"{}\" y=\"{}\" font-family=\"sans-serif\" font-size=\"{:.4}\" fill=\"{}\" transform=\"rotate({:.2} {} {})\">{}</text>",
@@ -562,7 +638,11 @@ pub fn svg(doc: &DocumentSnapshotV2, width: u32) -> Preview {
         }
     }
     svg.push_str("</svg>");
-    Preview { svg, drawn, skipped }
+    Preview {
+        svg,
+        drawn,
+        skipped,
+    }
 }
 
 /// The width a picture is drawn at when none is asked for, and the bounds of one asked for.
@@ -597,14 +677,20 @@ fn counted(svg: String) -> Preview {
             .unwrap_or(0)
     };
     let (drawn, skipped) = (number("data-drawn"), number("data-skipped"));
-    Preview { svg, drawn, skipped }
+    Preview {
+        svg,
+        drawn,
+        skipped,
+    }
 }
 
 async fn drawn_from(bytes: Vec<u8>, width: u32) -> AppResult<Preview> {
     tokio::task::spawn_blocking(move || {
         kentos_kcad::read(&bytes)
             .map(|(_, doc)| svg(&doc, width))
-            .map_err(|e| AppError::invalid(format!("Dosya bir KentOS çizimi olarak okunamadı: {e}")))
+            .map_err(|e| {
+                AppError::invalid(format!("Dosya bir KentOS çizimi olarak okunamadı: {e}"))
+            })
     })
     .await
     .map_err(|e| AppError::Storage(std::io::Error::other(e)))?
@@ -645,18 +731,26 @@ pub async fn project(
             }
             let row = crate::files::revision(&mut tx, access.tenant, access.project, r)
                 .await?
-                .ok_or_else(|| AppError::not_found(format!("“{}” projesinde {r}. revizyon yok.", access.name)))?;
+                .ok_or_else(|| {
+                    AppError::not_found(format!("“{}” projesinde {r}. revizyon yok.", access.name))
+                })?;
             tx.commit().await?;
             let sha = row.2;
             let tag = format!("\"r{r}-{}-w{width}\"", &sha[..16]);
             if already_has(if_none_match, &tag) {
                 return Ok(Pictured { tag, picture: None });
             }
-            let cache = format!("previews/{}/{}/{r:010}-{sha}-{width}", access.tenant, access.project);
+            let cache = format!(
+                "previews/{}/{}/{r:010}-{sha}-{width}",
+                access.tenant, access.project
+            );
             if let Ok(bytes) = blobs.read(&cache).await
                 && let Ok(text) = String::from_utf8(bytes)
             {
-                return Ok(Pictured { tag, picture: Some(counted(text)) });
+                return Ok(Pictured {
+                    tag,
+                    picture: Some(counted(text)),
+                });
             }
             let picture = drawn_from(blobs.read(&row.7).await?, width).await?;
             // Kept for the next caller; a picture not kept is drawn again, nothing more.
@@ -665,7 +759,10 @@ pub async fn project(
             {
                 let _ = w.finish().await;
             }
-            Ok(Pictured { tag, picture: Some(picture) })
+            Ok(Pictured {
+                tag,
+                picture: Some(picture),
+            })
         }
         ProjectStorage::Database => {
             tx.commit().await?;
@@ -682,7 +779,10 @@ pub async fn project(
             let snap = crate::snapshot::take(db, access, crate::snapshot::Take::Cut).await?;
             let tag = format!("\"d{}-w{width}\"", snap.revision);
             let picture = drawn_from(snap.bytes, width).await?;
-            Ok(Pictured { tag, picture: Some(picture) })
+            Ok(Pictured {
+                tag,
+                picture: Some(picture),
+            })
         }
     }
 }
@@ -709,7 +809,10 @@ pub async fn dossier_file(
     }
     let key = crate::blobs::Blobs::dossier_key(dossier, file);
     let picture = drawn_from(blobs.read(&key).await?, width).await?;
-    Ok(Pictured { tag, picture: Some(picture) })
+    Ok(Pictured {
+        tag,
+        picture: Some(picture),
+    })
 }
 
 #[cfg(test)]
@@ -728,8 +831,15 @@ mod tests {
         assert!(a.drawn > 10, "{} drawn", a.drawn);
         assert!(a.svg.starts_with("<svg") && a.svg.ends_with("</svg>"));
         assert!(a.svg.contains("SALON"), "its rooms' names");
-        assert_eq!(counted(a.svg.clone()), a, "a cached picture reads back with its counts");
-        assert!(already_has(Some("\"x\", W/\"r1-ab-w800\""), "\"r1-ab-w800\"") && !already_has(None, "\"a\""));
+        assert_eq!(
+            counted(a.svg.clone()),
+            a,
+            "a cached picture reads back with its counts"
+        );
+        assert!(
+            already_has(Some("\"x\", W/\"r1-ab-w800\""), "\"r1-ab-w800\"")
+                && !already_has(None, "\"a\"")
+        );
         assert_eq!(svg(&doc, 800), a, "deterministic");
     }
 
@@ -746,16 +856,26 @@ mod tests {
         doc.entities = vec![wall];
         let drawn = svg(&doc, 400);
         assert_eq!((drawn.drawn, drawn.skipped), (1, 0));
-        assert!(drawn.svg.contains("stroke-width=\"0.2000\"") && drawn.svg.contains("stroke-linecap=\"butt\""));
+        assert!(
+            drawn.svg.contains("stroke-width=\"0.2000\"")
+                && drawn.svg.contains("stroke-linecap=\"butt\"")
+        );
         // Its left face on the path: its middle a tenth of a metre to the path's right, the corner mitred.
         let middle = to_left(
-            &[Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 4.0, y: 0.0 }, Vec2 { x: 4.0, y: 3.0 }],
+            &[
+                Vec2 { x: 0.0, y: 0.0 },
+                Vec2 { x: 4.0, y: 0.0 },
+                Vec2 { x: 4.0, y: 3.0 },
+            ],
             -0.1,
             false,
         );
         let expected = [(0.0, -0.1), (4.1, -0.1), (4.1, 3.0)];
         for (p, (x, y)) in middle.iter().zip(expected) {
-            assert!((p.x - x).abs() < 1e-9 && (p.y - y).abs() < 1e-9, "{p:?} ≠ ({x}, {y})");
+            assert!(
+                (p.x - x).abs() < 1e-9 && (p.y - y).abs() < 1e-9,
+                "{p:?} ≠ ({x}, {y})"
+            );
         }
     }
 
@@ -764,11 +884,18 @@ mod tests {
         // A half circle from (0,0) to (2,0): every point one unit from (1,0); bulge 1 turns left (below the chord),
         // bulge -1 right (above it).
         for (bulge, side) in [(1.0, -1.0), (-1.0, 1.0)] {
-            let pts = bulged(&[Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 2.0, y: 0.0 }], Some(&vec![bulge, 0.0]), false);
+            let pts = bulged(
+                &[Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 2.0, y: 0.0 }],
+                Some(&vec![bulge, 0.0]),
+                false,
+            );
             assert!(pts.len() > 3);
             for p in &pts {
                 let r = ((p.x - 1.0).powi(2) + p.y.powi(2)).sqrt();
-                assert!((r - 1.0).abs() < 1e-9 && p.y * side >= -1e-9, "{bulge}: {p:?}");
+                assert!(
+                    (r - 1.0).abs() < 1e-9 && p.y * side >= -1e-9,
+                    "{bulge}: {p:?}"
+                );
             }
         }
         let mut doc = sample();

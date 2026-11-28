@@ -417,7 +417,9 @@ mod tests {
             .collect();
         unpredict_horizontal(&mut row, 4, 2, 2, true);
         let back: Vec<u16> = row
-            .as_chunks::<2>().0.iter()
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|c| u16::from_le_bytes([c[0], c[1]]))
             .collect();
         assert_eq!(back, [1000, 2000, 1005, 2007]);

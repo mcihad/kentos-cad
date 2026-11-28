@@ -67,7 +67,9 @@ pub enum SpaceScope {
     Unassigned,
 }
 impl SpaceScope {
-    pub fn is_project(&self) -> bool { *self == Self::Project }
+    pub fn is_project(&self) -> bool {
+        *self == Self::Project
+    }
 }
 
 /// Persistent physical column deduction. Absence preserves legacy wall-only areas.
@@ -85,21 +87,35 @@ pub enum SpaceColumns {
 
 impl SpaceColumns {
     pub const ALL: [Self; 3] = [Self::Ignore, Self::Net, Self::All];
-    pub fn is_ignore(&self) -> bool { *self == Self::Ignore }
+    pub fn is_ignore(&self) -> bool {
+        *self == Self::Ignore
+    }
     pub fn applies(self, method: SpaceMethod) -> bool {
         self == Self::All || (self == Self::Net && method == SpaceMethod::Net)
     }
     pub fn name(self) -> &'static str {
-        match self { Self::Ignore => "ignore", Self::Net => "net", Self::All => "all" }
+        match self {
+            Self::Ignore => "ignore",
+            Self::Net => "net",
+            Self::All => "all",
+        }
     }
     /// The word a quantity rule says after “kolon alanı:”, frozen in the command answers. “Düşme” read as a fall,
     /// not as “not deducted”; no answer held it (docs/adr/8003).
     pub fn label(self) -> &'static str {
-        match self { Self::Ignore => "Düşülmez", Self::Net => "Yalnız net", Self::All => "Her yöntemde" }
+        match self {
+            Self::Ignore => "Düşülmez",
+            Self::Net => "Yalnız net",
+            Self::All => "Her yöntemde",
+        }
     }
     /// The choice as a panel reads it alone, saying what happens to the column's area (docs/adr/8003).
     pub fn choice(self) -> &'static str {
-        match self { Self::Ignore => "Düşülmez", Self::Net => "Yalnız netten düşülür", Self::All => "Her yöntemde düşülür" }
+        match self {
+            Self::Ignore => "Düşülmez",
+            Self::Net => "Yalnız netten düşülür",
+            Self::All => "Her yöntemde düşülür",
+        }
     }
 }
 
@@ -123,10 +139,18 @@ pub enum SpaceBreak {
 impl SpaceBreak {
     pub fn words(self) -> &'static str {
         match self {
-            Self::LostEnclosure => "Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı. Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul).",
-            Self::NoFreeArea => "Kolonlar mahalın alanını tamamen kaplıyor; sınırı son hâliyle kaldı. Kolonları veya kolon alanı tercihini düzeltin.",
-            Self::SourceUnavailable => "Seçilmiş mahal kaynağı yok veya artık uygun değil; sınır son geçerli hâliyle kaldı. Kaynakları geri getirin ya da açıkça yeniden seçin.",
-            Self::InvalidBoundarySource => "Mahalın kolon kaynağı okunamıyor; sınırı son hâliyle kaldı. Kaynak kolonun geometrisini düzeltin.",
+            Self::LostEnclosure => {
+                "Mahali duvarlar artık kapatmıyor; sınırı son hâliyle kaldı. Duvarları kapatın ya da mahali yeniden bulun (Mahali düzenle › Duvarlardan bul)."
+            }
+            Self::NoFreeArea => {
+                "Kolonlar mahalın alanını tamamen kaplıyor; sınırı son hâliyle kaldı. Kolonları veya kolon alanı tercihini düzeltin."
+            }
+            Self::SourceUnavailable => {
+                "Seçilmiş mahal kaynağı yok veya artık uygun değil; sınır son geçerli hâliyle kaldı. Kaynakları geri getirin ya da açıkça yeniden seçin."
+            }
+            Self::InvalidBoundarySource => {
+                "Mahalın kolon kaynağı okunamıyor; sınırı son hâliyle kaldı. Kaynak kolonun geometrisini düzeltin."
+            }
         }
     }
 }
@@ -353,19 +377,31 @@ impl SpaceFields {
             if self.seed.is_none() || ids.is_empty() || ids.len() > MAX_SPACE_POINTS {
                 return Some(("sources".into(), "Kaynak listesi yalnız ilişkili mahalda, boş olmayan ve en çok 10000 kimlikle kullanılabilir.".into()));
             }
-            let uuid = |id: &String| crate::uuid_from_text(id).is_some_and(|id|id != [0;16]);
+            let uuid = |id: &String| crate::uuid_from_text(id).is_some_and(|id| id != [0; 16]);
             if ids.iter().any(|s| !uuid(s)) || ids.windows(2).any(|p| p[0] >= p[1]) {
-                return Some(("sources".into(), "Kaynak kimlikleri sıralı, tekrarsız ve standart küçük harfli UUID olmalı.".into()));
+                return Some((
+                    "sources".into(),
+                    "Kaynak kimlikleri sıralı, tekrarsız ve standart küçük harfli UUID olmalı."
+                        .into(),
+                ));
             }
         }
 
         if !self.scope.is_project() && (self.seed.is_none() || self.arch.level.is_some()) {
-            Some(("scope".into(), "Yalnız atanmamış kaynaklar, kat belirtilmeyen ilişkili mahalda kullanılabilir.".into()))
-        } else { None }
+            Some((
+                "scope".into(),
+                "Yalnız atanmamış kaynaklar, kat belirtilmeyen ilişkili mahalda kullanılabilir."
+                    .into(),
+            ))
+        } else {
+            None
+        }
     }
     /// What is wrong with the space, said so a reader can fix it: the field and the words; none: it holds.
     pub fn problem(&self) -> Option<(String, String)> {
-        if let Some(problem) = self.scope_problem() { return Some(problem); }
+        if let Some(problem) = self.scope_problem() {
+            return Some(problem);
+        }
         if self.seed.is_none() && !self.columns.is_ignore() {
             return Some(("columns".into(), "Kolon alanı yalnız duvarlardan bulunan ilişkili mahalda düşülür; çizilmiş sınırda Düşme seçin.".into()));
         }

@@ -82,16 +82,40 @@ pub fn check(al: &Alignment, pis: &[PiInput], rules: &AlignmentRules) -> Vec<Fin
     let less = |v: f64, limit: Option<f64>| limit.filter(|l| v < *l);
     for c in &al.curves {
         if let Some(l) = less(c.radius, rules.least_radius) {
-            out.push(Finding { rule: Rule::Radius, pis: vec![c.pi.clone()], from: c.stations[0], to: c.stations[3], value: c.radius, limit: l });
+            out.push(Finding {
+                rule: Rule::Radius,
+                pis: vec![c.pi.clone()],
+                from: c.stations[0],
+                to: c.stations[3],
+                value: c.radius,
+                limit: l,
+            });
         }
         if let Some(l) = less(c.arc, rules.least_arc) {
-            out.push(Finding { rule: Rule::Arc, pis: vec![c.pi.clone()], from: c.stations[1], to: c.stations[2], value: c.arc, limit: l });
+            out.push(Finding {
+                rule: Rule::Arc,
+                pis: vec![c.pi.clone()],
+                from: c.stations[1],
+                to: c.stations[2],
+                value: c.arc,
+                limit: l,
+            });
         }
-        for (length, from, to) in [(c.spiral_in, c.stations[0], c.stations[1]), (c.spiral_out, c.stations[2], c.stations[3])] {
+        for (length, from, to) in [
+            (c.spiral_in, c.stations[0], c.stations[1]),
+            (c.spiral_out, c.stations[2], c.stations[3]),
+        ] {
             if length > 0.0
                 && let Some(l) = less(length, rules.least_spiral)
             {
-                out.push(Finding { rule: Rule::Spiral, pis: vec![c.pi.clone()], from, to, value: length, limit: l });
+                out.push(Finding {
+                    rule: Rule::Spiral,
+                    pis: vec![c.pi.clone()],
+                    from,
+                    to,
+                    value: length,
+                    limit: l,
+                });
             }
         }
     }
@@ -99,20 +123,56 @@ pub fn check(al: &Alignment, pis: &[PiInput], rules: &AlignmentRules) -> Vec<Fin
         let joined = p.tangent < MEET;
         let pis = p.between.to_vec();
         if !joined && let Some(l) = less(p.tangent, rules.least_tangent) {
-            out.push(Finding { rule: Rule::Tangent, pis: pis.clone(), from: p.from, to: p.to, value: p.tangent, limit: l });
+            out.push(Finding {
+                rule: Rule::Tangent,
+                pis: pis.clone(),
+                from: p.from,
+                to: p.to,
+                value: p.tangent,
+                limit: l,
+            });
         }
-        if p.reverse && let Some(l) = less(p.tangent, rules.least_reverse) {
-            out.push(Finding { rule: Rule::Reverse, pis: pis.clone(), from: p.from, to: p.to, value: p.tangent, limit: l });
+        if p.reverse
+            && let Some(l) = less(p.tangent, rules.least_reverse)
+        {
+            out.push(Finding {
+                rule: Rule::Reverse,
+                pis: pis.clone(),
+                from: p.from,
+                to: p.to,
+                value: p.tangent,
+                limit: l,
+            });
         }
-        if !p.reverse && !joined && let Some(l) = less(p.tangent, rules.least_broken_back) {
-            out.push(Finding { rule: Rule::BrokenBack, pis: pis.clone(), from: p.from, to: p.to, value: p.tangent, limit: l });
+        if !p.reverse
+            && !joined
+            && let Some(l) = less(p.tangent, rules.least_broken_back)
+        {
+            out.push(Finding {
+                rule: Rule::BrokenBack,
+                pis: pis.clone(),
+                from: p.from,
+                to: p.to,
+                value: p.tangent,
+                limit: l,
+            });
         }
         if joined && let Some(limit) = rules.most_radius_ratio {
-            let (a, b) = (al.curves.iter().find(|c| c.pi == p.between[0]), al.curves.iter().find(|c| c.pi == p.between[1]));
+            let (a, b) = (
+                al.curves.iter().find(|c| c.pi == p.between[0]),
+                al.curves.iter().find(|c| c.pi == p.between[1]),
+            );
             if let (Some(a), Some(b)) = (a, b) {
                 let ratio = a.radius.max(b.radius) / a.radius.min(b.radius);
                 if ratio > limit {
-                    out.push(Finding { rule: Rule::RadiusRatio, pis, from: a.stations[0], to: b.stations[3], value: ratio, limit });
+                    out.push(Finding {
+                        rule: Rule::RadiusRatio,
+                        pis,
+                        from: a.stations[0],
+                        to: b.stations[3],
+                        value: ratio,
+                        limit,
+                    });
                 }
             }
         }
@@ -133,9 +193,20 @@ pub fn check(al: &Alignment, pis: &[PiInput], rules: &AlignmentRules) -> Vec<Fin
                 .iter()
                 .find(|e| (e.start[0] - p.x).hypot(e.start[1] - p.y) < MEET)
                 .map_or(f64::NAN, |e| e.station);
-            out.push(Finding { rule: Rule::Kink, pis: vec![p.id.clone()], from: at, to: at, value: turn.abs().to_degrees(), limit: 0.0 });
+            out.push(Finding {
+                rule: Rule::Kink,
+                pis: vec![p.id.clone()],
+                from: at,
+                to: at,
+                value: turn.abs().to_degrees(),
+                limit: 0.0,
+            });
         }
     }
-    out.sort_by(|a, b| a.from.total_cmp(&b.from).then((a.rule as u8).cmp(&(b.rule as u8))));
+    out.sort_by(|a, b| {
+        a.from
+            .total_cmp(&b.from)
+            .then((a.rule as u8).cmp(&(b.rule as u8)))
+    });
     out
 }

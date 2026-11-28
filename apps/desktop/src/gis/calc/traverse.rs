@@ -161,7 +161,9 @@ impl Computed {
 
 /// A known point's own height (docs/adr/4100): the drawing's point it names (or sits on) when it has one.
 fn point_height(model: &Model, text: &str) -> Option<f64> {
-    let Known::Point { p, .. } = resolve_point(model, text) else { return None };
+    let Known::Point { p, .. } = resolve_point(model, text) else {
+        return None;
+    };
     model.entities().find_map(|e| match e {
         kentos_commands::Entity::Point(pt) if pt.p.x == p.x && pt.p.y == p.y => pt.z,
         _ => None,
@@ -253,7 +255,8 @@ impl Form {
         let mut angles = Vec::new();
         let mut distances = Vec::new();
         let (mut zeniths, mut instruments, mut targets) = (Vec::new(), Vec::new(), Vec::new());
-        let mut back_sights: Vec<Option<kentos_interaction::survey::traverse::TraverseBackSight>> = Vec::new();
+        let mut back_sights: Vec<Option<kentos_interaction::survey::traverse::TraverseBackSight>> =
+            Vec::new();
         for (i, row) in std::iter::once(&self.first).chain(legs).enumerate() {
             let a = read_number(&row[ANGLE]);
             let d = read_number(&row[DISTANCE]);
@@ -266,13 +269,16 @@ impl Form {
             if self.heights {
                 match read_number(&row[ZENITH]) {
                     None => errors.push(format!("{place} başucu açısı yok.")),
-                    Some(v) if v.is_nan() => errors.push(format!("{place} başucu açısı bir sayı değil.")),
+                    Some(v) if v.is_nan() => {
+                        errors.push(format!("{place} başucu açısı bir sayı değil."))
+                    }
                     Some(_) => {}
                 }
                 zeniths.push(read_number(&row[ZENITH]).unwrap_or(f64::NAN));
-                for (col, what, list) in
-                    [(INSTRUMENT, "alet yüksekliği", &mut instruments), (TARGET, "işaret yüksekliği", &mut targets)]
-                {
+                for (col, what, list) in [
+                    (INSTRUMENT, "alet yüksekliği", &mut instruments),
+                    (TARGET, "işaret yüksekliği", &mut targets),
+                ] {
                     let v = read_number(&row[col]).unwrap_or(0.0);
                     if v.is_nan() {
                         errors.push(format!("{place} {what} bir sayı değil."));
@@ -287,13 +293,22 @@ impl Form {
                             if z.is_nan() {
                                 errors.push(format!("{place} geri başucu açısı bir sayı değil."));
                             }
-                            let (i_fore, t_fore) = (instruments[instruments.len() - 1], targets[targets.len() - 1]);
+                            let (i_fore, t_fore) = (
+                                instruments[instruments.len() - 1],
+                                targets[targets.len() - 1],
+                            );
                             let instrument = read_number(&row[BACK_INSTRUMENT]).unwrap_or(t_fore);
                             let target = read_number(&row[BACK_TARGET]).unwrap_or(i_fore);
                             if instrument.is_nan() || target.is_nan() {
-                                errors.push(format!("{place} geri nişanın yüksekliği bir sayı değil."));
+                                errors.push(format!(
+                                    "{place} geri nişanın yüksekliği bir sayı değil."
+                                ));
                             }
-                            Some(kentos_interaction::survey::traverse::TraverseBackSight { zenith: z, instrument, target })
+                            Some(kentos_interaction::survey::traverse::TraverseBackSight {
+                                zenith: z,
+                                instrument,
+                                target,
+                            })
                         }
                     });
                 }
@@ -343,11 +358,18 @@ impl Form {
         if self.heights {
             // Each height typed, else the known point's own (`true`).
             let typed_or_own = |typed: &str, point: &str| {
-                read_number(typed).map(|z| (z, false)).or_else(|| point_height(model, point).map(|z| (z, true)))
+                read_number(typed)
+                    .map(|z| (z, false))
+                    .or_else(|| point_height(model, point).map(|z| (z, true)))
             };
             match typed_or_own(&self.start_z, &self.start) {
-                None => errors.push("Başlangıç noktasının kotu yok: kotunu yazın ya da kotu olan bir nokta seçin.".to_owned()),
-                Some((v, _)) if v.is_nan() => errors.push("Başlangıç kotu bir sayı değil.".to_owned()),
+                None => errors.push(
+                    "Başlangıç noktasının kotu yok: kotunu yazın ya da kotu olan bir nokta seçin."
+                        .to_owned(),
+                ),
+                Some((v, _)) if v.is_nan() => {
+                    errors.push("Başlangıç kotu bir sayı değil.".to_owned())
+                }
                 Some((z0, own)) => {
                     let end = match self.kind {
                         Kind::Closed => Some((z0, own)),
@@ -367,7 +389,10 @@ impl Form {
                         targets: targets.clone(),
                         refraction: Some(model.settings().refraction()),
                         undulations: None,
-                        back: back_sights.iter().any(Option::is_some).then(|| back_sights.clone()),
+                        back: back_sights
+                            .iter()
+                            .any(Option::is_some)
+                            .then(|| back_sights.clone()),
                     });
                 }
             }
@@ -388,13 +413,18 @@ impl Form {
                 heights,
             };
             // Each leg at its own height when the project's heights can be made ellipsoidal (docs/adr/2900, 4100).
-            own_heights = kentos_native_application::survey_heights::traverse_undulations(model.settings(), &input)
-                .map(|r| r.map(|(u, name)| {
+            own_heights = kentos_native_application::survey_heights::traverse_undulations(
+                model.settings(),
+                &input,
+            )
+            .map(|r| {
+                r.map(|(u, name)| {
                     if let Some(h) = input.heights.as_mut() {
                         h.undulations = Some(u);
                     }
                     name
-                }));
+                })
+            });
             match traverse(&input) {
                 Ok(r) => {
                     result = Some(r);
@@ -421,7 +451,10 @@ impl Form {
             targets,
             own_heights,
             ends_z,
-            back: back_sights.iter().any(Option::is_some).then_some(back_sights),
+            back: back_sights
+                .iter()
+                .any(Option::is_some)
+                .then_some(back_sights),
         }
     }
 
@@ -455,28 +488,30 @@ impl Form {
             distances: c.distances,
             names: c.names,
             // Docs/adr/4100: the typed heights (empty: the known points' own) and the legs' readings.
-            heights: self.heights.then(|| kentos_commands::SurveyTraverseHeights {
-                start: read_number(&self.start_z),
-                end: read_number(&self.end_z),
-                zeniths: c.zeniths,
-                instruments: c.instruments,
-                targets: c.targets,
-                // Docs/adr/4500: the legs sighted back too.
-                back: c
-                    .back
-                    .map(|b| {
-                        b.into_iter()
-                            .map(|s| {
-                                s.map(|s| kentos_commands::SurveyBackSight {
-                                    zenith: s.zenith,
-                                    instrument: s.instrument,
-                                    target: s.target,
+            heights: self
+                .heights
+                .then(|| kentos_commands::SurveyTraverseHeights {
+                    start: read_number(&self.start_z),
+                    end: read_number(&self.end_z),
+                    zeniths: c.zeniths,
+                    instruments: c.instruments,
+                    targets: c.targets,
+                    // Docs/adr/4500: the legs sighted back too.
+                    back: c
+                        .back
+                        .map(|b| {
+                            b.into_iter()
+                                .map(|s| {
+                                    s.map(|s| kentos_commands::SurveyBackSight {
+                                        zenith: s.zenith,
+                                        instrument: s.instrument,
+                                        target: s.target,
+                                    })
                                 })
-                            })
-                            .collect()
-                    })
-                    .unwrap_or_default(),
-            }),
+                                .collect()
+                        })
+                        .unwrap_or_default(),
+                }),
         })
     }
 
@@ -533,7 +568,10 @@ impl Form {
             if let Some(h) = heights {
                 row.push(leg.dh.map(|d| fixed(d, 4)).unwrap_or_default());
                 row.push(leg.vh.map(|v| fixed(v, 4)).unwrap_or_default());
-                row.push(h.get(i).map_or_else(|| "bilinen".to_owned(), |z| fixed(*z, 3)));
+                row.push(
+                    h.get(i)
+                        .map_or_else(|| "bilinen".to_owned(), |z| fixed(*z, 3)),
+                );
             }
             if paired {
                 row.push(leg.refraction.map(|k| fixed(k, 3)).unwrap_or_default());
@@ -633,7 +671,11 @@ impl Form {
         if r.heights.is_some() {
             // Where the start's and the end's heights come from: typed, or the known point's own.
             let said = |(z, own): (f64, bool)| {
-                format!("{} m{}", format.length_bare(z), if own { ", noktanın kendi kotu" } else { "" })
+                format!(
+                    "{} m{}",
+                    format.length_bare(z),
+                    if own { ", noktanın kendi kotu" } else { "" }
+                )
             };
             let ends = match c.ends_z {
                 Some((start, Some(end))) if self.kind == Kind::Connected => {
@@ -659,9 +701,15 @@ impl Form {
             // Docs/adr/4500: the legs sighted back, and what their pairs give.
             if let Some(b) = &c.back {
                 let n = b.iter().filter(|s| s.is_some()).count();
-                let ks: Vec<String> = r.legs.iter().filter_map(|l| l.refraction).map(|k| fixed(k, 3)).collect();
+                let ks: Vec<String> = r
+                    .legs
+                    .iter()
+                    .filter_map(|l| l.refraction)
+                    .map(|k| fixed(k, 3))
+                    .collect();
                 let pairs = if ks.is_empty() {
-                    " İşaretler aletlerle aynı yükseklikte değil: çiftlerin k'sı hesaplanmadı.".to_owned()
+                    " İşaretler aletlerle aynı yükseklikte değil: çiftlerin k'sı hesaplanmadı."
+                        .to_owned()
                 } else {
                     format!(" Aynı iki uç arasındaki çiftlerin k'sı: {}.", ks.join("; "))
                 };
@@ -711,14 +759,16 @@ impl Form {
         // Docs/adr/4100: the heights by trigonometric heighting.
         top = top.push(words::field(
             "Kotlar",
-            Switch::new(self.heights, |on| event(Event::TraverseHeights(on))).label("Trigonometrik nivelmanla hesapla"),
+            Switch::new(self.heights, |on| event(Event::TraverseHeights(on)))
+                .label("Trigonometrik nivelmanla hesapla"),
             None,
         ));
         // Docs/adr/4500: the legs sighted back too.
         if self.heights {
             top = top.push(words::field(
                 "Karşılıklı",
-                Switch::new(self.reciprocal, |on| event(Event::TraverseReciprocal(on))).label("Geri başucu açılarıyla"),
+                Switch::new(self.reciprocal, |on| event(Event::TraverseReciprocal(on)))
+                    .label("Geri başucu açılarıyla"),
                 None,
             ));
         }
@@ -779,14 +829,20 @@ impl Form {
         });
         // The start's and the end's heights: empty, the known point's own.
         let heights_row = self.heights.then(|| {
-            let mut r = row![super::number_field("Başlangıç kotu (m)", &self.start_z, "noktanın kotu", |t| {
-                event(Event::TraverseStartZ(t))
-            })]
+            let mut r = row![super::number_field(
+                "Başlangıç kotu (m)",
+                &self.start_z,
+                "noktanın kotu",
+                |t| { event(Event::TraverseStartZ(t)) }
+            )]
             .spacing(18);
             if self.kind == Kind::Connected {
-                r = r.push(super::number_field("Bitiş kotu (m)", &self.end_z, "noktanın kotu", |t| {
-                    event(Event::TraverseEndZ(t))
-                }));
+                r = r.push(super::number_field(
+                    "Bitiş kotu (m)",
+                    &self.end_z,
+                    "noktanın kotu",
+                    |t| event(Event::TraverseEndZ(t)),
+                ));
             }
             r
         });
@@ -823,10 +879,19 @@ impl Form {
         // Docs/adr/4900: the pairs' measured k together, and Projeye yaz.
         if let Some(m) = c.result.as_ref().and_then(measured) {
             let spread = match (m.sd, m.sigma) {
-                (Some(s), Some(sigma)) => format!(", s = {}, ortalamanın σ'sı {}", fixed(s, 4), fixed(sigma, 4)),
+                (Some(s), Some(sigma)) => format!(
+                    ", s = {}, ortalamanın σ'sı {}",
+                    fixed(s, 4),
+                    fixed(sigma, 4)
+                ),
                 _ => String::new(),
             };
-            let now = model.settings().survey.clone().unwrap_or_default().refraction();
+            let now = model
+                .settings()
+                .survey
+                .clone()
+                .unwrap_or_default()
+                .refraction();
             body = body.push(
                 row![
                     label::caption(format!(
@@ -871,7 +936,10 @@ impl Form {
                     ]);
                     // Docs/adr/4100: the point's height.
                     if let Some(h) = &r.heights {
-                        row.push(h.get(i).map_or_else(|| "bilinen".to_owned(), |z| format.length_bare(*z)));
+                        row.push(
+                            h.get(i)
+                                .map_or_else(|| "bilinen".to_owned(), |z| format.length_bare(*z)),
+                        );
                     }
                     row
                 })
@@ -888,30 +956,36 @@ impl Form {
                 result_table(&super::parts::axis_heads(model, &head), rows, &numeric)
             } else if reduced {
                 result_table(
-                    &super::parts::axis_heads(model, &[
-                        "Nokta",
-                        "Semt",
-                        "Zeminde (m)",
-                        "Düzlemde (m)",
-                        "ΔY (m)",
-                        "ΔX (m)",
-                        "Y (sağa)",
-                        "X (yukarı)",
-                    ]),
+                    &super::parts::axis_heads(
+                        model,
+                        &[
+                            "Nokta",
+                            "Semt",
+                            "Zeminde (m)",
+                            "Düzlemde (m)",
+                            "ΔY (m)",
+                            "ΔX (m)",
+                            "Y (sağa)",
+                            "X (yukarı)",
+                        ],
+                    ),
                     rows,
                     &[false, true, true, true, true, true, true, true],
                 )
             } else {
                 result_table(
-                    &super::parts::axis_heads(model, &[
-                        "Nokta",
-                        "Semt",
-                        "Kenar (m)",
-                        "ΔY (m)",
-                        "ΔX (m)",
-                        "Y (sağa)",
-                        "X (yukarı)",
-                    ]),
+                    &super::parts::axis_heads(
+                        model,
+                        &[
+                            "Nokta",
+                            "Semt",
+                            "Kenar (m)",
+                            "ΔY (m)",
+                            "ΔX (m)",
+                            "Y (sağa)",
+                            "X (yukarı)",
+                        ],
+                    ),
                     rows,
                     &[false, true, true, true, true, true, true],
                 )

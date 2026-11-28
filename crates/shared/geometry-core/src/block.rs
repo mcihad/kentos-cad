@@ -45,7 +45,7 @@ use crate::geom::affine::{Affine, apply, compose, translation};
 use crate::geometry::{Bounds, empty_bounds, extend_bounds};
 use crate::jsmath::{PI, atan2, cos, js_hypot, js_max, js_min, sin};
 use crate::ops::curve_cuts::Cut;
-use crate::ops::transform::{transform_shape, transform_shape_in, TextPolicy};
+use crate::ops::transform::{TextPolicy, transform_shape, transform_shape_in};
 use crate::ops::warp::{Warp, warp_shape};
 use crate::text::{Font, TextAlign};
 use crate::vec2::Vec2;
@@ -350,7 +350,10 @@ impl Blocks {
         for d in &defs {
             flatten(&d.id, &sources, &mut done, &mut stack, font);
         }
-        let underlays = defs.iter().filter_map(|d| d.underlay.map(|u| (d.id.clone(), u))).collect();
+        let underlays = defs
+            .iter()
+            .filter_map(|d| d.underlay.map(|u| (d.id.clone(), u)))
+            .collect();
         let dynamic = defs
             .iter()
             .filter(|d| d.dynamic.is_some())
@@ -462,7 +465,10 @@ impl Blocks {
         Self::read_json(v, Entity::from_document_json)
     }
 
-    fn read_json(v: &Json, read_entity: fn(&Json) -> Result<Entity, String>) -> Result<Blocks, String> {
+    fn read_json(
+        v: &Json,
+        read_entity: fn(&Json) -> Result<Entity, String>,
+    ) -> Result<Blocks, String> {
         let Json::Arr(list) = v else {
             return Err("blok tanımları bir dizi olmalı".into());
         };
@@ -480,10 +486,7 @@ impl Blocks {
             let entities = entities
                 .iter()
                 .enumerate()
-                .map(|(k, e)| {
-                    read_entity(e)
-                        .map_err(|m| format!("[{i}].entities[{k}]: {m}"))
-                })
+                .map(|(k, e)| read_entity(e).map_err(|m| format!("[{i}].entities[{k}]: {m}")))
                 .collect::<Result<Vec<Entity>, String>>()?;
             let attributes = match d.get("attributes") {
                 Json::Arr(list) => list
@@ -583,7 +586,12 @@ impl Blocks {
                 continue;
             }
             batch.push(Piece {
-                shape: place_in(&attribute_piece(&flat, piece, values, places), &m, similar, self.font),
+                shape: place_in(
+                    &attribute_piece(&flat, piece, values, places),
+                    &m,
+                    similar,
+                    self.font,
+                ),
                 color: piece.color.clone(),
                 line_weight: piece.line_weight,
                 by_layer: piece.by_layer.clone(),
@@ -607,7 +615,12 @@ impl Blocks {
             .pieces
             .iter()
             .map(|piece| {
-                let shape = place_in(&attribute_piece(&flat, piece, values, places), &m, similar, self.font);
+                let shape = place_in(
+                    &attribute_piece(&flat, piece, values, places),
+                    &m,
+                    similar,
+                    self.font,
+                );
                 Piece {
                     shape,
                     color: piece.color.clone(),
@@ -674,14 +687,18 @@ impl Blocks {
     /// The unflattened local entities along a picked path, including nested inserts and the final leaf.
     /// Uses the same placed/dynamic definitions as `piece`; retains each entity's own look metadata.
     pub fn piece_chain(&self, insert: &Shape, path: &[u32]) -> Option<Vec<Entity>> {
-        if path.is_empty() || path.len() > MAX_DEPTH { return None; }
+        if path.is_empty() || path.len() > MAX_DEPTH {
+            return None;
+        }
         let mut cur = insert.clone();
         let mut out = Vec::with_capacity(path.len());
         for (depth, &i) in path.iter().enumerate() {
             let (flat, _, _) = self.placed(&cur)?;
             let e = flat.entities.get(i as usize)?;
             let inner = matches!(e.shape, Shape::Insert { .. });
-            if inner != (depth + 1 < path.len()) { return None; }
+            if inner != (depth + 1 < path.len()) {
+                return None;
+            }
             cur = e.shape.clone();
             out.push(e.clone());
         }
@@ -843,7 +860,12 @@ impl Blocks {
         (cut, arcs_as_nurbs, arcs_sampled)
     }
 
-    fn explode_with_count(&self, insert: &Entity, arcs_as_nurbs: &mut usize, arcs_sampled: &mut usize) -> Cut {
+    fn explode_with_count(
+        &self,
+        insert: &Entity,
+        arcs_as_nurbs: &mut usize,
+        arcs_sampled: &mut usize,
+    ) -> Cut {
         let Some((flat, m, similar)) = self.placed(&insert.shape) else {
             return Cut::Error("Yerleştirilen blok çizimde tanımlı değil; patlatılamadı.".into());
         };
@@ -975,7 +997,15 @@ impl Blocks {
 /// mapped edge. None for anything else (a closed or multi-part path with arcs, an arc path with widths or
 /// elevations): the warp's own way.
 fn exact_path(e: &Entity, m: &Affine) -> Option<Shape> {
-    let Shape::Polyline { pts, bulges, holes: None, parts: None, closed, widths } = &e.shape else {
+    let Shape::Polyline {
+        pts,
+        bulges,
+        holes: None,
+        parts: None,
+        closed,
+        widths,
+    } = &e.shape
+    else {
         return None;
     };
     let level = match e.rest.iter().find(|(k, _)| k == "zs").map(|(_, v)| v) {
@@ -984,9 +1014,14 @@ fn exact_path(e: &Entity, m: &Affine) -> Option<Shape> {
         Some(_) => false,
     };
     let arcs = bulges.as_ref().is_some_and(|b| b.iter().any(|b| *b != 0.0));
-    let wide = widths.as_ref().is_some_and(|w| w.iter().flatten().any(|w| *w != 0.0));
+    let wide = widths
+        .as_ref()
+        .is_some_and(|w| w.iter().flatten().any(|w| *w != 0.0));
     if arcs {
-        let flat = !e.rest.iter().any(|(k, v)| k == "zs" && !matches!(v, Json::Null));
+        let flat = !e
+            .rest
+            .iter()
+            .any(|(k, v)| k == "zs" && !matches!(v, Json::Null));
         if *closed || wide || !flat {
             return None;
         }
@@ -1122,7 +1157,13 @@ pub fn place_in(shape: &Shape, m: &Affine, similar: bool, font: Font) -> Shape {
         // An affine has no horizon; the similarity's own way all the same.
         Err(_) => transform_shape_in(shape, m, TextPolicy::Readable, font),
     };
-    crate::ops::transform::keep_unicode_mirror_center(shape, &mut placed, m, TextPolicy::Readable, font);
+    crate::ops::transform::keep_unicode_mirror_center(
+        shape,
+        &mut placed,
+        m,
+        TextPolicy::Readable,
+        font,
+    );
     placed
 }
 
@@ -1475,8 +1516,15 @@ fn flat_of(
                 stroke: own_stroke,
                 attribute: None,
                 annotation_origin: number_field(&e.rest, "_annotationIndex")
-                    .filter(|n| n.is_finite() && *n >= 0. && n.fract() == 0. && *n <= u32::MAX as f64)
-                    .map(|n| Arc::new(AnnotationOrigin { definition: id.to_owned(), entity: n as usize })),
+                    .filter(|n| {
+                        n.is_finite() && *n >= 0. && n.fract() == 0. && *n <= u32::MAX as f64
+                    })
+                    .map(|n| {
+                        Arc::new(AnnotationOrigin {
+                            definition: id.to_owned(),
+                            entity: n as usize,
+                        })
+                    }),
             });
         }
     }
@@ -1561,18 +1609,51 @@ mod tests {
         let path = r#"{"kind":"polyline","id":7,"layerId":"a","attrs":{},"pts":[{"x":0,"y":0},{"x":4,"y":0},{"x":0,"y":4}],"bulges":[0,0,0.25],"closed":true,"widths":[[0,0],[0,0],[0.1,0.2]]}"#;
         let value = Json::parse(path).unwrap();
         let native = Entity::from_document_json(&value).unwrap();
-        assert!(matches!(&native.shape, Shape::Polyline { closed:true, widths:Some(w), .. } if w[2] == [0.1,0.2]));
-        assert!(matches!(Entity::from_json(&value).unwrap().shape, Shape::Polyline { closed:false, widths:None, .. }));
-        assert_eq!(native.rest.iter().find(|(k,_)| k == "id").unwrap().1, Json::Num(7.0));
+        assert!(
+            matches!(&native.shape, Shape::Polyline { closed:true, widths:Some(w), .. } if w[2] == [0.1,0.2])
+        );
+        assert!(matches!(
+            Entity::from_json(&value).unwrap().shape,
+            Shape::Polyline {
+                closed: false,
+                widths: None,
+                ..
+            }
+        ));
+        assert_eq!(
+            native.rest.iter().find(|(k, _)| k == "id").unwrap().1,
+            Json::Num(7.0)
+        );
         let written = crate::api::json::to_string(&native);
         assert_eq!(written.matches("\"closed\"").count(), 1);
-        assert_eq!(Entity::from_document_json(&Json::parse(&written).unwrap()).unwrap(), native);
-        let definitions = Json::parse(&format!(r#"[{{"id":"p","base":{{"x":0,"y":0}},"entities":[{path}]}}]"#)).unwrap();
+        assert_eq!(
+            Entity::from_document_json(&Json::parse(&written).unwrap()).unwrap(),
+            native
+        );
+        let definitions = Json::parse(&format!(
+            r#"[{{"id":"p","base":{{"x":0,"y":0}},"entities":[{path}]}}]"#
+        ))
+        .unwrap();
         let blocks = Blocks::from_document_json(&definitions).unwrap();
-        let insert = entity(r#"{"kind":"insert","block":"p","p":{"x":0,"y":0},"scale":1,"rotation":0}"#);
-        let mid = crate::ops::subref::point_in(&blocks, &insert, &[0], crate::ops::subref::Place::Mid { part:0,ring:0,index:2 }).unwrap();
+        let insert =
+            entity(r#"{"kind":"insert","block":"p","p":{"x":0,"y":0},"scale":1,"rotation":0}"#);
+        let mid = crate::ops::subref::point_in(
+            &blocks,
+            &insert,
+            &[0],
+            crate::ops::subref::Place::Mid {
+                part: 0,
+                ring: 0,
+                index: 2,
+            },
+        )
+        .unwrap();
         assert!((mid.x + 0.5).abs() < 1e-12 && (mid.y - 2.0).abs() < 1e-12);
-        for bad in [path.replace("true", "\"true\""), path.replace("[0.1,0.2]", "[-0.1,0.2]"), path.replace("[0.1,0.2]", "[\"#NaN\",0.2]")] {
+        for bad in [
+            path.replace("true", "\"true\""),
+            path.replace("[0.1,0.2]", "[-0.1,0.2]"),
+            path.replace("[0.1,0.2]", "[\"#NaN\",0.2]"),
+        ] {
             assert!(Entity::from_document_json(&Json::parse(&bad).unwrap()).is_err());
         }
     }
@@ -1998,5 +2079,4 @@ mod tests {
             assert_eq!(blocks.get(ROGAR).unwrap().entities, before);
         }
     }
-
 }

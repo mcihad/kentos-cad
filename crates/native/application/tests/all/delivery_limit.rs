@@ -8,7 +8,13 @@ use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
 
 fn run(doc: &mut Document, input: Value) -> Value {
-    registry::run(&mut ExecutionContext::new(doc), "cad.delivery.edit", CallOp::Execute, input).expect("runs")
+    registry::run(
+        &mut ExecutionContext::new(doc),
+        "cad.delivery.edit",
+        CallOp::Execute,
+        input,
+    )
+    .expect("runs")
 }
 
 fn add(id: &str) -> Value {
@@ -19,14 +25,23 @@ fn add(id: &str) -> Value {
 
 #[test]
 fn the_thousand_and_first_delivery_is_refused_and_nothing_is_written() {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.delivery.edit.json")).expect("cases");
-    let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.delivery.edit.json"
+    ))
+    .expect("cases");
+    let snapshot: DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing");
     let mut doc = Document::from_snapshot_v2(snapshot).expect("opens");
     let first = run(&mut doc, add("0192f5a1-8099-7000-8000-000000000000"));
     assert_eq!(first["status"], "completed", "{first}");
     // A thousand records as the command writes them, each its own id and number.
-    let one = doc.settings().arch.as_ref().expect("the records").deliveries[0].clone();
+    let one = doc
+        .settings()
+        .arch
+        .as_ref()
+        .expect("the records")
+        .deliveries[0]
+        .clone();
     let mut settings = doc.settings().clone();
     let arch = settings.arch.as_mut().expect("the records");
     arch.deliveries = (0..MAX_DELIVERIES)

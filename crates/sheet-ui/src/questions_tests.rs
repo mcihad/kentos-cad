@@ -15,12 +15,22 @@ use crate::questions::QuestionsMessage;
 /// a parcel layer of 80 m × 60 m; the plot scale 1:1000 (the extent tests' context).
 fn context() -> Context {
     Context {
-        capabilities: Capabilities { georeferenced: true, attribute_layers: true, plot_scale: Some(1000) },
-        center: Some(GroundPoint { x: 500_300.0, y: 4_420_150.0 }),
+        capabilities: Capabilities {
+            georeferenced: true,
+            attribute_layers: true,
+            plot_scale: Some(1000),
+        },
+        center: Some(GroundPoint {
+            x: 500_300.0,
+            y: 4_420_150.0,
+        }),
         view_size: Some([200.0, 120.0]),
         drawing_bounds: Some([500_000.0, 4_420_000.0, 500_600.0, 4_420_300.0]),
         layers: vec![("parsel".into(), "Kadastro / Parsel".into())],
-        layer_bounds: vec![("parsel".into(), [500_100.0, 4_420_100.0, 500_180.0, 4_420_160.0])],
+        layer_bounds: vec![(
+            "parsel".into(),
+            [500_100.0, 4_420_100.0, 500_180.0, 4_420_160.0],
+        )],
         ..Context::default()
     }
 }
@@ -37,25 +47,54 @@ fn within(inner: [f64; 4], outer: [f64; 4]) -> bool {
 fn the_picture_shows_the_main_maps_frame_with_the_cut_or_the_fit() {
     let mut d = Designer::new(context());
     let _ = d.update(Message::NewSheet);
-    let p = d.questions().expect("the questions").picture.clone().expect("a picture");
-    assert!(within(p.frame, [0.0, 0.0, p.page[0], p.page[1]]), "the frame on the page: {p:?}");
+    let p = d
+        .questions()
+        .expect("the questions")
+        .picture
+        .clone()
+        .expect("a picture");
+    assert!(
+        within(p.frame, [0.0, 0.0, p.page[0], p.page[1]]),
+        "the frame on the page: {p:?}"
+    );
     // The fixed scale: 600 m at 1:1000 is 600 mm, past the frame: the cut.
     let drawing = p.drawing.expect("the drawing's box");
-    assert!((drawing[2] - 600.0).abs() < 1e-6 && (drawing[3] - 300.0).abs() < 1e-6, "{drawing:?}");
+    assert!(
+        (drawing[2] - 600.0).abs() < 1e-6 && (drawing[3] - 300.0).abs() < 1e-6,
+        "{drawing:?}"
+    );
     assert!(!within(drawing, p.frame), "the cut shows: {p:?}");
     // The whole drawing fitted: inside the frame, in its middle.
-    let _ = d.update(Message::Questions(QuestionsMessage::Extent(Extent::Drawing)));
-    let p = d.questions().expect("the questions").picture.clone().expect("a picture");
+    let _ = d.update(Message::Questions(QuestionsMessage::Extent(
+        Extent::Drawing,
+    )));
+    let p = d
+        .questions()
+        .expect("the questions")
+        .picture
+        .clone()
+        .expect("a picture");
     let drawing = p.drawing.expect("the drawing's box");
     assert!(within(drawing, p.frame), "fitted: {p:?}");
     let middle = |b: [f64; 4]| (b[0] + b[2] / 2.0, b[1] + b[3] / 2.0);
     let (a, b) = (middle(drawing), middle(p.frame));
-    assert!((a.0 - b.0).abs() < 1e-6 && (a.1 - b.1).abs() < 1e-6, "{a:?} {b:?}");
+    assert!(
+        (a.0 - b.0).abs() < 1e-6 && (a.1 - b.1).abs() < 1e-6,
+        "{a:?} {b:?}"
+    );
     // A layer: its box is the chosen one, inside the frame; the drawing past it.
     let _ = d.update(Message::Questions(QuestionsMessage::Extent(Extent::Layer)));
-    let p = d.questions().expect("the questions").picture.clone().expect("a picture");
+    let p = d
+        .questions()
+        .expect("the questions")
+        .picture
+        .clone()
+        .expect("a picture");
     assert!(within(p.chosen.expect("the layer's box"), p.frame), "{p:?}");
-    assert!(!within(p.drawing.expect("the drawing's box"), p.frame), "{p:?}");
+    assert!(
+        !within(p.drawing.expect("the drawing's box"), p.frame),
+        "{p:?}"
+    );
 }
 
 #[test]
@@ -69,13 +108,22 @@ fn a_template_that_asks_nothing_asks_kapsam_alone_and_a_calibration_sheet_is_mad
     let effects = d.ask_then_use(&t, None, "Yeni pafta".into());
     assert!(effects.is_empty(), "{effects:?}");
     let q = d.questions().expect("Kapsam alone");
-    assert_eq!((q.extent, q.template.variables.len()), (Some(Extent::Fixed), 0));
+    assert_eq!(
+        (q.extent, q.template.variables.len()),
+        (Some(Extent::Fixed), 0)
+    );
     assert!(q.picture.is_some());
-    assert_eq!(d.update(Message::Questions(QuestionsMessage::Make)), [Effect::ShowSheet]);
+    assert_eq!(
+        d.update(Message::Questions(QuestionsMessage::Make)),
+        [Effect::ShowSheet]
+    );
     // No question and no map (a print calibration sheet): made at once.
     let mut calibration = t.clone();
     // (Its texts and border alone: what tied to a map goes with the maps.)
-    calibration.sheet.items.retain(|it| matches!(it.kind, ItemKind::Text(_) | ItemKind::Border(_)));
+    calibration
+        .sheet
+        .items
+        .retain(|it| matches!(it.kind, ItemKind::Text(_) | ItemKind::Border(_)));
     calibration.sheet.variants.clear();
     calibration.sheet.active_variant = None;
     calibration.sheet.base_layout = None;

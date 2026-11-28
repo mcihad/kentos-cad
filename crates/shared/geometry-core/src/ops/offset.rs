@@ -12,11 +12,11 @@ use crate::entity::{
 };
 use crate::geom::arrangement::{Area, Ring};
 use crate::geom::bulge::{bulge_ring_area, has_bulges};
-use crate::geom::intersect::{Edge, closest_on_edge};
-use crate::geom::offset::{OffsetResult, offset_bulge_path, offset_path, side_of};
 use crate::geom::curve_outline::{CURVE_TOL, spline_outline};
 use crate::geom::ellipse::major_length;
 use crate::geom::intersect::intersect_edges;
+use crate::geom::intersect::{Edge, closest_on_edge};
+use crate::geom::offset::{OffsetResult, offset_bulge_path, offset_path, side_of};
 use crate::geom::region::{subtract_areas, union_areas};
 use crate::geometry::point_in_polygon;
 use crate::jsmath::{js_hypot, js_min};
@@ -309,7 +309,17 @@ pub fn offset_noted(e: &Shape, distance: f64, through: Vec2) -> (Geometry, Offse
 /// How many times a single path's edges cross each other, but for neighbours; 0 for anything else, or a path of
 /// more than 4 000 edges (not looked through).
 pub fn crossings(s: &Shape) -> usize {
-    let (Shape::Polyline { holes: None, parts: None, .. } | Shape::Polygon { holes: None, parts: None, .. }) = s else {
+    let (Shape::Polyline {
+        holes: None,
+        parts: None,
+        ..
+    }
+    | Shape::Polygon {
+        holes: None,
+        parts: None,
+        ..
+    }) = s
+    else {
         return 0;
     };
     let edges = entity_edges(s);
@@ -354,7 +364,13 @@ fn offset_chords(chords: &[Vec2], closed: bool, distance: f64, through: Vec2) ->
 /// A ring offset `d` to the left of its travel; none when it closes up (its turn reversed or its area gone).
 fn offset_ring(r: &Ring, d: f64) -> Option<Ring> {
     let ring = offset_ring_raw(r, d)?;
-    (!turned_over(&r.pts, r.bulges.as_deref(), &ring.pts, ring.bulges.as_deref())).then_some(ring)
+    (!turned_over(
+        &r.pts,
+        r.bulges.as_deref(),
+        &ring.pts,
+        ring.bulges.as_deref(),
+    ))
+    .then_some(ring)
 }
 
 /// Whether a ring's offset closed up: an edge of it runs against its source's (as many corners), or its area turned
@@ -429,7 +445,8 @@ fn offset_region(e: &Shape, distance: f64, through: Vec2) -> Geometry {
     let apart = rings.iter().enumerate().all(|(i, a)| {
         rings[i + 1..].iter().all(|b| {
             let (ea, eb) = (ring_edges(a), ring_edges(b));
-            ea.iter().all(|x| eb.iter().all(|y| intersect_edges(x, y).is_empty()))
+            ea.iter()
+                .all(|x| eb.iter().all(|y| intersect_edges(x, y).is_empty()))
         })
     }) && grown
         .iter()

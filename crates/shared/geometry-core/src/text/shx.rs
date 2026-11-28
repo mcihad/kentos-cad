@@ -7,7 +7,7 @@
 use crate::{
     Vec2,
     geom::bulge::bulge_arc,
-    jsmath::{acos, cos, sin, js_max},
+    jsmath::{acos, cos, js_max, sin},
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -159,9 +159,11 @@ impl<'a> ShapeFile<'a> {
             Some(Kind::Shapes) => Self::read_shapes(data),
             Some(Kind::Unifont) => Self::read_unifont(data),
             Some(Kind::BigFont) => Self::read_bigfont(data),
-            None => Err("Bu SHX biçimi desteklenmiyor; AutoCAD-86 shapes 1.0/1.1, unifont 1.0 \
+            None => Err(
+                "Bu SHX biçimi desteklenmiyor; AutoCAD-86 shapes 1.0/1.1, unifont 1.0 \
                          veya bigfont 1.0 gerekli."
-                .into()),
+                    .into(),
+            ),
         }
     }
 
@@ -536,7 +538,7 @@ impl Vm<'_, '_> {
         Ok(())
     }
     fn point(&mut self, p: Vec2) -> Result<(), String> {
-        if !p.x.is_finite() || !p.y.is_finite() || js_max(p.x.abs(),p.y.abs()) > 1e9 {
+        if !p.x.is_finite() || !p.y.is_finite() || js_max(p.x.abs(), p.y.abs()) > 1e9 {
             return Err("SHX şekil koordinatı sınır dışında.".into());
         }
         if self.pen && p != self.at {
@@ -582,7 +584,7 @@ impl Vm<'_, '_> {
             return self.point(end);
         }
         let step = 2. * acos((1. - TOL / radius).clamp(-1., 1.));
-        let count = js_max((sweep.abs() / step).ceil(),1.);
+        let count = js_max((sweep.abs() / step).ceil(), 1.);
         if !count.is_finite()
             || count > MAX_POINTS as f64
             || self.points.saturating_add(count as usize + 1) > MAX_POINTS

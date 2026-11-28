@@ -49,7 +49,12 @@ fn without_a_selection_the_tool_picks_first() {
     // A click turns one object over; a second click on it takes it out again.
     b.click(-16.0, -12.0);
     assert_eq!(b.selected(), [1]);
-    assert!(b.session.prompt().text().ends_with("(1 seçili) [Seçimi tamamla (Enter)]"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .ends_with("(1 seçili) [Seçimi tamamla (Enter)]")
+    );
     b.click(-16.0, -12.0);
     assert!(b.selected().is_empty());
     // Hovering names what a click would pick.
@@ -138,7 +143,9 @@ fn source_move_previews_the_associative_hatch_without_writing_and_copy_does_not_
         let hatch = hatch.expect("an associative hatch");
         let before = b.doc.to_snapshot_v2();
         b.selection.set([Slot(4)]);
-        if select_hatch { b.selection.set([Slot(4), hatch]); }
+        if select_hatch {
+            b.selection.set([Slot(4), hatch]);
+        }
         b.start(tool);
         b.click(-24., 4.);
         b.move_to(-21., 6.);
@@ -155,8 +162,15 @@ fn source_move_previews_the_associative_hatch_without_writing_and_copy_does_not_
         );
         assert_eq!(!preview.hatch.is_empty(), tool == "move" && !select_hatch);
         if select_hatch {
-            assert_eq!(preview.strokes.iter().filter(|s| s.dash == Some([4.,3.])).count(), 2,
-                "one source and one selected hatch; no extra derived ghost when following changes nothing");
+            assert_eq!(
+                preview
+                    .strokes
+                    .iter()
+                    .filter(|s| s.dash == Some([4., 3.]))
+                    .count(),
+                2,
+                "one source and one selected hatch; no extra derived ghost when following changes nothing"
+            );
         }
         let was = b.doc.get(hatch).cloned();
         b.click(-21., 6.);

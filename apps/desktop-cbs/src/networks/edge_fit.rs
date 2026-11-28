@@ -63,6 +63,10 @@ pub(crate) fn proposed(doc: &Document, active: &str) -> Option<String> {
         .iter()
         .find(|n| typed(n) && fit(doc, &n.id) == Fit::Lines)
         .or_else(|| leaves.iter().find(|n| fit(doc, &n.id) == Fit::Lines))
-        .or_else(|| leaves.iter().find(|n| typed(n) && fit(doc, &n.id) == Fit::Empty))
+        .or_else(|| {
+            leaves
+                .iter()
+                .find(|n| typed(n) && fit(doc, &n.id) == Fit::Empty)
+        })
         .map(|n| n.id.clone())
 }

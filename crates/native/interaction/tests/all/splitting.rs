@@ -130,9 +130,12 @@ fn split_picks_first_and_a_locked_layer_is_left_out() {
     let mut b = bench();
     // The crossing pair and the locked line 13 across nothing.
     b.start("split");
-    assert!(b.session.prompt().text().starts_with(
-        "Parçala: nesnelere tıklayın ya da pencereyle seçin (0 seçili)"
-    ));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Parçala: nesnelere tıklayın ya da pencereyle seçin (0 seçili)")
+    );
     b.click(-26.0, 12.0);
     b.click(-20.0, 8.0);
     b.click(8.0, -15.0);
@@ -658,7 +661,8 @@ fn overlapping_lines_are_said_as_such() {
     b.start("split");
     b.confirm();
     assert!(
-        b.last_text().is_some_and(|t| t.starts_with("Seçilen çizgiler üst üste biniyor")),
+        b.last_text()
+            .is_some_and(|t| t.starts_with("Seçilen çizgiler üst üste biniyor")),
         "{:?}",
         b.last_text()
     );

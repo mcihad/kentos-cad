@@ -19,7 +19,7 @@ pub(crate) trait ArchStartApp {
 impl ArchStartApp for App {
     /// The Mimari program's wall tools take [`FIRST_WALL_STYLE`] and its thickness, as choosing it under Stil does.
     /// Other programs keep "Yok" and 0.20 m.
-    fn start_architecture_tools(&mut self){
+    fn start_architecture_tools(&mut self) {
         if self.program != Some(kentos_launch::Module::Architecture) {
             return;
         }

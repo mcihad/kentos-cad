@@ -160,7 +160,9 @@ pub(crate) struct Seen<'r> {
 /// Whether a COPC node's cube, taken through its file's place (docs/adr/5100), meets one of the boxes in plan.
 fn node_meets(key: Key, info: &Info, pose: Option<&[f64; 16]>, boxes: &[[f64; 4]]) -> bool {
     let c = crate::pointclouds::cube_box(key, info, pose);
-    boxes.iter().any(|b| !(b[2] < c[0] || b[0] > c[3] || b[3] < c[1] || b[1] > c[4]))
+    boxes
+        .iter()
+        .any(|b| !(b[2] < c[0] || b[0] > c[3] || b[3] < c[1] || b[1] > c[4]))
 }
 
 fn box_meets(a: [f64; 4], b: [f64; 4]) -> bool {
@@ -221,7 +223,10 @@ fn scan(
         .flat_map(|(_, c)| c.cloud.sources.iter())
         .filter(|s| {
             let p = s.placed_bounds();
-            s.format != CloudFormat::Copc && boxes.iter().any(|b| box_meets(*b, [p[0], p[1], p[3], p[4]]))
+            s.format != CloudFormat::Copc
+                && boxes
+                    .iter()
+                    .any(|b| box_meets(*b, [p[0], p[1], p[3], p[4]]))
         })
         .map(|s| s.count)
         .sum();
@@ -279,7 +284,10 @@ fn scan(
                     }
                     read[k] += n;
                     for (i, r) in recs.chunks_exact(layout.len).enumerate() {
-                        let xyz = crate::pointclouds::placed(pose, crate::pointclouds::xyz_of(&layout, r, scale, offset));
+                        let xyz = crate::pointclouds::placed(
+                            pose,
+                            crate::pointclouds::xyz_of(&layout, r, scale, offset),
+                        );
                         see(&Seen {
                             cloud: k,
                             source: si as u32,
@@ -324,7 +332,10 @@ fn scan(
                 }
                 read[k] += n;
                 for (i, r) in recs.chunks_exact(layout.len).enumerate() {
-                    let xyz = crate::pointclouds::placed(pose, crate::pointclouds::xyz_of(&layout, r, scale, offset));
+                    let xyz = crate::pointclouds::placed(
+                        pose,
+                        crate::pointclouds::xyz_of(&layout, r, scale, offset),
+                    );
                     see(&Seen {
                         cloud: k,
                         source: si as u32,

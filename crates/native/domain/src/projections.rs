@@ -63,7 +63,11 @@ const LEAST: f64 = 1e-4;
 fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     let len2 = dx * dx + dy * dy;
-    let t = if len2 > 0.0 { (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0) } else { 0.0 };
+    let t = if len2 > 0.0 {
+        (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
     (p.x - (a.x + dx * t)).hypot(p.y - (a.y + dy * t))
 }
 
@@ -71,11 +75,17 @@ fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
 /// do not cross: the projection is inside the parcel).
 fn nearest(shape: &[Area], a: Vec2, b: Vec2) -> f64 {
     let mut d = f64::INFINITY;
-    for ring in shape.iter().flat_map(|x| std::iter::once(&x.outer).chain(&x.holes)) {
+    for ring in shape
+        .iter()
+        .flat_map(|x| std::iter::once(&x.outer).chain(&x.holes))
+    {
         let n = ring.pts.len();
         for k in 0..n {
             let (p, q) = (ring.pts[k], ring.pts[(k + 1) % n]);
-            d = d.min(to_segment(p, a, b)).min(to_segment(a, p, q)).min(to_segment(b, p, q));
+            d = d
+                .min(to_segment(p, a, b))
+                .min(to_segment(a, p, q))
+                .min(to_segment(b, p, q));
         }
     }
     d
@@ -83,7 +93,9 @@ fn nearest(shape: &[Area], a: Vec2, b: Vec2) -> f64 {
 
 /// A point inside an outline's largest part: its outer ring's centroid when inside it, else its first corner nudged in.
 fn inner_point(shape: &[Area]) -> Option<Vec2> {
-    let largest = shape.iter().max_by(|x, y| region::net_area(x).total_cmp(&region::net_area(y)))?;
+    let largest = shape
+        .iter()
+        .max_by(|x, y| region::net_area(x).total_cmp(&region::net_area(y)))?;
     let pts = &largest.outer.pts;
     let (mut cx, mut cy, mut a2) = (0.0, 0.0, 0.0);
     for k in 0..pts.len() {
@@ -115,7 +127,9 @@ impl Document {
     /// The rooms' parts outside the footprint on the storeys over their building's ground storey, in the drawing's
     /// order, and the footprint they stand out of (docs/adr/8152, 8164); none without a footprint.
     pub fn projection_parts(&self) -> (Vec<Area>, Vec<ProjectionPart>) {
-        let Some(arch) = self.settings().arch.as_ref() else { return (Vec::new(), Vec::new()) };
+        let Some(arch) = self.settings().arch.as_ref() else {
+            return (Vec::new(), Vec::new());
+        };
         let counted = self.zoning_counted();
         if counted.footprint_shape.is_empty() {
             return (Vec::new(), Vec::new());
@@ -123,7 +137,11 @@ impl Document {
         let program = &arch.program;
         let elevation = |id: &str| arch.levels.iter().find(|l| l.id == id).map(|l| l.elevation);
         // Each storey's ground: its building's ground storey (docs/adr/8072 §4), else the footprint's lowest.
-        let lowest = counted.grounds.iter().filter_map(|(g, _)| elevation(g)).reduce(f64::min);
+        let lowest = counted
+            .grounds
+            .iter()
+            .filter_map(|(g, _)| elevation(g))
+            .reduce(f64::min);
         let ground_of = |level: &str| -> Option<f64> {
             program
                 .building_of_level(level)
@@ -136,7 +154,11 @@ impl Document {
             .entities_with_uids()
             .filter_map(|(uid, e)| match e {
                 Entity::Space(s)
-                    if s.space.usage.as_deref().and_then(|u| program.brief(u)).is_some_and(|b| b.outdoor) =>
+                    if s.space
+                        .usage
+                        .as_deref()
+                        .and_then(|u| program.brief(u))
+                        .is_some_and(|b| b.outdoor) =>
                 {
                     Some(uid.to_string())
                 }
@@ -145,8 +167,12 @@ impl Document {
             .collect();
         let mut out = Vec::new();
         for r in &counted.rooms {
-            let Some(level) = r.level.as_deref() else { continue };
-            let (Some(floor), Some(ground)) = (elevation(level), ground_of(level)) else { continue };
+            let Some(level) = r.level.as_deref() else {
+                continue;
+            };
+            let (Some(floor), Some(ground)) = (elevation(level), ground_of(level)) else {
+                continue;
+            };
             if floor <= ground + 1e-6 {
                 continue;
             }
@@ -169,8 +195,12 @@ impl Document {
 
     /// The projections against `site`, a site plan not yet written (the Parsel tool's, docs/adr/8155).
     pub fn projections_for(&self, site: &kentos_contracts::SitePlan) -> Vec<Projection> {
-        let Some(arch) = self.settings().arch.as_ref() else { return Vec::new() };
-        let Some(report) = self.site_report_for(site) else { return Vec::new() };
+        let Some(arch) = self.settings().arch.as_ref() else {
+            return Vec::new();
+        };
+        let Some(report) = self.site_report_for(site) else {
+            return Vec::new();
+        };
         let detached = arch.layout == Some(BuildingLayout::Detached);
         self.projection_parts()
             .1

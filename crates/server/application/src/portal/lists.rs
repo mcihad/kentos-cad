@@ -77,7 +77,11 @@ impl Owner {
             .bind(tenant)
             .fetch_one(&mut **tx)
             .await?;
-        Ok(if office { Owner::Office(tenant) } else { Owner::Municipality(tenant) })
+        Ok(if office {
+            Owner::Office(tenant)
+        } else {
+            Owner::Municipality(tenant)
+        })
     }
 }
 
@@ -160,7 +164,13 @@ pub async fn list_for_professional(
     filter: &ListFilter,
 ) -> AppResult<DossierList> {
     let mut tx = db.scoped(user_scope(actor)).await?;
-    let found = list(&mut tx, Owner::Professional(actor.user_id), actor.user_id, filter).await?;
+    let found = list(
+        &mut tx,
+        Owner::Professional(actor.user_id),
+        actor.user_id,
+        filter,
+    )
+    .await?;
     tx.commit().await?;
     Ok(found)
 }

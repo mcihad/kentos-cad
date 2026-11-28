@@ -54,7 +54,9 @@ pub fn ends<'a, Message: Clone + 'a>(
 
 /// A row laid out by its window (a chooser left, the zoom right) on the strip's surface: the panel
 /// headers' ground, so the strip reads apart from the canvas under it and the panels beside it.
-pub fn surface<'a, Message: Clone + 'a>(content: impl Into<Element<'a, Message>>) -> Element<'a, Message> {
+pub fn surface<'a, Message: Clone + 'a>(
+    content: impl Into<Element<'a, Message>>,
+) -> Element<'a, Message> {
     container(content)
         .padding([4, 6])
         .width(Fill)
@@ -85,7 +87,11 @@ pub fn divider<'a, Message: Clone + 'a>() -> Element<'a, Message> {
     .into()
 }
 
-fn face<'a, Message: Clone + 'a>(glyph: Option<Icon>, words: Option<&str>, chevron: bool) -> Element<'a, Message> {
+fn face<'a, Message: Clone + 'a>(
+    glyph: Option<Icon>,
+    words: Option<&str>,
+    chevron: bool,
+) -> Element<'a, Message> {
     let mut r = Row::new().spacing(6).align_y(Center);
     if let Some(g) = glyph {
         r = r.push(icon(g).size(GLYPH));
@@ -109,7 +115,10 @@ fn face<'a, Message: Clone + 'a>(glyph: Option<Icon>, words: Option<&str>, chevr
 }
 
 /// The control's tip: “Ad: what it does” is the tip's title over its body, as on the ribbon.
-fn tipped<'a, Message: Clone + 'a>(content: impl Into<Element<'a, Message>>, words: &str) -> Element<'a, Message> {
+fn tipped<'a, Message: Clone + 'a>(
+    content: impl Into<Element<'a, Message>>,
+    words: &str,
+) -> Element<'a, Message> {
     let tip_text = match words.split_once(": ") {
         Some((title, body)) => Tip::new(title.to_owned()).body(body.to_owned()),
         None => Tip::new(words.to_owned()),
@@ -118,7 +127,11 @@ fn tipped<'a, Message: Clone + 'a>(content: impl Into<Element<'a, Message>>, wor
 }
 
 /// A button with words only (“1:1”).
-pub fn text_button<'a, Message: Clone + 'a>(words: &str, help: &str, press: Option<Message>) -> Element<'a, Message> {
+pub fn text_button<'a, Message: Clone + 'a>(
+    words: &str,
+    help: &str,
+    press: Option<Message>,
+) -> Element<'a, Message> {
     tipped(
         button(face(None, Some(words), false))
             .padding(0)
@@ -129,7 +142,11 @@ pub fn text_button<'a, Message: Clone + 'a>(words: &str, help: &str, press: Opti
 }
 
 /// A square button with its icon only; its words are its tip.
-pub fn icon_button<'a, Message: Clone + 'a>(glyph: Icon, help: &str, press: Option<Message>) -> Element<'a, Message> {
+pub fn icon_button<'a, Message: Clone + 'a>(
+    glyph: Icon,
+    help: &str,
+    press: Option<Message>,
+) -> Element<'a, Message> {
     tipped(
         button(face(Some(glyph), None, false))
             .padding(0)
@@ -140,7 +157,12 @@ pub fn icon_button<'a, Message: Clone + 'a>(glyph: Icon, help: &str, press: Opti
 }
 
 /// A button with its icon and its words (“Sığdır”), the strip's flat face.
-pub fn labelled<'a, Message: Clone + 'a>(glyph: Icon, words: &str, help: &str, press: Option<Message>) -> Element<'a, Message> {
+pub fn labelled<'a, Message: Clone + 'a>(
+    glyph: Icon,
+    words: &str,
+    help: &str,
+    press: Option<Message>,
+) -> Element<'a, Message> {
     tipped(
         button(face(Some(glyph), Some(words), false))
             .padding(0)
@@ -151,7 +173,13 @@ pub fn labelled<'a, Message: Clone + 'a>(glyph: Icon, words: &str, help: &str, p
 }
 
 /// A switch with its words, its icon before them when it has one; tinted while on (“Mahaller”, “Arazi saydam”).
-pub fn toggle<'a, Message: Clone + 'a>(glyph: Option<Icon>, words: &str, help: &str, on: bool, press: Message) -> Element<'a, Message> {
+pub fn toggle<'a, Message: Clone + 'a>(
+    glyph: Option<Icon>,
+    words: &str,
+    help: &str,
+    on: bool,
+    press: Message,
+) -> Element<'a, Message> {
     tipped(
         button(face(glyph, Some(words), false))
             .padding(0)
@@ -162,7 +190,12 @@ pub fn toggle<'a, Message: Clone + 'a>(glyph: Option<Icon>, words: &str, help: &
 }
 
 /// A switch with its icon only; its words are its tip.
-pub fn icon_toggle<'a, Message: Clone + 'a>(glyph: Icon, help: &str, on: bool, press: Message) -> Element<'a, Message> {
+pub fn icon_toggle<'a, Message: Clone + 'a>(
+    glyph: Icon,
+    help: &str,
+    on: bool,
+    press: Message,
+) -> Element<'a, Message> {
     tipped(
         button(face(Some(glyph), None, false))
             .padding(0)
@@ -207,7 +240,11 @@ pub fn split_toggle<'a, Message: Clone + 'a>(
 }
 
 /// A value the strip shows (the zoom): figures in a sunken box, the width of `room` characters.
-pub fn readout<'a, Message: Clone + 'a>(text: String, help: &str, room: f32) -> Element<'a, Message> {
+pub fn readout<'a, Message: Clone + 'a>(
+    text: String,
+    help: &str,
+    room: f32,
+) -> Element<'a, Message> {
     tipped(
         container(label::caption(text).font(typography::mono()))
             .center_x(typography::scaled(room))

@@ -224,7 +224,10 @@ fn path(
             super::dots::split(&dash, mm(s.dash_offset.unwrap_or(0.0)))
         });
     let dashed = match &dots {
-        Some(d) => d.dashes.as_ref().map(|(dash, phase)| (dash.as_slice(), *phase)),
+        Some(d) => d
+            .dashes
+            .as_ref()
+            .map(|(dash, phase)| (dash.as_slice(), *phase)),
         None => line.map(|(s, _)| (&[][..], mm(s.dash_offset.unwrap_or(0.0)))),
     };
     let line_now = line.filter(|_| dashed.is_some());
@@ -247,7 +250,11 @@ fn path(
                 _ => stroke_style(page, s),
             }
         }
-        page.note_paint(fill.is_some(), line_now.map(|(s, _)| mm(s.width).max(0.0)), even_odd);
+        page.note_paint(
+            fill.is_some(),
+            line_now.map(|(s, _)| mm(s.width).max(0.0)),
+            even_odd,
+        );
         match (fill.is_some(), line_now.is_some()) {
             (true, true) if even_odd => page.c.fill_even_odd_and_stroke(),
             (true, true) => page.c.fill_nonzero_and_stroke(),
@@ -260,7 +267,13 @@ fn path(
         shape(page);
         page.alpha_for(1.0, a);
         page.stroke_rgb(rgb);
-        page.line_style_phase(mm(s.width), &d.dots.0, d.dots.1, crate::LineCap::Round, s.join);
+        page.line_style_phase(
+            mm(s.width),
+            &d.dots.0,
+            d.dots.1,
+            crate::LineCap::Round,
+            s.join,
+        );
         page.note_paint(false, Some(mm(s.width).max(0.0)), false);
         page.c.stroke();
     }
@@ -273,7 +286,13 @@ fn mm(v: f64) -> f64 {
 
 fn stroke_style(page: &mut Page<'_>, s: &MapStroke) {
     let dash: Vec<f64> = s.dash.iter().map(|d| mm(*d)).collect();
-    page.line_style_phase(mm(s.width), &dash, mm(s.dash_offset.unwrap_or(0.0)), s.cap, s.join);
+    page.line_style_phase(
+        mm(s.width),
+        &dash,
+        mm(s.dash_offset.unwrap_or(0.0)),
+        s.cap,
+        s.join,
+    );
 }
 
 fn text(
@@ -414,7 +433,7 @@ mod tests {
             clip: RectUm::new(20_000, 10_000, 200_000, 100_000),
             rotation,
             view: MapViewPrim {
-                annotation_scale:None,
+                annotation_scale: None,
                 center: Some(GroundPoint {
                     x: 500_000.0,
                     y: 4_420_000.0,
@@ -480,10 +499,15 @@ mod tests {
     fn a_text_cut_away_is_not_written() {
         let mut m = prim(0, 0);
         // The box's left half: 0 to 500 000 millionths across, the whole height.
-        m.clip_shape = crate::clip::Clip::Rectangle { bounds: [0, 0, 500_000, 1_000_000] };
+        m.clip_shape = crate::clip::Clip::Rectangle {
+            bounds: [0, 0, 500_000, 1_000_000],
+        };
         let f = Frame::of(&m);
         assert!(f.holds([499_950.0, 4_420_000.0]), "in the left half");
-        assert!(!f.holds([500_050.0, 4_420_000.0]), "in the box, outside the cut");
+        assert!(
+            !f.holds([500_050.0, 4_420_000.0]),
+            "in the box, outside the cut"
+        );
         assert!(f.holds([500_000.0, 4_420_000.0]), "on the cut's edge");
     }
 

@@ -178,9 +178,16 @@ mod refusal_tests {
         let mut app = crate::files_testing::app_with_drawing();
         assert_eq!(app.add_record_refusal("parsel"), None);
         let doc = &mut app.document.as_mut().expect("a drawing").model;
-        doc.set_layer_geometry("parsel", Some(kentos_commands::LayerGeometry::Area), "Katman türü")
-            .expect("its objects are areas");
+        doc.set_layer_geometry(
+            "parsel",
+            Some(kentos_commands::LayerGeometry::Area),
+            "Katman türü",
+        )
+        .expect("its objects are areas");
         let why = app.add_record_refusal("parsel").expect("refused");
-        assert!(why.starts_with("“Parsel” bir alan katmanı; geometrisiz kayıt yalnız türü Karışık"), "{why}");
+        assert!(
+            why.starts_with("“Parsel” bir alan katmanı; geometrisiz kayıt yalnız türü Karışık"),
+            "{why}"
+        );
     }
 }

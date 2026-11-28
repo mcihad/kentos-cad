@@ -24,26 +24,37 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
     if input.operation == RoadEditOperation::Rebind {
         return Err(fail(
             codes::INVALID_HAUL,
-            "Brükner kübajını izler, yeniden bağlanmaz; kübajın koridorunu aksa yeniden bağlayın.".into(),
+            "Brükner kübajını izler, yeniden bağlanmaz; kübajın koridorunu aksa yeniden bağlayın."
+                .into(),
             "operation",
         ));
     }
     let own = doc.road_hauls();
     let mut list = own.to_vec();
-    let found = input.haul.as_deref().and_then(|t| common::find(own, t, "haul").ok());
+    let found = input
+        .haul
+        .as_deref()
+        .and_then(|t| common::find(own, t, "haul").ok());
     if input.operation == RoadEditOperation::Remove && found.is_none() {
         let name = input.haul.clone().unwrap_or_default();
-        return Err(common::find(own, &name, "haul").err().unwrap_or(Stop::Cancelled));
+        return Err(common::find(own, &name, "haul")
+            .err()
+            .unwrap_or(Stop::Cancelled));
     }
     let volume = match input.volume.as_deref() {
         Some(v) => Some(volumes::find(doc.road_volumes(), v, "volume")?.1.id.clone()),
         None => None,
     };
     let target = match (input.operation, found) {
-        (RoadEditOperation::Remove, Some((_, old))) if old.approved.is_some() || !old.history.is_empty() => {
+        (RoadEditOperation::Remove, Some((_, old)))
+            if old.approved.is_some() || !old.history.is_empty() =>
+        {
             return Err(fail(
                 codes::INVALID_HAUL,
-                format!("“{}” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez (ADR 0954). Brükneri bırakıp yenisini yazın.", old.name),
+                format!(
+                    "“{}” Brüknerinin onaylı taşıma planı ya da onay geçmişi var; onay ve geçmişi silinmez (ADR 0954). Brükneri bırakıp yenisini yazın.",
+                    old.name
+                ),
                 "haul",
             ));
         }
@@ -55,7 +66,10 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
             if volume.as_ref().is_some_and(|v| *v != old.volume) {
                 return Err(fail(
                     codes::INVALID_HAUL,
-                    format!("“{}” Brüknerinin kübajı değiştirilmez; başka kübaj için yeni bir Brükner yazın.", old.name),
+                    format!(
+                        "“{}” Brüknerinin kübajı değiştirilmez; başka kübaj için yeni bir Brükner yazın.",
+                        old.name
+                    ),
                     "volume",
                 ));
             }
@@ -106,7 +120,9 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
             Some(list[at].id.clone())
         }
         (RoadEditOperation::Set, None) => {
-            let missing = [("name", input.name.is_none()), ("volume", volume.is_none())].into_iter().find(|(_, m)| *m);
+            let missing = [("name", input.name.is_none()), ("volume", volume.is_none())]
+                .into_iter()
+                .find(|(_, m)| *m);
             let (Some(name), Some(v), None) = (&input.name, volume, missing) else {
                 return Err(fail(
                     codes::INVALID_HAUL,
@@ -115,7 +131,10 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
                 ));
             };
             let id = input.haul.clone().unwrap_or_else(|| {
-                (1..).map(|n| format!("h-{n}")).find(|id| own.iter().all(|h| &h.id != id)).unwrap_or_default()
+                (1..)
+                    .map(|n| format!("h-{n}"))
+                    .find(|id| own.iter().all(|h| &h.id != id))
+                    .unwrap_or_default()
             });
             list.push(HaulDef {
                 id: id.clone(),
@@ -140,14 +159,25 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
     road.hauls = list.clone();
     judged(&road, codes::INVALID_HAUL, "Brükner")?;
     // Docs/adr/0955: the network's layers are the drawing's.
-    if let Some(n) = target.as_ref().and_then(|id| list.iter().find(|h| &h.id == id)).and_then(|d| d.network.as_ref()) {
+    if let Some(n) = target
+        .as_ref()
+        .and_then(|id| list.iter().find(|h| &h.id == id))
+        .and_then(|d| d.network.as_ref())
+    {
         for (i, id) in n.layers.iter().enumerate() {
             if doc.layers().get(id).is_none() {
-                return Err(fail(codes::INVALID_HAUL, format!("Taşıma ağının “{id}” kimlikli katmanı çizimde yok."), &format!("network.layers[{i}]")));
+                return Err(fail(
+                    codes::INVALID_HAUL,
+                    format!("Taşıma ağının “{id}” kimlikli katmanı çizimde yok."),
+                    &format!("network.layers[{i}]"),
+                ));
             }
         }
     }
-    if let Some(d) = target.as_ref().and_then(|id| list.iter().find(|h| &h.id == id)) {
+    if let Some(d) = target
+        .as_ref()
+        .and_then(|id| list.iter().find(|h| &h.id == id))
+    {
         common::read(doc, d, false)?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -157,11 +187,24 @@ fn check(doc: &kentos_domain::Document, input: &HaulsEdit) -> Result<Checked, St
 fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<HaulsWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_hauls(c.list.clone(), STEP) {
-        return fail(codes::INVALID_HAUL, format!("Brükner kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_HAUL,
+            format!("Brükner kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
-    let haul = c.target.as_ref().and_then(|id| c.list.iter().find(|h| &h.id == id)).map(|d| common::report(doc, d));
+    let haul = c
+        .target
+        .as_ref()
+        .and_then(|id| c.list.iter().find(|h| &h.id == id))
+        .map(|d| common::report(doc, d));
     CommandResult::Completed {
-        output: HaulsWritten { haul, hauls: common::listed(&c.list), revision: doc.revision().to_string() },
+        output: HaulsWritten {
+            haul,
+            hauls: common::listed(&c.list),
+            revision: doc.revision().to_string(),
+        },
         warnings: vec![],
     }
 }
@@ -169,7 +212,10 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<HaulsWritte
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &HaulsEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: vec![] },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }

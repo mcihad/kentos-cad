@@ -59,7 +59,10 @@ struct Corner {
 
 impl Corner {
     fn at(&self, t: f64) -> Vec2 {
-        Vec2::new(self.p.x + (t - self.t0) * self.w.x, self.p.y + (t - self.t0) * self.w.y)
+        Vec2::new(
+            self.p.x + (t - self.t0) * self.w.x,
+            self.p.y + (t - self.t0) * self.w.y,
+        )
     }
 }
 
@@ -74,8 +77,11 @@ fn velocity(a: &Edge, b: &Edge) -> Option<Vec2> {
         ));
     }
     let same = a.n.x * b.n.x + a.n.y * b.n.y > 0.0;
-    (same && (a.speed - b.speed).abs() <= 1e-12 * crate::jsmath::js_max(crate::jsmath::js_max(a.speed.abs(), b.speed.abs()), 1.0))
-        .then(|| Vec2::new(a.n.x * a.speed, a.n.y * a.speed))
+    (same
+        && (a.speed - b.speed).abs()
+            <= 1e-12
+                * crate::jsmath::js_max(crate::jsmath::js_max(a.speed.abs(), b.speed.abs()), 1.0))
+    .then(|| Vec2::new(a.n.x * a.speed, a.n.y * a.speed))
 }
 
 fn dot(a: Vec2, b: Vec2) -> f64 {
@@ -103,7 +109,12 @@ pub(crate) type Face = Vec<(Vec2, f64)>;
 /// their rise; none for a gable end.
 pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, Fail> {
     let n = ring.len();
-    let size = crate::jsmath::js_max(ring.iter().fold(0.0_f64, |m, q| crate::jsmath::js_max(crate::jsmath::js_max(m, q.x.abs()), q.y.abs())), 1.0);
+    let size = crate::jsmath::js_max(
+        ring.iter().fold(0.0_f64, |m, q| {
+            crate::jsmath::js_max(crate::jsmath::js_max(m, q.x.abs()), q.y.abs())
+        }),
+        1.0,
+    );
     // Lengths below this are a point; times below this an instant (a unit of time moves a corner about a unit).
     let tol = 1e-9 * size;
     let edges: Vec<Edge> = (0..n)
@@ -112,7 +123,12 @@ pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, 
             let l = js_hypot(b.x - a.x, b.y - a.y);
             let d = Vec2::new((b.x - a.x) / l, (b.y - a.y) / l);
             let nn = Vec2::new(-d.y, d.x);
-            Edge { d, n: nn, c: dot(nn, a), speed: speeds[k] }
+            Edge {
+                d,
+                n: nn,
+                c: dot(nn, a),
+                speed: speeds[k],
+            }
         })
         .collect();
     let mut nodes: Vec<(Vec2, f64)> = ring.iter().map(|q| (*q, 0.0)).collect();
@@ -135,10 +151,22 @@ pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, 
             live: true,
         });
     }
-    let corner = |node: usize, p: Vec2, t: f64, inn: usize, out: usize, prev: usize, next: usize| {
-        let w = velocity(&edges[inn], &edges[out]);
-        Corner { node, p, t0: t, w: w.unwrap_or(Vec2::new(0.0, 0.0)), held: w.is_none(), inn, out, prev, next, live: true }
-    };
+    let corner =
+        |node: usize, p: Vec2, t: f64, inn: usize, out: usize, prev: usize, next: usize| {
+            let w = velocity(&edges[inn], &edges[out]);
+            Corner {
+                node,
+                p,
+                t0: t,
+                w: w.unwrap_or(Vec2::new(0.0, 0.0)),
+                held: w.is_none(),
+                inn,
+                out,
+                prev,
+                next,
+                live: true,
+            }
+        };
     let mut t = 0.0_f64;
     for _ in 0..8 * n * n + 64 {
         // Close every loop with no area left (two corners, or edges lying back to back): its corners' tracks end where
@@ -158,14 +186,19 @@ pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, 
             }
             let pts: Vec<Vec2> = members.iter().map(|&k| corners[k].at(t)).collect();
             let m = pts.len();
-            let twice: f64 = (0..m).map(|i| pts[i].x * pts[(i + 1) % m].y - pts[(i + 1) % m].x * pts[i].y).sum();
+            let twice: f64 = (0..m)
+                .map(|i| pts[i].x * pts[(i + 1) % m].y - pts[(i + 1) % m].x * pts[i].y)
+                .sum();
             if twice.abs() / 2.0 > tol * size {
                 continue;
             }
             let mut made: Vec<usize> = Vec::new();
             let mut node_of: Vec<usize> = Vec::with_capacity(m);
             for q in &pts {
-                let at = made.iter().copied().find(|&nd| js_hypot(nodes[nd].0.x - q.x, nodes[nd].0.y - q.y) <= tol);
+                let at = made
+                    .iter()
+                    .copied()
+                    .find(|&nd| js_hypot(nodes[nd].0.x - q.x, nodes[nd].0.y - q.y) <= tol);
                 node_of.push(at.unwrap_or_else(|| {
                     nodes.push((*q, t));
                     made.push(nodes.len() - 1);
@@ -282,7 +315,12 @@ pub(crate) fn faces(ring: &[Vec2], speeds: &[f64]) -> Result<Vec<Option<Face>>, 
 }
 
 /// Each sloping edge's face from the tracks bounding it: from its end round to its start.
-fn chain(nodes: &[(Vec2, f64)], arcs: &[(usize, usize, usize, usize)], n: usize, speeds: &[f64]) -> Vec<Option<Vec<(Vec2, f64)>>> {
+fn chain(
+    nodes: &[(Vec2, f64)],
+    arcs: &[(usize, usize, usize, usize)],
+    n: usize,
+    speeds: &[f64],
+) -> Vec<Option<Vec<(Vec2, f64)>>> {
     (0..n)
         .map(|k| {
             if speeds[k] <= 0.0 {
@@ -298,9 +336,14 @@ fn chain(nodes: &[(Vec2, f64)], arcs: &[(usize, usize, usize, usize)], n: usize,
             let mut ring = vec![nodes[start], nodes[end]];
             let mut at = end;
             while at != start {
-                let i = (0..mine.len()).find(|&i| !used[i] && (mine[i].0 == at || mine[i].1 == at))?;
+                let i =
+                    (0..mine.len()).find(|&i| !used[i] && (mine[i].0 == at || mine[i].1 == at))?;
                 used[i] = true;
-                at = if mine[i].0 == at { mine[i].1 } else { mine[i].0 };
+                at = if mine[i].0 == at {
+                    mine[i].1
+                } else {
+                    mine[i].0
+                };
                 if at != start {
                     ring.push(nodes[at]);
                 }
@@ -308,7 +351,10 @@ fn chain(nodes: &[(Vec2, f64)], arcs: &[(usize, usize, usize, usize)], n: usize,
             // Points that came to one (a corner born and gone at one event).
             let mut clean: Vec<(Vec2, f64)> = Vec::with_capacity(ring.len());
             for q in ring {
-                if clean.last().is_none_or(|l: &(Vec2, f64)| js_hypot(l.0.x - q.0.x, l.0.y - q.0.y) > 1e-9) {
+                if clean
+                    .last()
+                    .is_none_or(|l: &(Vec2, f64)| js_hypot(l.0.x - q.0.x, l.0.y - q.0.y) > 1e-9)
+                {
                     clean.push(q);
                 }
             }
@@ -327,7 +373,10 @@ mod tests {
 
     fn area(ring: &[(Vec2, f64)]) -> f64 {
         let n = ring.len();
-        (0..n).map(|i| ring[i].0.x * ring[(i + 1) % n].0.y - ring[(i + 1) % n].0.x * ring[i].0.y).sum::<f64>() / 2.0
+        (0..n)
+            .map(|i| ring[i].0.x * ring[(i + 1) % n].0.y - ring[(i + 1) % n].0.x * ring[i].0.y)
+            .sum::<f64>()
+            / 2.0
     }
 
     /// A 10 × 6 rectangle, every edge at the same speed: a hip roof, its ridge 3 high from (3, 3) to (7, 3).
@@ -339,7 +388,9 @@ mod tests {
         assert!((total - 60.0).abs() < 1e-9, "{total}");
         let south = f[0].as_ref().unwrap();
         assert_eq!(south.len(), 4, "{south:?}");
-        assert!(south.iter().any(|(q, z)| (q.x - 3.0).abs() < 1e-9 && (q.y - 3.0).abs() < 1e-9 && (z - 3.0).abs() < 1e-9));
+        assert!(south.iter().any(|(q, z)| (q.x - 3.0).abs() < 1e-9
+            && (q.y - 3.0).abs() < 1e-9
+            && (z - 3.0).abs() < 1e-9));
         assert!((area(south) - (10.0 + 4.0) / 2.0 * 3.0).abs() < 1e-9);
         assert!((area(f[1].as_ref().unwrap()) - 6.0 * 3.0 / 2.0).abs() < 1e-9);
     }
@@ -353,7 +404,11 @@ mod tests {
         for k in [0, 2] {
             let r = f[k].as_ref().unwrap();
             assert!((area(r) - 30.0).abs() < 1e-9, "{k}: {r:?}");
-            assert!(r.iter().all(|(q, z)| (z - crate::jsmath::js_min(q.y, 6.0 - q.y)).abs() < 1e-9), "{k}: {r:?}");
+            assert!(
+                r.iter()
+                    .all(|(q, z)| (z - crate::jsmath::js_min(q.y, 6.0 - q.y)).abs() < 1e-9),
+                "{k}: {r:?}"
+            );
         }
     }
 
@@ -362,7 +417,14 @@ mod tests {
     /// (2, 2), where the west and south edges' hips meet them; each face its trapezoid or triangle, the area all 56.
     #[test]
     fn an_l_turns_in_with_a_valley() {
-        let ring = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 4.0), p(4.0, 4.0), p(4.0, 8.0), p(0.0, 8.0)];
+        let ring = [
+            p(0.0, 0.0),
+            p(10.0, 0.0),
+            p(10.0, 4.0),
+            p(4.0, 4.0),
+            p(4.0, 8.0),
+            p(0.0, 8.0),
+        ];
         let f = faces(&ring, &[1.0; 6]).unwrap();
         let rings: Vec<&Vec<(Vec2, f64)>> = f.iter().flatten().collect();
         assert_eq!(rings.len(), 6);
@@ -383,7 +445,11 @@ mod tests {
         // North: (4,8) (0,8) (2,6): 4. West: (0,8) (0,0) (2,2) (2,6): (8 + 4) / 2 · 2 = 12.
         assert!((area(rings[4]) - 4.0).abs() < 1e-9, "{:?}", rings[4]);
         assert!((area(rings[5]) - 12.0).abs() < 1e-9, "{:?}", rings[5]);
-        let top = rings.iter().flat_map(|r| r.iter()).map(|(_, z)| *z).fold(0.0, crate::jsmath::js_max);
+        let top = rings
+            .iter()
+            .flat_map(|r| r.iter())
+            .map(|(_, z)| *z)
+            .fold(0.0, crate::jsmath::js_max);
         assert!((top - 2.0).abs() < 1e-9);
     }
 
@@ -401,7 +467,10 @@ mod tests {
             let l = js_hypot(b.x - a.x, b.y - a.y);
             for (q, z) in face {
                 let dist = ((b.x - a.x) * (q.y - a.y) - (b.y - a.y) * (q.x - a.x)) / l;
-                assert!((dist - z * speeds[k]).abs() < 1e-9, "{k}: {q:?} at {z}, {dist} from its edge");
+                assert!(
+                    (dist - z * speeds[k]).abs() < 1e-9,
+                    "{k}: {q:?} at {z}, {dist} from its edge"
+                );
             }
             assert!(area(face) > 1e-12, "{k}: counter-clockwise {face:?}");
             total += area(face);
@@ -415,14 +484,26 @@ mod tests {
     /// ends 4 and 9; the west 15.
     #[test]
     fn an_l_whose_arms_differ_closes_the_narrow_one_first() {
-        let ring = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 4.0), p(6.0, 4.0), p(6.0, 8.0), p(0.0, 8.0)];
+        let ring = [
+            p(0.0, 0.0),
+            p(10.0, 0.0),
+            p(10.0, 4.0),
+            p(6.0, 4.0),
+            p(6.0, 8.0),
+            p(0.0, 8.0),
+        ];
         let f = faces(&ring, &[1.0; 6]).unwrap();
         planar(&ring, &[1.0; 6], &f, 64.0);
         let areas: Vec<f64> = f.iter().flatten().map(|r| area(r)).collect();
         for (got, want) in areas.iter().zip([17.0, 4.0, 8.0, 11.0, 9.0, 15.0]) {
             assert!((got - want).abs() < 1e-9, "{areas:?}");
         }
-        let top = f.iter().flatten().flat_map(|r| r.iter()).map(|(_, z)| *z).fold(0.0, crate::jsmath::js_max);
+        let top = f
+            .iter()
+            .flatten()
+            .flat_map(|r| r.iter())
+            .map(|(_, z)| *z)
+            .fold(0.0, crate::jsmath::js_max);
         assert!((top - 3.0).abs() < 1e-9);
     }
 
@@ -431,11 +512,23 @@ mod tests {
     #[test]
     fn a_t_has_two_valleys() {
         let ring = [
-            p(0.0, 0.0), p(12.0, 0.0), p(12.0, 4.0), p(8.0, 4.0), p(8.0, 10.0), p(4.0, 10.0), p(4.0, 4.0), p(0.0, 4.0),
+            p(0.0, 0.0),
+            p(12.0, 0.0),
+            p(12.0, 4.0),
+            p(8.0, 4.0),
+            p(8.0, 10.0),
+            p(4.0, 10.0),
+            p(4.0, 4.0),
+            p(0.0, 4.0),
         ];
         let f = faces(&ring, &[1.0; 8]).unwrap();
         planar(&ring, &[1.0; 8], &f, 72.0);
-        let top = f.iter().flatten().flat_map(|r| r.iter()).map(|(_, z)| *z).fold(0.0, crate::jsmath::js_max);
+        let top = f
+            .iter()
+            .flatten()
+            .flat_map(|r| r.iter())
+            .map(|(_, z)| *z)
+            .fold(0.0, crate::jsmath::js_max);
         assert!((top - 2.0).abs() < 1e-9);
     }
 
@@ -443,7 +536,14 @@ mod tests {
     /// arms' ends: every point on its own plane, nothing lost.
     #[test]
     fn slopes_and_gable_ends_on_an_l() {
-        let ring = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 4.0), p(6.0, 4.0), p(6.0, 8.0), p(0.0, 8.0)];
+        let ring = [
+            p(0.0, 0.0),
+            p(10.0, 0.0),
+            p(10.0, 4.0),
+            p(6.0, 4.0),
+            p(6.0, 8.0),
+            p(0.0, 8.0),
+        ];
         let speeds = [2.0, 0.0, 2.0, 1.0, 0.0, 1.0];
         let f = faces(&ring, &speeds).unwrap();
         planar(&ring, &speeds, &f, 64.0);

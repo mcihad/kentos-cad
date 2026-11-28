@@ -17,7 +17,6 @@ use kentos_contracts::{
     RingGeometry, SplineEntity, TableEntity, TextAlign, TextEntity, Vec2, width_factor_ok,
 };
 
-use kentos_contracts::ImportDecisionTopic as Topic;
 use super::aci;
 use super::dimension;
 use super::entity::{Color, Kind, P3, Parsed, Vertex, Weight};
@@ -33,6 +32,7 @@ use crate::geom::{
 use crate::math::{TAU, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::nurbs;
 use crate::report::Report;
+use kentos_contracts::ImportDecisionTopic as Topic;
 use kentos_contracts::LookPart;
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::entity::{HatchCurve as CoreCurve, HatchLoop as CoreLoop};
@@ -42,10 +42,10 @@ mod notes;
 mod paths;
 mod pattern;
 
+use super::spatial::Map3;
 #[cfg(test)]
 use paths::arc_edge;
 use paths::{Boundary, path_loop, path_points, stitch};
-use super::spatial::Map3;
 
 /// Blocks nest at most this deep (a block that inserts itself is caught earlier).
 const MAX_DEPTH: usize = 24;
@@ -548,9 +548,15 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
         Entity::Opening(o) => o.opening.place.clone(),
         Entity::Space(s) => s.as_polygon().pts,
         Entity::Slab(s) => s.as_polygon().pts,
-        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) | Entity::Roof(_) | Entity::Railing(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
-            crate::arch_elements::outline_points(e).unwrap_or_default()
-        }
+        Entity::Grid(_)
+        | Entity::Column(_)
+        | Entity::Stair(_)
+        | Entity::Ramp(_)
+        | Entity::Beam(_)
+        | Entity::Roof(_)
+        | Entity::Railing(_)
+        | Entity::Tag(_)
+        | Entity::ViewMark(_) => crate::arch_elements::outline_points(e).unwrap_or_default(),
     }
 }
 
@@ -647,7 +653,10 @@ impl<'l> Emitter<'l> {
     /// not given twice. Upper-case tag → name; and the tags whose record no longer fits (tag, the record's tag, its
     /// name), to be said.
     #[allow(clippy::type_complexity)]
-    fn defined_names(&self, block: &str) -> (HashMap<String, String>, Vec<(String, String, String)>) {
+    fn defined_names(
+        &self,
+        block: &str,
+    ) -> (HashMap<String, String>, Vec<(String, String, String)>) {
         let mut names = HashMap::new();
         let mut stale = Vec::new();
         let Some(block) = self.lib.blocks.get(&block.to_uppercase()) else {
@@ -657,9 +666,12 @@ impl<'l> Emitter<'l> {
             .entities
             .iter()
             .filter_map(|x| match &x.kind {
-                Kind::Text { prompt: Some(_), constant: false, tag, .. } if !tag.trim().is_empty() => {
-                    Some((tag.trim(), x.meta.as_ref()))
-                }
+                Kind::Text {
+                    prompt: Some(_),
+                    constant: false,
+                    tag,
+                    ..
+                } if !tag.trim().is_empty() => Some((tag.trim(), x.meta.as_ref())),
                 _ => None,
             })
             .collect();
@@ -670,7 +682,8 @@ impl<'l> Emitter<'l> {
                     stale.push(((*tag).to_owned(), written.clone(), name.clone()));
                     continue;
                 }
-                let taken = defs.iter().any(|(other, _)| *other == name.as_str()) || names.values().any(|n| n == name);
+                let taken = defs.iter().any(|(other, _)| *other == name.as_str())
+                    || names.values().any(|n| n == name);
                 if !taken {
                     names.insert(tag.to_uppercase(), name.clone());
                 }
@@ -683,21 +696,30 @@ impl<'l> Emitter<'l> {
     /// elevation or vertices, a face's corners, a spline's points), or those of a block it inserts (docs/adr/2100 §2).
     /// A block that includes itself is cut where it comes round again.
     fn carries_heights(&mut self, key: &str) -> bool {
-        fn of(lib: &Library, key: &str, seen: &mut Vec<String>, cache: &HashMap<String, bool>) -> bool {
+        fn of(
+            lib: &Library,
+            key: &str,
+            seen: &mut Vec<String>,
+            cache: &HashMap<String, bool>,
+        ) -> bool {
             if let Some(known) = cache.get(key) {
                 return *known;
             }
             if seen.iter().any(|k| k == key) {
                 return false;
             }
-            let Some(block) = lib.blocks.get(key) else { return false };
+            let Some(block) = lib.blocks.get(key) else {
+                return false;
+            };
             seen.push(key.to_owned());
             let raised = |p: &P3| p[2] != 0.0;
             let found = block.entities.iter().any(|e| match &e.kind {
                 Kind::Line { a, b } => raised(a) || raised(b),
                 Kind::Point { p } => raised(p),
                 Kind::LwPolyline { elevation, .. } => *elevation != 0.0,
-                Kind::Polyline { verts, elevation, .. } => *elevation != 0.0 || verts.iter().any(|v| raised(&v.p)),
+                Kind::Polyline {
+                    verts, elevation, ..
+                } => *elevation != 0.0 || verts.iter().any(|v| raised(&v.p)),
                 Kind::Face { pts, .. } => pts.iter().any(raised),
                 Kind::Spline { ctrl, fit, .. } => ctrl.iter().chain(fit).any(raised),
                 Kind::Insert { name, .. } => of(lib, &name.to_uppercase(), seen, cache),
@@ -892,11 +914,7 @@ impl<'l> Emitter<'l> {
     /// drawing allows (the caller reads again with Blokları patlat).
     pub fn define_blocks(&mut self) -> Option<Vec<BlockDefinition>> {
         let lib = self.lib;
-        let names: Vec<&String> = lib
-            .order
-            .iter()
-            .filter(|n| !n.starts_with('*'))
-            .collect();
+        let names: Vec<&String> = lib.order.iter().filter(|n| !n.starts_with('*')).collect();
         for (i, n) in names.iter().enumerate() {
             self.kept.insert((*n).clone(), block_id(i + 1));
         }
@@ -924,7 +942,9 @@ impl<'l> Emitter<'l> {
             }
             let ctx = Ctx::definition(n);
             if !block.xref {
-                for x in &block.entities { self.emit(x, &ctx); }
+                for x in &block.entities {
+                    self.emit(x, &ctx);
+                }
             }
             self.named.clear();
             self.notes_done();
@@ -943,11 +963,21 @@ impl<'l> Emitter<'l> {
                 dynamic: None,
                 xref: block.xref.then(|| kentos_contracts::XrefSource {
                     path: block.xref_path.clone(),
-                    relative: (!block.xref_path.starts_with('/') && !block.xref_path.contains(':')).then(|| block.xref_path.clone()),
-                    kind: if block.overlay { kentos_contracts::XrefKind::Overlay } else { kentos_contracts::XrefKind::Attach },
+                    relative: (!block.xref_path.starts_with('/') && !block.xref_path.contains(':'))
+                        .then(|| block.xref_path.clone()),
+                    kind: if block.overlay {
+                        kentos_contracts::XrefKind::Overlay
+                    } else {
+                        kentos_contracts::XrefKind::Attach
+                    },
                     // Unloaded source: no file has been read. Zero is an unknown digest sentinel.
-                    digest: "0".repeat(64), unloaded: true, group: None, parent: None,
-                    objects: Vec::new(), page: None, underlay: None,
+                    digest: "0".repeat(64),
+                    unloaded: true,
+                    group: None,
+                    parent: None,
+                    objects: Vec::new(),
+                    page: None,
+                    underlay: None,
                 }),
                 card: None,
                 id: self.kept[n],
@@ -1035,7 +1065,13 @@ impl<'l> Emitter<'l> {
     fn skip(&mut self, what: &str, reason: &str, line: u32) {
         self.out.report.skip(what, reason, line);
         if reason == BAD_EXTRUSION {
-            self.out.report.decide_quiet(Topic::Ocs, "ocs_invalid_extrusion", what, "doğrultusu (210) geçersiz; nesne alınmadı", line);
+            self.out.report.decide_quiet(
+                Topic::Ocs,
+                "ocs_invalid_extrusion",
+                what,
+                "doğrultusu (210) geçersiz; nesne alınmadı",
+                line,
+            );
         }
     }
 
@@ -1043,10 +1079,18 @@ impl<'l> Emitter<'l> {
         self.out.report.polyline_loss(code, what, reason, line);
         // The losses that are decisions on the drawing's planes and blocks (docs/adr/1010).
         match code {
-            "block_ocs" => self.out.report.decide_quiet(Topic::Ocs, "ocs_block_tilted", what, reason, line),
-            "nonuniform_bulge" => {
-                self.out.report.decide_quiet(Topic::Block, "block_nonuniform_arcs_sampled", what, reason, line)
+            "block_ocs" => {
+                self.out
+                    .report
+                    .decide_quiet(Topic::Ocs, "ocs_block_tilted", what, reason, line)
             }
+            "nonuniform_bulge" => self.out.report.decide_quiet(
+                Topic::Block,
+                "block_nonuniform_arcs_sampled",
+                what,
+                reason,
+                line,
+            ),
             _ => {}
         }
     }
@@ -1056,7 +1100,11 @@ impl<'l> Emitter<'l> {
     fn plane_decision(&mut self, e: &Parsed) {
         if !matches!(
             e.kind,
-            Kind::Circle { .. } | Kind::Arc { .. } | Kind::LwPolyline { .. } | Kind::Text { .. } | Kind::Insert { .. }
+            Kind::Circle { .. }
+                | Kind::Arc { .. }
+                | Kind::LwPolyline { .. }
+                | Kind::Text { .. }
+                | Kind::Insert { .. }
                 | Kind::Hatch(_)
         ) {
             return;
@@ -1066,11 +1114,19 @@ impl<'l> Emitter<'l> {
             return;
         }
         let (code, words) = if x == 0.0 && y == 0.0 && z < 0.0 {
-            ("ocs_flipped_mirrored", "düzlemi ters (210: 0, 0, −1); plana aynalanarak kesin alındı")
+            (
+                "ocs_flipped_mirrored",
+                "düzlemi ters (210: 0, 0, −1); plana aynalanarak kesin alındı",
+            )
         } else {
-            ("ocs_tilted_projected", "eğik düzlemde; plana dik izdüşümüyle alındı, kendi düzlemi saklanmadı")
+            (
+                "ocs_tilted_projected",
+                "eğik düzlemde; plana dik izdüşümüyle alındı, kendi düzlemi saklanmadı",
+            )
         };
-        self.out.report.decide_quiet(Topic::Ocs, code, &e.name, words, e.line);
+        self.out
+            .report
+            .decide_quiet(Topic::Ocs, code, &e.name, words, e.line);
     }
 
     fn note(&mut self, what: &str, reason: &str, line: u32) {
@@ -1386,7 +1442,13 @@ impl<'l> Emitter<'l> {
             moved.push((!g).then_some(kept));
             kept += usize::from(!g);
         }
-        let place = |at: usize| if at < from { Some(at) } else { moved[at - from] };
+        let place = |at: usize| {
+            if at < from {
+                Some(at)
+            } else {
+                moved[at - from]
+            }
+        };
         out.handles.retain(|_, at| match place(*at) {
             Some(n) => {
                 *at = n;
@@ -1424,8 +1486,11 @@ impl<'l> Emitter<'l> {
         let out = &mut self.out;
         for t in std::mem::take(&mut out.ties) {
             let at = |h: &u64| out.handles.get(h).copied();
-            let resolved: Option<Vec<Vec<usize>>> =
-                t.sources.iter().map(|s| s.iter().map(at).collect()).collect();
+            let resolved: Option<Vec<Vec<usize>>> = t
+                .sources
+                .iter()
+                .map(|s| s.iter().map(at).collect())
+                .collect();
             let Some(resolved) = resolved else {
                 out.report.note(
                     "Tarama (HATCH)",
@@ -1484,7 +1549,13 @@ impl<'l> Emitter<'l> {
                     h.ring.iter().map(|p| p.y).sum::<f64>() / n,
                 )
             };
-            let Some(seed) = t.seeds.iter().copied().chain(std::iter::once(middle)).find(|p| inside(*p)) else {
+            let Some(seed) = t
+                .seeds
+                .iter()
+                .copied()
+                .chain(std::iter::once(middle))
+                .find(|p| inside(*p))
+            else {
                 out.report.note(
                     "Tarama (HATCH)",
                     "ilişkili taramanın tohum noktası bölgesinde değil; tarama ilişkisiz alındı",
@@ -1536,12 +1607,24 @@ impl<'l> Emitter<'l> {
         self.plane_decision(e);
         // Straight XYZ paths are representable exactly after an explicit
         // explode. Other source planes still need the persistent frame model.
-        if ctx.full.mixes_z() && !matches!(&e.kind,
-            Kind::Line { .. } | Kind::Point { .. } | Kind::LwPolyline { .. }
-            | Kind::Polyline { .. } | Kind::Face { .. } | Kind::Insert { .. }
-            | Kind::Block { .. }) {
-            self.polyline_loss("block_ocs", &e.name,
-                "eğik blok içindeki nesnenin kaynak düzlemi yerel modelde korunamaz", e.line);
+        if ctx.full.mixes_z()
+            && !matches!(
+                &e.kind,
+                Kind::Line { .. }
+                    | Kind::Point { .. }
+                    | Kind::LwPolyline { .. }
+                    | Kind::Polyline { .. }
+                    | Kind::Face { .. }
+                    | Kind::Insert { .. }
+                    | Kind::Block { .. }
+            )
+        {
+            self.polyline_loss(
+                "block_ocs",
+                &e.name,
+                "eğik blok içindeki nesnenin kaynak düzlemi yerel modelde korunamaz",
+                e.line,
+            );
         }
         match &e.kind {
             Kind::Line { a, b: bb } => {
@@ -1632,7 +1715,17 @@ impl<'l> Emitter<'l> {
                     *elevation != 0.0,
                 );
                 let pts: Vec<Vec2> = pts.iter().map(|p| v(p[0], p[1])).collect();
-                self.path(m, !ctx.deformed && ext[0] == 0.0 && ext[1] == 0.0, pts, bulges.clone(), *closed, zs, widths.clone(), b(), e);
+                self.path(
+                    m,
+                    !ctx.deformed && ext[0] == 0.0 && ext[1] == 0.0,
+                    pts,
+                    bulges.clone(),
+                    *closed,
+                    zs,
+                    widths.clone(),
+                    b(),
+                    e,
+                );
             }
             Kind::Polyline {
                 flags,
@@ -2040,7 +2133,9 @@ impl<'l> Emitter<'l> {
                     return self.skip("Maske (WIPEOUT)", "sınırının üç köşesi yok", e.line);
                 }
                 let mut base = b();
-                base.look.wipeout = Some(kentos_contracts::look::Wipeout { frame: self.wipeout_frames });
+                base.look.wipeout = Some(kentos_contracts::look::Wipeout {
+                    frame: self.wipeout_frames,
+                });
                 self.push(Entity::Polygon(PathEntity {
                     space_separator: None,
                     ms: None,
@@ -2069,13 +2164,16 @@ impl<'l> Emitter<'l> {
                 }
                 // An image whose file is not named still shows where it was (plan/render.md RM-19's tests: it was left
                 // out, frame and all).
-                let file = def.and_then(|h| self.images.get(&h).cloned()).filter(|f| !f.trim().is_empty());
+                let file = def
+                    .and_then(|h| self.images.get(&h).cloned())
+                    .filter(|f| !f.trim().is_empty());
                 if ring.len() < 3 || !ring.iter().all(|p| p.iter().all(|v| v.is_finite())) {
                     let said = match &file {
                         Some(file) => format!(
                             "raster görüntünün (“{file}”) dosyası çizimin içinde değil ve boyu yok; çerçevesi de alınamadı"
                         ),
-                        None => "raster görüntünün dosyası adlandırılmamış ve boyu yok; alınmadı".to_owned(),
+                        None => "raster görüntünün dosyası adlandırılmamış ve boyu yok; alınmadı"
+                            .to_owned(),
                     };
                     return self.skip("IMAGE", &said, e.line);
                 }
@@ -2107,9 +2205,15 @@ impl<'l> Emitter<'l> {
                     .map(|p| ctx.full.point(*p))
                     .collect();
                 let plan: Vec<Vec2> = ring.iter().map(|p| xy(*p)).collect();
-                let area: f64 = (0..4).map(|i| plan[i].x * plan[(i + 1) % 4].y - plan[(i + 1) % 4].x * plan[i].y).sum();
+                let area: f64 = (0..4)
+                    .map(|i| plan[i].x * plan[(i + 1) % 4].y - plan[(i + 1) % 4].x * plan[i].y)
+                    .sum();
                 if !area.is_finite() || area == 0.0 {
-                    return self.skip("OLE2FRAME", "gömülü belgenin çerçevesi yok; alınmadı", e.line);
+                    return self.skip(
+                        "OLE2FRAME",
+                        "gömülü belgenin çerçevesi yok; alınmadı",
+                        e.line,
+                    );
                 }
                 self.push(Entity::Polyline(PathEntity {
                     space_separator: None,
@@ -2133,8 +2237,7 @@ impl<'l> Emitter<'l> {
             Kind::MLeader(m) => self.mleader(ctx, m, b(), e),
             Kind::Unsupported(name) => {
                 let reason = match name.as_str() {
-                    "OLEFRAME" | "PDFUNDERLAY"
-                    | "DWFUNDERLAY" | "DGNUNDERLAY" => {
+                    "OLEFRAME" | "PDFUNDERLAY" | "DWFUNDERLAY" | "DGNUNDERLAY" => {
                         "raster görüntü ve gömülü/altlık nesneleri alınmaz"
                     }
                     "3DSOLID" | "BODY" | "REGION" | "SURFACE" | "PLANESURFACE"
@@ -2293,7 +2396,17 @@ impl<'l> Emitter<'l> {
     /// as a plan shows it. It was left out ("görüş doğrultusuna dik"): TEKNOKENT MİMARİ's 28 circles. One that is a
     /// point is left out.
     #[allow(clippy::too_many_arguments)]
-    fn edge_on(&mut self, c: Vec2, u: Vec2, w: Vec2, t0: f64, t1: f64, full: bool, b: EntityBase, e: &Parsed) {
+    fn edge_on(
+        &mut self,
+        c: Vec2,
+        u: Vec2,
+        w: Vec2,
+        t0: f64,
+        t1: f64,
+        full: bool,
+        b: EntityBase,
+        e: &Parsed,
+    ) {
         match crate::geom::edge_on(c, u, w, t0, t1, full) {
             Some((a, end)) => {
                 self.push(Entity::Line(LineEntity {
@@ -2311,7 +2424,11 @@ impl<'l> Emitter<'l> {
                     e.line,
                 );
             }
-            None => self.skip(&e.name, "görüş doğrultusuna dik ve bir noktaya iniyor", e.line),
+            None => self.skip(
+                &e.name,
+                "görüş doğrultusuna dik ve bir noktaya iniyor",
+                e.line,
+            ),
         }
     }
 
@@ -2336,11 +2453,15 @@ impl<'l> Emitter<'l> {
     ) {
         let mut pts = pts;
         let mut zs = zs.filter(|z| z.len() == pts.len());
-        let mut widths = widths.filter(|w| w.len() == pts.len() && w.iter().any(|[a,b]| *a != 0.0 || *b != 0.0));
+        let mut widths = widths
+            .filter(|w| w.len() == pts.len() && w.iter().any(|[a, b]| *a != 0.0 || *b != 0.0));
         bulges.resize(pts.len(), 0.0);
         // A closed path that repeats its first vertex: the repeat is not a corner.
-        if closed && pts.len() > 1 && pts.first() == pts.last()
-            && zs.as_ref().is_none_or(|z| z.first() == z.last()) {
+        if closed
+            && pts.len() > 1
+            && pts.first() == pts.last()
+            && zs.as_ref().is_none_or(|z| z.first() == z.last())
+        {
             pts.pop();
             bulges.pop();
             if let Some(w) = widths.as_mut() {
@@ -2354,7 +2475,10 @@ impl<'l> Emitter<'l> {
             return self.skip(&e.name, "iki köşesi yok", e.line);
         }
         let wide = widths.is_some();
-        let (pts, bulges, zs, widths) = match (has_arcs(&bulges), m.similarity().filter(|_| preserves_shape)) {
+        let (pts, bulges, zs, widths) = match (
+            has_arcs(&bulges),
+            m.similarity().filter(|_| preserves_shape),
+        ) {
             (_, Some(s)) => {
                 let pts: Vec<Vec2> = pts.iter().map(|p| m.apply(*p)).collect();
                 let bulges: Vec<f64> = if s.mirror {
@@ -2376,8 +2500,13 @@ impl<'l> Emitter<'l> {
                 // (t the edge's unit direction; docs/adr/1061 §3). Only the end cuts lean.
                 // Only a level path (one elevation, or none): a tilted one's widths lie in its own plane, not the
                 // plan's, and stay the safe refusal (the plan's 3B boundary).
-                let level = zs.as_ref().is_none_or(|z| z.windows(2).all(|w| w[0] == w[1]));
-                let widths = widths.as_ref().filter(|_| level).and_then(|w| exact_widths(m, &pts, w, closed));
+                let level = zs
+                    .as_ref()
+                    .is_none_or(|z| z.windows(2).all(|w| w[0] == w[1]));
+                let widths = widths
+                    .as_ref()
+                    .filter(|_| level)
+                    .and_then(|w| exact_widths(m, &pts, w, closed));
                 if widths.is_some() {
                     self.out.report.decide(
                         Topic::Block,
@@ -2387,7 +2516,12 @@ impl<'l> Emitter<'l> {
                         e.line,
                     );
                 }
-                (pts.iter().map(|p| m.apply(*p)).collect(), bulges, zs, widths)
+                (
+                    pts.iter().map(|p| m.apply(*p)).collect(),
+                    bulges,
+                    zs,
+                    widths,
+                )
             }
             (true, None) if !closed && !wide && zs.is_none() => {
                 // An open, flat, widthless line with arcs: its image is exact as a rational quadratic NURBS, an arc
@@ -2416,12 +2550,18 @@ impl<'l> Emitter<'l> {
                 }
                 let ring = bulge_path_points(&pts, &bulges, closed);
                 self.polyline_loss(
-                    "nonuniform_bulge", &e.name,
+                    "nonuniform_bulge",
+                    &e.name,
                     "yaylı kenarları eşit olmayan ölçekle eklendiği için noktalara bölündü",
                     e.line,
                 );
                 let n = ring.len();
-                (ring.iter().map(|p| m.apply(*p)).collect(), vec![0.0; n], zs, None)
+                (
+                    ring.iter().map(|p| m.apply(*p)).collect(),
+                    vec![0.0; n],
+                    zs,
+                    None,
+                )
             }
             (true, None) => {
                 // A stretched arc is an elliptic arc; the model's paths hold circular arcs only.
@@ -2429,7 +2569,8 @@ impl<'l> Emitter<'l> {
                 // The points sampled along an arc edge take the elevation the edge has there.
                 let zs = zs.map(|z| bulge_path_zs(&pts, &bulges, &z, closed));
                 self.polyline_loss(
-                    "nonuniform_bulge", &e.name,
+                    "nonuniform_bulge",
+                    &e.name,
                     "yaylı kenarları eşit olmayan ölçekle eklendiği için noktalara bölündü",
                     e.line,
                 );
@@ -2444,7 +2585,8 @@ impl<'l> Emitter<'l> {
         };
         if wide && widths.is_none() {
             self.polyline_loss(
-                "nonuniform_width", "Genişlikli çoklu çizgi",
+                "nonuniform_width",
+                "Genişlikli çoklu çizgi",
                 "eşit olmayan ölçekle eklendiği için genişliği alınmadı; çizgi ekseniyle geldi",
                 e.line,
             );
@@ -2497,7 +2639,8 @@ impl<'l> Emitter<'l> {
                     .is_some() =>
                 {
                     self.polyline_loss(
-                        "invalid_width", "Genişlikli çoklu çizgi",
+                        "invalid_width",
+                        "Genişlikli çoklu çizgi",
                         "genişlikleri geçersiz (eksi ya da sonsuz) olduğu için alınmadı",
                         e.line,
                     );
@@ -2566,7 +2709,17 @@ impl<'l> Emitter<'l> {
             .iter()
             .any(|x| x.widths != [0.0, 0.0])
             .then(|| verts.iter().map(|x| x.widths).collect());
-        self.path(m, !ctx.deformed && ext[0] == 0.0 && ext[1] == 0.0, pts, bulges, closed, zs, widths, b, e);
+        self.path(
+            m,
+            !ctx.deformed && ext[0] == 0.0 && ext[1] == 0.0,
+            pts,
+            bulges,
+            closed,
+            zs,
+            widths,
+            b,
+            e,
+        );
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -2669,7 +2822,17 @@ impl<'l> Emitter<'l> {
                     }
                 }
             };
-            return self.path(Tf::IDENTITY, true, pts, Vec::new(), closed, None, None, b, e);
+            return self.path(
+                Tf::IDENTITY,
+                true,
+                pts,
+                Vec::new(),
+                closed,
+                None,
+                None,
+                b,
+                e,
+            );
         }
         if fit.len() >= 2 {
             if own.is_none() {
@@ -2712,7 +2875,11 @@ impl<'l> Emitter<'l> {
         if words.trim().is_empty() {
             // An attribute with no value draws nothing and loses nothing (docs/adr/9227): said, not counted lost.
             if e.name == "ATTRIB" {
-                return self.note("Blok özniteliği (ATTRIB)", "değeri boş; çizilecek yazısı yok", e.line);
+                return self.note(
+                    "Blok özniteliği (ATTRIB)",
+                    "değeri boş; çizilecek yazısı yok",
+                    e.line,
+                );
             }
             // Nor does an empty text (docs/adr/9231): TEKNOKENT MİMARİ counted 303 of them "not taken".
             return self.note("Yazı (TEXT)", "boş; çizilecek yazısı yok", e.line);
@@ -3003,7 +3170,8 @@ impl<'l> Emitter<'l> {
             paragraph: Paragraph {
                 box_width: paragraph.box_width.map(|w| w * along),
                 ..paragraph
-            }.into(),
+            }
+            .into(),
             face: Default::default(),
             path: None,
         }));
@@ -3029,7 +3197,11 @@ impl<'l> Emitter<'l> {
     ) {
         let content = mtext_content(&caret_decode(text));
         if content.text.trim().is_empty() {
-            return self.note("Çok satırlı yazı (MTEXT)", "boş; çizilecek yazısı yok", e.line);
+            return self.note(
+                "Çok satırlı yazı (MTEXT)",
+                "boş; çizilecek yazısı yok",
+                e.line,
+            );
         }
         let raw = if height > 0.0 {
             height
@@ -3056,11 +3228,7 @@ impl<'l> Emitter<'l> {
             }
             (_, Some(r)) => {
                 let Some(o) = ocs_tf(ext, 0.0) else {
-                    return self.skip(
-                        "Çok satırlı yazı (MTEXT)",
-                        BAD_EXTRUSION,
-                        e.line,
-                    );
+                    return self.skip("Çok satırlı yazı (MTEXT)", BAD_EXTRUSION, e.line);
                 };
                 let d = o.linear(v(cos(r), sin(r)));
                 let l = hypot(d.x, d.y).max(f64::MIN_POSITIVE);
@@ -3103,7 +3271,11 @@ impl<'l> Emitter<'l> {
         let from_file = |l: kentos_contracts::ParagraphLayout| kentos_contracts::ParagraphLayout {
             indent: l.indent.map(|v| super::capitals::from_file(v, share)),
             left_indent: l.left_indent.map(|v| super::capitals::from_file(v, share)),
-            tabs: l.tabs.iter().map(|v| super::capitals::from_file(*v, share)).collect(),
+            tabs: l
+                .tabs
+                .iter()
+                .map(|v| super::capitals::from_file(*v, share))
+                .collect(),
             ..l
         };
         let layout = kept_layout
@@ -3115,7 +3287,9 @@ impl<'l> Emitter<'l> {
             layout,
             box_width,
             line_spacing: (spacing.is_finite() && spacing > 0.0)
-                .then(|| super::capitals::spacing_back(spacing, share, kept.and_then(|m| m.spacing)))
+                .then(|| {
+                    super::capitals::spacing_back(spacing, share, kept.and_then(|m| m.spacing))
+                })
                 .flatten()
                 .map(|s| s.clamp(MIN_LINE_SPACING, MAX_LINE_SPACING)),
             runs: content.runs,
@@ -3175,7 +3349,12 @@ impl<'l> Emitter<'l> {
         let [sx, sy, sz] = scale;
         let nz = super::extrusion_z(e.common.extrusion);
         if nz.abs() != 1.0 && !self.explode {
-            self.polyline_loss("block_ocs", "Blok (INSERT)", "eğik blok düzleminin tam 3B dönüşümü 2B modelde korunamaz", e.line);
+            self.polyline_loss(
+                "block_ocs",
+                "Blok (INSERT)",
+                "eğik blok düzleminin tam 3B dönüşümü 2B modelde korunamaz",
+                e.line,
+            );
         }
         if sx == 0.0 || sy == 0.0 {
             return self.skip("Blok (INSERT)", "ölçeği sıfır", e.line);
@@ -3201,7 +3380,7 @@ impl<'l> Emitter<'l> {
             }
             let (col, row) = ((cell % ncols) as f64, (cell / ncols) as f64);
             let full = Map3::translate(block.base.map(|c| -c))
-                .then(Map3::scale([sx,sy,sz]))
+                .then(Map3::scale([sx, sy, sz]))
                 .then(Map3::translate([col * dc, row * dr, 0.]))
                 .then(Map3::rotate(rotation))
                 .then(Map3::translate(p))
@@ -3210,7 +3389,10 @@ impl<'l> Emitter<'l> {
             let child = Ctx {
                 tf: full.plane(0.),
                 full,
-                deformed: ctx.deformed || sx.abs() != sy.abs() || e.common.extrusion[0] != 0.0 || e.common.extrusion[1] != 0.0,
+                deformed: ctx.deformed
+                    || sx.abs() != sy.abs()
+                    || e.common.extrusion[0] != 0.0
+                    || e.common.extrusion[1] != 0.0,
                 layer: Some(layer.to_string()),
                 byblock: byblock.clone(),
                 byblock_weight,
@@ -3325,7 +3507,9 @@ impl<'l> Emitter<'l> {
             && placed.array.0 * placed.array.1 <= 1
             && super::extrusion_z(e.common.extrusion) == 1.0;
         if !still {
-            return Err("başka bir programda taşınmış, dönmüş ya da ölçeklenmiş; bloğunun çizgi ve yazıları alındı");
+            return Err(
+                "başka bir programda taşınmış, dönmüş ya da ölçeklenmiş; bloğunun çizgi ve yazıları alındı",
+            );
         }
         let broken = "KentOS verisi okunamadı; bloğunun çizgi ve yazıları alındı";
         let mut value: serde_json::Value = serde_json::from_str(json).map_err(|_| broken)?;
@@ -3339,10 +3523,22 @@ impl<'l> Emitter<'l> {
             map.get("kind").and_then(|k| k.as_str()),
             // Every kind the writer writes with its data (`is_arch`): a beam, a roof and a railing too (UR-022).
             Some(
-                "wall" | "opening" | "space" | "slab" | "grid" | "column" | "stair" | "ramp" | "beam" | "roof"
-                    | "railing" | "tag" | "viewmark"
+                "wall"
+                    | "opening"
+                    | "space"
+                    | "slab"
+                    | "grid"
+                    | "column"
+                    | "stair"
+                    | "ramp"
+                    | "beam"
+                    | "roof"
+                    | "railing"
+                    | "tag"
+                    | "viewmark"
             )
-        ) || (map.get("kind").and_then(|k| k.as_str()) == Some("polyline") && map.contains_key("spaceSeparator"));
+        ) || (map.get("kind").and_then(|k| k.as_str()) == Some("polyline")
+            && map.contains_key("spaceSeparator"));
         // An architectural object keeps its own look, attributes and label (docs/adr/0347 §2).
         if arch {
             let o: Entity = serde_json::from_value(value).map_err(|_| broken)?;
@@ -3418,11 +3614,18 @@ impl<'l> Emitter<'l> {
                 Entity::Space(s) if s.space.sources.is_some() => {
                     if let Some(ids) = &mut s.space.sources {
                         for id in ids.iter_mut() {
-                            let next = if ambiguous.contains(id.as_str()) { gone.clone() } else { at(id) };
-                            if next == gone { room_unknown += 1; }
+                            let next = if ambiguous.contains(id.as_str()) {
+                                gone.clone()
+                            } else {
+                                at(id)
+                            };
+                            if next == gone {
+                                room_unknown += 1;
+                            }
                             *id = next;
                         }
-                        ids.sort(); ids.dedup();
+                        ids.sort();
+                        ids.dedup();
                     }
                 }
                 Entity::Opening(o) => tie(&mut o.opening.host),
@@ -3544,9 +3747,12 @@ impl<'l> Emitter<'l> {
             Some("blok dizisi (MINSERT) patlatılarak alındı")
         } else if super::extrusion_z(e.common.extrusion) != 1.0 {
             Some("eğik düzlemdeki yerleştirme patlatılarak alındı")
-        } else if (placed.p[2] != 0.0 || placed.scale[2].abs() != 1.0) && self.carries_heights(&key) {
+        } else if (placed.p[2] != 0.0 || placed.scale[2].abs() != 1.0) && self.carries_heights(&key)
+        {
             // A kept insert has no height nor Z scale: the block's heights would not land where the file puts them.
-            Some("kotlu bloğun yükseltilmiş ya da Z'de ölçeklenmiş yerleştirmesi patlatılarak alındı; kotlar dosyadaki yerinde")
+            Some(
+                "kotlu bloğun yükseltilmiş ya da Z'de ölçeklenmiş yerleştirmesi patlatılarak alındı; kotlar dosyadaki yerinde",
+            )
         } else if placed.scale[0] == 0.0 || placed.scale[1] == 0.0 {
             Some("ölçeği sıfır olan yerleştirme alınmadı")
         } else {
@@ -3597,8 +3803,7 @@ impl<'l> Emitter<'l> {
             p: v(placed.p[0], placed.p[1]),
             scale: sx.abs(),
             // Every distinct factor stays distinct, including sub-billionth differences.
-            y_scale: (sx.abs() != sy.abs())
-                .then_some(sy.abs()),
+            y_scale: (sx.abs() != sy.abs()).then_some(sy.abs()),
             rotation: exact.unwrap_or_else(|| turn_of(degrees)),
             mirror,
         }));
@@ -3639,10 +3844,16 @@ impl<'l> Emitter<'l> {
         }
         self.looked_upto = self.out.entities.len();
         // An ACAD_TABLE is a table, the others dimensions (docs/adr/1128 §4).
-        let as_what = if what.starts_with("Tablo") { "tablosu" } else { "ölçüsü" };
+        let as_what = if what.starts_with("Tablo") {
+            "tablosu"
+        } else {
+            "ölçüsü"
+        };
         self.note(
             what,
-            &format!("çizgi ve yazılara patlatılarak alındı (KentOS {as_what} olarak düzenlenemez)"),
+            &format!(
+                "çizgi ve yazılara patlatılarak alındı (KentOS {as_what} olarak düzenlenemez)"
+            ),
             e.line,
         );
     }
@@ -3690,7 +3901,11 @@ impl<'l> Emitter<'l> {
             let mut ring: Vec<Vec2> = ring.into_iter().map(|p| m.apply(p)).collect();
             ring.dedup();
             let open = h.path_flags.get(k).is_some_and(|f| f & 32 != 0);
-            if open && ring.len() >= 2 && ring.first() != ring.last() && ring.iter().all(|p| finite(*p)) {
+            if open
+                && ring.len() >= 2
+                && ring.first() != ring.last()
+                && ring.iter().all(|p| finite(*p))
+            {
                 pieces.push((k, ring));
                 continue;
             }
@@ -3711,7 +3926,10 @@ impl<'l> Emitter<'l> {
         }
         // An associative hatch of model space is tied to its objects once every object is read (docs/adr/0333 §2);
         // one in a block, or with no source objects, follows nothing.
-        let tied = h.assoc && !self.defining && ctx.chain.is_empty() && h.sources.iter().any(|s| !s.is_empty());
+        let tied = h.assoc
+            && !self.defining
+            && ctx.chain.is_empty()
+            && h.sources.iter().any(|s| !s.is_empty());
         if h.assoc && !tied {
             self.note(
                 "Tarama (HATCH)",
@@ -3874,7 +4092,8 @@ fn exact_widths(m: Tf, pts: &[Vec2], widths: &[[f64; 2]], closed: bool) -> Optio
 /// [`kentos_geometry_core::geom::affine_path::arcs_as_nurbs`] under the reader's map (docs/adr/1061 §3).
 fn arcs_as_nurbs(m: Tf, pts: &[Vec2], bulges: &[f64]) -> Option<(Vec<Vec2>, Vec<f64>, Vec<f64>)> {
     let pts: Vec<CoreVec2> = pts.iter().map(|p| CoreVec2::new(p.x, p.y)).collect();
-    let (ctrl, w, knots) = kentos_geometry_core::geom::affine_path::arcs_as_nurbs(&core_affine(m), &pts, bulges)?;
+    let (ctrl, w, knots) =
+        kentos_geometry_core::geom::affine_path::arcs_as_nurbs(&core_affine(m), &pts, bulges)?;
     Some((ctrl.into_iter().map(|c| v(c.x, c.y)).collect(), w, knots))
 }
 
@@ -3904,19 +4123,30 @@ mod tests {
         // y ≥ 0 (analytically, not by KentOS's NURBS code); the second piece is the straight line x = −3.
         let m = Tf::scale(3.0, 0.5);
         let (ctrl, w, knots) =
-            arcs_as_nurbs(m, &[v(1.0, 0.0), v(-1.0, 0.0), v(-1.0, -2.0)], &[1.0, 0.0]).expect("exact");
-        assert_eq!(knots, vec![0.0, 0.0, 0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 3.0]);
+            arcs_as_nurbs(m, &[v(1.0, 0.0), v(-1.0, 0.0), v(-1.0, -2.0)], &[1.0, 0.0])
+                .expect("exact");
+        assert_eq!(
+            knots,
+            vec![0.0, 0.0, 0.0, 1.0, 1.0, 2.0, 2.0, 3.0, 3.0, 3.0]
+        );
         assert_eq!(ctrl.len(), 7);
         for piece in 0..2 {
             for k in 0..=64 {
-                let p = bezier(&ctrl[piece * 2..piece * 2 + 3], &w[piece * 2..piece * 2 + 3], f64::from(k) / 64.0);
+                let p = bezier(
+                    &ctrl[piece * 2..piece * 2 + 3],
+                    &w[piece * 2..piece * 2 + 3],
+                    f64::from(k) / 64.0,
+                );
                 let r = (p.x / 3.0) * (p.x / 3.0) + (p.y / 0.5) * (p.y / 0.5);
                 assert!((r - 1.0).abs() < 1e-12 && p.y >= -1e-15, "{p:?} {r}");
             }
         }
         // The half circle is split in its middle, (0, 1), mapped exactly to (0, 0.5): two quarter pieces and the line.
         let mid = ctrl[2];
-        assert!(mid.x.abs() < 1e-12 && (mid.y - 0.5).abs() < 1e-12, "{mid:?}");
+        assert!(
+            mid.x.abs() < 1e-12 && (mid.y - 0.5).abs() < 1e-12,
+            "{mid:?}"
+        );
         for k in 0..=8 {
             let p = bezier(&ctrl[4..7], &w[4..7], f64::from(k) / 8.0);
             assert!((p.x + 3.0).abs() < 1e-12, "{p:?}");
@@ -3938,13 +4168,27 @@ mod tests {
         // x; along y under the same map, ±1 in x goes to ±3 across it. A 45° edge: |det| = 1.5, |M·t| = √(9+0.25)/√2.
         let m = Tf::scale(3.0, 0.5);
         let pts = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0), v(8.0, 8.0)];
-        let w = exact_widths(m, &pts, &[[2.0, 2.0], [2.0, 1.0], [2.0, 2.0], [0.0, 0.0]], false).expect("widths");
+        let w = exact_widths(
+            m,
+            &pts,
+            &[[2.0, 2.0], [2.0, 1.0], [2.0, 2.0], [0.0, 0.0]],
+            false,
+        )
+        .expect("widths");
         assert_eq!(w[0], [1.0, 1.0]);
         assert_eq!(w[1], [6.0, 3.0]);
         let k = 1.5 * hypot(1.0, 1.0) / hypot(3.0, 0.5);
         assert!((w[2][0] - 2.0 * k).abs() < 1e-12, "{w:?}");
         assert_eq!(w[3], [0.0, 0.0]);
-        assert!(exact_widths(m, &[v(0.0, 0.0), v(0.0, 0.0)], &[[1.0, 1.0], [0.0, 0.0]], false).is_none());
+        assert!(
+            exact_widths(
+                m,
+                &[v(0.0, 0.0), v(0.0, 0.0)],
+                &[[1.0, 1.0], [0.0, 0.0]],
+                false
+            )
+            .is_none()
+        );
         assert!(exact_widths(Tf::scale(1.0, 0.0), &pts, &[[1.0, 1.0]; 4], false).is_none());
     }
 

@@ -237,7 +237,10 @@ fn a_right_aligned_title_stands_over_its_numbers_with_the_arrow_or_without() {
             })
         })
         .collect();
-    assert!(!leaning.is_empty(), "the sorted column's arrow in the accent");
+    assert!(
+        !leaning.is_empty(),
+        "the sorted column's arrow in the accent"
+    );
 }
 
 #[test]
@@ -254,7 +257,11 @@ fn a_row_lights_under_the_pointer_even_if_it_cannot_be_pressed() {
         let p = at(line);
         pixel(image, p.x as u32, p.y as u32)
     };
-    assert_ne!(px(&before, 1.0), px(&after, 1.0), "the row under the pointer");
+    assert_ne!(
+        px(&before, 1.0),
+        px(&after, 1.0),
+        "the row under the pointer"
+    );
     assert_eq!(px(&before, 0.0), px(&after, 0.0), "not the other one");
     // A press on it says nothing: it has no message.
     run(&mut model, &mut snapshot, Input::Click(at(1.0)));
@@ -281,10 +288,13 @@ fn a_cell_fills_its_column_and_its_text_stays_where_the_cells_stands() {
         } else {
             text("Ada").into()
         };
-        Table::new([Column::new("Sıra").width(40.0), Column::new("Ad").width(120.0)])
-            .grid()
-            .push(Row::new([text("1").into(), name]))
-            .into()
+        Table::new([
+            Column::new("Sıra").width(40.0),
+            Column::new("Ad").width(120.0),
+        ])
+        .grid()
+        .push(Row::new([text("1").into(), name]))
+        .into()
     }
     let mut snapshot = Snapshot::new(Size::new(320.0, 80.0)).expect("çizici kurulamadı");
     let theme = Theme::Dark;
@@ -299,8 +309,7 @@ fn a_cell_fills_its_column_and_its_text_stays_where_the_cells_stands() {
         near(pixel(&cell, start + 1, y - 10), t.cell()),
         "a writable cell's ground from the column's start"
     );
-    let end = start
-        + (typography::scaled(120.0) + cell_pads(1, 2).0 + cell_pads(1, 2).1) as u32;
+    let end = start + (typography::scaled(120.0) + cell_pads(1, 2).0 + cell_pads(1, 2).1) as u32;
     assert!(
         near(pixel(&cell, end - 2, y - 10), t.cell()),
         "to the column's end but for the line's pixel"
@@ -317,7 +326,10 @@ fn a_cell_fills_its_column_and_its_text_stays_where_the_cells_stands() {
         })
     };
     // Anti-aliased on two grounds: their first inked pixels may differ by one.
-    let (plain_at, cell_at) = (ink(&plain).expect("its text"), ink(&cell).expect("its text"));
+    let (plain_at, cell_at) = (
+        ink(&plain).expect("its text"),
+        ink(&cell).expect("its text"),
+    );
     assert!(
         plain_at.abs_diff(cell_at) <= 1,
         "the text does not move when it turns into a field: {plain_at} and {cell_at}"
@@ -326,11 +338,9 @@ fn a_cell_fills_its_column_and_its_text_stays_where_the_cells_stands() {
 
 #[test]
 fn a_wide_table_is_as_wide_as_its_columns_and_their_pads() {
-    let table = Table::<'_, Msg>::new([
-        Column::new("A").width(100.0),
-        Column::new("B").width(50.0),
-    ])
-    .horizontal();
+    let table =
+        Table::<'_, Msg>::new([Column::new("A").width(100.0), Column::new("B").width(50.0)])
+            .horizontal();
     assert_eq!(
         table.content_width(),
         typography::scaled(100.0)

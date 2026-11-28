@@ -145,16 +145,22 @@ impl DataView {
     }
 
     /// The faces the reads draw ground-sized text markers with as vectors (docs/adr/9245): the style's images.
-    pub fn text_from(&self, source: Arc<dyn kentos_native_style::picture::ImageSource + Send + Sync>) {
+    pub fn text_from(
+        &self,
+        source: Arc<dyn kentos_native_style::picture::ImageSource + Send + Sync>,
+    ) {
         *self.text.lock().unwrap_or_else(PoisonError::into_inner) = Some(source);
     }
 }
 
 /// Whether a data layer is being read or drawn (the window listens for parts then).
 pub fn in_use() -> bool {
-    SERVICE
-        .get()
-        .is_some_and(|s| !s.layers.lock().unwrap_or_else(PoisonError::into_inner).is_empty())
+    SERVICE.get().is_some_and(|s| {
+        !s.layers
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .is_empty()
+    })
 }
 
 /// The quarter-octave step of a view's pixels per metre.
@@ -174,7 +180,10 @@ fn cover_of(view: &Bounds) -> [f64; 4] {
 }
 
 fn inside(view: &Bounds, cover: &[f64; 4]) -> bool {
-    view.min_x >= cover[0] && view.min_y >= cover[1] && view.max_x <= cover[2] && view.max_y <= cover[3]
+    view.min_x >= cover[0]
+        && view.min_y >= cover[1]
+        && view.max_x <= cover[2]
+        && view.max_y <= cover[3]
 }
 
 /// Whether a layer's labels are on: a single label or rules with a class (an absent style labels nothing of a table). A
@@ -274,7 +283,10 @@ fn build(job: &Job, entities: &[Entity]) -> Option<Arc<StyledLayerPart>> {
         kentos_plot::layers::LayerTables {
             names: &names,
             styles: &styles,
-            text: job.text.as_deref().map(|t| t as &dyn kentos_native_style::picture::ImageSource),
+            text: job
+                .text
+                .as_deref()
+                .map(|t| t as &dyn kentos_native_style::picture::ImageSource),
         },
     )
     .ok()?;
@@ -285,7 +297,11 @@ fn build(job: &Job, entities: &[Entity]) -> Option<Arc<StyledLayerPart>> {
 }
 
 /// A read's objects in a document of their own: the layer as a layer of objects, the project's settings and styles.
-fn label_document(job: &Job, styles: ProjectStyles, entities: Vec<Entity>) -> Option<kentos_domain::Document> {
+fn label_document(
+    job: &Job,
+    styles: ProjectStyles,
+    entities: Vec<Entity>,
+) -> Option<kentos_domain::Document> {
     let mut node = job.key.node.clone();
     node.data = None;
     let snapshot = kentos_commands::DocumentSnapshotV1 {
@@ -320,13 +336,20 @@ fn drawn_only(job: &Job, objects: Vec<Entity>) -> Vec<Entity> {
     };
     let refs: Vec<&Entity> = objects.iter().collect();
     let shapes: Vec<_> = if reader.reads_geometry() {
-        refs.iter().map(|e| kentos_native_application::geometry::shape(e)).collect()
+        refs.iter()
+            .map(|e| kentos_native_application::geometry::shape(e))
+            .collect()
     } else {
         Vec::new()
     };
     let name = job.key.node.name.clone();
     let drawn = reader.drawn(&refs, &|_| name.clone(), &|i| shapes.get(i));
-    objects.into_iter().zip(drawn).filter(|(_, d)| *d).map(|(e, _)| e).collect()
+    objects
+        .into_iter()
+        .zip(drawn)
+        .filter(|(_, d)| *d)
+        .map(|(e, _)| e)
+        .collect()
 }
 
 /// A read on its thread: the source asked for the cover's rows, each part drawn and handed back as it comes.
@@ -358,7 +381,8 @@ fn run(job: Job) {
         let compiled = kentos_native_application::layer_filter::compile_filter(f, unit).ok()?;
         let schema = source.schema(&data.table).ok()?;
         let typed = kentos_native_application::data_condition::typed(source.driver());
-        kentos_native_application::data_condition::pushed(compiled.expr()?, &schema, typed).condition
+        kentos_native_application::data_condition::pushed(compiled.expr()?, &schema, typed)
+            .condition
     });
     let request = Request {
         bbox: data.geometry.as_ref().map(|_| bbox),
@@ -380,14 +404,19 @@ fn run(job: Job) {
     // Each part is said to the window as it comes: it is drawn while the rest is read.
     let flush = |entities: &mut Vec<Entity>| {
         if let Some(part) = build(&job, entities)
-            && job.to.send(Said::Part(job.layer.clone(), job.read, part)).is_ok()
+            && job
+                .to
+                .send(Said::Part(job.layer.clone(), job.read, part))
+                .is_ok()
         {
             service().tell();
         }
         entities.clear();
     };
     let hidden = &job.key.hidden;
-    let read = source.features(&data.table, &request, &job.cancel, &mut |part: Vec<Feature>| {
+    let read = source.features(&data.table, &request, &job.cancel, &mut |part: Vec<
+        Feature,
+    >| {
         for f in part {
             if hidden.contains(&f.fid) {
                 continue;
@@ -410,9 +439,18 @@ fn run(job: Job) {
                 .collect();
             let made = match &data.text {
                 Some(text) => kentos_native_application::data_text::point_of(&g).and_then(|at| {
-                    kentos_native_application::data_text::object(text, at, &job.layer, next_id, attrs, default_height)
+                    kentos_native_application::data_text::object(
+                        text,
+                        at,
+                        &job.layer,
+                        next_id,
+                        attrs,
+                        default_height,
+                    )
                 }),
-                None => kentos_native_application::geopackage::object_of(&g, &job.layer, next_id, attrs),
+                None => {
+                    kentos_native_application::geopackage::object_of(&g, &job.layer, next_id, attrs)
+                }
             };
             if let Some(e) = made {
                 next_id = next_id.wrapping_add(1);
@@ -435,10 +473,13 @@ fn run(job: Job) {
         Ok(r) if r.stopped => {}
         Ok(_) => {
             flush(&mut entities);
-            if let (Some(styles), Some(objects)) = (job.labels.clone(), kept.map(|k| drawn_only(&job, k)))
+            if let (Some(styles), Some(objects)) =
+                (job.labels.clone(), kept.map(|k| drawn_only(&job, k)))
                 && let Some(doc) = label_document(&job, styles, objects)
             {
-                let _ = job.to.send(Said::Labels(job.layer.clone(), job.read, Box::new(doc)));
+                let _ = job
+                    .to
+                    .send(Said::Labels(job.layer.clone(), job.read, Box::new(doc)));
             }
             let _ = job.to.send(Said::Done(job.layer.clone(), job.read));
         }
@@ -477,12 +518,19 @@ impl DataView {
     /// The read drawn for a layer, by its id.
     /// Why a layer's last read failed, while it has not been read since (docs/adr/9187: a sheet printed without it).
     pub fn failure(&self, layer: &str) -> Option<String> {
-        self.layers.lock().unwrap_or_else(PoisonError::into_inner).get(layer).and_then(|l| l.failed.clone())
+        self.layers
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(layer)
+            .and_then(|l| l.failed.clone())
     }
 
     pub fn drawn_read(&self, layer: &str) -> Option<u64> {
         let layers = self.layers.lock().unwrap_or_else(PoisonError::into_inner);
-        layers.get(layer).and_then(|l| l.drawn.as_ref()).map(|r| r.id)
+        layers
+            .get(layer)
+            .and_then(|l| l.drawn.as_ref())
+            .map(|r| r.id)
     }
 
     /// The documents of the drawn reads' objects for their labels that came since last asked: the layer, the read and
@@ -613,21 +661,19 @@ impl DataView {
             };
             let l = layers.entry(node.id.clone()).or_default();
             let covered = |r: &Read| r.key == key && inside(view, &r.cover);
-            if l.going.as_ref().is_some_and(covered) || (l.going.is_none() && l.drawn.as_ref().is_some_and(covered)) {
+            if l.going.as_ref().is_some_and(covered)
+                || (l.going.is_none() && l.drawn.as_ref().is_some_and(covered))
+            {
                 continue;
             }
             // A new look or table is read at once; a moved view once it stops (a pan within the cover reads nothing).
-            let same_look = l
-                .drawn
-                .as_ref()
-                .or(l.going.as_ref())
-                .is_some_and(|r| {
-                    r.key.data == key.data
-                        && r.key.node == key.node
-                        && r.key.look == key.look
-                        && r.key.hidden == key.hidden
-                        && r.key.exact == key.exact
-                });
+            let same_look = l.drawn.as_ref().or(l.going.as_ref()).is_some_and(|r| {
+                r.key.data == key.data
+                    && r.key.node == key.node
+                    && r.key.look == key.look
+                    && r.key.hidden == key.hidden
+                    && r.key.exact == key.exact
+            });
             if same_look && !settled {
                 continue;
             }
@@ -654,7 +700,11 @@ impl DataView {
                 cancel: read.cancel.clone(),
                 to: self.to.clone(),
                 labels: (labelled(node) || editing(&node.id)).then(|| styles.clone()),
-                text: self.text.lock().unwrap_or_else(PoisonError::into_inner).clone(),
+                text: self
+                    .text
+                    .lock()
+                    .unwrap_or_else(PoisonError::into_inner)
+                    .clone(),
             };
             l.going = Some(read);
             let _ = std::thread::Builder::new()
@@ -683,7 +733,8 @@ pub fn ready() -> impl iced::futures::Stream<Item = crate::app::Message> {
                 }
                 *fresh = false;
             }
-            if iced::futures::executor::block_on(out.send(crate::app::Message::DataReady)).is_err() {
+            if iced::futures::executor::block_on(out.send(crate::app::Message::DataReady)).is_err()
+            {
                 break;
             }
             std::thread::sleep(std::time::Duration::from_millis(16));
@@ -714,7 +765,10 @@ mod tests {
         assert!(inside(&moved, &cover_of(&view)));
         assert_eq!(step_of(1.0), 0);
         assert_eq!(step_of(2.0), 4);
-        assert_eq!(attribute(&Value::Bool(true)), Some(serde_json::Value::String("true".into())));
+        assert_eq!(
+            attribute(&Value::Bool(true)),
+            Some(serde_json::Value::String("true".into()))
+        );
         assert_eq!(attribute(&Value::Null), None);
     }
 }

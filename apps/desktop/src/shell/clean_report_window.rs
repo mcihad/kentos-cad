@@ -96,14 +96,18 @@ impl App {
 
     fn clean_report_plan(&mut self) {
         let input = self.clean_report_input();
-        let Some(doc) = self.document.as_mut() else { return };
-        self.clean_report.plan = Some(match topology_clean::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Rapor alınamadı.".to_owned()),
-        });
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.clean_report.plan = Some(
+            match topology_clean::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, .. } => Ok(output),
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Rapor alınamadı.".to_owned()),
+            },
+        );
     }
 
     /// Taşınma raporu (`topology.cleanReport`): the selection or the whole drawing, with the tool's tolerance and works.
@@ -112,8 +116,14 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         };
-        let uids = (!self.selection.is_empty())
-            .then(|| self.selection.ids().iter().filter_map(|s| doc.model.uid(*s)).map(|u| u.to_string()).collect());
+        let uids = (!self.selection.is_empty()).then(|| {
+            self.selection
+                .ids()
+                .iter()
+                .filter_map(|s| doc.model.uid(*s))
+                .map(|u| u.to_string())
+                .collect()
+        });
         let w = self.memory.topology_works;
         self.clean_report = State {
             uids,
@@ -128,10 +138,22 @@ impl App {
 
     /// The moves written to `path` as CSV (a test or a trace gives it here, the picker in the app).
     pub(crate) fn clean_report_save(&mut self, path: PathBuf) {
-        let Some(Ok(r)) = &self.clean_report.plan else { return };
+        let Some(Ok(r)) = &self.clean_report.plan else {
+            return;
+        };
         match std::fs::write(&path, csv(r)) {
-            Ok(()) => self.say(Level::Success, format!("{TITLE}: {} taşınma {} dosyasına yazıldı.", r.moves.len(), path.display())),
-            Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.", path.display())),
+            Ok(()) => self.say(
+                Level::Success,
+                format!(
+                    "{TITLE}: {} taşınma {} dosyasına yazıldı.",
+                    r.moves.len(),
+                    path.display()
+                ),
+            ),
+            Err(e) => self.warn(format!(
+                "{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.",
+                path.display()
+            )),
         }
     }
 
@@ -164,7 +186,9 @@ impl App {
             Event::Saved(None) => return Task::none(),
             Event::Apply => {
                 let input = self.clean_report_input();
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
                 match topology_clean::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { output, .. } => {
                         let f = self.format();
@@ -183,7 +207,9 @@ impl App {
                         self.clean_report = State::default();
                         self.dialog = None;
                     }
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
                         self.warn(format!("{TITLE}: {}", error.message));
                     }
                     _ => {}
@@ -202,10 +228,12 @@ impl App {
 
     /// An object's name in the table: its kind and its number in the drawing.
     fn clean_report_name(&self, uid: &str) -> String {
-        let e = self
-            .document
-            .as_ref()
-            .and_then(|d| Uuid::parse_str(uid).ok().and_then(|u| d.model.slot_of(u)).and_then(|s| d.model.get(s)));
+        let e = self.document.as_ref().and_then(|d| {
+            Uuid::parse_str(uid)
+                .ok()
+                .and_then(|u| d.model.slot_of(u))
+                .and_then(|s| d.model.get(s))
+        });
         match e {
             Some(e) => {
                 let kind = match e {
@@ -226,9 +254,12 @@ impl App {
         let f = self.format();
         // The tolerance on its own line, the four works side by side on the box column: short switches that belong
         // together share a row (the owner: forms neat, not always one under the other).
-        let works = WORKS.iter().enumerate().fold(row![].spacing(18), |r, (i, w)| {
-            r.push(Switch::new(s.works[i], move |on| msg(Event::Work(i, on))).label(*w))
-        });
+        let works = WORKS
+            .iter()
+            .enumerate()
+            .fold(row![].spacing(18), |r, (i, w)| {
+                r.push(Switch::new(s.works[i], move |on| msg(Event::Work(i, on))).label(*w))
+            });
         let scope = match &s.uids {
             Some(u) => format!("seçili {} nesne", u.len()),
             None => "bütün çizim".to_owned(),
@@ -238,7 +269,11 @@ impl App {
             .field(
                 "Tolerans (m)",
                 row![
-                    NumberInput::new(s.tolerance, |v| msg(Event::Tolerance(v))).step(0.005).decimals(3).point().width(140),
+                    NumberInput::new(s.tolerance, |v| msg(Event::Tolerance(v)))
+                        .step(0.005)
+                        .decimals(3)
+                        .point()
+                        .width(140),
                     kentos_ui::label::caption(format!("Kapsam: {scope}"))
                 ]
                 .spacing(14)
@@ -250,7 +285,10 @@ impl App {
         match &s.plan {
             Some(Ok(r)) if r.moves.is_empty() => lines.push(words::text_line(
                 Kind::Warn,
-                format!("{} toleransla düzeltilecek bir şey yok; toleransı büyütün ya da işleri açın.", f.length(s.tolerance)),
+                format!(
+                    "{} toleransla düzeltilecek bir şey yok; toleransı büyütün ya da işleri açın.",
+                    f.length(s.tolerance)
+                ),
             )),
             Some(Ok(r)) => {
                 let c = &r.counts;
@@ -265,7 +303,10 @@ impl App {
                 .filter(|(n, _)| *n > 0)
                 .map(|(n, w)| format!("{n} {w}"))
                 .collect();
-                lines.push(words::text_line(Kind::Info, format!("{}; {} nesne değişir.", counted.join(", "), r.changes.len())));
+                lines.push(words::text_line(
+                    Kind::Info,
+                    format!("{}; {} nesne değişir.", counted.join(", "), r.changes.len()),
+                ));
                 lines.push(words::text_line(
                     Kind::Ok,
                     format!(
@@ -276,7 +317,10 @@ impl App {
                     ),
                 ));
                 if r.area_change != 0.0 {
-                    lines.push(words::text_line(Kind::Info, format!("Alanların toplamı {} değişir.", f.area(r.area_change))));
+                    lines.push(words::text_line(
+                        Kind::Info,
+                        format!("Alanların toplamı {} değişir.", f.area(r.area_change)),
+                    ));
                 }
                 match r.acceptance {
                     Some(a) if r.beyond > 0 => lines.push(words::text_line(
@@ -294,14 +338,17 @@ impl App {
                     None => lines.push(words::text_line(Kind::Info, "Kalite profili yok: kabul eşiği denetlenmez.")),
                 }
                 for c in &r.changes {
-                    let change = match (c.area_before, c.area_after, c.length_before, c.length_after) {
-                        (Some(a), Some(b), _, _) => f.area(b - a),
-                        (_, _, Some(a), Some(b)) => f.length(b - a),
-                        _ => "—".to_owned(),
-                    };
+                    let change =
+                        match (c.area_before, c.area_after, c.length_before, c.length_after) {
+                            (Some(a), Some(b), _, _) => f.area(b - a),
+                            (_, _, Some(a), Some(b)) => f.length(b - a),
+                            _ => "—".to_owned(),
+                        };
                     rows.push(vec![
                         self.clean_report_name(&c.uid),
-                        self.document.as_ref().map_or_else(|| c.layer.clone(), |d| d.model.layers().path(&c.layer)),
+                        self.document
+                            .as_ref()
+                            .map_or_else(|| c.layer.clone(), |d| d.model.layers().path(&c.layer)),
                         c.moves.to_string(),
                         f.length(c.max_moved),
                         f.length(c.total_moved),
@@ -325,7 +372,11 @@ impl App {
             "Değişen nesne yok.",
             260.0,
         );
-        let body = Column::new().spacing(12).push(form).push(words::summary(lines)).push(table);
+        let body = Column::new()
+            .spacing(12)
+            .push(form)
+            .push(words::summary(lines))
+            .push(table);
         let plan = s.plan.as_ref().and_then(|p| p.as_ref().ok());
         let ready = plan.is_some_and(|r| !r.changes.is_empty() && r.beyond == 0);
         let saveable = plan.is_some_and(|r| !r.moves.is_empty());
@@ -338,7 +389,10 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn clean_report_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn clean_report_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(APPLY) => Some(msg(Event::Apply)),
             Control::Press(CANCEL) => Some(msg(Event::Close)),

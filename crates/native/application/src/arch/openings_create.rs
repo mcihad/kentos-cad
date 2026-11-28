@@ -172,7 +172,10 @@ fn check(doc: &Document, input: &OpeningsCreate) -> Result<Checked, Stop> {
         }
         let (_, _, line) = openings::wall_at(doc, &n.host, &format!("{at}.host"))?;
         // A project type's opening follows it (docs/adr/0772 §1): the values given over its own are its exceptions.
-        let project = n.kind.as_deref().and_then(|k| crate::opening_types::project_type(doc, k));
+        let project = n
+            .kind
+            .as_deref()
+            .and_then(|k| crate::opening_types::project_type(doc, k));
         let kind = match (&n.kind, &project) {
             (_, Some(t)) => kentos_commands::OpeningTypeDef {
                 id: t.id.clone(),

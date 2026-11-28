@@ -359,7 +359,10 @@ pub struct OpeningChange {
     pub build: Option<Box<crate::OpeningBuild>>,
     /// Its construction's fields taken away.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningTypeField>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::OpeningTypeField>>", optional)
+    )]
     pub unset: Vec<crate::OpeningTypeField>,
 }
 
@@ -486,7 +489,11 @@ pub enum OpeningsOperation {
         #[cfg_attr(feature = "ts", ts(optional))]
         from: Option<String>,
         to: String,
-        #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+        #[serde(
+            default,
+            with = "crate::cad_properties::nullable",
+            skip_serializing_if = "Option::is_none"
+        )]
         #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
         #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
         level: Option<Option<String>>,
@@ -497,7 +504,10 @@ pub enum OpeningsOperation {
     /// type's version goes up and every other opening following it takes them, as `cad.openingtypes.edit`'s Update.
     Push {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningTypeField>>", optional))]
+        #[cfg_attr(
+            feature = "ts",
+            ts(as = "Option<Vec<crate::OpeningTypeField>>", optional)
+        )]
         fields: Vec<crate::OpeningTypeField>,
     },
     /// Tipi yeniden uygula: the openings take their type's latest version again, their exceptions kept (one left at an
@@ -507,7 +517,10 @@ pub enum OpeningsOperation {
     /// latest version.
     Reset {
         #[serde(default, skip_serializing_if = "Vec::is_empty")]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningTypeField>>", optional))]
+        #[cfg_attr(
+            feature = "ts",
+            ts(as = "Option<Vec<crate::OpeningTypeField>>", optional)
+        )]
         fields: Vec<crate::OpeningTypeField>,
     },
     /// Numarala: marks `prefix` + `start`, `start` + 1, … in their walls' order and along each wall; with no ids every
@@ -658,14 +671,24 @@ pub struct OpeningsDistancesInput {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum OpeningReference {
     End,
-    Opening { uid: String },
-    Wall { uid: String },
+    Opening {
+        uid: String,
+    },
+    Wall {
+        uid: String,
+    },
     /// A grid crossing the face, measured from the opening's middle (docs/adr/0728 §1).
-    Grid { uid: String },
+    Grid {
+        uid: String,
+    },
 }
 
 /// One side's distance: net along the face, from the opening's jamb to the reference's point on the face.

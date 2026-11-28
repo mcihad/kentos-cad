@@ -9,7 +9,11 @@ use serde_json::Value;
 const CASES: &str = include_str!("../../../../../fixtures/road/v1/cutout.json");
 
 fn p3(v: &Value) -> [f64; 3] {
-    [v[0].as_f64().unwrap(), v[1].as_f64().unwrap(), v[2].as_f64().unwrap()]
+    [
+        v[0].as_f64().unwrap(),
+        v[1].as_f64().unwrap(),
+        v[2].as_f64().unwrap(),
+    ]
 }
 
 fn area(a: [f64; 3], b: [f64; 3], c: [f64; 3]) -> f64 {
@@ -23,7 +27,11 @@ fn inside(t: [[f64; 3]; 3], p: [f64; 2]) -> Option<[f64; 3]> {
         return None;
     }
     let q = [p[0], p[1], 0.0];
-    let w = [area(q, t[1], t[2]) / d, area(t[0], q, t[2]) / d, area(t[0], t[1], q) / d];
+    let w = [
+        area(q, t[1], t[2]) / d,
+        area(t[0], q, t[2]) / d,
+        area(t[0], t[1], q) / d,
+    ];
     w.iter().all(|x| *x >= -1e-9).then_some(w)
 }
 
@@ -39,8 +47,12 @@ fn corridors_cut_out_of_the_terrain_as_shapely_says() {
             .iter()
             .map(|t| [0, 1, 2].map(|k| t[k].as_u64().unwrap() as u32))
             .collect();
-        let foot: Vec<[[f64; 3]; 3]> =
-            c["footprint"].as_array().unwrap().iter().map(|t| [p3(&t[0]), p3(&t[1]), p3(&t[2])]).collect();
+        let foot: Vec<[[f64; 3]; 3]> = c["footprint"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|t| [p3(&t[0]), p3(&t[1]), p3(&t[2])])
+            .collect();
         let cut = cut_out(&vs, &ts, &foot);
         let terrain: Vec<[[f64; 3]; 3]> = ts.iter().map(|t| t.map(|k| vs[k as usize])).collect();
         let mut sum = 0.0;
@@ -51,17 +63,40 @@ fn corridors_cut_out_of_the_terrain_as_shapely_says() {
             sum += s;
             let m = [(a[0] + b[0] + cc[0]) / 3.0, (a[1] + b[1] + cc[1]) / 3.0];
             let z = (a[2] + b[2] + cc[2]) / 3.0;
-            let on = terrain.iter().find_map(|tt| inside(*tt, m).map(|w| w[0] * tt[0][2] + w[1] * tt[1][2] + w[2] * tt[2][2]));
-            let ground = on.unwrap_or_else(|| panic!("{name}: a triangle off the terrain at {m:?}"));
-            assert!((ground - z).abs() < 1e-6, "{name}: {z} not on the terrain's {ground} at {m:?}");
+            let on = terrain.iter().find_map(|tt| {
+                inside(*tt, m).map(|w| w[0] * tt[0][2] + w[1] * tt[1][2] + w[2] * tt[2][2])
+            });
+            let ground =
+                on.unwrap_or_else(|| panic!("{name}: a triangle off the terrain at {m:?}"));
+            assert!(
+                (ground - z).abs() < 1e-6,
+                "{name}: {z} not on the terrain's {ground} at {m:?}"
+            );
             if s > 1e-6 {
-                assert!(foot.iter().all(|f| inside(*f, m).is_none_or(|w| w.iter().any(|x| *x < 1e-9))), "{name}: a triangle under a corridor at {m:?}");
+                assert!(
+                    foot.iter()
+                        .all(|f| inside(*f, m).is_none_or(|w| w.iter().any(|x| *x < 1e-9))),
+                    "{name}: a triangle under a corridor at {m:?}"
+                );
             }
         }
         let want = c["keptArea"].as_f64().unwrap();
-        assert!((sum - want).abs() <= 1e-6 * want.max(1.0), "{name}: kept {sum}, shapely {want}");
-        assert_eq!(cut.kept + cut.dropped + cut.clipped, ts.len(), "{name}: every triangle accounted for");
-        println!("{name}: {} kept, {} dropped, {} clipped → {} triangles", cut.kept, cut.dropped, cut.clipped, cut.triangles.len());
+        assert!(
+            (sum - want).abs() <= 1e-6 * want.max(1.0),
+            "{name}: kept {sum}, shapely {want}"
+        );
+        assert_eq!(
+            cut.kept + cut.dropped + cut.clipped,
+            ts.len(),
+            "{name}: every triangle accounted for"
+        );
+        println!(
+            "{name}: {} kept, {} dropped, {} clipped → {} triangles",
+            cut.kept,
+            cut.dropped,
+            cut.clipped,
+            cut.triangles.len()
+        );
     }
 }
 
@@ -91,10 +126,12 @@ fn cutout_timing() {
         }
     }
     let mut foot = Vec::new();
-    let line: Vec<[f64; 2]> = (0..=400).map(|k| {
-        let s = k as f64 * 2.5;
-        [s, 500.0 + 200.0 * (s / 160.0).sin()]
-    }).collect();
+    let line: Vec<[f64; 2]> = (0..=400)
+        .map(|k| {
+            let s = k as f64 * 2.5;
+            [s, 500.0 + 200.0 * (s / 160.0).sin()]
+        })
+        .collect();
     for p in line.windows(2) {
         let (dx, dy) = (p[1][0] - p[0][0], p[1][1] - p[0][1]);
         let l = dx.hypot(dy);

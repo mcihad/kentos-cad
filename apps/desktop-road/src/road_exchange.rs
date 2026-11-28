@@ -16,7 +16,11 @@ use crate::app::{App, Message};
 pub(crate) trait RoadExchangeApp1 {
     fn export_landxml(&mut self) -> Task<Message>;
     fn export_landxml_machine(&mut self) -> Task<Message>;
-    fn ask_landxml(&mut self, title: &'static str, then: fn(Option<PathBuf>) -> Message) -> Task<Message>;
+    fn ask_landxml(
+        &mut self,
+        title: &'static str,
+        then: fn(Option<PathBuf>) -> Message,
+    ) -> Task<Message>;
     fn landxml_chosen(&mut self, path: Option<PathBuf>) -> Task<Message>;
     fn landxml_machine_chosen(&mut self, path: Option<PathBuf>) -> Task<Message>;
     fn landxml_written(&mut self, path: Option<PathBuf>, machine_control: bool) -> Task<Message>;
@@ -25,15 +29,23 @@ pub(crate) trait RoadExchangeApp1 {
 impl RoadExchangeApp1 for App {
     /// LandXML ver from the ribbon: where to write the file.
     fn export_landxml(&mut self) -> Task<Message> {
-        self.ask_landxml("LandXML ver", |path| Message::from(crate::road::Event::LandxmlExport(path)))
+        self.ask_landxml("LandXML ver", |path| {
+            Message::from(crate::road::Event::LandxmlExport(path))
+        })
     }
 
     /// Makine kontrolüne ver from the ribbon (docs/adr/1031): where to write the file.
     fn export_landxml_machine(&mut self) -> Task<Message> {
-        self.ask_landxml("Makine kontrolüne ver", |path| Message::from(crate::road::Event::LandxmlMachine(path)))
+        self.ask_landxml("Makine kontrolüne ver", |path| {
+            Message::from(crate::road::Event::LandxmlMachine(path))
+        })
     }
 
-    fn ask_landxml(&mut self, title: &'static str, then: fn(Option<PathBuf>) -> Message) -> Task<Message> {
+    fn ask_landxml(
+        &mut self,
+        title: &'static str,
+        then: fn(Option<PathBuf>) -> Message,
+    ) -> Task<Message> {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -68,11 +80,15 @@ impl RoadExchangeApp1 for App {
     }
 
     fn landxml_written(&mut self, path: Option<PathBuf>, machine_control: bool) -> Task<Message> {
-        let Some(mut path) = path else { return Task::none() };
+        let Some(mut path) = path else {
+            return Task::none();
+        };
         if path.extension().is_none() {
             path.set_extension("xml");
         }
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let input = ExportLandxml {
             path: path.display().to_string(),
             surfaces: None,
@@ -86,7 +102,11 @@ impl RoadExchangeApp1 for App {
         let result = road_landxml::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             let profiles: usize = out.alignments.iter().map(|a| a.profiles.len()).sum();
-            let what = if machine_control { "Makine kontrolü dosyası" } else { "LandXML" };
+            let what = if machine_control {
+                "Makine kontrolü dosyası"
+            } else {
+                "LandXML"
+            };
             let said = heights.map_or_else(String::new, |h| format!("; kotlar {h}"));
             self.say(
                 Level::Success,
@@ -134,19 +154,37 @@ impl RoadExchangeApp2 for App {
 
     /// The file chosen: every alignment of it taken in with its profiles (`road.alignments.import`, one undo step).
     fn landxml_alignments_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
-        let Some(path) = path else { return Task::none() };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(path) = path else {
+            return Task::none();
+        };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let input = kentos_commands::AlignmentsImport {
             path: path.display().to_string(),
             alignments: None,
             without_profiles: false,
             expected_revision: None,
         };
-        let result = kentos_native_application::road_alignments_import::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let result = kentos_native_application::road_alignments_import::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
         if let Some(out) = self.answered(result) {
-            let names: Vec<String> = out.alignments.iter().map(|a| format!("“{}”", a.name)).collect();
+            let names: Vec<String> = out
+                .alignments
+                .iter()
+                .map(|a| format!("“{}”", a.name))
+                .collect();
             let profiles: usize = out.alignments.iter().map(|a| a.profiles.len()).sum();
-            self.say(Level::Success, format!("LandXML'den {} aks alındı: {}; {profiles} boykesit.", names.len(), names.join(", ")));
+            self.say(
+                Level::Success,
+                format!(
+                    "LandXML'den {} aks alındı: {}; {profiles} boykesit.",
+                    names.len(),
+                    names.join(", ")
+                ),
+            );
         }
         Task::none()
     }
@@ -188,11 +226,15 @@ impl RoadExchangeApp3 for App {
 
     /// The file chosen: every alignment with its profiles (`file.export.ifc`; the dialog asked before writing over).
     fn ifc_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
-        let Some(mut path) = path else { return Task::none() };
+        let Some(mut path) = path else {
+            return Task::none();
+        };
         if path.extension().is_none() {
             path.set_extension("ifc");
         }
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let input = kentos_commands::ExportIfc {
             path: path.display().to_string(),
             alignments: None,
@@ -200,12 +242,19 @@ impl RoadExchangeApp3 for App {
             stamp: None,
             overwrite: true,
         };
-        let result = kentos_native_application::road_ifc::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let result = kentos_native_application::road_ifc::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
         if let Some(out) = self.answered(result) {
             let profiles: usize = out.alignments.iter().map(|a| a.profiles.len()).sum();
             self.say(
                 Level::Success,
-                format!("IFC 4.3 yazıldı: {} aks, {profiles} boykesit ({}).", out.alignments.len(), path.display()),
+                format!(
+                    "IFC 4.3 yazıldı: {} aks, {profiles} boykesit ({}).",
+                    out.alignments.len(),
+                    path.display()
+                ),
             );
         }
         Task::none()
@@ -239,13 +288,25 @@ impl RoadExchangeApp3 for App {
     /// The file chosen: every surface and corridor that builds (`file.export.gltf`; the dialog asked before writing
     /// over).
     fn gltf_chosen(&mut self, path: Option<PathBuf>) -> Task<Message> {
-        let Some(mut path) = path else { return Task::none() };
+        let Some(mut path) = path else {
+            return Task::none();
+        };
         if path.extension().is_none() {
             path.set_extension("glb");
         }
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let input = kentos_commands::ExportGltf { path: path.display().to_string(), surfaces: None, corridors: None, overwrite: true };
-        let result = kentos_native_application::road_scene::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let input = kentos_commands::ExportGltf {
+            path: path.display().to_string(),
+            surfaces: None,
+            corridors: None,
+            overwrite: true,
+        };
+        let result = kentos_native_application::road_scene::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
         if let Some(out) = self.answered(result) {
             let triangles: u32 = out.meshes.iter().map(|m| m.triangles).sum();
             self.say(

@@ -12,19 +12,19 @@ use crate::module_profile::ModuleProfile as _;
 use std::cell::RefCell;
 use std::collections::HashSet;
 
+use iced::futures::{SinkExt, Stream, channel::mpsc};
 use iced::widget::{column, container};
 use iced::{Element, Task};
-use iced::futures::{SinkExt, Stream, channel::mpsc};
 use kentos_commands::{
-    CallEnvelope, CallOp, CommandResult, JobPhase, RoadNode, RoadNodeKind as N, RoadNodeState as S, RoadProjectEdit,
-    RoadProjectRebuild, RoadProjectRebuilt, RoadProjectTree,
+    CallEnvelope, CallOp, CommandResult, JobPhase, RoadNode, RoadNodeKind as N, RoadNodeState as S,
+    RoadProjectEdit, RoadProjectRebuild, RoadProjectRebuilt, RoadProjectTree,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_native_application::jobs::Job;
 use kentos_native_application::{ExecutionContext, road_project_edit, road_project_query};
-use kentos_ui::widget::progress::{self, Tint};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::label;
+use kentos_ui::widget::progress::{self, Tint};
 use kentos_ui::widget::tree_view::Check;
 use kentos_ui::widget::{Status, StatusItem, StatusTree};
 
@@ -106,7 +106,9 @@ impl PanelState {
 
 impl std::fmt::Debug for PanelState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PanelState").field("deep", &self.deep).finish()
+        f.debug_struct("PanelState")
+            .field("deep", &self.deep)
+            .finish()
     }
 }
 
@@ -233,8 +235,12 @@ impl App {
     pub(crate) fn road_project_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Open(k) => {
-                let Some(Ok(tree)) = self.road_project_read() else { return Task::none() };
-                let Some(n) = tree.nodes.get(k).cloned() else { return Task::none() };
+                let Some(Ok(tree)) = self.road_project_read() else {
+                    return Task::none();
+                };
+                let Some(n) = tree.nodes.get(k).cloned() else {
+                    return Task::none();
+                };
                 if n.kind == N::Drawing {
                     self.select_drawing(&n.id);
                 } else if let Some((command, _)) = editor_of(n.kind) {
@@ -245,10 +251,17 @@ impl App {
                 if self.terrain_work.road_project.running.is_some() {
                     return Task::none();
                 }
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
                 // Docs/adr/4740: Yalnız değişeni yaz is the project's (drawing again by itself follows it too).
                 let regional = !doc.model.road_rebuild_whole();
-                let input = RoadProjectRebuild { drawings: id.map(|i| vec![i]), edited, regional, expected_revision: None };
+                let input = RoadProjectRebuild {
+                    drawings: id.map(|i| vec![i]),
+                    edited,
+                    regional,
+                    expected_revision: None,
+                };
                 let envelope = CallEnvelope {
                     command: kentos_commands::ROAD_PROJECT_REBUILD.into(),
                     version: None,
@@ -259,7 +272,11 @@ impl App {
                     relax_constraints: false,
                 };
                 self.terrain_work.road_project.running = Some(Running {
-                    job: Job::start(format!("yeniden-uret-{}", doc.model.revision()), &doc.model, envelope),
+                    job: Job::start(
+                        format!("yeniden-uret-{}", doc.model.revision()),
+                        &doc.model,
+                        envelope,
+                    ),
                     session: doc.session,
                     share: Some(0.0),
                     stopping: false,
@@ -273,9 +290,16 @@ impl App {
                 }
             }
             Event::Auto(on) => {
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
-                let input = RoadProjectEdit { auto_rebuild: Some(on), regional: None, expected_revision: None };
-                let result = road_project_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
+                let input = RoadProjectEdit {
+                    auto_rebuild: Some(on),
+                    regional: None,
+                    expected_revision: None,
+                };
+                let result =
+                    road_project_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
                 if self.answered(result).is_some() {
                     let words = if on {
                         "Kendiliğinden yeniden üret açık: eskiyen çizimler değişikliğin adımında yeniden üretilir."
@@ -287,9 +311,16 @@ impl App {
             }
             // Docs/adr/4740: the project's choice, one undo step “Yalnız değişeni yaz”.
             Event::Regional(on) => {
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
-                let input = RoadProjectEdit { auto_rebuild: None, regional: Some(on), expected_revision: None };
-                let result = road_project_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
+                let input = RoadProjectEdit {
+                    auto_rebuild: None,
+                    regional: Some(on),
+                    expected_revision: None,
+                };
+                let result =
+                    road_project_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
                 if self.answered(result).is_some() {
                     let words = if on {
                         "Yalnız değişeni yaz açık: yeniden üretim, elle de kendiliğinden de, aynı çıkan nesneleri yerinde bırakır."
@@ -331,17 +362,27 @@ impl App {
         }
         self.terrain_work.road_project.running = None;
         if status.phase == JobPhase::Cancelled {
-            self.say(Level::Info, "Yeniden üretim durduruldu; hiçbir şey yazılmadı.".to_owned());
+            self.say(
+                Level::Info,
+                "Yeniden üretim durduruldu; hiçbir şey yazılmadı.".to_owned(),
+            );
             return;
         }
         let result = match status.answer.map(|a| a.result) {
-            Some(CommandResult::Completed { output, warnings }) => match serde_json::from_value::<RoadProjectRebuilt>(output) {
-                Ok(output) => CommandResult::Completed { output, warnings },
-                Err(e) => return self.warn(format!("Yeniden üretimin cevabı okunamadı: {e}")),
-            },
+            Some(CommandResult::Completed { output, warnings }) => {
+                match serde_json::from_value::<RoadProjectRebuilt>(output) {
+                    Ok(output) => CommandResult::Completed { output, warnings },
+                    Err(e) => return self.warn(format!("Yeniden üretimin cevabı okunamadı: {e}")),
+                }
+            }
             Some(CommandResult::Failed { error }) => CommandResult::Failed { error },
             Some(CommandResult::Conflict { error }) => CommandResult::Conflict { error },
-            _ => return self.say(Level::Info, "Yeniden üretim durduruldu; hiçbir şey yazılmadı.".to_owned()),
+            _ => {
+                return self.say(
+                    Level::Info,
+                    "Yeniden üretim durduruldu; hiçbir şey yazılmadı.".to_owned(),
+                );
+            }
         };
         if let Some(out) = self.answered(result) {
             let words = self.rebuilt_words(&out);
@@ -360,28 +401,51 @@ impl App {
         if out.rebuilt.iter().all(|r| r.kept.is_none()) {
             return format!("{n} çizim yeniden üretildi: {objects} nesne.");
         }
-        let kept: usize = out.rebuilt.iter().filter_map(|r| r.kept).map(|k| k as usize).sum();
+        let kept: usize = out
+            .rebuilt
+            .iter()
+            .filter_map(|r| r.kept)
+            .map(|k| k as usize)
+            .sum();
         let removed: usize = out.rebuilt.iter().map(|r| r.removed as usize).sum();
         let written = objects.saturating_sub(kept);
         if written == 0 && removed == 0 {
-            return format!("{n} çizim yeniden üretildi: hiçbir nesne değişmedi, {kept} nesne yerinde; kayıt güncel.");
+            return format!(
+                "{n} çizim yeniden üretildi: hiçbir nesne değişmedi, {kept} nesne yerinde; kayıt güncel."
+            );
         }
-        let region = out.rebuilt.iter().filter_map(|r| r.region).reduce(|[a, b, c, d], [e, f, g, h]| {
-            [a.min(e), b.min(f), c.max(g), d.max(h)]
-        });
+        let region = out
+            .rebuilt
+            .iter()
+            .filter_map(|r| r.region)
+            .reduce(|[a, b, c, d], [e, f, g, h]| [a.min(e), b.min(f), c.max(g), d.max(h)]);
         let place = region.map_or_else(String::new, |[x0, y0, x1, y1]| {
             let f = self.format();
-            format!("; değişen bölge {} × {}", f.length(x1 - x0), f.length(y1 - y0))
+            format!(
+                "; değişen bölge {} × {}",
+                f.length(x1 - x0),
+                f.length(y1 - y0)
+            )
         });
-        format!("{n} çizim yeniden üretildi: {kept} nesne yerinde kaldı, {written} yazıldı, {removed} silindi{place}.")
+        format!(
+            "{n} çizim yeniden üretildi: {kept} nesne yerinde kaldı, {written} yazıldı, {removed} silindi{place}."
+        )
     }
 
     /// A drawing's objects selected and shown.
     fn select_drawing(&mut self, id: &str) {
-        let Some(doc) = self.document.as_ref() else { return };
-        let Some(d) = doc.model.road_drawings().iter().find(|d| d.id == id) else { return };
-        let slots: Vec<Slot> =
-            d.uids.iter().filter_map(|u| Uuid::parse_str(u).ok()).filter_map(|u| doc.model.slot_of(u)).collect();
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let Some(d) = doc.model.road_drawings().iter().find(|d| d.id == id) else {
+            return;
+        };
+        let slots: Vec<Slot> = d
+            .uids
+            .iter()
+            .filter_map(|u| Uuid::parse_str(u).ok())
+            .filter_map(|u| doc.model.slot_of(u))
+            .collect();
         let ids: Vec<f64> = slots.iter().map(|s| f64::from(s.0)).collect();
         self.selection.set(slots);
         if !ids.is_empty() {
@@ -391,7 +455,9 @@ impl App {
 
     pub(crate) fn road_project_view(&self) -> Element<'_, Message> {
         let Some(read) = self.road_project_read() else {
-            return container(label::caption("Açık çizim yok.")).padding([8, 12]).into();
+            return container(label::caption("Açık çizim yok."))
+                .padding([8, 12])
+                .into();
         };
         let tree = match read {
             Ok(t) => t,
@@ -406,7 +472,8 @@ impl App {
                 _ => roots.push(k),
             }
         }
-        let mut made: Vec<Option<StatusItem<'_, Message>>> = (0..tree.nodes.len()).map(|_| None).collect();
+        let mut made: Vec<Option<StatusItem<'_, Message>>> =
+            (0..tree.nodes.len()).map(|_| None).collect();
         for k in (0..tree.nodes.len()).rev() {
             let mut item = road_item(k, &tree.nodes[k]);
             for &c in &children[k] {
@@ -439,26 +506,42 @@ impl App {
             // İş grafiği (docs/adr/1940): the chain from the sources to the sheets, the drawings' recipes.
             crate::exchange::words::secondary(
                 crate::project_graph_window::OPEN,
-                Some(Message::TerrainWork(crate::terrain_work::Event::ProjectGraph(
-                    crate::project_graph_window::Event::Open
-                ))),
+                Some(Message::TerrainWork(
+                    crate::terrain_work::Event::ProjectGraph(
+                        crate::project_graph_window::Event::Open
+                    )
+                )),
             ),
         ]
         .spacing(4)
         .padding([2, 12]);
         let running = self.terrain_work.road_project.running.as_ref();
-        let rebuild = (tree.rebuildable > 0 && running.is_none()).then(|| msg(Event::Rebuild(None, false)));
+        let rebuild =
+            (tree.rebuildable > 0 && running.is_none()).then(|| msg(Event::Rebuild(None, false)));
         let body = StatusTree::new(items)
-            .toggled(&self.terrain_work.road_project.toggled, |key| msg(Event::Fold(key)))
-            .filter(self.terrain_work.road_project.filter, |f| msg(Event::Filter(f)))
-            .bulk(icon(Icon::Redo).size(13.0), "Hepsini yeniden üret", tree.rebuildable as usize, rebuild)
+            .toggled(&self.terrain_work.road_project.toggled, |key| {
+                msg(Event::Fold(key))
+            })
+            .filter(self.terrain_work.road_project.filter, |f| {
+                msg(Event::Filter(f))
+            })
+            .bulk(
+                icon(Icon::Redo).size(13.0),
+                "Hepsini yeniden üret",
+                tree.rebuildable as usize,
+                rebuild,
+            )
             .counted("Güncel değil", "Sorun")
             .empty(self.project_tree_words().1);
         // A running rebuild (docs/adr/2440): its progress and Durdur.
         let progress_row: Element<'_, Message> = match running {
             Some(r) => iced::widget::row![
                 progress::bar(r.share.map(|s| s as f32)).tint(Tint::Muted),
-                label::caption(if r.stopping { "Durduruluyor…" } else { "Yeniden üretiliyor…" }),
+                label::caption(if r.stopping {
+                    "Durduruluyor…"
+                } else {
+                    "Yeniden üretiliyor…"
+                }),
                 crate::exchange::words::secondary(STOP, (!r.stopping).then(|| msg(Event::Stop)))
             ]
             .spacing(8)
@@ -467,7 +550,15 @@ impl App {
             .into(),
             None => iced::widget::space().into(),
         };
-        column![options, progress_row, kentos_ui::widget::horizontal_divider(), body.view()].spacing(4).padding([6, 0]).into()
+        column![
+            options,
+            progress_row,
+            kentos_ui::widget::horizontal_divider(),
+            body.view()
+        ]
+        .spacing(4)
+        .padding([6, 0])
+        .into()
     }
 }
 
@@ -490,7 +581,11 @@ fn road_item<'a>(k: usize, n: &RoadNode) -> StatusItem<'a, Message> {
         .on_press(msg(Event::Open(k)));
     match (n.kind, n.state) {
         (N::Drawing, S::Stale | S::Missing | S::Current) => {
-            item = item.action(icon(Icon::Redo).size(13.0), "Yeniden üret", msg(Event::Rebuild(Some(n.id.clone()), false)));
+            item = item.action(
+                icon(Icon::Redo).size(13.0),
+                "Yeniden üret",
+                msg(Event::Rebuild(Some(n.id.clone()), false)),
+            );
         }
         (N::Drawing, S::Edited) => {
             item = item.action(

@@ -3,8 +3,8 @@
 //! `unknown_block`), the note and reply limits, and the notes' save–open round trip with their undo.
 
 use kentos_commands::{
-    CommandResult, CompareAgainst, DrawingTake, MAX_REVIEW_NOTES, MAX_REVIEW_REPLIES, ReviewAnchorState, ReviewNote,
-    ReviewNoteOp, ReviewNotesEdit, ReviewNotesList, ReviewStatus,
+    CommandResult, CompareAgainst, DrawingTake, MAX_REVIEW_NOTES, MAX_REVIEW_REPLIES,
+    ReviewAnchorState, ReviewNote, ReviewNoteOp, ReviewNotesEdit, ReviewNotesList, ReviewStatus,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::{ExecutionContext, drawing_take, review_notes};
@@ -40,12 +40,22 @@ fn written(doc: &Document, name: &str) -> String {
     let dir = std::env::temp_dir().join(format!("kentos-review-take-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join(name);
-    std::fs::write(&path, kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap()).unwrap();
+    std::fs::write(
+        &path,
+        kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap(),
+    )
+    .unwrap();
     path.to_string_lossy().into_owned()
 }
 
 fn edit(doc: &mut Document, op: ReviewNoteOp) -> CommandResult<kentos_commands::ReviewNotesEdited> {
-    review_notes::execute(&mut ExecutionContext::new(doc), ReviewNotesEdit { change: op, expected_revision: None })
+    review_notes::execute(
+        &mut ExecutionContext::new(doc),
+        ReviewNotesEdit {
+            change: op,
+            expected_revision: None,
+        },
+    )
 }
 
 fn add(id: &str, anchors: Vec<String>) -> ReviewNoteOp {
@@ -80,11 +90,18 @@ fn changed_definition(doc: &Document) -> kentos_commands::BlockDefinition {
 fn a_changed_definition_makes_the_insert_note_stale_and_the_take_warns() {
     let mut doc = drawing();
     let old = written(&doc, "eski.kcad");
-    assert!(matches!(edit(&mut doc, add(NOTE, vec![INSERT.into()])), CommandResult::Completed { .. }));
+    assert!(matches!(
+        edit(&mut doc, add(NOTE, vec![INSERT.into()])),
+        CommandResult::Completed { .. }
+    ));
     assert_eq!(state(&doc), ReviewAnchorState::Current);
     let def = changed_definition(&doc);
     assert!(doc.update_block(def).unwrap());
-    assert_eq!(state(&doc), ReviewAnchorState::BlockChanged, "the insert is as it was, its definition is not");
+    assert_eq!(
+        state(&doc),
+        ReviewAnchorState::BlockChanged,
+        "the insert is as it was, its definition is not"
+    );
     assert!(review_notes::list(&doc, &ReviewNotesList::default()).notes[0].stale);
 
     // The insert moved too: taking it back from the old file replaces it and warns that the definition stays.
@@ -101,16 +118,22 @@ fn a_changed_definition_makes_the_insert_note_stale_and_the_take_warns() {
         overwrite: false,
         expected_revision: None,
     };
-    let CommandResult::Completed { output, warnings } = drawing_take::execute(&mut ExecutionContext::new(&mut doc), input) else {
+    let CommandResult::Completed { output, warnings } =
+        drawing_take::execute(&mut ExecutionContext::new(&mut doc), input)
+    else {
         panic!("the take")
     };
     assert_eq!(output.replaced, [INSERT]);
     assert_eq!(warnings.len(), 1);
     assert_eq!(warnings[0].code, "block_definition_differs");
-    let kentos_commands::Entity::Insert(i) = doc.get(slot).unwrap() else { panic!("insert") };
+    let kentos_commands::Entity::Insert(i) = doc.get(slot).unwrap() else {
+        panic!("insert")
+    };
     assert_eq!(i.p.x, 10.0);
     // The definition is the drawing's, changed: not taken.
-    let kentos_commands::Entity::Line(l) = &doc.blocks()[0].entities[0] else { panic!("line") };
+    let kentos_commands::Entity::Line(l) = &doc.blocks()[0].entities[0] else {
+        panic!("line")
+    };
     assert_eq!(l.b.x, 1.0);
     assert_eq!(doc.undo().as_deref(), Some("Farkları al"));
     assert_eq!(doc.get(slot), Some(&moved));
@@ -132,7 +155,9 @@ fn an_insert_whose_definition_the_drawing_lost_is_not_taken() {
         overwrite: false,
         expected_revision: None,
     };
-    let CommandResult::Failed { error } = drawing_take::execute(&mut ExecutionContext::new(&mut doc), input) else {
+    let CommandResult::Failed { error } =
+        drawing_take::execute(&mut ExecutionContext::new(&mut doc), input)
+    else {
         panic!("refused")
     };
     assert_eq!(error.code, "unknown_block");
@@ -143,13 +168,33 @@ fn an_insert_whose_definition_the_drawing_lost_is_not_taken() {
 #[test]
 fn replies_and_notes_stop_at_their_limits() {
     let mut doc = drawing();
-    assert!(matches!(edit(&mut doc, add(NOTE, vec![])), CommandResult::Completed { .. }));
+    assert!(matches!(
+        edit(&mut doc, add(NOTE, vec![])),
+        CommandResult::Completed { .. }
+    ));
     for i in 0..MAX_REVIEW_REPLIES {
-        let reply = ReviewNoteOp::Reply { id: NOTE.into(), text: format!("Yanıt {i}"), author: None, created_at: None, status: None };
-        assert!(matches!(edit(&mut doc, reply), CommandResult::Completed { .. }), "reply {i}");
+        let reply = ReviewNoteOp::Reply {
+            id: NOTE.into(),
+            text: format!("Yanıt {i}"),
+            author: None,
+            created_at: None,
+            status: None,
+        };
+        assert!(
+            matches!(edit(&mut doc, reply), CommandResult::Completed { .. }),
+            "reply {i}"
+        );
     }
-    let one_more = ReviewNoteOp::Reply { id: NOTE.into(), text: "Bir fazla".into(), author: None, created_at: None, status: None };
-    let CommandResult::Failed { error } = edit(&mut doc, one_more) else { panic!("refused") };
+    let one_more = ReviewNoteOp::Reply {
+        id: NOTE.into(),
+        text: "Bir fazla".into(),
+        author: None,
+        created_at: None,
+        status: None,
+    };
+    let CommandResult::Failed { error } = edit(&mut doc, one_more) else {
+        panic!("refused")
+    };
     assert_eq!(error.code, "too_many_review_replies");
 
     let notes: Vec<ReviewNote> = (0..MAX_REVIEW_NOTES)
@@ -171,7 +216,10 @@ fn replies_and_notes_stop_at_their_limits() {
         })
         .collect();
     doc.set_review_notes(notes, "Notlar");
-    let CommandResult::Failed { error } = edit(&mut doc, add("0192f5b0-3000-7000-8000-0000000000ab", vec![])) else {
+    let CommandResult::Failed { error } = edit(
+        &mut doc,
+        add("0192f5b0-3000-7000-8000-0000000000ab", vec![]),
+    ) else {
         panic!("refused")
     };
     assert_eq!(error.code, "too_many_review_notes");
@@ -180,7 +228,10 @@ fn replies_and_notes_stop_at_their_limits() {
 #[test]
 fn notes_survive_a_save_and_an_opening_and_undo_takes_them_back() {
     let mut doc = drawing();
-    assert!(matches!(edit(&mut doc, add(NOTE, vec![INSERT.into(), LINE.into()])), CommandResult::Completed { .. }));
+    assert!(matches!(
+        edit(&mut doc, add(NOTE, vec![INSERT.into(), LINE.into()])),
+        CommandResult::Completed { .. }
+    ));
     let reply = ReviewNoteOp::Reply {
         id: NOTE.into(),
         text: "Yön düzeltildi.\nKontrol edin.".into(),
@@ -188,13 +239,19 @@ fn notes_survive_a_save_and_an_opening_and_undo_takes_them_back() {
         created_at: None,
         status: Some(ReviewStatus::Answered),
     };
-    assert!(matches!(edit(&mut doc, reply), CommandResult::Completed { .. }));
+    assert!(matches!(
+        edit(&mut doc, reply),
+        CommandResult::Completed { .. }
+    ));
     let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap();
     let opened = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).unwrap()).unwrap();
     assert_eq!(opened.settings().review_notes, doc.settings().review_notes);
     let listed = review_notes::list(&opened, &ReviewNotesList::default());
     assert_eq!(listed.answered, 1);
-    assert!(!listed.notes[0].stale, "the stamps are the content's: the same after an opening");
+    assert!(
+        !listed.notes[0].stale,
+        "the stamps are the content's: the same after an opening"
+    );
     assert_eq!(doc.undo().as_deref(), Some("İnceleme notu"));
     assert_eq!(doc.settings().review_notes[0].status, ReviewStatus::Open);
     assert_eq!(doc.undo().as_deref(), Some("İnceleme notu"));
@@ -205,7 +262,10 @@ fn notes_survive_a_save_and_an_opening_and_undo_takes_them_back() {
     let before = doc.revision();
     let plan = review_notes::plan(
         &ExecutionContext::new(&mut doc),
-        &ReviewNotesEdit { change: ReviewNoteOp::Remove { id: NOTE.into() }, expected_revision: None },
+        &ReviewNotesEdit {
+            change: ReviewNoteOp::Remove { id: NOTE.into() },
+            expected_revision: None,
+        },
     );
     assert!(matches!(plan, CommandResult::Completed { .. }));
     assert_eq!(doc.revision(), before);
@@ -216,13 +276,19 @@ fn notes_survive_a_save_and_an_opening_and_undo_takes_them_back() {
 /// leaves it out with `pattern_too_long_for_lin` while the 12-element one is written.
 #[test]
 fn a_long_pattern_is_kept_and_left_out_of_a_lin_file() {
-    use kentos_commands::{LineTypeDef, LineTypesEdit, LineTypesOperation, PatternElement, PatternUnit};
+    use kentos_commands::{
+        LineTypeDef, LineTypesEdit, LineTypesOperation, PatternElement, PatternUnit,
+    };
     let mut doc = drawing();
     let pattern = |name: &str, n: usize| LineTypeDef {
         name: name.into(),
         description: String::new(),
         elements: (0..n)
-            .map(|i| PatternElement { length: if i % 2 == 0 { 2.0 } else { -1.0 }, text: None, shape: None })
+            .map(|i| PatternElement {
+                length: if i % 2 == 0 { 2.0 } else { -1.0 },
+                text: None,
+                shape: None,
+            })
             .collect(),
         unit: PatternUnit::Drawing,
         source: Some("DXF".into()),
@@ -237,7 +303,10 @@ fn a_long_pattern_is_kept_and_left_out_of_a_lin_file() {
         serde_json::from_value(serde_json::json!({ "operation": "export" })).expect("an export");
     assert!(matches!(input.operation, LineTypesOperation::Export));
     let CommandResult::Completed { output, warnings } =
-        kentos_native_application::line_types_edit::execute(&mut ExecutionContext::new(&mut doc), input)
+        kentos_native_application::line_types_edit::execute(
+            &mut ExecutionContext::new(&mut doc),
+            input,
+        )
     else {
         panic!("the export")
     };
@@ -253,9 +322,16 @@ fn a_long_pattern_is_kept_and_left_out_of_a_lin_file() {
 #[test]
 fn an_opened_metre_dxf_keeps_its_pattern_lengths() {
     let dash = |n: usize| -> String {
-        let mut out = format!("0\nLTYPE\n2\nU{n}\n70\n0\n3\n\n72\n65\n73\n{n}\n40\n{}\n", n as f64);
+        let mut out = format!(
+            "0\nLTYPE\n2\nU{n}\n70\n0\n3\n\n72\n65\n73\n{n}\n40\n{}\n",
+            n as f64
+        );
         for i in 0..n {
-            out.push_str(if i % 2 == 0 { "49\n1.0\n74\n0\n" } else { "49\n-0.5\n74\n0\n" });
+            out.push_str(if i % 2 == 0 {
+                "49\n1.0\n74\n0\n"
+            } else {
+                "49\n-0.5\n74\n0\n"
+            });
         }
         out
     };
@@ -271,14 +347,38 @@ fn an_opened_metre_dxf_keeps_its_pattern_lengths() {
     let format = kentos_native_application::cad_open::Format::of(&path).unwrap();
     let mut watch = kentos_formats::watch::Steps(|_, _| true);
     let opened =
-        kentos_native_application::cad_open::read(&path, text.as_bytes(), format, &mut watch).expect("opens");
+        kentos_native_application::cad_open::read(&path, text.as_bytes(), format, &mut watch)
+            .expect("opens");
     let s = opened.document.to_snapshot_v2();
-    let u16 = s.settings.line_types.iter().find(|t| t.name == "U16").expect("the 16-element type");
+    let u16 = s
+        .settings
+        .line_types
+        .iter()
+        .find(|t| t.name == "U16")
+        .expect("the 16-element type");
     assert_eq!(u16.elements.len(), 16);
-    assert_eq!((u16.elements[0].length, u16.elements[1].length), (1.0, -0.5), "metres, as the drawing's unit");
-    let u300 = s.settings.line_types.iter().find(|t| t.name == "U300").expect("the long type");
-    assert_eq!(u300.elements.len(), kentos_commands::MAX_STORED_PATTERN_ELEMENTS);
-    assert!(opened.report.notes.iter().any(|n| n.what == "Çizgi tipi deseni" && n.reason.contains("U300")));
+    assert_eq!(
+        (u16.elements[0].length, u16.elements[1].length),
+        (1.0, -0.5),
+        "metres, as the drawing's unit"
+    );
+    let u300 = s
+        .settings
+        .line_types
+        .iter()
+        .find(|t| t.name == "U300")
+        .expect("the long type");
+    assert_eq!(
+        u300.elements.len(),
+        kentos_commands::MAX_STORED_PATTERN_ELEMENTS
+    );
+    assert!(
+        opened
+            .report
+            .notes
+            .iter()
+            .any(|n| n.what == "Çizgi tipi deseni" && n.reason.contains("U300"))
+    );
     let layer = s.layers.iter().find(|l| l.name == "A").expect("the layer");
     assert_eq!(layer.style.line_pattern.as_deref(), Some("U16"));
 }
@@ -316,7 +416,10 @@ fn palettes_need_a_readable_bound_standard() {
     use kentos_commands::{ProjectStandardDocument, StandardsPalettes};
     let mut doc = drawing();
     let read = |doc: &mut Document| {
-        kentos_native_application::standards_palettes::execute(&mut ExecutionContext::new(doc), StandardsPalettes {})
+        kentos_native_application::standards_palettes::execute(
+            &mut ExecutionContext::new(doc),
+            StandardsPalettes {},
+        )
     };
     match read(&mut doc) {
         CommandResult::Completed { output, .. } => assert!(output.palettes.is_empty()),
@@ -344,15 +447,23 @@ fn palettes_need_a_readable_bound_standard() {
 fn a_replayed_journal_maps_an_associative_arrays_id() {
     use kentos_native_application::registry;
     use kentos_native_application::replay::{journal_of, replay};
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.arrays.edit.json")).unwrap();
-    let setup = kentos_commands::DocumentSnapshotV1::from_json(&cases["setup"].to_string()).unwrap();
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.arrays.edit.json"
+    ))
+    .unwrap();
+    let setup =
+        kentos_commands::DocumentSnapshotV1::from_json(&cases["setup"].to_string()).unwrap();
     let mut source = Document::from_snapshot(setup.clone()).unwrap();
     let mut target = Document::from_snapshot(setup).unwrap();
     let circle = source.uid(Slot(1)).unwrap().to_string();
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| {
-        let answer =
-            registry::run(&mut ExecutionContext::new(doc), name, kentos_commands::CallOp::Execute, input).expect("runs");
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            kentos_commands::CallOp::Execute,
+            input,
+        )
+        .expect("runs");
         assert_eq!(answer["status"], "completed", "{answer}");
         answer
     };
@@ -361,24 +472,39 @@ fn a_replayed_journal_maps_an_associative_arrays_id() {
         "cad.entities.array",
         serde_json::json!({"uids": [circle], "layout": {"kind": "grid", "rows": 2, "cols": 3, "dx": 5, "dy": 4}, "associative": true}),
     );
-    let array = made["output"]["array"].as_str().expect("an array id").to_owned();
+    let array = made["output"]["array"]
+        .as_str()
+        .expect("an array id")
+        .to_owned();
     run(
         &mut source,
         "cad.arrays.edit",
         serde_json::json!({"array": array, "edit": {"kind": "layout", "layout": {"kind": "grid", "rows": 3, "cols": 4, "dx": 5, "dy": 4}}}),
     );
     let journal = journal_of(&source);
-    let row = journal.calls.iter().find(|r| r.command.as_deref() == Some("cad.entities.array")).unwrap();
+    let row = journal
+        .calls
+        .iter()
+        .find(|r| r.command.as_deref() == Some("cad.entities.array"))
+        .unwrap();
     assert_eq!(row.arrays.added, vec![array.clone()]);
     let encoded = serde_json::to_value(&journal).unwrap();
     let decoded: kentos_commands::ReplayJournal = serde_json::from_value(encoded).unwrap();
     let report = replay(&mut target, None, &decoded);
     assert_eq!((report.failed, report.differs), (0, 0), "{report:?}");
-    let mapped = report.mapped.get(&array).expect("the array's id is mapped").clone();
+    let mapped = report
+        .mapped
+        .get(&array)
+        .expect("the array's id is mapped")
+        .clone();
     assert_ne!(mapped, array, "the replay made an array of its own");
     let arrays = target.arrays();
     assert_eq!(arrays.len(), 1);
     assert_eq!(arrays[0].id.to_string(), mapped);
-    assert_eq!(arrays[0].items.len(), 12, "the edit to 3×4 landed on the replay's array");
+    assert_eq!(
+        arrays[0].items.len(),
+        12,
+        "the edit to 3×4 landed on the replay's array"
+    );
     assert_eq!(target.len(), source.len());
 }

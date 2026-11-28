@@ -21,8 +21,8 @@
 use std::path::Path;
 
 use kentos_commands::{
-    Bounds, CommandResult, DocumentSnapshotV2, DrawingFont, GpkgTileSet, LayerDataOperation, LayersData, RastersGpkgRead,
-    Workspace,
+    Bounds, CommandResult, DocumentSnapshotV2, DrawingFont, GpkgTileSet, LayerDataOperation,
+    LayersData, RastersGpkgRead, Workspace,
 };
 use kentos_data::StoredProject;
 use kentos_domain::{Document, NewLayer};
@@ -63,7 +63,10 @@ pub struct Note {
 }
 
 fn note(code: &'static str, text: impl Into<String>) -> Note {
-    Note { code, text: text.into() }
+    Note {
+        code,
+        text: text.into(),
+    }
 }
 
 /// The first 16 bytes of an SQLite database file.
@@ -73,25 +76,40 @@ const SQLITE: &[u8; 16] = b"SQLite format 3\0";
 pub fn is_sqlite(path: &Path) -> bool {
     use std::io::Read;
     let mut head = [0u8; 16];
-    std::fs::File::open(path).and_then(|mut f| f.read_exact(&mut head)).is_ok() && &head == SQLITE
+    std::fs::File::open(path)
+        .and_then(|mut f| f.read_exact(&mut head))
+        .is_ok()
+        && &head == SQLITE
 }
 
 /// The address a GeoPackage's tables and projects are read at: its absolute path.
 pub fn address_of(path: &Path) -> String {
-    std::path::absolute(path).unwrap_or_else(|_| path.to_path_buf()).display().to_string()
+    std::path::absolute(path)
+        .unwrap_or_else(|_| path.to_path_buf())
+        .display()
+        .to_string()
 }
 
 /// The name a project made of `path` takes: the file's name without `.gpkg`.
 pub fn project_name(path: &Path) -> String {
-    path.file_stem().map(|s| s.to_string_lossy().trim().to_owned()).filter(|s| !s.is_empty()).unwrap_or_else(|| "Proje".into())
+    path.file_stem()
+        .map(|s| s.to_string_lossy().trim().to_owned())
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| "Proje".into())
 }
 
 /// Opens the GeoPackage at `path`: the project named `project` (made of its tables when the file keeps none), or
 /// without a name its only project, the names of its projects, or a new project of its tables.
 pub fn open(path: &Path, project: Option<&str>) -> Result<Opened, String> {
-    let file = path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned());
+    let file = path.file_name().map_or_else(
+        || path.display().to_string(),
+        |n| n.to_string_lossy().into_owned(),
+    );
     if !path.is_file() {
-        return Err(format!("“{file}” bulunamadı ({}). Dosya taşınmış ya da silinmiş olabilir.", path.display()));
+        return Err(format!(
+            "“{file}” bulunamadı ({}). Dosya taşınmış ya da silinmiş olabilir.",
+            path.display()
+        ));
     }
     if !is_sqlite(path) {
         return Err(format!(
@@ -104,12 +122,18 @@ pub fn open(path: &Path, project: Option<&str>) -> Result<Opened, String> {
     match (asked, kept.len()) {
         (Some(name), _) if kept.iter().any(|p| p.name == name) => {
             let bytes = crate::project_store::read(&address, None, name)?;
-            Ok(Opened::Kept { name: name.to_owned(), bytes })
+            Ok(Opened::Kept {
+                name: name.to_owned(),
+                bytes,
+            })
         }
         (Some(name), 0) => build(path, &address, name).map(|b| Opened::Built(Box::new(b))),
         (Some(name), _) => Err(format!(
             "“{file}” dosyasında “{name}” adında proje yok. Dosyadaki projeler: {}.",
-            kept.iter().map(|p| format!("“{}”", p.name)).collect::<Vec<_>>().join(", ")
+            kept.iter()
+                .map(|p| format!("“{}”", p.name))
+                .collect::<Vec<_>>()
+                .join(", ")
         )),
         (None, 0) => build(path, &address, &project_name(path)).map(|b| Opened::Built(Box::new(b))),
         (None, 1) => {
@@ -128,7 +152,8 @@ fn group(d: &Described) -> u8 {
     };
     match g.type_name.as_str() {
         "POINT" | "MULTIPOINT" => 0,
-        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "MULTICURVE" | "CURVE" => 1,
+        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "MULTICURVE"
+        | "CURVE" => 1,
         "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "MULTISURFACE" | "SURFACE" => 2,
         _ => 3,
     }
@@ -163,13 +188,22 @@ fn system_of(tables: &[Described], tiles: &[GpkgTileSet]) -> (u32, Vec<Note>) {
             distinct.push(*s);
         }
     }
-    let listed: Vec<u32> = systems.iter().copied().filter(|s| kentos_project::crs::system(*s).is_some()).collect();
+    let listed: Vec<u32> = systems
+        .iter()
+        .copied()
+        .filter(|s| kentos_project::crs::system(*s).is_some())
+        .collect();
     let chosen = {
         let count = |s: u32| listed.iter().filter(|x| **x == s).count();
         let most = listed.iter().map(|s| count(*s)).max().unwrap_or(0);
         listed.iter().copied().find(|s| count(*s) == most)
     };
-    let words = |list: &[u32]| list.iter().map(|s| format!("EPSG:{s}")).collect::<Vec<_>>().join(", ");
+    let words = |list: &[u32]| {
+        list.iter()
+            .map(|s| format!("EPSG:{s}"))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
     if distinct.len() > 1 {
         let to = chosen.map_or_else(|| "sistemsiz (Yerel)".to_owned(), |s| format!("EPSG:{s}"));
         notes.push(note(
@@ -200,12 +234,20 @@ fn system_of(tables: &[Described], tiles: &[GpkgTileSet]) -> (u32, Vec<Note>) {
 }
 
 /// The new project's first view: the tables' boxes in its system, framed together; none without one.
-fn home_of(tables: &[Described], tiles: &[GpkgTileSet], settings: &kentos_commands::ProjectSettings) -> Option<Bounds> {
+fn home_of(
+    tables: &[Described],
+    tiles: &[GpkgTileSet],
+    settings: &kentos_commands::ProjectSettings,
+) -> Option<Bounds> {
     let mut out: Option<[f64; 4]> = None;
     let boxes = tables
         .iter()
         .filter_map(|t| Some((t.extent?, t.data.geometry.as_ref()?.srid)))
-        .chain(tiles.iter().map(|t| (t.data_bounds.unwrap_or(t.bounds), t.srid.filter(|s| *s > 0))));
+        .chain(
+            tiles
+                .iter()
+                .map(|t| (t.data_bounds.unwrap_or(t.bounds), t.srid.filter(|s| *s > 0))),
+        );
     for (b, srid) in boxes {
         let Ok(b) = crate::sources::extent_in_project(settings, srid, b) else {
             continue;
@@ -215,15 +257,27 @@ fn home_of(tables: &[Described], tiles: &[GpkgTileSet], settings: &kentos_comman
         }
         out = Some(match out {
             None => b,
-            Some(o) => [o[0].min(b[0]), o[1].min(b[1]), o[2].max(b[2]), o[3].max(b[3])],
+            Some(o) => [
+                o[0].min(b[0]),
+                o[1].min(b[1]),
+                o[2].max(b[2]),
+                o[3].max(b[3]),
+            ],
         });
     }
-    out.map(|b| Bounds { min_x: b[0], min_y: b[1], max_x: b[2], max_y: b[3] })
+    out.map(|b| Bounds {
+        min_x: b[0],
+        min_y: b[1],
+        max_x: b[2],
+        max_y: b[3],
+    })
 }
 
 /// A project of the file's tables, named `name`, in memory.
 fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
-    let source = kentos_data::registry().source(address).map_err(|e| e.to_string())?;
+    let source = kentos_data::registry()
+        .source(address)
+        .map_err(|e| e.to_string())?;
     let mut notes = Vec::new();
     let mut tables: Vec<Described> = Vec::new();
     for t in source.tables().map_err(|e| e.to_string())? {
@@ -235,12 +289,19 @@ fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
                 if !d.left.is_empty() {
                     notes.push(note(
                         "fields_left",
-                        format!("“{}” tablosunun alan olarak alınmayan sütunları: {}", t.name, d.left.join("; ")),
+                        format!(
+                            "“{}” tablosunun alan olarak alınmayan sütunları: {}",
+                            t.name,
+                            d.left.join("; ")
+                        ),
                     ));
                 }
                 tables.push(d);
             }
-            Err(why) => notes.push(note("table_not_taken", format!("“{}” tablosu katman olarak alınmadı: {why}", t.name))),
+            Err(why) => notes.push(note(
+                "table_not_taken",
+                format!("“{}” tablosu katman olarak alınmadı: {why}", t.name),
+            )),
         }
     }
     let tiles = tile_tables(path, &mut notes);
@@ -249,18 +310,19 @@ fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
     notes.splice(0..0, said);
     tables.sort_by_key(group);
 
-    let mut snapshot = kentos_project::new_project::new_project(&kentos_project::new_project::NewProject {
-        name: name.to_owned(),
-        srid,
-        plot_scale: 1000.0,
-        workspace: Workspace::Gis,
-        drawing_font: DrawingFont::Barlow,
-        province: None,
-        drawing_unit: None,
-        annotation: None,
-        cad_work: None,
-        heights: None,
-    })?;
+    let mut snapshot =
+        kentos_project::new_project::new_project(&kentos_project::new_project::NewProject {
+            name: name.to_owned(),
+            srid,
+            plot_scale: 1000.0,
+            workspace: Workspace::Gis,
+            drawing_font: DrawingFont::Barlow,
+            province: None,
+            drawing_unit: None,
+            annotation: None,
+            cad_work: None,
+            heights: None,
+        })?;
     // The tables are its layers: of a new project's tree only the layer it starts drawing on stays.
     snapshot.layers.retain(|n| n.id == DRAFT_LAYER);
     snapshot.active_layer = DRAFT_LAYER.to_owned();
@@ -282,11 +344,24 @@ fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
             expected_revision: None,
         };
         match crate::layers_data::execute(&mut ExecutionContext::new(&mut doc), input) {
-            CommandResult::Completed { output, .. } => layers.push((t.data.table.clone(), output.layer)),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                notes.push(note("table_not_taken", format!("“{}” tablosu katman olarak alınmadı: {}", t.name, error.message)));
+            CommandResult::Completed { output, .. } => {
+                layers.push((t.data.table.clone(), output.layer))
             }
-            _ => notes.push(note("table_not_taken", format!("“{}” tablosu katman olarak alınmadı.", t.name))),
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                notes.push(note(
+                    "table_not_taken",
+                    format!(
+                        "“{}” tablosu katman olarak alınmadı: {}",
+                        t.name, error.message
+                    ),
+                ));
+            }
+            _ => notes.push(note(
+                "table_not_taken",
+                format!("“{}” tablosu katman olarak alınmadı.", t.name),
+            )),
         }
     }
     looks(&mut doc, path, &layers, &mut notes);
@@ -295,7 +370,11 @@ fn build(path: &Path, address: &str, name: &str) -> Result<Built, String> {
     // Built through commands, opened as read: no undo step stays, and nothing the owner did waits to be saved.
     let snapshot: DocumentSnapshotV2 = doc.to_snapshot_v2();
     let doc = Document::from_snapshot_v2(snapshot)?;
-    Ok(Built { document: doc, name: name.to_owned(), notes })
+    Ok(Built {
+        document: doc,
+        name: name.to_owned(),
+        notes,
+    })
 }
 
 /// Keeps `document` in the GeoPackage at `path` under `name` (docs/adr/9122): the owner's own save, never opening's.
@@ -304,7 +383,8 @@ pub fn keep(document: &Document, path: &Path, name: &str) -> Result<(), String> 
     let address = address_of(path);
     let mut snapshot = document.to_snapshot_v2();
     crate::project_store::with_relative(&mut snapshot, &address);
-    let bytes = kentos_kcad::encode_verified(&snapshot).map_err(|e| format!("proje KCAD v2'ye yazılamadı: {e}"))?;
+    let bytes = kentos_kcad::encode_verified(&snapshot)
+        .map_err(|e| format!("proje KCAD v2'ye yazılamadı: {e}"))?;
     crate::project_store::write(&address, None, name, &bytes)
 }
 
@@ -324,11 +404,17 @@ fn tile_tables(path: &Path, notes: &mut Vec<Note>) -> Vec<GpkgTileSet> {
     match has {
         Ok(0) => Vec::new(),
         Ok(_) => crate::gpkg_tiles::tile_tables(path).unwrap_or_else(|why| {
-            notes.push(note("tiles_unread", format!("Dosyanın döşeme tabloları okunamadı: {why}")));
+            notes.push(note(
+                "tiles_unread",
+                format!("Dosyanın döşeme tabloları okunamadı: {why}"),
+            ));
             Vec::new()
         }),
         Err(why) => {
-            notes.push(note("tiles_unread", format!("Dosyanın döşeme tabloları okunamadı: {why}")));
+            notes.push(note(
+                "tiles_unread",
+                format!("Dosyanın döşeme tabloları okunamadı: {why}"),
+            ));
             Vec::new()
         }
     }
@@ -339,13 +425,20 @@ fn tile_tables(path: &Path, notes: &mut Vec<Note>) -> Vec<GpkgTileSet> {
 fn rasters(doc: &mut Document, path: &Path, tiles: &[GpkgTileSet], notes: &mut Vec<Note>) {
     let file = address_of(path);
     for t in tiles {
-        let layer = match doc.add_layer_at(NewLayer::layer(t.table.clone()), None, None, None, false) {
-            Ok(id) => id,
-            Err(why) => {
-                notes.push(note("tiles_not_taken", format!("“{}” döşeme tablosu raster olarak alınmadı: {}", t.table, why.0)));
-                continue;
-            }
-        };
+        let layer =
+            match doc.add_layer_at(NewLayer::layer(t.table.clone()), None, None, None, false) {
+                Ok(id) => id,
+                Err(why) => {
+                    notes.push(note(
+                        "tiles_not_taken",
+                        format!(
+                            "“{}” döşeme tablosu raster olarak alınmadı: {}",
+                            t.table, why.0
+                        ),
+                    ));
+                    continue;
+                }
+            };
         let input = RastersGpkgRead {
             path: file.clone(),
             table: Some(t.table.clone()),
@@ -360,7 +453,9 @@ fn rasters(doc: &mut Document, path: &Path, tiles: &[GpkgTileSet], notes: &mut V
         };
         let why = match crate::gpkg_tiles::read::execute(&mut ExecutionContext::new(doc), input) {
             CommandResult::Completed { .. } => continue,
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 // The reader's words are a command caller's (which input to change); opening says what the file is.
                 match error.code.as_str() {
                     crate::codes::CRS_MISMATCH => format!(
@@ -381,7 +476,10 @@ fn rasters(doc: &mut Document, path: &Path, tiles: &[GpkgTileSet], notes: &mut V
             _ => String::new(),
         };
         let _ = doc.remove_layer(&layer);
-        notes.push(note("tiles_not_taken", format!("“{}” döşeme tablosu raster olarak alınmadı: {why}", t.table)));
+        notes.push(note(
+            "tiles_not_taken",
+            format!("“{}” döşeme tablosu raster olarak alınmadı: {why}", t.table),
+        ));
     }
 }
 
@@ -394,7 +492,10 @@ fn looks(doc: &mut Document, path: &Path, layers: &[(String, String)], notes: &m
     let profile = match crate::gpkg_profile::read_profile(path) {
         Ok(p) => p,
         Err(why) => {
-            notes.push(note("styles_unread", format!("Dosyanın katman stilleri okunamadı: {why}")));
+            notes.push(note(
+                "styles_unread",
+                format!("Dosyanın katman stilleri okunamadı: {why}"),
+            ));
             return;
         }
     };
@@ -412,11 +513,17 @@ fn looks(doc: &mut Document, path: &Path, layers: &[(String, String)], notes: &m
                     if !style.lost.is_empty() {
                         notes.push(note(
                             "style_lost",
-                            format!("“{table}” tablosunun stilinden alınamayanlar: {}", style.lost.join(", ")),
+                            format!(
+                                "“{table}” tablosunun stilinden alınamayanlar: {}",
+                                style.lost.join(", ")
+                            ),
                         ));
                     }
                 }
-                Err(why) => notes.push(note("style_not_taken", format!("“{table}” tablosunun stili alınmadı: {why}"))),
+                Err(why) => notes.push(note(
+                    "style_not_taken",
+                    format!("“{table}” tablosunun stili alınmadı: {why}"),
+                )),
             }
         }
         if let Some(dataset) = profile.datasets.get(table)
@@ -424,7 +531,10 @@ fn looks(doc: &mut Document, path: &Path, layers: &[(String, String)], notes: &m
         {
             info.dataset = Some(dataset.clone());
             if let Err(why) = doc.set_layer_info(layer, info, crate::datasets_edit::LABEL) {
-                notes.push(note("dataset_not_taken", format!("“{table}” tablosunun veri kümesi bilgisi alınmadı: {why}")));
+                notes.push(note(
+                    "dataset_not_taken",
+                    format!("“{table}” tablosunun veri kümesi bilgisi alınmadı: {why}"),
+                ));
             }
         }
     }

@@ -8,8 +8,8 @@
 //! `fixtures/commands/v1/road.terrains.sectioncheck.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, ContourRules, Entity, SectionGap, SectionPointRow, TerrainsSectionCheck,
-    TerrainsSectionChecked, contour_rules_default,
+    CommandResult, CommandWarning, ContourRules, Entity, SectionGap, SectionPointRow,
+    TerrainsSectionCheck, TerrainsSectionChecked, contour_rules_default,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -31,15 +31,27 @@ fn height_point(doc: &Document, uid: &str, path: &str) -> Result<(P, f64), Stop>
     if !checks::is_uid_text(uid) {
         return Err(fail(
             codes::INVALID_UID,
-            format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+            format!(
+                "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+            ),
             path,
         ));
     }
-    let Some(e) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)) else {
-        return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), path));
+    let Some(e) = Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s))
+    else {
+        return Err(fail(
+            codes::ENTITY_NOT_FOUND,
+            format!("“{uid}” kimlikli nesne çizimde yok."),
+            path,
+        ));
     };
     match e {
-        Entity::Point(p) if p.z.is_some_and(f64::is_finite) => Ok(([p.p.x, p.p.y], p.z.unwrap_or_default())),
+        Entity::Point(p) if p.z.is_some_and(f64::is_finite) => {
+            Ok(([p.p.x, p.p.y], p.z.unwrap_or_default()))
+        }
         _ => Err(fail(
             codes::NOT_A_HEIGHT_POINT,
             format!(
@@ -102,29 +114,55 @@ fn run(doc: &Document, input: &TerrainsSectionCheck) -> Result<Checked, Stop> {
         ));
     }
     if input.corridor.is_some_and(|c| !(c.is_finite() && c > 0.0)) {
-        return Err(fail(codes::INVALID_INPUT, "Kesitten uzaklık sınırı 0'dan büyük olmalı.".into(), "corridor"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Kesitten uzaklık sınırı 0'dan büyük olmalı.".into(),
+            "corridor",
+        ));
     }
     if input.contours.is_empty() {
-        return Err(fail(codes::LAYER_NOT_FOUND, "Eş yükselti eğrilerinin katmanını verin.".into(), "contours"));
+        return Err(fail(
+            codes::LAYER_NOT_FOUND,
+            "Eş yükselti eğrilerinin katmanını verin.".into(),
+            "contours",
+        ));
     }
     for (i, l) in input.contours.iter().enumerate() {
         if doc.layers().get(l.trim()).is_none() {
-            return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", l.trim()), &format!("contours[{i}]")));
+            return Err(fail(
+                codes::LAYER_NOT_FOUND,
+                format!("“{}” katmanı çizimde yok.", l.trim()),
+                &format!("contours[{i}]"),
+            ));
         }
     }
     let scale = match input.scale {
-        Some(0) => return Err(fail(codes::INVALID_CONTOURS, "Ölçek paydası 0 olamaz.".into(), "scale")),
+        Some(0) => {
+            return Err(fail(
+                codes::INVALID_CONTOURS,
+                "Ölçek paydası 0 olamaz.".into(),
+                "scale",
+            ));
+        }
         Some(s) => s,
         None => doc.settings().plot_scale.round().max(1.0) as u32,
     };
     let rules: ContourRules = match &input.rules {
         Some(r) => r.clone(),
-        None => contour_rules_default()
-            .ok_or_else(|| fail(codes::INVALID_CONTOURS, "Yerleşik eğri kural paketi okunamadı.".into(), "rules"))?,
+        None => contour_rules_default().ok_or_else(|| {
+            fail(
+                codes::INVALID_CONTOURS,
+                "Yerleşik eğri kural paketi okunamadı.".into(),
+                "rules",
+            )
+        })?,
     };
     let positive = |v: f64| v.is_finite() && v > 0.0;
     let Some(c) = rules.section_check.as_ref().filter(|c| {
-        c.xy.iter().all(|v| v.is_finite()) && positive(c.z_factor) && positive(c.factor) && c.spacing.is_none_or(positive)
+        c.xy.iter().all(|v| v.is_finite())
+            && positive(c.z_factor)
+            && positive(c.factor)
+            && c.spacing.is_none_or(positive)
     }) else {
         return Err(fail(
             codes::INVALID_CONTOURS,
@@ -152,11 +190,14 @@ fn run(doc: &Document, input: &TerrainsSectionCheck) -> Result<Checked, Stop> {
         let zs = pl.zs.as_ref();
         let level = zs.and_then(|zs| {
             let first = zs.first().copied().flatten()?;
-            (zs.len() == pl.pts.len() && zs.iter().all(|z| *z == Some(first)) && first.is_finite()).then_some(first)
+            (zs.len() == pl.pts.len() && zs.iter().all(|z| *z == Some(first)) && first.is_finite())
+                .then_some(first)
         });
         // A polyline with parts carries its height in each part's own vertices: read only one level throughout.
         let parts_level = pl.parts.iter().flatten().all(|part| {
-            part.zs.as_ref().is_some_and(|zs| zs.len() == part.pts.len() && zs.iter().all(|z| *z == level))
+            part.zs
+                .as_ref()
+                .is_some_and(|zs| zs.len() == part.pts.len() && zs.iter().all(|z| *z == level))
         });
         let Some(z) = level.filter(|_| parts_level) else {
             unlevelled += 1;
@@ -165,11 +206,17 @@ fn run(doc: &Document, input: &TerrainsSectionCheck) -> Result<Checked, Stop> {
         let rings = std::iter::once(&pl.pts).chain(pl.parts.iter().flatten().map(|p| &p.pts));
         for pts in rings {
             let n = pts.len();
-            let edges = if pl.closed && n > 2 { n } else { n.saturating_sub(1) };
+            let edges = if pl.closed && n > 2 {
+                n
+            } else {
+                n.saturating_sub(1)
+            };
             for k in 0..edges {
                 let (p, q) = (pts[k], pts[(k + 1) % n]);
                 if let Some(s) = cross(a, b, l, [p.x, p.y], [q.x, q.y])
-                    && !crossings.iter().any(|x| (x[0] - s).abs() <= SAME && x[1] == z)
+                    && !crossings
+                        .iter()
+                        .any(|x| (x[0] - s).abs() <= SAME && x[1] == z)
                 {
                     crossings.push([s, z]);
                 }
@@ -205,7 +252,11 @@ fn run(doc: &Document, input: &TerrainsSectionCheck) -> Result<Checked, Stop> {
                 let after = crossings.iter().find(|x| x[0] >= along);
                 match (before, after) {
                     (Some(p), Some(q)) => {
-                        let h = if q[0] - p[0] == 0.0 { p[1] } else { p[1] + (q[1] - p[1]) * (along - p[0]) / (q[0] - p[0]) };
+                        let h = if q[0] - p[0] == 0.0 {
+                            p[1]
+                        } else {
+                            p[1] + (q[1] - p[1]) * (along - p[0]) / (q[0] - p[0])
+                        };
                         row.contour = Some(h);
                         row.between = Some([p[1], q[1]]);
                         row.difference = Some(z - h);
@@ -221,13 +272,21 @@ fn run(doc: &Document, input: &TerrainsSectionCheck) -> Result<Checked, Stop> {
 
     // The section's places along it: its ends and its points on it (not outside, not off the line).
     let mut places: Vec<f64> = vec![0.0, l];
-    places.extend(rows.iter().filter(|r| r.state == "compared" || r.state == "noContour").map(|r| r.along));
+    places.extend(
+        rows.iter()
+            .filter(|r| r.state == "compared" || r.state == "noContour")
+            .map(|r| r.along),
+    );
     places.sort_by(f64::total_cmp);
     let gaps: Vec<SectionGap> = match c.spacing {
         Some(most) => places
             .windows(2)
             .filter(|w| w[1] - w[0] > most)
-            .map(|w| SectionGap { from: w[0], to: w[1], length: w[1] - w[0] })
+            .map(|w| SectionGap {
+                from: w[0],
+                to: w[1],
+                length: w[1] - w[0],
+            })
             .collect(),
         None => Vec::new(),
     };
@@ -235,7 +294,8 @@ fn run(doc: &Document, input: &TerrainsSectionCheck) -> Result<Checked, Stop> {
     let s = f64::from(scale);
     let koh_z = c.z_factor * (c.xy[0] * s * s + c.xy[1] * s + c.xy[2]) / 100.0;
     let limit = c.factor * koh_z;
-    let rms = (!diffs.is_empty()).then(|| (diffs.iter().map(|d| d * d).sum::<f64>() / diffs.len() as f64).sqrt());
+    let rms = (!diffs.is_empty())
+        .then(|| (diffs.iter().map(|d| d * d).sum::<f64>() / diffs.len() as f64).sqrt());
     let largest = diffs.iter().map(|d| d.abs()).reduce(f64::max);
     let within = rms.map(|r| r < limit);
     let mut warnings = Vec::new();
@@ -289,19 +349,31 @@ fn run(doc: &Document, input: &TerrainsSectionCheck) -> Result<Checked, Stop> {
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsSectionCheck) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsSectionCheck) -> CommandResult<TerrainsSectionChecked> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &TerrainsSectionCheck,
+) -> CommandResult<TerrainsSectionChecked> {
     match run(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: c.out, warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: c.out,
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsSectionCheck) -> CommandResult<TerrainsSectionChecked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsSectionCheck,
+) -> CommandResult<TerrainsSectionChecked> {
     plan(cx, &input)
 }
 
@@ -311,8 +383,17 @@ mod tests {
 
     #[test]
     fn a_section_crosses_a_segment_where_they_meet() {
-        assert_eq!(cross([0.0, 0.0], [10.0, 0.0], 10.0, [4.0, -1.0], [4.0, 1.0]), Some(4.0));
-        assert_eq!(cross([0.0, 0.0], [10.0, 0.0], 10.0, [4.0, 1.0], [4.0, 2.0]), None);
-        assert_eq!(cross([0.0, 0.0], [10.0, 0.0], 10.0, [0.0, 0.0], [5.0, 0.0]), None);
+        assert_eq!(
+            cross([0.0, 0.0], [10.0, 0.0], 10.0, [4.0, -1.0], [4.0, 1.0]),
+            Some(4.0)
+        );
+        assert_eq!(
+            cross([0.0, 0.0], [10.0, 0.0], 10.0, [4.0, 1.0], [4.0, 2.0]),
+            None
+        );
+        assert_eq!(
+            cross([0.0, 0.0], [10.0, 0.0], 10.0, [0.0, 0.0], [5.0, 0.0]),
+            None
+        );
     }
 }

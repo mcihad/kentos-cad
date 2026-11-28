@@ -54,7 +54,10 @@ pub fn fill_template_with(
                 let name = &after[..close];
                 let value = attrs.get(name).or_else(|| {
                     let folded = name.to_lowercase();
-                    attrs.iter().find(|(k, _)| k.to_lowercase() == folded).map(|(_, v)| v)
+                    attrs
+                        .iter()
+                        .find(|(k, _)| k.to_lowercase() == folded)
+                        .map(|(_, v)| v)
                 });
                 let known = || {
                     let folded = name.to_lowercase();

@@ -11,8 +11,8 @@ mod areas;
 pub mod calls;
 mod fixes;
 pub mod incremental;
-mod shift;
 mod lines;
+mod shift;
 
 pub use fixes::{Change, fix};
 pub use shift::{Shift, shift};

@@ -2,10 +2,8 @@
 //! the shared cases (tests/fixtures.rs): a document out of slots, and a
 //! command inside an open transaction.
 
+use kentos_commands::{CommandResult, DocumentSnapshotV1, PolygonCreate, PolygonCreated, Vec2};
 use kentos_domain::Document;
-use kentos_commands::{
-    CommandResult, DocumentSnapshotV1, PolygonCreate, PolygonCreated, Vec2,
-};
 use kentos_native_application::{ExecutionContext, polygon};
 use serde_json::Value;
 

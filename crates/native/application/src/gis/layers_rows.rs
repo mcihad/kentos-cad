@@ -9,7 +9,8 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, LAYER_ROWS_PAGE_MOST, LayerFilter, LayerRow, LayerRowsAnswer, LayersRows, RowsChecked,
+    CommandResult, LAYER_ROWS_PAGE_MOST, LayerFilter, LayerRow, LayerRowsAnswer, LayersRows,
+    RowsChecked,
 };
 use kentos_data::{Cancel, Condition, Feature, Order, Request};
 use kentos_domain::Document;
@@ -34,21 +35,40 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 pub fn missing_fields(named: &[String], fields: &[String], layer: &str) -> Option<String> {
     /// The layer's fields named at most: a wide table's list does not fill the line.
     const SHOWN: usize = 10;
-    let missing: Vec<String> = named.iter().filter(|n| !fields.contains(n)).map(|n| format!("“{n}”")).collect();
+    let missing: Vec<String> = named
+        .iter()
+        .filter(|n| !fields.contains(n))
+        .map(|n| format!("“{n}”"))
+        .collect();
     if missing.is_empty() {
         return None;
     }
-    let what = if missing.len() == 1 { "alanı" } else { "alanları" };
+    let what = if missing.len() == 1 {
+        "alanı"
+    } else {
+        "alanları"
+    };
     let has = match fields.len() {
         0 => "Katmanın alanı yok.".to_owned(),
         n if n <= SHOWN => format!("Katmanın alanları: {}.", fields.join(", ")),
-        n => format!("Katmanın alanları: {} ve {} alan daha.", fields[..SHOWN].join(", "), n - SHOWN),
+        n => format!(
+            "Katmanın alanları: {} ve {} alan daha.",
+            fields[..SHOWN].join(", "),
+            n - SHOWN
+        ),
     };
-    Some(format!("Süzgeç uygulanmadı: {} {what} “{layer}” katmanında yok. {has}", missing.join(", ")))
+    Some(format!(
+        "Süzgeç uygulanmadı: {} {what} “{layer}” katmanında yok. {has}",
+        missing.join(", ")
+    ))
 }
 
 fn unreachable(e: impl std::fmt::Display) -> Stop {
-    Stop::failed(error(codes::SOURCE_UNREACHABLE, format!("Kaynak okunamadı: {e}"), None))
+    Stop::failed(error(
+        codes::SOURCE_UNREACHABLE,
+        format!("Kaynak okunamadı: {e}"),
+        None,
+    ))
 }
 
 /// What the question asks, checked against the document.
@@ -66,7 +86,11 @@ struct Asked {
 fn checked(input: &LayersRows) -> Result<(), Stop> {
     let layer = input.layer.trim();
     if layer.is_empty() {
-        return Err(fail(codes::NO_LAYER, "Satırları okunacak veri katmanını (layer) verin.".into(), "layer"));
+        return Err(fail(
+            codes::NO_LAYER,
+            "Satırları okunacak veri katmanını (layer) verin.".into(),
+            "layer",
+        ));
     }
     let limit = input.limit.unwrap_or(100);
     if limit > LAYER_ROWS_PAGE_MOST {
@@ -89,7 +113,10 @@ fn checked(input: &LayersRows) -> Result<(), Stop> {
 }
 
 /// The layer the input names, after its own checks.
-fn found<'d>(doc: &'d Document, input: &LayersRows) -> Result<&'d kentos_commands::LayerNode, Stop> {
+fn found<'d>(
+    doc: &'d Document,
+    input: &LayersRows,
+) -> Result<&'d kentos_commands::LayerNode, Stop> {
     checked(input)?;
     let layer = input.layer.trim();
     doc.layers().get(layer).ok_or_else(|| {
@@ -111,7 +138,10 @@ fn asked(
     let Some(data) = node.data.clone() else {
         return Err(fail(
             codes::NOT_A_DATA_LAYER,
-            format!("“{}” bir veri katmanı değil; satırları kaynaktan okunmaz.", node.name),
+            format!(
+                "“{}” bir veri katmanı değil; satırları kaynaktan okunmaz.",
+                node.name
+            ),
             "layer",
         ));
     };
@@ -155,7 +185,13 @@ fn asked(
                 },
                 unit,
             )
-            .map_err(|why| fail(codes::INVALID_EXPRESSION, format!("Süzgeç: {why}"), "filter"))?;
+            .map_err(|why| {
+                fail(
+                    codes::INVALID_EXPRESSION,
+                    format!("Süzgeç: {why}"),
+                    "filter",
+                )
+            })?;
             if f.expr().is_some_and(|e| !e.world.is_empty()) {
                 return Err(fail(
                     codes::INVALID_EXPRESSION,
@@ -165,7 +201,10 @@ fn asked(
             }
             // A field the layer does not have is said, not asked: every row would be empty there and the answer “no
             // row” would look like the data's (docs/adr/9132).
-            if let Some(why) = f.expr().and_then(|e| missing_fields(&e.fields, &all_fields, &node.name)) {
+            if let Some(why) = f
+                .expr()
+                .and_then(|e| missing_fields(&e.fields, &all_fields, &node.name))
+            {
                 return Err(fail(codes::FIELD_NOT_FOUND, why, "filter"));
             }
             Some(f)
@@ -200,7 +239,11 @@ fn row_of(f: &Feature, names: &[String], system: Option<&TableSystem>, wkt: bool
     }
 }
 
-fn run(doc: &Document, input: &LayersRows, stopped: &dyn Fn() -> bool) -> Result<LayerRowsAnswer, Stop> {
+fn run(
+    doc: &Document,
+    input: &LayersRows,
+    stopped: &dyn Fn() -> bool,
+) -> Result<LayerRowsAnswer, Stop> {
     let node = found(doc, input)?;
     rows_of(node, doc.settings(), input, stopped)
 }
@@ -218,10 +261,14 @@ pub fn read(
         Err(stop) => stop,
     };
     match CommandResult::<LayerRowsAnswer>::from(stop) {
-        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-            Err(Box::new(error))
-        }
-        _ => Err(Box::new(error(codes::SOURCE_UNREACHABLE, "Kaynak okunamadı.".into(), None))),
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => Err(Box::new(error)),
+        _ => Err(Box::new(error(
+            codes::SOURCE_UNREACHABLE,
+            "Kaynak okunamadı.".into(),
+            None,
+        ))),
     }
 }
 
@@ -234,7 +281,10 @@ fn search_condition(
     fields: &[String],
     words: &str,
 ) -> Condition {
-    let mut either = vec![Condition::Contains { fields: fields.to_vec(), text: words.to_owned() }];
+    let mut either = vec![Condition::Contains {
+        fields: fields.to_vec(),
+        text: words.to_owned(),
+    }];
     let wanted = kentos_commands::fold(words);
     for f in &node.fields {
         let (Some(choices), Some(column)) = (f.values.as_ref(), schema.field(&f.name)) else {
@@ -244,16 +294,27 @@ fn search_condition(
             .iter()
             .filter(|c| kentos_commands::fold(&c.label).contains(&wanted))
             .filter_map(|c| match column.kind {
-                kentos_data::FieldKind::Int { .. } => c.code.trim().parse().ok().map(kentos_data::Value::Int),
-                kentos_data::FieldKind::Real => c.code.trim().parse().ok().map(kentos_data::Value::Real),
+                kentos_data::FieldKind::Int { .. } => {
+                    c.code.trim().parse().ok().map(kentos_data::Value::Int)
+                }
+                kentos_data::FieldKind::Real => {
+                    c.code.trim().parse().ok().map(kentos_data::Value::Real)
+                }
                 _ => Some(kentos_data::Value::Text(c.code.clone())),
             })
             .collect();
         if !values.is_empty() {
-            either.push(Condition::In { field: f.name.clone(), values });
+            either.push(Condition::In {
+                field: f.name.clone(),
+                values,
+            });
         }
     }
-    if either.len() == 1 { either.remove(0) } else { Condition::Or(either) }
+    if either.len() == 1 {
+        either.remove(0)
+    } else {
+        Condition::Or(either)
+    }
 }
 
 fn rows_of(
@@ -263,11 +324,18 @@ fn rows_of(
     stopped: &dyn Fn() -> bool,
 ) -> Result<LayerRowsAnswer, Stop> {
     let mut asked = asked(node, settings, input)?;
-    let source = kentos_data::registry().source(&asked.data.address).map_err(unreachable)?;
+    let source = kentos_data::registry()
+        .source(&asked.data.address)
+        .map_err(unreachable)?;
     // A field of the layer its table does not have (docs/adr/9318) is not asked of the source, which would refuse the
     // whole read: the others are read, the row is empty in it, and the answer names it.
     let schema = source.schema(&asked.data.table).map_err(unreachable)?;
-    let missing: Vec<String> = asked.fields.iter().filter(|f| schema.field(f).is_none()).cloned().collect();
+    let missing: Vec<String> = asked
+        .fields
+        .iter()
+        .filter(|f| schema.field(f).is_none())
+        .cloned()
+        .collect();
     asked.fields.retain(|f| schema.field(f).is_some());
     let data = &asked.data;
     let srid = data.geometry.as_ref().and_then(|g| g.srid);
@@ -275,18 +343,31 @@ fn rows_of(
     let bbox = match (input.bbox, &system, &data.geometry) {
         (None, ..) | (_, _, None) => None,
         (Some(b), None, Some(_)) => Some(b),
-        (Some(b), Some(s), Some(_)) => Some(
-            s.to_table(b)
-                .ok_or_else(|| fail(codes::INVALID_EXTENT, "Kutu tablonun sistemine çevrilemedi.".into(), "bbox"))?,
-        ),
+        (Some(b), Some(s), Some(_)) => Some(s.to_table(b).ok_or_else(|| {
+            fail(
+                codes::INVALID_EXTENT,
+                "Kutu tablonun sistemine çevrilemedi.".into(),
+                "bbox",
+            )
+        })?),
     };
     let mut parts = Vec::new();
     if let Some(keys) = &input.keys {
         parts.push(Condition::Fids(keys.clone()));
     }
-    if let Some(words) = input.search.as_deref().map(str::trim).filter(|w| !w.is_empty()) {
+    if let Some(words) = input
+        .search
+        .as_deref()
+        .map(str::trim)
+        .filter(|w| !w.is_empty())
+    {
         // Only the table's columns: a field of the layer its table lacks (docs/adr/9318) is not asked.
-        let searched: Vec<String> = asked.all_fields.iter().filter(|f| schema.field(f).is_some()).cloned().collect();
+        let searched: Vec<String> = asked
+            .all_fields
+            .iter()
+            .filter(|f| schema.field(f).is_some())
+            .cloned()
+            .collect();
         parts.push(search_condition(node, &schema, &searched, words));
     }
     // The filter's part the source answers itself (docs/adr/9109): all of it when exact.
@@ -315,12 +396,19 @@ fn rows_of(
         let mut rows = Vec::new();
         source
             .features(&data.table, request, &cancel, &mut |part: Vec<Feature>| {
-                rows.extend(part.iter().map(|f| row_of(f, &asked.fields, system.as_ref(), wkt)));
+                rows.extend(
+                    part.iter()
+                        .map(|f| row_of(f, &asked.fields, system.as_ref(), wkt)),
+                );
                 !stopped()
             })
             .map_err(unreachable)?;
         if stopped() {
-            return Err(Stop::failed(error(codes::CANCELLED, "İş durduruldu.".into(), None)));
+            return Err(Stop::failed(error(
+                codes::CANCELLED,
+                "İş durduruldu.".into(),
+                None,
+            )));
         }
         Ok(rows)
     };
@@ -334,7 +422,11 @@ fn rows_of(
     };
     let Some(filter) = asked.filter.as_ref().filter(|_| !pushed.exact) else {
         let total = match input.count {
-            Some(true) => Some(source.count(&data.table, &base, false).map_err(unreachable)?),
+            Some(true) => Some(
+                source
+                    .count(&data.table, &base, false)
+                    .map_err(unreachable)?,
+            ),
             _ => None,
         };
         let keys = match input.all_keys {
@@ -359,7 +451,13 @@ fn rows_of(
     // The filter asked of every row the source keeps, in the order: the rows it holds for, by key.
     let expr_fields: Vec<String> = filter
         .expr()
-        .map(|e| e.fields.iter().filter(|f| asked.all_fields.contains(f)).cloned().collect())
+        .map(|e| {
+            e.fields
+                .iter()
+                .filter(|f| asked.all_fields.contains(f))
+                .cloned()
+                .collect()
+        })
         .unwrap_or_default();
     let measured = filter
         .expr()
@@ -379,7 +477,9 @@ fn rows_of(
                     let attrs: serde_json::Map<String, serde_json::Value> = expr_fields
                         .iter()
                         .zip(&f.values)
-                        .filter_map(|(n, v)| attribute_text(v).map(|t| (n.clone(), serde_json::Value::String(t))))
+                        .filter_map(|(n, v)| {
+                            attribute_text(v).map(|t| (n.clone(), serde_json::Value::String(t)))
+                        })
                         .collect();
                     let g = match (measured, f.shape()) {
                         (true, Some(g)) => match &system {
@@ -399,9 +499,19 @@ fn rows_of(
                 Vec::new()
             };
             let held = filter.condition(&refs, &|_| String::new(), |i| shapes.get(i));
-            kept.extend(objects.iter().zip(held).filter(|(_, h)| *h).map(|((k, _), _)| *k));
+            kept.extend(
+                objects
+                    .iter()
+                    .zip(held)
+                    .filter(|(_, h)| *h)
+                    .map(|((k, _), _)| *k),
+            );
             if stopped() {
-                failure = Some(Stop::failed(error(codes::CANCELLED, "İş durduruldu.".into(), None)));
+                failure = Some(Stop::failed(error(
+                    codes::CANCELLED,
+                    "İş durduruldu.".into(),
+                    None,
+                )));
                 return false;
             }
             true
@@ -447,7 +557,9 @@ fn keys_of(
         ..request.clone()
     };
     source
-        .features(table, &request, &Cancel::new(), &mut |part: Vec<Feature>| {
+        .features(table, &request, &Cancel::new(), &mut |part: Vec<
+            Feature,
+        >| {
             keys.extend(part.iter().map(|f| f.fid));
             !stopped()
         })

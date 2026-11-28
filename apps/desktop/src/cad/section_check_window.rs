@@ -109,7 +109,9 @@ impl App {
             .ids()
             .iter()
             .filter_map(|slot| {
-                let Some(Entity::Point(p)) = doc.model.get(*slot) else { return None };
+                let Some(Entity::Point(p)) = doc.model.get(*slot) else {
+                    return None;
+                };
                 p.z?;
                 Some((doc.model.uid(*slot)?.to_string(), [p.p.x, p.p.y]))
             })
@@ -130,12 +132,19 @@ impl App {
                 }
             }
         }
-        let layers: Vec<(String, String)> =
-            doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+        let layers: Vec<(String, String)> = doc
+            .model
+            .layers()
+            .leaves()
+            .iter()
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect();
         // Pafta eğrileri's layer, else one named for contours, else the first.
         let named = layers.iter().find(|(_, n)| {
             let n = n.to_lowercase();
-            ["eğri", "egri", "yükselti", "yukselti", "kontur"].iter().any(|w| n.contains(w))
+            ["eğri", "egri", "yükselti", "yukselti", "kontur"]
+                .iter()
+                .any(|w| n.contains(w))
         });
         let contours = Some(self.terrain_work.sheet_contours.layer.clone())
             .filter(|l| layers.iter().any(|(id, _)| id == l))
@@ -145,13 +154,20 @@ impl App {
         self.terrain_work.section_check = State {
             from: picked[a].0.clone(),
             to: picked[b].0.clone(),
-            points: picked.iter().enumerate().filter(|(k, _)| *k != a && *k != b).map(|(_, p)| p.0.clone()).collect(),
+            points: picked
+                .iter()
+                .enumerate()
+                .filter(|(k, _)| *k != a && *k != b)
+                .map(|(_, p)| p.0.clone())
+                .collect(),
             layers,
             contours,
             ..State::default()
         };
         self.section_check_run();
-        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SectionCheck));
+        self.dialog = Some(Dialog::TerrainWork(
+            crate::terrain_work::TerrainDialogKind::SectionCheck,
+        ));
         Task::none()
     }
 
@@ -207,15 +223,28 @@ impl App {
                 }
                 if let Some(most) = r.spacing {
                     lines.push(if r.gaps.is_empty() {
-                        words::text_line(Kind::Ok, format!("Komşu noktalar en çok {most} m arayla (m. 93(1)(b))."))
+                        words::text_line(
+                            Kind::Ok,
+                            format!("Komşu noktalar en çok {most} m arayla (m. 93(1)(b))."),
+                        )
                     } else {
-                        words::text_line(Kind::Warn, warnings.iter().find(|w| w.contains("komşu")).cloned().unwrap_or_default())
+                        words::text_line(
+                            Kind::Warn,
+                            warnings
+                                .iter()
+                                .find(|w| w.contains("komşu"))
+                                .cloned()
+                                .unwrap_or_default(),
+                        )
                     });
                 }
                 if r.unlevelled > 0 {
                     lines.push(words::text_line(
                         Kind::Info,
-                        format!("Eğri katmanında her köşesi aynı kotta olmayan {} çizgi okunmadı.", r.unlevelled),
+                        format!(
+                            "Eğri katmanında her köşesi aynı kotta olmayan {} çizgi okunmadı.",
+                            r.unlevelled
+                        ),
                     ));
                 }
                 lines.push(words::text_line(
@@ -235,7 +264,10 @@ impl App {
                             f.coord(p.measured),
                             maybe(p.contour),
                             maybe(p.difference),
-                            p.between.map_or_else(|| "—".to_owned(), |b| format!("{} – {}", f.coord(b[0]), f.coord(b[1]))),
+                            p.between.map_or_else(
+                                || "—".to_owned(),
+                                |b| format!("{} – {}", f.coord(b[0]), f.coord(b[1])),
+                            ),
                             state_word(&p.state).to_owned(),
                         ]
                     })
@@ -245,7 +277,9 @@ impl App {
             None => {}
         }
         let text = |placeholder: &'static str, value: &str, on: fn(String) -> Event| {
-            kentos_ui::widget::text_field(placeholder, value).on_input(move |v| msg(on(v))).width(Length::Fixed(160.0))
+            kentos_ui::widget::text_field(placeholder, value)
+                .on_input(move |v| msg(on(v)))
+                .width(Length::Fixed(160.0))
         };
         let form = Form::new()
             .label_width(170.0)
@@ -291,7 +325,10 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn section_check_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn section_check_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Fill(CORRIDOR, v) => Some(msg(Event::Corridor(v.to_owned()))),

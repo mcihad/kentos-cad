@@ -1,7 +1,9 @@
 //! Façade and space dimension recipes (docs/adr/0729): the objects a recipe reads from the drawing, given to the
 //! shared rule (`kentos_formats::dimension_spans`, which the server checks with), and its plan with each row's account.
 
-use kentos_contracts::{DimensionSet, DimensionSetBreak, DimensionSetRow, DimensionSetRowPlace, Entity, EntityId, Vec2};
+use kentos_contracts::{
+    DimensionSet, DimensionSetBreak, DimensionSetRow, DimensionSetRowPlace, Entity, EntityId, Vec2,
+};
 use kentos_geometry_core::ops::dimension_set as core;
 use kentos_geometry_core::ops::dimension_span as span;
 use kentos_geometry_core::vec2::Vec2 as CoreVec2;
@@ -65,11 +67,19 @@ impl SpanPlan {
 
     /// The bodies' outermost face on the rows' side, across.
     fn face(&self) -> f64 {
-        if self.notes.side > 0.0 { self.body.1 } else { self.body.0 }
+        if self.notes.side > 0.0 {
+            self.body.1
+        } else {
+            self.body.0
+        }
     }
 
     /// Where a row's line runs: its place by hand, else its drawn spans' line, else the recipe's place.
-    fn row_at(&self, set: &DimensionSet, which: DimensionSetRow) -> Result<CoreVec2, DimensionSetBreak> {
+    fn row_at(
+        &self,
+        set: &DimensionSet,
+        which: DimensionSetRow,
+    ) -> Result<CoreVec2, DimensionSetBreak> {
         if !set.rows.contains(&which) {
             return Err(DimensionSetBreak::UnsupportedWall);
         }
@@ -114,7 +124,9 @@ impl Document {
                 .filter(|(_, e)| match e {
                     Entity::Grid(_) => true,
                     Entity::Opening(o) if sources.contains(&o.opening.host) => true,
-                    Entity::Wall(_) | Entity::Opening(_) => reach_box(e).is_some_and(|r| meets(&r, &b)),
+                    Entity::Wall(_) | Entity::Opening(_) => {
+                        reach_box(e).is_some_and(|r| meets(&r, &b))
+                    }
                     _ => false,
                 })
                 .map(|(uid, e)| kentos_formats::dimension_spans::Near {
@@ -157,7 +169,11 @@ impl Document {
 
     /// A façade's or a space's row's distance (docs/adr/0729 §6): from its bodies' outermost face on the rows' side,
     /// outward positive.
-    pub fn dimension_span_row_offset(&self, set: &DimensionSet, which: DimensionSetRow) -> Result<f64, DimensionSetBreak> {
+    pub fn dimension_span_row_offset(
+        &self,
+        set: &DimensionSet,
+        which: DimensionSetRow,
+    ) -> Result<f64, DimensionSetBreak> {
         let plan = self.dimension_span_spans(set).map_err(|r| r.broken)?;
         let at = plan.row_at(set, which)?;
         Ok(plan.notes.side * (plan.across(at) - plan.face()))

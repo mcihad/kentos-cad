@@ -12,10 +12,10 @@
 //! writes none, a removed one's tables lose the link (`cad.styles.edit.tables.json`).
 
 use kentos_commands::{
-    ANNOTATION_STYLES_FORMAT, AnnotationStyleKind, CommandResult, DimensionStyleDef, LeaderStyleDef,
-    StyleEditOperation, StylesEdit, StylesEdited, TableStyleDef, TextStyleDef, WallStyleDef,
-    dimension_styles_problem, leader_styles_problem, table_style_defs_problem, text_styles_problem,
-    wall_styles_problem,
+    ANNOTATION_STYLES_FORMAT, AnnotationStyleKind, CommandResult, DimensionStyleDef,
+    LeaderStyleDef, StyleEditOperation, StylesEdit, StylesEdited, TableStyleDef, TextStyleDef,
+    WallStyleDef, dimension_styles_problem, leader_styles_problem, table_style_defs_problem,
+    text_styles_problem, wall_styles_problem,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -182,7 +182,8 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
             }
         }
         (Table::Wall(t), Op::Update) => {
-            if let (Some(mut s), Some(at)) = (input.wall.clone(), t.iter().position(|s| s.id == id)) {
+            if let (Some(mut s), Some(at)) = (input.wall.clone(), t.iter().position(|s| s.id == id))
+            {
                 bind_materials(doc, &mut s, "wall")?;
                 t[at] = s;
             }
@@ -349,23 +350,34 @@ fn export(doc: &Document, input: &StylesEdit) -> Result<Planned, Stop> {
                     .into_iter()
                     .map(|i| &all[i])
                     .collect();
-            (chosen.iter().map(|s| s.id.clone()).collect(), serde_json::json!(chosen))
+            (
+                chosen.iter().map(|s| s.id.clone()).collect(),
+                serde_json::json!(chosen),
+            )
         }
         AnnotationStyleKind::Wall => {
             let all = &settings.wall_styles;
-            let chosen: Vec<&WallStyleDef> = picked(all.iter().map(|s| s.id.as_str()), input, "duvar stili")?
-                .into_iter()
-                .map(|i| &all[i])
-                .collect();
-            (chosen.iter().map(|s| s.id.clone()).collect(), serde_json::json!(chosen))
+            let chosen: Vec<&WallStyleDef> =
+                picked(all.iter().map(|s| s.id.as_str()), input, "duvar stili")?
+                    .into_iter()
+                    .map(|i| &all[i])
+                    .collect();
+            (
+                chosen.iter().map(|s| s.id.clone()).collect(),
+                serde_json::json!(chosen),
+            )
         }
         AnnotationStyleKind::Table => {
             let all = &settings.table_styles;
-            let chosen: Vec<&TableStyleDef> = picked(all.iter().map(|s| s.id.as_str()), input, "tablo stili")?
-                .into_iter()
-                .map(|i| &all[i])
-                .collect();
-            (chosen.iter().map(|s| s.id.clone()).collect(), serde_json::json!(chosen))
+            let chosen: Vec<&TableStyleDef> =
+                picked(all.iter().map(|s| s.id.as_str()), input, "tablo stili")?
+                    .into_iter()
+                    .map(|i| &all[i])
+                    .collect();
+            (
+                chosen.iter().map(|s| s.id.clone()).collect(),
+                serde_json::json!(chosen),
+            )
         }
     };
     let file = serde_json::json!({
@@ -530,7 +542,9 @@ fn import(
         AnnotationStyleKind::Dimension => {
             Table::Dimension(merge!(settings.dimension_styles, DimensionStyleDef))
         }
-        AnnotationStyleKind::Leader => Table::Leader(merge!(settings.leader_styles, LeaderStyleDef)),
+        AnnotationStyleKind::Leader => {
+            Table::Leader(merge!(settings.leader_styles, LeaderStyleDef))
+        }
         AnnotationStyleKind::Wall => Table::Wall(merge!(settings.wall_styles, WallStyleDef)),
         AnnotationStyleKind::Table => Table::Table(merge!(settings.table_styles, TableStyleDef)),
     };

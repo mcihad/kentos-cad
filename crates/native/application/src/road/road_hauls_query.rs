@@ -10,14 +10,18 @@ use crate::road_corridors::words;
 use crate::road_hauls as common;
 use crate::road_terrains::fail;
 
-fn answer(doc: &kentos_domain::Document, input: &HaulsQuery) -> Result<(HaulsQueried, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &kentos_domain::Document,
+    input: &HaulsQuery,
+) -> Result<(HaulsQueried, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let own = doc.road_hauls();
     let Some(name) = input.haul.as_deref() else {
         if input.points {
             return Err(fail(
                 codes::INVALID_HAUL,
-                "Noktalar bir Brüknerde sorulur: Brüknerin kimliğini ya da adını (haul) verin.".into(),
+                "Noktalar bir Brüknerde sorulur: Brüknerin kimliğini ya da adını (haul) verin."
+                    .into(),
                 "haul",
             ));
         }
@@ -42,7 +46,10 @@ fn answer(doc: &kentos_domain::Document, input: &HaulsQuery) -> Result<(HaulsQue
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &HaulsQuery) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }

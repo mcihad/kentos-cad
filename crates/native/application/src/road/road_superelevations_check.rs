@@ -4,8 +4,8 @@
 //! `fixtures/commands/v1/road.superelevations.check.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CurveFrictionRow, RelativeGradient, SuperelevationFinding, SuperelevationPivot,
-    SuperelevationsCheck, SuperelevationsChecked,
+    CommandResult, CommandWarning, CurveFrictionRow, RelativeGradient, SuperelevationFinding,
+    SuperelevationPivot, SuperelevationsCheck, SuperelevationsChecked,
 };
 use kentos_domain::Document;
 use kentos_road::superelevation_physics::{self as phys, Way};
@@ -17,29 +17,50 @@ use crate::road_superelevations as common;
 use crate::road_terrains::fail;
 
 /// The check now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &SuperelevationsCheck) -> Result<(SuperelevationsChecked, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &SuperelevationsCheck,
+) -> Result<(SuperelevationsChecked, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
-    let bad = |path: &str, words: &str| fail(codes::INVALID_SUPERELEVATION_CHECK, words.into(), path);
+    let bad =
+        |path: &str, words: &str| fail(codes::INVALID_SUPERELEVATION_CHECK, words.into(), path);
     let positive = |v: Option<f64>| v.is_none_or(|x| x.is_finite() && x > 0.0);
     if !positive(input.speed) {
         return Err(bad("speed", "Proje hızı 0'dan büyük olmalı (km/sa)."));
     }
     if !positive(input.most_friction) || input.most_friction.is_some_and(|f| f >= 1.0) {
-        return Err(bad("mostFriction", "En büyük yanal sürtünme 0 ile 1 arası olmalı."));
+        return Err(bad(
+            "mostFriction",
+            "En büyük yanal sürtünme 0 ile 1 arası olmalı.",
+        ));
     }
     if !positive(input.most_relative) || input.most_relative.is_some_and(|g| g >= 1.0) {
-        return Err(bad("mostRelative", "En büyük göreli eğim 0 ile 1 arası olmalı (oran; 0,005 = 1:200)."));
+        return Err(bad(
+            "mostRelative",
+            "En büyük göreli eğim 0 ile 1 arası olmalı (oran; 0,005 = 1:200).",
+        ));
     }
     let step = input.step.unwrap_or(1.0);
     if !(step.is_finite() && step > 0.0 && step <= 100.0) {
-        return Err(bad("step", "Klotoidin okunma adımı 0'dan büyük, en çok 100 m olmalı."));
+        return Err(bad(
+            "step",
+            "Klotoidin okunma adımı 0'dan büyük, en çok 100 m olmalı.",
+        ));
     }
-    let (_, def) = common::find(doc.road_superelevations(), &input.superelevation, "superelevation")?;
+    let (_, def) = common::find(
+        doc.road_superelevations(),
+        &input.superelevation,
+        "superelevation",
+    )?;
     check_def(doc, def, input, step)
 }
 
 /// The check of a schedule as typed (the desktop's Dever window, before it is saved): `input`'s limits on `def`.
-pub fn preview(doc: &Document, def: &kentos_commands::SuperelevationDef, input: &SuperelevationsCheck) -> Result<(SuperelevationsChecked, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    def: &kentos_commands::SuperelevationDef,
+    input: &SuperelevationsCheck,
+) -> Result<(SuperelevationsChecked, Vec<CommandWarning>), String> {
     let words = |stop: Stop| match stop {
         Stop::Failed(e) | Stop::Conflict(e) => e.message,
         Stop::Cancelled => String::new(),
@@ -54,25 +75,48 @@ fn check_def(
     input: &SuperelevationsCheck,
     step: f64,
 ) -> Result<(SuperelevationsChecked, Vec<CommandWarning>), Stop> {
-    let bad = |path: &str, words: &str| fail(codes::INVALID_SUPERELEVATION_CHECK, words.into(), path);
+    let bad =
+        |path: &str, words: &str| fail(codes::INVALID_SUPERELEVATION_CHECK, words.into(), path);
     let template = doc
         .road_templates()
         .iter()
         .find(|t| t.id == input.template || t.name.to_lowercase() == input.template.to_lowercase())
         .ok_or_else(|| {
-            fail(codes::UNKNOWN_ROAD_TEMPLATE, format!("“{}” kimlikli ya da adlı tip kesit projede yok.", input.template), "template")
+            fail(
+                codes::UNKNOWN_ROAD_TEMPLATE,
+                format!(
+                    "“{}” kimlikli ya da adlı tip kesit projede yok.",
+                    input.template
+                ),
+                "template",
+            )
         })?;
     let core = crate::road_sections::core_template(template);
     let (wl, wr) = crate::road_sections::lane_widths(&core);
     if wl <= 0.0 || wr <= 0.0 {
-        return Err(bad("template", "Tip kesitin iki yanında da şerit olmalı: göreli eğim şerit kenarında okunur."));
+        return Err(bad(
+            "template",
+            "Tip kesitin iki yanında da şerit olmalı: göreli eğim şerit kenarında okunur.",
+        ));
     }
     let built = common::alignment_of(doc, def)?;
     let (schedule, _) = common::schedule(def, &built)?;
     let normal = common::normal(def);
     // The traveled way: the sides' slopes (the schedule's, the normal where it has none) and widths (lanes + widening).
-    let slope = |pts: &[[f64; 2]], n: f64| if pts.is_empty() { vec![[0.0, n]] } else { pts.to_vec() };
-    let width = |pts: &[[f64; 2]], w: f64| if pts.is_empty() { vec![[0.0, w]] } else { pts.iter().map(|p| [p[0], w + p[1]]).collect() };
+    let slope = |pts: &[[f64; 2]], n: f64| {
+        if pts.is_empty() {
+            vec![[0.0, n]]
+        } else {
+            pts.to_vec()
+        }
+    };
+    let width = |pts: &[[f64; 2]], w: f64| {
+        if pts.is_empty() {
+            vec![[0.0, w]]
+        } else {
+            pts.iter().map(|p| [p[0], w + p[1]]).collect()
+        }
+    };
     let way = Way {
         left_slope: slope(&schedule.left, normal.left),
         right_slope: slope(&schedule.right, normal.right),
@@ -80,10 +124,16 @@ fn check_def(
         right_width: width(&schedule.right_widening, wr),
     };
     let length = built.core.length;
-    let gradients: Vec<RelativeGradient> = phys::relative_gradients(&way, schedule.pivot, 0.0, length)
-        .into_iter()
-        .map(|g| RelativeGradient { from: g.from, to: g.to, left: g.left, right: g.right })
-        .collect();
+    let gradients: Vec<RelativeGradient> =
+        phys::relative_gradients(&way, schedule.pivot, 0.0, length)
+            .into_iter()
+            .map(|g| RelativeGradient {
+                from: g.from,
+                to: g.to,
+                left: g.left,
+                right: g.right,
+            })
+            .collect();
     // Each curve at the speed given, else at its own design speed (docs/adr/0986): its PI's, else its alignment's.
     let own = crate::road_alignments::curve_speeds(doc, &def.alignment);
     if input.most_friction.is_some() && input.speed.is_none() && own.is_empty() {
@@ -105,7 +155,15 @@ fn check_def(
             phys::curve_friction(&built.core, &schedule, normal, v, step)
                 .into_iter()
                 .filter(move |c| speed_of(&c.pi) == Some(v))
-                .map(|c| CurveFrictionRow { pi: c.pi, from: c.from, to: c.to, friction: c.most, at: c.at, radius: c.radius, e: c.e })
+                .map(|c| CurveFrictionRow {
+                    pi: c.pi,
+                    from: c.from,
+                    to: c.to,
+                    friction: c.most,
+                    at: c.at,
+                    radius: c.radius,
+                    e: c.e,
+                })
         })
         .collect();
     curves.sort_by(|a, b| a.from.total_cmp(&b.from));
@@ -160,24 +218,44 @@ fn check_def(
     if !findings.is_empty() {
         warnings.push(CommandWarning {
             code: codes::SUPERELEVATION_LIMIT_BROKEN.into(),
-            message: format!("“{}” dever çizelgesinde {} yer verilen sınırları aşıyor.", def.name, findings.len()),
+            message: format!(
+                "“{}” dever çizelgesinde {} yer verilen sınırları aşıyor.",
+                def.name,
+                findings.len()
+            ),
             path: Some("superelevation".into()),
         });
     }
     let pivot = def.pivot.unwrap_or(SuperelevationPivot::Centerline);
-    Ok((SuperelevationsChecked { superelevation: def.id.clone(), pivot, gradients, curves, findings, step }, warnings))
+    Ok((
+        SuperelevationsChecked {
+            superelevation: def.id.clone(),
+            pivot,
+            gradients,
+            curves,
+            findings,
+            step,
+        },
+        warnings,
+    ))
 }
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &SuperelevationsCheck) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &SuperelevationsCheck) -> CommandResult<SuperelevationsChecked> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &SuperelevationsCheck,
+) -> CommandResult<SuperelevationsChecked> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -185,6 +263,9 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SuperelevationsCheck) -> CommandR
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: SuperelevationsCheck) -> CommandResult<SuperelevationsChecked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SuperelevationsCheck,
+) -> CommandResult<SuperelevationsChecked> {
     plan(cx, &input)
 }

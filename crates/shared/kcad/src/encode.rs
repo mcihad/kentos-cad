@@ -39,8 +39,7 @@ use kentos_contracts::{
     DimensionStyle, DimensionStyleDef, DocumentSnapshotV2, Entity, HeightKind, HeightReference,
     LayerField, LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle,
     LengthStyle, MigrationSource, ProjectSettings, SurveySettings, TopologyDecision, TopologyScope,
-    TopologySettings, Vec2,
-    Workspace, layer_fields_problem, layer_states_problem,
+    TopologySettings, Vec2, Workspace, layer_fields_problem, layer_states_problem,
 };
 use serde_json::Value;
 
@@ -113,22 +112,33 @@ fn modules_of(doc: &DocumentSnapshotV2, objects: Objs<'_>) -> ModuleVersions {
     }
     // GIS 4 (docs/adr/9105 §4): a layer's class counts shown.
     fn counted(nodes: &[kentos_contracts::LayerNode]) -> bool {
-        nodes.iter().any(|n| n.class_counts.is_some() || counted(&n.children))
+        nodes
+            .iter()
+            .any(|n| n.class_counts.is_some() || counted(&n.children))
     }
     // GIS 5 (docs/adr/9114 §1): a data layer whose rows are texts.
     fn texts(nodes: &[kentos_contracts::LayerNode]) -> bool {
-        nodes.iter().any(|n| n.data.as_ref().is_some_and(|d| d.text.is_some()) || texts(&n.children))
+        nodes
+            .iter()
+            .any(|n| n.data.as_ref().is_some_and(|d| d.text.is_some()) || texts(&n.children))
     }
     // GIS 7 (docs/adr/9192): where a layer's objects were copied from.
     fn origins(nodes: &[kentos_contracts::LayerNode]) -> bool {
-        nodes.iter().any(|n| n.origin.is_some() || origins(&n.children))
+        nodes
+            .iter()
+            .any(|n| n.origin.is_some() || origins(&n.children))
     }
     // GIS 3 (docs/adr/9104 §2): the data layers' edit grouping.
     // GIS 6 (docs/adr/9135): a relation by a parent key.
     if origins(&doc.layers) {
         out.modules
             .push(("gis".to_owned(), crate::GIS_WITH_LAYER_ORIGINS));
-    } else if doc.settings.relations.iter().any(|r| r.parent_key.is_some()) {
+    } else if doc
+        .settings
+        .relations
+        .iter()
+        .any(|r| r.parent_key.is_some())
+    {
         out.modules
             .push(("gis".to_owned(), crate::GIS_WITH_RELATION_KEYS));
     } else if texts(&doc.layers) {
@@ -773,7 +783,10 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, "boş harita işi yazılmaz"));
                 }
                 if s.cad_work != Some(kentos_contracts::CadWork::Map) {
-                    return Err(e.fail(Code::BadValue, "harita işi yalnız harita projesinin olur (cadWork map)"));
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "harita işi yalnız harita projesinin olur (cadWork map)",
+                    ));
                 }
                 if let Some((field, words)) = v.problem() {
                     return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
@@ -845,7 +858,10 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, "boş GNSS arşivi yazılmaz"));
                 }
                 if s.cad_work != Some(kentos_contracts::CadWork::Map) {
-                    return Err(e.fail(Code::BadValue, "GNSS arşivi yalnız harita projesinin olur (cadWork map)"));
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "GNSS arşivi yalnız harita projesinin olur (cadWork map)",
+                    ));
                 }
                 if let Some((field, words)) = v.problem() {
                     return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
@@ -929,7 +945,8 @@ impl<'d> Encoder<'d> {
                 if let Some(problem) = kentos_contracts::tool_layers_problem(&s.tool_layers) {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
-                let value = serde_json::to_value(&s.tool_layers).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                let value = serde_json::to_value(&s.tool_layers)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
         }
@@ -953,7 +970,8 @@ impl<'d> Encoder<'d> {
                 if let Some(problem) = kentos_contracts::zoning_plan_problem(data) {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
-                let value = serde_json::to_value(data).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                let value = serde_json::to_value(data)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
         }
@@ -1080,7 +1098,8 @@ impl<'d> Encoder<'d> {
         if !s.standard_docs.is_empty() {
             self.key("standardDocs");
             self.at(Seg::Name("standardDocs"), |e| {
-                if let Some(problem) = kentos_contracts::project_standards_problem(&s.standard_docs) {
+                if let Some(problem) = kentos_contracts::project_standards_problem(&s.standard_docs)
+                {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&s.standard_docs)
@@ -1116,7 +1135,9 @@ impl<'d> Encoder<'d> {
         if !s.view_templates.is_empty() {
             self.key("viewTemplates");
             self.at(Seg::Name("viewTemplates"), |e| {
-                if let Some(problem) = kentos_contracts::templates_problem(&s.view_templates, &s.named_views) {
+                if let Some(problem) =
+                    kentos_contracts::templates_problem(&s.view_templates, &s.named_views)
+                {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 e.json(&serde_json::to_value(&s.view_templates).unwrap_or_default())
@@ -1134,8 +1155,8 @@ impl<'d> Encoder<'d> {
                 if let Some(problem) = kentos_contracts::parcel_register_problem(register) {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
-                let value =
-                    serde_json::to_value(register).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                let value = serde_json::to_value(register)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
         }
@@ -1190,11 +1211,13 @@ impl<'d> Encoder<'d> {
         if !s.monitoring_reviews.is_empty() {
             self.key("monitoringReviews");
             self.at(Seg::Name("monitoringReviews"), |e| {
-                if let Some(problem) = kentos_contracts::monitoring_reviews_problem(&s.monitoring_reviews) {
+                if let Some(problem) =
+                    kentos_contracts::monitoring_reviews_problem(&s.monitoring_reviews)
+                {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
-                let value =
-                    serde_json::to_value(&s.monitoring_reviews).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                let value = serde_json::to_value(&s.monitoring_reviews)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
         }
@@ -1202,11 +1225,13 @@ impl<'d> Encoder<'d> {
         if !s.survey_adjustments.is_empty() {
             self.key("surveyAdjustments");
             self.at(Seg::Name("surveyAdjustments"), |e| {
-                if let Some(problem) = kentos_contracts::kept_adjustments_problem(&s.survey_adjustments) {
+                if let Some(problem) =
+                    kentos_contracts::kept_adjustments_problem(&s.survey_adjustments)
+                {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
-                let value =
-                    serde_json::to_value(&s.survey_adjustments).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                let value = serde_json::to_value(&s.survey_adjustments)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
         }
@@ -1214,7 +1239,9 @@ impl<'d> Encoder<'d> {
         if !s.standard_exceptions.is_empty() {
             self.key("standardExceptions");
             self.at(Seg::Name("standardExceptions"), |e| {
-                if let Some(problem) = kentos_contracts::standard_exceptions_problem(&s.standard_exceptions) {
+                if let Some(problem) =
+                    kentos_contracts::standard_exceptions_problem(&s.standard_exceptions)
+                {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&s.standard_exceptions)
@@ -1226,7 +1253,9 @@ impl<'d> Encoder<'d> {
         if !s.approved_sheet_templates.is_empty() {
             self.key("approvedSheetTemplates");
             self.at(Seg::Name("approvedSheetTemplates"), |e| {
-                if let Some(problem) = kentos_contracts::approved_sheet_templates_problem(&s.approved_sheet_templates) {
+                if let Some(problem) =
+                    kentos_contracts::approved_sheet_templates_problem(&s.approved_sheet_templates)
+                {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&s.approved_sheet_templates)
@@ -1372,7 +1401,11 @@ fn place_count(p: &kentos_contracts::PatternPlace) -> usize {
 /// field with none is not written.
 /// Whether a surface of the road settings pastes another (docs/adr/3920).
 pub(crate) fn road_has_pastes(r: &kentos_contracts::RoadSettings) -> bool {
-    r.surfaces.iter().any(|s| s.edits.iter().any(|e| matches!(e, kentos_contracts::SurfaceEdit::Paste { .. })))
+    r.surfaces.iter().any(|s| {
+        s.edits
+            .iter()
+            .any(|e| matches!(e, kentos_contracts::SurfaceEdit::Paste { .. }))
+    })
 }
 
 fn has_heights(s: &ProjectSettings) -> bool {
@@ -1629,9 +1662,15 @@ mod tests {
         let refused = crate::decode(&file).expect_err("architecture data 2 named 1");
         assert!(refused.message.contains("sürüm 2"), "{}", refused.message);
         // Architecture data 4 (docs/adr/8070 §8): a post in a file that names version 3 only.
-        let mut posted = crate::decode(include_bytes!("../../../../fixtures/arch/v1/section-building.kcad"))
-            .expect("the section building");
-        if let Some(Entity::Column(c)) = posted.entities.iter_mut().find(|e| matches!(e, Entity::Column(_))) {
+        let mut posted = crate::decode(include_bytes!(
+            "../../../../fixtures/arch/v1/section-building.kcad"
+        ))
+        .expect("the section building");
+        if let Some(Entity::Column(c)) = posted
+            .entities
+            .iter_mut()
+            .find(|e| matches!(e, Entity::Column(_)))
+        {
             c.column.member = Some(kentos_contracts::Member::post());
         }
         let three = ModuleVersions {

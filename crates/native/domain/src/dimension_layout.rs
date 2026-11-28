@@ -68,7 +68,10 @@ pub fn member_value(format: &Format, d: &DimensionEntity) -> (f64, String) {
 
 /// Its value's width as the document draws it, in em: in the dimension's own face, else the drawing's.
 pub fn value_width_em(font: Option<DrawingFont>, d: &DimensionEntity, shown: &str) -> f64 {
-    width_em(shown, Font::from_id(DrawingFont::id_of(d.look.font.or(font))))
+    width_em(
+        shown,
+        Font::from_id(DrawingFont::id_of(d.look.font.or(font))),
+    )
 }
 
 /// Whether two value places are the same: none is its own place.
@@ -121,8 +124,11 @@ impl Document {
             .iter()
             .zip(&recorded)
             .map(|(m, r)| {
-                (!same_shift(m.dimension.text_shift, *r))
-                    .then(|| m.dimension.text_shift.map_or((0.0, 0.0), |s| (s.along, s.across)))
+                (!same_shift(m.dimension.text_shift, *r)).then(|| {
+                    m.dimension
+                        .text_shift
+                        .map_or((0.0, 0.0), |s| (s.along, s.across))
+                })
             })
             .collect();
         let widths: Vec<f64> = members
@@ -133,10 +139,10 @@ impl Document {
             })
             .collect();
         // Rows in the recipe's order, along each.
-        let row_rank = |r: DimensionSetRow| set.rows.iter().position(|x| *x == r).unwrap_or(usize::MAX);
-        let centre = |m: &PlannedDimensionSetMember| {
-            (frame.t(m.dimension.a) + frame.t(m.dimension.b)) * 0.5
-        };
+        let row_rank =
+            |r: DimensionSetRow| set.rows.iter().position(|x| *x == r).unwrap_or(usize::MAX);
+        let centre =
+            |m: &PlannedDimensionSetMember| (frame.t(m.dimension.a) + frame.t(m.dimension.b)) * 0.5;
         let mut order: Vec<usize> = (0..members.len()).collect();
         order.sort_by(|&i, &j| {
             row_rank(members[i].segment.row)
@@ -191,10 +197,18 @@ impl Document {
                     // As the core lays the value out: along the line from a's side to b's, turned to read.
                     let t = (d.angle.unwrap_or(0.0) * PI) / 180.0;
                     let u = Vec2::new(cos(t), sin(t));
-                    let sign = if (d.b.x - d.a.x) * u.x + (d.b.y - d.a.y) * u.y < 0.0 { -1.0 } else { 1.0 };
+                    let sign = if (d.b.x - d.a.x) * u.x + (d.b.y - d.a.y) * u.y < 0.0 {
+                        -1.0
+                    } else {
+                        1.0
+                    };
                     let line = Vec2::new(u.x * sign, u.y * sign);
                     let rotation = atan2(line.y, line.x) * 180.0 / PI;
-                    let flip = if rotation > 90.0 || rotation <= -90.0 { -1.0 } else { 1.0 };
+                    let flip = if rotation > 90.0 || rotation <= -90.0 {
+                        -1.0
+                    } else {
+                        1.0
+                    };
                     let reads = line.x * flip * frame.d.x + line.y * flip * frame.d.y;
                     ValueBox {
                         line: line_of[i],
@@ -214,7 +228,13 @@ impl Document {
             } else {
                 boxes
                     .iter()
-                    .map(|b| if fits(b) { Placement::Fits } else { Placement::Tight })
+                    .map(|b| {
+                        if fits(b) {
+                            Placement::Fits
+                        } else {
+                            Placement::Tight
+                        }
+                    })
                     .collect()
             };
             let mut placements = vec![Placement::Fits; members.len()];
@@ -257,7 +277,11 @@ impl Document {
                 if moved[i].is_none() && recorded[i].is_some() {
                     m.dimension.text_shift = None;
                 }
-                m.shift = if moved[i].is_some() { recorded[i] } else { None };
+                m.shift = if moved[i].is_some() {
+                    recorded[i]
+                } else {
+                    None
+                };
             }
         }
         let mut entries: Vec<Vec<AnnotativeScale>> = vec![Vec::new(); members.len()];
@@ -276,8 +300,12 @@ impl Document {
                     point: None,
                     rotation: None,
                     offset: Some(theirs.offsets[i]),
-                    text_shift: shifting
-                        .then(|| shift_of(p).unwrap_or(TextShift { along: 0.0, across: 0.0 })),
+                    text_shift: shifting.then(|| {
+                        shift_of(p).unwrap_or(TextShift {
+                            along: 0.0,
+                            across: 0.0,
+                        })
+                    }),
                 });
             }
         }
@@ -285,7 +313,10 @@ impl Document {
             for (m, scales) in members.iter_mut().zip(entries) {
                 m.dimension.annotative = Some(Box::new(Annotative { at: own, scales }));
             }
-        } else if self.dimension_set(set.id).is_some_and(|before| !before.scales.is_empty()) {
+        } else if self
+            .dimension_set(set.id)
+            .is_some_and(|before| !before.scales.is_empty())
+        {
             // Its sheet scales gone, the representations it wrote go too.
             for m in members.iter_mut() {
                 m.dimension.annotative = None;

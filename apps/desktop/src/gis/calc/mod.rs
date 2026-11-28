@@ -275,7 +275,10 @@ impl App {
             "tool.stakeout" => {
                 self.calc_show(Window::Stakeout);
                 let points = self.document.as_ref().is_some_and(|doc| {
-                    self.selection.ids().iter().any(|&s| matches!(doc.model.get(s), Some(Entity::Point(_))))
+                    self.selection
+                        .ids()
+                        .iter()
+                        .any(|&s| matches!(doc.model.get(s), Some(Entity::Point(_))))
                 });
                 if points {
                     self.calc_from_selection();
@@ -322,7 +325,10 @@ impl App {
         if window == Window::Fit {
             // A CBS project's Oturt starts on a layer, never on every object (docs/adr/9330).
             let cbs = doc.model.settings().workspace == Some(kentos_commands::Workspace::Gis);
-            self.gis.calc.fit.sync(&doc.model, self.selection.len(), cbs);
+            self.gis
+                .calc
+                .fit
+                .sync(&doc.model, self.selection.len(), cbs);
         }
         if window == Window::RasterFit {
             self.gis
@@ -646,7 +652,11 @@ impl App {
         if let (Some(p), Some(doc)) = (p, &self.document) {
             // Vektör oturtma's base point keeps a shared name (its sets share them); every other field takes a name
             // only when one point carries it (UR2-016).
-            let name = if window == Window::Fit { read::name_at(&doc.model, p) } else { read::unique_name_at(&doc.model, p) };
+            let name = if window == Window::Fit {
+                read::name_at(&doc.model, p)
+            } else {
+                read::unique_name_at(&doc.model, p)
+            };
             let text = name.unwrap_or_else(|| format!("{},{}", p.x, p.y));
             if let Some(known) = self.calc_known_text(window, field) {
                 *known = text;
@@ -746,9 +756,18 @@ impl App {
         match answer {
             Ok(a) if a["status"] == "completed" => self.say(
                 Level::Success,
-                format!("Projenin kırılma katsayısı k = {} oldu (Proje ayarları › Ölçme).", kentos_interaction::fixed(k, 3)),
+                format!(
+                    "Projenin kırılma katsayısı k = {} oldu (Proje ayarları › Ölçme).",
+                    kentos_interaction::fixed(k, 3)
+                ),
             ),
-            Ok(a) => self.say(Level::Warn, a["error"]["message"].as_str().unwrap_or("Yazılamadı.").to_owned()),
+            Ok(a) => self.say(
+                Level::Warn,
+                a["error"]["message"]
+                    .as_str()
+                    .unwrap_or("Yazılamadı.")
+                    .to_owned(),
+            ),
             Err(why) => self.say(Level::Warn, format!("{why:?}")),
         }
     }

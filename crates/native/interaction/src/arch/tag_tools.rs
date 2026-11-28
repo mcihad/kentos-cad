@@ -26,8 +26,8 @@ use crate::log::Level;
 use crate::points;
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Area, CellGhost, Context, Cursor, Flow, OptionChoice, Pointer, Preview, Stroke, Tag, TextGhost, Tone,
-    Tool,
+    Area, CellGhost, Context, Cursor, Flow, OptionChoice, Pointer, Preview, Stroke, Tag, TextGhost,
+    Tone, Tool,
 };
 use crate::tool_settings::Setting;
 
@@ -229,7 +229,12 @@ impl Tool for TagTool {
             .option_with(
                 "Şablon",
                 "Ş",
-                if self.content.is_some() { "Özel" } else { "Türün" }.to_owned(),
+                if self.content.is_some() {
+                    "Özel"
+                } else {
+                    "Türün"
+                }
+                .to_owned(),
             )
             .option_with("Çerçeve", "B", shape.to_owned())
             .option_with(
@@ -513,7 +518,9 @@ impl TagAllTool {
                     .tags
                     .iter()
                     .chain(&plan.refreshed)
-                    .filter(|e| matches!(e, kentos_commands::Entity::Tag(t) if t.tag.text.is_empty()))
+                    .filter(
+                        |e| matches!(e, kentos_commands::Entity::Tag(t) if t.tag.text.is_empty()),
+                    )
                     .count();
                 if empty > 0 {
                     self.summary
@@ -1218,10 +1225,16 @@ impl ScheduleTool {
             Ok(p) => {
                 if let Entity::Table(t) = p.table {
                     if let Some(kentos_commands::TableSource::Schedule {
-                        of: ScheduleOf::Units, units, filter, by_level, ..
-                    }) = &t.source && units.iter().all(Vec::is_empty)
+                        of: ScheduleOf::Units,
+                        units,
+                        filter,
+                        by_level,
+                        ..
+                    }) = &t.source
+                        && units.iter().all(Vec::is_empty)
                     {
-                        self.empty_units = Some(cx.doc.units_schedule_empty_note(filter.as_ref(), *by_level));
+                        self.empty_units =
+                            Some(cx.doc.units_schedule_empty_note(filter.as_ref(), *by_level));
                     }
                     self.table = Some(*t);
                 }
@@ -1265,7 +1278,10 @@ impl ScheduleTool {
             .iter()
             .filter_map(|c| {
                 // The line of its words this place stands for (docs/adr/1030 §7).
-                let words = kentos_geometry_core::geom::table::cell_line(t.cells.get(c.row)?.get(c.col)?, c.line);
+                let words = kentos_geometry_core::geom::table::cell_line(
+                    t.cells.get(c.row)?.get(c.col)?,
+                    c.line,
+                );
                 (!words.is_empty()).then(|| CellGhost {
                     at: c.at,
                     text: words.to_owned(),
@@ -1295,7 +1311,10 @@ impl ScheduleTool {
                 String::new()
             };
             if let Some(note) = &self.empty_units {
-                cx.say(Level::Warn, format!("{} yerleştirildi. {note}", self.preset.label()));
+                cx.say(
+                    Level::Warn,
+                    format!("{} yerleştirildi. {note}", self.preset.label()),
+                );
                 return;
             }
             cx.say(
@@ -1341,9 +1360,16 @@ impl Tool for ScheduleTool {
     }
 
     fn settings(&self, _: &Format) -> Vec<Setting> {
-        let kinds: Vec<(&str, &str)> = SchedulePreset::ALL.iter().map(|p| (p.typed(), p.label())).collect();
+        let kinds: Vec<(&str, &str)> = SchedulePreset::ALL
+            .iter()
+            .map(|p| (p.typed(), p.label()))
+            .collect();
         vec![
-            Setting::choice("kind", "Tür", crate::tool_settings::choices(&kinds, self.preset.typed())),
+            Setting::choice(
+                "kind",
+                "Tür",
+                crate::tool_settings::choices(&kinds, self.preset.typed()),
+            ),
             Setting::choice(
                 "level",
                 "Kat",
@@ -1394,8 +1420,12 @@ impl Tool for ScheduleTool {
             return Vec::new();
         }
         vec![OptionChoice {
-            label: "Bina programını aç".into(), typed: "program".into(),
-            command: Some("arch.program"), icon: None, preview: None, checked: false,
+            label: "Bina programını aç".into(),
+            typed: "program".into(),
+            command: Some("arch.program"),
+            icon: None,
+            preview: None,
+            checked: false,
         }]
     }
 
@@ -1415,7 +1445,8 @@ impl Tool for ScheduleTool {
             prompt = Prompt::new(self.preset.label(), "uyarı içeren cetveli yerleştirin")
                 .option("Bölüm bağla", "B");
         }
-        prompt.option_with("Tür", "T", self.preset.label().to_owned())
+        prompt
+            .option_with("Tür", "T", self.preset.label().to_owned())
             .option_with("Grup", "G", on(self.group))
             .option_with("Toplam", "O", on(self.total))
             .option_with("Sırala", "S", on(self.sorted))
@@ -1467,8 +1498,10 @@ impl Tool for ScheduleTool {
 
     fn preview(&self, _format: &Format) -> Preview {
         let mut out = self.ghost.clone();
-        if let (Some(why), Some(at)) = (self.problem.as_ref().or(self.empty_units.as_ref()), self.hover)
-            && !why.is_empty()
+        if let (Some(why), Some(at)) = (
+            self.problem.as_ref().or(self.empty_units.as_ref()),
+            self.hover,
+        ) && !why.is_empty()
         {
             out.tag = Some(Tag {
                 at,

@@ -10,8 +10,8 @@
 //! every create command's.
 
 use kentos_commands::{
-    BlockDefinition, BlockId, CommandResult, CommandWarning, Entity, EntityBase, InsertEntity, MAX_NORTH_SIZE,
-    NORTH_BLOCK, NORTH_SIZE, NorthCreate, NorthCreated, NorthDirection, NorthPlan,
+    BlockDefinition, BlockId, CommandResult, CommandWarning, Entity, EntityBase, InsertEntity,
+    MAX_NORTH_SIZE, NORTH_BLOCK, NORTH_SIZE, NorthCreate, NorthCreated, NorthDirection, NorthPlan,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -37,7 +37,9 @@ struct Checked {
 /// system does not reach the point.
 pub fn true_north(doc: &Document, at: kentos_commands::Vec2) -> Option<f64> {
     let named = kentos_project::systems::own(doc.settings())?;
-    named.system?.true_north(kentos_geometry_core::Vec2::new(at.x, at.y))
+    named
+        .system?
+        .true_north(kentos_geometry_core::Vec2::new(at.x, at.y))
 }
 
 /// The model's north (docs/adr/8076 §6; EK-7 Tablo 7.8 `TrueNorth`): the angle, radians counter-clockwise from the
@@ -54,14 +56,27 @@ pub fn model_north(doc: &Document) -> Result<f64, String> {
         return Err("Çizimde duvar yok: binanın yeri bilinmiyor.".into());
     };
     let (mut lo, mut hi) = (first, first);
-    for p in doc.entities().filter_map(|e| match e {
-        Entity::Wall(w) => Some(w.wall.pts.iter()),
-        _ => None,
-    }).flatten() {
-        lo = kentos_commands::Vec2 { x: lo.x.min(p.x), y: lo.y.min(p.y) };
-        hi = kentos_commands::Vec2 { x: hi.x.max(p.x), y: hi.y.max(p.y) };
+    for p in doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Wall(w) => Some(w.wall.pts.iter()),
+            _ => None,
+        })
+        .flatten()
+    {
+        lo = kentos_commands::Vec2 {
+            x: lo.x.min(p.x),
+            y: lo.y.min(p.y),
+        };
+        hi = kentos_commands::Vec2 {
+            x: hi.x.max(p.x),
+            y: hi.y.max(p.y),
+        };
     }
-    let at = kentos_commands::Vec2 { x: (lo.x + hi.x) / 2.0, y: (lo.y + hi.y) / 2.0 };
+    let at = kentos_commands::Vec2 {
+        x: (lo.x + hi.x) / 2.0,
+        y: (lo.y + hi.y) / 2.0,
+    };
     if kentos_project::systems::own(doc.settings()).is_some_and(|n| n.system.is_some()) {
         return true_north(doc, at).ok_or_else(|| {
             "Projenin koordinat sistemi binanın yerine ulaşmıyor: coğrafi kuzey bulunamadı. Projenin koordinat \
@@ -73,7 +88,9 @@ pub fn model_north(doc: &Document) -> Result<f64, String> {
     let turns: Vec<f64> = doc
         .entities()
         .filter_map(|e| match e {
-            Entity::Insert(i) if doc.block(i.block).is_some_and(|b| b.name == NORTH_BLOCK) => Some(i.rotation),
+            Entity::Insert(i) if doc.block(i.block).is_some_and(|b| b.name == NORTH_BLOCK) => {
+                Some(i.rotation)
+            }
             _ => None,
         })
         .collect();
@@ -96,13 +113,27 @@ pub fn model_north(doc: &Document) -> Result<f64, String> {
     Ok(turn)
 }
 
-fn check(doc: &Document, input: &NorthCreate, fresh: impl FnOnce() -> BlockId) -> Result<Checked, Stop> {
+fn check(
+    doc: &Document,
+    input: &NorthCreate,
+    fresh: impl FnOnce() -> BlockId,
+) -> Result<Checked, Stop> {
     checks::point(input.at, "Kuzey okunun yerinin", "at")?;
     if let NorthDirection::Angle { angle } = input.north {
-        checks::finite(angle, "Kuzeyin açısı", "Açıyı radyan olarak sonlu bir sayıyla verin.", "north.angle")?;
+        checks::finite(
+            angle,
+            "Kuzeyin açısı",
+            "Açıyı radyan olarak sonlu bir sayıyla verin.",
+            "north.angle",
+        )?;
     }
     let size = input.size.unwrap_or(NORTH_SIZE);
-    checks::finite(size, "Kuzey okunun boyu", "Boyu kâğıt milimetresi olarak sonlu bir sayıyla verin.", "size")?;
+    checks::finite(
+        size,
+        "Kuzey okunun boyu",
+        "Boyu kâğıt milimetresi olarak sonlu bir sayıyla verin.",
+        "size",
+    )?;
     if !(size > 0.0 && size <= MAX_NORTH_SIZE) {
         return Err(Stop::failed(error(
             codes::INVALID_SCALE,

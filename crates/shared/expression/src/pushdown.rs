@@ -19,10 +19,10 @@
 //! number column: there the order and the window also keep text values.
 
 use crate::Expr;
-use kentos_geometry_core::jsmath::js_max;
 use crate::parser::{BinOp, Node};
 use crate::scalar;
 use crate::value::Value;
+use kentos_geometry_core::jsmath::js_max;
 
 /// The SQL a source speaks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -117,16 +117,31 @@ pub enum Sent {
     And(Box<Sent>, Box<Sent>),
     Or(Box<Sent>, Box<Sent>),
     /// A number column against a number: `op` is `<`, `<=`, `>` or `>=`.
-    Order { column: String, op: BinOp, number: f64 },
+    Order {
+        column: String,
+        op: BinOp,
+        number: f64,
+    },
     /// A number column between two numbers, both kept: an equality's window (wider than the language's tolerance) or
     /// `arasında`.
-    Between { column: String, low: f64, high: f64 },
+    Between {
+        column: String,
+        low: f64,
+        high: f64,
+    },
     /// A text column equal to a text (not empty, not a number).
-    Equals { column: String, text: String },
+    Equals {
+        column: String,
+        text: String,
+    },
     /// `içinde`: any of its parts (each an equality: a window or `Equals`).
     Any(Vec<Sent>),
     /// `boş` (`negated`: `boş değil`) on a number or text column: an empty text is empty too.
-    Empty { column: String, sort: ColumnSort, negated: bool },
+    Empty {
+        column: String,
+        sort: ColumnSort,
+        negated: bool,
+    },
 }
 
 impl Sent {
@@ -222,7 +237,9 @@ impl Builder<'_, '_> {
     fn node(&self, n: &Node) -> Option<(Sent, bool)> {
         match n {
             Node::Bin(BinOp::And, a, b) => match (self.node(a), self.node(b)) {
-                (Some((a, ea)), Some((b, eb))) => Some((Sent::And(Box::new(a), Box::new(b)), ea && eb)),
+                (Some((a, ea)), Some((b, eb))) => {
+                    Some((Sent::And(Box::new(a), Box::new(b)), ea && eb))
+                }
                 // What cannot be sent is left out: the rest keeps more, not fewer.
                 (Some((s, _)), None) | (None, Some((s, _))) => Some((s, false)),
                 (None, None) => None,
@@ -266,7 +283,14 @@ impl Builder<'_, '_> {
             }
             Node::IsNull(x, negated) => {
                 let (column, sort) = self.column(x)?;
-                (sort != ColumnSort::Other).then_some((Sent::Empty { column, sort, negated: *negated }, true))
+                (sort != ColumnSort::Other).then_some((
+                    Sent::Empty {
+                        column,
+                        sort,
+                        negated: *negated,
+                    },
+                    true,
+                ))
             }
             _ => None,
         }
@@ -281,11 +305,31 @@ fn compare((column, sort): (String, ColumnSort), lit: &Value, op: BinOp) -> Opti
             if op == BinOp::Eq {
                 // Wider than the language's 1e-9 · max(1, |a|, |b|): what it calls equal is inside.
                 let d = 1e-8 * js_max(x.abs(), 1.0);
-                return Some((Sent::Between { column, low: x - d, high: x + d }, false));
+                return Some((
+                    Sent::Between {
+                        column,
+                        low: x - d,
+                        high: x + d,
+                    },
+                    false,
+                ));
             }
-            Some((Sent::Order { column, op, number: x }, true))
+            Some((
+                Sent::Order {
+                    column,
+                    op,
+                    number: x,
+                },
+                true,
+            ))
         }
-        ColumnSort::Text if op == BinOp::Eq => Some((Sent::Equals { column, text: text_of(lit)? }, true)),
+        ColumnSort::Text if op == BinOp::Eq => Some((
+            Sent::Equals {
+                column,
+                text: text_of(lit)?,
+            },
+            true,
+        )),
         _ => None,
     }
 }
@@ -344,7 +388,11 @@ impl Writer {
                 let parts: Vec<String> = parts.iter().map(|p| self.sql(p)).collect();
                 format!("({})", parts.join(" OR "))
             }
-            Sent::Empty { column, sort, negated } => {
+            Sent::Empty {
+                column,
+                sort,
+                negated,
+            } => {
                 let typed_number = self.dialect == Dialect::Postgres && *sort == ColumnSort::Number;
                 match (typed_number, negated) {
                     (true, false) => format!("{column} IS NULL"),
@@ -419,7 +467,10 @@ mod tests {
         assert_eq!(sql("ada = '101'", Dialect::Sqlite), Pushed::default());
         assert_eq!(sql("tarih boş", Dialect::Sqlite), Pushed::default());
         assert_eq!(sql("alan <> 5", Dialect::Sqlite), Pushed::default());
-        assert_eq!(sql("alan > 9007199254740993", Dialect::Sqlite), Pushed::default());
+        assert_eq!(
+            sql("alan > 9007199254740993", Dialect::Sqlite),
+            Pushed::default()
+        );
     }
 
     #[test]
@@ -435,7 +486,10 @@ mod tests {
 
     #[test]
     fn in_between_and_empty() {
-        let p = sql("mahalle içinde ('A', 'B') and no arasında 1 ve 9", Dialect::Postgres);
+        let p = sql(
+            "mahalle içinde ('A', 'B') and no arasında 1 ve 9",
+            Dialect::Postgres,
+        );
         assert_eq!(
             p.sql,
             "((\"mahalle\" = $1 OR \"mahalle\" = $2) AND \"no\" BETWEEN $3::float8 AND $4::float8)"

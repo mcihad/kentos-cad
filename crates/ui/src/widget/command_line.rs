@@ -2510,7 +2510,6 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Suggestions<
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;

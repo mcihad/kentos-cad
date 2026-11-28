@@ -15,7 +15,14 @@ use kentos_road::section::template::{Component, Kind, Side};
 use crate::checks::Stop;
 
 /// The rows, top down, as KGM's 2024 sheets name them.
-pub const ROWS: [&str; 6] = ["SOL DOL.ŞEVİ", "SOL YAR.ŞEVİ", "PLATFORM GEN.", "ÜST YAPI KAL.", "SAĞ DOL.ŞEVİ", "SAĞ YAR.ŞEVİ"];
+pub const ROWS: [&str; 6] = [
+    "SOL DOL.ŞEVİ",
+    "SOL YAR.ŞEVİ",
+    "PLATFORM GEN.",
+    "ÜST YAPI KAL.",
+    "SAĞ DOL.ŞEVİ",
+    "SAĞ YAR.ŞEVİ",
+];
 
 /// A run of one value along the stations.
 #[derive(Clone, Debug, PartialEq)]
@@ -47,22 +54,43 @@ fn width(side: &Side) -> f64 {
 }
 
 /// The six rows' cells over stations `s0`–`s1` of a corridor built now.
-pub(crate) fn rows(doc: &Document, def: &CorridorDef, s0: f64, s1: f64) -> Result<[Vec<Cell>; 6], Stop> {
+pub(crate) fn rows(
+    doc: &Document,
+    def: &CorridorDef,
+    s0: f64,
+    s1: f64,
+) -> Result<[Vec<Cell>; 6], Stop> {
     let made = crate::road_corridors::make(doc, def, false)?;
     let thickness = |ri: usize| {
         let id = &def.regions.get(ri)?.template;
         let t = doc.road_templates().iter().find(|t| &t.id == id)?;
-        t.pavement.as_ref().map(|p| p.layers.iter().map(|l| l.thickness).sum::<f64>())
+        t.pavement
+            .as_ref()
+            .map(|p| p.layers.iter().map(|l| l.thickness).sum::<f64>())
     };
     // Each cross's six values, in station order.
     let mut at: Vec<(f64, [String; 6])> = Vec::new();
     for (ri, region) in made.regions.iter().enumerate() {
         for cross in &region.crosses {
             let s = cross.line.station;
-            let Some(section) = &cross.section else { continue };
+            let Some(section) = &cross.section else {
+                continue;
+            };
             let t = made.template_at(ri, s);
-            let fill = |kind: Kind, side: &Side| if kind == Kind::Fill { slope_text(side.fill) } else { "-".to_owned() };
-            let cut = |kind: Kind, side: &Side| if kind == Kind::Cut { slope_text(side.cut) } else { "-".to_owned() };
+            let fill = |kind: Kind, side: &Side| {
+                if kind == Kind::Fill {
+                    slope_text(side.fill)
+                } else {
+                    "-".to_owned()
+                }
+            };
+            let cut = |kind: Kind, side: &Side| {
+                if kind == Kind::Cut {
+                    slope_text(side.cut)
+                } else {
+                    "-".to_owned()
+                }
+            };
             let pavement = thickness(ri).map_or_else(|| "-".to_owned(), |v| format!("{v:.2} m."));
             at.push((
                 s,
@@ -81,10 +109,18 @@ pub(crate) fn rows(doc: &Document, def: &CorridorDef, s0: f64, s1: f64) -> Resul
     let mut out: [Vec<Cell>; 6] = Default::default();
     // The crosses in the view, and the one just before it (its values hold up to the middle toward the next).
     let first = at.iter().rposition(|(s, _)| *s <= s0 + 1e-9).unwrap_or(0);
-    let shown: Vec<&(f64, [String; 6])> = at.iter().skip(first).take_while(|(s, _)| *s < s1 + 1e-9).collect();
+    let shown: Vec<&(f64, [String; 6])> = at
+        .iter()
+        .skip(first)
+        .take_while(|(s, _)| *s < s1 + 1e-9)
+        .collect();
     for (k, row) in out.iter_mut().enumerate() {
         for (i, (s, v)) in shown.iter().enumerate() {
-            let from = if i == 0 { s0 } else { 0.5 * (shown[i - 1].0 + s) };
+            let from = if i == 0 {
+                s0
+            } else {
+                0.5 * (shown[i - 1].0 + s)
+            };
             let from = from.max(s0);
             match row.last_mut() {
                 Some(c) if c.text == v[k] => {}
@@ -92,9 +128,17 @@ pub(crate) fn rows(doc: &Document, def: &CorridorDef, s0: f64, s1: f64) -> Resul
                 Some(c) if from <= c.from + 1e-9 => c.text = v[k].clone(),
                 Some(c) => {
                     c.to = from;
-                    row.push(Cell { from, to: s1, text: v[k].clone() });
+                    row.push(Cell {
+                        from,
+                        to: s1,
+                        text: v[k].clone(),
+                    });
                 }
-                None => row.push(Cell { from: s0, to: s1, text: v[k].clone() }),
+                None => row.push(Cell {
+                    from: s0,
+                    to: s1,
+                    text: v[k].clone(),
+                }),
             }
         }
         if let Some(c) = row.last_mut() {
@@ -108,13 +152,24 @@ pub(crate) fn rows(doc: &Document, def: &CorridorDef, s0: f64, s1: f64) -> Resul
                 if let Some(c) = row.first_mut() {
                     c.from = lo;
                 }
-                row.insert(0, Cell { from: s0, to: lo, text: String::new() });
+                row.insert(
+                    0,
+                    Cell {
+                        from: s0,
+                        to: lo,
+                        text: String::new(),
+                    },
+                );
             }
             if hi < s1 - 1e-9 {
                 if let Some(c) = row.last_mut() {
                     c.to = hi;
                 }
-                row.push(Cell { from: hi, to: s1, text: String::new() });
+                row.push(Cell {
+                    from: hi,
+                    to: s1,
+                    text: String::new(),
+                });
             }
         }
     }
@@ -129,23 +184,60 @@ mod tests {
     /// corridor cases' drawing): every cell's words the same, its ends within a micrometre.
     #[test]
     fn rows_are_the_references() {
-        let all: serde_json::Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/road/v1/corridor-bands.json")).expect("json");
+        let all: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/road/v1/corridor-bands.json"
+        ))
+        .expect("json");
         for case in all["cases"].as_array().expect("cases") {
-            let setup = if case["setup"].is_null() { &all["setup"] } else { &case["setup"] };
-            let doc = Document::from_snapshot_v2(serde_json::from_value(setup.clone()).expect("setup")).expect("opens");
+            let setup = if case["setup"].is_null() {
+                &all["setup"]
+            } else {
+                &case["setup"]
+            };
+            let doc =
+                Document::from_snapshot_v2(serde_json::from_value(setup.clone()).expect("setup"))
+                    .expect("opens");
             let name = case["corridor"].as_str().unwrap();
-            let def = doc.road_corridors().iter().find(|c| c.id == name || c.name == name).expect("corridor").clone();
-            let profile = doc.road_profiles().iter().find(|p| p.id == case["profile"].as_str().unwrap()).expect("profile");
-            let (s0, s1) = (profile.pvis[0].station, profile.pvis.last().unwrap().station);
+            let def = doc
+                .road_corridors()
+                .iter()
+                .find(|c| c.id == name || c.name == name)
+                .expect("corridor")
+                .clone();
+            let profile = doc
+                .road_profiles()
+                .iter()
+                .find(|p| p.id == case["profile"].as_str().unwrap())
+                .expect("profile");
+            let (s0, s1) = (
+                profile.pvis[0].station,
+                profile.pvis.last().unwrap().station,
+            );
             let got = rows(&doc, &def, s0, s1).unwrap_or_else(|_| panic!("rows of {name}"));
             for (k, (cells, want)) in got.iter().zip(case["rows"].as_array().unwrap()).enumerate() {
                 let want = want.as_array().unwrap();
-                assert_eq!(cells.len(), want.len(), "{} · {}: {cells:?}", case["name"], ROWS[k]);
+                assert_eq!(
+                    cells.len(),
+                    want.len(),
+                    "{} · {}: {cells:?}",
+                    case["name"],
+                    ROWS[k]
+                );
                 for (c, w) in cells.iter().zip(want) {
-                    assert_eq!(c.text, w["text"].as_str().unwrap(), "{} · {}", case["name"], ROWS[k]);
+                    assert_eq!(
+                        c.text,
+                        w["text"].as_str().unwrap(),
+                        "{} · {}",
+                        case["name"],
+                        ROWS[k]
+                    );
                     let (f, t) = (w["from"].as_f64().unwrap(), w["to"].as_f64().unwrap());
-                    assert!((c.from - f).abs() < 1e-6 && (c.to - t).abs() < 1e-6, "{} · {}: {c:?} vs {w}", case["name"], ROWS[k]);
+                    assert!(
+                        (c.from - f).abs() < 1e-6 && (c.to - t).abs() < 1e-6,
+                        "{} · {}: {c:?} vs {w}",
+                        case["name"],
+                        ROWS[k]
+                    );
                 }
             }
         }

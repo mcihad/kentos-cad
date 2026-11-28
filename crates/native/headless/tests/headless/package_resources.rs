@@ -23,7 +23,9 @@ fn placed(v: &Value) -> Value {
             None => v.clone(),
         },
         Value::Array(list) => Value::Array(list.iter().map(placed).collect()),
-        Value::Object(map) => Value::Object(map.iter().map(|(k, x)| (k.clone(), placed(x))).collect()),
+        Value::Object(map) => {
+            Value::Object(map.iter().map(|(k, x)| (k.clone(), placed(x))).collect())
+        }
         other => other.clone(),
     }
 }
@@ -51,14 +53,19 @@ fn opened(setup: &Value, work: &Path) -> Session {
     let typed: kentos_commands::DocumentSnapshotV2 =
         serde_json::from_value(placed(setup)).expect("a snapshot");
     let project = work.join("proje.kcad");
-    std::fs::write(&project, kentos_kcad::encode_verified(&typed).expect("encoded")).expect("written");
+    std::fs::write(
+        &project,
+        kentos_kcad::encode_verified(&typed).expect("encoded"),
+    )
+    .expect("written");
     Session::open(&project).expect("opens")
 }
 
 #[test]
 fn every_package_resource_case_is_reported_as_the_reference_says() {
     let fixture: Value = serde_json::from_str(
-        &std::fs::read_to_string(fixtures().join("commands/v1/file.package.resources.json")).expect("the cases"),
+        &std::fs::read_to_string(fixtures().join("commands/v1/file.package.resources.json"))
+            .expect("the cases"),
     )
     .expect("JSON");
     assert_eq!(fixture["command"], "file.package");
@@ -84,11 +91,17 @@ fn every_package_resource_case_is_reported_as_the_reference_says() {
         let got = answer["output"]["resources"].clone();
         let got = if got.is_null() { json!([]) } else { got };
         if got != want["resources"] {
-            problems.push(format!("{name}:\n  want {}\n  got  {got}", want["resources"]));
+            problems.push(format!(
+                "{name}:\n  want {}\n  got  {got}",
+                want["resources"]
+            ));
         }
         let warned = told(&answer["warnings"]);
         if warned != want["warnings"] {
-            problems.push(format!("{name}: warnings\n  want {}\n  got  {warned}", want["warnings"]));
+            problems.push(format!(
+                "{name}: warnings\n  want {}\n  got  {warned}",
+                want["warnings"]
+            ));
         }
         if target.exists() {
             problems.push(format!("{name}: the plan wrote the package"));

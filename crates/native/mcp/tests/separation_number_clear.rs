@@ -11,12 +11,22 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 }
 
 fn case(cases: &Value, starts: &str) -> Value {
-    cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(starts))).unwrap().clone()
+    cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(starts)))
+        .unwrap()
+        .clone()
 }
 
 fn opened(server: &mut Server, setup: &Value, tag: &str) -> Value {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup.clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-separation-clear-{tag}-{}.kcad", std::process::id()));
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup.clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-separation-clear-{tag}-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let opened = call(server, "drawing.open", json!({"path": path}));
     let _ = std::fs::remove_file(&path);
@@ -26,7 +36,10 @@ fn opened(server: &mut Server, setup: &Value, tag: &str) -> Value {
 
 #[test]
 fn the_crowded_numbers_over_mcp_are_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.readjustment.sheets.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.readjustment.sheets.json"
+    ))
+    .unwrap();
     let case = case(&cases, "kılavuzlu numara: her yer bir çizgiye değiyorsa");
     let mut server = Server::new();
     let drawing = opened(&mut server, &case["setup"], "sheets");
@@ -38,10 +51,17 @@ fn the_crowded_numbers_over_mcp_are_the_case_s() {
     let got = &r["structuredContent"]["output"]["sheets"][0]["labels"];
     let want = &step["result"]["output"]["sheets"][0]["labels"];
     for (g, w) in got.as_array().unwrap().iter().zip(want.as_array().unwrap()) {
-        assert_eq!((&g["clear"], &g["clashes"]), (&w["clear"], &w["clashes"]), "{g}");
+        assert_eq!(
+            (&g["clear"], &g["clashes"]),
+            (&w["clear"], &w["clashes"]),
+            "{g}"
+        );
         assert_eq!(g["clear"], false);
         for k in 0..2 {
-            assert!((g["at"][k].as_f64().unwrap() - w["at"][k].as_f64().unwrap()).abs() < 1e-6, "{g}");
+            assert!(
+                (g["at"][k].as_f64().unwrap() - w["at"][k].as_f64().unwrap()).abs() < 1e-6,
+                "{g}"
+            );
         }
     }
     let warned: Vec<&str> = r["structuredContent"]["warnings"]
@@ -55,8 +75,14 @@ fn the_crowded_numbers_over_mcp_are_the_case_s() {
 
 #[test]
 fn the_distribution_by_value_over_mcp_is_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.readjustment.distribute.json")).unwrap();
-    let case = case(&cases, "değer esaslı: dağıtım kütlesi parsellere değerleri oranında");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.readjustment.distribute.json"
+    ))
+    .unwrap();
+    let case = case(
+        &cases,
+        "değer esaslı: dağıtım kütlesi parsellere değerleri oranında",
+    );
     let mut server = Server::new();
     let drawing = opened(&mut server, &cases["setup"], "distribute");
     let step = &case["steps"][0];
@@ -66,7 +92,12 @@ fn the_distribution_by_value_over_mcp_is_the_case_s() {
     assert_eq!(r["isError"], false, "{r}");
     let (got, want) = (&r["structuredContent"]["output"], &step["result"]["output"]);
     assert_eq!(got["basis"], "value");
-    for (g, w) in got["parcels"].as_array().unwrap().iter().zip(want["parcels"].as_array().unwrap()) {
+    for (g, w) in got["parcels"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .zip(want["parcels"].as_array().unwrap())
+    {
         for key in ["net", "deduction", "value", "valueShare"] {
             assert_eq!(g[key], w[key], "{key}: {g}");
         }
@@ -76,5 +107,8 @@ fn the_distribution_by_value_over_mcp_is_the_case_s() {
     args["drawing"] = drawing;
     args["rules"]["valueSource"] = json!(" ");
     let r = call(&mut server, "cad.readjustment.distribute", args);
-    assert_eq!(r["structuredContent"]["error"]["path"], "rules.valueSource", "{r}");
+    assert_eq!(
+        r["structuredContent"]["error"]["path"], "rules.valueSource",
+        "{r}"
+    );
 }

@@ -80,10 +80,17 @@ impl Surface {
             }
             // (t along the segment, a height from an edge if it is a crossing)
             let mut at: Vec<(f64, Option<f64>)> = vec![(0.0, None), (1.0, None)];
-            let (lo, hi) = ([p[0].min(q[0]), p[1].min(q[1])], [p[0].max(q[0]), p[1].max(q[1])]);
+            let (lo, hi) = (
+                [p[0].min(q[0]), p[1].min(q[1])],
+                [p[0].max(q[0]), p[1].max(q[1])],
+            );
             for e in &edges {
                 let (a, b) = (self.vertices[e[0] as usize], self.vertices[e[1] as usize]);
-                if a[0].max(b[0]) < lo[0] || a[0].min(b[0]) > hi[0] || a[1].max(b[1]) < lo[1] || a[1].min(b[1]) > hi[1] {
+                if a[0].max(b[0]) < lo[0]
+                    || a[0].min(b[0]) > hi[0]
+                    || a[1].max(b[1]) < lo[1]
+                    || a[1].min(b[1]) > hi[1]
+                {
                     continue;
                 }
                 let r = [b[0] - a[0], b[1] - a[1]];

@@ -17,7 +17,11 @@ const CONTENTS: [(&str, &str, &str); 11] = [
         "{number}\n{name}\nNet: {netArea}\nDöşeme: {floorElevation}\nTavan: {ceilingElevation}",
     ),
     // The building program (docs/adr/0773): the space's group, its design target and how far it is out.
-    ("program", "Bölüm ve hedef", "{number} · {unit}\n{area}\nHedef: {target}\nFark: {targetDiff}"),
+    (
+        "program",
+        "Bölüm ve hedef",
+        "{number} · {unit}\n{area}\nHedef: {target}\nFark: {targetDiff}",
+    ),
     // The shares (docs/adr/0784): the space's unit's share of the common areas and its gross.
     ("share", "Bölüm payı", "{unit}\nPay: {share}\nBrüt: {gross}"),
     ("floor", "Döşeme kotu", "{floorElevation}"),
@@ -33,7 +37,11 @@ const CONTENTS: [(&str, &str, &str); 11] = [
 
 pub(super) fn content_label(content: Option<&str>, bulk: bool) -> &'static str {
     if content.is_none() {
-        return if bulk { "Mevcut ya da türün" } else { "Türe göre" };
+        return if bulk {
+            "Mevcut ya da türün"
+        } else {
+            "Türe göre"
+        };
     }
     CONTENTS
         .iter()
@@ -48,7 +56,14 @@ pub(super) fn content_choices(content: Option<&str>, bulk: bool) -> Vec<OptionCh
             .find(|(_, _, value)| *value == text)
             .map_or("custom", |(id, _, _)| *id)
     });
-    let mut items = vec![("default", if bulk { "Mevcut ya da türün" } else { "Türe göre" })];
+    let mut items = vec![(
+        "default",
+        if bulk {
+            "Mevcut ya da türün"
+        } else {
+            "Türe göre"
+        },
+    )];
     items.extend(CONTENTS.iter().map(|(id, label, _)| (*id, *label)));
     if selected == "custom" {
         items.push(("custom", "Özel şablonu koru"));

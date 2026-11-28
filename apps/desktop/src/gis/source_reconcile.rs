@@ -337,8 +337,14 @@ impl App {
     /// Each conflict's row title as the window shows it (GIS-047), for the window's tests.
     #[cfg(test)]
     pub(crate) fn reconcile_titles(&self) -> Vec<String> {
-        let Some(w) = &self.gis.reconcile else { return Vec::new() };
-        w.plan.conflicts.iter().map(|c| self.reconcile_name(&w.layer, c)).collect()
+        let Some(w) = &self.gis.reconcile else {
+            return Vec::new();
+        };
+        w.plan
+            .conflicts
+            .iter()
+            .map(|c| self.reconcile_name(&w.layer, c))
+            .collect()
     }
 
     /// How a conflict's object is named in its row: the link's key and its value first (GIS-047), then its first
@@ -371,16 +377,22 @@ impl App {
             .and_then(|b| b.key.clone());
         let mut named: Vec<String> = match attrs {
             Some(a) => {
-                let keyed = key
-                    .as_ref()
-                    .and_then(|k| a.get(k).filter(|v| !v.is_empty()).map(|v| format!("{k} {v}")));
+                let keyed = key.as_ref().and_then(|k| {
+                    a.get(k)
+                        .filter(|v| !v.is_empty())
+                        .map(|v| format!("{k} {v}"))
+                });
                 keyed
                     .into_iter()
                     .chain(
                         fields
                             .iter()
                             .filter(|f| Some(*f) != key.as_ref())
-                            .filter_map(|f| a.get(f).filter(|v| !v.is_empty()).map(|v| format!("{f} {v}")))
+                            .filter_map(|f| {
+                                a.get(f)
+                                    .filter(|v| !v.is_empty())
+                                    .map(|v| format!("{f} {v}"))
+                            })
                             .take(2),
                     )
                     .collect()
@@ -397,7 +409,12 @@ impl App {
             named.push(format!("kimlik {short}"));
         }
         // Its layer, as the drawing names it (several may be reconciled together).
-        let layer_name = doc.model.layers().get(layer).map(|n| n.name.clone()).unwrap_or_default();
+        let layer_name = doc
+            .model
+            .layers()
+            .get(layer)
+            .map(|n| n.name.clone())
+            .unwrap_or_default();
         if layer_name.is_empty() {
             named.join(" · ")
         } else {

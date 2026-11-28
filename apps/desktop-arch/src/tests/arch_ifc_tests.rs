@@ -22,7 +22,9 @@ fn app() -> App {
 fn the_building_goes_out_as_ifc_and_the_message_says_what_it_holds() {
     let mut app = app();
     let out = std::env::temp_dir().join(format!("kentos-desktop-bina-{}.ifc", std::process::id()));
-    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExport(Some(out.clone()))));
+    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExport(Some(
+        out.clone(),
+    ))));
     let text = std::fs::read_to_string(&out).expect("written");
     assert!(text.starts_with("ISO-10303-21;") && text.contains("FILE_SCHEMA(('IFC4X3_ADD2'));"));
     assert_eq!(text.matches("=IFCWALL(").count(), 16);
@@ -48,7 +50,9 @@ fn a_file_name_without_its_extension_gets_ifc() {
         "kentos-desktop-bina-uzantisiz-{}",
         std::process::id()
     ));
-    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExport(Some(bare.clone()))));
+    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExport(Some(
+        bare.clone(),
+    ))));
     let written = bare.with_extension("ifc");
     assert!(written.exists(), "{} written", written.display());
     let _ = std::fs::remove_file(written);
@@ -59,17 +63,31 @@ fn a_file_name_without_its_extension_gets_ifc() {
 #[test]
 fn the_cut_bodies_go_out_as_a_reference_view() {
     let mut app = app();
-    let out = std::env::temp_dir().join(format!("kentos-desktop-bina-kesik-{}.ifc", std::process::id()));
-    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExportCut(Some(out.clone()))));
+    let out = std::env::temp_dir().join(format!(
+        "kentos-desktop-bina-kesik-{}.ifc",
+        std::process::id()
+    ));
+    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExportCut(
+        Some(out.clone()),
+    )));
     let text = std::fs::read_to_string(&out).expect("written");
     assert!(text.contains("ViewDefinition [ReferenceView]"));
     assert_eq!(text.matches("=IFCWALL(").count(), 16);
     // 14 through the walls and the 1. kat slab's hole over the stair (docs/adr/8071 §5).
     assert_eq!(text.matches("=IFCOPENINGELEMENT(").count(), 15);
-    assert_eq!(text.matches(",'Reference','SweptSolid',").count(), 15, "each opening a 'Reference' shape");
+    assert_eq!(
+        text.matches(",'Reference','SweptSolid',").count(),
+        15,
+        "each opening a 'Reference' shape"
+    );
     let said = app.log.last().expect("said");
     assert_eq!(said.level, Level::Success);
-    assert!(said.text.starts_with("IFC 4.3 yazıldı (gövdeler açıklıkları kesilmiş): 2 kat, 16 duvar"), "{}", said.text);
+    assert!(
+        said.text
+            .starts_with("IFC 4.3 yazıldı (gövdeler açıklıkları kesilmiş): 2 kat, 16 duvar"),
+        "{}",
+        said.text
+    );
     let _ = std::fs::remove_file(out);
 }
 
@@ -91,7 +109,9 @@ fn two_blocks_go_out_as_two_files() {
     let dir = std::env::temp_dir().join(format!("kentos-desktop-bloklar-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
     let first = dir.join("a.ifc");
-    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExport(Some(first.clone()))));
+    let _ = app.update(Message::from(crate::arch::Event::IfcBuildingExport(Some(
+        first.clone(),
+    ))));
     let a = std::fs::read_to_string(&first).expect("A written");
     let doc = &app.document.as_ref().expect("a drawing").model;
     let second = dir.join(kentos_native_application::arch_ifc::file_name_of(doc, "b"));
@@ -99,9 +119,18 @@ fn two_blocks_go_out_as_two_files() {
     assert_eq!(a.matches("=IFCBUILDINGSTOREY(").count(), 1);
     assert_eq!(b.matches("=IFCBUILDINGSTOREY(").count(), 1);
     assert!(a.contains("'MM-BNA-A_Blok'") && b.contains("'MM-BNA-B_Blok'"));
-    assert!(second.display().to_string().contains("B1"), "{}", second.display());
+    assert!(
+        second.display().to_string().contains("B1"),
+        "{}",
+        second.display()
+    );
     let said = app.log.last().expect("said");
     assert_eq!(said.level, Level::Success);
-    assert!(said.text.starts_with("IFC 4.3, 2 bina ayrı dosyalara yazıldı: A Blok: 1 kat"), "{}", said.text);
+    assert!(
+        said.text
+            .starts_with("IFC 4.3, 2 bina ayrı dosyalara yazıldı: A Blok: 1 kat"),
+        "{}",
+        said.text
+    );
     let _ = std::fs::remove_dir_all(dir);
 }

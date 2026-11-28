@@ -535,9 +535,23 @@ fn three_points_on_a_line_keep_the_first_two() {
     b.click(48.0, 40.0);
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert_eq!(b.doc.entities().count(), count, "nothing written");
-    assert!(b.session.prompt().text().contains("üçüncü noktayı"), "{}", b.session.prompt().text());
+    assert!(
+        b.session.prompt().text().contains("üçüncü noktayı"),
+        "{}",
+        b.session.prompt().text()
+    );
     b.click(44.0, 44.0);
-    assert_eq!(b.doc.entities().count(), count + 1, "the circle through the first two and the new third");
-    let Entity::Circle(c) = b.newest() else { panic!("a circle: {:?}", b.newest()) };
-    assert!((c.r - 8f64.sqrt()).abs() < 1e-9, "through (40,40), (44,40), (44,44): {}", c.r);
+    assert_eq!(
+        b.doc.entities().count(),
+        count + 1,
+        "the circle through the first two and the new third"
+    );
+    let Entity::Circle(c) = b.newest() else {
+        panic!("a circle: {:?}", b.newest())
+    };
+    assert!(
+        (c.r - 8f64.sqrt()).abs() < 1e-9,
+        "through (40,40), (44,40), (44,44): {}",
+        c.r
+    );
 }

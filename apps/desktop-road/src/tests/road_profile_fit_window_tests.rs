@@ -1,8 +1,8 @@
 //! Çizimden boykesit (road_profile_fit_window.rs, plan/road.md Y10.6b): the window reads the profile as the view is
 //! typed, makes it as one undo step; and its pictures.
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use kentos_domain::Slot;
 
 use crate::app::{App, Message};
@@ -16,9 +16,12 @@ const SAG: Slot = Slot(124);
 /// A road project with `road.profiles.fit`'s drawing: alignments, a profile and the lines drawn in a profile view.
 fn app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.profiles.fit.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.profiles.fit.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -50,7 +53,8 @@ fn the_window_makes_the_profile_as_one_step() {
         Some(crate::road::dialog(road::RoadDialogKind::RoadProfileFit))
     );
     let why = app
-        .modules.road()
+        .modules
+        .road()
         .road_profile_fit_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -58,7 +62,12 @@ fn the_window_makes_the_profile_as_one_step() {
     assert!(why.contains("kıyas kotu"), "{why}");
     view(&mut app);
     send(&mut app, W::Field(4, "60".into()));
-    let w = app.modules.road().road_profile_fit_window.as_ref().expect("open");
+    let w = app
+        .modules
+        .road()
+        .road_profile_fit_window
+        .as_ref()
+        .expect("open");
     let fitted = w
         .preview
         .fitted
@@ -72,7 +81,8 @@ fn the_window_makes_the_profile_as_one_step() {
     assert_eq!(fitted.curves, 2);
     send(&mut app, W::Field(4, "400".into()));
     let why = app
-        .modules.road()
+        .modules
+        .road()
         .road_profile_fit_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -128,7 +138,9 @@ fn screens() {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -137,11 +149,18 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("yol-y10-cizimden-boykesit-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
-        for (slot, file, length, tolerance) in [(GRADES, "egim", "60", ""), (CREST, "tepe", "", "0.05"), (SAG, "cukur", "", "")] {
+        for (slot, file, length, tolerance) in [
+            (GRADES, "egim", "60", ""),
+            (CREST, "tepe", "", "0.05"),
+            (SAG, "cukur", "", ""),
+        ] {
             app.selection.set([slot]);
             let _ = app.update(Message::Run("profile.fromLine"));
             view(&mut app);

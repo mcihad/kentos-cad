@@ -33,7 +33,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use kentos_commands::{
-    BoundaryProblem, CommandResult, Entity, ParcelBoundary, ParcelCorner, ParcelInGraph, ParcelsBoundaries, ParcelsBounded,
+    BoundaryProblem, CommandResult, Entity, ParcelBoundary, ParcelCorner, ParcelInGraph,
+    ParcelsBoundaries, ParcelsBounded,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::entity::{Shape, entity_area};
@@ -70,11 +71,24 @@ struct RingOf {
 fn rings_of(s: &Shape) -> Vec<RingOf> {
     let ring = |pts: &[Vec2], bulges: &Option<Vec<f64>>, hole: bool| RingOf {
         pts: pts.to_vec(),
-        bulges: (0..pts.len()).map(|i| bulges.as_ref().and_then(|b| b.get(i).copied()).unwrap_or(0.0)).collect(),
+        bulges: (0..pts.len())
+            .map(|i| {
+                bulges
+                    .as_ref()
+                    .and_then(|b| b.get(i).copied())
+                    .unwrap_or(0.0)
+            })
+            .collect(),
         hole,
     };
     let mut out = Vec::new();
-    if let Shape::Polygon { pts, bulges, holes, parts } = s {
+    if let Shape::Polygon {
+        pts,
+        bulges,
+        holes,
+        parts,
+    } = s
+    {
         out.push(ring(pts, bulges, false));
         for h in holes.iter().flatten() {
             out.push(ring(&h.pts, &h.bulges, true));
@@ -91,7 +105,13 @@ fn rings_of(s: &Shape) -> Vec<RingOf> {
 
 /// A place's key: its coordinates' bits (−0 as 0).
 fn key(p: Vec2) -> (u64, u64) {
-    let bits = |v: f64| if v == 0.0 { 0.0f64.to_bits() } else { v.to_bits() };
+    let bits = |v: f64| {
+        if v == 0.0 {
+            0.0f64.to_bits()
+        } else {
+            v.to_bits()
+        }
+    };
     (bits(p.x), bits(p.y))
 }
 
@@ -108,7 +128,10 @@ fn length(a: Vec2, b: Vec2, bulge: f64) -> f64 {
 /// An edge's middle on its curve (a bulge bows right of the way from `a` to `b` when positive).
 fn middle(a: Vec2, b: Vec2, bulge: f64) -> [f64; 2] {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
-    [(a.x + b.x) / 2.0 + dy * bulge / 2.0, (a.y + b.y) / 2.0 - dx * bulge / 2.0]
+    [
+        (a.x + b.x) / 2.0 + dy * bulge / 2.0,
+        (a.y + b.y) / 2.0 - dx * bulge / 2.0,
+    ]
 }
 
 /// The area between a chord `c` long and its arc with `bulge`, signed as the bulge (0 for a straight edge).
@@ -127,7 +150,10 @@ fn circle(a: Vec2, b: Vec2, bulge: f64) -> (Vec2, f64) {
     let (ux, uy) = (b.x - a.x, b.y - a.y);
     let k = (1.0 - bulge * bulge) / (4.0 * bulge);
     let centre = Vec2::new(ux / 2.0 - uy * k, uy / 2.0 + ux * k);
-    (centre, ux.hypot(uy) * (1.0 + bulge * bulge) / (4.0 * bulge.abs()))
+    (
+        centre,
+        ux.hypot(uy) * (1.0 + bulge * bulge) / (4.0 * bulge.abs()),
+    )
 }
 
 /// Whether `p` lies within `NEAR` of the arc from `a` to `b` with `bulge`, not at its ends: of its circle, and strictly
@@ -176,7 +202,12 @@ fn boundary_box(a: Vec2, b: Vec2, bulge: f64) -> [f64; 4] {
     }
     if bulge.abs() <= 1.0 {
         let rise = bulge.abs() * (b.x - a.x).hypot(b.y - a.y) / 2.0;
-        return [ends[0] - rise, ends[1] - rise, ends[2] + rise, ends[3] + rise];
+        return [
+            ends[0] - rise,
+            ends[1] - rise,
+            ends[2] + rise,
+            ends[3] + rise,
+        ];
     }
     let (o, r) = circle(a, b, bulge);
     [a.x + o.x - r, a.y + o.y - r, a.x + o.x + r, a.y + o.y + r]
@@ -203,10 +234,22 @@ fn parcels_of<'d>(doc: &'d Document, input: &ParcelsBoundaries) -> Result<Vec<&'
             for (i, uid) in uids.iter().enumerate() {
                 let path = format!("uids[{i}]");
                 if !checks::is_uid_text(uid) {
-                    return Err(fail(codes::INVALID_UID, format!("“{uid}” geçerli bir nesne kimliği değil."), path));
+                    return Err(fail(
+                        codes::INVALID_UID,
+                        format!("“{uid}” geçerli bir nesne kimliği değil."),
+                        path,
+                    ));
                 }
-                let Some(e) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)) else {
-                    return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), path));
+                let Some(e) = Uuid::parse_str(uid)
+                    .ok()
+                    .and_then(|u| doc.slot_of(u))
+                    .and_then(|s| doc.get(s))
+                else {
+                    return Err(fail(
+                        codes::ENTITY_NOT_FOUND,
+                        format!("“{uid}” kimlikli nesne çizimde yok."),
+                        path,
+                    ));
                 };
                 if !matches!(e, Entity::Polygon(_)) {
                     return Err(fail(
@@ -219,7 +262,10 @@ fn parcels_of<'d>(doc: &'d Document, input: &ParcelsBoundaries) -> Result<Vec<&'
             }
             Ok(out)
         }
-        None => Ok(doc.by_layer(PARCEL_LAYER).filter(|e| matches!(e, Entity::Polygon(_))).collect()),
+        None => Ok(doc
+            .by_layer(PARCEL_LAYER)
+            .filter(|e| matches!(e, Entity::Polygon(_)))
+            .collect()),
     }
 }
 
@@ -235,7 +281,11 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
         ));
     }
     let tolerance = input.arc_tolerance.unwrap_or(0.0).max(NEAR);
-    let uid_of = |e: &Entity| doc.uid(kentos_domain::Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default();
+    let uid_of = |e: &Entity| {
+        doc.uid(kentos_domain::Slot(e.base().id))
+            .map(|u| u.to_string())
+            .unwrap_or_default()
+    };
     let uids: Vec<String> = parcels.iter().map(|e| uid_of(e)).collect();
     let shapes: Vec<Shape> = parcels.iter().map(|e| shape(e)).collect();
     // The corners, in order of east, then north.
@@ -249,7 +299,11 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
     }
     let mut corners: Vec<Vec2> = places.values().copied().collect();
     corners.sort_by(|a, b| a.x.total_cmp(&b.x).then(a.y.total_cmp(&b.y)));
-    let index: BTreeMap<(u64, u64), usize> = corners.iter().enumerate().map(|(i, p)| (key(*p), i)).collect();
+    let index: BTreeMap<(u64, u64), usize> = corners
+        .iter()
+        .enumerate()
+        .map(|(i, p)| (key(*p), i))
+        .collect();
     let mut at_corner: Vec<Vec<usize>> = vec![Vec::new(); corners.len()];
     // The boundaries: every ring edge on its corners and bulge.
     let mut edges: Vec<Edge> = Vec::new();
@@ -275,10 +329,19 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
                 let left_of_way = ccw != r.hole;
                 let left = if forward { left_of_way } else { !left_of_way };
                 let same = by_ends.entry((lo, hi)).or_default();
-                let at = match same.iter().copied().find(|&j| (edges[j].bulge - bulge).abs() <= BULGE) {
+                let at = match same
+                    .iter()
+                    .copied()
+                    .find(|&j| (edges[j].bulge - bulge).abs() <= BULGE)
+                {
                     Some(j) => j,
                     None => {
-                        edges.push(Edge { lo, hi, bulge, sides: Vec::new() });
+                        edges.push(Edge {
+                            lo,
+                            hi,
+                            bulge,
+                            sides: Vec::new(),
+                        });
                         same.push(edges.len() - 1);
                         edges.len() - 1
                     }
@@ -294,7 +357,9 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
     let mut order: Vec<usize> = (0..edges.len()).collect();
     order.sort_by(|&x, &y| {
         let (a, b) = (&edges[x], &edges[y]);
-        a.lo.cmp(&b.lo).then(a.hi.cmp(&b.hi)).then(a.bulge.total_cmp(&b.bulge))
+        a.lo.cmp(&b.lo)
+            .then(a.hi.cmp(&b.hi))
+            .then(a.bulge.total_cmp(&b.bulge))
     });
     let mut boundary_id = vec![0usize; edges.len()];
     for (n, &e) in order.iter().enumerate() {
@@ -362,7 +427,10 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
     // each corner.
     let mut corner_grid: BTreeMap<(i64, i64), Vec<usize>> = BTreeMap::new();
     for (c, p) in corners.iter().enumerate() {
-        corner_grid.entry((cell(p.x), cell(p.y))).or_default().push(c);
+        corner_grid
+            .entry((cell(p.x), cell(p.y)))
+            .or_default()
+            .push(c);
     }
     let mut at_ends: Vec<Vec<usize>> = vec![Vec::new(); corners.len()];
     for (e, edge) in edges.iter().enumerate() {
@@ -386,7 +454,8 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
         for gx in cell(x0 - tolerance)..=cell(x1 + tolerance) {
             for gy in cell(y0 - tolerance)..=cell(y1 + tolerance) {
                 for &c in corner_grid.get(&(gx, gy)).into_iter().flatten() {
-                    if c != edge.lo && c != edge.hi
+                    if c != edge.lo
+                        && c != edge.hi
                         && let Some(t) = along_arc(corners[c], a, b, edge.bulge, tolerance)
                     {
                         on.insert(c, t);
@@ -405,8 +474,14 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
                 .iter()
                 .filter(|&&f| f != e)
                 .filter_map(|&f| {
-                    let other = if edges[f].lo == at { edges[f].hi } else { edges[f].lo };
-                    on.get(&other).filter(|&&t| t > t_at).map(|&t| (t, boundary_id[f], f, other))
+                    let other = if edges[f].lo == at {
+                        edges[f].hi
+                    } else {
+                        edges[f].lo
+                    };
+                    on.get(&other)
+                        .filter(|&&t| t > t_at)
+                        .map(|&t| (t, boundary_id[f], f, other))
                 })
                 .min_by(|x, y| x.0.total_cmp(&y.0).then(x.1.cmp(&y.1)));
             let Some((t, _, f, other)) = next else { break };
@@ -420,7 +495,11 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
         // corners it lacks: those stay missing corners, nothing is drawn with chords.
         let theta = 4.0 * edge.bulge.atan();
         let own_parts = chain.iter().all(|&(f, u, w)| {
-            let forward = if edges[f].lo == u { edges[f].bulge } else { -edges[f].bulge };
+            let forward = if edges[f].lo == u {
+                edges[f].bulge
+            } else {
+                -edges[f].bulge
+            };
             (forward - (theta * (on[&w] - on[&u]) / 4.0).tan()).abs() <= BULGE
         });
         if own_parts {
@@ -434,7 +513,11 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
         for &(f, u, w) in &chain {
             let (pu, pw) = (corners[u], corners[w]);
             ring.push(Vec2::new(pw.x - a.x, pw.y - a.y));
-            let forward = if edges[f].lo == u { edges[f].bulge } else { -edges[f].bulge };
+            let forward = if edges[f].lo == u {
+                edges[f].bulge
+            } else {
+                -edges[f].bulge
+            };
             segments += segment((pw.x - pu.x).hypot(pw.y - pu.y), forward);
             let mid = arc_point(a, b, edge.bulge, (on[&u] + on[&w]) / 2.0);
             let own = middle(pu, pw, forward);
@@ -444,7 +527,10 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
             }
         }
         let n = ring.len();
-        let shoelace: f64 = (0..n).map(|i| ring[i].x * ring[(i + 1) % n].y - ring[(i + 1) % n].x * ring[i].y).sum::<f64>() / 2.0;
+        let shoelace: f64 = (0..n)
+            .map(|i| ring[i].x * ring[(i + 1) % n].y - ring[(i + 1) % n].x * ring[i].y)
+            .sum::<f64>()
+            / 2.0;
         let area = (segment(c, edge.bulge) - (shoelace + segments)).abs();
         let Some((gap, place)) = widest else { continue };
         let mut on_parcels: Vec<usize> = edge.sides.iter().map(|s| s.parcel).collect();
@@ -472,7 +558,9 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
         ));
     }
     for (c, p) in corners.iter().enumerate() {
-        let Some(near) = grid.get(&(cell(p.x), cell(p.y))) else { continue };
+        let Some(near) = grid.get(&(cell(p.x), cell(p.y))) else {
+            continue;
+        };
         for &e in near.iter().map(|n| &order[*n]) {
             let edge = &edges[e];
             if edge.lo == c || edge.hi == c || folded.contains(&(c, e)) {
@@ -485,10 +573,16 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
                 let (dx, dy) = (b.x - a.x, b.y - a.y);
                 let l2 = dx * dx + dy * dy;
                 let t = ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2;
-                t > 0.0 && t < 1.0 && ((p.x - a.x) * dy - (p.y - a.y) * dx).abs() / l2.sqrt() <= NEAR
+                t > 0.0
+                    && t < 1.0
+                    && ((p.x - a.x) * dy - (p.y - a.y) * dx).abs() / l2.sqrt() <= NEAR
             };
             if on {
-                let mut on: Vec<usize> = at_corner[c].iter().copied().chain(edge.sides.iter().map(|s| s.parcel)).collect();
+                let mut on: Vec<usize> = at_corner[c]
+                    .iter()
+                    .copied()
+                    .chain(edge.sides.iter().map(|s| s.parcel))
+                    .collect();
                 on.sort_unstable();
                 on.dedup();
                 problems.push((
@@ -511,7 +605,8 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
                 break;
             }
             if (corners[j].x - corners[i].x).hypot(corners[j].y - corners[i].y) <= NEAR {
-                let mut on: Vec<usize> = at_corner[i].iter().chain(&at_corner[j]).copied().collect();
+                let mut on: Vec<usize> =
+                    at_corner[i].iter().chain(&at_corner[j]).copied().collect();
                 on.sort_unstable();
                 on.dedup();
                 problems.push((
@@ -559,9 +654,18 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
         .iter()
         .enumerate()
         .map(|(k, e)| {
-            let attr = |name: &str| e.base().attrs.get(name).map(|v| v.trim().to_owned()).unwrap_or_default();
-            let name: Vec<String> =
-                ["İl", "İlçe", "Mahalle", "Ada", "Parsel"].iter().map(|n| attr(n)).filter(|v| !v.is_empty()).collect();
+            let attr = |name: &str| {
+                e.base()
+                    .attrs
+                    .get(name)
+                    .map(|v| v.trim().to_owned())
+                    .unwrap_or_default()
+            };
+            let name: Vec<String> = ["İl", "İlçe", "Mahalle", "Ada", "Parsel"]
+                .iter()
+                .map(|n| attr(n))
+                .filter(|v| !v.is_empty())
+                .collect();
             let mut neighbours: Vec<usize> = rings_edges[k]
                 .iter()
                 .flat_map(|&e| edges[e].sides.iter().map(|s| s.parcel))
@@ -582,7 +686,11 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
         corners: corners
             .iter()
             .enumerate()
-            .map(|(i, p)| ParcelCorner { id: kid(i), at: [p.x, p.y], parcels: at_corner[i].iter().map(|&k| uids[k].clone()).collect() })
+            .map(|(i, p)| ParcelCorner {
+                id: kid(i),
+                at: [p.x, p.y],
+                parcels: at_corner[i].iter().map(|&k| uids[k].clone()).collect(),
+            })
             .collect(),
         boundaries,
         parcels: parcels_out,
@@ -595,7 +703,10 @@ fn run(doc: &Document, input: &ParcelsBoundaries) -> Result<ParcelsBounded, Stop
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ParcelsBoundaries) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -603,13 +714,19 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ParcelsBoundaries) -> Command
 /// The answer; reads only.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ParcelsBoundaries) -> CommandResult<ParcelsBounded> {
     match run(cx.doc, input) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ParcelsBoundaries) -> CommandResult<ParcelsBounded> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ParcelsBoundaries,
+) -> CommandResult<ParcelsBounded> {
     plan(cx, &input)
 }
 

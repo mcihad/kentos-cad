@@ -151,7 +151,12 @@ pub(super) fn no_stray(dir: &std::path::Path) {
 
 fn names_of(list: &Value) -> Vec<String> {
     list.as_array()
-        .map(|a| a.iter().filter_map(Value::as_str).map(str::to_owned).collect())
+        .map(|a| {
+            a.iter()
+                .filter_map(Value::as_str)
+                .map(str::to_owned)
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -164,8 +169,14 @@ fn tables_are_added_to_a_file_that_is_there_and_no_table_of_it_is_touched() {
     assert_eq!(got["status"], "completed", "{got}");
     let report = &got["output"]["sinkReport"];
     assert_eq!(report["mode"], "addTables");
-    let table = report["tables"][0]["table"].as_str().expect("a table").to_owned();
-    assert_eq!(report["tables"][0]["layer"], got["output"]["sink"]["tables"][0]["layer"]);
+    let table = report["tables"][0]["table"]
+        .as_str()
+        .expect("a table")
+        .to_owned();
+    assert_eq!(
+        report["tables"][0]["layer"],
+        got["output"]["sink"]["tables"][0]["layer"]
+    );
     assert!(report["batches"].as_u64().unwrap_or(0) >= 1);
     assert_eq!(report["ids"], "kentos_uids");
     assert!(report["tables"][0]["columns"].is_array(), "{report}");
@@ -180,8 +191,14 @@ fn tables_are_added_to_a_file_that_is_there_and_no_table_of_it_is_touched() {
         let kept = after.iter().find(|(n, _)| n == name).expect("kept");
         assert_eq!(&kept.1, rows, "{name} is as it was");
     }
-    let added = after.iter().find(|(n, _)| *n == table).expect("the new table");
-    assert_eq!(added.1.len() as u64, report["tables"][0]["rows"].as_u64().unwrap_or(0));
+    let added = after
+        .iter()
+        .find(|(n, _)| *n == table)
+        .expect("the new table");
+    assert_eq!(
+        added.1.len() as u64,
+        report["tables"][0]["rows"].as_u64().unwrap_or(0)
+    );
     // The answer's file is the file: its bytes and digest.
     let bytes = std::fs::read(&path).expect("reads");
     assert_eq!(got["output"]["sink"]["bytes"], json!(bytes.len()));
@@ -202,15 +219,30 @@ fn tables_are_added_to_a_file_that_is_there_and_no_table_of_it_is_touched() {
     // Replace takes only that table out and writes it again; the others stay.
     let replaced = run(&mut doc, buffer_to(&path, "replaceTables"));
     assert_eq!(replaced["status"], "completed", "{replaced}");
-    assert_eq!(replaced["output"]["sinkReport"]["tables"][0]["replaced"], true);
+    assert_eq!(
+        replaced["output"]["sinkReport"]["tables"][0]["replaced"],
+        true
+    );
     let now = contents(&path);
     assert_eq!(now.len(), after.len());
     for (name, rows) in &before {
-        assert_eq!(&now.iter().find(|(n, _)| n == name).expect("kept").1, rows, "{name}");
+        assert_eq!(
+            &now.iter().find(|(n, _)| n == name).expect("kept").1,
+            rows,
+            "{name}"
+        );
     }
     let gp = kentos_geopackage::GeoPackage::open(&path, false).expect("opens");
-    assert_eq!(gp.metadata(&table).expect("metadata").len(), 1, "no orphan document");
-    assert_eq!(gp.uids(&table).expect("ids").len(), added.1.len(), "no orphan id");
+    assert_eq!(
+        gp.metadata(&table).expect("metadata").len(),
+        1,
+        "no orphan document"
+    );
+    assert_eq!(
+        gp.uids(&table).expect("ids").len(),
+        added.1.len(),
+        "no orphan id"
+    );
     assert_eq!(
         names_of(&replaced["output"]["sinkReport"]["untouched"]).len(),
         before.len(),
@@ -294,11 +326,19 @@ fn a_run_stopped_at_any_point_leaves_the_file_and_the_drawing_as_they_were() {
                 .run(&mut doc, &input, true, &flow)
                 .map_err(|e| e.code)
                 .expect("runs");
-            assert_eq!(doc.revision(), revision, "{mode} {n}: the drawing is as it was");
+            assert_eq!(
+                doc.revision(),
+                revision,
+                "{mode} {n}: the drawing is as it was"
+            );
             match end {
                 RunEnd::Cancelled => {
                     cancelled += 1;
-                    assert_eq!(std::fs::read(&path).expect("reads"), before, "{mode} {n}: the file");
+                    assert_eq!(
+                        std::fs::read(&path).expect("reads"),
+                        before,
+                        "{mode} {n}: the file"
+                    );
                     assert!(!dir.join("yeni.gpkg").exists(), "{mode} {n}: no new file");
                 }
                 RunEnd::Ran(ran, _) => {
@@ -353,7 +393,10 @@ fn rows_go_in_batches_and_the_batches_are_counted() {
     let seen = seen.into_inner();
     assert_eq!(seen.len() as u32, out.batches);
     assert_eq!(seen.last(), Some(&(u64::from(rows), u64::from(rows))));
-    assert!(seen.windows(2).all(|w| w[0].0 < w[1].0), "progress only goes forward");
+    assert!(
+        seen.windows(2).all(|w| w[0].0 < w[1].0),
+        "progress only goes forward"
+    );
     session.commit().expect("committed");
     gp.close().expect("closed");
     let _ = std::fs::remove_dir_all(&dir);
@@ -379,7 +422,10 @@ fn a_table_output_is_written_as_an_attribute_table_when_the_sink_asks_for_it() {
     let refused = run(&mut doc, summary_to(&path, "new", false));
     assert_eq!(refused["error"]["code"], "nothing_to_export", "{refused}");
     assert!(
-        refused["error"]["message"].as_str().unwrap_or("").contains("sink.tables"),
+        refused["error"]["message"]
+            .as_str()
+            .unwrap_or("")
+            .contains("sink.tables"),
         "{refused}"
     );
     assert!(!path.exists());
@@ -391,7 +437,10 @@ fn a_table_output_is_written_as_an_attribute_table_when_the_sink_asks_for_it() {
     assert_eq!(table["output"], "table");
     assert!(table["layer"].is_null(), "no layer: {table}");
     assert!(table["geometry"].is_null());
-    assert_eq!((table["z"].as_str(), table["m"].as_str()), (Some("none"), Some("none")));
+    assert_eq!(
+        (table["z"].as_str(), table["m"].as_str()),
+        (Some("none"), Some("none"))
+    );
     let shown = &got["output"]["outputs"]["table"];
     let columns: Vec<&str> = shown["columns"]
         .as_array()
@@ -438,7 +487,9 @@ fn a_table_output_is_written_as_an_attribute_table_when_the_sink_asks_for_it() {
             .zip(&kinds)
             .map(|(c, k)| match (c, *k) {
                 (Value::Null, _) => kentos_geopackage::Value::Null,
-                (c, "integer") => kentos_geopackage::Value::Integer(c.as_i64().expect("a whole number")),
+                (c, "integer") => {
+                    kentos_geopackage::Value::Integer(c.as_i64().expect("a whole number"))
+                }
                 (c, "real") => kentos_geopackage::Value::Real(c.as_f64().expect("a number")),
                 (c, _) => kentos_geopackage::Value::Text(c.as_str().unwrap_or("").to_owned()),
             })
@@ -475,7 +526,10 @@ fn a_table_output_is_added_to_a_file_that_is_there_and_replaced_by_name() {
     let after = contents(&path);
     assert_eq!(after.len(), before.len() + 1);
     for (name, rows) in &before {
-        assert_eq!(&after.iter().find(|(n, _)| n == name).expect("kept").1, rows);
+        assert_eq!(
+            &after.iter().find(|(n, _)| n == name).expect("kept").1,
+            rows
+        );
     }
     // The same name again: refused, replaced when asked, the others untouched either way.
     let bytes = std::fs::read(&path).expect("reads");
@@ -484,7 +538,10 @@ fn a_table_output_is_added_to_a_file_that_is_there_and_replaced_by_name() {
     assert_eq!(std::fs::read(&path).expect("reads"), bytes);
     let replaced = run(&mut doc, summary_to(&path, "replaceTables", true));
     assert_eq!(replaced["status"], "completed", "{replaced}");
-    assert_eq!(replaced["output"]["sinkReport"]["tables"][0]["replaced"], true);
+    assert_eq!(
+        replaced["output"]["sinkReport"]["tables"][0]["replaced"],
+        true
+    );
     let now = contents(&path);
     assert_eq!(now.len(), after.len());
     for (name, rows) in &before {
@@ -505,7 +562,10 @@ fn a_table_output_is_added_to_a_file_that_is_there_and_replaced_by_name() {
             asked: Default::default(),
             last: Default::default(),
         };
-        let end = host.run(&mut doc, &input, true, &flow).map_err(|e| e.code).expect("runs");
+        let end = host
+            .run(&mut doc, &input, true, &flow)
+            .map_err(|e| e.code)
+            .expect("runs");
         if matches!(end, RunEnd::Cancelled) {
             assert_eq!(std::fs::read(&p2).expect("reads"), was, "stopped at {n}");
         }
@@ -541,7 +601,11 @@ fn a_file_whose_system_of_that_id_is_another_one_takes_no_table() {
     let mut doc = drawing();
     let got = run(&mut doc, buffer_to(&path, "addTables"));
     assert_eq!(got["error"]["code"], "crs_mismatch", "{got}");
-    assert_eq!(std::fs::read(&path).expect("reads"), before, "the file is as it was");
+    assert_eq!(
+        std::fs::read(&path).expect("reads"),
+        before,
+        "the file is as it was"
+    );
     no_stray(&dir);
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -568,14 +632,22 @@ fn an_input_read_from_its_source_goes_to_a_file() {
     );
     assert_eq!(got["status"], "completed", "{got}");
     assert_eq!(got["output"]["inputs"][0]["rows"], json!(12), "{got}");
-    assert_eq!(got["output"]["sink"]["tables"][0]["rows"], json!(12), "{got}");
+    assert_eq!(
+        got["output"]["sink"]["tables"][0]["rows"],
+        json!(12),
+        "{got}"
+    );
     assert_eq!(doc.revision(), before, "the drawing does not change");
     assert!(
         doc.layers().get("kaynak-input").is_none(),
         "the records went into the run's copy, not the drawing"
     );
     if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
-        std::fs::copy(&path, fixtures().join("geopackage/v1/kentos-run-kaynak.gpkg")).expect("keeps the file");
+        std::fs::copy(
+            &path,
+            fixtures().join("geopackage/v1/kentos-run-kaynak.gpkg"),
+        )
+        .expect("keeps the file");
     }
     let _ = std::fs::remove_dir_all(&dir);
 }

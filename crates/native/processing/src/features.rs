@@ -421,7 +421,12 @@ pub fn summarize_features(
     });
     let acting = acts
         .iter()
-        .map(|(name, acts)| ((*name).to_owned(), set.entities.iter().filter(|e| acts(e)).count()))
+        .map(|(name, acts)| {
+            (
+                (*name).to_owned(),
+                set.entities.iter().filter(|e| acts(e)).count(),
+            )
+        })
         .collect();
     InputSummary {
         count: set.entities.len(),

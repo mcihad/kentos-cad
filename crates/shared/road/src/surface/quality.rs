@@ -41,9 +41,13 @@ struct Buckets {
 
 impl Buckets {
     fn new(points: &[[f64; 3]], size: f64) -> Self {
-        let mut cells: std::collections::HashMap<(i64, i64), Vec<usize>> = std::collections::HashMap::new();
+        let mut cells: std::collections::HashMap<(i64, i64), Vec<usize>> =
+            std::collections::HashMap::new();
         for (i, p) in points.iter().enumerate() {
-            cells.entry(Self::key(p[0], p[1], size)).or_default().push(i);
+            cells
+                .entry(Self::key(p[0], p[1], size))
+                .or_default()
+                .push(i);
         }
         Self { size, cells }
     }
@@ -55,7 +59,10 @@ impl Buckets {
     /// The corners in the cells round (x, y), a superset of those within `size`.
     fn near(&self, x: f64, y: f64) -> impl Iterator<Item = usize> + '_ {
         let (cx, cy) = Self::key(x, y, self.size);
-        (cx - 1..=cx + 1).flat_map(move |i| (cy - 1..=cy + 1).flat_map(move |j| self.cells.get(&(i, j)).into_iter().flatten().copied()))
+        (cx - 1..=cx + 1).flat_map(move |i| {
+            (cy - 1..=cy + 1)
+                .flat_map(move |j| self.cells.get(&(i, j)).into_iter().flatten().copied())
+        })
     }
 }
 
@@ -85,12 +92,19 @@ impl Surface {
                 }
                 let d = plan(*p, q);
                 if d < near {
-                    out.push(NearPair { a: *p, b: q, distance: d, dz: q[2] - p[2] });
+                    out.push(NearPair {
+                        a: *p,
+                        b: q,
+                        distance: d,
+                        dz: q[2] - p[2],
+                    });
                 }
             }
         }
         out.sort_by(|x, y| {
-            (x.a[0], x.a[1], x.b[0], x.b[1]).partial_cmp(&(y.a[0], y.a[1], y.b[0], y.b[1])).unwrap_or(std::cmp::Ordering::Equal)
+            (x.a[0], x.a[1], x.b[0], x.b[1])
+                .partial_cmp(&(y.a[0], y.a[1], y.b[0], y.b[1]))
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
         out
     }
@@ -106,8 +120,11 @@ impl Surface {
         let mut out = Vec::new();
         for (i, p) in v.iter().enumerate() {
             // The heights summed from the lowest, so equal answers are equal bit for bit whatever the corners' order.
-            let mut heights: Vec<f64> =
-                buckets.near(p[0], p[1]).filter(|j| *j != i && plan(*p, v[*j]) <= radius).map(|j| v[j][2]).collect();
+            let mut heights: Vec<f64> = buckets
+                .near(p[0], p[1])
+                .filter(|j| *j != i && plan(*p, v[*j]) <= radius)
+                .map(|j| v[j][2])
+                .collect();
             heights.sort_by(f64::total_cmp);
             let n = heights.len();
             let sum: f64 = heights.iter().sum();
@@ -117,7 +134,12 @@ impl Surface {
             let mean = sum / n as f64;
             let difference = p[2] - mean;
             if difference.abs() > limit {
-                out.push(Spike { at: *p, mean, difference, neighbours: n });
+                out.push(Spike {
+                    at: *p,
+                    mean,
+                    difference,
+                    neighbours: n,
+                });
             }
         }
         out.sort_by(|a, b| {
@@ -125,21 +147,32 @@ impl Surface {
                 .abs()
                 .partial_cmp(&a.difference.abs())
                 .unwrap_or(std::cmp::Ordering::Equal)
-                .then((a.at[0], a.at[1]).partial_cmp(&(b.at[0], b.at[1])).unwrap_or(std::cmp::Ordering::Equal))
+                .then(
+                    (a.at[0], a.at[1])
+                        .partial_cmp(&(b.at[0], b.at[1]))
+                        .unwrap_or(std::cmp::Ordering::Equal),
+                )
         });
         out
     }
 
     /// The kept triangles with an edge longer than `limit` in plan.
     pub fn gaps(&self, limit: f64) -> Gaps {
-        let mut out = Gaps { triangles: 0, area: 0.0, longest: 0.0 };
+        let mut out = Gaps {
+            triangles: 0,
+            area: 0.0,
+            longest: 0.0,
+        };
         for t in &self.triangles {
             let p = t.map(|i| self.vertices[i as usize]);
             let longest = plan(p[0], p[1]).max(plan(p[1], p[2])).max(plan(p[2], p[0]));
             out.longest = out.longest.max(longest);
             if longest > limit {
                 out.triangles += 1;
-                out.area += ((p[1][0] - p[0][0]) * (p[2][1] - p[0][1]) - (p[2][0] - p[0][0]) * (p[1][1] - p[0][1])).abs() / 2.0;
+                out.area += ((p[1][0] - p[0][0]) * (p[2][1] - p[0][1])
+                    - (p[2][0] - p[0][0]) * (p[1][1] - p[0][1]))
+                    .abs()
+                    / 2.0;
             }
         }
         out

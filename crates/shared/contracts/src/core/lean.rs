@@ -181,19 +181,33 @@ mod tests {
         let empty: Lean<Info> = Info::default().into();
         assert!(empty.0.is_none() && empty.is_default());
         assert_eq!(empty.level, None);
-        assert_eq!(std::mem::size_of::<Lean<Info>>(), std::mem::size_of::<usize>());
+        assert_eq!(
+            std::mem::size_of::<Lean<Info>>(),
+            std::mem::size_of::<usize>()
+        );
         let mut set = Lean::from(Info::default());
         set.level = Some("Z".into());
         assert!(set.0.is_some() && !set.is_default());
-        assert_eq!(*set, Info { level: Some("Z".into()) });
+        assert_eq!(
+            *set,
+            Info {
+                level: Some("Z".into())
+            }
+        );
         assert_ne!(set, empty);
     }
 
     #[test]
     fn its_json_is_the_value_s_own() {
-        let set: Lean<Info> = Info { level: Some("Z".into()) }.into();
+        let set: Lean<Info> = Info {
+            level: Some("Z".into()),
+        }
+        .into();
         assert_eq!(serde_json::to_string(&set).unwrap(), r#"{"level":"Z"}"#);
-        assert_eq!(serde_json::to_string(&Lean::<Info>::default()).unwrap(), "{}");
+        assert_eq!(
+            serde_json::to_string(&Lean::<Info>::default()).unwrap(),
+            "{}"
+        );
         let read: Lean<Info> = serde_json::from_str("{}").unwrap();
         assert!(read.0.is_none());
         let read: Lean<Info> = serde_json::from_str(r#"{"level":"Z"}"#).unwrap();

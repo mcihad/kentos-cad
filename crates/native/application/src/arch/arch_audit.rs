@@ -14,22 +14,22 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_commands::{
-    ARCH_AUDIT_MAX_GAP, ARCH_AUDIT_MIN_AREA, ARCH_AUDIT_MIN_LENGTH, ARCH_AUDIT_MIN_WIDTH, ArchAudit, ArchAuditCheck,
-    ArchAuditExceptionView, ArchAuditFinding, ArchAuditFix, ArchAudited, ArchLevel, ChangesetStep, CommandResult,
-    CommandWarning, Entity, Vec2,
+    ARCH_AUDIT_MAX_GAP, ARCH_AUDIT_MIN_AREA, ARCH_AUDIT_MIN_LENGTH, ARCH_AUDIT_MIN_WIDTH,
+    ArchAudit, ArchAuditCheck, ArchAuditExceptionView, ArchAuditFinding, ArchAuditFix, ArchAudited,
+    ArchLevel, ChangesetStep, CommandResult, CommandWarning, Entity, Vec2,
 };
-use sha2::{Digest, Sha256};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2 as V;
+use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::entity::Shape;
+use kentos_geometry_core::geom::arch;
 use kentos_geometry_core::geom::arrangement::winding;
 use kentos_geometry_core::geom::bulge::{bulge_path_edges, segment_tangent};
 use kentos_geometry_core::geom::intersect::{Edge, closest_on_edge, ray_edge};
 use kentos_geometry_core::geom::wall::{self as wall_geom, JoinMode, Spec};
-use kentos_geometry_core::geom::arch;
 use kentos_geometry_core::geom::wall_join::{End, JOIN_TOLERANCE, WallIn, solve};
-use kentos_geometry_core::display::fixed;
 use serde_json::json;
+use sha2::{Digest, Sha256};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
@@ -53,25 +53,48 @@ const CODES: [(ArchAuditCheck, &[&str]); 18] = [
     ),
     (
         ArchAuditCheck::Openings,
-        &[codes::ARCH_OPENING_BROKEN, codes::TAG_MISSING_TYPE, codes::ARCH_OPENING_TYPE_STALE],
+        &[
+            codes::ARCH_OPENING_BROKEN,
+            codes::TAG_MISSING_TYPE,
+            codes::ARCH_OPENING_TYPE_STALE,
+        ],
     ),
     (
         ArchAuditCheck::Spaces,
-        &[codes::ARCH_SPACE_BROKEN, codes::ARCH_SPACE_SMALL, codes::ARCH_SPACE_NARROW, codes::ARCH_SLAB_BROKEN],
+        &[
+            codes::ARCH_SPACE_BROKEN,
+            codes::ARCH_SPACE_SMALL,
+            codes::ARCH_SPACE_NARROW,
+            codes::ARCH_SLAB_BROKEN,
+        ],
     ),
     (ArchAuditCheck::Numbers, &[codes::TAG_DUPLICATE_NUMBER]),
-    (ArchAuditCheck::Tags, &[codes::TAG_TARGET_GONE, codes::TAG_EMPTY]),
+    (
+        ArchAuditCheck::Tags,
+        &[codes::TAG_TARGET_GONE, codes::TAG_EMPTY],
+    ),
     (
         ArchAuditCheck::Dimensions,
-        &[codes::ARCH_DIMENSION_SET_BROKEN, codes::ARCH_DIMENSION_BROKEN],
+        &[
+            codes::ARCH_DIMENSION_SET_BROKEN,
+            codes::ARCH_DIMENSION_BROKEN,
+        ],
     ),
     (ArchAuditCheck::Grids, &[codes::ARCH_GRID_LABEL_DUPLICATE]),
     (ArchAuditCheck::Columns, &[codes::ARCH_COLUMN_GRID_GONE]),
-    (ArchAuditCheck::Viewmarks, &[codes::ARCH_VIEWMARK_TARGET_GONE]),
+    (
+        ArchAuditCheck::Viewmarks,
+        &[codes::ARCH_VIEWMARK_TARGET_GONE],
+    ),
     (ArchAuditCheck::Levels, &[codes::ARCH_LEVEL_MISSING]),
     (
         ArchAuditCheck::Accessibility,
-        &[codes::RAMP_SLOPE_OVER_PROFILE, codes::RAMP_LONG_RUN_SLOPE, codes::RAMP_LANDING_SHORT, codes::RAMP_TURN_NARROW],
+        &[
+            codes::RAMP_SLOPE_OVER_PROFILE,
+            codes::RAMP_LONG_RUN_SLOPE,
+            codes::RAMP_LANDING_SHORT,
+            codes::RAMP_TURN_NARROW,
+        ],
     ),
     (
         ArchAuditCheck::Stairs,
@@ -88,17 +111,29 @@ const CODES: [(ArchAuditCheck, &[&str]); 18] = [
             codes::STAIR_RAILING_MISSING,
         ],
     ),
-    (ArchAuditCheck::Ramps, &[codes::RAMP_NO_RUN, codes::RAMP_SLOPE_MISMATCH]),
+    (
+        ArchAuditCheck::Ramps,
+        &[codes::RAMP_NO_RUN, codes::RAMP_SLOPE_MISMATCH],
+    ),
     (ArchAuditCheck::Casework, &[codes::ARCH_CASEWORK_BROKEN]),
     (
         ArchAuditCheck::Doors,
         &[
-            codes::ARCH_DOOR_SWING_CLASH, codes::ARCH_DOOR_FRONT_BLOCKED, codes::ARCH_DOOR_CLEAR_NARROW,
-            codes::ARCH_DOOR_PULL_BLOCKED, codes::ARCH_DOOR_PUSH_BLOCKED,
+            codes::ARCH_DOOR_SWING_CLASH,
+            codes::ARCH_DOOR_FRONT_BLOCKED,
+            codes::ARCH_DOOR_CLEAR_NARROW,
+            codes::ARCH_DOOR_PULL_BLOCKED,
+            codes::ARCH_DOOR_PUSH_BLOCKED,
         ],
     ),
     (ArchAuditCheck::Program, &crate::program_check::CODES),
-    (ArchAuditCheck::Fixtures, &[codes::ARCH_FIXTURE_ZONE_BLOCKED, codes::ARCH_FIXTURE_ZONE_DOOR]),
+    (
+        ArchAuditCheck::Fixtures,
+        &[
+            codes::ARCH_FIXTURE_ZONE_BLOCKED,
+            codes::ARCH_FIXTURE_ZONE_DOOR,
+        ],
+    ),
     (ArchAuditCheck::Regulation, &crate::regulation_audit::CODES),
 ];
 
@@ -134,7 +169,12 @@ fn limits(input: &ArchAudit) -> Result<Limits, Stop> {
         (input.min_area, "minArea", "Küçük mahal eşiği", "m²"),
         (input.min_width, "minWidth", "Dar mahal eşiği", "m"),
         (input.min_length, "minLength", "Kısa duvar eşiği", "m"),
-        (input.min_clear_width, "minClearWidth", "En az net geçiş", "m"),
+        (
+            input.min_clear_width,
+            "minClearWidth",
+            "En az net geçiş",
+            "m",
+        ),
     ];
     for (v, path, what, _) in given {
         if let Some(v) = v {
@@ -198,10 +238,16 @@ impl Audit<'_> {
         let mut out = Vec::new();
         for e in self.doc.entities() {
             let Entity::Slab(s) = e else { continue };
-            let Some(why) = s.slab.bound.as_ref().and_then(|b| b.broken) else { continue };
+            let Some(why) = s.slab.bound.as_ref().and_then(|b| b.broken) else {
+                continue;
+            };
             let uid = self.uid_of(e);
             let fix = (!self.locked(e)).then(|| {
-                fix("Ayır: son sınırı bağımsız kontur yap", "cad.slabs.edit", json!({"uids": [uid], "operation": {"kind": "detach"}}))
+                fix(
+                    "Ayır: son sınırı bağımsız kontur yap",
+                    "cad.slabs.edit",
+                    json!({"uids": [uid], "operation": {"kind": "detach"}}),
+                )
             });
             out.push(finding(
                 ArchAuditCheck::Spaces,
@@ -300,7 +346,11 @@ fn along_each_other(a: [V; 2], b: [V; 2]) -> Option<(f64, V, f64)> {
     let (lo, hi) = (t0.min(t1).max(0.0), t0.max(t1).min(la));
     let length = hi - lo;
     let mid = (lo + hi) / 2.0;
-    Some((length, V::new(a[0].x + ux * mid, a[0].y + uy * mid), (across(b[0]) + across(b[1])) / 2.0))
+    Some((
+        length,
+        V::new(a[0].x + ux * mid, a[0].y + uy * mid),
+        (across(b[0]) + across(b[1])) / 2.0,
+    ))
 }
 
 struct Audit<'a> {
@@ -309,7 +359,10 @@ struct Audit<'a> {
 
 impl Audit<'_> {
     fn uid(&self, slot: Slot) -> String {
-        self.doc.uid(slot).map(|u| u.to_string()).unwrap_or_default()
+        self.doc
+            .uid(slot)
+            .map(|u| u.to_string())
+            .unwrap_or_default()
     }
 
     fn uid_of(&self, e: &Entity) -> String {
@@ -379,7 +432,11 @@ fn body_of(w: &WallAt<'_>) -> Option<Body> {
 impl Body {
     /// Whether `p` is inside or on it (within the joins' tolerance of its outline).
     fn holds(&self, p: V) -> bool {
-        if self.edges.iter().any(|e| closest_on_edge(e, p).d <= JOIN_TOLERANCE) {
+        if self
+            .edges
+            .iter()
+            .any(|e| closest_on_edge(e, p).d <= JOIN_TOLERANCE)
+        {
             return true;
         }
         let inside = |ring: &[Edge]| winding(ring, p).abs() > std::f64::consts::PI;
@@ -416,7 +473,12 @@ fn ends_of(walls: &[WallAt<'_>]) -> Vec<EndAt> {
         if w.spec.closed || n < 2 {
             continue;
         }
-        let b = |k: usize| w.bulges.as_ref().and_then(|bs| bs.get(k).copied()).unwrap_or(0.0);
+        let b = |k: usize| {
+            w.bulges
+                .as_ref()
+                .and_then(|bs| bs.get(k).copied())
+                .unwrap_or(0.0)
+        };
         let start = segment_tangent(w.pts[0], w.pts[1], b(0), false);
         let end = segment_tangent(w.pts[n - 2], w.pts[n - 1], b(n - 2), true);
         out.push(EndAt {
@@ -528,7 +590,9 @@ impl Audit<'_> {
                             && (o.at.x - e.at.x).hypot(o.at.y - e.at.y) <= JOIN_TOLERANCE
                     })
                     && !bodies.iter().enumerate().any(|(j, b)| {
-                        j != e.wall && same_level(j, e.wall) && b.as_ref().is_some_and(|b| b.holds(e.at))
+                        j != e.wall
+                            && same_level(j, e.wall)
+                            && b.as_ref().is_some_and(|b| b.holds(e.at))
                     })
             })
             .collect();
@@ -563,7 +627,9 @@ impl Audit<'_> {
             let mut f = finding(
                 ArchAuditCheck::Walls,
                 codes::ARCH_WALL_END_GAP,
-                format!("Duvarın {lower} ucuyla öbür duvar arasında {gap:.3} m boşluk var; birleşmiyor."),
+                format!(
+                    "Duvarın {lower} ucuyla öbür duvar arasında {gap:.3} m boşluk var; birleşmiyor."
+                ),
                 "Ucu öbür duvara uzatın; mahal ancak duvarlar birleşince kapanır.",
                 vec![uid(e.wall), uid(j)],
                 e.at,
@@ -590,7 +656,9 @@ impl Audit<'_> {
                 let mid = V::new((p.at.x + q.at.x) / 2.0, (p.at.y + q.at.y) / 2.0);
                 let (message, uids) = if p.wall == q.wall {
                     (
-                        format!("Duvarın iki ucu arasında {dist:.3} m boşluk var; duvar kapanmıyor."),
+                        format!(
+                            "Duvarın iki ucu arasında {dist:.3} m boşluk var; duvar kapanmıyor."
+                        ),
                         vec![uid(p.wall)],
                     )
                 } else {
@@ -643,7 +711,11 @@ impl Audit<'_> {
             let uid = self.uid_of(w.entity);
             let (a, b) = (w.pts[0], w.pts[w.pts.len() - 1]);
             let fix = (!self.locked(w.entity) && !hosts.contains(&uid)).then(|| {
-                fix("Kısa duvar parçasını sil", "cad.entities.delete", json!({"uids": [uid.clone()]}))
+                fix(
+                    "Kısa duvar parçasını sil",
+                    "cad.entities.delete",
+                    json!({"uids": [uid.clone()]}),
+                )
             });
             out.push(finding(
                 ArchAuditCheck::Walls,
@@ -668,7 +740,9 @@ impl Audit<'_> {
         let mut out = Vec::new();
         for i in 0..walls.len() {
             for j in i + 1..walls.len() {
-                let (Some(ra), Some(rb)) = (&runs[i], &runs[j]) else { continue };
+                let (Some(ra), Some(rb)) = (&runs[i], &runs[j]) else {
+                    continue;
+                };
                 if walls[i].level != walls[j].level {
                     continue;
                 }
@@ -677,17 +751,26 @@ impl Audit<'_> {
                     .iter()
                     .flat_map(|a| rb.iter().filter_map(move |b| along_each_other(*a, *b)))
                     .filter(|(length, _, across)| {
-                        *length > ta.max(tb) + JOIN_TOLERANCE && *across < (ta + tb) / 2.0 - JOIN_TOLERANCE
+                        *length > ta.max(tb) + JOIN_TOLERANCE
+                            && *across < (ta + tb) / 2.0 - JOIN_TOLERANCE
                     })
                     .max_by(|x, y| x.0.total_cmp(&y.0));
-                let Some((length, at, _)) = best else { continue };
+                let Some((length, at, _)) = best else {
+                    continue;
+                };
                 let (ua, ub) = (self.uid_of(walls[i].entity), self.uid_of(walls[j].entity));
                 let fix = same_wall(walls[i].entity, walls[j].entity)
                     .then(|| {
                         [(j, &ub), (i, &ua)]
                             .into_iter()
                             .find(|(k, u)| !self.locked(walls[*k].entity) && !hosts.contains(*u))
-                            .map(|(_, u)| fix("Yinelenen duvarı sil", "cad.entities.delete", json!({"uids": [u]})))
+                            .map(|(_, u)| {
+                                fix(
+                                    "Yinelenen duvarı sil",
+                                    "cad.entities.delete",
+                                    json!({"uids": [u]}),
+                                )
+                            })
                     })
                     .flatten();
                 out.push(finding(
@@ -717,7 +800,9 @@ impl Audit<'_> {
             })
             .collect();
         let edges: Vec<Vec<[V; 2]>> = seps.iter().map(|(_, p)| straight_edges(p)).collect();
-        let level = |p: &kentos_commands::PathEntity| p.space_separator.as_ref().and_then(|a| a.level.clone());
+        let level = |p: &kentos_commands::PathEntity| {
+            p.space_separator.as_ref().and_then(|a| a.level.clone())
+        };
         let mut out = Vec::new();
         for i in 0..seps.len() {
             for j in i + 1..seps.len() {
@@ -726,14 +811,25 @@ impl Audit<'_> {
                 }
                 let best = edges[i]
                     .iter()
-                    .flat_map(|a| edges[j].iter().filter_map(move |b| along_each_other(*a, *b)))
+                    .flat_map(|a| {
+                        edges[j]
+                            .iter()
+                            .filter_map(move |b| along_each_other(*a, *b))
+                    })
                     .filter(|(length, _, across)| *length > 1e-3 && *across <= 1e-3)
                     .max_by(|x, y| x.0.total_cmp(&y.0));
-                let Some((length, at, _)) = best else { continue };
+                let Some((length, at, _)) = best else {
+                    continue;
+                };
                 let (ua, ub) = (self.uid_of(seps[i].0), self.uid_of(seps[j].0));
                 let twin = same_points(&seps[i].1.pts, &seps[j].1.pts);
-                let fix = (twin && !self.locked(seps[j].0))
-                    .then(|| fix("Yinelenen ayırıcıyı sil", "cad.entities.delete", json!({"uids": [ub.clone()]})));
+                let fix = (twin && !self.locked(seps[j].0)).then(|| {
+                    fix(
+                        "Yinelenen ayırıcıyı sil",
+                        "cad.entities.delete",
+                        json!({"uids": [ub.clone()]}),
+                    )
+                });
                 out.push(finding(
                     ArchAuditCheck::Walls,
                     codes::ARCH_SEPARATOR_OVERLAP,
@@ -752,7 +848,10 @@ impl Audit<'_> {
 /// A straight wall's body's middle line, run by run: the middle of its faces (none when an edge is an arc or it cannot
 /// be drawn).
 fn center_runs(w: &WallAt<'_>) -> Option<Vec<[V; 2]>> {
-    if w.bulges.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0)) {
+    if w.bulges
+        .as_ref()
+        .is_some_and(|b| b.iter().any(|x| *x != 0.0))
+    {
         return None;
     }
     let lines = wall_geom::lines(&w.pts, None, &w.spec).ok()?;
@@ -776,8 +875,17 @@ fn center_runs(w: &WallAt<'_>) -> Option<Vec<[V; 2]>> {
 /// A path's straight edges (an arc's left out), its closing one too when closed.
 fn straight_edges(p: &kentos_commands::PathEntity) -> Vec<[V; 2]> {
     let n = p.pts.len();
-    let bulge = |k: usize| p.bulges.as_ref().and_then(|b| b.get(k).copied()).unwrap_or(0.0);
-    let count = if p.closed && n > 2 { n } else { n.saturating_sub(1) };
+    let bulge = |k: usize| {
+        p.bulges
+            .as_ref()
+            .and_then(|b| b.get(k).copied())
+            .unwrap_or(0.0)
+    };
+    let count = if p.closed && n > 2 {
+        n
+    } else {
+        n.saturating_sub(1)
+    };
     (0..count)
         .filter(|&k| bulge(k) == 0.0)
         .map(|k| [core(p.pts[k]), core(p.pts[(k + 1) % n])])
@@ -786,21 +894,39 @@ fn straight_edges(p: &kentos_commands::PathEntity) -> Vec<[V; 2]> {
 
 /// Whether two point lists are the same, either way round.
 fn same_points(a: &[Vec2], b: &[Vec2]) -> bool {
-    a.len() == b.len() && (a.iter().zip(b).all(|(p, q)| p == q) || a.iter().zip(b.iter().rev()).all(|(p, q)| p == q))
+    a.len() == b.len()
+        && (a.iter().zip(b).all(|(p, q)| p == q)
+            || a.iter().zip(b.iter().rev()).all(|(p, q)| p == q))
 }
 
 /// Whether wall `b` is a copy of wall `a`: the same path the same way round with the same width, justification,
 /// offset and closing, or the other way round when both are centred on their paths.
 fn same_wall(a: &Entity, b: &Entity) -> bool {
-    let (Entity::Wall(a), Entity::Wall(b)) = (a, b) else { return false };
+    let (Entity::Wall(a), Entity::Wall(b)) = (a, b) else {
+        return false;
+    };
     let (a, b) = (&a.wall, &b.wall);
-    let straight = |w: &kentos_commands::WallFields| w.bulges.as_ref().is_none_or(|x| x.iter().all(|v| *v == 0.0));
-    if !(straight(a) && straight(b) && a.width == b.width && a.closed == b.closed && a.pts.len() == b.pts.len()) {
+    let straight = |w: &kentos_commands::WallFields| {
+        w.bulges
+            .as_ref()
+            .is_none_or(|x| x.iter().all(|v| *v == 0.0))
+    };
+    if !(straight(a)
+        && straight(b)
+        && a.width == b.width
+        && a.closed == b.closed
+        && a.pts.len() == b.pts.len())
+    {
         return false;
     }
-    let forward = a.justify == b.justify && a.offset == b.offset && a.pts.iter().zip(&b.pts).all(|(p, q)| p == q);
-    let centred = |w: &kentos_commands::WallFields| w.justify == kentos_commands::WallJustify::Center && w.offset == 0.0;
-    let backward = centred(a) && centred(b) && a.pts.iter().zip(b.pts.iter().rev()).all(|(p, q)| p == q);
+    let forward = a.justify == b.justify
+        && a.offset == b.offset
+        && a.pts.iter().zip(&b.pts).all(|(p, q)| p == q);
+    let centred = |w: &kentos_commands::WallFields| {
+        w.justify == kentos_commands::WallJustify::Center && w.offset == 0.0
+    };
+    let backward =
+        centred(a) && centred(b) && a.pts.iter().zip(b.pts.iter().rev()).all(|(p, q)| p == q);
     forward || backward
 }
 
@@ -813,7 +939,10 @@ fn grid_middle(g: &kentos_commands::GridFields) -> V {
         [a, b] => kentos_geometry_core::geom::bulge::segment_mid(
             core(*a),
             core(*b),
-            g.bulges.as_ref().and_then(|x| x.first().copied()).unwrap_or(0.0),
+            g.bulges
+                .as_ref()
+                .and_then(|x| x.first().copied())
+                .unwrap_or(0.0),
         ),
         _ => V::new(0.0, 0.0),
     }
@@ -823,7 +952,12 @@ fn grid_middle(g: &kentos_commands::GridFields) -> V {
 /// nanometre.
 fn lies_on(g: &kentos_commands::GridFields, h: &kentos_commands::GridFields) -> bool {
     let near = |p: Vec2, q: Vec2| (p.x - q.x).abs() <= 1e-9 && (p.y - q.y).abs() <= 1e-9;
-    let bulge = |f: &kentos_commands::GridFields| f.bulges.as_ref().and_then(|x| x.first().copied()).unwrap_or(0.0);
+    let bulge = |f: &kentos_commands::GridFields| {
+        f.bulges
+            .as_ref()
+            .and_then(|x| x.first().copied())
+            .unwrap_or(0.0)
+    };
     let ([a, b], [c, d]) = (g.pts.as_slice(), h.pts.as_slice()) else {
         return false;
     };
@@ -844,7 +978,11 @@ fn opening_point(place: &[Vec2]) -> V {
 
 /// A space's point: its first part's outer ring's centroid by its vertices (their mean when it has no area).
 fn space_point(parts: &[kentos_commands::SpacePart]) -> V {
-    let Some(ring) = parts.first().map(|p| &p.outer.pts).filter(|r| !r.is_empty()) else {
+    let Some(ring) = parts
+        .first()
+        .map(|p| &p.outer.pts)
+        .filter(|r| !r.is_empty())
+    else {
         return V::new(0.0, 0.0);
     };
     let n = ring.len();
@@ -879,7 +1017,8 @@ fn space_label(s: &kentos_commands::SpaceFields) -> String {
     }
 }
 
-const SMALL_REPAIR: &str = "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.";
+const SMALL_REPAIR: &str =
+    "İki duvar arasında kalan bir boşluk mahal sayılmış olabilir; gereksizse mahalı silin.";
 
 impl Audit<'_> {
     fn openings(&self) -> Vec<ArchAuditFinding> {
@@ -906,10 +1045,16 @@ impl Audit<'_> {
             }
             // Behind its type's version (docs/adr/0772 §4).
             if o.follows_type()
-                && let Some(t) = o.style.as_deref().and_then(|s| self.doc.opening_types().iter().find(|t| t.id == s))
+                && let Some(t) = o
+                    .style
+                    .as_deref()
+                    .and_then(|s| self.doc.opening_types().iter().find(|t| t.id == s))
                 && o.type_version.unwrap_or(0) < t.version
             {
-                let n = n.map_or_else(|| "Numarasız açıklık".to_owned(), |n| format!("“{n}” açıklığı"));
+                let n = n.map_or_else(
+                    || "Numarasız açıklık".to_owned(),
+                    |n| format!("“{n}” açıklığı"),
+                );
                 let fix = (!self.locked(e)).then(|| {
                     fix(
                         "Tipi yeniden uygula",
@@ -1014,7 +1159,9 @@ impl Audit<'_> {
                 Entity::Space(s) => s.space.number.as_ref().map(|n| (false, n.clone())),
                 _ => None,
             };
-            let Some(key) = key.filter(|(_, n)| !n.is_empty()) else { continue };
+            let Some(key) = key.filter(|(_, n)| !n.is_empty()) else {
+                continue;
+            };
             if !groups.contains_key(&key) {
                 order.push(key.clone());
             }
@@ -1067,7 +1214,10 @@ impl Audit<'_> {
             let message = if t.tag.text.is_empty() {
                 "Etiketin nesnesi çizimde yok.".to_owned()
             } else {
-                format!("“{}” etiketinin nesnesi çizimde yok.", t.tag.text.replace('\n', " "))
+                format!(
+                    "“{}” etiketinin nesnesi çizimde yok.",
+                    t.tag.text.replace('\n', " ")
+                )
             };
             let fix = (!self.locked(e)).then(|| {
                 fix(
@@ -1099,7 +1249,9 @@ fn set_words(b: kentos_commands::DimensionSetBreak) -> &'static str {
         B::UnsupportedWall => {
             "Ölçü dizisinin duvar kenarı artık ölçülemiyor (pahlı köşe, yay ya da olmayan kenar); ölçüler son yerlerinde duruyor."
         }
-        B::OpeningUnplaced => "Ölçü dizisinin bir açıklığı duvarına yerleşmiyor; ölçüler son yerlerinde duruyor.",
+        B::OpeningUnplaced => {
+            "Ölçü dizisinin bir açıklığı duvarına yerleşmiyor; ölçüler son yerlerinde duruyor."
+        }
         B::MixedSources => {
             "Ölçü dizisinin duvarları artık farklı katlarda; ölçüler son yerlerinde duruyor."
         }
@@ -1156,7 +1308,9 @@ impl Audit<'_> {
             if members.contains(&uid) {
                 continue;
             }
-            let Some(refs) = d.refs.as_deref() else { continue };
+            let Some(refs) = d.refs.as_deref() else {
+                continue;
+            };
             let broken: Vec<&str> = [("a", &refs.a), ("b", &refs.b), ("c", &refs.c)]
                 .into_iter()
                 .filter(|(_, r)| r.as_ref().is_some_and(|r| r.broken.is_some()))
@@ -1166,8 +1320,10 @@ impl Audit<'_> {
                 continue;
             }
             let fix = (!self.locked(e)).then(|| {
-                let points: Vec<serde_json::Value> =
-                    broken.iter().map(|k| json!({"point": k, "to": null})).collect();
+                let points: Vec<serde_json::Value> = broken
+                    .iter()
+                    .map(|k| json!({"point": k, "to": null}))
+                    .collect();
                 fix(
                     // UR-025: freeing is no fix of the value: the label says the points stay and the value with them.
                     "Bağı çöz (noktalar eski yerinde, değer değişmez)",
@@ -1310,7 +1466,12 @@ impl Audit<'_> {
                     json!({"uids": [self.uid_of(e)], "operation": {"kind": "detach"}}),
                 )
             });
-            let at = v.mark.points.first().copied().map_or(V::new(0.0, 0.0), core);
+            let at = v
+                .mark
+                .points
+                .first()
+                .copied()
+                .map_or(V::new(0.0, 0.0), core);
             out.push(finding(
                 ArchAuditCheck::Viewmarks,
                 codes::ARCH_VIEWMARK_TARGET_GONE,
@@ -1382,7 +1543,10 @@ impl Audit<'_> {
     /// The ramps measured against `profile` (docs/adr/0723 §4): too steep for their rise, a long run too steep, a landing
     /// too short, too narrow where they turn. The last two are fixed by `cad.arch.edit` unless locked; the first two
     /// need the ramp drawn again (longer, or with Rampa's En uzun kol).
-    fn accessibility(&self, profile: Option<&(String, kentos_commands::RampRules)>) -> Vec<ArchAuditFinding> {
+    fn accessibility(
+        &self,
+        profile: Option<&(String, kentos_commands::RampRules)>,
+    ) -> Vec<ArchAuditFinding> {
         let Some((profile_id, rules)) = profile else {
             return Vec::new();
         };
@@ -1391,7 +1555,9 @@ impl Audit<'_> {
         for e in self.doc.entities() {
             let Entity::Ramp(r) = e else { continue };
             let shape = kentos_formats::arch_elements::core_ramp(&r.ramp);
-            let kentos_geometry_core::entity::Shape::Ramp { pts, ramp } = &shape else { continue };
+            let kentos_geometry_core::entity::Shape::Ramp { pts, ramp } = &shape else {
+                continue;
+            };
             let walk = arch::Walk::of(pts);
             let run = arch::ramp_run(&walk, ramp);
             let rise = r.ramp.rise.abs();
@@ -1497,7 +1663,10 @@ impl Audit<'_> {
     /// risers and a tread outside their range, a flight too narrow, a landing shorter than the flight is wide, a winding
     /// stair's tread too narrow at its narrow end, a side without a railing. A flight's width, a landing and the
     /// railings are fixed by `cad.arch.edit` unless locked; the others need the stair designed again.
-    fn stairs(&self, profile: Option<&(String, kentos_commands::StairRules)>) -> Vec<ArchAuditFinding> {
+    fn stairs(
+        &self,
+        profile: Option<&(String, kentos_commands::StairRules)>,
+    ) -> Vec<ArchAuditFinding> {
         let mut out = self.stairs_own();
         let Some((profile_id, rules)) = profile else {
             return out;
@@ -1506,18 +1675,33 @@ impl Audit<'_> {
             let Entity::Stair(st) = e else { continue };
             let x = &st.stair;
             let shape = kentos_formats::arch_elements::core_stair(x);
-            let kentos_geometry_core::entity::Shape::Stair { pts, stair } = &shape else { continue };
+            let kentos_geometry_core::entity::Shape::Stair { pts, stair } = &shape else {
+                continue;
+            };
             let uid = self.uid_of(e);
             let start = pts.first().copied().unwrap_or(V::new(0.0, 0.0));
             let fixable = !self.locked(e);
             let regulation = format!("{profile_id}, mevzuat onayı değildir");
-            let mut say = |code: &str, message: String, repair: String, at: V, fix: Option<ArchAuditFix>| {
-                out.push(finding(ArchAuditCheck::Stairs, code, message, repair, vec![uid.clone()], at, fix));
-            };
+            let mut say =
+                |code: &str, message: String, repair: String, at: V, fix: Option<ArchAuditFix>| {
+                    out.push(finding(
+                        ArchAuditCheck::Stairs,
+                        code,
+                        message,
+                        repair,
+                        vec![uid.clone()],
+                        at,
+                        fix,
+                    ));
+                };
             if x.riser_height > rules.riser + 1e-9 {
                 say(
                     codes::STAIR_RISER_OVER_PROFILE,
-                    format!("Merdivenin rıhtı {} m; en çok {} m olmalı.", fixed(x.riser_height, 3), fixed(rules.riser, 2)),
+                    format!(
+                        "Merdivenin rıhtı {} m; en çok {} m olmalı.",
+                        fixed(x.riser_height, 3),
+                        fixed(rules.riser, 2)
+                    ),
                     format!("Rıht sayısını artırın; merdiven uzar ({regulation})."),
                     start,
                     None,
@@ -1526,7 +1710,11 @@ impl Audit<'_> {
             if x.tread < rules.tread - 1e-9 {
                 say(
                     codes::STAIR_TREAD_SHORT,
-                    format!("Merdivenin basamağı {} m; en az {} m olmalı.", fixed(x.tread, 3), fixed(rules.tread, 2)),
+                    format!(
+                        "Merdivenin basamağı {} m; en az {} m olmalı.",
+                        fixed(x.tread, 3),
+                        fixed(rules.tread, 2)
+                    ),
                     format!("Basamağı derinleştirin; merdiven uzar ({regulation})."),
                     start,
                     None,
@@ -1663,7 +1851,15 @@ impl Audit<'_> {
                     }
                     _ => continue,
                 };
-                out.push(finding(ArchAuditCheck::Stairs, &w.code, message, repair, vec![uid.clone()], start, fix));
+                out.push(finding(
+                    ArchAuditCheck::Stairs,
+                    &w.code,
+                    message,
+                    repair,
+                    vec![uid.clone()],
+                    start,
+                    fix,
+                ));
             }
         }
         out
@@ -1709,7 +1905,15 @@ impl Audit<'_> {
                     }
                     _ => continue,
                 };
-                out.push(finding(ArchAuditCheck::Ramps, &w.code, message, repair, vec![uid.clone()], start, fix));
+                out.push(finding(
+                    ArchAuditCheck::Ramps,
+                    &w.code,
+                    message,
+                    repair,
+                    vec![uid.clone()],
+                    start,
+                    fix,
+                ));
             }
         }
         out
@@ -1766,28 +1970,51 @@ impl Audit<'_> {
 
 /// The profiles asked, from the catalog: the ramp rules and the stair rules with their profiles' ids
 /// (`invalid_arch_audit` for one the catalog lacks, or a second with ramp or with stair rules).
-type ProfileRules = (Option<(String, kentos_commands::RampRules)>, Option<(String, kentos_commands::StairRules)>);
+type ProfileRules = (
+    Option<(String, kentos_commands::RampRules)>,
+    Option<(String, kentos_commands::StairRules)>,
+);
 
 fn profiles_of(input: &ArchAudit) -> Result<ProfileRules, Stop> {
     let mut ramp = None;
     let mut stair = None;
     let refuse = |k: usize, words: String| {
-        Stop::failed(error(codes::INVALID_ARCH_AUDIT, words, Some(format!("profiles[{k}]"))))
+        Stop::failed(error(
+            codes::INVALID_ARCH_AUDIT,
+            words,
+            Some(format!("profiles[{k}]")),
+        ))
     };
     for (k, id) in input.profiles.iter().enumerate() {
         let Some(p) = kentos_commands::arch_profile(id) else {
-            let known: Vec<&str> = kentos_commands::ARCH_PROFILES.iter().map(|(i, _)| *i).collect();
-            return Err(refuse(k, format!("“{id}” profili yok; şunlardan birini verin: {}.", known.join(", "))));
+            let known: Vec<&str> = kentos_commands::ARCH_PROFILES
+                .iter()
+                .map(|(i, _)| *i)
+                .collect();
+            return Err(refuse(
+                k,
+                format!(
+                    "“{id}” profili yok; şunlardan birini verin: {}.",
+                    known.join(", ")
+                ),
+            ));
         };
         if let Some(r) = p.ramp {
             if ramp.is_some() {
-                return Err(refuse(k, "Rampalar için bir profil verilir; ikinci rampa profilini kaldırın.".into()));
+                return Err(refuse(
+                    k,
+                    "Rampalar için bir profil verilir; ikinci rampa profilini kaldırın.".into(),
+                ));
             }
             ramp = Some((p.id.clone(), r));
         }
         if let Some(s) = p.stair {
             if stair.is_some() {
-                return Err(refuse(k, "Merdivenler için bir profil verilir; ikinci merdiven profilini kaldırın.".into()));
+                return Err(refuse(
+                    k,
+                    "Merdivenler için bir profil verilir; ikinci merdiven profilini kaldırın."
+                        .into(),
+                ));
             }
             stair = Some((p.id.clone(), s));
         }
@@ -1814,7 +2041,10 @@ fn fix_level<'a>(doc: &'a Document, input: &ArchAudit) -> Result<Option<&'a Arch
                 Some("level".into()),
             ))),
         },
-        None => Ok(levels.iter().find(|l| l.elevation == 0.0).or(levels.first())),
+        None => Ok(levels
+            .iter()
+            .find(|l| l.elevation == 0.0)
+            .or(levels.first())),
     }
 }
 
@@ -1827,9 +2057,17 @@ struct Scope {
 
 fn scope_of(doc: &Document, input: &ArchAudit) -> Result<Scope, Stop> {
     let Some(within) = &input.within else {
-        return Ok(Scope { levels: None, uids: None });
+        return Ok(Scope {
+            levels: None,
+            uids: None,
+        });
     };
-    let levels = doc.settings().arch.as_ref().map(|a| a.levels.as_slice()).unwrap_or_default();
+    let levels = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.as_slice())
+        .unwrap_or_default();
     for (i, id) in within.levels.iter().flatten().enumerate() {
         if let Some(id) = id
             && !levels.iter().any(|l| &l.id == id)
@@ -1843,7 +2081,11 @@ fn scope_of(doc: &Document, input: &ArchAudit) -> Result<Scope, Stop> {
         }
     }
     for (i, u) in within.uids.iter().flatten().enumerate() {
-        if kentos_domain::Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).is_none() {
+        if kentos_domain::Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .is_none()
+        {
             return Err(Stop::failed(error(
                 codes::ENTITY_NOT_FOUND,
                 format!("“{u}” kimlikli nesne çizimde yok."),
@@ -1872,13 +2114,20 @@ impl Scope {
                 levels.contains(&level)
             })
         });
-        on_level && self.uids.as_ref().is_none_or(|set| f.uids.iter().any(|u| set.contains(u)))
+        on_level
+            && self
+                .uids
+                .as_ref()
+                .is_none_or(|set| f.uids.iter().any(|u| set.contains(u)))
     }
 }
 
 /// Every finding of the groups asked, in their order, each with its lasting key (`#2`, `#3` for a second and a third
 /// alike, docs/adr/0732 §1); the codes those groups could find (a profile's only when it is asked).
-fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, HashSet<&'static str>), Stop> {
+fn found(
+    doc: &Document,
+    input: &ArchAudit,
+) -> Result<(Vec<ArchAuditFinding>, HashSet<&'static str>), Stop> {
     let limits = limits(input)?;
     let (ramp_rules, stair_rules) = profiles_of(input)?;
     let level = fix_level(doc, input)?;
@@ -1888,7 +2137,10 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
     let asked = |c: ArchAuditCheck| {
         input.checks.contains(&c)
             || (input.checks.is_empty()
-                && !matches!(c, ArchAuditCheck::Doors | ArchAuditCheck::Fixtures | ArchAuditCheck::Regulation))
+                && !matches!(
+                    c,
+                    ArchAuditCheck::Doors | ArchAuditCheck::Fixtures | ArchAuditCheck::Regulation
+                ))
     };
     let mut findings = Vec::new();
     let mut run: HashSet<&'static str> = HashSet::new();
@@ -1952,30 +2204,42 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
             ),
             ArchAuditCheck::Program => crate::program_check::findings(doc),
             // Mevzuat (docs/adr/8033): each finding naming its article.
-            ArchAuditCheck::Regulation => crate::regulation_audit::findings(doc, |code, message, repair, slots, at, rule, offer| {
-                let uids = slots.iter().map(|s| audit.uid(*s)).collect();
-                // A stair's or a ramp's fix (docs/adr/8034): cad.arch.edit on it, not on a locked layer; a slab's edge
-                // cad.slabs.edit (docs/adr/8045 §4); an elevator's or a parking place's block its parameters (§5, §6).
-                let fix = offer.zip(slots.first()).and_then(|(o, s)| {
-                    let e = doc.get(*s)?;
-                    (!audit.locked(e)).then(|| {
-                        let command = o.command.unwrap_or("cad.arch.edit");
-                        let uid = audit.uid(*s);
-                        let input = if command == crate::block_values::PARAMETERS {
-                            json!({"operation": "set", "uids": [uid], "values": o.operation})
-                        } else {
-                            json!({"uids": [uid], "operation": o.operation})
-                        };
-                        fix(o.label, command, input)
-                    })
-                });
-                let mut f = finding(ArchAuditCheck::Regulation, code, message, repair, uids, at, fix);
-                f.rule = Some(rule);
-                f
-            }),
-            ArchAuditCheck::Fixtures => crate::fixture_audit::findings(doc, |code, message, repair, slots, at, turn| {
-                // A door's fix: the door turned (docs/adr/0787 §1), not on a locked layer.
-                let fix = turn.zip(slots.get(1)).and_then(|((label, what), door)| {
+            ArchAuditCheck::Regulation => crate::regulation_audit::findings(
+                doc,
+                |code, message, repair, slots, at, rule, offer| {
+                    let uids = slots.iter().map(|s| audit.uid(*s)).collect();
+                    // A stair's or a ramp's fix (docs/adr/8034): cad.arch.edit on it, not on a locked layer; a slab's edge
+                    // cad.slabs.edit (docs/adr/8045 §4); an elevator's or a parking place's block its parameters (§5, §6).
+                    let fix = offer.zip(slots.first()).and_then(|(o, s)| {
+                        let e = doc.get(*s)?;
+                        (!audit.locked(e)).then(|| {
+                            let command = o.command.unwrap_or("cad.arch.edit");
+                            let uid = audit.uid(*s);
+                            let input = if command == crate::block_values::PARAMETERS {
+                                json!({"operation": "set", "uids": [uid], "values": o.operation})
+                            } else {
+                                json!({"uids": [uid], "operation": o.operation})
+                            };
+                            fix(o.label, command, input)
+                        })
+                    });
+                    let mut f = finding(
+                        ArchAuditCheck::Regulation,
+                        code,
+                        message,
+                        repair,
+                        uids,
+                        at,
+                        fix,
+                    );
+                    f.rule = Some(rule);
+                    f
+                },
+            ),
+            ArchAuditCheck::Fixtures => {
+                crate::fixture_audit::findings(doc, |code, message, repair, slots, at, turn| {
+                    // A door's fix: the door turned (docs/adr/0787 §1), not on a locked layer.
+                    let fix = turn.zip(slots.get(1)).and_then(|((label, what), door)| {
                     let e = doc.get(*door)?;
                     (!audit.locked(e)).then(|| {
                         fix(
@@ -1985,18 +2249,19 @@ fn found(doc: &Document, input: &ArchAudit) -> Result<(Vec<ArchAuditFinding>, Ha
                         )
                     })
                 });
-                let mut f = finding(
-                    ArchAuditCheck::Fixtures,
-                    code,
-                    message,
-                    repair,
-                    slots.iter().map(|s| audit.uid(*s)).collect(),
-                    at,
-                    fix,
-                );
-                f.nature = Some(kentos_commands::ArchAuditNature::Passage);
-                f
-            }),
+                    let mut f = finding(
+                        ArchAuditCheck::Fixtures,
+                        code,
+                        message,
+                        repair,
+                        slots.iter().map(|s| audit.uid(*s)).collect(),
+                        at,
+                        fix,
+                    );
+                    f.nature = Some(kentos_commands::ArchAuditNature::Passage);
+                    f
+                })
+            }
         };
         let rank = |code: &str| codes.iter().position(|c| *c == code).unwrap_or(codes.len());
         // Stable: within one code and one place, the order they were found in.
@@ -2048,7 +2313,12 @@ pub fn lay_exceptions(
     findings: Vec<ArchAuditFinding>,
     view: ArchAuditExceptionView,
 ) -> (Vec<ArchAuditFinding>, u32, u32) {
-    let exceptions = doc.settings().arch.as_ref().map(|a| a.audit_exceptions.as_slice()).unwrap_or_default();
+    let exceptions = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.audit_exceptions.as_slice())
+        .unwrap_or_default();
     let (mut excepted, mut lapsed) = (0u32, 0u32);
     let mut out = Vec::new();
     for mut f in findings {
@@ -2069,7 +2339,12 @@ fn answer(doc: &Document, input: &ArchAudit) -> Result<(ArchAudited, Vec<Command
     let built = crate::options_edit::primary_view(doc);
     let (all, run) = found(built.as_ref().unwrap_or(doc), input)?;
     let scope = scope_of(doc, input)?;
-    let exceptions = doc.settings().arch.as_ref().map(|a| a.audit_exceptions.as_slice()).unwrap_or_default();
+    let exceptions = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.audit_exceptions.as_slice())
+        .unwrap_or_default();
     let stale: Vec<String> = exceptions
         .iter()
         .filter(|x| run.contains(x.code.as_str()) && !all.iter().any(|f| f.key == x.key))

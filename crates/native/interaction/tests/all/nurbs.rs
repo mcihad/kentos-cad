@@ -550,10 +550,20 @@ fn a_drawn_curve_is_said_not_taken_by_curve_edit() {
     assert!(matches!(b.newest(), Entity::Spline(_)), "{:?}", b.newest());
     b.selection.set([curve]);
     b.start("curveEdit");
-    assert!(b.last_text().is_some_and(|t| t.starts_with("Eğri aracıyla çizilen eğri burada düzenlenmez")), "{:?}", b.last_text());
+    assert!(
+        b.last_text()
+            .is_some_and(|t| t.starts_with("Eğri aracıyla çizilen eğri burada düzenlenmez")),
+        "{:?}",
+        b.last_text()
+    );
     b.selection.set([]);
     b.start("curveEdit");
     b.spatial.sync(&b.doc);
     b.click(4.0, 3.0);
-    assert!(b.last_text().is_some_and(|t| t.starts_with("Eğri aracıyla çizilen eğri burada düzenlenmez")), "{:?}", b.last_text());
+    assert!(
+        b.last_text()
+            .is_some_and(|t| t.starts_with("Eğri aracıyla çizilen eğri burada düzenlenmez")),
+        "{:?}",
+        b.last_text()
+    );
 }

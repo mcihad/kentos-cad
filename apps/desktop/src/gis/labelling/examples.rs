@@ -26,7 +26,10 @@ pub(super) struct Texts {
 /// The first [`SAMPLE_OBJECTS`] objects' texts as `node` labels them.
 pub(super) fn texts(doc: &kentos_domain::Document, node: &LayerNode) -> Texts {
     let list: Vec<&Entity> = doc.by_layer(&node.id).take(SAMPLE_OBJECTS).collect();
-    let mut out = Texts { read: list.len(), ..Texts::default() };
+    let mut out = Texts {
+        read: list.len(),
+        ..Texts::default()
+    };
     for (i, texts) in texts_of(doc, node, &list).iter().enumerate() {
         let Some(text) = texts.iter().map(|(_, t)| t).find(|t| !t.trim().is_empty()) else {
             out.empty += 1;
@@ -61,7 +64,11 @@ pub(super) fn scale_words(style: &LabelStyle, scale: f64) -> (Kind, String) {
     if !(scale.is_finite() && scale > 0.0) {
         return (Kind::Info, format!("Ölçek: {range}."));
     }
-    let seen = visible_at(denominator(scale), style.min_scale.map(denominator), style.max_scale.map(denominator));
+    let seen = visible_at(
+        denominator(scale),
+        style.min_scale.map(denominator),
+        style.max_scale.map(denominator),
+    );
     let now = if seen { "görünür" } else { "görünmez" };
     (
         if seen { Kind::Info } else { Kind::Warn },
@@ -73,11 +80,16 @@ pub(super) fn scale_words(style: &LabelStyle, scale: f64) -> (Kind, String) {
 pub(super) fn print_words(style: &LabelStyle) -> String {
     let mm = style.size * PX_MM;
     let grows = match (style.grow, style.max_size) {
-        (Some(_), Some(most)) => format!(" Ölçekle büyür, en çok {most} px ({:.1} mm).", most * PX_MM),
+        (Some(_), Some(most)) => {
+            format!(" Ölçekle büyür, en çok {most} px ({:.1} mm).", most * PX_MM)
+        }
         (Some(_), None) => " Ölçekle büyür.".to_owned(),
         _ => String::new(),
     };
-    format!("Baskı: yazı {} px, kâğıtta yaklaşık {mm:.1} mm.{grows}", style.size)
+    format!(
+        "Baskı: yazı {} px, kâğıtta yaklaşık {mm:.1} mm.{grows}",
+        style.size
+    )
 }
 
 /// The window's example lines for `node` (its draft) with `objects` objects at the view's `scale` (px a metre).
@@ -91,21 +103,31 @@ pub(super) fn example_lines(
     let t = texts(doc, node);
     match &t.first {
         Some((text, 0)) => lines.push((Kind::Info, format!("Örnek metin (ilk nesne): “{text}”."))),
-        Some((text, before)) => {
-            lines.push((Kind::Info, format!("Örnek metin: “{text}”; ilk {before} nesnenin metni boş.")))
-        }
-        None if objects > 0 => lines.push((Kind::Warn, format!("İlk {} nesnenin etiket metni boş.", t.read))),
+        Some((text, before)) => lines.push((
+            Kind::Info,
+            format!("Örnek metin: “{text}”; ilk {before} nesnenin metni boş."),
+        )),
+        None if objects > 0 => lines.push((
+            Kind::Warn,
+            format!("İlk {} nesnenin etiket metni boş.", t.read),
+        )),
         None => {}
     }
     if let (Some((first, _)), Some((longest, letters))) = (&t.first, &t.longest)
         && cut(longest) != *first
     {
-        lines.push((Kind::Info, format!("En uzun metin: “{}” ({letters} harf).", cut(longest))));
+        lines.push((
+            Kind::Info,
+            format!("En uzun metin: “{}” ({letters} harf).", cut(longest)),
+        ));
     }
     if t.first.is_some() && t.empty > 0 {
         lines.push((
             Kind::Info,
-            format!("İlk {} nesnenin {} tanesinde metin boş; onlara etiket yazılmaz.", t.read, t.empty),
+            format!(
+                "İlk {} nesnenin {} tanesinde metin boş; onlara etiket yazılmaz.",
+                t.read, t.empty
+            ),
         ));
     }
     if let Some(style) = class_styles(node).first() {

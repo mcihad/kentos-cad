@@ -391,9 +391,9 @@ mod tests {
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
-            app.grids.library = Some(crate::grids::Library::at(
-                crate::files_testing::scratch("datum-resim"),
-            ));
+            app.grids.library = Some(crate::grids::Library::at(crate::files_testing::scratch(
+                "datum-resim",
+            )));
             let _ = app.update(Message::Run("crs.set"));
             let task = app.update(settings_message(SettingsEvent::Grid(
                 crate::grids::Event::Picked(Some(tr.clone())),

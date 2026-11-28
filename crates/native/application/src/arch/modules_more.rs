@@ -501,7 +501,8 @@ pub(super) fn add_members(
         }
         // On the instance's base level or one above it: an upper storey (docs/adr/0796 §1); a single-storey
         // instance's own level only (docs/adr/0811).
-        let at = arch_level_holder(e).then(|| storey_of(&order, inst.level.as_deref(), e.own_level()));
+        let at =
+            arch_level_holder(e).then(|| storey_of(&order, inst.level.as_deref(), e.own_level()));
         if at.is_some_and(|s| s.is_none() || (inst.storey.is_some() && s != Some(0))) {
             return Err(fail(
                 codes::MODULE_LEVELS,
@@ -534,7 +535,12 @@ pub(super) fn add_members(
         } else {
             0
         };
-        let mut t = crate::transform::by_matrix(e, &back, crate::geometry::drawing_font(doc.settings().drawing_font)).ok_or_else(|| {
+        let mut t = crate::transform::by_matrix(
+            e,
+            &back,
+            crate::geometry::drawing_font(doc.settings().drawing_font),
+        )
+        .ok_or_else(|| {
             fail(
                 codes::NOT_FINITE,
                 "Nesne modüle alınamadı.".into(),
@@ -991,7 +997,11 @@ fn loose_plan(
         let out: Vec<usize> = copy
             .iter()
             .enumerate()
-            .filter(|(_, (_, e))| references(doc, e).iter().any(|r| !held.contains(r.as_str())))
+            .filter(|(_, (_, e))| {
+                references(doc, e)
+                    .iter()
+                    .any(|r| !held.contains(r.as_str()))
+            })
             .map(|(i, _)| i)
             .collect();
         if out.is_empty() {
@@ -1017,7 +1027,11 @@ fn loose_plan(
 fn held_apart(doc: &Document, modules: &[ArchModule]) -> (HashSet<String>, HashSet<String>) {
     let in_modules = modules
         .iter()
-        .flat_map(|m| m.instances.iter().flat_map(|i| i.members.iter().map(|o| o.uid.clone())))
+        .flat_map(|m| {
+            m.instances
+                .iter()
+                .flat_map(|i| i.members.iter().map(|o| o.uid.clone()))
+        })
         .collect();
     let in_options = doc
         .arch_options()
@@ -1164,7 +1178,9 @@ pub(super) fn repeat(
         return Err(fail(
             codes::MODULE_REPEAT_EMPTY,
             if loose {
-                format!("“{from}” katında tekrarlanacak bağlı modül örneği ya da modülsüz nesne yok.")
+                format!(
+                    "“{from}” katında tekrarlanacak bağlı modül örneği ya da modülsüz nesne yok."
+                )
             } else {
                 format!("“{from}” katında tekrarlanacak bağlı modül örneği yok.")
             },
@@ -1234,7 +1250,12 @@ pub(super) fn repeat(
             }
             // A single-storey instance repeats as one storey on the target (docs/adr/0811).
             if src.storey.is_none() {
-                storeys_fit(doc, &modules[k], Some(&t.level), &format!("operation.to[{j}].level"))?;
+                storeys_fit(
+                    doc,
+                    &modules[k],
+                    Some(&t.level),
+                    &format!("operation.to[{j}].level"),
+                )?;
             }
             let line = t
                 .instances
@@ -1324,7 +1345,9 @@ pub(super) fn repeat(
                     }
                     let c = copy_of(e, &map);
                     let mine = cleaned(&c, written_by_the_document(&c));
-                    if let Some(n) = (0..there.len()).find(|n| !used.contains(n) && near(&mine, &there[*n].1)) {
+                    if let Some(n) =
+                        (0..there.len()).find(|n| !used.contains(n) && near(&mine, &there[*n].1))
+                    {
                         used.insert(n);
                         map.insert(uid.clone(), there[n].0.clone());
                         matched.insert(i, there[n].0.clone());

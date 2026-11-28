@@ -160,11 +160,16 @@ fn write_execute(
         // A linked text's copy is a text of its own (docs/adr/0175 §4).
         let copies: Vec<_> = checked.moved.into_iter().map(unlinked).collect();
         // The copies' groups: a space's sources and an opening's wall go onto their copies (docs/adr/0730 §4).
-        let origins: Vec<_> =
-            checked.sources.iter().filter_map(|(_, id)| kentos_domain::Uuid::parse_str(id).ok()).collect();
+        let origins: Vec<_> = checked
+            .sources
+            .iter()
+            .filter_map(|(_, id)| kentos_domain::Uuid::parse_str(id).ok())
+            .collect();
         match cx.doc.add_room_copies(copies, &origins, label) {
-            Ok((slots,detached)) => {
-                if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
+            Ok((slots, detached)) => {
+                if detached > 0 {
+                    warnings.push(crate::spaces::uncopied_sources(detached));
+                }
                 // The constraints among the copied objects, onto the copies (docs/adr/0337 §3).
                 let group = crate::constraint_copy::group_of(
                     cx.doc,
@@ -220,9 +225,13 @@ fn write_execute(
         // The recipes whose objects all move, moved with them in the same change (docs/adr/0730 §4).
         match checked.matrix {
             Some(m) if !checked.recipes.is_empty() => {
-                if let Err(stop) =
-                    crate::dimension_set_copy::move_whole(cx.doc, changes, &checked.recipes, &m, label)
-                {
+                if let Err(stop) = crate::dimension_set_copy::move_whole(
+                    cx.doc,
+                    changes,
+                    &checked.recipes,
+                    &m,
+                    label,
+                ) {
                     return stop.into();
                 }
             }
@@ -710,7 +719,9 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
             )));
         }
         let before = shape(entity);
-        if matrix.as_ref().is_some_and(kentos_geometry_core::geom::affine::is_reflection)
+        if matrix
+            .as_ref()
+            .is_some_and(kentos_geometry_core::geom::affine::is_reflection)
             && let Entity::Text(t) = entity
         {
             crate::shape_edits::text_orientation_ready(doc, uid, t, "uids")?;
@@ -731,7 +742,12 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                 continue;
             }
             How::Matrix(m) => {
-                let after = transform_shape_in(&before, m, policy, drawing_font(doc.settings().drawing_font));
+                let after = transform_shape_in(
+                    &before,
+                    m,
+                    policy,
+                    drawing_font(doc.settings().drawing_font),
+                );
                 overflow |= finite_shape(&before) && !finite_shape(&after);
                 with_shape(entity, after).map(|e| carry_scales(entity, e, m))
             }
@@ -793,8 +809,13 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
                 Some("transform".into()),
             )));
         };
-        let e=crate::geometry::carry_space_separator(entity,e)
-            .map_err(|why|Stop::failed(checks::error(codes::INVALID_SPACE_SEPARATOR,why,Some("transform".into()))))?;
+        let e = crate::geometry::carry_space_separator(entity, e).map_err(|why| {
+            Stop::failed(checks::error(
+                codes::INVALID_SPACE_SEPARATOR,
+                why,
+                Some("transform".into()),
+            ))
+        })?;
         sources.push((slot, uid.clone()));
         moved.push(e);
     }
@@ -896,10 +917,16 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
         }
         warnings.extend(onto);
     }
-    if input.copy.unwrap_or(false) && moved.iter().any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some())) {
+    if input.copy.unwrap_or(false)
+        && moved
+            .iter()
+            .any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some()))
+    {
         let origins: Vec<_> = sources.iter().map(|(_, id)| id.clone()).collect();
         let detached = kentos_domain::space_follow::prepare_source_copies(&mut moved, &origins);
-        if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
+        if detached > 0 {
+            warnings.push(crate::spaces::uncopied_sources(detached));
+        }
     }
     Ok(Checked {
         sources,
@@ -1026,14 +1053,22 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
             at, width, place, ..
         } => at.is_finite() && width.is_finite() && pts(place),
         Shape::Grid { pts: p, bulges, .. } => pts(p) && values(bulges),
-        Shape::Column { at, column } => pt(at) && column.width.is_finite() && column.rotation.is_finite(),
-        Shape::Stair { pts: p, stair } => pts(p) && stair.width.is_finite() && stair.tread.is_finite(),
+        Shape::Column { at, column } => {
+            pt(at) && column.width.is_finite() && column.rotation.is_finite()
+        }
+        Shape::Stair { pts: p, stair } => {
+            pts(p) && stair.width.is_finite() && stair.tread.is_finite()
+        }
         Shape::Ramp { pts: p, ramp } => pts(p) && ramp.width.is_finite() && ramp.rise.is_finite(),
         Shape::Beam { pts: p, beam } => pts(p) && beam.width.is_finite() && beam.height.is_finite(),
-        Shape::Roof { pts: p, roof } => pts(p) && roof.slopes.iter().flatten().all(|s| s.is_finite()) && roof.base.is_finite(),
+        Shape::Roof { pts: p, roof } => {
+            pts(p) && roof.slopes.iter().flatten().all(|s| s.is_finite()) && roof.base.is_finite()
+        }
         Shape::Railing { pts: p, railing } => pts(p) && railing.width.is_finite(),
         Shape::Tag { at, .. } => pt(at),
-        Shape::ViewMark { points, mark } => points.iter().all(pt) && mark.at.as_ref().is_none_or(pt),
+        Shape::ViewMark { points, mark } => {
+            points.iter().all(pt) && mark.at.as_ref().is_none_or(pt)
+        }
         Shape::Space { parts, space } => {
             parts
                 .iter()

@@ -10,9 +10,9 @@ use std::path::{Path, PathBuf};
 
 use kentos_commands::table_formula::{self, Axis};
 use kentos_commands::{
-    CellField, CellFormula, CellRange, CellStyle, CommandResult, CommandWarning, Entity, FieldFormat,
-    MAX_TABLE_SIZE, SourceOverrides, TableEdit, TableEntity, TableRefresh, TableReport, TableSource,
-    TablesEdit, TablesEdited, TablesOperation, TablesPlan, cells_problem,
+    CellField, CellFormula, CellRange, CellStyle, CommandResult, CommandWarning, Entity,
+    FieldFormat, MAX_TABLE_SIZE, SourceOverrides, TableEdit, TableEntity, TableRefresh,
+    TableReport, TableSource, TablesEdit, TablesEdited, TablesOperation, TablesPlan, cells_problem,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::ops::table::{LEAST, ScheduleKind};
@@ -21,8 +21,8 @@ use sha2::{Digest, Sha256};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error, is_uid_text};
-use crate::geometry::{core_table, drawing_font, with_shape};
 pub use crate::codes;
+use crate::geometry::{core_table, drawing_font, with_shape};
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
@@ -75,7 +75,9 @@ fn table_at(doc: &Document, uid: &str, path: &str) -> Result<(Slot, Uuid, TableE
             .map_or(t.base.layer_id.as_str(), |n| n.name.as_str());
         return Err(fail(
             codes::LAYER_LOCKED,
-            format!("“{name}” katmanı kilitli; üzerindeki tablo değişmez. Kilidi Katmanlar panelinden açın."),
+            format!(
+                "“{name}” katmanı kilitli; üzerindeki tablo değişmez. Kilidi Katmanlar panelinden açın."
+            ),
             path,
         ));
     }
@@ -117,7 +119,10 @@ fn core_applied(t: &TableEntity, e: &Edit, path: &str) -> Result<TableEntity, St
     if let Some(p) = done.problem {
         return Err(invalid(p, path));
     }
-    let Some(Entity::Table(out)) = done.table.and_then(|s| with_shape(&Entity::Table(Box::new(t.clone())), s)) else {
+    let Some(Entity::Table(out)) = done
+        .table
+        .and_then(|s| with_shape(&Entity::Table(Box::new(t.clone())), s))
+    else {
         return Err(invalid("Tablo düzenlenemedi.".into(), path));
     };
     Ok(*out)
@@ -140,11 +145,18 @@ fn extras_moved(t: &mut TableEntity, axis: Axis, at: usize, count: isize) {
         let r = &mut s.range;
         let moved = match axis {
             Axis::Rows => range_moved(r.row, r.rows, at, count).map(|(a, b)| (a, b, r.col, r.cols)),
-            Axis::Columns => range_moved(r.col, r.cols, at, count).map(|(a, b)| (r.row, r.rows, a, b)),
+            Axis::Columns => {
+                range_moved(r.col, r.cols, at, count).map(|(a, b)| (r.row, r.rows, a, b))
+            }
         };
         match moved {
             Some((row, rows, col, cols)) => {
-                *r = CellRange { row, rows, col, cols };
+                *r = CellRange {
+                    row,
+                    rows,
+                    col,
+                    cols,
+                };
                 true
             }
             None => false,
@@ -194,9 +206,20 @@ fn cell_in(t: &TableEntity, row: u32, col: u32, path: &str) -> Result<(usize, us
     })
 }
 
-fn range_in(t: &TableEntity, row: u32, col: u32, rows: u32, cols: u32, path: &str) -> Result<CellRange, Stop> {
+fn range_in(
+    t: &TableEntity,
+    row: u32,
+    col: u32,
+    rows: u32,
+    cols: u32,
+    path: &str,
+) -> Result<CellRange, Stop> {
     let (n, m) = (t.rows.len() as u64, t.columns.len() as u64);
-    if rows == 0 || cols == 0 || u64::from(row) + u64::from(rows) > n || u64::from(col) + u64::from(cols) > m {
+    if rows == 0
+        || cols == 0
+        || u64::from(row) + u64::from(rows) > n
+        || u64::from(col) + u64::from(cols) > m
+    {
         return Err(out_of_range(
             format!(
                 "{}. satır, {}. sütundan {rows} × {cols} aralık tablonun içinde olmalı; tablonun {n} satırı, {m} sütunu var.",
@@ -206,14 +229,28 @@ fn range_in(t: &TableEntity, row: u32, col: u32, rows: u32, cols: u32, path: &st
             path,
         ));
     }
-    Ok(CellRange { row, col, rows, cols })
+    Ok(CellRange {
+        row,
+        col,
+        rows,
+        cols,
+    })
 }
 
-fn span_in(len: usize, from: u32, count: u32, what: &str, path: &str) -> Result<(usize, usize), Stop> {
+fn span_in(
+    len: usize,
+    from: u32,
+    count: u32,
+    what: &str,
+    path: &str,
+) -> Result<(usize, usize), Stop> {
     let (from, count) = (from as usize, count as usize);
     if count == 0 || from + count > len {
         return Err(out_of_range(
-            format!("{}. {what}dan {count} {what} tablonun içinde olmalı; tablonun {len} {what}ı var.", from + 1),
+            format!(
+                "{}. {what}dan {count} {what} tablonun içinde olmalı; tablonun {len} {what}ı var.",
+                from + 1
+            ),
             path,
         ));
     }
@@ -222,16 +259,28 @@ fn span_in(len: usize, from: u32, count: u32, what: &str, path: &str) -> Result<
 
 fn size_holds(x: f64, what: &str, path: &str) -> Result<(), Stop> {
     if !x.is_finite() {
-        return Err(fail(codes::NOT_FINITE, format!("{what} sonlu bir sayı olmalı."), path));
+        return Err(fail(
+            codes::NOT_FINITE,
+            format!("{what} sonlu bir sayı olmalı."),
+            path,
+        ));
     }
     if !(x > 0.0 && x <= MAX_TABLE_SIZE) {
-        return Err(invalid(format!("{what} {x}; sıfırdan büyük ve en çok {MAX_TABLE_SIZE} m olmalı."), path));
+        return Err(invalid(
+            format!("{what} {x}; sıfırdan büyük ve en çok {MAX_TABLE_SIZE} m olmalı."),
+            path,
+        ));
     }
     Ok(())
 }
 
 /// `t` with edit `e` applied.
-fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Result<TableEntity, Stop> {
+fn edited(
+    doc: &Document,
+    mut t: TableEntity,
+    e: &TableEdit,
+    path: &str,
+) -> Result<TableEntity, Stop> {
     // A schedule's rows and cells are the document's (docs/adr/0344 §3): only its sizes and lines change here; Emsal ve
     // TAKS tablosu's too (docs/adr/8030).
     let zoning = t.source.as_ref().is_some_and(TableSource::of_regulation);
@@ -258,19 +307,39 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
             path,
         ));
     }
-    if matches!(&t.source, Some(TableSource::File { key_column: Some(_), .. }))
-        && matches!(e, TableEdit::InsertRows { .. } | TableEdit::DeleteRows { .. } | TableEdit::InsertColumns { .. } | TableEdit::DeleteColumns { .. } | TableEdit::Merge { .. } | TableEdit::Unmerge { .. })
-    {
-        return Err(invalid("Anahtarlı bağlı tabloda satır/sütun yapısı değiştirilmez; önce kaynaktan ayırın.".into(), path));
+    if matches!(
+        &t.source,
+        Some(TableSource::File {
+            key_column: Some(_),
+            ..
+        })
+    ) && matches!(
+        e,
+        TableEdit::InsertRows { .. }
+            | TableEdit::DeleteRows { .. }
+            | TableEdit::InsertColumns { .. }
+            | TableEdit::DeleteColumns { .. }
+            | TableEdit::Merge { .. }
+            | TableEdit::Unmerge { .. }
+    ) {
+        return Err(invalid(
+            "Anahtarlı bağlı tabloda satır/sütun yapısı değiştirilmez; önce kaynaktan ayırın."
+                .into(),
+            path,
+        ));
     }
     match e {
         TableEdit::SetCell { row, col, words } => {
             let (r, c) = cell_in(&t, *row, *col, path)?;
-            if r > 0 && matches!(&t.source, Some(TableSource::File { key_column: Some(key), .. }) if *key as usize == c) {
+            if r > 0
+                && matches!(&t.source, Some(TableSource::File { key_column: Some(key), .. }) if *key as usize == c)
+            {
                 return Err(invalid("Bağlı tablonun satır anahtarı hücresi değiştirilemez; kaynak dosyayı düzeltin.".into(), path));
             }
-            t.formulas.retain(|f| (f.row as usize, f.col as usize) != (r, c));
-            t.fields.retain(|f| (f.row as usize, f.col as usize) != (r, c));
+            t.formulas
+                .retain(|f| (f.row as usize, f.col as usize) != (r, c));
+            t.fields
+                .retain(|f| (f.row as usize, f.col as usize) != (r, c));
             if table_formula::is_formula(words) {
                 t.formulas.push(CellFormula {
                     row: r as u32,
@@ -289,7 +358,9 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
             // their line breaks are kept in the cell it wrote them to (a merged range's top left), the table's rule
             // (at most 20 lines, no other control character) holding them.
             if words.contains('\n') {
-                let (tr, tc) = t.merge_at(r, c).map_or((r, c), |m| (m.row as usize, m.col as usize));
+                let (tr, tc) = t
+                    .merge_at(r, c)
+                    .map_or((r, c), |m| (m.row as usize, m.col as usize));
                 if let Some(cell) = out.cells.get_mut(tr).and_then(|row| row.get_mut(tc)) {
                     *cell = words.clone();
                 }
@@ -312,9 +383,15 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
                 ));
             }
             let edit = if rows {
-                Edit::InsertRows { at: *at as usize, count: *count as usize }
+                Edit::InsertRows {
+                    at: *at as usize,
+                    count: *count as usize,
+                }
             } else {
-                Edit::InsertColumns { at: *at as usize, count: *count as usize }
+                Edit::InsertColumns {
+                    at: *at as usize,
+                    count: *count as usize,
+                }
             };
             let mut out = core_applied(&t, &edit, path)?;
             out.styles = t.styles;
@@ -331,10 +408,19 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
         TableEdit::DeleteRows { from, count } | TableEdit::DeleteColumns { from, count } => {
             let rows = matches!(e, TableEdit::DeleteRows { .. });
             let len = if rows { t.rows.len() } else { t.columns.len() };
-            let (f, k) = span_in(len, *from, *count, if rows { "satır" } else { "sütun" }, path)?;
+            let (f, k) = span_in(
+                len,
+                *from,
+                *count,
+                if rows { "satır" } else { "sütun" },
+                path,
+            )?;
             if k == len {
                 return Err(invalid(
-                    format!("Tablonun bütün {}ları silinemez; en az biri kalır.", if rows { "satır" } else { "sütun" }),
+                    format!(
+                        "Tablonun bütün {}ları silinemez; en az biri kalır.",
+                        if rows { "satır" } else { "sütun" }
+                    ),
                     path,
                 ));
             }
@@ -347,10 +433,20 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
             out.styles = t.styles;
             out.formulas = t.formulas;
             out.fields = t.fields;
-            extras_moved(&mut out, if rows { Axis::Rows } else { Axis::Columns }, f, -(k as isize));
+            extras_moved(
+                &mut out,
+                if rows { Axis::Rows } else { Axis::Columns },
+                f,
+                -(k as isize),
+            );
             Ok(out)
         }
-        TableEdit::Merge { row, col, rows, cols } => {
+        TableEdit::Merge {
+            row,
+            col,
+            rows,
+            cols,
+        } => {
             let r = range_in(&t, *row, *col, *rows, *cols, path)?;
             let edit = Edit::Merge(kentos_geometry_core::entity::CellRange {
                 row: r.row as usize,
@@ -377,7 +473,11 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
             cell_in(&t, *row, *col, path)?;
             if t.merge_at(*row as usize, *col as usize).is_none() {
                 return Err(invalid(
-                    format!("{}. satır, {}. sütun birleşik bir alanda değil.", row + 1, col + 1),
+                    format!(
+                        "{}. satır, {}. sütun birleşik bir alanda değil.",
+                        row + 1,
+                        col + 1
+                    ),
                     path,
                 ));
             }
@@ -413,15 +513,28 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
             });
             Ok(t)
         }
-        TableEdit::ClearStyle { row, col, rows, cols } => {
+        TableEdit::ClearStyle {
+            row,
+            col,
+            rows,
+            cols,
+        } => {
             let r = range_in(&t, *row, *col, *rows, *cols, path)?;
             t.styles.retain(|s| {
                 let q = s.range;
-                !(q.row < r.row + r.rows && r.row < q.row + q.rows && q.col < r.col + r.cols && r.col < q.col + q.cols)
+                !(q.row < r.row + r.rows
+                    && r.row < q.row + q.rows
+                    && q.col < r.col + r.cols
+                    && r.col < q.col + q.cols)
             });
             Ok(t)
         }
-        TableEdit::Field { row, col, source, format } => {
+        TableEdit::Field {
+            row,
+            col,
+            source,
+            format,
+        } => {
             let (r, c) = cell_in(&t, *row, *col, path)?;
             if let Some(why) = source.problem() {
                 return Err(invalid(why, path));
@@ -438,8 +551,10 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
                     path,
                 ));
             }
-            t.formulas.retain(|f| (f.row as usize, f.col as usize) != (r, c));
-            t.fields.retain(|f| (f.row as usize, f.col as usize) != (r, c));
+            t.formulas
+                .retain(|f| (f.row as usize, f.col as usize) != (r, c));
+            t.fields
+                .retain(|f| (f.row as usize, f.col as usize) != (r, c));
             t.fields.push(CellField {
                 row: r as u32,
                 col: c as u32,
@@ -453,13 +568,21 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
         TableEdit::Unfield { row, col } => {
             let (r, c) = cell_in(&t, *row, *col, path)?;
             let before = t.fields.len();
-            t.fields.retain(|f| (f.row as usize, f.col as usize) != (r, c));
+            t.fields
+                .retain(|f| (f.row as usize, f.col as usize) != (r, c));
             if t.fields.len() == before {
-                return Err(invalid(format!("{}. satır, {}. sütunda alan yok.", r + 1, c + 1), path));
+                return Err(invalid(
+                    format!("{}. satır, {}. sütunda alan yok.", r + 1, c + 1),
+                    path,
+                ));
             }
             Ok(t)
         }
-        TableEdit::RowHeight { from, count, height } => {
+        TableEdit::RowHeight {
+            from,
+            count,
+            height,
+        } => {
             let (f, k) = span_in(t.rows.len(), *from, *count, "satır", path)?;
             size_holds(*height, "Satır yüksekliği", path)?;
             for h in &mut t.rows[f..f + k] {
@@ -502,7 +625,13 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
             if *rows {
                 // Each row as deep as its cells' lines ask (docs/adr/1030 §7).
                 t.rows = (0..t.rows.len())
-                    .map(|i| kentos_geometry_core::geom::table::fit_depth(&g, i, kentos_geometry_core::ops::table::ROW))
+                    .map(|i| {
+                        kentos_geometry_core::geom::table::fit_depth(
+                            &g,
+                            i,
+                            kentos_geometry_core::ops::table::ROW,
+                        )
+                    })
                     .collect();
             }
             Ok(t)
@@ -510,11 +639,17 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
         TableEdit::ColumnAlign { from, count, align } => {
             let (f, k) = span_in(t.columns.len(), *from, *count, "sütun", path)?;
             let m = t.columns.len();
-            let mut aligns = t.aligns.take().unwrap_or_else(|| vec![kentos_commands::TableAlign::Left; m]);
+            let mut aligns = t
+                .aligns
+                .take()
+                .unwrap_or_else(|| vec![kentos_commands::TableAlign::Left; m]);
             for a in &mut aligns[f..f + k] {
                 *a = *align;
             }
-            t.aligns = (!aligns.iter().all(|a| *a == kentos_commands::TableAlign::Left)).then_some(aligns);
+            t.aligns = (!aligns
+                .iter()
+                .all(|a| *a == kentos_commands::TableAlign::Left))
+            .then_some(aligns);
             Ok(t)
         }
         TableEdit::Header { on } => {
@@ -528,12 +663,18 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
         TableEdit::Frame { width } => {
             if let Some(w) = width {
                 if !w.is_finite() {
-                    return Err(fail(codes::NOT_FINITE, "Çerçeve kalınlığı sonlu bir sayı olmalı.".into(), path));
+                    return Err(fail(
+                        codes::NOT_FINITE,
+                        "Çerçeve kalınlığı sonlu bir sayı olmalı.".into(),
+                        path,
+                    ));
                 }
                 let (wd, d): (f64, f64) = (t.columns.iter().sum(), t.rows.iter().sum());
                 if !(*w > 0.0 && 2.0 * w < wd.min(d)) {
                     return Err(invalid(
-                        format!("Çerçeve kalınlığı {w}; sıfırdan büyük, tablonun eninin ve boyunun yarısından küçük olmalı."),
+                        format!(
+                            "Çerçeve kalınlığı {w}; sıfırdan büyük, tablonun eninin ve boyunun yarısından küçük olmalı."
+                        ),
                         path,
                     ));
                 }
@@ -544,7 +685,11 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
         TableEdit::Breaks { breaks } => {
             if let Some(b) = breaks {
                 if !(b.height.is_finite() && b.gap.is_finite()) {
-                    return Err(fail(codes::NOT_FINITE, "Parça derinliği ve aralığı sonlu sayılar olmalı.".into(), path));
+                    return Err(fail(
+                        codes::NOT_FINITE,
+                        "Parça derinliği ve aralığı sonlu sayılar olmalı.".into(),
+                        path,
+                    ));
                 }
                 if let Some(words) = b.problem() {
                     return Err(invalid(words, path));
@@ -554,22 +699,47 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
             Ok(t)
         }
         TableEdit::SourceKey { column } => {
-            let Some(TableSource::File { key_column, copy, .. }) = &mut t.source else {
-                return Err(invalid("Satır anahtarı yalnız dosyaya bağlı tabloda seçilir.".into(), path));
+            let Some(TableSource::File {
+                key_column, copy, ..
+            }) = &mut t.source
+            else {
+                return Err(invalid(
+                    "Satır anahtarı yalnız dosyaya bağlı tabloda seçilir.".into(),
+                    path,
+                ));
             };
             if let Some(col) = column {
                 if !t.header {
-                    return Err(invalid("Satır anahtarı için başlık satırı açık olmalı.".into(), path));
+                    return Err(invalid(
+                        "Satır anahtarı için başlık satırı açık olmalı.".into(),
+                        path,
+                    ));
                 }
                 let Some(copy) = copy else {
-                    return Err(invalid("Satır anahtarı için son kaynak kopyası gerekli; dosyaya yeniden bağlayın.".into(), path));
+                    return Err(invalid(
+                        "Satır anahtarı için son kaynak kopyası gerekli; dosyaya yeniden bağlayın."
+                            .into(),
+                        path,
+                    ));
                 };
-                if t.cells.len() != copy.len() || t.cells.iter().zip(copy.iter()).any(|(own, was)| own.len() != was.len()) {
+                if t.cells.len() != copy.len()
+                    || t.cells
+                        .iter()
+                        .zip(copy.iter())
+                        .any(|(own, was)| own.len() != was.len())
+                {
                     return Err(invalid("Tablonun satır ve sütun yapısı son kaynak kopyasından farklı; önce kaynağa yeniden bağlayın.".into(), path));
                 }
                 let keys = row_keys(copy, *col as usize).map_err(|why| invalid(why, path))?;
-                if keys.values().any(|r| t.cells.get(*r).and_then(|row| row.get(*col as usize)) != copy[*r].get(*col as usize)) {
-                    return Err(invalid("Satır anahtarı sütununda elle değişmiş değer var; önce kaynağı düzeltin.".into(), path));
+                if keys.values().any(|r| {
+                    t.cells.get(*r).and_then(|row| row.get(*col as usize))
+                        != copy[*r].get(*col as usize)
+                }) {
+                    return Err(invalid(
+                        "Satır anahtarı sütununda elle değişmiş değer var; önce kaynağı düzeltin."
+                            .into(),
+                        path,
+                    ));
                 }
             }
             *key_column = *column;
@@ -577,7 +747,10 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
         }
         TableEdit::SourceRule { rule } => {
             let Some(TableSource::File { overrides, .. }) = &mut t.source else {
-                return Err(invalid("Elle değişen hücre kuralı yalnız dosyaya bağlı tabloda seçilir.".into(), path));
+                return Err(invalid(
+                    "Elle değişen hücre kuralı yalnız dosyaya bağlı tabloda seçilir.".into(),
+                    path,
+                ));
             };
             *overrides = *rule;
             Ok(t)
@@ -602,12 +775,19 @@ fn resolved(path: &str, base: Option<&str>) -> PathBuf {
 
 /// The SHA-256 of `bytes`, lower case hex.
 pub fn digest_of(bytes: &[u8]) -> String {
-    Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()
+    Sha256::digest(bytes)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// A file's sheet's cells as a table takes them (its rows, the empty ones after the last with words dropped), or
 /// why they cannot be.
-fn sheet_rows(bytes: &[u8], sheet: Option<&str>, header: bool) -> Result<(Vec<Vec<String>>, Vec<String>), String> {
+fn sheet_rows(
+    bytes: &[u8],
+    sheet: Option<&str>,
+    header: bool,
+) -> Result<(Vec<Vec<String>>, Vec<String>), String> {
     let book = kentos_formats::table_file::read(bytes);
     if let Some(p) = book.problem {
         return Err(p);
@@ -617,7 +797,10 @@ fn sheet_rows(bytes: &[u8], sheet: Option<&str>, header: bool) -> Result<(Vec<Ve
         Some(want) => book.sheets.iter().find(|s| s.name.as_deref() == Some(want)),
     };
     let Some(found) = found else {
-        return Err(format!("Dosyada “{}” sayfası yok.", sheet.unwrap_or_default()));
+        return Err(format!(
+            "Dosyada “{}” sayfası yok.",
+            sheet.unwrap_or_default()
+        ));
     };
     let cells = kentos_geometry_core::ops::table::from_rows(found.rows.clone(), header);
     if let Some(p) = cells.problem {
@@ -632,7 +815,12 @@ fn sheet_rows(bytes: &[u8], sheet: Option<&str>, header: bool) -> Result<(Vec<Ve
 
 /// `t` with `cells` as its source's new cells (Tabloyu güncelle's rule, ADR 0184 §6), its styles, formulas and fields
 /// kept within its new rows and columns.
-fn refreshed(doc: &Document, t: &TableEntity, cells: &[Vec<String>], aligns: &[String]) -> Option<TableEntity> {
+fn refreshed(
+    doc: &Document,
+    t: &TableEntity,
+    cells: &[Vec<String>],
+    aligns: &[String],
+) -> Option<TableEntity> {
     let font = drawing_font(doc.settings().drawing_font);
     let next = core_edit::refresh(&core_table(t), cells, aligns, font)?;
     let Some(Entity::Table(mut out)) = with_shape(&Entity::Table(Box::new(t.clone())), next) else {
@@ -720,17 +908,24 @@ fn moved_hand_edit(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>])
         let counts = frequencies.get_or_insert_with(|| {
             let mut counts = HashMap::new();
             for row in copy.iter().skip(first) {
-                for (c, value) in row.iter().enumerate().filter(|(_, value)| !value.is_empty()) {
+                for (c, value) in row
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, value)| !value.is_empty())
+                {
                     *counts.entry((c, value.as_str())).or_insert(0) += 1;
                 }
             }
             counts
         });
-        let unique_anchor = stable.iter().find(|(c, value)| {
-            counts.get(&(*c, *value)) == Some(&1)
-        });
+        let unique_anchor = stable
+            .iter()
+            .find(|(c, value)| counts.get(&(*c, *value)) == Some(&1));
         let unique_anchor_changed = unique_anchor.is_some_and(|(c, value)| {
-            fresh.get(r).and_then(|row| row.get(*c)).is_none_or(|v| v != value)
+            fresh
+                .get(r)
+                .and_then(|row| row.get(*c))
+                .is_none_or(|v| v != value)
         });
         if unique_anchor_changed
             || fresh
@@ -777,14 +972,22 @@ fn row_keys(rows: &[Vec<String>], column: usize) -> Result<HashMap<&str, usize>,
     }
     let mut keys = HashMap::new();
     for (r, row) in rows.iter().enumerate().skip(1) {
-        let Some(key) = row.get(column).map(String::as_str).filter(|key| !key.trim().is_empty()) else {
+        let Some(key) = row
+            .get(column)
+            .map(String::as_str)
+            .filter(|key| !key.trim().is_empty())
+        else {
             return Err(format!("{}. veri satırının anahtarı boş.", r));
         };
         if key != key.trim() {
-            return Err(format!("“{key}” satır anahtarının başında veya sonunda boşluk var."));
+            return Err(format!(
+                "“{key}” satır anahtarının başında veya sonunda boşluk var."
+            ));
         }
         if keys.insert(key, r).is_some() {
-            return Err(format!("“{key}” satır anahtarı dosyada birden çok kez geçiyor."));
+            return Err(format!(
+                "“{key}” satır anahtarı dosyada birden çok kez geçiyor."
+            ));
         }
     }
     Ok(keys)
@@ -806,15 +1009,22 @@ fn keyed_overrides(
     let old_keys = row_keys(copy, column)?;
     let new_keys = row_keys(fresh, column)?;
     if rule == SourceOverrides::Keep
-        && old_keys.values().any(|r| t.cells.get(*r).and_then(|row| row.get(column)) != copy[*r].get(column))
+        && old_keys
+            .values()
+            .any(|r| t.cells.get(*r).and_then(|row| row.get(column)) != copy[*r].get(column))
     {
-        return Err("Satır anahtarı hücresi elle değiştirildi; kaynak satırı güvenle eşlenemiyor.".to_owned());
+        return Err(
+            "Satır anahtarı hücresi elle değiştirildi; kaynak satırı güvenle eşlenemiyor."
+                .to_owned(),
+        );
     }
     for (key, old_r) in &old_keys {
         if new_keys.contains_key(key) {
             continue;
         }
-        let Some(own) = t.cells.get(*old_r) else { continue };
+        let Some(own) = t.cells.get(*old_r) else {
+            continue;
+        };
         if rule == SourceOverrides::Keep
             && copy[*old_r].iter().enumerate().any(|(c, was)| {
                 own.get(c).is_some_and(|value| value != was)
@@ -822,7 +1032,9 @@ fn keyed_overrides(
                     && t.field_at(*old_r, c).is_none()
             })
         {
-            return Err(format!("“{key}” anahtarlı elle düzeltilmiş satır kaynaktan silindi; tablo korunuyor."));
+            return Err(format!(
+                "“{key}” anahtarlı elle düzeltilmiş satır kaynaktan silindi; tablo korunuyor."
+            ));
         }
     }
     let mut out = fresh.to_vec();
@@ -831,7 +1043,9 @@ fn keyed_overrides(
         let (Some(own), Some(was)) = (
             t.cells.first().and_then(|row| row.get(c)),
             copy.first().and_then(|row| row.get(c)),
-        ) else { continue };
+        ) else {
+            continue;
+        };
         if own == was || t.formula_at(0, c).is_some() || t.field_at(0, c).is_some() {
             continue;
         }
@@ -843,19 +1057,28 @@ fn keyed_overrides(
         }
     }
     for row in out.iter_mut().skip(1) {
-        let Some(key) = row.get(column).cloned() else { continue };
-        let Some(old_r) = old_keys.get(key.as_str()).copied() else { continue };
+        let Some(key) = row.get(column).cloned() else {
+            continue;
+        };
+        let Some(old_r) = old_keys.get(key.as_str()).copied() else {
+            continue;
+        };
         for (c, cell) in row.iter_mut().enumerate() {
             let (Some(own), Some(was)) = (
                 t.cells.get(old_r).and_then(|row| row.get(c)),
                 copy.get(old_r).and_then(|row| row.get(c)),
-            ) else { continue };
+            ) else {
+                continue;
+            };
             if own == was || t.formula_at(old_r, c).is_some() || t.field_at(old_r, c).is_some() {
                 continue;
             }
             if rule == SourceOverrides::Keep {
                 if cell != was {
-                    return Err(format!("“{key}” anahtarlı satırın {}. hücresini hem kaynak hem kullanıcı değiştirdi; tablo korunuyor.", c + 1));
+                    return Err(format!(
+                        "“{key}” anahtarlı satırın {}. hücresini hem kaynak hem kullanıcı değiştirdi; tablo korunuyor.",
+                        c + 1
+                    ));
                 }
                 *cell = own.clone();
                 kept += 1;
@@ -869,10 +1092,17 @@ fn keyed_overrides(
 
 /// Preserve style precedence while moving row-scoped styles with keyed records.
 /// A range split into runs remains at the same position in the style stack.
-fn keyed_styles(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], column: usize) -> Result<Vec<CellStyle>, String> {
+fn keyed_styles(
+    t: &TableEntity,
+    copy: &[Vec<String>],
+    fresh: &[Vec<String>],
+    column: usize,
+) -> Result<Vec<CellStyle>, String> {
     let old_keys = row_keys(copy, column)?;
     let new_keys = row_keys(fresh, column)?;
-    let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
+    let reordered = old_keys
+        .iter()
+        .any(|(key, old)| new_keys.get(key) != Some(old));
     if !reordered {
         return Ok(t.styles.clone());
     }
@@ -900,10 +1130,15 @@ fn keyed_styles(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], co
                 positions.push(0);
                 continue;
             }
-            let key = copy.get(old_r).and_then(|row| row.get(column))
-                .ok_or_else(|| "Biçimli satır kaynak kopyasında bulunamadı; tablo korunuyor.".to_owned())?;
-            positions.push(*new_keys.get(key.as_str())
-                .ok_or_else(|| format!("“{key}” anahtarlı biçimli satır kaynaktan silindi; tablo korunuyor."))?);
+            let key = copy
+                .get(old_r)
+                .and_then(|row| row.get(column))
+                .ok_or_else(|| {
+                    "Biçimli satır kaynak kopyasında bulunamadı; tablo korunuyor.".to_owned()
+                })?;
+            positions.push(*new_keys.get(key.as_str()).ok_or_else(|| {
+                format!("“{key}” anahtarlı biçimli satır kaynaktan silindi; tablo korunuyor.")
+            })?);
         }
         positions.sort_unstable();
         let mut runs: Vec<(usize, usize)> = Vec::new();
@@ -921,17 +1156,26 @@ fn keyed_styles(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], co
         }
     }
     if styles.len() > kentos_commands::MAX_CELL_STYLES {
-        return Err("Yenilenen tablo çok fazla hücre stili gerektiriyor; tablo korunuyor.".to_owned());
+        return Err(
+            "Yenilenen tablo çok fazla hücre stili gerektiriyor; tablo korunuyor.".to_owned(),
+        );
     }
     Ok(styles)
 }
 
 /// A merge within one keyed row follows that row; a merge across data rows
 /// stays blocked because moving its anchor alone could change its contents.
-fn keyed_merges(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], column: usize) -> Result<Vec<CellRange>, String> {
+fn keyed_merges(
+    t: &TableEntity,
+    copy: &[Vec<String>],
+    fresh: &[Vec<String>],
+    column: usize,
+) -> Result<Vec<CellRange>, String> {
     let old_keys = row_keys(copy, column)?;
     let new_keys = row_keys(fresh, column)?;
-    let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
+    let reordered = old_keys
+        .iter()
+        .any(|(key, old)| new_keys.get(key) != Some(old));
     if !reordered {
         return Ok(t.merges.clone());
     }
@@ -952,33 +1196,55 @@ fn keyed_merges(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], co
 
 /// Field sources use persistent object or project identity, so only the
 /// field's cell address changes when its keyed row moves.
-fn keyed_fields(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], column: usize) -> Result<Vec<CellField>, String> {
+fn keyed_fields(
+    t: &TableEntity,
+    copy: &[Vec<String>],
+    fresh: &[Vec<String>],
+    column: usize,
+) -> Result<Vec<CellField>, String> {
     let old_keys = row_keys(copy, column)?;
     let new_keys = row_keys(fresh, column)?;
-    let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
+    let reordered = old_keys
+        .iter()
+        .any(|(key, old)| new_keys.get(key) != Some(old));
     if !reordered {
         return Ok(t.fields.clone());
     }
-    t.fields.iter().map(|field| {
-        if field.row == 0 {
-            return Ok(field.clone());
-        }
-        let key = copy.get(field.row as usize).and_then(|row| row.get(column))
-            .ok_or_else(|| "Field satırı kaynak kopyasında bulunamadı; tablo korunuyor.".to_owned())?;
-        let row = *new_keys.get(key.as_str())
-            .ok_or_else(|| format!("“{key}” anahtarlı field satırı kaynaktan silindi; tablo korunuyor."))? as u32;
-        let mut next = field.clone();
-        next.row = row;
-        Ok(next)
-    }).collect()
+    t.fields
+        .iter()
+        .map(|field| {
+            if field.row == 0 {
+                return Ok(field.clone());
+            }
+            let key = copy
+                .get(field.row as usize)
+                .and_then(|row| row.get(column))
+                .ok_or_else(|| {
+                    "Field satırı kaynak kopyasında bulunamadı; tablo korunuyor.".to_owned()
+                })?;
+            let row = *new_keys.get(key.as_str()).ok_or_else(|| {
+                format!("“{key}” anahtarlı field satırı kaynaktan silindi; tablo korunuyor.")
+            })? as u32;
+            let mut next = field.clone();
+            next.row = row;
+            Ok(next)
+        })
+        .collect()
 }
 
 /// Formula cells and their references follow keyed source rows. A range that
 /// becomes disjoint, or a reference to a removed row, stops refresh.
-fn keyed_formulas(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], column: usize) -> Result<Vec<CellFormula>, String> {
+fn keyed_formulas(
+    t: &TableEntity,
+    copy: &[Vec<String>],
+    fresh: &[Vec<String>],
+    column: usize,
+) -> Result<Vec<CellFormula>, String> {
     let old_keys = row_keys(copy, column)?;
     let new_keys = row_keys(fresh, column)?;
-    let reordered = old_keys.iter().any(|(key, old)| new_keys.get(key) != Some(old));
+    let reordered = old_keys
+        .iter()
+        .any(|(key, old)| new_keys.get(key) != Some(old));
     if !reordered {
         return Ok(t.formulas.clone());
     }
@@ -987,16 +1253,23 @@ fn keyed_formulas(t: &TableEntity, copy: &[Vec<String>], fresh: &[Vec<String>], 
     for (key, old_row) in old_keys {
         rows[old_row] = new_keys.get(key).copied();
     }
-    t.formulas.iter().map(|formula| {
-        let row = rows.get(formula.row as usize).copied().flatten()
-            .ok_or_else(|| "Formül satırı kaynaktan silindi; tablo korunuyor.".to_owned())?;
-        let words = table_formula::remap_rows(&formula.formula, &rows)
-            .ok_or_else(|| "Formül aralığı bölündü veya satır başvurusu silindi; tablo korunuyor.".to_owned())?;
-        let mut next = formula.clone();
-        next.row = row as u32;
-        next.formula = words;
-        Ok(next)
-    }).collect()
+    t.formulas
+        .iter()
+        .map(|formula| {
+            let row = rows
+                .get(formula.row as usize)
+                .copied()
+                .flatten()
+                .ok_or_else(|| "Formül satırı kaynaktan silindi; tablo korunuyor.".to_owned())?;
+            let words = table_formula::remap_rows(&formula.formula, &rows).ok_or_else(|| {
+                "Formül aralığı bölündü veya satır başvurusu silindi; tablo korunuyor.".to_owned()
+            })?;
+            let mut next = formula.clone();
+            next.row = row as u32;
+            next.formula = words;
+            Ok(next)
+        })
+        .collect()
 }
 
 struct Checked {
@@ -1021,7 +1294,10 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
         TablesOperation::Edit { uid, edits } => {
             let (slot, u, t) = table_at(doc, uid, "operation.uid")?;
             if edits.is_empty() {
-                return Err(invalid("Düzenleme verilmedi; en az bir düzenleme verin.".into(), "operation.edits"));
+                return Err(invalid(
+                    "Düzenleme verilmedi; en az bir düzenleme verin.".into(),
+                    "operation.edits",
+                ));
             }
             let mut next = t.clone();
             for (i, e) in edits.iter().enumerate() {
@@ -1058,7 +1334,9 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                         status = TableRefresh::Live;
                         None
                     }
-                    Some(TableSource::File { path: None, name, .. }) => {
+                    Some(TableSource::File {
+                        path: None, name, ..
+                    }) => {
                         status = TableRefresh::Unlinked;
                         warnings.push(warning(
                             codes::SOURCE_UNLINKED,
@@ -1112,19 +1390,30 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                                                 None => Err("Anahtarlı tablonun son kaynak kopyası yok; elle düzeltmeler güvenle eşlenemiyor.".to_owned()),
                                             }
                                         } else if *overrides == SourceOverrides::Keep
-                                            && copy.as_ref().is_some_and(|old| moved_hand_edit(&t, old, &fresh))
+                                            && copy
+                                                .as_ref()
+                                                .is_some_and(|old| moved_hand_edit(&t, old, &fresh))
                                         {
                                             Err("Elle düzeltilmiş bir satırın sırası veya kimliği değişti. Satır anahtarı tanımlı olmadığı için düzeltme başka kaleme aktarılmadı; tablo olduğu gibi kaldı.".to_owned())
                                         } else {
                                             let conflicts = if *overrides == SourceOverrides::Keep {
-                                                copy.as_ref().map_or(0, |old| conflicting_hand_edits(&t, old, &fresh))
+                                                copy.as_ref().map_or(0, |old| {
+                                                    conflicting_hand_edits(&t, old, &fresh)
+                                                })
                                             } else {
                                                 0
                                             };
                                             if conflicts > 0 {
-                                                Err(format!("Kaynak ve elle düzeltme aynı {conflicts} hücreyi değiştirdi. Düzeltmeler sessizce silinmedi; tablo olduğu gibi kaldı. Kaynak değişikliğini inceleyip elle çözün veya açıkça 'üzerine yaz' seçeneğini kullanın."))
+                                                Err(format!(
+                                                    "Kaynak ve elle düzeltme aynı {conflicts} hücreyi değiştirdi. Düzeltmeler sessizce silinmedi; tablo olduğu gibi kaldı. Kaynak değişikliğini inceleyip elle çözün veya açıkça 'üzerine yaz' seçeneğini kullanın."
+                                                ))
                                             } else {
-                                                let (cells, kept, replaced) = with_overrides(&t, copy.as_ref(), &fresh, *overrides);
+                                                let (cells, kept, replaced) = with_overrides(
+                                                    &t,
+                                                    copy.as_ref(),
+                                                    &fresh,
+                                                    *overrides,
+                                                );
                                                 Ok((cells, kept, replaced, None))
                                             }
                                         };
@@ -1175,28 +1464,35 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                         }
                     },
                     // Veri çıkarımı (docs/adr/1030 §6): its recipe worked out again from the drawings it reads.
-                    Some(TableSource::Extraction(x)) => match crate::extract::refresh(doc, &t, x, base.as_deref(), None) {
-                        crate::extract::Refreshed::Changed { table, kept: k, replaced: r, warnings: w } => {
-                            (kept, replaced) = (k, r);
-                            warnings.extend(w);
-                            Some(*table)
+                    Some(TableSource::Extraction(x)) => {
+                        match crate::extract::refresh(doc, &t, x, base.as_deref(), None) {
+                            crate::extract::Refreshed::Changed {
+                                table,
+                                kept: k,
+                                replaced: r,
+                                warnings: w,
+                            } => {
+                                (kept, replaced) = (k, r);
+                                warnings.extend(w);
+                                Some(*table)
+                            }
+                            crate::extract::Refreshed::Unchanged { warnings: w } => {
+                                status = TableRefresh::Unchanged;
+                                warnings.extend(w);
+                                None
+                            }
+                            crate::extract::Refreshed::Missing(w) => {
+                                status = TableRefresh::Missing;
+                                warnings.push(w);
+                                None
+                            }
+                            crate::extract::Refreshed::Kept(w) => {
+                                status = TableRefresh::Unreadable;
+                                warnings.push(w);
+                                None
+                            }
                         }
-                        crate::extract::Refreshed::Unchanged { warnings: w } => {
-                            status = TableRefresh::Unchanged;
-                            warnings.extend(w);
-                            None
-                        }
-                        crate::extract::Refreshed::Missing(w) => {
-                            status = TableRefresh::Missing;
-                            warnings.push(w);
-                            None
-                        }
-                        crate::extract::Refreshed::Kept(w) => {
-                            status = TableRefresh::Unreadable;
-                            warnings.push(w);
-                            None
-                        }
-                    },
+                    }
                     Some(schedule) => {
                         let kind = match schedule {
                             TableSource::Coordinates { .. } => ScheduleKind::Coordinates,
@@ -1250,7 +1546,10 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
         } => {
             let (slot, u, t) = table_at(doc, uid, "operation.uid")?;
             if path.trim().is_empty() || path.chars().any(char::is_control) {
-                return Err(invalid("Dosyanın yolu boş olamaz.".into(), "operation.path"));
+                return Err(invalid(
+                    "Dosyanın yolu boş olamaz.".into(),
+                    "operation.path",
+                ));
             }
             let Ok(bytes) = std::fs::read(resolved(path, base.as_deref())) else {
                 return Err(fail(
@@ -1259,20 +1558,33 @@ fn check(doc: &Document, input: &TablesEdit) -> Result<Checked, Stop> {
                     "operation.path",
                 ));
             };
-            let (fresh, aligns) = sheet_rows(&bytes, sheet.as_deref(), t.header)
-                .map_err(|why| fail(codes::SOURCE_UNREADABLE, format!("“{path}”: {why}"), "operation.path"))?;
+            let (fresh, aligns) =
+                sheet_rows(&bytes, sheet.as_deref(), t.header).map_err(|why| {
+                    fail(
+                        codes::SOURCE_UNREADABLE,
+                        format!("“{path}”: {why}"),
+                        "operation.path",
+                    )
+                })?;
             let key_column = (*key_column).or(match &t.source {
                 Some(TableSource::File { key_column, .. }) => *key_column,
                 _ => None,
             });
             if let Some(column) = key_column {
                 if !t.header {
-                    return Err(invalid("Satır anahtarı için tabloda başlık satırı açık olmalı.".into(), "operation.keyColumn"));
+                    return Err(invalid(
+                        "Satır anahtarı için tabloda başlık satırı açık olmalı.".into(),
+                        "operation.keyColumn",
+                    ));
                 }
-                row_keys(&fresh, column as usize).map_err(|why| invalid(why, "operation.keyColumn"))?;
+                row_keys(&fresh, column as usize)
+                    .map_err(|why| invalid(why, "operation.keyColumn"))?;
             }
             let Some(mut next) = refreshed(doc, &t, &fresh, &aligns) else {
-                return Err(invalid("Tablo dosyanın satırlarıyla yazılamadı.".into(), "operation.path"));
+                return Err(invalid(
+                    "Tablo dosyanın satırlarıyla yazılamadı.".into(),
+                    "operation.path",
+                ));
             };
             let name = Path::new(path)
                 .file_name()
@@ -1338,7 +1650,11 @@ pub fn plan_in(doc: &Document, input: &TablesEdit) -> CommandResult<TablesPlan> 
     match check(doc, input) {
         Ok(c) => CommandResult::Completed {
             output: TablesPlan {
-                tables: c.changed.into_iter().map(|(_, _, t)| Entity::Table(Box::new(t))).collect(),
+                tables: c
+                    .changed
+                    .into_iter()
+                    .map(|(_, _, t)| Entity::Table(Box::new(t)))
+                    .collect(),
                 report: c.report,
                 revision: doc.revision().to_string(),
             },
@@ -1396,10 +1712,8 @@ mod tests {
 
     #[test]
     fn a_moved_hand_edit_does_not_attach_to_the_other_file_row() {
-        let path = std::env::temp_dir().join(format!(
-            "kentos-table-row-move-{}.csv",
-            std::process::id()
-        ));
+        let path =
+            std::env::temp_dir().join(format!("kentos-table-row-move-{}.csv", std::process::id()));
         let original = b"ID,Price\nA,10\nB,10\n";
         let changed = b"ID,Price\nB,10\nA,10\n";
         let (copy, _) = sheet_rows(original, None, true).unwrap();
@@ -1429,7 +1743,10 @@ mod tests {
         let before = doc.to_snapshot_v2();
         let history = doc.undo_labels();
         let request = TablesEdit {
-            operation: TablesOperation::Refresh { uids: vec![uid.clone()], base: None },
+            operation: TablesOperation::Refresh {
+                uids: vec![uid.clone()],
+                base: None,
+            },
             expected_revision: None,
         };
         let result = execute(&mut ExecutionContext::new(&mut doc), request.clone());
@@ -1437,7 +1754,10 @@ mod tests {
             panic!("refresh must report an ambiguous row: {result:?}");
         };
         assert_eq!(output.report[0].status, TableRefresh::Unreadable);
-        assert!(warnings.iter().any(|w| w.message.contains("anahtarı")), "{warnings:?}");
+        assert!(
+            warnings.iter().any(|w| w.message.contains("anahtarı")),
+            "{warnings:?}"
+        );
         assert!(output.changed.is_empty());
         assert_eq!(doc.to_snapshot_v2(), before);
         assert_eq!(doc.undo_labels(), history);
@@ -1449,12 +1769,19 @@ mod tests {
             },
             expected_revision: None,
         };
-        assert!(matches!(execute(&mut ExecutionContext::new(&mut doc), set_key), CommandResult::Completed { .. }));
+        assert!(matches!(
+            execute(&mut ExecutionContext::new(&mut doc), set_key),
+            CommandResult::Completed { .. }
+        ));
         let result = execute(&mut ExecutionContext::new(&mut doc), request);
-        let CommandResult::Completed { output, .. } = result else { panic!("keyed refresh: {result:?}") };
+        let CommandResult::Completed { output, .. } = result else {
+            panic!("keyed refresh: {result:?}")
+        };
         assert_eq!(output.report[0].status, TableRefresh::Updated);
         assert_eq!(output.report[0].kept, 1);
-        let Some(Entity::Table(table)) = doc.get(slot) else { panic!("table") };
+        let Some(Entity::Table(table)) = doc.get(slot) else {
+            panic!("table")
+        };
         assert_eq!(table.cells[1], vec!["B", "10"]);
         assert_eq!(table.cells[2], vec!["A", "11"]);
         assert_eq!(table.rows, vec![0.3, 0.4, 0.6]);
@@ -1465,7 +1792,10 @@ mod tests {
 
     #[test]
     fn changed_value_at_the_same_row_is_not_a_row_move() {
-        let copy = vec![vec!["ID".into(), "Price".into()], vec!["A".into(), "10".into()]];
+        let copy = vec![
+            vec!["ID".into(), "Price".into()],
+            vec!["A".into(), "10".into()],
+        ];
         let mut own = copy.clone();
         own[1][1] = "11".into();
         let table: TableEntity = serde_json::from_value(json!({
@@ -1530,7 +1860,10 @@ mod tests {
         let before = doc.to_snapshot_v2();
         let history = doc.undo_labels();
         let refresh = || TablesEdit {
-            operation: TablesOperation::Refresh { uids: vec![uid.clone()], base: None },
+            operation: TablesOperation::Refresh {
+                uids: vec![uid.clone()],
+                base: None,
+            },
             expected_revision: None,
         };
         let result = execute(&mut ExecutionContext::new(&mut doc), refresh());
@@ -1538,7 +1871,12 @@ mod tests {
             panic!("refresh must report the conflict: {result:?}");
         };
         assert_eq!(output.report[0].status, TableRefresh::Unreadable);
-        assert!(warnings.iter().any(|w| w.message.contains("aynı 1 hücreyi")), "{warnings:?}");
+        assert!(
+            warnings
+                .iter()
+                .any(|w| w.message.contains("aynı 1 hücreyi")),
+            "{warnings:?}"
+        );
         assert!(output.changed.is_empty());
         assert_eq!(doc.to_snapshot_v2(), before);
         assert_eq!(doc.undo_labels(), history);
@@ -1546,18 +1884,25 @@ mod tests {
         let choose = TablesEdit {
             operation: TablesOperation::Edit {
                 uid: uid.clone(),
-                edits: vec![TableEdit::SourceRule { rule: SourceOverrides::Replace }],
+                edits: vec![TableEdit::SourceRule {
+                    rule: SourceOverrides::Replace,
+                }],
             },
             expected_revision: None,
         };
-        assert!(matches!(execute(&mut ExecutionContext::new(&mut doc), choose), CommandResult::Completed { .. }));
+        assert!(matches!(
+            execute(&mut ExecutionContext::new(&mut doc), choose),
+            CommandResult::Completed { .. }
+        ));
         let result = execute(&mut ExecutionContext::new(&mut doc), refresh());
         let CommandResult::Completed { output, .. } = result else {
             panic!("explicit replace must refresh: {result:?}");
         };
         assert_eq!(output.report[0].status, TableRefresh::Updated);
         assert_eq!(output.report[0].replaced, 1);
-        let Some(Entity::Table(table)) = doc.get(slot) else { panic!("table") };
+        let Some(Entity::Table(table)) = doc.get(slot) else {
+            panic!("table")
+        };
         assert_eq!(table.cells[1][1], "12");
         std::fs::remove_file(path).unwrap();
     }
@@ -1576,60 +1921,141 @@ mod tests {
         }))
         .unwrap();
         let reordered = vec![copy[0].clone(), copy[2].clone(), copy[1].clone()];
-        let (cells, kept, replaced) = keyed_overrides(&table, &copy, &reordered, 0, SourceOverrides::Keep).unwrap();
+        let (cells, kept, replaced) =
+            keyed_overrides(&table, &copy, &reordered, 0, SourceOverrides::Keep).unwrap();
         assert_eq!(cells[1], vec!["B", "20"]);
         assert_eq!(cells[2], vec!["A", "11"]);
         assert_eq!((kept, replaced), (1, 0));
-        let (cells, kept, replaced) = keyed_overrides(&table, &copy, &reordered, 0, SourceOverrides::Replace).unwrap();
+        let (cells, kept, replaced) =
+            keyed_overrides(&table, &copy, &reordered, 0, SourceOverrides::Replace).unwrap();
         assert_eq!(cells[2], vec!["A", "10"]);
         assert_eq!((kept, replaced), (0, 1));
-        assert!(keyed_overrides(&table, &copy, &reordered[..2], 0, SourceOverrides::Keep)
-            .unwrap_err().contains("kaynaktan silindi"));
+        assert!(
+            keyed_overrides(&table, &copy, &reordered[..2], 0, SourceOverrides::Keep)
+                .unwrap_err()
+                .contains("kaynaktan silindi")
+        );
         let duplicate = vec![copy[0].clone(), copy[1].clone(), copy[1].clone()];
-        assert!(keyed_overrides(&table, &copy, &duplicate, 0, SourceOverrides::Keep)
-            .unwrap_err().contains("birden çok"));
-        let conflict = vec![copy[0].clone(), vec!["A".into(), "12".into()], copy[2].clone()];
-        assert!(keyed_overrides(&table, &copy, &conflict, 0, SourceOverrides::Keep)
-            .unwrap_err().contains("hem kaynak hem kullanıcı"));
+        assert!(
+            keyed_overrides(&table, &copy, &duplicate, 0, SourceOverrides::Keep)
+                .unwrap_err()
+                .contains("birden çok")
+        );
+        let conflict = vec![
+            copy[0].clone(),
+            vec!["A".into(), "12".into()],
+            copy[2].clone(),
+        ];
+        assert!(
+            keyed_overrides(&table, &copy, &conflict, 0, SourceOverrides::Keep)
+                .unwrap_err()
+                .contains("hem kaynak hem kullanıcı")
+        );
         let mut merged = table.clone();
-        merged.merges = vec![CellRange { row: 1, col: 0, rows: 1, cols: 2 }];
-        assert_eq!(keyed_merges(&merged, &copy, &reordered, 0).unwrap()[0].row, 2);
+        merged.merges = vec![CellRange {
+            row: 1,
+            col: 0,
+            rows: 1,
+            cols: 2,
+        }];
+        assert_eq!(
+            keyed_merges(&merged, &copy, &reordered, 0).unwrap()[0].row,
+            2
+        );
         merged.merges[0].rows = 2;
-        assert!(keyed_merges(&merged, &copy, &reordered, 0)
-            .unwrap_err().contains("birden çok satıra"));
+        assert!(
+            keyed_merges(&merged, &copy, &reordered, 0)
+                .unwrap_err()
+                .contains("birden çok satıra")
+        );
         let mut fielded = table.clone();
-        fielded.fields = vec![serde_json::from_value(json!({
-            "row":1,"col":1,"source":{"kind":"project","value":"name"}
-        })).unwrap()];
-        assert_eq!(keyed_fields(&fielded, &copy, &reordered, 0).unwrap()[0].row, 2);
-        assert!(keyed_fields(&fielded, &copy, &reordered[..2], 0)
-            .unwrap_err().contains("silindi"));
+        fielded.fields = vec![
+            serde_json::from_value(json!({
+                "row":1,"col":1,"source":{"kind":"project","value":"name"}
+            }))
+            .unwrap(),
+        ];
+        assert_eq!(
+            keyed_fields(&fielded, &copy, &reordered, 0).unwrap()[0].row,
+            2
+        );
+        assert!(
+            keyed_fields(&fielded, &copy, &reordered[..2], 0)
+                .unwrap_err()
+                .contains("silindi")
+        );
         let mut calculated = table.clone();
-        calculated.formulas = vec![CellFormula { row: 1, col: 1, formula: "=$B$3+2".into() }];
+        calculated.formulas = vec![CellFormula {
+            row: 1,
+            col: 1,
+            formula: "=$B$3+2".into(),
+        }];
         let formulas = keyed_formulas(&calculated, &copy, &reordered, 0).unwrap();
-        assert_eq!((formulas[0].row, formulas[0].formula.as_str()), (2, "=$B$2+2"));
-        assert!(keyed_formulas(&calculated, &copy, &reordered[..2], 0)
-            .unwrap_err().contains("silindi"));
+        assert_eq!(
+            (formulas[0].row, formulas[0].formula.as_str()),
+            (2, "=$B$2+2")
+        );
+        assert!(
+            keyed_formulas(&calculated, &copy, &reordered[..2], 0)
+                .unwrap_err()
+                .contains("silindi")
+        );
         calculated.formulas[0].formula = "=TOPLA(B2:B3)".into();
-        assert_eq!(keyed_formulas(&calculated, &copy, &reordered, 0).unwrap()[0].formula, "=TOPLA(B2:B3)");
-        let inserted = vec![copy[0].clone(), copy[1].clone(), vec!["C".into(), "30".into()], copy[2].clone()];
+        assert_eq!(
+            keyed_formulas(&calculated, &copy, &reordered, 0).unwrap()[0].formula,
+            "=TOPLA(B2:B3)"
+        );
+        let inserted = vec![
+            copy[0].clone(),
+            copy[1].clone(),
+            vec!["C".into(), "30".into()],
+            copy[2].clone(),
+        ];
         calculated.formulas[0].formula = "=TOPLA(B2:B3)".into();
-        assert!(keyed_formulas(&calculated, &copy, &inserted, 0)
-            .unwrap_err().contains("aralığı bölündü"));
+        assert!(
+            keyed_formulas(&calculated, &copy, &inserted, 0)
+                .unwrap_err()
+                .contains("aralığı bölündü")
+        );
         let mut styled = table.clone();
-        styled.styles = vec![serde_json::from_value(json!({
-            "row":1,"col":0,"rows":2,"cols":1,"fill":"#ff0000"
-        })).unwrap()];
-        assert!(keyed_styles(&styled, &copy, &copy[..1], 0)
-            .unwrap_err().contains("silindi"));
-        let subset = vec![copy[0].clone(), copy[1].clone(), copy[2].clone(), vec!["C".into(), "30".into()]];
-        let split = vec![subset[0].clone(), subset[1].clone(), subset[3].clone(), subset[2].clone()];
+        styled.styles = vec![
+            serde_json::from_value(json!({
+                "row":1,"col":0,"rows":2,"cols":1,"fill":"#ff0000"
+            }))
+            .unwrap(),
+        ];
+        assert!(
+            keyed_styles(&styled, &copy, &copy[..1], 0)
+                .unwrap_err()
+                .contains("silindi")
+        );
+        let subset = vec![
+            copy[0].clone(),
+            copy[1].clone(),
+            copy[2].clone(),
+            vec!["C".into(), "30".into()],
+        ];
+        let split = vec![
+            subset[0].clone(),
+            subset[1].clone(),
+            subset[3].clone(),
+            subset[2].clone(),
+        ];
         let moved = keyed_styles(&styled, &subset, &split, 0).unwrap();
-        assert_eq!(moved.iter().map(|s| (s.range.row, s.range.rows)).collect::<Vec<_>>(), vec![(1, 1), (3, 1)]);
+        assert_eq!(
+            moved
+                .iter()
+                .map(|s| (s.range.row, s.range.rows))
+                .collect::<Vec<_>>(),
+            vec![(1, 1), (3, 1)]
+        );
         assert_eq!(moved[0].fill, styled.styles[0].fill);
         assert_eq!(moved[1].fill, styled.styles[0].fill);
         styled.styles[0].range.rows = 1;
-        assert!(keyed_styles(&styled, &copy, &reordered[..2], 0)
-            .unwrap_err().contains("silindi"));
+        assert!(
+            keyed_styles(&styled, &copy, &reordered[..2], 0)
+                .unwrap_err()
+                .contains("silindi")
+        );
     }
 }

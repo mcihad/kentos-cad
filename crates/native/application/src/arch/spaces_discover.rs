@@ -96,16 +96,29 @@ fn check(
     spaces::level_known(doc, &arch, "level")?;
     let scope = input.scope.unwrap_or_default();
     if !scope.is_project() && input.level.is_some() {
-        return Err(spaces::fail(codes::INVALID_SPACE,
-            "Yalnız atanmamış kaynaklar seçilirken kat belirtilmemeli.".into(),"scope"));
+        return Err(spaces::fail(
+            codes::INVALID_SPACE,
+            "Yalnız atanmamış kaynaklar seçilirken kat belirtilmemeli.".into(),
+            "scope",
+        ));
     }
-    let source_fields = SpaceFields { sources:input.sources.clone().map(|mut ids| {ids.sort();ids}),
-        seed:Some(Vec2 {x:0.,y:0.}), scope, arch:arch.clone(), ..Default::default() };
+    let source_fields = SpaceFields {
+        sources: input.sources.clone().map(|mut ids| {
+            ids.sort();
+            ids
+        }),
+        seed: Some(Vec2 { x: 0., y: 0. }),
+        scope,
+        arch: arch.clone(),
+        ..Default::default()
+    };
     if let Some((field, words)) = source_fields.scope_problem() {
         return Err(spaces::fail(codes::INVALID_SPACE, words, &field));
     }
     let mut search = kentos_domain::space_follow::SpaceSearch::new(doc);
-    let selected = search.source_slots(&source_fields).map_err(|why|spaces::fail(codes::INVALID_SPACE,why.words().into(),"sources"))?;
+    let selected = search
+        .source_slots(&source_fields)
+        .map_err(|why| spaces::fail(codes::INVALID_SPACE, why.words().into(), "sources"))?;
 
     if let Some([a, b]) = input.bounds {
         checks::point(a, "Bölgenin", "bounds[0]")?;
@@ -121,21 +134,48 @@ fn check(
     checks::revision(doc, input.expected_revision.as_deref())?;
     let warnings = checks::layer(doc, &input.layer_id)?;
     checks::object_attrs(doc, &input.layer_id, input.attrs.as_ref(), "attrs")?;
-    let eligible = |e: &Entity| {
-        match e {
-            Entity::Wall(w) => kentos_domain::space_follow::source_level(scope,input.level.as_deref(),w.wall.arch.level.as_deref()),
-            Entity::Space(s) => kentos_domain::space_follow::source_level(scope,input.level.as_deref(),s.space.arch.level.as_deref()),
-            Entity::Polyline(p) if p.space_separator.is_some()=>kentos_domain::space_follow::source_level(scope,input.level.as_deref(),p.space_separator.as_ref().and_then(|a|a.level.as_deref())),
-            _ => false,
+    let eligible = |e: &Entity| match e {
+        Entity::Wall(w) => kentos_domain::space_follow::source_level(
+            scope,
+            input.level.as_deref(),
+            w.wall.arch.level.as_deref(),
+        ),
+        Entity::Space(s) => kentos_domain::space_follow::source_level(
+            scope,
+            input.level.as_deref(),
+            s.space.arch.level.as_deref(),
+        ),
+        Entity::Polyline(p) if p.space_separator.is_some() => {
+            kentos_domain::space_follow::source_level(
+                scope,
+                input.level.as_deref(),
+                p.space_separator.as_ref().and_then(|a| a.level.as_deref()),
+            )
         }
+        _ => false,
     };
     let mut walls = Vec::new();
     let mut separators = Vec::new();
-    for e in doc.entities().filter(|e| eligible(e) && selected.as_ref().is_none_or(|ids|ids.contains(&kentos_domain::Slot(e.base().id)))) {
-        if let Some(p)=kentos_domain::space_follow::separator_path(e) {
-            let path=format!("separators[{}]",p.base.id);
-            if let Some(why)=p.extras_problem(false){return Err(spaces::fail(codes::INVALID_SPACE,why,&path));}
-            separators.push(kentos_domain::space_follow::core_separator(e).ok_or_else(||spaces::fail(codes::INVALID_SPACE,"Mahal ayırıcı okunamadı.".into(),&path))?);
+    for e in doc.entities().filter(|e| {
+        eligible(e)
+            && selected
+                .as_ref()
+                .is_none_or(|ids| ids.contains(&kentos_domain::Slot(e.base().id)))
+    }) {
+        if let Some(p) = kentos_domain::space_follow::separator_path(e) {
+            let path = format!("separators[{}]", p.base.id);
+            if let Some(why) = p.extras_problem(false) {
+                return Err(spaces::fail(codes::INVALID_SPACE, why, &path));
+            }
+            separators.push(
+                kentos_domain::space_follow::core_separator(e).ok_or_else(|| {
+                    spaces::fail(
+                        codes::INVALID_SPACE,
+                        "Mahal ayırıcı okunamadı.".into(),
+                        &path,
+                    )
+                })?,
+            );
             continue;
         }
         let Entity::Wall(w) = e else { continue };
@@ -152,15 +192,18 @@ fn check(
     }
     if walls.len() + separators.len() > MAX_SPACES {
         let message = if separators.is_empty() {
-            format!("Toplu mahal bulmada en çok {MAX_SPACES} kaynak duvar işlenir; {} duvar var. Kat seçerek kapsamı daraltın.",walls.len())
+            format!(
+                "Toplu mahal bulmada en çok {MAX_SPACES} kaynak duvar işlenir; {} duvar var. Kat seçerek kapsamı daraltın.",
+                walls.len()
+            )
         } else {
-            format!("Toplu mahal bulmada en çok {MAX_SPACES} kaynak sınır işlenir; {} duvar ve {} ayırıcı var. Kat seçerek kapsamı daraltın.",walls.len(),separators.len())
+            format!(
+                "Toplu mahal bulmada en çok {MAX_SPACES} kaynak sınır işlenir; {} duvar ve {} ayırıcı var. Kat seçerek kapsamı daraltın.",
+                walls.len(),
+                separators.len()
+            )
         };
-        return Err(spaces::fail(
-            codes::INVALID_SPACE,
-            message,
-            "level",
-        ));
+        return Err(spaces::fail(codes::INVALID_SPACE, message, "level"));
     }
     let ins: Vec<_> = walls
         .iter()
@@ -170,7 +213,7 @@ fn check(
             spec: &w.spec,
         })
         .collect();
-    let index = BoundaryIndex::new_with_separators(&ins,&separators);
+    let index = BoundaryIndex::new_with_separators(&ins, &separators);
     let method = input.method.unwrap_or_else(|| spaces::project_method(doc));
     let found = index
         .rooms(kentos_domain::space_follow::method(method))
@@ -221,11 +264,19 @@ fn check(
         fields.parts = match search.deduct_columns(&fields) {
             Ok(parts) => parts,
             Err(SpaceBreak::NoFreeArea) => continue,
-            Err(why) => return Err(spaces::fail(codes::INVALID_SPACE,why.words().into(),"columns")),
+            Err(why) => {
+                return Err(spaces::fail(
+                    codes::INVALID_SPACE,
+                    why.words().into(),
+                    "columns",
+                ));
+            }
         };
         let comparison = if method == SpaceMethod::Net && fields.columns.applies(method) {
             spaces::areas(&fields.parts)
-        } else { vec![room.net.clone()] };
+        } else {
+            vec![room.net.clone()]
+        };
         let mut seen = Vec::new();
         let mut conflicts = Vec::new();
         for (uid, old) in &existing {
@@ -245,8 +296,7 @@ fn check(
             if overlap.is_empty() {
                 continue;
             }
-            let exactly_same = region::subtract_areas(&comparison, &old_areas)
-                .is_empty()
+            let exactly_same = region::subtract_areas(&comparison, &old_areas).is_empty()
                 && region::subtract_areas(&old_areas, &comparison).is_empty();
             if exactly_same {
                 seen.push(uid.clone());

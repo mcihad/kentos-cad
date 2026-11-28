@@ -198,7 +198,9 @@ fn facts_classes() -> &'static str {
     let Some(from) = EXT_STUB.find(FACTS_FROM) else {
         return "";
     };
-    let until = EXT_STUB[from..].find(FACTS_UNTIL).map_or(EXT_STUB.len(), |i| from + i);
+    let until = EXT_STUB[from..]
+        .find(FACTS_UNTIL)
+        .map_or(EXT_STUB.len(), |i| from + i);
     &EXT_STUB[from + 3..until]
 }
 
@@ -1121,17 +1123,27 @@ mod tests {
     #[test]
     fn the_facts_classes_are_a_part_of_their_own_and_nothing_is_lost() {
         let classes = facts_classes();
-        assert!(classes.starts_with("class ProjectAuditFacts"), "{}", &classes[..classes.len().min(80)]);
-        assert!(classes.contains("class ArchitectureFacts") && classes.contains("class DoorEscape"));
+        assert!(
+            classes.starts_with("class ProjectAuditFacts"),
+            "{}",
+            &classes[..classes.len().min(80)]
+        );
+        assert!(
+            classes.contains("class ArchitectureFacts") && classes.contains("class DoorEscape")
+        );
         assert!(!classes.contains("class SemanticFix") && !classes.contains("class AuditFinding"));
         let agent = agent_stub();
         assert!(agent.contains("part=factsApi") && !agent.contains("class ProjectAuditFacts"));
         assert!(agent.contains("class GisAuditFacts") && agent.contains("class AuditFinding"));
         for line in EXT_STUB.lines().filter(|l| l.starts_with("class ")) {
-            let there = usize::from(agent.lines().any(|l| l == line)) + usize::from(classes.lines().any(|l| l == line));
+            let there = usize::from(agent.lines().any(|l| l == line))
+                + usize::from(classes.lines().any(|l| l == line));
             assert_eq!(there, 1, "{line}");
         }
-        assert_eq!(sdk_part("factsApi"), Some(Value::String(classes.to_owned())));
+        assert_eq!(
+            sdk_part("factsApi"),
+            Some(Value::String(classes.to_owned()))
+        );
     }
 
     #[test]

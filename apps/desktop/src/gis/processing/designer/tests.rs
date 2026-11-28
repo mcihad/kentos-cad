@@ -82,7 +82,11 @@ fn selection_recipe_keeps_filters_in_the_existing_shareable_model_without_writin
     );
     let text = serde_json::to_string(draft).unwrap();
     assert_eq!(Model::from_text(&text).unwrap().to_json(), draft.to_json());
-    assert!(designer(&app).problems.is_empty(),"{:?}",designer(&app).problems);
+    assert!(
+        designer(&app).problems.is_empty(),
+        "{:?}",
+        designer(&app).problems
+    );
     event(&mut app, Event::Save);
     let id = designer(&app).draft.id.clone();
     assert!(app.gis.processing.registry.model(&id).is_some());

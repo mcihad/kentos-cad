@@ -71,7 +71,12 @@ fn hide_unplotted(doc: &kentos_domain::Document, out: &mut kentos_native_style::
     let unplotted: std::collections::HashSet<kentos_contracts::BlockId> = doc
         .blocks()
         .iter()
-        .filter(|b| b.xref.as_ref().and_then(|x| x.underlay.as_ref()).is_some_and(|u| !u.plot))
+        .filter(|b| {
+            b.xref
+                .as_ref()
+                .and_then(|x| x.underlay.as_ref())
+                .is_some_and(|u| !u.plot)
+        })
         .map(|b| b.id)
         .collect();
     if !unplotted.is_empty() {
@@ -125,7 +130,9 @@ pub fn map_drawing_of(
     hide_options(doc, options, &mut out);
     if !hidden.is_empty() {
         for e in doc.entities() {
-            if kentos_contracts::ViewCategory::of_kind(e.kind()).is_some_and(|c| hidden.contains(&c)) {
+            if kentos_contracts::ViewCategory::of_kind(e.kind())
+                .is_some_and(|c| hidden.contains(&c))
+            {
                 out.hide(e.base().id);
             }
         }
@@ -192,7 +199,12 @@ pub fn faint_on_paper(hex: &str) -> String {
     if a == 255 {
         format!("#{:02x}{:02x}{:02x}", mix(p[0]), mix(p[1]), mix(p[2]))
     } else {
-        format!("#{:02x}{:02x}{:02x}{a:02x}", mix(p[0]), mix(p[1]), mix(p[2]))
+        format!(
+            "#{:02x}{:02x}{:02x}{a:02x}",
+            mix(p[0]),
+            mix(p[1]),
+            mix(p[2])
+        )
     }
 }
 
@@ -320,7 +332,7 @@ pub fn build_whole(
     look: &Look,
     clip: Bounds,
     tables: LayerTables<'_>,
-) -> Result<StyledLayer,String> {
+) -> Result<StyledLayer, String> {
     let names = tables.names;
     let opts = BuildOptions {
         line_types: Some(&look.line_types),
@@ -341,20 +353,19 @@ pub fn build_whole(
     };
     let phased = kentos_native_style::phases::phased(entities, &look.phasing);
     let entities: Vec<&Entity> = phased.iter().map(|e| e.as_ref()).collect();
-    build_layer(store, &node.style, &entities, &opts)
-        .and_then(|(_, batches)| {
-            decode(
-                batches,
-                &DecodeOptions {
-                    palette: &look.palette,
-                    plot_scale: look.symbol_scale,
-                    library,
-                    view: look.view_colors,
-                    hold_weights: look.hold_weights,
-                    text_outlines: tables.text,
-                },
-            )
-        })
+    build_layer(store, &node.style, &entities, &opts).and_then(|(_, batches)| {
+        decode(
+            batches,
+            &DecodeOptions {
+                palette: &look.palette,
+                plot_scale: look.symbol_scale,
+                library,
+                view: look.view_colors,
+                hold_weights: look.hold_weights,
+                text_outlines: tables.text,
+            },
+        )
+    })
 }
 
 static SHEET_MADE: AtomicU64 = AtomicU64::new(0);

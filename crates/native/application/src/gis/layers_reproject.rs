@@ -186,7 +186,11 @@ fn shift_of(
 
 /// The chain's verdict for the way, as `cad.crs.transform` gives it for the same two systems at `at` (docs/adr/1230
 /// §3): the horizontal way only, as heights stay as they are (docs/adr/0583 §2). None when it does not answer.
-fn verdict(doc: &Document, from: u32, at: kentos_geometry_core::Vec2) -> Option<(ChainStatus, Vec<String>)> {
+fn verdict(
+    doc: &Document,
+    from: u32,
+    at: kentos_geometry_core::Vec2,
+) -> Option<(ChainStatus, Vec<String>)> {
     let input = CrsTransform {
         points: vec![CrsPoint {
             x: at.x,
@@ -234,7 +238,8 @@ pub(crate) fn preview(
     let mut first: Option<kentos_geometry_core::Vec2> = None;
     let mut preview = Preview::default();
     let (mut sum_x, mut sum_y) = (0.0, 0.0);
-    let (mut noted, mut plain): (Vec<ReprojectShift>, Vec<ReprojectShift>) = (Vec::new(), Vec::new());
+    let (mut noted, mut plain): (Vec<ReprojectShift>, Vec<ReprojectShift>) =
+        (Vec::new(), Vec::new());
     for (uid, e) in doc.by_layer_with_uids(layer) {
         let mut moved = e.clone();
         if first.is_none() {
@@ -289,7 +294,15 @@ pub(crate) fn preview(
     // How many objects each note has, for the warning; then every object with a note listed first.
     let counts: Vec<(&str, usize)> = REPROJECT_NOTES
         .iter()
-        .map(|n| (*n, noted.iter().filter(|r| r.notes.iter().any(|m| m == n)).count()))
+        .map(|n| {
+            (
+                *n,
+                noted
+                    .iter()
+                    .filter(|r| r.notes.iter().any(|m| m == n))
+                    .count(),
+            )
+        })
         .filter(|(_, k)| *k > 0)
         .collect();
     preview.shifts = noted;

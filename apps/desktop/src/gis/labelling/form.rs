@@ -684,11 +684,9 @@ fn text_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
         let template: Element<'a, Message> = if h.fields.is_empty() {
             h.input(Key::Template, "{label}", None)
         } else {
-            let picker = Select::new(
-                h.fields.iter().map(|f| Choice::new(f.clone())),
-                None,
-                |i| msg(Event::Field(i)),
-            )
+            let picker = Select::new(h.fields.iter().map(|f| Choice::new(f.clone())), None, |i| {
+                msg(Event::Field(i))
+            })
             .placeholder(super::ADD_FIELD);
             row![
                 h.input(Key::Template, "{label}", None),
@@ -701,7 +699,9 @@ fn text_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
         row_of(
             "Şablon",
             template,
-            Some("{label}: nesnenin etiketi; {Ad} gibi öznitelikler de yazılır. Alan ekle şablona alanı yazar."),
+            Some(
+                "{label}: nesnenin etiketi; {Ad} gibi öznitelikler de yazılır. Alan ekle şablona alanı yazar.",
+            ),
         )
     };
     let align = match s.align.unwrap_or(LabelAlign::Center) {
@@ -785,38 +785,50 @@ fn place_tab<'a>(h: &Host<'a>) -> Vec<Element<'a, Message>> {
         LabelPosition::On
     });
     let mut kinds: Vec<(&str, Element<'a, Message>)> = vec![
-        ("point", row_of(
-            "Nokta",
-            choice(
-                &["Çevresinde", "Üstünde"],
-                index_of(&POINTS, &point),
-                |i| msg(Event::Edit(Edit::Point(POINTS[i]))),
+        (
+            "point",
+            row_of(
+                "Nokta",
+                choice(
+                    &["Çevresinde", "Üstünde"],
+                    index_of(&POINTS, &point),
+                    |i| msg(Event::Edit(Edit::Point(POINTS[i]))),
+                ),
+                Some("Çevresinde: sağ üst, sol üst … sekiz yerden boş olan."),
             ),
-            Some("Çevresinde: sağ üst, sol üst … sekiz yerden boş olan."),
-        )),
-        ("polyline", row_of(
-            "Çizgi",
-            choice(
-                &["Paralel", "Kıvrık", "Yatay", "Eş yükselti"],
-                index_of(&LINES, &line_mode),
-                |i| msg(Event::Edit(Edit::Line(LINES[i]))),
+        ),
+        (
+            "polyline",
+            row_of(
+                "Çizgi",
+                choice(
+                    &["Paralel", "Kıvrık", "Yatay", "Eş yükselti"],
+                    index_of(&LINES, &line_mode),
+                    |i| msg(Event::Edit(Edit::Line(LINES[i]))),
+                ),
+                Some("Eş yükselti: kıvrık, üstü yokuş yukarı, kot çoklu çizginin ilk kotu."),
             ),
-            Some("Eş yükselti: kıvrık, üstü yokuş yukarı, kot çoklu çizginin ilk kotu."),
-        )),
-        ("polygon", row_of(
-            "Alan",
-            choice(
-                &["Yatay", "Eğik", "Çevre", "Sınır", "Parsel", "Köşe"],
-                index_of(&AREAS, &area),
-                |i| msg(Event::Edit(Edit::Area(AREAS[i]))),
+        ),
+        (
+            "polygon",
+            row_of(
+                "Alan",
+                choice(
+                    &["Yatay", "Eğik", "Çevre", "Sınır", "Parsel", "Köşe"],
+                    index_of(&AREAS, &area),
+                    |i| msg(Event::Edit(Edit::Area(AREAS[i]))),
+                ),
+                Some(
+                    "Parsel: yalnız içine; sığmazsa yığar, kısaltır, küçültür. Sınır: kenar boyunca içeride.",
+                ),
             ),
-            Some(
-                "Parsel: yalnız içine; sığmazsa yığar, kısaltır, küçültür. Sınır: kenar boyunca içeride.",
-            ),
-        )),
+        ),
     ];
     // The layer's own kind first: a point layer's Nokta, then the others.
-    if let Some(at) = h.kind.and_then(|k| kinds.iter().position(|(kind, _)| *kind == k)) {
+    if let Some(at) = h
+        .kind
+        .and_then(|k| kinds.iter().position(|(kind, _)| *kind == k))
+    {
         let own = kinds.remove(at);
         kinds.insert(0, own);
     }

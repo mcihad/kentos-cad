@@ -580,7 +580,10 @@ fn create_input(input: &ConstructionsCreate) -> Result<EntitiesCreate, Stop> {
             .map(|geometry| NewObject {
                 // The weight and line type go to what is drawn with lines, as the tools gave them (docs/adr/0139,
                 // 0260 §2).
-                line_weight: geometry.draws_lines().then_some(input.line_weight).flatten(),
+                line_weight: geometry
+                    .draws_lines()
+                    .then_some(input.line_weight)
+                    .flatten(),
                 line_type: geometry.draws_lines().then_some(input.line_type).flatten(),
                 line_pattern: None,
                 geometry,

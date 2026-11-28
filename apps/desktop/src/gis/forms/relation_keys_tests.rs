@@ -41,8 +41,13 @@ fn opened(tag: &str) -> (App, String, String, std::path::PathBuf) {
 
 /// The checks of the relation chosen in the window, read until the data layers' rows are in.
 fn checks(app: &mut App) -> Vec<(Kind, String)> {
-    let relation =
-        |app: &App| app.gis.relations_window.as_ref().and_then(|w| w.chosen_for_test().cloned()).expect("a relation");
+    let relation = |app: &App| {
+        app.gis
+            .relations_window
+            .as_ref()
+            .and_then(|w| w.chosen_for_test().cloned())
+            .expect("a relation")
+    };
     for _ in 0..3 {
         let r = relation(app);
         let _ = app.relation_checks(&r);
@@ -58,34 +63,72 @@ fn the_window_ties_by_the_neighbourhoods_code_and_says_what_it_ties_before_savin
     let (mut app, parent, child, path) = opened("iliski-anahtar");
     let lines = checks(&mut app);
     let said: Vec<&str> = lines.iter().map(|(_, l)| l.as_str()).collect();
-    assert!(said.contains(&"Üst anahtar “mahalle” benzersiz: 3 kaydın 3 ayrı değeri var."), "{said:#?}");
-    assert!(said.contains(&"Alt kayıtlar: 6; 4 tanesi bir üst kayda bağlı."), "{said:#?}");
-    assert!(said.contains(&"1 alt kayıt hiçbir üst kayıtta olmayan değeri tutuyor: “M9”."), "{said:#?}");
-    assert!(said.contains(&"1 alt kaydın alanı boş (NULL): üst kaydı yok."), "{said:#?}");
-    assert!(lines.iter().any(|(k, l)| *k == Kind::Warn && l.contains("M9")), "M9 is a warning, NULL is not");
+    assert!(
+        said.contains(&"Üst anahtar “mahalle” benzersiz: 3 kaydın 3 ayrı değeri var."),
+        "{said:#?}"
+    );
+    assert!(
+        said.contains(&"Alt kayıtlar: 6; 4 tanesi bir üst kayda bağlı."),
+        "{said:#?}"
+    );
+    assert!(
+        said.contains(&"1 alt kayıt hiçbir üst kayıtta olmayan değeri tutuyor: “M9”."),
+        "{said:#?}"
+    );
+    assert!(
+        said.contains(&"1 alt kaydın alanı boş (NULL): üst kaydı yok."),
+        "{said:#?}"
+    );
+    assert!(
+        lines
+            .iter()
+            .any(|(k, l)| *k == Kind::Warn && l.contains("M9")),
+        "M9 is a warning, NULL is not"
+    );
     // Saved with its key.
     ev(&mut app, Event::Save);
     let doc = app.document.as_ref().expect("open");
     let saved = doc.model.settings().relations.clone();
     assert_eq!(saved.len(), 1);
     assert_eq!(
-        (saved[0].parent.as_str(), saved[0].child.as_str(), saved[0].field.as_str(), saved[0].parent_key.as_deref()),
+        (
+            saved[0].parent.as_str(),
+            saved[0].child.as_str(),
+            saved[0].field.as_str(),
+            saved[0].parent_key.as_deref()
+        ),
         (parent.as_str(), child.as_str(), "mahalle", Some("mahalle"))
     );
     // The project file keeps it: written and read back.
     let bytes = kentos_kcad::encode_verified(&doc.model.to_snapshot_v2()).expect("written");
     let back = kentos_kcad::decode(&bytes).expect("read");
-    assert_eq!(back.settings.relations, saved, "the key read back as written");
+    assert_eq!(
+        back.settings.relations, saved,
+        "the key read back as written"
+    );
     // İlişkiden kur: a view joined by the code, not the persistent id.
     let task = app.update(Message::Run("data.joinViews"));
     drive(&mut app, task);
-    let task = app.update(Message::Gis(gis::Event::Joins(crate::joins_window::Event::FromRelation(0))));
+    let task = app.update(Message::Gis(gis::Event::Joins(
+        crate::joins_window::Event::FromRelation(0),
+    )));
     drive(&mut app, task);
-    let task = app.update(Message::Gis(gis::Event::Joins(crate::joins_window::Event::Save)));
+    let task = app.update(Message::Gis(gis::Event::Joins(
+        crate::joins_window::Event::Save,
+    )));
     drive(&mut app, task);
-    let views = &app.document.as_ref().expect("open").model.settings().join_views;
+    let views = &app
+        .document
+        .as_ref()
+        .expect("open")
+        .model
+        .settings()
+        .join_views;
     let view = views.iter().find(|v| v.layer == parent).expect("made");
-    assert_eq!((view.key.as_str(), view.with_key.as_str()), ("mahalle", "mahalle"));
+    assert_eq!(
+        (view.key.as_str(), view.with_key.as_str()),
+        ("mahalle", "mahalle")
+    );
     let _ = std::fs::remove_file(&path);
 }
 
@@ -131,7 +174,9 @@ fn removing_a_relation_says_what_it_touches_before_saving() {
     });
     let doc = app.document.as_mut().expect("open");
     let mut settings = doc.model.settings().clone();
-    settings.forms.push(serde_json::from_value(form).expect("a form"));
+    settings
+        .forms
+        .push(serde_json::from_value(form).expect("a form"));
     doc.model.set_settings(settings);
     let task = app.update(Message::Run("data.relations"));
     drive(&mut app, task);
@@ -141,7 +186,9 @@ fn removing_a_relation_says_what_it_touches_before_saving() {
     let lines = app.relation_removals(&w);
     assert_eq!(
         lines,
-        ["“Mahalle bakımları” Kaydet'te kaldırılır: alt kayıtların “mahalle” değerleri olduğu gibi kalır. İlişkili listesi bu bağı gösteren form: “Mahalle formu”."]
+        [
+            "“Mahalle bakımları” Kaydet'te kaldırılır: alt kayıtların “mahalle” değerleri olduğu gibi kalır. İlişkili listesi bu bağı gösteren form: “Mahalle formu”."
+        ]
     );
     let _ = std::fs::remove_file(&path);
 }

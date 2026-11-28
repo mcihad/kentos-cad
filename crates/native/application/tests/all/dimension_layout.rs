@@ -5,7 +5,9 @@
 //! hold the numbers against an independent reference (fixtures/commands/v1/cad.dimensionsets.*.layout.json).
 
 use super::wall_contours::drawing;
-use kentos_commands::{CallOp, DimensionSetId, DimensionSetRow, DimensionSetTight, Entity, EntityId};
+use kentos_commands::{
+    CallOp, DimensionSetId, DimensionSetRow, DimensionSetTight, Entity, EntityId,
+};
 use kentos_domain::{Document, Uuid};
 use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
@@ -40,7 +42,11 @@ fn house() -> (Document, Vec<String>, String, Vec<String>) {
         ((4., 0.), (4., 8.), 0.1),
     ] {
         let wall = json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": width, "justify": "center"});
-        let out = done(&mut doc, "cad.walls.create", json!({"layerId": "cizim", "walls": [wall]}));
+        let out = done(
+            &mut doc,
+            "cad.walls.create",
+            json!({"layerId": "cizim", "walls": [wall]}),
+        );
         walls.push(out["uids"][0].as_str().unwrap().to_owned());
     }
     let out = done(
@@ -72,7 +78,10 @@ fn facade(doc: &mut Document, walls: &[&String], extra: Value) -> DimensionSetId
 }
 
 fn dimension(doc: &Document, uid: EntityId) -> kentos_commands::DimensionEntity {
-    match doc.slot_of(Uuid::from_bytes(uid.0)).and_then(|s| doc.get(s)) {
+    match doc
+        .slot_of(Uuid::from_bytes(uid.0))
+        .and_then(|s| doc.get(s))
+    {
         Some(Entity::Dimension(d)) => *d.clone(),
         other => panic!("a member dimension: {other:?}"),
     }
@@ -98,7 +107,11 @@ fn a_sheet_scale_draws_each_row_as_far_out_on_paper() {
         let line = d.a.y + d.offset;
         let delta = line - -0.125;
         let there = a.scales[0].offset.unwrap();
-        assert!((there - (d.offset + delta)).abs() < 1e-9, "{there} vs {}", d.offset + delta);
+        assert!(
+            (there - (d.offset + delta)).abs() < 1e-9,
+            "{there} vs {}",
+            d.offset + delta
+        );
     }
     // The sheet's map draws them twice as large and as far.
     let sheet = doc.at_scale(own * 2.0).expect("another representation");
@@ -106,7 +119,9 @@ fn a_sheet_scale_draws_each_row_as_far_out_on_paper() {
     let mine = dimension(&doc, m.uid);
     let theirs = dimension(&sheet, m.uid);
     assert!((theirs.height - mine.height * 2.0).abs() < 1e-12);
-    assert!((theirs.offset - mine.annotative.as_ref().unwrap().scales[0].offset.unwrap()).abs() < 1e-12);
+    assert!(
+        (theirs.offset - mine.annotative.as_ref().unwrap().scales[0].offset.unwrap()).abs() < 1e-12
+    );
     // A sheet at a scale the recipe does not take leaves them out (docs/adr/0323).
     let other = doc.at_scale(own * 4.0).expect("left out");
     assert!(other.slot_of(Uuid::from_bytes(m.uid.0)).is_none());
@@ -119,9 +134,17 @@ fn a_sheet_scale_draws_each_row_as_far_out_on_paper() {
     );
     assert_eq!(refused["status"], "failed", "{refused}");
     // Their scales replaced: every member follows; none, the recipe leaves them as they are.
-    done(&mut doc, EDIT, json!({"id": id, "operation": {"kind": "set", "scales": [own * 2.0, own * 4.0]}}));
+    done(
+        &mut doc,
+        EDIT,
+        json!({"id": id, "operation": {"kind": "set", "scales": [own * 2.0, own * 4.0]}}),
+    );
     let set = doc.dimension_set(id).unwrap().clone();
-    assert!(set.members.iter().all(|m| dimension(&doc, m.uid).annotative.unwrap().scales.len() == 2));
+    assert!(
+        set.members
+            .iter()
+            .all(|m| dimension(&doc, m.uid).annotative.unwrap().scales.len() == 2)
+    );
 }
 
 #[test]
@@ -143,7 +166,11 @@ fn values_that_do_not_fit_go_aside_and_a_value_moved_by_hand_stays() {
         .collect();
     assert!(!moved.is_empty(), "a thin wall's value goes aside");
     for m in &moved {
-        assert_eq!(m.shift, dimension(&doc, m.uid).text_shift, "the recipe's place is recorded");
+        assert_eq!(
+            m.shift,
+            dimension(&doc, m.uid).text_shift,
+            "the recipe's place is recorded"
+        );
     }
     // A value moved by hand keeps its place through a source edit, and goes back with Yazıları tarife döndür.
     let first = moved[0].uid;
@@ -160,8 +187,16 @@ fn values_that_do_not_fit_go_aside_and_a_value_moved_by_hand_stays() {
         json!({"layerId": "cizim", "openings": [{"host": w[0], "at": 2.0, "width": 0.9}]}),
     );
     let mine = dimension(&doc, first).text_shift.unwrap();
-    assert_eq!((mine.along, mine.across), (0.0, 0.5), "the user's place kept");
-    done(&mut doc, EDIT, json!({"id": id, "operation": {"kind": "resetText"}}));
+    assert_eq!(
+        (mine.along, mine.across),
+        (0.0, 0.5),
+        "the user's place kept"
+    );
+    done(
+        &mut doc,
+        EDIT,
+        json!({"id": id, "operation": {"kind": "resetText"}}),
+    );
     let back = dimension(&doc, first).text_shift;
     let recorded = doc
         .dimension_set(id)
@@ -174,9 +209,17 @@ fn values_that_do_not_fit_go_aside_and_a_value_moved_by_hand_stays() {
     assert_eq!(back, recorded, "the recipe's place again");
     assert_ne!(back.map(|s| (s.along, s.across)), Some((0.0, 0.5)));
     // Keeping again: the recipe's places go, the values stand in their own.
-    done(&mut doc, EDIT, json!({"id": id, "operation": {"kind": "set", "tight": "keep"}}));
+    done(
+        &mut doc,
+        EDIT,
+        json!({"id": id, "operation": {"kind": "set", "tight": "keep"}}),
+    );
     let set = doc.dimension_set(id).unwrap().clone();
-    assert!(set.members.iter().all(|m| m.shift.is_none() && dimension(&doc, m.uid).text_shift.is_none()));
+    assert!(
+        set.members
+            .iter()
+            .all(|m| m.shift.is_none() && dimension(&doc, m.uid).text_shift.is_none())
+    );
 }
 
 #[test]
@@ -216,7 +259,13 @@ fn parts_rounding_to_other_than_the_overall_are_said() {
     );
 }
 
-fn everything(w: &[String], window: &str, grids: &[String], doc: &Document, id: DimensionSetId) -> Vec<String> {
+fn everything(
+    w: &[String],
+    window: &str,
+    grids: &[String],
+    doc: &Document,
+    id: DimensionSetId,
+) -> Vec<String> {
     let mut uids: Vec<String> = w.to_vec();
     uids.push(window.to_owned());
     uids.extend(grids.iter().cloned());
@@ -242,7 +291,10 @@ fn rows(doc: &Document, id: DimensionSetId) -> Vec<(DimensionSetRow, Vec<f64>)> 
                 .filter(|m| m.row == *r)
                 .map(|m| {
                     let d = dimension(doc, m.uid);
-                    (d.a.x.min(d.b.x), ((d.b.x - d.a.x).abs() * 1e6).round() / 1e6)
+                    (
+                        d.a.x.min(d.b.x),
+                        ((d.b.x - d.a.x).abs() * 1e6).round() / 1e6,
+                    )
                 })
                 .collect();
             out.sort_by(|a, b| a.0.total_cmp(&b.0));
@@ -266,8 +318,15 @@ fn a_copy_takes_the_whole_recipe_onto_the_copies() {
     assert_eq!(doc.dimension_sets().len(), 2);
     let copy = doc.dimension_sets()[1].clone();
     assert_ne!(copy.id, id);
-    assert!(created.contains(&Uuid::from_bytes(copy.wall.0).to_string()), "the copy's source is the wall's copy");
-    assert!(copy.members.iter().all(|m| created.contains(&Uuid::from_bytes(m.uid.0).to_string())));
+    assert!(
+        created.contains(&Uuid::from_bytes(copy.wall.0).to_string()),
+        "the copy's source is the wall's copy"
+    );
+    assert!(
+        copy.members
+            .iter()
+            .all(|m| created.contains(&Uuid::from_bytes(m.uid.0).to_string()))
+    );
     assert_eq!(rows(&doc, copy.id), before, "the same rows on the copies");
     assert!((copy.at.x - 25.0).abs() < 1e-9 && (copy.at.y - -1.5).abs() < 1e-9);
     // The original stays as it was; one undo takes the copy and its recipe back.
@@ -299,9 +358,17 @@ fn a_paste_takes_the_recipe_over_the_pasted_objects() {
     let id = facade(&mut doc, &[&w[0]], json!({}));
     let before = rows(&doc, id);
     let uids = everything(&w, &window, &grids, &doc, id);
-    let clip = done(&mut doc, "cad.entities.copy", json!({"uids": uids, "base": p(0., 0.)}));
+    let clip = done(
+        &mut doc,
+        "cad.entities.copy",
+        json!({"uids": uids, "base": p(0., 0.)}),
+    );
     assert_eq!(clip["dimensionSets"].as_array().unwrap().len(), 1);
-    done(&mut doc, "cad.entities.paste", json!({"clip": clip, "at": p(0., 30.)}));
+    done(
+        &mut doc,
+        "cad.entities.paste",
+        json!({"clip": clip, "at": p(0., 30.)}),
+    );
     assert_eq!(doc.dimension_sets().len(), 2);
     let pasted = doc.dimension_sets()[1].clone();
     assert_eq!(rows(&doc, pasted.id), before);
@@ -320,7 +387,11 @@ fn a_move_of_every_source_moves_the_rows_and_a_mirror_keeps_a_walls_face() {
         json!({"uids": uids, "transform": {"kind": "move", "dx": 0.0, "dy": 50.0}}),
     );
     let set = doc.dimension_set(id).unwrap().clone();
-    assert!((set.at.y - 48.5).abs() < 1e-9, "the rows went with the house: {:?}", set.at);
+    assert!(
+        (set.at.y - 48.5).abs() < 1e-9,
+        "the rows went with the house: {:?}",
+        set.at
+    );
     assert_eq!(rows(&doc, id), before);
     for m in &set.members {
         let d = dimension(&doc, m.uid);
@@ -351,11 +422,19 @@ fn a_move_of_every_source_moves_the_rows_and_a_mirror_keeps_a_walls_face() {
         .as_str()
         .unwrap()
         .to_owned();
-    let out = done(&mut doc, CREATE, json!({"layerId": "cizim", "wall": wall, "at": p(2.5, 1.0)}));
+    let out = done(
+        &mut doc,
+        CREATE,
+        json!({"layerId": "cizim", "wall": wall, "at": p(2.5, 1.0)}),
+    );
     let id = DimensionSetId::parse(out["set"].as_str().unwrap()).unwrap();
     let set = doc.dimension_set(id).unwrap().clone();
     let mut uids = vec![wall.clone()];
-    uids.extend(set.members.iter().map(|m| Uuid::from_bytes(m.uid.0).to_string()));
+    uids.extend(
+        set.members
+            .iter()
+            .map(|m| Uuid::from_bytes(m.uid.0).to_string()),
+    );
     done(
         &mut doc,
         "cad.entities.transform",
@@ -364,10 +443,17 @@ fn a_move_of_every_source_moves_the_rows_and_a_mirror_keeps_a_walls_face() {
     let copy = doc.dimension_sets()[1].clone();
     // The mirrored wall's path runs back (docs/adr/0339 §1): its body on the same side of its path, the same face.
     assert_eq!(copy.face, set.face, "the mirrored wall's own face");
-    assert!(copy.at.y > 0.5, "its rows above it as the original's: {:?}", copy.at);
+    assert!(
+        copy.at.y > 0.5,
+        "its rows above it as the original's: {:?}",
+        copy.at
+    );
     for m in &copy.members {
         let d = dimension(&doc, m.uid);
-        assert!((d.a.y - 0.1).abs() < 1e-9 && (d.b.y - 0.1).abs() < 1e-9, "the upper face measured: {d:?}");
+        assert!(
+            (d.a.y - 0.1).abs() < 1e-9 && (d.b.y - 0.1).abs() < 1e-9,
+            "the upper face measured: {d:?}"
+        );
         assert!(d.a.y + d.offset > 0.5, "{d:?}");
     }
     // A recipe on an L wall's second edge, mirrored in place: the path runs back, so it is the first edge now.
@@ -381,7 +467,11 @@ fn a_move_of_every_source_moves_the_rows_and_a_mirror_keeps_a_walls_face() {
         .as_str()
         .unwrap()
         .to_owned();
-    let out = done(&mut doc, CREATE, json!({"layerId": "cizim", "wall": wall, "edge": 1, "at": p(4.0, -1.0)}));
+    let out = done(
+        &mut doc,
+        CREATE,
+        json!({"layerId": "cizim", "wall": wall, "edge": 1, "at": p(4.0, -1.0)}),
+    );
     let id = DimensionSetId::parse(out["set"].as_str().unwrap()).unwrap();
     let set = doc.dimension_set(id).unwrap().clone();
     let measured = |doc: &Document, id: DimensionSetId| -> Vec<(f64, f64)> {
@@ -400,23 +490,38 @@ fn a_move_of_every_source_moves_the_rows_and_a_mirror_keeps_a_walls_face() {
     };
     let before = measured(&doc, id);
     let mut uids = vec![wall.clone()];
-    uids.extend(set.members.iter().map(|m| Uuid::from_bytes(m.uid.0).to_string()));
+    uids.extend(
+        set.members
+            .iter()
+            .map(|m| Uuid::from_bytes(m.uid.0).to_string()),
+    );
     done(
         &mut doc,
         "cad.entities.transform",
         json!({"uids": uids, "transform": {"kind": "mirror", "a": p(0., 0.), "b": p(1., 0.)}}),
     );
     let after = doc.dimension_set(id).unwrap().clone();
-    assert_eq!(after.edge, Some(0), "the mirrored path's first edge is the same wall run");
+    assert_eq!(
+        after.edge,
+        Some(0),
+        "the mirrored path's first edge is the same wall run"
+    );
     assert_eq!(after.face, set.face);
     assert!(after.broken.is_none(), "{:?}", after.broken);
     // The same intervals, on the measured face's mirror image (y → −y).
     let now = measured(&doc, id);
     assert_eq!(now.len(), before.len());
     for ((l, y), (l0, y0)) in now.iter().zip(&before) {
-        assert!((l - l0).abs() < 1e-9 && (y + y0).abs() < 1e-9, "{now:?} {before:?}");
+        assert!(
+            (l - l0).abs() < 1e-9 && (y + y0).abs() < 1e-9,
+            "{now:?} {before:?}"
+        );
     }
-    assert!((after.at.y - 1.0).abs() < 1e-9, "the rows' place mirrored: {:?}", after.at);
+    assert!(
+        (after.at.y - 1.0).abs() < 1e-9,
+        "the rows' place mirrored: {:?}",
+        after.at
+    );
 }
 
 /// The KCAD example of schema 129 (fixtures/kcad/v2/dimension-set-scales.json) is the commands' drawing: the house's
@@ -426,7 +531,11 @@ fn a_move_of_every_source_moves_the_rows_and_a_mirror_keeps_a_walls_face() {
 #[test]
 fn the_kcad_example_is_the_commands_drawing() {
     let (mut doc, w, ..) = house();
-    let id = facade(&mut doc, &[&w[0]], json!({"scales": [100.0, 200.0], "tight": "shift"}));
+    let id = facade(
+        &mut doc,
+        &[&w[0]],
+        json!({"scales": [100.0, 200.0], "tight": "shift"}),
+    );
     // The north wall runs west: its right face is the outer one.
     done(
         &mut doc,
@@ -435,35 +544,63 @@ fn the_kcad_example_is_the_commands_drawing() {
     );
     assert_eq!(doc.dimension_sets().len(), 2);
     let set = doc.dimension_set(id).unwrap().clone();
-    let first = set.members.iter().find(|m| m.shift.is_some()).expect("a value moved aside").uid;
+    let first = set
+        .members
+        .iter()
+        .find(|m| m.shift.is_some())
+        .expect("a value moved aside")
+        .uid;
     done(
         &mut doc,
         "cad.dimensions.edit",
         json!({"edit": {"kind": "moveText", "uid": Uuid::from_bytes(first.0).to_string(), "along": 0.0, "across": 0.6}}),
     );
     let snapshot = doc.to_snapshot_v2();
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/kcad/v2/dimension-set-scales.json");
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/kcad/v2/dimension-set-scales.json"
+    );
     if std::env::var_os("KENTOS_WRITE_SCALES_MODEL").is_some() {
-        std::fs::write(path, serde_json::to_string_pretty(&snapshot).unwrap() + "\n").unwrap();
+        std::fs::write(
+            path,
+            serde_json::to_string_pretty(&snapshot).unwrap() + "\n",
+        )
+        .unwrap();
     }
     let stored: kentos_commands::DocumentSnapshotV2 =
         serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
     let reopened = Document::from_snapshot_v2(stored.clone()).unwrap();
-    assert_eq!(reopened.to_snapshot_v2().dimension_sets, stored.dimension_sets, "opened unchanged");
+    assert_eq!(
+        reopened.to_snapshot_v2().dimension_sets,
+        stored.dimension_sets,
+        "opened unchanged"
+    );
     assert_eq!(stored.dimension_sets[1].scales, [100.0]);
-    assert!(stored.dimension_sets[1].span.is_none(), "a wall's own recipe");
+    assert!(
+        stored.dimension_sets[1].span.is_none(),
+        "a wall's own recipe"
+    );
     let set = &stored.dimension_sets[0];
     assert_eq!(set.scales, [100.0, 200.0]);
     assert_eq!(set.tight, DimensionSetTight::Shift);
-    assert!(set.members.iter().any(|m| m.shift.is_some()), "the recipe's places recorded");
+    assert!(
+        set.members.iter().any(|m| m.shift.is_some()),
+        "the recipe's places recorded"
+    );
     // The value moved by hand stands where the user put it; the recipe's place for it is kept as it was.
     let moved = set.members.iter().find(|m| {
-        stored.entities.iter().zip(&stored.uids).any(|(e, uid)| match e {
-            Entity::Dimension(d) => {
-                *uid == m.uid && d.text_shift.is_some_and(|s| (s.along, s.across) == (0.0, 0.6))
-            }
-            _ => false,
-        })
+        stored
+            .entities
+            .iter()
+            .zip(&stored.uids)
+            .any(|(e, uid)| match e {
+                Entity::Dimension(d) => {
+                    *uid == m.uid
+                        && d.text_shift
+                            .is_some_and(|s| (s.along, s.across) == (0.0, 0.6))
+                }
+                _ => false,
+            })
     });
     assert!(moved.is_some_and(|m| m.shift.is_some_and(|s| (s.along, s.across) != (0.0, 0.6))));
 }

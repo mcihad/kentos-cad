@@ -17,17 +17,30 @@ pub(crate) struct Names<'a> {
 
 impl Names<'_> {
     fn level(&self, id: &str) -> Option<String> {
-        self.levels.iter().find(|l| l.id == id).map(|l| l.name.clone())
+        self.levels
+            .iter()
+            .find(|l| l.id == id)
+            .map(|l| l.name.clone())
     }
 
     fn opening_type(&self, id: &str) -> Option<String> {
-        self.opening_types.iter().find(|t| t.id == id).map(|t| t.name.clone()).or_else(|| {
-            kentos_commands::builtin_opening_types().into_iter().find(|t| t.id == id).map(|t| t.name)
-        })
+        self.opening_types
+            .iter()
+            .find(|t| t.id == id)
+            .map(|t| t.name.clone())
+            .or_else(|| {
+                kentos_commands::builtin_opening_types()
+                    .into_iter()
+                    .find(|t| t.id == id)
+                    .map(|t| t.name)
+            })
     }
 
     fn wall_style(&self, id: &str) -> Option<String> {
-        self.wall_styles.iter().find(|s| s.id == id).map(|s| s.name.clone())
+        self.wall_styles
+            .iter()
+            .find(|s| s.id == id)
+            .map(|s| s.name.clone())
     }
 
     fn length(&self, v: f64) -> String {
@@ -101,7 +114,9 @@ fn text<'a>(v: &'a Value, key: &str) -> Option<&'a str> {
 }
 
 fn items<'a>(v: &'a Value, key: &str) -> &'a [Value] {
-    v.get(key).and_then(Value::as_array).map_or(&[], Vec::as_slice)
+    v.get(key)
+        .and_then(Value::as_array)
+        .map_or(&[], Vec::as_slice)
 }
 
 fn xy(v: &Value) -> Option<(f64, f64)> {
@@ -117,7 +132,10 @@ fn count(input: &Value, key: &str, what: &str) -> Option<String> {
 /// A path's length: its points in order (a closed one back to its first).
 fn path_length(pts: &[Value], closed: bool) -> f64 {
     let p: Vec<(f64, f64)> = pts.iter().filter_map(xy).collect();
-    let mut total: f64 = p.windows(2).map(|w| (w[1].0 - w[0].0).hypot(w[1].1 - w[0].1)).sum();
+    let mut total: f64 = p
+        .windows(2)
+        .map(|w| (w[1].0 - w[0].0).hypot(w[1].1 - w[0].1))
+        .sum();
     if closed && p.len() > 2 {
         let (a, b) = (p[p.len() - 1], p[0]);
         total += (b.0 - a.0).hypot(b.1 - a.1);
@@ -128,7 +146,9 @@ fn path_length(pts: &[Value], closed: bool) -> f64 {
 /// The value every item gives `key`, when they all give the same one.
 fn shared<'a>(list: &'a [Value], key: &str) -> Option<&'a Value> {
     let first = list.first()?.get(key)?;
-    list.iter().all(|i| i.get(key) == Some(first)).then_some(first)
+    list.iter()
+        .all(|i| i.get(key) == Some(first))
+        .then_some(first)
 }
 
 fn level(v: &Value, n: &Names) -> Option<String> {
@@ -159,17 +179,33 @@ fn walls_create(input: &Value, n: &Names) -> Vec<String> {
     let walls = items(input, "walls");
     let length: f64 = walls
         .iter()
-        .map(|w| path_length(items(w, "pts"), w.get("closed").and_then(Value::as_bool).unwrap_or(false)))
+        .map(|w| {
+            path_length(
+                items(w, "pts"),
+                w.get("closed").and_then(Value::as_bool).unwrap_or(false),
+            )
+        })
         .sum();
     let mut out = vec![
-        if walls.len() == 1 { String::new() } else { format!("{} duvar", walls.len()) },
-        if length > 0.0 { n.length(length) } else { String::new() },
+        if walls.len() == 1 {
+            String::new()
+        } else {
+            format!("{} duvar", walls.len())
+        },
+        if length > 0.0 {
+            n.length(length)
+        } else {
+            String::new()
+        },
     ];
     if let Some(w) = shared(walls, "width").and_then(Value::as_f64) {
         out.push(format!("kalınlık {}", n.length(w)));
     }
     if let Some(s) = shared(walls, "style").and_then(Value::as_str) {
-        out.push(format!("stil {}", n.wall_style(s).unwrap_or_else(|| s.to_owned())));
+        out.push(format!(
+            "stil {}",
+            n.wall_style(s).unwrap_or_else(|| s.to_owned())
+        ));
     }
     if let Some(j) = shared(walls, "justify").and_then(Value::as_str) {
         out.push(justify(j).to_owned());
@@ -196,7 +232,9 @@ fn walls_rectangle(input: &Value, n: &Names) -> Vec<String> {
         }
         _ => None,
     });
-    let mut out = vec![size.map_or_else(String::new, |(w, h)| format!("{} × {} {}", n.bare(w), n.bare(h), n.unit()))];
+    let mut out = vec![size.map_or_else(String::new, |(w, h)| {
+        format!("{} × {} {}", n.bare(w), n.bare(h), n.unit())
+    })];
     out.push(
         match text(input, "reference").unwrap_or("inner") {
             "outer" => "dış ölçü",
@@ -209,7 +247,10 @@ fn walls_rectangle(input: &Value, n: &Names) -> Vec<String> {
         out.push(format!("kalınlık {}", n.length(w)));
     }
     if let Some(s) = text(input, "style") {
-        out.push(format!("stil {}", n.wall_style(s).unwrap_or_else(|| s.to_owned())));
+        out.push(format!(
+            "stil {}",
+            n.wall_style(s).unwrap_or_else(|| s.to_owned())
+        ));
     }
     if input.get("adopt").and_then(Value::as_bool) == Some(true) {
         out.push("ortak duvar: var olan kullanılır".to_owned());
@@ -226,11 +267,20 @@ fn walls_partition(input: &Value, n: &Names) -> Vec<String> {
         out.push(format!(
             "kaynaktan {} {}",
             n.length(d),
-            if text(input, "measure") == Some("axis") { "eksen" } else { "net" }
+            if text(input, "measure") == Some("axis") {
+                "eksen"
+            } else {
+                "net"
+            }
         ));
     }
     out.push(side(text(input, "side").unwrap_or("")).to_owned());
-    if let Some(w) = input.get("wall").map(|w| items(w, "walls")).and_then(|w| w.first()).and_then(|w| num(w, "width")) {
+    if let Some(w) = input
+        .get("wall")
+        .map(|w| items(w, "walls"))
+        .and_then(|w| w.first())
+        .and_then(|w| num(w, "width"))
+    {
         out.push(format!("kalınlık {}", n.length(w)));
     }
     out
@@ -248,15 +298,28 @@ fn walls_convert(input: &Value, n: &Names) -> Vec<String> {
         out.push("çiftler".to_owned());
     }
     if let Some(keep) = input.get("keepSources").and_then(Value::as_bool) {
-        out.push(if keep { "kaynak çizgiler korunur" } else { "kaynak çizgiler silinir" }.to_owned());
+        out.push(
+            if keep {
+                "kaynak çizgiler korunur"
+            } else {
+                "kaynak çizgiler silinir"
+            }
+            .to_owned(),
+        );
     }
     out
 }
 
 fn walls_edit(input: &Value, n: &Names) -> Vec<String> {
     let walls = items(input, "uids").len();
-    let mut out = vec![if walls > 1 { format!("{walls} duvar") } else { String::new() }];
-    let Some(op) = input.get("operation") else { return out };
+    let mut out = vec![if walls > 1 {
+        format!("{walls} duvar")
+    } else {
+        String::new()
+    }];
+    let Some(op) = input.get("operation") else {
+        return out;
+    };
     match text(op, "kind").unwrap_or("") {
         "set" => {
             if let Some(w) = num(op, "width") {
@@ -269,7 +332,10 @@ fn walls_edit(input: &Value, n: &Names) -> Vec<String> {
                 out.push(format!("öteleme {}", n.length(o)));
             }
             if let Some(s) = text(op, "style") {
-                out.push(format!("stil {}", n.wall_style(s).unwrap_or_else(|| s.to_owned())));
+                out.push(format!(
+                    "stil {}",
+                    n.wall_style(s).unwrap_or_else(|| s.to_owned())
+                ));
             }
             if let Some(h) = num(op, "height") {
                 out.push(format!("yükseklik {}", n.length(h)));
@@ -312,7 +378,9 @@ fn openings_create(input: &Value, n: &Names) -> Vec<String> {
         return vec![format!("{} açıklık", list.len())];
     }
     let o = &list[0];
-    let mut out = vec![text(o, "type").map_or_else(String::new, |t| n.opening_type(t).unwrap_or_else(|| t.to_owned()))];
+    let mut out = vec![text(o, "type").map_or_else(String::new, |t| {
+        n.opening_type(t).unwrap_or_else(|| t.to_owned())
+    })];
     // Without a type the tool sends its form (the form's first type of KentOS's own).
     if out[0].is_empty() {
         out[0] = match text(o, "form") {
@@ -356,8 +424,14 @@ fn openings_create(input: &Value, n: &Names) -> Vec<String> {
 
 fn openings_edit(input: &Value, n: &Names) -> Vec<String> {
     let k = items(input, "uids").len();
-    let mut out = vec![if k > 1 { format!("{k} açıklık") } else { String::new() }];
-    let Some(op) = input.get("operation") else { return out };
+    let mut out = vec![if k > 1 {
+        format!("{k} açıklık")
+    } else {
+        String::new()
+    }];
+    let Some(op) = input.get("operation") else {
+        return out;
+    };
     match text(op, "kind").unwrap_or("") {
         "distance" => {
             if let Some(d) = num(op, "distance") {
@@ -376,9 +450,10 @@ fn openings_edit(input: &Value, n: &Names) -> Vec<String> {
         "flip" => out.push("açılışı çevrildi".to_owned()),
         "move" => out.push("taşındı".to_owned()),
         "rehost" => out.push("başka duvara taşındı".to_owned()),
-        "replaceType" => out.push(
-            text(op, "to").map_or_else(|| "türü değişti".to_owned(), |t| format!("tür {}", n.opening_type(t).unwrap_or_else(|| t.to_owned()))),
-        ),
+        "replaceType" => out.push(text(op, "to").map_or_else(
+            || "türü değişti".to_owned(),
+            |t| format!("tür {}", n.opening_type(t).unwrap_or_else(|| t.to_owned())),
+        )),
         "detach" => out.push("tipten ayrıldı".to_owned()),
         "push" => out.push("değerleri tipine uygulandı".to_owned()),
         "refresh" => out.push("tipi yeniden uygulandı".to_owned()),
@@ -398,7 +473,11 @@ fn spaces_create(input: &Value, n: &Names) -> Vec<String> {
         return vec![format!("{} mahal", list.len())];
     }
     let s = &list[0];
-    let name = [text(s, "number"), text(s, "name")].into_iter().flatten().collect::<Vec<_>>().join(" ");
+    let name = [text(s, "number"), text(s, "name")]
+        .into_iter()
+        .flatten()
+        .collect::<Vec<_>>()
+        .join(" ");
     let mut out = vec![name];
     if s.get("void").and_then(Value::as_bool) == Some(true) {
         out.push("döşeme boşluğu".to_owned());
@@ -466,7 +545,11 @@ fn slabs_create(input: &Value, n: &Names) -> Vec<String> {
 /// Merdiven and Rampa: how many, their width, a stair's height and a ramp's rise and slope.
 fn flights(input: &Value, key: &str, what: &str, n: &Names) -> Vec<String> {
     let list = items(input, key);
-    let mut out = vec![if list.len() == 1 { String::new() } else { format!("{} {what}", list.len()) }];
+    let mut out = vec![if list.len() == 1 {
+        String::new()
+    } else {
+        format!("{} {what}", list.len())
+    }];
     let Some(f) = list.first() else { return out };
     if let Some(w) = num(f, "width") {
         out.push(format!("genişlik {}", n.length(w)));
@@ -489,7 +572,10 @@ fn flights(input: &Value, key: &str, what: &str, n: &Names) -> Vec<String> {
 fn columns_create(input: &Value, n: &Names) -> Vec<String> {
     let list = items(input, "columns");
     let mut out = vec![format!("{} kolon", list.len())];
-    if let (Some(w), Some(d)) = (shared(list, "width").and_then(Value::as_f64), shared(list, "depth").and_then(Value::as_f64)) {
+    if let (Some(w), Some(d)) = (
+        shared(list, "width").and_then(Value::as_f64),
+        shared(list, "depth").and_then(Value::as_f64),
+    ) {
         out.push(format!("{} × {} {}", n.bare(w), n.bare(d), n.unit()));
     } else if let Some(w) = shared(list, "width").and_then(Value::as_f64) {
         out.push(format!("en {}", n.length(w)));
@@ -499,7 +585,13 @@ fn columns_create(input: &Value, n: &Names) -> Vec<String> {
 
 fn grids_create(input: &Value, n: &Names) -> Vec<String> {
     if let Some(system) = input.get("system") {
-        let spans = |k: &str| items(system, k).iter().filter_map(Value::as_f64).map(|v| n.bare(v)).collect::<Vec<_>>();
+        let spans = |k: &str| {
+            items(system, k)
+                .iter()
+                .filter_map(Value::as_f64)
+                .map(|v| n.bare(v))
+                .collect::<Vec<_>>()
+        };
         let (x, y) = (spans("x"), spans("y"));
         return vec![
             "aks sistemi".to_owned(),
@@ -521,7 +613,12 @@ fn grids_create(input: &Value, n: &Names) -> Vec<String> {
 
 fn casework_run(input: &Value, n: &Names) -> Vec<String> {
     let mut out = vec![segment(input, n).unwrap_or_default()];
-    for (key, word) in [("sink", "evye"), ("cooktop", "ocak"), ("oven", "fırın"), ("dishwasher", "bulaşık makinesi")] {
+    for (key, word) in [
+        ("sink", "evye"),
+        ("cooktop", "ocak"),
+        ("oven", "fırın"),
+        ("dishwasher", "bulaşık makinesi"),
+    ] {
         if let Some(m) = input.get(key).and_then(Value::as_u64) {
             out.push(format!("{word} {m}. modül"));
         }
@@ -549,7 +646,11 @@ fn tags_create(input: &Value) -> Vec<String> {
             _ => "nesneler",
         })
         .collect();
-    vec![if kinds.is_empty() { "hepsi etiketlendi".to_owned() } else { format!("hepsi etiketlendi: {}", kinds.join(", ")) }]
+    vec![if kinds.is_empty() {
+        "hepsi etiketlendi".to_owned()
+    } else {
+        format!("hepsi etiketlendi: {}", kinds.join(", "))
+    }]
 }
 
 /// A drawn segment's length (`from` → `to`).

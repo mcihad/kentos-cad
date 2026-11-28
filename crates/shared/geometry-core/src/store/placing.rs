@@ -732,7 +732,8 @@ impl Store {
         fixed: &[Vec<Vec2>],
         options: PlaceOptions,
     ) -> Shown {
-        self.place_labels_after(window, scale, fixed, options, None).0
+        self.place_labels_after(window, scale, fixed, options, None)
+            .0
     }
 
     /// [`place_labels`](Self::place_labels) for a view that moved a little since `prior` (docs/adr/0533 §3): the
@@ -745,13 +746,26 @@ impl Store {
         options: PlaceOptions,
         prior: Option<&Prior>,
     ) -> (Shown, Prior) {
-        self.place_labels_after_in(window,scale,fixed,options,prior,None)
+        self.place_labels_after_in(window, scale, fixed, options, prior, None)
     }
 
     /// View-specific layer visibility also controls obstacles, contours and ghost neighbours.
     #[allow(clippy::too_many_arguments)]
-    pub(super) fn place_labels_after_in(&self,window:&Bounds,scale:f64,fixed:&[Vec<Vec2>],options:PlaceOptions,prior:Option<&Prior>,shown:Option<&[bool]>)->(Shown,Prior) {
-        let visible=|it:&Item|shown.and_then(|s|s.get(it.layer as usize)).copied().unwrap_or_else(||self.flags(it).visible);
+    pub(super) fn place_labels_after_in(
+        &self,
+        window: &Bounds,
+        scale: f64,
+        fixed: &[Vec<Vec2>],
+        options: PlaceOptions,
+        prior: Option<&Prior>,
+        shown: Option<&[bool]>,
+    ) -> (Shown, Prior) {
+        let visible = |it: &Item| {
+            shown
+                .and_then(|s| s.get(it.layer as usize))
+                .copied()
+                .unwrap_or_else(|| self.flags(it).visible)
+        };
         let page = Page {
             x0: window.min_x,
             y0: window.min_y,
@@ -945,10 +959,12 @@ impl Store {
                     Kind::Point => {
                         let p = match &it.shape {
                             Shape::Point { p, .. } | Shape::Insert { p, .. } => page.px(*p),
-                            Shape::Opening { place, .. } => match crate::geom::opening::centre(place) {
-                                Some(c) => page.px(c),
-                                None => continue,
-                            },
+                            Shape::Opening { place, .. } => {
+                                match crate::geom::opening::centre(place) {
+                                    Some(c) => page.px(c),
+                                    None => continue,
+                                }
+                            }
                             _ => continue,
                         };
                         if cls.point == PointMode::Corner {
@@ -1379,7 +1395,9 @@ impl Store {
                         .chain(parts.iter().flatten().map(|q| q.p))
                         .collect(),
                     Shape::Insert { p, .. } => vec![*p],
-                    Shape::Opening { place, .. } => crate::geom::opening::centre(place).into_iter().collect(),
+                    Shape::Opening { place, .. } => {
+                        crate::geom::opening::centre(place).into_iter().collect()
+                    }
                     _ => Vec::new(),
                 };
                 for p in points {

@@ -28,10 +28,16 @@ pub fn period(from: Option<&str>, to: Option<&str>) -> AppResult<(Date, Date)> {
     let from = date_at("from", from)?
         .unwrap_or_else(|| Date::from_calendar_date(to.year(), Month::January, 1).unwrap_or(to));
     if from > to {
-        return Err(AppError::invalid_at("from", "Dönemin başı sonundan sonra olamaz."));
+        return Err(AppError::invalid_at(
+            "from",
+            "Dönemin başı sonundan sonra olamaz.",
+        ));
     }
     if (to - from).whole_days() > MAX_DAYS {
-        return Err(AppError::invalid_at("from", "Dönem en çok üç yıl olabilir."));
+        return Err(AppError::invalid_at(
+            "from",
+            "Dönem en çok üç yıl olabilir.",
+        ));
     }
     Ok((from, to))
 }
@@ -45,7 +51,9 @@ async fn municipality_tx(db: &Db, access: &Access) -> AppResult<Transaction<'sta
             .await?
             .unwrap_or(false);
     if !municipality {
-        return Err(AppError::invalid("İstatistikler belediyelerin başvuru ve aktarımları içindir."));
+        return Err(AppError::invalid(
+            "İstatistikler belediyelerin başvuru ve aktarımları içindir.",
+        ));
     }
     Ok(tx)
 }
@@ -64,12 +72,29 @@ fn within(col: &str) -> String {
 }
 
 /// `GET /v1/tenants/{tenant}/portal/statistics`: any member of the municipality.
-pub async fn statistics(db: &Db, access: &Access, from: Date, to: Date) -> AppResult<PortalStatistics> {
+pub async fn statistics(
+    db: &Db,
+    access: &Access,
+    from: Date,
+    to: Date,
+) -> AppResult<PortalStatistics> {
     let mut tx = municipality_tx(db, access).await?;
     let sent = within("d.sent_at");
     let closed = within("d.closed_at");
     let decided = format!("d.status in ('approved', 'rejected') and {closed}");
-    type Totals = (i64, i64, i64, i64, i64, i64, Option<f64>, Option<f64>, Option<f64>, i64, i64);
+    type Totals = (
+        i64,
+        i64,
+        i64,
+        i64,
+        i64,
+        i64,
+        Option<f64>,
+        Option<f64>,
+        Option<f64>,
+        i64,
+        i64,
+    );
     let t: Totals = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "select count(*) filter (where d.direction = 'application' and {sent}),
                 count(*) filter (where d.direction = 'application' and {decided}),
@@ -194,14 +219,16 @@ pub async fn statistics(db: &Db, access: &Access, from: Date, to: Date) -> AppRe
         fees_paid: paid,
         by_kind: kinds
             .into_iter()
-            .map(|(kind, received, approved, rejected, avg)| StatisticsKindRow {
-                label: catalog::kind_label(DossierDirection::Application, &kind),
-                kind,
-                received: count(received),
-                approved: count(approved),
-                rejected: count(rejected),
-                average_decision_days: days(avg),
-            })
+            .map(
+                |(kind, received, approved, rejected, avg)| StatisticsKindRow {
+                    label: catalog::kind_label(DossierDirection::Application, &kind),
+                    kind,
+                    received: count(received),
+                    approved: count(approved),
+                    rejected: count(rejected),
+                    average_decision_days: days(avg),
+                },
+            )
             .collect(),
         by_month: months
             .into_iter()
@@ -213,13 +240,21 @@ pub async fn statistics(db: &Db, access: &Access, from: Date, to: Date) -> AppRe
             .collect(),
         by_assignee: people
             .into_iter()
-            .map(|(name, open, decided)| StatisticsAssigneeRow { name, open: count(open), decided: count(decided) })
+            .map(|(name, open, decided)| StatisticsAssigneeRow {
+                name,
+                open: count(open),
+                decided: count(decided),
+            })
             .collect(),
     })
 }
 
 fn col(name: &str, kind: CellKind) -> WorkbookColumn {
-    WorkbookColumn { name: name.into(), kind, decimals: None }
+    WorkbookColumn {
+        name: name.into(),
+        kind,
+        decimals: None,
+    }
 }
 
 fn num(x: Option<f64>) -> String {
@@ -231,7 +266,12 @@ fn lira(kurus: i64) -> String {
 }
 
 /// The period's dossiers, one a row, as the workbook's “Dosyalar” sheet and the CSV file.
-async fn dossiers_sheet(db: &Db, access: &Access, from: Date, to: Date) -> AppResult<WorkbookSheet> {
+async fn dossiers_sheet(
+    db: &Db,
+    access: &Access,
+    from: Date,
+    to: Date,
+) -> AppResult<WorkbookSheet> {
     let mut tx = municipality_tx(db, access).await?;
     let rows: Vec<SummaryRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "{SUMMARY_SELECT} where d.tenant_id = $1 and ({} or {}) order by d.sent_at nulls last, d.created_at",
@@ -243,14 +283,18 @@ async fn dossiers_sheet(db: &Db, access: &Access, from: Date, to: Date) -> AppRe
     .bind(to)
     .fetch_all(&mut *tx)
     .await?;
-    let closed: Vec<(uuid::Uuid, Option<OffsetDateTime>)> =
-        sqlx::query_as("select id, closed_at from kentos.dossier where tenant_id = $1 and closed_at is not null")
-            .bind(access.tenant)
-            .fetch_all(&mut *tx)
-            .await?;
+    let closed: Vec<(uuid::Uuid, Option<OffsetDateTime>)> = sqlx::query_as(
+        "select id, closed_at from kentos.dossier where tenant_id = $1 and closed_at is not null",
+    )
+    .bind(access.tenant)
+    .fetch_all(&mut *tx)
+    .await?;
     tx.commit().await?;
     let closed: std::collections::BTreeMap<_, _> = closed.into_iter().collect();
-    let day = |t: Option<OffsetDateTime>| t.map(|t| t.to_offset(turkey()).date().to_string()).unwrap_or_default();
+    let day = |t: Option<OffsetDateTime>| {
+        t.map(|t| t.to_offset(turkey()).date().to_string())
+            .unwrap_or_default()
+    };
     Ok(WorkbookSheet {
         name: "Dosyalar".into(),
         columns: vec![
@@ -276,7 +320,12 @@ async fn dossiers_sheet(db: &Db, access: &Access, from: Date, to: Date) -> AppRe
                 };
                 vec![
                     r.number().unwrap_or_default(),
-                    if r.direction() == DossierDirection::Application { "Başvuru" } else { "Aktarım" }.into(),
+                    if r.direction() == DossierDirection::Application {
+                        "Başvuru"
+                    } else {
+                        "Aktarım"
+                    }
+                    .into(),
                     catalog::kind_label(r.direction(), &r.kind),
                     r.title.clone(),
                     r.professional_name.clone().unwrap_or_default(),
@@ -305,7 +354,10 @@ pub async fn export(
     let files = dossiers_sheet(db, access, from, to).await?;
     let summary = WorkbookSheet {
         name: "Özet".into(),
-        columns: vec![col("Gösterge", CellKind::Text), col("Değer", CellKind::Auto)],
+        columns: vec![
+            col("Gösterge", CellKind::Text),
+            col("Değer", CellKind::Auto),
+        ],
         rows: [
             ("Dönem", format!("{} – {}", s.from, s.to)),
             ("Gelen başvuru", s.received.to_string()),
@@ -352,13 +404,35 @@ pub async fn export(
     };
     let by_month = WorkbookSheet {
         name: "Aylara göre".into(),
-        columns: vec![col("Ay", CellKind::Text), col("Gelen", CellKind::Number), col("Karara bağlanan", CellKind::Number)],
-        rows: s.by_month.iter().map(|m| vec![m.month.clone(), m.received.to_string(), m.decided.to_string()]).collect(),
+        columns: vec![
+            col("Ay", CellKind::Text),
+            col("Gelen", CellKind::Number),
+            col("Karara bağlanan", CellKind::Number),
+        ],
+        rows: s
+            .by_month
+            .iter()
+            .map(|m| {
+                vec![
+                    m.month.clone(),
+                    m.received.to_string(),
+                    m.decided.to_string(),
+                ]
+            })
+            .collect(),
     };
     let by_person = WorkbookSheet {
         name: "Sorumlulara göre".into(),
-        columns: vec![col("Sorumlu", CellKind::Text), col("Açık", CellKind::Number), col("Karara bağlanan", CellKind::Number)],
-        rows: s.by_assignee.iter().map(|p| vec![p.name.clone(), p.open.to_string(), p.decided.to_string()]).collect(),
+        columns: vec![
+            col("Sorumlu", CellKind::Text),
+            col("Açık", CellKind::Number),
+            col("Karara bağlanan", CellKind::Number),
+        ],
+        rows: s
+            .by_assignee
+            .iter()
+            .map(|p| vec![p.name.clone(), p.open.to_string(), p.decided.to_string()])
+            .collect(),
     };
     let (sheets, ext, media) = match format {
         WorkbookFormat::Csv => (vec![files], "csv", "text/csv; charset=utf-8"),
@@ -375,7 +449,11 @@ pub async fn export(
     };
     let (bytes, _) = kentos_formats::workbook::write(&WorkbookWriteInput { format, sheets })
         .map_err(AppError::invalid)?;
-    Ok((bytes, format!("istatistik-{}-{}.{ext}", s.from, s.to), media))
+    Ok((
+        bytes,
+        format!("istatistik-{}-{}.{ext}", s.from, s.to),
+        media,
+    ))
 }
 
 #[cfg(test)]
@@ -385,11 +463,22 @@ mod tests {
     #[test]
     fn a_period_is_this_year_by_default_and_at_most_three_years() {
         let (from, to) = period(None, Some("2026-11-18")).unwrap();
-        assert_eq!((from.to_string(), to.to_string()), ("2026-01-01".into(), "2026-11-18".into()));
-        assert_eq!(period(Some("2026-12-01"), Some("2026-11-01")).unwrap_err().path(), Some("from"));
+        assert_eq!(
+            (from.to_string(), to.to_string()),
+            ("2026-01-01".into(), "2026-11-18".into())
+        );
+        assert_eq!(
+            period(Some("2026-12-01"), Some("2026-11-01"))
+                .unwrap_err()
+                .path(),
+            Some("from")
+        );
         assert!(period(Some("2020-01-01"), Some("2026-01-01")).is_err());
         assert_eq!(lira(751_063), "7510.63");
         assert_eq!(num(Some(3.5)), "3.5");
-        assert_eq!(kentos_contracts::DossierStatus::Approved, catalog::status_of("approved").unwrap());
+        assert_eq!(
+            kentos_contracts::DossierStatus::Approved,
+            catalog::status_of("approved").unwrap()
+        );
     }
 }

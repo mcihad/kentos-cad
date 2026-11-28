@@ -23,12 +23,12 @@ mod emit;
 mod entity;
 mod hatch;
 mod justify;
+mod layouts;
 mod leaders;
 mod lexer;
-mod layouts;
 mod ordering;
-pub mod preflight;
 pub mod polyline_policy;
+pub mod preflight;
 mod spatial;
 pub use polyline_policy::write_checked;
 mod strings;
@@ -149,97 +149,140 @@ fn decide_units(
         report.fact("Birim ($INSUNITS)", units_name(u));
     }
     let known = declared.and_then(|u| units::insunits(u).map(|(s, name)| (u, s, name)));
-    let (used, scale, name, source, assumed) = if let Some((reference,factor))=opts.scale_reference.and_then(|r|r.factor().map(|f|(r,f))) {
-        let code=kentos_contracts::FileUnit::ALL.into_iter().find(|u|units::insunits(u.code()).is_some_and(|(s,_)|s.factor()==factor)).map_or(0,|u|u.code());
+    let (used, scale, name, source, assumed) = if let Some((reference, factor)) = opts
+        .scale_reference
+        .and_then(|r| r.factor().map(|f| (r, f)))
+    {
+        let code = kentos_contracts::FileUnit::ALL
+            .into_iter()
+            .find(|u| units::insunits(u.code()).is_some_and(|(s, _)| s.factor() == factor))
+            .map_or(0, |u| u.code());
         report.decide(Topic::Unit, "unit_scale_reference", "Ölçek doğrulaması", &format!("Dosyadaki {} birim = {} m; kaynak uzunlukları ×{factor} ile metreye çevrildi. Blokların kendi fiziksel birimi korunur.",reference.source_length,reference.real_length), 0);
-        (code,units::insunits(code).map_or(Scale{mul:factor,div:1.},|(s,_)|s),if code==0{"özel ölçü"}else{units_name(code)},UnitSource::Chosen,false)
-    } else { match (opts.file_unit, opts.unit) {
-        (Some(chosen), project) => {
-            let code = chosen.code();
-            let (scale, name) = units::insunits(code).unwrap_or((Scale::ONE, "metre"));
-            let said = match known {
-                Some((u, _, declared_name)) if u != code => Some(format!(
-                    "dosya {declared_name} bildiriyor; değerler seçilen birimde, {name} okundu"
-                )),
-                Some(_) => None,
-                None => Some(format!(
-                    "dosya birim bildirmiyor; değerler seçilen birimde, {name} okundu"
-                )),
-            };
-            // A local project in the chosen unit itself has nothing more to say.
-            let declared_other = matches!(known, Some((u, _, _)) if u != code);
-            match said.filter(|_| {
-                project.is_none_or(|p| units::insunits_of(p) != code) || known.is_some()
-            }) {
-                Some(said) => {
-                    let code = if declared_other { "unit_chosen_over_declared" } else { "unit_chosen_undeclared" };
-                    report.decide(Topic::Unit, code, "Birim", &said, 0);
+        (
+            code,
+            units::insunits(code).map_or(
+                Scale {
+                    mul: factor,
+                    div: 1.,
+                },
+                |(s, _)| s,
+            ),
+            if code == 0 {
+                "özel ölçü"
+            } else {
+                units_name(code)
+            },
+            UnitSource::Chosen,
+            false,
+        )
+    } else {
+        match (opts.file_unit, opts.unit) {
+            (Some(chosen), project) => {
+                let code = chosen.code();
+                let (scale, name) = units::insunits(code).unwrap_or((Scale::ONE, "metre"));
+                let said = match known {
+                    Some((u, _, declared_name)) if u != code => Some(format!(
+                        "dosya {declared_name} bildiriyor; değerler seçilen birimde, {name} okundu"
+                    )),
+                    Some(_) => None,
+                    None => Some(format!(
+                        "dosya birim bildirmiyor; değerler seçilen birimde, {name} okundu"
+                    )),
+                };
+                // A local project in the chosen unit itself has nothing more to say.
+                let declared_other = matches!(known, Some((u, _, _)) if u != code);
+                match said.filter(|_| {
+                    project.is_none_or(|p| units::insunits_of(p) != code) || known.is_some()
+                }) {
+                    Some(said) => {
+                        let code = if declared_other {
+                            "unit_chosen_over_declared"
+                        } else {
+                            "unit_chosen_undeclared"
+                        };
+                        report.decide(Topic::Unit, code, "Birim", &said, 0);
+                    }
+                    None => report.decide_quiet(
+                        Topic::Unit,
+                        "unit_chosen",
+                        "Birim",
+                        &format!("değerler seçilen birimde, {name} okundu"),
+                        0,
+                    ),
                 }
-                None => report.decide_quiet(Topic::Unit, "unit_chosen", "Birim", &format!("değerler seçilen birimde, {name} okundu"), 0),
+                (code, scale, name, UnitSource::Chosen, false)
             }
-            (code, scale, name, UnitSource::Chosen, false)
-        }
-        (None, None) => {
-            if let Some(u) = declared.filter(|u| *u != 0 && *u != 6) {
-                report.decide(
+            (None, None) => {
+                if let Some(u) = declared.filter(|u| *u != 0 && *u != 6) {
+                    report.decide(
                     Topic::Unit,
                     "unit_declared_not_scaled",
                     "Birim",
                     &format!("dosya birimini {} olarak bildiriyor; koordinatlar ölçeklenmeden alındı (metre sayıldı)", units_name(u)),
                     0,
                 );
-            } else {
-                let why = if declared == Some(6) { "dosya metre bildiriyor" } else { "dosya birim bildirmiyor" };
-                report.decide_quiet(Topic::Unit, "unit_metres", "Birim", &format!("{why}; koordinatlar metre sayıldı"), 0);
+                } else {
+                    let why = if declared == Some(6) {
+                        "dosya metre bildiriyor"
+                    } else {
+                        "dosya birim bildirmiyor"
+                    };
+                    report.decide_quiet(
+                        Topic::Unit,
+                        "unit_metres",
+                        "Birim",
+                        &format!("{why}; koordinatlar metre sayıldı"),
+                        0,
+                    );
+                }
+                (6, Scale::ONE, "metre", UnitSource::Metres, known.is_none())
             }
-            (6, Scale::ONE, "metre", UnitSource::Metres, known.is_none())
-        }
-        (None, Some(project)) => {
-            let own = units::name_of(project);
-            match known {
-                Some((u, scale, name)) => {
-                    if name != own {
-                        report.decide(
+            (None, Some(project)) => {
+                let own = units::name_of(project);
+                match known {
+                    Some((u, scale, name)) => {
+                        if name != own {
+                            report.decide(
                             Topic::Unit,
                             "unit_converted",
                             "Birim",
                             &format!("dosya {name} biriminde; değerler çizimin birimine, {own}ye çevrildi"),
                             0,
                         );
-                    } else {
-                        report.decide_quiet(
+                        } else {
+                            report.decide_quiet(
                             Topic::Unit,
                             "unit_declared_same",
                             "Birim",
                             &format!("dosya {name} biriminde; çizimin birimiyle aynı, değerler çevrilmeden alındı"),
                             0,
                         );
+                        }
+                        (u, scale, name, UnitSource::Declared, false)
                     }
-                    (u, scale, name, UnitSource::Declared, false)
-                }
-                None => {
-                    let why = match declared {
-                        Some(0) | None => "dosya birim bildirmiyor".to_owned(),
-                        Some(u) => format!("dosyanın bildirdiği birim ({u}) tanınmıyor"),
-                    };
-                    report.decide(
-                        Topic::Unit,
-                        "unit_assumed_project",
-                        "Birim",
-                        &format!("{why}; değerler çizimin biriminde ({own}) sayıldı"),
-                        0,
-                    );
-                    (
-                        units::insunits_of(project),
-                        units::from_unit(project),
-                        own,
-                        UnitSource::Project,
-                        true,
-                    )
+                    None => {
+                        let why = match declared {
+                            Some(0) | None => "dosya birim bildirmiyor".to_owned(),
+                            Some(u) => format!("dosyanın bildirdiği birim ({u}) tanınmıyor"),
+                        };
+                        report.decide(
+                            Topic::Unit,
+                            "unit_assumed_project",
+                            "Birim",
+                            &format!("{why}; değerler çizimin biriminde ({own}) sayıldı"),
+                            0,
+                        );
+                        (
+                            units::insunits_of(project),
+                            units::from_unit(project),
+                            own,
+                            UnitSource::Project,
+                            true,
+                        )
+                    }
                 }
             }
         }
-    }
     };
     // the format's own blocks (model and paper space, a dimension's or a table's) are in the drawing's unit.
     let file = declared.unwrap_or(0);
@@ -268,7 +311,7 @@ fn decide_units(
         );
     }
     let decision = UnitDecision {
-        scale_reference:opts.scale_reference,
+        scale_reference: opts.scale_reference,
         declared: declared.filter(|u| *u != 0),
         used,
         name: name.to_owned(),
@@ -562,7 +605,9 @@ impl<'a> Reader<'a> {
                         if g(70).and_then(|x| parse_int(x.text())).unwrap_or(0) & 1 != 0
                             && let Some(file) = g(3)
                         {
-                            self.lib.shape_files.insert(handle, self.dec.string(file.value));
+                            self.lib
+                                .shape_files
+                                .insert(handle, self.dec.string(file.value));
                         }
                     }
                     self.lib.text_records.insert(
@@ -756,11 +801,18 @@ fn grouped(n: u64) -> String {
     out
 }
 
-pub fn read_watched(bytes: &[u8], opts: &DxfReadOptions, watch: &mut dyn Watch) -> Result<ImportResult, String> {
+pub fn read_watched(
+    bytes: &[u8],
+    opts: &DxfReadOptions,
+    watch: &mut dyn Watch,
+) -> Result<ImportResult, String> {
     read_checked_watched(bytes, opts, watch).map_err(|e| e.message)
 }
 
-pub fn read_checked(bytes: &[u8], opts: &DxfReadOptions) -> Result<ImportResult, preflight::ReadError> {
+pub fn read_checked(
+    bytes: &[u8],
+    opts: &DxfReadOptions,
+) -> Result<ImportResult, preflight::ReadError> {
     read_checked_watched(bytes, opts, &mut Quiet)
 }
 
@@ -791,15 +843,31 @@ pub fn read_checked_watched_within(
         let mut result = match read_once(bytes, opts, watch, false)? {
             Some(result) => result,
             None => {
-                let opened = DxfReadOptions { explode_blocks: true, ..opts.clone() };
-                read_once(bytes, &opened, watch, true)?.ok_or_else(|| "Bloklar açılarak da okunamadı.".to_owned())?
+                let opened = DxfReadOptions {
+                    explode_blocks: true,
+                    ..opts.clone()
+                };
+                read_once(bytes, &opened, watch, true)?
+                    .ok_or_else(|| "Bloklar açılarak da okunamadı.".to_owned())?
             }
         };
         diagnostics::enrich(&mut result.report, bytes, watch)?;
         Ok(result)
     })();
-    let result = read.map_err(|message: String| preflight::ReadError { code: if message == STOPPED { "cancelled" } else { "import_unreadable" }, message })?;
-    if !opts.allow_polyline_loss && let Some(error) = polyline_policy::refusal(result.report.notes.iter().chain(&result.report.skipped)) { return Err(error); }
+    let result = read.map_err(|message: String| preflight::ReadError {
+        code: if message == STOPPED {
+            "cancelled"
+        } else {
+            "import_unreadable"
+        },
+        message,
+    })?;
+    if !opts.allow_polyline_loss
+        && let Some(error) =
+            polyline_policy::refusal(result.report.notes.iter().chain(&result.report.skipped))
+    {
+        return Err(error);
+    }
     Ok(result)
 }
 
@@ -894,7 +962,9 @@ fn read_once(
     let objects = ordering::mapping(bytes)?;
     let order = objects.order;
     let mut lib = std::mem::take(&mut rd.lib);
-    for block in lib.blocks.values_mut() { ordering::reorder(&mut block.entities, &order); }
+    for block in lib.blocks.values_mut() {
+        ordering::reorder(&mut block.entities, &order);
+    }
     let mut em = Emitter::new(&lib, out, opts.explode_blocks);
     // Without WIPEOUTVARIABLES the frames show, the format's default (docs/adr/9227).
     em.wipeout_frames = objects.wipeout_frames.unwrap_or(true);
@@ -968,7 +1038,9 @@ fn read_once(
             match rd.entity(&kind, p.line)? {
                 Ok(e) if e.common.paper => paper_entities.push(e),
                 Ok(e) if !order.is_empty() => {
-                    if buffered.len() >= limit { return Err("Çizim sırası için nesne sınırı aşıldı; dosyayı bölün.".into()); }
+                    if buffered.len() >= limit {
+                        return Err("Çizim sırası için nesne sınırı aşıldı; dosyayı bölün.".into());
+                    }
                     buffered.push(e);
                 }
                 Ok(e) => em.emit(&e, &model),
@@ -978,7 +1050,9 @@ fn read_once(
     }
     if !order.is_empty() {
         ordering::reorder(&mut buffered, &order);
-        for e in &buffered { em.emit(e, &model); }
+        for e in &buffered {
+            em.emit(e, &model);
+        }
     }
     em.notes_done();
     em.merge_holes();
@@ -998,10 +1072,18 @@ fn read_once(
     );
     // A linetype can be the only user of a STYLE. Keep its original font,
     // fixed height, width factor and slant even when no TEXT was imported.
-    for text in lib.patterns.iter().flat_map(|p| &p.elements).filter_map(|e| e.text.as_ref()) {
-        let key = text.style.strip_prefix('#')
+    for text in lib
+        .patterns
+        .iter()
+        .flat_map(|p| &p.elements)
+        .filter_map(|e| e.text.as_ref())
+    {
+        let key = text
+            .style
+            .strip_prefix('#')
             .and_then(|h| u64::from_str_radix(h, 16).ok())
-            .and_then(|h| lib.style_handles.get(&h)).cloned()
+            .and_then(|h| lib.style_handles.get(&h))
+            .cloned()
             .unwrap_or_else(|| text.style.to_uppercase());
         if !text_used.contains(&key) {
             text_used.push(key);
@@ -1015,7 +1097,11 @@ fn read_once(
             .get(key)
             .and_then(|(_, v)| v.dimtxsty)
             .and_then(|h| lib.style_handles.get(&h))
-            .filter(|k| lib.text_records.get(*k).is_some_and(|r| !styles::is_standard(&r.name)))
+            .filter(|k| {
+                lib.text_records
+                    .get(*k)
+                    .is_some_and(|r| !styles::is_standard(&r.name))
+            })
             && !text_used.contains(key)
         {
             text_used.push(key.clone());
@@ -1053,15 +1139,28 @@ fn read_once(
     extra.sort();
     // What came of the layers (docs/adr/1010): those the table lists with nothing on them stay out, those the objects
     // name and the table lacks come with the defaults.
-    let unused: Vec<&str> = rd.layers.iter().filter(|l| !listed.contains(&l.name)).map(|l| l.name.as_str()).collect();
+    let unused: Vec<&str> = rd
+        .layers
+        .iter()
+        .filter(|l| !listed.contains(&l.name))
+        .map(|l| l.name.as_str())
+        .collect();
     if !unused.is_empty() {
         let shown: Vec<&str> = unused.iter().copied().take(10).collect();
-        let more = if unused.len() > shown.len() { format!(" ve {} katman daha", unused.len() - shown.len()) } else { String::new() };
+        let more = if unused.len() > shown.len() {
+            format!(" ve {} katman daha", unused.len() - shown.len())
+        } else {
+            String::new()
+        };
         out.report.decide_quiet(
             Topic::Layer,
             "layer_unused_left_out",
             "Katman",
-            &format!("{} katmanda nesne yok; alınmadı: {}{more}", unused.len(), shown.join(", ")),
+            &format!(
+                "{} katmanda nesne yok; alınmadı: {}{more}",
+                unused.len(),
+                shown.join(", ")
+            ),
             0,
         );
     }
@@ -1076,10 +1175,18 @@ fn read_once(
     }
     for l in rd.layers.iter().filter(|l| listed.contains(&l.name)) {
         let mut said = Vec::new();
-        if !l.visible { said.push("kapalı"); }
-        if l.frozen { said.push("dondurulmuş"); }
-        if l.locked { said.push("kilitli"); }
-        if !l.plot { said.push("basılmaz"); }
+        if !l.visible {
+            said.push("kapalı");
+        }
+        if l.frozen {
+            said.push("dondurulmuş");
+        }
+        if l.locked {
+            said.push("kilitli");
+        }
+        if !l.plot {
+            said.push("basılmaz");
+        }
         if !said.is_empty() {
             out.report.decide_quiet(
                 Topic::Layer,
@@ -1154,22 +1261,36 @@ fn read_once(
         };
     }
     block_units::normalize(&mut out.entities, &mut blocks, scale, &lib.block_units);
-    let block_names=blocks.iter().map(|b|(b.id,b.name.as_str())).collect::<std::collections::HashMap<_,_>>();
-    let mut reuse_scales=std::collections::BTreeMap::new();
+    let block_names = blocks
+        .iter()
+        .map(|b| (b.id, b.name.as_str()))
+        .collect::<std::collections::HashMap<_, _>>();
+    let mut reuse_scales = std::collections::BTreeMap::new();
     for entity in &out.entities {
-        if let kentos_contracts::Entity::Insert(i)=entity {
-            let sx=i.scale.abs();let sy=i.y_scale.unwrap_or(i.scale).abs();
-            if let Some(name)=block_names.get(&i.block) && !name.starts_with('*') && (!(0.5..=2.).contains(&sx) || !(0.5..=2.).contains(&sy)) {
-                reuse_scales.entry((*name).to_owned()).or_insert((sx,sy));
+        if let kentos_contracts::Entity::Insert(i) = entity {
+            let sx = i.scale.abs();
+            let sy = i.y_scale.unwrap_or(i.scale).abs();
+            if let Some(name) = block_names.get(&i.block)
+                && !name.starts_with('*')
+                && (!(0.5..=2.).contains(&sx) || !(0.5..=2.).contains(&sy))
+            {
+                reuse_scales.entry((*name).to_owned()).or_insert((sx, sy));
             }
         }
     }
-    if !reuse_scales.is_empty(){
-        let samples=reuse_scales.iter().take(5).map(|(name,(x,y))|format!("{name}: X ×{x:.6}, Y ×{y:.6}")).collect::<Vec<_>>().join("; ");
+    if !reuse_scales.is_empty() {
+        let samples = reuse_scales
+            .iter()
+            .take(5)
+            .map(|(name, (x, y))| format!("{name}: X ×{x:.6}, Y ×{y:.6}"))
+            .collect::<Vec<_>>()
+            .join("; ");
         out.report.decide(Topic::Block, "block_insert_scale_differs", "Blok ölçeği",&format!("Mevcut blok örnekleri tanımlarından farklı boyutta: {samples}. Yeni blok ölçek 1 ile tanımın fiziksel boyutunda eklenir. Bu fark beklenmiyorsa dosya birimini veya bilinen gerçek uzunluğu denetleyin."), 0);
     }
 
-    if !scale.is_one() && let Some(b) = &mut out.bounds {
+    if !scale.is_one()
+        && let Some(b) = &mut out.bounds
+    {
         units::bounds(b, scale);
     }
     // The styles the objects follow (docs/adr/0183 §7): their sizes paper mm at the project's scale.
@@ -1236,13 +1357,12 @@ fn read_once(
             .and_then(|n| lib.text_records.get(n))
             .filter(|r| !styles::is_standard(&r.name));
         let text_style = record.map(|r| r.name.clone());
-        let font = record
-            .and_then(|r| {
-                r.kentos.as_ref().map(|k| k.font).or_else(|| {
-                    styles::family_of(r.family.as_deref().unwrap_or(&r.file))
-                        .or_else(|| styles::family_of(&r.file))
-                })
-            });
+        let font = record.and_then(|r| {
+            r.kentos.as_ref().map(|k| k.font).or_else(|| {
+                styles::family_of(r.family.as_deref().unwrap_or(&r.file))
+                    .or_else(|| styles::family_of(&r.file))
+            })
+        });
         let (style, said) = styles::dimension_style(
             vars,
             format!("dxf-dim-{}", i + 1),
@@ -1288,7 +1408,9 @@ fn read_once(
             for e in &mut t.elements {
                 e.length = to_project(e.length);
                 if let Some(text) = &mut e.text {
-                    if let Some(key) = text.style.strip_prefix('#')
+                    if let Some(key) = text
+                        .style
+                        .strip_prefix('#')
                         .and_then(|h| u64::from_str_radix(h, 16).ok())
                         .and_then(|h| lib.style_handles.get(&h))
                     {
@@ -1296,13 +1418,19 @@ fn read_once(
                     }
                     // With a fixed STYLE height S multiplies that height;
                     // otherwise S itself is a drawing length.
-                    if !lib.style_heights.get(&text.style.to_uppercase()).is_some_and(|h| *h > 0.) {
+                    if !lib
+                        .style_heights
+                        .get(&text.style.to_uppercase())
+                        .is_some_and(|h| *h > 0.)
+                    {
                         text.place.scale = to_project(text.place.scale);
                     }
                     text.place.x = to_project(text.place.x);
                     text.place.y = to_project(text.place.y);
                 } else if let Some(shape) = &mut e.shape {
-                    if let Some(file) = shape.file.strip_prefix('#')
+                    if let Some(file) = shape
+                        .file
+                        .strip_prefix('#')
                         .and_then(|h| u64::from_str_radix(h, 16).ok())
                         .and_then(|h| lib.shape_files.get(&h))
                     {
@@ -1317,8 +1445,21 @@ fn read_once(
         })
         .collect();
     let mut source_handles = vec![None; out.entities.len()];
-    for (handle, index) in &out.handles { if let Some(slot) = source_handles.get_mut(*index) { *slot = Some(format!("{handle:X}")); } }
-    let layouts = layouts::read(bytes, &lib, paper_entities, rd.dec, opts, scale, &mut out.report, watch)?;
+    for (handle, index) in &out.handles {
+        if let Some(slot) = source_handles.get_mut(*index) {
+            *slot = Some(format!("{handle:X}"));
+        }
+    }
+    let layouts = layouts::read(
+        bytes,
+        &lib,
+        paper_entities,
+        rd.dec,
+        opts,
+        scale,
+        &mut out.report,
+        watch,
+    )?;
     let mut result = ImportResult {
         source_handles,
         layouts,

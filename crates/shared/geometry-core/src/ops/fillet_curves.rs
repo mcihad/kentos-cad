@@ -36,7 +36,9 @@ fn curve(s: &Shape, origin: Vec2) -> Option<Curve> {
         Shape::Line { a, b } if finite(a) && finite(b) && length(sub(b, a)) > EPS => {
             Some(Curve::Line(sub(a, origin), sub(b, origin)))
         }
-        Shape::Arc { c, r, a0, a1 } if finite(c) && r.is_finite() && r > EPS && a0.is_finite() && a1.is_finite() => {
+        Shape::Arc { c, r, a0, a1 }
+            if finite(c) && r.is_finite() && r > EPS && a0.is_finite() && a1.is_finite() =>
+        {
             Some(Curve::Round(sub(c, origin), r))
         }
         Shape::Circle { c, r } if finite(c) && r.is_finite() && r > EPS => {
@@ -462,17 +464,45 @@ mod tests {
 
     #[test]
     fn zero_radius_joins_at_a_true_intersection_and_pair_order_does_not_change_the_arc() {
-        let line=Shape::Line {a:p(-5.,0.),b:p(10.,0.)};
-        let circle=Shape::Circle {c:p(4.,1.),r:2.};
-        let zero=fillet(&line,p(-5.,0.),&circle,p(2.,1.),0.).unwrap();
-        assert!(zero.arc.is_none());assert_eq!(zero.second,circle);
-        let Shape::Line {b,..}=zero.first else {panic!()};
-        near(b.x,4.-3_f64.sqrt());near(b.y,0.);
-        let f=fillet(&line,p(-5.,0.),&circle,p(2.,1.),1.).unwrap();
-        let g=fillet(&circle,p(2.,1.),&line,p(-5.,0.),1.).unwrap();
-        assert_eq!(f.first,g.second);assert_eq!(f.second,g.first);
-        let (a,ar,a0,a1)=arc_of(f.arc);let (b,br,b0,b1)=arc_of(g.arc);
-        near(a.x,b.x);near(a.y,b.y);near(ar,br);near(a0,b0);near(a1,b1);
-        assert!(fillet(&line,p(0.,0.),&Shape::Circle {c:p(0.,0.),r:f64::INFINITY},p(1.,0.),1.).is_err());
+        let line = Shape::Line {
+            a: p(-5., 0.),
+            b: p(10., 0.),
+        };
+        let circle = Shape::Circle {
+            c: p(4., 1.),
+            r: 2.,
+        };
+        let zero = fillet(&line, p(-5., 0.), &circle, p(2., 1.), 0.).unwrap();
+        assert!(zero.arc.is_none());
+        assert_eq!(zero.second, circle);
+        let Shape::Line { b, .. } = zero.first else {
+            panic!()
+        };
+        near(b.x, 4. - 3_f64.sqrt());
+        near(b.y, 0.);
+        let f = fillet(&line, p(-5., 0.), &circle, p(2., 1.), 1.).unwrap();
+        let g = fillet(&circle, p(2., 1.), &line, p(-5., 0.), 1.).unwrap();
+        assert_eq!(f.first, g.second);
+        assert_eq!(f.second, g.first);
+        let (a, ar, a0, a1) = arc_of(f.arc);
+        let (b, br, b0, b1) = arc_of(g.arc);
+        near(a.x, b.x);
+        near(a.y, b.y);
+        near(ar, br);
+        near(a0, b0);
+        near(a1, b1);
+        assert!(
+            fillet(
+                &line,
+                p(0., 0.),
+                &Shape::Circle {
+                    c: p(0., 0.),
+                    r: f64::INFINITY
+                },
+                p(1., 0.),
+                1.
+            )
+            .is_err()
+        );
     }
 }

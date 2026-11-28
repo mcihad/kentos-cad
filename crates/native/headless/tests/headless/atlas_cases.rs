@@ -33,8 +33,7 @@ fn within(got: &Value, want: &Value, at: &str, problems: &mut Vec<String>) {
             let x = w["$near"].as_f64().unwrap_or(f64::NAN);
             let t = w.get("within").and_then(Value::as_f64).unwrap_or(0.0);
             // NaN is never near.
-            if (g - x).abs().partial_cmp(&t) != Some(std::cmp::Ordering::Less)
-                && (g - x).abs() != t
+            if (g - x).abs().partial_cmp(&t) != Some(std::cmp::Ordering::Less) && (g - x).abs() != t
             {
                 problems.push(format!("{at}: {g} (beklenen {x} ± {t})"));
             }
@@ -78,11 +77,18 @@ fn within(got: &Value, want: &Value, at: &str, problems: &mut Vec<String>) {
 fn uids_of(want: &Value, s: &Session) -> Value {
     let uid = |t: &str| -> Option<String> {
         let n: u64 = t.strip_prefix("$uidOf:")?.parse().ok()?;
-        s.document().entities_with_uids().find(|(_, e)| u64::from(e.base().id) == n).map(|(u, _)| u.to_string())
+        s.document()
+            .entities_with_uids()
+            .find(|(_, e)| u64::from(e.base().id) == n)
+            .map(|(u, _)| u.to_string())
     };
     match want {
         Value::String(t) => uid(t).map_or_else(|| want.clone(), Value::String),
-        Value::Object(m) => Value::Object(m.iter().map(|(k, v)| (uid(k).unwrap_or_else(|| k.clone()), uids_of(v, s))).collect()),
+        Value::Object(m) => Value::Object(
+            m.iter()
+                .map(|(k, v)| (uid(k).unwrap_or_else(|| k.clone()), uids_of(v, s)))
+                .collect(),
+        ),
         Value::Array(a) => Value::Array(a.iter().map(|v| uids_of(v, s)).collect()),
         other => other.clone(),
     }
@@ -172,7 +178,12 @@ fn the_shared_cases_pass() {
                 within(&answer["error"], e, &format!("{at} error"), &mut problems);
             }
             if let Some(o) = want.get("output") {
-                within(&answer["output"], &uids_of(o, &s), &format!("{at} output"), &mut problems);
+                within(
+                    &answer["output"],
+                    &uids_of(o, &s),
+                    &format!("{at} output"),
+                    &mut problems,
+                );
             }
             if let Some(w) = want.get("warnings") {
                 let codes: Vec<&Value> = answer["warnings"]

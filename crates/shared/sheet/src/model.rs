@@ -35,10 +35,16 @@ fn full() -> u8 {
 #[cfg_attr(feature = "schema", schemars(rename = "PaperSheetBook"))]
 pub struct SheetBook {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature="ts",ts(optional,as="Option<Vec<crate::plot_profile::PlotProfile>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::plot_profile::PlotProfile>>")
+    )]
     pub plot_profiles: Vec<crate::plot_profile::PlotProfile>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature="ts", ts(optional, as = "Option<Vec<crate::print_setup::NamedPageSetup>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::print_setup::NamedPageSetup>>")
+    )]
     pub page_setups: Vec<crate::print_setup::NamedPageSetup>,
     /// `kentos.sheet/1`.
     pub schema: String,
@@ -222,8 +228,8 @@ pub struct Sheet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_info: Option<crate::drawing_set::DrawingInfo>,
-    #[serde(default,skip_serializing_if="Option::is_none")]
-    #[cfg_attr(feature="ts",ts(optional))]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     pub plot: Option<crate::print_setup::AppliedPageSetup>,
     pub id: SheetId,
     pub name: String,
@@ -292,7 +298,9 @@ impl Sheet {
     /// name does not already start with it (“QA-002 · Teknik çizim”), so two sheets of one template are told apart.
     pub fn listed_name(&self) -> std::borrow::Cow<'_, str> {
         match self.drawing_info.as_ref().map(|i| i.number.trim()) {
-            Some(n) if !n.is_empty() && !self.name.starts_with(n) => format!("{n} · {}", self.name).into(),
+            Some(n) if !n.is_empty() && !self.name.starts_with(n) => {
+                format!("{n} · {}", self.name).into()
+            }
             _ => self.name.as_str().into(),
         }
     }

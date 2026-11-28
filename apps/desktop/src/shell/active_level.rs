@@ -54,15 +54,26 @@ pub(crate) fn with_level_state(settings: &mut ProjectSettings, chosen: &Chosen, 
 
 /// The level above (`up`) or under the active one by its floor's elevation, the project's order among equals; from
 /// Katsız (none), the ground level. None at the top or the bottom.
-pub(crate) fn stepped<'a>(settings: &'a ProjectSettings, active: Option<&str>, up: bool) -> Option<&'a ArchLevel> {
-    let levels = settings.arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+pub(crate) fn stepped<'a>(
+    settings: &'a ProjectSettings,
+    active: Option<&str>,
+    up: bool,
+) -> Option<&'a ArchLevel> {
+    let levels = settings
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.levels.as_slice());
     let mut order: Vec<&ArchLevel> = levels.iter().collect();
     order.sort_by(|a, b| a.elevation.total_cmp(&b.elevation));
     let Some(at) = active.and_then(|id| order.iter().position(|l| l.id == id)) else {
         let ground = effective(&Chosen::Ground, settings)?;
         return order.into_iter().find(|l| l.id == ground);
     };
-    if up { order.get(at + 1).copied() } else { at.checked_sub(1).and_then(|k| order.get(k).copied()) }
+    if up {
+        order.get(at + 1).copied()
+    } else {
+        at.checked_sub(1).and_then(|k| order.get(k).copied())
+    }
 }
 
 /// What was chosen.
@@ -80,7 +91,10 @@ pub enum Chosen {
 /// The level in force for a drawing of `settings`: the one chosen while the drawing has it, else its ground level;
 /// none without levels or with Katsız.
 pub fn effective<'a>(chosen: &'a Chosen, settings: &'a ProjectSettings) -> Option<&'a str> {
-    let levels = settings.arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+    let levels = settings
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.levels.as_slice());
     if levels.is_empty() {
         return None;
     }
@@ -117,7 +131,9 @@ impl App {
                     .as_ref()
                     .and_then(|a| a.levels.iter().find(|l| l.id == id))
                     .map_or(id.clone(), |l| l.name.clone());
-                format!("Etkin kat: {name}. Yeni duvar, kolon, merdiven ve rampalar bu kata çizilir.")
+                format!(
+                    "Etkin kat: {name}. Yeni duvar, kolon, merdiven ve rampalar bu kata çizilir."
+                )
             }
             _ => "Etkin kat yok (Katsız): yeni mimari nesneler kata atanmaz.".to_owned(),
         };
@@ -135,7 +151,10 @@ impl App {
         };
         let settings = doc.model.settings();
         if settings.arch.as_ref().is_none_or(|a| a.levels.is_empty()) {
-            self.say(Level::Info, "Projede kat yok: Mimari › Proje › Katlar'dan kat ekleyin.");
+            self.say(
+                Level::Info,
+                "Projede kat yok: Mimari › Proje › Katlar'dan kat ekleyin.",
+            );
             return;
         }
         let active = self.active_level();
@@ -181,7 +200,10 @@ impl App {
         let name = words.trim_start_matches("Kat: ").to_owned();
         self.say(
             Level::Info,
-            format!("Çizim kaydedildiği katta açıldı: etkin kat {name}, kat görünümü {}.", self.level_view.label()),
+            format!(
+                "Çizim kaydedildiği katta açıldı: etkin kat {name}, kat görünümü {}.",
+                self.level_view.label()
+            ),
         );
     }
 
@@ -208,7 +230,8 @@ impl App {
             ),
             (LevelView::Below, Some(id)) => {
                 let under = self.document.as_ref().and_then(|doc| {
-                    kentos_interaction::level_view::below(doc.model.settings(), &id).map(|l| l.name.clone())
+                    kentos_interaction::level_view::below(doc.model.settings(), &id)
+                        .map(|l| l.name.clone())
                 });
                 match under {
                     Some(under) => format!(
@@ -235,7 +258,8 @@ impl App {
         let Some(doc) = &self.document else {
             return;
         };
-        self.spatial.set_level_view(&doc.model, self.level_view, active);
+        self.spatial
+            .set_level_view(&doc.model, self.level_view, active);
         if self.level_view != LevelView::All {
             let store = self.spatial.store();
             self.selection.retain(|slot| {
@@ -282,7 +306,12 @@ impl App {
             .document
             .as_ref()
             .and_then(|doc| doc.model.settings().arch.as_ref())
-            .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect())
+            .map(|a| {
+                a.levels
+                    .iter()
+                    .map(|l| (l.id.clone(), l.name.clone()))
+                    .collect()
+            })
             .unwrap_or_default();
         let now = self.active_level();
         let view = self.level_view;
@@ -295,15 +324,25 @@ impl App {
                     Some(Message::ActiveLevel(Some(id.clone()))),
                 );
             }
-            menu = menu.radio("Katsız", now.is_none(), Some(Message::ActiveLevel(None))).separator();
+            menu = menu
+                .radio("Katsız", now.is_none(), Some(Message::ActiveLevel(None)))
+                .separator();
             // Üst kat and Alt kat (docs/adr/0720 §5), their keys shown.
-            for (id, title) in [("view.levels.up", "Üst kat"), ("view.levels.down", "Alt kat")] {
-                menu = menu.item(title, Message::Run(id)).icon(crate::icons::from_web(Some(if id.ends_with("up") {
-                    "levelUp"
-                } else {
-                    "levelDown"
-                })));
-                if let Some(keys) = crate::catalog::catalog().get(id).and_then(crate::keymap::first_key) {
+            for (id, title) in [
+                ("view.levels.up", "Üst kat"),
+                ("view.levels.down", "Alt kat"),
+            ] {
+                menu = menu
+                    .item(title, Message::Run(id))
+                    .icon(crate::icons::from_web(Some(if id.ends_with("up") {
+                        "levelUp"
+                    } else {
+                        "levelDown"
+                    })));
+                if let Some(keys) = crate::catalog::catalog()
+                    .get(id)
+                    .and_then(crate::keymap::first_key)
+                {
                     menu = menu.shortcut(keys);
                 }
             }
@@ -434,7 +473,11 @@ mod tests {
         assert_eq!(app.active_level(), None, "no levels, no Kat");
         assert!(app.level_words().is_none(), "nor its cell");
         with_levels(&mut app);
-        assert_eq!(app.active_level().as_deref(), Some("zemin"), "the level at 0, not the first");
+        assert_eq!(
+            app.active_level().as_deref(),
+            Some("zemin"),
+            "the level at 0, not the first"
+        );
         assert_eq!(app.level_words().as_deref(), Some("Kat: Zemin kat"));
         wall(&mut app);
         assert_eq!(newest_level(&app).as_deref(), Some("zemin"));
@@ -477,9 +520,13 @@ mod tests {
         wall(&mut app);
         let first = newest_wall(&app);
         assert_ne!(ground, first);
-        let at = kentos_interaction::Vec2::new(crate::tools_scenes::E + 2.5, crate::tools_scenes::N);
+        let at =
+            kentos_interaction::Vec2::new(crate::tools_scenes::E + 2.5, crate::tools_scenes::N);
         let hits = |app: &App| app.spatial.hits(at, 0.2);
-        assert!(hits(&app).contains(&ground) && hits(&app).contains(&first), "Bütün katlar: both");
+        assert!(
+            hits(&app).contains(&ground) && hits(&app).contains(&first),
+            "Bütün katlar: both"
+        );
         app.selection.set([ground, first]);
         let _ = app.update(Message::Run("view.levels.below"));
         assert_eq!(app.level_view, LevelView::Below);
@@ -487,9 +534,14 @@ mod tests {
         assert_eq!(app.level_icon(), "levelsBelow");
         assert_eq!(hits(&app), vec![first], "the ground's is faint: not picked");
         assert_eq!(app.spatial.level_looks().1.faded, vec![ground.0]);
-        assert_eq!(app.selection.ids(), &[first], "the faint wall left the selection");
+        assert_eq!(
+            app.selection.ids(),
+            &[first],
+            "the faint wall left the selection"
+        );
         let kinds = kentos_interaction::default_snap_kinds();
-        let end = kentos_interaction::Vec2::new(crate::tools_scenes::E + 5.0, crate::tools_scenes::N);
+        let end =
+            kentos_interaction::Vec2::new(crate::tools_scenes::E + 5.0, crate::tools_scenes::N);
         let snapped = |app: &App| app.spatial.snap(end, 0.3, kinds, None).map(|h| h.id as u32);
         assert!(snapped(&app).is_some(), "an end snapped to");
         let _ = app.update(Message::LevelView(LevelView::Active));
@@ -590,10 +642,19 @@ mod tests {
         let _ = app.update(Message::LevelView(LevelView::Active));
         assert!(dashed(&app), "Zemin kat alone: its eaves dashed");
         assert_eq!(app.spatial.level_looks().1.roofs, vec![roof.0]);
-        let at = kentos_interaction::Vec2::new(crate::tools_scenes::E, crate::tools_scenes::N + 2.0);
-        assert_eq!(app.spatial.hits(at, 0.2), vec![roof], "still Zemin kat's own: picked");
+        let at =
+            kentos_interaction::Vec2::new(crate::tools_scenes::E, crate::tools_scenes::N + 2.0);
+        assert_eq!(
+            app.spatial.hits(at, 0.2),
+            vec![roof],
+            "still Zemin kat's own: picked"
+        );
         let _ = app.view();
-        assert_ne!(app.label_spots.key(), Some(all), "the words placed again for the view");
+        assert_ne!(
+            app.label_spots.key(),
+            Some(all),
+            "the words placed again for the view"
+        );
         // On 1. kat, whose floor its eaves stand at: whole, its roof plan.
         let _ = app.update(Message::ActiveLevel(Some("kat-1".into())));
         assert!(!dashed(&app));
@@ -630,8 +691,21 @@ mod tests {
             )));
             crate::files_testing::drive(&mut app, task);
         }
-        let names: Vec<String> = app.sheets.book().sheets.iter().map(|s| s.name.clone()).collect();
-        assert_eq!(names, ["A-101 Bodrum planı", "A-102 Zemin kat planı", "A-103 1. kat planı"]);
+        let names: Vec<String> = app
+            .sheets
+            .book()
+            .sheets
+            .iter()
+            .map(|s| s.name.clone())
+            .collect();
+        assert_eq!(
+            names,
+            [
+                "A-101 Bodrum planı",
+                "A-102 Zemin kat planı",
+                "A-103 1. kat planı"
+            ]
+        );
         assert!(app.sheets.is_active(), "the first sheet in front");
         let task = app.update(Message::Sheet(kentos_sheet_ui::Message::Undo));
         crate::files_testing::drive(&mut app, task);
@@ -670,16 +744,30 @@ mod tests {
             drive(app, task);
         };
         let kept = |path: &std::path::Path| {
-            let arch = kentos_kcad::decode(&std::fs::read(path).expect("file")).expect("reads").settings.arch.expect("arch");
+            let arch = kentos_kcad::decode(&std::fs::read(path).expect("file"))
+                .expect("reads")
+                .settings
+                .arch
+                .expect("arch");
             (arch.active_level, arch.level_view)
         };
         save(&mut app);
-        assert_eq!(kept(&path), (None, None), "the ground level with all levels: nothing written");
+        assert_eq!(
+            kept(&path),
+            (None, None),
+            "the ground level with all levels: nothing written"
+        );
         let _ = app.update(Message::ActiveLevel(Some("kat-1".into())));
         let _ = app.update(Message::LevelView(LevelView::Below));
-        assert!(!app.document.as_ref().expect("a drawing").dirty(), "choosing a level leaves the drawing saved");
+        assert!(
+            !app.document.as_ref().expect("a drawing").dirty(),
+            "choosing a level leaves the drawing saved"
+        );
         save(&mut app);
-        assert_eq!(kept(&path), (Some(Some("kat-1".into())), Some(LevelView::Below)));
+        assert_eq!(
+            kept(&path),
+            (Some(Some("kat-1".into())), Some(LevelView::Below))
+        );
         // Opened again: on 1. kat with the level under it faint, said.
         let (mut again, _) = App::boot(None);
         let task = again.start_opening(path.clone(), crate::opening::Purpose::File);
@@ -687,8 +775,15 @@ mod tests {
         assert_eq!(again.active_level().as_deref(), Some("kat-1"));
         assert_eq!(again.level_view, LevelView::Below);
         assert_eq!(again.level_words().as_deref(), Some("Kat: 1. kat"));
-        assert!(said(&again, "kaydedildiği katta açıldı: etkin kat 1. kat, kat görünümü Etkin kat ve alt kat"));
-        assert_eq!(again.spatial.level_looks().1.faded.len(), 1, "the ground's wall faint under 1. kat");
+        assert!(said(
+            &again,
+            "kaydedildiği katta açıldı: etkin kat 1. kat, kat görünümü Etkin kat ve alt kat"
+        ));
+        assert_eq!(
+            again.spatial.level_looks().1.faded.len(),
+            1,
+            "the ground's wall faint under 1. kat"
+        );
         // Katsız, Yalnız etkin kat: written and read back.
         let _ = again.update(Message::ActiveLevel(None));
         let _ = again.update(Message::LevelView(LevelView::Active));
@@ -698,7 +793,10 @@ mod tests {
         let (mut third, _) = App::boot(None);
         let task = third.start_opening(path.clone(), crate::opening::Purpose::File);
         drive(&mut third, task);
-        assert_eq!((third.active_level(), third.level_view), (None, LevelView::Active));
+        assert_eq!(
+            (third.active_level(), third.level_view),
+            (None, LevelView::Active)
+        );
         assert_eq!(third.level_words().as_deref(), Some("Kat: Katsız"));
         // A tab: the drawing on screen keeps its level while another is in front.
         let task = third.start_opening(path.clone(), crate::opening::Purpose::Tab);
@@ -707,9 +805,16 @@ mod tests {
         let _ = third.update(Message::ActiveLevel(Some("bodrum".into())));
         let _ = third.update(Message::LevelView(LevelView::All));
         let _ = third.update(Message::DocTabs(crate::doc_tabs::Event::Show(0)));
-        assert_eq!((third.active_level(), third.level_view), (None, LevelView::Active), "the first tab's own");
+        assert_eq!(
+            (third.active_level(), third.level_view),
+            (None, LevelView::Active),
+            "the first tab's own"
+        );
         let _ = third.update(Message::DocTabs(crate::doc_tabs::Event::Show(1)));
-        assert_eq!((third.active_level().as_deref(), third.level_view), (Some("bodrum"), LevelView::All));
+        assert_eq!(
+            (third.active_level().as_deref(), third.level_view),
+            (Some("bodrum"), LevelView::All)
+        );
         let _ = std::fs::remove_dir_all(dir);
     }
 
@@ -730,7 +835,10 @@ mod tests {
         };
         // Renamed: “1. kat” → “Birinci kat”; the wall keeps the level, the cell says the new name.
         let _ = app.update(Message::Run("arch.settings"));
-        send(&mut app, Settings::Level(2, Edit::Name("Birinci kat".into())));
+        send(
+            &mut app,
+            Settings::Level(2, Edit::Name("Birinci kat".into())),
+        );
         send(&mut app, Settings::Save);
         assert_eq!(app.level_words().as_deref(), Some("Kat: Birinci kat"));
         assert_eq!(newest_level(&app).as_deref(), Some("kat-1"));
@@ -740,10 +848,21 @@ mod tests {
         send(&mut app, Settings::Level(2, Edit::Delete));
         send(&mut app, Settings::Save);
         let levels = |app: &App| {
-            app.document.as_ref().expect("a drawing").model.settings().arch.as_ref().map_or(0, |a| a.levels.len())
+            app.document
+                .as_ref()
+                .expect("a drawing")
+                .model
+                .settings()
+                .arch
+                .as_ref()
+                .map_or(0, |a| a.levels.len())
         };
         assert_eq!(levels(&app), 3, "kept");
-        assert!(said(&app, "“Birinci kat” katını 1 duvar anıyor; kaldırılmadı."), "{:?}", app.log.last());
+        assert!(
+            said(&app, "“Birinci kat” katını 1 duvar anıyor; kaldırılmadı."),
+            "{:?}",
+            app.log.last()
+        );
         assert!(said(&app, "Andığı 1 nesne seçildi."));
         assert_eq!(app.selection.ids(), &[upper]);
         // The window's Nesneleri seç (Kaydet waits there): the wall selected, the window closed as Vazgeç would.
@@ -758,9 +877,16 @@ mod tests {
         let uid = doc.model.uid(upper).expect("uid").to_string();
         let result = kentos_native_application::levels_assign::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            kentos_commands::LevelsAssign { level: "zemin".into(), uids: Some(vec![uid]), expected_revision: None },
+            kentos_commands::LevelsAssign {
+                level: "zemin".into(),
+                uids: Some(vec![uid]),
+                expected_revision: None,
+            },
         );
-        assert!(matches!(result, kentos_commands::CommandResult::Completed { .. }), "{result:?}");
+        assert!(
+            matches!(result, kentos_commands::CommandResult::Completed { .. }),
+            "{result:?}"
+        );
         let _ = app.update(Message::Run("arch.settings"));
         send(&mut app, Settings::Level(2, Edit::Delete));
         send(&mut app, Settings::Save);
@@ -789,7 +915,11 @@ mod tests {
         assert!(said(&app, "Etkin kat en alt kat; altında kat yok."));
         let _ = app.update(Message::ActiveLevel(None));
         let _ = app.update(Message::Run("view.levels.up"));
-        assert_eq!(app.active_level().as_deref(), Some("zemin"), "from Katsız, the ground");
+        assert_eq!(
+            app.active_level().as_deref(),
+            Some("zemin"),
+            "from Katsız, the ground"
+        );
     }
 
     /// docs/adr/0720 §4: Etkin kat changed on the status bar while Merdiven runs: its height row is the new level's at
@@ -799,15 +929,31 @@ mod tests {
         let mut app = levelled();
         let doc = app.document.as_mut().expect("a drawing");
         let mut settings = doc.model.settings().clone();
-        for (l, h) in settings.arch.as_mut().expect("arch").levels.iter_mut().zip([2.6, 3.06, 2.8]) {
+        for (l, h) in settings
+            .arch
+            .as_mut()
+            .expect("arch")
+            .levels
+            .iter_mut()
+            .zip([2.6, 3.06, 2.8])
+        {
             l.height = Some(h);
         }
         doc.model.set_settings(settings);
         crate::tools_scenes::run(&mut app, "tool.stair");
         let height = |app: &App| {
-            app.session.settings(&app.format()).into_iter().find(|r| r.key == "Y").map(|r| r.value).expect("Yükseklik")
+            app.session
+                .settings(&app.format())
+                .into_iter()
+                .find(|r| r.key == "Y")
+                .map(|r| r.value)
+                .expect("Yükseklik")
         };
-        assert!(height(&app).ends_with("· katın") && height(&app).starts_with("3.06"), "{}", height(&app));
+        assert!(
+            height(&app).ends_with("· katın") && height(&app).starts_with("3.06"),
+            "{}",
+            height(&app)
+        );
         let _ = app.update(Message::Viewport(crate::viewport::Event::Left));
         let _ = app.update(Message::ActiveLevel(Some("kat-1".into())));
         assert!(height(&app).starts_with("2.80"), "{}", height(&app));

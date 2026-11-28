@@ -260,7 +260,10 @@ fn key_fields(doc: &Document, layer: &str) -> Vec<(String, String)> {
     };
     let mut out: Vec<(String, String)> = Vec::new();
     for f in node.fields.iter().filter(|f| f.unique) {
-        out.push((format!("Katmanda tekil olan “{}” alanı", f.label()), f.name.clone()));
+        out.push((
+            format!("Katmanda tekil olan “{}” alanı", f.label()),
+            f.name.clone(),
+        ));
     }
     for x in node.indexes.iter().filter(|x| x.unique) {
         for k in &x.fields {

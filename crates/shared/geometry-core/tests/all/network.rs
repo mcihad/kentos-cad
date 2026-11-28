@@ -639,7 +639,10 @@ fn timing() {
         .trace_of(&[middle], &[], 30.0, TraceKind::Connected)
         .expect("a trace");
     row(
-        &format!("ilk izleme, ağın Denetle'siyle ({} nesne)", traced.objects.len()),
+        &format!(
+            "ilk izleme, ağın Denetle'siyle ({} nesne)",
+            traced.objects.len()
+        ),
         t.elapsed().as_secs_f64() * 1e3,
         100.0,
     );
@@ -779,8 +782,12 @@ fn timing() {
     };
     // A street in the middle moved a few metres at one end: its crossing comes apart and a new one is made.
     let mid = edges.len() / 2;
-    let a = Vec2::new(e0 + (N / 2) as f64 * STEP + 3.0, n0 + (N / 2) as f64 * STEP + 2.0);
-    let b = kentos_geometry_core::geom::intersect::point_at(edges[mid].path.last().expect("path"), 1.0);
+    let a = Vec2::new(
+        e0 + (N / 2) as f64 * STEP + 3.0,
+        n0 + (N / 2) as f64 * STEP + 2.0,
+    );
+    let b =
+        kentos_geometry_core::geom::intersect::point_at(edges[mid].path.last().expect("path"), 1.0);
     edges[mid].path = bulge_path_edges(&[a, b], None, false);
     rebuild("yeniden kurma: bir sokağın ucu taşındı", &edges, &mut kept);
     // A street's speed changed.
@@ -792,12 +799,19 @@ fn timing() {
     let mut street = edges[0].clone();
     street.id = 9e9;
     street.path = bulge_path_edges(
-        &[Vec2::new(x + STEP / 2.0, y), Vec2::new(x + STEP / 2.0, y + STEP)],
+        &[
+            Vec2::new(x + STEP / 2.0, y),
+            Vec2::new(x + STEP / 2.0, y + STEP),
+        ],
         None,
         false,
     );
     edges.push(street);
-    rebuild("yeniden kurma: bir sokak silindi, biri çizildi", &edges, &mut kept);
+    rebuild(
+        "yeniden kurma: bir sokak silindi, biri çizildi",
+        &edges,
+        &mut kept,
+    );
     // A hundred streets' speeds changed.
     for k in 0..100 {
         let i = (k * 997) % edges.len();
@@ -810,7 +824,8 @@ fn timing() {
     let known = |what: &str, edges: &[EdgeIn], was: Vec<u32>, kept: &mut Graph| {
         let whole = std::time::Instant::now();
         let n = edges.len();
-        let (fresh, _, how) = kept.rebuild_known(kept_rules.clone(), edges, &[], &[], was, Vec::new());
+        let (fresh, _, how) =
+            kept.rebuild_known(kept_rules.clone(), edges, &[], &[], was, Vec::new());
         row(
             &format!(
                 "{what} ({} kenar yeniden kesildi{})",
@@ -825,21 +840,38 @@ fn timing() {
     };
     let same = |n: usize| (0..n as u32).collect::<Vec<u32>>();
     let mid = edges.len() / 3;
-    let a = Vec2::new(e0 + (N / 3) as f64 * STEP + 3.0, n0 + (N / 3) as f64 * STEP + 2.0);
-    let b = kentos_geometry_core::geom::intersect::point_at(edges[mid].path.last().expect("path"), 1.0);
+    let a = Vec2::new(
+        e0 + (N / 3) as f64 * STEP + 3.0,
+        n0 + (N / 3) as f64 * STEP + 2.0,
+    );
+    let b =
+        kentos_geometry_core::geom::intersect::point_at(edges[mid].path.last().expect("path"), 1.0);
     edges[mid].path = bulge_path_edges(&[a, b], None, false);
     let mut was = same(edges.len());
     was[mid] = u32::MAX;
-    known("masaüstünde yeniden kurma: bir sokağın ucu taşındı", &edges, was, &mut kept);
+    known(
+        "masaüstünde yeniden kurma: bir sokağın ucu taşındı",
+        &edges,
+        was,
+        &mut kept,
+    );
     edges[mid + 7].costs = vec![Some("20".to_owned())];
     let mut was = same(edges.len());
     was[mid + 7] = u32::MAX;
-    known("masaüstünde yeniden kurma: bir sokağın hızı değişti", &edges, was, &mut kept);
+    known(
+        "masaüstünde yeniden kurma: bir sokağın hızı değişti",
+        &edges,
+        was,
+        &mut kept,
+    );
     edges.remove(mid + 40);
     let mut street = edges[0].clone();
     street.id = 9e9 + 1.0;
     street.path = bulge_path_edges(
-        &[Vec2::new(x + STEP / 2.0, y + STEP), Vec2::new(x + STEP / 2.0, y + 2.0 * STEP)],
+        &[
+            Vec2::new(x + STEP / 2.0, y + STEP),
+            Vec2::new(x + STEP / 2.0, y + 2.0 * STEP),
+        ],
         None,
         false,
     );
@@ -856,12 +888,22 @@ fn timing() {
             }
         })
         .collect();
-    known("masaüstünde yeniden kurma: bir sokak silindi, biri çizildi", &edges, was, &mut kept);
+    known(
+        "masaüstünde yeniden kurma: bir sokak silindi, biri çizildi",
+        &edges,
+        was,
+        &mut kept,
+    );
     let mut was = same(edges.len());
     for k in 0..100 {
         let i = (k * 991 + 13) % edges.len();
         edges[i].costs = vec![Some("60".to_owned())];
         was[i] = u32::MAX;
     }
-    known("masaüstünde yeniden kurma: yüz sokağın hızı değişti", &edges, was, &mut kept);
+    known(
+        "masaüstünde yeniden kurma: yüz sokağın hızı değişti",
+        &edges,
+        was,
+        &mut kept,
+    );
 }

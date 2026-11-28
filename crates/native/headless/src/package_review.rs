@@ -62,10 +62,13 @@ fn sheet_source(bytes: &[u8]) -> Option<Value> {
     let info = file.field(&file.trailer, "Info");
     let info = info.dict()?;
     let keywords = file.resolve(info.get("Keywords")?);
-    let kentos_formats::pdf::object::Obj::Str(raw) = keywords else { return None };
+    let kentos_formats::pdf::object::Obj::Str(raw) = keywords else {
+        return None;
+    };
     let text = kentos_formats::pdf::content::decode_text_string(&raw);
     let v: Value = serde_json::from_str(&text).ok()?;
-    (v["format"] == "kentos.sheet-source/1").then(|| json!({"revision": v["source"]["revision"], "sha256": v["source"]["sha256"]}))
+    (v["format"] == "kentos.sheet-source/1")
+        .then(|| json!({"revision": v["source"]["revision"], "sha256": v["source"]["sha256"]}))
 }
 
 /// What a PDF is: its PDF/A report, its pages of pictures only, the source in it.
@@ -80,7 +83,9 @@ fn sheet_facts(name: &str, bytes: &[u8]) -> Value {
             "conformance": r.conformance,
             "findings": r.findings.iter().map(|f| json!({"clause": f.clause, "message": f.message})).collect::<Vec<_>>(),
         }),
-        Err(why) => json!({"part": null, "conformance": null, "findings": [{"clause": "6.1", "message": why}]}),
+        Err(why) => {
+            json!({"part": null, "conformance": null, "findings": [{"clause": "6.1", "message": why}]})
+        }
     };
     let scanned: Vec<u32> = (1..=pages)
         .filter(|n| {
@@ -93,28 +98,57 @@ fn sheet_facts(name: &str, bytes: &[u8]) -> Value {
 
 /// The facts the rule reads, the files as the review read them, the model's name.
 #[allow(clippy::result_large_err)]
-fn facts(input: &ReviewPackage) -> Result<(Value, Vec<ReviewFile>, Option<String>), CommandResult<Value>> {
+fn facts(
+    input: &ReviewPackage,
+) -> Result<(Value, Vec<ReviewFile>, Option<String>), CommandResult<Value>> {
     let text = input.path.trim();
     let path = Path::new(text);
     if text.is_empty() || !path.is_absolute() {
-        return Err(refused("invalid_file_path", "Paketin tam yolunu verin: klasörü ya da .ifc dosyası.".into(), "path"));
-    }
-    let lone = path.is_file();
-    if lone && !path.extension().is_some_and(|e| e.eq_ignore_ascii_case("ifc")) {
         return Err(refused(
             "invalid_file_path",
-            format!("“{text}” bir klasör ya da .ifc dosyası değil: paket bir yayın klasörüdür ya da tek bir IFC modeli."),
+            "Paketin tam yolunu verin: klasörü ya da .ifc dosyası.".into(),
+            "path",
+        ));
+    }
+    let lone = path.is_file();
+    if lone
+        && !path
+            .extension()
+            .is_some_and(|e| e.eq_ignore_ascii_case("ifc"))
+    {
+        return Err(refused(
+            "invalid_file_path",
+            format!(
+                "“{text}” bir klasör ya da .ifc dosyası değil: paket bir yayın klasörüdür ya da tek bir IFC modeli."
+            ),
             "path",
         ));
     }
     if !lone && !path.is_dir() {
-        return Err(refused("invalid_file_path", format!("“{text}” yok."), "path"));
+        return Err(refused(
+            "invalid_file_path",
+            format!("“{text}” yok."),
+            "path",
+        ));
     }
     let (folder, mut names): (PathBuf, Vec<String>) = if lone {
-        (path.parent().map(Path::to_path_buf).unwrap_or_default(), vec![path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()])
+        (
+            path.parent().map(Path::to_path_buf).unwrap_or_default(),
+            vec![
+                path.file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_default(),
+            ],
+        )
     } else {
         let mut n: Vec<String> = std::fs::read_dir(path)
-            .map_err(|e| refused("invalid_file_path", format!("“{text}” okunamadı: {e}"), "path"))?
+            .map_err(|e| {
+                refused(
+                    "invalid_file_path",
+                    format!("“{text}” okunamadı: {e}"),
+                    "path",
+                )
+            })?
             .flatten()
             .filter(|e| e.path().is_file())
             .map(|e| e.file_name().to_string_lossy().into_owned())
@@ -124,18 +158,25 @@ fn facts(input: &ReviewPackage) -> Result<(Value, Vec<ReviewFile>, Option<String
         (path.to_path_buf(), n)
     };
     // The list.
-    let (list, list_error): (Option<Value>, Option<String>) = if lone || !names.iter().any(|n| n == LIST) {
-        (None, None)
-    } else {
-        match read(&folder.join(LIST)).map(|b| serde_json::from_slice::<Value>(&b)) {
-            Some(Ok(v)) if v["format"] == "kentos.publish/1" => (Some(v), None),
-            Some(Ok(_)) => (None, Some("biçimi kentos.publish/1 değil".into())),
-            Some(Err(e)) => (None, Some(e.to_string())),
-            None => (None, Some("okunamadı".into())),
-        }
-    };
-    let listed: Vec<Value> = list.as_ref().and_then(|l| l["files"].as_array().cloned()).unwrap_or_default();
-    let listed_names: BTreeSet<String> = listed.iter().filter_map(|f| f["name"].as_str().map(str::to_owned)).collect();
+    let (list, list_error): (Option<Value>, Option<String>) =
+        if lone || !names.iter().any(|n| n == LIST) {
+            (None, None)
+        } else {
+            match read(&folder.join(LIST)).map(|b| serde_json::from_slice::<Value>(&b)) {
+                Some(Ok(v)) if v["format"] == "kentos.publish/1" => (Some(v), None),
+                Some(Ok(_)) => (None, Some("biçimi kentos.publish/1 değil".into())),
+                Some(Err(e)) => (None, Some(e.to_string())),
+                None => (None, Some("okunamadı".into())),
+            }
+        };
+    let listed: Vec<Value> = list
+        .as_ref()
+        .and_then(|l| l["files"].as_array().cloned())
+        .unwrap_or_default();
+    let listed_names: BTreeSet<String> = listed
+        .iter()
+        .filter_map(|f| f["name"].as_str().map(str::to_owned))
+        .collect();
     let model_name: Option<String> = if lone {
         names.first().cloned()
     } else {
@@ -148,7 +189,9 @@ fn facts(input: &ReviewPackage) -> Result<(Value, Vec<ReviewFile>, Option<String
             }
         }
     };
-    let form_name: Option<String> = list.as_ref().and_then(|l| l["bim"]["form"]["name"].as_str().map(str::to_owned));
+    let form_name: Option<String> = list
+        .as_ref()
+        .and_then(|l| l["bim"]["form"]["name"].as_str().map(str::to_owned));
     for f in &listed_names {
         if !names.contains(f) {
             names.push(f.clone());
@@ -166,13 +209,21 @@ fn facts(input: &ReviewPackage) -> Result<(Value, Vec<ReviewFile>, Option<String
         let (bytes_ok, sha_ok) = match (entry, &bytes) {
             (Some(e), Some(b)) => (
                 Some(e["bytes"].as_u64() == Some(b.len() as u64)),
-                Some(e["sha256"].as_str().is_some_and(|s| s.eq_ignore_ascii_case(&sha256_hex(b)))),
+                Some(
+                    e["sha256"]
+                        .as_str()
+                        .is_some_and(|s| s.eq_ignore_ascii_case(&sha256_hex(b))),
+                ),
             ),
             _ => (None, None),
         };
         let k = kind(name);
         records.push(json!({"ad": name, "tur": k, "listede": entry.is_some(), "var": there, "baytTutar": bytes_ok, "ozetTutar": sha_ok}));
-        files.push(ReviewFile { name: name.clone(), kind: k.into(), listed: entry.is_some() });
+        files.push(ReviewFile {
+            name: name.clone(),
+            kind: k.into(),
+            listed: entry.is_some(),
+        });
         if let Some(b) = &bytes {
             if k == "pdf" {
                 sheets.push(sheet_facts(name, b));
@@ -182,11 +233,22 @@ fn facts(input: &ReviewPackage) -> Result<(Value, Vec<ReviewFile>, Option<String
             }
         }
     }
-    let form: Option<Value> =
-        form_name.as_ref().and_then(|n| read(&folder.join(n))).and_then(|b| serde_json::from_slice(&b).ok());
+    let form: Option<Value> = form_name
+        .as_ref()
+        .and_then(|n| read(&folder.join(n)))
+        .and_then(|b| serde_json::from_slice(&b).ok());
     let (ifc, ifc_error, model_sha) = match (&model_name, &model_bytes) {
-        (Some(name), Some(b)) => match kentos_ifc::read::file_facts(b, name, &kentos_ifc::read::Limits::default(), &|| false) {
-            Ok(f) => (serde_json::to_value(f).unwrap_or(Value::Null), None, Some(sha256_hex(b))),
+        (Some(name), Some(b)) => match kentos_ifc::read::file_facts(
+            b,
+            name,
+            &kentos_ifc::read::Limits::default(),
+            &|| false,
+        ) {
+            Ok(f) => (
+                serde_json::to_value(f).unwrap_or(Value::Null),
+                None,
+                Some(sha256_hex(b)),
+            ),
             Err(e) => (Value::Null, Some(e.to_string()), Some(sha256_hex(b))),
         },
         // A model the list names and the folder lacks: the package layer says so (review_file_missing).
@@ -228,7 +290,11 @@ fn reviewed(input: &ReviewPackage) -> Result<PackageReviewed, CommandResult<Valu
         .as_array()
         .into_iter()
         .flatten()
-        .map(|l| ReviewLayer { key: text(&l["key"]), holds: l["holds"].as_bool(), words: text(&l["words"]) })
+        .map(|l| ReviewLayer {
+            key: text(&l["key"]),
+            holds: l["holds"].as_bool(),
+            words: text(&l["words"]),
+        })
         .collect();
     let findings = decided["bulgular"]
         .as_array()
@@ -242,7 +308,12 @@ fn reviewed(input: &ReviewPackage) -> Result<PackageReviewed, CommandResult<Valu
             repair: text(&b["repair"]),
             cite: text(&b["cite"]),
             file: b["file"].as_str().map(str::to_owned),
-            objects: b["objects"].as_array().into_iter().flatten().filter_map(|g| g.as_str().map(str::to_owned)).collect(),
+            objects: b["objects"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|g| g.as_str().map(str::to_owned))
+                .collect(),
         })
         .collect();
     let rows = decided["satirlar"]
@@ -250,7 +321,10 @@ fn reviewed(input: &ReviewPackage) -> Result<PackageReviewed, CommandResult<Valu
         .into_iter()
         .flatten()
         .map(|r| ReviewFormRow {
-            no: r["no"].as_u64().and_then(|n| u8::try_from(n).ok()).unwrap_or(0),
+            no: r["no"]
+                .as_u64()
+                .and_then(|n| u8::try_from(n).ok())
+                .unwrap_or(0),
             title: text(&r["baslik"]),
             author: r["muellif"].as_str().map(str::to_owned),
             kentos: text(&r["kentos"]),
@@ -258,7 +332,15 @@ fn reviewed(input: &ReviewPackage) -> Result<PackageReviewed, CommandResult<Valu
         })
         .collect();
     let table = decided["tablo"].as_str().map(str::to_owned);
-    Ok(PackageReviewed { path: input.path.trim().to_owned(), files, model, layers, findings, table, rows })
+    Ok(PackageReviewed {
+        path: input.path.trim().to_owned(),
+        files,
+        model,
+        layers,
+        findings,
+        table,
+        rows,
+    })
 }
 
 /// `file.review.package`: the facts measured and the rule's answer; nothing is written.
@@ -266,13 +348,23 @@ pub(crate) fn run(input: &ReviewPackage, op: CallOp) -> CommandResult<Value> {
     if matches!(op, CallOp::Validate) {
         let p = Path::new(input.path.trim());
         return if p.is_absolute() && (p.is_dir() || p.is_file()) {
-            CommandResult::Completed { output: Value::Null, warnings: Vec::new() }
+            CommandResult::Completed {
+                output: Value::Null,
+                warnings: Vec::new(),
+            }
         } else {
-            refused("invalid_file_path", "Paketin tam yolunu verin: klasörü ya da .ifc dosyası.".into(), "path")
+            refused(
+                "invalid_file_path",
+                "Paketin tam yolunu verin: klasörü ya da .ifc dosyası.".into(),
+                "path",
+            )
         };
     }
     match reviewed(input) {
-        Ok(out) => CommandResult::Completed { output: serde_json::to_value(out).unwrap_or(Value::Null), warnings: Vec::new() },
+        Ok(out) => CommandResult::Completed {
+            output: serde_json::to_value(out).unwrap_or(Value::Null),
+            warnings: Vec::new(),
+        },
         Err(refusal) => refusal,
     }
 }

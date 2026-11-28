@@ -16,7 +16,12 @@ fn n(v: &Value) -> f64 {
 fn every_length_is_the_references() {
     let all: Value = serde_json::from_str(CASES).unwrap();
     for c in all["stopping"].as_array().unwrap() {
-        let got = stopping(n(&c["speed"]), n(&c["time"]), n(&c["decel"]), n(&c["grade"]));
+        let got = stopping(
+            n(&c["speed"]),
+            n(&c["time"]),
+            n(&c["decel"]),
+            n(&c["grade"]),
+        );
         match c["distance"].as_f64() {
             None => assert_eq!(got, None, "{c}"),
             Some(d) => assert!((got.expect("a distance") - d).abs() < 1e-9, "{c}: {got:?}"),
@@ -48,23 +53,49 @@ fn a_crest_of_the_proposed_length_gives_the_sight() {
         let s = stopping(speed, 2.5, 3.4, 0.0).unwrap();
         let l = crest(a, s, 1.08, 0.60);
         let g = a / 200.0;
-        let pvi = |id: &str, station: f64, elevation: f64, curve: VCurve| Pvi { id: id.into(), station, elevation, curve };
+        let pvi = |id: &str, station: f64, elevation: f64, curve: VCurve| Pvi {
+            id: id.into(),
+            station,
+            elevation,
+            curve,
+        };
         let v = build(&[
             pvi("a", 0.0, 100.0 - g * 2000.0, VCurve::None),
             // A length of 0: the grades alone give the sight, no curve is asked.
-            pvi("v", 2000.0, 100.0, if l > 0.0 { VCurve::Parabola { length: l } } else { VCurve::None }),
+            pvi(
+                "v",
+                2000.0,
+                100.0,
+                if l > 0.0 {
+                    VCurve::Parabola { length: l }
+                } else {
+                    VCurve::None
+                },
+            ),
             pvi("b", 4000.0, 100.0 - g * 2000.0, VCurve::None),
         ])
         .expect("builds");
         let worst = (0..=((l + 2.0 * s) / 0.5) as usize)
-            .filter_map(|i| v.sight(2000.0 - l / 2.0 - s + 0.5 * i as f64, true, 1.08, 0.60, 3.0 * s, 0.01))
+            .filter_map(|i| {
+                v.sight(
+                    2000.0 - l / 2.0 - s + 0.5 * i as f64,
+                    true,
+                    1.08,
+                    0.60,
+                    3.0 * s,
+                    0.01,
+                )
+            })
             .map(|seen| seen.distance)
             .fold(f64::INFINITY, f64::min);
         println!("V {speed} km/sa, A %{a}: DGM {s:.2} m, L {l:.2} m, en kısa görüş {worst:.2} m");
         if l > 0.0 {
             assert!((worst - s).abs() < 0.05, "{speed} {a}: {worst} vs {s}");
         } else {
-            assert!(worst >= s - 0.05, "{speed} {a}: the grades alone give {worst} ≥ {s}");
+            assert!(
+                worst >= s - 0.05,
+                "{speed} {a}: the grades alone give {worst} ≥ {s}"
+            );
         }
     }
 }

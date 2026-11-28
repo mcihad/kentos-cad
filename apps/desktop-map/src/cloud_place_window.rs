@@ -20,8 +20,8 @@
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use iced::widget::{container, row, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CloudPlaceBy, CommandResult, Entity, PointCloudsPlace, PointCloudsPlaced};
@@ -102,12 +102,20 @@ fn msg(e: Event) -> Message {
 
 /// Numbers from text, apart by spaces, commas or semicolons; a point for the decimal.
 fn numbers(text: &str, what: &str, n: usize) -> Result<Vec<f64>, String> {
-    let words: Vec<&str> =
-        text.split(|c: char| c.is_whitespace() || matches!(c, ',' | ';' | '[' | ']')).filter(|w| !w.is_empty()).collect();
+    let words: Vec<&str> = text
+        .split(|c: char| c.is_whitespace() || matches!(c, ',' | ';' | '[' | ']'))
+        .filter(|w| !w.is_empty())
+        .collect();
     if words.len() != n {
         return Err(format!("{what} {n} sayıdır; {} sayı yazıldı.", words.len()));
     }
-    words.iter().map(|w| w.parse::<f64>().map_err(|_| format!("{what}: “{w}” bir sayı değil; ondalık için nokta kullanın."))).collect()
+    words
+        .iter()
+        .map(|w| {
+            w.parse::<f64>()
+                .map_err(|_| format!("{what}: “{w}” bir sayı değil; ondalık için nokta kullanın."))
+        })
+        .collect()
 }
 
 /// Three numbers, or none when the text is empty.
@@ -127,19 +135,37 @@ fn comma(v: f64, d: usize) -> String {
 /// The rotation angle (degrees) of a place and how far it moves the middle of `box_` (metres).
 /// The box's middle moved by `m`, row by row (none: as it is).
 fn moved_middle(m: Option<&[f64]>, b: &[f64; 6]) -> [f64; 3] {
-    let c = [(b[0] + b[3]) / 2.0, (b[1] + b[4]) / 2.0, (b[2] + b[5]) / 2.0];
+    let c = [
+        (b[0] + b[3]) / 2.0,
+        (b[1] + b[4]) / 2.0,
+        (b[2] + b[5]) / 2.0,
+    ];
     match m {
-        Some(m) => std::array::from_fn(|i| m[4 * i] * c[0] + m[4 * i + 1] * c[1] + m[4 * i + 2] * c[2] + m[4 * i + 3]),
+        Some(m) => std::array::from_fn(|i| {
+            m[4 * i] * c[0] + m[4 * i + 1] * c[1] + m[4 * i + 2] * c[2] + m[4 * i + 3]
+        }),
         None => c,
     }
 }
 
 fn turn_and_shift(m: &[f64], b: &[f64; 6]) -> (f64, f64) {
     let (ax, ay, az) = (m[9] - m[6], m[2] - m[8], m[4] - m[1]);
-    let angle = (ax * ax + ay * ay + az * az).sqrt().atan2(m[0] + m[5] + m[10] - 1.0).to_degrees();
-    let c = [(b[0] + b[3]) / 2.0, (b[1] + b[4]) / 2.0, (b[2] + b[5]) / 2.0];
-    let q: [f64; 3] = std::array::from_fn(|i| m[4 * i] * c[0] + m[4 * i + 1] * c[1] + m[4 * i + 2] * c[2] + m[4 * i + 3]);
-    (angle, ((q[0] - c[0]).powi(2) + (q[1] - c[1]).powi(2) + (q[2] - c[2]).powi(2)).sqrt())
+    let angle = (ax * ax + ay * ay + az * az)
+        .sqrt()
+        .atan2(m[0] + m[5] + m[10] - 1.0)
+        .to_degrees();
+    let c = [
+        (b[0] + b[3]) / 2.0,
+        (b[1] + b[4]) / 2.0,
+        (b[2] + b[5]) / 2.0,
+    ];
+    let q: [f64; 3] = std::array::from_fn(|i| {
+        m[4 * i] * c[0] + m[4 * i + 1] * c[1] + m[4 * i + 2] * c[2] + m[4 * i + 3]
+    });
+    (
+        angle,
+        ((q[0] - c[0]).powi(2) + (q[1] - c[1]).powi(2) + (q[2] - c[2]).powi(2)).sqrt(),
+    )
 }
 
 /// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
@@ -158,15 +184,24 @@ pub(crate) trait CloudPlaceWindowApp {
 impl CloudPlaceWindowApp for App {
     /// The drawing's point clouds (id, name).
     fn cloud_place_clouds(&self) -> Vec<(String, String)> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
         doc.model
             .entities_with_uids()
             .filter_map(|(u, e)| {
-                let Entity::PointCloud(c) = e else { return None };
-                let name = c.cloud.sources.first().and_then(|s| s.file.as_deref()).map_or_else(
-                    || format!("Bulut #{}", e.base().id),
-                    |f| f.rsplit(['/', '\\']).next().unwrap_or(f).to_owned(),
-                );
+                let Entity::PointCloud(c) = e else {
+                    return None;
+                };
+                let name = c
+                    .cloud
+                    .sources
+                    .first()
+                    .and_then(|s| s.file.as_deref())
+                    .map_or_else(
+                        || format!("Bulut #{}", e.base().id),
+                        |f| f.rsplit(['/', '\\']).next().unwrap_or(f).to_owned(),
+                    );
                 Some((u.to_string(), name))
             })
             .collect()
@@ -181,15 +216,32 @@ impl CloudPlaceWindowApp for App {
             let center = triple(&s.center, "Merkez")?;
             let translation = triple(&s.translation, "Öteleme")?;
             match s.by {
-                By::Matrix => CloudPlaceBy::Matrix { matrix: numbers(&s.matrix, "Matris", 16)? },
+                By::Matrix => CloudPlaceBy::Matrix {
+                    matrix: numbers(&s.matrix, "Matris", 16)?,
+                },
                 By::AxisAngle => {
                     let a = numbers(&s.axis, "Eksen", 3)?;
-                    CloudPlaceBy::AxisAngle { axis: [a[0], a[1], a[2]], angle: s.angle, center, translation }
+                    CloudPlaceBy::AxisAngle {
+                        axis: [a[0], a[1], a[2]],
+                        angle: s.angle,
+                        center,
+                        translation,
+                    }
                 }
-                By::Euler => CloudPlaceBy::Euler { yaw: s.yaw, pitch: s.pitch, roll: s.roll, center, translation },
+                By::Euler => CloudPlaceBy::Euler {
+                    yaw: s.yaw,
+                    pitch: s.pitch,
+                    roll: s.roll,
+                    center,
+                    translation,
+                },
             }
         };
-        Ok(PointCloudsPlace { uid: s.cloud.clone(), place, expected_revision: None })
+        Ok(PointCloudsPlace {
+            uid: s.cloud.clone(),
+            place,
+            expected_revision: None,
+        })
     }
 
     fn cloud_place_run(&mut self) {
@@ -211,7 +263,12 @@ impl CloudPlaceWindowApp for App {
         let chosen = self
             .document
             .as_ref()
-            .and_then(|d| self.selection.ids().iter().find_map(|s| d.model.uid(*s).map(|u| u.to_string())))
+            .and_then(|d| {
+                self.selection
+                    .ids()
+                    .iter()
+                    .find_map(|s| d.model.uid(*s).map(|u| u.to_string()))
+            })
             .filter(|u| clouds.iter().any(|(c, _)| c == u))
             .unwrap_or_else(|| clouds[0].0.clone());
         self.modules.map_mut().cloud_place = State {
@@ -236,7 +293,8 @@ impl CloudPlaceWindowApp for App {
             }
         };
         let name = self
-            .modules.map()
+            .modules
+            .map()
             .cloud_place
             .clouds
             .iter()
@@ -248,7 +306,12 @@ impl CloudPlaceWindowApp for App {
         };
         match pointcloud_place::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } if !output.changed => {
-                self.say(Level::Info, format!("{TITLE}: “{name}” bulutunun nesnede konumu yok; hiçbir şey yazılmadı."));
+                self.say(
+                    Level::Info,
+                    format!(
+                        "{TITLE}: “{name}” bulutunun nesnede konumu yok; hiçbir şey yazılmadı."
+                    ),
+                );
             }
             CommandResult::Completed { output, .. } => {
                 let words = if remove {
@@ -260,9 +323,14 @@ impl CloudPlaceWindowApp for App {
                         comma(output.shift, 3)
                     )
                 };
-                self.say(Level::Success, format!("{TITLE}: {words} Tek adımda geri alınır."));
+                self.say(
+                    Level::Success,
+                    format!("{TITLE}: {words} Tek adımda geri alınır."),
+                );
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.warn(format!("{TITLE}: {}", error.message));
             }
             _ => {}
@@ -316,7 +384,11 @@ impl CloudPlaceWindowApp for App {
             let now = if c.placed() {
                 let first = c.sources.iter().find_map(|x| x.pose).unwrap_or_default();
                 let (a, d) = turn_and_shift(&first, &c.sources[0].bounds);
-                format!("Şimdi: konumu nesnede (dönme {}°, ortanın kayması {} m); dosyası değişmedi.", comma(a, 4), comma(d, 3))
+                format!(
+                    "Şimdi: konumu nesnede (dönme {}°, ortanın kayması {} m); dosyası değişmedi.",
+                    comma(a, 4),
+                    comma(d, 3)
+                )
             } else {
                 "Şimdi: dosyanın kendi yerinde.".to_owned()
             };
@@ -336,13 +408,35 @@ impl CloudPlaceWindowApp for App {
                 // the middle's shift from the file's own place, the step's from the kept one.
                 if let Some(c) = &cloud {
                     for (src, pose) in c.sources.iter().zip(&p.poses) {
-                        let name = src.file.as_deref().or(src.url.as_deref()).or(src.asset.as_deref()).unwrap_or("");
+                        let name = src
+                            .file
+                            .as_deref()
+                            .or(src.url.as_deref())
+                            .or(src.asset.as_deref())
+                            .unwrap_or("");
                         let name = name.rsplit(['/', '\\']).next().unwrap_or(name).to_owned();
-                        let (_, kept) = src.pose.as_ref().map_or((0.0, 0.0), |m| turn_and_shift(m, &src.bounds));
-                        let (a, total) = pose.as_deref().map_or((0.0, 0.0), |m| turn_and_shift(m, &src.bounds));
-                        let (from, to) = (moved_middle(src.pose.as_ref().map(|m| &m[..]), &src.bounds), moved_middle(pose.as_deref(), &src.bounds));
-                        let step = ((to[0] - from[0]).powi(2) + (to[1] - from[1]).powi(2) + (to[2] - from[2]).powi(2)).sqrt();
-                        rows.push(vec![name, comma(kept, 3), comma(step, 3), comma(total, 3), comma(a, 4)]);
+                        let (_, kept) = src
+                            .pose
+                            .as_ref()
+                            .map_or((0.0, 0.0), |m| turn_and_shift(m, &src.bounds));
+                        let (a, total) = pose
+                            .as_deref()
+                            .map_or((0.0, 0.0), |m| turn_and_shift(m, &src.bounds));
+                        let (from, to) = (
+                            moved_middle(src.pose.as_ref().map(|m| &m[..]), &src.bounds),
+                            moved_middle(pose.as_deref(), &src.bounds),
+                        );
+                        let step = ((to[0] - from[0]).powi(2)
+                            + (to[1] - from[1]).powi(2)
+                            + (to[2] - from[2]).powi(2))
+                        .sqrt();
+                        rows.push(vec![
+                            name,
+                            comma(kept, 3),
+                            comma(step, 3),
+                            comma(total, 3),
+                            comma(a, 4),
+                        ]);
                     }
                 }
             }
@@ -354,22 +448,37 @@ impl CloudPlaceWindowApp for App {
 
     fn cloud_place_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().cloud_place;
-        let by = Segmented::new([By::Matrix, By::AxisAngle, By::Euler], s.by, |v| msg(Event::By(v)));
+        let by = Segmented::new([By::Matrix, By::AxisAngle, By::Euler], s.by, |v| {
+            msg(Event::By(v))
+        });
         let mut form = Form::new()
             .label_width(130.0)
-            .field("Bulut", container(fields::select_owned(s.clouds.clone(), &s.cloud, |v| msg(Event::Cloud(v)))).width(280))
+            .field(
+                "Bulut",
+                container(fields::select_owned(s.clouds.clone(), &s.cloud, |v| {
+                    msg(Event::Cloud(v))
+                }))
+                .width(280),
+            )
             .field("Dönüşüm", by);
         form = match s.by {
             By::Matrix => form.field(
                 "Matris",
-                kentos_ui::widget::text_field("1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1", &s.matrix).on_input(|t| msg(Event::Matrix(t))),
+                kentos_ui::widget::text_field("1 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1", &s.matrix)
+                    .on_input(|t| msg(Event::Matrix(t))),
             ),
             By::AxisAngle => form.field(
                 "Eksen",
                 row![
-                    kentos_ui::widget::text_field("0 0 1", &s.axis).on_input(|t| msg(Event::Axis(t))).width(160),
+                    kentos_ui::widget::text_field("0 0 1", &s.axis)
+                        .on_input(|t| msg(Event::Axis(t)))
+                        .width(160),
                     label::caption("Açı (°)"),
-                    NumberInput::new(s.angle, |v| msg(Event::Angle(v))).step(0.1).decimals(4).point().width(110),
+                    NumberInput::new(s.angle, |v| msg(Event::Angle(v)))
+                        .step(0.1)
+                        .decimals(4)
+                        .point()
+                        .width(110),
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -377,11 +486,23 @@ impl CloudPlaceWindowApp for App {
             By::Euler => form.field(
                 "Sapma Z (°)",
                 row![
-                    NumberInput::new(s.yaw, |v| msg(Event::Yaw(v))).step(0.1).decimals(4).point().width(100),
+                    NumberInput::new(s.yaw, |v| msg(Event::Yaw(v)))
+                        .step(0.1)
+                        .decimals(4)
+                        .point()
+                        .width(100),
                     label::caption("Yunuslama Y (°)"),
-                    NumberInput::new(s.pitch, |v| msg(Event::Pitch(v))).step(0.1).decimals(4).point().width(100),
+                    NumberInput::new(s.pitch, |v| msg(Event::Pitch(v)))
+                        .step(0.1)
+                        .decimals(4)
+                        .point()
+                        .width(100),
                     label::caption("Yatış X (°)"),
-                    NumberInput::new(s.roll, |v| msg(Event::Roll(v))).step(0.1).decimals(4).point().width(100),
+                    NumberInput::new(s.roll, |v| msg(Event::Roll(v)))
+                        .step(0.1)
+                        .decimals(4)
+                        .point()
+                        .width(100),
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -391,9 +512,14 @@ impl CloudPlaceWindowApp for App {
             form = form
                 .field(
                     "Merkez",
-                    kentos_ui::widget::text_field("boş: bulutun kutusunun ortası", &s.center).on_input(|t| msg(Event::Center(t))),
+                    kentos_ui::widget::text_field("boş: bulutun kutusunun ortası", &s.center)
+                        .on_input(|t| msg(Event::Center(t))),
                 )
-                .field("Öteleme (m)", kentos_ui::widget::text_field("0 0 0", &s.translation).on_input(|t| msg(Event::Translation(t))));
+                .field(
+                    "Öteleme (m)",
+                    kentos_ui::widget::text_field("0 0 0", &s.translation)
+                        .on_input(|t| msg(Event::Translation(t))),
+                );
         }
         let form = form.help(match s.by {
             By::Euler => "X doğu, Y kuzey, Z yukarı; önce Z çevresinde Sapma, sonra dönmüş Y çevresinde Yunuslama, en son iki kez dönmüş X çevresinde Yatış (sağ el kuralı): R = Rz·Ry·Rx. Bulutun dosyası yazılmaz.",
@@ -432,8 +558,17 @@ impl CloudPlaceWindowApp for App {
             "Dosya yok.",
             140.0,
         );
-        let body = Grows::new().spacing(12.0).push(form).push(words::summary(lines)).push(actions).push_grow(table, 140.0);
-        Frame::new(TITLE).scroll(body).action(words::secondary(CLOSE, Some(msg(Event::Close)))).width(820.0).modal(msg(Event::Close))
+        let body = Grows::new()
+            .spacing(12.0)
+            .push(form)
+            .push(words::summary(lines))
+            .push(actions)
+            .push_grow(table, 140.0);
+        Frame::new(TITLE)
+            .scroll(body)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .width(820.0)
+            .modal(msg(Event::Close))
     }
 
     fn cloud_place_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

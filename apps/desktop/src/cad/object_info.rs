@@ -259,7 +259,11 @@ impl App {
                     .and_then(|d| d.model.layers().get(&base.layer_id))
                     .map(|n| n.fields.iter().map(|f| f.name.clone()).collect())
                     .unwrap_or_default();
-                let others = base.attrs.keys().filter(|k| !declared.contains(*k)).cloned();
+                let others = base
+                    .attrs
+                    .keys()
+                    .filter(|k| !declared.contains(*k))
+                    .cloned();
                 declared.iter().cloned().chain(others).collect()
             }
         };
@@ -275,7 +279,9 @@ impl App {
             .filter(|f| !withheld.contains(f))
             .map(|f| {
                 let v = match base.attrs.get(&f) {
-                    Some(raw) => crate::features::pending_rows::shown_value(field_of(&f), raw.clone()),
+                    Some(raw) => {
+                        crate::features::pending_rows::shown_value(field_of(&f), raw.clone())
+                    }
                     None => crate::features::texts::NULL.to_owned(),
                 };
                 (f, v)
@@ -304,14 +310,29 @@ impl App {
         withheld: &[String],
     ) -> Option<String> {
         let node = self.document.as_ref()?.model.layers().get(layer);
-        let declared: Vec<&str> = node.map(|n| n.fields.iter().map(|f| f.name.as_str()).collect()).unwrap_or_default();
-        let names: Vec<&str> = if declared.is_empty() { attrs.keys().map(String::as_str).collect() } else { declared };
-        kentos_commands::display_field(names.into_iter().filter(|n| !withheld.iter().any(|w| w == n))).map(str::to_owned)
+        let declared: Vec<&str> = node
+            .map(|n| n.fields.iter().map(|f| f.name.as_str()).collect())
+            .unwrap_or_default();
+        let names: Vec<&str> = if declared.is_empty() {
+            attrs.keys().map(String::as_str).collect()
+        } else {
+            declared
+        };
+        kentos_commands::display_field(
+            names
+                .into_iter()
+                .filter(|n| !withheld.iter().any(|w| w == n)),
+        )
+        .map(str::to_owned)
     }
 
     /// The record's name (docs/adr/9160): its layer's display field and the record's value of it; none when the layer
     /// has no field with a name in it or the record's value is empty.
-    pub(crate) fn display_value(&self, e: &Entity, withheld: &[String]) -> Option<(String, String)> {
+    pub(crate) fn display_value(
+        &self,
+        e: &Entity,
+        withheld: &[String],
+    ) -> Option<(String, String)> {
         let base = e.base();
         let field = self.display_field_of(&base.layer_id, &base.attrs, withheld)?;
         let value = base.attrs.get(&field)?.trim();
@@ -334,7 +355,13 @@ impl App {
         out.source = source_line(&doc.model, slot).or_else(|| {
             let uid = doc.model.uid(slot)?.to_string();
             let tail = &uid[uid.len().saturating_sub(8)..];
-            Some((format!("{} katmanı · kimlik …{tail}", self.layer_name(&e.base().layer_id)), false))
+            Some((
+                format!(
+                    "{} katmanı · kimlik …{tail}",
+                    self.layer_name(&e.base().layer_id)
+                ),
+                false,
+            ))
         });
         Some(out)
     }

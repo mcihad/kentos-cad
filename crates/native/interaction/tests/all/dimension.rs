@@ -63,23 +63,46 @@ fn dimension_value_is_previewed_at_its_real_position_angle_and_paper_height() {
         let mut b = on_tools();
         assert!(b.type_text(mode));
         let at = match mode {
-            "R" | "Ç" => { b.click(20., -8.); (23., -1.) },
-            "A" => { b.click(-10.,10.); b.click(24.,14.); (20.,12.) },
-            "O" => { b.click(0.,0.); (3.,5.) },
-            _ => { b.click(0.,0.); b.click(10.,4.); (5.,8.) },
+            "R" | "Ç" => {
+                b.click(20., -8.);
+                (23., -1.)
+            }
+            "A" => {
+                b.click(-10., 10.);
+                b.click(24., 14.);
+                (20., 12.)
+            }
+            "O" => {
+                b.click(0., 0.);
+                (3., 5.)
+            }
+            _ => {
+                b.click(0., 0.);
+                b.click(10., 4.);
+                (5., 8.)
+            }
         };
         b.move_to(at.0, at.1);
         let before = b.doc.to_snapshot_v2();
         let preview = b.session.preview(&Default::default()).unwrap();
-        let ghost = preview.texts.first().expect("actual value beside its dimension line");
+        let ghost = preview
+            .texts
+            .first()
+            .expect("actual value beside its dimension line");
         assert_eq!(b.doc.to_snapshot_v2(), before);
         assert!(ghost.height > 0.);
         b.click(at.0, at.1);
         let entity = b.newest();
         let layout = kentos_interaction::dimension_layout(entity).unwrap();
         let d = newest(&b);
-        assert_eq!(ghost.p, layout.text_at, "{mode}: same text anchor as the committed dimension");
-        assert_eq!(ghost.rotation, layout.rotation, "{mode}: same readable angle");
+        assert_eq!(
+            ghost.p, layout.text_at,
+            "{mode}: same text anchor as the committed dimension"
+        );
+        assert_eq!(
+            ghost.rotation, layout.rotation,
+            "{mode}: same readable angle"
+        );
         assert_eq!(ghost.height, d.height);
         assert_eq!(ghost.text, preview.tag.as_ref().unwrap().lines[0]);
         assert!(b.doc.undo().is_some());
@@ -927,25 +950,48 @@ fn reassociation_starts_with_the_selected_dimension_and_cancel_never_writes() {
     b.confirm();
     assert!(b.session.prompt().text().contains("ikinci noktasının"));
     b.confirm();
-    assert_eq!(b.doc.to_snapshot_v2(), before, "keeping both references is read only");
+    assert_eq!(
+        b.doc.to_snapshot_v2(),
+        before,
+        "keeping both references is read only"
+    );
 }
 
 #[test]
 fn dimension_placement_warns_about_coincident_text_without_moving_or_writing_it() {
     let mut b = Bench::new("dimension");
-    b.click(0., 0.); b.click(10., 0.); b.click(5., 3.);
+    b.click(0., 0.);
+    b.click(10., 0.);
+    b.click(5., 3.);
     b.confirm();
     b.start("dimension");
-    b.click(0., 0.); b.click(10., 0.);
+    b.click(0., 0.);
+    b.click(10., 0.);
     let before = b.doc.to_snapshot_v2();
     b.move_to(5., 3.);
     let preview = b.session.preview(&Default::default()).unwrap();
-    assert!(preview.tag.as_ref().unwrap().lines.iter().any(|s| s.contains("çakışabilir")));
+    assert!(
+        preview
+            .tag
+            .as_ref()
+            .unwrap()
+            .lines
+            .iter()
+            .any(|s| s.contains("çakışabilir"))
+    );
     assert_eq!(preview.tag_tone, kentos_interaction::Tone::Danger);
     assert_eq!(b.doc.to_snapshot_v2(), before);
     b.move_to(5., 30.);
     let clear = b.session.preview(&Default::default()).unwrap();
-    assert!(!clear.tag.as_ref().unwrap().lines.iter().any(|s| s.contains("çakışabilir")));
+    assert!(
+        !clear
+            .tag
+            .as_ref()
+            .unwrap()
+            .lines
+            .iter()
+            .any(|s| s.contains("çakışabilir"))
+    );
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
 
@@ -955,8 +1001,19 @@ fn a_second_point_on_the_first_is_said() {
     let mut b = Bench::new("dimension");
     b.click(0.0, 0.0);
     b.click(0.0, 0.0);
-    assert_eq!(b.last_text(), Some(kentos_interaction::dimension::SAME_POINT));
-    assert_eq!(b.session.prompt().text(), "Ölçü: ikinci ölçü noktasını belirtin");
+    assert_eq!(
+        b.last_text(),
+        Some(kentos_interaction::dimension::SAME_POINT)
+    );
+    assert_eq!(
+        b.session.prompt().text(),
+        "Ölçü: ikinci ölçü noktasını belirtin"
+    );
     b.click(10.0, 0.0);
-    assert!(b.session.prompt().text().starts_with("Ölçü: ölçü çizgisinin yerini gösterin"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Ölçü: ölçü çizgisinin yerini gösterin")
+    );
 }

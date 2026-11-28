@@ -33,7 +33,8 @@ use resvg::tiny_skia;
 use resvg::usvg;
 
 use crate::batches::{
-    AtlasImage, BatchKind, FillPaintBatch, INSTANCE_FLOATS, Instances, Mark, MarkerLook, StyledBatch, StyledLayer, Unit,
+    AtlasImage, BatchKind, FillPaintBatch, INSTANCE_FLOATS, Instances, Mark, MarkerLook,
+    StyledBatch, StyledLayer, Unit,
 };
 use crate::picture::{ImageSource, Segment};
 
@@ -49,7 +50,11 @@ pub const VECTORS_FROM_PX: f64 = 128.0;
 /// The vector batches of every ground-sized SVG marker batch, right after it in the draw order; the marker batch keeps
 /// drawing its bitmap while the symbol is small.
 pub fn add(layer: &mut StyledLayer, text: Option<&dyn ImageSource>) {
-    if !layer.batches.iter().any(|b| svg_of(b).is_some() || text_of(b).is_some()) {
+    if !layer
+        .batches
+        .iter()
+        .any(|b| svg_of(b).is_some() || text_of(b).is_some())
+    {
         return;
     }
     let has_low = !layer.low.is_empty();
@@ -61,12 +66,19 @@ pub fn add(layer: &mut StyledLayer, text: Option<&dyn ImageSource>) {
             (Some((svg, w, h)), _) => mesh(svg, w, h),
             (None, Some(t)) => {
                 by_height = true;
-                text.and_then(|source| text_svg(source, t)).and_then(|(svg, w, h)| mesh(&svg, w, h))
+                text.and_then(|source| text_svg(source, t))
+                    .and_then(|(svg, w, h)| mesh(&svg, w, h))
             }
             (None, None) => None,
         };
         let marks = match &b.kind {
-            BatchKind::Marker { offset, anchor, opacity, extent, .. } => Some((*offset, *anchor, *opacity, extent[1])),
+            BatchKind::Marker {
+                offset,
+                anchor,
+                opacity,
+                extent,
+                ..
+            } => Some((*offset, *anchor, *opacity, extent[1])),
             _ => None,
         };
         let (Some(meshes), Some((offset, anchor, opacity, height))) = (meshes, marks) else {
@@ -78,7 +90,12 @@ pub fn add(layer: &mut StyledLayer, text: Option<&dyn ImageSource>) {
             *vectors = true;
         }
         let at = |i: usize| {
-            f64::from(layer.data[b.range.start + i]) + if has_low { f64::from(layer.low[b.range.start + i]) } else { 0.0 }
+            f64::from(layer.data[b.range.start + i])
+                + if has_low {
+                    f64::from(layer.low[b.range.start + i])
+                } else {
+                    0.0
+                }
         };
         let n = b.range.len() / MARKER;
         // In double precision: a translation's residual rides in the layer's low stream, as a marker's place did.
@@ -87,7 +104,11 @@ pub fn add(layer: &mut StyledLayer, text: Option<&dyn ImageSource>) {
         for m in 0..n {
             let i = m * MARKER;
             let (x, y, turn) = (at(i), at(i + 1), at(i + 2));
-            let w = if by_height { at(i + 4) / meshes.aspect } else { at(i + 3) };
+            let w = if by_height {
+                at(i + 4) / meshes.aspect
+            } else {
+                at(i + 3)
+            };
             if !(w.is_finite() && w > 0.0) {
                 continue;
             }
@@ -126,14 +147,20 @@ pub fn add(layer: &mut StyledLayer, text: Option<&dyn ImageSource>) {
                 if has_low {
                     // The translation's (4, 5) residual; the instance shader adds it (`toPxLow`).
                     let translation = matches!(i % INSTANCE_FLOATS, 4 | 5);
-                    layer.low.push(if translation { (v - f64::from(high)) as f32 } else { 0.0 });
+                    layer.low.push(if translation {
+                        (v - f64::from(high)) as f32
+                    } else {
+                        0.0
+                    });
                 }
             }
             let mut color = *rgba;
             color[3] *= opacity;
             batches.push(StyledBatch {
                 range: start..layer.data.len(),
-                kind: BatchKind::Fill { paint: FillPaintBatch::Solid { color } },
+                kind: BatchKind::Fill {
+                    paint: FillPaintBatch::Solid { color },
+                },
                 key: b.key ^ (0x9e37_79b9_7f4a_7c15u64.wrapping_mul(k as u64 + 1)),
                 lod: None,
                 instances: Some(Instances {
@@ -142,7 +169,11 @@ pub fn add(layer: &mut StyledLayer, text: Option<&dyn ImageSource>) {
                     // The switch compares what the bitmap's batch does (`StyledBatch::legible`): a text's height.
                     scale: if by_height { height } else { largest },
                     proxy: None,
-                    mark: Some(Mark { anchor, aspect: meshes.aspect, boxes: k == 0 }),
+                    mark: Some(Mark {
+                        anchor,
+                        aspect: meshes.aspect,
+                        boxes: k == 0,
+                    }),
                 }),
                 ..b.clone()
             });
@@ -161,25 +192,42 @@ pub fn boxes<'a>(
     low: &'a [f32],
     b: &'a StyledBatch,
 ) -> impl Iterator<Item = ([f64; 2], [f64; 2], f64)> + 'a {
-    let found = b.instances.as_ref().and_then(|i| Some((i.mesh, i.mark.filter(|m| m.boxes)?)));
+    let found = b
+        .instances
+        .as_ref()
+        .and_then(|i| Some((i.mesh, i.mark.filter(|m| m.boxes)?)));
     let (start, mark) = match found {
         Some((mesh, mark)) => (b.range.start + mesh, Some(mark)),
         None => (b.range.end, None),
     };
     let numbers = data.get(start..b.range.end).unwrap_or(&[]);
-    numbers.as_chunks::<INSTANCE_FLOATS>().0.iter().enumerate().filter_map(move |(n, x)| {
-        let mark = mark?;
-        let low = |i: usize| f64::from(low.get(start + n * INSTANCE_FLOATS + i).copied().unwrap_or(0.0));
-        let (wc, ws) = (f64::from(x[0]), f64::from(x[1]));
-        let w = wc.hypot(ws);
-        let h = w * mark.aspect;
-        let turn = ws.atan2(wc);
-        let (s, c) = turn.sin_cos();
-        // The translation is the place and the turned offset; the box's middle is the anchor's way off it.
-        let (ax, ay) = (mark.anchor[0] * w, mark.anchor[1] * h);
-        let middle = [f64::from(x[4]) + low(4) - (c * ax - s * ay), f64::from(x[5]) + low(5) - (s * ax + c * ay)];
-        Some((middle, [w, h], turn))
-    })
+    numbers
+        .as_chunks::<INSTANCE_FLOATS>()
+        .0
+        .iter()
+        .enumerate()
+        .filter_map(move |(n, x)| {
+            let mark = mark?;
+            let low = |i: usize| {
+                f64::from(
+                    low.get(start + n * INSTANCE_FLOATS + i)
+                        .copied()
+                        .unwrap_or(0.0),
+                )
+            };
+            let (wc, ws) = (f64::from(x[0]), f64::from(x[1]));
+            let w = wc.hypot(ws);
+            let h = w * mark.aspect;
+            let turn = ws.atan2(wc);
+            let (s, c) = turn.sin_cos();
+            // The translation is the place and the turned offset; the box's middle is the anchor's way off it.
+            let (ax, ay) = (mark.anchor[0] * w, mark.anchor[1] * h);
+            let middle = [
+                f64::from(x[4]) + low(4) - (c * ax - s * ay),
+                f64::from(x[5]) + low(5) - (s * ax + c * ay),
+            ];
+            Some((middle, [w, h], turn))
+        })
 }
 
 /// A batch's SVG, width and height, when it is a ground-sized marker drawn from an SVG.
@@ -187,7 +235,14 @@ fn svg_of(b: &StyledBatch) -> Option<(&str, f64, f64)> {
     match &b.kind {
         BatchKind::Marker {
             unit: Unit::World,
-            look: MarkerLook::Image { image: AtlasImage::Svg { svg, width, height, .. }, fit_height: false },
+            look:
+                MarkerLook::Image {
+                    image:
+                        AtlasImage::Svg {
+                            svg, width, height, ..
+                        },
+                    fit_height: false,
+                },
             ..
         } if b.instances.is_none() && b.lod.is_none() => Some((svg.as_str(), *width, *height)),
         _ => None,
@@ -199,7 +254,11 @@ fn text_of(b: &StyledBatch) -> Option<&AtlasImage> {
     match &b.kind {
         BatchKind::Marker {
             unit: Unit::World,
-            look: MarkerLook::Image { image: image @ AtlasImage::Text { .. }, fit_height: true },
+            look:
+                MarkerLook::Image {
+                    image: image @ AtlasImage::Text { .. },
+                    fit_height: true,
+                },
             ..
         } if b.instances.is_none() && b.lod.is_none() => Some(image),
         _ => None,
@@ -217,7 +276,16 @@ const BASELINE: f64 = 0.78;
 /// high, the letters [`TEXT_BOX`] times smaller, the baseline at [`BASELINE`] of it, a halo the given share of the
 /// letters' size each side, stroked round-joined under the fill. None when the host has no face for it.
 pub(crate) fn text_svg(source: &dyn ImageSource, image: &AtlasImage) -> Option<(String, f64, f64)> {
-    let AtlasImage::Text { text, font, weight, italic, color, halo, .. } = image else {
+    let AtlasImage::Text {
+        text,
+        font,
+        weight,
+        italic,
+        color,
+        halo,
+        ..
+    } = image
+    else {
         return None;
     };
     let outline = source.text(text, font.as_deref(), *weight, *italic)?;
@@ -229,15 +297,31 @@ pub(crate) fn text_svg(source: &dyn ImageSource, image: &AtlasImage) -> Option<(
         return None;
     }
     let mut d = String::new();
-    let at = |p: [f32; 2]| (halo_w + s * f64::from(p[0]), TEXT_STEP * BASELINE + s * f64::from(p[1]));
+    let at = |p: [f32; 2]| {
+        (
+            halo_w + s * f64::from(p[0]),
+            TEXT_STEP * BASELINE + s * f64::from(p[1]),
+        )
+    };
     for glyph in &outline.glyphs {
         for segment in glyph {
             let _ = match *segment {
                 Segment::Move(p) => write!(d, "M{} {}", at(p).0, at(p).1),
                 Segment::Line(p) => write!(d, "L{} {}", at(p).0, at(p).1),
-                Segment::Quad(c, p) => write!(d, "Q{} {} {} {}", at(c).0, at(c).1, at(p).0, at(p).1),
+                Segment::Quad(c, p) => {
+                    write!(d, "Q{} {} {} {}", at(c).0, at(c).1, at(p).0, at(p).1)
+                }
                 Segment::Cubic(c1, c2, p) => {
-                    write!(d, "C{} {} {} {} {} {}", at(c1).0, at(c1).1, at(c2).0, at(c2).1, at(p).0, at(p).1)
+                    write!(
+                        d,
+                        "C{} {} {} {} {} {}",
+                        at(c1).0,
+                        at(c1).1,
+                        at(c2).0,
+                        at(c2).1,
+                        at(p).0,
+                        at(p).1
+                    )
                 }
                 Segment::Close => write!(d, "Z"),
             };
@@ -250,7 +334,10 @@ pub(crate) fn text_svg(source: &dyn ImageSource, image: &AtlasImage) -> Option<(
     let paint = |hex: &str| -> (String, f64) {
         let c = crate::color::parse_hex(hex, 1.0);
         let v = |x: f64| (x.clamp(0.0, 1.0) * 255.0).round() as u8;
-        (format!("rgb({},{},{})", v(c[0]), v(c[1]), v(c[2])), c[3].clamp(0.0, 1.0))
+        (
+            format!("rgb({},{},{})", v(c[0]), v(c[1]), v(c[2])),
+            c[3].clamp(0.0, 1.0),
+        )
     };
     let mut svg = format!(
         r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{TEXT_STEP}" viewBox="0 0 {width} {TEXT_STEP}">"#
@@ -264,7 +351,10 @@ pub(crate) fn text_svg(source: &dyn ImageSource, image: &AtlasImage) -> Option<(
         );
     }
     let (rgb, a) = paint(color);
-    let _ = write!(svg, r#"<path d="{d}" fill="{rgb}" fill-opacity="{a}" fill-rule="nonzero"/></svg>"#);
+    let _ = write!(
+        svg,
+        r#"<path d="{d}" fill="{rgb}" fill-opacity="{a}" fill-rule="nonzero"/></svg>"#
+    );
     Some((svg, width, TEXT_STEP))
 }
 
@@ -281,7 +371,11 @@ pub(crate) fn mesh(svg: &str, width: f64, height: f64) -> Option<Meshes> {
     let tree = usvg::Tree::from_str(svg, &usvg::Options::default()).ok()?;
     let size = tree.size();
     let (sw, sh) = (f64::from(size.width()), f64::from(size.height()));
-    let (sw, sh) = if sw > 0.0 && sh > 0.0 { (sw, sh) } else { (width, height) };
+    let (sw, sh) = if sw > 0.0 && sh > 0.0 {
+        (sw, sh)
+    } else {
+        (width, height)
+    };
     if !(sw > 0.0 && sh > 0.0) {
         return None;
     }
@@ -298,7 +392,11 @@ pub(crate) fn mesh(svg: &str, width: f64, height: f64) -> Option<Meshes> {
             order.push(key);
             order.len() - 1
         });
-        by_colour.entry(at).or_insert_with(|| (rgba, Vec::new())).1.extend(tris);
+        by_colour
+            .entry(at)
+            .or_insert_with(|| (rgba, Vec::new()))
+            .1
+            .extend(tris);
     };
     walk(tree.root(), &mut |path| {
         if !path.is_visible() {
@@ -310,7 +408,10 @@ pub(crate) fn mesh(svg: &str, width: f64, height: f64) -> Option<Meshes> {
         {
             let rings = rings(path.data(), ts, tolerance);
             let even_odd = fill.rule() == usvg::FillRule::EvenOdd;
-            put([rgb[0], rgb[1], rgb[2], f64::from(fill.opacity().get())], fill_rings(&rings, even_odd));
+            put(
+                [rgb[0], rgb[1], rgb[2], f64::from(fill.opacity().get())],
+                fill_rings(&rings, even_odd),
+            );
         }
         if let Some(stroke) = path.stroke()
             && let Some(rgb) = colour(stroke.paint())
@@ -318,11 +419,19 @@ pub(crate) fn mesh(svg: &str, width: f64, height: f64) -> Option<Meshes> {
         {
             let rings = rings(&outline, ts, tolerance);
             // An outline is filled by its winding, as the stroker means it.
-            put([rgb[0], rgb[1], rgb[2], f64::from(stroke.opacity().get())], fill_rings(&rings, false));
+            put(
+                [rgb[0], rgb[1], rgb[2], f64::from(stroke.opacity().get())],
+                fill_rings(&rings, false),
+            );
         }
     });
     let fills: Vec<_> = by_colour.into_values().collect();
-    (!fills.is_empty()).then_some(Meshes { width: sw, height: sh, aspect: sh / sw, fills })
+    (!fills.is_empty()).then_some(Meshes {
+        width: sw,
+        height: sh,
+        aspect: sh / sw,
+        fills,
+    })
 }
 
 fn walk(group: &usvg::Group, visit: &mut impl FnMut(&usvg::Path)) {
@@ -343,7 +452,11 @@ fn colour(paint: &usvg::Paint) -> Option<[f64; 3]> {
         usvg::Paint::RadialGradient(g) => g.stops().first()?.color(),
         usvg::Paint::Pattern(_) => return None,
     };
-    Some([f64::from(c.red) / 255.0, f64::from(c.green) / 255.0, f64::from(c.blue) / 255.0])
+    Some([
+        f64::from(c.red) / 255.0,
+        f64::from(c.green) / 255.0,
+        f64::from(c.blue) / 255.0,
+    ])
 }
 
 /// A path's contours as rings of points (the SVG's pixels after `ts`), curves flattened within `tolerance`.
@@ -356,7 +469,12 @@ fn rings(path: &tiny_skia::Path, ts: tiny_skia::Transform, tolerance: f64) -> Ve
     let mut out: Vec<Vec<Vec2>> = Vec::new();
     let mut ring: Vec<Vec2> = Vec::new();
     let mut last = Vec2::new(0.0, 0.0);
-    let steps = |a: Vec2, b: Vec2| ((a.x - b.x).hypot(a.y - b.y) / tolerance).sqrt().ceil().clamp(1.0, 64.0) as usize;
+    let steps = |a: Vec2, b: Vec2| {
+        ((a.x - b.x).hypot(a.y - b.y) / tolerance)
+            .sqrt()
+            .ceil()
+            .clamp(1.0, 64.0) as usize
+    };
     for seg in path.segments() {
         match seg {
             tiny_skia::PathSegment::MoveTo(p) => {
@@ -414,7 +532,10 @@ fn rings(path: &tiny_skia::Path, ts: tiny_skia::Transform, tolerance: f64) -> Ve
 
 fn area(r: &[Vec2]) -> f64 {
     let n = r.len();
-    (0..n).map(|i| r[i].x * r[(i + 1) % n].y - r[(i + 1) % n].x * r[i].y).sum::<f64>() / 2.0
+    (0..n)
+        .map(|i| r[i].x * r[(i + 1) % n].y - r[(i + 1) % n].x * r[i].y)
+        .sum::<f64>()
+        / 2.0
 }
 
 fn inside(p: Vec2, r: &[Vec2]) -> bool {
@@ -438,7 +559,10 @@ fn inside(p: Vec2, r: &[Vec2]) -> bool {
 fn fill_rings(rings: &[Vec<Vec2>], even_odd: bool) -> Vec<f64> {
     // Rings no edge of which crosses another are nested as they are: the overlay only where one does (a glyph's
     // contours mostly do not; it made a glyph's program take 0.61 ms instead of 0.24, docs/adr/9240).
-    if !even_odd && crossing(rings) && let Some(tris) = nonzero(rings) {
+    if !even_odd
+        && crossing(rings)
+        && let Some(tris) = nonzero(rings)
+    {
         return tris;
     }
     nested(rings, even_odd)
@@ -452,7 +576,11 @@ fn crossing(rings: &[Vec<Vec2>]) -> bool {
         let n = ring.len();
         for i in 0..n {
             let (a, b) = (ring[i], ring[(i + 1) % n]);
-            let (a, b) = if (a.x, a.y) <= (b.x, b.y) { (a, b) } else { (b, a) };
+            let (a, b) = if (a.x, a.y) <= (b.x, b.y) {
+                (a, b)
+            } else {
+                (b, a)
+            };
             edges.push((a, b, r, i, n));
         }
     }
@@ -462,11 +590,21 @@ fn crossing(rings: &[Vec<Vec2>]) -> bool {
         c.x >= a.x.min(b.x) && c.x <= a.x.max(b.x) && c.y >= a.y.min(b.y) && c.y <= a.y.max(b.y)
     };
     let meet = |(a, b): (Vec2, Vec2), (c, d): (Vec2, Vec2)| {
-        let (o1, o2, o3, o4) = (orient(a, b, c), orient(a, b, d), orient(c, d, a), orient(c, d, b));
-        if ((o1 > 0.0 && o2 < 0.0) || (o1 < 0.0 && o2 > 0.0)) && ((o3 > 0.0 && o4 < 0.0) || (o3 < 0.0 && o4 > 0.0)) {
+        let (o1, o2, o3, o4) = (
+            orient(a, b, c),
+            orient(a, b, d),
+            orient(c, d, a),
+            orient(c, d, b),
+        );
+        if ((o1 > 0.0 && o2 < 0.0) || (o1 < 0.0 && o2 > 0.0))
+            && ((o3 > 0.0 && o4 < 0.0) || (o3 < 0.0 && o4 > 0.0))
+        {
             return true;
         }
-        (o1 == 0.0 && on(a, b, c)) || (o2 == 0.0 && on(a, b, d)) || (o3 == 0.0 && on(c, d, a)) || (o4 == 0.0 && on(c, d, b))
+        (o1 == 0.0 && on(a, b, c))
+            || (o2 == 0.0 && on(a, b, d))
+            || (o3 == 0.0 && on(c, d, a))
+            || (o4 == 0.0 && on(c, d, b))
     };
     let mut active: Vec<usize> = Vec::new();
     for k in 0..edges.len() {
@@ -477,10 +615,15 @@ fn crossing(rings: &[Vec<Vec2>]) -> bool {
             // Edges following each other in a ring share an end: they cross only where one runs back over the other.
             if r == rj && (ij == (i + 1) % n || i == (ij + 1) % n) {
                 let shared = [(a, b), (b, a)].into_iter().find_map(|(s, u)| {
-                    [(c, d), (d, c)].into_iter().find(|(t, _)| t.x == s.x && t.y == s.y).map(|(_, v)| (s, u, v))
+                    [(c, d), (d, c)]
+                        .into_iter()
+                        .find(|(t, _)| t.x == s.x && t.y == s.y)
+                        .map(|(_, v)| (s, u, v))
                 });
                 if let Some((s, u, v)) = shared {
-                    if orient(s, u, v) == 0.0 && (u.x - s.x) * (v.x - s.x) + (u.y - s.y) * (v.y - s.y) > 0.0 {
+                    if orient(s, u, v) == 0.0
+                        && (u.x - s.x) * (v.x - s.x) + (u.y - s.y) * (v.y - s.y) > 0.0
+                    {
                         return true;
                     }
                     continue;
@@ -517,7 +660,14 @@ fn nonzero(rings: &[Vec<Vec2>]) -> Option<Vec<f64>> {
     if edges.is_empty() {
         return Some(Vec::new());
     }
-    let areas = kentos_geometry_core::geom::overlay::overlay(&[Source { edges, points: None, cut: None }], Rule::Any);
+    let areas = kentos_geometry_core::geom::overlay::overlay(
+        &[Source {
+            edges,
+            points: None,
+            cut: None,
+        }],
+        Rule::Any,
+    );
     if areas.is_empty() && rings.iter().any(|r| area(r).abs() > 0.0) {
         return None;
     }
@@ -532,7 +682,9 @@ fn nonzero(rings: &[Vec<Vec2>]) -> Option<Vec<f64>> {
 /// The rings' area when they do not cross themselves: each ring's parent the smallest ring holding it, filled by the
 /// nesting's winding (or its depth, even-odd).
 fn nested(rings: &[Vec<Vec2>], even_odd: bool) -> Vec<f64> {
-    let mut order: Vec<usize> = (0..rings.len()).filter(|&i| area(&rings[i]).abs() > 0.0).collect();
+    let mut order: Vec<usize> = (0..rings.len())
+        .filter(|&i| area(&rings[i]).abs() > 0.0)
+        .collect();
     order.sort_by(|&a, &b| area(&rings[b]).abs().total_cmp(&area(&rings[a]).abs()));
     // Each ring's parent: the smallest ring already placed that holds its first point.
     let mut parent: Vec<Option<usize>> = vec![None; rings.len()];
@@ -550,7 +702,13 @@ fn nested(rings: &[Vec<Vec2>], even_odd: bool) -> Vec<f64> {
             None => winding[i] = turn,
         }
     }
-    let filled = |i: usize| if even_odd { depth[i].is_multiple_of(2) } else { winding[i] != 0 };
+    let filled = |i: usize| {
+        if even_odd {
+            depth[i].is_multiple_of(2)
+        } else {
+            winding[i] != 0
+        }
+    };
     // Whether `h` lies in `i`'s area: every ring between them is filled.
     let within = |h: usize, i: usize| {
         let mut up = parent[h];
@@ -570,8 +728,11 @@ fn nested(rings: &[Vec<Vec2>], even_odd: bool) -> Vec<f64> {
         if !filled(i) || parent[i].is_some_and(filled) {
             continue;
         }
-        let holes: Vec<Vec<Vec2>> =
-            order.iter().filter(|&&h| !filled(h) && within(h, i)).map(|&h| rings[h].clone()).collect();
+        let holes: Vec<Vec<Vec2>> = order
+            .iter()
+            .filter(|&&h| !filled(h) && within(h, i))
+            .map(|&h| rings[h].clone())
+            .collect();
         out.extend(triangulate(&rings[i], &holes, Vec2::new(0.0, 0.0)));
     }
     out
@@ -589,7 +750,12 @@ mod tests {
                 kind: BatchKind::Marker {
                     unit: Unit::World,
                     look: MarkerLook::Image {
-                        image: AtlasImage::Svg { key: "s".into(), svg: svg.into(), width: 10.0, height: 10.0 },
+                        image: AtlasImage::Svg {
+                            key: "s".into(),
+                            svg: svg.into(),
+                            width: 10.0,
+                            height: 10.0,
+                        },
                         fit_height: false,
                     },
                     offset: [0.0, 0.0],
@@ -628,12 +794,30 @@ mod tests {
     #[test]
     fn an_svg_marker_becomes_instanced_triangles_where_the_bitmap_lay() {
         // Two markers 2 m wide at (5, 1) and (8, 3), the second turned a quarter.
-        let mut layer = marker_batch(SQUARE, &[[5.0, 1.0, 0.0, 2.0, 0.0], [8.0, 3.0, std::f32::consts::FRAC_PI_2, 2.0, 0.0]]);
+        let mut layer = marker_batch(
+            SQUARE,
+            &[
+                [5.0, 1.0, 0.0, 2.0, 0.0],
+                [8.0, 3.0, std::f32::consts::FRAC_PI_2, 2.0, 0.0],
+            ],
+        );
         add(&mut layer, None);
-        assert_eq!(layer.batches.len(), 2, "the marker batch, then one batch a colour");
-        assert!(matches!(layer.batches[0].kind, BatchKind::Marker { vectors: true, .. }), "it keeps its bitmap");
+        assert_eq!(
+            layer.batches.len(),
+            2,
+            "the marker batch, then one batch a colour"
+        );
+        assert!(
+            matches!(
+                layer.batches[0].kind,
+                BatchKind::Marker { vectors: true, .. }
+            ),
+            "it keeps its bitmap"
+        );
         let b = &layer.batches[1];
-        assert!(matches!(b.kind, BatchKind::Fill { paint: FillPaintBatch::Solid { color } } if color == [1.0, 0.0, 0.0, 1.0]));
+        assert!(
+            matches!(b.kind, BatchKind::Fill { paint: FillPaintBatch::Solid { color } } if color == [1.0, 0.0, 0.0, 1.0])
+        );
         let inst = b.instances.as_ref().expect("instanced");
         assert_eq!((inst.count, inst.scale), (2, 2.0));
         let numbers = &layer.data[b.range.clone()];
@@ -644,18 +828,34 @@ mod tests {
         assert_eq!(xs.iter().cloned().fold(f32::MAX, f32::min), -0.5);
         assert_eq!(xs.iter().cloned().fold(f32::MIN, f32::max), 0.5);
         // The first instance: no turn, 2 m wide, at its place.
-        assert_eq!(&placed[..INSTANCE_FLOATS], &[2.0, 0.0, -0.0, 2.0, 5.0, 1.0, 2.0, 0.0]);
+        assert_eq!(
+            &placed[..INSTANCE_FLOATS],
+            &[2.0, 0.0, -0.0, 2.0, 5.0, 1.0, 2.0, 0.0]
+        );
         // The second: a quarter turn in the shader's pixels (y up) is a quarter counter-clockwise on the ground.
         let q = &placed[INSTANCE_FLOATS..];
-        assert!((q[0] - 0.0).abs() < 1e-6 && (q[1] - 2.0).abs() < 1e-6, "x axis up the ground: {q:?}");
+        assert!(
+            (q[0] - 0.0).abs() < 1e-6 && (q[1] - 2.0).abs() < 1e-6,
+            "x axis up the ground: {q:?}"
+        );
         assert!((q[2] + 2.0).abs() < 1e-6 && (q[3] - 0.0).abs() < 1e-6);
     }
 
     /// Where the marker shader puts an image's point (`markerVertex` with `fit` 1, no twist), on the ground: the box
     /// centred on the place, the image's top row up, the anchor taken off and the offset added, then turned.
-    fn shader_place(m: [f64; 5], anchor: [f64; 2], offset: [f64; 2], aspect: f64, u: f64, v: f64) -> [f64; 2] {
+    fn shader_place(
+        m: [f64; 5],
+        anchor: [f64; 2],
+        offset: [f64; 2],
+        aspect: f64,
+        u: f64,
+        v: f64,
+    ) -> [f64; 2] {
         let (w, h) = (m[3], m[3] * aspect);
-        let q = [(u - 0.5) * w - anchor[0] * w + offset[0], (0.5 - v) * h - anchor[1] * h + offset[1]];
+        let q = [
+            (u - 0.5) * w - anchor[0] * w + offset[0],
+            (0.5 - v) * h - anchor[1] * h + offset[1],
+        ];
         let (s, c) = m[2].sin_cos();
         [m[0] + c * q[0] - s * q[1], m[1] + s * q[0] + c * q[1]]
     }
@@ -666,8 +866,16 @@ mod tests {
         let svg = r##"<svg xmlns="http://www.w3.org/2000/svg" width="20" height="10"><rect width="10" height="5" fill="#000000"/></svg>"##;
         let m = [100.0f32, 50.0, 30f32.to_radians(), 4.0, 0.0];
         let mut layer = marker_batch(svg, &[m]);
-        if let BatchKind::Marker { look: MarkerLook::Image { image: AtlasImage::Svg { width, height, .. }, .. }, anchor, offset, .. } =
-            &mut layer.batches[0].kind
+        if let BatchKind::Marker {
+            look:
+                MarkerLook::Image {
+                    image: AtlasImage::Svg { width, height, .. },
+                    ..
+                },
+            anchor,
+            offset,
+            ..
+        } = &mut layer.batches[0].kind
         {
             (*width, *height) = (20.0, 10.0);
             *anchor = [0.25, -0.5];
@@ -694,15 +902,24 @@ mod tests {
         want.sort_by(|a, b| a.partial_cmp(b).unwrap());
         assert_eq!(corners.len(), 4, "{corners:?}");
         for (a, b) in corners.iter().zip(&want) {
-            assert!((a[0] - b[0]).hypot(a[1] - b[1]) < 1e-4, "{corners:?} != {want:?}");
+            assert!(
+                (a[0] - b[0]).hypot(a[1] - b[1]) < 1e-4,
+                "{corners:?} != {want:?}"
+            );
         }
         // A mask's box: the image's middle, its size and its turn, as the shader placed the marker's box.
         let got: Vec<_> = boxes(&layer.data, &layer.low, b).collect();
         let middle = shader_place(m64, [0.25, -0.5], [1.0, 2.0], 0.5, 0.5, 0.5);
         assert_eq!(got.len(), 1);
         let (at, size, turn) = got[0];
-        assert!((at[0] - middle[0]).hypot(at[1] - middle[1]) < 1e-4, "{at:?} != {middle:?}");
-        assert!((size[0] - 4.0).abs() < 1e-5 && (size[1] - 2.0).abs() < 1e-5, "{size:?}");
+        assert!(
+            (at[0] - middle[0]).hypot(at[1] - middle[1]) < 1e-4,
+            "{at:?} != {middle:?}"
+        );
+        assert!(
+            (size[0] - 4.0).abs() < 1e-5 && (size[1] - 2.0).abs() < 1e-5,
+            "{size:?}"
+        );
         assert!((turn - 30f64.to_radians()).abs() < 1e-6);
     }
 
@@ -713,7 +930,11 @@ mod tests {
         let mut layer = marker_batch(svg, &[[40_000.0, 30_000.0, 0.0, 2.0, 0.0]]);
         layer.low = vec![0.001_25, -0.000_75, 0.0, 0.0, 0.0];
         add(&mut layer, None);
-        assert_eq!(layer.batches.len(), 3, "the marker batch, then a batch a colour");
+        assert_eq!(
+            layer.batches.len(),
+            3,
+            "the marker batch, then a batch a colour"
+        );
         assert_eq!(layer.low.len(), layer.data.len());
         for (k, b) in layer.batches[1..].iter().enumerate() {
             let inst = b.instances.as_ref().expect("instanced");
@@ -722,7 +943,10 @@ mod tests {
             let t = b.range.start + inst.mesh + 4;
             let x = f64::from(layer.data[t]) + f64::from(layer.low[t]);
             let y = f64::from(layer.data[t + 1]) + f64::from(layer.low[t + 1]);
-            assert!((x - 40_000.001_25).abs() < 1e-6 && (y - 29_999.999_25).abs() < 1e-6, "{x} {y}");
+            assert!(
+                (x - 40_000.001_25).abs() < 1e-6 && (y - 29_999.999_25).abs() < 1e-6,
+                "{x} {y}"
+            );
         }
         assert_eq!(boxes(&layer.data, &layer.low, &layer.batches[1]).count(), 1);
         assert_eq!(boxes(&layer.data, &layer.low, &layer.batches[2]).count(), 0);
@@ -741,7 +965,11 @@ mod tests {
         line.batches[0].instances = None;
         line.batches[0].key = 1;
         let order = crate::batches::merged_order(&[&layer.batches, &line.batches]);
-        assert_eq!(order, vec![(1, 0), (0, 0), (0, 1), (0, 2)], "the line, then the symbol's bitmap and colours");
+        assert_eq!(
+            order,
+            vec![(1, 0), (0, 0), (0, 1), (0, 2)],
+            "the line, then the symbol's bitmap and colours"
+        );
     }
 
     #[test]
@@ -751,7 +979,12 @@ mod tests {
         add(&mut layer, None);
         let (bitmap, vectors) = (&layer.batches[0], &layer.batches[1]);
         let at = VECTORS_FROM_PX / 2.0;
-        for (ppm, dpr) in [(at * 0.5, 1.0), (at, 1.0), (at * 1.01, 1.0), (at * 8.0, 2.0)] {
+        for (ppm, dpr) in [
+            (at * 0.5, 1.0),
+            (at, 1.0),
+            (at * 1.01, 1.0),
+            (at * 8.0, 2.0),
+        ] {
             let big = 2.0 * ppm > VECTORS_FROM_PX;
             assert_eq!(bitmap.legible(ppm, dpr), !big, "bitmap at {ppm} px/m");
             assert_eq!(vectors.legible(ppm, dpr), big, "vectors at {ppm} px/m");
@@ -767,11 +1000,17 @@ mod tests {
         assert_eq!(m.fills.len(), 2, "green and blue");
         // The green square with its hole: its triangles' area is 400 − 100.
         let green = &m.fills[0].1;
-        let area: f64 = green.chunks(6).map(|t| ((t[2] - t[0]) * (t[5] - t[1]) - (t[4] - t[0]) * (t[3] - t[1])).abs() / 2.0).sum();
+        let area: f64 = green
+            .chunks(6)
+            .map(|t| ((t[2] - t[0]) * (t[5] - t[1]) - (t[4] - t[0]) * (t[3] - t[1])).abs() / 2.0)
+            .sum();
         assert!((area - 300.0).abs() < 1e-6, "{area}");
         // The blue line's outline: 20 long, 2 wide.
         let blue = &m.fills[1].1;
-        let area: f64 = blue.chunks(6).map(|t| ((t[2] - t[0]) * (t[5] - t[1]) - (t[4] - t[0]) * (t[3] - t[1])).abs() / 2.0).sum();
+        let area: f64 = blue
+            .chunks(6)
+            .map(|t| ((t[2] - t[0]) * (t[5] - t[1]) - (t[4] - t[0]) * (t[3] - t[1])).abs() / 2.0)
+            .sum();
         assert!((area - 40.0).abs() < 0.5, "{area}");
     }
 
@@ -783,13 +1022,21 @@ mod tests {
         let m = mesh(svg, 100.0, 100.0).expect("parses");
         let held = |p: [f64; 2]| {
             m.fills[0].1.chunks(6).any(|t| {
-                let side = |a: usize, b: usize| (t[b] - t[a]) * (p[1] - t[a + 1]) - (t[b + 1] - t[a + 1]) * (p[0] - t[a]);
+                let side = |a: usize, b: usize| {
+                    (t[b] - t[a]) * (p[1] - t[a + 1]) - (t[b + 1] - t[a + 1]) * (p[0] - t[a])
+                };
                 let s = [side(0, 2), side(2, 4), side(4, 0)];
                 s.iter().all(|&v| v >= 0.0) || s.iter().all(|&v| v <= 0.0)
             })
         };
         // The leaf's tip and its base, where the stroke turns back on itself; the stem's middle; nothing beside it.
-        for p in [[25.0, 8.33], [26.0, 9.5], [50.0, 36.11], [48.5, 34.5], [50.0, 60.0]] {
+        for p in [
+            [25.0, 8.33],
+            [26.0, 9.5],
+            [50.0, 36.11],
+            [48.5, 34.5],
+            [50.0, 60.0],
+        ] {
             assert!(held(p), "{p:?} is inked");
         }
         assert!(!held([60.0, 60.0]), "the ground beside the stem");
@@ -798,15 +1045,41 @@ mod tests {
     /// Rings that cross go to the overlay; nested or apart ones are nested as they are.
     #[test]
     fn a_crossing_is_found_and_nesting_is_not_one() {
-        let ring = |pts: &[(f64, f64)]| pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect::<Vec<_>>();
-        let square = |x: f64, y: f64, s: f64| ring(&[(x, y), (x + s, y), (x + s, y + s), (x, y + s)]);
+        let ring = |pts: &[(f64, f64)]| {
+            pts.iter()
+                .map(|&(x, y)| Vec2::new(x, y))
+                .collect::<Vec<_>>()
+        };
+        let square =
+            |x: f64, y: f64, s: f64| ring(&[(x, y), (x + s, y), (x + s, y + s), (x, y + s)]);
         assert!(!crossing(&[square(0.0, 0.0, 10.0)]), "a square");
-        assert!(!crossing(&[square(0.0, 0.0, 10.0), square(3.0, 3.0, 2.0)]), "a square in a square");
-        assert!(!crossing(&[square(0.0, 0.0, 2.0), square(5.0, 0.0, 2.0)]), "two apart");
-        assert!(crossing(&[ring(&[(0.0, 0.0), (10.0, 10.0), (10.0, 0.0), (0.0, 10.0)])]), "a figure of eight");
-        assert!(crossing(&[square(0.0, 0.0, 10.0), square(5.0, 5.0, 10.0)]), "two overlapping");
-        assert!(crossing(&[ring(&[(0.0, 0.0), (10.0, 0.0), (5.0, 0.0), (5.0, 5.0)])]), "a ring running back over itself");
-        assert!(crossing(&[square(0.0, 0.0, 10.0), ring(&[(10.0, 5.0), (15.0, 2.0), (15.0, 8.0)])]), "touching at a point");
+        assert!(
+            !crossing(&[square(0.0, 0.0, 10.0), square(3.0, 3.0, 2.0)]),
+            "a square in a square"
+        );
+        assert!(
+            !crossing(&[square(0.0, 0.0, 2.0), square(5.0, 0.0, 2.0)]),
+            "two apart"
+        );
+        assert!(
+            crossing(&[ring(&[(0.0, 0.0), (10.0, 10.0), (10.0, 0.0), (0.0, 10.0)])]),
+            "a figure of eight"
+        );
+        assert!(
+            crossing(&[square(0.0, 0.0, 10.0), square(5.0, 5.0, 10.0)]),
+            "two overlapping"
+        );
+        assert!(
+            crossing(&[ring(&[(0.0, 0.0), (10.0, 0.0), (5.0, 0.0), (5.0, 5.0)])]),
+            "a ring running back over itself"
+        );
+        assert!(
+            crossing(&[
+                square(0.0, 0.0, 10.0),
+                ring(&[(10.0, 5.0), (15.0, 2.0), (15.0, 8.0)])
+            ]),
+            "touching at a point"
+        );
     }
 
     #[test]
@@ -819,10 +1092,24 @@ mod tests {
         };
         let area_of = |rule: &str| {
             let m = mesh(&svg(rule), 20.0, 20.0).expect("parses");
-            m.fills[0].1.chunks(6).map(|t| ((t[2] - t[0]) * (t[5] - t[1]) - (t[4] - t[0]) * (t[3] - t[1])).abs() / 2.0).sum::<f64>()
+            m.fills[0]
+                .1
+                .chunks(6)
+                .map(|t| {
+                    ((t[2] - t[0]) * (t[5] - t[1]) - (t[4] - t[0]) * (t[3] - t[1])).abs() / 2.0
+                })
+                .sum::<f64>()
         };
-        assert!((area_of("nonzero") - 400.0).abs() < 1e-6, "{}", area_of("nonzero"));
-        assert!((area_of("evenodd") - 300.0).abs() < 1e-6, "{}", area_of("evenodd"));
+        assert!(
+            (area_of("nonzero") - 400.0).abs() < 1e-6,
+            "{}",
+            area_of("nonzero")
+        );
+        assert!(
+            (area_of("evenodd") - 300.0).abs() < 1e-6,
+            "{}",
+            area_of("evenodd")
+        );
     }
 
     #[test]
@@ -830,14 +1117,20 @@ mod tests {
         let mut layer = marker_batch("<svg", &[[1.0, 1.0, 0.0, 2.0, 0.0]]);
         let before = layer.batches.clone();
         add(&mut layer, None);
-        assert_eq!(layer.batches, before, "an SVG that does not parse keeps its bitmap");
+        assert_eq!(
+            layer.batches, before,
+            "an SVG that does not parse keeps its bitmap"
+        );
         let mut layer = marker_batch(SQUARE, &[[1.0, 1.0, 0.0, 2.0, 0.0]]);
         if let BatchKind::Marker { unit, .. } = &mut layer.batches[0].kind {
             *unit = Unit::Px;
         }
         let before = layer.batches.clone();
         add(&mut layer, None);
-        assert_eq!(layer.batches, before, "a screen-sized one never grows past its bitmap");
+        assert_eq!(
+            layer.batches, before,
+            "a screen-sized one never grows past its bitmap"
+        );
     }
 
     /// A face of one square letter, 50 px, 40 wide, its advance 50.
@@ -846,10 +1139,26 @@ mod tests {
         fn picture(&self, _: &AtlasImage) -> Option<std::sync::Arc<crate::picture::Picture>> {
             None
         }
-        fn text(&self, _: &str, _: Option<&str>, _: f64, _: bool) -> Option<std::sync::Arc<crate::picture::TextOutline>> {
+        fn text(
+            &self,
+            _: &str,
+            _: Option<&str>,
+            _: f64,
+            _: bool,
+        ) -> Option<std::sync::Arc<crate::picture::TextOutline>> {
             use crate::picture::Segment::{Close, Line, Move};
-            let glyph = vec![Move([0.0, -40.0]), Line([40.0, -40.0]), Line([40.0, 0.0]), Line([0.0, 0.0]), Close];
-            Some(std::sync::Arc::new(crate::picture::TextOutline { size: 50.0, advance: 50.0, glyphs: vec![glyph] }))
+            let glyph = vec![
+                Move([0.0, -40.0]),
+                Line([40.0, -40.0]),
+                Line([40.0, 0.0]),
+                Line([0.0, 0.0]),
+                Close,
+            ];
+            Some(std::sync::Arc::new(crate::picture::TextOutline {
+                size: 50.0,
+                advance: 50.0,
+                glyphs: vec![glyph],
+            }))
         }
     }
 
@@ -869,7 +1178,9 @@ mod tests {
         let (svg, width, height) = text_svg(&Square, &image).expect("an SVG");
         // The letters at 80 / 50 = 1.6 times the face's px: the advance 80, the halo 8 each side.
         assert_eq!((width, height), (96.0, 100.0));
-        let halo = svg.find("stroke-width=\"16\"").expect("the halo's stroke, twice its share");
+        let halo = svg
+            .find("stroke-width=\"16\"")
+            .expect("the halo's stroke, twice its share");
         let fill = svg.find("fill=\"rgb(255,0,0)\"").expect("the fill");
         assert!(halo < fill, "the halo under the fill");
         // The square from (8, 78 − 64) to (72, 78): its first corner.
@@ -878,7 +1189,6 @@ mod tests {
         assert_eq!(meshes.fills.len(), 2, "the halo's colour and the fill's");
         assert!((meshes.aspect - 100.0 / 96.0).abs() < 1e-9);
     }
-
 
     /// docs/adr/9245: a text marker made vectors is drawn one way at a time, and neither way while too small to read
     /// (the bitmap's batch keeps `MIN_TEXT_PX`).
@@ -898,7 +1208,10 @@ mod tests {
             range: 0..data.len(),
             kind: BatchKind::Marker {
                 unit: Unit::World,
-                look: MarkerLook::Image { image, fit_height: true },
+                look: MarkerLook::Image {
+                    image,
+                    fit_height: true,
+                },
                 offset: [0.0, 0.0],
                 anchor: [0.0, 0.0],
                 opacity: 1.0,
@@ -920,14 +1233,30 @@ mod tests {
             lod: None,
             instances: None,
         };
-        let mut layer = StyledLayer { data, batches: vec![batch], ..Default::default() };
+        let mut layer = StyledLayer {
+            data,
+            batches: vec![batch],
+            ..Default::default()
+        };
         add(&mut layer, Some(&Square));
-        assert_eq!(layer.batches.len(), 2, "the bitmap's batch and the letter's colour");
+        assert_eq!(
+            layer.batches.len(),
+            2,
+            "the bitmap's batch and the letter's colour"
+        );
         let (bitmap, vectors) = (&layer.batches[0], &layer.batches[1]);
         // 10 m high: 0.1 px/m makes it a pixel, 5 px/m 50 px, 20 px/m 200 px.
-        assert!(!bitmap.legible(0.1, 1.0) && !vectors.legible(0.1, 1.0), "too small to read: neither");
-        assert!(bitmap.legible(5.0, 1.0) && !vectors.legible(5.0, 1.0), "small: the bitmap");
-        assert!(!bitmap.legible(20.0, 1.0) && vectors.legible(20.0, 1.0), "grown: the vectors");
+        assert!(
+            !bitmap.legible(0.1, 1.0) && !vectors.legible(0.1, 1.0),
+            "too small to read: neither"
+        );
+        assert!(
+            bitmap.legible(5.0, 1.0) && !vectors.legible(5.0, 1.0),
+            "small: the bitmap"
+        );
+        assert!(
+            !bitmap.legible(20.0, 1.0) && vectors.legible(20.0, 1.0),
+            "grown: the vectors"
+        );
     }
-
 }

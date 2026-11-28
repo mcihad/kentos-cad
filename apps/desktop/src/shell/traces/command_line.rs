@@ -96,7 +96,13 @@ impl CommandLine {
             operation.traverse(&mut |operation| {
                 operation.focusable(Some(&id), bounds, &mut text_box);
                 operation.text_input(Some(&id), bounds, &mut text_box);
-                operation.scrollable(Some(&panel), bounds, bounds, iced::Vector::ZERO, &mut panel_scroll);
+                operation.scrollable(
+                    Some(&panel),
+                    bounds,
+                    bounds,
+                    iced::Vector::ZERO,
+                    &mut panel_scroll,
+                );
                 for window_id in &window_ids {
                     operation.focusable(Some(window_id), bounds, &mut window_field);
                     operation.text_input(Some(window_id), bounds, &mut window_field);
@@ -116,7 +122,11 @@ impl CommandLine {
                 "iz, oynatıcının izleyemediği bir widget işlemi üretti: komut satırında {what}"
             ));
         }
-        if !text_box.touched && !window_field.touched && !window_field.asked.get() && !panel_scroll.touched {
+        if !text_box.touched
+            && !window_field.touched
+            && !window_field.asked.get()
+            && !panel_scroll.touched
+        {
             return Err(
                 "iz, oynatıcının izleyemediği bir widget işlemi üretti: komut satırının odağına dokunmuyor"
                     .to_owned(),
@@ -568,7 +578,12 @@ impl Scrollable for PanelScroll {
         self.touched = true;
     }
 
-    fn scroll_by(&mut self, _offset: AbsoluteOffset, _bounds: Rectangle, _content_bounds: Rectangle) {
+    fn scroll_by(
+        &mut self,
+        _offset: AbsoluteOffset,
+        _bounds: Rectangle,
+        _content_bounds: Rectangle,
+    ) {
         self.touched = true;
     }
 }

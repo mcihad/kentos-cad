@@ -41,7 +41,7 @@ const SVG_MAP_DPI: f64 = 200.0;
 /// One map's content, alone, for an SVG.
 struct MapOnly<'a> {
     sheet: Option<&'a str>,
-    failed:&'a std::cell::Cell<bool>,
+    failed: &'a std::cell::Cell<bool>,
     prim: &'a MapPrim,
     k: f64,
     painter: &'a dyn MapPainter,
@@ -60,7 +60,7 @@ impl<'a, M> canvas::Program<M> for MapOnly<'a> {
     ) -> Vec<canvas::Geometry> {
         let mut f = Frame::new(renderer, bounds.size());
         let mut request = crate::painter::MapRequest::of(self.prim, bounds.size(), self.k, true);
-        request.sheet=self.sheet;
+        request.sheet = self.sheet;
         if !self.painter.paint(&request, &mut f) {
             self.failed.set(true);
             paint::placeholder(&mut f, Rectangle::new(Point::ORIGIN, bounds.size()), 1.0);
@@ -243,7 +243,11 @@ impl Designer {
                 let Prim::Map(m) = p else {
                     continue;
                 };
-                if m.view.center.is_none() || maps.iter().any(|x| x.item == m.item && x.sheet.as_ref()==Some(id)) {
+                if m.view.center.is_none()
+                    || maps
+                        .iter()
+                        .any(|x| x.item == m.item && x.sheet.as_ref() == Some(id))
+                {
                     continue;
                 }
                 // At the paper's own size: a millimetre is 96/25.4 pixels.
@@ -256,11 +260,11 @@ impl Designer {
                 let content = match painter.export_content(&request)? {
                     Some(v) => v,
                     None => MapContent::Raster(RasterMap {
-                        png: self.map_png_for_sheet(painter, m, self.export_dpi,Some(id))?,
+                        png: self.map_png_for_sheet(painter, m, self.export_dpi, Some(id))?,
                     }),
                 };
                 maps.push(PdfMap {
-                    sheet:Some(id.clone()),
+                    sheet: Some(id.clone()),
                     item: m.item.clone(),
                     content,
                     corners: None,

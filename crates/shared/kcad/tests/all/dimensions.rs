@@ -194,7 +194,8 @@ fn every_field_of_the_new_dimensions_comes_back() {
 #[test]
 fn the_writer_refuses_what_a_reader_would_refuse_with_the_place() {
     let refuse = |d: DimensionEntity, code: Code, place: &str| {
-        let err = kentos_kcad::encode(&drawing(vec![Entity::Dimension(Box::new(d))])).expect_err("refused");
+        let err = kentos_kcad::encode(&drawing(vec![Entity::Dimension(Box::new(d))]))
+            .expect_err("refused");
         assert_eq!(err.code, code, "{err}");
         assert!(err.message.contains(place), "{place}: {err}");
     };

@@ -76,8 +76,14 @@ impl Clipping {
         let Json::Arr(list) = v.get("boundary") else {
             return None;
         };
-        let ring: Vec<Vec2> = list.iter().filter_map(|p| Vec2::from_json(p).ok()).collect();
-        if ring.len() < 3 || ring.len() != list.len() || ring.iter().any(|p| !(p.x.is_finite() && p.y.is_finite())) {
+        let ring: Vec<Vec2> = list
+            .iter()
+            .filter_map(|p| Vec2::from_json(p).ok())
+            .collect();
+        if ring.len() < 3
+            || ring.len() != list.len()
+            || ring.iter().any(|p| !(p.x.is_finite() && p.y.is_finite()))
+        {
             return None;
         }
         Some(Clipping {
@@ -332,7 +338,10 @@ crate::json_struct!(CellLook {
 impl CellLook {
     /// Whether the cell at `row`, `col` is in its range.
     pub fn holds(&self, row: usize, col: usize) -> bool {
-        row >= self.row && row < self.row + self.rows && col >= self.col && col < self.col + self.cols
+        row >= self.row
+            && row < self.row + self.rows
+            && col >= self.col
+            && col < self.col + self.cols
     }
 }
 
@@ -747,10 +756,13 @@ impl Entity {
                 value => bool::from_json(value)?,
             };
             *widths = json::read_field(v, "widths")?;
-            if widths.as_ref().is_some_and(|ws| {
-                ws.iter().flatten().any(|w| !w.is_finite() || *w < 0.0)
-            }) {
-                return Err("widths: sonlu, negatif olmayan kenar genişlikleri bekleniyordu".into());
+            if widths
+                .as_ref()
+                .is_some_and(|ws| ws.iter().flatten().any(|w| !w.is_finite() || *w < 0.0))
+            {
+                return Err(
+                    "widths: sonlu, negatif olmayan kenar genişlikleri bekleniyordu".into(),
+                );
             }
         }
         Ok(entity)
@@ -934,15 +946,25 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => vec![*p],
         Shape::Line { a, b } => vec![*a, *b],
         // A wall's are its path's (docs/adr/0339 §1): its faces' corners are its pieces'.
-        Shape::Polyline { pts, .. } | Shape::Leader { pts, .. } | Shape::Wall { pts, .. } => pts.clone(),
+        Shape::Polyline { pts, .. } | Shape::Leader { pts, .. } | Shape::Wall { pts, .. } => {
+            pts.clone()
+        }
         // Its jambs' four points (docs/adr/0341 §2).
         Shape::Opening { place, .. } => place.clone(),
         // Its rings' (docs/adr/0342 §2).
         Shape::Space { parts, .. } => entity_vertices(&crate::geom::space::as_polygon(parts)),
         // A grid's path's, a column's outline's, a stair's or ramp's band's (docs/adr/0343 §2).
-        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Beam { .. } | Shape::Roof { .. } | Shape::Railing { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
-            crate::geom::arch::outline(e).map(|o| entity_vertices(&o)).unwrap_or_default()
-        }
+        Shape::Grid { .. }
+        | Shape::Column { .. }
+        | Shape::Stair { .. }
+        | Shape::Ramp { .. }
+        | Shape::Beam { .. }
+        | Shape::Roof { .. }
+        | Shape::Railing { .. }
+        | Shape::Tag { .. }
+        | Shape::ViewMark { .. } => crate::geom::arch::outline(e)
+            .map(|o| entity_vertices(&o))
+            .unwrap_or_default(),
         Shape::Polygon { pts, holes, .. } => match holes {
             Some(h) if !h.is_empty() => pts
                 .iter()
@@ -1028,13 +1050,25 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
 pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
     match e {
         // Its jambs' ring (docs/adr/0341 §2).
-        Shape::Opening { place, .. } if place.len() == 4 => vec![place[0], place[2], place[3], place[1]],
-        // Its largest part's outer ring (docs/adr/0342 §2).
-        Shape::Space { parts, .. } => entity_outline(&crate::geom::space::as_polygon(parts), segments),
-        // A grid's path, a column's outline, a stair's or ramp's band (docs/adr/0343 §2).
-        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Beam { .. } | Shape::Roof { .. } | Shape::Railing { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
-            crate::geom::arch::outline(e).map(|o| entity_outline(&o, segments)).unwrap_or_default()
+        Shape::Opening { place, .. } if place.len() == 4 => {
+            vec![place[0], place[2], place[3], place[1]]
         }
+        // Its largest part's outer ring (docs/adr/0342 §2).
+        Shape::Space { parts, .. } => {
+            entity_outline(&crate::geom::space::as_polygon(parts), segments)
+        }
+        // A grid's path, a column's outline, a stair's or ramp's band (docs/adr/0343 §2).
+        Shape::Grid { .. }
+        | Shape::Column { .. }
+        | Shape::Stair { .. }
+        | Shape::Ramp { .. }
+        | Shape::Beam { .. }
+        | Shape::Roof { .. }
+        | Shape::Railing { .. }
+        | Shape::Tag { .. }
+        | Shape::ViewMark { .. } => crate::geom::arch::outline(e)
+            .map(|o| entity_outline(&o, segments))
+            .unwrap_or_default(),
         // Its body's outer ring (docs/adr/0339 §1); one that cannot be drawn its path.
         Shape::Wall { pts, bulges, wall } => crate::geom::wall::body(pts, bulges.as_deref(), wall)
             .map(|(ring, _)| ring)
@@ -1630,27 +1664,62 @@ impl<'a> TextPlace<'a> {
     /// Its lines and box (docs/adr/0182 §2).
     pub fn layout(&self, font: Font) -> crate::text::paragraph::Layout {
         if self.is_unicode() {
-            use crate::text::{paragraph::{Layout,Line},shaping::{self,Style}};
-            let laid=shaping::rich::layout(self.text,self.runs,Style {
-                family:self.font_or(font).drawn().id(),weight:if self.bold {600}else{400},
-                italic:self.italic,..Style::default()
-            },shaping::paragraph::Settings {
-                height:self.height,width_factor:self.width_factor.unwrap_or(1.),
-                box_width:if self.path.is_some() {None}else{self.box_width},line_spacing:self.line_spacing.unwrap_or(1.),
-                along:if self.path.is_some(){0.}else{self.align.map_or(0.,TextAlign::along)},flow:if self.path.is_some(){None}else{self.flow},
-            });
+            use crate::text::{
+                paragraph::{Layout, Line},
+                shaping::{self, Style},
+            };
+            let laid = shaping::rich::layout(
+                self.text,
+                self.runs,
+                Style {
+                    family: self.font_or(font).drawn().id(),
+                    weight: if self.bold { 600 } else { 400 },
+                    italic: self.italic,
+                    ..Style::default()
+                },
+                shaping::paragraph::Settings {
+                    height: self.height,
+                    width_factor: self.width_factor.unwrap_or(1.),
+                    box_width: if self.path.is_some() {
+                        None
+                    } else {
+                        self.box_width
+                    },
+                    line_spacing: self.line_spacing.unwrap_or(1.),
+                    along: if self.path.is_some() {
+                        0.
+                    } else {
+                        self.align.map_or(0., TextAlign::along)
+                    },
+                    flow: if self.path.is_some() { None } else { self.flow },
+                },
+            );
             return match laid {
-                Ok(laid)=>Layout {
-                    lines:laid.flow.pieces.iter().map(|p|Line {
-                        start:p.scalars.start as usize,end:p.scalars.end as usize,
-                        width:p.line.advance*self.height*self.width_factor.unwrap_or(1.),
-                        x:p.at[0],y:-p.at[1],
-                    }).collect(),
-                    width:laid.flow.width,pitch:laid.flow.pitch,depth:laid.flow.depth,
+                Ok(laid) => Layout {
+                    lines: laid
+                        .flow
+                        .pieces
+                        .iter()
+                        .map(|p| Line {
+                            start: p.scalars.start as usize,
+                            end: p.scalars.end as usize,
+                            width: p.line.advance * self.height * self.width_factor.unwrap_or(1.),
+                            x: p.at[0],
+                            y: -p.at[1],
+                        })
+                        .collect(),
+                    width: laid.flow.width,
+                    pitch: laid.flow.pitch,
+                    depth: laid.flow.depth,
                 },
                 // A failed profile has a finite one-em error marker. Never
                 // use legacy approximate widths for a Unicode profile.
-                Err(_)=>Layout {lines:Vec::new(),width:self.height,pitch:self.height,depth:1},
+                Err(_) => Layout {
+                    lines: Vec::new(),
+                    width: self.height,
+                    pitch: self.height,
+                    depth: 1,
+                },
             };
         }
         crate::text::paragraph::lay_out(&crate::text::paragraph::Paragraph {
@@ -1717,7 +1786,7 @@ impl<'a> TextPlace<'a> {
     /// of its height up from it.
     pub fn origin(&self, font: Font) -> Vec2 {
         if self.is_unicode() && self.path.is_some() {
-            return self.curved_baseline(font).map_or(self.p,|b|b.0);
+            return self.curved_baseline(font).map_or(self.p, |b| b.0);
         }
         // Along a curve, its first letter's (docs/adr/0196 §2).
         if let Some(a) = self.along(font) {
@@ -1760,12 +1829,21 @@ impl<'a> TextPlace<'a> {
     /// docs/adr/0186 §4).
     pub fn outline_grown(&self, font: Font, margin: f64) -> Vec<Vec2> {
         if self.is_unicode() {
-            let frame=self.unicode_plan(font).ok().and_then(|p|p.frame)
-                .unwrap_or([0.,-0.23*self.height,self.height,1.15*self.height]);
-            let [a,b,c,d]=frame;
-            let (u,v)=self.axes();
-            return [[a-margin,b-margin],[c+margin,b-margin],[c+margin,d+margin],[a-margin,d+margin]]
-                .map(|[x,y]|Vec2::new(self.p.x+u.x*x+v.x*y,self.p.y+u.y*x+v.y*y)).to_vec();
+            let frame = self
+                .unicode_plan(font)
+                .ok()
+                .and_then(|p| p.frame)
+                .unwrap_or([0., -0.23 * self.height, self.height, 1.15 * self.height]);
+            let [a, b, c, d] = frame;
+            let (u, v) = self.axes();
+            return [
+                [a - margin, b - margin],
+                [c + margin, b - margin],
+                [c + margin, d + margin],
+                [a - margin, d + margin],
+            ]
+            .map(|[x, y]| Vec2::new(self.p.x + u.x * x + v.x * y, self.p.y + u.y * x + v.y * y))
+            .to_vec();
         }
         // Along a curve, its letters' boxes as one ring (docs/adr/0196 §2.7).
         if let Some(a) = self.along(font) {
@@ -1890,7 +1968,9 @@ impl<'a> TextPlace<'a> {
     /// The box its mask fills (docs/adr/0145 §4): its outline with a tenth
     /// of its height around it.
     pub fn mask(&self, font: Font) -> Vec<Vec2> {
-        if self.is_unicode() {return self.outline_grown(font,self.height*0.1);}
+        if self.is_unicode() {
+            return self.outline_grown(font, self.height * 0.1);
+        }
         let (h, m) = (self.height * 1.15, self.height * 0.1);
         let (w, below, _, _) = self.extent(font);
         self.frame(font, (-m, -h * 0.2 - m - below), (w + m, h + m))
@@ -2100,7 +2180,10 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
         // Its label's place (docs/adr/0342 §2).
         Shape::Space { parts, .. } => return crate::geom::space::label_at(parts),
         // A grid's middle, a column's box's middle, a stair's or ramp's middle point (docs/adr/0343 §2, 0725 §2).
-        Shape::Grid { pts, .. } | Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } | Shape::Beam { pts, .. } => {
+        Shape::Grid { pts, .. }
+        | Shape::Stair { pts, .. }
+        | Shape::Ramp { pts, .. }
+        | Shape::Beam { pts, .. } => {
             return pts.get(pts.len() / 2).copied();
         }
         // A railing's middle point along its line (docs/adr/8045 §3).
@@ -2111,7 +2194,10 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
             if n == 0.0 {
                 return None;
             }
-            Vec2::new(pts.iter().map(|q| q.x).sum::<f64>() / n, pts.iter().map(|q| q.y).sum::<f64>() / n)
+            Vec2::new(
+                pts.iter().map(|q| q.x).sum::<f64>() / n,
+                pts.iter().map(|q| q.y).sum::<f64>() / n,
+            )
         }
         Shape::Column { at, column } => crate::geom::arch::column_center(*at, column),
         Shape::Tag { at, .. } => *at,
@@ -2141,8 +2227,14 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
 pub fn entity_length(e: &Shape) -> Option<f64> {
     match e {
         // A grid's along its path, a stair's or ramp's along its walking line (docs/adr/0343 §2).
-        Shape::Grid { pts, bulges, .. } => Some(crate::geom::bulge::bulge_path_length(pts, bulges.as_deref(), false)),
-        Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } | Shape::Beam { pts, .. } => Some(path_length(pts, false)),
+        Shape::Grid { pts, bulges, .. } => Some(crate::geom::bulge::bulge_path_length(
+            pts,
+            bulges.as_deref(),
+            false,
+        )),
+        Shape::Stair { pts, .. } | Shape::Ramp { pts, .. } | Shape::Beam { pts, .. } => {
+            Some(path_length(pts, false))
+        }
         // Round its eaves (docs/adr/8044 §1).
         Shape::Roof { pts, .. } => Some(path_length(pts, true)),
         // Along its line, round to its first point when closed (docs/adr/8045 §3).
@@ -2244,11 +2336,19 @@ pub fn entity_area(e: &Shape) -> Option<f64> {
             let g = ellipse_geom(*c, *major, *ratio, *t0, *t1);
             is_full_ellipse(&g).then(|| ellipse_area(&g))
         }
-        Shape::Hatch { ring, holes, boundary, .. } => {
+        Shape::Hatch {
+            ring,
+            holes,
+            boundary,
+            ..
+        } => {
             // The display ring is tessellated. Measurement follows the stored analytic boundary.
             if let Some(loops) = boundary.as_deref().filter(|loops| !loops.is_empty()) {
                 let loop_area = |l: &HatchLoop| {
-                    if let Some(area) = crate::geom::hatch_boundary::whole_curve(l).as_ref().and_then(entity_area) {
+                    if let Some(area) = crate::geom::hatch_boundary::whole_curve(l)
+                        .as_ref()
+                        .and_then(entity_area)
+                    {
                         return area.abs();
                     }
                     let (pts, bulges, _) = crate::geom::hatch_boundary::chorded(l);
@@ -2256,8 +2356,15 @@ pub fn entity_area(e: &Shape) -> Option<f64> {
                 };
                 return Some(loop_area(&loops[0]) - loops[1..].iter().map(loop_area).sum::<f64>());
             }
-            Some(signed_area(ring).abs() - holes.iter().flatten().map(|h| signed_area(h).abs()).sum::<f64>())
-        },
+            Some(
+                signed_area(ring).abs()
+                    - holes
+                        .iter()
+                        .flatten()
+                        .map(|h| signed_area(h).abs())
+                        .sum::<f64>(),
+            )
+        }
         _ => None,
     }
 }

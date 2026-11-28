@@ -67,8 +67,13 @@ impl View {
     /// show (docs/adr/8119). A key the new input lacks is dropped.
     pub fn carried(&self, input: Input) -> View {
         let mut next = View::new(input);
-        let index: std::collections::HashMap<&str, usize> =
-            next.input.objects.iter().enumerate().map(|(i, o)| (o.key.as_str(), i)).collect();
+        let index: std::collections::HashMap<&str, usize> = next
+            .input
+            .objects
+            .iter()
+            .enumerate()
+            .map(|(i, o)| (o.key.as_str(), i))
+            .collect();
         let moved = |set: &BTreeSet<usize>| -> BTreeSet<usize> {
             set.iter()
                 .filter_map(|&i| self.input.objects.get(i))
@@ -78,7 +83,10 @@ impl View {
         let hidden = moved(&self.hidden);
         let isolated = self.isolated.as_ref().map(&moved).filter(|s| !s.is_empty());
         let found = moved(&self.found);
-        let selected = self.selected.and_then(|i| self.input.objects.get(i)).and_then(|o| index.get(o.key.as_str()).copied());
+        let selected = self
+            .selected
+            .and_then(|i| self.input.objects.get(i))
+            .and_then(|o| index.get(o.key.as_str()).copied());
         next.hidden = hidden;
         next.isolated = isolated;
         next.found = found;
@@ -101,14 +109,26 @@ impl View {
     /// The tree's roots: objects with no parent (a parent out of range counts as none).
     pub fn roots(&self) -> Vec<usize> {
         let n = self.input.objects.len();
-        (0..n).filter(|&i| self.input.objects[i].parent.is_none_or(|p| p >= n || p == i)).collect()
+        (0..n)
+            .filter(|&i| {
+                self.input.objects[i]
+                    .parent
+                    .is_none_or(|p| p >= n || p == i)
+            })
+            .collect()
     }
 
     /// `object` and its ancestors, nearest first, at most as many as there are objects.
     fn line(&self, object: usize) -> impl Iterator<Item = usize> + '_ {
         let n = self.input.objects.len();
-        std::iter::successors(Some(object), move |&i| self.input.objects.get(i).and_then(|o| o.parent).filter(|&p| p < n))
-            .take(n.max(1))
+        std::iter::successors(Some(object), move |&i| {
+            self.input
+                .objects
+                .get(i)
+                .and_then(|o| o.parent)
+                .filter(|&p| p < n)
+        })
+        .take(n.max(1))
     }
 
     pub fn selected(&self) -> Option<usize> {
@@ -143,7 +163,9 @@ impl View {
     /// Whether `object` shows: neither it nor an ancestor hidden, it or an ancestor among the isolated when the view is
     /// isolated, a space only while the spaces show and an opening only while the openings do.
     pub fn shows(&self, object: usize) -> bool {
-        let Some(o) = self.input.objects.get(object) else { return false };
+        let Some(o) = self.input.objects.get(object) else {
+            return false;
+        };
         if (o.category == Category::Space && !self.spaces)
             || (o.category == Category::Opening && !self.openings)
             || (o.category == Category::Zone && !self.zones)
@@ -162,7 +184,8 @@ impl View {
     /// Whether an isolated object is below `object` (a storey shows while one of its walls is isolated, so the tree
     /// can reach it).
     fn below(&self, object: usize, only: &BTreeSet<usize>) -> bool {
-        only.iter().any(|&i| i != object && self.line(i).skip(1).any(|a| a == object))
+        only.iter()
+            .any(|&i| i != object && self.line(i).skip(1).any(|a| a == object))
     }
 
     /// Hides `objects` (and what is under them).
@@ -183,7 +206,12 @@ impl View {
     /// The box of the bodies of `object` and of what is under it, whether they show or not; empty when none has one.
     pub fn bounds_under(&self, object: usize) -> Aabb {
         let mut out = Aabb::EMPTY;
-        for b in self.input.bodies.iter().filter(|b| self.line(b.object).any(|a| a == object)) {
+        for b in self
+            .input
+            .bodies
+            .iter()
+            .filter(|b| self.line(b.object).any(|a| a == object))
+        {
             for p in b.positions.iter() {
                 for k in 0..3 {
                     out.min[k] = out.min[k].min(p[k]);
@@ -211,9 +239,17 @@ impl View {
     fn part_of(&self, object: usize) -> Part {
         let space = self.input.objects[object].category.is_volume();
         if self.found.contains(&object) {
-            if space { parts::FOUND_SPACE } else { parts::FOUND }
+            if space {
+                parts::FOUND_SPACE
+            } else {
+                parts::FOUND
+            }
         } else if self.selected == Some(object) {
-            if space { parts::SELECTED_SPACE } else { parts::SELECTED }
+            if space {
+                parts::SELECTED_SPACE
+            } else {
+                parts::SELECTED
+            }
         } else if self.input.is_apart(object) {
             parts::UNDERLAY
         } else {
@@ -256,15 +292,28 @@ impl View {
     /// bodies, not bodies of their own), nor the zones' (an area's volume over its rooms', docs/adr/8123).
     pub fn counts(&self) -> (usize, usize) {
         let bodies = || {
-            self.input.bodies.iter().filter(|b| !matches!(self.input.objects[b.object].category, Category::Opening | Category::Zone))
+            self.input.bodies.iter().filter(|b| {
+                !matches!(
+                    self.input.objects[b.object].category,
+                    Category::Opening | Category::Zone
+                )
+            })
         };
-        (bodies().filter(|b| self.shows(b.object)).count(), bodies().count())
+        (
+            bodies().filter(|b| self.shows(b.object)).count(),
+            bodies().count(),
+        )
     }
 
     /// The legend: the parts the scene shows, in the parts' order.
     pub fn legend(&self) -> Vec<(&'static str, [f32; 4])> {
-        let used: BTreeSet<Part> =
-            self.input.bodies.iter().filter(|b| self.shows(b.object)).map(|b| self.part_of(b.object)).collect();
+        let used: BTreeSet<Part> = self
+            .input
+            .bodies
+            .iter()
+            .filter(|b| self.shows(b.object))
+            .map(|b| self.part_of(b.object))
+            .collect();
         used.into_iter().map(|p| PARTS[p as usize]).collect()
     }
 
@@ -289,7 +338,14 @@ pub(crate) mod tests {
             parent,
             storey: None,
         };
-        let cube = |at: f64| Arc::new(vec![[at, 0.0, 0.0], [at + 1.0, 0.0, 0.0], [at, 1.0, 0.0], [at, 0.0, 1.0]]);
+        let cube = |at: f64| {
+            Arc::new(vec![
+                [at, 0.0, 0.0],
+                [at + 1.0, 0.0, 0.0],
+                [at, 1.0, 0.0],
+                [at, 0.0, 1.0],
+            ])
+        };
         let tri = vec![[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]];
         Input {
             title: "küçük".into(),
@@ -301,9 +357,21 @@ pub(crate) mod tests {
                 object("oda", Category::Space, Some(1)),
             ],
             bodies: vec![
-                BodyIn { object: 2, positions: cube(0.0), triangles: tri.clone() },
-                BodyIn { object: 3, positions: cube(5.0), triangles: tri.clone() },
-                BodyIn { object: 4, positions: cube(10.0), triangles: tri },
+                BodyIn {
+                    object: 2,
+                    positions: cube(0.0),
+                    triangles: tri.clone(),
+                },
+                BodyIn {
+                    object: 3,
+                    positions: cube(5.0),
+                    triangles: tri.clone(),
+                },
+                BodyIn {
+                    object: 4,
+                    positions: cube(10.0),
+                    triangles: tri,
+                },
             ],
             not_shown: Vec::new(),
             apart: None,
@@ -330,11 +398,19 @@ pub(crate) mod tests {
         v.unhide(2);
         assert!(v.shows(2));
         assert_eq!(v.ancestors(2), [1, 0]);
-        assert_eq!(v.bounds_under(1).max[0], 11.0, "the storey's box holds its walls and its space");
+        assert_eq!(
+            v.bounds_under(1).max[0],
+            11.0,
+            "the storey's box holds its walls and its space"
+        );
         assert_eq!(v.bounds_under(3).min[0], 5.0);
         v.spaces = false;
         assert_eq!(v.counts(), (2, 3));
-        assert_eq!(v.bounds().max[0], 6.0, "the spaces off, the box is the walls'");
+        assert_eq!(
+            v.bounds().max[0],
+            6.0,
+            "the spaces off, the box is the walls'"
+        );
     }
 
     #[test]
@@ -343,7 +419,10 @@ pub(crate) mod tests {
         v.select(Some(2));
         v.set_found([4]);
         let parts: Vec<(usize, Part)> = v.sources().iter().map(|s| (s.object, s.part)).collect();
-        assert_eq!(parts, [(2, parts::SELECTED), (3, 0), (4, parts::FOUND_SPACE)]);
+        assert_eq!(
+            parts,
+            [(2, parts::SELECTED), (3, 0), (4, parts::FOUND_SPACE)]
+        );
         assert!(v.sources()[2].through);
         let names: Vec<&str> = v.legend().iter().map(|l| l.0).collect();
         assert_eq!(names, ["Duvar", "Seçili", "Bulgulu mahal"]);
@@ -368,12 +447,23 @@ pub(crate) mod tests {
         for b in &mut again.bodies {
             b.object -= 1;
         }
-        again.objects.push(ObjectIn { key: "duvar-3".into(), class: "Wall".into(), label: "duvar-3".into(), category: Category::Wall, parent: Some(1), storey: None });
+        again.objects.push(ObjectIn {
+            key: "duvar-3".into(),
+            class: "Wall".into(),
+            label: "duvar-3".into(),
+            category: Category::Wall,
+            parent: Some(1),
+            storey: None,
+        });
         let next = v.carried(again);
         assert_eq!(next.find("duvar-2"), Some(2));
         assert!(next.is_hidden(2), "duvar-2 still hidden at its new place");
         assert_eq!(next.selected(), None, "the chosen wall is gone");
-        assert_eq!(next.found().iter().copied().collect::<Vec<_>>(), [3], "the room found at its new place");
+        assert_eq!(
+            next.found().iter().copied().collect::<Vec<_>>(),
+            [3],
+            "the room found at its new place"
+        );
         assert!(!next.spaces);
     }
 
@@ -389,7 +479,11 @@ pub(crate) mod tests {
         assert_eq!(input.apart, Some(5));
         let v = View::new(input);
         assert_eq!(v.roots(), [0, 5]);
-        assert_eq!(v.find("duvar-1"), Some(2), "the drawing's own key is the drawing's");
+        assert_eq!(
+            v.find("duvar-1"),
+            Some(2),
+            "the drawing's own key is the drawing's"
+        );
         let parts: Vec<(usize, Part)> = v.sources().iter().map(|s| (s.object, s.part)).collect();
         assert_eq!(parts[0], (2, 0), "the drawing's wall its class's colour");
         assert_eq!(parts[3], (7, parts::UNDERLAY), "the underlay's wall violet");

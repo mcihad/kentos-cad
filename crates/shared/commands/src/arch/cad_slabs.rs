@@ -221,20 +221,36 @@ pub struct SlabChange {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "elevation")))]
     pub offset: Option<f64>,
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub level: Option<Option<String>>,
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<ArchPhase>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<ArchPhase>"))]
     pub phase: Option<Option<ArchPhase>>,
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub material: Option<Option<String>>,
     /// Its edge's kind and width; null: no edge.
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<NewSlabEdge>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<NewSlabEdge>"))]
     pub edge: Option<Option<NewSlabEdge>>,
@@ -246,12 +262,20 @@ pub struct SlabChange {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub layers: Option<crate::SlabLayers>,
     /// A covering's type and name (docs/adr/8070 §10); null: a slab again.
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::Covering>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::Covering>"))]
     pub covering: Option<Option<crate::Covering>>,
     /// Its slope arrow (docs/adr/8071 §6); null: level again.
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::SlabSlope>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::SlabSlope>"))]
     pub slope: Option<Option<crate::SlabSlope>>,

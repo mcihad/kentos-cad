@@ -156,9 +156,14 @@ fn pattern_record(
             }
             Some(Complex::Text(t)) => {
                 let place = &t.place;
-                out.int(74, 2 | i64::from(place.absolute) | (i64::from(place.upright) << 3));
+                out.int(
+                    74,
+                    2 | i64::from(place.absolute) | (i64::from(place.upright) << 3),
+                );
                 out.int(75, 0);
-                let style = styles.iter().find(|s| s.name.eq_ignore_ascii_case(&t.style));
+                let style = styles
+                    .iter()
+                    .find(|s| s.name.eq_ignore_ascii_case(&t.style));
                 if let Some(style) = style {
                     references.push((
                         out.forward_handle(340),
@@ -171,7 +176,14 @@ fn pattern_record(
                     }
                 }
                 let fixed = style.is_some_and(|s| s.height.is_some_and(|h| h > 0.));
-                out.real(46, if fixed { place.scale } else { length(place.scale) });
+                out.real(
+                    46,
+                    if fixed {
+                        place.scale
+                    } else {
+                        length(place.scale)
+                    },
+                );
                 out.real(50, place.rotation);
                 out.real(44, length(place.x));
                 out.real(45, length(place.y));

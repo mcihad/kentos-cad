@@ -180,7 +180,10 @@ impl MapDialogKind {
 
 /// The module's window `kind` as the shell's.
 pub(crate) fn dialog(kind: MapDialogKind) -> Dialog {
-    Dialog::Module(ModuleDialog { module: Module::Map, kind: kind.number() })
+    Dialog::Module(ModuleDialog {
+        module: Module::Map,
+        kind: kind.number(),
+    })
 }
 
 impl From<Event> for Message {
@@ -198,11 +201,13 @@ pub(crate) trait MapState {
 impl MapState for ModuleStates {
     fn map(&self) -> &MapUiState {
         // Every program with the module's parts starts its state (ModuleStates::start).
-        self.get::<MapUiState>().expect("Harita modülünün durumu başlatılmamış")
+        self.get::<MapUiState>()
+            .expect("Harita modülünün durumu başlatılmamış")
     }
 
     fn map_mut(&mut self) -> &mut MapUiState {
-        self.get_mut::<MapUiState>().expect("Harita modülünün durumu başlatılmamış")
+        self.get_mut::<MapUiState>()
+            .expect("Harita modülünün durumu başlatılmamış")
     }
 }
 

@@ -62,7 +62,8 @@ pub struct State {
 const STYLES_TABLE: &str = kentos_geopackage::styles::STYLES_TABLE;
 
 /// How the file's other tables are kept (docs/adr/9178, 9191).
-pub(crate) const KEEP_TABLES: &str = "Öbür tabloları korumak için “Yalnız bu tabloları yeniden yaz”ı seçin.";
+pub(crate) const KEEP_TABLES: &str =
+    "Öbür tabloları korumak için “Yalnız bu tabloları yeniden yaz”ı seçin.";
 
 /// The ways a file that is there is written, as the confirmation offers them (docs/adr/9191): the way, its name, what
 /// it does, the button that does it.
@@ -139,7 +140,11 @@ pub(crate) mod words_of {
     pub fn taken(relations: usize) -> String {
         format!(
             "Dosyaya giden: her katman bir tablo (alanları türleriyle), katmanın stili{}.",
-            if relations == 0 { String::new() } else { format!(" ve iki ucu da yazılan {relations} ilişki") }
+            if relations == 0 {
+                String::new()
+            } else {
+                format!(" ve iki ucu da yazılan {relations} ilişki")
+            }
         )
     }
 }
@@ -147,8 +152,12 @@ pub(crate) mod words_of {
 impl App {
     /// The objects and layers a scope writes.
     fn gpkg_reach(&self, scope: Scope) -> Reach {
-        let mut reach =
-            Reach { objects: 0, layers: BTreeSet::new(), per_layer: Default::default(), left: Default::default() };
+        let mut reach = Reach {
+            objects: 0,
+            layers: BTreeSet::new(),
+            per_layer: Default::default(),
+            left: Default::default(),
+        };
         let Some(doc) = &self.document else {
             return reach;
         };
@@ -163,11 +172,18 @@ impl App {
             }
             reach.objects += 1;
             reach.layers.insert(e.base().layer_id.clone());
-            *reach.per_layer.entry(e.base().layer_id.clone()).or_default() += 1;
+            *reach
+                .per_layer
+                .entry(e.base().layer_id.clone())
+                .or_default() += 1;
         };
         match scope {
             Scope::Selection => {
-                self.selection.ids().iter().filter_map(|s| doc.get(*s)).for_each(&mut take);
+                self.selection
+                    .ids()
+                    .iter()
+                    .filter_map(|s| doc.get(*s))
+                    .for_each(&mut take);
                 // A data layer's rows chosen in its table, by their keys.
                 if let (Some(c), Some(layer)) = (&copy, self.gis.features.data.selected_layer()) {
                     let keys = &self.gis.features.data.selected;
@@ -178,7 +194,9 @@ impl App {
                         .for_each(&mut take);
                 }
             }
-            Scope::Active => doc.by_layer_with_uids(doc.layers().active()).for_each(|(_, e)| take(e)),
+            Scope::Active => doc
+                .by_layer_with_uids(doc.layers().active())
+                .for_each(|(_, e)| take(e)),
             Scope::All => doc.entities().for_each(&mut take),
         }
         reach
@@ -199,7 +217,11 @@ impl App {
             .filter(|n| {
                 matches!(
                     n.geometry,
-                    Some(kentos_commands::LayerGeometry::Point | kentos_commands::LayerGeometry::Line | kentos_commands::LayerGeometry::Area)
+                    Some(
+                        kentos_commands::LayerGeometry::Point
+                            | kentos_commands::LayerGeometry::Line
+                            | kentos_commands::LayerGeometry::Area
+                    )
                 ) || !n.fields.is_empty()
             })
             .map(|n| n.id.clone())
@@ -219,7 +241,11 @@ impl App {
 
     /// File › GeoPackage dışa aktar: the window, Seçili nesneler first when something is selected.
     pub(super) fn gpkg_out_open(&mut self) -> Task<Message> {
-        let scope = if self.selection.ids().is_empty() { Scope::All } else { Scope::Selection };
+        let scope = if self.selection.ids().is_empty() {
+            Scope::All
+        } else {
+            Scope::Selection
+        };
         self.open_window(Window::GpkgOut(State {
             scope,
             empty: true,
@@ -271,12 +297,24 @@ impl App {
             Event::Picked(None) => Task::none(),
             // A file that is there: how to write it and what that does, asked first (docs/adr/9168, 9191).
             Event::Picked(Some(path)) if path.exists() => {
-                let read = kentos_geopackage::GeoPackage::open(&path, false).ok().and_then(|gp| {
-                    let side = gp.side_tables().unwrap_or_default();
-                    let layers = gp.layers().ok()?;
-                    let rows = layers.iter().map(|t| (t.name.clone(), gp.count(t).unwrap_or(0))).collect();
-                    Some((layers.into_iter().map(|t| t.name).filter(|n| !side.contains(n)).collect(), rows))
-                });
+                let read = kentos_geopackage::GeoPackage::open(&path, false)
+                    .ok()
+                    .and_then(|gp| {
+                        let side = gp.side_tables().unwrap_or_default();
+                        let layers = gp.layers().ok()?;
+                        let rows = layers
+                            .iter()
+                            .map(|t| (t.name.clone(), gp.count(t).unwrap_or(0)))
+                            .collect();
+                        Some((
+                            layers
+                                .into_iter()
+                                .map(|t| t.name)
+                                .filter(|n| !side.contains(n))
+                                .collect(),
+                            rows,
+                        ))
+                    });
                 let (tables, rows) = match read {
                     Some((tables, rows)) => (Some(tables), rows),
                     None => (None, Default::default()),
@@ -297,7 +335,9 @@ impl App {
             }
             Event::Confirm => {
                 let asked = match &self.exchange {
-                    Some(Window::GpkgOut(s)) if s.running.is_none() => s.confirm.as_ref().map(|c| (c.path.clone(), s.write)),
+                    Some(Window::GpkgOut(s)) if s.running.is_none() => {
+                        s.confirm.as_ref().map(|c| (c.path.clone(), s.write))
+                    }
                     _ => None,
                 };
                 match asked {
@@ -346,8 +386,13 @@ impl App {
             Scope::All => (Vec::new(), Vec::new()),
             Scope::Active => (vec![model.layers().active().to_owned()], Vec::new()),
             Scope::Selection => {
-                let mut uids: Vec<String> =
-                    self.selection.ids().iter().filter_map(|s| model.uid(*s)).map(|u| u.to_string()).collect();
+                let mut uids: Vec<String> = self
+                    .selection
+                    .ids()
+                    .iter()
+                    .filter_map(|s| model.uid(*s))
+                    .map(|u| u.to_string())
+                    .collect();
                 // A data layer's rows chosen in its table, as the copy names them (docs/adr/9344).
                 if let (Some(c), Some(layer)) = (&copy, self.gis.features.data.selected_layer()) {
                     let keys: Vec<i64> = self.gis.features.data.selected.iter().copied().collect();
@@ -390,18 +435,32 @@ impl App {
     /// What writing a file that is there the way chosen does (docs/adr/9168, 9191): its tables that go, those written
     /// again or added to, the new ones, those that stay, and what goes in.
     pub(crate) fn gpkg_out_confirm_lines(&self, s: &State, c: &Confirm) -> Vec<(bool, String)> {
-        let file = c.path.file_name().map_or_else(|| c.path.display().to_string(), |n| n.to_string_lossy().into_owned());
+        let file = c.path.file_name().map_or_else(
+            || c.path.display().to_string(),
+            |n| n.to_string_lossy().into_owned(),
+        );
         let names = self.gpkg_out_names(s);
         if s.write != GpkgWrite::File {
             return self.gpkg_out_keep_lines(s.write, &file, &names, c);
         }
-        let mut lines = vec![(true, format!("“{file}” zaten var; Üstüne yaz dosyanın yerine yenisini yazar."))];
+        let mut lines = vec![(
+            true,
+            format!("“{file}” zaten var; Üstüne yaz dosyanın yerine yenisini yazar."),
+        )];
         match &c.tables {
-            None => lines.push((true, "Dosya GeoPackage olarak okunamadı; içindekiler yerine yazılan dosyayla gider.".to_owned())),
+            None => lines.push((
+                true,
+                "Dosya GeoPackage olarak okunamadı; içindekiler yerine yazılan dosyayla gider."
+                    .to_owned(),
+            )),
             Some(tables) => {
                 // The layers' styles go in their own table every time (docs/adr/9139): written again, not lost.
                 let styles = tables.iter().any(|t| t == STYLES_TABLE);
-                let tables: Vec<String> = tables.iter().filter(|t| *t != STYLES_TABLE).cloned().collect();
+                let tables: Vec<String> = tables
+                    .iter()
+                    .filter(|t| *t != STYLES_TABLE)
+                    .cloned()
+                    .collect();
                 let written = |t: &String| names.iter().any(|(n, _)| n == t);
                 let gone: Vec<&String> = tables.iter().filter(|t| !written(t)).collect();
                 let again: Vec<&String> = tables.iter().filter(|t| written(t)).collect();
@@ -411,7 +470,10 @@ impl App {
                         format!(
                             "Dosyadan silinen tablolar ({}): {}.",
                             gone.len(),
-                            gone.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(", ")
+                            gone.iter()
+                                .map(|t| t.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", ")
                         ),
                     ));
                     // The way to keep them (docs/adr/9191).
@@ -422,17 +484,27 @@ impl App {
                         false,
                         format!(
                             "Yeniden yazılan tablolar: {}.",
-                            again.iter().map(|t| t.as_str()).collect::<Vec<_>>().join(", ")
+                            again
+                                .iter()
+                                .map(|t| t.as_str())
+                                .collect::<Vec<_>>()
+                                .join(", ")
                         ),
                     ));
                 }
-                let new: Vec<&str> =
-                    names.iter().filter(|(n, _)| !tables.contains(n)).map(|(n, _)| n.as_str()).collect();
+                let new: Vec<&str> = names
+                    .iter()
+                    .filter(|(n, _)| !tables.contains(n))
+                    .map(|(n, _)| n.as_str())
+                    .collect();
                 if !new.is_empty() {
                     lines.push((false, format!("Yeni tablolar: {}.", new.join(", "))));
                 }
                 if styles {
-                    lines.push((false, format!("Katmanların stilleri ({STYLES_TABLE}) yeniden yazılır.")));
+                    lines.push((
+                        false,
+                        format!("Katmanların stilleri ({STYLES_TABLE}) yeniden yazılır."),
+                    ));
                 }
             }
         }
@@ -440,7 +512,11 @@ impl App {
             false,
             format!(
                 "Yazılan: {}.",
-                names.iter().map(|(n, k)| format!("{n} ({k} nesne)")).collect::<Vec<_>>().join(", ")
+                names
+                    .iter()
+                    .map(|(n, k)| format!("{n} ({k} nesne)"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ),
         ));
         lines
@@ -448,12 +524,22 @@ impl App {
 
     /// What only these tables written again, or the rows added, does to a file that is there (docs/adr/9191): which of
     /// its tables are written again or added to (with the rows each has), which are new, which stay as they are.
-    fn gpkg_out_keep_lines(&self, way: GpkgWrite, file: &str, names: &[(String, usize)], c: &Confirm) -> Vec<(bool, String)> {
+    fn gpkg_out_keep_lines(
+        &self,
+        way: GpkgWrite,
+        file: &str,
+        names: &[(String, usize)],
+        c: &Confirm,
+    ) -> Vec<(bool, String)> {
         let mut lines = vec![(
             false,
             match way {
-                GpkgWrite::Append => format!("“{file}” zaten var; Ekle satırları dosyanın aynı adlı tablolarına ekler."),
-                _ => format!("“{file}” zaten var; yalnız bu dışa aktarmanın tabloları yeniden yazılır, öbürleri kalır."),
+                GpkgWrite::Append => format!(
+                    "“{file}” zaten var; Ekle satırları dosyanın aynı adlı tablolarına ekler."
+                ),
+                _ => format!(
+                    "“{file}” zaten var; yalnız bu dışa aktarmanın tabloları yeniden yazılır, öbürleri kalır."
+                ),
             },
         )];
         let Some(tables) = &c.tables else {
@@ -468,8 +554,11 @@ impl App {
             .iter()
             .filter_map(|(n, k)| tables.iter().find(|t| same(t, n)).map(|t| (t, *k)))
             .collect();
-        let new: Vec<&str> =
-            names.iter().filter(|(n, _)| !tables.iter().any(|t| same(t, n))).map(|(n, _)| n.as_str()).collect();
+        let new: Vec<&str> = names
+            .iter()
+            .filter(|(n, _)| !tables.iter().any(|t| same(t, n)))
+            .map(|(n, _)| n.as_str())
+            .collect();
         let stay: Vec<&str> = tables
             .iter()
             .filter(|t| !names.iter().any(|(n, _)| same(t, n)) && t.as_str() != STYLES_TABLE)
@@ -483,7 +572,10 @@ impl App {
                     GpkgWrite::Append => format!(
                         "Satır eklenen tablolar: {}.",
                         met.iter()
-                            .map(|(t, k)| format!("{t} (dosyada {} satır, en çok {k} eklenir)", rows(t)))
+                            .map(|(t, k)| format!(
+                                "{t} (dosyada {} satır, en çok {k} eklenir)",
+                                rows(t)
+                            ))
                             .collect::<Vec<_>>()
                             .join(", ")
                     ),
@@ -501,7 +593,14 @@ impl App {
             lines.push((false, format!("Yeni tablolar: {}.", new.join(", "))));
         }
         if !stay.is_empty() {
-            lines.push((false, format!("Olduğu gibi kalan tablolar ({}): {}.", stay.len(), stay.join(", "))));
+            lines.push((
+                false,
+                format!(
+                    "Olduğu gibi kalan tablolar ({}): {}.",
+                    stay.len(),
+                    stay.join(", ")
+                ),
+            ));
         }
         if way == GpkgWrite::Append {
             lines.push((
@@ -544,17 +643,35 @@ impl App {
             .filter(|r| reach.layers.contains(&r.parent) && reach.layers.contains(&r.child))
             .count();
         let mut lines = std::mem::take(&mut first);
-        lines.push((false, format!("{} nesne, {} katman yazılır: {}.", reach.objects, reach.layers.len(), names.join(", "))));
+        lines.push((
+            false,
+            format!(
+                "{} nesne, {} katman yazılır: {}.",
+                reach.objects,
+                reach.layers.len(),
+                names.join(", ")
+            ),
+        ));
         // Layers of one name each get a table of their own (docs/adr/9344): the tables named before they are written.
         let renamed = gpkg_table_names(layers, &reach.layers);
         if !renamed.is_empty() {
-            lines.push((false, format!("Aynı adlı katmanların tabloları: {}.", renamed.join(", "))));
+            lines.push((
+                false,
+                format!("Aynı adlı katmanların tabloları: {}.", renamed.join(", ")),
+            ));
         }
         lines.push((false, words_of::taken(relations)));
         // The objects of the scope a table has no geometry for: how many of each kind stay out.
         if !reach.left.is_empty() {
-            let kinds: Vec<String> = reach.left.iter().map(|(word, n)| format!("{n} {word}")).collect();
-            lines.push((true, format!("Geometrisi olmadığı için yazılmayan: {}.", kinds.join(", "))));
+            let kinds: Vec<String> = reach
+                .left
+                .iter()
+                .map(|(word, n)| format!("{n} {word}"))
+                .collect();
+            lines.push((
+                true,
+                format!("Geometrisi olmadığı için yazılmayan: {}.", kinds.join(", ")),
+            ));
         }
         lines.push((false, words_of::LEFT.to_owned()));
         lines.push((false, words_of::COPY.to_owned()));
@@ -564,7 +681,10 @@ impl App {
     /// The summary's lines for the scope chosen (a test's question).
     #[cfg(test)]
     pub(crate) fn gpkg_out_summary(&self, scope: Scope) -> Vec<String> {
-        self.gpkg_out_lines(&self.gpkg_reach(scope)).into_iter().map(|(_, t)| t).collect()
+        self.gpkg_out_lines(&self.gpkg_reach(scope))
+            .into_iter()
+            .map(|(_, t)| t)
+            .collect()
     }
 
     pub(super) fn gpkg_out_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
@@ -573,14 +693,23 @@ impl App {
             let lines = self
                 .gpkg_out_confirm_lines(s, c)
                 .into_iter()
-                .map(|(warn, text)| words::text_line(if warn { Line::Warn } else { Line::Info }, text))
+                .map(|(warn, text)| {
+                    words::text_line(if warn { Line::Warn } else { Line::Info }, text)
+                })
                 .collect::<Vec<_>>();
             let running = s.running.is_some();
             let mut ways = RadioGroup::new(s.write, |w| event(Event::Write(w)));
             for (way, name, what, _) in WAYS {
-                ways = if running { ways.disabled(way, name) } else { ways.option(way, name, what) };
+                ways = if running {
+                    ways.disabled(way, name)
+                } else {
+                    ways.option(way, name, what)
+                };
             }
-            let button = WAYS.iter().find(|w| w.0 == s.write).map_or("Üstüne yaz", |w| w.3);
+            let button = WAYS
+                .iter()
+                .find(|w| w.0 == s.write)
+                .map_or("Üstüne yaz", |w| w.3);
             let body = Column::new()
                 .spacing(12)
                 .push(kentos_ui::label::body("Dosyaya nasıl yazılsın?"))
@@ -590,11 +719,17 @@ impl App {
             dialog = match &s.running {
                 Some(r) => dialog
                     .status(super::gpkg_out_run::foot(r))
-                    .action(words::secondary("Durdur", (!r.stopping).then(|| event(Event::Stop))))
+                    .action(words::secondary(
+                        "Durdur",
+                        (!r.stopping).then(|| event(Event::Stop)),
+                    ))
                     .action(words::primary(button, None)),
                 None => {
                     if let Some((error, text)) = &s.status {
-                        dialog = dialog.status(words::text_line(if *error { Line::Error } else { Line::Info }, text.clone()));
+                        dialog = dialog.status(words::text_line(
+                            if *error { Line::Error } else { Line::Info },
+                            text.clone(),
+                        ));
                     }
                     dialog
                         .action(words::secondary("Geri", Some(event(Event::Back))))
@@ -602,7 +737,10 @@ impl App {
                 }
             };
             return overlay::blocking(
-                dialog.width(680.0).max_height(720.0).on_close((!running).then(|| event(Event::Back))),
+                dialog
+                    .width(680.0)
+                    .max_height(720.0)
+                    .on_close((!running).then(|| event(Event::Back))),
             );
         }
         let counted = |scope| Counted(scope, self.gpkg_reach(scope).objects);
@@ -639,7 +777,8 @@ impl App {
         if s.scope == Scope::All && s.empty {
             reach.layers.extend(self.gpkg_template_ids());
         }
-        let lines = self.gpkg_out_lines(&reach)
+        let lines = self
+            .gpkg_out_lines(&reach)
             .into_iter()
             .map(|(warn, text)| words::text_line(if warn { Line::Warn } else { Line::Info }, text))
             .collect::<Vec<_>>();
@@ -647,21 +786,35 @@ impl App {
         if s.running.is_none()
             && let Some((error, text)) = &s.status
         {
-            body = body.push(words::text_line(if *error { Line::Error } else { Line::Info }, text.clone()));
+            body = body.push(words::text_line(
+                if *error { Line::Error } else { Line::Info },
+                text.clone(),
+            ));
         }
         let dialog = Dialog::new("GeoPackage dışa aktar").scroll(body);
         // The foot while it writes: how far, and Durdur (gpkg_out_run.rs).
         let dialog = match &s.running {
             Some(r) => dialog
                 .status(super::gpkg_out_run::foot(r))
-                .action(words::secondary("Durdur", (!r.stopping).then(|| event(Event::Stop))))
+                .action(words::secondary(
+                    "Durdur",
+                    (!r.stopping).then(|| event(Event::Stop)),
+                ))
                 .action(words::primary("Dışa aktar…", None)),
             None => dialog
                 .action(words::secondary("Vazgeç", Some(message(Exchange::Close))))
-                .action(words::primary("Dışa aktar…", (!reach.layers.is_empty()).then(|| event(Event::Save)))),
+                .action(words::primary(
+                    "Dışa aktar…",
+                    (!reach.layers.is_empty()).then(|| event(Event::Save)),
+                )),
         };
         let running = s.running.is_some();
-        overlay::blocking(dialog.width(640.0).max_height(720.0).on_close((!running).then(|| message(Exchange::Close))))
+        overlay::blocking(
+            dialog
+                .width(640.0)
+                .max_height(720.0)
+                .on_close((!running).then(|| message(Exchange::Close))),
+        )
     }
 }
 

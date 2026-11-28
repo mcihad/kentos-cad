@@ -22,13 +22,13 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
+use kentos_commands::LayerGeometry;
+use kentos_commands::encoding::base64_encode;
 use kentos_commands::identity::uuid_v5;
 use kentos_commands::{
     Entity, LayerField, LayerFieldKind, MAX_BINARY, MAX_INTEGER, binary_bytes, check_value,
     instant_moment, instant_utc,
 };
-use kentos_commands::LayerGeometry;
-use kentos_commands::encoding::base64_encode;
 use kentos_domain::{Document, Uuid};
 use kentos_geopackage as gpkg;
 use kentos_geopackage::{ColumnKind, Coord, Curve, DataType, GeoPackage, Geometry, Query, Value};
@@ -51,7 +51,10 @@ pub fn database_row_uid(database: &str, table: &str, key: i64) -> Uuid {
 /// A data layer's row's lasting id while the drawing does not hold it (docs/adr/9124): of the layer's source address,
 /// its table and the row's key, the same in every check.
 pub fn data_row_uid(address: &str, table: &str, key: i64) -> Uuid {
-    Uuid::from_bytes(uuid_v5(&NAMESPACE, format!("veri:{address}/{table}:{key}").as_bytes()))
+    Uuid::from_bytes(uuid_v5(
+        &NAMESPACE,
+        format!("veri:{address}/{table}:{key}").as_bytes(),
+    ))
 }
 
 /// A row's lasting id when the file keeps none.
@@ -96,11 +99,10 @@ pub fn layer_geometry_of(declared: &str) -> Option<kentos_commands::LayerGeometr
     let t = t.trim_end_matches(['Z', 'M', ' ']);
     match t {
         "POINT" | "MULTIPOINT" => Some(G::Point),
-        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "CURVE" | "MULTICURVE" => {
-            Some(G::Line)
-        }
-        "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "SURFACE" | "MULTISURFACE" | "TRIANGLE" | "TIN"
-        | "POLYHEDRALSURFACE" => Some(G::Area),
+        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "CURVE"
+        | "MULTICURVE" => Some(G::Line),
+        "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "SURFACE" | "MULTISURFACE" | "TRIANGLE"
+        | "TIN" | "POLYHEDRALSURFACE" => Some(G::Area),
         _ => None,
     }
 }
@@ -518,7 +520,10 @@ pub(crate) fn field_hints(
 
 /// KentOS's document of the kinds of a table's columns its types do not say (docs/adr/0629 §4); none when every field
 /// is of a kind a GeoPackage says itself.
-pub(crate) fn field_document(fields: &[LayerField], columns: &[(String, String)]) -> Option<String> {
+pub(crate) fn field_document(
+    fields: &[LayerField],
+    columns: &[(String, String)],
+) -> Option<String> {
     let kinds: serde_json::Map<String, J> = fields
         .iter()
         .filter(|f| f.kind.is_wide())
@@ -1536,7 +1541,9 @@ pub(crate) fn cell(text: Option<&String>, kind: &ColumnKind) -> Value {
         ColumnKind::DateTime if t.len() == 19 => Value::Text(format!("{t}Z")),
         // A time stamp in UTC: the same moment (docs/adr/0629 §4), its fraction in milliseconds as the GeoPackage
         // standard writes them (finer digits in threes).
-        ColumnKind::DateTime => Value::Text(instant_utc(t).map_or_else(|| t.clone(), |u| in_thousandths(&u))),
+        ColumnKind::DateTime => {
+            Value::Text(instant_utc(t).map_or_else(|| t.clone(), |u| in_thousandths(&u)))
+        }
         ColumnKind::Blob(_) => binary_bytes(t).map_or_else(|| Value::Text(t.clone()), Value::Blob),
         _ => Value::Text(t.clone()),
     }
@@ -1740,7 +1747,12 @@ impl TextTable {
     /// Row `i`'s cell `j` as written: its plain value in a typed column (a whole number that does not fit, or a text
     /// where a number should be, written as nothing would lose it: such a column is text), else its shown text.
     fn cell(&self, i: usize, j: usize) -> Value {
-        let shown = || self.rows.get(i).and_then(|r| r.get(j)).map_or(Value::Null, |c| Value::Text(c.clone()));
+        let shown = || {
+            self.rows
+                .get(i)
+                .and_then(|r| r.get(j))
+                .map_or(Value::Null, |c| Value::Text(c.clone()))
+        };
         let plain = self.values.get(i).and_then(|r| r.get(j));
         match (self.kind(j), plain) {
             (CellKind::Text, _) | (_, None) => shown(),
@@ -1845,7 +1857,10 @@ fn write_indexes(
             continue;
         };
         let column = p.columns[i].name.clone();
-        let said = node.indexes.iter().any(|x| x.unique && x.fields.len() == 1 && x.fields[0] == f.key());
+        let said = node
+            .indexes
+            .iter()
+            .any(|x| x.unique && x.fields.len() == 1 && x.fields[0] == f.key());
         if said {
             continue;
         }
@@ -1956,7 +1971,10 @@ pub fn write_with_tables(
                 session.continue_table(&a.have, a.columns.clone())?,
                 &a.columns,
                 &a.keys,
-                a.have.geometry.as_ref().map(|g| g.type_name.to_ascii_uppercase()),
+                a.have
+                    .geometry
+                    .as_ref()
+                    .map(|g| g.type_name.to_ascii_uppercase()),
             ),
             None => {
                 let def = gpkg::TableDef {
@@ -1977,7 +1995,12 @@ pub fn write_with_tables(
                     }),
                     columns: p.columns.clone(),
                 };
-                (session.start_table(&def)?, &p.columns, &p.keys, p.type_name.clone())
+                (
+                    session.start_table(&def)?,
+                    &p.columns,
+                    &p.keys,
+                    p.type_name.clone(),
+                )
             }
         };
         let mut rows: Vec<gpkg::NewRow> = Vec::with_capacity(batch.min(p.rows as usize));
@@ -1988,7 +2011,10 @@ pub fn write_with_tables(
             uids.clear();
             for (uid, e) in objects.by_ref() {
                 // An object the table has already (its lasting id) is not added again.
-                if p.append.as_ref().is_some_and(|a| a.uids.contains(&uid.to_string())) {
+                if p.append
+                    .as_ref()
+                    .is_some_and(|a| a.uids.contains(&uid.to_string()))
+                {
                     continue;
                 }
                 let geometry = match row_of(e) {
@@ -2032,22 +2058,38 @@ pub fn write_with_tables(
         };
         let geometry = p.append.as_ref().map_or_else(
             || p.type_name.clone().map(|t| (t, p.z, p.m)),
-            |a| a.have.geometry.as_ref().map(|g| (g.type_name.clone(), g.z, g.m)),
+            |a| {
+                a.have
+                    .geometry
+                    .as_ref()
+                    .map(|g| (g.type_name.clone(), g.z, g.m))
+            },
         );
         out.tables.push(TableWritten {
-            table: p.append.as_ref().map_or_else(|| p.table.clone(), |a| a.have.name.clone()),
+            table: p
+                .append
+                .as_ref()
+                .map_or_else(|| p.table.clone(), |a| a.have.name.clone()),
             layer: Some(p.layer.clone()),
             output: None,
             rows: p.rows,
             z: geometry.as_ref().map_or(0, |g| g.1),
             m: geometry.as_ref().map_or(0, |g| g.2),
             geometry: geometry.map(|g| g.0),
-            columns: keys.iter().zip(columns).map(|(k, c)| (k.clone(), c.name.clone())).collect(),
+            columns: keys
+                .iter()
+                .zip(columns)
+                .map(|(k, c)| (k.clone(), c.name.clone()))
+                .collect(),
             replaced: p.replaces,
             indexes,
             appended: p.append.is_some(),
             already: p.already,
-            left_out: p.append.as_ref().map(|a| a.left_out.clone()).unwrap_or_default(),
+            left_out: p
+                .append
+                .as_ref()
+                .map(|a| a.left_out.clone())
+                .unwrap_or_default(),
         });
     }
     for (p, t) in text_plans.iter().zip(tables) {
@@ -2173,8 +2215,10 @@ fn plan(
         // fill (a field team's empty template, docs/adr/1076): an empty table of its type with its columns.
         let template = rows == 0
             && !layers.is_empty()
-            && (matches!(node.geometry, Some(LayerGeometry::Point | LayerGeometry::Line | LayerGeometry::Area))
-                || !node.fields.is_empty());
+            && (matches!(
+                node.geometry,
+                Some(LayerGeometry::Point | LayerGeometry::Line | LayerGeometry::Area)
+            ) || !node.fields.is_empty());
         if rows == 0 && !template {
             continue;
         }
@@ -2788,9 +2832,18 @@ mod tests {
             .as_deref(),
             Some("2024-03-01T10:20:30.5+03:00")
         );
-        assert_eq!(in_thousandths("2024-03-01T07:20:30.5Z"), "2024-03-01T07:20:30.500Z");
-        assert_eq!(in_thousandths("2024-03-01T07:20:30.1234Z"), "2024-03-01T07:20:30.123400Z");
-        assert_eq!(in_thousandths("2024-03-01T07:20:30Z"), "2024-03-01T07:20:30Z");
+        assert_eq!(
+            in_thousandths("2024-03-01T07:20:30.5Z"),
+            "2024-03-01T07:20:30.500Z"
+        );
+        assert_eq!(
+            in_thousandths("2024-03-01T07:20:30.1234Z"),
+            "2024-03-01T07:20:30.123400Z"
+        );
+        assert_eq!(
+            in_thousandths("2024-03-01T07:20:30Z"),
+            "2024-03-01T07:20:30Z"
+        );
         // No offset in a time stamp column: UTC's.
         assert_eq!(
             value_text(

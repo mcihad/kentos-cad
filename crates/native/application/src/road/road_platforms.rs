@@ -2,7 +2,9 @@
 //! surface (`kentos_road::grading`): the slope lines and their side, the daylight ring, the open lines, the areas, and
 //! cut and fill against the terrain. Nothing graded is kept: every read computes again.
 
-use kentos_commands::{CommandWarning, PlatformDef, PlatformListed, PlatformReport, PlatformSide, PlatformSlopeLine};
+use kentos_commands::{
+    CommandWarning, PlatformDef, PlatformListed, PlatformReport, PlatformSide, PlatformSlopeLine,
+};
 use kentos_domain::Document;
 use kentos_road::grading::{self, Graded, Platform, Side};
 use kentos_road::surface::Surface;
@@ -25,17 +27,35 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
 }
 
 /// The pad of `name`: by its id, else by its name (case aside).
-pub(crate) fn find<'a>(list: &'a [PlatformDef], name: &str, path: &str) -> Result<(usize, &'a PlatformDef), Stop> {
+pub(crate) fn find<'a>(
+    list: &'a [PlatformDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a PlatformDef), Stop> {
     list.iter()
         .position(|c| c.id == name)
-        .or_else(|| list.iter().position(|c| c.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .position(|c| c.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|i| (i, &list[i]))
-        .ok_or_else(|| fail(codes::UNKNOWN_PLATFORM, format!("“{name}” kimlikli ya da adlı platform projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_PLATFORM,
+                format!("“{name}” kimlikli ya da adlı platform projede yok."),
+                path,
+            )
+        })
 }
 
 pub(crate) fn listed(list: &[PlatformDef]) -> Vec<PlatformListed> {
     list.iter()
-        .map(|p| PlatformListed { id: p.id.clone(), name: p.name.clone(), surface: p.surface.clone(), revision: p.revision })
+        .map(|p| PlatformListed {
+            id: p.id.clone(),
+            name: p.name.clone(),
+            surface: p.surface.clone(),
+            revision: p.revision,
+        })
         .collect()
 }
 
@@ -56,11 +76,27 @@ pub(crate) fn platform_of(def: &PlatformDef) -> Platform {
 
 /// The terrain a pad is graded to, built now.
 pub(crate) fn terrain_of(doc: &Document, def: &PlatformDef) -> Result<Surface, Stop> {
-    let Some(s) = doc.settings().road.as_ref().and_then(|r| r.surfaces.iter().find(|s| s.id == def.surface)) else {
-        return Err(fail(codes::INVALID_PLATFORM, format!("“{}” platformunun arazi yüzeyi projede yok.", def.name), "surface"));
+    let Some(s) = doc
+        .settings()
+        .road
+        .as_ref()
+        .and_then(|r| r.surfaces.iter().find(|s| s.id == def.surface))
+    else {
+        return Err(fail(
+            codes::INVALID_PLATFORM,
+            format!("“{}” platformunun arazi yüzeyi projede yok.", def.name),
+            "surface",
+        ));
     };
     crate::road_terrains::make(doc, s).surface.map_err(|p| {
-        fail(codes::INVALID_PLATFORM, format!("“{}” platformunun yüzeyi “{}” kurulamıyor: {}", def.name, s.name, p.message), "surface")
+        fail(
+            codes::INVALID_PLATFORM,
+            format!(
+                "“{}” platformunun yüzeyi “{}” kurulamıyor: {}",
+                def.name, s.name, p.message
+            ),
+            "surface",
+        )
     })
 }
 
@@ -86,7 +122,11 @@ pub(crate) fn report_of(def: &PlatformDef, g: &Graded) -> PlatformReport {
             at_corner: l.at_corner,
         })
         .collect();
-    let daylight = if g.open == 0 { g.lines.iter().filter_map(|l| l.daylight).collect() } else { Vec::new() };
+    let daylight = if g.open == 0 {
+        g.lines.iter().filter_map(|l| l.daylight).collect()
+    } else {
+        Vec::new()
+    };
     PlatformReport {
         id: def.id.clone(),
         name: def.name.clone(),
@@ -126,13 +166,24 @@ pub(crate) fn read(doc: &Document, def: &PlatformDef) -> Result<Read, Stop> {
 /// [`read`] telling `tick` how far it has come (docs/adr/4860): its terrain built (one step), then the grading, a
 /// corner's slope lines at a time, its design surface and its volumes (`grading::grade_told`); `tick` answering true
 /// stops it there, cancelled.
-pub(crate) fn read_told(doc: &Document, def: &PlatformDef, tick: &dyn Fn(u64, u64) -> bool) -> Result<Read, Stop> {
+pub(crate) fn read_told(
+    doc: &Document,
+    def: &PlatformDef,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Result<Read, Stop> {
     let terrain = terrain_of(doc, def)?;
     let g = grading::grade_told(&platform_of(def), &terrain, 0.0, tick).map_err(|e| match e {
         grading::GradingError::Stopped => Stop::Cancelled,
-        e => fail(codes::INVALID_PLATFORM, format!("“{}” platformu tesviye edilemiyor: {e}", def.name), "corners"),
+        e => fail(
+            codes::INVALID_PLATFORM,
+            format!("“{}” platformu tesviye edilemiyor: {e}", def.name),
+            "corners",
+        ),
     })?;
-    Ok(Read { warnings: open_warning(def, &g).into_iter().collect(), report: report_of(def, &g) })
+    Ok(Read {
+        warnings: open_warning(def, &g).into_iter().collect(),
+        report: report_of(def, &g),
+    })
 }
 
 /// A pad that does not read, in a list: its names and nothing graded.

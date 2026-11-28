@@ -98,7 +98,8 @@ impl Planned {
             .iter()
             .map(|l| json!({ "uid": l.id, "what": l.what, "why": why(l.why) }))
             .collect();
-        facts["export"] = json!({ "left": left, "crsWhy": b.crs_why, "northWhy": b.north_why, "memory": memory });
+        facts["export"] =
+            json!({ "left": left, "crsWhy": b.crs_why, "northWhy": b.north_why, "memory": memory });
         // The emsal table the file's zones are held to (docs/adr/8125; EK-9/10): each zone's storey (by its GlobalId),
         // state and the table's area of its rooms, from the drawing now.
         facts["emsal"] = b

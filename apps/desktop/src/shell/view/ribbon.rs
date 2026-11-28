@@ -104,11 +104,17 @@ impl App {
             let layer = self
                 .document
                 .as_ref()
-                .and_then(|d| d.model.layers().get(d.model.layers().active()).map(|n| n.name.clone()))
+                .and_then(|d| {
+                    d.model
+                        .layers()
+                        .get(d.model.layers().active())
+                        .map(|n| n.name.clone())
+                })
                 .unwrap_or_default();
             ribbon = ribbon.contextual_tab(
                 tab.label,
-                typography::elide(&layer, typography::caption(), typography::scaled(120.0)).into_owned(),
+                typography::elide(&layer, typography::caption(), typography::scaled(120.0))
+                    .into_owned(),
                 tab.id == shown,
                 Message::RibbonTab(tab.id),
             );
@@ -166,7 +172,11 @@ impl App {
             )
         });
         // The rows the data layers' sources do not have yet, beside the name (docs/adr/9123): the project's dot is not theirs.
-        let waiting: usize = self.data_waiting().iter().map(crate::data_pending::Waiting::rows).sum();
+        let waiting: usize = self
+            .data_waiting()
+            .iter()
+            .map(crate::data_pending::Waiting::rows)
+            .sum();
         // Built now, as the ribbon's elements own what they show.
         let help = catalog()
             .menu("help")
@@ -275,11 +285,7 @@ impl App {
     /// A panel of the web's ribbon: its buttons, which the ribbon shrinks to
     /// the window (large → small → icons → one button, DESIGN.md §7.3.1), its
     /// seldom used tools under the title's ▾ and its launcher (↘).
-    pub fn ribbon_group(
-        &self,
-        tab: &str,
-        panel: &RibbonPanel,
-    ) -> Option<Group<'static, Message>> {
+    pub fn ribbon_group(&self, tab: &str, panel: &RibbonPanel) -> Option<Group<'static, Message>> {
         use crate::ribbon_keys::{TipKey, folded_id, more_id};
         // A contextual panel for objects of a role (docs/adr/2480): only when every selected object has it.
         if !self.roles_hold(panel.roles) {
@@ -511,7 +517,9 @@ impl App {
                     label = top.label.trim_end_matches('…').to_owned();
                     aria = label.clone();
                 }
-                let current = active_entry.then(|| entries.iter().position(|e| std::ptr::eq(e, top))).flatten();
+                let current = active_entry
+                    .then(|| entries.iter().position(|e| std::ptr::eq(e, top)))
+                    .flatten();
                 // A method with its own drawing shows it (Ölçülendirme's kinds); else the command's.
                 let icon = icon.map_or(command.icon, |name| crate::icons::from_web(Some(name)));
                 // As wide as the face it shows (the owner's rule of 24 November 2026): reserving the family's longest
@@ -631,7 +639,11 @@ pub(crate) fn block_heads(
     let titled: Vec<(&'static str, usize)> = blocks
         .iter()
         .filter(|(title, _)| !title.is_empty())
-        .filter_map(|(title, items)| ids.iter().position(|id| items.contains(id)).map(|at| (*title, at)))
+        .filter_map(|(title, items)| {
+            ids.iter()
+                .position(|id| items.contains(id))
+                .map(|at| (*title, at))
+        })
         .collect();
     if titled.len() > 1 {
         for (title, at) in titled {

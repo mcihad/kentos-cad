@@ -403,7 +403,12 @@ impl Form {
     /// (docs/adr/0047), so Uygula waits until it is unlocked or left out.
     pub(super) fn locked_in_reach(&self, model: &Model, selection: &[Slot]) -> Vec<String> {
         let layers = model.layers();
-        self.reach(model, selection).0.into_iter().map(|(id, _)| id).filter(|id| layers.is_locked(id)).collect()
+        self.reach(model, selection)
+            .0
+            .into_iter()
+            .map(|(id, _)| id)
+            .filter(|id| layers.is_locked(id))
+            .collect()
     }
 
     /// The target points' layer Tümü leaves where it is (GIS-038): with control points, the layer they are fitted to,
@@ -676,5 +681,9 @@ fn movable_layer(model: &Model) -> Option<String> {
     if movable(&active) {
         return Some(active);
     }
-    layers.leaves().into_iter().map(|l| l.id.clone()).find(|id| movable(id))
+    layers
+        .leaves()
+        .into_iter()
+        .map(|l| l.id.clone())
+        .find(|id| movable(id))
 }

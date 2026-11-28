@@ -48,10 +48,9 @@ use kentos_contracts::{
     DrawingUnit, FieldChoice, FieldColumn, GeoidModel, HeightKind, HeightReference, LayerField,
     LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle,
     LengthStyle, LineType, MAX_ANNOTATION_MM, MigrationSource, PointStyle, PointSymbol, ProjectId,
-    ProjectSettings, ProjectStyles, SurveySettings, TopologyDecision, TopologyException, TopologyProfile,
-    TopologyRule, TopologyScope,
-    TopologyRuleKind, TopologySettings, Vec2, Workspace, annotation_mm_holds, layer_fields_problem,
-    layer_states_problem,
+    ProjectSettings, ProjectStyles, SurveySettings, TopologyDecision, TopologyException,
+    TopologyProfile, TopologyRule, TopologyRuleKind, TopologyScope, TopologySettings, Vec2,
+    Workspace, annotation_mm_holds, layer_fields_problem, layer_states_problem,
 };
 
 use crate::SCHEMAS;
@@ -277,7 +276,9 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
                      KentOS'u güncelleyip yeniden açın."
                 )
             } else {
-                format!("Belge şeması sürümü {v} bu uygulamada okunamıyor: bu bir KentOS sürümünün yazdığı şema değil.")
+                format!(
+                    "Belge şeması sürümü {v} bu uygulamada okunamıyor: bu bir KentOS sürümünün yazdığı şema değil."
+                )
             },
         )
     };
@@ -334,7 +335,12 @@ fn root(r: &mut Reader<'_>) -> Result<DocumentSnapshotV2, KcadError> {
 
 /// The document; `schema` is its payload's (2, 3 with objects' line weights,
 /// 4 with vertex elevations too, 5 with areas' parts, 6 with blocks).
-fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<DocumentSnapshotV2, KcadError> {
+fn body(
+    r: &mut Reader<'_>,
+    schema: u32,
+    gis: u16,
+    arch: u16,
+) -> Result<DocumentSnapshotV2, KcadError> {
     let mut has = Features::of(schema);
     has.gis = gis;
     let body_at = r.position();
@@ -358,7 +364,7 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<Document
     map(r, |r, key| {
         match key {
             "name" => name = Some(text(r)?),
-            "arrays" if has.arrays => arrays_ = Some(arrays::arrays(r,schema)?),
+            "arrays" if has.arrays => arrays_ = Some(arrays::arrays(r, schema)?),
             "blocks" if has.blocks => blocks = Some(blocks::definitions(r, has)?),
             "layers" => layers = Some(list(r, |r, _| layer(r, has))?),
             "origin" => origin = Some(point(r)?),
@@ -423,7 +429,10 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<Document
         return Err(r.fail(Code::BadValue, &error));
     }
     if schema < crate::SCHEMA_WITH_SHX_FONTS
-        && styles.items.iter().any(kentos_contracts::shape_resource::is_font_form)
+        && styles
+            .items
+            .iter()
+            .any(kentos_contracts::shape_resource::is_font_form)
     {
         return Err(r.fail(
             Code::BadValue,
@@ -489,34 +498,74 @@ fn body(r: &mut Reader<'_>, schema: u32, gis: u16, arch: u16) -> Result<Document
         ));
     }
     if arch < crate::ARCH_WITH_FOOTINGS && crate::uses_footings(&doc) {
-        return Err(r.fail_at(Code::UnknownField, body_at, "temel (tekil ve sürekli) mimari veri sürümü 40 gerektirir"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "temel (tekil ve sürekli) mimari veri sürümü 40 gerektirir",
+        ));
     }
     if arch < crate::ARCH_WITH_RAFTS && crate::uses_rafts(&doc) {
-        return Err(r.fail_at(Code::UnknownField, body_at, "radye mimari veri sürümü 41 gerektirir"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "radye mimari veri sürümü 41 gerektirir",
+        ));
     }
     if arch < crate::ARCH_WITH_MASSES && crate::uses_masses(&doc) {
-        return Err(r.fail_at(Code::UnknownField, body_at, "kütle mimari veri sürümü 45 gerektirir"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "kütle mimari veri sürümü 45 gerektirir",
+        ));
     }
     if arch < crate::ARCH_WITH_COLOR_PLAN && crate::uses_color_plan(&doc) {
-        return Err(r.fail_at(Code::UnknownField, body_at, "mahal renk planı mimari veri sürümü 44 gerektirir"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "mahal renk planı mimari veri sürümü 44 gerektirir",
+        ));
     }
     if arch < crate::ARCH_WITH_GROUND && crate::uses_ground(&doc) {
-        return Err(r.fail_at(Code::UnknownField, body_at, "vaziyetin tabii ve tesviye zemini mimari veri sürümü 43 gerektirir"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "vaziyetin tabii ve tesviye zemini mimari veri sürümü 43 gerektirir",
+        ));
     }
     if arch < crate::ARCH_WITH_PROFILES && crate::uses_profiles(&doc) {
-        return Err(r.fail_at(Code::UnknownField, body_at, "duvar profili (silme, harpuşta) mimari veri sürümü 42 gerektirir"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "duvar profili (silme, harpuşta) mimari veri sürümü 42 gerektirir",
+        ));
     }
     if arch < crate::ARCH_WITH_CASEWORK_PLACEMENT && crate::uses_casework_placement(&doc) {
-        return Err(r.fail_at(Code::UnknownField, body_at, "mutfak dizisinin kat ve dolgu yerleşimi mimari veri sürümü 39 gerektirir"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "mutfak dizisinin kat ve dolgu yerleşimi mimari veri sürümü 39 gerektirir",
+        ));
     }
     if arch < crate::ARCH_WITH_ELECTRIC_APPLIANCES && crate::uses_electric_appliances(&doc) {
-        return Err(r.fail_at(Code::UnknownField, body_at, "elektrikli cihaz kartı mimari veri sürümü 38 gerektirir"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "elektrikli cihaz kartı mimari veri sürümü 38 gerektirir",
+        ));
     }
     if arch < crate::ARCH_WITH_CEILING_RECIPE && crate::uses_ceiling_recipe(&doc) {
-        return Err(r.fail_at(Code::UnknownField, body_at, "yansıtılmış tavan planı mimari veri sürümü 37'den önce yok"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "yansıtılmış tavan planı mimari veri sürümü 37'den önce yok",
+        ));
     }
     if arch < crate::ARCH_WITH_SLAB_EDGE_BINDINGS && crate::uses_slab_edge_bindings(&doc) {
-        return Err(r.fail_at(Code::UnknownField, body_at, "tekil döşeme kenar bağları mimari veri sürümü 36'dan önce yok"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            body_at,
+            "tekil döşeme kenar bağları mimari veri sürümü 36'dan önce yok",
+        ));
     }
     if arch < crate::ARCH_WITH_BUILDING_PLAN_NOTES && crate::uses_building_plan_notes(&doc) {
         return Err(r.fail_at(
@@ -871,11 +920,14 @@ fn constraints(
             "boş kısıt kümesi yazılmaz; kısıt yoksa alan hiç yazılmaz",
         ));
     }
-    if !arcs && set.constraints.iter().any(|c| {
-        c.rule.elements().iter().any(|r| {
-            matches!(r.element, kentos_contracts::CadElement::ArcEdge { .. })
+    if !arcs
+        && set.constraints.iter().any(|c| {
+            c.rule
+                .elements()
+                .iter()
+                .any(|r| matches!(r.element, kentos_contracts::CadElement::ArcEdge { .. }))
         })
-    }) {
+    {
         return Err(r.fail_at(Code::BadValue, at, "yaylı kenar kısıtları şema 157 ister"));
     }
     // Schema 244 (docs/adr/8049 §3): a column's side only from it on.
@@ -1173,7 +1225,11 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 let list: Vec<kentos_contracts::ProjectStandardDocument> =
                     serde_json::from_value(value).map_err(|e| {
                         let words = e.to_string();
-                        let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
                         r.fail_at(code, at, &format!("standart belgeleri okunamadı: {words}"))
                     })?;
                 if list.is_empty() {
@@ -1188,11 +1244,16 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "tableStyles" if has.table_styles => {
                 let at = r.position();
                 let value = r.opaque()?;
-                let list: Vec<kentos_contracts::TableStyleDef> = serde_json::from_value(value).map_err(|e| {
-                    let words = e.to_string();
-                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
-                    r.fail_at(code, at, &format!("tablo stilleri okunamadı: {words}"))
-                })?;
+                let list: Vec<kentos_contracts::TableStyleDef> = serde_json::from_value(value)
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("tablo stilleri okunamadı: {words}"))
+                    })?;
                 if list.is_empty() {
                     return Err(r.fail_at(Code::BadValue, at, "boş tablo stili listesi yazılmaz"));
                 }
@@ -1206,13 +1267,26 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "standardExceptions" if has.standard_exceptions => {
                 let at = r.position();
                 let value = r.opaque()?;
-                let list: Vec<kentos_contracts::StandardException> = serde_json::from_value(value).map_err(|e| {
-                    let words = e.to_string();
-                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
-                    r.fail_at(code, at, &format!("kabul edilmiş standart bulguları okunamadı: {words}"))
-                })?;
+                let list: Vec<kentos_contracts::StandardException> = serde_json::from_value(value)
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(
+                            code,
+                            at,
+                            &format!("kabul edilmiş standart bulguları okunamadı: {words}"),
+                        )
+                    })?;
                 if list.is_empty() {
-                    return Err(r.fail_at(Code::BadValue, at, "boş kabul edilmiş bulgu listesi yazılmaz"));
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş kabul edilmiş bulgu listesi yazılmaz",
+                    ));
                 }
                 if let Some(problem) = kentos_contracts::standard_exceptions_problem(&list) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
@@ -1225,11 +1299,23 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 let list: Vec<kentos_contracts::ApprovedSheetTemplate> =
                     serde_json::from_value(value).map_err(|e| {
                         let words = e.to_string();
-                        let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
-                        r.fail_at(code, at, &format!("onaylı pafta şablonları okunamadı: {words}"))
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(
+                            code,
+                            at,
+                            &format!("onaylı pafta şablonları okunamadı: {words}"),
+                        )
                     })?;
                 if list.is_empty() {
-                    return Err(r.fail_at(Code::BadValue, at, "boş onaylı pafta şablonu listesi yazılmaz"));
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş onaylı pafta şablonu listesi yazılmaz",
+                    ));
                 }
                 if let Some(problem) = kentos_contracts::approved_sheet_templates_problem(&list) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
@@ -1240,17 +1326,30 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "reviewNotes" if has.review_notes => {
                 let at = r.position();
                 let value = r.opaque()?;
-                let list: Vec<kentos_contracts::ReviewNote> = serde_json::from_value(value).map_err(|e| {
-                    let words = e.to_string();
-                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
-                    r.fail_at(code, at, &format!("inceleme notları okunamadı: {words}"))
-                })?;
+                let list: Vec<kentos_contracts::ReviewNote> = serde_json::from_value(value)
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("inceleme notları okunamadı: {words}"))
+                    })?;
                 if list.is_empty() {
-                    return Err(r.fail_at(Code::BadValue, at, "boş inceleme notu listesi yazılmaz"));
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş inceleme notu listesi yazılmaz",
+                    ));
                 }
                 // Schema 215 (docs/adr/4140): a note's decision.
                 if !has.review_decisions && kentos_contracts::review_notes_have_decisions(&list) {
-                    return Err(r.fail_at(Code::UnknownField, at, "inceleme notunda decision (şema 215'ten önce yok)"));
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "inceleme notunda decision (şema 215'ten önce yok)",
+                    ));
                 }
                 if let Some(problem) = kentos_contracts::review_notes_problem(&list) {
                     return Err(r.fail_at(Code::BadValue, at, &problem));
@@ -1279,7 +1378,9 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 }
                 // Before schema 181 (docs/adr/1001 §1) a pattern held at most a LIN file's 12 elements.
                 if !has.long_patterns
-                    && let Some(t) = types.iter().find(|t| t.elements.len() > kentos_contracts::MAX_PATTERN_ELEMENTS)
+                    && let Some(t) = types
+                        .iter()
+                        .find(|t| t.elements.len() > kentos_contracts::MAX_PATTERN_ELEMENTS)
                 {
                     return Err(r.fail_at(
                         Code::BadValue,
@@ -1406,7 +1507,11 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 layer_states = layer_states_list(r, has.labels, has.frozen, has.patterns)?
             }
             "topology" if has.topology => {
-                topology = Some(topology_settings(r, has.exception_digests, has.topology_reviews)?)
+                topology = Some(topology_settings(
+                    r,
+                    has.exception_digests,
+                    has.topology_reviews,
+                )?)
             }
             "annotation" if has.annotation => annotation = Some(annotation_heights(r)?),
             "connections" if has.services => connections = services::connections(r)?,
@@ -1451,8 +1556,15 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             "namedViews" if has.views => {
                 let at = r.position();
-                named_views =
-                    views::named_views(r, has.viewmarks, has.view_recipes, has.recipe_detail, has.view_templates, has.options, has.option_combos)?;
+                named_views = views::named_views(
+                    r,
+                    has.viewmarks,
+                    has.view_recipes,
+                    has.recipe_detail,
+                    has.view_templates,
+                    has.options,
+                    has.option_combos,
+                )?;
                 // Schema 231 (docs/adr/8039 §5): a recipe's Tadilat projesi view.
                 if !has.renovation_view
                     && named_views.iter().any(|v| {
@@ -1481,7 +1593,11 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     objects::json_part(r, "kılavuz stilleri")?;
                 // Schema 187 (docs/adr/1025): a leader style's text style.
                 if !has.leader_text_styles && l.iter().any(|s| s.text_style.is_some()) {
-                    return Err(r.fail_at(Code::UnknownField, at, "kılavuz stilinin yazı stili belge şeması 187 gerektirir"));
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "kılavuz stilinin yazı stili belge şeması 187 gerektirir",
+                    ));
                 }
                 if let Some((field, words)) =
                     l.iter().find_map(kentos_contracts::LeaderStyleDef::problem)
@@ -1491,8 +1607,12 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                 leader_styles = l;
             }
             "dimensionStyles" if has.styles => {
-                dimension_styles =
-                    styles::dimension_styles(r, has.annotation, has.dimension_options, has.dimension_text_styles)?
+                dimension_styles = styles::dimension_styles(
+                    r,
+                    has.annotation,
+                    has.dimension_options,
+                    has.dimension_text_styles,
+                )?
             }
             // `srid` and `customCrs` come first in the encoded order: the project's own system is known.
             "secondSrid" if has.second_srid => {
@@ -1595,19 +1715,44 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             v.surfaces_only()
         };
         // A zero line's drawing (docs/adr/1720) is schema 198's, in any project.
-        if !has.map_drawings && v.drawings.iter().any(|d| d.command == "road.terrains.zeroline") {
-            return Err(relation("road", "sıfır hattı çizimi şema 198'den önce yazılmaz (road.terrains.zeroline)", r));
+        if !has.map_drawings
+            && v.drawings
+                .iter()
+                .any(|d| d.command == "road.terrains.zeroline")
+        {
+            return Err(relation(
+                "road",
+                "sıfır hattı çizimi şema 198'den önce yazılmaz (road.terrains.zeroline)",
+                r,
+            ));
         }
         // Cut and fill zones' drawing (docs/adr/1840) is schema 205's, in any project.
-        if !has.cutfill_drawings && v.drawings.iter().any(|d| d.command == "road.terrains.cutfill") {
-            return Err(relation("road", "kazı ve dolgu bölgeleri çizimi şema 205'ten önce yazılmaz (road.terrains.cutfill)", r));
+        if !has.cutfill_drawings
+            && v.drawings
+                .iter()
+                .any(|d| d.command == "road.terrains.cutfill")
+        {
+            return Err(relation(
+                "road",
+                "kazı ve dolgu bölgeleri çizimi şema 205'ten önce yazılmaz (road.terrains.cutfill)",
+                r,
+            ));
         }
         // A pipe run profile's drawing and a network as a drawing's source (docs/adr/3560) are schema 212's, in any
         // project.
         if !has.pipe_profile_drawings
-            && v.drawings.iter().any(|d| d.command == "cad.pipes.profile" || d.sources.iter().any(|s| s.kind == kentos_contracts::RoadSourceKind::Network))
+            && v.drawings.iter().any(|d| {
+                d.command == "cad.pipes.profile"
+                    || d.sources
+                        .iter()
+                        .any(|s| s.kind == kentos_contracts::RoadSourceKind::Network)
+            })
         {
-            return Err(relation("road", "hat profili çizimi ve ağ kaynağı şema 212'den önce yazılmaz (cad.pipes.profile)", r));
+            return Err(relation(
+                "road",
+                "hat profili çizimi ve ağ kaynağı şema 212'den önce yazılmaz (cad.pipes.profile)",
+                r,
+            ));
         }
         // A sheet's contour lines kept as a drawing, a layer as a drawing's source and drawing again whole
         // (docs/adr/4740) are schema 246's, in any project.
@@ -1619,8 +1764,16 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             ));
         }
         // A drawing record's version and revision (docs/adr/2840) are schema 209's.
-        if !has.drawing_provenance && v.drawings.iter().any(|d| d.version.is_some() || d.revision.is_some()) {
-            return Err(relation("road", "çizim kaydının işlem sürümü ve çıktı revizyonu şema 209'dan önce yazılmaz", r));
+        if !has.drawing_provenance
+            && v.drawings
+                .iter()
+                .any(|d| d.version.is_some() || d.revision.is_some())
+        {
+            return Err(relation(
+                "road",
+                "çizim kaydının işlem sürümü ve çıktı revizyonu şema 209'dan önce yazılmaz",
+                r,
+            ));
         }
         if cad_work != Some(CadWork::Road) && !(map && fits) {
             return Err(relation(
@@ -1636,10 +1789,18 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     }
     // A map's work structure is a map project's (docs/adr/1200 §2).
     if map_survey.is_some() && cad_work != Some(CadWork::Map) {
-        return Err(relation("mapSurvey", "GNSS arşivi yalnız harita projesinin olur (cadWork map)", r));
+        return Err(relation(
+            "mapSurvey",
+            "GNSS arşivi yalnız harita projesinin olur (cadWork map)",
+            r,
+        ));
     }
     if map_work.is_some() && cad_work != Some(CadWork::Map) {
-        return Err(relation("mapWork", "harita işi yalnız harita projesinin olur (cadWork map)", r));
+        return Err(relation(
+            "mapWork",
+            "harita işi yalnız harita projesinin olur (cadWork map)",
+            r,
+        ));
     }
     Ok(ProjectSettings {
         road,

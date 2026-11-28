@@ -7,7 +7,14 @@
 /// The form's table header: Tablo 9.1's columns and KentOS's note beside them. A drawing's table with this header is the
 /// form (Mimari › Metraj ▾ › Model kalite kontrol formu places it, Ruhsat takımı writes its answers again); the
 /// package's `BASLIK` is the same.
-pub const FORM_HEADER: [&str; 6] = ["No", "Kategori / Disiplin", "Kontrol Başlığı", "Açıklama", "Evet / Hayır", "Not"];
+pub const FORM_HEADER: [&str; 6] = [
+    "No",
+    "Kategori / Disiplin",
+    "Kontrol Başlığı",
+    "Açıklama",
+    "Evet / Hayır",
+    "Not",
+];
 
 /// Whether a table's first row is the form's header.
 pub fn is_form(header: &[String]) -> bool {
@@ -21,8 +28,12 @@ mod tests {
     /// The package writes the header this crate knows the form by.
     #[test]
     fn the_package_s_header_is_the_form_s() {
-        let package = include_str!("../../../../catalog/standards/dijital-proje/src/dijital_proje/form.py");
-        let line = package.lines().find(|l| l.starts_with("BASLIK = [")).expect("the package's header");
+        let package =
+            include_str!("../../../../catalog/standards/dijital-proje/src/dijital_proje/form.py");
+        let line = package
+            .lines()
+            .find(|l| l.starts_with("BASLIK = ["))
+            .expect("the package's header");
         let words: Vec<String> = FORM_HEADER.iter().map(|h| format!("\"{h}\"")).collect();
         assert_eq!(line, format!("BASLIK = [{}]", words.join(", ")));
         assert!(is_form(&FORM_HEADER.map(str::to_owned)));

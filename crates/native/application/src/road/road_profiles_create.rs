@@ -21,7 +21,8 @@ struct Checked {
 
 fn check(doc: &kentos_domain::Document, input: &ProfilesCreate) -> Result<Checked, Stop> {
     common::road_project(doc)?;
-    let (_, alignment) = alignments::find(alignments::alignments(doc), &input.alignment, "alignment")?;
+    let (_, alignment) =
+        alignments::find(alignments::alignments(doc), &input.alignment, "alignment")?;
     let surface = match input.surface.as_deref().filter(|s| !s.is_empty()) {
         Some(s) => Some(common::surface_id(doc, s, "surface")?),
         None => None,
@@ -70,7 +71,12 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesCreate) -> CommandResult<
         Err(stop) => return stop.into(),
     };
     let mut copy = cx.doc.reading_copy();
-    let mut planned = common::write(&mut ExecutionContext::new(&mut copy), c.list, STEP, Some(&c.id));
+    let mut planned = common::write(
+        &mut ExecutionContext::new(&mut copy),
+        c.list,
+        STEP,
+        Some(&c.id),
+    );
     if let CommandResult::Completed { output, .. } = &mut planned {
         output.revision = cx.doc.revision().to_string();
     }
@@ -78,7 +84,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesCreate) -> CommandResult<
 }
 
 /// Writes the profile: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ProfilesCreate) -> CommandResult<ProfilesWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProfilesCreate,
+) -> CommandResult<ProfilesWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_PROFILES_CREATE,
@@ -88,7 +97,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ProfilesCreate) -> CommandR
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: ProfilesCreate) -> CommandResult<ProfilesWritten> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProfilesCreate,
+) -> CommandResult<ProfilesWritten> {
     match check(cx.doc, &input) {
         Ok(c) => common::write(cx, c.list, STEP, Some(&c.id)),
         Err(stop) => stop.into(),

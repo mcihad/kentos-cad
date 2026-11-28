@@ -226,7 +226,12 @@ pub fn block_library_version<'a>(blocks: impl IntoIterator<Item = &'a BlockDefin
         } else {
             BLOCKS_VERSION
         };
-        let element = match b.card.as_ref().and_then(|c| c.element.as_ref()).map(|e| e.class) {
+        let element = match b
+            .card
+            .as_ref()
+            .and_then(|c| c.element.as_ref())
+            .map(|e| e.class)
+        {
             Some(crate::entity::BlockElementClass::ElectricAppliance) => BLOCKS_APPLIANCE_VERSION,
             Some(_) => BLOCKS_ELEMENT_VERSION,
             None => BLOCKS_VERSION,
@@ -387,8 +392,14 @@ pub struct BlocksEdit {
         with = "crate::cad_properties::nullable",
         skip_serializing_if = "Option::is_none"
     )]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::entity::BlockElement>>", optional))]
-    #[cfg_attr(feature = "schema", schemars(with = "Option<crate::entity::BlockElement>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Option<crate::entity::BlockElement>>", optional)
+    )]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "Option<crate::entity::BlockElement>")
+    )]
     pub element: Option<Option<crate::entity::BlockElement>>,
     /// `dynamic`: the parameters and actions (absent: none, a plain block).
     #[serde(default, skip_serializing_if = "Option::is_none")]

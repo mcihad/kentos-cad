@@ -415,17 +415,17 @@ impl App {
             body = body.push(words::text_line(Kind::Warn, why.clone()));
         }
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                words::ghost(REMOVE, at.map(|_| msg(Event::Remove))),
-                space::horizontal().width(Fill),
-                words::secondary(CANCEL, Some(msg(Event::Cancel))),
-                words::primary(SAVE, problem.is_none().then(|| msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(Center);
+        let footer = row![
+            words::ghost(REMOVE, at.map(|_| msg(Event::Remove))),
+            space::horizontal().width(Fill),
+            words::secondary(CANCEL, Some(msg(Event::Cancel))),
+            words::primary(SAVE, problem.is_none().then(|| msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(Center);
         Frame::new(TITLE)
-            .scroll(body).footer(footer)
+            .scroll(body)
+            .footer(footer)
             .width(900.0)
             .modal(msg(Event::Cancel))
     }

@@ -2,8 +2,8 @@
 //! box, offers and footer; the list as rows, a table, bars or cards.
 
 use super::*;
-use kentos_native_application::forms_source::source_key;
 use crate::gis;
+use kentos_native_application::forms_source::source_key;
 
 impl App {
     /// A related item's object linked to the record (its field takes the record's id) or unlinked (its
@@ -369,17 +369,29 @@ impl App {
     /// What a new child on `child`'s `field` holds of the record `uid` on `parent` (docs/adr/9135, 9180): the code its
     /// project relation ties by when the relation has a parent key, else the record's persistent id; why not when the
     /// record's key is empty or the key names a field the parent layer lacks.
-    fn child_code(&self, parent: &str, child: &str, field: &str, uid: &str) -> Result<String, String> {
+    fn child_code(
+        &self,
+        parent: &str,
+        child: &str,
+        field: &str,
+        uid: &str,
+    ) -> Result<String, String> {
         let Some(doc) = self.document.as_ref() else {
             return Ok(uid.to_owned());
         };
         let model = &doc.model;
-        let Some(r) = model.settings().relations.iter().find(|r| r.parent == parent && r.child == child && r.field == field)
+        let Some(r) = model
+            .settings()
+            .relations
+            .iter()
+            .find(|r| r.parent == parent && r.child == child && r.field == field)
         else {
             return Ok(uid.to_owned());
         };
         let key = model.parent_key(r);
-        let entity = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| Some((u, model.get(model.slot_of(u)?)?)));
+        let entity = kentos_domain::Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| Some((u, model.get(model.slot_of(u)?)?)));
         match (entity, &key) {
             (Some((u, e)), _) => key.code_of(u, e).ok_or_else(|| match &key {
                 kentos_domain::ParentKey::Field(name) => format!(
@@ -403,12 +415,17 @@ impl App {
         let Some(e) = self.gis.form_entry.as_ref() else {
             return Task::none();
         };
-        let Some(FormItem::Related { layer, .. }) = crate::forms::designer::find(&e.body.items, item) else {
+        let Some(FormItem::Related { layer, .. }) =
+            crate::forms::designer::find(&e.body.items, item)
+        else {
             return Task::none();
         };
         let layer = layer.clone();
         let over = e.identity();
-        let update = self.related_offers(e, item).into_iter().find(|o| o.action == RelatedAction::Update);
+        let update = self
+            .related_offers(e, item)
+            .into_iter()
+            .find(|o| o.action == RelatedAction::Update);
         // A record only read keeps its children only read too; said from the child's form.
         let parent_only_read = (e.read_only || self.read_only_source(&e.screen.layer).is_some()).then(|| {
             format!("Altta bekleyen “{}” yalnız okumaya açık; ondan açılan bu kayıt da değiştirilmez.", e.name)
@@ -458,20 +475,29 @@ impl App {
         let asked = self.gis.form_row_asked;
         let settings = doc.model.settings().clone();
         crate::db_connections::off_thread(
-            move || kentos_native_application::data_write::rows_to_take(&node, &settings, &[key], &|| false),
+            move || {
+                kentos_native_application::data_write::rows_to_take(
+                    &node,
+                    &settings,
+                    &[key],
+                    &|| false,
+                )
+            },
             move |rows| {
-                Message::Gis(gis::Event::FormRow(Box::new(crate::forms::row_target::RowTaken {
-                    asked,
-                    layer,
-                    key,
-                    form,
-                    rows,
-                    shown,
-                    over: Some(over),
-                    read_why,
-                    edit: false,
-                    default: false,
-                })))
+                Message::Gis(gis::Event::FormRow(Box::new(
+                    crate::forms::row_target::RowTaken {
+                        asked,
+                        layer,
+                        key,
+                        form,
+                        rows,
+                        shown,
+                        over: Some(over),
+                        read_why,
+                        edit: false,
+                        default: false,
+                    },
+                )))
             },
         )
     }
@@ -499,9 +525,14 @@ impl App {
             col = col.push(words::text_line(Kind::Error, issue.message.clone()));
         }
         // A data layer's source that could not be read (docs/adr/9165): the drawing's objects are shown still.
-        if let Some(FormItem::Related { layer, .. }) = crate::forms::designer::find(&e.body.items, id) {
+        if let Some(FormItem::Related { layer, .. }) =
+            crate::forms::designer::find(&e.body.items, id)
+        {
             for (_, why) in e.source_rows_said.iter().filter(|(l, _)| l == layer) {
-                col = col.push(words::text_line(Kind::Warn, format!("{why} Kaynaktaki kayıtlar listelenmedi.")));
+                col = col.push(words::text_line(
+                    Kind::Warn,
+                    format!("{why} Kaynaktaki kayıtlar listelenmedi."),
+                ));
             }
         }
         if uids.is_empty() {
@@ -636,7 +667,10 @@ impl App {
                 let first = doc.and_then(|d| {
                     let node = d.model.layers().get(&child_layer)?;
                     let attrs = child_attrs(d, e, &child_layer, uid)?;
-                    node.fields.iter().find_map(|f| attrs.get(&f.name).filter(|v| !v.is_empty())).cloned()
+                    node.fields
+                        .iter()
+                        .find_map(|f| attrs.get(&f.name).filter(|v| !v.is_empty()))
+                        .cloned()
                 });
                 let words = match first {
                     Some(v) => format!("{v} · satır {key} (kaynakta)"),
@@ -918,10 +952,13 @@ pub(super) fn source_or_tools<'a>(
     if source_key(uid).is_some() {
         // Only Aç (docs/adr/9176): the row is not in the drawing to be shown, unlinked or deleted from here.
         let open: Vec<kentos_forms::Offer> = open_offer(offers).into_iter().cloned().collect();
-        return row![related_tools(e, id, uid, !e.preview, &open), label::caption("kaynakta").style(muted)]
-            .spacing(4)
-            .align_y(Center)
-            .into();
+        return row![
+            related_tools(e, id, uid, !e.preview, &open),
+            label::caption("kaynakta").style(muted)
+        ]
+        .spacing(4)
+        .align_y(Center)
+        .into();
     }
     related_tools(e, id, uid, live, offers).into()
 }
@@ -934,7 +971,12 @@ pub(super) fn child_attrs<'d>(
     uid: &str,
 ) -> Option<&'d kentos_forms::Attrs> {
     match source_key(uid) {
-        Some(key) => e.source_rows.get(layer)?.iter().find(|(k, _)| *k == key).map(|(_, a)| a),
+        Some(key) => e
+            .source_rows
+            .get(layer)?
+            .iter()
+            .find(|(k, _)| *k == key)
+            .map(|(_, a)| a),
         None => {
             let slot = d.model.slot_of(kentos_domain::Uuid::parse_str(uid).ok()?)?;
             Some(&d.model.get(slot)?.base().attrs)

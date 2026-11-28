@@ -801,7 +801,9 @@ pub fn refusal_lines(error: &kentos_commands::CommandError, f: &Format) -> Vec<S
             None => b.label.clone(),
         };
         let value = match (b.kept, b.measured) {
-            (Some(k), Some(m)) => format!(": {} tutuyor, düzenleme {} yapar", f.length(k), f.length(m)),
+            (Some(k), Some(m)) => {
+                format!(": {} tutuyor, düzenleme {} yapar", f.length(k), f.length(m))
+            }
             (Some(k), None) => format!(": {} tutuyor", f.length(k)),
             _ => String::new(),
         };
@@ -832,7 +834,10 @@ fn way(b: &kentos_commands::BondInTheWay, all: &[kentos_commands::BondInTheWay])
 
 /// The bonds in the way marked where they stand (docs/adr/0780 §1): each wall line they hold drawn thick, each jamb
 /// ringed, a dashed line between a bond's parts and its name at the middle, in the danger colour.
-pub fn bonds_in_way(bonds: &[kentos_commands::BondInTheWay], doc: &kentos_domain::Document) -> Preview {
+pub fn bonds_in_way(
+    bonds: &[kentos_commands::BondInTheWay],
+    doc: &kentos_domain::Document,
+) -> Preview {
     let mut out = Preview::default();
     for (i, b) in bonds.iter().enumerate() {
         let places: Vec<Vec2> = b
@@ -860,10 +865,14 @@ pub fn bonds_in_way(bonds: &[kentos_commands::BondInTheWay], doc: &kentos_domain
             continue;
         };
         for w in places.windows(2) {
-            out.strokes.push(Stroke::dashed(vec![w[0], w[1]], false, [5.0, 3.0]).tone(Tone::Danger));
+            out.strokes
+                .push(Stroke::dashed(vec![w[0], w[1]], false, [5.0, 3.0]).tone(Tone::Danger));
         }
         let mid = places.iter().fold(Vec2::new(0.0, 0.0), |s, p| {
-            Vec2::new(s.x + p.x / places.len() as f64, s.y + p.y / places.len() as f64)
+            Vec2::new(
+                s.x + p.x / places.len() as f64,
+                s.y + p.y / places.len() as f64,
+            )
         });
         let name = b.parameter.as_deref().unwrap_or(b.label.as_str());
         out.labels.push(Label {
@@ -1214,25 +1223,29 @@ impl Tool for WallLength {
     fn text_draft(&mut self, text: &str, cx: &mut Context<'_>) {
         let below = Vec2::new(self.at.x, self.at.y - cx.view.world_length(CARD_PX));
         let f = cx.format();
-        self.card = cx.typed_length(text).filter(|d| d.is_finite()).map(|length| {
-            let result = walls_edit::plan(&ExecutionContext::new(cx.doc), &self.request(length));
-            if let Some(refused) = crate::bond_refusal::Refused::of_result(&result, cx) {
-                return (refused.lines, below, Tone::Danger, refused.marks);
-            }
-            let lines = match result {
-                kentos_commands::CommandResult::Completed { output, .. } => output
-                    .effects
-                    .as_ref()
-                    .map_or_else(Vec::new, |e| effect_lines(e, output.joined.len(), None, &f)),
-                kentos_commands::CommandResult::Failed { error }
-                | kentos_commands::CommandResult::Conflict { error }
-                | kentos_commands::CommandResult::NeedsInput { error } => {
-                    return (vec![error.message], below, Tone::Danger, Preview::default());
+        self.card = cx
+            .typed_length(text)
+            .filter(|d| d.is_finite())
+            .map(|length| {
+                let result =
+                    walls_edit::plan(&ExecutionContext::new(cx.doc), &self.request(length));
+                if let Some(refused) = crate::bond_refusal::Refused::of_result(&result, cx) {
+                    return (refused.lines, below, Tone::Danger, refused.marks);
                 }
-                _ => Vec::new(),
-            };
-            (lines, below, Tone::Accent, Preview::default())
-        });
+                let lines = match result {
+                    kentos_commands::CommandResult::Completed { output, .. } => output
+                        .effects
+                        .as_ref()
+                        .map_or_else(Vec::new, |e| effect_lines(e, output.joined.len(), None, &f)),
+                    kentos_commands::CommandResult::Failed { error }
+                    | kentos_commands::CommandResult::Conflict { error }
+                    | kentos_commands::CommandResult::NeedsInput { error } => {
+                        return (vec![error.message], below, Tone::Danger, Preview::default());
+                    }
+                    _ => Vec::new(),
+                };
+                (lines, below, Tone::Accent, Preview::default())
+            });
     }
     fn preview(&self, _: &Format) -> Preview {
         let Some((lines, at, tone, marks)) = &self.card else {

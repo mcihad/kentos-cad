@@ -142,12 +142,12 @@ impl<'a, Message: Clone + 'a> PythonRepl<'a, Message> {
                         _ => status.label(),
                     }
                 ))
-                    .font(typography::ui())
-                    .size(typography::caption())
-                    .wrapping(advanced_text::Wrapping::None)
-                    .style(move |theme: &Theme| text::Style {
-                        color: Some(status_color(status, &Tokens::of(theme))),
-                    }),
+                .font(typography::ui())
+                .size(typography::caption())
+                .wrapping(advanced_text::Wrapping::None)
+                .style(move |theme: &Theme| text::Style {
+                    color: Some(status_color(status, &Tokens::of(theme))),
+                }),
             )
             .push(
                 button(clear.spacing(5).align_y(iced::Center))

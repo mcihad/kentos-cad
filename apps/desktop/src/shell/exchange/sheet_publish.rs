@@ -278,13 +278,21 @@ impl App {
             return Task::none();
         }
         if let Event::Go(sheet) = &e {
-            let Some(k) = self.sheets.book().sheets.iter().position(|x| x.id.as_str() == sheet.as_str()) else {
+            let Some(k) = self
+                .sheets
+                .book()
+                .sheets
+                .iter()
+                .position(|x| x.id.as_str() == sheet.as_str())
+            else {
                 self.warn("Bu bulgu tek bir paftaya ait değil; pafta setinin ayarlarına bakın.");
                 return Task::none();
             };
             self.close_exchange();
             let show = self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(k + 1)));
-            let tab = self.update(Message::Sheet(kentos_sheet_ui::Message::InspectorTab(kentos_sheet_ui::InspectorTab::Preflight)));
+            let tab = self.update(Message::Sheet(kentos_sheet_ui::Message::InspectorTab(
+                kentos_sheet_ui::InspectorTab::Preflight,
+            )));
             return Task::batch([show, tab]);
         }
         let Some(Window::SheetPublish(s)) = &mut self.exchange else {
@@ -362,7 +370,12 @@ impl App {
                 let published: Vec<String> = f
                     .sheets
                     .iter()
-                    .filter(|x| !matches!(x.state, SheetPublishState::Unpublished | SheetPublishState::Removed))
+                    .filter(|x| {
+                        !matches!(
+                            x.state,
+                            SheetPublishState::Unpublished | SheetPublishState::Removed
+                        )
+                    })
                     .map(|x| x.sheet.clone())
                     .collect();
                 for r in &mut s.rows {
@@ -370,7 +383,11 @@ impl App {
                 }
                 // The update goes into a new folder beside the delivery, which stays as it was issued.
                 let was = f.path.clone();
-                let base = format!("{}-{}", was.trim_end_matches(['/', '\\']), kentos_plot::book::today());
+                let base = format!(
+                    "{}-{}",
+                    was.trim_end_matches(['/', '\\']),
+                    kentos_plot::book::today()
+                );
                 let mut next = base.clone();
                 let mut n = 2;
                 while std::path::Path::new(&next).exists() {
@@ -449,13 +466,22 @@ impl App {
                     return Task::none();
                 }
                 if matches!(e, Event::Resume) {
-                    if !s.folder.as_ref().and_then(|f| f.stopped.as_ref()).is_some_and(|x| x.resumable) {
+                    if !s
+                        .folder
+                        .as_ref()
+                        .and_then(|f| f.stopped.as_ref())
+                        .is_some_and(|x| x.resumable)
+                    {
                         return Task::none();
                     }
                     input.mode = SheetPublishMode::Separate;
                     input.resume = true;
                     input.previous = None;
-                    input.sheets = s.folder.as_ref().and_then(|f| f.stopped.as_ref()).map(|x| x.sheets.clone());
+                    input.sheets = s
+                        .folder
+                        .as_ref()
+                        .and_then(|f| f.stopped.as_ref())
+                        .map(|x| x.sheets.clone());
                 } else if matches!(op, CallOp::Execute) {
                     let Some(report) = &s.report else {
                         return Task::none();
@@ -473,7 +499,10 @@ impl App {
                     FILE_PUBLISH_SHEETS
                 };
                 let encoded = if s.asking {
-                    serde_json::to_value(PublishStatus { path: input.path.clone(), drawing: input.drawing.clone() })
+                    serde_json::to_value(PublishStatus {
+                        path: input.path.clone(),
+                        drawing: input.drawing.clone(),
+                    })
                 } else if s.check_only {
                     serde_json::to_value(kentos_commands::PreflightSheets {
                         drawing: input.drawing.clone(),
@@ -584,7 +613,9 @@ impl App {
                                             report.issues.iter().filter(|i| i.error).count(),
                                             report.issues.iter().filter(|i| !i.error).count()
                                         )
-                                    } else if matches!(s.op, CallOp::Execute) && report.previous.is_some() {
+                                    } else if matches!(s.op, CallOp::Execute)
+                                        && report.previous.is_some()
+                                    {
                                         format!(
                                             "Teslim güncellendi: {} pafta yeniden üretildi, {} pafta önceki teslimden olduğu gibi kopyalandı: {}",
                                             report.sheets.len() - report.carried.len(),
@@ -633,7 +664,9 @@ impl App {
                             s.report = None;
                         }
                         CommandResult::Cancelled => {
-                            s.status = if s.input.mode == SheetPublishMode::Separate && s.input.resumable {
+                            s.status = if s.input.mode == SheetPublishMode::Separate
+                                && s.input.resumable
+                            {
                                 "Yayın durduruldu; teslim klasörü oluşturulmadı. Bitmiş sayfalar devam için saklandı: Durum ile görün, Devam et ile sürdürün.".into()
                             } else {
                                 "Yayın iptal edildi; kısmi teslim oluşturulmadı.".into()
@@ -818,7 +851,9 @@ impl App {
             let mut rows = column![label::caption(format!(
                 "Çizim şimdi: revizyon {} · yayının kaynağı: {}",
                 f.current.revision,
-                f.published.as_ref().map_or("—".to_owned(), |p| format!("revizyon {}", p.revision))
+                f.published
+                    .as_ref()
+                    .map_or("—".to_owned(), |p| format!("revizyon {}", p.revision))
             ))]
             .spacing(4);
             for x in &f.sheets {
@@ -834,13 +869,23 @@ impl App {
                 let text = format!(
                     "{} · {word}{}{}",
                     x.name,
-                    x.date.as_ref().filter(|_| x.state != SheetPublishState::Unpublished).map_or(String::new(), |d| format!(" · {d} tarihli")),
+                    x.date
+                        .as_ref()
+                        .filter(|_| x.state != SheetPublishState::Unpublished)
+                        .map_or(String::new(), |d| format!(" · {d} tarihli")),
                     x.changes
                         .as_ref()
-                        .filter(|_| matches!(x.state, SheetPublishState::Stale | SheetPublishState::FileChanged))
+                        .filter(|_| matches!(
+                            x.state,
+                            SheetPublishState::Stale | SheetPublishState::FileChanged
+                        ))
                         .map_or(String::new(), changes_text)
                 );
-                rows = rows.push(if warn { label::body(text).style(style::text::warning) } else { label::caption(text) });
+                rows = rows.push(if warn {
+                    label::body(text).style(style::text::warning)
+                } else {
+                    label::caption(text)
+                });
             }
             if let Some(st) = &f.stopped {
                 rows = rows.push(
@@ -852,7 +897,11 @@ impl App {
                         },
                         st.done.len(),
                         st.remaining.len(),
-                        if st.resumable { "; Devam et ile sürdürülebilir." } else { "; çizim değişti, baştan yayınlayın." }
+                        if st.resumable {
+                            "; Devam et ile sürdürülebilir."
+                        } else {
+                            "; çizim değişti, baştan yayınlayın."
+                        }
                     ))
                     .style(style::text::warning),
                 );
@@ -881,18 +930,32 @@ impl App {
                             "{} {}{}{}",
                             f.name,
                             f.denominator.map_or_else(|| "atlas".into(), scale_text),
-                            if f.locked { " · kilitli" } else { " · kilitsiz" },
-                            if f.layers == "drawing" { " · çizimin katmanları" } else { "" }
+                            if f.locked {
+                                " · kilitli"
+                            } else {
+                                " · kilitsiz"
+                            },
+                            if f.layers == "drawing" {
+                                " · çizimin katmanları"
+                            } else {
+                                ""
+                            }
                         )
                     })
                     .collect::<Vec<_>>()
                     .join("; ");
                 results = results.push(label::caption(format!(
                     "{} · {:.0}×{:.0} mm{} · {}",
-                    if sc.number.is_empty() { sc.name.as_str() } else { sc.number.as_str() },
+                    if sc.number.is_empty() {
+                        sc.name.as_str()
+                    } else {
+                        sc.number.as_str()
+                    },
                     sc.paper[0],
                     sc.paper[1],
-                    sc.profile.as_ref().map_or(String::new(), |p| format!(" · {p}")),
+                    sc.profile
+                        .as_ref()
+                        .map_or(String::new(), |p| format!(" · {p}")),
                     frames
                 )));
             }
@@ -907,7 +970,12 @@ impl App {
                         report
                             .carried
                             .iter()
-                            .map(|id| s.rows.iter().find(|r| &r.id == id).map_or(id.as_str(), |r| r.name.as_str()))
+                            .map(|id| {
+                                s.rows
+                                    .iter()
+                                    .find(|r| &r.id == id)
+                                    .map_or(id.as_str(), |r| r.name.as_str())
+                            })
                             .collect::<Vec<_>>()
                             .join(", ")
                     }
@@ -917,9 +985,15 @@ impl App {
                 if report.previous.is_some() {
                     results = results.push(label::caption(format!(
                         "{} · {}",
-                        s.rows.iter().find(|r| r.id == pg.sheet).map_or(pg.sheet.as_str(), |r| r.name.as_str()),
+                        s.rows
+                            .iter()
+                            .find(|r| r.id == pg.sheet)
+                            .map_or(pg.sheet.as_str(), |r| r.name.as_str()),
                         if report.carried.contains(&pg.sheet) {
-                            format!("önceki teslimden kopyalandı ({} tarihli)", pg.date.as_deref().unwrap_or("tarihsiz"))
+                            format!(
+                                "önceki teslimden kopyalandı ({} tarihli)",
+                                pg.date.as_deref().unwrap_or("tarihsiz")
+                            )
                         } else {
                             "yeniden üretildi".to_owned()
                         }
@@ -927,17 +1001,35 @@ impl App {
                 }
                 results = results.push(label::caption(format!(
                     "Sayfa {} · {} çizgi, {} dolgu, {} yazı ({}), {} kırpma{}{}",
-                    s.rows.iter().find(|r| r.id == pg.sheet).map_or(pg.sheet.as_str(), |r| r.name.as_str()),
+                    s.rows
+                        .iter()
+                        .find(|r| r.id == pg.sheet)
+                        .map_or(pg.sheet.as_str(), |r| r.name.as_str()),
                     pg.strokes,
                     pg.fills,
                     pg.texts,
-                    if pg.fonts.is_empty() { "yazı yüzü yok".to_owned() } else { pg.fonts.join(", ") },
+                    if pg.fonts.is_empty() {
+                        "yazı yüzü yok".to_owned()
+                    } else {
+                        pg.fonts.join(", ")
+                    },
                     pg.clips,
-                    if pg.transparent > 0 { format!(", {} saydam", pg.transparent) } else { String::new() },
-                    if pg.raster_maps > 0 { format!(", {} resim görünüm", pg.raster_maps) } else { String::new() }
+                    if pg.transparent > 0 {
+                        format!(", {} saydam", pg.transparent)
+                    } else {
+                        String::new()
+                    },
+                    if pg.raster_maps > 0 {
+                        format!(", {} resim görünüm", pg.raster_maps)
+                    } else {
+                        String::new()
+                    }
                 )));
                 for f in &pg.findings {
-                    results = results.push(label::caption(format!("Uyarı/not · {} {}", f.message, f.fix)).style(style::text::warning));
+                    results = results.push(
+                        label::caption(format!("Uyarı/not · {} {}", f.message, f.fix))
+                            .style(style::text::warning),
+                    );
                 }
             }
             for f in &report.files {
@@ -954,7 +1046,13 @@ impl App {
                     if i.error { "Hata" } else { "Uyarı/not" },
                     s.rows.iter().find(|r| r.id == i.sheet).map_or_else(
                         // The BIM package's model and form are no sheet (docs/adr/8075).
-                        || if report.bim.as_ref().is_some_and(|b| b.model == i.sheet) || i.sheet == "model" { "Model" } else { "Pafta seti" },
+                        || if report.bim.as_ref().is_some_and(|b| b.model == i.sheet)
+                            || i.sheet == "model"
+                        {
+                            "Model"
+                        } else {
+                            "Pafta seti"
+                        },
                         |r| r.name.as_str()
                     ),
                     i.message,
@@ -1021,14 +1119,21 @@ impl App {
                 .style(style::button::secondary),
         );
         if !s.check_only {
-            let resumable = s.folder.as_ref().and_then(|f| f.stopped.as_ref()).is_some_and(|x| x.resumable);
+            let resumable = s
+                .folder
+                .as_ref()
+                .and_then(|f| f.stopped.as_ref())
+                .is_some_and(|x| x.resumable);
             let updatable = s.folder.as_ref().is_some_and(|f| {
                 f.state == kentos_commands::PublishFolderState::Published && !f.stale.is_empty()
             });
             window = window
                 .action(
                     button(label::body("Durum"))
-                        .on_press_maybe((!busy && !s.input.path.trim().is_empty()).then_some(event(Event::Status)))
+                        .on_press_maybe(
+                            (!busy && !s.input.path.trim().is_empty())
+                                .then_some(event(Event::Status)),
+                        )
                         .padding(kentos_ui::theme::metrics::action())
                         .style(style::button::secondary),
                 )
@@ -1061,13 +1166,21 @@ impl App {
 fn folder_text(f: &PublishStatusReport) -> String {
     match f.state {
         kentos_commands::PublishFolderState::Published if f.stale.is_empty() => {
-            format!("Teslim güncel: {} paftanın sayfası yayındakiyle aynı.", f.sheets.iter().filter(|x| x.state == SheetPublishState::Current).count())
+            format!(
+                "Teslim güncel: {} paftanın sayfası yayındakiyle aynı.",
+                f.sheets
+                    .iter()
+                    .filter(|x| x.state == SheetPublishState::Current)
+                    .count()
+            )
         }
         kentos_commands::PublishFolderState::Published => format!(
             "{} pafta güncelliğini yitirdi. Güncelle: yeni bir klasöre yalnız onlar yeniden üretilir, öbürleri kendi tarihiyle kopyalanır.",
             f.stale.len()
         ),
-        kentos_commands::PublishFolderState::Stopped => "Bu klasörün yayını durduruldu; teslim oluşturulmadı.".into(),
+        kentos_commands::PublishFolderState::Stopped => {
+            "Bu klasörün yayını durduruldu; teslim oluşturulmadı.".into()
+        }
         kentos_commands::PublishFolderState::None => "Bu klasörde yayın yok.".into(),
     }
 }
@@ -1075,7 +1188,11 @@ fn folder_text(f: &PublishStatusReport) -> String {
 /// What changed in a stale page's sources (docs/adr/1320 §2), as a short tail.
 fn changes_text(c: &kentos_commands::SheetSourceChanges) -> String {
     let mut parts = Vec::new();
-    for (n, word) in [(c.changed.len(), "nesne değişti"), (c.added.len(), "nesne eklendi"), (c.removed.len(), "nesne çıktı")] {
+    for (n, word) in [
+        (c.changed.len(), "nesne değişti"),
+        (c.added.len(), "nesne eklendi"),
+        (c.removed.len(), "nesne çıktı"),
+    ] {
         if n > 0 {
             parts.push(format!("{n} {word}"));
         }
@@ -1097,14 +1214,24 @@ fn changes_text(c: &kentos_commands::SheetSourceChanges) -> String {
             .to_owned(),
         );
     }
-    if parts.is_empty() { String::new() } else { format!(" · {}", parts.join(", ")) }
+    if parts.is_empty() {
+        String::new()
+    } else {
+        format!(" · {}", parts.join(", "))
+    }
 }
 
 /// A viewport's scale as the sheet reads it: 1:20, 1:37,5, 2:1.
 fn scale_text(d: f64) -> String {
     let n = |v: f64| {
         let t = format!("{v:.3}");
-        t.trim_end_matches('0').trim_end_matches('.').replace('.', ",")
+        t.trim_end_matches('0')
+            .trim_end_matches('.')
+            .replace('.', ",")
     };
-    if d > 0.0 && d < 1.0 { format!("{}:1", n(1.0 / d)) } else { format!("1:{}", n(d)) }
+    if d > 0.0 && d < 1.0 {
+        format!("{}:1", n(1.0 / d))
+    } else {
+        format!("1:{}", n(d))
+    }
 }

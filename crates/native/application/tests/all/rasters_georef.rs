@@ -23,7 +23,13 @@ fn scratch(name: &str) -> PathBuf {
 }
 
 fn run(doc: &mut Document, op: CallOp, input: Value) -> Value {
-    registry::run(&mut ExecutionContext::new(doc), "cad.rasters.georef", op, input).expect("runs")
+    registry::run(
+        &mut ExecutionContext::new(doc),
+        "cad.rasters.georef",
+        op,
+        input,
+    )
+    .expect("runs")
 }
 
 fn fnv(bytes: &[u8]) -> String {
@@ -49,7 +55,8 @@ fn doc(file: &Path) -> Document {
                        "sample": "u8", "file": file, "srid": 0, "style": { "render": "gray", "bands": [1] } }],
         "styles": { "items": [], "categories": [] }
     });
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     Document::from_snapshot(snapshot).expect("setup")
 }
 
@@ -63,7 +70,9 @@ fn band(bytes: &[u8], k: usize) -> (Vec<u8>, u32, u32) {
     }
     let region = r.region(0, 0, 0, w, h).expect("level 0");
     let n = region.bands as usize;
-    let out = (0..(w * h) as usize).map(|i| region.samples.get(i * n + k) as u8).collect();
+    let out = (0..(w * h) as usize)
+        .map(|i| region.samples.get(i * n + k) as u8)
+        .collect();
     (out, w, h)
 }
 
@@ -86,10 +95,19 @@ fn exact(source: &Path, warp: &Value) -> (Vec<u8>, Vec<u8>) {
         .as_array()
         .expect("points")
         .iter()
-        .map(|p| Gcp { pixel: v2(&p["pixel"]), target: v2(&p["target"]), used: true })
+        .map(|p| Gcp {
+            pixel: v2(&p["pixel"]),
+            target: v2(&p["target"]),
+            used: true,
+        })
         .collect();
     let g = solve(&gcps, Method::ThinPlate).expect("solved");
-    let a: Vec<f64> = warp["grid"]["affine"].as_array().expect("affine").iter().filter_map(Value::as_f64).collect();
+    let a: Vec<f64> = warp["grid"]["affine"]
+        .as_array()
+        .expect("affine")
+        .iter()
+        .filter_map(Value::as_f64)
+        .collect();
     let grid = w::Grid {
         affine: [a[0], a[1], a[2], a[3], a[4], a[5]],
         width: warp["grid"]["width"].as_u64().unwrap_or(0) as u32,
@@ -105,12 +123,25 @@ fn exact(source: &Path, warp: &Value) -> (Vec<u8>, Vec<u8>) {
                 continue;
             };
             let region = reader.region(0, x, y, rw, rh).expect("the region");
-            let Samples::U8(v) = w::render(&pixels, &region, sw, sh, true, reader.info.sample, true, 0.0, None) else {
+            let Samples::U8(v) = w::render(
+                &pixels,
+                &region,
+                sw,
+                sh,
+                true,
+                reader.info.sample,
+                true,
+                0.0,
+                None,
+            ) else {
                 panic!("8 bits")
             };
             for j in 0..TILE as usize {
                 for i in 0..TILE as usize {
-                    let (gx, gy) = (tx as usize * TILE as usize + i, ty as usize * TILE as usize + j);
+                    let (gx, gy) = (
+                        tx as usize * TILE as usize + i,
+                        ty as usize * TILE as usize + j,
+                    );
                     if gx < ow && gy < oh {
                         let k = (j * TILE as usize + i) * 4;
                         grey[gy * ow + gx] = v[k];
@@ -125,13 +156,20 @@ fn exact(source: &Path, warp: &Value) -> (Vec<u8>, Vec<u8>) {
 
 #[test]
 fn a_resampling_is_gdalwarps_leaves_its_source_and_is_made_again_the_same() {
-    let reference: Value =
-        serde_json::from_str(&std::fs::read_to_string(fixtures().join("georef.json")).expect("georef.json"))
-            .expect("JSON");
+    let reference: Value = serde_json::from_str(
+        &std::fs::read_to_string(fixtures().join("georef.json")).expect("georef.json"),
+    )
+    .expect("JSON");
     let warp = &reference["warp"];
     let dir = scratch("warp");
     let source = dir.join("pafta.tif");
-    std::fs::copy(fixtures().join("files").join(warp["source"].as_str().expect("source")), &source).expect("copy");
+    std::fs::copy(
+        fixtures()
+            .join("files")
+            .join(warp["source"].as_str().expect("source")),
+        &source,
+    )
+    .expect("copy");
     let before = sha256_hex(&std::fs::read(&source).expect("source"));
     let mut d = doc(&source);
     let uid = d.uid(Slot(1)).expect("the raster").to_string();
@@ -158,12 +196,28 @@ fn a_resampling_is_gdalwarps_leaves_its_source_and_is_made_again_the_same() {
     let (alpha, ..) = band(&written, 3);
     assert_eq!((w, h), (299, 237));
     let (exact_grey, exact_alpha) = exact(&source, warp);
-    assert_eq!(fnv(&exact_grey), warp["gray"].as_str().expect("gray"), "the exact inverse is gdalwarp's");
-    assert_eq!(fnv(&exact_alpha), warp["alpha"].as_str().expect("alpha"), "the exact inverse is gdalwarp's");
+    assert_eq!(
+        fnv(&exact_grey),
+        warp["gray"].as_str().expect("gray"),
+        "the exact inverse is gdalwarp's"
+    );
+    assert_eq!(
+        fnv(&exact_alpha),
+        warp["alpha"].as_str().expect("alpha"),
+        "the exact inverse is gdalwarp's"
+    );
     let differ = grey.iter().zip(&exact_grey).filter(|(a, b)| a != b).count()
-        + alpha.iter().zip(&exact_alpha).filter(|(a, b)| a != b).count();
+        + alpha
+            .iter()
+            .zip(&exact_alpha)
+            .filter(|(a, b)| a != b)
+            .count();
     // 149 of 70 863 here (grey and alpha counted apart): 0,2 %.
-    assert!(differ * 200 <= grey.len(), "{differ} of {} pixels differ from gdalwarp's", grey.len());
+    assert!(
+        differ * 200 <= grey.len(),
+        "{differ} of {} pixels differ from gdalwarp's",
+        grey.len()
+    );
     assert_eq!(record["output"]["digest"], json!(sha256_hex(&written)));
     // The source is as it was, and the record names it with its digest.
     assert_eq!(sha256_hex(&std::fs::read(&source).expect("source")), before);
@@ -178,11 +232,17 @@ fn a_resampling_is_gdalwarps_leaves_its_source_and_is_made_again_the_same() {
     let record2 = &second["output"]["raster"]["georef"];
     assert_eq!(record2["output"]["affine"], record["output"]["affine"]);
     assert_eq!(record2["source"], record["source"]);
-    assert_eq!(std::fs::read(dir.join("yeniden.tif")).expect("again"), written);
+    assert_eq!(
+        std::fs::read(dir.join("yeniden.tif")).expect("again"),
+        written
+    );
     // Undo puts back the raster as it was before the second run.
     assert!(d.undo().is_some());
     match d.get(Slot(1)) {
-        Some(Entity::Raster(r)) => assert_eq!(r.raster.file.as_deref(), Some(dir.join("cikti.tif").to_str().expect("path"))),
+        Some(Entity::Raster(r)) => assert_eq!(
+            r.raster.file.as_deref(),
+            Some(dir.join("cikti.tif").to_str().expect("path"))
+        ),
         other => panic!("{other:?}"),
     }
     let _ = std::fs::remove_dir_all(&dir);
@@ -190,13 +250,20 @@ fn a_resampling_is_gdalwarps_leaves_its_source_and_is_made_again_the_same() {
 
 #[test]
 fn the_hosts_own_resampling_is_taken_when_it_is_the_plans_grid() {
-    let reference: Value =
-        serde_json::from_str(&std::fs::read_to_string(fixtures().join("georef.json")).expect("georef.json"))
-            .expect("JSON");
+    let reference: Value = serde_json::from_str(
+        &std::fs::read_to_string(fixtures().join("georef.json")).expect("georef.json"),
+    )
+    .expect("JSON");
     let warp = &reference["warp"];
     let dir = scratch("made");
     let source = dir.join("pafta.tif");
-    std::fs::copy(fixtures().join("files").join(warp["source"].as_str().expect("source")), &source).expect("copy");
+    std::fs::copy(
+        fixtures()
+            .join("files")
+            .join(warp["source"].as_str().expect("source")),
+        &source,
+    )
+    .expect("copy");
     let mut d = doc(&source);
     let uid = d.uid(Slot(1)).expect("the raster").to_string();
     let points: Vec<Value> = warp["points"]
@@ -212,7 +279,10 @@ fn the_hosts_own_resampling_is_taken_when_it_is_the_plans_grid() {
     assert_eq!(planned["status"], "completed", "{planned}");
     let first = run(&mut d, CallOp::Execute, input.clone());
     assert_eq!(first["status"], "completed", "{first}");
-    assert_eq!(planned["output"]["raster"]["affine"], first["output"]["raster"]["affine"]);
+    assert_eq!(
+        planned["output"]["raster"]["affine"],
+        first["output"]["raster"]["affine"]
+    );
     assert!(d.undo().is_some());
     let mut made = input.clone();
     made.as_object_mut().expect("input").remove("output");
@@ -220,7 +290,10 @@ fn the_hosts_own_resampling_is_taken_when_it_is_the_plans_grid() {
     let taken = run(&mut d, CallOp::Execute, made);
     assert_eq!(taken["status"], "completed", "{taken}");
     assert_eq!(taken["output"]["raster"]["file"], json!(dir.join("a.tif")));
-    assert_eq!(taken["output"]["raster"]["georef"], first["output"]["raster"]["georef"]);
+    assert_eq!(
+        taken["output"]["raster"]["georef"],
+        first["output"]["raster"]["georef"]
+    );
     // Another pixel's grid is not the file's.
     assert!(d.undo().is_some());
     let mut other = input;
@@ -228,6 +301,9 @@ fn the_hosts_own_resampling_is_taken_when_it_is_the_plans_grid() {
     other["pixel"] = json!(0.5);
     other["made"] = json!({ "file": dir.join("a.tif") });
     let refused = run(&mut d, CallOp::Execute, other);
-    assert_eq!(refused["error"]["code"], "georef_output_mismatch", "{refused}");
+    assert_eq!(
+        refused["error"]["code"], "georef_output_mismatch",
+        "{refused}"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }

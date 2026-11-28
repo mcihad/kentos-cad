@@ -13,8 +13,15 @@ const PARCEL: &str = "0192f5a6-2580-7000-8000-000000000001";
 const ROAD: &str = "0192f5a6-2580-7000-8000-000000000002";
 
 fn saved(server: &mut Server, drawing: &Value, name: &str) -> kentos_commands::DocumentSnapshotV2 {
-    let path = std::env::temp_dir().join(format!("kentos-map-bond-{name}-{}.kcad", std::process::id()));
-    let written = call(server, "drawing.save", json!({"drawing": drawing, "path": path}));
+    let path = std::env::temp_dir().join(format!(
+        "kentos-map-bond-{name}-{}.kcad",
+        std::process::id()
+    ));
+    let written = call(
+        server,
+        "drawing.save",
+        json!({"drawing": drawing, "path": path}),
+    );
     assert_eq!(written["isError"], false, "{written}");
     let snapshot = kentos_kcad::decode(&std::fs::read(&path).unwrap()).unwrap();
     let _ = std::fs::remove_file(path);
@@ -37,48 +44,92 @@ fn front(s: &kentos_commands::DocumentSnapshotV2) -> f64 {
 
 #[test]
 fn the_bond_over_mcp_follows_the_road_and_survives_the_file() {
-    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/map-bond.kcad");
+    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/kcad/v2/map-bond.kcad");
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": sample}));
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
 
     // The road 2 m south: the bonded edge follows, from 5 m north of 4420005 to 5 m north of 4420003.
-    let moved = call(&mut server, "cad.entities.transform", json!({
-        "drawing": drawing, "uids": [ROAD], "transform": {"kind": "move", "dx": 0.0, "dy": -2.0}}));
+    let moved = call(
+        &mut server,
+        "cad.entities.transform",
+        json!({
+        "drawing": drawing, "uids": [ROAD], "transform": {"kind": "move", "dx": 0.0, "dy": -2.0}}),
+    );
     assert_eq!(moved["isError"], false, "{moved}");
     let after = saved(&mut server, &drawing, "moved");
-    assert!((front(&after) - 4_420_008.0).abs() < 1e-6, "{}", front(&after));
+    assert!(
+        (front(&after) - 4_420_008.0).abs() < 1e-6,
+        "{}",
+        front(&after)
+    );
     assert_eq!(after.constraints.constraints.len(), 1, "the bond is kept");
-    assert!(kentos_commands::rule_is_map_bond(&after.constraints.constraints[0].rule));
+    assert!(kentos_commands::rule_is_map_bond(
+        &after.constraints.constraints[0].rule
+    ));
 
     // Turned, the road would turn the edge: refused, nothing written.
-    let turned = call(&mut server, "cad.entities.transform", json!({
+    let turned = call(
+        &mut server,
+        "cad.entities.transform",
+        json!({
         "drawing": drawing, "uids": [ROAD],
-        "transform": {"kind": "rotate", "center": {"x": 487190.0, "y": 4420003.0}, "angle": 0.01}}));
+        "transform": {"kind": "rotate", "center": {"x": 487190.0, "y": 4420003.0}, "angle": 0.01}}),
+    );
     assert_eq!(turned["isError"], true, "{turned}");
-    assert!(turned.to_string().contains("constraint_conflict"), "{turned}");
+    assert!(
+        turned.to_string().contains("constraint_conflict"),
+        "{turned}"
+    );
     assert!((front(&saved(&mut server, &drawing, "turned")) - 4_420_008.0).abs() < 1e-6);
 
     // Paralel kaydır with a kept reference: the parcel's back edge 25 m from its front edge, a second bond (d2).
-    let kept = call(&mut server, "cad.shapes.edit", json!({
+    let kept = call(
+        &mut server,
+        "cad.shapes.edit",
+        json!({
         "drawing": drawing,
         "work": {"kind": "edgeShift", "id": PARCEL, "at": {"x": 487210.0, "y": 4420040.0}, "distance": 25.0,
-                 "reference": {"id": PARCEL, "at": {"x": 487210.0, "y": 4420008.0}, "keep": true}}}));
+                 "reference": {"id": PARCEL, "at": {"x": 487210.0, "y": 4420008.0}, "keep": true}}}),
+    );
     assert_eq!(kept["isError"], false, "{kept}");
-    assert_eq!(kept["structuredContent"]["output"]["bonds"].as_array().map(Vec::len), Some(1), "{kept}");
+    assert_eq!(
+        kept["structuredContent"]["output"]["bonds"]
+            .as_array()
+            .map(Vec::len),
+        Some(1),
+        "{kept}"
+    );
     let both = saved(&mut server, &drawing, "kept");
     assert_eq!(both.constraints.constraints.len(), 2);
-    let names: Vec<&str> = both.constraints.parameters.iter().map(|p| p.name.as_str()).collect();
+    let names: Vec<&str> = both
+        .constraints
+        .parameters
+        .iter()
+        .map(|p| p.name.as_str())
+        .collect();
     assert_eq!(names, ["d1", "d2"]);
     assert_eq!(both.constraints.parameters[1].expression, "25");
 
     // The road again: the front edge follows the road, the back edge its front edge (a chain).
-    let again = call(&mut server, "cad.entities.transform", json!({
-        "drawing": drawing, "uids": [ROAD], "transform": {"kind": "move", "dx": 0.0, "dy": -1.0}}));
+    let again = call(
+        &mut server,
+        "cad.entities.transform",
+        json!({
+        "drawing": drawing, "uids": [ROAD], "transform": {"kind": "move", "dx": 0.0, "dy": -1.0}}),
+    );
     assert_eq!(again["isError"], false, "{again}");
     let chained = saved(&mut server, &drawing, "chained");
-    assert!((front(&chained) - 4_420_007.0).abs() < 1e-6, "{}", front(&chained));
+    assert!(
+        (front(&chained) - 4_420_007.0).abs() < 1e-6,
+        "{}",
+        front(&chained)
+    );
     let back = parcel(&chained)[2].y;
-    assert!((back - 4_420_032.0).abs() < 1e-6, "the back edge 25 m behind: {back}");
+    assert!(
+        (back - 4_420_032.0).abs() < 1e-6,
+        "the back edge 25 m behind: {back}"
+    );
 }

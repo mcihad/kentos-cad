@@ -111,7 +111,10 @@ pub struct PositionAccuracy {
 
 /// The position accuracy rules KentOS carries.
 pub fn position_accuracy() -> Option<PositionAccuracy> {
-    serde_json::from_str(include_str!("../../../../../catalog/v1/rules/konum-dogrulugu-2022.json")).ok()
+    serde_json::from_str(include_str!(
+        "../../../../../catalog/v1/rules/konum-dogrulugu-2022.json"
+    ))
+    .ok()
 }
 
 /// Thousands grouped by a dot, as Turkish writes a scale (1/10.000).
@@ -129,48 +132,78 @@ fn scale_words(n: u32) -> String {
 
 /// A limit's value in metres and its source in words; else the input's path and why it does not hold.
 pub fn limit_metres(limit: &ShiftLimit) -> Result<ShiftLimitUsed, (String, String)> {
-    let rules = position_accuracy().ok_or_else(|| ("limit".to_owned(), "Konum doğruluğu kuralları okunamadı.".to_owned()))?;
+    let rules = position_accuracy().ok_or_else(|| {
+        (
+            "limit".to_owned(),
+            "Konum doğruluğu kuralları okunamadı.".to_owned(),
+        )
+    })?;
     let scale = |what: &str| -> Result<u32, (String, String)> {
         match limit.scale {
             Some(s) if (1..=MOST_LIMIT_SCALE).contains(&s) => Ok(s),
-            Some(s) => Err(("limit.scale".into(), format!("Ölçek paydası {s}: 1 ile {MOST_LIMIT_SCALE} arasında olmalı."))),
-            None => Err(("limit.scale".into(), format!("{what} için ölçek gerekir (1000: 1/1.000)."))),
+            Some(s) => Err((
+                "limit.scale".into(),
+                format!("Ölçek paydası {s}: 1 ile {MOST_LIMIT_SCALE} arasında olmalı."),
+            )),
+            None => Err((
+                "limit.scale".into(),
+                format!("{what} için ölçek gerekir (1000: 1/1.000)."),
+            )),
         }
     };
     match limit.basis {
         LimitBasis::Own => match limit.metres {
-            Some(m) if m.is_finite() && m > 0.0 && m <= MOST_SHIFT_LIMIT => {
-                Ok(ShiftLimitUsed { metres: m, source: "kullanıcının değeri".into() })
-            }
+            Some(m) if m.is_finite() && m > 0.0 && m <= MOST_SHIFT_LIMIT => Ok(ShiftLimitUsed {
+                metres: m,
+                source: "kullanıcının değeri".into(),
+            }),
             Some(m) => Err((
                 "limit.metres".into(),
                 format!("Sınır {m} m: 0'dan büyük, en çok {MOST_SHIFT_LIMIT} m olmalı."),
             )),
-            None => Err(("limit.metres".into(), "Kendi sınırınız için metres verin (ör. 0,05).".into())),
+            None => Err((
+                "limit.metres".into(),
+                "Kendi sınırınız için metres verin (ör. 0,05).".into(),
+            )),
         },
         LimitBasis::Detail => {
             let m = rules.detail.metres.unwrap_or_default();
-            Ok(ShiftLimitUsed { metres: m, source: format!("{}: {}", rules.detail.source, rules.detail.words) })
+            Ok(ShiftLimitUsed {
+                metres: m,
+                source: format!("{}: {}", rules.detail.source, rules.detail.words),
+            })
         }
         LimitBasis::Drawing => {
             let s = scale("Çizimde nokta konumu")?;
             let mm = rules.drawing.mm.unwrap_or_default();
             Ok(ShiftLimitUsed {
                 metres: mm * f64::from(s) / 1000.0,
-                source: format!("{}: {}, {}", rules.drawing.source, rules.drawing.words, scale_words(s)),
+                source: format!(
+                    "{}: {}, {}",
+                    rules.drawing.source,
+                    rules.drawing.words,
+                    scale_words(s)
+                ),
             })
         }
         LimitBasis::Method => {
             let ids: Vec<&str> = rules.table.methods.iter().map(|m| m.id.as_str()).collect();
             let Some(id) = limit.method.as_deref() else {
-                return Err(("limit.method".into(), format!("Üretim yöntemini verin: {}.", ids.join(", "))));
+                return Err((
+                    "limit.method".into(),
+                    format!("Üretim yöntemini verin: {}.", ids.join(", ")),
+                ));
             };
             let Some(row) = rules.table.methods.iter().find(|m| m.id == id) else {
-                return Err(("limit.method".into(), format!("“{id}” yöntemi tabloda yok; yöntemler: {}.", ids.join(", "))));
+                return Err((
+                    "limit.method".into(),
+                    format!("“{id}” yöntemi tabloda yok; yöntemler: {}.", ids.join(", ")),
+                ));
             };
             let s = scale("Üretim yöntemi")?;
             let Some(k) = rules.table.scales.iter().position(|x| *x == s) else {
-                let have: Vec<String> = rules.table.scales.iter().map(|x| scale_words(*x)).collect();
+                let have: Vec<String> =
+                    rules.table.scales.iter().map(|x| scale_words(*x)).collect();
                 return Err((
                     "limit.scale".into(),
                     format!(
@@ -183,7 +216,11 @@ pub fn limit_metres(limit: &ShiftLimit) -> Result<ShiftLimitUsed, (String, Strin
             let Some(m) = row.values.get(k).copied().flatten() else {
                 return Err((
                     "limit.scale".into(),
-                    format!("Tablo {} için “{}” değeri vermiyor.", scale_words(s), row.title),
+                    format!(
+                        "Tablo {} için “{}” değeri vermiyor.",
+                        scale_words(s),
+                        row.title
+                    ),
                 ));
             };
             Ok(ShiftLimitUsed {
@@ -199,28 +236,52 @@ mod tests {
     use super::*;
 
     fn method(id: &str, scale: u32) -> Result<ShiftLimitUsed, (String, String)> {
-        limit_metres(&ShiftLimit { basis: LimitBasis::Method, metres: None, scale: Some(scale), method: Some(id.into()) })
+        limit_metres(&ShiftLimit {
+            basis: LimitBasis::Method,
+            metres: None,
+            scale: Some(scale),
+            method: Some(id.into()),
+        })
     }
 
     #[test]
     fn the_rules_read_and_every_row_has_a_value_per_scale() {
         let r = position_accuracy().expect("rules");
         assert_eq!(r.table.scales.len(), 10);
-        assert!(r.table.methods.iter().all(|m| m.values.len() == r.table.scales.len()));
+        assert!(
+            r.table
+                .methods
+                .iter()
+                .all(|m| m.values.len() == r.table.scales.len())
+        );
     }
 
     #[test]
     fn the_table_gives_its_cells_and_refuses_an_empty_one_and_another_scale() {
         assert_eq!(method("prizmatik-pafta", 3000).expect("cell").metres, 1.11);
-        assert_eq!(method("sayisal-fotogrametrik", 1000).expect("cell").metres, 0.09);
-        assert_eq!(method("fotogrametrik", 1000).expect_err("empty").0, "limit.scale");
-        assert_eq!(method("sayisal", 1500).expect_err("not in the table").0, "limit.scale");
+        assert_eq!(
+            method("sayisal-fotogrametrik", 1000).expect("cell").metres,
+            0.09
+        );
+        assert_eq!(
+            method("fotogrametrik", 1000).expect_err("empty").0,
+            "limit.scale"
+        );
+        assert_eq!(
+            method("sayisal", 1500).expect_err("not in the table").0,
+            "limit.scale"
+        );
         assert_eq!(method("yok", 1000).expect_err("unknown").0, "limit.method");
     }
 
     #[test]
     fn the_drawing_limit_is_its_millimetres_at_the_scale() {
-        let l = limit_metres(&ShiftLimit { basis: LimitBasis::Drawing, metres: None, scale: Some(1000), method: None });
+        let l = limit_metres(&ShiftLimit {
+            basis: LimitBasis::Drawing,
+            metres: None,
+            scale: Some(1000),
+            method: None,
+        });
         assert_eq!(l.expect("drawing").metres, 0.2);
         assert_eq!(scale_words(10000), "1/10.000");
     }

@@ -27,11 +27,18 @@ fn base_of(input: &TerrainsStockpile) -> Result<Base, Stop> {
         "triangulated" => Base::Triangulated,
         "elevation" => match input.elevation {
             Some(z) if z.is_finite() => Base::Elevation(z),
-            _ => return Err(invalid("Kotla taban (elevation) için sonlu bir kot verin.".into(), "elevation")),
+            _ => {
+                return Err(invalid(
+                    "Kotla taban (elevation) için sonlu bir kot verin.".into(),
+                    "elevation",
+                ));
+            }
         },
         other => {
             return Err(invalid(
-                format!("“{other}” bir taban değil: lowest, highest, average, fit, triangulated ya da elevation olmalı."),
+                format!(
+                    "“{other}” bir taban değil: lowest, highest, average, fit, triangulated ya da elevation olmalı."
+                ),
                 "base",
             ));
         }
@@ -39,11 +46,18 @@ fn base_of(input: &TerrainsStockpile) -> Result<Base, Stop> {
 }
 
 /// The volume now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &TerrainsStockpile) -> Result<(TerrainsStockpiled, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &TerrainsStockpile,
+) -> Result<(TerrainsStockpiled, Vec<CommandWarning>), Stop> {
     let base = base_of(input)?;
     terrains::terrain_project(doc)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
-    let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+    let def = terrains::surfaces(doc)
+        .iter()
+        .find(|s| s.id == id)
+        .cloned()
+        .ok_or(Stop::Cancelled)?;
     let made = terrains::make(doc, &def);
     let surface = made.built()?;
     let region = crate::road_terrains_coverage::boundary_of(doc, &input.boundary)?;
@@ -78,7 +92,10 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsStockpile) -> Result<(Terra
         (None, Some(tin))
     } else {
         let plane = stockpile::base_plane(base, &region.outer, &corners).map_err(|_| {
-            invalid("Sınırın köşeleri bir doğru üstünde; eğimli taban düzlemi çizilemez.".into(), "base")
+            invalid(
+                "Sınırın köşeleri bir doğru üstünde; eğimli taban düzlemi çizilemez.".into(),
+                "base",
+            )
         })?;
         (Some(plane), None)
     };
@@ -151,13 +168,19 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsStockpile) -> Result<(Terra
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsStockpile) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsStockpile) -> CommandResult<TerrainsStockpiled> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &TerrainsStockpile,
+) -> CommandResult<TerrainsStockpiled> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -165,11 +188,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsStockpile) -> CommandResu
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsStockpile) -> CommandResult<TerrainsStockpiled> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsStockpile,
+) -> CommandResult<TerrainsStockpiled> {
     plan(cx, &input)
 }
 
 /// The volume for a window, or why it does not read; with its warnings' words.
-pub fn preview(doc: &Document, input: &TerrainsStockpile) -> Result<(TerrainsStockpiled, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &TerrainsStockpile,
+) -> Result<(TerrainsStockpiled, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

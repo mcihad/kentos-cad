@@ -6,8 +6,8 @@
 //! areas, the volumes from the section before and the totals) and a material table, under the zones' box.
 
 use kentos_commands::{
-    AnnotationKind, CutFillLabel, CutFillSection, CutFillSectionLabel, EntityBase, EntityGeometry, NewObject, TableAlign,
-    TableEntity, TerrainZoneVolumes, TerrainsCutFilled, TextAlign, Vec2,
+    AnnotationKind, CutFillLabel, CutFillSection, CutFillSectionLabel, EntityBase, EntityGeometry,
+    NewObject, TableAlign, TableEntity, TerrainZoneVolumes, TerrainsCutFilled, TextAlign, Vec2,
 };
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arrangement::Ring;
@@ -17,7 +17,12 @@ use kentos_road::surface::Region;
 /// A station as a kilometre, `k+mmm.cc`: the metres to the centimetre, half up.
 pub(crate) fn km_text(station: f64) -> String {
     let cm = (station * 100.0 + 0.5).floor() as i64;
-    format!("{}+{:03}.{:02}", cm / 100_000, (cm % 100_000) / 100, cm % 100)
+    format!(
+        "{}+{:03}.{:02}",
+        cm / 100_000,
+        (cm % 100_000) / 100,
+        cm % 100
+    )
 }
 
 /// A section's areas in words, to two decimals (m²).
@@ -39,9 +44,23 @@ pub(crate) fn section_labels(sections: &[CutFillSection]) -> Vec<CutFillSectionL
             (true, true) => angle - 180.0,
             (true, false) => angle + 180.0,
         };
-        let (km, areas) = if flipped { (TextAlign::MiddleLeft, TextAlign::MiddleRight) } else { (TextAlign::MiddleRight, TextAlign::MiddleLeft) };
-        out.push(CutFillSectionLabel { at: l, text: s.km.clone(), rotation, align: km });
-        out.push(CutFillSectionLabel { at: r, text: area_text(s.cut_area, s.fill_area), rotation, align: areas });
+        let (km, areas) = if flipped {
+            (TextAlign::MiddleLeft, TextAlign::MiddleRight)
+        } else {
+            (TextAlign::MiddleRight, TextAlign::MiddleLeft)
+        };
+        out.push(CutFillSectionLabel {
+            at: l,
+            text: s.km.clone(),
+            rotation,
+            align: km,
+        });
+        out.push(CutFillSectionLabel {
+            at: r,
+            text: area_text(s.cut_area, s.fill_area),
+            rotation,
+            align: areas,
+        });
     }
     out
 }
@@ -95,14 +114,30 @@ pub(crate) fn material_text(m: &TerrainZoneVolumes) -> String {
 
 /// A material's label: its words at the core's interior point of its boundary.
 pub(crate) fn material_label(m: &TerrainZoneVolumes, region: &Region) -> Option<CutFillLabel> {
-    let v = |r: &[[f64; 2]]| r.iter().map(|p| kentos_geometry_core::vec2::Vec2::new(p[0], p[1])).collect::<Vec<_>>();
+    let v = |r: &[[f64; 2]]| {
+        r.iter()
+            .map(|p| kentos_geometry_core::vec2::Vec2::new(p[0], p[1]))
+            .collect::<Vec<_>>()
+    };
     let shape = Shape::Polygon {
         pts: v(&region.outer),
         bulges: None,
-        holes: (!region.holes.is_empty()).then(|| region.holes.iter().map(|h| Ring { pts: v(h), bulges: None }).collect()),
+        holes: (!region.holes.is_empty()).then(|| {
+            region
+                .holes
+                .iter()
+                .map(|h| Ring {
+                    pts: v(h),
+                    bulges: None,
+                })
+                .collect()
+        }),
         parts: None,
     };
-    interior_point(&shape).map(|p| CutFillLabel { at: [p.x, p.y], text: material_text(m) })
+    interior_point(&shape).map(|p| CutFillLabel {
+        at: [p.x, p.y],
+        text: material_text(m),
+    })
 }
 
 /// The material table's cells: the heading, then each material (its name, area, cut and fill, its factors and its
@@ -110,9 +145,17 @@ pub(crate) fn material_label(m: &TerrainZoneVolumes, region: &Region) -> Option<
 pub(crate) fn material_table(materials: &[TerrainZoneVolumes]) -> Vec<Vec<String>> {
     let two = |v: f64| format!("{v:.2}");
     let mut rows = vec![
-        ["Malzeme", "Alan (m²)", "Kazı (m³)", "Dolgu (m³)", "Kazı katsayısı", "Dolgu katsayısı", "Katsayılı net (m³)"]
-            .map(String::from)
-            .to_vec(),
+        [
+            "Malzeme",
+            "Alan (m²)",
+            "Kazı (m³)",
+            "Dolgu (m³)",
+            "Kazı katsayısı",
+            "Dolgu katsayısı",
+            "Katsayılı net (m³)",
+        ]
+        .map(String::from)
+        .to_vec(),
     ];
     for m in materials {
         rows.push(vec![
@@ -169,7 +212,15 @@ fn text(p: [f64; 2], words: &str, height: f64, rotation: f64, align: TextAlign) 
 fn table(doc: &kentos_domain::Document, p: [f64; 2], cells: Vec<Vec<String>>) -> (NewObject, f64) {
     let h = doc.settings().annotation_height(AnnotationKind::Table);
     let columns = cells.first().map_or(0, Vec::len);
-    let aligns: Vec<TableAlign> = (0..columns).map(|j| if j == 0 { TableAlign::Left } else { TableAlign::Right }).collect();
+    let aligns: Vec<TableAlign> = (0..columns)
+        .map(|j| {
+            if j == 0 {
+                TableAlign::Left
+            } else {
+                TableAlign::Right
+            }
+        })
+        .collect();
     let mut t = TableEntity {
         base: EntityBase {
             look: Default::default(),
@@ -229,10 +280,29 @@ fn table(doc: &kentos_domain::Document, p: [f64; 2], cells: Vec<Vec<String>>) ->
 /// The right edge the tables stand beyond (docs/adr/4760): the zones' box's, or the sections' ends' with room for their
 /// longest words (a character a text height: wider than any of the drawing's fonts' letters) when that is farther.
 pub(crate) fn right_edge(out: &TerrainsCutFilled, h: f64) -> f64 {
-    let zones = out.zones.iter().flat_map(|z| z.ring.iter()).map(|p| p[0]).fold(f64::MIN, f64::max);
-    let ends = out.sections.iter().flat_map(|s| s.ends.iter()).map(|p| p[0]).fold(f64::MIN, f64::max);
-    let longest = out.section_labels.iter().map(|w| w.text.chars().count()).max().unwrap_or(0) as f64;
-    if out.sections.is_empty() { zones } else { zones.max(ends + h / 2.0 + longest * h) }
+    let zones = out
+        .zones
+        .iter()
+        .flat_map(|z| z.ring.iter())
+        .map(|p| p[0])
+        .fold(f64::MIN, f64::max);
+    let ends = out
+        .sections
+        .iter()
+        .flat_map(|s| s.ends.iter())
+        .map(|p| p[0])
+        .fold(f64::MIN, f64::max);
+    let longest = out
+        .section_labels
+        .iter()
+        .map(|w| w.text.chars().count())
+        .max()
+        .unwrap_or(0) as f64;
+    if out.sections.is_empty() {
+        zones
+    } else {
+        zones.max(ends + h / 2.0 + longest * h)
+    }
 }
 
 /// What the sections and the materials add to the drawing, after the zones and their words: each section's line, its
@@ -259,8 +329,15 @@ pub(crate) fn objects(doc: &kentos_domain::Document, out: &TerrainsCutFilled) ->
         let [l, r] = s.ends;
         let (from, to) = if k % 2 == 0 { (r, l) } else { (l, r) };
         let len = (to[0] - from[0]).hypot(to[1] - from[1]);
-        let out_way = if len > 0.0 { [(to[0] - from[0]) / len, (to[1] - from[1]) / len] } else { [0.0, 0.0] };
-        let at = [w.at[0] + out_way[0] * h / 2.0, w.at[1] + out_way[1] * h / 2.0];
+        let out_way = if len > 0.0 {
+            [(to[0] - from[0]) / len, (to[1] - from[1]) / len]
+        } else {
+            [0.0, 0.0]
+        };
+        let at = [
+            w.at[0] + out_way[0] * h / 2.0,
+            w.at[1] + out_way[1] * h / 2.0,
+        ];
         objects.push(text(at, &w.text, h, w.rotation, w.align));
     }
     for m in &out.material_labels {
@@ -271,10 +348,19 @@ pub(crate) fn objects(doc: &kentos_domain::Document, out: &TerrainsCutFilled) ->
     }
     let t = doc.settings().annotation_height(AnnotationKind::Table);
     let x = right_edge(out, h) + 2.0 * t;
-    let y1 = out.zones.iter().flat_map(|z| z.ring.iter()).map(|p| p[1]).fold(f64::MIN, f64::max);
+    let y1 = out
+        .zones
+        .iter()
+        .flat_map(|z| z.ring.iter())
+        .map(|p| p[1])
+        .fold(f64::MIN, f64::max);
     // Under the zones' quantity table when there is one: its rows are a row's height each.
     let zone_table = out.table.len() as f64 * kentos_geometry_core::ops::table::ROW * t;
-    let mut top = if out.table.is_empty() { y1 } else { y1 - zone_table - 2.0 * t };
+    let mut top = if out.table.is_empty() {
+        y1
+    } else {
+        y1 - zone_table - 2.0 * t
+    };
     for cells in [&out.section_table, &out.material_table] {
         if cells.is_empty() {
             continue;
@@ -314,10 +400,16 @@ mod tests {
             mass: None,
         };
         let east = section_labels(&[s([0.0, 5.0], [0.0, -5.0])]);
-        assert_eq!((east[0].rotation, east[0].align), (90.0, TextAlign::MiddleLeft));
+        assert_eq!(
+            (east[0].rotation, east[0].align),
+            (90.0, TextAlign::MiddleLeft)
+        );
         assert_eq!(east[1].align, TextAlign::MiddleRight);
         let north = section_labels(&[s([-5.0, 0.0], [5.0, 0.0])]);
-        assert_eq!((north[0].rotation, north[0].align), (0.0, TextAlign::MiddleRight));
+        assert_eq!(
+            (north[0].rotation, north[0].align),
+            (0.0, TextAlign::MiddleRight)
+        );
         assert_eq!(north[1].text, "Kazı 1.00 m² · Dolgu 2.00 m²");
     }
 }

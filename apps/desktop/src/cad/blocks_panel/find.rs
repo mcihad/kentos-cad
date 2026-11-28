@@ -204,11 +204,21 @@ impl App {
         self.dialog = Some(Dialog::BlockFind);
     }
     pub(crate) fn block_find_close_options(&mut self) {
-        if let Some(w) = self.blocks_panel.find.as_mut() { w.conversion = None; }
+        if let Some(w) = self.blocks_panel.find.as_mut() {
+            w.conversion = None;
+        }
         self.dialog = None;
         if let Some(w) = self.blocks_panel.find.as_mut()
-            && let Some(OptionsSnapshot { rotations, mirrors, scales, strict, hidden, tolerance, text_variants, attribute_variants }) =
-                w.previous_options.take()
+            && let Some(OptionsSnapshot {
+                rotations,
+                mirrors,
+                scales,
+                strict,
+                hidden,
+                tolerance,
+                text_variants,
+                attribute_variants,
+            }) = w.previous_options.take()
         {
             w.rotations = rotations;
             w.mirrors = mirrors;
@@ -402,7 +412,14 @@ impl App {
         Task::none()
     }
     pub(crate) fn block_find_view(&self) -> Element<'_, Message> {
-        if self.blocks_panel.find.as_ref().is_some_and(|w| w.conversion.is_some()) { return self.block_convert_view(); }
+        if self
+            .blocks_panel
+            .find
+            .as_ref()
+            .is_some_and(|w| w.conversion.is_some())
+        {
+            return self.block_convert_view();
+        }
         let Some(w) = &self.blocks_panel.find else {
             return text("").into();
         };
@@ -458,7 +475,9 @@ impl App {
         let Some(w) = &self.blocks_panel.find else {
             return Ok(None);
         };
-        if w.conversion.is_some() { return self.block_convert_control(control); }
+        if w.conversion.is_some() {
+            return self.block_convert_control(control);
+        }
         let e = match control {
             Control::Press("Vazgeç") => Event::CloseOptions,
             Control::Press("Bul")
@@ -480,7 +499,9 @@ impl App {
                 let (now, event) = match title {
                     "Döndürülmüş eşleri de bul" => (w.rotations, Event::Rotations),
                     "Yazı değerleri farklı olabilir" => (w.text_variants, Event::TextVariants),
-                    "Blok öznitelik değerleri farklı olabilir" => (w.attribute_variants, Event::AttributeVariants),
+                    "Blok öznitelik değerleri farklı olabilir" => {
+                        (w.attribute_variants, Event::AttributeVariants)
+                    }
                     "Aynalanmış eşleri de bul" => (w.mirrors, Event::Mirrors),
                     "Farklı boyuttaki ölçekli eşleri de bul" => (w.scales, Event::Scales),
                     "Katman, görünüş ve öznitelikler de aynı olsun" => {
@@ -675,8 +696,13 @@ fn panel_at_height(app: &App, height: f32) -> Element<'_, Message> {
                     .on_press_maybe((current && chosen > 0).then(|| msg(Event::Select)))
                     .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary),
-                words::primary("Bloğa dönüştür…", (current && chosen > 0).then(|| msg(Event::Convert)))
-            ].spacing(6).align_y(iced::Center)
+                words::primary(
+                    "Bloğa dönüştür…",
+                    (current && chosen > 0).then(|| msg(Event::Convert))
+                )
+            ]
+            .spacing(6)
+            .align_y(iced::Center)
         ]
         .spacing(8)
         .height(Fill),
@@ -754,8 +780,15 @@ mod tests {
         assert!(app.blocks_panel.find.as_ref().unwrap().mirrors);
         let _ = app.block_find_event(Event::TextVariants);
         let _ = app.block_find_event(Event::AttributeVariants);
-        let input=app.blocks_panel.find.as_ref().unwrap().input(&app.document.as_ref().unwrap().model).unwrap();
-        assert_eq!(input.text_variants,Some(true));assert_eq!(input.attribute_variants,Some(true));
+        let input = app
+            .blocks_panel
+            .find
+            .as_ref()
+            .unwrap()
+            .input(&app.document.as_ref().unwrap().model)
+            .unwrap();
+        assert_eq!(input.text_variants, Some(true));
+        assert_eq!(input.attribute_variants, Some(true));
         app.close_dialog();
         assert!(!app.blocks_panel.find.as_ref().unwrap().text_variants);
         assert!(!app.blocks_panel.find.as_ref().unwrap().attribute_variants);

@@ -7,6 +7,7 @@
 //! `cad.spaces.edit`.
 
 use crate::arch;
+use crate::arch::ArchState;
 use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
@@ -20,7 +21,6 @@ use kentos_ui::theme::typography;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::table;
 use kentos_ui::widget::{Choice, Dialog as Frame, Menu, Select};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -151,7 +151,11 @@ fn short(m: kentos_commands::SpaceMethod) -> &'static str {
 
 /// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
 pub(crate) trait QuantitiesApp {
-    fn quantities_read(&self, level: Option<&String>, building: Option<&String>) -> Result<SpacesQuantified, String>;
+    fn quantities_read(
+        &self,
+        level: Option<&String>,
+        building: Option<&String>,
+    ) -> Result<SpacesQuantified, String>;
     fn quantities_buildings(&self) -> Vec<(String, String)>;
     fn quantities_levels(&self) -> Vec<(String, String)>;
     fn open_quantities(&mut self);
@@ -168,14 +172,15 @@ pub(crate) trait QuantitiesApp {
     fn quantities_event(&mut self, event: Event) -> Task<Message>;
     fn quantities_view(&self) -> Element<'_, Message>;
     fn quantities_rule(&self, q: &SpacesQuantified, tab: Tab) -> String;
-    fn quantities_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>;
+    fn quantities_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
 impl QuantitiesApp for App {
-    fn quantities_read(&self, level: Option<&String>, building: Option<&String>) -> Result<SpacesQuantified, String>{
+    fn quantities_read(
+        &self,
+        level: Option<&String>,
+        building: Option<&String>,
+    ) -> Result<SpacesQuantified, String> {
         let Some(doc) = self.document.as_ref() else {
             return Err("Açık çizim yok.".into());
         };
@@ -195,18 +200,28 @@ impl QuantitiesApp for App {
 
     /// The program's buildings, by id and name, when it has several (docs/adr/8072 §4): each one's quantities are the
     /// storeys it counts, a shared one only in its building.
-    fn quantities_buildings(&self) -> Vec<(String, String)>{
+    fn quantities_buildings(&self) -> Vec<(String, String)> {
         let buildings: Vec<(String, String)> = self
             .document
             .as_ref()
             .and_then(|d| d.model.settings().arch.as_ref())
-            .map(|a| a.program.buildings.iter().map(|b| (b.id.clone(), b.name.clone())).collect())
+            .map(|a| {
+                a.program
+                    .buildings
+                    .iter()
+                    .map(|b| (b.id.clone(), b.name.clone()))
+                    .collect()
+            })
             .unwrap_or_default();
-        if buildings.len() > 1 { buildings } else { Vec::new() }
+        if buildings.len() > 1 {
+            buildings
+        } else {
+            Vec::new()
+        }
     }
 
     /// The project's levels, by id and name.
-    fn quantities_levels(&self) -> Vec<(String, String)>{
+    fn quantities_levels(&self) -> Vec<(String, String)> {
         self.document
             .as_ref()
             .and_then(|d| d.model.settings().arch.clone())
@@ -215,7 +230,7 @@ impl QuantitiesApp for App {
     }
 
     /// Metraj (`arch.quantities`): the window.
-    fn open_quantities(&mut self){
+    fn open_quantities(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -234,7 +249,7 @@ impl QuantitiesApp for App {
     /// Mahalleri birleştir (`arch.spaceMerge`): the spaces selected made one. Nothing is written before the decision
     /// is said (docs/adr/0773 §4): whose id and number go on, whose numbers, finishes and tags go, the fixtures in it;
     /// Birleştir writes it.
-    fn space_merge(&mut self){
+    fn space_merge(&mut self) {
         const WHAT: &str = "Mahalleri birleştir";
         let ids = self.selection.ids().to_vec();
         let Some(doc) = self.document.as_mut() else {
@@ -253,7 +268,10 @@ impl QuantitiesApp for App {
         }
         let input = SpacesEdit {
             uids: kentos_interaction::properties::uids_of(&doc.model, &spaces),
-            operation: SpacesOperation::Merge { keep: None, number: None },
+            operation: SpacesOperation::Merge {
+                keep: None,
+                number: None,
+            },
             expected_revision: None,
         };
         match spaces_edit::plan_in(&doc.model, &input) {
@@ -273,7 +291,7 @@ impl QuantitiesApp for App {
     }
 
     /// Birleştir: the merge said, written.
-    fn space_merge_confirmed(&mut self){
+    fn space_merge_confirmed(&mut self) {
         const WHAT: &str = "Mahalleri birleştir";
         let Some((input, _)) = self.space_merging.take() else {
             return;
@@ -300,18 +318,26 @@ impl QuantitiesApp for App {
         }
     }
 
-    fn space_merge_question(&self) -> Element<'_, Message>{
-        let said = self.space_merging.as_ref().map(|(_, w)| w.clone()).unwrap_or_default();
+    fn space_merge_question(&self) -> Element<'_, Message> {
+        let said = self
+            .space_merging
+            .as_ref()
+            .map(|(_, w)| w.clone())
+            .unwrap_or_default();
         kentos_ui::widget::overlay::modal(
-            kentos_ui::widget::Confirm::new(MERGE_TITLE, Message::DialogConfirmed, Message::DialogClosed)
-                .message(said)
-                .confirm("Birleştir"),
+            kentos_ui::widget::Confirm::new(
+                MERGE_TITLE,
+                Message::DialogConfirmed,
+                Message::DialogClosed,
+            )
+            .message(said)
+            .confirm("Birleştir"),
             Message::DialogClosed,
         )
     }
 
     /// The three tables of the answer, in the project's units.
-    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 9]{
+    fn quantities_tables(&self, q: &SpacesQuantified) -> [Table; 9] {
         let f = self
             .document
             .as_ref()
@@ -918,7 +944,9 @@ impl QuantitiesApp for App {
         // By material (docs/adr/0785 §4): its walls and slabs, area, volume and the amount by its way of counting.
         let materials = Table {
             name: "Malzemeler",
-            heading: vec!["Malzeme", "Kategori", "Metraj", "Duvar", "Döşeme", "Alan", "Hacim", "Miktar"],
+            heading: vec![
+                "Malzeme", "Kategori", "Metraj", "Duvar", "Döşeme", "Alan", "Hacim", "Miktar",
+            ],
             numbers: vec![false, false, false, true, true, true, true, true],
             widths: vec![140.0, 80.0, 88.0, 56.0, 64.0, 72.0, 72.0, 80.0],
             shown: q
@@ -927,15 +955,20 @@ impl QuantitiesApp for App {
                 .map(|m| {
                     vec![
                         m.name.clone(),
-                        kentos_native_application::material_quantities::category_label(m.category).to_owned(),
+                        kentos_native_application::material_quantities::category_label(m.category)
+                            .to_owned(),
                         m.quantity.label().to_owned(),
                         m.walls.to_string(),
                         m.slabs.to_string(),
                         area(m.area),
                         fixed(m.volume, 3),
                         match m.quantity {
-                            kentos_commands::MaterialQuantity::Area => format!("{} m²", fixed(m.amount, 2)),
-                            kentos_commands::MaterialQuantity::Volume => format!("{} m³", fixed(m.amount, 3)),
+                            kentos_commands::MaterialQuantity::Area => {
+                                format!("{} m²", fixed(m.amount, 2))
+                            }
+                            kentos_commands::MaterialQuantity::Volume => {
+                                format!("{} m³", fixed(m.amount, 3))
+                            }
                         },
                     ]
                 })
@@ -947,7 +980,8 @@ impl QuantitiesApp for App {
                     let n = |v: f64| format!("{v}");
                     vec![
                         m.name.clone(),
-                        kentos_native_application::material_quantities::category_label(m.category).to_owned(),
+                        kentos_native_application::material_quantities::category_label(m.category)
+                            .to_owned(),
                         m.quantity.label().to_owned(),
                         m.walls.to_string(),
                         m.slabs.to_string(),
@@ -958,7 +992,17 @@ impl QuantitiesApp for App {
                 })
                 .collect(),
         };
-        [spaces, walls, openings, slabs, transitions, ramps, stairs, beams, materials]
+        [
+            spaces,
+            walls,
+            openings,
+            slabs,
+            transitions,
+            ramps,
+            stairs,
+            beams,
+            materials,
+        ]
     }
 
     /// CSV has one table: the one shown. Workbooks keep every sheet,
@@ -970,14 +1014,21 @@ impl QuantitiesApp for App {
         q: &SpacesQuantified,
         tab: Tab,
         format: WorkbookFormat,
-    ) -> Vec<WorkbookSheet>{
-        let exact = self.modules.arch().quantities.as_ref().is_some_and(|w| w.exact);
+    ) -> Vec<WorkbookSheet> {
+        let exact = self
+            .modules
+            .arch()
+            .quantities
+            .as_ref()
+            .is_some_and(|w| w.exact);
         self.quantities_tables(q)
             .into_iter()
             .enumerate()
             .filter(|(i, _)| format != WorkbookFormat::Csv || *i == tab as usize)
             // Malzemeler only when the project keeps materials (docs/adr/0785 §4).
-            .filter(|(i, _)| *i != Tab::Materials as usize || !q.materials.is_empty() || tab == Tab::Materials)
+            .filter(|(i, _)| {
+                *i != Tab::Materials as usize || !q.materials.is_empty() || tab == Tab::Materials
+            })
             .map(|(_, t)| {
                 let rows = t
                     .cells
@@ -1029,7 +1080,7 @@ impl QuantitiesApp for App {
             .collect()
     }
 
-    fn quantities_event(&mut self, event: Event) -> Task<Message>{
+    fn quantities_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = self.modules.arch().quantities.as_ref() else {
             return Task::none();
         };
@@ -1046,7 +1097,9 @@ impl QuantitiesApp for App {
                     Some(k) if k < buildings.len() => (Some(buildings[k].0.clone()), None),
                     Some(k) => (
                         None,
-                        self.quantities_levels().get(k - buildings.len()).map(|(id, _)| id.clone()),
+                        self.quantities_levels()
+                            .get(k - buildings.len())
+                            .map(|(id, _)| id.clone()),
                     ),
                 };
                 let answer = self.quantities_read(level.as_ref(), building.as_ref());
@@ -1092,7 +1145,7 @@ impl QuantitiesApp for App {
         Task::none()
     }
 
-    fn quantities_view(&self) -> Element<'_, Message>{
+    fn quantities_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().quantities else {
             return text("").into();
         };
@@ -1100,11 +1153,21 @@ impl QuantitiesApp for App {
         let buildings = self.quantities_buildings();
         let mut names = vec!["Bütün katlar".to_owned()];
         // A building's own storeys (docs/adr/8072 §4), before the levels.
-        names.extend(buildings.iter().map(|(_, n)| format!("{n} (binanın katları)")));
+        names.extend(
+            buildings
+                .iter()
+                .map(|(_, n)| format!("{n} (binanın katları)")),
+        );
         names.extend(levels.iter().map(|(_, n)| n.clone()));
         let chosen = match (&w.building, &w.level) {
-            (Some(b), _) => buildings.iter().position(|(id, _)| id == b).map_or(0, |k| k + 1),
-            (None, Some(l)) => levels.iter().position(|(id, _)| id == l).map_or(0, |k| k + 1 + buildings.len()),
+            (Some(b), _) => buildings
+                .iter()
+                .position(|(id, _)| id == b)
+                .map_or(0, |k| k + 1),
+            (None, Some(l)) => levels
+                .iter()
+                .position(|(id, _)| id == l)
+                .map_or(0, |k| k + 1 + buildings.len()),
             (None, None) => 0,
         };
         let level: Element<'_, Message> =
@@ -1126,15 +1189,15 @@ impl QuantitiesApp for App {
         if w.answer.as_ref().is_ok_and(|q| !q.materials.is_empty()) {
             shown_tabs.push(Tab::Materials);
         }
-        let tabs = Segmented::new(
-            shown_tabs,
-            w.tab,
-            |t| msg(Event::Tab(t)),
-        );
+        let tabs = Segmented::new(shown_tabs, w.tab, |t| msg(Event::Tab(t)));
         let head = row![
             words::field("Gösterilen", tabs, None),
             words::field(
-                if buildings.is_empty() { "Kat" } else { "Kat ya da bina" },
+                if buildings.is_empty() {
+                    "Kat"
+                } else {
+                    "Kat ya da bina"
+                },
                 container(level).width(220),
                 None,
             ),
@@ -1319,7 +1382,12 @@ impl QuantitiesApp for App {
         })
         .into();
         // Sayılar (docs/adr/0733 §7): the worked-out numbers as shown, or to 15 significant digits.
-        let exact = self.modules.arch().quantities.as_ref().is_some_and(|w| w.exact);
+        let exact = self
+            .modules
+            .arch()
+            .quantities
+            .as_ref()
+            .is_some_and(|w| w.exact);
         let export: Element<'_, Message> = row![
             export,
             crate::exchange::words::check(
@@ -1352,7 +1420,7 @@ impl QuantitiesApp for App {
     }
 
     /// The rule the shown table's numbers come from: the command's own words.
-    fn quantities_rule(&self, q: &SpacesQuantified, tab: Tab) -> String{
+    fn quantities_rule(&self, q: &SpacesQuantified, tab: Tab) -> String {
         match tab {
             Tab::Spaces => q.spaces.first().map_or_else(
                 || "Alan: halkaların alanı, delikler düşülür; hacim: alan × iç yükseklik (bitmiş döşemeden tavana).".to_owned(),
@@ -1388,10 +1456,7 @@ impl QuantitiesApp for App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step).
-    fn quantities_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>{
+    fn quantities_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().quantities.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
@@ -1424,12 +1489,17 @@ fn merge_words(doc: &kentos_domain::Document, out: &kentos_commands::SpacesEdite
             .and_then(|s| match doc.get(s) {
                 Some(Entity::Space(x)) => {
                     let f = &x.space;
-                    Some(match (f.number.as_deref(), f.name.as_deref().or(f.usage.as_deref())) {
-                        (Some(n), Some(w)) => format!("“{n} {w}”"),
-                        (Some(n), None) => format!("“{n}”"),
-                        (None, Some(w)) => format!("“{w}”"),
-                        (None, None) => "mahal".into(),
-                    })
+                    Some(
+                        match (
+                            f.number.as_deref(),
+                            f.name.as_deref().or(f.usage.as_deref()),
+                        ) {
+                            (Some(n), Some(w)) => format!("“{n} {w}”"),
+                            (Some(n), None) => format!("“{n}”"),
+                            (None, Some(w)) => format!("“{w}”"),
+                            (None, None) => "mahal".into(),
+                        },
+                    )
                 }
                 _ => None,
             })
@@ -1450,7 +1520,11 @@ fn merge_words(doc: &kentos_domain::Document, out: &kentos_commands::SpacesEdite
         let gone = p.uid.as_deref().map_or_else(|| "parça".into(), name);
         let mut bits = vec![format!("numarası {}", p.number.as_deref().unwrap_or("yok"))];
         let f = &p.finishes;
-        let finishes: Vec<&str> = [&f.floor, &f.base, &f.wall, &f.ceiling].into_iter().flatten().map(String::as_str).collect();
+        let finishes: Vec<&str> = [&f.floor, &f.base, &f.wall, &f.ceiling]
+            .into_iter()
+            .flatten()
+            .map(String::as_str)
+            .collect();
         if !finishes.is_empty() {
             bits.push(format!("kaplaması {}", finishes.join(", ")));
         }

@@ -14,7 +14,13 @@ fn app_with_notes() -> App {
 }
 
 fn status_of(app: &App, number: u32) -> ReviewStatus {
-    app.review_listed().notes.iter().find(|n| n.note.number == number).expect("the note").note.status
+    app.review_listed()
+        .notes
+        .iter()
+        .find(|n| n.note.number == number)
+        .expect("the note")
+        .note
+        .status
 }
 
 /// UR-054: a resolved note chosen, the Açık filter hides it: no details, and its state is not changed from there.
@@ -22,20 +28,45 @@ fn status_of(app: &App, number: u32) -> ReviewStatus {
 fn a_note_the_filter_hides_is_not_acted_on() {
     let mut app = app_with_notes();
     // The second note (chosen as added) is resolved; the first stays open.
-    let _ = app.update(Message::ReviewNotes(Event::Status(Status(ReviewStatus::Resolved))));
+    let _ = app.update(Message::ReviewNotes(Event::Status(Status(
+        ReviewStatus::Resolved,
+    ))));
     assert_eq!(status_of(&app, 2), ReviewStatus::Resolved);
     // Filtering to Açık moves the choice to the shown open note.
     let _ = app.update(Message::ReviewNotes(Event::Filter(Filter::Open)));
-    let first = app.review_listed().notes.iter().find(|n| n.note.number == 1).unwrap().note.id.clone();
-    assert_eq!(app.review_window.as_ref().unwrap().chosen.as_deref(), Some(first.as_str()));
+    let first = app
+        .review_listed()
+        .notes
+        .iter()
+        .find(|n| n.note.number == 1)
+        .unwrap()
+        .note
+        .id
+        .clone();
+    assert_eq!(
+        app.review_window.as_ref().unwrap().chosen.as_deref(),
+        Some(first.as_str())
+    );
     // Resolving it takes its row out of the table: its details go and a further change does nothing.
-    let _ = app.update(Message::ReviewNotes(Event::Status(Status(ReviewStatus::Resolved))));
+    let _ = app.update(Message::ReviewNotes(Event::Status(Status(
+        ReviewStatus::Resolved,
+    ))));
     assert_eq!(status_of(&app, 1), ReviewStatus::Resolved);
     assert_eq!(app.review_visible_chosen(), None);
-    let _ = app.update(Message::ReviewNotes(Event::Status(Status(ReviewStatus::Open))));
-    assert_eq!(status_of(&app, 1), ReviewStatus::Resolved, "a hidden note is not changed");
+    let _ = app.update(Message::ReviewNotes(Event::Status(Status(
+        ReviewStatus::Open,
+    ))));
+    assert_eq!(
+        status_of(&app, 1),
+        ReviewStatus::Resolved,
+        "a hidden note is not changed"
+    );
     let _ = app.update(Message::ReviewNotes(Event::Remove));
-    assert_eq!(app.review_listed().notes.len(), 2, "a hidden note is not removed");
+    assert_eq!(
+        app.review_listed().notes.len(),
+        2,
+        "a hidden note is not removed"
+    );
     // An empty filter chooses nothing.
     let _ = app.update(Message::ReviewNotes(Event::Filter(Filter::Answered)));
     assert_eq!(app.review_window.as_ref().unwrap().chosen, None);
@@ -51,7 +82,9 @@ fn screens() {
     crate::files_testing::usage_shots("054", "acik-suzgec-gizli-not", || {
         let mut app = app_with_notes();
         let _ = app.update(Message::ReviewNotes(Event::Filter(Filter::Open)));
-        let _ = app.update(Message::ReviewNotes(Event::Status(Status(ReviewStatus::Resolved))));
+        let _ = app.update(Message::ReviewNotes(Event::Status(Status(
+            ReviewStatus::Resolved,
+        ))));
         app
     });
 }

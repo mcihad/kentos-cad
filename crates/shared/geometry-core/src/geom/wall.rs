@@ -230,7 +230,11 @@ impl FromJson for Component {
             priority: match Option::<f64>::from_json(v.get("priority"))? {
                 None => None,
                 Some(p) if (1.0..=9.0).contains(&p) && p.fract() == 0.0 => Some(p as u8),
-                Some(p) => return Err(format!("bileşenin önceliği 1 ile 9 arası bir tam sayıdır, {p} değil")),
+                Some(p) => {
+                    return Err(format!(
+                        "bileşenin önceliği 1 ile 9 arası bir tam sayıdır, {p} değil"
+                    ));
+                }
             },
             wrap: matches!(v.get("wrap"), Json::Bool(true)),
         })
@@ -325,7 +329,9 @@ impl crate::api::json::Flat for Spec {
             },
             joins: {
                 let at = |name: &str| match v.get("joins").get(name) {
-                    Json::Str(s) => JoinMode::of(s).ok_or_else(|| format!("bilinmeyen birleşim “{s}”")),
+                    Json::Str(s) => {
+                        JoinMode::of(s).ok_or_else(|| format!("bilinmeyen birleşim “{s}”"))
+                    }
                     _ => Ok(JoinMode::Auto),
                 };
                 [at("start")?, at("end")?]
@@ -336,7 +342,9 @@ impl crate::api::json::Flat for Spec {
                         Json::Arr(list) => list
                             .iter()
                             .map(|x| match x {
-                                Json::Num(n) if *n >= 0.0 && *n <= 255.0 && n.fract() == 0.0 => Ok(*n as u8),
+                                Json::Num(n) if *n >= 0.0 && *n <= 255.0 && n.fract() == 0.0 => {
+                                    Ok(*n as u8)
+                                }
                                 _ => Err("düğüm kararı negatif olmayan tam sayılardır".to_owned()),
                             })
                             .collect::<Result<Vec<u8>, String>>()
@@ -383,7 +391,10 @@ impl crate::api::json::Flat for Spec {
                 .collect();
             for (k, p) in [("startPass", &self.passes[0]), ("endPass", &self.passes[1])] {
                 if let Some(p) = p {
-                    joins.push((k.to_owned(), Json::Arr(p.iter().map(|&x| Json::Num(f64::from(x))).collect())));
+                    joins.push((
+                        k.to_owned(),
+                        Json::Arr(p.iter().map(|&x| Json::Num(f64::from(x))).collect()),
+                    ));
                 }
             }
             let joins = Json::Obj(joins.into_iter().collect());
@@ -568,11 +579,7 @@ pub(crate) fn band(a: &Line, b: &Line, closed: bool) -> Body {
 }
 
 /// The body's outline: the faces' band (a closed wall's outer ring and its hole).
-pub fn body(
-    pts: &[Vec2],
-    bulges: Option<&[f64]>,
-    spec: &Spec,
-) -> Result<Body, String> {
+pub fn body(pts: &[Vec2], bulges: Option<&[f64]>, spec: &Spec) -> Result<Body, String> {
     let all = lines(pts, bulges, spec)?;
     Ok(band(&all[0], &all[all.len() - 1], spec.closed))
 }
@@ -805,7 +812,11 @@ pub fn drawn(pts: &[Vec2], bulges: Option<&[f64]>, spec: &Spec) -> Result<Drawn,
     // Layers that turn at its free ends (docs/adr/0771 §3) are the solver's: a wall on its own turns as in a drawing.
     if spec.components.iter().any(|c| c.wrap) {
         let one = [crate::geom::wall_join::WallIn { pts, bulges, spec }];
-        if let Some(Some(d)) = crate::geom::wall_join::solve(&one, None).drawn.into_iter().next() {
+        if let Some(Some(d)) = crate::geom::wall_join::solve(&one, None)
+            .drawn
+            .into_iter()
+            .next()
+        {
             return Ok(d);
         }
     }
@@ -869,13 +880,14 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
     } else {
         &[]
     };
-    let hatch = |ring: &Vec<Vec2>, holes: &Option<Vec<Vec<Vec2>>>, pattern: HatchPattern| Shape::Hatch {
-        ring: ring.clone(),
-        holes: holes.clone(),
-        pattern: Box::new(pattern),
-        assoc: None,
-        boundary: None,
-    };
+    let hatch =
+        |ring: &Vec<Vec2>, holes: &Option<Vec<Vec<Vec2>>>, pattern: HatchPattern| Shape::Hatch {
+            ring: ring.clone(),
+            holes: holes.clone(),
+            pattern: Box::new(pattern),
+            assoc: None,
+            boundary: None,
+        };
     if view.detail == Detail::Schematic {
         if let Some(fill) = &spec.fill {
             for (ring, holes) in &d.fill {
@@ -907,7 +919,11 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
                 continue;
             };
             for (ring, holes) in &d.bands[k] {
-                out.push(piece(hatch(ring, holes, pattern.clone()), fill.color.clone(), None));
+                out.push(piece(
+                    hatch(ring, holes, pattern.clone()),
+                    fill.color.clone(),
+                    None,
+                ));
             }
         }
     }
@@ -941,7 +957,12 @@ pub fn pieces_of(d: &Drawn, pts: &[Vec2], spec: &Spec, view: View) -> Vec<Piece>
 
 /// A curtain wall in plan (docs/adr/8070 §7): its faces and ends as a wall's, its glass a line down its middle, and its
 /// mullions, each a frame's face wide and as deep as the wall, on the grid's lines of each straight stretch.
-fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64, f64, f64)) -> Vec<Piece> {
+fn curtain_pieces(
+    d: &Drawn,
+    pts: &[Vec2],
+    spec: &Spec,
+    (spacing, _, face): (f64, f64, f64),
+) -> Vec<Piece> {
     let mut out = Vec::new();
     let last = d.lines.len().saturating_sub(1);
     for k in [0, last] {
@@ -957,7 +978,11 @@ fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64
     let middle = (left + right) / 2.0;
     let glass = line_at(pts, None, spec.closed, middle).ok();
     // Its doors and windows (docs/adr/8129): the glass stops at their jambs, the mullions inside them are not there.
-    let inside = |s: f64| d.openings.iter().any(|&(s0, s1)| s > s0 + 1e-9 && s < s1 - 1e-9);
+    let inside = |s: f64| {
+        d.openings
+            .iter()
+            .any(|&(s0, s1)| s > s0 + 1e-9 && s < s1 - 1e-9)
+    };
     if d.openings.is_empty()
         && let Some(glass) = &glass
     {
@@ -974,14 +999,22 @@ fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64
         }
         let u = Vec2::new((b.x - a.x) / length, (b.y - a.y) / length);
         let normal = Vec2::new(-u.y, u.x);
-        let at = |s: f64, off: f64| Vec2::new(a.x + u.x * s + normal.x * off, a.y + u.y * s + normal.y * off);
+        let at = |s: f64, off: f64| {
+            Vec2::new(
+                a.x + u.x * s + normal.x * off,
+                a.y + u.y * s + normal.y * off,
+            )
+        };
         // The glass along this stretch, from corner to corner of its line, less the openings on it.
         if !d.openings.is_empty()
             && let Some(g) = &glass
             && let (Some(&g0), Some(&g1)) = (g.pts.get(i), g.pts.get((i + 1) % g.pts.len()))
         {
             // Its corners' places along the stretch (a mitre runs past or short of the stretch's end).
-            let (t0, t1) = ((g0.x - a.x) * u.x + (g0.y - a.y) * u.y, (g1.x - a.x) * u.x + (g1.y - a.y) * u.y);
+            let (t0, t1) = (
+                (g0.x - a.x) * u.x + (g0.y - a.y) * u.y,
+                (g1.x - a.x) * u.x + (g1.y - a.y) * u.y,
+            );
             let mut cuts: Vec<(f64, f64)> = d
                 .openings
                 .iter()
@@ -992,7 +1025,14 @@ fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64
             let mut from = (t0, g0);
             for (s0, s1) in cuts {
                 if s0 > from.0 + 1e-9 {
-                    out.push(piece(Shape::Line { a: from.1, b: at(s0, middle) }, None, None));
+                    out.push(piece(
+                        Shape::Line {
+                            a: from.1,
+                            b: at(s0, middle),
+                        },
+                        None,
+                        None,
+                    ));
                 }
                 if s1 >= t1 {
                     from = (t1, g1);
@@ -1009,7 +1049,11 @@ fn curtain_pieces(d: &Drawn, pts: &[Vec2], spec: &Spec, (spacing, _, face): (f64
             if inside(start + lines[k]) {
                 continue;
             }
-            let (s0, s1) = crate::geom::curtain::frame_span(&lines, k, crate::jsmath::js_min(face, length / 2.0));
+            let (s0, s1) = crate::geom::curtain::frame_span(
+                &lines,
+                k,
+                crate::jsmath::js_min(face, length / 2.0),
+            );
             out.push(piece(
                 Shape::Polygon {
                     pts: vec![at(s0, left), at(s1, left), at(s1, right), at(s0, right)],
@@ -1173,25 +1217,46 @@ mod tests {
         };
         let pts = [v(0.0, 0.0), v(6.0, 0.0)];
         let pieces = pieces(&pts, None, &spec, View::new(Detail::Standard, 50.0)).unwrap();
-        assert!(!pieces.iter().any(|p| matches!(p.shape, Shape::Hatch { .. })));
+        assert!(
+            !pieces
+                .iter()
+                .any(|p| matches!(p.shape, Shape::Hatch { .. }))
+        );
         let mullions: Vec<(f64, f64)> = pieces
             .iter()
             .filter_map(|p| match &p.shape {
                 Shape::Polygon { pts, .. } => {
                     let xs: Vec<f64> = pts.iter().map(|q| q.x).collect();
                     let ys: Vec<f64> = pts.iter().map(|q| q.y).collect();
-                    let lo = |v: &[f64]| v.iter().cloned().fold(f64::INFINITY, crate::jsmath::js_min);
-                    let hi = |v: &[f64]| v.iter().cloned().fold(f64::NEG_INFINITY, crate::jsmath::js_max);
-                    assert!((lo(&ys) + 0.075).abs() < 1e-12 && (hi(&ys) - 0.075).abs() < 1e-12, "{pts:?}");
+                    let lo =
+                        |v: &[f64]| v.iter().cloned().fold(f64::INFINITY, crate::jsmath::js_min);
+                    let hi = |v: &[f64]| {
+                        v.iter()
+                            .cloned()
+                            .fold(f64::NEG_INFINITY, crate::jsmath::js_max)
+                    };
+                    assert!(
+                        (lo(&ys) + 0.075).abs() < 1e-12 && (hi(&ys) - 0.075).abs() < 1e-12,
+                        "{pts:?}"
+                    );
                     Some((lo(&xs), hi(&xs)))
                 }
                 _ => None,
             })
             .collect();
-        let want = [(0.0, 0.05), (1.475, 1.525), (2.975, 3.025), (4.475, 4.525), (5.95, 6.0)];
+        let want = [
+            (0.0, 0.05),
+            (1.475, 1.525),
+            (2.975, 3.025),
+            (4.475, 4.525),
+            (5.95, 6.0),
+        ];
         assert_eq!(mullions.len(), want.len(), "{mullions:?}");
         for (got, want) in mullions.iter().zip(want) {
-            assert!((got.0 - want.0).abs() < 1e-12 && (got.1 - want.1).abs() < 1e-12, "{got:?} {want:?}");
+            assert!(
+                (got.0 - want.0).abs() < 1e-12 && (got.1 - want.1).abs() < 1e-12,
+                "{got:?} {want:?}"
+            );
         }
         // The glass: a line along y 0 from end to end.
         assert!(pieces.iter().any(|p| match &p.shape {
@@ -1214,20 +1279,33 @@ mod tests {
             ..Spec::default()
         };
         let pts = [v(0.0, 0.0), v(6.0, 0.0)];
-        let wall = [crate::geom::wall_join::WallIn { pts: &pts, bulges: None, spec: &spec }];
+        let wall = [crate::geom::wall_join::WallIn {
+            pts: &pts,
+            bulges: None,
+            spec: &spec,
+        }];
         let holes = [vec![crate::geom::opening::Hole::through(1.525, 4.475)]];
-        let d = crate::geom::wall_join::solve_with(&wall, &holes, None).drawn[0].clone().unwrap();
+        let d = crate::geom::wall_join::solve_with(&wall, &holes, None).drawn[0]
+            .clone()
+            .unwrap();
         assert_eq!(d.openings, vec![(1.525, 4.475)]);
         let pieces = pieces_of(&d, &pts, &spec, View::new(Detail::Standard, 50.0));
         let mullions: Vec<f64> = pieces
             .iter()
             .filter_map(|p| match &p.shape {
-                Shape::Polygon { pts, .. } => Some(pts.iter().map(|q| q.x).fold(f64::INFINITY, crate::jsmath::js_min)),
+                Shape::Polygon { pts, .. } => Some(
+                    pts.iter()
+                        .map(|q| q.x)
+                        .fold(f64::INFINITY, crate::jsmath::js_min),
+                ),
                 _ => None,
             })
             .collect();
         assert_eq!(mullions.len(), 4, "{mullions:?}");
-        assert!(!mullions.iter().any(|x| (x - 2.975).abs() < 1e-9), "{mullions:?}");
+        assert!(
+            !mullions.iter().any(|x| (x - 2.975).abs() < 1e-9),
+            "{mullions:?}"
+        );
         let glass: Vec<(f64, f64)> = pieces
             .iter()
             .filter_map(|p| match &p.shape {
@@ -1236,13 +1314,22 @@ mod tests {
             })
             .collect();
         assert_eq!(glass.len(), 2, "{glass:?}");
-        assert!((glass[0].0 - 0.0).abs() < 1e-9 && (glass[0].1 - 1.525).abs() < 1e-9, "{glass:?}");
-        assert!((glass[1].0 - 4.475).abs() < 1e-9 && (glass[1].1 - 6.0).abs() < 1e-9, "{glass:?}");
+        assert!(
+            (glass[0].0 - 0.0).abs() < 1e-9 && (glass[0].1 - 1.525).abs() < 1e-9,
+            "{glass:?}"
+        );
+        assert!(
+            (glass[1].0 - 4.475).abs() < 1e-9 && (glass[1].1 - 6.0).abs() < 1e-9,
+            "{glass:?}"
+        );
         // Its faces open between the jambs: no face line crosses x 3.
         let crosses = pieces.iter().any(|p| match &p.shape {
-            Shape::Polyline { pts, .. } => {
-                pts.windows(2).any(|w| (w[0].y - w[1].y).abs() < 1e-12 && w[0].y.abs() > 0.07 && crate::jsmath::js_min(w[0].x, w[1].x) < 3.0 && crate::jsmath::js_max(w[0].x, w[1].x) > 3.0)
-            }
+            Shape::Polyline { pts, .. } => pts.windows(2).any(|w| {
+                (w[0].y - w[1].y).abs() < 1e-12
+                    && w[0].y.abs() > 0.07
+                    && crate::jsmath::js_min(w[0].x, w[1].x) < 3.0
+                    && crate::jsmath::js_max(w[0].x, w[1].x) > 3.0
+            }),
             _ => false,
         });
         assert!(!crosses);
@@ -1314,13 +1401,7 @@ mod tests {
         // docs/adr/8009: ISO 128-23 draws the outline of what is cut wide (01.2.1) and a boundary between materials
         // narrow (01.1.1), half the wide (Table 2).
         let p = [v(0.0, 0.0), v(5.0, 0.0)];
-        let got = pieces(
-            &p,
-            None,
-            &layered(),
-            View::new(Detail::Detailed, 20.0),
-        )
-        .unwrap();
+        let got = pieces(&p, None, &layered(), View::new(Detail::Detailed, 20.0)).unwrap();
         let lines: Vec<&Piece> = got
             .iter()
             .filter(|x| !matches!(x.shape, Shape::Hatch { .. }))
@@ -1344,13 +1425,7 @@ mod tests {
             line_weight: Some(0.35),
             ..ComponentEdge::default()
         });
-        let got = pieces(
-            &p,
-            None,
-            &own,
-            View::new(Detail::Detailed, 20.0),
-        )
-        .unwrap();
+        let got = pieces(&p, None, &own, View::new(Detail::Detailed, 20.0)).unwrap();
         assert!(
             got.iter()
                 .any(|x| x.line_weight == Some(0.35) && x.stroke.weight_scale.is_none())
@@ -1369,13 +1444,7 @@ mod tests {
     fn the_detail_decides_the_components_lines_and_hatches() {
         let p = [v(0.0, 0.0), v(5.0, 0.0)];
         let count = |detail| {
-            let got = pieces(
-                &p,
-                None,
-                &layered(),
-                View::new(detail, 50.0),
-            )
-            .unwrap();
+            let got = pieces(&p, None, &layered(), View::new(detail, 50.0)).unwrap();
             let hatches = got
                 .iter()
                 .filter(|x| matches!(x.shape, Shape::Hatch { .. }))
@@ -1398,13 +1467,7 @@ mod tests {
             fill: Some("#000000".into()),
             ..spec(0.2, Justify::Center)
         };
-        let got = pieces(
-            &p,
-            None,
-            &s,
-            View::new(Detail::Schematic, 100.0),
-        )
-        .unwrap();
+        let got = pieces(&p, None, &s, View::new(Detail::Schematic, 100.0)).unwrap();
         assert_eq!(got.len(), 3);
         let Shape::Hatch { ring, holes, .. } = &got[0].shape else {
             panic!()

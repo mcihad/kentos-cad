@@ -16,7 +16,9 @@
 
 use std::collections::BTreeSet;
 
-use kentos_commands::{DataLayer, DataText, EditGrouping, Entity, LayerNode, ProjectSettings, TextCell};
+use kentos_commands::{
+    DataLayer, DataText, EditGrouping, Entity, LayerNode, ProjectSettings, TextCell,
+};
 use kentos_data::{
     Cancel, Capabilities, Change, Condition, Coord, Curve, DataError, Family, Feature, Geometry,
     GeometryField, NewFeature, Request, Schema, Value,
@@ -81,7 +83,9 @@ pub struct Receipting {
 /// one); a file has one place ("").
 pub fn receipt_scope(data: &DataLayer) -> String {
     if data.driver == "postgis" {
-        data.table.rsplit_once('.').map_or_else(|| "public".to_owned(), |(schema, _)| schema.to_owned())
+        data.table
+            .rsplit_once('.')
+            .map_or_else(|| "public".to_owned(), |(schema, _)| schema.to_owned())
     } else {
         String::new()
     }
@@ -89,7 +93,9 @@ pub fn receipt_scope(data: &DataLayer) -> String {
 
 /// Whether the layer's source keeps write receipts (set up by the owner).
 pub fn receipts_ready(data: &DataLayer) -> Result<bool, String> {
-    let source = kentos_data::registry().source(&data.address).map_err(|e| e.to_string())?;
+    let source = kentos_data::registry()
+        .source(&data.address)
+        .map_err(|e| e.to_string())?;
     match source.receipts(&receipt_scope(data)) {
         Ok(ready) => Ok(ready),
         Err(DataError::Unsupported(_)) => Ok(false),
@@ -99,8 +105,12 @@ pub fn receipts_ready(data: &DataLayer) -> Result<bool, String> {
 
 /// Makes the layer's source's write receipts table (docs/adr/9126): a table of its own, the data's tables untouched.
 pub fn set_up_receipts(data: &DataLayer) -> Result<(), String> {
-    let source = kentos_data::registry().source(&data.address).map_err(|e| e.to_string())?;
-    source.set_up_receipts(&receipt_scope(data)).map_err(|e| e.to_string())
+    let source = kentos_data::registry()
+        .source(&data.address)
+        .map_err(|e| e.to_string())?;
+    source
+        .set_up_receipts(&receipt_scope(data))
+        .map_err(|e| e.to_string())
 }
 
 /// Each table's new rows' keys by the objects' ids, as a committed write's receipt says them.
@@ -109,12 +119,17 @@ pub type ReceiptKeys = std::collections::BTreeMap<String, Vec<(Uuid, i64)>>;
 /// What a committed write's receipt says it wrote ([`ReceiptKeys`]). None when no write of `id` committed (its receipt
 /// is not there).
 pub fn receipt_keys(data: &DataLayer, id: &str) -> Result<Option<ReceiptKeys>, String> {
-    let source = kentos_data::registry().source(&data.address).map_err(|e| e.to_string())?;
-    let Some(receipt) = source.receipt(&receipt_scope(data), id).map_err(|e| e.to_string())? else {
+    let source = kentos_data::registry()
+        .source(&data.address)
+        .map_err(|e| e.to_string())?;
+    let Some(receipt) = source
+        .receipt(&receipt_scope(data), id)
+        .map_err(|e| e.to_string())?
+    else {
         return Ok(None);
     };
-    let value: serde_json::Value =
-        serde_json::from_str(&receipt.written).map_err(|e| format!("işlem kaydı okunamadı: {e}"))?;
+    let value: serde_json::Value = serde_json::from_str(&receipt.written)
+        .map_err(|e| format!("işlem kaydı okunamadı: {e}"))?;
     let mut out = std::collections::BTreeMap::new();
     for (table, w) in value.as_object().into_iter().flatten() {
         let keys = w["added"]
@@ -149,10 +164,21 @@ pub fn writes_of(doc: &Document, layer: &str) -> Option<LayerWrites> {
 /// The layers a session acts on together (docs/adr/9104 §2): each named layer alone, or with every data layer of its
 /// source, or every data layer; those being edited when `editing`, else those that may be (not read-only). In the tree's
 /// order.
-pub fn grouped(doc: &Document, named: &[String], grouping: EditGrouping, editing: bool) -> Vec<String> {
+pub fn grouped(
+    doc: &Document,
+    named: &[String],
+    grouping: EditGrouping,
+    editing: bool,
+) -> Vec<String> {
     let layers = doc.layers();
     let fits = |n: &LayerNode| {
-        n.data.as_ref().is_some_and(|d| if editing { doc.editing(&n.id) } else { !d.read_only })
+        n.data.as_ref().is_some_and(|d| {
+            if editing {
+                doc.editing(&n.id)
+            } else {
+                !d.read_only
+            }
+        })
     };
     let addresses: BTreeSet<&str> = named
         .iter()
@@ -165,7 +191,10 @@ pub fn grouped(doc: &Document, named: &[String], grouping: EditGrouping, editing
             EditGrouping::Layer => named.contains(&n.id),
             EditGrouping::Source => {
                 named.contains(&n.id)
-                    || (fits(n) && n.data.as_ref().is_some_and(|d| addresses.contains(d.address.as_str())))
+                    || (fits(n)
+                        && n.data
+                            .as_ref()
+                            .is_some_and(|d| addresses.contains(d.address.as_str())))
             }
             EditGrouping::All => named.contains(&n.id) || fits(n),
         })
@@ -175,7 +204,11 @@ pub fn grouped(doc: &Document, named: &[String], grouping: EditGrouping, editing
 
 /// What `layers` write, in the groups written together: each alone, or a source's in one transaction (docs/adr/9104
 /// §2). A layer with nothing to write is left out.
-pub fn groups_of(doc: &Document, layers: &[String], grouping: EditGrouping) -> Vec<Vec<LayerWrites>> {
+pub fn groups_of(
+    doc: &Document,
+    layers: &[String],
+    grouping: EditGrouping,
+) -> Vec<Vec<LayerWrites>> {
     let writes: Vec<LayerWrites> = layers
         .iter()
         .filter_map(|l| writes_of(doc, l))
@@ -204,7 +237,12 @@ pub fn written(w: &LayerWrites, keys: &[i64]) -> DataWritten {
             .zip(keys)
             .map(|((uid, e), key)| (*uid, e.clone(), *key))
             .collect(),
-        changed: w.changes.changed.iter().map(|c| (c.uid, c.now.clone())).collect(),
+        changed: w
+            .changes
+            .changed
+            .iter()
+            .map(|c| (c.uid, c.now.clone()))
+            .collect(),
         deleted: w.changes.deleted.clone(),
     }
 }
@@ -212,7 +250,8 @@ pub fn written(w: &LayerWrites, keys: &[i64]) -> DataWritten {
 /// Writes `w`'s changes to its table in one transaction of its source, checked against what others wrote since its
 /// rows were taken; the keys the table gave the new rows, in order. Nothing is written when it fails.
 pub fn write(w: &LayerWrites, settings: &ProjectSettings) -> Result<Vec<i64>, WriteFailure> {
-    write_group(std::slice::from_ref(w), settings, false).map(|mut keys| keys.pop().unwrap_or_default())
+    write_group(std::slice::from_ref(w), settings, false)
+        .map(|mut keys| keys.pop().unwrap_or_default())
 }
 
 /// One layer's rows as its table takes them, worked out before the transaction.
@@ -280,8 +319,12 @@ fn plan_group<'a>(
         .map_err(|e| unreachable(first, e))?;
     let mut planned = Vec::with_capacity(group.len());
     for w in group {
-        let schema = source.schema(&w.data.table).map_err(|e| unreachable(w, e))?;
-        let caps = source.capabilities(&w.data.table).map_err(|e| unreachable(w, e))?;
+        let schema = source
+            .schema(&w.data.table)
+            .map_err(|e| unreachable(w, e))?;
+        let caps = source
+            .capabilities(&w.data.table)
+            .map_err(|e| unreachable(w, e))?;
         allowed(w, &caps)?;
         let srid = w.data.geometry.as_ref().and_then(|g| g.srid);
         let system = TableSystem::of(settings, srid).map_err(WriteFailure::Unreachable)?;
@@ -299,14 +342,18 @@ fn plan_group<'a>(
             // A key the table does not make: the next ones after its greatest. Another writer taking them meanwhile
             // makes the table refuse the write (its primary key), and nothing is written.
             if !schema.key_made && !inserts.is_empty() {
-                let last = greatest_key(source.as_ref(), &w.data.table, &schema.key).map_err(|e| unreachable(w, e))?;
+                let last = greatest_key(source.as_ref(), &w.data.table, &schema.key)
+                    .map_err(|e| unreachable(w, e))?;
                 for (i, row) in inserts.iter_mut().enumerate() {
                     row.fid = Some(last + 1 + i as i64);
                 }
             }
             let mut updates = Vec::with_capacity(w.changes.changed.len());
             for c in &w.changes.changed {
-                if let Some(change) = row.change(c.key, &c.now, &c.row).map_err(|m| refused(w, &m, Some(c.uid)))? {
+                if let Some(change) = row
+                    .change(c.key, &c.now, &c.row)
+                    .map_err(|m| refused(w, &m, Some(c.uid)))?
+                {
                     updates.push(change);
                 }
             }
@@ -334,10 +381,14 @@ pub fn clashes_of_group(
         return Ok(Vec::new());
     };
     let (source, planned) = plan_group(group, settings)?;
-    let mut tx = source
-        .begin()
-        .map_err(|e| WriteFailure::Unreachable(format!("“{}” tablosu açılamadı: {e}", first.data.table)))?;
-    let found = conflicts(tx.as_mut(), &planned, crate::data_text::default_height(settings));
+    let mut tx = source.begin().map_err(|e| {
+        WriteFailure::Unreachable(format!("“{}” tablosu açılamadı: {e}", first.data.table))
+    })?;
+    let found = conflicts(
+        tx.as_mut(),
+        &planned,
+        crate::data_text::default_height(settings),
+    );
     let _ = tx.rollback();
     match found {
         Ok(None) => Ok(Vec::new()),
@@ -375,7 +426,11 @@ pub fn write_group_receipted(
     };
     let mut tx = source.begin().map_err(|e| unreachable(first, e))?;
     if !force {
-        match conflicts(tx.as_mut(), &planned, crate::data_text::default_height(settings)) {
+        match conflicts(
+            tx.as_mut(),
+            &planned,
+            crate::data_text::default_height(settings),
+        ) {
             Ok(None) => {}
             Ok(Some(failure)) => {
                 let _ = tx.rollback();
@@ -418,14 +473,13 @@ pub fn write_group_receipted(
             .iter()
             .zip(&keys)
             .map(|(p, k)| {
-                let added: Vec<serde_json::Value> = p
-                    .w
-                    .changes
-                    .added
-                    .iter()
-                    .zip(k)
-                    .map(|((uid, _), key)| serde_json::json!([uid.to_string(), key]))
-                    .collect();
+                let added: Vec<serde_json::Value> =
+                    p.w.changes
+                        .added
+                        .iter()
+                        .zip(k)
+                        .map(|((uid, _), key)| serde_json::json!([uid.to_string(), key]))
+                        .collect();
                 (
                     p.w.data.table.clone(),
                     serde_json::json!({
@@ -443,7 +497,11 @@ pub fn write_group_receipted(
         };
         if let Err(e) = tx.receipt(&scope, &receipt) {
             let _ = tx.rollback();
-            return Err(refused(first, &format!("işlem kaydı yazılamadı: {e}"), None));
+            return Err(refused(
+                first,
+                &format!("işlem kaydı yazılamadı: {e}"),
+                None,
+            ));
         }
     }
     tx.commit().map_err(|e| match e {
@@ -471,13 +529,18 @@ fn conflicts<'a>(
         }
         let keys: Vec<i64> = originals.keys().copied().collect();
         let rows = tx.rows(&p.w.data.table, &keys).map_err(|e| (p.w, e))?;
-        let by_key: std::collections::HashMap<i64, &Feature> = rows.iter().map(|f| (f.fid, f)).collect();
+        let by_key: std::collections::HashMap<i64, &Feature> =
+            rows.iter().map(|f| (f.fid, f)).collect();
         // The layer's fields out of the schema's order, as the take read them.
         let at: Vec<Option<usize>> = p.w.fields.iter().map(|n| p.schema.index(n)).collect();
         let text = p.w.data.text.as_ref();
         // What is here of each taken row: its object now; none for a row deleted here.
         let here: std::collections::HashMap<i64, &Entity> =
-            p.w.changes.changed.iter().map(|c| (c.key, &*c.now)).collect();
+            p.w.changes
+                .changed
+                .iter()
+                .map(|c| (c.key, &*c.now))
+                .collect();
         for (key, (uid, row)) in originals {
             // The table's row now as an object, compared as rows (a text's parts as its columns).
             let theirs = match by_key.get(key) {
@@ -485,14 +548,24 @@ fn conflicts<'a>(
                 Some(f) => {
                     let values: Vec<Value> = at
                         .iter()
-                        .map(|i| i.and_then(|i| f.values.get(i).cloned()).unwrap_or(Value::Null))
+                        .map(|i| {
+                            i.and_then(|i| f.values.get(i).cloned())
+                                .unwrap_or(Value::Null)
+                        })
                         .collect();
                     let read = Feature {
                         fid: f.fid,
                         geometry: f.geometry.clone(),
                         values,
                     };
-                    match object_from(&read, &p.w.fields, &p.w.layer, p.system.as_ref(), text, height) {
+                    match object_from(
+                        &read,
+                        &p.w.fields,
+                        &p.w.layer,
+                        p.system.as_ref(),
+                        text,
+                        height,
+                    ) {
                         Ok(e) => Some(e),
                         // A row that no longer reads as an object of the layer: a clash with nothing to show.
                         Err(_) => {
@@ -515,7 +588,9 @@ fn conflicts<'a>(
             let first = as_row(text, row).into_owned();
             let mine = here.get(key).map(|e| as_row(text, e).into_owned());
             let theirs_row = theirs.as_ref().map(|e| as_row(text, e).into_owned());
-            if let Some((fields, geometry)) = crate::data_clash::clash_of(&first, mine.as_ref(), theirs_row.as_ref()) {
+            if let Some((fields, geometry)) =
+                crate::data_clash::clash_of(&first, mine.as_ref(), theirs_row.as_ref())
+            {
                 clashes.push(crate::data_clash::RowClash {
                     layer: p.w.layer.clone(),
                     uid: *uid,
@@ -534,11 +609,19 @@ fn conflicts<'a>(
         return Ok(None);
     }
     let uids = clashes.iter().map(|c| c.uid).collect();
-    Ok(Some(WriteFailure::Conflict(crate::data_clash::clash_words(&clashes), uids, clashes)))
+    Ok(Some(WriteFailure::Conflict(
+        crate::data_clash::clash_words(&clashes),
+        uids,
+        clashes,
+    )))
 }
 
 /// The table's greatest key; 0 for an empty table.
-fn greatest_key(source: &dyn kentos_data::Source, table: &str, key: &str) -> Result<i64, DataError> {
+fn greatest_key(
+    source: &dyn kentos_data::Source,
+    table: &str,
+    key: &str,
+) -> Result<i64, DataError> {
     let request = Request {
         columns: Some(Vec::new()),
         geometry: false,
@@ -551,7 +634,9 @@ fn greatest_key(source: &dyn kentos_data::Source, table: &str, key: &str) -> Res
         ..Request::default()
     };
     let mut last = 0;
-    source.features(table, &request, &Cancel::new(), &mut |part: Vec<Feature>| {
+    source.features(table, &request, &Cancel::new(), &mut |part: Vec<
+        Feature,
+    >| {
         if let Some(f) = part.first() {
             last = f.fid;
         }
@@ -562,7 +647,10 @@ fn greatest_key(source: &dyn kentos_data::Source, table: &str, key: &str) -> Res
 
 fn refused(w: &LayerWrites, why: &str, uid: Option<Uuid>) -> WriteFailure {
     WriteFailure::Refused(
-        format!("“{}” katmanının değişiklikleri tablosuna yazılamadı: {why}", w.name),
+        format!(
+            "“{}” katmanının değişiklikleri tablosuna yazılamadı: {why}",
+            w.name
+        ),
         uid,
     )
 }
@@ -570,14 +658,38 @@ fn refused(w: &LayerWrites, why: &str, uid: Option<Uuid>) -> WriteFailure {
 /// The table's rights against what the layer writes.
 fn allowed(w: &LayerWrites, caps: &Capabilities) -> Result<(), WriteFailure> {
     let text = w.data.text.as_ref();
-    let rows = |c: &kentos_domain::DataChange| (as_row(text, &c.now).into_owned(), as_row(text, &c.row).into_owned());
-    let geometry_changed = w.changes.changed.iter().map(rows).any(|(now, row)| geometry_of(&now) != geometry_of(&row));
-    let values_changed = w.changes.changed.iter().map(rows).any(|(now, row)| now.base().attrs != row.base().attrs);
+    let rows = |c: &kentos_domain::DataChange| {
+        (
+            as_row(text, &c.now).into_owned(),
+            as_row(text, &c.row).into_owned(),
+        )
+    };
+    let geometry_changed = w
+        .changes
+        .changed
+        .iter()
+        .map(rows)
+        .any(|(now, row)| geometry_of(&now) != geometry_of(&row));
+    let values_changed = w
+        .changes
+        .changed
+        .iter()
+        .map(rows)
+        .any(|(now, row)| now.base().attrs != row.base().attrs);
     let missing = [
-        (!w.changes.added.is_empty() && !caps.insert, "yeni satır eklemeye"),
-        (geometry_changed && !caps.update_geometry, "geometri değiştirmeye"),
+        (
+            !w.changes.added.is_empty() && !caps.insert,
+            "yeni satır eklemeye",
+        ),
+        (
+            geometry_changed && !caps.update_geometry,
+            "geometri değiştirmeye",
+        ),
         (values_changed && !caps.update_values, "değer değiştirmeye"),
-        (!w.changes.deleted.is_empty() && !caps.delete, "satır silmeye"),
+        (
+            !w.changes.deleted.is_empty() && !caps.delete,
+            "satır silmeye",
+        ),
     ];
     match missing.iter().find(|(m, _)| *m) {
         Some((_, what)) => Err(WriteFailure::Refused(
@@ -603,8 +715,17 @@ pub(crate) struct Rows<'a> {
 
 impl<'a> Rows<'a> {
     /// Rows of the table `schema` describes; `curves` when it keeps arcs; `system` the move into its system.
-    pub(crate) fn new(schema: &'a Schema, curves: bool, system: Option<&'a TableSystem>) -> Rows<'a> {
-        Rows { schema, curves, system, text: None }
+    pub(crate) fn new(
+        schema: &'a Schema,
+        curves: bool,
+        system: Option<&'a TableSystem>,
+    ) -> Rows<'a> {
+        Rows {
+            schema,
+            curves,
+            system,
+            text: None,
+        }
     }
 }
 
@@ -635,7 +756,11 @@ impl Rows<'_> {
         let (now, row) = (as_row(self.text, now), as_row(self.text, row));
         let (now, row) = (&*now, &*row);
         let (a, b) = (&now.base().attrs, &row.base().attrs);
-        let names: BTreeSet<&String> = a.keys().chain(b.keys()).filter(|n| a.get(*n) != b.get(*n)).collect();
+        let names: BTreeSet<&String> = a
+            .keys()
+            .chain(b.keys())
+            .filter(|n| a.get(*n) != b.get(*n))
+            .collect();
         let mut values = Vec::new();
         for field in self.writable().filter(|f| names.contains(&f.name)) {
             let text = a.get(&field.name).filter(|t| !t.is_empty());
@@ -646,19 +771,22 @@ impl Rows<'_> {
         } else {
             Some(self.shape(now)?)
         };
-        Ok((geometry.is_some() || !values.is_empty()).then_some(Change {
-            fid: key,
-            geometry,
-            values,
-        }))
+        Ok(
+            (geometry.is_some() || !values.is_empty()).then_some(Change {
+                fid: key,
+                geometry,
+                values,
+            }),
+        )
     }
 
     /// The fields a row's values are written to.
     fn writable(&self) -> impl Iterator<Item = &kentos_data::Field> {
-        self.schema
-            .fields
-            .iter()
-            .filter(|f| !f.generated && f.name != self.schema.key && !matches!(f.kind, kentos_data::FieldKind::Other))
+        self.schema.fields.iter().filter(|f| {
+            !f.generated
+                && f.name != self.schema.key
+                && !matches!(f.kind, kentos_data::FieldKind::Other)
+        })
     }
 
     /// The object's geometry as the table's column holds it; none for a table without geometry.
@@ -673,14 +801,21 @@ impl Rows<'_> {
         };
         let g = as_family(g, column.family())?;
         let keeps_curves = self.curves && keeps_curves(&column.type_name);
-        let g = if keeps_curves || !g.is_curved() { g } else { chorded(&g) };
+        let g = if keeps_curves || !g.is_curved() {
+            g
+        } else {
+            chorded(&g)
+        };
         let g = match self.system {
             Some(s) => s
                 .moved_back(&g)
                 .ok_or_else(|| "geometri tablonun koordinat sistemine çevrilemedi".to_owned())?,
             None => g,
         };
-        Ok(Some(kentos_data::fit::fit(with_dims(g, column), &column.type_name)))
+        Ok(Some(kentos_data::fit::fit(
+            with_dims(g, column),
+            &column.type_name,
+        )))
     }
 }
 
@@ -694,7 +829,14 @@ fn value_of(field: &kentos_data::Field, text: Option<&String>) -> Result<Value, 
 fn keeps_curves(type_name: &str) -> bool {
     matches!(
         type_name.trim().to_ascii_uppercase().as_str(),
-        "GEOMETRY" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "CURVEPOLYGON" | "MULTICURVE" | "MULTISURFACE" | "CURVE" | "SURFACE"
+        "GEOMETRY"
+            | "CIRCULARSTRING"
+            | "COMPOUNDCURVE"
+            | "CURVEPOLYGON"
+            | "MULTICURVE"
+            | "MULTISURFACE"
+            | "CURVE"
+            | "SURFACE"
     )
 }
 
@@ -704,7 +846,11 @@ fn keeps_curves(type_name: &str) -> bool {
 fn as_family(g: Geometry, family: Family) -> Result<Geometry, String> {
     let closed = |c: &Curve| {
         let pts = chords_of(c);
-        pts.len() >= 4 && pts.first().zip(pts.last()).is_some_and(|(a, b)| a.x == b.x && a.y == b.y)
+        pts.len() >= 4
+            && pts
+                .first()
+                .zip(pts.last())
+                .is_some_and(|(a, b)| a.x == b.x && a.y == b.y)
     };
     match (family, g) {
         (Family::Any, g) => Ok(g),
@@ -715,12 +861,14 @@ fn as_family(g: Geometry, family: Family) -> Result<Geometry, String> {
         } else {
             Geometry::MultiCurve(rings)
         }),
-        (Family::Line, Geometry::MultiPolygon(polys)) => Ok(Geometry::MultiCurve(polys.into_iter().flatten().collect())),
+        (Family::Line, Geometry::MultiPolygon(polys)) => {
+            Ok(Geometry::MultiCurve(polys.into_iter().flatten().collect()))
+        }
         (Family::Area, g @ (Geometry::Polygon(_) | Geometry::MultiPolygon(_))) => Ok(g),
         (Family::Area, Geometry::Curve(c)) if closed(&c) => Ok(Geometry::Polygon(vec![c])),
-        (Family::Area, Geometry::MultiCurve(cs)) if cs.iter().all(closed) => {
-            Ok(Geometry::MultiPolygon(cs.into_iter().map(|c| vec![c]).collect()))
-        }
+        (Family::Area, Geometry::MultiCurve(cs)) if cs.iter().all(closed) => Ok(
+            Geometry::MultiPolygon(cs.into_iter().map(|c| vec![c]).collect()),
+        ),
         (family, g) => Err(format!(
             "{} geometrisi {} tutan bir sütuna yazılmaz",
             g.type_name(),
@@ -760,10 +908,14 @@ fn map_coords(g: &Geometry, f: &dyn Fn(&Coord) -> Coord) -> Geometry {
         Geometry::Curve(c) => Geometry::Curve(curve(c, f)),
         Geometry::Polygon(r) => Geometry::Polygon(r.iter().map(|c| curve(c, f)).collect()),
         Geometry::MultiCurve(cs) => Geometry::MultiCurve(cs.iter().map(|c| curve(c, f)).collect()),
-        Geometry::MultiPolygon(ps) => {
-            Geometry::MultiPolygon(ps.iter().map(|r| r.iter().map(|c| curve(c, f)).collect()).collect())
+        Geometry::MultiPolygon(ps) => Geometry::MultiPolygon(
+            ps.iter()
+                .map(|r| r.iter().map(|c| curve(c, f)).collect())
+                .collect(),
+        ),
+        Geometry::Collection(gs) => {
+            Geometry::Collection(gs.iter().map(|g| map_coords(g, f)).collect())
         }
-        Geometry::Collection(gs) => Geometry::Collection(gs.iter().map(|g| map_coords(g, f)).collect()),
     }
 }
 
@@ -774,7 +926,9 @@ pub(crate) fn chorded(g: &Geometry) -> Geometry {
         Geometry::Curve(c) => Geometry::Curve(line(c)),
         Geometry::Polygon(r) => Geometry::Polygon(r.iter().map(line).collect()),
         Geometry::MultiCurve(cs) => Geometry::MultiCurve(cs.iter().map(line).collect()),
-        Geometry::MultiPolygon(ps) => Geometry::MultiPolygon(ps.iter().map(|r| r.iter().map(line).collect()).collect()),
+        Geometry::MultiPolygon(ps) => {
+            Geometry::MultiPolygon(ps.iter().map(|r| r.iter().map(line).collect()).collect())
+        }
         Geometry::Collection(gs) => Geometry::Collection(gs.iter().map(chorded).collect()),
         other => other.clone(),
     }
@@ -878,9 +1032,18 @@ pub fn rows_to_take(
     let mut out = Vec::with_capacity(keys.len());
     let mut failed = None;
     source
-        .features(&data.table, &request, &Cancel::new(), &mut |part: Vec<Feature>| {
+        .features(&data.table, &request, &Cancel::new(), &mut |part: Vec<
+            Feature,
+        >| {
             for f in &part {
-                match object_from(f, &fields, &node.id, system.as_ref(), data.text.as_ref(), height) {
+                match object_from(
+                    f,
+                    &fields,
+                    &node.id,
+                    system.as_ref(),
+                    data.text.as_ref(),
+                    height,
+                ) {
                     Ok(e) => out.push((f.fid, e)),
                     Err(m) => failed = Some(m),
                 }
@@ -957,7 +1120,9 @@ fn rows_read(
     let mut out = AllRows::default();
     let mut halted = false;
     source
-        .features(&data.table, &request, &Cancel::new(), &mut |part: Vec<Feature>| {
+        .features(&data.table, &request, &Cancel::new(), &mut |part: Vec<
+            Feature,
+        >| {
             for f in &part {
                 out.read += 1;
                 if leave.contains(&f.fid) {
@@ -967,7 +1132,14 @@ fn rows_read(
                     out.skipped += 1;
                     continue;
                 }
-                match object_from(f, &fields, &node.id, system.as_ref(), data.text.as_ref(), height) {
+                match object_from(
+                    f,
+                    &fields,
+                    &node.id,
+                    system.as_ref(),
+                    data.text.as_ref(),
+                    height,
+                ) {
                     Ok(e) => out.rows.push((f.fid, e)),
                     Err(m) => {
                         out.skipped += 1;
@@ -1004,10 +1176,12 @@ fn object_from(
         .filter_map(|(n, v)| attribute_text(v).map(|t| (n.clone(), serde_json::Value::String(t))))
         .collect();
     let shape = match (f.shape(), system) {
-        (Some(g), Some(s)) => Some(
-            s.moved(g)
-                .ok_or_else(|| format!("{} anahtarlı satırın geometrisi projenin sistemine çevrilemedi.", f.fid))?,
-        ),
+        (Some(g), Some(s)) => Some(s.moved(g).ok_or_else(|| {
+            format!(
+                "{} anahtarlı satırın geometrisi projenin sistemine çevrilemedi.",
+                f.fid
+            )
+        })?),
         (Some(g), None) => Some(g.clone()),
         (None, _) => None,
     };
@@ -1022,5 +1196,6 @@ fn object_from(
         return Ok(e);
     }
     let record = serde_json::json!({ "kind": "record", "id": 1, "layerId": layer, "attrs": attrs });
-    serde_json::from_value(record).map_err(|e| format!("{} anahtarlı satır nesneye çevrilemedi: {e}", f.fid))
+    serde_json::from_value(record)
+        .map_err(|e| format!("{} anahtarlı satır nesneye çevrilemedi: {e}", f.fid))
 }

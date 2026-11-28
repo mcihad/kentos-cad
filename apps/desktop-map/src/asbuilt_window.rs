@@ -21,14 +21,16 @@
 //! the thresholds' source and the reviewer's statement; the project's reviews listed, those whose points changed since
 //! said to belong to the earlier result. Grafik draws one mark's movement against time.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use std::path::PathBuf;
 
 use iced::widget::{container, row, text_editor};
 use iced::{Center, Element, Task};
-use kentos_commands::{AsbuiltCheck, AsbuiltChecked, AsbuiltKind, AsbuiltPoint, CommandResult, Entity, FieldPackage};
+use kentos_commands::{
+    AsbuiltCheck, AsbuiltChecked, AsbuiltKind, AsbuiltPoint, CommandResult, Entity, FieldPackage,
+};
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, asbuilt_check, field_package};
@@ -123,7 +125,11 @@ pub struct State {
 }
 
 /// The jobs' words, in the kind's order (docs/adr/3620).
-pub(crate) const KINDS: [&str; 3] = ["Yapılanın kontrolü (as-built)", "Aplikasyon kontrolü", "İzleme (dönemsel hareket)"];
+pub(crate) const KINDS: [&str; 3] = [
+    "Yapılanın kontrolü (as-built)",
+    "Aplikasyon kontrolü",
+    "İzleme (dönemsel hareket)",
+];
 
 #[derive(Clone, Debug)]
 pub enum Event {
@@ -185,9 +191,15 @@ fn id_or_name(name: &str, uid: &str) -> String {
 
 /// The fields of `layer`'s points (docs/adr/9331): its own fields first, then the attributes its points carry, each once.
 pub fn name_fields(model: &kentos_domain::Document, layer: &str) -> Vec<String> {
-    let mut out: Vec<String> =
-        model.layers().get(layer).map(|n| n.fields.iter().map(|f| f.name.clone()).collect()).unwrap_or_default();
-    for e in model.by_layer(layer).filter(|e| matches!(e, Entity::Point(_))) {
+    let mut out: Vec<String> = model
+        .layers()
+        .get(layer)
+        .map(|n| n.fields.iter().map(|f| f.name.clone()).collect())
+        .unwrap_or_default();
+    for e in model
+        .by_layer(layer)
+        .filter(|e| matches!(e, Entity::Point(_)))
+    {
         for key in e.base().attrs.keys() {
             if !out.contains(key) {
                 out.push(key.clone());
@@ -204,7 +216,13 @@ pub fn guess_name_field(fields: &[String]) -> String {
     fields
         .iter()
         .find(|f| fold(f) == "AD")
-        .or_else(|| fields.iter().find(|f| ["NOKTA", "NAME", "ISIM", "ADI"].iter().any(|w| fold(f).contains(w))))
+        .or_else(|| {
+            fields.iter().find(|f| {
+                ["NOKTA", "NAME", "ISIM", "ADI"]
+                    .iter()
+                    .any(|w| fold(f).contains(w))
+            })
+        })
         .cloned()
         .unwrap_or_default()
 }
@@ -216,7 +234,10 @@ fn msg(e: Event) -> Message {
 impl State {
     /// The one tolerance given, when only one is (UR2-026): its component's word.
     fn one_tolerance(&self) -> Option<&'static str> {
-        match (self.horizontal.trim().is_empty(), self.vertical.trim().is_empty()) {
+        match (
+            self.horizontal.trim().is_empty(),
+            self.vertical.trim().is_empty(),
+        ) {
             (false, true) => Some("yatay"),
             (true, false) => Some("düşey"),
             _ => None,
@@ -293,7 +314,11 @@ fn limit(text: &str, words: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().ok().filter(|v| v.is_finite()).map(Some).ok_or_else(|| format!("{words} “{text}” bir sayı değil."))
+    t.parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .map(Some)
+        .ok_or_else(|| format!("{words} “{text}” bir sayı değil."))
 }
 
 fn opt(v: &str) -> Option<String> {
@@ -305,11 +330,18 @@ pub fn csv(r: &AsbuiltChecked) -> String {
     // A point without a name goes out by its object's id, as the table shows it (docs/adr/9331).
     let watch = watched(r);
     #[allow(clippy::type_complexity)]
-    let (status, flag): (fn(&str) -> &'static str, fn(&str) -> &'static str) =
-        if watch { (watch_status_word, watch_flag_word) } else { (status_word, flag_word) };
+    let (status, flag): (fn(&str) -> &'static str, fn(&str) -> &'static str) = if watch {
+        (watch_status_word, watch_flag_word)
+    } else {
+        (status_word, flag_word)
+    };
     let mut out = format!(
         "Nokta;Nesne;{};Eşleme;ΔDoğu (m);ΔKuzey (m);ΔKot (m);Yatay (m);Yüzeye göre (m);Yüzeye en yakın (m);Çizgiye göre (m);σ (m);Durum;İşaretler\n",
-        if watch { "Önceki dönemin noktası" } else { "Tasarım noktası" }
+        if watch {
+            "Önceki dönemin noktası"
+        } else {
+            "Tasarım noktası"
+        }
     );
     let o = |v: Option<f64>| v.map(|v| v.to_string()).unwrap_or_default();
     for p in &r.points {
@@ -328,7 +360,11 @@ pub fn csv(r: &AsbuiltChecked) -> String {
             o(p.normal),
             o(p.sigma),
             status(&p.status),
-            p.flags.iter().map(|f| flag(f)).collect::<Vec<_>>().join(", ")
+            p.flags
+                .iter()
+                .map(|f| flag(f))
+                .collect::<Vec<_>>()
+                .join(", ")
         ));
     }
     out
@@ -336,7 +372,10 @@ pub fn csv(r: &AsbuiltChecked) -> String {
 
 /// The package's file name, or nothing.
 fn package_name(path: &str) -> &str {
-    std::path::Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or("")
+    std::path::Path::new(path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("")
 }
 
 /// What of the package's design was compared: its points and lines (docs/adr/2820) and its surface when it carries one
@@ -357,20 +396,29 @@ pub(crate) fn changes(r: &kentos_commands::AsbuiltChecked) -> Vec<(Kind, &'stati
     if r.design_changed && own {
         out.push((Kind::Warn, "Çizimdeki tasarım paketten sonra değişmiş; kayıt sahaya verilen tasarımla, paketin tasarımıyla denetlendi."));
     } else if r.design_changed {
-        out.push((Kind::Error, "Tasarım, saha kaydının yapıldığı tasarımdan değişmiş."));
+        out.push((
+            Kind::Error,
+            "Tasarım, saha kaydının yapıldığı tasarımdan değişmiş.",
+        ));
     }
     let own_surface = r.package.as_ref().is_some_and(|p| p.surface);
     if r.surface_changed && own_surface {
         out.push((Kind::Warn, "Çizimdeki yüzey paketten sonra değişmiş; yüzey farkları sahaya verilen yüzeyle, paketin yüzeyiyle (yuzey.xml)."));
     } else if r.surface_changed {
-        out.push((Kind::Error, "Yüzey, saha paketinin yazıldığı yüzeyden değişmiş."));
+        out.push((
+            Kind::Error,
+            "Yüzey, saha paketinin yazıldığı yüzeyden değişmiş.",
+        ));
     }
     out
 }
 
 /// What the check took from the record's package (docs/adr/2420): its stamp and revision, the limits it gave, and the
 /// system, epoch or heights it was written for when they are not the project's.
-fn package_lines(p: &kentos_commands::AsbuiltPackage, f: &kentos_interaction::Format) -> Vec<Element<'static, Message>> {
+fn package_lines(
+    p: &kentos_commands::AsbuiltPackage,
+    f: &kentos_interaction::Format,
+) -> Vec<Element<'static, Message>> {
     let mut out = Vec::new();
     let limit = |k: &str| match k {
         "horizontal" => p.horizontal.map(|v| format!("yatay {}", f.length(v))),
@@ -384,26 +432,39 @@ fn package_lines(p: &kentos_commands::AsbuiltPackage, f: &kentos_interaction::Fo
             "Saha paketi {} (revizyon {}): {}; {}.",
             p.stamp.replace('T', " "),
             p.revision,
-            if taken.is_empty() { "sınırlar girdinin".to_owned() } else { format!("paketten {}", taken.join(", ")) },
+            if taken.is_empty() {
+                "sınırlar girdinin".to_owned()
+            } else {
+                format!("paketten {}", taken.join(", "))
+            },
             package_design_words(p)
         ),
     ));
     if !p.same_system {
         out.push(words::text_line(
             Kind::Warn,
-            format!("Paket {} için yazılmış; projenin sistemi başka.", p.epsg.as_deref().unwrap_or("sistemsiz bir proje")),
+            format!(
+                "Paket {} için yazılmış; projenin sistemi başka.",
+                p.epsg.as_deref().unwrap_or("sistemsiz bir proje")
+            ),
         ));
     }
     if !p.same_epoch {
         out.push(words::text_line(
             Kind::Warn,
-            format!("Paketin epoku {}; projeninki başka.", p.epoch.map_or("yok".to_owned(), |e| format!("{e}"))),
+            format!(
+                "Paketin epoku {}; projeninki başka.",
+                p.epoch.map_or("yok".to_owned(), |e| format!("{e}"))
+            ),
         ));
     }
     if !p.same_heights {
         out.push(words::text_line(
             Kind::Warn,
-            format!("Paketin kot sistemi “{}”; projeninki başka.", p.heights.as_deref().unwrap_or("yok")),
+            format!(
+                "Paketin kot sistemi “{}”; projeninki başka.",
+                p.heights.as_deref().unwrap_or("yok")
+            ),
         ));
     }
     out
@@ -433,15 +494,24 @@ impl AsbuiltWindowApp for App {
         let unless = |v: Option<String>| if watch { None } else { v };
         // Docs/adr/4840: a series' trend and thresholds.
         let series = watch && !s.epochs.trim().is_empty();
-        let (trend, thresholds) = if series { crate::asbuilt_trend::ask(&s.trend)? } else { (None, None) };
+        let (trend, thresholds) = if series {
+            crate::asbuilt_trend::ask(&s.trend)?
+        } else {
+            (None, None)
+        };
         Ok(AsbuiltCheck {
             measured: s.measured.clone(),
             design: opt(&s.design),
             surface: unless(opt(&s.surface)),
             lines: unless(opt(&s.lines)),
             // The check's own name field (Ad) goes unsaid, as a script leaves it.
-            field: opt(&s.field).filter(|f| f != kentos_native_application::asbuilt_check::NAME_FIELD),
-            search: if watch { None } else { limit(&s.search, "Arama yarıçapı")? },
+            field: opt(&s.field)
+                .filter(|f| f != kentos_native_application::asbuilt_check::NAME_FIELD),
+            search: if watch {
+                None
+            } else {
+                limit(&s.search, "Arama yarıçapı")?
+            },
             horizontal: limit(&s.horizontal, "Yatay tolerans")?,
             vertical: limit(&s.vertical, "Düşey tolerans")?,
             quality_field: opt(&s.quality_field),
@@ -455,15 +525,28 @@ impl AsbuiltWindowApp for App {
                 _ => None,
             },
             control: if watch {
-                s.control.split([',', ';']).map(str::trim).filter(|c| !c.is_empty()).map(str::to_owned).collect()
+                s.control
+                    .split([',', ';'])
+                    .map(str::trim)
+                    .filter(|c| !c.is_empty())
+                    .map(str::to_owned)
+                    .collect()
             } else {
                 Vec::new()
             },
             surface_by: (!watch && s.nearest).then_some(kentos_commands::AsbuiltSurfaceBy::Nearest),
             // Docs/adr/4420: the earlier epochs by their layers' names, each epoch's day its layer's Veri kümesi
             // bilgisi's (Güncelleme günü), this epoch's too.
-            epochs: if watch { self.asbuilt_epochs()? } else { Vec::new() },
-            date: if watch && !s.epochs.trim().is_empty() { self.layer_day(&s.measured) } else { None },
+            epochs: if watch {
+                self.asbuilt_epochs()?
+            } else {
+                Vec::new()
+            },
+            date: if watch && !s.epochs.trim().is_empty() {
+                self.layer_day(&s.measured)
+            } else {
+                None
+            },
             trend,
             thresholds,
         })
@@ -472,19 +555,37 @@ impl AsbuiltWindowApp for App {
     /// A layer's day, its Veri kümesi bilgisi's Güncelleme günü (docs/adr/4420).
     fn layer_day(&self, id: &str) -> Option<String> {
         let doc = self.document.as_ref()?;
-        doc.model.layers().get(id).and_then(|n| n.dataset.as_ref()).and_then(|d| d.updated.clone())
+        doc.model
+            .layers()
+            .get(id)
+            .and_then(|n| n.dataset.as_ref())
+            .and_then(|d| d.updated.clone())
     }
 
     /// Önceki dönemler (docs/adr/4420): the layers named, oldest first, each with its day; a name no layer has is said.
     fn asbuilt_epochs(&self) -> Result<Vec<kentos_commands::AsbuiltEpoch>, String> {
         let s = &self.modules.map().asbuilt;
         let mut out = Vec::new();
-        for name in s.epochs.split([',', ';']).map(str::trim).filter(|n| !n.is_empty()) {
+        for name in s
+            .epochs
+            .split([',', ';'])
+            .map(str::trim)
+            .filter(|n| !n.is_empty())
+        {
             let low = name.to_lowercase();
-            let Some((id, _)) = s.layers.iter().find(|(id, n)| n.to_lowercase() == low || id == name) else {
-                return Err(format!("“{name}” adlı katman yok; önceki dönemleri katman adlarıyla, eskiden yeniye yazın."));
+            let Some((id, _)) = s
+                .layers
+                .iter()
+                .find(|(id, n)| n.to_lowercase() == low || id == name)
+            else {
+                return Err(format!(
+                    "“{name}” adlı katman yok; önceki dönemleri katman adlarıyla, eskiden yeniye yazın."
+                ));
             };
-            out.push(kentos_commands::AsbuiltEpoch { layer: id.clone(), date: self.layer_day(id) });
+            out.push(kentos_commands::AsbuiltEpoch {
+                layer: id.clone(),
+                date: self.layer_day(id),
+            });
         }
         Ok(out)
     }
@@ -497,11 +598,19 @@ impl AsbuiltWindowApp for App {
             lines: opt(&s.lines),
             surface: opt(&s.surface),
             // The check's own name field (Ad) goes unsaid, as a script leaves it.
-            field: opt(&s.field).filter(|f| f != kentos_native_application::asbuilt_check::NAME_FIELD),
+            field: opt(&s.field)
+                .filter(|f| f != kentos_native_application::asbuilt_check::NAME_FIELD),
             horizontal: limit(&s.horizontal, "Yatay tolerans")?,
             vertical: limit(&s.vertical, "Düşey tolerans")?,
             quality: limit(&s.quality, "Kalite sınırı")?,
-            notes: s.notes.text().lines().map(str::trim).filter(|l| !l.is_empty()).map(str::to_owned).collect(),
+            notes: s
+                .notes
+                .text()
+                .lines()
+                .map(str::trim)
+                .filter(|l| !l.is_empty())
+                .map(str::to_owned)
+                .collect(),
             path: path.display().to_string(),
             // The save dialog asked before a file was replaced.
             overwrite: true,
@@ -518,14 +627,19 @@ impl AsbuiltWindowApp for App {
             Ok(input) => input,
             Err(why) => return self.warn(format!("Saha paketi: {why}")),
         };
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         let result = field_package::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             // docs/adr/3220: the surface goes in itself, its file and its triangles said.
-            let surface = out.surface.as_ref().map_or_else(String::new, |s| match (&s.file, s.triangles) {
-                (Some(file), Some(n)) => format!(", yüzey {} ({file}, {n} üçgen)", s.name),
-                _ => format!(", yüzey {}", s.name),
-            });
+            let surface =
+                out.surface
+                    .as_ref()
+                    .map_or_else(String::new, |s| match (&s.file, s.triangles) {
+                        (Some(file), Some(n)) => format!(", yüzey {} ({file}, {n} üçgen)", s.name),
+                        _ => format!(", yüzey {}", s.name),
+                    });
             self.say(
                 Level::Success,
                 format!(
@@ -555,13 +669,15 @@ impl AsbuiltWindowApp for App {
             Err(_) => Vec::new(),
         };
         self.asbuilt_reviews();
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         self.modules.map_mut().asbuilt.answer = Some(input.and_then(|input| {
             match asbuilt_check::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
-                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                    Err(error.message)
-                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
                 _ => Err("Denetlenemedi.".to_owned()),
             }
         }));
@@ -583,12 +699,21 @@ impl AsbuiltWindowApp for App {
             self.output("Açık çizim yok.");
             return Task::none();
         };
-        let leaves: Vec<(String, String)> =
-            doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+        let leaves: Vec<(String, String)> = doc
+            .model
+            .layers()
+            .leaves()
+            .iter()
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect();
         let holding = |what: fn(&Entity) -> bool| -> Vec<(String, String)> {
             leaves
                 .iter()
-                .filter(|(id, _)| doc.model.entities().any(|e| e.base().layer_id == *id && what(e)))
+                .filter(|(id, _)| {
+                    doc.model
+                        .entities()
+                        .any(|e| e.base().layer_id == *id && what(e))
+                })
                 .cloned()
                 .collect()
         };
@@ -598,25 +723,47 @@ impl AsbuiltWindowApp for App {
             .settings()
             .road
             .as_ref()
-            .map(|r| r.surfaces.iter().flat_map(|s| s.points.layers.iter().cloned()).collect())
+            .map(|r| {
+                r.surfaces
+                    .iter()
+                    .flat_map(|s| s.points.layers.iter().cloned())
+                    .collect()
+            })
             .unwrap_or_default();
         let layers = holding(|e| matches!(e, Entity::Point(_)));
-        let guessable: Vec<(String, String)> = layers.iter().filter(|(id, _)| !sources.contains(id)).cloned().collect();
+        let guessable: Vec<(String, String)> = layers
+            .iter()
+            .filter(|(id, _)| !sources.contains(id))
+            .cloned()
+            .collect();
         let line_layers = holding(|e| matches!(e, Entity::Line(_) | Entity::Polyline(_)));
         let find = |list: &[(String, String)], words: &[&str]| {
-            list.iter().find(|(_, n)| words.iter().any(|w| n.to_lowercase().contains(w))).map(|(id, _)| id.clone())
+            list.iter()
+                .find(|(_, n)| words.iter().any(|w| n.to_lowercase().contains(w)))
+                .map(|(id, _)| id.clone())
         };
-        let measured = find(&guessable, &["ölçül", "olcul", "ölçüm", "olcum", "saha", "gerçekleşen"])
-            .or_else(|| guessable.first().map(|(id, _)| id.clone()))
+        let measured = find(
+            &guessable,
+            &["ölçül", "olcul", "ölçüm", "olcum", "saha", "gerçekleşen"],
+        )
+        .or_else(|| guessable.first().map(|(id, _)| id.clone()))
+        .unwrap_or_default();
+        let design = find(&guessable, &["tasarım", "tasarim", "aplikasyon", "proje"])
+            .filter(|d| *d != measured)
             .unwrap_or_default();
-        let design = find(&guessable, &["tasarım", "tasarim", "aplikasyon", "proje"]).filter(|d| *d != measured).unwrap_or_default();
-        let lines = find(&line_layers, &["bordür", "bordur", "tasarım", "tasarim"]).unwrap_or_default();
+        let lines =
+            find(&line_layers, &["bordür", "bordur", "tasarım", "tasarim"]).unwrap_or_default();
         let surfaces: Vec<(String, String)> = doc
             .model
             .settings()
             .road
             .as_ref()
-            .map(|r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect())
+            .map(|r| {
+                r.surfaces
+                    .iter()
+                    .map(|s| (s.id.clone(), s.name.clone()))
+                    .collect()
+            })
             .unwrap_or_default();
         let surface = find(&surfaces, &["tasarım", "tasarim", "proje"]).unwrap_or_default();
         // The name field from the measured layer's own fields (docs/adr/9331), never a word typed that it lacks.
@@ -646,8 +793,18 @@ impl AsbuiltWindowApp for App {
             return;
         };
         match std::fs::write(&path, csv(r)) {
-            Ok(()) => self.say(Level::Success, format!("{TITLE}: {} nokta {} dosyasına yazıldı.", r.points.len(), path.display())),
-            Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.", path.display())),
+            Ok(()) => self.say(
+                Level::Success,
+                format!(
+                    "{TITLE}: {} nokta {} dosyasına yazıldı.",
+                    r.points.len(),
+                    path.display()
+                ),
+            ),
+            Err(e) => self.warn(format!(
+                "{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.",
+                path.display()
+            )),
         }
     }
 
@@ -674,10 +831,12 @@ impl AsbuiltWindowApp for App {
             Event::Control(v) => s.control = v,
             Event::Epochs(v) => s.epochs = v,
             // The table shown under the series: nothing is checked again.
-            Event::Trend(c @ (crate::asbuilt_trend::Change::View(_)
-            | crate::asbuilt_trend::Change::Mark(_)
-            | crate::asbuilt_trend::Change::Part(_)
-            | crate::asbuilt_trend::Change::Source(_))) => {
+            Event::Trend(
+                c @ (crate::asbuilt_trend::Change::View(_)
+                | crate::asbuilt_trend::Change::Mark(_)
+                | crate::asbuilt_trend::Change::Part(_)
+                | crate::asbuilt_trend::Change::Source(_)),
+            ) => {
                 s.trend.apply(c);
                 return Task::none();
             }
@@ -718,13 +877,20 @@ impl AsbuiltWindowApp for App {
                     .points
                     .iter()
                     .filter(|p| p.status != "within")
-                    .filter_map(|p| Uuid::parse_str(&p.uid).ok().and_then(|u| doc.model.slot_of(u)))
+                    .filter_map(|p| {
+                        Uuid::parse_str(&p.uid)
+                            .ok()
+                            .and_then(|u| doc.model.slot_of(u))
+                    })
                     .collect();
                 let n = slots.len();
                 self.selection.set(slots);
                 self.modules.map_mut().asbuilt = State::default();
                 self.dialog = None;
-                self.say(Level::Info, format!("{TITLE}: içinde olmayan {n} nokta seçildi."));
+                self.say(
+                    Level::Info,
+                    format!("{TITLE}: içinde olmayan {n} nokta seçildi."),
+                );
                 return Task::none();
             }
             Event::Save => {
@@ -807,15 +973,21 @@ impl AsbuiltWindowApp for App {
         let Some(Ok(r)) = &s.answer else {
             return Task::none();
         };
-        let uid = r.points.iter().filter(|p| s.show == Show::All || p.status != "within").nth(i).map(|p| p.uid.clone());
+        let uid = r
+            .points
+            .iter()
+            .filter(|p| s.show == Show::All || p.status != "within")
+            .nth(i)
+            .map(|p| p.uid.clone());
         let Some(uid) = uid else {
             return Task::none();
         };
         self.modules.map_mut().asbuilt.chosen = Some(i);
-        let slot = self
-            .document
-            .as_ref()
-            .and_then(|d| uid.parse::<kentos_domain::Uuid>().ok().and_then(|u| d.model.slot_of(u)));
+        let slot = self.document.as_ref().and_then(|d| {
+            uid.parse::<kentos_domain::Uuid>()
+                .ok()
+                .and_then(|u| d.model.slot_of(u))
+        });
         match slot {
             Some(slot) => self.navigating(|app| app.zoom_to_objects(&[f64::from(slot.0)])),
             None => self.warn(format!("{TITLE}: “{uid}” kimlikli nokta çizimde yok; sonuç eski olabilir, yeniden denetleyin.")),
@@ -827,7 +999,8 @@ impl AsbuiltWindowApp for App {
         let s = &self.modules.map().asbuilt;
         let f = self.format();
         let text = |value: &str, hint: &str, on: fn(String) -> Event, width: f32| {
-            container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(width)
+            container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v))))
+                .width(width)
         };
         let with_none = |list: &[(String, String)]| {
             let mut v = vec![(NONE.to_owned(), "—".to_owned())];
@@ -838,26 +1011,45 @@ impl AsbuiltWindowApp for App {
         // A monitoring job (docs/adr/3620): this epoch's and the earlier epoch's marks, the control points and the
         // movement limits; no design parts, no field package.
         let watch = s.kind == 2;
-        let kinds: Vec<(String, String)> = KINDS.iter().enumerate().map(|(i, k)| (i.to_string(), (*k).to_owned())).collect();
+        let kinds: Vec<(String, String)> = KINDS
+            .iter()
+            .enumerate()
+            .map(|(i, k)| (i.to_string(), (*k).to_owned()))
+            .collect();
         let mut form = Form::new()
             .label_width(170.0)
             .field(
                 "İş türü",
-                container(fields::select_owned(kinds, &s.kind.to_string(), |v| msg(Event::Kind(v.parse().unwrap_or(0))))).width(260),
+                container(fields::select_owned(kinds, &s.kind.to_string(), |v| {
+                    msg(Event::Kind(v.parse().unwrap_or(0)))
+                }))
+                .width(260),
             )
             .field(
                 if watch { "Bu dönem" } else { "Ölçülen" },
                 row![
-                    container(fields::select_owned(s.layers.clone(), &s.measured, |v| msg(Event::Measured(v)))).width(200),
+                    container(fields::select_owned(
+                        s.layers.clone(),
+                        &s.measured,
+                        |v| msg(Event::Measured(v))
+                    ))
+                    .width(200),
                     label::caption("Ad alanı"),
                     // The measured layer's own fields (docs/adr/9331): a word typed that the layer lacks named nothing.
                     container(fields::select_owned(
                         {
                             // The layer's fields; a field it lacks (or none chosen) shown as it is, never as another.
-                            let mut options: Vec<(String, String)> =
-                                s.name_fields.iter().map(|f| (f.clone(), f.clone())).collect();
+                            let mut options: Vec<(String, String)> = s
+                                .name_fields
+                                .iter()
+                                .map(|f| (f.clone(), f.clone()))
+                                .collect();
                             if !s.name_fields.contains(&s.field) {
-                                let shown = if s.field.is_empty() { "—".to_owned() } else { format!("{} (katmanda yok)", s.field) };
+                                let shown = if s.field.is_empty() {
+                                    "—".to_owned()
+                                } else {
+                                    format!("{} (katmanda yok)", s.field)
+                                };
                                 options.insert(0, (s.field.clone(), shown));
                             }
                             options
@@ -927,10 +1119,17 @@ impl AsbuiltWindowApp for App {
         };
         form = form
             .field(
-                if watch { "Hareket sınırı yatay / düşey (m)" } else { "Tolerans yatay / düşey (m)" },
-                row![text(&s.horizontal, "—", Event::Horizontal, 80.0), text(&s.vertical, "—", Event::Vertical, 80.0)]
-                    .spacing(8)
-                    .align_y(Center),
+                if watch {
+                    "Hareket sınırı yatay / düşey (m)"
+                } else {
+                    "Tolerans yatay / düşey (m)"
+                },
+                row![
+                    text(&s.horizontal, "—", Event::Horizontal, 80.0),
+                    text(&s.vertical, "—", Event::Vertical, 80.0)
+                ]
+                .spacing(8)
+                .align_y(Center),
             )
             .field(
                 "Kalite",
@@ -968,7 +1167,9 @@ impl AsbuiltWindowApp for App {
         // Docs/adr/5220: the job as checked kept in the project with the reviewer's statement.
         if watch && matches!(&s.answer, Some(Ok(_))) {
             form = form.section("İnceleme");
-            for (title, element) in crate::asbuilt_review_form::rows(&s.review, |c| msg(Event::Review(c))) {
+            for (title, element) in
+                crate::asbuilt_review_form::rows(&s.review, |c| msg(Event::Review(c)))
+            {
                 form = form.field(title, element);
             }
             let named = !s.review.name.trim().is_empty();
@@ -1001,7 +1202,10 @@ impl AsbuiltWindowApp for App {
                         ),
                     ));
                 } else if let Some(only) = s.one_tolerance() {
-                    lines.push(words::text_line(Kind::Info, format!("Yalnız {only} sapma denetlendi.")));
+                    lines.push(words::text_line(
+                        Kind::Info,
+                        format!("Yalnız {only} sapma denetlendi."),
+                    ));
                 }
                 lines.push(words::text_line(
                     if r.outside + r.unmatched + r.ambiguous + r.untoleranced == 0 { Kind::Ok } else { Kind::Warn },
@@ -1069,12 +1273,18 @@ impl AsbuiltWindowApp for App {
                             ),
                         ));
                     } else if !c.checked.is_empty() {
-                        lines.push(words::text_line(Kind::Ok, format!("Kontrol noktaları sabit: {}.", c.checked.join(", "))));
+                        lines.push(words::text_line(
+                            Kind::Ok,
+                            format!("Kontrol noktaları sabit: {}.", c.checked.join(", ")),
+                        ));
                     }
                     if !c.missing.is_empty() {
                         lines.push(words::text_line(
                             Kind::Warn,
-                            format!("İki dönemde de ölçülmeyen kontrol noktası: {}.", c.missing.join(", ")),
+                            format!(
+                                "İki dönemde de ölçülmeyen kontrol noktası: {}.",
+                                c.missing.join(", ")
+                            ),
                         ));
                     }
                 }
@@ -1084,7 +1294,11 @@ impl AsbuiltWindowApp for App {
                         // A design point without a name by its object's id, as a row's (docs/adr/9331).
                         format!(
                             "Ölçülmeyen: {}.",
-                            r.missing.iter().map(|m| id_or_name(&m.name, &m.uid)).collect::<Vec<_>>().join(", ")
+                            r.missing
+                                .iter()
+                                .map(|m| id_or_name(&m.name, &m.uid))
+                                .collect::<Vec<_>>()
+                                .join(", ")
                         ),
                     ));
                 }
@@ -1098,16 +1312,30 @@ impl AsbuiltWindowApp for App {
                 ));
                 // Docs/adr/4840: the marks' states against the thresholds.
                 if let Some(said) = crate::asbuilt_trend::line(&r.tracks) {
-                    let alarmed = r.tracks.iter().any(|t| t.state == Some(kentos_commands::AsbuiltState::Alarm));
-                    lines.push(words::text_line(if alarmed { Kind::Warn } else { Kind::Info }, said));
+                    let alarmed = r
+                        .tracks
+                        .iter()
+                        .any(|t| t.state == Some(kentos_commands::AsbuiltState::Alarm));
+                    lines.push(words::text_line(
+                        if alarmed { Kind::Warn } else { Kind::Info },
+                        said,
+                    ));
                 }
-                for p in r.points.iter().filter(|p| s.show == Show::All || p.status != "within") {
+                for p in r
+                    .points
+                    .iter()
+                    .filter(|p| s.show == Show::All || p.status != "within")
+                {
                     rows.push(if watch { watch_row(p) } else { point_row(p) });
                 }
                 // Points without a name in the field chosen (docs/adr/9331): shown by their ids, and why.
                 let unnamed = r.points.iter().filter(|p| p.name.is_empty()).count();
                 if unnamed > 0 {
-                    let field = if s.field.is_empty() { "Ad" } else { s.field.as_str() };
+                    let field = if s.field.is_empty() {
+                        "Ad"
+                    } else {
+                        s.field.as_str()
+                    };
                     lines.push(words::text_line(
                         Kind::Warn,
                         format!(
@@ -1116,7 +1344,10 @@ impl AsbuiltWindowApp for App {
                         ),
                     ));
                 }
-                lines.push(words::text_line(Kind::Info, "Bir satıra basınca harita o noktaya gider."));
+                lines.push(words::text_line(
+                    Kind::Info,
+                    "Bir satıra basınca harita o noktaya gider.",
+                ));
             }
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             None => {}
@@ -1148,25 +1379,41 @@ impl AsbuiltWindowApp for App {
             ]
         };
         // A row pressed goes to its point on the map (docs/adr/9331).
-        let table = sheet_chosen(columns, rows, "Bu süzgeçte nokta yok.", 260.0, s.chosen, |i| msg(Event::Row(i)));
+        let table = sheet_chosen(
+            columns,
+            rows,
+            "Bu süzgeçte nokta yok.",
+            260.0,
+            s.chosen,
+            |i| msg(Event::Row(i)),
+        );
         // Docs/adr/4420: a monitoring job's series: each point's horizontal movement from its first epoch at every
         // epoch (— where it was not measured or before it), its last height movement and its mean rates.
         // Docs/adr/4840: with a line or thresholds, a choice between the movements and each mark's line and state.
         let trend = matches!(&s.answer, Some(Ok(r)) if watched(r) && crate::asbuilt_trend::shown(&r.tracks));
         let series = match &s.answer {
             // Docs/adr/5220: one mark's movement against time.
-            Some(Ok(r)) if watched(r) && !r.tracks.is_empty() && s.trend.view == crate::asbuilt_trend::View::Chart => {
+            Some(Ok(r))
+                if watched(r)
+                    && !r.tracks.is_empty()
+                    && s.trend.view == crate::asbuilt_trend::View::Chart =>
+            {
                 Some((String::new(), self.asbuilt_chart(r)))
             }
-            Some(Ok(r)) if trend && s.trend.view == crate::asbuilt_trend::View::Line => {
-                Some((crate::asbuilt_trend::lead(&r.tracks, &s.trend.confidence), crate::asbuilt_trend::table(&r.tracks)))
-            }
+            Some(Ok(r)) if trend && s.trend.view == crate::asbuilt_trend::View::Line => Some((
+                crate::asbuilt_trend::lead(&r.tracks, &s.trend.confidence),
+                crate::asbuilt_trend::table(&r.tracks),
+            )),
             Some(Ok(r)) if watched(r) && !r.tracks.is_empty() => {
                 let mut columns = vec![col("Nokta", 70.0)];
                 for title in &s.epoch_titles {
                     columns.push(num(title, 80.0));
                 }
-                columns.extend([num("ΔKot", 70.0), num("Hız m/yıl", 80.0), num("Düşey m/yıl", 80.0)]);
+                columns.extend([
+                    num("ΔKot", 70.0),
+                    num("Hız m/yıl", 80.0),
+                    num("Düşey m/yıl", 80.0),
+                ]);
                 let comma = |v: f64| format!("{v:.3}").replace('.', ",");
                 let rows: Vec<Vec<String>> = r
                     .tracks
@@ -1178,7 +1425,15 @@ impl AsbuiltWindowApp for App {
                             Some(st) => comma(st.horizontal),
                             None => "—".to_owned(),
                         }));
-                        row.push(t.steps.last().cloned().flatten().and_then(|st| st.dz).map(mm).unwrap_or_default());
+                        row.push(
+                            t.steps
+                                .last()
+                                .cloned()
+                                .flatten()
+                                .and_then(|st| st.dz)
+                                .map(mm)
+                                .unwrap_or_default(),
+                        );
                         row.push(t.rate_horizontal.map(comma).unwrap_or_default());
                         row.push(t.rate_vertical.map(comma).unwrap_or_default());
                         row
@@ -1197,31 +1452,51 @@ impl AsbuiltWindowApp for App {
             .width(iced::Fill)
             .push(form)
             .push(words::summary(lines))
-            .push(Segmented::new([Show::All, Show::Faults], s.show, |v| msg(Event::Show(v))))
+            .push(Segmented::new([Show::All, Show::Faults], s.show, |v| {
+                msg(Event::Show(v))
+            }))
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         if let Some((lead, series)) = series {
             use crate::asbuilt_trend::{Change, View};
-            let views: Vec<View> = if trend { vec![View::Series, View::Line, View::Chart] } else { vec![View::Series, View::Chart] };
-            let shown = if !trend && s.trend.view == View::Line { View::Series } else { s.trend.view };
-            body = body.push(Segmented::new(views, shown, |v| msg(Event::Trend(Change::View(v)))));
+            let views: Vec<View> = if trend {
+                vec![View::Series, View::Line, View::Chart]
+            } else {
+                vec![View::Series, View::Chart]
+            };
+            let shown = if !trend && s.trend.view == View::Line {
+                View::Series
+            } else {
+                s.trend.view
+            };
+            body = body.push(Segmented::new(views, shown, |v| {
+                msg(Event::Trend(Change::View(v)))
+            }));
             if shown == View::Chart {
                 body = body.push(series);
             } else {
                 // Five rows at least when the window is short (docs/adr/4840: the series' marks are what the job is for).
-                body = body.push(label::caption(lead)).push_fit(series, kentos_ui::theme::typography::scaled(160.0));
+                body = body
+                    .push(label::caption(lead))
+                    .push_fit(series, kentos_ui::theme::typography::scaled(160.0));
             }
         }
         // Docs/adr/5220: the project's reviews.
         if watch && !s.reviews.is_empty() {
             body = body
                 .push(label::caption(crate::asbuilt_review_form::lead(&s.reviews)))
-                .push_fit(crate::asbuilt_review_form::table(&s.reviews), kentos_ui::theme::typography::scaled(90.0));
+                .push_fit(
+                    crate::asbuilt_review_form::table(&s.reviews),
+                    kentos_ui::theme::typography::scaled(90.0),
+                );
         }
         let ready = matches!(&s.answer, Some(Ok(r)) if !r.points.is_empty());
         Frame::new(TITLE)
             .scroll(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
-            .aside(words::secondary(SELECT, (faults > 0).then(|| msg(Event::Select))))
+            .aside(words::secondary(
+                SELECT,
+                (faults > 0).then(|| msg(Event::Select)),
+            ))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(1000.0)
             .modal(msg(Event::Close))
@@ -1250,9 +1525,15 @@ fn watch_row(p: &AsbuiltPoint) -> Vec<String> {
         o(p.dn),
         o(p.dh),
         // A length, never negative: no sign.
-        p.horizontal.map(|v| format!("{v:.3}").replace('.', ",")).unwrap_or_default(),
+        p.horizontal
+            .map(|v| format!("{v:.3}").replace('.', ","))
+            .unwrap_or_default(),
         watch_status_word(&p.status).to_owned(),
-        p.flags.iter().map(|f| watch_flag_word(f)).collect::<Vec<_>>().join(", "),
+        p.flags
+            .iter()
+            .map(|f| watch_flag_word(f))
+            .collect::<Vec<_>>()
+            .join(", "),
     ]
 }
 
@@ -1268,7 +1549,11 @@ fn point_row(p: &AsbuiltPoint) -> Vec<String> {
         o(p.nearest),
         o(p.normal),
         status_word(&p.status).to_owned(),
-        p.flags.iter().map(|f| flag_word(f)).collect::<Vec<_>>().join(", "),
+        p.flags
+            .iter()
+            .map(|f| flag_word(f))
+            .collect::<Vec<_>>()
+            .join(", "),
     ]
 }
 
@@ -1278,6 +1563,10 @@ struct SurfaceBy(bool);
 
 impl std::fmt::Display for SurfaceBy {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(if self.0 { "En yakın uzaklık" } else { "Düşey fark" })
+        f.write_str(if self.0 {
+            "En yakın uzaklık"
+        } else {
+            "Düşey fark"
+        })
     }
 }

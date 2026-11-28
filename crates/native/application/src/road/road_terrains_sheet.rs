@@ -31,12 +31,13 @@
 //!   takes the lines and leaves the type.
 
 use kentos_commands::{
-    CommandResult, ContourRules, CreateOperation, EntitiesCreate, Entity, EntityGeometry, LineType, LineTypeDef, NewObject,
-    PatternElement, PatternUnit, SheetBuiltUp, SheetContourLabel, SheetContourLine, SheetHeightCheck, SheetSlopes, SheetSpot,
-    TerrainsSheetContoured, TerrainsSheetContours, TextAlign, Vec2, contour_rules_default,
+    CommandResult, ContourRules, CreateOperation, EntitiesCreate, Entity, EntityGeometry, LineType,
+    LineTypeDef, NewObject, PatternElement, PatternUnit, SheetBuiltUp, SheetContourLabel,
+    SheetContourLine, SheetHeightCheck, SheetSlopes, SheetSpot, TerrainsSheetContoured,
+    TerrainsSheetContours, TextAlign, Vec2, contour_rules_default,
 };
-use kentos_road::surface::Surface;
 use kentos_road::surface::MAX_LEVELS;
+use kentos_road::surface::Surface;
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -72,15 +73,24 @@ fn ring_holds(ring: &[P], p: P) -> bool {
 
 /// The characteristic points (docs/adr/2320): a summit or a pit inside each innermost closed major or minor line.
 fn spots_of(surface: &Surface, lines: &[SheetContourLine], details: &[Detail]) -> Vec<SheetSpot> {
-    let regular: Vec<&SheetContourLine> =
-        lines.iter().filter(|l| l.closed && (l.kind == "major" || l.kind == "minor") && l.points.len() >= 3).collect();
-    let mut used: Vec<usize> = surface.triangles.iter().flatten().map(|&i| i as usize).collect();
+    let regular: Vec<&SheetContourLine> = lines
+        .iter()
+        .filter(|l| l.closed && (l.kind == "major" || l.kind == "minor") && l.points.len() >= 3)
+        .collect();
+    let mut used: Vec<usize> = surface
+        .triangles
+        .iter()
+        .flatten()
+        .map(|&i| i as usize)
+        .collect();
     used.sort_unstable();
     used.dedup();
     let mut out = Vec::new();
     for (k, l) in regular.iter().enumerate() {
-        let holds_another =
-            regular.iter().enumerate().any(|(j, m)| j != k && m.points.first().is_some_and(|q| ring_holds(&l.points, *q)));
+        let holds_another = regular
+            .iter()
+            .enumerate()
+            .any(|(j, m)| j != k && m.points.first().is_some_and(|q| ring_holds(&l.points, *q)));
         if holds_another {
             continue;
         }
@@ -89,12 +99,20 @@ fn spots_of(surface: &Surface, lines: &[SheetContourLine], details: &[Detail]) -
             .copied()
             .filter(|&i| {
                 let v = surface.vertices[i];
-                v[2] != l.z && ring_holds(&l.points, [v[0], v[1]]) && !details.iter().any(|d| inside(d, [v[0], v[1]]))
+                v[2] != l.z
+                    && ring_holds(&l.points, [v[0], v[1]])
+                    && !details.iter().any(|d| inside(d, [v[0], v[1]]))
             })
             .collect();
         let z = |i: usize| surface.vertices[i][2];
-        let top = held.iter().copied().max_by(|&a, &b| z(a).total_cmp(&z(b)).then(b.cmp(&a)));
-        let bottom = held.iter().copied().min_by(|&a, &b| z(a).total_cmp(&z(b)).then(a.cmp(&b)));
+        let top = held
+            .iter()
+            .copied()
+            .max_by(|&a, &b| z(a).total_cmp(&z(b)).then(b.cmp(&a)));
+        let bottom = held
+            .iter()
+            .copied()
+            .min_by(|&a, &b| z(a).total_cmp(&z(b)).then(a.cmp(&b)));
         let found = match (top, bottom) {
             (Some(t), _) if z(t) > l.z => Some(("summit", t)),
             (_, Some(b)) if z(b) < l.z => Some(("pit", b)),
@@ -119,11 +137,18 @@ fn spots_of(surface: &Surface, lines: &[SheetContourLine], details: &[Detail]) -
 /// The points the surveyor chose (docs/adr/3520): each point on `layers` (a multi-point's each), in the drawing's order,
 /// once per place; its own height when it has one (with the surface's there, if any), else the surface's; the points
 /// with neither are counted, not written; and how many take their own height.
-fn chosen_spots(doc: &kentos_domain::Document, surface: &Surface, layers: &[String]) -> (Vec<SheetSpot>, usize, usize) {
+fn chosen_spots(
+    doc: &kentos_domain::Document,
+    surface: &Surface,
+    layers: &[String],
+) -> (Vec<SheetSpot>, usize, usize) {
     let mut out = Vec::new();
     let mut seen: Vec<P> = Vec::new();
     let (mut off, mut measured) = (0, 0);
-    for e in doc.entities().filter(|e| layers.iter().any(|l| l.trim() == e.base().layer_id)) {
+    for e in doc
+        .entities()
+        .filter(|e| layers.iter().any(|l| l.trim() == e.base().layer_id))
+    {
         let Entity::Point(p) = e else { continue };
         let all = std::iter::once((p.p, p.z)).chain(p.parts.iter().flatten().map(|q| (q.p, q.z)));
         for (at, own) in all {
@@ -136,9 +161,23 @@ fn chosen_spots(doc: &kentos_domain::Document, surface: &Surface, layers: &[Stri
             match (own, ground) {
                 (Some(z), g) => {
                     measured += 1;
-                    out.push(SheetSpot { kind: "chosen".into(), x: c[0], y: c[1], z, text: decimetre(z), surface: g });
+                    out.push(SheetSpot {
+                        kind: "chosen".into(),
+                        x: c[0],
+                        y: c[1],
+                        z,
+                        text: decimetre(z),
+                        surface: g,
+                    });
                 }
-                (None, Some(z)) => out.push(SheetSpot { kind: "chosen".into(), x: c[0], y: c[1], z, text: decimetre(z), surface: None }),
+                (None, Some(z)) => out.push(SheetSpot {
+                    kind: "chosen".into(),
+                    x: c[0],
+                    y: c[1],
+                    z,
+                    text: decimetre(z),
+                    surface: None,
+                }),
                 (None, None) => off += 1,
             }
         }
@@ -148,7 +187,12 @@ fn chosen_spots(doc: &kentos_domain::Document, surface: &Surface, layers: &[Stri
 
 /// The chosen points' own heights against the surface's (docs/adr/4740; BÖHHBÜY m. 93(1)(c)): the points with their own
 /// height on the surface that are not one of its corners (a corner's difference is nought); none when there are none.
-fn height_check(surface: &Surface, found: &[SheetSpot], c: &kentos_commands::SectionCheck, scale: u32) -> Option<SheetHeightCheck> {
+fn height_check(
+    surface: &Surface,
+    found: &[SheetSpot],
+    c: &kentos_commands::SectionCheck,
+    scale: u32,
+) -> Option<SheetHeightCheck> {
     let corners: std::collections::HashSet<(u64, u64)> = surface
         .triangles
         .iter()
@@ -167,7 +211,11 @@ fn height_check(surface: &Surface, found: &[SheetSpot], c: &kentos_commands::Sec
     }
     let rms = (compared.iter().map(|(_, d)| d * d).sum::<f64>() / compared.len() as f64).sqrt();
     let (wide, largest) =
-        compared.iter().fold((compared[0].0, compared[0].1.abs()), |(s, m), (t, d)| if d.abs() > m { (*t, d.abs()) } else { (s, m) });
+        compared
+            .iter()
+            .fold((compared[0].0, compared[0].1.abs()), |(s, m), (t, d)| {
+                if d.abs() > m { (*t, d.abs()) } else { (s, m) }
+            });
     let s = f64::from(scale);
     let koh_z = c.z_factor * (c.xy[0] * s * s + c.xy[1] * s + c.xy[2]) / 100.0;
     let limit = c.factor * koh_z;
@@ -206,25 +254,35 @@ fn built_up_spots(
     let mut seen: Vec<P> = Vec::new();
     let mut off = 0;
     let mut add = |kind: &str, c: P, out: &mut Vec<SheetSpot>| match surface.height(c[0], c[1]).z {
-        Some(z) => out.push(SheetSpot { kind: kind.to_owned(), x: c[0], y: c[1], z, text: decimetre(z), surface: None }),
+        Some(z) => out.push(SheetSpot {
+            kind: kind.to_owned(),
+            x: c[0],
+            y: c[1],
+            z,
+            text: decimetre(z),
+            surface: None,
+        }),
         None => off += 1,
     };
     for e in doc.entities().filter(|e| on(&b.roads, e)) {
-        let pieces: Vec<Vec<P>> = match e {
-            Entity::Line(l) => vec![vec![[l.a.x, l.a.y], [l.b.x, l.b.y]]],
-            Entity::Polyline(p) => {
-                let close = |mut v: Vec<P>, closed: bool| {
-                    if closed && v.len() > 2 {
-                        v.push(v[0]);
-                    }
-                    v
-                };
-                std::iter::once(close(p.pts.iter().map(|v| [v.x, v.y]).collect(), p.closed))
-                    .chain(p.parts.iter().flatten().map(|part| close(part.pts.iter().map(|v| [v.x, v.y]).collect(), p.closed)))
-                    .collect()
-            }
-            _ => continue,
-        };
+        let pieces: Vec<Vec<P>> =
+            match e {
+                Entity::Line(l) => vec![vec![[l.a.x, l.a.y], [l.b.x, l.b.y]]],
+                Entity::Polyline(p) => {
+                    let close = |mut v: Vec<P>, closed: bool| {
+                        if closed && v.len() > 2 {
+                            v.push(v[0]);
+                        }
+                        v
+                    };
+                    std::iter::once(close(p.pts.iter().map(|v| [v.x, v.y]).collect(), p.closed))
+                        .chain(p.parts.iter().flatten().map(|part| {
+                            close(part.pts.iter().map(|v| [v.x, v.y]).collect(), p.closed)
+                        }))
+                        .collect()
+                }
+                _ => continue,
+            };
         for piece in pieces {
             let (mut at, mut walked) = (d / 2.0, 0.0);
             for w in piece.windows(2) {
@@ -261,7 +319,10 @@ fn built_up_spots(
             for h in p.holes.iter().flatten() {
                 rings.push(h.pts.iter().map(|v| [v.x, v.y]).collect());
             }
-            rings.into_iter().filter(|r| r.len() >= 3).collect::<Detail>()
+            rings
+                .into_iter()
+                .filter(|r| r.len() >= 3)
+                .collect::<Detail>()
         })
         .filter(|a: &Detail| !a.is_empty())
         .collect();
@@ -273,11 +334,22 @@ fn built_up_spots(
         [dx * cos + dy * sin, dy * cos - dx * sin]
     };
     let corners = areas.iter().flatten().flatten().map(own);
-    let (lo, hi) = corners.fold(([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]), |(lo, hi), c| {
-        ([lo[0].min(c[0]), lo[1].min(c[1])], [hi[0].max(c[0]), hi[1].max(c[1])])
-    });
+    let (lo, hi) = corners.fold(
+        ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]),
+        |(lo, hi), c| {
+            (
+                [lo[0].min(c[0]), lo[1].min(c[1])],
+                [hi[0].max(c[0]), hi[1].max(c[1])],
+            )
+        },
+    );
     if lo[0].is_finite() {
-        let (i0, i1, j0, j1) = ((lo[0] / d).ceil(), (hi[0] / d).floor(), (lo[1] / d).ceil(), (hi[1] / d).floor());
+        let (i0, i1, j0, j1) = (
+            (lo[0] / d).ceil(),
+            (hi[0] / d).floor(),
+            (lo[1] / d).ceil(),
+            (hi[1] / d).floor(),
+        );
         if (i1 - i0 + 1.0).max(0.0) * (j1 - j0 + 1.0).max(0.0) > MAX_GRID {
             return Err(fail(
                 codes::INVALID_CONTOURS,
@@ -285,7 +357,10 @@ fn built_up_spots(
                 "builtUp.every",
             ));
         }
-        let near = |c: P, list: &[SheetSpot]| list.iter().any(|s| (s.x - c[0]).hypot(s.y - c[1]) < d / 2.0);
+        let near = |c: P, list: &[SheetSpot]| {
+            list.iter()
+                .any(|s| (s.x - c[0]).hypot(s.y - c[1]) < d / 2.0)
+        };
         let mut j = j0;
         while j <= j1 {
             let mut i = i0;
@@ -315,12 +390,19 @@ fn decimetre(z: f64) -> String {
 /// The slopes' characteristic points (docs/adr/3120): each corner of a line or polyline on the top layers, then on the
 /// bottom ones, in the drawing's order, once per place (the same coordinates), its height the surface's; the corners
 /// off the surface are counted, not written.
-fn slope_spots(doc: &kentos_domain::Document, surface: &Surface, slopes: &SheetSlopes) -> (Vec<SheetSpot>, usize) {
+fn slope_spots(
+    doc: &kentos_domain::Document,
+    surface: &Surface,
+    slopes: &SheetSlopes,
+) -> (Vec<SheetSpot>, usize) {
     let mut out = Vec::new();
     let mut seen: Vec<P> = Vec::new();
     let mut off = 0;
     for (kind, layers) in [("slopeTop", &slopes.top), ("slopeBottom", &slopes.bottom)] {
-        for e in doc.entities().filter(|e| layers.iter().any(|l| l.trim() == e.base().layer_id)) {
+        for e in doc
+            .entities()
+            .filter(|e| layers.iter().any(|l| l.trim() == e.base().layer_id))
+        {
             let corners: Vec<P> = match e {
                 Entity::Line(l) => vec![[l.a.x, l.a.y], [l.b.x, l.b.y]],
                 Entity::Polyline(p) => p
@@ -337,7 +419,14 @@ fn slope_spots(doc: &kentos_domain::Document, surface: &Surface, slopes: &SheetS
                 }
                 seen.push(c);
                 match surface.height(c[0], c[1]).z {
-                    Some(z) => out.push(SheetSpot { kind: kind.to_owned(), x: c[0], y: c[1], z, text: decimetre(z), surface: None }),
+                    Some(z) => out.push(SheetSpot {
+                        kind: kind.to_owned(),
+                        x: c[0],
+                        y: c[1],
+                        z,
+                        text: decimetre(z),
+                        surface: None,
+                    }),
                     None => off += 1,
                 }
             }
@@ -448,9 +537,17 @@ fn level_text(z: f64) -> String {
 }
 
 /// The labels along a major part: every `every` metres, the first at half that.
-fn labels(surface: &Surface, points: &[P], closed: bool, z: f64, every: f64) -> Vec<SheetContourLabel> {
+fn labels(
+    surface: &Surface,
+    points: &[P],
+    closed: bool,
+    z: f64,
+    every: f64,
+) -> Vec<SheetContourLabel> {
     let n = points.len();
-    let segments: Vec<(P, P)> = (0..if closed { n } else { n - 1 }).map(|i| (points[i], points[(i + 1) % n])).collect();
+    let segments: Vec<(P, P)> = (0..if closed { n } else { n - 1 })
+        .map(|i| (points[i], points[(i + 1) % n]))
+        .collect();
     let mut out = Vec::new();
     let mut s = every / 2.0;
     let mut walked = 0.0;
@@ -465,14 +562,23 @@ fn labels(surface: &Surface, points: &[P], closed: bool, z: f64, every: f64) -> 
             let mut d = [(q[0] - p[0]) / len, (q[1] - p[1]) / len];
             // Its top uphill: against the fall direction of the triangle under the segment's middle.
             let mid = [(p[0] + q[0]) / 2.0, (p[1] + q[1]) / 2.0];
-            if let Some(aspect) = surface.strictly_in(mid[0], mid[1]).and_then(|t| surface.slope_of(t)).and_then(|s| s.aspect) {
+            if let Some(aspect) = surface
+                .strictly_in(mid[0], mid[1])
+                .and_then(|t| surface.slope_of(t))
+                .and_then(|s| s.aspect)
+            {
                 let uphill = [-aspect.sin(), -aspect.cos()];
                 let left = [-d[1], d[0]];
                 if left[0] * uphill[0] + left[1] * uphill[1] < 0.0 {
                     d = [-d[0], -d[1]];
                 }
             }
-            out.push(SheetContourLabel { z, text: level_text(z), at, rotation: d[1].atan2(d[0]).to_degrees() });
+            out.push(SheetContourLabel {
+                z,
+                text: level_text(z),
+                at,
+                rotation: d[1].atan2(d[0]).to_degrees(),
+            });
             s += every;
         }
         walked += len;
@@ -484,8 +590,13 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     common::terrain_project(doc)?;
     let rules: ContourRules = match &input.rules {
         Some(r) => r.clone(),
-        None => contour_rules_default()
-            .ok_or_else(|| fail(codes::INVALID_CONTOURS, "Yerleşik eğri kural paketi okunamadı.".into(), "rules"))?,
+        None => contour_rules_default().ok_or_else(|| {
+            fail(
+                codes::INVALID_CONTOURS,
+                "Yerleşik eğri kural paketi okunamadı.".into(),
+                "rules",
+            )
+        })?,
     };
     let positive = |v: f64| v.is_finite() && v > 0.0;
     if rules.id.trim().is_empty()
@@ -512,10 +623,16 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     }
     // Spot heights need the package's text height (Ek-3 0004): without it they are not written (no height invented).
     let summits = input.spots.unwrap_or(false);
-    let slopes = input.slopes.as_ref().filter(|s| !s.top.is_empty() || !s.bottom.is_empty());
+    let slopes = input
+        .slopes
+        .as_ref()
+        .filter(|s| !s.top.is_empty() || !s.bottom.is_empty());
     let chosen = !input.points.is_empty();
     let built = input.built_up.as_ref();
-    let spot_height = match (summits || slopes.is_some() || chosen || built.is_some(), rules.spot_height) {
+    let spot_height = match (
+        summits || slopes.is_some() || chosen || built.is_some(),
+        rules.spot_height,
+    ) {
         (false, _) => None,
         (true, Some(h)) if positive(h) => Some(h),
         (true, _) => {
@@ -539,19 +656,33 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
         }
     };
     let scale = match input.scale {
-        Some(0) => return Err(fail(codes::INVALID_CONTOURS, "Ölçek paydası 0 olamaz.".into(), "scale")),
+        Some(0) => {
+            return Err(fail(
+                codes::INVALID_CONTOURS,
+                "Ölçek paydası 0 olamaz.".into(),
+                "scale",
+            ));
+        }
         Some(s) => s,
         None => doc.settings().plot_scale.round().max(1.0) as u32,
     };
     let interval = match input.interval {
         Some(i) => i,
-        None => rules.intervals.iter().find(|i| i.scale == scale).map(|i| i.interval).ok_or_else(|| {
-            fail(
-                codes::INVALID_CONTOURS,
-                format!("{} paketi 1/{scale} ölçeği için eğri aralığı vermiyor; aralığı yazın.", rules.id),
-                "interval",
-            )
-        })?,
+        None => rules
+            .intervals
+            .iter()
+            .find(|i| i.scale == scale)
+            .map(|i| i.interval)
+            .ok_or_else(|| {
+                fail(
+                    codes::INVALID_CONTOURS,
+                    format!(
+                        "{} paketi 1/{scale} ölçeği için eğri aralığı vermiyor; aralığı yazın.",
+                        rules.id
+                    ),
+                    "interval",
+                )
+            })?,
     };
     let base = input.base.unwrap_or(0.0);
     if !(positive(interval) && base.is_finite()) {
@@ -564,18 +695,34 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     let warnings = checks::layer(doc, &input.layer_id)?;
     for d in &input.details {
         if doc.layers().get(d.trim()).is_none() {
-            return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", d.trim()), "details"));
+            return Err(fail(
+                codes::LAYER_NOT_FOUND,
+                format!("“{}” katmanı çizimde yok.", d.trim()),
+                "details",
+            ));
         }
     }
     if let Some(s) = slopes {
         for (at, layers) in [("slopes.top", &s.top), ("slopes.bottom", &s.bottom)] {
             if let Some(l) = layers.iter().find(|l| doc.layers().get(l.trim()).is_none()) {
-                return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", l.trim()), at));
+                return Err(fail(
+                    codes::LAYER_NOT_FOUND,
+                    format!("“{}” katmanı çizimde yok.", l.trim()),
+                    at,
+                ));
             }
         }
     }
-    if let Some(l) = input.points.iter().find(|l| doc.layers().get(l.trim()).is_none()) {
-        return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", l.trim()), "points"));
+    if let Some(l) = input
+        .points
+        .iter()
+        .find(|l| doc.layers().get(l.trim()).is_none())
+    {
+        return Err(fail(
+            codes::LAYER_NOT_FOUND,
+            format!("“{}” katmanı çizimde yok.", l.trim()),
+            "points",
+        ));
     }
     // Docs/adr/4740 (m. 63(2)): the built-up areas' and roads' layers and the spacing on the sheet.
     let built_every = match built {
@@ -591,27 +738,48 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             let every = match (b.every, rules.height_every) {
                 (Some(v), _) if positive(v) => v,
                 (Some(_), _) => {
-                    return Err(fail(codes::INVALID_CONTOURS, "Kotların paftadaki aralığı 0'dan büyük olmalı.".into(), "builtUp.every"));
+                    return Err(fail(
+                        codes::INVALID_CONTOURS,
+                        "Kotların paftadaki aralığı 0'dan büyük olmalı.".into(),
+                        "builtUp.every",
+                    ));
                 }
                 (None, Some(v)) => v,
                 (None, None) => {
                     return Err(fail(
                         codes::INVALID_CONTOURS,
-                        format!("{} paketi yerleşik alan kotlarının aralığını (heightEvery, m. 63(2)) vermiyor; aralığı yazın.", rules.id),
+                        format!(
+                            "{} paketi yerleşik alan kotlarının aralığını (heightEvery, m. 63(2)) vermiyor; aralığı yazın.",
+                            rules.id
+                        ),
                         "builtUp.every",
                     ));
                 }
             };
             // Docs/adr/5120: the grid's origin and rotation, the surveyor's.
-            if b.origin.is_some_and(|o| !(o[0].is_finite() && o[1].is_finite())) {
-                return Err(fail(codes::INVALID_CONTOURS, "Izgaranın başlangıç noktası sonlu olmalı.".into(), "builtUp.origin"));
+            if b.origin
+                .is_some_and(|o| !(o[0].is_finite() && o[1].is_finite()))
+            {
+                return Err(fail(
+                    codes::INVALID_CONTOURS,
+                    "Izgaranın başlangıç noktası sonlu olmalı.".into(),
+                    "builtUp.origin",
+                ));
             }
             if b.rotation.is_some_and(|r| !r.is_finite()) {
-                return Err(fail(codes::INVALID_CONTOURS, "Izgaranın dönme açısı sonlu olmalı.".into(), "builtUp.rotation"));
+                return Err(fail(
+                    codes::INVALID_CONTOURS,
+                    "Izgaranın dönme açısı sonlu olmalı.".into(),
+                    "builtUp.rotation",
+                ));
             }
             for (at, layers) in [("builtUp.areas", &b.areas), ("builtUp.roads", &b.roads)] {
                 if let Some(l) = layers.iter().find(|l| doc.layers().get(l.trim()).is_none()) {
-                    return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", l.trim()), at));
+                    return Err(fail(
+                        codes::LAYER_NOT_FOUND,
+                        format!("“{}” katmanı çizimde yok.", l.trim()),
+                        at,
+                    ));
                 }
             }
             Some(every)
@@ -620,18 +788,40 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     checks::revision(doc, input.expected_revision.as_deref())?;
     let own = common::surfaces(doc);
     let name = input.surface.as_str();
-    let Some(def) = own.iter().find(|s| s.id == name).or_else(|| own.iter().find(|s| s.name.to_lowercase() == name.to_lowercase())) else {
-        return Err(fail(codes::UNKNOWN_TERRAIN, format!("“{name}” kimlikli ya da adlı yüzey projede yok."), "surface"));
+    let Some(def) = own.iter().find(|s| s.id == name).or_else(|| {
+        own.iter()
+            .find(|s| s.name.to_lowercase() == name.to_lowercase())
+    }) else {
+        return Err(fail(
+            codes::UNKNOWN_TERRAIN,
+            format!("“{name}” kimlikli ya da adlı yüzey projede yok."),
+            "surface",
+        ));
     };
     let made = common::make(doc, def);
     let surface = made.built()?;
-    let used: Vec<f64> = surface.triangles.iter().flatten().map(|&i| surface.vertices[i as usize][2]).collect();
-    let (Some(lo), Some(hi)) = (used.iter().copied().reduce(f64::min), used.iter().copied().reduce(f64::max)) else {
+    let used: Vec<f64> = surface
+        .triangles
+        .iter()
+        .flatten()
+        .map(|&i| surface.vertices[i as usize][2])
+        .collect();
+    let (Some(lo), Some(hi)) = (
+        used.iter().copied().reduce(f64::min),
+        used.iter().copied().reduce(f64::max),
+    ) else {
         return Err(no_contours());
     };
-    let (first, last) = (((lo - base) / interval).ceil(), ((hi - base) / interval).floor());
+    let (first, last) = (
+        ((lo - base) / interval).ceil(),
+        ((hi - base) / interval).floor(),
+    );
     if last - first + 1.0 > MAX_LEVELS as f64 {
-        return Err(fail(codes::INVALID_CONTOURS, "Bu aralıkla yüzeyi 10 000'den çok düzey keser; aralığı büyütün.".into(), "interval"));
+        return Err(fail(
+            codes::INVALID_CONTOURS,
+            "Bu aralıkla yüzeyi 10 000'den çok düzey keser; aralığı büyütün.".into(),
+            "interval",
+        ));
     }
     // Each triangle's spacing on the sheet, paper millimetres.
     let mm = 1000.0 / f64::from(scale);
@@ -641,9 +831,19 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             _ => f64::INFINITY,
         })
         .collect();
-    let (steep_on, aux_on, labels_on) = (input.steep.unwrap_or(true), input.auxiliary.unwrap_or(true), input.labels.unwrap_or(true));
-    let steep: Vec<bool> = spacing.iter().map(|s| steep_on && *s < rules.steep_below).collect();
-    let gentle: Vec<bool> = spacing.iter().map(|s| aux_on && *s > rules.auxiliary_above).collect();
+    let (steep_on, aux_on, labels_on) = (
+        input.steep.unwrap_or(true),
+        input.auxiliary.unwrap_or(true),
+        input.labels.unwrap_or(true),
+    );
+    let steep: Vec<bool> = spacing
+        .iter()
+        .map(|s| steep_on && *s < rules.steep_below)
+        .collect();
+    let gentle: Vec<bool> = spacing
+        .iter()
+        .map(|s| aux_on && *s > rules.auxiliary_above)
+        .collect();
     // The details: closed polylines' and polygons' rings, chords for arcs.
     let details: Vec<Detail> = doc
         .entities()
@@ -658,21 +858,30 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             for h in p.holes.iter().flatten() {
                 rings.push(h.pts.iter().map(|v| [v.x, v.y]).collect());
             }
-            rings.into_iter().filter(|r| r.len() >= 3).collect::<Detail>()
+            rings
+                .into_iter()
+                .filter(|r| r.len() >= 3)
+                .collect::<Detail>()
         })
         .filter(|d: &Detail| !d.is_empty())
         .collect();
     let mut lines: Vec<SheetContourLine> = Vec::new();
     let mut cut = 0.0;
-    let mut add = |z: f64, kind: &str, found: Vec<(Vec<P>, bool)>, lines: &mut Vec<SheetContourLine>| {
-        for (points, closed) in found {
-            let (parts, gone, still) = clip(&points, closed, &details);
-            cut += gone;
-            for part in parts {
-                lines.push(SheetContourLine { z, kind: kind.to_owned(), closed: still, points: part });
+    let mut add =
+        |z: f64, kind: &str, found: Vec<(Vec<P>, bool)>, lines: &mut Vec<SheetContourLine>| {
+            for (points, closed) in found {
+                let (parts, gone, still) = clip(&points, closed, &details);
+                cut += gone;
+                for part in parts {
+                    lines.push(SheetContourLine {
+                        z,
+                        kind: kind.to_owned(),
+                        closed: still,
+                        points: part,
+                    });
+                }
             }
-        }
-    };
+        };
     let major_every = i64::from(rules.major_every);
     // Intermediate lines the steep rule left out, counted so that an empty result names the rule, not the interval.
     let mut dropped = 0usize;
@@ -683,14 +892,23 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
             let k = half as i64;
             let z = base + half * interval;
             let major = major_every > 0 && k.rem_euclid(major_every) == 0;
-            let found = if major { surface.level_lines(z, &|_| true) } else { surface.level_lines(z, &|t| !steep[t]) };
+            let found = if major {
+                surface.level_lines(z, &|_| true)
+            } else {
+                surface.level_lines(z, &|t| !steep[t])
+            };
             if !major && steep_on && found.is_empty() {
                 dropped += surface.level_lines(z, &|_| true).len();
             }
             add(z, if major { "major" } else { "minor" }, found, &mut lines);
         } else if aux_on {
             let z = base + half * interval;
-            add(z, "auxiliary", surface.level_lines(z, &|t| gentle[t]), &mut lines);
+            add(
+                z,
+                "auxiliary",
+                surface.level_lines(z, &|t| gentle[t]),
+                &mut lines,
+            );
         }
         m += 1.0;
     }
@@ -709,36 +927,70 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     if lines.is_empty() {
         return Err(no_contours());
     }
-    let mut spots = if summits { spots_of(surface, &lines, &details) } else { Vec::new() };
+    let mut spots = if summits {
+        spots_of(surface, &lines, &details)
+    } else {
+        Vec::new()
+    };
     let summit_count = spots.len();
     let (slope_found, slope_off) = slopes.map_or((Vec::new(), 0), |s| slope_spots(doc, surface, s));
     let (tops, bottoms) = (
         slope_found.iter().filter(|s| s.kind == "slopeTop").count(),
-        slope_found.iter().filter(|s| s.kind == "slopeBottom").count(),
+        slope_found
+            .iter()
+            .filter(|s| s.kind == "slopeBottom")
+            .count(),
     );
     spots.extend(slope_found);
-    let (chosen_found, chosen_off, measured) = if chosen { chosen_spots(doc, surface, &input.points) } else { (Vec::new(), 0, 0) };
+    let (chosen_found, chosen_off, measured) = if chosen {
+        chosen_spots(doc, surface, &input.points)
+    } else {
+        (Vec::new(), 0, 0)
+    };
     let chosen_note = chosen.then(|| {
         let mut parts = Vec::new();
         let widest = chosen_found
             .iter()
             .filter_map(|s| s.surface.map(|g| ((s.z - g).abs(), s)))
-            .fold(None::<(f64, &SheetSpot)>, |best, (d, s)| if best.is_none_or(|(b, _)| d > b) { Some((d, s)) } else { best });
+            .fold(None::<(f64, &SheetSpot)>, |best, (d, s)| {
+                if best.is_none_or(|(b, _)| d > b) {
+                    Some((d, s))
+                } else {
+                    best
+                }
+            });
         if let Some((d, s)) = widest {
-            parts.push(format!(" Kendi kotu yüzeyinkinden en çok {d:.3} m ayrılıyor (Y {:.3}, X {:.3}).", s.x, s.y));
+            parts.push(format!(
+                " Kendi kotu yüzeyinkinden en çok {d:.3} m ayrılıyor (Y {:.3}, X {:.3}).",
+                s.x, s.y
+            ));
         }
         if chosen_off > 0 {
-            parts.push(format!(" Kendi kotu olmayan ve yüzeyin dışında kalan {chosen_off} nokta yazılmadı."));
+            parts.push(format!(
+                " Kendi kotu olmayan ve yüzeyin dışında kalan {chosen_off} nokta yazılmadı."
+            ));
         }
         (chosen_found.len(), measured, parts.concat())
     });
     // Docs/adr/4740: the chosen points' own heights against the surface's, by m. 93(1)(c)'s limit.
-    let check = rules.section_check.as_ref().and_then(|c| height_check(surface, &chosen_found, c, scale));
-    let corners_only = chosen_found.iter().any(|s| s.surface.is_some()) && check.is_none() && rules.section_check.is_some();
+    let check = rules
+        .section_check
+        .as_ref()
+        .and_then(|c| height_check(surface, &chosen_found, c, scale));
+    let corners_only = chosen_found.iter().any(|s| s.surface.is_some())
+        && check.is_none()
+        && rules.section_check.is_some();
     spots.extend(chosen_found);
     // Docs/adr/4740 (m. 63(2)): heights along the roads and on the grid of the built-up areas.
     let built_found = match (built, built_every) {
-        (Some(b), Some(every)) => Some(built_up_spots(doc, surface, b, every / mm, &details, &spots)?),
+        (Some(b), Some(every)) => Some(built_up_spots(
+            doc,
+            surface,
+            b,
+            every / mm,
+            &details,
+            &spots,
+        )?),
         _ => None,
     };
     if let Some((found, ..)) = &built_found {
@@ -746,17 +998,27 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
     }
     let every = rules.label_every / mm;
     let labels: Vec<SheetContourLabel> = if labels_on {
-        lines.iter().filter(|l| l.kind == "major").flat_map(|l| labels(surface, &l.points, l.closed, l.z, every)).collect()
+        lines
+            .iter()
+            .filter(|l| l.kind == "major")
+            .flat_map(|l| labels(surface, &l.points, l.closed, l.z, every))
+            .collect()
     } else {
         Vec::new()
     };
-    let (n_steep, n_gentle) = (steep.iter().filter(|s| **s).count() as u32, gentle.iter().filter(|g| **g).count() as u32);
+    let (n_steep, n_gentle) = (
+        steep.iter().filter(|s| **s).count() as u32,
+        gentle.iter().filter(|g| **g).count() as u32,
+    );
     let mut notes = vec![format!(
         "Eğriler {} paketine göre: aralık {} m (1/{scale}), her {}. eğri kalın ({} mm), öbürleri {} mm.",
         rules.id, interval, rules.major_every, rules.major_weight, rules.minor_weight
     )];
     if n_steep > 0 {
-        notes.push(format!("Eğri arası paftada {} mm'den az olan {n_steep} üçgende yalnız kalın eğriler çizildi.", rules.steep_below));
+        notes.push(format!(
+            "Eğri arası paftada {} mm'den az olan {n_steep} üçgende yalnız kalın eğriler çizildi.",
+            rules.steep_below
+        ));
     }
     if n_gentle > 0 {
         notes.push(format!("Eğri arası {} mm'yi aşan {n_gentle} üçgende yarım aralıkta kesik yardımcı eğri çizildi.", rules.auxiliary_above));
@@ -768,7 +1030,9 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
         ));
     }
     if !input.details.is_empty() {
-        notes.push(format!("Detayların içinde kalan {cut:.2} m eğri çizilmedi (m. 78(1)(g))."));
+        notes.push(format!(
+            "Detayların içinde kalan {cut:.2} m eğri çizilmedi (m. 78(1)(g))."
+        ));
     }
     if let (Some(h), true) = (spot_height, summits) {
         notes.push(format!(
@@ -821,7 +1085,9 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
                 .to_owned(),
         );
     }
-    if let (Some(h), Some((_, roads, grid, off)), Some(every)) = (spot_height, &built_found, built_every) {
+    if let (Some(h), Some((_, roads, grid, off)), Some(every)) =
+        (spot_height, &built_found, built_every)
+    {
         let mut note = format!(
             "Yollarda {roads}, yerleşik alanlarda {grid} kot dm'ye kadar yazıldı ({h} mm, m. 63(2)): paftada yaklaşık {every} mm'de bir (arazide {} m), kotlar yüzeyden; yerleşik alandaki ızgara noktası detayın içinde ya da başka bir kota aralığın yarısından yakınsa yazılmaz. Çatı ve terasların uygun köşeleri ölçmecinin seçtiği noktalardır. m. 63 fotogrametrik üretimin maddesidir; yersel alımda m. 45(1)(c) uygulanır.",
             every / mm
@@ -832,13 +1098,22 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsSheetContours) -> Result
         notes.push(note);
     }
     // docs/adr/2720: the auxiliary lines drawn with the package's pattern as a project line type of its own name.
-    let pattern = (!rules.auxiliary_pattern.is_empty() && lines.iter().any(|l| l.kind == "auxiliary"))
-        .then(|| pattern_name(&rules));
+    let pattern = (!rules.auxiliary_pattern.is_empty()
+        && lines.iter().any(|l| l.kind == "auxiliary"))
+    .then(|| pattern_name(&rules));
     if let Some(name) = &pattern {
         let parts: Vec<String> = rules
             .auxiliary_pattern
             .iter()
-            .map(|l| if *l > 0.0 { format!("{l} mm çizgi") } else if *l < 0.0 { format!("{} mm boşluk", -l) } else { "nokta".to_owned() })
+            .map(|l| {
+                if *l > 0.0 {
+                    format!("{l} mm çizgi")
+                } else if *l < 0.0 {
+                    format!("{} mm boşluk", -l)
+                } else {
+                    "nokta".to_owned()
+                }
+            })
             .collect();
         notes.push(format!(
             "Yardımcı eğriler “{name}” çizgi tipiyle çizilir (kâğıtta {}); tip projede yoksa eklenir, varsa projedeki kullanılır; tip proje ayarıdır, geri almada kalır.",
@@ -878,14 +1153,27 @@ fn pattern_type(rules: &ContourRules) -> LineTypeDef {
     LineTypeDef {
         name: pattern_name(rules),
         description: format!("{} paketinin yardımcı eğrisi", rules.id),
-        elements: rules.auxiliary_pattern.iter().map(|l| PatternElement { length: *l, text: None, shape: None }).collect(),
+        elements: rules
+            .auxiliary_pattern
+            .iter()
+            .map(|l| PatternElement {
+                length: *l,
+                text: None,
+                shape: None,
+            })
+            .collect(),
         unit: PatternUnit::Paper,
         source: Some(rules.id.clone()),
     }
 }
 
 fn no_contours() -> Stop {
-    fail(codes::NO_CONTOURS, "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok; aralığı ya da taban kotunu değiştirin.".into(), "interval")
+    fail(
+        codes::NO_CONTOURS,
+        "Bu aralıkla yüzeyi kesen eş yükselti eğrisi yok; aralığı ya da taban kotunu değiştirin."
+            .into(),
+        "interval",
+    )
 }
 
 fn objects(c: &Checked) -> Vec<NewObject> {
@@ -935,13 +1223,24 @@ fn objects(c: &Checked) -> Vec<NewObject> {
     for s in &c.out.spots {
         // A chosen point is the surveyor's (docs/adr/3520): only its height is written.
         if s.kind != "chosen" {
-            out.push(plain(EntityGeometry::Point { p: Vec2 { x: s.x, y: s.y }, z: Some(s.z), parts: None }, None, false));
+            out.push(plain(
+                EntityGeometry::Point {
+                    p: Vec2 { x: s.x, y: s.y },
+                    z: Some(s.z),
+                    parts: None,
+                },
+                None,
+                false,
+            ));
         }
         out.push(plain(
             EntityGeometry::Text {
                 layout: None,
                 annotative: None,
-                p: Vec2 { x: s.x + spot / 2.0, y: s.y },
+                p: Vec2 {
+                    x: s.x + spot / 2.0,
+                    y: s.y,
+                },
                 text: s.text.clone(),
                 height: spot,
                 rotation: 0.0,
@@ -963,7 +1262,10 @@ fn objects(c: &Checked) -> Vec<NewObject> {
             EntityGeometry::Text {
                 layout: None,
                 annotative: None,
-                p: Vec2 { x: l.at[0], y: l.at[1] },
+                p: Vec2 {
+                    x: l.at[0],
+                    y: l.at[1],
+                },
                 text: l.text.clone(),
                 height,
                 rotation: l.rotation,
@@ -986,28 +1288,43 @@ fn objects(c: &Checked) -> Vec<NewObject> {
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsSheetContours) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The lines and labels execute would write; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsSheetContours) -> CommandResult<TerrainsSheetContoured> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &TerrainsSheetContours,
+) -> CommandResult<TerrainsSheetContoured> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: c.out, warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: c.out,
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/4740).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &TerrainsSheetContours) -> CommandResult<TerrainsSheetContoured> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &TerrainsSheetContours,
+) -> CommandResult<TerrainsSheetContoured> {
     write(cx, input.clone())
 }
 
 /// Writes the lines and labels, one undo step “Pafta eş yükselti eğrileri”, recorded as the command; the drawing kept
 /// with its surface and the layers it read (docs/adr/4740), so that it goes stale when they change and draws again.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsSheetContours) -> CommandResult<TerrainsSheetContoured> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsSheetContours,
+) -> CommandResult<TerrainsSheetContoured> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_TERRAINS_SHEET_CONTOURS,
@@ -1027,16 +1344,26 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsSheetContours) -> C
     )
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: TerrainsSheetContours) -> CommandResult<TerrainsSheetContoured> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsSheetContours,
+) -> CommandResult<TerrainsSheetContoured> {
     let c = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
     // The auxiliary pattern's line type, when the project has none of its name (a project setting, kept by undo as every
     // line type is, docs/adr/0313), and the objects as one step.
-    let step = cx.doc.begin_group(crate::create::label(Some(CreateOperation::SheetContours)));
+    let step = cx
+        .doc
+        .begin_group(crate::create::label(Some(CreateOperation::SheetContours)));
     if let Some(name) = &c.out.pattern
-        && !cx.doc.settings().line_types.iter().any(|t| kentos_commands::same_line_type_name(&t.name, name))
+        && !cx
+            .doc
+            .settings()
+            .line_types
+            .iter()
+            .any(|t| kentos_commands::same_line_type_name(&t.name, name))
     {
         let mut settings = cx.doc.settings().clone();
         settings.line_types.push(pattern_type(&c.rules));
@@ -1049,14 +1376,25 @@ fn write(cx: &mut ExecutionContext<'_>, input: TerrainsSheetContours) -> Command
         expected_revision: None,
     };
     // The check's own warnings (docs/adr/4740: m. 93(1)(c)'s); the layer's come from the write.
-    let own: Vec<kentos_commands::CommandWarning> =
-        c.warnings.iter().filter(|w| w.code == codes::SECTION_CHECK_EXCEEDED).cloned().collect();
+    let own: Vec<kentos_commands::CommandWarning> = c
+        .warnings
+        .iter()
+        .filter(|w| w.code == codes::SECTION_CHECK_EXCEEDED)
+        .cloned()
+        .collect();
     match crate::create::write_in(cx, create) {
-        CommandResult::Completed { output, mut warnings } => {
+        CommandResult::Completed {
+            output,
+            mut warnings,
+        } => {
             cx.doc.end_group(step);
             warnings.extend(own);
             CommandResult::Completed {
-                output: TerrainsSheetContoured { uids: output.created, revision: cx.doc.revision().to_string(), ..c.out },
+                output: TerrainsSheetContoured {
+                    uids: output.created,
+                    revision: cx.doc.revision().to_string(),
+                    ..c.out
+                },
                 warnings,
             }
         }

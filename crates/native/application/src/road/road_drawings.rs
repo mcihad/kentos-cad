@@ -15,20 +15,23 @@
 
 use std::collections::BTreeMap;
 
-use kentos_commands::{CommandResult, RoadDrawingDef, RoadDrawingSource, RoadSourceKind};
 use kentos_commands::canonical::stamp_of;
+use kentos_commands::{CommandResult, RoadDrawingDef, RoadDrawingSource, RoadSourceKind};
 use kentos_domain::{Document, Uuid};
 use serde::Serialize;
 use serde_json::{Number, Value};
 
+use crate::ExecutionContext;
 use crate::checks::{Stop, error};
 use crate::codes;
-use crate::ExecutionContext;
 
 /// `value` with its every number a float.
 fn floats(value: Value) -> Value {
     match value {
-        Value::Number(n) => n.as_f64().and_then(Number::from_f64).map_or(Value::Null, Value::Number),
+        Value::Number(n) => n
+            .as_f64()
+            .and_then(Number::from_f64)
+            .map_or(Value::Null, Value::Number),
         Value::Array(a) => Value::Array(a.into_iter().map(floats).collect()),
         Value::Object(o) => Value::Object(o.into_iter().map(|(k, v)| (k, floats(v))).collect()),
         other => other,
@@ -48,14 +51,20 @@ fn find<'a, T>(list: &'a [T], id: &str, of: impl Fn(&T) -> &str) -> Option<&'a T
 /// they are, in the drawing's order. A layer's filter is not applied: an object it leaves out now may count later.
 fn network_stamp(doc: &Document, id: &str) -> Option<String> {
     let def = doc.settings().networks.iter().find(|n| n.id == id)?;
-    let layers: std::collections::BTreeSet<&str> =
-        def.edges.iter().map(|l| l.layer.as_str()).chain(def.junctions.iter().map(|l| l.layer.as_str())).collect();
+    let layers: std::collections::BTreeSet<&str> = def
+        .edges
+        .iter()
+        .map(|l| l.layer.as_str())
+        .chain(def.junctions.iter().map(|l| l.layer.as_str()))
+        .collect();
     let objects: Vec<Value> = doc
         .entities()
         .filter(|e| layers.contains(e.base().layer_id.as_str()))
         .map(|e| serde_json::to_value(e).unwrap_or(Value::Null))
         .collect();
-    Some(stamp(&serde_json::json!({ "network": def, "objects": objects })))
+    Some(stamp(
+        &serde_json::json!({ "network": def, "objects": objects }),
+    ))
 }
 
 /// A layer's stamp (docs/adr/4740): of the geometries of its objects as they are, in the drawing's order; none when the
@@ -64,14 +73,18 @@ fn network_stamp(doc: &Document, id: &str) -> Option<String> {
 /// only says stale; one that missed a change would say current). Docs/adr/5120: the objects are read from the layer's
 /// index, in the drawing's order, not by walking the whole drawing.
 fn layer_stamp(doc: &Document, id: &str) -> Option<String> {
-    doc.layers().get(id).filter(|n| n.kind == kentos_commands::LayerNodeType::Layer)?;
+    doc.layers()
+        .get(id)
+        .filter(|n| n.kind == kentos_commands::LayerNodeType::Layer)?;
     let geometries: Vec<Value> = doc
         .by_layer(id)
         .map(|e| {
             // The object's JSON without what its base holds (its number, layer, look, attributes, label): its kind and
             // geometry.
             let mut v = serde_json::to_value(e).unwrap_or(Value::Null);
-            if let (Value::Object(o), Ok(Value::Object(base))) = (&mut v, serde_json::to_value(e.base())) {
+            if let (Value::Object(o), Ok(Value::Object(base))) =
+                (&mut v, serde_json::to_value(e.base()))
+            {
                 for k in base.keys() {
                     o.remove(k);
                 }
@@ -123,14 +136,24 @@ fn add(doc: &Document, kind: RoadSourceKind, id: &str, out: &mut Vec<RoadDrawing
     if out.iter().any(|s| s.kind == kind && s.id == id) {
         return;
     }
-    let Some(digest) = stamp_now(doc, kind, id) else { return };
-    out.push(RoadDrawingSource { kind, id: id.to_owned(), digest });
-    let Some(road) = doc.settings().road.as_ref() else { return };
+    let Some(digest) = stamp_now(doc, kind, id) else {
+        return;
+    };
+    out.push(RoadDrawingSource {
+        kind,
+        id: id.to_owned(),
+        digest,
+    });
+    let Some(road) = doc.settings().road.as_ref() else {
+        return;
+    };
     let mut named: Vec<(K, String)> = Vec::new();
     match kind {
         K::Surface | K::Template | K::Network | K::Layer => {}
         K::Alignment => {
-            if let Some(o) = find(&road.alignments, id, |s| &s.id).and_then(|a| a.offset_of.as_ref()) {
+            if let Some(o) =
+                find(&road.alignments, id, |s| &s.id).and_then(|a| a.offset_of.as_ref())
+            {
                 named.push((K::Alignment, o.alignment.clone()));
             }
         }
@@ -146,7 +169,11 @@ fn add(doc: &Document, kind: RoadSourceKind, id: &str, out: &mut Vec<RoadDrawing
                 named.extend(s.profile.iter().map(|x| (K::Profile, x.clone())));
                 named.extend(s.template.iter().map(|x| (K::Template, x.clone())));
                 named.extend(s.surface.iter().map(|x| (K::Surface, x.clone())));
-                named.extend(s.superelevation.iter().map(|x| (K::Superelevation, x.clone())));
+                named.extend(
+                    s.superelevation
+                        .iter()
+                        .map(|x| (K::Superelevation, x.clone())),
+                );
             }
         }
         K::Superelevation => {
@@ -162,18 +189,27 @@ fn add(doc: &Document, kind: RoadSourceKind, id: &str, out: &mut Vec<RoadDrawing
                     named.push((K::Template, r.template.clone()));
                 }
                 named.push((K::Surface, c.surface.clone()));
-                named.extend(c.superelevation.iter().map(|x| (K::Superelevation, x.clone())));
+                named.extend(
+                    c.superelevation
+                        .iter()
+                        .map(|x| (K::Superelevation, x.clone())),
+                );
             }
         }
-        K::Guardrail => named.extend(find(&road.guardrails, id, |s| &s.id).map(|g| (K::Corridor, g.corridor.clone()))),
-        K::Culvert => named.extend(find(&road.culverts, id, |s| &s.id).map(|g| (K::Corridor, g.corridor.clone()))),
-        K::Wall => named.extend(find(&road.walls, id, |s| &s.id).map(|g| (K::Corridor, g.corridor.clone()))),
+        K::Guardrail => named.extend(
+            find(&road.guardrails, id, |s| &s.id).map(|g| (K::Corridor, g.corridor.clone())),
+        ),
+        K::Culvert => named
+            .extend(find(&road.culverts, id, |s| &s.id).map(|g| (K::Corridor, g.corridor.clone()))),
+        K::Wall => named
+            .extend(find(&road.walls, id, |s| &s.id).map(|g| (K::Corridor, g.corridor.clone()))),
         K::Junction => {
             if let Some(j) = find(&road.junctions, id, |s| &s.id) {
                 named.extend(j.legs.iter().map(|l| (K::Alignment, l.alignment.clone())));
             }
         }
-        K::Platform => named.extend(find(&road.platforms, id, |s| &s.id).map(|p| (K::Surface, p.surface.clone()))),
+        K::Platform => named
+            .extend(find(&road.platforms, id, |s| &s.id).map(|p| (K::Surface, p.surface.clone()))),
     }
     for (k, i) in named {
         add(doc, k, &i, out);
@@ -189,7 +225,10 @@ fn objects_list(doc: &Document, uids: &[String], numbered: bool) -> (String, usi
     let list: Vec<Value> = uids
         .iter()
         .map(|u| {
-            let entity = Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
+            let entity = Uuid::parse_str(u)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s));
             present += usize::from(entity.is_some());
             entity.map_or(Value::Null, |e| {
                 let mut v = serde_json::to_value(e).unwrap_or(Value::Null);
@@ -262,14 +301,29 @@ pub(crate) fn version_of(command: &str) -> u32 {
 fn named(doc: &Document, kind: RoadSourceKind) -> Vec<(String, String)> {
     use RoadSourceKind as K;
     if kind == K::Network {
-        return doc.settings().networks.iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+        return doc
+            .settings()
+            .networks
+            .iter()
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect();
     }
     if kind == K::Layer {
-        return doc.layers().leaves().iter().map(|l| (l.id.clone(), l.name.clone())).collect();
+        return doc
+            .layers()
+            .leaves()
+            .iter()
+            .map(|l| (l.id.clone(), l.name.clone()))
+            .collect();
     }
-    let Some(r) = doc.settings().road.as_ref() else { return Vec::new() };
+    let Some(r) = doc.settings().road.as_ref() else {
+        return Vec::new();
+    };
     fn pairs<T>(list: &[T], f: impl Fn(&T) -> (&String, &String)) -> Vec<(String, String)> {
-        list.iter().map(f).map(|(i, n)| (i.clone(), n.clone())).collect()
+        list.iter()
+            .map(f)
+            .map(|(i, n)| (i.clone(), n.clone()))
+            .collect()
     }
     match kind {
         K::Surface => pairs(&r.surfaces, |x| (&x.id, &x.name)),
@@ -292,19 +346,28 @@ fn named(doc: &Document, kind: RoadSourceKind) -> Vec<(String, String)> {
 pub(crate) fn resolve(doc: &Document, kind: RoadSourceKind, text: &str) -> Option<String> {
     let all = named(doc, kind);
     let low = text.to_lowercase();
-    all.iter().find(|(i, _)| i == text).or_else(|| all.iter().find(|(_, n)| n.to_lowercase() == low)).map(|(i, _)| i.clone())
+    all.iter()
+        .find(|(i, _)| i == text)
+        .or_else(|| all.iter().find(|(_, n)| n.to_lowercase() == low))
+        .map(|(i, _)| i.clone())
 }
 
 /// A source's name now.
 pub(crate) fn name_of(doc: &Document, kind: RoadSourceKind, id: &str) -> Option<String> {
-    named(doc, kind).into_iter().find(|(i, _)| i == id).map(|(_, n)| n)
+    named(doc, kind)
+        .into_iter()
+        .find(|(i, _)| i == id)
+        .map(|(_, n)| n)
 }
 
 /// The input as a drawing keeps it: its main source by id (a later rename does not lose it), without its expected
 /// revision (drawing it again does not wait for that one).
 fn kept_input<I: Serialize>(input: &I, field: &str, id: &str) -> BTreeMap<String, Value> {
     let mut o: BTreeMap<String, Value> = match serde_json::to_value(input) {
-        Ok(Value::Object(o)) => o.into_iter().filter(|(k, _)| k != "expectedRevision").collect(),
+        Ok(Value::Object(o)) => o
+            .into_iter()
+            .filter(|(k, _)| k != "expectedRevision")
+            .collect(),
         _ => BTreeMap::new(),
     };
     o.insert(field.to_owned(), Value::String(id.to_owned()));
@@ -313,7 +376,10 @@ fn kept_input<I: Serialize>(input: &I, field: &str, id: &str) -> BTreeMap<String
 
 /// The next drawing id: `cz-1`, `cz-2` … (çizim) the first not taken.
 fn next_id(list: &[RoadDrawingDef]) -> String {
-    (1..).map(|n| format!("cz-{n}")).find(|id| list.iter().all(|d| &d.id != id)).unwrap_or_default()
+    (1..)
+        .map(|n| format!("cz-{n}"))
+        .find(|id| list.iter().all(|d| &d.id != id))
+        .unwrap_or_default()
 }
 
 /// Keeps what `command` drew from the source of `kind` its input's `field` names: its objects `uids`, as a drawing of
@@ -334,7 +400,11 @@ pub(crate) fn keep<I: Serialize>(
 
 /// Docs/adr/4320: a drawing drawn again whose objects came out as they are: its record takes its sources' stamps now
 /// and keeps the version and the revision of the write that made its objects (none was written now).
-pub(crate) fn renew(doc: &mut Document, d: &RoadDrawingDef, main: (RoadSourceKind, &str)) -> Result<(), Stop> {
+pub(crate) fn renew(
+    doc: &mut Document,
+    d: &RoadDrawingDef,
+    main: (RoadSourceKind, &str),
+) -> Result<(), Stop> {
     let mut drawing = record(doc, &d.command, &d.input, main, &d.uids, Some(&d.id))?;
     drawing.version = d.version;
     drawing.revision = d.revision.clone();
@@ -347,8 +417,13 @@ fn write_record(doc: &mut Document, drawing: RoadDrawingDef) -> Result<(), Stop>
         Some(d) => *d = drawing,
         None => list.push(drawing),
     }
-    doc.set_road_drawings(list, "Yol çizimi")
-        .map_err(|e| Stop::failed(error(codes::ROAD_DRAWINGS_FULL, format!("Çizim kaydedilemedi: {}.", e.0), None)))?;
+    doc.set_road_drawings(list, "Yol çizimi").map_err(|e| {
+        Stop::failed(error(
+            codes::ROAD_DRAWINGS_FULL,
+            format!("Çizim kaydedilemedi: {}.", e.0),
+            None,
+        ))
+    })?;
     Ok(())
 }
 
@@ -361,9 +436,15 @@ fn record<I: Serialize>(
     uids: &[String],
     replacing: Option<&str>,
 ) -> Result<RoadDrawingDef, Stop> {
-    let named = serde_json::to_value(input).ok().and_then(|v| v.get(field).and_then(Value::as_str).map(str::to_owned));
+    let named = serde_json::to_value(input)
+        .ok()
+        .and_then(|v| v.get(field).and_then(Value::as_str).map(str::to_owned));
     let Some(main) = named.and_then(|t| resolve(doc, kind, &t)) else {
-        return Err(Stop::failed(error(codes::ROAD_DRAWINGS_FULL, "Çizimin kaynağı projede bulunamadı.".into(), Some(field.into()))));
+        return Err(Stop::failed(error(
+            codes::ROAD_DRAWINGS_FULL,
+            "Çizimin kaynağı projede bulunamadı.".into(),
+            Some(field.into()),
+        )));
     };
     let list = doc.road_drawings();
     let id = replacing.map_or_else(|| next_id(list), str::to_owned);
@@ -374,15 +455,23 @@ fn record<I: Serialize>(
         sources: {
             let mut all = sources(doc, kind, &main);
             // Docs/adr/0980: a profile drawn with KGM's Dever band follows its superelevation schedule too.
-            let dever = serde_json::to_value(input).ok().and_then(|v| v.get("superelevation").and_then(Value::as_str).map(str::to_owned));
+            let dever = serde_json::to_value(input).ok().and_then(|v| {
+                v.get("superelevation")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned)
+            });
             if command == "road.profiles.draw"
-                && let Some(id) = dever.and_then(|t| resolve(doc, RoadSourceKind::Superelevation, &t))
+                && let Some(id) =
+                    dever.and_then(|t| resolve(doc, RoadSourceKind::Superelevation, &t))
             {
                 add(doc, RoadSourceKind::Superelevation, &id, &mut all);
             }
             // Docs/adr/1720, 1840: a zero line and cut and fill zones follow the comparison surface as well as their base.
-            let comparison =
-                serde_json::to_value(input).ok().and_then(|v| v.get("comparison").and_then(Value::as_str).map(str::to_owned));
+            let comparison = serde_json::to_value(input).ok().and_then(|v| {
+                v.get("comparison")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned)
+            });
             if matches!(command, "road.terrains.zeroline" | "road.terrains.cutfill")
                 && let Some(id) = comparison.and_then(|t| resolve(doc, RoadSourceKind::Surface, &t))
             {
@@ -392,11 +481,17 @@ fn record<I: Serialize>(
             // cross it as well as its own network.
             if command == "cad.pipes.profile" {
                 let v = serde_json::to_value(input).unwrap_or(Value::Null);
-                let ground = v.pointer("/ground/surface").and_then(Value::as_str).map(str::to_owned);
+                let ground = v
+                    .pointer("/ground/surface")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned);
                 if let Some(id) = ground.and_then(|t| resolve(doc, RoadSourceKind::Surface, &t)) {
                     add(doc, RoadSourceKind::Surface, &id, &mut all);
                 }
-                let crossing = v.pointer("/crossing/network").and_then(Value::as_str).map(str::to_owned);
+                let crossing = v
+                    .pointer("/crossing/network")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned);
                 if let Some(id) = crossing.and_then(|t| resolve(doc, RoadSourceKind::Network, &t)) {
                     add(doc, RoadSourceKind::Network, &id, &mut all);
                 }
@@ -431,8 +526,21 @@ fn record<I: Serialize>(
 fn sheet_layers<I: Serialize>(input: &I) -> Vec<String> {
     let v = serde_json::to_value(input).unwrap_or(Value::Null);
     let mut out: Vec<String> = Vec::new();
-    for at in ["/details", "/slopes/top", "/slopes/bottom", "/points", "/builtUp/areas", "/builtUp/roads"] {
-        for id in v.pointer(at).and_then(Value::as_array).into_iter().flatten().filter_map(Value::as_str) {
+    for at in [
+        "/details",
+        "/slopes/top",
+        "/slopes/bottom",
+        "/points",
+        "/builtUp/areas",
+        "/builtUp/roads",
+    ] {
+        for id in v
+            .pointer(at)
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+        {
             let id = id.trim();
             if !id.is_empty() && !out.iter().any(|x| x == id) {
                 out.push(id.to_owned());
@@ -446,13 +554,26 @@ fn sheet_layers<I: Serialize>(input: &I) -> Vec<String> {
 /// boundaries', each once.
 fn cutfill_layers<I: Serialize>(doc: &Document, input: &I) -> Vec<String> {
     let v = serde_json::to_value(input).unwrap_or(Value::Null);
-    let mut uids: Vec<&str> = v.pointer("/sections/axis").and_then(Value::as_str).into_iter().collect();
-    for m in v.get("materials").and_then(Value::as_array).into_iter().flatten() {
+    let mut uids: Vec<&str> = v
+        .pointer("/sections/axis")
+        .and_then(Value::as_str)
+        .into_iter()
+        .collect();
+    for m in v
+        .get("materials")
+        .and_then(Value::as_array)
+        .into_iter()
+        .flatten()
+    {
         uids.extend(m.get("boundary").and_then(Value::as_str));
     }
     let mut out: Vec<String> = Vec::new();
     for u in uids {
-        let layer = Uuid::parse_str(u).ok().and_then(|id| doc.slot_of(id)).and_then(|s| doc.get(s)).map(|e| e.base().layer_id.clone());
+        let layer = Uuid::parse_str(u)
+            .ok()
+            .and_then(|id| doc.slot_of(id))
+            .and_then(|s| doc.get(s))
+            .map(|e| e.base().layer_id.clone());
         if let Some(l) = layer
             && !out.contains(&l)
         {

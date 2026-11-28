@@ -296,7 +296,11 @@ impl Stages for WallFromLines {
         };
         prompt
             .option_with("Kat", "L", self.level.label())
-            .option_with("Kaynak çizgiler", "K", if m.wall_keep_sources { "Koru" } else { "Sil" })
+            .option_with(
+                "Kaynak çizgiler",
+                "K",
+                if m.wall_keep_sources { "Koru" } else { "Sil" },
+            )
             .option("Uygula", "Enter")
     }
 

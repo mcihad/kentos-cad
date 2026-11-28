@@ -68,7 +68,10 @@ pub(crate) fn place_words(shown: usize, objects: usize, rows: usize) -> String {
     if objects == 0 {
         return format!("Bu noktada {rows} veri satırı · {shown}/{rows}");
     }
-    format!("Bu noktada {objects} nesne, {rows} veri satırı · {shown}/{}", objects + rows)
+    format!(
+        "Bu noktada {objects} nesne, {rows} veri satırı · {shown}/{}",
+        objects + rows
+    )
 }
 
 fn msg(e: Event) -> Message {
@@ -133,7 +136,11 @@ pub(crate) fn card_body<'a>(
                 })
                 .size(size)
                 .wrapping(Wrapping::WordOrGlyph);
-                let value = if null { value.style(style::text::muted) } else { value };
+                let value = if null {
+                    value.style(style::text::muted)
+                } else {
+                    value
+                };
                 rows.push(label::caption(k.clone()).wrapping(Wrapping::None), value)
             },
         );
@@ -209,12 +216,18 @@ pub(crate) fn card_body<'a>(
         } else {
             kentos_ui::widget::tip(
                 small("Formu göster", None),
-                kentos_ui::widget::Tip::new("Katmanın formu yok").body("Veri › Formlar'da bu katman için bir form yapın."),
+                kentos_ui::widget::Tip::new("Katmanın formu yok")
+                    .body("Veri › Formlar'da bu katman için bir form yapın."),
                 iced::widget::tooltip::Position::Top,
             )
         };
         body = body.push(
-            row![small("Seç", Some(msg(Event::Choose))), small("Tabloda aç", Some(msg(Event::Table))), form].spacing(6),
+            row![
+                small("Seç", Some(msg(Event::Choose))),
+                small("Tabloda aç", Some(msg(Event::Table))),
+                form
+            ]
+            .spacing(6),
         );
     }
     // The window's preview: each action's name and its target filled for the object, as text.
@@ -283,7 +296,12 @@ impl App {
                 .padding(kentos_ui::theme::metrics::action_small())
                 .style(style::button::secondary)
         };
-        let raster = self.gis.data_info.showing_raster.then(|| self.raster_card()).flatten();
+        let raster = self
+            .gis
+            .data_info
+            .showing_raster
+            .then(|| self.raster_card())
+            .flatten();
         let (body, at): (Element<'_, Message>, _) = match (raster, self.info_card) {
             (Some((card, at)), _) => {
                 let mut body = column![card_body(self, &card, Shown::Row, &[], 0)].spacing(8);
@@ -307,13 +325,18 @@ impl App {
             }
             (None, None) => {
                 let (card, actions, at) = self.data_card()?;
-                (self.with_place(card_body(self, &card, Shown::Row, &actions, 0)), at)
+                (
+                    self.with_place(card_body(self, &card, Shown::Row, &actions, 0)),
+                    at,
+                )
             }
         };
         // Beside an object or a row, a raster under the same click offers its value.
         let body: Element<'_, Message> = match self.gis.data_info.cells.first() {
             Some(cell) if !self.gis.data_info.showing_raster => {
-                column![body, switch(format!("Raster değeri: {}", cell.layer), true)].spacing(8).into()
+                column![body, switch(format!("Raster değeri: {}", cell.layer), true)]
+                    .spacing(8)
+                    .into()
             }
             _ => body,
         };
@@ -337,9 +360,10 @@ impl App {
         let total = hits.len() + rows.len();
         match (self.info_card, &self.gis.data_info.card) {
             (Some((slot, _)), _) => hits.iter().position(|s| *s == slot).map(|i| (i, total)),
-            (None, Some(f)) => {
-                rows.iter().position(|r| r.layer == f.layer && r.key == f.key).map(|j| (hits.len() + j, total))
-            }
+            (None, Some(f)) => rows
+                .iter()
+                .position(|r| r.layer == f.layer && r.key == f.key)
+                .map(|j| (hits.len() + j, total)),
             (None, None) => None,
         }
     }
@@ -369,7 +393,12 @@ impl App {
     /// The layer of the card's record: the object's, or the row's.
     pub(crate) fn info_card_layer(&self) -> Option<String> {
         match (self.info_card, &self.gis.data_info.card) {
-            (Some((slot, _)), _) => self.document.as_ref()?.model.get(slot).map(|e| e.base().layer_id.clone()),
+            (Some((slot, _)), _) => self
+                .document
+                .as_ref()?
+                .model
+                .get(slot)
+                .map(|e| e.base().layer_id.clone()),
             (None, Some(f)) => Some(f.layer.clone()),
             (None, None) => None,
         }
@@ -380,7 +409,10 @@ impl App {
         let Some(layer) = self.info_card_layer() else {
             return iced::Task::none();
         };
-        match (self.info_card, self.gis.data_info.card.as_ref().map(|f| f.key)) {
+        match (
+            self.info_card,
+            self.gis.data_info.card.as_ref().map(|f| f.key),
+        ) {
             (Some((slot, _)), _) => {
                 self.selection.set([slot]);
                 match e {
@@ -401,7 +433,9 @@ impl App {
                         // A source's table is read a page at a time: its chosen row shown first by showing the chosen.
                         self.open_feature_table();
                         let _ = self.features_event(crate::features::Event::Layer(layer));
-                        let _ = self.features_event(crate::features::Event::Show(crate::features::Show::Selected));
+                        let _ = self.features_event(crate::features::Event::Show(
+                            crate::features::Show::Selected,
+                        ));
                         self.say(
                             kentos_interaction::Level::Info,
                             "Tablo seçili satırı gösteriyor; bütün satırlar için Göster › Tümü.",
@@ -424,7 +458,9 @@ impl App {
             return self.info_card_record(&e);
         }
         match e {
-            Event::Raster(to) => self.gis.data_info.showing_raster = to && !self.gis.data_info.cells.is_empty(),
+            Event::Raster(to) => {
+                self.gis.data_info.showing_raster = to && !self.gis.data_info.cells.is_empty()
+            }
             Event::Next => {
                 // The next of the objects still in the drawing and the rows, round to the first (docs/adr/9167).
                 let Some((i, total)) = self.info_place() else {
@@ -432,11 +468,17 @@ impl App {
                 };
                 let hits = self.gis.data_info.hits.clone();
                 let rows = self.gis.data_info.rows.clone();
-                let at = self.info_card.map(|(_, at)| at).or_else(|| self.gis.data_info.card.as_ref().map(|f| f.at));
+                let at = self
+                    .info_card
+                    .map(|(_, at)| at)
+                    .or_else(|| self.gis.data_info.card.as_ref().map(|f| f.at));
                 for k in 1..total {
                     let p = (i + k) % total;
                     if let Some(slot) = hits.get(p).copied() {
-                        if self.document.as_ref().is_some_and(|d| d.model.get(slot).is_some())
+                        if self
+                            .document
+                            .as_ref()
+                            .is_some_and(|d| d.model.get(slot).is_some())
                             && let Some(at) = at
                         {
                             self.info_card = Some((slot, at));
@@ -474,7 +516,10 @@ impl App {
                 }
             }
             Event::RowAction(index) => {
-                if let Some(a) = self.data_card().and_then(|(_, actions, _)| actions.into_iter().nth(index)) {
+                if let Some(a) = self
+                    .data_card()
+                    .and_then(|(_, actions, _)| actions.into_iter().nth(index))
+                {
                     self.run_action(&a);
                 }
             }
@@ -499,10 +544,12 @@ impl App {
         }
         if self.gis.data_info.card.is_some() {
             let gone = self.document.as_ref().is_none_or(|d| {
-                self.gis.data_info
-                    .card
-                    .as_ref()
-                    .is_none_or(|f| d.model.layers().get(&f.layer).is_none_or(|n| n.data.is_none()))
+                self.gis.data_info.card.as_ref().is_none_or(|f| {
+                    d.model
+                        .layers()
+                        .get(&f.layer)
+                        .is_none_or(|n| n.data.is_none())
+                })
             });
             let identify = self.session.tool_id() == kentos_interaction::identify::ID;
             if gone || !identify {

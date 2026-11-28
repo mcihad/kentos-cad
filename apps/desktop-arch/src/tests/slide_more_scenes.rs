@@ -12,22 +12,23 @@
 //! Test code only.
 
 use crate::arch;
+use crate::arch::ArchState;
 use iced::Point;
 use kentos_domain::Slot;
 use kentos_render_wgpu::Vec2;
 use kentos_ui::widget::docking;
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
-use crate::tool_settings::Commit;
 use crate::files_testing::make_cad;
+use crate::tool_settings::Commit;
 use crate::tools_scenes::run;
 use crate::tools_screens::Scene;
 
 const MODEL: &str = include_str!("../../../../fixtures/kcad/v2/slide-more.json");
 
 fn open(app: &mut App, b: [f64; 4]) {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(MODEL).expect("the sample");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_str(MODEL).expect("the sample");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     make_cad(app);
@@ -72,7 +73,9 @@ fn door_tool(app: &mut App) {
 
 fn hover(app: &mut App, x: f64) {
     let [x, y] = app.viewport.camera.world_to_screen(Vec2::new(x, -0.1));
-    let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(Point::new(x as f32, y as f32))));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(
+        Point::new(x as f32, y as f32),
+    )));
 }
 
 /// Kapı, Sürme, three leaves, Ortası sabit (XOX), on rails, between X3 and P3.
@@ -107,7 +110,8 @@ fn types(app: &mut App) {
     plan(app);
     run(app, "arch.openingTypes");
     if let Some(i) = app
-        .modules.arch()
+        .modules
+        .arch()
         .opening_types
         .as_ref()
         .and_then(|w| w.uses.iter().position(|u| u.kind.id == "x3"))

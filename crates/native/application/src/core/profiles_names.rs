@@ -17,7 +17,10 @@ use crate::codes;
 use crate::profile_files::Shelf;
 use crate::profiles::{mapping_found, profile_only};
 
-fn resolved(doc: &Document, input: &ProfilesNames) -> Result<(DataProfile, Option<ProfileMapping>), Stop> {
+fn resolved(
+    doc: &Document,
+    input: &ProfilesNames,
+) -> Result<(DataProfile, Option<ProfileMapping>), Stop> {
     let shelf = Shelf::of(doc, input.drawing.as_deref());
     let profile = profile_only(input.name.as_deref(), input.profile.as_ref(), shelf)?;
     let mapping = mapping_found(input.mapping.as_ref(), input.mapping_name.as_deref(), shelf)?;
@@ -34,7 +37,11 @@ fn resolved(doc: &Document, input: &ProfilesNames) -> Result<(DataProfile, Optio
 }
 
 /// The answer for a profile and a mapping already found.
-pub fn names(p: &DataProfile, m: Option<&ProfileMapping>, form: Option<kentos_commands::MappingNames>) -> ProfileNames {
+pub fn names(
+    p: &DataProfile,
+    m: Option<&ProfileMapping>,
+    form: Option<kentos_commands::MappingNames>,
+) -> ProfileNames {
     let form = form.or_else(|| m.and_then(|m| m.names));
     let rows = name_rows(p, m, form.as_ref());
     profile_names(p, m.map(|m| m.name.clone()), form, rows)

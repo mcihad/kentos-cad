@@ -393,21 +393,38 @@ pub(crate) fn north_texts(
     frame: &super::map::MapFrame,
     date: Option<&str>,
 ) -> [Option<String>; 3] {
-    let place = inputs.crs.as_ref().and_then(|c| c.tm).zip(frame.center).and_then(|(tm, c)| geodesy::tm_inverse(&tm, c.x, c.y));
-    let gamma = place
-        .map(|g| g.convergence)
-        .or_else(|| inputs.maps.iter().find(|m| m.item == map).and_then(|m| m.convergence));
+    let place = inputs
+        .crs
+        .as_ref()
+        .and_then(|c| c.tm)
+        .zip(frame.center)
+        .and_then(|(tm, c)| geodesy::tm_inverse(&tm, c.x, c.y));
+    let gamma = place.map(|g| g.convergence).or_else(|| {
+        inputs
+            .maps
+            .iter()
+            .find(|m| m.item == map)
+            .and_then(|m| m.convergence)
+    });
     let model = crate::wmm::info();
     let declination = match (place, date.and_then(crate::wmm::decimal_year), &model) {
         (Some(g), Some(year), Some(info)) if crate::wmm::valid(year) => {
-            crate::wmm::declination(g.lat, g.lon, year).map(|d| (d, info.model.clone(), date.and_then(|d| d.get(..7)).unwrap_or_default().to_owned()))
+            crate::wmm::declination(g.lat, g.lon, year).map(|d| {
+                (
+                    d,
+                    info.model.clone(),
+                    date.and_then(|d| d.get(..7)).unwrap_or_default().to_owned(),
+                )
+            })
         }
         _ => None,
     };
     let side = |d: f64| if d < 0.0 { "B" } else { "D" };
     [
         gamma.map(|g| format!("{}{}", if g < 0.0 { "−" } else { "+" }, dm(g))),
-        declination.as_ref().map(|(d, model, month)| format!("{} {} ({model}, {month})", dm(*d), side(*d))),
+        declination
+            .as_ref()
+            .map(|(d, model, month)| format!("{} {} ({model}, {month})", dm(*d), side(*d))),
         gamma.zip(declination.as_ref().map(|x| x.0)).map(|(g, d)| {
             let m = -g + d;
             format!("{} {}", dm(m), side(m))

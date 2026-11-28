@@ -12,7 +12,8 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 #[test]
 fn a_leapfrog_setup_and_burgas_over_mcp() {
     let mut server = Server::new();
-    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/drawing.kcad");
+    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/kcad/v2/drawing.kcad");
     let opened = call(&mut server, "drawing.open", json!({"path": sample}));
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
@@ -21,13 +22,28 @@ fn a_leapfrog_setup_and_burgas_over_mcp() {
         "back": {"distance": 62.415, "zenith": 101.2345, "target": 1.5},
         "fore": {"distance": 58.902, "zenith": 97.1234, "target": 1.5}});
     let work = |method: &str| json!({"kind": "level", "method": method, "known": [{"name": "R1", "h": 100.0}], "rows": [], "leapfrog": [setup]});
-    let r = call(&mut server, "cad.survey.adjust", json!({"drawing": drawing, "work": work("trigonometric"), "unit": "grad"}));
+    let r = call(
+        &mut server,
+        "cad.survey.adjust",
+        json!({"drawing": drawing, "work": work("trigonometric"), "unit": "grad"}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     let out = &r["structuredContent"]["output"];
     let dh = out["leapfrog"][0]["dh"].as_f64().expect("a difference");
-    let n1 = out["points"].as_array().unwrap().iter().find(|p| p["name"] == "N1").expect("N1")["h"].as_f64().unwrap();
+    let n1 = out["points"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|p| p["name"] == "N1")
+        .expect("N1")["h"]
+        .as_f64()
+        .unwrap();
     assert!((n1 - (100.0 + dh)).abs() < 1e-9, "{out}");
-    let r = call(&mut server, "cad.survey.adjust", json!({"drawing": drawing, "work": work("geometric")}));
+    let r = call(
+        &mut server,
+        "cad.survey.adjust",
+        json!({"drawing": drawing, "work": work("geometric")}),
+    );
     assert_eq!(r["isError"], true, "{r}");
     assert!(r.to_string().contains("work.method"), "{r}");
 
@@ -40,5 +56,11 @@ fn a_leapfrog_setup_and_burgas_over_mcp() {
     assert_eq!(r["isError"], false, "{r}");
     let out = &r["structuredContent"]["output"];
     assert_eq!(out["operation"]["area"]["extent"], 1237, "{out}");
-    assert!(out["flagged"][0]["notes"].as_array().unwrap().contains(&json!("outside_operation_area")), "{out}");
+    assert!(
+        out["flagged"][0]["notes"]
+            .as_array()
+            .unwrap()
+            .contains(&json!("outside_operation_area")),
+        "{out}"
+    );
 }

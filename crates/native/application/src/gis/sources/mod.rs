@@ -13,11 +13,11 @@ use std::path::Path;
 
 use kentos_commands::{
     CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LabelPin, LayerFieldKind,
-    LayerNodeType, LostPin,
-    MAX_PARKED, MAX_SOURCES, ParkedPin, PinLoss, PinMatch, PinMove, SourceCapabilities,
-    ObjectSource, ObjectSourceState, SourceColumn, SourceKind, SourceLink, SourceNext, SourceState, SourceTable, SourcesDescribe,
-    SourcesDescribed, SourcesEdit, SourcesEditOp, SourcesEdited, SourcesSync, SourcesSynced,
-    SyncDirection, SyncTopology, SyncedPins,
+    LayerNodeType, LostPin, MAX_PARKED, MAX_SOURCES, ObjectSource, ObjectSourceState, ParkedPin,
+    PinLoss, PinMatch, PinMove, SourceCapabilities, SourceColumn, SourceKind, SourceLink,
+    SourceNext, SourceState, SourceTable, SourcesDescribe, SourcesDescribed, SourcesEdit,
+    SourcesEditOp, SourcesEdited, SourcesSync, SourcesSynced, SyncDirection, SyncTopology,
+    SyncedPins,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{entity_bounds, entity_vertices};
@@ -168,9 +168,12 @@ fn moved_by(
         Some(match c {
             Curve::Line(p) => Curve::Line(p.iter().map(coord).collect::<Option<_>>()?),
             Curve::Arc(p) => Curve::Arc(p.iter().map(coord).collect::<Option<_>>()?),
-            Curve::Compound(parts) => {
-                Curve::Compound(parts.iter().map(|c| curve(c, coord)).collect::<Option<_>>()?)
-            }
+            Curve::Compound(parts) => Curve::Compound(
+                parts
+                    .iter()
+                    .map(|c| curve(c, coord))
+                    .collect::<Option<_>>()?,
+            ),
         })
     }
     Some(match g {
@@ -178,15 +181,23 @@ fn moved_by(
             Some(c) => Some(coord(c)?),
             None => None,
         }),
-        Geometry::MultiPoint(ps) => Geometry::MultiPoint(ps.iter().map(coord).collect::<Option<_>>()?),
+        Geometry::MultiPoint(ps) => {
+            Geometry::MultiPoint(ps.iter().map(coord).collect::<Option<_>>()?)
+        }
         Geometry::Curve(c) => Geometry::Curve(curve(c, &coord)?),
-        Geometry::Polygon(r) => Geometry::Polygon(r.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?),
+        Geometry::Polygon(r) => {
+            Geometry::Polygon(r.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?)
+        }
         Geometry::MultiCurve(cs) => {
             Geometry::MultiCurve(cs.iter().map(|c| curve(c, &coord)).collect::<Option<_>>()?)
         }
         Geometry::MultiPolygon(ps) => Geometry::MultiPolygon(
             ps.iter()
-                .map(|r| r.iter().map(|c| curve(c, &coord)).collect::<Option<Vec<_>>>())
+                .map(|r| {
+                    r.iter()
+                        .map(|c| curve(c, &coord))
+                        .collect::<Option<Vec<_>>>()
+                })
                 .collect::<Option<_>>()?,
         ),
         Geometry::Collection(gs) => {
@@ -224,7 +235,10 @@ pub fn extent_in_project(
 
 /// A box in the project's system as WGS 84 longitude and latitude (docs/adr/0633 §3): its sides densified; none
 /// in a local project or when the systems do not meet.
-pub fn wgs84_bounds(settings: &kentos_commands::ProjectSettings, extent: [f64; 4]) -> Option<[f64; 4]> {
+pub fn wgs84_bounds(
+    settings: &kentos_commands::ProjectSettings,
+    extent: [f64; 4],
+) -> Option<[f64; 4]> {
     if settings.srid == 4326 {
         return Some(extent);
     }
@@ -1995,15 +2009,16 @@ impl BandJob {
                             .iter()
                             .map(|(u, e)| (e, kentos_commands::EntityId(*u.as_bytes())))
                             .collect();
-                        let shapes: Vec<kentos_geometry_core::entity::Shape> =
-                            if c.reads_geometry() {
-                                rows.iter().map(|(_, e)| crate::geometry::shape(e)).collect()
-                            } else {
-                                Vec::new()
-                            };
-                        let names = |id: &str| {
-                            self.names.get(id).cloned().unwrap_or_else(|| id.to_owned())
+                        let shapes: Vec<kentos_geometry_core::entity::Shape> = if c.reads_geometry()
+                        {
+                            rows.iter()
+                                .map(|(_, e)| crate::geometry::shape(e))
+                                .collect()
+                        } else {
+                            Vec::new()
                         };
+                        let names =
+                            |id: &str| self.names.get(id).cloned().unwrap_or_else(|| id.to_owned());
                         c.passes(&list, &names, |i| shapes.get(i))
                     }
                 }
@@ -2848,9 +2863,9 @@ fn link_table(
     // said before the layer looks empty for no reason. Some rows without geometry are ordinary and nothing is said of
     // them: they are records in the attribute table.
     if let Some(column) = &stored.layer.geometry {
-        let (all, bare) = doc
-            .by_layer(&layer)
-            .fold((0usize, 0usize), |(a, b), e| (a + 1, b + usize::from(!e.has_geometry())));
+        let (all, bare) = doc.by_layer(&layer).fold((0usize, 0usize), |(a, b), e| {
+            (a + 1, b + usize::from(!e.has_geometry()))
+        });
         if all > 0 && bare == all {
             let column = &column.name;
             warnings.push(CommandWarning {
@@ -3706,7 +3721,12 @@ fn sync_run(
                     path: Some("layer".into()),
                 });
             }
-            warnings.extend(crate::fields_usage::library_warning(doc, &link.layer, &renames, "layer"));
+            warnings.extend(crate::fields_usage::library_warning(
+                doc,
+                &link.layer,
+                &renames,
+                "layer",
+            ));
             if !write {
                 return Ok((out, warnings));
             }

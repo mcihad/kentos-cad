@@ -51,13 +51,19 @@ impl Input for kentos_commands::DrawingTake {
 
 impl Input for kentos_commands::DrawingInspect {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        match path { "maxGap" => self.max_gap.as_mut(), _ => None }
+        match path {
+            "maxGap" => self.max_gap.as_mut(),
+            _ => None,
+        }
     }
 }
 
 impl Input for kentos_commands::ArraysFind {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        match path { "tolerance" => self.tolerance.as_mut(), _ => None }
+        match path {
+            "tolerance" => self.tolerance.as_mut(),
+            _ => None,
+        }
     }
 }
 
@@ -306,7 +312,10 @@ impl Input for kentos_commands::StairsCreate {
         }
         let (i, rest) = path.strip_prefix("stairs[")?.split_once("].")?;
         let s = self.stairs.get_mut(i.parse::<usize>().ok()?)?;
-        if let Some(k) = rest.strip_prefix("bulges[").and_then(|k| k.strip_suffix(']')) {
+        if let Some(k) = rest
+            .strip_prefix("bulges[")
+            .and_then(|k| k.strip_suffix(']'))
+        {
             return s.bulges.as_mut()?.get_mut(k.parse::<usize>().ok()?);
         }
         match rest {
@@ -887,7 +896,9 @@ impl Input for kentos_commands::EntitiesRelate {
 }
 
 impl Input for kentos_commands::EntitiesIsolate {
-    fn number(&mut self, _path: &str) -> Option<&mut f64> { None }
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
 }
 
 impl Input for kentos_commands::EntitiesSelect {
@@ -1152,13 +1163,19 @@ impl Input for kentos_commands::DrawingAudit {
 
 impl Input for kentos_commands::BlocksConvert {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        match path { "tolerance" => self.tolerance.as_mut(), _ => None }
+        match path {
+            "tolerance" => self.tolerance.as_mut(),
+            _ => None,
+        }
     }
 }
 
 impl Input for kentos_commands::BlocksFind {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        match path { "tolerance" => self.tolerance.as_mut(), _ => None }
+        match path {
+            "tolerance" => self.tolerance.as_mut(),
+            _ => None,
+        }
     }
 }
 
@@ -2024,8 +2041,18 @@ impl Input for EntitiesArray {
                 "dy" => Some(dy),
                 _ => None,
             },
-            ArrayLayout::Lattice {dx,dy,column_angle,row_angle,..} => match rest {
-                "dx"=>Some(dx),"dy"=>Some(dy),"columnAngle"=>Some(column_angle),"rowAngle"=>Some(row_angle),_=>None,
+            ArrayLayout::Lattice {
+                dx,
+                dy,
+                column_angle,
+                row_angle,
+                ..
+            } => match rest {
+                "dx" => Some(dx),
+                "dy" => Some(dy),
+                "columnAngle" => Some(column_angle),
+                "rowAngle" => Some(row_angle),
+                _ => None,
             },
             ArrayLayout::Polar { center, fill, .. } => match rest {
                 "fill" => Some(fill),

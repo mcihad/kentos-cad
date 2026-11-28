@@ -83,7 +83,10 @@ impl App {
         let close = Message::MapCrsClose;
         let mut body = iced::widget::Column::new().spacing(10);
         if !settings.has_system() {
-            body = body.push(words::text_line(Kind::Warn, "Yerel proje başka sistemde gösterilmez."));
+            body = body.push(words::text_line(
+                Kind::Warn,
+                "Yerel proje başka sistemde gösterilmez.",
+            ));
             return kentos_ui::widget::Dialog::new(TITLE)
                 .push(body)
                 .action(words::primary("Kapat", Some(close.clone())))
@@ -94,7 +97,10 @@ impl App {
         body = body
             .push(words::text_line(
                 Kind::Info,
-                format!("Nesnelerin saklandığı sistem: {}.", crs::title_of(settings.srid)),
+                format!(
+                    "Nesnelerin saklandığı sistem: {}.",
+                    crs::title_of(settings.srid)
+                ),
             ))
             .push(words::text_line(
                 Kind::Info,
@@ -108,10 +114,17 @@ impl App {
             iced::widget::button(label::body(caption))
                 .on_press(message(srid))
                 .padding(kentos_ui::theme::metrics::action())
-                .style(if chosen { kentos_ui::style::button::primary } else { kentos_ui::style::button::secondary })
+                .style(if chosen {
+                    kentos_ui::style::button::primary
+                } else {
+                    kentos_ui::style::button::secondary
+                })
         };
         let mut quick = iced::widget::Row::new().spacing(8);
-        quick = quick.push(pick(format!("Projenin sistemi (EPSG:{})", settings.srid), None));
+        quick = quick.push(pick(
+            format!("Projenin sistemi (EPSG:{})", settings.srid),
+            None,
+        ));
         for srid in FIRST.into_iter().filter(|s| *s != settings.srid) {
             if let Some(s) = kentos_project::crs::system(srid) {
                 quick = quick.push(pick(s.name.clone(), Some(srid)));
@@ -121,18 +134,27 @@ impl App {
         let others: Vec<(u32, String)> = kentos_project::crs::others_by_datum(settings.srid)
             .into_iter()
             .flat_map(|(datum, systems)| {
-                systems.into_iter().filter(|s| !FIRST.contains(&s.srid)).map(move |s| (s.srid, format!("{datum} · {} (EPSG:{})", s.name, s.srid)))
+                systems
+                    .into_iter()
+                    .filter(|s| !FIRST.contains(&s.srid))
+                    .map(move |s| (s.srid, format!("{datum} · {} (EPSG:{})", s.name, s.srid)))
             })
             .collect();
         let at = current.and_then(|c| others.iter().position(|(s, _)| *s == c));
         let ids: Vec<u32> = others.iter().map(|(s, _)| *s).collect();
         let select = kentos_ui::widget::select::Select::new(
-            others.iter().map(|(_, n)| kentos_ui::widget::select::Choice::new(n.clone())),
+            others
+                .iter()
+                .map(|(_, n)| kentos_ui::widget::select::Choice::new(n.clone())),
             at,
             move |i| message(ids.get(i).copied()),
         )
         .placeholder("Başka bir sistem ara…");
-        body = body.push(words::field("Başka sistem", select, Some("Çizim dönüştürülmez; yalnız haritanın çizildiği sistem değişir.".to_owned())));
+        body = body.push(words::field(
+            "Başka sistem",
+            select,
+            Some("Çizim dönüştürülmez; yalnız haritanın çizildiği sistem değişir.".to_owned()),
+        ));
         kentos_ui::widget::Dialog::new(TITLE)
             .push(body)
             .action(words::primary("Kapat", Some(close.clone())))

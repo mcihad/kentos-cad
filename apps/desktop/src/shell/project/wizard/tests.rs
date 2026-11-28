@@ -312,31 +312,55 @@ fn a_cbs_project_opens_empty_and_its_first_save_asks_where() {
     assert_eq!(doc.name(), "Ada 101");
     assert_eq!(doc.settings().srid, 5256, "Sivas's zone");
     // No data or drawing layer: only Açıklama, for texts and notes the project file keeps (a tree holds one at least).
-    let leaves: Vec<(&str, Option<kentos_commands::LayerGeometry>)> =
-        doc.model.layers().leaves().iter().map(|n| (n.name.as_str(), n.geometry)).collect();
-    assert_eq!(leaves, [("Açıklama", Some(kentos_commands::LayerGeometry::Annotation))]);
-    assert!(doc.path.is_none() && doc.stored_source().is_none(), "kept nowhere yet");
-    assert!(std::fs::read_dir(&dir).map_or(true, |mut d| d.next().is_none()), "nothing written");
+    let leaves: Vec<(&str, Option<kentos_commands::LayerGeometry>)> = doc
+        .model
+        .layers()
+        .leaves()
+        .iter()
+        .map(|n| (n.name.as_str(), n.geometry))
+        .collect();
+    assert_eq!(
+        leaves,
+        [("Açıklama", Some(kentos_commands::LayerGeometry::Annotation))]
+    );
     assert!(
-        app.log.lines().any(|l| l.text.contains("Veri ekle") && l.text.contains("ilk Kaydet'te sorulur")),
+        doc.path.is_none() && doc.stored_source().is_none(),
+        "kept nowhere yet"
+    );
+    assert!(
+        std::fs::read_dir(&dir).map_or(true, |mut d| d.next().is_none()),
+        "nothing written"
+    );
+    assert!(
+        app.log
+            .lines()
+            .any(|l| l.text.contains("Veri ekle") && l.text.contains("ilk Kaydet'te sorulur")),
         "{:?}",
         app.log.lines().map(|l| l.text.as_str()).collect::<Vec<_>>()
     );
     // No feature is drawn before a data layer is added: the drawing tools are off and say how; a text is written.
     assert!(!app.available("tool.polygon"));
     assert!(
-        app.why_disabled("tool.polygon").is_some_and(|w| w.contains("bir açıklama katmanı") && w.contains("Veri ekle")),
+        app.why_disabled("tool.polygon")
+            .is_some_and(|w| w.contains("bir açıklama katmanı") && w.contains("Veri ekle")),
         "{:?}",
         app.why_disabled("tool.polygon")
     );
-    assert!(app.available("tool.text"), "{:?}", app.why_disabled("tool.text"));
+    assert!(
+        app.available("tool.text"),
+        "{:?}",
+        app.why_disabled("tool.text")
+    );
     // The first Kaydet asks for its file (the dialog's answer given here) and writes it there.
     let file = dir.join("Ada 101.kcad");
     app.picker = Picker::File(file.clone());
     let task = app.update(Message::Run("file.save"));
     drive(&mut app, task);
     app.picker = Picker::Dialog;
-    assert_eq!(app.document.as_ref().and_then(|d| d.path.as_deref()), Some(file.as_path()));
+    assert_eq!(
+        app.document.as_ref().and_then(|d| d.path.as_deref()),
+        Some(file.as_path())
+    );
     assert!(file.exists(), "written");
 }
 

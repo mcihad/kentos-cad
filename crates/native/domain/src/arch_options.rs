@@ -57,7 +57,11 @@ impl Document {
 
     /// Gives the project the combinations `next` as one change named `label` (into the open transaction, else an undo
     /// step of its own); they are checked against the sets the project has then. Whether anything changed.
-    pub fn set_option_combos(&mut self, next: Vec<OptionCombo>, label: &str) -> Result<bool, Refusal> {
+    pub fn set_option_combos(
+        &mut self,
+        next: Vec<OptionCombo>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
         if let Some((path, problem)) = option_combos_problem(self.arch_options(), &next) {
             return Err(Refusal(format!("{path}: {problem}")));
         }

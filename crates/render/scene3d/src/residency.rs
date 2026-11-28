@@ -18,7 +18,10 @@ impl Default for Budgets {
     /// of the screen, and about a frame's worth of bus at 60 frames a second. A host with a measured device sets its
     /// own (plan/3d.md SCENE-DEC-06).
     fn default() -> Self {
-        Budgets { resident: 1 << 30, upload: 64 << 20 }
+        Budgets {
+            resident: 1 << 30,
+            upload: 64 << 20,
+        }
     }
 }
 
@@ -86,8 +89,12 @@ impl Residency {
             }
             if self.bytes + bytes > budgets.resident {
                 // Let go of the longest unused, never one of this frame.
-                let mut old: Vec<(u64, u64)> =
-                    self.entries.iter().filter(|(_, e)| e.used < self.frame).map(|(k, e)| (e.used, *k)).collect();
+                let mut old: Vec<(u64, u64)> = self
+                    .entries
+                    .iter()
+                    .filter(|(_, e)| e.used < self.frame)
+                    .map(|(k, e)| (e.used, *k))
+                    .collect();
                 old.sort_unstable();
                 let mut freed = Vec::new();
                 let mut room = budgets.resident.saturating_sub(self.bytes);
@@ -109,7 +116,13 @@ impl Residency {
                     out.evict.push(k);
                 }
             }
-            self.entries.insert(id, Entry { bytes, used: self.frame });
+            self.entries.insert(
+                id,
+                Entry {
+                    bytes,
+                    used: self.frame,
+                },
+            );
             self.bytes += bytes;
             sent += bytes;
             out.upload.push(id);
@@ -133,7 +146,10 @@ impl Residency {
 mod tests {
     use super::*;
 
-    const B: Budgets = Budgets { resident: 100, upload: 50 };
+    const B: Budgets = Budgets {
+        resident: 100,
+        upload: 50,
+    };
 
     #[test]
     fn a_frame_uploads_within_its_budget_and_the_rest_waits() {
@@ -172,7 +188,13 @@ mod tests {
         assert_eq!(p.upload, vec![3]);
         // A content larger than all that may go waits.
         r.begin();
-        let p = r.plan(&[(1, 40), (3, 40), (4, 90)], Budgets { resident: 100, upload: 200 });
+        let p = r.plan(
+            &[(1, 40), (3, 40), (4, 90)],
+            Budgets {
+                resident: 100,
+                upload: 200,
+            },
+        );
         assert!(p.evict.is_empty());
         assert_eq!(p.waiting, vec![4]);
         assert!(r.forget(3));

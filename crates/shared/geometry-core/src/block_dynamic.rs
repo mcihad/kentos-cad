@@ -353,15 +353,21 @@ impl Dynamic {
 
     /// A parameter's value: the insert's, else its default.
     fn value(&self, p: &Parameter, values: Option<&Params>) -> Option<ParamValue> {
-        self.type_values.iter().find(|(name, _)| name == p.name()).map(|(_, value)| value.clone())
+        self.type_values
+            .iter()
+            .find(|(name, _)| name == p.name())
+            .map(|(_, value)| value.clone())
             .or_else(|| values.and_then(|v| v.of(p.name()).cloned()))
             .or_else(|| p.default_value())
     }
 
     /// Whether the insert's values draw the definition as it is (every value its default, nothing hidden).
     pub fn is_default(&self, values: Option<&Params>) -> bool {
-        if self.type_values.iter().any(|(name, value)| self.parameter(name)
-            .and_then(Parameter::default_value).is_some_and(|d| !same(&d, value))) {
+        if self.type_values.iter().any(|(name, value)| {
+            self.parameter(name)
+                .and_then(Parameter::default_value)
+                .is_some_and(|d| !same(&d, value))
+        }) {
             return false;
         }
         // The first visibility state is also applied when the insert stores no overrides.
@@ -389,7 +395,9 @@ impl Dynamic {
         let mirror = self.mirror(values);
         let mut out = Vec::new();
         for p in &self.parameters {
-            if self.type_parameters.iter().any(|name| name == p.name()) { continue; }
+            if self.type_parameters.iter().any(|name| name == p.name()) {
+                continue;
+            }
             let value = self.value(p, values);
             let grip = match (p, value) {
                 (
@@ -513,7 +521,9 @@ impl Dynamic {
     /// distance in that direction (none on its start), an angle's turn toward `at` (the turn nearest its default,
     /// none on its centre), a point's `at`. None for the other kinds, and for a parameter its expression computes.
     pub fn value_at(&self, name: &str, at: Vec2, values: Option<&Params>) -> Option<ParamValue> {
-        if self.type_parameters.iter().any(|n| n == name) { return None; }
+        if self.type_parameters.iter().any(|n| n == name) {
+            return None;
+        }
         let at = self.unmirror(values, at);
         match self.parameter(name)? {
             Parameter::Linear { from, to, rule, .. } if !rule.derived => {

@@ -83,7 +83,11 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
 }
 
 /// As `drawing`, its snapshot changed by `edit` before it opens.
-fn drawing_with(n: usize, renderer: Option<Value>, edit: impl FnOnce(&mut DocumentSnapshotV1)) -> Document {
+fn drawing_with(
+    n: usize,
+    renderer: Option<Value>,
+    edit: impl FnOnce(&mut DocumentSnapshotV1),
+) -> Document {
     let mut entities = Vec::with_capacity(n + 10);
     let base = |id: u32, layer: &str| EntityBase {
         look: Default::default(),
@@ -492,7 +496,10 @@ fn a_mask_s_source_keeps_its_numbers_and_the_rest_let_them_go() {
     let scene = scene_of(&mut cache, &doc, &mut spatial, &library);
     assert_eq!(scene.layers.len(), 2, "yol beneath, parsel over it");
     assert!(scene.layers[0].lets_numbers_go(), "yol lets its numbers go");
-    assert!(!scene.layers[1].lets_numbers_go(), "parsel cuts yol with its markers: it keeps them");
+    assert!(
+        !scene.layers[1].lets_numbers_go(),
+        "parsel cuts yol with its markers: it keeps them"
+    );
 }
 
 #[test]
@@ -770,10 +777,21 @@ fn a_far_zoom_builds_again_only_for_construction_lines() {
         max_x: 489_100.0,
         max_y: 4_421_050.0,
     };
-    let scene_at = |cache: &mut StyledCache, doc: &Document, spatial: &mut Spatial, view: &Bounds| {
-        spatial.sync(&doc.model);
-        cache.scene(1, &doc.model, spatial.store(), &library, &look(doc), view, 1.0, false, 1)
-    };
+    let scene_at =
+        |cache: &mut StyledCache, doc: &Document, spatial: &mut Spatial, view: &Bounds| {
+            spatial.sync(&doc.model);
+            cache.scene(
+                1,
+                &doc.model,
+                spatial.store(),
+                &library,
+                &look(doc),
+                view,
+                1.0,
+                false,
+                1,
+            )
+        };
     for with_line in [false, true] {
         let mut doc = drawing(200, None);
         if with_line {
@@ -781,7 +799,10 @@ fn a_far_zoom_builds_again_only_for_construction_lines() {
             base.id = 0;
             let line = Entity::Xline(kentos_commands::ConstructionEntity {
                 base,
-                p: Vec2 { x: 489_000.0, y: 4_421_000.0 },
+                p: Vec2 {
+                    x: 489_000.0,
+                    y: 4_421_000.0,
+                },
                 dir: Vec2 { x: 1.0, y: 0.5 },
             });
             assert!(doc.model.add(line).is_ok(), "the line is added");
@@ -791,10 +812,21 @@ fn a_far_zoom_builds_again_only_for_construction_lines() {
         let before = scene_at(&mut cache, &doc, &mut spatial, &VIEW);
         cache.last_build = None;
         let after = scene_at(&mut cache, &doc, &mut spatial, &zoomed);
-        assert_eq!(cache.last_build.is_some(), with_line, "built again: {with_line}");
+        assert_eq!(
+            cache.last_build.is_some(),
+            with_line,
+            "built again: {with_line}"
+        );
         if !with_line {
             assert_eq!(after.layers.len(), before.layers.len());
-            assert!(after.layers.iter().zip(&before.layers).all(|(a, b)| Arc::ptr_eq(a, b)), "the same parts");
+            assert!(
+                after
+                    .layers
+                    .iter()
+                    .zip(&before.layers)
+                    .all(|(a, b)| Arc::ptr_eq(a, b)),
+                "the same parts"
+            );
             // The box followed the view: the next frame there is a comparison too.
             scene_at(&mut cache, &doc, &mut spatial, &zoomed);
             assert!(cache.last_build.is_none());
@@ -968,16 +1000,39 @@ fn a_deep_view_builds_the_objects_its_box_meets_split_at_its_edge() {
         let mut cache = StyledCache::default();
         cache.set_only(Some(deep));
         let mut l = look(&doc);
-        l.view_build.deep = Some(kentos_native_style::Deep { bounds: deep, tolerance: 1e-3 });
+        l.view_build.deep = Some(kentos_native_style::Deep {
+            bounds: deep,
+            tolerance: 1e-3,
+        });
         let view = Bounds {
             min_x: deep.min_x + 0.4,
             min_y: deep.min_y + 0.4,
             max_x: deep.max_x - 0.4,
             max_y: deep.max_y - 0.4,
         };
-        cache.scene(1, &doc.model, spatial.store(), &library, &l, &view, 1000.0, true, 1)
+        cache.scene(
+            1,
+            &doc.model,
+            spatial.store(),
+            &library,
+            &l,
+            &view,
+            1000.0,
+            true,
+            1,
+        )
     };
-    let whole = StyledCache::default().scene(1, &doc.model, spatial.store(), &library, &look(&doc), &VIEW, 1.0, true, 1);
+    let whole = StyledCache::default().scene(
+        1,
+        &doc.model,
+        spatial.store(),
+        &library,
+        &look(&doc),
+        &VIEW,
+        1.0,
+        true,
+        1,
+    );
     // In the first parcel, clear of its edges and of the first road below it: the parcel and the road, whose box
     // meets it, as they are.
     let inside = deep_scene(Bounds {
@@ -994,7 +1049,10 @@ fn a_deep_view_builds_the_objects_its_box_meets_split_at_its_edge() {
         max_y: 4_420_001.0,
     });
     let (w, i, a) = (strokes(&whole), strokes(&inside), strokes(&across));
-    assert!(i > 0 && i * 50 < w, "the deep scene holds the parcel and the road alone: {i} of {w}");
+    assert!(
+        i > 0 && i * 50 < w,
+        "the deep scene holds the parcel and the road alone: {i} of {w}"
+    );
     // Parcel 4 + road 2 segments; split, parcel 6 + road 4.
     assert_eq!(i / 6 * 10, a / 6 * 6, "{i} → {a}");
 }
@@ -1009,7 +1067,15 @@ fn drawn_of(scene: &StyledScene) -> Vec<(u64, Vec<u32>)> {
             layer
                 .batches
                 .iter()
-                .map(|b| (b.key, layer.data[b.range.clone()].iter().map(|v| v.to_bits()).collect()))
+                .map(|b| {
+                    (
+                        b.key,
+                        layer.data[b.range.clone()]
+                            .iter()
+                            .map(|v| v.to_bits())
+                            .collect(),
+                    )
+                })
                 .collect::<Vec<_>>()
         })
         .collect()
@@ -1018,8 +1084,10 @@ fn drawn_of(scene: &StyledScene) -> Vec<(u64, Vec<u32>)> {
 /// The openings' drawing (fixtures/kcad/v2/openings.json): a 6 m wall (slot 1, layer duvar), a door (slot 2) and a window
 /// (slot 3) on it (layer kapi), an opening whose wall is gone (slot 4).
 fn openings() -> Document {
-    let snapshot: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/openings.json")).expect("the openings' drawing");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/openings.json"
+    ))
+    .expect("the openings' drawing");
     Document::from_v2(snapshot, None).expect("opens")
 }
 
@@ -1032,9 +1100,22 @@ fn draws_as_new(mut doc: Document, what: &str, edit: impl FnOnce(&mut Document))
     let before = scene_of(&mut cache, &doc, &mut spatial, &library);
     edit(&mut doc);
     let after = scene_of(&mut cache, &doc, &mut spatial, &library);
-    let fresh = scene_of(&mut StyledCache::default(), &doc, &mut Spatial::of(&doc.model), &library);
-    assert_ne!(drawn_of(&after), drawn_of(&before), "{what}: the drawing changed");
-    assert_eq!(drawn_of(&after), drawn_of(&fresh), "{what}: drawn as a new cache draws it");
+    let fresh = scene_of(
+        &mut StyledCache::default(),
+        &doc,
+        &mut Spatial::of(&doc.model),
+        &library,
+    );
+    assert_ne!(
+        drawn_of(&after),
+        drawn_of(&before),
+        "{what}: the drawing changed"
+    );
+    assert_eq!(
+        drawn_of(&after),
+        drawn_of(&fresh),
+        "{what}: drawn as a new cache draws it"
+    );
 }
 
 /// The owner, 24 November 2026: “pencere koyuyoruz ama görünmüyor, zoom yapınca ancak gözüküyor”. Every edit to the
@@ -1100,8 +1181,16 @@ fn a_door_moved_along_its_wall_draws_the_wall_again() {
     door.opening.at += 1.0;
     assert!(doc.model.update(Slot(2), Entity::Opening(door)));
     let after = scene_of(&mut cache, &doc, &mut spatial, &library);
-    let fresh = scene_of(&mut StyledCache::default(), &doc, &mut Spatial::of(&doc.model), &library);
+    let fresh = scene_of(
+        &mut StyledCache::default(),
+        &doc,
+        &mut Spatial::of(&doc.model),
+        &library,
+    );
     assert_ne!(drawn_of(&after), drawn_of(&before), "the wall's gap moved");
-    assert_eq!(drawn_of(&after), drawn_of(&fresh), "drawn as a new cache draws it");
+    assert_eq!(
+        drawn_of(&after),
+        drawn_of(&fresh),
+        "drawn as a new cache draws it"
+    );
 }
-

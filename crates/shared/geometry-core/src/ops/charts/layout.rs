@@ -1339,7 +1339,9 @@ pub fn within(layout: &Layout, x0: f32, y0: f32, x1: f32, y1: f32) -> Vec<u32> {
     let inside = |x: f32, y: f32| x >= xa && x <= xb && y >= ya && y <= yb;
     let mut out: Vec<u32> = layout
         .points
-        .as_chunks::<2>().0.iter()
+        .as_chunks::<2>()
+        .0
+        .iter()
         .enumerate()
         .filter(|(_, xy)| inside(xy[0], xy[1]))
         .map(|(i, _)| layout.point_elems[i])

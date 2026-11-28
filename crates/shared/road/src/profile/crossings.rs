@@ -37,8 +37,16 @@ impl Crossing {
     /// The bound a proposal keeps.
     pub fn bound(&self) -> Bound {
         match self.kind {
-            CrossingKind::Above => Bound { station: self.station, low: None, high: Some(self.limit()) },
-            CrossingKind::Below => Bound { station: self.station, low: Some(self.limit()), high: None },
+            CrossingKind::Above => Bound {
+                station: self.station,
+                low: None,
+                high: Some(self.limit()),
+            },
+            CrossingKind::Below => Bound {
+                station: self.station,
+                low: Some(self.limit()),
+                high: None,
+            },
         }
     }
 }

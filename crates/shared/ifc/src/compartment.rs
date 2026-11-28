@@ -25,7 +25,9 @@ pub fn add(b: &mut Building, compartments: &[Vec<u128>]) -> usize {
             .filter(|(_, s)| s.id.is_some_and(|id| rooms.contains(&id)))
             .map(|(i, _)| i)
             .collect();
-        let Some(first) = rooms.iter().min() else { continue };
+        let Some(first) = rooms.iter().min() else {
+            continue;
+        };
         if spaces.is_empty() {
             continue;
         }
@@ -67,7 +69,10 @@ mod tests {
 
     #[test]
     fn each_compartment_is_a_zone_of_the_spaces_the_file_holds() {
-        let mut b = Building { spaces: vec![space(1), space(2), space(3)], ..Building::default() };
+        let mut b = Building {
+            spaces: vec![space(1), space(2), space(3)],
+            ..Building::default()
+        };
         // The second compartment's rooms are another building's: no zone, no number.
         let n = add(&mut b, &[vec![2, 1], vec![9], vec![3, 8], Vec::new()]);
         assert_eq!(n, 2);
@@ -75,17 +80,40 @@ mod tests {
         let zones: Vec<Zone> = b
             .groups
             .iter()
-            .map(|g| (g.name.as_str(), g.long_name.as_deref(), g.object_type.as_deref(), g.spaces.as_slice()))
+            .map(|g| {
+                (
+                    g.name.as_str(),
+                    g.long_name.as_deref(),
+                    g.object_type.as_deref(),
+                    g.spaces.as_slice(),
+                )
+            })
             .collect();
         assert_eq!(
             zones,
             [
-                ("MM-ZON-Yangın_kompartımanı_1", Some("Yangın kompartımanı 1"), Some("Yangın kompartımanı"), &[0, 1][..]),
-                ("MM-ZON-Yangın_kompartımanı_2", Some("Yangın kompartımanı 2"), Some("Yangın kompartımanı"), &[2][..]),
+                (
+                    "MM-ZON-Yangın_kompartımanı_1",
+                    Some("Yangın kompartımanı 1"),
+                    Some("Yangın kompartımanı"),
+                    &[0, 1][..]
+                ),
+                (
+                    "MM-ZON-Yangın_kompartımanı_2",
+                    Some("Yangın kompartımanı 2"),
+                    Some("Yangın kompartımanı"),
+                    &[2][..]
+                ),
             ]
         );
         // The same first room, the same GlobalId; another, another.
-        assert_eq!(b.groups[0].id, Some(fnv("kentos-kompartiman:00000000000000000000000000000001", 0)));
+        assert_eq!(
+            b.groups[0].id,
+            Some(fnv(
+                "kentos-kompartiman:00000000000000000000000000000001",
+                0
+            ))
+        );
         assert_ne!(b.groups[0].id, b.groups[1].id);
     }
 }

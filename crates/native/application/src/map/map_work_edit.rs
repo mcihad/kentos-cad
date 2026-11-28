@@ -6,15 +6,17 @@
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, MapWork, MapWorkEdit, MapWorkEdited, MapWorkOperation as Op, WorkDerivation,
-    WorkFile, WorkItem, WorkStatus, next_numbered,
+    CommandResult, CommandWarning, Entity, MapWork, MapWorkEdit, MapWorkEdited,
+    MapWorkOperation as Op, WorkDerivation, WorkFile, WorkItem, WorkStatus, next_numbered,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
-use crate::map_work::{Revisions, file_sha, item_of_layer, map_project, stale_count, stale_objects_in};
+use crate::map_work::{
+    Revisions, file_sha, item_of_layer, map_project, stale_count, stale_objects_in,
+};
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
@@ -38,24 +40,48 @@ fn name_ok(name: &str, path: &str) -> Result<(), Stop> {
 
 fn item_at<'w>(work: &'w MapWork, id: &str, path: &str) -> Result<&'w WorkItem, Stop> {
     work.item(id).ok_or_else(|| {
-        fail(codes::UNKNOWN_WORK_ITEM, format!("Harita işinde “{id}” kimlikli öğe yok."), path)
+        fail(
+            codes::UNKNOWN_WORK_ITEM,
+            format!("Harita işinde “{id}” kimlikli öğe yok."),
+            path,
+        )
     })
 }
 
 /// The layers an item takes: each in the drawing, not given twice and in no other item than `own`.
-fn layers_ok(doc: &Document, work: &MapWork, layers: &[String], own: Option<&str>) -> Result<(), Stop> {
+fn layers_ok(
+    doc: &Document,
+    work: &MapWork,
+    layers: &[String],
+    own: Option<&str>,
+) -> Result<(), Stop> {
     for (i, l) in layers.iter().enumerate() {
         let at = format!("operation.layers[{i}]");
         if doc.layers().get(l).is_none() {
-            return Err(fail(codes::LAYER_NOT_FOUND, format!("“{l}” kimlikli katman çizimde yok."), &at));
+            return Err(fail(
+                codes::LAYER_NOT_FOUND,
+                format!("“{l}” kimlikli katman çizimde yok."),
+                &at,
+            ));
         }
         if layers[..i].contains(l) {
-            return Err(fail(codes::LAYER_IN_WORK_ITEM, format!("“{l}” katmanı iki kez verilmiş."), &at));
-        }
-        if let Some(other) = work.items.iter().find(|w| Some(w.id.as_str()) != own && w.layers.contains(l)) {
             return Err(fail(
                 codes::LAYER_IN_WORK_ITEM,
-                format!("“{l}” katmanı harita işinin “{}” öğesinde; bir katman tek öğenin olur.", other.name),
+                format!("“{l}” katmanı iki kez verilmiş."),
+                &at,
+            ));
+        }
+        if let Some(other) = work
+            .items
+            .iter()
+            .find(|w| Some(w.id.as_str()) != own && w.layers.contains(l))
+        {
+            return Err(fail(
+                codes::LAYER_IN_WORK_ITEM,
+                format!(
+                    "“{l}” katmanı harita işinin “{}” öğesinde; bir katman tek öğenin olur.",
+                    other.name
+                ),
                 &at,
             ));
         }
@@ -73,9 +99,19 @@ fn read_file(path: &str, at: &str) -> Result<String, Stop> {
         ));
     }
     if !Path::new(path).is_file() {
-        return Err(fail(codes::FILE_NOT_FOUND, format!("“{path}” dosyası yok."), at));
+        return Err(fail(
+            codes::FILE_NOT_FOUND,
+            format!("“{path}” dosyası yok."),
+            at,
+        ));
     }
-    file_sha(path).ok_or_else(|| fail(codes::FILE_NOT_FOUND, format!("“{path}” dosyası okunamadı."), at))
+    file_sha(path).ok_or_else(|| {
+        fail(
+            codes::FILE_NOT_FOUND,
+            format!("“{path}” dosyası okunamadı."),
+            at,
+        )
+    })
 }
 
 fn with_file<'w>(item: &'w WorkItem, path: &str) -> Result<&'w WorkFile, Stop> {
@@ -89,11 +125,19 @@ fn with_file<'w>(item: &'w WorkItem, path: &str) -> Result<&'w WorkFile, Stop> {
 }
 
 fn nothing() -> Stop {
-    fail(codes::NOTHING_TO_SET, "Değişecek bir şey yok.".into(), "operation")
+    fail(
+        codes::NOTHING_TO_SET,
+        "Değişecek bir şey yok.".into(),
+        "operation",
+    )
 }
 
 fn full() -> Stop {
-    fail(codes::WORK_FULL, "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur.".into(), "operation")
+    fail(
+        codes::WORK_FULL,
+        "Harita işinde en çok 1000 öğe ve 10 000 türetme kaydı olur.".into(),
+        "operation",
+    )
 }
 
 /// What the operation does, worked out: the work structure after, the rasters and images to point at a new file, the
@@ -148,18 +192,27 @@ impl Change {
 fn class_layers(doc: &Document, p: &kentos_commands::DataProfile) -> Vec<String> {
     p.classes
         .iter()
-        .filter_map(|c| match crate::profiles::find(doc.layers().nodes(), &c.layer) {
-            crate::profiles::Place::Layer(id) => Some(id),
-            _ => None,
-        })
+        .filter_map(
+            |c| match crate::profiles::find(doc.layers().nodes(), &c.layer) {
+                crate::profiles::Place::Layer(id) => Some(id),
+                _ => None,
+            },
+        )
         .collect()
 }
 
 /// The work with `item`'s layers joined by the profile's classes' layers in `doc` that it does not hold yet; a class
 /// layer another item holds is refused.
-fn joined(doc: &Document, work: &MapWork, item: &str, p: &kentos_commands::DataProfile) -> Result<MapWork, Stop> {
+fn joined(
+    doc: &Document,
+    work: &MapWork,
+    item: &str,
+    p: &kentos_commands::DataProfile,
+) -> Result<MapWork, Stop> {
     let mut next = work.clone();
-    let Some(at) = next.items.iter().position(|i| i.id == item) else { return Ok(next) };
+    let Some(at) = next.items.iter().position(|i| i.id == item) else {
+        return Ok(next);
+    };
     for layer in class_layers(doc, p) {
         match item_of_layer(doc, work, &layer) {
             Some(i) if i.id == item => {}
@@ -187,7 +240,9 @@ fn joined(doc: &Document, work: &MapWork, item: &str, p: &kentos_commands::DataP
 
 /// Whether an item's typed layers keep its profile: refused with the first finding when not (docs/adr/4880).
 fn profile_kept(doc: &Document, item: &WorkItem, drawing: Option<&str>) -> Result<(), Stop> {
-    let Some(p) = crate::map_work_profile::of_item(doc, item, drawing) else { return Ok(()) };
+    let Some(p) = crate::map_work_profile::of_item(doc, item, drawing) else {
+        return Ok(());
+    };
     let p = p?;
     let (_, mine) = crate::map_work_profile::findings(doc, &p);
     if let Some(first) = mine.first() {
@@ -211,11 +266,20 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
     map_project(doc)?;
     let now = doc.map_work().cloned().unwrap_or_default();
     match &input.operation {
-        Op::Add { kind, name, layers, file } => {
+        Op::Add {
+            kind,
+            name,
+            layers,
+            file,
+        } => {
             name_ok(name, "operation.name")?;
             layers_ok(doc, &now, layers, None)?;
             let file = match file {
-                Some(path) => Some(WorkFile { path: path.clone(), revision: read_file(path, "operation.file")?, relative: None }),
+                Some(path) => Some(WorkFile {
+                    path: path.clone(),
+                    revision: read_file(path, "operation.file")?,
+                    relative: None,
+                }),
                 None => None,
             };
             if now.items.len() >= kentos_commands::MAX_WORK_ITEMS {
@@ -237,9 +301,18 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 approved_values: Vec::new(),
                 profile: None,
             });
-            Ok(Change { item: Some(id), file_revision: revision, ..Change::new(work, "Harita işine ekle") })
+            Ok(Change {
+                item: Some(id),
+                file_revision: revision,
+                ..Change::new(work, "Harita işine ekle")
+            })
         }
-        Op::Set { item, name, status, layers } => {
+        Op::Set {
+            item,
+            name,
+            status,
+            layers,
+        } => {
             let old = item_at(&now, item, "operation.item")?;
             if let Some(n) = name {
                 name_ok(n, "operation.name")?;
@@ -270,14 +343,19 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 next.approved_parts.clear();
                 next.approved_values.clear();
             } else if status == &Some(WorkStatus::Approved) {
-                let stamp = Revisions::new(doc, &work, std::collections::HashMap::new()).kept(&next);
+                let stamp =
+                    Revisions::new(doc, &work, std::collections::HashMap::new()).kept(&next);
                 next.approved = Some(stamp.clone());
                 // Docs/adr/2880: an item without a file keeps its objects' digests, the list its stamp is the digest
                 // of, so what changes after can be told object by object; an item of too many objects is stamped whole.
                 next.approved_objects = match next.file {
                     None => {
                         let pairs = crate::map_work::content_objects(doc, &work, &next.id);
-                        if pairs.len() <= kentos_commands::MAX_APPROVED_OBJECTS { pairs } else { Vec::new() }
+                        if pairs.len() <= kentos_commands::MAX_APPROVED_OBJECTS {
+                            pairs
+                        } else {
+                            Vec::new()
+                        }
                     }
                     Some(_) => Vec::new(),
                 };
@@ -302,7 +380,10 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 if n > 0 {
                     return Err(fail(
                         codes::APPROVAL_STALE,
-                        format!("“{}” onaylanamaz: katmanlarındaki {n} türetilmiş nesnenin kaynağı değişti; önce onları güncelleyin.", next.name),
+                        format!(
+                            "“{}” onaylanamaz: katmanlarındaki {n} türetilmiş nesnenin kaynağı değişti; önce onları güncelleyin.",
+                            next.name
+                        ),
                         "operation.status",
                     ));
                 }
@@ -317,7 +398,11 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 ..Change::new(work, "Harita işi öğesini değiştir")
             })
         }
-        Op::Profile { item, name, classes } => {
+        Op::Profile {
+            item,
+            name,
+            classes,
+        } => {
             let old = item_at(&now, item, "operation.item")?;
             let Some(name) = name else {
                 if old.profile.is_none() || !classes.is_empty() {
@@ -327,7 +412,10 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 if let Some(slot) = work.items.iter_mut().find(|i| i.id == *item) {
                     slot.profile = None;
                 }
-                return Ok(Change { item: Some(item.clone()), ..Change::new(work, "Harita işi öğesinin profilini kaldır") });
+                return Ok(Change {
+                    item: Some(item.clone()),
+                    ..Change::new(work, "Harita işi öğesinin profilini kaldır")
+                });
             };
             if !text_ok(name) {
                 return Err(fail(
@@ -339,7 +427,10 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             if classes.len() > kentos_commands::MAX_PROFILE_CLASS_IDS {
                 return Err(fail(
                     codes::INVALID_WORK_TEXT,
-                    format!("Bir öğenin profilinde en çok {} sınıf olur.", kentos_commands::MAX_PROFILE_CLASS_IDS),
+                    format!(
+                        "Bir öğenin profilinde en çok {} sınıf olur.",
+                        kentos_commands::MAX_PROFILE_CLASS_IDS
+                    ),
                     "operation.classes",
                 ));
             }
@@ -352,14 +443,23 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                     ));
                 }
             }
-            let whole = crate::map_work_profile::load(doc, name, input.drawing.as_deref(), "operation.name")?;
+            let whole = crate::map_work_profile::load(
+                doc,
+                name,
+                input.drawing.as_deref(),
+                "operation.name",
+            )?;
             let p = crate::map_work_profile::narrowed(&whole, classes)?;
             // What the profile writes, on a reading copy: the layers and fields it adds, its warnings.
             let mut copy = doc.reading_copy();
-            let (applied, warnings) = crate::profiles::write(&mut copy, &p).map_err(|s| s.at("operation.name"))?;
+            let (applied, warnings) =
+                crate::profiles::write(&mut copy, &p).map_err(|s| s.at("operation.name"))?;
             let mut work = now.clone();
             if let Some(slot) = work.items.iter_mut().find(|i| i.id == *item) {
-                slot.profile = Some(kentos_commands::WorkProfile { name: name.clone(), classes: classes.clone() });
+                slot.profile = Some(kentos_commands::WorkProfile {
+                    name: name.clone(),
+                    classes: classes.clone(),
+                });
             }
             let work = joined(&copy, &work, item, &p)?;
             if work == now && applied.layers.is_empty() && applied.fields.is_empty() {
@@ -381,7 +481,11 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             let before = work.derivations.len();
             work.derivations.retain(|d| d.source != *item);
             let released = u32::try_from(before - work.derivations.len()).unwrap_or(u32::MAX);
-            Ok(Change { item: Some(item.clone()), released, ..Change::new(work, "Harita işinden çıkar") })
+            Ok(Change {
+                item: Some(item.clone()),
+                released,
+                ..Change::new(work, "Harita işinden çıkar")
+            })
         }
         Op::Relink { item, file } => {
             let old = item_at(&now, item, "operation.item")?;
@@ -403,11 +507,16 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                     Entity::Image(i) => i.image.file.as_mut(),
                     _ => None,
                 };
-                let Some(shown) = shown.filter(|f| **f == was.path) else { continue };
+                let Some(shown) = shown.filter(|f| **f == was.path) else {
+                    continue;
+                };
                 if doc.layers().is_locked(layer) {
                     return Err(fail(
                         codes::LAYER_LOCKED,
-                        format!("“{}” katmanı kilitli: üstündeki resim yeni dosyaya bağlanamaz. Kilidi açın.", doc.layers().path(layer)),
+                        format!(
+                            "“{}” katmanı kilitli: üstündeki resim yeni dosyaya bağlanamaz. Kilidi açın.",
+                            doc.layers().path(layer)
+                        ),
                         "operation.item",
                     ));
                 }
@@ -417,7 +526,12 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 }
             }
             let mut work = now.clone();
-            if let Some(f) = work.items.iter_mut().find(|i| i.id == *item).and_then(|i| i.file.as_mut()) {
+            if let Some(f) = work
+                .items
+                .iter_mut()
+                .find(|i| i.id == *item)
+                .and_then(|i| i.file.as_mut())
+            {
                 f.path = file.clone();
                 f.revision = sha.clone();
                 // The next save writes the new place's relative path (docs/adr/1201 §1).
@@ -428,7 +542,11 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             // path, never a reload; one that loaded other content is left to Dış başvurular › Yolu değiştir.
             let mut blocks = Vec::new();
             for def in doc.blocks() {
-                let Some(x) = def.xref.as_ref().filter(|x| x.parent.is_none() && same_file(&x.path, &was.path)) else {
+                let Some(x) = def
+                    .xref
+                    .as_ref()
+                    .filter(|x| x.parent.is_none() && same_file(&x.path, &was.path))
+                else {
                     continue;
                 };
                 if x.digest == sha {
@@ -450,7 +568,12 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 }
             }
             // A bound layer's link is the project's setting, outside undo (docs/adr/0506): said, not changed.
-            for link in doc.settings().sources.iter().filter(|l| same_file(&l.path, &was.path)) {
+            for link in doc
+                .settings()
+                .sources
+                .iter()
+                .filter(|l| same_file(&l.path, &was.path))
+            {
                 warnings.push(CommandWarning {
                     code: codes::LINK_NOT_FOLLOWED.into(),
                     message: format!(
@@ -461,7 +584,11 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 });
             }
             if sha != was.revision {
-                let n = work.derivations.iter().filter(|d| d.source == *item).count();
+                let n = work
+                    .derivations
+                    .iter()
+                    .filter(|d| d.source == *item)
+                    .count();
                 warnings.push(CommandWarning {
                     code: codes::SOURCE_CONTENT_CHANGED.into(),
                     message: format!(
@@ -488,7 +615,10 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 _ => {
                     return Err(fail(
                         codes::FILE_NOT_FOUND,
-                        format!("“{}” dosyası yok; Yeniden bağla ile yeni yerini gösterin.", was.path),
+                        format!(
+                            "“{}” dosyası yok; Yeniden bağla ile yeni yerini gösterin.",
+                            was.path
+                        ),
                         "operation.item",
                     ));
                 }
@@ -497,12 +627,25 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
                 return Err(nothing());
             }
             let mut work = now.clone();
-            if let Some(f) = work.items.iter_mut().find(|i| i.id == *item).and_then(|i| i.file.as_mut()) {
+            if let Some(f) = work
+                .items
+                .iter_mut()
+                .find(|i| i.id == *item)
+                .and_then(|i| i.file.as_mut())
+            {
                 f.revision = sha.clone();
             }
-            Ok(Change { item: Some(item.clone()), file_revision: Some(sha), ..Change::new(work, "Kaynağı yenile") })
+            Ok(Change {
+                item: Some(item.clone()),
+                file_revision: Some(sha),
+                ..Change::new(work, "Kaynağı yenile")
+            })
         }
-        Op::Derive { source, uids, operation } => {
+        Op::Derive {
+            source,
+            uids,
+            operation,
+        } => {
             let src = item_at(&now, source, "operation.source")?;
             if !text_ok(operation) {
                 return Err(fail(
@@ -522,23 +665,42 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             for (i, u) in uids.iter().enumerate() {
                 let at = format!("operation.uids[{i}]");
                 if !checks::is_uid_text(u) {
-                    return Err(fail(codes::INVALID_UID, format!("“{u}” geçerli bir nesne kimliği değil."), &at));
+                    return Err(fail(
+                        codes::INVALID_UID,
+                        format!("“{u}” geçerli bir nesne kimliği değil."),
+                        &at,
+                    ));
                 }
-                let Some(uuid) = Uuid::parse_str(u).ok().filter(|x| doc.slot_of(*x).is_some()) else {
-                    return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{u}” kimlikli nesne çizimde yok."), &at));
+                let Some(uuid) = Uuid::parse_str(u)
+                    .ok()
+                    .filter(|x| doc.slot_of(*x).is_some())
+                else {
+                    return Err(fail(
+                        codes::ENTITY_NOT_FOUND,
+                        format!("“{u}” kimlikli nesne çizimde yok."),
+                        &at,
+                    ));
                 };
                 let id = kentos_commands::EntityId(*uuid.as_bytes());
                 if let Some(d) = now.derivations.iter().find(|d| d.uids.contains(&id)) {
                     return Err(fail(
                         codes::ALREADY_DERIVED,
-                        format!("“{u}” nesnesi “{}” türetme kaydında; önce o kaydı silin.", d.id),
+                        format!(
+                            "“{u}” nesnesi “{}” türetme kaydında; önce o kaydı silin.",
+                            d.id
+                        ),
                         &at,
                     ));
                 }
                 // An item without a file is its objects (docs/adr/2080 §2): they are not made from it.
-                let layer = doc.slot_of(uuid).and_then(|s| doc.get(s)).map(|e| e.base().layer_id.clone());
+                let layer = doc
+                    .slot_of(uuid)
+                    .and_then(|s| doc.get(s))
+                    .map(|e| e.base().layer_id.clone());
                 if src.file.is_none()
-                    && layer.is_some_and(|l| item_of_layer(doc, &now, &l).is_some_and(|i| i.id == src.id))
+                    && layer.is_some_and(|l| {
+                        item_of_layer(doc, &now, &l).is_some_and(|i| i.id == src.id)
+                    })
                 {
                     return Err(fail(
                         codes::OWN_CONTENT,
@@ -587,7 +749,10 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             }
             let mut work = now.clone();
             work.derivations.retain(|d| d.id != *derivation);
-            Ok(Change { derivation: Some(derivation.clone()), ..Change::new(work, "Türetme kaydını sil") })
+            Ok(Change {
+                derivation: Some(derivation.clone()),
+                ..Change::new(work, "Türetme kaydını sil")
+            })
         }
         Op::Release { uids } => {
             if uids.is_empty() {
@@ -601,14 +766,23 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             for (i, u) in uids.iter().enumerate() {
                 let at = format!("operation.uids[{i}]");
                 if !checks::is_uid_text(u) {
-                    return Err(fail(codes::INVALID_UID, format!("“{u}” geçerli bir nesne kimliği değil."), &at));
+                    return Err(fail(
+                        codes::INVALID_UID,
+                        format!("“{u}” geçerli bir nesne kimliği değil."),
+                        &at,
+                    ));
                 }
-                let id = Uuid::parse_str(u).ok().map(|x| kentos_commands::EntityId(*x.as_bytes()));
+                let id = Uuid::parse_str(u)
+                    .ok()
+                    .map(|x| kentos_commands::EntityId(*x.as_bytes()));
                 // A derived object deleted from the drawing may still be let go of: its record names it.
-                let Some(id) = id.filter(|id| now.derivations.iter().any(|d| d.uids.contains(id))) else {
+                let Some(id) = id.filter(|id| now.derivations.iter().any(|d| d.uids.contains(id)))
+                else {
                     return Err(fail(
                         codes::NOT_DERIVED,
-                        format!("“{u}” nesnesi hiçbir türetme kaydında değil; zaten bağımsız çizim."),
+                        format!(
+                            "“{u}” nesnesi hiçbir türetme kaydında değil; zaten bağımsız çizim."
+                        ),
                         &at,
                     ));
                 };
@@ -624,14 +798,21 @@ fn check(doc: &Document, input: &MapWorkEdit) -> Result<Change, Stop> {
             work.derivations.retain(|d| !d.uids.is_empty());
             let released = u32::try_from(before - work.derivations.len()).unwrap_or(u32::MAX);
             let freed = u32::try_from(ids.len()).unwrap_or(u32::MAX);
-            Ok(Change { released, freed, ..Change::new(work, "Bağımsız yap") })
+            Ok(Change {
+                released,
+                freed,
+                ..Change::new(work, "Bağımsız yap")
+            })
         }
     }
 }
 
 /// Whether two kept paths name the same file: the same text, else the same file on disk.
 fn same_file(a: &str, b: &str) -> bool {
-    a == b || std::fs::canonicalize(a).ok().is_some_and(|x| std::fs::canonicalize(b).ok().is_some_and(|y| x == y))
+    a == b
+        || std::fs::canonicalize(a)
+            .ok()
+            .is_some_and(|x| std::fs::canonicalize(b).ok().is_some_and(|y| x == y))
 }
 
 fn output(doc: &Document, c: &Change, revision: String) -> MapWorkEdited {
@@ -668,7 +849,8 @@ fn write(cx: &mut ExecutionContext<'_>, input: MapWorkEdit) -> CommandResult<Map
         let mut work = work;
         // Docs/adr/4880: the profile's layers and fields first, then its classes' layers join the item.
         if let (Some(p), Some(item)) = (&profile, &item) {
-            let (applied, _) = crate::profiles::write(doc, p).map_err(|s| Some(s.at("operation.name")))?;
+            let (applied, _) =
+                crate::profiles::write(doc, p).map_err(|s| Some(s.at("operation.name")))?;
             work = joined(doc, &work, item, p).map_err(Some)?;
             change.layers = applied.layers;
             change.fields = applied.fields;
@@ -690,13 +872,19 @@ fn write(cx: &mut ExecutionContext<'_>, input: MapWorkEdit) -> CommandResult<Map
         return stop.into();
     }
     let output = output(cx.doc, &change, cx.doc.revision().to_string());
-    CommandResult::Completed { output, warnings: change.warnings }
+    CommandResult::Completed {
+        output,
+        warnings: change.warnings,
+    }
 }
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &MapWorkEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -706,12 +894,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &MapWorkEdit) -> CommandResult<Map
     match check(cx.doc, input) {
         Ok(c) => {
             let output = output(cx.doc, &c, cx.doc.revision().to_string());
-            CommandResult::Completed { output, warnings: c.warnings }
+            CommandResult::Completed {
+                output,
+                warnings: c.warnings,
+            }
         }
         Err(stop) => stop.into(),
     }
 }
 
 pub fn execute(cx: &mut ExecutionContext<'_>, input: MapWorkEdit) -> CommandResult<MapWorkEdited> {
-    crate::call::recorded(cx, kentos_commands::MAP_WORK_EDIT, kentos_commands::MAP_WORK_EDIT_VERSION, input, write)
+    crate::call::recorded(
+        cx,
+        kentos_commands::MAP_WORK_EDIT,
+        kentos_commands::MAP_WORK_EDIT_VERSION,
+        input,
+        write,
+    )
 }

@@ -77,7 +77,11 @@ impl Measured {
     pub fn middle_at(&self) -> Vec2 {
         let [a, b] = self.line;
         let length = (b.x - a.x).hypot(b.y - a.y);
-        let t = if length > 0.0 { self.middle() / length } else { 0.0 };
+        let t = if length > 0.0 {
+            self.middle() / length
+        } else {
+            0.0
+        };
         Vec2 {
             x: a.x + (b.x - a.x) * t,
             y: a.y + (b.y - a.y) * t,
@@ -94,7 +98,12 @@ fn key(uid: Uuid) -> u128 {
 }
 
 /// The opening `o` measured on its wall's `face`, for a tool's overlay; none where the command refuses it.
-pub fn measured(doc: &Document, slot: Slot, o: &OpeningFields, face: DimensionSetFace) -> Option<Measured> {
+pub fn measured(
+    doc: &Document,
+    slot: Slot,
+    o: &OpeningFields,
+    face: DimensionSetFace,
+) -> Option<Measured> {
     measure(doc, slot, o, face, "uids[0]").ok()
 }
 
@@ -185,26 +194,32 @@ pub(crate) fn measure(
         }
     }
     // Other walls' faces crossing the face segment: a tee's, a wall drawn on its own at a corner.
-    let (lo, hi) = (
-        (a.x.min(b.x), a.y.min(b.y)),
-        (a.x.max(b.x), a.y.max(b.y)),
-    );
+    let (lo, hi) = ((a.x.min(b.x), a.y.min(b.y)), (a.x.max(b.x), a.y.max(b.y)));
     for (uid, e) in doc.entities_with_uids() {
         let Entity::Wall(w) = e else { continue };
         if uid == host {
             continue;
         }
         let reach = w.wall.width + w.wall.offset.abs();
-        let near = w.wall.pts.iter().fold((f64::MAX, f64::MAX, f64::MIN, f64::MIN), |r, q| {
-            (r.0.min(q.x), r.1.min(q.y), r.2.max(q.x), r.3.max(q.y))
-        });
-        if near.0 - reach > hi.0 || near.2 + reach < lo.0 || near.1 - reach > hi.1 || near.3 + reach < lo.1 {
+        let near = w
+            .wall
+            .pts
+            .iter()
+            .fold((f64::MAX, f64::MAX, f64::MIN, f64::MIN), |r, q| {
+                (r.0.min(q.x), r.1.min(q.y), r.2.max(q.x), r.3.max(q.y))
+            });
+        if near.0 - reach > hi.0
+            || near.2 + reach < lo.0
+            || near.1 - reach > hi.1
+            || near.3 + reach < lo.1
+        {
             continue;
         }
         let Shape::Wall { pts, bulges, wall } = crate::geometry::shape(e) else {
             continue;
         };
-        let Ok(lines) = kentos_geometry_core::geom::wall::lines(&pts, bulges.as_deref(), &wall) else {
+        let Ok(lines) = kentos_geometry_core::geom::wall::lines(&pts, bulges.as_deref(), &wall)
+        else {
             continue;
         };
         for l in [lines.first(), lines.last()].into_iter().flatten() {
@@ -214,7 +229,9 @@ pub(crate) fn measure(
                 if l.bulges.get(k).is_some_and(|b| *b != 0.0) {
                     continue;
                 }
-                if let Some(t) = core::crossing(face_line[0], face_line[1], l.pts[k], l.pts[(k + 1) % n]) {
+                if let Some(t) =
+                    core::crossing(face_line[0], face_line[1], l.pts[k], l.pts[(k + 1) % n])
+                {
                     candidates.push(Candidate {
                         kind: Kind::Wall,
                         key: key(uid),
@@ -237,12 +254,10 @@ pub(crate) fn measure(
         },
     };
     // The grids crossing the face, from the opening's middle (docs/adr/0728 §1), on its wall's level.
-    let level = doc
-        .slot_of(host)
-        .and_then(|s| match doc.get(s) {
-            Some(Entity::Wall(w)) => w.wall.arch.level.clone(),
-            _ => None,
-        });
+    let level = doc.slot_of(host).and_then(|s| match doc.get(s) {
+        Some(Entity::Wall(w)) => w.wall.arch.level.clone(),
+        _ => None,
+    });
     let grids = crate::grid_refs::Grids::of(doc);
     let middle = (jambs[0].1 + jambs[1].1) / 2.0;
     let [before, after] = kentos_geometry_core::ops::grid_ref::crossing_at(
@@ -259,7 +274,10 @@ pub(crate) fn measure(
             kind: Kind::Grid,
             uid: Some(uid),
             s,
-            at: Vec2 { x: g.to.x, y: g.to.y },
+            at: Vec2 {
+                x: g.to.x,
+                y: g.to.y,
+            },
         })
     };
     Ok(Measured {
@@ -344,7 +362,10 @@ fn read(doc: &Document, input: &OpeningsDistancesInput) -> Result<OpeningsDistan
 pub mod distances {
     use super::*;
 
-    pub fn validate(cx: &ExecutionContext<'_>, input: &OpeningsDistancesInput) -> CommandResult<()> {
+    pub fn validate(
+        cx: &ExecutionContext<'_>,
+        input: &OpeningsDistancesInput,
+    ) -> CommandResult<()> {
         match read(cx.doc, input) {
             Ok(_) => CommandResult::Completed {
                 output: (),
@@ -360,7 +381,10 @@ pub mod distances {
         plan_in(cx.doc, input)
     }
     /// The answer without a context, for a tool's overlay.
-    pub fn plan_in(doc: &Document, input: &OpeningsDistancesInput) -> CommandResult<OpeningsDistances> {
+    pub fn plan_in(
+        doc: &Document,
+        input: &OpeningsDistancesInput,
+    ) -> CommandResult<OpeningsDistances> {
         match read(doc, input) {
             Ok(output) => CommandResult::Completed {
                 output,

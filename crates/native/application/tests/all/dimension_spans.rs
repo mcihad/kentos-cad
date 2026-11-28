@@ -42,11 +42,16 @@ fn house(level: Option<&str>) -> (Document, Vec<String>) {
         ((0., 8.), (0., 0.), 0.25),
         ((4., 0.), (4., 8.), 0.1),
     ] {
-        let mut wall = json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": width, "justify": "center"});
+        let mut wall =
+            json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": width, "justify": "center"});
         if level.is_some() {
             wall["arch"] = arch.clone();
         }
-        let out = done(&mut doc, "cad.walls.create", json!({"layerId": "cizim", "walls": [wall]}));
+        let out = done(
+            &mut doc,
+            "cad.walls.create",
+            json!({"layerId": "cizim", "walls": [wall]}),
+        );
         uids.push(out["uids"][0].as_str().unwrap().to_owned());
     }
     done(
@@ -81,11 +86,16 @@ fn row(doc: &Document, id: DimensionSetId, which: DimensionSetRow) -> Vec<f64> {
         .iter()
         .filter(|m| m.row == which)
         .map(|m| {
-            let Some(Entity::Dimension(d)) = doc.slot_of(Uuid::from_bytes(m.uid.0)).and_then(|s| doc.get(s))
+            let Some(Entity::Dimension(d)) = doc
+                .slot_of(Uuid::from_bytes(m.uid.0))
+                .and_then(|s| doc.get(s))
             else {
                 panic!("a member dimension")
             };
-            (d.a.x.min(d.b.x), ((d.b.x - d.a.x).abs() * 1e6).round() / 1e6)
+            (
+                d.a.x.min(d.b.x),
+                ((d.b.x - d.a.x).abs() * 1e6).round() / 1e6,
+            )
         })
         .collect();
     out.sort_by(|a, b| a.0.total_cmp(&b.0));
@@ -93,16 +103,34 @@ fn row(doc: &Document, id: DimensionSetId, which: DimensionSetRow) -> Vec<f64> {
 }
 
 fn members(doc: &Document, id: DimensionSetId) -> Vec<EntityId> {
-    doc.dimension_set(id).unwrap().members.iter().map(|m| m.uid).collect()
+    doc.dimension_set(id)
+        .unwrap()
+        .members
+        .iter()
+        .map(|m| m.uid)
+        .collect()
 }
 
 #[test]
 fn the_south_facade_reaches_the_corners_and_follows_a_door_and_a_partition() {
     let (mut doc, w) = house(None);
-    let id = facade(&mut doc, &[&w[0]], &["openings", "walls", "grids", "overall"]);
-    assert_eq!(row(&doc, id, DimensionSetRow::Openings), [6.125, 1.2, 2.925]);
-    assert_eq!(row(&doc, id, DimensionSetRow::Walls), [0.25, 3.825, 0.1, 5.825, 0.25]);
-    assert_eq!(row(&doc, id, DimensionSetRow::Grids), [0.125, 4.0, 6.0, 0.125]);
+    let id = facade(
+        &mut doc,
+        &[&w[0]],
+        &["openings", "walls", "grids", "overall"],
+    );
+    assert_eq!(
+        row(&doc, id, DimensionSetRow::Openings),
+        [6.125, 1.2, 2.925]
+    );
+    assert_eq!(
+        row(&doc, id, DimensionSetRow::Walls),
+        [0.25, 3.825, 0.1, 5.825, 0.25]
+    );
+    assert_eq!(
+        row(&doc, id, DimensionSetRow::Grids),
+        [0.125, 4.0, 6.0, 0.125]
+    );
     assert_eq!(row(&doc, id, DimensionSetRow::Overall), [10.25]);
     let before = members(&doc, id);
     // A door later: the openings row gains it; the overall and the walls keep their dimensions.
@@ -111,20 +139,32 @@ fn the_south_facade_reaches_the_corners_and_follows_a_door_and_a_partition() {
         "cad.openings.create",
         json!({"layerId": "cizim", "openings": [{"host": w[0], "at": 2.0, "width": 0.9}]}),
     );
-    assert_eq!(row(&doc, id, DimensionSetRow::Openings), [1.675, 0.9, 3.55, 1.2, 2.925]);
+    assert_eq!(
+        row(&doc, id, DimensionSetRow::Openings),
+        [1.675, 0.9, 3.55, 1.2, 2.925]
+    );
     let after = members(&doc, id);
     let kept = before.iter().filter(|u| after.contains(u)).count();
-    assert!(kept >= 9, "the unchanged pairs keep their dimensions: {kept}");
+    assert!(
+        kept >= 9,
+        "the unchanged pairs keep their dimensions: {kept}"
+    );
     // A partition meeting the south wall later: the walls row gains its faces.
     done(
         &mut doc,
         "cad.walls.create",
         json!({"layerId": "cizim", "walls": [{"pts": [p(8., 0.), p(8., 8.)], "width": 0.1, "justify": "center"}]}),
     );
-    assert_eq!(row(&doc, id, DimensionSetRow::Walls), [0.25, 3.825, 0.1, 3.9, 0.1, 1.825, 0.25]);
+    assert_eq!(
+        row(&doc, id, DimensionSetRow::Walls),
+        [0.25, 3.825, 0.1, 3.9, 0.1, 1.825, 0.25]
+    );
     // One undo takes the partition and its dimensions back.
     assert!(doc.undo().is_some());
-    assert_eq!(row(&doc, id, DimensionSetRow::Walls), [0.25, 3.825, 0.1, 5.825, 0.25]);
+    assert_eq!(
+        row(&doc, id, DimensionSetRow::Walls),
+        [0.25, 3.825, 0.1, 5.825, 0.25]
+    );
 }
 
 #[test]
@@ -140,7 +180,10 @@ fn a_split_source_takes_its_piece_and_a_join_gives_it_back() {
     let span = set.span.as_ref().unwrap();
     assert_eq!(span.walls.len(), 1, "the piece joins the façade");
     assert_eq!(row(&doc, id, DimensionSetRow::Overall), [10.25]);
-    assert_eq!(row(&doc, id, DimensionSetRow::Openings), [6.125, 1.2, 2.925]);
+    assert_eq!(
+        row(&doc, id, DimensionSetRow::Openings),
+        [6.125, 1.2, 2.925]
+    );
     let piece = span.walls[0].to_string();
     done(
         &mut doc,
@@ -148,7 +191,10 @@ fn a_split_source_takes_its_piece_and_a_join_gives_it_back() {
         json!({"uids": [w[0], piece], "operation": {"kind": "join"}}),
     );
     let set = doc.dimension_set(id).unwrap();
-    assert!(set.span.as_ref().unwrap().walls.is_empty(), "joined back into one wall");
+    assert!(
+        set.span.as_ref().unwrap().walls.is_empty(),
+        "joined back into one wall"
+    );
     assert_eq!(row(&doc, id, DimensionSetRow::Overall), [10.25]);
     assert!(set.broken.is_none());
 }
@@ -189,12 +235,23 @@ fn a_turned_wall_keeps_its_face_and_its_dimensions() {
     let id = DimensionSetId::parse(out["set"].as_str().unwrap()).unwrap();
     let before = members(&doc, id);
     let lengths = row(&doc, id, DimensionSetRow::Openings);
-    done(&mut doc, "cad.walls.edit", json!({"uids": [w[0]], "operation": {"kind": "flip"}}));
+    done(
+        &mut doc,
+        "cad.walls.edit",
+        json!({"uids": [w[0]], "operation": {"kind": "flip"}}),
+    );
     let set = doc.dimension_set(id).unwrap();
-    assert_eq!(set.face, kentos_commands::DimensionSetFace::Left, "the same physical face");
+    assert_eq!(
+        set.face,
+        kentos_commands::DimensionSetFace::Left,
+        "the same physical face"
+    );
     assert_eq!(row(&doc, id, DimensionSetRow::Openings), lengths);
     assert_eq!(members(&doc, id).len(), before.len());
-    assert!(members(&doc, id).iter().all(|u| before.contains(u)), "the same dimensions");
+    assert!(
+        members(&doc, id).iter().all(|u| before.contains(u)),
+        "the same dimensions"
+    );
 }
 
 #[test]
@@ -223,7 +280,9 @@ fn walls_on_two_levels_are_refused_and_a_moved_one_breaks_the_set() {
     let upper = doc
         .entities_with_uids()
         .find_map(|(uid, e)| match e {
-            Entity::Wall(x) if x.wall.arch.level.as_deref() == Some("kat-1") => Some(uid.to_string()),
+            Entity::Wall(x) if x.wall.arch.level.as_deref() == Some("kat-1") => {
+                Some(uid.to_string())
+            }
             _ => None,
         })
         .unwrap();
@@ -236,8 +295,15 @@ fn walls_on_two_levels_are_refused_and_a_moved_one_breaks_the_set() {
     assert_eq!(refused["status"], "failed");
     assert_eq!(refused["error"]["code"], "invalid_dimension_set");
     let id = facade(&mut doc, &[&w[0], &w[2]], &["overall"]);
-    done(&mut doc, "cad.levels.assign", json!({"uids": [w[2]], "level": "kat-1"}));
-    assert_eq!(doc.dimension_set(id).unwrap().broken, Some(DimensionSetBreak::MixedSources));
+    done(
+        &mut doc,
+        "cad.levels.assign",
+        json!({"uids": [w[2]], "level": "kat-1"}),
+    );
+    assert_eq!(
+        doc.dimension_set(id).unwrap().broken,
+        Some(DimensionSetBreak::MixedSources)
+    );
 }
 
 #[test]
@@ -289,13 +355,24 @@ fn the_kcad_example_is_the_commands_drawing() {
     let (mut doc, w) = house(None);
     facade(&mut doc, &[&w[0]], &["openings", "grids", "overall"]);
     let snapshot = doc.to_snapshot_v2();
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/kcad/v2/dimension-set-spans.json");
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/kcad/v2/dimension-set-spans.json"
+    );
     if std::env::var_os("KENTOS_WRITE_SPAN_MODEL").is_some() {
-        std::fs::write(path, serde_json::to_string_pretty(&snapshot).unwrap() + "\n").unwrap();
+        std::fs::write(
+            path,
+            serde_json::to_string_pretty(&snapshot).unwrap() + "\n",
+        )
+        .unwrap();
     }
     let stored: kentos_commands::DocumentSnapshotV2 =
         serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
     let reopened = Document::from_snapshot_v2(stored.clone()).unwrap();
-    assert_eq!(reopened.to_snapshot_v2().dimension_sets, stored.dimension_sets, "opened unchanged");
+    assert_eq!(
+        reopened.to_snapshot_v2().dimension_sets,
+        stored.dimension_sets,
+        "opened unchanged"
+    );
     assert!(stored.dimension_sets[0].span.is_some());
 }

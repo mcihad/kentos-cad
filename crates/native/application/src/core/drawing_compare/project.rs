@@ -155,7 +155,10 @@ mod tests {
     }
 
     fn sheet() -> Value {
-        serde_json::from_str(include_str!("../../../../../../fixtures/kcad/v2/sheets.json")).unwrap()
+        serde_json::from_str(include_str!(
+            "../../../../../../fixtures/kcad/v2/sheets.json"
+        ))
+        .unwrap()
     }
 
     #[test]

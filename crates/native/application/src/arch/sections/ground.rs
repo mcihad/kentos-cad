@@ -24,7 +24,9 @@ pub(super) struct Grounds {
 pub(super) fn grounds(doc: &Document) -> Option<Grounds> {
     let site = doc.settings().arch.as_ref()?.site.as_ref()?;
     let datum = site.datum?;
-    let made = |g: Option<&kentos_commands::SiteGround>, graded| crate::site_ground::made_of(doc, g?, graded);
+    let made = |g: Option<&kentos_commands::SiteGround>, graded| {
+        crate::site_ground::made_of(doc, g?, graded)
+    };
     let g = Grounds {
         natural: made(site.natural_ground.as_ref(), false),
         graded: made(site.graded_ground.as_ref(), true),
@@ -39,12 +41,32 @@ pub(super) fn natural_known(doc: &Document) -> bool {
 }
 
 /// The ground across `span` (along the line, the section's `u`), not through what is cut.
-pub(super) fn draw(doc: &Document, frame: &Frame, cut: &[sec::Cut], span: (f64, f64), out: &mut Out) {
+pub(super) fn draw(
+    doc: &Document,
+    frame: &Frame,
+    cut: &[sec::Cut],
+    span: (f64, f64),
+    out: &mut Out,
+) {
     let g = grounds(doc);
-    if let Some(s) = g.as_ref().and_then(|g| g.natural.as_ref().map(|s| (s, g.datum))) {
-        drape(s.0, frame, cut, span, s.1, (NATURAL, LIGHT, Some("dashed")), out);
+    if let Some(s) = g
+        .as_ref()
+        .and_then(|g| g.natural.as_ref().map(|s| (s, g.datum)))
+    {
+        drape(
+            s.0,
+            frame,
+            cut,
+            span,
+            s.1,
+            (NATURAL, LIGHT, Some("dashed")),
+            out,
+        );
     }
-    match g.as_ref().and_then(|g| g.graded.as_ref().map(|s| (s, g.datum))) {
+    match g
+        .as_ref()
+        .and_then(|g| g.graded.as_ref().map(|s| (s, g.datum)))
+    {
         Some((s, datum)) => drape(s, frame, cut, span, datum, (GRADED, HEAVY, None), out),
         None => {
             for (a, b) in uncut(cut, span, 0.0) {
@@ -89,7 +111,10 @@ fn drape(
         run.clear();
     }
     // Every cut ring's corners break a stretch, so that a piece lies wholly in or out of what is cut.
-    let breaks: Vec<f64> = cut.iter().flat_map(|c| c.ring.iter().map(|q| q.x)).collect();
+    let breaks: Vec<f64> = cut
+        .iter()
+        .flat_map(|c| c.ring.iter().map(|q| q.x))
+        .collect();
     for w in places.windows(2) {
         let (Some(z0), Some(z1)) = (w[0].z, w[1].z) else {
             end(&mut run, &mut runs);
@@ -104,7 +129,11 @@ fn drape(
             let t = if u1 > u0 { (u - u0) / (u1 - u0) } else { 0.0 };
             P::new(u, z0 - datum + (z1 - z0) * t)
         };
-        let mut cuts: Vec<f64> = breaks.iter().copied().filter(|u| *u > u0 && *u < u1).collect();
+        let mut cuts: Vec<f64> = breaks
+            .iter()
+            .copied()
+            .filter(|u| *u > u0 && *u < u1)
+            .collect();
         cuts.sort_by(f64::total_cmp);
         let mut from = u0;
         for to in cuts.into_iter().chain(std::iter::once(u1)) {

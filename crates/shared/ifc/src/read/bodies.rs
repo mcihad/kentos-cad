@@ -51,12 +51,21 @@ impl Model {
 
     /// The openings' own volumes (every `IfcFeatureElementSubtraction` with a shape), uncut: what the bodies have
     /// cut from their hosts, for a viewer to show see-through when asked.
-    pub fn opening_bodies(&self, bytes: &[u8], cancel: &dyn Fn() -> bool) -> Result<Bodies, ReadError> {
+    pub fn opening_bodies(
+        &self,
+        bytes: &[u8],
+        cancel: &dyn Fn() -> bool,
+    ) -> Result<Bodies, ReadError> {
         self.made(bytes, cancel, true)
     }
 
     /// The bodies, or the openings' volumes.
-    fn made(&self, bytes: &[u8], cancel: &dyn Fn() -> bool, openings: bool) -> Result<Bodies, ReadError> {
+    fn made(
+        &self,
+        bytes: &[u8],
+        cancel: &dyn Fn() -> bool,
+        openings: bool,
+    ) -> Result<Bodies, ReadError> {
         let schema = header::version(self.summary.family);
         guarded(|| {
             let mut decoder = EntityDecoder::with_arc_index(bytes, self.index.clone());
@@ -73,11 +82,17 @@ impl Model {
                 (0.0, 0.0, 0.0)
             };
             let router = GeometryRouter::with_scale_and_rtc(scale, anchor);
-            let voids = if openings { FxHashMap::default() } else { self.voids(schema) };
+            let voids = if openings {
+                FxHashMap::default()
+            } else {
+                self.voids(schema)
+            };
             let mut out = Bodies::default();
             let mut n = 0;
             for (i, o) in self.objects.iter().enumerate() {
-                if !o.has_shape || schema.is_subtype_of(&o.class, "IfcFeatureElementSubtraction") != openings {
+                if !o.has_shape
+                    || schema.is_subtype_of(&o.class, "IfcFeatureElementSubtraction") != openings
+                {
                     continue;
                 }
                 n += 1;
@@ -87,20 +102,50 @@ impl Model {
                 let made = decoder
                     .decode_by_id(o.step)
                     .map_err(|e| e.to_string())
-                    .and_then(|e| router.process_element_with_voids(&e, &mut decoder, &voids).map_err(|e| e.to_string()));
+                    .and_then(|e| {
+                        router
+                            .process_element_with_voids(&e, &mut decoder, &voids)
+                            .map_err(|e| e.to_string())
+                    });
                 match made {
                     Ok(mesh) if !mesh.indices.is_empty() => {
-                        let [ox, oy, oz] = [mesh.origin[0] + anchor.0, mesh.origin[1] + anchor.1, mesh.origin[2] + anchor.2];
+                        let [ox, oy, oz] = [
+                            mesh.origin[0] + anchor.0,
+                            mesh.origin[1] + anchor.1,
+                            mesh.origin[2] + anchor.2,
+                        ];
                         let positions = mesh
                             .positions
-                            .as_chunks::<3>().0.iter()
-                            .map(|p| [ox + f64::from(p[0]), oy + f64::from(p[1]), oz + f64::from(p[2])])
+                            .as_chunks::<3>()
+                            .0
+                            .iter()
+                            .map(|p| {
+                                [
+                                    ox + f64::from(p[0]),
+                                    oy + f64::from(p[1]),
+                                    oz + f64::from(p[2]),
+                                ]
+                            })
                             .collect();
-                        let triangles = mesh.indices.as_chunks::<3>().0.iter().map(|t| [t[0], t[1], t[2]]).collect();
+                        let triangles = mesh
+                            .indices
+                            .as_chunks::<3>()
+                            .0
+                            .iter()
+                            .map(|t| [t[0], t[1], t[2]])
+                            .collect();
                         let rounding = rounding(&mesh, scale);
-                        out.bodies.push(Body { object: i, positions, triangles, rounding });
+                        out.bodies.push(Body {
+                            object: i,
+                            positions,
+                            triangles,
+                            rounding,
+                        });
                     }
-                    Ok(_) => out.not_shown.push(NotShown { object: i, reason: "gövdesi boş çıktı".to_owned() }),
+                    Ok(_) => out.not_shown.push(NotShown {
+                        object: i,
+                        reason: "gövdesi boş çıktı".to_owned(),
+                    }),
                     Err(reason) => out.not_shown.push(NotShown { object: i, reason }),
                 }
             }
@@ -130,7 +175,9 @@ impl Model {
 /// (three with the scaling), one at the world positions' reach.
 fn rounding(mesh: &ifc_lite_geometry::Mesh, scale: f64) -> f64 {
     let world = mesh.positions.iter().fold(0.0f32, |m, v| m.max(v.abs()));
-    let local = mesh.local_bounds.map_or(world, |b| b.iter().fold(0.0f32, |m, v| m.max(v.abs())));
+    let local = mesh
+        .local_bounds
+        .map_or(world, |b| b.iter().fold(0.0f32, |m, v| m.max(v.abs())));
     let times = if scale == 1.0 { 1.0 } else { 3.0 };
     (times * f64::from(local) + f64::from(world)) * f64::from(f32::EPSILON) / 2.0
 }
@@ -146,10 +193,21 @@ pub fn volume_and_area(b: &Body) -> (f64, f64) {
             let c = b.positions[k as usize];
             [c[0] - o[0], c[1] - o[1], c[2] - o[2]]
         });
-        let cross = [q[1] * r[2] - q[2] * r[1], q[2] * r[0] - q[0] * r[2], q[0] * r[1] - q[1] * r[0]];
+        let cross = [
+            q[1] * r[2] - q[2] * r[1],
+            q[2] * r[0] - q[0] * r[2],
+            q[0] * r[1] - q[1] * r[0],
+        ];
         v += (p[0] * cross[0] + p[1] * cross[1] + p[2] * cross[2]) / 6.0;
-        let (u, w) = ([q[0] - p[0], q[1] - p[1], q[2] - p[2]], [r[0] - p[0], r[1] - p[1], r[2] - p[2]]);
-        let n = [u[1] * w[2] - u[2] * w[1], u[2] * w[0] - u[0] * w[2], u[0] * w[1] - u[1] * w[0]];
+        let (u, w) = (
+            [q[0] - p[0], q[1] - p[1], q[2] - p[2]],
+            [r[0] - p[0], r[1] - p[1], r[2] - p[2]],
+        );
+        let n = [
+            u[1] * w[2] - u[2] * w[1],
+            u[2] * w[0] - u[0] * w[2],
+            u[0] * w[1] - u[1] * w[0],
+        ];
         a += (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt() / 2.0;
     }
     (v.abs(), a)

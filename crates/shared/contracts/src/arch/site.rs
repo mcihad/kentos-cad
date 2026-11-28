@@ -112,7 +112,9 @@ pub struct SiteGround {
 impl SiteGround {
     /// The ground of the points on `layer`.
     pub fn of_layer(layer: &str) -> Self {
-        Self { layers: vec![layer.to_owned()] }
+        Self {
+            layers: vec![layer.to_owned()],
+        }
     }
 
     /// What is wrong with it (`what`: the ground's name, Tabii zemin): the words.
@@ -121,12 +123,20 @@ impl SiteGround {
             return Some(format!("{what} en az bir nokta katmanından kurulur."));
         }
         if self.layers.len() > MAX_GROUND_LAYERS {
-            return Some(format!("{what} en çok {MAX_GROUND_LAYERS} katmandan kurulur; {} verildi.", self.layers.len()));
+            return Some(format!(
+                "{what} en çok {MAX_GROUND_LAYERS} katmandan kurulur; {} verildi.",
+                self.layers.len()
+            ));
         }
         if self.layers.iter().any(|l| l.trim().is_empty()) {
             return Some(format!("{what} katmanının kimliği boş olamaz."));
         }
-        if self.layers.iter().enumerate().any(|(i, l)| self.layers[..i].contains(l)) {
+        if self
+            .layers
+            .iter()
+            .enumerate()
+            .any(|(i, l)| self.layers[..i].contains(l))
+        {
             return Some(format!("{what} katmanları birer kez yazılır."));
         }
         None
@@ -134,7 +144,8 @@ impl SiteGround {
 
     /// Whether it is made of the same layers as `other`, in any order.
     fn same(&self, other: &Self) -> bool {
-        self.layers.len() == other.layers.len() && self.layers.iter().all(|l| other.layers.contains(l))
+        self.layers.len() == other.layers.len()
+            && self.layers.iter().all(|l| other.layers.contains(l))
     }
 }
 
@@ -235,10 +246,18 @@ impl SitePlan {
             ));
         }
         // The grounds (docs/adr/8174): each its survey's layers; the earthwork is the two's difference.
-        if let Some(why) = self.natural_ground.as_ref().and_then(|g| g.problem("Tabii zemin")) {
+        if let Some(why) = self
+            .natural_ground
+            .as_ref()
+            .and_then(|g| g.problem("Tabii zemin"))
+        {
             return Some(("site.naturalGround".into(), why));
         }
-        if let Some(why) = self.graded_ground.as_ref().and_then(|g| g.problem("Tesviye zemin")) {
+        if let Some(why) = self
+            .graded_ground
+            .as_ref()
+            .and_then(|g| g.problem("Tesviye zemin"))
+        {
             return Some(("site.gradedGround".into(), why));
         }
         if let (Some(n), Some(g)) = (&self.natural_ground, &self.graded_ground)
@@ -246,7 +265,8 @@ impl SitePlan {
         {
             return Some((
                 "site.gradedGround".into(),
-                "Tabii ve tesviye zemin aynı katmanlardan kurulamaz: hafriyat ikisinin farkıdır.".into(),
+                "Tabii ve tesviye zemin aynı katmanlardan kurulamaz: hafriyat ikisinin farkıdır."
+                    .into(),
             ));
         }
         None

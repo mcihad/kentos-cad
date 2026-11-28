@@ -147,7 +147,9 @@ impl<Message> Toast<Message> {
     /// bildirim kapanır. Eylemli bildirim en az 8 saniye durur.
     /// Its button's words and message, when it has one (what a test presses).
     pub fn action_of(&self) -> Option<(&str, &Message)> {
-        self.action.as_ref().map(|(label, message)| (label.as_str(), message))
+        self.action
+            .as_ref()
+            .map(|(label, message)| (label.as_str(), message))
     }
 
     pub fn action(mut self, label: impl Into<String>, message: Message) -> Self {

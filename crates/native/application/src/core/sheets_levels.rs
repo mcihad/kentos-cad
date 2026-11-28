@@ -6,7 +6,8 @@
 use std::collections::BTreeSet;
 
 use kentos_commands::{
-    CommandResult, Entity, SheetPicture, SheetTemplateSource, SheetsEdit, SheetsEdited, SheetsLevels,
+    CommandResult, Entity, SheetPicture, SheetTemplateSource, SheetsEdit, SheetsEdited,
+    SheetsLevels,
 };
 use kentos_domain::Document;
 use kentos_sheet::{create, levels, template};
@@ -47,17 +48,22 @@ fn chosen(doc: &Document, input: &SheetsLevels) -> Result<Vec<(String, String)>,
     if levels.is_empty() {
         return Err(Stop::failed(error(
             crate::codes::LEVEL_NOT_FOUND,
-            "Projede kat yok; kat planı paftası için önce Proje ayarları › Mimari'de kat ekleyin.".into(),
+            "Projede kat yok; kat planı paftası için önce Proje ayarları › Mimari'de kat ekleyin."
+                .into(),
             Some("levels".into()),
         )));
     }
     let Some(ids) = &input.levels else {
-        return Ok(levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect());
+        return Ok(levels
+            .iter()
+            .map(|l| (l.id.clone(), l.name.clone()))
+            .collect());
     };
     if ids.is_empty() {
         return Err(Stop::failed(error(
             crate::codes::LEVEL_NOT_FOUND,
-            "Kat listesi boş; katların kimliklerini verin ya da bütün katlar için alanı bırakın.".into(),
+            "Kat listesi boş; katların kimliklerini verin ya da bütün katlar için alanı bırakın."
+                .into(),
             Some("levels".into()),
         )));
     }
@@ -99,13 +105,14 @@ fn prepare(cx: &ExecutionContext<'_>, input: &SheetsLevels) -> Result<SheetsEdit
         Some(SheetTemplateSource::Custom { template }) => template::read_template(&template.to_string())
             .map_err(|e| Stop::failed(error(&e.code, e.message, e.path.map(|p| format!("source.template.{p}")))))?,
     };
-    let options: template::InstanceOptions = serde_json::from_value(input.options.clone()).map_err(|e| {
-        Stop::failed(error(
-            "invalid_options",
-            format!("Şablon seçenekleri okunamadı: {e}"),
-            Some("options".into()),
-        ))
-    })?;
+    let options: template::InstanceOptions = serde_json::from_value(input.options.clone())
+        .map_err(|e| {
+            Stop::failed(error(
+                "invalid_options",
+                format!("Şablon seçenekleri okunamadı: {e}"),
+                Some("options".into()),
+            ))
+        })?;
     if options.name.is_some() {
         return Err(Stop::failed(error(
             "invalid_options",
@@ -114,7 +121,8 @@ fn prepare(cx: &ExecutionContext<'_>, input: &SheetsLevels) -> Result<SheetsEdit
         )));
     }
     let ids: BTreeSet<String> = chosen.iter().map(|(id, _)| id.clone()).collect();
-    let bounds = level_extent(cx.doc, &ids).or_else(|| sheets_fit::extent_of(cx.doc, cx.doc.entities()));
+    let bounds =
+        level_extent(cx.doc, &ids).or_else(|| sheets_fit::extent_of(cx.doc, cx.doc.entities()));
     let (book, _) = match cx.doc.sheets() {
         Some(s) => kentos_sheet::project::read_project_sheets(s)
             .map_err(|e| Stop::failed(error("book_unreadable", e.message, None)))?,

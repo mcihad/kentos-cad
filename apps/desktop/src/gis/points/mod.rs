@@ -42,9 +42,9 @@ pub mod batch;
 mod batch_tests;
 pub mod batch_view;
 pub(crate) mod cell;
-pub mod edit;
 #[cfg(test)]
 mod display_tests;
+pub mod edit;
 pub(crate) mod target;
 #[cfg(test)]
 mod target_tests;
@@ -112,7 +112,8 @@ pub mod texts {
     pub const CREATE_LAYER: &str = "Nokta katmanı oluştur";
     pub const START_EDITING: &str = "Düzenlemeyi başlat";
     pub const DRAFT_CLOSED: &str = "Düzenlemeye kapalı; satır yazılmaz.";
-    pub const DRAFT_TO_EDITS: &str = "Enter satırı katmanın düzenlemesine yazar; tabloya Kaynağa yaz ile geçer.";
+    pub const DRAFT_TO_EDITS: &str =
+        "Enter satırı katmanın düzenlemesine yazar; tabloya Kaynağa yaz ile geçer.";
     pub const DRAFT_TO_LAYER: &str = "Enter satırı bu katmana yazar.";
     pub const NONE: &str = "Çizimde nokta yok. Nokta aracıyla, Satır ekle ile ya da İşlemler ▾ › İçe aktar ile ekleyin.";
     pub const NO_MATCH: &str = "Süzgece uyan nokta yok.";
@@ -623,7 +624,11 @@ impl App {
                     self.gis.points.draft = Some(Draft::default());
                     // The row's layer is found now and shown above the table (docs/adr/9320): a row no layer takes
                     // says so before anything is typed.
-                    if let Some(why) = self.document.as_ref().and_then(|d| target::refusal(&d.model, self.draft_target().as_ref())) {
+                    if let Some(why) = self
+                        .document
+                        .as_ref()
+                        .and_then(|d| target::refusal(&d.model, self.draft_target().as_ref()))
+                    {
                         self.warn(why);
                     }
                 }
@@ -845,7 +850,13 @@ impl App {
                             .copied()
                             .filter(|s| self.editable_coordinate_point(*s))
                             .collect();
-                        walk_columns(&rows, slot, col, w, &[EditColumn::Name, EditColumn::Code, EditColumn::Z])
+                        walk_columns(
+                            &rows,
+                            slot,
+                            col,
+                            w,
+                            &[EditColumn::Name, EditColumn::Code, EditColumn::Z],
+                        )
                     } else {
                         next_cell(&self.shown_points(), slot, col, w)
                     }

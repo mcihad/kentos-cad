@@ -222,7 +222,9 @@ pub enum Guide {
 impl Marks {
     /// The camera the marks draw with now: the area's live one, else the one they were built for.
     fn shown(&self) -> Camera {
-        self.live.as_ref().map_or(self.camera, crate::viewport::live::LiveView::camera)
+        self.live
+            .as_ref()
+            .map_or(self.camera, crate::viewport::live::LiveView::camera)
     }
 
     pub fn is_empty(&self) -> bool {
@@ -293,7 +295,13 @@ impl<Message> canvas::Program<Message> for Marks {
         if let Some((b, name)) = &self.extent {
             extent_frame(&mut frame, *b, name, &camera, &self.colors, accent);
         }
-        missing(&mut frame, &self.missing, &camera, &self.colors, Tokens::of(theme).danger);
+        missing(
+            &mut frame,
+            &self.missing,
+            &camera,
+            &self.colors,
+            Tokens::of(theme).danger,
+        );
         clip_frames(&mut frame, &self.clips, &camera, &self.colors);
         if let Some(p) = &self.picked {
             crate::extensions::panel_marks::draw(&mut frame, p, &camera, &self.colors, accent);
@@ -519,7 +527,13 @@ fn param_grips(
 /// any drawing; at most 2 000.
 /// A range of a path (docs/adr/2980): one accent line along its points, on a wider halo so it shows on any drawing,
 /// under the rings of its ends.
-fn range(frame: &mut canvas::Frame, pts: &[Vec2], camera: &Camera, colors: &MarkColors, accent: iced::Color) {
+fn range(
+    frame: &mut canvas::Frame,
+    pts: &[Vec2],
+    camera: &Camera,
+    colors: &MarkColors,
+    accent: iced::Color,
+) {
     if pts.len() < 2 {
         return;
     }
@@ -534,7 +548,8 @@ fn range(frame: &mut canvas::Frame, pts: &[Vec2], camera: &Camera, colors: &Mark
             }
         }
     });
-    let stroke = |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+    let stroke =
+        |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
     frame.stroke(&line, stroke(7.0, colors.halo));
     frame.stroke(&line, stroke(3.5, accent));
 }
@@ -594,7 +609,10 @@ fn ways(
             b.close();
         }
     });
-    frame.stroke(&heads, Stroke::default().with_color(colors.halo).with_width(3.0));
+    frame.stroke(
+        &heads,
+        Stroke::default().with_color(colors.halo).with_width(3.0),
+    );
     frame.fill(&heads, accent);
 }
 
@@ -677,11 +695,17 @@ fn extent_frame(
         }
         p.close();
     });
-    frame.stroke(&path, Stroke::default().with_color(colors.halo).with_width(3.5));
+    frame.stroke(
+        &path,
+        Stroke::default().with_color(colors.halo).with_width(3.5),
+    );
     frame.stroke(
         &path,
         Stroke {
-            line_dash: canvas::LineDash { segments: &[8.0, 5.0], offset: 0 },
+            line_dash: canvas::LineDash {
+                segments: &[8.0, 5.0],
+                offset: 0,
+            },
             ..Stroke::default().with_color(accent).with_width(1.5)
         },
     );
@@ -1006,7 +1030,12 @@ fn broken(
 }
 
 /// The clipping boundaries Kırp shows on the screen (docs/adr/0351 §1): a thin line on a halo, never plotted.
-fn clip_frames(frame: &mut canvas::Frame, rings: &[Vec<Vec2>], camera: &Camera, colors: &MarkColors) {
+fn clip_frames(
+    frame: &mut canvas::Frame,
+    rings: &[Vec<Vec2>],
+    camera: &Camera,
+    colors: &MarkColors,
+) {
     for ring in rings {
         if ring.len() < 3 {
             continue;
@@ -1023,8 +1052,14 @@ fn clip_frames(frame: &mut canvas::Frame, rings: &[Vec<Vec2>], camera: &Camera, 
             }
             b.close();
         });
-        frame.stroke(&path, Stroke::default().with_color(colors.halo).with_width(3.0));
-        frame.stroke(&path, Stroke::default().with_color(colors.window).with_width(1.0));
+        frame.stroke(
+            &path,
+            Stroke::default().with_color(colors.halo).with_width(3.0),
+        );
+        frame.stroke(
+            &path,
+            Stroke::default().with_color(colors.window).with_width(1.0),
+        );
     }
 }
 
@@ -1047,8 +1082,12 @@ fn missing(
                 Point::new(x as f32, y as f32)
             })
             .collect();
-        let (lo_x, hi_x) = at.iter().fold((f32::MAX, f32::MIN), |(a, b), p| (a.min(p.x), b.max(p.x)));
-        let (lo_y, hi_y) = at.iter().fold((f32::MAX, f32::MIN), |(a, b), p| (a.min(p.y), b.max(p.y)));
+        let (lo_x, hi_x) = at
+            .iter()
+            .fold((f32::MAX, f32::MIN), |(a, b), p| (a.min(p.x), b.max(p.x)));
+        let (lo_y, hi_y) = at
+            .iter()
+            .fold((f32::MAX, f32::MIN), |(a, b), p| (a.min(p.y), b.max(p.y)));
         if hi_x < 0.0 || hi_y < 0.0 || lo_x > size.width || lo_y > size.height {
             continue;
         }
@@ -1063,15 +1102,24 @@ fn missing(
             b.move_to(at[1]);
             b.line_to(at[3]);
         });
-        frame.stroke(&path, Stroke::default().with_color(colors.halo).with_width(3.0));
+        frame.stroke(
+            &path,
+            Stroke::default().with_color(colors.halo).with_width(3.0),
+        );
         frame.stroke(
             &path,
             Stroke {
-                line_dash: canvas::LineDash { segments: &[6.0, 4.0], offset: 0 },
+                line_dash: canvas::LineDash {
+                    segments: &[6.0, 4.0],
+                    offset: 0,
+                },
                 ..Stroke::default().with_color(danger).with_width(1.25)
             },
         );
-        let (mx, my) = (f.iter().map(|p| p.x).sum::<f64>() / 4.0, f.iter().map(|p| p.y).sum::<f64>() / 4.0);
+        let (mx, my) = (
+            f.iter().map(|p| p.x).sum::<f64>() / 4.0,
+            f.iter().map(|p| p.y).sum::<f64>() / 4.0,
+        );
         middles.push(Vec2::new(mx, my));
     }
     // The triangle's tip a little above the middle, so it stands over it.
@@ -1562,11 +1610,13 @@ impl crate::app::App {
         );
         // The spaces whose walls no longer close round them (docs/adr/0342 §3), above their label: its lines stand
         // about the pole, four of its heights tall.
-        let above = 4.0 * kentos_geometry_core::geom::space::LABEL_MM * model.settings().plot_scale / 1000.0;
+        let above = 4.0 * kentos_geometry_core::geom::space::LABEL_MM * model.settings().plot_scale
+            / 1000.0;
         for slot in model.lost_spaces() {
             match model.get(slot) {
                 Some(kentos_commands::Entity::Space(s)) => {
-                    if let Some(p) = kentos_native_application::spaces::label_point(&s.space.parts) {
+                    if let Some(p) = kentos_native_application::spaces::label_point(&s.space.parts)
+                    {
                         out.push(Vec2::new(p.x, p.y + above));
                     }
                 }
@@ -1577,9 +1627,13 @@ impl crate::app::App {
                     }
                 }
                 // A column whose grid is gone (docs/adr/0343 §3), at its centre.
-                Some(kentos_commands::Entity::Column(c)) => out.push(Vec2::new(c.column.at.x, c.column.at.y)),
+                Some(kentos_commands::Entity::Column(c)) => {
+                    out.push(Vec2::new(c.column.at.x, c.column.at.y))
+                }
                 // A tag whose object is gone (docs/adr/0344 §1), above its middle.
-                Some(kentos_commands::Entity::Tag(t)) => out.push(Vec2::new(t.tag.at.x, t.tag.at.y + above)),
+                Some(kentos_commands::Entity::Tag(t)) => {
+                    out.push(Vec2::new(t.tag.at.x, t.tag.at.y + above))
+                }
                 // A view mark whose target is gone (docs/adr/0345 §2), above its first point.
                 Some(kentos_commands::Entity::ViewMark(m)) => {
                     if let Some(p) = m.mark.points.first() {

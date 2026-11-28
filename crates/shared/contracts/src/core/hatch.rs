@@ -197,7 +197,10 @@ pub fn hatch_patterns_problem(defs: &[HatchPatternDef]) -> Option<String> {
                 "“{name}” tarama deseninin adı virgül içeremez ve en çok {MAX_PATTERN_NAME} harf olur"
             ));
         }
-        if defs[..i].iter().any(|o| same_hatch_pattern_name(&o.name, name)) {
+        if defs[..i]
+            .iter()
+            .any(|o| same_hatch_pattern_name(&o.name, name))
+        {
             return Some(format!("“{name}” tarama deseni iki kez var"));
         }
         let n = d.lines.len();

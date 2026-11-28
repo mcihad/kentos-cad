@@ -235,10 +235,10 @@ impl App {
         let mut choices: Vec<Choice> = layers
             .iter()
             .map(|(id, path, n)| {
-                let label = self
-                    .document
-                    .as_ref()
-                    .map_or_else(|| format!("{path} ({n})"), |d| super::data::layer_label(d, id, path, *n));
+                let label = self.document.as_ref().map_or_else(
+                    || format!("{path} ({n})"),
+                    |d| super::data::layer_label(d, id, path, *n),
+                );
                 Choice::new(label).shown(path.clone())
             })
             .collect();

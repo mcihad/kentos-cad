@@ -185,7 +185,10 @@ fn a_mask_over_a_text_says_it_does_not_cover_words() {
         .add(Entity::Text(kentos_commands::TextEntity {
             annotative: None,
             base: crate::common::base("cizim"),
-            p: kentos_commands::Vec2 { x: E + 5.0, y: N + 9.0 },
+            p: kentos_commands::Vec2 {
+                x: E + 5.0,
+                y: N + 9.0,
+            },
             text: "TEST".to_owned(),
             height: 1.0,
             rotation: 0.0,
@@ -202,10 +205,17 @@ fn a_mask_over_a_text_says_it_does_not_cover_words() {
     b.spatial.sync(&b.doc);
     b.start("wipeout");
     let before = b.said(0).len();
-    draw(&mut b, &[[2.0, 6.0], [14.0, 6.0], [14.0, 14.0], [2.0, 14.0]]);
+    draw(
+        &mut b,
+        &[[2.0, 6.0], [14.0, 6.0], [14.0, 14.0], [2.0, 14.0]],
+    );
     let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
     assert!(said.contains(&"Maske eklendi."), "{said:?}");
-    assert!(said.iter().any(|t| t.starts_with("Maske yazıları örtmez: buradaki 1 yazı")), "{said:?}");
+    assert!(
+        said.iter()
+            .any(|t| t.starts_with("Maske yazıları örtmez: buradaki 1 yazı")),
+        "{said:?}"
+    );
     let before = b.said(0).len();
     draw(&mut b, &[[40.0, 40.0], [44.0, 40.0], [42.0, 44.0]]);
     let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();

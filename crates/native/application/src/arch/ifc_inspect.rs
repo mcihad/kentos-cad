@@ -7,8 +7,9 @@ use std::collections::BTreeMap;
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, IfcInspect, IfcInspected, IfcInspectedFinding, IfcInspectedObject, IfcInspectedSet,
-    IfcInspectedStorey, IfcInspectedUnits, IfcInspectedValue, IfcValue,
+    CommandResult, CommandWarning, IfcInspect, IfcInspected, IfcInspectedFinding,
+    IfcInspectedObject, IfcInspectedSet, IfcInspectedStorey, IfcInspectedUnits, IfcInspectedValue,
+    IfcValue,
 };
 use kentos_ifc::read::{self as ifc, Limits, Model, SetKind, Severity, Unit, ValueKind};
 
@@ -22,7 +23,9 @@ fn inspect(input: &IfcInspect) -> Result<(IfcInspected, Vec<CommandWarning>), St
     let wrong = |why: &str| {
         Stop::failed(checks::error(
             codes::INVALID_FILE_PATH,
-            format!("IFC dosyasının yolu {why}: tam yolunu verin, .ifc ile biten ve var olan bir dosya."),
+            format!(
+                "IFC dosyasının yolu {why}: tam yolunu verin, .ifc ile biten ve var olan bir dosya."
+            ),
             Some("path".into()),
         ))
     };
@@ -32,23 +35,35 @@ fn inspect(input: &IfcInspect) -> Result<(IfcInspected, Vec<CommandWarning>), St
     if !path.is_absolute() {
         return Err(wrong("göreli"));
     }
-    if !path.extension().is_some_and(|e| e.eq_ignore_ascii_case("ifc")) {
+    if !path
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("ifc"))
+    {
         return Err(wrong(".ifc ile bitmiyor"));
     }
     let bytes = match std::fs::read(path) {
         Ok(b) => b,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Err(wrong("bir dosya göstermiyor")),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            return Err(wrong("bir dosya göstermiyor"));
+        }
         Err(e) => return Err(wrong(&format!("okunamıyor ({e})"))),
     };
     let never = || false;
-    let model = ifc::read(&bytes, &Limits::default(), &never)
-        .map_err(|e| Stop::failed(checks::error(codes::IFC_UNREADABLE, e.to_string(), Some("path".into()))))?;
+    let model = ifc::read(&bytes, &Limits::default(), &never).map_err(|e| {
+        Stop::failed(checks::error(
+            codes::IFC_UNREADABLE,
+            e.to_string(),
+            Some("path".into()),
+        ))
+    })?;
     let object = match input.object.as_deref() {
         Some(gid) => {
             let Some(i) = model.objects.iter().position(|o| o.global_id == gid) else {
                 return Err(Stop::failed(checks::error(
                     codes::IFC_OBJECT_NOT_FOUND,
-                    format!("Dosyada GlobalId'si “{gid}” olan nesne yok; GlobalId'yi dosyanın nesnelerinden alın."),
+                    format!(
+                        "Dosyada GlobalId'si “{gid}” olan nesne yok; GlobalId'yi dosyanın nesnelerinden alın."
+                    ),
                     Some("object".into()),
                 )));
             };
@@ -66,8 +81,19 @@ fn inspect(input: &IfcInspect) -> Result<(IfcInspected, Vec<CommandWarning>), St
         .enumerate()
         .filter(|(_, o)| o.class.eq_ignore_ascii_case("IfcBuildingStorey"))
         .map(|(i, o)| {
-            let contains = model.objects.iter().filter(|c| c.container == Some(i)).count() as u64;
-            (o.step, IfcInspectedStorey { global_id: o.global_id.clone(), name: o.name.clone(), contains })
+            let contains = model
+                .objects
+                .iter()
+                .filter(|c| c.container == Some(i))
+                .count() as u64;
+            (
+                o.step,
+                IfcInspectedStorey {
+                    global_id: o.global_id.clone(),
+                    name: o.name.clone(),
+                    contains,
+                },
+            )
         })
         .collect();
     storeys.sort_by_key(|(step, _)| *step);
@@ -94,7 +120,10 @@ fn inspect(input: &IfcInspect) -> Result<(IfcInspected, Vec<CommandWarning>), St
     } else {
         vec![CommandWarning {
             code: codes::IFC_READ_FINDINGS.into(),
-            message: format!("Dosyada okumayı durdurmayan {} bozukluk var; bulgular listesi kayıt ve satırlarını verir.", findings.len()),
+            message: format!(
+                "Dosyada okumayı durdurmayan {} bozukluk var; bulgular listesi kayıt ve satırlarını verir.",
+                findings.len()
+            ),
             path: None,
         }]
     };
@@ -125,13 +154,19 @@ fn written(u: &Unit) -> String {
 
 fn object_of(model: &Model, bytes: &[u8], i: usize) -> Result<IfcInspectedObject, Stop> {
     let o = &model.objects[i];
-    let sets = model
-        .property_sets(bytes, i)
-        .map_err(|e| Stop::failed(checks::error(codes::IFC_UNREADABLE, e.to_string(), Some("object".into()))))?;
+    let sets = model.property_sets(bytes, i).map_err(|e| {
+        Stop::failed(checks::error(
+            codes::IFC_UNREADABLE,
+            e.to_string(),
+            Some("object".into()),
+        ))
+    })?;
     let mut storey = None;
     let mut at = o.parent.or(o.container);
     for _ in 0..model.objects.len() {
-        let Some(p) = at.and_then(|p| model.objects.get(p)) else { break };
+        let Some(p) = at.and_then(|p| model.objects.get(p)) else {
+            break;
+        };
         if p.class.eq_ignore_ascii_case("IfcBuildingStorey") {
             storey = p.name.clone();
             break;
@@ -164,7 +199,12 @@ fn object_of(model: &Model, bytes: &[u8], i: usize) -> Result<IfcInspectedObject
                 values: s
                     .values
                     .into_iter()
-                    .map(|v| IfcInspectedValue { name: v.name, class: v.class, value: value_of(&v.value), unit: v.unit })
+                    .map(|v| IfcInspectedValue {
+                        name: v.name,
+                        class: v.class,
+                        value: value_of(&v.value),
+                        unit: v.unit,
+                    })
                     .collect(),
             })
             .collect(),
@@ -174,11 +214,21 @@ fn object_of(model: &Model, bytes: &[u8], i: usize) -> Result<IfcInspectedObject
 pub(crate) fn value_of(v: &ValueKind) -> IfcValue {
     match v {
         ValueKind::Text(s) => IfcValue::Text { text: s.clone() },
-        ValueKind::Number { value, measure } => IfcValue::Number { number: *value, measure: measure.clone() },
-        ValueKind::Integer { value, measure } => IfcValue::Integer { integer: *value, measure: measure.clone() },
+        ValueKind::Number { value, measure } => IfcValue::Number {
+            number: *value,
+            measure: measure.clone(),
+        },
+        ValueKind::Integer { value, measure } => IfcValue::Integer {
+            integer: *value,
+            measure: measure.clone(),
+        },
         ValueKind::Logical(b) => IfcValue::Logical { logical: *b },
-        ValueKind::Enumeration(items) => IfcValue::Enumeration { items: items.clone() },
-        ValueKind::List(items) => IfcValue::List { items: items.iter().map(words).collect() },
+        ValueKind::Enumeration(items) => IfcValue::Enumeration {
+            items: items.clone(),
+        },
+        ValueKind::List(items) => IfcValue::List {
+            items: items.iter().map(words).collect(),
+        },
         ValueKind::Bounded { lower, upper } => {
             let number = |v: &ValueKind| match v {
                 ValueKind::Number { value, .. } => Some(*value),
@@ -186,10 +236,16 @@ pub(crate) fn value_of(v: &ValueKind) -> IfcValue {
                 _ => None,
             };
             let measure = |v: &ValueKind| match v {
-                ValueKind::Number { measure, .. } | ValueKind::Integer { measure, .. } => measure.clone(),
+                ValueKind::Number { measure, .. } | ValueKind::Integer { measure, .. } => {
+                    measure.clone()
+                }
                 _ => None,
             };
-            IfcValue::Bounded { lower: number(lower), upper: number(upper), measure: measure(lower).or_else(|| measure(upper)) }
+            IfcValue::Bounded {
+                lower: number(lower),
+                upper: number(upper),
+                measure: measure(lower).or_else(|| measure(upper)),
+            }
         }
         ValueKind::Reference(step) => IfcValue::Reference { step: *step },
         ValueKind::Empty => IfcValue::Empty,
@@ -215,7 +271,10 @@ fn words(v: &ValueKind) -> String {
 /// Checks `input`: the file reads and the object is there; writes nothing.
 pub fn validate(_cx: &ExecutionContext<'_>, input: &IfcInspect) -> CommandResult<()> {
     match inspect(input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }

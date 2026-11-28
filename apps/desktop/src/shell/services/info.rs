@@ -169,7 +169,11 @@ impl App {
         self.service_info.busy = false;
         // Each answer of a layer the drawing still has (an id is the drawing's own, a name may be another's).
         let held = |a: &Answer| {
-            a.layer_id.is_empty() || self.document.as_ref().is_some_and(|d| d.model.layers().get(&a.layer_id).is_some())
+            a.layer_id.is_empty()
+                || self
+                    .document
+                    .as_ref()
+                    .is_some_and(|d| d.model.layers().get(&a.layer_id).is_some())
         };
         self.service_info.answers = answers.into_iter().filter(|a| held(a)).collect();
     }
@@ -178,7 +182,10 @@ impl App {
     /// this one; an answer still on its way is dropped when it comes.
     pub(crate) fn leave_service_info(&mut self) {
         let asked = self.service_info.asked + 1;
-        self.service_info = Info { asked, ..Info::default() };
+        self.service_info = Info {
+            asked,
+            ..Info::default()
+        };
     }
 
     /// The bottom panel's Servis bilgisi tab.
@@ -238,7 +245,11 @@ mod tests {
     use crate::app::Message;
 
     fn answer(layer: &str) -> Answer {
-        Answer { layer: layer.into(), layer_id: String::new(), rows: Ok(Vec::new()) }
+        Answer {
+            layer: layer.into(),
+            layer_id: String::new(),
+            rows: Ok(Vec::new()),
+        }
     }
 
     /// GIS-044 (docs/adr/1101): Servis bilgisi's point and answers are the drawing's they were asked on. Another
@@ -251,7 +262,11 @@ mod tests {
         app.service_info.asked = 7;
         app.service_info.busy = true;
         app.service_info_answered(7, vec![answer("Parseller")]);
-        assert_eq!(app.service_info.answers.len(), 1, "the ask's own answer is shown");
+        assert_eq!(
+            app.service_info.answers.len(),
+            1,
+            "the ask's own answer is shown"
+        );
         // Another point asked meanwhile: the first one's late answer is dropped.
         app.service_info.asked = 8;
         app.service_info_answered(7, vec![answer("Parseller")]);
@@ -264,9 +279,15 @@ mod tests {
         .expect("reads");
         let doc = crate::document::Document::new(snapshot, None).expect("opens");
         let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-        assert!(app.service_info.at.is_none() && app.service_info.answers.is_empty(), "cleared");
+        assert!(
+            app.service_info.at.is_none() && app.service_info.answers.is_empty(),
+            "cleared"
+        );
         assert!(!app.service_info.busy);
         app.service_info_answered(8, vec![answer("Parseller")]);
-        assert!(app.service_info.answers.is_empty(), "the late answer is not the new drawing's");
+        assert!(
+            app.service_info.answers.is_empty(),
+            "the late answer is not the new drawing's"
+        );
     }
 }

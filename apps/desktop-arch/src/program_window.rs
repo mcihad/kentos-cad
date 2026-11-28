@@ -15,15 +15,15 @@
 //! empty: the parcel's area).
 
 use crate::arch;
+use crate::arch::ArchState;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use crate::arch::ArchState;
 
-use iced::futures::channel::mpsc;
 use iced::Task;
+use iced::futures::channel::mpsc;
 use kentos_commands::{
-    BuildingProgram, CommandResult, ProgramAssign, ProgramBuilding, ProgramCheck, ProgramChecked, ProgramEdit,
-    ProgramUnit, ProgramWing, ShareRule, SpaceBrief, UnitKind,
+    BuildingProgram, CommandResult, ProgramAssign, ProgramBuilding, ProgramCheck, ProgramChecked,
+    ProgramEdit, ProgramUnit, ProgramWing, ShareRule, SpaceBrief, UnitKind,
 };
 use kentos_native_application::{ExecutionContext, program_check, program_edit};
 
@@ -222,11 +222,17 @@ fn number(t: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().map(Some).map_err(|_| format!("{what} bir sayı olmalı: “{t}”."))
+    t.parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what} bir sayı olmalı: “{t}”."))
 }
 
 fn usages(t: &str) -> Vec<String> {
-    t.split(',').map(str::trim).filter(|s| !s.is_empty()).map(str::to_owned).collect()
+    t.split(',')
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .map(str::to_owned)
+        .collect()
 }
 
 impl Window {
@@ -249,8 +255,16 @@ impl Window {
                 .map(|t| t.to_string())
                 .unwrap_or_default(),
             buildings: program.buildings.clone(),
-            zeros: program.buildings.iter().map(|b| b.zero.map(|z| z.to_string()).unwrap_or_default()).collect(),
-            notes: program.buildings.iter().map(|b| crate::project::plan_notes::rows(&b.plan_notes)).collect(),
+            zeros: program
+                .buildings
+                .iter()
+                .map(|b| b.zero.map(|z| z.to_string()).unwrap_or_default())
+                .collect(),
+            notes: program
+                .buildings
+                .iter()
+                .map(|b| crate::project::plan_notes::rows(&b.plan_notes))
+                .collect(),
             shared: program.shared.clone(),
             share_rule: program.share_rule,
             briefs: program.briefs.iter().cloned().map(BriefRow::of).collect(),
@@ -269,7 +283,9 @@ impl Window {
 
     /// Whether the window holds a change Kaydet has not written (docs/adr/8006).
     fn unsaved(&self) -> bool {
-        self.opened.as_ref().is_some_and(|opened| *opened != self.program())
+        self.opened
+            .as_ref()
+            .is_some_and(|opened| *opened != self.program())
     }
 
     /// The program as typed; the words of what does not read.
@@ -282,7 +298,9 @@ impl Window {
     fn users_of(&self, id: &str) -> Vec<String> {
         self.units
             .iter()
-            .filter(|r| r.unit.building.as_deref() == Some(id) || r.unit.wing.as_deref() == Some(id))
+            .filter(|r| {
+                r.unit.building.as_deref() == Some(id) || r.unit.wing.as_deref() == Some(id)
+            })
             .map(|r| format!("“{}”", r.unit.number))
             .collect()
     }
@@ -302,7 +320,11 @@ impl Window {
             .shared
             .iter()
             .filter(|sh| {
-                let spanning: Vec<&ProgramBuilding> = p.buildings.iter().filter(|b| b.levels.contains(&sh.level)).collect();
+                let spanning: Vec<&ProgramBuilding> = p
+                    .buildings
+                    .iter()
+                    .filter(|b| b.levels.contains(&sh.level))
+                    .collect();
                 spanning.len() > 1 && spanning.iter().any(|b| b.id == sh.building)
             })
             .cloned()
@@ -383,7 +405,7 @@ pub(crate) trait ProgramWindowApp {
 
 impl ProgramWindowApp for App {
     /// Bina programı: the window on the project's program.
-    fn open_program(&mut self){
+    fn open_program(&mut self) {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return;
@@ -392,7 +414,7 @@ impl ProgramWindowApp for App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Program));
     }
 
-    fn program_event(&mut self, event: Event) -> Task<Message>{
+    fn program_event(&mut self, event: Event) -> Task<Message> {
         let Some(w) = self.modules.arch_mut().program_window.as_mut() else {
             return Task::none();
         };
@@ -413,18 +435,26 @@ impl ProgramWindowApp for App {
                 let taken: Vec<String> = w
                     .buildings
                     .iter()
-                    .flat_map(|b| std::iter::once(b.id.clone()).chain(b.wings.iter().map(|x| x.id.clone())))
+                    .flat_map(|b| {
+                        std::iter::once(b.id.clone()).chain(b.wings.iter().map(|x| x.id.clone()))
+                    })
                     .collect();
                 let taken: Vec<&str> = taken.iter().map(String::as_str).collect();
                 let id = fresh_id("bina-", &taken);
                 let n = w.buildings.len() + 1;
-                w.buildings.push(ProgramBuilding { id, name: format!("{n}. bina"), ..Default::default() });
+                w.buildings.push(ProgramBuilding {
+                    id,
+                    name: format!("{n}. bina"),
+                    ..Default::default()
+                });
                 w.zeros.push(String::new());
                 w.notes.push(Vec::new());
                 (w.building, w.wing) = (w.buildings.len() - 1, 0);
             }
             Event::RemoveBuilding(i) => {
-                let Some(b) = w.buildings.get(i) else { return Task::none() };
+                let Some(b) = w.buildings.get(i) else {
+                    return Task::none();
+                };
                 let mut users = w.users_of(&b.id);
                 // A wing's flats name its building too: each flat is said once.
                 for x in &b.wings {
@@ -499,7 +529,8 @@ impl ProgramWindowApp for App {
                     let kept = b.structure.is_some_and(|x| x.traditional);
                     b.structure = system.map(|system| kentos_commands::BuildingStructure {
                         system,
-                        traditional: kept && system == kentos_commands::StructuralSystem::CutStoneMasonry,
+                        traditional: kept
+                            && system == kentos_commands::StructuralSystem::CutStoneMasonry,
                     });
                 }
             }
@@ -510,7 +541,8 @@ impl ProgramWindowApp for App {
             }
             Event::SharedBuilding(level, building) => {
                 w.shared.retain(|sh| sh.level != level);
-                w.shared.push(kentos_commands::SharedLevel { level, building });
+                w.shared
+                    .push(kentos_commands::SharedLevel { level, building });
             }
             Event::BuildingLevel(i, l) => {
                 if let Some(b) = w.buildings.get_mut(i) {
@@ -521,18 +553,26 @@ impl ProgramWindowApp for App {
                 let taken: Vec<String> = w
                     .buildings
                     .iter()
-                    .flat_map(|b| std::iter::once(b.id.clone()).chain(b.wings.iter().map(|x| x.id.clone())))
+                    .flat_map(|b| {
+                        std::iter::once(b.id.clone()).chain(b.wings.iter().map(|x| x.id.clone()))
+                    })
                     .collect();
                 let taken: Vec<&str> = taken.iter().map(String::as_str).collect();
                 let id = fresh_id("kanat-", &taken);
                 if let Some(b) = w.buildings.get_mut(i) {
                     let n = b.wings.len() + 1;
-                    b.wings.push(ProgramWing { id, name: format!("{n}. kanat"), levels: Vec::new() });
+                    b.wings.push(ProgramWing {
+                        id,
+                        name: format!("{n}. kanat"),
+                        levels: Vec::new(),
+                    });
                     (w.building, w.wing) = (i, b.wings.len() - 1);
                 }
             }
             Event::RemoveWing(i, k) => {
-                let Some(x) = w.buildings.get(i).and_then(|b| b.wings.get(k)) else { return Task::none() };
+                let Some(x) = w.buildings.get(i).and_then(|b| b.wings.get(k)) else {
+                    return Task::none();
+                };
                 let users = w.users_of(&x.id);
                 if users.is_empty() {
                     if let Some(b) = w.buildings.get_mut(i) {
@@ -626,9 +666,16 @@ impl ProgramWindowApp for App {
                 let taken: Vec<&str> = w.units.iter().map(|r| r.unit.id.as_str()).collect();
                 let id = fresh_id("bolum-", &taken);
                 let numbers: Vec<&str> = w.units.iter().map(|r| r.unit.number.as_str()).collect();
-                let number = (1..).map(|n| n.to_string()).find(|n| !numbers.contains(&n.as_str())).unwrap_or_default();
+                let number = (1..)
+                    .map(|n| n.to_string())
+                    .find(|n| !numbers.contains(&n.as_str()))
+                    .unwrap_or_default();
                 w.units.push(UnitRow {
-                    unit: ProgramUnit { id, number, ..Default::default() },
+                    unit: ProgramUnit {
+                        id,
+                        number,
+                        ..Default::default()
+                    },
                     name: String::new(),
                     area: String::new(),
                     weight: String::new(),
@@ -660,7 +707,10 @@ impl ProgramWindowApp for App {
                 }
             }
             Event::AddBrief => {
-                w.briefs.push(BriefRow::of(SpaceBrief { usage: "Yeni kullanım".into(), ..Default::default() }));
+                w.briefs.push(BriefRow::of(SpaceBrief {
+                    usage: "Yeni kullanım".into(),
+                    ..Default::default()
+                }));
                 w.brief = w.briefs.len() - 1;
             }
             Event::RemoveBrief(i) => {
@@ -692,13 +742,20 @@ impl ProgramWindowApp for App {
                         w.said = Some(if n == 0 {
                             (Kind::Ok, "Tasarım hedeflerinden sapma yok.".into())
                         } else {
-                            (Kind::Warn, format!("{n} bulgu: tasarım hedefi, yasal sınır değil."))
+                            (
+                                Kind::Warn,
+                                format!("{n} bulgu: tasarım hedefi, yasal sınır değil."),
+                            )
                         });
                         w.checked = Some(Arc::new(output.clone()));
                         w.tab = Tab::Status;
                     }
-                    CommandResult::Cancelled => w.said = Some((Kind::Info, "Denetim durduruldu.".into())),
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    CommandResult::Cancelled => {
+                        w.said = Some((Kind::Info, "Denetim durduruldu.".into()))
+                    }
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
                         w.said = Some((Kind::Error, error.message.clone()))
                     }
                     CommandResult::Queued { .. } => {}
@@ -733,7 +790,8 @@ impl ProgramWindowApp for App {
                 let task = self.save_program();
                 // Written: the window is the saved program again and closes; refused, it stays and says why.
                 if self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .program_window
                     .as_ref()
                     .is_some_and(|w| !w.unsaved())
@@ -750,16 +808,26 @@ impl ProgramWindowApp for App {
         Task::none()
     }
 
-    fn show_program_finding(&mut self, index: usize) -> Task<Message>{
+    fn show_program_finding(&mut self, index: usize) -> Task<Message> {
         let (Some(doc), Some(finding)) = (
             self.document.as_ref(),
-            self.modules.arch().program_window.as_ref().and_then(|w| w.checked.as_ref())
+            self.modules
+                .arch()
+                .program_window
+                .as_ref()
+                .and_then(|w| w.checked.as_ref())
                 .and_then(|checked| checked.findings.get(index)),
         ) else {
             return Task::none();
         };
-        let slots: Vec<_> = finding.uids.iter().filter_map(|uid| doc.model.slot_of(uid.parse().ok()?)).collect();
-        let Some(&first) = slots.first() else { return Task::none() };
+        let slots: Vec<_> = finding
+            .uids
+            .iter()
+            .filter_map(|uid| doc.model.slot_of(uid.parse().ok()?))
+            .collect();
+        let Some(&first) = slots.first() else {
+            return Task::none();
+        };
         let level_of = |slot| doc.model.get(slot).and_then(|entity| entity.own_level());
         let level = level_of(first)
             .filter(|level| slots.iter().all(|&slot| level_of(slot) == Some(*level)))
@@ -780,7 +848,7 @@ impl ProgramWindowApp for App {
     }
 
     /// Kaydet: the program as typed through `cad.program.edit`; the window stays open on what was written.
-    fn save_program(&mut self) -> Task<Message>{
+    fn save_program(&mut self) -> Task<Message> {
         let Some(w) = &self.modules.arch().program_window else {
             return Task::none();
         };
@@ -794,12 +862,16 @@ impl ProgramWindowApp for App {
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
-        let input = ProgramEdit { program: Some(program), ..Default::default() };
+        let input = ProgramEdit {
+            program: Some(program),
+            ..Default::default()
+        };
         let result = program_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.output("Bina programı yazıldı.");
             let tab = self
-                .modules.arch()
+                .modules
+                .arch()
                 .program_window
                 .as_ref()
                 .map(|w| w.tab)
@@ -812,7 +884,7 @@ impl ProgramWindowApp for App {
     }
 
     /// Seçilenleri ver: the selected spaces given to the group of row `i` (the program written first).
-    fn give_to_unit(&mut self, i: usize) -> Task<Message>{
+    fn give_to_unit(&mut self, i: usize) -> Task<Message> {
         let Some(w) = &self.modules.arch().program_window else {
             return Task::none();
         };
@@ -841,12 +913,20 @@ impl ProgramWindowApp for App {
             return Task::none();
         }
         let n = uids.len();
-        let input = ProgramEdit { program: Some(program), assign: vec![ProgramAssign { uids, unit: Some(unit) }], ..Default::default() };
+        let input = ProgramEdit {
+            program: Some(program),
+            assign: vec![ProgramAssign {
+                uids,
+                unit: Some(unit),
+            }],
+            ..Default::default()
+        };
         let result = program_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.output(format!("{n} mahal bölüme verildi."));
             let tab = self
-                .modules.arch()
+                .modules
+                .arch()
                 .program_window
                 .as_ref()
                 .map(|w| w.tab)
@@ -859,7 +939,7 @@ impl ProgramWindowApp for App {
     }
 
     /// Denetle: `cad.program.check` on the drawing's reading copy, on a thread of its own.
-    fn check_program(&mut self) -> Task<Message>{
+    fn check_program(&mut self) -> Task<Message> {
         let Some(doc) = &self.document else {
             return Task::none();
         };
@@ -873,20 +953,28 @@ impl ProgramWindowApp for App {
         w.next += 1;
         let id = w.next;
         let stop = Arc::new(AtomicBool::new(false));
-        w.running = Some(Running { id, stop: stop.clone(), done: 0, total: 0 });
+        w.running = Some(Running {
+            id,
+            stop: stop.clone(),
+            done: 0,
+            total: 0,
+        });
         w.said = None;
         let (out, replies) = mpsc::unbounded();
-        let spawned = std::thread::Builder::new().name("kentos-program".into()).spawn(move || {
-            let tell = out.clone();
-            let stopped = move |done: u64, total: u64| {
-                if done.is_multiple_of(8) || done == total {
-                    let _ = tell.unbounded_send(Event::Progress(id, done, total));
-                }
-                stop.load(Ordering::Relaxed)
-            };
-            let result = program_check::check_watched(&copy, &ProgramCheck::default(), &stopped);
-            let _ = out.unbounded_send(Event::Checked(id, Arc::new(result)));
-        });
+        let spawned = std::thread::Builder::new()
+            .name("kentos-program".into())
+            .spawn(move || {
+                let tell = out.clone();
+                let stopped = move |done: u64, total: u64| {
+                    if done.is_multiple_of(8) || done == total {
+                        let _ = tell.unbounded_send(Event::Progress(id, done, total));
+                    }
+                    stop.load(Ordering::Relaxed)
+                };
+                let result =
+                    program_check::check_watched(&copy, &ProgramCheck::default(), &stopped);
+                let _ = out.unbounded_send(Event::Checked(id, Arc::new(result)));
+            });
         match spawned {
             Ok(_) => Task::run(replies, msg),
             Err(e) => Task::done(msg(Event::Checked(
@@ -903,7 +991,7 @@ impl ProgramWindowApp for App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    fn program_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
+    fn program_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().program_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

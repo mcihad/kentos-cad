@@ -169,8 +169,12 @@ mod tests {
         // Jambs at 30° and 40° through a wall between radii 5.85 and 6.15: its faces' edges are 10° arcs, the jambs
         // straight; its area the ring's piece, (6.15² − 5.85²)/2 · 10°.
         let (r1, r2) = (6.15, 5.85);
-        let at =
-            |r: f64, deg: f64| Vec2::new(r * crate::jsmath::cos(deg.to_radians()), r * crate::jsmath::sin(deg.to_radians()));
+        let at = |r: f64, deg: f64| {
+            Vec2::new(
+                r * crate::jsmath::cos(deg.to_radians()),
+                r * crate::jsmath::sin(deg.to_radians()),
+            )
+        };
         let ring = vec![at(r1, 30.0), at(r2, 30.0), at(r2, 40.0), at(r1, 40.0)];
         let circles = [(Vec2::new(0.0, 0.0), r1), (Vec2::new(0.0, 0.0), r2)];
         let b = along(&ring, &circles);

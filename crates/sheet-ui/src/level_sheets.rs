@@ -31,7 +31,11 @@ impl Designer {
     }
 
     /// The sheets made with the template's answers `values`; the first one in front.
-    pub(crate) fn make_level_sheets(&mut self, t: &Template, values: Vec<VariableValue>) -> Vec<Effect> {
+    pub(crate) fn make_level_sheets(
+        &mut self,
+        t: &Template,
+        values: Vec<VariableValue>,
+    ) -> Vec<Effect> {
         let options = InstanceOptions {
             paper: None,
             name: None,
@@ -60,7 +64,8 @@ impl Designer {
         pool.reverse();
         let levels = self.ctx.levels.clone();
         let made = match level_sheets(&self.book, t, &options, &levels, &how, |sheet| {
-            pool.pop().unwrap_or_else(|| kentos_sheet::create::ids_for(t, sheet))
+            pool.pop()
+                .unwrap_or_else(|| kentos_sheet::create::ids_for(t, sheet))
         }) {
             Ok(made) => made,
             Err(e) => return vec![Effect::Say(Say::Warn, e.message)],
@@ -73,7 +78,9 @@ impl Designer {
         let first = made.made.first().map(|m| m.sheet.clone());
         let numbers: Vec<&str> = made.made.iter().map(|m| m.number.as_str()).collect();
         let said = match (numbers.first(), numbers.last()) {
-            (Some(a), Some(b)) if a != b => format!("{} kat planı paftası: {a} … {b}.", numbers.len()),
+            (Some(a), Some(b)) if a != b => {
+                format!("{} kat planı paftası: {a} … {b}.", numbers.len())
+            }
             (Some(a), _) => format!("Kat planı paftası: {a}."),
             _ => String::new(),
         };
@@ -89,6 +96,9 @@ impl Designer {
         self.selection.clear();
         self.view = crate::view_math::View::default();
         self.refresh();
-        vec![Effect::ShowSheet, Effect::Say(Say::Success, format!("{said}{kept}"))]
+        vec![
+            Effect::ShowSheet,
+            Effect::Say(Say::Success, format!("{said}{kept}")),
+        ]
     }
 }

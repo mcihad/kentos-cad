@@ -26,12 +26,19 @@ pub(super) fn collect(
             // Count borrowed vertices before cloning geometry or expanding its edges.
             let vertices = match e {
                 Entity::Polyline(p) | Entity::Polygon(p) => {
-                    let ring_count = |n: usize, holes: &Option<Vec<kentos_commands::RingGeometry>>| {
-                        holes.iter().flatten().fold(n, |n, h| n.saturating_add(h.pts.len()))
-                    };
-                    p.parts.iter().flatten().fold(ring_count(p.pts.len(), &p.holes), |n, part| {
-                        n.saturating_add(ring_count(part.pts.len(), &part.holes))
-                    })
+                    let ring_count =
+                        |n: usize, holes: &Option<Vec<kentos_commands::RingGeometry>>| {
+                            holes
+                                .iter()
+                                .flatten()
+                                .fold(n, |n, h| n.saturating_add(h.pts.len()))
+                        };
+                    p.parts
+                        .iter()
+                        .flatten()
+                        .fold(ring_count(p.pts.len(), &p.holes), |n, part| {
+                            n.saturating_add(ring_count(part.pts.len(), &part.holes))
+                        })
                 }
                 _ => 2,
             };

@@ -27,7 +27,9 @@ impl Session {
         values: &std::collections::BTreeMap<String, serde_json::Value>,
         cx: &mut Context<'_>,
     ) -> bool {
-        self.tool.as_mut().is_some_and(|tool| tool.reopen(values, cx))
+        self.tool
+            .as_mut()
+            .is_some_and(|tool| tool.reopen(values, cx))
     }
 
     /// Refresh decorations after a model change, even with the pointer in

@@ -54,9 +54,16 @@ pub struct WorldRelation {
 
 /// What a record gives its children to hold: its `by` field's value (the spaces round it dropped, none when empty), else
 /// its persistent id (docs/adr/9135).
-pub(crate) fn code_of<'a>(by: Option<&str>, attrs: &'a Attrs, uid: Option<&'a str>) -> Option<&'a str> {
+pub(crate) fn code_of<'a>(
+    by: Option<&str>,
+    attrs: &'a Attrs,
+    uid: Option<&'a str>,
+) -> Option<&'a str> {
     match by {
-        Some(name) => attrs.get(name).map(|v| js_trim(v)).filter(|v| !v.is_empty()),
+        Some(name) => attrs
+            .get(name)
+            .map(|v| js_trim(v))
+            .filter(|v| !v.is_empty()),
         None => uid,
     }
 }
@@ -803,7 +810,11 @@ impl Related {
 pub(crate) fn related_of(layer: &str, field: &str, world: &World) -> Option<Related> {
     let other = world.get(layer)?;
     let name = name_of(&other.fields, field);
-    let by = other.relations.iter().find(|r| r.field == field).and_then(|r| r.by.clone());
+    let by = other
+        .relations
+        .iter()
+        .find(|r| r.field == field)
+        .and_then(|r| r.by.clone());
     Some(Related {
         rows: other
             .rows
@@ -876,7 +887,12 @@ mod tests {
     #[test]
     fn a_related_item_by_a_parent_key_lists_the_records_holding_its_code() {
         let work = |uid: &str, code: &str| {
-            (uid.to_owned(), [("mahalle".to_owned(), code.to_owned())].into_iter().collect::<Attrs>())
+            (
+                uid.to_owned(),
+                [("mahalle".to_owned(), code.to_owned())]
+                    .into_iter()
+                    .collect::<Attrs>(),
+            )
         };
         let mut w = World::new();
         w.insert(
@@ -884,9 +900,18 @@ mod tests {
             OtherLayer {
                 name: "Bakım".into(),
                 fields: vec![
-                    serde_json::from_value(serde_json::json!({ "name": "mahalle", "kind": "text" })).expect("a field"),
+                    serde_json::from_value(
+                        serde_json::json!({ "name": "mahalle", "kind": "text" }),
+                    )
+                    .expect("a field"),
                 ],
-                rows: vec![work("b1", "M1"), work("b2", "M1"), work("b3", "M2"), work("b5", "M9"), work("b6", "")],
+                rows: vec![
+                    work("b1", "M1"),
+                    work("b2", "M1"),
+                    work("b3", "M2"),
+                    work("b5", "M9"),
+                    work("b6", ""),
+                ],
                 shapes: Vec::new(),
                 relations: vec![WorldRelation {
                     id: "mahalle-bakim".into(),
@@ -897,14 +922,24 @@ mod tests {
             },
         );
         let related = related_of("bakim", "mahalle", &w).expect("the layer");
-        let record = |code: &str| -> Attrs { [("kod".to_owned(), code.to_owned())].into_iter().collect() };
-        let object = Object { uid: Some("m-uid".into()), ..Object::default() };
+        let record =
+            |code: &str| -> Attrs { [("kod".to_owned(), code.to_owned())].into_iter().collect() };
+        let object = Object {
+            uid: Some("m-uid".into()),
+            ..Object::default()
+        };
         assert_eq!(related.of(&record("M1"), &object), ["b1", "b2"]);
         assert_eq!(related.of(&record(" M2 "), &object), ["b3"]);
         assert!(related.of(&record("M3"), &object).is_empty());
-        assert!(related.of(&record(""), &object).is_empty(), "an empty code has no child");
+        assert!(
+            related.of(&record(""), &object).is_empty(),
+            "an empty code has no child"
+        );
         w.get_mut("bakim").expect("the layer").relations[0].by = None;
         let by_uid = related_of("bakim", "mahalle", &w).expect("the layer");
-        assert!(by_uid.of(&record("M1"), &object).is_empty(), "by persistent id the code is not asked");
+        assert!(
+            by_uid.of(&record("M1"), &object).is_empty(),
+            "by persistent id the code is not asked"
+        );
     }
 }

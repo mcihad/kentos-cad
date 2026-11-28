@@ -1847,7 +1847,9 @@ pub trait Tool {
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool;
     /// Only opted-in tools see unfinished editor text. A readonly context
     /// makes an accidental semantic write impossible in this path.
-    fn previews_input(&self) -> bool { false }
+    fn previews_input(&self) -> bool {
+        false
+    }
     fn preview_input(&mut self, _text: Option<&str>, _cx: &Context<'_>) -> InputPreview {
         InputPreview::Off
     }

@@ -124,7 +124,8 @@ mod tests {
             assert_eq!(svg_elements(markup), written, "{name}: {markup}");
         }
         let inventory: serde_json::Value =
-            serde_json::from_str(include_str!("../../../../docs/inventory/web.json")).expect("reads");
+            serde_json::from_str(include_str!("../../../../docs/inventory/web.json"))
+                .expect("reads");
         let mut named = Vec::new();
         for list in ["commands", "tools"] {
             for item in inventory[list].as_array().into_iter().flatten() {

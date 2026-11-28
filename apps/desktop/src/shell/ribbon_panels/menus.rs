@@ -117,7 +117,6 @@ pub(super) fn weight_menu(current: Option<f64>) -> Menu<Message> {
     )
 }
 
-
 /// The kinds' column: up to three lines, else two and “n tür daha”, a line
 /// before it (the web's `.rsel__kinds`).
 pub(super) fn kinds_column(kinds: &[(usize, String)], width: f32) -> Element<'static, Message> {

@@ -96,8 +96,15 @@ pub fn count(doc: &Document, layer: &str, filter: Option<&CompiledFilter>) -> (u
 
 /// How many of `rows` the filter keeps, and how many there are: a data layer's rows read from its source as objects
 /// (docs/adr/9130), named by no object id of the drawing.
-pub fn count_rows(doc: &Document, rows: &[kentos_commands::Entity], filter: Option<&CompiledFilter>) -> (u32, u32) {
-    let list: Vec<_> = rows.iter().map(|e| (e, kentos_commands::EntityId([0; 16]))).collect();
+pub fn count_rows(
+    doc: &Document,
+    rows: &[kentos_commands::Entity],
+    filter: Option<&CompiledFilter>,
+) -> (u32, u32) {
+    let list: Vec<_> = rows
+        .iter()
+        .map(|e| (e, kentos_commands::EntityId([0; 16])))
+        .collect();
     count_list(doc, &list, filter)
 }
 

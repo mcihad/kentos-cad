@@ -22,7 +22,9 @@ use crate::Vec2;
 use crate::format::Format;
 use crate::log::Level;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, Tone, Tool, ViewChange};
+use crate::tool::{
+    Context, Cursor, Flow, OptionChoice, Pointer, Preview, Tag, Tone, Tool, ViewChange,
+};
 
 /// The tool's id: its command is `tool.netRoute`.
 pub const ID: &str = "netRoute";
@@ -283,10 +285,14 @@ impl NetRoute {
         let started = record::now_ms();
         let cost = self.seen.cost;
         let mut values = record::common_values(&def, Some(cost), &self.base, cx);
-        values.insert("reorder".to_owned(), json!(reorder_key(cx.memory.network_reorder)));
+        values.insert(
+            "reorder".to_owned(),
+            json!(reorder_key(cx.memory.network_reorder)),
+        );
         let tool = format!("tool.{ID}");
         let derived = record::derivation(&tool, LABEL, &values, &def, started, cx);
-        let mut words = record::common_words(&def, Some(cost), "Duraklar", &self.base, &cx.format());
+        let mut words =
+            record::common_words(&def, Some(cost), "Duraklar", &self.base, &cx.format());
         if cx.memory.network_reorder != Reorder::None {
             words.push(format!("Sıra: {}", reorder_name(cx.memory.network_reorder)));
         }
@@ -302,8 +308,15 @@ impl NetRoute {
         ) else {
             return;
         };
-        words.push(record::layer_words("Çıktı katmanı", ROUTE_LAYER.name, &written.opened));
-        let said = format!("{LABEL}: {totals}; “{}” katmanına yazıldı.", ROUTE_LAYER.name);
+        words.push(record::layer_words(
+            "Çıktı katmanı",
+            ROUTE_LAYER.name,
+            &written.opened,
+        ));
+        let said = format!(
+            "{LABEL}: {totals}; “{}” katmanına yazıldı.",
+            ROUTE_LAYER.name
+        );
         cx.say(Level::Success, said.clone());
         cx.view_changes.push(ViewChange::Ran(Box::new(AnalysisRun {
             tool,
@@ -388,7 +401,12 @@ impl Tool for NetRoute {
 
     /// The network as it is, from the start (docs/adr/9332): its name, cost and unit, how its lines join.
     fn settings(&self, format: &Format) -> Vec<crate::tool_settings::Setting> {
-        Base::settings(self.seen.def.as_ref(), self.seen.cost, self.seen.offer.as_ref(), format)
+        Base::settings(
+            self.seen.def.as_ref(),
+            self.seen.cost,
+            self.seen.offer.as_ref(),
+            format,
+        )
     }
 
     /// A network defined, changed or removed while the tool runs (docs/adr/9332): seen again; another network, the
@@ -417,11 +435,12 @@ impl Tool for NetRoute {
     /// their order; the route comes as it did.
     fn reopen(&mut self, values: &BTreeMap<String, Value>, cx: &mut Context<'_>) -> bool {
         let points = record::reopen_common(values, cx);
-        if let Some(r) = values
-            .get("reorder")
-            .and_then(Value::as_str)
-            .and_then(|k| REORDERS.iter().map(|(r, _)| *r).find(|r| reorder_key(*r) == k))
-        {
+        if let Some(r) = values.get("reorder").and_then(Value::as_str).and_then(|k| {
+            REORDERS
+                .iter()
+                .map(|(r, _)| *r)
+                .find(|r| reorder_key(*r) == k)
+        }) {
             cx.memory.network_reorder = r;
         }
         self.base.reset();

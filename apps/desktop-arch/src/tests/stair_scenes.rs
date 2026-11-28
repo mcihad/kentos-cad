@@ -12,13 +12,13 @@
 //!
 //! Test code only.
 
-use crate::arch_ext::*;
 use crate::arch;
+use crate::arch::ArchState;
+use crate::arch_ext::*;
 use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::level_view::LevelView;
 use serde_json::{Value, json};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::tools_scenes::{E, N, Objects, click, hover, run, typed};
@@ -51,7 +51,12 @@ fn p(x: f64, y: f64) -> Value {
 /// The view on `[x0, y0]`–`[x1, y1]` (from the drawing's origin).
 fn view_on(app: &mut App, a: [f64; 2], b: [f64; 2]) {
     app.viewport.camera.fit(
-        &kentos_render_wgpu::Bounds { min_x: E + a[0], min_y: N + a[1], max_x: E + b[0], max_y: N + b[1] },
+        &kentos_render_wgpu::Bounds {
+            min_x: E + a[0],
+            min_y: N + a[1],
+            max_x: E + b[0],
+            max_y: N + b[1],
+        },
         24.0,
     );
 }
@@ -59,12 +64,20 @@ fn view_on(app: &mut App, a: [f64; 2], b: [f64; 2]) {
 /// The project with its two levels, a 7 × 5.4 m stair hall's walls on each, Etkin kat Zemin kat, the view round it.
 fn levelled(app: &mut App) {
     opened(app, Objects::new(), 50.0);
-    command(app, "cad.settings.set", json!({"arch": {"levels": levels(3.06)}}));
+    command(
+        app,
+        "cad.settings.set",
+        json!({"arch": {"levels": levels(3.06)}}),
+    );
     for level in ["zemin", "kat-1"] {
-        command(app, "cad.walls.create", json!({"layerId": "cizim", "walls": [{
-            "pts": [p(0.0, 0.0), p(7.0, 0.0), p(7.0, 5.4), p(0.0, 5.4)], "closed": true, "width": 0.25,
-            "justify": "right", "arch": {"level": level}
-        }]}));
+        command(
+            app,
+            "cad.walls.create",
+            json!({"layerId": "cizim", "walls": [{
+                "pts": [p(0.0, 0.0), p(7.0, 0.0), p(7.0, 5.4), p(0.0, 5.4)], "closed": true, "width": 0.25,
+                "justify": "right", "arch": {"level": level}
+            }]}),
+        );
     }
     app.choose_level(Some("zemin".into()));
     view_on(app, [0.2, 0.2], [6.0, 3.6]);
@@ -131,7 +144,11 @@ fn above_below(app: &mut App) {
 /// Zemin kat raised to 3.40 m: the bound stair's risers follow; selected, Öznitelikler says so.
 fn raised(app: &mut App) {
     written(app);
-    command(app, "cad.settings.set", json!({"arch": {"levels": levels(3.4)}}));
+    command(
+        app,
+        "cad.settings.set",
+        json!({"arch": {"levels": levels(3.4)}}),
+    );
     if let Some(slot) = stair_slot(app) {
         app.selection.set([slot]);
     }
@@ -155,12 +172,16 @@ fn post(app: &mut App) {
 /// Two more stairs on Zemin kat beside the hall: a curved one too narrow at its inner side and a straight one with a
 /// left railing only.
 fn more(app: &mut App) {
-    command(app, "cad.stairs.create", json!({"layerId": "cizim", "stairs": [
-        {"pts": [p(11.0, 2.7), p(9.6, 2.7)], "bulges": [1.0, 0.0], "width": 1.0, "risers": 10, "riserHeight": 0.17,
-         "tread": 0.27, "post": 0.2, "railings": "both", "arch": {"level": "zemin"}},
-        {"pts": [p(13.0, 0.5), p(13.0, 5.0)], "width": 1.1, "risers": 16, "riserHeight": 0.17, "tread": 0.28,
-         "railings": "left", "arch": {"level": "zemin"}}
-    ]}));
+    command(
+        app,
+        "cad.stairs.create",
+        json!({"layerId": "cizim", "stairs": [
+            {"pts": [p(11.0, 2.7), p(9.6, 2.7)], "bulges": [1.0, 0.0], "width": 1.0, "risers": 10, "riserHeight": 0.17,
+             "tread": 0.27, "post": 0.2, "railings": "both", "arch": {"level": "zemin"}},
+            {"pts": [p(13.0, 0.5), p(13.0, 5.0)], "width": 1.1, "risers": 16, "riserHeight": 0.17, "tread": 0.28,
+             "railings": "left", "arch": {"level": "zemin"}}
+        ]}),
+    );
 }
 
 fn quantities(app: &mut App) {
@@ -185,7 +206,8 @@ fn audit(app: &mut App) {
         .iter()
         .position(|&i| {
             let f = &app
-                .modules.arch()
+                .modules
+                .arch()
                 .arch_audit
                 .audited
                 .as_ref()
@@ -214,7 +236,12 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
             let _ = app.update(message);
         };
         let at = crate::tools_screens::caption_at(s, app, "Genel", false);
-        s.input(app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(at, -8.0));
+        s.input(
+            app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(at, -8.0),
+        );
     })]
 }
 
@@ -274,9 +301,16 @@ mod tests {
         assert_eq!(looks.upper, vec![slot.0]);
         assert!(app.spatial.draws_otherwise());
         // Zemin kat raised: the risers follow.
-        command(&mut app, "cad.settings.set", json!({"arch": {"levels": levels(3.4)}}));
+        command(
+            &mut app,
+            "cad.settings.set",
+            json!({"arch": {"levels": levels(3.4)}}),
+        );
         let (_, s) = stairs(&app).remove(0);
-        assert!((f64::from(s.risers) * s.riser_height - 3.4).abs() < 1e-9, "{s:?}");
+        assert!(
+            (f64::from(s.risers) * s.riser_height - 3.4).abs() < 1e-9,
+            "{s:?}"
+        );
         // Döner merdiven with its post.
         let mut app = app_with_drawing();
         post(&mut app);
@@ -293,14 +327,17 @@ mod tests {
             &app.document.as_ref().unwrap().model,
             &kentos_commands::SpacesQuantities::default(),
         );
-        let kentos_commands::CommandResult::Completed { output, .. } = q else { panic!("{q:?}") };
+        let kentos_commands::CommandResult::Completed { output, .. } = q else {
+            panic!("{q:?}")
+        };
         assert_eq!(output.stairs.len(), 3);
         assert!(output.stairs[0].height_from_level);
         assert!(output.stairs[1].inner_tread.is_some() && output.stairs[1].radius.is_some());
         assert_eq!(output.totals.stair_risers, 18 + 10 + 16);
         audit(&mut app);
         let codes: Vec<String> = app
-            .modules.arch()
+            .modules
+            .arch()
             .arch_audit
             .audited
             .as_ref()
@@ -325,7 +362,8 @@ mod tests {
             crate::arch_audit::Event::Fix,
         )));
         let codes: Vec<String> = app
-            .modules.arch()
+            .modules
+            .arch()
             .arch_audit
             .audited
             .as_ref()

@@ -72,7 +72,11 @@ fn they_come_back_through_the_codec_and_the_columns() {
 fn only_a_stretched_insert_or_a_unit_is_schema_57() {
     let mut doc = content("block-extras.json");
     let plain = |doc: &mut DocumentSnapshotV2| {
-        for e in doc.entities.iter_mut().chain(doc.blocks.iter_mut().flat_map(|b| b.entities.iter_mut())) {
+        for e in doc
+            .entities
+            .iter_mut()
+            .chain(doc.blocks.iter_mut().flat_map(|b| b.entities.iter_mut()))
+        {
             if let Entity::Insert(i) = e {
                 i.y_scale = None;
             }
@@ -86,12 +90,18 @@ fn only_a_stretched_insert_or_a_unit_is_schema_57() {
     // Each in turn is enough.
     let mut one = doc.clone();
     one.blocks[1].units = Some(BlockUnits::Unitless);
-    assert_eq!(schema(&kentos_kcad::encode_verified(&one).expect("writes")), 57);
+    assert_eq!(
+        schema(&kentos_kcad::encode_verified(&one).expect("writes")),
+        57
+    );
     let mut one = doc.clone();
     if let Entity::Insert(i) = &mut one.blocks[2].entities[0] {
         i.y_scale = Some(3.0);
     }
-    assert_eq!(schema(&kentos_kcad::encode_verified(&one).expect("writes")), 57);
+    assert_eq!(
+        schema(&kentos_kcad::encode_verified(&one).expect("writes")),
+        57
+    );
     // A y factor equal to the x one is refused: one way to write an insert, as the reader takes it.
     let mut one = doc.clone();
     if let Entity::Insert(i) = &mut one.entities[0] {
@@ -104,12 +114,32 @@ fn only_a_stretched_insert_or_a_unit_is_schema_57() {
 #[test]
 fn the_readers_errors_name_their_places() {
     for (file, code, place) in [
-        ("broken/block-extras-in-schema-56.kcad", Code::UnknownField, "units"),
-        ("broken/insert-y-scale-in-schema-56.kcad", Code::UnknownField, "yScale"),
-        ("broken/block-units-in-schema-56.kcad", Code::UnknownField, "units"),
-        ("broken/insert-y-scale-equal.kcad", Code::BadValue, "eşitse yazılmaz"),
+        (
+            "broken/block-extras-in-schema-56.kcad",
+            Code::UnknownField,
+            "units",
+        ),
+        (
+            "broken/insert-y-scale-in-schema-56.kcad",
+            Code::UnknownField,
+            "yScale",
+        ),
+        (
+            "broken/block-units-in-schema-56.kcad",
+            Code::UnknownField,
+            "units",
+        ),
+        (
+            "broken/insert-y-scale-equal.kcad",
+            Code::BadValue,
+            "eşitse yazılmaz",
+        ),
         ("broken/insert-y-scale-zero.kcad", Code::BadValue, "pozitif"),
-        ("broken/block-units-unknown.kcad", Code::BadValue, "blok birimi"),
+        (
+            "broken/block-units-unknown.kcad",
+            Code::BadValue,
+            "blok birimi",
+        ),
     ] {
         let err = kentos_kcad::decode(&read(file)).expect_err(file);
         assert_eq!(err.code, code, "{file}: {err}");

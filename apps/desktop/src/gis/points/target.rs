@@ -54,12 +54,15 @@ pub(crate) fn choices(doc: &Document) -> Vec<Choice> {
                     !d.read_only
                         && d.text.is_none()
                         && d.geometry.as_ref().is_some_and(|g| {
-                            crate::layer_types::data_geometry(&g.type_name).is_none_or(|g| g.admits("point"))
+                            crate::layer_types::data_geometry(&g.type_name)
+                                .is_none_or(|g| g.admits("point"))
                         })
                 })
             }
             // A CBS project's drawing layers keep no objects of their own (docs/adr/9196 §2).
-            LayerKind::Drawing => !cbs && n.geometry.is_none_or(|g: LayerGeometry| g.admits("point")),
+            LayerKind::Drawing => {
+                !cbs && n.geometry.is_none_or(|g: LayerGeometry| g.admits("point"))
+            }
             _ => false,
         })
         .map(|n| Choice {
@@ -111,7 +114,10 @@ pub(crate) fn refusal(doc: &Document, choice: Option<&Choice>) -> Option<String>
 /// A table's columns for the row's name and code: the first field whose folded name is one of theirs.
 pub(crate) fn columns(fields: &[LayerField]) -> (Option<String>, Option<String>) {
     let find = |names: &[&str]| {
-        fields.iter().find(|f| names.contains(&kentos_commands::fold(&f.name).as_str())).map(|f| f.name.clone())
+        fields
+            .iter()
+            .find(|f| names.contains(&kentos_commands::fold(&f.name).as_str()))
+            .map(|f| f.name.clone())
     };
     (find(&NAME_COLUMNS), find(&CODE_COLUMNS))
 }
@@ -139,10 +145,14 @@ impl App {
             return Task::none();
         };
         let empty = |v: &str| v.trim().is_empty();
-        let col = [(EditColumn::Name, &d.name), (EditColumn::East, &d.east), (EditColumn::North, &d.north)]
-            .into_iter()
-            .find_map(|(col, v)| empty(v).then_some(col))
-            .unwrap_or(EditColumn::Code);
+        let col = [
+            (EditColumn::Name, &d.name),
+            (EditColumn::East, &d.east),
+            (EditColumn::North, &d.north),
+        ]
+        .into_iter()
+        .find_map(|(col, v)| empty(v).then_some(col))
+        .unwrap_or(EditColumn::Code);
         self.edit_cell(Some((Target::Draft, col)))
     }
 
@@ -159,7 +169,10 @@ impl App {
             return Task::none();
         }
         self.new_typed_layer(LayerGeometry::Point);
-        let made = self.document.as_ref().map(|d| d.model.layers().active().to_owned());
+        let made = self
+            .document
+            .as_ref()
+            .map(|d| d.model.layers().active().to_owned());
         if let (Some(d), Some(id)) = (self.gis.points.draft.as_mut(), made) {
             d.layer = Some(id);
         }
@@ -184,11 +197,27 @@ mod tests {
     #[test]
     fn a_tables_name_and_code_are_its_columns_of_those_names_in_any_case() {
         let fields = |names: &[&str]| -> Vec<LayerField> {
-            names.iter().map(|n| LayerField::new(*n, LayerFieldKind::Text)).collect()
+            names
+                .iter()
+                .map(|n| LayerField::new(*n, LayerFieldKind::Text))
+                .collect()
         };
-        assert_eq!(columns(&fields(&["fid_eski", "AD", "Kod"])), (Some("AD".into()), Some("Kod".into())));
-        assert_eq!(columns(&fields(&["ADI", "CODE"])), (Some("ADI".into()), Some("CODE".into())));
-        assert_eq!(columns(&fields(&["Name", "kodu"])), (Some("Name".into()), None));
-        assert_eq!(columns(&fields(&["adres", "durum"])), (None, None), "a column only like a name is not one");
+        assert_eq!(
+            columns(&fields(&["fid_eski", "AD", "Kod"])),
+            (Some("AD".into()), Some("Kod".into()))
+        );
+        assert_eq!(
+            columns(&fields(&["ADI", "CODE"])),
+            (Some("ADI".into()), Some("CODE".into()))
+        );
+        assert_eq!(
+            columns(&fields(&["Name", "kodu"])),
+            (Some("Name".into()), None)
+        );
+        assert_eq!(
+            columns(&fields(&["adres", "durum"])),
+            (None, None),
+            "a column only like a name is not one"
+        );
     }
 }

@@ -29,7 +29,10 @@ impl AreaMap {
             let region = crs::operation_region(&op)?;
             Some((op.id.clone(), region))
         });
-        AreaMap { area: crs::area(srid), operation }
+        AreaMap {
+            area: crs::area(srid),
+            operation,
+        }
     }
 }
 
@@ -46,19 +49,35 @@ fn rings(r: &Region) -> Vec<Vec<[f64; 2]>> {
 impl canvas::Program<Message> for AreaMap {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         // Türkiye's extent (onshore and offshore) as the ground every area is drawn on.
-        let ground = crs::extent_area(kentos_geometry_core::crs::operation::TURKIYE_EXTENT).map(|a| rings(&Region::Area(a)));
+        let ground = crs::extent_area(kentos_geometry_core::crs::operation::TURKIYE_EXTENT)
+            .map(|a| rings(&Region::Area(a)));
         let area = self.area.map(|a| rings(&Region::Area(a)));
         let op = self.operation.as_ref().map(|(_, r)| rings(r));
-        let all: Vec<&[f64; 2]> =
-            [&ground, &area, &op].into_iter().flatten().flat_map(|r| r.iter().flatten()).collect();
+        let all: Vec<&[f64; 2]> = [&ground, &area, &op]
+            .into_iter()
+            .flatten()
+            .flat_map(|r| r.iter().flatten())
+            .collect();
         if all.is_empty() {
             return vec![frame.into_geometry()];
         }
-        let (mut w, mut s, mut e, mut n) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut w, mut s, mut e, mut n) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in &all {
             w = w.min(p[0]);
             e = e.max(p[0]);
@@ -69,12 +88,18 @@ impl canvas::Program<Message> for AreaMap {
         let k = ((s + n) / 2.0).to_radians().cos().max(0.2);
         let pad = 10.0_f32;
         let (bw, bh) = (bounds.width - 2.0 * pad, bounds.height - 2.0 * pad);
-        let scale = (f64::from(bw) / ((e - w) * k).max(1e-9)).min(f64::from(bh) / (n - s).max(1e-9));
+        let scale =
+            (f64::from(bw) / ((e - w) * k).max(1e-9)).min(f64::from(bh) / (n - s).max(1e-9));
         let (ox, oy) = (
             pad + (bw - ((e - w) * k * scale) as f32) / 2.0,
             pad + (bh - ((n - s) * scale) as f32) / 2.0,
         );
-        let at = |p: &[f64; 2]| Point::new(ox + ((p[0] - w) * k * scale) as f32, oy + ((n - p[1]) * scale) as f32);
+        let at = |p: &[f64; 2]| {
+            Point::new(
+                ox + ((p[0] - w) * k * scale) as f32,
+                oy + ((n - p[1]) * scale) as f32,
+            )
+        };
         let path = |rs: &[Vec<[f64; 2]>]| {
             Path::new(|b| {
                 for r in rs {
@@ -97,14 +122,26 @@ impl canvas::Program<Message> for AreaMap {
         if let Some(a) = &area {
             let p = path(a);
             // Even-odd: a hole of the extent stays open.
-            let fill = canvas::Fill { style: canvas::Style::Solid(Color { a: 0.22, ..tk.accent }), rule: canvas::fill::Rule::EvenOdd };
+            let fill = canvas::Fill {
+                style: canvas::Style::Solid(Color {
+                    a: 0.22,
+                    ..tk.accent
+                }),
+                rule: canvas::fill::Rule::EvenOdd,
+            };
             frame.fill(&p, fill);
             frame.stroke(&p, solid(1.5, tk.accent));
         }
         if let Some(o) = &op {
             frame.stroke(
                 &path(o),
-                Stroke { line_dash: LineDash { segments: &[5.0, 3.0], offset: 0 }, ..solid(1.5, tk.warning) },
+                Stroke {
+                    line_dash: LineDash {
+                        segments: &[5.0, 3.0],
+                        offset: 0,
+                    },
+                    ..solid(1.5, tk.warning)
+                },
             );
         }
         for c in kentos_project::provinces::provinces() {
@@ -133,9 +170,12 @@ pub fn view<'a>(map: AreaMap) -> Element<'a, Message> {
             Region::Area(a) => area_words(a),
             Region::Box(_) => "kutu, yaklaşık".to_owned(),
         };
-        words.push(format!("Datum dönüşümünün ({id}) kullanım alanı, kesikli — {w}"));
+        words.push(format!(
+            "Datum dönüşümünün ({id}) kullanım alanı, kesikli — {w}"
+        ));
     }
-    let mut c = column![container(canvas::Canvas::new(map).width(Fill).height(180)).width(Fill)].spacing(4);
+    let mut c =
+        column![container(canvas::Canvas::new(map).width(Fill).height(180)).width(Fill)].spacing(4);
     for w in words {
         c = c.push(label::caption(w).width(Fill));
     }

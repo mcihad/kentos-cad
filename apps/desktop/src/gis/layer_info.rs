@@ -374,7 +374,12 @@ impl App {
         let first = self
             .document
             .as_ref()
-            .and_then(|d| d.model.by_layer(&w.layer).next().map(|e| e.base().attrs.clone()))
+            .and_then(|d| {
+                d.model
+                    .by_layer(&w.layer)
+                    .next()
+                    .map(|e| e.base().attrs.clone())
+            })
             .unwrap_or_default();
         let empty_title = match self.display_field_of(&w.layer, &first, &[]) {
             Some(field) => format!(

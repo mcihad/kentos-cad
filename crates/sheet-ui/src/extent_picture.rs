@@ -53,27 +53,45 @@ impl canvas::Program<Message> for Program {
         frame.fill_rectangle(page_at, page_size, Color::WHITE);
         frame.stroke(
             &Path::rectangle(page_at, page_size),
-            Stroke::default().with_color(t.border_strong()).with_width(1.0),
+            Stroke::default()
+                .with_color(t.border_strong())
+                .with_width(1.0),
         );
         // The boxes on the page alone.
         if let Some(d) = p.drawing.and_then(on_page) {
             let (at, size) = rect(d);
-            frame.fill_rectangle(at, size, Color { a: 0.22, ..t.accent });
-            frame.stroke(&Path::rectangle(at, size), Stroke::default().with_color(t.accent).with_width(1.0));
+            frame.fill_rectangle(
+                at,
+                size,
+                Color {
+                    a: 0.22,
+                    ..t.accent
+                },
+            );
+            frame.stroke(
+                &Path::rectangle(at, size),
+                Stroke::default().with_color(t.accent).with_width(1.0),
+            );
         }
         if let Some(c) = p.chosen.and_then(on_page) {
             let (at, size) = rect(c);
             frame.stroke(
                 &Path::rectangle(at, size),
                 Stroke {
-                    line_dash: canvas::LineDash { segments: &[3.0, 2.0], offset: 0 },
+                    line_dash: canvas::LineDash {
+                        segments: &[3.0, 2.0],
+                        offset: 0,
+                    },
                     ..Stroke::default().with_color(t.accent_hover).with_width(1.0)
                 },
             );
         }
         // The map's frame over them.
         let (at, size) = rect(p.frame);
-        frame.stroke(&Path::rectangle(at, size), Stroke::default().with_color(Color::BLACK).with_width(1.5));
+        frame.stroke(
+            &Path::rectangle(at, size),
+            Stroke::default().with_color(Color::BLACK).with_width(1.5),
+        );
         vec![frame.into_geometry()]
     }
 }

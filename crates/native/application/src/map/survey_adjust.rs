@@ -116,7 +116,12 @@ fn numbers(work: &AdjustWork) -> Result<(), Stop> {
                 }
             }
         }
-        AdjustWork::Level { known, rows, leapfrog, .. } => {
+        AdjustWork::Level {
+            known,
+            rows,
+            leapfrog,
+            ..
+        } => {
             for (i, k) in known.iter().enumerate() {
                 if let Some(h) = k.h {
                     finite(h, "Bilinen kot", format!("work.known[{i}].h"))?;
@@ -132,9 +137,21 @@ fn numbers(work: &AdjustWork) -> Result<(), Stop> {
             // docs/adr/5300: the leap-frog setups' sights.
             for (i, r) in leapfrog.iter().enumerate() {
                 for (side, s) in [("back", &r.back), ("fore", &r.fore)] {
-                    finite(s.distance, "Eğik uzunluk", format!("work.leapfrog[{i}].{side}.distance"))?;
-                    finite(s.zenith, "Başucu açısı", format!("work.leapfrog[{i}].{side}.zenith"))?;
-                    finite(s.target, "İşaret yüksekliği", format!("work.leapfrog[{i}].{side}.target"))?;
+                    finite(
+                        s.distance,
+                        "Eğik uzunluk",
+                        format!("work.leapfrog[{i}].{side}.distance"),
+                    )?;
+                    finite(
+                        s.zenith,
+                        "Başucu açısı",
+                        format!("work.leapfrog[{i}].{side}.zenith"),
+                    )?;
+                    finite(
+                        s.target,
+                        "İşaret yüksekliği",
+                        format!("work.leapfrog[{i}].{side}.target"),
+                    )?;
                 }
             }
         }
@@ -174,7 +191,8 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
     {
         return Err(Stop::failed(checks::error(
             codes::INVALID_INPUT,
-            "Dengeleme kaydının adı boş olmaz; en çok 120 karakterdir, denetim karakteri taşımaz.".into(),
+            "Dengeleme kaydının adı boş olmaz; en çok 120 karakterdir, denetim karakteri taşımaz."
+                .into(),
             Some("keep".into()),
         )));
     }
@@ -335,10 +353,12 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
             }
             let mut setups = Vec::with_capacity(leapfrog.len());
             for (i, r) in leapfrog.iter().enumerate() {
-                let sight = |s: &kentos_commands::AdjustSight| kentos_geometry_core::survey::fieldbook::Sight {
-                    slope: s.distance,
-                    zenith: s.zenith,
-                    target: s.target,
+                let sight = |s: &kentos_commands::AdjustSight| {
+                    kentos_geometry_core::survey::fieldbook::Sight {
+                        slope: s.distance,
+                        zenith: s.zenith,
+                        target: s.target,
+                    }
                 };
                 let (dh, length) = kentos_geometry_core::survey::fieldbook::leapfrog(
                     sight(&r.back),
@@ -347,7 +367,12 @@ fn adjusted(doc: &Document, input: &SurveyAdjust) -> Result<Adjusted, Stop> {
                     doc.settings().refraction(),
                 )
                 .map_err(|e| refuse(codes::SURVEY_REFUSED, e, &format!("work.leapfrog[{i}]")))?;
-                setups.push(kentos_commands::AdjustDifference { from: r.from.clone(), to: r.to.clone(), dh, length });
+                setups.push(kentos_commands::AdjustDifference {
+                    from: r.from.clone(),
+                    to: r.to.clone(),
+                    dh,
+                    length,
+                });
             }
             let network = LevelInput {
                 kind: match method {
@@ -713,12 +738,21 @@ fn write_execute(
     if let Some(name) = &kept {
         let record = kentos_commands::KeptAdjustment {
             name: name.clone(),
-            kind: if a.level { kentos_commands::KeptAdjustmentKind::Height } else { kentos_commands::KeptAdjustmentKind::Horizontal },
+            kind: if a.level {
+                kentos_commands::KeptAdjustmentKind::Height
+            } else {
+                kentos_commands::KeptAdjustmentKind::Horizontal
+            },
             revision: made_on,
             points: a
                 .points
                 .iter()
-                .map(|p| kentos_commands::KeptAdjustedPoint { name: p.name.clone(), at: p.at, h: p.h, sigma: p.sigma })
+                .map(|p| kentos_commands::KeptAdjustedPoint {
+                    name: p.name.clone(),
+                    at: p.at,
+                    h: p.h,
+                    sigma: p.sigma,
+                })
                 .collect(),
             f: a.f,
             m0: a.m0,
@@ -731,8 +765,12 @@ fn write_execute(
         }
         if let Some(problem) = kentos_commands::kept_adjustments_problem(&list) {
             cx.doc.cancel_group(group);
-            return Stop::failed(checks::error(codes::INVALID_INPUT, format!("Dengeleme kaydı yazılamıyor: {problem}."), Some("keep".into())))
-                .into();
+            return Stop::failed(checks::error(
+                codes::INVALID_INPUT,
+                format!("Dengeleme kaydı yazılamıyor: {problem}."),
+                Some("keep".into()),
+            ))
+            .into();
         }
         cx.doc.set_survey_adjustments(list, step);
     }

@@ -27,7 +27,11 @@ use crate::layer_export::{Plan, fail, format_words, table_name_of, unreachable};
 pub(crate) trait Sink {
     /// Writes rows (each in the system written, its values the fields' kinds); `objects` are the layer's objects they
     /// were made from, in their order (a KML file's styles are their classes', docs/adr/9112 §4).
-    fn write(&mut self, rows: &[NewFeature], objects: &[&kentos_commands::Entity]) -> Result<(), String>;
+    fn write(
+        &mut self,
+        rows: &[NewFeature],
+        objects: &[&kentos_commands::Entity],
+    ) -> Result<(), String>;
     /// The fields an `append` left out (the table lacks them).
     fn left_out(&self) -> Vec<String> {
         Vec::new()
@@ -42,7 +46,11 @@ pub(crate) trait Sink {
 struct Nothing;
 
 impl Sink for Nothing {
-    fn write(&mut self, _rows: &[NewFeature], _objects: &[&kentos_commands::Entity]) -> Result<(), String> {
+    fn write(
+        &mut self,
+        _rows: &[NewFeature],
+        _objects: &[&kentos_commands::Entity],
+    ) -> Result<(), String> {
         Ok(())
     }
 
@@ -55,12 +63,19 @@ impl Sink for Nothing {
 
 /// The table written: a GeoPackage's table name, PostGIS's `schema.table`; none for a file.
 pub(crate) fn table_of(plan: &Plan<'_>) -> Option<String> {
-    let name = plan.input.name.clone().unwrap_or_else(|| table_name_of(&plan.node.name));
+    let name = plan
+        .input
+        .name
+        .clone()
+        .unwrap_or_else(|| table_name_of(&plan.node.name));
     match plan.input.format {
         ExportFormat::Gpkg => Some(name),
         ExportFormat::Postgis => Some(format!(
             "{}.{}",
-            plan.input.schema.clone().unwrap_or_else(|| "public".to_owned()),
+            plan.input
+                .schema
+                .clone()
+                .unwrap_or_else(|| "public".to_owned()),
             name
         )),
         _ => None,
@@ -68,20 +83,34 @@ pub(crate) fn table_of(plan: &Plan<'_>) -> Option<String> {
 }
 
 /// The target for the plan; a plan's writes nothing. Refused when it is there and not to be written over.
-pub(crate) fn sink_for(doc: &Document, plan: &Plan<'_>, write: bool) -> Result<Box<dyn Sink>, Stop> {
+pub(crate) fn sink_for(
+    doc: &Document,
+    plan: &Plan<'_>,
+    write: bool,
+) -> Result<Box<dyn Sink>, Stop> {
     let existing = plan.input.existing.unwrap_or_default();
     let path = plan.input.path.as_deref().map(|p| PathBuf::from(p.trim()));
     // A file format's file there already.
-    if let (Some(p), false) = (&path, matches!(plan.input.format, ExportFormat::Postgis | ExportFormat::Gpkg))
-        && p.exists()
+    if let (Some(p), false) = (
+        &path,
+        matches!(
+            plan.input.format,
+            ExportFormat::Postgis | ExportFormat::Gpkg
+        ),
+    ) && p.exists()
         && existing == ExportExisting::Refuse
     {
         return Err(exists(&format!("“{}” dosyası var.", p.display())));
     }
     match plan.input.format {
-        ExportFormat::Gpkg | ExportFormat::Postgis => Table::open(doc, plan, path.as_deref(), existing, write),
+        ExportFormat::Gpkg | ExportFormat::Postgis => {
+            Table::open(doc, plan, path.as_deref(), existing, write)
+        }
         _ if !write => Ok(Box::new(Nothing)),
-        ExportFormat::Csv => Ok(Box::new(Csv::open(plan, path.as_deref().unwrap_or(Path::new("")))?)),
+        ExportFormat::Csv => Ok(Box::new(Csv::open(
+            plan,
+            path.as_deref().unwrap_or(Path::new("")),
+        )?)),
         _ => crate::layer_export_streams::open(plan, path.unwrap_or_default()),
     }
 }
@@ -164,18 +193,34 @@ impl Table {
                     (address, Some((p, None)))
                 }
             }
-            _ => (plan.input.address.clone().unwrap_or_default().trim().to_owned(), None),
+            _ => (
+                plan.input
+                    .address
+                    .clone()
+                    .unwrap_or_default()
+                    .trim()
+                    .to_owned(),
+                None,
+            ),
         };
-        let source: Arc<dyn Source> = kentos_data::registry().source(&address).map_err(unreachable)?;
+        let source: Arc<dyn Source> = kentos_data::registry()
+            .source(&address)
+            .map_err(unreachable)?;
         let tables = source.tables().map_err(unreachable)?;
         let there = tables.iter().any(|t| t.name == name);
-        let overwrite_file = existing == ExportExisting::OverwriteFile && plan.input.format == ExportFormat::Gpkg;
+        let overwrite_file =
+            existing == ExportExisting::OverwriteFile && plan.input.format == ExportFormat::Gpkg;
         if there && !overwrite_file {
             match existing {
                 ExportExisting::Refuse => {
-                    return Err(exists(&format!("“{name}” tablosu {} kaynağında var.", format_words(plan.input.format))));
+                    return Err(exists(&format!(
+                        "“{name}” tablosu {} kaynağında var.",
+                        format_words(plan.input.format)
+                    )));
                 }
-                ExportExisting::Append | ExportExisting::ReplaceLayer | ExportExisting::OverwriteFile => {}
+                ExportExisting::Append
+                | ExportExisting::ReplaceLayer
+                | ExportExisting::OverwriteFile => {}
             }
         }
         let mut kept = None;
@@ -183,8 +228,17 @@ impl Table {
         if there && existing == ExportExisting::Append {
             let schema = source.schema(&name).map_err(unreachable)?;
             let names: Vec<String> = plan.schema.fields.iter().map(|f| f.name.clone()).collect();
-            left_out = names.iter().filter(|n| schema.index(n).is_none()).cloned().collect();
-            kept = Some(names.into_iter().filter(|n| schema.index(n).is_some()).collect());
+            left_out = names
+                .iter()
+                .filter(|n| schema.index(n).is_none())
+                .cloned()
+                .collect();
+            kept = Some(
+                names
+                    .into_iter()
+                    .filter(|n| schema.index(n).is_some())
+                    .collect(),
+            );
         }
         if !write {
             return Ok(Box::new(Nothing));
@@ -195,17 +249,27 @@ impl Table {
                 name: name.clone(),
                 // Named as it is written (its identifier is the table's name, as the layer added is).
                 title: Some(name.clone()),
-                description: plan.input.options.as_ref().and_then(|o| o.description.clone()),
+                description: plan
+                    .input
+                    .options
+                    .as_ref()
+                    .and_then(|o| o.description.clone()),
                 key: plan.schema.key.clone(),
                 fields: plan.schema.fields.clone(),
                 geometry: plan.schema.geometry.clone(),
-                spatial_index: plan.input.options.as_ref().and_then(|o| o.no_spatial_index) != Some(true),
+                spatial_index: plan.input.options.as_ref().and_then(|o| o.no_spatial_index)
+                    != Some(true),
                 system: system_text(plan.schema.geometry.as_ref().and_then(|g| g.srid)),
             };
             tx.create_table(&table, there).map_err(unreachable)?;
         }
         let metadata = (plan.input.metadata == Some(true))
-            .then(|| plan.node.dataset.as_ref().and_then(|d| serde_json::to_string(d).ok()))
+            .then(|| {
+                plan.node
+                    .dataset
+                    .as_ref()
+                    .and_then(|d| serde_json::to_string(d).ok())
+            })
             .flatten();
         Ok(Box::new(Table {
             tx: Some(tx),
@@ -219,7 +283,11 @@ impl Table {
 }
 
 impl Sink for Table {
-    fn write(&mut self, rows: &[NewFeature], _objects: &[&kentos_commands::Entity]) -> Result<(), String> {
+    fn write(
+        &mut self,
+        rows: &[NewFeature],
+        _objects: &[&kentos_commands::Entity],
+    ) -> Result<(), String> {
         let Some(tx) = self.tx.as_mut() else {
             return Ok(());
         };
@@ -227,13 +295,20 @@ impl Sink for Table {
             Some(kept) => rows
                 .iter()
                 .map(|r| NewFeature {
-                    values: r.values.iter().filter(|(n, _)| kept.contains(n)).cloned().collect(),
+                    values: r
+                        .values
+                        .iter()
+                        .filter(|(n, _)| kept.contains(n))
+                        .cloned()
+                        .collect(),
                     ..r.clone()
                 })
                 .collect(),
             None => rows.to_vec(),
         };
-        tx.insert(&self.name, &rows).map(|_| ()).map_err(|e| e.to_string())
+        tx.insert(&self.name, &rows)
+            .map(|_| ())
+            .map_err(|e| e.to_string())
     }
 
     fn left_out(&self) -> Vec<String> {
@@ -257,8 +332,14 @@ impl Sink for Table {
             let gp = kentos_geopackage::GeoPackage::open(path, true).map_err(|e| e.0)?;
             let (date, time) = crate::exchange_files::now();
             let now = format!("{date}T{time}.000Z");
-            gp.add_metadata(&self.name, crate::gpkg_profile::DATASET_STANDARD, "application/json", text, &now)
-                .map_err(|e| e.0)?;
+            gp.add_metadata(
+                &self.name,
+                crate::gpkg_profile::DATASET_STANDARD,
+                "application/json",
+                text,
+                &now,
+            )
+            .map_err(|e| e.0)?;
         }
         Ok(vec![path.display().to_string()])
     }
@@ -287,20 +368,26 @@ pub(crate) fn system_text(srid: Option<i32>) -> Option<kentos_data::SystemText> 
 }
 
 /// The data layer the written table makes: where it is, its fields, its name; none for a file.
-pub(crate) fn data_layer_of(plan: &Plan<'_>) -> Option<(kentos_commands::DataLayer, Vec<LayerField>, String)> {
+pub(crate) fn data_layer_of(
+    plan: &Plan<'_>,
+) -> Option<(kentos_commands::DataLayer, Vec<LayerField>, String)> {
     let table = table_of(plan)?;
     let (driver, address) = match plan.input.format {
         ExportFormat::Gpkg => ("gpkg", plan.input.path.clone()?.trim().to_owned()),
         ExportFormat::Postgis => ("postgis", plan.input.address.clone()?.trim().to_owned()),
         _ => return None,
     };
-    let geometry = plan.schema.geometry.as_ref().map(|g| kentos_commands::DataGeometry {
-        column: g.name.clone(),
-        type_name: g.type_name.clone(),
-        srid: g.srid.and_then(|s| u32::try_from(s).ok()),
-        z: g.z,
-        m: g.m,
-    });
+    let geometry = plan
+        .schema
+        .geometry
+        .as_ref()
+        .map(|g| kentos_commands::DataGeometry {
+            column: g.name.clone(),
+            type_name: g.type_name.clone(),
+            srid: g.srid.and_then(|s| u32::try_from(s).ok()),
+            z: g.z,
+            m: g.m,
+        });
     let data = kentos_commands::DataLayer {
         driver: driver.to_owned(),
         address,
@@ -314,7 +401,11 @@ pub(crate) fn data_layer_of(plan: &Plan<'_>) -> Option<(kentos_commands::DataLay
     };
     let fields = plan.fields.iter().map(|f| f.written()).collect();
     // The layer added is named as the table written (its bare name, without the schema).
-    let name = plan.input.name.clone().unwrap_or_else(|| table_name_of(&plan.node.name));
+    let name = plan
+        .input
+        .name
+        .clone()
+        .unwrap_or_else(|| table_name_of(&plan.node.name));
     Some((data, fields, name))
 }
 
@@ -366,13 +457,18 @@ impl Csv {
     /// A row of cells: quoted when it holds the separator, a quote or a line break.
     fn line(&self, cells: &[String]) -> String {
         let quoted = |c: &str| {
-            if c.contains(self.separator) || c.contains('"') || c.contains('\n') || c.contains('\r') {
+            if c.contains(self.separator) || c.contains('"') || c.contains('\n') || c.contains('\r')
+            {
                 format!("\"{}\"", c.replace('"', "\"\""))
             } else {
                 c.to_owned()
             }
         };
-        let mut out = cells.iter().map(|c| quoted(c)).collect::<Vec<_>>().join(&self.separator.to_string());
+        let mut out = cells
+            .iter()
+            .map(|c| quoted(c))
+            .collect::<Vec<_>>()
+            .join(&self.separator.to_string());
         out.push_str("\r\n");
         out
     }
@@ -390,7 +486,9 @@ impl Csv {
 
 /// A text in Windows-1254; a character the code page lacks is `?`.
 fn windows_1254(text: &str) -> Vec<u8> {
-    text.chars().map(|c| kentos_formats::text::windows1254_byte(c).unwrap_or(b'?')).collect()
+    text.chars()
+        .map(|c| kentos_formats::text::windows1254_byte(c).unwrap_or(b'?'))
+        .collect()
 }
 
 /// A value as a CSV cell.
@@ -402,12 +500,22 @@ pub(crate) fn cell(v: &Value) -> String {
 }
 
 impl Sink for Csv {
-    fn write(&mut self, rows: &[NewFeature], _objects: &[&kentos_commands::Entity]) -> Result<(), String> {
+    fn write(
+        &mut self,
+        rows: &[NewFeature],
+        _objects: &[&kentos_commands::Entity],
+    ) -> Result<(), String> {
         for r in rows {
             let mut cells: Vec<String> = self
                 .fields
                 .iter()
-                .map(|f| r.values.iter().find(|(n, _)| n == f).map(|(_, v)| cell(v)).unwrap_or_default())
+                .map(|f| {
+                    r.values
+                        .iter()
+                        .find(|(n, _)| n == f)
+                        .map(|(_, v)| cell(v))
+                        .unwrap_or_default()
+                })
                 .collect();
             if self.geometry {
                 match (&r.geometry, self.xy) {

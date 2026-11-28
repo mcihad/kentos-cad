@@ -13,7 +13,12 @@ use kentos_contracts::{
     Entity, SlabBound, SlabBreak, SlabEdgeBindings, SlabFace, SlabFields, SlabSourceKind, SpacePart,
 };
 use kentos_geometry_core::Vec2 as V;
-use kentos_geometry_core::geom::{arrangement::{Area, Ring}, bulge::bulge_path_edges, intersect::{Edge, intersect_edges}, region, wall};
+use kentos_geometry_core::geom::{
+    arrangement::{Area, Ring},
+    bulge::bulge_path_edges,
+    intersect::{Edge, intersect_edges},
+    region, wall,
+};
 
 use crate::document::Document;
 use crate::history::Op;
@@ -60,10 +65,18 @@ fn parts_box(parts: &[SpacePart]) -> Box4 {
     b
 }
 
-fn sub(a: V, b: V) -> V { V::new(a.x - b.x, a.y - b.y) }
-fn cross(a: V, b: V) -> f64 { a.x * b.y - a.y * b.x }
-fn dot(a: V, b: V) -> f64 { a.x * b.x + a.y * b.y }
-fn add_scaled(a: V, b: V, s: f64) -> V { V::new(a.x + b.x * s, a.y + b.y * s) }
+fn sub(a: V, b: V) -> V {
+    V::new(a.x - b.x, a.y - b.y)
+}
+fn cross(a: V, b: V) -> f64 {
+    a.x * b.y - a.y * b.x
+}
+fn dot(a: V, b: V) -> f64 {
+    a.x * b.x + a.y * b.y
+}
+fn add_scaled(a: V, b: V, s: f64) -> V {
+    V::new(a.x + b.x * s, a.y + b.y * s)
+}
 
 fn ring_edges(ring: &kentos_contracts::SpaceRing) -> Vec<Edge> {
     let pts: Vec<_> = ring.pts.iter().map(|p| V::new(p.x, p.y)).collect();
@@ -71,36 +84,70 @@ fn ring_edges(ring: &kentos_contracts::SpaceRing) -> Vec<Edge> {
 }
 
 fn crosses(a: &[Edge], b: &[Edge]) -> bool {
-    a.iter().any(|p| b.iter().any(|q| !intersect_edges(p, q).is_empty()))
+    a.iter()
+        .any(|p| b.iter().any(|q| !intersect_edges(p, q).is_empty()))
 }
 
-fn solve_edges(doc: &Document, edges: &SlabEdgeBindings, level: Option<&str>) -> Result<SpacePart, SlabBreak> {
+fn solve_edges(
+    doc: &Document,
+    edges: &SlabEdgeBindings,
+    level: Option<&str>,
+) -> Result<SpacePart, SlabBreak> {
     let invalid = SlabBreak::EdgeShapeInvalid;
     let missing = SlabBreak::EdgeSourceGone;
     let old = &edges.reference.outer.pts;
     let n = old.len();
-    if n < 3 { return Err(invalid); }
+    if n < 3 {
+        return Err(invalid);
+    }
     let old: Vec<V> = old.iter().map(|p| V::new(p.x, p.y)).collect();
-    let signed = (0..n).map(|i| cross(sub(old[i], old[0]), sub(old[(i + 1) % n], old[0]))).sum::<f64>();
-    if signed.abs() <= 1e-10 { return Err(invalid); }
-    let mut lines: Vec<_> = (0..n).map(|i| (old[i], sub(old[(i + 1) % n], old[i]))).collect();
+    let signed = (0..n)
+        .map(|i| cross(sub(old[i], old[0]), sub(old[(i + 1) % n], old[0])))
+        .sum::<f64>();
+    if signed.abs() <= 1e-10 {
+        return Err(invalid);
+    }
+    let mut lines: Vec<_> = (0..n)
+        .map(|i| (old[i], sub(old[(i + 1) % n], old[i])))
+        .collect();
     for link in &edges.links {
         let line = lines.get_mut(link.edge as usize).ok_or(invalid)?;
         let uid = Uuid::parse_str(&link.wall).map_err(|_| missing)?;
-        let Some(Entity::Wall(w)) = doc.slot_of(uid).and_then(|s| doc.get(s)).filter(|e| e.own_level() == level)
-        else { return Err(missing) };
+        let Some(Entity::Wall(w)) = doc
+            .slot_of(uid)
+            .and_then(|s| doc.get(s))
+            .filter(|e| e.own_level() == level)
+        else {
+            return Err(missing);
+        };
         let spec = kentos_formats::walls::spec(&w.wall);
         let pts: Vec<_> = w.wall.pts.iter().map(|p| V::new(p.x, p.y)).collect();
         let all = wall::lines(&pts, w.wall.bulges.as_deref(), &spec).map_err(|_| missing)?;
-        let face = match link.face { Some(i) => all.get(i as usize), None => all.last() }.ok_or(missing)?;
+        let face = match link.face {
+            Some(i) => all.get(i as usize),
+            None => all.last(),
+        }
+        .ok_or(missing)?;
         let i = link.segment as usize;
         let a = *face.pts.get(i).ok_or(missing)?;
-        let b = *face.pts.get(i + 1).or_else(|| spec.closed.then(|| &face.pts[0])).ok_or(missing)?;
-        if face.bulges.get(i).is_some_and(|v| *v != 0.0) { return Err(missing); }
+        let b = *face
+            .pts
+            .get(i + 1)
+            .or_else(|| spec.closed.then(|| &face.pts[0]))
+            .ok_or(missing)?;
+        if face.bulges.get(i).is_some_and(|v| *v != 0.0) {
+            return Err(missing);
+        }
         let d = sub(b, a);
         let len = d.x.hypot(d.y);
-        if len < 1e-8 { return Err(missing); }
-        let dir = if dot(d, line.1) >= 0.0 { d } else { V::new(-d.x, -d.y) };
+        if len < 1e-8 {
+            return Err(missing);
+        }
+        let dir = if dot(d, line.1) >= 0.0 {
+            d
+        } else {
+            V::new(-d.x, -d.y)
+        };
         let outward = V::new(dir.y / len, -dir.x / len);
         *line = (add_scaled(a, outward, link.offset * signed.signum()), dir);
     }
@@ -109,26 +156,48 @@ fn solve_edges(doc: &Document, edges: &SlabEdgeBindings, level: Option<&str>) ->
         let (a, u) = lines[(i + n - 1) % n];
         let (b, v) = lines[i];
         let den = cross(u, v);
-        if den.abs() <= 1e-10 * u.x.hypot(u.y) * v.x.hypot(v.y) { return Err(invalid); }
+        if den.abs() <= 1e-10 * u.x.hypot(u.y) * v.x.hypot(v.y) {
+            return Err(invalid);
+        }
         let p = add_scaled(a, u, cross(sub(b, a), v) / den);
-        if !p.x.is_finite() || !p.y.is_finite() { return Err(invalid); }
+        if !p.x.is_finite() || !p.y.is_finite() {
+            return Err(invalid);
+        }
         points.push(p);
     }
-    if (0..n).any(|i| dot(sub(points[(i + 1) % n], points[i]), lines[i].1) <= 1e-10) { return Err(invalid); }
+    if (0..n).any(|i| dot(sub(points[(i + 1) % n], points[i]), lines[i].1) <= 1e-10) {
+        return Err(invalid);
+    }
     let outer = bulge_path_edges(&points, None, true);
     for (i, a) in outer.iter().enumerate() {
         for (j, b) in outer.iter().enumerate().skip(i + 2) {
-            if (i != 0 || j != n - 1) && !intersect_edges(a, b).is_empty() { return Err(invalid); }
+            if (i != 0 || j != n - 1) && !intersect_edges(a, b).is_empty() {
+                return Err(invalid);
+            }
         }
     }
-    let mask = Area { outer: Ring { pts: points.clone(), bulges: None }, holes: vec![] };
+    let mask = Area {
+        outer: Ring {
+            pts: points.clone(),
+            bulges: None,
+        },
+        holes: vec![],
+    };
     for hole in &edges.reference.holes {
-        if hole.pts.iter().any(|p| !region::inside_area(&mask, V::new(p.x, p.y))) || crosses(&outer, &ring_edges(hole)) {
+        if hole
+            .pts
+            .iter()
+            .any(|p| !region::inside_area(&mask, V::new(p.x, p.y)))
+            || crosses(&outer, &ring_edges(hole))
+        {
             return Err(invalid);
         }
     }
     let mut part = edges.reference.clone();
-    part.outer.pts = points.into_iter().map(|p| kentos_contracts::Vec2 { x: p.x, y: p.y }).collect();
+    part.outer.pts = points
+        .into_iter()
+        .map(|p| kentos_contracts::Vec2 { x: p.x, y: p.y })
+        .collect();
     Ok(part)
 }
 
@@ -258,7 +327,9 @@ impl Document {
             .filter(|s| match &*s.entity {
                 Entity::Slab(x) => x.slab.bound.as_ref().is_some_and(|b| {
                     b.space.as_ref().is_some_and(|u| spaces.contains(u))
-                        || b.edges.as_ref().is_some_and(|e| e.links.iter().any(|l| walls.contains(&l.wall)))
+                        || b.edges
+                            .as_ref()
+                            .is_some_and(|e| e.links.iter().any(|l| walls.contains(&l.wall)))
                         || (b.source == SlabSourceKind::Walls
                             && boxes
                                 .iter()

@@ -61,7 +61,9 @@ impl SslMode {
     }
 
     pub fn from_libpq(text: &str) -> Option<SslMode> {
-        SSL_MODES.into_iter().find(|m| m.libpq().eq_ignore_ascii_case(text.trim()))
+        SSL_MODES
+            .into_iter()
+            .find(|m| m.libpq().eq_ignore_ascii_case(text.trim()))
     }
 
     /// Its name in the window.
@@ -79,12 +81,22 @@ impl SslMode {
     /// What it means, for the window's note.
     pub fn note(self) -> &'static str {
         match self {
-            SslMode::Prefer => "Sunucu destekliyorsa bağlantı şifrelenir, desteklemiyorsa şifresiz kurulur. Çoğu kurum için uygundur.",
-            SslMode::Require => "Bağlantı her zaman şifrelenir; sunucu şifrelemeyi desteklemiyorsa bağlanılmaz. Sertifika doğrulanmaz.",
-            SslMode::VerifyFull => "Şifreli bağlantı; sunucunun sertifikası ve adı sistemin güvendiği sertifikalarla doğrulanır. En güvenlisidir.",
-            SslMode::VerifyCa => "Şifreli bağlantı; sunucunun sertifikası doğrulanır, adı doğrulanmaz.",
+            SslMode::Prefer => {
+                "Sunucu destekliyorsa bağlantı şifrelenir, desteklemiyorsa şifresiz kurulur. Çoğu kurum için uygundur."
+            }
+            SslMode::Require => {
+                "Bağlantı her zaman şifrelenir; sunucu şifrelemeyi desteklemiyorsa bağlanılmaz. Sertifika doğrulanmaz."
+            }
+            SslMode::VerifyFull => {
+                "Şifreli bağlantı; sunucunun sertifikası ve adı sistemin güvendiği sertifikalarla doğrulanır. En güvenlisidir."
+            }
+            SslMode::VerifyCa => {
+                "Şifreli bağlantı; sunucunun sertifikası doğrulanır, adı doğrulanmaz."
+            }
             SslMode::Allow => "Önce şifresiz denenir; sunucu isterse şifreli kurulur.",
-            SslMode::Disable => "Bağlantı şifrelenmez. Yalnız kendi bilgisayarınızdaki ya da güvendiğiniz ağdaki sunucu için seçin.",
+            SslMode::Disable => {
+                "Bağlantı şifrelenmez. Yalnız kendi bilgisayarınızdaki ya da güvendiğiniz ağdaki sunucu için seçin."
+            }
         }
     }
 }
@@ -181,14 +193,22 @@ impl DbConnection {
         } else {
             format!("{}@", self.user)
         };
-        format!("{user}{}:{}/{}", self.host.trim(), self.port, self.database.trim())
+        format!(
+            "{user}{}:{}/{}",
+            self.host.trim(),
+            self.port,
+            self.database.trim()
+        )
     }
 
     /// What is wrong with it, field by field, before it is saved or tried.
     pub fn problems(&self) -> Vec<(Field, String)> {
         let mut out = Vec::new();
         if self.name.trim().is_empty() {
-            out.push((Field::Name, "Bağlantıya bir ad verin; listelerde bu adla görünür.".to_owned()));
+            out.push((
+                Field::Name,
+                "Bağlantıya bir ad verin; listelerde bu adla görünür.".to_owned(),
+            ));
         }
         let host = self.host.trim();
         if host.is_empty() {
@@ -199,7 +219,8 @@ impl DbConnection {
         } else if host.contains(char::is_whitespace) || host.contains('/') || host.contains('@') {
             out.push((
                 Field::Host,
-                "Sunucu adı boşluk, / ya da @ içermez; yalnız adı ya da IP adresini yazın.".to_owned(),
+                "Sunucu adı boşluk, / ya da @ içermez; yalnız adı ya da IP adresini yazın."
+                    .to_owned(),
             ));
         }
         if self.port == 0 {
@@ -269,7 +290,9 @@ fn parse_url(text: &str) -> Result<Parsed, String> {
         None => authority,
     };
     let (host, port) = if let Some(inner) = host_port.strip_prefix('[') {
-        let (h, after) = inner.split_once(']').ok_or("Adresin IPv6 sunucusu ] ile kapanmıyor.")?;
+        let (h, after) = inner
+            .split_once(']')
+            .ok_or("Adresin IPv6 sunucusu ] ile kapanmıyor.")?;
         (h.to_owned(), after.strip_prefix(':').unwrap_or(""))
     } else {
         match host_port.rsplit_once(':') {
@@ -368,7 +391,8 @@ fn word(out: &mut Parsed, key: &str, value: String) -> Result<(), String> {
         "user" | "username" => c.user = value,
         "password" => out.password = Some(value).filter(|p| !p.is_empty()),
         "sslmode" => {
-            c.ssl = SslMode::from_libpq(&value).ok_or_else(|| format!("“{value}” bir SSL kipi değil."))?;
+            c.ssl = SslMode::from_libpq(&value)
+                .ok_or_else(|| format!("“{value}” bir SSL kipi değil."))?;
         }
         _ => {}
     }
@@ -490,7 +514,10 @@ impl ConnectionStore {
 
     /// The file that did not read and was set aside, once.
     pub fn take_set_aside(&self) -> Option<PathBuf> {
-        self.set_aside.lock().unwrap_or_else(PoisonError::into_inner).take()
+        self.set_aside
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .take()
     }
 
     /// Keeps `connection`: a new one, or the one named `previous` (renamed too). Refused: its problems, or a name
@@ -505,13 +532,18 @@ impl ConnectionStore {
             .iter()
             .any(|c| fold(&c.name) == fold(&name) && Some(c.name.as_str()) != previous);
         if clash {
-            return Err(format!("“{name}” adında bir bağlantı zaten var; başka bir ad verin."));
+            return Err(format!(
+                "“{name}” adında bir bağlantı zaten var; başka bir ad verin."
+            ));
         }
         let mut connection = connection;
         connection.name = name;
         // A renamed connection keeps its favourites.
         if let Some(p) = previous.filter(|p| *p != connection.name) {
-            let mut favorites = self.favorites.lock().unwrap_or_else(PoisonError::into_inner);
+            let mut favorites = self
+                .favorites
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner);
             if let Some(kept) = favorites.remove(p) {
                 favorites.insert(connection.name.clone(), kept);
             }
@@ -526,13 +558,21 @@ impl ConnectionStore {
 
     /// The favourite tables of the connection named `name` (docs/adr/9172), `schema.table`, in the order starred.
     pub fn favorites(&self, name: &str) -> Vec<String> {
-        self.favorites.lock().unwrap_or_else(PoisonError::into_inner).get(name).cloned().unwrap_or_default()
+        self.favorites
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(name)
+            .cloned()
+            .unwrap_or_default()
     }
 
     /// Stars `table` of the connection named `name`, or takes its star away; whether it is a favourite now.
     pub fn toggle_favorite(&self, name: &str, table: &str) -> Result<bool, String> {
         let now = {
-            let mut favorites = self.favorites.lock().unwrap_or_else(PoisonError::into_inner);
+            let mut favorites = self
+                .favorites
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner);
             let list = favorites.entry(name.to_owned()).or_default();
             let now = match list.iter().position(|t| t == table) {
                 Some(at) => {
@@ -562,7 +602,10 @@ impl ConnectionStore {
         if list.len() == before {
             return Ok(false);
         }
-        self.favorites.lock().unwrap_or_else(PoisonError::into_inner).remove(name);
+        self.favorites
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .remove(name);
         self.version.fetch_add(1, Ordering::Relaxed);
         self.write(&list).map(|()| true)
     }
@@ -600,7 +643,11 @@ impl ConnectionStore {
             format: FORMAT.into(),
             version: 1,
             connections: list.to_vec(),
-            favorites: self.favorites.lock().unwrap_or_else(PoisonError::into_inner).clone(),
+            favorites: self
+                .favorites
+                .lock()
+                .unwrap_or_else(PoisonError::into_inner)
+                .clone(),
         };
         let text = serde_json::to_string_pretty(&file).map_err(|e| e.to_string())?;
         write_private(&folder.join(FILE), text.as_bytes()).map_err(|e| {
@@ -647,7 +694,13 @@ fn write_private(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
 }
 
 /// The connections of the file in `folder` and their favourites; one that does not read is set aside and said.
-fn read(folder: &Path) -> (Vec<DbConnection>, std::collections::BTreeMap<String, Vec<String>>, Option<PathBuf>) {
+fn read(
+    folder: &Path,
+) -> (
+    Vec<DbConnection>,
+    std::collections::BTreeMap<String, Vec<String>>,
+    Option<PathBuf>,
+) {
     let path = folder.join(FILE);
     let Ok(bytes) = std::fs::read(&path) else {
         return (Vec::new(), Default::default(), None);
@@ -726,7 +779,12 @@ pub fn password_for(key: &Key) -> Option<String> {
         .lock()
         .unwrap_or_else(PoisonError::into_inner)
         .iter()
-        .find(|(k, _)| k.host == key.host && k.port == key.port && k.database == key.database && (k.user.is_empty() || k.user == key.user))
+        .find(|(k, _)| {
+            k.host == key.host
+                && k.port == key.port
+                && k.database == key.database
+                && (k.user.is_empty() || k.user == key.user)
+        })
         .map(|(_, p)| p.clone());
     typed.or_else(|| store().password_for(key))
 }
@@ -917,15 +975,30 @@ mod tests {
             user: "ali".into(),
         };
         assert_eq!(s.password_for(&key).as_deref(), Some("gizli"));
-        assert!(s.password_for(&Key { user: "veli".into(), ..key.clone() }).is_none());
-        assert!(s.password_for(&Key { port: 5433, ..key.clone() }).is_none());
+        assert!(
+            s.password_for(&Key {
+                user: "veli".into(),
+                ..key.clone()
+            })
+            .is_none()
+        );
+        assert!(
+            s.password_for(&Key {
+                port: 5433,
+                ..key.clone()
+            })
+            .is_none()
+        );
         // Read again from the file, which only the user may read.
         let again = ConnectionStore::open(Some(dir.clone()));
         assert_eq!(again.list(), s.list());
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let mode = std::fs::metadata(dir.join(FILE)).unwrap().permissions().mode();
+            let mode = std::fs::metadata(dir.join(FILE))
+                .unwrap()
+                .permissions()
+                .mode();
             assert_eq!(mode & 0o777, 0o600);
         }
         assert_eq!(again.remove("İl özel idaresi"), Ok(true));
@@ -951,17 +1024,36 @@ mod tests {
         assert_eq!(s.toggle_favorite("Belediye", "kadastro.parsel"), Ok(true));
         assert_eq!(s.toggle_favorite("Belediye", "public.park"), Ok(true));
         assert_eq!(s.favorites("Belediye"), ["kadastro.parsel", "public.park"]);
-        assert_eq!(s.toggle_favorite("Belediye", "kadastro.parsel"), Ok(false), "starred again: taken away");
-        assert_eq!(ConnectionStore::open(Some(dir.clone())).favorites("Belediye"), ["public.park"], "kept in the file");
+        assert_eq!(
+            s.toggle_favorite("Belediye", "kadastro.parsel"),
+            Ok(false),
+            "starred again: taken away"
+        );
+        assert_eq!(
+            ConnectionStore::open(Some(dir.clone())).favorites("Belediye"),
+            ["public.park"],
+            "kept in the file"
+        );
         // Renamed: the favourites follow.
-        s.put(Some("Belediye"), DbConnection { name: "Kent".into(), ..kent() }).expect("renamed");
+        s.put(
+            Some("Belediye"),
+            DbConnection {
+                name: "Kent".into(),
+                ..kent()
+            },
+        )
+        .expect("renamed");
         assert_eq!(s.favorites("Kent"), ["public.park"]);
         assert!(s.favorites("Belediye").is_empty());
         // Given to others: no favourites in the file.
         assert!(!export(&s.list(), false).contains("public.park"));
         // Removed: they go with it.
         assert_eq!(s.remove("Kent"), Ok(true));
-        assert!(ConnectionStore::open(Some(dir.clone())).favorites("Kent").is_empty());
+        assert!(
+            ConnectionStore::open(Some(dir.clone()))
+                .favorites("Kent")
+                .is_empty()
+        );
         let _ = std::fs::remove_dir_all(&dir);
     }
 
@@ -981,17 +1073,42 @@ mod tests {
         assert!(!without.contains("gizli"), "{without}");
         let back = import(&without).expect("reads");
         assert_eq!(back.len(), 2);
-        assert_eq!(back[0].connection, DbConnection { password: None, ..a.clone() });
+        assert_eq!(
+            back[0].connection,
+            DbConnection {
+                password: None,
+                ..a.clone()
+            }
+        );
         assert_eq!(back[1].connection, b);
         assert!(back.iter().all(|i| i.skipped.is_none()));
         let with = import(&export(std::slice::from_ref(&a), true)).expect("reads");
         assert_eq!(with[0].connection, a);
         // A connection the file cannot give whole is said, not taken.
-        let broken = export(&[DbConnection { host: String::new(), ..kent() }], false);
-        assert!(import(&broken).expect("reads")[0].skipped.as_deref().is_some_and(|w| w.contains("Sunucu")));
+        let broken = export(
+            &[DbConnection {
+                host: String::new(),
+                ..kent()
+            }],
+            false,
+        );
+        assert!(
+            import(&broken).expect("reads")[0]
+                .skipped
+                .as_deref()
+                .is_some_and(|w| w.contains("Sunucu"))
+        );
         assert!(import("{bozuk").unwrap_err().contains("okunamadı"));
-        assert!(import(r#"{"format":"başka","version":1,"connections":[]}"#).unwrap_err().contains("değil"));
-        assert!(import(r#"{"format":"kentos.db-connections","version":2,"connections":[]}"#).unwrap_err().contains("güncelleyin"));
+        assert!(
+            import(r#"{"format":"başka","version":1,"connections":[]}"#)
+                .unwrap_err()
+                .contains("değil")
+        );
+        assert!(
+            import(r#"{"format":"kentos.db-connections","version":2,"connections":[]}"#)
+                .unwrap_err()
+                .contains("güncelleyin")
+        );
     }
 
     #[test]
@@ -999,7 +1116,10 @@ mod tests {
         for m in SSL_MODES {
             assert_eq!(SslMode::from_libpq(m.libpq()), Some(m));
         }
-        assert_eq!(SslMode::from_libpq(" VERIFY-FULL "), Some(SslMode::VerifyFull));
+        assert_eq!(
+            SslMode::from_libpq(" VERIFY-FULL "),
+            Some(SslMode::VerifyFull)
+        );
         assert_eq!(SslMode::from_libpq("SslPrefer"), None);
     }
 

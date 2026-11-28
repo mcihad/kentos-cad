@@ -379,7 +379,8 @@ fn assess(
             corridor,
             use_,
             lodging: lodging.filter(|_| {
-                !dwelling && kentos_domain::fire_use::lodging_bedroom(name.or(usage).unwrap_or_default())
+                !dwelling
+                    && kentos_domain::fire_use::lodging_bedroom(name.or(usage).unwrap_or_default())
             }),
             people,
             width: neck.map_or(width, |(w, _)| w),

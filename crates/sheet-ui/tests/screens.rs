@@ -151,8 +151,7 @@ fn out_dir() -> PathBuf {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {
-    let fonts =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../paket/fonts/cizim");
+    let fonts = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../paket/fonts/cizim");
     assert!(
         kentos_sheet_ui::fonts::load_dir(&fonts) > 0,
         "the drawing's faces in {}",
@@ -262,8 +261,7 @@ fn screens() {
 #[ignore = "pictures for the owner, run by hand"]
 fn adr_0206_screens() {
     use kentos_sheet::display::{CoordPoint, CoordinateInput};
-    let fonts =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../paket/fonts/cizim");
+    let fonts = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../paket/fonts/cizim");
     assert!(kentos_sheet_ui::fonts::load_dir(&fonts) > 0);
     kentos_ui::theme::motion::set_reduced(true);
     let out = out_dir();
@@ -352,8 +350,7 @@ fn adr_0206_screens() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn rename_screens() {
-    let fonts =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../paket/fonts/cizim");
+    let fonts = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../paket/fonts/cizim");
     assert!(kentos_sheet_ui::fonts::load_dir(&fonts) > 0);
     kentos_ui::theme::motion::set_reduced(true);
     let out = out_dir();
@@ -387,8 +384,7 @@ fn rename_screens() {
 #[ignore = "pictures for the owner, run by hand"]
 fn adr_0314_screens() {
     use kentos_sheet_ui::OverrideEdit;
-    let fonts =
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../paket/fonts/cizim");
+    let fonts = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../paket/fonts/cizim");
     assert!(kentos_sheet_ui::fonts::load_dir(&fonts) > 0);
     kentos_ui::theme::motion::set_reduced(true);
     let out = out_dir();

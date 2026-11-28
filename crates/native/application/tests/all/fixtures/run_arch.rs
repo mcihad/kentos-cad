@@ -57,15 +57,27 @@ macro_rules! arch_cases {
             }
             // Oda modülleri (docs/adr/0775).
             kentos_commands::CAD_MODULES_EDIT => $then!(modules_edit, kentos_commands::ModulesEdit),
-            kentos_commands::CAD_MODULES_QUERY => $then!(modules_query, kentos_commands::ModulesQuery),
+            kentos_commands::CAD_MODULES_QUERY => {
+                $then!(modules_query, kentos_commands::ModulesQuery)
+            }
             // Tasarım seçenekleri (docs/adr/0788).
             kentos_commands::CAD_OPTIONS_EDIT => $then!(options_edit, kentos_commands::OptionsEdit),
-            kentos_commands::CAD_OPTIONS_QUERY => $then!(options_query, kentos_commands::OptionsQuery),
+            kentos_commands::CAD_OPTIONS_QUERY => {
+                $then!(options_query, kentos_commands::OptionsQuery)
+            }
             // Oda iç görünüşü (docs/adr/0799).
-            kentos_commands::CAD_ELEVATIONS_EDIT => $then!(elevations_edit, kentos_commands::ElevationsEdit),
-            kentos_commands::CAD_ELEVATIONS_QUERY => $then!(elevations_query, kentos_commands::ElevationsQuery),
-            kentos_commands::CAD_SECTIONS_EDIT => $then!(sections_edit, kentos_commands::BuildingSectionsEdit),
-            kentos_commands::CAD_SECTIONS_QUERY => $then!(sections_query, kentos_commands::BuildingSectionsQuery),
+            kentos_commands::CAD_ELEVATIONS_EDIT => {
+                $then!(elevations_edit, kentos_commands::ElevationsEdit)
+            }
+            kentos_commands::CAD_ELEVATIONS_QUERY => {
+                $then!(elevations_query, kentos_commands::ElevationsQuery)
+            }
+            kentos_commands::CAD_SECTIONS_EDIT => {
+                $then!(sections_edit, kentos_commands::BuildingSectionsEdit)
+            }
+            kentos_commands::CAD_SECTIONS_QUERY => {
+                $then!(sections_query, kentos_commands::BuildingSectionsQuery)
+            }
             kentos_commands::CAD_WALLS_DISTANCES => {
                 $then!(walls_distances, kentos_commands::WallsDistancesInput)
             }
@@ -86,8 +98,12 @@ macro_rules! arch_cases {
                 $then!(casework_query, kentos_commands::CaseworkQuery)
             }
             kentos_commands::CAD_NORTH_CREATE => $then!(north, kentos_commands::NorthCreate),
-            kentos_commands::CAD_REVISIONS_MARK => $then!(revisions, kentos_commands::RevisionsMark),
-            kentos_commands::CAD_LEGENDS_MATERIALS => $then!(legends, kentos_commands::LegendsMaterials),
+            kentos_commands::CAD_REVISIONS_MARK => {
+                $then!(revisions, kentos_commands::RevisionsMark)
+            }
+            kentos_commands::CAD_LEGENDS_MATERIALS => {
+                $then!(legends, kentos_commands::LegendsMaterials)
+            }
             kentos_commands::CAD_LEVELS_ASSIGN => {
                 $then!(levels_assign, kentos_commands::LevelsAssign)
             }
@@ -121,7 +137,7 @@ macro_rules! arch_cases {
                 $then!(spaces_number, kentos_commands::SpacesNumber)
             }
             kentos_commands::CAD_SPACES_SEPARATORS => {
-                $then!(spaces_separators,kentos_commands::SpacesSeparators)
+                $then!(spaces_separators, kentos_commands::SpacesSeparators)
             }
             kentos_commands::CAD_ROOFS_CREATE => {
                 $then!(roofs_create, kentos_commands::RoofsCreate)
@@ -166,7 +182,9 @@ macro_rules! arch_cases {
                 $then!(spaces_edit, kentos_commands::SpacesEdit)
             }
             kentos_commands::CAD_PROGRAM_EDIT => $then!(program_edit, kentos_commands::ProgramEdit),
-            kentos_commands::CAD_PROGRAM_CHECK => $then!(program_check, kentos_commands::ProgramCheck),
+            kentos_commands::CAD_PROGRAM_CHECK => {
+                $then!(program_check, kentos_commands::ProgramCheck)
+            }
             kentos_commands::CAD_SPACES_QUANTITIES => {
                 $then!(spaces_quantities, kentos_commands::SpacesQuantities)
             }

@@ -42,7 +42,10 @@ pub fn mapping(bytes: &[u8]) -> Result<Objects, String> {
         if in_image && p.code == 5 {
             image = u64::from_str_radix(p.text().trim(), 16).ok();
         }
-        if in_image && p.code == 1 && let Some(h) = image.take() {
+        if in_image
+            && p.code == 1
+            && let Some(h) = image.take()
+        {
             images.insert(h, p.text().trim().to_string());
         }
         if p.code == 0 {
@@ -68,7 +71,11 @@ pub fn mapping(bytes: &[u8]) -> Result<Objects, String> {
     if !enabled {
         out.clear();
     }
-    Ok(Objects { order: out, wipeout_frames: frames, images })
+    Ok(Objects {
+        order: out,
+        wipeout_frames: frames,
+        images,
+    })
 }
 
 pub fn reorder(entities: &mut [Parsed], map: &HashMap<u64, u64>) {

@@ -52,7 +52,13 @@ fn connection(name: &str) -> DbConnection {
     }
 }
 
-fn relation(schema: &str, name: &str, geometry: Option<&str>, srid: Option<u32>, key: Option<&str>) -> Relation {
+fn relation(
+    schema: &str,
+    name: &str,
+    geometry: Option<&str>,
+    srid: Option<u32>,
+    key: Option<&str>,
+) -> Relation {
     Relation {
         schema: schema.into(),
         name: name.into(),
@@ -85,7 +91,13 @@ fn catalog() -> Arc<Catalog> {
         },
         relations: vec![
             relation("kadastro", "malik", None, None, Some("id")),
-            relation("kadastro", "parsel", Some("MULTIPOLYGON"), Some(5256), Some("fid")),
+            relation(
+                "kadastro",
+                "parsel",
+                Some("MULTIPOLYGON"),
+                Some(5256),
+                Some("fid"),
+            ),
             relation("kadastro", "yer", Some("POINT"), Some(4326), Some("fid")),
             relation("imar", "plan_notu", Some("POINT"), Some(4326), None),
         ],
@@ -125,13 +137,24 @@ fn a_connection_is_made_in_a_window_and_never_typed_as_an_address() {
     );
     assert_eq!(saved.password, None, "Parolayı sakla was not ticked");
     // The password stays for this session only.
-    assert_eq!(connections::password_for(&Key::of(&saved)).as_deref(), Some("gizli"));
+    assert_eq!(
+        connections::password_for(&Key::of(&saved)).as_deref(),
+        Some("gizli")
+    );
     // The window chose it and lists it.
     assert_eq!(window(&app).connection.as_deref(), Some(name));
     assert!(window(&app).listing);
-    send(&mut app, Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)));
+    send(
+        &mut app,
+        Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)),
+    );
     assert!(window(&app).catalog.is_some());
-    assert!(window(&app).status.as_ref().is_some_and(|(e, t)| !*e && t.contains("PostgreSQL 16.4")));
+    assert!(
+        window(&app)
+            .status
+            .as_ref()
+            .is_some_and(|(e, t)| !*e && t.contains("PostgreSQL 16.4"))
+    );
     connections::forget(&saved);
     let _ = app.db_store.remove(name);
 }
@@ -142,11 +165,22 @@ fn the_window_lists_chooses_and_waits_for_the_system_question() {
     let name = "Liste penceresi";
     keep_connection(&app, &connection(name));
     run(&mut app, "source.postgis");
-    let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+    let at = app
+        .db_store
+        .list()
+        .iter()
+        .position(|c| c.name == name)
+        .expect("listed");
     send(&mut app, Event::Postgis(P::Choose(at)));
-    send(&mut app, Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)));
+    send(
+        &mut app,
+        Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)),
+    );
     // A table without a key cannot be chosen; the others can.
-    send(&mut app, Event::Postgis(P::Toggle("kadastro.parsel".into())));
+    send(
+        &mut app,
+        Event::Postgis(P::Toggle("kadastro.parsel".into())),
+    );
     send(&mut app, Event::Postgis(P::Toggle("kadastro.yer".into())));
     assert_eq!(window(&app).chosen.len(), 2);
     // Tablo ara narrows Görünenleri seç.
@@ -160,14 +194,30 @@ fn the_window_lists_chooses_and_waits_for_the_system_question() {
         "only what the search shows"
     );
     // A list for another connection than the chosen one is dropped.
-    send(&mut app, Event::Postgis(P::Listed("başka".into(), Err(Diagnosis { problem: Problem::Host, message: "yok".into() }), true)));
+    send(
+        &mut app,
+        Event::Postgis(P::Listed(
+            "başka".into(),
+            Err(Diagnosis {
+                problem: Problem::Host,
+                message: "yok".into(),
+            }),
+            true,
+        )),
+    );
     assert!(window(&app).catalog.is_some());
     // A refusal says why and empties the list.
-    send(&mut app, Event::Postgis(P::Listed(
-        name.into(),
-        Err(Diagnosis { problem: Problem::Database, message: "Sunucuda “kent” adlı bir veritabanı yok.".into() }),
-        true,
-    )));
+    send(
+        &mut app,
+        Event::Postgis(P::Listed(
+            name.into(),
+            Err(Diagnosis {
+                problem: Problem::Database,
+                message: "Sunucuda “kent” adlı bir veritabanı yok.".into(),
+            }),
+            true,
+        )),
+    );
     assert!(window(&app).catalog.is_none());
     assert!(
         window(&app)
@@ -188,7 +238,12 @@ fn a_server_that_wants_a_password_asks_once_and_gives_the_list_back() {
     let name = "Parola sorusu";
     keep_connection(&app, &connection(name));
     run(&mut app, "source.postgis");
-    let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+    let at = app
+        .db_store
+        .list()
+        .iter()
+        .position(|c| c.name == name)
+        .expect("listed");
     send(&mut app, Event::Postgis(P::Choose(at)));
     let wants = Diagnosis {
         problem: Problem::PasswordNeeded,
@@ -273,8 +328,19 @@ fn the_connection_window_says_what_is_missing_and_fills_from_a_pasted_address() 
     );
     db(&mut app, Db::PasteApply);
     let e = editor(&app);
-    assert_eq!((e.host.as_str(), e.port.as_str(), e.database.as_str(), e.user.as_str()), ("10.0.0.5", "6543", "kent_veri", "ali"));
-    assert_eq!(e.password, "süper", "the address's password goes to the password field");
+    assert_eq!(
+        (
+            e.host.as_str(),
+            e.port.as_str(),
+            e.database.as_str(),
+            e.user.as_str()
+        ),
+        ("10.0.0.5", "6543", "kent_veri", "ali")
+    );
+    assert_eq!(
+        e.password, "süper",
+        "the address's password goes to the password field"
+    );
     assert_eq!(e.ssl, SslMode::Require);
     assert_eq!(e.name, "kent_veri");
     assert!(e.paste.is_none());
@@ -295,16 +361,26 @@ fn a_connection_is_edited_copied_and_removed() {
     let mut c = connection(name);
     c.password = Some("eski".into());
     keep_connection(&app, &c);
-    db(&mut app, Db::Edit(name.into(), crate::db_connections::Then::Browse));
+    db(
+        &mut app,
+        Db::Edit(name.into(), crate::db_connections::Then::Browse),
+    );
     let e = editor(&app);
-    assert!(e.kept && e.keep_password && e.password.is_empty(), "the saved password is not shown");
+    assert!(
+        e.kept && e.keep_password && e.password.is_empty(),
+        "the saved password is not shown"
+    );
     db(&mut app, Db::Host("yeni.belediye.local".into()));
     db(&mut app, Db::Name("Düzenlendi".into()));
     db(&mut app, Db::Save);
     assert!(app.db_store.get(name).is_none(), "renamed");
     let edited = app.db_store.get("Düzenlendi").expect("kept");
     assert_eq!(edited.host, "yeni.belediye.local");
-    assert_eq!(edited.password.as_deref(), Some("eski"), "the saved password stays when nothing is typed");
+    assert_eq!(
+        edited.password.as_deref(),
+        Some("eski"),
+        "the saved password stays when nothing is typed"
+    );
     // Kopyasını oluştur: a new connection of a free name, its password with it.
     db(&mut app, Db::Duplicate("Düzenlendi".into()));
     let e = editor(&app);
@@ -337,10 +413,19 @@ fn a_connections_file_comes_in_with_free_names() {
         ..given.clone()
     };
     let file = connections::export(&[given, broken], false);
-    db(&mut app, Db::ImportRead(Some(Ok(("/tmp/baglantilar.json".into(), file)))));
-    let taken = app.db_store.get("Ekipten (2)").expect("taken with a free name");
+    db(
+        &mut app,
+        Db::ImportRead(Some(Ok(("/tmp/baglantilar.json".into(), file)))),
+    );
+    let taken = app
+        .db_store
+        .get("Ekipten (2)")
+        .expect("taken with a free name");
     assert_eq!((taken.user.as_str(), taken.ssl), ("ayse", SslMode::Require));
-    assert!(app.db_store.get("Sunucusuz").is_none(), "one the file cannot give whole is said, not taken");
+    assert!(
+        app.db_store.get("Sunucusuz").is_none(),
+        "one the file cannot give whole is said, not taken"
+    );
     let _ = app.db_store.remove("Ekipten");
     let _ = app.db_store.remove("Ekipten (2)");
 }
@@ -427,12 +512,23 @@ fn a_real_database_is_listed_and_bound() {
     keep_connection(&app, &c);
     let before = count(&app);
     run(&mut app, "source.postgis");
-    let at = app.db_store.list().iter().position(|x| x.name == c.name).expect("listed");
+    let at = app
+        .db_store
+        .list()
+        .iter()
+        .position(|x| x.name == c.name)
+        .expect("listed");
     send(&mut app, Event::Postgis(P::Choose(at)));
     let listed = kentos_postgis::probe::browse(&c, None).map(Arc::new);
-    send(&mut app, Event::Postgis(P::Listed(c.name.clone(), listed, true)));
+    send(
+        &mut app,
+        Event::Postgis(P::Listed(c.name.clone(), listed, true)),
+    );
     assert!(window(&app).catalog.is_some(), "{:?}", window(&app).status);
-    send(&mut app, Event::Postgis(P::Toggle("kadastro.parsel".into())));
+    send(
+        &mut app,
+        Event::Postgis(P::Toggle("kadastro.parsel".into())),
+    );
     send(&mut app, Event::Postgis(P::Run));
     finish_binding(&mut app);
     assert!(
@@ -527,7 +623,9 @@ fn screens() {
                 db(&mut app, e);
             }
             let tried = match &real {
-                Some(_) => kentos_postgis::probe::probe(&base, std::env::var("PGPASSWORD").ok().as_deref()),
+                Some(_) => {
+                    kentos_postgis::probe::probe(&base, std::env::var("PGPASSWORD").ok().as_deref())
+                }
                 None => Ok(catalog().facts.clone()),
             };
             let generation = app.gis.db_editor.as_ref().map_or(0, |e| e.generation);
@@ -542,7 +640,10 @@ fn screens() {
             picture(&mut app, &format!("baglanti-{mode}-3-hata"));
             db(&mut app, Db::Save);
             // The window with the connection chosen and its tables.
-            send(&mut app, Event::Postgis(P::Listed(base.name.clone(), listed(), true)));
+            send(
+                &mut app,
+                Event::Postgis(P::Listed(base.name.clone(), listed(), true)),
+            );
             for t in ["kadastro.parsel", "kadastro.bina"] {
                 send(&mut app, Event::Postgis(P::Toggle(t.into())));
             }
@@ -550,7 +651,9 @@ fn screens() {
             send(&mut app, Event::Postgis(P::Advanced));
             send(
                 &mut app,
-                Event::Postgis(P::Query("SELECT fid, ada, parsel, geom FROM kadastro.parsel WHERE ada = 105".into())),
+                Event::Postgis(P::Query(
+                    "SELECT fid, ada, parsel, geom FROM kadastro.parsel WHERE ada = 105".into(),
+                )),
             );
             picture(&mut app, &format!("postgis-{mode}-5-sorgu"));
             if real.is_some() {
@@ -643,18 +746,33 @@ fn every_kind_of_table_is_drawn_once_bound() {
         }
         finish_binding(&mut app);
         let doc = app.document.as_ref().expect("a drawing");
-        let bound = doc.settings().sources.iter().find(|l| l.table == table).cloned();
+        let bound = doc
+            .settings()
+            .sources
+            .iter()
+            .find(|l| l.table == table)
+            .cloned();
         let (drawn, records) = bound.as_ref().map_or((0, 0), |l| {
-            doc.model
-                .by_layer(&l.layer)
-                .fold((0, 0), |(d, r), e| if e.has_geometry() { (d + 1, r) } else { (d, r + 1) })
+            doc.model.by_layer(&l.layer).fold((0, 0), |(d, r), e| {
+                if e.has_geometry() {
+                    (d + 1, r)
+                } else {
+                    (d, r + 1)
+                }
+            })
         });
         let shown = app.spatial.store().len();
-        eprintln!("{table}: bound {} → {drawn} drawn, {records} records, store {shown}", bound.is_some());
+        eprintln!(
+            "{table}: bound {} → {drawn} drawn, {records} records, store {shown}",
+            bound.is_some()
+        );
         snapshot.settle(&mut app, App::view, &mut update);
         let name = table.replace(['.', '"'], "-");
         let file = out.join(format!("postgis-cizim-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("a picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("a picture");
         println!("{}", file.display());
         let _ = app.db_store.remove(&c.name);
     }
@@ -670,54 +788,112 @@ fn a_query_alone_is_read_for_its_columns_and_offered_its_key() {
     let name = "Sorgu penceresi";
     keep_connection(&app, &connection(name));
     run(&mut app, "source.postgis");
-    let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+    let at = app
+        .db_store
+        .list()
+        .iter()
+        .position(|c| c.name == name)
+        .expect("listed");
     send(&mut app, Event::Postgis(P::Choose(at)));
-    send(&mut app, Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)));
+    send(
+        &mut app,
+        Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)),
+    );
     send(&mut app, Event::Postgis(P::Advanced));
     let sql = "SELECT fid, ada, geom FROM kadastro.parsel WHERE ada = 105";
     let said = window(&app).status.clone();
     assert!(said.is_some(), "Bağlandı …");
     send(&mut app, Event::Postgis(P::Query(sql.into())));
-    assert!(window(&app).query_table().is_none(), "not added before its columns are read");
+    assert!(
+        window(&app).query_table().is_none(),
+        "not added before its columns are read"
+    );
     // The connection's line stays as the SQL is typed: taken away, the lines under it moved up and the input lost the
     // keyboard after its first letter.
     assert_eq!(window(&app).status, said);
-    let column = |name: &str, integer: bool, geometry: bool| QueryColumn { name: name.into(), integer, geometry };
+    let column = |name: &str, integer: bool, geometry: bool| QueryColumn {
+        name: name.into(),
+        integer,
+        geometry,
+    };
     send(
         &mut app,
-        Event::Postgis(P::QueryColumns(sql.into(), Ok(vec![column("ada", true, false), column("fid", true, false), column("geom", false, true)]))),
+        Event::Postgis(P::QueryColumns(
+            sql.into(),
+            Ok(vec![
+                column("ada", true, false),
+                column("fid", true, false),
+                column("geom", false, true),
+            ]),
+        )),
     );
     let w = window(&app);
-    assert_eq!((w.query_key.as_deref(), w.query_geometry.as_deref()), (Some("fid"), Some("geom")), "fid offered first");
+    assert_eq!(
+        (w.query_key.as_deref(), w.query_geometry.as_deref()),
+        (Some("fid"), Some("geom")),
+        "fid offered first"
+    );
     assert_eq!(w.query_name, "Sorgu: parsel");
     let q = w.query_table().expect("ready");
-    assert_eq!(q.text(), "-- kentos: key=fid geometry=geom\nSELECT fid, ada, geom FROM kadastro.parsel WHERE ada = 105");
+    assert_eq!(
+        q.text(),
+        "-- kentos: key=fid geometry=geom\nSELECT fid, ada, geom FROM kadastro.parsel WHERE ada = 105"
+    );
     // The key chosen otherwise, the geometry left out.
     send(&mut app, Event::Postgis(P::QueryKey(0)));
     send(&mut app, Event::Postgis(P::QueryGeometry(1)));
     let w = window(&app);
-    assert_eq!((w.query_key.as_deref(), w.query_geometry.as_deref()), (Some("ada"), None));
+    assert_eq!(
+        (w.query_key.as_deref(), w.query_geometry.as_deref()),
+        (Some("ada"), None)
+    );
     send(&mut app, Event::Postgis(P::QueryKey(1)));
     send(&mut app, Event::Postgis(P::QueryGeometry(0)));
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
     assert!(crate::files_testing::find_text(&mut shot, &app, "Anahtar sütunu").is_some());
     let project = app.document.as_ref().expect("open").settings().srid;
-    let question = format!("Projenin sistemine çevir (EPSG:{project}); tablo kendi sisteminde kalır");
-    assert!(crate::files_testing::find_text(&mut shot, &app, &question).is_none(), "no system question");
+    let question =
+        format!("Projenin sistemine çevir (EPSG:{project}); tablo kendi sisteminde kalır");
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, &question).is_none(),
+        "no system question"
+    );
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "vy16-sorgu-katmani");
     // Another query: the columns read before are forgotten.
     send(&mut app, Event::Postgis(P::Query("SELECT 1 AS fid".into())));
     assert!(window(&app).query_columns.is_none() && window(&app).query_table().is_none());
     // A query longer than a layer keeps is not offered: the window says so and suggests a view.
     let ors: Vec<String> = (0..200).map(|i| format!("ada = {i}")).collect();
-    let long = format!("SELECT fid, geom FROM kadastro.parsel WHERE {}", ors.join(" OR "));
+    let long = format!(
+        "SELECT fid, geom FROM kadastro.parsel WHERE {}",
+        ors.join(" OR ")
+    );
     send(&mut app, Event::Postgis(P::Query(long.clone())));
-    send(&mut app, Event::Postgis(P::QueryColumns(long, Ok(vec![column("fid", true, false), column("geom", false, true)]))));
-    assert!(window(&app).query_key.is_some() && window(&app).query_table().is_none(), "too long to keep");
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    send(
+        &mut app,
+        Event::Postgis(P::QueryColumns(
+            long,
+            Ok(vec![
+                column("fid", true, false),
+                column("geom", false, true),
+            ]),
+        )),
+    );
+    assert!(
+        window(&app).query_key.is_some() && window(&app).query_table().is_none(),
+        "too long to keep"
+    );
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
     let said = super::postgis_query::too_long_words();
-    assert!(crate::files_testing::find_text(&mut shot, &app, &said).is_some(), "{said}");
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, &said).is_some(),
+        "{said}"
+    );
     let _ = app.db_store.remove(name);
 }
 
@@ -725,13 +901,25 @@ fn a_query_alone_is_read_for_its_columns_and_offered_its_key() {
 /// connection may write it; a view or a table without the write right says it is read only.
 #[test]
 fn a_chosen_table_says_its_key_geometry_system_and_right() {
-    let parcel = relation("kadastro", "parsel", Some("MULTIPOLYGON"), Some(5256), Some("fid"));
+    let parcel = relation(
+        "kadastro",
+        "parsel",
+        Some("MULTIPOLYGON"),
+        Some(5256),
+        Some("fid"),
+    );
     assert_eq!(
         super::postgis::identity(&parcel),
         "kadastro.parsel · geometri sütunu geom · anahtar fid · çok parçalı alan · ≈1.240 satır · EPSG:5256 · yazılabilir"
     );
-    let read_only = Relation { writable: false, ..relation("imar", "plan_notu", Some("POINT"), Some(4326), Some("id")) };
-    assert!(super::postgis::identity(&read_only).ends_with("salt okunur (yazma yetkisi yok ya da görünüm)"));
+    let read_only = Relation {
+        writable: false,
+        ..relation("imar", "plan_notu", Some("POINT"), Some(4326), Some("id"))
+    };
+    assert!(
+        super::postgis::identity(&read_only)
+            .ends_with("salt okunur (yazma yetkisi yok ya da görünüm)")
+    );
 }
 
 /// A chosen table's extent (docs/adr/9183): said while it is asked, in the table's own system east before north once
@@ -739,10 +927,22 @@ fn a_chosen_table_says_its_key_geometry_system_and_right() {
 #[test]
 fn a_chosen_tables_extent_is_said_as_the_database_gives_it() {
     use super::postgis::extent_words;
-    let parcel = relation("kadastro", "parsel", Some("MULTIPOLYGON"), Some(5256), Some("fid"));
-    assert_eq!(extent_words(&parcel, None).as_deref(), Some("kapsam okunuyor…"));
+    let parcel = relation(
+        "kadastro",
+        "parsel",
+        Some("MULTIPOLYGON"),
+        Some(5256),
+        Some("fid"),
+    );
+    assert_eq!(
+        extent_words(&parcel, None).as_deref(),
+        Some("kapsam okunuyor…")
+    );
     let given = Ok(Some([486_500.0, 4_420_200.0, 486_900.25, 4_420_300.5]));
-    assert_eq!(extent_words(&parcel, Some(&given)).as_deref(), Some("kapsam Y 486500.00–486900.25, X 4420200.00–4420300.50"));
+    assert_eq!(
+        extent_words(&parcel, Some(&given)).as_deref(),
+        Some("kapsam Y 486500.00–486900.25, X 4420200.00–4420300.50")
+    );
     let point = relation("kadastro", "yer", Some("POINT"), Some(4326), Some("fid"));
     let degrees = Ok(Some([32.5, 39.75, 32.875, 39.9]));
     assert_eq!(
@@ -750,7 +950,10 @@ fn a_chosen_tables_extent_is_said_as_the_database_gives_it() {
         Some("kapsam Y 32.500000–32.875000, X 39.750000–39.900000")
     );
     let why = Err("bağlantı kesildi".to_owned());
-    assert_eq!(extent_words(&parcel, Some(&why)).as_deref(), Some("kapsam okunamadı: bağlantı kesildi"));
+    assert_eq!(
+        extent_words(&parcel, Some(&why)).as_deref(),
+        Some("kapsam okunamadı: bağlantı kesildi")
+    );
     let owners = relation("kadastro", "malik", None, None, Some("id"));
     assert_eq!(extent_words(&owners, None), None);
 }
@@ -772,59 +975,124 @@ fn on_postgresql_the_catalogue_says_a_tables_column_extent_and_related_tables() 
     let schema = format!("kentos_katalog_{id}");
     let parcels = format!("{schema}.parsel");
     crate::pg_testing::sql(&pg, &[&format!("CREATE SCHEMA {schema}")]);
-    crate::data_layers_tests::parcels_in(kentos_data::registry().source(&pg).expect("the database").as_ref(), &parcels, 3);
+    crate::data_layers_tests::parcels_in(
+        kentos_data::registry()
+            .source(&pg)
+            .expect("the database")
+            .as_ref(),
+        &parcels,
+        3,
+    );
     crate::pg_testing::sql(
         &pg,
         &[
-            &format!("CREATE TABLE {schema}.malik (id serial PRIMARY KEY, ad text, parsel integer REFERENCES {parcels}(fid))"),
-            &format!("CREATE VIEW {schema}.parsel_ozeti AS SELECT kullanim, count(*) AS adet FROM {parcels} GROUP BY kullanim"),
+            &format!(
+                "CREATE TABLE {schema}.malik (id serial PRIMARY KEY, ad text, parsel integer REFERENCES {parcels}(fid))"
+            ),
+            &format!(
+                "CREATE VIEW {schema}.parsel_ozeti AS SELECT kullanim, count(*) AS adet FROM {parcels} GROUP BY kullanim"
+            ),
             &format!("ANALYZE {parcels}"),
         ],
     );
     let mut c = connections::parse(&pg).expect("the address").connection;
     c.name = format!("Katalog sınaması {id}");
     let catalog = kentos_postgis::probe::browse(&c, None).expect("listed");
-    let find = |t: &str| catalog.relations.iter().find(|r| r.table() == t).cloned().expect("listed");
+    let find = |t: &str| {
+        catalog
+            .relations
+            .iter()
+            .find(|r| r.table() == t)
+            .cloned()
+            .expect("listed")
+    };
     let parcel = find(&parcels);
     assert_eq!(parcel.geometry_column.as_deref(), Some("geom"));
     assert_eq!(parcel.related, [format!("{schema}.malik")]);
     assert_eq!(find(&format!("{schema}.malik")).related, [parcels.clone()]);
     let view = find(&format!("{schema}.parsel_ozeti"));
-    assert!(view.why_not().is_some(), "a view without a key cannot be bound");
+    assert!(
+        view.why_not().is_some(),
+        "a view without a key cannot be bound"
+    );
     // The window: the parcels chosen say their extent; their owners one press away.
     let mut app = app_with_drawing();
     keep_connection(&app, &c);
     run(&mut app, "source.postgis");
-    let at = app.db_store.list().iter().position(|x| x.name == c.name).expect("listed");
+    let at = app
+        .db_store
+        .list()
+        .iter()
+        .position(|x| x.name == c.name)
+        .expect("listed");
     send(&mut app, Event::Postgis(P::Choose(at)));
-    send(&mut app, Event::Postgis(P::Listed(c.name.clone(), Ok(Arc::new(catalog)), true)));
+    send(
+        &mut app,
+        Event::Postgis(P::Listed(c.name.clone(), Ok(Arc::new(catalog)), true)),
+    );
     send(&mut app, Event::Postgis(P::Toggle(parcels.clone())));
-    let extent = window(&app).extents.get(&parcels).cloned().expect("asked").expect("given").expect("an extent");
+    let extent = window(&app)
+        .extents
+        .get(&parcels)
+        .cloned()
+        .expect("asked")
+        .expect("given")
+        .expect("an extent");
     let close = |a: f64, b: f64| (a - b).abs() < 1.0;
-    assert!(close(extent[0], 486_500.0) && close(extent[2], 486_585.0), "{extent:?}");
-    let words = super::postgis::extent_words(&parcel, window(&app).extents.get(&parcels)).expect("its extent");
+    assert!(
+        close(extent[0], 486_500.0) && close(extent[2], 486_585.0),
+        "{extent:?}"
+    );
+    let words = super::postgis::extent_words(&parcel, window(&app).extents.get(&parcels))
+        .expect("its extent");
     assert!(words.starts_with("kapsam Y 486500"), "{words}");
-    send(&mut app, Event::Postgis(P::Toggle(format!("{schema}.malik"))));
-    assert!(window(&app).chosen.contains(&format!("{schema}.malik")), "the related table chosen");
+    send(
+        &mut app,
+        Event::Postgis(P::Toggle(format!("{schema}.malik"))),
+    );
+    assert!(
+        window(&app).chosen.contains(&format!("{schema}.malik")),
+        "the related table chosen"
+    );
     // An account that may only read: the parcels read only.
     let name = format!("kentos_katalog_okur_{id}");
     let reader = crate::pg_testing::account(&pg, &name, &parcels, "SELECT");
     let mut r = connections::parse(&reader).expect("the address").connection;
     r.name = format!("Okur {id}");
     let seen = kentos_postgis::probe::browse(&r, None).expect("listed");
-    let theirs = seen.relations.iter().find(|x| x.table() == parcels).expect("listed");
-    assert!(!theirs.writable && super::postgis::identity(theirs).ends_with("salt okunur (yazma yetkisi yok ya da görünüm)"));
+    let theirs = seen
+        .relations
+        .iter()
+        .find(|x| x.table() == parcels)
+        .expect("listed");
+    assert!(
+        !theirs.writable
+            && super::postgis::identity(theirs)
+                .ends_with("salt okunur (yazma yetkisi yok ya da görünüm)")
+    );
     // Cut, then joined again.
     let relay = crate::pg_testing::Relay::over(&pg);
-    let mut through = connections::parse(&relay.address).expect("the address").connection;
+    let mut through = connections::parse(&relay.address)
+        .expect("the address")
+        .connection;
     through.name = format!("Aktarıcı {id}");
     relay.set_open(false);
     let refused = kentos_postgis::probe::browse(&through, None).expect_err("the connection cut");
     assert!(!refused.message.is_empty(), "said why");
     relay.set_open(true);
-    assert!(kentos_postgis::probe::browse(&through, None).is_ok(), "listed again");
+    assert!(
+        kentos_postgis::probe::browse(&through, None).is_ok(),
+        "listed again"
+    );
     let _ = app.db_store.remove(&c.name);
-    crate::pg_testing::sql(&pg, &[&format!("DROP OWNED BY {name}"), &format!("DROP ROLE {name}"), &format!("DROP SCHEMA {schema} CASCADE")]);
+    crate::pg_testing::sql(
+        &pg,
+        &[
+            &format!("DROP OWNED BY {name}"),
+            &format!("DROP ROLE {name}"),
+            &format!("DROP SCHEMA {schema} CASCADE"),
+        ],
+    );
 }
 
 /// Pictures (docs/adr/9140), light at 1440×900 and dark at 1100×760: the catalogue with every table and searched for
@@ -835,18 +1103,44 @@ fn catalog_screens() {
     let prepare = |filter: &'static str| {
         move || {
             let mut app = app_with_drawing();
-            let name = format!("Resim bağlantısı {}", if filter.is_empty() { "tümü" } else { filter });
+            let name = format!(
+                "Resim bağlantısı {}",
+                if filter.is_empty() { "tümü" } else { filter }
+            );
             keep_connection(&app, &connection(&name));
             run(&mut app, "source.postgis");
-            let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+            let at = app
+                .db_store
+                .list()
+                .iter()
+                .position(|c| c.name == name)
+                .expect("listed");
             send(&mut app, Event::Postgis(P::Choose(at)));
             let mut relations = catalog().relations.clone();
             for i in 0..30 {
-                relations.push(relation("kent", &format!("tablo_{i:02}"), Some("POINT"), Some(5256), Some("fid")));
+                relations.push(relation(
+                    "kent",
+                    &format!("tablo_{i:02}"),
+                    Some("POINT"),
+                    Some(5256),
+                    Some("fid"),
+                ));
             }
-            relations.push(relation("kent", "park", Some("MULTIPOLYGON"), Some(5256), Some("fid")));
-            let big = Arc::new(Catalog { relations, ..(*catalog()).clone() });
-            send(&mut app, Event::Postgis(P::Listed(name.clone(), Ok(big), true)));
+            relations.push(relation(
+                "kent",
+                "park",
+                Some("MULTIPOLYGON"),
+                Some(5256),
+                Some("fid"),
+            ));
+            let big = Arc::new(Catalog {
+                relations,
+                ..(*catalog()).clone()
+            });
+            send(
+                &mut app,
+                Event::Postgis(P::Listed(name.clone(), Ok(big), true)),
+            );
             send(&mut app, Event::Postgis(P::Toggle("kent.park".into())));
             send(&mut app, Event::Postgis(P::Filter(filter.into())));
             app
@@ -864,9 +1158,20 @@ fn related_screens() {
     crate::files_testing::usage_shots("9183", "01-katalog-iliskili", || {
         let mut app = app_with_drawing();
         let name = "Belediye CBS".to_owned();
-        keep_connection(&app, &DbConnection { host: "veri.belediye.local".into(), ..connection(&name) });
+        keep_connection(
+            &app,
+            &DbConnection {
+                host: "veri.belediye.local".into(),
+                ..connection(&name)
+            },
+        );
         run(&mut app, "source.postgis");
-        let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+        let at = app
+            .db_store
+            .list()
+            .iter()
+            .position(|c| c.name == name)
+            .expect("listed");
         send(&mut app, Event::Postgis(P::Choose(at)));
         let mut relations = catalog().relations.clone();
         for r in &mut relations {
@@ -876,9 +1181,28 @@ fn related_screens() {
                 _ => {}
             }
         }
-        send(&mut app, Event::Postgis(P::Listed(name.clone(), Ok(Arc::new(Catalog { relations, ..(*catalog()).clone() })), true)));
-        send(&mut app, Event::Postgis(P::Toggle("kadastro.parsel".into())));
-        send(&mut app, Event::Postgis(P::Extent("kadastro.parsel".into(), Ok(Some([486_500.0, 4_420_200.0, 486_585.0, 4_420_225.0])))));
+        send(
+            &mut app,
+            Event::Postgis(P::Listed(
+                name.clone(),
+                Ok(Arc::new(Catalog {
+                    relations,
+                    ..(*catalog()).clone()
+                })),
+                true,
+            )),
+        );
+        send(
+            &mut app,
+            Event::Postgis(P::Toggle("kadastro.parsel".into())),
+        );
+        send(
+            &mut app,
+            Event::Postgis(P::Extent(
+                "kadastro.parsel".into(),
+                Ok(Some([486_500.0, 4_420_200.0, 486_585.0, 4_420_225.0])),
+            )),
+        );
         app
     });
 }
@@ -892,33 +1216,78 @@ fn schemas_open_and_close_and_starred_tables_come_first() {
     let name = "Ağaç ve yıldız";
     keep_connection(&app, &connection(name));
     run(&mut app, "source.postgis");
-    let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+    let at = app
+        .db_store
+        .list()
+        .iter()
+        .position(|c| c.name == name)
+        .expect("listed");
     send(&mut app, Event::Postgis(P::Choose(at)));
-    send(&mut app, Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)));
+    send(
+        &mut app,
+        Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)),
+    );
     let lines = |app: &App| {
         let w = window(app);
         let c = app.db_store.get(name).expect("kept");
-        list_lines(w.catalog.as_deref().expect("listed"), &c, &app.db_store.favorites(name), &w.closed, &w.filter)
+        list_lines(
+            w.catalog.as_deref().expect("listed"),
+            &c,
+            &app.db_store.favorites(name),
+            &w.closed,
+            &w.filter,
+        )
     };
     let all = lines(&app);
-    assert!(matches!(all.first(), Some(L::Schema(_, _, true))), "every schema open at first: {all:?}");
+    assert!(
+        matches!(all.first(), Some(L::Schema(_, _, true))),
+        "every schema open at first: {all:?}"
+    );
     // Kadastro closed: its head stays, its tables go.
     send(&mut app, Event::Postgis(P::Schema("kadastro".into())));
     let closed = lines(&app);
-    assert!(closed.iter().any(|l| matches!(l, L::Schema(s, _, false) if s == "kadastro")), "{closed:?}");
-    assert!(!closed.iter().any(|l| matches!(l, L::Table(t) if t.starts_with("kadastro."))), "{closed:?}");
+    assert!(
+        closed
+            .iter()
+            .any(|l| matches!(l, L::Schema(s, _, false) if s == "kadastro")),
+        "{closed:?}"
+    );
+    assert!(
+        !closed
+            .iter()
+            .any(|l| matches!(l, L::Table(t) if t.starts_with("kadastro."))),
+        "{closed:?}"
+    );
     // A search opens it again for what it matches.
     send(&mut app, Event::Postgis(P::Filter("yer".into())));
-    assert_eq!(lines(&app), [L::Schema("kadastro".into(), 1, true), L::Table("kadastro.yer".into())]);
+    assert_eq!(
+        lines(&app),
+        [
+            L::Schema("kadastro".into(), 1, true),
+            L::Table("kadastro.yer".into())
+        ]
+    );
     send(&mut app, Event::Postgis(P::Filter(String::new())));
     // Starred: first under Sık kullanılanlar, kept for the connection.
-    send(&mut app, Event::Postgis(P::Favorite("imar.plan_notu".into())));
+    send(
+        &mut app,
+        Event::Postgis(P::Favorite("imar.plan_notu".into())),
+    );
     let starred = lines(&app);
-    assert_eq!(&starred[..2], [L::Starred(1), L::Favorite("imar.plan_notu".into())]);
+    assert_eq!(
+        &starred[..2],
+        [L::Starred(1), L::Favorite("imar.plan_notu".into())]
+    );
     assert_eq!(app.db_store.favorites(name), ["imar.plan_notu"]);
     // Opened again: the closed schema is the window's, the star the connection's.
-    send(&mut app, Event::Postgis(P::Favorite("imar.plan_notu".into())));
-    assert!(app.db_store.favorites(name).is_empty(), "starred again: taken away");
+    send(
+        &mut app,
+        Event::Postgis(P::Favorite("imar.plan_notu".into())),
+    );
+    assert!(
+        app.db_store.favorites(name).is_empty(),
+        "starred again: taken away"
+    );
     let _ = app.db_store.remove(name);
 }
 
@@ -932,10 +1301,21 @@ fn tree_screens() {
         let _ = app.db_store.remove(name);
         keep_connection(&app, &connection(name));
         run(&mut app, "source.postgis");
-        let at = app.db_store.list().iter().position(|c| c.name == name).expect("listed");
+        let at = app
+            .db_store
+            .list()
+            .iter()
+            .position(|c| c.name == name)
+            .expect("listed");
         send(&mut app, Event::Postgis(P::Choose(at)));
-        send(&mut app, Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)));
-        send(&mut app, Event::Postgis(P::Favorite("kadastro.parsel".into())));
+        send(
+            &mut app,
+            Event::Postgis(P::Listed(name.into(), Ok(catalog()), true)),
+        );
+        send(
+            &mut app,
+            Event::Postgis(P::Favorite("kadastro.parsel".into())),
+        );
         send(&mut app, Event::Postgis(P::Schema("imar".into())));
         app
     });

@@ -113,7 +113,13 @@ impl OpeningRest {
         }
     }
 
-    pub(crate) fn with(self, host: String, at: f64, width: f64, place: Vec<kentos_contracts::Vec2>) -> OpeningFields {
+    pub(crate) fn with(
+        self,
+        host: String,
+        at: f64,
+        width: f64,
+        place: Vec<kentos_contracts::Vec2>,
+    ) -> OpeningFields {
         OpeningFields {
             host,
             at,

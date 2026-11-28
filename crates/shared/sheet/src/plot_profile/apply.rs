@@ -1,10 +1,10 @@
 //! Plot ink is derived output data. It never rewrites model colours, layers or paper items.
+use super::{PlotColor, PlotProfile, PlotStyle, StyleKey, Target};
 use crate::{
     display::{DisplayList, Prim},
     pdf::{MapContent, MapStroke},
     style::Stroke,
 };
-use super::{PlotColor, PlotProfile, PlotStyle, StyleKey, Target};
 use std::collections::BTreeMap;
 /// Resolve once per page/layer pass; no per-primitive scan of all assignments.
 pub struct Resolved<'a> {

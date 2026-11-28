@@ -81,19 +81,34 @@ macro_rules! road_cases {
                 $then!(road_sections_draw, kentos_commands::SectionsDraw)
             }
             kentos_commands::ROAD_SUPERELEVATIONS_EDIT => {
-                $then!(road_superelevations_edit, kentos_commands::SuperelevationsEdit)
+                $then!(
+                    road_superelevations_edit,
+                    kentos_commands::SuperelevationsEdit
+                )
             }
             kentos_commands::ROAD_SUPERELEVATIONS_QUERY => {
-                $then!(road_superelevations_query, kentos_commands::SuperelevationsQuery)
+                $then!(
+                    road_superelevations_query,
+                    kentos_commands::SuperelevationsQuery
+                )
             }
             kentos_commands::ROAD_SUPERELEVATIONS_CHECK => {
-                $then!(road_superelevations_check, kentos_commands::SuperelevationsCheck)
+                $then!(
+                    road_superelevations_check,
+                    kentos_commands::SuperelevationsCheck
+                )
             }
             kentos_commands::ROAD_SUPERELEVATIONS_WIDEN => {
-                $then!(road_superelevations_widen, kentos_commands::SuperelevationsWiden)
+                $then!(
+                    road_superelevations_widen,
+                    kentos_commands::SuperelevationsWiden
+                )
             }
             kentos_commands::ROAD_SUPERELEVATIONS_TRANSITIONS => {
-                $then!(road_superelevations_transitions, kentos_commands::SuperelevationsTransitions)
+                $then!(
+                    road_superelevations_transitions,
+                    kentos_commands::SuperelevationsTransitions
+                )
             }
             kentos_commands::ROAD_CORRIDORS_EDIT => {
                 $then!(road_corridors_edit, kentos_commands::CorridorsEdit)
@@ -105,13 +120,22 @@ macro_rules! road_cases {
                 $then!(road_corridors_water, kentos_commands::CorridorsWater)
             }
             kentos_commands::ROAD_CORRIDORS_DAYLIGHTS => {
-                $then!(road_corridors_daylights, kentos_commands::CorridorsDaylights)
+                $then!(
+                    road_corridors_daylights,
+                    kentos_commands::CorridorsDaylights
+                )
             }
             kentos_commands::ROAD_CORRIDORS_PROTECTED => {
-                $then!(road_corridors_protected, kentos_commands::CorridorsProtected)
+                $then!(
+                    road_corridors_protected,
+                    kentos_commands::CorridorsProtected
+                )
             }
             kentos_commands::ROAD_CORRIDORS_PREFLIGHT => {
-                $then!(road_corridors_preflight, kentos_commands::CorridorsPreflight)
+                $then!(
+                    road_corridors_preflight,
+                    kentos_commands::CorridorsPreflight
+                )
             }
             kentos_commands::ROAD_CORRIDORS_DRAW => {
                 $then!(road_corridors_draw, kentos_commands::CorridorsDraw)
@@ -126,7 +150,10 @@ macro_rules! road_cases {
                 $then!(road_volumes_approve, kentos_commands::VolumesApprove)
             }
             kentos_commands::ROAD_VOLUMES_UNCERTAINTY => {
-                $then!(road_volumes_uncertainty, kentos_commands::VolumesUncertainty)
+                $then!(
+                    road_volumes_uncertainty,
+                    kentos_commands::VolumesUncertainty
+                )
             }
             kentos_commands::ROAD_VOLUMES_PROGRESS => {
                 $then!(road_volumes_progress, kentos_commands::VolumesProgress)
@@ -186,7 +213,10 @@ macro_rules! road_cases {
                 $then!(road_culverts_draw, kentos_commands::CulvertsDraw)
             }
             kentos_commands::ROAD_CULVERTS_HYDRAULICS => {
-                $then!(road_culverts_hydraulics, kentos_commands::CulvertsHydraulics)
+                $then!(
+                    road_culverts_hydraulics,
+                    kentos_commands::CulvertsHydraulics
+                )
             }
             kentos_commands::ROAD_CULVERTS_CLOSURE => {
                 $then!(road_culverts_closure, kentos_commands::CulvertsClosure)
@@ -231,7 +261,10 @@ macro_rules! road_cases {
                 $then!(road_terrains_coverage, kentos_commands::TerrainsCoverage)
             }
             kentos_commands::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW => {
-                $then!(road_terrains_coverage_draw, kentos_commands::TerrainsCoverageDraw)
+                $then!(
+                    road_terrains_coverage_draw,
+                    kentos_commands::TerrainsCoverageDraw
+                )
             }
             kentos_commands::ROAD_TERRAINS_DENSITY => {
                 $then!(road_terrains_density, kentos_commands::TerrainsDensity)
@@ -288,7 +321,10 @@ macro_rules! road_cases {
                 $then!(road_junctions_draw, kentos_commands::JunctionsDraw)
             }
             kentos_commands::ROAD_JUNCTIONS_CLEARANCE => {
-                $then!(road_junctions_clearance, kentos_commands::JunctionsClearance)
+                $then!(
+                    road_junctions_clearance,
+                    kentos_commands::JunctionsClearance
+                )
             }
             kentos_commands::ROAD_JUNCTIONS_TIE => {
                 $then!(road_junctions_tie, kentos_commands::JunctionsTie)

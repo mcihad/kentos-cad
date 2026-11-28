@@ -160,12 +160,19 @@ pub fn compare(expect: &Expect, got: &Observation, trace: &Trace) -> Vec<String>
                 "{:?}",
                 got.named_views
                     .iter()
-                    .map(|v| (v.name.clone(), [v.center.x - ox, v.center.y - oy], v.width, v.height))
+                    .map(|v| (
+                        v.name.clone(),
+                        [v.center.x - ox, v.center.y - oy],
+                        v.width,
+                        v.height
+                    ))
                     .collect::<Vec<_>>()
             ),
             format!(
                 "{:?} (±{t} m)",
-                want.iter().map(|w| (w.name.clone(), w.center, w.width, w.height)).collect::<Vec<_>>()
+                want.iter()
+                    .map(|w| (w.name.clone(), w.center, w.width, w.height))
+                    .collect::<Vec<_>>()
             ),
         );
     }

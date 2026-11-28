@@ -19,7 +19,10 @@ pub(crate) fn table_in(scope: &str) -> String {
 
 /// The statement that writes a receipt; its values `$1` id, `$2` who, `$3` what it wrote.
 pub(crate) fn insert_sql(scope: &str) -> String {
-    format!("INSERT INTO {} (id, by, written) VALUES ($1, $2, $3::jsonb)", table_in(scope))
+    format!(
+        "INSERT INTO {} (id, by, written) VALUES ($1, $2, $3::jsonb)",
+        table_in(scope)
+    )
 }
 
 impl PgSource {
@@ -55,11 +58,13 @@ impl PgSource {
         let table = table_in(scope);
         runtime()?.block_on(async {
             let mut conn = self.pool.acquire().await.map_err(error_of)?;
-            let row = sqlx::query(sqlx::AssertSqlSafe(format!("SELECT by, written::text FROM {table} WHERE id = $1")))
-                .bind(id)
-                .fetch_optional(&mut *conn)
-                .await
-                .map_err(error_of)?;
+            let row = sqlx::query(sqlx::AssertSqlSafe(format!(
+                "SELECT by, written::text FROM {table} WHERE id = $1"
+            )))
+            .bind(id)
+            .fetch_optional(&mut *conn)
+            .await
+            .map_err(error_of)?;
             row.map(|r| {
                 Ok(Receipt {
                     id: id.to_owned(),

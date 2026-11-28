@@ -6,7 +6,9 @@
 //! volume is smaller than the one it came from — no soil does that — and is told, as are densities that would. Reads
 //! only. The shared cases are `fixtures/commands/v1/road.volumes.states.json`.
 
-use kentos_commands::{CommandResult, CommandWarning, VolumeDef, VolumeStateRow, VolumeStatesRead, VolumesStates};
+use kentos_commands::{
+    CommandResult, CommandWarning, VolumeDef, VolumeStateRow, VolumeStatesRead, VolumesStates,
+};
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
 
@@ -16,7 +18,11 @@ use crate::codes;
 use crate::road_volumes as common;
 
 /// What a row's factors or densities say that the soil cannot do, in words.
-fn checks(cut: Option<f64>, fill: Option<f64>, d: Option<&kentos_commands::VolumeDensities>) -> Vec<String> {
+fn checks(
+    cut: Option<f64>,
+    fill: Option<f64>,
+    d: Option<&kentos_commands::VolumeDensities>,
+) -> Vec<String> {
     let mut out = Vec::new();
     match d {
         Some(d) => {
@@ -32,7 +38,9 @@ fn checks(cut: Option<f64>, fill: Option<f64>, d: Option<&kentos_commands::Volum
         }
         None => {
             if let Some(c) = cut.filter(|c| *c < 1.0) {
-                out.push(format!("kabarma 1'den küçük ({c}): gevşek hacim yerindekinden az olamaz"));
+                out.push(format!(
+                    "kabarma 1'den küçük ({c}): gevşek hacim yerindekinden az olamaz"
+                ));
             }
             if let Some(f) = fill.filter(|f| *f < 1.0) {
                 out.push(format!(
@@ -45,16 +53,26 @@ fn checks(cut: Option<f64>, fill: Option<f64>, d: Option<&kentos_commands::Volum
 }
 
 /// The states of `def` (saved or as typed), and the warnings.
-fn states(doc: &Document, def: &VolumeDef) -> Result<(VolumeStatesRead, Vec<CommandWarning>), Stop> {
+fn states(
+    doc: &Document,
+    def: &VolumeDef,
+) -> Result<(VolumeStatesRead, Vec<CommandWarning>), Stop> {
     let (report, mut warnings, alignment) = common::compute_on(doc, def)?;
     let text = |s: f64| km_text(alignment.km(s), 3);
     let n = def.factors.len();
     // Each computed stretch goes to the row holding its middle (the last row's end included), as the volume's factors.
-    let row_of = |m: f64| def.factors.iter().enumerate().position(|(i, f)| f.from <= m && (m < f.to || (i + 1 == n && m <= f.to)));
+    let row_of = |m: f64| {
+        def.factors
+            .iter()
+            .enumerate()
+            .position(|(i, f)| f.from <= m && (m < f.to || (i + 1 == n && m <= f.to)))
+    };
     let mut sums = vec![(0.0, 0.0); n];
     let (mut un_cut, mut un_fill) = (0.0, 0.0);
     for r in &report.rows {
-        let (Some(c), Some(f)) = (r.cut, r.fill) else { continue };
+        let (Some(c), Some(f)) = (r.cut, r.fill) else {
+            continue;
+        };
         match row_of(0.5 * (r.from + r.to)) {
             Some(k) => {
                 sums[k].0 += c;
@@ -112,7 +130,11 @@ fn states(doc: &Document, def: &VolumeDef) -> Result<(VolumeStatesRead, Vec<Comm
     if !told.is_empty() {
         warnings.push(CommandWarning {
             code: codes::VOLUME_FACTOR_PHYSICS.into(),
-            message: format!("“{}” kübajının katsayıları zeminin yapamayacağını söylüyor: {}.", def.name, told.join("; ")),
+            message: format!(
+                "“{}” kübajının katsayıları zeminin yapamayacağını söylüyor: {}.",
+                def.name,
+                told.join("; ")
+            ),
             path: Some("factors".into()),
         });
     }
@@ -132,7 +154,10 @@ fn states(doc: &Document, def: &VolumeDef) -> Result<(VolumeStatesRead, Vec<Comm
     Ok((out, warnings))
 }
 
-fn answer(doc: &Document, input: &VolumesStates) -> Result<(VolumeStatesRead, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &Document,
+    input: &VolumesStates,
+) -> Result<(VolumeStatesRead, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_volumes(), &input.volume, "volume")?;
     states(doc, def)
@@ -141,7 +166,10 @@ fn answer(doc: &Document, input: &VolumesStates) -> Result<(VolumeStatesRead, Ve
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &VolumesStates) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -155,11 +183,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &VolumesStates) -> CommandResult<V
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: VolumesStates) -> CommandResult<VolumeStatesRead> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: VolumesStates,
+) -> CommandResult<VolumeStatesRead> {
     plan(cx, &input)
 }
 
 /// The states of a volume as typed (the desktop's Kübaj window, before it is saved).
-pub fn preview_of(doc: &Document, def: &VolumeDef) -> Result<(VolumeStatesRead, Vec<CommandWarning>), String> {
+pub fn preview_of(
+    doc: &Document,
+    def: &VolumeDef,
+) -> Result<(VolumeStatesRead, Vec<CommandWarning>), String> {
     states(doc, def).map_err(crate::road_corridors::words)
 }

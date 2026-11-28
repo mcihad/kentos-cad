@@ -43,13 +43,23 @@ fn a_selected_door_shows_both_distances_and_writes_nothing() {
     let before = b.doc.to_snapshot_v2();
     let numbers = b.session.temporary_numbers();
     assert_eq!(numbers.len(), 2, "one before and one after the door");
-    let preview = b.session.preview(&Default::default()).expect("the dimensions");
+    let preview = b
+        .session
+        .preview(&Default::default())
+        .expect("the dimensions");
     assert_eq!(preview.texts.len(), 2);
-    assert!(preview.texts.iter().all(|t| t.text.contains("4.5")), "{:?}", preview.texts);
+    assert!(
+        preview.texts.iter().all(|t| t.text.contains("4.5")),
+        "{:?}",
+        preview.texts
+    );
     // Above the wall: the left face's dimensions stand above it.
     assert!(numbers.iter().all(|p| p.y > N + 0.1));
     b.move_to(5., -1.);
-    assert!(b.session.temporary_numbers().iter().all(|p| p.y < N - 0.1), "the right face's below");
+    assert!(
+        b.session.temporary_numbers().iter().all(|p| p.y < N - 0.1),
+        "the right face's below"
+    );
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
 
@@ -71,7 +81,10 @@ fn a_number_typed_moves_the_door_from_its_reference_and_one_undo_takes_it_back()
     assert_eq!(b.doc.to_snapshot_v2(), before, "the field writes nothing");
     b.run(|session, cx| session.text_typed(Some("1 m"), cx));
     assert!(!b.session.is_running());
-    assert!((at(&b, door) - 1.5).abs() < 1e-9, "the start jamb 1 m from the wall's end");
+    assert!(
+        (at(&b, door) - 1.5).abs() < 1e-9,
+        "the start jamb 1 m from the wall's end"
+    );
     assert_eq!(b.selection.ids(), [door], "the door stays selected");
     b.doc.undo().unwrap();
     assert_eq!(b.doc.to_snapshot_v2().entities, before.entities);
@@ -90,10 +103,17 @@ fn escape_and_a_bad_value_write_nothing() {
     b.click(end.x - E, end.y - N);
     b.views.clear();
     b.run(|session, cx| session.text_typed(Some("kapı"), cx));
-    assert!(b.session.is_running(), "the field opens again for the value");
+    assert!(
+        b.session.is_running(),
+        "the field opens again for the value"
+    );
     assert!(b.views.iter().any(|v| matches!(v, ViewChange::Text(_))));
     b.run(|session, cx| session.text_typed(Some("20 m"), cx));
     assert!(!b.session.is_running());
-    assert_eq!(b.doc.to_snapshot_v2(), before, "off its wall: refused, said");
+    assert_eq!(
+        b.doc.to_snapshot_v2(),
+        before,
+        "off its wall: refused, said"
+    );
     assert!((at(&b, door) - 5.).abs() < 1e-9);
 }

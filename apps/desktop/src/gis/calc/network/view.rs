@@ -144,7 +144,11 @@ fn footer<'a>(
     )
     .width(170);
     dialog
-        .action(row![label::caption(KEEP), keep_box].spacing(8).align_y(Center))
+        .action(
+            row![label::caption(KEEP), keep_box]
+                .spacing(8)
+                .align_y(Center),
+        )
         .action(footer_button(
             "Çizime yaz",
             done.then(|| event(Calc::AddPoints)),
@@ -452,7 +456,14 @@ impl LevelForm {
             ));
         // docs/adr/5300: leap-frog setups, Trigonometrik only; each row's height difference beside it.
         if self.kind == LevelKind::Trigonometric {
-            let leaps = grid::view_with(Sheet::LevelLeapfrog, &LEAPS, &self.leapfrog, |_, _| String::new(), 0, |_| Vec::new());
+            let leaps = grid::view_with(
+                Sheet::LevelLeapfrog,
+                &LEAPS,
+                &self.leapfrog,
+                |_, _| String::new(),
+                0,
+                |_| Vec::new(),
+            );
             // Each setup's height difference as computed, in one line under the table.
             let said: Vec<String> = self
                 .leapfrog
@@ -460,11 +471,20 @@ impl LevelForm {
                 .iter()
                 .zip(&self.leapfrog_dh)
                 .filter(|(_, d)| d.is_finite())
-                .map(|(r, d)| format!("{} → {} {} m", kentos_interaction::js_trim(&r[0]), kentos_interaction::js_trim(&r[1]), fixed(*d, 4)))
+                .map(|(r, d)| {
+                    format!(
+                        "{} → {} {} m",
+                        kentos_interaction::js_trim(&r[0]),
+                        kentos_interaction::js_trim(&r[1]),
+                        fixed(*d, 4)
+                    )
+                })
                 .collect();
             let mut leap_body = column![leaps].spacing(4);
             if !said.is_empty() {
-                leap_body = leap_body.push(label::caption(format!("Kot farkları: {}", said.join(" · "))).width(Fill));
+                leap_body = leap_body.push(
+                    label::caption(format!("Kot farkları: {}", said.join(" · "))).width(Fill),
+                );
             }
             body = body.push(titled(
                 "Atlamalı nivelman",

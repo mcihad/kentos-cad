@@ -11,12 +11,12 @@
 //!
 //! Test code only.
 
-use crate::arch_ext::*;
 use crate::arch;
+use crate::arch::ArchState;
+use crate::arch_ext::*;
 use kentos_commands::Entity;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::tools_scenes::{E, N, Objects, click, hover, run, typed};
@@ -45,7 +45,11 @@ fn levels(upper: f64) -> Value {
 /// The project with its two levels, Etkin kat 1. kat, the view round the ramp's place and the plan below it.
 fn levelled(app: &mut App) {
     opened(app, Objects::new(), 100.0);
-    command(app, "cad.settings.set", json!({"arch": {"levels": levels(3.06)}}));
+    command(
+        app,
+        "cad.settings.set",
+        json!({"arch": {"levels": levels(3.06)}}),
+    );
     app.choose_level(Some("kat-1".into()));
     fit(app, 30.0, 12.0);
     app.tab = "arch";
@@ -58,7 +62,13 @@ fn tool(app: &mut App) {
     levelled(app);
     run(app, "tool.ramp");
     // Eğim is M since Genişlik took E (docs/adr/8003).
-    for (key, value) in [("Y", "1.2"), ("M", "5"), ("H", "1.5"), ("L", "9"), ("Z", "kat-0.15")] {
+    for (key, value) in [
+        ("Y", "1.2"),
+        ("M", "5"),
+        ("H", "1.5"),
+        ("L", "9"),
+        ("Z", "kat-0.15"),
+    ] {
         typed(app, key);
         typed(app, value);
     }
@@ -97,7 +107,12 @@ fn written(app: &mut App) {
 /// The view on `[x0, y0]`–`[x1, y1]` (from the drawing's origin).
 fn view_on(app: &mut App, a: [f64; 2], b: [f64; 2]) {
     app.viewport.camera.fit(
-        &kentos_render_wgpu::Bounds { min_x: E + a[0], min_y: N + a[1], max_x: E + b[0], max_y: N + b[1] },
+        &kentos_render_wgpu::Bounds {
+            min_x: E + a[0],
+            min_y: N + a[1],
+            max_x: E + b[0],
+            max_y: N + b[1],
+        },
         24.0,
     );
 }
@@ -106,19 +121,27 @@ fn view_on(app: &mut App, a: [f64; 2], b: [f64; 2]) {
 /// its start, where its slope and its first level are written.
 fn raised(app: &mut App) {
     written(app);
-    command(app, "cad.settings.set", json!({"arch": {"levels": levels(3.4)}}));
+    command(
+        app,
+        "cad.settings.set",
+        json!({"arch": {"levels": levels(3.4)}}),
+    );
     view_on(app, [-1.5, 7.0], [11.5, 11.0]);
     hover(app, [10.5, 10.6]);
 }
 
 /// Two more ramps on Zemin kat: an L 1.20 m wide whose landing is its width, and a short steep one.
 fn more(app: &mut App) {
-    command(app, "cad.ramps.create", json!({"layerId": "cizim", "ramps": [
-        {"pts": [{"x": E + 1.0, "y": N + 1.0}, {"x": E + 7.0, "y": N + 1.0}, {"x": E + 7.0, "y": N + 5.0}],
-         "width": 1.2, "rise": 0.5, "arch": {"level": "zemin"}},
-        {"pts": [{"x": E + 12.0, "y": N + 2.0}, {"x": E + 15.0, "y": N + 2.0}], "width": 1.5, "rise": 0.3,
-         "arch": {"level": "zemin"}}
-    ]}));
+    command(
+        app,
+        "cad.ramps.create",
+        json!({"layerId": "cizim", "ramps": [
+            {"pts": [{"x": E + 1.0, "y": N + 1.0}, {"x": E + 7.0, "y": N + 1.0}, {"x": E + 7.0, "y": N + 5.0}],
+             "width": 1.2, "rise": 0.5, "arch": {"level": "zemin"}},
+            {"pts": [{"x": E + 12.0, "y": N + 2.0}, {"x": E + 15.0, "y": N + 2.0}], "width": 1.5, "rise": 0.3,
+             "arch": {"level": "zemin"}}
+        ]}),
+    );
 }
 
 fn quantities(app: &mut App) {
@@ -141,7 +164,8 @@ fn audit(app: &mut App) {
         .arch_audit_shown()
         .iter()
         .position(|&i| {
-            app.modules.arch()
+            app.modules
+                .arch()
                 .arch_audit
                 .audited
                 .as_ref()
@@ -171,7 +195,12 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
             let _ = app.update(message);
         };
         let at = crate::tools_screens::caption_at(s, app, "Genel", false);
-        s.input(app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(at, -5.0));
+        s.input(
+            app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(at, -5.0),
+        );
     })]
 }
 
@@ -217,7 +246,11 @@ mod tests {
         assert_eq!(r.arch.level.as_deref(), Some("kat-1"));
         assert_eq!(r.pts.len(), 4, "two landings on its way: {:?}", r.pts);
         assert_eq!(r.railings, Some(kentos_commands::Railings::Both));
-        command(&mut app, "cad.settings.set", json!({"arch": {"levels": levels(3.4)}}));
+        command(
+            &mut app,
+            "cad.settings.set",
+            json!({"arch": {"levels": levels(3.4)}}),
+        );
         let r = &ramps(&app)[0];
         assert!((r.base.unwrap() - 3.25).abs() < 1e-9, "{:?}", r.base);
         more(&mut app);
@@ -225,13 +258,20 @@ mod tests {
             &app.document.as_ref().unwrap().model,
             &kentos_commands::SpacesQuantities::default(),
         );
-        let kentos_commands::CommandResult::Completed { output, .. } = q else { panic!("{q:?}") };
+        let kentos_commands::CommandResult::Completed { output, .. } = q else {
+            panic!("{q:?}")
+        };
         assert_eq!(output.ramps.len(), 3);
         assert_eq!(output.ramps[0].landings, 2);
-        assert!((output.ramps[0].run - 24.0).abs() < 1e-9, "{}", output.ramps[0].run);
+        assert!(
+            (output.ramps[0].run - 24.0).abs() < 1e-9,
+            "{}",
+            output.ramps[0].run
+        );
         audit(&mut app);
         let codes: Vec<String> = app
-            .modules.arch()
+            .modules
+            .arch()
             .arch_audit
             .audited
             .as_ref()
@@ -252,7 +292,8 @@ mod tests {
             crate::arch_audit::Event::Fix,
         )));
         let codes: Vec<String> = app
-            .modules.arch()
+            .modules
+            .arch()
             .arch_audit
             .audited
             .as_ref()

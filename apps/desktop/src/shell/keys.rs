@@ -152,8 +152,16 @@ pub fn mac_keys(text: &str) -> String {
             }
         }
         // The key: a word (S, Enter, Boşluk, F3) or one sign (/, =).
-        let word: usize = tail.chars().take_while(|c| c.is_alphanumeric()).map(char::len_utf8).sum();
-        let len = if word > 0 { word } else { tail.chars().next().map_or(0, char::len_utf8) };
+        let word: usize = tail
+            .chars()
+            .take_while(|c| c.is_alphanumeric())
+            .map(char::len_utf8)
+            .sum();
+        let len = if word > 0 {
+            word
+        } else {
+            tail.chars().next().map_or(0, char::len_utf8)
+        };
         if len == 0 {
             out.push_str("Ctrl+");
             rest = tail;
@@ -455,17 +463,30 @@ mod tests {
     fn option_symbols_are_text_on_macos() {
         let at = press(ch("@"), Code::KeyQ, Modifiers::ALT, Some("@"));
         assert!(at.third_level_text(true));
-        assert!(!at.third_level_text(false), "Alt alone types no symbol off macOS");
+        assert!(
+            !at.third_level_text(false),
+            "Alt alone types no symbol off macOS"
+        );
         let hash = press(ch("#"), Code::Digit3, Modifiers::ALT, Some("#"));
         assert!(hash.third_level_text(true));
         // ⌥Q on a US layout types œ, a letter: still Alt+Q.
         let oe = press(ch("œ"), Code::KeyQ, Modifiers::ALT, Some("œ"));
         assert!(!oe.third_level_text(true));
         // ⌥⌘ and ⌃⌥ with a symbol: ⌘ makes a chord; Ctrl+Alt is AltGr's rule everywhere.
-        let cmd = press(ch("@"), Code::KeyQ, Modifiers::ALT | Modifiers::LOGO, Some("@"));
+        let cmd = press(
+            ch("@"),
+            Code::KeyQ,
+            Modifiers::ALT | Modifiers::LOGO,
+            Some("@"),
+        );
         assert!(!cmd.third_level_text(true));
         // Alt with a key that types nothing (Alt+Up, Alt+Enter) stays a chord.
-        let up = press(Key::Named(Named::ArrowUp), Code::ArrowUp, Modifiers::ALT, None);
+        let up = press(
+            Key::Named(Named::ArrowUp),
+            Code::ArrowUp,
+            Modifiers::ALT,
+            None,
+        );
         assert!(!up.third_level_text(true));
         assert_eq!(chord(&up).as_deref(), Some("Alt+Up"));
         if cfg!(target_os = "macos") {
@@ -498,8 +519,14 @@ mod tests {
         assert_eq!((value_start(&enter), typed(&enter)), (None, None));
         assert!(is_chorded("Ctrl+S") && is_chorded("F3") && is_chorded("Shift+F3"));
         // UR-002: macOS's way of the same chords.
-        assert_eq!(mac_keys("Kaydet (Ctrl+S); Ctrl+Z geri alır."), "Kaydet (⌘S); ⌘Z geri alır.");
-        assert_eq!(mac_keys("Ctrl+Shift+Z, Ctrl+Alt+/ ve Ctrl+Enter"), "⇧⌘Z, ⌥⌘/ ve ⌘Enter");
+        assert_eq!(
+            mac_keys("Kaydet (Ctrl+S); Ctrl+Z geri alır."),
+            "Kaydet (⌘S); ⌘Z geri alır."
+        );
+        assert_eq!(
+            mac_keys("Ctrl+Shift+Z, Ctrl+Alt+/ ve Ctrl+Enter"),
+            "⇧⌘Z, ⌥⌘/ ve ⌘Enter"
+        );
         assert_eq!(mac_keys("Ctrl + tık"), "Ctrl + tık");
         assert!(!is_chorded("G") && !is_chorded("Space") && !is_chorded("+"));
     }

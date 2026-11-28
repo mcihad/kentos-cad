@@ -18,7 +18,8 @@ fn call(server: &mut Server, name: &str, args: Value) -> Value {
 }
 
 fn opened(server: &mut Server) -> Value {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/road-work.kcad");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/kcad/v2/road-work.kcad");
     let opened = call(server, "drawing.open", json!({"path":path}));
     assert_eq!(opened["isError"], false, "{opened}");
     opened["structuredContent"]["drawing"].clone()
@@ -28,16 +29,33 @@ fn opened(server: &mut Server) -> Value {
 fn a_surface_is_made_asked_and_refused_outside_a_road_project() {
     let mut server = Server::new();
     let listed = server
-        .handle(&json!({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{"_meta":{
+        .handle(
+            &json!({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{"_meta":{
             "io.modelcontextprotocol/protocolVersion":MODERN,
             "io.modelcontextprotocol/clientInfo":{"name":"road-terrain-test","version":"1"},
-            "io.modelcontextprotocol/clientCapabilities":{}}}}))
+            "io.modelcontextprotocol/clientCapabilities":{}}}}),
+        )
         .unwrap();
     let tools = listed["result"]["tools"].as_array().expect("tools");
-    let tool = |name: &str| tools.iter().find(|t| t["name"] == name).cloned().unwrap_or_default();
-    assert_eq!(tool("road.terrains.query")["annotations"]["readOnlyHint"], true);
-    assert_eq!(tool("road.terrains.edit")["annotations"]["destructiveHint"], true);
-    assert_eq!(tool("road.terrains.create")["annotations"]["destructiveHint"], false);
+    let tool = |name: &str| {
+        tools
+            .iter()
+            .find(|t| t["name"] == name)
+            .cloned()
+            .unwrap_or_default()
+    };
+    assert_eq!(
+        tool("road.terrains.query")["annotations"]["readOnlyHint"],
+        true
+    );
+    assert_eq!(
+        tool("road.terrains.edit")["annotations"]["destructiveHint"],
+        true
+    );
+    assert_eq!(
+        tool("road.terrains.create")["annotations"]["destructiveHint"],
+        false
+    );
 
     let drawing = opened(&mut server);
     let made = call(
@@ -65,10 +83,21 @@ fn a_surface_is_made_asked_and_refused_outside_a_road_project() {
     assert_eq!(section.last().unwrap()["station"], 40.0);
 
     // A Mimari project holds no surfaces (a Harita project does since docs/adr/1520 §1).
-    let building = call(&mut server, "drawing.new", json!({"workspace":"cad","cadWork":"architecture"}));
+    let building = call(
+        &mut server,
+        "drawing.new",
+        json!({"workspace":"cad","cadWork":"architecture"}),
+    );
     assert_eq!(building["isError"], false, "{building}");
     let building = building["structuredContent"]["drawing"].clone();
-    let refused = call(&mut server, "road.terrains.query", json!({"drawing":building}));
+    let refused = call(
+        &mut server,
+        "road.terrains.query",
+        json!({"drawing":building}),
+    );
     assert_eq!(refused["isError"], true, "{refused}");
-    assert_eq!(refused["structuredContent"]["error"]["code"], "not_a_road_project", "{refused}");
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"], "not_a_road_project",
+        "{refused}"
+    );
 }

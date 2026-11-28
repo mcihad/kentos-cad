@@ -412,7 +412,10 @@ pub struct AtlasExported {
     /// The content digest of each object a page lists (docs/adr/3600; `kentos.object-digest/1`, ADR 1320 §2: its
     /// snapshot form without its slot `id`, keys sorted, SHA-256), by persistent id: what a later run is told from.
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<std::collections::BTreeMap<String, String>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<std::collections::BTreeMap<String, String>>", optional)
+    )]
     pub objects: std::collections::BTreeMap<String, String>,
     /// The record written (planned) beside the PDF (docs/adr/4000): `<name>.kaynaklar.json`; none for a check.
     #[serde(default, skip_serializing_if = "Option::is_none")]

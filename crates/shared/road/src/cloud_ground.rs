@@ -90,18 +90,32 @@ impl Lines {
                 }
             }
         }
-        Lines { reach, size, segments, cells }
+        Lines {
+            reach,
+            size,
+            segments,
+            cells,
+        }
     }
 
     fn near(&self, x: f64, y: f64) -> bool {
-        let key = ((x / self.size).floor() as i64, (y / self.size).floor() as i64);
-        let Some(list) = self.cells.get(&key) else { return false };
+        let key = (
+            (x / self.size).floor() as i64,
+            (y / self.size).floor() as i64,
+        );
+        let Some(list) = self.cells.get(&key) else {
+            return false;
+        };
         let r2 = self.reach * self.reach;
         list.iter().any(|&k| {
             let [a, b] = self.segments[k as usize];
             let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
             let len2 = dx * dx + dy * dy;
-            let t = if len2 > 0.0 { (((x - a[0]) * dx + (y - a[1]) * dy) / len2).clamp(0.0, 1.0) } else { 0.0 };
+            let t = if len2 > 0.0 {
+                (((x - a[0]) * dx + (y - a[1]) * dy) / len2).clamp(0.0, 1.0)
+            } else {
+                0.0
+            };
             let (ex, ey) = (x - (a[0] + t * dx), y - (a[1] + t * dy));
             ex * ex + ey * ey <= r2
         })
@@ -145,14 +159,24 @@ impl Thinner {
         if !(rule.cell > 0.0 && rule.cell.is_finite()) {
             return Err(ThinningError::Cell);
         }
-        if rule.z_tolerance.is_some_and(|z| !(z > 0.0 && z.is_finite())) {
+        if rule
+            .z_tolerance
+            .is_some_and(|z| !(z > 0.0 && z.is_finite()))
+        {
             return Err(ThinningError::ZTolerance);
         }
         if rule.near.is_some_and(|r| !(r > 0.0 && r.is_finite())) {
             return Err(ThinningError::Near);
         }
         let lines = rule.near.map(|r| Lines::new(r, breaklines));
-        Ok(Thinner { rule, lines, cells: HashMap::new(), near: Vec::new(), read: 0, bounds: None })
+        Ok(Thinner {
+            rule,
+            lines,
+            cells: HashMap::new(),
+            near: Vec::new(),
+            read: 0,
+            bounds: None,
+        })
     }
 
     /// The next ground point read.
@@ -174,7 +198,15 @@ impl Thinner {
         let pick = Pick { order, p };
         match self.cells.get_mut(&key) {
             None => {
-                self.cells.insert(key, Cell { best: pick, distance: d, low: pick, high: pick });
+                self.cells.insert(
+                    key,
+                    Cell {
+                        best: pick,
+                        distance: d,
+                        low: pick,
+                        high: pick,
+                    },
+                );
             }
             Some(cell) => {
                 if d < cell.distance {
@@ -211,7 +243,8 @@ impl Thinner {
         for pick in &self.near {
             kept.entry(pick.order).or_insert((pick.p, 2));
         }
-        let mut points: Vec<(u64, [f64; 3], u8)> = kept.into_iter().map(|(o, (p, why))| (o, p, why)).collect();
+        let mut points: Vec<(u64, [f64; 3], u8)> =
+            kept.into_iter().map(|(o, (p, why))| (o, p, why)).collect();
         points.sort_by_key(|x| x.0);
         let count = |why: u8| points.iter().filter(|x| x.2 == why).count() as u64;
         Thinned {
@@ -255,7 +288,11 @@ fn inside(ring: &[[f64; 2]], x: f64, y: f64) -> bool {
 
 fn ring_area(ring: &[[f64; 2]]) -> f64 {
     let n = ring.len();
-    (0..n).map(|i| ring[i][0] * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * ring[i][1]).sum::<f64>().abs() / 2.0
+    (0..n)
+        .map(|i| ring[i][0] * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * ring[i][1])
+        .sum::<f64>()
+        .abs()
+        / 2.0
 }
 
 /// The coverage of `ring` (an area's outer ring), or with none of the points' cell box, by what `thinned` read on a
@@ -263,7 +300,12 @@ fn ring_area(ring: &[[f64; 2]]) -> f64 {
 pub fn coverage(thinned: &Thinned, cell: f64, ring: Option<&[[f64; 2]]>) -> Option<Coverage> {
     let (cells, occupied, area) = match ring {
         Some(r) if r.len() >= 3 => {
-            let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+            let (mut x0, mut y0, mut x1, mut y1) = (
+                f64::INFINITY,
+                f64::INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+            );
             for p in r {
                 x0 = x0.min(p[0]);
                 y0 = y0.min(p[1]);
@@ -301,8 +343,16 @@ pub fn coverage(thinned: &Thinned, cell: f64, ring: Option<&[[f64; 2]]>) -> Opti
         area,
         cells,
         occupied,
-        share: if cells == 0 { 0.0 } else { occupied as f64 / cells as f64 },
-        density: if area > 0.0 { thinned.read as f64 / area } else { 0.0 },
+        share: if cells == 0 {
+            0.0
+        } else {
+            occupied as f64 / cells as f64
+        },
+        density: if area > 0.0 {
+            thinned.read as f64 / area
+        } else {
+            0.0
+        },
     })
 }
 

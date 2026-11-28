@@ -32,7 +32,9 @@ fn line(s: &Shape, part: u32, ring: u32, index: u32) -> Option<(P, P)> {
 
 /// A boundary edge's line: an area's or a single path's straight edge only (what Paralel kaydır shifts).
 pub(crate) fn boundary_line(s: &Shape, part: u32, ring: u32, index: u32) -> Option<(P, P)> {
-    let takes = matches!(s, Shape::Polygon { .. } | Shape::Polyline { .. }) && part == 0 && !is_multi_part(s);
+    let takes = matches!(s, Shape::Polygon { .. } | Shape::Polyline { .. })
+        && part == 0
+        && !is_multi_part(s);
     if !takes {
         return None;
     }
@@ -83,13 +85,23 @@ pub(crate) fn moved(before: &Shape, now: &Shape, part: u32, ring: u32, index: u3
 /// A boundary edge of `entity` moved `by` along its left normal (the bond adapter's shift) by Paralel kaydır's rule:
 /// its neighbours lengthen or shorten to meet it. The object as it would be written, or why not in Turkish (Paralel
 /// kaydır's words: a neighbour passed, a neighbour parallel to it).
-pub(crate) fn shifted(entity: &Entity, part: u32, ring: u32, index: u32, by: f64) -> Result<Entity, String> {
+pub(crate) fn shifted(
+    entity: &Entity,
+    part: u32,
+    ring: u32,
+    index: u32,
+    by: f64,
+) -> Result<Entity, String> {
     let s = shape(entity);
     let (_, dir) = boundary_line(&s, part, ring, index)
         .ok_or("Bağlı kenar artık bir alanın ya da çoklu çizginin düz kenarı değil")?;
     let normal = edge_shift::normal(&s, ring as usize, index as usize).map_err(str::to_owned)?;
     // Paralel kaydır's distance is along its own normal: the left normal's shift with the sign of their dot.
-    let sense = if -dir.y * normal.x + dir.x * normal.y >= 0.0 { 1.0 } else { -1.0 };
+    let sense = if -dir.y * normal.x + dir.x * normal.y >= 0.0 {
+        1.0
+    } else {
+        -1.0
+    };
     let moved = edge_shift::shifted(&s, ring as usize, index as usize, by * sense)?;
     let mut next = with_shape(entity, moved).ok_or("Bağlı kenarın nesnesi yazılamıyor")?;
     // The core's path carries no widths; Paralel kaydır keeps the vertices, so the widths stay as they were.
@@ -119,7 +131,9 @@ pub(crate) fn rule_problem(doc: &Document, rule: &ConstraintRule) -> Option<Stri
         match e.element {
             CadElement::Boundary { part, ring, index } => {
                 if !matches!(entity, Entity::Polygon(_) | Entity::Polyline(_)) {
-                    return Err("sınır kenarı yalnız bir alanın ya da çoklu çizginin kenarı olur".into());
+                    return Err(
+                        "sınır kenarı yalnız bir alanın ya da çoklu çizginin kenarı olur".into(),
+                    );
                 }
                 boundary_line(&shape(entity), part, ring, index).ok_or_else(|| {
                     format!(
@@ -128,8 +142,16 @@ pub(crate) fn rule_problem(doc: &Document, rule: &ConstraintRule) -> Option<Stri
                     )
                 })
             }
-            CadElement::Segment { part, ring, index } => segment_line(&shape(entity), part, ring, index)
-                .ok_or_else(|| "referans düz bir kenar olmalı: bir çizgi ya da bir yolun veya alanın düz kenarı".into()),
+            CadElement::Segment { part, ring, index } => segment_line(
+                &shape(entity),
+                part,
+                ring,
+                index,
+            )
+            .ok_or_else(|| {
+                "referans düz bir kenar olmalı: bir çizgi ya da bir yolun veya alanın düz kenarı"
+                    .into()
+            }),
             _ => Err("harita bağı bir düz kenardan sınır kenarına uzaklıktır".into()),
         }
     };
@@ -162,7 +184,12 @@ mod tests {
 
     fn square() -> Shape {
         Shape::Polygon {
-            pts: vec![P::new(0.0, 0.0), P::new(10.0, 0.0), P::new(10.0, 10.0), P::new(0.0, 10.0)],
+            pts: vec![
+                P::new(0.0, 0.0),
+                P::new(10.0, 0.0),
+                P::new(10.0, 10.0),
+                P::new(0.0, 10.0),
+            ],
             bulges: None,
             holes: Some(vec![Ring {
                 pts: vec![P::new(2.0, 2.0), P::new(2.0, 4.0), P::new(4.0, 4.0)],
@@ -195,14 +222,24 @@ mod tests {
     fn sliding_along_itself_is_no_move_but_across_or_turned_is() {
         let s = square();
         let slid = Shape::Polygon {
-            pts: vec![P::new(-3.0, 0.0), P::new(10.0, 0.0), P::new(10.0, 10.0), P::new(0.0, 10.0)],
+            pts: vec![
+                P::new(-3.0, 0.0),
+                P::new(10.0, 0.0),
+                P::new(10.0, 10.0),
+                P::new(0.0, 10.0),
+            ],
             bulges: None,
             holes: None,
             parts: None,
         };
         assert!(!moved(&s, &slid, 0, 0, 0));
         let across = Shape::Polygon {
-            pts: vec![P::new(0.0, -1.0), P::new(10.0, -1.0), P::new(10.0, 10.0), P::new(0.0, 10.0)],
+            pts: vec![
+                P::new(0.0, -1.0),
+                P::new(10.0, -1.0),
+                P::new(10.0, 10.0),
+                P::new(0.0, 10.0),
+            ],
             bulges: None,
             holes: None,
             parts: None,
@@ -210,7 +247,12 @@ mod tests {
         assert!(moved(&s, &across, 0, 0, 0));
         assert!(!moved(&s, &across, 0, 0, 2), "the far edge stayed");
         let turned = Shape::Polygon {
-            pts: vec![P::new(0.0, 0.0), P::new(10.0, 0.5), P::new(10.0, 10.0), P::new(0.0, 10.0)],
+            pts: vec![
+                P::new(0.0, 0.0),
+                P::new(10.0, 0.5),
+                P::new(10.0, 10.0),
+                P::new(0.0, 10.0),
+            ],
             bulges: None,
             holes: None,
             parts: None,

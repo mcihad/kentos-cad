@@ -10,15 +10,22 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 }
 
 fn opened(server: &mut Server, tag: &str) -> (Value, Vec<String>) {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.entities.vertex.inner.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.entities.vertex.inner.json"
+    ))
+    .unwrap();
     let mut setup = cases["setup"].clone();
     let count = setup["entities"].as_array().unwrap().len();
-    let uids: Vec<String> = (1..=count).map(|i| format!("0192f5c0-4200-7000-8000-{i:012x}")).collect();
+    let uids: Vec<String> = (1..=count)
+        .map(|i| format!("0192f5c0-4200-7000-8000-{i:012x}"))
+        .collect();
     setup["version"] = json!(2);
     setup["uids"] = json!(uids);
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-vertex-delete-{tag}-{}.kcad", std::process::id()));
+    let path = std::env::temp_dir().join(format!(
+        "kentos-vertex-delete-{tag}-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let open = call(server, "drawing.open", json!({"path": path}));
     let _ = std::fs::remove_file(&path);
@@ -27,9 +34,16 @@ fn opened(server: &mut Server, tag: &str) -> (Value, Vec<String>) {
 }
 
 fn branch_end(server: &mut Server, drawing: &Value, uid: &str) -> (f64, f64) {
-    let e = call(server, "drawing.entity", json!({"drawing": drawing, "uid": uid}));
+    let e = call(
+        server,
+        "drawing.entity",
+        json!({"drawing": drawing, "uid": uid}),
+    );
     let b = &e["structuredContent"]["entity"]["b"];
-    (b["x"].as_f64().unwrap() - 487_000.0, b["y"].as_f64().unwrap() - 4_420_000.0)
+    (
+        b["x"].as_f64().unwrap() - 487_000.0,
+        b["y"].as_f64().unwrap() - 4_420_000.0,
+    )
 }
 
 #[test]
@@ -37,16 +51,34 @@ fn a_lost_corner_s_edges_carry_the_branch_over_mcp() {
     let mut server = Server::new();
     let place = json!({"kind": "vertex", "part": 0, "ring": 0, "index": 1});
     let (drawing, uids) = opened(&mut server, "acik");
-    let r = call(&mut server, "cad.entities.vertex", json!({"drawing": drawing, "uid": uids[14], "action": "remove", "place": place, "topology": {}}));
+    let r = call(
+        &mut server,
+        "cad.entities.vertex",
+        json!({"drawing": drawing, "uid": uids[14], "action": "remove", "place": place, "topology": {}}),
+    );
     assert_eq!(r["isError"], false, "{r}");
-    assert_eq!(r["structuredContent"]["output"]["ids"], json!([15, 16]), "{r}");
+    assert_eq!(
+        r["structuredContent"]["output"]["ids"],
+        json!([15, 16]),
+        "{r}"
+    );
     // (0, −40) to (40, −60), 20 of the 60 m: (40/3, −40 − 20/3).
     let (x, y) = branch_end(&mut server, &drawing, &uids[15]);
-    assert!((x - 40.0 / 3.0).abs() < 1e-6 && (y - (-40.0 - 20.0 / 3.0)).abs() < 1e-6, "{x} {y}");
+    assert!(
+        (x - 40.0 / 3.0).abs() < 1e-6 && (y - (-40.0 - 20.0 / 3.0)).abs() < 1e-6,
+        "{x} {y}"
+    );
 
     let (drawing, uids) = opened(&mut server, "kapali");
-    let r = call(&mut server, "cad.entities.vertex", json!({"drawing": drawing, "uid": uids[14], "action": "remove", "place": place}));
+    let r = call(
+        &mut server,
+        "cad.entities.vertex",
+        json!({"drawing": drawing, "uid": uids[14], "action": "remove", "place": place}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     let (x, y) = branch_end(&mut server, &drawing, &uids[15]);
-    assert!((x - 20.0).abs() < 1e-9 && (y + 40.0).abs() < 1e-9, "stays: {x} {y}");
+    assert!(
+        (x - 20.0).abs() < 1e-9 && (y + 40.0).abs() < 1e-9,
+        "stays: {x} {y}"
+    );
 }

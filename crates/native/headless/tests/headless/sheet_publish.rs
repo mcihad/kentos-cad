@@ -1,11 +1,11 @@
 //! The filesystem command has its own host runner; document-only fixtures never pretend to perform file I/O.
+use crate::files;
 use kentos_commands::{
-    CallEnvelope, CallOp, CommandResult, PublishSheets, FILE_PUBLISH_SHEETS, encoding::sha256_hex,
+    CallEnvelope, CallOp, CommandResult, FILE_PUBLISH_SHEETS, PublishSheets, encoding::sha256_hex,
 };
 use kentos_domain::Document;
 use kentos_sheet::{SheetBook, project::project_sheets};
 use serde_json::{Value, json};
-use crate::files;
 const CASES: &str = include_str!("../../../../../fixtures/commands/v1/file.publish.sheets.json");
 fn fixture() -> Value {
     serde_json::from_str(CASES).unwrap()
@@ -201,18 +201,45 @@ fn a_file_plan_job_never_executes_publication() {
 
 #[test]
 fn drawing_set_publication_names_and_manifest_use_literal_captured_metadata() {
-    let fx=fixture();let root=std::env::temp_dir().join(format!("kentos-publish-drawing-set-{}",std::process::id()));
-    let _=std::fs::remove_dir_all(&root);std::fs::create_dir_all(&root).unwrap();
-    let mut doc=source(&fx,&json!({}),&root);
-    let (mut book,_)=kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
-    book.sheets[0].drawing_info=Some(kentos_sheet::drawing_set::DrawingInfo{number:"A-101".into(),title:"Başlık {id}".into(),revision:"R02".into(),status:"Yayın".into(),subset:vec!["Mimari".into(),"Katlar".into()]});
-    doc.set_sheets(project_sheets(&book, |_|None).unwrap()).unwrap();
-    let answer=kentos_headless::file_commands::call(&mut doc,CallEnvelope{command:FILE_PUBLISH_SHEETS.into(),version:None,op:CallOp::Execute,request_id:None,expected:None,relax_constraints:false,input:json!({"path":root.join("delivery"),"sheets":["ground"],"mode":"separate","naming":"{number}-{title}-{revision}-{status}-{subset}"})});
-    let CommandResult::Completed{output,..}=answer.result else{panic!("{answer:?}")};
-    assert_eq!(output["files"][0]["name"],"A-101-Başlık {id}-R02-Yayın-Mimari-Katlar.pdf");
-    let manifest:Value=serde_json::from_slice(&std::fs::read(root.join("delivery/yayin.json")).unwrap()).unwrap();
-    assert_eq!(manifest["drawingSet"][0]["info"]["number"],"A-101");
-    assert_eq!(manifest["drawingSet"][0]["info"]["revision"],"R02");
+    let fx = fixture();
+    let root =
+        std::env::temp_dir().join(format!("kentos-publish-drawing-set-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).unwrap();
+    let mut doc = source(&fx, &json!({}), &root);
+    let (mut book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
+    book.sheets[0].drawing_info = Some(kentos_sheet::drawing_set::DrawingInfo {
+        number: "A-101".into(),
+        title: "Başlık {id}".into(),
+        revision: "R02".into(),
+        status: "Yayın".into(),
+        subset: vec!["Mimari".into(), "Katlar".into()],
+    });
+    doc.set_sheets(project_sheets(&book, |_| None).unwrap())
+        .unwrap();
+    let answer = kentos_headless::file_commands::call(
+        &mut doc,
+        CallEnvelope {
+            command: FILE_PUBLISH_SHEETS.into(),
+            version: None,
+            op: CallOp::Execute,
+            request_id: None,
+            expected: None,
+            relax_constraints: false,
+            input: json!({"path":root.join("delivery"),"sheets":["ground"],"mode":"separate","naming":"{number}-{title}-{revision}-{status}-{subset}"}),
+        },
+    );
+    let CommandResult::Completed { output, .. } = answer.result else {
+        panic!("{answer:?}")
+    };
+    assert_eq!(
+        output["files"][0]["name"],
+        "A-101-Başlık {id}-R02-Yayın-Mimari-Katlar.pdf"
+    );
+    let manifest: Value =
+        serde_json::from_slice(&std::fs::read(root.join("delivery/yayin.json")).unwrap()).unwrap();
+    assert_eq!(manifest["drawingSet"][0]["info"]["number"], "A-101");
+    assert_eq!(manifest["drawingSet"][0]["info"]["revision"], "R02");
     std::fs::remove_dir_all(root).unwrap();
 }
 
@@ -247,11 +274,20 @@ fn an_archival_publication_delivers_pdf_a_2_files() {
         for f in files {
             let bytes = std::fs::read(target.join(f["name"].as_str().unwrap())).unwrap();
             let report = kentos_formats::pdf::pdfa::pdfa2_report(&bytes).unwrap();
-            assert_eq!(report.conforms(), archival, "{}: {:?}", f["name"], report.findings);
+            assert_eq!(
+                report.conforms(),
+                archival,
+                "{}: {:?}",
+                f["name"],
+                report.findings
+            );
         }
         let manifest: Value =
             serde_json::from_slice(&std::fs::read(target.join("yayin.json")).unwrap()).unwrap();
-        assert_eq!(manifest["options"]["pdfa"], if archival { json!(true) } else { Value::Null });
+        assert_eq!(
+            manifest["options"]["pdfa"],
+            if archival { json!(true) } else { Value::Null }
+        );
     }
     let _ = std::fs::remove_dir_all(&dir);
 }

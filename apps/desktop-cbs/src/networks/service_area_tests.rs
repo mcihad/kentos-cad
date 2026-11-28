@@ -25,13 +25,24 @@ pub(super) fn typed(app: &mut App, text: &str) {
 }
 
 /// The objects of the layer named `name`, with their shapes.
-fn objects(app: &App, name: &str) -> Vec<(kentos_geometry_core::entity::Shape, std::collections::BTreeMap<String, String>)> {
+fn objects(
+    app: &App,
+    name: &str,
+) -> Vec<(
+    kentos_geometry_core::entity::Shape,
+    std::collections::BTreeMap<String, String>,
+)> {
     let doc = &app.document.as_ref().expect("open").model;
     let Some(layer) = doc.layers().leaves().into_iter().find(|n| n.name == name) else {
         return Vec::new();
     };
     doc.by_layer(&layer.id)
-        .map(|e| (kentos_native_application::geometry::shape(e), e.base().attrs.clone()))
+        .map(|e| {
+            (
+                kentos_native_application::geometry::shape(e),
+                e.base().attrs.clone(),
+            )
+        })
         .collect()
 }
 
@@ -80,7 +91,11 @@ fn the_breaks_and_the_margin_stand_first_and_35_m_reach_what_the_network_reaches
     at_35_m(&mut app);
     assert_eq!(settings(&app)[4].1, "35");
     assert_eq!(settings(&app)[7].1, "Açık");
-    assert!(prompt(&app).contains("1 tesis; 3 çizgi, 1 alan"), "{}", prompt(&app));
+    assert!(
+        prompt(&app).contains("1 tesis; 3 çizgi, 1 alan"),
+        "{}",
+        prompt(&app)
+    );
     typed(&mut app, "");
     let log: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(
@@ -103,17 +118,28 @@ fn the_breaks_and_the_margin_stand_first_and_35_m_reach_what_the_network_reaches
     for (got, want) in lengths.iter().zip([5.0, 30.0, 35.0]) {
         assert!((got - want).abs() < 1e-6, "{lengths:?}");
     }
-    assert!(lines.iter().all(|(_, a)| a.get("Aralık (m)").map(String::as_str) == Some("0–35")), "{lines:?}");
+    assert!(
+        lines
+            .iter()
+            .all(|(_, a)| a.get("Aralık (m)").map(String::as_str) == Some("0–35")),
+        "{lines:?}"
+    );
     // The area: the lines' 50 m surroundings, so B (35 m from the end of CB's part) is in it though not reached.
     let areas = objects(&app, "Yaklaşık hizmet alanı");
     let [(kentos_geometry_core::entity::Shape::Polygon { pts, .. }, attrs)] = &areas[..] else {
         panic!("one area: {areas:?}");
     };
     assert!(
-        kentos_geometry_core::geometry::point_in_polygon(kentos_interaction::Vec2::new(B.0, B.1), pts),
+        kentos_geometry_core::geometry::point_in_polygon(
+            kentos_interaction::Vec2::new(B.0, B.1),
+            pts
+        ),
         "B in the area"
     );
-    assert_eq!(attrs.get("Bitiş (m)").map(String::as_str), Some(f.length(35.0).trim_end_matches(" m")));
+    assert_eq!(
+        attrs.get("Bitiş (m)").map(String::as_str),
+        Some(f.length(35.0).trim_end_matches(" m"))
+    );
 }
 
 /// The view drawn back so that the area's 50 m surroundings show whole.

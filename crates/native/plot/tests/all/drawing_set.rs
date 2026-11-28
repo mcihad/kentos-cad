@@ -4,7 +4,7 @@ use kentos_sheet::{
     drawing_set::{DrawingIndex, DrawingInfo},
     ops::{Op, apply_all},
 };
-use serde_json::{Value};
+use serde_json::Value;
 #[test]
 fn drawing_set_title_fields_and_live_index_follow_a_revision_in_the_real_pdf() {
     let fx: Value = serde_json::from_str(include_str!(

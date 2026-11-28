@@ -14,16 +14,16 @@
 //! the regulation): by value the records carry a fifth column, the parcel's value before the readjustment, and
 //! Değerlerin kaynağı says who determined them; the answer says it is no rule.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use std::path::PathBuf;
 
 use iced::widget::{container, row, text_input};
 use iced::{Center, Element, Task};
 use kentos_commands::{
-    CommandResult, Entity, ReadjustmentDistribute, ReadjustmentDistributed, ReadjustmentEntry, ReadjustmentRules,
-    ReadjustmentScope, ReadjustmentScopeParcel, ReadjustmentScoped,
+    CommandResult, Entity, ReadjustmentDistribute, ReadjustmentDistributed, ReadjustmentEntry,
+    ReadjustmentRules, ReadjustmentScope, ReadjustmentScopeParcel, ReadjustmentScoped,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, readjustment, readjustment_scope};
@@ -47,9 +47,15 @@ const MODES: [(&str, &str); 4] = [
     ("toward_zero", "Sıfıra doğru"),
     ("away_from_zero", "Sıfırdan uzağa"),
 ];
-const RULES: [(&str, &str); 2] = [("largest_remainder", "En büyük artık"), ("reject", "Artığı reddet")];
+const RULES: [(&str, &str); 2] = [
+    ("largest_remainder", "En büyük artık"),
+    ("reject", "Artığı reddet"),
+];
 /// docs/adr/5080: the distribution's bases, the regulation's first.
-const BASES: [(&str, &str); 2] = [("area", "Alan · yönetmelik"), ("value", "Değer · karşılaştırma")];
+const BASES: [(&str, &str); 2] = [
+    ("area", "Alan · yönetmelik"),
+    ("value", "Değer · karşılaştırma"),
+];
 
 /// What the table shows.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -177,7 +183,10 @@ pub fn records(text: &str) -> Result<Vec<ReadjustmentEntry>, String> {
         }
         let cells: Vec<&str> = line.split(';').map(str::trim).collect();
         if cells.len() != 4 && cells.len() != 5 {
-            return Err(format!("{}. satır dört ya da beş sütun değil (parsel;hak sahibi;tapu alanı;pay[;değer]).", n + 1));
+            return Err(format!(
+                "{}. satır dört ya da beş sütun değil (parsel;hak sahibi;tapu alanı;pay[;değer]).",
+                n + 1
+            ));
         }
         // A header by its column names only (UR2-035: a first line whose area was not a number was taken for one and
         // dropped, its holder lost and the shortened total shown as kept); every other line is data, checked alike.
@@ -189,7 +198,10 @@ pub fn records(text: &str) -> Result<Vec<ReadjustmentEntry>, String> {
             holder: cells[1].to_owned(),
             area: cells[2].to_owned(),
             share: cells[3].to_owned(),
-            value: cells.get(4).filter(|v| !v.is_empty()).map(|v| (*v).to_owned()),
+            value: cells
+                .get(4)
+                .filter(|v| !v.is_empty())
+                .map(|v| (*v).to_owned()),
         });
     }
     Ok(out)
@@ -199,7 +211,12 @@ pub fn records(text: &str) -> Result<Vec<ReadjustmentEntry>, String> {
 /// them (a word of them in each of its first four cells).
 fn is_header(cells: &[&str]) -> bool {
     let fold = |t: &str| t.to_lowercase().replace('ı', "i").replace("i̇", "i");
-    let words: [&[&str]; 4] = [&["parsel"], &["hak", "malik", "sahib"], &["alan", "yüzölçüm", "yuzolcum"], &["pay", "hisse"]];
+    let words: [&[&str]; 4] = [
+        &["parsel"],
+        &["hak", "malik", "sahib"],
+        &["alan", "yüzölçüm", "yuzolcum"],
+        &["pay", "hisse"],
+    ];
     cells.iter().zip(words).all(|(c, w)| {
         let c = fold(c);
         w.iter().any(|w| c.contains(w))
@@ -221,7 +238,10 @@ pub fn csv(r: &ReadjustmentDistributed) -> String {
     );
     for p in &r.parcels {
         for x in &p.parts {
-            out.push_str(&format!("{};{};{};{};{}\n", p.parcel, x.holder, x.share, x.exact, x.value));
+            out.push_str(&format!(
+                "{};{};{};{};{}\n",
+                p.parcel, x.holder, x.share, x.exact, x.value
+            ));
         }
     }
     out.push_str("\nHak sahibi;Toplam (m²)\n");
@@ -253,7 +273,9 @@ pub fn status_word(p: &ReadjustmentScopeParcel) -> String {
     let rest = p.outside_recorded.as_deref().unwrap_or("");
     let mut out = match p.status.as_str() {
         "registered" => "Tescilli esas".to_owned(),
-        "computed" if p.pieces > 1 => format!("Giren kısım esas; {} parçada {rest} kalır", p.pieces),
+        "computed" if p.pieces > 1 => {
+            format!("Giren kısım esas; {} parçada {rest} kalır", p.pieces)
+        }
         "computed" => format!("Giren kısım esas; dışarıda {rest} kalır"),
         "needsCorrection" => "Yanılma sınırı dışında: düzeltme gerekir".to_owned(),
         "noRecord" => "Tescilli yüzölçümü yok".to_owned(),
@@ -278,7 +300,9 @@ pub fn apply(entries: &mut [ReadjustmentEntry], scope: &ReadjustmentScoped) -> V
     let mut kept = Vec::new();
     let mut unrecorded = Vec::new();
     for p in &scope.parcels {
-        let mine: Vec<usize> = (0..entries.len()).filter(|&i| entries[i].parcel.trim() == p.parcel).collect();
+        let mine: Vec<usize> = (0..entries.len())
+            .filter(|&i| entries[i].parcel.trim() == p.parcel)
+            .collect();
         if mine.is_empty() {
             if p.kind != "outside" {
                 unrecorded.push(p.parcel.clone());
@@ -295,7 +319,15 @@ pub fn apply(entries: &mut [ReadjustmentEntry], scope: &ReadjustmentScoped) -> V
                     changed.push(format!("{} {before} → {b}", p.parcel));
                 }
             }
-            _ => kept.push(format!("{} ({})", p.parcel, if p.duplicate { "aynı Ada/Parsel" } else { status_short(&p.status) })),
+            _ => kept.push(format!(
+                "{} ({})",
+                p.parcel,
+                if p.duplicate {
+                    "aynı Ada/Parsel"
+                } else {
+                    status_short(&p.status)
+                }
+            )),
         }
     }
     let mut outside: Vec<String> = Vec::new();
@@ -310,17 +342,36 @@ pub fn apply(entries: &mut [ReadjustmentEntry], scope: &ReadjustmentScoped) -> V
         if changed.is_empty() {
             "Esas alanlar kayıtlara yazıldı; hiçbir kaydın alanı değişmedi.".to_owned()
         } else {
-            format!("{} parselin kayıtlarında alan esas alanla değişti: {}.", changed.len(), changed.join("; "))
+            format!(
+                "{} parselin kayıtlarında alan esas alanla değişti: {}.",
+                changed.len(),
+                changed.join("; ")
+            )
         },
     )];
     if !kept.is_empty() {
-        lines.push((true, format!("Esası olmayan parsellerin kayıtları dosyadaki alanla kaldı, inceleyin: {}.", kept.join(", "))));
+        lines.push((
+            true,
+            format!(
+                "Esası olmayan parsellerin kayıtları dosyadaki alanla kaldı, inceleyin: {}.",
+                kept.join(", ")
+            ),
+        ));
     }
     if !unrecorded.is_empty() {
-        lines.push((true, format!("Kapsamda olup kaydı olmayan parsel: {}.", unrecorded.join(", "))));
+        lines.push((
+            true,
+            format!(
+                "Kapsamda olup kaydı olmayan parsel: {}.",
+                unrecorded.join(", ")
+            ),
+        ));
     }
     if !outside.is_empty() {
-        lines.push((true, format!("Kapsamda olmayan kayıt parseli: {}.", outside.join(", "))));
+        lines.push((
+            true,
+            format!("Kapsamda olmayan kayıt parseli: {}.", outside.join(", ")),
+        ));
     }
     lines
 }
@@ -342,8 +393,12 @@ fn status_short(status: &str) -> &'static str {
 /// The one selected object's uid when it is an area: the boundary.
 fn chosen_boundary(app: &App) -> Option<String> {
     let doc = app.document.as_ref()?;
-    let [slot] = app.selection.ids() else { return None };
-    matches!(doc.model.get(*slot)?, Entity::Polygon(_)).then(|| doc.model.uid(*slot).map(|u| u.to_string())).flatten()
+    let [slot] = app.selection.ids() else {
+        return None;
+    };
+    matches!(doc.model.get(*slot)?, Entity::Polygon(_))
+        .then(|| doc.model.uid(*slot).map(|u| u.to_string()))
+        .flatten()
 }
 
 /// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
@@ -378,8 +433,11 @@ impl ReadjustmentWindowApp for App {
             self.modules.map_mut().readjustment.scope = None;
             return;
         };
-        let Some(doc) = self.document.as_ref() else { return };
-        self.modules.map_mut().readjustment.scope = Some(readjustment_scope::preview(&doc.model, &input));
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        self.modules.map_mut().readjustment.scope =
+            Some(readjustment_scope::preview(&doc.model, &input));
     }
 
     fn readjustment_run(&mut self) {
@@ -426,7 +484,10 @@ impl ReadjustmentWindowApp for App {
 
     /// The records read from `path` (a test or a trace gives it here, the picker in the app).
     fn readjustment_file(&mut self, path: PathBuf) {
-        match std::fs::read_to_string(&path).map_err(|e| e.to_string()).and_then(|t| records(&t)) {
+        match std::fs::read_to_string(&path)
+            .map_err(|e| e.to_string())
+            .and_then(|t| records(&t))
+        {
             Ok(entries) => {
                 self.modules.map_mut().readjustment.entries = entries;
                 self.modules.map_mut().readjustment.file =
@@ -516,8 +577,13 @@ impl ReadjustmentWindowApp for App {
             Event::Saved(Some(path)) => {
                 if let Some(Ok(r)) = &self.modules.map().readjustment.answer {
                     match std::fs::write(&path, csv(r)) {
-                        Ok(()) => self.say(Level::Success, format!("{TITLE}: sonuç {} dosyasına yazıldı.", path.display())),
-                        Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
+                        Ok(()) => self.say(
+                            Level::Success,
+                            format!("{TITLE}: sonuç {} dosyasına yazıldı.", path.display()),
+                        ),
+                        Err(e) => {
+                            self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display()))
+                        }
                     }
                 }
                 return Task::none();
@@ -535,12 +601,24 @@ impl ReadjustmentWindowApp for App {
     fn readjustment_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().readjustment;
         let r = &s.rules;
-        let text = |placeholder: &str, value: &str, on: fn(String) -> Event| -> text_input::TextInput<'_, Message> {
+        let text = |placeholder: &str,
+                    value: &str,
+                    on: fn(String) -> Event|
+         -> text_input::TextInput<'_, Message> {
             fields::input(None, placeholder, value, false, false).on_input(move |v| msg(on(v)))
         };
-        let modes: Vec<(String, String)> = MODES.iter().map(|(a, b)| ((*a).into(), (*b).into())).collect();
-        let rules: Vec<(String, String)> = RULES.iter().map(|(a, b)| ((*a).into(), (*b).into())).collect();
-        let bases: Vec<(String, String)> = BASES.iter().map(|(a, b)| ((*a).into(), (*b).into())).collect();
+        let modes: Vec<(String, String)> = MODES
+            .iter()
+            .map(|(a, b)| ((*a).into(), (*b).into()))
+            .collect();
+        let rules: Vec<(String, String)> = RULES
+            .iter()
+            .map(|(a, b)| ((*a).into(), (*b).into()))
+            .collect();
+        let bases: Vec<(String, String)> = BASES
+            .iter()
+            .map(|(a, b)| ((*a).into(), (*b).into()))
+            .collect();
         let basis = r.basis.clone().unwrap_or_else(|| "area".into());
         let by_value = basis == "value";
         // Short fields that belong together share a line; every line starts on the box column.
@@ -680,7 +758,10 @@ impl ReadjustmentWindowApp for App {
             )),
         }
         for (look, line) in &s.applied {
-            lines.push(words::text_line(if *look { Kind::Warn } else { Kind::Ok }, line.clone()));
+            lines.push(words::text_line(
+                if *look { Kind::Warn } else { Kind::Ok },
+                line.clone(),
+            ));
         }
         let mut table: Element<'_, Message> = words::empty("Kayıt yok: kayıtları seçin.");
         match &s.answer {
@@ -707,7 +788,13 @@ impl ReadjustmentWindowApp for App {
                         if a.conserved { "toplam kesin korunuyor" } else { "toplam korunmuyor" }
                     ),
                 ));
-                let to = |v: &[String]| if v.is_empty() { String::new() } else { format!(" → {}", v.join(", ")) };
+                let to = |v: &[String]| {
+                    if v.is_empty() {
+                        String::new()
+                    } else {
+                        format!(" → {}", v.join(", "))
+                    }
+                };
                 lines.push(words::text_line(
                     Kind::Info,
                     match &a.mass_remainder {
@@ -733,7 +820,10 @@ impl ReadjustmentWindowApp for App {
                     View::Scope | View::Sheet => words::empty("Düzenleme sınırı seçili değil."),
                     View::Holders => sheet(
                         vec![col("Hak sahibi", 160.0), num("Toplam hak (m²)", 160.0)],
-                        a.holders.iter().map(|h| vec![h.holder.clone(), h.value.clone()]).collect(),
+                        a.holders
+                            .iter()
+                            .map(|h| vec![h.holder.clone(), h.value.clone()])
+                            .collect(),
                         "Hak sahibi yok.",
                         240.0,
                     ),
@@ -751,7 +841,11 @@ impl ReadjustmentWindowApp for App {
                         a.parcels
                             .iter()
                             .map(|p| {
-                                let parts: Vec<String> = p.parts.iter().map(|x| format!("{} ({}): {}", x.holder, x.share, x.value)).collect();
+                                let parts: Vec<String> = p
+                                    .parts
+                                    .iter()
+                                    .map(|x| format!("{} ({}): {}", x.holder, x.share, x.value))
+                                    .collect();
                                 vec![
                                     p.parcel.clone(),
                                     p.area.clone(),
@@ -778,14 +872,22 @@ impl ReadjustmentWindowApp for App {
                         a.parcels
                             .iter()
                             .map(|p| {
-                                let parts: Vec<String> = p.parts.iter().map(|x| format!("{} ({}): {}", x.holder, x.share, x.value)).collect();
+                                let parts: Vec<String> = p
+                                    .parts
+                                    .iter()
+                                    .map(|x| format!("{} ({}): {}", x.holder, x.share, x.value))
+                                    .collect();
                                 vec![
                                     p.parcel.clone(),
                                     p.area.clone(),
                                     p.deduction.clone(),
                                     p.net.clone(),
                                     parts.join("; "),
-                                    if p.remainder == "0" { String::new() } else { format!("{}{}", p.remainder, to(&p.remainder_to)) },
+                                    if p.remainder == "0" {
+                                        String::new()
+                                    } else {
+                                        format!("{}{}", p.remainder, to(&p.remainder_to))
+                                    },
                                 ]
                             })
                             .collect(),
@@ -805,7 +907,14 @@ impl ReadjustmentWindowApp for App {
             ));
             table = match &s.scope {
                 Some(Ok(k)) => sheet(
-                    vec![col("Parsel", 70.0), col("Kısım", 150.0), num("Nokta", 55.0), num("Y", 130.0), num("X", 130.0), num("Alan (m²)", 100.0)],
+                    vec![
+                        col("Parsel", 70.0),
+                        col("Kısım", 150.0),
+                        num("Nokta", 55.0),
+                        num("Y", 130.0),
+                        num("X", 130.0),
+                        num("Alan (m²)", 100.0),
+                    ],
                     crate::readjustment_sheet::rows(k, &f),
                     "Kısmen giren parsel yok: ayırma çapı gerekmez.",
                     240.0,
@@ -837,7 +946,12 @@ impl ReadjustmentWindowApp for App {
                                 _ => "Dışarıda",
                             };
                             let diff = match p.difference {
-                                Some(d) => format!("{}{} / ±{}", if d > 0.0 { "+" } else { "" }, f.area_bare(d), f.area_bare(p.limit)),
+                                Some(d) => format!(
+                                    "{}{} / ±{}",
+                                    if d > 0.0 { "+" } else { "" },
+                                    f.area_bare(d),
+                                    f.area_bare(p.limit)
+                                ),
                                 None => format!("— / ±{}", f.area_bare(p.limit)),
                             };
                             vec![
@@ -866,16 +980,28 @@ impl ReadjustmentWindowApp for App {
             .width(iced::Fill)
             .push(form)
             .push(words::summary(lines))
-            .push(Segmented::new([View::Holders, View::Parcels, View::Scope, View::Sheet], s.view, |v| msg(Event::View(v))))
+            .push(Segmented::new(
+                [View::Holders, View::Parcels, View::Scope, View::Sheet],
+                s.view,
+                |v| msg(Event::View(v)),
+            ))
             .push_fit(table, kentos_ui::theme::typography::scaled(200.0));
         let ready = matches!(s.answer, Some(Ok(_)));
         let parts = matches!(&s.scope, Some(Ok(k)) if crate::readjustment_sheet::has_parts(k));
-        let frame = Frame::new(TITLE).scroll(body).aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))));
+        let frame = Frame::new(TITLE)
+            .scroll(body)
+            .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))));
         // The separation sheet's view: its parts written on the drawing, or a sheet for each parcel (docs/adr/2680).
         let frame = if s.view == View::Sheet {
             frame
-                .aside(words::secondary(crate::readjustment_sheet::WRITE, parts.then(|| msg(Event::WriteSheet))))
-                .aside(words::secondary(crate::readjustment_sheet::MAKE, parts.then(|| msg(Event::MakeSheets))))
+                .aside(words::secondary(
+                    crate::readjustment_sheet::WRITE,
+                    parts.then(|| msg(Event::WriteSheet)),
+                ))
+                .aside(words::secondary(
+                    crate::readjustment_sheet::MAKE,
+                    parts.then(|| msg(Event::MakeSheets)),
+                ))
         } else {
             frame
         };

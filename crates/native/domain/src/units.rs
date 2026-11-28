@@ -66,7 +66,9 @@ impl Document {
             let mut after = (**before).clone();
             point(&mut after.p);
             match &mut after.layout {
-                ArrayLayout::Grid { dx, dy, .. } | ArrayLayout::Lattice { dx, dy, .. } | ArrayLayout::Line { dx, dy, .. } => {
+                ArrayLayout::Grid { dx, dy, .. }
+                | ArrayLayout::Lattice { dx, dy, .. }
+                | ArrayLayout::Line { dx, dy, .. } => {
                     *dx = scale.apply(*dx);
                     *dy = scale.apply(*dy);
                 }
@@ -129,7 +131,13 @@ impl Document {
         if !(scale.is_finite() && scale > 0.0) || before == scale {
             return false;
         }
-        self.record(vec![Op::PlotScale { before, after: scale }], label);
+        self.record(
+            vec![Op::PlotScale {
+                before,
+                after: scale,
+            }],
+            label,
+        );
         // What reads the scale, as `set_settings` refreshes it.
         self.refresh_viewmarks();
         self.refresh_dimension_set_rows();

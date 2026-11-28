@@ -81,11 +81,23 @@ pub struct StandardProvenance {
     pub dimension_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
     /// Office tool palettes by id (docs/adr/1014).
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<std::collections::BTreeMap<String, StandardOrigin>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(
+            optional,
+            as = "Option<std::collections::BTreeMap<String, StandardOrigin>>"
+        )
+    )]
     pub tool_palettes: std::collections::BTreeMap<String, StandardOrigin>,
     /// Table styles by name (docs/adr/1126 §6).
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<std::collections::BTreeMap<String, StandardOrigin>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(
+            optional,
+            as = "Option<std::collections::BTreeMap<String, StandardOrigin>>"
+        )
+    )]
     pub table_style_definitions: std::collections::BTreeMap<String, StandardOrigin>,
 }
 
@@ -346,7 +358,9 @@ pub fn tool_palettes_problem(palettes: &[ToolPalette]) -> Option<String> {
     let mut ids = std::collections::BTreeSet::new();
     for p in palettes {
         if !good(&p.id) || !good(&p.name) {
-            return Some("paletin kimliği ve adı 1–128 bayt olmalı ve kenar boşluğu içermemeli".into());
+            return Some(
+                "paletin kimliği ve adı 1–128 bayt olmalı ve kenar boşluğu içermemeli".into(),
+            );
         }
         if !ids.insert(p.id.to_lowercase()) {
             return Some(format!("“{}” palet kimliği yineleniyor", p.id));
@@ -357,16 +371,30 @@ pub fn tool_palettes_problem(palettes: &[ToolPalette]) -> Option<String> {
         let mut tools = std::collections::BTreeSet::new();
         for t in &p.tools {
             if !good(&t.id) || !good(&t.title) || !good(&t.command) {
-                return Some(format!("“{}” paletinin aracının kimliği, başlığı ve komutu 1–128 bayt olmalı", p.id));
+                return Some(format!(
+                    "“{}” paletinin aracının kimliği, başlığı ve komutu 1–128 bayt olmalı",
+                    p.id
+                ));
             }
             if !tools.insert(t.id.to_lowercase()) {
-                return Some(format!("“{}” paletinde “{}” araç kimliği yineleniyor", p.id, t.id));
+                return Some(format!(
+                    "“{}” paletinde “{}” araç kimliği yineleniyor",
+                    p.id, t.id
+                ));
             }
             if t.command_version == 0 {
-                return Some(format!("“{}” aracının komut sürümü 1 ya da büyük olmalı", t.id));
+                return Some(format!(
+                    "“{}” aracının komut sürümü 1 ya da büyük olmalı",
+                    t.id
+                ));
             }
-            if !t.input.is_object() || serde_json::to_string(&t.input).map_or(true, |s| s.len() > 65_536) {
-                return Some(format!("“{}” aracının girdisi en çok 64 KiB'lık bir nesne olmalı", t.id));
+            if !t.input.is_object()
+                || serde_json::to_string(&t.input).map_or(true, |s| s.len() > 65_536)
+            {
+                return Some(format!(
+                    "“{}” aracının girdisi en çok 64 KiB'lık bir nesne olmalı",
+                    t.id
+                ));
             }
         }
     }
@@ -609,7 +637,9 @@ pub fn parse_standard_document(
                 if let Some(problem) = tool_palettes_problem(&resources.tool_palettes) {
                     return Err(format!("Araç paleti geçersiz: {problem}."));
                 }
-                if let Some(problem) = crate::table_style_defs_problem(&resources.table_style_definitions) {
+                if let Some(problem) =
+                    crate::table_style_defs_problem(&resources.table_style_definitions)
+                {
                     return Err(format!("Tablo stili kaynağı geçersiz: {problem}."));
                 }
             }
@@ -797,7 +827,15 @@ pub fn check_resource_fields(resources: &serde_json::Value) -> Result<(), String
                 item,
                 &format!("resources.leaderStyles[{i}]"),
                 // docs/adr/1025: the note's text style, by name.
-                &["id", "name", "height", "arrow", "arrowSize", "mask", "textStyle"],
+                &[
+                    "id",
+                    "name",
+                    "height",
+                    "arrow",
+                    "arrowSize",
+                    "mask",
+                    "textStyle",
+                ],
             )?;
         }
     }
@@ -1666,7 +1704,10 @@ pub struct StandardInstallChoice {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct StandardsInstall {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<StandardInstallChoice>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<StandardInstallChoice>>")
+    )]
     pub choices: Vec<StandardInstallChoice>,
     /// A project's or office's block libraries (`kentos.blocks`, absolute paths ending `.kblok`, at most 16 MiB
     /// each), searched in this order before KentOS's own; each is named by its file stem in a row's `library`. Read
@@ -1740,4 +1781,3 @@ pub struct StandardsInstalled {
     #[cfg_attr(feature = "schema", schemars(extend("description" = REVISION_TEXT)))]
     pub revision: String,
 }
-

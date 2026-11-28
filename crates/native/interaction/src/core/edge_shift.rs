@@ -32,7 +32,9 @@ use crate::format::Format;
 use crate::log::Level;
 use crate::points;
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Cursor, Flow, Marker, MarkerShape, Pointer, Preview, Stroke, Tag, Tone, Tool};
+use crate::tool::{
+    Context, Cursor, Flow, Marker, MarkerShape, Pointer, Preview, Stroke, Tag, Tone, Tool,
+};
 
 /// The tool's id: its command is `tool.edgeShift`.
 pub const ID: &str = "edgeShift";
@@ -94,7 +96,13 @@ enum Amount {
 /// Where the cursor moves the edge: the place, the distance, the shape moved there (or why not) and, while
 /// Topolojik düzenleme is on, the neighbours moved with it (their shapes, each area's size before and after) and their
 /// vertices that move, where they go (docs/adr/3000).
-type At = (Vec2, f64, Result<Shape, String>, Vec<(Shape, Option<(f64, f64)>)>, Vec<Vec2>);
+type At = (
+    Vec2,
+    f64,
+    Result<Shape, String>,
+    Vec<(Shape, Option<(f64, f64)>)>,
+    Vec<Vec2>,
+);
 
 /// A shape's vertices in order: a point's, a line's ends, a path's or an area's outer ring and holes.
 fn vertices(s: &Shape) -> Vec<Vec2> {
@@ -121,7 +129,11 @@ fn moved_vertices(then: &Shape, now: &Shape, out: &mut Vec<Vec2>) {
     }
     for (p, q) in a.iter().zip(&b) {
         let gone = (q.x - p.x).abs() > 1e-9 || (q.y - p.y).abs() > 1e-9;
-        if gone && !out.iter().any(|o| (o.x - q.x).abs() <= 1e-9 && (o.y - q.y).abs() <= 1e-9) {
+        if gone
+            && !out
+                .iter()
+                .any(|o| (o.x - q.x).abs() <= 1e-9 && (o.y - q.y).abs() <= 1e-9)
+        {
             out.push(*q);
         }
     }
@@ -193,7 +205,10 @@ impl EdgeShift {
                 {
                     self.reference = None;
                     self.keep = false;
-                    cx.say(Level::Info, "Referans bu kenara paralel değil; referans bırakıldı.");
+                    cx.say(
+                        Level::Info,
+                        "Referans bu kenara paralel değil; referans bırakıldı.",
+                    );
                 }
                 self.edge = Some(Picking {
                     slot,
@@ -232,7 +247,10 @@ impl EdgeShift {
         };
         let k = &picking.picked;
         if slot == picking.slot && (part, ring, index) == (0, k.ring, k.edge) {
-            cx.say(Level::Warn, "Kenar kendisinin referansı olamaz; başka bir kenar seçin.");
+            cx.say(
+                Level::Warn,
+                "Kenar kendisinin referansı olamaz; başka bir kenar seçin.",
+            );
             return;
         }
         let r = Reference {
@@ -335,12 +353,17 @@ impl EdgeShift {
             };
             cx.say(
                 Level::Info,
-                format!("Topolojik düzenleme: {} komşu nesne de değişti{inside}.", out.neighbours.len()),
+                format!(
+                    "Topolojik düzenleme: {} komşu nesne de değişti{inside}.",
+                    out.neighbours.len()
+                ),
             );
         }
         let moved_area = picking.area.map(|_| out.after);
         let format = cx.format();
-        let area = moved_area.map(|a| format!(", alan {}", format.area(a))).unwrap_or_default();
+        let area = moved_area
+            .map(|a| format!(", alan {}", format.area(a)))
+            .unwrap_or_default();
         // The bond's parameter, as the Kısıtlar panel names it.
         let parameter = out.bonds.first().and_then(|id| {
             cx.doc
@@ -359,10 +382,15 @@ impl EdgeShift {
                 format.length(kept)
             ),
             (Amount::FromReference(Some(d)), None) => {
-                format!("{LABEL}: kenar referanstan {} uzağa kaydırıldı{area}.", format.length(d))
+                format!(
+                    "{LABEL}: kenar referanstan {} uzağa kaydırıldı{area}.",
+                    format.length(d)
+                )
             }
             (Amount::FromReference(None), None) => format!("{LABEL}: kenar yerinde kaldı."),
-            (Amount::Shift(d), _) => format!("{LABEL}: kenar {} kaydırıldı{area}.", format.length(d)),
+            (Amount::Shift(d), _) => {
+                format!("{LABEL}: kenar {} kaydırıldı{area}.", format.length(d))
+            }
         };
         cx.say(Level::Success, said);
         self.edge = None;
@@ -465,7 +493,13 @@ impl Tool for EdgeShift {
         // The neighbours that go with it while Topolojik düzenleme is on (the command's own rule), the vertices inside
         // the shared edge too (docs/adr/2600); the command's refusal when one cannot go.
         let found = match &moved {
-            Ok(after) => crate::neighbours::shifted_neighbours(cx, picking.slot, &picking.shape, after, (k.ring, k.edge)),
+            Ok(after) => crate::neighbours::shifted_neighbours(
+                cx,
+                picking.slot,
+                &picking.shape,
+                after,
+                (k.ring, k.edge),
+            ),
             Err(_) => Ok(None),
         };
         let found = match found {
@@ -495,7 +529,8 @@ impl Tool for EdgeShift {
                             if let Some(t) = &then {
                                 moved_vertices(t, &now, &mut carried);
                             }
-                            let sizes = then.and_then(|t| Some((rules::area_of(&t)?, rules::area_of(&now)?)));
+                            let sizes = then
+                                .and_then(|t| Some((rules::area_of(&t)?, rules::area_of(&now)?)));
                             (now, sizes)
                         })
                         .collect()
@@ -568,7 +603,10 @@ impl Tool for EdgeShift {
                 if !has_area {
                     cx.say(Level::Warn, rules::NOT_AREA);
                 } else if self.reference.is_some() {
-                    cx.say(Level::Warn, "Referansla hedef alan verilmez; referansa uzaklığı yazın.");
+                    cx.say(
+                        Level::Warn,
+                        "Referansla hedef alan verilmez; referansa uzaklığı yazın.",
+                    );
                 } else {
                     self.asking = true;
                 }
@@ -660,7 +698,8 @@ impl Tool for EdgeShift {
             false,
             std::f64::consts::PI / 90.0,
         );
-        out.strokes.push(Stroke::solid(edge_pts, false).width(2.0).tone(Tone::Snap));
+        out.strokes
+            .push(Stroke::solid(edge_pts, false).width(2.0).tone(Tone::Snap));
         // The reference, the line the edge keeps its distance from (docs/adr/2580): long dashes, stays where it is.
         if let Some(r) = self.reference {
             out.strokes.push(Stroke {
@@ -707,7 +746,8 @@ impl Tool for EdgeShift {
                 }
                 // The neighbours moved with it, and a neighbour area's new size (docs/adr/1960).
                 for (now, sizes) in around {
-                    out.strokes.extend(Outline::of(now, Some([3.0, 3.0]), 1.0, Tone::Snap).strokes);
+                    out.strokes
+                        .extend(Outline::of(now, Some([3.0, 3.0]), 1.0, Tone::Snap).strokes);
                     if let Some((before, after)) = sizes {
                         lines.push(format!(
                             "komşu {} ({})",
@@ -718,7 +758,11 @@ impl Tool for EdgeShift {
                 }
                 // Where the neighbours' vertices go, each ringed once (docs/adr/3000).
                 for &p in carried {
-                    out.markers.push(Marker { at: p, shape: MarkerShape::Ring(5.0), tone: Tone::Snap });
+                    out.markers.push(Marker {
+                        at: p,
+                        shape: MarkerShape::Ring(5.0),
+                        tone: Tone::Snap,
+                    });
                 }
                 if !carried.is_empty() {
                     lines.push(format!("komşunun {} köşesi birlikte kayar", carried.len()));

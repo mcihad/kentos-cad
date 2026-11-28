@@ -1,13 +1,13 @@
 //! topology › tests's tests that need the CBS module's surfaces (its project's bottom tabs and panels; docs/adr/9199
 //! §4.14): moved from the core's gis/topology/tests.rs with the module's package; the work they test is the core's.
 
-use crate::gis;
-use kentos_commands::TopologySettings;
-use kentos_domain::Slot;
-use crate::topology::plan::Filter;
-use crate::topology::Event;
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
+use crate::gis;
+use crate::topology::Event;
+use crate::topology::plan::Filter;
+use kentos_commands::TopologySettings;
+use kentos_domain::Slot;
 
 const DRAWING: &str = include_str!("../../../../fixtures/interaction/v1/topology-rules.kcad");
 
@@ -273,7 +273,11 @@ fn a_lapsed_exception_is_said_on_its_row() {
     ev(&mut app, Event::Press(0));
     ev(&mut app, Event::Exception(true));
     let x = &topology(&app).exceptions[0];
-    assert_eq!(x.digest.as_ref().map(String::len), Some(16), "bound to the geometry");
+    assert_eq!(
+        x.digest.as_ref().map(String::len),
+        Some(16),
+        "bound to the geometry"
+    );
     // Its digest made old as a change of the objects' geometry would.
     let doc = &mut app.document.as_mut().expect("open").model;
     let mut settings = doc.settings().clone();
@@ -297,13 +301,22 @@ fn a_finding_is_marked_as_an_error_with_its_reason() {
     ev(&mut app, Event::Error);
     let t = topology(&app);
     assert_eq!(t.exceptions.len(), 1);
-    assert_eq!(t.exceptions[0].decision, Some(kentos_commands::TopologyDecision::Error));
-    assert_eq!(t.exceptions[0].reason.as_deref(), Some("Sayısallaştırma hatası"));
+    assert_eq!(
+        t.exceptions[0].decision,
+        Some(kentos_commands::TopologyDecision::Error)
+    );
+    assert_eq!(
+        t.exceptions[0].reason.as_deref(),
+        Some("Sayısallaştırma hatası")
+    );
     assert!(t.exceptions[0].rule_digest.is_some());
     let c = app.topology_checked().expect("checked again");
     let f = &c.findings[0];
     assert!(!f.exception, "an error is still open");
-    assert_eq!(crate::topology::review::state_text(c, f), "Hata: Sayısallaştırma hatası");
+    assert_eq!(
+        crate::topology::review::state_text(c, f),
+        "Hata: Sayısallaştırma hatası"
+    );
     // A profile asks for a reason.
     let doc = &mut app.document.as_mut().expect("open").model;
     let mut settings = doc.settings().clone();
@@ -320,7 +333,11 @@ fn a_finding_is_marked_as_an_error_with_its_reason() {
     ev(&mut app, Event::Press(1));
     ev(&mut app, Event::Reason(String::new()));
     ev(&mut app, Event::Exception(true));
-    assert_eq!(topology(&app).exceptions.len(), 1, "nothing written without a reason");
+    assert_eq!(
+        topology(&app).exceptions.len(),
+        1,
+        "nothing written without a reason"
+    );
 }
 
 /// Tarifle onar (docs/adr/1260 §4): the chosen findings planned first, nothing written; Uygula writes the recipe as
@@ -333,8 +350,15 @@ fn a_recipe_is_planned_then_applied_in_one_step() {
     ev(&mut app, Event::Recipe);
     let r = app.topology_recipe().expect("planned").clone();
     assert_eq!(r.planned.recipe.len(), 1);
-    assert_eq!(app.document.as_ref().expect("open").model.revision(), revision, "a plan writes nothing");
-    assert!(app.topology_recipe_text(&r).starts_with("Onarım tarifi: 1 adım"));
+    assert_eq!(
+        app.document.as_ref().expect("open").model.revision(),
+        revision,
+        "a plan writes nothing"
+    );
+    assert!(
+        app.topology_recipe_text(&r)
+            .starts_with("Onarım tarifi: 1 adım")
+    );
     ev(&mut app, Event::Drop);
     assert!(app.topology_recipe().is_none());
     ev(&mut app, Event::Recipe);
@@ -393,17 +417,37 @@ fn the_recheck_after_a_move_finds_what_checking_all_finds() {
 fn a_reason_stays_with_its_finding() {
     let mut app = checked();
     ev(&mut app, Event::Press(0));
-    ev(&mut app, Event::Reason("QA: örnek hattın açık başlangıcı".into()));
+    ev(
+        &mut app,
+        Event::Reason("QA: örnek hattın açık başlangıcı".into()),
+    );
     ev(&mut app, Event::Exception(true));
     ev(&mut app, Event::Filter(Filter::All));
     let other = app.topology_shown().len() - 1;
     ev(&mut app, Event::Press(other));
-    assert_eq!(app.gis.topology.reason, "", "another finding: its own words, none yet");
+    assert_eq!(
+        app.gis.topology.reason, "",
+        "another finding: its own words, none yet"
+    );
     ev(&mut app, Event::Error);
-    let reasons: Vec<Option<String>> = topology(&app).exceptions.iter().map(|x| x.reason.clone()).collect();
-    assert_eq!(reasons.iter().filter(|r| r.as_deref() == Some("QA: örnek hattın açık başlangıcı")).count(), 1, "{reasons:?}");
+    let reasons: Vec<Option<String>> = topology(&app)
+        .exceptions
+        .iter()
+        .map(|x| x.reason.clone())
+        .collect();
+    assert_eq!(
+        reasons
+            .iter()
+            .filter(|r| r.as_deref() == Some("QA: örnek hattın açık başlangıcı"))
+            .count(),
+        1,
+        "{reasons:?}"
+    );
     ev(&mut app, Event::Press(0));
-    assert_eq!(app.gis.topology.reason, "QA: örnek hattın açık başlangıcı", "its own reason back");
+    assert_eq!(
+        app.gis.topology.reason, "QA: örnek hattın açık başlangıcı",
+        "its own reason back"
+    );
 }
 
 /// GIS-032: Gerekçe is the finding's it was typed for and the drawing's: another finding or another drawing starts
@@ -412,10 +456,21 @@ fn a_reason_stays_with_its_finding() {
 fn the_reason_typed_stays_with_its_finding_and_drawing() {
     let mut app = checked();
     ev(&mut app, Event::Press(0));
-    ev(&mut app, Event::Reason("QA: ortak sınır için geçici istisna".into()));
+    ev(
+        &mut app,
+        Event::Reason("QA: ortak sınır için geçici istisna".into()),
+    );
     ev(&mut app, Event::Press(1));
-    assert!(app.gis.topology.reason.is_empty(), "another finding starts it empty");
+    assert!(
+        app.gis.topology.reason.is_empty(),
+        "another finding starts it empty"
+    );
     ev(&mut app, Event::Reason("taslak".into()));
-    let _ = app.update(crate::app::Message::Opened(Some(Ok(Box::new(crate::files_testing::drawing(0))))));
-    assert!(app.gis.topology.reason.is_empty() && app.gis.topology.checked.is_none(), "another drawing starts it again");
+    let _ = app.update(crate::app::Message::Opened(Some(Ok(Box::new(
+        crate::files_testing::drawing(0),
+    )))));
+    assert!(
+        app.gis.topology.reason.is_empty() && app.gis.topology.checked.is_none(),
+        "another drawing starts it again"
+    );
 }

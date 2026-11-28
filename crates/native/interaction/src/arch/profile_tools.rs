@@ -78,7 +78,11 @@ pub struct ProfileTool {
 /// Metres in centimetres as a plan writes them: 5, 22.5.
 fn cm(m: f64) -> String {
     let c = (m * 1000.0).round() / 10.0;
-    if c.fract() == 0.0 { format!("{c:.0}") } else { format!("{c:.1}") }
+    if c.fract() == 0.0 {
+        format!("{c:.0}")
+    } else {
+        format!("{c:.1}")
+    }
 }
 
 fn justify_key(j: WallJustify) -> &'static str {
@@ -146,7 +150,11 @@ impl ProfileTool {
     }
 
     fn name(&self) -> &'static str {
-        if self.coping { "Duvar harpuştası" } else { "Cephe silmesi" }
+        if self.coping {
+            "Duvar harpuştası"
+        } else {
+            "Cephe silmesi"
+        }
     }
 
     /// Its Tür taken, with that kind's sizes until changed.
@@ -165,7 +173,11 @@ impl ProfileTool {
     }
 
     fn covering(&self) -> Covering {
-        if self.coping { Covering::coping() } else { Covering::facade_moulding() }
+        if self.coping {
+            Covering::coping()
+        } else {
+            Covering::facade_moulding()
+        }
     }
 
     fn kind(&self) -> crate::arch_layer::Kind {
@@ -178,8 +190,16 @@ impl ProfileTool {
 
     /// The floor of the level `level`, metres over ±0.00 (0 without one).
     fn floor_of(cx: &Context<'_>, level: Option<&str>) -> f64 {
-        let levels = cx.doc.settings().arch.as_ref().map(|a| a.levels.as_slice()).unwrap_or_default();
-        level.and_then(|id| levels.iter().find(|l| l.id == id)).map_or(0.0, |l| l.elevation)
+        let levels = cx
+            .doc
+            .settings()
+            .arch
+            .as_ref()
+            .map(|a| a.levels.as_slice())
+            .unwrap_or_default();
+        level
+            .and_then(|id| levels.iter().find(|l| l.id == id))
+            .map_or(0.0, |l| l.elevation)
     }
 
     /// The straight wall under `at`.
@@ -209,10 +229,18 @@ impl ProfileTool {
     /// The moulding round the walls' outer outline round `seed`, out of it; why there is none.
     fn moulding_round(&self, seed: Vec2, cx: &Context<'_>) -> Result<NewBeam, String> {
         let level = cx.new_arch().and_then(|a| a.level);
-        let Some(part) = cx.doc.slab_from_walls(points::wire(seed), level.as_deref(), false) else {
+        let Some(part) = cx
+            .doc
+            .slab_from_walls(points::wire(seed), level.as_deref(), false)
+        else {
             return Err("Nokta hiçbir duvar konturunun içinde değil; yapının içine tıklayın ya da Sınır'ı Çiz yapın.".into());
         };
-        if part.outer.bulges.as_ref().is_some_and(|b| b.iter().any(|v| *v != 0.0)) {
+        if part
+            .outer
+            .bulges
+            .as_ref()
+            .is_some_and(|b| b.iter().any(|v| *v != 0.0))
+        {
             return Err("Eğrisel konturun cephe silmesi çizilemiyor: Sınır'ı Çiz yapıp düz kenarlarla verin.".into());
         }
         let ring: Vec<Vec2> = part.outer.pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
@@ -227,7 +255,10 @@ impl ProfileTool {
             return Err("Burada duvar yok.".into());
         };
         let w = &w.wall;
-        if w.bulges.as_ref().is_some_and(|b| b.iter().any(|v| *v != 0.0)) {
+        if w.bulges
+            .as_ref()
+            .is_some_and(|b| b.iter().any(|v| *v != 0.0))
+        {
             return Err("Eğrisel duvarın harpuştası çizilemiyor; düz bir duvara tıklayın.".into());
         }
         let Some(height) = cx.doc.wall_height(w) else {
@@ -255,7 +286,10 @@ impl ProfileTool {
             base_offset: Some(top),
             material: self.material.clone(),
             covering: Some(self.covering()),
-            arch: Some(kentos_commands::ArchInfo { level: w.arch.level.clone(), ..cx.new_arch().unwrap_or_default() }),
+            arch: Some(kentos_commands::ArchInfo {
+                level: w.arch.level.clone(),
+                ..cx.new_arch().unwrap_or_default()
+            }),
             ..NewBeam::default()
         })
     }
@@ -312,13 +346,21 @@ impl ProfileTool {
             kentos_commands::CommandResult::Completed { output, .. } => {
                 for e in &output.beams {
                     self.drawn.strokes.extend(
-                        Outline::of(&kentos_native_application::geometry::shape(e), None, 2.0, Tone::Accent).strokes,
+                        Outline::of(
+                            &kentos_native_application::geometry::shape(e),
+                            None,
+                            2.0,
+                            Tone::Accent,
+                        )
+                        .strokes,
                     );
                 }
             }
             kentos_commands::CommandResult::Failed { error }
             | kentos_commands::CommandResult::Conflict { error }
-            | kentos_commands::CommandResult::NeedsInput { error } => self.why = Some(error.message),
+            | kentos_commands::CommandResult::NeedsInput { error } => {
+                self.why = Some(error.message)
+            }
             _ => {}
         }
     }
@@ -332,7 +374,11 @@ impl ProfileTool {
             points::written(result, cx).is_some()
         });
         if written {
-            let what = if self.coping { "Duvar harpuştası kondu" } else { "Cephe silmesi çizildi" };
+            let what = if self.coping {
+                "Duvar harpuştası kondu"
+            } else {
+                "Cephe silmesi çizildi"
+            };
             cx.say(Level::Success, format!("{what}: {}.", self.size()));
         }
     }
@@ -348,7 +394,8 @@ impl ProfileTool {
 
     /// A setting's value taken; false when it cannot be read.
     fn apply(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
-        let length = |cx: &mut Context<'_>| cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0);
+        let length =
+            |cx: &mut Context<'_>| cx.typed_length(value).filter(|v| v.is_finite() && *v > 0.0);
         match key {
             "T" => match value {
                 "moulding" => {
@@ -375,9 +422,11 @@ impl ProfileTool {
             },
             "E" => length(cx).map(|v| self.width = v).is_some(),
             "Y" => length(cx).map(|v| self.height = v).is_some(),
-            "A" if !self.coping => {
-                cx.typed_length(js_trim(value)).filter(|v| v.is_finite()).map(|v| self.base = v).is_some()
-            }
+            "A" if !self.coping => cx
+                .typed_length(js_trim(value))
+                .filter(|v| v.is_finite())
+                .map(|v| self.base = v)
+                .is_some(),
             "M" => {
                 let t = js_trim(value);
                 self.material = (!t.is_empty() && upper_tr(t) != "YOK").then(|| t.to_owned());
@@ -473,7 +522,15 @@ impl Tool for ProfileTool {
         };
         let mut p = Prompt::new(name, step)
             .option_with("Tür", "T", name)
-            .option_with("Sınır", "S", if self.bound == Bound::Outline { "Dış yüzler" } else { "Çiz" })
+            .option_with(
+                "Sınır",
+                "S",
+                if self.bound == Bound::Outline {
+                    "Dış yüzler"
+                } else {
+                    "Çiz"
+                },
+            )
             .option_with("Çıkıntı", "E", n(self.width))
             .option_with("Yükseklik", "Y", n(self.height))
             .option_with("Kattan yükseklik", "A", n(self.base));
@@ -549,7 +606,10 @@ impl Tool for ProfileTool {
                 Ask::Material => "M",
             };
             if !self.apply(field, text, cx) {
-                cx.say(Level::Warn, "Değer okunamadı; çıkıntı, taşma ve yükseklik sıfırdan büyük bir uzunluktur.");
+                cx.say(
+                    Level::Warn,
+                    "Değer okunamadı; çıkıntı, taşma ve yükseklik sıfırdan büyük bir uzunluktur.",
+                );
                 return true;
             }
             self.ask = None;
@@ -563,7 +623,11 @@ impl Tool for ProfileTool {
                 return true;
             }
             "S" if !self.coping => {
-                self.bound = if self.bound == Bound::Outline { Bound::Draw } else { Bound::Outline };
+                self.bound = if self.bound == Bound::Outline {
+                    Bound::Draw
+                } else {
+                    Bound::Outline
+                };
                 self.pts.clear();
                 self.see(cx);
                 return true;
@@ -598,7 +662,10 @@ impl Tool for ProfileTool {
             "T",
             "Tür",
             crate::tool_settings::choices(
-                &[("moulding", "Cephe silmesi"), ("coping", "Duvar harpuştası")],
+                &[
+                    ("moulding", "Cephe silmesi"),
+                    ("coping", "Duvar harpuştası"),
+                ],
                 if self.coping { "coping" } else { "moulding" },
             ),
         )];
@@ -608,11 +675,19 @@ impl Tool for ProfileTool {
                 "Sınır",
                 crate::tool_settings::choices(
                     &[("outline", "Dış yüzler"), ("draw", "Çiz")],
-                    if self.bound == Bound::Outline { "outline" } else { "draw" },
+                    if self.bound == Bound::Outline {
+                        "outline"
+                    } else {
+                        "draw"
+                    },
                 ),
             ));
         }
-        out.push(Setting::text("E", if self.coping { "Taşma" } else { "Çıkıntı" }, f.length(self.width)));
+        out.push(Setting::text(
+            "E",
+            if self.coping { "Taşma" } else { "Çıkıntı" },
+            f.length(self.width),
+        ));
         out.push(Setting::text("Y", "Yükseklik", f.length(self.height)));
         if !self.coping {
             out.push(Setting::text("A", "Kattan yükseklik", f.length(self.base)));
@@ -627,7 +702,11 @@ impl Tool for ProfileTool {
                 ),
             ));
         }
-        out.push(Setting::text("M", "Malzeme", self.material.clone().unwrap_or_else(|| "Yok".into())));
+        out.push(Setting::text(
+            "M",
+            "Malzeme",
+            self.material.clone().unwrap_or_else(|| "Yok".into()),
+        ));
         out.push(Setting::hint(
             "P",
             "Yeri",
@@ -661,7 +740,10 @@ impl Tool for ProfileTool {
             self.see(cx);
             return true;
         }
-        cx.say(Level::Warn, "Değer uygulanmadı: çıkıntı, taşma ve yükseklik sıfırdan büyük bir uzunluktur.");
+        cx.say(
+            Level::Warn,
+            "Değer uygulanmadı: çıkıntı, taşma ve yükseklik sıfırdan büyük bir uzunluktur.",
+        );
         false
     }
 
@@ -704,7 +786,11 @@ impl Tool for ProfileTool {
             }
             Tag { at, lines }
         });
-        out.tag_tone = if self.why.is_some() { Tone::Danger } else { Tone::Accent };
+        out.tag_tone = if self.why.is_some() {
+            Tone::Danger
+        } else {
+            Tone::Accent
+        };
         out
     }
 }
@@ -716,11 +802,19 @@ mod tests {
     #[test]
     fn a_ring_runs_round_once_from_the_middle_of_its_first_edge_counter_clockwise() {
         // Clockwise in, counter-clockwise out: from the middle of an edge round to it again.
-        let ring = [Vec2::new(0.0, 0.0), Vec2::new(0.0, 4.0), Vec2::new(6.0, 4.0), Vec2::new(6.0, 0.0)];
+        let ring = [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(0.0, 4.0),
+            Vec2::new(6.0, 4.0),
+            Vec2::new(6.0, 0.0),
+        ];
         let axis = round_axis(&ring).expect("a ring");
         assert_eq!(axis.len(), 6);
         assert_eq!(axis.first(), axis.last());
-        let area: f64 = axis.windows(2).map(|w| w[0].x * w[1].y - w[1].x * w[0].y).sum();
+        let area: f64 = axis
+            .windows(2)
+            .map(|w| w[0].x * w[1].y - w[1].x * w[0].y)
+            .sum();
         assert!(area > 0.0, "counter-clockwise");
         assert!(round_axis(&ring[..2]).is_none());
     }

@@ -72,8 +72,13 @@ fn dynamic_loss_warning(doc: &kentos_domain::Document) -> Option<String> {
     ))
 }
 
-fn has_dimension_references(doc: &kentos_domain::Document, chosen: &[(String, Vec<&Entity>)]) -> bool {
-    chosen.iter().flat_map(|(_, list)| list.iter().copied())
+fn has_dimension_references(
+    doc: &kentos_domain::Document,
+    chosen: &[(String, Vec<&Entity>)],
+) -> bool {
+    chosen
+        .iter()
+        .flat_map(|(_, list)| list.iter().copied())
         .chain(doc.blocks().iter().flat_map(|b| &b.entities))
         .any(|e| matches!(e, Entity::Dimension(d) if d.refs.is_some()))
 }
@@ -409,10 +414,9 @@ impl App {
             None => s.status = None,
             Some(Err(e)) => s.status = Some((true, format!("Yazılamadı: {e}"))),
             Some(Ok(name)) => {
-                let format = s.dwg.map_or_else(
-                    || "DXF R2007".to_owned(),
-                    |v| format!("DWG {}", v.label()),
-                );
+                let format = s
+                    .dwg
+                    .map_or_else(|| "DXF R2007".to_owned(), |v| format!("DWG {}", v.label()));
                 let (report, layers) = s.written.take().unwrap_or_default();
                 let written: u32 = report.counts.values().sum();
                 self.say(
@@ -453,37 +457,53 @@ impl App {
             |c| c.1 > 0,
         );
         let chosen = self.chosen(s);
-        let unit = self.document.as_ref().map_or(kentos_commands::DrawingUnit::M, |d| {
-            let settings = d.model.settings();
-            if settings.has_system() {
-                kentos_commands::DrawingUnit::M
-            } else {
-                settings.unit()
-            }
-        });
+        let unit = self
+            .document
+            .as_ref()
+            .map_or(kentos_commands::DrawingUnit::M, |d| {
+                let settings = d.model.settings();
+                if settings.has_system() {
+                    kentos_commands::DrawingUnit::M
+                } else {
+                    settings.unit()
+                }
+            });
         let any = chosen.iter().any(|(_, list)| !list.is_empty())
             || (s.scope != Scope::Selection
                 && self
                     .document
                     .as_ref()
                     .is_some_and(|d| d.model.sheets().is_some()));
-        let mut body = Column::new()
-            .spacing(12)
-            .push(words::field(
-                "Yazılacak nesneler",
-                scope,
-                Some(if s.dwg.is_some() {
-                    "Seçili DWG sürümüne dönüştürülür; sürüm ve aktarım kayıpları raporlanır.".to_owned()
-                } else {
-                    format!("DXF R2007 (UTF-8, birim {}); koordinatlar yuvarlanmadan, tam yazılır.", unit.mark())
-                }),
-            ));
+        let mut body = Column::new().spacing(12).push(words::field(
+            "Yazılacak nesneler",
+            scope,
+            Some(if s.dwg.is_some() {
+                "Seçili DWG sürümüne dönüştürülür; sürüm ve aktarım kayıpları raporlanır."
+                    .to_owned()
+            } else {
+                format!(
+                    "DXF R2007 (UTF-8, birim {}); koordinatlar yuvarlanmadan, tam yazılır.",
+                    unit.mark()
+                )
+            }),
+        ));
         // Disclose behavior loss before the layer/options table and before asking for an output path.
-        if let Some(warning) = self.document.as_ref().and_then(|d| dynamic_loss_warning(&d.model)) {
+        if let Some(warning) = self
+            .document
+            .as_ref()
+            .and_then(|d| dynamic_loss_warning(&d.model))
+        {
             body = body.push(words::text_line(Line::Warn, warning));
         }
-        if self.document.as_ref().is_some_and(|d| has_dimension_references(&d.model, &chosen)) {
-            body = body.push(words::text_line(Line::Warn, kentos_formats::dxf::DIMENSION_REFERENCE_LOSS));
+        if self
+            .document
+            .as_ref()
+            .is_some_and(|d| has_dimension_references(&d.model, &chosen))
+        {
+            body = body.push(words::text_line(
+                Line::Warn,
+                kentos_formats::dxf::DIMENSION_REFERENCE_LOSS,
+            ));
         }
         body = body.push(self.dxf_export_layers(s))
             .push(dxf_export_forms(s))
@@ -902,7 +922,10 @@ impl State {
 
 /// How many of the tied hatches among `list` (what is written) have a boundary object that is not written: they go
 /// out following nothing.
-pub(crate) fn untied_hatches(doc: &kentos_domain::Document, list: &[&kentos_commands::Entity]) -> usize {
+pub(crate) fn untied_hatches(
+    doc: &kentos_domain::Document,
+    list: &[&kentos_commands::Entity],
+) -> usize {
     let written: std::collections::HashSet<String> = list
         .iter()
         .filter_map(|e| doc.uid(kentos_domain::Slot(e.base().id)))
@@ -953,7 +976,8 @@ mod tests {
     fn nested_dynamic_loss_is_visible_before_writing_and_preview_keeps_the_source_exact() {
         let snapshot = kentos_kcad::decode(include_bytes!(
             "../../../../../fixtures/interaction/v1/block-parametric-component.kcad"
-        )).unwrap();
+        ))
+        .unwrap();
         let doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
         let before = doc.to_snapshot_v2();
         // Only the parent is chosen; inspecting just the selected root's dynamic field misses the loss.
@@ -975,10 +999,18 @@ mod tests {
     fn unused_dynamic_definitions_warn_even_when_only_a_dimension_is_exported() {
         let snapshot = kentos_kcad::decode(include_bytes!(
             "../../../../../fixtures/interaction/v1/block-parametric-component.kcad"
-        )).unwrap();
+        ))
+        .unwrap();
         let doc = kentos_domain::Document::from_snapshot_v2(snapshot).unwrap();
-        let dimension = doc.entities().find(|e| matches!(e, Entity::Dimension(_))).unwrap();
-        assert!(super::dynamic_loss_warning(&doc).unwrap().contains("Kullanılmayan"));
+        let dimension = doc
+            .entities()
+            .find(|e| matches!(e, Entity::Dimension(_)))
+            .unwrap();
+        assert!(
+            super::dynamic_loss_warning(&doc)
+                .unwrap()
+                .contains("Kullanılmayan")
+        );
         let chosen = kentos_headless::export::by_layer(&doc, [dimension]);
         assert!(super::has_dimension_references(&doc, &chosen));
         let input = kentos_headless::export::dxf_input(&doc, &chosen);
@@ -996,18 +1028,34 @@ mod tests {
     #[test]
     fn beams_roofs_and_railings_come_back_whole_from_kentos_dxf() {
         for (file, kind, n) in [
-            (include_str!("../../../../../fixtures/kcad/v2/beams.json"), "beam", 2),
-            (include_str!("../../../../../fixtures/kcad/v2/roof-edges.json"), "roof", 1),
-            (include_str!("../../../../../fixtures/kcad/v2/railing-objects.json"), "railing", 1),
+            (
+                include_str!("../../../../../fixtures/kcad/v2/beams.json"),
+                "beam",
+                2,
+            ),
+            (
+                include_str!("../../../../../fixtures/kcad/v2/roof-edges.json"),
+                "roof",
+                1,
+            ),
+            (
+                include_str!("../../../../../fixtures/kcad/v2/railing-objects.json"),
+                "railing",
+                1,
+            ),
         ] {
-            let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(file).expect("the sample");
+            let snapshot: kentos_commands::DocumentSnapshotV2 =
+                serde_json::from_str(file).expect("the sample");
             let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
             let chosen = kentos_headless::export::by_layer(&doc, doc.entities());
             let input = kentos_headless::export::dxf_input(&doc, &chosen);
             let (bytes, _) = kentos_formats::dxf::write_checked(&input).expect("writes");
             let read = kentos_formats::dxf::read_checked(
                 &bytes,
-                &kentos_commands::DxfReadOptions { unit: Some(kentos_commands::DrawingUnit::M), ..Default::default() },
+                &kentos_commands::DxfReadOptions {
+                    unit: Some(kentos_commands::DrawingUnit::M),
+                    ..Default::default()
+                },
             )
             .expect("reads");
             let broken: Vec<_> = read
@@ -1019,7 +1067,11 @@ mod tests {
                 .collect();
             assert!(broken.is_empty(), "{kind}: {broken:?}");
             let got = read.entities.iter().filter(|e| e.kind() == kind).count();
-            assert!(got >= n, "{kind}: {got} of {n} back, {:?}", read.entities.iter().map(|e| e.kind()).collect::<Vec<_>>());
+            assert!(
+                got >= n,
+                "{kind}: {got} of {n} back, {:?}",
+                read.entities.iter().map(|e| e.kind()).collect::<Vec<_>>()
+            );
         }
     }
 
@@ -1028,19 +1080,30 @@ mod tests {
     #[test]
     fn a_sheets_paper_objects_on_layer_0_are_no_layer_lost() {
         let mut app = crate::files_testing::app_with_drawing();
-        let _ = app.update(crate::app::Message::Sheet(kentos_sheet_ui::Message::NewSheet));
+        let _ = app.update(crate::app::Message::Sheet(
+            kentos_sheet_ui::Message::NewSheet,
+        ));
         if app.sheets.questions().is_some() {
-            let _ = app.update(crate::app::Message::Sheet(kentos_sheet_ui::Message::Questions(
-                kentos_sheet_ui::questions::QuestionsMessage::Make,
-            )));
+            let _ = app.update(crate::app::Message::Sheet(
+                kentos_sheet_ui::Message::Questions(
+                    kentos_sheet_ui::questions::QuestionsMessage::Make,
+                ),
+            ));
         }
         let doc = &app.document.as_ref().expect("a drawing").model;
         assert!(doc.sheets().is_some(), "a sheet to write");
         let chosen = kentos_headless::export::by_layer(doc, doc.entities());
         let input = kentos_headless::export::dxf_input(doc, &chosen);
-        assert!(input.layouts.iter().any(|l| !l.entities.is_empty()), "the sheet's paper objects written");
+        assert!(
+            input.layouts.iter().any(|l| !l.entities.is_empty()),
+            "the sheet's paper objects written"
+        );
         let (_, report) = kentos_formats::dxf::write_checked(&input).unwrap();
-        assert!(!report.notes.iter().any(|n| n.what == "Katman"), "{:?}", report.notes);
+        assert!(
+            !report.notes.iter().any(|n| n.what == "Katman"),
+            "{:?}",
+            report.notes
+        );
     }
 
     /// An area whose only hole is in a later part has islands (docs/adr/0143).

@@ -114,9 +114,14 @@ pub mod texts {
     pub fn tied(n: usize, score: Option<u32>, places: &[&str]) -> String {
         let points = score.map(|p| format!(" ({p})")).unwrap_or_default();
         if places.len() > 1 {
-            format!("{n} aday aynı puanda{points}: {} mahallelerinde; mahalleyi ekleyerek ayırın", places.join(", "))
+            format!(
+                "{n} aday aynı puanda{points}: {} mahallelerinde; mahalleyi ekleyerek ayırın",
+                places.join(", ")
+            )
         } else {
-            format!("{n} aday aynı puanda{points}: mahalleyi, ilçeyi ya da posta kodunu ekleyerek ayırın")
+            format!(
+                "{n} aday aynı puanda{points}: mahalleyi, ilçeyi ya da posta kodunu ekleyerek ayırın"
+            )
         }
     }
 

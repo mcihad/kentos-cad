@@ -2,8 +2,8 @@
 //! `$any`: canonical JSON without a time, read back by the style library's file reader and by the blocks' import
 //! into a drawing without them, the same definitions.
 
-use kentos_domain::Document;
 use kentos_commands::{CallOp, DocumentSnapshotV1};
+use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, registry};
 use kentos_style_library::file::parse_style_file;
 use serde_json::{Value, json};
@@ -112,10 +112,7 @@ fn a_library_export_is_canonical_and_reads_back_with_what_it_draws() {
     );
     let text = out["kstil"].as_str().expect("the text");
     let value: Value = serde_json::from_str(text).expect("JSON");
-    assert_eq!(
-        text,
-        kentos_commands::canonical::canonical_json(&value)
-    );
+    assert_eq!(text, kentos_commands::canonical::canonical_json(&value));
     assert!(value.get("exported").is_none(), "no time in it");
     let file = parse_style_file(text).expect("the reader takes it");
     let ids: Vec<&str> = file.items.iter().filter_map(|i| i["id"].as_str()).collect();
@@ -141,10 +138,7 @@ fn a_blocks_export_reads_back_into_a_drawing_without_them() {
     );
     let text = out["library"].as_str().expect("the text");
     let value: Value = serde_json::from_str(text).expect("JSON");
-    assert_eq!(
-        text,
-        kentos_commands::canonical::canonical_json(&value)
-    );
+    assert_eq!(text, kentos_commands::canonical::canonical_json(&value));
     let names: Vec<&str> = value["blocks"]
         .as_array()
         .expect("blocks")
@@ -311,14 +305,30 @@ fn a_library_formula_recomputes_each_scene_instance_and_refuses_an_invalid_insta
 fn publication_metadata_is_independent_of_local_revision_and_atomic() {
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
         "../../../../../fixtures/kcad/v2/block-publication.json"
-    )).unwrap();
+    ))
+    .unwrap();
     let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
     let before = doc.to_snapshot_v2();
     let block = doc.blocks()[0].id;
-    let mut publication = serde_json::to_value(doc.blocks()[0].card.as_ref().unwrap().publication.as_ref().unwrap()).unwrap();
+    let mut publication = serde_json::to_value(
+        doc.blocks()[0]
+            .card
+            .as_ref()
+            .unwrap()
+            .publication
+            .as_ref()
+            .unwrap(),
+    )
+    .unwrap();
     publication["release"] = json!(3);
     let input = json!({"operation":"card","block":block,"publication":publication});
-    let plan = registry::run(&mut ExecutionContext::new(&mut doc), "cad.blocks.edit", CallOp::Plan, input.clone()).unwrap();
+    let plan = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.blocks.edit",
+        CallOp::Plan,
+        input.clone(),
+    )
+    .unwrap();
     assert_eq!(plan["status"], "completed", "{plan}");
     assert_eq!(doc.to_snapshot_v2(), before);
     run(&mut doc, "cad.blocks.edit", input);
@@ -330,8 +340,13 @@ fn publication_metadata_is_independent_of_local_revision_and_atomic() {
     assert_eq!(doc.to_snapshot_v2(), before);
     publication["release"] = json!(0);
     for op in [CallOp::Validate, CallOp::Plan, CallOp::Execute] {
-        let answer = registry::run(&mut ExecutionContext::new(&mut doc), "cad.blocks.edit", op,
-            json!({"operation":"card","block":block,"publication":publication})).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            "cad.blocks.edit",
+            op,
+            json!({"operation":"card","block":block,"publication":publication}),
+        )
+        .unwrap();
         assert_eq!(answer["error"]["code"], "invalid_block_card", "{answer}");
         assert_eq!(doc.to_snapshot_v2(), before);
     }

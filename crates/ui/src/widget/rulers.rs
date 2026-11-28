@@ -1141,12 +1141,19 @@ mod interaction {
         use super::{areas, label_size, left_thickness, thickness, typography};
         use iced::{Point, Rectangle, Size};
         let label = typography::measured_font_width("1189", label_size(), typography::mono());
-        assert!(left_thickness() >= label + 4.0, "{} for {label}", left_thickness());
+        assert!(
+            left_thickness() >= label + 4.0,
+            "{} for {label}",
+            left_thickness()
+        );
         assert!(left_thickness() >= thickness());
         let a = areas(Rectangle::new(Point::ORIGIN, Size::new(800.0, 600.0)));
         assert_eq!(a.left.width, left_thickness());
         assert_eq!(a.top.height, thickness());
-        assert_eq!(a.content.x, left_thickness(), "the content starts after the left ruler");
+        assert_eq!(
+            a.content.x,
+            left_thickness(),
+            "the content starts after the left ruler"
+        );
     }
-
 }

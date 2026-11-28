@@ -13,19 +13,32 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_known_points_places_over_mcp() {
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2");
+    let root =
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2");
     let mut server = Server::new();
-    let opened = call(&mut server, "drawing.open", json!({"path": root.join("map-survey-velocity.kcad")}));
+    let opened = call(
+        &mut server,
+        "drawing.open",
+        json!({"path": root.join("map-survey-velocity.kcad")}),
+    );
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
     let places = |server: &mut Server| {
-        let r = call(server, "map.survey.query", json!({"drawing": drawing, "places": true}));
+        let r = call(
+            server,
+            "map.survey.query",
+            json!({"drawing": drawing, "places": true}),
+        );
         assert_eq!(r["isError"], false, "{r}");
         r["structuredContent"]["output"]["knownPlaces"].clone()
     };
     let rows = places(&mut server);
     let (ankr, n1) = (&rows[0], &rows[1]);
-    assert_eq!((ankr["mark"].as_str(), ankr["epoch"].as_f64()), (Some("ANKR"), Some(2005.0)), "{rows}");
+    assert_eq!(
+        (ankr["mark"].as_str(), ankr["epoch"].as_f64()),
+        (Some("ANKR"), Some(2005.0)),
+        "{rows}"
+    );
     assert!(ankr.get("moved").is_none(), "at the decision: {ankr}");
     // The chain's own answer for ANKR's coordinates, asked as a separate call.
     let t = call(
@@ -55,7 +68,12 @@ fn the_known_points_places_over_mcp() {
     );
     assert_eq!(added["isError"], false, "{added}");
     let rows = places(&mut server);
-    let n3 = rows.as_array().unwrap().iter().find(|r| r["mark"] == "N3").unwrap();
+    let n3 = rows
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|r| r["mark"] == "N3")
+        .unwrap();
     let moved = &n3["moved"];
     assert_eq!(moved["by"], "velocity", "{n3}");
     let years = 2005.0 - 2026.84;
@@ -71,9 +89,17 @@ fn the_known_points_places_over_mcp() {
         assert!((got - want).abs() < 1e-6, "shift[{i}]: {got} ≠ {want}");
     }
     assert_eq!(n3["point"], "kn-2");
-    assert!(n3["dx"].is_number() && n3["dy"].is_number(), "compared with N3's accepted point: {n3}");
+    assert!(
+        n3["dx"].is_number() && n3["dy"].is_number(),
+        "compared with N3's accepted point: {n3}"
+    );
 
     // Without `places`, nothing of it.
     let r = call(&mut server, "map.survey.query", json!({"drawing": drawing}));
-    assert!(r["structuredContent"]["output"].get("knownPlaces").is_none(), "{r}");
+    assert!(
+        r["structuredContent"]["output"]
+            .get("knownPlaces")
+            .is_none(),
+        "{r}"
+    );
 }

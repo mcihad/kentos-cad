@@ -40,7 +40,10 @@ impl Catalog {
                 let description = DESKTOP_DESCRIPTIONS
                     .iter()
                     .find(|(desktop, _)| *desktop == id)
-                    .map_or_else(|| leak(axis_free(c.description.unwrap_or_default())), |(_, d)| *d);
+                    .map_or_else(
+                        || leak(axis_free(c.description.unwrap_or_default())),
+                        |(_, d)| *d,
+                    );
                 let pending_note = c.pending_note.map(leak);
                 // The sheet mode's keys are its own (docs/adr/0164): the web binds them only
                 // while a sheet is in front, and the desktop's sheet mode takes them itself
@@ -119,7 +122,9 @@ impl Catalog {
                 if let RawItem::Split { key, .. } = raw_item
                     && !key.is_empty()
                 {
-                    splits.entry(key.clone()).or_insert_with(|| raw_item.clone());
+                    splits
+                        .entry(key.clone())
+                        .or_insert_with(|| raw_item.clone());
                 }
             }
         }
@@ -280,8 +285,12 @@ impl Catalog {
             .iter()
             .map(|id| leak(id.clone()))
             .collect();
-        let map_only: Vec<&'static str> =
-            ribbon.modules.map.iter().map(|id| leak(id.clone())).collect();
+        let map_only: Vec<&'static str> = ribbon
+            .modules
+            .map
+            .iter()
+            .map(|id| leak(id.clone()))
+            .collect();
         let module_commands = kentos_launch::Module::ALL
             .into_iter()
             .map(|module| {
@@ -490,7 +499,11 @@ pub(super) fn resolve(raw: RawItem, splits: &HashMap<String, RawItem>) -> RawIte
             modes,
             entry_works,
         } => match splits.get(&split) {
-            Some(RawItem::Split { split: entries, key, .. }) => RawItem::Split {
+            Some(RawItem::Split {
+                split: entries,
+                key,
+                ..
+            }) => RawItem::Split {
                 split: entries
                     .iter()
                     .map(|e| {

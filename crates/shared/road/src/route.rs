@@ -47,24 +47,39 @@ impl Grid {
     /// The grid spanning `a` and `b` and `margin` around them; none when it would hold more than [`MOST_NODES`].
     pub fn over(a: [f64; 2], b: [f64; 2], cell: f64, margin: f64) -> Option<Grid> {
         let origin = [a[0].min(b[0]) - margin, a[1].min(b[1]) - margin];
-        let span = [(a[0] - b[0]).abs() + 2.0 * margin, (a[1] - b[1]).abs() + 2.0 * margin];
+        let span = [
+            (a[0] - b[0]).abs() + 2.0 * margin,
+            (a[1] - b[1]).abs() + 2.0 * margin,
+        ];
         let cols = (span[0] / cell).ceil() + 1.0;
         let rows = (span[1] / cell).ceil() + 1.0;
         if !(cols.is_finite() && rows.is_finite()) || cols * rows > MOST_NODES as f64 {
             return None;
         }
-        Some(Grid { origin, cell, cols: cols as usize, rows: rows as usize })
+        Some(Grid {
+            origin,
+            cell,
+            cols: cols as usize,
+            rows: rows as usize,
+        })
     }
 
     /// A node's place.
     pub fn place(&self, n: usize) -> [f64; 2] {
-        [self.origin[0] + (n % self.cols) as f64 * self.cell, self.origin[1] + (n / self.cols) as f64 * self.cell]
+        [
+            self.origin[0] + (n % self.cols) as f64 * self.cell,
+            self.origin[1] + (n / self.cols) as f64 * self.cell,
+        ]
     }
 
     /// The node nearest a place.
     pub fn nearest(&self, p: [f64; 2]) -> usize {
-        let i = ((p[0] - self.origin[0]) / self.cell + 0.5).floor().clamp(0.0, (self.cols - 1) as f64) as usize;
-        let j = ((p[1] - self.origin[1]) / self.cell + 0.5).floor().clamp(0.0, (self.rows - 1) as f64) as usize;
+        let i = ((p[0] - self.origin[0]) / self.cell + 0.5)
+            .floor()
+            .clamp(0.0, (self.cols - 1) as f64) as usize;
+        let j = ((p[1] - self.origin[1]) / self.cell + 0.5)
+            .floor()
+            .clamp(0.0, (self.rows - 1) as f64) as usize;
         j * self.cols + i
     }
 }
@@ -105,13 +120,23 @@ impl PartialOrd for Open {
 impl Ord for Open {
     // The least cost first, then the least node.
     fn cmp(&self, other: &Self) -> Ordering {
-        other.0.total_cmp(&self.0).then_with(|| other.1.cmp(&self.1))
+        other
+            .0
+            .total_cmp(&self.0)
+            .then_with(|| other.1.cmp(&self.1))
     }
 }
 
 /// The least-cost path from node `a` to node `b`: `heights[n]` the node's height (none: not entered), `grade` the
 /// steepest step (rise over run), `climb` the cost of a metre risen or fallen.
-pub fn least_cost(grid: &Grid, heights: &[Option<f64>], a: usize, b: usize, grade: f64, climb: f64) -> Result<Found, NoRoute> {
+pub fn least_cost(
+    grid: &Grid,
+    heights: &[Option<f64>],
+    a: usize,
+    b: usize,
+    grade: f64,
+    climb: f64,
+) -> Result<Found, NoRoute> {
     if heights[a].is_none() {
         return Err(NoRoute::Blocked { end: false });
     }
@@ -178,7 +203,11 @@ pub fn least_cost(grid: &Grid, heights: &[Option<f64>], a: usize, b: usize, grad
         nodes.push(from[last]);
     }
     nodes.reverse();
-    Ok(Found { nodes, cost: dist[b], settled })
+    Ok(Found {
+        nodes,
+        cost: dist[b],
+        settled,
+    })
 }
 
 /// The points of `line` Douglas–Peucker keeps within `tolerance` (in plan): the ends, and recursively the farthest
@@ -213,7 +242,11 @@ pub fn simplified(line: &[[f64; 3]], tolerance: f64) -> Vec<[f64; 3]> {
             stack.push((i, at));
         }
     }
-    line.iter().zip(&keep).filter(|(_, k)| **k).map(|(p, _)| *p).collect()
+    line.iter()
+        .zip(&keep)
+        .filter(|(_, k)| **k)
+        .map(|(p, _)| *p)
+        .collect()
 }
 
 #[cfg(test)]
@@ -236,18 +269,33 @@ mod tests {
         }
         let g = least_cost(&grid, &walled, a, b, 10.0, 5.0).expect("found");
         assert!(g.cost > 10.0);
-        assert!(g.nodes.iter().any(|&n| n / grid.cols == grid.rows - 1 || n % grid.cols != 7));
+        assert!(
+            g.nodes
+                .iter()
+                .any(|&n| n / grid.cols == grid.rows - 1 || n % grid.cols != 7)
+        );
         walled[(grid.rows - 1) * grid.cols + 7] = None;
         // The knight's step jumps a one-node wall; a two-node wall stops it.
         for j in 0..grid.rows {
             walled[j * grid.cols + 8] = None;
         }
-        assert_eq!(least_cost(&grid, &walled, a, b, 10.0, 5.0), Err(NoRoute::Unreached));
+        assert_eq!(
+            least_cost(&grid, &walled, a, b, 10.0, 5.0),
+            Err(NoRoute::Unreached)
+        );
     }
 
     #[test]
     fn simplifying_keeps_the_corners() {
-        let line = [[0.0, 0.0, 0.0], [1.0, 0.01, 0.0], [2.0, 0.0, 0.0], [2.0, 2.0, 0.0]];
-        assert_eq!(simplified(&line, 0.1), vec![[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [2.0, 2.0, 0.0]]);
+        let line = [
+            [0.0, 0.0, 0.0],
+            [1.0, 0.01, 0.0],
+            [2.0, 0.0, 0.0],
+            [2.0, 2.0, 0.0],
+        ];
+        assert_eq!(
+            simplified(&line, 0.1),
+            vec![[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [2.0, 2.0, 0.0]]
+        );
     }
 }

@@ -253,8 +253,15 @@ fn entries() -> impl Iterator<Item = &'static Entry> {
 
 fn fillet_targets() -> Vec<CommandTarget> {
     let mut targets = corner_targets();
-    targets[1] = target(Some("lines"), &["line", "polyline", "arc", "circle"], &[], Some("not_a_corner"),
-        Some("Bağımsız çizgi/yay/daire çiftleri analitik teğet çözüm kullanır; daireler bütün kalır, yaylar sonlu açı aralığında kırpılır. Açık çoklu çizginin yalnız düz uç kenarları, başka bir düz uç kenarla birleşebilir; yaylı yol, elips ve NURBS desteklenmez."));
+    targets[1] = target(
+        Some("lines"),
+        &["line", "polyline", "arc", "circle"],
+        &[],
+        Some("not_a_corner"),
+        Some(
+            "Bağımsız çizgi/yay/daire çiftleri analitik teğet çözüm kullanır; daireler bütün kalır, yaylar sonlu açı aralığında kırpılır. Açık çoklu çizginin yalnız düz uç kenarları, başka bir düz uç kenarla birleşebilir; yaylı yol, elips ve NURBS desteklenmez.",
+        ),
+    );
     targets
 }
 
@@ -295,8 +302,26 @@ pub fn capabilities_of(id: &str) -> Option<CommandCapabilities> {
         targets: (entry.targets)(),
         refusals,
         warnings: {
-            let mut warnings:Vec<String>=entry.warnings.iter().map(|w|(*w).to_owned()).collect();
-            if matches!(id,"cad.entities.edit"|"cad.entities.transform"|"cad.entities.delete"|"cad.entities.trim"|"cad.entities.extend"|"cad.entities.break"|"cad.entities.join"|"cad.entities.fillet"|"cad.entities.chamfer"|"cad.entities.stretch"|"cad.entities.lengthen"|"cad.changeset.apply"|"cad.hatches.edit") {warnings.push("hatch_association_lost".into());}
+            let mut warnings: Vec<String> =
+                entry.warnings.iter().map(|w| (*w).to_owned()).collect();
+            if matches!(
+                id,
+                "cad.entities.edit"
+                    | "cad.entities.transform"
+                    | "cad.entities.delete"
+                    | "cad.entities.trim"
+                    | "cad.entities.extend"
+                    | "cad.entities.break"
+                    | "cad.entities.join"
+                    | "cad.entities.fillet"
+                    | "cad.entities.chamfer"
+                    | "cad.entities.stretch"
+                    | "cad.entities.lengthen"
+                    | "cad.changeset.apply"
+                    | "cad.hatches.edit"
+            ) {
+                warnings.push("hatch_association_lost".into());
+            }
             warnings
         },
     })

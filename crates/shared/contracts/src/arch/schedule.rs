@@ -88,7 +88,17 @@ impl ScheduleOf {
             ScheduleOf::Columns => &[Tag, Place, Type, Width, Level],
             ScheduleOf::Walls => &[Type, Thickness, Length, Height, Area, Volume],
             ScheduleOf::Fixtures => &[Type, Category, Space, Level, Count],
-            ScheduleOf::Units => &[Number, Name, UnitKind, Building, Level, Area, Share, Gross, RecordedArea],
+            ScheduleOf::Units => &[
+                Number,
+                Name,
+                UnitKind,
+                Building,
+                Level,
+                Area,
+                Share,
+                Gross,
+                RecordedArea,
+            ],
             ScheduleOf::Beams => &[Tag, Type, Width, Height, Length, Level],
             ScheduleOf::Coverings => &[Type, Thickness, Area, Level],
         };
@@ -462,7 +472,10 @@ impl ScheduleField {
                     | ScheduleOf::Beams
                     | ScheduleOf::Coverings
             ),
-            Width => matches!(of, ScheduleOf::Openings | ScheduleOf::Columns | ScheduleOf::Beams),
+            Width => matches!(
+                of,
+                ScheduleOf::Openings | ScheduleOf::Columns | ScheduleOf::Beams
+            ),
             Height => matches!(
                 of,
                 ScheduleOf::Openings | ScheduleOf::Spaces | ScheduleOf::Walls | ScheduleOf::Beams
@@ -566,8 +579,20 @@ impl ScheduleField {
         use ScheduleField::*;
         matches!(
             self,
-            Width | Height | Sill | Head | Perimeter | Length | Thickness | Baseboard | RoughWidth | UnitWidth
-                | LeafWidth | ClearWidth | Drum | Pocket
+            Width
+                | Height
+                | Sill
+                | Head
+                | Perimeter
+                | Length
+                | Thickness
+                | Baseboard
+                | RoughWidth
+                | UnitWidth
+                | LeafWidth
+                | ClearWidth
+                | Drum
+                | Pocket
         )
     }
 
@@ -640,7 +665,10 @@ impl ScheduleField {
     /// Whether it is one of a units schedule's own fields (docs/adr/0795, `.kcad` schema 151).
     pub fn is_unit_field(self) -> bool {
         use ScheduleField::*;
-        matches!(self, UnitKind | Building | Wing | RecordedArea | ShareWeight)
+        matches!(
+            self,
+            UnitKind | Building | Wing | RecordedArea | ShareWeight
+        )
     }
 }
 
@@ -873,8 +901,16 @@ pub fn schedule_problem(
             ));
         }
         for (k, list) in [("buildings", &f.buildings), ("wings", &f.wings)] {
-            if let Some((i, _)) = list.iter().flatten().enumerate().find(|(_, t)| t.trim().is_empty()) {
-                return Some((format!("filter.{k}[{i}]"), "Süzgecin kimlikleri boş olamaz.".into()));
+            if let Some((i, _)) = list
+                .iter()
+                .flatten()
+                .enumerate()
+                .find(|(_, t)| t.trim().is_empty())
+            {
+                return Some((
+                    format!("filter.{k}[{i}]"),
+                    "Süzgecin kimlikleri boş olamaz.".into(),
+                ));
             }
         }
     }

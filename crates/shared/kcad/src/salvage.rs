@@ -164,7 +164,11 @@ fn write(item: &Item, out: &mut Vec<u8>) {
 /// A text item's text.
 fn text(item: &Item) -> Option<String> {
     let Item::Raw(bytes) = item else { return None };
-    let mut p = Parser { data: bytes, pos: 0, cut: false };
+    let mut p = Parser {
+        data: bytes,
+        pos: 0,
+        cut: false,
+    };
     let (major, n, _) = p.head()?;
     (major == TEXT).then(|| String::from_utf8_lossy(&bytes[p.pos..p.pos + n as usize]).into_owned())
 }
@@ -222,20 +226,36 @@ fn payload(root: &[(Item, Item)], document: &[(Item, Item)]) -> Vec<u8> {
     out
 }
 
-fn strict(root: &[(Item, Item)], document: &[(Item, Item)]) -> Result<DocumentSnapshotV2, KcadError> {
+fn strict(
+    root: &[(Item, Item)],
+    document: &[(Item, Item)],
+) -> Result<DocumentSnapshotV2, KcadError> {
     crate::decode::payload(&payload(root, document), &mut Quiet)
 }
 
 /// The object's id as hex: an object is `{kind: {…, uid: 16 bytes, …}}`.
 fn uid_of(object: &Item) -> Option<String> {
-    let Item::Map(outer) = object else { return None };
+    let Item::Map(outer) = object else {
+        return None;
+    };
     let (_, inner) = outer.first()?;
     let Item::Map(pairs) = inner else { return None };
-    let (_, v) = pairs.iter().find(|(k, _)| text(k).as_deref() == Some("uid"))?;
+    let (_, v) = pairs
+        .iter()
+        .find(|(k, _)| text(k).as_deref() == Some("uid"))?;
     let Item::Raw(bytes) = v else { return None };
-    let mut p = Parser { data: bytes, pos: 0, cut: false };
+    let mut p = Parser {
+        data: bytes,
+        pos: 0,
+        cut: false,
+    };
     let (major, n, _) = p.head()?;
-    (major == BYTES && n == 16).then(|| bytes[p.pos..p.pos + 16].iter().map(|b| format!("{b:02x}")).collect())
+    (major == BYTES && n == 16).then(|| {
+        bytes[p.pos..p.pos + 16]
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect()
+    })
 }
 
 /// Recovers what it can of `data`, a `.kcad` the reader may refuse.
@@ -243,24 +263,42 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
     if let Ok(document) = crate::decode(data) {
         let kept = Vec::new();
         let n = document.entities.len();
-        return Ok(Salvaged { document, container: Vec::new(), kept, objects_read: n, objects_kept: n, lost: Vec::new(), whole: true });
+        return Ok(Salvaged {
+            document,
+            container: Vec::new(),
+            kept,
+            objects_read: n,
+            objects_kept: n,
+            lost: Vec::new(),
+            whole: true,
+        });
     }
     if data.len() < FIXED_HEADER || data[..5] != MAGIC_PREFIX {
-        return Err(fail("Dosya bir KCAD değil ya da başlığı okunamıyor; kurtarılacak bir şey yok."));
+        return Err(fail(
+            "Dosya bir KCAD değil ya da başlığı okunamıyor; kurtarılacak bir şey yok.",
+        ));
     }
     let mut container = Vec::new();
     let header_len = usize::from(u16::from_le_bytes([data[12], data[13]]));
     let codec = data[15];
     if codec != crate::header::CODEC_NONE {
-        return Err(fail("Dosya sıkıştırılmış yazılmış; sıkıştırılmış yük kurtarılmaz."));
+        return Err(fail(
+            "Dosya sıkıştırılmış yazılmış; sıkıştırılmış yük kurtarılmaz.",
+        ));
     }
     // FIXED_HEADER ≥ 24 holds bytes 16..24.
-    let declared = u64::from_le_bytes([data[16], data[17], data[18], data[19], data[20], data[21], data[22], data[23]]);
+    let declared = u64::from_le_bytes([
+        data[16], data[17], data[18], data[19], data[20], data[21], data[22], data[23],
+    ]);
     if header_len < FIXED_HEADER || header_len > data.len() {
-        return Err(fail("Başlığın boyu dosyadan uzun; yükün nerede başladığı bilinmiyor."));
+        return Err(fail(
+            "Başlığın boyu dosyadan uzun; yükün nerede başladığı bilinmiyor.",
+        ));
     }
     let available = data.len() - header_len;
-    let take = usize::try_from(declared).unwrap_or(usize::MAX).min(available);
+    let take = usize::try_from(declared)
+        .unwrap_or(usize::MAX)
+        .min(available);
     if take < usize::try_from(declared).unwrap_or(usize::MAX) {
         container.push(format!(
             "dosya kesik: yükün {} baytı bekleniyordu, {} bayt var; özet de yok",
@@ -274,24 +312,37 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
         } else {
             let sum = Sha256::digest(&data[..end]);
             if sum[..] != data[end..end + HASH_SIZE] {
-                container.push("dosyanın özeti tutmuyor: baytlar yazıldıktan sonra değişmiş".into());
+                container
+                    .push("dosyanın özeti tutmuyor: baytlar yazıldıktan sonra değişmiş".into());
             }
             if rest > HASH_SIZE {
-                container.push(format!("dosyanın sonunda {} fazla bayt var; okunmadı", rest - HASH_SIZE));
+                container.push(format!(
+                    "dosyanın sonunda {} fazla bayt var; okunmadı",
+                    rest - HASH_SIZE
+                ));
             }
         }
     }
     let body = &data[header_len..header_len + take];
-    let mut parser = Parser { data: body, pos: 0, cut: false };
+    let mut parser = Parser {
+        data: body,
+        pos: 0,
+        cut: false,
+    };
     let Some(Item::Map(root)) = parser.item(0) else {
         return Err(fail("Yükün başı okunamıyor; kurtarılacak bir çizim yok."));
     };
     if parser.cut {
         container.push("yük kesik: kesildiği yerden sonrası okunmadı".into());
     }
-    let Some(document) = root.iter().find(|(k, _)| text(k).as_deref() == Some("document")).map(|(_, v)| v.clone())
+    let Some(document) = root
+        .iter()
+        .find(|(k, _)| text(k).as_deref() == Some("document"))
+        .map(|(_, v)| v.clone())
     else {
-        return Err(fail("Yükte çizim (document) yok; kurtarılacak bir şey yok."));
+        return Err(fail(
+            "Yükte çizim (document) yok; kurtarılacak bir şey yok.",
+        ));
     };
     let Item::Map(mut doc) = document else {
         return Err(fail("Yükün çizimi bir harita değil; kurtarılamaz."));
@@ -301,7 +352,9 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
     // come after them): an empty drawing's, said. The project's own coordinate system is then not known.
     fill_required(&mut doc, &mut lost)?;
     // The objects aside; an empty list in their place while the rest is tried.
-    let at = doc.iter().position(|(k, _)| text(k).as_deref() == Some("entities"));
+    let at = doc
+        .iter()
+        .position(|(k, _)| text(k).as_deref() == Some("entities"));
     let objects: Vec<Item> = match at.map(|i| doc[i].1.clone()) {
         Some(Item::Array(items)) => items,
         _ => Vec::new(),
@@ -312,7 +365,12 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
         Some(i) => doc[i].1 = empty.clone(),
         None => {
             doc.push((Item::Raw(text_item("entities")), empty.clone()));
-            doc.sort_by(|a, b| crate::cbor::key_order(&text(&a.0).unwrap_or_default(), &text(&b.0).unwrap_or_default()));
+            doc.sort_by(|a, b| {
+                crate::cbor::key_order(
+                    &text(&a.0).unwrap_or_default(),
+                    &text(&b.0).unwrap_or_default(),
+                )
+            });
         }
     }
     // The document's keys: drop, last first, any one whose leaving makes the rest read.
@@ -328,7 +386,9 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
             if key == "entities" {
                 continue;
             }
-            let Item::Array(items) = doc[i].1.clone() else { continue };
+            let Item::Array(items) = doc[i].1.clone() else {
+                continue;
+            };
             if items.is_empty() {
                 continue;
             }
@@ -365,7 +425,11 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
             let mut fewer = doc.clone();
             fewer.remove(i);
             if strict(&root, &fewer).is_ok() {
-                lost.push(Lost { part: format!("document.{key}"), uid: None, reason: why.clone() });
+                lost.push(Lost {
+                    part: format!("document.{key}"),
+                    uid: None,
+                    reason: why.clone(),
+                });
                 doc = fewer;
                 reason = None;
                 dropped = true;
@@ -379,7 +443,10 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
         }
     }
     // The objects back, half by half.
-    let Some(slot) = doc.iter().position(|(k, _)| text(k).as_deref() == Some("entities")) else {
+    let Some(slot) = doc
+        .iter()
+        .position(|(k, _)| text(k).as_deref() == Some("entities"))
+    else {
         return Err(fail("Çizimin nesneler bölümü bulunamadı; kurtarılamaz."));
     };
     let (kept_objects, out) = bisect(&root, &doc, slot, objects, "entities", uid_of);
@@ -400,7 +467,15 @@ pub fn salvage(data: &[u8]) -> Result<Salvaged, KcadError> {
 }
 
 /// The keys a drawing must have (the reader's `required`), and an empty drawing's values for them.
-const REQUIRED: [&str; 7] = ["name", "layers", "origin", "styles", "entities", "settings", "activeLayer"];
+const REQUIRED: [&str; 7] = [
+    "name",
+    "layers",
+    "origin",
+    "styles",
+    "entities",
+    "settings",
+    "activeLayer",
+];
 
 fn defaults() -> Result<Vec<(Item, Item)>, KcadError> {
     let empty = serde_json::json!({
@@ -412,13 +487,24 @@ fn defaults() -> Result<Vec<(Item, Item)>, KcadError> {
                     "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}],
         "activeLayer": "0", "entities": [], "uids": [], "styles": {"items": [], "categories": []}
     });
-    let doc: DocumentSnapshotV2 = serde_json::from_value(empty).map_err(|e| fail(&format!("boş çizim kurulamadı: {e}")))?;
+    let doc: DocumentSnapshotV2 =
+        serde_json::from_value(empty).map_err(|e| fail(&format!("boş çizim kurulamadı: {e}")))?;
     let bytes = crate::encode(&doc)?;
     let header_len = usize::from(u16::from_le_bytes([bytes[12], bytes[13]]));
     let body = &bytes[header_len..bytes.len() - HASH_SIZE];
-    let mut p = Parser { data: body, pos: 0, cut: false };
-    let Some(Item::Map(root)) = p.item(0) else { return Err(fail("boş çizim okunamadı")) };
-    match root.into_iter().find(|(k, _)| text(k).as_deref() == Some("document")).map(|(_, v)| v) {
+    let mut p = Parser {
+        data: body,
+        pos: 0,
+        cut: false,
+    };
+    let Some(Item::Map(root)) = p.item(0) else {
+        return Err(fail("boş çizim okunamadı"));
+    };
+    match root
+        .into_iter()
+        .find(|(k, _)| text(k).as_deref() == Some("document"))
+        .map(|(_, v)| v)
+    {
         Some(Item::Map(pairs)) => Ok(pairs),
         _ => Err(fail("boş çizimin belgesi yok")),
     }
@@ -426,13 +512,21 @@ fn defaults() -> Result<Vec<(Item, Item)>, KcadError> {
 
 /// The first layer's id of a `layers` item.
 fn first_layer(layers: &Item) -> Option<Item> {
-    let Item::Array(items) = layers else { return None };
-    let Item::Map(pairs) = items.first()? else { return None };
-    pairs.iter().find(|(k, _)| text(k).as_deref() == Some("id")).map(|(_, v)| v.clone())
+    let Item::Array(items) = layers else {
+        return None;
+    };
+    let Item::Map(pairs) = items.first()? else {
+        return None;
+    };
+    pairs
+        .iter()
+        .find(|(k, _)| text(k).as_deref() == Some("id"))
+        .map(|(_, v)| v.clone())
 }
 
 fn fill_required(doc: &mut Vec<(Item, Item)>, lost: &mut Vec<Lost>) -> Result<(), KcadError> {
-    let has = |doc: &[(Item, Item)], key: &str| doc.iter().any(|(k, _)| text(k).as_deref() == Some(key));
+    let has =
+        |doc: &[(Item, Item)], key: &str| doc.iter().any(|(k, _)| text(k).as_deref() == Some(key));
     if REQUIRED.iter().all(|k| has(doc, k)) {
         return Ok(());
     }
@@ -450,19 +544,36 @@ fn fill_required(doc: &mut Vec<(Item, Item)>, lost: &mut Vec<Lost>) -> Result<()
         };
         let value = match value {
             Some(v) => v,
-            None => base.iter().find(|(k, _)| text(k).as_deref() == Some(key)).map(|(_, v)| v.clone()).ok_or_else(|| fail("boş çizimin anahtarı yok"))?,
+            None => base
+                .iter()
+                .find(|(k, _)| text(k).as_deref() == Some(key))
+                .map(|(_, v)| v.clone())
+                .ok_or_else(|| fail("boş çizimin anahtarı yok"))?,
         };
         let words = match key {
-            "settings" => "dosyada kalmadı (kesik ya da bozuk); boş çizimin ayarları kondu: koordinat sistemi SRID 0, birim ve basamaklar varsayılan. Projenin koordinat sistemini yeniden atayın.",
-            "activeLayer" => "dosyada kalmadı (kesik ya da bozuk); etkin katman ilk katman yapıldı.",
+            "settings" => {
+                "dosyada kalmadı (kesik ya da bozuk); boş çizimin ayarları kondu: koordinat sistemi SRID 0, birim ve basamaklar varsayılan. Projenin koordinat sistemini yeniden atayın."
+            }
+            "activeLayer" => {
+                "dosyada kalmadı (kesik ya da bozuk); etkin katman ilk katman yapıldı."
+            }
             "layers" => "dosyada kalmadı (kesik ya da bozuk); tek bir “0” katmanı kondu.",
             _ => "dosyada kalmadı (kesik ya da bozuk); boş çizimin değeri kondu.",
         };
-        lost.push(Lost { part: format!("document.{key}"), uid: None, reason: words.into() });
+        lost.push(Lost {
+            part: format!("document.{key}"),
+            uid: None,
+            reason: words.into(),
+        });
         doc.push((Item::Raw(text_item(key)), value));
     }
     // Back in the profile's key order.
-    doc.sort_by(|a, b| crate::cbor::key_order(&text(&a.0).unwrap_or_default(), &text(&b.0).unwrap_or_default()));
+    doc.sort_by(|a, b| {
+        crate::cbor::key_order(
+            &text(&a.0).unwrap_or_default(),
+            &text(&b.0).unwrap_or_default(),
+        )
+    });
     Ok(())
 }
 
@@ -489,9 +600,11 @@ fn bisect(
         doc[slot].1 = Item::Array(trial.clone());
         match strict(root, &doc) {
             Ok(_) => kept = trial,
-            Err(e) if batch.len() == 1 => {
-                lost.push(Lost { part: format!("{part}[{first}]"), uid: uid(&batch[0]), reason: said(&e) })
-            }
+            Err(e) if batch.len() == 1 => lost.push(Lost {
+                part: format!("{part}[{first}]"),
+                uid: uid(&batch[0]),
+                reason: said(&e),
+            }),
             Err(_) => {
                 let half = batch.len() / 2;
                 let (a, b) = batch.split_at(half);
@@ -505,7 +618,10 @@ fn bisect(
 }
 
 fn entity_place(part: &str) -> usize {
-    part.strip_prefix("entities[").and_then(|s| s.strip_suffix(']')).and_then(|n| n.parse().ok()).unwrap_or(0)
+    part.strip_prefix("entities[")
+        .and_then(|s| s.strip_suffix(']'))
+        .and_then(|n| n.parse().ok())
+        .unwrap_or(0)
 }
 
 fn text_item(s: &str) -> Vec<u8> {
@@ -514,4 +630,3 @@ fn text_item(s: &str) -> Vec<u8> {
     out.extend_from_slice(s.as_bytes());
     out
 }
-

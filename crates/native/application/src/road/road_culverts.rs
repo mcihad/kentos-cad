@@ -4,8 +4,8 @@
 //! road's top between the hinges (`culvert::cover`) and the quantities. Nothing read is kept: every read computes again.
 
 use kentos_commands::{
-    CommandWarning, CulvertDef, CulvertEnd, CulvertFlow, CulvertListed, CulvertReport, CulvertShapeDef, StakeoutDistances,
-    StakeoutQuery,
+    CommandWarning, CulvertDef, CulvertEnd, CulvertFlow, CulvertListed, CulvertReport,
+    CulvertShapeDef, StakeoutDistances, StakeoutQuery,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -21,17 +21,34 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work == Some(kentos_commands::CadWork::Road) {
         Ok(())
     } else {
-        Err(fail(codes::NOT_A_ROAD_PROJECT, "Menfez yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(), ""))
+        Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "Menfez yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(),
+            "",
+        ))
     }
 }
 
 /// The culvert of `name`: by its id, else by its name (case aside).
-pub(crate) fn find<'a>(list: &'a [CulvertDef], name: &str, path: &str) -> Result<(usize, &'a CulvertDef), Stop> {
+pub(crate) fn find<'a>(
+    list: &'a [CulvertDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a CulvertDef), Stop> {
     list.iter()
         .position(|c| c.id == name)
-        .or_else(|| list.iter().position(|c| c.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .position(|c| c.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|i| (i, &list[i]))
-        .ok_or_else(|| fail(codes::UNKNOWN_CULVERT, format!("“{name}” kimlikli ya da adlı menfez projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_CULVERT,
+                format!("“{name}” kimlikli ya da adlı menfez projede yok."),
+                path,
+            )
+        })
 }
 
 pub(crate) fn listed(list: &[CulvertDef]) -> Vec<CulvertListed> {
@@ -48,8 +65,30 @@ pub(crate) fn listed(list: &[CulvertDef]) -> Vec<CulvertListed> {
 
 pub(crate) fn shape_of(s: &CulvertShapeDef) -> Shape {
     match *s {
-        CulvertShapeDef::Pipe { diameter, thickness, count, spacing } => Shape::Pipe { diameter, thickness, count, spacing },
-        CulvertShapeDef::Box { width, height, thickness, slab, cells } => Shape::Box { width, height, thickness, slab, cells },
+        CulvertShapeDef::Pipe {
+            diameter,
+            thickness,
+            count,
+            spacing,
+        } => Shape::Pipe {
+            diameter,
+            thickness,
+            count,
+            spacing,
+        },
+        CulvertShapeDef::Box {
+            width,
+            height,
+            thickness,
+            slab,
+            cells,
+        } => Shape::Box {
+            width,
+            height,
+            thickness,
+            slab,
+            cells,
+        },
     }
 }
 
@@ -74,11 +113,23 @@ pub(crate) fn read(doc: &Document, def: &CulvertDef) -> Result<Read, Stop> {
 
 /// [`read`] telling `tick` how far it has come (docs/adr/4860): its corridor's sections, then its cross
 /// (`road_stakeout::table_told`); `tick` answering true stops it there, cancelled.
-pub(crate) fn read_told(doc: &Document, def: &CulvertDef, tick: &dyn Fn(u64, u64) -> bool) -> Result<Read, Stop> {
+pub(crate) fn read_told(
+    doc: &Document,
+    def: &CulvertDef,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Result<Read, Stop> {
     let (_, corridor) = corridors::find(doc.road_corridors(), &def.corridor, "corridor")?;
     let bad = |words: String| fail(codes::INVALID_CULVERT, words, "station");
-    let first = corridor.regions.iter().map(|r| r.from).fold(f64::INFINITY, f64::min);
-    let last = corridor.regions.iter().map(|r| r.to).fold(f64::NEG_INFINITY, f64::max);
+    let first = corridor
+        .regions
+        .iter()
+        .map(|r| r.from)
+        .fold(f64::INFINITY, f64::min);
+    let last = corridor
+        .regions
+        .iter()
+        .map(|r| r.to)
+        .fold(f64::NEG_INFINITY, f64::max);
     let s = def.station;
     if s < first - 1e-9 || s > last + 1e-9 {
         return Err(bad(format!(
@@ -97,20 +148,34 @@ pub(crate) fn read_told(doc: &Document, def: &CulvertDef, tick: &dyn Fn(u64, u64
         codes: None,
         distances: StakeoutDistances::Grid,
     };
-    let (table, mut warnings, alignment) = crate::road_stakeout::table_told(doc, &query, tick).map_err(|stop| match stop {
-        Stop::Cancelled => Stop::Cancelled,
-        stop => fail(codes::INVALID_CULVERT, format!("“{}” menfezinin koridoru okunamıyor: {}", def.name, words(stop)), "corridor"),
-    })?;
+    let (table, mut warnings, alignment) = crate::road_stakeout::table_told(doc, &query, tick)
+        .map_err(|stop| match stop {
+            Stop::Cancelled => Stop::Cancelled,
+            stop => fail(
+                codes::INVALID_CULVERT,
+                format!(
+                    "“{}” menfezinin koridoru okunamıyor: {}",
+                    def.name,
+                    words(stop)
+                ),
+                "corridor",
+            ),
+        })?;
     warnings.retain(|w| w.code != codes::STAKEOUT_UNSOLVED);
     let Some(region) = table.rows.first().map(|r| r.region) else {
-        return Err(bad(format!("“{}” menfezinin km'sinde koridorun kesiti yok.", def.name)));
+        return Err(bad(format!(
+            "“{}” menfezinin km'sinde koridorun kesiti yok.",
+            def.name
+        )));
     };
     let rows: Vec<_> = table.rows.iter().filter(|r| r.region == region).collect();
     let point = |code: &str| rows.iter().find(|r| r.code == code);
     let mut toes = [0.0; 2];
     let mut hinges = [0.0; 2];
     for (k, (word, side)) in [("left", "sol"), ("right", "sağ")].into_iter().enumerate() {
-        let fill = point(&format!("{word}.hinge")).zip(point(&format!("{word}.daylight"))).filter(|(h, d)| h.z - d.z > 1e-9);
+        let fill = point(&format!("{word}.hinge"))
+            .zip(point(&format!("{word}.daylight")))
+            .filter(|(h, d)| h.z - d.z > 1e-9);
         let Some((h, d)) = fill else {
             return Err(bad(format!(
                 "“{}” menfezinin km'sinde {side} yan dolguda değil; menfez dolgunun altından geçer.",
@@ -129,8 +194,14 @@ pub(crate) fn read_told(doc: &Document, def: &CulvertDef, tick: &dyn Fn(u64, u64
         .map(|r| [r.offset, r.z])
         .collect();
     let crest = top.iter().map(|p| p[1]).fold(f64::NEG_INFINITY, f64::max);
-    let (least, at) = cover(&top, def.skew, def.invert, def.slope, right, &shape).unwrap_or((0.0, 0.0));
-    let place = alignment.core.at(s).ok_or_else(|| bad(format!("“{}” menfezinin km'si aksın üstünde değil.", def.name)))?;
+    let (least, at) =
+        cover(&top, def.skew, def.invert, def.slope, right, &shape).unwrap_or((0.0, 0.0));
+    let place = alignment.core.at(s).ok_or_else(|| {
+        bad(format!(
+            "“{}” menfezinin km'si aksın üstünde değil.",
+            def.name
+        ))
+    })?;
     let angle = place.direction - std::f64::consts::FRAC_PI_2 + def.skew.to_radians();
     let c = def.skew.to_radians().cos();
     let ends = ["left", "right"]
@@ -163,7 +234,10 @@ pub(crate) fn read_told(doc: &Document, def: &CulvertDef, tick: &dyn Fn(u64, u64
     if stale {
         warnings.push(CommandWarning {
             code: codes::CULVERT_STALE.into(),
-            message: format!("“{}” menfezinin koridoru değişti; menfezi denetleyip koridora yeniden bağlayın.", def.name),
+            message: format!(
+                "“{}” menfezinin koridoru değişti; menfezi denetleyip koridora yeniden bağlayın.",
+                def.name
+            ),
             path: Some("culvert".into()),
         });
     }
@@ -184,7 +258,13 @@ pub(crate) fn read_told(doc: &Document, def: &CulvertDef, tick: &dyn Fn(u64, u64
         pipes: f64::from(shape.pipes()) * b.length,
         concrete: shape.concrete() * b.length,
     };
-    Ok(Read { report, crest, warnings, angle, at: [place.x, place.y] })
+    Ok(Read {
+        report,
+        crest,
+        warnings,
+        angle,
+        at: [place.x, place.y],
+    })
 }
 
 /// A culvert that does not read: its names and nothing else.
@@ -200,7 +280,12 @@ pub(crate) fn broken(def: &CulvertDef) -> CulvertReport {
         length: 0.0,
         width: shape_of(&def.shape).width(),
         ends: Vec::new(),
-        inlet: if def.flow == CulvertFlow::Right { "left" } else { "right" }.into(),
+        inlet: if def.flow == CulvertFlow::Right {
+            "left"
+        } else {
+            "right"
+        }
+        .into(),
         cover: 0.0,
         cover_offset: 0.0,
         pipes: 0.0,

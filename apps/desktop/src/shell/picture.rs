@@ -15,18 +15,34 @@ use kentos_ui::widget::picture::{Picture, Saved};
 use crate::app::{App, Message};
 
 /// A window's drawing as a picture: zoomed, panned and saved under `name` (the saved file's name), in the field's box.
-pub fn picture<'a>(content: impl Into<Element<'a, Message>>, name: impl Into<String>) -> Element<'a, Message> {
-    container(Picture::new(content).name(name).on_save(Message::SavePicture))
-        .padding(1)
-        .width(Fill)
-        .height(Fill)
-        .style(style::container::field_box)
-        .into()
+pub fn picture<'a>(
+    content: impl Into<Element<'a, Message>>,
+    name: impl Into<String>,
+) -> Element<'a, Message> {
+    container(
+        Picture::new(content)
+            .name(name)
+            .on_save(Message::SavePicture),
+    )
+    .padding(1)
+    .width(Fill)
+    .height(Fill)
+    .style(style::container::field_box)
+    .into()
 }
 
 /// The saved file's name from the picture's: what a file name cannot hold dropped.
 pub fn file_name(name: &str) -> String {
-    let kept: String = name.chars().map(|c| if matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') { '-' } else { c }).collect();
+    let kept: String = name
+        .chars()
+        .map(|c| {
+            if matches!(c, '/' | '\\' | ':' | '*' | '?' | '"' | '<' | '>' | '|') {
+                '-'
+            } else {
+                c
+            }
+        })
+        .collect();
     let kept = kept.trim();
     format!("{}.png", if kept.is_empty() { "Çizim" } else { kept })
 }
@@ -39,7 +55,11 @@ pub fn write(saved: &Saved, path: &Path) -> std::io::Result<()> {
 impl App {
     /// Resim olarak kaydet: where the picture goes, asked (next to the drawing's file, if it has one), then written.
     pub(crate) fn save_picture(&mut self, saved: Saved) -> Task<Message> {
-        let folder = self.document.as_ref().and_then(|d| d.path.as_ref()).and_then(|p| p.parent().map(Path::to_path_buf));
+        let folder = self
+            .document
+            .as_ref()
+            .and_then(|d| d.path.as_ref())
+            .and_then(|p| p.parent().map(Path::to_path_buf));
         Task::perform(
             async move {
                 let mut dialog = rfd::AsyncFileDialog::new()
@@ -51,7 +71,11 @@ impl App {
                 }
                 let file = dialog.save_file().await?;
                 let path = file.path().to_path_buf();
-                Some(write(&saved, &path).map(|()| (path, saved.width, saved.height)).map_err(|e| e.to_string()))
+                Some(
+                    write(&saved, &path)
+                        .map(|()| (path, saved.width, saved.height))
+                        .map_err(|e| e.to_string()),
+                )
             },
             Message::PictureWritten,
         )
@@ -62,7 +86,13 @@ impl App {
         match written {
             None => {}
             Some(Ok((path, width, height))) => {
-                self.say(Level::Info, format!("Resim kaydedildi ({width}×{height} piksel): {}", path.display()));
+                self.say(
+                    Level::Info,
+                    format!(
+                        "Resim kaydedildi ({width}×{height} piksel): {}",
+                        path.display()
+                    ),
+                );
             }
             Some(Err(e)) => self.warn(format!("Resim yazılamadı: {e}. Başka bir yer seçin.")),
         }
@@ -76,7 +106,11 @@ pub fn step(least: f64) -> f64 {
         return 1.0;
     }
     let decade = 10f64.powf(least.log10().floor());
-    [1.0, 2.0, 2.5, 5.0, 10.0].into_iter().map(|m| m * decade).find(|s| *s >= least * (1.0 - 1e-9)).unwrap_or(10.0 * decade)
+    [1.0, 2.0, 2.5, 5.0, 10.0]
+        .into_iter()
+        .map(|m| m * decade)
+        .find(|s| *s >= least * (1.0 - 1e-9))
+        .unwrap_or(10.0 * decade)
 }
 
 /// The decimals a grid of `step` is labelled with.
@@ -103,19 +137,28 @@ const SCROLLBAR: f32 = 14.0;
 
 impl Shown {
     pub fn of(size: iced::Size) -> Self {
-        let part = kentos_ui::widget::picture::visible().unwrap_or(iced::Rectangle::new(iced::Point::ORIGIN, size));
+        let part = kentos_ui::widget::picture::visible()
+            .unwrap_or(iced::Rectangle::new(iced::Point::ORIGIN, size));
         let zoomed = part.width < size.width - 0.5 || part.height < size.height - 0.5;
         Self { part, zoomed }
     }
 
     /// The left labels' x: their own, or the part's left edge where the view has moved past it.
     pub fn left(&self, own: f32) -> f32 {
-        if self.zoomed { own.max(self.part.x + 4.0) } else { own }
+        if self.zoomed {
+            own.max(self.part.x + 4.0)
+        } else {
+            own
+        }
     }
 
     /// The bottom labels' top: their own, or `height` over the part's bottom edge (above the scrollbar).
     pub fn bottom(&self, own: f32, height: f32) -> f32 {
-        if self.zoomed { own.min(self.part.y + self.part.height - height - SCROLLBAR) } else { own }
+        if self.zoomed {
+            own.min(self.part.y + self.part.height - height - SCROLLBAR)
+        } else {
+            own
+        }
     }
 
     pub fn has_x(&self, x: f32) -> bool {
@@ -140,7 +183,11 @@ pub fn label(
     let size = typography::caption();
     if let Some(ground) = backdrop {
         let width = words.chars().count() as f32 * size * 0.6 + 6.0;
-        let left = if centred { at.x - width / 2.0 } else { at.x - 3.0 };
+        let left = if centred {
+            at.x - width / 2.0
+        } else {
+            at.x - 3.0
+        };
         frame.fill(
             &iced::widget::canvas::Path::rounded_rectangle(
                 iced::Point::new(left, at.y - 1.0),
@@ -156,7 +203,11 @@ pub fn label(
         color,
         size: iced::Pixels(size),
         font: typography::ui(),
-        align_x: if centred { iced::widget::text::Alignment::Center } else { iced::widget::text::Alignment::Default },
+        align_x: if centred {
+            iced::widget::text::Alignment::Center
+        } else {
+            iced::widget::text::Alignment::Default
+        },
         ..iced::widget::canvas::Text::default()
     });
 }

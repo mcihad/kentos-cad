@@ -14,8 +14,8 @@
 //! `fixtures/commands/v1/file.import.dxf.json`.
 
 use std::collections::{BTreeMap, HashMap, HashSet};
-use std::path::Path;
 use std::io::Read;
+use std::path::Path;
 
 use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{
@@ -33,14 +33,27 @@ use crate::import_apply::{self, ImportPlan, LayerTarget, Styles, fold_turkish, l
 
 /// The source codec, independent of the filename. UI and automation share it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum CadFormat { Dxf, Dwg }
+pub enum CadFormat {
+    Dxf,
+    Dwg,
+}
 
 impl CadFormat {
     pub fn command(self) -> &'static str {
-        match self { Self::Dxf => kentos_commands::FILE_IMPORT_DXF, Self::Dwg => kentos_commands::FILE_IMPORT_DWG }
+        match self {
+            Self::Dxf => kentos_commands::FILE_IMPORT_DXF,
+            Self::Dwg => kentos_commands::FILE_IMPORT_DWG,
+        }
     }
-    pub fn label(self) -> &'static str { match self { Self::Dxf => "DXF", Self::Dwg => "DWG" } }
-    pub fn step_name(self, file: &str) -> String { format!("{}: {file}", self.label()) }
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Dxf => "DXF",
+            Self::Dwg => "DWG",
+        }
+    }
+    pub fn step_name(self, file: &str) -> String {
+        format!("{}: {file}", self.label())
+    }
 }
 
 /// The undo step's name: “DXF: ad.dxf”.
@@ -84,7 +97,7 @@ pub fn read_options(
 ) -> DxfReadOptions {
     let settings = doc.settings();
     DxfReadOptions {
-        scale_reference:None,
+        scale_reference: None,
         allow_polyline_loss: false,
         max_entities: 0,
         explode_blocks: explode,
@@ -111,7 +124,9 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
 
 /// The path: absolute and not a folder.
 fn check_path(input: &ImportDxf) -> Result<(), Stop> {
-    if input.scale_reference.is_some_and(|r|r.factor().is_none()) || (input.scale_reference.is_some() && input.file_unit.is_some()) {
+    if input.scale_reference.is_some_and(|r| r.factor().is_none())
+        || (input.scale_reference.is_some() && input.file_unit.is_some())
+    {
         return Err(refuse(codes::INVALID_SCALE,"Ölçek doğrulamasında kaynak ve gerçek uzunluk pozitif/sonlu olmalı. Dosya birimi ile ölçü doğrulamasından yalnız birini seçin.".into(),"scaleReference"));
     }
     let path = Path::new(&input.path);
@@ -141,14 +156,41 @@ fn check_path(input: &ImportDxf) -> Result<(), Stop> {
 /// Bounded from the open file descriptor, including a file that grows while it is read.
 pub fn read_cad_bytes(path: &Path) -> Result<Vec<u8>, Box<kentos_commands::CommandError>> {
     let fail = |code: &str, message: String| Box::new(error(code, message, Some("path".into())));
-    let file = std::fs::File::open(path).map_err(|e| fail(if e.kind() == std::io::ErrorKind::NotFound { codes::FILE_NOT_FOUND } else { codes::IMPORT_UNREADABLE }, format!("{} okunamadı: {e}. Dosyanın izinlerini denetleyin.", path.display())))?;
+    let file = std::fs::File::open(path).map_err(|e| {
+        fail(
+            if e.kind() == std::io::ErrorKind::NotFound {
+                codes::FILE_NOT_FOUND
+            } else {
+                codes::IMPORT_UNREADABLE
+            },
+            format!(
+                "{} okunamadı: {e}. Dosyanın izinlerini denetleyin.",
+                path.display()
+            ),
+        )
+    })?;
     let limit = kentos_formats::dxf::preflight::MAX_BYTES;
     if file.metadata().is_ok_and(|m| m.len() > limit as u64) {
-        return Err(fail(codes::CAD_FILE_TOO_LARGE, "CAD dosyası 256 MiB sınırını aşıyor; dosyayı bölün.".into()));
+        return Err(fail(
+            codes::CAD_FILE_TOO_LARGE,
+            "CAD dosyası 256 MiB sınırını aşıyor; dosyayı bölün.".into(),
+        ));
     }
     let mut bytes = Vec::new();
-    file.take(limit as u64 + 1).read_to_end(&mut bytes).map_err(|e| fail(codes::IMPORT_UNREADABLE, format!("{} okunamadı: {e}", path.display())))?;
-    if bytes.len() > limit { return Err(fail(codes::CAD_FILE_TOO_LARGE, "CAD dosyası okuma sırasında 256 MiB sınırını aştı.".into())); }
+    file.take(limit as u64 + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|e| {
+            fail(
+                codes::IMPORT_UNREADABLE,
+                format!("{} okunamadı: {e}", path.display()),
+            )
+        })?;
+    if bytes.len() > limit {
+        return Err(fail(
+            codes::CAD_FILE_TOO_LARGE,
+            "CAD dosyası okuma sırasında 256 MiB sınırını aştı.".into(),
+        ));
+    }
     Ok(bytes)
 }
 
@@ -176,14 +218,36 @@ fn read_file(doc: &Document, input: &ImportDxf, format: CadFormat) -> Result<Rea
     options.scale_reference = input.scale_reference;
     let mut result = match format {
         CadFormat::Dxf => kentos_formats::dxf::read_checked(&bytes, &options).map_err(|e| {
-            refuse(e.code, format!("{name} DXF olarak okunamadı: {e}"), if e.code == codes::POLYLINE_GEOMETRY_LOSS { "allowPolylineLoss" } else { "path" })
+            refuse(
+                e.code,
+                format!("{name} DXF olarak okunamadı: {e}"),
+                if e.code == codes::POLYLINE_GEOMETRY_LOSS {
+                    "allowPolylineLoss"
+                } else {
+                    "path"
+                },
+            )
         })?,
         CadFormat::Dwg => kentos_dwg::read(&bytes, &options).map_err(|e| {
-            refuse(e.code, format!("{name}: {e}"), if e.code == codes::POLYLINE_GEOMETRY_LOSS { "allowPolylineLoss" } else { "path" })
+            refuse(
+                e.code,
+                format!("{name}: {e}"),
+                if e.code == codes::POLYLINE_GEOMETRY_LOSS {
+                    "allowPolylineLoss"
+                } else {
+                    "path"
+                },
+            )
         })?,
     };
     prepare_cad(doc, path, &mut result)?;
-    if !input.allow_polyline_loss && let Some(error) = kentos_formats::dxf::polyline_policy::refusal(result.report.notes.iter().chain(&result.report.skipped)) { return Err(refuse(error.code, error.message, "allowPolylineLoss")); }
+    if !input.allow_polyline_loss
+        && let Some(error) = kentos_formats::dxf::polyline_policy::refusal(
+            result.report.notes.iter().chain(&result.report.skipped),
+        )
+    {
+        return Err(refuse(error.code, error.message, "allowPolylineLoss"));
+    }
     let unusable = import_apply::unusable(&result.entities)
         .map(|(place, kind)| import_apply::unusable_text(place, kind))
         .or_else(|| import_apply::unusable_block(&result.blocks));
@@ -194,7 +258,11 @@ fn read_file(doc: &Document, input: &ImportDxf, format: CadFormat) -> Result<Rea
 }
 
 /// The same resolved paths and sheet validation for a window's already-read bytes and a command's read.
-pub(crate) fn prepare_cad(doc: &Document, path: &Path, result: &mut ImportResult) -> Result<(), Stop> {
+pub(crate) fn prepare_cad(
+    doc: &Document,
+    path: &Path,
+    result: &mut ImportResult,
+) -> Result<(), Stop> {
     // A sheet the book cannot hold does not cost the drawing: the model comes in, the file's sheets stay out and are said.
     if let Err(message) = crate::cad_layouts::merge(doc, &result.layouts) {
         result.report.notes.push(kentos_commands::ReportItem {
@@ -208,12 +276,26 @@ pub(crate) fn prepare_cad(doc: &Document, path: &Path, result: &mut ImportResult
         result.layouts.clear();
     }
     for note in crate::cad_layouts::diagnostics(&result.layouts) {
-        if !result.report.notes.iter().any(|n| n.what == note.what && n.reason == note.reason) { result.report.notes.push(note); }
+        if !result
+            .report
+            .notes
+            .iter()
+            .any(|n| n.what == note.what && n.reason == note.reason)
+        {
+            result.report.notes.push(note);
+        }
     }
     for block in &mut result.blocks {
         if let Some(x) = &mut block.xref
-            && !Path::new(&x.path).is_absolute() && !x.path.contains(':') {
-                x.path = path.parent().unwrap_or_else(|| Path::new(".")).join(x.path.replace('\\', "/")).to_string_lossy().into_owned();
+            && !Path::new(&x.path).is_absolute()
+            && !x.path.contains(':')
+        {
+            x.path = path
+                .parent()
+                .unwrap_or_else(|| Path::new("."))
+                .join(x.path.replace('\\', "/"))
+                .to_string_lossy()
+                .into_owned();
         }
     }
     Ok(())
@@ -238,13 +320,15 @@ fn plan_of(
         group: input.group.as_ref(),
     };
     let (layers, objects) = route_layers(doc, &routing, source)?;
-    if !paper_only { nothing_to_import(
-        file,
-        source.is_empty(),
-        layers.is_empty(),
-        objects,
-        &input.skip_layers,
-    )?; }
+    if !paper_only {
+        nothing_to_import(
+            file,
+            source.is_empty(),
+            layers.is_empty(),
+            objects,
+            &input.skip_layers,
+        )?;
+    }
     Ok(ImportPlan {
         source_srid: None,
         label: format.step_name(file),
@@ -416,7 +500,11 @@ pub fn import_plan(
 }
 
 pub fn import_plan_format(
-    doc: &Document, input: &ImportDxf, layers: &[ImportLayer], file: &str, format: CadFormat,
+    doc: &Document,
+    input: &ImportDxf,
+    layers: &[ImportLayer],
+    file: &str,
+    format: CadFormat,
 ) -> Result<ImportPlan, Box<kentos_commands::CommandError>> {
     plan_of(doc, input, layers, file, format, false).map_err(|stop| Box::new(stop.into_error()))
 }
@@ -457,7 +545,8 @@ fn warnings_of(result: &ImportResult) -> Vec<CommandWarning> {
     if kentos_formats::dxf::polyline_policy::refusal(result.report.notes.iter()).is_some() {
         out.push(CommandWarning {
             code: codes::IMPORT_LOSSES.into(),
-            message: "Kabul edilen çoklu çizgi dönüşüm kayıpları report.notes içinde ayrıntılıdır.".into(),
+            message: "Kabul edilen çoklu çizgi dönüşüm kayıpları report.notes içinde ayrıntılıdır."
+                .into(),
             path: Some("allowPolylineLoss".into()),
         });
     }
@@ -468,7 +557,7 @@ fn warnings_of(result: &ImportResult) -> Vec<CommandWarning> {
 /// none): metres as they are.
 fn metres() -> UnitDecision {
     UnitDecision {
-        scale_reference:None,
+        scale_reference: None,
         declared: None,
         used: 6,
         name: "metre".into(),
@@ -481,11 +570,28 @@ fn metres() -> UnitDecision {
 
 /// Puts `read` into `doc` by `input` (one step: the layers, the blocks, the
 /// objects and the styles).
-fn write(doc: &mut Document, input: &ImportDxf, read: ReadDxf, format: CadFormat) -> CommandResult<DxfImported> {
+fn write(
+    doc: &mut Document,
+    input: &ImportDxf,
+    read: ReadDxf,
+    format: CadFormat,
+) -> CommandResult<DxfImported> {
     let closed_polylines = input
         .closed_polylines
         .unwrap_or_else(|| closed_by_type(doc));
-    let plan = match plan_of(doc, input, &read.result.layers, &read.file, format, read.result.entities.is_empty() && read.result.layouts.iter().any(|l| !l.entities.is_empty() || !l.viewports.is_empty())) {
+    let plan = match plan_of(
+        doc,
+        input,
+        &read.result.layers,
+        &read.file,
+        format,
+        read.result.entities.is_empty()
+            && read
+                .result
+                .layouts
+                .iter()
+                .any(|l| !l.entities.is_empty() || !l.viewports.is_empty()),
+    ) {
         Ok(plan) => plan,
         Err(stop) => return stop.into(),
     };
@@ -499,7 +605,10 @@ fn write(doc: &mut Document, input: &ImportDxf, read: ReadDxf, format: CadFormat
     let report = serde_json::to_value(&result.report).unwrap_or(Value::Null);
     let unit = result.unit.clone().unwrap_or_else(metres);
     let styles = Styles {
-        cad_source:Some(crate::cad_layouts::Source{file:file.clone(),sha256:Some(sha256.clone())}),
+        cad_source: Some(crate::cad_layouts::Source {
+            file: file.clone(),
+            sha256: Some(sha256.clone()),
+        }),
         layouts: result.layouts,
         text: result.text_styles,
         dimension: result.dimension_styles,
@@ -547,7 +656,19 @@ fn check(doc: &Document, input: &ImportDxf, format: CadFormat) -> Result<ReadDxf
     check_path(input)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let read = read_file(doc, input, format)?;
-    plan_of(doc, input, &read.result.layers, &read.file, format, read.result.entities.is_empty() && read.result.layouts.iter().any(|l| !l.entities.is_empty() || !l.viewports.is_empty()))?;
+    plan_of(
+        doc,
+        input,
+        &read.result.layers,
+        &read.file,
+        format,
+        read.result.entities.is_empty()
+            && read
+                .result
+                .layouts
+                .iter()
+                .any(|l| !l.entities.is_empty() || !l.viewports.is_empty()),
+    )?;
     Ok(read)
 }
 
@@ -556,7 +677,11 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ImportDxf) -> CommandResult<(
     validate_format(cx, input, CadFormat::Dxf)
 }
 
-pub fn validate_format(cx: &ExecutionContext<'_>, input: &ImportDxf, format: CadFormat) -> CommandResult<()> {
+pub fn validate_format(
+    cx: &ExecutionContext<'_>,
+    input: &ImportDxf,
+    format: CadFormat,
+) -> CommandResult<()> {
     match check(cx.doc, input, format) {
         Ok(_) => CommandResult::Completed {
             output: (),
@@ -571,7 +696,11 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ImportDxf) -> CommandResult<DxfIm
     plan_format(cx, input, CadFormat::Dxf)
 }
 
-pub fn plan_format(cx: &ExecutionContext<'_>, input: &ImportDxf, format: CadFormat) -> CommandResult<DxfImported> {
+pub fn plan_format(
+    cx: &ExecutionContext<'_>,
+    input: &ImportDxf,
+    format: CadFormat,
+) -> CommandResult<DxfImported> {
     let read = match check(cx.doc, input, format) {
         Ok(read) => read,
         Err(stop) => return stop.into(),
@@ -589,14 +718,14 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ImportDxf) -> CommandResult
     execute_format(cx, input, CadFormat::Dxf)
 }
 
-pub fn execute_format(cx: &mut ExecutionContext<'_>, input: ImportDxf, format: CadFormat) -> CommandResult<DxfImported> {
-    crate::call::recorded(
-        cx,
-        format.command(),
-        1,
-        input,
-        |cx, input| write_execute(cx, input, None, format),
-    )
+pub fn execute_format(
+    cx: &mut ExecutionContext<'_>,
+    input: ImportDxf,
+    format: CadFormat,
+) -> CommandResult<DxfImported> {
+    crate::call::recorded(cx, format.command(), 1, input, |cx, input| {
+        write_execute(cx, input, None, format)
+    })
 }
 
 /// [`execute`] with the file its host already read (the desktop's window
@@ -612,10 +741,14 @@ pub fn execute_read(
 }
 
 pub fn execute_read_format(
-    cx: &mut ExecutionContext<'_>, input: ImportDxf, read: ReadDxf, format: CadFormat,
+    cx: &mut ExecutionContext<'_>,
+    input: ImportDxf,
+    read: ReadDxf,
+    format: CadFormat,
 ) -> CommandResult<DxfImported> {
-    crate::call::recorded(cx, format.command(), 1, input,
-        move |cx, input| write_execute(cx, input, Some(read), format))
+    crate::call::recorded(cx, format.command(), 1, input, move |cx, input| {
+        write_execute(cx, input, Some(read), format)
+    })
 }
 
 /// The journal's row of a large import the desktop wrote a frame at a time
@@ -634,8 +767,13 @@ pub fn record_progressive(
 }
 
 pub fn record_progressive_format(
-    doc: &mut Document, input: &ImportDxf, file: &str, created: &[kentos_domain::Slot],
-    warnings: &[CommandWarning], base: u64, format: CadFormat,
+    doc: &mut Document,
+    input: &ImportDxf,
+    file: &str,
+    created: &[kentos_domain::Slot],
+    warnings: &[CommandWarning],
+    base: u64,
+    format: CadFormat,
 ) -> u64 {
     let input = serde_json::to_value(input).unwrap_or(Value::Null);
     crate::call::record_written(
@@ -679,28 +817,60 @@ fn write_execute(
             }
         }
     };
-    if !input.allow_polyline_loss && let Some(error) = kentos_formats::dxf::polyline_policy::refusal(read.result.report.notes.iter().chain(&read.result.report.skipped)) {
+    if !input.allow_polyline_loss
+        && let Some(error) = kentos_formats::dxf::polyline_policy::refusal(
+            read.result
+                .report
+                .notes
+                .iter()
+                .chain(&read.result.report.skipped),
+        )
+    {
         return refuse(error.code, error.message, "allowPolylineLoss").into();
     }
-    if let Err(stop) = prepare_cad(cx.doc, Path::new(&input.path), &mut read.result) { return stop.into(); }
-    if !input.allow_polyline_loss && let Some(error) = kentos_formats::dxf::polyline_policy::refusal(read.result.report.notes.iter().chain(&read.result.report.skipped)) { return refuse(error.code, error.message, "allowPolylineLoss").into(); }
-    if input.reproject && let Err(stop) = move_into_project(cx.doc, input.srid, &mut read.result) {
+    if let Err(stop) = prepare_cad(cx.doc, Path::new(&input.path), &mut read.result) {
+        return stop.into();
+    }
+    if !input.allow_polyline_loss
+        && let Some(error) = kentos_formats::dxf::polyline_policy::refusal(
+            read.result
+                .report
+                .notes
+                .iter()
+                .chain(&read.result.report.skipped),
+        )
+    {
+        return refuse(error.code, error.message, "allowPolylineLoss").into();
+    }
+    if input.reproject
+        && let Err(stop) = move_into_project(cx.doc, input.srid, &mut read.result)
+    {
         return stop.into();
     }
     write(cx.doc, &input, read, format)
 }
 
 /// [`move_into_project`] for the desktop's large import, written a frame at a time: why not, as the command says it.
-pub fn moved_into_project(doc: &Document, srid: Option<u32>, result: &mut ImportResult) -> Result<(), String> {
+pub fn moved_into_project(
+    doc: &Document,
+    srid: Option<u32>,
+    result: &mut ImportResult,
+) -> Result<(), String> {
     move_into_project(doc, srid, result).map_err(|stop| match CommandResult::<()>::from(stop) {
-        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => error.message,
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => error.message,
         _ => "Koordinatlar projenin sistemine çevrilemedi.".to_owned(),
     })
 }
 
 /// The file's coordinates moved into the project's system (GIS-052, docs/adr/1109): from `srid`, else the system the
 /// file declares; exactly, points and straight-edged paths only, the rest left out and said in the report.
-pub(crate) fn move_into_project(doc: &Document, srid: Option<u32>, result: &mut ImportResult) -> Result<(), Stop> {
+pub(crate) fn move_into_project(
+    doc: &Document,
+    srid: Option<u32>,
+    result: &mut ImportResult,
+) -> Result<(), Stop> {
     let settings = doc.settings();
     if !settings.has_system() {
         return Err(refuse(
@@ -724,7 +894,9 @@ pub(crate) fn move_into_project(doc: &Document, srid: Option<u32>, result: &mut 
     let (Some(from), Some(to)) = (from, to) else {
         return Err(refuse(
             codes::CRS_MISMATCH,
-            format!("EPSG:{from_srid} ya da projenin sistemi KentOS'un çevirebildiği sistemlerde yok; dosyayı projenin sistemine çevirip verin."),
+            format!(
+                "EPSG:{from_srid} ya da projenin sistemi KentOS'un çevirebildiği sistemlerde yok; dosyayı projenin sistemine çevirip verin."
+            ),
             "reproject",
         ));
     };

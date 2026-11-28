@@ -259,8 +259,10 @@ impl SheetMaps {
                     }
                     let turn = f64::from(view.rotation) / 1000.0;
                     let kept = model.reading_copy();
-                    kentos_native_application::road_plan_axes::with_axes_on(model, annotation, turn, room)
-                        .unwrap_or(kept)
+                    kentos_native_application::road_plan_axes::with_axes_on(
+                        model, annotation, turn, room,
+                    )
+                    .unwrap_or(kept)
                 })
                 .map(|model| {
                     let mut spatial = Spatial::new();
@@ -332,14 +334,26 @@ impl SheetMaps {
             .center
             .map_or_else(|| scene::scene_origin(doc), |p| Vec2::new(p.x, p.y));
         let own_key = match (own, level) {
-            _ if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.2.is_empty() || recipe.3 || !recipe.4.is_empty() || recipe.5.is_some() => {
+            _ if recipe.0.is_some()
+                || !recipe.1.is_empty()
+                || !recipe.2.is_empty()
+                || recipe.3
+                || !recipe.4.is_empty()
+                || recipe.5.is_some() =>
+            {
                 use std::hash::{Hash, Hasher};
                 let mut h = std::collections::hash_map::DefaultHasher::new();
-                serde_json::to_string(&own.0).unwrap_or_default().hash(&mut h);
-                serde_json::to_string(own.1).unwrap_or_default().hash(&mut h);
+                serde_json::to_string(&own.0)
+                    .unwrap_or_default()
+                    .hash(&mut h);
+                serde_json::to_string(own.1)
+                    .unwrap_or_default()
+                    .hash(&mut h);
                 level.map(|l| (l.id.as_str(), l.below)).hash(&mut h);
                 // A linked view's recipe (docs/adr/0774 §3).
-                serde_json::to_string(&recipe).unwrap_or_default().hash(&mut h);
+                serde_json::to_string(&recipe)
+                    .unwrap_or_default()
+                    .hash(&mut h);
                 h.finish() | 1
             }
             ((MapLayers::Theme(_), _), _) | ((_, [_, ..]), _) | (_, Some(_)) => {
@@ -407,10 +421,17 @@ impl SheetMaps {
             phasing: std::sync::Arc::new({
                 // A level's plan (docs/adr/0716): the level under it faint; a linked view's phase and categories
                 // (docs/adr/0774 §3).
-                let mut p =
-                    kentos_plot::layers::map_drawing_of(&doc.model, recipe.0, recipe.1, recipe.2, recipe.3, recipe.4);
+                let mut p = kentos_plot::layers::map_drawing_of(
+                    &doc.model, recipe.0, recipe.1, recipe.2, recipe.3, recipe.4,
+                );
                 if let Some(range) = recipe.5 {
-                    for id in kentos_native_application::ceiling_plan::hidden(&doc.model, level.map(|l| l.id.as_str()), range) { p.hide(id); }
+                    for id in kentos_native_application::ceiling_plan::hidden(
+                        &doc.model,
+                        level.map(|l| l.id.as_str()),
+                        range,
+                    ) {
+                        p.hide(id);
+                    }
                 }
                 for &id in &faint {
                     p.fade(id);
@@ -530,28 +551,46 @@ fn clip_runs(pts: &[Point], bounds: iced::Rectangle) -> Vec<Vec<Point>> {
 /// Prepare the whole map before painting: an excessive/dense/dotted recipe
 /// falls back as a whole to the existing CPU painter, without double compositing.
 fn stroke_runs(
-    r: &MapRequest<'_>, paths: &[kentos_sheet::pdf::MapPath], px_mm: f64,
+    r: &MapRequest<'_>,
+    paths: &[kentos_sheet::pdf::MapPath],
+    px_mm: f64,
 ) -> Option<Vec<Vec<Vec<Point>>>> {
-    paths.iter().map(|p| {
-        let Some(stroke) = &p.stroke else { return Some(Vec::new()); };
-        let dash: Vec<f64> = stroke.dash.iter().map(|v| v * px_mm).collect();
-        let phase = stroke.dash_offset.unwrap_or(0.) * px_mm;
-        let mut out = Vec::new();
-        for ring in std::iter::once(&p.points).chain(p.holes.iter().filter(|_| p.closed)) {
-            let camera = r.transform();
-            let mut points: Vec<Vec2> = ring.iter().map(|q| {
-                let p = camera.point(*q); Vec2::new(p[0],p[1])
-            }).collect();
-            if p.closed && let Some(first) = points.first().copied() { points.push(first); }
-            if dash.is_empty() {
-                let points: Vec<Point> = points.iter().map(|p|Point::new(p.x as f32,p.y as f32)).collect();
-                out.extend(clip_runs(&points,r.bounds()));
-            } else {
-                out.extend(dashes::runs(&points,r.bounds(),&dash,phase)?);
+    paths
+        .iter()
+        .map(|p| {
+            let Some(stroke) = &p.stroke else {
+                return Some(Vec::new());
+            };
+            let dash: Vec<f64> = stroke.dash.iter().map(|v| v * px_mm).collect();
+            let phase = stroke.dash_offset.unwrap_or(0.) * px_mm;
+            let mut out = Vec::new();
+            for ring in std::iter::once(&p.points).chain(p.holes.iter().filter(|_| p.closed)) {
+                let camera = r.transform();
+                let mut points: Vec<Vec2> = ring
+                    .iter()
+                    .map(|q| {
+                        let p = camera.point(*q);
+                        Vec2::new(p[0], p[1])
+                    })
+                    .collect();
+                if p.closed
+                    && let Some(first) = points.first().copied()
+                {
+                    points.push(first);
+                }
+                if dash.is_empty() {
+                    let points: Vec<Point> = points
+                        .iter()
+                        .map(|p| Point::new(p.x as f32, p.y as f32))
+                        .collect();
+                    out.extend(clip_runs(&points, r.bounds()));
+                } else {
+                    out.extend(dashes::runs(&points, r.bounds(), &dash, phase)?);
+                }
             }
-        }
-        Some(out)
-    }).collect()
+            Some(out)
+        })
+        .collect()
 }
 
 /// The core's map paths on a canvas, as its PDF writer draws them and cut to the map's box as
@@ -958,7 +997,10 @@ impl SheetPainter<'_> {
             }
             drawn.push(paths);
         }
-        let strokes: Option<Vec<_>> = drawn.iter().map(|paths| stroke_runs(r, paths, px_mm)).collect();
+        let strokes: Option<Vec<_>> = drawn
+            .iter()
+            .map(|paths| stroke_runs(r, paths, px_mm))
+            .collect();
         let Some(strokes) = strokes else {
             return self.paint_picture(r, frame, &at, only, s);
         };
@@ -1165,12 +1207,20 @@ impl SheetPainter<'_> {
         // A linked view's recipe (docs/adr/0774 §3): the words of what its phase or categories leave out.
         let mut recipe_out: std::collections::HashSet<u32> = match r.primitive {
             Some(p) if p.phase.is_some() || !p.hidden.is_empty() || !p.options.is_empty() => {
-                kentos_plot::layers::map_phasing_of(doc, p.phase, &p.hidden, &p.options).hidden().collect()
+                kentos_plot::layers::map_phasing_of(doc, p.phase, &p.hidden, &p.options)
+                    .hidden()
+                    .collect()
             }
             _ => Default::default(),
         };
-        if let Some(p) = r.primitive && let Some(range) = p.ceiling {
-            recipe_out.extend(kentos_native_application::ceiling_plan::hidden(doc, p.level.as_ref().map(|l| l.id.as_str()), range));
+        if let Some(p) = r.primitive
+            && let Some(range) = p.ceiling
+        {
+            recipe_out.extend(kentos_native_application::ceiling_plan::hidden(
+                doc,
+                p.level.as_ref().map(|l| l.id.as_str()),
+                range,
+            ));
         }
         let spots: Vec<_> = spots
             .into_iter()
@@ -1393,10 +1443,10 @@ fn crosses(a: [f64; 2], b: [f64; 2], e: [f64; 4]) -> bool {
 }
 
 #[cfg(test)]
-mod tests;
-#[cfg(test)]
 #[path = "print_check_tests.rs"]
 mod print_check_tests;
+#[cfg(test)]
+mod tests;
 
 /// Each map's own survey quality in the sheet mode (docs/adr/2800).
 #[cfg(test)]

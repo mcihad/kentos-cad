@@ -136,7 +136,11 @@ impl<'a, Message: 'a> Widget<Message, Theme, Renderer> for Fit<'a, Message> {
         // A box given a height of its own (a resized dialog, docs/adr/0746): the last elastic child takes what is
         // over, else the space goes above the last child (the buttons stay at the bottom).
         let mut gap_before_last = 0.0;
-        let target = if self.fill && max.height.is_finite() { max.height } else { limits.min().height };
+        let target = if self.fill && max.height.is_finite() {
+            max.height
+        } else {
+            limits.min().height
+        };
         let over = target - used;
         if over > 0.5 && count > 0 {
             match (0..count).rev().find(|&i| elastic[i]) {
@@ -385,10 +389,19 @@ mod tests {
         let (height, children) = laid_out(dialog(100.0), 500.0);
         assert_eq!((height, children[2]), (190.0, (150.0, 40.0)));
         // No elastic child and a footer: the space goes above the buttons.
-        let fit = Fit::new().spacing(10.0).push(block(30.0)).push(block(40.0)).fill(true).footer(true);
+        let fit = Fit::new()
+            .spacing(10.0)
+            .push(block(30.0))
+            .push(block(40.0))
+            .fill(true)
+            .footer(true);
         assert_eq!(laid_out(fit, 500.0).1[1], (460.0, 40.0));
         // No footer (the buttons inside the body): nothing is pushed down.
-        let fit = Fit::new().spacing(10.0).push(block(30.0)).push(block(40.0)).fill(true);
+        let fit = Fit::new()
+            .spacing(10.0)
+            .push(block(30.0))
+            .push(block(40.0))
+            .fill(true);
         assert_eq!(laid_out(fit, 500.0).1[1], (40.0, 40.0));
     }
 

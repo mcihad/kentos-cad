@@ -230,19 +230,39 @@ mod glyph_owner_tests {
     #[test]
     fn arabic_source_letters_belong_to_the_body_not_its_preceding_dots() {
         use kentos_geometry_core::text::shaping::{self, Style, placed::PlacedGlyph};
-        let line = shaping::line("العربية", Style {family:"arimo",..Style::default()}).unwrap();
-        let glyphs:Vec<_> = line.glyphs.into_iter().map(|glyph|PlacedGlyph {
-            glyph,transform:[1.,0.,0.,1.,0.,0.],
-        }).collect();
-        let owners=super::glyph_owners(&glyphs);
-        let mut actual:Vec<_>=owners.values().map(|&i| {
-            let g=&glyphs[i].glyph;(g.scalars.start,g.id)
-        }).collect();actual.sort();
+        let line = shaping::line(
+            "العربية",
+            Style {
+                family: "arimo",
+                ..Style::default()
+            },
+        )
+        .unwrap();
+        let glyphs: Vec<_> = line
+            .glyphs
+            .into_iter()
+            .map(|glyph| PlacedGlyph {
+                glyph,
+                transform: [1., 0., 0., 1., 0., 0.],
+            })
+            .collect();
+        let owners = super::glyph_owners(&glyphs);
+        let mut actual: Vec<_> = owners
+            .values()
+            .map(|&i| {
+                let g = &glyphs[i].glyph;
+                (g.scalars.start, g.id)
+            })
+            .collect();
+        actual.sort();
         // Independent C HarfBuzz 15.0.0, frozen NotoSansArabic-400 face:
         // body GIDs in logical order. GIDs 278/309/307 are preceding dots,
         // and must not receive the source letter's searchable bounding box.
-        assert_eq!(actual,[(0,8),(1,72),(2,48),(3,31),(4,19),(5,18),(6,83)]);
-        assert_eq!(glyphs.len(),10);
+        assert_eq!(
+            actual,
+            [(0, 8), (1, 72), (2, 48), (3, 31), (4, 19), (5, 18), (6, 83)]
+        );
+        assert_eq!(glyphs.len(), 10);
     }
 }
 
@@ -316,10 +336,14 @@ pub(crate) fn built_layers_profile(
     labels: &[MapLabel],
     clip: Option<&[[f64; 2]]>,
 ) -> Result<Vec<(String, String, kentos_native_style::StyledLayer)>, String> {
-    let built = built_layers_profile_unchecked(src, layers, overrides, scale, extent, profile, labels)?;
+    let built =
+        built_layers_profile_unchecked(src, layers, overrides, scale, extent, profile, labels)?;
     let losses = emitted_line_type_losses(&built, scale, extent, src.origin, clip);
     if !losses.is_empty() {
-        return Err(format!("{} Eksik çizgi deseniyle çıktı üretilmedi.", losses.join("\n")));
+        return Err(format!(
+            "{} Eksik çizgi deseniyle çıktı üretilmedi.",
+            losses.join("\n")
+        ));
     }
     Ok(built)
 }
@@ -330,20 +354,37 @@ pub(crate) fn line_type_losses(
     src: &MapSource<'_>,
     map: &kentos_sheet::display::MapPrim,
 ) -> Result<Vec<String>, String> {
-    let Some(extent) = map.extent else { return Ok(Vec::new()); };
+    let Some(extent) = map.extent else {
+        return Ok(Vec::new());
+    };
     if !line_type_check_needed(src.doc, map, src.library) {
         return Ok(Vec::new());
     }
-    let built = built_layers_profile_unchecked(src, &map.layers, &map.layer_overrides,
-        map.view.scale, extent, None, &[])?;
+    let built = built_layers_profile_unchecked(
+        src,
+        &map.layers,
+        &map.layer_overrides,
+        map.view.scale,
+        extent,
+        None,
+        &[],
+    )?;
     let clip = ground_clip(map);
-    Ok(emitted_line_type_losses(&built, map.view.scale, extent, src.origin, clip.as_deref()))
+    Ok(emitted_line_type_losses(
+        &built,
+        map.view.scale,
+        extent,
+        src.origin,
+        clip.as_deref(),
+    ))
 }
 
 /// Cheap source gate, not the finding itself. The ordinary built-in/short
 /// pattern project must not compile its map a second time for this check.
 pub(crate) fn line_type_check_needed(
-    doc: &kentos_domain::Document, map: &kentos_sheet::display::MapPrim, library: &StyleLibrary,
+    doc: &kentos_domain::Document,
+    map: &kentos_sheet::display::MapPrim,
+    library: &StyleLibrary,
 ) -> bool {
     let types =
         kentos_native_style::line_types::LineTypes::with_resources(doc.settings(), doc.styles());
@@ -352,40 +393,82 @@ pub(crate) fn line_type_check_needed(
     }
     // Geometric-width dashes are split before filling and can reject an
     // excessive/dotted recipe. Inspect their actual emitted diagnostics too.
-    let wide = |e: &kentos_contracts::Entity| matches!(e,
-        kentos_contracts::Entity::Polyline(p) if p.widths.as_ref().is_some_and(|w|w.iter().any(|[a,b]|*a>0. || *b>0.)));
-    if doc.entities().any(wide) || doc.blocks().iter().flat_map(|b|&b.entities).any(wide) { return true; }
+    let wide = |e: &kentos_contracts::Entity| {
+        matches!(e,
+        kentos_contracts::Entity::Polyline(p) if p.widths.as_ref().is_some_and(|w|w.iter().any(|[a,b]|*a>0. || *b>0.)))
+    };
+    if doc.entities().any(wide) || doc.blocks().iter().flat_map(|b| &b.entities).any(wide) {
+        return true;
+    }
 
     let bad = |name: Option<&str>| name.is_some_and(|n| types.loss(n).is_some());
     fn long_dash(v: &serde_json::Value) -> bool {
         match v {
-            serde_json::Value::Object(m) => m.get("lineTypeLoss").is_some() || m.get("cadMarks").is_some()
-                || m.get("dash").and_then(serde_json::Value::as_array)
-                    .is_some_and(|d| d.len() > 4096)
-                || m.values().any(long_dash),
+            serde_json::Value::Object(m) => {
+                m.get("lineTypeLoss").is_some()
+                    || m.get("cadMarks").is_some()
+                    || m.get("dash")
+                        .and_then(serde_json::Value::as_array)
+                        .is_some_and(|d| d.len() > 4096)
+                    || m.values().any(long_dash)
+            }
             serde_json::Value::Array(a) => a.iter().any(long_dash),
             _ => false,
         }
     }
-    fn layers(nodes: &[kentos_contracts::LayerNode], bad: &impl Fn(Option<&str>)->bool) -> bool {
-        nodes.iter().any(|n| bad(n.style.line_pattern.as_deref())
-            || n.style.renderer.as_ref().is_some_and(long_dash) || layers(&n.children,bad))
+    fn layers(nodes: &[kentos_contracts::LayerNode], bad: &impl Fn(Option<&str>) -> bool) -> bool {
+        nodes.iter().any(|n| {
+            bad(n.style.line_pattern.as_deref())
+                || n.style.renderer.as_ref().is_some_and(long_dash)
+                || layers(&n.children, bad)
+        })
     }
     layers(doc.layers().nodes(), &bad)
-        || doc.entities().any(|e| bad(e.base().look.line_pattern.as_deref()))
-        || doc.blocks().iter().flat_map(|b| &b.entities).any(|e| bad(e.base().look.line_pattern.as_deref()))
-        || doc.settings().layer_states.iter().flat_map(|s| &s.nodes)
-            .any(|n| n.style.as_ref().is_some_and(|s|bad(s.line_pattern.as_deref()) || s.renderer.as_ref().is_some_and(long_dash)))
-        || map.layer_overrides.iter().any(|o|bad(o.line_pattern.as_deref()))
-        || library.items(None).iter().any(|(item,_)|item.symbol().is_some_and(long_dash))
+        || doc
+            .entities()
+            .any(|e| bad(e.base().look.line_pattern.as_deref()))
+        || doc
+            .blocks()
+            .iter()
+            .flat_map(|b| &b.entities)
+            .any(|e| bad(e.base().look.line_pattern.as_deref()))
+        || doc
+            .settings()
+            .layer_states
+            .iter()
+            .flat_map(|s| &s.nodes)
+            .any(|n| {
+                n.style.as_ref().is_some_and(|s| {
+                    bad(s.line_pattern.as_deref()) || s.renderer.as_ref().is_some_and(long_dash)
+                })
+            })
+        || map
+            .layer_overrides
+            .iter()
+            .any(|o| bad(o.line_pattern.as_deref()))
+        || library
+            .items(None)
+            .iter()
+            .any(|(item, _)| item.symbol().is_some_and(long_dash))
 }
 
 /// The map's visible ground (docs/adr/1007): its clip shape (the frame, a rectangle or a polygon) on its turned
 /// content, in world coordinates. None for a map with no centre.
 pub fn ground_clip(map: &kentos_sheet::display::MapPrim) -> Option<Vec<[f64; 2]>> {
     let center = map.view.center?;
-    let t = kentos_sheet::projection::Transform::paper(&map.clip, center, map.view.scale.max(1e-6), map.view.rotation);
-    Some(map.clip_shape.paper_points(&map.clip).into_iter().map(|p| t.inverse(p)).collect())
+    let t = kentos_sheet::projection::Transform::paper(
+        &map.clip,
+        center,
+        map.view.scale.max(1e-6),
+        map.view.rotation,
+    );
+    Some(
+        map.clip_shape
+            .paper_points(&map.clip)
+            .into_iter()
+            .map(|p| t.inverse(p))
+            .collect(),
+    )
 }
 
 /// Whether the box `[x0, y0, x1, y1]` and the simple polygon `ring` share a point.
@@ -404,11 +487,16 @@ fn box_meets_ring(b: [f64; 4], ring: &[[f64; 2]]) -> bool {
         }
         inside
     };
-    if [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]].iter().any(|p| inside_ring(p[0], p[1])) {
+    if [[b[0], b[1]], [b[2], b[1]], [b[2], b[3]], [b[0], b[3]]]
+        .iter()
+        .any(|p| inside_ring(p[0], p[1]))
+    {
         return true;
     }
     let cross = |p: [f64; 2], q: [f64; 2], r: [f64; 2], s: [f64; 2]| {
-        let d = |a: [f64; 2], b: [f64; 2], c: [f64; 2]| (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+        let d = |a: [f64; 2], b: [f64; 2], c: [f64; 2]| {
+            (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        };
         let (d1, d2, d3, d4) = (d(r, s, p), d(r, s, q), d(p, q, r), d(p, q, s));
         (d1 > 0.0) != (d2 > 0.0) && (d3 > 0.0) != (d4 > 0.0)
     };
@@ -427,22 +515,47 @@ fn emitted_line_type_losses(
     clip: Option<&[[f64; 2]]>,
 ) -> Vec<String> {
     // The clip in the batches' origin-relative metres: a loss outside the visible shape is not delivered.
-    let ring: Option<Vec<[f64; 2]>> = clip.map(|c| c.iter().map(|p| [p[0] - origin.x, p[1] - origin.y]).collect());
-    let seen = [extent[0]-origin.x, extent[1]-origin.y, extent[2]-origin.x, extent[3]-origin.y];
+    let ring: Option<Vec<[f64; 2]>> = clip.map(|c| {
+        c.iter()
+            .map(|p| [p[0] - origin.x, p[1] - origin.y])
+            .collect()
+    });
+    let seen = [
+        extent[0] - origin.x,
+        extent[1] - origin.y,
+        extent[2] - origin.x,
+        extent[3] - origin.y,
+    ];
     let px_per_m = 1. / (scale.max(1e-6) * kentos_native_style::program::METRES_PER_PX);
     let ring = ring.as_deref();
-    built.iter().flat_map(|(_, name, layer)| layer.batches.iter().filter_map(move |b| {
-        b.line_type_loss.as_ref().filter(|_| {
-            let ink = match &b.kind {
-                kentos_native_style::batches::BatchKind::Stroke { color, .. } => color[3] > 0.,
-                kentos_native_style::batches::BatchKind::Fill { paint: kentos_native_style::FillPaintBatch::Hatch { color, .. } } => color[3] > 0.,
-                _ => false,
-            };
-            ink && b.in_scale(scale) && b.in_view(seen, px_per_m, 1.)
-                && ring.is_none_or(|r| r.len() < 3 || box_meets_ring(b.reach_bounds(px_per_m, 1.), r))
+    built
+        .iter()
+        .flat_map(|(_, name, layer)| {
+            layer.batches.iter().filter_map(move |b| {
+                b.line_type_loss
+                    .as_ref()
+                    .filter(|_| {
+                        let ink = match &b.kind {
+                            kentos_native_style::batches::BatchKind::Stroke { color, .. } => {
+                                color[3] > 0.
+                            }
+                            kentos_native_style::batches::BatchKind::Fill {
+                                paint: kentos_native_style::FillPaintBatch::Hatch { color, .. },
+                            } => color[3] > 0.,
+                            _ => false,
+                        };
+                        ink && b.in_scale(scale)
+                            && b.in_view(seen, px_per_m, 1.)
+                            && ring.is_none_or(|r| {
+                                r.len() < 3 || box_meets_ring(b.reach_bounds(px_per_m, 1.), r)
+                            })
+                    })
+                    .map(|loss| format!("{name}: {loss}"))
+            })
         })
-            .map(|loss| format!("{name}: {loss}"))
-    })).collect::<std::collections::BTreeSet<_>>().into_iter().collect()
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect()
 }
 
 fn built_layers_profile_unchecked(
@@ -480,9 +593,14 @@ fn built_layers_profile_unchecked(
         .level
         .map(|l| crate::layers::level_looks(doc, l))
         .unwrap_or_default();
-    let mut phasing = crate::layers::map_drawing_of(doc, src.phase, src.hidden, src.pens, src.mono, src.options);
+    let mut phasing =
+        crate::layers::map_drawing_of(doc, src.phase, src.hidden, src.pens, src.mono, src.options);
     if let Some(range) = src.ceiling {
-        for id in kentos_scene_query::ceiling_plan::hidden(doc, src.level.map(|l| l.id.as_str()), range) { phasing.hide(id); }
+        for id in
+            kentos_scene_query::ceiling_plan::hidden(doc, src.level.map(|l| l.id.as_str()), range)
+        {
+            phasing.hide(id);
+        }
     }
     for &id in &faint {
         phasing.fade(id);
@@ -641,14 +759,14 @@ pub fn vector_content_clipped(
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
     clip: Option<&[[f64; 2]]>,
 ) -> Result<MapContent, Vec<(String, Vec<&'static str>)>> {
-    collect_vector_clipped(src, layers, overrides, scale, extent, labels, profile, clip).map_err(|e| {
-        match e {
+    collect_vector_clipped(src, layers, overrides, scale, extent, labels, profile, clip).map_err(
+        |e| match e {
             VectorIssue::Unsupported(why) => why,
             VectorIssue::Invalid(message) => {
                 vec![(message, vec!["baskı geometrisi hesaplanamadı"])]
             }
-        }
-    })
+        },
+    )
 }
 /// Missing vector support can use raster; a failed geometry calculation must refuse the export.
 #[derive(Debug)]
@@ -683,7 +801,8 @@ pub fn collect_vector_clipped(
 ) -> Result<MapContent, VectorIssue> {
     for l in labels {
         if let Some(u) = &l.unicode
-            && let Err(error) = &u.text.plan {
+            && let Err(error) = &u.text.plan
+        {
             return Err(VectorIssue::Invalid(error.message(&u.text.source)));
         }
     }

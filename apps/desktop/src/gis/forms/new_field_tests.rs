@@ -25,7 +25,10 @@ fn opened() -> (App, String) {
         input,
     )
     .expect("runs");
-    let layer = done["output"]["layer"].as_str().expect("the layer").to_owned();
+    let layer = done["output"]["layer"]
+        .as_str()
+        .expect("the layer")
+        .to_owned();
     let task = app.update(Message::Run("data.forms"));
     drive(&mut app, task);
     ev(&mut app, Event::NewForm);
@@ -38,15 +41,30 @@ fn opened() -> (App, String) {
 #[test]
 fn yeni_alan_makes_the_layers_field_and_puts_it_on_the_form() {
     let (mut app, layer) = opened();
-    assert!(app.layer_fields_of(&layer).is_empty(), "the layer has no field");
+    assert!(
+        app.layer_fields_of(&layer).is_empty(),
+        "the layer has no field"
+    );
     ev(&mut app, Event::NewFieldName("durum".into()));
     ev(&mut app, Event::CreateField);
     // The layer's field, and the form's item bound to it: the designer stays on the form.
-    assert_eq!(app.layer_fields_of(&layer).iter().map(|f| f.name.clone()).collect::<Vec<_>>(), ["durum"]);
-    let w = app.gis.forms_window.as_ref().expect("the designer stays open");
+    assert_eq!(
+        app.layer_fields_of(&layer)
+            .iter()
+            .map(|f| f.name.clone())
+            .collect::<Vec<_>>(),
+        ["durum"]
+    );
+    let w = app
+        .gis
+        .forms_window
+        .as_ref()
+        .expect("the designer stays open");
     let body = w.body.as_ref().expect("the form's draft");
     assert!(
-        body.walk().iter().any(|(_, i)| matches!(i, kentos_commands::FormItem::Field(f) if f.field == "durum")),
+        body.walk()
+            .iter()
+            .any(|(_, i)| matches!(i, kentos_commands::FormItem::Field(f) if f.field == "durum")),
         "on the form"
     );
     assert!(w.new_field.is_empty(), "the name typed is cleared");
@@ -55,7 +73,11 @@ fn yeni_alan_makes_the_layers_field_and_puts_it_on_the_form() {
     ev(&mut app, Event::CreateField);
     assert_eq!(app.layer_fields_of(&layer).len(), 1);
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
-    assert!(said.iter().any(|t| t.contains("“durum” alanı katmanda var")), "{said:#?}");
+    assert!(
+        said.iter()
+            .any(|t| t.contains("“durum” alanı katmanda var")),
+        "{said:#?}"
+    );
 }
 
 /// The layer's fields durum (required), tur (Konut, Ticaret) and tip (no list); the draft's items tur with the default
@@ -69,12 +91,17 @@ fn three_kinds(app: &mut App, layer: &str) {
     tur.values = Some(vec![choice("Konut"), choice("Ticaret")]);
     let tip = LayerField::new("tip", LayerFieldKind::Text);
     let doc = app.document.as_mut().expect("open");
-    assert_eq!(doc.model.set_layer_fields(layer, vec![durum, tur, tip], &[]), Ok(true));
-    let items: kentos_commands::FormBody = serde_json::from_value(serde_json::json!({ "revision": 1, "items": [
+    assert_eq!(
+        doc.model
+            .set_layer_fields(layer, vec![durum, tur, tip], &[]),
+        Ok(true)
+    );
+    let items: kentos_commands::FormBody =
+        serde_json::from_value(serde_json::json!({ "revision": 1, "items": [
         { "type": "field", "id": "tur", "field": "tur", "default": "Köşk" },
         { "type": "field", "id": "tip", "field": "tip", "widget": "list" }
     ] }))
-    .expect("a body");
+        .expect("a body");
     let w = app.gis.forms_window.as_mut().expect("the designer");
     let body = w.body.as_mut().expect("the draft");
     body.items = items.items;
@@ -89,16 +116,33 @@ fn yayinla_says_what_keeps_the_form_back_kind_by_kind() {
     let (mut app, layer) = opened();
     ev(&mut app, Event::Publish);
     let said = crate::files_testing::last_said(&app);
-    assert!(said.contains("formu yayınlanamıyor. Boş form: Formda alan yok; kayıt bu formla düzenlenemez."), "{said}");
+    assert!(
+        said.contains(
+            "formu yayınlanamıyor. Boş form: Formda alan yok; kayıt bu formla düzenlenemez."
+        ),
+        "{said}"
+    );
     three_kinds(&mut app, &layer);
     ev(&mut app, Event::Publish);
     let said = crate::files_testing::last_said(&app);
-    let at = |words: &str| said.find(words).unwrap_or_else(|| panic!("“{words}” not in: {said}"));
-    let (required, default, list) =
-        (at("Zorunlu alan: “durum” alanı katmanda zorunlu ama formda yok"), at("Varsayılan değer: "), at("Değer listesi: "));
-    assert!(required < default && default < list, "in their order: {said}");
+    let at = |words: &str| {
+        said.find(words)
+            .unwrap_or_else(|| panic!("“{words}” not in: {said}"))
+    };
+    let (required, default, list) = (
+        at("Zorunlu alan: “durum” alanı katmanda zorunlu ama formda yok"),
+        at("Varsayılan değer: "),
+        at("Değer listesi: "),
+    );
+    assert!(
+        required < default && default < list,
+        "in their order: {said}"
+    );
     assert!(!said.contains("Boş form"), "{said}");
-    assert!(app.chosen_form().expect("the form").releases.is_empty(), "nothing published");
+    assert!(
+        app.chosen_form().expect("the form").releases.is_empty(),
+        "nothing published"
+    );
 }
 
 /// Pictures (docs/adr/9141), light at 1440×900 and dark at 1100×760: Formlar on the layer without fields, its palette

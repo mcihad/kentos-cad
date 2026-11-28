@@ -1844,8 +1844,12 @@ mod tests {
                         .expect("its points")
                         .iter()
                         .map(|p| {
-                            let typed: Vec<&str> =
-                                p["typed"].as_array().expect("typed").iter().filter_map(|v| v.as_str()).collect();
+                            let typed: Vec<&str> = p["typed"]
+                                .as_array()
+                                .expect("typed")
+                                .iter()
+                                .filter_map(|v| v.as_str())
+                                .collect();
                             typed[..4].join("\t")
                         })
                         .collect();

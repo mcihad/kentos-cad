@@ -116,7 +116,13 @@ fn deflate_side_by_side(pages: &[Built<'_>], workers: usize) -> Vec<Vec<u8>> {
     std::thread::scope(|s| {
         let jobs: Vec<_> = pages
             .chunks(each)
-            .map(|part| s.spawn(move || part.iter().map(|p| deflate(p.raw.as_slice())).collect::<Vec<_>>()))
+            .map(|part| {
+                s.spawn(move || {
+                    part.iter()
+                        .map(|p| deflate(p.raw.as_slice()))
+                        .collect::<Vec<_>>()
+                })
+            })
             .collect();
         jobs.into_iter()
             .flat_map(|j| j.join().unwrap_or_default())
@@ -169,8 +175,10 @@ fn usage_of(lists: &[Listed], inputs: &PdfInputs) -> Result<Usage> {
                             for t in &layer.texts {
                                 if let Some(glyphs) = &t.glyphs {
                                     if t.text.encode_utf16().count() > 16_382 {
-                                        return Err(SheetError::new("pdf_text_layout_invalid",
-                                            "Tek yazı PDF metin sınırını aşıyor. Yazıyı ayrı nesnelere bölün; arama ve kopyalama verisi kesilmez."));
+                                        return Err(SheetError::new(
+                                            "pdf_text_layout_invalid",
+                                            "Tek yazı PDF metin sınırını aşıyor. Yazıyı ayrı nesnelere bölün; arama ve kopyalama verisi kesilmez.",
+                                        ));
                                     }
                                     u.glyphs.add(glyphs)?;
                                 } else {
@@ -368,11 +376,7 @@ pub(super) fn document_audited(
                 }
                 Prim::Map(m) => match content_of(inputs, l.page, &l.sheet, &m.item) {
                     Some(MapContent::Raster(r))
-                        if !rasters.contains_key(&(
-                            l.sheet.clone(),
-                            l.page,
-                            m.item.clone(),
-                        )) =>
+                        if !rasters.contains_key(&(l.sheet.clone(), l.page, m.item.clone())) =>
                     {
                         let pic = picture(&r.png).ok_or_else(|| {
                     SheetError::at(
@@ -418,7 +422,9 @@ pub(super) fn document_audited(
     let mut gpts: Vec<String> = Vec::new();
     // The pages a few at a time: each built, their contents compressed side by side, then written in order, so the
     // file is the one a page-by-page writer makes (docs/adr/0638 §4).
-    let workers = std::thread::available_parallelism().map_or(1, |n| n.get()).clamp(1, 8);
+    let workers = std::thread::available_parallelism()
+        .map_or(1, |n| n.get())
+        .clamp(1, 8);
     for batch in lists.chunks(PAGES_AT_ONCE) {
         let mut built: Vec<Built<'_>> = Vec::with_capacity(batch.len());
         for l in batch {
@@ -687,15 +693,26 @@ pub(super) fn document_audited(
             i32::try_from(page.atlas.index).ok()
         })
         .collect();
-    let labelled = numbers.len() == lists.len() && numbers.iter().enumerate().any(|(k, n)| *n != k as i32 + 1);
-    let labels: Vec<(i32, Ref, i32)> =
-        if labelled { numbers.iter().enumerate().map(|(k, n)| (k as i32, doc.alloc(), *n)).collect() } else { Vec::new() };
+    let labelled =
+        numbers.len() == lists.len() && numbers.iter().enumerate().any(|(k, n)| *n != k as i32 + 1);
+    let labels: Vec<(i32, Ref, i32)> = if labelled {
+        numbers
+            .iter()
+            .enumerate()
+            .map(|(k, n)| (k as i32, doc.alloc(), *n))
+            .collect()
+    } else {
+        Vec::new()
+    };
     let mut pdf = Pdf::new();
     pdf.set_version(1, 7);
     pdf.set_file_id((id.clone(), id));
     pdf.extend(&doc.chunk);
     for (_, r, n) in &labels {
-        pdf.indirect(*r).start::<pdf_writer::writers::PageLabel>().style(pdf_writer::types::NumberingStyle::Arabic).offset(*n);
+        pdf.indirect(*r)
+            .start::<pdf_writer::writers::PageLabel>()
+            .style(pdf_writer::types::NumberingStyle::Arabic)
+            .offset(*n);
     }
     {
         let mut cat = pdf.catalog(catalog);

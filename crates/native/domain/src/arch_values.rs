@@ -256,13 +256,16 @@ impl Document {
                         None => Text(format!(
                             "{} {}",
                             self.arch_value_text(&Length(w.width), false),
-                            crate::text_fields::unit_name(self.settings().drawing_unit.unwrap_or_default())
+                            crate::text_fields::unit_name(
+                                self.settings().drawing_unit.unwrap_or_default()
+                            )
                         )),
                     }),
                     "level" => wall().and_then(|w| self.level_name(&w.arch)).map(Text),
                     // Its own phase first (docs/adr/8039 §1), its wall's otherwise.
                     "phase" => x.phase.map(|p| Text(p.label().to_owned())).or_else(|| {
-                        wall().and_then(|w| w.arch.phase)
+                        wall()
+                            .and_then(|w| w.arch.phase)
                             .map(|p| Text(p.label().to_owned()))
                     }),
                     _ => None,
@@ -281,7 +284,9 @@ impl Document {
                     "name" => text(&x.name),
                     "usage" => text(&x.usage),
                     "area" => Some(Area(area())),
-                    "netArea" => crate::space_follow::SpaceSearch::new(self).net_area(x).map(Area),
+                    "netArea" => crate::space_follow::SpaceSearch::new(self)
+                        .net_area(x)
+                        .map(Area),
                     // The building program (docs/adr/0773): its group, its brief's range, how far out it is.
                     "unit" => {
                         let program = self.program();
@@ -300,7 +305,9 @@ impl Document {
                         let b = program.brief(x.usage.as_deref()?)?;
                         let t = |v: f64, unit: bool| self.arch_value_text(&Area(v), unit);
                         match (b.area_min, b.area_max) {
-                            (Some(lo), Some(hi)) => Some(Text(format!("{}–{}", t(lo, false), t(hi, true)))),
+                            (Some(lo), Some(hi)) => {
+                                Some(Text(format!("{}–{}", t(lo, false), t(hi, true))))
+                            }
                             (Some(lo), None) => Some(Text(format!("≥ {}", t(lo, true)))),
                             (None, Some(hi)) => Some(Text(format!("≤ {}", t(hi, true)))),
                             (None, None) => None,
@@ -316,12 +323,16 @@ impl Document {
                         let unit = x.unit.as_deref()?;
                         let (_, parts) = self.program_shares()?;
                         let (_, part) = parts.iter().find(|(u, _)| u == unit)?;
-                        let t = if place == "share" { &part.share } else { &part.gross };
+                        let t = if place == "share" {
+                            &part.share
+                        } else {
+                            &part.gross
+                        };
                         t.parse::<f64>().ok().map(Area)
                     }
-                    "perimeter" => {
-                        Some(Length(kentos_geometry_core::geom::space::perimeter(&areas())))
-                    }
+                    "perimeter" => Some(Length(kentos_geometry_core::geom::space::perimeter(
+                        &areas(),
+                    ))),
                     "height" => height().map(|h| Length(h.inside())),
                     "volume" => height().map(|h| Volume(area() * h.inside())),
                     // On a storey the project knows: its finished floor; its ceiling when it has one (an asma tavan, a
@@ -406,9 +417,10 @@ impl Document {
                 let x = &b.beam;
                 match place {
                     "tag" => text(&x.tag),
-                    "type" => Some(Text(
-                        x.member.as_ref().map_or_else(|| x.role.label().to_owned(), kentos_contracts::Member::words),
-                    )),
+                    "type" => Some(Text(x.member.as_ref().map_or_else(
+                        || x.role.label().to_owned(),
+                        kentos_contracts::Member::words,
+                    ))),
                     "width" => Some(Length(x.width)),
                     "height" => Some(Length(x.height)),
                     "length" => Some(Length(x.length())),
@@ -422,14 +434,18 @@ impl Document {
             Entity::Slab(sl) => {
                 let x = &sl.slab;
                 match place {
-                    "type" => Some(Text(
-                        x.covering.as_ref().map_or_else(|| x.role.label().to_owned(), kentos_contracts::Covering::words),
-                    )),
+                    "type" => Some(Text(x.covering.as_ref().map_or_else(
+                        || x.role.label().to_owned(),
+                        kentos_contracts::Covering::words,
+                    ))),
                     "thickness" => Some(Length(x.thickness)),
-                    "area" => Some(Area(kentos_geometry_core::geom::space::area(&core_areas(&x.parts)))),
-                    "volume" => {
-                        Some(Volume(kentos_geometry_core::geom::space::area(&core_areas(&x.parts)) * x.thickness))
-                    }
+                    "area" => Some(Area(kentos_geometry_core::geom::space::area(&core_areas(
+                        &x.parts,
+                    )))),
+                    "volume" => Some(Volume(
+                        kentos_geometry_core::geom::space::area(&core_areas(&x.parts))
+                            * x.thickness,
+                    )),
                     "level" => self.level_name(&x.arch).map(Text),
                     "phase" => x.arch.phase.map(|p| Text(p.label().to_owned())),
                     _ => None,
@@ -515,10 +531,15 @@ impl Document {
         let mut hidden = hidden_by(b, &i.parameters);
         // When the use zone is displayed, its outline still has no physical depth.
         if let Some(states) = b.dynamic.iter().flat_map(|d| &d.parameters).find_map(|p| {
-            let kentos_contracts::BlockParameter::Visibility { name, states } = p else { return None };
-            let Some(kentos_contracts::ParamValue::Text(selected)) = i.parameters.get(name) else { return None };
+            let kentos_contracts::BlockParameter::Visibility { name, states } = p else {
+                return None;
+            };
+            let Some(kentos_contracts::ParamValue::Text(selected)) = i.parameters.get(name) else {
+                return None;
+            };
             (fold_name(selected) == fold_name(ZONE_STATE)).then_some(states)
-        }) && let Some(physical) = states.first() {
+        }) && let Some(physical) = states.first()
+        {
             hidden.extend(&physical.hidden);
         }
         let corners = entities_box(b.entities.iter().filter(|e| !hidden.contains(&e.base().id)))?;
@@ -594,12 +615,20 @@ impl Document {
                 continue;
             };
             let r = entity_bounds(&core.shape);
-            if ![r.min_x, r.min_y, r.max_x, r.max_y].iter().all(|v| v.is_finite()) {
+            if ![r.min_x, r.min_y, r.max_x, r.max_y]
+                .iter()
+                .all(|v| v.is_finite())
+            {
                 continue;
             }
             seen = Some(match seen {
                 None => [r.min_x, r.min_y, r.max_x, r.max_y],
-                Some(o) => [o[0].min(r.min_x), o[1].min(r.min_y), o[2].max(r.max_x), o[3].max(r.max_y)],
+                Some(o) => [
+                    o[0].min(r.min_x),
+                    o[1].min(r.min_y),
+                    o[2].max(r.max_x),
+                    o[3].max(r.max_y),
+                ],
             });
         }
         let [x0, y0, x1, y1] = seen?;

@@ -1,7 +1,7 @@
 use super::*;
 use crate::arch;
-use crate::files_testing::{app_with_drawing, make_cad};
 use crate::arch::ArchState;
+use crate::files_testing::{app_with_drawing, make_cad};
 
 const TYPES: &str = include_str!("../../../../fixtures/commands/v1/cad.openingtypes.edit.json");
 
@@ -38,7 +38,9 @@ fn the_window_counts_each_type_and_previews_a_change_before_writing() {
     let _ = app.update(Message::Run("arch.openingTypes"));
     assert_eq!(
         app.dialog,
-        Some(crate::arch::dialog(crate::arch::ArchDialogKind::OpeningTypes))
+        Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::OpeningTypes
+        ))
     );
     let w = app.modules.arch().opening_types.as_ref().unwrap();
     let k = w.uses.iter().find(|u| u.kind.id == "k01").unwrap();
@@ -72,7 +74,8 @@ fn apply_writes_one_undo_step_and_esc_writes_nothing() {
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let _ = app.update(Message::Run("arch.openingTypes"));
     let i = app
-        .modules.arch()
+        .modules
+        .arch()
         .opening_types
         .as_ref()
         .unwrap()
@@ -169,15 +172,33 @@ fn detach_and_reset_run_on_the_selection_in_one_step() {
 fn contextual_opening_assignment_and_push_are_explicit_and_revision_bound() {
     let mut app = app();
     let model = &app.document.as_ref().unwrap().model;
-    let source = (0..200).map(Slot).find(|&slot| matches!(
-        model.get(slot), Some(Entity::Opening(o)) if !o.opening.overrides.is_empty()
-    )).expect("one K01 has a local frame size");
+    let source = (0..200)
+        .map(Slot)
+        .find(|&slot| {
+            matches!(
+                model.get(slot), Some(Entity::Opening(o)) if !o.opening.overrides.is_empty()
+            )
+        })
+        .expect("one K01 has a local frame size");
     let snapshot = |app: &App| app.document.as_ref().unwrap().model.to_snapshot_v2();
     let before = snapshot(&app);
     app.selection.set([source]);
     let _ = app.update(Message::Run("arch.openingPush"));
-    let context = |app: &App| app.modules.arch().opening_types.as_ref().unwrap().context.as_ref().unwrap().action.clone();
-    let ContextAction::Push { report, .. } = context(&app) else { panic!("change preview") };
+    let context = |app: &App| {
+        app.modules
+            .arch()
+            .opening_types
+            .as_ref()
+            .unwrap()
+            .context
+            .as_ref()
+            .unwrap()
+            .action
+            .clone()
+    };
+    let ContextAction::Push { report, .. } = context(&app) else {
+        panic!("change preview")
+    };
     assert_eq!(report.applied.len(), 20);
     assert_eq!(snapshot(&app), before);
     let _ = app.opening_types_event(Event::Close);
@@ -203,19 +224,24 @@ fn contextual_opening_assignment_and_push_are_explicit_and_revision_bound() {
     let _ = app.update(Message::Run("arch.openingDetach"));
     let unbound = snapshot(&app);
     let _ = app.update(Message::Run("arch.openingPush"));
-    let ContextAction::Assign { choices, .. } = context(&app) else { panic!("direct assignment") };
+    let ContextAction::Assign { choices, .. } = context(&app) else {
+        panic!("direct assignment")
+    };
     let k01 = choices.iter().position(|(id, _, _)| id == "k01").unwrap();
     let _ = app.opening_types_event(Event::ContextChoice(k01));
     assert_eq!(snapshot(&app), unbound);
     let _ = app.opening_types_event(Event::ContextApply);
     let doc = &app.document.as_ref().unwrap().model;
-    assert!(matches!(doc.get(source), Some(Entity::Opening(o)) if o.opening.style.as_deref() == Some("k01")));
+    assert!(
+        matches!(doc.get(source), Some(Entity::Opening(o)) if o.opening.style.as_deref() == Some("k01"))
+    );
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(snapshot(&app), unbound);
 }
 
 /// The special doors' cases (docs/adr/0777): D01 revolving, CG1 pocket, KT1 folding, each with its door.
-const SPECIAL: &str = include_str!("../../../../fixtures/commands/v1/cad.openings.create.special.json");
+const SPECIAL: &str =
+    include_str!("../../../../fixtures/commands/v1/cad.openings.create.special.json");
 
 #[test]
 fn a_types_operation_shows_its_own_fields_and_a_switch_reads_evet() {
@@ -228,7 +254,8 @@ fn a_types_operation_shows_its_own_fields_and_a_switch_reads_evet() {
     make_cad(&mut app);
     let _ = app.update(Message::Run("arch.openingTypes"));
     let fields = |app: &App| -> Vec<OpeningTypeField> {
-        app.modules.arch()
+        app.modules
+            .arch()
             .opening_types
             .as_ref()
             .unwrap()
@@ -238,7 +265,8 @@ fn a_types_operation_shows_its_own_fields_and_a_switch_reads_evet() {
             .collect()
     };
     let i = app
-        .modules.arch()
+        .modules
+        .arch()
         .opening_types
         .as_ref()
         .unwrap()
@@ -400,7 +428,8 @@ fn a_new_type_is_the_form_picked_or_a_copy_of_the_chosen_one() {
     let mut app = app();
     let _ = app.update(Message::Run("arch.openingTypes"));
     let i = app
-        .modules.arch()
+        .modules
+        .arch()
         .opening_types
         .as_ref()
         .unwrap()

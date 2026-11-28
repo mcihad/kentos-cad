@@ -92,7 +92,10 @@ fn a_room_follows_the_active_level_only_while_it_has_walls() {
     assert_eq!(level_of(b.newest()), None);
     b.session.exit();
     // Walls on Zemin kat now: the room tool takes it, and says it follows.
-    wall(&mut b, &[(10., 0.), (14., 0.), (14., 3.), (10., 3.), (10., 0.)]);
+    wall(
+        &mut b,
+        &[(10., 0.), (14., 0.), (14., 3.), (10., 3.), (10., 0.)],
+    );
     b.start("space");
     assert_eq!(shown(&b), "Zemin kat (etkin kat)");
     b.click(12., 1.5);
@@ -138,7 +141,11 @@ fn a_stair_rises_the_active_levels_height() {
     b.click(6., 0.);
     b.confirm();
     let first = b.doc.revision();
-    assert!((rise(b.newest()) - 3.06).abs() < 1e-9, "{}", rise(b.newest()));
+    assert!(
+        (rise(b.newest()) - 3.06).abs() < 1e-9,
+        "{}",
+        rise(b.newest())
+    );
     // No stair_rise_level: the stair's rise is its level's.
     // A typed height is kept; Kat follows the level again.
     assert!(b.run(|s, cx| s.configure("Y", "2.80", cx)));
@@ -192,10 +199,16 @@ fn a_running_tool_follows_the_active_level_at_once() {
     b.level = Some("kat-1".into());
     b.run(|s, cx| s.level_changed(cx));
     assert_eq!(row(&b, "Y"), "2.800 m · katın", "the row follows at once");
-    assert_ne!(b.session.preview(&Default::default()), before, "and the preview's rise");
+    assert_ne!(
+        b.session.preview(&Default::default()),
+        before,
+        "and the preview's rise"
+    );
     b.click(6., 0.);
     b.confirm();
-    let Entity::Stair(st) = b.newest() else { panic!("a stair") };
+    let Entity::Stair(st) = b.newest() else {
+        panic!("a stair")
+    };
     assert_eq!(st.stair.arch.level.as_deref(), Some("kat-1"));
     assert!((f64::from(st.stair.risers) * st.stair.riser_height - 2.8).abs() < 1e-9);
 }

@@ -21,12 +21,19 @@ fn a_stair_bound_to_its_level_or_with_a_post_opts_into_schema_125() {
         })
         .collect();
     assert_eq!(
-        stairs.iter().map(|s| (s.height_from_level, s.post)).collect::<Vec<_>>(),
+        stairs
+            .iter()
+            .map(|s| (s.height_from_level, s.post))
+            .collect::<Vec<_>>(),
         [(true, None), (true, Some(0.3)), (false, None)]
     );
     assert!(BYTES.windows(10).any(|w| w == b"\x67version\x18\x7d"));
-    let old = include_bytes!("../../../../../fixtures/kcad/v2/broken/stair-levels-in-schema-124.kcad");
-    assert_eq!(kentos_kcad::decode(old).expect_err("refused").code, kentos_kcad::Code::BadValue);
+    let old =
+        include_bytes!("../../../../../fixtures/kcad/v2/broken/stair-levels-in-schema-124.kcad");
+    assert_eq!(
+        kentos_kcad::decode(old).expect_err("refused").code,
+        kentos_kcad::Code::BadValue
+    );
     // The same drawing without them stays in the schema before.
     let mut plain = model;
     for e in &mut plain.entities {
@@ -36,7 +43,10 @@ fn a_stair_bound_to_its_level_or_with_a_post_opts_into_schema_125() {
         }
     }
     let bytes = kentos_kcad::encode_verified(&plain).unwrap();
-    assert!(!bytes.windows(10).any(|w| w == b"\x67version\x18\x7d"), "none, no schema 125");
+    assert!(
+        !bytes.windows(10).any(|w| w == b"\x67version\x18\x7d"),
+        "none, no schema 125"
+    );
 }
 
 #[test]
@@ -47,6 +57,10 @@ fn a_stairs_level_and_post_keep_their_rules() {
             env!("CARGO_MANIFEST_DIR")
         ))
         .unwrap();
-        assert_eq!(kentos_kcad::decode(&bytes).expect_err(name).code, kentos_kcad::Code::BadValue, "{name}");
+        assert_eq!(
+            kentos_kcad::decode(&bytes).expect_err(name).code,
+            kentos_kcad::Code::BadValue,
+            "{name}"
+        );
     }
 }

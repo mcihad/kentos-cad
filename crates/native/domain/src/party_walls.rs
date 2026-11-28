@@ -41,11 +41,17 @@ impl Document {
     /// in the edges' order then the storeys' order of their names; none without a site plan, without a party edge, or in
     /// ayrık nizam.
     pub fn party_walls(&self) -> Vec<PartyWall> {
-        let Some(arch) = self.settings().arch.as_ref() else { return Vec::new() };
-        if arch.layout == Some(kentos_contracts::BuildingLayout::Detached) || !arch.has_party_edges() {
+        let Some(arch) = self.settings().arch.as_ref() else {
+            return Vec::new();
+        };
+        if arch.layout == Some(kentos_contracts::BuildingLayout::Detached)
+            || !arch.has_party_edges()
+        {
             return Vec::new();
         }
-        let Some(report) = self.site_report() else { return Vec::new() };
+        let Some(report) = self.site_report() else {
+            return Vec::new();
+        };
         let (walls, openings) = self.bodies();
         let mut levels: Vec<Option<String>> = walls.iter().map(|(_, l, _)| l.clone()).collect();
         levels.extend(openings.iter().map(|(_, l, _)| l.clone()));
@@ -74,7 +80,10 @@ impl Document {
             let inward = Vec2::new(-dy * left, dx * left);
             for level in &levels {
                 let mut read = |s: f64| -> At {
-                    let p = Vec2::new(a.x + dx * s + inward.x * INSIDE, a.y + dy * s + inward.y * INSIDE);
+                    let p = Vec2::new(
+                        a.x + dx * s + inward.x * INSIDE,
+                        a.y + dy * s + inward.y * INSIDE,
+                    );
                     element(&walls, &openings, level, p)
                 };
                 let mut found: BTreeMap<At, f64> = BTreeMap::new();
@@ -84,7 +93,11 @@ impl Document {
                 if found.keys().all(|k| *k == At::Open) {
                     continue;
                 }
-                let mut wall = PartyWall { edge: i + 1, level: level.clone(), ..Default::default() };
+                let mut wall = PartyWall {
+                    edge: i + 1,
+                    level: level.clone(),
+                    ..Default::default()
+                };
                 for (at, length) in found {
                     match at {
                         At::Wall(uid) => wall.walls.push((uid, length)),

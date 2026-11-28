@@ -36,7 +36,11 @@ pub struct Shown {
 
 impl Shown {
     pub fn new(session: u64, input: ZoningCheck) -> Self {
-        Self { session, input, made: RefCell::new(None) }
+        Self {
+            session,
+            input,
+            made: RefCell::new(None),
+        }
     }
 }
 
@@ -67,16 +71,18 @@ impl ZoningMarksApp for App {
         {
             return made.clone();
         }
-        let made = zoning_check::with_regions(&doc.model, &shown.input).ok().and_then(|(checked, regions)| {
-            let regions: Vec<Area> = checked
-                .findings
-                .iter()
-                .zip(regions)
-                .filter(|(f, _)| HATCHED.contains(&f.kind.as_str()))
-                .flat_map(|(_, r)| r)
-                .collect();
-            (!regions.is_empty()).then(|| Arc::new(ZoningMarks { regions }))
-        });
+        let made = zoning_check::with_regions(&doc.model, &shown.input)
+            .ok()
+            .and_then(|(checked, regions)| {
+                let regions: Vec<Area> = checked
+                    .findings
+                    .iter()
+                    .zip(regions)
+                    .filter(|(f, _)| HATCHED.contains(&f.kind.as_str()))
+                    .flat_map(|(_, r)| r)
+                    .collect();
+                (!regions.is_empty()).then(|| Arc::new(ZoningMarks { regions }))
+            });
         *shown.made.borrow_mut() = Some((generation, revision, made.clone()));
         made
     }
@@ -118,20 +124,36 @@ fn hatch_line(rings: &[Vec<Point>], c: f32) -> Vec<(Point, Point)> {
         }
     }
     ts.sort_by(f32::total_cmp);
-    ts.as_chunks::<2>().0.iter().map(|p| (Point::new(p[0], p[0] - c), Point::new(p[1], p[1] - c))).collect()
+    ts.as_chunks::<2>()
+        .0
+        .iter()
+        .map(|p| (Point::new(p[0], p[0] - c), Point::new(p[1], p[1] - c)))
+        .collect()
 }
 
 /// The overlaps on the screen: each region a light fill, hatched at 45° every 7 px, outlined on a halo, in the danger
 /// colour. Each region alone: two that cover the same place (a decision's part and a parcel's in one road) are both
 /// drawn, never cancelled by an even-odd rule across them.
-pub fn draw(frame: &mut canvas::Frame, m: &ZoningMarks, camera: &Camera, colors: &MarkColors, tokens: &Tokens) {
+pub fn draw(
+    frame: &mut canvas::Frame,
+    m: &ZoningMarks,
+    camera: &Camera,
+    colors: &MarkColors,
+    tokens: &Tokens,
+) {
     for region in &m.regions {
         draw_region(frame, std::slice::from_ref(region), camera, colors, tokens);
     }
 }
 
 /// One region (its outer ring and holes, even-odd among themselves).
-fn draw_region(frame: &mut canvas::Frame, region: &[Area], camera: &Camera, colors: &MarkColors, tokens: &Tokens) {
+fn draw_region(
+    frame: &mut canvas::Frame,
+    region: &[Area],
+    camera: &Camera,
+    colors: &MarkColors,
+    tokens: &Tokens,
+) {
     let rings = rings_on_screen(region, camera);
     if rings.is_empty() {
         return;
@@ -148,7 +170,10 @@ fn draw_region(frame: &mut canvas::Frame, region: &[Area], camera: &Camera, colo
     let danger = tokens.danger;
     frame.fill(
         &shape,
-        canvas::Fill { style: canvas::Style::Solid(danger.scale_alpha(0.14)), rule: canvas::fill::Rule::EvenOdd },
+        canvas::Fill {
+            style: canvas::Style::Solid(danger.scale_alpha(0.14)),
+            rule: canvas::fill::Rule::EvenOdd,
+        },
     );
     // The hatch across the rings' box, each line cut to the inside.
     let (mut lo, mut hi) = (f32::MAX, f32::MIN);
@@ -168,7 +193,8 @@ fn draw_region(frame: &mut canvas::Frame, region: &[Area], camera: &Camera, colo
             lines += 1;
         }
     });
-    let stroke = |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+    let stroke =
+        |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
     frame.stroke(&hatch, stroke(1.0, danger.scale_alpha(0.8)));
     frame.stroke(&shape, stroke(3.5, colors.halo));
     frame.stroke(&shape, stroke(1.5, danger));
@@ -181,11 +207,27 @@ mod tests {
     #[test]
     fn a_hatch_line_is_cut_to_the_inside_even_odd() {
         // A 20 × 20 square with a 10 × 10 hole, the line x − y = 0 through both.
-        let square = vec![Point::new(0.0, 0.0), Point::new(20.0, 0.0), Point::new(20.0, 20.0), Point::new(0.0, 20.0)];
-        let hole = vec![Point::new(5.0, 5.0), Point::new(15.0, 5.0), Point::new(15.0, 15.0), Point::new(5.0, 15.0)];
+        let square = vec![
+            Point::new(0.0, 0.0),
+            Point::new(20.0, 0.0),
+            Point::new(20.0, 20.0),
+            Point::new(0.0, 20.0),
+        ];
+        let hole = vec![
+            Point::new(5.0, 5.0),
+            Point::new(15.0, 5.0),
+            Point::new(15.0, 15.0),
+            Point::new(5.0, 15.0),
+        ];
         let pieces = hatch_line(&[square, hole], 0.5);
         assert_eq!(pieces.len(), 2, "{pieces:?}");
-        assert!((pieces[0].0.x - 0.5).abs() < 0.01 && (pieces[0].1.x - 5.5).abs() < 0.01, "{pieces:?}");
-        assert!((pieces[1].0.x - 15.0).abs() < 0.01 && (pieces[1].1.x - 20.0).abs() < 0.01, "{pieces:?}");
+        assert!(
+            (pieces[0].0.x - 0.5).abs() < 0.01 && (pieces[0].1.x - 5.5).abs() < 0.01,
+            "{pieces:?}"
+        );
+        assert!(
+            (pieces[1].0.x - 15.0).abs() < 0.01 && (pieces[1].1.x - 20.0).abs() < 0.01,
+            "{pieces:?}"
+        );
     }
 }

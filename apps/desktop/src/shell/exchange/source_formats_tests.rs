@@ -17,10 +17,20 @@ use crate::files_testing::scratch;
 fn project(dir: &std::path::Path) -> App {
     let mut app = scene(&qa_gpkg(dir, "qa.gpkg"));
     let model = &mut app.document.as_mut().expect("a drawing").model;
-    let secim = model.layers().leaves().into_iter().find(|l| l.name == "qa_secim").map(|l| l.id.clone()).expect("qa_secim");
+    let secim = model
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "qa_secim")
+        .map(|l| l.id.clone())
+        .expect("qa_secim");
     model.rename_layer(&secim, "qa_yollar");
-    let group = model.add_layer(kentos_domain::NewLayer::group("Senaryo 1"), None, false).expect("a group");
-    model.move_layer(&secim, Some(&group), None).expect("into the group");
+    let group = model
+        .add_layer(kentos_domain::NewLayer::group("Senaryo 1"), None, false)
+        .expect("a group");
+    model
+        .move_layer(&secim, Some(&group), None)
+        .expect("into the group");
     // The rows asked for, as an export window asks when it opens, and read.
     let _ = app.source_copy();
     read_rows(&mut app);
@@ -30,7 +40,11 @@ fn project(dir: &std::path::Path) -> App {
 fn rows(path: &std::path::Path, table: &str) -> i64 {
     let gp = kentos_geopackage::GeoPackage::open(path, false).expect("opens");
     gp.connection()
-        .query_row(&format!("SELECT count(*) FROM {}", kentos_geopackage::quote(table)), [], |r| r.get(0))
+        .query_row(
+            &format!("SELECT count(*) FROM {}", kentos_geopackage::quote(table)),
+            [],
+            |r| r.get(0),
+        )
         .expect("counted")
 }
 
@@ -43,14 +57,36 @@ fn geopackage_writes_the_rows_and_names_same_named_layers_apart() {
     let dir = scratch("kaynak-gpkg-disari");
     let mut app = project(&dir);
     run(&mut app, "file.export.gpkg");
-    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)));
+    send(
+        &mut app,
+        Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)),
+    );
     let summary = app.gpkg_out_summary(super::gpkg_out::Scope::All);
-    assert!(summary.iter().any(|l| l.starts_with("7 nesne, 3 katman yazılır")), "{summary:#?}");
-    assert!(summary.iter().any(|l| l.contains("Senaryo 1 / qa_yollar → qa_yollar_2")), "{summary:#?}");
+    assert!(
+        summary
+            .iter()
+            .any(|l| l.starts_with("7 nesne, 3 katman yazılır")),
+        "{summary:#?}"
+    );
+    assert!(
+        summary
+            .iter()
+            .any(|l| l.contains("Senaryo 1 / qa_yollar → qa_yollar_2")),
+        "{summary:#?}"
+    );
     let path = dir.join("disari.gpkg");
     app.picker = Picker::File(path.clone());
     send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
-    assert_eq!((rows(&path, "qa_noktalar"), rows(&path, "qa_yollar"), rows(&path, "qa_yollar_2")), (3, 3, 1), "{:?}", log(&app));
+    assert_eq!(
+        (
+            rows(&path, "qa_noktalar"),
+            rows(&path, "qa_yollar"),
+            rows(&path, "qa_yollar_2")
+        ),
+        (3, 3, 1),
+        "{:?}",
+        log(&app)
+    );
 }
 
 #[test]
@@ -59,8 +95,16 @@ fn the_other_formats_plan_the_rows() {
     let app = project(&dir);
     assert!(app.fgb_plan().is_ok(), "{:?}", app.fgb_plan().err());
     assert!(app.gml_plan(true).is_ok(), "{:?}", app.gml_plan(true).err());
-    assert!(app.csv_plan(kentos_commands::CsvGeometry::Wkt, kentos_commands::CsvSeparator::Comma).is_ok());
-    let shp = app.shp_plan(kentos_commands::ShpEncoding::Utf8).expect("Shapefiles");
+    assert!(
+        app.csv_plan(
+            kentos_commands::CsvGeometry::Wkt,
+            kentos_commands::CsvSeparator::Comma
+        )
+        .is_ok()
+    );
+    let shp = app
+        .shp_plan(kentos_commands::ShpEncoding::Utf8)
+        .expect("Shapefiles");
     assert_eq!(shp.0.len(), 3, "a Shapefile a layer");
 }
 
@@ -71,17 +115,37 @@ fn a_row_chosen_in_its_table_is_saved_with_its_geopackage() {
     let yollar = app
         .document
         .as_ref()
-        .and_then(|d| d.model.layers().leaves().into_iter().find(|l| l.name == "qa_yollar").map(|l| l.id.clone()))
+        .and_then(|d| {
+            d.model
+                .layers()
+                .leaves()
+                .into_iter()
+                .find(|l| l.name == "qa_yollar")
+                .map(|l| l.id.clone())
+        })
         .expect("qa_yollar");
     assert!(!app.available("file.saveSelection"));
     app.gis.features.data.choose_rows(&yollar, [1].into());
-    assert!(app.available("file.saveSelection"), "a chosen row is a selection");
+    assert!(
+        app.available("file.saveSelection"),
+        "a chosen row is a selection"
+    );
     let copy = dir.join("secim.kcad");
     app.picker = Picker::File(copy.clone());
     run(&mut app, "file.saveSelection");
-    assert!(matches!(app.exchange, Some(Window::SelectionSave(_))), "the copy's kind asked");
-    send(&mut app, Event::SelectionSave(super::selection_save::Event::Save));
-    assert!(said(&app, "Seçilenler CBS projesi olarak kaydedildi: 1 nesne"), "{:?}", log(&app));
+    assert!(
+        matches!(app.exchange, Some(Window::SelectionSave(_))),
+        "the copy's kind asked"
+    );
+    send(
+        &mut app,
+        Event::SelectionSave(super::selection_save::Event::Save),
+    );
+    assert!(
+        said(&app, "Seçilenler CBS projesi olarak kaydedildi: 1 nesne"),
+        "{:?}",
+        log(&app)
+    );
     let gpkg = copy.with_extension("gpkg");
     assert_eq!(rows(&gpkg, "qa_yollar"), 1);
     let gp = kentos_geopackage::GeoPackage::open(&gpkg, false).expect("opens");
@@ -110,7 +174,14 @@ fn the_command_reads_the_rows_for_every_channel() {
     )
     .expect("answered");
     assert_eq!(answer["status"], "completed", "{answer}");
-    assert_eq!((rows(&path, "qa_noktalar"), rows(&path, "qa_yollar"), rows(&path, "qa_yollar_2")), (3, 3, 1));
+    assert_eq!(
+        (
+            rows(&path, "qa_noktalar"),
+            rows(&path, "qa_yollar"),
+            rows(&path, "qa_yollar_2")
+        ),
+        (3, 3, 1)
+    );
 }
 
 #[test]
@@ -120,7 +191,10 @@ fn screens() {
     crate::files_testing::usage_shots("9344", "01-geopackage-kaynak", || {
         let mut app = project(&dir);
         run(&mut app, "file.export.gpkg");
-        send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)));
+        send(
+            &mut app,
+            Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)),
+        );
         app
     });
 }

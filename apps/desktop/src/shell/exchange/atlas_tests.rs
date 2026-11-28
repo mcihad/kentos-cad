@@ -312,9 +312,17 @@ pub(super) fn app_with_atlas_of(name: &str) -> App {
     let snapshot = DocumentSnapshotV1::from_json(&setup["drawing"].to_string()).expect("reads");
     let mut doc = crate::document::Document::new(snapshot, None).expect("opens");
     for sheet in setup["book"]["sheets"].as_array().expect("sheets") {
-        let input = serde_json::from_value(json!({ "ops": [{ "op": "addSheet", "sheet": sheet }] })).expect("an input");
-        let answer = kentos_native_application::sheets_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        assert!(matches!(answer, kentos_commands::CommandResult::Completed { .. }), "{answer:?}");
+        let input =
+            serde_json::from_value(json!({ "ops": [{ "op": "addSheet", "sheet": sheet }] }))
+                .expect("an input");
+        let answer = kentos_native_application::sheets_edit::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        assert!(
+            matches!(answer, kentos_commands::CommandResult::Completed { .. }),
+            "{answer:?}"
+        );
     }
     let (mut app, _) = App::boot(None);
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
@@ -350,11 +358,17 @@ fn the_preview_lists_each_page_s_sources() {
 fn sources_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/atlas-kaynak-3600");
+    let out =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/atlas-kaynak-3600");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 700.0), "koyu-dar"),
+    ] {
         let mut app = app_with_atlas_of("plain");
-        let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         run(&mut app, "file.export.atlas");
@@ -364,7 +378,10 @@ fn sources_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("onizleme-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -373,12 +390,18 @@ fn sources_screens() {
 /// the pages that list parcel 2 changed, the others the same, as the shared case says.
 pub(super) fn previewed_against_the_record(app: &mut App, dir: &std::path::Path) {
     run(app, "file.export.atlas");
-    send(app, Event::Atlas(A::SavePicked(Some(dir.join("atlas.pdf")))));
+    send(
+        app,
+        Event::Atlas(A::SavePicked(Some(dir.join("atlas.pdf")))),
+    );
     assert!(app.exchange.is_none(), "written and closed");
     let record = dir.join("atlas.kaynaklar.json");
     assert!(record.exists(), "the record beside the PDF");
     let doc = &mut app.document.as_mut().expect("a drawing").model;
-    let uid = doc.uid(kentos_domain::Slot(2)).expect("parcel 2").to_string();
+    let uid = doc
+        .uid(kentos_domain::Slot(2))
+        .expect("parcel 2")
+        .to_string();
     let answer = kentos_native_application::registry::run(
         &mut ExecutionContext::new(doc),
         "cad.entities.set",
@@ -402,18 +425,36 @@ fn the_preview_says_each_page_against_the_previous_atlas() {
         .as_array()
         .expect("cases")
         .iter()
-        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Güncelleme: kayıt PDF'in yanına")))
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("Güncelleme: kayıt PDF'in yanına"))
+        })
         .expect("the update case");
     let want: Vec<(u64, String)> = case["steps"][2]["result"]["output"]["changes"]["pages"]
         .as_array()
         .expect("pages")
         .iter()
-        .map(|p| (p["index"].as_u64().expect("an index"), p["state"].as_str().expect("a state").to_owned()))
+        .map(|p| {
+            (
+                p["index"].as_u64().expect("an index"),
+                p["state"].as_str().expect("a state").to_owned(),
+            )
+        })
         .collect();
     let got: Vec<(u64, String)> = changes
         .pages
         .iter()
-        .map(|p| (u64::from(p.index), serde_json::to_value(p.state).expect("json").as_str().expect("a word").to_owned()))
+        .map(|p| {
+            (
+                u64::from(p.index),
+                serde_json::to_value(p.state)
+                    .expect("json")
+                    .as_str()
+                    .expect("a word")
+                    .to_owned(),
+            )
+        })
         .collect();
     assert_eq!(got, want);
     assert_eq!(changes.pdf, "atlas.pdf");
@@ -432,11 +473,17 @@ fn the_preview_says_each_page_against_the_previous_atlas() {
 fn update_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/atlas-guncelleme-4000");
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/atlas-guncelleme-4000");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 700.0), "koyu-dar"),
+    ] {
         let mut app = app_with_atlas_of("plain");
-        let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let dir = scratch(&format!("atlas-guncelleme-resim-{name}"));
@@ -447,7 +494,10 @@ fn update_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("onizleme-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -459,20 +509,49 @@ fn a_chosen_coverage_not_applied_says_so_beside_its_button() {
     let mut app = app_with_atlas();
     run(&mut app, "file.export.atlas");
     send(&mut app, Event::Atlas(A::Sheet(1)));
-    let layer = window(&app).layers.iter().position(|(id, _)| id == "parsel").expect("the parcel layer") + 1;
+    let layer = window(&app)
+        .layers
+        .iter()
+        .position(|(id, _)| id == "parsel")
+        .expect("the parcel layer")
+        + 1;
     send(&mut app, Event::Atlas(A::Layer(layer)));
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
     assert!(
-        crate::files_testing::find_text(&mut shot, &app, "Atlas tanımı değişti: sayfaları bu tanımla hesaplamak için Tanımı uygula'ya basın.").is_some(),
+        crate::files_testing::find_text(
+            &mut shot,
+            &app,
+            "Atlas tanımı değişti: sayfaları bu tanımla hesaplamak için Tanımı uygula'ya basın."
+        )
+        .is_some(),
         "the pending definition is said"
     );
-    assert!(crate::files_testing::find_texts(&mut shot, &app, "Tanımı uygula").len() >= 2, "a button beside the line");
+    assert!(
+        crate::files_testing::find_texts(&mut shot, &app, "Tanımı uygula").len() >= 2,
+        "a button beside the line"
+    );
     crate::files_testing::evidence(&mut shot, &app, "gis-030", "atlas-uygulanmamis-tanim");
     send(&mut app, Event::Atlas(A::Apply));
-    assert!(window(&app).plan.as_ref().is_ok_and(|p| !p.pages.is_empty()));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
-    assert!(crate::files_testing::find_text(&mut shot, &app, "Atlas tanımı değişti: sayfaları bu tanımla hesaplamak için Tanımı uygula'ya basın.").is_none());
+    assert!(
+        window(&app)
+            .plan
+            .as_ref()
+            .is_ok_and(|p| !p.pages.is_empty())
+    );
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
+    assert!(
+        crate::files_testing::find_text(
+            &mut shot,
+            &app,
+            "Atlas tanımı değişti: sayfaları bu tanımla hesaplamak için Tanımı uygula'ya basın."
+        )
+        .is_none()
+    );
 }
 
 /// GIS-031 (docs/adr/1091): the sheets' preflight reads an atlas sheet page by page, each in its own context as the
@@ -484,17 +563,51 @@ fn the_preflight_reads_an_atlas_page_by_page() {
     let doc = &app.document.as_ref().expect("open").model;
     let sheets = doc.sheets().expect("a book");
     let (book, _) = kentos_sheet::project::read_project_sheets(sheets).expect("reads");
-    let atlas = book.sheets.iter().find(|s| s.atlas.is_some()).map(|s| s.id.clone()).expect("an atlas sheet");
-    let input = kentos_commands::PreflightSheets { drawing: None, sheets: Some(vec![atlas.clone()]), dpi: None };
+    let atlas = book
+        .sheets
+        .iter()
+        .find(|s| s.atlas.is_some())
+        .map(|s| s.id.clone())
+        .expect("an atlas sheet");
+    let input = kentos_commands::PreflightSheets {
+        drawing: None,
+        sheets: Some(vec![atlas.clone()]),
+        dpi: None,
+    };
     let checked = kentos_headless::sheet_preflight::preflight(doc, &input).expect("checked");
-    let codes: Vec<(&str, bool)> = checked.issues.iter().map(|i| (i.code.as_str(), i.error)).collect();
-    assert!(codes.iter().any(|(c, e)| *c == "atlas_sheet" && !e), "{codes:?}");
-    assert!(!codes.iter().any(|(c, _)| *c == "map_unplaced"), "the atlas maps are placed on each page: {codes:?}");
+    let codes: Vec<(&str, bool)> = checked
+        .issues
+        .iter()
+        .map(|i| (i.code.as_str(), i.error))
+        .collect();
+    assert!(
+        codes.iter().any(|(c, e)| *c == "atlas_sheet" && !e),
+        "{codes:?}"
+    );
+    assert!(
+        !codes.iter().any(|(c, _)| *c == "map_unplaced"),
+        "the atlas maps are placed on each page: {codes:?}"
+    );
     // The atlas's own fields resolve on each page; a value the fixture really lacks (@kaynak) is an error said with
     // its pages.
-    assert!(checked.issues.iter().all(|i| !i.message.contains("@atlas_")), "{:?}", checked.issues);
-    let missing = checked.issues.iter().find(|i| i.code == "value_missing").expect("the fixture's missing @kaynak");
-    assert!(missing.error && missing.message.contains("(sayfa “"), "{}", missing.message);
+    assert!(
+        checked
+            .issues
+            .iter()
+            .all(|i| !i.message.contains("@atlas_")),
+        "{:?}",
+        checked.issues
+    );
+    let missing = checked
+        .issues
+        .iter()
+        .find(|i| i.code == "value_missing")
+        .expect("the fixture's missing @kaynak");
+    assert!(
+        missing.error && missing.message.contains("(sayfa “"),
+        "{}",
+        missing.message
+    );
 }
 
 /// The municipal report's 15th item (docs/adr/9147): a coverage that gives no page is said by the plan and nothing is
@@ -504,12 +617,24 @@ fn an_atlas_whose_coverage_gives_no_page_is_said_and_not_written() {
     let mut app = app_with_atlas();
     run(&mut app, "file.export.atlas");
     send(&mut app, Event::Atlas(A::Sheet(1)));
-    let layer = window(&app).layers.iter().position(|(id, _)| id == "parsel").expect("the parcel layer") + 1;
+    let layer = window(&app)
+        .layers
+        .iter()
+        .position(|(id, _)| id == "parsel")
+        .expect("the parcel layer")
+        + 1;
     send(&mut app, Event::Atlas(A::Layer(layer)));
     send(&mut app, Event::Atlas(A::Filter("Parsel > 100000".into())));
     send(&mut app, Event::Atlas(A::Apply));
-    let why = window(&app).plan.as_ref().expect_err("no page, no plan").clone();
-    assert!(why.ends_with("süzgeçlerden geçen nesne kalmadı: atlasın sayfası yok."), "{why}");
+    let why = window(&app)
+        .plan
+        .as_ref()
+        .expect_err("no page, no plan")
+        .clone();
+    assert!(
+        why.ends_with("süzgeçlerden geçen nesne kalmadı: atlasın sayfası yok."),
+        "{why}"
+    );
     let path = scratch("atlas-bos").join("atlas.pdf");
     send(&mut app, Event::Atlas(A::SavePicked(Some(path.clone()))));
     assert!(!path.exists(), "an atlas of no page is not written");
@@ -533,12 +658,17 @@ fn a_hundred_page_atlas_is_one_pdf_of_its_pages_read_back_independently() {
     // Independent readers, where this machine has them: what they read is said; a missing one is said too.
     let tool = |name: &str, args: &[String]| -> Option<String> {
         let out = std::process::Command::new(name).args(args).output().ok()?;
-        out.status.success().then(|| String::from_utf8_lossy(&out.stdout).into_owned())
+        out.status
+            .success()
+            .then(|| String::from_utf8_lossy(&out.stdout).into_owned())
     };
     let file = path.display().to_string();
     match tool("pdfinfo", std::slice::from_ref(&file)) {
         Some(info) => {
-            let read = info.lines().find_map(|l| l.strip_prefix("Pages:")).map(str::trim);
+            let read = info
+                .lines()
+                .find_map(|l| l.strip_prefix("Pages:"))
+                .map(str::trim);
             assert_eq!(read, Some("100"), "pdfinfo: {info}");
         }
         None => println!("pdfinfo yok: sayfa sayısı yalnız dosyanın kendisinden okundu."),
@@ -554,7 +684,10 @@ fn a_hundred_page_atlas_is_one_pdf_of_its_pages_read_back_independently() {
         (Some((x1, y1, first)), Some((xn, yn, _))) => {
             // Each page on its own parcel, in the project's system.
             assert!(first.contains("ID[\"EPSG\",5253]]"), "{first}");
-            assert!((x1 - xn).abs() > 1.0 || (y1 - yn).abs() > 1.0, "({x1}, {y1}) and ({xn}, {yn})");
+            assert!(
+                (x1 - xn).abs() > 1.0 || (y1 - yn).abs() > 1.0,
+                "({x1}, {y1}) and ({xn}, {yn})"
+            );
         }
         _ => println!("gdalinfo yok ya da sayfayı okuyamadı: sayfaların yer bilgisi okunmadı."),
     }

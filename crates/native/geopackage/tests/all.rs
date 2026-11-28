@@ -655,12 +655,16 @@ fn a_session_adds_and_replaces_tables_in_one_transaction_and_a_dropped_one_leave
     // Rolled back: nothing of it is in the file.
     {
         let s = gp.session().expect("a session");
-        assert_eq!(s.taken("PARSEL").expect("taken"), Taken::Data(kentos_geopackage::DataType::Features));
+        assert_eq!(
+            s.taken("PARSEL").expect("taken"),
+            Taken::Data(kentos_geopackage::DataType::Features)
+        );
         assert_eq!(s.taken("yeni").expect("taken"), Taken::Free);
         assert_eq!(s.taken("gpkg_contents").expect("taken"), Taken::Other);
         s.drop_table("parsel").expect("dropped");
         let mut w = s.start_table(&square_table("yeni", srs)).expect("started");
-        s.append(&mut w, &[one_square(1.0)], None).expect("appended");
+        s.append(&mut w, &[one_square(1.0)], None)
+            .expect("appended");
         s.finish_table(w).expect("finished");
         s.rollback().expect("rolled back");
     }
@@ -668,9 +672,15 @@ fn a_session_adds_and_replaces_tables_in_one_transaction_and_a_dropped_one_leave
     // Committed: the parcel table replaced by a new one of the same name in two batches, another added beside it.
     let s = gp.session().expect("a session");
     s.drop_table("parsel").expect("dropped");
-    let mut w = s.start_table(&square_table("parsel", srs)).expect("started");
+    let mut w = s
+        .start_table(&square_table("parsel", srs))
+        .expect("started");
     let a = s
-        .append(&mut w, &[one_square(1.0), one_square(10.0)], Some(&["u1".into(), "u2".into()]))
+        .append(
+            &mut w,
+            &[one_square(1.0), one_square(10.0)],
+            Some(&["u1".into(), "u2".into()]),
+        )
         .expect("batch one");
     let b = s
         .append(&mut w, &[one_square(20.0)], Some(&["u3".into()]))
@@ -678,8 +688,14 @@ fn a_session_adds_and_replaces_tables_in_one_transaction_and_a_dropped_one_leave
     assert_eq!((a, b), (vec![1, 2], vec![3]));
     assert_eq!(w.rows(), 3);
     s.finish_table(w).expect("finished");
-    s.add_metadata("parsel", "https://example.org/x", "text/plain", "x", "2026-10-20T00:00:00.000Z")
-        .expect("metadata");
+    s.add_metadata(
+        "parsel",
+        "https://example.org/x",
+        "text/plain",
+        "x",
+        "2026-10-20T00:00:00.000Z",
+    )
+    .expect("metadata");
     s.commit().expect("committed");
     drop(gp);
     let gp = GeoPackage::open(&tmp, false).expect("opens");
@@ -688,12 +704,22 @@ fn a_session_adds_and_replaces_tables_in_one_transaction_and_a_dropped_one_leave
     assert_eq!(gp.count(parsel).expect("count"), 3);
     assert_eq!(parsel.columns.len(), 1);
     assert_eq!(
-        gp.uids("parsel").expect("uids").values().cloned().collect::<std::collections::BTreeSet<_>>(),
+        gp.uids("parsel")
+            .expect("uids")
+            .values()
+            .cloned()
+            .collect::<std::collections::BTreeSet<_>>(),
         ["u1", "u2", "u3"].map(String::from).into()
     );
     // The index is the new one's, its three boxes; the other tables are as they were.
     let found = gp
-        .rows(parsel, &Query { bbox: Some([0.0, 4419999.0, 30.0, 4420010.0]), ..Query::default() })
+        .rows(
+            parsel,
+            &Query {
+                bbox: Some([0.0, 4419999.0, 30.0, 4420010.0]),
+                ..Query::default()
+            },
+        )
         .expect("rows");
     assert_eq!(found.len(), 3);
     let mut again = before.clone();
@@ -719,15 +745,25 @@ fn the_lasting_ids_extension_is_registered_once() {
     let _ = copy(&dir().join("qgis.gpkg"), &tmp);
     // A second table written with ids into the same file.
     let src = GeoPackage::open(&dir().join("qgis.gpkg"), false).expect("opens");
-    let layer = src.layers().expect("layers").into_iter().find(|l| l.name == "parsel").expect("parsel");
+    let layer = src
+        .layers()
+        .expect("layers")
+        .into_iter()
+        .find(|l| l.name == "parsel")
+        .expect("parsel");
     let rows: Vec<NewRow> = src
         .rows(&layer, &Query::default())
         .expect("rows")
         .into_iter()
-        .map(|r| NewRow { fid: Some(r.fid), geometry: r.geometry.map(|g| g.expect("a geometry")), values: r.values })
+        .map(|r| NewRow {
+            fid: Some(r.fid),
+            geometry: r.geometry.map(|g| g.expect("a geometry")),
+            values: r.values,
+        })
         .collect();
-    let uids: Vec<String> =
-        (0..rows.len()).map(|i| format!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6e{:04}", 7000 + i)).collect();
+    let uids: Vec<String> = (0..rows.len())
+        .map(|i| format!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6e{:04}", 7000 + i))
+        .collect();
     let def = TableDef {
         name: "parsel_iki".into(),
         data_type: layer.data_type.clone(),
@@ -738,7 +774,8 @@ fn the_lasting_ids_extension_is_registered_once() {
         columns: layer.columns.clone(),
     };
     let mut out = GeoPackage::open(&tmp, true).expect("opens to write");
-    out.write_table(&def, &rows, Some(&uids[..])).expect("written");
+    out.write_table(&def, &rows, Some(&uids[..]))
+        .expect("written");
     let rows_of: i64 = out
         .connection()
         .query_row(

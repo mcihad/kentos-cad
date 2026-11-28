@@ -195,7 +195,9 @@ pub fn infos_problem(tree: &[LayerNode]) -> Option<String> {
 
 /// The words a field's name has to be a record's name (docs/adr/9160), folded: Turkish letters to their plain Latin ones,
 /// lower case.
-const NAME_WORDS: [&str; 9] = ["ad", "adi", "isim", "ismi", "name", "unvan", "unvani", "baslik", "title"];
+const NAME_WORDS: [&str; 9] = [
+    "ad", "adi", "isim", "ismi", "name", "unvan", "unvani", "baslik", "title",
+];
 
 /// A field's name folded for [`NAME_WORDS`]: ı, i, İ and I alike; ş, ğ, ü, ö, ç as s, g, u, o, c; lower case.
 fn folded(name: &str) -> String {
@@ -223,7 +225,10 @@ pub fn display_field<'a>(names: impl IntoIterator<Item = &'a str>) -> Option<&'a
         if NAME_WORDS.contains(&f.as_str()) {
             return Some(name);
         }
-        if compound.is_none() && f.split(|c: char| !c.is_alphanumeric()).any(|w| NAME_WORDS.contains(&w)) {
+        if compound.is_none()
+            && f.split(|c: char| !c.is_alphanumeric())
+                .any(|w| NAME_WORDS.contains(&w))
+        {
             compound = Some(name);
         }
     }
@@ -243,8 +248,16 @@ mod tests {
 
     #[test]
     fn the_display_field_is_a_name_and_not_a_word_inside_another() {
-        assert_eq!(display_field(["ada", "yol_adi", "ad"]), Some("ad"), "a name word itself first");
-        assert_eq!(display_field(["ada", "adres", "Mahalle adı", "yol_adi"]), Some("Mahalle adı"), "else the first compound");
+        assert_eq!(
+            display_field(["ada", "yol_adi", "ad"]),
+            Some("ad"),
+            "a name word itself first"
+        );
+        assert_eq!(
+            display_field(["ada", "adres", "Mahalle adı", "yol_adi"]),
+            Some("Mahalle adı"),
+            "else the first compound"
+        );
         assert_eq!(display_field(["fid", "ADI"]), Some("ADI"));
         assert_eq!(display_field(["İSİM"]), Some("İSİM"));
         assert_eq!(display_field(["Unvanı", "name"]), Some("Unvanı"));

@@ -63,7 +63,12 @@ impl App {
 
     /// The findings of `keys` marked (those already so left out), from the tab or from Öznitelikler (docs/adr/4600);
     /// checked again, then the rows of `chosen` are the tab's chosen ones.
-    pub(super) fn topology_review_keys(&mut self, keys: Vec<String>, op: TopologyExceptionOperation, chosen: Vec<String>) -> Task<Message> {
+    pub(super) fn topology_review_keys(
+        &mut self,
+        keys: Vec<String>,
+        op: TopologyExceptionOperation,
+        chosen: Vec<String>,
+    ) -> Task<Message> {
         let Some(c) = self.topology_checked() else {
             return Task::none();
         };

@@ -64,7 +64,11 @@ impl View {
                         chosen: false,
                     });
                     if is_open {
-                        members.sort_by(|a, b| self.input().objects[*a].label.cmp(&self.input().objects[*b].label));
+                        members.sort_by(|a, b| {
+                            self.input().objects[*a]
+                                .label
+                                .cmp(&self.input().objects[*b].label)
+                        });
                         out.extend(members.into_iter().map(|i| self.row(i, 1, open)));
                     }
                 }
@@ -87,7 +91,14 @@ impl View {
         }
     }
 
-    fn walk(&self, i: usize, depth: usize, open: &BTreeSet<String>, seen: &mut BTreeSet<usize>, out: &mut Vec<Row>) {
+    fn walk(
+        &self,
+        i: usize,
+        depth: usize,
+        open: &BTreeSet<String>,
+        seen: &mut BTreeSet<usize>,
+        out: &mut Vec<Row>,
+    ) {
         if !seen.insert(i) {
             return;
         }
@@ -114,12 +125,25 @@ mod tests {
     #[test]
     fn the_structure_opens_branch_by_branch() {
         let v = view();
-        let closed: Vec<String> = v.rows(TreeMode::Structure, &BTreeSet::new()).into_iter().map(|r| r.id).collect();
+        let closed: Vec<String> = v
+            .rows(TreeMode::Structure, &BTreeSet::new())
+            .into_iter()
+            .map(|r| r.id)
+            .collect();
         assert_eq!(closed, ["proje"]);
         let open: BTreeSet<String> = ["proje", "kat"].map(String::from).into();
         let rows = v.rows(TreeMode::Structure, &open);
         let ids: Vec<(&str, usize)> = rows.iter().map(|r| (r.id.as_str(), r.depth)).collect();
-        assert_eq!(ids, [("proje", 0), ("kat", 1), ("duvar-1", 2), ("duvar-2", 2), ("oda", 2)]);
+        assert_eq!(
+            ids,
+            [
+                ("proje", 0),
+                ("kat", 1),
+                ("duvar-1", 2),
+                ("duvar-2", 2),
+                ("oda", 2)
+            ]
+        );
         assert_eq!(rows[1].count, 3);
     }
 
@@ -129,10 +153,20 @@ mod tests {
         v.select(Some(3));
         let open: BTreeSet<String> = [class_id("Wall")].into();
         let rows = v.rows(TreeMode::Class, &open);
-        let words: Vec<(&str, usize, bool)> = rows.iter().map(|r| (r.label.as_str(), r.count, r.chosen)).collect();
+        let words: Vec<(&str, usize, bool)> = rows
+            .iter()
+            .map(|r| (r.label.as_str(), r.count, r.chosen))
+            .collect();
         assert_eq!(
             words,
-            [("Project", 1, false), ("Space", 1, false), ("Storey", 1, false), ("Wall", 2, false), ("duvar-1", 0, false), ("duvar-2", 0, true)]
+            [
+                ("Project", 1, false),
+                ("Space", 1, false),
+                ("Storey", 1, false),
+                ("Wall", 2, false),
+                ("duvar-1", 0, false),
+                ("duvar-2", 0, true)
+            ]
         );
     }
 }

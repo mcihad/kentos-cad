@@ -83,7 +83,9 @@ pub(crate) fn in_project(m: Module) -> &'static str {
 /// Whether `module`'s program offers product command `product` to an agent (docs/adr/8056 §1).
 fn offers_product(module: Module, product: &str) -> bool {
     use kentos_native_application::registry::discipline_of;
-    let own = discipline_of(product).and_then(|d| d.module()).is_none_or(|m| m == module);
+    let own = discipline_of(product)
+        .and_then(|d| d.module())
+        .is_none_or(|m| m == module);
     own || catalog().routes_offer(module, product)
 }
 
@@ -187,9 +189,13 @@ impl App {
             }
             // A CAD drawing in a CBS program: the CAD modules' programs are asked (their projects are files,
             // docs/adr/9196).
-            (None, Some(Workspace::Cad)) if program.storage() == kentos_launch::Storage::Database => {
-                let cad: Vec<Module> =
-                    Module::ALL.into_iter().filter(|m| m.storage() == kentos_launch::Storage::File).collect();
+            (None, Some(Workspace::Cad))
+                if program.storage() == kentos_launch::Storage::Database =>
+            {
+                let cad: Vec<Module> = Module::ALL
+                    .into_iter()
+                    .filter(|m| m.storage() == kentos_launch::Storage::File)
+                    .collect();
                 self.ask_hand_over(&opened, cad);
                 Task::none()
             }
@@ -275,7 +281,8 @@ impl App {
             None => true,
             Some(m) => {
                 self.module_offers(m, id)
-                    || (self.program.is_none() && Module::ALL.into_iter().all(|o| !self.module_offers(o, id)))
+                    || (self.program.is_none()
+                        && Module::ALL.into_iter().all(|o| !self.module_offers(o, id)))
             }
         }
     }

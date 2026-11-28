@@ -24,10 +24,10 @@ use kentos_commands::{
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_drainage, road_drainage_draw};
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
@@ -94,9 +94,18 @@ impl Window {
             "" => None,
             t => {
                 let mut it = t.split(',').map(str::trim);
-                match (it.next().map(str::parse::<f64>), it.next().map(str::parse::<f64>), it.next()) {
+                match (
+                    it.next().map(str::parse::<f64>),
+                    it.next().map(str::parse::<f64>),
+                    it.next(),
+                ) {
                     (Some(Ok(y)), Some(Ok(x)), None) => Some([y, x]),
-                    _ => return Err(format!("{}: “{t}” Y,X biçiminde iki sayı değil.", FIELDS[0])),
+                    _ => {
+                        return Err(format!(
+                            "{}: “{t}” Y,X biçiminde iki sayı değil.",
+                            FIELDS[0]
+                        ));
+                    }
                 }
             }
         };
@@ -104,11 +113,17 @@ impl Window {
             Some(DrainageCatchmentAsk {
                 at,
                 culvert: self.culvert.clone(),
-                cell: number(&self.fields[1], FIELDS[1])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[1]))?,
-                radius: number(&self.fields[2], FIELDS[2])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[2]))?,
+                cell: number(&self.fields[1], FIELDS[1])?
+                    .ok_or_else(|| format!("{} yazılmalı.", FIELDS[1]))?,
+                radius: number(&self.fields[2], FIELDS[2])?
+                    .ok_or_else(|| format!("{} yazılmalı.", FIELDS[2]))?,
                 runoff: match number(&self.fields[3], FIELDS[3])? {
                     Some(c) if !(0.0..=1.0).contains(&c) => {
-                        return Err(format!("{}: {} 0 ile 1 arasında olmalı (ör. 0,5).", FIELDS[3], self.fields[3].trim()));
+                        return Err(format!(
+                            "{}: {} 0 ile 1 arasında olmalı (ör. 0,5).",
+                            FIELDS[3],
+                            self.fields[3].trim()
+                        ));
                     }
                     c => c,
                 },
@@ -117,15 +132,23 @@ impl Window {
         } else {
             None
         };
-        let ponds = number(&self.fields[5], FIELDS[5])?.map(|min_depth| DrainagePondsAsk { min_depth });
-        Ok(DrainageQuery { surface, ponds, drops: Vec::new(), catchment })
+        let ponds =
+            number(&self.fields[5], FIELDS[5])?.map(|min_depth| DrainagePondsAsk { min_depth });
+        Ok(DrainageQuery {
+            surface,
+            ponds,
+            drops: Vec::new(),
+            catchment,
+        })
     }
 }
 
 /// The selected point's place.
 fn chosen_point(app: &App) -> Option<[f64; 2]> {
     let doc = app.document.as_ref()?;
-    let [slot] = app.selection.ids() else { return None };
+    let [slot] = app.selection.ids() else {
+        return None;
+    };
     match doc.model.get(*slot)? {
         Entity::Point(p) => Some([p.p.x, p.p.y]),
         _ => None,
@@ -140,12 +163,22 @@ impl App {
             return;
         };
         // A map project's surface drains as a road project's (docs/adr/1580).
-        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work) {
+        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work)
+        {
             self.warn("Drenaj Harita ve Yol projelerinde olur.".to_owned());
             return;
         }
-        let Some(first) = doc.model.settings().road.as_ref().and_then(|r| r.surfaces.first()) else {
-            self.warn("Drenaj bir arazi yüzeyinde okunur: önce Arazi yüzeyleri'nde bir yüzey oluşturun.".to_owned());
+        let Some(first) = doc
+            .model
+            .settings()
+            .road
+            .as_ref()
+            .and_then(|r| r.surfaces.first())
+        else {
+            self.warn(
+                "Drenaj bir arazi yüzeyinde okunur: önce Arazi yüzeyleri'nde bir yüzey oluşturun."
+                    .to_owned(),
+            );
             return;
         };
         let surface = first.id.clone();
@@ -162,7 +195,9 @@ impl App {
             preview: None,
             warnings: Vec::new(),
         }));
-        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Drainage));
+        self.dialog = Some(Dialog::TerrainWork(
+            crate::terrain_work::TerrainDialogKind::Drainage,
+        ));
     }
 
     fn preview_drainage(&mut self) {
@@ -231,11 +266,21 @@ impl App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let input = DrainageDraw { query, layer_id: layer, labels: true, expected_revision: None };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let input = DrainageDraw {
+            query,
+            layer_id: layer,
+            labels: true,
+            expected_revision: None,
+        };
         let result = road_drainage_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            self.say(Level::Success, format!("Drenaj planda, {} nesne.", out.uids.len()));
+            self.say(
+                Level::Success,
+                format!("Drenaj planda, {} nesne.", out.uids.len()),
+            );
             self.terrain_work.drainage_window = None;
             self.dialog = None;
         }
@@ -246,22 +291,41 @@ impl App {
         let Some(w) = &self.terrain_work.drainage_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let model = self.document.as_ref().map(|d| &d.model);
         let surfaces: Vec<(String, String)> = model
             .and_then(|m| m.settings().road.as_ref())
-            .map_or_else(Vec::new, |r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect());
+            .map_or_else(Vec::new, |r| {
+                r.surfaces
+                    .iter()
+                    .map(|s| (s.id.clone(), s.name.clone()))
+                    .collect()
+            });
         let sids: Vec<String> = surfaces.iter().map(|s| s.0.clone()).collect();
         let on_surface = Select::new(
             surfaces.iter().map(|s| Choice::new(s.1.clone())),
-            w.surface.as_ref().and_then(|s| sids.iter().position(|i| i == s)),
+            w.surface
+                .as_ref()
+                .and_then(|s| sids.iter().position(|i| i == s)),
             move |i| msg(Event::Surface(sids[i].clone())),
         );
-        let culverts: Vec<(Option<String>, String)> = std::iter::once((None, "Menfez yok".to_owned()))
-            .chain(model.map_or_else(Vec::new, |m| m.road_culverts().iter().map(|c| (Some(c.id.clone()), c.name.clone())).collect()))
-            .collect();
+        let culverts: Vec<(Option<String>, String)> =
+            std::iter::once((None, "Menfez yok".to_owned()))
+                .chain(model.map_or_else(Vec::new, |m| {
+                    m.road_culverts()
+                        .iter()
+                        .map(|c| (Some(c.id.clone()), c.name.clone()))
+                        .collect()
+                }))
+                .collect();
         let cids: Vec<Option<String>> = culverts.iter().map(|c| c.0.clone()).collect();
         let on_culvert = Select::new(
             culverts.iter().map(|c| Choice::new(c.1.clone())),
@@ -271,14 +335,19 @@ impl App {
         let field = |hint: &'static str, k: usize, width: f32| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(width),
                 None,
             )
         };
         let top = row![
             words::field("Arazi yüzeyi", container(on_surface).width(160), None),
             field("menfezin girişi", 0, 200.0),
-            words::secondary(FROM_SELECTION, chosen_point(self).map(|_| msg(Event::FromSelection))),
+            words::secondary(
+                FROM_SELECTION,
+                chosen_point(self).map(|_| msg(Event::FromSelection))
+            ),
             words::field("Menfez", container(on_culvert).width(170), None),
         ]
         .spacing(10)
@@ -294,7 +363,10 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(12.0).push(top).push(second);
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(12.0)
+            .push(top)
+            .push(second);
         match &w.preview {
             None => {
                 body = body.push(
@@ -349,28 +421,38 @@ impl App {
                 body = body.push_grow(row![picture, side].spacing(12).height(Fill), typography::scaled(320.0));
             }
         }
-        let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let lids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let on_layer = Select::new(
             lnames.iter().map(|n| Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+            w.layer
+                .as_ref()
+                .and_then(|l| lids.iter().position(|id| id == l)),
             move |i| msg(Event::Layer(lids[i].clone())),
         )
         .placeholder("Katman");
-        let ready = matches!(&w.preview, Some(Ok(q)) if q.catchment.is_some() || !q.ponds.is_empty());
+        let ready =
+            matches!(&w.preview, Some(Ok(q)) if q.catchment.is_some() || !q.ponds.is_empty());
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                space::horizontal().width(Fill),
-                label::caption("Katman").style(muted),
-                container(on_layer).width(170),
-                words::secondary(DRAW, ready.then(|| msg(Event::Draw))),
-                space::horizontal().width(24),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
+        let footer = row![
+            space::horizontal().width(Fill),
+            label::caption("Katman").style(muted),
+            container(on_layer).width(170),
+            words::secondary(DRAW, ready.then(|| msg(Event::Draw))),
+            space::horizontal().width(24),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1180.0)
+            .modal(msg(Event::Close))
     }
 
     pub(crate) fn drainage_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -399,7 +481,14 @@ struct Plan<'a> {
 impl canvas::Program<Message> for Plan<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let mut pts: Vec<[f64; 2]> = Vec::new();
@@ -412,7 +501,12 @@ impl canvas::Program<Message> for Plan<'_> {
         if pts.is_empty() {
             return vec![frame.into_geometry()];
         }
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in &pts {
             x0 = x0.min(p[0]);
             y0 = y0.min(p[1]);
@@ -420,11 +514,22 @@ impl canvas::Program<Message> for Plan<'_> {
             y1 = y1.max(p[1]);
         }
         let pad = 22.0_f64;
-        let (w, h) = (f64::from(bounds.width) - 2.0 * pad, f64::from(bounds.height) - 2.0 * pad);
+        let (w, h) = (
+            f64::from(bounds.width) - 2.0 * pad,
+            f64::from(bounds.height) - 2.0 * pad,
+        );
         let span = (x1 - x0).max(y1 - y0).max(1.0);
         let scale = (w / (x1 - x0).max(span * 0.05)).min(h / (y1 - y0).max(span * 0.05));
-        let (ox, oy) = (pad + (w - (x1 - x0) * scale) / 2.0, pad + (h - (y1 - y0) * scale) / 2.0);
-        let at = |x: f64, y: f64| Point::new((ox + (x - x0) * scale) as f32, (oy + (y1 - y) * scale) as f32);
+        let (ox, oy) = (
+            pad + (w - (x1 - x0) * scale) / 2.0,
+            pad + (h - (y1 - y0) * scale) / 2.0,
+        );
+        let at = |x: f64, y: f64| {
+            Point::new(
+                (ox + (x - x0) * scale) as f32,
+                (oy + (y1 - y) * scale) as f32,
+            )
+        };
         if let Some(c) = &self.q.catchment {
             for ring in &c.outline {
                 if ring.len() < 3 {
@@ -437,8 +542,17 @@ impl canvas::Program<Message> for Plan<'_> {
                     }
                     p.close();
                 });
-                frame.fill(&shape, iced::Color { a: 0.18, ..tk.accent });
-                frame.stroke(&shape, Stroke::default().with_width(1.4).with_color(tk.accent));
+                frame.fill(
+                    &shape,
+                    iced::Color {
+                        a: 0.18,
+                        ..tk.accent
+                    },
+                );
+                frame.stroke(
+                    &shape,
+                    Stroke::default().with_width(1.4).with_color(tk.accent),
+                );
             }
             if c.path.len() >= 2 {
                 let flow = Path::new(|p| {
@@ -464,7 +578,10 @@ impl canvas::Program<Message> for Plan<'_> {
             let c = at(p.bottom[0], p.bottom[1]);
             let r = (p.area.sqrt() * scale / 2.0).clamp(4.0, 40.0) as f32;
             frame.fill(&Path::circle(c, r), iced::Color { a: 0.3, ..tk.info });
-            frame.stroke(&Path::circle(c, r), Stroke::default().with_width(1.2).with_color(tk.info));
+            frame.stroke(
+                &Path::circle(c, r),
+                Stroke::default().with_width(1.2).with_color(tk.info),
+            );
             frame.fill_text(Text {
                 content: format!("{:.2} m", p.depth),
                 position: c + iced::Vector::new(r + 3.0, -7.0),
@@ -473,11 +590,24 @@ impl canvas::Program<Message> for Plan<'_> {
                 ..Text::default()
             });
         }
-        let legend = [("havza", tk.accent), ("akış yolu", tk.info), ("boşaltım", tk.danger)];
+        let legend = [
+            ("havza", tk.accent),
+            ("akış yolu", tk.info),
+            ("boşaltım", tk.danger),
+        ];
         let mut x = 8.0_f32;
         for (word, color) in legend {
-            frame.stroke(&Path::line(Point::new(x, 12.0), Point::new(x + 14.0, 12.0)), Stroke::default().with_width(2.0).with_color(color));
-            frame.fill_text(Text { content: word.into(), position: Point::new(x + 18.0, 5.0), color: tk.muted, size: Pixels(11.0), ..Text::default() });
+            frame.stroke(
+                &Path::line(Point::new(x, 12.0), Point::new(x + 14.0, 12.0)),
+                Stroke::default().with_width(2.0).with_color(color),
+            );
+            frame.fill_text(Text {
+                content: word.into(),
+                position: Point::new(x + 18.0, 5.0),
+                color: tk.muted,
+                size: Pixels(11.0),
+                ..Text::default()
+            });
             x += 30.0 + 7.0 * word.chars().count() as f32;
         }
         vec![frame.into_geometry()]

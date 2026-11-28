@@ -3,8 +3,8 @@
 //! has no kind of its own.
 
 use kentos_contracts::{
-    ArcEntity, CircleEntity, Entity, EntityBase, LineEntity, OpeningAnchor, OpeningFields, OpeningForm,
-    OpeningHand, OpeningOperation, OpeningSide, PathEntity, Vec2,
+    ArcEntity, CircleEntity, Entity, EntityBase, LineEntity, OpeningAnchor, OpeningFields,
+    OpeningForm, OpeningHand, OpeningOperation, OpeningSide, PathEntity, Vec2,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::entity::Shape;

@@ -49,7 +49,10 @@ fn drawing(rooms: Vec<Value>, scheme: Option<&str>) -> Document {
         e["layerId"] = json!("0");
         e["attrs"] = json!({});
         snapshot["entities"].as_array_mut().unwrap().push(e);
-        snapshot["uids"].as_array_mut().unwrap().push(json!(format!("0192f5a1-7242-7000-8000-{:012x}", i + 1)));
+        snapshot["uids"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!(format!("0192f5a1-7242-7000-8000-{:012x}", i + 1)));
     }
     Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap()
 }
@@ -77,7 +80,10 @@ fn kullanim_colours_a_room_by_the_group_its_name_reads_as_and_a_use_by_its_own()
         room(40.0, "zemin", Some("Kiler"), None, None),
         room(44.0, "k1", Some("Salon"), None, None),
     ];
-    assert!(drawing(rooms.clone(), None).space_fills().is_empty(), "no colour plan, no fill");
+    assert!(
+        drawing(rooms.clone(), None).space_fills().is_empty(),
+        "no colour plan, no fill"
+    );
     let doc = drawing(rooms, Some("usage"));
     assert_eq!(doc.color_plan(), Some(ColorScheme::Usage));
     let f = fills(&doc);
@@ -104,8 +110,20 @@ fn kullanim_colours_a_room_by_the_group_its_name_reads_as_and_a_use_by_its_own()
             ("Diğer", 1),
         ]
     );
-    assert!(legend.iter().all(|r| (r.area - 12.0 * r.rooms as f64).abs() < 1e-9), "each room 12 m²");
-    assert_eq!(doc.color_legend(None).iter().map(|r| r.rooms).sum::<usize>(), 12, "every storey's");
+    assert!(
+        legend
+            .iter()
+            .all(|r| (r.area - 12.0 * r.rooms as f64).abs() < 1e-9),
+        "each room 12 m²"
+    );
+    assert_eq!(
+        doc.color_legend(None)
+            .iter()
+            .map(|r| r.rooms)
+            .sum::<usize>(),
+        12,
+        "every storey's"
+    );
 }
 
 #[test]
@@ -125,8 +143,11 @@ fn bagimsiz_bolum_colours_the_units_in_their_order_and_leaves_a_room_in_none_unf
     assert_eq!(f.len(), 5, "the room in no unit is not filled");
     assert_eq!(f[0].1, f[4].1, "an annex its unit's colour");
     assert_ne!(f[0].1, f[1].1, "two units, two colours");
-    let rows: Vec<(String, Option<&str>, usize)> =
-        doc.color_legend(None).into_iter().map(|r| (r.label, r.color, r.rooms)).collect();
+    let rows: Vec<(String, Option<&str>, usize)> = doc
+        .color_legend(None)
+        .into_iter()
+        .map(|r| (r.label, r.color, r.rooms))
+        .collect();
     assert_eq!(
         rows,
         [
@@ -142,20 +163,28 @@ fn bagimsiz_bolum_colours_the_units_in_their_order_and_leaves_a_room_in_none_unf
 #[test]
 fn the_legend_is_drawn_and_drawn_again_in_one_place() {
     let mut doc = drawing(
-        vec![room(0.0, "zemin", Some("Salon"), None, None), room(4.0, "zemin", Some("Banyo"), None, None)],
+        vec![
+            room(0.0, "zemin", Some("Salon"), None, None),
+            room(4.0, "zemin", Some("Banyo"), None, None),
+        ],
         Some("usage"),
     );
     let marked = |doc: &Document| {
-        doc.entities().filter(|e| e.base().attrs.contains_key(color_legend::MARK_ATTR)).count()
+        doc.entities()
+            .filter(|e| e.base().attrs.contains_key(color_legend::MARK_ATTR))
+            .count()
     };
-    let rows = color_legend::draw(&mut doc, Some("zemin"), Vec2 { x: 0.0, y: -2.0 }, "0").expect("drawn");
+    let rows =
+        color_legend::draw(&mut doc, Some("zemin"), Vec2 { x: 0.0, y: -2.0 }, "0").expect("drawn");
     assert_eq!(rows, 2);
     // The title, each row's swatch, outline and words, the total.
     assert_eq!(marked(&doc), 1 + 2 * 3 + 1);
     let texts: Vec<String> = doc
         .entities()
         .filter_map(|e| match e {
-            Entity::Text(t) if t.base.attrs.contains_key(color_legend::MARK_ATTR) => Some(t.text.clone()),
+            Entity::Text(t) if t.base.attrs.contains_key(color_legend::MARK_ATTR) => {
+                Some(t.text.clone())
+            }
             _ => None,
         })
         .collect();
@@ -169,13 +198,15 @@ fn the_legend_is_drawn_and_drawn_again_in_one_place() {
         ]
     );
     // Again elsewhere: the old legend goes.
-    color_legend::draw(&mut doc, Some("zemin"), Vec2 { x: 20.0, y: -2.0 }, "0").expect("drawn again");
+    color_legend::draw(&mut doc, Some("zemin"), Vec2 { x: 20.0, y: -2.0 }, "0")
+        .expect("drawn again");
     assert_eq!(marked(&doc), 8);
     // Without a colour plan it says where to choose one, and writes nothing.
     let mut s = doc.settings().clone();
     s.arch.as_mut().unwrap().color_plan = None;
     doc.set_settings(s);
-    let why = color_legend::draw(&mut doc, Some("zemin"), Vec2 { x: 0.0, y: 0.0 }, "0").expect_err("no plan");
+    let why = color_legend::draw(&mut doc, Some("zemin"), Vec2 { x: 0.0, y: 0.0 }, "0")
+        .expect_err("no plan");
     assert!(why.contains("Renk planı kapalı"), "{why}");
 }
 
@@ -183,13 +214,24 @@ fn the_legend_is_drawn_and_drawn_again_in_one_place() {
 fn a_colour_plan_round_trips_under_arch_data_44() {
     let mut doc = drawing(vec![room(0.0, "zemin", Some("Salon"), None, None)], None);
     let mut s = doc.settings().clone();
-    s.arch.as_mut().unwrap().color_plan = Some(ColorPlan { scheme: ColorScheme::Unit });
+    s.arch.as_mut().unwrap().color_plan = Some(ColorPlan {
+        scheme: ColorScheme::Unit,
+    });
     doc.set_settings(s);
     let snapshot = doc.to_snapshot_v2();
     assert!(kentos_kcad::uses_color_plan(&snapshot));
-    assert_eq!(kentos_kcad::arch_version(&snapshot), kentos_kcad::ARCH_WITH_COLOR_PLAN);
-    let back = kentos_kcad::decode(&kentos_kcad::encode(&snapshot).expect("written")).expect("read");
-    assert_eq!(back.settings.arch.and_then(|a| a.color_plan), Some(ColorPlan { scheme: ColorScheme::Unit }));
+    assert_eq!(
+        kentos_kcad::arch_version(&snapshot),
+        kentos_kcad::ARCH_WITH_COLOR_PLAN
+    );
+    let back =
+        kentos_kcad::decode(&kentos_kcad::encode(&snapshot).expect("written")).expect("read");
+    assert_eq!(
+        back.settings.arch.and_then(|a| a.color_plan),
+        Some(ColorPlan {
+            scheme: ColorScheme::Unit
+        })
+    );
 }
 
 /// A fill is drawn where its rooms' layer is (docs/adr/8176 §3.4): a layer of rooms over a layer of doors covers it;
@@ -197,14 +239,27 @@ fn a_colour_plan_round_trips_under_arch_data_44() {
 #[test]
 fn the_layers_a_fill_covers_are_said() {
     use kentos_domain::NewLayer;
-    let mut doc = drawing(vec![room(0.0, "zemin", Some("Salon"), None, None)], Some("usage"));
-    let doors = doc.add_layer(NewLayer::layer("Kapılar"), None, false).unwrap();
-    let e: Entity = serde_json::from_value(json!({"kind": "line", "id": 0, "layerId": doors, "attrs": {},
-        "a": {"x": 1.0, "y": 1.0}, "b": {"x": 2.0, "y": 1.0}}))
+    let mut doc = drawing(
+        vec![room(0.0, "zemin", Some("Salon"), None, None)],
+        Some("usage"),
+    );
+    let doors = doc
+        .add_layer(NewLayer::layer("Kapılar"), None, false)
+        .unwrap();
+    let e: Entity = serde_json::from_value(
+        json!({"kind": "line", "id": 0, "layerId": doors, "attrs": {},
+        "a": {"x": 1.0, "y": 1.0}, "b": {"x": 2.0, "y": 1.0}}),
+    )
     .unwrap();
     doc.add(e).unwrap();
     // "0" (the rooms') is first, over "Kapılar".
-    assert_eq!(doc.covered_layers(), [("0".to_owned(), vec!["Kapılar".to_owned()])]);
+    assert_eq!(
+        doc.covered_layers(),
+        [("0".to_owned(), vec!["Kapılar".to_owned()])]
+    );
     assert_eq!(doc.move_layer(&doors, None, Some(0)), Ok(true));
-    assert!(doc.covered_layers().is_empty(), "the doors over the rooms: nothing covered");
+    assert!(
+        doc.covered_layers().is_empty(),
+        "the doors over the rooms: nothing covered"
+    );
 }

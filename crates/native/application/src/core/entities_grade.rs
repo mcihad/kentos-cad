@@ -32,7 +32,10 @@ type Path = (Vec<Vec2>, Option<Vec<f64>>, Vec<Option<f64>>);
 /// The object's path (a line's two ends); a polyline's or an area's ring `at` (part, ring; docs/adr/4980).
 fn path_of(e: &Entity, at: (usize, usize)) -> Option<Path> {
     let v = |p: &kentos_commands::Vec2| Vec2::new(p.x, p.y);
-    let ring = |pts: &[kentos_commands::Vec2], bulges: &Option<Vec<f64>>, zs: &Option<Vec<Option<f64>>>| -> Path {
+    let ring = |pts: &[kentos_commands::Vec2],
+                bulges: &Option<Vec<f64>>,
+                zs: &Option<Vec<Option<f64>>>|
+     -> Path {
         let zs = zs.clone().unwrap_or_else(|| vec![None; pts.len()]);
         (pts.iter().map(v).collect(), bulges.clone(), zs)
     };
@@ -40,11 +43,22 @@ fn path_of(e: &Entity, at: (usize, usize)) -> Option<Path> {
         Entity::Line(l) if at == (0, 0) => Some((vec![v(&l.a), v(&l.b)], None, vec![l.za, l.zb])),
         Entity::Polyline(p) | Entity::Polygon(p) => Some(match at {
             (0, 0) => ring(&p.pts, &p.bulges, &p.zs),
-            (0, h) => p.holes.as_ref()?.get(h - 1).map(|r| ring(&r.pts, &r.bulges, &r.zs))?,
-            (k, 0) => p.parts.as_ref()?.get(k - 1).map(|q| ring(&q.pts, &q.bulges, &q.zs))?,
+            (0, h) => p
+                .holes
+                .as_ref()?
+                .get(h - 1)
+                .map(|r| ring(&r.pts, &r.bulges, &r.zs))?,
+            (k, 0) => p
+                .parts
+                .as_ref()?
+                .get(k - 1)
+                .map(|q| ring(&q.pts, &q.bulges, &q.zs))?,
             (k, h) => {
                 let q = p.parts.as_ref()?.get(k - 1)?;
-                q.holes.as_ref()?.get(h - 1).map(|r| ring(&r.pts, &r.bulges, &r.zs))?
+                q.holes
+                    .as_ref()?
+                    .get(h - 1)
+                    .map(|r| ring(&r.pts, &r.bulges, &r.zs))?
             }
         }),
         _ => None,
@@ -56,14 +70,29 @@ fn path_of(e: &Entity, at: (usize, usize)) -> Option<Path> {
 fn ring_mut(
     p: &mut PathEntity,
     (part, ring): (usize, usize),
-) -> Option<(&mut Vec<kentos_commands::Vec2>, &mut Option<Vec<f64>>, &mut Option<Vec<Option<f64>>>)> {
+) -> Option<(
+    &mut Vec<kentos_commands::Vec2>,
+    &mut Option<Vec<f64>>,
+    &mut Option<Vec<Option<f64>>>,
+)> {
     match (part, ring) {
         (0, 0) => Some((&mut p.pts, &mut p.bulges, &mut p.zs)),
-        (0, h) => p.holes.as_mut()?.get_mut(h - 1).map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs)),
-        (k, 0) => p.parts.as_mut()?.get_mut(k - 1).map(|q| (&mut q.pts, &mut q.bulges, &mut q.zs)),
+        (0, h) => p
+            .holes
+            .as_mut()?
+            .get_mut(h - 1)
+            .map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs)),
+        (k, 0) => p
+            .parts
+            .as_mut()?
+            .get_mut(k - 1)
+            .map(|q| (&mut q.pts, &mut q.bulges, &mut q.zs)),
         (k, h) => {
             let q = p.parts.as_mut()?.get_mut(k - 1)?;
-            q.holes.as_mut()?.get_mut(h - 1).map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs))
+            q.holes
+                .as_mut()?
+                .get_mut(h - 1)
+                .map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs))
         }
     }
 }
@@ -78,16 +107,32 @@ fn no_ring(e: &Entity, (part, ring): (usize, usize)) -> Stop {
         Entity::Polyline(p) | Entity::Polygon(p) => {
             let parts = 1 + p.parts.as_ref().map_or(0, Vec::len);
             if part >= parts {
-                ("part", format!("Nesnenin {parts} parçası var (0'dan): {part}. parça yok."))
+                (
+                    "part",
+                    format!("Nesnenin {parts} parçası var (0'dan): {part}. parça yok."),
+                )
             } else {
                 let holes = match part {
                     0 => p.holes.as_ref().map_or(0, Vec::len),
-                    k => p.parts.as_ref().and_then(|q| q.get(k - 1)).and_then(|q| q.holes.as_ref()).map_or(0, Vec::len),
+                    k => p
+                        .parts
+                        .as_ref()
+                        .and_then(|q| q.get(k - 1))
+                        .and_then(|q| q.holes.as_ref())
+                        .map_or(0, Vec::len),
                 };
-                ("ring", format!("{part}. parçanın {holes} deliği var: {ring}. halka yok (0 dış halka, 1'den delikler)."))
+                (
+                    "ring",
+                    format!(
+                        "{part}. parçanın {holes} deliği var: {ring}. halka yok (0 dış halka, 1'den delikler)."
+                    ),
+                )
             }
         }
-        _ => ("uid", "Nesne çizgi, çoklu çizgi ya da alan değil; kotu eğimle verilemez.".to_owned()),
+        _ => (
+            "uid",
+            "Nesne çizgi, çoklu çizgi ya da alan değil; kotu eğimle verilemez.".to_owned(),
+        ),
     };
     fail(codes::WRONG_PLACE, why, at)
 }
@@ -120,22 +165,48 @@ fn mode(input: &EntitiesGrade) -> Result<Mode, Stop> {
 
 fn number_or_length(why: &str) -> Stop {
     match why {
-        "length" => fail(codes::INVALID_INPUT, "Köşe aralığının yatay uzunluğu sıfır.".into(), "to"),
-        _ => fail(codes::INVALID_INPUT, "Kot ve eğim sonlu sayı olmalı.".into(), "start"),
+        "length" => fail(
+            codes::INVALID_INPUT,
+            "Köşe aralığının yatay uzunluğu sıfır.".into(),
+            "to",
+        ),
+        _ => fail(
+            codes::INVALID_INPUT,
+            "Kot ve eğim sonlu sayı olmalı.".into(),
+            "start",
+        ),
     }
 }
 
 fn check(doc: &Document, input: &EntitiesGrade) -> Result<(Slot, Entity, EntitiesGraded), Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     if !checks::is_uid_text(&input.uid) {
-        return Err(fail(codes::INVALID_UID, format!("“{}” geçerli bir nesne kimliği değil.", input.uid), "uid"));
+        return Err(fail(
+            codes::INVALID_UID,
+            format!("“{}” geçerli bir nesne kimliği değil.", input.uid),
+            "uid",
+        ));
     }
-    let Some((slot, e)) = Uuid::parse_str(&input.uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s).map(|e| (s, e)))
+    let Some((slot, e)) = Uuid::parse_str(&input.uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s).map(|e| (s, e)))
     else {
-        return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{}” kimlikli nesne çizimde yok.", input.uid), "uid"));
+        return Err(fail(
+            codes::ENTITY_NOT_FOUND,
+            format!("“{}” kimlikli nesne çizimde yok.", input.uid),
+            "uid",
+        ));
     };
-    if !matches!(e, Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)) {
-        return Err(fail(codes::NOT_A_PATH, "Nesne çizgi, çoklu çizgi ya da alan değil; kotu eğimle verilemez.".into(), "uid"));
+    if !matches!(
+        e,
+        Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)
+    ) {
+        return Err(fail(
+            codes::NOT_A_PATH,
+            "Nesne çizgi, çoklu çizgi ya da alan değil; kotu eğimle verilemez.".into(),
+            "uid",
+        ));
     }
     let at = (input.part as usize, input.ring as usize);
     let Some((pts, bulges, zs)) = path_of(e, at) else {
@@ -143,7 +214,11 @@ fn check(doc: &Document, input: &EntitiesGrade) -> Result<(Slot, Entity, Entitie
     };
     let (from, to) = (input.from as usize, input.to as usize);
     if !(from < to && to < pts.len()) {
-        let whose = if at == (0, 0) { "nesnenin".to_owned() } else { format!("{}. parçanın {}. halkasının", at.0, at.1) };
+        let whose = if at == (0, 0) {
+            "nesnenin".to_owned()
+        } else {
+            format!("{}. parçanın {}. halkasının", at.0, at.1)
+        };
         return Err(fail(
             codes::WRONG_PLACE,
             format!(
@@ -157,11 +232,19 @@ fn check(doc: &Document, input: &EntitiesGrade) -> Result<(Slot, Entity, Entitie
     }
     let mode = mode(input)?;
     let Some(start) = input.start.or(zs[from]) else {
-        return Err(fail(codes::ELEVATION_MISSING, format!("{}. köşenin kotu yok; başlangıç kotunu (start) verin.", input.from), "start"));
+        return Err(fail(
+            codes::ELEVATION_MISSING,
+            format!(
+                "{}. köşenin kotu yok; başlangıç kotunu (start) verin.",
+                input.from
+            ),
+            "start",
+        ));
     };
     let (next, out) = match mode {
         Mode::Target(target) => {
-            let g = grade(&pts, bulges.as_deref(), from, to, start, target).map_err(number_or_length)?;
+            let g = grade(&pts, bulges.as_deref(), from, to, start, target)
+                .map_err(number_or_length)?;
             let mut next = e.clone();
             match &mut next {
                 Entity::Line(l) => {
@@ -179,12 +262,25 @@ fn check(doc: &Document, input: &EntitiesGrade) -> Result<(Slot, Entity, Entitie
                 }
                 _ => {}
             }
-            let out = EntitiesGraded { length: g.length, start, end: g.end, grade: g.grade, zs: g.zs, back: None, point: None, revision: String::new() };
+            let out = EntitiesGraded {
+                length: g.length,
+                start,
+                end: g.end,
+                grade: g.grade,
+                zs: g.zs,
+                back: None,
+                point: None,
+                revision: String::new(),
+            };
             (next, out)
         }
         Mode::Peak { ahead, back } => {
             let Some(end) = input.end.or(zs[to]) else {
-                return Err(fail(codes::ELEVATION_MISSING, format!("{}. köşenin kotu yok; bitiş kotunu (end) verin.", input.to), "end"));
+                return Err(fail(
+                    codes::ELEVATION_MISSING,
+                    format!("{}. köşenin kotu yok; bitiş kotunu (end) verin.", input.to),
+                    "end",
+                ));
             };
             let g = peak(&pts, bulges.as_deref(), from, to, start, end, ahead, back).map_err(|why| match why {
                 NoPeak::Length => number_or_length("length"),
@@ -225,7 +321,16 @@ fn check(doc: &Document, input: &EntitiesGrade) -> Result<(Slot, Entity, Entitie
                     zs
                 }
             };
-            let out = EntitiesGraded { length: g.length, start, end, grade: ahead, zs, back: Some(back), point: Some(point), revision: String::new() };
+            let out = EntitiesGraded {
+                length: g.length,
+                start,
+                end,
+                grade: ahead,
+                zs,
+                back: Some(back),
+                point: Some(point),
+                revision: String::new(),
+            };
             (next, out)
         }
     };
@@ -233,7 +338,10 @@ fn check(doc: &Document, input: &EntitiesGrade) -> Result<(Slot, Entity, Entitie
     if doc.layers().is_locked(layer) {
         return Err(fail(
             codes::LAYER_LOCKED,
-            format!("“{}” katmanı kilitli: nesnenin kotları değişemez. Kilidi açın.", doc.layers().path(layer)),
+            format!(
+                "“{}” katmanı kilitli: nesnenin kotları değişemez. Kilidi açın.",
+                doc.layers().path(layer)
+            ),
             "uid",
         ));
     }
@@ -300,12 +408,21 @@ fn peaked(
                 part.ms = None;
             }
             q.widths = None;
-            if matches!(e, Entity::Polygon(_)) { Entity::Polygon(q) } else { Entity::Polyline(q) }
+            if matches!(e, Entity::Polygon(_)) {
+                Entity::Polygon(q)
+            } else {
+                Entity::Polyline(q)
+            }
         }
         _ => e.clone(),
     };
     // The added vertex's measure and the edges' widths, as an edit carries them (on a source edge: along it).
-    crate::elevation::carry_measures(&mut next, &crate::elevation::measure_paths(e), &[], Carry::Along);
+    crate::elevation::carry_measures(
+        &mut next,
+        &crate::elevation::measure_paths(e),
+        &[],
+        Carry::Along,
+    );
     if let Some(source) = crate::widths::source(e) {
         crate::widths::carry(&mut next, &[source], None, Carry::Along);
     }
@@ -314,7 +431,10 @@ fn peaked(
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesGrade) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -324,7 +444,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &EntitiesGrade) -> CommandResult<E
     match check(cx.doc, input) {
         Ok((_, _, mut out)) => {
             out.revision = cx.doc.revision().to_string();
-            CommandResult::Completed { output: out, warnings: Vec::new() }
+            CommandResult::Completed {
+                output: out,
+                warnings: Vec::new(),
+            }
         }
         Err(stop) => stop.into(),
     }
@@ -337,9 +460,21 @@ fn write(cx: &mut ExecutionContext<'_>, input: EntitiesGrade) -> CommandResult<E
     };
     cx.doc.update_many(vec![(slot, next)], STEP);
     out.revision = cx.doc.revision().to_string();
-    CommandResult::Completed { output: out, warnings: Vec::new() }
+    CommandResult::Completed {
+        output: out,
+        warnings: Vec::new(),
+    }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: EntitiesGrade) -> CommandResult<EntitiesGraded> {
-    crate::call::recorded(cx, kentos_commands::CAD_ENTITIES_GRADE, kentos_commands::CAD_ENTITIES_GRADE_VERSION, input, write)
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesGrade,
+) -> CommandResult<EntitiesGraded> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_ENTITIES_GRADE,
+        kentos_commands::CAD_ENTITIES_GRADE_VERSION,
+        input,
+        write,
+    )
 }

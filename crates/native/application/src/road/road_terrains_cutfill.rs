@@ -24,10 +24,10 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    AnnotationKind, CommandResult, CommandWarning, CreateOperation, CutFillKind, CutFillLabel, CutFillSection, EntitiesCreate,
-    MOST_COMPARE_SECTIONS,
-    EntityBase, EntityGeometry, HatchPattern, HatchPatternType, MOST_CUTFILL_BANDS, NewObject, RingGeometry, TableAlign,
-    TableEntity, TerrainCutFillZone, TerrainsCutFill, TerrainsCutFilled, TextAlign, Vec2,
+    AnnotationKind, CommandResult, CommandWarning, CreateOperation, CutFillKind, CutFillLabel,
+    CutFillSection, EntitiesCreate, EntityBase, EntityGeometry, HatchPattern, HatchPatternType,
+    MOST_COMPARE_SECTIONS, MOST_CUTFILL_BANDS, NewObject, RingGeometry, TableAlign, TableEntity,
+    TerrainCutFillZone, TerrainsCutFill, TerrainsCutFilled, TextAlign, Vec2,
 };
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arrangement::Ring;
@@ -56,7 +56,10 @@ struct Checked {
 }
 
 fn triangles(s: &Surface) -> Vec<Triangle> {
-    s.triangles.iter().map(|t| t.map(|i| s.vertices[i as usize])).collect()
+    s.triangles
+        .iter()
+        .map(|t| t.map(|i| s.vertices[i as usize]))
+        .collect()
 }
 
 /// A number as Rust writes an f64 (the shortest that reads back the same).
@@ -66,7 +69,11 @@ fn num(v: f64) -> String {
 
 /// Checks `input`, `told` the overlay and the bands (`kentos_road::volume_zones::cut_fill_told`) and answering whether
 /// to stop (docs/adr/4040).
-fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
+fn check(
+    doc: &kentos_domain::Document,
+    input: &TerrainsCutFill,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Checked, Stop> {
     terrains::terrain_project(doc)?;
     let warnings = checks::layer(doc, &input.layer_id)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -75,20 +82,37 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
     {
         return Err(fail(
             codes::INVALID_ANALYSIS,
-            "Aralık 0'dan büyük bir sayı olmalı (m); bantsız kazı ve dolgu için boş bırakın.".into(),
+            "Aralık 0'dan büyük bir sayı olmalı (m); bantsız kazı ve dolgu için boş bırakın."
+                .into(),
             "interval",
         ));
     }
     // Docs/adr/4760: the sections' interval and widths, the materials' names and factors.
     if let Some(s) = &input.sections {
         if !(s.interval.is_finite() && s.interval > 0.0) {
-            return Err(fail(codes::INVALID_ANALYSIS, "Kesit aralığı 0'dan büyük bir uzunluk olmalı.".into(), "sections.interval"));
+            return Err(fail(
+                codes::INVALID_ANALYSIS,
+                "Kesit aralığı 0'dan büyük bir uzunluk olmalı.".into(),
+                "sections.interval",
+            ));
         }
-        if !(s.left.is_finite() && s.right.is_finite() && s.left >= 0.0 && s.right >= 0.0 && s.left + s.right > 0.0) {
-            return Err(fail(codes::INVALID_ANALYSIS, compare::WIDTHS.into(), "sections.left"));
+        if !(s.left.is_finite()
+            && s.right.is_finite()
+            && s.left >= 0.0
+            && s.right >= 0.0
+            && s.left + s.right > 0.0)
+        {
+            return Err(fail(
+                codes::INVALID_ANALYSIS,
+                compare::WIDTHS.into(),
+                "sections.left",
+            ));
         }
         // Docs/adr/5140: the Brückner value's factors.
-        for (v, at) in [(s.cut_factor, "sections.cutFactor"), (s.fill_factor, "sections.fillFactor")] {
+        for (v, at) in [
+            (s.cut_factor, "sections.cutFactor"),
+            (s.fill_factor, "sections.fillFactor"),
+        ] {
             if v.is_some_and(|f| !(f.is_finite() && f > 0.0 && f <= 10.0)) {
                 return Err(fail(
                     codes::INVALID_ANALYSIS,
@@ -115,13 +139,29 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
             "comparison",
         ));
     }
-    let axis = input.sections.as_ref().map(|s| compare::axis_of(doc, &s.axis, "sections.axis")).transpose()?;
+    let axis = input
+        .sections
+        .as_ref()
+        .map(|s| compare::axis_of(doc, &s.axis, "sections.axis"))
+        .transpose()?;
     let regions = compare::zone_regions_at(doc, &input.materials, "materials")?;
-    let def = |id: &str| terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled);
+    let def = |id: &str| {
+        terrains::surfaces(doc)
+            .iter()
+            .find(|s| s.id == id)
+            .cloned()
+            .ok_or(Stop::Cancelled)
+    };
     let (b, c) = (def(&base)?, def(&comparison)?);
     let (made_b, made_c) = (terrains::make(doc, &b), terrains::make(doc, &c));
     let (sb, sc) = (made_b.built()?, made_c.built()?);
-    let z = match cut_fill_told(&triangles(sc), &triangles(sb), input.interval, MOST_CUTFILL_BANDS, told) {
+    let z = match cut_fill_told(
+        &triangles(sc),
+        &triangles(sb),
+        input.interval,
+        MOST_CUTFILL_BANDS,
+        told,
+    ) {
         Ok(Some(z)) => z,
         Ok(None) => return Err(Stop::Cancelled),
         Err(TooManyBands(n)) => {
@@ -166,13 +206,26 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
     let materials = if input.materials.is_empty() {
         Vec::new()
     } else {
-        compare::zone_volumes(&triangles(sc), &triangles(sb), &input.materials, &regions, (1.0, 1.0), "materials", &mut warnings)
+        compare::zone_volumes(
+            &triangles(sc),
+            &triangles(sb),
+            &input.materials,
+            &regions,
+            (1.0, 1.0),
+            "materials",
+            &mut warnings,
+        )
     };
-    let material_labels: Vec<CutFillLabel> =
-        materials.iter().zip(&regions).filter_map(|(m, r)| sections_draw::material_label(m, r)).collect();
+    let material_labels: Vec<CutFillLabel> = materials
+        .iter()
+        .zip(&regions)
+        .filter_map(|(m, r)| sections_draw::material_label(m, r))
+        .collect();
     let start = input.sections.as_ref().and_then(|s| s.start).unwrap_or(0.0);
     // Docs/adr/5140: the Brückner value, the running cut times its swell less the running fill times its factor.
-    let (kc, kf) = input.sections.as_ref().map_or((1.0, 1.0), |s| (s.cut_factor.unwrap_or(1.0), s.fill_factor.unwrap_or(1.0)));
+    let (kc, kf) = input.sections.as_ref().map_or((1.0, 1.0), |s| {
+        (s.cut_factor.unwrap_or(1.0), s.fill_factor.unwrap_or(1.0))
+    });
     let (mut run_cut, mut run_fill) = (0.0, 0.0);
     let sections: Vec<CutFillSection> = sectioned.as_ref().map_or_else(Vec::new, |s| {
         s.rows
@@ -185,8 +238,14 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
                 ends: [r.left, r.right],
                 cut_area: r.cut,
                 fill_area: r.fill,
-                cut_volume: k.checked_sub(1).and_then(|j| s.between.get(j)).map(|b| b[0]),
-                fill_volume: k.checked_sub(1).and_then(|j| s.between.get(j)).map(|b| b[1]),
+                cut_volume: k
+                    .checked_sub(1)
+                    .and_then(|j| s.between.get(j))
+                    .map(|b| b[0]),
+                fill_volume: k
+                    .checked_sub(1)
+                    .and_then(|j| s.between.get(j))
+                    .map(|b| b[1]),
                 mass: k.checked_sub(1).and_then(|j| s.between.get(j)).map(|b| {
                     run_cut += b[0];
                     run_fill += b[1];
@@ -200,8 +259,14 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
         .zones
         .into_iter()
         .map(|zone| {
-            let kind = if zone.band < 0 { CutFillKind::Cut } else { CutFillKind::Fill };
-            let band = input.interval.map(|i| (zone.band as f64 * i, (zone.band + 1) as f64 * i));
+            let kind = if zone.band < 0 {
+                CutFillKind::Cut
+            } else {
+                CutFillKind::Fill
+            };
+            let band = input
+                .interval
+                .map(|i| (zone.band as f64 * i, (zone.band + 1) as f64 * i));
             TerrainCutFillZone {
                 kind,
                 from: band.map(|b| b.0),
@@ -255,7 +320,12 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
                 .out
                 .zones
                 .iter()
-                .filter_map(|z| label_at(z).map(|at| CutFillLabel { at, text: label_text(z) }))
+                .filter_map(|z| {
+                    label_at(z).map(|at| CutFillLabel {
+                        at,
+                        text: label_text(z),
+                    })
+                })
                 .collect();
         }
         if input.table.unwrap_or(false) {
@@ -269,7 +339,15 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
             }
         }
         if input.depths.unwrap_or(false) {
-            c.out.depths = c.out.zones.iter().map(|z| CutFillLabel { at: z.deepest, text: depth_text(z) }).collect();
+            c.out.depths = c
+                .out
+                .zones
+                .iter()
+                .map(|z| CutFillLabel {
+                    at: z.deepest,
+                    text: depth_text(z),
+                })
+                .collect();
         }
         c
     })
@@ -277,22 +355,49 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsCutFill, told: &dyn Fn(u
 
 /// A zone's words: its kind and its volume to two decimals (m³).
 fn label_text(z: &TerrainCutFillZone) -> String {
-    format!("{} {:.2} m³", if z.kind == CutFillKind::Cut { "Kazı" } else { "Dolgu" }, z.volume)
+    format!(
+        "{} {:.2} m³",
+        if z.kind == CutFillKind::Cut {
+            "Kazı"
+        } else {
+            "Dolgu"
+        },
+        z.volume
+    )
 }
 
 /// A zone's deepest place's words (docs/adr/2740): the cut's depth, the fill's height, to two decimals (m).
 fn depth_text(z: &TerrainCutFillZone) -> String {
-    format!("{} {:.2} m", if z.kind == CutFillKind::Cut { "derinlik" } else { "yükseklik" }, z.depth)
+    format!(
+        "{} {:.2} m",
+        if z.kind == CutFillKind::Cut {
+            "derinlik"
+        } else {
+            "yükseklik"
+        },
+        z.depth
+    )
 }
 
 /// A zone's label place: the core's interior point of its rings.
 fn label_at(z: &TerrainCutFillZone) -> Option<[f64; 2]> {
-    let v = |r: &[[f64; 2]]| r.iter().map(|p| kentos_geometry_core::vec2::Vec2::new(p[0], p[1])).collect::<Vec<_>>();
+    let v = |r: &[[f64; 2]]| {
+        r.iter()
+            .map(|p| kentos_geometry_core::vec2::Vec2::new(p[0], p[1]))
+            .collect::<Vec<_>>()
+    };
     let shape = Shape::Polygon {
         pts: v(&z.ring),
         bulges: None,
-        holes: (!z.holes.is_empty())
-            .then(|| z.holes.iter().map(|h| Ring { pts: v(h), bulges: None }).collect()),
+        holes: (!z.holes.is_empty()).then(|| {
+            z.holes
+                .iter()
+                .map(|h| Ring {
+                    pts: v(h),
+                    bulges: None,
+                })
+                .collect()
+        }),
         parts: None,
     };
     interior_point(&shape).map(|p| [p.x, p.y])
@@ -304,12 +409,31 @@ fn table_cells(out: &TerrainsCutFilled) -> Vec<Vec<String>> {
     let banded = out.interval.is_some();
     let two = |v: f64| format!("{v:.2}");
     let mut rows = vec![if banded {
-        ["Bölge", "Tür", "Alt (m)", "Üst (m)", "Alan (m²)", "Hacim (m³)"].map(String::from).to_vec()
+        [
+            "Bölge",
+            "Tür",
+            "Alt (m)",
+            "Üst (m)",
+            "Alan (m²)",
+            "Hacim (m³)",
+        ]
+        .map(String::from)
+        .to_vec()
     } else {
-        ["Bölge", "Tür", "Alan (m²)", "Hacim (m³)"].map(String::from).to_vec()
+        ["Bölge", "Tür", "Alan (m²)", "Hacim (m³)"]
+            .map(String::from)
+            .to_vec()
     }];
     for (k, z) in out.zones.iter().enumerate() {
-        let mut row = vec![(k + 1).to_string(), if z.kind == CutFillKind::Cut { "Kazı" } else { "Dolgu" }.to_owned()];
+        let mut row = vec![
+            (k + 1).to_string(),
+            if z.kind == CutFillKind::Cut {
+                "Kazı"
+            } else {
+                "Dolgu"
+            }
+            .to_owned(),
+        ];
         if banded {
             row.push(z.from.map(two).unwrap_or_default());
             row.push(z.to.map(two).unwrap_or_default());
@@ -319,9 +443,11 @@ fn table_cells(out: &TerrainsCutFilled) -> Vec<Vec<String>> {
         rows.push(row);
     }
     let blank = if banded { 3 } else { 1 };
-    for (name, area, volume) in
-        [("Kazı", Some(out.cut_area), out.cut), ("Dolgu", Some(out.fill_area), out.fill), ("Net (dolgu − kazı)", None, out.net)]
-    {
+    for (name, area, volume) in [
+        ("Kazı", Some(out.cut_area), out.cut),
+        ("Dolgu", Some(out.fill_area), out.fill),
+        ("Net (dolgu − kazı)", None, out.net),
+    ] {
         let mut row = vec![name.to_owned()];
         row.extend(std::iter::repeat_n(String::new(), blank));
         row.push(area.map(two).unwrap_or_default());
@@ -333,14 +459,29 @@ fn table_cells(out: &TerrainsCutFilled) -> Vec<Vec<String>> {
 
 /// A zone's transparency: without bands one half; with bands, on each side the band at zero 0.75, the deepest 0.25.
 fn transparency(out: &TerrainsCutFilled, zone: &TerrainCutFillZone) -> f64 {
-    let (Some(i), Some(from)) = (out.interval, zone.from) else { return 0.5 };
+    let (Some(i), Some(from)) = (out.interval, zone.from) else {
+        return 0.5;
+    };
     let band = (from / i).round();
-    let side: Vec<f64> = out.zones.iter().filter(|z| z.kind == zone.kind).filter_map(|z| z.from).map(|f| (f / i).round()).collect();
+    let side: Vec<f64> = out
+        .zones
+        .iter()
+        .filter(|z| z.kind == zone.kind)
+        .filter_map(|z| z.from)
+        .map(|f| (f / i).round())
+        .collect();
     let (depth, deepest) = match zone.kind {
-        CutFillKind::Cut => (-band - 1.0, side.iter().map(|b| -b - 1.0).fold(0.0, f64::max)),
+        CutFillKind::Cut => (
+            -band - 1.0,
+            side.iter().map(|b| -b - 1.0).fold(0.0, f64::max),
+        ),
         CutFillKind::Fill => (band, side.iter().copied().fold(0.0, f64::max)),
     };
-    if deepest > 0.0 { 0.75 - 0.5 * depth / deepest } else { 0.5 }
+    if deepest > 0.0 {
+        0.75 - 0.5 * depth / deepest
+    } else {
+        0.5
+    }
 }
 
 /// A bare object: its geometry alone.
@@ -373,7 +514,10 @@ fn annotations(doc: &kentos_domain::Document, out: &TerrainsCutFilled) -> Vec<Ne
             bare(EntityGeometry::Text {
                 layout: None,
                 annotative: None,
-                p: Vec2 { x: l.at[0], y: l.at[1] },
+                p: Vec2 {
+                    x: l.at[0],
+                    y: l.at[1],
+                },
                 text: l.text.clone(),
                 height: text,
                 rotation: 0.0,
@@ -390,11 +534,21 @@ fn annotations(doc: &kentos_domain::Document, out: &TerrainsCutFilled) -> Vec<Ne
         .collect();
     // docs/adr/2740: each zone's deepest place, a point and its words beside it, half a text's height right.
     for d in &out.depths {
-        objects.push(bare(EntityGeometry::Point { p: Vec2 { x: d.at[0], y: d.at[1] }, z: None, parts: None }));
+        objects.push(bare(EntityGeometry::Point {
+            p: Vec2 {
+                x: d.at[0],
+                y: d.at[1],
+            },
+            z: None,
+            parts: None,
+        }));
         objects.push(bare(EntityGeometry::Text {
             layout: None,
             annotative: None,
-            p: Vec2 { x: d.at[0] + text / 2.0, y: d.at[1] },
+            p: Vec2 {
+                x: d.at[0] + text / 2.0,
+                y: d.at[1],
+            },
             text: d.text.clone(),
             height: text,
             rotation: 0.0,
@@ -417,7 +571,15 @@ fn annotations(doc: &kentos_domain::Document, out: &TerrainsCutFilled) -> Vec<Ne
     let x1 = sections_draw::right_edge(out, text);
     let h = settings.annotation_height(AnnotationKind::Table);
     let columns = out.table.first().map_or(0, Vec::len);
-    let aligns: Vec<TableAlign> = (0..columns).map(|j| if j < 2 { TableAlign::Left } else { TableAlign::Right }).collect();
+    let aligns: Vec<TableAlign> = (0..columns)
+        .map(|j| {
+            if j < 2 {
+                TableAlign::Left
+            } else {
+                TableAlign::Right
+            }
+        })
+        .collect();
     let mut t = TableEntity {
         base: EntityBase {
             look: Default::default(),
@@ -431,7 +593,10 @@ fn annotations(doc: &kentos_domain::Document, out: &TerrainsCutFilled) -> Vec<Ne
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        p: Vec2 { x: x1 + 2.0 * h, y: y1 },
+        p: Vec2 {
+            x: x1 + 2.0 * h,
+            y: y1,
+        },
         rotation: 0.0,
         height: h,
         rows: Vec::new(),
@@ -475,13 +640,20 @@ fn annotations(doc: &kentos_domain::Document, out: &TerrainsCutFilled) -> Vec<Ne
 
 /// Each zone's hatch, then its closed area.
 fn objects(out: &TerrainsCutFilled, names: &(String, String)) -> Vec<NewObject> {
-    let pts = |r: &[[f64; 2]]| r.iter().map(|p| Vec2 { x: p[0], y: p[1] }).collect::<Vec<Vec2>>();
+    let pts = |r: &[[f64; 2]]| {
+        r.iter()
+            .map(|p| Vec2 { x: p[0], y: p[1] })
+            .collect::<Vec<Vec2>>()
+    };
     out.zones
         .iter()
         .flat_map(|z| {
             let cut = z.kind == CutFillKind::Cut;
             let mut attrs = BTreeMap::from([
-                ("Tür".to_owned(), if cut { "Kazı" } else { "Dolgu" }.to_owned()),
+                (
+                    "Tür".to_owned(),
+                    if cut { "Kazı" } else { "Dolgu" }.to_owned(),
+                ),
                 ("Alan (m²)".to_owned(), num(z.area)),
                 ("Hacim (m³)".to_owned(), num(z.volume)),
                 ("Taban".to_owned(), names.0.clone()),
@@ -516,12 +688,23 @@ fn objects(out: &TerrainsCutFilled, names: &(String, String)) -> Vec<NewObject> 
             let area = EntityGeometry::Polygon {
                 pts: pts(&z.ring),
                 bulges: None,
-                holes: (!z.holes.is_empty())
-                    .then(|| z.holes.iter().map(|h| RingGeometry { pts: pts(h), bulges: None, zs: None }).collect()),
+                holes: (!z.holes.is_empty()).then(|| {
+                    z.holes
+                        .iter()
+                        .map(|h| RingGeometry {
+                            pts: pts(h),
+                            bulges: None,
+                            zs: None,
+                        })
+                        .collect()
+                }),
                 zs: None,
                 parts: None,
             };
-            [object(hatch, Some(transparency(out, z))), object(area, None)]
+            [
+                object(hatch, Some(transparency(out, z))),
+                object(area, None),
+            ]
         })
         .collect()
 }
@@ -529,28 +712,43 @@ fn objects(out: &TerrainsCutFilled, names: &(String, String)) -> Vec<NewObject> 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsCutFill) -> CommandResult<()> {
     match check(cx.doc, input, &cx.stop_only()) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The zones execute would write; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsCutFill) -> CommandResult<TerrainsCutFilled> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &TerrainsCutFill,
+) -> CommandResult<TerrainsCutFilled> {
     match check(cx.doc, input, &cx.stop_only()) {
-        Ok(c) => CommandResult::Completed { output: c.out, warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: c.out,
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3, 1720).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &TerrainsCutFill) -> CommandResult<TerrainsCutFilled> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &TerrainsCutFill,
+) -> CommandResult<TerrainsCutFilled> {
     write(cx, input.clone())
 }
 
 /// Writes the zones, one undo step “Kazı ve dolgu bölgeleri”, and keeps the drawing with both surfaces' stamps: the
 /// project's tree says when a surface changed since, and `road.project.rebuild` draws it again.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsCutFill) -> CommandResult<TerrainsCutFilled> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsCutFill,
+) -> CommandResult<TerrainsCutFilled> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_TERRAINS_CUTFILL,
@@ -570,7 +768,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsCutFill) -> Command
     )
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: TerrainsCutFill) -> CommandResult<TerrainsCutFilled> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsCutFill,
+) -> CommandResult<TerrainsCutFilled> {
     let c = match check(cx.doc, &input, &cx.told()) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -585,11 +786,26 @@ fn write(cx: &mut ExecutionContext<'_>, input: TerrainsCutFill) -> CommandResult
         expected_revision: None,
     };
     // The check's own warnings (docs/adr/4760: a material off the surfaces); the layer's come from the write.
-    let own: Vec<CommandWarning> = c.warnings.iter().filter(|w| w.code == codes::COMPARE_UNCOVERED).cloned().collect();
+    let own: Vec<CommandWarning> = c
+        .warnings
+        .iter()
+        .filter(|w| w.code == codes::COMPARE_UNCOVERED)
+        .cloned()
+        .collect();
     match crate::create::write_in(cx, create) {
-        CommandResult::Completed { output, mut warnings } => {
+        CommandResult::Completed {
+            output,
+            mut warnings,
+        } => {
             warnings.extend(own);
-            CommandResult::Completed { output: TerrainsCutFilled { uids: output.created, revision: output.revision, ..c.out }, warnings }
+            CommandResult::Completed {
+                output: TerrainsCutFilled {
+                    uids: output.created,
+                    revision: output.revision,
+                    ..c.out
+                },
+                warnings,
+            }
         }
         other => crate::trim::relay(other),
     }
@@ -606,11 +822,15 @@ mod tests {
 
     /// The shared cases' project and their first case's input.
     fn project() -> (kentos_domain::Document, kentos_commands::TerrainsCutFill) {
-        let cases: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.terrains.cutfill.json")).expect("cases");
-        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let cases: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/commands/v1/road.terrains.cutfill.json"
+        ))
+        .expect("cases");
+        let snapshot: DocumentSnapshotV2 =
+            serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
         let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
-        let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+        let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone())
+            .expect("an input");
         (doc, input)
     }
 
@@ -626,9 +846,16 @@ mod tests {
         assert!(whole.is_ok());
         let seen = seen.into_inner();
         assert!(seen.len() > 4, "{} ticks", seen.len());
-        assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1), "{seen:?}");
+        assert!(
+            seen.windows(2)
+                .all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1),
+            "{seen:?}"
+        );
         let half = kentos_road::volume_zones::HALF;
-        assert!(seen.iter().any(|t| t.0 < half) && seen.iter().any(|t| t.0 >= half), "{seen:?}");
+        assert!(
+            seen.iter().any(|t| t.0 < half) && seen.iter().any(|t| t.0 >= half),
+            "{seen:?}"
+        );
         assert!(seen.iter().all(|t| t.1 == 2 * half), "{seen:?}");
         let asked = Cell::new(0);
         let stopped = check(&doc, &input, &|_, _| {

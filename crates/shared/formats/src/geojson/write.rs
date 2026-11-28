@@ -259,8 +259,14 @@ impl<W: std::io::Write> Stream<W> {
     ) -> Self {
         let mut s = Stream {
             out,
-            fields: layers.iter().map(|l| (l.id.clone(), l.fields.clone())).collect(),
-            names: layers.iter().map(|l| (l.id.clone(), l.name.clone())).collect(),
+            fields: layers
+                .iter()
+                .map(|l| (l.id.clone(), l.fields.clone()))
+                .collect(),
+            names: layers
+                .iter()
+                .map(|l| (l.id.clone(), l.name.clone()))
+                .collect(),
             wgs84,
             blocks,
             rep: Report::default(),
@@ -359,7 +365,11 @@ impl<W: std::io::Write> Stream<W> {
         }
         self.first = false;
         out.push_str("{\"type\":\"Feature\",\"properties\":{");
-        let own = self.fields.get(b.layer_id.as_str()).map(Vec::as_slice).unwrap_or_default();
+        let own = self
+            .fields
+            .get(b.layer_id.as_str())
+            .map(Vec::as_slice)
+            .unwrap_or_default();
         for (i, (k, v)) in b.attrs.iter().enumerate() {
             if i > 0 {
                 out.push(',');

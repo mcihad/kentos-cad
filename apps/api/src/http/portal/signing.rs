@@ -6,7 +6,9 @@ use axum::Json;
 use axum::extract::{Path, State};
 use axum::http::{HeaderMap, StatusCode};
 use kentos_application::portal::signing::{self, SigningDelivery};
-use kentos_contracts::{DossierSignatureView, SigningRequestCreate, SigningRequestCreated, SigningTrust, SigningVerdict};
+use kentos_contracts::{
+    DossierSignatureView, SigningRequestCreate, SigningRequestCreated, SigningTrust, SigningVerdict,
+};
 
 use super::path_id;
 use crate::http::AppState;
@@ -14,7 +16,11 @@ use crate::http::auth::Caller;
 use crate::http::error::{Body, Failure};
 
 /// `GET /v1/signing/trust`: the server's public key and names, for the signing service's setup and the desktop.
-pub async fn trust(State(state): State<AppState>, headers: HeaderMap, _caller: Caller) -> Result<Json<SigningTrust>, Failure> {
+pub async fn trust(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    _caller: Caller,
+) -> Result<Json<SigningTrust>, Failure> {
     state
         .config
         .signing
@@ -33,9 +39,19 @@ pub async fn request(
 ) -> Result<(StatusCode, Json<SigningRequestCreated>), Failure> {
     let run = async {
         let id = path_id(&id, "Dosya")?;
-        signing::request(state.db()?, &state.blobs, state.config.signing.as_deref(), &caller.0, id, &input).await
+        signing::request(
+            state.db()?,
+            &state.blobs,
+            state.config.signing.as_deref(),
+            &caller.0,
+            id,
+            &input,
+        )
+        .await
     };
-    run.await.map(|r| (StatusCode::CREATED, Json(r))).map_err(|e| Failure::with(e, &headers))
+    run.await
+        .map(|r| (StatusCode::CREATED, Json(r)))
+        .map_err(|e| Failure::with(e, &headers))
 }
 
 /// `POST /v1/signing/{transaction}/result`: the signing service's result as it gave it.
@@ -60,8 +76,17 @@ pub async fn cancel(
     caller: Caller,
     Path(transaction): Path<String>,
 ) -> Result<StatusCode, Failure> {
-    let run = async { signing::cancel(state.db()?, &caller.0, path_id(&transaction, "İmza isteği")?).await };
-    run.await.map(|()| StatusCode::NO_CONTENT).map_err(|e| Failure::with(e, &headers))
+    let run = async {
+        signing::cancel(
+            state.db()?,
+            &caller.0,
+            path_id(&transaction, "İmza isteği")?,
+        )
+        .await
+    };
+    run.await
+        .map(|()| StatusCode::NO_CONTENT)
+        .map_err(|e| Failure::with(e, &headers))
 }
 
 /// `GET /v1/dossiers/{id}/signatures`.

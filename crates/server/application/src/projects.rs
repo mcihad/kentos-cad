@@ -317,7 +317,9 @@ pub fn check_casework(runs: &[kentos_contracts::CaseworkRecord], path: &str) -> 
 }
 
 /// The kitchen runs as a column holds them: none when there are none.
-pub(crate) fn casework_value(runs: &[kentos_contracts::CaseworkRecord]) -> AppResult<Option<Value>> {
+pub(crate) fn casework_value(
+    runs: &[kentos_contracts::CaseworkRecord],
+) -> AppResult<Option<Value>> {
     if runs.is_empty() {
         return Ok(None);
     }
@@ -467,7 +469,9 @@ pub fn storage_name(storage: ProjectStorage) -> &'static str {
 /// CAD type's (`cad`, `architecture`, `zoningPlan`, `landReadjustment`, `subdivision`, `road`) whole project is its
 /// file's revisions; a CBS project's is the database's. A type no module has keeps the database's, as before.
 pub fn storage_of_type(project_type: ProjectType) -> ProjectStorage {
-    match kentos_launch::Module::of_project_type(project_type.name()).map(kentos_launch::Module::storage) {
+    match kentos_launch::Module::of_project_type(project_type.name())
+        .map(kentos_launch::Module::storage)
+    {
         Some(kentos_launch::Storage::File) => ProjectStorage::File,
         Some(kentos_launch::Storage::Database) | None => ProjectStorage::Database,
     }
@@ -476,7 +480,11 @@ pub fn storage_of_type(project_type: ProjectType) -> ProjectStorage {
 /// The storage a new or converted project of `project_type` is kept in: its type's, asked for or not; the other one is
 /// refused with the reason (docs/adr/9196 §2): a CAD type's whole project is its file, a CBS project's data its
 /// database.
-pub fn check_storage(project_type: ProjectType, asked: Option<ProjectStorage>, path: &str) -> AppResult<ProjectStorage> {
+pub fn check_storage(
+    project_type: ProjectType,
+    asked: Option<ProjectStorage>,
+    path: &str,
+) -> AppResult<ProjectStorage> {
     let own = storage_of_type(project_type);
     match asked {
         None => Ok(own),
@@ -821,9 +829,12 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
         return Err(gone(&name));
     }
     let bad = |e: serde_json::Error| AppError::invalid(format!("Proje kaydı okunamadı: {e}"));
-    let mut settings: kentos_contracts::ProjectSettings = serde_json::from_value(settings).map_err(bad)?;
-    let mut sheets: Option<kentos_contracts::ProjectSheets> =
-        sheets.map(serde_json::from_value).transpose().map_err(bad)?;
+    let mut settings: kentos_contracts::ProjectSettings =
+        serde_json::from_value(settings).map_err(bad)?;
+    let mut sheets: Option<kentos_contracts::ProjectSheets> = sheets
+        .map(serde_json::from_value)
+        .transpose()
+        .map_err(bad)?;
     // The künye's personal particulars only to whoever works on the objects (docs/adr/8100).
     if !access.sees_particulars() {
         settings.cut_particulars();
@@ -1012,21 +1023,30 @@ pub(crate) async fn require_whole_copy(
 /// A stored copy (a file project's revision, a checkpoint) for `access` (docs/adr/8100): refused when the caller reads
 /// the künye's personal particulars cut and the copy carries any, read from its bytes as they are. A stored copy is not
 /// cut (docs/adr/0550 §3). The file is left at its start.
-pub(crate) async fn require_particulars(access: &ProjectAccess, file: &mut tokio::fs::File) -> AppResult<()> {
+pub(crate) async fn require_particulars(
+    access: &ProjectAccess,
+    file: &mut tokio::fs::File,
+) -> AppResult<()> {
     use tokio::io::{AsyncReadExt as _, AsyncSeekExt as _};
     if access.sees_particulars() {
         return Ok(());
     }
     let mut bytes = Vec::new();
-    file.read_to_end(&mut bytes).await.map_err(AppError::Storage)?;
-    file.seek(std::io::SeekFrom::Start(0)).await.map_err(AppError::Storage)?;
+    file.read_to_end(&mut bytes)
+        .await
+        .map_err(AppError::Storage)?;
+    file.seek(std::io::SeekFrom::Start(0))
+        .await
+        .map_err(AppError::Storage)?;
     let _turn = crate::files::verifying()
         .acquire()
         .await
         .map_err(|e| AppError::Storage(std::io::Error::other(e)))?;
     let carries = tokio::task::spawn_blocking(move || {
-        kentos_kcad::decode(&bytes)
-            .map(|doc| doc.settings.has_particulars() || doc.sheets.as_ref().is_some_and(|s| s.has_particulars()))
+        kentos_kcad::decode(&bytes).map(|doc| {
+            doc.settings.has_particulars()
+                || doc.sheets.as_ref().is_some_and(|s| s.has_particulars())
+        })
     })
     .await
     .map_err(|e| AppError::Storage(std::io::Error::other(e)))?
@@ -1611,7 +1631,10 @@ mod tests {
         assert!(e.to_string().contains("iki kez yazılmış"), "{e}");
         let e = check_profile_files(&[file(ProfileFileKind::Profile, "Park")], AT)
             .expect_err("a name the rule refuses");
-        assert!(e.to_string().contains("profil ya da eşleme adı olamaz"), "{e}");
+        assert!(
+            e.to_string().contains("profil ya da eşleme adı olamaz"),
+            "{e}"
+        );
     }
 
     #[test]

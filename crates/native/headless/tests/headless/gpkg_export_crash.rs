@@ -26,21 +26,32 @@ fn points(k: u32) -> u32 {
 /// The objects the fixture's active layer holds already: every version's table has them too.
 fn already() -> u32 {
     let s = Session::open(&fixture()).expect("the fixture opens");
-    let layer = s.summary()["activeLayer"].as_str().expect("a layer").to_owned();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
     s.document().by_layer(&layer).count() as u32
 }
 
 /// Version `k`: the fixture with [`points`]`(k)` points more on its active layer; the session and that layer.
 fn version(k: u32) -> (Session, String) {
     let mut s = Session::open(&fixture()).expect("the fixture opens");
-    let layer = s.summary()["activeLayer"].as_str().expect("a layer").to_owned();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
     let objects: Vec<_> = (0..points(k))
         .map(|i| {
             json!({"geometry": {"kind": "point", "p": {"x": 500000.0 + f64::from(i % 300), "y": 4400000.0 + f64::from(i / 300)}}})
         })
         .collect();
     let answer = s
-        .run("cad.entities.create", None, Op::Execute, json!({"layerId": layer, "objects": objects}))
+        .run(
+            "cad.entities.create",
+            None,
+            Op::Execute,
+            json!({"layerId": layer, "objects": objects}),
+        )
         .expect("runs");
     assert_eq!(answer["status"], "completed", "{answer}");
     (s, layer)
@@ -48,9 +59,10 @@ fn version(k: u32) -> (Session, String) {
 
 /// The point layer of `s` written to `target` over what is there, as `file.export.gpkg` writes it.
 fn deliver(s: &Session, layer: &str, target: &Path) {
-    let input: kentos_commands::ExportGpkg =
-        serde_json::from_value(json!({"path": target.display().to_string(), "layers": [layer], "overwrite": true}))
-            .expect("an input");
+    let input: kentos_commands::ExportGpkg = serde_json::from_value(
+        json!({"path": target.display().to_string(), "layers": [layer], "overwrite": true}),
+    )
+    .expect("an input");
     kentos_headless::file_commands::export_gpkg(s.document(), &input).expect("written");
 }
 
@@ -75,12 +87,22 @@ fn gpkg_export_crash_child() {
 fn read(path: &Path) -> Result<(String, i64), String> {
     let gp = kentos_geopackage::GeoPackage::open(path, false).map_err(|e| e.0)?;
     let c = gp.connection();
-    let check: String = c.query_row("PRAGMA integrity_check", [], |r| r.get(0)).map_err(|e| e.to_string())?;
+    let check: String = c
+        .query_row("PRAGMA integrity_check", [], |r| r.get(0))
+        .map_err(|e| e.to_string())?;
     let table: String = c
-        .query_row("SELECT table_name FROM gpkg_contents WHERE data_type = 'features'", [], |r| r.get(0))
+        .query_row(
+            "SELECT table_name FROM gpkg_contents WHERE data_type = 'features'",
+            [],
+            |r| r.get(0),
+        )
         .map_err(|e| e.to_string())?;
     let n: i64 = c
-        .query_row(&format!("SELECT count(*) FROM \"{table}\" WHERE geom IS NOT NULL"), [], |r| r.get(0))
+        .query_row(
+            &format!("SELECT count(*) FROM \"{table}\" WHERE geom IS NOT NULL"),
+            [],
+            |r| r.get(0),
+        )
         .map_err(|e| e.to_string())?;
     Ok((check, n))
 }
@@ -114,14 +136,27 @@ fn a_killed_delivery_leaves_a_whole_geopackage_under_the_name() {
     let base = already();
     let (original, layer) = version(0);
     deliver(&original, &layer, &target);
-    assert_eq!(whole(&target, base), Some(0), "the original delivery: {:?}", read(&target));
+    assert_eq!(
+        whole(&target, base),
+        Some(0),
+        "the original delivery: {:?}",
+        read(&target)
+    );
     let exe = std::env::current_exe().expect("the test binary");
     let mut seen = std::collections::BTreeSet::new();
-    for (round, wait_ms) in [5u64, 120, 260, 410, 590, 780, 990, 1210, 1460, 1720].into_iter().enumerate() {
+    for (round, wait_ms) in [5u64, 120, 260, 410, 590, 780, 990, 1210, 1460, 1720]
+        .into_iter()
+        .enumerate()
+    {
         let ready = target.with_extension("ready");
         let _ = std::fs::remove_file(&ready);
         let mut child = std::process::Command::new(&exe)
-            .args(["gpkg_export_crash::gpkg_export_crash_child", "--exact", "--nocapture", "--test-threads=1"])
+            .args([
+                "gpkg_export_crash::gpkg_export_crash_child",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+            ])
             .env(CHILD, &target)
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
@@ -129,19 +164,33 @@ fn a_killed_delivery_leaves_a_whole_geopackage_under_the_name() {
             .expect("the child starts");
         let start = Instant::now();
         while !ready.exists() {
-            assert!(start.elapsed() < Duration::from_secs(180), "the child never got ready");
+            assert!(
+                start.elapsed() < Duration::from_secs(180),
+                "the child never got ready"
+            );
             std::thread::sleep(Duration::from_millis(5));
         }
         std::thread::sleep(Duration::from_millis(wait_ms));
         child.kill().expect("SIGKILL");
         let _ = child.wait();
         let which = whole(&target, base);
-        assert!(which.is_some(), "round {round}: the file under the name is not a whole delivery: {:?}", read(&target));
+        assert!(
+            which.is_some(),
+            "round {round}: the file under the name is not a whole delivery: {:?}",
+            read(&target)
+        );
         seen.insert(which);
         for name in leftovers(&dir) {
-            assert_ne!(dir.join(&name), target, "a temporary file is never the delivery");
+            assert_ne!(
+                dir.join(&name),
+                target,
+                "a temporary file is never the delivery"
+            );
         }
     }
-    assert!(seen.len() >= 2, "the kills landed on more than one delivery: {seen:?}");
+    assert!(
+        seen.len() >= 2,
+        "the kills landed on more than one delivery: {seen:?}"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }

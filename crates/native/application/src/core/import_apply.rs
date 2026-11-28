@@ -79,7 +79,7 @@ pub struct Applied {
 #[derive(Clone, Debug, Default)]
 pub struct Styles {
     pub layouts: Vec<kentos_commands::CadLayout>,
-    pub cad_source:Option<crate::cad_layouts::Source>,
+    pub cad_source: Option<crate::cad_layouts::Source>,
     pub text: Vec<TextStyleDef>,
     pub dimension: Vec<DimensionStyleDef>,
     /// The file's line types with patterns and its line type scale (docs/adr/0313 §6).
@@ -189,20 +189,37 @@ impl ImportedStyles {
         // (KentOS's own come back as they were), else takes a new one; one the table rules refuse is none.
         for mut s in styles.table {
             let read = s.id.clone();
-            let id = match settings.table_styles.iter().find(|p| same_name(&p.name, &s.name)) {
+            let id = match settings
+                .table_styles
+                .iter()
+                .find(|p| same_name(&p.name, &s.name))
+            {
                 Some(p) => Some(p.id.clone()),
                 None => {
-                    let taken = |id: &str| settings.table_styles.iter().chain(&out.table).any(|p| p.id == id);
+                    let taken = |id: &str| {
+                        settings
+                            .table_styles
+                            .iter()
+                            .chain(&out.table)
+                            .any(|p| p.id == id)
+                    };
                     if s.id.starts_with("dxf-table-") || taken(&s.id) {
                         s.id = Uuid::now_v7().to_string();
                     }
-                    let table: Vec<kentos_commands::TableStyleDef> =
-                        settings.table_styles.iter().chain(&out.table).chain(std::iter::once(&s)).cloned().collect();
-                    kentos_commands::table_style_defs_problem(&table).is_none().then(|| {
-                        let id = s.id.clone();
-                        out.table.push(s);
-                        id
-                    })
+                    let table: Vec<kentos_commands::TableStyleDef> = settings
+                        .table_styles
+                        .iter()
+                        .chain(&out.table)
+                        .chain(std::iter::once(&s))
+                        .cloned()
+                        .collect();
+                    kentos_commands::table_style_defs_problem(&table)
+                        .is_none()
+                        .then(|| {
+                            let id = s.id.clone();
+                            out.table.push(s);
+                            id
+                        })
                 }
             };
             out.table_ids.insert(read, id);
@@ -221,7 +238,10 @@ impl ImportedStyles {
             Entity::Dimension(d) => d.look.dim_style = to(d.look.dim_style.take()),
             // A table's table style (docs/adr/1128 §4): the project's it became, else none.
             Entity::Table(t) => {
-                t.table_style = t.table_style.take().and_then(|id| self.table_ids.get(&id).cloned().flatten());
+                t.table_style = t
+                    .table_style
+                    .take()
+                    .and_then(|id| self.table_ids.get(&id).cloned().flatten());
             }
             _ => {}
         }
@@ -231,7 +251,10 @@ impl ImportedStyles {
     /// (docs/adr/0183 §1); undoing the import leaves them, unused.
     fn add(&mut self, doc: &mut Document) -> (usize, usize) {
         let added = (self.text.len(), self.dimension.len());
-        if added != (0, 0) || !self.line_types.is_empty() || self.line_type_scale.is_some() || !self.table.is_empty()
+        if added != (0, 0)
+            || !self.line_types.is_empty()
+            || self.line_type_scale.is_some()
+            || !self.table.is_empty()
         {
             let mut settings = doc.settings().clone();
             settings.text_styles.append(&mut self.text);
@@ -444,7 +467,10 @@ pub fn apply_file_import(
     };
     if let Some(o) = origin.filter(|o| o.path.is_absolute()) {
         use sha2::{Digest, Sha256};
-        let sha256: String = Sha256::digest(o.bytes).iter().map(|b| format!("{b:02x}")).collect();
+        let sha256: String = Sha256::digest(o.bytes)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect();
         let now = crate::gis_derive::utc_now();
         // To the second, as the record keeps it.
         let at = format!("{}Z", now.get(..19).unwrap_or(&now));
@@ -717,7 +743,8 @@ fn apply_inner(
     styles: Styles,
     plan: &ImportPlan,
 ) -> Result<Applied, String> {
-    let sheets = crate::cad_layouts::merge_with_source(doc, &styles.layouts,styles.cad_source.as_ref())?;
+    let sheets =
+        crate::cad_layouts::merge_with_source(doc, &styles.layouts, styles.cad_source.as_ref())?;
     let mut prepared = prepare(doc, plan)?;
     let mut styles = ImportedStyles::new(doc.settings(), styles);
     let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets, &styles);
@@ -752,7 +779,9 @@ fn apply_inner(
         tie_placeholders(doc, &placed);
         doc.with_import_metadata(&plan.label, |doc| {
             added_styles = styles.add(doc);
-            if let Some(sheets) = sheets { doc.set_sheets(Some(sheets))?; }
+            if let Some(sheets) = sheets {
+                doc.set_sheets(Some(sheets))?;
+            }
             Ok::<_, String>(())
         })?;
         Ok::<_, String>(slots)
@@ -797,11 +826,16 @@ fn tie_placeholders(doc: &mut Document, placed: &[(usize, Slot)]) {
             Some(Entity::Space(s)) if s.space.sources.is_some() => {
                 let mut x = s.clone();
                 if let Some(ids) = &mut x.space.sources {
-                    for id in ids.iter_mut() { if let Some(mapped) = text(id) { *id = mapped; } }
-                    ids.sort(); ids.dedup();
+                    for id in ids.iter_mut() {
+                        if let Some(mapped) = text(id) {
+                            *id = mapped;
+                        }
+                    }
+                    ids.sort();
+                    ids.dedup();
                 }
                 Some(Entity::Space(x))
-            },
+            }
             Some(Entity::Opening(o)) => text(&o.opening.host).map(|host| {
                 let mut x = o.clone();
                 x.opening.host = host;
@@ -905,7 +939,11 @@ impl Progressive {
         styles: Styles,
         plan: &ImportPlan,
     ) -> Result<Self, String> {
-        let sheets = crate::cad_layouts::merge_with_source(doc, &styles.layouts,styles.cad_source.as_ref())?;
+        let sheets = crate::cad_layouts::merge_with_source(
+            doc,
+            &styles.layouts,
+            styles.cad_source.as_ref(),
+        )?;
         let mut prepared = prepare(doc, plan)?;
         let styles = ImportedStyles::new(doc.settings(), styles);
         let mut imported = ImportedBlocks::new(doc, blocks, &prepared.targets, &styles);
@@ -1007,11 +1045,18 @@ impl Progressive {
                 tie_placeholders(doc, &placed);
                 let meta = doc.with_import_metadata(&self.label, |doc| {
                     self.added_styles = self.styles.add(doc);
-                    if let Some(sheets) = self.sheets.take() { doc.set_sheets(Some(sheets))?; }
+                    if let Some(sheets) = self.sheets.take() {
+                        doc.set_sheets(Some(sheets))?;
+                    }
                     Ok::<_, String>(())
                 });
-                if let Err(error) = meta { self.cancel(doc); return Err(error); }
-                if let Some(group) = self.group.take() { doc.end_group(group); }
+                if let Err(error) = meta {
+                    self.cancel(doc);
+                    return Err(error);
+                }
+                if let Some(group) = self.group.take() {
+                    doc.end_group(group);
+                }
                 return Ok(true);
             }
             if Instant::now() >= until {
@@ -1091,12 +1136,21 @@ fn finite(e: &Entity) -> bool {
                 .iter()
                 .all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts))),
             Entity::Slab(e) => {
-                e.slab.parts.iter().all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts)))
+                e.slab
+                    .parts
+                    .iter()
+                    .all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts)))
                     && fs(&[e.slab.thickness, e.slab.offset])
-                    && e.slab.edge.as_ref().is_none_or(|g| g.width.is_finite() && g.runs.iter().all(|r| ps(&r.pts)))
+                    && e.slab
+                        .edge
+                        .as_ref()
+                        .is_none_or(|g| g.width.is_finite() && g.runs.iter().all(|r| ps(&r.pts)))
             }
             Entity::Mass(e) => {
-                e.mass.parts.iter().all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts)))
+                e.mass
+                    .parts
+                    .iter()
+                    .all(|p| ps(&p.outer.pts) && p.holes.iter().all(|h| ps(&h.pts)))
                     && fs(&[e.mass.height, e.mass.offset])
             }
             Entity::Grid(e) => ps(&e.grid.pts),
@@ -1106,8 +1160,14 @@ fn finite(e: &Entity) -> bool {
             }
             Entity::Ramp(e) => ps(&e.ramp.pts) && fs(&[e.ramp.width, e.ramp.rise]),
             Entity::Beam(e) => ps(&e.beam.pts) && fs(&[e.beam.width, e.beam.height, e.beam.offset]),
-            Entity::Roof(e) => ps(&e.roof.pts) && e.roof.slopes.iter().flatten().all(|s| s.is_finite()) && fs(&[e.roof.offset]),
-            Entity::Railing(e) => ps(&e.railing.pts) && fs(&[e.railing.height, e.railing.width, e.railing.offset]),
+            Entity::Roof(e) => {
+                ps(&e.roof.pts)
+                    && e.roof.slopes.iter().flatten().all(|s| s.is_finite())
+                    && fs(&[e.roof.offset])
+            }
+            Entity::Railing(e) => {
+                ps(&e.railing.pts) && fs(&[e.railing.height, e.railing.width, e.railing.offset])
+            }
             Entity::Tag(e) => p(&e.tag.at),
             Entity::ViewMark(e) => ps(&e.mark.points),
             Entity::Nurbs(e) => {
@@ -1715,7 +1775,8 @@ mod tests {
                 font: Some(kentos_commands::DrawingFont::Arimo),
                 bold: true,
                 ..Default::default()
-            }.into(),
+            }
+            .into(),
             path: None,
         })
     }
@@ -1817,7 +1878,7 @@ mod tests {
         let mut def = block(1, "Pafta", None);
         def.entities.push(text_in("", "dxf-text-2"));
         let styles = Styles {
-            cad_source:None,
+            cad_source: None,
             layouts: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),

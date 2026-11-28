@@ -169,17 +169,29 @@ fn parameter_marks_share_project_units_and_keep_small_nonzero_values_visible() {
 #[test]
 fn a_parameter_mark_reads_at_the_projects_decimals() {
     use kentos_commands::{AngleUnit, ParameterKind};
-    use kentos_interaction::constraint_marks::{parameter_label_words as label, parameter_value_words as words};
+    use kentos_interaction::constraint_marks::{
+        parameter_label_words as label, parameter_value_words as words,
+    };
     let (b, _, _) = ell();
     let mut s = b.doc.settings().clone();
     s.length_decimals = 3;
     assert_eq!(label(2.57040682429, ParameterKind::Length, &s), "2.57 m");
-    assert_eq!(words(2.57040682429, ParameterKind::Length, &s), "2.57040682429 m");
+    assert_eq!(
+        words(2.57040682429, ParameterKind::Length, &s),
+        "2.57040682429 m"
+    );
     assert_eq!(label(4.0, ParameterKind::Length, &s), "4 m");
     assert_eq!(label(-1.23456, ParameterKind::Length, &s), "-1.235 m");
-    assert_eq!(label(0.00002, ParameterKind::Length, &s), "0.00002 m", "a small value is not shown as none");
+    assert_eq!(
+        label(0.00002, ParameterKind::Length, &s),
+        "0.00002 m",
+        "a small value is not shown as none"
+    );
     assert_eq!(label(-0.0, ParameterKind::Length, &s), "0 m");
-    assert_eq!(label(123456789.123456, ParameterKind::Length, &s), "123456789.123 m");
+    assert_eq!(
+        label(123456789.123456, ParameterKind::Length, &s),
+        "123456789.123 m"
+    );
     s.angle_unit = AngleUnit::Deg;
     assert_eq!(label(45.000000001, ParameterKind::Angle, &s), "45 °");
     assert_eq!(label(33.333333333, ParameterKind::Angle, &s), "33.3333 °");

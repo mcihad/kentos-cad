@@ -54,30 +54,73 @@ pub fn check(v: &Vertical, pvis: &[Pvi], rules: &ProfileRules) -> Vec<Finding> {
         let g = ((b.elevation - a.elevation) / (b.station - a.station)).abs();
         let ids = vec![a.id.clone(), b.id.clone()];
         if let Some(l) = rules.most_grade.filter(|l| g > *l) {
-            out.push(Finding { rule: Rule::Grade, pvis: ids.clone(), from: a.station, to: b.station, value: g, limit: l });
+            out.push(Finding {
+                rule: Rule::Grade,
+                pvis: ids.clone(),
+                from: a.station,
+                to: b.station,
+                value: g,
+                limit: l,
+            });
         }
         if let Some(l) = rules.least_grade.filter(|l| g < *l) {
-            out.push(Finding { rule: Rule::LeastGrade, pvis: ids, from: a.station, to: b.station, value: g, limit: l });
+            out.push(Finding {
+                rule: Rule::LeastGrade,
+                pvis: ids,
+                from: a.station,
+                to: b.station,
+                value: g,
+                limit: l,
+            });
         }
     }
     for c in &v.curves {
         let (from, to) = (c.start[0], c.end[0]);
         if let Some(k) = c.k {
-            let limit = if c.crest { rules.least_crest_k } else { rules.least_sag_k };
+            let limit = if c.crest {
+                rules.least_crest_k
+            } else {
+                rules.least_sag_k
+            };
             if let Some(l) = limit.filter(|l| k < *l) {
                 let rule = if c.crest { Rule::CrestK } else { Rule::SagK };
-                out.push(Finding { rule, pvis: vec![c.pvi.clone()], from, to, value: k, limit: l });
+                out.push(Finding {
+                    rule,
+                    pvis: vec![c.pvi.clone()],
+                    from,
+                    to,
+                    value: k,
+                    limit: l,
+                });
             }
         }
         if let Some(h) = c.h {
-            let limit = if c.crest { rules.least_crest_h } else { rules.least_sag_h };
+            let limit = if c.crest {
+                rules.least_crest_h
+            } else {
+                rules.least_sag_h
+            };
             if let Some(l) = limit.filter(|l| h < *l) {
                 let rule = if c.crest { Rule::CrestH } else { Rule::SagH };
-                out.push(Finding { rule, pvis: vec![c.pvi.clone()], from, to, value: h, limit: l });
+                out.push(Finding {
+                    rule,
+                    pvis: vec![c.pvi.clone()],
+                    from,
+                    to,
+                    value: h,
+                    limit: l,
+                });
             }
         }
         if let Some(l) = rules.least_curve.filter(|l| to - from < *l) {
-            out.push(Finding { rule: Rule::Curve, pvis: vec![c.pvi.clone()], from, to, value: to - from, limit: l });
+            out.push(Finding {
+                rule: Rule::Curve,
+                pvis: vec![c.pvi.clone()],
+                from,
+                to,
+                value: to - from,
+                limit: l,
+            });
         }
     }
     if let Some(l) = rules.least_grade_length {
@@ -96,6 +139,10 @@ pub fn check(v: &Vertical, pvis: &[Pvi], rules: &ProfileRules) -> Vec<Finding> {
             }
         }
     }
-    out.sort_by(|a, b| a.from.total_cmp(&b.from).then((a.rule as u8).cmp(&(b.rule as u8))));
+    out.sort_by(|a, b| {
+        a.from
+            .total_cmp(&b.from)
+            .then((a.rule as u8).cmp(&(b.rule as u8)))
+    });
     out
 }

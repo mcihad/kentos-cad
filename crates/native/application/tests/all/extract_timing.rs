@@ -49,11 +49,17 @@ fn drawing(lines: usize, chairs: usize, rows: usize) -> Document {
     for k in 0..lines {
         let y = (k / 1000) as f64 * 2.0;
         let x = (k % 1000) as f64 * 3.0;
-        next(json!({"kind":"line","a":{"x":x,"y":y},"b":{"x":x + 2.5,"y":y}}), &mut entities);
+        next(
+            json!({"kind":"line","a":{"x":x,"y":y},"b":{"x":x + 2.5,"y":y}}),
+            &mut entities,
+        );
     }
     for k in 0..chairs {
         let (x, y) = ((k % 500) as f64 * 1.0, 3000.0 + (k / 500) as f64);
-        next(json!({"kind":"insert","block":SANDALYE,"p":{"x":x,"y":y},"scale":1.0,"rotation":0.0}), &mut entities);
+        next(
+            json!({"kind":"insert","block":SANDALYE,"p":{"x":x,"y":y},"scale":1.0,"rotation":0.0}),
+            &mut entities,
+        );
     }
     for k in 0..rows {
         let (x, y) = ((k % 200) as f64 * 4.0, 5000.0 + (k / 200) as f64 * 2.0);
@@ -127,7 +133,10 @@ fn extract_timing() {
         let t = Instant::now();
         let answer = extract_run::plan_watched(&doc, &input, &watch);
         times.push(t.elapsed().as_secs_f64() * 1000.0);
-        assert_eq!(watch.done.load(Ordering::Relaxed), watch.total.load(Ordering::Relaxed));
+        assert_eq!(
+            watch.done.load(Ordering::Relaxed),
+            watch.total.load(Ordering::Relaxed)
+        );
         last = Some(answer);
     }
     running.store(false, Ordering::Relaxed);
@@ -138,7 +147,10 @@ fn extract_timing() {
     };
     // 60 000 lines; 30 000 Sandalye and 9 000 × 3 shown in rows; 10 000 Sıra and their 10 000 frame lines; the Boş
     // rows' 3 000 Sandalye hidden.
-    assert_eq!(output.occurrences, 60_000 + 30_000 + 27_000 + 10_000 + 10_000);
+    assert_eq!(
+        output.occurrences,
+        60_000 + 30_000 + 27_000 + 10_000 + 10_000
+    );
     assert_eq!(output.notes.hidden_states, 3_000, "{warnings:?}");
     times.sort_by(f64::total_cmp);
     // A stop asked 20 ms in: how soon the answer comes, and how far the watch got.
@@ -153,8 +165,13 @@ fn extract_timing() {
     let answered = asked.elapsed().as_secs_f64() * 1000.0;
     let whole = t.elapsed().as_secs_f64() * 1000.0;
     assert!(matches!(stopped, CommandResult::Cancelled), "{stopped:?}");
-    println!("Veri çıkarımı önizlemesi, 100 000 nesne (60 000 çizgi, 30 000 blok, 10 000 dinamik sıra):");
-    println!("  süre en iyi {:.1} ms, ortanca {:.1} ms (5 kez)", times[0], times[2]);
+    println!(
+        "Veri çıkarımı önizlemesi, 100 000 nesne (60 000 çizgi, 30 000 blok, 10 000 dinamik sıra):"
+    );
+    println!(
+        "  süre en iyi {:.1} ms, ortanca {:.1} ms (5 kez)",
+        times[0], times[2]
+    );
     println!(
         "  RSS önce {before:.0} MB, en yüksek {:.0} MB, sonra {after:.0} MB",
         f64::from_bits(peak.load(Ordering::Relaxed))
@@ -164,7 +181,13 @@ fn extract_timing() {
         watch.done.load(Ordering::Relaxed),
         watch.total.load(Ordering::Relaxed)
     );
-    println!("  satır {}, oluşum {}, gizli {} (görünürlük {})", output.rows.len(), output.occurrences, output.notes.hidden, output.notes.hidden_states);
+    println!(
+        "  satır {}, oluşum {}, gizli {} (görünürlük {})",
+        output.rows.len(),
+        output.occurrences,
+        output.notes.hidden,
+        output.notes.hidden_states
+    );
 }
 
 /// The watch, small: a stop asked before the walk answers `Cancelled` with nothing made; without a stop the walk goes
@@ -175,10 +198,18 @@ fn a_stopped_extraction_is_cancelled_and_a_whole_one_walks_every_object() {
     let input = input();
     let watch = Watch::default();
     watch.stop.store(true, Ordering::Relaxed);
-    assert!(matches!(extract_run::plan_watched(&doc, &input, &watch), CommandResult::Cancelled));
-    assert_eq!(watch.done.load(Ordering::Relaxed), 1, "stopped at the first look");
+    assert!(matches!(
+        extract_run::plan_watched(&doc, &input, &watch),
+        CommandResult::Cancelled
+    ));
+    assert_eq!(
+        watch.done.load(Ordering::Relaxed),
+        1,
+        "stopped at the first look"
+    );
     let watch = Watch::default();
-    let CommandResult::Completed { output, .. } = extract_run::plan_watched(&doc, &input, &watch) else {
+    let CommandResult::Completed { output, .. } = extract_run::plan_watched(&doc, &input, &watch)
+    else {
         panic!("completes")
     };
     assert_eq!(watch.done.load(Ordering::Relaxed), 1000);

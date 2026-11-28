@@ -63,7 +63,11 @@ fn names<'a>(all: &[&'a Entity]) -> BTreeSet<&'a String> {
 
 /// The clash of a taken row, or none when its sides can be written together. `mine` none: deleted here; `theirs` none:
 /// deleted in the table.
-pub fn clash_of(first: &Entity, mine: Option<&Entity>, theirs: Option<&Entity>) -> Option<(Vec<FieldClash>, bool)> {
+pub fn clash_of(
+    first: &Entity,
+    mine: Option<&Entity>,
+    theirs: Option<&Entity>,
+) -> Option<(Vec<FieldClash>, bool)> {
     let Some(theirs) = theirs else {
         // Deleted in the table: a clash, deleted here too or not (a table refuses to delete a row it has not).
         return Some((Vec::new(), false));
@@ -116,7 +120,11 @@ pub fn merged(
     let mut attrs = std::collections::BTreeMap::new();
     for name in names(&[first, mine, theirs]) {
         let changed_here = value(mine, name) != value(first, name);
-        let keep = if changed_here && !take_theirs(name) { mine } else { theirs };
+        let keep = if changed_here && !take_theirs(name) {
+            mine
+        } else {
+            theirs
+        };
         if let Some(v) = keep.base().attrs.get(name) {
             attrs.insert(name.clone(), v.clone());
         }
@@ -127,7 +135,8 @@ pub fn merged(
 
 /// A value as the words show it: quoted, or “boş”.
 fn shown(v: &Option<String>) -> String {
-    v.as_ref().map_or_else(|| "boş".to_owned(), |s| format!("“{s}”"))
+    v.as_ref()
+        .map_or_else(|| "boş".to_owned(), |s| format!("“{s}”"))
 }
 
 /// What a save that met clashes says: each row by its key and what clashes in it.
@@ -148,7 +157,13 @@ pub fn clash_words(clashes: &[RowClash]) -> String {
                 .fields
                 .iter()
                 .map(|f| {
-                    format!("{} (ilk {}, sizinki {}, tablodaki {})", f.field, shown(&f.first), shown(&f.mine), shown(&f.theirs))
+                    format!(
+                        "{} (ilk {}, sizinki {}, tablodaki {})",
+                        f.field,
+                        shown(&f.first),
+                        shown(&f.mine),
+                        shown(&f.theirs)
+                    )
                 })
                 .collect();
             if c.geometry {
@@ -187,12 +202,30 @@ mod tests {
     fn different_fields_are_no_clash_and_the_same_field_to_two_values_is_one() {
         let first = row("acik", None, 0.0);
         // A changed durum, B wrote a note: written together.
-        assert_eq!(clash_of(&first, Some(&row("A-ikinci", None, 0.0)), Some(&row("acik", Some("B-sadece-not"), 0.0))), None);
+        assert_eq!(
+            clash_of(
+                &first,
+                Some(&row("A-ikinci", None, 0.0)),
+                Some(&row("acik", Some("B-sadece-not"), 0.0))
+            ),
+            None
+        );
         // Both changed durum to the same value: no clash.
-        assert_eq!(clash_of(&first, Some(&row("iyi", None, 0.0)), Some(&row("iyi", None, 0.0))), None);
+        assert_eq!(
+            clash_of(
+                &first,
+                Some(&row("iyi", None, 0.0)),
+                Some(&row("iyi", None, 0.0))
+            ),
+            None
+        );
         // To two values: a clash with the three values.
-        let (fields, geometry) =
-            clash_of(&first, Some(&row("benim", None, 0.0)), Some(&row("onun", None, 0.0))).expect("a clash");
+        let (fields, geometry) = clash_of(
+            &first,
+            Some(&row("benim", None, 0.0)),
+            Some(&row("onun", None, 0.0)),
+        )
+        .expect("a clash");
         assert_eq!(
             fields,
             [FieldClash {
@@ -204,12 +237,28 @@ mod tests {
         );
         assert!(!geometry);
         // Moved on both sides to two places: the geometry clashes.
-        assert_eq!(clash_of(&first, Some(&row("acik", None, 1.0)), Some(&row("acik", None, 2.0))), Some((Vec::new(), true)));
+        assert_eq!(
+            clash_of(
+                &first,
+                Some(&row("acik", None, 1.0)),
+                Some(&row("acik", None, 2.0))
+            ),
+            Some((Vec::new(), true))
+        );
         // The table unchanged: nothing to check, whatever is here.
-        assert_eq!(clash_of(&first, Some(&row("benim", None, 5.0)), Some(&first)), None);
+        assert_eq!(
+            clash_of(&first, Some(&row("benim", None, 5.0)), Some(&first)),
+            None
+        );
         // Deleted in the table, or here while the table changed it: clashes with no field.
-        assert_eq!(clash_of(&first, Some(&row("benim", None, 0.0)), None), Some((Vec::new(), false)));
-        assert_eq!(clash_of(&first, None, Some(&row("onun", None, 0.0))), Some((Vec::new(), false)));
+        assert_eq!(
+            clash_of(&first, Some(&row("benim", None, 0.0)), None),
+            Some((Vec::new(), false))
+        );
+        assert_eq!(
+            clash_of(&first, None, Some(&row("onun", None, 0.0))),
+            Some((Vec::new(), false))
+        );
     }
 
     #[test]
@@ -219,13 +268,26 @@ mod tests {
         let theirs = row("onun", Some("B-notu"), 0.0);
         // The table's durum chosen: the note and durum are the table's, the move here stays.
         let m = merged(&first, &mine, &theirs, &|f| f == "durum", false);
-        assert_eq!(m.base().attrs.get("durum").map(String::as_str), Some("onun"));
-        assert_eq!(m.base().attrs.get("not").map(String::as_str), Some("B-notu"), "the table's own change is kept");
+        assert_eq!(
+            m.base().attrs.get("durum").map(String::as_str),
+            Some("onun")
+        );
+        assert_eq!(
+            m.base().attrs.get("not").map(String::as_str),
+            Some("B-notu"),
+            "the table's own change is kept"
+        );
         assert_eq!(geometry_of(&m), geometry_of(&mine));
         // Mine chosen: durum is mine, the note still the table's.
         let m = merged(&first, &mine, &theirs, &|_| false, false);
-        assert_eq!(m.base().attrs.get("durum").map(String::as_str), Some("benim"));
-        assert_eq!(m.base().attrs.get("not").map(String::as_str), Some("B-notu"));
+        assert_eq!(
+            m.base().attrs.get("durum").map(String::as_str),
+            Some("benim")
+        );
+        assert_eq!(
+            m.base().attrs.get("not").map(String::as_str),
+            Some("B-notu")
+        );
         // The table's geometry chosen.
         let m = merged(&first, &mine, &theirs, &|_| false, true);
         assert_eq!(geometry_of(&m), geometry_of(&theirs));
@@ -278,7 +340,13 @@ pub fn settle(
                     .map(|(f, _)| f.field.as_str())
                     .collect();
                 let geometry_theirs = r.geometry && picks.get(r.fields.len()) == Some(&false);
-                let made = merged(&r.first, &now, theirs, &|n| take.contains(n), geometry_theirs);
+                let made = merged(
+                    &r.first,
+                    &now,
+                    theirs,
+                    &|n| take.contains(n),
+                    geometry_theirs,
+                );
                 if made != now {
                     updates.push((slot, made));
                 }

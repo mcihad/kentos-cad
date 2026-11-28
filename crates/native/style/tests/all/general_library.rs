@@ -17,13 +17,27 @@ pub(crate) fn allowed(kind: &str) -> &'static [&'static str] {
     match kind {
         "marker" => &["shape", "svg", "text"],
         "line" => &["simpleLine", "markerLine"],
-        "fill" => &["simpleFill", "hatchFill", "patternFill", "gradientFill", "centroidMarker", "simpleLine", "markerLine"],
+        "fill" => &[
+            "simpleFill",
+            "hatchFill",
+            "patternFill",
+            "gradientFill",
+            "centroidMarker",
+            "simpleLine",
+            "markerLine",
+        ],
         _ => &[],
     }
 }
 
 /// A marker's layers (inside a marker line, a pattern or a centroid marker) are a marker symbol's.
-pub(crate) fn check_layers(id: &str, kind: &str, layers: &[Value], lib: &kentos_native_style::StyleLibrary, problems: &mut Vec<String>) {
+pub(crate) fn check_layers(
+    id: &str,
+    kind: &str,
+    layers: &[Value],
+    lib: &kentos_native_style::StyleLibrary,
+    problems: &mut Vec<String>,
+) {
     for layer in layers {
         let t = layer["type"].as_str().unwrap_or("");
         if !allowed(kind).contains(&t) {
@@ -63,12 +77,28 @@ fn every_general_symbol_is_one_the_engine_draws_in_a_category_that_exists() {
     let paths: BTreeSet<Vec<String>> = categories
         .iter()
         .filter_map(|c| c["path"].as_array())
-        .map(|p| p.iter().filter_map(Value::as_str).map(str::to_owned).collect())
+        .map(|p| {
+            p.iter()
+                .filter_map(Value::as_str)
+                .map(str::to_owned)
+                .collect()
+        })
         .collect();
     let ours = |id: &str| id.starts_with("genel.") || id.starts_with("kent.");
-    let general: Vec<&Value> = items.iter().filter(|i| i["id"].as_str().is_some_and(ours)).collect();
-    let symbols: Vec<&Value> = general.iter().copied().filter(|i| i["kind"] == "symbol").collect();
-    assert!(symbols.len() >= 330, "{} general and city symbols", symbols.len());
+    let general: Vec<&Value> = items
+        .iter()
+        .filter(|i| i["id"].as_str().is_some_and(ours))
+        .collect();
+    let symbols: Vec<&Value> = general
+        .iter()
+        .copied()
+        .filter(|i| i["kind"] == "symbol")
+        .collect();
+    assert!(
+        symbols.len() >= 330,
+        "{} general and city symbols",
+        symbols.len()
+    );
     let palette = StylePalette::paper();
     let mut problems = Vec::new();
     let mut used: BTreeSet<Vec<String>> = BTreeSet::new();
@@ -84,7 +114,13 @@ fn every_general_symbol_is_one_the_engine_draws_in_a_category_that_exists() {
                 continue;
             }
         };
-        let path: Vec<String> = item["path"].as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_owned).collect();
+        let path: Vec<String> = item["path"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .map(str::to_owned)
+            .collect();
         // The id's branch is its category's top: genel.… under Genel, kent.… under Kent.
         let branch = match path.first().map(String::as_str) {
             Some("Genel") => "genel.",
@@ -95,7 +131,10 @@ fn every_general_symbol_is_one_the_engine_draws_in_a_category_that_exists() {
             }
         };
         if !id.starts_with(&format!("{branch}{short}")) {
-            problems.push(format!("{id}: a {kind} symbol under {:?} has an id starting with {branch}{short}", path[0]));
+            problems.push(format!(
+                "{id}: a {kind} symbol under {:?} has an id starting with {branch}{short}",
+                path[0]
+            ));
         }
         // The category and each one above it are listed.
         for n in 1..=path.len() {
@@ -107,19 +146,27 @@ fn every_general_symbol_is_one_the_engine_draws_in_a_category_that_exists() {
         if item["name"].as_str().is_none_or(str::is_empty) {
             problems.push(format!("{id}: no name"));
         }
-        let layers = item["symbol"]["layers"].as_array().cloned().unwrap_or_default();
+        let layers = item["symbol"]["layers"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
         if layers.is_empty() {
             problems.push(format!("{id}: no layers"));
         }
         check_layers(id, kind, &layers, &lib, &mut problems);
         if let Err(why) = preview(&item["symbol"], None, (96.0, 64.0), None, &palette, &lib) {
             problems.push(format!("{id}: no preview: {why}"));
-        } else if preview(&item["symbol"], None, (96.0, 64.0), None, &palette, &lib).is_ok_and(|p| p.layer.batches.is_empty()) {
+        } else if preview(&item["symbol"], None, (96.0, 64.0), None, &palette, &lib)
+            .is_ok_and(|p| p.layer.batches.is_empty())
+        {
             problems.push(format!("{id}: the preview draws nothing"));
         }
     }
     // Every category under Genel and Kent but the pictograms' holds symbols, directly or below.
-    for path in paths.iter().filter(|p| p.first().is_some_and(|f| f == "Genel" || f == "Kent")) {
+    for path in paths
+        .iter()
+        .filter(|p| p.first().is_some_and(|f| f == "Genel" || f == "Kent"))
+    {
         let pictograms = path.get(1).is_some_and(|s| s == "Piktogramlar");
         if !pictograms && !used.iter().any(|u| u.starts_with(path)) {
             problems.push(format!("category {path:?} holds no symbol"));

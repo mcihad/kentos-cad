@@ -323,7 +323,12 @@ fn cut_end(l: &Line, end: End, target: &[Edge], reach: f64) -> Option<Line> {
     if let Some(arc) = bulge_arc(pts[n - 2], last, bulges[n - 2]) {
         let a0 = crate::jsmath::atan2(last.y - arc.c.y, last.x - arc.c.x);
         let ahead = TAU - arc.sweep.abs() - 1e-9;
-        let round = Edge::Arc { c: arc.c, r: arc.r, a0, sweep: ahead.copysign(arc.sweep) };
+        let round = Edge::Arc {
+            c: arc.c,
+            r: arc.r,
+            a0,
+            sweep: ahead.copysign(arc.sweep),
+        };
         for t in target {
             for h in intersect_edges(&round, t) {
                 let d = arc.r * ahead * h.t;
@@ -372,7 +377,10 @@ fn cut_end(l: &Line, end: End, target: &[Edge], reach: f64) -> Option<Line> {
                 let (mut p, mut b) = (pts, bulges);
                 let arc = bulge_arc(p[n - 2], last, b[n - 2])?;
                 let a = crate::jsmath::atan2(last.y - arc.c.y, last.x - arc.c.x) + more;
-                p[n - 1] = Vec2::new(arc.c.x + cos(a) * arc.r, arc.c.y + crate::jsmath::sin(a) * arc.r);
+                p[n - 1] = Vec2::new(
+                    arc.c.x + cos(a) * arc.r,
+                    arc.c.y + crate::jsmath::sin(a) * arc.r,
+                );
                 b[n - 2] = crate::jsmath::tan((arc.sweep + more) / 4.0);
                 (p, b)
             }
@@ -1124,9 +1132,15 @@ impl<'a> Solver<'a> {
         let user = self.spec(e.wall).passes[e.end.index()]
             .as_ref()
             .filter(|p| p.len() == self.ranks(e.wall).len())
-            .map(|p| p.iter().map(|&x| (x as usize).min(ranks.len())).collect::<Vec<usize>>());
+            .map(|p| {
+                p.iter()
+                    .map(|&x| (x as usize).min(ranks.len()))
+                    .collect::<Vec<usize>>()
+            });
         let cleanup = user.is_some() || (self.spec(e.wall).cleanup && self.spec(h).cleanup);
-        let depth = user.clone().unwrap_or_else(|| self.depths(e.wall, &ranks, cleanup));
+        let depth = user
+            .clone()
+            .unwrap_or_else(|| self.depths(e.wall, &ranks, cleanup));
         let nj = lj.len() - 1;
         let line_depth = |k: usize| {
             if depth.len() != nj || k == 0 {
@@ -1370,7 +1384,8 @@ impl<'a> Solver<'a> {
         let offsets = wall::boundaries(spec);
         let left = wall::left_face(spec);
         let right = left - spec.width;
-        let paths: Vec<Option<(Path, Shape)>> = lines.iter().map(|l| line_path(l, spec.closed)).collect();
+        let paths: Vec<Option<(Path, Shape)>> =
+            lines.iter().map(|l| line_path(l, spec.closed)).collect();
         list.iter()
             .filter_map(|h| {
                 let (s0, s1) = (h.s0, h.s1);
@@ -1436,7 +1451,15 @@ impl<'a> Solver<'a> {
     }
 
     /// The wall between its lines `upper` and `lower` (distances to the path's left) on `[s0, s1]`, as a body.
-    fn between(&self, i: usize, base: &Path, s0: f64, s1: f64, upper: f64, lower: f64) -> Option<Body> {
+    fn between(
+        &self,
+        i: usize,
+        base: &Path,
+        s0: f64,
+        s1: f64,
+        upper: f64,
+        lower: f64,
+    ) -> Option<Body> {
         let a = self.stretch(i, base, s0, s1, upper)?;
         let b = self.stretch(i, base, s0, s1, lower)?;
         let mut ring = a.outline(false);
@@ -1468,7 +1491,12 @@ impl<'a> Solver<'a> {
         };
         let gaps_of = |k: usize| -> Vec<Span> {
             let mut g = self.gaps[i][k].clone();
-            g.extend(holes.iter().filter(|h| takes(h, offsets[k])).map(|h| h.spans[k]));
+            g.extend(
+                holes
+                    .iter()
+                    .filter(|h| takes(h, offsets[k]))
+                    .map(|h| h.spans[k]),
+            );
             if let Some(t) = &turned {
                 g.extend(t.gaps[k].iter().copied());
             }
@@ -1497,7 +1525,13 @@ impl<'a> Solver<'a> {
         };
         // A band between `upper` and `lower` (distances to the path's left) less the joins' cuts and the holes it
         // meets: each hole cut out between its jambs, what it leaves of the band's thickness put back between them.
-        let band = |a: &Line, b: &Line, ka: usize, kb: usize, upper: f64, lower: f64, extra: &[(Span, Span)]| {
+        let band = |a: &Line,
+                    b: &Line,
+                    ka: usize,
+                    kb: usize,
+                    upper: f64,
+                    lower: f64,
+                    extra: &[(Span, Span)]| {
             let mut cuts = extra.to_vec();
             let mut back = Vec::new();
             for (x, h) in holes.iter().enumerate() {
@@ -1529,7 +1563,15 @@ impl<'a> Solver<'a> {
                     if let Some(t) = &turned {
                         extra.extend(t.cuts[c].iter().copied());
                     }
-                    let mut out = band(&lines[c], &lines[c + 1], c, c + 1, offsets[c], offsets[c + 1], &extra);
+                    let mut out = band(
+                        &lines[c],
+                        &lines[c + 1],
+                        c,
+                        c + 1,
+                        offsets[c],
+                        offsets[c + 1],
+                        &extra,
+                    );
                     if let Some(t) = &turned {
                         out.extend(t.bodies[c].iter().cloned());
                     }
@@ -1588,10 +1630,11 @@ impl<'a> Solver<'a> {
             for side in [h.hi, h.lo] {
                 let inside = side < left - eps && side > right + eps;
                 if inside && !offsets.iter().any(|&o| (o - side).abs() <= eps) {
-                    d.recesses.extend(
-                        self.stretch(i, base, h.s0, h.s1, side)
-                            .map(|line| Stroke { line, closed: false }),
-                    );
+                    d.recesses
+                        .extend(self.stretch(i, base, h.s0, h.s1, side).map(|line| Stroke {
+                            line,
+                            closed: false,
+                        }));
                 }
             }
         }
@@ -1614,7 +1657,11 @@ pub fn level(spec: &Spec) -> Option<&str> {
 
 /// [`solve`] with each wall's openings' holes along its base line (docs/adr/0341 §2, 0719 §3; a missing list: none):
 /// its lines, bands and fill cut out between each opening's jambs as far across as it goes, and the jambs drawn.
-pub fn solve_with(walls: &[WallIn<'_>], openings: &[Vec<crate::geom::opening::Hole>], only: Option<&[usize]>) -> Solved {
+pub fn solve_with(
+    walls: &[WallIn<'_>],
+    openings: &[Vec<crate::geom::opening::Hole>],
+    only: Option<&[usize]>,
+) -> Solved {
     let n = walls.len();
     // A level is a semantic identity, not its elevation: equal elevations may
     // belong to different storeys. Unassigned walls retain their legacy group.
@@ -1698,7 +1745,8 @@ pub fn solve_with(walls: &[WallIn<'_>], openings: &[Vec<crate::geom::opening::Ho
                 break;
             }
             if levels[ends[a].wall] == levels[ends[b].wall]
-                && dist(ends[a].at, ends[b].at) <= JOIN_TOLERANCE {
+                && dist(ends[a].at, ends[b].at) <= JOIN_TOLERANCE
+            {
                 let (ra, rb) = (root(&mut group, a), root(&mut group, b));
                 group[ra.max(rb)] = ra.min(rb);
             }

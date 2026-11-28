@@ -46,9 +46,12 @@ pub fn fitted(ring: &[Vec2], least: f64) -> Vec<Vec<Vec2>> {
         return Vec::new();
     }
     let along = |p: &Vec2| (p.x - base.x) * u.x + (p.y - base.y) * u.y;
-    let (lo, hi) = hull.iter().map(along).fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), s| {
-        (if s < lo { s } else { lo }, if s > hi { s } else { hi })
-    });
+    let (lo, hi) = hull
+        .iter()
+        .map(along)
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), s| {
+            (if s < lo { s } else { lo }, if s > hi { s } else { hi })
+        });
     let across = Vec2::new(-u.y, u.x);
     let step = thick / 2.0;
     // One step past its far end: the clip ends it where the band does.
@@ -97,7 +100,10 @@ fn clip(pts: &[Vec2], ring: &[Vec2]) -> Vec<Vec<Vec2>> {
         for w in ts.windows(2) {
             let (p0, p1) = (at(a, d, w[0]), at(a, d, w[1]));
             if point_in_polygon(at(a, d, (w[0] + w[1]) / 2.0), ring) {
-                if run.last().is_some_and(|l| js_hypot(l.x - p0.x, l.y - p0.y) < 1e-12) {
+                if run
+                    .last()
+                    .is_some_and(|l| js_hypot(l.x - p0.x, l.y - p0.y) < 1e-12)
+                {
                     run.push(p1);
                 } else {
                     if run.len() >= 2 {
@@ -137,7 +143,10 @@ mod tests {
         assert_eq!(line.len(), 41);
         for (k, q) in line.iter().enumerate() {
             assert!((q.x - 0.05 * k as f64).abs() < 1e-12, "{k}: {q:?}");
-            assert!((q.y - if k % 2 == 1 { 0.1 } else { 0.0 }).abs() < 1e-12, "{k}: {q:?}");
+            assert!(
+                (q.y - if k % 2 == 1 { 0.1 } else { 0.0 }).abs() < 1e-12,
+                "{k}: {q:?}"
+            );
         }
     }
 
@@ -170,11 +179,17 @@ mod tests {
                 assert_eq!(side(&w[0]) + side(&w[1]), 1, "{w:?} by turns");
             }
             for w in inner.windows(3) {
-                assert!((js_hypot(w[2].x - w[0].x, w[2].y - w[0].y) - thick).abs() < 1e-9, "{w:?}");
+                assert!(
+                    (js_hypot(w[2].x - w[0].x, w[2].y - w[0].y) - thick).abs() < 1e-9,
+                    "{w:?}"
+                );
             }
         }
         let points: usize = z.iter().map(Vec::len).sum();
-        assert!(points as f64 >= (10.0_f64.sqrt() / (thick / 2.0)).floor(), "{points}");
+        assert!(
+            points as f64 >= (10.0_f64.sqrt() / (thick / 2.0)).floor(),
+            "{points}"
+        );
     }
 
     /// An upright band (a wall's layer cut across): its zigzag runs up it.
@@ -183,14 +198,23 @@ mod tests {
         let ring = [p(0.0, 0.0), p(0.1, 0.0), p(0.1, 3.0), p(0.0, 3.0)];
         let z = fitted(&ring, 0.05);
         assert_eq!(z.len(), 1);
-        assert!(z[0].iter().all(|q| q.x.abs() < 1e-12 || (q.x - 0.1).abs() < 1e-12));
+        assert!(
+            z[0].iter()
+                .all(|q| q.x.abs() < 1e-12 || (q.x - 0.1).abs() < 1e-12)
+        );
         assert!((z[0].last().unwrap().y - z[0][0].y).abs() > 2.9);
     }
 
     /// Thinner than the limit, or no band at all: no symbol.
     #[test]
     fn a_thin_band_draws_none() {
-        assert!(fitted(&[p(0.0, 0.0), p(2.0, 0.0), p(2.0, 0.04), p(0.0, 0.04)], 0.05).is_empty());
+        assert!(
+            fitted(
+                &[p(0.0, 0.0), p(2.0, 0.0), p(2.0, 0.04), p(0.0, 0.04)],
+                0.05
+            )
+            .is_empty()
+        );
         assert!(fitted(&[p(0.0, 0.0), p(2.0, 0.0)], 0.05).is_empty());
     }
 }

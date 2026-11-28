@@ -45,15 +45,21 @@ fn other_template(table: &str) -> bool {
 
 /// Both crates' decisions, the general ones first.
 pub fn decisions() -> Vec<&'static Decision> {
-    kentos_digital_project::decision::base().iter().chain(catalog::decisions()).collect()
+    kentos_digital_project::decision::base()
+        .iter()
+        .chain(catalog::decisions())
+        .collect()
 }
 
 /// A class's Turkish name: EK-5's, else its EK-6 or EK-7 table's.
 fn turkish_of(class: &str) -> Option<String> {
     let c = catalog::base();
-    c.class(class)
-        .map(|x| x.tr.clone())
-        .or_else(|| c.tables.iter().find(|t| t.class == class).and_then(|t| t.tr.clone()))
+    c.class(class).map(|x| x.tr.clone()).or_else(|| {
+        c.tables
+            .iter()
+            .find(|t| t.class == class)
+            .and_then(|t| t.tr.clone())
+    })
 }
 
 /// A clause as the list names it: its number and its words' start (“Madde 4.11: Katman ve sembol isimlendirmesinde …”).
@@ -71,14 +77,29 @@ fn clause_title(no: &str, text: &str) -> String {
 pub fn all() -> Vec<Rule> {
     let decisions = decisions();
     let touching = |id: &str| -> Vec<String> {
-        decisions.iter().filter(|d| d.rows.iter().any(|r| r == id)).map(|d| d.id.clone()).collect()
+        decisions
+            .iter()
+            .filter(|d| d.rows.iter().any(|r| r == id))
+            .map(|d| d.id.clone())
+            .collect()
     };
     let mut out = Vec::new();
     for r in dp::base().rows() {
         let (path, architecture) = match r {
-            DpRow::Code(c) => (c.code.clone(), !other_discipline(&c.list) && !c.group.as_deref().is_some_and(|g| !g.starts_with("MİMARİ") && !g.starts_with("TÜM"))),
+            DpRow::Code(c) => (
+                c.code.clone(),
+                !other_discipline(&c.list)
+                    && !c
+                        .group
+                        .as_deref()
+                        .is_some_and(|g| !g.starts_with("MİMARİ") && !g.starts_with("TÜM")),
+            ),
             DpRow::Template(t) => (
-                t.fields.iter().map(|f| f.name.as_str()).collect::<Vec<_>>().join(" _ "),
+                t.fields
+                    .iter()
+                    .map(|f| f.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(" _ "),
                 !other_template(&t.table),
             ),
             DpRow::Font(f) => (f.points.clone(), true),
@@ -112,7 +133,12 @@ pub fn all() -> Vec<Rule> {
                 Some(q.level),
                 ARCHITECTURE.contains(&q.class.as_str()) || q.table.starts_with("7."),
             ),
-            IfcRow::Class(c) => (c.code.clone(), Some(c.class.clone()), Some(c.level), ARCHITECTURE.contains(&c.class.as_str())),
+            IfcRow::Class(c) => (
+                c.code.clone(),
+                Some(c.class.clone()),
+                Some(c.level),
+                ARCHITECTURE.contains(&c.class.as_str()),
+            ),
             IfcRow::Table(t) => (
                 String::new(),
                 Some(t.class.clone()),
@@ -120,7 +146,16 @@ pub fn all() -> Vec<Rule> {
                 ARCHITECTURE.contains(&t.class.as_str()) || t.table.starts_with("7."),
             ),
             IfcRow::Question(q) => (q.title.clone(), None, None, q.form == "9.1"),
-            IfcRow::Template(t) => (t.fields.iter().map(|f| f.name.as_str()).collect::<Vec<_>>().join(" - "), None, None, true),
+            IfcRow::Template(t) => (
+                t.fields
+                    .iter()
+                    .map(|f| f.name.as_str())
+                    .collect::<Vec<_>>()
+                    .join(" - "),
+                None,
+                None,
+                true,
+            ),
             IfcRow::Clause(_) => (String::new(), None, None, true),
         };
         let source = r.source();
@@ -206,7 +241,12 @@ impl Filter {
 
     /// The rows it keeps, by their places.
     pub fn apply(&self, rules: &[Rule]) -> Vec<usize> {
-        rules.iter().enumerate().filter(|(_, r)| self.keeps(r)).map(|(i, _)| i).collect()
+        rules
+            .iter()
+            .enumerate()
+            .filter(|(_, r)| self.keeps(r))
+            .map(|(i, _)| i)
+            .collect()
     }
 }
 
@@ -222,7 +262,10 @@ mod tests {
             assert!(ids.insert(r.id.clone()), "{} twice", r.id);
             assert!(!r.source.pages.is_empty(), "{}", r.id);
         }
-        assert_eq!(rules.len(), dp::base().rows().len() + catalog::base().rows().len());
+        assert_eq!(
+            rules.len(),
+            dp::base().rows().len() + catalog::base().rows().len()
+        );
     }
 
     #[test]
@@ -234,7 +277,11 @@ mod tests {
             level: Some(Level::Mandatory),
             words: "duvar yangın".into(),
         };
-        let kept: Vec<&str> = f.apply(&rules).into_iter().map(|i| rules[i].id.as_str()).collect();
+        let kept: Vec<&str> = f
+            .apply(&rules)
+            .into_iter()
+            .map(|i| rules[i].id.as_str())
+            .collect();
         assert_eq!(kept, ["T6.66/Pset_WallCommon.FireRating"]);
         let fire = &rules[f.apply(&rules)[0]];
         assert_eq!(fire.class.as_deref(), Some("IfcWall"));
@@ -244,9 +291,15 @@ mod tests {
     #[test]
     fn other_disciplines_rows_are_left_out_of_the_architectural_list() {
         let rules = all();
-        let arch = Filter { architecture: true, ..Filter::default() };
-        let kept: std::collections::HashSet<&str> =
-            arch.apply(&rules).into_iter().map(|i| rules[i].id.as_str()).collect();
+        let arch = Filter {
+            architecture: true,
+            ..Filter::default()
+        };
+        let kept: std::collections::HashSet<&str> = arch
+            .apply(&rules)
+            .into_iter()
+            .map(|i| rules[i].id.as_str())
+            .collect();
         assert!(kept.contains("T2.3/DUVA"), "Mimari's item");
         assert!(!kept.contains("T2.5/BETO"), "a structural sub-discipline");
         assert!(kept.contains("T6.58/Name"), "the space's name");
@@ -258,10 +311,15 @@ mod tests {
     #[test]
     fn a_rule_says_its_decisions() {
         let rules = all();
-        let tag = rules.iter().find(|r| r.id == "T6.37/Tag").expect("IfcGroup's Tag");
+        let tag = rules
+            .iter()
+            .find(|r| r.id == "T6.37/Tag")
+            .expect("IfcGroup's Tag");
         assert_eq!(tag.decisions, ["K06"]);
         assert_eq!(fold("İÇ MİMARİ Işık"), "ic mimari isik");
         assert_eq!(fold("IfcWall"), fold("ifcwall"));
-        assert!(decisions().iter().any(|d| d.id == "K13") && decisions().iter().any(|d| d.id == "K06"));
+        assert!(
+            decisions().iter().any(|d| d.id == "K13") && decisions().iter().any(|d| d.id == "K06")
+        );
     }
 }

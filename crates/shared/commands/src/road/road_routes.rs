@@ -9,9 +9,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+use crate::Vec2;
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::Vec2;
 
 pub const ROAD_ROUTES_FIND: &str = "road.routes.find";
 pub const ROAD_ROUTES_FIND_VERSION: u32 = 1;

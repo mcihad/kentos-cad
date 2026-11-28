@@ -102,7 +102,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             tool_layers: Vec::new(),
             named_ucs: Vec::new(),
             named_views: Vec::new(),
-        view_templates: Vec::new(),
+            view_templates: Vec::new(),
             forms: Vec::new(),
             relations: Vec::new(),
             join_views: Vec::new(),

@@ -1176,7 +1176,8 @@ impl Designer {
         };
         // The template's own sheet name, as the web's; one the book has already takes “ 2”, “ 3” … so two sheets
         // of one template are told apart.
-        let taken: std::collections::BTreeSet<&str> = self.book.sheets.iter().map(|s| s.name.as_str()).collect();
+        let taken: std::collections::BTreeSet<&str> =
+            self.book.sheets.iter().map(|s| s.name.as_str()).collect();
         let name = taken.contains(t.sheet.name.as_str()).then(|| {
             (2..)
                 .map(|n| format!("{} {n}", t.sheet.name))

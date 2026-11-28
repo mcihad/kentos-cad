@@ -130,7 +130,14 @@ pub fn plan(base: &Alignment, other: &Alignment, tolerance: f64) -> Vec<Departur
         .map(|(from, to)| {
             let station = |s: f64| point(s).and_then(|p| gap(base, p).1);
             let (largest, at) = largest(from, to, &|s| point(s).map_or(0.0, |p| gap(base, p).0));
-            Departure { from, to, base_from: station(from), base_to: station(to), largest, at }
+            Departure {
+                from,
+                to,
+                base_from: station(from),
+                base_to: station(to),
+                largest,
+                at,
+            }
         })
         .collect()
 }
@@ -148,13 +155,23 @@ fn steepest(v: &Vertical) -> f64 {
 
 /// The largest absolute curvature of an alignment (each element's is linear between its ends).
 fn sharpest(a: &Alignment) -> f64 {
-    a.elements.iter().flat_map(|e| [e.k0.abs(), e.k1.abs()]).fold(0.0, f64::max)
+    a.elements
+        .iter()
+        .flat_map(|e| [e.k0.abs(), e.k1.abs()])
+        .fold(0.0, f64::max)
 }
 
 /// Where `other` lies within `tolerance` of `base` in plan and both have elevations, the stretches whose elevations
 /// differ by more than `height` (m): the alternative's elevation at its station against the base's at the station of
 /// the base nearest to it.
-pub fn height(base: &Alignment, base_z: &Vertical, other: &Alignment, other_z: &Vertical, tolerance: f64, height: f64) -> Vec<Departure> {
+pub fn height(
+    base: &Alignment,
+    base_z: &Vertical,
+    other: &Alignment,
+    other_z: &Vertical,
+    tolerance: f64,
+    height: f64,
+) -> Vec<Departure> {
     let together = |s: f64| -> Option<f64> {
         let l = other.at(s)?;
         let (d, station) = gap(base, [l.x, l.y]);
@@ -174,7 +191,14 @@ pub fn height(base: &Alignment, base_z: &Vertical, other: &Alignment, other_z: &
         .map(|(from, to)| {
             let station = |s: f64| other.at(s).and_then(|l| gap(base, [l.x, l.y]).1);
             let (largest, at) = largest(from, to, &|s| together(s).map_or(0.0, f64::abs));
-            Departure { from, to, base_from: station(from), base_to: station(to), largest, at }
+            Departure {
+                from,
+                to,
+                base_from: station(from),
+                base_to: station(to),
+                largest,
+                at,
+            }
         })
         .collect()
 }

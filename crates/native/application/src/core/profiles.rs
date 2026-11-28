@@ -296,7 +296,11 @@ pub(crate) fn write(
         && let Err(why) = doc.set_domains(domains.clone(), STEP)
     {
         doc.cancel_group(group);
-        return Err(Stop::failed(error(codes::INVALID_INPUT, why.0, Some("profile".into()))));
+        return Err(Stop::failed(error(
+            codes::INVALID_INPUT,
+            why.0,
+            Some("profile".into()),
+        )));
     }
     let mut layer_of: HashMap<&str, String> = HashMap::new();
     for c in &p.classes {

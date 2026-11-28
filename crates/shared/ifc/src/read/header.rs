@@ -12,7 +12,10 @@ const HEAD: usize = 1 << 20;
 /// Whether the bytes start as a STEP file: `ISO-10303-21;` after an optional byte order mark and white space.
 pub(super) fn starts_as_step(bytes: &[u8]) -> bool {
     let b = bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(bytes);
-    let at = b.iter().position(|c| !c.is_ascii_whitespace()).unwrap_or(b.len());
+    let at = b
+        .iter()
+        .position(|c| !c.is_ascii_whitespace())
+        .unwrap_or(b.len());
     b[at..].starts_with(b"ISO-10303-21;")
 }
 
@@ -44,26 +47,48 @@ pub(super) fn version(family: Family) -> SchemaVersion {
 pub(super) fn read(bytes: &[u8]) -> Result<(Header, Option<String>), ReadError> {
     let head = &bytes[..bytes.len().min(HEAD)];
     let Some(start) = find(head, b"HEADER;") else {
-        return Ok((Header::default(), ifc_lite_core::declared_schema_bounded(bytes)));
+        return Ok((
+            Header::default(),
+            ifc_lite_core::declared_schema_bounded(bytes),
+        ));
     };
     let mut header = Header::default();
     let mut schema = None;
     for statement in statements(&head[start + 7..]) {
-        let Some(open) = statement.iter().position(|&c| c == b'(') else { continue };
+        let Some(open) = statement.iter().position(|&c| c == b'(') else {
+            continue;
+        };
         // A comment before the keyword is passed over.
-        let from = statement[..open].windows(2).rposition(|w| w == b"*/").map_or(0, |at| at + 2);
-        let keyword = String::from_utf8_lossy(&statement[from..open]).trim().to_ascii_uppercase();
+        let from = statement[..open]
+            .windows(2)
+            .rposition(|w| w == b"*/")
+            .map_or(0, |at| at + 2);
+        let keyword = String::from_utf8_lossy(&statement[from..open])
+            .trim()
+            .to_ascii_uppercase();
         let mut record = b"#1=".to_vec();
         record.extend_from_slice(statement[from..].trim_ascii_start());
         record.push(b';');
-        let Ok((_, _, tokens)) = ifc_lite_core::parse_entity(&record) else { continue };
+        let Ok((_, _, tokens)) = ifc_lite_core::parse_entity(&record) else {
+            continue;
+        };
         let values: Vec<AttributeValue> = tokens.iter().map(AttributeValue::from_token).collect();
-        let text = |i: usize| values.get(i).and_then(AttributeValue::as_string).map(str::to_owned);
+        let text = |i: usize| {
+            values
+                .get(i)
+                .and_then(AttributeValue::as_string)
+                .map(str::to_owned)
+        };
         let texts = |i: usize| -> Vec<String> {
             values
                 .get(i)
                 .and_then(AttributeValue::as_list)
-                .map(|l| l.iter().filter_map(AttributeValue::as_string).map(str::to_owned).collect())
+                .map(|l| {
+                    l.iter()
+                        .filter_map(AttributeValue::as_string)
+                        .map(str::to_owned)
+                        .collect()
+                })
                 .unwrap_or_default()
         };
         match keyword.as_str() {
@@ -84,7 +109,10 @@ pub(super) fn read(bytes: &[u8]) -> Result<(Header, Option<String>), ReadError> 
             _ => {}
         }
     }
-    Ok((header, schema.or_else(|| ifc_lite_core::declared_schema_bounded(bytes))))
+    Ok((
+        header,
+        schema.or_else(|| ifc_lite_core::declared_schema_bounded(bytes)),
+    ))
 }
 
 /// Where `needle` starts in `hay`, outside quoted strings.

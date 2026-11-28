@@ -9,17 +9,28 @@ fn surface_of(f: impl Fn(f64, f64) -> f64, n: i32, step: f64) -> Surface {
     for j in 0..=n {
         for i in 0..=n {
             let (x, y) = (f64::from(i) * step, f64::from(j) * step);
-            points.push(SpotPoint { x, y, z: f(x, y), source: None });
+            points.push(SpotPoint {
+                x,
+                y,
+                z: f(x, y),
+                source: None,
+            });
         }
     }
-    surface::build(&SurfaceInput { points, ..SurfaceInput::default() }).expect("builds")
+    surface::build(&SurfaceInput {
+        points,
+        ..SurfaceInput::default()
+    })
+    .expect("builds")
 }
 
 #[test]
 fn a_plane_s_elevation_ranges_are_its_strips() {
     // z = 100 + 0.1 x over 10 × 10: z runs 100 to 101 across x; the range [100.2, 100.5) is the strip 2 ≤ x < 5.
     let s = surface_of(|x, _| 100.0 + 0.1 * x, 10, 1.0);
-    let (b, parts) = s.bands(Measure::Elevation, &[99.0, 100.2, 100.5, 100.9], true).expect("bands");
+    let (b, parts) = s
+        .bands(Measure::Elevation, &[99.0, 100.2, 100.5, 100.9], true)
+        .expect("bands");
     let k = 1.01_f64.sqrt();
     let want = [20.0, 30.0, 40.0];
     for (band, w) in b.bands.iter().zip(want) {
@@ -39,13 +50,23 @@ fn slopes_and_aspects_by_square() {
     let h = |y: f64| if y <= 5.0 { -0.05 * y } else { -0.25 };
     let s = surface_of(|x, y| 50.0 + g(x) + h(y), 10, 1.0);
     // Slopes: √(0.2² + 0.05²) = 20.6 %, 20 %, 5 %, 0 (flat).
-    let (b, _) = s.bands(Measure::Slope, &[1.0, 10.0, 20.3, 30.0], false).expect("bands");
-    assert!((b.bands[0].area - 25.0).abs() < 1e-9 && b.bands[0].triangles == 50, "{b:?}");
+    let (b, _) = s
+        .bands(Measure::Slope, &[1.0, 10.0, 20.3, 30.0], false)
+        .expect("bands");
+    assert!(
+        (b.bands[0].area - 25.0).abs() < 1e-9 && b.bands[0].triangles == 50,
+        "{b:?}"
+    );
     assert!((b.bands[1].area - 25.0).abs() < 1e-9, "{b:?}");
     assert!((b.bands[2].area - 25.0).abs() < 1e-9, "{b:?}");
-    assert!((b.outside_area - 25.0).abs() < 1e-9 && b.flat_area == 0.0, "{b:?}");
+    assert!(
+        (b.outside_area - 25.0).abs() < 1e-9 && b.flat_area == 0.0,
+        "{b:?}"
+    );
     // Aspects: falling west (270°) where only g slopes, north (0°) where only h, between where both; flat apart.
-    let (a, _) = s.bands(Measure::Aspect, &[0.0, 45.0, 315.0, 360.0], false).expect("bands");
+    let (a, _) = s
+        .bands(Measure::Aspect, &[0.0, 45.0, 315.0, 360.0], false)
+        .expect("bands");
     assert!((a.flat_area - 25.0).abs() < 1e-9, "{a:?}");
     let west_south = (-0.2_f64).atan2(0.05).to_degrees() + 360.0;
     assert!(west_south > 270.0 && west_south < 315.0);
@@ -62,7 +83,10 @@ fn a_plane_is_smooth_and_a_ridge_is_rough() {
     let ridge = surface_of(|x, _| 10.0 - (x - 3.0).abs(), 6, 1.0);
     let r = ridge.roughness().expect("corners");
     // Half the angle each way: |Σ| / Σα = cos 45°.
-    assert!((r.max - (1.0 - std::f64::consts::FRAC_1_SQRT_2)).abs() < 1e-12, "{r:?}");
+    assert!(
+        (r.max - (1.0 - std::f64::consts::FRAC_1_SQRT_2)).abs() < 1e-12,
+        "{r:?}"
+    );
     assert_eq!(r.at, [3.0, 0.0]);
 }
 
@@ -80,8 +104,14 @@ fn a_raster_flattens_a_ridge_and_keeps_a_plane() {
 #[test]
 fn the_refusals() {
     let s = surface_of(|x, _| x, 2, 1.0);
-    assert_eq!(s.bands(Measure::Slope, &[1.0], false).err(), Some(AnalysisError::Breaks));
-    assert_eq!(s.bands(Measure::Slope, &[2.0, 1.0], false).err(), Some(AnalysisError::Breaks));
+    assert_eq!(
+        s.bands(Measure::Slope, &[1.0], false).err(),
+        Some(AnalysisError::Breaks)
+    );
+    assert_eq!(
+        s.bands(Measure::Slope, &[2.0, 1.0], false).err(),
+        Some(AnalysisError::Breaks)
+    );
     assert_eq!(s.grid_slope(0.0).err(), Some(AnalysisError::Cell));
     assert_eq!(s.grid_slope(1e-6).err(), Some(AnalysisError::TooMany));
 }

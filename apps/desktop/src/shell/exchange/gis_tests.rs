@@ -133,11 +133,17 @@ fn an_import_into_a_cbs_project_goes_into_its_tables() {
     assert_eq!(model.count(&tm.id), 0, "its objects are its table's rows");
     let lines: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(
-        lines.iter().any(|l| l.contains("CBS projesinin verisi tablolarda durur") && l.contains("Kent.gpkg")),
+        lines.iter().any(
+            |l| l.contains("CBS projesinin verisi tablolarda durur") && l.contains("Kent.gpkg")
+        ),
         "{lines:?}"
     );
     // The layer the drawing had already keeps the parcel it took: its own move is the user's (Veri kaynağına taşı).
-    assert!(kentos_native_application::layer_kind::held_in_file(model).iter().all(|h| h.id != tm.id));
+    assert!(
+        kentos_native_application::layer_kind::held_in_file(model)
+            .iter()
+            .all(|h| h.id != tm.id)
+    );
 }
 
 #[test]
@@ -343,7 +349,10 @@ fn a_geojson_export_writes_what_the_reader_takes_back() {
         Event::GeoJsonExport(geojson_export::Event::Scope(dxf_export::Scope::All)),
     );
     // The project's own coordinates, asked for (RFC 7946's WGS 84 is the default, GIS-011).
-    send(&mut app, Event::GeoJsonExport(geojson_export::Event::Wgs84(false)));
+    send(
+        &mut app,
+        Event::GeoJsonExport(geojson_export::Event::Wgs84(false)),
+    );
     send(&mut app, Event::GeoJsonExport(geojson_export::Event::Run));
     assert_eq!(app.dialog, None, "{:?}", app.exchange);
     assert!(
@@ -586,7 +595,11 @@ fn a_geojson_export_is_rfc_7946_by_default_and_keeps_the_choice() {
     let path = dir.join("web.geojson");
     app.picker = Picker::File(path.clone());
     let doc = &app.document.as_ref().expect("open").model;
-    let first = doc.entities_with_uids().find(|(_, e)| e.kind() == "polygon").map(|(u, _)| u).expect("a parcel");
+    let first = doc
+        .entities_with_uids()
+        .find(|(_, e)| e.kind() == "polygon")
+        .map(|(u, _)| u)
+        .expect("a parcel");
     let slot = doc.slot_of(first).expect("its slot");
     app.selection.set([slot]);
     run(&mut app, "file.export.geojson");
@@ -595,14 +608,21 @@ fn a_geojson_export_is_rfc_7946_by_default_and_keeps_the_choice() {
     shot.settle(&mut app, App::view, &mut update);
     crate::files_testing::evidence(&mut shot, &app, "gis-011", "tek-katman-wgs84");
     send(&mut app, Event::GeoJsonExport(geojson_export::Event::Run));
-    let v: serde_json::Value = serde_json::from_slice(&std::fs::read(&path).expect("written")).expect("json");
+    let v: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&path).expect("written")).expect("json");
     assert!(v.get("crs").is_none(), "RFC 7946 has no crs member");
     let ring = &v["features"][0]["geometry"]["coordinates"][0][0];
     let (lon, lat) = (ring[0].as_f64().unwrap(), ring[1].as_f64().unwrap());
-    assert!((25.0..46.0).contains(&lon) && (35.0..43.0).contains(&lat), "{lon}, {lat}");
+    assert!(
+        (25.0..46.0).contains(&lon) && (35.0..43.0).contains(&lat),
+        "{lon}, {lat}"
+    );
     // The project's coordinates chosen once are the next export's.
     run(&mut app, "file.export.geojson");
-    send(&mut app, Event::GeoJsonExport(geojson_export::Event::Wgs84(false)));
+    send(
+        &mut app,
+        Event::GeoJsonExport(geojson_export::Event::Wgs84(false)),
+    );
     send(&mut app, Event::GeoJsonExport(geojson_export::Event::Run));
     run(&mut app, "file.export.geojson");
     let Some(super::Window::GeoJsonExport(s)) = &app.exchange else {
@@ -620,40 +640,63 @@ fn an_archive_s_layers_come_in_together() {
     // The archive, written by the export command.
     let dir = scratch("shp-arsiv");
     let zip = dir.join("envanter.zip");
-    let snapshot: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_str(include_str!("../../../../../fixtures/exchange/v1/devir.json")).expect("the sample");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../../fixtures/exchange/v1/devir.json"
+    ))
+    .expect("the sample");
     let sample = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
     let input: kentos_commands::ExportShp =
-        serde_json::from_value(serde_json::json!({ "path": zip.to_string_lossy() })).expect("the input");
+        serde_json::from_value(serde_json::json!({ "path": zip.to_string_lossy() }))
+            .expect("the input");
     let made = kentos_headless::shp_export::make(&sample, &input).expect("made");
     kentos_headless::shp_export::write(&made).expect("written");
     assert!(zip.exists());
-    let members = kentos_formats::shp::zip_layers(&std::fs::read(&zip).expect("read")).expect("listed");
+    let members =
+        kentos_formats::shp::zip_layers(&std::fs::read(&zip).expect("read")).expect("listed");
     assert!(members.len() >= 4, "{members:?}");
     // An empty GIS project of the sample's system.
-    let mut drawing: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/empty.kcad")).expect("the drawing");
+    let mut drawing: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/interaction/v1/empty.kcad"
+    ))
+    .expect("the drawing");
     drawing["settings"]["srid"] = serde_json::json!(5256);
     drawing["settings"]["workspace"] = serde_json::json!("gis");
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let (mut app, _) = App::boot(None);
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.picker = Picker::File(zip.clone());
     run(&mut app, "file.import.shp");
     let s = window(&app);
-    let Source::Zip { layers, systems, .. } = &s.source else {
+    let Source::Zip {
+        layers, systems, ..
+    } = &s.source
+    else {
         panic!("an archive")
     };
     assert_eq!(layers.len(), members.len());
-    assert!(systems.iter().all(|(_, sys)| sys == "EPSG:5256"), "{systems:?}");
+    assert!(
+        systems.iter().all(|(_, sys)| sys == "EPSG:5256"),
+        "{systems:?}"
+    );
     let read = s.result.as_ref().expect("read");
-    assert_eq!(read.layers.len(), members.len(), "every layer read: {:?}", read.layers.iter().map(|l| &l.name).collect::<Vec<_>>());
+    assert_eq!(
+        read.layers.len(),
+        members.len(),
+        "every layer read: {:?}",
+        read.layers.iter().map(|l| &l.name).collect::<Vec<_>>()
+    );
     let objects = read.entities.len();
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
     let head = format!("Bütün katmanlar ({})", members.len());
-    assert!(crate::files_testing::find_text(&mut shot, &app, &head).is_some(), "{head}");
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, &head).is_some(),
+        "{head}"
+    );
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-042-zip-katmanlar");
     let before = count(&app);
     import(&mut app);

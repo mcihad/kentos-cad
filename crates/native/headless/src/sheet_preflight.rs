@@ -1,8 +1,10 @@
 //! A cancellable, output-free print inspection shared by the UI, typed Python and agents.
-use kentos_commands::{PreflightSheets, SheetsPreflighted, SheetPublishIssue, CallOp, CommandResult};
+use crate::file_commands::{Refused, refuse};
+use kentos_commands::{
+    CallOp, CommandResult, PreflightSheets, SheetPublishIssue, SheetsPreflighted,
+};
 use kentos_domain::Document;
 use kentos_native_application::jobs::Progress;
-use crate::file_commands::{Refused, refuse};
 fn stop(progress: Option<&Progress>) -> Result<(), Refused> {
     if progress.is_some_and(Progress::stopped) {
         Err(refuse(
@@ -88,7 +90,16 @@ pub(crate) fn work(
         // An atlas sheet is read page by page in each page's context, as the atlas's PDF draws it (GIS-031): its
         // maps' places and its @atlas_ fields come from the page; what is still missing is said with the page.
         if book.sheet(id).is_some_and(|sh| sh.atlas.is_some()) {
-            atlas_issues(&copy, &book, id, &render, input.drawing.as_deref(), &user, &date, &mut issues)?;
+            atlas_issues(
+                &copy,
+                &book,
+                id,
+                &render,
+                input.drawing.as_deref(),
+                &user,
+                &date,
+                &mut issues,
+            )?;
             continue;
         }
         let findings =
@@ -213,7 +224,8 @@ fn atlas_issues(
         let findings = kentos_plot::preflight::inspect(doc, book, id, &on_page, drawing)
             .map_err(|e| refuse(&e.code, e.message, "sheets"))?;
         for f in findings {
-            let error = f.severity == kentos_sheet::preflight::Severity::Error || f.code == "map_unplaced";
+            let error =
+                f.severity == kentos_sheet::preflight::Severity::Error || f.code == "map_unplaced";
             match said.iter_mut().find(|s| s.0 == f.code && s.1 == f.message) {
                 Some(s) => {
                     s.3 |= error;
@@ -240,7 +252,11 @@ fn atlas_issues(
     });
     for (code, message, fix, error, on) in said {
         let shown: Vec<String> = on.iter().take(3).map(|n| format!("“{n}”")).collect();
-        let more = if on.len() > 3 { format!(" ve {} sayfa daha", on.len() - 3) } else { String::new() };
+        let more = if on.len() > 3 {
+            format!(" ve {} sayfa daha", on.len() - 3)
+        } else {
+            String::new()
+        };
         issues.push(SheetPublishIssue {
             sheet: id.to_owned(),
             code,

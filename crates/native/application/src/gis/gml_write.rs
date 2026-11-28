@@ -83,9 +83,19 @@ fn num(v: f64) -> String {
 pub fn xml_name(text: &str) -> String {
     let mut out: String = text
         .chars()
-        .map(|c| if c.is_alphanumeric() || matches!(c, '_' | '-' | '.') { c } else { '_' })
+        .map(|c| {
+            if c.is_alphanumeric() || matches!(c, '_' | '-' | '.') {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect();
-    if !out.chars().next().is_some_and(|c| c.is_alphabetic() || c == '_') {
+    if !out
+        .chars()
+        .next()
+        .is_some_and(|c| c.is_alphabetic() || c == '_')
+    {
         out.insert(0, '_');
     }
     out
@@ -232,10 +242,18 @@ fn arc_extremes(a: &Coord, m: &Coord, b: &Coord, f: &mut dyn FnMut(f64, f64)) {
     let (t0, t2) = (ang(a), ang(b));
     let ccw = (m.x - a.x) * (b.y - a.y) - (m.y - a.y) * (b.x - a.x) > 0.0;
     // The sweep from a to b through m, counter-clockwise positive.
-    let s = if ccw { (t2 - t0).rem_euclid(tau) } else { -(t0 - t2).rem_euclid(tau) };
+    let s = if ccw {
+        (t2 - t0).rem_euclid(tau)
+    } else {
+        -(t0 - t2).rem_euclid(tau)
+    };
     for k in 0..4 {
         let t = k as f64 * std::f64::consts::FRAC_PI_2;
-        let along = if ccw { (t - t0).rem_euclid(tau) } else { -(t0 - t).rem_euclid(tau) };
+        let along = if ccw {
+            (t - t0).rem_euclid(tau)
+        } else {
+            -(t0 - t).rem_euclid(tau)
+        };
         if along.abs() <= s.abs() {
             f(cx + r * t.cos(), cy + r * t.sin());
         }
@@ -277,7 +295,10 @@ impl W<'_> {
         // The dimension always: a reader that took the collection's envelope for the default (GDAL) would read the
         // two-dimensional lists of a file with an elevation somewhere as three.
         let dim = if z { 3 } else { 2 };
-        format!("<gml:posList srsDimension=\"{dim}\">{}</gml:posList>", self.list(pts, z))
+        format!(
+            "<gml:posList srsDimension=\"{dim}\">{}</gml:posList>",
+            self.list(pts, z)
+        )
     }
 
     fn attrs(&self, id: &str, top: bool) -> String {
@@ -292,7 +313,11 @@ impl W<'_> {
         let a = self.attrs(id, top);
         match c {
             Curve::Line(p) => {
-                let _ = write!(out, "<gml:LineString{a}>{}</gml:LineString>", self.pos_list(p, z));
+                let _ = write!(
+                    out,
+                    "<gml:LineString{a}>{}</gml:LineString>",
+                    self.pos_list(p, z)
+                );
             }
             Curve::Arc(p) => {
                 let _ = write!(
@@ -351,7 +376,11 @@ impl W<'_> {
         let a = self.attrs(id, top);
         match g {
             Geometry::Point(Some(c)) => {
-                let _ = write!(out, "<gml:Point{a}><gml:pos>{}</gml:pos></gml:Point>", self.pos(c, z));
+                let _ = write!(
+                    out,
+                    "<gml:Point{a}><gml:pos>{}</gml:pos></gml:Point>",
+                    self.pos(c, z)
+                );
             }
             Geometry::Point(None) => {}
             Geometry::Curve(c) => self.line_or_arc(c, id, top, z, out),
@@ -403,7 +432,11 @@ impl W<'_> {
         } else {
             ((b[0], b[1]), (b[2], b[3]))
         };
-        let dim = if z.is_some() { " srsDimension=\"3\"" } else { "" };
+        let dim = if z.is_some() {
+            " srsDimension=\"3\""
+        } else {
+            ""
+        };
         let (zl, zh) = match z {
             Some(r) => (format!(" {}", num(r[0])), format!(" {}", num(r[1]))),
             None => (String::new(), String::new()),
@@ -465,16 +498,26 @@ fn value(v: &Value, kind: &ColumnKind, notes: &mut Notes, out: &mut String) -> b
 
 fn xsd_type(kind: &ColumnKind) -> String {
     match kind {
-        ColumnKind::Integer => "<xs:simpleType><xs:restriction base=\"xs:long\"></xs:restriction></xs:simpleType>".into(),
-        ColumnKind::Real => "<xs:simpleType><xs:restriction base=\"xs:double\"></xs:restriction></xs:simpleType>".into(),
-        ColumnKind::Boolean => "<xs:simpleType><xs:restriction base=\"xs:boolean\"></xs:restriction></xs:simpleType>".into(),
+        ColumnKind::Integer => {
+            "<xs:simpleType><xs:restriction base=\"xs:long\"></xs:restriction></xs:simpleType>"
+                .into()
+        }
+        ColumnKind::Real => {
+            "<xs:simpleType><xs:restriction base=\"xs:double\"></xs:restriction></xs:simpleType>"
+                .into()
+        }
+        ColumnKind::Boolean => {
+            "<xs:simpleType><xs:restriction base=\"xs:boolean\"></xs:restriction></xs:simpleType>"
+                .into()
+        }
         ColumnKind::Date => String::new(),
         ColumnKind::DateTime => String::new(),
         ColumnKind::Blob(_) => String::new(),
         ColumnKind::Text(Some(n)) => format!(
             "<xs:simpleType><xs:restriction base=\"xs:string\"><xs:maxLength value=\"{n}\"/></xs:restriction></xs:simpleType>"
         ),
-        _ => "<xs:simpleType><xs:restriction base=\"xs:string\"></xs:restriction></xs:simpleType>".into(),
+        _ => "<xs:simpleType><xs:restriction base=\"xs:string\"></xs:restriction></xs:simpleType>"
+            .into(),
     }
 }
 
@@ -492,14 +535,23 @@ pub fn type_word(kind: &ColumnKind) -> &'static str {
 }
 
 /// The GML of the feature types, with `schema` the file name of the `.xsd` it points to.
-pub fn write(types: &[OutType], srid: Option<u32>, schema: Option<&str>, notes: &mut Notes) -> String {
+pub fn write(
+    types: &[OutType],
+    srid: Option<u32>,
+    schema: Option<&str>,
+    notes: &mut Notes,
+) -> String {
     let srs = Srs::of(srid);
     let mut w = W { srs: &srs, notes };
     let mut out = String::new();
     out.push_str("<?xml version=\"1.0\" encoding=\"utf-8\" ?>\n");
     out.push_str("<ogr:FeatureCollection\n     gml:id=\"aFeatureCollection\"\n     xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n");
     if let Some(s) = schema {
-        let _ = writeln!(out, "     xsi:schemaLocation=\"{NAMESPACE} {}\"", uri_name(s));
+        let _ = writeln!(
+            out,
+            "     xsi:schemaLocation=\"{NAMESPACE} {}\"",
+            uri_name(s)
+        );
     }
     let _ = writeln!(out, "     xmlns:ogr=\"{NAMESPACE}\"");
     out.push_str("     xmlns:gml=\"http://www.opengis.net/gml/3.2\">\n");
@@ -511,7 +563,12 @@ pub fn write(types: &[OutType], srid: Option<u32>, schema: Option<&str>, notes: 
                 all = Some(match all {
                     None => (b, z),
                     Some((a, az)) => (
-                        [a[0].min(b[0]), a[1].min(b[1]), a[2].max(b[2]), a[3].max(b[3])],
+                        [
+                            a[0].min(b[0]),
+                            a[1].min(b[1]),
+                            a[2].max(b[2]),
+                            a[3].max(b[3]),
+                        ],
                         match (az, z) {
                             (Some(p), Some(q)) => Some([p[0].min(q[0]), p[1].max(q[1])]),
                             (p, q) => p.or(q),
@@ -530,7 +587,11 @@ pub fn write(types: &[OutType], srid: Option<u32>, schema: Option<&str>, notes: 
     for t in types {
         for (n, (g, values)) in t.features.iter().enumerate() {
             let fid = format!("{}.{n}", t.name);
-            let _ = write!(out, "  <ogr:featureMember>\n    <ogr:{} gml:id=\"{fid}\">\n", t.name);
+            let _ = write!(
+                out,
+                "  <ogr:featureMember>\n    <ogr:{} gml:id=\"{fid}\">\n",
+                t.name
+            );
             if let Some(g) = g.as_ref().filter(|g| !g.is_empty()) {
                 let (z, m) = {
                     let (mut z, mut m) = (false, false);

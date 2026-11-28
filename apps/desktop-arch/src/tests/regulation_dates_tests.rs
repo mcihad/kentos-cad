@@ -3,11 +3,11 @@
 //! (RG 1.7.2026/33297, Geçici 3/11); without a date the outcome turns on is eksik veri. The Denetim tab says the rule
 //! set over its table and lists the standards package's findings with their state.
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use kentos_commands::{ArchAuditOutcome, ArchAuditState};
 use kentos_launch::Module;
 use serde_json::{Value, json};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -37,18 +37,33 @@ pub(crate) fn basement_with_annexes() -> App {
 /// annexes; `o`: the common area).
 fn building(basement: &[(&str, &str)], upper: usize) -> App {
     kentos_postgis::connections::keep_in_memory();
-    let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
-    app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+    let (mut app, _) = App::start_in(
+        Some(Module::Architecture),
+        None,
+        Settings::memory(),
+        Recovery::off(),
+    );
+    app.db_store = Box::leak(Box::new(
+        kentos_postgis::connections::ConnectionStore::open(None),
+    ));
     app.hand_over = |m, _| Ok(m.program().to_owned());
     let task = app.update(Message::Run("file.new"));
     drive(&mut app, task);
     let level = |id: &str, name: &str, z: f64| json!({ "id": id, "name": name, "elevation": z, "height": 3.0 });
     let mut levels = vec![level("b01", "Bodrum kat", -3.0)];
     for k in 0..upper {
-        let name = if k == 0 { "Zemin kat".to_owned() } else { format!("{k}. kat") };
+        let name = if k == 0 {
+            "Zemin kat".to_owned()
+        } else {
+            format!("{k}. kat")
+        };
         levels.push(level(&format!("k{k:02}"), &name, 3.0 * k as f64));
     }
-    run(&mut app, "cad.settings.set", json!({ "arch": { "levels": levels } }));
+    run(
+        &mut app,
+        "cad.settings.set",
+        json!({ "arch": { "levels": levels } }),
+    );
     run(
         &mut app,
         "cad.program.edit",
@@ -62,14 +77,24 @@ fn building(basement: &[(&str, &str)], upper: usize) -> App {
             {"id": "o", "number": "O", "name": "Ortak alan", "kind": "common"}
         ]}}),
     );
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     let p = |x: f64, y: f64| json!({"x": x, "y": y});
     let room = |x0: f64, name: &str, level: &str, unit: &str, void: bool| {
         json!({"parts": [{"outer": {"pts": [p(x0, 0.0), p(x0 + 4.0, 0.0), p(x0 + 4.0, 4.0), p(x0, 4.0)]}}],
                "name": name, "unit": unit, "void": void, "arch": {"level": level}})
     };
-    let mut spaces: Vec<Value> =
-        basement.iter().enumerate().map(|(i, (name, unit))| room(4.0 * i as f64, name, "b01", unit, false)).collect();
+    let mut spaces: Vec<Value> = basement
+        .iter()
+        .enumerate()
+        .map(|(i, (name, unit))| room(4.0 * i as f64, name, "b01", unit, false))
+        .collect();
     for k in 0..upper {
         let (level, unit) = (format!("k{k:02}"), format!("d{}", k + 1));
         spaces.push(room(0.0, "Salon", &level, &unit, false));
@@ -77,7 +102,11 @@ fn building(basement: &[(&str, &str)], upper: usize) -> App {
         spaces.push(room(8.0, "Merdiven holü", &level, "o", false));
         spaces.push(room(12.0, "Asansör", &level, "o", true));
     }
-    run(&mut app, "cad.spaces.create", json!({"layerId": layer, "spaces": spaces}));
+    run(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": spaces}),
+    );
     app
 }
 
@@ -102,23 +131,48 @@ pub(crate) fn dated(app: &mut App, date: Option<&str>) {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(
+        app.modules.arch().arch_audit.regulation_failed,
+        None,
+        "the national regulation's rule answers"
+    );
 }
 
 /// The rule set's outcomes by article: `(rule, version, outcome)`.
 /// The lift articles' outcomes (the doors' rows are their own test's).
 fn outcomes(app: &App) -> Vec<(String, Option<String>, ArchAuditOutcome)> {
-    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
-    set.rules.iter().filter(|r| r.rule.contains(" 34/")).map(|r| (r.rule.clone(), r.version.clone(), r.state)).collect()
+    let set = app
+        .modules
+        .arch()
+        .arch_audit
+        .rule_set
+        .as_ref()
+        .expect("the rule set");
+    set.rules
+        .iter()
+        .filter(|r| r.rule.contains(" 34/"))
+        .map(|r| (r.rule.clone(), r.version.clone(), r.state))
+        .collect()
 }
 
 /// The standards package's findings in the tab: code, state, message.
 fn regulation(app: &App) -> Vec<(String, Option<ArchAuditState>, String)> {
-    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+    let audited = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
     audited
         .findings
         .iter()
-        .filter(|f| matches!(f.code.as_str(), "paiy_elevator_missing" | "paiy_elevator_not_serving" | "regulation_date_needed"))
+        .filter(|f| {
+            matches!(
+                f.code.as_str(),
+                "paiy_elevator_missing" | "paiy_elevator_not_serving" | "regulation_date_needed"
+            )
+        })
         .map(|f| (f.code.clone(), f.state, f.message.clone()))
         .collect()
 }
@@ -134,8 +188,16 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
     assert_eq!(
         outcomes(&app),
         [
-            ("PAİY 34/1".to_owned(), v("11.7.2021"), ArchAuditOutcome::Passed),
-            ("PAİY 34/8".to_owned(), v("11.7.2021"), ArchAuditOutcome::OutOfScope),
+            (
+                "PAİY 34/1".to_owned(),
+                v("11.7.2021"),
+                ArchAuditOutcome::Passed
+            ),
+            (
+                "PAİY 34/8".to_owned(),
+                v("11.7.2021"),
+                ArchAuditOutcome::OutOfScope
+            ),
         ]
     );
     assert_eq!(regulation(&app), Vec::new());
@@ -154,7 +216,14 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
     // car park, docs/adr/8108; 28/2, 28/3: no roof, docs/adr/8134; 39/4, 25/1, 25/2: no site plan edge against a
     // neighbour, docs/adr/8142; 41/1, 41/2: no site plan, no projection, docs/adr/8152; 40/4, 40/5, 42/1, 58/2: no roof,
     // docs/adr/8159) out of it.
-    let line = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set").line();
+    let line = app
+        .modules
+        .arch()
+        .arch_audit
+        .rule_set
+        .as_ref()
+        .expect("the rule set")
+        .line();
     assert_eq!(
         line,
         "Kural seti — Başvuru tarihi künyeden: 30.6.2026 · PAİY 34/1 (11.7.2021) geçti · BYKHY 24/2 (19.12.2007) kaldı \
@@ -169,8 +238,16 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
     assert_eq!(
         outcomes(&app),
         [
-            ("PAİY 34/1".to_owned(), v("1.7.2026"), ArchAuditOutcome::Passed),
-            ("PAİY 34/8".to_owned(), v("1.7.2026"), ArchAuditOutcome::Failed),
+            (
+                "PAİY 34/1".to_owned(),
+                v("1.7.2026"),
+                ArchAuditOutcome::Passed
+            ),
+            (
+                "PAİY 34/8".to_owned(),
+                v("1.7.2026"),
+                ArchAuditOutcome::Failed
+            ),
         ]
     );
     assert_eq!(
@@ -181,18 +258,48 @@ fn the_application_date_chooses_the_version_of_the_elevator_articles() {
             "Bodrum kat: asansör bu kata ulaşmıyor (katta eklenti ve teknik hacim) — PAİY 34/8 (1.7.2026)".to_owned()
         )]
     );
-    let rule = app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter().find(|f| f.code == "paiy_elevator_not_serving").and_then(|f| f.rule.clone());
+    let rule = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked")
+        .findings
+        .iter()
+        .find(|f| f.code == "paiy_elevator_not_serving")
+        .and_then(|f| f.rule.clone());
     assert_eq!(rule.as_deref(), Some("PAİY 34/8 · RG 1.7.2026/33297"));
     // No date: the two versions disagree, so the finding is eksik veri, never a guess.
     dated(&mut app, None);
     checked(&mut app);
     let found = regulation(&app);
     assert_eq!(found.len(), 1, "{found:#?}");
-    assert_eq!((found[0].0.as_str(), found[0].1), ("regulation_date_needed", Some(ArchAuditState::MissingData)));
-    assert!(found[0].2.contains("11.7.2021–30.6.2026 başvurusunda bulgu yok"), "{}", found[0].2);
-    assert!(outcomes(&app).iter().all(|(_, _, o)| *o == ArchAuditOutcome::MissingData));
+    assert_eq!(
+        (found[0].0.as_str(), found[0].1),
+        ("regulation_date_needed", Some(ArchAuditState::MissingData))
+    );
+    assert!(
+        found[0]
+            .2
+            .contains("11.7.2021–30.6.2026 başvurusunda bulgu yok"),
+        "{}",
+        found[0].2
+    );
+    assert!(
+        outcomes(&app)
+            .iter()
+            .all(|(_, _, o)| *o == ArchAuditOutcome::MissingData)
+    );
     // The shaft drawn in the basement too: 34/8 holds by either version, and no date is needed.
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     let p = |x: f64, y: f64| json!({"x": x, "y": y});
     run(
         &mut app,
@@ -218,8 +325,18 @@ fn an_expert_s_approval_of_a_package_finding_is_kept_until_the_finding_changes()
     dated(&mut app, Some("02.07.2026"));
     checked(&mut app);
     let listed = |app: &App| {
-        let a = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        a.findings.iter().filter(|f| f.code == "paiy_elevator_not_serving").cloned().collect::<Vec<_>>()
+        let a = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        a.findings
+            .iter()
+            .filter(|f| f.code == "paiy_elevator_not_serving")
+            .cloned()
+            .collect::<Vec<_>>()
     };
     let asked = listed(&app);
     assert_eq!(asked.len(), 1, "{asked:#?}");
@@ -227,23 +344,56 @@ fn an_expert_s_approval_of_a_package_finding_is_kept_until_the_finding_changes()
     let row = crate::arch_audit_scenes::row_of(&app, "paiy_elevator_not_serving");
     event(&mut app, Event::Press(row));
     event(&mut app, Event::Except(None));
-    event(&mut app, Event::Note("Kazan dairesi ortak alan sayılmaz: idarenin görüşü.".to_owned()));
+    event(
+        &mut app,
+        Event::Note("Kazan dairesi ortak alan sayılmaz: idarenin görüşü.".to_owned()),
+    );
     event(&mut app, Event::ExceptConfirm);
     app.arch_audit_standards_settle();
-    let exceptions = app.document.as_ref().expect("a drawing").model.settings().arch.as_ref().expect("Mimari").audit_exceptions.clone();
+    let exceptions = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .arch
+        .as_ref()
+        .expect("Mimari")
+        .audit_exceptions
+        .clone();
     assert_eq!(exceptions.len(), 1, "{exceptions:#?}");
     assert_eq!(exceptions[0].code, "paiy_elevator_not_serving");
     assert!(listed(&app).is_empty(), "the approved finding is hidden");
-    assert_eq!(app.modules.arch().arch_audit.audited.as_ref().expect("checked").excepted, 1, "counted once");
+    assert_eq!(
+        app.modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked")
+            .excepted,
+        1,
+        "counted once"
+    );
     event(&mut app, Event::View(1));
     app.arch_audit_standards_settle();
     let shown = listed(&app);
     assert_eq!(shown.len(), 1);
     assert!(shown[0].exception && !shown[0].lapsed);
-    assert_eq!(shown[0].note.as_deref(), Some("Kazan dairesi ortak alan sayılmaz: idarenin görüşü."));
+    assert_eq!(
+        shown[0].note.as_deref(),
+        Some("Kazan dairesi ortak alan sayılmaz: idarenin görüşü.")
+    );
     event(&mut app, Event::View(0));
     // A flat's storage in the basement: 34/8 asks for the elevator there plainly; that finding is open.
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     let p = |x: f64, y: f64| json!({"x": x, "y": y});
     run(
         &mut app,
@@ -255,7 +405,11 @@ fn an_expert_s_approval_of_a_package_finding_is_kept_until_the_finding_changes()
     let open = listed(&app);
     assert_eq!(open.len(), 1, "{open:#?}");
     assert_eq!((open[0].state, open[0].exception), (None, false));
-    assert!(open[0].message.contains("katta eklenti ve teknik hacim"), "{}", open[0].message);
+    assert!(
+        open[0].message.contains("katta eklenti ve teknik hacim"),
+        "{}",
+        open[0].message
+    );
 }
 
 /// An office's storey (docs/adr/8078 §8): a meeting room of 10 × 12 m (its people by Ek-5/A over 50), the corridor
@@ -263,8 +417,15 @@ fn an_expert_s_approval_of_a_package_finding_is_kept_until_the_finding_changes()
 /// the stair's door declared `rating`.
 fn office_storey(side: &str, rating: &str) -> App {
     kentos_postgis::connections::keep_in_memory();
-    let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
-    app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+    let (mut app, _) = App::start_in(
+        Some(Module::Architecture),
+        None,
+        Settings::memory(),
+        Recovery::off(),
+    );
+    app.db_store = Box::leak(Box::new(
+        kentos_postgis::connections::ConnectionStore::open(None),
+    ));
     app.hand_over = |m, _| Ok(m.program().to_owned());
     let task = app.update(Message::Run("file.new"));
     drive(&mut app, task);
@@ -280,7 +441,14 @@ fn office_storey(side: &str, rating: &str) -> App {
             {"id": "b1", "number": "1", "nature": "Büro"}, {"id": "o", "number": "O", "kind": "common"}
         ]}}),
     );
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     let p = |x: f64, y: f64| json!({"x": x, "y": y});
     let wall = |a: (f64, f64), b: (f64, f64), w: f64| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": w, "arch": {"level": "k00"}});
     let doc = app.document.as_mut().expect("a drawing");
@@ -294,7 +462,12 @@ fn office_storey(side: &str, rating: &str) -> App {
         ]}),
     )
     .expect("the walls");
-    let host = |i: usize| walls["output"]["uids"][i].as_str().expect("a wall").to_owned();
+    let host = |i: usize| {
+        walls["output"]["uids"][i]
+            .as_str()
+            .expect("a wall")
+            .to_owned()
+    };
     let doors = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
         "cad.openings.create",
@@ -311,7 +484,8 @@ fn office_storey(side: &str, rating: &str) -> App {
         "cad.arch.performance",
         json!({"operation": {"kind": "objects", "uids": [stair_door], "fireRating": {"value": rating, "basis": {"kind": "author"}}}}),
     );
-    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
+    let rect =
+        |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
     run(
         &mut app,
         "cad.spaces.create",
@@ -330,13 +504,29 @@ fn office_storey(side: &str, rating: &str) -> App {
 #[test]
 fn the_doors_of_a_crowded_room_and_of_the_stair_are_read_by_bykhy_47() {
     let said = |app: &App| {
-        app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter()
-            .filter(|f| f.code.starts_with("bykhy_exit_door") || f.code.starts_with("bykhy_stair_door"))
+        app.modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked")
+            .findings
+            .iter()
+            .filter(|f| {
+                f.code.starts_with("bykhy_exit_door") || f.code.starts_with("bykhy_stair_door")
+            })
             .map(|f| (f.code.clone(), f.message.clone(), f.rule.clone()))
             .collect::<Vec<_>>()
     };
     let rows = |app: &App| {
-        app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set").rules.iter()
+        app.modules
+            .arch()
+            .arch_audit
+            .rule_set
+            .as_ref()
+            .expect("the rule set")
+            .rules
+            .iter()
             .filter(|r| r.rule.starts_with("BYKHY 47"))
             .map(|r| (r.rule.clone(), r.state))
             .collect::<Vec<_>>()
@@ -345,13 +535,32 @@ fn the_doors_of_a_crowded_room_and_of_the_stair_are_read_by_bykhy_47() {
     checked(&mut app);
     let found = said(&app);
     assert_eq!(found.len(), 2, "{found:#?}");
-    assert!(found[0].1.contains("içine açılıyor") && found[0].2.as_deref() == Some("BYKHY 47/2 · RG 19.12.2007/26735"), "{found:#?}");
-    assert!(found[1].1.starts_with("Kaçış merdiveni kapısı “EI 30”"), "{found:#?}");
-    assert_eq!(rows(&app), [("BYKHY 47/2".to_owned(), ArchAuditOutcome::Failed), ("BYKHY 47/3".to_owned(), ArchAuditOutcome::Failed)]);
+    assert!(
+        found[0].1.contains("içine açılıyor")
+            && found[0].2.as_deref() == Some("BYKHY 47/2 · RG 19.12.2007/26735"),
+        "{found:#?}"
+    );
+    assert!(
+        found[1].1.starts_with("Kaçış merdiveni kapısı “EI 30”"),
+        "{found:#?}"
+    );
+    assert_eq!(
+        rows(&app),
+        [
+            ("BYKHY 47/2".to_owned(), ArchAuditOutcome::Failed),
+            ("BYKHY 47/3".to_owned(), ArchAuditOutcome::Failed)
+        ]
+    );
     let mut app = office_storey("left", "EI2 60-S200C5");
     checked(&mut app);
     assert_eq!(said(&app), Vec::new());
-    assert_eq!(rows(&app), [("BYKHY 47/2".to_owned(), ArchAuditOutcome::Passed), ("BYKHY 47/3".to_owned(), ArchAuditOutcome::Passed)]);
+    assert_eq!(
+        rows(&app),
+        [
+            ("BYKHY 47/2".to_owned(), ArchAuditOutcome::Passed),
+            ("BYKHY 47/3".to_owned(), ArchAuditOutcome::Passed)
+        ]
+    );
 }
 
 /// The Denetim tab with the rule set over its table: applied for on 30.6.2026, on 2.7.2026 and with no date, light and
@@ -365,32 +574,53 @@ fn the_doors_of_a_crowded_room_and_of_the_stair_are_read_by_bykhy_47() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/mevzuat-tarih-8078");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/mevzuat-tarih-8078");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1500.0, 1000.0), "acik"), ("dark", Size::new(1300.0, 950.0), "koyu")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1500.0, 1000.0), "acik"),
+        ("dark", Size::new(1300.0, 950.0), "koyu"),
+    ] {
         let mut app = basement_with_annexes();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        for (i, (date, words)) in [(Some("30.06.2026"), "30-haziran"), (Some("02.07.2026"), "2-temmuz"), (None, "tarihsiz")]
-            .into_iter()
-            .enumerate()
+        for (i, (date, words)) in [
+            (Some("30.06.2026"), "30-haziran"),
+            (Some("02.07.2026"), "2-temmuz"),
+            (None, "tarihsiz"),
+        ]
+        .into_iter()
+        .enumerate()
         {
             dated(&mut app, date);
             checked(&mut app);
             // The standards package's finding chosen, so the table shows its row.
-            let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-            app.modules.arch_mut().arch_audit.selected = audited
-                .findings
-                .iter()
-                .position(|f| matches!(f.code.as_str(), "paiy_elevator_not_serving" | "regulation_date_needed"));
+            let audited = app
+                .modules
+                .arch()
+                .arch_audit
+                .audited
+                .as_ref()
+                .expect("checked");
+            app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| {
+                matches!(
+                    f.code.as_str(),
+                    "paiy_elevator_not_serving" | "regulation_date_needed"
+                )
+            });
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{}-{words}-{name}.png", i + 1));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
         // The reviewer's approval of the basement holding only the boiler room, listed with İstisnalar: Göster.
@@ -399,7 +629,9 @@ fn screens() {
             let _ = app.update(Message::from(crate::arch::Event::ArchAudit(e)));
         };
         let mut app = building(&[("Kazan dairesi", "o")], 4);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         dated(&mut app, Some("02.07.2026"));
@@ -407,36 +639,65 @@ fn screens() {
         let row = crate::arch_audit_scenes::row_of(&app, "paiy_elevator_not_serving");
         event(&mut app, Event::Press(row));
         event(&mut app, Event::Except(None));
-        event(&mut app, Event::Note("Kazan dairesi ortak alan sayılmaz: idarenin görüşü.".to_owned()));
+        event(
+            &mut app,
+            Event::Note("Kazan dairesi ortak alan sayılmaz: idarenin görüşü.".to_owned()),
+        );
         event(&mut app, Event::ExceptConfirm);
         app.arch_audit_standards_settle();
         event(&mut app, Event::View(1));
         app.arch_audit_standards_settle();
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_elevator_not_serving");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "paiy_elevator_not_serving");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("4-uzman-onayi-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
         // BYKHY 47 (docs/adr/8078 §8): the meeting room's door turned into it, the stair's door of 30 minutes.
         let mut app = office_storey("right", "EI 30");
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_exit_door_swing");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "bykhy_exit_door_swing");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("5-kapilar-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

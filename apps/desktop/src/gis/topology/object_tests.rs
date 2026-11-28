@@ -16,9 +16,12 @@ use crate::topology::Event as T;
 use crate::topology::object::ObjectFindings;
 
 fn opened(module: Module) -> App {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.topology.check.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.topology.check.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(module);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -89,14 +92,20 @@ fn form_on_short_edges() -> App {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/topoloji-nesne-3800");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/topoloji-nesne-3800");
     std::fs::create_dir_all(&out).expect("a folder");
     let mut update = |app: &mut App, m: Message| {
         let _ = app.update(m);
     };
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 700.0), "koyu-dar"),
+    ] {
         let mut app = opened(Module::Map);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -109,7 +118,10 @@ fn screens() {
         app.props_closed.insert("geometry");
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("oznitelikler-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
     let mut app = form_on_short_edges();
@@ -119,7 +131,10 @@ fn screens() {
     let mut snapshot = Snapshot::new(size).expect("a renderer");
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("formla-duzenle-acik-genis.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
 }
 
@@ -135,14 +150,20 @@ fn review_screens() {
     use iced::Size;
     use kentos_commands::TopologyExceptionOperation as Op;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/oznitelikten-isaret-4600");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/oznitelikten-isaret-4600");
     std::fs::create_dir_all(&out).expect("a folder");
     let mut update = |app: &mut App, m: Message| {
         let _ = app.update(m);
     };
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Module::Map);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -175,7 +196,10 @@ fn review_screens() {
         app.selection.set([Slot(1), Slot(2), Slot(5)]);
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-coklu-secim-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

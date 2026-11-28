@@ -157,7 +157,10 @@ fn the_whole_lifecycle_leaves_nothing_of_a_lease_behind() {
     let temp = Temp::new("yasam");
     let mut r = open(&temp.0);
     let first = install(&mut r, &package(ID, "1.0.0", &[]));
-    assert!(!r.developed(ID), "from a file: a published version's environment");
+    assert!(
+        !r.developed(ID),
+        "from a file: a published version's environment"
+    );
     let l1 = first.activation.unwrap().unwrap().lease;
     assert_eq!(r.state(ID), Some(State::Active));
     assert_eq!(r.contributions().len(), 1);

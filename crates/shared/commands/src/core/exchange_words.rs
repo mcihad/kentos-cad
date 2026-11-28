@@ -13,7 +13,9 @@ pub fn small(v: f64) -> String {
         return "< 0,000001".into();
     }
     let t = format!("{v:.6}");
-    t.trim_end_matches('0').trim_end_matches('.').replace('.', ",")
+    t.trim_end_matches('0')
+        .trim_end_matches('.')
+        .replace('.', ",")
 }
 
 /// An object kind in words.
@@ -45,7 +47,11 @@ pub fn kind_word(kind: &str) -> String {
 pub fn detail_words(loss: &str, detail: &str) -> String {
     match loss {
         "notWritten" | "chorded" | "extra" => kind_word(detail),
-        "kindChanged" => detail.split(" → ").map(kind_word).collect::<Vec<_>>().join(" → "),
+        "kindChanged" => detail
+            .split(" → ")
+            .map(kind_word)
+            .collect::<Vec<_>>()
+            .join(" → "),
         "styleLost" => match detail {
             "color" => "Renk".into(),
             "lineWeight" => "Çizgi kalınlığı".into(),
@@ -96,8 +102,12 @@ pub fn cell_words(aspect: &str, c: &ExchangeCell) -> String {
             })
             .collect::<Vec<_>>()
             .join(", "),
-        "position" | "shape" | "length" => d.parse::<f64>().map_or_else(|_| d.to_owned(), |v| format!("{} m", small(v))),
-        "area" => d.parse::<f64>().map_or_else(|_| d.to_owned(), |v| format!("{} m²", small(v))),
+        "position" | "shape" | "length" => d
+            .parse::<f64>()
+            .map_or_else(|_| d.to_owned(), |v| format!("{} m", small(v))),
+        "area" => d
+            .parse::<f64>()
+            .map_or_else(|_| d.to_owned(), |v| format!("{} m²", small(v))),
         // Blocks and tables (docs/adr/2380): lost by kind and count, converted by a kind's change or what changed.
         "blocks" | "tables" if c.state == ExchangeState::Lost => d
             .split(", ")
@@ -113,7 +123,14 @@ pub fn cell_words(aspect: &str, c: &ExchangeCell) -> String {
                 if x.contains(" → ") {
                     detail_words("kindChanged", x)
                 } else {
-                    detail_words(if aspect == "tables" { "tableChanged" } else { "blockChanged" }, x)
+                    detail_words(
+                        if aspect == "tables" {
+                            "tableChanged"
+                        } else {
+                            "blockChanged"
+                        },
+                        x,
+                    )
                 }
             })
             .collect::<Vec<_>>()
@@ -128,7 +145,10 @@ pub fn cell_words(aspect: &str, c: &ExchangeCell) -> String {
                 "tables" => "tableChanged",
                 _ => "",
             };
-            d.split(", ").map(|x| detail_words(loss, x)).collect::<Vec<_>>().join(", ")
+            d.split(", ")
+                .map(|x| detail_words(loss, x))
+                .collect::<Vec<_>>()
+                .join(", ")
         }
     });
     let word = match c.state {
@@ -142,7 +162,9 @@ pub fn cell_words(aspect: &str, c: &ExchangeCell) -> String {
     match (c.state, detail) {
         (ExchangeState::Kept, Some(d)) if numeric => format!("{word} ({d})"),
         // GIS-039: a difference beyond what the tolerance allows, not a kind's conversion.
-        (ExchangeState::Converted, Some(d)) if numeric => format!("Toleransı aşar, {} nesne: en çok {d}", c.count),
+        (ExchangeState::Converted, Some(d)) if numeric => {
+            format!("Toleransı aşar, {} nesne: en çok {d}", c.count)
+        }
         (ExchangeState::Kept, _) => word.to_owned(),
         (_, Some(d)) => format!("{word}: {d}"),
         (_, None) => format!("{word} ({})", c.count),

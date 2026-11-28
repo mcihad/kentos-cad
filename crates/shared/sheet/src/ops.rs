@@ -1102,9 +1102,7 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
                 .iter()
                 .find(|p| p.id == s.setup)
                 .cloned()
-                .ok_or_else(|| {
-                    SheetError::new("unknown_page_setup", "Sayfa düzeni bulunamadı.")
-                })?;
+                .ok_or_else(|| SheetError::new("unknown_page_setup", "Sayfa düzeni bulunamadı."))?;
             let old = b
                 .sheet(&s.sheet)
                 .cloned()
@@ -1117,11 +1115,8 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
                     relayout: true,
                 },
             )?;
-            let plot = crate::print_setup::AppliedPageSetup::capture(
-                b,
-                Some(setup.id),
-                setup.settings,
-            );
+            let plot =
+                crate::print_setup::AppliedPageSetup::capture(b, Some(setup.id), setup.settings);
             sheet_mut(b, &s.sheet)?.plot = Some(plot);
             Ok(vec![Op::ReplaceSheet(ReplaceSheet { sheet: old })])
         }
@@ -1179,7 +1174,8 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
                 .collect();
             if let Some(plot) = s.plot.as_mut() {
                 if plot.settings.profile_snapshot.is_none() {
-                    plot.settings.profile_snapshot = crate::plot_profile::for_sheet(b, &d.id)?.cloned();
+                    plot.settings.profile_snapshot =
+                        crate::plot_profile::for_sheet(b, &d.id)?.cloned();
                 }
                 if let Some(profile) = &mut plot.settings.profile_snapshot {
                     crate::book_transfer::profile(profile, &BTreeMap::new(), &map);
@@ -1188,7 +1184,9 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
             crate::template::remap_items(&mut s.items, &map);
             crate::variants::remap(&mut s.variants, &mut s.base_layout, &map);
             s.id = d.new_id.clone();
-            if let Some(info) = &mut s.drawing_info { info.number.clear(); }
+            if let Some(info) = &mut s.drawing_info {
+                info.number.clear();
+            }
             s.name = d.name.clone();
             let at = d.index.map_or(i + 1, |x| (x as usize).min(b.sheets.len()));
             b.sheets.insert(at, s);
@@ -1490,16 +1488,31 @@ fn run(b: &mut SheetBook, op: &Op) -> Result<Vec<Op>> {
             let mut used = BTreeSet::new();
             let mut old = Vec::new();
             for e in &s.entries {
-                if !used.insert(&e.id) { return Err(SheetError::new("duplicate_id", "Aynı pafta toplu bilgide iki kez var; her paftayı bir kez yazın.")); }
+                if !used.insert(&e.id) {
+                    return Err(SheetError::new(
+                        "duplicate_id",
+                        "Aynı pafta toplu bilgide iki kez var; her paftayı bir kez yazın.",
+                    ));
+                }
                 let sheet = sheet_mut(b, &e.id)?;
-                old.push(crate::drawing_set::SetDrawingInfo { id: e.id.clone(), info: std::mem::replace(&mut sheet.drawing_info, e.info.clone()) });
+                old.push(crate::drawing_set::SetDrawingInfo {
+                    id: e.id.clone(),
+                    info: std::mem::replace(&mut sheet.drawing_info, e.info.clone()),
+                });
             }
-            Ok(vec![Op::SetDrawingSet(crate::drawing_set::SetDrawingSet { entries: old })])
+            Ok(vec![Op::SetDrawingSet(crate::drawing_set::SetDrawingSet {
+                entries: old,
+            })])
         }
         Op::SetDrawingInfo(s) => {
             let sheet = sheet_mut(b, &s.id)?;
             let old = std::mem::replace(&mut sheet.drawing_info, s.info.clone());
-            Ok(vec![Op::SetDrawingInfo(crate::drawing_set::SetDrawingInfo { id: s.id.clone(), info: old })])
+            Ok(vec![Op::SetDrawingInfo(
+                crate::drawing_set::SetDrawingInfo {
+                    id: s.id.clone(),
+                    info: old,
+                },
+            )])
         }
         Op::SaveVariables(s) => {
             let list = match &s.sheet {

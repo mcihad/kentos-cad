@@ -213,7 +213,12 @@ pub fn inside_edges(
                     max_x: arc.c.x + arc.r,
                     max_y: arc.c.y + arc.r,
                 },
-                _ => Bounds { min_x: a.x.min(b.x), min_y: a.y.min(b.y), max_x: a.x.max(b.x), max_y: a.y.max(b.y) },
+                _ => Bounds {
+                    min_x: a.x.min(b.x),
+                    min_y: a.y.min(b.y),
+                    max_x: a.x.max(b.x),
+                    max_y: a.y.max(b.y),
+                },
             };
             for (s, n) in within(doc, store, points, &near, &edited) {
                 if !found.iter().any(|(f, _)| *f == s) {
@@ -227,7 +232,10 @@ pub fn inside_edges(
         let others: Vec<Neighbour> = edits
             .iter()
             .filter(|(s, ..)| s != own)
-            .map(|(_, b, _)| Neighbour { shape: b.clone(), locked: false })
+            .map(|(_, b, _)| Neighbour {
+                shape: b.clone(),
+                locked: false,
+            })
             .collect();
         let held: Vec<Vec2> = topology_edit::carried(&others, &edges, points)
             .iter()
@@ -236,11 +244,18 @@ pub fn inside_edges(
                 _ => None,
             })
             .collect();
-        let kept = |c: &Change| edited_too || !matches!(c, Change::Move { at, .. } if held.iter().any(|h| h.x == at.x && h.y == at.y));
+        let kept = |c: &Change| {
+            edited_too
+                || !matches!(c, Change::Move { at, .. } if held.iter().any(|h| h.x == at.x && h.y == at.y))
+        };
         if edited_too {
             list.extend(others);
         }
-        extra.extend(topology_edit::carried(&list, &edges, points).into_iter().filter(|c| kept(c)));
+        extra.extend(
+            topology_edit::carried(&list, &edges, points)
+                .into_iter()
+                .filter(|c| kept(c)),
+        );
         let unlocked: Vec<Neighbour> = list.into_iter().filter(|n| !n.locked).collect();
         carried += topology_edit::carried(&unlocked, &edges, points)
             .iter()
@@ -253,15 +268,30 @@ pub fn inside_edges(
 /// The edited objects the carried moves (`extra`, [`inside_edges`] with `edited_too`) put right: each one with a vertex
 /// at a carried place, its shape as edited with that vertex moved (Esnet's other stretched objects sharing a T junction
 /// with the edge). Points only with `points`.
-pub fn carry_edited(edits: &[(Slot, Shape, Shape)], extra: &[Change], points: bool) -> Vec<(Slot, Shape)> {
-    let moves: Vec<Change> = extra.iter().filter(|c| matches!(c, Change::Move { .. })).cloned().collect();
+pub fn carry_edited(
+    edits: &[(Slot, Shape, Shape)],
+    extra: &[Change],
+    points: bool,
+) -> Vec<(Slot, Shape)> {
+    let moves: Vec<Change> = extra
+        .iter()
+        .filter(|c| matches!(c, Change::Move { .. }))
+        .cloned()
+        .collect();
     if moves.is_empty() {
         return Vec::new();
     }
     let mut out = Vec::new();
     for (slot, _, after) in edits {
-        let list = [Neighbour { shape: after.clone(), locked: false }];
-        if let Some((_, shape)) = topology_edit::apply(&list, &moves, points).edited.into_iter().next() {
+        let list = [Neighbour {
+            shape: after.clone(),
+            locked: false,
+        }];
+        if let Some((_, shape)) = topology_edit::apply(&list, &moves, points)
+            .edited
+            .into_iter()
+            .next()
+        {
             out.push((*slot, straight(shape)));
         }
     }
@@ -314,7 +344,15 @@ fn ring_edge(s: &Shape, ring: usize, edge: usize) -> Option<(Vec2, Vec2, f64)> {
             let h = holes.as_ref()?.get(k - 1)?;
             (&h.pts, h.bulges.as_deref(), true)
         }
-        (Shape::Polyline { pts, bulges, closed, .. }, 0) => (pts, bulges.as_deref(), *closed),
+        (
+            Shape::Polyline {
+                pts,
+                bulges,
+                closed,
+                ..
+            },
+            0,
+        ) => (pts, bulges.as_deref(), *closed),
         _ => return None,
     };
     let n = pts.len();
@@ -375,7 +413,9 @@ pub fn along_edge(
     ring: usize,
     edge: usize,
 ) -> Result<(Vec<Change>, usize), (&'static str, &'static str)> {
-    let (Some((a, b, bulge)), Some((a2, b2, _))) = (ring_edge(before, ring, edge), ring_edge(after, ring, edge)) else {
+    let (Some((a, b, bulge)), Some((a2, b2, _))) =
+        (ring_edge(before, ring, edge), ring_edge(after, ring, edge))
+    else {
         return Ok((Vec::new(), 0));
     };
     if bulge != 0.0 {
@@ -390,7 +430,9 @@ pub fn along_edge(
         };
         let found = within(doc, store, points, &near, &[slot]);
         let list: Vec<Neighbour> = found.into_iter().map(|(_, n)| n).collect();
-        return if topology_edit::inside_arc(&list, arc.c, arc.r, arc.a0, arc.sweep, points).is_empty() {
+        return if topology_edit::inside_arc(&list, arc.c, arc.r, arc.a0, arc.sweep, points)
+            .is_empty()
+        {
             Ok((Vec::new(), 0))
         } else {
             Err((ON_ARC, "work.at"))

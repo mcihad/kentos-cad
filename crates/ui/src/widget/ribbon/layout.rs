@@ -347,10 +347,14 @@ impl<'a, Message: Clone + 'a> Group<'a, Message> {
         let launcher: Element<'a, Message> = match &self.launcher {
             Some((message, name)) => key_tip(
                 tip(
-                    button(icon(self.launcher_icon.unwrap_or(Icon::Maximize)).size(10.0).tone(Tone::Muted))
-                        .on_press(message.clone())
-                        .padding(crate::theme::metrics::icon_small(10.0))
-                        .style(style::button::ribbon(style::button::Ribbon::Idle)),
+                    button(
+                        icon(self.launcher_icon.unwrap_or(Icon::Maximize))
+                            .size(10.0)
+                            .tone(Tone::Muted),
+                    )
+                    .on_press(message.clone())
+                    .padding(crate::theme::metrics::icon_small(10.0))
+                    .style(style::button::ribbon(style::button::Ribbon::Idle)),
                     Tip::new(name.clone()),
                     tooltip::Position::Bottom,
                 ),
@@ -1020,13 +1024,20 @@ mod tests {
     /// space between buttons): its column ends where its longest name does, not where its family's longest would.
     #[test]
     fn a_small_split_is_as_wide_as_its_own_face() {
-        let split = |label: &str| Button::<()>::small(Icon::Button, label.to_owned()).on_press(()).menu(Menu::new);
+        let split = |label: &str| {
+            Button::<()>::small(Icon::Button, label.to_owned())
+                .on_press(())
+                .menu(Menu::new)
+        };
         let short = tools_width(&[split("Dikdörtgen")], 1);
         let long = tools_width(&[split("Döndürülmüş dikdörtgen")], 1);
         assert!(short < long, "{short} {long}");
         // Its face, its arrow and their paddings: the name's own width and a fixed rest.
         let name = |s: &str| typography::measured_width(s, typography::caption(), false);
         let rest = short - name("Dikdörtgen");
-        assert!((long - name("Döndürülmüş dikdörtgen") - rest).abs() < 0.01, "{short} {long}");
+        assert!(
+            (long - name("Döndürülmüş dikdörtgen") - rest).abs() < 0.01,
+            "{short} {long}"
+        );
     }
 }

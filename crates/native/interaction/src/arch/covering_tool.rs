@@ -141,10 +141,16 @@ impl CoveringTool {
     }
 
     /// The covering to write at the click or the corners drawn; why there is none.
-    fn new_slab(&self, at: Option<Vec2>, corners: Option<&[Vec2]>, cx: &Context<'_>) -> Result<NewSlab, String> {
+    fn new_slab(
+        &self,
+        at: Option<Vec2>,
+        corners: Option<&[Vec2]>,
+        cx: &Context<'_>,
+    ) -> Result<NewSlab, String> {
         let (space, arch, auto) = match (at, corners) {
             (Some(at), _) => {
-                let (uid, s) = Self::room_at(at, cx).ok_or("Burada mahal yok; kaplamayı bir mahalin içine tıklayın.")?;
+                let (uid, s) = Self::room_at(at, cx)
+                    .ok_or("Burada mahal yok; kaplamayı bir mahalin içine tıklayın.")?;
                 let (level_floor, _) = Self::storey_floor(s.arch.level.as_deref(), cx);
                 // On its ceiling (its asma tavan, its height, the slab over it) or on its floor (docs/adr/8040 §3).
                 let h = cx.doc.room_height(&s);
@@ -153,12 +159,16 @@ impl CoveringTool {
                     (Some(h), false) => h.floor + self.thickness,
                     (None, _) => level_floor + self.thickness,
                 };
-                let arch = kentos_commands::ArchInfo { level: s.arch.level.clone(), ..Default::default() };
+                let arch = kentos_commands::ArchInfo {
+                    level: s.arch.level.clone(),
+                    ..Default::default()
+                };
                 (Some(uid), Some(arch), base - level_floor)
             }
             (None, _) => {
                 let arch = cx.new_arch();
-                let (level_floor, height) = Self::storey_floor(arch.as_ref().and_then(|a| a.level.as_deref()), cx);
+                let (level_floor, height) =
+                    Self::storey_floor(arch.as_ref().and_then(|a| a.level.as_deref()), cx);
                 let _ = level_floor;
                 // A ceiling drawn by hand under its storey's top; another covering on its floor.
                 let auto = match (self.ceiling(), height) {
@@ -170,7 +180,13 @@ impl CoveringTool {
         };
         Ok(NewSlab {
             parts: corners.map(|c| {
-                vec![SpacePart { outer: SpaceRing { pts: points::wire_all(c), bulges: None }, holes: Vec::new() }]
+                vec![SpacePart {
+                    outer: SpaceRing {
+                        pts: points::wire_all(c),
+                        bulges: None,
+                    },
+                    holes: Vec::new(),
+                }]
             }),
             space,
             thickness: Some(self.thickness),
@@ -219,7 +235,9 @@ impl CoveringTool {
                 self.drawn.path.push(at);
             }
         }
-        let Some((at, corners)) = self.hovered() else { return };
+        let Some((at, corners)) = self.hovered() else {
+            return;
+        };
         let slab = match self.new_slab(at, corners.as_deref(), cx) {
             Ok(s) => s,
             Err(why) => {
@@ -238,7 +256,9 @@ impl CoveringTool {
             }
             kentos_commands::CommandResult::Failed { error }
             | kentos_commands::CommandResult::Conflict { error }
-            | kentos_commands::CommandResult::NeedsInput { error } => self.why = Some(error.message),
+            | kentos_commands::CommandResult::NeedsInput { error } => {
+                self.why = Some(error.message)
+            }
             _ => {}
         }
     }
@@ -254,7 +274,10 @@ impl CoveringTool {
         let area = self.area;
         let kind = self.kind();
         let written = crate::arch_layer::writing(&kind, cx, |layer, cx| {
-            let input = SlabsCreate { layer_id: layer.to_owned(), ..self.call(slab.clone(), cx) };
+            let input = SlabsCreate {
+                layer_id: layer.to_owned(),
+                ..self.call(slab.clone(), cx)
+            };
             let result = slabs_create::execute(&mut ExecutionContext::new(cx.doc), input);
             points::written(result, cx).is_some()
         });
@@ -279,7 +302,14 @@ impl CoveringTool {
             .iter()
             .map(|t| OptionChoice {
                 typed: (*t).into(),
-                label: format!("{} ({t})", if *t == "CEILING" { "Asma tavan" } else { Covering::word(t) }),
+                label: format!(
+                    "{} ({t})",
+                    if *t == "CEILING" {
+                        "Asma tavan"
+                    } else {
+                        Covering::word(t)
+                    }
+                ),
                 icon: None,
                 preview: None,
                 checked: *t == self.covering.predefined,
@@ -373,9 +403,13 @@ impl Tool for CoveringTool {
         match self.ask {
             Some(Ask::Thickness) => return words("kaplamanın kalınlığını yazın (12.5 mm gibi)"),
             Some(Ask::Offset) => {
-                return words("üst yüzünün katın kotuna göre farkını yazın (boş ya da Oto: mahalin tavanında ya da tabanında)");
+                return words(
+                    "üst yüzünün katın kotuna göre farkını yazın (boş ya da Oto: mahalin tavanında ya da tabanında)",
+                );
             }
-            Some(Ask::Material) => return words("malzemesini yazın (Alçıpan, Parke gibi; boş: söylenmez)"),
+            Some(Ask::Material) => {
+                return words("malzemesini yazın (Alçıpan, Parke gibi; boş: söylenmez)");
+            }
             None => {}
         }
         let step = match (self.room, self.pts.len()) {
@@ -384,14 +418,36 @@ impl Tool for CoveringTool {
             (false, n) if n < 3 => "kaplamanın köşelerine tıklayın",
             _ => "köşelere tıklayın, Enter ile kapatın",
         };
-        let tip = if self.ceiling() { "Asma tavan".to_owned() } else { Covering::word(&self.covering.predefined).to_owned() };
-        let offset = self.offset.map_or_else(|| "Oto".to_owned(), |v| covering_length(&self.format, v));
+        let tip = if self.ceiling() {
+            "Asma tavan".to_owned()
+        } else {
+            Covering::word(&self.covering.predefined).to_owned()
+        };
+        let offset = self
+            .offset
+            .map_or_else(|| "Oto".to_owned(), |v| covering_length(&self.format, v));
         let mut p = Prompt::new("Kaplama", step)
-            .option_with("Sınır", "S", if self.room { "Mahal" } else { "Köşeleri çiz" })
+            .option_with(
+                "Sınır",
+                "S",
+                if self.room {
+                    "Mahal"
+                } else {
+                    "Köşeleri çiz"
+                },
+            )
             .option_with("Tip", "P", tip)
-            .option_with("Kalınlık", "E", covering_length(&self.format, self.thickness))
+            .option_with(
+                "Kalınlık",
+                "E",
+                covering_length(&self.format, self.thickness),
+            )
             .option_with("Kot farkı", "F", offset)
-            .option_with("Malzeme", "M", self.material.clone().unwrap_or_else(|| "Yok".into()));
+            .option_with(
+                "Malzeme",
+                "M",
+                self.material.clone().unwrap_or_else(|| "Yok".into()),
+            );
         if !self.room && !self.pts.is_empty() {
             p = p.option("Geri al", "G");
         }
@@ -448,8 +504,15 @@ impl Tool for CoveringTool {
                 self.pts.clear();
             }
             "P" => {
-                let at = Covering::TYPES.iter().position(|t| *t == self.covering.predefined).unwrap_or(0);
-                return self.choose_option("P", Covering::TYPES[(at + 1) % Covering::TYPES.len()], cx);
+                let at = Covering::TYPES
+                    .iter()
+                    .position(|t| *t == self.covering.predefined)
+                    .unwrap_or(0);
+                return self.choose_option(
+                    "P",
+                    Covering::TYPES[(at + 1) % Covering::TYPES.len()],
+                    cx,
+                );
             }
             "E" => self.ask = Some(Ask::Thickness),
             "F" => self.ask = Some(Ask::Offset),
@@ -482,7 +545,12 @@ impl Tool for CoveringTool {
             Setting::choice("S", "Sınır", self.bound_choices()),
             Setting::choice("P", "Tip", self.type_choices()),
             Setting::text("E", "Kalınlık", covering_length(f, self.thickness)),
-            Setting::text("F", "Kot farkı", self.offset.map_or_else(|| "Oto".to_owned(), |v| covering_length(f, v))),
+            Setting::text(
+                "F",
+                "Kot farkı",
+                self.offset
+                    .map_or_else(|| "Oto".to_owned(), |v| covering_length(f, v)),
+            ),
             Setting::text("M", "Malzeme", self.material.clone().unwrap_or_default()),
             Setting::hint(
                 "K",
@@ -500,7 +568,11 @@ impl Tool for CoveringTool {
         }
         match key {
             "E" | "F" => {
-                let ask = if key == "E" { Ask::Thickness } else { Ask::Offset };
+                let ask = if key == "E" {
+                    Ask::Thickness
+                } else {
+                    Ask::Offset
+                };
                 if !self.set_length(ask, value.trim(), cx) {
                     return false;
                 }
@@ -533,7 +605,11 @@ impl Tool for CoveringTool {
                 self.covering = covering_of(t);
                 // A ceiling's first thickness and another's, until one is typed (docs/adr/8070 §10).
                 if self.ceiling() != was_ceiling {
-                    self.thickness = if self.ceiling() { CEILING_THICKNESS } else { COVERING_THICKNESS };
+                    self.thickness = if self.ceiling() {
+                        CEILING_THICKNESS
+                    } else {
+                        COVERING_THICKNESS
+                    };
                 }
             }
             _ => return false,
@@ -577,13 +653,21 @@ impl Tool for CoveringTool {
             at,
             lines: match (&self.why, self.area) {
                 (Some(why), _) => vec![title.clone(), why.clone()],
-                (None, Some(a)) => vec![format!("{title} · {} · {}", format.area(a), covering_length(format, self.thickness))],
+                (None, Some(a)) => vec![format!(
+                    "{title} · {} · {}",
+                    format.area(a),
+                    covering_length(format, self.thickness)
+                )],
                 _ => vec![title.clone()],
             },
         });
         Preview {
             tag,
-            tag_tone: if self.why.is_some() { Tone::Danger } else { Tone::Accent },
+            tag_tone: if self.why.is_some() {
+                Tone::Danger
+            } else {
+                Tone::Accent
+            },
             ..self.drawn.clone()
         }
     }

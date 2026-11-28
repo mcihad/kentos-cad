@@ -20,8 +20,12 @@
 use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Size, Task, Theme, mouse};
-use kentos_commands::{AlignmentsCheck, AlignmentsChecked, DesignFinding, RoadProfilesCheck, RoadProfilesChecked};
-use kentos_native_application::{road_alignments, road_alignments_check, road_profiles, road_profiles_check};
+use kentos_commands::{
+    AlignmentsCheck, AlignmentsChecked, DesignFinding, RoadProfilesCheck, RoadProfilesChecked,
+};
+use kentos_native_application::{
+    road_alignments, road_alignments_check, road_profiles, road_profiles_check,
+};
 use kentos_road::alignment::Kind;
 use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
@@ -90,7 +94,11 @@ pub enum Listed {
 
 impl std::fmt::Display for Listed {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(if *self == Listed::Findings { "Bulgular" } else { "Kurp çiftleri" })
+        f.write_str(if *self == Listed::Findings {
+            "Bulgular"
+        } else {
+            "Kurp çiftleri"
+        })
     }
 }
 
@@ -103,7 +111,11 @@ enum Checked {
 
 impl std::fmt::Display for Checked {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(if *self == Checked::Alignment { "Aks" } else { "Boykesit" })
+        f.write_str(if *self == Checked::Alignment {
+            "Aks"
+        } else {
+            "Boykesit"
+        })
     }
 }
 
@@ -129,12 +141,17 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("{what} bir sayı olmalı: “{t}”."))
+    t.replace(',', ".")
+        .parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what} bir sayı olmalı: “{t}”."))
 }
 
 impl Window {
     pub(crate) fn alignment_input(&self) -> Result<AlignmentsCheck, String> {
-        let Some(alignment) = self.alignment.clone() else { return Err("Bir aks seçin.".into()) };
+        let Some(alignment) = self.alignment.clone() else {
+            return Err("Bir aks seçin.".into());
+        };
         let f = |k: usize| number(&self.alignment_fields[k], ALIGNMENT_FIELDS[k]);
         Ok(AlignmentsCheck {
             alignment,
@@ -150,7 +167,9 @@ impl Window {
     }
 
     pub(crate) fn profile_input(&self) -> Result<RoadProfilesCheck, String> {
-        let Some(profile) = self.profile.clone() else { return Err("Bir boykesit seçin.".into()) };
+        let Some(profile) = self.profile.clone() else {
+            return Err("Bir boykesit seçin.".into());
+        };
         let f = |k: usize| number(&self.profile_fields[k], PROFILE_FIELDS[k]);
         let percent = |k: usize| f(k).map(|v| v.map(|p| p / 100.0));
         Ok(RoadProfilesCheck {
@@ -186,9 +205,16 @@ impl DesignCheckWindowApp for App {
             self.warn("Tasarım denetimi yalnız yol projesinde (KentOS Yol) olur.".to_owned());
             return;
         }
-        let alignment = doc.model.road_alignments().iter().find(|a| a.offset_of.is_none()).map(|a| a.id.clone());
+        let alignment = doc
+            .model
+            .road_alignments()
+            .iter()
+            .find(|a| a.offset_of.is_none())
+            .map(|a| a.id.clone());
         let Some(alignment) = alignment else {
-            self.warn("Tasarım denetimi bir aksta okunur: önce Güzergâh'ta bir aks oluşturun.".to_owned());
+            self.warn(
+                "Tasarım denetimi bir aksta okunur: önce Güzergâh'ta bir aks oluşturun.".to_owned(),
+            );
             return;
         };
         let profile = doc.model.road_profiles().first().map(|p| p.id.clone());
@@ -197,7 +223,9 @@ impl DesignCheckWindowApp for App {
             profile,
             ..Window::default()
         }));
-        self.dialog = Some(crate::road::dialog(crate::road::RoadDialogKind::DesignCheck));
+        self.dialog = Some(crate::road::dialog(
+            crate::road::RoadDialogKind::DesignCheck,
+        ));
         let _ = self.design_check_event(Event::Preview);
     }
 
@@ -210,14 +238,18 @@ impl DesignCheckWindowApp for App {
             Event::Alignment(a) => w.alignment = Some(a),
             Event::Profile(p) => w.profile = Some(p),
             Event::Kinks(k) => w.kinks = k,
-            Event::AlignmentField(k, t) => w.alignment_fields[k.min(ALIGNMENT_FIELDS.len() - 1)] = t,
+            Event::AlignmentField(k, t) => {
+                w.alignment_fields[k.min(ALIGNMENT_FIELDS.len() - 1)] = t
+            }
             Event::ProfileField(k, t) => w.profile_fields[k.min(PROFILE_FIELDS.len() - 1)] = t,
             Event::List(l) => {
                 w.list = l;
                 return Task::none();
             }
             Event::Preview => {
-                let Some(doc) = &self.document else { return Task::none() };
+                let Some(doc) = &self.document else {
+                    return Task::none();
+                };
                 let read = if w.profile_mode {
                     w.profile_input()
                         .and_then(|q| road_profiles_check::preview(&doc.model, &q))
@@ -254,36 +286,86 @@ impl DesignCheckWindowApp for App {
             return iced::widget::text("").into();
         };
         let model = self.document.as_ref().map(|d| &d.model);
-        let checked = if w.profile_mode { Checked::Profile } else { Checked::Alignment };
+        let checked = if w.profile_mode {
+            Checked::Profile
+        } else {
+            Checked::Alignment
+        };
         let mut form = Form::new()
             .label_width(170.0)
             .section("Denetlenen")
-            .row(Segmented::new([Checked::Alignment, Checked::Profile], checked, |c| msg(Event::Mode(c == Checked::Profile))));
+            .row(Segmented::new(
+                [Checked::Alignment, Checked::Profile],
+                checked,
+                |c| msg(Event::Mode(c == Checked::Profile)),
+            ));
         if w.profile_mode {
-            let list: Vec<(String, String)> =
-                model.map_or_else(Vec::new, |m| m.road_profiles().iter().map(|p| (p.id.clone(), p.name.clone())).collect());
+            let list: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
+                m.road_profiles()
+                    .iter()
+                    .map(|p| (p.id.clone(), p.name.clone()))
+                    .collect()
+            });
             let ids: Vec<String> = list.iter().map(|p| p.0.clone()).collect();
-            let at = w.profile.as_ref().and_then(|p| ids.iter().position(|i| i == p));
-            form = form.field("Boykesit", Select::new(list.iter().map(|p| Choice::new(p.1.clone())), at, move |i| msg(Event::Profile(ids[i].clone()))));
+            let at = w
+                .profile
+                .as_ref()
+                .and_then(|p| ids.iter().position(|i| i == p));
+            form = form.field(
+                "Boykesit",
+                Select::new(
+                    list.iter().map(|p| Choice::new(p.1.clone())),
+                    at,
+                    move |i| msg(Event::Profile(ids[i].clone())),
+                ),
+            );
             form = form.section("Kurallar");
             for (k, name) in PROFILE_FIELDS.iter().enumerate() {
-                form = form.field(*name, kentos_ui::widget::text_field("yok", &w.profile_fields[k]).on_input(move |t| msg(Event::ProfileField(k, t))));
+                form = form.field(
+                    *name,
+                    kentos_ui::widget::text_field("yok", &w.profile_fields[k])
+                        .on_input(move |t| msg(Event::ProfileField(k, t))),
+                );
             }
             form = form.help("K, eğimin %1 değiştiği yatay boydur (m/%). Yarıçap H bir parabolde 100·K'dir (asimetrikte keskin kolun), dairede kendi yarıçapı. Standart hangisini veriyorsa onu yazın.");
         } else {
             let list: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
-                m.road_alignments().iter().filter(|a| a.offset_of.is_none()).map(|a| (a.id.clone(), a.name.clone())).collect()
+                m.road_alignments()
+                    .iter()
+                    .filter(|a| a.offset_of.is_none())
+                    .map(|a| (a.id.clone(), a.name.clone()))
+                    .collect()
             });
             let ids: Vec<String> = list.iter().map(|p| p.0.clone()).collect();
-            let at = w.alignment.as_ref().and_then(|p| ids.iter().position(|i| i == p));
-            form = form.field("Aks", Select::new(list.iter().map(|p| Choice::new(p.1.clone())), at, move |i| msg(Event::Alignment(ids[i].clone()))));
+            let at = w
+                .alignment
+                .as_ref()
+                .and_then(|p| ids.iter().position(|i| i == p));
+            form = form.field(
+                "Aks",
+                Select::new(
+                    list.iter().map(|p| Choice::new(p.1.clone())),
+                    at,
+                    move |i| msg(Event::Alignment(ids[i].clone())),
+                ),
+            );
             form = form.section("Kurallar");
             for (k, name) in ALIGNMENT_FIELDS.iter().enumerate() {
-                form = form.field(*name, kentos_ui::widget::text_field("yok", &w.alignment_fields[k]).on_input(move |t| msg(Event::AlignmentField(k, t))));
+                form = form.field(
+                    *name,
+                    kentos_ui::widget::text_field("yok", &w.alignment_fields[k])
+                        .on_input(move |t| msg(Event::AlignmentField(k, t))),
+                );
             }
-            form = form.row(crate::exchange::words::check(w.kinks, "Kurpsuz kırıkları bul", Some(msg(Event::Kinks(!w.kinks)))));
+            form = form.row(crate::exchange::words::check(
+                w.kinks,
+                "Kurpsuz kırıkları bul",
+                Some(msg(Event::Kinks(!w.kinks))),
+            ));
         }
-        form = form.row(kentos_ui::label::caption("Sınırlar tasarım standardınındır; KentOS değer vermez. Boş kural denetlenmez."));
+        form = form.row(kentos_ui::label::caption(
+            "Sınırlar tasarım standardınındır; KentOS değer vermez. Boş kural denetlenmez.",
+        ));
         let mut d = RoadDialog::new(TITLE, form, msg(Event::Close)).form_width(380.0);
         match &w.preview {
             None => {}
@@ -298,7 +380,15 @@ impl DesignCheckWindowApp for App {
                         .into_iter()
                         .find(|(d, _)| d.id == a.alignment)
                         .and_then(|(_, b)| b.ok())
-                        .map(|b| Shape::Elements(b.core.elements.iter().map(|e| (e.kind, e.station, e.station + e.length)).collect())),
+                        .map(|b| {
+                            Shape::Elements(
+                                b.core
+                                    .elements
+                                    .iter()
+                                    .map(|e| (e.kind, e.station, e.station + e.length))
+                                    .collect(),
+                            )
+                        }),
                     (Read::Profile(p), Some(m)) => road_profiles::made_profiles(m)
                         .into_iter()
                         .find(|(d, _)| d.id == p.profile)
@@ -318,13 +408,25 @@ impl DesignCheckWindowApp for App {
                     _ => None,
                 };
                 let rules = if w.profile_mode {
-                    w.profile_fields.iter().filter(|f| !f.trim().is_empty()).count()
+                    w.profile_fields
+                        .iter()
+                        .filter(|f| !f.trim().is_empty())
+                        .count()
                 } else {
-                    w.alignment_fields.iter().filter(|f| !f.trim().is_empty()).count() + usize::from(w.kinks)
+                    w.alignment_fields
+                        .iter()
+                        .filter(|f| !f.trim().is_empty())
+                        .count()
+                        + usize::from(w.kinks)
                 };
                 d = d
                     .picture(
-                        iced::widget::canvas(Strip { shape: shape.unwrap_or(Shape::Elements(Vec::new())), findings }).width(Fill).height(Fill),
+                        iced::widget::canvas(Strip {
+                            shape: shape.unwrap_or(Shape::Elements(Vec::new())),
+                            findings,
+                        })
+                        .width(Fill)
+                        .height(Fill),
                         260.0,
                     )
                     .legend(if w.profile_mode {
@@ -345,16 +447,28 @@ impl DesignCheckWindowApp for App {
                     findings
                         .iter()
                         .map(|f| {
-                            let at = if (f.to - f.from).abs() < 1e-9 { format!("{:.2}", f.from) } else { format!("{:.2} – {:.2}", f.from, f.to) };
+                            let at = if (f.to - f.from).abs() < 1e-9 {
+                                format!("{:.2}", f.from)
+                            } else {
+                                format!("{:.2} – {:.2}", f.from, f.to)
+                            };
                             vec![f.message.clone(), at]
                         })
                         .collect(),
-                    if rules == 0 { "Kural yazılmadı: soldaki alanlara sınır yazın" } else { "Verilen kuralların hepsi tutuyor" },
+                    if rules == 0 {
+                        "Kural yazılmadı: soldaki alanlara sınır yazın"
+                    } else {
+                        "Verilen kuralların hepsi tutuyor"
+                    },
                 );
                 d = match read {
                     Read::Alignment(a) => {
                         let pairs = road_dialog::table(
-                            vec![col("Kurplar", 120.0), col("Tür", 240.0), num("Aradaki aliyman (m)", 160.0)],
+                            vec![
+                                col("Kurplar", 120.0),
+                                col("Tür", 240.0),
+                                num("Aradaki aliyman (m)", 160.0),
+                            ],
                             a.pairs
                                 .iter()
                                 .map(|p| {
@@ -364,13 +478,26 @@ impl DesignCheckWindowApp for App {
                                         (false, true) => "aynı yön, bitişik (birleşik)",
                                         (false, false) => "aynı yön",
                                     };
-                                    vec![format!("{} – {}", p.between[0], p.between[1]), kind.to_owned(), format!("{:.2}", p.tangent)]
+                                    vec![
+                                        format!("{} – {}", p.between[0], p.between[1]),
+                                        kind.to_owned(),
+                                        format!("{:.2}", p.tangent),
+                                    ]
                                 })
                                 .collect(),
                             "Kurp çifti yok",
                         );
-                        let shown = if w.list == Listed::Pairs { pairs } else { finding_rows };
-                        d.detail(road_dialog::detail_choice([Listed::Findings, Listed::Pairs], w.list, |l| msg(Event::List(l)), shown))
+                        let shown = if w.list == Listed::Pairs {
+                            pairs
+                        } else {
+                            finding_rows
+                        };
+                        d.detail(road_dialog::detail_choice(
+                            [Listed::Findings, Listed::Pairs],
+                            w.list,
+                            |l| msg(Event::List(l)),
+                            shown,
+                        ))
                     }
                     Read::Profile(_) => d.detail(finding_rows),
                 };
@@ -387,7 +514,10 @@ impl DesignCheckWindowApp for App {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(PREVIEW) => Some(msg(Event::Preview)),
             Control::Fill(name, t) if !w.profile_mode && ALIGNMENT_FIELDS.contains(&name) => {
-                let k = ALIGNMENT_FIELDS.iter().position(|f| *f == name).unwrap_or(0);
+                let k = ALIGNMENT_FIELDS
+                    .iter()
+                    .position(|f| *f == name)
+                    .unwrap_or(0);
                 Some(msg(Event::AlignmentField(k, t.to_owned())))
             }
             Control::Fill(name, t) if w.profile_mode && PROFILE_FIELDS.contains(&name) => {
@@ -415,23 +545,52 @@ struct Strip<'a> {
 impl canvas::Program<Message> for Strip<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let text = |frame: &mut canvas::Frame, s: String, p: Point, color: Color| {
-            frame.fill_text(Text { content: s, position: p, color, size: Pixels(11.0), ..Text::default() })
+            frame.fill_text(Text {
+                content: s,
+                position: p,
+                color,
+                size: Pixels(11.0),
+                ..Text::default()
+            })
         };
         let (s0, s1) = match &self.shape {
-            Shape::Elements(e) => (e.first().map_or(0.0, |x| x.1), e.last().map_or(1.0, |x| x.2)),
-            Shape::Profile(p) => (p.first().map_or(0.0, |x| x[0]), p.last().map_or(1.0, |x| x[0])),
+            Shape::Elements(e) => (
+                e.first().map_or(0.0, |x| x.1),
+                e.last().map_or(1.0, |x| x.2),
+            ),
+            Shape::Profile(p) => (
+                p.first().map_or(0.0, |x| x[0]),
+                p.last().map_or(1.0, |x| x[0]),
+            ),
         };
         let (left, right) = (16.0_f32, bounds.width - 16.0);
         let x = |s: f64| left + ((s - s0) / (s1 - s0).max(1e-9)) as f32 * (right - left);
         let (top, bottom) = (28.0_f32, bounds.height - 34.0);
         for f in self.findings {
             let (a, b) = (x(f.from), x(f.to));
-            frame.fill_rectangle(Point::new(a.min(b) - 1.0, top), Size::new((b - a).abs().max(3.0), bottom - top), Color { a: 0.18, ..tk.danger });
-            frame.stroke(&Path::line(Point::new(a, top), Point::new(a, bottom)), Stroke::default().with_width(1.0).with_color(tk.danger));
+            frame.fill_rectangle(
+                Point::new(a.min(b) - 1.0, top),
+                Size::new((b - a).abs().max(3.0), bottom - top),
+                Color {
+                    a: 0.18,
+                    ..tk.danger
+                },
+            );
+            frame.stroke(
+                &Path::line(Point::new(a, top), Point::new(a, bottom)),
+                Stroke::default().with_width(1.0).with_color(tk.danger),
+            );
         }
         match &self.shape {
             Shape::Elements(els) => {
@@ -442,11 +601,19 @@ impl canvas::Program<Message> for Strip<'_> {
                         Kind::Spiral => (tk.success, 14.0),
                         Kind::Arc => (tk.accent, 22.0),
                     };
-                    frame.fill_rectangle(Point::new(x(*a), mid - h / 2.0), Size::new((x(*b) - x(*a)).max(1.0), h), color);
+                    frame.fill_rectangle(
+                        Point::new(x(*a), mid - h / 2.0),
+                        Size::new((x(*b) - x(*a)).max(1.0), h),
+                        color,
+                    );
                 }
             }
             Shape::Profile(pts) if pts.len() > 1 => {
-                let (lo, hi) = pts.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| (a.min(p[1]), b.max(p[1])));
+                let (lo, hi) = pts
+                    .iter()
+                    .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| {
+                        (a.min(p[1]), b.max(p[1]))
+                    });
                 let y = |z: f64| bottom - ((z - lo) / (hi - lo).max(1e-6)) as f32 * (bottom - top);
                 let path = Path::new(|p| {
                     p.move_to(Point::new(x(pts[0][0]), y(pts[0][1])));
@@ -454,14 +621,37 @@ impl canvas::Program<Message> for Strip<'_> {
                         p.line_to(Point::new(x(q[0]), y(q[1])));
                     }
                 });
-                frame.stroke(&path, Stroke::default().with_width(2.0).with_color(tk.danger));
-                text(&mut frame, format!("{hi:.2}"), Point::new(left, top - 14.0), tk.muted);
-                text(&mut frame, format!("{lo:.2}"), Point::new(left, bottom + 2.0), tk.muted);
+                frame.stroke(
+                    &path,
+                    Stroke::default().with_width(2.0).with_color(tk.danger),
+                );
+                text(
+                    &mut frame,
+                    format!("{hi:.2}"),
+                    Point::new(left, top - 14.0),
+                    tk.muted,
+                );
+                text(
+                    &mut frame,
+                    format!("{lo:.2}"),
+                    Point::new(left, bottom + 2.0),
+                    tk.muted,
+                );
             }
             Shape::Profile(_) => {}
         }
-        text(&mut frame, format!("{s0:.0}"), Point::new(left, bounds.height - 18.0), tk.muted);
-        text(&mut frame, format!("{s1:.0} m"), Point::new(right - 50.0, bounds.height - 18.0), tk.muted);
+        text(
+            &mut frame,
+            format!("{s0:.0}"),
+            Point::new(left, bounds.height - 18.0),
+            tk.muted,
+        );
+        text(
+            &mut frame,
+            format!("{s1:.0} m"),
+            Point::new(right - 50.0, bounds.height - 18.0),
+            tk.muted,
+        );
         vec![frame.into_geometry()]
     }
 }

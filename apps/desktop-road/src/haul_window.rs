@@ -21,12 +21,17 @@
 //! each one undo step, and closes. The free haul, the sites, the unit prices and the truck's payload are the user's:
 //! nothing is filled in; the cost is the priced items' sum, the trips the hauled volume over the payload (ADR 0907 §5).
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
-use iced::{Center, Color, Element, Fill, Length, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
-use kentos_commands::{CommandWarning, HaulCostDef, HaulDef, HaulReport, HaulSiteDef, HaulSiteKind, HaulsEdit, RoadEditOperation};
+use iced::{
+    Center, Color, Element, Fill, Length, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse,
+};
+use kentos_commands::{
+    CommandWarning, HaulCostDef, HaulDef, HaulReport, HaulSiteDef, HaulSiteKind, HaulsEdit,
+    RoadEditOperation,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_hauls, road_hauls_edit};
 use kentos_ui::theme::{Tokens, typography};
@@ -76,8 +81,16 @@ fn grouped(v: f64, digits: usize) -> String {
         }
         out.push(c);
     }
-    let sign = if v < 0.0 && text.chars().any(|c| c.is_ascii_digit() && c != '0') { "-" } else { "" };
-    if fraction.is_empty() { format!("{sign}{out}") } else { format!("{sign}{out},{fraction}") }
+    let sign = if v < 0.0 && text.chars().any(|c| c.is_ascii_digit() && c != '0') {
+        "-"
+    } else {
+        ""
+    };
+    if fraction.is_empty() {
+        format!("{sign}{out}")
+    } else {
+        format!("{sign}{out},{fraction}")
+    }
 }
 
 fn number(text: &str) -> Result<Option<f64>, ()> {
@@ -123,44 +136,112 @@ impl Row {
             revision: d.revision,
             volume: Some(d.volume.clone()),
             fields: {
-                let price = |f: fn(&HaulCostDef) -> Option<f64>| d.cost.as_ref().and_then(f).map(trimmed).unwrap_or_default();
+                let price = |f: fn(&HaulCostDef) -> Option<f64>| {
+                    d.cost.as_ref().and_then(f).map(trimmed).unwrap_or_default()
+                };
                 [
-                    if d.balance == 0.0 { String::new() } else { trimmed(d.balance) },
+                    if d.balance == 0.0 {
+                        String::new()
+                    } else {
+                        trimmed(d.balance)
+                    },
                     d.free.map(trimmed).unwrap_or_default(),
-                    d.cost.as_ref().map(|c| c.currency.clone()).unwrap_or_default(),
+                    d.cost
+                        .as_ref()
+                        .map(|c| c.currency.clone())
+                        .unwrap_or_default(),
                     price(|c| c.overhaul),
                     price(|c| c.waste),
                     price(|c| c.borrow),
                     price(|c| c.payload),
                 ]
             },
-            sites: d.sites.iter().map(|s| (s.name.clone(), s.kind, trimmed(s.station), trimmed(s.volume))).collect(),
-            unsuitable: d.unsuitable.iter().map(|u| [trimmed(u.from), trimmed(u.to), trimmed(u.share)]).collect(),
-            barriers: d.barriers.iter().map(|b| [b.name.clone(), trimmed(b.station), b.detour.map(trimmed).unwrap_or_default()]).collect(),
+            sites: d
+                .sites
+                .iter()
+                .map(|s| {
+                    (
+                        s.name.clone(),
+                        s.kind,
+                        trimmed(s.station),
+                        trimmed(s.volume),
+                    )
+                })
+                .collect(),
+            unsuitable: d
+                .unsuitable
+                .iter()
+                .map(|u| [trimmed(u.from), trimmed(u.to), trimmed(u.share)])
+                .collect(),
+            barriers: d
+                .barriers
+                .iter()
+                .map(|b| {
+                    [
+                        b.name.clone(),
+                        trimmed(b.station),
+                        b.detour.map(trimmed).unwrap_or_default(),
+                    ]
+                })
+                .collect(),
             approved: d.approved.clone(),
             history: d.history.clone(),
             net_layer: d.network.as_ref().and_then(|n| n.layers.first().cloned()),
-            net_more: d.network.as_ref().map(|n| n.layers.iter().skip(1).cloned().collect()).unwrap_or_default(),
+            net_more: d
+                .network
+                .as_ref()
+                .map(|n| n.layers.iter().skip(1).cloned().collect())
+                .unwrap_or_default(),
             net_fields: [
-                d.network.as_ref().map(|n| trimmed(n.connect)).unwrap_or_default(),
-                d.network.as_ref().and_then(|n| n.reach).map(trimmed).unwrap_or_default(),
+                d.network
+                    .as_ref()
+                    .map(|n| trimmed(n.connect))
+                    .unwrap_or_default(),
+                d.network
+                    .as_ref()
+                    .and_then(|n| n.reach)
+                    .map(trimmed)
+                    .unwrap_or_default(),
             ],
-            xy: d.sites.iter().map(|s| s.at.map_or_else(Default::default, |p| [trimmed(p.x), trimmed(p.y)])).collect(),
+            xy: d
+                .sites
+                .iter()
+                .map(|s| {
+                    s.at.map_or_else(Default::default, |p| [trimmed(p.x), trimmed(p.y)])
+                })
+                .collect(),
         }
     }
 
     fn def(&self) -> Result<HaulDef, String> {
-        let volume = self.volume.clone().ok_or("Bir kübaj seçin: Brükner onun kütle ordinatıdır.")?;
-        let balance = number(&self.fields[0]).map_err(|()| "Denge çizgisi bir sayı olmalı.".to_owned())?.unwrap_or(0.0);
-        let free = number(&self.fields[1]).map_err(|()| "Serbest taşıma bir sayı olmalı.".to_owned())?;
+        let volume = self
+            .volume
+            .clone()
+            .ok_or("Bir kübaj seçin: Brükner onun kütle ordinatıdır.")?;
+        let balance = number(&self.fields[0])
+            .map_err(|()| "Denge çizgisi bir sayı olmalı.".to_owned())?
+            .unwrap_or(0.0);
+        let free =
+            number(&self.fields[1]).map_err(|()| "Serbest taşıma bir sayı olmalı.".to_owned())?;
         let mut prices = [None; 4];
-        for (k, what) in ["Fazla taşıma fiyatı", "Döküm fiyatı", "Ödünç fiyatı", "Kamyon yükü"].into_iter().enumerate() {
-            prices[k] = number(&self.fields[3 + k]).map_err(|()| format!("{what} bir sayı olmalı."))?;
+        for (k, what) in [
+            "Fazla taşıma fiyatı",
+            "Döküm fiyatı",
+            "Ödünç fiyatı",
+            "Kamyon yükü",
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            prices[k] =
+                number(&self.fields[3 + k]).map_err(|()| format!("{what} bir sayı olmalı."))?;
         }
         let currency = self.fields[2].trim();
         let cost = match (currency.is_empty(), prices.iter().any(Option::is_some)) {
             (true, false) => None,
-            (true, true) => return Err("Birim fiyat ya da kamyon yükü için para birimini yazın.".to_owned()),
+            (true, true) => {
+                return Err("Birim fiyat ya da kamyon yükü için para birimini yazın.".to_owned());
+            }
             (false, _) => Some(HaulCostDef {
                 currency: currency.to_owned(),
                 overhaul: prices[0],
@@ -176,7 +257,10 @@ impl Row {
             match (number(&xy[0]), number(&xy[1])) {
                 (Ok(Some(x)), Ok(Some(y))) => Ok(Some(kentos_commands::Vec2 { x, y })),
                 (Ok(None), Ok(None)) => Ok(None),
-                _ => Err(format!("{}. alanın konumu doğu ve kuzey iki sayı olmalı (ikisi de boşsa alan yol üstündedir).", i + 1)),
+                _ => Err(format!(
+                    "{}. alanın konumu doğu ve kuzey iki sayı olmalı (ikisi de boşsa alan yol üstündedir).",
+                    i + 1
+                )),
             }
         };
         for (i, (name, kind, station, volume)) in self.sites.iter().enumerate() {
@@ -185,16 +269,28 @@ impl Row {
                 Ok(Some(v)) => Ok(v),
                 _ => Err(format!("{n}. alanın {what} bir sayı olmalı.")),
             };
-            sites.push(HaulSiteDef { name: name.clone(), kind: *kind, station: need(station, "km'si")?, volume: need(volume, "hacmi")?, at: place(i)? });
+            sites.push(HaulSiteDef {
+                name: name.clone(),
+                kind: *kind,
+                station: need(station, "km'si")?,
+                volume: need(volume, "hacmi")?,
+                at: place(i)?,
+            });
         }
         let mut unsuitable = Vec::new();
         for (i, u) in self.unsuitable.iter().enumerate() {
             let n = i + 1;
             let need = |t: &str, what: &str| match number(t) {
                 Ok(Some(v)) => Ok(v),
-                _ => Err(format!("{n}. uygunsuz malzeme satırının {what} bir sayı olmalı.")),
+                _ => Err(format!(
+                    "{n}. uygunsuz malzeme satırının {what} bir sayı olmalı."
+                )),
             };
-            unsuitable.push(kentos_commands::HaulUnsuitableDef { from: need(&u[0], "başı")?, to: need(&u[1], "sonu")?, share: need(&u[2], "payı")? });
+            unsuitable.push(kentos_commands::HaulUnsuitableDef {
+                from: need(&u[0], "başı")?,
+                to: need(&u[1], "sonu")?,
+                share: need(&u[2], "payı")?,
+            });
         }
         let mut barriers = Vec::new();
         for (i, b) in self.barriers.iter().enumerate() {
@@ -203,8 +299,13 @@ impl Row {
                 Ok(Some(v)) => v,
                 _ => return Err(format!("{n}. engelin km'si bir sayı olmalı.")),
             };
-            let detour = number(&b[2]).map_err(|()| format!("{n}. engelin dolaşması bir sayı olmalı (boş: kapalı)."))?;
-            barriers.push(kentos_commands::HaulBarrierDef { name: b[0].trim().to_owned(), station, detour });
+            let detour = number(&b[2])
+                .map_err(|()| format!("{n}. engelin dolaşması bir sayı olmalı (boş: kapalı)."))?;
+            barriers.push(kentos_commands::HaulBarrierDef {
+                name: b[0].trim().to_owned(),
+                station,
+                detour,
+            });
         }
         Ok(HaulDef {
             id: self.id.clone(),
@@ -222,11 +323,14 @@ impl Row {
             network: match &self.net_layer {
                 None => None,
                 Some(layer) => Some(kentos_commands::HaulNetworkDef {
-                    layers: std::iter::once(layer.clone()).chain(self.net_more.iter().cloned()).collect(),
+                    layers: std::iter::once(layer.clone())
+                        .chain(self.net_more.iter().cloned())
+                        .collect(),
                     connect: number(&self.net_fields[0])
                         .map_err(|()| "Bağlantı toleransı bir sayı olmalı.".to_owned())?
                         .unwrap_or(NET_CONNECT),
-                    reach: number(&self.net_fields[1]).map_err(|()| "Aksa erişim bir sayı olmalı.".to_owned())?,
+                    reach: number(&self.net_fields[1])
+                        .map_err(|()| "Aksa erişim bir sayı olmalı.".to_owned())?,
                 }),
             },
         })
@@ -304,7 +408,12 @@ pub(crate) trait HaulWindowApp {
     fn haul_write(&mut self, edit: HaulsEdit) -> bool;
     fn save_hauls(&mut self) -> Task<Message>;
     fn road_haul_view(&self) -> Element<'_, Message>;
-    fn haul_editor<'a>(&'a self, w: &'a Window, r: &'a Row, volumes: &[(String, String)]) -> Element<'a, Message>;
+    fn haul_editor<'a>(
+        &'a self,
+        w: &'a Window,
+        r: &'a Row,
+        volumes: &[(String, String)],
+    ) -> Element<'a, Message>;
     fn haul_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
@@ -348,16 +457,27 @@ impl HaulWindowApp for App {
             return;
         };
         w.preview = match r.def().and_then(|d| road_hauls::preview(&doc.model, &d)) {
-            Err(e) => Preview { why: Some(e), ..Preview::default() },
-            Ok((report, warnings)) => Preview { report: Some(report), warnings, why: None },
+            Err(e) => Preview {
+                why: Some(e),
+                ..Preview::default()
+            },
+            Ok((report, warnings)) => Preview {
+                report: Some(report),
+                warnings,
+                why: None,
+            },
         };
     }
 
     /// The project's earthwork volumes: id and name.
     fn haul_volumes(&self) -> Vec<(String, String)> {
-        self.document
-            .as_ref()
-            .map_or_else(Vec::new, |d| d.model.road_volumes().iter().map(|v| (v.id.clone(), v.name.clone())).collect())
+        self.document.as_ref().map_or_else(Vec::new, |d| {
+            d.model
+                .road_volumes()
+                .iter()
+                .map(|v| (v.id.clone(), v.name.clone()))
+                .collect()
+        })
     }
 
     fn haul_event(&mut self, event: Event) -> Task<Message> {
@@ -372,15 +492,26 @@ impl HaulWindowApp for App {
                 w.line = None;
             }
             Event::New => match volumes.first() {
-                None => warning = Some("Brükner bir kübajın kütle ordinatıdır: önce Kübaj'da bir kübaj hesabı oluşturun."),
+                None => {
+                    warning = Some(
+                        "Brükner bir kübajın kütle ordinatıdır: önce Kübaj'da bir kübaj hesabı oluşturun.",
+                    )
+                }
                 Some((id, _)) => {
                     let taken: Vec<String> = w.rows.iter().map(|r| r.id.clone()).collect();
-                    let new_id = (1..).map(|n| format!("h-{n}")).find(|x| !taken.contains(x)).unwrap_or_default();
+                    let new_id = (1..)
+                        .map(|n| format!("h-{n}"))
+                        .find(|x| !taken.contains(x))
+                        .unwrap_or_default();
                     let n = w.rows.len() + 1;
                     // The first volume, the balance line at 0; the free haul and the sites are the user's.
                     w.rows.push(Row {
                         id: new_id,
-                        name: if n == 1 { "Brükner".to_owned() } else { format!("Brükner {n}") },
+                        name: if n == 1 {
+                            "Brükner".to_owned()
+                        } else {
+                            format!("Brükner {n}")
+                        },
                         revision: 0,
                         volume: Some(id.clone()),
                         fields: Default::default(),
@@ -401,7 +532,8 @@ impl HaulWindowApp for App {
             Event::Remove => {
                 if let Some(i) = w.chosen.filter(|i| *i < w.rows.len()) {
                     w.rows.remove(i);
-                    w.chosen = (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
+                    w.chosen =
+                        (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
                 }
             }
             Event::Name(t) => {
@@ -410,9 +542,14 @@ impl HaulWindowApp for App {
                 }
             }
             Event::Volume(id) => {
-                let saved = w.chosen.and_then(|i| w.rows.get(i)).is_some_and(|r| w.kept.iter().any(|k| k.id == r.id));
+                let saved = w
+                    .chosen
+                    .and_then(|i| w.rows.get(i))
+                    .is_some_and(|r| w.kept.iter().any(|k| k.id == r.id));
                 if saved {
-                    warning = Some("Kaydedilmiş Brüknerin kübajı değişmez; başka kübaj için yeni bir Brükner oluşturun.");
+                    warning = Some(
+                        "Kaydedilmiş Brüknerin kübajı değişmez; başka kübaj için yeni bir Brükner oluşturun.",
+                    );
                 } else if let Some(r) = chosen_row(w) {
                     r.volume = Some(id);
                 }
@@ -464,7 +601,12 @@ impl HaulWindowApp for App {
                 if let Some(r) = chosen_row(w) {
                     // A new site's name follows the count; its station and volume are the user's.
                     let n = r.sites.len() + 1;
-                    r.sites.push((format!("Alan {n}"), HaulSiteKind::Waste, String::new(), String::new()));
+                    r.sites.push((
+                        format!("Alan {n}"),
+                        HaulSiteKind::Waste,
+                        String::new(),
+                        String::new(),
+                    ));
                     r.xy.resize(n, Default::default());
                     w.line = Some(n - 1);
                 }
@@ -511,7 +653,8 @@ impl HaulWindowApp for App {
                 if let Some(r) = chosen_row(w) {
                     // A new barrier's name follows the count; its station and detour are the user's.
                     let n = r.barriers.len() + 1;
-                    r.barriers.push([format!("Engel {n}"), String::new(), String::new()]);
+                    r.barriers
+                        .push([format!("Engel {n}"), String::new(), String::new()]);
                     w.barrier_line = Some(n - 1);
                 }
             }
@@ -554,7 +697,9 @@ impl HaulWindowApp for App {
     }
 
     fn haul_write(&mut self, edit: HaulsEdit) -> bool {
-        let Some(doc) = self.document.as_mut() else { return false };
+        let Some(doc) = self.document.as_mut() else {
+            return false;
+        };
         let result = road_hauls_edit::execute(&mut ExecutionContext::new(&mut doc.model), edit);
         self.answered(result).is_some()
     }
@@ -609,13 +754,21 @@ impl HaulWindowApp for App {
         let Some(w) = &self.modules.road().haul_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
         let volumes = self.haul_volumes();
         let mut list = Column::new().spacing(1).padding(2);
         for (i, r) in w.rows.iter().enumerate() {
-            let on = volumes.iter().find(|v| Some(&v.0) == r.volume.as_ref()).map_or_else(String::new, |v| v.1.clone());
+            let on = volumes
+                .iter()
+                .find(|v| Some(&v.0) == r.volume.as_ref())
+                .map_or_else(String::new, |v| v.1.clone());
             let face = column![
-                Elided::new(r.name.clone()).size(typography::body()).font(typography::ui()).width(Fill),
+                Elided::new(r.name.clone())
+                    .size(typography::body())
+                    .font(typography::ui())
+                    .width(Fill),
                 label::caption(format!("{on} · {} alan", r.sites.len())).style(muted),
             ]
             .spacing(1);
@@ -628,52 +781,87 @@ impl HaulWindowApp for App {
             );
         }
         if w.rows.is_empty() {
-            list = list.push(label::caption("Brükner yok. Yeni Brükner ile bir kübajın kütle diyagramını okuyun.").style(muted));
+            list = list.push(
+                label::caption(
+                    "Brükner yok. Yeni Brükner ile bir kübajın kütle diyagramını okuyun.",
+                )
+                .style(muted),
+            );
         }
         let left = column![
             label::strong("Brüknerler"),
-            container(scrollable(list).height(typography::scaled(300.0))).style(style::container::field_box).width(Fill),
+            container(scrollable(list).height(typography::scaled(300.0)))
+                .style(style::container::field_box)
+                .width(Fill),
             words::secondary(NEW, Some(msg(Event::New))),
         ]
         .spacing(8);
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
-            None => container(label::caption("Bir Brükner seçin ya da yeni bir Brükner oluşturun.")).padding(12).into(),
+            None => container(label::caption(
+                "Bir Brükner seçin ya da yeni bir Brükner oluşturun.",
+            ))
+            .padding(12)
+            .into(),
             Some(r) => self.haul_editor(w, r, &volumes),
         };
         // The editor scrolls with the body: resized or full screen it grows.
         let body = row![container(left).width(220), container(right).width(Fill)].spacing(16);
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
         let footer = row![
-                words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
-                space::horizontal().width(Fill),
-                words::secondary(CANCEL, Some(msg(Event::Cancel))),
-                words::primary(SAVE, Some(msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1120.0).modal(msg(Event::Cancel))
+            words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
+            space::horizontal().width(Fill),
+            words::secondary(CANCEL, Some(msg(Event::Cancel))),
+            words::primary(SAVE, Some(msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1120.0)
+            .modal(msg(Event::Cancel))
     }
 
-    fn haul_editor<'a>(&'a self, w: &'a Window, r: &'a Row, volumes: &[(String, String)]) -> Element<'a, Message> {
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+    fn haul_editor<'a>(
+        &'a self,
+        w: &'a Window,
+        r: &'a Row,
+        volumes: &[(String, String)],
+    ) -> Element<'a, Message> {
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let ids: Vec<String> = volumes.iter().map(|v| v.0.clone()).collect();
         let on_volume = Select::new(
             volumes.iter().map(|v| Choice::new(v.1.clone())),
-            r.volume.as_ref().and_then(|v| ids.iter().position(|i| i == v)),
+            r.volume
+                .as_ref()
+                .and_then(|v| ids.iter().position(|i| i == v)),
             move |i| msg(Event::Volume(ids[i].clone())),
         )
         .placeholder("Kübaj");
         let field = |hint: &'a str, k: usize, width: f32| {
-            kentos_ui::widget::text_field(hint, &r.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width)
+            kentos_ui::widget::text_field(hint, &r.fields[k])
+                .on_input(move |t| msg(Event::Field(k, t)))
+                .width(width)
         };
         // The picture takes what a resized or full screen window has over (docs/adr/0937 §2).
         let mut col = kentos_ui::widget::grow::Grows::new().spacing(10.0);
         col = col.push(
             row![
-                words::field("Ad", kentos_ui::widget::text_field("Brüknerin adı", &r.name).on_input(|t| msg(Event::Name(t))), None),
+                words::field(
+                    "Ad",
+                    kentos_ui::widget::text_field("Brüknerin adı", &r.name)
+                        .on_input(|t| msg(Event::Name(t))),
+                    None
+                ),
                 words::field("Kübaj", container(on_volume).width(200), None),
                 words::field("Denge çizgisi (m³)", field("0", 0, 110.0), None),
                 words::field("Serbest taşıma (m)", field("", 1, 110.0), None),
@@ -682,9 +870,15 @@ impl HaulWindowApp for App {
             .align_y(iced::alignment::Vertical::Bottom),
         );
         // The price fields name the currency as it is typed.
-        let currency = if r.fields[2].trim().is_empty() { "para".to_owned() } else { r.fields[2].trim().to_owned() };
+        let currency = if r.fields[2].trim().is_empty() {
+            "para".to_owned()
+        } else {
+            r.fields[2].trim().to_owned()
+        };
         let priced = |title: String, k: usize, width: f32| -> Element<'a, Message> {
-            column![label::caption(title), field("", k, width)].spacing(4).into()
+            column![label::caption(title), field("", k, width)]
+                .spacing(4)
+                .into()
         };
         col = col.push(
             row![
@@ -697,7 +891,10 @@ impl HaulWindowApp for App {
             .spacing(10)
             .align_y(iced::alignment::Vertical::Bottom),
         );
-        let kinds = [(HaulSiteKind::Borrow, "Ödünç"), (HaulSiteKind::Waste, "Döküm")];
+        let kinds = [
+            (HaulSiteKind::Borrow, "Ödünç"),
+            (HaulSiteKind::Waste, "Döküm"),
+        ];
         let sites = &r.sites;
         let table = road_dialog::edit_table(
             vec![
@@ -707,7 +904,11 @@ impl HaulWindowApp for App {
                 road_dialog::col("Km (m)", 65.0),
                 road_dialog::col("Hacim (m³)", 85.0),
                 road_dialog::col("Doğu (m)", 85.0),
-                road_dialog::Col { title: "Kuzey (m)", width: None, number: true },
+                road_dialog::Col {
+                    title: "Kuzey (m)",
+                    width: None,
+                    number: true,
+                },
             ],
             sites.len(),
             move |j, k| {
@@ -715,11 +916,19 @@ impl HaulWindowApp for App {
                 let xy = r.xy.get(j);
                 match k {
                     0 => road_dialog::edit(name, false, move |v| msg(Event::Site(j, 0, v))),
-                    1 => road_dialog::pick(kinds.map(|k| k.1), kinds.iter().position(|k| k.0 == *kind), move |i| msg(Event::Kind(j, kinds[i].0))),
+                    1 => road_dialog::pick(
+                        kinds.map(|k| k.1),
+                        kinds.iter().position(|k| k.0 == *kind),
+                        move |i| msg(Event::Kind(j, kinds[i].0)),
+                    ),
                     2 => road_dialog::edit(station, true, move |v| msg(Event::Site(j, 2, v))),
                     3 => road_dialog::edit(volume, true, move |v| msg(Event::Site(j, 3, v))),
-                    4 => road_dialog::edit(xy.map_or("", |p| p[0].as_str()), true, move |v| msg(Event::Site(j, 4, v))),
-                    _ => road_dialog::edit(xy.map_or("", |p| p[1].as_str()), true, move |v| msg(Event::Site(j, 5, v))),
+                    4 => road_dialog::edit(xy.map_or("", |p| p[0].as_str()), true, move |v| {
+                        msg(Event::Site(j, 4, v))
+                    }),
+                    _ => road_dialog::edit(xy.map_or("", |p| p[1].as_str()), true, move |v| {
+                        msg(Event::Site(j, 5, v))
+                    }),
                 }
             },
             w.line,
@@ -744,11 +953,17 @@ impl HaulWindowApp for App {
         let layers = self.relation_layers();
         let mut layer_ids: Vec<Option<String>> = vec![None];
         layer_ids.extend(layers.iter().map(|l| Some(l.0.clone())));
-        let names: Vec<String> = std::iter::once("Ağ yok".to_owned()).chain(layers.iter().map(|l| l.1.clone())).collect();
+        let names: Vec<String> = std::iter::once("Ağ yok".to_owned())
+            .chain(layers.iter().map(|l| l.1.clone()))
+            .collect();
         let at = layer_ids.iter().position(|l| *l == r.net_layer);
-        let on_layer = Select::new(names.into_iter().map(Choice::new), at, move |i| msg(Event::NetLayer(layer_ids[i].clone())));
+        let on_layer = Select::new(names.into_iter().map(Choice::new), at, move |i| {
+            msg(Event::NetLayer(layer_ids[i].clone()))
+        });
         let net_field = |hint: &'a str, k: usize| {
-            kentos_ui::widget::text_field(hint, &r.net_fields[k]).on_input(move |t| msg(Event::NetField(k, t))).width(110)
+            kentos_ui::widget::text_field(hint, &r.net_fields[k])
+                .on_input(move |t| msg(Event::NetField(k, t)))
+                .width(110)
         };
         col = col.push(
             row![
@@ -772,10 +987,18 @@ impl HaulWindowApp for App {
             vec![
                 road_dialog::col("Baş (m)", 100.0),
                 road_dialog::col("Son (m)", 100.0),
-                road_dialog::Col { title: "Uygunsuz (%)", width: None, number: true },
+                road_dialog::Col {
+                    title: "Uygunsuz (%)",
+                    width: None,
+                    number: true,
+                },
             ],
             rows_u.len(),
-            move |j, k| road_dialog::edit(&rows_u[j][k], true, move |v| msg(Event::Unsuitable(j, k, v))),
+            move |j, k| {
+                road_dialog::edit(&rows_u[j][k], true, move |v| {
+                    msg(Event::Unsuitable(j, k, v))
+                })
+            },
             w.unsuitable_line,
             |j| msg(Event::UnsuitableLine(j)),
             "Uygunsuz malzeme yok: bütün yarma dolguya uygun sayılır",
@@ -783,12 +1006,18 @@ impl HaulWindowApp for App {
         let rows_b = &r.barriers;
         let barriers = road_dialog::edit_table(
             vec![
-                road_dialog::Col { title: "Ad", width: None, number: false },
+                road_dialog::Col {
+                    title: "Ad",
+                    width: None,
+                    number: false,
+                },
                 road_dialog::col("Km (m)", 100.0),
                 road_dialog::col("Dolaşma (m)", 110.0),
             ],
             rows_b.len(),
-            move |j, k| road_dialog::edit(&rows_b[j][k], k > 0, move |v| msg(Event::Barrier(j, k, v))),
+            move |j, k| {
+                road_dialog::edit(&rows_b[j][k], k > 0, move |v| msg(Event::Barrier(j, k, v)))
+            },
             w.barrier_line,
             |j| msg(Event::BarrierLine(j)),
             "Engel yok",
@@ -824,7 +1053,9 @@ impl HaulWindowApp for App {
             // The totals and the cost over the diagram, the loops under it.
             (Some(e), _) => col = col.push(label::caption(e.clone()).style(danger)),
             (None, Some(rep)) => {
-                let avg = rep.average.map_or_else(|| "—".to_owned(), |a| format!("{} m", grouped(a, 0)));
+                let avg = rep
+                    .average
+                    .map_or_else(|| "—".to_owned(), |a| format!("{} m", grouped(a, 0)));
                 col = col.push(label::caption(format!(
                     "Dengelenen {} m³ · moment {} m³·m · ortalama taşıma {avg} · fazla taşıma {} m³ ({} m³·m) · döküm {} m³ · ödünç {} m³",
                     grouped(rep.hauled, 0),
@@ -835,23 +1066,47 @@ impl HaulWindowApp for App {
                     grouped(rep.borrow, 0),
                 )));
                 if let Some(c) = &rep.cost {
-                    let part = |what: &str, v: Option<f64>| v.map(|v| format!(" · {what} {} {}", grouped(v, 2), c.currency));
-                    let parts: String = [part("fazla taşıma", c.overhaul), part("döküm", c.waste), part("ödünç", c.borrow)]
-                        .into_iter()
-                        .flatten()
-                        .collect();
-                    let trips = c.trips.map_or_else(String::new, |t| format!(" · {} kamyon seferi", grouped(t, 0)));
-                    col = col.push(label::strong(format!("Maliyet {} {}{parts}{trips}", grouped(c.total, 2), c.currency)));
+                    let part = |what: &str, v: Option<f64>| {
+                        v.map(|v| format!(" · {what} {} {}", grouped(v, 2), c.currency))
+                    };
+                    let parts: String = [
+                        part("fazla taşıma", c.overhaul),
+                        part("döküm", c.waste),
+                        part("ödünç", c.borrow),
+                    ]
+                    .into_iter()
+                    .flatten()
+                    .collect();
+                    let trips = c.trips.map_or_else(String::new, |t| {
+                        format!(" · {} kamyon seferi", grouped(t, 0))
+                    });
+                    col = col.push(label::strong(format!(
+                        "Maliyet {} {}{parts}{trips}",
+                        grouped(c.total, 2),
+                        c.currency
+                    )));
                 }
                 for wn in &w.preview.warnings {
                     col = col.push(label::caption(wn.message.clone()).style(warn));
                 }
-                col = col.push_grow(crate::picture::picture(iced::widget::canvas(Diagram { preview: &w.preview }).width(Fill).height(Fill), "Brükner"), typography::scaled(160.0));
+                col = col.push_grow(
+                    crate::picture::picture(
+                        iced::widget::canvas(Diagram {
+                            preview: &w.preview,
+                        })
+                        .width(Fill)
+                        .height(Fill),
+                        "Brükner",
+                    ),
+                    typography::scaled(160.0),
+                );
                 col = col.push(loops_table(rep));
             }
             _ => {}
         }
-        container(col).padding(iced::Padding::default().right(14)).into()
+        container(col)
+            .padding(iced::Padding::default().right(14))
+            .into()
     }
 
     fn haul_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -874,10 +1129,16 @@ impl HaulWindowApp for App {
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),
             },
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
-            Control::Fill("Denge çizgisi (m³)", text) => Some(msg(Event::Field(0, text.to_owned()))),
-            Control::Fill("Serbest taşıma (m)", text) => Some(msg(Event::Field(1, text.to_owned()))),
+            Control::Fill("Denge çizgisi (m³)", text) => {
+                Some(msg(Event::Field(0, text.to_owned())))
+            }
+            Control::Fill("Serbest taşıma (m)", text) => {
+                Some(msg(Event::Field(1, text.to_owned())))
+            }
             Control::Fill("Para birimi", text) => Some(msg(Event::Field(2, text.to_owned()))),
-            Control::Fill("Kamyon yükü (m³)", text) => Some(msg(Event::Field(6, text.to_owned()))),
+            Control::Fill("Kamyon yükü (m³)", text) => {
+                Some(msg(Event::Field(6, text.to_owned())))
+            }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }
@@ -935,7 +1196,14 @@ struct Diagram<'a> {
 impl canvas::Program<Message> for Diagram<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let t = Tokens::of(theme);
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let caption = |frame: &mut canvas::Frame, words: String, at: Point, color: Color| {
@@ -949,7 +1217,12 @@ impl canvas::Program<Message> for Diagram<'_> {
             });
         };
         let Some(rep) = self.preview.report.as_ref().filter(|r| r.points.len() > 1) else {
-            caption(&mut frame, "Kübajı seçince Brükner burada çizilir.".into(), Point::new(16.0, 20.0), t.muted);
+            caption(
+                &mut frame,
+                "Kübajı seçince Brükner burada çizilir.".into(),
+                Point::new(16.0, 20.0),
+                t.muted,
+            );
             return vec![frame.into_geometry()];
         };
         let pts = &rep.points;
@@ -965,9 +1238,15 @@ impl canvas::Program<Message> for Diagram<'_> {
         let pad = (hi - lo) * 0.06;
         let (lo, hi) = (lo - pad, hi + pad);
         let (left, gap) = (64.0, 10.0);
-        let (wd, ht) = (bounds.width as f64 - left - gap, bounds.height as f64 - 2.0 * gap);
+        let (wd, ht) = (
+            bounds.width as f64 - left - gap,
+            bounds.height as f64 - 2.0 * gap,
+        );
         let at = |s: f64, v: f64| {
-            Point::new((left + (s - s0) / (s1 - s0).max(1e-9) * wd) as f32, (gap + (hi - v) / (hi - lo) * ht) as f32)
+            Point::new(
+                (left + (s - s0) / (s1 - s0).max(1e-9) * wd) as f32,
+                (gap + (hi - v) / (hi - lo) * ht) as f32,
+            )
         };
         // The ordinate at a station: after a step there, or before it.
         let value = |s: f64, after: bool| -> f64 {
@@ -984,9 +1263,15 @@ impl canvas::Program<Message> for Diagram<'_> {
             let color = if l.unbalanced > 0.0 {
                 Color { a: 0.35, ..orange }
             } else if l.forward {
-                Color { a: 0.28, ..t.danger }
+                Color {
+                    a: 0.28,
+                    ..t.danger
+                }
             } else {
-                Color { a: 0.28, ..t.accent }
+                Color {
+                    a: 0.28,
+                    ..t.accent
+                }
             };
             let shape = Path::new(|b| {
                 b.move_to(at(l.from, rep.balance));
@@ -1009,8 +1294,20 @@ impl canvas::Program<Message> for Diagram<'_> {
         while v <= hi + 1e-9 {
             let a = at(s0, v);
             if part.has_y(a.y) {
-                frame.stroke(&Path::line(a, at(s1, v)), Stroke::default().with_color(Color { a: 0.3, ..t.border }).with_width(1.0));
-                crate::picture::label(&mut frame, grouped(v, 0), Point::new(label_x, a.y - 7.0), t.muted, false, (label_x > 4.5).then_some(t.field.scale_alpha(0.9)));
+                frame.stroke(
+                    &Path::line(a, at(s1, v)),
+                    Stroke::default()
+                        .with_color(Color { a: 0.3, ..t.border })
+                        .with_width(1.0),
+                );
+                crate::picture::label(
+                    &mut frame,
+                    grouped(v, 0),
+                    Point::new(label_x, a.y - 7.0),
+                    t.muted,
+                    false,
+                    (label_x > 4.5).then_some(t.field.scale_alpha(0.9)),
+                );
             }
             v += step;
         }
@@ -1020,7 +1317,11 @@ impl canvas::Program<Message> for Diagram<'_> {
         );
         let curve = Path::new(|b| {
             for (i, p) in pts.iter().enumerate() {
-                if i == 0 { b.move_to(at(p[0], p[1])) } else { b.line_to(at(p[0], p[1])) }
+                if i == 0 {
+                    b.move_to(at(p[0], p[1]))
+                } else {
+                    b.line_to(at(p[0], p[1]))
+                }
             }
         });
         frame.stroke(&curve, Stroke::default().with_color(t.text).with_width(1.8));

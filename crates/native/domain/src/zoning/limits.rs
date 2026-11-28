@@ -119,7 +119,9 @@ pub(super) fn says_traditional(words: &[String]) -> bool {
 /// Whether a room's words or its group's say 22/1-j's rooms (docs/adr/8147): "yönetim ve toplantı odaları ile spor ve
 /// sosyal mekânlar", a word beginning with Yönetim, Toplantı, Spor or Sosyal.
 pub(super) fn says_amenity(room: &[String], group: &[String]) -> bool {
-    ["YONETIM", "TOPLANTI", "SPOR", "SOSYAL"].into_iter().any(|w| names(w, room, group))
+    ["YONETIM", "TOPLANTI", "SPOR", "SOSYAL"]
+        .into_iter()
+        .any(|w| names(w, room, group))
 }
 
 /// The storeys under the ground, by their ids (22/1-k: "bütün cepheleri tamamen toprağın altında kalan bodrum katlar";
@@ -180,7 +182,10 @@ pub(super) fn apply(
         rooms
             .iter()
             .filter(|r| {
-                r.unit.as_deref() == Some(unit) && !r.void && !r.outdoor && r.count == EmsalCount::Included
+                r.unit.as_deref() == Some(unit)
+                    && !r.void
+                    && !r.outdoor
+                    && r.count == EmsalCount::Included
             })
             .map(|r| r.net)
             .sum()
@@ -195,7 +200,11 @@ pub(super) fn apply(
     let mut asks: Vec<(ZoningLimit, Option<&str>, Option<f64>)> = Vec::new();
     for limit in [ZoningLimit::Balcony, ZoningLimit::Storage] {
         for &u in &units {
-            let share = if limit == ZoningLimit::Balcony { BALCONY_SHARE } else { STORAGE_SHARE };
+            let share = if limit == ZoningLimit::Balcony {
+                BALCONY_SHARE
+            } else {
+                STORAGE_SHARE
+            };
             asks.push((limit, Some(u), Some(share * net_of(u))));
         }
     }
@@ -243,7 +252,11 @@ pub(super) fn apply(
             ZoningLimit::Shelter => {
                 let need = shelter_need.unwrap_or(0.0);
                 let net: f64 = members.iter().map(|&i| rooms[i].net).sum();
-                if net > 0.0 { (need * area / net).min(area) } else { need.min(area) }
+                if net > 0.0 {
+                    (need * area / net).min(area)
+                } else {
+                    need.min(area)
+                }
             }
             _ => allowed.unwrap_or(area),
         };
@@ -282,8 +295,17 @@ mod tests {
     /// own; of 30000 m² it would be 1500 m², the 1000 m² holds.
     #[test]
     fn the_common_rooms_limit_is_5_percent_of_katlar_alani_and_at_most_1000_m2() {
-        for (floors, allowed) in [(2400.0, 120.0), (20000.0, 1000.0), (30000.0, 1000.0), (0.0, 0.0)] {
-            assert!((amenity_allowed(floors) - allowed).abs() < 1e-9, "{floors}: {}", amenity_allowed(floors));
+        for (floors, allowed) in [
+            (2400.0, 120.0),
+            (20000.0, 1000.0),
+            (30000.0, 1000.0),
+            (0.0, 0.0),
+        ] {
+            assert!(
+                (amenity_allowed(floors) - allowed).abs() < 1e-9,
+                "{floors}: {}",
+                amenity_allowed(floors)
+            );
         }
     }
 }

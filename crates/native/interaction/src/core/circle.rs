@@ -19,9 +19,7 @@
 //! `cad.curves.construct`'s (docs/adr/0289), which refuses with the words the
 //! tool says; the previews are the same core's.
 
-use kentos_commands::{
-    CircleCreate, ConstructedCurve, CurveConstruction, EdgeNear, MeasuredPoint,
-};
+use kentos_commands::{CircleCreate, ConstructedCurve, CurveConstruction, EdgeNear, MeasuredPoint};
 use kentos_geometry_core::entity::tessellate_circle;
 use kentos_geometry_core::geom::arc::Circle as Round;
 use kentos_geometry_core::geom::intersect::Edge;
@@ -438,8 +436,14 @@ impl Tool for Circle {
         // the line could not read), the step kept for the right value.
         let asks_size = (self.mode == Mode::Ttr && self.tangents.len() == 2)
             || (self.mode == Mode::Center && self.d.last().is_some());
-        if asks_size && typed.is_some_and(|r| r.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater)) {
-            let what = if self.mode == Mode::Center && self.diameter { "Çap" } else { "Yarıçap" };
+        if asks_size
+            && typed.is_some_and(|r| r.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater))
+        {
+            let what = if self.mode == Mode::Center && self.diameter {
+                "Çap"
+            } else {
+                "Yarıçap"
+            };
             cx.say(
                 Level::Warn,
                 format!(

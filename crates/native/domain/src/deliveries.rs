@@ -11,7 +11,10 @@ use crate::history::Op;
 impl Document {
     /// The delivery record, in the order the packages went; empty when none is kept.
     pub fn deliveries(&self) -> &[Delivery] {
-        self.settings.arch.as_ref().map_or(&[], |a| a.deliveries.as_slice())
+        self.settings
+            .arch
+            .as_ref()
+            .map_or(&[], |a| a.deliveries.as_slice())
     }
 
     /// Gives the drawing `next` as one change named `label` (into the open transaction, else an undo step of its own).
@@ -25,7 +28,13 @@ impl Document {
         }
         let before = std::sync::Arc::new(self.deliveries().to_vec());
         self.transact(label, |doc| {
-            doc.record(vec![Op::Arch(ArchOp::Deliveries { before, after: std::sync::Arc::new(next) })], label);
+            doc.record(
+                vec![Op::Arch(ArchOp::Deliveries {
+                    before,
+                    after: std::sync::Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }

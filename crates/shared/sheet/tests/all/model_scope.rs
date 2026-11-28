@@ -1,7 +1,7 @@
 use kentos_sheet::{
-    *,
     model_scope::Viewport,
     ops::{self, Op},
+    *,
 };
 #[test]
 fn independent_rotated_navigation_and_scope_have_one_model_and_reversible_paper_camera() {

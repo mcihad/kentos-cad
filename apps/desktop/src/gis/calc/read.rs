@@ -102,7 +102,10 @@ fn resolve(doc: &Model, text: &str, strict: bool) -> Known {
     let named = points_named(doc, t);
     // Two points of one name (UR2-016): which one is meant is not guessed; the candidates are said.
     if strict && named.len() > 1 {
-        let places: Vec<String> = named.iter().map(|pt| format!("({}, {})", pt.p.x, pt.p.y)).collect();
+        let places: Vec<String> = named
+            .iter()
+            .map(|pt| format!("({}, {})", pt.p.x, pt.p.y))
+            .collect();
         return Known::Error(format!(
             "“{t}” adını {} nokta taşıyor: {}. Noktayı Çizimden seçin ya da Y,X yazın.",
             named.len(),
@@ -139,7 +142,9 @@ pub fn known_point(doc: &Model, text: &str) -> Option<KnownPoint> {
 /// as [`resolve_point`] finds it: Cihaza gönder takes its code and elevation.
 pub fn point_named<'a>(doc: &'a Model, text: &str) -> Option<&'a Entity> {
     let key = upper_tr(js_trim(text));
-    let mut found = doc.entities().filter(|e| matches!(e, Entity::Point(pt) if upper_tr(point_name(pt)) == key));
+    let mut found = doc
+        .entities()
+        .filter(|e| matches!(e, Entity::Point(pt) if upper_tr(point_name(pt)) == key));
     // One point of the name, or none: two are not told apart by it (UR2-016).
     match (found.next(), found.next()) {
         (Some(one), None) => Some(one),
@@ -149,7 +154,11 @@ pub fn point_named<'a>(doc: &'a Model, text: &str) -> Option<&'a Entity> {
 
 /// A point's name as Hesap reads it: its label, else its `Ad` attribute.
 fn point_name(pt: &kentos_commands::PointEntity) -> &str {
-    pt.base.label.as_deref().or_else(|| pt.base.attrs.get("Ad").map(String::as_str)).unwrap_or("")
+    pt.base
+        .label
+        .as_deref()
+        .or_else(|| pt.base.attrs.get("Ad").map(String::as_str))
+        .unwrap_or("")
 }
 
 /// The drawing's points named `text` (trimmed, case as Turkish folds it).

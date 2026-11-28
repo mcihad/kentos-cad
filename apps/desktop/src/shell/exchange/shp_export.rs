@@ -95,9 +95,12 @@ impl App {
         let time = self.export_time();
         // The data layers' rows too (docs/adr/9344).
         let copy = self.source_copy();
-        let (model, _) =
-            kentos_native_application::time_export::filtered(copy.as_ref().map_or(&doc.model, |c| &c.doc), &[], time.as_ref())
-                .map_err(|(_, why, _)| why)?;
+        let (model, _) = kentos_native_application::time_export::filtered(
+            copy.as_ref().map_or(&doc.model, |c| &c.doc),
+            &[],
+            time.as_ref(),
+        )
+        .map_err(|(_, why, _)| why)?;
         let model = model.as_ref();
         let ids = kentos_native_application::shapefile::layer_ids(model, &[])
             .map_err(|(_, id)| format!("{id} katmanı yok"))?;
@@ -208,7 +211,9 @@ impl App {
                     time,
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
-                let model = source.as_ref().map_or_else(|| doc.model.clone(), |c| c.doc.clone());
+                let model = source
+                    .as_ref()
+                    .map_or_else(|| doc.model.clone(), |c| c.doc.clone());
                 off_thread(
                     move || {
                         kentos_headless::file_commands::export_shp(&model, &input)

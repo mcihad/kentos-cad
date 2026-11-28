@@ -280,10 +280,7 @@ impl Tool for Array {
                 "M",
                 "Dağıtım",
                 choices(
-                    &[
-                        ("spacing", "Aralıkla çoğalt"),
-                        ("fit", "Uç paylarıyla"),
-                    ],
+                    &[("spacing", "Aralıkla çoğalt"), ("fit", "Uç paylarıyla")],
                     if self.fit { "fit" } else { "spacing" },
                 ),
             ),
@@ -299,10 +296,7 @@ impl Tool for Array {
                     "R",
                     "Aralık türü",
                     choices(
-                        &[
-                            ("clear", "Net aralık"),
-                            ("centers", "Merkez arası"),
-                        ],
+                        &[("clear", "Net aralık"), ("centers", "Merkez arası")],
                         if self.reference == OpeningArraySpacing::Clear {
                             "clear"
                         } else {
@@ -315,10 +309,7 @@ impl Tool for Array {
                     "Y",
                     "Yön",
                     choices(
-                        &[
-                            ("end", "Sona doğru"),
-                            ("start", "Başa doğru"),
-                        ],
+                        &[("end", "Sona doğru"), ("start", "Başa doğru")],
                         if self.direction == WallEnd::End {
                             "end"
                         } else {

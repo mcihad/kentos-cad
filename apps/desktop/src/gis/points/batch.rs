@@ -673,7 +673,8 @@ fn run_dedupe(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outc
                 uids: removed,
                 expected_revision: None,
             };
-            return refusal(delete::execute(&mut ExecutionContext::new(doc), input)).map(|e| e.message);
+            return refusal(delete::execute(&mut ExecutionContext::new(doc), input))
+                .map(|e| e.message);
         };
         // Set aside, not deleted: to the layer of that name, made when there is none.
         let layer = match &aside_layer {

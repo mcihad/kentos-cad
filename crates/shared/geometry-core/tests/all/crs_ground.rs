@@ -466,7 +466,11 @@ mod survey {
             // docs/adr/4100: the heights by trigonometric heighting, back.
             if let Some(want) = want.get("heights") {
                 let got = r.heights.clone().expect("heights");
-                for (i, (h, w)) in got.iter().zip(want.as_array().expect("heights")).enumerate() {
+                for (i, (h, w)) in got
+                    .iter()
+                    .zip(want.as_array().expect("heights"))
+                    .enumerate()
+                {
                     near(*h, w, 1e-6, &format!("{name} P{} kotu", i + 1));
                 }
                 assert!(r.height_misclosure.expect("closed").abs() <= 1e-6, "{name}");

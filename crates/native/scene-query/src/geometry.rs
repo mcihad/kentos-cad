@@ -77,15 +77,21 @@ pub fn core_layout(
 ) -> Option<Box<kentos_geometry_core::text::paragraph::Flow>> {
     l.map(|l| {
         Box::new(kentos_geometry_core::text::paragraph::Flow {
-            engine:l.engine.map(|e|match e { kentos_commands::TextLayoutEngine::UnicodeV1=>kentos_geometry_core::text::paragraph::Engine::UnicodeV1 }),
+            engine: l.engine.map(|e| match e {
+                kentos_commands::TextLayoutEngine::UnicodeV1 => {
+                    kentos_geometry_core::text::paragraph::Engine::UnicodeV1
+                }
+            }),
             first: l.indent.unwrap_or(0.0),
             left: l.left_indent.unwrap_or(0.0),
             tabs: l.tabs.clone(),
-            columns: l.columns.map(|c| kentos_geometry_core::text::paragraph::Columns {
-                count: c.count,
-                gap: c.gap,
-                height: c.height,
-            }),
+            columns: l
+                .columns
+                .map(|c| kentos_geometry_core::text::paragraph::Columns {
+                    count: c.count,
+                    gap: c.gap,
+                    height: c.height,
+                }),
         })
     })
 }
@@ -96,7 +102,11 @@ pub fn contract_layout(
 ) -> Option<Box<kentos_commands::ParagraphLayout>> {
     f.map(|f| {
         Box::new(kentos_commands::ParagraphLayout {
-            engine:f.engine.map(|e|match e {kentos_geometry_core::text::paragraph::Engine::UnicodeV1=>kentos_commands::TextLayoutEngine::UnicodeV1}),
+            engine: f.engine.map(|e| match e {
+                kentos_geometry_core::text::paragraph::Engine::UnicodeV1 => {
+                    kentos_commands::TextLayoutEngine::UnicodeV1
+                }
+            }),
             indent: (f.first != 0.0).then_some(f.first),
             left_indent: (f.left != 0.0).then_some(f.left),
             tabs: f.tabs.clone(),
@@ -121,7 +131,9 @@ pub fn contract_source(source: Option<Json>) -> Option<TableSource> {
 }
 
 /// A table's cell styles as the core takes them (docs/adr/0327 §1).
-pub fn core_looks(styles: &[kentos_commands::CellStyle]) -> Option<Vec<kentos_geometry_core::entity::CellLook>> {
+pub fn core_looks(
+    styles: &[kentos_commands::CellStyle],
+) -> Option<Vec<kentos_geometry_core::entity::CellLook>> {
     (!styles.is_empty()).then(|| {
         styles
             .iter()
@@ -164,11 +176,14 @@ pub fn core_table(t: &TableEntity) -> Shape {
         grid: t.grid.map(|g| g.name().to_owned()),
         frame: t.frame,
         source: core_source(t.source.as_ref()).map(Box::new),
-        breaks: t.breaks.map(|b| kentos_geometry_core::entity::TableBreaks {
-            height: b.height,
-            gap: Some(b.gap),
-            once: b.once.then_some(true),
-        }).map(Box::new),
+        breaks: t
+            .breaks
+            .map(|b| kentos_geometry_core::entity::TableBreaks {
+                height: b.height,
+                gap: Some(b.gap),
+                once: b.once.then_some(true),
+            })
+            .map(Box::new),
         face: Box::new(core_face(&t.face)),
     }
 }
@@ -190,10 +205,11 @@ pub fn styled_table(t: &TableEntity, settings: &kentos_commands::ProjectSettings
     let ground = |mm: Option<f64>| mm.map(|v| v * settings.plot_scale / 1000.0);
     let cols = t.columns.len();
     let mut kinds = Vec::new();
-    for ((first, count), cell) in kentos_commands::table_style_rows(t)
-        .into_iter()
-        .zip([&style.title, &style.header, &style.data])
-    {
+    for ((first, count), cell) in kentos_commands::table_style_rows(t).into_iter().zip([
+        &style.title,
+        &style.header,
+        &style.data,
+    ]) {
         let Some(cell) = cell else { continue };
         let drawn = cell.height.is_some()
             || cell.horizontal_margin.is_some()
@@ -679,11 +695,13 @@ pub fn core_raster(r: &RasterFields) -> Shape {
         dataset: r
             .dataset
             .as_ref()
-            .and_then(|d| Json::parse(&d.to_json_text()).ok()).map(Box::new),
+            .and_then(|d| Json::parse(&d.to_json_text()).ok())
+            .map(Box::new),
         tiles: r
             .tiles
             .as_ref()
-            .and_then(|t| Json::parse(&serde_json::to_string(t).ok()?).ok()).map(Box::new),
+            .and_then(|t| Json::parse(&serde_json::to_string(t).ok()?).ok())
+            .map(Box::new),
     }
 }
 
@@ -753,8 +771,7 @@ pub fn core_cloud(c: &kentos_commands::PointCloudFields) -> Shape {
     Shape::PointCloud {
         bounds: c.bounds,
         count: c.count as f64,
-        sources: Json::parse(&kentos_commands::sources_json_text(&c.sources))
-            .unwrap_or(Json::Null),
+        sources: Json::parse(&kentos_commands::sources_json_text(&c.sources)).unwrap_or(Json::Null),
         srid: f64::from(c.srid),
         style: Json::parse(&c.style.to_json_text()).unwrap_or(Json::Null),
         opacity: c.opacity,
@@ -856,10 +873,18 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Circle(c) => Shape::Circle { c: v(&c.c), r: c.r },
         Entity::Leader(l) => Shape::Leader {
             blocks: (!l.blocks.is_empty()).then(|| {
-                l.blocks.iter().map(|b| kentos_domain::Uuid::from_bytes(b.0).to_string()).collect()
+                l.blocks
+                    .iter()
+                    .map(|b| kentos_domain::Uuid::from_bytes(b.0).to_string())
+                    .collect()
             }),
             arms: (!l.arms.is_empty()).then(|| {
-                l.arms.iter().map(|a| kentos_geometry_core::geom::leader::Arm { pts: points(&a.pts) }).collect()
+                l.arms
+                    .iter()
+                    .map(|a| kentos_geometry_core::geom::leader::Arm {
+                        pts: points(&a.pts),
+                    })
+                    .collect()
             }),
             pts: points(&l.pts),
             text: l.text.clone(),
@@ -1302,7 +1327,8 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
                 box_width,
                 line_spacing,
                 runs: contract_runs(runs),
-            }.into();
+            }
+            .into();
             e.path = path.map(contract_curve).map(Box::new);
         }
         (
@@ -1373,12 +1399,16 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         ) => {
             // The arrowhead is the object's own: the core carries its name and size through unchanged.
             // Its arms' points; each arm keeps what its tip follows (docs/adr/0326 §1).
-            let tips: Vec<Option<kentos_commands::SubRef>> = e.arms.iter().map(|a| a.tip.clone()).collect();
+            let tips: Vec<Option<kentos_commands::SubRef>> =
+                e.arms.iter().map(|a| a.tip.clone()).collect();
             e.arms = arms
                 .unwrap_or_default()
                 .into_iter()
                 .enumerate()
-                .map(|(i, a)| kentos_commands::LeaderArm { pts: back(a.pts), tip: tips.get(i).cloned().flatten() })
+                .map(|(i, a)| kentos_commands::LeaderArm {
+                    pts: back(a.pts),
+                    tip: tips.get(i).cloned().flatten(),
+                })
                 .collect();
             e.pts = back(pts);
             e.text = text;
@@ -1432,7 +1462,9 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         (Entity::Image(e), s @ Shape::Image { .. }) => e.image = contract_image(s)?,
         (Entity::Raster(e), s @ Shape::Raster { .. }) => *e.raster = contract_raster(s)?,
         (Entity::PointCloud(e), s @ Shape::PointCloud { .. }) => *e.cloud = contract_cloud(s)?,
-        (Entity::Wall(e), s @ Shape::Wall { .. }) => *e.wall = kentos_formats::walls::contract_wall(&s)?,
+        (Entity::Wall(e), s @ Shape::Wall { .. }) => {
+            *e.wall = kentos_formats::walls::contract_wall(&s)?
+        }
         // An opening's place along its wall, its width and its jambs (docs/adr/0341 §1); the rest is its own.
         // A space's rings and seed (docs/adr/0342 §3); the rest is its own.
         (Entity::Space(e), Shape::Space { parts, space }) => {
@@ -1611,8 +1643,10 @@ pub fn carry_space_separator(from: &Entity, entity: Entity) -> Result<Entity, St
         Entity::Circle(c)=>circle(c.base,c.c,c.r),
         _=>return Err("Bu işlem mahal ayırıcının analitik çoklu çizgi rolünü koruyamıyor. Önce Mahal ayırıcı rolünü açıkça kaldırın; hiçbir nesne değiştirilmedi.".into()),
     };
-    p.space_separator=Some(role);
-    if let Some(why)=p.extras_problem(false){return Err(why);}
+    p.space_separator = Some(role);
+    if let Some(why) = p.extras_problem(false) {
+        return Err(why);
+    }
     Ok(Entity::Polyline(p))
 }
 
@@ -1786,7 +1820,8 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
                 box_width,
                 line_spacing: line_spacing.filter(|s| *s != 1.0),
                 runs,
-            }.into(),
+            }
+            .into(),
             face: face.into(),
         }),
         EntityGeometry::Dimension {
@@ -1836,7 +1871,10 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             annotative,
         } => {
             // A boundary draws the ring (docs/adr/0328 §1).
-            let (ring, holes) = match boundary.as_deref().and_then(kentos_domain::hatch_boundaries::drawn) {
+            let (ring, holes) = match boundary
+                .as_deref()
+                .and_then(kentos_domain::hatch_boundaries::drawn)
+            {
                 Some(drawn) => drawn,
                 None => (ring, holes),
             };
@@ -1941,11 +1979,20 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             table_style: table_style.flatten(),
         })),
         EntityGeometry::Image(image) => Entity::Image(ImageEntity { base, image }),
-        EntityGeometry::Raster(raster) => Entity::Raster(RasterEntity { base, raster: Box::new(raster) }),
+        EntityGeometry::Raster(raster) => Entity::Raster(RasterEntity {
+            base,
+            raster: Box::new(raster),
+        }),
         EntityGeometry::PointCloud(cloud) => {
-            Entity::PointCloud(kentos_commands::PointCloudEntity { base, cloud: Box::new(cloud) })
+            Entity::PointCloud(kentos_commands::PointCloudEntity {
+                base,
+                cloud: Box::new(cloud),
+            })
         }
-        EntityGeometry::Wall(wall) => Entity::Wall(kentos_commands::WallEntity { base, wall: Box::new(wall) }),
+        EntityGeometry::Wall(wall) => Entity::Wall(kentos_commands::WallEntity {
+            base,
+            wall: Box::new(wall),
+        }),
     }
 }
 
@@ -2273,18 +2320,31 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
 
 /// A text's laid out lines (docs/adr/0182 §2), each one's first letter and the one past its last: what Satırlara
 /// ayır reads its paragraphs' lines from (docs/adr/0325 §3).
-pub fn text_lines(doc: &kentos_domain::Document, t: &kentos_commands::TextEntity) -> Vec<(usize, usize)> {
-    text_layout(doc, t).lines.iter().map(|l| (l.start, l.end)).collect()
+pub fn text_lines(
+    doc: &kentos_domain::Document,
+    t: &kentos_commands::TextEntity,
+) -> Vec<(usize, usize)> {
+    text_layout(doc, t)
+        .lines
+        .iter()
+        .map(|l| (l.start, l.end))
+        .collect()
 }
 
 /// Physical baseline offsets and depth, including tab pieces of the same row.
-pub fn text_layout(doc: &kentos_domain::Document, t: &kentos_commands::TextEntity) -> kentos_geometry_core::text::paragraph::Layout {
+pub fn text_layout(
+    doc: &kentos_domain::Document,
+    t: &kentos_commands::TextEntity,
+) -> kentos_geometry_core::text::paragraph::Layout {
     let s = shape(&Entity::Text(t.clone()));
     let font = drawing_font(doc.settings().drawing_font);
     kentos_geometry_core::entity::TextPlace::of(&s)
         .map(|p| p.layout(font))
         .unwrap_or(kentos_geometry_core::text::paragraph::Layout {
-            lines: Vec::new(), width: 0., pitch: 0., depth: 0,
+            lines: Vec::new(),
+            width: 0.,
+            pitch: 0.,
+            depth: 0,
         })
 }
 

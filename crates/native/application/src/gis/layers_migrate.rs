@@ -13,8 +13,9 @@
 //! the rows to it (`append`); the texts' table beside it goes the same way.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateTarget, DataLayer, Entity, ExportExisting, ExportFormat, LayerDataOperation, LayerField,
-    LayerNodeType, LayersData, LayersExport, LayersMigrate, LayersMigrated, MigratedTexts, TextEntity,
+    CommandResult, CommandWarning, CreateTarget, DataLayer, Entity, ExportExisting, ExportFormat,
+    LayerDataOperation, LayerField, LayerNodeType, LayersData, LayersExport, LayersMigrate,
+    LayersMigrated, MigratedTexts, TextEntity,
 };
 use kentos_domain::{Document, ServedBy, Slot};
 
@@ -32,11 +33,20 @@ fn export_of(input: &LayersMigrate) -> LayersExport {
     let gpkg = input.target == CreateTarget::Gpkg;
     LayersExport {
         layer: input.layer.trim().to_owned(),
-        format: if gpkg { ExportFormat::Gpkg } else { ExportFormat::Postgis },
+        format: if gpkg {
+            ExportFormat::Gpkg
+        } else {
+            ExportFormat::Postgis
+        },
         path: gpkg.then(|| input.path.clone().unwrap_or_default()),
         address: (!gpkg).then(|| input.address.clone().unwrap_or_default()),
         schema: (!gpkg).then(|| input.schema.clone().unwrap_or_else(|| "public".to_owned())),
-        name: input.table.as_deref().map(str::trim).filter(|t| !t.is_empty()).map(str::to_owned),
+        name: input
+            .table
+            .as_deref()
+            .map(str::trim)
+            .filter(|t| !t.is_empty())
+            .map(str::to_owned),
         existing: input.existing.filter(|e| *e != ExportExisting::Refuse),
         ..LayersExport::default()
     }
@@ -44,21 +54,39 @@ fn export_of(input: &LayersMigrate) -> LayersExport {
 
 /// The source the tables go into: the GeoPackage's path, the database's address.
 fn address_of(export: &LayersExport) -> String {
-    export.path.clone().or(export.address.clone()).unwrap_or_default().trim().to_owned()
+    export
+        .path
+        .clone()
+        .or(export.address.clone())
+        .unwrap_or_default()
+        .trim()
+        .to_owned()
 }
 
 /// The migration's own checks, in the contract's order, before the export's.
 fn checked(doc: &Document, input: &LayersMigrate) -> Result<(), Stop> {
     let id = input.layer.trim();
     if id.is_empty() {
-        return Err(fail(codes::NO_LAYER, "Taşınacak katman verilmedi (layer).".into(), "layer"));
+        return Err(fail(
+            codes::NO_LAYER,
+            "Taşınacak katman verilmedi (layer).".into(),
+            "layer",
+        ));
     }
     match input.target {
         CreateTarget::Gpkg if input.path.as_deref().is_none_or(|p| p.trim().is_empty()) => {
-            return Err(fail(codes::NO_TARGET, "Tablonun yapılacağı GeoPackage dosyası verilmedi (path).".into(), "path"));
+            return Err(fail(
+                codes::NO_TARGET,
+                "Tablonun yapılacağı GeoPackage dosyası verilmedi (path).".into(),
+                "path",
+            ));
         }
         CreateTarget::Postgis if input.address.as_deref().is_none_or(|a| a.trim().is_empty()) => {
-            return Err(fail(codes::NO_TARGET, "Tablonun yapılacağı veritabanı verilmedi (address).".into(), "address"));
+            return Err(fail(
+                codes::NO_TARGET,
+                "Tablonun yapılacağı veritabanı verilmedi (address).".into(),
+                "address",
+            ));
         }
         _ => {}
     }
@@ -69,35 +97,50 @@ fn checked(doc: &Document, input: &LayersMigrate) -> Result<(), Stop> {
             "existing",
         ));
     }
-    let node = doc
-        .layers()
-        .get(id)
-        .ok_or_else(|| fail(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), "layer"))?;
+    let node = doc.layers().get(id).ok_or_else(|| {
+        fail(
+            codes::LAYER_NOT_FOUND,
+            format!("“{id}” kimlikli katman çizimde yok."),
+            "layer",
+        )
+    })?;
     if node.kind == LayerNodeType::Group {
         return Err(fail(
             codes::NOT_A_LAYER,
-            format!("“{}” bir katman grubu; kaynağa taşınan bir katmandır. Grubun bir katmanını verin.", node.name),
+            format!(
+                "“{}” bir katman grubu; kaynağa taşınan bir katmandır. Grubun bir katmanını verin.",
+                node.name
+            ),
             "layer",
         ));
     }
     if node.service.is_some() {
         return Err(fail(
             codes::SERVICE_LAYER,
-            format!("“{}” bir harita servisinden çizilir; taşınacak nesnesi yoktur.", node.name),
+            format!(
+                "“{}” bir harita servisinden çizilir; taşınacak nesnesi yoktur.",
+                node.name
+            ),
             "layer",
         ));
     }
     if let Some(d) = &node.data {
         return Err(fail(
             codes::DATA_LAYER,
-            format!("“{}” zaten “{}” tablosunu okuyor; nesneleri kaynağında.", node.name, d.table),
+            format!(
+                "“{}” zaten “{}” tablosunu okuyor; nesneleri kaynağında.",
+                node.name, d.table
+            ),
             "layer",
         ));
     }
     if doc.layers().is_locked(id) {
         return Err(fail(
             codes::LAYER_LOCKED,
-            format!("“{}” kilitli; nesneleri taşınmaz. Kilidi açıp yeniden deneyin.", node.name),
+            format!(
+                "“{}” kilitli; nesneleri taşınmaz. Kilidi açıp yeniden deneyin.",
+                node.name
+            ),
             "layer",
         ));
     }
@@ -116,7 +159,10 @@ fn as_migration(stop: Stop) -> Stop {
 }
 
 /// The export's plan of the layer's objects a table holds: every one, its texts left to their own table.
-fn plan_of<'d>(doc: &'d Document, export: &'d LayersExport) -> Result<crate::layer_export::Plan<'d>, Stop> {
+fn plan_of<'d>(
+    doc: &'d Document,
+    export: &'d LayersExport,
+) -> Result<crate::layer_export::Plan<'d>, Stop> {
     let mut plan = crate::layer_export::planned(doc, export).map_err(as_migration)?;
     plan.all_objects = true;
     plan.texts_apart = true;
@@ -135,14 +181,24 @@ struct Counted<'d> {
 }
 
 /// The layer's objects counted by a dry export: written, and what no table holds (refused then).
-fn counted<'d>(doc: &'d Document, input: &LayersMigrate, export: &'d LayersExport) -> Result<Counted<'d>, Stop> {
+fn counted<'d>(
+    doc: &'d Document,
+    input: &LayersMigrate,
+    export: &'d LayersExport,
+) -> Result<Counted<'d>, Stop> {
     checked(doc, input)?;
     let id = input.layer.trim();
     let plan = plan_of(doc, export)?;
     let table = crate::layer_export_sinks::table_of(&plan).unwrap_or_default();
     let list = texts::of(doc, id);
     let only_texts = !list.is_empty() && !texts::others(doc, id);
-    let texts_table = (!list.is_empty()).then(|| if only_texts { table.clone() } else { texts::beside(&table) });
+    let texts_table = (!list.is_empty()).then(|| {
+        if only_texts {
+            table.clone()
+        } else {
+            texts::beside(&table)
+        }
+    });
     // The tables there already: said for the migration (the export's words name its `existing`, which this has not).
     let mut tables: Vec<&String> = Vec::new();
     if !only_texts {
@@ -160,11 +216,18 @@ fn counted<'d>(doc: &'d Document, input: &LayersMigrate, export: &'d LayersExpor
         }
     }
     if only_texts {
-        return Ok(Counted { table, run: None, texts: list, texts_table });
+        return Ok(Counted {
+            table,
+            run: None,
+            texts: list,
+            texts_table,
+        });
     }
     let (run, _) = crate::layer_export::run(doc, &plan, false, &|| false, &|_| {})?;
     if run.skipped > 0 {
-        let first = first_left(doc, id).or_else(|| run.first_skip.clone()).unwrap_or_default();
+        let first = first_left(doc, id)
+            .or_else(|| run.first_skip.clone())
+            .unwrap_or_default();
         return Err(fail(
             codes::UNWRITABLE_OBJECTS,
             format!(
@@ -174,7 +237,12 @@ fn counted<'d>(doc: &'d Document, input: &LayersMigrate, export: &'d LayersExpor
             "layer",
         ));
     }
-    Ok(Counted { table, run: Some(run), texts: list, texts_table })
+    Ok(Counted {
+        table,
+        run: Some(run),
+        texts: list,
+        texts_table,
+    })
 }
 
 /// The first object of the layer a table has no geometry for, its texts aside, in words: “ölçü bir geometri sütununa
@@ -182,7 +250,9 @@ fn counted<'d>(doc: &'d Document, input: &LayersMigrate, export: &'d LayersExpor
 fn first_left(doc: &Document, layer: &str) -> Option<String> {
     doc.by_layer_with_uids(layer).find_map(|(_, e)| match e {
         Entity::Text(_) => None,
-        e => crate::geopackage::geometry_of(e).err().map(|word| format!("{word} bir geometri sütununa yazılmaz")),
+        e => crate::geopackage::geometry_of(e)
+            .err()
+            .map(|word| format!("{word} bir geometri sütununa yazılmaz")),
     })
 }
 
@@ -193,10 +263,20 @@ fn table_there(export: &LayersExport, table: &str) -> Result<bool, Stop> {
         return Ok(false);
     }
     let unreachable = |e: kentos_data::DataError| {
-        Stop::failed(error(codes::SOURCE_UNREACHABLE, format!("Okunamadı ya da yazılamadı: {e}"), None))
+        Stop::failed(error(
+            codes::SOURCE_UNREACHABLE,
+            format!("Okunamadı ya da yazılamadı: {e}"),
+            None,
+        ))
     };
-    let source = kentos_data::registry().source(&address).map_err(unreachable)?;
-    Ok(source.tables().map_err(unreachable)?.iter().any(|t| t.name == table))
+    let source = kentos_data::registry()
+        .source(&address)
+        .map_err(unreachable)?;
+    Ok(source
+        .tables()
+        .map_err(unreachable)?
+        .iter()
+        .any(|t| t.name == table))
 }
 
 /// The texts' details their table has no column for, said (docs/adr/9114 §2).
@@ -217,7 +297,10 @@ fn warnings_of(list: &[&TextEntity]) -> Vec<CommandWarning> {
 pub fn validate(cx: &ExecutionContext<'_>, input: &LayersMigrate) -> CommandResult<()> {
     let export = export_of(input);
     match counted(cx.doc, input, &export) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -248,7 +331,11 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersMigrate) -> CommandResult<L
                 .run
                 .as_ref()
                 .and(c.texts_table.clone())
-                .map(|table| MigratedTexts { layer: String::new(), table, written: n }),
+                .map(|table| MigratedTexts {
+                    layer: String::new(),
+                    table,
+                    written: n,
+                }),
             revision: cx.doc.revision().to_string(),
         },
         warnings: warnings_of(&c.texts),
@@ -256,7 +343,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersMigrate) -> CommandResult<L
 }
 
 /// Moves the layer into the source, the call's one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> CommandResult<LayersMigrated> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersMigrate,
+) -> CommandResult<LayersMigrated> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_LAYERS_MIGRATE,
@@ -302,7 +392,10 @@ fn add(
 /// The layer's table as written: its rows, its geometry type, the data layer reading it and its fields.
 type Written = (u64, Option<String>, DataLayer, Vec<LayerField>);
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> CommandResult<LayersMigrated> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersMigrate,
+) -> CommandResult<LayersMigrated> {
     let export = export_of(&input);
     let id = input.layer.trim().to_owned();
     let gpkg = input.target == CreateTarget::Gpkg;
@@ -324,18 +417,36 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> Command
                     Ok(p) => p,
                     Err(stop) => return stop.into(),
                 };
-                let (run, _) = match crate::layer_export::run(cx.doc, &plan, !cx.dry(), &|| false, &|_| {}) {
-                    Ok(r) => r,
-                    Err(stop) => return stop.into(),
+                let (run, _) =
+                    match crate::layer_export::run(cx.doc, &plan, !cx.dry(), &|| false, &|_| {}) {
+                        Ok(r) => r,
+                        Err(stop) => return stop.into(),
+                    };
+                let Some((data, fields, _)) = crate::layer_export_sinks::data_layer_of(&plan)
+                else {
+                    return fail(
+                        codes::SOURCE_UNREACHABLE,
+                        "Yazılan tablonun yeri okunamadı.".into(),
+                        "target",
+                    )
+                    .into();
                 };
-                let Some((data, fields, _)) = crate::layer_export_sinks::data_layer_of(&plan) else {
-                    return fail(codes::SOURCE_UNREACHABLE, "Yazılan tablonun yeri okunamadı.".into(), "target").into();
-                };
-                Some((run.written, plan.schema.geometry.as_ref().map(|g| g.type_name.clone()), data, fields))
+                Some((
+                    run.written,
+                    plan.schema.geometry.as_ref().map(|g| g.type_name.clone()),
+                    data,
+                    fields,
+                ))
             }
         };
         let list: Vec<TextEntity> = c.texts.iter().map(|t| (*t).clone()).collect();
-        (c.table.clone(), main, c.texts_table.clone(), list, warnings_of(&c.texts))
+        (
+            c.table.clone(),
+            main,
+            c.texts_table.clone(),
+            list,
+            warnings_of(&c.texts),
+        )
     };
     // The texts' table; the layer's table taken back when it cannot be written, so nothing is moved by halves.
     let texts_written = match &texts_table {
@@ -367,7 +478,12 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> Command
         None => 0,
     };
     let Some(old) = cx.doc.layers().get(&id).cloned() else {
-        return fail(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), "layer").into();
+        return fail(
+            codes::LAYER_NOT_FOUND,
+            format!("“{id}” kimlikli katman çizimde yok."),
+            "layer",
+        )
+        .into();
     };
     let (parent, index) = cx.doc.layers().place_of(&id).unwrap_or((None, 0));
     let mut output = LayersMigrated {
@@ -387,7 +503,14 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> Command
         Some((_, _, data, fields)) => (data.clone(), fields.clone()),
         None => match &texts_table {
             Some(t) => texts::data_layer(gpkg, &address, t, srid),
-            None => return fail(codes::NOTHING_TO_EXPORT, "Taşınacak nesne yok.".into(), "layer").into(),
+            None => {
+                return fail(
+                    codes::NOTHING_TO_EXPORT,
+                    "Taşınacak nesne yok.".into(),
+                    "layer",
+                )
+                .into();
+            }
         },
     };
     if let Err(why) = read_in_place(cx.doc, &id, own.0, own.1) {
@@ -401,7 +524,14 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> Command
     // A layer's texts beside other objects: a data layer of their own above it, in the layer's colour.
     if let Some(t) = texts_table.as_ref().filter(|_| beside) {
         let (data, fields) = texts::data_layer(gpkg, &address, t, srid);
-        let layer = match add(cx, format!("{} (yazılar)", old.name), (parent, index), data, fields, false) {
+        let layer = match add(
+            cx,
+            format!("{} (yazılar)", old.name),
+            (parent, index),
+            data,
+            fields,
+            false,
+        ) {
             Ok(l) => l,
             Err(r) => return *r,
         };
@@ -409,7 +539,11 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> Command
             style.color = old.style.color.clone();
             cx.doc.set_layer_style(&layer, style, LABEL);
         }
-        output.texts = Some(MigratedTexts { layer, table: t.clone(), written: texts_written });
+        output.texts = Some(MigratedTexts {
+            layer,
+            table: t.clone(),
+            written: texts_written,
+        });
     }
     output.revision = cx.doc.revision().to_string();
     CommandResult::Completed { output, warnings }
@@ -417,12 +551,25 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersMigrate) -> Command
 
 /// The layer `id`'s objects taken out of the drawing and the layer made to read `data` with its table's `fields` and
 /// the table's geometry kind, as the step [`LABEL`]; why the drawing refused, in its words (nothing changed then).
-fn read_in_place(doc: &mut Document, id: &str, data: DataLayer, fields: Vec<LayerField>) -> Result<(), String> {
+fn read_in_place(
+    doc: &mut Document,
+    id: &str,
+    data: DataLayer,
+    fields: Vec<LayerField>,
+) -> Result<(), String> {
     let objects: Vec<Slot> = doc.by_layer(id).map(|e| Slot(e.base().id)).collect();
     let family = data.family();
     doc.transact(LABEL, |doc| {
         doc.remove(&objects);
-        doc.set_layer_service(id, ServedBy { data: Some(data), ..ServedBy::default() }, None, LABEL)?;
+        doc.set_layer_service(
+            id,
+            ServedBy {
+                data: Some(data),
+                ..ServedBy::default()
+            },
+            None,
+            LABEL,
+        )?;
         doc.set_layer_fields(id, fields, &[])?;
         doc.set_layer_geometry(id, family, LABEL)?;
         Ok(())

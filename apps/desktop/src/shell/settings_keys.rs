@@ -84,7 +84,13 @@ fn message(edit: KeysEdit) -> Message {
 
 /// The keymap of the window's draft: what Kaydet would put in use.
 pub(crate) fn draft_keymap(draft: &SettingsDraft) -> Keymap {
-    let value = |key: &str| draft.values.get(key).cloned().unwrap_or_else(|| Value::Object(Default::default()));
+    let value = |key: &str| {
+        draft
+            .values
+            .get(key)
+            .cloned()
+            .unwrap_or_else(|| Value::Object(Default::default()))
+    };
     Keymap::new(&value(SHORTCUTS_SETTING), &value(ALIASES_SETTING))
 }
 
@@ -96,7 +102,10 @@ fn shown(chord: &str) -> String {
 /// The programs that do not offer a command, in a sentence (“KentOS Harita ve KentOS GIS'te”); none when every
 /// program does.
 fn programs_without(id: &str) -> Option<String> {
-    let without: Vec<Module> = Module::ALL.into_iter().filter(|m| !catalog().module_has(*m, id)).collect();
+    let without: Vec<Module> = Module::ALL
+        .into_iter()
+        .filter(|m| !catalog().module_has(*m, id))
+        .collect();
     let (last, rest) = without.split_last()?;
     let rest: Vec<&str> = rest.iter().map(|m| m.title()).collect();
     Some(if rest.is_empty() {
@@ -119,11 +128,19 @@ impl App {
                     || map.keys_source(c.id) == Source::User;
             }
             fold_turkish(c.title).contains(&q)
-                || map.keys_of(c).iter().any(|k| fold_turkish(k).contains(&q) || fold_turkish(&shown(k)).contains(&q))
+                || map
+                    .keys_of(c)
+                    .iter()
+                    .any(|k| fold_turkish(k).contains(&q) || fold_turkish(&shown(k)).contains(&q))
                 || c.aliases.iter().any(|a| fold_turkish(a).contains(&q))
-                || map.names_of(c.id).iter().any(|n| fold_turkish(n).contains(&q))
+                || map
+                    .names_of(c.id)
+                    .iter()
+                    .any(|n| fold_turkish(n).contains(&q))
         };
-        let changed = |c: &&'static Command| map.keys_source(c.id) == Source::User || !map.names_of(c.id).is_empty();
+        let changed = |c: &&'static Command| {
+            map.keys_source(c.id) == Source::User || !map.names_of(c.id).is_empty()
+        };
         let all: Vec<&'static Command> = catalog()
             .commands()
             .iter()
@@ -169,7 +186,10 @@ impl App {
                 if chosen.is_some() {
                     page.recording = true;
                     page.pending = None;
-                    page.note = Some((Severity::Info, "Bir tuşa ya da tuş birleşimine basın; Esc vazgeçer.".into()));
+                    page.note = Some((
+                        Severity::Info,
+                        "Bir tuşa ya da tuş birleşimine basın; Esc vazgeçer.".into(),
+                    ));
                 }
             }
             KeysEdit::StopRecording => page.note = None,
@@ -183,18 +203,30 @@ impl App {
                         shortcuts = Some(map.shortcuts_with(command.id, &chord));
                         page.note = Some((
                             Severity::Success,
-                            format!("“{}” {title} komutuna verildi. Kaydet ile geçerli olur.", shown(&chord)),
+                            format!(
+                                "“{}” {title} komutuna verildi. Kaydet ile geçerli olur.",
+                                shown(&chord)
+                            ),
                         ));
                     }
                     KeyCheck::Own => {
-                        page.note = Some((Severity::Info, format!("“{}” zaten {title} komutunun.", shown(&chord))));
+                        page.note = Some((
+                            Severity::Info,
+                            format!("“{}” zaten {title} komutunun.", shown(&chord)),
+                        ));
                     }
                     KeyCheck::Kept(why) | KeyCheck::Unreadable(why) => {
-                        page.note = Some((Severity::Warning, format!("“{}” kullanılamaz. {why}", shown(&chord))));
+                        page.note = Some((
+                            Severity::Warning,
+                            format!("“{}” kullanılamaz. {why}", shown(&chord)),
+                        ));
                     }
                     KeyCheck::Taken(other, _) => {
                         page.note = None;
-                        page.pending = Some(Pending::Key { chord, from: other.id });
+                        page.pending = Some(Pending::Key {
+                            chord,
+                            from: other.id,
+                        });
                     }
                 }
             }
@@ -203,7 +235,10 @@ impl App {
                     shortcuts = Some(map.shortcuts_without(command.id, &chord));
                     page.note = Some((
                         Severity::Info,
-                        format!("“{}” {title} komutundan kaldırıldı. Kaydet ile geçerli olur.", shown(&chord)),
+                        format!(
+                            "“{}” {title} komutundan kaldırıldı. Kaydet ile geçerli olur.",
+                            shown(&chord)
+                        ),
                     ));
                 }
             }
@@ -213,7 +248,10 @@ impl App {
                     let other = catalog().get(from).map_or(from, |c| c.title);
                     page.note = Some((
                         Severity::Success,
-                        format!("“{}” {other} komutundan alınıp {title} komutuna verildi. Kaydet ile geçerli olur.", shown(&chord)),
+                        format!(
+                            "“{}” {other} komutundan alınıp {title} komutuna verildi. Kaydet ile geçerli olur.",
+                            shown(&chord)
+                        ),
                     ));
                 }
                 (Some(Pending::Name { name, from }), Some(command)) => {
@@ -222,7 +260,9 @@ impl App {
                     page.name.clear();
                     page.note = Some((
                         Severity::Success,
-                        format!("“{name}” {other} komutundan alınıp {title} komutuna verildi. Kaydet ile geçerli olur."),
+                        format!(
+                            "“{name}” {other} komutundan alınıp {title} komutuna verildi. Kaydet ile geçerli olur."
+                        ),
                     ));
                 }
                 _ => {}
@@ -234,7 +274,10 @@ impl App {
                         Pending::Name { name, from } => (name.clone(), *from),
                     };
                     let other = catalog().get(from).map_or(from, |c| c.title);
-                    page.note = Some((Severity::Info, format!("Değişmedi: “{what}” {other} komutunda kaldı.")));
+                    page.note = Some((
+                        Severity::Info,
+                        format!("Değişmedi: “{what}” {other} komutunda kaldı."),
+                    ));
                 }
             }
             KeysEdit::NameTyped(text) => page.name = text,
@@ -254,17 +297,27 @@ impl App {
                             .unwrap_or_default();
                         page.note = Some((
                             Severity::Success,
-                            format!("“{name}” {title} komutunun adı oldu: komut satırına yazıp Enter'a basın. Kaydet ile geçerli olur.{classic}"),
+                            format!(
+                                "“{name}” {title} komutunun adı oldu: komut satırına yazıp Enter'a basın. Kaydet ile geçerli olur.{classic}"
+                            ),
                         ));
                     }
                     NameCheck::Own => {
-                        page.note = Some((Severity::Info, format!("“{}” zaten {title} komutunun adı.", page.name.trim())));
+                        page.note = Some((
+                            Severity::Info,
+                            format!("“{}” zaten {title} komutunun adı.", page.name.trim()),
+                        ));
                     }
                     NameCheck::Kept(why) => page.note = Some((Severity::Warning, why)),
-                    NameCheck::Unreadable(why) => page.note = Some((Severity::Warning, why.to_owned())),
+                    NameCheck::Unreadable(why) => {
+                        page.note = Some((Severity::Warning, why.to_owned()))
+                    }
                     NameCheck::Taken(other, name) => {
                         page.note = None;
-                        page.pending = Some(Pending::Name { name, from: other.id });
+                        page.pending = Some(Pending::Name {
+                            name,
+                            from: other.id,
+                        });
                     }
                 }
             }
@@ -282,7 +335,9 @@ impl App {
                     page.pending = None;
                     page.note = Some((
                         Severity::Info,
-                        format!("{title} komutunun tuşları ve adları KentOS'un varsayılanına döndü. Kaydet ile geçerli olur."),
+                        format!(
+                            "{title} komutunun tuşları ve adları KentOS'un varsayılanına döndü. Kaydet ile geçerli olur."
+                        ),
                     ));
                 }
             }
@@ -309,7 +364,10 @@ impl App {
     /// waiting, a modifier alone waits on. None when nothing waits.
     pub(crate) fn record_key(&mut self, press: &KeyPress) -> Option<Task<Message>> {
         if self.dialog != Some(crate::app::Dialog::Settings)
-            || !self.settings_draft.as_ref().is_some_and(|d| d.keys.recording)
+            || !self
+                .settings_draft
+                .as_ref()
+                .is_some_and(|d| d.keys.recording)
         {
             return None;
         }
@@ -331,7 +389,10 @@ impl App {
     }
 
     /// The section: the search and Hepsini varsayılana döndür over the list and the chosen command's form.
-    pub(crate) fn shortcuts_section<'a>(&'a self, draft: &'a SettingsDraft) -> Element<'a, Message> {
+    pub(crate) fn shortcuts_section<'a>(
+        &'a self,
+        draft: &'a SettingsDraft,
+    ) -> Element<'a, Message> {
         let map = draft_keymap(draft);
         let page = &draft.keys;
         let (listed, total) = self.keys_listed(&map, &page.query);
@@ -343,37 +404,63 @@ impl App {
             .on_press_maybe((!map.is_default()).then_some(message(KeysEdit::AllDefaults)))
             .padding(kentos_ui::theme::metrics::action())
             .style(style::button::ghost);
-        let mut top = Column::new().spacing(10).push(row![search, space::horizontal(), all].align_y(Center));
+        let mut top = Column::new()
+            .spacing(10)
+            .push(row![search, space::horizontal(), all].align_y(Center));
         // What the settings keep that is not used here: said, never dropped in silence.
         let unused = map.unused_entries();
         if !unused.is_empty() {
-            let first: Vec<String> = unused.iter().take(3).map(|u| format!("{}: {}", u.entry, u.why)).collect();
-            let more = if unused.len() > 3 { format!(" … ve {} giriş daha.", unused.len() - 3) } else { String::new() };
+            let first: Vec<String> = unused
+                .iter()
+                .take(3)
+                .map(|u| format!("{}: {}", u.entry, u.why))
+                .collect();
+            let more = if unused.len() > 3 {
+                format!(" … ve {} giriş daha.", unused.len() - 3)
+            } else {
+                String::new()
+            };
             top = top.push(Banner::warning(format!(
                 "Ayar dosyasındaki {} giriş kullanılmıyor, saklanıyor. {}{more}",
                 unused.len(),
                 first.join(" · ")
             )));
         }
-        let list = listed.iter().fold(Column::new().spacing(1), |list, command| {
-            let keys: Vec<String> = map.keys_of(command).iter().map(|k| shown(k)).collect();
-            let mut names: Vec<String> = command.aliases.iter().take(1).map(|a| (*a).to_owned()).collect();
-            names.extend(map.names_of(command.id).iter().map(|n| (*n).to_owned()));
-            let user = map.keys_source(command.id) == Source::User || !map.names_of(command.id).is_empty();
-            let subtitle = format!(
-                "{} · {}",
-                if names.is_empty() { "adı yok".to_owned() } else { names.join(", ") },
-                if user { "kullanıcının" } else { "varsayılan" }
-            );
-            let mut item = Item::new(command.title)
-                .subtitle(subtitle)
-                .on_press(message(KeysEdit::Choose(command.id)))
-                .current(page.chosen == Some(command.id));
-            if !keys.is_empty() {
-                item = item.trailing(caps(keys));
-            }
-            list.push(item)
-        });
+        let list = listed
+            .iter()
+            .fold(Column::new().spacing(1), |list, command| {
+                let keys: Vec<String> = map.keys_of(command).iter().map(|k| shown(k)).collect();
+                let mut names: Vec<String> = command
+                    .aliases
+                    .iter()
+                    .take(1)
+                    .map(|a| (*a).to_owned())
+                    .collect();
+                names.extend(map.names_of(command.id).iter().map(|n| (*n).to_owned()));
+                let user = map.keys_source(command.id) == Source::User
+                    || !map.names_of(command.id).is_empty();
+                let subtitle = format!(
+                    "{} · {}",
+                    if names.is_empty() {
+                        "adı yok".to_owned()
+                    } else {
+                        names.join(", ")
+                    },
+                    if user {
+                        "kullanıcının"
+                    } else {
+                        "varsayılan"
+                    }
+                );
+                let mut item = Item::new(command.title)
+                    .subtitle(subtitle)
+                    .on_press(message(KeysEdit::Choose(command.id)))
+                    .current(page.chosen == Some(command.id));
+                if !keys.is_empty() {
+                    item = item.trailing(caps(keys));
+                }
+                list.push(item)
+            });
         let list: Element<'a, Message> = if listed.is_empty() {
             label::muted("Aramayla eşleşen komut yok.").into()
         } else {
@@ -382,25 +469,43 @@ impl App {
         let foot = self.keys_foot(&map, listed.len(), total);
         let details = match page.chosen.and_then(|id| catalog().get(id)) {
             Some(command) => self.keys_details(&map, page, command),
-            None => label::muted("Kısayolunu ya da adını değiştireceğiniz komutu soldan seçin.").into(),
+            None => {
+                label::muted("Kısayolunu ya da adını değiştireceğiniz komutu soldan seçin.").into()
+            }
         };
-        top.push(ListDetails::new(list, details).list_foot(foot).list_width(290.0).height(400.0))
-            .into()
+        top.push(
+            ListDetails::new(list, details)
+                .list_foot(foot)
+                .list_width(290.0)
+                .height(400.0),
+        )
+        .into()
     }
 
     /// Under the list: how many it shows, and the user's keys and names this program has no command for.
-    fn keys_foot<'a>(&self, map: &Keymap, shown_count: usize, total: usize) -> Element<'a, Message> {
+    fn keys_foot<'a>(
+        &self,
+        map: &Keymap,
+        shown_count: usize,
+        total: usize,
+    ) -> Element<'a, Message> {
         let mut words = if shown_count < total {
             format!("{total} komuttan {shown_count} tanesi; aramayı daraltın.")
         } else {
             format!("{total} komut.")
         };
-        let elsewhere = map.changed().into_iter().filter(|c| !self.offers(c.id)).count();
+        let elsewhere = map
+            .changed()
+            .into_iter()
+            .filter(|c| !self.offers(c.id))
+            .count();
         if elsewhere > 0 {
             // “KentOS Harita'da”, “bu CBS projesinde”: where the list is (program.rs).
             let here = self.here_words();
             let mut chars = here.chars();
-            let here = chars.next().map_or(String::new(), |c| c.to_uppercase().chain(chars).collect());
+            let here = chars
+                .next()
+                .map_or(String::new(), |c| c.to_uppercase().chain(chars).collect());
             words.push_str(&format!(
                 " {here} olmayan {elsewhere} komutun tuşu ya da adı saklı; o komutların olduğu yerde geçerlidir."
             ));

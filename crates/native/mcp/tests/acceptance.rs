@@ -326,8 +326,12 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
         .count();
     let written = rows.iter().filter(|r| r.get("effects").is_some()).count();
     assert_eq!(written, 2, "the DXF and the PDF");
-    let pdf_row = rows.iter().find(|r| r["command"] == "file.export.pdf").expect("PDF export");
-    let original_pdf = std::fs::read(pdf_row["input"]["path"].as_str().expect("PDF path")).expect("original PDF");
+    let pdf_row = rows
+        .iter()
+        .find(|r| r["command"] == "file.export.pdf")
+        .expect("PDF export");
+    let original_pdf =
+        std::fs::read(pdf_row["input"]["path"].as_str().expect("PDF path")).expect("original PDF");
     journal["calls"] = Value::Array(rows);
     let fresh = call(&mut server, "drawing.new", scenario["project"].clone());
     let fresh = fresh["drawing"].as_str().expect("a handle").to_owned();
@@ -345,12 +349,23 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
         .as_array()
         .expect("steps")
         .iter()
-        .filter(|s| s["outcome"] == "failed" || (s["outcome"] == "differs" && s["command"] != "file.export.pdf"))
+        .filter(|s| {
+            s["outcome"] == "failed"
+                || (s["outcome"] == "differs" && s["command"] != "file.export.pdf")
+        })
         .collect();
     assert!(wrong.is_empty(), "{wrong:#?}");
-    let changed: Vec<_> = report["steps"].as_array().unwrap().iter()
-        .filter(|s| s["outcome"] == "differs").collect();
-    assert_eq!(changed.len(), 1, "only the PDF's new source metadata changes: {report}");
+    let changed: Vec<_> = report["steps"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|s| s["outcome"] == "differs")
+        .collect();
+    assert_eq!(
+        changed.len(),
+        1,
+        "only the PDF's new source metadata changes: {report}"
+    );
     assert_eq!(changed[0]["command"], "file.export.pdf");
     assert_eq!(report["same"], json!(done + written - 1), "{report}");
     let after: Vec<_> = std::fs::read_dir(&dir)
@@ -362,25 +377,54 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
     // Independently prove the digest difference is confined to metadata, rather
     // than accepting a changed drawing, font, page dictionary or physical scale.
     let replayed_path = dir.join("replayed.pdf");
-    call(&mut server, "drawing.exportPdf", json!({"drawing":fresh,"path":replayed_path}));
+    call(
+        &mut server,
+        "drawing.exportPdf",
+        json!({"drawing":fresh,"path":replayed_path}),
+    );
     let replayed_pdf = std::fs::read(&replayed_path).expect("replayed PDF");
     let mut original = files::objects(&original_pdf);
     let mut replayed = files::objects(&replayed_pdf);
     let is_info = |head: &[u8]| head.windows(9).any(|s| s == b"/Keywords");
-    let original_info: Vec<_> = original.values().filter(|(head, _)| is_info(head)).collect();
-    let replayed_info: Vec<_> = replayed.values().filter(|(head, _)| is_info(head)).collect();
+    let original_info: Vec<_> = original
+        .values()
+        .filter(|(head, _)| is_info(head))
+        .collect();
+    let replayed_info: Vec<_> = replayed
+        .values()
+        .filter(|(head, _)| is_info(head))
+        .collect();
     assert_eq!((original_info.len(), replayed_info.len()), (1, 1));
-    assert_ne!(original_info[0], replayed_info[0], "source session provenance must remain truthful");
+    assert_ne!(
+        original_info[0], replayed_info[0],
+        "source session provenance must remain truthful"
+    );
     original.retain(|_, (head, _)| !is_info(head));
     replayed.retain(|_, (head, _)| !is_info(head));
-    assert_eq!(original.len(), replayed.len(), "same non-metadata object count");
-    let changed_objects: Vec<_> = original.iter()
-        .filter_map(|(id, object)| (replayed.get(id) != Some(object)).then_some(*id)).collect();
-    assert!(changed_objects.is_empty(), "non-metadata PDF objects changed: {changed_objects:?}");
-    let expected_pdf = &scenario["steps"].as_array().unwrap().iter()
-        .find(|s| s["export"] == "pdf").unwrap()["expect"]["pdf"];
+    assert_eq!(
+        original.len(),
+        replayed.len(),
+        "same non-metadata object count"
+    );
+    let changed_objects: Vec<_> = original
+        .iter()
+        .filter_map(|(id, object)| (replayed.get(id) != Some(object)).then_some(*id))
+        .collect();
+    assert!(
+        changed_objects.is_empty(),
+        "non-metadata PDF objects changed: {changed_objects:?}"
+    );
+    let expected_pdf = &scenario["steps"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["export"] == "pdf")
+        .unwrap()["expect"]["pdf"];
     let problems = files::pdf_problems(&replayed_pdf, expected_pdf);
-    assert!(problems.is_empty(), "replayed physical dimensions: {problems:#?}");
+    assert!(
+        problems.is_empty(),
+        "replayed physical dimensions: {problems:#?}"
+    );
     let mine = call(
         &mut server,
         "drawing.summary",
@@ -423,26 +467,42 @@ fn the_parcels_are_made_checked_written_and_opened_elsewhere_as_the_scenario_say
     std::fs::create_dir_all(&dir).expect("a folder");
     let out = dir.display().to_string();
     let mut rows: Vec<Value> = Vec::new();
-    for (n, step) in scenario["steps"].as_array().expect("steps").iter().enumerate() {
+    for (n, step) in scenario["steps"]
+        .as_array()
+        .expect("steps")
+        .iter()
+        .enumerate()
+    {
         let name = step["name"].as_str().unwrap_or("");
         if step["fresh"] == true {
-            let journal = call(&mut server, "drawing.journal", json!({ "drawing": drawing }));
+            let journal = call(
+                &mut server,
+                "drawing.journal",
+                json!({ "drawing": drawing }),
+            );
             rows.extend(journal["calls"].as_array().cloned().unwrap_or_default());
             let fresh = call(&mut server, "drawing.new", scenario["project"].clone());
             drawing = fresh["drawing"].as_str().expect("a handle").to_owned();
         }
         let mut selected = Value::Null;
         if let Some(command) = step["command"].as_str() {
-            let text = bind(&step["input"], &names).to_string().replace("$out:", &format!("{out}/"));
+            let text = bind(&step["input"], &names)
+                .to_string()
+                .replace("$out:", &format!("{out}/"));
             let mut arguments: Value = serde_json::from_str(&text).expect("json");
             arguments["drawing"] = json!(drawing);
             let answer = call(&mut server, command, arguments);
             assert_eq!(answer["status"], "completed", "{name}: {answer}");
             if let Some(key) = step["as"].as_str() {
-                names.insert(key.to_owned(), answer["output"]["uid"].as_str().expect("uid").to_owned());
+                names.insert(
+                    key.to_owned(),
+                    answer["output"]["uid"].as_str().expect("uid").to_owned(),
+                );
             }
             for (key, field) in step["bind"].as_object().into_iter().flatten() {
-                let value = answer["output"][field.as_str().expect("a field")].as_str().expect("bound");
+                let value = answer["output"][field.as_str().expect("a field")]
+                    .as_str()
+                    .expect("bound");
                 names.insert(key.clone(), value.to_owned());
             }
             selected = answer["output"]["selected"].clone();
@@ -450,31 +510,65 @@ fn the_parcels_are_made_checked_written_and_opened_elsewhere_as_the_scenario_say
             let undone = call(&mut server, "drawing.undo", json!({ "drawing": drawing }));
             assert_eq!(undone["step"], label, "{name}");
         } else if step["reopen"] == true {
-            let journal = call(&mut server, "drawing.journal", json!({ "drawing": drawing }));
+            let journal = call(
+                &mut server,
+                "drawing.journal",
+                json!({ "drawing": drawing }),
+            );
             rows.extend(journal["calls"].as_array().cloned().unwrap_or_default());
             let path = dir.join(format!("ada-{n}.kcad"));
-            call(&mut server, "drawing.save", json!({ "drawing": drawing, "path": path }));
+            call(
+                &mut server,
+                "drawing.save",
+                json!({ "drawing": drawing, "path": path }),
+            );
             let opened = call(&mut server, "drawing.open", json!({ "path": path }));
             drawing = opened["drawing"].as_str().expect("a handle").to_owned();
         }
         let expect = &step["expect"];
         let mut problems = Vec::new();
         for (key, want) in expect["objects"].as_object().into_iter().flatten() {
-            let got = call(&mut server, "drawing.entity", json!({ "drawing": drawing, "uid": names[key] }));
+            let got = call(
+                &mut server,
+                "drawing.entity",
+                json!({ "drawing": drawing, "uid": names[key] }),
+            );
             differs(&got["entity"], want, tolerance, key, &mut problems);
         }
         for (key, want) in expect["measures"].as_object().into_iter().flatten() {
-            let got = call(&mut server, "drawing.measure", json!({ "drawing": drawing, "uid": names[key] }));
+            let got = call(
+                &mut server,
+                "drawing.measure",
+                json!({ "drawing": drawing, "uid": names[key] }),
+            );
             differs(&got, want, tolerance, &format!("{key} ölçü"), &mut problems);
         }
         if let Some(count) = expect.get("count") {
-            let summary = call(&mut server, "drawing.summary", json!({ "drawing": drawing }));
-            differs(&summary["objects"], count, 0.0, "nesne sayısı", &mut problems);
+            let summary = call(
+                &mut server,
+                "drawing.summary",
+                json!({ "drawing": drawing }),
+            );
+            differs(
+                &summary["objects"],
+                count,
+                0.0,
+                "nesne sayısı",
+                &mut problems,
+            );
         }
         if let Some(want) = expect["selected"].as_array() {
-            let mut want: Vec<String> = want.iter().filter_map(|k| k.as_str()).map(|k| names[k].clone()).collect();
-            let mut got: Vec<String> =
-                selected.as_array().into_iter().flatten().filter_map(|u| u.as_str().map(str::to_owned)).collect();
+            let mut want: Vec<String> = want
+                .iter()
+                .filter_map(|k| k.as_str())
+                .map(|k| names[k].clone())
+                .collect();
+            let mut got: Vec<String> = selected
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|u| u.as_str().map(str::to_owned))
+                .collect();
             want.sort();
             got.sort();
             if got != want {
@@ -483,16 +577,26 @@ fn the_parcels_are_made_checked_written_and_opened_elsewhere_as_the_scenario_say
         }
         for (layer, spec) in expect["layers"].as_object().into_iter().flatten() {
             let tree = call(&mut server, "drawing.layers", json!({ "drawing": drawing }));
-            let Some(id) = layer_named(&tree["layers"], layer).or_else(|| layer_named(&tree, layer)) else {
+            let Some(id) =
+                layer_named(&tree["layers"], layer).or_else(|| layer_named(&tree, layer))
+            else {
                 problems.push(format!("{layer} katmanı yok"));
                 continue;
             };
-            let page = call(&mut server, "drawing.entities", json!({ "drawing": drawing, "layer": id }));
+            let page = call(
+                &mut server,
+                "drawing.entities",
+                json!({ "drawing": drawing, "layer": id }),
+            );
             let key = spec["key"].as_str().expect("a key");
             let items = page["items"].as_array().cloned().unwrap_or_default();
             let rows_of = spec["rows"].as_object().expect("rows");
             if items.len() != rows_of.len() {
-                problems.push(format!("{layer}: {} nesne, beklenen {}", items.len(), rows_of.len()));
+                problems.push(format!(
+                    "{layer}: {} nesne, beklenen {}",
+                    items.len(),
+                    rows_of.len()
+                ));
             }
             for item in &items {
                 let attrs = &item["entity"]["attrs"];
@@ -500,14 +604,34 @@ fn the_parcels_are_made_checked_written_and_opened_elsewhere_as_the_scenario_say
                     problems.push(format!("{layer}: {key} yok"));
                     continue;
                 };
-                differs(attrs, &rows_of[k], 0.0, &format!("{layer}/{k}"), &mut problems);
-                let m = call(&mut server, "drawing.measure", json!({ "drawing": drawing, "uid": item["uid"] }));
-                differs(&m["area"], &spec["areas"][k], tolerance, &format!("{layer}/{k} alan"), &mut problems);
+                differs(
+                    attrs,
+                    &rows_of[k],
+                    0.0,
+                    &format!("{layer}/{k}"),
+                    &mut problems,
+                );
+                let m = call(
+                    &mut server,
+                    "drawing.measure",
+                    json!({ "drawing": drawing, "uid": item["uid"] }),
+                );
+                differs(
+                    &m["area"],
+                    &spec["areas"][k],
+                    tolerance,
+                    &format!("{layer}/{k} alan"),
+                    &mut problems,
+                );
             }
         }
         assert!(problems.is_empty(), "{name}: {problems:#?}");
     }
-    let journal = call(&mut server, "drawing.journal", json!({ "drawing": drawing }));
+    let journal = call(
+        &mut server,
+        "drawing.journal",
+        json!({ "drawing": drawing }),
+    );
     rows.extend(journal["calls"].as_array().cloned().unwrap_or_default());
     assert!(
         rows.iter().all(|r| r["kind"] == "command"),
@@ -518,26 +642,58 @@ fn the_parcels_are_made_checked_written_and_opened_elsewhere_as_the_scenario_say
 
 #[test]
 fn sheet_create_fit_and_detailed_read_work_as_one_atomic_agent_changeset() {
-    let mut server=Server::new();
-    let opened=call(&mut server,"drawing.open",json!({"path":concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/kcad/v2/sheets.kcad")}));
-    let drawing=opened["drawing"].as_str().unwrap();
-    let before=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true,"pictures":true}));
-    let fixture:Value=serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.sheets.create.json")).unwrap();
-    let mut create=fixture["cases"][0]["steps"][0]["input"].clone();create["id"]=json!("agent");
-    let answer=call(&mut server,"cad.changeset.apply",json!({"drawing":drawing,"label":"Pafta oluştur ve sığdır","steps":[
-        {"command":"cad.sheets.create","input":create},
-        {"command":"cad.sheets.fit","input":{"item":"agent-item-0","bounds":[0,0,5,3]}}
-    ]}));
-    assert_eq!(answer["status"],"completed","{answer}");
-    let read=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true,"pictures":true}));
-    assert!(read["output"]["templates"].as_array().unwrap().len()>=10);
-    let added=read["output"]["book"]["sheets"].as_array().unwrap().iter().find(|s|s["id"]=="agent").unwrap();
-    assert_eq!(added["items"][0]["kind"]["view"]["scale"],15);
-    assert_eq!(added["items"][0]["kind"]["view"]["center"],json!({"x":2.5,"y":1.5}));
-    assert_eq!(read["output"]["pictures"],before["output"]["pictures"]);
-    call(&mut server,"drawing.undo",json!({"drawing":drawing}));
-    let undone=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));
-    assert_eq!(undone["output"]["book"],before["output"]["book"]);
+    let mut server = Server::new();
+    let opened = call(
+        &mut server,
+        "drawing.open",
+        json!({"path":concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/kcad/v2/sheets.kcad")}),
+    );
+    let drawing = opened["drawing"].as_str().unwrap();
+    let before = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true,"pictures":true}),
+    );
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.sheets.create.json"
+    ))
+    .unwrap();
+    let mut create = fixture["cases"][0]["steps"][0]["input"].clone();
+    create["id"] = json!("agent");
+    let answer = call(
+        &mut server,
+        "cad.changeset.apply",
+        json!({"drawing":drawing,"label":"Pafta oluştur ve sığdır","steps":[
+            {"command":"cad.sheets.create","input":create},
+            {"command":"cad.sheets.fit","input":{"item":"agent-item-0","bounds":[0,0,5,3]}}
+        ]}),
+    );
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let read = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true,"pictures":true}),
+    );
+    assert!(read["output"]["templates"].as_array().unwrap().len() >= 10);
+    let added = read["output"]["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|s| s["id"] == "agent")
+        .unwrap();
+    assert_eq!(added["items"][0]["kind"]["view"]["scale"], 15);
+    assert_eq!(
+        added["items"][0]["kind"]["view"]["center"],
+        json!({"x":2.5,"y":1.5})
+    );
+    assert_eq!(read["output"]["pictures"], before["output"]["pictures"]);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    let undone = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true}),
+    );
+    assert_eq!(undone["output"]["book"], before["output"]["book"]);
 }
 
 #[test]
@@ -727,22 +883,64 @@ fn live_named_view_is_resolved_by_mcp_without_rewriting_its_capture() {
 
 #[test]
 fn twenty_viewport_annotation_and_layer_operations_use_the_catalog_and_undo() {
-    let data:Value=serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/viewport-annotations.json")).unwrap();
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/viewport-annotations.json"
+    ))
+    .unwrap();
     for c in data["cases"].as_array().unwrap() {
-        let mut server=Server::new();
-        let opened=call(&mut server,"drawing.open",json!({"path":concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/kcad/v2/sheets.kcad")}));let drawing=opened["drawing"].as_str().unwrap();
-        call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":c["sheet"]}]}));
-        let before=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));
-        let changed=call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[c["operation"]]}));
-        let after=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));
-        let page=after["output"]["book"]["sheets"].as_array().unwrap().iter().find(|s|s["id"]=="page").unwrap();
-        let mut expected=c["operation"]["layerOverrides"].clone();
-        for o in expected.as_array_mut().unwrap() {if o["frozen"]==false {o.as_object_mut().unwrap().remove("frozen");}}
-        assert_eq!(page["items"][0]["kind"]["layerOverrides"],expected);
-        assert_eq!(page["items"][0]["kind"]["viewLocked"],true);
+        let mut server = Server::new();
+        let opened = call(
+            &mut server,
+            "drawing.open",
+            json!({"path":concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/kcad/v2/sheets.kcad")}),
+        );
+        let drawing = opened["drawing"].as_str().unwrap();
+        call(
+            &mut server,
+            "cad.sheets.edit",
+            json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":c["sheet"]}]}),
+        );
+        let before = call(
+            &mut server,
+            "cad.sheets.set",
+            json!({"drawing":drawing,"details":true}),
+        );
+        let changed = call(
+            &mut server,
+            "cad.sheets.edit",
+            json!({"drawing":drawing,"ops":[c["operation"]]}),
+        );
+        let after = call(
+            &mut server,
+            "cad.sheets.set",
+            json!({"drawing":drawing,"details":true}),
+        );
+        let page = after["output"]["book"]["sheets"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|s| s["id"] == "page")
+            .unwrap();
+        let mut expected = c["operation"]["layerOverrides"].clone();
+        for o in expected.as_array_mut().unwrap() {
+            if o["frozen"] == false {
+                o.as_object_mut().unwrap().remove("frozen");
+            }
+        }
+        assert_eq!(page["items"][0]["kind"]["layerOverrides"], expected);
+        assert_eq!(page["items"][0]["kind"]["viewLocked"], true);
         assert!(after["output"]["annotationScales"].is_array());
-        call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":changed["output"]["inverse"]}));
-        let back=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));assert_eq!(back["output"]["book"],before["output"]["book"]);
+        call(
+            &mut server,
+            "cad.sheets.edit",
+            json!({"drawing":drawing,"ops":changed["output"]["inverse"]}),
+        );
+        let back = call(
+            &mut server,
+            "cad.sheets.set",
+            json!({"drawing":drawing,"details":true}),
+        );
+        assert_eq!(back["output"]["book"], before["output"]["book"]);
     }
 }
 
@@ -807,8 +1005,7 @@ fn twenty_agent_viewport_queries_return_source_uids_and_ignore_clipped_snap_poin
 }
 
 #[test]
-fn an_agent_creates_a_six_page_architectural_set_and_exports_each_shared_master_at_its_page_size()
- {
+fn an_agent_creates_a_six_page_architectural_set_and_exports_each_shared_master_at_its_page_size() {
     let data: Value = serde_json::from_str(include_str!(
         "../../../../fixtures/sheet/v1/multipage-sets.json"
     ))
@@ -941,7 +1138,10 @@ fn an_agent_keeps_twenty_native_plot_profiles_before_any_sheet_exists() {
             "cad.sheets.set",
             json!({"drawing":drawing,"details":true}),
         );
-        assert_eq!(state["output"]["book"]["plotProfiles"][0], c["exchange"]["profile"]);
+        assert_eq!(
+            state["output"]["book"]["plotProfiles"][0],
+            c["exchange"]["profile"]
+        );
         call(
             &mut server,
             "cad.sheets.edit",
@@ -954,8 +1154,7 @@ fn an_agent_keeps_twenty_native_plot_profiles_before_any_sheet_exists() {
 #[test]
 fn an_agent_exports_a_real_ink_profile_with_the_common_pen_fields() {
     let data: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/plot-ink.json"))
-            .unwrap();
+        serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/plot-ink.json")).unwrap();
     let c = &data["cases"][17];
     let dir = std::env::temp_dir().join(format!("kentos-mcp-sheet20-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -1080,7 +1279,6 @@ fn an_agent_creates_the_calibration_template_and_measures_real_pdf_marks() {
     std::fs::remove_dir_all(folder).unwrap();
 }
 
-
 #[test]
 fn an_agent_plans_and_publishes_a_pinned_sheet_delivery() {
     let root = std::env::temp_dir().join(format!("kentos-mcp-sheet25-{}", std::process::id()));
@@ -1088,126 +1286,394 @@ fn an_agent_plans_and_publishes_a_pinned_sheet_delivery() {
     std::fs::create_dir_all(&root).unwrap();
     let target = root.join("delivery");
     let mut server = Server::new();
-    let fx: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/file.publish.sheets.json")).unwrap();
+    let fx: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/file.publish.sheets.json"
+    ))
+    .unwrap();
     let source = root.join("source.kcad");
     std::fs::write(&source, serde_json::to_vec(&fx["setup"]).unwrap()).unwrap();
     let opened = call(&mut server, "drawing.open", json!({"path":source}));
     let drawing = opened["drawing"].as_str().unwrap();
-    let ops: Vec<Value> = fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect();
-    call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
+    let ops: Vec<Value> = fx["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| json!({"op":"addSheet","sheet":s}))
+        .collect();
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":ops}),
+    );
     let before = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
-    let plan = call(&mut server, "file.publish.sheets", json!({"drawing":drawing,"path":target,"mode":"separate","op":"plan"}));
-    assert_eq!(plan["status"],"completed", "{plan}");
-    assert_eq!(plan["output"]["ready"],true,"{plan}");
+    let plan = call(
+        &mut server,
+        "file.publish.sheets",
+        json!({"drawing":drawing,"path":target,"mode":"separate","op":"plan"}),
+    );
+    assert_eq!(plan["status"], "completed", "{plan}");
+    assert_eq!(plan["output"]["ready"], true, "{plan}");
     assert!(!target.exists());
-    let issued = call(&mut server, "file.publish.sheets", json!({"drawing":drawing,"path":target,"mode":"separate","pin":plan["output"]["source"]}));
-    assert_eq!(issued["status"],"completed","{issued}");
-    let manifest: Value = serde_json::from_slice(&std::fs::read(target.join("yayin.json")).unwrap()).unwrap();
-    assert_eq!(manifest["source"],plan["output"]["source"]);
+    let issued = call(
+        &mut server,
+        "file.publish.sheets",
+        json!({"drawing":drawing,"path":target,"mode":"separate","pin":plan["output"]["source"]}),
+    );
+    assert_eq!(issued["status"], "completed", "{issued}");
+    let manifest: Value =
+        serde_json::from_slice(&std::fs::read(target.join("yayin.json")).unwrap()).unwrap();
+    assert_eq!(manifest["source"], plan["output"]["source"]);
     for f in issued["output"]["files"].as_array().unwrap() {
         let bytes = std::fs::read(target.join(f["name"].as_str().unwrap())).unwrap();
-        assert_eq!(kentos_commands::encoding::sha256_hex(&bytes),f["sha256"]);
-        assert_eq!(files::pdf_pages(&bytes).len(),1);
+        assert_eq!(kentos_commands::encoding::sha256_hex(&bytes), f["sha256"]);
+        assert_eq!(files::pdf_pages(&bytes).len(), 1);
     }
     let after = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
-    assert_eq!(before["objects"],after["objects"]);
+    assert_eq!(before["objects"], after["objects"]);
     std::fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
 fn an_agent_edits_drawing_set_fields_and_queries_the_persisted_standard_identity() {
-    let fx:Value=serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/drawing-set.json")).unwrap();
-    let root=std::env::temp_dir().join(format!("kentos-mcp-sheet26-{}",std::process::id()));std::fs::create_dir_all(&root).unwrap();
-    let source=root.join("source.kcad");std::fs::write(&source,serde_json::to_vec(&fx["model"]).unwrap()).unwrap();
-    let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();
-    let mut ops:Vec<Value>=fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect();
+    let fx: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/drawing-set.json"
+    ))
+    .unwrap();
+    let root = std::env::temp_dir().join(format!("kentos-mcp-sheet26-{}", std::process::id()));
+    std::fs::create_dir_all(&root).unwrap();
+    let source = root.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&fx["model"]).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let mut ops: Vec<Value> = fx["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| json!({"op":"addSheet","sheet":s}))
+        .collect();
     ops.extend(fx["cases"][0]["ops"].as_array().unwrap().clone());
-    let edited=call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
-    assert_eq!(edited["output"]["sheets"][0]["drawingInfo"]["number"],"A-101");
-    let kept=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));
-    assert_eq!(kept["output"]["book"]["sheets"][0]["drawingInfo"],fx["cases"][0]["metadata"]["ground"]);
-    let rejected=tool_result(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[{"op":"setDrawingInfo","id":"section","info":{"number":"A-101"}}]}));
-    assert_eq!(rejected["structuredContent"]["error"]["code"],"duplicate_sheet_number");
-    let after=call(&mut server,"cad.sheets.set",json!({"drawing":drawing,"details":true}));assert_eq!(kept,after);
+    let edited = call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":ops}),
+    );
+    assert_eq!(
+        edited["output"]["sheets"][0]["drawingInfo"]["number"],
+        "A-101"
+    );
+    let kept = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true}),
+    );
+    assert_eq!(
+        kept["output"]["book"]["sheets"][0]["drawingInfo"],
+        fx["cases"][0]["metadata"]["ground"]
+    );
+    let rejected = tool_result(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":[{"op":"setDrawingInfo","id":"section","info":{"number":"A-101"}}]}),
+    );
+    assert_eq!(
+        rejected["structuredContent"]["error"]["code"],
+        "duplicate_sheet_number"
+    );
+    let after = call(
+        &mut server,
+        "cad.sheets.set",
+        json!({"drawing":drawing,"details":true}),
+    );
+    assert_eq!(kept, after);
     std::fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
-fn sheet_package_agent_delivers_real_fonts_and_refuses_a_changed_recorded_delivery(){
-    let fx:Value=serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/delivery.json")).unwrap();
-    let root=std::env::temp_dir().join(format!("kentos-mcp-sheet-package-{}",std::process::id()));let _=std::fs::remove_dir_all(&root);std::fs::create_dir_all(&root).unwrap();let source=root.join("source.kcad");std::fs::write(&source,serde_json::to_vec(&fx["model"]).unwrap()).unwrap();
-    let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();
-    let ops=fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect::<Vec<_>>();call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
-    let input=json!({"drawing":drawing,"path":root.join("delivery"),"resources":true,"requestId":"complete-delivery"});
-    let output=call(&mut server,"file.publish.sheets",input.clone());assert_eq!(output["status"],"completed","{output}");
-    let files=output["output"]["resources"]["files"].as_array().unwrap();assert_eq!(files.iter().filter(|f|f["kind"]=="font").count(),22);assert_eq!(files.iter().filter(|f|f["kind"]=="license").count(),7);
-    let replay=call(&mut server,"file.publish.sheets",input.clone());assert_eq!(replay["replayed"],true);
-    let font=files.iter().find(|f|f["kind"]=="font").unwrap()["path"].as_str().unwrap();std::fs::write(root.join("delivery").join(font),b"changed").unwrap();
-    let refused=tool_result(&mut server,"file.publish.sheets",input);assert_eq!(refused["isError"],true);assert_eq!(refused["structuredContent"]["error"]["code"],"integrity_failed");std::fs::remove_dir_all(root).unwrap();
+fn sheet_package_agent_delivers_real_fonts_and_refuses_a_changed_recorded_delivery() {
+    let fx: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/delivery.json")).unwrap();
+    let root =
+        std::env::temp_dir().join(format!("kentos-mcp-sheet-package-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).unwrap();
+    let source = root.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&fx["model"]).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let ops = fx["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| json!({"op":"addSheet","sheet":s}))
+        .collect::<Vec<_>>();
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":ops}),
+    );
+    let input = json!({"drawing":drawing,"path":root.join("delivery"),"resources":true,"requestId":"complete-delivery"});
+    let output = call(&mut server, "file.publish.sheets", input.clone());
+    assert_eq!(output["status"], "completed", "{output}");
+    let files = output["output"]["resources"]["files"].as_array().unwrap();
+    assert_eq!(files.iter().filter(|f| f["kind"] == "font").count(), 22);
+    assert_eq!(files.iter().filter(|f| f["kind"] == "license").count(), 7);
+    let replay = call(&mut server, "file.publish.sheets", input.clone());
+    assert_eq!(replay["replayed"], true);
+    let font = files.iter().find(|f| f["kind"] == "font").unwrap()["path"]
+        .as_str()
+        .unwrap();
+    std::fs::write(root.join("delivery").join(font), b"changed").unwrap();
+    let refused = tool_result(&mut server, "file.publish.sheets", input);
+    assert_eq!(refused["isError"], true);
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "integrity_failed"
+    );
+    std::fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
-fn sheet_preflight_agent_reads_native_source_errors_without_an_output_path(){
-    let fx:Value=serde_json::from_str(include_str!("../../../../fixtures/commands/v1/file.preflight.sheets.json")).unwrap();
-    let root=std::env::temp_dir().join(format!("kentos-mcp-preflight-{}",std::process::id()));let _=std::fs::remove_dir_all(&root);std::fs::create_dir_all(&root).unwrap();
-    let mut model=fx["model"].clone();model["entities"].as_array_mut().unwrap().push(json!({"kind":"image","id":20,"layerId":"cizim","attrs":{},"file":root.join("missing.png"),"p":{"x":0,"y":0},"width":1,"height":1,"rotation":0}));let source=root.join("source.kcad");std::fs::write(&source,serde_json::to_vec(&model).unwrap()).unwrap();
-    let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();
-    let ops=fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect::<Vec<_>>();call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
-    let result=call(&mut server,"file.preflight.sheets",json!({"drawing":drawing}));assert_eq!(result["status"],"completed","{result}");assert_eq!(result["output"]["ready"],false);assert!(result["output"]["issues"].as_array().unwrap().iter().any(|i|i["code"]=="missing_reference"&&i["error"]==true));assert_eq!(std::fs::read_dir(&root).unwrap().count(),1);std::fs::remove_dir_all(root).unwrap();
+fn sheet_preflight_agent_reads_native_source_errors_without_an_output_path() {
+    let fx: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/file.preflight.sheets.json"
+    ))
+    .unwrap();
+    let root = std::env::temp_dir().join(format!("kentos-mcp-preflight-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).unwrap();
+    let mut model = fx["model"].clone();
+    model["entities"].as_array_mut().unwrap().push(json!({"kind":"image","id":20,"layerId":"cizim","attrs":{},"file":root.join("missing.png"),"p":{"x":0,"y":0},"width":1,"height":1,"rotation":0}));
+    let source = root.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&model).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let ops = fx["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| json!({"op":"addSheet","sheet":s}))
+        .collect::<Vec<_>>();
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":ops}),
+    );
+    let result = call(
+        &mut server,
+        "file.preflight.sheets",
+        json!({"drawing":drawing}),
+    );
+    assert_eq!(result["status"], "completed", "{result}");
+    assert_eq!(result["output"]["ready"], false);
+    assert!(
+        result["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["code"] == "missing_reference" && i["error"] == true)
+    );
+    assert_eq!(std::fs::read_dir(&root).unwrap().count(), 1);
+    std::fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
-fn sheet_snapshot_agent_plan_guard_and_pdf_source_are_the_same_revision(){
-    let fx:Value=serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/source-snapshot.json")).unwrap();
-    let root=std::env::temp_dir().join(format!("kentos-mcp-snapshot-{}",std::process::id()));let _=std::fs::remove_dir_all(&root);std::fs::create_dir_all(&root).unwrap();
-    let source=root.join("source.kcad");std::fs::write(&source,serde_json::to_vec(&fx["model"]).unwrap()).unwrap();
-    let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();
-    let ops=fx["book"]["sheets"].as_array().unwrap().iter().map(|s|json!({"op":"addSheet","sheet":s})).collect::<Vec<_>>();call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":ops}));
-    let plan=call(&mut server,"file.publish.sheets",json!({"drawing":drawing,"path":root.join("delivery"),"op":"plan"}));
-    assert_eq!(plan["status"],"completed","{plan}");let pin=plan["output"]["source"].clone();assert!(pin["resourcesSha256"].is_string());assert!(!root.join("delivery").exists());
-    let issued=call(&mut server,"file.publish.sheets",json!({"drawing":drawing,"path":root.join("delivery"),"pin":pin}));assert_eq!(issued["status"],"completed","{issued}");
-    let manifest:Value=serde_json::from_slice(&std::fs::read(root.join("delivery/yayin.json")).unwrap()).unwrap();assert_eq!(manifest["snapshot"]["source"],pin);assert_eq!(manifest["snapshot"]["laterEditsExcluded"],true);
-    call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[{"op":"renameSheet","id":"ground","name":"Sonraki revizyon"}]}));
-    let refused=tool_result(&mut server,"file.publish.sheets",json!({"drawing":drawing,"path":root.join("stale"),"pin":pin}));assert_eq!(refused["isError"],true);assert_eq!(refused["structuredContent"]["error"]["code"],"pin_mismatch");assert!(!root.join("stale").exists());std::fs::remove_dir_all(root).unwrap();
+fn sheet_snapshot_agent_plan_guard_and_pdf_source_are_the_same_revision() {
+    let fx: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/source-snapshot.json"
+    ))
+    .unwrap();
+    let root = std::env::temp_dir().join(format!("kentos-mcp-snapshot-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).unwrap();
+    let source = root.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&fx["model"]).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let ops = fx["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| json!({"op":"addSheet","sheet":s}))
+        .collect::<Vec<_>>();
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":ops}),
+    );
+    let plan = call(
+        &mut server,
+        "file.publish.sheets",
+        json!({"drawing":drawing,"path":root.join("delivery"),"op":"plan"}),
+    );
+    assert_eq!(plan["status"], "completed", "{plan}");
+    let pin = plan["output"]["source"].clone();
+    assert!(pin["resourcesSha256"].is_string());
+    assert!(!root.join("delivery").exists());
+    let issued = call(
+        &mut server,
+        "file.publish.sheets",
+        json!({"drawing":drawing,"path":root.join("delivery"),"pin":pin}),
+    );
+    assert_eq!(issued["status"], "completed", "{issued}");
+    let manifest: Value =
+        serde_json::from_slice(&std::fs::read(root.join("delivery/yayin.json")).unwrap()).unwrap();
+    assert_eq!(manifest["snapshot"]["source"], pin);
+    assert_eq!(manifest["snapshot"]["laterEditsExcluded"], true);
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":[{"op":"renameSheet","id":"ground","name":"Sonraki revizyon"}]}),
+    );
+    let refused = tool_result(
+        &mut server,
+        "file.publish.sheets",
+        json!({"drawing":drawing,"path":root.join("stale"),"pin":pin}),
+    );
+    assert_eq!(refused["isError"], true);
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "pin_mismatch"
+    );
+    assert!(!root.join("stale").exists());
+    std::fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
-fn sheet_host_pdf_twenty_physical_pages_work_without_a_window_or_printer(){
-    let data:Value=serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/calibration.json")).unwrap();
-    let root=std::env::temp_dir().join(format!("kentos-mcp-pdf-host-{}",std::process::id()));let _=std::fs::remove_dir_all(&root);std::fs::create_dir_all(&root).unwrap();
-    for(n,c)in data["cases"].as_array().unwrap().iter().enumerate(){
-        let source=root.join(format!("source-{n}.kcad"));std::fs::write(&source,serde_json::to_vec(&c["model"]).unwrap()).unwrap();
-        let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();
-        call(&mut server,"cad.sheets.edit",json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":c["sheet"]}]}));
-        let target=root.join(format!("page-{n}.pdf"));let plan=call(&mut server,"file.export.pdf",json!({"drawing":drawing,"path":target,"op":"plan"}));assert_eq!(plan["status"],"completed","{plan}");assert!(!target.exists());
-        let issued=call(&mut server,"file.export.pdf",json!({"drawing":drawing,"path":target,"requestId":"host-pdf"}));assert_eq!(issued["status"],"completed","{issued}");assert_eq!(issued["output"]["sha256"],plan["output"]["sha256"]);
-        let bytes=std::fs::read(&target).unwrap();let pages=files::pdf_pages(&bytes);assert_eq!(pages.len(),1);
-        for rgb in [[34./255.,85./255.,170./255.],[204./255.,51./255.,68./255.]]{
-            assert!(pages[0].ink.iter().filter(|l|l.color.iter().zip(rgb).all(|(a,b)|(a-b).abs()<0.002)).any(|l|((l.segment[2]-l.segment[0]).hypot(l.segment[3]-l.segment[1])-100.).abs()<0.002),"{} {rgb:?}",c["name"]);
+fn sheet_host_pdf_twenty_physical_pages_work_without_a_window_or_printer() {
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/sheet/v1/calibration.json"
+    ))
+    .unwrap();
+    let root = std::env::temp_dir().join(format!("kentos-mcp-pdf-host-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).unwrap();
+    for (n, c) in data["cases"].as_array().unwrap().iter().enumerate() {
+        let source = root.join(format!("source-{n}.kcad"));
+        std::fs::write(&source, serde_json::to_vec(&c["model"]).unwrap()).unwrap();
+        let mut server = Server::new();
+        let opened = call(&mut server, "drawing.open", json!({"path":source}));
+        let drawing = opened["drawing"].as_str().unwrap();
+        call(
+            &mut server,
+            "cad.sheets.edit",
+            json!({"drawing":drawing,"ops":[{"op":"addSheet","sheet":c["sheet"]}]}),
+        );
+        let target = root.join(format!("page-{n}.pdf"));
+        let plan = call(
+            &mut server,
+            "file.export.pdf",
+            json!({"drawing":drawing,"path":target,"op":"plan"}),
+        );
+        assert_eq!(plan["status"], "completed", "{plan}");
+        assert!(!target.exists());
+        let issued = call(
+            &mut server,
+            "file.export.pdf",
+            json!({"drawing":drawing,"path":target,"requestId":"host-pdf"}),
+        );
+        assert_eq!(issued["status"], "completed", "{issued}");
+        assert_eq!(issued["output"]["sha256"], plan["output"]["sha256"]);
+        let bytes = std::fs::read(&target).unwrap();
+        let pages = files::pdf_pages(&bytes);
+        assert_eq!(pages.len(), 1);
+        for rgb in [
+            [34. / 255., 85. / 255., 170. / 255.],
+            [204. / 255., 51. / 255., 68. / 255.],
+        ] {
+            assert!(
+                pages[0]
+                    .ink
+                    .iter()
+                    .filter(|l| l.color.iter().zip(rgb).all(|(a, b)| (a - b).abs() < 0.002))
+                    .any(
+                        |l| ((l.segment[2] - l.segment[0]).hypot(l.segment[3] - l.segment[1])
+                            - 100.)
+                            .abs()
+                            < 0.002
+                    ),
+                "{} {rgb:?}",
+                c["name"]
+            );
         }
-        let replay=call(&mut server,"file.export.pdf",json!({"drawing":drawing,"path":target,"requestId":"host-pdf"}));assert_eq!(replay["replayed"],true);assert_eq!(std::fs::read(&target).unwrap(),bytes);
+        let replay = call(
+            &mut server,
+            "file.export.pdf",
+            json!({"drawing":drawing,"path":target,"requestId":"host-pdf"}),
+        );
+        assert_eq!(replay["replayed"], true);
+        assert_eq!(std::fs::read(&target).unwrap(), bytes);
     }
     std::fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
-fn import_scale_agent_uses_the_same_physical_reference_and_undo_in_a_project_with_crs(){
-    let fixture:Value=serde_json::from_str(include_str!("../../../../fixtures/commands/v1/file.import.dxf.json")).unwrap();let mut model=fixture["setup"].clone();model["settings"]["srid"]=json!(5256);model["settings"]["workspace"]=json!("gis");
-    let root=std::env::temp_dir().join(format!("kentos-mcp-import-scale-{}",std::process::id()));std::fs::create_dir_all(&root).unwrap();let source=root.join("source.kcad");std::fs::write(&source,serde_json::to_vec(&model).unwrap()).unwrap();
-    let mut server=Server::new();let opened=call(&mut server,"drawing.open",json!({"path":source}));let drawing=opened["drawing"].as_str().unwrap();let before=call(&mut server,"drawing.summary",json!({"drawing":drawing}));
-    let path=concat!(env!("CARGO_MANIFEST_DIR"),"/../../../fixtures/formats/v1/dxf-units/mm.dxf");let reference=json!({"sourceLength":1250,"realLength":12.5});
-    let planned=call(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":path,"scaleReference":reference,"op":"plan"}));assert_eq!(planned["status"],"completed","{planned}");assert_eq!(planned["output"]["unit"]["factor"],0.01);
-    assert_eq!(call(&mut server,"drawing.summary",json!({"drawing":drawing}))["objects"],before["objects"]);
-    let issued=call(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":path,"scaleReference":reference}));assert_eq!(issued["status"],"completed","{issued}");assert_eq!(issued["output"]["unit"],planned["output"]["unit"]);
-    call(&mut server,"drawing.undo",json!({"drawing":drawing}));assert_eq!(call(&mut server,"drawing.summary",json!({"drawing":drawing}))["objects"],before["objects"]);
-    let refused=tool_result(&mut server,"file.import.dxf",json!({"drawing":drawing,"path":path,"fileUnit":"mm","scaleReference":reference}));assert_eq!(refused["isError"],true);assert_eq!(refused["structuredContent"]["error"]["code"],"invalid_scale");std::fs::remove_dir_all(root).unwrap();
+fn import_scale_agent_uses_the_same_physical_reference_and_undo_in_a_project_with_crs() {
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/file.import.dxf.json"
+    ))
+    .unwrap();
+    let mut model = fixture["setup"].clone();
+    model["settings"]["srid"] = json!(5256);
+    model["settings"]["workspace"] = json!("gis");
+    let root = std::env::temp_dir().join(format!("kentos-mcp-import-scale-{}", std::process::id()));
+    std::fs::create_dir_all(&root).unwrap();
+    let source = root.join("source.kcad");
+    std::fs::write(&source, serde_json::to_vec(&model).unwrap()).unwrap();
+    let mut server = Server::new();
+    let opened = call(&mut server, "drawing.open", json!({"path":source}));
+    let drawing = opened["drawing"].as_str().unwrap();
+    let before = call(&mut server, "drawing.summary", json!({"drawing":drawing}));
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/formats/v1/dxf-units/mm.dxf"
+    );
+    let reference = json!({"sourceLength":1250,"realLength":12.5});
+    let planned = call(
+        &mut server,
+        "file.import.dxf",
+        json!({"drawing":drawing,"path":path,"scaleReference":reference,"op":"plan"}),
+    );
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert_eq!(planned["output"]["unit"]["factor"], 0.01);
+    assert_eq!(
+        call(&mut server, "drawing.summary", json!({"drawing":drawing}))["objects"],
+        before["objects"]
+    );
+    let issued = call(
+        &mut server,
+        "file.import.dxf",
+        json!({"drawing":drawing,"path":path,"scaleReference":reference}),
+    );
+    assert_eq!(issued["status"], "completed", "{issued}");
+    assert_eq!(issued["output"]["unit"], planned["output"]["unit"]);
+    call(&mut server, "drawing.undo", json!({"drawing":drawing}));
+    assert_eq!(
+        call(&mut server, "drawing.summary", json!({"drawing":drawing}))["objects"],
+        before["objects"]
+    );
+    let refused = tool_result(
+        &mut server,
+        "file.import.dxf",
+        json!({"drawing":drawing,"path":path,"fileUnit":"mm","scaleReference":reference}),
+    );
+    assert_eq!(refused["isError"], true);
+    assert_eq!(
+        refused["structuredContent"]["error"]["code"],
+        "invalid_scale"
+    );
+    std::fs::remove_dir_all(root).unwrap();
 }
 
 #[test]
 fn sheet_preflight_agent_reports_visible_linetype_loss_without_writing_or_mutating() {
     let fx: Value = serde_json::from_str(include_str!(
         "../../../../fixtures/commands/v1/file.preflight.sheets.json"
-    )).unwrap();
+    ))
+    .unwrap();
     let root = std::env::temp_dir().join(format!("kentos-mcp-linetype-{}", std::process::id()));
     std::fs::create_dir_all(&root).unwrap();
     let mut model = fx["model"].clone();
@@ -1221,15 +1687,33 @@ fn sheet_preflight_agent_reports_visible_linetype_loss_without_writing_or_mutati
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path":source}));
     let drawing = opened["drawing"].as_str().unwrap();
-    let ops = fx["book"]["sheets"].as_array().unwrap().iter()
-        .map(|s|json!({"op":"addSheet","sheet":s})).collect::<Vec<_>>();
-    call(&mut server, "cad.sheets.edit", json!({"drawing":drawing,"ops":ops}));
-    let result = call(&mut server, "file.preflight.sheets", json!({"drawing":drawing}));
+    let ops = fx["book"]["sheets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|s| json!({"op":"addSheet","sheet":s}))
+        .collect::<Vec<_>>();
+    call(
+        &mut server,
+        "cad.sheets.edit",
+        json!({"drawing":drawing,"ops":ops}),
+    );
+    let result = call(
+        &mut server,
+        "file.preflight.sheets",
+        json!({"drawing":drawing}),
+    );
     assert_eq!(result["status"], "completed", "{result}");
     assert_eq!(result["output"]["ready"], false, "{result}");
-    assert!(result["output"]["issues"].as_array().unwrap().iter().any(|i|
-        i["code"]=="linetype_unsupported" && i["error"]==true
-            && i["message"].as_str().unwrap().contains("HW")));
+    assert!(
+        result["output"]["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|i| i["code"] == "linetype_unsupported"
+                && i["error"] == true
+                && i["message"].as_str().unwrap().contains("HW"))
+    );
     assert_eq!(std::fs::read(&source).unwrap(), bytes);
     assert_eq!(std::fs::read_dir(&root).unwrap().count(), 1);
     std::fs::remove_dir_all(root).unwrap();
@@ -1383,8 +1867,7 @@ fn agent_can_attach_portable_shx_and_clear_only_the_resolved_resource_finding() 
 #[test]
 fn an_agent_imports_a_ctb_and_publishes_with_its_pen() {
     let data: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/plot-ink.json"))
-            .unwrap();
+        serde_json::from_str(include_str!("../../../../fixtures/sheet/v1/plot-ink.json")).unwrap();
     let c = &data["cases"][17];
     let dir = std::env::temp_dir().join(format!("kentos-mcp-ctb-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -1395,7 +1878,10 @@ fn an_agent_imports_a_ctb_and_publishes_with_its_pen() {
     let drawing = opened["drawing"].as_str().unwrap();
     let mut setup = c["setup"].clone();
     setup["settings"].as_object_mut().unwrap().remove("profile");
-    setup["settings"].as_object_mut().unwrap().remove("profileSnapshot");
+    setup["settings"]
+        .as_object_mut()
+        .unwrap()
+        .remove("profileSnapshot");
     call(
         &mut server,
         "cad.sheets.edit",
@@ -1403,18 +1889,28 @@ fn an_agent_imports_a_ctb_and_publishes_with_its_pen() {
     );
     let pen_of = |server: &mut Server, name: &str| {
         let path = dir.join(name);
-        call(server, "drawing.exportPdf", json!({"drawing":drawing,"path":path}));
+        call(
+            server,
+            "drawing.exportPdf",
+            json!({"drawing":drawing,"path":path}),
+        );
         let pages = files::pdf_pages(&std::fs::read(&path).unwrap());
         pages[0]
             .ink
             .iter()
-            .find(|p| p.segment.iter().zip([80., 72., 180., 72.]).all(|(a, b)| (a - b).abs() < 0.002))
+            .find(|p| {
+                p.segment
+                    .iter()
+                    .zip([80., 72., 180., 72.])
+                    .all(|(a, b)| (a - b).abs() < 0.002)
+            })
             .map(|p| (p.width, p.color))
             .unwrap()
     };
     let (before, _) = pen_of(&mut server, "before.pdf");
     assert!((before - 0.5).abs() > 0.01, "{before}");
-    let ctb = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/commands/v1/plotstyles/siyah.ctb");
+    let ctb = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/commands/v1/plotstyles/siyah.ctb");
     let imported = call(
         &mut server,
         "cad.plotstyles.import",

@@ -11,7 +11,10 @@ use crate::history::Op;
 impl Document {
     /// The building's declared performance, none when nothing is declared.
     pub fn building_performance(&self) -> Option<&BuildingPerformance> {
-        self.settings.arch.as_ref().and_then(|a| a.performance.as_ref())
+        self.settings
+            .arch
+            .as_ref()
+            .and_then(|a| a.performance.as_ref())
     }
 
     /// Gives the building `next` as one change named `label` (into the open transaction, else an undo step of its own);
@@ -34,7 +37,13 @@ impl Document {
             return Ok(false);
         }
         self.transact(label, |doc| {
-            doc.record(vec![Op::Arch(ArchOp::Performance { before, after: next })], label);
+            doc.record(
+                vec![Op::Arch(ArchOp::Performance {
+                    before,
+                    after: next,
+                })],
+                label,
+            );
             Ok(true)
         })
     }

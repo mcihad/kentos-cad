@@ -1,10 +1,10 @@
 //! search › tests's tests that need the CBS module's surfaces (its project's bottom tabs and panels; docs/adr/9199
 //! §4.14): moved from the core's cad/search/tests.rs with the module's package; the work they test is the core's.
 
-use kentos_domain::Slot;
-use crate::search::{Event, Field, PANEL_HEIGHT};
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
+use crate::search::{Event, Field, PANEL_HEIGHT};
+use kentos_domain::Slot;
 
 const DRAWING: &str = include_str!("../../../../fixtures/interaction/v1/data-search.kcad");
 

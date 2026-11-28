@@ -66,7 +66,9 @@ fn members(renderer: &Value, at: usize) -> Vec<bool> {
     let list = objects();
     let refs: Vec<&Entity> = list.iter().collect();
     let reader = ClassReader::new(renderer, Unit::METRE).expect("classes");
-    reader.members(&refs, &name, &|_| None, at).expect("members")
+    reader
+        .members(&refs, &name, &|_| None, at)
+        .expect("members")
 }
 
 fn categorized() -> Value {
@@ -87,22 +89,48 @@ fn a_categorized_renderers_classes_say_their_condition_and_what_they_take() {
     let classes = style_classes(&v);
     let rows: Vec<(&str, &str, bool, Option<&str>)> = classes
         .iter()
-        .map(|c| (c.id.as_str(), c.label.as_str(), c.enabled, c.expression.as_deref()))
+        .map(|c| {
+            (
+                c.id.as_str(),
+                c.label.as_str(),
+                c.enabled,
+                c.expression.as_deref(),
+            )
+        })
         .collect();
     assert_eq!(
         rows,
         [
             ("c0", "Konut", true, Some("kullanim = 'Konut'")),
             ("c1", "Ticaret", false, Some("kullanim = 'Ticaret'")),
-            ("c2", "(boş)", true, Some("(kullanim boş veya kullanim = '')")),
-            (OTHER, "Diğer değerler", true, Some("kullanim değil içinde ('Konut', 'Ticaret', '')")),
+            (
+                "c2",
+                "(boş)",
+                true,
+                Some("(kullanim boş veya kullanim = '')")
+            ),
+            (
+                OTHER,
+                "Diğer değerler",
+                true,
+                Some("kullanim değil içinde ('Konut', 'Ticaret', '')")
+            ),
         ]
     );
-    assert_eq!(classes[0].symbols, Some(json!({ "marker": { "ref": "a" } })));
+    assert_eq!(
+        classes[0].symbols,
+        Some(json!({ "marker": { "ref": "a" } }))
+    );
     // The text is not drawn: it counts nowhere. A switched-off category still says what it takes.
     assert_eq!(counts(&v), [2, 1, 1, 2]);
-    assert_eq!(members(&v, 0), [true, true, false, false, false, false, false]);
-    assert_eq!(members(&v, 3), [false, false, false, true, false, true, false]);
+    assert_eq!(
+        members(&v, 0),
+        [true, true, false, false, false, false, false]
+    );
+    assert_eq!(
+        members(&v, 3),
+        [false, false, false, true, false, true, false]
+    );
 }
 
 #[test]
@@ -130,12 +158,21 @@ fn graduated_classes_bound_their_numbers_and_the_last_takes_its_maximum() {
         ]
     });
     let classes = style_classes(&v);
-    assert_eq!(classes[0].expression.as_deref(), Some("alan >= 0 ve alan < 500"));
-    assert_eq!(classes[1].expression.as_deref(), Some("alan >= 500 ve alan <= 1500"));
+    assert_eq!(
+        classes[0].expression.as_deref(),
+        Some("alan >= 0 ve alan < 500")
+    );
+    assert_eq!(
+        classes[1].expression.as_deref(),
+        Some("alan >= 500 ve alan <= 1500")
+    );
     assert!(!classes[1].enabled);
     // 120, 480, 60 below 500; 900 and 1500 (the last's maximum) in the second; the one without a value in none.
     assert_eq!(counts(&v), [3, 2]);
-    assert_eq!(members(&v, 1), [false, false, true, true, false, false, false]);
+    assert_eq!(
+        members(&v, 1),
+        [false, false, true, true, false, false, false]
+    );
 }
 
 #[test]
@@ -152,13 +189,25 @@ fn rules_list_their_children_after_them_and_the_else_rule_takes_the_rest() {
     let classes = style_classes(&v);
     let rows: Vec<(&str, &str, usize, Option<&str>)> = classes
         .iter()
-        .map(|c| (c.id.as_str(), c.label.as_str(), c.depth, c.expression.as_deref()))
+        .map(|c| {
+            (
+                c.id.as_str(),
+                c.label.as_str(),
+                c.depth,
+                c.expression.as_deref(),
+            )
+        })
         .collect();
     assert_eq!(
         rows,
         [
             ("r0", "Büyük", 0, Some("alan >= 500")),
-            ("r0.0", "Park", 1, Some("(alan >= 500) ve (kullanim = 'Park')")),
+            (
+                "r0.0",
+                "Park",
+                1,
+                Some("(alan >= 500) ve (kullanim = 'Park')")
+            ),
             ("r1", "Konut", 0, Some("kullanim = 'Konut'")),
             // A switched-off sibling does not keep its objects from the else rule.
             ("r2", "(adsız kural)", 0, Some("değil ((alan >= 500))")),
@@ -200,10 +249,17 @@ fn switching_classes_writes_only_false_and_keeps_what_it_does_not_know() {
     let mut v = categorized();
     v["note"] = json!("kept");
     // Off: written as false; on: the flag goes; the other way: each turned over.
-    assert_eq!(set_enabled(&mut v, Some(&["c0".into(), OTHER.into()]), Switch::Off), Ok(true));
+    assert_eq!(
+        set_enabled(&mut v, Some(&["c0".into(), OTHER.into()]), Switch::Off),
+        Ok(true)
+    );
     assert_eq!(v["categories"][0]["enabled"], json!(false));
     assert_eq!(v["otherEnabled"], json!(false));
-    assert_eq!(set_enabled(&mut v, Some(&["c0".into()]), Switch::Off), Ok(false), "already off");
+    assert_eq!(
+        set_enabled(&mut v, Some(&["c0".into()]), Switch::Off),
+        Ok(false),
+        "already off"
+    );
     assert_eq!(set_enabled(&mut v, None, Switch::Invert), Ok(true));
     assert!(v["categories"][0].get("enabled").is_none());
     assert!(v["categories"][1].get("enabled").is_none());
@@ -211,7 +267,9 @@ fn switching_classes_writes_only_false_and_keeps_what_it_does_not_know() {
     assert!(v.get("otherEnabled").is_none());
     assert_eq!(set_enabled(&mut v, None, Switch::On), Ok(true));
     assert_eq!(
-        v["categories"].as_array().map(|a| a.iter().all(|k| k.get("enabled").is_none())),
+        v["categories"]
+            .as_array()
+            .map(|a| a.iter().all(|k| k.get("enabled").is_none())),
         Some(true)
     );
     assert_eq!(v["note"], json!("kept"));
@@ -219,22 +277,34 @@ fn switching_classes_writes_only_false_and_keeps_what_it_does_not_know() {
         set_enabled(&mut v, Some(&["c0".into(), "c7".into()]), Switch::Off),
         Err(SwitchRefused::UnknownClass(1))
     );
-    assert!(v["categories"][0].get("enabled").is_none(), "nothing written on a refusal");
+    assert!(
+        v["categories"][0].get("enabled").is_none(),
+        "nothing written on a refusal"
+    );
 
     let mut rules = json!({ "type": "rules", "rules": [
         { "id": "1", "label": "A", "children": [{ "id": "1a", "label": "B" }] }
     ]});
-    assert_eq!(set_enabled(&mut rules, Some(&["r0.0".into()]), Switch::Off), Ok(true));
+    assert_eq!(
+        set_enabled(&mut rules, Some(&["r0.0".into()]), Switch::Off),
+        Ok(true)
+    );
     assert_eq!(rules["rules"][0]["children"][0]["enabled"], json!(false));
 
     let mut graduated = json!({ "type": "graduated", "expr": "alan", "classes": [
         { "min": 0, "max": 1, "label": "a", "symbols": {} }
     ]});
-    assert_eq!(set_enabled(&mut graduated, Some(&["g0".into()]), Switch::Off), Ok(true));
+    assert_eq!(
+        set_enabled(&mut graduated, Some(&["g0".into()]), Switch::Off),
+        Ok(true)
+    );
     assert_eq!(graduated["classes"][0]["enabled"], json!(false));
 
     let mut single = json!({ "type": "single", "symbols": {} });
-    assert_eq!(set_enabled(&mut single, None, Switch::Off), Err(SwitchRefused::NoClasses));
+    assert_eq!(
+        set_enabled(&mut single, None, Switch::Off),
+        Err(SwitchRefused::NoClasses)
+    );
 }
 
 #[test]
@@ -244,12 +314,18 @@ fn an_object_is_drawn_when_its_class_is_on() {
     // Ticaret is off; Diğer değerler on: Park and Sanayi drawn by it; the text never.
     let v = categorized();
     let reader = ClassReader::new(&v, Unit::METRE).expect("classes");
-    assert_eq!(reader.drawn(&refs, &name, &|_| None), [true, true, false, true, true, true, false]);
+    assert_eq!(
+        reader.drawn(&refs, &name, &|_| None),
+        [true, true, false, true, true, true, false]
+    );
     // Without Diğer değerler, a value no category holds is drawn by nothing.
     let mut no_other = categorized();
     no_other.as_object_mut().expect("an object").remove("other");
     let reader = ClassReader::new(&no_other, Unit::METRE).expect("classes");
-    assert_eq!(reader.drawn(&refs, &name, &|_| None), [true, true, false, false, true, false, false]);
+    assert_eq!(
+        reader.drawn(&refs, &name, &|_| None),
+        [true, true, false, false, true, false, false]
+    );
     // A rule's own symbols draw while it and the rules above it are on; a switched-off parent hides its children.
     let rules = json!({ "type": "rules", "rules": [
         { "id": "1", "label": "Büyük", "filter": "alan >= 500", "enabled": false,
@@ -257,5 +333,8 @@ fn an_object_is_drawn_when_its_class_is_on() {
         { "id": "2", "label": "Konut", "filter": "kullanim = 'Konut'", "symbols": {} }
     ]});
     let reader = ClassReader::new(&rules, Unit::METRE).expect("classes");
-    assert_eq!(reader.drawn(&refs, &name, &|_| None), [true, true, false, false, false, false, false]);
+    assert_eq!(
+        reader.drawn(&refs, &name, &|_| None),
+        [true, true, false, false, false, false, false]
+    );
 }

@@ -3,8 +3,8 @@
 //! symbol chosen for the open konut row fills it; Sembolleri ver writes what the case with that pick writes, the
 //! decisions untouched, in one undo step. And its pictures.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -12,15 +12,25 @@ use crate::app::{App, Message};
 use crate::zoning_symbols_window::{Event as Z, pairs, rows};
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.zoning.symbolize.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.zoning.symbolize.json"
+    ))
+    .expect("cases")
 }
 
 fn case(name: &str) -> Value {
-    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case").clone()
+    cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case")
+        .clone()
 }
 
 fn opened() -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases()["setup"].clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases()["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -35,7 +45,15 @@ const KONUT: &str = "Kullanıcının seçtiği sembol: UİP konut alanı Gelişm
 
 fn symbols(app: &App) -> Vec<(u32, Option<String>, Value)> {
     let doc = &app.document.as_ref().expect("a drawing").model;
-    doc.entities().map(|e| (e.base().id, e.base().symbol.clone(), serde_json::to_value(&e.base().attrs).expect("json"))).collect()
+    doc.entities()
+        .map(|e| {
+            (
+                e.base().id,
+                e.base().symbol.clone(),
+                serde_json::to_value(&e.base().attrs).expect("json"),
+            )
+        })
+        .collect()
 }
 
 /// The window's plan is the case's answer; its rows the levels and uses with a symbol or without one.
@@ -47,7 +65,8 @@ fn the_rows_are_the_levels_and_uses_of_the_case() {
         Some(crate::map::dialog(map::MapDialogKind::ZoningSymbols))
     );
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning_symbols
         .answer
         .clone()
@@ -70,9 +89,18 @@ fn the_rows_are_the_levels_and_uses_of_the_case() {
     );
     let table = kentos_commands::builtin_zoning_symbols().expect("the table");
     let shown = rows(&r, &table, &[]);
-    let konut = shown.iter().find(|row| row[1] == "Konut alanı").expect("a konut row");
-    assert_eq!((konut[0].as_str(), konut[2].as_str(), konut[3].as_str()), ("Uygulama imar planı", "— seçilmedi", "—"));
-    let park = shown.iter().find(|row| row[1] == "Park" && row[0] == "Uygulama imar planı").expect("a park row");
+    let konut = shown
+        .iter()
+        .find(|row| row[1] == "Konut alanı")
+        .expect("a konut row");
+    assert_eq!(
+        (konut[0].as_str(), konut[2].as_str(), konut[3].as_str()),
+        ("Uygulama imar planı", "— seçilmedi", "—")
+    );
+    let park = shown
+        .iter()
+        .find(|row| row[1] == "Park" && row[0] == "Uygulama imar planı")
+        .expect("a park row");
     assert_eq!((park[2].as_str(), park[3].as_str()), ("Park", "KentOS"));
 }
 
@@ -83,7 +111,8 @@ fn a_symbol_chosen_for_an_open_use_is_written_and_decisions_stay() {
     let mut app = opened();
     let before = symbols(&app);
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning_symbols
         .answer
         .clone()
@@ -98,7 +127,8 @@ fn a_symbol_chosen_for_an_open_use_is_written_and_decisions_stay() {
         "mpyy.uip.konut.gelisme-konut-alani".into(),
     ))));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning_symbols
         .answer
         .clone()
@@ -122,7 +152,10 @@ fn a_symbol_chosen_for_an_open_use_is_written_and_decisions_stay() {
             .expect("the object");
         assert_eq!(got.1.as_deref(), fields["symbol"].as_str(), "{slot}");
     }
-    assert_eq!(after.iter().map(|(_, _, a)| a.clone()).collect::<Vec<_>>(), before.iter().map(|(_, _, a)| a.clone()).collect::<Vec<_>>());
+    assert_eq!(
+        after.iter().map(|(_, _, a)| a.clone()).collect::<Vec<_>>(),
+        before.iter().map(|(_, _, a)| a.clone()).collect::<Vec<_>>()
+    );
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(symbols(&app), before);
 }
@@ -134,7 +167,8 @@ fn a_kept_choice_is_read_when_the_window_opens_again() {
     let mut app = opened();
     assert!(app.modules.map().zoning_symbols.keep);
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning_symbols
         .answer
         .clone()
@@ -165,7 +199,8 @@ fn a_kept_choice_is_read_when_the_window_opens_again() {
     );
     let _ = app.update(Message::from(map::Event::ZoningSymbols(Z::Open)));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning_symbols
         .answer
         .clone()
@@ -197,12 +232,22 @@ fn a_kept_choice_is_read_when_the_window_opens_again() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/sembol-karar-4240");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/sembol-karar-4240");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
-        for (file, step) in [("0-imar-denetimi", 0), ("1-sembol-penceresi", 1), ("2-konut-secildi", 2)] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
+        for (file, step) in [
+            ("0-imar-denetimi", 0),
+            ("1-sembol-penceresi", 1),
+            ("2-konut-secildi", 2),
+        ] {
             let mut app = opened();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -213,7 +258,8 @@ fn screens() {
                 }
                 2 => {
                     let r = app
-                        .modules.map()
+                        .modules
+                        .map()
                         .zoning_symbols
                         .answer
                         .clone()
@@ -236,7 +282,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }

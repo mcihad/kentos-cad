@@ -44,21 +44,28 @@ const RECORDS: [(&str, &str); 9] = [
     ("IFCPROJECTEDCRS", "IfcProjectedCRS"),
     ("IFCMAPCONVERSION", "IfcMapConversion"),
     ("IFCMAPCONVERSIONSCALED", "IfcMapConversion"),
-    ("IFCGEOMETRICREPRESENTATIONCONTEXT", "IfcGeometricRepresentationContext"),
+    (
+        "IFCGEOMETRICREPRESENTATIONCONTEXT",
+        "IfcGeometricRepresentationContext",
+    ),
 ];
 
 /// The annex rows the form cites (docs/adr/8074 §3) besides EK-9's questions, by their catalog ids: EK-1's project code,
 /// EK-2's file name, EK-3's room numbers, EK-5's classes, version and names, EK-7's project and system.
-const SOURCES: [&str; 9] = ["M1.1.1", "T2.1", "T3.1", "M5.1", "M5.4", "M5.5", "T7.1", "T7.6", "T7.7"];
+const SOURCES: [&str; 9] = [
+    "M1.1.1", "T2.1", "T3.1", "M5.1", "M5.4", "M5.5", "T7.1", "T7.6", "T7.7",
+];
 
 impl Model {
     /// The facts of the file read from `bytes`, its name `name` (with its extension).
     pub fn facts(&self, bytes: &[u8], name: &str) -> Result<Json, ReadError> {
         let schema = header::version(self.summary.family);
-        let sets: Vec<Vec<PropertySet>> =
-            (0..self.objects.len()).map(|i| self.property_sets(bytes, i)).collect::<Result<_, _>>()?;
-        let materials: Vec<Vec<String>> =
-            (0..self.objects.len()).map(|i| self.materials(bytes, i)).collect::<Result<_, _>>()?;
+        let sets: Vec<Vec<PropertySet>> = (0..self.objects.len())
+            .map(|i| self.property_sets(bytes, i))
+            .collect::<Result<_, _>>()?;
+        let materials: Vec<Vec<String>> = (0..self.objects.len())
+            .map(|i| self.materials(bytes, i))
+            .collect::<Result<_, _>>()?;
         guarded(|| {
             let mut decoder = EntityDecoder::with_arc_index(bytes, self.index.clone());
             let elevations = self.elevations(&mut decoder, schema);
@@ -128,7 +135,9 @@ impl Model {
 
     fn file_json(&self, bytes: &[u8], name: &str) -> Json {
         let h = &self.summary.header;
-        let extension = std::path::Path::new(name).extension().map(|e| e.to_string_lossy().to_lowercase());
+        let extension = std::path::Path::new(name)
+            .extension()
+            .map(|e| e.to_string_lossy().to_lowercase());
         json!({
             "name": name,
             "extension": extension,
@@ -149,7 +158,11 @@ impl Model {
     }
 
     /// The storeys' and the site's elevations (`Elevation`, `RefElevation`), by object index.
-    fn elevations(&self, decoder: &mut EntityDecoder, schema: SchemaVersion) -> BTreeMap<usize, f64> {
+    fn elevations(
+        &self,
+        decoder: &mut EntityDecoder,
+        schema: SchemaVersion,
+    ) -> BTreeMap<usize, f64> {
         let mut out = BTreeMap::new();
         for (i, o) in self.objects.iter().enumerate() {
             let attribute = if schema.is_subtype_of(&o.class, "IfcBuildingStorey") {
@@ -183,13 +196,32 @@ impl Model {
         None
     }
 
-    fn object_json(&self, i: usize, sets: &[PropertySet], materials: &[String], elevations: &BTreeMap<usize, f64>) -> Json {
+    fn object_json(
+        &self,
+        i: usize,
+        sets: &[PropertySet],
+        materials: &[String],
+        elevations: &BTreeMap<usize, f64>,
+    ) -> Json {
         let o = &self.objects[i];
-        let gid = |j: Option<usize>| j.and_then(|j| self.objects.get(j)).map(|x| x.global_id.clone());
+        let gid = |j: Option<usize>| {
+            j.and_then(|j| self.objects.get(j))
+                .map(|x| x.global_id.clone())
+        };
         let group = |own: bool, kind: SetKind| -> Map<String, Json> {
             sets.iter()
                 .filter(|s| s.from_type != own && s.kind == kind)
-                .map(|s| (s.name.clone(), Json::Object(s.values.iter().map(|v| (v.name.clone(), value_json(&v.value))).collect())))
+                .map(|s| {
+                    (
+                        s.name.clone(),
+                        Json::Object(
+                            s.values
+                                .iter()
+                                .map(|v| (v.name.clone(), value_json(&v.value)))
+                                .collect(),
+                        ),
+                    )
+                })
                 .collect()
         };
         json!({
@@ -217,7 +249,12 @@ impl Model {
     }
 
     /// The catalog's mandatory rows some objects of the file do not carry, their objects by GlobalId.
-    fn gaps(&self, sets: &[Vec<PropertySet>], materials: &[Vec<String>], elevations: &BTreeMap<usize, f64>) -> Vec<Json> {
+    fn gaps(
+        &self,
+        sets: &[Vec<PropertySet>],
+        materials: &[Vec<String>],
+        elevations: &BTreeMap<usize, f64>,
+    ) -> Vec<Json> {
         let carriers: Vec<(String, Carrier<'_>)> = self
             .objects
             .iter()
@@ -226,7 +263,11 @@ impl Model {
                 let props = sets[i]
                     .iter()
                     .filter(|s| s.kind == SetKind::Properties)
-                    .flat_map(|s| s.values.iter().map(move |v| (s.name.as_str(), v.name.as_str(), valued(&v.value))))
+                    .flat_map(|s| {
+                        s.values
+                            .iter()
+                            .map(move |v| (s.name.as_str(), v.name.as_str(), valued(&v.value)))
+                    })
                     .collect();
                 let quantities = sets[i]
                     .iter()
@@ -303,7 +344,9 @@ impl Model {
                 match d.sets.get(&s.name) {
                     None => say("unknown_set", None),
                     Some(def) => {
-                        if !def.applies.is_empty() && !def.applies.iter().any(|a| schema.is_subtype_of(class, a)) {
+                        if !def.applies.is_empty()
+                            && !def.applies.iter().any(|a| schema.is_subtype_of(class, a))
+                        {
                             say("not_for_class", None);
                         }
                         for v in &s.values {
@@ -320,7 +363,11 @@ impl Model {
 
     /// EK-5 Tablo 5.1's category code of each class the file holds.
     fn class_codes(&self) -> BTreeMap<String, String> {
-        let held: BTreeSet<String> = self.objects.iter().map(|o| o.class.to_lowercase()).collect();
+        let held: BTreeSet<String> = self
+            .objects
+            .iter()
+            .map(|o| o.class.to_lowercase())
+            .collect();
         catalog::base()
             .classes
             .iter()
@@ -355,7 +402,9 @@ fn value_json(v: &ValueKind) -> Json {
         ValueKind::Logical(b) => json!(b),
         ValueKind::Enumeration(items) => json!(items),
         ValueKind::List(items) => Json::Array(items.iter().map(value_json).collect()),
-        ValueKind::Bounded { lower, upper } => json!({ "lower": value_json(lower), "upper": value_json(upper) }),
+        ValueKind::Bounded { lower, upper } => {
+            json!({ "lower": value_json(lower), "upper": value_json(upper) })
+        }
         ValueKind::Reference(r) => json!(format!("#{r}")),
         ValueKind::Empty => Json::Null,
     }
@@ -376,7 +425,11 @@ fn attribute_json(v: &AttributeValue) -> Json {
 }
 
 /// EK-7's resource records by class, each its record and its attributes by the schema's names.
-fn records(bytes: &[u8], decoder: &mut EntityDecoder, schema: SchemaVersion) -> BTreeMap<String, Vec<Json>> {
+fn records(
+    bytes: &[u8],
+    decoder: &mut EntityDecoder,
+    schema: SchemaVersion,
+) -> BTreeMap<String, Vec<Json>> {
     let mut out: BTreeMap<String, Vec<Json>> = BTreeMap::new();
     let mut scanner = EntityScanner::new(bytes);
     while let Some((id, keyword, _, _)) = scanner.next_entity() {
@@ -384,12 +437,19 @@ fn records(bytes: &[u8], decoder: &mut EntityDecoder, schema: SchemaVersion) -> 
         let Some((_, listed)) = RECORDS.iter().find(|(k, _)| *k == upper) else {
             continue;
         };
-        let Ok(e) = decoder.decode_by_id(id) else { continue };
+        let Ok(e) = decoder.decode_by_id(id) else {
+            continue;
+        };
         let class = e.ifc_type.name().to_owned();
         let names = schema.attribute_names(&class).unwrap_or_default();
-        let attributes: Map<String, Json> =
-            names.iter().enumerate().map(|(k, n)| ((*n).to_owned(), e.get(k).map_or(Json::Null, attribute_json))).collect();
-        out.entry((*listed).to_owned()).or_default().push(json!({ "step": id, "class": class, "attributes": attributes }));
+        let attributes: Map<String, Json> = names
+            .iter()
+            .enumerate()
+            .map(|(k, n)| ((*n).to_owned(), e.get(k).map_or(Json::Null, attribute_json)))
+            .collect();
+        out.entry((*listed).to_owned())
+            .or_default()
+            .push(json!({ "step": id, "class": class, "attributes": attributes }));
     }
     out
 }
@@ -397,12 +457,16 @@ fn records(bytes: &[u8], decoder: &mut EntityDecoder, schema: SchemaVersion) -> 
 /// The cites of [`SOURCES`] and of EK-9 Tablo 9.1's questions, as the rule catalog says them (“EK-7 Tablo 7.6 · PDF s.
 /// 227–228”): from the IFC annexes' catalog, else the 2D annexes'.
 fn sources() -> Map<String, Json> {
-    let ids = SOURCES.iter().map(|s| (*s).to_owned()).chain((1..=21).map(|n| format!("T9.1/{n}")));
+    let ids = SOURCES
+        .iter()
+        .map(|s| (*s).to_owned())
+        .chain((1..=21).map(|n| format!("T9.1/{n}")));
     ids.filter_map(|id| {
-        let s = catalog::base()
-            .row(&id)
-            .map(|r| r.source())
-            .or_else(|| kentos_digital_project::catalog::base().row(&id).map(|r| r.source()))?;
+        let s = catalog::base().row(&id).map(|r| r.source()).or_else(|| {
+            kentos_digital_project::catalog::base()
+                .row(&id)
+                .map(|r| r.source())
+        })?;
         Some((id, json!(s.cite())))
     })
     .collect()

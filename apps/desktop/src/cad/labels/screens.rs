@@ -409,9 +409,10 @@ fn perf() {
 
     use crate::app::App;
 
-    let mut snapshot: DocumentSnapshotV1 =
-        serde_json::from_str(include_str!("../../../../../fixtures/document/v1/sample.json"))
-            .expect("the sample");
+    let mut snapshot: DocumentSnapshotV1 = serde_json::from_str(include_str!(
+        "../../../../../fixtures/document/v1/sample.json"
+    ))
+    .expect("the sample");
     let first = snapshot
         .entities
         .iter()

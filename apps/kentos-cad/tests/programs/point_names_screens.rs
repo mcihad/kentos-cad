@@ -53,7 +53,8 @@ fn name_of(app: &App, slot: Slot) -> (String, f64, f64) {
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {
     crate::drawing_fonts::load_font_folders();
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9314");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-9314");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     // The glyph atlas makes a frame's new letters until a deadline and leaves the rest for the next frame, which a
     // window asks for (docs/adr/9212 §5); a picture draws its frames by hand, so a few first.
@@ -62,7 +63,10 @@ fn screens() {
         for _ in 0..8 {
             let _ = snapshot.render(app.view(), &app.theme());
         }
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     };
     let settle = |snapshot: &mut Snapshot, app: &mut App| {
@@ -75,8 +79,19 @@ fn screens() {
     settle(&mut snapshot, &mut app);
     let _ = app.update(Message::Opened(Some(Ok(Box::new(parcels())))));
     // Three points with their names, as Noktalar's Satır ekle writes them in Harita.
-    let layer = app.document.as_ref().expect("open").model.layers().active().to_owned();
-    for (name, east, north) in [("N1", "487000", "4420020"), ("N2", "487015", "4420020"), ("N3", "487030", "4420020")] {
+    let layer = app
+        .document
+        .as_ref()
+        .expect("open")
+        .model
+        .layers()
+        .active()
+        .to_owned();
+    for (name, east, north) in [
+        ("N1", "487000", "4420020"),
+        ("N2", "487015", "4420020"),
+        ("N3", "487030", "4420020"),
+    ] {
         let doc = &mut app.document.as_mut().expect("open").model;
         let draft = Draft {
             name: name.to_owned(),
@@ -85,7 +100,11 @@ fn screens() {
             ..Draft::default()
         };
         let written = write_draft(doc, &draft, &layer, None);
-        assert!(written.outcome.step.is_some(), "{name}: {:?}", written.outcome.said);
+        assert!(
+            written.outcome.step.is_some(),
+            "{name}: {:?}",
+            written.outcome.said
+        );
     }
     let (n2, n3) = (point_named(&app, "N2"), point_named(&app, "N3"));
     let before = name_of(&app, n2);
@@ -105,7 +124,11 @@ fn screens() {
         assert!(renamed.step.is_some(), "{:?}", renamed.said);
     }
     let after = name_of(&app, n2);
-    assert_eq!((after.1 - before.1, after.2 - before.2), (0.0, 6.0), "N2's name moved with it");
+    assert_eq!(
+        (after.1 - before.1, after.2 - before.2),
+        (0.0, 6.0),
+        "N2's name moved with it"
+    );
     assert_eq!(name_of(&app, n3).0, "N30", "N3's text took its new name");
     // The drawing area takes the edits made beside the app at its next message, as after a command.
     let _ = app.update(Message::Run("view.zoomExtents"));

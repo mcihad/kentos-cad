@@ -8,9 +8,9 @@ use axum::response::{IntoResponse, Response};
 use kentos_application::portal::{accounts, catalog as names, notifications, organization};
 use kentos_application::{AppError, identity};
 use kentos_contracts::{
-    NotificationSettings, NotificationSettingsEdit,
-    MunicipalityCard, Notifications, NotificationsRead, PasswordChange, PortalCatalog, PortalMe,
-    ProfessionalEdit, SignInMethod, Signup, SignupInfo,
+    MunicipalityCard, NotificationSettings, NotificationSettingsEdit, Notifications,
+    NotificationsRead, PasswordChange, PortalCatalog, PortalMe, ProfessionalEdit, SignInMethod,
+    Signup, SignupInfo,
 };
 use serde::Deserialize;
 
@@ -41,7 +41,10 @@ pub async fn signup_info(
 ) -> Result<Json<SignupInfo>, Failure> {
     let run = async {
         if !state.config.local_login {
-            return Ok(SignupInfo { open: false, ticket: None });
+            return Ok(SignupInfo {
+                open: false,
+                ticket: None,
+            });
         }
         let mut info = accounts::signup_info(state.db()?).await?;
         // The form's ticket (docs/adr/9000 §20): it must come back with the sign-up, a person's while later.
@@ -69,7 +72,10 @@ pub async fn sign_up(
     // sent at once or without its ticket, too many accounts from one address.
     let address = client.key();
     let limited = |wait: u64, what: &str| AppError::Limited {
-        message: format!("{what}; {} dakika sonra yeniden deneyin.", wait.div_ceil(60)),
+        message: format!(
+            "{what}; {} dakika sonra yeniden deneyin.",
+            wait.div_ceil(60)
+        ),
         retry_after: wait,
     };
     state
@@ -77,7 +83,11 @@ pub async fn sign_up(
         .tries
         .hit(&address)
         .map_err(|w| fail(limited(w, "Bu adresten çok fazla kayıt denemesi geldi")))?;
-    if input.website.as_deref().is_some_and(|w| !w.trim().is_empty()) {
+    if input
+        .website
+        .as_deref()
+        .is_some_and(|w| !w.trim().is_empty())
+    {
         return Err(fail(AppError::invalid("Kayıt alınamadı.")));
     }
     state
@@ -85,7 +95,10 @@ pub async fn sign_up(
         .redeem(input.ticket.as_deref(), unix_now())
         .map_err(|why| fail(AppError::invalid_at("ticket", why)))?;
     if let Some(w) = state.signups.accounts.blocked(&address) {
-        return Err(fail(limited(w, "Bu adresten bir saatte açılabilecek hesap sayısı doldu")));
+        return Err(fail(limited(
+            w,
+            "Bu adresten bir saatte açılabilecek hesap sayısı doldu",
+        )));
     }
     let db = state.db().map_err(fail)?;
     let user = accounts::sign_up(db, &input, None).await.map_err(fail)?;
@@ -155,7 +168,8 @@ pub async fn notification_settings(
     headers: HeaderMap,
     caller: Caller,
 ) -> Result<Json<NotificationSettings>, Failure> {
-    let run = async { kentos_application::notification_delivery::settings(state.db()?, &caller.0).await };
+    let run =
+        async { kentos_application::notification_delivery::settings(state.db()?, &caller.0).await };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
@@ -166,7 +180,10 @@ pub async fn set_notification_settings(
     caller: Caller,
     Body(input): Body<NotificationSettingsEdit>,
 ) -> Result<Json<NotificationSettings>, Failure> {
-    let run = async { kentos_application::notification_delivery::set_settings(state.db()?, &caller.0, &input).await };
+    let run = async {
+        kentos_application::notification_delivery::set_settings(state.db()?, &caller.0, &input)
+            .await
+    };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
@@ -222,7 +239,9 @@ pub async fn read(
 
 /// Seconds since 1970, for the sign-up's ticket.
 fn unix_now() -> u64 {
-    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs())
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs())
 }
 
 /// `GET /v1/me/notifications/stream`: the caller's unread count as it changes (Server-Sent Events, docs/adr/9000 §23).
@@ -233,7 +252,9 @@ pub async fn stream(
     headers: HeaderMap,
     caller: Caller,
 ) -> Result<
-    axum::response::sse::Sse<impl futures_util::Stream<Item = Result<axum::response::sse::Event, std::convert::Infallible>>>,
+    axum::response::sse::Sse<
+        impl futures_util::Stream<Item = Result<axum::response::sse::Event, std::convert::Infallible>>,
+    >,
     Failure,
 > {
     use axum::response::sse::{Event, KeepAlive, Sse};
@@ -241,20 +262,25 @@ pub async fn stream(
     let db = state.db().map_err(|e| Failure::with(e, &headers))?.clone();
     let actor = caller.0;
     let rx = state.notices.subscribe();
-    let events = futures_util::stream::unfold((db, actor, rx, true), |(db, actor, mut rx, first)| async move {
-        if !first {
-            loop {
-                match rx.recv().await {
-                    Ok(user) if user == actor.user_id => break,
-                    Ok(_) => continue,
-                    Err(RecvError::Lagged(_)) => break,
-                    Err(RecvError::Closed) => return None,
+    let events = futures_util::stream::unfold(
+        (db, actor, rx, true),
+        |(db, actor, mut rx, first)| async move {
+            if !first {
+                loop {
+                    match rx.recv().await {
+                        Ok(user) if user == actor.user_id => break,
+                        Ok(_) => continue,
+                        Err(RecvError::Lagged(_)) => break,
+                        Err(RecvError::Closed) => return None,
+                    }
                 }
             }
-        }
-        let unread = notifications::unread(&db, &actor).await.ok()?;
-        let event = Event::default().event("unread").data(serde_json::json!({ "unread": unread }).to_string());
-        Some((Ok(event), (db, actor, rx, false)))
-    });
+            let unread = notifications::unread(&db, &actor).await.ok()?;
+            let event = Event::default()
+                .event("unread")
+                .data(serde_json::json!({ "unread": unread }).to_string());
+            Some((Ok(event), (db, actor, rx, false)))
+        },
+    );
     Ok(Sse::new(events).keep_alive(KeepAlive::new().interval(std::time::Duration::from_secs(25))))
 }

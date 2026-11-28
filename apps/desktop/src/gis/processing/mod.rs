@@ -27,24 +27,24 @@ pub(crate) mod apart;
 mod apart_tests;
 pub(crate) mod background;
 pub(crate) mod batch;
-pub(crate) mod data_location;
 pub(crate) mod data_inputs;
-#[cfg(test)]
-#[path = "recall_tests.rs"]
-mod recall_tests;
+pub(crate) mod data_location;
 pub(crate) mod data_select;
 pub(crate) mod designer;
 pub mod dialog;
 mod fields;
+pub mod memory;
 pub(crate) mod overwrite;
 #[cfg(test)]
 mod overwrite_tests;
-pub mod memory;
 pub mod panel;
 mod plan;
+#[cfg(test)]
+#[path = "recall_tests.rs"]
+mod recall_tests;
 pub(crate) use plan::ServerPlace;
-mod server;
 pub(crate) mod environment;
+mod server;
 pub(crate) mod sink;
 
 /// The İşlemler panel's event as the app's message (the ribbon's model buttons send it too).
@@ -58,15 +58,17 @@ mod convert_tests;
 #[cfg(test)]
 mod distance_tests;
 #[cfg(test)]
+mod environment_tests;
+#[cfg(test)]
 mod generalize_tests;
 #[cfg(test)]
 mod generate_tests;
 #[cfg(test)]
 mod geometry_tests;
 #[cfg(test)]
-mod input_layer_tests;
-#[cfg(test)]
 mod hydrology_tests;
+#[cfg(test)]
+mod input_layer_tests;
 #[cfg(test)]
 mod interpolation_tests;
 #[cfg(test)]
@@ -87,8 +89,6 @@ mod remote_tests;
 mod sampling_tests;
 #[cfg(test)]
 mod server_tests;
-#[cfg(test)]
-mod environment_tests;
 #[cfg(test)]
 mod sink_tests;
 #[cfg(test)]
@@ -740,7 +740,12 @@ impl App {
         }
         // Another tool with a data layer among its inputs: read on the rows, written into the drawing (data_inputs.rs).
         if attempted
-            && self.gis.processing.dialog.as_ref().is_some_and(|w| w.sink.place == sink::Place::Drawing)
+            && self
+                .gis
+                .processing
+                .dialog
+                .as_ref()
+                .is_some_and(|w| w.sink.place == sink::Place::Drawing)
             && let Some(task) = self.processing_rows_run()
         {
             return task;
@@ -884,8 +889,18 @@ impl App {
                 iced::widget::operation::snap_to_end(window::FORM)
             }
             // The matches kept by layer: their card heads the form (data_location.rs, docs/adr/9345).
-            Some(RunStatus::Ok { .. }) if self.gis.processing.dialog.as_ref().is_some_and(|w| w.layer_results.is_some()) => {
-                iced::widget::operation::snap_to(window::FORM, iced::widget::scrollable::RelativeOffset::START)
+            Some(RunStatus::Ok { .. })
+                if self
+                    .gis
+                    .processing
+                    .dialog
+                    .as_ref()
+                    .is_some_and(|w| w.layer_results.is_some()) =>
+            {
+                iced::widget::operation::snap_to(
+                    window::FORM,
+                    iced::widget::scrollable::RelativeOffset::START,
+                )
             }
             _ => Task::none(),
         }
@@ -918,7 +933,11 @@ impl App {
                 // A result its layer's style draws nothing for (a categorized fill without Diğer değerler): said, so
                 // a written result is not taken for a missing one.
                 let uids: Vec<String> = self.document.as_ref().map_or_else(Vec::new, |d| {
-                    added.iter().filter_map(|s| d.model.uid(*s)).map(|u| u.to_string()).collect()
+                    added
+                        .iter()
+                        .filter_map(|s| d.model.uid(*s))
+                        .map(|u| u.to_string())
+                        .collect()
                 });
                 if let Some(note) = self.unstyled_note(&uids) {
                     self.warn(format!("{label}: {note}"));
@@ -1382,8 +1401,11 @@ impl App {
         for p in &tool.parameters {
             match &p.kind {
                 kentos_processing::ParamKind::Features { scopes, .. } => {
-                    let offers = |k: kentos_processing::ScopeKind| scopes.as_ref().is_none_or(|s| s.contains(&k));
-                    let takes = first && selected && offers(kentos_processing::ScopeKind::Selection);
+                    let offers = |k: kentos_processing::ScopeKind| {
+                        scopes.as_ref().is_none_or(|s| s.contains(&k))
+                    };
+                    let takes =
+                        first && selected && offers(kentos_processing::ScopeKind::Selection);
                     first = false;
                     if takes {
                         values.insert(p.name.clone(), json!({ "scope": "selection" }));
@@ -1417,8 +1439,8 @@ fn without_kind_narrowing(mut values: Values) -> Values {
 }
 
 #[cfg(test)]
-#[path = "result_name_tests.rs"]
-mod result_name_tests;
-#[cfg(test)]
 #[path = "buffer_cases_tests.rs"]
 mod buffer_cases_tests;
+#[cfg(test)]
+#[path = "result_name_tests.rs"]
+mod result_name_tests;

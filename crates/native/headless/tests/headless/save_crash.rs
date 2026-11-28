@@ -21,13 +21,21 @@ fn sheets_fixture() -> PathBuf {
 /// Version `k` of the drawing: the fixture with POINTS points whose attribute `V` is `k`.
 fn version(k: u32) -> Session {
     let mut s = Session::open(&sheets_fixture()).expect("the fixture opens");
-    let layer = s.summary()["activeLayer"].as_str().expect("a layer").to_owned();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
     let objects: Vec<_> = (0..POINTS)
         .map(|i| json!({"geometry": {"kind": "point", "p": {"x": 500000.0 + f64::from(i % 300), "y": 4400000.0 + f64::from(i / 300)}},
             "attrs": {"V": k.to_string()}}))
         .collect();
     let answer = s
-        .run("cad.entities.create", None, Op::Execute, json!({"layerId": layer, "objects": objects}))
+        .run(
+            "cad.entities.create",
+            None,
+            Op::Execute,
+            json!({"layerId": layer, "objects": objects}),
+        )
         .expect("runs");
     assert_eq!(answer["status"], "completed", "{answer}");
     s
@@ -78,11 +86,19 @@ fn a_killed_save_leaves_a_whole_file_under_the_name() {
     let exe = std::env::current_exe().expect("the test binary");
     let mut deaths = 0;
     let mut versions_seen = std::collections::BTreeSet::new();
-    for (round, wait_ms) in [3u64, 130, 300, 470, 660, 860, 1070, 1290, 1530, 1800].into_iter().enumerate() {
+    for (round, wait_ms) in [3u64, 130, 300, 470, 660, 860, 1070, 1290, 1530, 1800]
+        .into_iter()
+        .enumerate()
+    {
         let ready = target.with_extension("ready");
         let _ = std::fs::remove_file(&ready);
         let mut child = std::process::Command::new(&exe)
-            .args(["save_crash::save_crash_child", "--exact", "--nocapture", "--test-threads=1"])
+            .args([
+                "save_crash::save_crash_child",
+                "--exact",
+                "--nocapture",
+                "--test-threads=1",
+            ])
             .env(CHILD, &target)
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())
@@ -90,7 +106,10 @@ fn a_killed_save_leaves_a_whole_file_under_the_name() {
             .expect("the child starts");
         let start = Instant::now();
         while !ready.exists() {
-            assert!(start.elapsed() < Duration::from_secs(120), "the child never got ready");
+            assert!(
+                start.elapsed() < Duration::from_secs(120),
+                "the child never got ready"
+            );
             std::thread::sleep(Duration::from_millis(5));
         }
         std::thread::sleep(Duration::from_millis(wait_ms));
@@ -100,21 +119,37 @@ fn a_killed_save_leaves_a_whole_file_under_the_name() {
         // The child's own versions, written whole before it started on the target.
         let mut known = vec![original_known.clone()];
         for k in 1..=VERSIONS {
-            known.push(std::fs::read(dir.join(format!("surum-{k}.kcad"))).expect("the child's version"));
+            known.push(
+                std::fs::read(dir.join(format!("surum-{k}.kcad"))).expect("the child's version"),
+            );
         }
         let bytes = std::fs::read(&target).expect("the name still has a file");
         let which = known.iter().position(|k| *k == bytes);
-        assert!(which.is_some(), "round {round}: the file under the name is not a whole version ({} bytes)", bytes.len());
+        assert!(
+            which.is_some(),
+            "round {round}: the file under the name is not a whole version ({} bytes)",
+            bytes.len()
+        );
         versions_seen.insert(which.unwrap());
         let opened = Session::open(&target).expect("the file opens");
         let snapshot = opened.document().to_snapshot_v2();
-        assert!(snapshot.sheets.is_some(), "round {round}: the sheets are kept");
+        assert!(
+            snapshot.sheets.is_some(),
+            "round {round}: the sheets are kept"
+        );
         for name in leftovers(&dir) {
-            assert_ne!(dir.join(&name), target, "a temporary file is never the drawing");
+            assert_ne!(
+                dir.join(&name),
+                target,
+                "a temporary file is never the drawing"
+            );
         }
     }
     assert_eq!(deaths, 10);
-    assert!(versions_seen.len() >= 2, "the kills landed on more than one version: {versions_seen:?}");
+    assert!(
+        versions_seen.len() >= 2,
+        "the kills landed on more than one version: {versions_seen:?}"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -129,7 +164,12 @@ fn a_save_the_disk_refuses_keeps_the_drawing_unsaved_and_its_undo() {
     let mut s = Session::open(&target).expect("opens");
     let layer = s.summary()["activeLayer"].as_str().unwrap().to_owned();
     let answer = s
-        .run("cad.point.create", None, Op::Execute, json!({"layerId": layer, "p": {"x": 500001.0, "y": 4400001.0}}))
+        .run(
+            "cad.point.create",
+            None,
+            Op::Execute,
+            json!({"layerId": layer, "p": {"x": 500001.0, "y": 4400001.0}}),
+        )
         .expect("runs");
     assert_eq!(answer["status"], "completed");
     let before = s.summary();
@@ -141,8 +181,16 @@ fn a_save_the_disk_refuses_keeps_the_drawing_unsaved_and_its_undo() {
     std::fs::set_permissions(&dir, perms).unwrap();
     let error = refused.expect_err("the folder refuses writing");
     assert_eq!(error.code, "file_unwritable");
-    assert_eq!(s.summary(), before, "the drawing is as it was: unsaved, the same revision");
-    assert_eq!(std::fs::read(&target).unwrap(), original, "the previous file is untouched");
+    assert_eq!(
+        s.summary(),
+        before,
+        "the drawing is as it was: unsaved, the same revision"
+    );
+    assert_eq!(
+        std::fs::read(&target).unwrap(),
+        original,
+        "the previous file is untouched"
+    );
     assert!(leftovers(&dir).is_empty(), "no temporary file is left");
     assert!(s.undo().is_some(), "the undo chain is whole");
     let _ = std::fs::remove_dir_all(&dir);
@@ -158,7 +206,10 @@ fn a_save_onto_a_full_disk_keeps_the_previous_file_and_the_drawing() {
     struct Mounted(PathBuf);
     impl Drop for Mounted {
         fn drop(&mut self) {
-            let _ = std::process::Command::new("hdiutil").args(["detach", "-force"]).arg(&self.0).output();
+            let _ = std::process::Command::new("hdiutil")
+                .args(["detach", "-force"])
+                .arg(&self.0)
+                .output();
         }
     }
     let dir = std::env::temp_dir().join(format!("kentos-save-full-{}", std::process::id()));
@@ -166,11 +217,17 @@ fn a_save_onto_a_full_disk_keeps_the_previous_file_and_the_drawing() {
     std::fs::create_dir_all(&dir).expect("a folder");
     let image = dir.join("dolu.dmg");
     let made = std::process::Command::new("hdiutil")
-        .args(["create", "-size", "1m", "-fs", "HFS+", "-volname", "KDOLU", "-type", "UDIF"])
+        .args([
+            "create", "-size", "1m", "-fs", "HFS+", "-volname", "KDOLU", "-type", "UDIF",
+        ])
         .arg(&image)
         .output()
         .expect("hdiutil runs");
-    assert!(made.status.success(), "{}", String::from_utf8_lossy(&made.stderr));
+    assert!(
+        made.status.success(),
+        "{}",
+        String::from_utf8_lossy(&made.stderr)
+    );
     let mount = dir.join("mnt");
     let attached = std::process::Command::new("hdiutil")
         .args(["attach", "-nobrowse", "-mountpoint"])
@@ -178,28 +235,52 @@ fn a_save_onto_a_full_disk_keeps_the_previous_file_and_the_drawing() {
         .arg(&image)
         .output()
         .expect("hdiutil runs");
-    assert!(attached.status.success(), "{}", String::from_utf8_lossy(&attached.stderr));
+    assert!(
+        attached.status.success(),
+        "{}",
+        String::from_utf8_lossy(&attached.stderr)
+    );
     let _mounted = Mounted(mount.clone());
     let target = mount.join("pafta.kcad");
     let original = std::fs::read(sheets_fixture()).expect("the fixture");
     std::fs::write(&target, &original).expect("the original fits");
     let mut s = Session::open(&target).expect("opens");
-    let layer = s.summary()["activeLayer"].as_str().expect("a layer").to_owned();
+    let layer = s.summary()["activeLayer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
     // Far more than the volume's space left: 30 000 points with their attributes.
     let objects: Vec<_> = (0..POINTS)
         .map(|i| json!({"geometry": {"kind": "point", "p": {"x": 500000.0 + f64::from(i % 300), "y": 4400000.0 + f64::from(i / 300)}},
             "attrs": {"V": "dolu"}}))
         .collect();
     let answer = s
-        .run("cad.entities.create", None, Op::Execute, json!({"layerId": layer, "objects": objects}))
+        .run(
+            "cad.entities.create",
+            None,
+            Op::Execute,
+            json!({"layerId": layer, "objects": objects}),
+        )
         .expect("runs");
     assert_eq!(answer["status"], "completed");
     let before = s.summary();
     let error = s.save(None).expect_err("the disk is full");
     assert_eq!(error.code, "file_unwritable", "{}", error.message);
-    assert_eq!(std::fs::read(&target).expect("the file"), original, "the previous file is untouched");
-    assert!(leftovers(&mount).is_empty(), "no temporary file is left: {:?}", leftovers(&mount));
-    assert_eq!(s.summary(), before, "the drawing is as it was: unsaved, the same revision");
+    assert_eq!(
+        std::fs::read(&target).expect("the file"),
+        original,
+        "the previous file is untouched"
+    );
+    assert!(
+        leftovers(&mount).is_empty(),
+        "no temporary file is left: {:?}",
+        leftovers(&mount)
+    );
+    assert_eq!(
+        s.summary(),
+        before,
+        "the drawing is as it was: unsaved, the same revision"
+    );
     assert!(s.undo().is_some(), "the undo chain is whole");
     drop(_mounted);
     let _ = std::fs::remove_dir_all(&dir);

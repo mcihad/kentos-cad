@@ -7,9 +7,10 @@
 //! (docs/adr/0567) a network's vehicle `profiles` and dated `closures`.
 
 use kentos_contracts::{
-    DeviceTerminal, JunctionRole, NetworkConnect, NetworkCostKind, NetworkDef, NetworkDirection,
-    NetworkClosures, NetworkKind, NetworkLevels, NetworkProfile, NetworkPeriod, NetworkSubnetworks, NetworkTerminals, NetworkTurns,
-    NetworkUTurns, SubnetworkReach, TerminalConfig, TerminalDevice, TurnLayer, networks_problem,
+    DeviceTerminal, JunctionRole, NetworkClosures, NetworkConnect, NetworkCostKind, NetworkDef,
+    NetworkDirection, NetworkKind, NetworkLevels, NetworkPeriod, NetworkProfile,
+    NetworkSubnetworks, NetworkTerminals, NetworkTurns, NetworkUTurns, SubnetworkReach,
+    TerminalConfig, TerminalDevice, TurnLayer, networks_problem,
 };
 
 use super::Encoder;
@@ -267,7 +268,10 @@ impl<'d> Encoder<'d> {
                 self.open(p.limits.len(), false)?;
                 for (i, l) in p.limits.iter().enumerate() {
                     self.at(Seg::Index(i), |e| {
-                        e.network_map(vec![("field", V::Text(&l.field)), ("value", V::Float(l.value))])
+                        e.network_map(vec![
+                            ("field", V::Text(&l.field)),
+                            ("value", V::Float(l.value)),
+                        ])
                     })?;
                 }
                 self.close();
@@ -277,7 +281,10 @@ impl<'d> Encoder<'d> {
                 self.open(p.forbidden.len(), false)?;
                 for (i, l) in p.forbidden.iter().enumerate() {
                     self.at(Seg::Index(i), |e| {
-                        e.network_map(vec![("field", V::Text(&l.field)), ("values", V::Texts(&l.values))])
+                        e.network_map(vec![
+                            ("field", V::Text(&l.field)),
+                            ("values", V::Texts(&l.values)),
+                        ])
                     })?;
                 }
                 self.close();

@@ -21,8 +21,12 @@ fn run(doc: &mut Document, name: &str, input: Value) {
 
 /// The acceptance drawing, built with KentOS's commands from the audit facts' empty drawing.
 fn basement_with_annexes() -> Document {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/audit-facts/v1/mimari.kcad");
-    let mut snap: kentos_commands::DocumentSnapshotV2 = kentos_kcad::decode(&std::fs::read(path).unwrap()).unwrap();
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/audit-facts/v1/mimari.kcad"
+    );
+    let mut snap: kentos_commands::DocumentSnapshotV2 =
+        kentos_kcad::decode(&std::fs::read(path).unwrap()).unwrap();
     snap.entities.clear();
     snap.uids.clear();
     if let Some(arch) = snap.settings.arch.as_mut() {
@@ -67,7 +71,11 @@ fn basement_with_annexes() -> Document {
         spaces.push(room(8.0, "Merdiven holü", level, "o", false));
         spaces.push(room(12.0, "Asansör", level, "o", true));
     }
-    run(&mut doc, "cad.spaces.create", json!({"layerId": layer, "spaces": spaces}));
+    run(
+        &mut doc,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": spaces}),
+    );
     doc
 }
 
@@ -102,7 +110,12 @@ fn audited(doc: &mut Document, input: Value) -> Value {
     );
     match answer.result {
         CommandResult::Completed { output, warnings } => {
-            assert!(warnings.iter().all(|w| w.code != "regulation_rule_unavailable"), "{warnings:?}");
+            assert!(
+                warnings
+                    .iter()
+                    .all(|w| w.code != "regulation_rule_unavailable"),
+                "{warnings:?}"
+            );
             output
         }
         other => panic!("{other:?}"),
@@ -114,8 +127,23 @@ fn package(output: &Value) -> Vec<(String, Option<String>, String)> {
         .as_array()
         .into_iter()
         .flatten()
-        .filter(|f| matches!(f["code"].as_str(), Some("paiy_elevator_missing" | "paiy_elevator_not_serving" | "regulation_date_needed")))
-        .map(|f| (f["code"].as_str().unwrap().to_owned(), f["state"].as_str().map(str::to_owned), f["message"].as_str().unwrap().to_owned()))
+        .filter(|f| {
+            matches!(
+                f["code"].as_str(),
+                Some(
+                    "paiy_elevator_missing"
+                        | "paiy_elevator_not_serving"
+                        | "regulation_date_needed"
+                )
+            )
+        })
+        .map(|f| {
+            (
+                f["code"].as_str().unwrap().to_owned(),
+                f["state"].as_str().map(str::to_owned),
+                f["message"].as_str().unwrap().to_owned(),
+            )
+        })
         .collect()
 }
 
@@ -126,7 +154,13 @@ fn outcomes(output: &Value) -> Vec<(String, Value, String)> {
         .into_iter()
         .flatten()
         .filter(|r| r["rule"].as_str().is_some_and(|x| x.contains(" 34/")))
-        .map(|r| (r["rule"].as_str().unwrap().to_owned(), r["version"].clone(), r["state"].as_str().unwrap().to_owned()))
+        .map(|r| {
+            (
+                r["rule"].as_str().unwrap().to_owned(),
+                r["version"].clone(),
+                r["state"].as_str().unwrap().to_owned(),
+            )
+        })
         .collect()
 }
 
@@ -140,8 +174,16 @@ fn a_headless_audit_reads_the_elevator_articles_by_the_application_date() {
     assert_eq!(
         outcomes(&out),
         [
-            ("PAİY 34/1".to_owned(), json!("11.7.2021"), "passed".to_owned()),
-            ("PAİY 34/8".to_owned(), json!("11.7.2021"), "outOfScope".to_owned()),
+            (
+                "PAİY 34/1".to_owned(),
+                json!("11.7.2021"),
+                "passed".to_owned()
+            ),
+            (
+                "PAİY 34/8".to_owned(),
+                json!("11.7.2021"),
+                "outOfScope".to_owned()
+            ),
         ]
     );
     assert_eq!(out["ruleSet"]["date"], "2026-06-30");
@@ -150,16 +192,45 @@ fn a_headless_audit_reads_the_elevator_articles_by_the_application_date() {
     let found = package(&out);
     assert_eq!(found.len(), 1, "{found:#?}");
     assert_eq!(found[0].0, "paiy_elevator_not_serving");
-    assert!(found[0].2.starts_with("Bodrum kat: asansör bu kata ulaşmıyor"), "{}", found[0].2);
-    let finding = out["findings"].as_array().unwrap().iter().find(|f| f["code"] == "paiy_elevator_not_serving").unwrap().clone();
+    assert!(
+        found[0]
+            .2
+            .starts_with("Bodrum kat: asansör bu kata ulaşmıyor"),
+        "{}",
+        found[0].2
+    );
+    let finding = out["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|f| f["code"] == "paiy_elevator_not_serving")
+        .unwrap()
+        .clone();
     assert_eq!(finding["check"], "regulation");
     assert_eq!(finding["rule"], "PAİY 34/8 · RG 1.7.2026/33297");
     // It names the basement's rooms: its key is theirs, a click shows them.
     assert_eq!(finding["uids"].as_array().map(Vec::len), Some(3));
-    assert!(finding["key"].as_str().unwrap().starts_with("paiy_elevator_not_serving:"));
-    assert_eq!(outcomes(&out)[1], ("PAİY 34/8".to_owned(), json!("1.7.2026"), "failed".to_owned()));
+    assert!(
+        finding["key"]
+            .as_str()
+            .unwrap()
+            .starts_with("paiy_elevator_not_serving:")
+    );
+    assert_eq!(
+        outcomes(&out)[1],
+        (
+            "PAİY 34/8".to_owned(),
+            json!("1.7.2026"),
+            "failed".to_owned()
+        )
+    );
     // It follows the regulation group's own findings, before any other group's.
-    let checks: Vec<&str> = out["findings"].as_array().unwrap().iter().map(|f| f["check"].as_str().unwrap()).collect();
+    let checks: Vec<&str> = out["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|f| f["check"].as_str().unwrap())
+        .collect();
     assert!(checks.iter().all(|c| *c == "regulation"), "{checks:?}");
     // Left on purpose over the protocol: the finding given as the audit listed it, then hidden and counted.
     let excepted = out["excepted"].as_u64().unwrap();
@@ -177,22 +248,46 @@ fn a_headless_audit_reads_the_elevator_articles_by_the_application_date() {
                           "findings": [finding]}),
         },
     );
-    assert!(matches!(marked.result, CommandResult::Completed { .. }), "{:?}", marked.result);
+    assert!(
+        matches!(marked.result, CommandResult::Completed { .. }),
+        "{:?}",
+        marked.result
+    );
     let out = audited(&mut doc, ask.clone());
     assert!(package(&out).is_empty(), "{out}");
     assert_eq!(out["excepted"].as_u64(), Some(excepted + 1));
-    let shown = audited(&mut doc, json!({"checks": ["regulation"], "exceptions": "show"}));
-    let f = shown["findings"].as_array().unwrap().iter().find(|f| f["code"] == "paiy_elevator_not_serving").unwrap();
-    assert_eq!((f["exception"].as_bool(), f["note"].as_str()), (Some(true), Some("İdare bodruma asansör istemedi.")));
+    let shown = audited(
+        &mut doc,
+        json!({"checks": ["regulation"], "exceptions": "show"}),
+    );
+    let f = shown["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|f| f["code"] == "paiy_elevator_not_serving")
+        .unwrap();
+    assert_eq!(
+        (f["exception"].as_bool(), f["note"].as_str()),
+        (Some(true), Some("İdare bodruma asansör istemedi."))
+    );
     dated(&mut doc, None);
     let out = audited(&mut doc, ask);
     let found = package(&out);
     assert_eq!(found.len(), 1, "{found:#?}");
-    assert_eq!((found[0].0.as_str(), found[0].1.as_deref()), ("regulation_date_needed", Some("missingData")));
+    assert_eq!(
+        (found[0].0.as_str(), found[0].1.as_deref()),
+        ("regulation_date_needed", Some("missingData"))
+    );
     assert!(out["ruleSet"].get("date").is_none());
     // Of Etkin kat, or without the regulation group, the rule is not asked.
-    let out = audited(&mut doc, json!({"checks": ["regulation"], "within": {"levels": ["k00"]}}));
-    assert!(out.get("ruleSet").is_none() && package(&out).is_empty(), "{out}");
+    let out = audited(
+        &mut doc,
+        json!({"checks": ["regulation"], "within": {"levels": ["k00"]}}),
+    );
+    assert!(
+        out.get("ruleSet").is_none() && package(&out).is_empty(),
+        "{out}"
+    );
     let out = audited(&mut doc, json!({"checks": ["walls"]}));
     assert!(out.get("ruleSet").is_none(), "{out}");
 }
@@ -204,14 +299,19 @@ fn office_storey(side: &str, rating: &str) -> Document {
     let mut doc = basement_with_annexes();
     let mut settings = doc.settings().clone();
     let arch = settings.arch.as_mut().expect("Mimari");
-    arch.levels = serde_json::from_value(json!([{"id": "k00", "name": "Zemin kat", "elevation": 0.0, "height": 3.0}]))
-        .expect("the storey");
+    arch.levels = serde_json::from_value(
+        json!([{"id": "k00", "name": "Zemin kat", "elevation": 0.0, "height": 3.0}]),
+    )
+    .expect("the storey");
     arch.program = serde_json::from_value(json!({"units": [
         {"id": "b1", "number": "1", "nature": "Büro"}, {"id": "o", "number": "O", "kind": "common"}
     ]}))
     .expect("the program");
     doc.set_settings(settings);
-    let gone: Vec<Value> = doc.entities_with_uids().map(|(u, _)| json!(u.to_string())).collect();
+    let gone: Vec<Value> = doc
+        .entities_with_uids()
+        .map(|(u, _)| json!(u.to_string()))
+        .collect();
     let call = |doc: &mut Document, name: &str, input: Value| -> Value {
         let answer = kentos_native_application::registry::run(
             &mut kentos_native_application::ExecutionContext::new(doc),
@@ -250,7 +350,8 @@ fn office_storey(side: &str, rating: &str) -> Document {
         "cad.arch.performance",
         json!({"operation": {"kind": "objects", "uids": [stair_door], "fireRating": {"value": rating, "basis": {"kind": "author"}}}}),
     );
-    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
+    let rect =
+        |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
     call(
         &mut doc,
         "cad.spaces.create",
@@ -269,8 +370,18 @@ fn doors_said(output: &Value) -> Vec<(String, Option<String>, String)> {
         .as_array()
         .into_iter()
         .flatten()
-        .filter(|f| f["code"].as_str().is_some_and(|c| c.starts_with("bykhy_exit_door") || c.starts_with("bykhy_stair_door")))
-        .map(|f| (f["code"].as_str().unwrap().to_owned(), f["state"].as_str().map(str::to_owned), f["message"].as_str().unwrap().to_owned()))
+        .filter(|f| {
+            f["code"].as_str().is_some_and(|c| {
+                c.starts_with("bykhy_exit_door") || c.starts_with("bykhy_stair_door")
+            })
+        })
+        .map(|f| {
+            (
+                f["code"].as_str().unwrap().to_owned(),
+                f["state"].as_str().map(str::to_owned),
+                f["message"].as_str().unwrap().to_owned(),
+            )
+        })
         .collect()
 }
 
@@ -278,7 +389,12 @@ fn doors_said(output: &Value) -> Vec<(String, Option<String>, String)> {
 fn a_crowded_room_s_door_and_the_stair_s_door_are_read_by_bykhy_47() {
     let ask = json!({"checks": ["regulation"]});
     let state = |out: &Value, rule: &str| {
-        out["ruleSet"]["rules"].as_array().unwrap().iter().find(|r| r["rule"] == rule).map(|r| r["state"].as_str().unwrap().to_owned())
+        out["ruleSet"]["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|r| r["rule"] == rule)
+            .map(|r| r["state"].as_str().unwrap().to_owned())
     };
     // The room's door opens to the corridor (the path's left, out of the room); the stair door is EI2 60-S200C5.
     let mut doc = office_storey("left", "EI2 60-S200C5");
@@ -291,8 +407,14 @@ fn a_crowded_room_s_door_and_the_stair_s_door_are_read_by_bykhy_47() {
     let out = audited(&mut doc, ask);
     let said = doors_said(&out);
     assert_eq!(said.len(), 2, "{said:#?}");
-    assert!(said[0].2.contains("Toplantı salonu") && said[0].2.contains("içine açılıyor"), "{said:#?}");
-    assert!(said[1].2.contains("30 dakika < 60 dakika") && said[1].2.contains("duman sızdırmaz değil"), "{said:#?}");
+    assert!(
+        said[0].2.contains("Toplantı salonu") && said[0].2.contains("içine açılıyor"),
+        "{said:#?}"
+    );
+    assert!(
+        said[1].2.contains("30 dakika < 60 dakika") && said[1].2.contains("duman sızdırmaz değil"),
+        "{said:#?}"
+    );
     assert_eq!(state(&out, "BYKHY 47/2").as_deref(), Some("failed"));
     assert_eq!(state(&out, "BYKHY 47/3").as_deref(), Some("failed"));
 }
@@ -314,7 +436,10 @@ fn a_headless_building_ifc_writes_the_package_s_fire_compartments() {
         "cad.arch.performance",
         json!({"operation": {"kind": "objects", "uids": walls, "fireRating": {"value": "EI 60", "basis": {"kind": "author"}}}}),
     );
-    let file = std::env::temp_dir().join(format!("kentos-headless-kompartiman-{}.ifc", std::process::id()));
+    let file = std::env::temp_dir().join(format!(
+        "kentos-headless-kompartiman-{}.ifc",
+        std::process::id()
+    ));
     let export = |doc: &mut Document, compartments: Option<Value>| -> (Value, String) {
         let mut input = json!({"path": file.display().to_string(), "overwrite": true, "stamp": "2026-11-17T12:00:00"});
         if let Some(c) = compartments {
@@ -335,7 +460,12 @@ fn a_headless_building_ifc_writes_the_package_s_fire_compartments() {
         );
         let output = match answer.result {
             CommandResult::Completed { output, warnings } => {
-                assert!(warnings.iter().all(|w| w.code != "regulation_rule_unavailable"), "{warnings:?}");
+                assert!(
+                    warnings
+                        .iter()
+                        .all(|w| w.code != "regulation_rule_unavailable"),
+                    "{warnings:?}"
+                );
                 output
             }
             other => panic!("{other:?}"),
@@ -344,7 +474,10 @@ fn a_headless_building_ifc_writes_the_package_s_fire_compartments() {
     };
     let (output, text) = export(&mut doc, None);
     assert_eq!(output["compartments"], 2, "{output}");
-    let zones = text.lines().filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang")).count();
+    let zones = text
+        .lines()
+        .filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang"))
+        .count();
     assert_eq!(zones, 2);
     let (output, text) = export(&mut doc, Some(json!([])));
     assert_eq!(output["compartments"], 0, "{output}");

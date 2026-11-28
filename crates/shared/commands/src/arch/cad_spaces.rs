@@ -12,7 +12,10 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::entity::{Entity, Vec2};
-use crate::{ArchInfo, ArchPhase, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart, SpaceScope};
+use crate::{
+    ArchInfo, ArchPhase, SpaceColumns, SpaceFields, SpaceFinishes, SpaceMethod, SpacePart,
+    SpaceScope,
+};
 
 pub const CAD_SPACES_CREATE: &str = "cad.spaces.create";
 pub const CAD_SPACES_CREATE_VERSION: u32 = 1;
@@ -228,7 +231,11 @@ pub struct SpacesPlan {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct SpaceChange {
     /// Explicit UUIDs; null clears the list and restores scope/level search.
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<Vec<String>>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<String>>"))]
     pub sources: Option<Option<Vec<String>>>,

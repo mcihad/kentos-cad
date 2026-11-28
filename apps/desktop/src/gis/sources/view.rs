@@ -286,7 +286,9 @@ impl Line {
                 out.extend(relation.comment.clone());
                 out
             }
-            Line::Stored { at, meta, .. } => vec![at.name.clone(), meta.clone(), "Proje".to_owned()],
+            Line::Stored { at, meta, .. } => {
+                vec![at.name.clone(), meta.clone(), "Proje".to_owned()]
+            }
             Line::Preset { name, group, .. } => {
                 vec![name.clone(), group.clone(), "Hazır altlık".to_owned()]
             }
@@ -335,7 +337,6 @@ fn note(key: String, label: impl Into<String>, warn: bool, depth: usize) -> Line
 }
 
 impl App {
-
     /// The panel's body: Klasör ekle over the rows.
     pub(crate) fn sources_view(&self) -> Element<'_, Message> {
         let add = tip(
@@ -407,7 +408,6 @@ impl App {
         .height(Fill);
         column![bar, list].into()
     }
-
 }
 
 impl App {

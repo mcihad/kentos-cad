@@ -80,7 +80,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsCreate) -> CommandResult<
 }
 
 /// Writes the project's surfaces; a setting, not an undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsCreate) -> CommandResult<TerrainsWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsCreate,
+) -> CommandResult<TerrainsWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_TERRAINS_CREATE,
@@ -90,7 +93,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsCreate) -> CommandR
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: TerrainsCreate) -> CommandResult<TerrainsWritten> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsCreate,
+) -> CommandResult<TerrainsWritten> {
     let c = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),

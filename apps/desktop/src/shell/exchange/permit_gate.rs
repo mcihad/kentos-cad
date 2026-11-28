@@ -48,7 +48,10 @@ pub struct Shut {
 impl Gate {
     /// Open for the drawing at `generation`: asked on it, answered, nothing found.
     pub fn open(&self, generation: u64) -> bool {
-        self.asked_on == Some(generation) && self.answered && self.failed.is_none() && self.findings.is_empty()
+        self.asked_on == Some(generation)
+            && self.answered
+            && self.failed.is_none()
+            && self.findings.is_empty()
     }
 }
 
@@ -68,7 +71,8 @@ impl App {
 
     /// Whether the check's report came and the gate has yet to ask; asking takes it.
     pub(crate) fn permit_gate_due(&mut self) -> bool {
-        let ready = matches!(&self.exchange, Some(Window::SheetPublish(s)) if s.planned().is_some());
+        let ready =
+            matches!(&self.exchange, Some(Window::SheetPublish(s)) if s.planned().is_some());
         match self.permit_gate_mut() {
             Some(gate) if gate.due && ready => {
                 gate.due = false;
@@ -84,7 +88,8 @@ impl App {
         // The drawing's `cad` section, measured as Mimari denetimi's Dijital proje rules read it.
         let cad = kentos_processing::audit_facts::cad::measure(&self.document.as_ref()?.model);
         let mut facts = serde_json::to_value(
-            kentos_extensions::audit_facts::ProjectAuditFacts::new(0.0, Vec::new(), false).with_cad(cad),
+            kentos_extensions::audit_facts::ProjectAuditFacts::new(0.0, Vec::new(), false)
+                .with_cad(cad),
         )
         .ok()?;
         if let Some(Window::SheetPublish(s)) = &self.exchange
@@ -128,9 +133,15 @@ impl App {
             async move {
                 let (sent, got) = iced::futures::channel::oneshot::channel();
                 std::thread::spawn(move || {
-                    let _ = sent.send(crate::standards::call(PACKAGE, MODULE, FUNCTION, vec![facts]));
+                    let _ = sent.send(crate::standards::call(
+                        PACKAGE,
+                        MODULE,
+                        FUNCTION,
+                        vec![facts],
+                    ));
                 });
-                got.await.unwrap_or_else(|_| Err("Kuralın süreci cevap vermeden kapandı.".to_owned()))
+                got.await
+                    .unwrap_or_else(|_| Err("Kuralın süreci cevap vermeden kapandı.".to_owned()))
             },
             move |answer| event(Event::Gate(generation, answer)),
         )
@@ -154,8 +165,16 @@ impl App {
                     .flatten()
                     .filter(|f| f.get("severity").and_then(Value::as_str) == Some("error"))
                     .map(|f| Shut {
-                        message: f.get("message").and_then(Value::as_str).unwrap_or_default().to_owned(),
-                        repair: f.get("repair").and_then(Value::as_str).unwrap_or_default().to_owned(),
+                        message: f
+                            .get("message")
+                            .and_then(Value::as_str)
+                            .unwrap_or_default()
+                            .to_owned(),
+                        repair: f
+                            .get("repair")
+                            .and_then(Value::as_str)
+                            .unwrap_or_default()
+                            .to_owned(),
                     })
                     .collect();
             }
@@ -169,7 +188,11 @@ impl App {
     /// The rule asked and answered now, on this thread (tests and pictures).
     #[cfg(any(test, feature = "testing"))]
     pub fn permit_gate_settle(&mut self) {
-        let generation = self.document.as_ref().map(|d| d.model.generation()).unwrap_or_default();
+        let generation = self
+            .document
+            .as_ref()
+            .map(|d| d.model.generation())
+            .unwrap_or_default();
         let Some(facts) = self.permit_gate_facts() else {
             return;
         };
@@ -181,16 +204,31 @@ impl App {
     }
 
     /// The gate's part of the window: what keeps it shut, or that it is open.
-    pub(crate) fn permit_gate_view<'a>(&'a self, gate: &'a Gate, generation: u64) -> Element<'a, Message> {
-        let mut out = column![label::body("Ruhsat kapısı: paftalar modelden, paket yönetmelikte (Md. 4/2, 6, 8, 9/1)")
-            .font(kentos_ui::theme::typography::ui_strong())]
+    pub(crate) fn permit_gate_view<'a>(
+        &'a self,
+        gate: &'a Gate,
+        generation: u64,
+    ) -> Element<'a, Message> {
+        let mut out = column![
+            label::body(
+                "Ruhsat kapısı: paftalar modelden, paket yönetmelikte (Md. 4/2, 6, 8, 9/1)"
+            )
+            .font(kentos_ui::theme::typography::ui_strong())
+        ]
         .spacing(4);
         if gate.asked_on != Some(generation) || !gate.answered {
-            return out.push(label::caption("Paftaların modelden üretildiği denetleniyor…")).into();
+            return out
+                .push(label::caption(
+                    "Paftaların modelden üretildiği denetleniyor…",
+                ))
+                .into();
         }
         if let Some(why) = &gate.failed {
             return out
-                .push(label::body(format!("Denetlenemedi, yayın açılmaz: {why}")).style(style::text::danger))
+                .push(
+                    label::body(format!("Denetlenemedi, yayın açılmaz: {why}"))
+                        .style(style::text::danger),
+                )
                 .into();
         }
         if gate.findings.is_empty() {
@@ -208,7 +246,10 @@ impl App {
         }
         out.push(
             row![
-                label::caption("Kapı kapalıyken ruhsat yayını yapılmaz; bulgular Denetim'de düzeltilir.").width(Fill),
+                label::caption(
+                    "Kapı kapalıyken ruhsat yayını yapılmaz; bulgular Denetim'de düzeltilir."
+                )
+                .width(Fill),
                 button(label::caption("Denetim'de göster"))
                     .padding(kentos_ui::theme::metrics::action())
                     .style(style::button::secondary)

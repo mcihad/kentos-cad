@@ -11,9 +11,19 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_accepted_network_s_height_bars_are_the_case_s_over_mcp() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.survey.edit.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().contains("kot çubuklarıyla")).unwrap().clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.survey.edit.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"].as_str().unwrap().contains("kot çubuklarıyla"))
+        .unwrap()
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
     let dir = std::env::temp_dir().join(format!("kentos-network-bars-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     let path = dir.join("ag.kcad");
@@ -28,22 +38,52 @@ fn the_accepted_network_s_height_bars_are_the_case_s_over_mcp() {
     let r = call(&mut server, "map.survey.edit", args);
     assert_eq!(r["isError"], false, "{r}");
     let out = &r["structuredContent"]["output"];
-    assert_eq!((out["ellipses"].as_u64(), out["bars"].as_u64()), (Some(3), Some(3)), "{out}");
+    assert_eq!(
+        (out["ellipses"].as_u64(), out["bars"].as_u64()),
+        (Some(3), Some(3)),
+        "{out}"
+    );
     let saved = dir.join("kabul.kcad");
-    let s = call(&mut server, "drawing.save", json!({"drawing": drawing, "path": saved}));
+    let s = call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing": drawing, "path": saved}),
+    );
     assert_eq!(s["isError"], false, "{s}");
-    let back = serde_json::to_value(kentos_kcad::decode(&std::fs::read(&saved).unwrap()).unwrap()).unwrap();
-    let bars: Vec<&Value> = back["entities"].as_array().unwrap().iter().filter(|e| e["attrs"].get("Kot yarı aralığı (m)").is_some()).collect();
+    let back = serde_json::to_value(kentos_kcad::decode(&std::fs::read(&saved).unwrap()).unwrap())
+        .unwrap();
+    let bars: Vec<&Value> = back["entities"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|e| e["attrs"].get("Kot yarı aralığı (m)").is_some())
+        .collect();
     assert_eq!(bars.len(), 3);
-    let want: Vec<&Value> = step["expect"]["fields"].as_object().unwrap().values().filter(|f| f["attrs"].get("Kot yarı aralığı (m)").is_some()).collect();
+    let want: Vec<&Value> = step["expect"]["fields"]
+        .as_object()
+        .unwrap()
+        .values()
+        .filter(|f| f["attrs"].get("Kot yarı aralığı (m)").is_some())
+        .collect();
     assert_eq!(want.len(), 3);
     for b in &bars {
         // The case's bar of the same mark (its fields are keyed by slot).
-        let w = want.iter().find(|w| w["attrs"]["İşaret"] == b["attrs"]["İşaret"]).expect("the case's bar");
+        let w = want
+            .iter()
+            .find(|w| w["attrs"]["İşaret"] == b["attrs"]["İşaret"])
+            .expect("the case's bar");
         assert_eq!(b["attrs"], w["attrs"]);
-        for (p, q) in b["pts"].as_array().unwrap().iter().zip(w["pts"].as_array().unwrap()) {
+        for (p, q) in b["pts"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .zip(w["pts"].as_array().unwrap())
+        {
             for k in ["x", "y"] {
-                assert!((p[k].as_f64().unwrap() - q[k].as_f64().unwrap()).abs() < 1e-6, "{p} {q}");
+                assert!(
+                    (p[k].as_f64().unwrap() - q[k].as_f64().unwrap()).abs() < 1e-6,
+                    "{p} {q}"
+                );
             }
         }
     }

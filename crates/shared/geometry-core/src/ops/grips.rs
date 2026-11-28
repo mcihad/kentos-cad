@@ -110,7 +110,9 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         // Its middle: dragged, it slides along its wall (docs/adr/0341 §3).
         Shape::Opening { place, .. } => crate::geom::opening::centre(place).into_iter().collect(),
         // A slab's are its rings' as an area's: vertices, edges' middles, holes' vertices (docs/adr/0722 §1).
-        Shape::Space { parts, space } if space.slab.is_some() => entity_grips(&crate::geom::space::as_polygon(parts)),
+        Shape::Space { parts, space } if space.slab.is_some() => {
+            entity_grips(&crate::geom::space::as_polygon(parts))
+        }
         // Its label's place: dragged, the whole space moves (docs/adr/0342 §3).
         Shape::Space { parts, .. } => crate::geom::space::label_at(parts).into_iter().collect(),
         // A grid's ends, a stair's or ramp's walking line's points, a column's centre (docs/adr/0343 §2).
@@ -339,7 +341,11 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
     if let Shape::Space { parts, space } = &e.shape
         && space.slab.is_some()
     {
-        let moved = move_grip(&Entity::new(crate::geom::space::as_polygon(parts)), index, p)?;
+        let moved = move_grip(
+            &Entity::new(crate::geom::space::as_polygon(parts)),
+            index,
+            p,
+        )?;
         let parts = crate::ops::areas::areas_of_entity(&moved.shape);
         if parts.is_empty() {
             return None;
@@ -444,16 +450,28 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         // It moves whole with its label (docs/adr/0342 §3).
         Shape::Space { parts, .. } => {
             let c = crate::geom::space::label_at(parts)?;
-            return Some(crate::ops::transform::translate_entity(e, p.x - c.x, p.y - c.y));
+            return Some(crate::ops::transform::translate_entity(
+                e,
+                p.x - c.x,
+                p.y - c.y,
+            ));
         }
         // Its jambs move with its middle; the document puts them back on its wall (docs/adr/0341 §3).
-        Shape::Opening { place, at, width, opening } => {
+        Shape::Opening {
+            place,
+            at,
+            width,
+            opening,
+        } => {
             let c = crate::geom::opening::centre(place)?;
             let (dx, dy) = (p.x - c.x, p.y - c.y);
             Shape::Opening {
                 at: *at,
                 width: *width,
-                place: place.iter().map(|q| Vec2::new(q.x + dx, q.y + dy)).collect(),
+                place: place
+                    .iter()
+                    .map(|q| Vec2::new(q.x + dx, q.y + dy))
+                    .collect(),
                 opening: opening.clone(),
             }
         }

@@ -131,7 +131,8 @@ pub fn sub_object(doc: &Document, e: &Entity, at: Vec2, tol: f64) -> Option<(Vec
         tol
     };
     if matches!(e, Entity::Insert(_)) {
-        place_near_in(&crate::blocks::drawing_blocks(doc), &core, at, tol).map(|(path, p, _)| (path, p))
+        place_near_in(&crate::blocks::drawing_blocks(doc), &core, at, tol)
+            .map(|(path, p, _)| (path, p))
     } else {
         place_near(&core, at, tol).map(|(p, _)| (Vec::new(), p))
     }

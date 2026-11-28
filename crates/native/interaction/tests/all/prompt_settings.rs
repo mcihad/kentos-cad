@@ -16,8 +16,17 @@ fn bound(b: &Bench) -> String {
 #[test]
 fn slab_says_kaynaga_bagli_in_its_prompt_and_its_letter_turns_it() {
     let mut b = Bench::new("slab");
-    let option = b.session.prompt().options.into_iter().find(|o| o.key == "B");
-    assert_eq!(option.map(|o| o.label), Some("Kaynağa bağlı"), "the prompt offers B");
+    let option = b
+        .session
+        .prompt()
+        .options
+        .into_iter()
+        .find(|o| o.key == "B");
+    assert_eq!(
+        option.map(|o| o.label),
+        Some("Kaynağa bağlı"),
+        "the prompt offers B"
+    );
     let before = bound(&b);
     assert!(b.type_text("B"), "the letter is the slab's");
     assert_ne!(bound(&b), before, "B turned Kaynağa bağlı");
@@ -31,9 +40,27 @@ fn slab_says_kaynaga_bagli_in_its_prompt_and_its_letter_turns_it() {
 #[ignore = "a measure for docs/adr/0776, not a rule"]
 fn architectural_settings_out_of_the_prompts() {
     let tools = [
-        "wall", "wallRectangle", "wallPartition", "interiorDimensions", "wallDimensions", "door", "window", "opening",
-        "space", "slab", "spaceNumber", "spaceDiscover", "grid", "column", "stair", "ramp", "gridSystem", "casework",
-        "tag", "tagAll", "spaceSplit",
+        "wall",
+        "wallRectangle",
+        "wallPartition",
+        "interiorDimensions",
+        "wallDimensions",
+        "door",
+        "window",
+        "opening",
+        "space",
+        "slab",
+        "spaceNumber",
+        "spaceDiscover",
+        "grid",
+        "column",
+        "stair",
+        "ramp",
+        "gridSystem",
+        "casework",
+        "tag",
+        "tagAll",
+        "spaceSplit",
     ];
     let mut out = 0;
     for tool in tools {

@@ -6,11 +6,11 @@
 //! KENTOS_SHOTS_ONLY=duvar-stilleri,duvar-birlesim-denetle,duvar-stili-adi-kaydedildi,duvar-stili-geri-alindi cargo test -p kentos-desktop-arch arch_screens -- --ignored --nocapture
 //! ```
 
-use crate::arch;
-use kentos_domain::Slot;
 use crate::app::{App, Message};
+use crate::arch;
 use crate::tools_scenes::run;
 use crate::wall_scenes::{joins_cross, room};
+use kentos_domain::Slot;
 
 /// The pictures of this file, for the module's `screens` (arch_screens.rs).
 pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {

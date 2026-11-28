@@ -134,10 +134,27 @@ fn write_steps(
             Ok(v) => v,
             Err(stop) => return stop.into(),
         };
-        if let Some(scope)=&input.model_scope && matches!(step.command.as_str(),"cad.entities.select"|"cad.entities.pick"|"cad.snap.find") {
-            let scope=serde_json::json!(scope);
-            if filled.get("modelScope").is_some_and(|s|!s.is_null() && s!=&scope) {return Stop::failed(error("scope_mismatch","Adımın model kapsamı değişiklik kümesinin kapsamıyla aynı olmalı.".into(),Some(at))).into();}
-            if let Some(object)=filled.as_object_mut() {object.insert("modelScope".into(),scope);}
+        if let Some(scope) = &input.model_scope
+            && matches!(
+                step.command.as_str(),
+                "cad.entities.select" | "cad.entities.pick" | "cad.snap.find"
+            )
+        {
+            let scope = serde_json::json!(scope);
+            if filled
+                .get("modelScope")
+                .is_some_and(|s| !s.is_null() && s != &scope)
+            {
+                return Stop::failed(error(
+                    "scope_mismatch",
+                    "Adımın model kapsamı değişiklik kümesinin kapsamıyla aynı olmalı.".into(),
+                    Some(at),
+                ))
+                .into();
+            }
+            if let Some(object) = filled.as_object_mut() {
+                object.insert("modelScope".into(), scope);
+            }
         }
         let answer = match registry::run(cx, &step.command, CallOp::Execute, filled) {
             Ok(v) => v,
@@ -237,12 +254,40 @@ fn within(error: CommandError, at: &str, i: usize) -> CommandError {
 /// The set's own checks, in order (see the contract).
 fn check(doc: &kentos_domain::Document, input: &ChangesetApply) -> Result<(), Stop> {
     if let Some(scope) = &input.model_scope {
-        let book = doc.sheets().ok_or_else(|| Stop::failed(error("scope_mismatch", "Projede pafta kitabı yok.".into(), Some("modelScope".into()))))?;
-        let (book,_) = kentos_sheet::project::read_project_sheets(book).map_err(|e|Stop::failed(error(&e.code,e.message,Some("modelScope".into()))))?;
-        kentos_sheet::model_scope::Viewport::resolve_with_views(&book,&scope.sheet,&scope.item,&doc.settings().drawn_views()).map_err(|e|Stop::failed(error(&e.code,e.message,Some("modelScope".into()))))?;
-        for (i,step) in input.steps.iter().enumerate() {
-            if !step.command.starts_with("cad.") || ["cad.sheets.","cad.views.","cad.settings.","cad.units.","cad.project.","cad.plot."].iter().any(|p| step.command.starts_with(p)) {
-                return Err(Stop::failed(error("model_scope_command", "Bu komut model düzenleme kapsamında kullanılamaz.".into(), Some(format!("steps[{i}].command")))));
+        let book = doc.sheets().ok_or_else(|| {
+            Stop::failed(error(
+                "scope_mismatch",
+                "Projede pafta kitabı yok.".into(),
+                Some("modelScope".into()),
+            ))
+        })?;
+        let (book, _) = kentos_sheet::project::read_project_sheets(book)
+            .map_err(|e| Stop::failed(error(&e.code, e.message, Some("modelScope".into()))))?;
+        kentos_sheet::model_scope::Viewport::resolve_with_views(
+            &book,
+            &scope.sheet,
+            &scope.item,
+            &doc.settings().drawn_views(),
+        )
+        .map_err(|e| Stop::failed(error(&e.code, e.message, Some("modelScope".into()))))?;
+        for (i, step) in input.steps.iter().enumerate() {
+            if !step.command.starts_with("cad.")
+                || [
+                    "cad.sheets.",
+                    "cad.views.",
+                    "cad.settings.",
+                    "cad.units.",
+                    "cad.project.",
+                    "cad.plot.",
+                ]
+                .iter()
+                .any(|p| step.command.starts_with(p))
+            {
+                return Err(Stop::failed(error(
+                    "model_scope_command",
+                    "Bu komut model düzenleme kapsamında kullanılamaz.".into(),
+                    Some(format!("steps[{i}].command")),
+                )));
             }
         }
     }

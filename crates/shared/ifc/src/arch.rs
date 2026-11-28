@@ -16,8 +16,8 @@ use kentos_geometry_core::geom::opening::{HoleFrame, Recess};
 use kentos_geometry_core::geom::section::{Flight, Height, Sloped, Solid};
 
 use crate::building::{
-    Actor, Address, Building, Class, Element, Group, Opening, Organization, Place, Pset, Qto, Shape, Space, Storey,
-    Value, Zone, flat_rings,
+    Actor, Address, Building, Class, Element, Group, Opening, Organization, Place, Pset, Qto,
+    Shape, Space, Storey, Value, Zone, flat_rings,
 };
 use crate::naming::name;
 
@@ -150,7 +150,9 @@ fn prominent(values: impl Iterator<Item = (Option<f64>, f64)>, total: f64) -> Op
             None => held.push((v, w)),
         }
     }
-    held.into_iter().find(|(_, w)| *w > total / 2.0).map(|(v, _)| v)
+    held.into_iter()
+        .find(|(_, w)| *w > total / 2.0)
+        .map(|(v, _)| v)
 }
 
 /// A void's part over a floor slab (docs/adr/8071 §5): the slab's persistent id, the void's (a space, docs/adr/0708),
@@ -326,11 +328,19 @@ impl Particulars {
     /// end: no guess is written.
     pub fn names(&self) -> Option<(Option<String>, Option<String>)> {
         let whole: Vec<&str> = self.architect.as_deref()?.split_whitespace().collect();
-        let family: Vec<&str> = self.architect_family.as_deref()?.split_whitespace().collect();
+        let family: Vec<&str> = self
+            .architect_family
+            .as_deref()?
+            .split_whitespace()
+            .collect();
         if family.is_empty() || family.len() > whole.len() {
             return None;
         }
-        let same = |a: &[&str], b: &[&str]| a.iter().zip(b).all(|(x, y)| x.to_lowercase() == y.to_lowercase());
+        let same = |a: &[&str], b: &[&str]| {
+            a.iter()
+                .zip(b)
+                .all(|(x, y)| x.to_lowercase() == y.to_lowercase())
+        };
         let n = family.len();
         let given = if same(&whole[whole.len() - n..], &family) {
             &whole[..whole.len() - n]
@@ -527,13 +537,18 @@ struct Piece {
 fn chimney_groups(pieces: &[Piece]) -> Vec<Vec<usize>> {
     fn middle(r: &[[f64; 2]]) -> [f64; 2] {
         let n = r.len().max(1) as f64;
-        [r.iter().map(|p| p[0]).sum::<f64>() / n, r.iter().map(|p| p[1]).sum::<f64>() / n]
+        [
+            r.iter().map(|p| p[0]).sum::<f64>() / n,
+            r.iter().map(|p| p[1]).sum::<f64>() / n,
+        ]
     }
     fn within(r: &[[f64; 2]], p: [f64; 2]) -> bool {
         let mut odd = false;
         for i in 0..r.len() {
             let (a, b) = (r[i], r[(i + 1) % r.len()]);
-            if (a[1] > p[1]) != (b[1] > p[1]) && p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]) {
+            if (a[1] > p[1]) != (b[1] > p[1])
+                && p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1])
+            {
                 odd = !odd;
             }
         }
@@ -590,10 +605,18 @@ fn shapes(solid: &Solid, exact: Option<&Option<ExactShapes>>, floor: f64) -> Vec
         Height::Prism { bottom, top } => {
             let (rings, bulges) = match exact.and_then(Option::as_ref).filter(|e| !e.is_empty()) {
                 Some(e) => (
-                    e.iter().map(|(r, _)| r.iter().map(|p| pt(*p)).collect()).collect(),
+                    e.iter()
+                        .map(|(r, _)| r.iter().map(|p| pt(*p)).collect())
+                        .collect(),
                     e.iter().map(|(_, b)| b.clone()).collect(),
                 ),
-                None => (rings.iter().map(|r| r.iter().map(|p| pt(*p)).collect()).collect(), Vec::new()),
+                None => (
+                    rings
+                        .iter()
+                        .map(|r| r.iter().map(|p| pt(*p)).collect())
+                        .collect(),
+                    Vec::new(),
+                ),
             };
             vec![Shape::Prism {
                 rings,
@@ -620,7 +643,12 @@ fn balusters(solid: &Solid, floor: f64) -> Vec<Shape> {
         .iter()
         .filter(|[(a, z0), (b, z1)]| a == b && z1 > z0)
         .map(|[(q, z0), (_, z1)]| Shape::Prism {
-            rings: vec![vec![[q.x - w, q.y - w], [q.x + w, q.y - w], [q.x + w, q.y + w], [q.x - w, q.y + w]]],
+            rings: vec![vec![
+                [q.x - w, q.y - w],
+                [q.x + w, q.y - w],
+                [q.x + w, q.y + w],
+                [q.x - w, q.y + w],
+            ]],
             bulges: Vec::new(),
             bottom: z0 - floor,
             top: z1 - floor,
@@ -703,27 +731,58 @@ fn section(e: Option<&Entity>, el: &Element) -> Option<crate::building::ProfileS
     use kentos_contracts::ColumnShape;
     let cm = |m: f64| {
         let c = (m * 1000.0).round() / 10.0;
-        if (c - c.round()).abs() < 1e-9 { format!("{}", c.round() as i64) } else { format!("{c:.1}").replace('.', ",") }
+        if (c - c.round()).abs() < 1e-9 {
+            format!("{}", c.round() as i64)
+        } else {
+            format!("{c:.1}").replace('.', ",")
+        }
     };
     let (section, profile, bearing) = match (e?, el.class) {
         (Entity::Column(c), Class::Column | Class::Member) => {
             let (w, d) = (c.column.width, c.column.depth.unwrap_or(c.column.width));
-            let bearing =
-                el.class == Class::Column && c.column.arch.load_bearing.as_ref().is_none_or(|b| b.bearing);
+            let bearing = el.class == Class::Column
+                && c.column
+                    .arch
+                    .load_bearing
+                    .as_ref()
+                    .is_none_or(|b| b.bearing);
             match c.column.shape {
-                ColumnShape::Rect => (Section::Rectangle { x: w, y: d }, format!("{}×{}", cm(w), cm(d)), bearing),
-                ColumnShape::Round => (Section::Circle { radius: w / 2.0 }, format!("Ø{}", cm(w)), bearing),
+                ColumnShape::Rect => (
+                    Section::Rectangle { x: w, y: d },
+                    format!("{}×{}", cm(w), cm(d)),
+                    bearing,
+                ),
+                ColumnShape::Round => (
+                    Section::Circle { radius: w / 2.0 },
+                    format!("Ø{}", cm(w)),
+                    bearing,
+                ),
                 ColumnShape::LShape => {
                     let [t0, t1] = c.column.legs?;
                     let (x0, y0, x1, y1) = (-w / 2.0, -d / 2.0, w / 2.0, d / 2.0);
-                    let outline = vec![[x0, y0], [x1, y0], [x1, y0 + t0], [x0 + t1, y0 + t0], [x0 + t1, y1], [x0, y1]];
-                    (Section::Outline(outline), format!("L {}×{}", cm(w), cm(d)), bearing)
+                    let outline = vec![
+                        [x0, y0],
+                        [x1, y0],
+                        [x1, y0 + t0],
+                        [x0 + t1, y0 + t0],
+                        [x0 + t1, y1],
+                        [x0, y1],
+                    ];
+                    (
+                        Section::Outline(outline),
+                        format!("L {}×{}", cm(w), cm(d)),
+                        bearing,
+                    )
                 }
             }
         }
         (Entity::Beam(b), Class::Beam | Class::Member) => {
             let (w, h) = (b.beam.width, b.beam.height);
-            (Section::Rectangle { x: w, y: h }, format!("{}×{}", cm(w), cm(h)), el.class == Class::Beam)
+            (
+                Section::Rectangle { x: w, y: h },
+                format!("{}×{}", cm(w), cm(h)),
+                el.class == Class::Beam,
+            )
         }
         _ => return None,
     };
@@ -745,7 +804,10 @@ fn material(m: Option<String>) -> Option<String> {
 fn give(psets: &mut Vec<Pset>, set: &str, key: &str, value: Value) {
     match psets.iter_mut().find(|p| p.name == set) {
         Some(p) => p.props.push((key.to_owned(), value)),
-        None => psets.push(Pset { name: set.to_owned(), props: vec![(key.to_owned(), value)] }),
+        None => psets.push(Pset {
+            name: set.to_owned(),
+            props: vec![(key.to_owned(), value)],
+        }),
     }
 }
 
@@ -757,7 +819,9 @@ fn tag_of(e: &Entity) -> Option<String> {
         Entity::Beam(b) => b.beam.tag.as_deref(),
         _ => None,
     };
-    own.map(str::trim).filter(|t| !t.is_empty()).map(str::to_owned)
+    own.map(str::trim)
+        .filter(|t| !t.is_empty())
+        .map(str::to_owned)
 }
 
 /// The common property set EK-6 asks a class's fire resistance class in.
@@ -782,15 +846,28 @@ fn common_set(class: Class) -> Option<&'static str> {
 
 /// The declarations an object carries (docs/adr/8068): its fire resistance class (its own, else its wall style's or its
 /// door or window type's) and a door's or a stair's exit role. Nothing declared is nothing written.
-fn declared(e: &Entity, wall_styles: &[kentos_contracts::WallStyleDef], arch: Option<&ArchSettings>) -> (Option<String>, Option<bool>) {
+fn declared(
+    e: &Entity,
+    wall_styles: &[kentos_contracts::WallStyleDef],
+    arch: Option<&ArchSettings>,
+) -> (Option<String>, Option<bool>) {
     let fire = match e {
         Entity::Wall(w) => w.wall.arch.fire_rating.as_ref().or_else(|| {
             let id = w.wall.style.as_deref()?;
-            wall_styles.iter().find(|s| s.id == id)?.fire_rating.as_ref()
+            wall_styles
+                .iter()
+                .find(|s| s.id == id)?
+                .fire_rating
+                .as_ref()
         }),
         Entity::Opening(o) => o.opening.fire_rating.as_ref().or_else(|| {
             let id = o.opening.style.as_deref()?;
-            arch?.opening_types.iter().find(|t| t.id == id)?.fire_rating.as_ref()
+            arch?
+                .opening_types
+                .iter()
+                .find(|t| t.id == id)?
+                .fire_rating
+                .as_ref()
         }),
         other => other.arch_info().and_then(|a| a.fire_rating.as_ref()),
     };
@@ -800,13 +877,19 @@ fn declared(e: &Entity, wall_styles: &[kentos_contracts::WallStyleDef], arch: Op
         _ => None,
     };
     // A word that says nothing is no value: it is missing, never written empty.
-    (fire.map(|d| d.value.trim().to_owned()).filter(|v| !v.is_empty()), exit.map(|x| x.exit))
+    (
+        fire.map(|d| d.value.trim().to_owned())
+            .filter(|v| !v.is_empty()),
+        exit.map(|x| x.exit),
+    )
 }
 
 /// A material's name as the model writes it: `Ad_Dayanım` when the project's material of that name has a strength
 /// (EK-6: “Beton_C25”), else its name.
 fn material_named(name: String, arch: Option<&ArchSettings>) -> String {
-    let strength = arch.and_then(|a| a.material(&name)).and_then(|m| m.strength.as_deref());
+    let strength = arch
+        .and_then(|a| a.material(&name))
+        .and_then(|m| m.strength.as_deref());
     kentos_contracts::material_label(&name, strength)
 }
 
@@ -864,7 +947,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .map(|(level, n, floor, _)| Storey {
             // Derived from its building and its level (docs/adr/8117): the same storey keeps its GlobalId whatever else
             // changes; a level two buildings span is a storey of each.
-            id: Some(crate::step::derived_id("storey", &format!("{storey_scope}|{level}"))),
+            id: Some(crate::step::derived_id(
+                "storey",
+                &format!("{storey_scope}|{level}"),
+            )),
             name: name("BNK", n),
             long_name: Some(n.clone()),
             elevation: *floor - zero,
@@ -925,8 +1011,7 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let floor = levels[storey].2;
         let mut shapes_of: Vec<Shape> = Vec::new();
         // A balustered railing's balusters are bodies too (docs/adr/8128).
-        let barred =
-            matches!(e, Entity::Railing(r) if r.railing.infill == kentos_contracts::RailingInfill::Balusters);
+        let barred = matches!(e, Entity::Railing(r) if r.railing.infill == kentos_contracts::RailingInfill::Balusters);
         for &i in indices {
             shapes_of.extend(shapes(&solids[i], exact.get(i), floor));
             if barred {
@@ -964,7 +1049,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             as_member = Some((Class::Covering, t, c.words()));
             object_type = c.object_type();
         }
-        let (class, predefined, words): (Class, &'static str, String) = if let Some(found) = as_member {
+        let (class, predefined, words): (Class, &'static str, String) = if let Some(found) =
+            as_member
+        {
             found
         } else {
             match e {
@@ -974,7 +1061,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     "STANDARD",
                     wall_style_name(w.wall.style.as_deref()),
                 ),
-                Entity::Slab(s) => (Class::Slab, s.slab.role.ifc_type(), s.slab.role.ifc_words().into()),
+                Entity::Slab(s) => (
+                    Class::Slab,
+                    s.slab.role.ifc_type(),
+                    s.slab.role.ifc_words().into(),
+                ),
                 Entity::Column(c) => (
                     Class::Column,
                     "COLUMN",
@@ -985,7 +1076,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     BeamRole::BondBeam => (Class::Beam, "BEAM", "Hatıl".into()),
                     // EK-6 Tablo 6.34's predefined types (docs/adr/8172).
                     BeamRole::PadFooting => (Class::Footing, "PAD_FOOTING", "Tekil temel".into()),
-                    BeamRole::StripFooting => (Class::Footing, "STRIP_FOOTING", "Sürekli temel".into()),
+                    BeamRole::StripFooting => {
+                        (Class::Footing, "STRIP_FOOTING", "Sürekli temel".into())
+                    }
                     _ => (Class::Beam, "BEAM", "Kiriş".into()),
                 },
                 Entity::Roof(_) => (Class::Roof, "NOTDEFINED", "Çatı".into()),
@@ -1023,13 +1116,24 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let psets = match e {
             Entity::Slab(s) if s.slab.covering.is_none() => {
                 // Its declared exterior role over its role's reading (docs/adr/8124: a floor over open air).
-                let outside = s.slab.arch.external.as_ref().map_or(s.slab.role != SlabRole::Floor, |x| x.external);
+                let outside = s
+                    .slab
+                    .arch
+                    .external
+                    .as_ref()
+                    .map_or(s.slab.role != SlabRole::Floor, |x| x.external);
                 let mut props = vec![("IsExternal".into(), Value::Bool(outside))];
                 // A sloped slab's pitch (EK-6 Tablo 6.123's PitchAngle; docs/adr/8071 §6), radians.
                 if let Some(sl) = s.slab.slope {
-                    props.push(("PitchAngle".into(), Value::PlaneAngle(sl.grade().abs().atan())));
+                    props.push((
+                        "PitchAngle".into(),
+                        Value::PlaneAngle(sl.grade().abs().atan()),
+                    ));
                 }
-                vec![Pset { name: "Pset_SlabCommon".into(), props }]
+                vec![Pset {
+                    name: "Pset_SlabCommon".into(),
+                    props,
+                }]
             }
             // A post carries nothing of the frame's that the drawing knows: no LoadBearing (docs/adr/8070 §8). A column
             // declared not to carry says so (docs/adr/8124).
@@ -1037,7 +1141,13 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 name: "Pset_ColumnCommon".into(),
                 props: vec![(
                     "LoadBearing".into(),
-                    Value::Bool(c.column.arch.load_bearing.as_ref().is_none_or(|b| b.bearing)),
+                    Value::Bool(
+                        c.column
+                            .arch
+                            .load_bearing
+                            .as_ref()
+                            .is_none_or(|b| b.bearing),
+                    ),
                 )],
             }],
             Entity::Roof(_) => vec![Pset {
@@ -1169,7 +1279,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let (storey, floor) = (elements[whole].storey, levels[elements[whole].storey].2);
         let body: Vec<Shape> = pieces
             .iter()
-            .flat_map(|&i| shapes(&solids[i], exact.get(i), floor).into_iter().chain(balusters(&solids[i], floor)))
+            .flat_map(|&i| {
+                shapes(&solids[i], exact.get(i), floor)
+                    .into_iter()
+                    .chain(balusters(&solids[i], floor))
+            })
             .collect();
         if body.is_empty() {
             continue;
@@ -1202,13 +1316,14 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     for s in 0..storeys.len() {
         let mut rings: Vec<Vec<P>> = Vec::new();
         let mut whose: Vec<usize> = Vec::new();
-        for (k, el) in elements
-            .iter()
-            .enumerate()
-            .filter(|(_, el)| matches!(el.class, Class::Wall | Class::Column | Class::Member) && el.storey == s)
-        {
+        for (k, el) in elements.iter().enumerate().filter(|(_, el)| {
+            matches!(el.class, Class::Wall | Class::Column | Class::Member) && el.storey == s
+        }) {
             for sh in &el.shapes {
-                if let Shape::Prism { rings: rs, bulges, .. } = sh {
+                if let Shape::Prism {
+                    rings: rs, bulges, ..
+                } = sh
+                {
                     for r in &flat_rings(rs, bulges) {
                         rings.push(r.iter().map(|p| P::new(p[0], p[1])).collect());
                         whose.push(k);
@@ -1314,7 +1429,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     object: None,
                     name: name(class.code(), &words),
                     description: None,
-                    tag: Some(mark.clone().or_else(|| code.clone()).unwrap_or_else(|| owner.clone())),
+                    tag: Some(
+                        mark.clone()
+                            .or_else(|| code.clone())
+                            .unwrap_or_else(|| owner.clone()),
+                    ),
                     predefined: if door { "DOOR" } else { "WINDOW" },
                     object_type: None,
                     part_of: curtain.then_some(host),
@@ -1411,7 +1530,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         opened.insert(uid.as_str());
         openings.push(Opening {
             // A niche is its object; a flue's object is its chimney, its hollow an id of its own.
-            id: Some(if niche { *bits } else { crate::step::fnv(uid, 1) }),
+            id: Some(if niche {
+                *bits
+            } else {
+                crate::step::fnv(uid, 1)
+            }),
             name: name("ACL", if niche { "Niş" } else { "Baca boşluğu" }),
             host,
             ring: ring.clone(),
@@ -1428,7 +1551,12 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 ring,
                 bottom: floor + bottom,
                 top: floor + top,
-                flue: Some((*bits, uid.clone(), openings.len() - 1, elements[host].material.clone())),
+                flue: Some((
+                    *bits,
+                    uid.clone(),
+                    openings.len() - 1,
+                    elements[host].material.clone(),
+                )),
                 stack: None,
             });
         }
@@ -1446,14 +1574,32 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             let n = r.pts.len();
             (
                 r.pts.iter().map(|q| [q.x, q.y]).collect(),
-                (0..n).map(|i| r.bulges.as_ref().and_then(|b| b.get(i)).copied().unwrap_or(0.0)).collect(),
+                (0..n)
+                    .map(|i| {
+                        r.bulges
+                            .as_ref()
+                            .and_then(|b| b.get(i))
+                            .copied()
+                            .unwrap_or(0.0)
+                    })
+                    .collect(),
             )
         };
-        let (outer, outer_bulges): (Vec<Vec<[f64; 2]>>, Vec<Vec<f64>>) =
-            sl.slab.parts.iter().map(|part| ring_of(&part.outer)).unzip();
+        let (outer, outer_bulges): (Vec<Vec<[f64; 2]>>, Vec<Vec<f64>>) = sl
+            .slab
+            .parts
+            .iter()
+            .map(|part| ring_of(&part.outer))
+            .unzip();
         let (mut lo, mut hi) = (f64::MAX, f64::MIN);
         for sh in &mut elements[k].shapes {
-            if let Shape::Prism { rings, bulges, bottom, top } = sh {
+            if let Shape::Prism {
+                rings,
+                bulges,
+                bottom,
+                top,
+            } = sh
+            {
                 *rings = outer.clone();
                 *bulges = outer_bulges.clone();
                 lo = lo.min(*bottom);
@@ -1485,16 +1631,25 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         for c in slab_cuts.iter().filter(|c| &c.owner == owner) {
             // Named for its void: its number and its name, as the room list writes them.
             let words = match by_uid.get(&c.source) {
-                Some(&(_, Entity::Space(sp))) => [sp.space.number.as_deref(), sp.space.name.as_deref()]
-                    .into_iter()
-                    .flatten()
-                    .collect::<Vec<_>>()
-                    .join(" "),
+                Some(&(_, Entity::Space(sp))) => {
+                    [sp.space.number.as_deref(), sp.space.name.as_deref()]
+                        .into_iter()
+                        .flatten()
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                }
                 _ => String::new(),
             };
             openings.push(Opening {
                 id: Some(crate::step::fnv(&format!("{}/{}", c.source, owner), 1)),
-                name: name("ACL", if words.trim().is_empty() { "Boşluk" } else { &words }),
+                name: name(
+                    "ACL",
+                    if words.trim().is_empty() {
+                        "Boşluk"
+                    } else {
+                        &words
+                    },
+                ),
                 host: k,
                 ring: c.ring.clone(),
                 bulges: c.bulges.clone(),
@@ -1515,13 +1670,21 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let cuts: Vec<&Opening> = openings.iter().filter(|o| o.host == k).collect();
         let el = &elements[k];
         let qto = match (el.class, e) {
-            (Class::Wall, Entity::Wall(w)) => Some(crate::quantities::wall(&w.wall, &el.shapes, &cuts)),
-            (Class::Slab, Entity::Slab(sl)) if sl.slab.slope.is_some() => crate::quantities::sloped_slab(&sl.slab),
+            (Class::Wall, Entity::Wall(w)) => {
+                Some(crate::quantities::wall(&w.wall, &el.shapes, &cuts))
+            }
+            (Class::Slab, Entity::Slab(sl)) if sl.slab.slope.is_some() => {
+                crate::quantities::sloped_slab(&sl.slab)
+            }
             (Class::Slab, Entity::Slab(_)) => crate::quantities::slab(&el.shapes, &cuts),
             (Class::Covering, _) => crate::quantities::covering(&el.shapes),
             (Class::Column, Entity::Column(_)) => crate::quantities::column(&el.shapes, &cuts),
-            (Class::Beam, Entity::Beam(b)) => Some(crate::quantities::beam(&b.beam, &el.shapes, &cuts)),
-            (Class::Footing, Entity::Beam(b)) => Some(crate::quantities::footing(&b.beam, &el.shapes, &cuts)),
+            (Class::Beam, Entity::Beam(b)) => {
+                Some(crate::quantities::beam(&b.beam, &el.shapes, &cuts))
+            }
+            (Class::Footing, Entity::Beam(b)) => {
+                Some(crate::quantities::footing(&b.beam, &el.shapes, &cuts))
+            }
             _ => None,
         };
         if let Some(q) = qto {
@@ -1541,7 +1704,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         };
         for &i in list {
             let solid = &solids[i];
-            let (Height::Prism { bottom, top }, Some(ring)) = (&solid.height, solid.rings.first()) else {
+            let (Height::Prism { bottom, top }, Some(ring)) = (&solid.height, solid.rings.first())
+            else {
                 continue;
             };
             pieces.push(Piece {
@@ -1650,10 +1814,20 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         let mut psets = Vec::new();
         if class == Class::TransportElement {
             if let Some(n) = f.people {
-                give(&mut psets, "Pset_TransportElementCommon", "CapacityPeople", Value::Count(n));
+                give(
+                    &mut psets,
+                    "Pset_TransportElementCommon",
+                    "CapacityPeople",
+                    Value::Count(n),
+                );
             }
             if let Some(kg) = f.weight {
-                give(&mut psets, "Pset_TransportElementCommon", "CapacityWeight", Value::Mass(kg));
+                give(
+                    &mut psets,
+                    "Pset_TransportElementCommon",
+                    "CapacityWeight",
+                    Value::Mass(kg),
+                );
             }
         }
         elements.push(Element {
@@ -1696,7 +1870,12 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 let pts: Vec<P> = r.pts.iter().map(|q| P::new(q.x, q.y)).collect();
                 kentos_geometry_core::entity::polygon_ring(&pts, r.bulges.as_deref()).len() >= 3
             })
-            .map(|r| (r.pts.iter().map(|q| [q.x, q.y]).collect(), r.bulges.clone().unwrap_or_default()))
+            .map(|r| {
+                (
+                    r.pts.iter().map(|q| [q.x, q.y]).collect(),
+                    r.bulges.clone().unwrap_or_default(),
+                )
+            })
             .unzip();
         if rings.is_empty() {
             written.left.push(Left {
@@ -1712,20 +1891,28 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             Some(r) => (r.floor - levels[storey].2, r.ceiling - levels[storey].2),
             None => {
                 let bottom = f.floor_offset.unwrap_or(0.0);
-                (bottom, bottom + f.height.or(levels[storey].3).unwrap_or(2.8))
+                (
+                    bottom,
+                    bottom + f.height.or(levels[storey].3).unwrap_or(2.8),
+                )
             }
         };
         // Under a roof (docs/adr/8071 §11): its ceiling known no other way, its pieces up to the roof's underside.
         let elevation = levels[storey].2;
-        let under = found.filter(|r| !r.known && !r.roof.is_empty()).and_then(|r| {
-            let faces: Vec<crate::under_roof::UnderFace> =
-                r.roof.iter().map(|(ring, (c, dx, dy))| (ring.clone(), (c - elevation, *dx, *dy))).collect();
-            let p = crate::under_roof::pieces(&rings, &bulges, &faces);
-            if p.is_some() {
-                storey_roofs.entry(storey).or_insert(faces);
-            }
-            p
-        });
+        let under = found
+            .filter(|r| !r.known && !r.roof.is_empty())
+            .and_then(|r| {
+                let faces: Vec<crate::under_roof::UnderFace> = r
+                    .roof
+                    .iter()
+                    .map(|(ring, (c, dx, dy))| (ring.clone(), (c - elevation, *dx, *dy)))
+                    .collect();
+                let p = crate::under_roof::pieces(&rings, &bulges, &faces);
+                if p.is_some() {
+                    storey_roofs.entry(storey).or_insert(faces);
+                }
+                p
+            });
         let blank = |v: &Option<String>| v.as_deref().is_none_or(|t| t.trim().is_empty());
         if blank(&f.number) || blank(&f.name) {
             written.unnamed.push(uid.clone());
@@ -1748,15 +1935,22 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         // Their thicknesses (docs/adr/8070 §6, EK-6 Tablo 6.20's first way): the floor slab's finish and the plaster
         // under the slab over, as the vertical model holds them; the finish of the walls' faces it lies along
         // (docs/adr/8076 §7).
-        let (floor_t, ceiling_t, wall_t) = coverings.get(uid).copied().unwrap_or((None, None, None));
+        let (floor_t, ceiling_t, wall_t) =
+            coverings.get(uid).copied().unwrap_or((None, None, None));
         if let Some(t) = floor_t {
-            props.push(("FloorCoveringThickness".to_owned(), Value::PositiveLength(t)));
+            props.push((
+                "FloorCoveringThickness".to_owned(),
+                Value::PositiveLength(t),
+            ));
         }
         if let Some(t) = wall_t {
             props.push(("WallCoveringThickness".to_owned(), Value::PositiveLength(t)));
         }
         if let Some(t) = ceiling_t {
-            props.push(("CeilingCoveringThickness".to_owned(), Value::PositiveLength(t)));
+            props.push((
+                "CeilingCoveringThickness".to_owned(),
+                Value::PositiveLength(t),
+            ));
         }
         let psets = if props.is_empty() {
             Vec::new()
@@ -1797,7 +1991,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             .iter()
             .map(|a| {
                 let pts: Vec<[f64; 2]> = a.outer.pts.iter().map(|p| [p.x, p.y]).collect();
-                crate::quantities::path_length(&pts, &a.outer.bulges.clone().unwrap_or_default(), true)
+                crate::quantities::path_length(
+                    &pts,
+                    &a.outer.bulges.clone().unwrap_or_default(),
+                    true,
+                )
             })
             .sum();
         q.push(("GrossFloorArea".into(), Value::Area(gross)));
@@ -1816,7 +2014,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 q.push(("NetVolume".into(), Value::Volume(v)));
             }
         }
-        let qtos = vec![Qto { name: "Qto_SpaceBaseQuantities".into(), quantities: q }];
+        let qtos = vec![Qto {
+            name: "Qto_SpaceBaseQuantities".into(),
+            quantities: q,
+        }];
         // Its kind (docs/adr/8125; EK-6 Tablo 6.58): a car park PARKING, an outdoor room (its brief's: a balcony, a
         // terrace, an open area) EXTERNAL, else INTERNAL. EK-6 asks the type; IFC 4.3's optional
         // `Pset_SpaceCommon.IsExternal` is not written (K286).
@@ -1833,7 +2034,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             "INTERNAL"
         };
         let (top, body) = match &under {
-            Some(p) => (crate::under_roof::top(p), crate::under_roof::shapes(p, bottom)),
+            Some(p) => (
+                crate::under_roof::top(p),
+                crate::under_roof::shapes(p, bottom),
+            ),
             None => (top, Vec::new()),
         };
         spaces.push(Space {
@@ -1897,14 +2101,23 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         known.sort_by(f64::total_cmp);
         known.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
         if ssl.is_none() && known.len() > 1 {
-            storey.unentered.push(("ElevationOfSSLRelative", "taşıyıcı döşemenin kotu değişiyor, baskın kot yok"));
+            storey.unentered.push((
+                "ElevationOfSSLRelative",
+                "taşıyıcı döşemenin kotu değişiyor, baskın kot yok",
+            ));
         }
         if storey_roofs.contains_key(&storey_at) {
             if gross.is_none() {
-                storey.unentered.push(("GrossHeight", "mahalleri çatının altına yükseliyor: yükseklik sabit değil"));
+                storey.unentered.push((
+                    "GrossHeight",
+                    "mahalleri çatının altına yükseliyor: yükseklik sabit değil",
+                ));
             }
             if net.is_none() {
-                storey.unentered.push(("NetHeight", "mahalleri çatının altına yükseliyor: yükseklik sabit değil"));
+                storey.unentered.push((
+                    "NetHeight",
+                    "mahalleri çatının altına yükseliyor: yükseklik sabit değil",
+                ));
             }
         }
         if let Some(l) = ssl {
@@ -1950,7 +2163,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // standart net yüksekliği"; docs/adr/8076 §4), each where every storey has the same.
     let constant = |h: Vec<Option<f64>>| -> Option<f64> {
         let first = (*h.first()?)?;
-        h.iter().all(|x| x.is_some_and(|x| (x - first).abs() <= 1e-9)).then_some(first)
+        h.iter()
+            .all(|x| x.is_some_and(|x| (x - first).abs() <= 1e-9))
+            .then_some(first)
     };
     if let Some(h) = constant(storey_heights.iter().map(|s| s.0).collect()) {
         building_quantities.push(("Height".to_owned(), Value::Length(h)));
@@ -2050,7 +2265,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .as_ref()
         .filter(|c| c.chars().any(|ch| ch != '0'))
     {
-        let building_code = scope.as_ref().and_then(|b| b.code.as_deref()).or(k.building_code.as_deref());
+        let building_code = scope
+            .as_ref()
+            .and_then(|b| b.code.as_deref())
+            .or(k.building_code.as_deref());
         let id = format!("{code}_{}", building_code.unwrap_or("00"));
         common.push(("BuildingID".to_owned(), Value::Id(id)));
         common.push(("IsPermanentID".to_owned(), Value::Bool(false)));
@@ -2061,24 +2279,40 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         Some(b) => (b.gross_area, b.footprint),
         None => (k.gross_area, k.footprint),
     };
-    if let Some(u) = scope.as_ref().and_then(|b| b.usage.as_ref()).or(k.occupancy.as_ref()) {
+    if let Some(u) = scope
+        .as_ref()
+        .and_then(|b| b.usage.as_ref())
+        .or(k.occupancy.as_ref())
+    {
         common.push(("OccupancyType".to_owned(), label(u)));
     }
     if let Some(a) = gross_area {
         common.push(("GrossPlannedArea".to_owned(), Value::Area(a)));
     }
     // The rooms' net areas together (EK-6 Tablo 6.7 `NetPlannedArea`; docs/adr/8068), as the model's spaces carry them.
-    let net: f64 = spaces.iter().filter_map(|s| s.qtos.iter().find_map(|q| q.quantities.iter().find_map(|(k, v)| match (k.as_str(), v) {
-        ("NetFloorArea", Value::Area(a)) => Some(*a),
-        _ => None,
-    }))).sum();
+    let net: f64 = spaces
+        .iter()
+        .filter_map(|s| {
+            s.qtos.iter().find_map(|q| {
+                q.quantities
+                    .iter()
+                    .find_map(|(k, v)| match (k.as_str(), v) {
+                        ("NetFloorArea", Value::Area(a)) => Some(*a),
+                        _ => None,
+                    })
+            })
+        })
+        .sum();
     if net > 0.0 {
         common.push(("NetPlannedArea".to_owned(), Value::Area(net)));
     }
     if let Some(c) = &k.construction {
         common.push(("ConstructionMethod".to_owned(), label(c)));
     }
-    if let Some(d) = arch.and_then(|a| a.performance.as_ref()).and_then(|p| p.fire_protection_class.as_ref()) {
+    if let Some(d) = arch
+        .and_then(|a| a.performance.as_ref())
+        .and_then(|p| p.fire_protection_class.as_ref())
+    {
         common.push(("FireProtectionClass".to_owned(), label(&d.value)));
     }
     common.push((
@@ -2105,8 +2339,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // The author's declarations (docs/adr/8068): each element's fire resistance class and exit role, its material
     // named with its strength.
     {
-        let at: std::collections::HashMap<u128, usize> =
-            elements.iter().enumerate().filter_map(|(i, e)| Some((e.id?, i))).collect();
+        let at: std::collections::HashMap<u128, usize> = elements
+            .iter()
+            .enumerate()
+            .filter_map(|(i, e)| Some((e.id?, i)))
+            .collect();
         for (id, _, e) in &entities {
             let Some(&i) = at.get(id) else { continue };
             let class = elements[i].class;
@@ -2120,7 +2357,12 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 && b.beam.rise.is_some()
                 && class == Class::Member
             {
-                give(&mut elements[i].psets, "Pset_MemberCommon", "Slope", Value::PlaneAngle(b.beam.grade().abs().atan()));
+                give(
+                    &mut elements[i].psets,
+                    "Pset_MemberCommon",
+                    "Slope",
+                    Value::PlaneAngle(b.beam.grade().abs().atan()),
+                );
             }
             if let (Some(set), Some(x)) = (common_set(class), exit)
                 && matches!(class, Class::Door | Class::Stair)
@@ -2133,10 +2375,19 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                 && class == Class::Wall
                 && let Some(b) = w.wall.arch.load_bearing.as_ref().or_else(|| {
                     let id = w.wall.style.as_deref()?;
-                    wall_styles.iter().find(|s| s.id == id)?.load_bearing.as_ref()
+                    wall_styles
+                        .iter()
+                        .find(|s| s.id == id)?
+                        .load_bearing
+                        .as_ref()
                 })
             {
-                give(&mut elements[i].psets, "Pset_WallCommon", "LoadBearing", Value::Bool(b.bearing));
+                give(
+                    &mut elements[i].psets,
+                    "Pset_WallCommon",
+                    "LoadBearing",
+                    Value::Bool(b.bearing),
+                );
             }
         }
         for e in &mut elements {
@@ -2154,20 +2405,31 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .filter(|a| a.rings.iter().any(|r| r.len() >= 3))
         .map(|a| {
             // Derived from the level and how its rooms count (docs/adr/8117).
-            let mut key = format!("{storey_scope}|{}|{:?}", a.level.as_deref().unwrap_or(""), a.count);
+            let mut key = format!(
+                "{storey_scope}|{}|{:?}",
+                a.level.as_deref().unwrap_or(""),
+                a.count
+            );
             while zone_keys.contains(&key) {
                 key.push('+');
             }
             zone_keys.push(key.clone());
             let storey = storey_of(a.level.as_deref());
             let (state, words, description) = emsal_state(a);
-            let storey_name = storeys.get(storey).map_or_else(String::new, |s| s.long_name.clone().unwrap_or_else(|| s.name.clone()));
+            let storey_name = storeys.get(storey).map_or_else(String::new, |s| {
+                s.long_name.clone().unwrap_or_else(|| s.name.clone())
+            });
             let top = spaces
                 .iter()
                 .filter(|s| s.storey == storey)
                 .map(|s| s.top)
-                .fold(levels.get(storey).and_then(|l| l.3).unwrap_or(0.0), f64::max);
-            let under = storey_roofs.get(&storey).and_then(|faces| crate::under_roof::pieces(&a.rings, &[], faces));
+                .fold(
+                    levels.get(storey).and_then(|l| l.3).unwrap_or(0.0),
+                    f64::max,
+                );
+            let under = storey_roofs
+                .get(&storey)
+                .and_then(|faces| crate::under_roof::pieces(&a.rings, &[], faces));
             let (top, body) = match &under {
                 Some(p) => (crate::under_roof::top(p), crate::under_roof::shapes(p, 0.0)),
                 None => (top, Vec::new()),
@@ -2212,7 +2474,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             Group {
                 id: g.id,
                 name: name("ZON", &g.number),
-                long_name: Some(g.name.clone().unwrap_or_else(|| format!("{kind} {}", g.number))),
+                long_name: Some(
+                    g.name
+                        .clone()
+                        .unwrap_or_else(|| format!("{kind} {}", g.number)),
+                ),
                 object_type: Some(kind.into()),
                 spaces: spaces_of,
                 psets: Vec::new(),
@@ -2225,7 +2491,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // building, at its ±0.00, so each copy takes its building's GlobalId.
     if let Some(b) = &scope {
         for g in &mut grids {
-            g.id = g.id.map(|x| crate::step::fnv(&format!("kentos-aks:{}:{x}", b.id), 0));
+            g.id =
+                g.id.map(|x| crate::step::fnv(&format!("kentos-aks:{}:{x}", b.id), 0));
         }
     }
     // A layered roof's material layer set (docs/adr/8071 §8): top down, each layer its kind's word, its material (the
@@ -2236,7 +2503,8 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         .iter()
         .filter_map(|(owner, &k)| match by_uid.get(owner) {
             Some(&(_, Entity::Roof(r)))
-                if !r.roof.layers.is_empty() && elements.get(k).is_some_and(|e| e.class == Class::Roof) =>
+                if !r.roof.layers.is_empty()
+                    && elements.get(k).is_some_and(|e| e.class == Class::Roof) =>
             {
                 use kentos_contracts::RoofLayerKind as K;
                 let layers = r
@@ -2270,28 +2538,37 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     let mut types: Vec<crate::building::TypeObject> = Vec::new();
     // The style each type is of, beside it.
     let mut type_styles: Vec<String> = Vec::new();
-    let layers_of = |components: &[WallComponent], width: f64| -> Option<Vec<crate::building::Layer>> {
-        let thick = kentos_contracts::component_thicknesses(width, components)?;
-        let layers: Vec<crate::building::Layer> = components
-            .iter()
-            .zip(thick)
-            .map(|(c, t)| crate::building::Layer {
-                name: c.name.clone(),
-                material: c.material.clone().map(|m| material_named(m, arch)),
-                thickness: t,
-                category: None,
-            })
-            .collect();
-        (!layers.is_empty()).then_some(layers)
-    };
+    let layers_of =
+        |components: &[WallComponent], width: f64| -> Option<Vec<crate::building::Layer>> {
+            let thick = kentos_contracts::component_thicknesses(width, components)?;
+            let layers: Vec<crate::building::Layer> = components
+                .iter()
+                .zip(thick)
+                .map(|(c, t)| crate::building::Layer {
+                    name: c.name.clone(),
+                    material: c.material.clone().map(|m| material_named(m, arch)),
+                    thickness: t,
+                    category: None,
+                })
+                .collect();
+            (!layers.is_empty()).then_some(layers)
+        };
     for (owner, &k) in &index {
-        let Some(&(_, Entity::Wall(w))) = by_uid.get(owner) else { continue };
-        if elements.get(k).is_none_or(|e| e.class != Class::Wall) || layer_sets.iter().any(|(i, ..)| *i == k) {
+        let Some(&(_, Entity::Wall(w))) = by_uid.get(owner) else {
+            continue;
+        };
+        if elements.get(k).is_none_or(|e| e.class != Class::Wall)
+            || layer_sets.iter().any(|(i, ..)| *i == k)
+        {
             continue;
         }
-        let Some(layers) = layers_of(&w.wall.components, w.wall.width) else { continue };
+        let Some(layers) = layers_of(&w.wall.components, w.wall.width) else {
+            continue;
+        };
         let style = w.wall.style.as_deref();
-        let set_name = Some(wall_style_name(style)).filter(|n| !n.trim().is_empty()).unwrap_or_else(|| "Duvar katmanları".into());
+        let set_name = Some(wall_style_name(style))
+            .filter(|n| !n.trim().is_empty())
+            .unwrap_or_else(|| "Duvar katmanları".into());
         layer_sets.push((k, set_name, layers));
         let Some(id) = style else { continue };
         match type_styles.iter().position(|s| s == id) {
@@ -2302,7 +2579,11 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     .iter()
                     .find(|d| d.id == id)
                     .cloned()
-                    .or_else(|| kentos_contracts::builtin_wall_styles().into_iter().find(|d| d.id == id));
+                    .or_else(|| {
+                        kentos_contracts::builtin_wall_styles()
+                            .into_iter()
+                            .find(|d| d.id == id)
+                    });
                 let layer_set = def
                     .as_ref()
                     .and_then(|d| layers_of(&d.components, d.new_width()))
@@ -2333,9 +2614,13 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // storey; a sloped one's none.
     let mut layer_usages: Vec<(usize, f64)> = Vec::new();
     for (owner, &k) in &index {
-        let Some(&(_, Entity::Slab(sl))) = by_uid.get(owner) else { continue };
+        let Some(&(_, Entity::Slab(sl))) = by_uid.get(owner) else {
+            continue;
+        };
         let s = &sl.slab;
-        if !elements.get(k).is_some_and(|e| matches!(e.class, Class::Slab | Class::Covering))
+        if !elements
+            .get(k)
+            .is_some_and(|e| matches!(e.class, Class::Slab | Class::Covering))
             || layer_sets.iter().any(|(i, ..)| *i == k)
             || (s.covering.is_none() && s.layers.is_empty())
         {
@@ -2351,20 +2636,36 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             thickness: l.thickness,
             category: match l.kind {
                 L::Insulation => Some("Insulation"),
-                L::Finish if over => Some(if outside_top { "Outer finish" } else { "Inner finish" }),
-                L::Plaster if !over => Some(if open_under { "Outer finish" } else { "Inner finish" }),
+                L::Finish if over => Some(if outside_top {
+                    "Outer finish"
+                } else {
+                    "Inner finish"
+                }),
+                L::Plaster if !over => Some(if open_under {
+                    "Outer finish"
+                } else {
+                    "Inner finish"
+                }),
                 _ => None,
             },
         };
-        let mut layers: Vec<crate::building::Layer> = s.layers.over.iter().map(|l| layer(l, true)).collect();
+        let mut layers: Vec<crate::building::Layer> =
+            s.layers.over.iter().map(|l| layer(l, true)).collect();
         layers.push(crate::building::Layer {
-            name: s.covering.as_ref().map_or_else(|| "Taşıyıcı".to_owned(), |c| c.words()),
+            name: s
+                .covering
+                .as_ref()
+                .map_or_else(|| "Taşıyıcı".to_owned(), |c| c.words()),
             material: material(s.material.clone()),
             thickness: s.thickness,
             category: s.covering.is_none().then_some("LoadBearing"),
         });
         layers.extend(s.layers.under.iter().map(|l| layer(l, false)));
-        let name = if s.covering.is_some() { "Kaplama katmanları" } else { "Döşeme katmanları" };
+        let name = if s.covering.is_some() {
+            "Kaplama katmanları"
+        } else {
+            "Döşeme katmanları"
+        };
         layer_sets.push((k, name.to_owned(), layers));
         if s.slope.is_none() {
             layer_usages.push((k, s.offset));
@@ -2377,8 +2678,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
     // share one.
     let element_types = arch.map_or(&[][..], |a| a.element_types.as_slice());
     // Each element's object, by its index.
-    let entity_at: BTreeMap<usize, &Entity> =
-        index.iter().filter_map(|(owner, &k)| by_uid.get(owner).map(|&(_, e)| (k, e))).collect();
+    let entity_at: BTreeMap<usize, &Entity> = index
+        .iter()
+        .filter_map(|(owner, &k)| by_uid.get(owner).map(|&(_, e)| (k, e)))
+        .collect();
     for t in element_types {
         use kentos_contracts::ElementTypeKind as K;
         let class = match t.kind {
@@ -2406,7 +2709,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
             .iter()
             .filter(|&(owner, &k)| {
                 by_uid.get(owner).is_some_and(|&(_, e)| {
-                    e.arch_info().and_then(|a| a.element_type.as_ref()).is_some_and(|l| l.id == t.id)
+                    e.arch_info()
+                        .and_then(|a| a.element_type.as_ref())
+                        .is_some_and(|l| l.id == t.id)
                 }) && elements.get(k).is_some_and(|e| e.class == class)
             })
             .map(|(_, &k)| k)
@@ -2417,19 +2722,29 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         members.sort_unstable();
         members.dedup();
         let first = elements[members[0]].predefined;
-        let predefined = if first != "USERDEFINED" && members.iter().all(|&k| elements[k].predefined == first) {
-            first
-        } else {
-            "NOTDEFINED"
+        let predefined =
+            if first != "USERDEFINED" && members.iter().all(|&k| elements[k].predefined == first) {
+                first
+            } else {
+                "NOTDEFINED"
+            };
+        let set_of = |k: usize| {
+            layer_sets
+                .iter()
+                .find(|(i, ..)| *i == k)
+                .map(|(_, n, l)| (n.clone(), l.clone()))
         };
-        let set_of = |k: usize| layer_sets.iter().find(|(i, ..)| *i == k).map(|(_, n, l)| (n.clone(), l.clone()));
-        let layer_set = set_of(members[0]).filter(|s| members.iter().all(|&k| set_of(k).as_ref() == Some(s)));
+        let layer_set =
+            set_of(members[0]).filter(|s| members.iter().all(|&k| set_of(k).as_ref() == Some(s)));
         // A column type's, a beam type's, a post type's or a rail type's section (docs/adr/8167, 8170), when its
         // elements share one.
         let section_of = |k: usize| section(entity_at.get(&k).copied(), &elements[k]);
         let profile_set = section_of(members[0])
             .filter(|p| members.iter().all(|&k| section_of(k).as_ref() == Some(p)))
-            .map(|p| crate::building::ProfileSet { name: t.name.clone(), ..p });
+            .map(|p| crate::building::ProfileSet {
+                name: t.name.clone(),
+                ..p
+            });
         let seed = match &scope {
             Some(b) => format!("kentos-eleman-tipi:{}:{}", b.id, t.id),
             None => format!("kentos-eleman-tipi:{}", t.id),
@@ -2454,27 +2769,47 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         use kentos_geometry_core::geom::arrangement::{Area, Ring};
         let area_of = |rings: &[Vec<[f64; 2]>], bulges: &[Vec<f64>]| -> Vec<Area> {
             let ring = |i: usize| Ring {
-                pts: rings[i].iter().map(|p| kentos_geometry_core::Vec2 { x: p[0], y: p[1] }).collect(),
-                bulges: bulges.get(i).filter(|b| b.iter().any(|x| *x != 0.0)).cloned(),
+                pts: rings[i]
+                    .iter()
+                    .map(|p| kentos_geometry_core::Vec2 { x: p[0], y: p[1] })
+                    .collect(),
+                bulges: bulges
+                    .get(i)
+                    .filter(|b| b.iter().any(|x| *x != 0.0))
+                    .cloned(),
             };
             if rings.is_empty() {
                 return Vec::new();
             }
-            vec![Area { outer: ring(0), holes: (1..rings.len()).map(ring).collect() }]
+            vec![Area {
+                outer: ring(0),
+                holes: (1..rings.len()).map(ring).collect(),
+            }]
         };
-        let rooms: Vec<(usize, Vec<Area>)> = spaces.iter().enumerate().map(|(i, sp)| (i, area_of(&sp.rings, &sp.bulges))).collect();
+        let rooms: Vec<(usize, Vec<Area>)> = spaces
+            .iter()
+            .enumerate()
+            .map(|(i, sp)| (i, area_of(&sp.rings, &sp.bulges)))
+            .collect();
         let mut out: Vec<(usize, Vec<usize>)> = Vec::new();
-        for (k, el) in elements.iter().enumerate().filter(|(_, el)| el.class == Class::Covering) {
+        for (k, el) in elements
+            .iter()
+            .enumerate()
+            .filter(|(_, el)| el.class == Class::Covering)
+        {
             let Some(id) = el.id else { continue };
-            let bound = by_uid.values().find(|(bits, _)| *bits == id).and_then(|(_, e)| match e {
-                Entity::Slab(s) => s
-                    .slab
-                    .bound
-                    .as_ref()
-                    .filter(|b| b.source == kentos_contracts::SlabSourceKind::Space)
-                    .and_then(|b| b.space.clone()),
-                _ => None,
-            });
+            let bound = by_uid
+                .values()
+                .find(|(bits, _)| *bits == id)
+                .and_then(|(_, e)| match e {
+                    Entity::Slab(s) => s
+                        .slab
+                        .bound
+                        .as_ref()
+                        .filter(|b| b.source == kentos_contracts::SlabSourceKind::Space)
+                        .and_then(|b| b.space.clone()),
+                    _ => None,
+                });
             let room = match bound {
                 Some(uid) => kentos_contracts::EntityId::parse(&uid)
                     .map(|u| u128::from_be_bytes(u.0))
@@ -2490,7 +2825,9 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
                     at.and_then(|p| {
                         rooms.iter().find(|(i, areas)| {
                             spaces[*i].storey == el.storey
-                                && areas.iter().any(|a| kentos_geometry_core::geom::region::inside_area(a, p))
+                                && areas
+                                    .iter()
+                                    .any(|a| kentos_geometry_core::geom::region::inside_area(a, p))
                         })
                     })
                     .map(|(i, _)| *i)
@@ -2596,7 +2933,10 @@ pub fn building(input: Input<'_>) -> (Building, Written) {
         crs,
         crs_why,
         // The y axis turned by the angle: a unit vector in the model's plane.
-        true_north: north.as_ref().ok().map(|a| [-crate::math::sin(*a), crate::math::cos(*a)]),
+        true_north: north
+            .as_ref()
+            .ok()
+            .map(|a| [-crate::math::sin(*a), crate::math::cos(*a)]),
         north_why: north.err(),
         layer_sets,
         layer_usages,
@@ -2676,17 +3016,34 @@ mod tests {
             architect_family: family.map(str::to_owned),
             ..Particulars::default()
         };
-        let names = |p: Particulars| p.names().map(|(g, f)| (g.unwrap_or_default(), f.unwrap_or_default()));
-        assert_eq!(names(k("Ayşe Nur Yılmaz", Some("Yılmaz"))), Some(("Ayşe Nur".into(), "Yılmaz".into())));
+        let names = |p: Particulars| {
+            p.names()
+                .map(|(g, f)| (g.unwrap_or_default(), f.unwrap_or_default()))
+        };
+        assert_eq!(
+            names(k("Ayşe Nur Yılmaz", Some("Yılmaz"))),
+            Some(("Ayşe Nur".into(), "Yılmaz".into()))
+        );
         // Two words of family name, and one written first.
-        assert_eq!(names(k("Ali Rıza Kara Demir", Some("Kara Demir"))), Some(("Ali Rıza".into(), "Kara Demir".into())));
-        assert_eq!(names(k("Yılmaz Ayşe", Some("yılmaz"))), Some(("Ayşe".into(), "yılmaz".into())));
+        assert_eq!(
+            names(k("Ali Rıza Kara Demir", Some("Kara Demir"))),
+            Some(("Ali Rıza".into(), "Kara Demir".into()))
+        );
+        assert_eq!(
+            names(k("Yılmaz Ayşe", Some("yılmaz"))),
+            Some(("Ayşe".into(), "yılmaz".into()))
+        );
         // None given, or one the name does not hold at either end: nothing written for either name.
         assert_eq!(names(k("Ayşe Nur Yılmaz", None)), None);
         assert_eq!(names(k("Ayşe Nur Yılmaz", Some("Nur"))), None);
         let none = k("Ayşe Nur Yılmaz", None).architect().expect("an actor");
         assert_eq!((none.given, none.family), (None, None));
-        let both = k("Ayşe Nur Yılmaz", Some("Yılmaz")).architect().expect("an actor");
-        assert_eq!((both.given.as_deref(), both.family.as_deref()), (Some("Ayşe Nur"), Some("Yılmaz")));
+        let both = k("Ayşe Nur Yılmaz", Some("Yılmaz"))
+            .architect()
+            .expect("an actor");
+        assert_eq!(
+            (both.given.as_deref(), both.family.as_deref()),
+            (Some("Ayşe Nur"), Some("Yılmaz"))
+        );
     }
 }

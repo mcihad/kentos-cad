@@ -3,8 +3,13 @@
 
 /// The mass haul diagrams whose volume's corridor is on `alignment` (docs/adr/0995): their ids and names, for KGM's
 /// earthwork rows.
-pub(crate) fn hauls_on(doc: Option<&kentos_domain::Document>, alignment: Option<&str>) -> Vec<(String, String)> {
-    let (Some(doc), Some(alignment)) = (doc, alignment) else { return Vec::new() };
+pub(crate) fn hauls_on(
+    doc: Option<&kentos_domain::Document>,
+    alignment: Option<&str>,
+) -> Vec<(String, String)> {
+    let (Some(doc), Some(alignment)) = (doc, alignment) else {
+        return Vec::new();
+    };
     doc.road_hauls()
         .iter()
         .filter(|h| {

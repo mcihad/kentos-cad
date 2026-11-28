@@ -444,11 +444,21 @@ mod tests {
         let area = app.viewport.bounds;
         press(&mut app, Point::new(area.width * 0.30, area.height * 0.45));
         let open = app.text_field.clone().expect("the field opened");
-        assert!(app.session.preview(&app.format()).is_none_or(|p| p.texts.is_empty()), "nothing typed, nothing drawn");
+        assert!(
+            app.session
+                .preview(&app.format())
+                .is_none_or(|p| p.texts.is_empty()),
+            "nothing typed, nothing drawn"
+        );
         let _ = app.update(Message::TextField(Event::Input("ADA 27".into())));
         let preview = app.session.preview(&app.format()).expect("a preview");
-        let [ghost] = preview.texts.as_slice() else { panic!("one text to come: {:?}", preview.texts) };
-        assert_eq!((ghost.text.as_str(), ghost.p, ghost.height), ("ADA 27", open.at, open.height));
+        let [ghost] = preview.texts.as_slice() else {
+            panic!("one text to come: {:?}", preview.texts)
+        };
+        assert_eq!(
+            (ghost.text.as_str(), ghost.p, ghost.height),
+            ("ADA 27", open.at, open.height)
+        );
         snapshot.settle(&mut app, App::view, &mut update);
         crate::files_testing::evidence(&mut snapshot, &app, "ur2-005", "1-yazarken");
         let _ = app.update(Message::TextField(Event::Keep));
@@ -460,8 +470,16 @@ mod tests {
                 _ => None,
             })
             .expect("the text written");
-        assert_eq!((written.0.x, written.0.y), (ghost.p.x, ghost.p.y), "where it was drawn");
-        assert_eq!((written.1, written.2), (ghost.height, ghost.rotation), "as large and as turned as it was drawn");
+        assert_eq!(
+            (written.0.x, written.0.y),
+            (ghost.p.x, ghost.p.y),
+            "where it was drawn"
+        );
+        assert_eq!(
+            (written.1, written.2),
+            (ghost.height, ghost.rotation),
+            "as large and as turned as it was drawn"
+        );
         snapshot.settle(&mut app, App::view, &mut update);
         crate::files_testing::evidence(&mut snapshot, &app, "ur2-005", "2-enter-sonrasi");
     }

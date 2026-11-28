@@ -26,7 +26,10 @@ fn project(dir: &Path) -> App {
     let mut app = scene(&qa_gpkg(dir, "qa.gpkg"));
     let model = &mut app.document.as_mut().expect("a drawing").model;
     let mut layer = kentos_domain::NewLayer::layer("yollar");
-    layer.fields = vec![serde_json::from_value(serde_json::json!({ "name": "ad", "kind": "text" })).expect("a field")];
+    layer.fields = vec![
+        serde_json::from_value(serde_json::json!({ "name": "ad", "kind": "text" }))
+            .expect("a field"),
+    ];
     let id = model.add_layer(layer, None, false).expect("a layer");
     let road: kentos_commands::Entity = serde_json::from_value(serde_json::json!({
         "kind": "polyline", "id": 0, "layerId": id, "attrs": { "ad": "AB" },
@@ -42,7 +45,10 @@ fn project(dir: &Path) -> App {
 fn save_selection(app: &mut App, path: &Path, same: ExportExisting) {
     app.picker = Picker::File(path.to_path_buf());
     run(app, "file.saveSelection");
-    assert!(matches!(app.exchange, Some(Window::SelectionSave(_))), "the copy's kind is asked first");
+    assert!(
+        matches!(app.exchange, Some(Window::SelectionSave(_))),
+        "the copy's kind is asked first"
+    );
     send(app, Event::SelectionSave(S::Same(same)));
     send(app, Event::SelectionSave(S::Save));
 }
@@ -51,7 +57,12 @@ fn save_selection(app: &mut App, path: &Path, same: ExportExisting) {
 fn rows(gpkg: &Path, table: &str) -> Vec<(i64, String)> {
     let gp = kentos_geopackage::GeoPackage::open(gpkg, false).expect("opens");
     let conn = gp.connection();
-    let mut q = conn.prepare(&format!("SELECT fid, ad FROM {} ORDER BY fid", kentos_geopackage::quote(table))).expect("a query");
+    let mut q = conn
+        .prepare(&format!(
+            "SELECT fid, ad FROM {} ORDER BY fid",
+            kentos_geopackage::quote(table)
+        ))
+        .expect("a query");
     q.query_map([], |r| Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?)))
         .expect("read")
         .map(|r| r.expect("a row"))
@@ -76,7 +87,11 @@ fn a_cbs_selection_is_a_project_with_its_geopackage_and_saves_at_once() {
     let copy = dir.join("kopya").join("secim.kcad");
     std::fs::create_dir_all(copy.parent().expect("a folder")).expect("made");
     save_selection(&mut app, &copy, ExportExisting::Refuse);
-    assert!(said(&app, "Seçilenler CBS projesi olarak kaydedildi: 1 nesne"), "{:?}", log(&app));
+    assert!(
+        said(&app, "Seçilenler CBS projesi olarak kaydedildi: 1 nesne"),
+        "{:?}",
+        log(&app)
+    );
     let gpkg = copy.with_extension("gpkg");
     assert_eq!(rows(&gpkg, "yollar"), [(1, "AB".to_owned())]);
     // The copy: no object in its project file, its layer reading the table, its path from the project.
@@ -84,29 +99,73 @@ fn a_cbs_selection_is_a_project_with_its_geopackage_and_saves_at_once() {
     {
         let model = &copied.document.as_ref().expect("open").model;
         assert!(kentos_native_application::layer_kind::held_in_file(model).is_empty());
-        let node = model.layers().leaves().into_iter().find(|l| l.name == "yollar").expect("the layer").clone();
+        let node = model
+            .layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == "yollar")
+            .expect("the layer")
+            .clone();
         let data = node.data.as_ref().expect("a data layer");
-        assert_eq!((data.table.as_str(), data.relative.as_deref()), ("yollar", Some("secim.gpkg")));
+        assert_eq!(
+            (data.table.as_str(), data.relative.as_deref()),
+            ("yollar", Some("secim.gpkg"))
+        );
         assert_eq!(data.geometry.as_ref().and_then(|g| g.srid), Some(5256));
     }
     // A GeoPackage table added (Dosyada bırak, veri katmanı olarak ekle), then Kaydet: written at once.
     let other = qa_gpkg(&dir, "ek.gpkg");
     copied
-        .add_data_layers(vec![crate::data_layers::describe(&other.display().to_string(), "qa_noktalar").expect("described")])
+        .add_data_layers(vec![
+            crate::data_layers::describe(&other.display().to_string(), "qa_noktalar")
+                .expect("described"),
+        ])
         .expect("added");
     let task = copied.start_save(crate::saving::Target::File(copy.clone()));
     drive(&mut copied, task);
-    assert!(copied.gis.layer_migrate.is_none(), "no move asked: {:?}", log(&copied));
-    assert!(!copied.document.as_ref().expect("open").model.is_dirty(), "saved: {:?}", log(&copied));
+    assert!(
+        copied.gis.layer_migrate.is_none(),
+        "no move asked: {:?}",
+        log(&copied)
+    );
+    assert!(
+        !copied.document.as_ref().expect("open").model.is_dirty(),
+        "saved: {:?}",
+        log(&copied)
+    );
     // Opened again: the same row, value and system.
     let session = kentos_headless::Session::open(&copy).expect("opens");
     let doc = session.document();
     assert_eq!(doc.settings().srid, 5256);
-    let node = doc.layers().leaves().into_iter().find(|l| l.name == "yollar").expect("the layer");
-    let read = kentos_native_application::data_write::all_rows(node, doc.settings(), &Default::default(), &|| false).expect("read");
+    let node = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "yollar")
+        .expect("the layer");
+    let read = kentos_native_application::data_write::all_rows(
+        node,
+        doc.settings(),
+        &Default::default(),
+        &|| false,
+    )
+    .expect("read");
     let (key, road) = &read.rows[0];
-    assert_eq!((read.rows.len(), *key, road.base().attrs.get("ad").map(String::as_str)), (1, 1, Some("AB")));
-    assert!(doc.layers().leaves().iter().any(|l| l.name == "qa_noktalar"), "the new layer kept");
+    assert_eq!(
+        (
+            read.rows.len(),
+            *key,
+            road.base().attrs.get("ad").map(String::as_str)
+        ),
+        (1, 1, Some("AB"))
+    );
+    assert!(
+        doc.layers()
+            .leaves()
+            .iter()
+            .any(|l| l.name == "qa_noktalar"),
+        "the new layer kept"
+    );
 }
 
 #[test]
@@ -119,8 +178,15 @@ fn a_table_of_the_same_name_is_given_its_own_made_again_or_added_to() {
     assert_eq!(rows(&gpkg, "yollar").len(), 1);
     // Ekle: the row after the table's own.
     save_selection(&mut app, &copy, ExportExisting::Append);
-    assert!(said(&app, "Seçilenler CBS projesi olarak kaydedildi"), "{:?}", log(&app));
-    assert_eq!(rows(&gpkg, "yollar"), [(1, "AB".to_owned()), (2, "AB".to_owned())]);
+    assert!(
+        said(&app, "Seçilenler CBS projesi olarak kaydedildi"),
+        "{:?}",
+        log(&app)
+    );
+    assert_eq!(
+        rows(&gpkg, "yollar"),
+        [(1, "AB".to_owned()), (2, "AB".to_owned())]
+    );
     // Üzerine yaz: the table made again with the selection alone.
     save_selection(&mut app, &copy, ExportExisting::ReplaceLayer);
     assert_eq!(rows(&gpkg, "yollar"), [(1, "AB".to_owned())]);
@@ -129,8 +195,18 @@ fn a_table_of_the_same_name_is_given_its_own_made_again_or_added_to() {
     assert_eq!(rows(&gpkg, "yollar"), [(1, "AB".to_owned())]);
     assert_eq!(rows(&gpkg, "yollar_2"), [(1, "AB".to_owned())]);
     let session = kentos_headless::Session::open(&copy).expect("opens");
-    let node = session.document().layers().leaves().into_iter().find(|l| l.name == "yollar").expect("the layer").clone();
-    assert_eq!(node.data.as_ref().map(|d| d.table.as_str()), Some("yollar_2"));
+    let node = session
+        .document()
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "yollar")
+        .expect("the layer")
+        .clone();
+    assert_eq!(
+        node.data.as_ref().map(|d| d.table.as_str()),
+        Some("yollar_2")
+    );
 }
 
 #[test]
@@ -142,11 +218,23 @@ fn a_drawing_copy_keeps_the_objects_in_its_file() {
     run(&mut app, "file.saveSelection");
     send(&mut app, Event::SelectionSave(S::Tables(false)));
     send(&mut app, Event::SelectionSave(S::Save));
-    assert!(said(&app, "Seçilenler kaydedildi: 1 nesne"), "{:?}", log(&app));
-    assert!(!copy.with_extension("gpkg").exists(), "no GeoPackage for a drawing copy");
+    assert!(
+        said(&app, "Seçilenler kaydedildi: 1 nesne"),
+        "{:?}",
+        log(&app)
+    );
+    assert!(
+        !copy.with_extension("gpkg").exists(),
+        "no GeoPackage for a drawing copy"
+    );
     let copied = open(&copy);
-    let held = kentos_native_application::layer_kind::held_in_file(&copied.document.as_ref().expect("open").model);
-    assert_eq!(held.iter().map(|h| h.name.as_str()).collect::<Vec<_>>(), ["yollar"]);
+    let held = kentos_native_application::layer_kind::held_in_file(
+        &copied.document.as_ref().expect("open").model,
+    );
+    assert_eq!(
+        held.iter().map(|h| h.name.as_str()).collect::<Vec<_>>(),
+        ["yollar"]
+    );
 }
 
 #[test]
@@ -168,12 +256,28 @@ fn a_layer_that_no_table_holds_writes_nothing() {
     }
     let copy = dir.join("olculu.kcad");
     save_selection(&mut app, &copy, ExportExisting::Refuse);
-    assert!(log(&app).iter().any(|l| l.contains("Hiçbir dosya yazılmadı")), "{:?}", log(&app));
-    assert!(!copy.exists() && !copy.with_extension("gpkg").exists(), "nothing left of the copy");
+    assert!(
+        log(&app)
+            .iter()
+            .any(|l| l.contains("Hiçbir dosya yazılmadı")),
+        "{:?}",
+        log(&app)
+    );
+    assert!(
+        !copy.exists() && !copy.with_extension("gpkg").exists(),
+        "nothing left of the copy"
+    );
 }
 
 fn layer_id_of(model: &kentos_domain::Document, name: &str) -> String {
-    model.layers().leaves().into_iter().find(|l| l.name == name).expect("the layer").id.clone()
+    model
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == name)
+        .expect("the layer")
+        .id
+        .clone()
 }
 
 #[test]

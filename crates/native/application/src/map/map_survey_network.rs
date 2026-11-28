@@ -21,15 +21,18 @@
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    BaselineSigmaOf, BaselineTest, CommandError, CommandResult, CommandWarning, CrsPoint, CrsSide, CrsTransform,
-    ErrorEllipse, GnssRuleClass, GnssRules, HeightKind, HeightReference, KnownMoved, KnownMovedBy, MapSurvey,
-    MapSurveyNetwork, MapSurveyNetworked, NetworkBaseline, NetworkEpochFrom, NetworkRules, NetworkSimilarity,
-    NetworkCorrelations, NetworkCorrelationsUsed, NetworkStage, NetworkStation, SimilarityResidual, SurveyBaseline,
+    BaselineSigmaOf, BaselineTest, CommandError, CommandResult, CommandWarning, CrsPoint, CrsSide,
+    CrsTransform, ErrorEllipse, GnssRuleClass, GnssRules, HeightKind, HeightReference, KnownMoved,
+    KnownMovedBy, MapSurvey, MapSurveyNetwork, MapSurveyNetworked, NetworkBaseline,
+    NetworkCorrelations, NetworkCorrelationsUsed, NetworkEpochFrom, NetworkRules,
+    NetworkSimilarity, NetworkStage, NetworkStation, SimilarityResidual, SurveyBaseline,
     SurveyCampaign, SurveyGrid, SurveyKnown, VelocityModel, gnss_rules_default,
 };
 use kentos_domain::Document;
-use kentos_geometry_core::survey::adjust::gnss::{self, Baseline, Datum, GnssInput, GnssResult, GnssStation};
 use kentos_geometry_core::survey::adjust::Normal;
+use kentos_geometry_core::survey::adjust::gnss::{
+    self, Baseline, Datum, GnssInput, GnssResult, GnssStation,
+};
 use kentos_geometry_core::survey::adjust::{W_LIMIT, chi2_quantile, t_quantile};
 
 use crate::ExecutionContext;
@@ -90,16 +93,26 @@ fn rules_problem(r: &GnssRules) -> Option<&'static str> {
         }
         let limit = [c.constant, c.ppm];
         if !limit.iter().all(|v| v.is_finite() && *v >= 0.0) || limit.iter().all(|v| *v == 0.0) {
-            return Some("Sınıfın baz sınırı eksi olmayan sonlu iki sayıdır (m ve ppm), ikisi birden sıfır olamaz.");
+            return Some(
+                "Sınıfın baz sınırı eksi olmayan sonlu iki sayıdır (m ve ppm), ikisi birden sıfır olamaz.",
+            );
         }
-        if !(c.horizontal.is_finite() && c.horizontal > 0.0 && c.height.is_finite() && c.height > 0.0) {
+        if !(c.horizontal.is_finite()
+            && c.horizontal > 0.0
+            && c.height.is_finite()
+            && c.height > 0.0)
+        {
             return Some("Sınıfın nokta sınırları 0'dan büyük sonlu sayılar olmalı (m).");
         }
-        if c.confidence.is_some_and(|p| !(p.is_finite() && p > 0.0 && p < 1.0)) {
+        if c.confidence
+            .is_some_and(|p| !(p.is_finite() && p > 0.0 && p < 1.0))
+        {
             return Some("Sınıfın güveni 0 ile 1 arasında olmalı.");
         }
         if c.similarity.is_some_and(|v| !(v.is_finite() && v > 0.0)) {
-            return Some("Sınıfın benzerlik ölçeği sınırı 0'dan büyük sonlu bir sayı olmalı (ppm).");
+            return Some(
+                "Sınıfın benzerlik ölçeği sınırı 0'dan büyük sonlu bir sayı olmalı (ppm).",
+            );
         }
     }
     None
@@ -118,7 +131,10 @@ const ARCSEC: f64 = 180.0 * 3600.0 / std::f64::consts::PI;
 /// from the linearised normals on the free points reduced to their mean; t = |λ − 1|/σ against Student's t at
 /// (1 + confidence)/2. `points` are (id, mark, given, free, given latitude and longitude).
 #[allow(clippy::type_complexity)]
-fn similarity(points: &[(String, String, [f64; 3], [f64; 3], f64, f64)], confidence: f64) -> Option<NetworkSimilarity> {
+fn similarity(
+    points: &[(String, String, [f64; 3], [f64; 3], f64, f64)],
+    confidence: f64,
+) -> Option<NetworkSimilarity> {
     let n = points.len();
     if n < 3 {
         return None;
@@ -140,14 +156,19 @@ fn similarity(points: &[(String, String, [f64; 3], [f64; 3], f64, f64)], confide
             [0.0, 0.0, 1.0, x[2], x[1], -x[0], 0.0],
         ]
     };
-    let mul = |r: &[[f64; 3]; 3], x: [f64; 3]| [0, 1, 2].map(|i| r[i][0] * x[0] + r[i][1] * x[1] + r[i][2] * x[2]);
+    let mul = |r: &[[f64; 3]; 3], x: [f64; 3]| {
+        [0, 1, 2].map(|i| r[i][0] * x[0] + r[i][1] * x[1] + r[i][2] * x[2])
+    };
     // λ and R, then T = mean(given) − λ·R·mean(free).
     let (mut lambda, mut r) = (1.0f64, [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]);
     let gm = mean(&|i| points[i].2);
     let fm = mean(&|i| points[i].3);
     for _ in 0..20 {
         // The free points as the current transformation puts them, reduced to their mean.
-        let moved: Vec<[f64; 3]> = points.iter().map(|p| mul(&r, [p.3[0] - fm[0], p.3[1] - fm[1], p.3[2] - fm[2]]).map(|v| lambda * v)).collect();
+        let moved: Vec<[f64; 3]> = points
+            .iter()
+            .map(|p| mul(&r, [p.3[0] - fm[0], p.3[1] - fm[1], p.3[2] - fm[2]]).map(|v| lambda * v))
+            .collect();
         let mut normal = Normal::new(7);
         let mut b = [0.0; 7];
         for (p, x) in points.iter().zip(&moved) {
@@ -204,7 +225,11 @@ fn similarity(points: &[(String, String, [f64; 3], [f64; 3], f64, f64)], confide
         vv += v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
         let e = gnss::enu_rows(p.4 / RAD, p.5 / RAD);
         let enu = [0, 1, 2].map(|i| e[i][0] * v[0] + e[i][1] * v[1] + e[i][2] * v[2]);
-        residuals.push(SimilarityResidual { id: p.0.clone(), mark: p.1.clone(), enu });
+        residuals.push(SimilarityResidual {
+            id: p.0.clone(),
+            mark: p.1.clone(),
+            enu,
+        });
     }
     // The scale's σ from the linearised normals on the free points reduced to their mean.
     let mut normal = Normal::new(7);
@@ -225,7 +250,12 @@ fn similarity(points: &[(String, String, [f64; 3], [f64; 3], f64, f64)], confide
     let d = lambda - 1.0;
     let t = if sigma > 0.0 { d.abs() / sigma } else { 0.0 };
     let quantile = t_quantile(dof as f64, (1.0 + confidence) / 2.0);
-    let rotation = [(r[2][1] - r[1][2]) / 2.0, (r[0][2] - r[2][0]) / 2.0, (r[1][0] - r[0][1]) / 2.0].map(|v| v * ARCSEC);
+    let rotation = [
+        (r[2][1] - r[1][2]) / 2.0,
+        (r[0][2] - r[2][0]) / 2.0,
+        (r[1][0] - r[0][1]) / 2.0,
+    ]
+    .map(|v| v * ARCSEC);
     Some(NetworkSimilarity {
         known: points.iter().map(|p| p.0.clone()).collect(),
         translation,
@@ -259,7 +289,10 @@ fn error_ellipse(c: [f64; 6], p: f64) -> ErrorEllipse {
     if azimuth >= 180.0 {
         azimuth -= 180.0;
     }
-    let (major, minor) = (k2 * (mid + half).max(0.0).sqrt(), k2 * (mid - half).max(0.0).sqrt());
+    let (major, minor) = (
+        k2 * (mid + half).max(0.0).sqrt(),
+        k2 * (mid - half).max(0.0).sqrt(),
+    );
     ErrorEllipse {
         confidence: p,
         major,
@@ -296,7 +329,11 @@ pub(crate) fn ecef((lat, lon, h): (f64, f64, f64), (a, inv_f): (f64, f64)) -> [f
 /// rows east, north, up at its place.
 fn weight((lat, lon, _): (f64, f64, f64), sigma: [f64; 3]) -> [f64; 6] {
     let r = gnss::enu_rows(lat / RAD, lon / RAD);
-    let var = [sigma[1] * sigma[1], sigma[0] * sigma[0], sigma[2] * sigma[2]];
+    let var = [
+        sigma[1] * sigma[1],
+        sigma[0] * sigma[0],
+        sigma[2] * sigma[2],
+    ];
     let c = |i: usize, j: usize| (0..3).map(|k| r[k][i] * var[k] * r[k][j]).sum::<f64>();
     [c(0, 0), c(0, 1), c(0, 2), c(1, 1), c(1, 2), c(2, 2)]
 }
@@ -307,14 +344,40 @@ pub(crate) fn decimal_year(t: &str) -> Option<f64> {
     let t = t.strip_suffix('Z').unwrap_or(t);
     let (date, time) = t.split_once('T')?;
     let mut d = date.split('-');
-    let (y, mo, da) = (d.next()?.parse::<i64>().ok()?, d.next()?.parse::<i64>().ok()?, d.next()?.parse::<i64>().ok()?);
+    let (y, mo, da) = (
+        d.next()?.parse::<i64>().ok()?,
+        d.next()?.parse::<i64>().ok()?,
+        d.next()?.parse::<i64>().ok()?,
+    );
     let mut c = time.split(':');
-    let (h, mi, s) = (c.next()?.parse::<i64>().ok()?, c.next()?.parse::<i64>().ok()?, c.next()?.parse::<f64>().ok()?);
-    if d.next().is_some() || c.next().is_some() || !(1..=12).contains(&mo) || !(0..24).contains(&h) || !(0..60).contains(&mi) {
+    let (h, mi, s) = (
+        c.next()?.parse::<i64>().ok()?,
+        c.next()?.parse::<i64>().ok()?,
+        c.next()?.parse::<f64>().ok()?,
+    );
+    if d.next().is_some()
+        || c.next().is_some()
+        || !(1..=12).contains(&mo)
+        || !(0..24).contains(&h)
+        || !(0..60).contains(&mi)
+    {
         return None;
     }
     let leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
-    let days = [31, if leap { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let days = [
+        31,
+        if leap { 29 } else { 28 },
+        31,
+        30,
+        31,
+        30,
+        31,
+        31,
+        30,
+        31,
+        30,
+        31,
+    ];
     if !(1..=days[(mo - 1) as usize]).contains(&da) || !(0.0..60.0).contains(&s) {
         return None;
     }
@@ -326,7 +389,10 @@ pub(crate) fn decimal_year(t: &str) -> Option<f64> {
 
 /// The measurement epoch and where it comes from (docs/adr/2120 §1): `given`, else the mean of the baselines'
 /// observation mid-times when every one has its start and end; none otherwise.
-fn measurement_epoch(given: Option<f64>, used: &[&SurveyBaseline]) -> Option<(f64, NetworkEpochFrom)> {
+fn measurement_epoch(
+    given: Option<f64>,
+    used: &[&SurveyBaseline],
+) -> Option<(f64, NetworkEpochFrom)> {
     if let Some(e) = given {
         return Some((e, NetworkEpochFrom::Given));
     }
@@ -350,11 +416,29 @@ pub(crate) fn moved_to(
     from: f64,
     to: f64,
 ) -> Result<(f64, f64, f64), Stop> {
-    let ellipsoidal = || Some(HeightReference { kind: HeightKind::Ellipsoidal, vertical_srid: None, geoid: None });
+    let ellipsoidal = || {
+        Some(HeightReference {
+            kind: HeightKind::Ellipsoidal,
+            vertical_srid: None,
+            geoid: None,
+        })
+    };
     let input = CrsTransform {
-        points: vec![CrsPoint { x: lon, y: lat, z: Some(h) }],
-        from: Some(CrsSide { srid: Some(srid), heights: ellipsoidal(), epoch: Some(from) }),
-        to: Some(CrsSide { srid: Some(srid), heights: ellipsoidal(), epoch: Some(to) }),
+        points: vec![CrsPoint {
+            x: lon,
+            y: lat,
+            z: Some(h),
+        }],
+        from: Some(CrsSide {
+            srid: Some(srid),
+            heights: ellipsoidal(),
+            epoch: Some(from),
+        }),
+        to: Some(CrsSide {
+            srid: Some(srid),
+            heights: ellipsoidal(),
+            epoch: Some(to),
+        }),
         uncertainty: None,
         velocity: Some(grid.clone()),
     };
@@ -362,24 +446,44 @@ pub(crate) fn moved_to(
         CommandResult::Completed { output, .. } => match output.points.first() {
             Some(Some(p)) => Ok((p.y, p.x, p.z.unwrap_or(h))),
             _ => {
-                let why = output.unreached.first().map_or("", |u| crate::crs_transform::reason_text(&u.reason));
-                Err(fail(codes::EPOCH_UNSUPPORTED, format!("Bilinen nokta ölçme epokuna taşınamadı: {why}"), "operation"))
+                let why = output
+                    .unreached
+                    .first()
+                    .map_or("", |u| crate::crs_transform::reason_text(&u.reason));
+                Err(fail(
+                    codes::EPOCH_UNSUPPORTED,
+                    format!("Bilinen nokta ölçme epokuna taşınamadı: {why}"),
+                    "operation",
+                ))
             }
         },
         CommandResult::Failed { mut error } => {
             error.path = Some("operation".into());
             Err(Stop::failed(error))
         }
-        other => Err(fail(codes::INVALID_SURVEY_VALUE, format!("{other:?}"), "operation")),
+        other => Err(fail(
+            codes::INVALID_SURVEY_VALUE,
+            format!("{other:?}"),
+            "operation",
+        )),
     }
 }
 
 /// A known point's latitude, longitude (degrees) and ellipsoidal height carried `years` by its own velocity
 /// (docs/adr/2520): linearly in the frame's Earth-centred X, Y, Z, X(t) = X(t₀) + V·(t − t₀) (IERS Conventions 2010
 /// §4.1), on the frame's ellipsoid both ways.
-pub(crate) fn by_velocity(given: (f64, f64, f64), shape: (f64, f64), v: [f64; 3], years: f64) -> (f64, f64, f64) {
+pub(crate) fn by_velocity(
+    given: (f64, f64, f64),
+    shape: (f64, f64),
+    v: [f64; 3],
+    years: f64,
+) -> (f64, f64, f64) {
     let p = ecef(given, shape);
-    let q = [p[0] + v[0] * years, p[1] + v[1] * years, p[2] + v[2] * years];
+    let q = [
+        p[0] + v[0] * years,
+        p[1] + v[1] * years,
+        p[2] + v[2] * years,
+    ];
     let (lat, lon, h) = gnss::to_geodetic(shape.0, shape.1, q);
     (lat * RAD, lon * RAD, h)
 }
@@ -413,7 +517,12 @@ fn stage(
     };
     for (k, id) in ids.iter().enumerate() {
         let parts = &obs[3 * k..3 * k + 3];
-        let w = parts.iter().filter_map(|o| o.w).fold(None, |m: Option<f64>, w| Some(m.map_or(w, |m| if w > m { w } else { m })));
+        let w = parts
+            .iter()
+            .filter_map(|o| o.w)
+            .fold(None, |m: Option<f64>, w| {
+                Some(m.map_or(w, |m| if w > m { w } else { m }))
+            });
         let flag = if parts.iter().all(|o| o.flag == "uncontrolled") {
             "uncontrolled"
         } else if w.is_some_and(|w| w > limit) {
@@ -425,7 +534,11 @@ fn stage(
             note(w.unwrap_or(0.0), id, &mut worst);
         }
         let at = r.stations[froms[k]].xyz;
-        tests.push(BaselineTest { v: enu(at, r.baselines[k].v), w, flag: flag.into() });
+        tests.push(BaselineTest {
+            v: enu(at, r.baselines[k].v),
+            w,
+            flag: flag.into(),
+        });
     }
     // A weighted known point's pseudo-observations: a known point the network does not agree with.
     let mut i = 3 * ids.len();
@@ -462,7 +575,11 @@ fn stage(
 
 /// The network of `input` adjusted, or why it cannot be. `prefix` is the input's path (“operation.” in an edit).
 #[allow(clippy::too_many_lines)]
-pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) -> Result<Analysis, Stop> {
+pub(crate) fn analyse(
+    doc: &Document,
+    input: &MapSurveyNetwork,
+    prefix: &str,
+) -> Result<Analysis, Stop> {
     map_project(doc)?;
     let empty = MapSurvey::default();
     let survey = doc.map_survey().unwrap_or(&empty);
@@ -470,36 +587,67 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     if let Some(c) = &input.campaign
         && survey.campaign(c).is_none()
     {
-        return Err(fail(codes::UNKNOWN_SURVEY_RECORD, format!("GNSS arşivinde “{c}” kimlikli arazi ölçümü yok."), &path("campaign")));
+        return Err(fail(
+            codes::UNKNOWN_SURVEY_RECORD,
+            format!("GNSS arşivinde “{c}” kimlikli arazi ölçümü yok."),
+            &path("campaign"),
+        ));
     }
     let scale = input.scale.unwrap_or(1.0);
     if !(scale.is_finite() && scale > 0.0) {
-        return Err(fail(codes::INVALID_SURVEY_VALUE, "Varyans çarpanı 0'dan büyük sonlu bir sayı olmalı.".into(), &path("scale")));
+        return Err(fail(
+            codes::INVALID_SURVEY_VALUE,
+            "Varyans çarpanı 0'dan büyük sonlu bir sayı olmalı.".into(),
+            &path("scale"),
+        ));
     }
     let package = match &input.rules {
         Some(r) => r.clone(),
         None => gnss_rules_default().ok_or_else(|| {
-            fail(codes::INVALID_SURVEY_VALUE, "KentOS'un GNSS ağı kural paketi okunamadı.".into(), &path("rules"))
+            fail(
+                codes::INVALID_SURVEY_VALUE,
+                "KentOS'un GNSS ağı kural paketi okunamadı.".into(),
+                &path("rules"),
+            )
         })?,
     };
     if let Some(why) = rules_problem(&package) {
-        return Err(fail(codes::INVALID_SURVEY_VALUE, why.into(), &path("rules")));
+        return Err(fail(
+            codes::INVALID_SURVEY_VALUE,
+            why.into(),
+            &path("rules"),
+        ));
     }
     let class = match &input.class {
-        Some(id) => Some(package.classes.iter().find(|c| c.id == *id).ok_or_else(|| {
-            let names: Vec<&str> = package.classes.iter().map(|c| c.id.as_str()).collect();
-            fail(
-                codes::UNKNOWN_RULE_CLASS,
-                format!("“{}” kural paketinde “{id}” sınıfı yok; sınıflar: {}.", package.id, names.join(", ")),
-                &path("class"),
-            )
-        })?),
+        Some(id) => Some(
+            package
+                .classes
+                .iter()
+                .find(|c| c.id == *id)
+                .ok_or_else(|| {
+                    let names: Vec<&str> = package.classes.iter().map(|c| c.id.as_str()).collect();
+                    fail(
+                        codes::UNKNOWN_RULE_CLASS,
+                        format!(
+                            "“{}” kural paketinde “{id}” sınıfı yok; sınıflar: {}.",
+                            package.id,
+                            names.join(", ")
+                        ),
+                        &path("class"),
+                    )
+                })?,
+        ),
         None => None,
     };
-    if let Some(e) = input.epoch.filter(|e| kentos_commands::epoch_problem(*e).is_some()) {
+    if let Some(e) = input
+        .epoch
+        .filter(|e| kentos_commands::epoch_problem(*e).is_some())
+    {
         return Err(fail(
             codes::INVALID_EPOCH,
-            format!("Ölçme epoku 1900 ile 2100 arasında ondalık bir yıl olmalı (2026.84 gibi); yazılan {e}."),
+            format!(
+                "Ölçme epoku 1900 ile 2100 arasında ondalık bir yıl olmalı (2026.84 gibi); yazılan {e}."
+            ),
             &path("epoch"),
         ));
     }
@@ -519,7 +667,10 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     }
     let campaign = survey.campaign(&used[0].campaign).cloned();
     let velocity_grid = if input.velocities {
-        Some(velocity_of(campaign.as_ref()).ok_or_else(|| crate::map_survey_sessions::no_grid(&path("velocities")))?)
+        Some(
+            velocity_of(campaign.as_ref())
+                .ok_or_else(|| crate::map_survey_sessions::no_grid(&path("velocities")))?,
+        )
     } else {
         None
     };
@@ -548,8 +699,11 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
             }
         }
     }
-    let known: Vec<&SurveyKnown> =
-        survey.known.iter().filter(|k| k.excluded.is_none() && mark_at.contains_key(&k.mark)).collect();
+    let known: Vec<&SurveyKnown> = survey
+        .known
+        .iter()
+        .filter(|k| k.excluded.is_none() && mark_at.contains_key(&k.mark))
+        .collect();
     if known.is_empty() {
         return Err(held_wrong(
             codes::DATUM_MISSING,
@@ -578,7 +732,10 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
             if let Some(k) = known.iter().find(|k| k.srid != srid) {
                 return Err(held_wrong(
                     codes::KNOWN_DIFFER,
-                    format!("“{}” ile “{}” bilinen noktaları aynı çerçevede değil; hepsini aynı çerçevede girin.", known[0].id, k.id),
+                    format!(
+                        "“{}” ile “{}” bilinen noktaları aynı çerçevede değil; hepsini aynı çerçevede girin.",
+                        known[0].id, k.id
+                    ),
                     prefix,
                 ));
             }
@@ -598,13 +755,19 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     let Some(shape) = ellipsoid_of(srid) else {
         return Err(held_wrong(
             codes::UNKNOWN_FRAME,
-            format!("EPSG:{srid} kayıttaki coğrafi bir sistem değil; bilinen noktaların çerçevesini (4326 WGS 84, 5252 TUREF) verin."),
+            format!(
+                "EPSG:{srid} kayıttaki coğrafi bir sistem değil; bilinen noktaların çerçevesini (4326 WGS 84, 5252 TUREF) verin."
+            ),
             prefix,
         ));
     };
     let hold = match &input.hold {
         Some(h) => known.iter().find(|k| k.id == *h).copied().ok_or_else(|| {
-            fail(codes::UNKNOWN_SURVEY_RECORD, format!("“{h}” ağın bilinen noktalarından biri değil."), &path("hold"))
+            fail(
+                codes::UNKNOWN_SURVEY_RECORD,
+                format!("“{h}” ağın bilinen noktalarından biri değil."),
+                &path("hold"),
+            )
         })?,
         None => known[0],
     };
@@ -627,7 +790,9 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
                                     // came from (UR2-019: both read 2026,84).
                                     let (known_at, network_at) = epochs_apart(e, t);
                                     let source = match from {
-                                        NetworkEpochFrom::Baselines => " (bazların gözlem zamanlarından)",
+                                        NetworkEpochFrom::Baselines => {
+                                            " (bazların gözlem zamanlarından)"
+                                        }
                                         _ => "",
                                     };
                                     format!(
@@ -650,7 +815,14 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
                 let r = gnss::enu_rows(given.0 / RAD, given.1 / RAD);
                 let d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
                 let shift = [0, 1, 2].map(|i| r[i][0] * d[0] + r[i][1] * d[1] + r[i][2] * d[2]);
-                moved.push(KnownMoved { id: k.id.clone(), mark: k.mark.clone(), by, from: e, years: t - e, shift });
+                moved.push(KnownMoved {
+                    id: k.id.clone(),
+                    mark: k.mark.clone(),
+                    by,
+                    from: e,
+                    years: t - e,
+                    shift,
+                });
                 now
             }
             _ => given,
@@ -660,15 +832,35 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     let epoch = measured.map(|m| m.0).or(epoch);
     let epoch_from = measured.map_or(NetworkEpochFrom::Known, |m| m.1);
     let place_of = |k: &SurveyKnown| at.get(&k.id).copied().unwrap_or((k.lat, k.lon, k.height));
-    let known_by: HashMap<&str, &SurveyKnown> = known.iter().rev().map(|k| (k.mark.as_str(), *k)).collect();
+    let known_by: HashMap<&str, &SurveyKnown> =
+        known.iter().rev().map(|k| (k.mark.as_str(), *k)).collect();
     let known_of = |m: &str| known_by.get(m).copied();
-    let baselines: Vec<Baseline> =
-        used.iter().map(|b| Baseline { from: b.from.clone(), to: b.to.clone(), d: b.d, cov: b.covariance }).collect();
+    let baselines: Vec<Baseline> = used
+        .iter()
+        .map(|b| Baseline {
+            from: b.from.clone(),
+            to: b.to.clone(),
+            d: b.d,
+            cov: b.covariance,
+        })
+        .collect();
     let free_stations: Vec<GnssStation> = marks
         .iter()
         .map(|m| match known_of(m) {
-            Some(k) => GnssStation { name: m.clone(), xyz: Some(ecef(place_of(k), shape)), fixed: k.id == hold.id, sigma: None, cov: None },
-            None => GnssStation { name: m.clone(), xyz: None, fixed: false, sigma: None, cov: None },
+            Some(k) => GnssStation {
+                name: m.clone(),
+                xyz: Some(ecef(place_of(k), shape)),
+                fixed: k.id == hold.id,
+                sigma: None,
+                cov: None,
+            },
+            None => GnssStation {
+                name: m.clone(),
+                xyz: None,
+                fixed: false,
+                sigma: None,
+                cov: None,
+            },
         })
         .collect();
     let held_stations: Vec<GnssStation> = marks
@@ -681,7 +873,13 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
                 sigma: None,
                 cov: k.sigma.map(|s| weight(place_of(k), s)),
             },
-            None => GnssStation { name: m.clone(), xyz: None, fixed: false, sigma: None, cov: None },
+            None => GnssStation {
+                name: m.clone(),
+                xyz: None,
+                fixed: false,
+                sigma: None,
+                cov: None,
+            },
         })
         .collect();
     // docs/adr/4920: the used baselines' sessions, their full covariance when asked for.
@@ -708,9 +906,22 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     let held = gnss::adjust(&core(held_stations, baselines)).map_err(refused)?;
     let limit = w_limit(class);
     let ids: Vec<String> = used.iter().map(|b| b.id.clone()).collect();
-    let known_ids: Vec<Option<String>> = marks.iter().map(|m| known_of(m).map(|k| k.id.clone())).collect();
-    let froms: Vec<usize> = used.iter().map(|b| mark_at.get(&b.from).copied().unwrap_or(0)).collect();
-    let (free_stage, free_tests) = stage(&free, &ids, &froms, &known_ids, limit, vec![hold.mark.clone()]);
+    let known_ids: Vec<Option<String>> = marks
+        .iter()
+        .map(|m| known_of(m).map(|k| k.id.clone()))
+        .collect();
+    let froms: Vec<usize> = used
+        .iter()
+        .map(|b| mark_at.get(&b.from).copied().unwrap_or(0))
+        .collect();
+    let (free_stage, free_tests) = stage(
+        &free,
+        &ids,
+        &froms,
+        &known_ids,
+        limit,
+        vec![hold.mark.clone()],
+    );
     // Madde 15(1)(c): the known points' given coordinates (at the measurement epoch) against the free stage's.
     #[allow(clippy::type_complexity)]
     let common: Vec<(String, String, [f64; 3], [f64; 3], f64, f64)> = known
@@ -718,11 +929,27 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         .filter_map(|k| {
             let i = *mark_at.get(&k.mark)?;
             let at = place_of(k);
-            Some((k.id.clone(), k.mark.clone(), ecef(at, shape), free.stations[i].xyz, at.0, at.1))
+            Some((
+                k.id.clone(),
+                k.mark.clone(),
+                ecef(at, shape),
+                free.stations[i].xyz,
+                at.0,
+                at.1,
+            ))
         })
         .collect();
-    let similar = similarity(&common, class.and_then(|c| c.confidence).unwrap_or(SIMILARITY_CONFIDENCE));
-    let fixed: Vec<String> = known.iter().filter(|k| k.sigma.is_none()).map(|k| k.mark.clone()).collect();
+    let similar = similarity(
+        &common,
+        class
+            .and_then(|c| c.confidence)
+            .unwrap_or(SIMILARITY_CONFIDENCE),
+    );
+    let fixed: Vec<String> = known
+        .iter()
+        .filter(|k| k.sigma.is_none())
+        .map(|k| k.mark.clone())
+        .collect();
     let (held_stage, held_tests) = stage(&held, &ids, &froms, &known_ids, limit, fixed);
     let mut failed_baselines = 0u32;
     let rows: Vec<NetworkBaseline> = used
@@ -731,11 +958,19 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         .map(|(k, b)| {
             let length = baseline_length(b);
             let c = b.covariance;
-            let sigma = [(c[0] * scale).sqrt(), (c[3] * scale).sqrt(), (c[5] * scale).sqrt()];
+            let sigma = [
+                (c[0] * scale).sqrt(),
+                (c[3] * scale).sqrt(),
+                (c[5] * scale).sqrt(),
+            ];
             let adjusted = free.baselines[k].adjusted;
             let limit = class.map(|c| c.constant + c.ppm * 1e-6 * length);
             let rules = class.zip(limit).map(|(c, l)| {
-                let of = if c.baseline_of == BaselineSigmaOf::Adjusted { adjusted } else { sigma };
+                let of = if c.baseline_of == BaselineSigmaOf::Adjusted {
+                    adjusted
+                } else {
+                    sigma
+                };
                 of.iter().all(|v| *v <= l)
             });
             if rules == Some(false) {
@@ -756,7 +991,12 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         })
         .collect();
     let mut failed_stations = 0u32;
-    let point_of: HashMap<&str, _> = survey.points.iter().rev().map(|p| (p.mark.as_str(), p)).collect();
+    let point_of: HashMap<&str, _> = survey
+        .points
+        .iter()
+        .rev()
+        .map(|p| (p.mark.as_str(), p))
+        .collect();
     let mut stations = Vec::with_capacity(marks.len());
     let mut new = Vec::new();
     let mut unread: Vec<String> = Vec::new();
@@ -784,11 +1024,24 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
             dz: None,
             rules: None,
             // docs/adr/2560: the confidence region of a mark the stage moved.
-            ellipse: (!s.held).then(|| error_ellipse(s.cenu, class.and_then(|c| c.confidence).unwrap_or(CONFIDENCE))),
+            ellipse: (!s.held).then(|| {
+                error_ellipse(
+                    s.cenu,
+                    class.and_then(|c| c.confidence).unwrap_or(CONFIDENCE),
+                )
+            }),
             velocity: None,
         };
         if k.is_none() {
-            let placed = place(doc, campaign.as_ref(), (lat, lon, h), srid, epoch, "operation").map_err(Stop::into_error);
+            let placed = place(
+                doc,
+                campaign.as_ref(),
+                (lat, lon, h),
+                srid,
+                epoch,
+                "operation",
+            )
+            .map_err(Stop::into_error);
             if let Ok(p) = &placed {
                 row.x = Some(p.x);
                 row.y = Some(p.y);
@@ -800,7 +1053,8 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
                 }
             }
             if let Some(c) = class {
-                let ok = sigma[0] <= c.horizontal && sigma[1] <= c.horizontal && sigma[2] <= c.height;
+                let ok =
+                    sigma[0] <= c.horizontal && sigma[1] <= c.horizontal && sigma[2] <= c.height;
                 row.rules = Some(ok);
                 if !ok {
                     failed_stations += 1;
@@ -811,7 +1065,14 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
             let velocity = match &velocity_grid {
                 Some(grid) => {
                     let years = epoch.unwrap_or(2005.0);
-                    match crate::map_survey_sessions::velocity_at(doc, grid, (lat, lon, h), srid, shape, years) {
+                    match crate::map_survey_sessions::velocity_at(
+                        doc,
+                        grid,
+                        (lat, lon, h),
+                        srid,
+                        shape,
+                        years,
+                    ) {
                         Ok(v) => Some(v),
                         Err(stop) => {
                             unread.push(format!(
@@ -825,13 +1086,24 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
                 None => None,
             };
             row.velocity = velocity;
-            new.push(NewMark { mark: m.clone(), lat, lon, height: h, sigma, placed, velocity });
+            new.push(NewMark {
+                mark: m.clone(),
+                lat,
+                lon,
+                height: h,
+                sigma,
+                placed,
+                velocity,
+            });
         }
         stations.push(row);
     }
     let rules = class.map(|c| {
         // The similarity's scale against the class's limit (Madde 15(1)(c): C1's 3 ppm), when both are there.
-        let similar_holds = c.similarity.zip(similar.as_ref()).map(|(limit, s)| s.scale.abs() <= limit);
+        let similar_holds = c
+            .similarity
+            .zip(similar.as_ref())
+            .map(|(limit, s)| s.scale.abs() <= limit);
         NetworkRules {
             package: package.id.clone(),
             release: package.release,
@@ -848,7 +1120,11 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
     // The same network already accepted: the same baselines, known points, held point, factor and class, and every
     // new mark's point carrying that adjustment now.
     let class_of = class.map(|c| (c.id.clone(), format!("{}@{}", package.id, package.release)));
-    let used_sessions: Vec<String> = if correlated { relevant.iter().map(|(id, _)| id.clone()).collect() } else { Vec::new() };
+    let used_sessions: Vec<String> = if correlated {
+        relevant.iter().map(|(id, _)| id.clone()).collect()
+    } else {
+        Vec::new()
+    };
     let known_ids_used: Vec<String> = known.iter().map(|k| k.id.clone()).collect();
     let current = survey
         .adjustments
@@ -874,9 +1150,14 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         .map(|a| a.id.clone());
     let mut why = Vec::new();
     if let Some(a) = &current {
-        why.push(format!("Bu ağ “{a}” dengelemesiyle kabul edildi; noktaları güncel."));
+        why.push(format!(
+            "Bu ağ “{a}” dengelemesiyle kabul edildi; noktaları güncel."
+        ));
     }
-    for (name, st) in [("Serbest dengelemede", &free_stage), ("Bilinen noktalara dayalı dengelemede", &held_stage)] {
+    for (name, st) in [
+        ("Serbest dengelemede", &free_stage),
+        ("Bilinen noktalara dayalı dengelemede", &held_stage),
+    ] {
         if st.blunders > 0 {
             why.push(format!(
                 "{name} {} uyuşumsuz ölçü var (test değeri {:.2}'yi aşıyor); en kötüsü “{}”.",
@@ -926,7 +1207,10 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         rules,
         current,
         correlations,
-        velocity_grid: velocity_grid.as_ref().map(|g| SurveyGrid { name: g.name.clone(), sha256: g.sha256.clone() }),
+        velocity_grid: velocity_grid.as_ref().map(|g| SurveyGrid {
+            name: g.name.clone(),
+            sha256: g.sha256.clone(),
+        }),
         acceptable: why.is_empty(),
         why,
         revision: doc.revision().to_string(),
@@ -940,13 +1224,21 @@ pub(crate) fn analyse(doc: &Document, input: &MapSurveyNetwork, prefix: &str) ->
         class: class.map(|c| (c.id.clone(), format!("{}@{}", package.id, package.release))),
         new,
         sessions: used_sessions,
-        velocity_grid: velocity_grid.map(|g| SurveyGrid { name: g.name, sha256: g.sha256 }),
+        velocity_grid: velocity_grid.map(|g| SurveyGrid {
+            name: g.name,
+            sha256: g.sha256,
+        }),
     })
 }
 
 /// The campaign's velocity grid as the chain takes it.
 pub(crate) fn velocity_of(campaign: Option<&SurveyCampaign>) -> Option<VelocityModel> {
-    campaign.and_then(|c| c.velocity.as_ref()).map(|g| VelocityModel { name: g.name.clone(), sha256: g.sha256.clone() })
+    campaign
+        .and_then(|c| c.velocity.as_ref())
+        .map(|g| VelocityModel {
+            name: g.name.clone(),
+            sha256: g.sha256.clone(),
+        })
 }
 
 /// An epoch as a sentence writes it: two decimals, a decimal comma (2026,84).
@@ -963,7 +1255,11 @@ fn epochs_apart(a: f64, b: f64) -> (String, String) {
 
 /// Days as a reader takes them: a tenth below ten days, whole above; comma decimal.
 fn days_text(days: f64) -> String {
-    if days < 10.0 { format!("{days:.1}").replace('.', ",") } else { format!("{days:.0}") }
+    if days < 10.0 {
+        format!("{days:.1}").replace('.', ",")
+    } else {
+        format!("{days:.0}")
+    }
 }
 
 /// The answer's warnings: a class that does not hold, a network without degrees of freedom; `prefix` is the input's
@@ -976,7 +1272,10 @@ pub(crate) fn warnings_of(out: &MapSurveyNetworked, prefix: &str) -> Vec<Command
             message: {
                 // Madde 15(1)(c)'s scale, when it is what fails (docs/adr/2160).
                 let scale = match (r.similarity, out.similarity.as_ref()) {
-                    (Some(false), Some(s)) => format!("; benzerlik dönüşümünün ölçeği sınırı aşıyor (|1 − λ| = {:.2} ppm)", s.scale.abs()),
+                    (Some(false), Some(s)) => format!(
+                        "; benzerlik dönüşümünün ölçeği sınırı aşıyor (|1 − λ| = {:.2} ppm)",
+                        s.scale.abs()
+                    ),
                     _ => String::new(),
                 };
                 format!(
@@ -1010,30 +1309,44 @@ pub(crate) fn warnings_of(out: &MapSurveyNetworked, prefix: &str) -> Vec<Command
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &MapSurveyNetwork) -> CommandResult<()> {
     match analyse(cx.doc, input, "") {
-        Ok(a) => CommandResult::Completed { output: (), warnings: warnings_of(&a.out, "") },
+        Ok(a) => CommandResult::Completed {
+            output: (),
+            warnings: warnings_of(&a.out, ""),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &MapSurveyNetwork) -> CommandResult<MapSurveyNetworked> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &MapSurveyNetwork,
+) -> CommandResult<MapSurveyNetworked> {
     match analyse(cx.doc, input, "") {
         Ok(a) => {
             let warnings = warnings_of(&a.out, "");
-            CommandResult::Completed { output: a.out, warnings }
+            CommandResult::Completed {
+                output: a.out,
+                warnings,
+            }
         }
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: MapSurveyNetwork) -> CommandResult<MapSurveyNetworked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: MapSurveyNetwork,
+) -> CommandResult<MapSurveyNetworked> {
     plan(cx, &input)
 }
 
 /// The network for a window, or why it does not adjust.
 pub fn preview(doc: &Document, input: &MapSurveyNetwork) -> Result<MapSurveyNetworked, String> {
-    analyse(doc, input, "").map(|a| a.out).map_err(|stop| stop.into_error().message)
+    analyse(doc, input, "")
+        .map(|a| a.out)
+        .map_err(|stop| stop.into_error().message)
 }
 
 #[cfg(test)]
@@ -1043,8 +1356,14 @@ mod epoch_words_tests {
     /// UR2-019: two epochs that round to one 2026,84 are written with the decimals that tell them apart.
     #[test]
     fn two_epochs_are_written_apart() {
-        assert_eq!(epochs_apart(2026.84, 2026.8412), ("2026,840".to_owned(), "2026,841".to_owned()));
-        assert_eq!(epochs_apart(2005.0, 2026.84), ("2005,00".to_owned(), "2026,84".to_owned()));
+        assert_eq!(
+            epochs_apart(2026.84, 2026.8412),
+            ("2026,840".to_owned(), "2026,841".to_owned())
+        );
+        assert_eq!(
+            epochs_apart(2005.0, 2026.84),
+            ("2005,00".to_owned(), "2026,84".to_owned())
+        );
         assert_eq!(days_text(0.0012 * 365.25), "0,4");
         assert_eq!(days_text(21.84 * 365.25), "7977");
     }

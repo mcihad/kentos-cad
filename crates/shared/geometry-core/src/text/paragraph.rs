@@ -42,16 +42,22 @@ pub const DEFAULT_TAB: f64 = 4.0;
 
 /// An opt-in frozen metric/glyph profile. None on Flow preserves legacy text.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Engine { UnicodeV1 }
+pub enum Engine {
+    UnicodeV1,
+}
 
 impl crate::api::json::FromJson for Engine {
-    fn from_json(v:&crate::api::json::Json)->Result<Self,String> {
-        match v {crate::api::json::Json::Str(s) if s=="unicode-v1"=>Ok(Self::UnicodeV1),
-            _=>Err("Bilinmeyen yazı yerleşimi profili.".into())}
+    fn from_json(v: &crate::api::json::Json) -> Result<Self, String> {
+        match v {
+            crate::api::json::Json::Str(s) if s == "unicode-v1" => Ok(Self::UnicodeV1),
+            _ => Err("Bilinmeyen yazı yerleşimi profili.".into()),
+        }
     }
 }
 impl crate::api::json::ToJson for Engine {
-    fn write_json(&self,out:&mut String) {crate::api::json::write_str(out,"unicode-v1");}
+    fn write_json(&self, out: &mut String) {
+        crate::api::json::write_str(out, "unicode-v1");
+    }
 }
 
 /// A multi-line text's indents, tab stops and columns (docs/adr/0324 §1), in
@@ -137,7 +143,12 @@ pub const STACK_UNDER: f64 = -0.25;
 
 /// A stacked run's parts (docs/adr/0324 §2): its numerator's and denominator's letters (`start..mark`,
 /// `mark + 1..end`), its mark (`/` a bar, `^` none, `#` a slash side by side) and its width in thousandths of an em.
-pub fn stack_parts(letters: &[char], r: &Run, font: Font, bold: bool) -> Option<(usize, char, f64, f64)> {
+pub fn stack_parts(
+    letters: &[char],
+    r: &Run,
+    font: Font,
+    bold: bool,
+) -> Option<(usize, char, f64, f64)> {
     let q = stack_of(letters, r)?;
     let (s, e) = (r.start as usize, (r.end as usize).min(letters.len()));
     let sum = |from: usize, to: usize| -> f64 {
@@ -295,7 +306,8 @@ pub fn lay_out(p: &Paragraph<'_>) -> Layout {
         };
         if left > x && left < next { left } else { next }
     };
-    let walk_to = |from: usize, to: usize, x: f64| walk(&letters, &adv, &stacks, from, to, x, &stop);
+    let walk_to =
+        |from: usize, to: usize, x: f64| walk(&letters, &adv, &stacks, from, to, x, &stop);
     // Each row: its letters and where it starts (its indent), in the walk's units.
     let mut rows: Vec<(usize, usize, f64)> = Vec::new();
     let mut start = 0;
@@ -306,7 +318,15 @@ pub fn lay_out(p: &Paragraph<'_>) -> Layout {
         let end = i;
         match p.box_width {
             None => rows.push((start, end, first)),
-            Some(w) => wrap(&letters, start, end, w, (first, left), &|a, b, x| scale(walk_to(a, b, x)), &mut rows),
+            Some(w) => wrap(
+                &letters,
+                start,
+                end,
+                w,
+                (first, left),
+                &|a, b, x| scale(walk_to(a, b, x)),
+                &mut rows,
+            ),
         }
         start = i + 1;
     }
@@ -373,7 +393,11 @@ pub fn lay_out(p: &Paragraph<'_>) -> Layout {
         (0..count)
             .map(|c| {
                 let begin = c * per;
-                let end = if c + 1 == count { rows.len() } else { rows.len().min(begin + per) };
+                let end = if c + 1 == count {
+                    rows.len()
+                } else {
+                    rows.len().min(begin + per)
+                };
                 end.saturating_sub(begin)
             })
             .max()
@@ -580,7 +604,11 @@ fn list_mark(line: &[char]) -> usize {
         return 2;
     }
     let digits = line.iter().take_while(|c| c.is_ascii_digit()).count();
-    if digits > 0 && line.len() >= digits + 2 && matches!(line[digits], '.' | ')') && line[digits + 1] == '\t' {
+    if digits > 0
+        && line.len() >= digits + 2
+        && matches!(line[digits], '.' | ')')
+        && line[digits + 1] == '\t'
+    {
         return digits + 2;
     }
     0
@@ -589,7 +617,13 @@ fn list_mark(line: &[char]) -> usize {
 /// The text's lines from the one letter `start` is in to the one before `end` (the cursor's line when they are
 /// one) made a list of `kind`: each one's old mark taken away and the new one put first, the numbers from 1; the
 /// runs follow the letters (`retext`). Also whether any line of the text still has a mark.
-pub fn list_lines(text: &str, runs: &[Run], start: usize, end: usize, kind: ListKind) -> (String, Vec<Run>, bool) {
+pub fn list_lines(
+    text: &str,
+    runs: &[Run],
+    start: usize,
+    end: usize,
+    kind: ListKind,
+) -> (String, Vec<Run>, bool) {
     let letters: Vec<char> = text.chars().collect();
     let lines: Vec<&[char]> = letters.split(|c| *c == '\n').collect();
     let line_of = |at: usize| -> usize {
@@ -602,7 +636,10 @@ pub fn list_lines(text: &str, runs: &[Run], start: usize, end: usize, kind: List
         }
         lines.len().saturating_sub(1)
     };
-    let (a, b) = (line_of(start), line_of(if end > start { end - 1 } else { start }));
+    let (a, b) = (
+        line_of(start),
+        line_of(if end > start { end - 1 } else { start }),
+    );
     let mut out = String::with_capacity(text.len() + 4 * (b - a + 1));
     let mut marked = false;
     let mut n = 0;
@@ -782,7 +819,7 @@ impl crate::api::json::FromJson for Flow {
     fn from_json(v: &crate::api::json::Json) -> Result<Flow, String> {
         use crate::api::json::read_field;
         Ok(Flow {
-            engine:read_field(v,"engine")?,
+            engine: read_field(v, "engine")?,
             first: read_field::<Option<f64>>(v, "indent")?.unwrap_or(0.0),
             left: read_field::<Option<f64>>(v, "leftIndent")?.unwrap_or(0.0),
             tabs: read_field::<Option<Vec<f64>>>(v, "tabs")?.unwrap_or_default(),
@@ -805,7 +842,7 @@ impl crate::api::json::ToJson for Flow {
         if !self.tabs.is_empty() {
             field(out, &mut first, "tabs", &self.tabs);
         }
-        field(out,&mut first,"engine",&self.engine);
+        field(out, &mut first, "engine", &self.engine);
         field(out, &mut first, "columns", &self.columns);
         out.push('}');
     }

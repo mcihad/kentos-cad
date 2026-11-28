@@ -8,7 +8,9 @@ use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::text::shaping::{OutlineOp, placed};
 use kentos_render_wgpu::Rgba8;
-use kentos_render_wgpu::glyphs::{GlyphAtlas, GlyphGpu, GlyphPlace, GlyphQuad, GlyphText, GlyphUnit};
+use kentos_render_wgpu::glyphs::{
+    GlyphAtlas, GlyphGpu, GlyphPlace, GlyphQuad, GlyphText, GlyphUnit,
+};
 use kentos_render_wgpu::styled::StyledFrame;
 
 const E: f64 = 487_012.346;
@@ -79,7 +81,13 @@ fn draw(gpu: &Gpu, glyphs: &mut GlyphGpu, texts: &[GlyphText], frame: &StyledFra
 }
 
 /// As [`draw`], the pixel texts grown `grow` times.
-fn draw_grown(gpu: &Gpu, glyphs: &mut GlyphGpu, texts: &[GlyphText], frame: &StyledFrame, grow: f32) -> Vec<u8> {
+fn draw_grown(
+    gpu: &Gpu,
+    glyphs: &mut GlyphGpu,
+    texts: &[GlyphText],
+    frame: &StyledFrame,
+    grow: f32,
+) -> Vec<u8> {
     let (device, queue) = (&gpu.device, &gpu.queue);
     let mut layer = glyphs.layer(device, queue, texts, None);
     assert!(!layer.pending, "every field made without a deadline");
@@ -87,7 +95,11 @@ fn draw_grown(gpu: &Gpu, glyphs: &mut GlyphGpu, texts: &[GlyphText], frame: &Sty
     glyphs.prepare(device, queue, &mut layer, frame, grow);
     let texture = device.create_texture(&wgpu::TextureDescriptor {
         label: Some("glyphs target"),
-        size: wgpu::Extent3d { width: W, height: H, depth_or_array_layers: 1 },
+        size: wgpu::Extent3d {
+            width: W,
+            height: H,
+            depth_or_array_layers: 1,
+        },
         mip_level_count: 1,
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
@@ -96,7 +108,8 @@ fn draw_grown(gpu: &Gpu, glyphs: &mut GlyphGpu, texts: &[GlyphText], frame: &Sty
         view_formats: &[],
     });
     let target = texture.create_view(&wgpu::TextureViewDescriptor::default());
-    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    let mut encoder =
+        device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
     {
         let [r, g, b, a] = BG.map(|v| f64::from(v) / 255.0);
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -116,7 +129,8 @@ fn draw_grown(gpu: &Gpu, glyphs: &mut GlyphGpu, texts: &[GlyphText], frame: &Sty
         });
         glyphs.draw(&mut pass, &layer, 1);
     }
-    let row = (W * 4).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+    let row =
+        (W * 4).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
     let buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: None,
         size: u64::from(row * H),
@@ -127,18 +141,31 @@ fn draw_grown(gpu: &Gpu, glyphs: &mut GlyphGpu, texts: &[GlyphText], frame: &Sty
         texture.as_image_copy(),
         wgpu::TexelCopyBufferInfo {
             buffer: &buffer,
-            layout: wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(row), rows_per_image: None },
+            layout: wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(row),
+                rows_per_image: None,
+            },
         },
-        wgpu::Extent3d { width: W, height: H, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width: W,
+            height: H,
+            depth_or_array_layers: 1,
+        },
     );
     let index = queue.submit([encoder.finish()]);
     let slice = buffer.slice(..);
     slice.map_async(wgpu::MapMode::Read, |_| {});
     device
-        .poll(wgpu::PollType::Wait { submission_index: Some(index), timeout: None })
+        .poll(wgpu::PollType::Wait {
+            submission_index: Some(index),
+            timeout: None,
+        })
         .expect("the frame finishes");
     let data = slice.get_mapped_range();
-    (0..H).flat_map(|y| data[(y * row) as usize..(y * row + W * 4) as usize].to_vec()).collect()
+    (0..H)
+        .flat_map(|y| data[(y * row) as usize..(y * row + W * 4) as usize].to_vec())
+        .collect()
 }
 
 /// The same outlines filled whole on the CPU, the halo a round-joined stroke under them.
@@ -187,9 +214,21 @@ fn reference(layout: &placed::Layout, at: [f64; 2], frame: &StyledFrame, halo_px
             line_join: tiny_skia::LineJoin::Round,
             ..tiny_skia::Stroke::default()
         };
-        picture.stroke_path(&path, &paint(HALO), &stroke, tiny_skia::Transform::identity(), None);
+        picture.stroke_path(
+            &path,
+            &paint(HALO),
+            &stroke,
+            tiny_skia::Transform::identity(),
+            None,
+        );
     }
-    picture.fill_path(&path, &paint(INK), tiny_skia::FillRule::Winding, tiny_skia::Transform::identity(), None);
+    picture.fill_path(
+        &path,
+        &paint(INK),
+        tiny_skia::FillRule::Winding,
+        tiny_skia::Transform::identity(),
+        None,
+    );
     picture.data().to_vec()
 }
 
@@ -239,7 +278,10 @@ fn keep(rgba: &[u8], name: &str) {
     let mut png = png::Encoder::new(file, W, H);
     png.set_color(png::ColorType::Rgba);
     png.set_depth(png::BitDepth::Eight);
-    png.write_header().expect("a header").write_image_data(rgba).expect("writes the picture");
+    png.write_header()
+        .expect("a header")
+        .write_image_data(rgba)
+        .expect("writes the picture");
 }
 
 /// docs/adr/9212 §4 stage 1: a text turned 30° with a halo of 1.5 px, at the survey grid's numbers, against its
@@ -253,7 +295,13 @@ pub fn a_turned_haloed_text_matches_its_outlines_drawn_whole(gpu: &Gpu) {
     let ours = draw(gpu, &mut glyphs, &[world(at, &text, 1.5)], &frame);
     let theirs = reference(&text, at, &frame, 1.5);
     let (mean, gross, ink) = compare(&ours, &theirs);
-    let halo = |rgba: &[u8]| rgba.as_chunks::<4>().0.iter().filter(|p| p[0] > 230 && p[1] > 230 && p[2] > 230).count();
+    let halo = |rgba: &[u8]| {
+        rgba.as_chunks::<4>()
+            .0
+            .iter()
+            .filter(|p| p[0] > 230 && p[1] > 230 && p[2] > 230)
+            .count()
+    };
     let (halo_ours, halo_theirs) = (halo(&ours), halo(&theirs));
     eprintln!(
         "glyphs: mean difference {mean:.2}, {gross} pixels off by a quarter, {ink} ink pixels, halo {halo_ours} / {halo_theirs}"
@@ -262,8 +310,14 @@ pub fn a_turned_haloed_text_matches_its_outlines_drawn_whole(gpu: &Gpu) {
     keep(&theirs, "dondurulmus-haleli-referans");
     assert!(ink > 800, "the text is in view: {ink} ink pixels");
     assert!(mean < 1.5, "mean difference {mean:.2}");
-    assert!((gross as f64) < 0.03 * ink as f64, "{gross} pixels off by a quarter of {ink}");
-    assert!(halo_ours.abs_diff(halo_theirs) * 5 < halo_theirs, "halo {halo_ours} / {halo_theirs}");
+    assert!(
+        (gross as f64) < 0.03 * ink as f64,
+        "{gross} pixels off by a quarter of {ink}"
+    );
+    assert!(
+        halo_ours.abs_diff(halo_theirs) * 5 < halo_theirs,
+        "halo {halo_ours} / {halo_theirs}"
+    );
 }
 
 /// A text of pixels drawn as large as a world text at one scale stays that large at twice the scale, as the world
@@ -293,7 +347,10 @@ pub fn a_text_of_pixels_keeps_its_size_as_a_world_text_grows(gpu: &Gpu) {
         draw(gpu, &mut glyphs, std::slice::from_ref(&pixels), &near),
     );
     let (mean, _, _) = compare(&w20, &p20);
-    assert!(mean < 0.2, "the same at the scale they were matched at: {mean:.3}");
+    assert!(
+        mean < 0.2,
+        "the same at the scale they were matched at: {mean:.3}"
+    );
     let nearer = view([E, N], 40.0);
     let (w40, p40) = (
         draw(gpu, &mut glyphs, std::slice::from_ref(&world), &nearer),
@@ -301,14 +358,30 @@ pub fn a_text_of_pixels_keeps_its_size_as_a_world_text_grows(gpu: &Gpu) {
     );
     let ((_, a, _), (_, b, _), (_, c, _)) = (inked(&w20), inked(&w40), inked(&p40));
     let (grown, kept) = (b / a, c / a);
-    eprintln!("glyphs: the world text's ink ×{grown:.3}, the pixel text's ×{kept:.3} at twice the scale");
-    assert!((grown - 4.0).abs() < 0.2, "the world text grows four times in area: ×{grown:.3}");
-    assert!((kept - 1.0).abs() < 0.03, "the pixel text keeps its size: ×{kept:.3}");
+    eprintln!(
+        "glyphs: the world text's ink ×{grown:.3}, the pixel text's ×{kept:.3} at twice the scale"
+    );
+    assert!(
+        (grown - 4.0).abs() < 0.2,
+        "the world text grows four times in area: ×{grown:.3}"
+    );
+    assert!(
+        (kept - 1.0).abs() < 0.03,
+        "the pixel text keeps its size: ×{kept:.3}"
+    );
     // Grown with the view as a picture of it would (a gesture before the texts are placed again), it is the world
     // text at the new scale.
-    let picture = draw_grown(gpu, &mut glyphs, std::slice::from_ref(&pixels), &nearer, 2.0);
+    let picture = draw_grown(
+        gpu,
+        &mut glyphs,
+        std::slice::from_ref(&pixels),
+        &nearer,
+        2.0,
+    );
     let (mean, _, _) = compare(&w40, &picture);
-    eprintln!("glyphs: the pixel text grown twice against the world text at twice the scale: {mean:.3}");
+    eprintln!(
+        "glyphs: the pixel text grown twice against the world text at twice the scale: {mean:.3}"
+    );
     assert!(mean < 0.2, "{mean:.3}");
 }
 
@@ -324,12 +397,23 @@ pub fn sub_pixel_pans_move_the_text_by_the_pan(gpu: &Gpu) {
     let (_, _, before) = inked(&draw(gpu, &mut glyphs, &texts, &view([E, N], SCALE)));
     for pan in [0.25, 0.5, 1.0] {
         let step = pan / SCALE;
-        let (_, _, after) = inked(&draw(gpu, &mut glyphs, &texts, &view([E + step, N + step], SCALE)));
+        let (_, _, after) = inked(&draw(
+            gpu,
+            &mut glyphs,
+            &texts,
+            &view([E + step, N + step], SCALE),
+        ));
         let moved = [after[0] - before[0], after[1] - before[1]];
-        eprintln!("glyphs: a pan of {pan} px moved the ink by {:.3}, {:.3} px", moved[0], moved[1]);
+        eprintln!(
+            "glyphs: a pan of {pan} px moved the ink by {:.3}, {:.3} px",
+            moved[0], moved[1]
+        );
         // The camera east and north: the text goes left and down the screen (y down), within a twentieth of a pixel
         // (the field's own sampling as the letters cross the pixel grid).
-        assert!((moved[0] + pan).abs() < 0.05 && (moved[1] - pan).abs() < 0.05, "{pan}: {moved:?}");
+        assert!(
+            (moved[0] + pan).abs() < 0.05 && (moved[1] - pan).abs() < 0.05,
+            "{pan}: {moved:?}"
+        );
     }
 }
 
@@ -341,7 +425,14 @@ pub fn masks_and_underlines_draw_under_and_over_the_letters(gpu: &Gpu) {
     let (s, c) = 30f64.to_radians().sin_cos();
     // The unit square onto a 120 × 40 px box turned 30°, its middle on the anchor (pixels, y up).
     let mask = GlyphQuad {
-        transform: [w * c, w * s, -h * s, h * c, -(w * c - h * s) / 2.0, -(w * s + h * c) / 2.0],
+        transform: [
+            w * c,
+            w * s,
+            -h * s,
+            h * c,
+            -(w * c - h * s) / 2.0,
+            -(w * s + h * c) / 2.0,
+        ],
         color: Rgba8([255, 0, 0, 255]),
         triangle: false,
     };
@@ -357,43 +448,69 @@ pub fn masks_and_underlines_draw_under_and_over_the_letters(gpu: &Gpu) {
     let share = |p: &[u8; 4]| ((f64::from(p[0]) - f64::from(p[1])) / 255.0).clamp(0.0, 1.0);
     let pixels = rgba.as_chunks::<4>().0;
     let area: f64 = pixels.iter().map(share).sum();
-    let edge = pixels.iter().filter(|p| (0.15..0.85).contains(&share(p))).count();
-    eprintln!("glyphs: a mask of {} px² covers {area:.0}, {edge} pixels of its edge partly", w * h);
+    let edge = pixels
+        .iter()
+        .filter(|p| (0.15..0.85).contains(&share(p)))
+        .count();
+    eprintln!(
+        "glyphs: a mask of {} px² covers {area:.0}, {edge} pixels of its edge partly",
+        w * h
+    );
     assert!((area - w * h).abs() < 0.01 * w * h, "{area}");
     assert!(edge > 200, "smoothed edges: {edge}");
     // The letters over the mask, the underline over them.
     let text = layout("OO", 1.2, 0.0);
     let m = middle(&text);
     let ink_at = |rgba: &[u8], colour: [u8; 3]| {
-        rgba.as_chunks::<4>().0.iter().filter(|p| (0..3).all(|i| p[i].abs_diff(colour[i]) < 30)).count()
+        rgba.as_chunks::<4>()
+            .0
+            .iter()
+            .filter(|p| (0..3).all(|i| p[i].abs_diff(colour[i]) < 30))
+            .count()
     };
     let lettered = GlyphText {
         under: vec![GlyphQuad {
             transform: [8.0, 0.0, 0.0, 2.0, -4.0 - m[0], -1.0 - m[1]],
             color: Rgba8([255, 0, 0, 255]),
-        triangle: false,
-    }],
+            triangle: false,
+        }],
         over: vec![GlyphQuad {
             transform: [8.0, 0.0, 0.0, 0.1, -4.0 - m[0], -0.05 - m[1]],
             color: Rgba8([0, 200, 0, 255]),
-        triangle: false,
-    }],
+            triangle: false,
+        }],
         ..world([E, N], &text, 0.0)
     };
     let rgba = draw(gpu, &mut glyphs, std::slice::from_ref(&lettered), &frame);
     let ink_colour = [INK.0[0], INK.0[1], INK.0[2]];
-    let letters = GlyphText { under: Vec::new(), over: Vec::new(), ..lettered.clone() };
-    let underline = GlyphText { glyphs: Vec::new(), under: Vec::new(), ..lettered.clone() };
+    let letters = GlyphText {
+        under: Vec::new(),
+        over: Vec::new(),
+        ..lettered.clone()
+    };
+    let underline = GlyphText {
+        glyphs: Vec::new(),
+        under: Vec::new(),
+        ..lettered.clone()
+    };
     let (alone, bar) = (
         draw(gpu, &mut glyphs, std::slice::from_ref(&letters), &frame),
         draw(gpu, &mut glyphs, std::slice::from_ref(&underline), &frame),
     );
     let (ink, ink_alone) = (ink_at(&rgba, ink_colour), ink_at(&alone, ink_colour));
     let (green, green_alone) = (ink_at(&rgba, [0, 200, 0]), ink_at(&bar, [0, 200, 0]));
-    eprintln!("glyphs: ink {ink} over the mask, {ink_alone} alone; underline {green} over the letters, {green_alone} alone");
+    eprintln!(
+        "glyphs: ink {ink} over the mask, {ink_alone} alone; underline {green} over the letters, {green_alone} alone"
+    );
     // The letters whole over the mask (the underline takes its own row off them), the underline whole over them.
-    assert!(ink_alone > 50 && ink + 40 >= ink_alone, "{ink} of {ink_alone}");
-    assert!(green_alone > 100 && green == green_alone, "{green} of {green_alone}");
+    assert!(
+        ink_alone > 50 && ink + 40 >= ink_alone,
+        "{ink} of {ink_alone}"
+    );
+    assert!(
+        green_alone > 100 && green == green_alone,
+        "{green} of {green_alone}"
+    );
     keep(&rgba, "maske-alt-cizgi-gpu");
 }
 
@@ -428,11 +545,23 @@ pub fn rings_and_lines_cover_their_areas(gpu: &Gpu) {
         .collect();
     let (area, edge, _) = cover(GlyphQuad::ring(&hexagon, 1.0, red), &mut glyphs);
     let exact = 1.5 * 3f64.sqrt() * 50.0 * 50.0;
-    eprintln!("glyphs: a hexagon of {exact:.0} px² covers {area:.0}, {edge} pixels of its edge partly");
+    eprintln!(
+        "glyphs: a hexagon of {exact:.0} px² covers {area:.0}, {edge} pixels of its edge partly"
+    );
     // The triangles fill to the edge; the outline smooths its outer half pixel (about a pixel of the edge in three).
-    assert!((area - exact).abs() < 0.01 * exact && edge > 80, "{area} {edge}");
+    assert!(
+        (area - exact).abs() < 0.01 * exact && edge > 80,
+        "{area} {edge}"
+    );
     // A concave L, clockwise: 80 × 80 less its upper right 50 × 50.
-    let l = [[-40.0, -40.0], [-40.0, 40.0], [-10.0, 40.0], [-10.0, -10.0], [40.0, -10.0], [40.0, -40.0]];
+    let l = [
+        [-40.0, -40.0],
+        [-40.0, 40.0],
+        [-10.0, 40.0],
+        [-10.0, -10.0],
+        [40.0, -10.0],
+        [40.0, -40.0],
+    ];
     let (area, _, _) = cover(GlyphQuad::ring(&l, 1.0, red), &mut glyphs);
     eprintln!("glyphs: a concave L of 3900 px² covers {area:.0}");
     assert!((area - 3900.0).abs() < 0.015 * 3900.0, "{area}");
@@ -450,7 +579,11 @@ pub fn holes_stay_open_and_screen_marks_stay_put(gpu: &Gpu) {
     let mut glyphs = GlyphGpu::new(&gpu.device, FORMAT);
     let red = Rgba8([255, 0, 0, 255]);
     let shares = |rgba: &[u8]| -> Vec<f64> {
-        rgba.as_chunks::<4>().0.iter().map(|p| ((f64::from(p[0]) - f64::from(p[1])) / 255.0).clamp(0.0, 1.0)).collect()
+        rgba.as_chunks::<4>()
+            .0
+            .iter()
+            .map(|p| ((f64::from(p[0]) - f64::from(p[1])) / 255.0).clamp(0.0, 1.0))
+            .collect()
     };
     let shape = |unit: GlyphUnit, at: [f64; 2], under: Vec<GlyphQuad>| GlyphText {
         at,
@@ -462,40 +595,89 @@ pub fn holes_stay_open_and_screen_marks_stay_put(gpu: &Gpu) {
     // An 80 px square with a 40 px square hole: 4 800 px², its middle open.
     let square = |r: f64| vec![[-r, -r], [r, -r], [r, r], [-r, r]];
     let frame = view([E, N], 20.0);
-    let holed = shape(GlyphUnit::Px { turns: false }, [E, N], GlyphQuad::polygon(&[square(40.0), square(20.0)], 1.0, red));
+    let holed = shape(
+        GlyphUnit::Px { turns: false },
+        [E, N],
+        GlyphQuad::polygon(&[square(40.0), square(20.0)], 1.0, red),
+    );
     let rgba = draw(gpu, &mut glyphs, std::slice::from_ref(&holed), &frame);
     let covered = shares(&rgba);
     let area: f64 = covered.iter().sum();
     let middle = covered[(H / 2 * W + W / 2) as usize];
     eprintln!("glyphs: a square with a hole of 4800 px² covers {area:.0}; its middle {middle:.2}");
     keep(&rgba, "delikli-gpu");
-    assert!((area - 4800.0).abs() < 0.015 * 4800.0 && middle < 0.01, "{area} {middle}");
+    assert!(
+        (area - 4800.0).abs() < 0.015 * 4800.0 && middle < 0.01,
+        "{area} {middle}"
+    );
     // A 20 px square on the screen at (60, 50), y down: the same pixels panned and turned.
-    let mark = shape(GlyphUnit::Screen, [60.0, 50.0], GlyphQuad::polygon(&[vec![[0.0, 0.0], [20.0, 0.0], [20.0, -20.0], [0.0, -20.0]]], 1.0, red));
+    let mark = shape(
+        GlyphUnit::Screen,
+        [60.0, 50.0],
+        GlyphQuad::polygon(
+            &[vec![[0.0, 0.0], [20.0, 0.0], [20.0, -20.0], [0.0, -20.0]]],
+            1.0,
+            red,
+        ),
+    );
     let here = draw(gpu, &mut glyphs, std::slice::from_ref(&mark), &frame);
-    let moved = StyledFrame { twist: 0.4, ..view([E + 37.25, N - 12.5], 55.0) };
+    let moved = StyledFrame {
+        twist: 0.4,
+        ..view([E + 37.25, N - 12.5], 55.0)
+    };
     let there = draw(gpu, &mut glyphs, std::slice::from_ref(&mark), &moved);
     let (count, _, centre) = inked(&here);
-    let worst = here.iter().zip(&there).map(|(p, q)| p.abs_diff(*q)).max().unwrap_or(0);
-    eprintln!("glyphs: a screen mark of {count} pixels about {centre:?}; panned and turned, the most a channel differs {worst}");
+    let worst = here
+        .iter()
+        .zip(&there)
+        .map(|(p, q)| p.abs_diff(*q))
+        .max()
+        .unwrap_or(0);
+    eprintln!(
+        "glyphs: a screen mark of {count} pixels about {centre:?}; panned and turned, the most a channel differs {worst}"
+    );
     assert!(worst == 0, "{worst}");
-    assert!((centre[0] - 70.0).abs() < 0.6 && (centre[1] - 60.0).abs() < 0.6, "{centre:?}");
+    assert!(
+        (centre[0] - 70.0).abs() < 0.6 && (centre[1] - 60.0).abs() < 0.6,
+        "{centre:?}"
+    );
     // On the map the same square moves with the pan.
     let on_map = shape(GlyphUnit::Px { turns: false }, [E, N], mark.under.clone());
     let a = draw(gpu, &mut glyphs, std::slice::from_ref(&on_map), &frame);
-    let b = draw(gpu, &mut glyphs, std::slice::from_ref(&on_map), &view([E + 1.0, N], 20.0));
+    let b = draw(
+        gpu,
+        &mut glyphs,
+        std::slice::from_ref(&on_map),
+        &view([E + 1.0, N], 20.0),
+    );
     let (_, _, ca) = inked(&a);
     let (_, _, cb) = inked(&b);
-    assert!((ca[0] - cb[0] - 20.0).abs() < 0.6, "a metre's pan at 20 px a metre: {ca:?} {cb:?}");
+    assert!(
+        (ca[0] - cb[0] - 20.0).abs() < 0.6,
+        "a metre's pan at 20 px a metre: {ca:?} {cb:?}"
+    );
 }
 
 /// Fields on pages of 160 px (a dozen and more of them, the texture made again as they come) draw as on one page.
 pub fn fields_on_many_pages_draw_as_on_one(gpu: &Gpu) {
-    let lines = ["ABCDEFGHIJKLM", "NOPQRSTUVWXYZ", "abcdefghijklm", "nopqrstuvwxyz", "0123456789 ğüşıöç", "ĞÜŞİÖÇ &@%"];
+    let lines = [
+        "ABCDEFGHIJKLM",
+        "NOPQRSTUVWXYZ",
+        "abcdefghijklm",
+        "nopqrstuvwxyz",
+        "0123456789 ğüşıöç",
+        "ĞÜŞİÖÇ &@%",
+    ];
     let texts: Vec<GlyphText> = lines
         .iter()
         .enumerate()
-        .map(|(i, line)| world([E - 7.0, N + 4.0 - 1.6 * i as f64], &layout(line, 0.9, 0.0), 1.0))
+        .map(|(i, line)| {
+            world(
+                [E - 7.0, N + 4.0 - 1.6 * i as f64],
+                &layout(line, 0.9, 0.0),
+                1.0,
+            )
+        })
         .collect();
     let frame = view([E, N], 20.0);
     let mut one = GlyphGpu::new(&gpu.device, FORMAT);
@@ -503,10 +685,17 @@ pub fn fields_on_many_pages_draw_as_on_one(gpu: &Gpu) {
     let a = draw(gpu, &mut one, &texts, &frame);
     let b = draw(gpu, &mut many, &texts, &frame);
     let pages = many.atlas().page_count();
-    let worst = a.iter().zip(&b).map(|(p, q)| p.abs_diff(*q)).max().unwrap_or(0);
+    let worst = a
+        .iter()
+        .zip(&b)
+        .map(|(p, q)| p.abs_diff(*q))
+        .max()
+        .unwrap_or(0);
     let (mean, _, _) = compare(&a, &b);
     let (count, _, _) = inked(&a);
-    eprintln!("glyphs: {pages} pages; the most a channel differs {worst}, mean {mean:.4}; {count} pixels of text");
+    eprintln!(
+        "glyphs: {pages} pages; the most a channel differs {worst}, mean {mean:.4}; {count} pixels of text"
+    );
     keep(&b, "cok-sayfa-gpu");
     assert_eq!(one.atlas().page_count(), 1);
     assert!(pages >= 12, "{pages} pages");
@@ -530,13 +719,21 @@ pub fn a_glyph_past_its_field_is_read_from_its_outline(gpu: &Gpu) {
         let ours = draw(gpu, &mut glyphs, &[world(at, &text, halo_px)], &frame);
         let theirs = reference(&text, at, &frame, halo_px);
         let (mean, gross, inked) = compare(&ours, &theirs);
-        eprintln!("big glyph {case}: mean difference {mean:.2}, {gross} pixels off by a quarter, {inked} ink pixels");
+        eprintln!(
+            "big glyph {case}: mean difference {mean:.2}, {gross} pixels off by a quarter, {inked} ink pixels"
+        );
         keep(&ours, &format!("buyuk-glif-{case}-gpu"));
         keep(&theirs, &format!("buyuk-glif-{case}-referans"));
-        assert!(inked > 5_000, "case {case}: the E's corner fills much of the view ({inked} px)");
+        assert!(
+            inked > 5_000,
+            "case {case}: the E's corner fills much of the view ({inked} px)"
+        );
         // Edges smoothed by four samples against the reference's exact coverage: a pixel off by more than a quarter
         // only along them, never in the corner's body.
-        assert!(gross <= (W + H) as usize, "case {case}: {gross} pixels off by a quarter");
+        assert!(
+            gross <= (W + H) as usize,
+            "case {case}: {gross} pixels off by a quarter"
+        );
         assert!(mean < 3.0, "case {case}: mean difference {mean:.2}");
     }
     // Below the threshold the text draws from its field, as it always did.
@@ -546,5 +743,8 @@ pub fn a_glyph_past_its_field_is_read_from_its_outline(gpu: &Gpu) {
     let ours = draw(gpu, &mut glyphs, &[world(at, &text, 1.5)], &frame);
     let theirs = reference(&text, at, &frame, 1.5);
     let (mean, ..) = compare(&ours, &theirs);
-    assert!(mean < 1.0, "a small text from its field: mean difference {mean:.2}");
+    assert!(
+        mean < 1.0,
+        "a small text from its field: mean difference {mean:.2}"
+    );
 }

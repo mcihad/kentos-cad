@@ -52,9 +52,10 @@ pub fn order_of(f: &LayerField) -> &'static str {
         // A time stamp by its moment in UTC (docs/adr/0629 §3).
         LayerFieldKind::Instant => "instant",
         LayerFieldKind::Boolean => "boolean",
-        LayerFieldKind::Text | LayerFieldKind::Uuid | LayerFieldKind::Json | LayerFieldKind::Binary => {
-            "text"
-        }
+        LayerFieldKind::Text
+        | LayerFieldKind::Uuid
+        | LayerFieldKind::Json
+        | LayerFieldKind::Binary => "text",
     }
 }
 
@@ -341,7 +342,9 @@ pub fn outgoing_columns(
     for j in visible_columns(table, hidden) {
         let c = &table.columns[j];
         let secret = c.key.as_deref().is_some_and(named)
-            || c.field.as_ref().is_some_and(|f| named(&f.name) || named(f.label()));
+            || c.field
+                .as_ref()
+                .is_some_and(|f| named(&f.name) || named(f.label()));
         if secret {
             out.withheld.push(c.label.clone());
         } else {
@@ -354,7 +357,13 @@ pub fn outgoing_columns(
 /// A cell's text in a copy: tabs and line breaks become spaces, so a cell stays one cell.
 fn flat(text: &str) -> String {
     text.chars()
-        .map(|c| if matches!(c, '\t' | '\n' | '\r') { ' ' } else { c })
+        .map(|c| {
+            if matches!(c, '\t' | '\n' | '\r') {
+                ' '
+            } else {
+                c
+            }
+        })
         .collect()
 }
 
@@ -543,7 +552,13 @@ mod tests {
         let names: Vec<&str> = sheet.columns.iter().map(|c| c.name.as_str()).collect();
         assert_eq!(names, ["Tür", "Ad", "Kat"]);
         assert_eq!(sheet.rows[0], ["Nokta", "Dükkân", "1"]);
-        assert!(sheet.rows.iter().flatten().all(|v| v != "123" && v != "456"));
+        assert!(
+            sheet
+                .rows
+                .iter()
+                .flatten()
+                .all(|v| v != "123" && v != "456")
+        );
         // The whole table is the same sheet as before.
         let all = workbook_sheet(&t, &[0, 1], "Tablo");
         assert_eq!(all.columns.len(), 4);

@@ -8,7 +8,10 @@
 //! swatch `4H` wide and `2H` high, its top `2.4H + 3H·i` below the place, its words `5H` right of the place, level
 //! with the swatch's middle.
 
-use kentos_commands::{CommandResult, EntitiesCreate, EntityGeometry, HatchPattern, HatchPatternType, NewObject, TextAlign, Vec2};
+use kentos_commands::{
+    CommandResult, EntitiesCreate, EntityGeometry, HatchPattern, HatchPatternType, NewObject,
+    TextAlign, Vec2,
+};
 use kentos_domain::{Document, Slot};
 
 use crate::{ExecutionContext, create};
@@ -31,7 +34,12 @@ pub fn row_words(label: &str, rooms: usize, area: f64) -> String {
 /// Draws the legend of the rooms on `level` (every room's: none) with its top left at `at`, on `layer`, the old legend
 /// taken away first; how many rows it has. One undo step when the caller holds a group. None without a colour plan or
 /// a room.
-pub fn draw(doc: &mut Document, level: Option<&str>, at: Vec2, layer: &str) -> Result<usize, String> {
+pub fn draw(
+    doc: &mut Document,
+    level: Option<&str>,
+    at: Vec2,
+    layer: &str,
+) -> Result<usize, String> {
     let Some(scheme) = doc.color_plan() else {
         return Err("Renk planı kapalı: önce Mahal ▸ Renk planı'ndan bir şema seçin.".into());
     };
@@ -39,13 +47,19 @@ pub fn draw(doc: &mut Document, level: Option<&str>, at: Vec2, layer: &str) -> R
     if rows.is_empty() {
         return Err("Bu katta mahal yok: renk planının lejandı mahallerden yapılır.".into());
     }
-    let old: Vec<Slot> =
-        doc.entities().filter(|e| e.base().attrs.contains_key(MARK_ATTR)).map(|e| Slot(e.base().id)).collect();
+    let old: Vec<Slot> = doc
+        .entities()
+        .filter(|e| e.base().attrs.contains_key(MARK_ATTR))
+        .map(|e| Slot(e.base().id))
+        .collect();
     if !old.is_empty() {
         doc.remove(&old);
     }
     let h = 2.5 / 1000.0 * doc.settings().plot_scale;
-    let p = |x: f64, y: f64| Vec2 { x: at.x + x, y: at.y + y };
+    let p = |x: f64, y: f64| Vec2 {
+        x: at.x + x,
+        y: at.y + y,
+    };
     let object = |geometry, color: Option<&str>, what: &str| NewObject {
         geometry,
         color: color.map(str::to_owned),
@@ -77,17 +91,30 @@ pub fn draw(doc: &mut Document, level: Option<&str>, at: Vec2, layer: &str) -> R
         path: None,
     };
     let level_name = level.and_then(|id| {
-        doc.settings().arch.as_ref().and_then(|a| a.levels.iter().find(|l| l.id == id)).map(|l| l.name.clone())
+        doc.settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.levels.iter().find(|l| l.id == id))
+            .map(|l| l.name.clone())
     });
     let title = match &level_name {
         Some(name) => format!("Mahal renk planı: {} ({name})", scheme.label()),
         None => format!("Mahal renk planı: {}", scheme.label()),
     };
-    let mut objects = vec![object(text(p(0.0, 0.0), title, 1.2 * h, TextAlign::TopLeft), None, "başlık")];
+    let mut objects = vec![object(
+        text(p(0.0, 0.0), title, 1.2 * h, TextAlign::TopLeft),
+        None,
+        "başlık",
+    )];
     let (mut rooms, mut area) = (0, 0.0);
     for (i, r) in rows.iter().enumerate() {
         let top = -(2.4 * h + 3.0 * h * i as f64);
-        let ring = vec![p(0.0, top - 2.0 * h), p(4.0 * h, top - 2.0 * h), p(4.0 * h, top), p(0.0, top)];
+        let ring = vec![
+            p(0.0, top - 2.0 * h),
+            p(4.0 * h, top - 2.0 * h),
+            p(4.0 * h, top),
+            p(0.0, top),
+        ];
         if let Some(color) = r.color {
             let fill = EntityGeometry::Hatch {
                 ring: ring.clone(),
@@ -110,17 +137,31 @@ pub fn draw(doc: &mut Document, level: Option<&str>, at: Vec2, layer: &str) -> R
         };
         objects.push(object(outline, None, &r.label));
         let words = row_words(&r.label, r.rooms, r.area);
-        objects.push(object(text(p(5.0 * h, top - h), words, h, TextAlign::MiddleLeft), None, &r.label));
+        objects.push(object(
+            text(p(5.0 * h, top - h), words, h, TextAlign::MiddleLeft),
+            None,
+            &r.label,
+        ));
         rooms += r.rooms;
         area += r.area;
     }
     let total_top = -(2.4 * h + 3.0 * rows.len() as f64 * h);
     objects.push(object(
-        text(p(5.0 * h, total_top - h), row_words("Toplam", rooms, area), h, TextAlign::MiddleLeft),
+        text(
+            p(5.0 * h, total_top - h),
+            row_words("Toplam", rooms, area),
+            h,
+            TextAlign::MiddleLeft,
+        ),
         None,
         "toplam",
     ));
-    let input = EntitiesCreate { layer_id: layer.to_owned(), objects, operation: None, expected_revision: None };
+    let input = EntitiesCreate {
+        layer_id: layer.to_owned(),
+        objects,
+        operation: None,
+        expected_revision: None,
+    };
     match create::execute(&mut ExecutionContext::new(doc), input) {
         CommandResult::Completed { .. } => Ok(rows.len()),
         CommandResult::Failed { error } | CommandResult::NeedsInput { error } => Err(error.message),

@@ -47,7 +47,9 @@ pub(super) fn named_views(
                     let value = r.opaque()?;
                     let read: ViewRecipe = serde_json::from_value(value.clone()).map_err(|e| {
                         let words = e.to_string();
-                        let code = if words.contains("unknown field") || words.contains("unknown variant") {
+                        let code = if words.contains("unknown field")
+                            || words.contains("unknown variant")
+                        {
                             Code::UnknownField
                         } else {
                             Code::BadValue
@@ -68,7 +70,8 @@ pub(super) fn named_views(
                             "görünüş tarifinin duvar ayrıntısı ve kırpması şema 143'ten beri yazılır",
                         ));
                     }
-                    if !templates && (!read.pens.is_empty() || read.mono || read.template.is_some()) {
+                    if !templates && (!read.pens.is_empty() || read.mono || read.template.is_some())
+                    {
                         return Err(r.fail_at(
                             Code::UnknownField,
                             at,

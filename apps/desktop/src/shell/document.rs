@@ -48,13 +48,17 @@ pub struct StoredSource {
 impl StoredSource {
     /// A GeoPackage's file: where its layers' relative paths start from; none for a database.
     pub fn file(&self) -> Option<PathBuf> {
-        (!self.address.starts_with("postgres")).then(|| PathBuf::from(self.address.strip_prefix("gpkg:").unwrap_or(&self.address)))
+        (!self.address.starts_with("postgres"))
+            .then(|| PathBuf::from(self.address.strip_prefix("gpkg:").unwrap_or(&self.address)))
     }
 
     /// Where it is kept, as the interface says it: “sivas.gpkg”, “kentos_veri › public”.
     pub fn place(&self) -> String {
         match self.file() {
-            Some(f) => f.file_name().map_or_else(|| self.address.clone(), |n| n.to_string_lossy().into_owned()),
+            Some(f) => f.file_name().map_or_else(
+                || self.address.clone(),
+                |n| n.to_string_lossy().into_owned(),
+            ),
             None => {
                 let db = self.address.rsplit('/').next().unwrap_or(&self.address);
                 let db = db.split('?').next().unwrap_or(db);
@@ -278,21 +282,34 @@ impl Document {
     }
 
     pub fn file_name(&self) -> Option<std::borrow::Cow<'_, str>> {
-        self.path.as_deref()?.file_name().map(|name| name.to_string_lossy())
+        self.path
+            .as_deref()?
+            .file_name()
+            .map(|name| name.to_string_lossy())
     }
 
     /// The project's name as the inspector and the opening's words say it: its own, but a file of an older KentOS
     /// whose project kept a new project's name is called by its file (docs/adr/9138).
     pub(crate) fn shown_name(&self) -> std::borrow::Cow<'_, str> {
-        let stem = self.path.as_deref().and_then(std::path::Path::file_stem).map(|s| s.to_string_lossy());
+        let stem = self
+            .path
+            .as_deref()
+            .and_then(std::path::Path::file_stem)
+            .map(|s| s.to_string_lossy());
         match stem {
-            Some(stem) if self.name() == kentos_project::new_project::NEW_PROJECT_NAME && !stem.trim().is_empty() => stem,
+            Some(stem)
+                if self.name() == kentos_project::new_project::NEW_PROJECT_NAME
+                    && !stem.trim().is_empty() =>
+            {
+                stem
+            }
             _ => std::borrow::Cow::Borrowed(self.name()),
         }
     }
 
     pub(crate) fn display_name(&self) -> std::borrow::Cow<'_, str> {
-        self.file_name().unwrap_or_else(|| std::borrow::Cow::Borrowed(self.name()))
+        self.file_name()
+            .unwrap_or_else(|| std::borrow::Cow::Borrowed(self.name()))
     }
 
     /// Whether the drawing has changes no save has written.
@@ -678,7 +695,9 @@ mod tests {
 }
 
 /// A command's refusal: its error, when it wrote nothing.
-pub fn refusal<T>(result: kentos_commands::CommandResult<T>) -> Option<kentos_commands::CommandError> {
+pub fn refusal<T>(
+    result: kentos_commands::CommandResult<T>,
+) -> Option<kentos_commands::CommandError> {
     match result {
         kentos_commands::CommandResult::Failed { error }
         | kentos_commands::CommandResult::Conflict { error }

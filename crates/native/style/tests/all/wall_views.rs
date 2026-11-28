@@ -88,11 +88,7 @@ fn a_layer_at_a_views_own_detail_is_what_a_store_at_it_draws() {
     // The store's own view asked for is its plain build; detailed draws the layers' lines and the brick's hatch the
     // schematic store does not.
     assert_eq!(built(&store, &list, Some(own)), plain);
-    let detailed = built(
-        &store,
-        &list,
-        Some(View::new(Detail::Detailed, 100.0)),
-    );
+    let detailed = built(&store, &list, Some(View::new(Detail::Detailed, 100.0)));
     assert!(detailed.1.len() > plain.1.len());
     assert_eq!(store.wall_view(), own);
 }

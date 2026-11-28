@@ -32,9 +32,7 @@ fn room() -> (Bench, Slot) {
     let mut b = bench();
     let layer = b.doc.layers().active().to_owned();
     let p = |x: f64, y: f64| json!({"x": E + x, "y": N + y});
-    let wall = |a: (f64, f64), z: (f64, f64)| {
-        json!({"kind":"wall","id":0,"layerId":layer,"attrs":{},"width":0.2,"pts":[p(a.0,a.1),p(z.0,z.1)]})
-    };
+    let wall = |a: (f64, f64), z: (f64, f64)| json!({"kind":"wall","id":0,"layerId":layer,"attrs":{},"width":0.2,"pts":[p(a.0,a.1),p(z.0,z.1)]});
     add(
         &mut b,
         vec![
@@ -46,7 +44,9 @@ fn room() -> (Bench, Slot) {
     );
     let column = add(
         &mut b,
-        vec![json!({"kind":"column","id":0,"layerId":layer,"attrs":{},"width":0.4,"depth":0.4,"at":p(2., 1.5)})],
+        vec![
+            json!({"kind":"column","id":0,"layerId":layer,"attrs":{},"width":0.4,"depth":0.4,"at":p(2., 1.5)}),
+        ],
     )[0];
     b.session.exit();
     b.selection.set([column]);
@@ -67,7 +67,10 @@ fn a_selected_column_shows_its_four_gaps_and_writes_nothing() {
     let before = b.doc.to_snapshot_v2();
     let numbers = b.session.temporary_numbers();
     assert_eq!(numbers.len(), 4, "east, north, west, south: {numbers:?}");
-    let preview = b.session.preview(&Default::default()).expect("the dimensions");
+    let preview = b
+        .session
+        .preview(&Default::default())
+        .expect("the dimensions");
     // West: 1.8 − 0.1 = 1.700; east 6 − 0.1 − 2.2 = 3.700; south 1.3 − 0.1 = 1.200; north 3.9 − 1.7 = 2.200.
     for value in ["1.700", "3.700", "1.200", "2.200"] {
         assert!(
@@ -102,11 +105,18 @@ fn a_number_typed_moves_the_column_in_one_step() {
     b.run(|session, cx| session.text_typed(Some("1.00"), cx));
     assert!(!b.session.is_running());
     let (x, y) = at(&b, column);
-    assert!((x - 1.3).abs() < 1e-9 && (y - 1.5).abs() < 1e-9, "({x}, {y})");
+    assert!(
+        (x - 1.3).abs() < 1e-9 && (y - 1.5).abs() < 1e-9,
+        "({x}, {y})"
+    );
     assert_eq!(b.last_level(), Some(Level::Success));
     assert_eq!(b.selection.ids(), [column], "the column stays selected");
     assert_eq!(b.doc.undo().as_deref(), Some("Mimari nesneyi düzenle"));
-    assert_eq!(b.doc.to_snapshot_v2().entities, before.entities, "one undo takes it back");
+    assert_eq!(
+        b.doc.to_snapshot_v2().entities,
+        before.entities,
+        "one undo takes it back"
+    );
 }
 
 #[test]
@@ -120,7 +130,10 @@ fn escape_and_a_bad_value_write_nothing() {
     let n = b.session.temporary_numbers()[0];
     b.click(n.x - E, n.y - N);
     b.run(|session, cx| session.text_typed(Some("uzak"), cx));
-    assert!(b.session.is_running(), "a value that does not read keeps the field");
+    assert!(
+        b.session.is_running(),
+        "a value that does not read keeps the field"
+    );
     b.run(|session, cx| session.text_typed(None, cx));
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
@@ -137,10 +150,15 @@ fn a_column_on_grids_says_why_it_does_not_move() {
             json!({"kind":"grid","id":0,"layerId":layer,"attrs":{},"pts":[p(4., -1.),p(4., 5.)],"name":"A"}),
         ],
     );
-    let uids: Vec<String> = grids.iter().map(|&s| b.doc.uid(s).unwrap().to_string()).collect();
+    let uids: Vec<String> = grids
+        .iter()
+        .map(|&s| b.doc.uid(s).unwrap().to_string())
+        .collect();
     let tied = add(
         &mut b,
-        vec![json!({"kind":"column","id":0,"layerId":layer,"attrs":{},"width":0.4,"depth":0.4,"at":p(4., 3.),"grids":[uids[1],uids[0]],"place":"A-1"})],
+        vec![
+            json!({"kind":"column","id":0,"layerId":layer,"attrs":{},"width":0.4,"depth":0.4,"at":p(4., 3.),"grids":[uids[1],uids[0]],"place":"A-1"}),
+        ],
     )[0];
     b.selection.set([tied]);
     b.move_to(5.5, 1.);
@@ -151,7 +169,8 @@ fn a_column_on_grids_says_why_it_does_not_move() {
     assert!(!b.session.is_running(), "no field opens: nothing to type");
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert!(
-        b.last_text().is_some_and(|t| t.contains("akslara bağlı (A-1)")),
+        b.last_text()
+            .is_some_and(|t| t.contains("akslara bağlı (A-1)")),
         "{:?}",
         b.last_text()
     );

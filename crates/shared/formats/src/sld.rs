@@ -784,7 +784,9 @@ fn svg_marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<S
         .and_then(Value::as_f64)
         .unwrap_or(2.0);
     let (size, uom) = size_of(size, unit);
-    if layer.get("fill").is_some_and(|v| !v.is_null()) || layer.get("stroke").is_some_and(|v| !v.is_null()) {
+    if layer.get("fill").is_some_and(|v| !v.is_null())
+        || layer.get("stroke").is_some_and(|v| !v.is_null())
+    {
         lost.push(format!(
             "{what}: SVG işaretinin dolgu ve çizgi renkleri SLD'ye yazılmadı (çizimin kendi renkleri kalır)"
         ));
@@ -865,7 +867,11 @@ fn text_marker_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<
         && let Some((rgb, a)) = h.get("color").and_then(colour)
     {
         let w = h.get("width").and_then(Value::as_f64).unwrap_or(0.0);
-        let w = if w <= 0.0 { 1.0 } else { round3(size_of(w, unit).0) };
+        let w = if w <= 0.0 {
+            1.0
+        } else {
+            round3(size_of(w, unit).0)
+        };
         let _ = write!(
             s,
             "<se:Stroke>{}<se:SvgParameter name=\"stroke-width\">{}</se:SvgParameter></se:Stroke>",
@@ -981,9 +987,7 @@ fn pattern_xml(layer: &Value, lost: &mut Vec<String>, what: &str) -> Option<Sym>
         return None;
     };
     if markers.len() > 1 {
-        lost.push(format!(
-            "{what}: desenin yalnız ilk işareti SLD'ye yazıldı"
-        ));
+        lost.push(format!("{what}: desenin yalnız ilk işareti SLD'ye yazıldı"));
     }
     let m = marker_xml(first, lost, what)?;
     let present = |key: &str, none: f64| {
@@ -1472,7 +1476,12 @@ fn literal_expr(t: &str) -> String {
 
 /// The expression of an SE function KentOS can say (`Recode` and `Categorize` of one field, to a `durum` chain whose
 /// values are colours), with `fallback` for the rest; none, said, for another function.
-fn function_expr(f: Node<'_, '_>, fallback: &str, lost: &mut Vec<String>, what: &str) -> Option<String> {
+fn function_expr(
+    f: Node<'_, '_>,
+    fallback: &str,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<String> {
     let name = f.attribute("name").unwrap_or("");
     let args: Vec<Node<'_, '_>> = f.children().filter(|c| c.is_element()).collect();
     let field = args
@@ -1495,15 +1504,29 @@ fn function_expr(f: Node<'_, '_>, fallback: &str, lost: &mut Vec<String>, what: 
     match name {
         "Recode" if lits.len() >= 2 && lits.len() % 2 == 0 => {
             for pair in lits.chunks(2) {
-                let _ = write!(out, " eğer [{field}] = {} ise {}", literal_expr(&pair[0]), q(&pair[1]));
+                let _ = write!(
+                    out,
+                    " eğer [{field}] = {} ise {}",
+                    literal_expr(&pair[0]),
+                    q(&pair[1])
+                );
             }
             let _ = write!(out, " yoksa '{fallback}' son");
         }
         "Categorize" if lits.len() >= 3 && lits.len() % 2 == 1 => {
             for (k, pair) in lits[1..].chunks(2).enumerate() {
-                let _ = write!(out, " eğer [{field}] < {} ise {}", literal_expr(&pair[0]), q(&lits[2 * k]));
+                let _ = write!(
+                    out,
+                    " eğer [{field}] < {} ise {}",
+                    literal_expr(&pair[0]),
+                    q(&lits[2 * k])
+                );
             }
-            let _ = write!(out, " yoksa {} son", q(lits.last().map(String::as_str).unwrap_or("")));
+            let _ = write!(
+                out,
+                " yoksa {} son",
+                q(lits.last().map(String::as_str).unwrap_or(""))
+            );
         }
         _ => {
             lost.push(format!(
@@ -1633,7 +1656,8 @@ pub fn colour_with(rgb: &str, opacity: Option<f64>) -> String {
 }
 
 fn read_stroke(s: Node<'_, '_>, uom: Option<&str>, id: &str, lost: &mut Vec<String>) -> Value {
-    let color = paint(s, "stroke", Some("#000000"), lost, "Çizgi").unwrap_or_else(|| json!("#000000"));
+    let color =
+        paint(s, "stroke", Some("#000000"), lost, "Çizgi").unwrap_or_else(|| json!("#000000"));
     let (width, unit) = size_in(
         param(s, "stroke-width")
             .and_then(|w| w.parse().ok())
@@ -1666,7 +1690,12 @@ fn read_stroke(s: Node<'_, '_>, uom: Option<&str>, id: &str, lost: &mut Vec<Stri
     l
 }
 
-fn read_fill(f: Node<'_, '_>, uom: Option<&str>, id: &str, lost: &mut Vec<String>) -> Option<Value> {
+fn read_fill(
+    f: Node<'_, '_>,
+    uom: Option<&str>,
+    id: &str,
+    lost: &mut Vec<String>,
+) -> Option<Value> {
     if let Some(g) = child(f, "GraphicFill") {
         // SE tiles the graphic at its own size: the cell is the graphic's size.
         let Some(marker) = child(g, "Graphic").and_then(|g| read_mark(g, uom, lost)) else {
@@ -1747,7 +1776,10 @@ fn font_mark(mark: Node<'_, '_>) -> Option<(String, char)> {
     {
         font = Some(f.to_owned());
     }
-    if let Some(i) = child(mark, "MarkIndex").map(text_of).and_then(|i| i.parse::<u32>().ok()) {
+    if let Some(i) = child(mark, "MarkIndex")
+        .map(text_of)
+        .and_then(|i| i.parse::<u32>().ok())
+    {
         code = char::from_u32(i);
     }
     if let Some(w) = child(mark, "WellKnownName").map(text_of)
@@ -1798,7 +1830,9 @@ fn read_mark(g: Node<'_, '_>, uom: Option<&str>, lost: &mut Vec<String>) -> Opti
             && let Some(rgb) = param(s, "stroke")
         {
             let (w, _) = size_in(
-                param(s, "stroke-width").and_then(|w| w.parse().ok()).unwrap_or(1.0),
+                param(s, "stroke-width")
+                    .and_then(|w| w.parse().ok())
+                    .unwrap_or(1.0),
                 uom,
             );
             m["halo"] = json!({
@@ -1827,7 +1861,8 @@ fn read_mark(g: Node<'_, '_>, uom: Option<&str>, lost: &mut Vec<String>) -> Opti
         m["fill"] = c;
     }
     if let Some(s) = child(mark, "Stroke") {
-        m["stroke"] = paint(s, "stroke", Some("#000000"), lost, "İşaret").unwrap_or_else(|| json!("#000000"));
+        m["stroke"] =
+            paint(s, "stroke", Some("#000000"), lost, "İşaret").unwrap_or_else(|| json!("#000000"));
         let (w, _) = size_in(
             param(s, "stroke-width")
                 .and_then(|w| w.parse().ok())
@@ -1857,7 +1892,12 @@ fn read_symbols(rule: Node<'_, '_>, lost: &mut Vec<String>) -> Value {
                     fill_layers.push(f);
                 }
                 if let Some(st) = child(s, "Stroke") {
-                    fill_layers.push(read_stroke(st, uom, &format!("o{}", fill_layers.len()), lost));
+                    fill_layers.push(read_stroke(
+                        st,
+                        uom,
+                        &format!("o{}", fill_layers.len()),
+                        lost,
+                    ));
                 }
                 if child(s, "Displacement").is_some() || child(s, "PerpendicularOffset").is_some() {
                     lost.push("alanın kaydırması KentOS'un dolgusuna çevrilmedi".into());
@@ -2256,7 +2296,11 @@ mod tests {
         );
         let w = write("nokta", &r, &[], Kinds::ALL, &none);
         assert!(w.lost.is_empty(), "{:?}", w.lost);
-        assert!(w.xml.contains("image/svg+xml") && w.xml.contains("base64:"), "{}", w.xml);
+        assert!(
+            w.xml.contains("image/svg+xml") && w.xml.contains("base64:"),
+            "{}",
+            w.xml
+        );
         let back = read(&w.xml).expect("reads");
         let m = first_marker(&back);
         assert_eq!(m["type"], "svg");
@@ -2267,7 +2311,11 @@ mod tests {
         // A drawing the layer does not carry cannot be written.
         let r = marker_set(json!({ "id": "v", "type": "svg", "asset": "kapi", "size": 4 }));
         let w = write("nokta", &r, &[], Kinds::ALL, &none);
-        assert!(w.lost.iter().any(|l| l.contains("kitaplıkta yok")), "{:?}", w.lost);
+        assert!(
+            w.lost.iter().any(|l| l.contains("kitaplıkta yok")),
+            "{:?}",
+            w.lost
+        );
     }
 
     #[test]
@@ -2276,11 +2324,22 @@ mod tests {
             "id": "t", "type": "text", "text": "A", "font": "Arial", "size": 6, "unit": "mm", "color": "#aa0000",
             "weight": 700 }));
         let w = write("nokta", &r, &[], Kinds::ALL, &none);
-        assert!(w.xml.contains("ttf://Arial") && w.xml.contains("<se:MarkIndex>65</se:MarkIndex>"), "{}", w.xml);
-        assert!(w.lost.iter().any(|l| l.contains("kalın ve eğik")), "{:?}", w.lost);
+        assert!(
+            w.xml.contains("ttf://Arial") && w.xml.contains("<se:MarkIndex>65</se:MarkIndex>"),
+            "{}",
+            w.xml
+        );
+        assert!(
+            w.lost.iter().any(|l| l.contains("kalın ve eğik")),
+            "{:?}",
+            w.lost
+        );
         let back = read(&w.xml).expect("reads");
         let m = first_marker(&back);
-        assert_eq!((m["type"].as_str(), m["text"].as_str(), m["font"].as_str()), (Some("text"), Some("A"), Some("Arial")));
+        assert_eq!(
+            (m["type"].as_str(), m["text"].as_str(), m["font"].as_str()),
+            (Some("text"), Some("A"), Some("Arial"))
+        );
         assert_eq!(m["color"], "#aa0000");
         // SE's other way of naming it.
         let xml = w.xml.replace(
@@ -2299,7 +2358,13 @@ mod tests {
         let w = write("parsel", &r, &[], Kinds::ALL, &none);
         assert!(w.xml.contains("<se:GraphicFill>"), "{}", w.xml);
         assert!(w.lost.iter().any(|l| l.contains("degrade")), "{:?}", w.lost);
-        assert!(w.lost.iter().any(|l| l.contains("her ikinci satırın kayması")), "{:?}", w.lost);
+        assert!(
+            w.lost
+                .iter()
+                .any(|l| l.contains("her ikinci satırın kayması")),
+            "{:?}",
+            w.lost
+        );
         let back = read(&w.xml).expect("reads");
         let l = &back.renderer["symbols"]["fill"]["layers"][0];
         assert_eq!(l["type"], "patternFill");
@@ -2312,8 +2377,18 @@ mod tests {
         let r = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
             { "id": "f", "type": "simpleFill", "color": { "expr": "[renk]", "fallback": "#ff0000" } } ] } } });
         let w = write("parsel", &r, &[], Kinds::ALL, &none);
-        assert!(w.xml.contains("<ogc:PropertyName>renk</ogc:PropertyName>"), "{}", w.xml);
-        assert!(w.lost.iter().any(|l| l.contains("her SLD okuyucusu alana bağlı rengi okumaz")), "{:?}", w.lost);
+        assert!(
+            w.xml.contains("<ogc:PropertyName>renk</ogc:PropertyName>"),
+            "{}",
+            w.xml
+        );
+        assert!(
+            w.lost
+                .iter()
+                .any(|l| l.contains("her SLD okuyucusu alana bağlı rengi okumaz")),
+            "{:?}",
+            w.lost
+        );
         let back = read(&w.xml).expect("reads");
         let c = &back.renderer["symbols"]["fill"]["layers"][0]["color"];
         assert_eq!(c["expr"], "[renk]");

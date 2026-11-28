@@ -95,7 +95,9 @@ pub fn normalized_dashes(dash: &[f64]) -> std::borrow::Cow<'_, [f64]> {
 pub fn batch_dashes(b: &StyledBatch) -> std::borrow::Cow<'_, [f64]> {
     let dash = match &b.kind {
         BatchKind::Stroke { dash, .. }
-        | BatchKind::Fill { paint: FillPaintBatch::Hatch { dash, .. } } => dash.as_deref(),
+        | BatchKind::Fill {
+            paint: FillPaintBatch::Hatch { dash, .. },
+        } => dash.as_deref(),
         _ => None,
     };
     normalized_dashes(dash.unwrap_or_default())
@@ -106,7 +108,9 @@ pub fn batch_dashes(b: &StyledBatch) -> std::borrow::Cow<'_, [f64]> {
 pub fn dash_values(dash: Option<&[f64]>) -> ([f64; 8], f64, f64) {
     let mut d = [0.0; 8];
     let even = normalized_dashes(dash.unwrap_or_default());
-    for (slot, v) in d.iter_mut().zip(even.iter()) { *slot = *v; }
+    for (slot, v) in d.iter_mut().zip(even.iter()) {
+        *slot = *v;
+    }
     let total: f64 = even.iter().sum();
     let on: f64 = even.iter().step_by(2).sum();
     (d, total, if total > 0.0 { on / total } else { 1.0 })
@@ -117,7 +121,9 @@ pub fn dash_values(dash: Option<&[f64]>) -> ([f64; 8], f64, f64) {
 fn dash_phase(phase: f64, period: f64) -> f64 {
     if period > 0. && period.is_finite() && phase.is_finite() {
         phase.rem_euclid(period)
-    } else {phase}
+    } else {
+        phase
+    }
 }
 
 /// A pattern's per-cell random shift and whether neighbour cells must be
@@ -151,7 +157,12 @@ const NONE: [f64; 4] = [0.0; 4];
 pub fn style_block(b: &StyledBatch) -> StyleBlock {
     let mut s = StyleBlock {
         // Whole multiples of 2¹⁶ m: exact in float32. z: the px a world unit a paper width is held to (docs/adr/0793 §1).
-        origin: [b.origin[0] as f32, b.origin[1] as f32, b.weight_cap as f32, 0.0],
+        origin: [
+            b.origin[0] as f32,
+            b.origin[1] as f32,
+            b.weight_cap as f32,
+            0.0,
+        ],
         ..StyleBlock::default()
     };
     match &b.kind {
@@ -169,7 +180,7 @@ pub fn style_block(b: &StyledBatch) -> StyleBlock {
             s.set(8, &d);
             // A large/negative source phase is equivalent modulo its full
             // period. Fold before f32; doing it in the shader loses fractions.
-            let phase = dash_phase(*dash_offset,total);
+            let phase = dash_phase(*dash_offset, total);
             s.set(20, &[*width, total, on, phase]);
             s.set(24, &[*blur, 0.0, 0.0, 0.0]);
             let cap = match cap {
@@ -198,7 +209,7 @@ pub fn style_block(b: &StyledBatch) -> StyleBlock {
                 // A family's stagger (docs/adr/0186 §3).
                 s.set(16, &[*stagger, 0.0, 0.0, 0.0]);
                 s.set(20, &[angle.cos(), angle.sin(), *spacing, *width]);
-                s.set(24, &[*offset, total, on, dash_phase(*dash_offset,total)]);
+                s.set(24, &[*offset, total, on, dash_phase(*dash_offset, total)]);
                 s.u[0] = unit(*u);
             }
             // A raster (docs/adr/0204 §5): b.z = opacity; its quads carry the rest.
@@ -330,13 +341,13 @@ mod tests {
 
     #[test]
     fn remote_positive_negative_phase_uses_the_complete_period_before_f32() {
-        assert_eq!(dash_phase(1_000_000_000.25,0.75),0.5);
-        assert_eq!(dash_phase(-1_000_000_000.25,0.75),0.25);
-        let (_,period,_)=dash_values(Some(&[0.125,0.25,0.375]));
-        assert_eq!(period,1.5);
-        assert_eq!(dash_phase(1_000_000_000.25,period),1.25);
-        assert_eq!(dash_phase(-1_000_000_000.25,period),0.25);
-        assert_eq!(dash_phase(7.,0.),7.);
+        assert_eq!(dash_phase(1_000_000_000.25, 0.75), 0.5);
+        assert_eq!(dash_phase(-1_000_000_000.25, 0.75), 0.25);
+        let (_, period, _) = dash_values(Some(&[0.125, 0.25, 0.375]));
+        assert_eq!(period, 1.5);
+        assert_eq!(dash_phase(1_000_000_000.25, period), 1.25);
+        assert_eq!(dash_phase(-1_000_000_000.25, period), 0.25);
+        assert_eq!(dash_phase(7., 0.), 7.);
     }
 
     #[test]
@@ -359,13 +370,13 @@ mod tests {
 
     #[test]
     fn a_long_odd_recipe_uses_every_value_for_its_period_and_ink_share() {
-        let source = [2.,3.,4.,5.,6.,7.,8.,9.,23.];
-        let (inline,period,share)=dash_values(Some(&source));
-        assert_eq!(inline,[2.,3.,4.,5.,6.,7.,8.,9.]);
-        assert_eq!(period,134.);
-        assert_eq!(share,0.5);
-        let full=normalized_dashes(&source);
-        assert_eq!(full.len(),18);
-        assert_eq!(&full[9..],&source);
+        let source = [2., 3., 4., 5., 6., 7., 8., 9., 23.];
+        let (inline, period, share) = dash_values(Some(&source));
+        assert_eq!(inline, [2., 3., 4., 5., 6., 7., 8., 9.]);
+        assert_eq!(period, 134.);
+        assert_eq!(share, 0.5);
+        let full = normalized_dashes(&source);
+        assert_eq!(full.len(), 18);
+        assert_eq!(&full[9..], &source);
     }
 }

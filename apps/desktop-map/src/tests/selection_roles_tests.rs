@@ -4,20 +4,25 @@
 //! decision area opens Alan with İmar; a selection whose objects do not all share the role has no such panel; a CBS
 //! project none. And their pictures.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use kentos_launch::Module;
 use serde_json::Value;
 
 use crate::app::{App, Message};
 
 fn open(file: &str, program: Option<Module>) -> App {
-    let cases: Value = serde_json::from_str(&std::fs::read_to_string(
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/commands/v1").join(file),
+    let cases: Value = serde_json::from_str(
+        &std::fs::read_to_string(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/commands/v1")
+                .join(file),
+        )
+        .expect("the cases"),
     )
-    .expect("the cases"))
     .expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -31,7 +36,11 @@ fn select(app: &mut App, layers: &[(&str, usize)]) {
     let mut slots = Vec::new();
     for (layer, n) in layers {
         slots.extend(
-            doc.model.entities().filter(|e| e.base().layer_id == *layer).take(*n).map(|e| kentos_domain::Slot(e.base().id)),
+            doc.model
+                .entities()
+                .filter(|e| e.base().layer_id == *layer)
+                .take(*n)
+                .map(|e| kentos_domain::Slot(e.base().id)),
         );
     }
     assert!(!slots.is_empty(), "objects on {layers:?}");
@@ -41,7 +50,13 @@ fn select(app: &mut App, layers: &[(&str, usize)]) {
 /// The selection's contextual tab and its panels' names.
 fn shown(app: &App) -> (&'static str, Vec<&'static str>) {
     let tab = app.selection_tab().expect("a contextual tab");
-    (tab.id, app.tab_groups(tab).into_iter().filter_map(|(p, _)| p.map(|p| p.label)).collect())
+    (
+        tab.id,
+        app.tab_groups(tab)
+            .into_iter()
+            .filter_map(|(p, _)| p.map(|p| p.label))
+            .collect(),
+    )
 }
 
 #[test]
@@ -54,7 +69,8 @@ fn a_pipe_opens_altyapi_on_its_own_network() {
     assert_eq!(app.selection_roles().network.as_deref(), Some("su"));
     let _ = app.update(Message::Run("pipes.check"));
     assert_eq!(
-        app.modules.map().pipes_check.network, "su",
+        app.modules.map().pipes_check.network,
+        "su",
         "the selection's network, not the first"
     );
     let _ = app.update(Message::from(map::Event::PipesCheck(
@@ -65,7 +81,8 @@ fn a_pipe_opens_altyapi_on_its_own_network() {
     assert!(!shown(&app).1.contains(&"Altyapı"));
     let _ = app.update(Message::Run("pipes.check"));
     assert_eq!(
-        app.modules.map().pipes_check.network, "atiksu",
+        app.modules.map().pipes_check.network,
+        "atiksu",
         "the first network again"
     );
 }
@@ -76,7 +93,10 @@ fn a_surface_s_points_open_yuzey_on_that_surface() {
     select(&mut app, &[("cukur", 3)]);
     let (tab, panels) = shown(&app);
     assert_eq!(tab, "ctx.point");
-    assert!(panels.contains(&"Yüzey") && !panels.contains(&"Altyapı"), "{panels:?}");
+    assert!(
+        panels.contains(&"Yüzey") && !panels.contains(&"Altyapı"),
+        "{panels:?}"
+    );
     assert_eq!(app.selection_roles().surface.as_deref(), Some("t-3"));
     let _ = app.update(Message::Run("terrain.sheetContours"));
     assert_eq!(
@@ -97,7 +117,11 @@ fn a_surface_s_points_open_yuzey_on_that_surface() {
     app.dialog = None;
     app.terrain_work.surface_analysis_window = None;
     let _ = app.update(Message::Run("terrain.surfaces"));
-    let w = app.terrain_work.terrain_window.as_ref().expect("the window");
+    let w = app
+        .terrain_work
+        .terrain_window
+        .as_ref()
+        .expect("the window");
     assert_eq!(w.chosen_def().map(|d| d.id.as_str()), Some("t-3"));
     // A building with the points: not a surface's source.
     app.terrain_work.terrain_window = None;
@@ -135,7 +159,10 @@ fn a_gis_project_has_no_role_panels() {
     }
     select(&mut app, &[("su", 1)]);
     let (_, panels) = shown(&app);
-    assert!(!panels.contains(&"Altyapı") && !panels.contains(&"Yüzey"), "{panels:?}");
+    assert!(
+        !panels.contains(&"Altyapı") && !panels.contains(&"Yüzey"),
+        "{panels:?}"
+    );
 }
 
 /// `.run/gui-evidence/baglamsal-roller-2480/`:
@@ -148,16 +175,26 @@ fn a_gis_project_has_no_role_panels() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/baglamsal-roller-2480");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/baglamsal-roller-2480");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (file, layers, shot) in [
             ("cad.pipes.check.json", vec![("su", 2)], "1-altyapi"),
-            ("road.terrains.sheetcontours.json", vec![("cukur", 3)], "2-yuzey"),
+            (
+                "road.terrains.sheetcontours.json",
+                vec![("cukur", 3)],
+                "2-yuzey",
+            ),
             ("cad.zoning.check.json", vec![("karar", 2)], "3-imar"),
         ] {
             let mut app = open(file, Some(Module::Map));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -170,7 +207,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{shot}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }

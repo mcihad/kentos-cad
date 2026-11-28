@@ -193,8 +193,18 @@ fn mesh_sor_names_its_mesh_and_says_when_there_is_none() {
         panic!("the mesh window");
     };
     assert!(s.meshes.all.len() > 1, "{:?}", s.meshes.all);
-    assert!(s.meshes.all.iter().all(|(_, name)| name.starts_with('“') && name.contains(" · ağ ")), "{:?}", s.meshes.all);
-    assert!(s.meshes.uids().is_empty(), "Tüm meshler: every mesh is asked");
+    assert!(
+        s.meshes
+            .all
+            .iter()
+            .all(|(_, name)| name.starts_with('“') && name.contains(" · ağ ")),
+        "{:?}",
+        s.meshes.all
+    );
+    assert!(
+        s.meshes.uids().is_empty(),
+        "Tüm meshler: every mesh is asked"
+    );
     let first = s.meshes.all[0].0.clone();
     send(&mut app, Event::Area(A::Cloud(1)));
     let Some(Window::MeshQuery(s)) = &app.exchange else {

@@ -4,8 +4,8 @@
 //! the mean (a systematic shift), the largest difference, each cloud's KOH_Z at the control points, and the notes; a
 //! choice shows the worst cells or the control points. CSV kaydet writes both.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
@@ -129,7 +129,11 @@ impl OverlapWindowApp for App {
             radius: Some(s.radius),
             scale: Some(s.scale.max(1.0) as u32),
             rules: None,
-            drawing: self.document.as_ref().and_then(|d| d.path.as_ref()).map(|p| p.to_string_lossy().into_owned()),
+            drawing: self
+                .document
+                .as_ref()
+                .and_then(|d| d.path.as_ref())
+                .map(|p| p.to_string_lossy().into_owned()),
         };
         let Some(doc) = self.document.as_mut() else {
             return;
@@ -157,10 +161,15 @@ impl OverlapWindowApp for App {
             .entities_with_uids()
             .filter_map(|(u, e)| match e {
                 Entity::PointCloud(c) => {
-                    let name = c.cloud.sources.first().and_then(|s| s.file.as_deref()).map_or_else(
-                        || format!("Bulut #{}", e.base().id),
-                        |f| f.rsplit(['/', '\\']).next().unwrap_or(f).to_owned(),
-                    );
+                    let name = c
+                        .cloud
+                        .sources
+                        .first()
+                        .and_then(|s| s.file.as_deref())
+                        .map_or_else(
+                            || format!("Bulut #{}", e.base().id),
+                            |f| f.rsplit(['/', '\\']).next().unwrap_or(f).to_owned(),
+                        );
                     Some((u.to_string(), name))
                 }
                 _ => None,
@@ -187,12 +196,21 @@ impl OverlapWindowApp for App {
                 .layers()
                 .leaves()
                 .iter()
-                .filter(|n| doc.model.entities().any(|e| e.base().layer_id == n.id && matches!(e, Entity::Point(_))))
+                .filter(|n| {
+                    doc.model
+                        .entities()
+                        .any(|e| e.base().layer_id == n.id && matches!(e, Entity::Point(_)))
+                })
                 .map(|n| (n.id.clone(), n.name.clone())),
         );
         let control = layers
             .iter()
-            .find(|(id, n)| !id.is_empty() && ["gnss", "kontrol"].iter().any(|w| n.to_lowercase().contains(w)))
+            .find(|(id, n)| {
+                !id.is_empty()
+                    && ["gnss", "kontrol"]
+                        .iter()
+                        .any(|w| n.to_lowercase().contains(w))
+            })
             .map(|(id, _)| id.clone())
             .unwrap_or_default();
         self.modules.map_mut().overlap = State {
@@ -219,7 +237,10 @@ impl OverlapWindowApp for App {
             return;
         };
         match std::fs::write(&path, csv(r)) {
-            Ok(()) => self.say(Level::Success, format!("{TITLE}: sonuç {} dosyasına yazıldı.", path.display())),
+            Ok(()) => self.say(
+                Level::Success,
+                format!("{TITLE}: sonuç {} dosyasına yazıldı.", path.display()),
+            ),
             Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
         }
     }
@@ -269,16 +290,37 @@ impl OverlapWindowApp for App {
 
     fn overlap_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().overlap;
-        let pick = |v: &str, on: fn(String) -> Event| container(fields::select_owned(s.clouds.clone(), v, move |x| msg(on(x)))).width(230);
+        let pick = |v: &str, on: fn(String) -> Event| {
+            container(fields::select_owned(s.clouds.clone(), v, move |x| {
+                msg(on(x))
+            }))
+            .width(230)
+        };
         let form = Form::new()
             .label_width(120.0)
-            .field("Birinci tarama", row![pick(&s.a, Event::A), label::caption("İkinci"), pick(&s.b, Event::B)].spacing(10).align_y(Center))
+            .field(
+                "Birinci tarama",
+                row![
+                    pick(&s.a, Event::A),
+                    label::caption("İkinci"),
+                    pick(&s.b, Event::B)
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
             .field(
                 "Hücre (m)",
                 row![
-                    NumberInput::new(s.cell, |v| msg(Event::Cell(v))).step(0.5).decimals(2).point().width(100),
+                    NumberInput::new(s.cell, |v| msg(Event::Cell(v)))
+                        .step(0.5)
+                        .decimals(2)
+                        .point()
+                        .width(100),
                     label::caption("En az nokta"),
-                    NumberInput::new(s.least, |v| msg(Event::Least(v))).step(1.0).decimals(0).width(80)
+                    NumberInput::new(s.least, |v| msg(Event::Least(v)))
+                        .step(1.0)
+                        .decimals(0)
+                        .width(80)
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -286,11 +328,21 @@ impl OverlapWindowApp for App {
             .field(
                 "Kontrol",
                 row![
-                    container(fields::select_owned(s.layers.clone(), &s.control, |v| msg(Event::Control(v)))).width(230),
+                    container(fields::select_owned(s.layers.clone(), &s.control, |v| msg(
+                        Event::Control(v)
+                    )))
+                    .width(230),
                     label::caption("Çevre (m)"),
-                    NumberInput::new(s.radius, |v| msg(Event::Radius(v))).step(0.5).decimals(2).point().width(80),
+                    NumberInput::new(s.radius, |v| msg(Event::Radius(v)))
+                        .step(0.5)
+                        .decimals(2)
+                        .point()
+                        .width(80),
                     label::caption("Ölçek 1/"),
-                    NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(500.0).decimals(0).width(90)
+                    NumberInput::new(s.scale, |v| msg(Event::Scale(v)))
+                        .step(500.0)
+                        .decimals(0)
+                        .width(90)
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -309,10 +361,17 @@ impl OverlapWindowApp for App {
                             cm(r.rmsd_z),
                             cm(r.limit),
                             r.rules,
-                            if ok { "sınırın içinde" } else { "sınırın dışında" }
+                            if ok {
+                                "sınırın içinde"
+                            } else {
+                                "sınırın dışında"
+                            }
                         ),
                     ),
-                    None => words::text_line(Kind::Warn, "Örtüşen hücre yok: iki bulut aynı yeri yeterli noktayla kaplamıyor."),
+                    None => words::text_line(
+                        Kind::Warn,
+                        "Örtüşen hücre yok: iki bulut aynı yeri yeterli noktayla kaplamıyor.",
+                    ),
                 });
                 if r.cells > 0 {
                     lines.push(words::text_line(
@@ -349,16 +408,35 @@ impl OverlapWindowApp for App {
                 }
                 table = match s.view {
                     View::Worst => sheet(
-                        vec![num("Hücre Y (doğu)", 150.0), num("Hücre X (kuzey)", 150.0), num("dz (cm)", 100.0)],
-                        r.worst.iter().map(|c| vec![format!("{:.2}", c.x), format!("{:.2}", c.y), cm(c.dz)]).collect(),
+                        vec![
+                            num("Hücre Y (doğu)", 150.0),
+                            num("Hücre X (kuzey)", 150.0),
+                            num("dz (cm)", 100.0),
+                        ],
+                        r.worst
+                            .iter()
+                            .map(|c| vec![format!("{:.2}", c.x), format!("{:.2}", c.y), cm(c.dz)])
+                            .collect(),
                         "Örtüşen hücre yok.",
                         240.0,
                     ),
                     View::Control => sheet(
-                        vec![col("Nokta", 110.0), num("Kot (m)", 110.0), num("Birinci (cm)", 110.0), num("İkinci (cm)", 110.0)],
+                        vec![
+                            col("Nokta", 110.0),
+                            num("Kot (m)", 110.0),
+                            num("Birinci (cm)", 110.0),
+                            num("İkinci (cm)", 110.0),
+                        ],
                         r.control
                             .iter()
-                            .map(|c| vec![c.name.clone(), format!("{:.3}", c.z), c.dz_a.map(cm).unwrap_or_default(), c.dz_b.map(cm).unwrap_or_default()])
+                            .map(|c| {
+                                vec![
+                                    c.name.clone(),
+                                    format!("{:.3}", c.z),
+                                    c.dz_a.map(cm).unwrap_or_default(),
+                                    c.dz_b.map(cm).unwrap_or_default(),
+                                ]
+                            })
                             .collect(),
                         "Kontrol noktası yok.",
                         240.0,
@@ -372,7 +450,9 @@ impl OverlapWindowApp for App {
             .spacing(12)
             .push(form)
             .push(words::summary(lines))
-            .push(Segmented::new([View::Worst, View::Control], s.view, |v| msg(Event::View(v))))
+            .push(Segmented::new([View::Worst, View::Control], s.view, |v| {
+                msg(Event::View(v))
+            }))
             .push(table);
         let ready = matches!(s.answer, Some(Ok(_)));
         Frame::new(TITLE)

@@ -8,7 +8,9 @@ use kentos_commands::{
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
-use kentos_road::superelevation::{self as sup, Crossfall, CurveRule, Mark, Row, Schedule, SuperError};
+use kentos_road::superelevation::{
+    self as sup, Crossfall, CurveRule, Mark, Row, Schedule, SuperError,
+};
 
 use crate::checks::Stop;
 use crate::codes;
@@ -35,29 +37,52 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     }
 }
 
-pub(crate) fn find<'a>(list: &'a [SuperelevationDef], name: &str, path: &str) -> Result<(usize, &'a SuperelevationDef), Stop> {
+pub(crate) fn find<'a>(
+    list: &'a [SuperelevationDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a SuperelevationDef), Stop> {
     list.iter()
         .position(|t| t.id == name)
-        .or_else(|| list.iter().position(|t| t.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .position(|t| t.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|i| (i, &list[i]))
-        .ok_or_else(|| fail(codes::UNKNOWN_SUPERELEVATION, format!("“{name}” kimlikli ya da adlı dever çizelgesi projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_SUPERELEVATION,
+                format!("“{name}” kimlikli ya da adlı dever çizelgesi projede yok."),
+                path,
+            )
+        })
 }
 
 pub(crate) fn normal(def: &SuperelevationDef) -> Crossfall {
-    Crossfall { left: def.normal_left, right: def.normal_right }
+    Crossfall {
+        left: def.normal_left,
+        right: def.normal_right,
+    }
 }
 
 /// The schedule's alignment built.
 pub(crate) fn alignment_of(doc: &Document, def: &SuperelevationDef) -> Result<Built, Stop> {
     let list = alignments::alignments(doc);
     let a = list.iter().find(|a| a.id == def.alignment).ok_or_else(|| {
-        fail(codes::UNKNOWN_ALIGNMENT, format!("“{}” kimlikli aks projede yok.", def.alignment), "alignment")
+        fail(
+            codes::UNKNOWN_ALIGNMENT,
+            format!("“{}” kimlikli aks projede yok.", def.alignment),
+            "alignment",
+        )
     })?;
     alignments::build(list, a, "")
 }
 
 /// The schedule built on its alignment, and its critical stations; why not, at the curve's or row's path.
-pub(crate) fn schedule(def: &SuperelevationDef, built: &Built) -> Result<(Schedule, Vec<sup::Critical>), Stop> {
+pub(crate) fn schedule(
+    def: &SuperelevationDef,
+    built: &Built,
+) -> Result<(Schedule, Vec<sup::Critical>), Stop> {
     schedule_slopes(def, built).map(|(mut s, critical)| {
         s.pivot = pivot_of(def);
         (s, critical)
@@ -77,7 +102,10 @@ pub fn pivot_of(def: &SuperelevationDef) -> kentos_road::superelevation_physics:
     }
 }
 
-fn schedule_slopes(def: &SuperelevationDef, built: &Built) -> Result<(Schedule, Vec<sup::Critical>), Stop> {
+fn schedule_slopes(
+    def: &SuperelevationDef,
+    built: &Built,
+) -> Result<(Schedule, Vec<sup::Critical>), Stop> {
     let bad = |path: String, words: String| fail(codes::INVALID_SUPERELEVATION, words, &path);
     match &def.method {
         SuperelevationMethod::Stations { rows } => {
@@ -86,18 +114,30 @@ fn schedule_slopes(def: &SuperelevationDef, built: &Built) -> Result<(Schedule, 
                 if r.station < -1e-9 || r.station > length + 1e-9 {
                     return Err(bad(
                         format!("method.rows[{i}].station"),
-                        format!("{}. satır aksın dışında: aksın km'si 0 ile {length:.3} m arası.", i + 1),
+                        format!(
+                            "{}. satır aksın dışında: aksın km'si 0 ile {length:.3} m arası.",
+                            i + 1
+                        ),
                     ));
                 }
             }
-            let rows: Vec<Row> = rows.iter().map(|r| Row { station: r.station, left: r.left, right: r.right }).collect();
-            sup::from_rows(&rows).map(|s| (s, Vec::new())).map_err(|e| match e {
-                SuperError::BadRow { row } => bad(
-                    format!("method.rows[{row}].station"),
-                    format!("{}. satırın km'si bir öncekinden büyük olmalı.", row + 1),
-                ),
-                other => bad("method".into(), format!("{other:?}")),
-            })
+            let rows: Vec<Row> = rows
+                .iter()
+                .map(|r| Row {
+                    station: r.station,
+                    left: r.left,
+                    right: r.right,
+                })
+                .collect();
+            sup::from_rows(&rows)
+                .map(|s| (s, Vec::new()))
+                .map_err(|e| match e {
+                    SuperError::BadRow { row } => bad(
+                        format!("method.rows[{row}].station"),
+                        format!("{}. satırın km'si bir öncekinden büyük olmalı.", row + 1),
+                    ),
+                    other => bad("method".into(), format!("{other:?}")),
+                })
         }
         SuperelevationMethod::Curves { curves } => {
             let rules: Vec<CurveRule> = curves
@@ -163,7 +203,11 @@ pub(crate) fn reversed(def: &SuperelevationDef, length: f64, revision: u32) -> S
             rows: rows
                 .iter()
                 .rev()
-                .map(|r| kentos_commands::SuperRowDef { station: length - r.station, left: r.right, right: r.left })
+                .map(|r| kentos_commands::SuperRowDef {
+                    station: length - r.station,
+                    left: r.right,
+                    right: r.left,
+                })
                 .collect(),
         },
         m @ SuperelevationMethod::Curves { .. } => m.clone(),
@@ -184,11 +228,18 @@ pub(crate) fn reversed(def: &SuperelevationDef, length: f64, revision: u32) -> S
 }
 
 pub(crate) fn stale(doc: &Document, def: &SuperelevationDef) -> bool {
-    doc.road_alignments().iter().find(|a| a.id == def.alignment).is_some_and(|a| a.revision != def.alignment_revision)
+    doc.road_alignments()
+        .iter()
+        .find(|a| a.id == def.alignment)
+        .is_some_and(|a| a.revision != def.alignment_revision)
 }
 
 pub(crate) fn stale_warning(doc: &Document, def: &SuperelevationDef) -> Option<CommandWarning> {
-    let now = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
+    let now = doc
+        .road_alignments()
+        .iter()
+        .find(|a| a.id == def.alignment)
+        .map_or(0, |a| a.revision);
     stale(doc, def).then(|| CommandWarning {
         code: codes::SUPERELEVATION_STALE.into(),
         message: format!(
@@ -236,7 +287,14 @@ pub(crate) fn report(doc: &Document, def: &SuperelevationDef) -> SuperelevationR
                 .into_iter()
                 .map(|c| {
                     let km = b.km(c.station);
-                    SuperCritical { pi: c.pi, mark: mark(c.mark).into(), station: c.station, km, km_text: km_text(km, 3), exit: c.exit }
+                    SuperCritical {
+                        pi: c.pi,
+                        mark: mark(c.mark).into(),
+                        station: c.station,
+                        km,
+                        km_text: km_text(km, 3),
+                        exit: c.exit,
+                    }
                 })
                 .collect();
         }
@@ -247,10 +305,16 @@ pub(crate) fn report(doc: &Document, def: &SuperelevationDef) -> SuperelevationR
 }
 
 /// The schedule a sample line set reads, built; why not as a warning.
-pub(crate) fn schedule_of(doc: &Document, id: &str, set: &str) -> Result<(Schedule, Crossfall), CommandWarning> {
+pub(crate) fn schedule_of(
+    doc: &Document,
+    id: &str,
+    set: &str,
+) -> Result<(Schedule, Crossfall), CommandWarning> {
     let gone = |why: String| CommandWarning {
         code: codes::SECTION_SUPERELEVATION_GONE.into(),
-        message: format!("“{set}” kesit takımının dever çizelgesi {why}; şeritler tip kesitin eğimiyle verildi."),
+        message: format!(
+            "“{set}” kesit takımının dever çizelgesi {why}; şeritler tip kesitin eğimiyle verildi."
+        ),
         path: Some("set".into()),
     };
     let Some(def) = doc.road_superelevations().iter().find(|d| d.id == id) else {
@@ -271,7 +335,10 @@ pub fn made_superelevations(doc: &Document) -> Vec<(SuperelevationDef, Superelev
     if road_project(doc).is_err() {
         return Vec::new();
     }
-    doc.road_superelevations().iter().map(|d| (d.clone(), report(doc, d))).collect()
+    doc.road_superelevations()
+        .iter()
+        .map(|d| (d.clone(), report(doc, d)))
+        .collect()
 }
 
 /// A schedule (perhaps not written) built now, for the desktop's Dever window: its report.

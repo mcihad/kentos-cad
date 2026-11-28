@@ -63,7 +63,10 @@ fn heading(title: &str) -> String {
 
 /// A muted line under the rows: what, then how.
 fn note<'a>(what: &'a str, how: String) -> Element<'a, Message> {
-    label::caption(format!("{what}: {how}")).style(style::text::muted).wrapping(Wrapping::WordOrGlyph).into()
+    label::caption(format!("{what}: {how}"))
+        .style(style::text::muted)
+        .wrapping(Wrapping::WordOrGlyph)
+        .into()
 }
 
 /// A ring's area (shoelace) and perimeter, closed.
@@ -96,11 +99,14 @@ impl App {
         let preview = self.session.preview(&f)?;
         let settings = doc.model.settings();
         if id == kentos_interaction::path::MEASURE_ID {
-            return (preview.path.len() >= 2).then(|| kentos_interaction::measured::path(settings, &f, &preview.path, None));
+            return (preview.path.len() >= 2)
+                .then(|| kentos_interaction::measured::path(settings, &f, &preview.path, None));
         }
         let ring = preview.ring.filter(|r| r.len() >= 3)?;
         let (area, perimeter) = ring_measures(&ring);
-        Some(kentos_interaction::measured::area(settings, &f, area, perimeter))
+        Some(kentos_interaction::measured::area(
+            settings, &f, area, perimeter,
+        ))
     }
 
     /// The measurement the box shows: the one going on, else the last one while its tool runs or no other tool does.
@@ -109,7 +115,10 @@ impl App {
             return Some(live);
         }
         let tool = self.session.tool_id();
-        self.measured.as_ref().filter(|m| tool == m.tool || tool == "select").cloned()
+        self.measured
+            .as_ref()
+            .filter(|m| tool == m.tool || tool == "select")
+            .cloned()
     }
 
     /// The box at the drawing area's lower left; none without a measurement to show.
@@ -120,15 +129,30 @@ impl App {
         let (lead, rest): (Option<(String, String)>, Vec<(String, String)>) = match m.title {
             "Mesafe" => {
                 let total = m.rows.iter().find(|(w, _)| w == "Toplam").cloned();
-                (total, m.rows.iter().filter(|(w, _)| w != "Toplam").cloned().collect())
+                (
+                    total,
+                    m.rows
+                        .iter()
+                        .filter(|(w, _)| w != "Toplam")
+                        .cloned()
+                        .collect(),
+                )
             }
-            "Alan" => (m.rows.first().cloned(), m.rows.iter().skip(1).cloned().collect()),
+            "Alan" => (
+                m.rows.first().cloned(),
+                m.rows.iter().skip(1).cloned().collect(),
+            ),
             _ => (None, m.rows.clone()),
         };
-        let mut title = Row::new().spacing(6).align_y(iced::Center).push(label::strong(heading(m.title)));
+        let mut title = Row::new()
+            .spacing(6)
+            .align_y(iced::Center)
+            .push(label::strong(heading(m.title)));
         if live {
             title = title.push(
-                container(label::caption("sürüyor")).padding([0, 6]).style(style::container::badge),
+                container(label::caption("sürüyor"))
+                    .padding([0, 6])
+                    .style(style::container::badge),
             );
         }
         let head = Row::new()
@@ -158,35 +182,54 @@ impl App {
             );
         }
         // A path's parts with their running totals, as a short table; another measurement's rows by name.
-        let parts: Element<'_, Message> = if m.title == "Mesafe" && !rest.is_empty() && rest.iter().all(|(w, _)| w.ends_with(". parça")) {
+        let parts: Element<'_, Message> = if m.title == "Mesafe"
+            && !rest.is_empty()
+            && rest.iter().all(|(w, _)| w.ends_with(". parça"))
+        {
             let header = row![
                 label::caption("#").width(typography::scaled(22.0)),
-                label::caption("Parça").width(Fill).align_x(iced::alignment::Horizontal::Right),
+                label::caption("Parça")
+                    .width(Fill)
+                    .align_x(iced::alignment::Horizontal::Right),
             ]
             .spacing(8);
             let lines = rest.iter().enumerate().map(|(i, (_, v))| {
                 row![
                     label::mono_caption((i + 1).to_string()).width(typography::scaled(22.0)),
-                    label::mono(v.clone()).width(Fill).align_x(iced::alignment::Horizontal::Right),
+                    label::mono(v.clone())
+                        .width(Fill)
+                        .align_x(iced::alignment::Horizontal::Right),
                 ]
                 .spacing(8)
                 .into()
             });
-            column![header, kentos_ui::widget::horizontal_divider(), scrollable(Column::with_children(lines).spacing(3)).height(Length::Shrink)]
-                .spacing(4)
-                .into()
+            column![
+                header,
+                kentos_ui::widget::horizontal_divider(),
+                scrollable(Column::with_children(lines).spacing(3)).height(Length::Shrink)
+            ]
+            .spacing(4)
+            .into()
         } else {
             rest.iter()
-                .fold(kentos_ui::widget::Pairs::new().spacing_x(10.0).spacing_y(2.0), |rows, (what, value)| {
-                    rows.push(
-                        label::caption(what.clone()).style(style::text::muted),
-                        label::body(value.clone()).wrapping(Wrapping::WordOrGlyph),
-                    )
-                })
+                .fold(
+                    kentos_ui::widget::Pairs::new()
+                        .spacing_x(10.0)
+                        .spacing_y(2.0),
+                    |rows, (what, value)| {
+                        rows.push(
+                            label::caption(what.clone()).style(style::text::muted),
+                            label::body(value.clone()).wrapping(Wrapping::WordOrGlyph),
+                        )
+                    },
+                )
                 .into()
         };
         body = body.push(container(parts).max_height(typography::scaled(ROWS_HIGH)));
-        let mut notes = Column::new().spacing(2).push(note("Birim", m.units.clone())).push(note("Hesap", m.method.clone()));
+        let mut notes = Column::new()
+            .spacing(2)
+            .push(note("Birim", m.units.clone()))
+            .push(note("Hesap", m.method.clone()));
         if let Some(system) = &m.system {
             notes = notes.push(note("Sistem", system.clone()));
         }

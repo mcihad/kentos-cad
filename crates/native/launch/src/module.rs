@@ -27,12 +27,7 @@ pub enum Module {
 
 impl Module {
     /// Every module, in the launcher's order.
-    pub const ALL: [Module; 4] = [
-        Module::Architecture,
-        Module::Map,
-        Module::Gis,
-        Module::Road,
-    ];
+    pub const ALL: [Module; 4] = [Module::Architecture, Module::Map, Module::Gis, Module::Road];
 
     /// The id the command line and the recent files write.
     pub const fn id(self) -> &'static str {
@@ -157,12 +152,7 @@ impl Module {
     pub const fn project_types(self) -> &'static [&'static str] {
         match self {
             Module::Architecture => &["architecture"],
-            Module::Map => &[
-                "cad",
-                "landReadjustment",
-                "zoningPlan",
-                "subdivision",
-            ],
+            Module::Map => &["cad", "landReadjustment", "zoningPlan", "subdivision"],
             Module::Road => &["road"],
             Module::Gis => &["gis"],
         }
@@ -211,9 +201,9 @@ impl Module {
         match self {
             Module::Gis => &[Annotation, Data, Service, Raster, PointCloud, Group],
             Module::Architecture => &[Drawing, Raster, PointCloud, Group],
-            Module::Map | Module::Road => {
-                &[Drawing, Annotation, Data, Bound, Service, Raster, PointCloud, Group]
-            }
+            Module::Map | Module::Road => &[
+                Drawing, Annotation, Data, Bound, Service, Raster, PointCloud, Group,
+            ],
         }
     }
 }
@@ -407,7 +397,8 @@ impl LayerKind {
 
     /// Whether `client` writes on a layer of this kind in a project kept as `storage`.
     pub fn written_by(self, client: Client, storage: Storage) -> bool {
-        self.written_as().is_some_and(|w| client.writes(storage).contains(&w))
+        self.written_as()
+            .is_some_and(|w| client.writes(storage).contains(&w))
     }
 
     /// The mobile behaviours a layer of this kind may take in a project kept as `storage` (docs/adr/9198 §2.2): to edit
@@ -566,7 +557,9 @@ impl Client {
     /// and a CBS project's data rows too.
     pub const fn writes(self, storage: Storage) -> &'static [Writes] {
         match (self, storage) {
-            (Client::Desktop | Client::Web, Storage::Database) => &[Writes::ProjectFile, Writes::DataRows],
+            (Client::Desktop | Client::Web, Storage::Database) => {
+                &[Writes::ProjectFile, Writes::DataRows]
+            }
             (Client::Desktop | Client::Web, Storage::File) => &[Writes::ProjectFile],
             (Client::MobileApp, Storage::Database) => &[Writes::DataRows],
             (Client::MobileApp, Storage::File) | (Client::MobileViewer, _) => &[],
@@ -606,7 +599,11 @@ mod tests {
             of(Some("cad"), Some("architecture")),
             Some(Module::Architecture)
         );
-        assert_eq!(of(Some("cad"), Some("detail")), None, "three CAD works only");
+        assert_eq!(
+            of(Some("cad"), Some("detail")),
+            None,
+            "three CAD works only"
+        );
         assert_eq!(of(Some("cad"), Some("map")), Some(Module::Map));
         assert_eq!(of(Some("cad"), Some("road")), Some(Module::Road));
         // Not asked yet, or not known: no module.
@@ -630,12 +627,7 @@ mod tests {
         assert_eq!(Module::Architecture.project_types(), ["architecture"]);
         assert_eq!(
             Module::Map.project_types(),
-            [
-                "cad",
-                "landReadjustment",
-                "zoningPlan",
-                "subdivision"
-            ]
+            ["cad", "landReadjustment", "zoningPlan", "subdivision"]
         );
         assert_eq!(Module::Road.project_types(), ["road"]);
         assert_eq!(Module::Gis.project_types(), ["gis"]);
@@ -700,7 +692,11 @@ mod tests {
             // A database project holds no layer whose objects are in the file but its annotation; a file project
             // always draws.
             assert_eq!(kinds.contains(&LayerKind::Drawing), !cbs, "{m:?}");
-            assert_eq!(kinds.contains(&LayerKind::Bound), !cbs && m != Module::Architecture, "{m:?}");
+            assert_eq!(
+                kinds.contains(&LayerKind::Bound),
+                !cbs && m != Module::Architecture,
+                "{m:?}"
+            );
             assert!(kinds.contains(&LayerKind::Group));
             // In the tables' order, each once.
             let order: Vec<usize> = kinds
@@ -709,9 +705,15 @@ mod tests {
                 .collect();
             assert!(order.windows(2).all(|w| w[0] < w[1]), "{m:?}");
         }
-        assert_eq!(serde_json::to_string(&Storage::Database).expect("json"), "\"database\"");
+        assert_eq!(
+            serde_json::to_string(&Storage::Database).expect("json"),
+            "\"database\""
+        );
         for k in LayerKind::ALL {
-            assert_eq!(serde_json::to_string(&k).expect("json"), format!("\"{}\"", k.id()));
+            assert_eq!(
+                serde_json::to_string(&k).expect("json"),
+                format!("\"{}\"", k.id())
+            );
         }
     }
 
@@ -721,21 +723,42 @@ mod tests {
             // A viewer writes nothing.
             assert!(Client::MobileViewer.writes(storage).is_empty());
             // The desktop always writes the project file.
-            assert!(Client::Desktop.writes(storage).contains(&Writes::ProjectFile));
+            assert!(
+                Client::Desktop
+                    .writes(storage)
+                    .contains(&Writes::ProjectFile)
+            );
             // The mobile application never does.
-            assert!(!Client::MobileApp.writes(storage).contains(&Writes::ProjectFile));
+            assert!(
+                !Client::MobileApp
+                    .writes(storage)
+                    .contains(&Writes::ProjectFile)
+            );
             // The web, when it returns, keeps the desktop's rules.
             assert_eq!(Client::Web.writes(storage), Client::Desktop.writes(storage));
         }
-        assert_eq!(Client::MobileApp.writes(Storage::Database), [Writes::DataRows]);
-        assert!(Client::MobileApp.writes(Storage::File).is_empty(), "a CAD project is viewed");
+        assert_eq!(
+            Client::MobileApp.writes(Storage::Database),
+            [Writes::DataRows]
+        );
+        assert!(
+            Client::MobileApp.writes(Storage::File).is_empty(),
+            "a CAD project is viewed"
+        );
         // On a module's layers: the mobile application writes a CBS project's data tables alone; nothing of a CAD
         // project; a viewer nothing anywhere; services and groups no client writes.
         for m in Module::ALL {
             for k in m.layer_kinds() {
                 let app = k.written_by(Client::MobileApp, m.storage());
-                assert_eq!(app, m.storage() == Storage::Database && *k == LayerKind::Data, "{m:?} {k:?}");
-                assert!(!k.written_by(Client::MobileViewer, m.storage()), "{m:?} {k:?}");
+                assert_eq!(
+                    app,
+                    m.storage() == Storage::Database && *k == LayerKind::Data,
+                    "{m:?} {k:?}"
+                );
+                assert!(
+                    !k.written_by(Client::MobileViewer, m.storage()),
+                    "{m:?} {k:?}"
+                );
                 if matches!(k, LayerKind::Service | LayerKind::Group) {
                     assert!(!k.written_by(Client::Desktop, m.storage()), "{m:?} {k:?}");
                 }
@@ -745,7 +768,10 @@ mod tests {
         assert_eq!(LayerKind::Data.kept(), Kept::Source);
         assert_eq!(LayerKind::Annotation.kept(), Kept::ProjectFile);
         for c in Client::ALL {
-            assert_eq!(serde_json::to_string(&c).expect("json"), format!("\"{}\"", c.id()));
+            assert_eq!(
+                serde_json::to_string(&c).expect("json"),
+                format!("\"{}\"", c.id())
+            );
         }
     }
 
@@ -753,15 +779,29 @@ mod tests {
     /// (docs/adr/9198 §2.2).
     #[test]
     fn only_a_cbs_data_table_is_edited_on_the_phone() {
-        assert_eq!(LayerKind::Data.mobile_choices(Storage::Database), Mobile::ALL);
+        assert_eq!(
+            LayerKind::Data.mobile_choices(Storage::Database),
+            Mobile::ALL
+        );
         for kind in LayerKind::ALL {
-            assert_eq!(kind.mobile_choices(Storage::File), [Mobile::Show, Mobile::Hide], "{kind:?}");
+            assert_eq!(
+                kind.mobile_choices(Storage::File),
+                [Mobile::Show, Mobile::Hide],
+                "{kind:?}"
+            );
             if kind != LayerKind::Data {
-                assert_eq!(kind.mobile_choices(Storage::Database), [Mobile::Show, Mobile::Hide], "{kind:?}");
+                assert_eq!(
+                    kind.mobile_choices(Storage::Database),
+                    [Mobile::Show, Mobile::Hide],
+                    "{kind:?}"
+                );
             }
         }
         for m in Mobile::ALL {
-            assert_eq!(serde_json::to_string(&m).expect("json"), format!("\"{}\"", m.id()));
+            assert_eq!(
+                serde_json::to_string(&m).expect("json"),
+                format!("\"{}\"", m.id())
+            );
         }
     }
 

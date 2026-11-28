@@ -12,7 +12,10 @@ const TOOLS: &str = include_str!("../../../../../fixtures/interaction/v1/tools.k
 
 fn named(b: &mut Bench, layer: &str) {
     let mut s = b.doc.settings().clone();
-    s.tool_layers = vec![ToolLayer { tool: AnnotationTool::Text, layer: layer.to_owned() }];
+    s.tool_layers = vec![ToolLayer {
+        tool: AnnotationTool::Text,
+        layer: layer.to_owned(),
+    }];
     b.doc.set_settings(s);
 }
 
@@ -25,7 +28,9 @@ fn a_text_goes_to_the_project_s_text_layer() {
     b.start("text");
     b.click(4.0, 2.0);
     b.run(|s, cx| s.text_typed(Some("Ada 101"), cx));
-    let Entity::Text(t) = b.newest() else { panic!("a text") };
+    let Entity::Text(t) = b.newest() else {
+        panic!("a text")
+    };
     assert_eq!(t.base.layer_id, "kot", "the text layer, not the active one");
     assert!(b.undo_step(), "one undo step");
 }
@@ -41,7 +46,9 @@ fn a_locked_text_layer_is_said_and_a_missing_one_leaves_the_active_layer() {
     assert_eq!(b.last_level(), Some(Level::Warn));
     assert_eq!(
         b.last_text(),
-        Some("Yazılar “Kilitli katman” katmanına çizilir ve o katman kilitli. Kilidi Katmanlar panelinden açın ya da Proje ayarları › Araç katmanları'nı değiştirin.")
+        Some(
+            "Yazılar “Kilitli katman” katmanına çizilir ve o katman kilitli. Kilidi Katmanlar panelinden açın ya da Proje ayarları › Araç katmanları'nı değiştirin."
+        )
     );
     let mut b = Bench::on(TOOLS);
     b.draft.snap = false;
@@ -49,6 +56,8 @@ fn a_locked_text_layer_is_said_and_a_missing_one_leaves_the_active_layer() {
     b.start("text");
     b.click(4.0, 2.0);
     b.run(|s, cx| s.text_typed(Some("Ada 102"), cx));
-    let Entity::Text(t) = b.newest() else { panic!("a text") };
+    let Entity::Text(t) = b.newest() else {
+        panic!("a text")
+    };
     assert_eq!(t.base.layer_id, "cizim");
 }

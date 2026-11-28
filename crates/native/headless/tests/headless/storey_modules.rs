@@ -16,7 +16,8 @@ use kentos_domain::{Document, Uuid};
 use kentos_native_application::{ExecutionContext, modules_edit};
 use serde_json::{Value, json};
 
-const CASES: &str = include_str!("../../../../../fixtures/commands/v1/cad.modules.edit.storeys.json");
+const CASES: &str =
+    include_str!("../../../../../fixtures/commands/v1/cad.modules.edit.storeys.json");
 
 fn drawing() -> Document {
     let file: Value = serde_json::from_str(CASES).unwrap();
@@ -70,7 +71,14 @@ fn a_duplex_spans_two_storeys_and_a_floor_repeats_with_its_loose_objects() {
         json!({"kind": "place", "module": "Dubleks", "at": {"x": 20, "y": 10}, "level": "bodrum"}),
     );
     let inst = placed.module.unwrap().instances[1].clone();
-    let of = |key: u32| inst.members.iter().find(|o| o.key == uid(key)).unwrap().uid.clone();
+    let of = |key: u32| {
+        inst.members
+            .iter()
+            .find(|o| o.key == uid(key))
+            .unwrap()
+            .uid
+            .clone()
+    };
     assert_eq!(level(entity(&doc, &of(1))), Some("bodrum"));
     assert_eq!(level(entity(&doc, &of(3))), Some("zemin"));
     assert_eq!(level(entity(&doc, &of(9))), Some("zemin"));
@@ -156,7 +164,13 @@ fn a_duplex_spans_two_storeys_and_a_floor_repeats_with_its_loose_objects() {
     }
     // The dimension from the hall's wall to the duplex's: its copy on the repeated duplex's wall.
     let new_duplex = doc.arch_modules()[0].instances.last().unwrap().clone();
-    let wall1 = new_duplex.members.iter().find(|o| o.key == uid(1)).unwrap().uid.clone();
+    let wall1 = new_duplex
+        .members
+        .iter()
+        .find(|o| o.key == uid(1))
+        .unwrap()
+        .uid
+        .clone();
     match entity(&doc, &copy(20)) {
         Entity::Dimension(d) => {
             let refs = d.refs.as_ref().unwrap();
@@ -196,7 +210,10 @@ fn storey_modules_timing() {
     for n in 0..10u32 {
         let mut map = std::collections::HashMap::new();
         for e in &ents {
-            map.insert(uid(e["id"].as_u64().unwrap() as u32), format!("0192f5a1-7961-7000-8000-{:012x}", id));
+            map.insert(
+                uid(e["id"].as_u64().unwrap() as u32),
+                format!("0192f5a1-7961-7000-8000-{:012x}", id),
+            );
             uids.push(format!("0192f5a1-7961-7000-8000-{:012x}", id));
             id += 1;
         }
@@ -223,7 +240,8 @@ fn storey_modules_timing() {
     snapshot["entities"] = Value::Array(all);
     snapshot["uids"] = json!(uids);
     let mut doc =
-        Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(snapshot).unwrap()).unwrap();
+        Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(snapshot).unwrap())
+            .unwrap();
     for n in 0..10usize {
         let members: Vec<String> = (0..11).map(|k| uids[n * 27 + k].clone()).collect();
         done(
@@ -231,7 +249,10 @@ fn storey_modules_timing() {
             json!({"kind": "define", "name": format!("Dubleks {n}"), "uids": members, "base": {"x": 0, "y": 0}}),
         );
     }
-    let to: Vec<Value> = (2..9).step_by(2).map(|k| json!({"level": format!("k{k}")})).collect();
+    let to: Vec<Value> = (2..9)
+        .step_by(2)
+        .map(|k| json!({"level": format!("k{k}")}))
+        .collect();
     let op = json!({"operation": {"kind": "repeat", "from": "k0", "loose": true, "to": to}});
     let input: ModulesEdit = serde_json::from_value(op).unwrap();
     let t = Instant::now();

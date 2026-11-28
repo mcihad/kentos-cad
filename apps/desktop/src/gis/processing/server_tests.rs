@@ -159,10 +159,7 @@ fn the_organisation_s_policy_keeps_an_extension_s_tool_off_the_server() {
         app.server_place_for(TAKS),
         ServerPlace::Off("kurum ilkesi eklenti kodunun sunucuda çalışmasına izin vermiyor".into())
     );
-    assert_eq!(
-        app.server_place_for("convert.vertices"),
-        ServerPlace::Ready
-    );
+    assert_eq!(app.server_place_for("convert.vertices"), ServerPlace::Ready);
     // KentOS's own tool in the window: its server row on.
     tool(&mut app, "processing.run.convert.vertices");
     assert_eq!(app.processing_server_place(), ServerPlace::Ready);

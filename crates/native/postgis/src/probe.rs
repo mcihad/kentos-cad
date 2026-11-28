@@ -69,10 +69,10 @@ pub struct ServerFacts {
 impl ServerFacts {
     /// One line for the window: `PostgreSQL 16.4, PostGIS 3.4.2 · 3 şema, 27 tablo (12'si geometrili)`.
     pub fn line(&self) -> String {
-        let postgis = self
-            .postgis
-            .as_ref()
-            .map_or_else(|| "PostGIS kurulu değil".to_owned(), |v| format!("PostGIS {v}"));
+        let postgis = self.postgis.as_ref().map_or_else(
+            || "PostGIS kurulu değil".to_owned(),
+            |v| format!("PostGIS {v}"),
+        );
         format!(
             "{}, {postgis} · {} şema, {} tablo ({} geometrili)",
             self.version, self.schemas, self.tables, self.spatial
@@ -199,7 +199,10 @@ impl Catalog {
 
 /// `connection`'s options with the password it is tried with: the one typed, else the one KentOS knows, else
 /// `PGPASSWORD` (and libpq's `~/.pgpass` through sqlx); whether one was given.
-fn options(connection: &DbConnection, typed: Option<&str>) -> Result<(PgConnectOptions, bool), Diagnosis> {
+fn options(
+    connection: &DbConnection,
+    typed: Option<&str>,
+) -> Result<(PgConnectOptions, bool), Diagnosis> {
     let mut options = PgConnectOptions::from_str(&connection.address()).map_err(|e| Diagnosis {
         problem: Problem::Other,
         message: format!("Bağlantının bilgileri okunamadı: {e}."),
@@ -270,29 +273,48 @@ pub(crate) fn diagnose(e: &sqlx::Error, at: &Endpoint<'_>, password_given: bool)
         sqlx::Error::Io(io) => {
             let words = io.to_string();
             let lower = words.to_ascii_lowercase();
-            if lower.contains("lookup address") || lower.contains("name or service not known")
-                || lower.contains("nodename nor servname") || lower.contains("no such host")
+            if lower.contains("lookup address")
+                || lower.contains("name or service not known")
+                || lower.contains("nodename nor servname")
+                || lower.contains("no such host")
                 || lower.contains("temporary failure in name resolution")
             {
                 return said(
                     Problem::Host,
-                    format!("“{}” adlı sunucu bulunamadı. Sunucu adını ya da IP adresini denetleyin; ağa (VPN'e) bağlı olduğunuzdan emin olun.", at.host),
+                    format!(
+                        "“{}” adlı sunucu bulunamadı. Sunucu adını ya da IP adresini denetleyin; ağa (VPN'e) bağlı olduğunuzdan emin olun.",
+                        at.host
+                    ),
                 );
             }
             match io.kind() {
                 std::io::ErrorKind::ConnectionRefused => said(
                     Problem::Refused,
-                    format!("{}:{} bağlantıyı kabul etmedi: orada PostgreSQL çalışmıyor ya da güvenlik duvarı engelliyor. Sunucu adını ve bağlantı noktasını (genellikle 5432) denetleyin.", at.host, at.port),
+                    format!(
+                        "{}:{} bağlantıyı kabul etmedi: orada PostgreSQL çalışmıyor ya da güvenlik duvarı engelliyor. Sunucu adını ve bağlantı noktasını (genellikle 5432) denetleyin.",
+                        at.host, at.port
+                    ),
                 ),
                 std::io::ErrorKind::TimedOut => said(
                     Problem::Timeout,
-                    format!("{}:{} yanıt vermedi: sunucu kapalı ya da ağ engelli olabilir.", at.host, at.port),
+                    format!(
+                        "{}:{} yanıt vermedi: sunucu kapalı ya da ağ engelli olabilir.",
+                        at.host, at.port
+                    ),
                 ),
-                std::io::ErrorKind::HostUnreachable | std::io::ErrorKind::NetworkUnreachable => said(
-                    Problem::Refused,
-                    format!("{} adresine ağdan ulaşılamıyor. Ağ bağlantınızı (VPN'i) denetleyin.", at.host),
+                std::io::ErrorKind::HostUnreachable | std::io::ErrorKind::NetworkUnreachable => {
+                    said(
+                        Problem::Refused,
+                        format!(
+                            "{} adresine ağdan ulaşılamıyor. Ağ bağlantınızı (VPN'i) denetleyin.",
+                            at.host
+                        ),
+                    )
+                }
+                _ => said(
+                    Problem::Other,
+                    format!("{}:{} ile bağlantı kurulamadı: {words}.", at.host, at.port),
                 ),
-                _ => said(Problem::Other, format!("{}:{} ile bağlantı kurulamadı: {words}.", at.host, at.port)),
             }
         }
         sqlx::Error::Tls(tls) => {
@@ -303,20 +325,38 @@ pub(crate) fn diagnose(e: &sqlx::Error, at: &Endpoint<'_>, password_given: bool)
                     Problem::Tls,
                     "Sunucu şifreli bağlantıyı (SSL) desteklemiyor. SSL kipini “Varsa kullan” yapın ya da yöneticinizden SSL'i açmasını isteyin.".to_owned(),
                 )
-            } else if lower.contains("certificate") || lower.contains("unknownissuer") || lower.contains("notvalidforname") {
+            } else if lower.contains("certificate")
+                || lower.contains("unknownissuer")
+                || lower.contains("notvalidforname")
+            {
                 said(
                     Problem::Certificate,
-                    format!("Sunucunun sertifikası doğrulanamadı ({words}). Kurum sertifikası kullanılıyorsa SSL kipini “Zorunlu” yapın ya da sertifikayı sisteme ekletin."),
+                    format!(
+                        "Sunucunun sertifikası doğrulanamadı ({words}). Kurum sertifikası kullanılıyorsa SSL kipini “Zorunlu” yapın ya da sertifikayı sisteme ekletin."
+                    ),
                 )
             } else {
-                said(Problem::Tls, format!("Şifreli bağlantı (SSL) kurulamadı: {words}."))
+                said(
+                    Problem::Tls,
+                    format!("Şifreli bağlantı (SSL) kurulamadı: {words}."),
+                )
             }
         }
-        sqlx::Error::Protocol(words) if words.to_ascii_lowercase().contains("password") && !password_given => said(
-            Problem::PasswordNeeded,
-            format!("Sunucu “{}” kullanıcısı için parola istiyor; bu bağlantının parolası bilinmiyor. Parolayı yazıp yeniden deneyin.", at.user),
+        sqlx::Error::Protocol(words)
+            if words.to_ascii_lowercase().contains("password") && !password_given =>
+        {
+            said(
+                Problem::PasswordNeeded,
+                format!(
+                    "Sunucu “{}” kullanıcısı için parola istiyor; bu bağlantının parolası bilinmiyor. Parolayı yazıp yeniden deneyin.",
+                    at.user
+                ),
+            )
+        }
+        sqlx::Error::Configuration(c) => said(
+            Problem::Other,
+            format!("Bağlantının bilgileri okunamadı: {c}."),
         ),
-        sqlx::Error::Configuration(c) => said(Problem::Other, format!("Bağlantının bilgileri okunamadı: {c}.")),
         other => said(Problem::Other, format!("Bağlantı kurulamadı: {other}.")),
     }
 }
@@ -362,7 +402,8 @@ fn failed(e: sqlx::Error) -> Diagnosis {
 }
 
 /// The schemas a listing leaves out (the system's, PostGIS's own).
-const SYSTEM_SCHEMAS: &str = "('pg_catalog', 'information_schema', 'topology', 'tiger', 'tiger_data')";
+const SYSTEM_SCHEMAS: &str =
+    "('pg_catalog', 'information_schema', 'topology', 'tiger', 'tiger_data')";
 
 async fn facts(conn: &mut PgConnection) -> Result<(ServerFacts, bool), sqlx::Error> {
     let row = sqlx::query(
@@ -383,7 +424,10 @@ async fn facts(conn: &mut PgConnection) -> Result<(ServerFacts, bool), sqlx::Err
         ServerFacts {
             version: format!(
                 "PostgreSQL {}",
-                version.split_whitespace().next().unwrap_or(version.as_str())
+                version
+                    .split_whitespace()
+                    .next()
+                    .unwrap_or(version.as_str())
             ),
             postgis: postgis.clone(),
             user: row.try_get(1)?,
@@ -422,8 +466,10 @@ async fn relations(conn: &mut PgConnection, postgis: bool) -> Result<Vec<Relatio
     .fetch_all(&mut *conn)
     .await?;
     // The geometry and geography columns, first by each table (PostGIS's catalogs: none without it; docs/adr/0745).
-    let mut columns: std::collections::HashMap<(String, String), (String, Option<u32>, usize, String)> =
-        std::collections::HashMap::new();
+    let mut columns: std::collections::HashMap<
+        (String, String),
+        (String, Option<u32>, usize, String),
+    > = std::collections::HashMap::new();
     if postgis {
         let geometry: Vec<(String, String, String, i32, String)> = sqlx::query_as(
             "SELECT f_table_schema::text, f_table_name::text, type::text, srid, f_geometry_column::text FROM geometry_columns
@@ -452,7 +498,8 @@ async fn relations(conn: &mut PgConnection, postgis: bool) -> Result<Vec<Relatio
     )
     .fetch_all(&mut *conn)
     .await?;
-    let mut related: std::collections::HashMap<String, std::collections::BTreeSet<String>> = std::collections::HashMap::new();
+    let mut related: std::collections::HashMap<String, std::collections::BTreeSet<String>> =
+        std::collections::HashMap::new();
     for (from, to) in keys {
         related.entry(from.clone()).or_default().insert(to.clone());
         related.entry(to).or_default().insert(from);
@@ -473,26 +520,41 @@ async fn relations(conn: &mut PgConnection, postgis: bool) -> Result<Vec<Relatio
         let named: Option<Vec<String>> = row.try_get(9)?;
         // The rule `shape` keeps: a table's single integer primary key; a view's first integer key column of KEYS.
         let key = match kind {
-            RelationKind::Table | RelationKind::Partitioned => match (pk.as_deref(), pk_types.as_deref()) {
-                (Some([k]), Some([t])) if matches!(t.as_str(), "smallint" | "integer" | "bigint") => Some(k.clone()),
-                _ => None,
-            },
+            RelationKind::Table | RelationKind::Partitioned => {
+                match (pk.as_deref(), pk_types.as_deref()) {
+                    (Some([k]), Some([t]))
+                        if matches!(t.as_str(), "smallint" | "integer" | "bigint") =>
+                    {
+                        Some(k.clone())
+                    }
+                    _ => None,
+                }
+            }
             RelationKind::View | RelationKind::MaterializedView => {
                 let named = named.unwrap_or_default();
-                crate::KEYS.iter().find(|k| named.iter().any(|n| n == *k)).map(|k| (*k).to_owned())
+                crate::KEYS
+                    .iter()
+                    .find(|k| named.iter().any(|n| n == *k))
+                    .map(|k| (*k).to_owned())
             }
         };
         let geometry = columns.get(&(schema.clone(), name.clone()));
         let view = matches!(kind, RelationKind::View | RelationKind::MaterializedView);
-        let ties = related.remove(&format!("{schema}.{name}")).map(|t| t.into_iter().collect()).unwrap_or_default();
+        let ties = related
+            .remove(&format!("{schema}.{name}"))
+            .map(|t| t.into_iter().collect())
+            .unwrap_or_default();
         out.push(Relation {
             geometry: geometry.map(|g| g.0.to_ascii_uppercase()),
             geometry_column: geometry.map(|g| g.3.clone()),
             related: ties,
             srid: geometry.and_then(|g| g.1),
             geometry_columns: geometry.map_or(0, |g| g.2),
-            estimate: (!matches!(kind, RelationKind::View) && tuples >= 0.0).then(|| tuples.round() as u64),
-            comment: row.try_get::<Option<String>, _>(4)?.filter(|c| !c.trim().is_empty()),
+            estimate: (!matches!(kind, RelationKind::View) && tuples >= 0.0)
+                .then(|| tuples.round() as u64),
+            comment: row
+                .try_get::<Option<String>, _>(4)?
+                .filter(|c| !c.trim().is_empty()),
             readable: row.try_get(5)?,
             writable: !view && row.try_get::<bool, _>(6)?,
             key,
@@ -512,7 +574,11 @@ pub fn probe(connection: &DbConnection, typed: Option<&str>) -> Result<ServerFac
 
 /// `connection`'s database's relations from its catalogue, and the server's facts; or why not.
 pub fn browse(connection: &DbConnection, typed: Option<&str>) -> Result<Catalog, Diagnosis> {
-    if let Some((_, why)) = connection.problems().into_iter().find(|(f, _)| *f != connections::Field::Name) {
+    if let Some((_, why)) = connection
+        .problems()
+        .into_iter()
+        .find(|(f, _)| *f != connections::Field::Name)
+    {
         return Err(Diagnosis {
             problem: Problem::Other,
             message: why,
@@ -544,7 +610,10 @@ mod tests {
 
     #[test]
     fn network_failures_are_said_with_what_to_do() {
-        let refused = sqlx::Error::Io(std::io::Error::new(std::io::ErrorKind::ConnectionRefused, "refused"));
+        let refused = sqlx::Error::Io(std::io::Error::new(
+            std::io::ErrorKind::ConnectionRefused,
+            "refused",
+        ));
         let d = diagnose(&refused, &at(), true);
         assert_eq!(d.problem, Problem::Refused);
         assert!(d.message.contains("5432"), "{}", d.message);
@@ -557,7 +626,10 @@ mod tests {
         let tls = sqlx::Error::Tls("server does not support TLS".into());
         assert_eq!(diagnose(&tls, &at(), true).problem, Problem::Tls);
         let no_password = sqlx::Error::Protocol("expected password for authentication".into());
-        assert_eq!(diagnose(&no_password, &at(), false).problem, Problem::PasswordNeeded);
+        assert_eq!(
+            diagnose(&no_password, &at(), false).problem,
+            Problem::PasswordNeeded
+        );
     }
 
     /// A server's refusal as sqlx gives it: its SQLSTATE and its words.
@@ -598,16 +670,33 @@ mod tests {
         let refusal = |code, words| sqlx::Error::Database(Box::new(Refusal(code, words)));
         let auth = refusal("28P01", "password authentication failed for user \"ali\"");
         // No password was given: the server asks for one (the window opens its field); one was: it is wrong.
-        assert_eq!(diagnose(&auth, &at(), false).problem, Problem::PasswordNeeded);
+        assert_eq!(
+            diagnose(&auth, &at(), false).problem,
+            Problem::PasswordNeeded
+        );
         assert_eq!(diagnose(&auth, &at(), true).problem, Problem::Password);
-        let hba = refusal("28000", "no pg_hba.conf entry for host \"10.0.0.9\", user \"ali\", database \"kent\"");
+        let hba = refusal(
+            "28000",
+            "no pg_hba.conf entry for host \"10.0.0.9\", user \"ali\", database \"kent\"",
+        );
         let d = diagnose(&hba, &at(), true);
         assert_eq!(d.problem, Problem::Access);
-        assert!(d.message.contains("pg_hba.conf") && d.message.contains("yönetici"), "{}", d.message);
-        let d = diagnose(&refusal("3D000", "database \"kent\" does not exist"), &at(), true);
+        assert!(
+            d.message.contains("pg_hba.conf") && d.message.contains("yönetici"),
+            "{}",
+            d.message
+        );
+        let d = diagnose(
+            &refusal("3D000", "database \"kent\" does not exist"),
+            &at(),
+            true,
+        );
         assert_eq!(d.problem, Problem::Database);
         assert!(d.message.contains("“kent”"));
-        assert_eq!(diagnose(&refusal("42501", "permission denied"), &at(), true).problem, Problem::Access);
+        assert_eq!(
+            diagnose(&refusal("42501", "permission denied"), &at(), true).problem,
+            Problem::Access
+        );
     }
 
     #[test]
@@ -637,17 +726,33 @@ mod tests {
             ],
         };
         let mut c = DbConnection::default();
-        let shown: Vec<(&str, usize)> = catalog.schemas(&c).iter().map(|(s, l)| (*s, l.len())).collect();
+        let shown: Vec<(&str, usize)> = catalog
+            .schemas(&c)
+            .iter()
+            .map(|(s, l)| (*s, l.len()))
+            .collect();
         assert_eq!(shown, [("kadastro", 1), ("public", 1)]);
         assert_eq!(catalog.hidden(&c), 2);
         c.geometryless = true;
-        let shown: Vec<(&str, usize)> = catalog.schemas(&c).iter().map(|(s, l)| (*s, l.len())).collect();
+        let shown: Vec<(&str, usize)> = catalog
+            .schemas(&c)
+            .iter()
+            .map(|(s, l)| (*s, l.len()))
+            .collect();
         assert_eq!(shown, [("kadastro", 2), ("public", 2)]);
         c.public_only = true;
-        let shown: Vec<(&str, usize)> = catalog.schemas(&c).iter().map(|(s, l)| (*s, l.len())).collect();
+        let shown: Vec<(&str, usize)> = catalog
+            .schemas(&c)
+            .iter()
+            .map(|(s, l)| (*s, l.len()))
+            .collect();
         assert_eq!(shown, [("public", 2)]);
         let mut keyless = r("public", "x", true);
         keyless.key = None;
-        assert!(keyless.why_not().is_some_and(|w| w.contains("birincil anahtar")));
+        assert!(
+            keyless
+                .why_not()
+                .is_some_and(|w| w.contains("birincil anahtar"))
+        );
     }
 }

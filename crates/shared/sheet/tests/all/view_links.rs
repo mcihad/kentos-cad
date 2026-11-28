@@ -1,8 +1,8 @@
 use kentos_sheet::{
-    *,
-    display::{RenderInputs, Prim},
-    viewport::*,
+    display::{Prim, RenderInputs},
     ops::{self, Op},
+    viewport::*,
+    *,
 };
 #[test]
 fn twenty_independent_link_cameras_follow_stable_ids_but_snapshots_do_not() {
@@ -89,8 +89,11 @@ fn twenty_independent_link_cameras_follow_stable_ids_but_snapshots_do_not() {
                 .center,
             map.view.center
         );
-        let raw=Op::SetItemProps(ops::SetItemProps{id:"viewport".into(),patch:serde_json::json!({"kind":{"view":{"center":{"x":0.,"y":0.}}}})});
-        assert_eq!(ops::apply(&book,&raw).unwrap_err().code,"linked_view");
+        let raw = Op::SetItemProps(ops::SetItemProps {
+            id: "viewport".into(),
+            patch: serde_json::json!({"kind":{"view":{"center":{"x":0.,"y":0.}}}}),
+        });
+        assert_eq!(ops::apply(&book, &raw).unwrap_err().code, "linked_view");
         let edit = SetViewport {
             id: "viewport".into(),
             center: Some(GroundPoint { x: 0., y: 0. }),

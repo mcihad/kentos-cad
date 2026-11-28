@@ -26,16 +26,33 @@ pub(crate) fn boundary_of(doc: &Document, uid: &str) -> Result<Region, Stop> {
         .entities_with_uids()
         .find(|(u, _)| u.to_string() == uid)
         .map(|(_, e)| e.clone())
-        .ok_or_else(|| fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), "boundary"))?;
-    let not = || invalid(format!("“{uid}” sınır olamaz: düz kenarlı, tek parçalı kapalı bir çoklu çizgi ya da alan olmalı."), "boundary");
+        .ok_or_else(|| {
+            fail(
+                codes::ENTITY_NOT_FOUND,
+                format!("“{uid}” kimlikli nesne çizimde yok."),
+                "boundary",
+            )
+        })?;
+    let not = || {
+        invalid(
+            format!(
+                "“{uid}” sınır olamaz: düz kenarlı, tek parçalı kapalı bir çoklu çizgi ya da alan olmalı."
+            ),
+            "boundary",
+        )
+    };
     let straight = |b: &Option<Vec<f64>>| b.as_ref().is_none_or(|b| b.iter().all(|v| *v == 0.0));
-    let ring = |pts: &[kentos_commands::Vec2]| pts.iter().map(|p| [p.x, p.y]).collect::<Vec<[f64; 2]>>();
+    let ring =
+        |pts: &[kentos_commands::Vec2]| pts.iter().map(|p| [p.x, p.y]).collect::<Vec<[f64; 2]>>();
     let path = match &entity {
         Entity::Polygon(p) => p,
         Entity::Polyline(p) if p.closed => p,
         _ => return Err(not()),
     };
-    if path.parts.as_ref().is_some_and(|q| !q.is_empty()) || path.pts.len() < 3 || !straight(&path.bulges) {
+    if path.parts.as_ref().is_some_and(|q| !q.is_empty())
+        || path.pts.len() < 3
+        || !straight(&path.bulges)
+    {
         return Err(not());
     }
     let mut holes = Vec::new();
@@ -47,7 +64,10 @@ pub(crate) fn boundary_of(doc: &Document, uid: &str) -> Result<Region, Stop> {
             holes.push(ring(&h.pts));
         }
     }
-    Ok(Region { outer: ring(&path.pts), holes })
+    Ok(Region {
+        outer: ring(&path.pts),
+        holes,
+    })
 }
 
 /// The drawing's object as a boundary for a window's picture; none when it is not one.
@@ -56,16 +76,30 @@ pub fn boundary_region(doc: &Document, uid: &str) -> Option<Region> {
 }
 
 /// The coverage now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &TerrainsCoverage) -> Result<(TerrainsCovered, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &TerrainsCoverage,
+) -> Result<(TerrainsCovered, Vec<CommandWarning>), Stop> {
     if input.longest.is_some_and(|v| !(v.is_finite() && v > 0.0)) {
-        return Err(invalid("Tahmin sayılan kenar boyu (longest) sıfırdan büyük olmalı.".into(), "longest"));
+        return Err(invalid(
+            "Tahmin sayılan kenar boyu (longest) sıfırdan büyük olmalı.".into(),
+            "longest",
+        ));
     }
     terrains::terrain_project(doc)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
-    let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+    let def = terrains::surfaces(doc)
+        .iter()
+        .find(|s| s.id == id)
+        .cloned()
+        .ok_or(Stop::Cancelled)?;
     let made = terrains::make(doc, &def);
     let surface = made.built()?;
-    let region = input.boundary.as_deref().map(|uid| boundary_of(doc, uid)).transpose()?;
+    let region = input
+        .boundary
+        .as_deref()
+        .map(|uid| boundary_of(doc, uid))
+        .transpose()?;
     let c = surface.coverage(region.as_ref(), input.longest);
     let no_data = c.boundary_area.map(|b| (b - c.covered).max(0.0));
     let mut warnings = Vec::new();
@@ -93,7 +127,11 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCoverage) -> Result<(Terrai
             outside: c.outside,
             share: c.boundary_area.filter(|b| *b > 0.0).map(|b| c.covered / b),
             estimated: c.estimated,
-            estimated_share: if c.covered > 0.0 { c.estimated / c.covered } else { 0.0 },
+            estimated_share: if c.covered > 0.0 {
+                c.estimated / c.covered
+            } else {
+                0.0
+            },
             estimated_triangles: count(c.estimated_triangles),
             longest_edge: c.longest_edge,
         },
@@ -104,7 +142,10 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsCoverage) -> Result<(Terrai
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsCoverage) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -118,12 +159,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsCoverage) -> CommandResul
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsCoverage) -> CommandResult<TerrainsCovered> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsCoverage,
+) -> CommandResult<TerrainsCovered> {
     plan(cx, &input)
 }
 
 /// The coverage for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &TerrainsCoverage) -> Result<(TerrainsCovered, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &TerrainsCoverage,
+) -> Result<(TerrainsCovered, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }
 
@@ -142,10 +189,18 @@ pub struct CoveragePicture {
 pub fn picture(doc: &Document, input: &TerrainsCoverage) -> Result<CoveragePicture, String> {
     let read = || -> Result<CoveragePicture, Stop> {
         let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
-        let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+        let def = terrains::surfaces(doc)
+            .iter()
+            .find(|s| s.id == id)
+            .cloned()
+            .ok_or(Stop::Cancelled)?;
         let made = terrains::make(doc, &def);
         let surface = made.built()?;
-        let region = input.boundary.as_deref().map(|uid| boundary_of(doc, uid)).transpose()?;
+        let region = input
+            .boundary
+            .as_deref()
+            .map(|uid| boundary_of(doc, uid))
+            .transpose()?;
         let longest = input.longest.unwrap_or(f64::INFINITY);
         let triangles = surface
             .triangles
@@ -160,7 +215,9 @@ pub fn picture(doc: &Document, input: &TerrainsCoverage) -> Result<CoveragePictu
                 (p, surface.longest_edge(i) > longest)
             })
             .collect();
-        let rings = region.map_or_else(Vec::new, |r| std::iter::once(r.outer).chain(r.holes).collect());
+        let rings = region.map_or_else(Vec::new, |r| {
+            std::iter::once(r.outer).chain(r.holes).collect()
+        });
         Ok(CoveragePicture { triangles, rings })
     };
     read().map_err(crate::road_corridors::words)

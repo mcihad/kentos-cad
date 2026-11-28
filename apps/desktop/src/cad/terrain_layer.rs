@@ -31,7 +31,8 @@ fn edges_of(surface: &kentos_road::surface::Surface) -> Edges {
         let v = surface.vertices[i as usize];
         [v[0], v[1]]
     };
-    let constrained: std::collections::BTreeSet<[u32; 2]> = surface.constrained.iter().copied().collect();
+    let constrained: std::collections::BTreeSet<[u32; 2]> =
+        surface.constrained.iter().copied().collect();
     let mut seen = std::collections::BTreeSet::new();
     let mut out = Edges::default();
     for t in &surface.triangles {
@@ -42,8 +43,16 @@ fn edges_of(surface: &kentos_road::surface::Surface) -> Edges {
             }
         }
     }
-    out.constrained = surface.constrained.iter().map(|[a, b]| [at(*a), at(*b)]).collect();
-    out.removed = surface.removed_triangles().into_iter().map(|t| t.map(at)).collect();
+    out.constrained = surface
+        .constrained
+        .iter()
+        .map(|[a, b]| [at(*a), at(*b)])
+        .collect();
+    out.removed = surface
+        .removed_triangles()
+        .into_iter()
+        .map(|t| t.map(at))
+        .collect();
     out
 }
 
@@ -74,7 +83,8 @@ pub(crate) fn layer<'a>(
     slot: &crate::labels::GlyphSlot,
 ) -> Option<Element<'a, Message>> {
     let holds = doc.settings().road.as_ref().is_some_and(|road| {
-        !road.surfaces.is_empty() && kentos_native_application::road_terrains::holds_surfaces(doc.settings().cad_work)
+        !road.surfaces.is_empty()
+            && kentos_native_application::road_terrains::holds_surfaces(doc.settings().cad_work)
     });
     if !holds {
         slot.clear();
@@ -96,46 +106,66 @@ pub(crate) fn layer<'a>(
 
 impl Layer<'_> {
     /// Its picture, on a canvas frame or for the area's renderer (plan/render.md RM-14).
-    fn paint(&self, frame: &mut impl crate::gpu_frame::Paint, surfaces: &[Edges], bounds: Rectangle) {
-            let (w, h) = (bounds.width as f64, bounds.height as f64);
-            let screen = |p: [f64; 2]| self.camera.world_to_screen(Vec2::new(p[0], p[1]));
-            let path = |edges: &[[[f64; 2]; 2]], least: f64| {
-                Path::new(|b| {
-                    for [a, c] in edges {
-                        let (p, q) = (screen(*a), screen(*c));
-                        let off = (p[0] < 0.0 && q[0] < 0.0)
-                            || (p[0] > w && q[0] > w)
-                            || (p[1] < 0.0 && q[1] < 0.0)
-                            || (p[1] > h && q[1] > h);
-                        if off || (q[0] - p[0]).hypot(q[1] - p[1]) < least {
-                            continue;
-                        }
-                        b.move_to(Point::new(p[0] as f32, p[1] as f32));
-                        b.line_to(Point::new(q[0] as f32, q[1] as f32));
+    fn paint(
+        &self,
+        frame: &mut impl crate::gpu_frame::Paint,
+        surfaces: &[Edges],
+        bounds: Rectangle,
+    ) {
+        let (w, h) = (bounds.width as f64, bounds.height as f64);
+        let screen = |p: [f64; 2]| self.camera.world_to_screen(Vec2::new(p[0], p[1]));
+        let path = |edges: &[[[f64; 2]; 2]], least: f64| {
+            Path::new(|b| {
+                for [a, c] in edges {
+                    let (p, q) = (screen(*a), screen(*c));
+                    let off = (p[0] < 0.0 && q[0] < 0.0)
+                        || (p[0] > w && q[0] > w)
+                        || (p[1] < 0.0 && q[1] < 0.0)
+                        || (p[1] > h && q[1] > h);
+                    if off || (q[0] - p[0]).hypot(q[1] - p[1]) < least {
+                        continue;
                     }
-                })
-            };
-            for s in surfaces {
-                frame.stroke(
-                    &path(&s.plain, 2.0),
-                    Stroke::default().with_width(0.75).with_color(Color { a: 0.45, ..self.ink }),
-                );
-                frame.stroke(
-                    &path(&s.constrained, 0.0),
-                    Stroke::default().with_width(1.6).with_color(self.danger),
-                );
-                for t in &s.removed {
-                    let [a, b, c] = t.map(screen);
-                    let hole = Path::new(|p| {
-                        p.move_to(Point::new(a[0] as f32, a[1] as f32));
-                        p.line_to(Point::new(b[0] as f32, b[1] as f32));
-                        p.line_to(Point::new(c[0] as f32, c[1] as f32));
-                        p.close();
-                    });
-                    frame.fill(&hole, Color { a: 0.14, ..self.danger });
-                    frame.stroke(&hole, Stroke::default().with_width(1.0).with_color(Color { a: 0.7, ..self.danger }));
+                    b.move_to(Point::new(p[0] as f32, p[1] as f32));
+                    b.line_to(Point::new(q[0] as f32, q[1] as f32));
                 }
+            })
+        };
+        for s in surfaces {
+            frame.stroke(
+                &path(&s.plain, 2.0),
+                Stroke::default().with_width(0.75).with_color(Color {
+                    a: 0.45,
+                    ..self.ink
+                }),
+            );
+            frame.stroke(
+                &path(&s.constrained, 0.0),
+                Stroke::default().with_width(1.6).with_color(self.danger),
+            );
+            for t in &s.removed {
+                let [a, b, c] = t.map(screen);
+                let hole = Path::new(|p| {
+                    p.move_to(Point::new(a[0] as f32, a[1] as f32));
+                    p.line_to(Point::new(b[0] as f32, b[1] as f32));
+                    p.line_to(Point::new(c[0] as f32, c[1] as f32));
+                    p.close();
+                });
+                frame.fill(
+                    &hole,
+                    Color {
+                        a: 0.14,
+                        ..self.danger
+                    },
+                );
+                frame.stroke(
+                    &hole,
+                    Stroke::default().with_width(1.0).with_color(Color {
+                        a: 0.7,
+                        ..self.danger
+                    }),
+                );
             }
+        }
     }
 
     /// What the picture depends on: the drawing's revision, the view and the colours.
@@ -143,12 +173,22 @@ impl Layer<'_> {
         use std::hash::{Hash, Hasher};
         let mut h = std::collections::hash_map::DefaultHasher::new();
         self.doc.revision().hash(&mut h);
-        for p in [Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)] {
+        for p in [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(1.0, 0.0),
+            Vec2::new(0.0, 1.0),
+        ] {
             for c in self.camera.world_to_screen(p) {
                 c.to_bits().hash(&mut h);
             }
         }
-        for c in [bounds.width, bounds.height, self.ink.r, self.ink.a, self.danger.r] {
+        for c in [
+            bounds.width,
+            bounds.height,
+            self.ink.r,
+            self.ink.a,
+            self.danger.r,
+        ] {
             c.to_bits().hash(&mut h);
         }
         h.finish()
@@ -167,7 +207,11 @@ impl canvas::Program<Message> for Layer<'_> {
         _cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
         let revision = self.doc.revision();
-        let stale = state.built.borrow().as_ref().is_none_or(|(r, _)| *r != revision);
+        let stale = state
+            .built
+            .borrow()
+            .as_ref()
+            .is_none_or(|(r, _)| *r != revision);
         if stale {
             let edges = kentos_native_application::road_terrains::made_surfaces(self.doc)
                 .into_iter()
@@ -181,13 +225,17 @@ impl canvas::Program<Message> for Layer<'_> {
             return Vec::new();
         };
         if let Some(slot) = &self.gpu {
-            crate::gpu_frame::publish(slot, key, self.camera, bounds.size(), |f| self.paint(f, surfaces, bounds));
+            crate::gpu_frame::publish(slot, key, self.camera, bounds.size(), |f| {
+                self.paint(f, surfaces, bounds)
+            });
             return Vec::new();
         }
         if state.key.get() != key {
             state.cache.clear();
             state.key.set(key);
         }
-        vec![state.cache.draw(renderer, bounds.size(), |frame| self.paint(frame, surfaces, bounds))]
+        vec![state.cache.draw(renderer, bounds.size(), |frame| {
+            self.paint(frame, surfaces, bounds)
+        })]
     }
 }

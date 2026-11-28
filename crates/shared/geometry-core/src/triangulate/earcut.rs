@@ -52,14 +52,20 @@ pub(super) fn earcut_into(pts: &[Vec2], rings: &[Range<usize>], out: &mut Vec<u3
     let Some(outer) = rings.first() else {
         return;
     };
-    let mut l = List { n: Vec::with_capacity(rings.iter().map(|r| r.len() + 2).sum()) };
+    let mut l = List {
+        n: Vec::with_capacity(rings.iter().map(|r| r.len() + 2).sum()),
+    };
     let Some(mut outer_node) = l.linked(pts, outer.clone(), true) else {
         return;
     };
     if l.n[outer_node].next == l.n[outer_node].prev {
         return;
     }
-    let holes: Vec<Range<usize>> = rings[1..].iter().filter(|h| h.len() >= 3).cloned().collect();
+    let holes: Vec<Range<usize>> = rings[1..]
+        .iter()
+        .filter(|h| h.len() >= 3)
+        .cloned()
+        .collect();
     if !holes.is_empty() {
         outer_node = l.eliminate_holes(pts, &holes, outer_node);
     }
@@ -87,7 +93,16 @@ fn max3(a: f64, b: f64, c: f64) -> f64 {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn point_in_triangle(ax: f64, ay: f64, bx: f64, by: f64, cx: f64, cy: f64, px: f64, py: f64) -> bool {
+fn point_in_triangle(
+    ax: f64,
+    ay: f64,
+    bx: f64,
+    by: f64,
+    cx: f64,
+    cy: f64,
+    px: f64,
+    py: f64,
+) -> bool {
     (cx - px) * (ay - py) >= (ax - px) * (cy - py)
         && (ax - px) * (by - py) >= (bx - px) * (ay - py)
         && (bx - px) * (cy - py) >= (cx - px) * (by - py)
@@ -106,7 +121,14 @@ fn sign(v: f64) -> i8 {
 impl List {
     fn node(&mut self, i: u32, x: f64, y: f64) -> usize {
         let k = self.n.len();
-        self.n.push(Node { i, x, y, prev: k, next: k, steiner: false });
+        self.n.push(Node {
+            i,
+            x,
+            y,
+            prev: k,
+            next: k,
+            steiner: false,
+        });
         k
     }
 
@@ -231,9 +253,20 @@ impl List {
         if self.area(a, b, c) >= 0.0 {
             return false;
         }
-        let (ax, bx, cx, ay, by, cy) =
-            (self.n[a].x, self.n[b].x, self.n[c].x, self.n[a].y, self.n[b].y, self.n[c].y);
-        let (x0, y0, x1, y1) = (min3(ax, bx, cx), min3(ay, by, cy), max3(ax, bx, cx), max3(ay, by, cy));
+        let (ax, bx, cx, ay, by, cy) = (
+            self.n[a].x,
+            self.n[b].x,
+            self.n[c].x,
+            self.n[a].y,
+            self.n[b].y,
+            self.n[c].y,
+        );
+        let (x0, y0, x1, y1) = (
+            min3(ax, bx, cx),
+            min3(ay, by, cy),
+            max3(ax, bx, cx),
+            max3(ay, by, cy),
+        );
         let mut p = self.n[c].next;
         while p != a {
             let q = self.n[p];
@@ -315,7 +348,9 @@ impl List {
                 queue.push(self.leftmost(list));
             }
         }
-        stable_sort(&mut queue, &mut |&a, &b| js_cmp(self.compare_xy_slope(a, b), 0.0));
+        stable_sort(&mut queue, &mut |&a, &b| {
+            js_cmp(self.compare_xy_slope(a, b), 0.0)
+        });
         let mut outer = outer;
         for &h in &queue {
             outer = self.eliminate_hole(h, outer);
@@ -429,7 +464,8 @@ impl List {
 
     /// Whether the corner at `m` holds the corner at `p`, the same point passed twice.
     fn sector_contains_sector(&self, m: usize, p: usize) -> bool {
-        self.area(self.n[m].prev, m, self.n[p].prev) < 0.0 && self.area(self.n[p].next, m, self.n[m].next) < 0.0
+        self.area(self.n[m].prev, m, self.n[p].prev) < 0.0
+            && self.area(self.n[p].next, m, self.n[m].next) < 0.0
     }
 
     fn leftmost(&self, start: usize) -> usize {
@@ -509,12 +545,18 @@ impl List {
     }
 
     fn middle_inside(&self, a: usize, b: usize) -> bool {
-        let (px, py) = ((self.n[a].x + self.n[b].x) / 2.0, (self.n[a].y + self.n[b].y) / 2.0);
+        let (px, py) = (
+            (self.n[a].x + self.n[b].x) / 2.0,
+            (self.n[a].y + self.n[b].y) / 2.0,
+        );
         let mut inside = false;
         let mut p = a;
         loop {
             let (q, n) = (self.n[p], self.n[self.n[p].next]);
-            if (q.y > py) != (n.y > py) && n.y != q.y && px < (n.x - q.x) * (py - q.y) / (n.y - q.y) + q.x {
+            if (q.y > py) != (n.y > py)
+                && n.y != q.y
+                && px < (n.x - q.x) * (py - q.y) / (n.y - q.y) + q.x
+            {
                 inside = !inside;
             }
             p = q.next;

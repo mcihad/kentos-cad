@@ -61,7 +61,11 @@ pub struct RateLimiter {
 
 impl RateLimiter {
     pub fn new(max: u32, window: Duration) -> Self {
-        Self { max, window, hits: Mutex::new(HashMap::new()) }
+        Self {
+            max,
+            window,
+            hits: Mutex::new(HashMap::new()),
+        }
     }
 
     /// Seconds until `key` may do it again, or None when it may now (nothing is counted).
@@ -83,7 +87,11 @@ impl RateLimiter {
             *entry = (0, Instant::now());
         }
         if entry.0 >= self.max {
-            return Err(self.window.saturating_sub(entry.1.elapsed()).as_secs().max(1));
+            return Err(self
+                .window
+                .saturating_sub(entry.1.elapsed())
+                .as_secs()
+                .max(1));
         }
         entry.0 += 1;
         Ok(())
@@ -119,7 +127,11 @@ mod tests {
         let wait = l.hit("10.0.0.1").unwrap_err();
         assert!((1..=60).contains(&wait), "{wait}");
         assert!(l.blocked("10.0.0.1").is_some());
-        assert_eq!(l.hit("10.0.0.2"), Ok(()), "another address has its own count");
+        assert_eq!(
+            l.hit("10.0.0.2"),
+            Ok(()),
+            "another address has its own count"
+        );
         assert!(l.blocked("10.0.0.3").is_none());
         let short = RateLimiter::new(1, Duration::from_millis(30));
         short.hit("a").unwrap();

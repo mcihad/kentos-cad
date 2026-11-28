@@ -3,7 +3,9 @@
 //! report's case: `bedel >= 100`, written on `bakim`, asked of `mahalleler` (mahalle, ad).
 
 use kentos_commands::{CommandResult, LayerDataOperation, LayersData, LayersRows, Workspace};
-use kentos_data::{Coord, Driver, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value};
+use kentos_data::{
+    Coord, Driver, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value,
+};
 use kentos_domain::Document;
 use kentos_native_application::layers_rows::{self, missing_fields};
 use kentos_native_application::{ExecutionContext, data_describe};
@@ -15,7 +17,9 @@ fn neighbourhoods() -> std::path::PathBuf {
     std::fs::create_dir_all(&dir).expect("a folder");
     let path = dir.join("Mahalle-Verileri.gpkg");
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
-    let source = kentos_data_gpkg::Gpkg.open(&path.display().to_string()).expect("open");
+    let source = kentos_data_gpkg::Gpkg
+        .open(&path.display().to_string())
+        .expect("open");
     let mut tx = source.begin().expect("begin");
     tx.create_table(
         &NewTable {
@@ -45,8 +49,14 @@ fn neighbourhoods() -> std::path::PathBuf {
         .enumerate()
         .map(|(i, &(m, ad))| NewFeature {
             fid: None,
-            geometry: Some(Geometry::Point(Some(Coord::xy(484_000.0 + i as f64 * 10.0, 4_420_000.0)))),
-            values: vec![("mahalle".into(), Value::Text(m.into())), ("ad".into(), Value::Text(ad.into()))],
+            geometry: Some(Geometry::Point(Some(Coord::xy(
+                484_000.0 + i as f64 * 10.0,
+                4_420_000.0,
+            )))),
+            values: vec![
+                ("mahalle".into(), Value::Text(m.into())),
+                ("ad".into(), Value::Text(ad.into())),
+            ],
         })
         .collect();
     tx.insert("mahalleler", &rows).expect("rows");
@@ -57,20 +67,23 @@ fn neighbourhoods() -> std::path::PathBuf {
 /// A CBS project with the file's `mahalleler` as a data layer; its id.
 fn project(path: &std::path::Path) -> (Document, String) {
     let address = path.display().to_string();
-    let source = kentos_data::registry().source(&address).expect("the source");
-    let snapshot = kentos_project::new_project::new_project(&kentos_project::new_project::NewProject {
-        name: "Mahalleler".into(),
-        srid: 5255,
-        plot_scale: 1000.0,
-        workspace: Workspace::Gis,
-        drawing_font: kentos_commands::DrawingFont::Barlow,
-        province: None,
-        drawing_unit: None,
-        annotation: None,
-        cad_work: None,
-        heights: None,
-    })
-    .expect("a project");
+    let source = kentos_data::registry()
+        .source(&address)
+        .expect("the source");
+    let snapshot =
+        kentos_project::new_project::new_project(&kentos_project::new_project::NewProject {
+            name: "Mahalleler".into(),
+            srid: 5255,
+            plot_scale: 1000.0,
+            workspace: Workspace::Gis,
+            drawing_font: kentos_commands::DrawingFont::Barlow,
+            province: None,
+            drawing_unit: None,
+            annotation: None,
+            cad_work: None,
+            heights: None,
+        })
+        .expect("a project");
     let mut doc = Document::from_snapshot(snapshot).expect("a document");
     let d = data_describe::describe_in(source.as_ref(), &address, "mahalleler").expect("described");
     let input = LayersData {
@@ -83,7 +96,10 @@ fn project(path: &std::path::Path) -> (Document, String) {
         fields: Some(d.fields.clone()),
         expected_revision: None,
     };
-    let layer = match kentos_native_application::layers_data::execute(&mut ExecutionContext::new(&mut doc), input) {
+    let layer = match kentos_native_application::layers_data::execute(
+        &mut ExecutionContext::new(&mut doc),
+        input,
+    ) {
         CommandResult::Completed { output, .. } => output.layer,
         other => panic!("not added: {other:?}"),
     };
@@ -126,10 +142,20 @@ fn a_condition_naming_a_field_the_layer_lacks_is_said_not_answered_empty() {
 #[test]
 fn the_words_name_every_missing_field_and_a_wide_tables_first_fields() {
     let named = |n: &[&str]| n.iter().map(|s| s.to_string()).collect::<Vec<_>>();
-    assert_eq!(missing_fields(&named(&["ad"]), &named(&["mahalle", "ad"]), "mahalleler"), None);
     assert_eq!(
-        missing_fields(&named(&["bedel", "ad", "durum"]), &named(&["mahalle", "ad"]), "mahalleler").as_deref(),
-        Some("Süzgeç uygulanmadı: “bedel”, “durum” alanları “mahalleler” katmanında yok. Katmanın alanları: mahalle, ad.")
+        missing_fields(&named(&["ad"]), &named(&["mahalle", "ad"]), "mahalleler"),
+        None
+    );
+    assert_eq!(
+        missing_fields(
+            &named(&["bedel", "ad", "durum"]),
+            &named(&["mahalle", "ad"]),
+            "mahalleler"
+        )
+        .as_deref(),
+        Some(
+            "Süzgeç uygulanmadı: “bedel”, “durum” alanları “mahalleler” katmanında yok. Katmanın alanları: mahalle, ad."
+        )
     );
     assert_eq!(
         missing_fields(&named(&["x"]), &[], "boş").as_deref(),
@@ -137,5 +163,10 @@ fn the_words_name_every_missing_field_and_a_wide_tables_first_fields() {
     );
     let wide: Vec<String> = (1..=14).map(|i| format!("a{i}")).collect();
     let words = missing_fields(&named(&["x"]), &wide, "geniş").expect("said");
-    assert!(words.ends_with("Katmanın alanları: a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 ve 4 alan daha."), "{words}");
+    assert!(
+        words.ends_with(
+            "Katmanın alanları: a1, a2, a3, a4, a5, a6, a7, a8, a9, a10 ve 4 alan daha."
+        ),
+        "{words}"
+    );
 }

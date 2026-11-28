@@ -67,9 +67,8 @@ pub struct Spec {
 }
 
 impl crate::api::json::Flat for Spec {
-    const NAMES: &'static [&'static str] = &[
-        "form", "radius", "at", "angle", "flip", "size", "words",
-    ];
+    const NAMES: &'static [&'static str] =
+        &["form", "radius", "at", "angle", "flip", "size", "words"];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
         let form = match v.get("form") {
@@ -174,7 +173,11 @@ pub fn height(spec: &Spec, scale: f64) -> f64 {
 }
 
 fn word_width(t: &str, h: f64) -> f64 {
-    if t.is_empty() { 0.0 } else { width_em(t, Font::DEFAULT) * h }
+    if t.is_empty() {
+        0.0
+    } else {
+        width_em(t, Font::DEFAULT) * h
+    }
 }
 
 /// A bubble's radius at 1:`scale`.
@@ -273,7 +276,8 @@ pub fn pieces(points: &[Vec2], spec: &Spec, scale: f64) -> Vec<Piece> {
             bubble(&mut out, c, spec, scale, Some(Vec2::new(cos(a), sin(a))));
         }
         Form::Detail => {
-            let (Some(&c), Some(rr), Some(b)) = (points.first(), spec.radius, detail_bubble(points, spec))
+            let (Some(&c), Some(rr), Some(b)) =
+                (points.first(), spec.radius, detail_bubble(points, spec))
             else {
                 return out;
             };
@@ -292,4 +296,3 @@ pub fn pieces(points: &[Vec2], spec: &Spec, scale: f64) -> Vec<Piece> {
     }
     out
 }
-

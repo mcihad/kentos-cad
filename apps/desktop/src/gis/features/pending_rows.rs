@@ -34,7 +34,11 @@ pub(crate) fn pending_lines(changes: &DataChanges, fields: &[String]) -> Vec<Pen
                     if now == was {
                         now
                     } else {
-                        let was = if was.is_empty() { "boş".to_owned() } else { was };
+                        let was = if was.is_empty() {
+                            "boş".to_owned()
+                        } else {
+                            was
+                        };
                         format!("{now} (önce: {was})")
                     }
                 })
@@ -49,7 +53,11 @@ pub(crate) fn pending_lines(changes: &DataChanges, fields: &[String]) -> Vec<Pen
             deleted: true,
             cells: fields
                 .iter()
-                .map(|f| row.as_ref().and_then(|e| e.base().attrs.get(f).cloned()).unwrap_or_default())
+                .map(|f| {
+                    row.as_ref()
+                        .and_then(|e| e.base().attrs.get(f).cloned())
+                        .unwrap_or_default()
+                })
                 .collect(),
         });
     }
@@ -95,7 +103,12 @@ pub(crate) fn shown_value(field: Option<&kentos_commands::LayerField>, raw: Stri
 
 /// The status line's words for the pending rows shown while the source cannot be read, with when the source last
 /// answered for the layer (`verified`, milliseconds since 1970: docs/adr/9163), in the device's time.
-pub(crate) fn pending_words(added: usize, changed: usize, deleted: usize, verified: Option<u64>) -> String {
+pub(crate) fn pending_words(
+    added: usize,
+    changed: usize,
+    deleted: usize,
+    verified: Option<u64>,
+) -> String {
     let last = match verified {
         Some(ms) => crate::cloud::local_time::stamp(ms, crate::cloud::local_time::Zone::system()),
         None => "bilinmiyor".to_owned(),

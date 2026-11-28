@@ -19,7 +19,10 @@ pub struct Aabb {
 }
 
 impl Aabb {
-    pub const EMPTY: Aabb = Aabb { min: [f64::INFINITY; 3], max: [f64::NEG_INFINITY; 3] };
+    pub const EMPTY: Aabb = Aabb {
+        min: [f64::INFINITY; 3],
+        max: [f64::NEG_INFINITY; 3],
+    };
 
     pub fn is_empty(&self) -> bool {
         (0..3).any(|a| self.min[a] > self.max[a])
@@ -31,7 +34,10 @@ impl Aabb {
     }
 
     pub fn union(&self, o: &Aabb) -> Aabb {
-        Aabb { min: std::array::from_fn(|a| self.min[a].min(o.min[a])), max: std::array::from_fn(|a| self.max[a].max(o.max[a])) }
+        Aabb {
+            min: std::array::from_fn(|a| self.min[a].min(o.min[a])),
+            max: std::array::from_fn(|a| self.max[a].max(o.max[a])),
+        }
     }
 
     pub fn center(&self) -> V3 {
@@ -39,12 +45,22 @@ impl Aabb {
     }
 
     pub fn diagonal(&self) -> f64 {
-        if self.is_empty() { 0.0 } else { math::length(math::sub(self.max, self.min)) }
+        if self.is_empty() {
+            0.0
+        } else {
+            math::length(math::sub(self.max, self.min))
+        }
     }
 
     /// The largest side.
     pub fn extent(&self) -> f64 {
-        if self.is_empty() { 0.0 } else { (0..3).map(|a| self.max[a] - self.min[a]).fold(0.0, f64::max) }
+        if self.is_empty() {
+            0.0
+        } else {
+            (0..3)
+                .map(|a| self.max[a] - self.min[a])
+                .fold(0.0, f64::max)
+        }
     }
 
     /// Whether `o` lies inside, `tolerance` metres allowed.
@@ -130,6 +146,8 @@ impl Hierarchy {
             }
             stack.extend(&self.tiles[i as usize].children);
         }
-        seen.iter().position(|s| !s).map(|i| format!("{}. karoya kökten ulaşılmıyor", i))
+        seen.iter()
+            .position(|s| !s)
+            .map(|i| format!("{}. karoya kökten ulaşılmıyor", i))
     }
 }

@@ -43,7 +43,12 @@ fn rooms(app: &mut App) {
     let mut o = Objects::new();
     wall(
         &mut o,
-        &[(-0.125, -0.125), (9.125, -0.125), (9.125, 6.125), (-0.125, 6.125)],
+        &[
+            (-0.125, -0.125),
+            (9.125, -0.125),
+            (9.125, 6.125),
+            (-0.125, 6.125),
+        ],
         0.25,
         true,
     );
@@ -64,10 +69,25 @@ fn rooms(app: &mut App) {
     put("islak", "Asma klozet", [7.4, 6.0], PI);
     put("islak", "Dolaplı lavabo", [6.05, 4.6], -FRAC_PI_2);
     let dry = ["Laminat parke", "Saten boya", "Alçı", "Ahşap süpürgelik"];
-    room(&mut o, &[(0.0, 3.05), (3.95, 3.05), (3.95, 6.0), (0.0, 6.0)], "Z-01", "Yatak odası", dry);
     room(
         &mut o,
-        &[(0.0, 0.0), (9.0, 0.0), (9.0, 3.45), (5.95, 3.45), (5.95, 6.0), (4.05, 6.0), (4.05, 2.95), (0.0, 2.95)],
+        &[(0.0, 3.05), (3.95, 3.05), (3.95, 6.0), (0.0, 6.0)],
+        "Z-01",
+        "Yatak odası",
+        dry,
+    );
+    room(
+        &mut o,
+        &[
+            (0.0, 0.0),
+            (9.0, 0.0),
+            (9.0, 3.45),
+            (5.95, 3.45),
+            (5.95, 6.0),
+            (4.05, 6.0),
+            (4.05, 2.95),
+            (0.0, 2.95),
+        ],
         "Z-02",
         "Salon ve mutfak",
         dry,
@@ -109,13 +129,21 @@ fn view(app: &mut App, right: f64) {
 }
 
 /// A schedule of `of` placed right of the flat: its uid and slot.
-fn schedule(app: &mut App, of: ScheduleOf, columns: Option<Vec<ScheduleColumn>>, sort: Vec<ScheduleSort>) -> Option<(String, Slot)> {
+fn schedule(
+    app: &mut App,
+    of: ScheduleOf,
+    columns: Option<Vec<ScheduleColumn>>,
+    sort: Vec<ScheduleSort>,
+) -> Option<(String, Slot)> {
     let doc = app.document.as_mut()?;
     let made = kentos_native_application::schedules_create::execute(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
         SchedulesCreate {
             layer_id: "cizim".into(),
-            at: Vec2 { x: E + 10.0, y: N + 6.0 },
+            at: Vec2 {
+                x: E + 10.0,
+                y: N + 6.0,
+            },
             of,
             columns,
             filter: None,
@@ -138,8 +166,18 @@ fn schedule(app: &mut App, of: ScheduleOf, columns: Option<Vec<ScheduleColumn>>,
 /// The fixtures by category: a heading and a subtotal for each, by type within.
 fn fixtures(app: &mut App) -> Option<(String, Slot)> {
     rooms(app);
-    let by = |column, ends| ScheduleSort { column, descending: false, header: ends, footer: ends };
-    let made = schedule(app, ScheduleOf::Fixtures, None, vec![by(1, true), by(0, false)]);
+    let by = |column, ends| ScheduleSort {
+        column,
+        descending: false,
+        header: ends,
+        footer: ends,
+    };
+    let made = schedule(
+        app,
+        ScheduleOf::Fixtures,
+        None,
+        vec![by(1, true), by(0, false)],
+    );
     hover(app, [9.6, -1.2]);
     made
 }
@@ -163,7 +201,11 @@ fn export(app: &mut App) {
 /// The rooms' finishes and their baseboards' lengths.
 fn finishes(app: &mut App) {
     rooms(app);
-    let column = |field| ScheduleColumn { field, title: None, attr: None };
+    let column = |field| ScheduleColumn {
+        field,
+        title: None,
+        attr: None,
+    };
     let columns = [
         ScheduleField::Number,
         ScheduleField::Name,
@@ -181,13 +223,22 @@ fn finishes(app: &mut App) {
     let table = made.and_then(|(_, slot)| {
         let doc = app.document.as_ref()?;
         match doc.model.entities().find(|e| e.base().id == slot.0)? {
-            kentos_commands::Entity::Table(t) => Some((t.p, t.columns.iter().sum::<f64>(), t.rows.iter().sum::<f64>())),
+            kentos_commands::Entity::Table(t) => Some((
+                t.p,
+                t.columns.iter().sum::<f64>(),
+                t.rows.iter().sum::<f64>(),
+            )),
             _ => None,
         }
     });
     if let Some((p, w, h)) = table {
         app.viewport.camera.fit(
-            &kentos_render_wgpu::Bounds { min_x: p.x - 2.2, min_y: p.y - h - 0.6, max_x: p.x + w + 0.3, max_y: p.y + 0.4 },
+            &kentos_render_wgpu::Bounds {
+                min_x: p.x - 2.2,
+                min_y: p.y - h - 0.6,
+                max_x: p.x + w + 0.3,
+                max_y: p.y + 0.4,
+            },
             24.0,
         );
     }

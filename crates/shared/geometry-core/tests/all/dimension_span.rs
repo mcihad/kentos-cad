@@ -63,7 +63,10 @@ impl House {
         h
     }
     fn p(&self, x: f64, y: f64) -> Vec2 {
-        Vec2::new(self.o.x + self.c * x - self.s * y, self.o.y + self.s * x + self.c * y)
+        Vec2::new(
+            self.o.x + self.c * x - self.s * y,
+            self.o.y + self.s * x + self.c * y,
+        )
     }
     fn d(&self) -> Vec2 {
         Vec2::new(self.c, self.s)
@@ -74,7 +77,11 @@ impl House {
     }
 }
 
-fn lengths(spans: &[kentos_geometry_core::ops::dimension_set::Span], row: Row, h: &House) -> Vec<f64> {
+fn lengths(
+    spans: &[kentos_geometry_core::ops::dimension_set::Span],
+    row: Row,
+    h: &House,
+) -> Vec<f64> {
     spans
         .iter()
         .filter(|s| s.row == row)
@@ -92,14 +99,24 @@ fn openings(h: &House) -> Vec<OpeningIn> {
         OpeningIn {
             source: 10,
             host: Some(0),
-            jambs: [h.p(6., 0.125), h.p(6., -0.125), h.p(7.2, 0.125), h.p(7.2, -0.125)],
+            jambs: [
+                h.p(6., 0.125),
+                h.p(6., -0.125),
+                h.p(7.2, 0.125),
+                h.p(7.2, -0.125),
+            ],
             flue: false,
             niche_right: None,
         },
         OpeningIn {
             source: 11,
             host: Some(2),
-            jambs: [h.p(4.2, 7.875), h.p(4.2, 8.125), h.p(3., 7.875), h.p(3., 8.125)],
+            jambs: [
+                h.p(4.2, 7.875),
+                h.p(4.2, 8.125),
+                h.p(3., 7.875),
+                h.p(3., 8.125),
+            ],
             flue: false,
             niche_right: None,
         },
@@ -184,9 +201,19 @@ fn the_south_wall_alone_reaches_the_corners_and_meets_the_partition() {
     ] {
         let h = House::new(o, turn);
         let got = run(&h, &[0], &spec(0.25), &spec(0.1), Reference::Faces, &ALL).unwrap();
-        assert_eq!(lengths(&got.spans, Row::Openings, &h), [6.125, 1.2, 2.925], "{o:?} {turn}");
-        assert_eq!(lengths(&got.spans, Row::Walls, &h), [0.25, 3.825, 0.1, 5.825, 0.25]);
-        assert_eq!(lengths(&got.spans, Row::Grids, &h), [0.125, 4.0, 6.0, 0.125]);
+        assert_eq!(
+            lengths(&got.spans, Row::Openings, &h),
+            [6.125, 1.2, 2.925],
+            "{o:?} {turn}"
+        );
+        assert_eq!(
+            lengths(&got.spans, Row::Walls, &h),
+            [0.25, 3.825, 0.1, 5.825, 0.25]
+        );
+        assert_eq!(
+            lengths(&got.spans, Row::Grids, &h),
+            [0.125, 4.0, 6.0, 0.125]
+        );
         assert_eq!(lengths(&got.spans, Row::Overall, &h), [10.25]);
         assert_eq!(got.side, -1.0);
         assert!(got.skipped.is_empty());
@@ -194,7 +221,10 @@ fn the_south_wall_alone_reaches_the_corners_and_meets_the_partition() {
         for (row, k) in ALL.iter().zip(0..) {
             let s = got.spans.iter().find(|s| s.row == *row).unwrap();
             let across = |p: Vec2| -(p.x - h.o.x) * h.s + (p.y - h.o.y) * h.c;
-            assert!((across(s.at) - (-1.5 - 0.5 * f64::from(k))).abs() < 1e-6, "{row:?}");
+            assert!(
+                (across(s.at) - (-1.5 - 0.5 * f64::from(k))).abs() < 1e-6,
+                "{row:?}"
+            );
         }
     }
 }
@@ -202,14 +232,38 @@ fn the_south_wall_alone_reaches_the_corners_and_meets_the_partition() {
 #[test]
 fn the_core_is_the_strongest_band_and_hidden_windows_stay_out() {
     let h = House::new(Vec2::new(0., 0.), 0.0);
-    let got = run(&h, &[0], &layered(), &spec(0.1), Reference::Core, &[Row::Overall]).unwrap();
+    let got = run(
+        &h,
+        &[0],
+        &layered(),
+        &spec(0.1),
+        Reference::Core,
+        &[Row::Overall],
+    )
+    .unwrap();
     assert_eq!(lengths(&got.spans, Row::Overall, &h), [10.21]);
     // All four walls chosen: from the south the north wall's window is behind the south wall.
-    let got = run(&h, &[0, 1, 2, 3], &spec(0.25), &spec(0.1), Reference::Faces, &[Row::Openings]).unwrap();
+    let got = run(
+        &h,
+        &[0, 1, 2, 3],
+        &spec(0.25),
+        &spec(0.1),
+        Reference::Faces,
+        &[Row::Openings],
+    )
+    .unwrap();
     assert_eq!(lengths(&got.spans, Row::Openings, &h), [6.125, 1.2, 2.925]);
     // Run west, the same lengths in the other order, the rows still south.
-    let back = run_along(&h, Vec2::new(-1., 0.), &[0], &spec(0.25), &spec(0.1), Reference::Faces, &[Row::Openings])
-        .unwrap();
+    let back = run_along(
+        &h,
+        Vec2::new(-1., 0.),
+        &[0],
+        &spec(0.25),
+        &spec(0.1),
+        Reference::Faces,
+        &[Row::Openings],
+    )
+    .unwrap();
     let l: Vec<f64> = back
         .spans
         .iter()
@@ -236,9 +290,8 @@ fn a_removed_span_keeps_its_row_and_an_empty_row_takes_no_place() {
             chosen: i == 0,
         })
         .collect();
-    let drop = |row: Row, a: &Point, b: &Point| {
-        row == Row::Openings && a.source == 3 && b.source == 10
-    };
+    let drop =
+        |row: Row, a: &Point, b: &Point| row == Row::Openings && a.source == 3 && b.source == 10;
     let got = plan(
         &Recipe {
             direction: h.d(),
@@ -278,7 +331,12 @@ fn a_room_measures_its_outline_and_its_door() {
     let door = OpeningIn {
         source: 12,
         host: Some(0),
-        jambs: [h.p(1., 0.125), h.p(1., -0.125), h.p(2., 0.125), h.p(2., -0.125)],
+        jambs: [
+            h.p(1., 0.125),
+            h.p(1., -0.125),
+            h.p(2., 0.125),
+            h.p(2., -0.125),
+        ],
         flue: false,
         niche_right: None,
     };

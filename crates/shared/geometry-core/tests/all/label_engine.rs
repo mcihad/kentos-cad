@@ -154,7 +154,13 @@ fn place_with_prior(case: &Value) -> (Shown, Prior) {
         max_y: w[3],
     };
     let prior = case.get("prior").map(prior_of);
-    s.place_labels_after(&window, num(&case["scale"]), &fixed, options, prior.as_ref())
+    s.place_labels_after(
+        &window,
+        num(&case["scale"]),
+        &fixed,
+        options,
+        prior.as_ref(),
+    )
 }
 
 #[test]
@@ -167,7 +173,11 @@ fn the_store_places_the_labels_the_reference_places() {
         let (shown, prior) = place_with_prior(case);
         if let Some(next) = case.get("nextPrior") {
             let want = prior_of(next);
-            assert_eq!(prior.entries().len(), want.entries().len(), "{name}: the next prior");
+            assert_eq!(
+                prior.entries().len(),
+                want.entries().len(),
+                "{name}: the next prior"
+            );
             for (g, w) in prior.entries().iter().zip(want.entries()) {
                 assert_eq!((g.0, g.1, g.2), (w.0, w.1, w.2), "{name}: a spot");
                 close(g.3.x, w.3.x, &format!("{name}: spot x"));
@@ -318,7 +328,9 @@ fn timing() {
                 let ms = t.elapsed().as_secs_f64() * 1000.0;
                 placed = shown
                     .records
-                    .as_chunks::<LABEL_STRIDE>().0.iter()
+                    .as_chunks::<LABEL_STRIDE>()
+                    .0
+                    .iter()
                     .filter(|r| r[1] == LABEL_PLACED)
                     .count();
                 ms

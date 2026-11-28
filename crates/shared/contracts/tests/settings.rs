@@ -580,18 +580,46 @@ fn chords_are_written_one_way_and_kentos_keeps_its_own_keys() {
     assert!(cases.chords.len() >= 20);
     for c in &cases.chords {
         match (normalize_chord(&c.text), &c.expect) {
-            (Ok(chord), ChordExpect { chord: Some(want), error: None, reserved }) => {
+            (
+                Ok(chord),
+                ChordExpect {
+                    chord: Some(want),
+                    error: None,
+                    reserved,
+                },
+            ) => {
                 assert_eq!(&chord, want, "{}", c.name);
-                assert_eq!(reserved_key(&chord), *reserved, "{}: kept by KentOS", c.name);
-                assert_eq!(normalize_chord(&chord).as_ref(), Ok(&chord), "{}: written once", c.name);
+                assert_eq!(
+                    reserved_key(&chord),
+                    *reserved,
+                    "{}: kept by KentOS",
+                    c.name
+                );
+                assert_eq!(
+                    normalize_chord(&chord).as_ref(),
+                    Ok(&chord),
+                    "{}: written once",
+                    c.name
+                );
             }
-            (Err(code), ChordExpect { chord: None, error: Some(want), .. }) => {
+            (
+                Err(code),
+                ChordExpect {
+                    chord: None,
+                    error: Some(want),
+                    ..
+                },
+            ) => {
                 assert_eq!(code, *want, "{}", c.name);
             }
             (got, _) => panic!("{}: {got:?}", c.name),
         }
     }
-    for code in [ChordError::NoKey, ChordError::UnknownKey, ChordError::BadModifier] {
+    for code in [
+        ChordError::NoKey,
+        ChordError::UnknownKey,
+        ChordError::BadModifier,
+    ] {
         assert!(!code.message().is_empty());
     }
 }
@@ -603,11 +631,28 @@ fn typed_names_are_kept_in_turkish_upper_case() {
     assert!(cases.aliases.len() >= 8);
     for c in &cases.aliases {
         match (normalize_alias(&c.text), &c.expect) {
-            (Ok(alias), AliasExpect { alias: Some(want), error: None }) => {
+            (
+                Ok(alias),
+                AliasExpect {
+                    alias: Some(want),
+                    error: None,
+                },
+            ) => {
                 assert_eq!(&alias, want, "{}", c.name);
-                assert_eq!(normalize_alias(&alias).as_ref(), Ok(&alias), "{}: written once", c.name);
+                assert_eq!(
+                    normalize_alias(&alias).as_ref(),
+                    Ok(&alias),
+                    "{}: written once",
+                    c.name
+                );
             }
-            (Err(code), AliasExpect { alias: None, error: Some(want) }) => assert_eq!(code, *want, "{}", c.name),
+            (
+                Err(code),
+                AliasExpect {
+                    alias: None,
+                    error: Some(want),
+                },
+            ) => assert_eq!(code, *want, "{}", c.name),
             (got, _) => panic!("{}: {got:?}", c.name),
         }
     }
@@ -620,14 +665,22 @@ fn the_keys_and_names_settings_keep_their_entries_as_written() {
     let schema = settings_schema();
     for key in [SHORTCUTS_SETTING, ALIASES_SETTING] {
         let d = schema.get(key).expect("described");
-        assert_eq!((d.kind, d.scope), (SettingType::Map, SettingScope::User), "{key}");
+        assert_eq!(
+            (d.kind, d.scope),
+            (SettingType::Map, SettingScope::User),
+            "{key}"
+        );
         assert_eq!(d.default, serde_json::json!({}), "{key}");
     }
-    let shortcuts = serde_json::json!({ "tool.line": ["Ctrl+Shift+L", "F9"], "view.layers": [], "x.y": "F5" });
+    let shortcuts =
+        serde_json::json!({ "tool.line": ["Ctrl+Shift+L", "F9"], "view.layers": [], "x.y": "F5" });
     assert_eq!(
         shortcut_entries(&shortcuts),
         vec![
-            ("tool.line".to_owned(), Some(vec!["Ctrl+Shift+L".to_owned(), "F9".to_owned()])),
+            (
+                "tool.line".to_owned(),
+                Some(vec!["Ctrl+Shift+L".to_owned(), "F9".to_owned()])
+            ),
             ("view.layers".to_owned(), Some(Vec::new())),
             ("x.y".to_owned(), None),
         ]
@@ -635,7 +688,10 @@ fn the_keys_and_names_settings_keep_their_entries_as_written() {
     let aliases = serde_json::json!({ "ÇZ": "tool.line", "BOŞ": ["tool.line"] });
     assert_eq!(
         alias_entries(&aliases),
-        vec![("BOŞ".to_owned(), None), ("ÇZ".to_owned(), Some("tool.line".to_owned()))]
+        vec![
+            ("BOŞ".to_owned(), None),
+            ("ÇZ".to_owned(), Some("tool.line".to_owned()))
+        ]
     );
     assert!(shortcut_entries(&serde_json::json!([])).is_empty());
 }

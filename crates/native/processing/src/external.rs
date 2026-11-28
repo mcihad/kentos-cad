@@ -270,9 +270,11 @@ fn modules_of(
         .as_array()
         .filter(|ids| !ids.is_empty())
         .and_then(|ids| ids.iter().map(Value::as_str).collect::<Option<Vec<&str>>>())
-        .ok_or("modules: aracın çıktığı modüllerin kimlikleri, en az biri (cbs, harita, mimari, yol).")?;
-    let set =
-        kentos_launch::ModuleSet::from_ids(ids.iter().copied()).map_err(|e| format!("modules: {e}"))?;
+        .ok_or(
+            "modules: aracın çıktığı modüllerin kimlikleri, en az biri (cbs, harita, mimari, yol).",
+        )?;
+    let set = kentos_launch::ModuleSet::from_ids(ids.iter().copied())
+        .map_err(|e| format!("modules: {e}"))?;
     if let Some(stray) = set.modules().into_iter().find(|m| !manifest.has(*m)) {
         return Err(format!(
             "modules: “{}” eklentinin manifestinde yok; araç yalnız eklentinin modüllerinde çıkar ({}).",

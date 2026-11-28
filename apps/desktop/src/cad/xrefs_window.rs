@@ -302,10 +302,20 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        let input = XrefsEdit { operation: operation.clone(), drawing, expected_revision: None, diff: true };
+        let input = XrefsEdit {
+            operation: operation.clone(),
+            drawing,
+            expected_revision: None,
+            diff: true,
+        };
         match xrefs_edit::plan(&ExecutionContext::new(&mut doc.model), &input) {
             CommandResult::Completed { output, warnings } => {
-                self.xrefs.pending = Some(crate::xrefs_review_view::Pending { operation, title, output, warnings });
+                self.xrefs.pending = Some(crate::xrefs_review_view::Pending {
+                    operation,
+                    title,
+                    output,
+                    warnings,
+                });
             }
             CommandResult::Failed { error }
             | CommandResult::Conflict { error }
@@ -382,7 +392,9 @@ impl App {
             _ => None,
         };
         let pixels = std::fs::read(path).ok().and_then(|bytes| {
-            let item = crate::pictures::library_item(&file_name(path), &bytes).ok()?.1;
+            let item = crate::pictures::library_item(&file_name(path), &bytes)
+                .ok()?
+                .1;
             let size = |k: &str| item.get(k).and_then(serde_json::Value::as_f64);
             Some((size("width")?, size("height")?))
         });
@@ -524,7 +536,11 @@ impl App {
         let drawing = self.drawing_path();
         // The source as every face finds it (docs/adr/1060 §6): a fallback of the same name is opened only when its
         // bytes are the ones loaded, never another drawing that shares the name.
-        let kept = self.document.as_ref().and_then(|d| d.model.block(x.block)).and_then(|b| b.xref.clone());
+        let kept = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.block(x.block))
+            .and_then(|b| b.xref.clone());
         let Some(kept) = kept else {
             return Task::none();
         };
@@ -598,11 +614,11 @@ impl App {
             }
             Event::Candidate(k) => {
                 let listed = self.xrefs.listed.as_deref().unwrap_or_default();
-                let picked = self
-                    .xrefs
-                    .chosen
-                    .and_then(|c| listed.get(c))
-                    .and_then(|x| x.candidates.get(k).map(|c| (x.name.clone(), c.path.clone())));
+                let picked = self.xrefs.chosen.and_then(|c| listed.get(c)).and_then(|x| {
+                    x.candidates
+                        .get(k)
+                        .map(|c| (x.name.clone(), c.path.clone()))
+                });
                 if let Some((name, path)) = picked {
                     let title = format!("Yolu değiştir: {name} → {}", file_name(Path::new(&path)));
                     self.xref_preview(XrefsOperation::Repath { name, path }, title);
@@ -612,7 +628,10 @@ impl App {
                 if let Some(p) = self.xrefs.pending.take()
                     && let Some(done) = self.xref_run_with(p.operation, true)
                 {
-                    let changed = done.diff.as_ref().map_or(0, |d| d.changed + d.added + d.removed);
+                    let changed = done
+                        .diff
+                        .as_ref()
+                        .map_or(0, |d| d.changed + d.added + d.removed);
                     self.say(
                         Level::Success,
                         format!(
@@ -810,7 +829,9 @@ impl App {
             words::text_line(
                 Kind::Info,
                 if rest == 0 {
-                    format!("{unloaded} başvuru boşaltıldı: çizimde içeriği yok; Yeniden yükle ile geri gelir.")
+                    format!(
+                        "{unloaded} başvuru boşaltıldı: çizimde içeriği yok; Yeniden yükle ile geri gelir."
+                    )
                 } else {
                     format!(
                         "{} dış başvuru; {unloaded} boşaltıldı (çizimde içeriği yok), {rest} kaynağıyla aynı.",
@@ -847,7 +868,9 @@ impl App {
             let ambiguous = x.tried.iter().find(|p| p.contains("içerik özeti farklı"));
             let place = if let Some(candidate) = ambiguous {
                 let path = candidate.split(" (").next().unwrap_or(candidate);
-                format!("Aynı adlı farklı dosya: {path}. Otomatik bağlanmadı; onaylamak için {REPATH} seçin.")
+                format!(
+                    "Aynı adlı farklı dosya: {path}. Otomatik bağlanmadı; onaylamak için {REPATH} seçin."
+                )
             } else {
                 match x.via {
                     AssetVia::SearchPath => format!("{} · arama yolundan bulundu", x.path),
@@ -870,7 +893,10 @@ impl App {
                 container(icon(crate::icons::from_web(Some(glyph))).size(18.0)).padding(
                     iced::Padding {
                         // As deep as it is in the network (docs/adr/1060 §1).
-                        left: 18.0 * x.depth.map_or(if x.parent.is_some() { 1.0 } else { 0.0 }, f64::from) as f32,
+                        left: 18.0
+                            * x.depth
+                                .map_or(if x.parent.is_some() { 1.0 } else { 0.0 }, f64::from)
+                                as f32,
                         ..Default::default()
                     }
                 ),
@@ -918,12 +944,13 @@ impl App {
                     (None, Some(x)) => Some(self.xref_detail_view(x)),
                     (None, None) => None,
                 };
-                body = body
-                    .push(words::summary(vec![line]))
-                    .push(
-                        iced::widget::scrollable(list.padding(iced::Padding { right: 14.0, ..Default::default() }))
-                            .height(if below.is_some() { 150.0 } else { 300.0 }),
-                    );
+                body = body.push(words::summary(vec![line])).push(
+                    iced::widget::scrollable(list.padding(iced::Padding {
+                        right: 14.0,
+                        ..Default::default()
+                    }))
+                    .height(if below.is_some() { 150.0 } else { 300.0 }),
+                );
                 if let Some(b) = below {
                     body = body.push(iced::widget::scrollable(b).height(150.0));
                 }

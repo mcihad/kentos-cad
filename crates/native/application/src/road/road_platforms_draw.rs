@@ -4,8 +4,8 @@
 //! cases are `fixtures/commands/v1/road.platforms.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, PlatformsDraw, PlatformsDrawn,
-    TextAlign, TextFace, Vec2,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject,
+    PlatformsDraw, PlatformsDrawn, TextAlign, TextFace, Vec2,
 };
 use kentos_domain::Document;
 
@@ -32,37 +32,84 @@ pub struct PlatformLabel {
 }
 
 /// [`PlatformLabel`] for a pad; none without a top.
-pub fn platform_label(name: &str, base: f64, r: &kentos_commands::PlatformReport, plot_scale: f64) -> Option<PlatformLabel> {
+pub fn platform_label(
+    name: &str,
+    base: f64,
+    r: &kentos_commands::PlatformReport,
+    plot_scale: f64,
+) -> Option<PlatformLabel> {
     if r.top.len() < 3 {
         return None;
     }
     let height = TEXT_MM * plot_scale / 1000.0;
     let mut text = format!("{name} · Kot {}", comma(base, 2));
     if let (Some(c), Some(f)) = (r.cut, r.fill) {
-        text.push_str(&format!("\nKazı {} m³ · Dolgu {} m³", comma(c, 1), comma(f, 1)));
+        text.push_str(&format!(
+            "\nKazı {} m³ · Dolgu {} m³",
+            comma(c, 1),
+            comma(f, 1)
+        ));
     }
     let lines = text.lines().count() as f64;
     let longest = text.lines().map(|l| l.chars().count()).max().unwrap_or(0) as f64;
     // The drawing font's letters run about 0.6 of the height wide, a line with its descenders 1.3 heights tall, lines 1.5
     // heights apart.
-    let size = [longest * height * 0.62, height * (1.3 + 1.5 * (lines - 1.0))];
+    let size = [
+        longest * height * 0.62,
+        height * (1.3 + 1.5 * (lines - 1.0)),
+    ];
     let bounds = |pts: &[[f64; 3]]| {
-        pts.iter().fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| {
-            [b[0].min(p[0]), b[1].min(p[1]), b[2].max(p[0]), b[3].max(p[1])]
-        })
+        pts.iter().fold(
+            [
+                f64::INFINITY,
+                f64::INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+            ],
+            |b, p| {
+                [
+                    b[0].min(p[0]),
+                    b[1].min(p[1]),
+                    b[2].max(p[0]),
+                    b[3].max(p[1]),
+                ]
+            },
+        )
     };
     let top = bounds(&r.top);
     let fits = size[0] <= 0.9 * (top[2] - top[0]) && size[1] <= 0.9 * (top[3] - top[1]);
     let (at, align) = if fits {
         let n = r.top.len() as f64;
-        let (cx, cy) = r.top.iter().fold((0.0, 0.0), |(x, y), p| (x + p[0] / n, y + p[1] / n));
+        let (cx, cy) = r
+            .top
+            .iter()
+            .fold((0.0, 0.0), |(x, y), p| (x + p[0] / n, y + p[1] / n));
         ([cx, cy], TextAlign::MiddleCenter)
     } else {
-        let all = bounds(if r.daylight.len() >= 3 { &r.daylight } else { &r.top });
-        let outer = [all[0].min(top[0]), all[1].min(top[1]), all[2].max(top[2]), all[3].max(top[3])];
-        ([(outer[0] + outer[2]) / 2.0, outer[3] + height], TextAlign::BottomCenter)
+        let all = bounds(if r.daylight.len() >= 3 {
+            &r.daylight
+        } else {
+            &r.top
+        });
+        let outer = [
+            all[0].min(top[0]),
+            all[1].min(top[1]),
+            all[2].max(top[2]),
+            all[3].max(top[3]),
+        ];
+        (
+            [(outer[0] + outer[2]) / 2.0, outer[3] + height],
+            TextAlign::BottomCenter,
+        )
     };
-    Some(PlatformLabel { text, at, height, align, size, outside: !fits })
+    Some(PlatformLabel {
+        text,
+        at,
+        height,
+        align,
+        size,
+        outside: !fits,
+    })
 }
 
 struct Checked {
@@ -105,7 +152,11 @@ fn comma(v: f64, digits: usize) -> String {
     format!("{v:.digits$}").replace('.', ",")
 }
 
-fn check(doc: &Document, input: &PlatformsDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
+fn check(
+    doc: &Document,
+    input: &PlatformsDraw,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_platforms(), &input.platform, "platform")?;
@@ -122,7 +173,10 @@ fn check(doc: &Document, input: &PlatformsDraw, told: &dyn Fn(u64, u64) -> bool)
             && (to[0] - l.from[0]).hypot(to[1] - l.from[1]) > 1e-9
         {
             objects.push(object(EntityGeometry::Line {
-                a: Vec2 { x: l.from[0], y: l.from[1] },
+                a: Vec2 {
+                    x: l.from[0],
+                    y: l.from[1],
+                },
                 b: Vec2 { x: to[0], y: to[1] },
                 zs: Some(vec![Some(l.from[2]), Some(to[2])]),
                 ms: None,
@@ -135,7 +189,10 @@ fn check(doc: &Document, input: &PlatformsDraw, told: &dyn Fn(u64, u64) -> bool)
         objects.push(object(EntityGeometry::Text {
             layout: None,
             annotative: None,
-            p: Vec2 { x: label.at[0], y: label.at[1] },
+            p: Vec2 {
+                x: label.at[0],
+                y: label.at[1],
+            },
             text: label.text,
             height: label.height,
             rotation: 0.0,
@@ -149,10 +206,18 @@ fn check(doc: &Document, input: &PlatformsDraw, told: &dyn Fn(u64, u64) -> bool)
             path: None,
         }));
     }
-    Ok(Checked { id: def.id.clone(), objects, warnings })
+    Ok(Checked {
+        id: def.id.clone(),
+        objects,
+        warnings,
+    })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &PlatformsDraw, c: Checked) -> CommandResult<PlatformsDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &PlatformsDraw,
+    c: Checked,
+) -> CommandResult<PlatformsDrawn> {
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects: c.objects,
@@ -164,7 +229,11 @@ fn write(cx: &mut ExecutionContext<'_>, input: &PlatformsDraw, c: Checked) -> Co
         other => return crate::trim::relay(other),
     };
     CommandResult::Completed {
-        output: PlatformsDrawn { platform: c.id, uids: created.created, revision: cx.doc.revision().to_string() },
+        output: PlatformsDrawn {
+            platform: c.id,
+            uids: created.created,
+            revision: cx.doc.revision().to_string(),
+        },
         warnings: c.warnings,
     }
 }
@@ -172,7 +241,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &PlatformsDraw, c: Checked) -> Co
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &PlatformsDraw) -> CommandResult<()> {
     match check(cx.doc, input, &cx.stop_only()) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -194,7 +266,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PlatformsDraw) -> CommandResult<P
 
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &PlatformsDraw) -> CommandResult<PlatformsDrawn> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &PlatformsDraw,
+) -> CommandResult<PlatformsDrawn> {
     let checked = check(cx.doc, input, &cx.told());
     match checked {
         Ok(c) => write(cx, input, c),
@@ -203,7 +278,10 @@ pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &PlatformsDraw) -> Comm
 }
 
 /// Draws the pad: one undo step, kept in the road drawings.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: PlatformsDraw) -> CommandResult<PlatformsDrawn> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: PlatformsDraw,
+) -> CommandResult<PlatformsDrawn> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_PLATFORMS_DRAW,
@@ -215,7 +293,14 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: PlatformsDraw) -> CommandRe
                 Ok(c) => write(cx, &input, c),
                 Err(stop) => stop.into(),
             };
-            crate::road_drawings::kept(cx, kentos_commands::ROAD_PLATFORMS_DRAW, &input, (kentos_commands::RoadSourceKind::Platform, "platform"), r, |o| &o.uids)
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_PLATFORMS_DRAW,
+                &input,
+                (kentos_commands::RoadSourceKind::Platform, "platform"),
+                r,
+                |o| &o.uids,
+            )
         },
     )
 }
@@ -225,17 +310,20 @@ mod stop_tests {
     //! Docs/adr/4860: the corners' slope lines, the design surface, the volumes told and a stop heard within (`crate::told_tests`), on the shared cases' project.
     use super::*;
 
-    const CASES: &str = include_str!("../../../../../fixtures/commands/v1/road.platforms.draw.json");
+    const CASES: &str =
+        include_str!("../../../../../fixtures/commands/v1/road.platforms.draw.json");
 
     #[test]
     fn its_reckoning_is_told_and_hears_a_stop() {
-        let (doc, input): (kentos_domain::Document, kentos_commands::PlatformsDraw) = crate::told_tests::project(CASES);
+        let (doc, input): (kentos_domain::Document, kentos_commands::PlatformsDraw) =
+            crate::told_tests::project(CASES);
         crate::told_tests::told_and_stopped(|told| check(&doc, &input, told));
     }
 
     #[test]
     fn a_stopped_job_draws_nothing() {
-        let (mut doc, input): (kentos_domain::Document, kentos_commands::PlatformsDraw) = crate::told_tests::project(CASES);
+        let (mut doc, input): (kentos_domain::Document, kentos_commands::PlatformsDraw) =
+            crate::told_tests::project(CASES);
         crate::told_tests::stopped_job_draws_nothing(&mut doc, |cx| draw(cx, &input));
     }
 }

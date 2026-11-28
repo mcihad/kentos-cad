@@ -44,7 +44,10 @@ pub struct Exaggeration {
 }
 
 impl Exaggeration {
-    pub const NONE: Exaggeration = Exaggeration { factor: 1.0, datum: 0.0 };
+    pub const NONE: Exaggeration = Exaggeration {
+        factor: 1.0,
+        datum: 0.0,
+    };
 
     /// A source point as shown.
     pub fn shown(&self, p: V3) -> V3 {
@@ -59,7 +62,10 @@ impl Exaggeration {
     /// A source box as shown (the map is monotone in z, so a box stays a box).
     pub fn shown_box(&self, b: &Aabb) -> Aabb {
         let (lo, hi) = (self.shown(b.min), self.shown(b.max));
-        Aabb { min: [lo[0], lo[1], lo[2].min(hi[2])], max: [hi[0], hi[1], lo[2].max(hi[2])] }
+        Aabb {
+            min: [lo[0], lo[1], lo[2].min(hi[2])],
+            max: [hi[0], hi[1], lo[2].max(hi[2])],
+        }
     }
 
     /// How much an error grows when shown: the largest scale of the map (3D Tiles 1.1 scales a tile's geometric error
@@ -99,7 +105,11 @@ impl Frustum {
                 inside = false;
             }
         }
-        if inside { Visibility::Inside } else { Visibility::Intersecting }
+        if inside {
+            Visibility::Inside
+        } else {
+            Visibility::Intersecting
+        }
     }
 }
 
@@ -116,14 +126,25 @@ pub struct Camera {
 impl Camera {
     /// The camera `distance` from `target` at `azimuth` (degrees from east, counterclockwise) and `elevation` (degrees
     /// above the horizon), looking at it, z up.
-    pub fn orbit(target: V3, azimuth: f64, elevation: f64, distance: f64, projection: Projection) -> Camera {
+    pub fn orbit(
+        target: V3,
+        azimuth: f64,
+        elevation: f64,
+        distance: f64,
+        projection: Projection,
+    ) -> Camera {
         let (a, e) = (azimuth.to_radians(), elevation.to_radians());
         let eye = [
             target[0] + distance * e.cos() * a.cos(),
             target[1] + distance * e.cos() * a.sin(),
             target[2] + distance * e.sin(),
         ];
-        Camera { eye, target, up: [0.0, 0.0, 1.0], projection }
+        Camera {
+            eye,
+            target,
+            up: [0.0, 0.0, 1.0],
+            projection,
+        }
     }
 
     /// The camera's right, up and forward, of length one; looking straight along `up`, the right is east.
@@ -155,7 +176,12 @@ impl Camera {
         let projection = match self.projection {
             Projection::Perspective { fov_y, near } => {
                 let g = 1.0 / (fov_y / 2.0).tan();
-                M4::from_rows([[g / aspect, 0.0, 0.0, 0.0], [0.0, g, 0.0, 0.0], [0.0, 0.0, 0.0, near], [0.0, 0.0, -1.0, 0.0]])
+                M4::from_rows([
+                    [g / aspect, 0.0, 0.0, 0.0],
+                    [0.0, g, 0.0, 0.0],
+                    [0.0, 0.0, 0.0, near],
+                    [0.0, 0.0, -1.0, 0.0],
+                ])
             }
             Projection::Orthographic { height, depth } => {
                 let (hh, hw) = (height / 2.0, height / 2.0 * aspect);
@@ -204,7 +230,10 @@ impl Camera {
                 ]
             }
         };
-        Frustum { eye: self.eye, planes }
+        Frustum {
+            eye: self.eye,
+            planes,
+        }
     }
 
     /// The ray through a place of the viewport (pixels from its top left, fractional): its origin and direction (of
@@ -217,12 +246,18 @@ impl Camera {
             Projection::Perspective { fov_y, .. } => {
                 let ty = (fov_y / 2.0).tan();
                 let tx = ty * viewport.aspect();
-                let d = math::add(f, math::add(math::scale(s, nx * tx), math::scale(u, ny * ty)));
+                let d = math::add(
+                    f,
+                    math::add(math::scale(s, nx * tx), math::scale(u, ny * ty)),
+                );
                 (self.eye, math::normalize(d))
             }
             Projection::Orthographic { height, .. } => {
                 let (hh, hw) = (height / 2.0, height / 2.0 * viewport.aspect());
-                let o = math::add(self.eye, math::add(math::scale(s, nx * hw), math::scale(u, ny * hh)));
+                let o = math::add(
+                    self.eye,
+                    math::add(math::scale(s, nx * hw), math::scale(u, ny * hh)),
+                );
                 (o, f)
             }
         }
@@ -236,12 +271,20 @@ impl Camera {
             return None;
         }
         let (x, y, z) = (c[0] / c[3], c[1] / c[3], c[2] / c[3]);
-        Some(((x + 1.0) / 2.0 * viewport.width, (1.0 - y) / 2.0 * viewport.height, z))
+        Some((
+            (x + 1.0) / 2.0 * viewport.width,
+            (1.0 - y) / 2.0 * viewport.height,
+            z,
+        ))
     }
 
     /// The distance from the eye to a box (0 inside it).
     pub fn distance_to(&self, b: &Aabb) -> f64 {
-        let d: V3 = std::array::from_fn(|a| (b.min[a] - self.eye[a]).max(self.eye[a] - b.max[a]).max(0.0));
+        let d: V3 = std::array::from_fn(|a| {
+            (b.min[a] - self.eye[a])
+                .max(self.eye[a] - b.max[a])
+                .max(0.0)
+        });
         math::length(d)
     }
 }

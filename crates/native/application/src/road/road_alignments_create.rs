@@ -36,8 +36,18 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsCreate) -> Result<Chec
         stationing: input.stationing.clone().filter(|s| !s.is_empty()),
         design_speed: input.design_speed,
         // Docs/adr/1028: trimmed; empty is none.
-        start_place: input.start_place.as_deref().map(str::trim).filter(|n| !n.is_empty()).map(str::to_owned),
-        end_place: input.end_place.as_deref().map(str::trim).filter(|n| !n.is_empty()).map(str::to_owned),
+        start_place: input
+            .start_place
+            .as_deref()
+            .map(str::trim)
+            .filter(|n| !n.is_empty())
+            .map(str::to_owned),
+        end_place: input
+            .end_place
+            .as_deref()
+            .map(str::trim)
+            .filter(|n| !n.is_empty())
+            .map(str::to_owned),
     };
     let mut list = own.to_vec();
     list.push(def);
@@ -60,7 +70,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &AlignmentsCreate) -> CommandR
 }
 
 /// What execute would write now; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsCreate) -> CommandResult<AlignmentsWritten> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &AlignmentsCreate,
+) -> CommandResult<AlignmentsWritten> {
     let c = match check(cx.doc, input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -74,7 +87,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsCreate) -> CommandResul
 }
 
 /// Writes the alignment: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsCreate) -> CommandResult<AlignmentsWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AlignmentsCreate,
+) -> CommandResult<AlignmentsWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_ALIGNMENTS_CREATE,
@@ -95,7 +111,10 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<AlignmentsW
     common::write(cx, c.list, STEP, Some(&c.id), mapping, vec![])
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: AlignmentsCreate) -> CommandResult<AlignmentsWritten> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AlignmentsCreate,
+) -> CommandResult<AlignmentsWritten> {
     match check(cx.doc, &input) {
         Ok(c) => write(cx, c),
         Err(stop) => stop.into(),

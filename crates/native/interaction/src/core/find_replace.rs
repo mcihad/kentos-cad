@@ -143,4 +143,3 @@ pub fn write_query(doc: &mut Document, picked: &[Match], q: &Query) -> (usize, V
     };
     (n, properties::said(result))
 }
-

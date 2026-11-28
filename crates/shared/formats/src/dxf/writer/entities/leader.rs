@@ -153,7 +153,11 @@ impl Writer<'_> {
         }
         let words = super::form_words(WHAT, false, self.forms.metadata);
         self.report.note(WHAT, &words, 0);
-        self.end(if self.forms.metadata { meta } else { Meta::default() });
+        self.end(if self.forms.metadata {
+            meta
+        } else {
+            Meta::default()
+        });
         if let (Some(h), Some(text), Some(at), Some(align)) =
             (note_handle, note, laid.note_point, laid.note_align)
         {
@@ -180,7 +184,8 @@ impl Writer<'_> {
         self.begin("LEADER", &l.base);
         self.out.str(100, "AcDbLeader");
         self.out.str(3, "Standard");
-        self.out.int(71, i64::from(l.arrow != Some(LeaderArrow::None)));
+        self.out
+            .int(71, i64::from(l.arrow != Some(LeaderArrow::None)));
         self.out.int(72, 0);
         self.out.int(73, 3);
         self.out.int(74, 1);
@@ -199,13 +204,21 @@ impl Writer<'_> {
         self.out.xyz(211, v(c, s));
         let mut meta = Self::base_meta(&l.base);
         meta.arm = true;
-        self.end(if self.forms.metadata { meta } else { Meta::default() });
+        self.end(if self.forms.metadata {
+            meta
+        } else {
+            Meta::default()
+        });
     }
 
     /// A leader's look as a block (docs/adr/0327 §6): each arm's line from where it leaves its arrowhead, its
     /// arrowheads filled (SOLIDs) or drawn, its note an MTEXT where its layout puts it; an INSERT at the origin places
     /// it, KentOS's data the leader itself.
-    fn leader_block(&mut self, l: &LeaderEntity, laid: &kentos_geometry_core::geom::leader::LeaderLayout) -> bool {
+    fn leader_block(
+        &mut self,
+        l: &LeaderEntity,
+        laid: &kentos_geometry_core::geom::leader::LeaderLayout,
+    ) -> bool {
         let record = self.handles.take();
         *self.anonymous += 1;
         let name = format!("*U{}", *self.anonymous);
@@ -217,9 +230,9 @@ impl Writer<'_> {
             kentos_geometry_core::geom::leader::drawn_path(&pts, laid),
             laid.head.clone(),
         )];
-        drawn.extend(kentos_geometry_core::geom::leader::arm_layouts(&crate::blocks::shape(
-            &Entity::Leader(l.clone()),
-        )));
+        drawn.extend(kentos_geometry_core::geom::leader::arm_layouts(
+            &crate::blocks::shape(&Entity::Leader(l.clone())),
+        ));
         for (path, head) in &drawn {
             let line: Vec<Vec2> = path.iter().map(at).collect();
             for p in &line {
@@ -231,7 +244,10 @@ impl Writer<'_> {
             for ring in &head.fills {
                 match ring.len() {
                     3 => self.block_solid(record, [at(&ring[0]), at(&ring[1]), at(&ring[2])]),
-                    4 => self.block_quad(record, [at(&ring[0]), at(&ring[1]), at(&ring[2]), at(&ring[3])]),
+                    4 => self.block_quad(
+                        record,
+                        [at(&ring[0]), at(&ring[1]), at(&ring[2]), at(&ring[3])],
+                    ),
                     _ => {
                         let pts: Vec<Vec2> = ring.iter().map(at).collect();
                         if pts.len() > 2 {
@@ -251,7 +267,11 @@ impl Writer<'_> {
             laid.note_align,
         ) {
             // The middle of its left or right at the note's point (MTEXT's 4 and 6).
-            let attach = if align == TextAlign::MiddleRight { 6 } else { 4 };
+            let attach = if align == TextAlign::MiddleRight {
+                6
+            } else {
+                4
+            };
             self.block_mtext_attached(record, at(&p), l.height, l.rotation, text, attach, l.mask);
         }
         self.block_end(record);

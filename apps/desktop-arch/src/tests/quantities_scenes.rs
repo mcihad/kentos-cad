@@ -1,10 +1,10 @@
 //! Metraj's pictures over the spaces (docs/adr/0342 §5): the quantities of the rooms, of the walls and of a shaft. The
 //! spaces are drawn by the core's tools (space_scenes.rs). `arch_screens` takes them.
 
-use crate::arch;
 use crate::app::{App, Message};
-use crate::tools_scenes::run;
+use crate::arch;
 use crate::space_scenes::{shaft_written, spaces};
+use crate::tools_scenes::run;
 
 /// The pictures of this file, for the module's `screens` (arch_screens.rs).
 pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {

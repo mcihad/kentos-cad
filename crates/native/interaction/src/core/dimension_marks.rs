@@ -125,11 +125,22 @@ impl DimensionMarks {
 
     /// Sees the project's levels and Etkin kat; nothing is allocated while they stay as they were (a pointer move's).
     fn see_levels(&mut self, cx: &Context<'_>) {
-        let levels = cx.doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+        let levels = cx
+            .doc
+            .settings()
+            .arch
+            .as_ref()
+            .map_or(&[][..], |a| a.levels.as_slice());
         let same = levels.len() == self.levels.len()
-            && levels.iter().zip(&self.levels).all(|(l, (id, name))| l.id == *id && l.name == *name);
+            && levels
+                .iter()
+                .zip(&self.levels)
+                .all(|(l, (id, name))| l.id == *id && l.name == *name);
         if !same {
-            self.levels = levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect();
+            self.levels = levels
+                .iter()
+                .map(|l| (l.id.clone(), l.name.clone()))
+                .collect();
         }
         if self.active.as_deref() != cx.level {
             self.active = cx.level.map(str::to_owned);
@@ -150,7 +161,10 @@ impl DimensionMarks {
             LevelChoice::Active if self.point_has_z => return None,
             LevelChoice::Active => self.active.clone()?,
         };
-        Some(DimensionLevel { id, offset: self.offset })
+        Some(DimensionLevel {
+            id,
+            offset: self.offset,
+        })
     }
 
     /// Kot's measure at its point: the level's, else the typed or the point's own elevation.
@@ -313,17 +327,28 @@ impl DimensionMarks {
             .active
             .as_ref()
             .and_then(|id| self.levels.iter().find(|(l, _)| l == id))
-            .map_or_else(|| "Etkin kat".to_owned(), |(_, name)| format!("Etkin kat ({name})"));
-        std::iter::once(choice("etkin".into(), active, self.level == LevelChoice::Active))
-            .chain(self.levels.iter().map(|(id, name)| {
-                choice(format!("id:{id}"), name.clone(), self.level == LevelChoice::Level(id.clone()))
-            }))
-            .chain(std::iter::once(choice(
-                "yok".into(),
-                "Yok (noktanın kotu)".into(),
-                self.level == LevelChoice::Off,
-            )))
-            .collect()
+            .map_or_else(
+                || "Etkin kat".to_owned(),
+                |(_, name)| format!("Etkin kat ({name})"),
+            );
+        std::iter::once(choice(
+            "etkin".into(),
+            active,
+            self.level == LevelChoice::Active,
+        ))
+        .chain(self.levels.iter().map(|(id, name)| {
+            choice(
+                format!("id:{id}"),
+                name.clone(),
+                self.level == LevelChoice::Level(id.clone()),
+            )
+        }))
+        .chain(std::iter::once(choice(
+            "yok".into(),
+            "Yok (noktanın kotu)".into(),
+            self.level == LevelChoice::Off,
+        )))
+        .collect()
     }
 }
 
@@ -345,7 +370,9 @@ impl Tool for DimensionMarks {
             Kind::CenterMark => "daireye, yaya ya da yay parçasına tıklayın",
             Kind::CenterLine if self.first.is_none() => "birinci düz kenara tıklayın",
             Kind::CenterLine => "ikinci düz kenara tıklayın",
-            Kind::Elevation if self.asking_offset => "kata göre farkı yazın (−0.02 gibi; 0 kaldırır)",
+            Kind::Elevation if self.asking_offset => {
+                "kata göre farkı yazın (−0.02 gibi; 0 kaldırır)"
+            }
             Kind::Elevation if self.point.is_none() => "kotu yazılacak noktayı belirtin",
             Kind::Elevation if self.asking_z => "noktanın kotunu yazın",
             Kind::Elevation => "değerin yerini belirtin",
@@ -360,7 +387,11 @@ impl Tool for DimensionMarks {
     }
 
     fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
-        if self.kind == Kind::Elevation && key == "K" { self.level_choices() } else { Vec::new() }
+        if self.kind == Kind::Elevation && key == "K" {
+            self.level_choices()
+        } else {
+            Vec::new()
+        }
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
@@ -422,7 +453,9 @@ impl Tool for DimensionMarks {
                     "etkin" | "" => LevelChoice::Active,
                     "yok" => LevelChoice::Off,
                     v => match v.strip_prefix("id:").or(Some(v)) {
-                        Some(id) if self.levels.iter().any(|(l, _)| l == id) => LevelChoice::Level(id.to_owned()),
+                        Some(id) if self.levels.iter().any(|(l, _)| l == id) => {
+                            LevelChoice::Level(id.to_owned())
+                        }
                         _ => {
                             cx.say(Level::Warn, "Projede böyle bir kat yok.");
                             return false;
@@ -435,8 +468,14 @@ impl Tool for DimensionMarks {
                 if text.is_empty() || text == "0" {
                     self.offset = None;
                 } else {
-                    let Some(o) = cx.typed_length(text).filter(|o| o.is_finite() && o.abs() <= kentos_commands::MAX_LEVEL_OFFSET) else {
-                        cx.say(Level::Warn, "Farkı metre olarak bir sayıyla yazın (−0.02 gibi).");
+                    let Some(o) = cx
+                        .typed_length(text)
+                        .filter(|o| o.is_finite() && o.abs() <= kentos_commands::MAX_LEVEL_OFFSET)
+                    else {
+                        cx.say(
+                            Level::Warn,
+                            "Farkı metre olarak bir sayıyla yazın (−0.02 gibi).",
+                        );
                         return false;
                     };
                     self.offset = (o != 0.0).then_some(o);
@@ -579,7 +618,10 @@ impl Tool for DimensionMarks {
             self.configure("F", text, cx);
             return true;
         }
-        if self.kind == Kind::Elevation && !self.levels.is_empty() && js_trim(text).eq_ignore_ascii_case("f") {
+        if self.kind == Kind::Elevation
+            && !self.levels.is_empty()
+            && js_trim(text).eq_ignore_ascii_case("f")
+        {
             self.asking_offset = true;
             return true;
         }

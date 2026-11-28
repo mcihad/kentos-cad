@@ -41,7 +41,9 @@ fn shown_ring(m: &MapPrim) -> Option<Vec<[f64; 2]>> {
     };
     Some(match &m.clip_shape {
         Clip::Frame => t.ground_corners(f).to_vec(),
-        Clip::Rectangle { bounds: [l, top, r, b] } => vec![at(*l, *top), at(*r, *top), at(*r, *b), at(*l, *b)],
+        Clip::Rectangle {
+            bounds: [l, top, r, b],
+        } => vec![at(*l, *top), at(*r, *top), at(*r, *b), at(*l, *b)],
         Clip::Polygon { points } => points.iter().map(|p| at(p[0], p[1])).collect(),
     })
 }
@@ -60,7 +62,12 @@ pub(crate) fn inside(ring: &[[f64; 2]], q: Vec2) -> bool {
         if turn.is_nan() {
             return false;
         }
-        if turn == 0.0 && q.x >= a[0].min(b[0]) && q.x <= a[0].max(b[0]) && q.y >= a[1].min(b[1]) && q.y <= a[1].max(b[1]) {
+        if turn == 0.0
+            && q.x >= a[0].min(b[0])
+            && q.x <= a[0].max(b[0])
+            && q.y >= a[1].min(b[1])
+            && q.y <= a[1].max(b[1])
+        {
             return true;
         }
         if (a[1] > q.y) != (b[1] > q.y) {
@@ -77,7 +84,11 @@ pub(crate) fn inside(ring: &[[f64; 2]], q: Vec2) -> bool {
 /// then reads the project's, which is empty).
 pub fn map_surveys(doc: &Document, list: Option<&DisplayList>) -> Vec<MapSurveyInput> {
     let settings = doc.settings();
-    if settings.map_survey.as_ref().is_none_or(|s| s.points.is_empty()) {
+    if settings
+        .map_survey
+        .as_ref()
+        .is_none_or(|s| s.points.is_empty())
+    {
         return Vec::new();
     }
     let mut out: Vec<MapSurveyInput> = Vec::new();
@@ -87,8 +98,16 @@ pub fn map_surveys(doc: &Document, list: Option<&DisplayList>) -> Vec<MapSurveyI
         if out.iter().any(|s| s.item == m.item) {
             continue;
         }
-        let f = survey_facts_where(settings, |point| place(doc, point).is_some_and(|q| inside(&ring, q)));
-        out.push(MapSurveyInput { item: m.item.clone(), position: f.position, height: f.height, network: f.network, note: f.note });
+        let f = survey_facts_where(settings, |point| {
+            place(doc, point).is_some_and(|q| inside(&ring, q))
+        });
+        out.push(MapSurveyInput {
+            item: m.item.clone(),
+            position: f.position,
+            height: f.height,
+            network: f.network,
+            note: f.note,
+        });
     }
     out
 }
@@ -103,11 +122,19 @@ mod tests {
         let diamond = [[0.0, 10.0], [10.0, 0.0], [0.0, -10.0], [-10.0, 0.0]];
         assert!(inside(&diamond, Vec2::new(0.0, 0.0)));
         assert!(inside(&diamond, Vec2::new(5.0, 5.0)), "on an edge");
-        assert!(!inside(&diamond, Vec2::new(6.0, 6.0)), "in the box, out of the diamond");
+        assert!(
+            !inside(&diamond, Vec2::new(6.0, 6.0)),
+            "in the box, out of the diamond"
+        );
         let back = [diamond[3], diamond[2], diamond[1], diamond[0]];
         assert!(inside(&back, Vec2::new(-4.0, 3.0)) && !inside(&back, Vec2::new(-8.0, 8.0)));
         // Large coordinates: a point a micrometre outside an edge is outside.
-        let big = [[487000.0, 4420010.0], [487010.0, 4420010.0], [487010.0, 4420000.0], [487000.0, 4420000.0]];
+        let big = [
+            [487000.0, 4420010.0],
+            [487010.0, 4420010.0],
+            [487010.0, 4420000.0],
+            [487000.0, 4420000.0],
+        ];
         assert!(inside(&big, Vec2::new(487010.0, 4420005.0)));
         assert!(!inside(&big, Vec2::new(487010.000001, 4420005.0)));
     }
@@ -115,10 +142,21 @@ mod tests {
     /// docs/adr/3200: a concave ring (an L leaving its top right quarter out), its notch's corner and edges inside.
     #[test]
     fn inside_takes_a_concave_ring() {
-        let ell = [[0.0, 0.0], [10.0, 0.0], [10.0, 5.0], [5.0, 5.0], [5.0, 10.0], [0.0, 10.0]];
+        let ell = [
+            [0.0, 0.0],
+            [10.0, 0.0],
+            [10.0, 5.0],
+            [5.0, 5.0],
+            [5.0, 10.0],
+            [0.0, 10.0],
+        ];
         assert!(inside(&ell, Vec2::new(2.0, 8.0)) && inside(&ell, Vec2::new(8.0, 2.0)));
         assert!(!inside(&ell, Vec2::new(8.0, 8.0)), "the notch");
-        assert!(inside(&ell, Vec2::new(5.0, 5.0)) && inside(&ell, Vec2::new(7.0, 5.0)) && inside(&ell, Vec2::new(5.0, 7.0)));
+        assert!(
+            inside(&ell, Vec2::new(5.0, 5.0))
+                && inside(&ell, Vec2::new(7.0, 5.0))
+                && inside(&ell, Vec2::new(5.0, 7.0))
+        );
         assert!(!inside(&ell, Vec2::new(5.000001, 7.0)));
         let back: Vec<[f64; 2]> = ell.iter().rev().copied().collect();
         assert!(!inside(&back, Vec2::new(8.0, 8.0)) && inside(&back, Vec2::new(1.0, 1.0)));

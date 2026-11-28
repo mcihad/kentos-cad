@@ -28,10 +28,22 @@ const DIRECTIONS: [[f64; 2]; 8] = [
     [-1.0, 0.0],
     [0.0, 1.0],
     [0.0, -1.0],
-    [std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2],
-    [-std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2],
-    [std::f64::consts::FRAC_1_SQRT_2, -std::f64::consts::FRAC_1_SQRT_2],
-    [-std::f64::consts::FRAC_1_SQRT_2, -std::f64::consts::FRAC_1_SQRT_2],
+    [
+        std::f64::consts::FRAC_1_SQRT_2,
+        std::f64::consts::FRAC_1_SQRT_2,
+    ],
+    [
+        -std::f64::consts::FRAC_1_SQRT_2,
+        std::f64::consts::FRAC_1_SQRT_2,
+    ],
+    [
+        std::f64::consts::FRAC_1_SQRT_2,
+        -std::f64::consts::FRAC_1_SQRT_2,
+    ],
+    [
+        -std::f64::consts::FRAC_1_SQRT_2,
+        -std::f64::consts::FRAC_1_SQRT_2,
+    ],
 ];
 /// How far past the part's boundary the line runs, in text heights, nearest first.
 const REACH: [f64; 3] = [1.0, 2.0, 3.0];
@@ -57,7 +69,12 @@ pub struct Obstacles {
 /// The box a place's line, landing and note may reach around a part (its outer ring's corners and arcs' ends widened by
 /// `SPAN` heights and the note's width): no object outside it can touch any place.
 pub fn reach_of(parts: &[&ScopePart], height: f64, width: f64) -> Bounds {
-    let mut b = Bounds { min_x: f64::INFINITY, min_y: f64::INFINITY, max_x: f64::NEG_INFINITY, max_y: f64::NEG_INFINITY };
+    let mut b = Bounds {
+        min_x: f64::INFINITY,
+        min_y: f64::INFINITY,
+        max_x: f64::NEG_INFINITY,
+        max_y: f64::NEG_INFINITY,
+    };
     for part in parts {
         for r in &part.rings {
             for p in &r.pts {
@@ -68,7 +85,10 @@ pub fn reach_of(parts: &[&ScopePart], height: f64, width: f64) -> Bounds {
             }
             // An arc bulges at most its chord's half-length times its bulge's size past its chord: widen by the
             // longest chord to be sure.
-            if r.bulges.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0)) {
+            if r.bulges
+                .as_ref()
+                .is_some_and(|b| b.iter().any(|x| *x != 0.0))
+            {
                 let n = r.pts.len();
                 let most = (0..n)
                     .map(|i| {
@@ -84,7 +104,12 @@ pub fn reach_of(parts: &[&ScopePart], height: f64, width: f64) -> Bounds {
         }
     }
     let grow = SPAN * height + width;
-    Bounds { min_x: b.min_x - grow, min_y: b.min_y - grow, max_x: b.max_x + grow, max_y: b.max_y + grow }
+    Bounds {
+        min_x: b.min_x - grow,
+        min_y: b.min_y - grow,
+        max_x: b.max_x + grow,
+        max_y: b.max_y + grow,
+    }
 }
 
 fn meets(a: &Bounds, b: &Bounds) -> bool {
@@ -94,7 +119,12 @@ fn meets(a: &Bounds, b: &Bounds) -> bool {
 impl Obstacles {
     /// The drawing's objects the sheet's map shows within `area`: on a shown layer, not on `skip` (the separation
     /// sheets' own point and piece layers, each map freezing the other parcels').
-    pub fn of_drawing(doc: &Document, skip: &BTreeSet<String>, area: &Bounds, font: Font) -> Obstacles {
+    pub fn of_drawing(
+        doc: &Document,
+        skip: &BTreeSet<String>,
+        area: &Bounds,
+        font: Font,
+    ) -> Obstacles {
         let mut out = Obstacles::default();
         for (uid, e) in doc.entities_with_uids() {
             let layer = &e.base().layer_id;
@@ -106,7 +136,11 @@ impl Obstacles {
                 continue;
             }
             let owner = uid.to_string();
-            out.edges.extend(entity_edges(&shape).into_iter().map(|edge| (edge, owner.clone())));
+            out.edges.extend(
+                entity_edges(&shape)
+                    .into_iter()
+                    .map(|edge| (edge, owner.clone())),
+            );
             if let Some(t) = TextPlace::of(&shape) {
                 out.boxes.push((t.outline(font), owner.clone()));
             }
@@ -128,7 +162,8 @@ impl Obstacles {
     /// A number placed on a leader: its whole line (from its tip through its landing) and its note's box.
     pub fn add_leader(&mut self, placed: &Placed, owner: &str) {
         for w in placed.line.windows(2) {
-            self.edges.push((Edge::Seg { a: w[0], b: w[1] }, owner.to_owned()));
+            self.edges
+                .push((Edge::Seg { a: w[0], b: w[1] }, owner.to_owned()));
         }
         self.boxes.push((placed.note.clone(), owner.to_owned()));
     }
@@ -146,7 +181,12 @@ pub struct Placed {
 /// Where the ray from `tip` in direction `d` last crosses the part's rings, and the point `k` heights past it on the
 /// ray: east, the last of the part's crossings of the horizontal line through the tip (`crossings_at`'s rule, as
 /// docs/adr/4680 has it); any other way, the same in the part turned so the ray runs east from the origin.
-fn leaving(part: &ScopePart, tip: [f64; 2], d: [f64; 2], past: f64) -> Option<([f64; 2], [f64; 2])> {
+fn leaving(
+    part: &ScopePart,
+    tip: [f64; 2],
+    d: [f64; 2],
+    past: f64,
+) -> Option<([f64; 2], [f64; 2])> {
     if d == [1.0, 0.0] {
         let east = *crossings_at(part, tip[1]).last()?;
         return Some(([east, tip[1]], [east + past, tip[1]]));
@@ -197,12 +237,19 @@ fn edge_meets_box(e: &Edge, ring: &[Vec2]) -> bool {
 
 /// Whether two convex boxes touch.
 fn boxes_meet(a: &[Vec2], b: &[Vec2]) -> bool {
-    a.iter().any(|p| within(b, *p)) || b.iter().any(|p| within(a, *p)) || sides(a).any(|s| sides(b).any(|t| !intersect_edges(&s, &t).is_empty()))
+    a.iter().any(|p| within(b, *p))
+        || b.iter().any(|p| within(a, *p))
+        || sides(a).any(|s| sides(b).any(|t| !intersect_edges(&s, &t).is_empty()))
 }
 
 /// What a place touches: its line's stretch outside the part (hits where it leaves the part not counted), its landing
 /// and its note's box, against every obstacle; sorted, each owner once.
-fn clashes(obstacles: &Obstacles, out: [Vec2; 2], landing: [Vec2; 2], note: &[Vec2]) -> Vec<String> {
+fn clashes(
+    obstacles: &Obstacles,
+    out: [Vec2; 2],
+    landing: [Vec2; 2],
+    note: &[Vec2],
+) -> Vec<String> {
     let (outside, land) = (seg(out[0], out[1]), seg(landing[0], landing[1]));
     let mut hit = BTreeSet::new();
     for (e, owner) in &obstacles.edges {
@@ -234,19 +281,37 @@ fn clashes(obstacles: &Obstacles, out: [Vec2; 2], landing: [Vec2; 2], note: &[Ve
 
 /// Where a number `height` tall goes outside its part on a leader from `tip`: the first clear place in the order the
 /// places are tried, else the one touching the fewest (the first of equals). None when no ray leaves the part.
-pub fn place(part: &ScopePart, tip: [f64; 2], number: &str, height: f64, font: Font, obstacles: &Obstacles) -> Option<Placed> {
+pub fn place(
+    part: &ScopePart,
+    tip: [f64; 2],
+    number: &str,
+    height: f64,
+    font: Font,
+    obstacles: &Obstacles,
+) -> Option<Placed> {
     let mut best: Option<Placed> = None;
     for k in REACH {
         for d in DIRECTIONS {
-            let Some((out, bend)) = leaving(part, tip, d, k * height) else { continue };
+            let Some((out, bend)) = leaving(part, tip, d, k * height) else {
+                continue;
+            };
             let pts = [v(tip), v(bend)];
             let layout = leader::layout(&pts, height, 0.0, None, None, true)?;
-            let (Some(landing), Some(p), align) = (layout.landing, layout.note_point, layout.note_align) else { continue };
+            let (Some(landing), Some(p), align) =
+                (layout.landing, layout.note_point, layout.note_align)
+            else {
+                continue;
+            };
             let note = TextPlace::line(p, number, height, 0.0, align, None).outline(font);
             let found = clashes(obstacles, [v(out), v(bend)], landing, &note);
             let clear = found.is_empty();
             if best.as_ref().is_none_or(|b| found.len() < b.clashes.len()) {
-                best = Some(Placed { bend, line: vec![v(tip), v(bend), landing[1]], note, clashes: found });
+                best = Some(Placed {
+                    bend,
+                    line: vec![v(tip), v(bend), landing[1]],
+                    note,
+                    clashes: found,
+                });
             }
             if clear {
                 return best;

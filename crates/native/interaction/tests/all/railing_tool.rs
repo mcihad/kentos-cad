@@ -197,7 +197,15 @@ fn railing_settings_refuse_out_of_range_values_before_finishing_the_path() {
     b.confirm();
     let r = newest_railing(&b);
     assert_eq!(rel(&r), [(0., 9.), (4., 9.), (4., 12.)]);
-    assert_eq!((r.railing.height, r.railing.width, r.railing.gap, r.railing.offset), (3., 0.5, Some(1.), -10.));
+    assert_eq!(
+        (
+            r.railing.height,
+            r.railing.width,
+            r.railing.gap,
+            r.railing.offset
+        ),
+        (3., 0.5, Some(1.), -10.)
+    );
 }
 
 /// Boşluktan on a stair's void: the sides the walls run along get none, and the stretch where the stair from Zemin kat

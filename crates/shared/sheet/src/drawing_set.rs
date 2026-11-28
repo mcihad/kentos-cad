@@ -1,12 +1,12 @@
 //! Standard drawing-set metadata and deterministic sheet/view index rows.
+use crate::{
+    ItemKind,
+    error::{Result, SheetError},
+    model::SheetBook,
+};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
-use crate::{
-    error::{Result, SheetError},
-    model::SheetBook,
-    ItemKind,
-};
 
 pub use kentos_contracts::DrawingInfo;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

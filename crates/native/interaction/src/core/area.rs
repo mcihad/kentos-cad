@@ -341,7 +341,12 @@ impl AreaAction {
                 })
                 .collect();
             let pick = |want: bool| -> Vec<Slot> {
-                targets.iter().zip(&touches).filter(|(_, t)| **t == want).map(|(s, _)| *s).collect()
+                targets
+                    .iter()
+                    .zip(&touches)
+                    .filter(|(_, t)| **t == want)
+                    .map(|(s, _)| *s)
+                    .collect()
             };
             (pick(true), pick(false))
         };
@@ -755,7 +760,10 @@ impl AreaSplit {
             .entities()
             .filter(|e| match e {
                 Entity::Hatch(h) => h.assoc.as_ref().is_some_and(|a| {
-                    a.outer.iter().chain(&a.bounds).any(|id| sources.contains(&id.to_string()))
+                    a.outer
+                        .iter()
+                        .chain(&a.bounds)
+                        .any(|id| sources.contains(&id.to_string()))
                 }),
                 _ => false,
             })
@@ -764,7 +772,12 @@ impl AreaSplit {
         let curved = self
             .list
             .iter()
-            .filter(|t| matches!(doc.get(t.slot), Some(Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_))))
+            .filter(|t| {
+                matches!(
+                    doc.get(t.slot),
+                    Some(Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_))
+                )
+            })
             .count();
         let work = AreaWork::Split {
             ids: self.list.iter().map(|t| edge::uid(doc, t.slot)).collect(),
@@ -870,14 +883,32 @@ impl Stages for AreaSplit {
 
     fn prompt(&self, _n: usize) -> Prompt {
         if let Some(by) = &self.by_area {
-            let side = if by.across() { "karşı taraf" } else { "kenar yanı" };
-            let prompt = match (by.has_edge(), by.has_cut()) {
-                (false, _) => Prompt::new("Alan böl", "alanın referans kenarına tıklayın (kesim bu kenara paralel olur)"),
-                (true, false) => Prompt::new("Alan böl", "ayrılacak alanı yazın").option_with("Karşı taraf", "T", side),
-                (true, true) => Prompt::new("Alan böl", "kesimi onaylamak için Enter'a basın ya da başka bir alan yazın")
-                    .option_with("Karşı taraf", "T", side),
+            let side = if by.across() {
+                "karşı taraf"
+            } else {
+                "kenar yanı"
             };
-            let prompt = if by.has_edge() { prompt.option("Geri", "G") } else { prompt };
+            let prompt = match (by.has_edge(), by.has_cut()) {
+                (false, _) => Prompt::new(
+                    "Alan böl",
+                    "alanın referans kenarına tıklayın (kesim bu kenara paralel olur)",
+                ),
+                (true, false) => Prompt::new("Alan böl", "ayrılacak alanı yazın").option_with(
+                    "Karşı taraf",
+                    "T",
+                    side,
+                ),
+                (true, true) => Prompt::new(
+                    "Alan böl",
+                    "kesimi onaylamak için Enter'a basın ya da başka bir alan yazın",
+                )
+                .option_with("Karşı taraf", "T", side),
+            };
+            let prompt = if by.has_edge() {
+                prompt.option("Geri", "G")
+            } else {
+                prompt
+            };
             return prompt.option("Noktalarla kes", "H");
         }
         if self.by_object {
@@ -899,7 +930,11 @@ impl Stages for AreaSplit {
             prompt.option("Geri", "G")
         };
         let prompt = prompt.option("Çizgiyle kes", "N");
-        if self.list.len() == 1 { prompt.option("Hedef alan", "H") } else { prompt }
+        if self.list.len() == 1 {
+            prompt.option("Hedef alan", "H")
+        } else {
+            prompt
+        }
     }
 
     fn point(&mut self, p: Vec2, _cx: &mut Context<'_>) -> Flow {
@@ -1004,7 +1039,11 @@ impl Stages for AreaSplit {
             return match by.line() {
                 Some(line) => self.split(Some(line), None, cx),
                 None => {
-                    let why = if by.has_edge() { "Önce ayrılacak alanı yazın." } else { "Önce alanın referans kenarına tıklayın." };
+                    let why = if by.has_edge() {
+                        "Önce ayrılacak alanı yazın."
+                    } else {
+                        "Önce alanın referans kenarına tıklayın."
+                    };
                     cx.say(Level::Warn, why);
                     Flow::Stay
                 }

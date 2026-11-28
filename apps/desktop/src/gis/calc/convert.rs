@@ -263,7 +263,12 @@ pub struct Converted {
 /// docs/adr/3700: what a converted point lies beyond, as `cad.crs.transform` notes it: the source system's and the
 /// datum operation's areas of use at its place, the target system's where it lands (a system of the registry; the
 /// project's own definitions have none).
-pub fn area_notes(from: &Side, to: &Side, choices: &[core::Choice], c: &Converted) -> Vec<&'static str> {
+pub fn area_notes(
+    from: &Side,
+    to: &Side,
+    choices: &[core::Choice],
+    c: &Converted,
+) -> Vec<&'static str> {
     let operation = core::operation::operation(&from.system, &to.system, choices, false)
         .ok()
         .and_then(|o| kentos_project::crs::operation_region(&o));
@@ -628,9 +633,16 @@ impl Form {
                 .filter_map(|(name, _, r)| {
                     r.ok().map(|c| {
                         // docs/adr/3700: the areas of use the point lies beyond.
-                        let beyond: Vec<&str> =
-                            area_notes(&from, &to, &choices, &c).into_iter().map(note_short).collect();
-                        vec![name, c.values[0].1.clone(), c.values[1].1.clone(), beyond.join(", ")]
+                        let beyond: Vec<&str> = area_notes(&from, &to, &choices, &c)
+                            .into_iter()
+                            .map(note_short)
+                            .collect();
+                        vec![
+                            name,
+                            c.values[0].1.clone(),
+                            c.values[1].1.clone(),
+                            beyond.join(", "),
+                        ]
                     })
                 })
                 .collect();
@@ -760,7 +772,9 @@ impl Form {
                                 Line::Warn,
                                 format!(
                                     "Nokta {}; dönüştürüldü, sonucu denetleyin.",
-                                    kentos_native_application::crs_transform::point_note_words(note)
+                                    kentos_native_application::crs_transform::point_note_words(
+                                        note
+                                    )
                                 ),
                             ));
                         }
@@ -822,7 +836,10 @@ impl Form {
                 }
                 if let Some((heading, rows)) = self.listed(settings, f) {
                     // docs/adr/3700: how many points lie beyond an area of use.
-                    let beyond = rows.iter().filter(|r| r.get(3).is_some_and(|n| !n.is_empty())).count();
+                    let beyond = rows
+                        .iter()
+                        .filter(|r| r.get(3).is_some_and(|n| !n.is_empty()))
+                        .count();
                     if beyond > 0 {
                         lines.push((
                             Line::Warn,
@@ -1204,9 +1221,15 @@ mod tests {
 
     /// TUREF / TM30 coordinates of a place given in degrees (KentOS's own projection).
     pub(super) fn tm30(lat: f64, lon: f64) -> [String; 2] {
-        let geo = crs::system(5252).and_then(System::transform_system).expect("TUREF");
-        let tm = crs::system(5254).and_then(System::transform_system).expect("TM30");
-        let p = transform_in(&geo, &tm, Vec2::new(lon, lat), &[]).expect("moves").point;
+        let geo = crs::system(5252)
+            .and_then(System::transform_system)
+            .expect("TUREF");
+        let tm = crs::system(5254)
+            .and_then(System::transform_system)
+            .expect("TM30");
+        let p = transform_in(&geo, &tm, Vec2::new(lon, lat), &[])
+            .expect("moves")
+            .point;
         [format!("{:.3}", p.x), format!("{:.3}", p.y)]
     }
 
@@ -1219,14 +1242,22 @@ mod tests {
             "srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000
         }))
         .expect("settings");
-        let f = ConvertFormat { east: "Y", north: "X", decimals: 3, notation: Notation::Dms };
+        let f = ConvertFormat {
+            east: "Y",
+            north: "X",
+            decimals: 3,
+            notation: Notation::Dms,
+        };
         let [bx, by] = tm30(40.1826, 29.0665);
         let [ax, ay] = tm30(39.9334, 32.8597);
         let form = Form {
             from: Some(Pick::Srid(5254)),
             to: Some(Pick::Srid(5255)),
             mode: Mode::List,
-            rows: vec![["Bursa".into(), bx.clone(), by.clone()], ["Ankara".into(), ax, ay]],
+            rows: vec![
+                ["Bursa".into(), bx.clone(), by.clone()],
+                ["Ankara".into(), ax, ay],
+            ],
             ..Form::default()
         };
         let (heading, rows) = form.listed(&settings, &f).expect("the list");
@@ -1238,7 +1269,10 @@ mod tests {
         let c = convert_point(&from.system, &to.system, &[], &bx, &by, &f).expect("converted");
         assert_eq!(area_notes(&from, &to, &[], &c), ["outside_target_area"]);
         // Within every area: no note.
-        let inside = Form { to: Some(Pick::Srid(4326)), ..form.clone() };
+        let inside = Form {
+            to: Some(Pick::Srid(4326)),
+            ..form.clone()
+        };
         let (from, to) = inside.systems(&settings);
         let c = convert_point(&from.system, &to.system, &[], &bx, &by, &f).expect("converted");
         assert!(area_notes(&from, &to, &[], &c).is_empty());
@@ -1279,24 +1313,48 @@ mod screens {
         send(&mut app, Event::A("500000".into()));
         send(&mut app, Event::B("4420000".into()));
         let (settings, f) = app.convert_format().expect("a drawing");
-        assert!(matches!(app.gis.calc.convert.point(&settings, &f), Some(Ok(_))));
+        assert!(matches!(
+            app.gis.calc.convert.point(&settings, &f),
+            Some(Ok(_))
+        ));
         send(&mut app, Event::Swap);
         let form = &app.gis.calc.convert;
-        assert_eq!((form.from, form.to), (Some(Pick::Srid(4326)), Some(Pick::Srid(5256))));
+        assert_eq!(
+            (form.from, form.to),
+            (Some(Pick::Srid(4326)), Some(Pick::Srid(5256)))
+        );
         let lat: f64 = form.a.parse().expect("the latitude in degrees");
         let lon: f64 = form.b.parse().expect("the longitude in degrees");
-        assert!((lat - 39.914_179).abs() < 1e-6 && (lon - 36.0).abs() < 1e-9, "{lat} {lon}");
-        let back = form.point(&settings, &f).expect("typed").expect("converted back");
-        assert!((back.point.x - 500_000.0).abs() < 1e-6 && (back.point.y - 4_420_000.0).abs() < 1e-6, "{:?}", back.point);
+        assert!(
+            (lat - 39.914_179).abs() < 1e-6 && (lon - 36.0).abs() < 1e-9,
+            "{lat} {lon}"
+        );
+        let back = form
+            .point(&settings, &f)
+            .expect("typed")
+            .expect("converted back");
+        assert!(
+            (back.point.x - 500_000.0).abs() < 1e-6 && (back.point.y - 4_420_000.0).abs() < 1e-6,
+            "{:?}",
+            back.point
+        );
         if std::env::var_os("KENTOS_SHOTS").is_some() {
             let mut shot = crate::files_testing::offscreen(Size::new(1440., 900.));
-            shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+            shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+                drop(app.update(m))
+            });
             crate::files_testing::evidence(&mut shot, &app, "ur2-050", "yon-degisti");
         }
         send(&mut app, Event::Swap);
         let form = &app.gis.calc.convert;
-        let (e, n): (f64, f64) = (form.a.parse().expect("east"), form.b.parse().expect("north"));
-        assert!((e - 500_000.0).abs() < 1e-6 && (n - 4_420_000.0).abs() < 1e-6, "{e} {n}");
+        let (e, n): (f64, f64) = (
+            form.a.parse().expect("east"),
+            form.b.parse().expect("north"),
+        );
+        assert!(
+            (e - 500_000.0).abs() < 1e-6 && (n - 4_420_000.0).abs() < 1e-6,
+            "{e} {n}"
+        );
         // No result: the metres typed do not stay as degrees.
         send(&mut app, Event::A("50000x".into()));
         send(&mut app, Event::Swap);
@@ -1400,11 +1458,17 @@ mod screens {
     #[test]
     #[ignore = "pictures for the owner, run by hand"]
     fn area_screens() {
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-alani-3700");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.run/gui-evidence/kullanim-alani-3700");
         std::fs::create_dir_all(&out).expect("a folder for the pictures");
-        for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+        for (theme, size, name) in [
+            ("light", Size::new(1440.0, 900.0), "acik-genis"),
+            ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+        ] {
             let mut app = crate::files_testing::app_with_drawing();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             app.follow.flash = None;
@@ -1429,7 +1493,10 @@ mod screens {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("1-liste-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         }
     }

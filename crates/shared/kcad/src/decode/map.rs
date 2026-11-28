@@ -43,8 +43,11 @@ pub(super) fn zoning_plan(
 }
 
 /// `toolLayers` (schema 255, usage review UR-003): the layer each annotation tool draws on, checked as it is read.
-pub(super) fn tool_layers(r: &mut Reader<'_>) -> Result<Vec<kentos_contracts::ToolLayer>, KcadError> {
-    let (v, at): (Vec<kentos_contracts::ToolLayer>, usize) = objects::json_part(r, "araç katmanları")?;
+pub(super) fn tool_layers(
+    r: &mut Reader<'_>,
+) -> Result<Vec<kentos_contracts::ToolLayer>, KcadError> {
+    let (v, at): (Vec<kentos_contracts::ToolLayer>, usize) =
+        objects::json_part(r, "araç katmanları")?;
     if v.is_empty() {
         return Err(r.fail_at(Code::BadValue, at, "boş araç katmanları yazılmaz"));
     }
@@ -106,7 +109,11 @@ pub(super) fn map_survey(
     }
     // Schema 207 (docs/adr/2520): a known point's own velocity.
     if !has.known_velocities && v.has_velocities() {
-        return Err(r.fail_at(Code::UnknownField, at, "bilinen noktada velocity (şema 207'den önce yok)"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            "bilinen noktada velocity (şema 207'den önce yok)",
+        ));
     }
     // Schema 248 (docs/adr/4920): baseline sessions, an adjustment's sessions, kept limits, a point's velocity.
     if !has.gnss_sessions && v.has_sessions() {
@@ -130,30 +137,58 @@ pub(super) fn map_work(
     }
     // Schema 193 (docs/adr/1201 §1): an item's file's relative path.
     if !has.map_work_relative && v.has_relative() {
-        return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinin dosyasında relative (şema 193'ten önce yok)"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            "harita işi öğesinin dosyasında relative (şema 193'ten önce yok)",
+        ));
     }
     // Schema 206 (docs/adr/2080): an approval's stamp; a derivation from an item without a file.
     if !has.work_stamps && v.items.iter().any(|i| i.approved.is_some()) {
-        return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde approved (şema 206'dan önce yok)"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            "harita işi öğesinde approved (şema 206'dan önce yok)",
+        ));
     }
     if !has.work_stamps && v.has_stamps() {
-        return Err(r.fail_at(Code::BadValue, at, "dosyası olmayan öğeden türetme şema 206'dan önce yazılmaz"));
+        return Err(r.fail_at(
+            Code::BadValue,
+            at,
+            "dosyası olmayan öğeden türetme şema 206'dan önce yazılmaz",
+        ));
     }
     // Schema 210 (docs/adr/2880): an approval's objects' digests.
     if !has.approved_objects && v.has_approved_objects() {
-        return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde approvedObjects (şema 210'dan önce yok)"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            "harita işi öğesinde approvedObjects (şema 210'dan önce yok)",
+        ));
     }
     // Schema 211 (docs/adr/3280): an approval's objects' parts' digests.
     if !has.approved_parts && v.has_approved_parts() {
-        return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde approvedParts (şema 211'den önce yok)"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            "harita işi öğesinde approvedParts (şema 211'den önce yok)",
+        ));
     }
     // Schema 213 (docs/adr/3680): an approval's objects' values.
     if !has.approved_values && v.has_approved_values() {
-        return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde approvedValues (şema 213'ten önce yok)"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            "harita işi öğesinde approvedValues (şema 213'ten önce yok)",
+        ));
     }
     // Schema 247 (docs/adr/4880): an item's typed layers' profile.
     if !has.work_profiles && v.has_profiles() {
-        return Err(r.fail_at(Code::UnknownField, at, "harita işi öğesinde profile (şema 247'den önce yok)"));
+        return Err(r.fail_at(
+            Code::UnknownField,
+            at,
+            "harita işi öğesinde profile (şema 247'den önce yok)",
+        ));
     }
     if let Some((field, words)) = v.problem() {
         return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));

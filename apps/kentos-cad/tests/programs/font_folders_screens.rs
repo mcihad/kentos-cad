@@ -42,7 +42,8 @@ fn screens() {
     let roboto = DrawingFont::from_name("Roboto").expect("a family");
     // Roboto is in paket/fonts/arayuz: the text system draws it in its own face, not Arial's.
     assert_eq!(crate::drawing_fonts::family(roboto), "Roboto");
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9313");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-9313");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     // The glyph atlas makes a frame's new letters until a deadline and leaves the rest for the next frame, which a
     // window asks for (docs/adr/9212 §5); a picture draws its frames by hand, so a few first.
@@ -51,7 +52,10 @@ fn screens() {
         for _ in 0..8 {
             let _ = snapshot.render(app.view(), &app.theme());
         }
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     };
     let settle = |snapshot: &mut Snapshot, app: &mut App| {
@@ -71,7 +75,10 @@ fn screens() {
         (app, snapshot)
     };
     // The corners named as texts, upright: the project's Arial, then the folder's Roboto.
-    for (name, font) in [("kose-adlari-arial", DrawingFont::Arial), ("kose-adlari-roboto", roboto)] {
+    for (name, font) in [
+        ("kose-adlari-arial", DrawingFont::Arial),
+        ("kose-adlari-roboto", roboto),
+    ] {
         let (mut app, mut snapshot) = open(font);
         settle(&mut snapshot, &mut app);
         app.selection.set([Slot(1), Slot(2)]);

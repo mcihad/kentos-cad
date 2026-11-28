@@ -115,12 +115,22 @@ impl App {
 
     /// Why a view read whole has no row: its layer has no record, or no record met one of the joined layer's.
     pub(super) fn join_empty(r: &JoinRead, v: &JoinView, doc: &Document, with: &str) -> String {
-        let name = |id: &str| doc.model.layers().get(id).map_or_else(|| id.to_owned(), |n| n.name.clone());
+        let name = |id: &str| {
+            doc.model
+                .layers()
+                .get(id)
+                .map_or_else(|| id.to_owned(), |n| n.name.clone())
+        };
         if r.report.records == 0 {
-            return format!("“{}” katmanında kayıt yok; görünümde satır yok.", name(&v.layer));
+            return format!(
+                "“{}” katmanında kayıt yok; görünümde satır yok.",
+                name(&v.layer)
+            );
         }
         if r.report.with_records == 0 {
-            return format!("“{with}” içinde kayıt yok; yalnız eşleşenler gösterildiği için satır yok.");
+            return format!(
+                "“{with}” içinde kayıt yok; yalnız eşleşenler gösterildiği için satır yok."
+            );
         }
         if r.report.matched == 0 {
             return format!(
@@ -142,7 +152,10 @@ impl App {
             *per_record.entry(row.left.as_str()).or_default() += 1;
         }
         let several = per_record.values().filter(|n| **n > 1).count();
-        let mut out = format!("{} satır · {} kayıt: {} eşleşen", p.rows, p.records, p.matched);
+        let mut out = format!(
+            "{} satır · {} kayıt: {} eşleşen",
+            p.rows, p.records, p.matched
+        );
         if several > 0 {
             out.push_str(&format!(" ({several} birden çok kayıtla)"));
         }
@@ -217,7 +230,9 @@ impl App {
             })
             .collect();
         let info: Element<'_, Message> = match &r.broken {
-            None if r.waiting.is_some() => label::muted(r.waiting.clone().unwrap_or_default()).into(),
+            None if r.waiting.is_some() => {
+                label::muted(r.waiting.clone().unwrap_or_default()).into()
+            }
             // A source's table that could not be read says why, with Yeniden dene when asking again may help
             // (docs/adr/0740 §2; a table not where the view says is set in Birleşik görünümler…).
             Some(why) => {

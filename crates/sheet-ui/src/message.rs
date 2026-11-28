@@ -51,7 +51,9 @@ pub enum StageEvent {
         ctrl: bool,
         alt: bool,
     },
-    RightClick { at: [f64;2] },
+    RightClick {
+        at: [f64; 2],
+    },
     DoubleClick {
         at: [f64; 2],
     },

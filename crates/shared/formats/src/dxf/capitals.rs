@@ -225,9 +225,18 @@ mod tests {
             Some(1187.0 / 2048.0)
         );
         // Times New Roman's own capitals (docs/adr/9311), its twins' theirs; a face KentOS draws in Barlow, Barlow's.
-        assert_eq!(share("times.ttf", None, false, false), Some(TIMES_NEW_ROMAN));
-        assert_eq!(share("timesbd.ttf", None, false, false), Some(1356.0 / 2048.0));
-        assert_eq!(share("LiberationSerif-Bold.ttf", None, false, false), Some(1341.0 / 2048.0));
+        assert_eq!(
+            share("times.ttf", None, false, false),
+            Some(TIMES_NEW_ROMAN)
+        );
+        assert_eq!(
+            share("timesbd.ttf", None, false, false),
+            Some(1356.0 / 2048.0)
+        );
+        assert_eq!(
+            share("LiberationSerif-Bold.ttf", None, false, false),
+            Some(1341.0 / 2048.0)
+        );
         assert_eq!(share("calibri.ttf", None, false, false), Some(0.7));
         // Shape files and a style naming nothing: their height is their capitals'.
         for none in ["romans.shx", "txt", "ROMANS", "", "isocp.shx"] {

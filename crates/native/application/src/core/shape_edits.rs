@@ -5,9 +5,9 @@
 //! (`scripts/fixtures/shape_edits_cases.py`).
 
 use kentos_commands::{
-    CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan, Entity, EntityEdit,
-    EntityGeometry, ShapeElevation, ShapeNeighbour, ShapeWork, ShapesEdit, ShapesEdited, ShiftReference,
-    StretchTopology, TextEntity, Vec2 as Wire,
+    CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan, Entity,
+    EntityEdit, EntityGeometry, ShapeElevation, ShapeNeighbour, ShapeWork, ShapesEdit,
+    ShapesEdited, ShiftReference, StretchTopology, TextEntity, Vec2 as Wire,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::entity::{
@@ -32,7 +32,11 @@ fn v(p: Wire) -> Vec2 {
     Vec2::new(p.x, p.y)
 }
 
-pub(crate) fn object<'d>(doc: &'d Document, uid: &str, path: &str) -> Result<(Slot, &'d Entity), Stop> {
+pub(crate) fn object<'d>(
+    doc: &'d Document,
+    uid: &str,
+    path: &str,
+) -> Result<(Slot, &'d Entity), Stop> {
     if !is_uid_text(uid) {
         return Err(refuse(
             codes::INVALID_UID,
@@ -329,7 +333,9 @@ fn edge_shift_of(
     let picked = rules::pick(&s, v(at)).map_err(|why| refused(why, "work.at"))?;
     // With a reference the distance is from its line, and Bu uzaklığı koru keeps it (docs/adr/2580).
     let (d, keep) = match reference {
-        Some(r) => crate::edge_shift_reference::by_reference(doc, slot, e, &picked, distance, area, r)?,
+        Some(r) => {
+            crate::edge_shift_reference::by_reference(doc, slot, e, &picked, distance, area, r)?
+        }
         None => (plain_distance(&s, &picked, distance, area)?, None),
     };
     let moved = rules::shifted(&s, picked.ring, picked.edge, d)
@@ -355,9 +361,17 @@ fn edge_shift_of(
     {
         // The neighbours' vertices inside the shared edge go with it (docs/adr/2600).
         let store = crate::geometry_store::store_of(doc);
-        let (extra, carried) =
-            crate::topology_follow::along_edge(doc, &store, t.points, slot, &s, &moved, picked.ring, picked.edge)
-                .map_err(|(why, path)| refused(why.to_owned(), path))?;
+        let (extra, carried) = crate::topology_follow::along_edge(
+            doc,
+            &store,
+            t.points,
+            slot,
+            &s,
+            &moved,
+            picked.ring,
+            picked.edge,
+        )
+        .map_err(|(why, path)| refused(why.to_owned(), path))?;
         p.carried = carried;
         follow(doc, &mut p, t, (slot, s, moved), &extra)?;
     }
@@ -365,7 +379,12 @@ fn edge_shift_of(
 }
 
 /// Paralel kaydır's shift without a reference: `distance`, or the one that reaches the target `area`.
-fn plain_distance(s: &Shape, picked: &rules::Picked, distance: Option<f64>, area: Option<f64>) -> Result<f64, Stop> {
+fn plain_distance(
+    s: &Shape,
+    picked: &rules::Picked,
+    distance: Option<f64>,
+    area: Option<f64>,
+) -> Result<f64, Stop> {
     let refused = |text: String, path: &str| refuse(codes::EDGE_SHIFT_REFUSED, text, path);
     let d = match (distance, area) {
         (Some(d), None) => {
@@ -404,15 +423,31 @@ fn follow(
     extra: &[kentos_geometry_core::ops::topology_edit::Change],
 ) -> Result<(), Stop> {
     let store = crate::geometry_store::store_of(doc);
-    let Some(n) = crate::topology_follow::neighbours_with(doc, &store, t.points, &[(slot, before, after)], extra) else {
+    let Some(n) = crate::topology_follow::neighbours_with(
+        doc,
+        &store,
+        t.points,
+        &[(slot, before, after)],
+        extra,
+    ) else {
         return Ok(());
     };
     if t.stop_on_locked && n.locked > 0 {
-        return Err(refuse(codes::SHARED_BOUNDARY_LOCKED, crate::stretch::shared_locked(n.locked), "work.topology"));
+        return Err(refuse(
+            codes::SHARED_BOUNDARY_LOCKED,
+            crate::stretch::shared_locked(n.locked),
+            "work.topology",
+        ));
     }
     for (change, now) in n.changes.iter().zip(&n.shapes) {
-        let EntityEdit::Update { uid, .. } = change else { continue };
-        let then = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)).map(shape);
+        let EntityEdit::Update { uid, .. } = change else {
+            continue;
+        };
+        let then = Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+            .map(shape);
         p.neighbours.push(ShapeNeighbour {
             uid: uid.clone(),
             before: then.as_ref().map_or(0.0, neighbour_size),
@@ -424,7 +459,10 @@ fn follow(
     if n.locked > 0 {
         p.warnings.push(CommandWarning {
             code: codes::NEIGHBOUR_LOCKED.into(),
-            message: format!("Kilitli katmandaki {} komşu nesne değişmedi; ortak sınır ayrıldı.", n.locked),
+            message: format!(
+                "Kilitli katmandaki {} komşu nesne değişmedi; ortak sınır ayrıldı.",
+                n.locked
+            ),
             path: Some("work.topology".into()),
         });
     }
@@ -661,7 +699,15 @@ fn prepare(doc: &Document, input: &ShapesEdit) -> Result<Prepared, Stop> {
             area,
             topology,
             reference,
-        } => edge_shift_of(doc, id, *at, *distance, *area, *topology, reference.as_ref()),
+        } => edge_shift_of(
+            doc,
+            id,
+            *at,
+            *distance,
+            *area,
+            *topology,
+            reference.as_ref(),
+        ),
         ShapeWork::Simplify { ids, tolerance } => simplify_of(doc, ids, *tolerance),
         ShapeWork::Elevation { ids, elevation } => elevation_of(doc, ids, *elevation),
         ShapeWork::Readable { ids } => readable_of(doc, ids),
@@ -774,7 +820,10 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
         Ok(p) => p,
         Err(stop) => return stop.into(),
     };
-    let output = |changed: Vec<String>, created: Vec<String>, bonds: Vec<String>, revision: String| ShapesEdited {
+    let output = |changed: Vec<String>,
+                  created: Vec<String>,
+                  bonds: Vec<String>,
+                  revision: String| ShapesEdited {
         changed,
         before: p.before,
         after: p.after,
@@ -791,12 +840,22 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
     // Okunur yap with every text readable already: nothing to write, nothing refused.
     if p.changes.is_empty() && p.keep.is_none() {
         return CommandResult::Completed {
-            output: output(Vec::new(), Vec::new(), Vec::new(), cx.doc.revision().to_string()),
+            output: output(
+                Vec::new(),
+                Vec::new(),
+                Vec::new(),
+                cx.doc.revision().to_string(),
+            ),
             warnings: Vec::new(),
         };
     }
     let (changed, created, revision, mut warnings) = if p.changes.is_empty() {
-        (Vec::new(), Vec::new(), cx.doc.revision().to_string(), Vec::new())
+        (
+            Vec::new(),
+            Vec::new(),
+            cx.doc.revision().to_string(),
+            Vec::new(),
+        )
     } else {
         match ours(edit::write_in(cx, edit_input(&p, &input))) {
             CommandResult::Completed {
@@ -815,12 +874,20 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ShapesEdit) -> CommandRes
     };
     // Bu uzaklığı koru (docs/adr/2580): the bonds already there follow the shift first, in this step (the next edge of
     // a chain moves; an edge bonded elsewhere refuses the shift), then the new bond and its parameter are written.
-    match crate::constraint_follow::follow(cx.doc, kentos_commands::CAD_SHAPES_EDIT, false, &|| false) {
+    match crate::constraint_follow::follow(cx.doc, kentos_commands::CAD_SHAPES_EDIT, false, &|| {
+        false
+    }) {
         Ok(followed) => warnings.extend(followed.warnings),
         Err(stop) => return stop.into(),
     }
     let label = crate::edit::label(EditOperation::EdgeShift);
-    let bond = match crate::constraints_edit::add_bond_given(cx.doc, kept.rule.clone(), label, kept.value, "work.reference") {
+    let bond = match crate::constraints_edit::add_bond_given(
+        cx.doc,
+        kept.rule.clone(),
+        label,
+        kept.value,
+        "work.reference",
+    ) {
         Ok(id) => id,
         Err(stop) => return stop.into(),
     };

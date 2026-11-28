@@ -179,7 +179,11 @@ pub(crate) fn axis_heads(model: &kentos_domain::Document, head: &[&str]) -> Vec<
 }
 
 /// A resolved point as a Hesap field shows it: `Y … X …`, or in a CAD project `Doğu … Kuzey …` (UR2-017).
-pub(crate) fn point_words(model: &kentos_domain::Document, format: &Format, p: kentos_interaction::Vec2) -> String {
+pub(crate) fn point_words(
+    model: &kentos_domain::Document,
+    format: &Format,
+    p: kentos_interaction::Vec2,
+) -> String {
     if model.settings().project_type() != Some(kentos_commands::Workspace::Cad) {
         return format.point(p);
     }

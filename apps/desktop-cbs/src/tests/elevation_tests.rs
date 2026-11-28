@@ -24,10 +24,9 @@ fn gnss() -> App {
         ]);
         d["activeLayer"] = json!("gnss");
     });
-    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(iced::Rectangle::new(
-        iced::Point::ORIGIN,
-        iced::Size::new(1000.0, 700.0),
-    ))));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
+        iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0)),
+    )));
     let task = app.update(Message::Run("view.zoomExtents"));
     drive(&mut app, task);
     app
@@ -43,9 +42,16 @@ fn screens() {
         let task = app.update(Message::Run("tool.readElevation"));
         drive(&mut app, task);
         let (e, n) = (crate::tools_scenes::E, crate::tools_scenes::N);
-        let [sx, sy] = app.viewport.camera.world_to_screen(kentos_interaction::Vec2::new(e + 20.0, n + 10.0));
+        let [sx, sy] = app
+            .viewport
+            .camera
+            .world_to_screen(kentos_interaction::Vec2::new(e + 20.0, n + 10.0));
         let at = iced::Point::new(sx as f32, sy as f32);
-        for ev in [crate::viewport::Event::Moved(at), crate::viewport::Event::Pressed(at), crate::viewport::Event::Released(at)] {
+        for ev in [
+            crate::viewport::Event::Moved(at),
+            crate::viewport::Event::Pressed(at),
+            crate::viewport::Event::Released(at),
+        ] {
             let task = app.update(Message::Viewport(ev));
             drive(&mut app, task);
         }

@@ -218,7 +218,11 @@ pub fn problems(doc: &Document, tool: &Tool, table: &Table) -> Vec<Refusal> {
                 continue;
             };
             if let Err(message) = cell_value(doc, def, text) {
-                out.push(Refusal { row: i, column: name.clone(), message: format!("“{}”: {message}.", def.label) });
+                out.push(Refusal {
+                    row: i,
+                    column: name.clone(),
+                    message: format!("“{}”: {message}.", def.label),
+                });
             }
         }
     }

@@ -62,7 +62,10 @@ fn on(v: &Value, key: &str) -> bool {
 }
 
 fn list<'a>(v: &'a Value, key: &str) -> &'a [Value] {
-    v.get(key).and_then(Value::as_array).map(Vec::as_slice).unwrap_or_default()
+    v.get(key)
+        .and_then(Value::as_array)
+        .map(Vec::as_slice)
+        .unwrap_or_default()
 }
 
 /// The renderer's classes in the tree's order.
@@ -130,7 +133,11 @@ fn graduated(r: &Value) -> Vec<StyleClass> {
             expression: (!e.is_empty()).then(|| {
                 let x = wrap(e);
                 let upper = if i == last { "<=" } else { "<" };
-                format!("{x} >= {} ve {x} {upper} {}", number(bound(k, "min")), number(bound(k, "max")))
+                format!(
+                    "{x} >= {} ve {x} {upper} {}",
+                    number(bound(k, "min")),
+                    number(bound(k, "max"))
+                )
             }),
         })
         .collect()
@@ -141,14 +148,23 @@ fn bound(k: &Value, key: &str) -> f64 {
 }
 
 fn filter_of(rule: &Value) -> Option<&str> {
-    rule.get("filter").and_then(Value::as_str).map(str::trim).filter(|f| !f.is_empty())
+    rule.get("filter")
+        .and_then(Value::as_str)
+        .map(str::trim)
+        .filter(|f| !f.is_empty())
 }
 
 fn is_else(rule: &Value) -> bool {
     rule.get("isElse") == Some(&Value::Bool(true))
 }
 
-fn rules(level: &[Value], parent: Option<&str>, prefix: &str, depth: usize, out: &mut Vec<StyleClass>) {
+fn rules(
+    level: &[Value],
+    parent: Option<&str>,
+    prefix: &str,
+    depth: usize,
+    out: &mut Vec<StyleClass>,
+) {
     // What the enabled plain siblings take: the rest is the “değilse” rules'. A sibling without a condition takes
     // everything.
     let taken: Option<Vec<&str>> = level
@@ -163,7 +179,10 @@ fn rules(level: &[Value], parent: Option<&str>, prefix: &str, depth: usize, out:
                 Some(t) if t.is_empty() => None,
                 Some(t) => Some(format!(
                     "değil ({})",
-                    t.iter().map(|f| format!("({f})")).collect::<Vec<_>>().join(" veya ")
+                    t.iter()
+                        .map(|f| format!("({f})"))
+                        .collect::<Vec<_>>()
+                        .join(" veya ")
                 )),
                 None => Some("yanlış".to_owned()),
             }
@@ -178,21 +197,37 @@ fn rules(level: &[Value], parent: Option<&str>, prefix: &str, depth: usize, out:
         let label = text_of(rule, "label").trim();
         out.push(StyleClass {
             id: id.clone(),
-            label: if label.is_empty() { "(adsız kural)".to_owned() } else { label.to_owned() },
+            label: if label.is_empty() {
+                "(adsız kural)".to_owned()
+            } else {
+                label.to_owned()
+            },
             enabled: on(rule, "enabled"),
             depth,
             symbols: rule.get("symbols").filter(|s| !s.is_null()).cloned(),
             expression: expression.clone(),
         });
-        rules(list(rule, "children"), expression.as_deref(), &format!("{id}."), depth + 1, out);
+        rules(
+            list(rule, "children"),
+            expression.as_deref(),
+            &format!("{id}."),
+            depth + 1,
+            out,
+        );
     }
 }
 
 /// The expression bare when it is a field or a single word, in brackets otherwise.
 fn wrap(e: &str) -> String {
     let field = e.starts_with('[') && e.ends_with(']') && e[1..].find(']') == Some(e.len() - 2);
-    let word = e.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '$');
-    if field || word { e.to_owned() } else { format!("({e})") }
+    let word = e
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '_' || c == '$');
+    if field || word {
+        e.to_owned()
+    } else {
+        format!("({e})")
+    }
 }
 
 /// A text in the language: in single quotes, a quote inside written twice.
@@ -226,7 +261,11 @@ fn others(e: &str, categories: &[Value]) -> String {
             values.push(v);
         }
     }
-    let list = values.iter().map(|v| text(v)).collect::<Vec<_>>().join(", ");
+    let list = values
+        .iter()
+        .map(|v| text(v))
+        .collect::<Vec<_>>()
+        .join(", ");
     if values.contains(&"") {
         format!("{x} değil içinde ({list})")
     } else {
@@ -304,7 +343,10 @@ impl ClassReader {
             }
             "graduated" => Reading::Graduated {
                 expr: compile(text_of(renderer, "expr"), unit),
-                bounds: list(renderer, "classes").iter().map(|k| (bound(k, "min"), bound(k, "max"))).collect(),
+                bounds: list(renderer, "classes")
+                    .iter()
+                    .map(|k| (bound(k, "min"), bound(k, "max")))
+                    .collect(),
             },
             _ => {
                 fn read(level: &[Value], unit: Unit) -> Vec<RuleReader> {
@@ -314,7 +356,9 @@ impl ClassReader {
                             enabled: on(r, "enabled"),
                             is_else: is_else(r),
                             draws: r.get("symbols").is_some_and(|s| !s.is_null()),
-                            filter: (!is_else(r)).then(|| filter_of(r).map(|f| compile(f, unit))).flatten(),
+                            filter: (!is_else(r))
+                                .then(|| filter_of(r).map(|f| compile(f, unit)))
+                                .flatten(),
                             children: read(list(r, "children"), unit),
                         })
                         .collect()
@@ -331,7 +375,8 @@ impl ClassReader {
                         fields.push(f.clone());
                     }
                 }
-                geometry |= e.needs.measured || e.needs.vertices || e.needs.kind || e.needs.centroid;
+                geometry |=
+                    e.needs.measured || e.needs.vertices || e.needs.kind || e.needs.centroid;
             }
         };
         match &reading {
@@ -465,7 +510,12 @@ impl ClassReader {
         shape: &dyn Fn(usize) -> Option<&'s Shape>,
     ) -> Option<Result<Vec<Option<usize>>, String>> {
         match &self.reading {
-            Reading::Categorized { expr, first, categories, other } => Some(expr.clone().and_then(|e| {
+            Reading::Categorized {
+                expr,
+                first,
+                categories,
+                other,
+            } => Some(expr.clone().and_then(|e| {
                 let column = evaluate_objects(&e, list, layer_name, shape, As::Text)?;
                 Ok(column
                     .values()
@@ -494,10 +544,11 @@ impl ClassReader {
                     .into_iter()
                     .zip(list)
                     .map(|(v, o)| match v {
-                        Read::Num(n) if n.is_finite() && drawn_by_style(o) => bounds
-                            .iter()
-                            .enumerate()
-                            .position(|(i, (min, max))| n >= *min && (n < *max || (i == last && n <= *max))),
+                        Read::Num(n) if n.is_finite() && drawn_by_style(o) => {
+                            bounds.iter().enumerate().position(|(i, (min, max))| {
+                                n >= *min && (n < *max || (i == last && n <= *max))
+                            })
+                        }
                         _ => None,
                     })
                     .collect())
@@ -524,11 +575,15 @@ impl ClassReader {
                 Some(match &r.filter {
                     None => Ok(vec![true; list.len()]),
                     Some(Err(e)) => Err(e.clone()),
-                    Some(Ok(e)) => evaluate_objects(e, list, layer_name, shape, As::Bool).map(|c| {
-                        (0..list.len())
-                            .map(|k| c.kinds.get(k) == Some(&3) && c.numbers.get(k) == Some(&1.0))
-                            .collect()
-                    }),
+                    Some(Ok(e)) => {
+                        evaluate_objects(e, list, layer_name, shape, As::Bool).map(|c| {
+                            (0..list.len())
+                                .map(|k| {
+                                    c.kinds.get(k) == Some(&3) && c.numbers.get(k) == Some(&1.0)
+                                })
+                                .collect()
+                        })
+                    }
                 })
             })
             .collect();
@@ -599,7 +654,10 @@ impl ClassReader {
                 let drawn: Vec<bool> = list.iter().map(|o| drawn_by_style(o)).collect();
                 let mut masks = Vec::new();
                 Self::rule_masks(rules, &drawn, list, layer_name, shape, &mut masks);
-                masks.into_iter().nth(at).unwrap_or_else(|| Ok(vec![false; list.len()]))
+                masks
+                    .into_iter()
+                    .nth(at)
+                    .unwrap_or_else(|| Ok(vec![false; list.len()]))
             }
             _ => match self.placed(list, layer_name, shape) {
                 Some(Ok(placed)) => Ok(placed.into_iter().map(|p| p == Some(at)).collect()),
@@ -612,7 +670,9 @@ impl ClassReader {
     /// How many classes there are ([`style_classes`]' length).
     fn len(&self) -> usize {
         match &self.reading {
-            Reading::Categorized { categories, other, .. } => categories + usize::from(*other),
+            Reading::Categorized {
+                categories, other, ..
+            } => categories + usize::from(*other),
             Reading::Graduated { bounds, .. } => bounds.len(),
             Reading::Rules(rules) => {
                 fn count(rules: &[RuleReader]) -> usize {
@@ -644,7 +704,11 @@ pub enum SwitchRefused {
 
 /// The renderer (its JSON) with the classes of `ids` (every class when none) switched on, off or the other way; what
 /// it does not know of the renderer stays as it is. Whether anything changed; nothing is written on a refusal.
-pub fn set_enabled(renderer: &mut Value, ids: Option<&[String]>, switch: Switch) -> Result<bool, SwitchRefused> {
+pub fn set_enabled(
+    renderer: &mut Value,
+    ids: Option<&[String]>,
+    switch: Switch,
+) -> Result<bool, SwitchRefused> {
     let listed = style_classes(renderer);
     if listed.is_empty() {
         return Err(SwitchRefused::NoClasses);
@@ -690,7 +754,10 @@ fn index(id: &str, letter: char) -> Option<usize> {
 }
 
 /// The object holding a class's flag and the flag's key.
-fn flag_of<'a>(renderer: &'a mut Value, id: &str) -> Option<(&'a mut Map<String, Value>, &'static str)> {
+fn flag_of<'a>(
+    renderer: &'a mut Value,
+    id: &str,
+) -> Option<(&'a mut Map<String, Value>, &'static str)> {
     if id == OTHER {
         return Some((renderer.as_object_mut()?, "otherEnabled"));
     }
@@ -702,7 +769,11 @@ fn flag_of<'a>(renderer: &'a mut Value, id: &str) -> Option<(&'a mut Map<String,
         let k = renderer.get_mut("classes")?.get_mut(i)?;
         return Some((k.as_object_mut()?, "enabled"));
     }
-    let path: Vec<usize> = id.strip_prefix('r')?.split('.').map(|p| p.parse().ok()).collect::<Option<_>>()?;
+    let path: Vec<usize> = id
+        .strip_prefix('r')?
+        .split('.')
+        .map(|p| p.parse().ok())
+        .collect::<Option<_>>()?;
     let (first, rest) = path.split_first()?;
     let mut rule = renderer.get_mut("rules")?.get_mut(*first)?;
     for i in rest {

@@ -80,7 +80,12 @@ pub(super) fn seats(doc: &Document, entities: &[(Uuid, &Entity)]) -> Vec<Seat> {
             };
             let ring = kentos_geometry_core::geom::beam::band(&pts, &beam);
             (ring.len() >= 3).then(|| Seat {
-                at: SlabAt { rings: vec![ring], top, over: 0.0, thickness: 0.0 },
+                at: SlabAt {
+                    rings: vec![ring],
+                    top,
+                    over: 0.0,
+                    thickness: 0.0,
+                },
                 level: b.arch.level.clone(),
             })
         })
@@ -160,8 +165,16 @@ pub(super) fn column(
 /// not part of.
 fn profile_look(c: &kentos_commands::Covering, material: Option<&str>) -> Look {
     let element = c.element_of();
-    let m = material.map(str::trim).filter(|m| !m.is_empty()).unwrap_or_default();
-    Look { key: format!("{element}:{}", fold(m)), layer: kentos_commands::ek4_layer(element, m), heavy: true, fill: None }
+    let m = material
+        .map(str::trim)
+        .filter(|m| !m.is_empty())
+        .unwrap_or_default();
+    Look {
+        key: format!("{element}:{}", fold(m)),
+        layer: kentos_commands::ek4_layer(element, m),
+        heavy: true,
+        fill: None,
+    }
 }
 
 /// The EK-2 element a post or a rail is drawn on (docs/adr/8070 §8): Diğer (Diğer ögeler için), EK-2 having no post's or
@@ -188,7 +201,10 @@ pub(super) fn beam(
     }
     let element = match b.role {
         // A profile (docs/adr/8173) on its covering's EK-2 element (Harpuşta, Cephe), by its material.
-        _ if b.covering.is_some() => b.covering.as_ref().map_or(MEMBER_ELEMENT, kentos_commands::Covering::element_of),
+        _ if b.covering.is_some() => b
+            .covering
+            .as_ref()
+            .map_or(MEMBER_ELEMENT, kentos_commands::Covering::element_of),
         // A rail (docs/adr/8070 §8), by its material.
         _ if b.member.is_some() => MEMBER_ELEMENT,
         BeamRole::Beam => "TASI",
@@ -197,7 +213,9 @@ pub(super) fn beam(
         // A footing on EK-2's Temel (docs/adr/8172).
         BeamRole::PadFooting | BeamRole::StripFooting => "TEML",
     };
-    let made_of = (b.member.is_some() || b.covering.is_some()).then_some(b.material.as_deref()).flatten();
+    let made_of = (b.member.is_some() || b.covering.is_some())
+        .then_some(b.material.as_deref())
+        .flatten();
     // A sloped member (docs/adr/8130): its start where a level one's is (its underside over its floor, else its top
     // where it hangs), rising evenly to its end; its depth across its axis a level one's, so upright it is deeper.
     let height = match (b.rise, b.pts.as_slice()) {

@@ -208,7 +208,13 @@ pub(crate) fn work_out(
     sources: &Sources,
     base: Option<&str>,
 ) -> Result<Extracted, Stop> {
-    work_out_watched(doc, recipe, sources, base, &kentos_formats::extract::Watch::default())
+    work_out_watched(
+        doc,
+        recipe,
+        sources,
+        base,
+        &kentos_formats::extract::Watch::default(),
+    )
 }
 
 /// [`work_out`] that says how far it is and stops when asked (docs/adr/1131 §3).
@@ -278,8 +284,15 @@ pub(crate) fn work_out_watched(
         length: s.length_decimals,
         area: s.area_decimals,
     };
-    kentos_formats::extract::extract_watched(recipe, &drawings, sources.join.as_deref(), decimals, &shown, watch)
-        .map_err(|(code, at, words)| fail(code, words, &format!("recipe.{at}")))
+    kentos_formats::extract::extract_watched(
+        recipe,
+        &drawings,
+        sources.join.as_deref(),
+        decimals,
+        &shown,
+        watch,
+    )
+    .map_err(|(code, at, words)| fail(code, words, &format!("recipe.{at}")))
 }
 
 /// The project's decimals.
@@ -316,7 +329,10 @@ fn warnings_of(e: &Extracted) -> Vec<CommandWarning> {
         // The count says why: a dynamic block's visibility state, a hidden or frozen layer (docs/adr/1131 §2).
         let layers = n.hidden - n.hidden_states.min(n.hidden);
         let why = match (n.hidden_states, layers) {
-            (0, _) => format!("{} nesne gizli ya da dondurulmuş katmanda olduğu için", n.hidden),
+            (0, _) => format!(
+                "{} nesne gizli ya da dondurulmuş katmanda olduğu için",
+                n.hidden
+            ),
             (s, 0) => format!("{s} parça dinamik bloğun görünürlük durumu gizlediği için"),
             (s, l) => format!(
                 "{s} parça dinamik bloğun görünürlük durumu gizlediği, {l} nesne gizli ya da dondurulmuş katmanda olduğu için"
@@ -536,7 +552,9 @@ pub mod run {
             Err(stop) => {
                 let r: CommandResult<ExtractRan> = stop.into();
                 match r {
-                    CommandResult::Failed { error } if error.code == kentos_formats::extract::CANCELLED => {
+                    CommandResult::Failed { error }
+                        if error.code == kentos_formats::extract::CANCELLED =>
+                    {
                         CommandResult::Cancelled
                     }
                     other => other,

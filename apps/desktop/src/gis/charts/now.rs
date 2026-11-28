@@ -88,7 +88,12 @@ impl App {
     /// Where the shown layer's rows come from (docs/adr/9130): the drawing, or a data layer's source (read, being read,
     /// unread); none before the layer is read.
     pub(crate) fn layer_rows_from(&self) -> Option<super::data::From> {
-        self.gis.charts.layer_data.borrow().as_ref().map(|(_, d)| d.from.clone())
+        self.gis
+            .charts
+            .layer_data
+            .borrow()
+            .as_ref()
+            .map(|(_, d)| d.from.clone())
     }
 
     /// The İşlemler table's data, read once a table.
@@ -153,7 +158,10 @@ impl App {
         // A data layer's columns are its fields: its rows are not read for them (docs/adr/9181).
         if !table && let Some(data) = self.data_layer_shape() {
             let kept = p.layer_spec.clone();
-            return Some(complete(&kept.unwrap_or_else(|| Spec::new(ChartKind::Bar)), &data));
+            return Some(complete(
+                &kept.unwrap_or_else(|| Spec::new(ChartKind::Bar)),
+                &data,
+            ));
         }
         self.with_chart_data(|data| {
             let kept = if table {

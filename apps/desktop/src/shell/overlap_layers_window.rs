@@ -20,9 +20,11 @@ impl App {
     pub(crate) fn choose_overlap_layers(&mut self) {
         self.choose_overlap(kentos_interaction::Overlap::Layers);
         let held = |app: &App| {
-            app.document
-                .as_ref()
-                .is_some_and(|d| app.overlap_layers.iter().any(|l| d.model.layers().get(l).is_some()))
+            app.document.as_ref().is_some_and(|d| {
+                app.overlap_layers
+                    .iter()
+                    .any(|l| d.model.layers().get(l).is_some())
+            })
         };
         if self.document.is_some() && !held(self) {
             self.dialog = Some(Dialog::OverlapLayers);
@@ -49,10 +51,12 @@ impl App {
                 );
             }
         }
-        let chosen = self
-            .document
-            .as_ref()
-            .map_or(0, |d| self.overlap_layers.iter().filter(|l| d.model.layers().get(l).is_some()).count());
+        let chosen = self.document.as_ref().map_or(0, |d| {
+            self.overlap_layers
+                .iter()
+                .filter(|l| d.model.layers().get(l).is_some())
+                .count()
+        });
         let said = if chosen == 0 {
             words::text_line(
                 Kind::Warn,
@@ -61,7 +65,9 @@ impl App {
         } else {
             words::text_line(
                 Kind::Ok,
-                format!("{chosen} katman seçili: yeni bir alan bu katmanların alanlarıyla çakışan yerinden kırpılır."),
+                format!(
+                    "{chosen} katman seçili: yeni bir alan bu katmanların alanlarıyla çakışan yerinden kırpılır."
+                ),
             )
         };
         let body = Column::new()

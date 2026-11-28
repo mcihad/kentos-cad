@@ -14,18 +14,18 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{CommandWarning, ProfileFitted, ProfilesFit};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_profiles_fit};
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::label;
 
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -36,8 +36,16 @@ pub const TITLE: &str = "Çizimden boykesit";
 const CLOSE: &str = "Kapat";
 const MAKE: &str = "Boykesiti oluştur";
 /// The typed fields, in order.
-const FIELDS: [&str; 8] =
-    ["Yer (Y; X)", "Km (m)", "Kıyas kotu (m)", "Abartma", "Kurp boyu (m)", "Ad", "Tolerans (m)", ""];
+const FIELDS: [&str; 8] = [
+    "Yer (Y; X)",
+    "Km (m)",
+    "Kıyas kotu (m)",
+    "Abartma",
+    "Kurp boyu (m)",
+    "Ad",
+    "Tolerans (m)",
+    "",
+];
 
 /// The profile as last read.
 #[derive(Debug, Clone, Default)]
@@ -78,20 +86,31 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.replace(',', ".")
+        .parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 impl Window {
     /// The command's input as typed, or why it is not one.
     pub(crate) fn input(&self) -> Result<ProfilesFit, String> {
         let alignment = self.alignment.clone().ok_or("Bir aks seçin.")?;
-        let parts: Vec<Option<f64>> =
-            self.fields[0].split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s, "Yer").ok().flatten()).collect();
-        let at = match parts[..] {
-            [Some(x), Some(y)] => [x, y],
-            _ => return Err("Görünümün kıyas kotunun ve ilk km'sinin çizimdeki yerini “Y; X” olarak yazın.".into()),
-        };
-        let datum = number(&self.fields[2], "Kıyas kotu")?.ok_or("Görünümün kıyas kotunu yazın.")?;
+        let parts: Vec<Option<f64>> = self.fields[0]
+            .split([';', ' '])
+            .filter(|s| !s.is_empty())
+            .map(|s| number(s, "Yer").ok().flatten())
+            .collect();
+        let at =
+            match parts[..] {
+                [Some(x), Some(y)] => [x, y],
+                _ => return Err(
+                    "Görünümün kıyas kotunun ve ilk km'sinin çizimdeki yerini “Y; X” olarak yazın."
+                        .into(),
+                ),
+            };
+        let datum =
+            number(&self.fields[2], "Kıyas kotu")?.ok_or("Görünümün kıyas kotunu yazın.")?;
         let name = self.fields[5].trim();
         Ok(ProfilesFit {
             uid: self.uid.clone(),
@@ -137,8 +156,15 @@ impl RoadProfileFitWindowApp for App {
             self.warn("Çizimden boykesit yalnız yol projesinde (KentOS Yol) olur.".to_owned());
             return;
         }
-        let Some(first) = doc.model.road_alignments().iter().find(|a| a.offset_of.is_none()) else {
-            self.warn("Boykesit bir aksın üstündedir: önce Güzergâh'ta bir aks oluşturun.".to_owned());
+        let Some(first) = doc
+            .model
+            .road_alignments()
+            .iter()
+            .find(|a| a.offset_of.is_none())
+        else {
+            self.warn(
+                "Boykesit bir aksın üstündedir: önce Güzergâh'ta bir aks oluşturun.".to_owned(),
+            );
             return;
         };
         let alignment = first.id.clone();
@@ -160,7 +186,15 @@ impl RoadProfileFitWindowApp for App {
             uid,
             source,
             alignment: Some(alignment),
-            fields: [format!("{}; {}", round(x), round(y)), "0".into(), String::new(), "1".into(), String::new(), String::new(), String::new()],
+            fields: [
+                format!("{}; {}", round(x), round(y)),
+                "0".into(),
+                String::new(),
+                "1".into(),
+                String::new(),
+                String::new(),
+                String::new(),
+            ],
             preview: Preview::default(),
         }));
         self.dialog = Some(crate::road::dialog(road::RoadDialogKind::RoadProfileFit));
@@ -219,9 +253,13 @@ impl RoadProfileFitWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let result = road_profiles_fit::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        let Some(out) = self.answered(result) else { return Task::none() };
+        let Some(out) = self.answered(result) else {
+            return Task::none();
+        };
         self.say(
             Level::Success,
             format!(
@@ -241,23 +279,37 @@ impl RoadProfileFitWindowApp for App {
         let Some(w) = &self.modules.road().road_profile_fit_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let alignments: Vec<(String, String)> = self.document.as_ref().map_or_else(Vec::new, |d| {
-            d.model.road_alignments().iter().map(|a| (a.id.clone(), a.name.clone())).collect()
+            d.model
+                .road_alignments()
+                .iter()
+                .map(|a| (a.id.clone(), a.name.clone()))
+                .collect()
         });
         let ids: Vec<String> = alignments.iter().map(|a| a.0.clone()).collect();
         let on_alignment = Select::new(
             alignments.iter().map(|a| Choice::new(a.1.clone())),
-            w.alignment.as_ref().and_then(|c| ids.iter().position(|i| i == c)),
+            w.alignment
+                .as_ref()
+                .and_then(|c| ids.iter().position(|i| i == c)),
             move |i| msg(Event::Alignment(ids[i].clone())),
         )
         .placeholder("Aks");
         let field = |hint: &'static str, k: usize, width: f32| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(width),
                 None,
             )
         };
@@ -273,7 +325,9 @@ impl RoadProfileFitWindowApp for App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top);
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(10.0)
+            .push(top);
         match (&w.preview.why, &w.preview.fitted) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(f)) => {
@@ -292,49 +346,76 @@ impl RoadProfileFitWindowApp for App {
                 let (line, pvis): (Vec<[f64; 2]>, Vec<[f64; 2]>) = match w.drawn() {
                     Some(to) => (
                         w.preview.line.iter().map(|p| to(*p)).collect(),
-                        f.pvis.iter().map(|p| to([p.station, p.elevation])).collect(),
+                        f.pvis
+                            .iter()
+                            .map(|p| to([p.station, p.elevation]))
+                            .collect(),
                     ),
                     None => (Vec::new(), Vec::new()),
                 };
-                let picture = crate::picture::picture(iced::widget::canvas(Plan { source: &w.source, line, pvis }).width(Fill).height(Fill), TITLE);
+                let picture = crate::picture::picture(
+                    iced::widget::canvas(Plan {
+                        source: &w.source,
+                        line,
+                        pvis,
+                    })
+                    .width(Fill)
+                    .height(Fill),
+                    TITLE,
+                );
                 use crate::road_dialog::{col, grouped, num};
                 let list = crate::road_dialog::sheet_fill(
-                    vec![col("PVI", 64.0), num("Km (m)", 100.0), num("Kot (m)", 100.0), num("Kurp (m)", 150.0)],
+                    vec![
+                        col("PVI", 64.0),
+                        num("Km (m)", 100.0),
+                        num("Kot (m)", 100.0),
+                        num("Kurp (m)", 150.0),
+                    ],
                     f.pvis
                         .iter()
                         .map(|p| {
                             let curve = if p.length > 0.0 {
                                 grouped(p.length, 3)
                             } else if p.length_in > 0.0 {
-                                format!("{} + {}", grouped(p.length_in, 3), grouped(p.length_out, 3))
+                                format!(
+                                    "{} + {}",
+                                    grouped(p.length_in, 3),
+                                    grouped(p.length_out, 3)
+                                )
                             } else {
                                 "—".into()
                             };
-                            vec![p.id.clone(), grouped(p.station, 3), grouped(p.elevation, 3), curve]
+                            vec![
+                                p.id.clone(),
+                                grouped(p.station, 3),
+                                grouped(p.elevation, 3),
+                                curve,
+                            ]
                         })
                         .collect(),
                     "PVI yok",
                 );
                 body = body.push_grow(
-                    row![picture, list]
-                        .spacing(12)
-                        .height(Fill),
+                    row![picture, list].spacing(12).height(Fill),
                     typography::scaled(280.0),
                 );
             }
             _ => {}
         }
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                label::caption("Çizgi kalır; boykesit tek geri alma adımı.").style(muted),
-                space::horizontal().width(Fill),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-                words::primary(MAKE, w.preview.fitted.as_ref().map(|_| msg(Event::Make))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1060.0).modal(msg(Event::Close))
+        let footer = row![
+            label::caption("Çizgi kalır; boykesit tek geri alma adımı.").style(muted),
+            space::horizontal().width(Fill),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+            words::primary(MAKE, w.preview.fitted.as_ref().map(|_| msg(Event::Make))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1060.0)
+            .modal(msg(Event::Close))
     }
 
     fn road_profile_fit_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -363,14 +444,31 @@ struct Plan<'a> {
 impl canvas::Program<Message> for Plan<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
-        let pts: Vec<&[f64; 2]> = self.source.iter().chain(&self.line).chain(&self.pvis).collect();
+        let pts: Vec<&[f64; 2]> = self
+            .source
+            .iter()
+            .chain(&self.line)
+            .chain(&self.pvis)
+            .collect();
         if pts.is_empty() {
             return vec![frame.into_geometry()];
         }
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in &pts {
             x0 = x0.min(p[0]);
             x1 = x1.max(p[0]);
@@ -378,7 +476,8 @@ impl canvas::Program<Message> for Plan<'_> {
             y1 = y1.max(p[1]);
         }
         let pad = 18.0;
-        let scale = ((bounds.width - 2.0 * pad) as f64 / (x1 - x0).max(1e-6)).min((bounds.height - 2.0 * pad) as f64 / (y1 - y0).max(1e-6));
+        let scale = ((bounds.width - 2.0 * pad) as f64 / (x1 - x0).max(1e-6))
+            .min((bounds.height - 2.0 * pad) as f64 / (y1 - y0).max(1e-6));
         let (cx, cy) = (0.5 * (x0 + x1), 0.5 * (y0 + y1));
         let at = |p: [f64; 2]| {
             Point::new(
@@ -398,14 +497,31 @@ impl canvas::Program<Message> for Plan<'_> {
         };
         frame.stroke(
             &polyline(&self.pvis),
-            Stroke { line_dash: canvas::LineDash { segments: &[4.0, 3.0], offset: 0 }, ..Stroke::default() }
-                .with_width(0.8)
-                .with_color(tk.muted),
+            Stroke {
+                line_dash: canvas::LineDash {
+                    segments: &[4.0, 3.0],
+                    offset: 0,
+                },
+                ..Stroke::default()
+            }
+            .with_width(0.8)
+            .with_color(tk.muted),
         );
-        frame.stroke(&polyline(self.source), Stroke::default().with_width(4.0).with_color(iced::Color { a: 0.35, ..tk.text }));
-        frame.stroke(&polyline(&self.line), Stroke::default().with_width(1.6).with_color(tk.danger));
+        frame.stroke(
+            &polyline(self.source),
+            Stroke::default()
+                .with_width(4.0)
+                .with_color(iced::Color { a: 0.35, ..tk.text }),
+        );
+        frame.stroke(
+            &polyline(&self.line),
+            Stroke::default().with_width(1.6).with_color(tk.danger),
+        );
         for p in &self.pvis {
-            frame.stroke(&Path::circle(at(*p), 3.5), Stroke::default().with_width(1.2).with_color(tk.accent));
+            frame.stroke(
+                &Path::circle(at(*p), 3.5),
+                Stroke::default().with_width(1.2).with_color(tk.accent),
+            );
         }
         vec![frame.into_geometry()]
     }

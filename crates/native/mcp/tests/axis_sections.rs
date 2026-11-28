@@ -32,8 +32,12 @@ fn near(got: &Value, want: &Value, at: &str) {
 
 /// The file `name`'s cases, its drawing opened over MCP, and the case starting `start`.
 fn opened(server: &mut Server, cases: &Value, tag: &str) -> Value {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-axis-sections-{tag}-{}.kcad", std::process::id()));
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-axis-sections-{tag}-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let opened = call(server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
@@ -42,21 +46,37 @@ fn opened(server: &mut Server, cases: &Value, tag: &str) -> Value {
 }
 
 fn step(cases: &Value, start: &str) -> Value {
-    cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(start))).unwrap()["steps"][0].clone()
+    cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(start)))
+        .unwrap()["steps"][0]
+        .clone()
 }
 
 #[test]
 fn sections_along_an_axis_over_mcp_are_the_cases() {
     let mut server = Server::new();
-    let sections: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.terrains.compare.sections.json")).unwrap();
+    let sections: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.terrains.compare.sections.json"
+    ))
+    .unwrap();
     let drawing = opened(&mut server, &sections, "compare");
     let s = step(&sections, "Yaylı eksen: kurpta");
     let mut args = s["input"].clone();
     args["drawing"] = drawing;
     let r = call(&mut server, "road.terrains.compare", args);
     assert_eq!(r["isError"], false, "{r}");
-    near(&r["structuredContent"]["output"]["sections"], &s["result"]["output"]["sections"], "sections");
-    let cutfill: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.terrains.cutfill.json")).unwrap();
+    near(
+        &r["structuredContent"]["output"]["sections"],
+        &s["result"]["output"]["sections"],
+        "sections",
+    );
+    let cutfill: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.terrains.cutfill.json"
+    ))
+    .unwrap();
     let drawing = opened(&mut server, &cutfill, "cutfill");
     for start in ["Kesitler eksen boyunca", "Malzeme bölgeleri"] {
         let s = step(&cutfill, start);
@@ -66,7 +86,14 @@ fn sections_along_an_axis_over_mcp_are_the_cases() {
         let r = call(&mut server, "road.terrains.cutfill", args);
         assert_eq!(r["isError"], false, "{start}: {r}");
         let got = &r["structuredContent"]["output"];
-        for key in ["sections", "sectionLabels", "sectionTable", "materials", "materialLabels", "materialTable"] {
+        for key in [
+            "sections",
+            "sectionLabels",
+            "sectionTable",
+            "materials",
+            "materialLabels",
+            "materialTable",
+        ] {
             if let Some(want) = s["result"]["output"].get(key) {
                 near(&got[key], want, &format!("{start}.{key}"));
             }

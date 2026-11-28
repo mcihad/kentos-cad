@@ -114,8 +114,8 @@ impl App {
             &self.docks,
             Message::Dock,
             move |panel| {
-                let pane =
-                    Pane::new(self.panel_title(panel), move || self.panel_body(panel)).icon(panel.icon());
+                let pane = Pane::new(self.panel_title(panel), move || self.panel_body(panel))
+                    .icon(panel.icon());
                 match (panel, &self.document) {
                     (Panel::Layers, Some(doc)) => {
                         pane.actions(self.layers_actions(doc.layer_count()))
@@ -228,11 +228,19 @@ impl App {
                     .row("Sürüm", label::body(env!("CARGO_PKG_VERSION")))
                     .row(
                         "Platform",
-                        label::body(format!("{} · {}", std::env::consts::OS, std::env::consts::ARCH)),
+                        label::body(format!(
+                            "{} · {}",
+                            std::env::consts::OS,
+                            std::env::consts::ARCH
+                        )),
                     )
                     .row(
                         "Çizim",
-                        label::body(self.document.as_ref().map_or("Açık çizim yok", |d| d.model.name())),
+                        label::body(
+                            self.document
+                                .as_ref()
+                                .map_or("Açık çizim yok", |d| d.model.name()),
+                        ),
                     )
                     .row("Çizim motoru", label::body("GPU destekli 2B çizim"))
                     .row("Koordinat sistemi", label::body(crs))
@@ -259,11 +267,12 @@ impl App {
             Asking::Unsaved(then) => {
                 // What would be lost, with the count (cloud/leaving.rs).
                 let q = self.unsaved_question(then);
-                let mut ask = Confirm::new(q.title, Message::DialogConfirmed, Message::DialogClosed)
-                    .message(q.message)
-                    .detail(q.detail)
-                    .confirm(q.confirm)
-                    .destructive();
+                let mut ask =
+                    Confirm::new(q.title, Message::DialogConfirmed, Message::DialogClosed)
+                        .message(q.message)
+                        .detail(q.detail)
+                        .confirm(q.confirm)
+                        .destructive();
                 // UR-001: a local drawing can be saved first, the leaving going on once it is saved.
                 if let Some(keep) = q.keep {
                     ask = ask.keep(keep, Message::DialogSave);
@@ -498,7 +507,9 @@ fn headed_menu_of(
             Some(on) if is_choice(command.id) => menu.radio(title, on, run).icon(command.icon),
             // A switch's row has its icon beside its tick (CBS review, docs/adr/9337): Tam ekran, Çizgi kalınlığını
             // göster, Mevcut durum.
-            Some(on) if !command.id.starts_with("tool.") => menu.check(title, on, run).icon(command.icon),
+            Some(on) if !command.id.starts_with("tool.") => {
+                menu.check(title, on, run).icon(command.icon)
+            }
             _ => menu.item(title, run).icon(command.icon),
         };
         if let Some(keys) = crate::keymap::first_key(command) {
@@ -741,11 +752,13 @@ fn document_title(name: &str, dirty: bool, waiting: usize) -> Element<'static, M
             });
         title = title.push(kentos_ui::widget::tip(
             dot,
-            Tip::new("Proje kaydedilmedi").body("Projede (katmanlar, görünüşler, ayarlar) kaydedilmemiş değişiklikler var."),
+            Tip::new("Proje kaydedilmedi")
+                .body("Projede (katmanlar, görünüşler, ayarlar) kaydedilmemiş değişiklikler var."),
             iced::widget::tooltip::Position::Bottom,
         ));
     }
-    title = title.push(label::caption(name.to_owned()).wrapping(iced::widget::text::Wrapping::None));
+    title =
+        title.push(label::caption(name.to_owned()).wrapping(iced::widget::text::Wrapping::None));
     if waiting > 0 {
         // The tabs' count badge (kentos-ui's `warning_count` pill), 16 pixels high.
         let badge = button(

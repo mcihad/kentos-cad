@@ -76,12 +76,22 @@ mod tests {
             storeys: Some(StoreyCount { above: 3, below: 1 }),
         }
         .normalized();
-        assert_eq!(facts.particulars.get("kullanim").map(String::as_str), Some("konut"));
+        assert_eq!(
+            facts.particulars.get("kullanim").map(String::as_str),
+            Some("konut")
+        );
         assert!(!facts.particulars.contains_key("belediye"));
-        assert_eq!(facts.particulars["nufus_kaynagi"].chars().count(), MOST_TEXT);
+        assert_eq!(
+            facts.particulars["nufus_kaynagi"].chars().count(),
+            MOST_TEXT
+        );
         assert_eq!(facts.construction_area, Some(5000.0));
         assert_eq!(facts.clone().normalized(), facts);
         let json = serde_json::to_string(&facts).unwrap_or_default();
-        assert!(json.contains(r#""constructionArea":5000.0"#) && json.contains(r#""storeys":{"above":3,"below":1}"#), "{json}");
+        assert!(
+            json.contains(r#""constructionArea":5000.0"#)
+                && json.contains(r#""storeys":{"above":3,"below":1}"#),
+            "{json}"
+        );
     }
 }

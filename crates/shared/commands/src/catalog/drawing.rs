@@ -2,7 +2,17 @@
 //! was cut into, so the compiler builds no single function of 19 000 lines (docs/adr/8054 §4).
 
 use super::*;
-use crate::{ArcCreate, ArcCreated, CAD_ARC_CREATE, CAD_ARC_CREATE_VERSION, CAD_CIRCLE_CREATE, CAD_CIRCLE_CREATE_VERSION, CAD_ENTITIES_ARRAY, CAD_ENTITIES_ARRAY_VERSION, CAD_ENTITIES_DELETE, CAD_ENTITIES_DELETE_VERSION, CAD_ENTITIES_EDIT, CAD_ENTITIES_EDIT_VERSION, CAD_ENTITIES_TRANSFORM, CAD_ENTITIES_TRANSFORM_VERSION, CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE, CAD_POINT_CREATE_VERSION, CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION, CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION, CircleCreate, CircleCreated, EntitiesArray, EntitiesArrayed, EntitiesDelete, EntitiesDeleted, EntitiesEdit, EntitiesEdited, EntitiesTransform, EntitiesTransformed, LineCreate, LineCreated, PointCreate, PointCreated, PolygonCreate, PolygonCreated, PolylineCreate, PolylineCreated};
+use crate::{
+    ArcCreate, ArcCreated, CAD_ARC_CREATE, CAD_ARC_CREATE_VERSION, CAD_CIRCLE_CREATE,
+    CAD_CIRCLE_CREATE_VERSION, CAD_ENTITIES_ARRAY, CAD_ENTITIES_ARRAY_VERSION, CAD_ENTITIES_DELETE,
+    CAD_ENTITIES_DELETE_VERSION, CAD_ENTITIES_EDIT, CAD_ENTITIES_EDIT_VERSION,
+    CAD_ENTITIES_TRANSFORM, CAD_ENTITIES_TRANSFORM_VERSION, CAD_LINE_CREATE,
+    CAD_LINE_CREATE_VERSION, CAD_POINT_CREATE, CAD_POINT_CREATE_VERSION, CAD_POLYGON_CREATE,
+    CAD_POLYGON_CREATE_VERSION, CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION, CircleCreate,
+    CircleCreated, EntitiesArray, EntitiesArrayed, EntitiesDelete, EntitiesDeleted, EntitiesEdit,
+    EntitiesEdited, EntitiesTransform, EntitiesTransformed, LineCreate, LineCreated, PointCreate,
+    PointCreated, PolygonCreate, PolygonCreated, PolylineCreate, PolylineCreated,
+};
 use serde_json::json;
 
 pub(super) fn descriptors() -> Vec<CommandDescriptor> {

@@ -196,7 +196,7 @@ fn builds_the_web_s_batches() {
             // Görünüm kipleri where the case gives them (docs/adr/0195).
             view: View {
                 position_low: false,
-                plot_precision:false,
+                plot_precision: false,
                 fills: view["fills"] != false,
                 area_edges: view["areaEdges"] != false,
                 map: None,
@@ -263,7 +263,12 @@ fn builds_the_web_s_batches() {
         let mut got = layer.to_json();
         if writing {
             // The segments as now, the rest compared as recorded.
-            for (g, w) in got.as_array_mut().into_iter().flatten().zip(e["batches"].as_array().into_iter().flatten()) {
+            for (g, w) in got
+                .as_array_mut()
+                .into_iter()
+                .flatten()
+                .zip(e["batches"].as_array().into_iter().flatten())
+            {
                 if let Some(now) = g.get("segments").cloned() {
                     segments.push(now.as_array().cloned().unwrap_or_default());
                     g["segments"] = w["segments"].clone();
@@ -287,7 +292,8 @@ fn builds_the_web_s_batches() {
 /// the record writes a whole number, every other byte of the file as it was: the `"segments": [` lists in the file's
 /// order are the batches' in the cases'.
 fn write_segments(lists: &[Vec<Value>]) {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/style/v1/batches.json");
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/style/v1/batches.json");
     let text = std::fs::read_to_string(&path).expect("batches.json");
     let mut out = String::with_capacity(text.len());
     let mut lines = text.split_inclusive('\n');
@@ -313,7 +319,10 @@ fn write_segments(lists: &[Vec<Value>]) {
             if (value as f32).to_bits() == (was as f32).to_bits() {
                 out.push_str(line);
             } else {
-                assert!(value.fract() == 0.0 && value.abs() < 16_777_216.0, "a segment's code is whole: {value}");
+                assert!(
+                    value.fract() == 0.0 && value.abs() < 16_777_216.0,
+                    "a segment's code is whole: {value}"
+                );
                 let indent = &line[..line.len() - line.trim_start().len()];
                 let comma = if body.ends_with(',') { "," } else { "" };
                 out.push_str(&format!("{indent}{}{comma}\n", value as i64));

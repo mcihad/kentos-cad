@@ -23,16 +23,17 @@ fn msg(e: Event) -> Message {
 
 /// Why a tool is off on a data layer's table, and what to do instead.
 pub(crate) mod off {
-    pub const FORM: &str = "Seçili satırın formu: katmanın formu yoksa alanlarından kurulan varsayılan form açılır.";
+    pub const FORM: &str =
+        "Seçili satırın formu: katmanın formu yoksa alanlarından kurulan varsayılan form açılır.";
     pub const CALCULATE: &str =
         "Veri katmanında alan hesabı yok: düzenleme oturumunda hücreye çift tıklayıp değeri yazın.";
     pub const COPY: &str = "Veri katmanının satırları kaynaktan sayfa sayfa okunur, panoya kopyalanmaz. Satırları bir dosyaya yazmak için Dışa aktar'ı kullanın.";
-    pub const ADD_RECORD: &str = "Veri katmanına yeni satır, düzenleme oturumunda çizim araçlarıyla eklenir.";
-    pub const DUPLICATE: &str =
-        "Veri katmanında satır çoğaltılmaz; yeni satırı düzenleme oturumunda çizim araçlarıyla ekleyin.";
-    pub const PASTE: &str =
-        "Veri katmanına panodan satır yapıştırılmaz; yeni satırı düzenleme oturumunda çizim araçlarıyla ekleyin.";
-    pub const EXPORT: &str = "Katmanı bir dosyaya ya da veri kaynağına yazar; Katmanlar'daki Dışa aktar ile aynı.";
+    pub const ADD_RECORD: &str =
+        "Veri katmanına yeni satır, düzenleme oturumunda çizim araçlarıyla eklenir.";
+    pub const DUPLICATE: &str = "Veri katmanında satır çoğaltılmaz; yeni satırı düzenleme oturumunda çizim araçlarıyla ekleyin.";
+    pub const PASTE: &str = "Veri katmanına panodan satır yapıştırılmaz; yeni satırı düzenleme oturumunda çizim araçlarıyla ekleyin.";
+    pub const EXPORT: &str =
+        "Katmanı bir dosyaya ya da veri kaynağına yazar; Katmanlar'daki Dışa aktar ile aynı.";
 }
 
 impl App {
@@ -45,13 +46,23 @@ impl App {
         };
         let edited = doc.edited_layers();
         let editing = doc.editing(layer);
-        let words = if editing { "Düzenleniyor" } else { "Düzenlemeye kapalı" };
-        let tone = if editing { kentos_ui::style::text::accent } else { kentos_ui::style::text::muted };
+        let words = if editing {
+            "Düzenleniyor"
+        } else {
+            "Düzenlemeye kapalı"
+        };
+        let tone = if editing {
+            kentos_ui::style::text::accent
+        } else {
+            kentos_ui::style::text::muted
+        };
         if edited.len() < 2 {
             return kentos_ui::label::caption(words).style(tone).into();
         }
-        let named: Vec<(String, String)> =
-            edited.iter().map(|l| (l.clone(), self.data_layer_name(l))).collect();
+        let named: Vec<(String, String)> = edited
+            .iter()
+            .map(|l| (l.clone(), self.data_layer_name(l)))
+            .collect();
         let current = layer.to_owned();
         bar_menu(
             from_web(Some("edit")),
@@ -61,7 +72,11 @@ impl App {
             move || {
                 let mut menu = Menu::new().header("Düzenlenen katmanlar");
                 for (id, name) in &named {
-                    menu = menu.check(name.clone(), *id == current, Some(msg(Event::EditedLayer(id.clone()))));
+                    menu = menu.check(
+                        name.clone(),
+                        *id == current,
+                        Some(msg(Event::EditedLayer(id.clone()))),
+                    );
                 }
                 menu
             },
@@ -119,7 +134,9 @@ impl App {
         // never cut off.
         let filters: [Element<'a, Message>; 8] = [
             pane.into(),
-            container(self.layer_select(rows)).width(Length::Fixed(250.0)).into(),
+            container(self.layer_select(rows))
+                .width(Length::Fixed(250.0))
+                .into(),
             self.pinned_chip(rows),
             self.edit_state_badge(&layer),
             scope,
@@ -149,10 +166,17 @@ impl App {
                 let mut menu = Menu::new().header(out_words::COLUMNS_HEADER);
                 for key in &named {
                     menu = menu
-                        .check(key.clone(), !hidden.contains(key), Some(msg(Event::Columns(ColumnsEvent::Toggle(key.clone())))))
+                        .check(
+                            key.clone(),
+                            !hidden.contains(key),
+                            Some(msg(Event::Columns(ColumnsEvent::Toggle(key.clone())))),
+                        )
                         .stay();
                 }
-                menu.separator().item(out_words::SHOW_ALL, Some(msg(Event::Columns(ColumnsEvent::ShowAll))))
+                menu.separator().item(
+                    out_words::SHOW_ALL,
+                    Some(msg(Event::Columns(ColumnsEvent::ShowAll))),
+                )
             },
         );
         // Dışa aktar ▾: the layer to a file or a source, the table's selected rows only too.
@@ -160,16 +184,24 @@ impl App {
         let open = {
             let layer = layer.clone();
             move |only: bool| {
-                Message::Gis(crate::gis::Event::LayerExport(crate::layer_export::Event::Open(layer.clone(), only)))
+                Message::Gis(crate::gis::Event::LayerExport(
+                    crate::layer_export::Event::Open(layer.clone(), only),
+                ))
             }
         };
-        let export = bar_menu(from_web(Some("export")), None, texts::EXPORT.to_owned(), off::EXPORT, move || {
-            Menu::new()
-                .item("Farklı kaydet…", Some(open(false)))
-                .icon(from_web(Some("saveAs")))
-                .item("Seçilenleri farklı kaydet…", selected.then(|| open(true)))
-                .icon(from_web(Some("select")))
-        });
+        let export = bar_menu(
+            from_web(Some("export")),
+            None,
+            texts::EXPORT.to_owned(),
+            off::EXPORT,
+            move || {
+                Menu::new()
+                    .item("Farklı kaydet…", Some(open(false)))
+                    .icon(from_web(Some("saveAs")))
+                    .item("Seçilenleri farklı kaydet…", selected.then(|| open(true)))
+                    .icon(from_web(Some("select")))
+            },
+        );
         // İncele ▾: İstatistik and Grafik read the source's rows (docs/adr/9130).
         let statistics = self.shows_bottom_tab(crate::bottom::BottomTab::Statistics);
         let chart = self.shows_bottom_tab(crate::bottom::BottomTab::Chart);
@@ -182,7 +214,10 @@ impl App {
                 let mut menu = Menu::new();
                 if statistics {
                     menu = menu
-                        .item(out_words::STATISTICS, Some(msg(Event::Analyse(Analyse::Statistics))))
+                        .item(
+                            out_words::STATISTICS,
+                            Some(msg(Event::Analyse(Analyse::Statistics))),
+                        )
                         .icon(from_web(Some("chartHistogram")));
                 }
                 if chart {
@@ -194,23 +229,30 @@ impl App {
             },
         );
         // ⋯: what a data layer's table offers of a drawing layer's, the rest off with why.
-        let more = bar_menu(Icon::More, None, texts::MORE.to_owned(), texts::MORE_HINT, || {
-            Menu::new()
-                .item(texts::ADD_RECORD, None)
-                .icon(from_web(Some("tableRowBelow")))
-                .detail(off::ADD_RECORD)
-                .item(texts::DUPLICATE, None)
-                .icon(from_web(Some("copy")))
-                .detail(off::DUPLICATE)
-                .item(texts::PASTE, None)
-                .icon(from_web(Some("paste")))
-                .detail(off::PASTE)
-                .separator()
-                .item(texts::FIELDS, Some(msg(Event::Fields)))
-                .icon(from_web(Some("layerFields")))
-                .detail(texts::FIELDS_HINT)
-        });
-        let zoom_on = (!panel.data.selected.is_empty()).then(|| msg(Event::Data(super::data::DataEvent::Zoom)));
+        let more = bar_menu(
+            Icon::More,
+            None,
+            texts::MORE.to_owned(),
+            texts::MORE_HINT,
+            || {
+                Menu::new()
+                    .item(texts::ADD_RECORD, None)
+                    .icon(from_web(Some("tableRowBelow")))
+                    .detail(off::ADD_RECORD)
+                    .item(texts::DUPLICATE, None)
+                    .icon(from_web(Some("copy")))
+                    .detail(off::DUPLICATE)
+                    .item(texts::PASTE, None)
+                    .icon(from_web(Some("paste")))
+                    .detail(off::PASTE)
+                    .separator()
+                    .item(texts::FIELDS, Some(msg(Event::Fields)))
+                    .icon(from_web(Some("layerFields")))
+                    .detail(texts::FIELDS_HINT)
+            },
+        );
+        let zoom_on = (!panel.data.selected.is_empty())
+            .then(|| msg(Event::Data(super::data::DataEvent::Zoom)));
         let actions = row![
             bar_button("zoomSelection", texts::ZOOM, texts::ZOOM_HINT, zoom_on),
             columns_menu,
@@ -225,12 +267,17 @@ impl App {
         .spacing(2)
         .align_y(Center);
         // The layer drawn on, when the table shows another (docs/adr/9129): both are read, neither is taken for the other.
-        let mut bar = iced::widget::Row::with_children(filters).push(actions).spacing(8).align_y(Center);
+        let mut bar = iced::widget::Row::with_children(filters)
+            .push(actions)
+            .spacing(8)
+            .align_y(Center);
         // Said with what each is for (docs/adr/9326): the table's selection is its layer's rows; the drawing tools draw
         // on the target.
         if let Some(t) = self.table_target_words(rows) {
             let table = rows.layer.as_deref().and_then(|id| {
-                self.document.as_ref().and_then(|d| d.model.layers().get(id).map(|n| n.name.clone()))
+                self.document
+                    .as_ref()
+                    .and_then(|d| d.model.layers().get(id).map(|n| n.name.clone()))
             });
             let body = match table {
                 Some(name) => format!(
@@ -245,7 +292,9 @@ impl App {
                 iced::widget::tooltip::Position::Top,
             ));
         }
-        container(bar.wrap().vertical_spacing(6)).padding([4, 8]).into()
+        container(bar.wrap().vertical_spacing(6))
+            .padding([4, 8])
+            .into()
     }
 }
 

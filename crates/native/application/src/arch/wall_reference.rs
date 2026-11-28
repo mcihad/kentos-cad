@@ -4,8 +4,8 @@
 //! `startPass` and `endPass` keep the user's decision at a tee, refused where the end tees into no straight wall.
 
 use kentos_commands::{
-    Entity, OpeningDepthChange, SpaceAreaChange, WallChange, WallEffects, WallEntity,
-    WallFields, WallReference,
+    Entity, OpeningDepthChange, SpaceAreaChange, WallChange, WallEffects, WallEntity, WallFields,
+    WallReference,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;

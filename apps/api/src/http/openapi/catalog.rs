@@ -34,7 +34,12 @@ pub(super) enum Out {
 }
 
 /// A query parameter: name, JSON type, required, what it is.
-pub(super) struct P(pub &'static str, pub &'static str, pub bool, pub &'static str);
+pub(super) struct P(
+    pub &'static str,
+    pub &'static str,
+    pub bool,
+    pub &'static str,
+);
 
 pub(super) struct Op {
     pub method: &'static str,
@@ -113,32 +118,106 @@ const SYSTEM: &str = "Sistem";
 
 /// The groups in the order they are read, with what each holds.
 pub(super) const TAGS: &[(&str, &str)] = &[
-    (AUTH, "Giriş, çıkış, programın taşıyıcı oturumu, kişisel erişim anahtarları ve açık oturumlar."),
-    (FILES, "Hesabın parça parça yüklemesi, taranması; projenin ekleri ve çiziminin resmi (SVG)."),
-    (PROJECTS, "Kurumların projeleri: liste, açma, komutlar (her değişiklik bir komuttur), olaylar ve nesneler."),
-    (PROJECT_FILES, "Dosya olarak saklanan projenin KCAD revizyonları, yüklemesi, indirmesi ve yedekleri."),
-    (JOBS, "Sunucuda çalışan uzun işler: dışa aktarma, içe aktarma, işleme ve denetim."),
-    (PORTAL_ACCOUNT, "Portalda hesabın kendisi: meslek mensubu kaydı, profil, parola, katalog."),
-    (DOSSIERS, "Belediye ile meslek mensubu arasındaki başvuru ve aktarım dosyaları, belgeleri ve yazışmaları."),
-    (ORGANIZATION, "Kurumun portal ayarları, üyeleri ve meslek mensubu rehberi."),
-    (PLATFORM, "Sistem yöneticisinin kurumları, hesapları, meslek mensubu doğrulaması ve kayıt defteri."),
-    (FEES, "Belediyenin yıllık ücret tarifesi (2464 sayılı Kanun) ve dosyalara tahakkuk, ödeme, iptal."),
-    (SIGNING, "Dosyanın belgelerini nitelikli elektronik sertifikayla imzalamak: sunucunun imzalı isteği, KentOS İmza \
-               ya da masaüstü, sunucunun kendi kaydına karşı doğrulama (ADR 9002, 9004)."),
+    (
+        AUTH,
+        "Giriş, çıkış, programın taşıyıcı oturumu, kişisel erişim anahtarları ve açık oturumlar.",
+    ),
+    (
+        FILES,
+        "Hesabın parça parça yüklemesi, taranması; projenin ekleri ve çiziminin resmi (SVG).",
+    ),
+    (
+        PROJECTS,
+        "Kurumların projeleri: liste, açma, komutlar (her değişiklik bir komuttur), olaylar ve nesneler.",
+    ),
+    (
+        PROJECT_FILES,
+        "Dosya olarak saklanan projenin KCAD revizyonları, yüklemesi, indirmesi ve yedekleri.",
+    ),
+    (
+        JOBS,
+        "Sunucuda çalışan uzun işler: dışa aktarma, içe aktarma, işleme ve denetim.",
+    ),
+    (
+        PORTAL_ACCOUNT,
+        "Portalda hesabın kendisi: meslek mensubu kaydı, profil, parola, katalog.",
+    ),
+    (
+        DOSSIERS,
+        "Belediye ile meslek mensubu arasındaki başvuru ve aktarım dosyaları, belgeleri ve yazışmaları.",
+    ),
+    (
+        ORGANIZATION,
+        "Kurumun portal ayarları, üyeleri ve meslek mensubu rehberi.",
+    ),
+    (
+        PLATFORM,
+        "Sistem yöneticisinin kurumları, hesapları, meslek mensubu doğrulaması ve kayıt defteri.",
+    ),
+    (
+        FEES,
+        "Belediyenin yıllık ücret tarifesi (2464 sayılı Kanun) ve dosyalara tahakkuk, ödeme, iptal.",
+    ),
+    (
+        SIGNING,
+        "Dosyanın belgelerini nitelikli elektronik sertifikayla imzalamak: sunucunun imzalı isteği, KentOS İmza \
+               ya da masaüstü, sunucunun kendi kaydına karşı doğrulama (ADR 9002, 9004).",
+    ),
     (NOTIFICATIONS, "Hesabın bildirimleri."),
     (SHEETS, "Pafta şablonu kitaplığı."),
-    (EXTENSIONS, "Kurumun eklenti kataloğu (yükleme, inceleme, onay, kurulum)."),
-    (SYSTEM, "Sağlık, API'nin kendi açıklaması, harita servisleri aracısı ve canlı bağlantı."),
+    (
+        EXTENSIONS,
+        "Kurumun eklenti kataloğu (yükleme, inceleme, onay, kurulum).",
+    ),
+    (
+        SYSTEM,
+        "Sağlık, API'nin kendi açıklaması, harita servisleri aracısı ve canlı bağlantı.",
+    ),
 ];
 
 const DOSSIER_LIST: &[P] = &[
-    P("direction", "string", false, "`application` (başvuru) ya da `transfer` (aktarım)."),
-    P("status", "string", false, "Virgülle ayrılmış durumlar (`draft,submitted,…`)."),
-    P("q", "string", false, "Numara, başlık, ada/parsel ya da kişi adında arama."),
-    P("mine", "boolean", false, "Yalnız çağıranın sorumlu olduğu dosyalar."),
-    P("awaiting", "boolean", false, "Yalnız çağıran tarafın sırası olan dosyalar."),
-    P("archived", "boolean", false, "Arşiv: süresi dolunca arşive geçen kapanmış dosyalar (çalışma listesi yerine)."),
-    P("limit", "integer", false, "En çok kaç dosya (1–200, varsayılan 50)."),
+    P(
+        "direction",
+        "string",
+        false,
+        "`application` (başvuru) ya da `transfer` (aktarım).",
+    ),
+    P(
+        "status",
+        "string",
+        false,
+        "Virgülle ayrılmış durumlar (`draft,submitted,…`).",
+    ),
+    P(
+        "q",
+        "string",
+        false,
+        "Numara, başlık, ada/parsel ya da kişi adında arama.",
+    ),
+    P(
+        "mine",
+        "boolean",
+        false,
+        "Yalnız çağıranın sorumlu olduğu dosyalar.",
+    ),
+    P(
+        "awaiting",
+        "boolean",
+        false,
+        "Yalnız çağıran tarafın sırası olan dosyalar.",
+    ),
+    P(
+        "archived",
+        "boolean",
+        false,
+        "Arşiv: süresi dolunca arşive geçen kapanmış dosyalar (çalışma listesi yerine).",
+    ),
+    P(
+        "limit",
+        "integer",
+        false,
+        "En çok kaç dosya (1–200, varsayılan 50).",
+    ),
     P("offset", "integer", false, "Kaç dosya atlanacak."),
 ];
 const SEARCH: &[P] = &[
@@ -147,14 +226,33 @@ const SEARCH: &[P] = &[
     P("limit", "integer", false, "En çok kaç kayıt."),
 ];
 const EVENTS: &[P] = &[
-    P("after", "string", false, "Bu imleçten sonraki olaylar (bir önceki yanıtın `cursor`'ı); yoksa baştan."),
+    P(
+        "after",
+        "string",
+        false,
+        "Bu imleçten sonraki olaylar (bir önceki yanıtın `cursor`'ı); yoksa baştan.",
+    ),
     P("limit", "integer", false, "En çok kaç olay."),
-    P("wait", "integer", false, "Yeni olay yoksa en çok bu kadar saniye bekle (uzun yoklama)."),
+    P(
+        "wait",
+        "integer",
+        false,
+        "Yeni olay yoksa en çok bu kadar saniye bekle (uzun yoklama).",
+    ),
 ];
 const CANDIDATES: &[P] = &[P("q", "string", false, "Ad ya da e-postada arama.")];
-const INLINE: &[P] =
-    &[P("inline", "boolean", false, "`1`: PDF ya da resim tarayıcıda/telefonda yerinde gösterilir (indirilmez).")];
-const PICTURE: &[P] = &[P("width", "integer", false, "Piksel genişlik, 64–4096 (varsayılan 1200).")];
+const INLINE: &[P] = &[P(
+    "inline",
+    "boolean",
+    false,
+    "`1`: PDF ya da resim tarayıcıda/telefonda yerinde gösterilir (indirilmez).",
+)];
+const PICTURE: &[P] = &[P(
+    "width",
+    "integer",
+    false,
+    "Piksel genişlik, 64–4096 (varsayılan 1200).",
+)];
 const PART: &[P] = &[P(
     "offset",
     "integer",
@@ -742,12 +840,27 @@ fn param_about(path: &str, name: &str) -> &'static str {
 fn error(status: u16) -> (&'static str, &'static str) {
     match status {
         401 => ("Unauthenticated", "Oturum yok ya da bitti: yeniden giriş."),
-        403 => ("Forbidden", "Hesabın bu iş için yetkisi yok (ileti hangi yetkinin eksik olduğunu söyler)."),
-        404 => ("NotFound", "Yok ya da çağıran göremiyor (ikisi ayırt edilmez)."),
-        409 => ("Conflict", "Çakışma: beklenen sürüm/durum değişmiş ya da proje arşivde."),
+        403 => (
+            "Forbidden",
+            "Hesabın bu iş için yetkisi yok (ileti hangi yetkinin eksik olduğunu söyler).",
+        ),
+        404 => (
+            "NotFound",
+            "Yok ya da çağıran göremiyor (ikisi ayırt edilmez).",
+        ),
+        409 => (
+            "Conflict",
+            "Çakışma: beklenen sürüm/durum değişmiş ya da proje arşivde.",
+        ),
         410 => ("Gone", "Proje çöpte."),
-        422 => ("Invalid", "Girdi geçersiz; `path` hangi alan olduğunu söyler."),
-        _ => ("Limited", "Çok fazla deneme ya da hesabın sınırı; `Retry-After` kadar bekleyin."),
+        422 => (
+            "Invalid",
+            "Girdi geçersiz; `path` hangi alan olduğunu söyler.",
+        ),
+        _ => (
+            "Limited",
+            "Çok fazla deneme ya da hesabın sınırı; `Retry-After` kadar bekleyin.",
+        ),
     }
 }
 
@@ -761,7 +874,11 @@ pub(super) fn document() -> Value {
     let mut paths = Map::new();
     for o in ops() {
         let mut parameters: Vec<Value> = Vec::new();
-        for name in o.path.split('/').filter_map(|s| s.strip_prefix('{').and_then(|s| s.strip_suffix('}'))) {
+        for name in o
+            .path
+            .split('/')
+            .filter_map(|s| s.strip_prefix('{').and_then(|s| s.strip_suffix('}')))
+        {
             parameters.push(json!({
                 "name": name, "in": "path", "required": true,
                 "description": param_about(o.path, name), "schema": { "type": "string" }
@@ -774,35 +891,59 @@ pub(super) fn document() -> Value {
         }
         let mut responses = Map::new();
         let (status, response) = match &o.out {
-            Out::Json(s, make) => (*s, json!({ "description": "Başarılı.", "content": { "application/json": { "schema": make(&mut g).to_value() } } })),
-            Out::Shape(s, name, about) => (*s, json!({ "description": about, "content": { "application/json": {
-                "schema": { "type": "object", "description": format!("{about} TypeScript sözleşmesinde: `{name}`.") } } } })),
+            Out::Json(s, make) => (
+                *s,
+                json!({ "description": "Başarılı.", "content": { "application/json": { "schema": make(&mut g).to_value() } } }),
+            ),
+            Out::Shape(s, name, about) => (
+                *s,
+                json!({ "description": about, "content": { "application/json": {
+                "schema": { "type": "object", "description": format!("{about} TypeScript sözleşmesinde: `{name}`.") } } } }),
+            ),
             Out::Empty(s) => (*s, json!({ "description": "Başarılı; gövde yok." })),
-            Out::File(about) => (200, json!({
-                "description": format!("{about} `ETag`, `Range` (206) ve `If-None-Match` (304) desteklenir."),
-                "headers": { "ETag": { "schema": { "type": "string" } }, "Content-Range": { "schema": { "type": "string" } } },
-                "content": { "application/octet-stream": { "schema": { "type": "string", "contentMediaType": "application/octet-stream" } } }
-            })),
-            Out::Svg => (200, json!({
-                "description": "SVG resmi; `ETag` ile değişmemişse 304.",
-                "headers": {
-                    "ETag": { "schema": { "type": "string" } },
-                    "x-kentos-drawn": { "description": "Çizilen nesne sayısı.", "schema": { "type": "integer" } },
-                    "x-kentos-skipped": { "description": "Çizilmeyen nesne sayısı.", "schema": { "type": "integer" } }
-                },
-                "content": { "image/svg+xml": { "schema": { "type": "string" } } }
-            })),
+            Out::File(about) => (
+                200,
+                json!({
+                    "description": format!("{about} `ETag`, `Range` (206) ve `If-None-Match` (304) desteklenir."),
+                    "headers": { "ETag": { "schema": { "type": "string" } }, "Content-Range": { "schema": { "type": "string" } } },
+                    "content": { "application/octet-stream": { "schema": { "type": "string", "contentMediaType": "application/octet-stream" } } }
+                }),
+            ),
+            Out::Svg => (
+                200,
+                json!({
+                    "description": "SVG resmi; `ETag` ile değişmemişse 304.",
+                    "headers": {
+                        "ETag": { "schema": { "type": "string" } },
+                        "x-kentos-drawn": { "description": "Çizilen nesne sayısı.", "schema": { "type": "integer" } },
+                        "x-kentos-skipped": { "description": "Çizilmeyen nesne sayısı.", "schema": { "type": "integer" } }
+                    },
+                    "content": { "image/svg+xml": { "schema": { "type": "string" } } }
+                }),
+            ),
             Out::Redirect => (302, json!({ "description": "Yönlendirme (`Location`)." })),
-            Out::Text(kind) => (200, json!({ "description": "Başarılı.", "content": { *kind: { "schema": { "type": "string" } } } })),
+            Out::Text(kind) => (
+                200,
+                json!({ "description": "Başarılı.", "content": { *kind: { "schema": { "type": "string" } } } }),
+            ),
             Out::Upgrade => (101, json!({ "description": "WebSocket'e geçiş." })),
         };
         responses.insert(status.to_string(), response);
         if matches!(o.out, Out::File(_)) && o.method == "GET" {
-            responses.insert("206".into(), json!({ "description": "İstenen parça (`Range`)." }));
-            responses.insert("304".into(), json!({ "description": "Değişmedi (`If-None-Match`)." }));
+            responses.insert(
+                "206".into(),
+                json!({ "description": "İstenen parça (`Range`)." }),
+            );
+            responses.insert(
+                "304".into(),
+                json!({ "description": "Değişmedi (`If-None-Match`)." }),
+            );
         }
         if matches!(o.out, Out::Svg) {
-            responses.insert("304".into(), json!({ "description": "Değişmedi (`If-None-Match`)." }));
+            responses.insert(
+                "304".into(),
+                json!({ "description": "Değişmedi (`If-None-Match`)." }),
+            );
         }
         let mut errors: Vec<u16> = Vec::new();
         if !o.public {
@@ -820,7 +961,10 @@ pub(super) fn document() -> Value {
         errors.sort_unstable();
         errors.dedup();
         for e in errors {
-            responses.insert(e.to_string(), json!({ "$ref": format!("#/components/responses/{}", error(e).0) }));
+            responses.insert(
+                e.to_string(),
+                json!({ "$ref": format!("#/components/responses/{}", error(e).0) }),
+            );
         }
         let mut operation = json!({
             "tags": [o.tag],

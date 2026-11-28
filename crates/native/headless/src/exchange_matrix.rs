@@ -19,8 +19,9 @@
 //! - `relations`: the project's relations between the layers written not read back (lost; their names).
 
 use kentos_commands::{
-    CallOp, CommandError, CommandResult, EXCHANGE_ASPECTS, ExchangeCell, ExchangeCheck, ExchangeChecked, ExchangeFormat,
-    ExchangeMatrix, ExchangeMatrixed, ExchangeRow, ExchangeState, codes,
+    CallOp, CommandError, CommandResult, EXCHANGE_ASPECTS, ExchangeCell, ExchangeCheck,
+    ExchangeChecked, ExchangeFormat, ExchangeMatrix, ExchangeMatrixed, ExchangeRow, ExchangeState,
+    codes,
 };
 use kentos_domain::Document;
 use serde_json::Value;
@@ -33,8 +34,18 @@ fn losses(r: &ExchangeChecked, kind: &str) -> (u32, Option<String>) {
     (count, (!details.is_empty()).then(|| details.join(", ")))
 }
 
-fn cell(format: ExchangeFormat, state: ExchangeState, count: u32, detail: Option<String>) -> ExchangeCell {
-    ExchangeCell { format, state, count, detail }
+fn cell(
+    format: ExchangeFormat,
+    state: ExchangeState,
+    count: u32,
+    detail: Option<String>,
+) -> ExchangeCell {
+    ExchangeCell {
+        format,
+        state,
+        count,
+        detail,
+    }
 }
 
 /// The first of the losses asked that happened, as its state; kept when none did.
@@ -57,7 +68,12 @@ pub fn cell_of(r: &ExchangeChecked, aspect: &str) -> ExchangeCell {
             if count == 0 {
                 cell(r.format, S::Kept, 0, None)
             } else {
-                let detail = r.not_written.iter().map(|k| format!("{} {}", k.kind, k.count)).collect::<Vec<_>>().join(", ");
+                let detail = r
+                    .not_written
+                    .iter()
+                    .map(|k| format!("{} {}", k.kind, k.count))
+                    .collect::<Vec<_>>()
+                    .join(", ");
                 cell(r.format, S::Lost, count, Some(detail))
             }
         }
@@ -65,7 +81,14 @@ pub fn cell_of(r: &ExchangeChecked, aspect: &str) -> ExchangeCell {
         "curves" => first(r, &[("chorded", S::Approximated)]),
         "z" => first(r, &[("zLost", S::Lost), ("zAdded", S::Added)]),
         "m" => first(r, &[("mLost", S::Lost)]),
-        "attributes" => first(r, &[("attrLost", S::Lost), ("attrChanged", S::Converted), ("attrAdded", S::Added)]),
+        "attributes" => first(
+            r,
+            &[
+                ("attrLost", S::Lost),
+                ("attrChanged", S::Converted),
+                ("attrAdded", S::Added),
+            ],
+        ),
         "style" => first(r, &[("styleLost", S::Lost)]),
         "identity" => first(r, &[("identityLost", S::Lost)]),
         "position" => {
@@ -103,17 +126,28 @@ fn numeric(r: &ExchangeChecked, above: u32, greatest: Option<f64>) -> ExchangeCe
 /// or changed (`changed`), else kept.
 fn part(r: &ExchangeChecked, kind: &str, changed: &str) -> ExchangeCell {
     if let Some(k) = r.not_written.iter().find(|k| k.kind == kind) {
-        return cell(r.format, ExchangeState::Lost, k.count, Some(format!("{kind} {}", k.count)));
+        return cell(
+            r.format,
+            ExchangeState::Lost,
+            k.count,
+            Some(format!("{kind} {}", k.count)),
+        );
     }
     let prefix = format!("{kind} → ");
     let turned: Vec<_> = r
         .losses
         .iter()
-        .filter(|l| l.kind == "kindChanged" && l.detail.as_deref().is_some_and(|d| d.starts_with(&prefix)))
+        .filter(|l| {
+            l.kind == "kindChanged" && l.detail.as_deref().is_some_and(|d| d.starts_with(&prefix))
+        })
         .collect();
     let count: u32 = turned.iter().map(|l| l.count).sum();
     if count > 0 {
-        let detail = turned.iter().filter_map(|l| l.detail.as_deref()).collect::<Vec<_>>().join(", ");
+        let detail = turned
+            .iter()
+            .filter_map(|l| l.detail.as_deref())
+            .collect::<Vec<_>>()
+            .join(", ");
         return cell(r.format, ExchangeState::Converted, count, Some(detail));
     }
     first(r, &[(changed, ExchangeState::Converted)])
@@ -123,18 +157,29 @@ fn part(r: &ExchangeChecked, kind: &str, changed: &str) -> ExchangeCell {
 pub fn rows(checks: &[ExchangeChecked]) -> Vec<ExchangeRow> {
     EXCHANGE_ASPECTS
         .iter()
-        .map(|a| ExchangeRow { aspect: (*a).to_owned(), cells: checks.iter().map(|r| cell_of(r, a)).collect() })
+        .map(|a| ExchangeRow {
+            aspect: (*a).to_owned(),
+            cells: checks.iter().map(|r| cell_of(r, a)).collect(),
+        })
         .collect()
 }
 
 pub fn run(doc: &Document, input: &ExchangeMatrix, op: CallOp) -> CommandResult<Value> {
     let mut formats: Vec<ExchangeFormat> = Vec::new();
-    for f in if input.formats.is_empty() { ExchangeFormat::ALL.to_vec() } else { input.formats.clone() } {
+    for f in if input.formats.is_empty() {
+        ExchangeFormat::ALL.to_vec()
+    } else {
+        input.formats.clone()
+    } {
         if !formats.contains(&f) {
             formats.push(f);
         }
     }
-    let ask = |format: ExchangeFormat| ExchangeCheck { format, layers: input.layers.clone(), tolerance: input.tolerance };
+    let ask = |format: ExchangeFormat| ExchangeCheck {
+        format,
+        layers: input.layers.clone(),
+        tolerance: input.tolerance,
+    };
     // The question's own refusals once, as the check says them.
     if let Some(&f) = formats.first() {
         match crate::exchange_check::run(doc, &ask(f), CallOp::Validate) {
@@ -143,24 +188,29 @@ pub fn run(doc: &Document, input: &ExchangeMatrix, op: CallOp) -> CommandResult<
         }
     }
     if op == CallOp::Validate {
-        return CommandResult::Completed { output: Value::Null, warnings: Vec::new() };
+        return CommandResult::Completed {
+            output: Value::Null,
+            warnings: Vec::new(),
+        };
     }
     let mut checks: Vec<ExchangeChecked> = Vec::new();
     for (i, &f) in formats.iter().enumerate() {
         match crate::exchange_check::run(doc, &ask(f), CallOp::Execute) {
-            CommandResult::Completed { output, .. } => match serde_json::from_value::<ExchangeChecked>(output) {
-                Ok(r) => checks.push(r),
-                Err(e) => {
-                    return CommandResult::Failed {
-                        error: CommandError {
-                            code: codes::EXCHANGE_UNREADABLE.into(),
-                            message: format!("{} denetiminin cevabı okunamadı: {e}", f.title()),
-                            path: Some(format!("formats[{i}]")),
-                            ..CommandError::default()
-                        },
-                    };
+            CommandResult::Completed { output, .. } => {
+                match serde_json::from_value::<ExchangeChecked>(output) {
+                    Ok(r) => checks.push(r),
+                    Err(e) => {
+                        return CommandResult::Failed {
+                            error: CommandError {
+                                code: codes::EXCHANGE_UNREADABLE.into(),
+                                message: format!("{} denetiminin cevabı okunamadı: {e}", f.title()),
+                                path: Some(format!("formats[{i}]")),
+                                ..CommandError::default()
+                            },
+                        };
+                    }
                 }
-            },
+            }
             CommandResult::Failed { mut error } => {
                 // The check's refusal, its path under the format's.
                 error.path = Some(match error.path.take() {
@@ -172,9 +222,21 @@ pub fn run(doc: &Document, input: &ExchangeMatrix, op: CallOp) -> CommandResult<
             other => return other,
         }
     }
-    let tolerance = checks.first().map_or(input.tolerance.unwrap_or(kentos_commands::EXCHANGE_TOLERANCE), |c| c.tolerance);
-    let output = ExchangeMatrixed { tolerance, rows: rows(&checks), checks };
-    CommandResult::Completed { output: serde_json::to_value(output).unwrap_or(Value::Null), warnings: Vec::new() }
+    let tolerance = checks.first().map_or(
+        input
+            .tolerance
+            .unwrap_or(kentos_commands::EXCHANGE_TOLERANCE),
+        |c| c.tolerance,
+    );
+    let output = ExchangeMatrixed {
+        tolerance,
+        rows: rows(&checks),
+        checks,
+    };
+    CommandResult::Completed {
+        output: serde_json::to_value(output).unwrap_or(Value::Null),
+        warnings: Vec::new(),
+    }
 }
 
 #[cfg(test)]
@@ -190,14 +252,20 @@ mod tests {
 
     fn matrix(input: &ExchangeMatrix) -> ExchangeMatrixed {
         match run(&drawing(), input, CallOp::Execute) {
-            CommandResult::Completed { output, .. } => serde_json::from_value(output).expect("the answer"),
+            CommandResult::Completed { output, .. } => {
+                serde_json::from_value(output).expect("the answer")
+            }
             other => panic!("{other:?}"),
         }
     }
 
     fn state(m: &ExchangeMatrixed, aspect: &str, format: ExchangeFormat) -> ExchangeState {
         let row = m.rows.iter().find(|r| r.aspect == aspect).expect("the row");
-        row.cells.iter().find(|c| c.format == format).expect("the cell").state
+        row.cells
+            .iter()
+            .find(|c| c.format == format)
+            .expect("the cell")
+            .state
     }
 
     /// The sample drawing's matrix is ADR 1660's table: every format leaves the text out but DXF, turns the circle
@@ -209,7 +277,10 @@ mod tests {
         use ExchangeState as S;
         let m = matrix(&ExchangeMatrix::default());
         assert_eq!(m.checks.len(), 6);
-        assert_eq!(m.rows.iter().map(|r| r.aspect.as_str()).collect::<Vec<_>>(), EXCHANGE_ASPECTS);
+        assert_eq!(
+            m.rows.iter().map(|r| r.aspect.as_str()).collect::<Vec<_>>(),
+            EXCHANGE_ASPECTS
+        );
         for f in [F::Gpkg, F::Parquet, F::Fgb, F::Gml, F::Shp] {
             assert_eq!(state(&m, "objects", f), S::Lost, "{f:?}");
         }
@@ -217,13 +288,34 @@ mod tests {
         for f in F::ALL {
             assert_eq!(state(&m, "kinds", f), S::Converted, "{f:?}");
         }
-        for (f, chorded) in [(F::Gpkg, false), (F::Parquet, true), (F::Fgb, false), (F::Gml, false), (F::Shp, true), (F::Dxf, false)] {
+        for (f, chorded) in [
+            (F::Gpkg, false),
+            (F::Parquet, true),
+            (F::Fgb, false),
+            (F::Gml, false),
+            (F::Shp, true),
+            (F::Dxf, false),
+        ] {
             assert_eq!(state(&m, "curves", f) == S::Approximated, chorded, "{f:?}");
         }
-        for (f, lost) in [(F::Gpkg, false), (F::Parquet, true), (F::Fgb, false), (F::Gml, true), (F::Shp, false), (F::Dxf, true)] {
+        for (f, lost) in [
+            (F::Gpkg, false),
+            (F::Parquet, true),
+            (F::Fgb, false),
+            (F::Gml, true),
+            (F::Shp, false),
+            (F::Dxf, true),
+        ] {
             assert_eq!(state(&m, "m", f) == S::Lost, lost, "{f:?}");
         }
-        for (f, lost) in [(F::Gpkg, false), (F::Parquet, false), (F::Fgb, true), (F::Gml, true), (F::Shp, true), (F::Dxf, true)] {
+        for (f, lost) in [
+            (F::Gpkg, false),
+            (F::Parquet, false),
+            (F::Fgb, true),
+            (F::Gml, true),
+            (F::Shp, true),
+            (F::Dxf, true),
+        ] {
             assert_eq!(state(&m, "identity", f) == S::Lost, lost, "{f:?}");
         }
         // Within the tolerance everywhere: the vertices kept.
@@ -236,13 +328,32 @@ mod tests {
     #[test]
     fn formats_asked_once_and_refusals_under_their_path() {
         use ExchangeFormat as F;
-        let m = matrix(&ExchangeMatrix { formats: vec![F::Dxf, F::Gpkg, F::Dxf], ..Default::default() });
-        assert_eq!(m.checks.iter().map(|c| c.format).collect::<Vec<_>>(), [F::Dxf, F::Gpkg]);
-        let bad = ExchangeMatrix { tolerance: Some(0.0), ..Default::default() };
-        let CommandResult::Failed { error } = run(&drawing(), &bad, CallOp::Execute) else { panic!("refused") };
+        let m = matrix(&ExchangeMatrix {
+            formats: vec![F::Dxf, F::Gpkg, F::Dxf],
+            ..Default::default()
+        });
+        assert_eq!(
+            m.checks.iter().map(|c| c.format).collect::<Vec<_>>(),
+            [F::Dxf, F::Gpkg]
+        );
+        let bad = ExchangeMatrix {
+            tolerance: Some(0.0),
+            ..Default::default()
+        };
+        let CommandResult::Failed { error } = run(&drawing(), &bad, CallOp::Execute) else {
+            panic!("refused")
+        };
         assert_eq!(error.code, "invalid_tolerance");
-        let gone = ExchangeMatrix { layers: vec!["yok".into()], ..Default::default() };
-        let CommandResult::Failed { error } = run(&drawing(), &gone, CallOp::Execute) else { panic!("refused") };
-        assert_eq!((error.code.as_str(), error.path.as_deref()), ("layer_not_found", Some("layers[0]")));
+        let gone = ExchangeMatrix {
+            layers: vec!["yok".into()],
+            ..Default::default()
+        };
+        let CommandResult::Failed { error } = run(&drawing(), &gone, CallOp::Execute) else {
+            panic!("refused")
+        };
+        assert_eq!(
+            (error.code.as_str(), error.path.as_deref()),
+            ("layer_not_found", Some("layers[0]"))
+        );
     }
 }

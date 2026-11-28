@@ -122,7 +122,11 @@ fn is_zero(v: &u8) -> bool {
 
 impl Default for UnderlayLook {
     fn default() -> Self {
-        Self { fade: 0, monochrome: false, plot: true }
+        Self {
+            fade: 0,
+            monochrome: false,
+            plot: true,
+        }
     }
 }
 
@@ -153,10 +157,19 @@ impl XrefSource {
         if self.path.trim().is_empty() {
             return Some("dış başvurunun yolu boş".into());
         }
-        if self.digest.len() != 64 || !self.digest.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)) {
+        if self.digest.len() != 64
+            || !self
+                .digest
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        {
             return Some("dış başvurunun özeti 64 küçük onaltılık rakam olmalı".into());
         }
-        if self.relative.as_deref().is_some_and(|r| r.trim().is_empty()) {
+        if self
+            .relative
+            .as_deref()
+            .is_some_and(|r| r.trim().is_empty())
+        {
             return Some("dış başvurunun göreli yolu boş".into());
         }
         if self.group.as_deref().is_some_and(|g| g.trim().is_empty()) {
@@ -173,7 +186,9 @@ impl XrefSource {
                 return Some("altlık görünüşü yalnız PDF altlığında olur".into());
             }
             if u.fade > MAX_UNDERLAY_FADE {
-                return Some(format!("PDF altlığının soldurması en çok %{MAX_UNDERLAY_FADE} olabilir"));
+                return Some(format!(
+                    "PDF altlığının soldurması en çok %{MAX_UNDERLAY_FADE} olabilir"
+                ));
             }
             if *u == UnderlayLook::default() {
                 return Some("varsayılan altlık görünüşü yazılmaz".into());
@@ -201,7 +216,11 @@ pub enum XrefBindMode {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum XrefsOperation {
     /// A drawing file attached (or overlaid) and placed once.

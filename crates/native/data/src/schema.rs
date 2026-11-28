@@ -10,7 +10,9 @@ pub enum FieldKind {
     Bool,
     /// An integer of `bits` bits (8, 16, 32 or 64) as the source declares it (`SMALLINT`, `int4`, `MEDIUMINT`, `bigint`):
     /// a writer makes the column that holds it and a value past its range is refused (docs/adr/9108 §1).
-    Int { bits: u8 },
+    Int {
+        bits: u8,
+    },
     /// A double.
     Real,
     /// An exact decimal: digits in all and after the point, when the source says them.
@@ -227,7 +229,12 @@ mod tests {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ColumnRule {
     Values(Vec<(String, Option<String>)>),
-    Range { min: Option<f64>, min_included: bool, max: Option<f64>, max_included: bool },
+    Range {
+        min: Option<f64>,
+        min_included: bool,
+        max: Option<f64>,
+        max_included: bool,
+    },
 }
 
 /// A column and its rule; none: the column's rule taken away.

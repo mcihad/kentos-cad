@@ -12,7 +12,7 @@ use kentos_application::{admin, projects, sharing};
 use kentos_contracts::{
     CommandEnvelope, DocumentSnapshotV1, Entity, FeatureChange, GrantRole, PROJECT_ACCESS_REVOKE,
     PROJECT_CHANGES, PROJECT_SHARE, ProjectAccessChange, ProjectAccessRevoke, ProjectChanges,
-    ProjectCreate, ProjectShare, SignInMethod, TenantRole, ProjectType,
+    ProjectCreate, ProjectShare, ProjectType, SignInMethod, TenantRole,
 };
 use kentos_postgres::testing::TestDb;
 use uuid::Uuid;

@@ -324,7 +324,9 @@ pub(crate) fn scale_expressions(block: &mut kentos_commands::BlockDefinition, s:
     for p in &dynamic.parameters {
         if matches!(p, P::Linear { .. } | P::Angle { .. }) {
             // Match the expression host: first numeric variable after Turkish folding.
-            numeric_lengths.entry(fold_turkish(p.name())).or_insert(matches!(p, P::Linear { .. }));
+            numeric_lengths
+                .entry(fold_turkish(p.name()))
+                .or_insert(matches!(p, P::Linear { .. }));
         }
     }
     for p in &mut dynamic.parameters {

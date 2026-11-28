@@ -17,15 +17,16 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
     let mut geo = Vec::new();
     let x = &w.wall;
     let change = |c: kentos_commands::WallChange| Message::Properties(Event::Wall(slot, c));
-    let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
-        label,
-        swatch: None,
-        icon,
-        wide: false,
-        chosen,
-        enabled: true,
-        message,
-    };
+    let pick =
+        |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
+            label,
+            swatch: None,
+            icon,
+            wide: false,
+            chosen,
+            enabled: true,
+            message,
+        };
     let select = |text: String, items: Vec<Choice>| {
         edit(Editor::Select {
             text,
@@ -37,22 +38,37 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
     let fixed = kentos_commands::fixed_width(&x.components).is_some();
     // Duvar or Giydirme cephe (docs/adr/8070 §7): a curtain wall is its grid's frames and panels; turning a wall into one
     // takes the tool's first grid (KentOS's own panel, glass and aluminium), back a plain wall of one body.
-    let kinds = [(false, "Duvar"), (true, kentos_interaction::wall::CURTAIN_LABEL)]
-        .into_iter()
-        .map(|(c, label)| {
-            let grid = c.then(|| kentos_interaction::wall::grid(&kentos_interaction::Memory::default()));
-            pick(
-                label.to_owned(),
-                c == x.curtain.is_some(),
-                change(kentos_commands::WallChange { curtain: Some(grid), ..Default::default() }),
-                None,
-            )
-        })
-        .collect();
-    let kind = if x.curtain.is_some() { kentos_interaction::wall::CURTAIN_LABEL } else { "Duvar" };
+    let kinds = [
+        (false, "Duvar"),
+        (true, kentos_interaction::wall::CURTAIN_LABEL),
+    ]
+    .into_iter()
+    .map(|(c, label)| {
+        let grid =
+            c.then(|| kentos_interaction::wall::grid(&kentos_interaction::Memory::default()));
+        pick(
+            label.to_owned(),
+            c == x.curtain.is_some(),
+            change(kentos_commands::WallChange {
+                curtain: Some(grid),
+                ..Default::default()
+            }),
+            None,
+        )
+    })
+    .collect();
+    let kind = if x.curtain.is_some() {
+        kentos_interaction::wall::CURTAIN_LABEL
+    } else {
+        "Duvar"
+    };
     geo.push(Row::text("Tür", kind).editor(select(kind.to_owned(), kinds)));
     // A wall's width is its Kalınlık, as the tool and its panel say (docs/adr/8003); a line's weight is Çizgi kalınlığı.
-    geo.push(metres("Kalınlık", x.width).editor(if fixed { None } else { number(Field::WallWidth(slot)) }));
+    geo.push(metres("Kalınlık", x.width).editor(if fixed {
+        None
+    } else {
+        number(Field::WallWidth(slot))
+    }));
     if let Some(grid) = &x.curtain {
         geo.push(metres("Panel eni", grid.spacing).editor(number(Field::CurtainSpacing(slot))));
         geo.push(metres("Panel boyu", grid.rows).editor(number(Field::CurtainRows(slot))));
@@ -70,9 +86,19 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
     let keep_now = super::super::wall_parts::keep();
     let keeps = kentos_commands::WallReference::ALL
         .iter()
-        .map(|&r| pick(r.label().to_owned(), r == keep_now, Message::Properties(Event::WallKeep(r)), None))
+        .map(|&r| {
+            pick(
+                r.label().to_owned(),
+                r == keep_now,
+                Message::Properties(Event::WallKeep(r)),
+                None,
+            )
+        })
         .collect();
-    geo.push(Row::text("Sabit kalan çizgi", keep_now.label()).editor(select(keep_now.label().to_owned(), keeps)));
+    geo.push(
+        Row::text("Sabit kalan çizgi", keep_now.label())
+            .editor(select(keep_now.label().to_owned(), keeps)),
+    );
     let justify = kentos_commands::WallJustify::ALL
         .iter()
         .map(|&j| {
@@ -92,14 +118,19 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
             )
         })
         .collect();
-    geo.push(Row::text("Hiza", x.justify.label()).editor(select(x.justify.label().to_owned(), justify)));
+    geo.push(
+        Row::text("Hiza", x.justify.label()).editor(select(x.justify.label().to_owned(), justify)),
+    );
     geo.push(metres("Öteleme", x.offset).editor(number(Field::WallOffset(slot))));
     let offered = kentos_interaction::wall::offered(doc.settings());
     let style_name = x
         .style
         .as_deref()
         .and_then(|id| offered.iter().find(|s| s.id == id))
-        .map_or_else(|| kentos_interaction::wall::NO_STYLE.to_owned(), |s| s.name.clone());
+        .map_or_else(
+            || kentos_interaction::wall::NO_STYLE.to_owned(),
+            |s| s.name.clone(),
+        );
     let mut styles = vec![pick(
         kentos_interaction::wall::NO_STYLE.to_owned(),
         x.style.is_none(),
@@ -131,7 +162,11 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
     let caps = [(false, "Kapalı"), (true, "Açık")]
         .into_iter()
         .map(|(o, l)| {
-            let caps = if o { kentos_commands::WallCaps::Open } else { kentos_commands::WallCaps::Closed };
+            let caps = if o {
+                kentos_commands::WallCaps::Open
+            } else {
+                kentos_commands::WallCaps::Closed
+            };
             pick(
                 l.to_owned(),
                 o == open,
@@ -155,15 +190,28 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
         kentos_commands::WallJoin::Through => "wallJoinThrough",
     };
     if !x.closed {
-        for (title, now, at_end) in [("Başlangıç birleşimi", x.joins.start, false), ("Son birleşimi", x.joins.end, true)] {
+        for (title, now, at_end) in [
+            ("Başlangıç birleşimi", x.joins.start, false),
+            ("Son birleşimi", x.joins.end, true),
+        ] {
             let items = kentos_commands::WallJoin::ALL
                 .iter()
                 .map(|&j| {
-                    let (start, end) = if at_end { (None, Some(j)) } else { (Some(j), None) };
+                    let (start, end) = if at_end {
+                        (None, Some(j))
+                    } else {
+                        (Some(j), None)
+                    };
                     pick(
                         j.label().to_owned(),
                         j == now,
-                        op(kentos_commands::WallsOperation::Joins { start, end, cleanup: None, start_pass: None, end_pass: None }),
+                        op(kentos_commands::WallsOperation::Joins {
+                            start,
+                            end,
+                            cleanup: None,
+                            start_pass: None,
+                            end_pass: None,
+                        }),
                         Some(join_icon(j)),
                     )
                 })
@@ -171,19 +219,34 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
             geo.push(Row::text(title, now.label()).editor(select(now.label().to_owned(), items)));
         }
         // Its ends' node decisions (docs/adr/0771 §1): the user's, kept on the end, or the priorities'.
-        for (title, pass, at_end) in
-            [("Baş düğümü", x.joins.start_pass.as_ref(), false), ("Son düğümü", x.joins.end_pass.as_ref(), true)]
-        {
+        for (title, pass, at_end) in [
+            ("Baş düğümü", x.joins.start_pass.as_ref(), false),
+            ("Son düğümü", x.joins.end_pass.as_ref(), true),
+        ] {
             let now = super::super::wall_parts::node_text(pass);
             let items = super::super::wall_parts::node_choices(x)
                 .into_iter()
                 .map(|(label, p)| {
-                    let (start_pass, end_pass) = if at_end { (None, Some(p.clone())) } else { (Some(p.clone()), None) };
+                    let (start_pass, end_pass) = if at_end {
+                        (None, Some(p.clone()))
+                    } else {
+                        (Some(p.clone()), None)
+                    };
                     pick(
                         label.to_owned(),
                         super::super::wall_parts::node_text(p.as_ref()) == now,
-                        op(kentos_commands::WallsOperation::Joins { start: None, end: None, cleanup: None, start_pass, end_pass }),
-                        Some(if p.is_some() { "wallJoinButt" } else { "wallJoinAuto" }),
+                        op(kentos_commands::WallsOperation::Joins {
+                            start: None,
+                            end: None,
+                            cleanup: None,
+                            start_pass,
+                            end_pass,
+                        }),
+                        Some(if p.is_some() {
+                            "wallJoinButt"
+                        } else {
+                            "wallJoinAuto"
+                        }),
                     )
                 })
                 .collect();
@@ -196,7 +259,13 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
             pick(
                 l.to_owned(),
                 c == x.cleanup,
-                op(kentos_commands::WallsOperation::Joins { start: None, end: None, cleanup: Some(c), start_pass: None, end_pass: None }),
+                op(kentos_commands::WallsOperation::Joins {
+                    start: None,
+                    end: None,
+                    cleanup: Some(c),
+                    start_pass: None,
+                    end_pass: None,
+                }),
                 None,
             )
         })
@@ -206,9 +275,7 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
     } else {
         "Kapalı"
     };
-    geo.push(
-        Row::text("Temizlik", clean_text).editor(select(clean_text.to_owned(), clean)),
-    );
+    geo.push(Row::text("Temizlik", clean_text).editor(select(clean_text.to_owned(), clean)));
     // Its own; else up to the slab over it within its storey, else its storey's (docs/adr/8040 §1): the number in
     // its cell, where it comes from in a note under it (docs/adr/0687: a decorated number does not fit a
     // numeric cell at a large text size).
@@ -243,7 +310,12 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
         .arch
         .level
         .as_deref()
-        .map(|id| levels.iter().find(|l| l.id == id).map_or_else(|| id.to_owned(), |l| l.name.clone()))
+        .map(|id| {
+            levels
+                .iter()
+                .find(|l| l.id == id)
+                .map_or_else(|| id.to_owned(), |l| l.name.clone())
+        })
         .unwrap_or_else(|| "Yok".to_owned());
     let mut level_items = vec![pick(
         "Yok".to_owned(),
@@ -272,7 +344,10 @@ pub(super) fn rows(k: &Kit, w: &kentos_commands::WallEntity) -> Vec<Row> {
         id: "arch.settings",
     });
     geo.push(Row::text("Kat", level_name.clone()).editor(select(level_name, level_items)));
-    let phase_name = x.arch.phase.map_or("Yok", kentos_commands::ArchPhase::label);
+    let phase_name = x
+        .arch
+        .phase
+        .map_or("Yok", kentos_commands::ArchPhase::label);
     let mut phases = vec![pick(
         "Yok".to_owned(),
         x.arch.phase.is_none(),

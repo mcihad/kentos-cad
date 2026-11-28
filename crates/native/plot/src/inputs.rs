@@ -248,7 +248,10 @@ impl LegendSources for Sources<'_> {
 
     /// A data layer's rows are its source's: its table's geometry says what they are drawn as (docs/adr/9177).
     fn declared(&self, layer: &str) -> Option<kentos_native_style::classify::Present> {
-        self.doc.layers().get(layer).and_then(kentos_native_style::classify::data_layer_present)
+        self.doc
+            .layers()
+            .get(layer)
+            .and_then(kentos_native_style::classify::data_layer_present)
     }
 
     fn symbol(&self, id: &str) -> Option<Value> {
@@ -643,7 +646,10 @@ pub fn sheet_data_in(
             .collect()
     });
     let extents = extents_of(list);
-    let mut out = SheetData { surveys: crate::survey_scope::map_surveys(doc, list), ..SheetData::default() };
+    let mut out = SheetData {
+        surveys: crate::survey_scope::map_surveys(doc, list),
+        ..SheetData::default()
+    };
     for it in &items {
         match &it.kind {
             ItemKind::Table(t) => {

@@ -1,7 +1,7 @@
 use super::*;
 use crate::arch;
-use crate::files_testing::{app_with_drawing, make_cad};
 use crate::arch::ArchState;
+use crate::files_testing::{app_with_drawing, make_cad};
 
 const CASES: &str = include_str!("../../../../fixtures/commands/v1/cad.materials.edit.json");
 
@@ -9,7 +9,8 @@ const CASES: &str = include_str!("../../../../fixtures/commands/v1/cad.materials
 fn app() -> App {
     let mut app = app_with_drawing();
     let file: serde_json::Value = serde_json::from_str(CASES).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(file["setup"].clone()).unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(file["setup"].clone()).unwrap();
     let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     make_cad(&mut app);
@@ -81,11 +82,18 @@ fn a_slab_is_bound_from_its_properties_and_metraj_groups_by_material() {
         panic!("the slab");
     };
     assert_eq!(s.slab.material_id.as_deref(), Some("betonarme"));
-    let q = match kentos_native_application::spaces_quantities::plan_in(model(&app), &Default::default()) {
+    let q = match kentos_native_application::spaces_quantities::plan_in(
+        model(&app),
+        &Default::default(),
+    ) {
         kentos_commands::CommandResult::Completed { output, .. } => output,
         other => panic!("{other:?}"),
     };
-    let names: Vec<(&str, u32, u32)> = q.materials.iter().map(|m| (m.name.as_str(), m.walls, m.slabs)).collect();
+    let names: Vec<(&str, u32, u32)> = q
+        .materials
+        .iter()
+        .map(|m| (m.name.as_str(), m.walls, m.slabs))
+        .collect();
     assert_eq!(names[0], ("Tuğla", 4, 0));
     assert_eq!(names[1], ("Betonarme", 0, 3));
 }
@@ -105,7 +113,9 @@ fn kentos_library_materials_are_taken_in_one_undo_step_the_projects_kept() {
     ));
     // KentOS's 21, the project's Tuğla and Betonarme not ticked (they differ): 19 new ones previewed.
     assert_eq!(w.picked.iter().filter(|p| **p).count(), 19);
-    let Some(Ok(plan)) = &w.take_preview else { panic!("{:?}", w.take_preview) };
+    let Some(Ok(plan)) = &w.take_preview else {
+        panic!("{:?}", w.take_preview)
+    };
     assert_eq!(plan.report.taken.len(), 19);
     assert_eq!(
         model(&app).to_snapshot_v2(),
@@ -194,7 +204,11 @@ fn a_wall_style_component_is_bound_in_duvar_stilleri_and_saved_in_one_step() {
     );
     let _ = app.update(Message::Run("edit.undo"));
     let c = &model(&app).settings().wall_styles[0].components[2];
-    assert_eq!(c.material_id.as_deref(), Some("betonarme"), "one undo step a save");
+    assert_eq!(
+        c.material_id.as_deref(),
+        Some("betonarme"),
+        "one undo step a save"
+    );
 }
 
 #[test]
@@ -215,12 +229,24 @@ fn a_slab_is_bound_to_a_space_of_its_level_from_its_sinir_row() {
     // Both spaces of the level, the salon (where the slab now is) first.
     let words: Vec<&str> = spaces.iter().map(|(_, w)| w.as_str()).collect();
     assert_eq!(words, ["101 Salon", "102 Mutfak"]);
-    assert_eq!(crate::properties::wall_parts::bound_text(&slab, &spaces), "Mahale bağlı · 101 Salon");
+    assert_eq!(
+        crate::properties::wall_parts::bound_text(&slab, &spaces),
+        "Mahale bağlı · 101 Salon"
+    );
     let choices = crate::properties::wall_parts::bound_choices(&slab, &spaces);
-    let chosen: Vec<&str> = choices.iter().filter(|c| c.1).map(|c| c.0.as_str()).collect();
+    let chosen: Vec<&str> = choices
+        .iter()
+        .filter(|c| c.1)
+        .map(|c| c.0.as_str())
+        .collect();
     assert_eq!(chosen, ["Mahale bağlı · 101 Salon"]);
     // One undo: bound to the kitchen's walls again.
     let _ = app.update(Message::Run("edit.undo"));
-    let Some(Entity::Slab(s)) = model(&app).get(slot) else { panic!() };
-    assert_eq!(s.slab.bound.as_ref().unwrap().source, kentos_commands::SlabSourceKind::Walls);
+    let Some(Entity::Slab(s)) = model(&app).get(slot) else {
+        panic!()
+    };
+    assert_eq!(
+        s.slab.bound.as_ref().unwrap().source,
+        kentos_commands::SlabSourceKind::Walls
+    );
 }

@@ -21,8 +21,9 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, Entity, EntityBase, OrthoSeamDifference, OrthoSeamEnd, OrthoSeamMethod, OrthoSeamPolygon,
-    OrthophotoSeamlines, OrthophotoSeamlinesBuilt, PathEntity, RasterEntity, SEAMLINE_LAYER, SEAMLINE_LAYER_NAME, Vec2,
+    CommandResult, Entity, EntityBase, OrthoSeamDifference, OrthoSeamEnd, OrthoSeamMethod,
+    OrthoSeamPolygon, OrthophotoSeamlines, OrthophotoSeamlinesBuilt, PathEntity, RasterEntity,
+    SEAMLINE_LAYER, SEAMLINE_LAYER_NAME, Vec2,
 };
 use kentos_domain::{Document, NewLayer, Uuid};
 use kentos_formats::raster::source::Region;
@@ -51,7 +52,10 @@ fn bad(message: &str, path: &str) -> Stop {
 /// The input's own numbers and choices, before the drawing is read.
 fn asked(input: &OrthophotoSeamlines) -> Result<(), Stop> {
     if input.first.trim() == input.second.trim() {
-        return Err(bad("Aynı ortofoto iki kez verildi; birleşme çizgisi iki ayrı görüntü arasında kurulur.", "second"));
+        return Err(bad(
+            "Aynı ortofoto iki kez verildi; birleşme çizgisi iki ayrı görüntü arasında kurulur.",
+            "second",
+        ));
     }
     if let Some(s) = input.step
         && !(s.is_finite() && s > 0.0)
@@ -61,7 +65,10 @@ fn asked(input: &OrthophotoSeamlines) -> Result<(), Stop> {
     let voronoi = input.method == OrthoSeamMethod::Voronoi;
     if let Some(c) = input.cell {
         if voronoi {
-            return Err(bad("Hücre yalnız radyometrik fark yönteminde verilir.", "cell"));
+            return Err(bad(
+                "Hücre yalnız radyometrik fark yönteminde verilir.",
+                "cell",
+            ));
         }
         if !(1..=64).contains(&c) {
             return Err(bad("Hücre 1 ile 64 piksel arasında olmalı.", "cell"));
@@ -69,34 +76,65 @@ fn asked(input: &OrthophotoSeamlines) -> Result<(), Stop> {
     }
     if let Some(c) = input.corridor {
         if voronoi {
-            return Err(bad("Arama bandı yalnız radyometrik fark yönteminde verilir.", "corridor"));
+            return Err(bad(
+                "Arama bandı yalnız radyometrik fark yönteminde verilir.",
+                "corridor",
+            ));
         }
         if !(c.is_finite() && c > 0.0) {
-            return Err(bad("Arama bandı 0'dan büyük olmalı (metre); bütün örtüşme için boş bırakın.", "corridor"));
+            return Err(bad(
+                "Arama bandı 0'dan büyük olmalı (metre); bütün örtüşme için boş bırakın.",
+                "corridor",
+            ));
         }
     }
     if input.avoid.is_some() && voronoi {
-        return Err(bad("Geçilmeyecek alanlar yalnız radyometrik fark yönteminde verilir.", "avoid"));
+        return Err(bad(
+            "Geçilmeyecek alanlar yalnız radyometrik fark yönteminde verilir.",
+            "avoid",
+        ));
     }
     if let Some([p, q]) = &input.footprints
         && p.trim() == q.trim()
     {
-        return Err(bad("Aynı ayak izi iki kez verildi; her görüntünün kendi ayak izini verin.", "footprints"));
+        return Err(bad(
+            "Aynı ayak izi iki kez verildi; her görüntünün kendi ayak izini verin.",
+            "footprints",
+        ));
     }
     Ok(())
 }
 
 /// A raster of the input, checked: the entity.
-pub(crate) fn raster<'a>(doc: &'a Document, uid: &str, path: &str) -> Result<(Uuid, &'a RasterEntity), Stop> {
+pub(crate) fn raster<'a>(
+    doc: &'a Document,
+    uid: &str,
+    path: &str,
+) -> Result<(Uuid, &'a RasterEntity), Stop> {
     let uid = uid.trim();
     if !checks::is_uid_text(uid) {
-        return Err(fail(codes::INVALID_UID, format!("“{uid}” geçerli bir nesne kimliği değil."), path));
+        return Err(fail(
+            codes::INVALID_UID,
+            format!("“{uid}” geçerli bir nesne kimliği değil."),
+            path,
+        ));
     }
-    let Some((id, e)) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u).and_then(|s| doc.get(s)).map(|e| (u, e))) else {
-        return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), path));
+    let Some((id, e)) = Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u).and_then(|s| doc.get(s)).map(|e| (u, e)))
+    else {
+        return Err(fail(
+            codes::ENTITY_NOT_FOUND,
+            format!("“{uid}” kimlikli nesne çizimde yok."),
+            path,
+        ));
     };
     let Entity::Raster(r) = e else {
-        return Err(fail(codes::NOT_A_RASTER, format!("“{uid}” bir raster değil; ortofotoyu seçin."), path));
+        return Err(fail(
+            codes::NOT_A_RASTER,
+            format!("“{uid}” bir raster değil; ortofotoyu seçin."),
+            path,
+        ));
     };
     let project = doc.settings().srid;
     if r.raster.srid != 0 && r.raster.srid != project {
@@ -118,39 +156,76 @@ pub(crate) fn footprint(doc: &Document, uid: &str, path: &str) -> Result<Vec<Pt>
         .ok()
         .and_then(|u| doc.slot_of(u))
         .and_then(|s| doc.get(s))
-        .ok_or_else(|| fail(codes::INVALID_INPUT, format!("“{uid}” kimlikli ayak izi çizimde yok."), path))?;
+        .ok_or_else(|| {
+            fail(
+                codes::INVALID_INPUT,
+                format!("“{uid}” kimlikli ayak izi çizimde yok."),
+                path,
+            )
+        })?;
     let straight = |b: &Option<Vec<f64>>| b.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0));
     let ring = |pts: &[Vec2]| -> Vec<Pt> { pts.iter().map(|v| [v.x, v.y]).collect() };
     match e {
-        Entity::Polygon(p) if p.holes.as_ref().is_none_or(Vec::is_empty) && p.parts.as_ref().is_none_or(Vec::is_empty) => {
+        Entity::Polygon(p)
+            if p.holes.as_ref().is_none_or(Vec::is_empty)
+                && p.parts.as_ref().is_none_or(Vec::is_empty) =>
+        {
             if !straight(&p.bulges) {
-                return Err(bad("Ayak izinin kenarları düz olmalı; yaylı ayak izi kullanılmaz.", path));
+                return Err(bad(
+                    "Ayak izinin kenarları düz olmalı; yaylı ayak izi kullanılmaz.",
+                    path,
+                ));
             }
             Ok(ring(&p.pts))
         }
-        Entity::Polygon(_) => Err(bad("Ayak izi tek parçalı ve deliksiz bir alan olmalı.", path)),
+        Entity::Polygon(_) => Err(bad(
+            "Ayak izi tek parçalı ve deliksiz bir alan olmalı.",
+            path,
+        )),
         Entity::Polyline(p) if p.closed => {
             if !straight(&p.bulges) {
-                return Err(bad("Ayak izinin kenarları düz olmalı; yaylı ayak izi kullanılmaz.", path));
+                return Err(bad(
+                    "Ayak izinin kenarları düz olmalı; yaylı ayak izi kullanılmaz.",
+                    path,
+                ));
             }
             Ok(ring(&p.pts))
         }
-        _ => Err(bad("Ayak izi bir alan ya da kapalı bir çoklu çizgi olmalı.", path)),
+        _ => Err(bad(
+            "Ayak izi bir alan ya da kapalı bir çoklu çizgi olmalı.",
+            path,
+        )),
     }
 }
 
 /// The footprints' fault in the user's words.
 fn fault(f: SeamFault, given: bool) -> Stop {
     let which = |k: usize| if k == 0 { "Birinci" } else { "İkinci" };
-    let what = if given { "ayak izi" } else { "görüntünün sınırı" };
+    let what = if given {
+        "ayak izi"
+    } else {
+        "görüntünün sınırı"
+    };
     let path = if given { "footprints" } else { "second" };
     match f {
-        SeamFault::Degenerate(k) => bad(&format!("{} {what} alan kaplamıyor (üçten az köşe ya da sıfır alan).", which(k)), path),
-        SeamFault::NotConvex(k) => bad(
-            &format!("{} {what} dışbükey değil; birleşme çizgisi dışbükey ayak izleri arasında kurulur. İçbükey ayak izini parçalara bölün.", which(k)),
+        SeamFault::Degenerate(k) => bad(
+            &format!(
+                "{} {what} alan kaplamıyor (üçten az köşe ya da sıfır alan).",
+                which(k)
+            ),
             path,
         ),
-        SeamFault::Apart => bad("İki görüntü örtüşmüyor (ya da yalnız değiyor); birleşme çizgisi ancak örtüşmede kurulur.", path),
+        SeamFault::NotConvex(k) => bad(
+            &format!(
+                "{} {what} dışbükey değil; birleşme çizgisi dışbükey ayak izleri arasında kurulur. İçbükey ayak izini parçalara bölün.",
+                which(k)
+            ),
+            path,
+        ),
+        SeamFault::Apart => bad(
+            "İki görüntü örtüşmüyor (ya da yalnız değiyor); birleşme çizgisi ancak örtüşmede kurulur.",
+            path,
+        ),
         SeamFault::Inside(k) => bad(
             &format!(
                 "{} görüntü öbürünün içinde kalıyor: öbürü onu bütünüyle örtüyor, aralarında birleşme çizgisi yok. Mozaikte üstte kalanı seçin.",
@@ -168,10 +243,17 @@ fn fault(f: SeamFault, given: bool) -> Stop {
 /// The areas of the `avoid` layer (areas, every part and hole, and closed polylines).
 fn avoided(doc: &Document, layer: &str) -> Result<Vec<Area>, Stop> {
     if doc.layers().get(layer).is_none() {
-        return Err(fail(codes::LAYER_NOT_FOUND, format!("Geçilmeyecek alanların katmanı “{layer}” çizimde yok."), "avoid"));
+        return Err(fail(
+            codes::LAYER_NOT_FOUND,
+            format!("Geçilmeyecek alanların katmanı “{layer}” çizimde yok."),
+            "avoid",
+        ));
     }
     let ring = |pts: &[Vec2], bulges: Option<&Vec<f64>>| Ring {
-        pts: pts.iter().map(|p| kentos_geometry_core::Vec2::new(p.x, p.y)).collect(),
+        pts: pts
+            .iter()
+            .map(|p| kentos_geometry_core::Vec2::new(p.x, p.y))
+            .collect(),
         bulges: bulges.cloned(),
     };
     let mut out = Vec::new();
@@ -179,14 +261,26 @@ fn avoided(doc: &Document, layer: &str) -> Result<Vec<Area>, Stop> {
         match e {
             Entity::Polygon(p) => {
                 let holes = |h: &Option<Vec<kentos_commands::RingGeometry>>| {
-                    h.iter().flatten().map(|r| ring(&r.pts, r.bulges.as_ref())).collect::<Vec<_>>()
+                    h.iter()
+                        .flatten()
+                        .map(|r| ring(&r.pts, r.bulges.as_ref()))
+                        .collect::<Vec<_>>()
                 };
-                out.push(Area { outer: ring(&p.pts, p.bulges.as_ref()), holes: holes(&p.holes) });
+                out.push(Area {
+                    outer: ring(&p.pts, p.bulges.as_ref()),
+                    holes: holes(&p.holes),
+                });
                 for part in p.parts.iter().flatten() {
-                    out.push(Area { outer: ring(&part.pts, part.bulges.as_ref()), holes: holes(&part.holes) });
+                    out.push(Area {
+                        outer: ring(&part.pts, part.bulges.as_ref()),
+                        holes: holes(&part.holes),
+                    });
                 }
             }
-            Entity::Polyline(p) if p.closed => out.push(Area { outer: ring(&p.pts, p.bulges.as_ref()), holes: Vec::new() }),
+            Entity::Polyline(p) if p.closed => out.push(Area {
+                outer: ring(&p.pts, p.bulges.as_ref()),
+                holes: Vec::new(),
+            }),
             _ => {}
         }
     }
@@ -214,12 +308,22 @@ fn radiometry(
         None => Vec::new(),
     };
     // The overlap's box in the first's pixels, whole cells.
-    let corners: Vec<(f64, f64)> = fp.overlap().iter().filter_map(|p| r1.raster.pixel_of(p[0], p[1])).collect();
+    let corners: Vec<(f64, f64)> = fp
+        .overlap()
+        .iter()
+        .filter_map(|p| r1.raster.pixel_of(p[0], p[1]))
+        .collect();
     let (w1, h1) = (i64::from(r1.raster.width), i64::from(r1.raster.height));
     let lo = |f: fn(&(f64, f64)) -> f64| corners.iter().map(f).fold(f64::INFINITY, f64::min);
     let hi = |f: fn(&(f64, f64)) -> f64| corners.iter().map(f).fold(f64::NEG_INFINITY, f64::max);
-    let (i0, i1) = ((lo(|p| p.0).floor() as i64).max(0), (hi(|p| p.0).ceil() as i64).min(w1));
-    let (j0, j1) = ((lo(|p| p.1).floor() as i64).max(0), (hi(|p| p.1).ceil() as i64).min(h1));
+    let (i0, i1) = (
+        (lo(|p| p.0).floor() as i64).max(0),
+        (hi(|p| p.0).ceil() as i64).min(w1),
+    );
+    let (j0, j1) = (
+        (lo(|p| p.1).floor() as i64).max(0),
+        (hi(|p| p.1).ceil() as i64).min(h1),
+    );
     let (ci0, cj0) = (i0.div_euclid(c), j0.div_euclid(c));
     let (ci1, cj1) = ((i1 - 1).div_euclid(c), (j1 - 1).div_euclid(c));
     if i1 <= i0 || j1 <= j0 {
@@ -240,29 +344,83 @@ fn radiometry(
     }
     let mut o1 = opened(doc, r1, input.folder.as_deref(), "first")?;
     let mut o2 = opened(doc, r2, input.folder.as_deref(), "second")?;
-    let read = |o: &mut crate::raster_files::Opened, x: i64, y: i64, w: u32, h: u32, path: &str| -> Result<Region, Stop> {
+    let read = |o: &mut crate::raster_files::Opened,
+                x: i64,
+                y: i64,
+                w: u32,
+                h: u32,
+                path: &str|
+     -> Result<Region, Stop> {
         o.region(x, y, w, h)
-            .map_err(|e| fail(codes::IMPORT_UNREADABLE, format!("Ortofotonun pikselleri okunamadı: {e}"), path))?
-            .ok_or_else(|| fail(codes::IMPORT_UNREADABLE, "Ortofotonun pikselleri okunamadı.".into(), path))
+            .map_err(|e| {
+                fail(
+                    codes::IMPORT_UNREADABLE,
+                    format!("Ortofotonun pikselleri okunamadı: {e}"),
+                    path,
+                )
+            })?
+            .ok_or_else(|| {
+                fail(
+                    codes::IMPORT_UNREADABLE,
+                    "Ortofotonun pikselleri okunamadı.".into(),
+                    path,
+                )
+            })
     };
     let first = read(&mut o1, px0, py0, pw, ph, "first")?;
     // The second's pixels under the box, two more round it for the cubic.
-    let box_in_second: Vec<(f64, f64)> = [(px0, py0), (px0 + i64::from(pw), py0), (px0, py0 + i64::from(ph)), (px0 + i64::from(pw), py0 + i64::from(ph))]
-        .iter()
-        .filter_map(|&(i, j)| {
-            let p = ground(r1, i as f64, j as f64);
-            r2.raster.pixel_of(p[0], p[1])
-        })
-        .collect();
+    let box_in_second: Vec<(f64, f64)> = [
+        (px0, py0),
+        (px0 + i64::from(pw), py0),
+        (px0, py0 + i64::from(ph)),
+        (px0 + i64::from(pw), py0 + i64::from(ph)),
+    ]
+    .iter()
+    .filter_map(|&(i, j)| {
+        let p = ground(r1, i as f64, j as f64);
+        r2.raster.pixel_of(p[0], p[1])
+    })
+    .collect();
     let (w2, h2) = (i64::from(r2.raster.width), i64::from(r2.raster.height));
-    let sx0 = (box_in_second.iter().map(|p| p.0).fold(f64::INFINITY, f64::min).floor() as i64 - 2).max(0);
-    let sy0 = (box_in_second.iter().map(|p| p.1).fold(f64::INFINITY, f64::min).floor() as i64 - 2).max(0);
-    let sx1 = (box_in_second.iter().map(|p| p.0).fold(f64::NEG_INFINITY, f64::max).ceil() as i64 + 2).min(w2);
-    let sy1 = (box_in_second.iter().map(|p| p.1).fold(f64::NEG_INFINITY, f64::max).ceil() as i64 + 2).min(h2);
+    let sx0 = (box_in_second
+        .iter()
+        .map(|p| p.0)
+        .fold(f64::INFINITY, f64::min)
+        .floor() as i64
+        - 2)
+    .max(0);
+    let sy0 = (box_in_second
+        .iter()
+        .map(|p| p.1)
+        .fold(f64::INFINITY, f64::min)
+        .floor() as i64
+        - 2)
+    .max(0);
+    let sx1 = (box_in_second
+        .iter()
+        .map(|p| p.0)
+        .fold(f64::NEG_INFINITY, f64::max)
+        .ceil() as i64
+        + 2)
+    .min(w2);
+    let sy1 = (box_in_second
+        .iter()
+        .map(|p| p.1)
+        .fold(f64::NEG_INFINITY, f64::max)
+        .ceil() as i64
+        + 2)
+    .min(h2);
     if sx1 <= sx0 || sy1 <= sy0 {
         return Err(bad("Örtüşmede ikinci görüntünün pikseli yok.", "cell"));
     }
-    let second = read(&mut o2, sx0, sy0, (sx1 - sx0) as u32, (sy1 - sy0) as u32, "second")?;
+    let second = read(
+        &mut o2,
+        sx0,
+        sy0,
+        (sx1 - sx0) as u32,
+        (sy1 - sy0) as u32,
+        "second",
+    )?;
     let bands = r1.raster.bands.min(r2.raster.bands).max(1);
     // The second's bands at a point of its pixels (pixel centres at whole + 0.5), none when not readable there.
     let sample = |u: f64, v: f64| -> Option<Vec<f64>> {
@@ -289,7 +447,8 @@ fn radiometry(
                     for n in -1..=2_i64 {
                         let mut row = 0.0;
                         for m in -1..=2_i64 {
-                            row += second.at((iu + m - sx0) as u32, (iv + n - sy0) as u32, b) * keys(tx - m as f64);
+                            row += second.at((iu + m - sx0) as u32, (iv + n - sy0) as u32, b)
+                                * keys(tx - m as f64);
                         }
                         sum += row * keys(ty - n as f64);
                     }
@@ -298,7 +457,11 @@ fn radiometry(
                 .collect(),
         )
     };
-    let in_avoid = |p: Pt| avoid.iter().any(|a| inside_area(a, kentos_geometry_core::Vec2::new(p[0], p[1])));
+    let in_avoid = |p: Pt| {
+        avoid
+            .iter()
+            .any(|a| inside_area(a, kentos_geometry_core::Vec2::new(p[0], p[1])))
+    };
     let mut diff = vec![f64::NAN; gw * gh];
     let mut searched = 0_u32;
     let mut sum = 0.0;
@@ -326,12 +489,18 @@ fn radiometry(
                         break 'pixels;
                     };
                     let (li, lj) = ((i - px0) as u32, (j - py0) as u32);
-                    let d = (0..bands).map(|b| (first.at(li, lj, b) - b2[b as usize]).abs()).fold(0.0, f64::max);
+                    let d = (0..bands)
+                        .map(|b| (first.at(li, lj, b) - b2[b as usize]).abs())
+                        .fold(0.0, f64::max);
                     worst = worst.map(|w| w.max(d));
                 }
             }
             let Some(d) = worst else { continue };
-            let centre = ground(r1, ((ci0 + gi as i64) * c) as f64 + c as f64 / 2.0, ((cj0 + gj as i64) * c) as f64 + c as f64 / 2.0);
+            let centre = ground(
+                r1,
+                ((ci0 + gi as i64) * c) as f64 + c as f64 / 2.0,
+                ((cj0 + gj as i64) * c) as f64 + c as f64 / 2.0,
+            );
             if let Some(corridor) = input.corridor
                 && geo::to_polyline(centre, voronoi) > corridor
             {
@@ -350,7 +519,11 @@ fn radiometry(
     }
     let centre_of = |k: usize| {
         let (gi, gj) = ((k % gw) as i64, (k / gw) as i64);
-        ground(r1, ((ci0 + gi) * c) as f64 + c as f64 / 2.0, ((cj0 + gj) * c) as f64 + c as f64 / 2.0)
+        ground(
+            r1,
+            ((ci0 + gi) * c) as f64 + c as f64 / 2.0,
+            ((cj0 + gj) * c) as f64 + c as f64 / 2.0,
+        )
     };
     let nearest = |p: Pt| -> usize {
         let mut best = (f64::INFINITY, 0);
@@ -395,32 +568,52 @@ fn radiometry(
 }
 
 /// What the command builds, writing nothing: the output and the two polygons as they would be written.
-fn run(doc: &Document, input: &OrthophotoSeamlines) -> Result<(OrthophotoSeamlinesBuilt, [Entity; 2]), Stop> {
+fn run(
+    doc: &Document,
+    input: &OrthophotoSeamlines,
+) -> Result<(OrthophotoSeamlinesBuilt, [Entity; 2]), Stop> {
     asked(input)?;
     let (id1, r1) = raster(doc, &input.first, "first")?;
     let (id2, r2) = raster(doc, &input.second, "second")?;
-    let layer = input.layer.as_deref().map(str::trim).unwrap_or(SEAMLINE_LAYER).to_owned();
+    let layer = input
+        .layer
+        .as_deref()
+        .map(str::trim)
+        .unwrap_or(SEAMLINE_LAYER)
+        .to_owned();
     let opened = match doc.layers().get(&layer) {
         Some(node) => {
             if doc.layers().is_locked(&layer) {
                 return Err(fail(
                     codes::LAYER_LOCKED,
-                    format!("“{}” katmanı kilitli; mozaik elemanları bu katmana yazılır. Kilidi Katmanlar panelinden açın.", node.name),
+                    format!(
+                        "“{}” katmanı kilitli; mozaik elemanları bu katmana yazılır. Kilidi Katmanlar panelinden açın.",
+                        node.name
+                    ),
                     "layer",
                 ));
             }
             false
         }
         None if input.layer.is_some() => {
-            return Err(fail(codes::LAYER_NOT_FOUND, format!("“{layer}” katmanı çizimde yok."), "layer"));
+            return Err(fail(
+                codes::LAYER_NOT_FOUND,
+                format!("“{layer}” katmanı çizimde yok."),
+                "layer",
+            ));
         }
         None => true,
     };
     let given = input.footprints.is_some();
     let (f1, f2) = match &input.footprints {
-        Some([a, b]) => (footprint(doc, a, "footprints[0]")?, footprint(doc, b, "footprints[1]")?),
+        Some([a, b]) => (
+            footprint(doc, a, "footprints[0]")?,
+            footprint(doc, b, "footprints[1]")?,
+        ),
         None => {
-            let ring = |r: &RasterEntity| -> Vec<Pt> { r.raster.corners().iter().map(|&(x, y)| [x, y]).collect() };
+            let ring = |r: &RasterEntity| -> Vec<Pt> {
+                r.raster.corners().iter().map(|&(x, y)| [x, y]).collect()
+            };
             (ring(r1), ring(r2))
         }
     };
@@ -441,7 +634,10 @@ fn run(doc: &Document, input: &OrthophotoSeamlines) -> Result<(OrthophotoSeamlin
             "method",
         ));
     }
-    let length: f64 = seam.windows(2).map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1])).sum();
+    let length: f64 = seam
+        .windows(2)
+        .map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]))
+        .sum();
     let overlap_area = fp.overlap_area();
     let method_word = match input.method {
         OrthoSeamMethod::Voronoi => "eşit uzaklık (Voronoi)",
@@ -487,7 +683,10 @@ fn run(doc: &Document, input: &OrthophotoSeamlines) -> Result<(OrthophotoSeamlin
         })
     };
     let [(s, sc), (e, ec)] = fp.ends();
-    let end = |at: Pt, crossing: bool| OrthoSeamEnd { at, kind: if crossing { "crossing" } else { "shared" }.into() };
+    let end = |at: Pt, crossing: bool| OrthoSeamEnd {
+        at,
+        kind: if crossing { "crossing" } else { "shared" }.into(),
+    };
     let mut notes = vec![format!(
         "Mozaik elemanları ({}): örtüşme {:.2} m², birleşme çizgisi {:.2} m; birinci görüntü örtüşmenin {:.2} m²'sini, ikinci {:.2} m²'sini kullanır.",
         method_word, overlap_area, length, polygons[0].kept, polygons[1].kept
@@ -528,20 +727,32 @@ fn run(doc: &Document, input: &OrthophotoSeamlines) -> Result<(OrthophotoSeamlin
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &OrthophotoSeamlines) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What execute would write; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &OrthophotoSeamlines) -> CommandResult<OrthophotoSeamlinesBuilt> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &OrthophotoSeamlines,
+) -> CommandResult<OrthophotoSeamlinesBuilt> {
     match run(cx.doc, input) {
-        Ok((out, _)) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok((out, _)) => CommandResult::Completed {
+            output: out,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: OrthophotoSeamlines) -> CommandResult<OrthophotoSeamlinesBuilt> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: OrthophotoSeamlines,
+) -> CommandResult<OrthophotoSeamlinesBuilt> {
     if let Err(stop) = checks::revision(cx.doc, input.expected_revision.as_deref()) {
         return stop.into();
     }
@@ -551,17 +762,30 @@ fn write(cx: &mut ExecutionContext<'_>, input: OrthophotoSeamlines) -> CommandRe
     };
     let group = cx.doc.begin_group(STEP);
     if out.opened {
-        let layer = NewLayer { id: Some(SEAMLINE_LAYER.to_owned()), ..NewLayer::layer(SEAMLINE_LAYER_NAME) };
+        let layer = NewLayer {
+            id: Some(SEAMLINE_LAYER.to_owned()),
+            ..NewLayer::layer(SEAMLINE_LAYER_NAME)
+        };
         if let Err(refusal) = cx.doc.add_layer(layer, None, false) {
             cx.doc.cancel_group(group);
-            return Stop::failed(error(codes::LAYER_NOT_FOUND, refusal.to_string(), Some("layer".into()))).into();
+            return Stop::failed(error(
+                codes::LAYER_NOT_FOUND,
+                refusal.to_string(),
+                Some("layer".into()),
+            ))
+            .into();
         }
     }
     let slots = match cx.doc.add_many(entities.to_vec(), STEP) {
         Ok(slots) => slots,
         Err(_) => {
             cx.doc.cancel_group(group);
-            return Stop::failed(error(codes::INVALID_INPUT, "Çizimde yeni nesneye yer kalmadı.".into(), None)).into();
+            return Stop::failed(error(
+                codes::INVALID_INPUT,
+                "Çizimde yeni nesneye yer kalmadı.".into(),
+                None,
+            ))
+            .into();
         }
     };
     cx.doc.end_group(group);
@@ -569,10 +793,16 @@ fn write(cx: &mut ExecutionContext<'_>, input: OrthophotoSeamlines) -> CommandRe
         out.polygons[k].uid = cx.doc.uid(*slot).map(|u| u.to_string());
     }
     out.revision = cx.doc.revision().to_string();
-    CommandResult::Completed { output: out, warnings: Vec::new() }
+    CommandResult::Completed {
+        output: out,
+        warnings: Vec::new(),
+    }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: OrthophotoSeamlines) -> CommandResult<OrthophotoSeamlinesBuilt> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: OrthophotoSeamlines,
+) -> CommandResult<OrthophotoSeamlinesBuilt> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_ORTHOPHOTO_SEAMLINES,

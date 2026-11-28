@@ -11,8 +11,12 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn each_point_s_areas_of_use_are_said_over_mcp() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.crs.transform.json")).unwrap();
-    let v1: kentos_commands::DocumentSnapshotV1 = serde_json::from_value(cases["setup"].clone()).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.crs.transform.json"
+    ))
+    .unwrap();
+    let v1: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
     let snapshot = kentos_commands::migrate_v1(v1).unwrap();
     let dir = std::env::temp_dir().join(format!("kentos-crs-point-notes-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -22,7 +26,16 @@ fn each_point_s_areas_of_use_are_said_over_mcp() {
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Noktaların ayrı kararları"))).unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("Noktaların ayrı kararları"))
+        })
+        .unwrap();
     let want = &case["steps"][0]["result"];
     let mut input = case["steps"][0]["input"].clone();
     input["drawing"] = drawing;
@@ -34,7 +47,14 @@ fn each_point_s_areas_of_use_are_said_over_mcp() {
         got["output"]["flagged"],
         json!([{"index": 1, "notes": ["outside_target_area"]}, {"index": 2, "notes": ["outside_source_area", "outside_target_area"]}])
     );
-    assert!(got["output"]["points"].as_array().unwrap().iter().all(|p| !p.is_null()), "every point converted");
+    assert!(
+        got["output"]["points"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|p| !p.is_null()),
+        "every point converted"
+    );
     assert!(r.to_string().contains("outside_area"), "{r}");
     let _ = std::fs::remove_dir_all(dir);
 }

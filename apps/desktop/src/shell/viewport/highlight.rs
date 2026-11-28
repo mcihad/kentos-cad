@@ -145,7 +145,10 @@ impl Viewport {
                     .then(|| spatial.and_then(|sp| selection_box(sp, selection.ids())))
                     .flatten();
                 let part = if let Some(frame) = boxed {
-                    let style = Highlight { fill: None, ..style };
+                    let style = Highlight {
+                        fill: None,
+                        ..style
+                    };
                     Arc::new(scene::build_highlight(
                         vec![&frame],
                         &style,
@@ -270,10 +273,16 @@ pub(crate) fn objects_of<'a>(
         let Some(e) = doc.model.get(slot) else {
             continue;
         };
-        match spatial.map(|s|s.represented(e)).unwrap_or_else(||Some(std::borrow::Cow::Borrowed(e))) {
-            None=>{},
-            Some(std::borrow::Cow::Owned(e))=>pieces.push(e),
-            Some(std::borrow::Cow::Borrowed(e))=>match spatial.and_then(|s|s.pieces(e)) {Some(placed)=>pieces.extend(placed),None=>objects.push(e)},
+        match spatial
+            .map(|s| s.represented(e))
+            .unwrap_or_else(|| Some(std::borrow::Cow::Borrowed(e)))
+        {
+            None => {}
+            Some(std::borrow::Cow::Owned(e)) => pieces.push(e),
+            Some(std::borrow::Cow::Borrowed(e)) => match spatial.and_then(|s| s.pieces(e)) {
+                Some(placed) => pieces.extend(placed),
+                None => objects.push(e),
+            },
         }
     }
     let pieces: &'a Vec<Entity> = pieces;
@@ -317,13 +326,20 @@ pub(crate) fn objects_of_parallel<'a>(
                 scope.spawn(move || {
                     let mut out = Vec::new();
                     for (e, x, shown) in part {
-                        out.extend(kentos_native_application::blocks::piece_entities_shown(e, x, |i| shown[i]));
+                        out.extend(kentos_native_application::blocks::piece_entities_shown(
+                            e,
+                            x,
+                            |i| shown[i],
+                        ));
                     }
                     out
                 })
             })
             .collect();
-        handles.into_iter().map(|h| h.join().unwrap_or_default()).collect()
+        handles
+            .into_iter()
+            .map(|h| h.join().unwrap_or_default())
+            .collect()
     });
     *pieces = made;
     let pieces: &'a Vec<Vec<Entity>> = pieces;
@@ -346,15 +362,24 @@ mod tests {
         crate::tools_scenes::open(&mut app, o);
         let ids: Vec<Slot> = (1..=30_001).map(Slot).collect();
         assert!(ids.len() > super::HIGHLIGHT_LIMIT);
-        app.spatial.sync(&app.document.as_ref().expect("open").model);
+        app.spatial
+            .sync(&app.document.as_ref().expect("open").model);
         let frame = super::selection_box(&app.spatial, &ids).expect("a box");
-        let kentos_commands::Entity::Polygon(p) = frame else { panic!("a closed area") };
+        let kentos_commands::Entity::Polygon(p) = frame else {
+            panic!("a closed area")
+        };
         let (e, n) = (crate::tools_scenes::E, crate::tools_scenes::N);
         let xs: Vec<f64> = p.pts.iter().map(|q| q.x - e).collect();
         let ys: Vec<f64> = p.pts.iter().map(|q| q.y - n).collect();
         let near = |a: f64, b: f64| (a - b).abs() < 1e-6;
-        assert!(near(xs.iter().cloned().fold(f64::INFINITY, f64::min), 0.0) && near(xs.iter().cloned().fold(f64::MIN, f64::max), 299.5));
-        assert!(near(ys.iter().cloned().fold(f64::INFINITY, f64::min), 0.0) && near(ys.iter().cloned().fold(f64::MIN, f64::max), 100.25));
+        assert!(
+            near(xs.iter().cloned().fold(f64::INFINITY, f64::min), 0.0)
+                && near(xs.iter().cloned().fold(f64::MIN, f64::max), 299.5)
+        );
+        assert!(
+            near(ys.iter().cloned().fold(f64::INFINITY, f64::min), 0.0)
+                && near(ys.iter().cloned().fold(f64::MIN, f64::max), 100.25)
+        );
     }
 
     use iced::{Point, Rectangle};
@@ -419,10 +444,19 @@ mod tests {
         let accent = Rgba8::rgb(0x4c, 0x9b, 0xe8);
         let mut selection = Selection::new();
         selection.set(doc.model.entities().map(|e| Slot(e.base().id)));
-        let (plain, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        let (plain, _) =
+            viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         // Across the sample's first line, (486 512.34, 4 420 187.52) → (486 522.44, 4 420 187.72).
-        let b = Bounds { min_x: 486_515.0, min_y: 4_420_187.0, max_x: 486_517.0, max_y: 4_420_188.5 };
-        viewport.deep.set(Some(kentos_native_style::Deep { bounds: b, tolerance: 1e-4 }));
+        let b = Bounds {
+            min_x: 486_515.0,
+            min_y: 4_420_187.0,
+            max_x: 486_517.0,
+            max_y: 4_420_188.5,
+        };
+        viewport.deep.set(Some(kentos_native_style::Deep {
+            bounds: b,
+            tolerance: 1e-4,
+        }));
         let (deep, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert_ne!(deep.id, plain.id, "built again for the box");
         assert!(deep.segments.len() > plain.segments.len());
@@ -431,17 +465,26 @@ mod tests {
             let p = kentos_render_wgpu::precision::join(hi, lo);
             Vec2::new(o.x + p[0], o.y + p[1])
         };
-        let inside = |p: Vec2| p.x >= b.min_x - 1e-6 && p.x <= b.max_x + 1e-6 && p.y >= b.min_y - 1e-6 && p.y <= b.max_y + 1e-6;
+        let inside = |p: Vec2| {
+            p.x >= b.min_x - 1e-6
+                && p.x <= b.max_x + 1e-6
+                && p.y >= b.min_y - 1e-6
+                && p.y <= b.max_y + 1e-6
+        };
         let mut within = 0;
         for s in &deep.segments {
             let (p, q) = (world(s.a_hi, s.a_lo), world(s.b_hi, s.b_lo));
             if inside(Vec2::new((p.x + q.x) / 2.0, (p.y + q.y) / 2.0)) {
                 within += 1;
-                assert!(inside(p) && inside(q), "{p:?} → {q:?} reaches into the box from outside it");
+                assert!(
+                    inside(p) && inside(q),
+                    "{p:?} → {q:?} reaches into the box from outside it"
+                );
             }
         }
         assert!(within > 0, "the line's piece in the box");
-        let (again, _) = viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        let (again, _) =
+            viewport.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert_eq!(again.id, deep.id, "the same box: kept");
     }
 
@@ -476,12 +519,15 @@ mod tests {
                 path: None,
             }],
         });
-        let (sel, hover) = themed.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
+        let (sel, hover) =
+            themed.highlights(&doc, &selection, accent, &fixed, &curves, &clip, None);
         assert!(sel.segments.is_empty() && sel.fills.is_empty() && sel.markers.is_empty());
         let mut hovering = Selection::new();
         hovering.set_hover(Some(slot));
         let (_, hover2) = themed.highlights(&doc, &hovering, accent, &fixed, &curves, &clip, None);
-        assert!(hover.segments.is_empty() && hover2.segments.is_empty() && hover2.markers.is_empty());
+        assert!(
+            hover.segments.is_empty() && hover2.segments.is_empty() && hover2.markers.is_empty()
+        );
     }
 
     /// Where the selection's highlight is drawn, measured (docs/adr/0029): as
@@ -670,8 +716,15 @@ mod tests {
         let a = objects_of(&doc, Some(&spatial), &mut ids.iter().copied(), &mut one);
         let mut many = Vec::new();
         let b = objects_of_parallel(&doc, Some(&spatial), &mut ids.iter().copied(), &mut many, 8);
-        assert!(a.len() > ids.len(), "the inserts' pieces: {} objects", a.len());
+        assert!(
+            a.len() > ids.len(),
+            "the inserts' pieces: {} objects",
+            a.len()
+        );
         assert_eq!(a.len(), b.len());
-        assert!(a.iter().zip(&b).all(|(x, y)| x == y), "the same objects in the same order");
+        assert!(
+            a.iter().zip(&b).all(|(x, y)| x == y),
+            "the same objects in the same order"
+        );
     }
 }

@@ -27,7 +27,13 @@ const CHUNK: usize = 2000;
 /// Every data layer of `snapshot` (not a service's) read into objects of its layer, its rows' values their attributes,
 /// and the layer no longer a data layer. Stops at the first source that cannot be read, nothing changed.
 pub fn take_rows(snapshot: &mut DocumentSnapshotV2, cancel: &Cancel) -> Result<Taken, String> {
-    let mut next = snapshot.entities.iter().map(|e| e.base().id).max().unwrap_or(0).saturating_add(1);
+    let mut next = snapshot
+        .entities
+        .iter()
+        .map(|e| e.base().id)
+        .max()
+        .unwrap_or(0)
+        .saturating_add(1);
     let settings = snapshot.settings.clone();
     let default_height = crate::data_text::default_height(&settings);
     let mut taken = Taken::default();
@@ -45,7 +51,8 @@ pub fn take_rows(snapshot: &mut DocumentSnapshotV2, cancel: &Cancel) -> Result<T
             .map_err(|e| format!("“{}” katmanının tablosu okunamadı: {e}", node.name))?;
         let columns: Vec<String> = schema.fields.iter().map(|f| f.name.clone()).collect();
         let srid = data.geometry.as_ref().and_then(|g| g.srid);
-        let system = TableSystem::of(&settings, srid).map_err(|why| format!("“{}”: {why}", node.name))?;
+        let system =
+            TableSystem::of(&settings, srid).map_err(|why| format!("“{}”: {why}", node.name))?;
         let request = Request {
             columns: Some(columns.clone()),
             geometry: data.geometry.is_some(),
@@ -58,7 +65,9 @@ pub fn take_rows(snapshot: &mut DocumentSnapshotV2, cancel: &Cancel) -> Result<T
                     let attrs: Map<String, J> = columns
                         .iter()
                         .zip(&f.values)
-                        .filter_map(|(c, v)| crate::geopackage::attribute_text(v).map(|t| (c.clone(), J::String(t))))
+                        .filter_map(|(c, v)| {
+                            crate::geopackage::attribute_text(v).map(|t| (c.clone(), J::String(t)))
+                        })
                         .collect();
                     let shape = match &f.geometry {
                         None => None,
@@ -67,21 +76,34 @@ pub fn take_rows(snapshot: &mut DocumentSnapshotV2, cancel: &Cancel) -> Result<T
                             Some(s) => match s.moved(g) {
                                 Some(m) => Some(m),
                                 None => {
-                                    taken.left.push(format!("“{}” {}: projenin sistemine çevrilemedi", node.name, f.fid));
+                                    taken.left.push(format!(
+                                        "“{}” {}: projenin sistemine çevrilemedi",
+                                        node.name, f.fid
+                                    ));
                                     continue;
                                 }
                             },
                             None => Some(g.clone()),
                         },
                         Some(Err(why)) => {
-                            taken.left.push(format!("“{}” {}: geometrisi okunamadı ({why})", node.name, f.fid));
+                            taken.left.push(format!(
+                                "“{}” {}: geometrisi okunamadı ({why})",
+                                node.name, f.fid
+                            ));
                             continue;
                         }
                     };
                     let entity = match (&shape, &data.text) {
                         (None, _) => record(&node.id, next, attrs),
                         (Some(g), Some(text)) => crate::data_text::point_of(g).and_then(|at| {
-                            crate::data_text::object(text, at, &node.id, next, attrs, default_height)
+                            crate::data_text::object(
+                                text,
+                                at,
+                                &node.id,
+                                next,
+                                attrs,
+                                default_height,
+                            )
                         }),
                         (Some(g), None) => crate::geopackage::object_of(g, &node.id, next, attrs),
                     };
@@ -91,7 +113,10 @@ pub fn take_rows(snapshot: &mut DocumentSnapshotV2, cancel: &Cancel) -> Result<T
                             next = next.saturating_add(1);
                             taken.rows += 1;
                         }
-                        None => taken.left.push(format!("“{}” {}: geometrisinin çizimde karşılığı yok", node.name, f.fid)),
+                        None => taken.left.push(format!(
+                            "“{}” {}: geometrisinin çizimde karşılığı yok",
+                            node.name, f.fid
+                        )),
                     }
                 }
                 !cancel.is_cancelled()
@@ -109,7 +134,10 @@ pub fn take_rows(snapshot: &mut DocumentSnapshotV2, cancel: &Cancel) -> Result<T
     }
     plain(&mut layers);
     snapshot.layers = layers;
-    snapshot.uids.extend(made.iter().map(|_| EntityId(kentos_domain::Uuid::now_v7().into_bytes())));
+    snapshot.uids.extend(
+        made.iter()
+            .map(|_| EntityId(kentos_domain::Uuid::now_v7().into_bytes())),
+    );
     snapshot.entities.extend(made);
     Ok(taken)
 }
@@ -128,11 +156,15 @@ pub fn plain(nodes: &mut [LayerNode]) {
 
 /// A row without geometry: a record of the layer with its values.
 fn record(layer: &str, id: u32, attrs: Map<String, J>) -> Option<Entity> {
-    serde_json::from_value(json!({ "kind": "record", "id": id, "layerId": layer, "attrs": attrs })).ok()
+    serde_json::from_value(json!({ "kind": "record", "id": id, "layerId": layer, "attrs": attrs }))
+        .ok()
 }
 
 /// Each data layer of the tree, not a service's, depth first.
-fn walk(nodes: &mut [LayerNode], each: &mut dyn FnMut(&mut LayerNode) -> Result<(), String>) -> Result<(), String> {
+fn walk(
+    nodes: &mut [LayerNode],
+    each: &mut dyn FnMut(&mut LayerNode) -> Result<(), String>,
+) -> Result<(), String> {
     for n in nodes {
         if n.kind == LayerNodeType::Group {
             walk(&mut n.children, each)?;

@@ -29,15 +29,31 @@ fn the_known_points_go_to_the_measurement_epoch_over_mcp() {
     let dir = std::env::temp_dir().join(format!("kentos-epoch-grids-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join(format!("{sha}.tif")), &grid).unwrap();
-    kentos_native_application::crs_models::load(&sha, kentos_native_application::crs_models::ModelKind::Velocity, Some(&dir))
-        .unwrap();
-    let cases: Value =
-        serde_json::from_str(&std::fs::read_to_string(root.join("fixtures/commands/v1/map.survey.network.json")).unwrap())
-            .unwrap();
-    let find = |name: &str| cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap().clone();
+    kentos_native_application::crs_models::load(
+        &sha,
+        kentos_native_application::crs_models::ModelKind::Velocity,
+        Some(&dir),
+    )
+    .unwrap();
+    let cases: Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("fixtures/commands/v1/map.survey.network.json"))
+            .unwrap(),
+    )
+    .unwrap();
+    let find = |name: &str| {
+        cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"] == name)
+            .unwrap()
+            .clone()
+    };
     let case = find(MOVED);
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-survey-epoch-{}.kcad", std::process::id()));
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
+    let path =
+        std::env::temp_dir().join(format!("kentos-survey-epoch-{}.kcad", std::process::id()));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -53,7 +69,10 @@ fn the_known_points_go_to_the_measurement_epoch_over_mcp() {
         near(&got["epoch"], &want["epoch"], "epoch");
         assert_eq!(got["epochFrom"], want["epochFrom"], "{name}");
         assert_eq!(got["acceptable"], want["acceptable"], "{name}");
-        let (gm, wm) = (got["moved"].as_array().unwrap(), want["moved"].as_array().unwrap());
+        let (gm, wm) = (
+            got["moved"].as_array().unwrap(),
+            want["moved"].as_array().unwrap(),
+        );
         assert_eq!(gm.len(), wm.len(), "{name}");
         for (g, w) in gm.iter().zip(wm) {
             assert_eq!(g["id"], w["id"]);

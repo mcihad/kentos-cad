@@ -4,7 +4,8 @@
 //! tangents). Nothing read is kept: every read computes again.
 
 use kentos_commands::{
-    CommandWarning, JunctionDef, JunctionKind, JunctionLeg, JunctionListed, JunctionPlace, JunctionReport, JunctionReturn,
+    CommandWarning, JunctionDef, JunctionKind, JunctionLeg, JunctionListed, JunctionPlace,
+    JunctionReport, JunctionReturn,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -16,32 +17,64 @@ use crate::road_alignments as alignments;
 use crate::road_terrains::fail;
 
 /// The quadrants in order: the first leg's side and the second's.
-pub(crate) const QUADRANTS: [(&str, &str); 4] = [("right", "right"), ("right", "left"), ("left", "left"), ("left", "right")];
+pub(crate) const QUADRANTS: [(&str, &str); 4] = [
+    ("right", "right"),
+    ("right", "left"),
+    ("left", "left"),
+    ("left", "right"),
+];
 
 /// Only a road project has junctions.
 pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work == Some(kentos_commands::CadWork::Road) {
         Ok(())
     } else {
-        Err(fail(codes::NOT_A_ROAD_PROJECT, "Kavşak yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(), ""))
+        Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "Kavşak yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(),
+            "",
+        ))
     }
 }
 
 /// The junction of `name`: by its id, else by its name (case aside).
-pub(crate) fn find<'a>(list: &'a [JunctionDef], name: &str, path: &str) -> Result<(usize, &'a JunctionDef), Stop> {
+pub(crate) fn find<'a>(
+    list: &'a [JunctionDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a JunctionDef), Stop> {
     list.iter()
         .position(|c| c.id == name)
-        .or_else(|| list.iter().position(|c| c.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .position(|c| c.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|i| (i, &list[i]))
-        .ok_or_else(|| fail(codes::UNKNOWN_JUNCTION, format!("“{name}” kimlikli ya da adlı kavşak projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_JUNCTION,
+                format!("“{name}” kimlikli ya da adlı kavşak projede yok."),
+                path,
+            )
+        })
 }
 
 pub(crate) fn listed(list: &[JunctionDef]) -> Vec<JunctionListed> {
-    list.iter().map(|j| JunctionListed { id: j.id.clone(), name: j.name.clone(), kind: j.kind, revision: j.revision }).collect()
+    list.iter()
+        .map(|j| JunctionListed {
+            id: j.id.clone(),
+            name: j.name.clone(),
+            kind: j.kind,
+            revision: j.revision,
+        })
+        .collect()
 }
 
 /// The junction read now, and its warnings.
-pub(crate) fn read(doc: &Document, def: &JunctionDef) -> Result<(JunctionReport, Vec<CommandWarning>), Stop> {
+pub(crate) fn read(
+    doc: &Document,
+    def: &JunctionDef,
+) -> Result<(JunctionReport, Vec<CommandWarning>), Stop> {
     read_told(doc, def, &|_, _| false)
 }
 
@@ -57,59 +90,120 @@ pub(crate) fn read_told(
     let mut built = Vec::new();
     for leg in &def.legs {
         let (_, a) = alignments::find(list, &leg.alignment, "legs")?;
-        let b = alignments::build(list, a, "")
-            .map_err(|_| bad(format!("“{}” kavşağının “{}” aksı kurulamıyor.", def.name, a.name), "legs"))?;
+        let b = alignments::build(list, a, "").map_err(|_| {
+            bad(
+                format!("“{}” kavşağının “{}” aksı kurulamıyor.", def.name, a.name),
+                "legs",
+            )
+        })?;
         built.push((a, b));
     }
     let ((da, ba), (db, bb)) = (&built[0], &built[1]);
     let found = crossings_told(&ba.core, &bb.core, 1.0, tick).ok_or(Stop::Cancelled)?;
     if found.is_empty() {
-        return Err(bad(format!("“{}” kavşağının kolları (“{}” ve “{}”) kesişmiyor.", def.name, da.name, db.name), "legs"));
+        return Err(bad(
+            format!(
+                "“{}” kavşağının kolları (“{}” ve “{}”) kesişmiyor.",
+                def.name, da.name, db.name
+            ),
+            "legs",
+        ));
     }
     let Some(&(sa, sb)) = found.get(def.at as usize) else {
         return Err(bad(
-            format!("“{}” kavşağının kolları {} yerde kesişiyor; {}. kesişim yok.", def.name, found.len(), def.at + 1),
+            format!(
+                "“{}” kavşağının kolları {} yerde kesişiyor; {}. kesişim yok.",
+                def.name,
+                found.len(),
+                def.at + 1
+            ),
             "at",
         ));
     };
     let (Some(pa), Some(pb)) = (ba.core.at(sa), bb.core.at(sb)) else {
-        return Err(bad(format!("“{}” kavşağının kesişimi aksların üstünde değil.", def.name), "legs"));
+        return Err(bad(
+            format!("“{}” kavşağının kesişimi aksların üstünde değil.", def.name),
+            "legs",
+        ));
     };
-    let (ta, tb) = ([pa.direction.cos(), pa.direction.sin()], [pb.direction.cos(), pb.direction.sin()]);
+    let (ta, tb) = (
+        [pa.direction.cos(), pa.direction.sin()],
+        [pb.direction.cos(), pb.direction.sin()],
+    );
     if (ta[0] * tb[1] - ta[1] * tb[0]).abs() < 1e-9 {
-        return Err(bad(format!("“{}” kavşağının kolları kesişimde paralel.", def.name), "legs"));
+        return Err(bad(
+            format!("“{}” kavşağının kolları kesişimde paralel.", def.name),
+            "legs",
+        ));
     }
-    let angle = (ta[0] * tb[0] + ta[1] * tb[1]).clamp(-1.0, 1.0).acos().to_degrees();
+    let angle = (ta[0] * tb[0] + ta[1] * tb[1])
+        .clamp(-1.0, 1.0)
+        .acos()
+        .to_degrees();
     let p = [pa.x, pa.y];
     let mut warnings = Vec::new();
     let mut stale = false;
-    let legs: Vec<JunctionLeg> = [(da, ba, sa, pa.direction, &def.legs[0]), (db, bb, sb, pb.direction, &def.legs[1])]
-        .into_iter()
-        .map(|(d, b, s, dir, leg)| {
-            let changed = d.revision != leg.alignment_revision;
-            if changed {
-                stale = true;
-                warnings.push(CommandWarning {
-                    code: codes::JUNCTION_STALE.into(),
-                    message: format!("“{}” kavşağının “{}” aksı değişti; kavşağı denetleyip yeniden bağlayın.", def.name, d.name),
-                    path: Some("junction".into()),
-                });
-            }
-            JunctionLeg { alignment: d.id.clone(), station: s, km_text: km_text(b.km(s), 3), direction: dir.to_degrees(), stale: changed }
-        })
-        .collect();
+    let legs: Vec<JunctionLeg> = [
+        (da, ba, sa, pa.direction, &def.legs[0]),
+        (db, bb, sb, pb.direction, &def.legs[1]),
+    ]
+    .into_iter()
+    .map(|(d, b, s, dir, leg)| {
+        let changed = d.revision != leg.alignment_revision;
+        if changed {
+            stale = true;
+            warnings.push(CommandWarning {
+                code: codes::JUNCTION_STALE.into(),
+                message: format!(
+                    "“{}” kavşağının “{}” aksı değişti; kavşağı denetleyip yeniden bağlayın.",
+                    def.name, d.name
+                ),
+                path: Some("junction".into()),
+            });
+        }
+        JunctionLeg {
+            alignment: d.id.clone(),
+            station: s,
+            km_text: km_text(b.km(s), 3),
+            direction: dir.to_degrees(),
+            stale: changed,
+        }
+    })
+    .collect();
     let mut returns = Vec::new();
     if def.kind == JunctionKind::AtGrade {
-        let side = |w: &str, leg: &kentos_commands::JunctionLegDef| if w == "right" { (1.0, leg.right) } else { (-1.0, -leg.left) };
+        let side = |w: &str, leg: &kentos_commands::JunctionLegDef| {
+            if w == "right" {
+                (1.0, leg.right)
+            } else {
+                (-1.0, -leg.left)
+            }
+        };
         let mut reach: [Vec<f64>; 2] = [vec![sa], vec![sb]];
         for (k, (wa, wb)) in QUADRANTS.iter().enumerate() {
             let r = def.radii.as_ref().map_or(def.radius, |v| v[k]);
             let ((ka, oa), (kb, ob)) = (side(wa, &def.legs[0]), side(wb, &def.legs[1]));
-            let Some(f) = fillet(p, Edge { tangent: ta, offset: oa, side: ka }, Edge { tangent: tb, offset: ob, side: kb }, r)
-            else {
-                return Err(bad(format!("“{}” kavşağının kolları kesişimde paralel.", def.name), "legs"));
+            let Some(f) = fillet(
+                p,
+                Edge {
+                    tangent: ta,
+                    offset: oa,
+                    side: ka,
+                },
+                Edge {
+                    tangent: tb,
+                    offset: ob,
+                    side: kb,
+                },
+                r,
+            ) else {
+                return Err(bad(
+                    format!("“{}” kavşağının kolları kesişimde paralel.", def.name),
+                    "legs",
+                ));
             };
-            let along = |q: [f64; 2], t: [f64; 2], s: f64| s + (q[0] - p[0]) * t[0] + (q[1] - p[1]) * t[1];
+            let along =
+                |q: [f64; 2], t: [f64; 2], s: f64| s + (q[0] - p[0]) * t[0] + (q[1] - p[1]) * t[1];
             let (qa, qb) = (along(f.on_a, ta, sa), along(f.on_b, tb, sb));
             reach[0].push(qa);
             reach[1].push(qb);
@@ -119,19 +213,33 @@ pub(crate) fn read_told(
                 radius: r,
                 cx: f.center[0],
                 cy: f.center[1],
-                on_a: JunctionPlace { x: f.on_a[0], y: f.on_a[1], station: qa },
-                on_b: JunctionPlace { x: f.on_b[0], y: f.on_b[1], station: qb },
+                on_a: JunctionPlace {
+                    x: f.on_a[0],
+                    y: f.on_a[1],
+                    station: qa,
+                },
+                on_b: JunctionPlace {
+                    x: f.on_b[0],
+                    y: f.on_b[1],
+                    station: qb,
+                },
                 sweep: f.sweep.to_degrees(),
                 length: f.length,
             });
         }
         for ((d, b), stations) in built.iter().zip(&reach) {
-            let (lo, hi) = stations.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(l, h), s| (l.min(*s), h.max(*s)));
-            let curved = b
-                .core
-                .elements
+            let (lo, hi) = stations
                 .iter()
-                .any(|e| e.station < hi && e.station + e.length > lo && b.core.at(e.station + 0.5 * e.length).is_some_and(|q| q.curvature.abs() > 1e-12));
+                .fold((f64::INFINITY, f64::NEG_INFINITY), |(l, h), s| {
+                    (l.min(*s), h.max(*s))
+                });
+            let curved = b.core.elements.iter().any(|e| {
+                e.station < hi
+                    && e.station + e.length > lo
+                    && b.core
+                        .at(e.station + 0.5 * e.length)
+                        .is_some_and(|q| q.curvature.abs() > 1e-12)
+            });
             if curved {
                 warnings.push(CommandWarning {
                     code: codes::JUNCTION_ON_CURVE.into(),
@@ -187,7 +295,13 @@ pub(crate) fn leg_profiles<'a>(
     report: &JunctionReport,
     given: Option<&[String]>,
     code: &str,
-) -> Result<(Vec<&'a kentos_commands::ProfileDef>, Vec<crate::road_profiles::Built>), Stop> {
+) -> Result<
+    (
+        Vec<&'a kentos_commands::ProfileDef>,
+        Vec<crate::road_profiles::Built>,
+    ),
+    Stop,
+> {
     use crate::road_profiles as profiles;
     let own = profiles::profiles(doc);
     let mut chosen = Vec::new();
@@ -199,13 +313,32 @@ pub(crate) fn leg_profiles<'a>(
         }
         None => {
             for leg in &report.legs {
-                let on: Vec<_> = own.iter().filter(|p| p.alignment == leg.alignment).collect();
-                let name = alignments::alignments(doc).iter().find(|a| a.id == leg.alignment).map_or("", |a| a.name.as_str());
+                let on: Vec<_> = own
+                    .iter()
+                    .filter(|p| p.alignment == leg.alignment)
+                    .collect();
+                let name = alignments::alignments(doc)
+                    .iter()
+                    .find(|a| a.id == leg.alignment)
+                    .map_or("", |a| a.name.as_str());
                 match on.as_slice() {
                     [one] => chosen.push(*one),
-                    [] => return Err(fail(code, format!("“{name}” aksının boykesiti yok; profiles ile verin."), "profiles")),
+                    [] => {
+                        return Err(fail(
+                            code,
+                            format!("“{name}” aksının boykesiti yok; profiles ile verin."),
+                            "profiles",
+                        ));
+                    }
                     _ => {
-                        return Err(fail(code, format!("“{name}” aksının {} boykesiti var; hangisi, profiles ile verin.", on.len()), "profiles"));
+                        return Err(fail(
+                            code,
+                            format!(
+                                "“{name}” aksının {} boykesiti var; hangisi, profiles ile verin.",
+                                on.len()
+                            ),
+                            "profiles",
+                        ));
                     }
                 }
             }
@@ -216,18 +349,36 @@ pub(crate) fn leg_profiles<'a>(
         built.push(profiles::build(doc, p)?);
     }
     if chosen.len() != 2 {
-        return Err(fail(code, format!("Kolların sırasıyla iki boykesit verin; {} verildi.", chosen.len()), "profiles"));
+        return Err(fail(
+            code,
+            format!(
+                "Kolların sırasıyla iki boykesit verin; {} verildi.",
+                chosen.len()
+            ),
+            "profiles",
+        ));
     }
     for (k, (p, leg)) in chosen.iter().zip(&report.legs).enumerate() {
         if p.alignment != leg.alignment {
-            return Err(fail(code, format!("“{}” boykesiti kavşağın {}. kolunun aksında değil.", p.name, k + 1), &format!("profiles[{k}]")));
+            return Err(fail(
+                code,
+                format!(
+                    "“{}” boykesiti kavşağın {}. kolunun aksında değil.",
+                    p.name,
+                    k + 1
+                ),
+                &format!("profiles[{k}]"),
+            ));
         }
     }
     Ok((chosen, built))
 }
 
 /// The profiles' stale warnings.
-pub(crate) fn profiles_stale(doc: &Document, chosen: &[&kentos_commands::ProfileDef]) -> Vec<CommandWarning> {
+pub(crate) fn profiles_stale(
+    doc: &Document,
+    chosen: &[&kentos_commands::ProfileDef],
+) -> Vec<CommandWarning> {
     chosen
         .iter()
         .filter_map(|p| {

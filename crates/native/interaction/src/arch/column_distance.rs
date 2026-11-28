@@ -142,9 +142,12 @@ impl Overlay {
                 }
                 self.preview.strokes.extend(drawn.strokes);
                 // The number over a mask of the view's ground: the line it stands on does not cross it.
-                self.preview
-                    .texts
-                    .extend(drawn.texts.into_iter().map(|t| TextGhost { mask: true, ..t }));
+                self.preview.texts.extend(
+                    drawn
+                        .texts
+                        .into_iter()
+                        .map(|t| TextGhost { mask: true, ..t }),
+                );
                 let (dx, dy) = ((to.x - from.x) / length, (to.y - from.y) / length);
                 let n = (-dy * height * 0.8, dx * height * 0.8);
                 let mut mark = Stroke::solid(
@@ -341,14 +344,19 @@ impl Tool for ColumnDistance {
         LABEL
     }
     fn prompt(&self) -> Prompt {
-        Prompt::new(LABEL, "yeni net mesafeyi yazın; Enter kolonu kaydırır, Esc vazgeçer")
+        Prompt::new(
+            LABEL,
+            "yeni net mesafeyi yazın; Enter kolonu kaydırır, Esc vazgeçer",
+        )
     }
     fn point_count(&self) -> usize {
         0
     }
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
         if self.tied {
-            if let CommandResult::Failed { error } = arch_edit::plan_in(cx.doc, &self.edit(self.value)) {
+            if let CommandResult::Failed { error } =
+                arch_edit::plan_in(cx.doc, &self.edit(self.value))
+            {
                 cx.say(Level::Warn, error.message);
             }
             self.done = true;

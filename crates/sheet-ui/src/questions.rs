@@ -170,7 +170,8 @@ impl Designer {
         };
         if let Some(extent) = d.extent {
             d.placed = crate::new_extent::place(&d.template, d.paper, &ctx, extent, d.layer);
-            d.picture = crate::new_extent::picture(&d.template, d.paper, &ctx, extent, d.layer, d.placed.0);
+            d.picture =
+                crate::new_extent::picture(&d.template, d.paper, &ctx, extent, d.layer, d.placed.0);
         }
     }
 
@@ -216,7 +217,10 @@ impl Designer {
                 if d.extent.is_some() {
                     d.extent = Some(extent);
                     // A Katman choice starts on the first layer that holds objects.
-                    if extent == crate::new_extent::Extent::Layer && d.layer.is_none() && !self.ctx.layer_bounds.is_empty() {
+                    if extent == crate::new_extent::Extent::Layer
+                        && d.layer.is_none()
+                        && !self.ctx.layer_bounds.is_empty()
+                    {
                         d.layer = Some(0);
                     }
                     self.questions_place();
@@ -274,7 +278,11 @@ impl Designer {
     }
 
     /// Kapsam: the four choices, a Katman choice's layer, and the sentence of what the choice gives.
-    fn extent_view<'a>(&'a self, d: &'a QuestionsDialog, extent: crate::new_extent::Extent) -> Element<'a, Message> {
+    fn extent_view<'a>(
+        &'a self,
+        d: &'a QuestionsDialog,
+        extent: crate::new_extent::Extent,
+    ) -> Element<'a, Message> {
         use crate::new_extent::{EXTENTS, Extent};
         use kentos_ui::widget::segmented::Segmented;
         #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -285,7 +293,11 @@ impl Designer {
             }
         }
         let all: Vec<Choice> = EXTENTS.iter().map(|(e, w)| Choice(*e, w)).collect();
-        let chosen = all.iter().copied().find(|c| c.0 == extent).unwrap_or(all[3]);
+        let chosen = all
+            .iter()
+            .copied()
+            .find(|c| c.0 == extent)
+            .unwrap_or(all[3]);
         // A choice with nothing to fit is dimmed: no view, no layer with objects, no drawing.
         let ctx = &self.ctx;
         let can = |c: Choice| match c.0 {
@@ -294,16 +306,31 @@ impl Designer {
             Extent::Drawing => ctx.drawing_bounds.is_some(),
             Extent::Fixed => true,
         };
-        let choices = Segmented::new_with(all, chosen, |c: Choice| Message::Questions(QuestionsMessage::Extent(c.0)), can)
-            .width(Fill);
-        let mut col = column![label::caption(texts::EXTENT).style(style::text::muted), choices].spacing(4);
+        let choices = Segmented::new_with(
+            all,
+            chosen,
+            |c: Choice| Message::Questions(QuestionsMessage::Extent(c.0)),
+            can,
+        )
+        .width(Fill);
+        let mut col = column![
+            label::caption(texts::EXTENT).style(style::text::muted),
+            choices
+        ]
+        .spacing(4);
         if extent == Extent::Layer {
             let names: Vec<kentos_ui::widget::select::Choice> = (0..self.ctx.layer_bounds.len())
-                .map(|i| kentos_ui::widget::select::Choice::new(crate::new_extent::layer_name(&self.ctx, i)))
+                .map(|i| {
+                    kentos_ui::widget::select::Choice::new(crate::new_extent::layer_name(
+                        &self.ctx, i,
+                    ))
+                })
                 .collect();
             col = col.push(
-                kentos_ui::widget::select::Select::new(names, d.layer, |i| Message::Questions(QuestionsMessage::Layer(i)))
-                    .placeholder(texts::LAYER),
+                kentos_ui::widget::select::Select::new(names, d.layer, |i| {
+                    Message::Questions(QuestionsMessage::Layer(i))
+                })
+                .placeholder(texts::LAYER),
             );
         }
         // The words beside the picture of what they say (docs/adr/9187).
@@ -311,9 +338,12 @@ impl Designer {
         match &d.picture {
             Some(p) => col
                 .push(
-                    iced::widget::row![crate::extent_picture::picture(p), iced::widget::container(words).width(Fill)]
-                        .spacing(12)
-                        .align_y(iced::Center),
+                    iced::widget::row![
+                        crate::extent_picture::picture(p),
+                        iced::widget::container(words).width(Fill)
+                    ]
+                    .spacing(12)
+                    .align_y(iced::Center),
                 )
                 .into(),
             None => col.push(words).into(),
@@ -375,7 +405,8 @@ impl Designer {
         if let Some(extent) = d.extent {
             body = body.push(self.extent_view(d, extent));
         }
-        let mut body = body.push(scrollable(container(list).padding([0, 8])).height(Length::Shrink));
+        let mut body =
+            body.push(scrollable(container(list).padding([0, 8])).height(Length::Shrink));
         if let Some(p) = &d.problem {
             body = body.push(label::body(p.as_str()).style(style::text::danger));
         }

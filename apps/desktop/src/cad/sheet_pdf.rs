@@ -78,7 +78,10 @@ impl App {
 
     /// Capture the open designer book, assets and drawing together. No screen cache participates.
     pub(crate) fn sheet_output_snapshot(&self) -> Result<kentos_domain::Document, String> {
-        self.document.as_ref().map(|d|d.model.reading_copy()).ok_or_else(||"Önce bir çizim açın.".into())
+        self.document
+            .as_ref()
+            .map(|d| d.model.reading_copy())
+            .ok_or_else(|| "Önce bir çizim açın.".into())
     }
 
     pub(crate) fn sheet_native_pdf(&self) -> Result<kentos_plot::book::BookPdf, String> {
@@ -92,9 +95,23 @@ impl App {
             .as_ref()
             .and_then(|d| d.path.as_ref())
             .map(|p| p.to_string_lossy().into_owned());
-        let mut captured=kentos_plot::provenance::Capture::new(&doc,&kentos_plot::book::current_user(),&kentos_plot::book::today(),drawing.as_deref()).map_err(|e|e.message)?;
-        captured.dpi_override(Some(self.sheets.output_dpi())).map_err(|e|e.message)?;
-        kentos_plot::book::book_pdf_captured(&captured,&options.sheets.clone(),Some(options),None).map_err(|e|e.message)
+        let mut captured = kentos_plot::provenance::Capture::new(
+            &doc,
+            &kentos_plot::book::current_user(),
+            &kentos_plot::book::today(),
+            drawing.as_deref(),
+        )
+        .map_err(|e| e.message)?;
+        captured
+            .dpi_override(Some(self.sheets.output_dpi()))
+            .map_err(|e| e.message)?;
+        kentos_plot::book::book_pdf_captured(
+            &captured,
+            &options.sheets.clone(),
+            Some(options),
+            None,
+        )
+        .map_err(|e| e.message)
     }
 
     pub(crate) fn sheet_print_preview(&mut self) {
@@ -102,21 +119,37 @@ impl App {
         self.take_along_styles();
         let result = (|| {
             let doc = self.sheet_output_snapshot()?;
-            let id = self.sheets.print_preview_sheet().ok_or("Yazılacak bir pafta seçin.")?;
+            let id = self
+                .sheets
+                .print_preview_sheet()
+                .ok_or("Yazılacak bir pafta seçin.")?;
             let drawing = self
                 .document
                 .as_ref()
                 .and_then(|d| d.path.as_ref())
                 .map(|p| p.to_string_lossy().into_owned());
-            let mut captured=kentos_plot::provenance::Capture::new(&doc,&kentos_plot::book::current_user(),&kentos_plot::book::today(),drawing.as_deref()).map_err(|e|e.message)?;
-            captured.dpi_override(Some(self.sheets.output_dpi())).map_err(|e|e.message)?;
+            let mut captured = kentos_plot::provenance::Capture::new(
+                &doc,
+                &kentos_plot::book::current_user(),
+                &kentos_plot::book::today(),
+                drawing.as_deref(),
+            )
+            .map_err(|e| e.message)?;
+            captured
+                .dpi_override(Some(self.sheets.output_dpi()))
+                .map_err(|e| e.message)?;
             let dpi = preview_dpi(self.sheets.book().sheet(&id).map(|s| s.page.size));
-            let image=kentos_plot::preview::page_captured(&captured,&id,dpi).map_err(|e|e.message)?;
+            let image =
+                kentos_plot::preview::page_captured(&captured, &id, dpi).map_err(|e| e.message)?;
             Ok::<_, String>((image, id, dpi))
         })();
         match result {
             Ok((image, id, dpi)) => {
-                let name = self.sheets.book().sheet(&id).map_or_else(|| id.as_str().to_owned(), |s| s.name.clone());
+                let name = self
+                    .sheets
+                    .book()
+                    .sheet(&id)
+                    .map_or_else(|| id.as_str().to_owned(), |s| s.name.clone());
                 self.sheets.show_print_preview(
                     image.width,
                     image.height,
@@ -127,7 +160,7 @@ impl App {
             Err(e) => {
                 self.sheets.print_preview_failed(&e);
                 self.warn(format!("Baskı önizlenemedi: {e}"));
-            },
+            }
         }
     }
 

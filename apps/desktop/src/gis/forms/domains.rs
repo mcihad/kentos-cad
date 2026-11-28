@@ -155,7 +155,10 @@ impl App {
     /// Değer listeleri from Formlar (docs/adr/9322): Kaydet and Vazgeç come back to the designer as it was. With a
     /// field (its layer, key, label and kind), a new list of the field's kind named after it is made and chosen, linked
     /// to the field on Kaydet (Liste oluştur ve bağla).
-    pub(crate) fn open_domains_for(&mut self, field: Option<(String, String, String, LayerFieldKind)>) -> Task<Message> {
+    pub(crate) fn open_domains_for(
+        &mut self,
+        field: Option<(String, String, String, LayerFieldKind)>,
+    ) -> Task<Message> {
         let task = self.open_domains();
         let Some(w) = self.gis.domains.as_mut() else {
             return task;
@@ -164,7 +167,11 @@ impl App {
         if let Some((layer, key, label, kind)) = field {
             let mut name = label.clone();
             let mut n = 2;
-            while w.domains.iter().any(|d| d.name.to_lowercase() == name.to_lowercase()) {
+            while w
+                .domains
+                .iter()
+                .any(|d| d.name.to_lowercase() == name.to_lowercase())
+            {
                 name = format!("{label} {n}");
                 n += 1;
             }
@@ -183,7 +190,11 @@ impl App {
                 unit: None,
             });
             w.chosen = Some(w.domains.len() - 1);
-            w.bind = Some(Bind { layer, field: key, id });
+            w.bind = Some(Bind {
+                layer,
+                field: key,
+                id,
+            });
         }
         task
     }
@@ -196,7 +207,11 @@ impl App {
             return Task::none();
         }
         self.dialog = Some(Dialog::Gis(gis::GisDialogKind::Forms));
-        let y = self.gis.forms_window.as_ref().map_or(0.0, |w| w.properties_offset);
+        let y = self
+            .gis
+            .forms_window
+            .as_ref()
+            .map_or(0.0, |w| w.properties_offset);
         iced::widget::operation::scroll_to(
             iced::widget::Id::new(crate::forms::designer_view::PROPERTIES_SCROLL),
             iced::widget::scrollable::AbsoluteOffset { x: 0.0, y },
@@ -476,8 +491,16 @@ impl App {
         };
         let mut edits = Self::domain_edits(&w);
         // Liste oluştur ve bağla: the new list linked to the form's field in the same step (docs/adr/9322).
-        if let Some(b) = w.bind.as_ref().filter(|b| w.domains.iter().any(|d| d.id == b.id)) {
-            edits.push(DomainsOp::Link { layer: b.layer.clone(), field: b.field.clone(), domain: Some(b.id.clone()) });
+        if let Some(b) = w
+            .bind
+            .as_ref()
+            .filter(|b| w.domains.iter().any(|d| d.id == b.id))
+        {
+            edits.push(DomainsOp::Link {
+                layer: b.layer.clone(),
+                field: b.field.clone(),
+                domain: Some(b.id.clone()),
+            });
         }
         if edits.is_empty() {
             return self.close_domains(w.back);
@@ -517,13 +540,19 @@ impl App {
             self.warn(w.message);
         }
         let n = w.domains.len();
-        let bound = w.bind.as_ref().and_then(|b| w.domains.iter().find(|d| d.id == b.id)).map(|d| d.name.clone());
+        let bound = w
+            .bind
+            .as_ref()
+            .and_then(|b| w.domains.iter().find(|d| d.id == b.id))
+            .map(|d| d.name.clone());
         self.say(
             Level::Success,
             match (n, bound) {
                 (0, _) => "Projenin değer listeleri kaldırıldı.".to_owned(),
                 (_, Some(name)) => {
-                    format!("{n} değer listesi kaydedildi; “{name}” listesi formun alanına bağlandı.")
+                    format!(
+                        "{n} değer listesi kaydedildi; “{name}” listesi formun alanına bağlandı."
+                    )
                 }
                 _ => format!("{n} değer listesi kaydedildi; bağlı alanlar güncellendi."),
             },
@@ -962,7 +991,9 @@ fn editor<'a>(
                 .spacing(6),
             );
             // The first code or label left empty is marked where it is (docs/adr/9322).
-            let gap = values.iter().position(|c| c.code.trim().is_empty() || c.label.trim().is_empty());
+            let gap = values
+                .iter()
+                .position(|c| c.code.trim().is_empty() || c.label.trim().is_empty());
             for (i, c) in values.iter().enumerate() {
                 let retired = c.retired;
                 let here = gap == Some(i);

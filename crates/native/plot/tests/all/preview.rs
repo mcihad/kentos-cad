@@ -139,7 +139,9 @@ fn a_master_page_preview_has_real_paper_and_model_ink() {
     assert!(
         image
             .rgba
-            .as_chunks::<4>().0.iter()
+            .as_chunks::<4>()
+            .0
+            .iter()
             .filter(|p| p[0] > 248 && p[1] > 248 && p[2] > 248 && p[3] == 255)
             .count()
             > 300_000
@@ -147,7 +149,9 @@ fn a_master_page_preview_has_real_paper_and_model_ink() {
     assert!(
         image
             .rgba
-            .as_chunks::<4>().0.iter()
+            .as_chunks::<4>()
+            .0
+            .iter()
             .filter(|p| p[0] < 200 || p[1] < 200 || p[2] < 200)
             .count()
             > 100

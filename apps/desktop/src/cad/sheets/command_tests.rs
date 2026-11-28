@@ -13,7 +13,12 @@ use crate::catalog::{PORTED, Standing, catalog};
 use crate::files_testing::{app_with_drawing, last_said};
 
 /// The sheet commands commands.rs ran before (no sheet in front needed).
-const BEFORE: [&str; 4] = ["sheet.model", "sheet.drawingSet", "sheet.new", "sheet.fromTemplate"];
+const BEFORE: [&str; 4] = [
+    "sheet.model",
+    "sheet.drawingSet",
+    "sheet.new",
+    "sheet.fromTemplate",
+];
 /// The web's sheet commands the designer cannot do yet: Karelaj puts a coordinate grid on the chosen map, and the
 /// designer's Karelaj button has nothing behind it.
 const WAITING: [&str; 1] = ["sheet.grid"];
@@ -54,10 +59,16 @@ fn every_sheet_command_runs_here_but_karelaj() {
         .collect();
     assert_eq!(wired, COMMANDS);
     for id in COMMANDS {
-        let command = catalog().get(id).unwrap_or_else(|| panic!("{id} is a command"));
+        let command = catalog()
+            .get(id)
+            .unwrap_or_else(|| panic!("{id} is a command"));
         assert_eq!(command.standing, Standing::Ported, "{id}");
         // The sheet mode takes its keys itself: none of them is the drawing's.
-        assert!(command.shortcuts.is_empty(), "{id}: {:?}", command.shortcuts);
+        assert!(
+            command.shortcuts.is_empty(),
+            "{id}: {:?}",
+            command.shortcuts
+        );
     }
 }
 
@@ -84,7 +95,10 @@ fn a_command_on_the_paper_needs_a_sheet_in_front_and_says_how() {
     // Typed in the command line under the drawing, by its title: the same word.
     let _ = app.run_typed("Sola hizala");
     assert_eq!(last_said(&app), behind);
-    assert!(app.available("sheet.undo"), "the new sheet is the paper's step");
+    assert!(
+        app.available("sheet.undo"),
+        "the new sheet is the paper's step"
+    );
     // PAFTA brings the first sheet in front.
     run(&mut app, "sheet.open");
     assert!(app.sheets.is_active());
@@ -126,7 +140,10 @@ fn each_command_is_the_designer_s_own_message() {
         assert!(!app.available(id), "{id}");
     }
     let chosen = choose_all(&mut app);
-    assert!(chosen >= 3, "the template's sheet has several free items: {chosen}");
+    assert!(
+        chosen >= 3,
+        "the template's sheet has several free items: {chosen}"
+    );
 
     for (id, step) in [
         ("sheet.align.left", "Hizala"),
@@ -138,7 +155,11 @@ fn each_command_is_the_designer_s_own_message() {
         run(&mut app, id);
         let label = app.sheets.undo_label().unwrap_or_default().to_owned();
         assert!(label.starts_with(step), "{id}: {label}");
-        assert!(app.sheets.error().is_none(), "{id}: {:?}", app.sheets.error());
+        assert!(
+            app.sheets.error().is_none(),
+            "{id}: {:?}",
+            app.sheets.error()
+        );
     }
 
     // Gizle ya da göster, Kilitle ya da aç: every chosen item, one step each way.
@@ -176,7 +197,12 @@ fn each_command_is_the_designer_s_own_message() {
     run(&mut app, "sheet.ungroup");
     assert_eq!(count(&app), before);
     let _ = app.update(Message::Sheet(Sheet::Select(
-        app.sheets.selection().first().cloned().into_iter().collect(),
+        app.sheets
+            .selection()
+            .first()
+            .cloned()
+            .into_iter()
+            .collect(),
     )));
     assert!(app.available("sheet.renameItem"));
     run(&mut app, "sheet.duplicateItems");
@@ -211,21 +237,39 @@ fn each_command_is_the_designer_s_own_message() {
 
     // The sheets: Çoğalt (in front), Sola taşı, Sağa taşı and Sil, said, Geri al bringing it back.
     run(&mut app, "sheet.duplicate");
-    let book = |app: &App| app.sheets.book().sheets.iter().map(|s| s.id.clone()).collect::<Vec<_>>();
+    let book = |app: &App| {
+        app.sheets
+            .book()
+            .sheets
+            .iter()
+            .map(|s| s.id.clone())
+            .collect::<Vec<_>>()
+    };
     let two = book(&app);
     assert_eq!(two.len(), 2);
-    assert_eq!(app.sheets.open_sheet().map(|s| s.id.clone()), Some(two[1].clone()));
+    assert_eq!(
+        app.sheets.open_sheet().map(|s| s.id.clone()),
+        Some(two[1].clone())
+    );
     run(&mut app, "sheet.moveLeft");
     assert_eq!(book(&app), [two[1].clone(), two[0].clone()]);
     run(&mut app, "sheet.moveRight");
     assert_eq!(book(&app), two);
     run(&mut app, "sheet.delete");
     assert_eq!(book(&app), [two[0].clone()]);
-    assert!(last_said(&app).contains("Geri al ile geri gelir"), "{}", last_said(&app));
+    assert!(
+        last_said(&app).contains("Geri al ile geri gelir"),
+        "{}",
+        last_said(&app)
+    );
     // Kaydır has no direction: it says the arrow keys.
     choose_all(&mut app);
     run(&mut app, "sheet.nudge");
-    assert!(last_said(&app).contains("ok tuşları"), "{}", last_said(&app));
+    assert!(
+        last_said(&app).contains("ok tuşları"),
+        "{}",
+        last_said(&app)
+    );
     // No command the designer has is missing its handler.
     assert!(
         !app.log.lines().any(|l| l.text.contains("işleyicisi eksik")),
@@ -245,9 +289,19 @@ fn the_windows_and_tabs_open_as_the_ribbon_opens_them() {
     assert_eq!(app.sheets.inspector_tab(), InspectorTab::Page);
     run(&mut app, "sheet.preflight");
     assert_eq!(app.sheets.inspector_tab(), InspectorTab::Preflight);
-    for id in ["sheet.variables", "sheet.saveTemplate", "sheet.export.pdf", "sheet.print"] {
+    for id in [
+        "sheet.variables",
+        "sheet.saveTemplate",
+        "sheet.export.pdf",
+        "sheet.print",
+    ] {
         run(&mut app, id);
-        assert!(app.sheets.window(std::rc::Rc::new(app.sheet_painter())).is_some(), "{id} opens a window");
+        assert!(
+            app.sheets
+                .window(std::rc::Rc::new(app.sheet_painter()))
+                .is_some(),
+            "{id} opens a window"
+        );
         let _ = app.update(Message::Sheet(Sheet::CloseDialog));
     }
     // Every command once, as Komut ara would run it where it can.
@@ -280,7 +334,8 @@ fn komut_ara_runs_a_sheet_command_or_says_why_it_is_off() {
         .collect();
     assert_eq!(rows.len(), 2, "{rows:?}");
     assert!(
-        rows.iter().any(|(on, why)| !on && why.starts_with("Önde pafta yok")),
+        rows.iter()
+            .any(|(on, why)| !on && why.starts_with("Önde pafta yok")),
         "{rows:?}"
     );
     assert!(rows.iter().any(|(on, _)| *on), "{rows:?}");
@@ -296,7 +351,12 @@ fn komut_ara_runs_a_sheet_command_or_says_why_it_is_off() {
     assert!(sola.enabled, "{}", sola.detail);
     assert_eq!(sola.detail, "Pafta");
     let _ = app.search_run(at);
-    assert!(app.sheets.undo_label().unwrap_or_default().starts_with("Hizala"));
+    assert!(
+        app.sheets
+            .undo_label()
+            .unwrap_or_default()
+            .starts_with("Hizala")
+    );
 }
 
 /// The modules' decision: every module's program has sheets (its Çıktı › Pafta) and offers the designer's commands;
@@ -307,13 +367,22 @@ fn each_module_offers_the_sheet_commands_and_atlas_where_maps_are() {
         for id in COMMANDS {
             let atlas = *id == "sheet.atlas";
             let expected = !atlas || matches!(module, Module::Map | Module::Gis);
-            assert_eq!(catalog().module_has(module, id), expected, "{module:?} {id}");
+            assert_eq!(
+                catalog().module_has(module, id),
+                expected,
+                "{module:?} {id}"
+            );
         }
-        assert!(catalog().module_has(module, "sheet.new"), "{module:?} makes sheets");
+        assert!(
+            catalog().module_has(module, "sheet.new"),
+            "{module:?} makes sheets"
+        );
     }
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Architecture);
-    let why = app.why_disabled("sheet.atlas").expect("not KentOS Mimari's");
+    let why = app
+        .why_disabled("sheet.atlas")
+        .expect("not KentOS Mimari's");
     assert!(why.contains("Harita") && why.contains("GIS"), "{why}");
 }
 
@@ -358,11 +427,17 @@ fn screens() {
         ("dark", Size::new(1100.0, 760.0), "koyu-1100"),
     ] {
         let mut app = app_with_drawing();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         // The sheet's map looks at the drawing: a sheet is made where the drawing area looks.
-        if let Some(b) = app.document.as_ref().and_then(kentos_render_wgpu::scene::extents) {
+        if let Some(b) = app
+            .document
+            .as_ref()
+            .and_then(kentos_render_wgpu::scene::extents)
+        {
             app.viewport.camera.center =
                 kentos_render_wgpu::Vec2::new((b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0);
         }
@@ -370,7 +445,10 @@ fn screens() {
         let shot = |snapshot: &mut Snapshot, app: &mut App, name: &str| {
             settle(snapshot, app);
             let file = out.join(format!("{name}-{tag}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         };
         new_sheet(&mut app);

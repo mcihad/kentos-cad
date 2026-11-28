@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+use crate::RoadEditOperation;
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::RoadEditOperation;
 
 pub const ROAD_PLATFORMS_EDIT: &str = "road.platforms.edit";
 pub const ROAD_PLATFORMS_EDIT_VERSION: u32 = 1;

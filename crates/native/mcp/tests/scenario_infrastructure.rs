@@ -10,8 +10,10 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_area_near_the_sewer_over_mcp_is_the_case_s() {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.scenarios.impact.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.scenarios.impact.json"
+    ))
+    .unwrap();
     let case = cases["cases"]
         .as_array()
         .unwrap()
@@ -19,8 +21,12 @@ fn the_area_near_the_sewer_over_mcp_is_the_case_s() {
         .find(|c| c["name"] == "altyapıya yakınlık: kanalizasyon hattına 40 m")
         .unwrap()
         .clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-scenario-infrastructure-{}.kcad", std::process::id()));
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-scenario-infrastructure-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -29,14 +35,23 @@ fn the_area_near_the_sewer_over_mcp_is_the_case_s() {
     args["drawing"] = opened["structuredContent"]["drawing"].clone();
     let answer = call(&mut server, "cad.scenarios.impact", args);
     assert_eq!(answer["isError"], false, "{answer}");
-    let got = answer["structuredContent"]["output"]["measures"].as_array().unwrap().clone();
-    let want = case["steps"][0]["result"]["output"]["measures"].as_array().unwrap().clone();
+    let got = answer["structuredContent"]["output"]["measures"]
+        .as_array()
+        .unwrap()
+        .clone();
+    let want = case["steps"][0]["result"]["output"]["measures"]
+        .as_array()
+        .unwrap()
+        .clone();
     for id in ["infrastructure", "infrastructureShare"] {
         let g = got.iter().find(|m| m["id"] == id).unwrap();
         let w = want.iter().find(|m| m["id"] == id).unwrap();
         assert_eq!((&g["label"], &g["method"]), (&w["label"], &w["method"]));
         for side in ["base", "alternative"] {
-            assert!((g[side].as_f64().unwrap() - w[side].as_f64().unwrap()).abs() < 1e-9, "{id} {side}");
+            assert!(
+                (g[side].as_f64().unwrap() - w[side].as_f64().unwrap()).abs() < 1e-9,
+                "{id} {side}"
+            );
         }
     }
     let _ = std::fs::remove_file(path);

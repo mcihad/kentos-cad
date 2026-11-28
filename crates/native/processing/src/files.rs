@@ -212,7 +212,12 @@ pub struct CubeOpen<'f> {
 /// A result's file named for it when none is asked (gis-usage-report GIS-012, docs/adr/1078): `dir/<stem><suffix><ext>`,
 /// else `…-2`, `…-3` …: the first no file has and no run of this process has taken. It is taken here, so two runs
 /// started together never write one file, and a later run never writes over an earlier result a layer shows.
-pub fn free_output(dir: &std::path::Path, stem: &str, suffix: &str, ext: &str) -> std::path::PathBuf {
+pub fn free_output(
+    dir: &std::path::Path,
+    stem: &str,
+    suffix: &str,
+    ext: &str,
+) -> std::path::PathBuf {
     use std::collections::HashSet;
     use std::sync::{Mutex, OnceLock, PoisonError};
     static TAKEN: OnceLock<Mutex<HashSet<std::path::PathBuf>>> = OnceLock::new();

@@ -14,12 +14,12 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::{Shape, ellipse_geom, is_closed_outline, tessellate_circle};
 use kentos_geometry_core::geom::arc::{ArcGeom, tessellate_arc};
 use kentos_geometry_core::geom::ellipse::tessellate_ellipse;
 use kentos_geometry_core::jsmath::{TAU, acos, js_hypot, js_max, js_min};
 use kentos_geometry_core::store::{Expanded, Item, Store};
-use kentos_geometry_core::Vec2;
 
 use super::super::batch::{BatchSink, CURVE_LEVELS, CURVE_TOLERANCE_PX, Def};
 use super::super::compile::{Env, Geom};
@@ -159,7 +159,17 @@ impl Instancer {
                     let (fills, strokes) = view.hides(shape);
                     rec.hide(fills, strokes);
                     let set = sets.and_then(|s| s.get(k)).copied().unwrap_or(simple);
-                    draw_object(shape, [MODE_SET, set, set, color], program, values, env, None, buf, &mut rec, cx);
+                    draw_object(
+                        shape,
+                        [MODE_SET, set, set, color],
+                        program,
+                        values,
+                        env,
+                        None,
+                        buf,
+                        &mut rec,
+                        cx,
+                    );
                 }
                 cx.curve_tolerance = curve_tolerance;
                 rec.into_def(*made).map(Arc::new)
@@ -257,8 +267,12 @@ mod tests {
         assert_eq!(chords(0.3, 4.0), 5.0);
         // 24 px: the sagitta within a quarter pixel, one chord fewer not.
         let n = chords(6.0, 4.0);
-        let sag = |n: f64| 24.0 * (1.0 - kentos_geometry_core::jsmath::cos(std::f64::consts::PI / n));
-        assert!(sag(n) <= CURVE_TOLERANCE_PX && sag(n - 1.0) > CURVE_TOLERANCE_PX, "{n}");
+        let sag =
+            |n: f64| 24.0 * (1.0 - kentos_geometry_core::jsmath::cos(std::f64::consts::PI / n));
+        assert!(
+            sag(n) <= CURVE_TOLERANCE_PX && sag(n - 1.0) > CURVE_TOLERANCE_PX,
+            "{n}"
+        );
         // A big circle near: never more than the fine count.
         assert_eq!(chords(500.0, 4.0), FINE_CHORDS);
     }
@@ -304,8 +318,17 @@ mod tests {
             curve_lod: on,
             ..View::default()
         };
-        let out = super::super::build_layer_with(&store, &program, &o, None, Vec2::new(0.0, 0.0), 1000.0, false, view)
-            .expect("build");
+        let out = super::super::build_layer_with(
+            &store,
+            &program,
+            &o,
+            None,
+            Vec2::new(0.0, 0.0),
+            1000.0,
+            false,
+            view,
+        )
+        .expect("build");
         let Json::Arr(batches) = Json::parse(&out.json).expect("json") else {
             panic!("{}", out.json);
         };
@@ -323,16 +346,25 @@ mod tests {
         let on = built(RED, true);
         // The three similar inserts in the instanced batch; the one with a y factor of its own on its sibling's.
         assert_eq!(on.iter().map(count).sum::<f64>(), 3.0, "{on:?}");
-        assert!(on.iter().any(|b| count(b) == 0.0 && matches!(b.get("len"), Json::Num(n) if *n > 0.0)));
+        assert!(
+            on.iter()
+                .any(|b| count(b) == 0.0 && matches!(b.get("len"), Json::Num(n) if *n > 0.0))
+        );
         // The definition's circle comes with its coarser levels: main (the line), fine, one per ceiling.
-        let lod = on.iter().find(|b| count(b) > 0.0).map(|b| b.get("lod").clone());
+        let lod = on
+            .iter()
+            .find(|b| count(b) > 0.0)
+            .map(|b| b.get("lod").clone());
         let Some(Json::Arr(lod)) = lod else {
             panic!("levels: {on:?}");
         };
         assert_eq!(lod.len(), 2 + CURVE_LEVELS.len());
         // Off: nothing instanced, no levels.
         let off = built(RED, false);
-        assert!(off.iter().all(|b| count(b) == 0.0 && matches!(b.get("lod"), Json::Null)));
+        assert!(
+            off.iter()
+                .all(|b| count(b) == 0.0 && matches!(b.get("lod"), Json::Null))
+        );
         // A dashed line is drawn from the path's start, which a turned definition would move: piece by piece.
         let dashed = r##"{"type":"line","layers":[{"id":"r","type":"simpleLine","color":"#FF0000","width":0.3,"dash":[2,1]}]}"##;
         assert!(built(dashed, true).iter().all(|b| count(b) == 0.0));
@@ -376,9 +408,22 @@ mod tests {
                 pieces: &[0; 3],
                 bands: &[],
             };
-            let view = View { instancing: true, curve_tolerance: tolerance, ..View::default() };
-            let out = super::super::build_layer_with(&store, &program, &o, None, Vec2::new(0.0, 0.0), 1000.0, false, view)
-                .expect("build");
+            let view = View {
+                instancing: true,
+                curve_tolerance: tolerance,
+                ..View::default()
+            };
+            let out = super::super::build_layer_with(
+                &store,
+                &program,
+                &o,
+                None,
+                Vec2::new(0.0, 0.0),
+                1000.0,
+                false,
+                view,
+            )
+            .expect("build");
             let Json::Arr(batches) = Json::parse(&out.json).expect("json") else {
                 panic!("{}", out.json);
             };
@@ -386,7 +431,9 @@ mod tests {
                 .iter()
                 .find(|b| matches!(b.get("inst").get("count"), Json::Num(n) if *n == 3.0))
                 .unwrap_or_else(|| panic!("instanced: {batches:?}"));
-            let Json::Num(len) = inst.get("len") else { panic!("{inst:?}") };
+            let Json::Num(len) = inst.get("len") else {
+                panic!("{inst:?}")
+            };
             // A stroke's segment is six numbers.
             *len / 6.0
         };
@@ -394,7 +441,10 @@ mod tests {
         let (plain, round) = (chords_of(None), chords_of(Some(0.0005)));
         let at_twenty = (std::f64::consts::PI / acos(1.0 - 0.0005 / 20.0)).ceil();
         assert_eq!(plain, FINE_CHORDS + 4.0);
-        assert!(round - plain >= at_twenty - FINE_CHORDS, "{round} chords; a 20 m circle takes {at_twenty}");
+        assert!(
+            round - plain >= at_twenty - FINE_CHORDS,
+            "{round} chords; a 20 m circle takes {at_twenty}"
+        );
     }
 
     #[test]
@@ -417,9 +467,9 @@ mod tests {
     /// strokes, or recorded without the view asking, comes without (docs/adr/1065 §2).
     #[test]
     fn a_definition_of_many_strokes_comes_with_the_box_round_them() {
-        use kentos_geometry_core::api::json::Json;
         use super::super::super::batch::BLOCK_PROXY_PX;
         use super::super::super::prim::{PrimUnit, Sink as _, StrokeStyle};
+        use kentos_geometry_core::api::json::Json;
         let style = StrokeStyle {
             color: "#000000".into(),
             opacity: 1.0,
@@ -439,7 +489,11 @@ mod tests {
             rec.set_block_proxy(proxy);
             for i in 0..segments {
                 let x = i as f64 * 0.5;
-                rec.stroke(&style, &[Vec2::new(x, 0.0), Vec2::new(x + 0.25, 2.0)], false);
+                rec.stroke(
+                    &style,
+                    &[Vec2::new(x, 0.0), Vec2::new(x + 0.25, 2.0)],
+                    false,
+                );
             }
             let def = Arc::new(rec.into_def(1).expect("a definition"));
             let mut sink = BatchSink::new(Vec2::new(0.0, 0.0));
@@ -450,7 +504,11 @@ mod tests {
             let Ok(Json::Arr(list)) = Json::parse(&out.json) else {
                 panic!("{}", out.json);
             };
-            let inst = list.iter().find(|b| !matches!(b.get("inst"), Json::Null)).cloned().expect("instanced");
+            let inst = list
+                .iter()
+                .find(|b| !matches!(b.get("inst"), Json::Null))
+                .cloned()
+                .expect("instanced");
             (inst, out.data.len())
         };
         let (inst, len) = batch(12, true);
@@ -459,11 +517,23 @@ mod tests {
         };
         // Four segments of six numbers; the box's larger side: 0.5 · 11 + 0.25 wide, 2 high.
         assert!(matches!(proxy[0], Json::Num(n) if n == 24.0), "{proxy:?}");
-        assert!(matches!(proxy[1], Json::Num(e) if (e - 5.75).abs() < 1e-12), "{proxy:?}");
-        assert_eq!(len, 12 * 6 + 24 + 2 * super::super::super::batch::INSTANCE_FLOATS);
+        assert!(
+            matches!(proxy[1], Json::Num(e) if (e - 5.75).abs() < 1e-12),
+            "{proxy:?}"
+        );
+        assert_eq!(
+            len,
+            12 * 6 + 24 + 2 * super::super::super::batch::INSTANCE_FLOATS
+        );
         // At the largest insert's scale (1.5) the proxy is drawn from 3 px over 5.75 · 1.5 on.
         const { assert!(BLOCK_PROXY_PX / (5.75 * 1.5) > 0.3) };
-        assert!(matches!(batch(11, true).0.get("inst").get("proxy"), Json::Null));
-        assert!(matches!(batch(12, false).0.get("inst").get("proxy"), Json::Null));
+        assert!(matches!(
+            batch(11, true).0.get("inst").get("proxy"),
+            Json::Null
+        ));
+        assert!(matches!(
+            batch(12, false).0.get("inst").get("proxy"),
+            Json::Null
+        ));
     }
 }

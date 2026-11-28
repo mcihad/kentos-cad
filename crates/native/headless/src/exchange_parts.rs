@@ -19,8 +19,16 @@ fn dist(a: Vec2, b: Vec2) -> f64 {
 }
 
 /// Whether the insert read back (`b` in `back`) shows another block than the original (`a` in `doc`).
-pub(crate) fn block_changed(doc: &Document, a: &InsertEntity, back: &Document, b: &InsertEntity, tolerance: f64) -> bool {
-    let (Some(da), Some(db)) = (doc.block(a.block), back.block(b.block)) else { return true };
+pub(crate) fn block_changed(
+    doc: &Document,
+    a: &InsertEntity,
+    back: &Document,
+    b: &InsertEntity,
+    tolerance: f64,
+) -> bool {
+    let (Some(da), Some(db)) = (doc.block(a.block), back.block(b.block)) else {
+        return true;
+    };
     if da.name != db.name || dist(da.base, db.base) > tolerance {
         return true;
     }
@@ -35,16 +43,28 @@ pub(crate) fn block_changed(doc: &Document, a: &InsertEntity, back: &Document, b
     }
     da.entities.len() != db.entities.len()
         || da.entities.iter().zip(&db.entities).any(|(o, n)| {
-            o.kind() != n.kind() || places(n).into_iter().any(|p| matches!(to_original(o, p).partial_cmp(&tolerance), Some(std::cmp::Ordering::Greater) | None))
+            o.kind() != n.kind()
+                || places(n).into_iter().any(|p| {
+                    matches!(
+                        to_original(o, p).partial_cmp(&tolerance),
+                        Some(std::cmp::Ordering::Greater) | None
+                    )
+                })
         })
 }
 
 /// What of the table read back is another: `cells`, `sizes` or `merges`; none when it is the same.
-pub(crate) fn table_changed(a: &TableEntity, b: &TableEntity, tolerance: f64) -> Option<&'static str> {
+pub(crate) fn table_changed(
+    a: &TableEntity,
+    b: &TableEntity,
+    tolerance: f64,
+) -> Option<&'static str> {
     if a.cells != b.cells {
         return Some("cells");
     }
-    let same = |x: &[f64], y: &[f64]| x.len() == y.len() && x.iter().zip(y).all(|(p, q)| (p - q).abs() <= tolerance);
+    let same = |x: &[f64], y: &[f64]| {
+        x.len() == y.len() && x.iter().zip(y).all(|(p, q)| (p - q).abs() <= tolerance)
+    };
     if !same(&a.rows, &b.rows) || !same(&a.columns, &b.columns) {
         return Some("sizes");
     }
@@ -52,23 +72,33 @@ pub(crate) fn table_changed(a: &TableEntity, b: &TableEntity, tolerance: f64) ->
 }
 
 /// The names of the project's relations between layers written (`written`) that the trip lost, in the project's order.
-pub(crate) fn relations_lost(doc: &Document, back: &Document, written: impl Fn(&str) -> bool) -> Vec<String> {
+pub(crate) fn relations_lost(
+    doc: &Document,
+    back: &Document,
+    written: impl Fn(&str) -> bool,
+) -> Vec<String> {
     let mut lost = Vec::new();
     for r in &doc.settings().relations {
         if !(written(&r.parent) && written(&r.child)) {
             continue;
         }
-        let made = back.settings().relations.iter().any(|m| m.parent == r.parent && m.child == r.child && m.field == r.field);
+        let made = back
+            .settings()
+            .relations
+            .iter()
+            .any(|m| m.parent == r.parent && m.child == r.child && m.field == r.field);
         // Every child read back with a key reaches an object of the parent layer by its persistent id.
         let reaches = || {
-            back.entities().filter(|e| e.base().layer_id == r.child).all(|e| match e.base().attrs.get(&r.field).map(|v| v.trim()) {
-                None | Some("") => true,
-                Some(key) => Uuid::parse_str(key)
-                    .ok()
-                    .and_then(|u| back.slot_of(u))
-                    .and_then(|s| back.get(s))
-                    .is_some_and(|p| p.base().layer_id == r.parent),
-            })
+            back.entities()
+                .filter(|e| e.base().layer_id == r.child)
+                .all(|e| match e.base().attrs.get(&r.field).map(|v| v.trim()) {
+                    None | Some("") => true,
+                    Some(key) => Uuid::parse_str(key)
+                        .ok()
+                        .and_then(|u| back.slot_of(u))
+                        .and_then(|s| back.get(s))
+                        .is_some_and(|p| p.base().layer_id == r.parent),
+                })
         };
         if !(made && reaches()) {
             lost.push(r.name.clone());
@@ -81,8 +111,8 @@ pub(crate) fn relations_lost(doc: &Document, back: &Document, written: impl Fn(&
 mod tests {
     use super::*;
     use kentos_commands::{
-        CallOp, CommandResult, DocumentSnapshotV2, Entity, ExchangeFormat, ExchangeMatrix, ExchangeMatrixed,
-        ExchangeState,
+        CallOp, CommandResult, DocumentSnapshotV2, Entity, ExchangeFormat, ExchangeMatrix,
+        ExchangeMatrixed, ExchangeState,
     };
     use serde_json::Value;
 
@@ -101,22 +131,50 @@ mod tests {
     }
 
     fn insert(doc: &Document) -> InsertEntity {
-        doc.entities().find_map(|e| if let Entity::Insert(i) = e { Some(i.clone()) } else { None }).expect("an insert")
+        doc.entities()
+            .find_map(|e| {
+                if let Entity::Insert(i) = e {
+                    Some(i.clone())
+                } else {
+                    None
+                }
+            })
+            .expect("an insert")
     }
 
     fn table(doc: &Document) -> TableEntity {
-        *(doc.entities().find_map(|e| if let Entity::Table(t) = e { Some(t.clone()) } else { None }).expect("a table"))
+        *(doc
+            .entities()
+            .find_map(|e| {
+                if let Entity::Table(t) = e {
+                    Some(t.clone())
+                } else {
+                    None
+                }
+            })
+            .expect("a table"))
     }
 
     /// The entities' index of the first of a kind in the JSON.
     fn index_of(v: &Value, kind: &str) -> usize {
-        v["entities"].as_array().expect("entities").iter().position(|e| e["kind"] == kind).expect(kind)
+        v["entities"]
+            .as_array()
+            .expect("entities")
+            .iter()
+            .position(|e| e["kind"] == kind)
+            .expect(kind)
     }
 
     fn matrix(doc: &Document) -> ExchangeMatrixed {
-        let input = ExchangeMatrix { formats: Vec::new(), layers: Vec::new(), tolerance: None };
+        let input = ExchangeMatrix {
+            formats: Vec::new(),
+            layers: Vec::new(),
+            tolerance: None,
+        };
         match crate::exchange_matrix::run(doc, &input, CallOp::Execute) {
-            CommandResult::Completed { output, .. } => serde_json::from_value(output).expect("the answer"),
+            CommandResult::Completed { output, .. } => {
+                serde_json::from_value(output).expect("the answer")
+            }
             other => panic!("{other:?}"),
         }
     }
@@ -128,17 +186,31 @@ mod tests {
         let m = matrix(&drawing());
         let cell = |aspect: &str, f: ExchangeFormat| {
             let row = m.rows.iter().find(|r| r.aspect == aspect).expect(aspect);
-            row.cells.iter().find(|c| c.format == f).cloned().expect("a cell")
+            row.cells
+                .iter()
+                .find(|c| c.format == f)
+                .cloned()
+                .expect("a cell")
         };
         for f in ExchangeFormat::ALL {
             let (dxf, gpkg) = (f == ExchangeFormat::Dxf, f == ExchangeFormat::Gpkg);
-            let kept_if = |yes: bool| if yes { ExchangeState::Kept } else { ExchangeState::Lost };
+            let kept_if = |yes: bool| {
+                if yes {
+                    ExchangeState::Kept
+                } else {
+                    ExchangeState::Lost
+                }
+            };
             assert_eq!(cell("blocks", f).state, kept_if(dxf), "{f:?}");
             assert_eq!(cell("tables", f).state, kept_if(dxf), "{f:?}");
             let relations = cell("relations", f);
             assert_eq!(relations.state, kept_if(gpkg), "{f:?}");
             if !gpkg {
-                assert_eq!(relations.detail.as_deref(), Some("Parselin malikleri"), "{f:?}");
+                assert_eq!(
+                    relations.detail.as_deref(),
+                    Some("Parselin malikleri"),
+                    "{f:?}"
+                );
             }
         }
         let rows: Vec<&str> = m.rows.iter().map(|r| r.aspect.as_str()).collect();
@@ -177,7 +249,12 @@ mod tests {
         // The key holds a spot height's id: it reaches no object of the parcel layer.
         let astray = variant(|v| {
             let point = v["uids"][0].clone();
-            let i = v["entities"].as_array().expect("entities").iter().position(|e| e["layerId"] == "malik").expect("malik");
+            let i = v["entities"]
+                .as_array()
+                .expect("entities")
+                .iter()
+                .position(|e| e["layerId"] == "malik")
+                .expect("malik");
             v["entities"][i]["attrs"]["parsel_id"] = point;
         });
         assert_eq!(relations_lost(&doc, &astray, all), ["Parselin malikleri"]);

@@ -73,7 +73,10 @@ pub struct ClashChoice {
     pub key: i64,
     /// Each field both sides changed, and the side it keeps.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<BTreeMap<String, ClashSide>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<BTreeMap<String, ClashSide>>")
+    )]
     pub fields: BTreeMap<String, ClashSide>,
     /// The shape moved on both sides: the side it keeps.
     #[serde(default, skip_serializing_if = "Option::is_none")]

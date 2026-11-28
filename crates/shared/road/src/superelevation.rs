@@ -88,7 +88,9 @@ pub enum SuperError {
 
 /// The value of piecewise linear break points at `s`; the end value beyond them; `none` without any.
 fn along(points: &[[f64; 2]], s: f64, none: f64) -> f64 {
-    let (Some(first), Some(last)) = (points.first(), points.last()) else { return none };
+    let (Some(first), Some(last)) = (points.first(), points.last()) else {
+        return none;
+    };
     if s <= first[0] {
         return first[1];
     }
@@ -97,7 +99,11 @@ fn along(points: &[[f64; 2]], s: f64, none: f64) -> f64 {
     }
     let i = points.partition_point(|p| p[0] <= s);
     let (a, b) = (points[i - 1], points[i]);
-    if b[0] == a[0] { b[1] } else { a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0]) }
+    if b[0] == a[0] {
+        b[1]
+    } else {
+        a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0])
+    }
 }
 
 impl Schedule {
@@ -122,7 +128,11 @@ impl Schedule {
             let (p, q) = (w[0], w[1]);
             let (dp, dq) = (diff(p), diff(q));
             if (dp > 0.0) != (dq > 0.0) {
-                out.push(if dp == dq { q } else { p + (q - p) * dp / (dp - dq) });
+                out.push(if dp == dq {
+                    q
+                } else {
+                    p + (q - p) * dp / (dp - dq)
+                });
             }
         }
         out
@@ -130,7 +140,12 @@ impl Schedule {
 
     /// Where a side's widening starts, reaches its target or ends (docs/adr/0972): every widening break point.
     pub fn widening_stations(&self) -> Vec<f64> {
-        let mut out: Vec<f64> = self.left_widening.iter().chain(&self.right_widening).map(|p| p[0]).collect();
+        let mut out: Vec<f64> = self
+            .left_widening
+            .iter()
+            .chain(&self.right_widening)
+            .map(|p| p[0])
+            .collect();
         out.sort_by(f64::total_cmp);
         out.dedup();
         out
@@ -138,19 +153,30 @@ impl Schedule {
 
     /// The cross slopes at `s`; `normal` where a side has no break point.
     pub fn at(&self, s: f64, normal: Crossfall) -> Crossfall {
-        Crossfall { left: along(&self.left, s, normal.left), right: along(&self.right, s, normal.right) }
+        Crossfall {
+            left: along(&self.left, s, normal.left),
+            right: along(&self.right, s, normal.right),
+        }
     }
 
     /// How much the axis rises over the profile grade at `s` (m) for the traveled way's `widths` (left, right) there:
     /// 0 about the centreline (docs/adr/0931 §1).
     pub fn lift(&self, s: f64, normal: Crossfall, widths: (f64, f64)) -> f64 {
         let c = self.at(s, normal);
-        crate::superelevation_physics::axis_lift(self.pivot, (c.left, c.right), (normal.left, normal.right), widths)
+        crate::superelevation_physics::axis_lift(
+            self.pivot,
+            (c.left, c.right),
+            (normal.left, normal.right),
+            widths,
+        )
     }
 
     /// The extra widths (left, right) at `s`.
     pub fn widening(&self, s: f64) -> (f64, f64) {
-        (along(&self.left_widening, s, 0.0), along(&self.right_widening, s, 0.0))
+        (
+            along(&self.left_widening, s, 0.0),
+            along(&self.right_widening, s, 0.0),
+        )
     }
 }
 
@@ -194,18 +220,43 @@ fn end(rule: &CurveRule, n_out: f64, n_in: f64, full: f64, toward: f64, exit: bo
         inside.reverse();
         widening.reverse();
     }
-    let mut critical = vec![Critical { pi: rule.pi.clone(), mark: Mark::NormalCrown, station: nc, exit }];
+    let mut critical = vec![Critical {
+        pi: rule.pi.clone(),
+        mark: Mark::NormalCrown,
+        station: nc,
+        exit,
+    }];
     if n_out < 0.0 {
-        critical.push(Critical { pi: rule.pi.clone(), mark: Mark::LevelCrown, station: at(0.0), exit });
+        critical.push(Critical {
+            pi: rule.pi.clone(),
+            mark: Mark::LevelCrown,
+            station: at(0.0),
+            exit,
+        });
     }
     if n_in < 0.0 && -n_in > n_out {
-        critical.push(Critical { pi: rule.pi.clone(), mark: Mark::ReverseCrown, station: rc, exit });
+        critical.push(Critical {
+            pi: rule.pi.clone(),
+            mark: Mark::ReverseCrown,
+            station: rc,
+            exit,
+        });
     }
-    critical.push(Critical { pi: rule.pi.clone(), mark: Mark::Full, station: full, exit });
+    critical.push(Critical {
+        pi: rule.pi.clone(),
+        mark: Mark::Full,
+        station: full,
+        exit,
+    });
     if exit {
         critical.reverse();
     }
-    End { outside, inside, widening, critical }
+    End {
+        outside,
+        inside,
+        widening,
+        critical,
+    }
 }
 
 /// A schedule from the curves' rules, rotating about the centreline from the `normal` slopes; and its critical
@@ -250,7 +301,11 @@ pub fn from_curves(
     for (fs_in, fs_out, r, c) in placed {
         // Turning left (delta > 0) the right side is outside.
         let left_outside = c.delta < 0.0;
-        let (n_out, n_in) = if left_outside { (normal.left, normal.right) } else { (normal.right, normal.left) };
+        let (n_out, n_in) = if left_outside {
+            (normal.left, normal.right)
+        } else {
+            (normal.right, normal.left)
+        };
         let a = end(r, n_out, n_in, fs_in, 1.0, false);
         let b = end(r, n_out, n_in, fs_out, -1.0, true);
         let first = a.outside[0][0].min(a.inside[0][0]).min(a.widening[0][0]);
@@ -262,13 +317,24 @@ pub fn from_curves(
         if let Some((prev, pi)) = last
             && first < prev - 1e-9
         {
-            return Err(SuperError::Overlap { a: pi.to_owned(), b: r.pi.clone() });
+            return Err(SuperError::Overlap {
+                a: pi.to_owned(),
+                b: r.pi.clone(),
+            });
         }
         last = Some((end_s, r.pi.as_str()));
-        let (outside, inside) = if left_outside { (&mut s.left, &mut s.right) } else { (&mut s.right, &mut s.left) };
+        let (outside, inside) = if left_outside {
+            (&mut s.left, &mut s.right)
+        } else {
+            (&mut s.right, &mut s.left)
+        };
         outside.extend(a.outside.iter().chain(b.outside.iter()));
         inside.extend(a.inside.iter().chain(b.inside.iter()));
-        let wide = if left_outside { &mut s.right_widening } else { &mut s.left_widening };
+        let wide = if left_outside {
+            &mut s.right_widening
+        } else {
+            &mut s.left_widening
+        };
         if r.widening > 0.0 {
             wide.extend(a.widening.iter().chain(b.widening.iter()));
         }

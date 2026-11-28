@@ -120,26 +120,55 @@ pub struct Alignment {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ChainError {
     TooFewPoints,
-    DuplicateId { pi: String },
-    NotFinite { pi: String },
+    DuplicateId {
+        pi: String,
+    },
+    NotFinite {
+        pi: String,
+    },
     /// A PI where the one before it is.
-    SamePlace { pi: String },
+    SamePlace {
+        pi: String,
+    },
     /// A negative radius or clothoid length, or a curve on the start or the end.
-    BadCurve { pi: String },
+    BadCurve {
+        pi: String,
+    },
     /// The direction turns back (180°).
-    TurnTooSharp { pi: String },
+    TurnTooSharp {
+        pi: String,
+    },
     /// The clothoids turn more than the deflection.
-    SpiralsLong { pi: String, turn: f64, delta: f64 },
+    SpiralsLong {
+        pi: String,
+        turn: f64,
+        delta: f64,
+    },
     /// Two curves' tangent lengths are longer than the tangent between them.
-    CurvesOverlap { a: String, b: String, excess: f64 },
+    CurvesOverlap {
+        a: String,
+        b: String,
+        excess: f64,
+    },
     /// An ove asked where it cannot be: on the start's or the end's neighbour, between curves turning opposite ways or
     /// of one radius, or beside a clothoid on the shared side (`why` says which; docs/adr/0979).
-    BadOve { pi: String, why: OveWhy },
+    BadOve {
+        pi: String,
+        why: OveWhy,
+    },
     /// No ove joins the two curves on the PIs as they are: even its longest (the second curve's arc used up) leaves
     /// the middle tangent `excess` metres too long.
-    OveTooLong { a: String, b: String, excess: f64 },
+    OveTooLong {
+        a: String,
+        b: String,
+        excess: f64,
+    },
     /// More than one ove joins them (two A's): which one is meant is the user's to say by moving a PI.
-    OveAmbiguous { a: String, b: String, parameters: Vec<f64> },
+    OveAmbiguous {
+        a: String,
+        b: String,
+        parameters: Vec<f64>,
+    },
 }
 
 /// Why an ove cannot be asked on a PI.
@@ -218,7 +247,14 @@ struct OvePart {
 
 /// A curve's centre: on the inward normals of both tangents through `pi`, `oi` from the entry one and `oo` from the
 /// exit one; and its feet, `t` along the entry tangent and `u` along the exit tangent from the PI.
-fn centre_of(pi: [f64; 2], din: f64, dout: f64, sign: f64, oi: f64, oo: f64) -> ([f64; 2], f64, f64) {
+fn centre_of(
+    pi: [f64; 2],
+    din: f64,
+    dout: f64,
+    sign: f64,
+    oi: f64,
+    oo: f64,
+) -> ([f64; 2], f64, f64) {
     let (ui, uo) = (unit(din), unit(dout));
     let (ni, no) = ([-ui[1] * sign, ui[0] * sign], [-uo[1] * sign, uo[0] * sign]);
     // centre = PI + oi·ni + t·ui = PI + oo·no + u·uo: solve for t along the entry tangent.
@@ -226,7 +262,14 @@ fn centre_of(pi: [f64; 2], din: f64, dout: f64, sign: f64, oi: f64, oo: f64) -> 
     let det = ui[0] * (-uo[1]) - ui[1] * (-uo[0]);
     let t = (d[0] * (-uo[1]) - d[1] * (-uo[0])) / det;
     let u = (ui[0] * d[1] - ui[1] * d[0]) / det;
-    ([pi[0] + oi * ni[0] + t * ui[0], pi[1] + oi * ni[1] + t * ui[1]], t, u)
+    (
+        [
+            pi[0] + oi * ni[0] + t * ui[0],
+            pi[1] + oi * ni[1] + t * ui[1],
+        ],
+        t,
+        u,
+    )
 }
 
 fn plan(pis: &[PiInput], i: usize) -> Result<Option<Planned>, ChainError> {
@@ -282,7 +325,12 @@ const OVE_SAMPLES: usize = 512;
 /// when the radius falls (closing), after both when it grows. The one condition, both O's the same, is a function of
 /// A alone, g(A) = |BC| + t2 − u1 + s·(x_M2 − x_M1), s = −1 closing, +1 opening; g(0) is the plain gap between the
 /// circles' feet. A is sampled up to where an arc would go negative and each sign change bisected.
-fn solve_ove(pis: &[PiInput], i: usize, c1: &Planned, c2: &Planned) -> Result<(Planned, Planned), ChainError> {
+fn solve_ove(
+    pis: &[PiInput],
+    i: usize,
+    c1: &Planned,
+    c2: &Planned,
+) -> Result<(Planned, Planned), ChainError> {
     let (a0, b, c, d) = (&pis[i - 1], &pis[i], &pis[i + 1], &pis[i + 2]);
     let din = (b.y - a0.y).atan2(b.x - a0.x);
     let dmid = (c.y - b.y).atan2(c.x - b.x);
@@ -305,13 +353,19 @@ fn solve_ove(pis: &[PiInput], i: usize, c1: &Planned, c2: &Planned) -> Result<(P
     };
     // The longest A: the second curve's arc used up when closing, the first's when opening.
     let most = if closing {
-        r2 * (2.0 * (c2.delta.abs() - c2.l_out / (2.0 * r2))).max(0.0).sqrt()
+        r2 * (2.0 * (c2.delta.abs() - c2.l_out / (2.0 * r2)))
+            .max(0.0)
+            .sqrt()
     } else {
-        r1 * (2.0 * (c1.delta.abs() - c1.l_in / (2.0 * r1))).max(0.0).sqrt()
+        r1 * (2.0 * (c1.delta.abs() - c1.l_in / (2.0 * r1)))
+            .max(0.0)
+            .sqrt()
     };
     let g0 = g(0.0);
-    let samples: Vec<(f64, f64)> =
-        (0..=OVE_SAMPLES).map(|k| most * k as f64 / OVE_SAMPLES as f64).map(|a| (a, if a == 0.0 { g0 } else { g(a) })).collect();
+    let samples: Vec<(f64, f64)> = (0..=OVE_SAMPLES)
+        .map(|k| most * k as f64 / OVE_SAMPLES as f64)
+        .map(|a| (a, if a == 0.0 { g0 } else { g(a) }))
+        .collect();
     let mut roots = Vec::new();
     // Where the plain circles' feet meet (|g(0)| within MEET) the root at A = 0 is no ove: the scan starts past it.
     let from = usize::from(g0.abs() <= MEET);
@@ -337,12 +391,26 @@ fn solve_ove(pis: &[PiInput], i: usize, c1: &Planned, c2: &Planned) -> Result<(P
     match roots.len() {
         0 => {
             // No sign change: every middle tangent too long (the circles too far apart), or every one overlapping.
-            let least = samples.iter().map(|&(_, v)| v).fold(f64::INFINITY, f64::min);
-            let most = samples.iter().map(|&(_, v)| v).fold(f64::NEG_INFINITY, f64::max);
+            let least = samples
+                .iter()
+                .map(|&(_, v)| v)
+                .fold(f64::INFINITY, f64::min);
+            let most = samples
+                .iter()
+                .map(|&(_, v)| v)
+                .fold(f64::NEG_INFINITY, f64::max);
             if least > 0.0 {
-                Err(ChainError::OveTooLong { a: b.id.clone(), b: c.id.clone(), excess: least })
+                Err(ChainError::OveTooLong {
+                    a: b.id.clone(),
+                    b: c.id.clone(),
+                    excess: least,
+                })
             } else {
-                Err(ChainError::CurvesOverlap { a: b.id.clone(), b: c.id.clone(), excess: -most })
+                Err(ChainError::CurvesOverlap {
+                    a: b.id.clone(),
+                    b: c.id.clone(),
+                    excess: -most,
+                })
             }
         }
         1 => {
@@ -351,11 +419,27 @@ fn solve_ove(pis: &[PiInput], i: usize, c1: &Planned, c2: &Planned) -> Result<(P
             let gap = (r1 - r2).abs() - (centre1[0] - centre2[0]).hypot(centre1[1] - centre2[1]);
             let part = OvePart { a, closing, gap };
             let o = u1 + s * x1;
-            let first = Planned { t_in: -t1 + c1.k_in, t_out: o, centre: centre1, ove_out: Some(part), ..*c1 };
-            let second = Planned { t_in: bc - o, t_out: u2 + c2.k_out, centre: centre2, ove_in: Some(part), ..*c2 };
+            let first = Planned {
+                t_in: -t1 + c1.k_in,
+                t_out: o,
+                centre: centre1,
+                ove_out: Some(part),
+                ..*c1
+            };
+            let second = Planned {
+                t_in: bc - o,
+                t_out: u2 + c2.k_out,
+                centre: centre2,
+                ove_in: Some(part),
+                ..*c2
+            };
             Ok((first, second))
         }
-        _ => Err(ChainError::OveAmbiguous { a: b.id.clone(), b: c.id.clone(), parameters: roots }),
+        _ => Err(ChainError::OveAmbiguous {
+            a: b.id.clone(),
+            b: c.id.clone(),
+            parameters: roots,
+        }),
     }
 }
 
@@ -369,12 +453,19 @@ pub fn build(pis: &[PiInput]) -> Result<Alignment, ChainError> {
         if !seen.insert(p.id.as_str()) || p.id.trim().is_empty() {
             return Err(ChainError::DuplicateId { pi: p.id.clone() });
         }
-        if ![p.x, p.y, p.radius, p.spiral_in, p.spiral_out].iter().all(|v| v.is_finite()) {
+        if ![p.x, p.y, p.radius, p.spiral_in, p.spiral_out]
+            .iter()
+            .all(|v| v.is_finite())
+        {
             return Err(ChainError::NotFinite { pi: p.id.clone() });
         }
         let end = i == 0 || i == pis.len() - 1;
         let curved = p.radius != 0.0 || p.spiral_in != 0.0 || p.spiral_out != 0.0;
-        if p.radius < 0.0 || p.spiral_in < 0.0 || p.spiral_out < 0.0 || (end && curved) || (p.radius == 0.0 && curved)
+        if p.radius < 0.0
+            || p.spiral_in < 0.0
+            || p.spiral_out < 0.0
+            || (end && curved)
+            || (p.radius == 0.0 && curved)
         {
             return Err(ChainError::BadCurve { pi: p.id.clone() });
         }
@@ -382,14 +473,26 @@ pub fn build(pis: &[PiInput]) -> Result<Alignment, ChainError> {
             return Err(ChainError::SamePlace { pi: p.id.clone() });
         }
     }
-    let mut planned: Vec<Option<Planned>> =
-        (0..pis.len()).map(|i| if i == 0 || i == pis.len() - 1 { Ok(None) } else { plan(pis, i) }).collect::<Result<_, _>>()?;
+    let mut planned: Vec<Option<Planned>> = (0..pis.len())
+        .map(|i| {
+            if i == 0 || i == pis.len() - 1 {
+                Ok(None)
+            } else {
+                plan(pis, i)
+            }
+        })
+        .collect::<Result<_, _>>()?;
     // The oves (docs/adr/0979): each between a PI's curve and the next one's, solved on the PIs.
     for i in 0..pis.len() {
         if !pis[i].ove {
             continue;
         }
-        let bad = |why| Err(ChainError::BadOve { pi: pis[i].id.clone(), why });
+        let bad = |why| {
+            Err(ChainError::BadOve {
+                pi: pis[i].id.clone(),
+                why,
+            })
+        };
         let (Some(c1), Some(c2)) = (planned[i], planned.get(i + 1).copied().flatten()) else {
             return bad(OveWhy::NoNextCurve);
         };
@@ -499,8 +602,11 @@ pub fn build(pis: &[PiInput]) -> Result<Alignment, ChainError> {
         // An ove's circle runs on past the middle direction by τ = A²/(2R²) before a closing ove leaves it, and ends that
         // much short after an opening one; the second circle the other way round (docs/adr/0979 §2).
         let tau = |o: &OvePart| o.a * o.a / (2.0 * c.radius * c.radius);
-        let more = c.ove_out.map_or(0.0, |o| if o.closing { tau(&o) } else { -tau(&o) })
-            + c.ove_in.map_or(0.0, |o| if o.closing { -tau(&o) } else { tau(&o) });
+        let more = c
+            .ove_out
+            .map_or(0.0, |o| if o.closing { tau(&o) } else { -tau(&o) })
+            + c.ove_in
+                .map_or(0.0, |o| if o.closing { -tau(&o) } else { tau(&o) });
         let arc = c.radius * (c.delta.abs() - (c.l_in + c.l_out) / (2.0 * c.radius) + more);
         if arc > 0.0 {
             let e = Element {
@@ -554,7 +660,10 @@ pub fn build(pis: &[PiInput]) -> Result<Alignment, ChainError> {
             let n = &pis[c.index + 1];
             let dout = (n.y - b.y).atan2(n.x - b.x);
             let st = [b.x + c.t_out * dout.cos(), b.y + c.t_out * dout.sin()];
-            out.residual.place = out.residual.place.max((place[0] - st[0]).hypot(place[1] - st[1]));
+            out.residual.place = out
+                .residual
+                .place
+                .max((place[0] - st[0]).hypot(place[1] - st[1]));
             out.residual.direction = out.residual.direction.max(wrap(theta - dout).abs());
         }
         out.curves.push(CurveReport {
@@ -579,8 +688,17 @@ pub fn build(pis: &[PiInput]) -> Result<Alignment, ChainError> {
         {
             let ove = a.ove_out.map(|o| {
                 let length = o.a * o.a * (1.0 / b.radius - 1.0 / a.radius).abs();
-                let station = out.curves.iter().find(|c| c.pi == pis[a.index].id).map_or(0.0, |c| c.stations[3] - length);
-                Ove { a: o.a, length, station, gap: o.gap }
+                let station = out
+                    .curves
+                    .iter()
+                    .find(|c| c.pi == pis[a.index].id)
+                    .map_or(0.0, |c| c.stations[3] - length);
+                Ove {
+                    a: o.a,
+                    length,
+                    station,
+                    gap: o.gap,
+                }
             });
             out.joins.push(Join {
                 between: [pis[a.index].id.clone(), pis[b.index].id.clone()],

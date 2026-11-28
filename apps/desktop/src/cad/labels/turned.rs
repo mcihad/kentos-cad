@@ -173,7 +173,11 @@ pub(super) fn pictured(
                 ),
                 piece.lean,
             );
-            add(Part::Fill(std::slice::from_ref(&mask), plain, Color { a: 1.0, ..halo }));
+            add(Part::Fill(
+                std::slice::from_ref(&mask),
+                plain,
+                Color { a: 1.0, ..halo },
+            ));
         }
         let lean = piece.lean / piece.width_factor;
         let glyphs = outlines(piece, dx, dy, || {

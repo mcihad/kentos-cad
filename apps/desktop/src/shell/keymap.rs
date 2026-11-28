@@ -118,7 +118,11 @@ impl Keymap {
 
     fn read_keys(&mut self, id: &str, keys: Option<Vec<String>>) {
         let Some(command) = catalog().get(id) else {
-            self.skip(SHORTCUTS_SETTING, id.to_owned(), "Bu sürümde böyle bir komut yok; kısayolu saklanıyor, kullanılmıyor.");
+            self.skip(
+                SHORTCUTS_SETTING,
+                id.to_owned(),
+                "Bu sürümde böyle bir komut yok; kısayolu saklanıyor, kullanılmıyor.",
+            );
             return;
         };
         if let Some(why) = not_bindable(command) {
@@ -126,7 +130,11 @@ impl Keymap {
             return;
         }
         let Some(keys) = keys else {
-            self.skip(SHORTCUTS_SETTING, command.title.to_owned(), "Tuşları bir liste değil; saklanıyor, kullanılmıyor.");
+            self.skip(
+                SHORTCUTS_SETTING,
+                command.title.to_owned(),
+                "Tuşları bir liste değil; saklanıyor, kullanılmıyor.",
+            );
             return;
         };
         let mut own = Vec::new();
@@ -139,14 +147,21 @@ impl Keymap {
                     continue;
                 }
             };
-            if let Some(why) = reserved_key(&chord).map(|r| r.message()).or_else(|| system_key(&chord)) {
+            if let Some(why) = reserved_key(&chord)
+                .map(|r| r.message())
+                .or_else(|| system_key(&chord))
+            {
                 self.skip(SHORTCUTS_SETTING, entry, why);
                 continue;
             }
             match self.taken.get(&chord).copied() {
                 Some(other) if other != command.id => {
                     let title = catalog().get(other).map_or(other, |c| c.title);
-                    self.skip(SHORTCUTS_SETTING, entry, format!("“{chord}” {title} komutunun; bir tuş tek komutun olur."));
+                    self.skip(
+                        SHORTCUTS_SETTING,
+                        entry,
+                        format!("“{chord}” {title} komutunun; bir tuş tek komutun olur."),
+                    );
                     continue;
                 }
                 Some(_) => continue,
@@ -160,7 +175,11 @@ impl Keymap {
 
     fn read_name(&mut self, name: &str, id: Option<String>) {
         let Some(command) = id.as_deref().and_then(|id| catalog().get(id)) else {
-            self.skip(ALIASES_SETTING, name.to_owned(), "Bu sürümde böyle bir komut yok; ad saklanıyor, kullanılmıyor.");
+            self.skip(
+                ALIASES_SETTING,
+                name.to_owned(),
+                "Bu sürümde böyle bir komut yok; ad saklanıyor, kullanılmıyor.",
+            );
             return;
         };
         if let Some(why) = not_bindable(command) {
@@ -179,7 +198,11 @@ impl Keymap {
             return;
         }
         if self.names.iter().any(|(n, _)| fold(n) == fold(&kept)) {
-            self.skip(ALIASES_SETTING, name.to_owned(), "Aynı ad bir kez daha yazılmış; ilki geçerli.");
+            self.skip(
+                ALIASES_SETTING,
+                name.to_owned(),
+                "Aynı ad bir kez daha yazılmış; ilki geçerli.",
+            );
             return;
         }
         self.names.push((kept, command.id));
@@ -221,7 +244,11 @@ impl Keymap {
 
     /// Where a command's keys come from.
     pub fn keys_source(&self, id: &str) -> Source {
-        if self.user.contains_key(id) { Source::User } else { Source::Default }
+        if self.user.contains_key(id) {
+            Source::User
+        } else {
+            Source::Default
+        }
     }
 
     /// Whether the user's keys took a key the command has by default (it is another's now).
@@ -239,7 +266,11 @@ impl Keymap {
     /// The command a key runs where `offers` says what is offered: the user's for a key the user gave (nothing when
     /// it is not offered here: the key does not fall to another command), else the first command that has it by
     /// default, in the catalog's order, as before the user set anything.
-    pub fn command_for(&self, chord: &str, offers: impl Fn(&str) -> bool) -> Option<&'static Command> {
+    pub fn command_for(
+        &self,
+        chord: &str,
+        offers: impl Fn(&str) -> bool,
+    ) -> Option<&'static Command> {
         if let Some(id) = self.taken.get(chord) {
             return catalog().get(id).filter(|c| offers(c.id));
         }
@@ -288,7 +319,9 @@ impl Keymap {
         catalog()
             .commands()
             .iter()
-            .filter(|c| self.user.contains_key(c.id) || self.names.iter().any(|(_, id)| *id == c.id))
+            .filter(|c| {
+                self.user.contains_key(c.id) || self.names.iter().any(|(_, id)| *id == c.id)
+            })
             .collect()
     }
 }
@@ -298,12 +331,19 @@ impl Keymap {
 fn kentos_name(kept: &str) -> Option<String> {
     if let Some(id) = crate::alias_profile::kentos_meaning(kept) {
         let title = catalog().get(id).map_or(id, |c| c.title);
-        return Some(format!("“{kept}” KentOS'ta {title} komutunun adı; başka bir ad seçin."));
+        return Some(format!(
+            "“{kept}” KentOS'ta {title} komutunun adı; başka bir ad seçin."
+        ));
     }
     Module::ALL.into_iter().find_map(|m| {
         let name = crate::module_names::of(m)?.find(kept)?;
-        let title = catalog().get(name.command).map_or(name.command, |c| c.title);
-        Some(format!("“{kept}” {} {title} komutunun adı; başka bir ad seçin.", m.in_program()))
+        let title = catalog()
+            .get(name.command)
+            .map_or(name.command, |c| c.title);
+        Some(format!(
+            "“{kept}” {} {title} komutunun adı; başka bir ad seçin.",
+            m.in_program()
+        ))
     })
 }
 
@@ -326,7 +366,11 @@ pub fn first_key(command: &Command) -> Option<String> {
 
 /// A command's keys now ([`Keymap::keys_of`]).
 pub fn keys(command: &Command) -> Vec<String> {
-    active().keys_of(command).into_iter().map(str::to_owned).collect()
+    active()
+        .keys_of(command)
+        .into_iter()
+        .map(str::to_owned)
+        .collect()
 }
 
 impl App {
@@ -357,11 +401,19 @@ pub fn user_line(
         return line;
     }
     let own_name = catalog().get(id).is_some_and(|c| !c.aliases.is_empty()) || line.name != id;
-    let mut list: Vec<&str> = if own_name { vec![line.name] } else { Vec::new() };
+    let mut list: Vec<&str> = if own_name {
+        vec![line.name]
+    } else {
+        Vec::new()
+    };
     list.extend(line.aliases.iter().copied());
     list.extend(names);
     let (name, aliases) = interned(&list);
-    kentos_ui::widget::command_line::Command { name, aliases, ..line }
+    kentos_ui::widget::command_line::Command {
+        name,
+        aliases,
+        ..line
+    }
 }
 
 /// A list of names made `'static` once (the command line's rows are borrowed for the program's life): each list the
@@ -374,9 +426,15 @@ fn interned(list: &[&str]) -> (&'static str, &'static [&'static str]) {
     let key: Vec<String> = list.iter().map(|s| (*s).to_owned()).collect();
     MADE.with(|made| {
         *made.borrow_mut().entry(key.clone()).or_insert_with(|| {
-            let all: Vec<&'static str> = key.into_iter().map(|s| &*Box::leak(s.into_boxed_str())).collect();
+            let all: Vec<&'static str> = key
+                .into_iter()
+                .map(|s| &*Box::leak(s.into_boxed_str()))
+                .collect();
             match all.split_first() {
-                Some((first, rest)) => (*first, Box::leak(rest.to_vec().into_boxed_slice()) as &'static [&'static str]),
+                Some((first, rest)) => (
+                    *first,
+                    Box::leak(rest.to_vec().into_boxed_slice()) as &'static [&'static str],
+                ),
                 None => ("", &[]),
             }
         })

@@ -176,7 +176,8 @@ impl App {
         // them when it has changes too.
         if let (Then::Close(_), false) = (then, self.doc_tabs.unsaved().is_empty()) {
             // By the names their tabs show (two of one project name told apart by their files).
-            let mut docs: Vec<&crate::document::Document> = self.doc_tabs.parked.iter().map(|p| &p.document).collect();
+            let mut docs: Vec<&crate::document::Document> =
+                self.doc_tabs.parked.iter().map(|p| &p.document).collect();
             docs.extend(self.document.as_ref());
             let titles = crate::doc_tabs::tab_titles(&docs);
             let names: Vec<String> = docs

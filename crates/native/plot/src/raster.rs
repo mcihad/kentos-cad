@@ -31,9 +31,7 @@ pub(crate) fn map(
         (raw[1] * cap).ceil().max(1.) as u32,
     );
     if u64::from(w) * u64::from(h) > 32_100_000 {
-        return Err(
-            "Harita resmi 32 milyon pikseli aşıyor; paftanın dpi değerini düşürün.".into(),
-        );
+        return Err("Harita resmi 32 milyon pikseli aşıyor; paftanın dpi değerini düşürün.".into());
     }
     let image = render_image_captured(src, m, labels, [w, h], drawing, profile, sources)?;
     Ok(RasterMap {
@@ -65,12 +63,18 @@ pub fn render_image_profile(
     drawing: Option<&str>,
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
 ) -> Result<MapImage, String> {
-    let sources=crate::source_images::SourceImages::capture(src.doc,drawing)?;
-    render_image_captured(src,m,labels,size,drawing,profile,Some(sources))
+    let sources = crate::source_images::SourceImages::capture(src.doc, drawing)?;
+    render_image_captured(src, m, labels, size, drawing, profile, Some(sources))
 }
 fn render_image_captured(
-    src:&MapSource<'_>,m:&MapPrim,labels:&[MapLabel],size:[u32;2],drawing:Option<&str>,profile:Option<&kentos_sheet::plot_profile::PlotProfile>,sources:Option<std::sync::Arc<crate::source_images::SourceImages>>,
-)->Result<MapImage,String>{
+    src: &MapSource<'_>,
+    m: &MapPrim,
+    labels: &[MapLabel],
+    size: [u32; 2],
+    drawing: Option<&str>,
+    profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
+    sources: Option<std::sync::Arc<crate::source_images::SourceImages>>,
+) -> Result<MapImage, String> {
     let center = m.view.center.ok_or("Haritanın merkezi yok.")?;
     let extent = m.extent.ok_or("Haritanın kapsamı yok.")?;
     let [w, h] = size;
@@ -104,7 +108,10 @@ fn render_image_captured(
         labels,
         crate::maps::ground_clip(m).as_deref(),
     )?;
-    let images = match sources{Some(sources)=>Images::captured(src.doc,drawing,sources),None=>Images::new(src.doc,drawing)};
+    let images = match sources {
+        Some(sources) => Images::captured(src.doc, drawing, sources),
+        None => Images::new(src.doc, drawing),
+    };
     for (_, _, layer) in &built {
         images.made(layer);
     }
@@ -120,8 +127,8 @@ fn render_image_captured(
         )?
     } else {
         let layers: Vec<_> = built.iter().map(|(_, _, l)| l).collect();
-        let rgba = paint(w, h, &view, &layers, &images)
-            .ok_or("Harita resmi için bellek ayrılamadı.")?;
+        let rgba =
+            paint(w, h, &view, &layers, &images).ok_or("Harita resmi için bellek ayrılamadı.")?;
         tiny(&rgba, w, h).ok_or("Harita resmi açılamadı.")?
     };
     let missing: Vec<_> = images.missing.borrow().iter().cloned().collect();
@@ -137,8 +144,10 @@ fn render_image_captured(
         for l in &mut writing {
             if let Some(s) = resolved.model(&l.layer) {
                 l.color = kentos_sheet::plot_profile::apply::color(&l.color, s);
-                if let Some(u)=&mut l.unicode {
-                    for color in u.colors.iter_mut().flatten() {*color=kentos_sheet::plot_profile::apply::color(color,s);}
+                if let Some(u) = &mut l.unicode {
+                    for color in u.colors.iter_mut().flatten() {
+                        *color = kentos_sheet::plot_profile::apply::color(color, s);
+                    }
                 }
             }
         }
@@ -172,17 +181,27 @@ fn render_image_captured(
 }
 
 pub(crate) fn png(rgba: &[u8], w: u32, h: u32) -> Result<Vec<u8>, String> {
-    png_at(rgba,w,h,None)
+    png_at(rgba, w, h, None)
 }
 
 pub(crate) fn png_at(rgba: &[u8], w: u32, h: u32, dpi: Option<u16>) -> Result<Vec<u8>, String> {
-    png_with_source(rgba,w,h,dpi,None)
+    png_with_source(rgba, w, h, dpi, None)
 }
-pub(crate) fn png_with_source(rgba:&[u8],w:u32,h:u32,dpi:Option<u16>,source:Option<&str>)->Result<Vec<u8>,String>{
+pub(crate) fn png_with_source(
+    rgba: &[u8],
+    w: u32,
+    h: u32,
+    dpi: Option<u16>,
+    source: Option<&str>,
+) -> Result<Vec<u8>, String> {
     let mut bytes = Vec::new();
     {
         let mut encoder = png::Encoder::new(&mut bytes, w, h);
-        if let Some(source)=source{encoder.add_itxt_chunk("kentos.source".into(),source.into()).map_err(|e|e.to_string())?;}
+        if let Some(source) = source {
+            encoder
+                .add_itxt_chunk("kentos.source".into(), source.into())
+                .map_err(|e| e.to_string())?;
+        }
         if let Some(dpi) = dpi {
             let ppm = (f64::from(dpi) / 0.0254).round() as u32;
             encoder.set_pixel_dims(Some(png::PixelDimensions {
@@ -201,7 +220,11 @@ pub(crate) fn png_with_source(rgba:&[u8],w:u32,h:u32,dpi:Option<u16>,source:Opti
 
 pub(crate) fn tiny(rgba: &[u8], w: u32, h: u32) -> Option<resvg::tiny_skia::Pixmap> {
     let mut pixmap = resvg::tiny_skia::Pixmap::new(w, h)?;
-    for (dst, src) in pixmap.pixels_mut().iter_mut().zip(rgba.as_chunks::<4>().0.iter()) {
+    for (dst, src) in pixmap
+        .pixels_mut()
+        .iter_mut()
+        .zip(rgba.as_chunks::<4>().0.iter())
+    {
         *dst = resvg::tiny_skia::ColorU8::from_rgba(src[0], src[1], src[2], src[3]).premultiply();
     }
     Some(pixmap)
@@ -230,9 +253,9 @@ fn draw_labels(
     _images: &Images<'_>,
     scale: f64,
     profile: Option<&kentos_sheet::plot_profile::PlotProfile>,
-) -> Result<(),String> {
+) -> Result<(), String> {
     use resvg::tiny_skia::{
-        FillRule, PathBuilder, Stroke, Transform, StrokeDash, LineCap, LineJoin,
+        FillRule, LineCap, LineJoin, PathBuilder, Stroke, StrokeDash, Transform,
     };
     let styles = profile.map(kentos_sheet::plot_profile::apply::Resolved::new);
     let px_mm = view.dpr / crate::maps::PX_MM;
@@ -335,7 +358,9 @@ fn draw_labels(
         }
         // A text in its embedded SHX font (ADR 1125): the font's strokes at the object's weight, as in the PDF.
         if let Some((lines, weight)) = &l.shx {
-            let w = style.and_then(|s| s.line_weight).map_or(*weight, |w| f64::from(w) / 1000.);
+            let w = style
+                .and_then(|s| s.line_weight)
+                .map_or(*weight, |w| f64::from(w) / 1000.);
             let pen = Stroke {
                 width: if w == 0. { 1. } else { (w * px_mm) as f32 },
                 line_cap: LineCap::Round,
@@ -350,7 +375,7 @@ fn draw_labels(
             continue;
         }
         if l.unicode.is_some() {
-            draw_unicode(pixmap,view,origin,l,scale)?;
+            draw_unicode(pixmap, view, origin, l, scale)?;
             continue;
         }
         if l.text.is_empty() {

@@ -77,11 +77,17 @@ pub fn mapping(before: &Alignment, after: &Alignment) -> Vec<Row> {
             },
         })
         .collect();
-    rows.extend(before.elements.iter().filter(|o| after.elements.iter().all(|n| n.id != o.id)).map(|o| Row {
-        element: o.id.clone(),
-        change: Change::Removed,
-        before: Some(range(o)),
-        after: None,
-    }));
+    rows.extend(
+        before
+            .elements
+            .iter()
+            .filter(|o| after.elements.iter().all(|n| n.id != o.id))
+            .map(|o| Row {
+                element: o.id.clone(),
+                change: Change::Removed,
+                before: Some(range(o)),
+                after: None,
+            }),
+    );
     rows
 }

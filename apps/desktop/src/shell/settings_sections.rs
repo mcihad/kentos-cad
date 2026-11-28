@@ -612,7 +612,10 @@ impl App {
             .section("3B görünüm")
             .field(
                 Fields::title("graphics.scene3dQuality"),
-                choices("graphics.scene3dQuality", &f.value("graphics.scene3dQuality")),
+                choices(
+                    "graphics.scene3dQuality",
+                    &f.value("graphics.scene3dQuality"),
+                ),
             )
             .help(Fields::help("graphics.scene3dQuality"))
             // The styled drawing (docs/adr/0090), as the web's Çizim motoru → Semboller ve çizgiler.

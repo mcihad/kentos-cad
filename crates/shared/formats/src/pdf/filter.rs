@@ -18,7 +18,10 @@ pub enum FilterError {
 fn names(o: Option<&Obj>) -> Vec<String> {
     match o {
         Some(Obj::Name(n)) => vec![n.clone()],
-        Some(Obj::Array(a)) => a.iter().filter_map(|x| x.name().map(str::to_owned)).collect(),
+        Some(Obj::Array(a)) => a
+            .iter()
+            .filter_map(|x| x.name().map(str::to_owned))
+            .collect(),
         _ => Vec::new(),
     }
 }
@@ -41,7 +44,11 @@ pub fn decode(dict: &Dict, raw: &[u8]) -> Result<Vec<u8>, FilterError> {
         data = match f.as_str() {
             "FlateDecode" | "Fl" => predict(inflate(&data)?, p)?,
             "LZWDecode" | "LZW" => {
-                let early = p.and_then(|d| d.get("EarlyChange")).and_then(Obj::num).unwrap_or(1.0) != 0.0;
+                let early = p
+                    .and_then(|d| d.get("EarlyChange"))
+                    .and_then(Obj::num)
+                    .unwrap_or(1.0)
+                    != 0.0;
                 predict(lzw(&data, early)?, p)?
             }
             "ASCIIHexDecode" | "AHx" => ascii_hex(&data),
@@ -74,7 +81,11 @@ fn predict(data: Vec<u8>, p: Option<&Dict>) -> Result<Vec<u8>, FilterError> {
         return Ok(data);
     }
     let colors = p.get("Colors").and_then(Obj::num).unwrap_or(1.0).max(1.0) as usize;
-    let bits = p.get("BitsPerComponent").and_then(Obj::num).unwrap_or(8.0).max(1.0) as usize;
+    let bits = p
+        .get("BitsPerComponent")
+        .and_then(Obj::num)
+        .unwrap_or(8.0)
+        .max(1.0) as usize;
     let columns = p.get("Columns").and_then(Obj::num).unwrap_or(1.0).max(1.0) as usize;
     let bpp = (colors * bits).div_ceil(8).max(1);
     let row = (colors * bits * columns).div_ceil(8);
@@ -122,7 +133,11 @@ fn predict(data: Vec<u8>, p: Option<&Dict>) -> Result<Vec<u8>, FilterError> {
                     };
                     cur[i].wrapping_add(pred)
                 }
-                _ => return Err(FilterError::Broken(format!("PNG öngörücüsünün süzgeci {kind}"))),
+                _ => {
+                    return Err(FilterError::Broken(format!(
+                        "PNG öngörücüsünün süzgeci {kind}"
+                    )));
+                }
             };
         }
         out.extend_from_slice(&cur);
@@ -281,6 +296,9 @@ mod tests {
     fn the_text_filters() {
         assert_eq!(ascii_hex(b"48 65 6c6C6f>"), b"Hello");
         assert_eq!(ascii85(b"<~87cURD]i,\"Ebo80~>").unwrap(), b"Hello World!");
-        assert_eq!(run_length(&[2, b'a', b'b', b'c', 254, b'x', 128]), b"abcxxx");
+        assert_eq!(
+            run_length(&[2, b'a', b'b', b'c', 254, b'x', 128]),
+            b"abcxxx"
+        );
     }
 }

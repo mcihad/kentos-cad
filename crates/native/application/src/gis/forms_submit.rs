@@ -334,10 +334,7 @@ fn child(
     if next.is_empty() {
         attrs.remove(&link.name);
     } else {
-        attrs.insert(
-            link.name.clone(),
-            next.join(kentos_commands::MULTIPLE_JOIN),
-        );
+        attrs.insert(link.name.clone(), next.join(kentos_commands::MULTIPLE_JOIN));
     }
     // The values: through the child layer's form when it has one, else by its fields' rules.
     let values: Vec<(String, String)> = c
@@ -647,7 +644,13 @@ fn commit_plan(
     doc: &Document,
     input: &FormsSubmit,
     c: &Checked,
-) -> Result<Option<(kentos_commands::SourcesSynced, Vec<kentos_commands::CommandWarning>)>, Stop> {
+) -> Result<
+    Option<(
+        kentos_commands::SourcesSynced,
+        Vec<kentos_commands::CommandWarning>,
+    )>,
+    Stop,
+> {
     if !input.commit {
         return Ok(None);
     }
@@ -761,7 +764,10 @@ fn parent_code(
     if key == kentos_domain::ParentKey::Missing {
         return Err(fail(
             codes::RELATION_FIELD_UNKNOWN,
-            format!("“{}” ilişkisinin üst anahtarı “{named}” alanı üst katmanda yok.", r.name),
+            format!(
+                "“{}” ilişkisinin üst anahtarı “{named}” alanı üst katmanda yok.",
+                r.name
+            ),
             &format!("children[{i}].relation"),
         ));
     }

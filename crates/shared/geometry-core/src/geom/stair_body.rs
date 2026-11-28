@@ -277,7 +277,10 @@ pub fn clip(ring: &[Vec2], keep: &dyn Fn(Vec2) -> f64) -> Vec<Vec2> {
         }
         if (ka >= 0.0) != (kb >= 0.0) {
             let t = ka / (ka - kb);
-            put(Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t), &mut out);
+            put(
+                Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t),
+                &mut out,
+            );
         }
     }
     while out.len() > 1 && same(out[0], out[out.len() - 1]) {
@@ -297,7 +300,12 @@ pub const UNDER_STAIR_CLEAR: f64 = 1.80;
 ///   `clear`, a space when its bottom is over its floor.
 /// - Without (no slab to take it from): what is sure, the places under treads and landings lower than `clear`, taken as
 ///   solid (the section draws the body down to its floor).
-pub fn low_under(parts: &[StairPart], base: f64, clear: f64, waist: bool) -> Vec<(Vec<Vec2>, bool)> {
+pub fn low_under(
+    parts: &[StairPart],
+    base: f64,
+    clear: f64,
+    waist: bool,
+) -> Vec<(Vec<Vec2>, bool)> {
     let limit = base + clear;
     let mut out = Vec::new();
     for part in parts {
@@ -397,7 +405,11 @@ mod tests {
 
     fn area(r: &[Vec2]) -> f64 {
         let n = r.len();
-        ((0..n).map(|i| r[i].x * r[(i + 1) % n].y - r[(i + 1) % n].x * r[i].y).sum::<f64>() / 2.0).abs()
+        ((0..n)
+            .map(|i| r[i].x * r[(i + 1) % n].y - r[(i + 1) % n].x * r[i].y)
+            .sum::<f64>()
+            / 2.0)
+            .abs()
     }
 
     /// A straight flight of 18 risers of 0.17 m and treads of 0.28 m from the floor at ±0.00, its waist 0.15 m:
@@ -417,13 +429,30 @@ mod tests {
         let reach = (1.80 + upright) / slope;
         assert_eq!(low.len(), 2, "{low:?}");
         assert!(!low[0].1 && low[1].1);
-        assert!((area(&low[0].0) - lifts * 1.2).abs() < 1e-9, "{}", area(&low[0].0));
-        assert!((area(&low[1].0) - (reach - lifts) * 1.2).abs() < 1e-9, "{}", area(&low[1].0));
+        assert!(
+            (area(&low[0].0) - lifts * 1.2).abs() < 1e-9,
+            "{}",
+            area(&low[0].0)
+        );
+        assert!(
+            (area(&low[1].0) - (reach - lifts) * 1.2).abs() < 1e-9,
+            "{}",
+            area(&low[1].0)
+        );
         // Without a waist the sure part: under the treads lower than 1.80 m, to the 11th tread (at 1.87 m) from 2.80 m.
-        let solid = low_under(&stair_body(&pts, &s, 0.0, None), 0.0, UNDER_STAIR_CLEAR, false);
+        let solid = low_under(
+            &stair_body(&pts, &s, 0.0, None),
+            0.0,
+            UNDER_STAIR_CLEAR,
+            false,
+        );
         assert_eq!(solid.len(), 1);
         assert!(!solid[0].1);
-        assert!((area(&solid[0].0) - 10.0 * 0.28 * 1.2).abs() < 1e-9, "{}", area(&solid[0].0));
+        assert!(
+            (area(&solid[0].0) - 10.0 * 0.28 * 1.2).abs() < 1e-9,
+            "{}",
+            area(&solid[0].0)
+        );
     }
 
     /// A U stair of 2 × 9 risers of 0.17 m, its landing at 1.53 m, waist 0.15: the landing's underside at 1.38 m is a
@@ -438,13 +467,21 @@ mod tests {
             Vec2::new(0.0, 1.2),
         ];
         let parts = stair_body(&pts, &s, 0.0, Some(0.15));
-        let landings: Vec<&StairPart> = parts.iter().filter(|p| matches!(p, StairPart::Prism { .. })).collect();
+        let landings: Vec<&StairPart> = parts
+            .iter()
+            .filter(|p| matches!(p, StairPart::Prism { .. }))
+            .collect();
         assert!(!landings.is_empty(), "{parts:?}");
         for l in &landings {
-            let StairPart::Prism { bottom, top, .. } = l else { continue };
+            let StairPart::Prism { bottom, top, .. } = l else {
+                continue;
+            };
             assert!((top - bottom - 0.15).abs() < 1e-9 && *bottom < 1.80);
         }
         let low = low_under(&parts, 0.0, UNDER_STAIR_CLEAR, true);
-        assert!(low.iter().filter(|(_, open)| *open).count() > landings.len(), "{low:?}");
+        assert!(
+            low.iter().filter(|(_, open)| *open).count() > landings.len(),
+            "{low:?}"
+        );
     }
 }

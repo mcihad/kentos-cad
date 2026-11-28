@@ -14,7 +14,8 @@ pub const MOST: usize = 200_000;
 pub const READING: &str = "Değerler kaynaktan okunuyor…";
 pub const UNREAD: &str = "Değerler kaynaktan okunamadı:";
 pub const MORE: &str = "Alanın 200 000'den çok değeri var; ilk 200 000'i listelendi.";
-pub const FIELD_ONLY: &str = "Veri katmanı tablosunun bir alanıyla sınıflandırılır: değere alanın adını yazın.";
+pub const FIELD_ONLY: &str =
+    "Veri katmanı tablosunun bir alanıyla sınıflandırılır: değere alanın adını yazın.";
 
 /// What the window does with the values when they come.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -45,12 +46,16 @@ impl SourceValues {
     /// are listed (`unique_values`: Turkish, numbers by their size).
     pub fn values(&self) -> Vec<ValueCount> {
         let once: Vec<Option<String>> = self.groups.iter().map(|(v, _)| v.clone()).collect();
-        let rows: std::collections::HashMap<&str, u64> =
-            self.groups.iter().filter_map(|(v, n)| v.as_deref().map(|v| (v, *n))).collect();
+        let rows: std::collections::HashMap<&str, u64> = self
+            .groups
+            .iter()
+            .filter_map(|(v, n)| v.as_deref().map(|v| (v, *n)))
+            .collect();
         unique_values(&once)
             .into_iter()
             .map(|v| ValueCount {
-                count: usize::try_from(rows.get(v.value.as_str()).copied().unwrap_or(0)).unwrap_or(usize::MAX),
+                count: usize::try_from(rows.get(v.value.as_str()).copied().unwrap_or(0))
+                    .unwrap_or(usize::MAX),
                 value: v.value,
             })
             .collect()
@@ -72,8 +77,12 @@ fn number(text: &str) -> Option<f64> {
 
 /// The field's values read from the source (the thread's work).
 pub fn read(data: &DataLayer, field: &str, then: Then) -> Result<SourceValues, String> {
-    let source = kentos_data::registry().source(&data.address).map_err(|e| e.to_string())?;
-    let mut groups = source.groups(&data.table, field, None, MOST + 1).map_err(|e| e.to_string())?;
+    let source = kentos_data::registry()
+        .source(&data.address)
+        .map_err(|e| e.to_string())?;
+    let mut groups = source
+        .groups(&data.table, field, None, MOST + 1)
+        .map_err(|e| e.to_string())?;
     let more = groups.len() > MOST;
     groups.truncate(MOST);
     let groups: Vec<(Option<String>, u64)> = groups
@@ -90,13 +99,24 @@ pub fn read(data: &DataLayer, field: &str, then: Then) -> Result<SourceValues, S
         let mut all = Vec::new();
         source
             .features(&data.table, &request, &Cancel::new(), &mut |part| {
-                all.extend(part.iter().map(|f| (f.values.first().and_then(kentos_data::Value::number), 1)));
+                all.extend(
+                    part.iter()
+                        .map(|f| (f.values.first().and_then(kentos_data::Value::number), 1)),
+                );
                 true
             })
             .map_err(|e| e.to_string())?;
         all
     } else {
-        groups.iter().map(|(v, n)| (v.as_deref().and_then(number), *n)).collect()
+        groups
+            .iter()
+            .map(|(v, n)| (v.as_deref().and_then(number), *n))
+            .collect()
     };
-    Ok(SourceValues { field: field.to_owned(), groups, numbers, more })
+    Ok(SourceValues {
+        field: field.to_owned(),
+        groups,
+        numbers,
+        more,
+    })
 }

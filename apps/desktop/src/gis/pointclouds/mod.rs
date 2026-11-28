@@ -332,7 +332,9 @@ impl crate::app::App {
             .ids()
             .iter()
             .filter_map(|&s| match doc.model.get(s) {
-                Some(Entity::PointCloud(c)) => Some((s, (*c.cloud).clone(), c.base.layer_id.clone())),
+                Some(Entity::PointCloud(c)) => {
+                    Some((s, (*c.cloud).clone(), c.base.layer_id.clone()))
+                }
                 _ => None,
             })
             .collect()

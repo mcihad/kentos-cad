@@ -52,14 +52,23 @@ impl ProjectSettings {
     /// Whether it carries a personal particular: a value of one of [`PERSONAL_PARTICULARS`], or who delivered a
     /// package.
     pub fn has_particulars(&self) -> bool {
-        self.variables.iter().any(|v| is_personal(&v.name) && says(&v.value))
-            || self.arch.as_ref().is_some_and(|a| a.deliveries.iter().any(|d| d.by.is_some()))
+        self.variables
+            .iter()
+            .any(|v| is_personal(&v.name) && says(&v.value))
+            || self
+                .arch
+                .as_ref()
+                .is_some_and(|a| a.deliveries.iter().any(|d| d.by.is_some()))
     }
 
     /// Its personal particulars cut; how many were.
     pub fn cut_particulars(&mut self) -> usize {
         let mut cut = 0;
-        for v in self.variables.iter_mut().filter(|v| is_personal(&v.name) && says(&v.value)) {
+        for v in self
+            .variables
+            .iter_mut()
+            .filter(|v| is_personal(&v.name) && says(&v.value))
+        {
             v.value = match v.kind {
                 VariableKind::Text => VariableValue::Text(CUT_PARTICULAR.to_owned()),
                 _ => VariableValue::Null,
@@ -83,12 +92,22 @@ fn cut_list(list: Option<&mut Value>) -> usize {
     };
     let mut cut = 0;
     for v in list.iter_mut() {
-        let personal = v.get("name").and_then(Value::as_str).is_some_and(is_personal);
+        let personal = v
+            .get("name")
+            .and_then(Value::as_str)
+            .is_some_and(is_personal);
         if !personal || !says_json(v.get("value")) {
             continue;
         }
-        let text = v.get("kind").and_then(Value::as_str).is_none_or(|k| k == "text");
-        v["value"] = if text { Value::String(CUT_PARTICULAR.to_owned()) } else { Value::Null };
+        let text = v
+            .get("kind")
+            .and_then(Value::as_str)
+            .is_none_or(|k| k == "text");
+        v["value"] = if text {
+            Value::String(CUT_PARTICULAR.to_owned())
+        } else {
+            Value::Null
+        };
         cut += 1;
     }
     cut
@@ -98,7 +117,10 @@ fn cut_list(list: Option<&mut Value>) -> usize {
 fn list_has(list: Option<&Value>) -> bool {
     list.and_then(Value::as_array).is_some_and(|list| {
         list.iter().any(|v| {
-            v.get("name").and_then(Value::as_str).is_some_and(is_personal) && says_json(v.get("value"))
+            v.get("name")
+                .and_then(Value::as_str)
+                .is_some_and(is_personal)
+                && says_json(v.get("value"))
         })
     })
 }
@@ -134,19 +156,37 @@ mod tests {
     use crate::{ArchSettings, Delivery, DeliveryPackage, ProjectVariable};
 
     fn var(name: &str, kind: VariableKind, value: VariableValue) -> ProjectVariable {
-        ProjectVariable { name: name.into(), label: String::new(), kind, value }
+        ProjectVariable {
+            name: name.into(),
+            label: String::new(),
+            kind,
+            value,
+        }
     }
 
     #[test]
     fn the_kunye_s_personal_particulars_are_cut_and_the_rest_kept() {
-        let mut s: ProjectSettings = serde_json::from_value(json!({"srid": 5256, "lengthDecimals": 3,
+        let mut s: ProjectSettings =
+            serde_json::from_value(json!({"srid": 5256, "lengthDecimals": 3,
             "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 100.0}))
-        .expect("settings");
+            .expect("settings");
         s = ProjectSettings {
             variables: vec![
-                var("proje_no", VariableKind::Text, VariableValue::Text("2026/14".into())),
-                var("yapi_sahibi", VariableKind::Text, VariableValue::Text("Ayşe Yılmaz".into())),
-                var("sicil_no", VariableKind::Number, VariableValue::Number(12345.0)),
+                var(
+                    "proje_no",
+                    VariableKind::Text,
+                    VariableValue::Text("2026/14".into()),
+                ),
+                var(
+                    "yapi_sahibi",
+                    VariableKind::Text,
+                    VariableValue::Text("Ayşe Yılmaz".into()),
+                ),
+                var(
+                    "sicil_no",
+                    VariableKind::Number,
+                    VariableValue::Number(12345.0),
+                ),
                 var("mimar", VariableKind::Text, VariableValue::Null),
                 var("ada", VariableKind::Text, VariableValue::Text("118".into())),
             ],
@@ -155,7 +195,12 @@ mod tests {
                     id: "0192f5a1-8099-7000-8000-000000000001".into(),
                     number: 1,
                     revision: "000".into(),
-                    package: DeliveryPackage { manifest: "a".repeat(64), files: 1, path: None, source: None },
+                    package: DeliveryPackage {
+                        manifest: "a".repeat(64),
+                        files: 1,
+                        path: None,
+                        source: None,
+                    },
                     to: "Belediye".into(),
                     channel: Default::default(),
                     at: "2026-11-02".into(),
@@ -168,8 +213,16 @@ mod tests {
             ..s
         };
         assert!(s.has_particulars());
-        assert_eq!(s.cut_particulars(), 3, "the owner, the registration number and who delivered");
-        let values: Vec<(&str, &VariableValue)> = s.variables.iter().map(|v| (v.name.as_str(), &v.value)).collect();
+        assert_eq!(
+            s.cut_particulars(),
+            3,
+            "the owner, the registration number and who delivered"
+        );
+        let values: Vec<(&str, &VariableValue)> = s
+            .variables
+            .iter()
+            .map(|v| (v.name.as_str(), &v.value))
+            .collect();
         assert_eq!(
             values,
             [
@@ -180,11 +233,21 @@ mod tests {
                 ("ada", &VariableValue::Text("118".into())),
             ]
         );
-        assert!(s.variables.iter().all(|v| v.problem().is_none()), "a cut value is a value of its kind");
+        assert!(
+            s.variables.iter().all(|v| v.problem().is_none()),
+            "a cut value is a value of its kind"
+        );
         assert_eq!(s.arch.as_ref().unwrap().deliveries[0].by, None);
-        assert!(!s.has_particulars(), "a cut text reads Gizli, which is no one's");
+        assert!(
+            !s.has_particulars(),
+            "a cut text reads Gizli, which is no one's"
+        );
         let mut again = s.clone();
-        assert_eq!(again.cut_particulars(), 0, "a cut copy has nothing more to cut");
+        assert_eq!(
+            again.cut_particulars(),
+            0,
+            "a cut copy has nothing more to cut"
+        );
         assert_eq!(again, s);
     }
 
@@ -204,7 +267,10 @@ mod tests {
         assert_eq!(sheets.cut_particulars(), 2);
         assert_eq!(sheets.book["variables"][0]["value"], CUT_PARTICULAR);
         assert_eq!(sheets.book["variables"][1]["value"], "2026/14");
-        assert_eq!(sheets.book["sheets"][0]["variables"][0]["value"], Value::Null);
+        assert_eq!(
+            sheets.book["sheets"][0]["variables"][0]["value"],
+            Value::Null
+        );
         assert!(!sheets.has_particulars());
         assert_eq!(sheets.cut_particulars(), 0);
     }

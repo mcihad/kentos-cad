@@ -49,7 +49,9 @@ fn routed() -> BTreeSet<(String, String)> {
             while let Some(at) = rest.find(".route(") {
                 rest = &rest[at + 7..];
                 let Some(open) = rest.find('"') else { break };
-                let Some(len) = rest[open + 1..].find('"') else { break };
+                let Some(len) = rest[open + 1..].find('"') else {
+                    break;
+                };
                 let path = rest[open + 1..open + 1 + len].to_owned();
                 // The handlers: up to the parenthesis closing `.route(`.
                 let mut depth = 1;
@@ -84,18 +86,33 @@ fn routed() -> BTreeSet<(String, String)> {
 fn every_route_is_described_and_nothing_else() {
     let routes = routed();
     assert!(routes.len() > 100, "{} routes found", routes.len());
-    let described: BTreeSet<(String, String)> =
-        ops().iter().map(|o| (o.method.to_owned(), o.path.to_owned())).collect();
+    let described: BTreeSet<(String, String)> = ops()
+        .iter()
+        .map(|o| (o.method.to_owned(), o.path.to_owned()))
+        .collect();
     let missing: Vec<_> = routes.difference(&described).collect();
     let extra: Vec<_> = described.difference(&routes).collect();
-    assert!(missing.is_empty() && extra.is_empty(), "açıklanmayan: {missing:?}\nyönlendiricide olmayan: {extra:?}");
+    assert!(
+        missing.is_empty() && extra.is_empty(),
+        "açıklanmayan: {missing:?}\nyönlendiricide olmayan: {extra:?}"
+    );
 }
 
 #[test]
 fn every_operation_says_what_it_does() {
     let mut ids = BTreeSet::new();
     for o in ops() {
-        assert!(!o.summary.is_empty() && !o.about.is_empty(), "{} {}", o.method, o.path);
-        assert!(ids.insert(super::catalog::operation_id(o.method, o.path)), "{} {}", o.method, o.path);
+        assert!(
+            !o.summary.is_empty() && !o.about.is_empty(),
+            "{} {}",
+            o.method,
+            o.path
+        );
+        assert!(
+            ids.insert(super::catalog::operation_id(o.method, o.path)),
+            "{} {}",
+            o.method,
+            o.path
+        );
     }
 }

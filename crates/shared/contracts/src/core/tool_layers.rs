@@ -23,7 +23,11 @@ pub enum AnnotationTool {
 }
 
 impl AnnotationTool {
-    pub const ALL: [AnnotationTool; 3] = [AnnotationTool::Dimension, AnnotationTool::Text, AnnotationTool::Hatch];
+    pub const ALL: [AnnotationTool; 3] = [
+        AnnotationTool::Dimension,
+        AnnotationTool::Text,
+        AnnotationTool::Hatch,
+    ];
 
     /// Its objects at the head of a sentence (“Ölçüler”, “Yazılar”, “Taramalar”).
     pub fn plural(self) -> &'static str {
@@ -63,7 +67,10 @@ pub fn tool_layers_problem(list: &[ToolLayer]) -> Option<String> {
             return Some(format!("{}. araç katmanının katmanı boş", i + 1));
         }
         if list[..i].iter().any(|o| o.tool == t.tool) {
-            return Some(format!("{} aracının katmanı iki kez yazılmış", t.tool.word()));
+            return Some(format!(
+                "{} aracının katmanı iki kez yazılmış",
+                t.tool.word()
+            ));
         }
     }
     None
@@ -71,5 +78,7 @@ pub fn tool_layers_problem(list: &[ToolLayer]) -> Option<String> {
 
 /// The layer a project names for `tool`, if any.
 pub fn tool_layer(list: &[ToolLayer], tool: AnnotationTool) -> Option<&str> {
-    list.iter().find(|t| t.tool == tool).map(|t| t.layer.as_str())
+    list.iter()
+        .find(|t| t.tool == tool)
+        .map(|t| t.layer.as_str())
 }

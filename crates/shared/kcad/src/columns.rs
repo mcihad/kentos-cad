@@ -475,7 +475,12 @@ struct Cursor<'c> {
 /// A typeface's place in `DrawingFont::ALL` (docs/adr/0183); a fonts folder's family is one past them, its name the
 /// next text (docs/adr/9313).
 fn font_place(f: DrawingFont) -> u32 {
-    count(DrawingFont::ALL.iter().position(|x| *x == f).unwrap_or(DrawingFont::ALL.len()))
+    count(
+        DrawingFont::ALL
+            .iter()
+            .position(|x| *x == f)
+            .unwrap_or(DrawingFont::ALL.len()),
+    )
 }
 
 /// The place that says a folder family's name follows.
@@ -565,7 +570,10 @@ struct TableLink {
     digest: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     copy: Option<Vec<Vec<String>>>,
-    #[serde(default, skip_serializing_if = "kentos_contracts::SourceOverrides::is_keep")]
+    #[serde(
+        default,
+        skip_serializing_if = "kentos_contracts::SourceOverrides::is_keep"
+    )]
     overrides: kentos_contracts::SourceOverrides,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     key_column: Option<u32>,
@@ -587,13 +595,20 @@ fn table_cells_json(
             overrides,
             key_column,
             ..
-        }) if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() || key_column.is_some() => Some(TableLink {
-            path: path.clone(),
-            digest: digest.clone(),
-            copy: copy.clone(),
-            overrides: *overrides,
-            key_column: *key_column,
-        }),
+        }) if path.is_some()
+            || digest.is_some()
+            || copy.is_some()
+            || !overrides.is_keep()
+            || key_column.is_some() =>
+        {
+            Some(TableLink {
+                path: path.clone(),
+                digest: digest.clone(),
+                copy: copy.clone(),
+                overrides: *overrides,
+                key_column: *key_column,
+            })
+        }
         _ => None,
     };
     let schedule = source

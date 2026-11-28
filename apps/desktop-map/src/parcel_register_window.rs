@@ -10,12 +10,13 @@
 //! Belgeler is chosen: Onayı yaz writes its approval as given outside (a draft then becomes a document), Taslağı geri
 //! çek removes a draft. Each plan is said as the form is filled; each write is one undo step.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use iced::{Element, Length, Task};
 use kentos_commands::{
-    CommandResult, ParcelApprovalInput, ParcelDocumentInput, ParcelToRecord, ParcelsApprove, ParcelsApproved,
-    ParcelsRecord, ParcelsRecorded, ParcelsRecords, ParcelsRecordsListed, ParcelsWithdraw,
+    CommandResult, ParcelApprovalInput, ParcelDocumentInput, ParcelToRecord, ParcelsApprove,
+    ParcelsApproved, ParcelsRecord, ParcelsRecorded, ParcelsRecords, ParcelsRecordsListed,
+    ParcelsWithdraw,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, parcel_drafts, parcel_register};
@@ -137,24 +138,49 @@ pub fn state_word(state: &str) -> &'static str {
 
 /// `Ada/Parsel` of a parcel number, else `#n`.
 fn label(r: &ParcelsRecordsListed, n: u32) -> String {
-    r.parcels.iter().find(|p| p.number == n).map_or_else(|| format!("#{n}"), |p| format!("{}/{}", p.ada, p.parsel))
+    r.parcels
+        .iter()
+        .find(|p| p.number == n)
+        .map_or_else(|| format!("#{n}"), |p| format!("{}/{}", p.ada, p.parsel))
 }
 
 fn labels(r: &ParcelsRecordsListed, list: &[u32]) -> String {
-    if list.is_empty() { "—".into() } else { list.iter().map(|n| label(r, *n)).collect::<Vec<_>>().join(", ") }
+    if list.is_empty() {
+        "—".into()
+    } else {
+        list.iter()
+            .map(|n| label(r, *n))
+            .collect::<Vec<_>>()
+            .join(", ")
+    }
 }
 
 fn document_name(r: &ParcelsRecordsListed, n: u32) -> String {
-    r.documents.iter().find(|d| d.number == n).map_or_else(|| format!("#{n}"), |d| d.name.clone())
+    r.documents
+        .iter()
+        .find(|d| d.number == n)
+        .map_or_else(|| format!("#{n}"), |d| d.name.clone())
 }
 
 /// The rows of the parcels' table as shown (the closed ones only with `history`).
-fn shown_parcels(r: &ParcelsRecordsListed, history: bool) -> Vec<&kentos_commands::RecordedParcelRow> {
-    r.parcels.iter().filter(|p| history || p.closed_by.is_none()).collect()
+fn shown_parcels(
+    r: &ParcelsRecordsListed,
+    history: bool,
+) -> Vec<&kentos_commands::RecordedParcelRow> {
+    r.parcels
+        .iter()
+        .filter(|p| history || p.closed_by.is_none())
+        .collect()
 }
 
 /// The table's rows for `show`.
-pub fn rows(r: &ParcelsRecordsListed, show: Show, history: bool, close: &[u32], f: &kentos_interaction::Format) -> Vec<Vec<String>> {
+pub fn rows(
+    r: &ParcelsRecordsListed,
+    show: Show,
+    history: bool,
+    close: &[u32],
+    f: &kentos_interaction::Format,
+) -> Vec<Vec<String>> {
     match show {
         Show::Parcels => shown_parcels(r, history)
             .into_iter()
@@ -173,12 +199,22 @@ pub fn rows(r: &ParcelsRecordsListed, show: Show, history: bool, close: &[u32], 
                     f.area(p.recorded_area),
                     p.area.map_or_else(|| "—".into(), |a| f.area(a)),
                     labels(r, &p.neighbours),
-                    if close.contains(&p.number) { "✓".into() } else { String::new() },
+                    if close.contains(&p.number) {
+                        "✓".into()
+                    } else {
+                        String::new()
+                    },
                 ]
             })
             .collect(),
         Show::Documents => {
-            let dash = |t: &str| if t.is_empty() { "—".to_owned() } else { t.to_owned() };
+            let dash = |t: &str| {
+                if t.is_empty() {
+                    "—".to_owned()
+                } else {
+                    t.to_owned()
+                }
+            };
             let mut out: Vec<Vec<String>> = r
                 .documents
                 .iter()
@@ -188,7 +224,10 @@ pub fn rows(r: &ParcelsRecordsListed, show: Show, history: bool, close: &[u32], 
                         d.name.clone(),
                         dash(&d.kind),
                         dash(&d.date),
-                        d.approval.as_ref().map_or_else(|| "Kayıtlı".to_owned(), |a| format!("Onaylı: {}", a.reference)),
+                        d.approval.as_ref().map_or_else(
+                            || "Kayıtlı".to_owned(),
+                            |a| format!("Onaylı: {}", a.reference),
+                        ),
                         labels(r, &d.created),
                         labels(r, &d.closed),
                     ]
@@ -201,7 +240,11 @@ pub fn rows(r: &ParcelsRecordsListed, show: Show, history: bool, close: &[u32], 
                     dash(&d.kind),
                     dash(&d.date),
                     "Taslak".to_owned(),
-                    if d.create.is_empty() { "—".to_owned() } else { d.create.join(", ") },
+                    if d.create.is_empty() {
+                        "—".to_owned()
+                    } else {
+                        d.create.join(", ")
+                    },
                     labels(r, &d.close),
                 ]
             }));
@@ -216,7 +259,11 @@ pub fn rows(r: &ParcelsRecordsListed, show: Show, history: bool, close: &[u32], 
                     b.number.to_string(),
                     format!("{}, {}", f.coord(b.from[0]), f.coord(b.from[1])),
                     format!("{}, {}", f.coord(b.to[0]), f.coord(b.to[1])),
-                    if b.bulge == 0.0 { f.length(b.length) } else { format!("{} yay", f.length(b.length)) },
+                    if b.bulge == 0.0 {
+                        f.length(b.length)
+                    } else {
+                        format!("{} yay", f.length(b.length))
+                    },
                     document_name(r, b.created_by),
                     labels(r, &b.parcels),
                     match (b.closed_by, b.drawn) {
@@ -227,7 +274,11 @@ pub fn rows(r: &ParcelsRecordsListed, show: Show, history: bool, close: &[u32], 
                     if b.lengths.is_empty() {
                         "—".into()
                     } else {
-                        b.lengths.iter().map(|l| l.length.clone()).collect::<Vec<_>>().join("; ")
+                        b.lengths
+                            .iter()
+                            .map(|l| l.length.clone())
+                            .collect::<Vec<_>>()
+                            .join("; ")
                     },
                     if b.lengths.is_empty() {
                         "—".into()
@@ -248,14 +299,25 @@ pub fn rows(r: &ParcelsRecordsListed, show: Show, history: bool, close: &[u32], 
 }
 
 /// What a document does, in words.
-pub fn plan_words(r: Option<&ParcelsRecordsListed>, created: &[String], out: &ParcelsRecorded, name: &str) -> String {
+pub fn plan_words(
+    r: Option<&ParcelsRecordsListed>,
+    created: &[String],
+    out: &ParcelsRecorded,
+    name: &str,
+) -> String {
     let mut parts = Vec::new();
     if !out.created.is_empty() {
-        let names = if created.is_empty() { String::new() } else { format!(" ({})", created.join(", ")) };
+        let names = if created.is_empty() {
+            String::new()
+        } else {
+            format!(" ({})", created.join(", "))
+        };
         parts.push(format!("{} parsel oluşturur{names}", out.created.len()));
     }
     if !out.closed.is_empty() {
-        let names = r.map(|r| format!(" ({})", labels(r, &out.closed))).unwrap_or_default();
+        let names = r
+            .map(|r| format!(" ({})", labels(r, &out.closed)))
+            .unwrap_or_default();
         parts.push(format!("{} parsel kapatır{names}", out.closed.len()));
     }
     let mut lines = Vec::new();
@@ -263,20 +325,32 @@ pub fn plan_words(r: Option<&ParcelsRecordsListed>, created: &[String], out: &Pa
         lines.push(format!("{} yeni sınır", out.boundaries_created));
     }
     if out.boundaries_shared > 0 {
-        lines.push(format!("{} kayıtlı sınır paylaşılır", out.boundaries_shared));
+        lines.push(format!(
+            "{} kayıtlı sınır paylaşılır",
+            out.boundaries_shared
+        ));
     }
     if out.boundaries_closed > 0 {
         lines.push(format!("{} sınır kapanır", out.boundaries_closed));
     }
     // Docs/adr/4620: the neighbours' boundaries split at the new corners, and who took the pieces.
     if out.boundaries_split > 0 {
-        let names = r.map(|r| format!(" ({} parçaları alır)", labels(r, &out.neighbours))).unwrap_or_default();
-        lines.push(format!("{} komşu sınırı yeni köşede bölünür{names}", out.boundaries_split));
+        let names = r
+            .map(|r| format!(" ({} parçaları alır)", labels(r, &out.neighbours)))
+            .unwrap_or_default();
+        lines.push(format!(
+            "{} komşu sınırı yeni köşede bölünür{names}",
+            out.boundaries_split
+        ));
     }
     if out.lengths > 0 {
         lines.push(format!("{} kenar ölçüsü", out.lengths));
     }
-    let tail = if lines.is_empty() { String::new() } else { format!("; {}", lines.join(", ")) };
+    let tail = if lines.is_empty() {
+        String::new()
+    } else {
+        format!("; {}", lines.join(", "))
+    };
     if out.draft {
         return format!(
             "Taslak {} “{name}”: onaylanınca {}{tail}. Güncel kayıt değişmez.",
@@ -284,19 +358,34 @@ pub fn plan_words(r: Option<&ParcelsRecordsListed>, created: &[String], out: &Pa
             parts.join(", ")
         );
     }
-    format!("Belge {} “{name}”: {}{tail}.", out.document, parts.join(", "))
+    format!(
+        "Belge {} “{name}”: {}{tail}.",
+        out.document,
+        parts.join(", ")
+    )
 }
 
 /// What approving the chosen document or draft does, in words.
-pub fn approve_words(r: &ParcelsRecordsListed, chosen: Chosen, out: &ParcelsApproved, reference: &str) -> String {
+pub fn approve_words(
+    r: &ParcelsRecordsListed,
+    chosen: Chosen,
+    out: &ParcelsApproved,
+    reference: &str,
+) -> String {
     match (chosen, &out.recorded) {
         (Chosen::Draft(n), Some(recorded)) => {
             let draft = r.drafts.iter().find(|d| d.number == n);
             let made = draft.map(|d| d.create.clone()).unwrap_or_default();
             let name = draft.map(|d| d.name.clone()).unwrap_or_default();
-            format!("Onay {reference} yazılır; taslak belge olur. {}", plan_words(Some(r), &made, recorded, &name))
+            format!(
+                "Onay {reference} yazılır; taslak belge olur. {}",
+                plan_words(Some(r), &made, recorded, &name)
+            )
         }
-        _ => format!("“{}” belgesinin onayı yazılır: {reference}. Belge değişmez.", document_name(r, out.document)),
+        _ => format!(
+            "“{}” belgesinin onayı yazılır: {reference}. Belge değişmez.",
+            document_name(r, out.document)
+        ),
     }
 }
 
@@ -319,8 +408,21 @@ impl ParcelRegisterWindowApp for App {
         let s = &self.modules.map().parcel_register;
         let text = |t: &str| (!t.trim().is_empty()).then(|| t.trim().to_owned());
         ParcelsRecord {
-            document: ParcelDocumentInput { name: s.name.trim().to_owned(), kind: text(&s.kind), date: text(&s.date), note: text(&s.note) },
-            create: s.create.iter().map(|u| ParcelToRecord { uid: u.clone(), stated_area: None, lengths: None }).collect(),
+            document: ParcelDocumentInput {
+                name: s.name.trim().to_owned(),
+                kind: text(&s.kind),
+                date: text(&s.date),
+                note: text(&s.note),
+            },
+            create: s
+                .create
+                .iter()
+                .map(|u| ParcelToRecord {
+                    uid: u.clone(),
+                    stated_area: None,
+                    lengths: None,
+                })
+                .collect(),
             close: s.close.clone(),
             draft: s.draft,
             expected_revision: None,
@@ -359,11 +461,12 @@ impl ParcelRegisterWindowApp for App {
         self.modules.map_mut().parcel_register.approve_plan = Some(
             match parcel_drafts::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
-                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                    Err(error.message)
-                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
                 _ => Err("Önizleme alınamadı.".to_owned()),
-            });
+            },
+        );
     }
 
     /// The register read again and the new document's plan.
@@ -415,7 +518,8 @@ impl ParcelRegisterWindowApp for App {
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
-        self.modules.map()
+        self.modules
+            .map()
             .parcel_register
             .create
             .iter()
@@ -425,7 +529,13 @@ impl ParcelRegisterWindowApp for App {
                     .and_then(|id| doc.model.slot_of(id))
                     .and_then(|slot| doc.model.get(slot))
                     .map(|e| {
-                        let attr = |k: &str| e.base().attrs.get(k).map(|v| v.trim().to_owned()).unwrap_or_default();
+                        let attr = |k: &str| {
+                            e.base()
+                                .attrs
+                                .get(k)
+                                .map(|v| v.trim().to_owned())
+                                .unwrap_or_default()
+                        };
                         format!("{}/{}", attr("Ada"), attr("Parsel"))
                     })
                     .unwrap_or_else(|| "?".to_owned())
@@ -440,7 +550,13 @@ impl ParcelRegisterWindowApp for App {
             return Task::none();
         }
         self.modules.map_mut().parcel_register = State {
-            create: self.modules.map().parcels_check.uids.clone().unwrap_or_default(),
+            create: self
+                .modules
+                .map()
+                .parcels_check
+                .uids
+                .clone()
+                .unwrap_or_default(),
             ..State::default()
         };
         self.parcel_register_run();
@@ -455,12 +571,17 @@ impl ParcelRegisterWindowApp for App {
             Event::History(on) => self.modules.map_mut().parcel_register.history = on,
             Event::Toggle(i) => {
                 let s = &self.modules.map().parcel_register;
-                let Some(r) = &s.answer else { return Task::none() };
+                let Some(r) = &s.answer else {
+                    return Task::none();
+                };
                 if s.show == Show::Documents {
                     // A document or draft pressed is chosen for its approval; pressed again, no longer.
                     let picked = match r.documents.get(i) {
                         Some(d) => Some(Chosen::Document(d.number)),
-                        None => r.drafts.get(i - r.documents.len()).map(|d| Chosen::Draft(d.number)),
+                        None => r
+                            .drafts
+                            .get(i - r.documents.len())
+                            .map(|d| Chosen::Draft(d.number)),
                     };
                     let state = &mut self.modules.map_mut().parcel_register;
                     state.chosen = if state.chosen == picked { None } else { picked };
@@ -471,7 +592,11 @@ impl ParcelRegisterWindowApp for App {
                     return Task::none();
                 }
                 // Only a current parcel closes; a closed one's row is history.
-                let Some(n) = shown_parcels(r, s.history).get(i).filter(|p| p.closed_by.is_none()).map(|p| p.number) else {
+                let Some(n) = shown_parcels(r, s.history)
+                    .get(i)
+                    .filter(|p| p.closed_by.is_none())
+                    .map(|p| p.number)
+                else {
                     return Task::none();
                 };
                 let close = &mut self.modules.map_mut().parcel_register.close;
@@ -515,20 +640,38 @@ impl ParcelRegisterWindowApp for App {
                 self.parcel_approve_run();
             }
             Event::Approve => {
-                let (Some(input), Some(chosen)) =
-                    (self.parcel_approve_input(), self.modules.map().parcel_register.chosen)
-                else {
+                let (Some(input), Some(chosen)) = (
+                    self.parcel_approve_input(),
+                    self.modules.map().parcel_register.chosen,
+                ) else {
                     return Task::none();
                 };
-                let before = self.modules.map().parcel_register.answer.clone().unwrap_or_default();
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
-                match parcel_drafts::execute(&mut ExecutionContext::new(&mut doc.model), input.clone()) {
+                let before = self
+                    .modules
+                    .map()
+                    .parcel_register
+                    .answer
+                    .clone()
+                    .unwrap_or_default();
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
+                match parcel_drafts::execute(
+                    &mut ExecutionContext::new(&mut doc.model),
+                    input.clone(),
+                ) {
                     CommandResult::Completed { output, .. } => {
-                        let words = approve_words(&before, chosen, &output, &input.approval.reference);
-                        self.say(Level::Success, format!("{TITLE}: {words} Tek adımda geri alınır."));
+                        let words =
+                            approve_words(&before, chosen, &output, &input.approval.reference);
+                        self.say(
+                            Level::Success,
+                            format!("{TITLE}: {words} Tek adımda geri alınır."),
+                        );
                         self.parcel_register_reset();
                     }
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
                         self.warn(format!("{TITLE}: {}", error.message));
                     }
                     _ => {}
@@ -556,7 +699,9 @@ impl ParcelRegisterWindowApp for App {
                         );
                         self.parcel_register_reset();
                     }
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
                         self.warn(format!("{TITLE}: {}", error.message));
                     }
                     _ => {}
@@ -566,14 +711,25 @@ impl ParcelRegisterWindowApp for App {
                 let input = self.parcel_register_input();
                 let made = self.parcel_register_made();
                 let before = self.modules.map().parcel_register.answer.clone();
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
-                match parcel_register::execute(&mut ExecutionContext::new(&mut doc.model), input.clone()) {
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
+                match parcel_register::execute(
+                    &mut ExecutionContext::new(&mut doc.model),
+                    input.clone(),
+                ) {
                     CommandResult::Completed { output, .. } => {
-                        let words = plan_words(before.as_ref(), &made, &output, &input.document.name);
-                        self.say(Level::Success, format!("{TITLE}: {words} Tek adımda geri alınır."));
+                        let words =
+                            plan_words(before.as_ref(), &made, &output, &input.document.name);
+                        self.say(
+                            Level::Success,
+                            format!("{TITLE}: {words} Tek adımda geri alınır."),
+                        );
                         self.parcel_register_reset();
                     }
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
                         self.warn(format!("{TITLE}: {}", error.message));
                     }
                     _ => {}
@@ -599,8 +755,16 @@ impl ParcelRegisterWindowApp for App {
                     "Çizimde parsel kaydı yok. İlk belge seçili alanlardan parsel oluşturur.",
                 ));
             } else {
-                let shared = r.boundaries.iter().filter(|b| b.closed_by.is_none() && b.parcels.len() > 1).count();
-                let current = r.boundaries.iter().filter(|b| b.closed_by.is_none()).count();
+                let shared = r
+                    .boundaries
+                    .iter()
+                    .filter(|b| b.closed_by.is_none() && b.parcels.len() > 1)
+                    .count();
+                let current = r
+                    .boundaries
+                    .iter()
+                    .filter(|b| b.closed_by.is_none())
+                    .count();
                 lines.push(words::text_line(
                     Kind::Ok,
                     format!(
@@ -688,32 +852,60 @@ impl ParcelRegisterWindowApp for App {
         };
         // The chosen document's or draft's row, in Belgeler.
         let chosen_row = match (s.show, s.chosen, &s.answer) {
-            (Show::Documents, Some(Chosen::Document(n)), Some(r)) => r.documents.iter().position(|d| d.number == n),
-            (Show::Documents, Some(Chosen::Draft(n)), Some(r)) => {
-                r.drafts.iter().position(|d| d.number == n).map(|k| r.documents.len() + k)
+            (Show::Documents, Some(Chosen::Document(n)), Some(r)) => {
+                r.documents.iter().position(|d| d.number == n)
             }
+            (Show::Documents, Some(Chosen::Draft(n)), Some(r)) => r
+                .drafts
+                .iter()
+                .position(|d| d.number == n)
+                .map(|k| r.documents.len() + k),
             _ => None,
         };
-        let table = sheet_chosen(cols, table_rows, "Gösterilecek satır yok.", 260.0, chosen_row, |i| msg(Event::Toggle(i)));
+        let table = sheet_chosen(
+            cols,
+            table_rows,
+            "Gösterilecek satır yok.",
+            260.0,
+            chosen_row,
+            |i| msg(Event::Toggle(i)),
+        );
         let choose = iced::widget::row![
-            Segmented::new([Show::Parcels, Show::Documents, Show::Boundaries], s.show, |v| msg(Event::Show(v))),
+            Segmented::new(
+                [Show::Parcels, Show::Documents, Show::Boundaries],
+                s.show,
+                |v| msg(Event::Show(v))
+            ),
             iced::widget::Space::new().width(Length::Fill),
             Switch::new(s.history, |on| msg(Event::History(on))).label(HISTORY),
         ]
         .spacing(12)
         .align_y(iced::Center);
         let made = self.parcel_register_made();
-        let closing = s.answer.as_ref().map(|r| labels(r, &s.close)).unwrap_or_else(|| "—".into());
+        let closing = s
+            .answer
+            .as_ref()
+            .map(|r| labels(r, &s.close))
+            .unwrap_or_else(|| "—".into());
         let text = |placeholder: &'static str, value: &str, on: fn(String) -> Event| {
-            kentos_ui::widget::text_field(placeholder, value).on_input(move |v| msg(on(v))).width(Length::Fill)
+            kentos_ui::widget::text_field(placeholder, value)
+                .on_input(move |v| msg(on(v)))
+                .width(Length::Fill)
         };
-        let plan = match (&s.plan, s.name.trim().is_empty(), s.create.is_empty() && s.close.is_empty()) {
+        let plan = match (
+            &s.plan,
+            s.name.trim().is_empty(),
+            s.create.is_empty() && s.close.is_empty(),
+        ) {
             (_, _, true) => words::text_line(
                 Kind::Info,
                 "Oluşturacağı alanları seçip Parsel alan denetimini açın ya da kapatacağı parselleri tabloda seçin.",
             ),
             (_, true, _) => words::text_line(Kind::Info, "Belgenin adını yazın."),
-            (Some(Ok(out)), ..) => words::text_line(Kind::Ok, plan_words(s.answer.as_ref(), &made, out, s.name.trim())),
+            (Some(Ok(out)), ..) => words::text_line(
+                Kind::Ok,
+                plan_words(s.answer.as_ref(), &made, out, s.name.trim()),
+            ),
             (Some(Err(why)), ..) => words::text_line(Kind::Error, why.clone()),
             (None, ..) => words::text_line(Kind::Info, "Önizleme yok."),
         };
@@ -739,27 +931,51 @@ impl ParcelRegisterWindowApp for App {
                 Chosen::Document(n) => {
                     let d = r.documents.iter().find(|d| d.number == n);
                     (
-                        format!("Belge {n} “{}”", d.map(|d| d.name.clone()).unwrap_or_default()),
+                        format!(
+                            "Belge {n} “{}”",
+                            d.map(|d| d.name.clone()).unwrap_or_default()
+                        ),
                         d.and_then(|d| d.approval.as_ref().map(|a| a.reference.clone())),
                     )
                 }
                 Chosen::Draft(n) => (
-                    format!("Taslak T{n} “{}”", r.drafts.iter().find(|d| d.number == n).map(|d| d.name.clone()).unwrap_or_default()),
+                    format!(
+                        "Taslak T{n} “{}”",
+                        r.drafts
+                            .iter()
+                            .find(|d| d.number == n)
+                            .map(|d| d.name.clone())
+                            .unwrap_or_default()
+                    ),
                     None,
                 ),
             };
-            let mut form = Form::new().label_width(150.0).section("Seçili belge").field("Belge", words::text_line(Kind::Info, title));
+            let mut form = Form::new()
+                .label_width(150.0)
+                .section("Seçili belge")
+                .field("Belge", words::text_line(Kind::Info, title));
             if let Some(reference) = approved {
-                form = form.row(words::text_line(Kind::Ok, format!("Onayı yazılmış: {reference}. Onay bir kez yazılır.")));
+                form = form.row(words::text_line(
+                    Kind::Ok,
+                    format!("Onayı yazılmış: {reference}. Onay bir kez yazılır."),
+                ));
             } else {
                 let approve_plan = match (&s.approve_plan, s.reference.trim().is_empty()) {
-                    (_, true) => words::text_line(Kind::Info, "Onayı veren yerin yazdığı onay sayısını yazın."),
-                    (Some(Ok(out)), _) => words::text_line(Kind::Ok, approve_words(r, chosen, out, s.reference.trim())),
+                    (_, true) => words::text_line(
+                        Kind::Info,
+                        "Onayı veren yerin yazdığı onay sayısını yazın.",
+                    ),
+                    (Some(Ok(out)), _) => words::text_line(
+                        Kind::Ok,
+                        approve_words(r, chosen, out, s.reference.trim()),
+                    ),
                     (Some(Err(why)), _) => words::text_line(Kind::Error, why.clone()),
                     (None, _) => words::text_line(Kind::Info, "Önizleme yok."),
                 };
                 let can = matches!(s.approve_plan, Some(Ok(_)));
-                let mut buttons = iced::widget::row![words::primary(APPROVE, can.then(|| msg(Event::Approve)))].spacing(8);
+                let mut buttons =
+                    iced::widget::row![words::primary(APPROVE, can.then(|| msg(Event::Approve)))]
+                        .spacing(8);
                 if matches!(chosen, Chosen::Draft(_)) {
                     buttons = buttons.push(words::secondary(WITHDRAW, Some(msg(Event::Withdraw))));
                 }
@@ -793,9 +1009,8 @@ impl ParcelRegisterWindowApp for App {
     fn parcel_register_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
-            Control::Press(SAVE) => {
-                matches!(self.modules.map().parcel_register.plan, Some(Ok(_))).then(|| msg(Event::Save))
-            }
+            Control::Press(SAVE) => matches!(self.modules.map().parcel_register.plan, Some(Ok(_)))
+                .then(|| msg(Event::Save)),
             Control::Fill(NAME, v) => Some(msg(Event::Name(v.to_owned()))),
             Control::Fill(KIND, v) => Some(msg(Event::Kind(v.to_owned()))),
             Control::Fill(DATE, v) => Some(msg(Event::Date(v.to_owned()))),
@@ -805,12 +1020,15 @@ impl ParcelRegisterWindowApp for App {
             Control::Fill(REFERENCE, v) => Some(msg(Event::Reference(v.to_owned()))),
             Control::Fill(APPROVAL_DATE, v) => Some(msg(Event::ApprovalDate(v.to_owned()))),
             Control::Fill(APPROVER, v) => Some(msg(Event::Approver(v.to_owned()))),
-            Control::Press(APPROVE) => matches!(self.modules.map().parcel_register.approve_plan, Some(Ok(_)))
-                .then(|| msg(Event::Approve)),
-            Control::Press(WITHDRAW) => {
-                matches!(self.modules.map().parcel_register.chosen, Some(Chosen::Draft(_)))
-                    .then(|| msg(Event::Withdraw))
+            Control::Press(APPROVE) => {
+                matches!(self.modules.map().parcel_register.approve_plan, Some(Ok(_)))
+                    .then(|| msg(Event::Approve))
             }
+            Control::Press(WITHDRAW) => matches!(
+                self.modules.map().parcel_register.chosen,
+                Some(Chosen::Draft(_))
+            )
+            .then(|| msg(Event::Withdraw)),
             Control::Row(n) if n > 0 => Some(msg(Event::Toggle(n - 1))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })

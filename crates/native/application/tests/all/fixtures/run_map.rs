@@ -5,8 +5,12 @@ macro_rules! map_cases {
     ($command:expr, $then:ident, $else:expr) => {
         match $command {
             kentos_commands::CAD_PARCELS_CREATE => $then!(parcels, kentos_commands::ParcelsCreate),
-            kentos_commands::CAD_SURVEY_POINTS => $then!(survey_points, kentos_commands::SurveyPoints),
-            kentos_commands::CAD_SURVEY_ADJUST => $then!(survey_adjust, kentos_commands::SurveyAdjust),
+            kentos_commands::CAD_SURVEY_POINTS => {
+                $then!(survey_points, kentos_commands::SurveyPoints)
+            }
+            kentos_commands::CAD_SURVEY_ADJUST => {
+                $then!(survey_adjust, kentos_commands::SurveyAdjust)
+            }
             kentos_commands::CAD_POINTCLOUDS_DESCRIBE => {
                 $then!(pointclouds_describe, kentos_commands::PointCloudsDescribe)
             }

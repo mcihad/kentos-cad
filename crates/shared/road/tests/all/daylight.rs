@@ -3,7 +3,9 @@
 //! its own where KentOS walks outward; no KentOS code.
 
 use kentos_road::section::GroundPoint;
-use kentos_road::section::template::{Component, Daylight, Ditch, Side, Template, build, daylights};
+use kentos_road::section::template::{
+    Component, Daylight, Ditch, Side, Template, build, daylights,
+};
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/road/v1/daylight.json");
@@ -18,13 +20,32 @@ fn side(v: &Value) -> Side {
             .as_array()
             .unwrap()
             .iter()
-            .map(|c| Component::Lane { width: n(&c["width"]), slope: n(&c["slope"]) })
+            .map(|c| Component::Lane {
+                width: n(&c["width"]),
+                slope: n(&c["slope"]),
+            })
             .collect(),
         cut: n(&v["cut"]),
         fill: n(&v["fill"]),
-        ditch: v.get("ditch").map(|d| Ditch { fore: n(&d["fore"]), depth: n(&d["depth"]), bottom: n(&d["bottom"]) }),
-        bench: v.get("bench").map(|b| kentos_road::section::template::SlopeBench { height: n(&b["height"]), width: n(&b["width"]), fall: b.get("fall").map_or(0.0, n) }),
-        fill_bench: v.get("fillBench").map(|b| kentos_road::section::template::SlopeBench { height: n(&b["height"]), width: n(&b["width"]), fall: b.get("fall").map_or(0.0, n) }),
+        ditch: v.get("ditch").map(|d| Ditch {
+            fore: n(&d["fore"]),
+            depth: n(&d["depth"]),
+            bottom: n(&d["bottom"]),
+        }),
+        bench: v
+            .get("bench")
+            .map(|b| kentos_road::section::template::SlopeBench {
+                height: n(&b["height"]),
+                width: n(&b["width"]),
+                fall: b.get("fall").map_or(0.0, n),
+            }),
+        fill_bench: v
+            .get("fillBench")
+            .map(|b| kentos_road::section::template::SlopeBench {
+                height: n(&b["height"]),
+                width: n(&b["width"]),
+                fall: b.get("fall").map_or(0.0, n),
+            }),
     }
 }
 
@@ -35,22 +56,52 @@ fn the_daylights_are_the_references() {
     assert!(cases.len() >= 10);
     for c in cases {
         let name = c["name"].as_str().unwrap();
-        let template = Template { left: side(&c["template"]["left"]), right: side(&c["template"]["right"]) };
+        let template = Template {
+            left: side(&c["template"]["left"]),
+            right: side(&c["template"]["right"]),
+        };
         let ground: Vec<GroundPoint> = c["ground"]
             .as_array()
             .unwrap()
             .iter()
-            .map(|g| GroundPoint { offset: n(&g["offset"]), z: g["z"].as_f64(), gap: g["gap"].as_bool().unwrap(), crossing: false })
+            .map(|g| GroundPoint {
+                offset: n(&g["offset"]),
+                z: g["z"].as_f64(),
+                gap: g["gap"].as_bool().unwrap(),
+                crossing: false,
+            })
             .collect();
         let axis = n(&c["axis"]);
         let got = daylights(&template, axis, &ground);
         let built = build(&template, axis, &ground).expect("builds");
-        for (k, (d, want)) in got.iter().zip(c["expected"].as_array().unwrap()).enumerate() {
-            let close = |a: f64, b: f64, what: &str| assert!((a - b).abs() <= 1e-9 * b.abs().max(1.0), "{name} {k} {what}: {a} vs {b}");
+        for (k, (d, want)) in got
+            .iter()
+            .zip(c["expected"].as_array().unwrap())
+            .enumerate()
+        {
+            let close = |a: f64, b: f64, what: &str| {
+                assert!(
+                    (a - b).abs() <= 1e-9 * b.abs().max(1.0),
+                    "{name} {k} {what}: {a} vs {b}"
+                )
+            };
             match (d, want["kind"].as_str().unwrap()) {
-                (Daylight::Hit { offset, crossings, next, sensitivity, cut }, "hit") => {
+                (
+                    Daylight::Hit {
+                        offset,
+                        crossings,
+                        next,
+                        sensitivity,
+                        cut,
+                    },
+                    "hit",
+                ) => {
                     close(*offset, n(&want["offset"]), "offset");
-                    assert_eq!(u64::from(*crossings), want["crossings"].as_u64().unwrap(), "{name} {k} crossings");
+                    assert_eq!(
+                        u64::from(*crossings),
+                        want["crossings"].as_u64().unwrap(),
+                        "{name} {k} crossings"
+                    );
                     assert_eq!(*cut, want["cut"].as_bool().unwrap(), "{name} {k} cut");
                     match (next, want.get("next")) {
                         (None, None) => {}
@@ -60,7 +111,11 @@ fn the_daylights_are_the_references() {
                     close(*sensitivity, n(&want["sensitivity"]), "sensitivity");
                     // The diagnosis finds the daylight the section was built to.
                     let s = if k == 0 { &built.left } else { &built.right };
-                    close(s.daylight.expect("built to it")[0].abs(), *offset, "the section's daylight");
+                    close(
+                        s.daylight.expect("built to it")[0].abs(),
+                        *offset,
+                        "the section's daylight",
+                    );
                 }
                 (Daylight::Hinge, "hinge") => {}
                 (Daylight::Gap { at }, "gap") => close(*at, n(&want["at"]), "gap"),

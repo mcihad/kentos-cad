@@ -23,12 +23,13 @@
 //! - **The whole drawing only:** layers, blocks, numbering and storeys are the drawing's, so a check of Etkin kat or of
 //!   the objects selected leaves them out.
 
-use std::collections::BTreeSet;
 use crate::arch::ArchState;
+use std::collections::BTreeSet;
 
 use iced::Task;
 use kentos_commands::{
-    ArchAuditCheck, ArchAuditFinding, ArchAuditFix, ArchAuditRuleSet, ArchAuditState, ChangesetStep, Vec2,
+    ArchAuditCheck, ArchAuditFinding, ArchAuditFix, ArchAuditRuleSet, ArchAuditState,
+    ChangesetStep, Vec2,
 };
 use kentos_extensions::audit_facts::ProjectAuditFacts;
 use kentos_native_application::delivered_model::{self, Counted, Drift, Expected, Last};
@@ -78,8 +79,17 @@ impl DeliveredLine {
         let number = u32::try_from(v.get("number")?.as_u64()?).ok()?;
         let text = |k: &str| v.get(k).and_then(Value::as_str).map(str::to_owned);
         let drift = v.get("drift").filter(|d| d.is_object()).map(|d| {
-            let n = |k: &str| d.get(k).and_then(Value::as_u64).and_then(|n| usize::try_from(n).ok()).unwrap_or(0);
-            Drift { added: n("added"), removed: n("removed"), changed: n("changed") }
+            let n = |k: &str| {
+                d.get(k)
+                    .and_then(Value::as_u64)
+                    .and_then(|n| usize::try_from(n).ok())
+                    .unwrap_or(0)
+            };
+            Drift {
+                added: n("added"),
+                removed: n("removed"),
+                changed: n("changed"),
+            }
         });
         Some(Self {
             number,
@@ -97,21 +107,29 @@ impl DeliveredLine {
     pub(crate) fn words(&self) -> String {
         let n = self.number;
         if let Some(why) = &self.error {
-            return format!("{n}. teslimin modeli okunamadı: {why} EK-9 formu çizimin şimdiki hâlinden.");
+            return format!(
+                "{n}. teslimin modeli okunamadı: {why} EK-9 formu çizimin şimdiki hâlinden."
+            );
         }
         let file = format!("{}, {}", self.model, day(&self.at));
         let drift = match self.drift {
-            None if self.older => "Model, KentOS kalıcı kimlikleri yazmadan önce yazılmış; çizimle nesne nesne \
+            None if self.older => {
+                "Model, KentOS kalıcı kimlikleri yazmadan önce yazılmış; çizimle nesne nesne \
                                    karşılaştırılamadı."
-                .to_owned(),
+                    .to_owned()
+            }
             None => "Çizimde şimdi bina yok.".to_owned(),
             Some(d) if d.is_none() => "Çizimin modeli teslim edilenle aynı.".to_owned(),
             Some(d) => {
-                let parts: Vec<String> = [(d.changed, "değişti"), (d.added, "eklendi"), (d.removed, "silindi")]
-                    .into_iter()
-                    .filter(|(k, _)| *k > 0)
-                    .map(|(k, what)| format!("{k} nesne {what}"))
-                    .collect();
+                let parts: Vec<String> = [
+                    (d.changed, "değişti"),
+                    (d.added, "eklendi"),
+                    (d.removed, "silindi"),
+                ]
+                .into_iter()
+                .filter(|(k, _)| *k > 0)
+                .map(|(k, what)| format!("{k} nesne {what}"))
+                .collect();
                 format!("Teslimden bu yana çizimde {}.", parts.join(", "))
             }
         };
@@ -149,8 +167,8 @@ fn day(at: &str) -> String {
 
 /// The facts the Dijital proje rule reads first: the CAD drawing's section alone.
 fn standards_facts(doc: &kentos_domain::Document) -> Option<Value> {
-    let facts =
-        ProjectAuditFacts::new(0.0, Vec::new(), false).with_cad(kentos_processing::audit_facts::cad::measure(doc));
+    let facts = ProjectAuditFacts::new(0.0, Vec::new(), false)
+        .with_cad(kentos_processing::audit_facts::cad::measure(doc));
     serde_json::to_value(facts).ok()
 }
 
@@ -182,17 +200,17 @@ impl ArchAuditStandardsApp for App {
     /// The facts the Dijital proje rule reads first: the CAD drawing's section alone (the permit gate measures its own,
     /// permit_gate.rs).
     #[cfg(test)]
-    fn arch_audit_standards_facts(&self) -> Option<Value>{
+    fn arch_audit_standards_facts(&self) -> Option<Value> {
         standards_facts(&self.document.as_ref()?.model)
     }
 
     /// The facts the national regulation's rule reads: the permit's particulars (the application date, the plan's
     /// storeys) and the building's.
-    fn arch_audit_regulation_facts(&self) -> Option<Value>{
+    fn arch_audit_regulation_facts(&self) -> Option<Value> {
         regulation_facts(&self.document.as_ref()?.model)
     }
 
-    fn arch_audit_standards_input(&self) -> Option<Input>{
+    fn arch_audit_standards_input(&self) -> Option<Input> {
         Some(Input {
             copy: self.document.as_ref()?.model.reading_copy(),
             delivered: self.modules.arch().arch_audit.delivered_model,
@@ -200,13 +218,14 @@ impl ArchAuditStandardsApp for App {
     }
 
     /// After a check: the last answer put back, and the rules asked again when the check was the whole drawing's.
-    fn arch_audit_standards_after_check(&mut self){
+    fn arch_audit_standards_after_check(&mut self) {
         let doc = self.document.as_ref().map(|d| &d.model);
         let panel = &mut self.modules.arch_mut().arch_audit;
         let whole = matches!(panel.scope, AuditScope::All);
         let last: BTreeSet<&str> = panel.standards.iter().map(|f| f.key.as_str()).collect();
         if let Some(a) = panel.audited.as_mut() {
-            a.findings.retain(|f| !f.code.starts_with(CODES) && !last.contains(f.key.as_str()));
+            a.findings
+                .retain(|f| !f.code.starts_with(CODES) && !last.contains(f.key.as_str()));
             if whole && let Some(doc) = doc {
                 put(doc, panel.view, &panel.standards, a);
             }
@@ -215,7 +234,7 @@ impl ArchAuditStandardsApp for App {
     }
 
     /// The rules' ask when a check made it due; their answer comes as [`Event::Standards`].
-    fn arch_audit_standards_task(&mut self) -> Task<Message>{
+    fn arch_audit_standards_task(&mut self) -> Task<Message> {
         if !std::mem::take(&mut self.modules.arch_mut().arch_audit.standards_due) {
             return Task::none();
         }
@@ -232,7 +251,8 @@ impl ArchAuditStandardsApp for App {
                 std::thread::spawn(move || {
                     let _ = sent.send(answer(input));
                 });
-                got.await.unwrap_or_else(|_| Err("Kuralın süreci cevap vermeden kapandı.".to_owned()))
+                got.await
+                    .unwrap_or_else(|_| Err("Kuralın süreci cevap vermeden kapandı.".to_owned()))
             },
             move |answer| msg(Event::Standards(generation, answer)),
         )
@@ -240,7 +260,7 @@ impl ArchAuditStandardsApp for App {
 
     /// The rules' answer: their findings in place of the last ones, for the ask still current. A package that gave no
     /// answer says why over the table, so a clean table is not taken for a pass.
-    fn arch_audit_standards_answer(&mut self, generation: u64, answer: Result<Value, String>){
+    fn arch_audit_standards_answer(&mut self, generation: u64, answer: Result<Value, String>) {
         if generation != self.modules.arch().arch_audit.standards_generation {
             return;
         }
@@ -251,7 +271,10 @@ impl ArchAuditStandardsApp for App {
             Ok(v) => (part(&v["digital"]), part(&v["regulation"])),
             Err(why) => (Err(why.clone()), Err(why.clone())),
         };
-        panel.delivered = answer.as_ref().ok().and_then(|v| DeliveredLine::of(&v["delivered"]));
+        panel.delivered = answer
+            .as_ref()
+            .ok()
+            .and_then(|v| DeliveredLine::of(&v["delivered"]));
         let mut found = Vec::new();
         match digital {
             Ok(d) => {
@@ -275,8 +298,12 @@ impl ArchAuditStandardsApp for App {
         if let Some(a) = panel.audited.as_mut()
             && matches!(panel.scope, AuditScope::All)
         {
-            let kept = panel.selected.and_then(|i| a.findings.get(i)).map(|f| f.key.clone());
-            a.findings.retain(|f| !f.code.starts_with(CODES) && !last.contains(&f.key));
+            let kept = panel
+                .selected
+                .and_then(|i| a.findings.get(i))
+                .map(|f| f.key.clone());
+            a.findings
+                .retain(|f| !f.code.starts_with(CODES) && !last.contains(&f.key));
             if let Some(doc) = doc {
                 put(doc, panel.view, &panel.standards, a);
             }
@@ -287,7 +314,7 @@ impl ArchAuditStandardsApp for App {
 
     /// The rules' ask and answer now, on this thread: what the tab's task does (tests and pictures).
     #[cfg(test)]
-    fn arch_audit_standards_settle(&mut self){
+    fn arch_audit_standards_settle(&mut self) {
         let Some(input) = self.arch_audit_standards_input() else {
             return;
         };
@@ -308,7 +335,8 @@ fn put(
     standards: &[ArchAuditFinding],
     audited: &mut super::Audited,
 ) {
-    let (laid, excepted, _) = kentos_native_application::arch_audit::lay_exceptions(doc, standards.to_vec(), view);
+    let (laid, excepted, _) =
+        kentos_native_application::arch_audit::lay_exceptions(doc, standards.to_vec(), view);
     audited.excepted = audited.excepted.saturating_sub(audited.standards_excepted) + excepted;
     audited.standards_excepted = excepted;
     audited.findings.extend(laid);
@@ -319,11 +347,15 @@ fn put(
 fn answer(input: Input) -> Result<Value, String> {
     let doc = &input.copy;
     let cad = standards_facts(doc).ok_or_else(|| "Çizimin olguları yazılamadı.".to_owned())?;
-    let building = regulation_facts(doc).ok_or_else(|| "Binanın olguları yazılamadı.".to_owned())?;
+    let building =
+        regulation_facts(doc).ok_or_else(|| "Binanın olguları yazılamadı.".to_owned())?;
     let (ifc, delivered) = model(doc, input.delivered);
-    let digital = ifc.and_then(|ifc| crate::standards::call(DIGITAL.0, DIGITAL.1, FUNCTION, vec![cad, ifc]));
+    let digital =
+        ifc.and_then(|ifc| crate::standards::call(DIGITAL.0, DIGITAL.1, FUNCTION, vec![cad, ifc]));
     let regulation = crate::standards::call(REGULATION.0, REGULATION.1, FUNCTION, vec![building]);
-    let side = |r: Result<Value, String>| r.map_or_else(|e| json!({ "error": e }), |v| json!({ "answer": v }));
+    let side = |r: Result<Value, String>| {
+        r.map_or_else(|e| json!({ "error": e }), |v| json!({ "answer": v }))
+    };
     Ok(json!({ "digital": side(digital), "regulation": side(regulation), "delivered": delivered }))
 }
 
@@ -337,7 +369,9 @@ fn model(doc: &kentos_domain::Document, asked: bool) -> (Result<Value, String>, 
             .map(|f| f.unwrap_or(Value::Null))
     };
     let put = |line: &mut Value, c: Counted| match c {
-        Counted::Drift(d) => line["drift"] = json!({ "added": d.added, "removed": d.removed, "changed": d.changed }),
+        Counted::Drift(d) => {
+            line["drift"] = json!({ "added": d.added, "removed": d.removed, "changed": d.changed })
+        }
         Counted::NoModel => line["drift"] = Value::Null,
         Counted::Older => line["older"] = json!(true),
     };
@@ -381,7 +415,11 @@ pub(crate) fn rule_set(answer: &Value) -> Option<ArchAuditRuleSet> {
 fn part(side: &Value) -> Result<Value, String> {
     match side.get("answer") {
         Some(v) => Ok(v.clone()),
-        None => Err(side.get("error").and_then(Value::as_str).unwrap_or("Kural cevap vermedi.").to_owned()),
+        None => Err(side
+            .get("error")
+            .and_then(Value::as_str)
+            .unwrap_or("Kural cevap vermedi.")
+            .to_owned()),
     }
 }
 
@@ -392,17 +430,32 @@ fn part(side: &Value) -> Result<Value, String> {
 fn findings(answer: &Value, digital: bool) -> Vec<ArchAuditFinding> {
     let mut out: Vec<ArchAuditFinding> = Vec::new();
     for f in answer.as_array().into_iter().flatten() {
-        let text = |k: &str| f.get(k).and_then(Value::as_str).unwrap_or_default().to_owned();
+        let text = |k: &str| {
+            f.get(k)
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_owned()
+        };
         let code = text("code");
         if digital && !code.starts_with(CODES) {
             continue;
         }
-        let uids: Vec<String> =
-            f.get("uids").and_then(Value::as_array).into_iter().flatten().filter_map(|u| u.as_str().map(str::to_owned)).collect();
+        let uids: Vec<String> = f
+            .get("uids")
+            .and_then(Value::as_array)
+            .into_iter()
+            .flatten()
+            .filter_map(|u| u.as_str().map(str::to_owned))
+            .collect();
         let at = f
             .get("at")
             .and_then(Value::as_array)
-            .and_then(|a| Some(Vec2 { x: a.first()?.as_f64()?, y: a.get(1)?.as_f64()? }))
+            .and_then(|a| {
+                Some(Vec2 {
+                    x: a.first()?.as_f64()?,
+                    y: a.get(1)?.as_f64()?,
+                })
+            })
             .unwrap_or(Vec2 { x: 0.0, y: 0.0 });
         let fix = f.get("fix").filter(|x| !x.is_null()).and_then(|x| {
             Some(ArchAuditFix {

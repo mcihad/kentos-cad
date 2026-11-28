@@ -79,23 +79,36 @@ pub struct KeptAdjustment {
 /// finite and not below nought; m0 and the test only with redundancy (f above nought).
 pub fn kept_adjustments_problem(list: &[KeptAdjustment]) -> Option<String> {
     if list.len() > MAX_KEPT_ADJUSTMENTS {
-        return Some(format!("Proje en çok {MAX_KEPT_ADJUSTMENTS} dengeleme kaydı tutar"));
+        return Some(format!(
+            "Proje en çok {MAX_KEPT_ADJUSTMENTS} dengeleme kaydı tutar"
+        ));
     }
     let mut names = HashSet::new();
     for a in list {
         if !review_label_ok(&a.name, MAX_KEPT_ADJUSTMENT_NAME) || !names.insert(a.name.as_str()) {
-            return Some(format!("“{}” dengeleme kaydının adı geçersiz ya da iki kez yazılmış", a.name));
+            return Some(format!(
+                "“{}” dengeleme kaydının adı geçersiz ya da iki kez yazılmış",
+                a.name
+            ));
         }
         if a.revision.is_empty() || !a.revision.bytes().all(|b| b.is_ascii_digit()) {
-            return Some(format!("“{}” dengeleme kaydının sürümü bir tamsayı yazısı değil", a.name));
+            return Some(format!(
+                "“{}” dengeleme kaydının sürümü bir tamsayı yazısı değil",
+                a.name
+            ));
         }
         if a.points.len() > MAX_KEPT_ADJUSTED_POINTS {
-            return Some(format!("“{}” dengeleme kaydı en çok {MAX_KEPT_ADJUSTED_POINTS} nokta tutar", a.name));
+            return Some(format!(
+                "“{}” dengeleme kaydı en çok {MAX_KEPT_ADJUSTED_POINTS} nokta tutar",
+                a.name
+            ));
         }
         let mut points = HashSet::new();
         for p in &a.points {
             let placed = match a.kind {
-                KeptAdjustmentKind::Horizontal => p.at.is_some_and(|v| v.x.is_finite() && v.y.is_finite()) && p.h.is_none(),
+                KeptAdjustmentKind::Horizontal => {
+                    p.at.is_some_and(|v| v.x.is_finite() && v.y.is_finite()) && p.h.is_none()
+                }
                 KeptAdjustmentKind::Height => p.h.is_some_and(f64::is_finite) && p.at.is_none(),
             };
             if !review_label_ok(&p.name, MAX_KEPT_ADJUSTMENT_NAME)
@@ -103,11 +116,19 @@ pub fn kept_adjustments_problem(list: &[KeptAdjustment]) -> Option<String> {
                 || !placed
                 || !(p.sigma.is_finite() && p.sigma >= 0.0)
             {
-                return Some(format!("“{}” dengeleme kaydının “{}” noktası geçersiz", a.name, p.name));
+                return Some(format!(
+                    "“{}” dengeleme kaydının “{}” noktası geçersiz",
+                    a.name, p.name
+                ));
             }
         }
-        if a.m0.is_some_and(|m| !(m.is_finite() && m >= 0.0)) || (a.f == 0 && (a.m0.is_some() || a.passed.is_some())) {
-            return Some(format!("“{}” dengeleme kaydının m0'ı ya da testi geçersiz", a.name));
+        if a.m0.is_some_and(|m| !(m.is_finite() && m >= 0.0))
+            || (a.f == 0 && (a.m0.is_some() || a.passed.is_some()))
+        {
+            return Some(format!(
+                "“{}” dengeleme kaydının m0'ı ya da testi geçersiz",
+                a.name
+            ));
         }
     }
     None
@@ -122,7 +143,12 @@ mod tests {
             name: "Poligon 1".into(),
             kind: KeptAdjustmentKind::Horizontal,
             revision: "12".into(),
-            points: vec![KeptAdjustedPoint { name: "P1".into(), at: Some(Vec2 { x: 1.0, y: 2.0 }), h: None, sigma: 0.004 }],
+            points: vec![KeptAdjustedPoint {
+                name: "P1".into(),
+                at: Some(Vec2 { x: 1.0, y: 2.0 }),
+                h: None,
+                sigma: 0.004,
+            }],
             f: 3,
             m0: Some(1.2),
             passed: Some(true),

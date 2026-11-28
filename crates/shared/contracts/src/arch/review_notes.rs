@@ -24,7 +24,9 @@ pub const MAX_REVIEW_AUTHOR: usize = 120;
 pub const MAX_REVIEW_LABEL: usize = 64;
 
 /// Where a note stands.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
+)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -97,7 +99,10 @@ pub struct ReviewDecision {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub class: Option<String>,
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<std::collections::BTreeMap<String, String>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<std::collections::BTreeMap<String, String>>", optional)
+    )]
     pub fields: std::collections::BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -182,7 +187,9 @@ pub fn review_text_ok(text: &str) -> bool {
     !text.is_empty()
         && text.trim() == text
         && text.chars().count() <= MAX_REVIEW_TEXT
-        && !text.chars().any(|c| c.is_control() && c != '\n' && c != '\t')
+        && !text
+            .chars()
+            .any(|c| c.is_control() && c != '\n' && c != '\t')
 }
 
 /// Whether `text` is a short label (author, time, revision): no space at its edges, no control character, at most
@@ -208,22 +215,39 @@ pub fn review_id_ok(id: &str) -> bool {
 /// candidate and its asset.
 fn decision_problem(n: &ReviewNote, d: &ReviewDecision) -> Option<String> {
     let number = n.number;
-    if !review_label_ok(&d.command, MAX_REVIEW_LABEL) || !review_label_ok(&d.source, MAX_REVIEW_AUTHOR) {
-        return Some(format!("{number}. notun kararının komutu ya da kaynağı geçersiz"));
+    if !review_label_ok(&d.command, MAX_REVIEW_LABEL)
+        || !review_label_ok(&d.source, MAX_REVIEW_AUTHOR)
+    {
+        return Some(format!(
+            "{number}. notun kararının komutu ya da kaynağı geçersiz"
+        ));
     }
     if !review_id_ok(&d.candidate) || d.asset.as_deref().is_some_and(|a| !review_id_ok(a)) {
-        return Some(format!("{number}. notun kararının aday ya da varlık kimliği küçük harfli bir UUID değil"));
+        return Some(format!(
+            "{number}. notun kararının aday ya da varlık kimliği küçük harfli bir UUID değil"
+        ));
     }
     let bound = |uid: &str| n.anchors.iter().any(|a| a.uid == uid);
     if !bound(&d.candidate) || d.asset.as_deref().is_some_and(|a| !bound(a)) {
-        return Some(format!("{number}. not kararının adayına ve varlığına bağlı değil"));
+        return Some(format!(
+            "{number}. not kararının adayına ve varlığına bağlı değil"
+        ));
     }
     let says = d.accept || d.class.is_some() || !d.fields.is_empty() || d.reject.is_some();
-    let parts_ok = d.class.as_deref().is_none_or(|c| review_label_ok(c, MAX_REVIEW_LABEL))
-        && d.fields.iter().all(|(k, v)| review_label_ok(k, MAX_REVIEW_LABEL) && review_text_ok(v))
+    let parts_ok = d
+        .class
+        .as_deref()
+        .is_none_or(|c| review_label_ok(c, MAX_REVIEW_LABEL))
+        && d.fields
+            .iter()
+            .all(|(k, v)| review_label_ok(k, MAX_REVIEW_LABEL) && review_text_ok(v))
         && d.reject.as_deref().is_none_or(review_text_ok);
     let fits = !(d.accept && d.reject.is_some()) && !(d.reject.is_some() && d.asset.is_some());
-    (!(says && parts_ok && fits)).then(|| format!("{number}. notun kararı geçersiz (kabul ile ret birlikte, varlıklı ret ya da boş karar)"))
+    (!(says && parts_ok && fits)).then(|| {
+        format!(
+            "{number}. notun kararı geçersiz (kabul ile ret birlikte, varlıklı ret ya da boş karar)"
+        )
+    })
 }
 
 fn note_problem(n: &ReviewNote) -> Option<String> {
@@ -243,28 +267,45 @@ fn note_problem(n: &ReviewNote) -> Option<String> {
         (&n.sheet, MAX_REVIEW_LABEL),
         (&n.view, MAX_REVIEW_LABEL),
     ];
-    if labels.iter().any(|(t, most)| t.as_deref().is_some_and(|t| !review_label_ok(t, *most))) {
-        return Some(format!("{}. notun yazar, tarih, revizyon ya da bağ alanı geçersiz", n.number));
+    if labels
+        .iter()
+        .any(|(t, most)| t.as_deref().is_some_and(|t| !review_label_ok(t, *most)))
+    {
+        return Some(format!(
+            "{}. notun yazar, tarih, revizyon ya da bağ alanı geçersiz",
+            n.number
+        ));
     }
     if n.at.is_some_and(|p| !(p.x.is_finite() && p.y.is_finite())) {
         return Some(format!("{}. notun noktası sonlu değil", n.number));
     }
     if n.anchors.len() > MAX_REVIEW_ANCHORS {
-        return Some(format!("{}. not en çok {MAX_REVIEW_ANCHORS} nesneye bağlanabilir", n.number));
+        return Some(format!(
+            "{}. not en çok {MAX_REVIEW_ANCHORS} nesneye bağlanabilir",
+            n.number
+        ));
     }
     let mut seen = std::collections::HashSet::new();
     for a in &n.anchors {
         if !review_id_ok(&a.uid) || !seen.insert(a.uid.as_str()) {
-            return Some(format!("{}. notun nesne bağı geçersiz ya da yinelenmiş: “{}”", n.number, a.uid));
+            return Some(format!(
+                "{}. notun nesne bağı geçersiz ya da yinelenmiş: “{}”",
+                n.number, a.uid
+            ));
         }
         if !review_label_ok(&a.stamp, MAX_REVIEW_LABEL)
-            || a.block_stamp.as_deref().is_some_and(|s| !review_label_ok(s, MAX_REVIEW_LABEL))
+            || a.block_stamp
+                .as_deref()
+                .is_some_and(|s| !review_label_ok(s, MAX_REVIEW_LABEL))
         {
             return Some(format!("{}. notun nesne damgası geçersiz", n.number));
         }
     }
     if n.replies.len() > MAX_REVIEW_REPLIES {
-        return Some(format!("{}. not en çok {MAX_REVIEW_REPLIES} yanıt taşıyabilir", n.number));
+        return Some(format!(
+            "{}. not en çok {MAX_REVIEW_REPLIES} yanıt taşıyabilir",
+            n.number
+        ));
     }
     if let Some(d) = &n.decision
         && let Some(problem) = decision_problem(n, d)
@@ -273,8 +314,12 @@ fn note_problem(n: &ReviewNote) -> Option<String> {
     }
     for r in &n.replies {
         if !review_text_ok(&r.text)
-            || r.author.as_deref().is_some_and(|t| !review_label_ok(t, MAX_REVIEW_AUTHOR))
-            || r.created_at.as_deref().is_some_and(|t| !review_label_ok(t, MAX_REVIEW_LABEL))
+            || r.author
+                .as_deref()
+                .is_some_and(|t| !review_label_ok(t, MAX_REVIEW_AUTHOR))
+            || r.created_at
+                .as_deref()
+                .is_some_and(|t| !review_label_ok(t, MAX_REVIEW_LABEL))
         {
             return Some(format!("{}. notun bir yanıtı geçersiz", n.number));
         }
@@ -290,7 +335,9 @@ pub fn review_notes_have_decisions(notes: &[ReviewNote]) -> bool {
 /// Structural validation at the file and command boundary: what is wrong with `notes`, or none.
 pub fn review_notes_problem(notes: &[ReviewNote]) -> Option<String> {
     if notes.len() > MAX_REVIEW_NOTES {
-        return Some(format!("Bir çizim en çok {MAX_REVIEW_NOTES} inceleme notu taşıyabilir"));
+        return Some(format!(
+            "Bir çizim en çok {MAX_REVIEW_NOTES} inceleme notu taşıyabilir"
+        ));
     }
     let mut ids = std::collections::HashSet::new();
     let mut numbers = std::collections::HashSet::new();
@@ -299,10 +346,16 @@ pub fn review_notes_problem(notes: &[ReviewNote]) -> Option<String> {
             return Some(problem);
         }
         if !ids.insert(n.id.as_str()) {
-            return Some(format!("“{}” kimlikli inceleme notu iki kez yazılmış", n.id));
+            return Some(format!(
+                "“{}” kimlikli inceleme notu iki kez yazılmış",
+                n.id
+            ));
         }
         if !numbers.insert(n.number) {
-            return Some(format!("{} numaralı inceleme notu iki kez yazılmış", n.number));
+            return Some(format!(
+                "{} numaralı inceleme notu iki kez yazılmış",
+                n.number
+            ));
         }
     }
     None
@@ -339,7 +392,13 @@ mod tests {
     #[test]
     fn a_decision_is_checked_against_what_it_says_and_its_anchors() {
         let anchored = |uids: &[&str]| -> Vec<ReviewAnchor> {
-            uids.iter().map(|u| ReviewAnchor { uid: (*u).into(), stamp: "s".into(), block_stamp: None }).collect()
+            uids.iter()
+                .map(|u| ReviewAnchor {
+                    uid: (*u).into(),
+                    stamp: "s".into(),
+                    block_stamp: None,
+                })
+                .collect()
         };
         let mut n = note(A, 1);
         n.anchors = anchored(&[A, B]);
@@ -361,10 +420,23 @@ mod tests {
         loose.anchors = anchored(&[A]);
         assert!(review_notes_problem(&[loose]).is_some());
         for d in [
-            ReviewDecision { accept: false, ..accept.clone() },
-            ReviewDecision { reject: Some("Gölge".into()), ..accept.clone() },
-            ReviewDecision { accept: false, reject: Some("Gölge".into()), ..accept.clone() },
-            ReviewDecision { class: Some(" direk".into()), ..accept.clone() },
+            ReviewDecision {
+                accept: false,
+                ..accept.clone()
+            },
+            ReviewDecision {
+                reject: Some("Gölge".into()),
+                ..accept.clone()
+            },
+            ReviewDecision {
+                accept: false,
+                reject: Some("Gölge".into()),
+                ..accept.clone()
+            },
+            ReviewDecision {
+                class: Some(" direk".into()),
+                ..accept.clone()
+            },
         ] {
             let mut wrong = n.clone();
             wrong.decision = Some(d);
@@ -379,7 +451,12 @@ mod tests {
         });
         assert_eq!(review_notes_problem(&[both]), None);
         let mut rejected = n.clone();
-        rejected.decision = Some(ReviewDecision { accept: false, reject: Some("Gölge".into()), asset: None, ..accept });
+        rejected.decision = Some(ReviewDecision {
+            accept: false,
+            reject: Some("Gölge".into()),
+            asset: None,
+            ..accept
+        });
         assert_eq!(review_notes_problem(&[rejected]), None);
     }
 
@@ -404,7 +481,11 @@ mod tests {
     #[test]
     fn anchors_are_unique_and_the_origin_defaults_to_the_user() {
         let mut n = note(A, 1);
-        let anchor = ReviewAnchor { uid: B.into(), stamp: "0123456789abcdef".into(), block_stamp: None };
+        let anchor = ReviewAnchor {
+            uid: B.into(),
+            stamp: "0123456789abcdef".into(),
+            block_stamp: None,
+        };
         n.anchors = vec![anchor.clone(), anchor];
         assert!(review_notes_problem(&[n]).is_some());
         let json = serde_json::to_value(note(A, 1)).unwrap();
@@ -412,6 +493,11 @@ mod tests {
         assert_eq!(json["status"], "open");
         let back: ReviewNote = serde_json::from_value(json).unwrap();
         assert_eq!(back.origin, ReviewOrigin::User);
-        assert!(serde_json::from_value::<ReviewNote>(serde_json::json!({"id":A,"number":1,"text":"x","extra":1})).is_err());
+        assert!(
+            serde_json::from_value::<ReviewNote>(
+                serde_json::json!({"id":A,"number":1,"text":"x","extra":1})
+            )
+            .is_err()
+        );
     }
 }

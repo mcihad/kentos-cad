@@ -174,7 +174,10 @@ fn form<'a>(
     }
     // Where the result goes, chosen before the output's name (docs/adr/9354): the drawing, a GeoPackage or a database
     // (sink.rs, docs/adr/0592 §3); on the server the side column's Sonuç says it.
-    let selection_only = matches!(window.tool.id.as_str(), "selection.byExpression" | "selection.byLocation");
+    let selection_only = matches!(
+        window.tool.id.as_str(),
+        "selection.byExpression" | "selection.byLocation"
+    );
     if selection_only {
         out = out.push(label::caption("Bu işlem yalnız seçimi değiştirir; yeni katman oluşturmaz, çizim verisini değiştirmez."));
     }
@@ -250,7 +253,9 @@ fn layer_results(r: &super::data_location::LayerResults) -> Element<'_, Message>
         let on = r.shown.as_deref() == Some(l.layer.as_str());
         button(
             row![
-                icon(crate::icons::from_web(Some("table"))).size(14.0).tone(if on { Tone::Accent } else { Tone::Muted }),
+                icon(crate::icons::from_web(Some("table")))
+                    .size(14.0)
+                    .tone(if on { Tone::Accent } else { Tone::Muted }),
                 label::caption(l.label.clone()),
                 container(label::mono_caption(l.keys.len().to_string()))
                     .padding([0, 6])
@@ -272,9 +277,15 @@ fn layer_results(r: &super::data_location::LayerResults) -> Element<'_, Message>
             ]
             .spacing(6)
             .align_y(Center),
-            Row::with_children(chips).spacing(6).align_y(Center).wrap().vertical_spacing(6),
-            label::caption("Bir katmanı seçin: eşleşmeleri tabloda seçili gösterilir; işlem yeniden çalışmaz.")
-                .style(style::text::muted),
+            Row::with_children(chips)
+                .spacing(6)
+                .align_y(Center)
+                .wrap()
+                .vertical_spacing(6),
+            label::caption(
+                "Bir katmanı seçin: eşleşmeleri tabloda seçili gösterilir; işlem yeniden çalışmaz."
+            )
+            .style(style::text::muted),
         ]
         .spacing(8),
     )
@@ -458,8 +469,13 @@ fn field_row<'a>(
     env: &Env<'a, '_>,
 ) -> Element<'a, Message> {
     // An output layer while the result goes to a file or a database is the table's name there (docs/adr/9354).
-    let to_table = matches!(def.kind, ParamKind::Layer { .. }) && window.sink.place != super::sink::Place::Drawing;
-    let title = if to_table { "Tablo adı".to_owned() } else { def.label.clone() };
+    let to_table = matches!(def.kind, ParamKind::Layer { .. })
+        && window.sink.place != super::sink::Place::Drawing;
+    let title = if to_table {
+        "Tablo adı".to_owned()
+    } else {
+        def.label.clone()
+    };
     let mut heading = Row::new()
         .spacing(8)
         .align_y(Alignment::End)
@@ -469,8 +485,15 @@ fn field_row<'a>(
     }
     let mut text = Column::new().spacing(2).push(heading);
     if to_table {
-        let place = if window.sink.place == super::sink::Place::File { "GeoPackage'da" } else { "Veritabanında" };
-        text = text.push(label::caption(format!("{place} bu adla tablo yazılır; çizim değişmez.")).style(style::text::muted));
+        let place = if window.sink.place == super::sink::Place::File {
+            "GeoPackage'da"
+        } else {
+            "Veritabanında"
+        };
+        text = text.push(
+            label::caption(format!("{place} bu adla tablo yazılır; çizim değişmez."))
+                .style(style::text::muted),
+        );
     } else if let Some(d) = &def.description {
         text = text.push(label::caption(d.clone()).style(style::text::muted));
     }
@@ -582,11 +605,16 @@ fn side<'a>(
             out = out.push(label::body(paragraph.to_owned()).style(style::text::muted));
         }
     }
-    if matches!(tool.id.as_str(), "selection.byExpression" | "selection.byLocation") {
-        out = out.push(button(label::body("Seçim tarifini model olarak kaydet…"))
-            .padding(kentos_ui::theme::metrics::action())
-            .style(style::button::secondary)
-            .on_press(ev(Event::SelectionRecipe)));
+    if matches!(
+        tool.id.as_str(),
+        "selection.byExpression" | "selection.byLocation"
+    ) {
+        out = out.push(
+            button(label::body("Seçim tarifini model olarak kaydet…"))
+                .padding(kentos_ui::theme::metrics::action())
+                .style(style::button::secondary)
+                .on_press(ev(Event::SelectionRecipe)),
+        );
     }
     if let Some(model) = model {
         let lookup = |id: &str| registry.tool(id);

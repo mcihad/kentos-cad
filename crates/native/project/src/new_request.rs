@@ -338,7 +338,8 @@ mod tests {
     #[test]
     fn a_road_is_asked_by_its_work_and_starts_on_turkiyes_heights() {
         use kentos_contracts::{CadWork, HeightKind};
-        let road = made(json!({ "workspace": "cad", "cadWork": "road", "province": 58 })).expect("a road");
+        let road =
+            made(json!({ "workspace": "cad", "cadWork": "road", "province": 58 })).expect("a road");
         assert_eq!(
             (road.cad_work, road.srid, road.plot_scale),
             (Some(CadWork::Road), 5256, 1000.0)
@@ -346,12 +347,21 @@ mod tests {
         let drawing = crate::new_project::new_project(&road).expect("a drawing");
         let heights = drawing.settings.heights.expect("its heights");
         assert_eq!(
-            (heights.kind, heights.vertical_srid, heights.geoid.map(|g| g.name)),
-            (HeightKind::Orthometric, Some(5775), Some("TG-20".to_owned()))
+            (
+                heights.kind,
+                heights.vertical_srid,
+                heights.geoid.map(|g| g.name)
+            ),
+            (
+                HeightKind::Orthometric,
+                Some(5775),
+                Some("TG-20".to_owned())
+            )
         );
         assert_eq!(drawing.settings.cad_work, Some(CadWork::Road));
         // A map asked by its work is what its coordinates already said; a building keeps no heights.
-        let map = made(json!({ "workspace": "cad", "cadWork": "map", "srid": 5254 })).expect("a map");
+        let map =
+            made(json!({ "workspace": "cad", "cadWork": "map", "srid": 5254 })).expect("a map");
         assert_eq!((map.cad_work, map.heights), (Some(CadWork::Map), None));
         let refused = |input: Value| made(input).expect_err("refused").message;
         assert!(refused(json!({ "workspace": "cad", "cadWork": "road" })).contains("srid gerekli"));
@@ -359,7 +369,9 @@ mod tests {
             refused(json!({ "workspace": "cad", "cadWork": "road", "coords": "local" }))
                 .contains("koordinat sistemlidir")
         );
-        assert!(refused(json!({ "cadWork": "road", "srid": 5256 })).contains("yalnız CAD projesinde"));
+        assert!(
+            refused(json!({ "cadWork": "road", "srid": 5256 })).contains("yalnız CAD projesinde")
+        );
         assert!(refused(json!({ "workspace": "cad", "cadWork": "yol" })).contains("cadWork"));
     }
 

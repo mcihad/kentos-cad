@@ -34,8 +34,11 @@ fn with_forms(tag: &str, view: &str, read_only: bool) -> (App, String, String) {
     let mut app = app_with_drawing();
     let mut parents = crate::data_layers::describe(&address, "mahalleler").expect("described");
     parents.data.read_only = read_only;
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "bakim").expect("described"), parents])
-        .expect("added");
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "bakim").expect("described"),
+        parents,
+    ])
+    .expect("added");
     let parent = node(&app, "mahalleler").expect("mahalleler").id.clone();
     let child = node(&app, "bakim").expect("bakim").id.clone();
     let body = serde_json::json!({ "revision": 1, "items": [
@@ -63,9 +66,15 @@ fn with_forms(tag: &str, view: &str, read_only: bool) -> (App, String, String) {
     );
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.model.settings().clone();
-    settings.forms.push(serde_json::from_value(form).expect("a form"));
-    settings.forms.push(serde_json::from_value(works).expect("the works' form"));
-    settings.relations.push(serde_json::from_value(relation).expect("a relation"));
+    settings
+        .forms
+        .push(serde_json::from_value(form).expect("a form"));
+    settings
+        .forms
+        .push(serde_json::from_value(works).expect("the works' form"));
+    settings
+        .relations
+        .push(serde_json::from_value(relation).expect("a relation"));
     doc.model.set_settings(settings);
     (app, parent, child)
 }
@@ -99,8 +108,16 @@ fn a_work_taken_into_the_drawing_is_listed_once_as_edited_and_the_tables_cells_a
     // B01 taken into the drawing and its bedel changed there.
     let layer = node(&app, "bakim").expect("bakim").clone();
     let _ = app.data_edits_event(crate::data_edits::Event::Start(child.clone()));
-    let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
-    let rows = kentos_native_application::data_write::rows_to_take(&layer, &settings, &[1], &|| false).expect("read");
+    let settings = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .clone();
+    let rows =
+        kentos_native_application::data_write::rows_to_take(&layer, &settings, &[1], &|| false)
+            .expect("read");
     let doc = app.document.as_mut().expect("a drawing");
     let uid = doc.model.take_data_rows(&child, rows).expect("taken")[0].expect("B01");
     let slot = doc.model.slot_of(uid).expect("its object");
@@ -109,13 +126,24 @@ fn a_work_taken_into_the_drawing_is_listed_once_as_edited_and_the_tables_cells_a
     assert!(doc.model.update(slot, e));
     let works = works_of(&mut app, &parent, 1);
     assert_eq!(works.len(), 2, "{works:?}");
-    assert!(works.contains(&uid.to_string()), "the taken one as the drawing's object: {works:?}");
-    assert!(works.contains(&"kaynak:2".to_owned()), "the other from its source: {works:?}");
-    assert!(!works.contains(&"kaynak:1".to_owned()), "not twice: {works:?}");
+    assert!(
+        works.contains(&uid.to_string()),
+        "the taken one as the drawing's object: {works:?}"
+    );
+    assert!(
+        works.contains(&"kaynak:2".to_owned()),
+        "the other from its source: {works:?}"
+    );
+    assert!(
+        !works.contains(&"kaynak:1".to_owned()),
+        "not twice: {works:?}"
+    );
     // The table's cells: the taken one's as edited, the other's as its source holds it.
     let e = app.gis.form_entry.as_ref().expect("the form");
     let d = app.document.as_ref().expect("a drawing");
-    let bedel = |id: &str| super::entry::child_attrs_for_tests(d, e, &child, id).and_then(|a| a.get("bedel").cloned());
+    let bedel = |id: &str| {
+        super::entry::child_attrs_for_tests(d, e, &child, id).and_then(|a| a.get("bedel").cloned())
+    };
     assert_eq!(bedel(&uid.to_string()).as_deref(), Some("75"));
     assert_eq!(bedel("kaynak:2").as_deref(), Some("100"));
 }
@@ -150,7 +178,12 @@ fn open_taken(app: &mut App, parent: &str, key: i64) {
 }
 
 fn taken(app: &App, layer: &str) -> usize {
-    app.document.as_ref().expect("a drawing").model.taken_objects(layer).len()
+    app.document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .taken_objects(layer)
+        .len()
 }
 
 /// The report's set-up: the neighbourhoods read-only. B02 opens in the works' form over M1's, shown from its source;
@@ -160,9 +193,18 @@ fn a_work_read_from_its_source_opens_in_its_own_form_over_the_neighbourhoods() {
     let (mut app, parent, child) = with_form("form-kaynak-ac", "list");
     assert_eq!(works_of(&mut app, &parent, 1), ["kaynak:1", "kaynak:2"]);
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
-    assert_eq!(crate::files_testing::find_texts(&mut shot, &app, "Aç").len(), 2, "each work read from its source has Aç");
-    form_event(&mut app, Event::OpenRelated("bakimlar".into(), "kaynak:2".into()));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
+    assert_eq!(
+        crate::files_testing::find_texts(&mut shot, &app, "Aç").len(),
+        2,
+        "each work read from its source has Aç"
+    );
+    form_event(
+        &mut app,
+        Event::OpenRelated("bakimlar".into(), "kaynak:2".into()),
+    );
     let e = app.gis.form_entry.as_ref().expect("the work's form");
     assert_eq!(e.form_for_tests(), "bakim-formu");
     assert_eq!(e.row.as_ref().map(|(_, k)| *k), Some(2));
@@ -171,7 +213,9 @@ fn a_work_read_from_its_source_opens_in_its_own_form_over_the_neighbourhoods() {
     assert!(e.read_only);
     assert_eq!(
         e.read_why.as_deref(),
-        Some("Altta bekleyen “Mahalle formu” yalnız okumaya açık; ondan açılan bu kayıt da değiştirilmez.")
+        Some(
+            "Altta bekleyen “Mahalle formu” yalnız okumaya açık; ondan açılan bu kayıt da değiştirilmez."
+        )
     );
     assert_eq!(app.gis.form_stack.len(), 1, "M1's form waits under it");
     assert_eq!(taken(&app, &child), 0, "shown, not taken");
@@ -188,14 +232,27 @@ fn a_work_read_from_its_source_opens_in_its_own_form_over_the_neighbourhoods() {
 fn a_work_of_a_layer_not_being_edited_is_shown_and_its_form_says_how_to_change_it() {
     let (mut app, parent, child) = with_forms("form-kaynak-ac-okuma", "table", false);
     open_taken(&mut app, &parent, 1);
-    assert_eq!(app.gis.form_entry.as_ref().expect("M1's form").related_now("bakimlar"), ["kaynak:1", "kaynak:2"]);
-    form_event(&mut app, Event::OpenRelated("bakimlar".into(), "kaynak:1".into()));
+    assert_eq!(
+        app.gis
+            .form_entry
+            .as_ref()
+            .expect("M1's form")
+            .related_now("bakimlar"),
+        ["kaynak:1", "kaynak:2"]
+    );
+    form_event(
+        &mut app,
+        Event::OpenRelated("bakimlar".into(), "kaynak:1".into()),
+    );
     let e = app.gis.form_entry.as_ref().expect("the work's form");
     assert_eq!(e.row.as_ref().map(|(_, k)| *k), Some(1));
     assert!(e.read_only);
     let why = e.read_why.clone().unwrap_or_default();
     assert!(why.starts_with("“bakim” düzenlemeye açık değil"), "{why}");
-    assert!(why.contains("düzenleme oturumunu başlatıp kaydı listeden yeniden açın"), "{why}");
+    assert!(
+        why.contains("düzenleme oturumunu başlatıp kaydı listeden yeniden açın"),
+        "{why}"
+    );
     assert_eq!(taken(&app, &child), 0, "shown, not taken");
 }
 
@@ -206,17 +263,37 @@ fn a_work_of_a_layer_being_edited_is_taken_and_its_form_changes_it() {
     let (mut app, parent, child) = with_forms("form-kaynak-ac-yaz", "list", false);
     let _ = app.data_edits_event(crate::data_edits::Event::Start(child.clone()));
     open_taken(&mut app, &parent, 1);
-    form_event(&mut app, Event::OpenRelated("bakimlar".into(), "kaynak:2".into()));
-    let uid = app.document.as_ref().expect("a drawing").model.taken_uid(&child, 2).expect("B02 taken into the session");
+    form_event(
+        &mut app,
+        Event::OpenRelated("bakimlar".into(), "kaynak:2".into()),
+    );
+    let uid = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .taken_uid(&child, 2)
+        .expect("B02 taken into the session");
     let e = app.gis.form_entry.as_ref().expect("the work's form");
     assert_eq!(e.form_for_tests(), "bakim-formu");
-    assert!(!e.read_only && e.read_why.is_none(), "changed through its form");
+    assert!(
+        !e.read_only && e.read_why.is_none(),
+        "changed through its form"
+    );
     assert_eq!(e.shown_for_tests("kod").as_deref(), Some("B02"));
     assert_eq!(app.gis.form_stack.len(), 1, "M1's form waits under it");
     form_event(&mut app, Event::Cancel);
-    let works = app.gis.form_entry.as_ref().expect("M1's form comes back").related_now("bakimlar");
+    let works = app
+        .gis
+        .form_entry
+        .as_ref()
+        .expect("M1's form comes back")
+        .related_now("bakimlar");
     assert_eq!(works.len(), 2, "{works:?}");
-    assert!(works.contains(&uid.to_string()) && !works.contains(&"kaynak:2".to_owned()), "once, as taken: {works:?}");
+    assert!(
+        works.contains(&uid.to_string()) && !works.contains(&"kaynak:2".to_owned()),
+        "once, as taken: {works:?}"
+    );
 }
 
 /// The pictures (`.run/gui-evidence/kullanim-9176/`): M1's form listing its two works with Aç, and B02's form opened
@@ -235,7 +312,10 @@ fn open_screens() {
         let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let (mut app, parent, _) = with_form(&format!("form-kaynak-ac-resim-{n}"), "table");
         let _ = works_of(&mut app, &parent, 1);
-        form_event(&mut app, Event::OpenRelated("bakimlar".into(), "kaynak:2".into()));
+        form_event(
+            &mut app,
+            Event::OpenRelated("bakimlar".into(), "kaynak:2".into()),
+        );
         app
     });
 }

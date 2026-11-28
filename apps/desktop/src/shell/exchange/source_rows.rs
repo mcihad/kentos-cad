@@ -22,7 +22,10 @@ pub(crate) enum Rows {
     /// Being read.
     Reading,
     /// Read: the source's rows the drawing does not hold, and which of them the layer's filter lets through (none: all).
-    Ready { rows: Arc<Vec<Entity>>, shown: Option<Arc<Vec<usize>>> },
+    Ready {
+        rows: Arc<Vec<Entity>>,
+        shown: Option<Arc<Vec<usize>>>,
+    },
     /// The source could not be read: why.
     Failed(String),
 }
@@ -48,13 +51,20 @@ impl SourceScopes {
     /// The scope's source rows by layer, borrowed: each data layer in it that has rows.
     pub(crate) fn rows(&self, scope: Scope) -> Vec<&Entity> {
         match scope {
-            Scope::Selection => self.chosen.iter().flat_map(|(_, rows)| rows.iter().flatten()).collect(),
+            Scope::Selection => self
+                .chosen
+                .iter()
+                .flat_map(|(_, rows)| rows.iter().flatten())
+                .collect(),
             Scope::Visible => self
                 .layers
                 .iter()
                 .filter(|l| l.visible)
                 .flat_map(|l| match &l.rows {
-                    Rows::Ready { rows, shown: Some(shown) } => shown.iter().filter_map(|&i| rows.get(i)).collect(),
+                    Rows::Ready {
+                        rows,
+                        shown: Some(shown),
+                    } => shown.iter().filter_map(|&i| rows.get(i)).collect(),
                     Rows::Ready { rows, shown: None } => rows.iter().collect(),
                     _ => Vec::new(),
                 })
@@ -107,21 +117,33 @@ impl SourceScopes {
 
     /// How many of a data layer's rows its filter keeps, of how many (none: no filter, or not read).
     pub(crate) fn filtered(&self, layer: &str) -> Option<(usize, usize)> {
-        self.layers.iter().find(|l| l.id == layer).and_then(|l| match &l.rows {
-            Rows::Ready { rows, shown: Some(shown) } => Some((shown.len(), rows.len())),
-            _ => None,
-        })
+        self.layers
+            .iter()
+            .find(|l| l.id == layer)
+            .and_then(|l| match &l.rows {
+                Rows::Ready {
+                    rows,
+                    shown: Some(shown),
+                } => Some((shown.len(), rows.len())),
+                _ => None,
+            })
     }
 
     fn in_scope(&self, scope: Scope) -> impl Iterator<Item = &SourceLayer> {
-        self.layers.iter().filter(move |l| scope == Scope::All || l.visible)
+        self.layers
+            .iter()
+            .filter(move |l| scope == Scope::All || l.visible)
     }
 }
 
 impl App {
     /// A scope's objects for an export window: the drawing's and the data layers' rows (docs/adr/9338). Görünen
     /// katmanlar is what the map draws: the visible layers' objects their filters let through.
-    pub(crate) fn export_objects<'a>(&'a self, sources: &'a SourceScopes, scope: Scope) -> Vec<&'a Entity> {
+    pub(crate) fn export_objects<'a>(
+        &'a self,
+        sources: &'a SourceScopes,
+        scope: Scope,
+    ) -> Vec<&'a Entity> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
@@ -141,7 +163,11 @@ impl App {
     }
 
     /// The scope's objects by layer, in the tree's order.
-    pub(crate) fn export_by_layer<'a>(&'a self, sources: &'a SourceScopes, scope: Scope) -> Vec<(String, Vec<&'a Entity>)> {
+    pub(crate) fn export_by_layer<'a>(
+        &'a self,
+        sources: &'a SourceScopes,
+        scope: Scope,
+    ) -> Vec<(String, Vec<&'a Entity>)> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
@@ -166,27 +192,52 @@ impl App {
                     Some(Err(why)) => Rows::Failed(why),
                     Some(Ok(read)) => {
                         let held = doc.model.data_hidden(&node.id);
-                        let rows: Vec<Entity> =
-                            read.iter().filter(|(k, _)| !held.contains(k)).map(|(_, e)| e.clone()).collect();
+                        let rows: Vec<Entity> = read
+                            .iter()
+                            .filter(|(k, _)| !held.contains(k))
+                            .map(|(_, e)| e.clone())
+                            .collect();
                         let shown = node.filter.as_ref().and_then(|f| {
-                            let compiled = kentos_native_application::layer_filter::compile_filter(f, unit).ok()?;
+                            let compiled =
+                                kentos_native_application::layer_filter::compile_filter(f, unit)
+                                    .ok()?;
                             let list: Vec<&Entity> = rows.iter().collect();
                             let shapes: Vec<_> = if compiled.reads_geometry() {
-                                rows.iter().map(kentos_native_application::geometry::shape).collect()
+                                rows.iter()
+                                    .map(kentos_native_application::geometry::shape)
+                                    .collect()
                             } else {
                                 Vec::new()
                             };
-                            let name = |id: &str| tree.get(id).map_or_else(String::new, |l| l.name.clone());
+                            let name = |id: &str| {
+                                tree.get(id).map_or_else(String::new, |l| l.name.clone())
+                            };
                             let met = compiled.condition(&list, &name, |i| shapes.get(i));
-                            Some(Arc::new(met.iter().enumerate().filter(|(_, m)| **m).map(|(i, _)| i).collect()))
+                            Some(Arc::new(
+                                met.iter()
+                                    .enumerate()
+                                    .filter(|(_, m)| **m)
+                                    .map(|(i, _)| i)
+                                    .collect(),
+                            ))
                         });
-                        Rows::Ready { rows: Arc::new(rows), shown }
+                        Rows::Ready {
+                            rows: Arc::new(rows),
+                            shown,
+                        }
                     }
                 };
-                SourceLayer { id: node.id.clone(), visible: tree.is_visible(&node.id), rows }
+                SourceLayer {
+                    id: node.id.clone(),
+                    visible: tree.is_visible(&node.id),
+                    rows,
+                }
             })
             .collect();
-        SourceScopes { layers, chosen: self.chosen_source_rows() }
+        SourceScopes {
+            layers,
+            chosen: self.chosen_source_rows(),
+        }
     }
 
     /// A source's rows came, or the table's chosen rows were read: an open export window gathers its scopes again.
@@ -223,7 +274,11 @@ impl App {
         }
         if !matches!(
             self.exchange,
-            Some(super::Window::GeoJsonExport(_) | super::Window::Package(_) | super::Window::Wgs84Export(_))
+            Some(
+                super::Window::GeoJsonExport(_)
+                    | super::Window::Package(_)
+                    | super::Window::Wgs84Export(_)
+            )
         ) {
             return;
         }

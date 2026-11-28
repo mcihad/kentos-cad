@@ -425,25 +425,25 @@ impl App {
             .into(),
             Some(r) => self.relation_editor(r, &layers),
         };
-        let mut body = column![
-            row![container(left).width(240), container(right).width(Fill)].spacing(16),
-        ]
-        .spacing(14);
+        let mut body =
+            column![row![container(left).width(240), container(right).width(Fill)].spacing(16),]
+                .spacing(14);
         // What Kaydet's removals touch, before they are written (docs/adr/9153).
         for line in self.relation_removals(w) {
             body = body.push(words::text_line(Kind::Warn, line));
         }
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
         let footer = row![
-                words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
-                space::horizontal().width(Fill),
-                words::secondary(CANCEL, Some(msg(Event::Cancel))),
-                words::primary(SAVE, Some(msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(Center);
+            words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
+            space::horizontal().width(Fill),
+            words::secondary(CANCEL, Some(msg(Event::Cancel))),
+            words::primary(SAVE, Some(msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(Center);
         Frame::new(TITLE)
-            .scroll(body).footer(footer)
+            .scroll(body)
+            .footer(footer)
             .width(720.0)
             .modal(msg(Event::Cancel))
     }
@@ -514,12 +514,17 @@ impl App {
         let parents = self.layer_fields_of(&r.parent);
         let parent_keys: Vec<String> = parents.iter().map(|f| f.key().to_owned()).collect();
         let parent_key = Select::new(
-            std::iter::once(Choice::new(UID_CHOICE)).chain(parents.iter().map(|f| Choice::new(f.label().to_owned()))),
+            std::iter::once(Choice::new(UID_CHOICE))
+                .chain(parents.iter().map(|f| Choice::new(f.label().to_owned()))),
             match &r.parent_key {
                 None => Some(0),
                 Some(k) => parent_keys.iter().position(|p| p == k).map(|i| i + 1),
             },
-            move |i| msg(Event::ParentKey(i.checked_sub(1).and_then(|i| parent_keys.get(i).cloned()))),
+            move |i| {
+                msg(Event::ParentKey(
+                    i.checked_sub(1).and_then(|i| parent_keys.get(i).cloned()),
+                ))
+            },
         );
         let at = POLICIES.iter().position(|(p, _, _)| *p == r.on_delete);
         let policy = Select::new(POLICIES.iter().map(|(_, w, _)| Choice::new(*w)), at, |i| {
@@ -541,7 +546,11 @@ impl App {
                 pick(&r.child, Event::Child),
                 None,
             ))
-            .push(words::field("Üst anahtar", parent_key, Some(PARENT_KEY_HINT.to_owned())))
+            .push(words::field(
+                "Üst anahtar",
+                parent_key,
+                Some(PARENT_KEY_HINT.to_owned()),
+            ))
             .push(words::field("Alan", field, None));
         if fields.is_empty() {
             col = col.push(words::text_line(

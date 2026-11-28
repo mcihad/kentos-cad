@@ -94,7 +94,10 @@ mod tests {
     #[test]
     fn the_stroke_quad_reaches_its_margin_past_its_smoothing() {
         let native = source();
-        assert!(native.contains("let quad = halfW + 0.5 * blur + strokeMargin;"), "the corners' patch applies");
+        assert!(
+            native.contains("let quad = halfW + 0.5 * blur + strokeMargin;"),
+            "the corners' patch applies"
+        );
         assert!(native.contains("override strokeMargin: f32 = 0.75;"));
         assert!(!native.contains("let along = mix(-ext, len + ext, c.x);"));
         assert!(native.contains("fn strokeVsStrip("));

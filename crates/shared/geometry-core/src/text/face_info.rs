@@ -39,7 +39,8 @@ pub fn is_collection(bytes: &[u8]) -> bool {
 
 fn face(bytes: &[u8], index: u32) -> Option<FaceInfo> {
     let face = Face::parse(bytes, index).ok()?;
-    let family = name(&face, name_id::TYPOGRAPHIC_FAMILY).or_else(|| name(&face, name_id::FAMILY))?;
+    let family =
+        name(&face, name_id::TYPOGRAPHIC_FAMILY).or_else(|| name(&face, name_id::FAMILY))?;
     let style = name(&face, name_id::TYPOGRAPHIC_SUBFAMILY)
         .or_else(|| name(&face, name_id::SUBFAMILY))
         .unwrap_or_default();
@@ -57,8 +58,14 @@ fn face(bytes: &[u8], index: u32) -> Option<FaceInfo> {
 
 /// The face's name `id` in Unicode, American English first, trimmed; none when it has none.
 fn name(face: &Face<'_>, id: u16) -> Option<String> {
-    let names: Vec<_> = face.names().into_iter().filter(|n| n.name_id == id && n.is_unicode()).collect();
-    let english = names.iter().find(|n| n.language() == ttf_parser::Language::English_UnitedStates);
+    let names: Vec<_> = face
+        .names()
+        .into_iter()
+        .filter(|n| n.name_id == id && n.is_unicode())
+        .collect();
+    let english = names
+        .iter()
+        .find(|n| n.language() == ttf_parser::Language::English_UnitedStates);
     english
         .into_iter()
         .chain(names.iter())
@@ -77,11 +84,17 @@ mod tests {
         let barlow = describe(DRAWING_FACES[6]);
         assert_eq!(barlow.len(), 1);
         assert_eq!(barlow[0].family, "Barlow");
-        assert_eq!((barlow[0].weight, barlow[0].italic, barlow[0].turkish), (400, false, true));
+        assert_eq!(
+            (barlow[0].weight, barlow[0].italic, barlow[0].turkish),
+            (400, false, true)
+        );
         let italic = describe(DRAWING_FACES[5]);
         assert!(italic[0].italic);
         let serif = describe(ADDED_FACES[5]);
-        assert_eq!((serif[0].family.as_str(), serif[0].weight), ("Liberation Serif", 700));
+        assert_eq!(
+            (serif[0].family.as_str(), serif[0].weight),
+            ("Liberation Serif", 700)
+        );
         let math = describe(FALLBACK_FACES[6]);
         assert_eq!(math[0].family, "Noto Sans Math");
         assert!(!is_collection(DRAWING_FACES[6]));

@@ -32,7 +32,12 @@ const DICTIONARY: &str = "15";
 pub fn entries(styles: &[TableStyleDef], names: &StyleNames) -> Vec<(String, String)> {
     styles
         .iter()
-        .filter_map(|s| Some((super::layers::valid_name(&s.name), format!("{:X}", names.table_handle(&s.id)?))))
+        .filter_map(|s| {
+            Some((
+                super::layers::valid_name(&s.name),
+                format!("{:X}", names.table_handle(&s.id)?),
+            ))
+        })
         .collect()
 }
 
@@ -42,7 +47,10 @@ fn colour(c: Option<&str>) -> (i64, bool) {
         None => (BY_BLOCK, false),
         Some(c) => {
             let (dxf, _) = aci::from_app(c);
-            (i64::from(dxf.aci), aci::color(dxf.aci).to_lowercase() != c.to_lowercase())
+            (
+                i64::from(dxf.aci),
+                aci::color(dxf.aci).to_lowercase() != c.to_lowercase(),
+            )
         }
     }
 }
@@ -71,7 +79,9 @@ pub fn write(
     // Paper mm in drawing units at the plot scale.
     let length = |mm: f64| mm / 1000.0 * paper;
     for s in styles {
-        let Some(handle) = names.table_handle(&s.id) else { continue };
+        let Some(handle) = names.table_handle(&s.id) else {
+            continue;
+        };
         let mut lost: Vec<&str> = Vec::new();
         out.str(0, "TABLESTYLE");
         out.handle(5, handle);
@@ -87,8 +97,14 @@ pub fn write(
         // One margin pair for the table: the data cells', else the title's, else the heading's.
         let cells = [&s.data, &s.title, &s.header];
         let margin = |f: fn(&TableCellStyleDef) -> Option<f64>| {
-            let given: Vec<f64> = cells.iter().filter_map(|c| c.as_ref().and_then(f)).collect();
-            (given.first().copied(), given.windows(2).any(|w| w[0] != w[1]))
+            let given: Vec<f64> = cells
+                .iter()
+                .filter_map(|c| c.as_ref().and_then(f))
+                .collect();
+            (
+                given.first().copied(),
+                given.windows(2).any(|w| w[0] != w[1]),
+            )
         };
         let (h, h_differ) = margin(|c| c.horizontal_margin);
         let (v, v_differ) = margin(|c| c.vertical_margin);
@@ -147,12 +163,19 @@ pub fn write(
                 lost.push("kenar kalınlığı DXF'in en yakın çizgi kalınlığı olarak yazıldı");
             }
         }
-        let meta = xdata::Meta { table_style: serde_json::to_string(s).ok(), ..Default::default() };
+        let meta = xdata::Meta {
+            table_style: serde_json::to_string(s).ok(),
+            ..Default::default()
+        };
         out.xdata(&xdata::groups(&meta));
         lost.sort_unstable();
         lost.dedup();
         for why in lost {
-            report.note("Tablo stili", &format!("“{}”: {why}; KentOS verisi stili tam taşır", s.name), 0);
+            report.note(
+                "Tablo stili",
+                &format!("“{}”: {why}; KentOS verisi stili tam taşır", s.name),
+                0,
+            );
         }
     }
 }

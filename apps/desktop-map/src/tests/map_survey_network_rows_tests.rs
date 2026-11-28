@@ -4,8 +4,8 @@
 //! reason turns the adjustment out of date and Geri al takes it back; a known point leaves and comes back the same way;
 //! the adjustment's button opens Ağ dengelemesi. And the pictures.
 
-use crate::map_ext::*;
 use crate::map;
+use crate::map_ext::*;
 use kentos_launch::Module;
 use kentos_ui::widget::Status;
 use serde_json::Value;
@@ -16,9 +16,12 @@ use crate::map_survey_panel::Event as P;
 use crate::survey_network_window::{Class, Event as N};
 
 fn opened() -> App {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.survey.network.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.survey.network.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -30,7 +33,9 @@ fn opened() -> App {
 fn accepted() -> App {
     let mut app = opened();
     let _ = app.update(Message::Run("map.survey.adjustment"));
-    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Class(Class::C2))));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Class(
+        Class::C2,
+    ))));
     let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Accept)));
     app.dialog = None;
     app
@@ -41,14 +46,19 @@ fn send(app: &mut App, e: P) {
 }
 
 fn tree(app: &App) -> kentos_commands::MapSurveyTree {
-    app.map_survey_read().expect("a drawing").expect("a map project")
+    app.map_survey_read()
+        .expect("a drawing")
+        .expect("a map project")
 }
 
 #[test]
 fn the_accepted_adjustment_selects_its_points_and_goes_out_of_date_with_a_baseline() {
     let mut app = accepted();
     let t = tree(&app);
-    assert_eq!((t.baselines.len(), t.known.len(), t.adjustments.len()), (8, 2, 1));
+    assert_eq!(
+        (t.baselines.len(), t.known.len(), t.adjustments.len()),
+        (8, 2, 1)
+    );
     let a = &t.adjustments[0];
     let (tone, words, out) = adjustment_state(&t, a);
     assert_eq!((tone, words, out.len()), (Status::Info, "Kabul edildi", 0));
@@ -59,13 +69,29 @@ fn the_accepted_adjustment_selects_its_points_and_goes_out_of_date_with_a_baseli
     assert_eq!(app.selection.len(), 3);
     // A baseline left out without a reason is not; with one it is, and the adjustment is out of date.
     send(&mut app, P::Exclude("bz-8".into()));
-    assert!(tree(&app).baselines.iter().find(|b| b.id == "bz-8").is_some_and(|b| b.excluded.is_none()));
+    assert!(
+        tree(&app)
+            .baselines
+            .iter()
+            .find(|b| b.id == "bz-8")
+            .is_some_and(|b| b.excluded.is_none())
+    );
     send(&mut app, P::Text("Çok bağlantılı, şüpheli".into()));
     send(&mut app, P::Exclude("bz-8".into()));
     let t = tree(&app);
-    assert_eq!(t.baselines.iter().find(|b| b.id == "bz-8").and_then(|b| b.excluded.clone()).as_deref(), Some("Çok bağlantılı, şüpheli"));
+    assert_eq!(
+        t.baselines
+            .iter()
+            .find(|b| b.id == "bz-8")
+            .and_then(|b| b.excluded.clone())
+            .as_deref(),
+        Some("Çok bağlantılı, şüpheli")
+    );
     let (tone, words, out) = adjustment_state(&t, &t.adjustments[0]);
-    assert_eq!((tone, words, out), (Status::Warning, "Güncel değil", vec!["bz-8"]));
+    assert_eq!(
+        (tone, words, out),
+        (Status::Warning, "Güncel değil", vec!["bz-8"])
+    );
     // Geri al: accepted again.
     send(&mut app, P::Include("bz-8".into()));
     let t = tree(&app);
@@ -75,8 +101,16 @@ fn the_accepted_adjustment_selects_its_points_and_goes_out_of_date_with_a_baseli
     send(&mut app, P::Text("Röper bozulmuş".into()));
     send(&mut app, P::Exclude(known.clone()));
     let t = tree(&app);
-    assert!(t.known.iter().find(|k| k.id == known).is_some_and(|k| k.excluded.is_some()));
-    assert_eq!(adjustment_state(&t, &t.adjustments[0]).2, vec![known.as_str()]);
+    assert!(
+        t.known
+            .iter()
+            .find(|k| k.id == known)
+            .is_some_and(|k| k.excluded.is_some())
+    );
+    assert_eq!(
+        adjustment_state(&t, &t.adjustments[0]).2,
+        vec![known.as_str()]
+    );
     send(&mut app, P::Include(known.clone()));
     assert!(tree(&app).known.iter().all(|k| k.excluded.is_none()));
     // The adjustment's button opens Ağ dengelemesi.
@@ -98,16 +132,28 @@ fn the_accepted_adjustment_selects_its_points_and_goes_out_of_date_with_a_baseli
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/arsivde-bazlar-2920");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/arsivde-bazlar-2920");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = accepted();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         app.show_map_survey();
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::MapSurvey));
-        app.docks.update(kentos_ui::widget::docking::Event::Shared(kentos_ui::widget::docking::Side::Right, vec![0.72, 0.28]));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(
+                Panel::MapSurvey,
+            ));
+        app.docks.update(kentos_ui::widget::docking::Event::Shared(
+            kentos_ui::widget::docking::Side::Right,
+            vec![0.72, 0.28],
+        ));
         send(&mut app, P::Text("Çok bağlantılı, şüpheli".into()));
         send(&mut app, P::Exclude("bz-8".into()));
         // The campaigns', the marks' and the uses' branches folded, the baselines' opened: the network's rows in sight.
@@ -120,7 +166,10 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("arsiv-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -135,16 +184,42 @@ fn a_baseline_s_row_draws_it_between_its_ends() {
     let t = tree(&app);
     let accepted_end = |m: &str| !crate::map_survey_network_rows::objects_of(&t, &[m]).is_empty();
     // A baseline from a known point without an accepted point of its own: drawn from the known point's own place.
-    let lone = t.baselines.iter().find(|b| !(accepted_end(&b.from) && accepted_end(&b.to))).cloned().expect("one");
-    let known_end = if accepted_end(&lone.from) { lone.to.clone() } else { lone.from.clone() };
-    let own = t.known_places.iter().find(|p| p.mark == known_end).expect("its known point's place");
+    let lone = t
+        .baselines
+        .iter()
+        .find(|b| !(accepted_end(&b.from) && accepted_end(&b.to)))
+        .cloned()
+        .expect("one");
+    let known_end = if accepted_end(&lone.from) {
+        lone.to.clone()
+    } else {
+        lone.from.clone()
+    };
+    let own = t
+        .known_places
+        .iter()
+        .find(|p| p.mark == known_end)
+        .expect("its known point's place");
     send(&mut app, P::Baseline(lone.id.clone()));
     let marks = app.baseline_marks().expect("drawn");
     let line = &marks.lines[0];
-    let (at, flag) = if lone.from == known_end { (line.from, line.known.clone()) } else { (line.to, line.known.clone()) };
+    let (at, flag) = if lone.from == known_end {
+        (line.from, line.known.clone())
+    } else {
+        (line.to, line.known.clone())
+    };
     assert_eq!(at, [own.x.expect("placed"), own.y.expect("placed")]);
-    assert_eq!(flag.iter().flatten().collect::<Vec<_>>(), [&known_end], "one end at the known point's place, named");
-    let said = app.log.lines().last().map(|l| l.text.clone()).unwrap_or_default();
+    assert_eq!(
+        flag.iter().flatten().collect::<Vec<_>>(),
+        [&known_end],
+        "one end at the known point's place, named"
+    );
+    let said = app
+        .log
+        .lines()
+        .last()
+        .map(|l| l.text.clone())
+        .unwrap_or_default();
     assert_eq!(
         said,
         format!(
@@ -153,27 +228,55 @@ fn a_baseline_s_row_draws_it_between_its_ends() {
         )
     );
     // Its known point left out: not drawn, and the window says why.
-    let k = t.known.iter().find(|k| k.mark == known_end).expect("known").id.clone();
+    let k = t
+        .known
+        .iter()
+        .find(|k| k.mark == known_end)
+        .expect("known")
+        .id
+        .clone();
     send(&mut app, P::Text("Röper bozulmuş".into()));
     send(&mut app, P::Exclude(k.clone()));
     send(&mut app, P::Baseline(lone.id.clone()));
     assert!(app.baseline_marks().is_none());
-    let said = app.log.lines().last().map(|l| l.text.clone()).unwrap_or_default();
-    assert!(said.starts_with(&format!("{} çizilemedi", lone.id)), "{said}");
+    let said = app
+        .log
+        .lines()
+        .last()
+        .map(|l| l.text.clone())
+        .unwrap_or_default();
+    assert!(
+        said.starts_with(&format!("{} çizilemedi", lone.id)),
+        "{said}"
+    );
     send(&mut app, P::Include(k));
     let t = tree(&app);
     // One between two accepted points is.
-    let b = t.baselines.iter().find(|b| accepted_end(&b.from) && accepted_end(&b.to)).cloned().expect("one");
+    let b = t
+        .baselines
+        .iter()
+        .find(|b| accepted_end(&b.from) && accepted_end(&b.to))
+        .cloned()
+        .expect("one");
     send(&mut app, P::Baseline(b.id.clone()));
     assert_eq!(app.selection.len(), 2, "its two ends selected");
     let marks = app.baseline_marks().expect("drawn");
     let mark = &marks.lines[0];
-    assert_eq!((marks.lines.len(), mark.words.clone()), (1, format!("{} · {:.3} m", b.id, b.length)));
+    assert_eq!(
+        (marks.lines.len(), mark.words.clone()),
+        (1, format!("{} · {:.3} m", b.id, b.length))
+    );
     // The ends are the accepted points' objects where the drawing holds them.
     let place = |mark_name: &str| {
-        let uid = crate::map_survey_network_rows::objects_of(&t, &[mark_name]).into_iter().next().expect("accepted");
+        let uid = crate::map_survey_network_rows::objects_of(&t, &[mark_name])
+            .into_iter()
+            .next()
+            .expect("accepted");
         let doc = app.document.as_ref().expect("open");
-        let slot = doc.model.slot_of(kentos_domain::Uuid::parse_str(&uid).expect("a uid")).expect("drawn");
+        let slot = doc
+            .model
+            .slot_of(kentos_domain::Uuid::parse_str(&uid).expect("a uid"))
+            .expect("drawn");
         match doc.model.get(slot) {
             Some(kentos_commands::Entity::Point(p)) => [p.p.x, p.p.y],
             _ => panic!("a point"),
@@ -195,23 +298,42 @@ fn a_baseline_s_row_draws_it_between_its_ends() {
 fn baseline_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/baz-haritada-3320");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/baz-haritada-3320");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = accepted();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         app.show_map_survey();
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::MapSurvey));
-        app.docks.update(kentos_ui::widget::docking::Event::Shared(kentos_ui::widget::docking::Side::Right, vec![0.72, 0.28]));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(
+                Panel::MapSurvey,
+            ));
+        app.docks.update(kentos_ui::widget::docking::Event::Shared(
+            kentos_ui::widget::docking::Side::Right,
+            vec![0.72, 0.28],
+        ));
         for key in ["campaigns", "marks", "uses", "baselines"] {
             send(&mut app, P::Fold(key.into()));
         }
         let _ = app.update(Message::Run("view.zoomExtents"));
         let t = tree(&app);
-        let accepted_end = |m: &str| !crate::map_survey_network_rows::objects_of(&t, &[m]).is_empty();
-        let b = t.baselines.iter().find(|b| accepted_end(&b.from) && accepted_end(&b.to)).expect("one").id.clone();
+        let accepted_end =
+            |m: &str| !crate::map_survey_network_rows::objects_of(&t, &[m]).is_empty();
+        let b = t
+            .baselines
+            .iter()
+            .find(|b| accepted_end(&b.from) && accepted_end(&b.to))
+            .expect("one")
+            .id
+            .clone();
         send(&mut app, P::Baseline(b));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -220,7 +342,10 @@ fn baseline_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("baz-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -234,15 +359,29 @@ fn ağı_göster_draws_every_baseline_at_once() {
     let mut app = accepted();
     // BN2 left out: its baselines have an end with neither an accepted point nor a known point's place.
     send(&mut app, P::Text("Röper bozulmuş".into()));
-    let bn2 = tree(&app).known.iter().find(|k| k.mark == "BN2").expect("BN2").id.clone();
+    let bn2 = tree(&app)
+        .known
+        .iter()
+        .find(|k| k.mark == "BN2")
+        .expect("BN2")
+        .id
+        .clone();
     send(&mut app, P::Exclude(bn2));
     let t = tree(&app);
     let accepted_end = |m: &str| !crate::map_survey_network_rows::objects_of(&t, &[m]).is_empty();
     let placed = |m: &str| accepted_end(m) || m == "BN1";
-    let drawable: Vec<String> =
-        t.baselines.iter().filter(|b| placed(&b.from) && placed(&b.to)).map(|b| b.id.clone()).collect();
+    let drawable: Vec<String> = t
+        .baselines
+        .iter()
+        .filter(|b| placed(&b.from) && placed(&b.to))
+        .map(|b| b.id.clone())
+        .collect();
     let missing = t.baselines.len() - drawable.len();
-    assert!(drawable.len() > 2 && missing > 0, "{} drawable, {missing} not", drawable.len());
+    assert!(
+        drawable.len() > 2 && missing > 0,
+        "{} drawable, {missing} not",
+        drawable.len()
+    );
     // One left out first, with a reason.
     send(&mut app, P::Text("Çok bağlantılı, şüpheli".into()));
     let out = drawable[0].clone();
@@ -251,11 +390,27 @@ fn ağı_göster_draws_every_baseline_at_once() {
     let marks = app.baseline_marks().expect("drawn");
     assert_eq!(marks.lines.len(), drawable.len());
     let words: Vec<&str> = marks.lines.iter().map(|l| l.words.as_str()).collect();
-    assert!(drawable.iter().all(|id| words.iter().any(|w| w.starts_with(&format!("{id} ·")))), "{words:?}");
+    assert!(
+        drawable
+            .iter()
+            .all(|id| words.iter().any(|w| w.starts_with(&format!("{id} ·")))),
+        "{words:?}"
+    );
     let left_out: Vec<bool> = marks.lines.iter().map(|l| l.excluded).collect();
     assert_eq!(left_out.iter().filter(|e| **e).count(), 1, "{left_out:?}");
-    assert!(marks.lines.iter().find(|l| l.words.starts_with(&format!("{out} ·"))).is_some_and(|l| l.excluded));
-    let said = app.log.lines().last().map(|l| l.text.clone()).unwrap_or_default();
+    assert!(
+        marks
+            .lines
+            .iter()
+            .find(|l| l.words.starts_with(&format!("{out} ·")))
+            .is_some_and(|l| l.excluded)
+    );
+    let said = app
+        .log
+        .lines()
+        .last()
+        .map(|l| l.text.clone())
+        .unwrap_or_default();
     assert_eq!(
         said,
         format!(
@@ -279,16 +434,28 @@ fn ağı_göster_draws_every_baseline_at_once() {
 fn network_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ag-haritada-3720");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ag-haritada-3720");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = accepted();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         app.show_map_survey();
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::MapSurvey));
-        app.docks.update(kentos_ui::widget::docking::Event::Shared(kentos_ui::widget::docking::Side::Right, vec![0.72, 0.28]));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(
+                Panel::MapSurvey,
+            ));
+        app.docks.update(kentos_ui::widget::docking::Event::Shared(
+            kentos_ui::widget::docking::Side::Right,
+            vec![0.72, 0.28],
+        ));
         send(&mut app, P::Text("Çok bağlantılı, şüpheli".into()));
         send(&mut app, P::Exclude("bz-8".into()));
         for key in ["campaigns", "marks", "uses", "baselines"] {
@@ -303,7 +470,10 @@ fn network_screens() {
         send(&mut app, P::ShowNetwork);
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("ag-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -321,7 +491,11 @@ fn a_known_point_s_row_says_its_own_place() {
     for p in &t.known_places {
         let words = place_words(p);
         assert_eq!(words.len(), 1, "{words:?}");
-        assert!(words[0].starts_with("Projede kendi yeri Y ") && words[0].ends_with("(2005,00 epokunda, zincir tam)."), "{words:?}");
+        assert!(
+            words[0].starts_with("Projede kendi yeri Y ")
+                && words[0].ends_with("(2005,00 epokunda, zincir tam)."),
+            "{words:?}"
+        );
     }
     let moved = SurveyKnownPlace {
         id: "bn-3".into(),
@@ -355,7 +529,17 @@ fn a_known_point_s_row_says_its_own_place() {
             "kn-1 kabul noktası bu yerden 7.2 mm uzakta, kot farkı +12.0 mm.",
         ]
     );
-    let lost = SurveyKnownPlace { x: None, y: None, z: None, moved: None, dx: None, dy: None, dz: None, why: Some("Bir neden.".into()), ..moved };
+    let lost = SurveyKnownPlace {
+        x: None,
+        y: None,
+        z: None,
+        moved: None,
+        dx: None,
+        dy: None,
+        dz: None,
+        why: Some("Bir neden.".into()),
+        ..moved
+    };
     assert_eq!(place_words(&lost), ["Projede yeri yok: Bir neden."]);
 }
 
@@ -370,16 +554,28 @@ fn a_known_point_s_row_says_its_own_place() {
 fn known_place_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/bilinen-yeri-4120");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/bilinen-yeri-4120");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = accepted();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         app.show_map_survey();
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::MapSurvey));
-        app.docks.update(kentos_ui::widget::docking::Event::Shared(kentos_ui::widget::docking::Side::Right, vec![0.72, 0.28]));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(
+                Panel::MapSurvey,
+            ));
+        app.docks.update(kentos_ui::widget::docking::Event::Shared(
+            kentos_ui::widget::docking::Side::Right,
+            vec![0.72, 0.28],
+        ));
         for key in ["campaigns", "marks", "uses", "baselines"] {
             send(&mut app, P::Fold(key.into()));
         }
@@ -392,7 +588,10 @@ fn known_place_screens() {
         send(&mut app, P::ShowNetwork);
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("ag-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

@@ -4,6 +4,7 @@
 //! again.
 
 use crate::arch;
+use crate::arch::ArchState;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{CommandResult, WallJoinIssue, WallsJoins};
@@ -11,7 +12,6 @@ use kentos_interaction::Level;
 use kentos_ui::icon::icon;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -49,15 +49,12 @@ pub(crate) trait WallJoinsApp {
     fn open_wall_joins(&mut self);
     fn wall_joins_event(&mut self, event: Event) -> Task<Message>;
     fn wall_joins_view(&self) -> Element<'_, Message>;
-    fn wall_joins_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>;
+    fn wall_joins_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
 impl WallJoinsApp for App {
     /// The drawing's joins read again: the window's list, or none without a drawing.
-    fn wall_joins_read(&self) -> Option<Window>{
+    fn wall_joins_read(&self) -> Option<Window> {
         let doc = self.document.as_ref()?;
         let mut copy = doc.model.reading_copy();
         let result = kentos_native_application::walls_joins::plan(
@@ -74,7 +71,7 @@ impl WallJoinsApp for App {
     }
 
     /// Birleşimleri denetle (`arch.wallJoinCheck`): the window.
-    fn open_wall_joins(&mut self){
+    fn open_wall_joins(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -83,11 +80,12 @@ impl WallJoinsApp for App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::WallJoins));
     }
 
-    fn wall_joins_event(&mut self, event: Event) -> Task<Message>{
+    fn wall_joins_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Show(i) => {
                 let Some(issue) = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .wall_joins
                     .as_ref()
                     .and_then(|w| w.issues.get(i))
@@ -109,7 +107,8 @@ impl WallJoinsApp for App {
             }
             Event::Apply(i) => {
                 let Some(fix) = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .wall_joins
                     .as_ref()
                     .and_then(|w| w.issues.get(i))
@@ -147,7 +146,7 @@ impl WallJoinsApp for App {
         Task::none()
     }
 
-    fn wall_joins_view(&self) -> Element<'_, Message>{
+    fn wall_joins_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().wall_joins else {
             return iced::widget::text("").into();
         };
@@ -216,10 +215,7 @@ impl WallJoinsApp for App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step): the first issue's Göster and Öneriyi uygula.
-    fn wall_joins_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>{
+    fn wall_joins_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().wall_joins.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

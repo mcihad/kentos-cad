@@ -79,7 +79,12 @@ pub(super) fn enrich(
             } else {
                 severity
             });
-            let property = item.details.iter().find(|d| d.property.starts_with("polyline.loss.")).map(|d| d.property.clone()).unwrap_or_else(|| property(item).into());
+            let property = item
+                .details
+                .iter()
+                .find(|d| d.property.starts_with("polyline.loss."))
+                .map(|d| d.property.clone())
+                .unwrap_or_else(|| property(item).into());
             let existing = item.details.clone();
             let details: Vec<_> = item
                 .lines
@@ -91,7 +96,11 @@ pub(super) fn enrich(
                     d
                 })
                 .collect();
-            item.details = if details.is_empty() { existing } else { details };
+            item.details = if details.is_empty() {
+                existing
+            } else {
+                details
+            };
         }
     }
     Ok(())

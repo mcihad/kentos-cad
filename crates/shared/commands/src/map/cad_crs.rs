@@ -321,7 +321,11 @@ pub struct UnreachedPoint {
 /// EPSG's area of use of the source system (read at the point on the source's datum), of the datum transformation's
 /// operation (the same place; none when the datum stays or the way is the project's own), of the target system (where
 /// the point lands). A box is approximate (IOGP GN 7-1 §5.7): a note warns, it does not refuse.
-pub const CRS_POINT_NOTES: [&str; 3] = ["outside_source_area", "outside_operation_area", "outside_target_area"];
+pub const CRS_POINT_NOTES: [&str; 3] = [
+    "outside_source_area",
+    "outside_operation_area",
+    "outside_target_area",
+];
 
 /// A transformed point beyond an area of use (docs/adr/3700): its place in `points` and its notes ([`CRS_POINT_NOTES`]).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]

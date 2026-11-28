@@ -18,21 +18,24 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::arch::ArchState;
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, ElementType, ElementTypeKind, ElementTypeRefused, ElementTypeReport, ElementTypesEdit,
-    ElementTypesEdited, ElementTypesOperation, Entity, TypeField, fields_off_type, type_link,
+    CommandResult, ElementType, ElementTypeKind, ElementTypeRefused, ElementTypeReport,
+    ElementTypesEdit, ElementTypesEdited, ElementTypesOperation, Entity, TypeField,
+    fields_off_type, type_link,
 };
 use kentos_domain::Slot;
 use kentos_interaction::{Format, Level};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography::scaled;
 use kentos_ui::widget::table::{self, Column as Col, Row, Table};
-use kentos_ui::widget::{Choice, Dialog as Frame, Form, ListDetails, Menu, MenuButton, Select, text_field};
+use kentos_ui::widget::{
+    Choice, Dialog as Frame, Form, ListDetails, Menu, MenuButton, Select, text_field,
+};
 use kentos_ui::{label, style};
 use serde_json::{Map, Value};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::arch;
@@ -73,8 +76,12 @@ enum Edit {
 fn edit_of(kind: ElementTypeKind, f: &TypeField) -> Edit {
     use ElementTypeKind as K;
     match (kind, f.key) {
-        (_, "width" | "height" | "thickness" | "tread") => Edit::Length { required: f.required },
-        (_, "depth" | "gutter" | "snowGuard" | "gap" | "landing" | "post") => Edit::Length { required: false },
+        (_, "width" | "height" | "thickness" | "tread") => Edit::Length {
+            required: f.required,
+        },
+        (_, "depth" | "gutter" | "snowGuard" | "gap" | "landing" | "post") => {
+            Edit::Length { required: false }
+        }
         (_, "winders") => Edit::Count,
         (_, "material") => Edit::Text,
         (_, "fill" | "numbering") => Edit::Switch,
@@ -93,22 +100,41 @@ fn choices(kind: ElementTypeKind, key: &str) -> Vec<(&'static str, Option<Value>
     let to = |v: Value| Some(v);
     let member = |m: kentos_commands::Member| serde_json::to_value(m).ok();
     match (kind, key) {
-        (K::Column, "member") => vec![("Kolon", None), ("Dikme", member(kentos_commands::Member::post()))],
-        (K::Beam, "member") => vec![("Kiriş", None), ("Kayıt", member(kentos_commands::Member::rail()))],
+        (K::Column, "member") => vec![
+            ("Kolon", None),
+            ("Dikme", member(kentos_commands::Member::post())),
+        ],
+        (K::Beam, "member") => vec![
+            ("Kiriş", None),
+            ("Kayıt", member(kentos_commands::Member::rail())),
+        ],
         (K::Column, "shape") => kentos_commands::ColumnShape::ALL
             .iter()
-            .map(|s| (s.label(), (*s != kentos_commands::ColumnShape::Rect).then(|| Value::from(s.name()))))
+            .map(|s| {
+                (
+                    s.label(),
+                    (*s != kentos_commands::ColumnShape::Rect).then(|| Value::from(s.name())),
+                )
+            })
             .collect(),
         (K::Beam, "role") => kentos_commands::BeamRole::ALL
             .iter()
             .map(|r| {
-                (r.label(), (*r != kentos_commands::BeamRole::Beam).then(|| serde_json::to_value(r).unwrap_or(Value::Null)))
+                (
+                    r.label(),
+                    (*r != kentos_commands::BeamRole::Beam)
+                        .then(|| serde_json::to_value(r).unwrap_or(Value::Null)),
+                )
             })
             .collect(),
         (K::Slab, "role") => kentos_commands::SlabRole::ALL
             .iter()
             .map(|r| {
-                (r.label(), (*r != kentos_commands::SlabRole::Floor).then(|| serde_json::to_value(r).unwrap_or(Value::Null)))
+                (
+                    r.label(),
+                    (*r != kentos_commands::SlabRole::Floor)
+                        .then(|| serde_json::to_value(r).unwrap_or(Value::Null)),
+                )
             })
             .collect(),
         (K::Railing, "infill") => kentos_commands::RailingInfill::ALL
@@ -116,12 +142,17 @@ fn choices(kind: ElementTypeKind, key: &str) -> Vec<(&'static str, Option<Value>
             .map(|i| {
                 (
                     i.label(),
-                    (*i != kentos_commands::RailingInfill::default()).then(|| serde_json::to_value(i).unwrap_or(Value::Null)),
+                    (*i != kentos_commands::RailingInfill::default())
+                        .then(|| serde_json::to_value(i).unwrap_or(Value::Null)),
                 )
             })
             .collect(),
         (K::Stair, "railings") => std::iter::once(("Yok", None))
-            .chain(kentos_commands::Railings::ALL.iter().map(|r| (r.words(), to(Value::from(r.as_str())))))
+            .chain(
+                kentos_commands::Railings::ALL
+                    .iter()
+                    .map(|r| (r.words(), to(Value::from(r.as_str())))),
+            )
             .collect(),
         _ => Vec::new(),
     }
@@ -135,13 +166,21 @@ fn shown_words(key: &str, v: Option<&Value>, f: &Format) -> String {
     match key {
         "legs" => v
             .as_array()
-            .map(|l| l.iter().filter_map(Value::as_f64).map(|m| f.length_bare(m)).collect::<Vec<_>>().join(" / "))
+            .map(|l| {
+                l.iter()
+                    .filter_map(Value::as_f64)
+                    .map(|m| f.length_bare(m))
+                    .collect::<Vec<_>>()
+                    .join(" / ")
+            })
             .unwrap_or_default(),
         "layers" => match v {
             Value::Array(l) => format!("{} katman", l.len()),
             Value::Object(o) => format!(
                 "{} katman",
-                o.values().map(|x| x.as_array().map_or(usize::from(!x.is_null()), Vec::len)).sum::<usize>()
+                o.values()
+                    .map(|x| x.as_array().map_or(usize::from(!x.is_null()), Vec::len))
+                    .sum::<usize>()
             ),
             _ => "Var".into(),
         },
@@ -202,7 +241,9 @@ pub(crate) struct Use {
 pub(crate) fn use_of(doc: &kentos_domain::Document, t: &ElementType) -> Use {
     let mut u = Use::default();
     for e in doc.entities() {
-        let Some(l) = type_link(e).filter(|l| l.id == t.id) else { continue };
+        let Some(l) = type_link(e).filter(|l| l.id == t.id) else {
+            continue;
+        };
         u.elements += 1;
         if l.version < t.version {
             u.behind += 1;
@@ -221,13 +262,22 @@ pub(crate) fn report_words(r: &ElementTypeReport) -> String {
     let followed = r.applied.len().saturating_sub(r.kept.len());
     let mut parts = vec![format!("{followed} eleman yeni değerleri alır")];
     if !r.kept.is_empty() {
-        parts.push(format!("{} eleman değişen alanda kendi değerini korur", r.kept.len()));
+        parts.push(format!(
+            "{} eleman değişen alanda kendi değerini korur",
+            r.kept.len()
+        ));
     }
     if !r.skipped.is_empty() {
-        parts.push(format!("{} eleman kilitli katmanda eski sürümde kalır", r.skipped.len()));
+        parts.push(format!(
+            "{} eleman kilitli katmanda eski sürümde kalır",
+            r.skipped.len()
+        ));
     }
     if !r.refused.is_empty() {
-        parts.push(format!("{} eleman geçersiz olur, eski sürümde kalır", r.refused.len()));
+        parts.push(format!(
+            "{} eleman geçersiz olur, eski sürümde kalır",
+            r.refused.len()
+        ));
     }
     parts.join("; ")
 }
@@ -240,7 +290,10 @@ pub(crate) trait ElementTypesWindowApp {
     fn element_types_chosen(&self) -> Option<ElementType>;
     fn element_types_change(&self) -> Option<Result<Map<String, Value>, String>>;
     fn element_types_preview(&mut self);
-    fn element_types_command(&mut self, operation: ElementTypesOperation) -> Option<ElementTypesEdited>;
+    fn element_types_command(
+        &mut self,
+        operation: ElementTypesOperation,
+    ) -> Option<ElementTypesEdited>;
     fn selected_typeable(&self) -> Vec<(String, ElementTypeKind, Option<String>)>;
     fn element_type_name(&self, kind: ElementTypeKind, wish: Option<&str>) -> String;
     fn element_types_said(&mut self, kind: Kind, words: String);
@@ -248,18 +301,24 @@ pub(crate) trait ElementTypesWindowApp {
     fn element_types_apply(&mut self) -> Task<Message>;
     fn select_same_element_type(&mut self);
     fn element_types_view(&self) -> Element<'_, Message>;
-    fn element_types_table<'a>(&'a self, w: &'a Window, types: &'a [ElementType]) -> Element<'a, Message>;
+    fn element_types_table<'a>(
+        &'a self,
+        w: &'a Window,
+        types: &'a [ElementType],
+    ) -> Element<'a, Message>;
     fn element_types_details<'a>(&'a self, w: &'a Window, f: &Format) -> Element<'a, Message>;
     fn element_types_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
 impl ElementTypesWindowApp for App {
-    fn element_types_format(&self) -> Option<Format>{
-        self.document.as_ref().map(|d| Format::of(d.model.settings()))
+    fn element_types_format(&self) -> Option<Format> {
+        self.document
+            .as_ref()
+            .map(|d| Format::of(d.model.settings()))
     }
 
     /// Eleman tipleri (`arch.elementTypes`).
-    fn open_element_types(&mut self){
+    fn open_element_types(&mut self) {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return;
@@ -271,32 +330,60 @@ impl ElementTypesWindowApp for App {
             .iter()
             .find_map(|&s| doc.model.get(s).and_then(type_link).map(|l| l.id.clone()))
             .or_else(|| doc.model.element_types().first().map(|t| t.id.clone()));
-        let mut w = self.modules.arch_mut().element_types.take().unwrap_or_default();
+        let mut w = self
+            .modules
+            .arch_mut()
+            .element_types
+            .take()
+            .unwrap_or_default();
         w.said = None;
         self.modules.arch_mut().element_types = Some(w);
         if let Some(id) = chosen {
             self.element_types_choose(&id);
         }
-        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ElementTypes));
+        self.dialog = Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::ElementTypes,
+        ));
     }
 
-    fn element_types_choose(&mut self, id: &str){
-        let Some(f) = self.element_types_format() else { return };
-        let Some(t) = self.document.as_ref().and_then(|d| d.model.element_type(id).cloned()) else { return };
-        let Some(w) = self.modules.arch_mut().element_types.as_mut() else { return };
+    fn element_types_choose(&mut self, id: &str) {
+        let Some(f) = self.element_types_format() else {
+            return;
+        };
+        let Some(t) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.element_type(id).cloned())
+        else {
+            return;
+        };
+        let Some(w) = self.modules.arch_mut().element_types.as_mut() else {
+            return;
+        };
         w.chosen = Some(t.id.clone());
         w.name = t.name.clone();
         w.typed = t
             .kind
             .fields()
             .iter()
-            .filter(|x| matches!(edit_of(t.kind, x), Edit::Length { .. } | Edit::Count | Edit::Text))
+            .filter(|x| {
+                matches!(
+                    edit_of(t.kind, x),
+                    Edit::Length { .. } | Edit::Count | Edit::Text
+                )
+            })
             .map(|x| {
                 let v = t.values.get(x.key);
                 let words = match edit_of(t.kind, x) {
-                    Edit::Length { .. } => v.and_then(Value::as_f64).map_or_else(String::new, |m| f.length_bare(m)),
-                    Edit::Count => v.and_then(Value::as_u64).map_or_else(String::new, |n| n.to_string()),
-                    _ => v.and_then(Value::as_str).map_or_else(String::new, str::to_owned),
+                    Edit::Length { .. } => v
+                        .and_then(Value::as_f64)
+                        .map_or_else(String::new, |m| f.length_bare(m)),
+                    Edit::Count => v
+                        .and_then(Value::as_u64)
+                        .map_or_else(String::new, |n| n.to_string()),
+                    _ => v
+                        .and_then(Value::as_str)
+                        .map_or_else(String::new, str::to_owned),
                 };
                 (x.key, words)
             })
@@ -305,26 +392,31 @@ impl ElementTypesWindowApp for App {
         w.preview = None;
     }
 
-    fn element_types_chosen(&self) -> Option<ElementType>{
+    fn element_types_chosen(&self) -> Option<ElementType> {
         let id = self.modules.arch().element_types.as_ref()?.chosen.clone()?;
         self.document.as_ref()?.model.element_type(&id).cloned()
     }
 
     /// The values typed against the chosen type: the fields that changed (null: taken away), or why one cannot be read.
-    fn element_types_change(&self) -> Option<Result<Map<String, Value>, String>>{
+    fn element_types_change(&self) -> Option<Result<Map<String, Value>, String>> {
         let w = self.modules.arch().element_types.as_ref()?;
         let t = self.element_types_chosen()?;
         let f = self.element_types_format()?;
         let mut out = Map::new();
         for (key, typed) in &w.typed {
-            let Some(field) = t.kind.field(key) else { continue };
+            let Some(field) = t.kind.field(key) else {
+                continue;
+            };
             let now = t.values.get(*key);
             let typed = typed.trim();
             let next: Option<Value> = match edit_of(t.kind, field) {
                 Edit::Length { required } => {
                     if typed.is_empty() {
                         if required {
-                            return Some(Err(format!("{} boş olamaz; bir uzunluk yazın.", field.label)));
+                            return Some(Err(format!(
+                                "{} boş olamaz; bir uzunluk yazın.",
+                                field.label
+                            )));
                         }
                         None
                     } else {
@@ -332,22 +424,35 @@ impl ElementTypesWindowApp for App {
                             Some(l) => {
                                 let m = l.metres(|n| f.to_metres(n));
                                 if !(m.is_finite() && m > 0.0) {
-                                    return Some(Err(format!("{} sıfırdan büyük olmalı.", field.label)));
+                                    return Some(Err(format!(
+                                        "{} sıfırdan büyük olmalı.",
+                                        field.label
+                                    )));
                                 }
                                 // The typed words of the value it has: no change.
-                                if now.and_then(Value::as_f64).is_some_and(|v| f.length_bare(v) == typed) {
+                                if now
+                                    .and_then(Value::as_f64)
+                                    .is_some_and(|v| f.length_bare(v) == typed)
+                                {
                                     continue;
                                 }
                                 Some(Value::from(m))
                             }
-                            None => return Some(Err(format!("{} okunmadı: “{typed}”.", field.label))),
+                            None => {
+                                return Some(Err(format!("{} okunmadı: “{typed}”.", field.label)));
+                            }
                         }
                     }
                 }
                 Edit::Count if typed.is_empty() => None,
                 Edit::Count => match typed.parse::<u32>() {
                     Ok(n) => Some(Value::from(n)),
-                    Err(_) => return Some(Err(format!("{} bir tam sayı olmalı: “{typed}”.", field.label))),
+                    Err(_) => {
+                        return Some(Err(format!(
+                            "{} bir tam sayı olmalı: “{typed}”.",
+                            field.label
+                        )));
+                    }
                 },
                 _ if typed.is_empty() => None,
                 _ => Some(Value::from(typed)),
@@ -364,24 +469,29 @@ impl ElementTypesWindowApp for App {
         Some(Ok(out))
     }
 
-    fn element_types_preview(&mut self){
+    fn element_types_preview(&mut self) {
         let change = self.element_types_change();
-        let Some(t) = self.element_types_chosen() else { return };
+        let Some(t) = self.element_types_chosen() else {
+            return;
+        };
         let preview = match change {
             None => None,
             Some(Err(why)) => Some(Err(why)),
             Some(Ok(values)) if values.is_empty() => None,
             Some(Ok(values)) => self.document.as_ref().map(|doc| {
                 let input = ElementTypesEdit {
-                    operation: ElementTypesOperation::Update { kind: t.id.clone(), values },
+                    operation: ElementTypesOperation::Update {
+                        kind: t.id.clone(),
+                        values,
+                    },
                     on_refused: ElementTypeRefused::Stop,
                     expected_revision: None,
                 };
                 match kentos_native_application::element_types_edit::plan_in(&doc.model, &input) {
                     CommandResult::Completed { output, .. } => Ok(output),
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                        Err(error.message)
-                    }
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => Err(error.message),
                     _ => Err("Önizleme yapılamadı.".into()),
                 }
             }),
@@ -392,22 +502,39 @@ impl ElementTypesWindowApp for App {
     }
 
     /// `cad.elementtypes.edit` over the drawing; its answer, or none with the refusal said.
-    fn element_types_command(&mut self, operation: ElementTypesOperation) -> Option<ElementTypesEdited>{
+    fn element_types_command(
+        &mut self,
+        operation: ElementTypesOperation,
+    ) -> Option<ElementTypesEdited> {
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::element_types_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            ElementTypesEdit { operation, on_refused: ElementTypeRefused::Stop, expected_revision: None },
+            ElementTypesEdit {
+                operation,
+                on_refused: ElementTypeRefused::Stop,
+                expected_revision: None,
+            },
         );
         match result {
-            CommandResult::Completed { output, warnings, .. } => {
+            CommandResult::Completed {
+                output, warnings, ..
+            } => {
                 for w in warnings {
                     self.warn(w.message);
                 }
                 Some(output)
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 let message = error.message;
-                match self.modules.arch_mut().element_types.as_mut().filter(|_| self.dialog.is_some()) {
+                match self
+                    .modules
+                    .arch_mut()
+                    .element_types
+                    .as_mut()
+                    .filter(|_| self.dialog.is_some())
+                {
                     Some(w) => w.said = Some((Kind::Error, message)),
                     None => self.warn(message),
                 }
@@ -418,42 +545,73 @@ impl ElementTypesWindowApp for App {
     }
 
     /// The selected elements a type serves, each its persistent id and the type it follows.
-    fn selected_typeable(&self) -> Vec<(String, ElementTypeKind, Option<String>)>{
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
+    fn selected_typeable(&self) -> Vec<(String, ElementTypeKind, Option<String>)> {
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
         self.selection
             .ids()
             .iter()
             .filter_map(|&s| {
                 let e = doc.model.get(s)?;
                 let kind = ElementTypeKind::of(e)?;
-                Some((doc.model.uid(s)?.to_string(), kind, type_link(e).map(|l| l.id.clone())))
+                Some((
+                    doc.model.uid(s)?.to_string(),
+                    kind,
+                    type_link(e).map(|l| l.id.clone()),
+                ))
             })
             .collect()
     }
 
     /// A free name for a new `kind` type: “Kolon 1”, “Kolon 2” ….
-    fn element_type_name(&self, kind: ElementTypeKind, wish: Option<&str>) -> String{
+    fn element_type_name(&self, kind: ElementTypeKind, wish: Option<&str>) -> String {
         let taken: Vec<String> = self
             .document
             .as_ref()
-            .map(|d| d.model.element_types().iter().filter(|t| t.kind == kind).map(|t| t.name.to_lowercase()).collect())
+            .map(|d| {
+                d.model
+                    .element_types()
+                    .iter()
+                    .filter(|t| t.kind == kind)
+                    .map(|t| t.name.to_lowercase())
+                    .collect()
+            })
             .unwrap_or_default();
-        if let Some(w) = wish.map(str::trim).filter(|w| kentos_commands::element_type_name_ok(w))
+        if let Some(w) = wish
+            .map(str::trim)
+            .filter(|w| kentos_commands::element_type_name_ok(w))
             && !taken.contains(&w.to_lowercase())
         {
             return w.to_owned();
         }
-        (1..).map(|n| format!("{} {n}", kind.label())).find(|n| !taken.contains(&n.to_lowercase())).unwrap_or_default()
+        (1..)
+            .map(|n| format!("{} {n}", kind.label()))
+            .find(|n| !taken.contains(&n.to_lowercase()))
+            .unwrap_or_default()
     }
 
-    fn element_types_said(&mut self, kind: Kind, words: String){
-        match self.modules.arch_mut().element_types.as_mut().filter(|_| self.dialog.is_some()) {
+    fn element_types_said(&mut self, kind: Kind, words: String) {
+        match self
+            .modules
+            .arch_mut()
+            .element_types
+            .as_mut()
+            .filter(|_| self.dialog.is_some())
+        {
             Some(w) => w.said = Some((kind, words)),
-            None => self.say(if kind == Kind::Error { Level::Warn } else { Level::Success }, words),
+            None => self.say(
+                if kind == Kind::Error {
+                    Level::Warn
+                } else {
+                    Level::Success
+                },
+                words,
+            ),
         }
     }
 
-    fn element_types_event(&mut self, event: Event) -> Task<Message>{
+    fn element_types_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Choose(id) => self.element_types_choose(&id),
             Event::Name(t) => {
@@ -497,7 +655,10 @@ impl ElementTypesWindowApp for App {
                     && let Some(id) = done.id
                 {
                     self.element_types_choose(&id);
-                    self.element_types_said(Kind::Ok, format!("{name} tipi eklendi; değerlerini yazıp Uygula'ya basın."));
+                    self.element_types_said(
+                        Kind::Ok,
+                        format!("{name} tipi eklendi; değerlerini yazıp Uygula'ya basın."),
+                    );
                 }
             }
             Event::FromSelection => {
@@ -532,17 +693,37 @@ impl ElementTypesWindowApp for App {
                         self.modules.arch_mut().element_types = Some(Window::default());
                     }
                     self.element_types_choose(&id);
-                    self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ElementTypes));
-                    self.element_types_said(Kind::Ok, format!("{name} tipi seçili {} elemandan yapıldı; eleman onu izliyor.", kind.words()));
+                    self.dialog = Some(crate::arch::dialog(
+                        crate::arch::ArchDialogKind::ElementTypes,
+                    ));
+                    self.element_types_said(
+                        Kind::Ok,
+                        format!(
+                            "{name} tipi seçili {} elemandan yapıldı; eleman onu izliyor.",
+                            kind.words()
+                        ),
+                    );
                 }
             }
             Event::Apply => return self.element_types_apply(),
             Event::Remove => {
-                let Some(t) = self.element_types_chosen() else { return Task::none() };
-                let u = self.document.as_ref().map(|d| use_of(&d.model, &t)).unwrap_or_default();
-                let op = ElementTypesOperation::Remove { kind: t.id.clone(), detach: true };
+                let Some(t) = self.element_types_chosen() else {
+                    return Task::none();
+                };
+                let u = self
+                    .document
+                    .as_ref()
+                    .map(|d| use_of(&d.model, &t))
+                    .unwrap_or_default();
+                let op = ElementTypesOperation::Remove {
+                    kind: t.id.clone(),
+                    detach: true,
+                };
                 if self.element_types_command(op).is_some() {
-                    let first = self.document.as_ref().and_then(|d| d.model.element_types().first().map(|x| x.id.clone()));
+                    let first = self
+                        .document
+                        .as_ref()
+                        .and_then(|d| d.model.element_types().first().map(|x| x.id.clone()));
                     if let Some(w) = self.modules.arch_mut().element_types.as_mut() {
                         *w = Window::default();
                     }
@@ -551,7 +732,10 @@ impl ElementTypesWindowApp for App {
                     }
                     self.element_types_said(
                         Kind::Ok,
-                        format!("{} tipi silindi; {} eleman değerleriyle kaldı, tip izlemiyor.", t.name, u.elements),
+                        format!(
+                            "{} tipi silindi; {} eleman değerleriyle kaldı, tip izlemiyor.",
+                            t.name, u.elements
+                        ),
                     );
                 }
             }
@@ -560,59 +744,123 @@ impl ElementTypesWindowApp for App {
                 self.dialog = None;
             }
             Event::Assign(id) => {
-                let Some(t) = self.document.as_ref().and_then(|d| d.model.element_type(&id).cloned()) else {
+                let Some(t) = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| d.model.element_type(&id).cloned())
+                else {
                     return Task::none();
                 };
-                let uids: Vec<String> =
-                    self.selected_typeable().into_iter().filter(|(_, k, _)| *k == t.kind).map(|(u, _, _)| u).collect();
+                let uids: Vec<String> = self
+                    .selected_typeable()
+                    .into_iter()
+                    .filter(|(_, k, _)| *k == t.kind)
+                    .map(|(u, _, _)| u)
+                    .collect();
                 if uids.is_empty() {
-                    self.warn(format!("Seçimde {} yok; {} tipi yalnız {} elemanlara verilir.", t.kind.words(), t.name, t.kind.words()));
+                    self.warn(format!(
+                        "Seçimde {} yok; {} tipi yalnız {} elemanlara verilir.",
+                        t.kind.words(),
+                        t.name,
+                        t.kind.words()
+                    ));
                     return Task::none();
                 }
                 let n = uids.len();
-                if self.element_types_command(ElementTypesOperation::Assign { kind: id, uids }).is_some() {
-                    self.say(Level::Success, format!("{n} {} {} tipini izliyor.", t.kind.words(), t.name));
+                if self
+                    .element_types_command(ElementTypesOperation::Assign { kind: id, uids })
+                    .is_some()
+                {
+                    self.say(
+                        Level::Success,
+                        format!("{n} {} {} tipini izliyor.", t.kind.words(), t.name),
+                    );
                 }
             }
             Event::Detach | Event::Reset | Event::Refresh => {
-                let uids: Vec<String> =
-                    self.selected_typeable().into_iter().filter(|(_, _, t)| t.is_some()).map(|(u, _, _)| u).collect();
+                let uids: Vec<String> = self
+                    .selected_typeable()
+                    .into_iter()
+                    .filter(|(_, _, t)| t.is_some())
+                    .map(|(u, _, _)| u)
+                    .collect();
                 if uids.is_empty() {
                     self.warn("Seçimde bir tipi izleyen eleman yok.");
                     return Task::none();
                 }
                 let n = uids.len();
                 let (op, done) = match event {
-                    Event::Detach => (ElementTypesOperation::Detach { uids }, "tipten ayrıldı; değerleri kaldı"),
-                    Event::Reset => (ElementTypesOperation::Reset { uids, fields: Vec::new() }, "tipine döndü"),
-                    _ => (ElementTypesOperation::Refresh { uids }, "tipinin son sürümünü aldı"),
+                    Event::Detach => (
+                        ElementTypesOperation::Detach { uids },
+                        "tipten ayrıldı; değerleri kaldı",
+                    ),
+                    Event::Reset => (
+                        ElementTypesOperation::Reset {
+                            uids,
+                            fields: Vec::new(),
+                        },
+                        "tipine döndü",
+                    ),
+                    _ => (
+                        ElementTypesOperation::Refresh { uids },
+                        "tipinin son sürümünü aldı",
+                    ),
                 };
                 if self.element_types_command(op).is_some() {
                     self.say(Level::Success, format!("{n} eleman {done}."));
                 }
             }
             Event::Push => {
-                let typed: Vec<String> =
-                    self.selected_typeable().into_iter().filter(|(_, _, t)| t.is_some()).map(|(u, _, _)| u).collect();
+                let typed: Vec<String> = self
+                    .selected_typeable()
+                    .into_iter()
+                    .filter(|(_, _, t)| t.is_some())
+                    .map(|(u, _, _)| u)
+                    .collect();
                 let [uid] = typed.as_slice() else {
-                    self.warn("Tipe uygula tek elemanla çalışır: değerleri tipin olacak elemanı seçin.");
+                    self.warn(
+                        "Tipe uygula tek elemanla çalışır: değerleri tipin olacak elemanı seçin.",
+                    );
                     return Task::none();
                 };
-                if let Some(done) = self.element_types_command(ElementTypesOperation::Push { uid: uid.clone(), fields: Vec::new() }) {
-                    self.say(Level::Success, format!("Elemanın kendi değerleri tipin oldu; {}.", report_words(&done.report)));
+                if let Some(done) = self.element_types_command(ElementTypesOperation::Push {
+                    uid: uid.clone(),
+                    fields: Vec::new(),
+                }) {
+                    self.say(
+                        Level::Success,
+                        format!(
+                            "Elemanın kendi değerleri tipin oldu; {}.",
+                            report_words(&done.report)
+                        ),
+                    );
                 }
             }
         }
         Task::none()
     }
 
-    fn element_types_apply(&mut self) -> Task<Message>{
-        let Some(t) = self.element_types_chosen() else { return Task::none() };
-        let name = self.modules.arch().element_types.as_ref().map(|w| w.name.trim().to_owned()).unwrap_or_default();
+    fn element_types_apply(&mut self) -> Task<Message> {
+        let Some(t) = self.element_types_chosen() else {
+            return Task::none();
+        };
+        let name = self
+            .modules
+            .arch()
+            .element_types
+            .as_ref()
+            .map(|w| w.name.trim().to_owned())
+            .unwrap_or_default();
         let change = self.element_types_change();
         let mut said = Vec::new();
         if !name.is_empty() && name != t.name {
-            if self.element_types_command(ElementTypesOperation::Rename { kind: t.id.clone(), name: name.clone() }).is_none() {
+            if self
+                .element_types_command(ElementTypesOperation::Rename {
+                    kind: t.id.clone(),
+                    name: name.clone(),
+                })
+                .is_none()
+            {
                 return Task::none();
             }
             said.push(format!("adı {name}"));
@@ -623,7 +871,10 @@ impl ElementTypesWindowApp for App {
                 return Task::none();
             }
             Some(Ok(values)) if !values.is_empty() => {
-                match self.element_types_command(ElementTypesOperation::Update { kind: t.id.clone(), values }) {
+                match self.element_types_command(ElementTypesOperation::Update {
+                    kind: t.id.clone(),
+                    values,
+                }) {
                     Some(done) => said.push(report_words(&done.report)),
                     None => return Task::none(),
                 }
@@ -631,25 +882,43 @@ impl ElementTypesWindowApp for App {
             _ => {}
         }
         self.element_types_choose(&t.id);
-        let shown = if name.is_empty() { t.name.clone() } else { name };
+        let shown = if name.is_empty() {
+            t.name.clone()
+        } else {
+            name
+        };
         if said.is_empty() {
             self.element_types_said(Kind::Info, "Değişen bir değer yok.".into());
         } else {
-            self.element_types_said(Kind::Ok, format!("{shown} tipi değişti: {}.", said.join("; ")));
+            self.element_types_said(
+                Kind::Ok,
+                format!("{shown} tipi değişti: {}.", said.join("; ")),
+            );
         }
         Task::none()
     }
 
     /// Aynı tiptekileri seç (`arch.elementSameType`): every element of the selected one's type (else the window's
     /// chosen type), selected.
-    fn select_same_element_type(&mut self){
+    fn select_same_element_type(&mut self) {
         let from_selection = self.selected_typeable().into_iter().find_map(|(_, _, t)| t);
-        let Some(id) = from_selection.or_else(|| self.modules.arch().element_types.as_ref().and_then(|w| w.chosen.clone())) else {
+        let Some(id) = from_selection.or_else(|| {
+            self.modules
+                .arch()
+                .element_types
+                .as_ref()
+                .and_then(|w| w.chosen.clone())
+        }) else {
             self.warn("Önce bir tipi izleyen eleman seçin: aynı tiptekiler onun tipiyle seçilir.");
             return;
         };
-        let Some(doc) = self.document.as_ref() else { return };
-        let name = doc.model.element_type(&id).map_or_else(|| id.clone(), |t| t.name.clone());
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let name = doc
+            .model
+            .element_type(&id)
+            .map_or_else(|| id.clone(), |t| t.name.clone());
         let slots: Vec<Slot> = doc
             .model
             .entities()
@@ -661,9 +930,12 @@ impl ElementTypesWindowApp for App {
         self.element_types_said(Kind::Ok, format!("{name} tipinde {n} eleman seçildi."));
     }
 
-    fn element_types_view(&self) -> Element<'_, Message>{
-        let (Some(w), Some(doc), Some(f)) = (&self.modules.arch().element_types, self.document.as_ref(), self.element_types_format())
-        else {
+    fn element_types_view(&self) -> Element<'_, Message> {
+        let (Some(w), Some(doc), Some(f)) = (
+            &self.modules.arch().element_types,
+            self.document.as_ref(),
+            self.element_types_format(),
+        ) else {
             return space::horizontal().into();
         };
         let types = doc.model.element_types();
@@ -674,10 +946,13 @@ impl ElementTypesWindowApp for App {
             )
             .into()
         } else {
-            ListDetails::new(self.element_types_table(w, types), self.element_types_details(w, &f))
-                .list_width(LIST)
-                .height(BODY)
-                .into()
+            ListDetails::new(
+                self.element_types_table(w, types),
+                self.element_types_details(w, &f),
+            )
+            .list_width(LIST)
+            .height(BODY)
+            .into()
         };
         let chosen = self.element_types_chosen();
         let mut foot = row![
@@ -688,17 +963,33 @@ impl ElementTypesWindowApp for App {
         .spacing(8)
         .align_y(Center);
         foot = match &w.said {
-            Some((kind, said)) => foot.push(container(words::text_line(*kind, said.clone())).width(Fill)),
+            Some((kind, said)) => {
+                foot.push(container(words::text_line(*kind, said.clone())).width(Fill))
+            }
             None => foot.push(space::horizontal().width(Fill)),
         };
         let foot = foot
-            .push(words::primary(APPLY, chosen.as_ref().map(|_| msg(Event::Apply))))
+            .push(words::primary(
+                APPLY,
+                chosen.as_ref().map(|_| msg(Event::Apply)),
+            ))
             .push(words::secondary(CLOSE, Some(msg(Event::Close))));
-        Frame::new(TITLE).push(label::caption(LEAD)).push(body).footer(foot).width(1020.0).modal(msg(Event::Close))
+        Frame::new(TITLE)
+            .push(label::caption(LEAD))
+            .push(body)
+            .footer(foot)
+            .width(1020.0)
+            .modal(msg(Event::Close))
     }
 
-    fn element_types_table<'a>(&'a self, w: &'a Window, types: &'a [ElementType]) -> Element<'a, Message>{
-        let Some(doc) = self.document.as_ref() else { return space::horizontal().into() };
+    fn element_types_table<'a>(
+        &'a self,
+        w: &'a Window,
+        types: &'a [ElementType],
+    ) -> Element<'a, Message> {
+        let Some(doc) = self.document.as_ref() else {
+            return space::horizontal().into();
+        };
         let mut t = Table::new([
             Col::new("Tip").width(Fill),
             Col::new("Tür").width(scaled(76.0)),
@@ -725,7 +1016,7 @@ impl ElementTypesWindowApp for App {
         t.into()
     }
 
-    fn element_types_details<'a>(&'a self, w: &'a Window, f: &Format) -> Element<'a, Message>{
+    fn element_types_details<'a>(&'a self, w: &'a Window, f: &Format) -> Element<'a, Message> {
         let (Some(t), Some(doc)) = (self.element_types_chosen(), self.document.as_ref()) else {
             return label::caption("Bir tip seçin.").into();
         };
@@ -733,31 +1024,54 @@ impl ElementTypesWindowApp for App {
         let mut form = Form::new()
             .label_width(scaled(140.0))
             .section(format!("{} tipi · sürüm {}", t.kind.label(), t.version))
-            .field("Ad", text_field("Tipin adı", &w.name).on_input(|x| msg(Event::Name(x))));
+            .field(
+                "Ad",
+                text_field("Tipin adı", &w.name).on_input(|x| msg(Event::Name(x))),
+            );
         for field in t.kind.fields() {
             let key = field.key;
-            let typed = || w.typed.iter().find(|(k, _)| *k == key).map(|(_, x)| x.as_str()).unwrap_or("");
+            let typed = || {
+                w.typed
+                    .iter()
+                    .find(|(k, _)| *k == key)
+                    .map(|(_, x)| x.as_str())
+                    .unwrap_or("")
+            };
             let cell: Element<'a, Message> = if field.named {
                 label::body(format!("{} (tipin adı)", t.name)).into()
             } else {
                 match edit_of(t.kind, field) {
                     Edit::Length { .. } => row![
-                        text_field("", typed()).on_input(move |x| msg(Event::Value(key, x))).width(scaled(110.0)),
+                        text_field("", typed())
+                            .on_input(move |x| msg(Event::Value(key, x)))
+                            .width(scaled(110.0)),
                         label::body(unit),
                     ]
                     .spacing(6)
                     .align_y(Center)
                     .into(),
-                    Edit::Count => {
-                        text_field("", typed()).on_input(move |x| msg(Event::Value(key, x))).width(scaled(110.0)).into()
-                    }
-                    Edit::Text => text_field("", typed()).on_input(move |x| msg(Event::Value(key, x))).width(Fill).into(),
+                    Edit::Count => text_field("", typed())
+                        .on_input(move |x| msg(Event::Value(key, x)))
+                        .width(scaled(110.0))
+                        .into(),
+                    Edit::Text => text_field("", typed())
+                        .on_input(move |x| msg(Event::Value(key, x)))
+                        .width(Fill)
+                        .into(),
                     Edit::Switch => {
-                        let on = now_of(w, &t, key).and_then(|v| v.as_bool()).unwrap_or(false);
-                        let words = if key == "fill" { ["Dolu", "Boş"] } else { ["Evet", "Hayır"] };
-                        Select::new(words.iter().map(|x| Choice::new(*x)), Some(usize::from(!on)), move |i| {
-                            msg(Event::Pick(key, (i == 0).then_some(Value::Bool(true))))
-                        })
+                        let on = now_of(w, &t, key)
+                            .and_then(|v| v.as_bool())
+                            .unwrap_or(false);
+                        let words = if key == "fill" {
+                            ["Dolu", "Boş"]
+                        } else {
+                            ["Evet", "Hayır"]
+                        };
+                        Select::new(
+                            words.iter().map(|x| Choice::new(*x)),
+                            Some(usize::from(!on)),
+                            move |i| msg(Event::Pick(key, (i == 0).then_some(Value::Bool(true)))),
+                        )
                         .searchable(false)
                         .into()
                     }
@@ -765,7 +1079,8 @@ impl ElementTypesWindowApp for App {
                         let list = choices(t.kind, key);
                         let now = now_of(w, &t, key);
                         let at = list.iter().position(|(_, v)| *v == now);
-                        let values: Vec<Option<Value>> = list.iter().map(|(_, v)| v.clone()).collect();
+                        let values: Vec<Option<Value>> =
+                            list.iter().map(|(_, v)| v.clone()).collect();
                         Select::new(list.iter().map(|(x, _)| Choice::new(*x)), at, move |i| {
                             msg(Event::Pick(key, values.get(i).cloned().flatten()))
                         })
@@ -780,7 +1095,10 @@ impl ElementTypesWindowApp for App {
         let u = use_of(&doc.model, &t);
         form = form.field(
             "Kullanım",
-            label::body(format!("{} eleman izliyor · {} istisna · {} eski sürümde", u.elements, u.own, u.behind)),
+            label::body(format!(
+                "{} eleman izliyor · {} istisna · {} eski sürümde",
+                u.elements, u.own, u.behind
+            )),
         );
         let preview: Element<'a, Message> = match &w.preview {
             None => label::caption(
@@ -792,11 +1110,13 @@ impl ElementTypesWindowApp for App {
             Some(Err(why)) => words::text_line(Kind::Warn, why.clone()),
         };
         let out = Column::new().spacing(10).push(form).push(preview);
-        scrollable(container(out).padding(iced::Padding::ZERO.right(14))).height(Fill).into()
+        scrollable(container(out).padding(iced::Padding::ZERO.right(14)))
+            .height(Fill)
+            .into()
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    fn element_types_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
+    fn element_types_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.arch().element_types else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
@@ -808,13 +1128,21 @@ impl ElementTypesWindowApp for App {
             Control::Press(SAME) => Some(msg(Event::SelectSame)),
             Control::Pick(NEW, FROM) => Some(msg(Event::FromSelection)),
             Control::Pick(NEW, kind) => {
-                let k = ElementTypeKind::ALL.into_iter().find(|k| k.label() == kind).ok_or_else(|| format!("Yeni tip ▾'de {kind} yok"))?;
+                let k = ElementTypeKind::ALL
+                    .into_iter()
+                    .find(|k| k.label() == kind)
+                    .ok_or_else(|| format!("Yeni tip ▾'de {kind} yok"))?;
                 Some(msg(Event::New(k)))
             }
             Control::Fill("Ad", x) => Some(msg(Event::Name(x.to_owned()))),
             Control::Fill(label, x) => {
                 let t = chosen.ok_or_else(|| "Seçili tip yok".to_owned())?;
-                let f = t.kind.fields().iter().find(|f| f.label == label).ok_or_else(|| format!("“{label}” alanı yok"))?;
+                let f = t
+                    .kind
+                    .fields()
+                    .iter()
+                    .find(|f| f.label == label)
+                    .ok_or_else(|| format!("“{label}” alanı yok"))?;
                 Some(msg(Event::Value(f.key, x.to_owned())))
             }
             Control::Row(n) if n >= 1 => {
@@ -854,7 +1182,9 @@ fn new_menu<'a>() -> Element<'a, Message> {
     let face = container(
         row![
             label::body(NEW),
-            icon(kentos_ui::icon::Icon::ChevronDown).size(12.0).tone(kentos_ui::icon::Tone::Muted),
+            icon(kentos_ui::icon::Icon::ChevronDown)
+                .size(12.0)
+                .tone(kentos_ui::icon::Tone::Muted),
         ]
         .spacing(6)
         .align_y(Center),
@@ -866,7 +1196,9 @@ fn new_menu<'a>() -> Element<'a, Message> {
         for kind in ElementTypeKind::ALL {
             menu = menu.item(kind.label(), msg(Event::New(kind)));
         }
-        menu.separator().item(FROM, msg(Event::FromSelection)).detail("Tipe çevir: değerleri tipin olur")
+        menu.separator()
+            .item(FROM, msg(Event::FromSelection))
+            .detail("Tipe çevir: değerleri tipin olur")
     })
     .into()
 }

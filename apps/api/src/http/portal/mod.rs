@@ -111,20 +111,41 @@ pub fn routes() -> Router<AppState> {
             "/v1/dossiers/{id}/files/{file}/import",
             post(dossiers::import),
         )
-        .route("/v1/dossiers/{id}/files/from-upload", post(dossiers::from_upload))
+        .route(
+            "/v1/dossiers/{id}/files/from-upload",
+            post(dossiers::from_upload),
+        )
         .route("/v1/dossiers/{id}/office", put(dossiers::set_office))
-        .route("/v1/dossiers/{id}/live-project", put(dossiers::set_live_project))
-        .route("/v1/dossiers/{id}/files/{file}/preview.svg", get(dossiers::preview))
-        .route("/v1/tenants/{tenant}/fees/schedules", get(fees::schedules).post(fees::create))
+        .route(
+            "/v1/dossiers/{id}/live-project",
+            put(dossiers::set_live_project),
+        )
+        .route(
+            "/v1/dossiers/{id}/files/{file}/preview.svg",
+            get(dossiers::preview),
+        )
+        .route(
+            "/v1/tenants/{tenant}/fees/schedules",
+            get(fees::schedules).post(fees::create),
+        )
         .route(
             "/v1/tenants/{tenant}/fees/schedules/{id}",
             get(fees::schedule).put(fees::update).delete(fees::remove),
         )
-        .route("/v1/tenants/{tenant}/fees/schedules/{id}/activate", post(fees::activate))
-        .route("/v1/tenants/{tenant}/fees/schedules/{id}/copy", post(fees::copy))
+        .route(
+            "/v1/tenants/{tenant}/fees/schedules/{id}/activate",
+            post(fees::activate),
+        )
+        .route(
+            "/v1/tenants/{tenant}/fees/schedules/{id}/copy",
+            post(fees::copy),
+        )
         .route("/v1/tenants/{tenant}/fees/template", get(fees::template))
         .route("/v1/tenants/{tenant}/fees/try", post(fees::try_out))
-        .route("/v1/dossiers/{id}/fees", get(fees::dossier_fees).post(fees::issue))
+        .route(
+            "/v1/dossiers/{id}/fees",
+            get(fees::dossier_fees).post(fees::issue),
+        )
         .route("/v1/dossiers/{id}/fees/preview", post(fees::preview))
         .route("/v1/dossiers/{id}/fees/{fee}/paid", post(fees::paid))
         .route("/v1/dossiers/{id}/fees/{fee}/cancel", post(fees::cancel))
@@ -135,11 +156,23 @@ pub fn routes() -> Router<AppState> {
         .route("/v1/signing/{transaction}/cancel", post(signing::cancel))
         .route("/v1/holidays", get(holidays::list))
         .route("/v1/platform/holidays", post(holidays::add))
-        .route("/v1/platform/holidays/{day}", axum::routing::delete(holidays::remove))
-        .route("/v1/platform/retention", get(retention::page).put(retention::set))
+        .route(
+            "/v1/platform/holidays/{day}",
+            axum::routing::delete(holidays::remove),
+        )
+        .route(
+            "/v1/platform/retention",
+            get(retention::page).put(retention::set),
+        )
         .route("/v1/platform/retention/run", post(retention::run_now))
-        .route("/v1/tenants/{tenant}/portal/statistics", get(statistics::page))
-        .route("/v1/tenants/{tenant}/portal/statistics/export", get(statistics::export))
+        .route(
+            "/v1/tenants/{tenant}/portal/statistics",
+            get(statistics::page),
+        )
+        .route(
+            "/v1/tenants/{tenant}/portal/statistics/export",
+            get(statistics::export),
+        )
 }
 
 /// A file's bytes coming to a dossier: under the upload limits (`super::router`).

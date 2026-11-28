@@ -36,8 +36,8 @@ use std::sync::{Arc, Mutex};
 
 use iced::Task;
 use kentos_commands::SceneMeshKind;
-pub(crate) use kentos_model_view::VIEWS;
 use kentos_model_view::OrbitCamera;
+pub(crate) use kentos_model_view::VIEWS;
 use kentos_model_view_ui::look::{LEGEND, NORTH};
 use kentos_model_view_ui::scene::{Picked, Seen};
 pub(crate) use kentos_model_view_ui::scene::{Scene, Source};
@@ -97,7 +97,11 @@ fn road(parts: &[road_scene::ScenePart], smooth: bool) -> Scene {
             through: false,
         };
         if p.kind == SceneMeshKind::Terrain || p.roles.len() != p.triangles.len() {
-            sources.push(source(0, p.triangles.clone(), smooth && p.kind == SceneMeshKind::Terrain));
+            sources.push(source(
+                0,
+                p.triangles.clone(),
+                smooth && p.kind == SceneMeshKind::Terrain,
+            ));
             continue;
         }
         let mut by: HashMap<u32, Vec<[u32; 3]>> = HashMap::new();
@@ -225,7 +229,9 @@ impl Window {
 
     /// The object of the point last picked, as a test names it.
     pub fn picked_owner(&self) -> Option<String> {
-        self.drawn_picked().and_then(|p| p.owner.as_deref()).map(|k| self.named(k))
+        self.drawn_picked()
+            .and_then(|p| p.owner.as_deref())
+            .map(|k| self.named(k))
     }
 
     /// The scene's triangles, as its sources have them.
@@ -238,7 +244,11 @@ impl Window {
         let m = self.drawn().meshes().iter().find(|m| m.part == part)?;
         let t = m.triangles.get(n.min(m.triangles.len().checked_sub(1)?))?;
         let [a, b, c] = t.map(|k| m.vertices[k as usize]);
-        Some([(a[0] + b[0] + c[0]) / 3.0, (a[1] + b[1] + c[1]) / 3.0, (a[2] + b[2] + c[2]) / 3.0])
+        Some([
+            (a[0] + b[0] + c[0]) / 3.0,
+            (a[1] + b[1] + c[1]) / 3.0,
+            (a[2] + b[2] + c[2]) / 3.0,
+        ])
     }
 
     /// How many things the scene shows.
@@ -249,17 +259,34 @@ impl Window {
     /// The middle of the `n`th triangle of the `k`th source mesh of `part` and that mesh's object: a place a click
     /// meets it, unless something stands in front.
     pub fn owner_on(&self, part: u32, k: usize, n: usize) -> Option<([f64; 3], String)> {
-        let m = self.drawn().meshes().iter().filter(|m| m.part == part).nth(k)?;
+        let m = self
+            .drawn()
+            .meshes()
+            .iter()
+            .filter(|m| m.part == part)
+            .nth(k)?;
         let t = m.triangles.get(n)?;
         let [a, b, c] = t.map(|i| m.vertices[i as usize]);
         let owner = self.named(m.owner.as_deref()?);
-        Some(([(a[0] + b[0] + c[0]) / 3.0, (a[1] + b[1] + c[1]) / 3.0, (a[2] + b[2] + c[2]) / 3.0], owner))
+        Some((
+            [
+                (a[0] + b[0] + c[0]) / 3.0,
+                (a[1] + b[1] + c[1]) / 3.0,
+                (a[2] + b[2] + c[2]) / 3.0,
+            ],
+            owner,
+        ))
     }
 
     /// The parts of the source meshes of an object.
     pub fn parts_of(&self, owner: &str) -> Vec<u32> {
         let key = self.key_of(owner);
-        self.drawn().meshes().iter().filter(|m| m.owner.as_deref() == Some(key.as_str())).map(|m| m.part).collect()
+        self.drawn()
+            .meshes()
+            .iter()
+            .filter(|m| m.owner.as_deref() == Some(key.as_str()))
+            .map(|m| m.part)
+            .collect()
     }
 
     /// The parts its tiles carry, a section's caps' layer with them (docs/adr/8171 §2.2).
@@ -281,7 +308,18 @@ impl Window {
             PARTS
                 .iter()
                 .enumerate()
-                .map(|(k, (_, c))| Style::of([c[0], c[1], c[2], if k == 0 && self.see_through { 0.45 } else { 1.0 }]))
+                .map(|(k, (_, c))| {
+                    Style::of([
+                        c[0],
+                        c[1],
+                        c[2],
+                        if k == 0 && self.see_through {
+                            0.45
+                        } else {
+                            1.0
+                        },
+                    ])
+                })
                 .collect(),
         )
     }
@@ -293,9 +331,18 @@ impl Window {
 
     /// The vertical exaggeration as typed, about the scene's lowest point; 1 when it does not read or is not positive.
     pub fn exaggeration(&self) -> Exaggeration {
-        let factor =
-            self.exaggeration.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite() && *v > 0.0).unwrap_or(1.0);
-        Exaggeration { factor, datum: self.scene.bounds().min[2] }
+        let factor = self
+            .exaggeration
+            .trim()
+            .replace(',', ".")
+            .parse::<f64>()
+            .ok()
+            .filter(|v| v.is_finite() && *v > 0.0)
+            .unwrap_or(1.0);
+        Exaggeration {
+            factor,
+            datum: self.scene.bounds().min[2],
+        }
     }
 
     /// The camera now, in the shown space.
@@ -305,7 +352,12 @@ impl Window {
 
     /// A window on `scene`, seen from the north-east: the road's (its `parts`, made from the drawing's `made`
     /// generation and revision), or a building's viewer (its own scene and camera; `scene` empty).
-    pub(crate) fn new(scene: Scene, parts: Vec<road_scene::ScenePart>, building: Option<Building3d>, made: (u64, u64)) -> Window {
+    pub(crate) fn new(
+        scene: Scene,
+        parts: Vec<road_scene::ScenePart>,
+        building: Option<Building3d>,
+        made: (u64, u64),
+    ) -> Window {
         let mut w = Window {
             scene: Arc::new(scene),
             parts: Arc::new(parts),
@@ -314,7 +366,12 @@ impl Window {
             building,
             cut: true,
             flat: false,
-            orbit: OrbitCamera { target: [0.0; 3], azimuth: 0.0, elevation: 0.0, distance: 1.0 },
+            orbit: OrbitCamera {
+                target: [0.0; 3],
+                azimuth: 0.0,
+                elevation: 0.0,
+                distance: 1.0,
+            },
             see_through: false,
             picked: None,
             legend: true,
@@ -379,7 +436,9 @@ impl App {
     /// (scene3d_building.rs). The camera stays where the user put it. The drawing closed, or nothing left to show,
     /// closes the window and says why.
     pub(crate) fn follow_scene3d(&mut self) -> Task<Message> {
-        let Some(building) = self.scene3d_window.as_ref().map(|w| w.building.is_some()) else { return Task::none() };
+        let Some(building) = self.scene3d_window.as_ref().map(|w| w.building.is_some()) else {
+            return Task::none();
+        };
         let Some(doc) = self.document.as_ref() else {
             self.scene3d_gone();
             return Task::none();
@@ -394,11 +453,20 @@ impl App {
         let (parts, _) = road_scene::scene(&doc.model);
         if parts.is_empty() {
             self.scene3d_gone();
-            self.warn("3B görünümde gösterilecek arazi yüzeyi ya da koridor kalmadı; 3B görünüm kapandı.".to_owned());
+            self.warn(
+                "3B görünümde gösterilecek arazi yüzeyi ya da koridor kalmadı; 3B görünüm kapandı."
+                    .to_owned(),
+            );
             return Task::none();
         }
-        let Some(w) = self.scene3d_window.as_mut() else { return Task::none() };
-        let shown = if w.cut { road_scene::with_terrain_cut(&parts) } else { parts.clone() };
+        let Some(w) = self.scene3d_window.as_mut() else {
+            return Task::none();
+        };
+        let shown = if w.cut {
+            road_scene::with_terrain_cut(&parts)
+        } else {
+            parts.clone()
+        };
         w.scene = Arc::new(road(&shown, !w.flat));
         w.parts = Arc::new(parts);
         w.made = now;
@@ -406,17 +474,32 @@ impl App {
     }
 
     pub(crate) fn scene3d_event(&mut self, event: Event) -> Task<Message> {
-        if self.scene3d_window.as_ref().is_some_and(|w| w.building.is_some()) {
+        if self
+            .scene3d_window
+            .as_ref()
+            .is_some_and(|w| w.building.is_some())
+        {
             return self.building3d_event(event);
         }
-        let Some(w) = self.scene3d_window.as_mut() else { return Task::none() };
+        let Some(w) = self.scene3d_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Orbit(dx, dy) => w.orbit.orbit(f64::from(dx), f64::from(dy)),
             Event::Pan(dx, dy) => w.orbit.pan(f64::from(dx), f64::from(dy)),
             Event::Dolly(steps) => w.orbit.dolly(f64::from(steps)),
             Event::Pick(x, y, width, height) => {
-                let vp = Viewport { width: f64::from(width), height: f64::from(height) };
-                w.picked = w.scene.pick(&w.camera(), &vp, &w.exaggeration(), f64::from(x), f64::from(y));
+                let vp = Viewport {
+                    width: f64::from(width),
+                    height: f64::from(height),
+                };
+                w.picked = w.scene.pick(
+                    &w.camera(),
+                    &vp,
+                    &w.exaggeration(),
+                    f64::from(x),
+                    f64::from(y),
+                );
             }
             // From the south, looking north: north is up on the screen.
             Event::North => w.orbit.north(),
@@ -431,7 +514,11 @@ impl App {
                 } else {
                     w.flat = !w.flat;
                 }
-                let parts = if w.cut { road_scene::with_terrain_cut(&w.parts) } else { w.parts.to_vec() };
+                let parts = if w.cut {
+                    road_scene::with_terrain_cut(&w.parts)
+                } else {
+                    w.parts.to_vec()
+                };
                 w.scene = Arc::new(road(&parts, !w.flat));
             }
             // glTF ver: the module's command (docs/adr/9199 §3.3).
@@ -476,19 +563,29 @@ impl App {
             Event::SeeThrough => V::SeeThrough,
             Event::Close => V::Close,
             Event::Storey(i) => {
-                if let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) {
+                if let Some(b) = self
+                    .scene3d_window
+                    .as_mut()
+                    .and_then(|w| w.building.as_mut())
+                {
                     b.toggle_storey(i);
                 }
                 return Task::none();
             }
             Event::AllStoreys => {
-                if let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) {
+                if let Some(b) = self
+                    .scene3d_window
+                    .as_mut()
+                    .and_then(|w| w.building.as_mut())
+                {
                     b.show_all_storeys();
                 }
                 return Task::none();
             }
             // The road's alone.
-            Event::Exaggeration(_) | Event::Cut | Event::Flat | Event::Export => return Task::none(),
+            Event::Exaggeration(_) | Event::Cut | Event::Flat | Event::Export => {
+                return Task::none();
+            }
         };
         self.building3d_viewer(viewer);
         Task::none()
@@ -502,7 +599,8 @@ impl App {
             if let Some(m) = b.control(&control) {
                 return Ok(Some(m));
             }
-            return crate::ifc_viewer::viewer_control(&b.viewer, control, TITLE).map(|m| Some(msg(Event::Viewer(m))));
+            return crate::ifc_viewer::viewer_control(&b.viewer, control, TITLE)
+                .map(|m| Some(msg(Event::Viewer(m))));
         }
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
@@ -513,9 +611,9 @@ impl App {
             Control::Press(FLAT) => Some(msg(Event::Flat)),
             Control::Press(LEGEND) => Some(msg(Event::Legend)),
             Control::Press(NORTH) => Some(msg(Event::North)),
-            Control::Press(name) if VIEWS.iter().any(|v| v.0 == name) => {
-                Some(msg(Event::View(VIEWS.iter().position(|v| v.0 == name).unwrap_or(0))))
-            }
+            Control::Press(name) if VIEWS.iter().any(|v| v.0 == name) => Some(msg(Event::View(
+                VIEWS.iter().position(|v| v.0 == name).unwrap_or(0),
+            ))),
             Control::Fill(EXAGGERATION, t) => Some(msg(Event::Exaggeration(t.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })

@@ -9,8 +9,8 @@ use iced::{Center, Element, Task};
 use kentos_commands::Workspace;
 use kentos_interaction::Level;
 use kentos_project::wizard::{CAD_SCALES, GIS_SCALES, scale_text};
-use kentos_ui::widget::Menu;
 use kentos_ui::theme::typography;
+use kentos_ui::widget::Menu;
 
 use crate::app::{App, Message};
 
@@ -34,7 +34,10 @@ fn event(e: Event) -> Message {
 
 /// A whole number over 0 typed with dots between its digits, or none.
 fn whole(text: &str) -> Option<f64> {
-    let digits: String = text.chars().filter(|c| *c != '.' && !c.is_whitespace()).collect();
+    let digits: String = text
+        .chars()
+        .filter(|c| *c != '.' && !c.is_whitespace())
+        .collect();
     let n: u64 = digits.parse().ok()?;
     (n > 0 && n < 1_000_000_000).then_some(n as f64)
 }
@@ -59,7 +62,10 @@ pub(crate) fn scale_words(n: f64) -> String {
     if n >= 1.0 {
         return scale_text(n.round());
     }
-    format!("{}:1", scale_text((1.0 / n).round()).trim_start_matches("1:"))
+    format!(
+        "{}:1",
+        scale_text((1.0 / n).round()).trim_start_matches("1:")
+    )
 }
 
 impl App {
@@ -99,9 +105,9 @@ impl App {
 
     /// Metres a drawing unit is at the view's middle: 1 but in a geographic project (map_marks.rs).
     pub(crate) fn metres_per_unit(&self) -> f64 {
-        self.document
-            .as_ref()
-            .map_or(1.0, |d| crate::map_marks::metres_per_unit(d.model.settings(), &self.viewport.camera))
+        self.document.as_ref().map_or(1.0, |d| {
+            crate::map_marks::metres_per_unit(d.model.settings(), &self.viewport.camera)
+        })
     }
 
     /// The view's 1:N as the status bar says it: of metres on the ground (GIS-040).
@@ -112,8 +118,9 @@ impl App {
     /// A view's 1:N through its own camera, as the status bar says the active one's (docs/adr/9327): a split view's
     /// badge and the status bar say the same scale, in a geographic project too.
     pub(crate) fn scale_of(&self, camera: &kentos_render_wgpu::Camera) -> f64 {
-        let per_unit =
-            self.document.as_ref().map_or(1.0, |d| crate::map_marks::metres_per_unit(d.model.settings(), camera));
+        let per_unit = self.document.as_ref().map_or(1.0, |d| {
+            crate::map_marks::metres_per_unit(d.model.settings(), camera)
+        });
         camera.screen_scale() * per_unit
     }
 
@@ -145,7 +152,10 @@ impl App {
 }
 
 /// The selector's menu: the type's scales, then Ölçek yaz….
-pub(crate) fn scale_menu(scales: &[f64], summary: &[kentos_interaction::scale_summary::ScaleRow]) -> Menu<Message> {
+pub(crate) fn scale_menu(
+    scales: &[f64],
+    summary: &[kentos_interaction::scale_summary::ScaleRow],
+) -> Menu<Message> {
     let menu = scales
         .iter()
         .fold(Menu::new().header("Görünümün ölçeği"), |menu, &n| {
@@ -160,7 +170,9 @@ impl App {
     /// Ölçeklerin özeti at the screen's middle (docs/adr/1231): a project with a coordinate system's (a map's, a road's,
     /// a GIS's); none for a building on its own coordinates.
     pub(crate) fn scale_summary(&self) -> Vec<kentos_interaction::scale_summary::ScaleRow> {
-        let Some(doc) = &self.document else { return Vec::new() };
+        let Some(doc) = &self.document else {
+            return Vec::new();
+        };
         let settings = doc.settings();
         if kentos_project::systems::own(settings).is_none() {
             return Vec::new();
@@ -183,7 +195,19 @@ mod tests {
     #[test]
     fn a_scale_chosen_or_typed_zooms_the_view_to_it() {
         assert_eq!(
-            ["1:500", "2.500", " 1:25.000 ", "0", "abc", "1:", "2:1", "2.646:1", "0:1", "1:1"].map(typed_scale),
+            [
+                "1:500",
+                "2.500",
+                " 1:25.000 ",
+                "0",
+                "abc",
+                "1:",
+                "2:1",
+                "2.646:1",
+                "0:1",
+                "1:1"
+            ]
+            .map(typed_scale),
             [
                 Some(500.0),
                 Some(2500.0),
@@ -227,20 +251,45 @@ mod tests {
         assert_eq!(scale_words(1.0), "1:1");
         assert_eq!(scale_words(1.4), "1:1");
         assert_eq!(scale_words(0.99), "1:1", "just closer than full size");
-        assert_eq!(scale_words(0.5), "2:1", "half the paper's metre: twice the size");
+        assert_eq!(
+            scale_words(0.5),
+            "2:1",
+            "half the paper's metre: twice the size"
+        );
         assert_eq!(scale_words(0.2), "5:1");
         assert_eq!(scale_words(0.4), "3:1");
         assert_eq!(scale_words(1.0 / 2646.0), "2.646:1", "the deepest zoom");
         assert_eq!(scale_words(0.0), "—");
         assert_eq!(scale_words(f64::NAN), "—");
         // Within the camera's reach: 2 646:1 closest in.
-        for n in [0.3, 0.51, 0.7, 1.0 / 2646.0, 1e-3, 0.999, 1.0, 1.5, 68.4, 2.5e8] {
+        for n in [
+            0.3,
+            0.51,
+            0.7,
+            1.0 / 2646.0,
+            1e-3,
+            0.999,
+            1.0,
+            1.5,
+            68.4,
+            2.5e8,
+        ] {
             let words = scale_words(n);
-            assert!(!words.starts_with("0:") && !words.ends_with(":0"), "{n}: {words}");
+            assert!(
+                !words.starts_with("0:") && !words.ends_with(":0"),
+                "{n}: {words}"
+            );
             // What a readout says, typed back, is the scale it said (to its rounding).
             let back = typed_scale(&words).expect("typed back");
-            let said = if n >= 1.0 { n.round() } else { 1.0 / (1.0 / n).round() };
-            assert!((back - said).abs() <= said * 1e-12, "{n}: {words} read {back}");
+            let said = if n >= 1.0 {
+                n.round()
+            } else {
+                1.0 / (1.0 / n).round()
+            };
+            assert!(
+                (back - said).abs() <= said * 1e-12,
+                "{n}: {words} read {back}"
+            );
         }
     }
 

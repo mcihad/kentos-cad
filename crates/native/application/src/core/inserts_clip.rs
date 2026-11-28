@@ -6,8 +6,8 @@
 //! counted (docs/adr/0278); one undo step “Kırp”. The shared cases are `fixtures/commands/v1/cad.inserts.clip.json`.
 
 use kentos_commands::{
-    ClipBoundary, ClipFrame, CommandResult, CommandWarning, Entity, InsertClip, InsertClipped, InsertsClip,
-    InsertsClipOperation, InsertsClipped, MAX_CLIPPING_CORNERS, Vec2, codes,
+    ClipBoundary, ClipFrame, CommandResult, CommandWarning, Entity, InsertClip, InsertClipped,
+    InsertsClip, InsertsClipOperation, InsertsClipped, MAX_CLIPPING_CORNERS, Vec2, codes,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::block::placement_xy;
@@ -27,7 +27,12 @@ fn ring_of(boundary: &ClipBoundary) -> Vec<Vec2> {
         ClipBoundary::Rectangle { a, b } => {
             let (x0, x1) = (a.x.min(b.x), a.x.max(b.x));
             let (y0, y1) = (a.y.min(b.y), a.y.max(b.y));
-            vec![Vec2 { x: x0, y: y0 }, Vec2 { x: x1, y: y0 }, Vec2 { x: x1, y: y1 }, Vec2 { x: x0, y: y1 }]
+            vec![
+                Vec2 { x: x0, y: y0 },
+                Vec2 { x: x1, y: y0 },
+                Vec2 { x: x1, y: y1 },
+                Vec2 { x: x0, y: y1 },
+            ]
         }
         ClipBoundary::Polygon { points } => {
             let mut ring = points.clone();
@@ -51,7 +56,11 @@ fn meet(a: P, b: P, c: P, d: P) -> bool {
         return true;
     }
     let on = |a: P, b: P, q: P, o: f64| {
-        o == 0.0 && q.x >= a.x.min(b.x) && q.x <= a.x.max(b.x) && q.y >= a.y.min(b.y) && q.y <= a.y.max(b.y)
+        o == 0.0
+            && q.x >= a.x.min(b.x)
+            && q.x <= a.x.max(b.x)
+            && q.y >= a.y.min(b.y)
+            && q.y <= a.y.max(b.y)
     };
     on(a, b, c, o1) || on(a, b, d, o2) || on(c, d, a, o3) || on(c, d, b, o4)
 }
@@ -80,7 +89,8 @@ fn crossing(ring: &[Vec2]) -> Option<(usize, usize)> {
                 // Neighbours meet at their shared corner only: not folding back along each other.
                 let (shared, x, y) = if hi == lo + 1 { (b, a, d) } else { (a, b, c) };
                 if orient2d(x, shared, y) == 0.0
-                    && (x.x - shared.x) * (y.x - shared.x) + (x.y - shared.y) * (y.y - shared.y) > 0.0
+                    && (x.x - shared.x) * (y.x - shared.x) + (x.y - shared.y) * (y.y - shared.y)
+                        > 0.0
                 {
                     best = best.min(Some((lo, hi))).or(Some((lo, hi)));
                 }
@@ -97,7 +107,9 @@ fn crossing(ring: &[Vec2]) -> Option<(usize, usize)> {
 /// The ring's twice-signed area.
 fn area2(ring: &[Vec2]) -> f64 {
     let n = ring.len();
-    (0..n).map(|i| ring[i].x * ring[(i + 1) % n].y - ring[(i + 1) % n].x * ring[i].y).sum()
+    (0..n)
+        .map(|i| ring[i].x * ring[(i + 1) % n].y - ring[(i + 1) % n].x * ring[i].y)
+        .sum()
 }
 
 /// The boundary given, checked: its corners in the drawing.
@@ -112,20 +124,32 @@ fn boundary(b: &ClipBoundary) -> Result<Vec<Vec2>, Stop> {
         return Err(bad("Kırpma sınırı en az üç köşeli bir çokgendir.".into()));
     }
     if ring.len() > MAX_CLIPPING_CORNERS {
-        return Err(bad(format!("Kırpma sınırı en çok {MAX_CLIPPING_CORNERS} köşeli olabilir.")));
+        return Err(bad(format!(
+            "Kırpma sınırı en çok {MAX_CLIPPING_CORNERS} köşeli olabilir."
+        )));
     }
     if area2(&ring) == 0.0 {
-        return Err(bad("Kırpma sınırının alanı yok: köşeleri bir doğru üzerinde ya da üst üste.".into()));
+        return Err(bad(
+            "Kırpma sınırının alanı yok: köşeleri bir doğru üzerinde ya da üst üste.".into(),
+        ));
     }
     if let Some((i, j)) = crossing(&ring) {
-        return Err(bad(format!("Kırpma sınırının {}. ve {}. kenarı kesişiyor; kendini kesmeyen bir sınır çizin.", i + 1, j + 1)));
+        return Err(bad(format!(
+            "Kırpma sınırının {}. ve {}. kenarı kesişiyor; kendini kesmeyen bir sınır çizin.",
+            i + 1,
+            j + 1
+        )));
     }
     Ok(ring)
 }
 
 /// The ring in the insert's definition: its corners through the inverse of the placement, the base put back. None
 /// for a placement without an inverse.
-fn in_definition(ring: &[Vec2], insert: &kentos_commands::InsertEntity, base: Vec2) -> Option<Vec<Vec2>> {
+fn in_definition(
+    ring: &[Vec2],
+    insert: &kentos_commands::InsertEntity,
+    base: Vec2,
+) -> Option<Vec<Vec2>> {
     let m = placement_xy(
         P::new(insert.p.x, insert.p.y),
         insert.scale,
@@ -141,7 +165,10 @@ fn in_definition(ring: &[Vec2], insert: &kentos_commands::InsertEntity, base: Ve
         ring.iter()
             .map(|v| {
                 let (x, y) = (v.x - m[4], v.y - m[5]);
-                Vec2 { x: (m[3] * x - m[2] * y) / det + base.x, y: (m[0] * y - m[1] * x) / det + base.y }
+                Vec2 {
+                    x: (m[3] * x - m[2] * y) / det + base.x,
+                    y: (m[0] * y - m[1] * x) / det + base.y,
+                }
             })
             .collect(),
     )
@@ -159,7 +186,9 @@ fn check(doc: &Document, input: &InsertsClip) -> Result<Planned, Stop> {
         if !matches!(e, Entity::Insert(_)) {
             return Err(refuse(
                 codes::NOT_AN_INSERT,
-                format!("“{uid}” kimlikli nesne bir blok ya da dış başvuru değil; yalnız onlar kırpılır."),
+                format!(
+                    "“{uid}” kimlikli nesne bir blok ya da dış başvuru değil; yalnız onlar kırpılır."
+                ),
                 &format!("uids[{at}]"),
             ));
         }
@@ -175,16 +204,29 @@ fn check(doc: &Document, input: &InsertsClip) -> Result<Planned, Stop> {
         let Entity::Insert(ins) = e else { continue };
         let mut next = ins.clone();
         match &input.operation {
-            InsertsClipOperation::Set { inverted, frame, .. } => {
-                let base = doc.blocks().iter().find(|b| b.id == ins.block).map_or(Vec2 { x: 0.0, y: 0.0 }, |b| b.base);
-                let Some(local) = in_definition(ring.as_deref().unwrap_or_default(), ins, base) else {
+            InsertsClipOperation::Set {
+                inverted, frame, ..
+            } => {
+                let base = doc
+                    .blocks()
+                    .iter()
+                    .find(|b| b.id == ins.block)
+                    .map_or(Vec2 { x: 0.0, y: 0.0 }, |b| b.base);
+                let Some(local) = in_definition(ring.as_deref().unwrap_or_default(), ins, base)
+                else {
                     return Err(refuse(
                         codes::INVALID_CLIPPING,
-                        format!("“{uid}” kimlikli yerleştirmenin ölçeği sıfır; kırpma sınırı onun tanımına taşınamaz."),
+                        format!(
+                            "“{uid}” kimlikli yerleştirmenin ölçeği sıfır; kırpma sınırı onun tanımına taşınamaz."
+                        ),
                         &format!("uids[{at}]"),
                     ));
                 };
-                next.clipping = Some(InsertClip { boundary: local, inverted: *inverted, frame: *frame });
+                next.clipping = Some(InsertClip {
+                    boundary: local,
+                    inverted: *inverted,
+                    frame: *frame,
+                });
             }
             InsertsClipOperation::Remove => {
                 if next.clipping.take().is_none() {
@@ -192,29 +234,40 @@ fn check(doc: &Document, input: &InsertsClip) -> Result<Planned, Stop> {
                 }
             }
             InsertsClipOperation::Frame { frame } => {
-                let Some(c) = next.clipping.as_mut() else { continue };
+                let Some(c) = next.clipping.as_mut() else {
+                    continue;
+                };
                 c.frame = *frame;
             }
             InsertsClipOperation::Invert => {
-                let Some(c) = next.clipping.as_mut() else { continue };
+                let Some(c) = next.clipping.as_mut() else {
+                    continue;
+                };
                 c.inverted = !c.inverted;
             }
         }
         writes.push((
             slot,
             Entity::Insert(next.clone()),
-            InsertClipped { uid: uid.clone(), clipping: next.clipping },
+            InsertClipped {
+                uid: uid.clone(),
+                clipping: next.clipping,
+            },
         ));
     }
     if writes.is_empty() {
         return Err(refuse(
             codes::NOT_CLIPPED,
-            "Verilen yerleştirmelerin hiçbiri kırpılmış değil; önce bir kırpma sınırı verin.".into(),
+            "Verilen yerleştirmelerin hiçbiri kırpılmış değil; önce bir kırpma sınırı verin."
+                .into(),
             "uids",
         ));
     }
     // A boundary that leaves an insert nothing is said, not refused: the content may still change.
-    if matches!(input.operation, InsertsClipOperation::Set { .. } | InsertsClipOperation::Invert) {
+    if matches!(
+        input.operation,
+        InsertsClipOperation::Set { .. } | InsertsClipOperation::Invert
+    ) {
         let blocks = crate::blocks::drawing_blocks(doc);
         let empty: Vec<&str> = writes
             .iter()
@@ -242,8 +295,13 @@ fn check(doc: &Document, input: &InsertsClip) -> Result<Planned, Stop> {
 /// Whether a piece is the plotted frame the clipping added (it alone is not content).
 fn is_frame(piece: &kentos_geometry_core::block::Piece, e: &Entity) -> bool {
     let Entity::Insert(i) = e else { return false };
-    i.clipping.as_ref().is_some_and(|c| c.frame == ClipFrame::Plot)
-        && matches!(piece.shape, kentos_geometry_core::entity::Shape::Polyline { closed: true, .. })
+    i.clipping
+        .as_ref()
+        .is_some_and(|c| c.frame == ClipFrame::Plot)
+        && matches!(
+            piece.shape,
+            kentos_geometry_core::entity::Shape::Polyline { closed: true, .. }
+        )
         && piece.attribute.is_none()
 }
 
@@ -254,7 +312,10 @@ fn in_order(mut writes: Vec<(Slot, Entity, InsertClipped)>) -> Vec<(Slot, Entity
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &InsertsClip) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: (), warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: (),
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -283,7 +344,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: InsertsClip) -> CommandResu
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: InsertsClip) -> CommandResult<InsertsClipped> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: InsertsClip,
+) -> CommandResult<InsertsClipped> {
     let Planned { writes, warnings } = match check(cx.doc, &input) {
         Ok(p) => p,
         Err(stop) => return stop.into(),
@@ -303,7 +367,10 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: InsertsClip) -> CommandRe
         Ok(())
     });
     CommandResult::Completed {
-        output: InsertsClipped { inserts: out, revision: cx.doc.revision().to_string() },
+        output: InsertsClipped {
+            inserts: out,
+            revision: cx.doc.revision().to_string(),
+        },
         warnings,
     }
 }
@@ -318,11 +385,24 @@ mod tests {
 
     #[test]
     fn crossing_rings_are_found() {
-        assert_eq!(crossing(&[v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0), v(0.0, 4.0)]), None);
+        assert_eq!(
+            crossing(&[v(0.0, 0.0), v(4.0, 0.0), v(4.0, 4.0), v(0.0, 4.0)]),
+            None
+        );
         assert!(crossing(&[v(0.0, 0.0), v(4.0, 4.0), v(4.0, 0.0), v(0.0, 4.0)]).is_some());
         // A spike folding back along its neighbour.
         assert!(crossing(&[v(0.0, 0.0), v(4.0, 0.0), v(2.0, 0.0), v(2.0, 3.0)]).is_some());
         // A ring touching itself at a corner.
-        assert!(crossing(&[v(0.0, 0.0), v(4.0, 0.0), v(2.0, 2.0), v(4.0, 4.0), v(0.0, 4.0), v(2.0, 2.0)]).is_some());
+        assert!(
+            crossing(&[
+                v(0.0, 0.0),
+                v(4.0, 0.0),
+                v(2.0, 2.0),
+                v(4.0, 4.0),
+                v(0.0, 4.0),
+                v(2.0, 2.0)
+            ])
+            .is_some()
+        );
     }
 }

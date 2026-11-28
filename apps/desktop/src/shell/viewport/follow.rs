@@ -47,7 +47,12 @@ impl<'a, Message, Theme, Renderer> Follow<'a, Message, Theme, Renderer> {
         follows: Follows,
         content: impl Into<Element<'a, Message, Theme, Renderer>>,
     ) -> Self {
-        Self { built, live, follows, content: content.into() }
+        Self {
+            built,
+            live,
+            follows,
+            content: content.into(),
+        }
     }
 }
 
@@ -80,7 +85,8 @@ pub fn pinned(built: &Camera, now: &Camera, p: kentos_render_wgpu::Vec2) -> Opti
     (shift.x.is_finite() && shift.y.is_finite()).then_some(shift)
 }
 
-impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer> for Follow<'_, Message, Theme, Renderer>
+impl<Message, Theme, Renderer> Widget<Message, Theme, Renderer>
+    for Follow<'_, Message, Theme, Renderer>
 where
     Renderer: iced::advanced::Renderer,
 {
@@ -92,7 +98,12 @@ where
         self.content.as_widget().size_hint()
     }
 
-    fn layout(&mut self, tree: &mut Tree, renderer: &Renderer, limits: &layout::Limits) -> layout::Node {
+    fn layout(
+        &mut self,
+        tree: &mut Tree,
+        renderer: &Renderer,
+        limits: &layout::Limits,
+    ) -> layout::Node {
         self.content.as_widget_mut().layout(tree, renderer, limits)
     }
 
@@ -108,7 +119,9 @@ where
     ) {
         let now = self.live.camera();
         let draw = |renderer: &mut Renderer| {
-            self.content.as_widget().draw(tree, renderer, theme, style, layout, cursor, viewport);
+            self.content
+                .as_widget()
+                .draw(tree, renderer, theme, style, layout, cursor, viewport);
         };
         if now == self.built {
             draw(renderer);
@@ -154,8 +167,16 @@ where
         self.content.as_widget().diff(tree);
     }
 
-    fn operate(&mut self, tree: &mut Tree, layout: Layout<'_>, renderer: &Renderer, operation: &mut dyn Operation) {
-        self.content.as_widget_mut().operate(tree, layout, renderer, operation);
+    fn operate(
+        &mut self,
+        tree: &mut Tree,
+        layout: Layout<'_>,
+        renderer: &Renderer,
+        operation: &mut dyn Operation,
+    ) {
+        self.content
+            .as_widget_mut()
+            .operate(tree, layout, renderer, operation);
     }
 
     fn update(
@@ -169,7 +190,9 @@ where
         shell: &mut Shell<'_, Message>,
         viewport: &Rectangle,
     ) {
-        self.content.as_widget_mut().update(tree, event, layout, cursor, renderer, clipboard, shell, viewport);
+        self.content.as_widget_mut().update(
+            tree, event, layout, cursor, renderer, clipboard, shell, viewport,
+        );
     }
 
     fn mouse_interaction(
@@ -180,7 +203,9 @@ where
         viewport: &Rectangle,
         renderer: &Renderer,
     ) -> mouse::Interaction {
-        self.content.as_widget().mouse_interaction(tree, layout, cursor, viewport, renderer)
+        self.content
+            .as_widget()
+            .mouse_interaction(tree, layout, cursor, viewport, renderer)
     }
 
     fn overlay<'b>(
@@ -191,11 +216,14 @@ where
         viewport: &Rectangle,
         translation: Vector,
     ) -> Option<overlay::Element<'b, Message, Theme, Renderer>> {
-        self.content.as_widget_mut().overlay(tree, layout, renderer, viewport, translation)
+        self.content
+            .as_widget_mut()
+            .overlay(tree, layout, renderer, viewport, translation)
     }
 }
 
-impl<'a, Message, Theme, Renderer> From<Follow<'a, Message, Theme, Renderer>> for Element<'a, Message, Theme, Renderer>
+impl<'a, Message, Theme, Renderer> From<Follow<'a, Message, Theme, Renderer>>
+    for Element<'a, Message, Theme, Renderer>
 where
     Message: 'a,
     Theme: 'a,
@@ -230,7 +258,10 @@ mod tests {
             let world = built.screen_to_world(x, y);
             let [ex, ey] = now.world_to_screen(world);
             let (gx, gy) = (k * x as f32 + shift.x, k * y as f32 + shift.y);
-            assert!((f64::from(gx) - ex).abs() < 1e-3 && (f64::from(gy) - ey).abs() < 1e-3, "({x}, {y})");
+            assert!(
+                (f64::from(gx) - ex).abs() < 1e-3 && (f64::from(gy) - ey).abs() < 1e-3,
+                "({x}, {y})"
+            );
         }
         assert_eq!(moved(&built, &built), Some((1.0, Vector::ZERO)));
     }
@@ -246,12 +277,22 @@ mod tests {
         now.pan_by(-37.0, 12.5);
         let by = pinned(&built, &now, p).expect("a shift");
         let [x, y] = now.world_to_screen(p);
-        assert!((500.0 + f64::from(by.x) - x).abs() <= 0.5 && (200.0 + f64::from(by.y) - y).abs() <= 0.5, "{by:?}");
-        assert!(by.x.fract() == 0.0 && by.y.fract() == 0.0, "whole pixels: {by:?}");
+        assert!(
+            (500.0 + f64::from(by.x) - x).abs() <= 0.5
+                && (200.0 + f64::from(by.y) - y).abs() <= 0.5,
+            "{by:?}"
+        );
+        assert!(
+            by.x.fract() == 0.0 && by.y.fract() == 0.0,
+            "whole pixels: {by:?}"
+        );
         assert_eq!(pinned(&built, &built, p), Some(Vector::ZERO));
         let mut turned = built;
         turned.twist = 0.3;
-        assert!(pinned(&built, &turned, p).is_some(), "a turn moves the card's place");
+        assert!(
+            pinned(&built, &turned, p).is_some(),
+            "a turn moves the card's place"
+        );
     }
 
     #[test]

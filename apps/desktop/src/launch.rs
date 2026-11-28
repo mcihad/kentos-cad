@@ -5,9 +5,8 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 use crate::{
-    app, blocks_library, cloud, dialog_sizes, forms, grids, layout, processing,
-    program, python, python_setup, recent, recovery, settings, sheets, snapshot, sources, style,
-    usage, windows,
+    app, blocks_library, cloud, dialog_sizes, forms, grids, layout, processing, program, python,
+    python_setup, recent, recovery, settings, sheets, snapshot, sources, style, usage, windows,
 };
 
 use kentos_launch::Module;

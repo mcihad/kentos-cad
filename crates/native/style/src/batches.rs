@@ -507,7 +507,9 @@ pub use kentos_style_core::style::batch::CURVE_LEVELS;
 /// A batch's detail levels as the core described them (`"lod"`), if it has them.
 fn lod_of(d: &Value) -> Option<Lod> {
     let list = d.get("lod")?.as_array()?;
-    let mut lens = list.iter().map(|v| v.as_f64().unwrap_or(0.0).max(0.0) as usize);
+    let mut lens = list
+        .iter()
+        .map(|v| v.as_f64().unwrap_or(0.0).max(0.0) as usize);
     let main = lens.next()?;
     let levels: Vec<usize> = lens.collect();
     Some(Lod {
@@ -523,7 +525,8 @@ fn instances_of(d: &Value) -> Option<Instances> {
     let inst = d.get("inst")?;
     let count = inst.get("count")?.as_f64()?.max(0.0) as u32;
     let len = n(d, "len") as usize;
-    let mesh = len.checked_sub(count as usize * kentos_style_core::style::batch::INSTANCE_FLOATS)?;
+    let mesh =
+        len.checked_sub(count as usize * kentos_style_core::style::batch::INSTANCE_FLOATS)?;
     let proxy = inst.get("proxy").and_then(Value::as_array).and_then(|p| {
         let len = p.first()?.as_f64()?.max(0.0) as usize;
         let extent = p.get(1)?.as_f64()?;
@@ -642,11 +645,9 @@ fn quad(v: &Value, k: &str) -> [f64; 4] {
 
 /// Full source dash list. Native execution normalizes odd recipes without truncation.
 fn dash_list(v: &Value, k: &str) -> Option<Vec<f64>> {
-    v.get(k).and_then(Value::as_array).map(|d| {
-        d.iter()
-            .map(|x| x.as_f64().unwrap_or(0.0))
-            .collect()
-    })
+    v.get(k)
+        .and_then(Value::as_array)
+        .map(|d| d.iter().map(|x| x.as_f64().unwrap_or(0.0)).collect())
 }
 
 fn line_type_loss(style: &Value) -> Option<String> {
@@ -1332,8 +1333,15 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
         let style = d.get("style").unwrap_or(&Value::Null);
         // Bound malformed/custom style workloads before any GPU allocation.
         // The UI's named definitions have a smaller independent format limit.
-        if style.get("dash").and_then(Value::as_array).is_some_and(|d| d.len() > 4096) {
-            return Err("Çizgi deseni 4096 öğe güvenlik sınırını aşıyor; desen kesilmeden reddedildi.".into());
+        if style
+            .get("dash")
+            .and_then(Value::as_array)
+            .is_some_and(|d| d.len() > 4096)
+        {
+            return Err(
+                "Çizgi deseni 4096 öğe güvenlik sınırını aşıyor; desen kesilmeden reddedildi."
+                    .into(),
+            );
         }
         let min_scale = d.get("minScale").and_then(Value::as_f64);
         let max_scale = d.get("maxScale").and_then(Value::as_f64);
@@ -1390,8 +1398,14 @@ pub fn decode(out: Batches, o: &DecodeOptions) -> Result<StyledLayer, String> {
                 max_scale,
                 group,
                 effect: effect.clone(),
-                weight_cap: if s(style, "kind") == "hatch" && paper(style) { held } else { 0.0 },
-                line_type_loss: (s(style, "kind") == "hatch").then(|| line_type_loss(style)).flatten(),
+                weight_cap: if s(style, "kind") == "hatch" && paper(style) {
+                    held
+                } else {
+                    0.0
+                },
+                line_type_loss: (s(style, "kind") == "hatch")
+                    .then(|| line_type_loss(style))
+                    .flatten(),
                 lod: lod_of(d),
                 instances: instances_of(d),
             },
@@ -1822,7 +1836,9 @@ impl StyledBatch {
             _ => true,
         };
         match self.kind {
-            BatchKind::Marker { vectors: true, .. } => readable && px <= crate::svg_marks::VECTORS_FROM_PX,
+            BatchKind::Marker { vectors: true, .. } => {
+                readable && px <= crate::svg_marks::VECTORS_FROM_PX
+            }
             _ => readable,
         }
     }
@@ -1854,9 +1870,14 @@ impl StyledLayer {
     /// Reconstruct a batch for CPU/export in float64, before its view transform.
     pub fn values(&self, range: Range<usize>) -> Option<Vec<f64>> {
         let high = self.data.get(range.clone())?;
-        Some(high.iter().enumerate().map(|(i, &v)| {
-            f64::from(v) + f64::from(self.low.get(range.start + i).copied().unwrap_or(0.0))
-        }).collect())
+        Some(
+            high.iter()
+                .enumerate()
+                .map(|(i, &v)| {
+                    f64::from(v) + f64::from(self.low.get(range.start + i).copied().unwrap_or(0.0))
+                })
+                .collect(),
+        )
     }
 
     /// The batches as `fixtures/style/v1/batches.json` writes them.
@@ -2250,19 +2271,37 @@ mod fold_tests {
 
     #[test]
     fn a_long_recipe_folds_against_its_full_float64_period_at_a_far_origin() {
-        let dash=vec![2.,3.,4.,5.,6.,7.,8.,9.,23.];
+        let dash = vec![2., 3., 4., 5., 6., 7., 8., 9., 23.];
         // Independent sum and odd-list repetition: 67 × 2, not the first 8.
-        let total=134.;
-        let (angle,offset,phase,spacing,stagger)=(0.6,0.25,0.75,1.5,0.4);
-        let paint=FillPaintBatch::Hatch {color:[0.;4],angle,offset,spacing,stagger,
-            width:0.1,dash:Some(dash),dash_offset:phase,unit:Unit::World};
-        let FillPaintBatch::Hatch {offset:folded,dash_offset:shifted,..}=fold(paint,O) else {unreachable!()};
-        let (c,s)=(cos(angle),sin(angle));
-        let row=|q:[f64;2],off:f64|((-s*q[0]+c*q[1]-off)/spacing+0.5).floor();
+        let total = 134.;
+        let (angle, offset, phase, spacing, stagger) = (0.6, 0.25, 0.75, 1.5, 0.4);
+        let paint = FillPaintBatch::Hatch {
+            color: [0.; 4],
+            angle,
+            offset,
+            spacing,
+            stagger,
+            width: 0.1,
+            dash: Some(dash),
+            dash_offset: phase,
+            unit: Unit::World,
+        };
+        let FillPaintBatch::Hatch {
+            offset: folded,
+            dash_offset: shifted,
+            ..
+        } = fold(paint, O)
+        else {
+            unreachable!()
+        };
+        let (c, s) = (cos(angle), sin(angle));
+        let row = |q: [f64; 2], off: f64| ((-s * q[0] + c * q[1] - off) / spacing + 0.5).floor();
         for p in POINTS {
-            let w=from_anchor(p);
-            assert!(same_phase((c*w[0]+s*w[1]-row(w,offset)*stagger+phase)/total,
-                (c*p[0]+s*p[1]-row(p,folded)*stagger+shifted)/total));
+            let w = from_anchor(p);
+            assert!(same_phase(
+                (c * w[0] + s * w[1] - row(w, offset) * stagger + phase) / total,
+                (c * p[0] + s * p[1] - row(p, folded) * stagger + shifted) / total
+            ));
         }
     }
 

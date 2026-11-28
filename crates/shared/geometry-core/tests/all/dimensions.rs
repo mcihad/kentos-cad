@@ -452,7 +452,9 @@ fn the_label_record_says_the_unit_the_prefix_and_the_mask() {
     };
     let records = s.texts_only(&view, 10.0, None);
     let said: Vec<(f64, &str, &str, f64)> = records
-        .as_chunks::<LABEL_STRIDE>().0.iter()
+        .as_chunks::<LABEL_STRIDE>()
+        .0
+        .iter()
         .map(|r| {
             (
                 r[0],

@@ -73,11 +73,15 @@ pub fn is_gvx(bytes: &[u8]) -> bool {
 }
 
 fn child<'a, 'i>(n: Node<'a, 'i>, name: &str) -> Option<Node<'a, 'i>> {
-    n.children().find(|c| c.is_element() && c.tag_name().name() == name)
+    n.children()
+        .find(|c| c.is_element() && c.tag_name().name() == name)
 }
 
 fn text_of(n: Option<Node<'_, '_>>) -> Option<String> {
-    n.and_then(|n| n.text()).map(str::trim).filter(|t| !t.is_empty()).map(str::to_owned)
+    n.and_then(|n| n.text())
+        .map(str::trim)
+        .filter(|t| !t.is_empty())
+        .map(str::to_owned)
 }
 
 /// The text of the element at `path` below `n`.
@@ -91,7 +95,11 @@ fn at(n: Node<'_, '_>, path: &[&str]) -> Option<String> {
 
 /// GVX's `Datetime` (GPS time) as the archive's `…Z` time.
 fn gps_time(t: &str) -> Option<String> {
-    let z = if t.ends_with('Z') { t.to_owned() } else { format!("{t}Z") };
+    let z = if t.ends_with('Z') {
+        t.to_owned()
+    } else {
+        format!("{t}Z")
+    };
     survey_time(&z).map(|_| z)
 }
 
@@ -101,20 +109,33 @@ pub fn read(bytes: &[u8]) -> Result<GvxRead, String> {
     let body = text::decode(&bytes[bom..], enc);
     let doc = xml::document(&body).map_err(|why| match why {
         xml::Unparsed::NotXml => "GVX dosyası okunamadı: geçerli bir XML değil.".to_owned(),
-        xml::Unparsed::TooDeep => format!("GVX dosyası okunamadı: öğeler {} düzeyden derin.", xml::DEPTH),
+        xml::Unparsed::TooDeep => format!(
+            "GVX dosyası okunamadı: öğeler {} düzeyden derin.",
+            xml::DEPTH
+        ),
     })?;
     let rows = Rows::new(&body);
     let line = |n: Node<'_, '_>| rows.row(n.range().start);
     let root = doc.root_element();
     if root.tag_name().name() != "GVX" {
-        return Err(format!("Kök öğe “{}”; GVX dosyasının kökü GVX'tir.", root.tag_name().name()));
+        return Err(format!(
+            "Kök öğe “{}”; GVX dosyasının kökü GVX'tir.",
+            root.tag_name().name()
+        ));
     }
     match root.attribute("VERSION").map(str::trim) {
         Some("1.0") => {}
-        Some(v) => return Err(format!("GVX {v} sürümü okunmaz; KentOS GVX 1.0'ı (NGS, 4 Şubat 2021) okur.")),
+        Some(v) => {
+            return Err(format!(
+                "GVX {v} sürümü okunmaz; KentOS GVX 1.0'ı (NGS, 4 Şubat 2021) okur."
+            ));
+        }
         None => return Err("GVX öğesinin VERSION'ı yok; KentOS GVX 1.0'ı okur.".into()),
     }
-    for rs in root.children().filter(|c| c.is_element() && c.tag_name().name() == "REFERENCE_SYSTEM") {
+    for rs in root
+        .children()
+        .filter(|c| c.is_element() && c.tag_name().name() == "REFERENCE_SYSTEM")
+    {
         let unit = at(rs, &["LINEAR_UNIT", "NAME"]);
         if unit.as_deref().is_some_and(|u| u != "meters") {
             return Err(format!(
@@ -126,21 +147,33 @@ pub fn read(bytes: &[u8]) -> Result<GvxRead, String> {
     }
     // The points by their id: the mark's name.
     let mut names: std::collections::HashMap<String, String> = std::collections::HashMap::new();
-    for p in root.children().filter(|c| c.is_element() && c.tag_name().name() == "POINT") {
+    for p in root
+        .children()
+        .filter(|c| c.is_element() && c.tag_name().name() == "POINT")
+    {
         let Some(id) = at(p, &["ID"]) else {
             return Err(format!("Satır {}: POINT öğesinin ID'si yok.", line(p)));
         };
         let Some(name) = at(p, &["NAME"]) else {
-            return Err(format!("Satır {}: “{id}” noktasının NAME'i (işaretin adı) yok.", line(p)));
+            return Err(format!(
+                "Satır {}: “{id}” noktasının NAME'i (işaretin adı) yok.",
+                line(p)
+            ));
         };
         if names.insert(id.clone(), name).is_some() {
-            return Err(format!("Satır {}: “{id}” nokta kimliği iki kez verilmiş.", line(p)));
+            return Err(format!(
+                "Satır {}: “{id}” nokta kimliği iki kez verilmiş.",
+                line(p)
+            ));
         }
     }
     // The setups: how a vector was made and with which software.
     let mut setups: std::collections::HashMap<String, (Option<BaselineSolution>, Option<String>)> =
         std::collections::HashMap::new();
-    for s in root.children().filter(|c| c.is_element() && c.tag_name().name() == "SURVEY_SETUP") {
+    for s in root
+        .children()
+        .filter(|c| c.is_element() && c.tag_name().name() == "SURVEY_SETUP")
+    {
         let Some(id) = at(s, &["ID"]) else { continue };
         let solution = match at(s, &["SOLUTION_TYPE"]).as_deref() {
             Some("Post-processed") => Some(BaselineSolution::PostProcessed),
@@ -148,7 +181,10 @@ pub fn read(bytes: &[u8]) -> Result<GvxRead, String> {
             Some("NetworkRTK") => Some(BaselineSolution::NetworkRtk),
             _ => None,
         };
-        let software = match (at(s, &["PROCESSING_SOFTWARE", "NAME"]), at(s, &["PROCESSING_SOFTWARE", "VERSION"])) {
+        let software = match (
+            at(s, &["PROCESSING_SOFTWARE", "NAME"]),
+            at(s, &["PROCESSING_SOFTWARE", "VERSION"]),
+        ) {
             (Some(n), Some(v)) => Some(format!("{n} {v}")),
             (Some(n), None) => Some(n),
             _ => None,
@@ -157,37 +193,63 @@ pub fn read(bytes: &[u8]) -> Result<GvxRead, String> {
     }
     let mut out = GvxRead::default();
     let mut seen = std::collections::HashSet::new();
-    for v in root.children().filter(|c| c.is_element() && c.tag_name().name() == "GNSS_VECTOR") {
+    for v in root
+        .children()
+        .filter(|c| c.is_element() && c.tag_name().name() == "GNSS_VECTOR")
+    {
         let n = line(v);
         let Some(id) = at(v, &["ID"]) else {
             return Err(format!("Satır {n}: GNSS_VECTOR öğesinin ID'si yok."));
         };
         if !seen.insert(id.clone()) {
-            return Err(format!("Satır {n}: “{id}” vektör kimliği iki kez verilmiş."));
+            return Err(format!(
+                "Satır {n}: “{id}” vektör kimliği iki kez verilmiş."
+            ));
         }
         let mark = |tag: &str| -> Result<String, String> {
-            let pid = at(v, &[tag]).ok_or_else(|| format!("Satır {n}: “{id}” vektörünün {tag}'si yok."))?;
-            names.get(&pid).cloned().ok_or_else(|| format!("Satır {n}: “{id}” vektörünün {tag}'si “{pid}” dosyada bir POINT değil."))
+            let pid = at(v, &[tag])
+                .ok_or_else(|| format!("Satır {n}: “{id}” vektörünün {tag}'si yok."))?;
+            names.get(&pid).cloned().ok_or_else(|| {
+                format!("Satır {n}: “{id}” vektörünün {tag}'si “{pid}” dosyada bir POINT değil.")
+            })
         };
         let (from, to) = (mark("INITIAL_POINT_ID")?, mark("TERMINAL_POINT_ID")?);
         if from == to {
-            return Err(format!("Satır {n}: “{id}” vektörünün iki ucu aynı işaret (“{from}”)."));
+            return Err(format!(
+                "Satır {n}: “{id}” vektörünün iki ucu aynı işaret (“{from}”)."
+            ));
         }
         let number = |path: &[&str]| -> Result<f64, String> {
-            let t = at(v, path).ok_or_else(|| format!("Satır {n}: “{id}” vektörünün {} değeri yok.", path.join("/")))?;
+            let t = at(v, path).ok_or_else(|| {
+                format!(
+                    "Satır {n}: “{id}” vektörünün {} değeri yok.",
+                    path.join("/")
+                )
+            })?;
             t.parse::<f64>()
                 .ok()
                 .filter(|x| x.is_finite())
-                .ok_or_else(|| format!("Satır {n}: “{id}” vektörünün {} değeri “{t}” sayı değil.", path.join("/")))
+                .ok_or_else(|| {
+                    format!(
+                        "Satır {n}: “{id}” vektörünün {} değeri “{t}” sayı değil.",
+                        path.join("/")
+                    )
+                })
         };
-        let d = [number(&["ECEF_DELTAS", "DX"])?, number(&["ECEF_DELTAS", "DY"])?, number(&["ECEF_DELTAS", "DZ"])?];
+        let d = [
+            number(&["ECEF_DELTAS", "DX"])?,
+            number(&["ECEF_DELTAS", "DY"])?,
+            number(&["ECEF_DELTAS", "DZ"])?,
+        ];
         let sd = [
             number(&["CORRELATION_MATRIX", "SDX"])?,
             number(&["CORRELATION_MATRIX", "SDY"])?,
             number(&["CORRELATION_MATRIX", "SDZ"])?,
         ];
         if sd.iter().any(|s| *s <= 0.0) {
-            return Err(format!("Satır {n}: “{id}” vektörünün standart sapmaları 0'dan büyük olmalı."));
+            return Err(format!(
+                "Satır {n}: “{id}” vektörünün standart sapmaları 0'dan büyük olmalı."
+            ));
         }
         let p = [
             number(&["CORRELATION_MATRIX", "PXY"])?,
@@ -195,7 +257,9 @@ pub fn read(bytes: &[u8]) -> Result<GvxRead, String> {
             number(&["CORRELATION_MATRIX", "PYZ"])?,
         ];
         if p.iter().any(|r| !(-1.0..=1.0).contains(r)) {
-            return Err(format!("Satır {n}: “{id}” vektörünün korelasyonları −1 ile 1 arasında olmalı."));
+            return Err(format!(
+                "Satır {n}: “{id}” vektörünün korelasyonları −1 ile 1 arasında olmalı."
+            ));
         }
         let covariance = [
             sd[0] * sd[0],
@@ -206,7 +270,9 @@ pub fn read(bytes: &[u8]) -> Result<GvxRead, String> {
             sd[2] * sd[2],
         ];
         if !covariance_ok(&covariance) {
-            return Err(format!("Satır {n}: “{id}” vektörünün kovaryansı pozitif tanımlı değil."));
+            return Err(format!(
+                "Satır {n}: “{id}” vektörünün kovaryansı pozitif tanımlı değil."
+            ));
         }
         let time = |tag: &str| -> Result<Option<String>, String> {
             match at(v, &["OBSERVATION_TIME", tag]) {
@@ -217,7 +283,9 @@ pub fn read(bytes: &[u8]) -> Result<GvxRead, String> {
             }
         };
         let (start, end) = (time("START")?, time("END")?);
-        let (solution, software) = at(v, &["SURVEY_SETUP_ID"]).and_then(|s| setups.get(&s).cloned()).unwrap_or((None, None));
+        let (solution, software) = at(v, &["SURVEY_SETUP_ID"])
+            .and_then(|s| setups.get(&s).cloned())
+            .unwrap_or((None, None));
         let count = |path: &[&str]| at(v, path).and_then(|t| t.parse::<u32>().ok());
         out.vectors.push(GvxVector {
             id,
@@ -242,14 +310,29 @@ pub fn read(bytes: &[u8]) -> Result<GvxRead, String> {
 }
 
 /// The file's sessions (docs/adr/4920): each kept with its vectors and blocks, or said not to be.
-fn sessions(root: Node<'_, '_>, line: &dyn Fn(Node<'_, '_>) -> u32, out: &mut GvxRead) -> Result<(), String> {
-    let order: std::collections::HashMap<&str, usize> =
-        out.vectors.iter().enumerate().map(|(k, v)| (v.id.as_str(), k)).collect();
+fn sessions(
+    root: Node<'_, '_>,
+    line: &dyn Fn(Node<'_, '_>) -> u32,
+    out: &mut GvxRead,
+) -> Result<(), String> {
+    let order: std::collections::HashMap<&str, usize> = out
+        .vectors
+        .iter()
+        .enumerate()
+        .map(|(k, v)| (v.id.as_str(), k))
+        .collect();
     let mut taken: std::collections::HashMap<String, String> = std::collections::HashMap::new();
     let mut kept = Vec::new();
-    for s in root.children().filter(|c| c.is_element() && c.tag_name().name() == "SESSION") {
+    for s in root
+        .children()
+        .filter(|c| c.is_element() && c.tag_name().name() == "SESSION")
+    {
         let n = line(s);
-        let id = s.attribute("ID").map(str::trim).filter(|t| !t.is_empty()).map(str::to_owned);
+        let id = s
+            .attribute("ID")
+            .map(str::trim)
+            .filter(|t| !t.is_empty())
+            .map(str::to_owned);
         let Some(id) = id else {
             return Err(format!("Satır {n}: SESSION öğesinin ID'si yok."));
         };
@@ -267,43 +350,74 @@ fn sessions(root: Node<'_, '_>, line: &dyn Fn(Node<'_, '_>) -> u32, out: &mut Gv
         if let Some(m) = child(s, "CROSS_CORRELATION_MATRIX") {
             let axes = m.attribute("ORDER").map_or("XYZ", str::trim);
             if axes != "XYZ" {
-                return Err(format!("Satır {}: “{id}” oturumunun ORDER'ı “{axes}”; KentOS XYZ sırasını okur.", line(m)));
+                return Err(format!(
+                    "Satır {}: “{id}” oturumunun ORDER'ı “{axes}”; KentOS XYZ sırasını okur.",
+                    line(m)
+                ));
             }
-            for b in m.children().filter(|c| c.is_element() && c.tag_name().name() == "CCM_BLOCK") {
+            for b in m
+                .children()
+                .filter(|c| c.is_element() && c.tag_name().name() == "CCM_BLOCK")
+            {
                 let bn = line(b);
                 let end_of = |name: &str| -> Result<String, String> {
                     let v = b.attribute(name).map(str::trim).unwrap_or_default();
                     if order.contains_key(v) {
                         Ok(v.to_owned())
                     } else {
-                        Err(format!("Satır {bn}: “{id}” oturumunun bloğundaki {name} “{v}” dosyada bir GNSS_VECTOR değil."))
+                        Err(format!(
+                            "Satır {bn}: “{id}” oturumunun bloğundaki {name} “{v}” dosyada bir GNSS_VECTOR değil."
+                        ))
                     }
                 };
                 let (row, col) = (end_of("VECTOR_ID_ROW")?, end_of("VECTOR_ID_COL")?);
                 if row == col {
-                    return Err(format!("Satır {bn}: “{id}” oturumunun bloğu “{row}” vektörünü kendisiyle eşliyor."));
+                    return Err(format!(
+                        "Satır {bn}: “{id}” oturumunun bloğu “{row}” vektörünü kendisiyle eşliyor."
+                    ));
                 }
-                let pair = if row < col { (row.clone(), col.clone()) } else { (col.clone(), row.clone()) };
+                let pair = if row < col {
+                    (row.clone(), col.clone())
+                } else {
+                    (col.clone(), row.clone())
+                };
                 if !pairs.insert(pair) {
-                    return Err(format!("Satır {bn}: “{id}” oturumunda “{row}” ile “{col}” bloğu iki kez verilmiş."));
+                    return Err(format!(
+                        "Satır {bn}: “{id}” oturumunda “{row}” ile “{col}” bloğu iki kez verilmiş."
+                    ));
                 }
                 let text = text_of(child(b, "CORRELATIONS")).unwrap_or_default();
-                let values: Vec<f64> = text.split(',').filter_map(|t| t.trim().parse::<f64>().ok()).collect();
+                let values: Vec<f64> = text
+                    .split(',')
+                    .filter_map(|t| t.trim().parse::<f64>().ok())
+                    .collect();
                 if values.len() != 9 || text.split(',').count() != 9 {
-                    return Err(format!("Satır {bn}: “{id}” oturumunun “{row}”–“{col}” bloğu virgülle ayrılmış 9 sayı olmalı."));
+                    return Err(format!(
+                        "Satır {bn}: “{id}” oturumunun “{row}”–“{col}” bloğu virgülle ayrılmış 9 sayı olmalı."
+                    ));
                 }
-                if !values.iter().all(|r| r.is_finite() && (-1.0..=1.0).contains(r)) {
-                    return Err(format!("Satır {bn}: “{id}” oturumunun “{row}”–“{col}” korelasyonları −1 ile 1 arasında olmalı."));
+                if !values
+                    .iter()
+                    .all(|r| r.is_finite() && (-1.0..=1.0).contains(r))
+                {
+                    return Err(format!(
+                        "Satır {bn}: “{id}” oturumunun “{row}”–“{col}” korelasyonları −1 ile 1 arasında olmalı."
+                    ));
                 }
                 let mut r = [0.0; 9];
                 r.copy_from_slice(&values);
                 blocks.push((row, col, r));
             }
         }
-        let mut vectors: Vec<String> = blocks.iter().flat_map(|(a, b, _)| [a.clone(), b.clone()]).collect();
+        let mut vectors: Vec<String> = blocks
+            .iter()
+            .flat_map(|(a, b, _)| [a.clone(), b.clone()])
+            .collect();
         vectors.sort_by_key(|v| order.get(v.as_str()).copied().unwrap_or(usize::MAX));
         vectors.dedup();
-        let total = s.attribute("TOTAL_VECTORS").and_then(|t| t.trim().parse::<usize>().ok());
+        let total = s
+            .attribute("TOTAL_VECTORS")
+            .and_then(|t| t.trim().parse::<usize>().ok());
         if vectors.len() < 2 || total.is_some_and(|t| t != vectors.len()) {
             out.ignored.push(match total {
                 Some(t) if vectors.len() >= 2 => format!(
@@ -316,10 +430,19 @@ fn sessions(root: Node<'_, '_>, line: &dyn Fn(Node<'_, '_>) -> u32, out: &mut Gv
         }
         for v in &vectors {
             if let Some(other) = taken.insert(v.clone(), id.clone()) {
-                return Err(format!("Satır {n}: “{v}” vektörü hem “{other}” hem “{id}” oturumunda."));
+                return Err(format!(
+                    "Satır {n}: “{v}” vektörü hem “{other}” hem “{id}” oturumunda."
+                ));
             }
         }
-        let session = GvxSession { id, start, end, vectors, blocks, line: n };
+        let session = GvxSession {
+            id,
+            start,
+            end,
+            vectors,
+            blocks,
+            line: n,
+        };
         if !session.complete() {
             let k = session.vectors.len();
             out.incomplete.push(format!(
@@ -362,9 +485,22 @@ mod tests {
         let r = read(ONE.as_bytes()).expect("read");
         assert_eq!(r.vectors.len(), 1);
         let v = &r.vectors[0];
-        assert_eq!((v.id.as_str(), v.from.as_str(), v.to.as_str()), ("V1", "ANKR", "N1"));
+        assert_eq!(
+            (v.id.as_str(), v.from.as_str(), v.to.as_str()),
+            ("V1", "ANKR", "N1")
+        );
         assert_eq!(v.d, [1000.5, -200.25, 300.125]);
-        assert_eq!(v.covariance, [0.002 * 0.002, -0.5 * 0.002 * 0.004, 0.25 * 0.002 * 0.003, 0.004 * 0.004, 0.1 * 0.004 * 0.003, 0.003 * 0.003]);
+        assert_eq!(
+            v.covariance,
+            [
+                0.002 * 0.002,
+                -0.5 * 0.002 * 0.004,
+                0.25 * 0.002 * 0.003,
+                0.004 * 0.004,
+                0.1 * 0.004 * 0.003,
+                0.003 * 0.003
+            ]
+        );
         assert_eq!(v.start.as_deref(), Some("2026-11-03T08:00:00.00Z"));
         assert_eq!(v.solution, Some(BaselineSolution::PostProcessed));
         assert_eq!(v.software.as_deref(), Some("Isleyici 5.90"));
@@ -375,11 +511,40 @@ mod tests {
     #[test]
     fn a_wrong_file_says_where() {
         assert!(read(b"not xml").is_err());
-        assert!(read(ONE.replace("VERSION=\"1.0\"", "VERSION=\"2.0\"").as_bytes()).unwrap_err().contains("2.0"));
-        assert!(read(ONE.replace("<NAME>meters</NAME>", "<NAME>feet</NAME>").as_bytes()).unwrap_err().contains("feet"));
-        assert!(read(ONE.replace("<PXY>-0.5</PXY>", "<PXY>-1.5</PXY>").as_bytes()).unwrap_err().contains("V1"));
-        assert!(read(ONE.replace("<TERMINAL_POINT_ID>P2", "<TERMINAL_POINT_ID>P9").as_bytes()).unwrap_err().contains("P9"));
-        assert!(read(ONE.replace("<NAME>N1</NAME>", "<NAME>ANKR</NAME>").as_bytes()).unwrap_err().contains("aynı işaret"));
+        assert!(
+            read(ONE.replace("VERSION=\"1.0\"", "VERSION=\"2.0\"").as_bytes())
+                .unwrap_err()
+                .contains("2.0")
+        );
+        assert!(
+            read(
+                ONE.replace("<NAME>meters</NAME>", "<NAME>feet</NAME>")
+                    .as_bytes()
+            )
+            .unwrap_err()
+            .contains("feet")
+        );
+        assert!(
+            read(ONE.replace("<PXY>-0.5</PXY>", "<PXY>-1.5</PXY>").as_bytes())
+                .unwrap_err()
+                .contains("V1")
+        );
+        assert!(
+            read(
+                ONE.replace("<TERMINAL_POINT_ID>P2", "<TERMINAL_POINT_ID>P9")
+                    .as_bytes()
+            )
+            .unwrap_err()
+            .contains("P9")
+        );
+        assert!(
+            read(
+                ONE.replace("<NAME>N1</NAME>", "<NAME>ANKR</NAME>")
+                    .as_bytes()
+            )
+            .unwrap_err()
+            .contains("aynı işaret")
+        );
         let crossed = ONE.replace("</GVX>", "<SESSION ID=\"S\" TOTAL_VECTORS=\"2\"><CROSS_CORRELATION_MATRIX ORDER=\"XYZ\"/></SESSION></GVX>");
         assert_eq!(read(crossed.as_bytes()).expect("read").ignored.len(), 1);
     }
@@ -390,10 +555,18 @@ mod tests {
         let mut three = ONE.to_owned();
         let v1 = &ONE[ONE.find("<GNSS_VECTOR>").unwrap()..ONE.find("</GVX>").unwrap()];
         for k in [2, 3] {
-            three = three.replace("</GVX>", &format!("{}</GVX>", v1.replace("<ID>V1</ID>", &format!("<ID>V{k}</ID>"))));
+            three = three.replace(
+                "</GVX>",
+                &format!(
+                    "{}</GVX>",
+                    v1.replace("<ID>V1</ID>", &format!("<ID>V{k}</ID>"))
+                ),
+            );
         }
         let block = |r: &str, c: &str| {
-            format!("<CCM_BLOCK VECTOR_ID_ROW=\"{r}\" VECTOR_ID_COL=\"{c}\"><CORRELATIONS>0.1,0,0,0,0.2,0,0,0,0.3</CORRELATIONS></CCM_BLOCK>")
+            format!(
+                "<CCM_BLOCK VECTOR_ID_ROW=\"{r}\" VECTOR_ID_COL=\"{c}\"><CORRELATIONS>0.1,0,0,0,0.2,0,0,0,0.3</CORRELATIONS></CCM_BLOCK>"
+            )
         };
         let session = |blocks: &str| {
             three.replace(
@@ -401,18 +574,47 @@ mod tests {
                 &format!("<SESSION ID=\"O1\" TOTAL_VECTORS=\"3\"><SESSION_TIME><START>2026-11-03T08:00:00.00</START><END>2026-11-03T10:00:00.00</END></SESSION_TIME><CROSS_CORRELATION_MATRIX ORDER=\"XYZ\">{blocks}</CROSS_CORRELATION_MATRIX></SESSION></GVX>"),
             )
         };
-        let full = read(session(&[block("V2", "V3"), block("V1", "V2"), block("V1", "V3")].concat()).as_bytes()).expect("read");
+        let full = read(
+            session(&[block("V2", "V3"), block("V1", "V2"), block("V1", "V3")].concat()).as_bytes(),
+        )
+        .expect("read");
         assert_eq!(full.sessions.len(), 1);
         let s = &full.sessions[0];
         assert_eq!(s.vectors, ["V1", "V2", "V3"]);
         assert!(s.complete() && full.incomplete.is_empty());
-        assert_eq!(s.blocks[0], ("V2".into(), "V3".into(), [0.1, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.3]));
+        assert_eq!(
+            s.blocks[0],
+            (
+                "V2".into(),
+                "V3".into(),
+                [0.1, 0.0, 0.0, 0.0, 0.2, 0.0, 0.0, 0.0, 0.3]
+            )
+        );
         assert_eq!(s.start.as_deref(), Some("2026-11-03T08:00:00.00Z"));
-        let short = read(session(&[block("V1", "V2"), block("V1", "V3")].concat()).as_bytes()).expect("read");
+        let short = read(session(&[block("V1", "V2"), block("V1", "V3")].concat()).as_bytes())
+            .expect("read");
         assert_eq!((short.sessions.len(), short.incomplete.len()), (1, 1));
-        assert!(read(session(&[block("V1", "V2"), block("V2", "V1")].concat()).as_bytes()).unwrap_err().contains("iki kez"));
-        assert!(read(session(&block("V1", "V9")).as_bytes()).unwrap_err().contains("V9"));
-        assert!(read(session(&block("V1", "V2").replace("0.3", "1.3")).as_bytes()).unwrap_err().contains("−1 ile 1"));
-        assert_eq!(read(session(&block("V1", "V2")).as_bytes()).expect("read").ignored.len(), 1);
+        assert!(
+            read(session(&[block("V1", "V2"), block("V2", "V1")].concat()).as_bytes())
+                .unwrap_err()
+                .contains("iki kez")
+        );
+        assert!(
+            read(session(&block("V1", "V9")).as_bytes())
+                .unwrap_err()
+                .contains("V9")
+        );
+        assert!(
+            read(session(&block("V1", "V2").replace("0.3", "1.3")).as_bytes())
+                .unwrap_err()
+                .contains("−1 ile 1")
+        );
+        assert_eq!(
+            read(session(&block("V1", "V2")).as_bytes())
+                .expect("read")
+                .ignored
+                .len(),
+            1
+        );
     }
 }

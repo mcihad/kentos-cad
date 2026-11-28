@@ -21,14 +21,34 @@ pub const FILL_CANCEL: &str = "Vazgeç";
 /// A class field of the profile by name, with its list when its domain has one: its label and the (code, label) values.
 fn class_field(class: &str, name: &str) -> Option<(String, Vec<(String, String)>)> {
     let profile = kentos_commands::builtin_profile(PROFILE)?;
-    let field = profile.classes.iter().find(|c| c.id == class)?.fields.iter().find(|f| f.name == name)?.clone();
+    let field = profile
+        .classes
+        .iter()
+        .find(|c| c.id == class)?
+        .fields
+        .iter()
+        .find(|f| f.name == name)?
+        .clone();
     let values = field
         .domain
         .as_ref()
         .and_then(|d| profile.domains.iter().find(|x| x.id == *d))
-        .map(|d| d.values.iter().flatten().map(|v| (v.code.clone(), v.label.clone())).collect())
+        .map(|d| {
+            d.values
+                .iter()
+                .flatten()
+                .map(|v| (v.code.clone(), v.label.clone()))
+                .collect()
+        })
         .unwrap_or_default();
-    Some((field.alias.clone().filter(|a| !a.is_empty()).unwrap_or(field.name.clone()), values))
+    Some((
+        field
+            .alias
+            .clone()
+            .filter(|a| !a.is_empty())
+            .unwrap_or(field.name.clone()),
+        values,
+    ))
 }
 
 /// A field as the window names it: its alias in the profile, else its name.
@@ -39,7 +59,12 @@ pub(crate) fn field_title(class: &str, name: &str) -> String {
 /// A class as the window names it: its title in the profile, else its id.
 pub(crate) fn class_title(class: &str) -> String {
     kentos_commands::builtin_profile(PROFILE)
-        .and_then(|p| p.classes.into_iter().find(|c| c.id == class).map(|c| c.title))
+        .and_then(|p| {
+            p.classes
+                .into_iter()
+                .find(|c| c.id == class)
+                .map(|c| c.title)
+        })
         .unwrap_or_else(|| class.to_owned())
 }
 
@@ -96,25 +121,40 @@ impl App {
     }
 
     /// The form of the group Alan gir opened, with its heading: none while no group is open.
-    pub(crate) fn reconcile_fill_view(&self) -> Option<(Element<'_, Message>, Element<'_, Message>)> {
+    pub(crate) fn reconcile_fill_view(
+        &self,
+    ) -> Option<(Element<'_, Message>, Element<'_, Message>)> {
         let s = &self.gis.features_reconcile;
-        let (Some(g), Some(Ok(a))) = (s.fill, &s.answer) else { return None };
+        let (Some(g), Some(Ok(a))) = (s.fill, &s.answer) else {
+            return None;
+        };
         let group = a.groups.get(g)?;
         let class = group.class.clone().unwrap_or_default();
         let mut fill = Form::new().label_width(130.0);
         for name in fill_fields(group) {
             let (title, values) = class_field(&class, &name).unwrap_or((name.clone(), Vec::new()));
             let typed = s.typed.get(&name).cloned().unwrap_or_default();
-            let why = group.invalid.iter().find(|t| t.field == name).map(|t| t.message.clone());
+            let why = group
+                .invalid
+                .iter()
+                .find(|t| t.field == name)
+                .map(|t| t.message.clone());
             let field = name.clone();
             let input: Element<'_, Message> = if values.is_empty() {
-                container(fields::input(None, &title, &typed, false, false).on_input(move |v| msg(Event::Typed(field.clone(), v))))
-                    .width(240)
-                    .into()
+                container(
+                    fields::input(None, &title, &typed, false, false)
+                        .on_input(move |v| msg(Event::Typed(field.clone(), v))),
+                )
+                .width(240)
+                .into()
             } else {
                 let mut choices = vec![(String::new(), "Seçin".to_owned())];
                 choices.extend(values);
-                container(fields::select_owned(choices, &typed, move |v| msg(Event::Typed(field.clone(), v)))).width(240).into()
+                container(fields::select_owned(choices, &typed, move |v| {
+                    msg(Event::Typed(field.clone(), v))
+                }))
+                .width(240)
+                .into()
             };
             let line = match why {
                 Some(w) => row![input, label::caption(w)].spacing(8).align_y(Center),
@@ -130,7 +170,11 @@ impl App {
             ]
             .spacing(8),
         );
-        let head = label::caption(format!("Alan gir: {} grubunun alanları", class_title(&class))).into();
+        let head = label::caption(format!(
+            "Alan gir: {} grubunun alanları",
+            class_title(&class)
+        ))
+        .into();
         Some((head, fill.into()))
     }
 }

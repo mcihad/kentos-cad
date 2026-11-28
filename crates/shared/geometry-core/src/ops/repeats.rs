@@ -114,17 +114,33 @@ fn on(c: Vec2, r: f64, angle: f64) -> Vec2 {
 
 /// Strict analytic equality: endpoint direction is immaterial for lines, arc span is not.
 fn equal(a: &Shape, b: &Shape, tolerance: f64, check: &mut impl FnMut() -> bool) -> Option<bool> {
-    equal_with(a,b,tolerance,check,false,false)
+    equal_with(a, b, tolerance, check, false, false)
 }
 /// Strict geometry/pose/content verification at the final world placement; never ignores text values.
-pub fn equivalent(a:&Shape,b:&Shape,tolerance:f64,check:&mut impl FnMut()->bool)->Option<bool> {
-    equal(a,b,tolerance,check)
+pub fn equivalent(
+    a: &Shape,
+    b: &Shape,
+    tolerance: f64,
+    check: &mut impl FnMut() -> bool,
+) -> Option<bool> {
+    equal(a, b, tolerance, check)
 }
-fn equal_with(a: &Shape, b: &Shape, tolerance: f64, check: &mut impl FnMut() -> bool, text_variants:bool, attribute_variants:bool) -> Option<bool> {
+fn equal_with(
+    a: &Shape,
+    b: &Shape,
+    tolerance: f64,
+    check: &mut impl FnMut() -> bool,
+    text_variants: bool,
+    attribute_variants: bool,
+) -> Option<bool> {
     Some(match (a, b) {
-        (Shape::Text { .. },Shape::Text { .. }) | (Shape::Insert { .. },Shape::Insert { .. }) => {
-            for _ in 0..pose::work(a).max(pose::work(b)) { if !check() {return None;} }
-            pose::equal(a,b,tolerance,text_variants,attribute_variants)
+        (Shape::Text { .. }, Shape::Text { .. }) | (Shape::Insert { .. }, Shape::Insert { .. }) => {
+            for _ in 0..pose::work(a).max(pose::work(b)) {
+                if !check() {
+                    return None;
+                }
+            }
+            pose::equal(a, b, tolerance, text_variants, attribute_variants)
         }
         (Shape::Polyline { .. }, Shape::Polyline { .. }) => {
             return path::equal(a, b, tolerance, check);
@@ -175,7 +191,9 @@ fn anchor(scene: &[Shape], source: &[usize]) -> (usize, Vec2, Vec2, bool) {
         }
     }
     for &i in source {
-        if let Some((p,size,angle))=pose::frame(&scene[i]) {return (i,p,on(p,size,angle),false);}
+        if let Some((p, size, angle)) = pose::frame(&scene[i]) {
+            return (i, p, on(p, size, angle), false);
+        }
     }
     let i = source[0];
     let Shape::Circle { c, r } = scene[i] else {
@@ -193,8 +211,11 @@ fn anchor(scene: &[Shape], source: &[usize]) -> (usize, Vec2, Vec2, bool) {
 
 fn pairs(scene: &[Shape], source: &Shape, target: usize, circle_pair: bool) -> Vec<(Vec2, Vec2)> {
     match (source, &scene[target]) {
-        (Shape::Text { .. }, Shape::Text { .. }) | (Shape::Insert { .. }, Shape::Insert { .. }) =>
-            pose::frame(&scene[target]).map(|(p,size,angle)|vec![(p,on(p,size,angle))]).unwrap_or_default(),
+        (Shape::Text { .. }, Shape::Text { .. }) | (Shape::Insert { .. }, Shape::Insert { .. }) => {
+            pose::frame(&scene[target])
+                .map(|(p, size, angle)| vec![(p, on(p, size, angle))])
+                .unwrap_or_default()
+        }
         (Shape::Polyline { .. }, Shape::Polyline { .. }) => path::pairs(&scene[target]),
         (Shape::Line { .. }, Shape::Line { a, b }) => vec![(*a, *b), (*b, *a)],
         (Shape::Arc { .. }, Shape::Arc { c, r, a0, a1 }) => {
@@ -328,23 +349,30 @@ pub fn find(
                 if stopped() {
                     return Err(Error::Cancelled);
                 }
-                let source_angle = pose::frame(&scene[anchor]).map(|(_,_,a)|if mirror {-a}else{a}).unwrap_or_else(||atan2(
-                    if mirror {
-                        origin.y - end.y
-                    } else {
-                        end.y - origin.y
-                    },
-                    end.x - origin.x,
-                ));
+                let source_angle = pose::frame(&scene[anchor])
+                    .map(|(_, _, a)| if mirror { -a } else { a })
+                    .unwrap_or_else(|| {
+                        atan2(
+                            if mirror {
+                                origin.y - end.y
+                            } else {
+                                end.y - origin.y
+                            },
+                            end.x - origin.x,
+                        )
+                    });
                 let rotation = if options.rotations {
-                    pose::frame(&scene[target]).map(|(_,_,a)|a).unwrap_or_else(||atan2(toward.y - at.y, toward.x - at.x)) - source_angle
+                    pose::frame(&scene[target])
+                        .map(|(_, _, a)| a)
+                        .unwrap_or_else(|| atan2(toward.y - at.y, toward.x - at.x))
+                        - source_angle
                 } else {
                     0.0
                 };
                 let scale = if options.scales {
-                    match (pose::frame(&scene[anchor]),pose::frame(&scene[target])) {
-                        (Some((_,a,_)),Some((_,b,_)))=>b/a,
-                        _=>dist(at, toward) / dist(origin, end)
+                    match (pose::frame(&scene[anchor]), pose::frame(&scene[target])) {
+                        (Some((_, a, _)), Some((_, b, _))) => b / a,
+                        _ => dist(at, toward) / dist(origin, end),
                     }
                 } else {
                     1.0
@@ -398,14 +426,21 @@ pub fn find(
                         }
                         if compatible(source[member], j as usize) {
                             let mut cancelled = false;
-                            let matched = equal_with(&mapped, &scene[j as usize], t, &mut || {
-                                if stopped() {
-                                    cancelled = true;
-                                    return false;
-                                }
-                                found.comparisons += 1;
-                                found.comparisons <= options.budget
-                            }, options.text_variants, options.attribute_variants);
+                            let matched = equal_with(
+                                &mapped,
+                                &scene[j as usize],
+                                t,
+                                &mut || {
+                                    if stopped() {
+                                        cancelled = true;
+                                        return false;
+                                    }
+                                    found.comparisons += 1;
+                                    found.comparisons <= options.budget
+                                },
+                                options.text_variants,
+                                options.attribute_variants,
+                            );
                             match matched {
                                 Some(true) => matches.push(j as usize),
                                 Some(false) => {}

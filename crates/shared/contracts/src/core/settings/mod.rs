@@ -143,7 +143,10 @@ pub struct SettingDescriptor {
     pub key: String,
     #[serde(rename = "type")]
     pub kind: SettingType,
-    #[cfg_attr(feature = "ts", ts(type = "boolean | number | string | Record<string, string | Array<string>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(type = "boolean | number | string | Record<string, string | Array<string>>")
+    )]
     pub default: Value,
     /// Smallest value of a number, inclusive.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -403,7 +406,13 @@ impl Default for SettingsFile {
 pub struct PolicyRule {
     /// The value everyone gets; the control is shown locked.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional, type = "boolean | number | string | Record<string, string | Array<string>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(
+            optional,
+            type = "boolean | number | string | Record<string, string | Array<string>>"
+        )
+    )]
     pub value: Option<Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -490,12 +499,18 @@ pub struct ResolvedSetting {
     pub key: String,
     /// What was asked for: the value of the most specific layer that holds a
     /// valid one. The preference is never lost when it cannot be used.
-    #[cfg_attr(feature = "ts", ts(type = "boolean | number | string | Record<string, string | Array<string>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(type = "boolean | number | string | Record<string, string | Array<string>>")
+    )]
     pub requested: Value,
     /// The layer `requested` came from (`default` when none holds one).
     pub source: SettingScope,
     /// What is used.
-    #[cfg_attr(feature = "ts", ts(type = "boolean | number | string | Record<string, string | Array<string>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(type = "boolean | number | string | Record<string, string | Array<string>>")
+    )]
     pub effective: Value,
     /// Why `effective` differs from `requested`; none when they are equal.
     #[serde(default, skip_serializing_if = "Option::is_none")]

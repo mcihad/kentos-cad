@@ -291,4 +291,3 @@ fn a_new_search_takes_the_last_mark_away() {
     assert!(app.gis.address.rows.is_empty());
     assert!(app.address_mark_label().is_none(), "no candidate, no mark");
 }
-

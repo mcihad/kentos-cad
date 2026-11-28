@@ -65,11 +65,41 @@ fn a_book_s_sheets_print_their_maps_at_scale() {
     let made = book_pdf(&doc, &[], "kabul", "2026-10-13").expect("a PDF");
     assert_eq!(made.sheets, ["kat-plani", "vaziyet"]);
     // Both fixture viewports are intentionally unlocked; native preflight now names them per page.
-    let mut actual=made.findings.iter().map(|f|(f.code.as_str(),f.item.as_deref())).collect::<Vec<_>>();actual.sort();
-    assert_eq!(actual,[("no_kerning",None),("viewport_scale_unlocked",Some("kat-plani-harita")),("viewport_scale_unlocked",Some("vaziyet-harita"))]);
-    assert!(made.findings.iter().all(|f|f.severity==if f.code=="no_kerning"{kentos_sheet::preflight::Severity::Info}else{kentos_sheet::preflight::Severity::Warning}));
-    let mut owners=made.sheet_findings.iter().map(|(id,f)|(id.as_str(),f.code.as_str())).collect::<Vec<_>>();owners.sort();
-    assert_eq!(owners,[("kat-plani","no_kerning"),("kat-plani","viewport_scale_unlocked"),("vaziyet","no_kerning"),("vaziyet","viewport_scale_unlocked")]);
+    let mut actual = made
+        .findings
+        .iter()
+        .map(|f| (f.code.as_str(), f.item.as_deref()))
+        .collect::<Vec<_>>();
+    actual.sort();
+    assert_eq!(
+        actual,
+        [
+            ("no_kerning", None),
+            ("viewport_scale_unlocked", Some("kat-plani-harita")),
+            ("viewport_scale_unlocked", Some("vaziyet-harita"))
+        ]
+    );
+    assert!(made.findings.iter().all(|f| f.severity
+        == if f.code == "no_kerning" {
+            kentos_sheet::preflight::Severity::Info
+        } else {
+            kentos_sheet::preflight::Severity::Warning
+        }));
+    let mut owners = made
+        .sheet_findings
+        .iter()
+        .map(|(id, f)| (id.as_str(), f.code.as_str()))
+        .collect::<Vec<_>>();
+    owners.sort();
+    assert_eq!(
+        owners,
+        [
+            ("kat-plani", "no_kerning"),
+            ("kat-plani", "viewport_scale_unlocked"),
+            ("vaziyet", "no_kerning"),
+            ("vaziyet", "viewport_scale_unlocked")
+        ]
+    );
     let want = &step(&scenario, |s| s["export"] == "pdf")["expect"]["pdf"];
     let problems = pdf_problems(&made.bytes, want);
     assert!(problems.is_empty(), "{problems:#?}");
@@ -91,13 +121,19 @@ fn a_gradient_and_a_dense_hatch_go_to_the_pdf_as_vectors() {
     let scenario: Value = serde_json::from_str(SCENARIO).expect("the scenario");
     let mut doc = drawing(&scenario);
     let k11 = &step(&scenario, |s| s["as"] == "k11")["input"];
-    let (ax, ay) = (k11["a"]["x"].as_f64().expect("x"), k11["a"]["y"].as_f64().expect("y"));
+    let (ax, ay) = (
+        k11["a"]["x"].as_f64().expect("x"),
+        k11["a"]["y"].as_f64().expect("y"),
+    );
     let ring = |dx: f64| {
         json!([{ "x": ax + dx, "y": ay + 0.5 }, { "x": ax + dx + 1.5, "y": ay + 0.5 },
                { "x": ax + dx + 1.5, "y": ay + 2.0 }, { "x": ax + dx, "y": ay + 2.0 }])
     };
     let layer = doc.layers().active().to_owned();
-    let plain = book_pdf(&doc, &[], "kabul", "2026-10-17").expect("a PDF").bytes.len();
+    let plain = book_pdf(&doc, &[], "kabul", "2026-10-17")
+        .expect("a PDF")
+        .bytes
+        .len();
     for (k, pattern) in [
         json!({ "type": "gradient", "angle": 30, "spacing": 1,
                 "gradient": { "shape": "spherical", "inverted": false, "color2": "#FFFFFF" } }),
@@ -120,10 +156,18 @@ fn a_gradient_and_a_dense_hatch_go_to_the_pdf_as_vectors() {
     );
     // KENTOS_PLOT_OUT=dir writes the PDF there to look at (docs/adr/0333 Doğrulama).
     if let Some(dir) = std::env::var_os("KENTOS_PLOT_OUT") {
-        std::fs::write(std::path::Path::new(&dir).join("tarama-pdf.pdf"), &made.bytes).expect("written");
+        std::fs::write(
+            std::path::Path::new(&dir).join("tarama-pdf.pdf"),
+            &made.bytes,
+        )
+        .expect("written");
     }
     // The bands and the lines are in it: the map grew by them (it would not if they were outside its frame).
-    assert!(made.bytes.len() > plain + 20_000, "{} against {plain}", made.bytes.len());
+    assert!(
+        made.bytes.len() > plain + 20_000,
+        "{} against {plain}",
+        made.bytes.len()
+    );
 }
 
 /// Loaded caches are immutable until an explicit update; stale field values
@@ -136,22 +180,31 @@ fn stale_loaded_field_cache_blocks_pdf_until_explicit_refresh_and_is_undoable() 
     let mut doc = drawing(&scenario);
     let layer = doc.layers().active().to_owned();
     let t: Entity = serde_json::from_value(json!({"kind":"text","id":0,"layerId":layer,"attrs":{},
-        "p":{"x":1.,"y":0.5},"text":"Eski","height":0.125,"rotation":0.})).unwrap();
+        "p":{"x":1.,"y":0.5},"text":"Eski","height":0.125,"rotation":0.}))
+    .unwrap();
     let slot = doc.add(t).unwrap();
     let uid = doc.uid(slot).unwrap().to_string();
     let mut snapshot = doc.to_snapshot_v2();
-    let Entity::Text(t) = snapshot.entities.last_mut().unwrap() else { panic!() };
+    let Entity::Text(t) = snapshot.entities.last_mut().unwrap() else {
+        panic!()
+    };
     t.paragraph.fields = serde_json::from_value::<Vec<TextField>>(json!([
         {"start":0,"end":4,"source":{"kind":"project","value":"name"}}
-    ])).unwrap();
+    ]))
+    .unwrap();
     let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
     let before = doc.to_snapshot_v2();
     let error = book_pdf(&doc, &[], "kabul", "2026-11-04").expect_err("stale cached field");
     assert_eq!(error.code, "text_field_stale");
     assert!(error.message.contains("Eski") && error.message.contains("Oda"));
     assert_eq!(doc.to_snapshot_v2(), before);
-    let changed = registry::run(&mut ExecutionContext::new(&mut doc), "cad.fields.edit", CallOp::Execute,
-        json!({"edit":{"kind":"update","uids":[uid]}})).unwrap();
+    let changed = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.fields.edit",
+        CallOp::Execute,
+        json!({"edit":{"kind":"update","uids":[uid]}}),
+    )
+    .unwrap();
     assert_eq!(changed["status"], "completed", "{changed}");
     let made = book_pdf(&doc, &[], "kabul", "2026-11-04").unwrap();
     assert!(!made.findings.iter().any(|f| f.code == "text_field_stale"));
@@ -171,58 +224,104 @@ fn model_text_never_silently_exports_question_mark_substitutions() {
     ] {
         let mut doc = drawing(&scenario);
         let layer = doc.layers().active().to_owned();
-        doc.add(serde_json::from_value(json!({"kind":"text","id":0,"layerId":layer,"attrs":{},
-            "p":{"x":x,"y":0.5},"text":text,"height":0.125,"rotation":0.,"font":"arimo"})).unwrap()).unwrap();
+        doc.add(
+            serde_json::from_value(json!({"kind":"text","id":0,"layerId":layer,"attrs":{},
+            "p":{"x":x,"y":0.5},"text":text,"height":0.125,"rotation":0.,"font":"arimo"}))
+            .unwrap(),
+        )
+        .unwrap();
         let before = doc.to_snapshot_v2();
         let result = book_pdf(&doc, &[], "kabul", "2026-11-04");
         if rejected {
             let error = result.expect_err(text);
             assert_eq!(error.code, "map_text_unsupported", "{text}: {error:?}");
             assert!(error.message.contains("U+"));
-        } else { result.unwrap_or_else(|e| panic!("{text}: {e:?}")); }
+        } else {
+            result.unwrap_or_else(|e| panic!("{text}: {e:?}"));
+        }
         assert_eq!(doc.to_snapshot_v2(), before);
     }
 }
 
 #[test]
 fn unicode_profile_prints_combining_marks_symbols_and_bidi_without_mutating_text() {
-    let scenario:Value=serde_json::from_str(SCENARIO).unwrap();
-    let mut doc=drawing(&scenario);
-    for (n,text) in ["Ög\u{306}ç — İstanbul", "⌀32 ≤ 5‰ ±25 °C", "Türkçe / العربية / עברית 123"].into_iter().enumerate() {
-        let layer=doc.layers().active().to_owned();
+    let scenario: Value = serde_json::from_str(SCENARIO).unwrap();
+    let mut doc = drawing(&scenario);
+    for (n, text) in [
+        "Ög\u{306}ç — İstanbul",
+        "⌀32 ≤ 5‰ ±25 °C",
+        "Türkçe / العربية / עברית 123",
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        let layer = doc.layers().active().to_owned();
         doc.add(serde_json::from_value(json!({"kind":"text","id":0,"layerId":layer,"attrs":{},
             "p":{"x":1.,"y":0.5-n as f64*0.2},"text":text,"height":0.125,"rotation":0.,"font":"arimo",
             "layout":{"engine":"unicode-v1"}})).unwrap()).unwrap();
     }
-    let before=doc.to_snapshot_v2();
-    let made=book_pdf(&doc,&[],"kabul","2026-11-04").unwrap();
-    assert!(!made.findings.iter().any(|f|f.code=="map_text_unsupported" || f.code=="text_layout_unsupported"));
-    let fallback:Vec<_>=made.findings.iter().filter(|f|f.code=="text_font_fallback").collect();
+    let before = doc.to_snapshot_v2();
+    let made = book_pdf(&doc, &[], "kabul", "2026-11-04").unwrap();
+    assert!(
+        !made
+            .findings
+            .iter()
+            .any(|f| f.code == "map_text_unsupported" || f.code == "text_layout_unsupported")
+    );
+    let fallback: Vec<_> = made
+        .findings
+        .iter()
+        .filter(|f| f.code == "text_font_fallback")
+        .collect();
     assert!(!fallback.is_empty());
-    assert!(fallback.iter().all(|f|f.severity==kentos_sheet::preflight::Severity::Info));
-    assert_eq!(doc.to_snapshot_v2(),before);
-    if let Ok(dir)=std::env::var("KENTOS_TEXT_PDF_OUT") {std::fs::write(std::path::Path::new(&dir).join("unicode-profile-native.pdf"),made.bytes).unwrap();}
-    let mut bad=before.clone();
-    let Entity::Text(t)=bad.entities.last_mut().unwrap() else {panic!()};
-    t.text="Desteklenmeyen 🛸".into();
-    let doc=Document::from_snapshot_v2(bad).unwrap();
-    assert_eq!(book_pdf(&doc,&[],"kabul","2026-11-04").unwrap_err().code,"text_layout_unsupported");
+    assert!(
+        fallback
+            .iter()
+            .all(|f| f.severity == kentos_sheet::preflight::Severity::Info)
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
+    if let Ok(dir) = std::env::var("KENTOS_TEXT_PDF_OUT") {
+        std::fs::write(
+            std::path::Path::new(&dir).join("unicode-profile-native.pdf"),
+            made.bytes,
+        )
+        .unwrap();
+    }
+    let mut bad = before.clone();
+    let Entity::Text(t) = bad.entities.last_mut().unwrap() else {
+        panic!()
+    };
+    t.text = "Desteklenmeyen 🛸".into();
+    let doc = Document::from_snapshot_v2(bad).unwrap();
+    assert_eq!(
+        book_pdf(&doc, &[], "kabul", "2026-11-04").unwrap_err().code,
+        "text_layout_unsupported"
+    );
 }
 
 /// Real GUI's saved snapshot is supplied explicitly; screenshots/files stay outside Git.
 #[test]
 #[ignore]
 fn unicode_profile_gui_snapshot_pdf() {
-    let path=std::env::var("KENTOS_TEXT_GUI_SNAPSHOT").expect("saved GUI snapshot path");
-    let snapshot=serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
-    let doc=Document::from_snapshot_v2(snapshot).unwrap();
-    let made=book_pdf(&doc,&[],"kabul","2026-11-04").unwrap();
-    let out=std::env::var("KENTOS_TEXT_PDF_OUT").expect("PDF output directory");
-    std::fs::write(std::path::Path::new(&out).join("unicode-profile-gui.pdf"),made.bytes).unwrap();
-    let (book,_)=kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
-    for (i,sheet) in book.sheets.iter().enumerate() {
-        let preview=kentos_plot::preview::page(&doc,&sheet.id,"kabul","2026-11-04",None,144).unwrap();
-        std::fs::write(std::path::Path::new(&out).join(format!("unicode-profile-gui-preview-{i}.png")),preview.png).unwrap();
+    let path = std::env::var("KENTOS_TEXT_GUI_SNAPSHOT").expect("saved GUI snapshot path");
+    let snapshot = serde_json::from_slice(&std::fs::read(path).unwrap()).unwrap();
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let made = book_pdf(&doc, &[], "kabul", "2026-11-04").unwrap();
+    let out = std::env::var("KENTOS_TEXT_PDF_OUT").expect("PDF output directory");
+    std::fs::write(
+        std::path::Path::new(&out).join("unicode-profile-gui.pdf"),
+        made.bytes,
+    )
+    .unwrap();
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
+    for (i, sheet) in book.sheets.iter().enumerate() {
+        let preview =
+            kentos_plot::preview::page(&doc, &sheet.id, "kabul", "2026-11-04", None, 144).unwrap();
+        std::fs::write(
+            std::path::Path::new(&out).join(format!("unicode-profile-gui-preview-{i}.png")),
+            preview.png,
+        )
+        .unwrap();
     }
 }
 /// Independent PDF rasterization catches a preview that re-shapes the source,
@@ -285,9 +384,17 @@ fn unicode_profile_preview_matches_pdf_ink_at_two_scales_and_large_coordinates()
         let info = reader.next_frame(&mut bytes).unwrap();
         assert_eq!([preview.width, preview.height], [info.width, info.height]);
         assert_eq!(info.color_type, png::ColorType::Rgb);
-        let a: Vec<_> = preview.rgba.as_chunks::<4>().0.iter().map(|p| is_coloured(p)).collect();
+        let a: Vec<_> = preview
+            .rgba
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|p| is_coloured(p))
+            .collect();
         let b: Vec<_> = bytes[..info.buffer_size()]
-            .as_chunks::<3>().0.iter()
+            .as_chunks::<3>()
+            .0
+            .iter()
             .map(|p| is_coloured(p))
             .collect();
         for (from, to) in [(&a, &b), (&b, &a)] {

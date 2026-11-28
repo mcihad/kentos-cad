@@ -83,8 +83,12 @@ impl Geometry {
             Geometry::Curve(Curve::Arc(_)) => Some("CIRCULARSTRING"),
             Geometry::Curve(c @ Curve::Compound(_)) if c.is_curved() => Some("COMPOUNDCURVE"),
             Geometry::Polygon(rings) if rings.iter().any(Curve::is_curved) => Some("CURVEPOLYGON"),
-            Geometry::MultiCurve(curves) if curves.iter().any(Curve::is_curved) => Some("MULTICURVE"),
-            Geometry::MultiPolygon(polys) if polys.iter().flatten().any(Curve::is_curved) => Some("MULTISURFACE"),
+            Geometry::MultiCurve(curves) if curves.iter().any(Curve::is_curved) => {
+                Some("MULTICURVE")
+            }
+            Geometry::MultiPolygon(polys) if polys.iter().flatten().any(Curve::is_curved) => {
+                Some("MULTISURFACE")
+            }
             _ => None,
         }
     }

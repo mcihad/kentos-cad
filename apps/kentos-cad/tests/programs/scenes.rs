@@ -90,14 +90,18 @@ pub fn open_edited(app: &mut App, objects: Objects, edit: impl FnOnce(&mut Value
     ]);
     d["entities"] = Value::Array(objects.0);
     edit(&mut d);
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&d.to_string()).expect("the drawing reads");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&d.to_string()).expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
 }
 
 /// Where a point (east and north from the drawing's origin) is on the drawing area.
 pub fn at(app: &App, p: [f64; 2]) -> Point {
-    let [x, y] = app.viewport.camera.world_to_screen(Vec2::new(E + p[0], N + p[1]));
+    let [x, y] = app
+        .viewport
+        .camera
+        .world_to_screen(Vec2::new(E + p[0], N + p[1]));
     Point::new(x as f32, y as f32)
 }
 
@@ -119,19 +123,35 @@ pub fn run(app: &mut App, id: &'static str) {
 
 /// Where `caption` is on the window (a docked one first), or beside it where its arrow is.
 pub fn caption_at(snapshot: &mut Snapshot, app: &App, caption: &str, arrow: bool) -> Point {
-    let docked = find_texts(snapshot, app, caption).into_iter().find(|at| at.x > 900.0 && at.y > 150.0);
+    let docked = find_texts(snapshot, app, caption)
+        .into_iter()
+        .find(|at| at.x > 900.0 && at.y > 150.0);
     let at = docked
         .or_else(|| find_text(snapshot, app, caption))
         .unwrap_or_else(|| panic!("{caption} is on screen"));
-    if arrow { Point::new(at.x + at.width + 10.0, at.center_y()) } else { at.center() }
+    if arrow {
+        Point::new(at.x + at.width + 10.0, at.center_y())
+    } else {
+        at.center()
+    }
 }
 
 /// `caption` clicked (or right-clicked) on the window, or its arrow.
-pub fn press_caption(snapshot: &mut Snapshot, app: &mut App, caption: &str, right: bool, arrow: bool) {
+pub fn press_caption(
+    snapshot: &mut Snapshot,
+    app: &mut App,
+    caption: &str,
+    right: bool,
+    arrow: bool,
+) {
     let at = caption_at(snapshot, app, caption, arrow);
     let mut update = |app: &mut App, message: Message| {
         let _ = app.update(message);
     };
-    let input = if right { Input::RightClick(at) } else { Input::Click(at) };
+    let input = if right {
+        Input::RightClick(at)
+    } else {
+        Input::Click(at)
+    };
     snapshot.input(app, App::view, &mut update, input);
 }

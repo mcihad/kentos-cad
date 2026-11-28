@@ -2,13 +2,13 @@
 //! permanent dimension on Mimari's dimension layer (the layer key its program starts with), following the walls. Moved
 //! from the core's building_context_tests.rs with the module's package (docs/adr/9199 §4.11).
 
-use kentos_domain::Slot;
-use kentos_launch::Module;
-use serde_json::{Value, json};
 use crate::app::{App, Message};
 use crate::files_testing::drive;
 use crate::recovery::Recovery;
 use crate::settings::Settings;
+use kentos_domain::Slot;
+use kentos_launch::Module;
+use serde_json::{Value, json};
 
 /// A new KentOS Mimari project: a 5 × 4 m room of Dış duvar 25 on its first storey, a door K1 in the first wall and
 /// the room 101 Salon; the first wall's, the door's and the room's slots.

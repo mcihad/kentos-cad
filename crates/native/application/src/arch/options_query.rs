@@ -7,8 +7,9 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CombosCompared, CommandResult, CommandWarning, DesignOption, OptionChoice, OptionCombo, Entity, OptionChange, OptionKindCount, OptionKindDifference,
-    OptionComboRow, OptionRow, OptionSet, OptionSetRow, OptionsCompared, OptionsQueried, OptionsQuery, option_set,
+    CombosCompared, CommandResult, CommandWarning, DesignOption, Entity, OptionChange,
+    OptionChoice, OptionCombo, OptionComboRow, OptionKindCount, OptionKindDifference, OptionRow,
+    OptionSet, OptionSetRow, OptionsCompared, OptionsQueried, OptionsQuery, option_set,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::ops::compare::{Attrs, Matching, Member, Settings, Status, compare};
@@ -45,7 +46,11 @@ fn path_length(pts: &[kentos_commands::Vec2], bulges: Option<&[f64]>, closed: bo
 fn objects<'a>(doc: &'a Document, o: &DesignOption) -> Vec<(String, &'a Entity)> {
     o.members
         .iter()
-        .filter_map(|m| present(doc, m).and_then(|s| doc.get(s)).map(|e| (m.clone(), e)))
+        .filter_map(|m| {
+            present(doc, m)
+                .and_then(|s| doc.get(s))
+                .map(|e| (m.clone(), e))
+        })
         .collect()
 }
 
@@ -164,10 +169,11 @@ fn compared(
 /// The plan the given choices show (the main model and the shown options): its objects, spaces' area and walls'
 /// length.
 fn plan_of(doc: &Document, choices: &[OptionChoice]) -> (u32, f64, f64) {
-    let hidden: std::collections::HashSet<String> = kentos_commands::option_hidden_uids(doc.arch_options(), choices)
-        .into_iter()
-        .map(str::to_owned)
-        .collect();
+    let hidden: std::collections::HashSet<String> =
+        kentos_commands::option_hidden_uids(doc.arch_options(), choices)
+            .into_iter()
+            .map(str::to_owned)
+            .collect();
     let (mut objects, mut area, mut length) = (0u32, 0.0, 0.0);
     for (uid, e) in doc.entities_with_uids() {
         if hidden.contains(&uid.to_string()) {
@@ -176,7 +182,9 @@ fn plan_of(doc: &Document, choices: &[OptionChoice]) -> (u32, f64, f64) {
         objects += 1;
         match e {
             Entity::Space(x) => area += crate::spaces::area_of(&x.space.parts),
-            Entity::Wall(w) => length += path_length(&w.wall.pts, w.wall.bulges.as_deref(), w.wall.closed),
+            Entity::Wall(w) => {
+                length += path_length(&w.wall.pts, w.wall.bulges.as_deref(), w.wall.closed)
+            }
             _ => {}
         }
     }
@@ -184,9 +192,18 @@ fn plan_of(doc: &Document, choices: &[OptionChoice]) -> (u32, f64, f64) {
 }
 
 /// Two combinations compared (docs/adr/0809 §1): each set whose shown option differs, compared as two options are.
-fn combos_compared(doc: &Document, a: &OptionCombo, b: &OptionCombo, search: f64, tolerance: f64) -> CombosCompared {
+fn combos_compared(
+    doc: &Document,
+    a: &OptionCombo,
+    b: &OptionCombo,
+    search: f64,
+    tolerance: f64,
+) -> CombosCompared {
     let sets = doc.arch_options();
-    let (ca, cb) = (kentos_commands::combo_choices(sets, a), kentos_commands::combo_choices(sets, b));
+    let (ca, cb) = (
+        kentos_commands::combo_choices(sets, a),
+        kentos_commands::combo_choices(sets, b),
+    );
     let mut out = CombosCompared {
         a: a.id.clone(),
         b: b.id.clone(),
@@ -199,7 +216,9 @@ fn combos_compared(doc: &Document, a: &OptionCombo, b: &OptionCombo, search: f64
     };
     for ((s, x), y) in sets.iter().zip(&ca).zip(&cb) {
         match (s.option(&x.option), s.option(&y.option)) {
-            (Some(oa), Some(ob)) if oa.id != ob.id => out.sets.push(compared(doc, s, oa, ob, search, tolerance)),
+            (Some(oa), Some(ob)) if oa.id != ob.id => {
+                out.sets.push(compared(doc, s, oa, ob, search, tolerance))
+            }
             _ => out.alike.push(s.id.clone()),
         }
     }
@@ -220,9 +239,10 @@ fn combo_rows(doc: &Document) -> Vec<OptionComboRow> {
         .iter()
         .map(|c| {
             let choices = kentos_commands::combo_choices(sets, c);
-            let current = choices
-                .iter()
-                .all(|ch| sets.iter().any(|s| s.id == ch.set && s.primary == ch.option));
+            let current = choices.iter().all(|ch| {
+                sets.iter()
+                    .any(|s| s.id == ch.set && s.primary == ch.option)
+            });
             let (objects, area, length) = plan_of(doc, &choices);
             OptionComboRow {
                 id: c.id.clone(),
@@ -243,7 +263,12 @@ fn metres_per_unit(doc: &Document) -> f64 {
 }
 
 /// A comparison's search distance and tolerance, absent ones 0.5 m and 1 mm in the drawing's unit.
-fn reach(doc: &Document, search: Option<f64>, tolerance: Option<f64>, at: &str) -> Result<(f64, f64), Stop> {
+fn reach(
+    doc: &Document,
+    search: Option<f64>,
+    tolerance: Option<f64>,
+    at: &str,
+) -> Result<(f64, f64), Stop> {
     let unit = metres_per_unit(doc).max(f64::MIN_POSITIVE);
     for (v, name) in [(search, "search"), (tolerance, "tolerance")] {
         if v.is_some_and(|v| !(v.is_finite() && v >= 0.0)) {
@@ -254,10 +279,16 @@ fn reach(doc: &Document, search: Option<f64>, tolerance: Option<f64>, at: &str) 
             ));
         }
     }
-    Ok((search.unwrap_or(0.5 / unit), tolerance.unwrap_or(0.001 / unit)))
+    Ok((
+        search.unwrap_or(0.5 / unit),
+        tolerance.unwrap_or(0.001 / unit),
+    ))
 }
 
-fn answer(doc: &Document, input: &OptionsQuery) -> Result<(OptionsQueried, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &Document,
+    input: &OptionsQuery,
+) -> Result<(OptionsQueried, Vec<CommandWarning>), Stop> {
     let all = doc.arch_options();
     let mut chosen: Vec<&OptionSet> = match &input.set {
         Some(key) => vec![option_set(all, key).ok_or_else(|| {
@@ -294,7 +325,10 @@ fn answer(doc: &Document, input: &OptionsQuery) -> Result<(OptionsQueried, Vec<C
         let s = option_set(all, &c.set).ok_or_else(|| {
             fail(
                 codes::OPTION_SET_NOT_FOUND,
-                format!("Projede “{}” adlı ya da kimlikli tasarım seçeneği kümesi yok.", c.set),
+                format!(
+                    "Projede “{}” adlı ya da kimlikli tasarım seçeneği kümesi yok.",
+                    c.set
+                ),
                 "compare.set",
             )
         })?;
@@ -407,6 +441,9 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &OptionsQuery) -> CommandResult<Op
     query(cx.doc, input)
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: OptionsQuery) -> CommandResult<OptionsQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: OptionsQuery,
+) -> CommandResult<OptionsQueried> {
     query(cx.doc, &input)
 }

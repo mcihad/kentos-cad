@@ -522,7 +522,9 @@ impl TopologySettings {
                     && x.at.y.is_finite()
                     && x.digest.as_deref().is_none_or(exception_digest_holds)
                     && x.rule_digest.as_deref().is_none_or(exception_digest_holds)
-                    && x.reason.as_deref().is_none_or(|r| reason_problem(r).is_none())
+                    && x.reason
+                        .as_deref()
+                        .is_none_or(|r| reason_problem(r).is_none())
             })
             .collect();
         let tolerance = self.tolerance.filter(|t| Self::tolerance_holds(*t));

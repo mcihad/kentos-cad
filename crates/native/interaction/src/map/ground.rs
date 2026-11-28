@@ -85,12 +85,20 @@ pub fn trimmed(v: f64) -> String {
 /// and an area are taken on its system's ellipsoid (the geodesics between the vertices, GeographicLib's polygon) and
 /// written in metres and square metres; none in a projected project or one without a system. `Err` when a point is
 /// beyond the system.
-pub fn on_geographic_ellipsoid(settings: &ProjectSettings, rings: &[Ring], closed: bool) -> Option<Result<(f64, Option<f64>), ()>> {
+pub fn on_geographic_ellipsoid(
+    settings: &ProjectSettings,
+    rings: &[Ring],
+    closed: bool,
+) -> Option<Result<(f64, Option<f64>), ()>> {
     let system = systems::own(settings).and_then(|n| n.system)?;
     if !matches!(system, kentos_geometry_core::crs::System::Geographic { .. }) {
         return None;
     }
-    Some(ground_measures(&system, rings, closed, None).map(|m| (m.ellipsoid_length, m.ellipsoid_area)).map_err(|_| ()))
+    Some(
+        ground_measures(&system, rings, closed, None)
+            .map(|m| (m.ellipsoid_length, m.ellipsoid_area))
+            .map_err(|_| ()),
+    )
 }
 
 /// The project's own system when it is geographic: its drawing in degrees (GIS-040).

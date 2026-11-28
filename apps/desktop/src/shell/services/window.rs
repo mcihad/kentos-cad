@@ -771,7 +771,8 @@ impl App {
         let mut body = Column::new().spacing(14);
         for g in &c.groups {
             let mut group = Column::new().spacing(6).push(label::strong(g.name.clone()));
-            let all: Vec<&'static presets::Preset> = c.presets.iter().filter(|p| p.group == g.id).collect();
+            let all: Vec<&'static presets::Preset> =
+                c.presets.iter().filter(|p| p.group == g.id).collect();
             for pair in all.chunks(2) {
                 let mut line = iced::widget::Row::new().spacing(8);
                 for p in pair {
@@ -1105,10 +1106,17 @@ fn took_read(w: &mut Window, c: Connecting) {
         let left = if failed.is_empty() {
             String::new()
         } else {
-            format!(" Karo kümesi okunamayan koleksiyonlar: {}.", failed.join(", "))
+            format!(
+                " Karo kümesi okunamayan koleksiyonlar: {}.",
+                failed.join(", ")
+            )
         };
         w.said = Some((
-            if failed.is_empty() { Kind::Ok } else { Kind::Warn },
+            if failed.is_empty() {
+                Kind::Ok
+            } else {
+                Kind::Warn
+            },
             format!(
                 "{}: {} katman.{left}",
                 if o.title.is_empty() {

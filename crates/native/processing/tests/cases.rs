@@ -120,7 +120,10 @@ struct State {
 
 fn state(doc: &Document) -> State {
     State {
-        objects: doc.entities().map(|e| (e.base().id, equivalence::linked(plain(e), doc))).collect(),
+        objects: doc
+            .entities()
+            .map(|e| (e.base().id, equivalence::linked(plain(e), doc)))
+            .collect(),
         layers: serde_json::to_value(doc.layers().nodes()).expect("the tree writes"),
     }
 }

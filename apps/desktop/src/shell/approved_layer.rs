@@ -29,13 +29,20 @@ pub struct Approved {
 
 /// An arc's chords: none longer than a thousandth of its radius off it (a picture's tolerance, not a measure's).
 fn arc_line(c: kentos_geometry_core::Vec2, r: f64, a0: f64, sweep: f64) -> Vec<[f64; 2]> {
-    kentos_geometry_core::tessellate::arc_points(c, r, a0, sweep, (r * 1e-3).max(1e-6)).into_iter().map(|p| [p.x, p.y]).collect()
+    kentos_geometry_core::tessellate::arc_points(c, r, a0, sweep, (r * 1e-3).max(1e-6))
+        .into_iter()
+        .map(|p| [p.x, p.y])
+        .collect()
 }
 
 impl Approved {
     /// The outlines of `shapes` (objects as approved), for the selection's version `version`.
     pub fn of(shapes: &[Entity], version: u64) -> Self {
-        let mut out = Approved { objects: shapes.len(), version, ..Approved::default() };
+        let mut out = Approved {
+            objects: shapes.len(),
+            version,
+            ..Approved::default()
+        };
         for e in shapes {
             if let Entity::Point(p) = e {
                 out.points.push([p.p.x, p.p.y]);
@@ -67,7 +74,17 @@ pub fn layer<'a>(
         return None;
     };
     let gpu = crate::labels::gpu_text().then(|| slot.clone());
-    Some(canvas::Canvas::new(Layer { approved, camera: *camera, color, gpu }).width(Fill).height(Fill).into())
+    Some(
+        canvas::Canvas::new(Layer {
+            approved,
+            camera: *camera,
+            color,
+            gpu,
+        })
+        .width(Fill)
+        .height(Fill)
+        .into(),
+    )
 }
 
 struct Layer<'a> {
@@ -90,13 +107,29 @@ impl Layer<'_> {
     fn key(&self, bounds: Rectangle) -> u64 {
         use std::hash::{Hash, Hasher};
         let mut h = std::collections::hash_map::DefaultHasher::new();
-        (self.approved.version, self.approved.objects, self.approved.lines.len()).hash(&mut h);
-        for p in [Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)] {
+        (
+            self.approved.version,
+            self.approved.objects,
+            self.approved.lines.len(),
+        )
+            .hash(&mut h);
+        for p in [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(1.0, 0.0),
+            Vec2::new(0.0, 1.0),
+        ] {
             for c in self.camera.world_to_screen(p) {
                 c.to_bits().hash(&mut h);
             }
         }
-        for c in [bounds.width, bounds.height, self.color.r, self.color.g, self.color.b, self.color.a] {
+        for c in [
+            bounds.width,
+            bounds.height,
+            self.color.r,
+            self.color.g,
+            self.color.b,
+            self.color.a,
+        ] {
             c.to_bits().hash(&mut h);
         }
         h.finish()
@@ -111,7 +144,10 @@ impl Layer<'_> {
             Point::new(s[0] as f32, s[1] as f32)
         };
         let dashed = Stroke {
-            line_dash: LineDash { segments: &[7.0, 4.0], offset: 0 },
+            line_dash: LineDash {
+                segments: &[7.0, 4.0],
+                offset: 0,
+            },
             ..Stroke::default().with_width(1.8).with_color(self.color)
         };
         // Each outline its own path: a dashed stroke of one path joins its parts' ends (two shapes showed a solid
@@ -130,7 +166,10 @@ impl Layer<'_> {
         }
         for p in &self.approved.points {
             let ring = Path::circle(screen(*p), 6.0);
-            frame.stroke(&ring, Stroke::default().with_width(1.8).with_color(self.color));
+            frame.stroke(
+                &ring,
+                Stroke::default().with_width(1.8).with_color(self.color),
+            );
         }
     }
 }
@@ -138,7 +177,14 @@ impl Layer<'_> {
 impl canvas::Program<Message> for Layer<'_> {
     type State = State;
 
-    fn draw(&self, state: &State, renderer: &Renderer, _theme: &Theme, bounds: Rectangle, _cursor: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        state: &State,
+        renderer: &Renderer,
+        _theme: &Theme,
+        bounds: Rectangle,
+        _cursor: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let key = self.key(bounds);
         if let Some(slot) = &self.gpu {
             crate::gpu_frame::publish(slot, key, self.camera, bounds.size(), |f| self.paint(f));
@@ -148,6 +194,10 @@ impl canvas::Program<Message> for Layer<'_> {
             state.cache.clear();
             state.key.set(key);
         }
-        vec![state.cache.draw(renderer, bounds.size(), |frame| self.paint(frame))]
+        vec![
+            state
+                .cache
+                .draw(renderer, bounds.size(), |frame| self.paint(frame)),
+        ]
     }
 }

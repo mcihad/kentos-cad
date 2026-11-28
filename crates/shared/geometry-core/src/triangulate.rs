@@ -145,11 +145,20 @@ pub fn fill_into(pts: &[Vec2], rings: &[Range<usize>], out: &mut Vec<Vec2>) {
 /// once; the turns exact (`predicates`), their signs alike with the axes
 /// swapped.
 fn crosses(pts: &[Vec2], rings: &[Range<usize>]) -> bool {
-    let (mut lo, mut hi) = (Vec2::new(f64::INFINITY, f64::INFINITY), Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY));
+    let (mut lo, mut hi) = (
+        Vec2::new(f64::INFINITY, f64::INFINITY),
+        Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY),
+    );
     for r in rings.iter().filter(|r| r.len() >= 3) {
         for p in &pts[r.clone()] {
-            lo = Vec2::new(if p.x < lo.x { p.x } else { lo.x }, if p.y < lo.y { p.y } else { lo.y });
-            hi = Vec2::new(if p.x > hi.x { p.x } else { hi.x }, if p.y > hi.y { p.y } else { hi.y });
+            lo = Vec2::new(
+                if p.x < lo.x { p.x } else { lo.x },
+                if p.y < lo.y { p.y } else { lo.y },
+            );
+            hi = Vec2::new(
+                if p.x > hi.x { p.x } else { hi.x },
+                if p.y > hi.y { p.y } else { hi.y },
+            );
         }
     }
     let swap = hi.y - lo.y > hi.x - lo.x;
@@ -169,7 +178,15 @@ fn crosses(pts: &[Vec2], rings: &[Range<usize>]) -> bool {
         }
     }
     edges.sort_by(|p, q| p.0.total_cmp(&q.0));
-    let side = |o: f64| if o > 0.0 { 1 } else if o < 0.0 { -1 } else { 0 };
+    let side = |o: f64| {
+        if o > 0.0 {
+            1
+        } else if o < 0.0 {
+            -1
+        } else {
+            0
+        }
+    };
     let mut active: Vec<usize> = Vec::new();
     for i in 0..edges.len() {
         let (x0, _, a, b) = edges[i];
@@ -367,7 +384,13 @@ fn bridge(pts: &[Vec2], ring: Vec<usize>, hole: &[usize], mi: usize) -> Vec<usiz
         (edge + 1) % n
     };
     let p = pts[ring[pi]];
-    let corner = |i: usize| (pts[ring[(i + n - 1) % n]], pts[ring[i]], pts[ring[(i + 1) % n]]);
+    let corner = |i: usize| {
+        (
+            pts[ring[(i + n - 1) % n]],
+            pts[ring[i]],
+            pts[ring[(i + 1) % n]],
+        )
+    };
     let holds_m = |i: usize| {
         let (prev, v, next) = corner(i);
         locally_inside(prev, v, next, m)
@@ -510,7 +533,9 @@ mod tests {
     /// Sum of the triangle areas; every triangle must be counter-clockwise.
     fn covered(pts: &[Vec2], idx: &[u32]) -> f64 {
         assert_eq!(idx.len() % 3, 0);
-        idx.as_chunks::<3>().0.iter()
+        idx.as_chunks::<3>()
+            .0
+            .iter()
             .map(|t| {
                 let a = cross(pts[t[0] as usize], pts[t[1] as usize], pts[t[2] as usize]) / 2.0;
                 assert!(a >= 0.0, "clockwise triangle {t:?}");
@@ -636,7 +661,8 @@ mod tests {
                 (9.974945448948716, 1.684112837031762),
             ]),
         ];
-        let want = signed_area(&rings[0]).abs() - rings[1..].iter().map(|h| signed_area(h).abs()).sum::<f64>();
+        let want = signed_area(&rings[0]).abs()
+            - rings[1..].iter().map(|h| signed_area(h).abs()).sum::<f64>();
         let (pts, ranges) = rings_of(&rings);
         let mut idx = Vec::new();
         triangulate_into(&pts, &ranges, &mut idx);
@@ -656,7 +682,11 @@ mod tests {
         let (pts, ranges) = rings_of(&rings);
         let mut idx = Vec::new();
         triangulate_into(&pts, &ranges, &mut idx);
-        assert!((covered(&pts, &idx) - 78.0).abs() < 1e-9, "{}", covered(&pts, &idx));
+        assert!(
+            (covered(&pts, &idx) - 78.0).abs() < 1e-9,
+            "{}",
+            covered(&pts, &idx)
+        );
         assert!((filled(&rings).0 - 78.0).abs() < 1e-9);
     }
 
@@ -666,7 +696,11 @@ mod tests {
         let bow = ring(&[(0.0, 0.0), (10.0, 10.0), (10.0, 0.0), (0.0, 10.0)]);
         let (area, corners) = filled(std::slice::from_ref(&bow));
         assert!((area - 50.0).abs() < 1e-9, "{area}");
-        assert!(corners.iter().any(|p| (p.x - 5.0).abs() < 1e-9 && (p.y - 5.0).abs() < 1e-9));
+        assert!(
+            corners
+                .iter()
+                .any(|p| (p.x - 5.0).abs() < 1e-9 && (p.y - 5.0).abs() < 1e-9)
+        );
         // A bow-tie hole takes both of its loops out.
         let (area, _) = filled(&[square(-5.0, -5.0, 20.0), bow]);
         assert!((area - 350.0).abs() < 1e-9, "{area}");
@@ -675,14 +709,21 @@ mod tests {
     /// A hole over the outline takes out what it covers of the area, no more.
     #[test]
     fn a_hole_over_the_outline_takes_out_only_what_it_covers() {
-        let rings = [square(0.0, 0.0, 10.0), ring(&[(8.0, 4.0), (12.0, 4.0), (12.0, 6.0), (8.0, 6.0)])];
+        let rings = [
+            square(0.0, 0.0, 10.0),
+            ring(&[(8.0, 4.0), (12.0, 4.0), (12.0, 6.0), (8.0, 6.0)]),
+        ];
         assert!((filled(&rings).0 - 96.0).abs() < 1e-9);
     }
 
     /// A polygon the ear clipper fills is filled with its triangles, corner for corner.
     #[test]
     fn a_valid_polygon_is_filled_with_the_clippers_triangles() {
-        let rings = [square(0.0, 0.0, 10.0), square(4.0, 4.0, 2.0), square(1.0, 6.0, 2.0)];
+        let rings = [
+            square(0.0, 0.0, 10.0),
+            square(4.0, 4.0, 2.0),
+            square(1.0, 6.0, 2.0),
+        ];
         let (pts, ranges) = rings_of(&rings);
         let mut idx = Vec::new();
         triangulate_into(&pts, &ranges, &mut idx);

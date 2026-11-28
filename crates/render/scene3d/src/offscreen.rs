@@ -58,11 +58,19 @@ fn uniform(binding: u32) -> wgpu::BindGroupLayoutEntry {
     }
 }
 
-fn texture(binding: u32, sample_type: wgpu::TextureSampleType, multisampled: bool) -> wgpu::BindGroupLayoutEntry {
+fn texture(
+    binding: u32,
+    sample_type: wgpu::TextureSampleType,
+    multisampled: bool,
+) -> wgpu::BindGroupLayoutEntry {
     wgpu::BindGroupLayoutEntry {
         binding,
         visibility: wgpu::ShaderStages::FRAGMENT,
-        ty: wgpu::BindingType::Texture { sample_type, view_dimension: wgpu::TextureViewDimension::D2, multisampled },
+        ty: wgpu::BindingType::Texture {
+            sample_type,
+            view_dimension: wgpu::TextureViewDimension::D2,
+            multisampled,
+        },
         count: None,
     }
 }
@@ -109,11 +117,20 @@ fn full(
 }
 
 impl Passes {
-    pub(crate) fn new(device: &wgpu::Device, format: wgpu::TextureFormat, quality: Quality) -> Passes {
+    pub(crate) fn new(
+        device: &wgpu::Device,
+        format: wgpu::TextureFormat,
+        quality: Quality,
+    ) -> Passes {
         let float = wgpu::TextureSampleType::Float { filterable: false };
         let composite_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("kentos.scene3d.composite"),
-            entries: &[texture(0, float, false), texture(1, float, false), uniform(2), texture(3, float, false)],
+            entries: &[
+                texture(0, float, false),
+                texture(1, float, false),
+                uniform(2),
+                texture(3, float, false),
+            ],
         });
         let composite = full(
             device,
@@ -138,7 +155,11 @@ impl Passes {
                 OCCLUSION_WGSL,
                 ("occlusionVs", "occlusionFs"),
                 &layout,
-                wgpu::ColorTargetState { format: OCCLUSION_FORMAT, blend: None, write_mask: wgpu::ColorWrites::ALL },
+                wgpu::ColorTargetState {
+                    format: OCCLUSION_FORMAT,
+                    blend: None,
+                    write_mask: wgpu::ColorWrites::ALL,
+                },
             );
             (pipeline, layout)
         });
@@ -161,7 +182,10 @@ impl Passes {
 
     /// Where the viewport lays the target (its corners, 0–1) and whether the occlusion darkens it.
     pub(crate) fn place(&self, queue: &wgpu::Queue, uv: [f32; 4], occluded: bool) {
-        let block = PlaceBlock { uv, shade: [if occluded { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0] };
+        let block = PlaceBlock {
+            uv,
+            shade: [if occluded { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0],
+        };
         queue.write_buffer(&self.place, 0, bytemuck::bytes_of(&block));
     }
 
@@ -182,11 +206,22 @@ pub(crate) struct Targets {
     composite: wgpu::BindGroup,
 }
 
-fn target(device: &wgpu::Device, label: &str, size: (u32, u32), samples: u32, format: wgpu::TextureFormat, usage: wgpu::TextureUsages) -> wgpu::TextureView {
+fn target(
+    device: &wgpu::Device,
+    label: &str,
+    size: (u32, u32),
+    samples: u32,
+    format: wgpu::TextureFormat,
+    usage: wgpu::TextureUsages,
+) -> wgpu::TextureView {
     device
         .create_texture(&wgpu::TextureDescriptor {
             label: Some(label),
-            size: wgpu::Extent3d { width: size.0, height: size.1, depth_or_array_layers: 1 },
+            size: wgpu::Extent3d {
+                width: size.0,
+                height: size.1,
+                depth_or_array_layers: 1,
+            },
             mip_level_count: 1,
             sample_count: samples,
             dimension: wgpu::TextureDimension::D2,
@@ -215,26 +250,80 @@ impl Targets {
         let samples = quality.samples();
         let draw = wgpu::TextureUsages::RENDER_ATTACHMENT;
         let read = wgpu::TextureUsages::TEXTURE_BINDING;
-        let color = target(device, "kentos.scene3d.colour", size, samples, format, if samples > 1 { draw } else { draw | read });
-        let resolved = (samples > 1).then(|| target(device, "kentos.scene3d.resolved", size, 1, format, draw | read));
-        let occluded = passes.occlusion.is_some() && samples > 1;
-        let depth = target(device, "kentos.scene3d.depth", size, samples, DEPTH_FORMAT, if occluded { draw | read } else { draw });
-        let occlusion = passes.occlusion.as_ref().filter(|_| occluded).map(|(_, layout)| {
-            let view = target(device, "kentos.scene3d.occlusion", size, 1, OCCLUSION_FORMAT, draw | read);
-            let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
-                label: Some("kentos.scene3d.occlusion"),
-                layout,
-                entries: &[
-                    wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&depth) },
-                    wgpu::BindGroupEntry { binding: 1, resource: passes.lens.as_entire_binding() },
-                ],
-            });
-            (view, bind)
+        let color = target(
+            device,
+            "kentos.scene3d.colour",
+            size,
+            samples,
+            format,
+            if samples > 1 { draw } else { draw | read },
+        );
+        let resolved = (samples > 1).then(|| {
+            target(
+                device,
+                "kentos.scene3d.resolved",
+                size,
+                1,
+                format,
+                draw | read,
+            )
         });
+        let occluded = passes.occlusion.is_some() && samples > 1;
+        let depth = target(
+            device,
+            "kentos.scene3d.depth",
+            size,
+            samples,
+            DEPTH_FORMAT,
+            if occluded { draw | read } else { draw },
+        );
+        let occlusion = passes
+            .occlusion
+            .as_ref()
+            .filter(|_| occluded)
+            .map(|(_, layout)| {
+                let view = target(
+                    device,
+                    "kentos.scene3d.occlusion",
+                    size,
+                    1,
+                    OCCLUSION_FORMAT,
+                    draw | read,
+                );
+                let bind = device.create_bind_group(&wgpu::BindGroupDescriptor {
+                    label: Some("kentos.scene3d.occlusion"),
+                    layout,
+                    entries: &[
+                        wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: wgpu::BindingResource::TextureView(&depth),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 1,
+                            resource: passes.lens.as_entire_binding(),
+                        },
+                    ],
+                });
+                (view, bind)
+            });
         let veil = occlusion.as_ref().map(|_| {
             (
-                target(device, "kentos.scene3d.veil", size, samples, VEIL_FORMAT, draw),
-                target(device, "kentos.scene3d.veilResolved", size, 1, VEIL_FORMAT, draw | read),
+                target(
+                    device,
+                    "kentos.scene3d.veil",
+                    size,
+                    samples,
+                    VEIL_FORMAT,
+                    draw,
+                ),
+                target(
+                    device,
+                    "kentos.scene3d.veilResolved",
+                    size,
+                    1,
+                    VEIL_FORMAT,
+                    draw | read,
+                ),
             )
         });
         let shown = resolved.as_ref().unwrap_or(&color);
@@ -245,13 +334,33 @@ impl Targets {
             label: Some("kentos.scene3d.composite"),
             layout: &passes.composite_layout,
             entries: &[
-                wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(shown) },
-                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(shade) },
-                wgpu::BindGroupEntry { binding: 2, resource: passes.place.as_entire_binding() },
-                wgpu::BindGroupEntry { binding: 3, resource: wgpu::BindingResource::TextureView(lifted) },
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(shown),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::TextureView(shade),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: passes.place.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: wgpu::BindingResource::TextureView(lifted),
+                },
             ],
         });
-        *this = Some(Targets { size, color, resolved, depth, veil, occlusion, composite });
+        *this = Some(Targets {
+            size,
+            color,
+            resolved,
+            depth,
+            veil,
+            occlusion,
+            composite,
+        });
     }
 
     /// Whether the occlusion is drawn.
@@ -260,22 +369,35 @@ impl Targets {
     }
 
     /// The scene's pass: the view's colour cleared see-through, its veil none, its depth cleared far.
-    pub(crate) fn scene_pass<'e>(&self, encoder: &'e mut wgpu::CommandEncoder) -> wgpu::RenderPass<'e> {
+    pub(crate) fn scene_pass<'e>(
+        &self,
+        encoder: &'e mut wgpu::CommandEncoder,
+    ) -> wgpu::RenderPass<'e> {
         let colour = Some(wgpu::RenderPassColorAttachment {
             view: &self.color,
             depth_slice: None,
             resolve_target: self.resolved.as_ref(),
             ops: wgpu::Operations {
                 load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
-                store: if self.resolved.is_some() { wgpu::StoreOp::Discard } else { wgpu::StoreOp::Store },
+                store: if self.resolved.is_some() {
+                    wgpu::StoreOp::Discard
+                } else {
+                    wgpu::StoreOp::Store
+                },
             },
         });
-        let veil = self.veil.as_ref().map(|(samples, resolved)| wgpu::RenderPassColorAttachment {
-            view: samples,
-            depth_slice: None,
-            resolve_target: Some(resolved),
-            ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT), store: wgpu::StoreOp::Discard },
-        });
+        let veil = self
+            .veil
+            .as_ref()
+            .map(|(samples, resolved)| wgpu::RenderPassColorAttachment {
+                view: samples,
+                depth_slice: None,
+                resolve_target: Some(resolved),
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color::TRANSPARENT),
+                    store: wgpu::StoreOp::Discard,
+                },
+            });
         let attachments = [colour, veil];
         let used = if self.veil.is_some() { 2 } else { 1 };
         encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -285,7 +407,11 @@ impl Targets {
                 view: &self.depth,
                 depth_ops: Some(wgpu::Operations {
                     load: wgpu::LoadOp::Clear(DEPTH_CLEAR),
-                    store: if self.occlusion.is_some() { wgpu::StoreOp::Store } else { wgpu::StoreOp::Discard },
+                    store: if self.occlusion.is_some() {
+                        wgpu::StoreOp::Store
+                    } else {
+                        wgpu::StoreOp::Discard
+                    },
                 }),
                 stencil_ops: None,
             }),
@@ -295,7 +421,14 @@ impl Targets {
     }
 
     /// The occlusion (when drawn), then the view laid over `output` at `viewport` within `scissor`.
-    pub(crate) fn finish(&self, passes: &Passes, encoder: &mut wgpu::CommandEncoder, output: &wgpu::TextureView, viewport: [f32; 4], scissor: [u32; 4]) {
+    pub(crate) fn finish(
+        &self,
+        passes: &Passes,
+        encoder: &mut wgpu::CommandEncoder,
+        output: &wgpu::TextureView,
+        viewport: [f32; 4],
+        scissor: [u32; 4],
+    ) {
         if let (Some((view, bind)), Some((pipeline, _))) = (&self.occlusion, &passes.occlusion) {
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("kentos.scene3d.occlusion"),
@@ -303,7 +436,10 @@ impl Targets {
                     view,
                     depth_slice: None,
                     resolve_target: None,
-                    ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::WHITE), store: wgpu::StoreOp::Store },
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                        store: wgpu::StoreOp::Store,
+                    },
                 })],
                 depth_stencil_attachment: None,
                 timestamp_writes: None,
@@ -319,7 +455,10 @@ impl Targets {
                 view: output,
                 depth_slice: None,
                 resolve_target: None,
-                ops: wgpu::Operations { load: wgpu::LoadOp::Load, store: wgpu::StoreOp::Store },
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Load,
+                    store: wgpu::StoreOp::Store,
+                },
             })],
             depth_stencil_attachment: None,
             timestamp_writes: None,
@@ -327,7 +466,12 @@ impl Targets {
         });
         let [vx, vy, vw, vh] = viewport;
         pass.set_viewport(vx, vy, vw, vh, 0.0, 1.0);
-        pass.set_scissor_rect(scissor[0], scissor[1], scissor[2] - scissor[0], scissor[3] - scissor[1]);
+        pass.set_scissor_rect(
+            scissor[0],
+            scissor[1],
+            scissor[2] - scissor[0],
+            scissor[3] - scissor[1],
+        );
         pass.set_pipeline(&passes.composite);
         pass.set_bind_group(0, &self.composite, &[]);
         pass.draw(0..3, 0..1);

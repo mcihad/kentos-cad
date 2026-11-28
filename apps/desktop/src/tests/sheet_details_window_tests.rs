@@ -8,10 +8,14 @@ use crate::sheet_details_window::{Event as D, ratios};
 /// The details' drawing of `cad.sheets.details`'s shared cases, opened.
 fn app() -> App {
     let (mut app, _) = App::boot(None);
-    let fx: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.sheets.details.json")).expect("cases");
-    let model = kentos_domain::Document::from_snapshot(serde_json::from_value(fx["setup"].clone()).expect("a drawing"))
-        .expect("opens");
+    let fx: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.sheets.details.json"
+    ))
+    .expect("cases");
+    let model = kentos_domain::Document::from_snapshot(
+        serde_json::from_value(fx["setup"].clone()).expect("a drawing"),
+    )
+    .expect("opens");
     let doc = crate::document::Document::from_v2(model.to_snapshot_v2(), None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -28,7 +32,12 @@ fn select(app: &mut App, slot: u32) {
 fn book(app: &App) -> serde_json::Value {
     let doc = app.document.as_ref().expect("a drawing");
     let sheets = doc.model.sheets().expect("a book");
-    serde_json::to_value(kentos_sheet::project::read_project_sheets(sheets).expect("reads").0).expect("json")
+    serde_json::to_value(
+        kentos_sheet::project::read_project_sheets(sheets)
+            .expect("reads")
+            .0,
+    )
+    .expect("json")
 }
 
 #[test]
@@ -76,7 +85,14 @@ fn the_window_previews_builds_the_set_in_one_step_and_one_undo_takes_it_back() {
     let want = (0.37 * (1.0 + 2.0 * crate::sheet_details_window::MARGIN) * 1e6 / 5.0).round();
     assert_eq!(plate["frame"]["width"].as_f64(), Some(want), "{plate}");
     // The preview wrote nothing.
-    assert!(app.document.as_ref().expect("a drawing").model.sheets().is_none());
+    assert!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .sheets()
+            .is_none()
+    );
     let can_undo = app.document.as_ref().expect("a drawing").model.can_undo();
     assert!(!can_undo);
     send(&mut app, D::Build);
@@ -84,15 +100,36 @@ fn the_window_previews_builds_the_set_in_one_step_and_one_undo_takes_it_back() {
     let built = book(&app);
     let sheets = built["sheets"].as_array().expect("sheets");
     assert_eq!(sheets.len(), planned.made.len(), "{built}");
-    let items: Vec<&serde_json::Value> = sheets.iter().flat_map(|s| s["items"].as_array().expect("items")).collect();
-    let levha = items.iter().find(|i| i["id"] == plate["item"]).expect("the plate's viewport");
-    assert_eq!(levha["kind"]["layerOverrides"], serde_json::json!([{ "layer": "olcu", "frozen": true }]), "{levha}");
+    let items: Vec<&serde_json::Value> = sheets
+        .iter()
+        .flat_map(|s| s["items"].as_array().expect("items"))
+        .collect();
+    let levha = items
+        .iter()
+        .find(|i| i["id"] == plate["item"])
+        .expect("the plate's viewport");
+    assert_eq!(
+        levha["kind"]["layerOverrides"],
+        serde_json::json!([{ "layer": "olcu", "frozen": true }]),
+        "{levha}"
+    );
     assert_eq!(levha["kind"]["viewLocked"], true, "{levha}");
     let _ = app.update(Message::Run("edit.undo"));
-    let after = app.document.as_ref().expect("a drawing").model.sheets().map(|s| {
-        kentos_sheet::project::read_project_sheets(s).map(|(b, _)| b.sheets.len()).unwrap_or(0)
-    });
-    assert!(after.unwrap_or(0) == 0, "one undo takes the set back: {after:?}");
+    let after = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .sheets()
+        .map(|s| {
+            kentos_sheet::project::read_project_sheets(s)
+                .map(|(b, _)| b.sheets.len())
+                .unwrap_or(0)
+        });
+    assert!(
+        after.unwrap_or(0) == 0,
+        "one undo takes the set back: {after:?}"
+    );
 }
 
 #[test]
@@ -101,11 +138,29 @@ fn closing_writes_nothing_and_an_empty_selection_is_said() {
     let _ = app.update(Message::Run("sheet.details"));
     assert_eq!(app.dialog, Some(Dialog::SheetDetails));
     send(&mut app, D::FromSelection);
-    assert!(app.sheet_details.as_ref().is_some_and(|s| s.details.is_empty()));
-    assert!(app.log.lines().last().is_some_and(|l| l.text.contains("seçili nesne yok")), "said");
+    assert!(
+        app.sheet_details
+            .as_ref()
+            .is_some_and(|s| s.details.is_empty())
+    );
+    assert!(
+        app.log
+            .lines()
+            .last()
+            .is_some_and(|l| l.text.contains("seçili nesne yok")),
+        "said"
+    );
     select(&mut app, 2);
     send(&mut app, D::FromSelection);
     send(&mut app, D::Close);
     assert!(app.dialog.is_none());
-    assert!(app.document.as_ref().expect("a drawing").model.sheets().is_none(), "Kapat wrote nothing");
+    assert!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .sheets()
+            .is_none(),
+        "Kapat wrote nothing"
+    );
 }

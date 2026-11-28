@@ -18,9 +18,9 @@
 //! └─────────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::arch::ArchState;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use crate::arch::ArchState;
 
 use iced::futures::channel::oneshot;
 use iced::widget::{Column, container, row, scrollable, space};
@@ -93,7 +93,9 @@ impl Default for Window {
             outcome: None,
             tab: Tab::Findings,
             chosen: None,
-            author: std::env::var("USER").map(|u| u.trim().to_owned()).unwrap_or_default(),
+            author: std::env::var("USER")
+                .map(|u| u.trim().to_owned())
+                .unwrap_or_default(),
             said: None,
         }
     }
@@ -137,21 +139,39 @@ fn layer_words(key: &str) -> &str {
 fn model_path(path: &str, r: &PackageReviewed) -> Option<PathBuf> {
     let p = Path::new(path.trim());
     let name = r.model.as_ref()?;
-    let at = if p.is_dir() { p.join(name) } else { p.to_path_buf() };
+    let at = if p.is_dir() {
+        p.join(name)
+    } else {
+        p.to_path_buf()
+    };
     at.is_file().then_some(at)
 }
 
 /// The return note in words: each error finding with its layer, what it says, how to put it right, its article and
 /// objects.
 pub(crate) fn letter(r: &PackageReviewed, author: &str) -> String {
-    let mut out = format!("İade gerekçeleri\nPaket: {}\nİnceleyen: {}\n\n", r.path, author.trim());
+    let mut out = format!(
+        "İade gerekçeleri\nPaket: {}\nİnceleyen: {}\n\n",
+        r.path,
+        author.trim()
+    );
     for (k, f) in r.findings.iter().filter(|f| f.error).enumerate() {
-        out.push_str(&format!("{}. [{}] {}\n   Onarım: {}\n   Dayanak: {}\n", k + 1, layer_words(&f.layer), f.message, f.repair, f.cite));
+        out.push_str(&format!(
+            "{}. [{}] {}\n   Onarım: {}\n   Dayanak: {}\n",
+            k + 1,
+            layer_words(&f.layer),
+            f.message,
+            f.repair,
+            f.cite
+        ));
         if let Some(file) = &f.file {
             out.push_str(&format!("   Dosya: {file}\n"));
         }
         if !f.objects.is_empty() {
-            out.push_str(&format!("   Nesneler (GlobalId): {}\n", f.objects.join(", ")));
+            out.push_str(&format!(
+                "   Nesneler (GlobalId): {}\n",
+                f.objects.join(", ")
+            ));
         }
         out.push('\n');
     }
@@ -159,11 +179,21 @@ pub(crate) fn letter(r: &PackageReviewed, author: &str) -> String {
 }
 
 fn topic_of(f: &ReviewFinding, author: &str) -> BcfTopicInput {
-    let title: String = f.message.lines().next().unwrap_or_default().chars().take(kentos_commands::MAX_BCF_TITLE).collect();
+    let title: String = f
+        .message
+        .lines()
+        .next()
+        .unwrap_or_default()
+        .chars()
+        .take(kentos_commands::MAX_BCF_TITLE)
+        .collect();
     BcfTopicInput {
         guid: None,
         title,
-        description: Some(format!("{}\nOnarım: {}\nDayanak: {}", f.message, f.repair, f.cite)),
+        description: Some(format!(
+            "{}\nOnarım: {}\nDayanak: {}",
+            f.message, f.repair, f.cite
+        )),
         topic_type: Some("Issue".into()),
         status: Some("Open".into()),
         priority: None,
@@ -171,7 +201,12 @@ fn topic_of(f: &ReviewFinding, author: &str) -> BcfTopicInput {
         author: author.trim().to_owned(),
         date: None,
         assigned_to: None,
-        objects: f.objects.iter().take(kentos_commands::MAX_BCF_OBJECTS).cloned().collect(),
+        objects: f
+            .objects
+            .iter()
+            .take(kentos_commands::MAX_BCF_OBJECTS)
+            .cloned()
+            .collect(),
         comments: Vec::new(),
     }
 }
@@ -192,7 +227,7 @@ pub(crate) trait PackageReviewWindowApp {
 
 impl PackageReviewWindowApp for App {
     /// Gelen paketi incele (`arch.reviewPackage`).
-    fn open_review_package(&mut self){
+    fn open_review_package(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -200,13 +235,19 @@ impl PackageReviewWindowApp for App {
         if self.modules.arch().review_window.is_none() {
             self.modules.arch_mut().review_window = Some(Window::default());
         }
-        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ReviewPackage));
+        self.dialog = Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::ReviewPackage,
+        ));
     }
 
-    fn review_start(&mut self) -> Task<Message>{
-        let Some(doc) = self.document.as_ref() else { return Task::none() };
+    fn review_start(&mut self) -> Task<Message> {
+        let Some(doc) = self.document.as_ref() else {
+            return Task::none();
+        };
         let mut model = doc.model.clone();
-        let Some(w) = self.modules.arch_mut().review_window.as_mut() else { return Task::none() };
+        let Some(w) = self.modules.arch_mut().review_window.as_mut() else {
+            return Task::none();
+        };
         let typed = w.system.trim().trim_start_matches("EPSG:").trim();
         let system = if typed.is_empty() {
             None
@@ -230,34 +271,43 @@ impl PackageReviewWindowApp for App {
         w.chosen = None;
         w.said = None;
         let (done, wait) = oneshot::channel();
-        let spawned = std::thread::Builder::new().name("paket-inceleme".into()).stack_size(64 << 20).spawn(move || {
-            let answer = kentos_headless::file_commands::call(
-                &mut model,
-                CallEnvelope {
-                    command: kentos_commands::FILE_REVIEW_PACKAGE.into(),
-                    version: None,
-                    op: CallOp::Execute,
-                    request_id: None,
-                    expected: None,
-                    relax_constraints: false,
-                    input,
-                },
-            );
-            let _ = done.send(answer.result);
-        });
+        let spawned = std::thread::Builder::new()
+            .name("paket-inceleme".into())
+            .stack_size(64 << 20)
+            .spawn(move || {
+                let answer = kentos_headless::file_commands::call(
+                    &mut model,
+                    CallEnvelope {
+                        command: kentos_commands::FILE_REVIEW_PACKAGE.into(),
+                        version: None,
+                        op: CallOp::Execute,
+                        request_id: None,
+                        expected: None,
+                        relax_constraints: false,
+                        input,
+                    },
+                );
+                let _ = done.send(answer.result);
+            });
         if spawned.is_err() {
-            w.outcome = Some(Outcome::Refused("İnceleme başlatılamadı: iş parçacığı açılmadı.".into()));
+            w.outcome = Some(Outcome::Refused(
+                "İnceleme başlatılamadı: iş parçacığı açılmadı.".into(),
+            ));
             return Task::none();
         }
         Task::perform(wait, |answer| {
             let outcome = match answer {
-                Ok(CommandResult::Completed { output, .. }) => match serde_json::from_value::<PackageReviewed>(output) {
-                    Ok(r) => Outcome::Done(Arc::new(r)),
-                    Err(e) => Outcome::Refused(format!("İncelemenin cevabı okunamadı: {e}")),
-                },
-                Ok(CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error }) => {
-                    Outcome::Refused(error.message)
+                Ok(CommandResult::Completed { output, .. }) => {
+                    match serde_json::from_value::<PackageReviewed>(output) {
+                        Ok(r) => Outcome::Done(Arc::new(r)),
+                        Err(e) => Outcome::Refused(format!("İncelemenin cevabı okunamadı: {e}")),
+                    }
                 }
+                Ok(
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error },
+                ) => Outcome::Refused(error.message),
                 Ok(_) | Err(_) => Outcome::Refused("İnceleme yarıda kaldı.".into()),
             };
             msg(Event::Reviewed(Box::new(outcome)))
@@ -265,30 +315,46 @@ impl PackageReviewWindowApp for App {
     }
 
     /// The chosen finding's objects shown in the IFC viewer, on the package's model.
-    fn review_show(&mut self) -> Task<Message>{
-        let Some(w) = self.modules.arch().review_window.as_ref() else { return Task::none() };
-        let Some(Outcome::Done(r)) = &w.outcome else { return Task::none() };
-        let Some(f) = w.chosen.and_then(|k| r.findings.get(k)) else { return Task::none() };
+    fn review_show(&mut self) -> Task<Message> {
+        let Some(w) = self.modules.arch().review_window.as_ref() else {
+            return Task::none();
+        };
+        let Some(Outcome::Done(r)) = &w.outcome else {
+            return Task::none();
+        };
+        let Some(f) = w.chosen.and_then(|k| r.findings.get(k)) else {
+            return Task::none();
+        };
         let (keys, path) = (f.objects.clone(), model_path(&w.path, r));
         let Some(path) = path else {
             if let Some(w) = self.modules.arch_mut().review_window.as_mut() {
-                w.said = Some((Kind::Info, "Paketin okunabilir bir modeli yok: gösterilecek nesne yok.".into()));
+                w.said = Some((
+                    Kind::Info,
+                    "Paketin okunabilir bir modeli yok: gösterilecek nesne yok.".into(),
+                ));
             }
             return Task::none();
         };
         if keys.is_empty()
             && let Some(w) = self.modules.arch_mut().review_window.as_mut()
         {
-            w.said = Some((Kind::Info, "Bu bulgu bir nesneyi anmıyor: model yalnız açılır.".into()));
+            w.said = Some((
+                Kind::Info,
+                "Bu bulgu bir nesneyi anmıyor: model yalnız açılır.".into(),
+            ));
         }
         self.dialog = None;
         self.open_ifc_model_showing(path, keys)
     }
 
     /// The error findings written as a BCF file at `path` and in words beside it.
-    fn review_return(&mut self, path: PathBuf){
-        let Some(w) = self.modules.arch().review_window.as_ref() else { return };
-        let Some(Outcome::Done(r)) = &w.outcome else { return };
+    fn review_return(&mut self, path: PathBuf) {
+        let Some(w) = self.modules.arch().review_window.as_ref() else {
+            return;
+        };
+        let Some(Outcome::Done(r)) = &w.outcome else {
+            return;
+        };
         let errors: Vec<&ReviewFinding> = r.findings.iter().filter(|f| f.error).collect();
         let model = model_path(&w.path, r);
         // Objects only where the model can show them.
@@ -310,32 +376,47 @@ impl PackageReviewWindowApp for App {
             model: model.map(|m| m.display().to_string()),
             topics,
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        let said = match bcf_exchange::write::execute(&mut ExecutionContext::new(&mut doc.model), input) {
-            CommandResult::Completed { output, .. } => match std::fs::write(&text_path, note) {
-                Ok(()) => (
-                    Kind::Ok,
-                    format!(
-                        "İade notu: {} gerekçe “{}” ve “{}” dosyalarına yazıldı.",
-                        output.topics,
-                        path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
-                        text_path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default()
-                    ),
-                ),
-                Err(e) => (Kind::Warn, format!("BCF yazıldı; yazılı not yazılamadı: {e}")),
-            },
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                (Kind::Warn, error.message)
-            }
-            CommandResult::Queued { .. } | CommandResult::Cancelled => (Kind::Warn, "Yazılmadı.".into()),
+        let Some(doc) = self.document.as_mut() else {
+            return;
         };
+        let said =
+            match bcf_exchange::write::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+                CommandResult::Completed { output, .. } => match std::fs::write(&text_path, note) {
+                    Ok(()) => (
+                        Kind::Ok,
+                        format!(
+                            "İade notu: {} gerekçe “{}” ve “{}” dosyalarına yazıldı.",
+                            output.topics,
+                            path.file_name()
+                                .map(|n| n.to_string_lossy().into_owned())
+                                .unwrap_or_default(),
+                            text_path
+                                .file_name()
+                                .map(|n| n.to_string_lossy().into_owned())
+                                .unwrap_or_default()
+                        ),
+                    ),
+                    Err(e) => (
+                        Kind::Warn,
+                        format!("BCF yazıldı; yazılı not yazılamadı: {e}"),
+                    ),
+                },
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => (Kind::Warn, error.message),
+                CommandResult::Queued { .. } | CommandResult::Cancelled => {
+                    (Kind::Warn, "Yazılmadı.".into())
+                }
+            };
         if let Some(w) = self.modules.arch_mut().review_window.as_mut() {
             w.said = Some(said);
         }
     }
 
-    fn review_event(&mut self, event: Event) -> Task<Message>{
-        let Some(w) = self.modules.arch_mut().review_window.as_mut() else { return Task::none() };
+    fn review_event(&mut self, event: Event) -> Task<Message> {
+        let Some(w) = self.modules.arch_mut().review_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Close => {
                 self.modules.arch_mut().review_window = None;
@@ -354,7 +435,10 @@ impl PackageReviewWindowApp for App {
                         let picked = if folder {
                             d.set_title("Gelen paketin klasörü").pick_folder().await
                         } else {
-                            d.set_title("Gelen IFC modeli").add_filter("IFC (.ifc)", &["ifc", "IFC"]).pick_file().await
+                            d.set_title("Gelen IFC modeli")
+                                .add_filter("IFC (.ifc)", &["ifc", "IFC"])
+                                .pick_file()
+                                .await
                         };
                         picked.map(|f| f.path().to_path_buf())
                     },
@@ -379,9 +463,14 @@ impl PackageReviewWindowApp for App {
             Event::Show => return self.review_show(),
             Event::Author(t) => w.author = t,
             Event::Return => {
-                let Some(Outcome::Done(r)) = &w.outcome else { return Task::none() };
+                let Some(Outcome::Done(r)) = &w.outcome else {
+                    return Task::none();
+                };
                 if !r.findings.iter().any(|f| f.error) {
-                    w.said = Some((Kind::Info, "Hata bulgusu yok: iade gerekçesi yazılmaz.".into()));
+                    w.said = Some((
+                        Kind::Info,
+                        "Hata bulgusu yok: iade gerekçesi yazılmaz.".into(),
+                    ));
                     return Task::none();
                 }
                 if w.author.trim().is_empty() {
@@ -410,7 +499,7 @@ impl PackageReviewWindowApp for App {
         Task::none()
     }
 
-    fn review_view(&self) -> Element<'_, Message>{
+    fn review_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().review_window else {
             return space::horizontal().into();
         };
@@ -419,7 +508,9 @@ impl PackageReviewWindowApp for App {
             .field(
                 "Paket",
                 row![
-                    text_field("Yayın klasörü ya da .ifc dosyası", &w.path).on_input(|t| msg(Event::Path(t))).width(Fill),
+                    text_field("Yayın klasörü ya da .ifc dosyası", &w.path)
+                        .on_input(|t| msg(Event::Path(t)))
+                        .width(Fill),
                     words::secondary("Klasör…", Some(msg(Event::PickFolder))),
                     words::secondary("IFC…", Some(msg(Event::PickModel))),
                 ]
@@ -429,7 +520,9 @@ impl PackageReviewWindowApp for App {
             .field(
                 "İdarenin sistemi",
                 row![
-                    text_field("5256", &w.system).on_input(|t| msg(Event::System(t))).width(scaled(90.0)),
+                    text_field("5256", &w.system)
+                        .on_input(|t| msg(Event::System(t)))
+                        .width(scaled(90.0)),
                     label::body("EPSG (boşsa konum değerlendirilmez)"),
                     space::horizontal().width(Fill),
                     words::primary(REVIEW, Some(msg(Event::Review))),
@@ -440,8 +533,12 @@ impl PackageReviewWindowApp for App {
         let mut body = Column::new().spacing(10).push(head);
         match &w.outcome {
             None => body = body.push(label::caption("Paketi seçip İncele'ye basın.")),
-            Some(Outcome::Running) => body = body.push(words::text_line(Kind::Info, "İnceleniyor…")),
-            Some(Outcome::Refused(why)) => body = body.push(words::text_line(Kind::Warn, why.clone())),
+            Some(Outcome::Running) => {
+                body = body.push(words::text_line(Kind::Info, "İnceleniyor…"))
+            }
+            Some(Outcome::Refused(why)) => {
+                body = body.push(words::text_line(Kind::Warn, why.clone()))
+            }
             Some(Outcome::Done(r)) => {
                 let mut layers = row![].spacing(18).align_y(Center);
                 for l in &r.layers {
@@ -458,15 +555,25 @@ impl PackageReviewWindowApp for App {
                     r.files.len(),
                     errors,
                     r.findings.len() - errors,
-                    r.model.as_ref().map_or_else(String::new, |m| format!(" · model {m}"))
-                ) + &r.table.as_ref().map_or_else(String::new, |t| format!(" · form EK-9 Tablo {t}"));
+                    r.model
+                        .as_ref()
+                        .map_or_else(String::new, |m| format!(" · model {m}"))
+                ) + &r
+                    .table
+                    .as_ref()
+                    .map_or_else(String::new, |t| format!(" · form EK-9 Tablo {t}"));
                 body = body
                     .push(layers)
                     .push(label::caption(summary))
-                    .push(Segmented::new([Tab::Findings, Tab::Form], w.tab, |t| msg(Event::Tab(t))));
+                    .push(Segmented::new([Tab::Findings, Tab::Form], w.tab, |t| {
+                        msg(Event::Tab(t))
+                    }));
                 body = body.push(match w.tab {
                     Tab::Findings => {
-                        ListDetails::new(self.review_table(w, r), self.review_details(w, r)).list_width(LIST).height(BODY).into()
+                        ListDetails::new(self.review_table(w, r), self.review_details(w, r))
+                            .list_width(LIST)
+                            .height(BODY)
+                            .into()
                     }
                     Tab::Form => self.review_form(r),
                 });
@@ -474,20 +581,29 @@ impl PackageReviewWindowApp for App {
         }
         let mut foot = row![
             label::body("Yazar"),
-            text_field("adınız", &w.author).on_input(|t| msg(Event::Author(t))).width(scaled(160.0)),
+            text_field("adınız", &w.author)
+                .on_input(|t| msg(Event::Author(t)))
+                .width(scaled(160.0)),
             words::secondary(RETURN, Some(msg(Event::Return))),
         ]
         .spacing(8)
         .align_y(Center);
         foot = match &w.said {
-            Some((kind, said)) => foot.push(container(words::text_line(*kind, said.clone())).width(Fill)),
+            Some((kind, said)) => {
+                foot.push(container(words::text_line(*kind, said.clone())).width(Fill))
+            }
             None => foot.push(space::horizontal().width(Fill)),
         };
         let foot = foot.push(words::secondary(CLOSE, Some(msg(Event::Close))));
-        Frame::new(TITLE).push(label::caption(LEAD)).scroll(body).footer(foot).width(1160.0).modal(msg(Event::Close))
+        Frame::new(TITLE)
+            .push(label::caption(LEAD))
+            .scroll(body)
+            .footer(foot)
+            .width(1160.0)
+            .modal(msg(Event::Close))
     }
 
-    fn review_table<'a>(&'a self, w: &'a Window, r: &'a PackageReviewed) -> Element<'a, Message>{
+    fn review_table<'a>(&'a self, w: &'a Window, r: &'a PackageReviewed) -> Element<'a, Message> {
         let mut t = Table::new([
             Col::new("Katman").width(scaled(70.0)),
             Col::new("Bulgu").width(Fill),
@@ -495,12 +611,21 @@ impl PackageReviewWindowApp for App {
         ])
         .empty("Bulgu yok: paket her katmanda tutuyor.");
         for (k, f) in r.findings.iter().enumerate() {
-            let layer = if f.error { layer_words(&f.layer).to_owned() } else { format!("{} (uyarı)", layer_words(&f.layer)) };
+            let layer = if f.error {
+                layer_words(&f.layer).to_owned()
+            } else {
+                format!("{} (uyarı)", layer_words(&f.layer))
+            };
             t = t.push(
                 Row::new([
                     table::text(layer).into(),
                     table::text(f.message.clone()).into(),
-                    table::number(if f.objects.is_empty() { "—".to_owned() } else { f.objects.len().to_string() }).into(),
+                    table::number(if f.objects.is_empty() {
+                        "—".to_owned()
+                    } else {
+                        f.objects.len().to_string()
+                    })
+                    .into(),
                 ])
                 .selected(w.chosen == Some(k))
                 .on_press(msg(Event::Choose(k))),
@@ -509,7 +634,7 @@ impl PackageReviewWindowApp for App {
         t.into()
     }
 
-    fn review_details<'a>(&'a self, w: &'a Window, r: &'a PackageReviewed) -> Element<'a, Message>{
+    fn review_details<'a>(&'a self, w: &'a Window, r: &'a PackageReviewed) -> Element<'a, Message> {
         let Some(f) = w.chosen.and_then(|k| r.findings.get(k)) else {
             return label::caption("Bir bulgu seçin.").into();
         };
@@ -525,14 +650,19 @@ impl PackageReviewWindowApp for App {
         if !f.objects.is_empty() {
             form = form.field("Nesneler", label::body(f.objects.join(", ")));
         }
-        let out = Column::new()
-            .spacing(10)
-            .push(form)
-            .push(row![space::horizontal().width(Fill), words::secondary(SHOW, Some(msg(Event::Show)))].align_y(Center));
-        scrollable(container(out).padding(iced::Padding::ZERO.right(14))).height(Fill).into()
+        let out = Column::new().spacing(10).push(form).push(
+            row![
+                space::horizontal().width(Fill),
+                words::secondary(SHOW, Some(msg(Event::Show)))
+            ]
+            .align_y(Center),
+        );
+        scrollable(container(out).padding(iced::Padding::ZERO.right(14)))
+            .height(Fill)
+            .into()
     }
 
-    fn review_form<'a>(&'a self, r: &'a PackageReviewed) -> Element<'a, Message>{
+    fn review_form<'a>(&'a self, r: &'a PackageReviewed) -> Element<'a, Message> {
         let mut t = Table::new([
             Col::new("No").width(scaled(40.0)).align_right(),
             Col::new("Başlık").width(Fill),
@@ -545,7 +675,14 @@ impl PackageReviewWindowApp for App {
             let state = match row_.agree {
                 Some(true) => words::text_line(Kind::Ok, "aynı"),
                 Some(false) => words::text_line(Kind::Error, "farklı"),
-                None => words::text_line(Kind::Info, if row_.author.is_none() { "form yok" } else { "inceleme" }),
+                None => words::text_line(
+                    Kind::Info,
+                    if row_.author.is_none() {
+                        "form yok"
+                    } else {
+                        "inceleme"
+                    },
+                ),
             };
             t = t.push(Row::new([
                 table::number(row_.no.to_string()).into(),
@@ -559,7 +696,7 @@ impl PackageReviewWindowApp for App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    fn review_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
+    fn review_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().review_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

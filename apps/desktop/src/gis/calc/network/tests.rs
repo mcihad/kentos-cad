@@ -601,7 +601,13 @@ fn projede_sakla_keeps_the_adjustment_with_the_write() {
     let doc = app.document.as_mut().expect("a drawing");
     let kept = doc.model.survey_adjustments().to_vec();
     assert_eq!(kept.len(), 1);
-    assert_eq!((kept[0].name.as_str(), kept[0].kind), ("Poligon 2026/1", kentos_commands::KeptAdjustmentKind::Horizontal));
+    assert_eq!(
+        (kept[0].name.as_str(), kept[0].kind),
+        (
+            "Poligon 2026/1",
+            kentos_commands::KeptAdjustmentKind::Horizontal
+        )
+    );
     let at = kept[0].points[0].at.expect("a place");
     assert_eq!((at.x, at.y), (r.points[0].y, r.points[0].x));
     assert_eq!(doc.model.undo().as_deref(), Some(NETWORK_TITLE));
@@ -614,27 +620,48 @@ fn projede_sakla_keeps_the_adjustment_with_the_write() {
 #[test]
 fn a_levelling_stays_with_its_drawing() {
     let cells = |rows: &[&[&str]]| -> Vec<Vec<String>> {
-        rows.iter().map(|r| r.iter().map(|t| (*t).to_owned()).collect()).collect()
+        rows.iter()
+            .map(|r| r.iter().map(|t| (*t).to_owned()).collect())
+            .collect()
     };
     let mut app = app_with_scene();
     let _ = app.update(Message::Run("calc.levelNetwork"));
     app.gis.calc.level.known = Cells::of(HEIGHT_COLS, cells(&[&["BN1", "100"]]));
     app.gis.calc.level.rows = Cells::of(
         LEVEL_COLS,
-        cells(&[&["BN1", "N2", "1.250", "100"], &["N2", "BN1", "-1.248", "100"]]),
+        cells(&[
+            &["BN1", "N2", "1.250", "100"],
+            &["N2", "BN1", "-1.248", "100"],
+        ]),
     );
     app.gis.calc.level.keep = "Röper gidiş dönüş".into();
     assert!(app.park_active());
-    let _ = app.update(Message::Opened(Some(Ok(Box::new(crate::files_testing::drawing(2))))));
-    assert_eq!(app.gis.calc.open, None, "the window is left with its drawing");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(
+        crate::files_testing::drawing(2),
+    )))));
+    assert_eq!(
+        app.gis.calc.open, None,
+        "the window is left with its drawing"
+    );
     let _ = app.update(Message::Run("calc.levelNetwork"));
     assert_eq!(app.gis.calc.open, Some(Window::Level));
     let form = &app.gis.calc.level;
-    assert_eq!((form.rows.filled().count(), form.keep.as_str()), (0, ""), "the other drawing's form is empty");
-    assert!(!matches!(form.solved.result, Some(Ok(_))), "nothing to write: {:?}", form.solved);
+    assert_eq!(
+        (form.rows.filled().count(), form.keep.as_str()),
+        (0, ""),
+        "the other drawing's form is empty"
+    );
+    assert!(
+        !matches!(form.solved.result, Some(Ok(_))),
+        "nothing to write: {:?}",
+        form.solved
+    );
     let _ = app.update(Message::Gis(gis::Event::Calc(CalcEvent::Close)));
     let _ = app.update(Message::DocTabs(crate::doc_tabs::Event::Show(0)));
     let form = &app.gis.calc.level;
-    assert_eq!((form.rows.filled().count(), form.keep.as_str()), (2, "Röper gidiş dönüş"));
+    assert_eq!(
+        (form.rows.filled().count(), form.keep.as_str()),
+        (2, "Röper gidiş dönüş")
+    );
     assert_eq!(app.gis.calc.open, None);
 }

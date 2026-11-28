@@ -5,8 +5,8 @@
 //! buluşmuyor”. Reads only. The shared cases are `fixtures/commands/v1/road.corridors.daylights.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CorridorDaylights, CorridorsDaylights, DaylightCounts, DaylightSide, DaylightStation,
-    DaylightWorst,
+    CommandResult, CommandWarning, CorridorDaylights, CorridorsDaylights, DaylightCounts,
+    DaylightSide, DaylightStation, DaylightWorst,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -19,9 +19,22 @@ use crate::road_corridors as common;
 use crate::road_terrains::fail;
 
 fn side_of(d: &Daylight, sign: f64) -> DaylightSide {
-    let none = DaylightSide { kind: String::new(), offset: None, cut: None, crossings: None, next: None, sensitivity: None };
+    let none = DaylightSide {
+        kind: String::new(),
+        offset: None,
+        cut: None,
+        crossings: None,
+        next: None,
+        sensitivity: None,
+    };
     match *d {
-        Daylight::Hit { offset, crossings, next, sensitivity, cut } => DaylightSide {
+        Daylight::Hit {
+            offset,
+            crossings,
+            next,
+            sensitivity,
+            cut,
+        } => DaylightSide {
             kind: "hit".into(),
             offset: Some(sign * offset),
             cut: Some(cut),
@@ -29,14 +42,28 @@ fn side_of(d: &Daylight, sign: f64) -> DaylightSide {
             next,
             sensitivity: sensitivity.is_finite().then_some(sensitivity),
         },
-        Daylight::Hinge => DaylightSide { kind: "hinge".into(), ..none },
-        Daylight::Gap { at } => DaylightSide { kind: "gap".into(), offset: Some(sign * at), ..none },
-        Daylight::Swath { end } => DaylightSide { kind: "swath".into(), offset: Some(sign * end), ..none },
+        Daylight::Hinge => DaylightSide {
+            kind: "hinge".into(),
+            ..none
+        },
+        Daylight::Gap { at } => DaylightSide {
+            kind: "gap".into(),
+            offset: Some(sign * at),
+            ..none
+        },
+        Daylight::Swath { end } => DaylightSide {
+            kind: "swath".into(),
+            offset: Some(sign * end),
+            ..none
+        },
     }
 }
 
 /// The daylights now, and their warnings.
-pub(crate) fn answer(doc: &Document, input: &CorridorsDaylights) -> Result<(CorridorDaylights, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &CorridorsDaylights,
+) -> Result<(CorridorDaylights, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_corridors(), &input.corridor, "corridor")?;
     if input.sensitive.is_some_and(|s| !(s.is_finite() && s > 0.0)) {
@@ -55,11 +82,22 @@ fn daylights_of(
     def: &kentos_commands::CorridorDef,
     sensitive_at: Option<f64>,
 ) -> Result<(CorridorDaylights, Vec<CommandWarning>), Stop> {
-    let input = CorridorsDaylights { corridor: def.id.clone(), sensitive: sensitive_at };
+    let input = CorridorsDaylights {
+        corridor: def.id.clone(),
+        sensitive: sensitive_at,
+    };
     let made = common::make(doc, def, false)?;
     let text = |s: f64| km_text(made.sampler.alignment.km(s), 3);
     let mut stations = Vec::new();
-    let mut counts = DaylightCounts { hit: 0, hinge: 0, gap: 0, swath: 0, multiple: 0, sensitive: 0, unbuilt: 0 };
+    let mut counts = DaylightCounts {
+        hit: 0,
+        hinge: 0,
+        gap: 0,
+        swath: 0,
+        multiple: 0,
+        sensitive: 0,
+        unbuilt: 0,
+    };
     let mut worst: Option<DaylightWorst> = None;
     let (mut multiple, mut sensitive): (Vec<f64>, Vec<f64>) = (Vec::new(), Vec::new());
     for (ri, region) in made.regions.iter().enumerate() {
@@ -78,7 +116,11 @@ fn daylights_of(
             let both = daylights(&template, sec.axis, &ground);
             for (k, d) in both.iter().enumerate() {
                 match *d {
-                    Daylight::Hit { crossings, sensitivity, .. } => {
+                    Daylight::Hit {
+                        crossings,
+                        sensitivity,
+                        ..
+                    } => {
                         counts.hit += 1;
                         if crossings > 1 {
                             counts.multiple += 1;
@@ -88,7 +130,9 @@ fn daylights_of(
                             counts.sensitive += 1;
                             sensitive.push(s);
                         }
-                        if sensitivity.is_finite() && worst.as_ref().is_none_or(|w| sensitivity > w.sensitivity) {
+                        if sensitivity.is_finite()
+                            && worst.as_ref().is_none_or(|w| sensitivity > w.sensitivity)
+                        {
                             worst = Some(DaylightWorst {
                                 station: s,
                                 km_text: text(s),
@@ -116,7 +160,11 @@ fn daylights_of(
         let mut l: Vec<f64> = list.to_vec();
         l.dedup();
         let words: Vec<String> = l.iter().take(8).map(|s| text(*s)).collect();
-        let more = if l.len() > 8 { format!(" ve {} kesit daha", l.len() - 8) } else { String::new() };
+        let more = if l.len() > 8 {
+            format!(" ve {} kesit daha", l.len() - 8)
+        } else {
+            String::new()
+        };
         format!("{}{more}", words.join(", "))
     };
     if !multiple.is_empty() {
@@ -146,19 +194,34 @@ fn daylights_of(
             path: Some("sensitive".into()),
         });
     }
-    Ok((CorridorDaylights { corridor: def.id.clone(), sensitive: input.sensitive, stations, counts, worst }, warnings))
+    Ok((
+        CorridorDaylights {
+            corridor: def.id.clone(),
+            sensitive: input.sensitive,
+            stations,
+            counts,
+            worst,
+        },
+        warnings,
+    ))
 }
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &CorridorsDaylights) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &CorridorsDaylights) -> CommandResult<CorridorDaylights> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &CorridorsDaylights,
+) -> CommandResult<CorridorDaylights> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -166,12 +229,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CorridorsDaylights) -> CommandRes
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: CorridorsDaylights) -> CommandResult<CorridorDaylights> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CorridorsDaylights,
+) -> CommandResult<CorridorDaylights> {
     plan(cx, &input)
 }
 
 /// The daylights for a window, or why they do not read.
-pub fn preview(doc: &Document, input: &CorridorsDaylights) -> Result<(CorridorDaylights, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &CorridorsDaylights,
+) -> Result<(CorridorDaylights, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(common::words)
 }
 

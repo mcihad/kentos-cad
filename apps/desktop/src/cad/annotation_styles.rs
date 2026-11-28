@@ -1024,7 +1024,10 @@ impl App {
             form = form.push(words::field(
                 "Big Font dosyası",
                 label::caption(f.clone()),
-                Some("DXF dosyasından; SHX yazı fontunun yanında çizilir, DXF’e aynen yazılır.".to_owned()),
+                Some(
+                    "DXF dosyasından; SHX yazı fontunun yanında çizilir, DXF’e aynen yazılır."
+                        .to_owned(),
+                ),
             ));
         }
         form.into()
@@ -1061,12 +1064,19 @@ impl App {
         .searchable(false);
         // The project's, KentOS's own faces, then the fonts folders' families (docs/adr/9313).
         let list = kentos_native_application::font_folders::choices(s.font);
-        let names: Vec<Choice> = std::iter::once(Choice::new(format!("Projenin ({})", project.label())))
-            .chain(list.iter().map(|f| Choice::new(f.label())))
-            .collect();
-        let at = Some(s.font.and_then(|f| list.iter().position(|x| *x == f)).map_or(0, |i| i + 1));
+        let names: Vec<Choice> =
+            std::iter::once(Choice::new(format!("Projenin ({})", project.label())))
+                .chain(list.iter().map(|f| Choice::new(f.label())))
+                .collect();
+        let at = Some(
+            s.font
+                .and_then(|f| list.iter().position(|x| *x == f))
+                .map_or(0, |i| i + 1),
+        );
         let fonts = Select::new(names, at, move |i| {
-            msg(Event::Font(i.checked_sub(1).and_then(|i| list.get(i).copied())))
+            msg(Event::Font(
+                i.checked_sub(1).and_then(|i| list.get(i).copied()),
+            ))
         })
         .searchable(true);
         // Its value's text style (DIMTXSTY, docs/adr/1023): the drawing's text styles by name; an SHX one's embedded
@@ -1074,18 +1084,35 @@ impl App {
         let names: Vec<String> = self
             .document
             .as_ref()
-            .map(|d| d.model.settings().text_styles.iter().map(|t| t.name.clone()).collect())
+            .map(|d| {
+                d.model
+                    .settings()
+                    .text_styles
+                    .iter()
+                    .map(|t| t.name.clone())
+                    .collect()
+            })
             .unwrap_or_default();
         let chosen = s
             .text_style
             .as_deref()
-            .map(|n| names.iter().position(|x| x.eq_ignore_ascii_case(n)).map_or(0, |i| i + 1))
+            .map(|n| {
+                names
+                    .iter()
+                    .position(|x| x.eq_ignore_ascii_case(n))
+                    .map_or(0, |i| i + 1)
+            })
             .unwrap_or(0);
         let picked = names.clone();
         let text_styles = Select::new(
-            std::iter::once(Choice::new("Yok (yazı tipi)")).chain(names.iter().map(|n| Choice::new(n.clone()))),
+            std::iter::once(Choice::new("Yok (yazı tipi)"))
+                .chain(names.iter().map(|n| Choice::new(n.clone()))),
             Some(chosen),
-            move |i| msg(Event::TextStyle(i.checked_sub(1).and_then(|i| picked.get(i).cloned()))),
+            move |i| {
+                msg(Event::TextStyle(
+                    i.checked_sub(1).and_then(|i| picked.get(i).cloned()),
+                ))
+            },
         );
         let affix = |label: &'static str, value: &'a Option<String>, on: fn(String) -> Event| {
             let input = kentos_ui::widget::text_field("", value.as_deref().unwrap_or_default())
@@ -1216,7 +1243,9 @@ impl App {
             Kind::Dimension => DIMENSION_NUMBERS.to_vec(),
         };
         let fonts = |item: &str| {
-            kentos_native_application::font_folders::choices(None).into_iter().find(|f| f.label() == item)
+            kentos_native_application::font_folders::choices(None)
+                .into_iter()
+                .find(|f| f.label() == item)
         };
         Ok(match control {
             Control::Fill(NAME, text) => Some(msg(Event::Name(text.to_owned()))),

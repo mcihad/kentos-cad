@@ -34,7 +34,8 @@ fn points(workspace: Workspace, cad_work: Option<CadWork>) -> crate::document::D
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {
     crate::drawing_fonts::load_font_folders();
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9316");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-9316");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     // The glyph atlas makes a frame's new letters until a deadline (docs/adr/9212 §5): a few frames first.
     let save = |snapshot: &mut Snapshot, app: &App, name: &str| {
@@ -42,7 +43,10 @@ fn screens() {
         for _ in 0..8 {
             let _ = snapshot.render(app.view(), &app.theme());
         }
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     };
     let settle = |snapshot: &mut Snapshot, app: &mut App| {
@@ -55,7 +59,10 @@ fn screens() {
     let (mut app, _) = App::boot(None);
     let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
     settle(&mut snapshot, &mut app);
-    let _ = app.update(Message::Opened(Some(Ok(Box::new(points(Workspace::Gis, None))))));
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(points(
+        Workspace::Gis,
+        None,
+    ))))));
     let _ = app.update(Message::Run("view.pointLabels"));
     let _ = app.update(Message::Run("view.pointCodes"));
     assert!(app.settings.bool("graphics.pointLabels"));
@@ -68,7 +75,10 @@ fn screens() {
     let (mut app, _) = App::boot(None);
     let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
     settle(&mut snapshot, &mut app);
-    let _ = app.update(Message::Opened(Some(Ok(Box::new(points(Workspace::Cad, Some(CadWork::Map)))))));
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(points(
+        Workspace::Cad,
+        Some(CadWork::Map),
+    ))))));
     let slot = {
         let doc = &mut app.document.as_mut().expect("open").model;
         let layer = doc.layers().active().to_owned();
@@ -84,7 +94,12 @@ fn screens() {
             north: format!("{}", at.y + 4.0),
             ..Draft::default()
         };
-        assert!(write_draft(doc, &draft, &layer, None).outcome.step.is_some());
+        assert!(
+            write_draft(doc, &draft, &layer, None)
+                .outcome
+                .step
+                .is_some()
+        );
         let slot = doc
             .entities()
             .filter(|e| matches!(e, Entity::Point(_)))

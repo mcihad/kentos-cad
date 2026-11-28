@@ -97,7 +97,10 @@ pub(crate) const TITLES: [(&str, &str); 505] = [
     ("cad.rasters.mosaic", "Sanal mozaik"),
     ("cad.rasters.reproject", "Rasteri projenin sistemine çevir"),
     ("cad.rasters.gpkgread", "GeoPackage karolarını oku"),
-    ("cad.rasters.gpkgwrite", "Rasteri GeoPackage karosu olarak yaz"),
+    (
+        "cad.rasters.gpkgwrite",
+        "Rasteri GeoPackage karosu olarak yaz",
+    ),
     ("cad.time.query", "Zamanda sorgu"),
     ("cad.sensors.ingest", "Sensör gözlemlerini al"),
     ("cad.sensors.latest", "Sensörlerin son gözlemi"),
@@ -396,7 +399,10 @@ pub(crate) const TITLES: [(&str, &str); 505] = [
     ("cad.standards.palettes", "Ofis araç paletleri"),
     ("cad.standards.install", "Standart kaynaklarını kur"),
     ("cad.standards.exceptions", "Standart bulgusunu kabul et"),
-    ("cad.standards.conflicts", "Bağlı standartlardaki farklı tanımları göster"),
+    (
+        "cad.standards.conflicts",
+        "Bağlı standartlardaki farklı tanımları göster",
+    ),
     ("cad.standards.check", "Standardı denetle"),
     ("cad.standards.apply", "Standardı uygula"),
     ("cad.styles.edit", "Yazı ve ölçü stilleri"),
@@ -504,7 +510,10 @@ pub(crate) const TITLES: [(&str, &str); 505] = [
     ("file.import.sld", "SLD'den görünüş al"),
     ("file.export.qml", "Görünüşü QML olarak dışa aktar"),
     ("file.import.qml", "QML'den görünüş al"),
-    ("file.export.maplibre", "Görünüşü MapLibre stili olarak dışa aktar"),
+    (
+        "file.export.maplibre",
+        "Görünüşü MapLibre stili olarak dışa aktar",
+    ),
     ("file.import.maplibre", "MapLibre stilinden görünüş al"),
     ("file.export.dxf", "DXF dışa aktar"),
     ("file.export.dwg", "DWG dışa aktar"),
@@ -815,7 +824,13 @@ fn value(key: &str, v: &Value, layer: &dyn Fn(&str) -> Option<String>, deep: boo
                 .iter()
                 .filter(|(k, _)| head.is_none_or(|(t, _)| t != k.as_str()))
                 .take(4)
-                .map(|(k, v)| format!("{} {}", label_of(k, v).to_lowercase(), value(k, v, layer, false)))
+                .map(|(k, v)| {
+                    format!(
+                        "{} {}",
+                        label_of(k, v).to_lowercase(),
+                        value(k, v, layer, false)
+                    )
+                })
                 .collect();
             match head {
                 Some((_, t)) if fields.is_empty() => t.to_owned(),
@@ -846,15 +861,28 @@ fn is_id(s: &str) -> bool {
     let parts: Vec<&str> = s.split('-').collect();
     s.len() == 36
         && parts.iter().map(|p| p.len()).eq([8, 4, 4, 4, 12])
-        && parts.iter().all(|p| p.chars().all(|c| c.is_ascii_hexdigit()))
+        && parts
+            .iter()
+            .all(|p| p.chars().all(|c| c.is_ascii_hexdigit()))
 }
 
 /// A tag or a choice said in Turkish: `left` is sol, `clear` net (docs/adr/8004).
 fn enum_word(key: &str, s: &str) -> Option<&'static str> {
     let keyed = matches!(
         key,
-        "kind" | "op" | "operation" | "side" | "measure" | "reference" | "justify" | "method" | "role" | "face"
-            | "from" | "distanceReference" | "of"
+        "kind"
+            | "op"
+            | "operation"
+            | "side"
+            | "measure"
+            | "reference"
+            | "justify"
+            | "method"
+            | "role"
+            | "face"
+            | "from"
+            | "distanceReference"
+            | "of"
     );
     if !keyed {
         return None;
@@ -921,30 +949,43 @@ pub(crate) fn inputs_for(
             kentos_commands::ArrayLayout::Polar { .. } => "Kutupsal",
             kentos_commands::ArrayLayout::Path { .. } => "Yol boyunca",
         };
-        let mm = (i.tolerance.unwrap_or(1e-6) * 1000.).to_string().replace('.', ",");
-        return format!("{kind} · {} yer · {} mevcut blok · {missing} eksik · {kept} korunan · Tolerans: {mm} mm",
-            i.items.len(), i.items.len()-missing);
+        let mm = (i.tolerance.unwrap_or(1e-6) * 1000.)
+            .to_string()
+            .replace('.', ",");
+        return format!(
+            "{kind} · {} yer · {} mevcut blok · {missing} eksik · {kept} korunan · Tolerans: {mm} mm",
+            i.items.len(),
+            i.items.len() - missing
+        );
     }
     if command == Some(kentos_commands::CAD_BLOCKS_CONVERT)
         && let Ok(i) = serde_json::from_value::<kentos_commands::BlocksConvert>(input.clone())
     {
         // This command's tolerance is metres, independent of the project's display unit.
         // Keep significant digits: the generic four-decimal summary made 0.001 mm say 0.
-        let mm = (i.tolerance.unwrap_or(kentos_commands::RECOGNITION_TOLERANCE) * 1000.)
+        let mm = (i
+            .tolerance
+            .unwrap_or(kentos_commands::RECOGNITION_TOLERANCE)
+            * 1000.)
             .to_string()
             .replace('.', ",");
         let name = value("name", &Value::String(i.name), layer, false);
         let on = |b| if b { "evet" } else { "hayır" };
         return format!(
             "Ad: {name} · {} aday · Kaynak: {} parça · Tolerans: {mm} mm · Döndürme: {} · Aynalama: {} · Farklı boyut: {}",
-            i.groups.len(), i.source.len(), on(i.rotations.unwrap_or(true)),
-            on(i.mirrors.unwrap_or(false)), on(i.scales.unwrap_or(false))
+            i.groups.len(),
+            i.source.len(),
+            on(i.rotations.unwrap_or(true)),
+            on(i.mirrors.unwrap_or(false)),
+            on(i.scales.unwrap_or(false))
         );
     }
     let words = inputs(input, layer);
     // A wall's width is its Kalınlık (docs/adr/8003, 8004).
     if command.is_some_and(|c| c.starts_with("cad.walls.")) {
-        return words.replace("Genişlik:", "Kalınlık:").replace("genişlik ", "kalınlık ");
+        return words
+            .replace("Genişlik:", "Kalınlık:")
+            .replace("genişlik ", "kalınlık ");
     }
     words
 }
@@ -1130,14 +1171,23 @@ mod tests {
             "groups":[["source"],["other"]],"mirrors":true});
         let before = input.clone();
         let said = inputs_for(Some(kentos_commands::CAD_BLOCKS_CONVERT), &input, &|_| None);
-        assert!(said.contains("2 aday · Kaynak: 1 parça · Tolerans: 0,001 mm"), "{said}");
+        assert!(
+            said.contains("2 aday · Kaynak: 1 parça · Tolerans: 0,001 mm"),
+            "{said}"
+        );
         assert!(said.contains("Döndürme: evet · Aynalama: evet · Farklı boyut: hayır"));
-        assert_eq!(input, before, "only the readable summary changes; replay keeps model metres");
+        assert_eq!(
+            input, before,
+            "only the readable summary changes; replay keeps model metres"
+        );
         input["tolerance"] = json!(1e-12);
         let said = inputs_for(Some(kentos_commands::CAD_BLOCKS_CONVERT), &input, &|_| None);
         assert!(said.contains("Tolerans: 0,000000001 mm"), "{said}");
-        assert_eq!(inputs_for(Some("cad.circle.create"), &input, &|_| None),
-            inputs(&input, &|_| None), "other commands keep their existing summary");
+        assert_eq!(
+            inputs_for(Some("cad.circle.create"), &input, &|_| None),
+            inputs(&input, &|_| None),
+            "other commands keep their existing summary"
+        );
     }
 
     #[test]
@@ -1147,8 +1197,10 @@ mod tests {
             "items":[{"uid":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"},{},
                 {"uid":"01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60","kept":true}]});
         let before = input.clone();
-        assert_eq!(inputs_for(Some(kentos_commands::CAD_ARRAYS_ADOPT), &input, &|_| None),
-            "Sıra · 3 yer · 2 mevcut blok · 1 eksik · 1 korunan · Tolerans: 0,001 mm");
+        assert_eq!(
+            inputs_for(Some(kentos_commands::CAD_ARRAYS_ADOPT), &input, &|_| None),
+            "Sıra · 3 yer · 2 mevcut blok · 1 eksik · 1 korunan · Tolerans: 0,001 mm"
+        );
         assert_eq!(input, before, "the replay input stays in model metres");
     }
 

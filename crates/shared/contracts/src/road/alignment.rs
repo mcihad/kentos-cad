@@ -113,7 +113,10 @@ pub const MAX_PLACE_CHARS: usize = 80;
 /// Whether `name` is a place name an alignment's end takes: trimmed, not empty, at most [`MAX_PLACE_CHARS`] characters,
 /// no control character.
 pub fn place_ok(name: &str) -> bool {
-    name == name.trim() && !name.is_empty() && name.chars().count() <= MAX_PLACE_CHARS && !name.chars().any(char::is_control)
+    name == name.trim()
+        && !name.is_empty()
+        && name.chars().count() <= MAX_PLACE_CHARS
+        && !name.chars().any(char::is_control)
 }
 
 /// A PVI of a vertical alignment (docs/adr/0902 §2): its persistent id, its station along the alignment (its own
@@ -158,21 +161,30 @@ pub struct ProfilePvi {
 pub(super) fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     if list.len() > MAX_ALIGNMENTS {
-        return fail("alignments".into(), &format!("en çok {MAX_ALIGNMENTS} aks olur"));
+        return fail(
+            "alignments".into(),
+            &format!("en çok {MAX_ALIGNMENTS} aks olur"),
+        );
     }
     let mut ids = std::collections::BTreeSet::new();
     let mut names = std::collections::BTreeSet::new();
     for (i, a) in list.iter().enumerate() {
         let at = |field: &str| format!("alignments[{i}].{field}");
         if !word_ok(&a.id) {
-            return fail(at("id"), "aksın kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+            return fail(
+                at("id"),
+                "aksın kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı",
+            );
         }
         if !ids.insert(a.id.as_str()) {
             return fail(at("id"), "bu kimlikte başka bir aks var");
         }
         let name = a.name.trim();
         if name.is_empty() || name != a.name || a.name.chars().count() > 120 {
-            return fail(at("name"), "aksın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            return fail(
+                at("name"),
+                "aksın adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter",
+            );
         }
         if !names.insert(name.to_lowercase()) {
             return fail(at("name"), "bu adda başka bir aks var");
@@ -186,26 +198,40 @@ pub(super) fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, Strin
                     return fail(at("designSpeed"), "paralel aksın proje hızı kaynağınındır");
                 }
                 if a.start_place.is_some() || a.end_place.is_some() {
-                    return fail(at("startPlace"), "paralel aksın gittiği yerler kaynağınındır");
+                    return fail(
+                        at("startPlace"),
+                        "paralel aksın gittiği yerler kaynağınındır",
+                    );
                 }
                 let source = list.iter().find(|b| b.id == o.alignment);
                 match source {
                     None => return fail(at("offsetOf.alignment"), "kaynak aks projede yok"),
                     Some(b) if b.offset_of.is_some() || b.id == a.id => {
-                        return fail(at("offsetOf.alignment"), "paralel aks yalnız PI'larıyla kurulan aksa bağlanır");
+                        return fail(
+                            at("offsetOf.alignment"),
+                            "paralel aks yalnız PI'larıyla kurulan aksa bağlanır",
+                        );
                     }
                     _ => {}
                 }
-                if !(o.offset.is_finite() && o.offset != 0.0 && o.offset.abs() <= MAX_ALIGNMENT_OFFSET) {
+                if !(o.offset.is_finite()
+                    && o.offset != 0.0
+                    && o.offset.abs() <= MAX_ALIGNMENT_OFFSET)
+                {
                     return fail(
                         at("offsetOf.offset"),
-                        &format!("öteleme 0 olmayan, en çok {MAX_ALIGNMENT_OFFSET} m bir sayı olmalı"),
+                        &format!(
+                            "öteleme 0 olmayan, en çok {MAX_ALIGNMENT_OFFSET} m bir sayı olmalı"
+                        ),
                     );
                 }
             }
             (None, false) => {
                 if a.pis.len() < 2 || a.pis.len() > MAX_ALIGNMENT_PIS {
-                    return fail(at("pis"), &format!("aksın 2 ile {MAX_ALIGNMENT_PIS} arası noktası olur"));
+                    return fail(
+                        at("pis"),
+                        &format!("aksın 2 ile {MAX_ALIGNMENT_PIS} arası noktası olur"),
+                    );
                 }
                 let mut pis = std::collections::BTreeSet::new();
                 for (j, p) in a.pis.iter().enumerate() {
@@ -213,25 +239,46 @@ pub(super) fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, Strin
                     if !word_ok(&p.id) || !pis.insert(p.id.as_str()) {
                         return fail(pat("id"), "noktanın kimliği aksta tek ve boşluksuz olmalı");
                     }
-                    if ![p.x, p.y, p.radius, p.spiral_in, p.spiral_out].iter().all(|v| v.is_finite()) {
+                    if ![p.x, p.y, p.radius, p.spiral_in, p.spiral_out]
+                        .iter()
+                        .all(|v| v.is_finite())
+                    {
                         return fail(pat("x"), "sayılar sonlu olmalı");
                     }
                     if p.radius < 0.0 || p.spiral_in < 0.0 || p.spiral_out < 0.0 {
                         return fail(pat("radius"), "yarıçap ve klotoid boyları eksi olamaz");
                     }
                     if p.speed.is_some_and(|v| !speed_ok(v)) {
-                        return fail(pat("speed"), &format!("proje hızı 0'dan büyük, en çok {MAX_DESIGN_SPEED} km/sa olmalı"));
+                        return fail(
+                            pat("speed"),
+                            &format!(
+                                "proje hızı 0'dan büyük, en çok {MAX_DESIGN_SPEED} km/sa olmalı"
+                            ),
+                        );
                     }
                 }
             }
-            _ => return fail(at("pis"), "aks ya PI'larıyla ya bir aksa paralel kurulur, ikisi birden değil"),
+            _ => {
+                return fail(
+                    at("pis"),
+                    "aks ya PI'larıyla ya bir aksa paralel kurulur, ikisi birden değil",
+                );
+            }
         }
         if a.design_speed.is_some_and(|v| !speed_ok(v)) {
-            return fail(at("designSpeed"), &format!("proje hızı 0'dan büyük, en çok {MAX_DESIGN_SPEED} km/sa olmalı"));
+            return fail(
+                at("designSpeed"),
+                &format!("proje hızı 0'dan büyük, en çok {MAX_DESIGN_SPEED} km/sa olmalı"),
+            );
         }
         for (field, place) in [("startPlace", &a.start_place), ("endPlace", &a.end_place)] {
             if place.as_deref().is_some_and(|n| !place_ok(n)) {
-                return fail(at(field), &format!("yer adı boş olmayan, kenarında boşluk olmayan, en çok {MAX_PLACE_CHARS} harf olmalı"));
+                return fail(
+                    at(field),
+                    &format!(
+                        "yer adı boş olmayan, kenarında boşluk olmayan, en çok {MAX_PLACE_CHARS} harf olmalı"
+                    ),
+                );
             }
         }
         if let Some(st) = &a.stationing {
@@ -239,10 +286,20 @@ pub(super) fn alignments_problem(list: &[AlignmentDef]) -> Option<(String, Strin
                 return fail(at("stationing.start"), "başlangıç km'si sonlu olmalı");
             }
             if st.equations.len() > MAX_STATION_EQUATIONS {
-                return fail(at("stationing.equations"), &format!("en çok {MAX_STATION_EQUATIONS} km eşitliği olur"));
+                return fail(
+                    at("stationing.equations"),
+                    &format!("en çok {MAX_STATION_EQUATIONS} km eşitliği olur"),
+                );
             }
-            if st.equations.iter().any(|q| !(q.back.is_finite() && q.ahead.is_finite())) {
-                return fail(at("stationing.equations"), "km eşitliğinin değerleri sonlu olmalı");
+            if st
+                .equations
+                .iter()
+                .any(|q| !(q.back.is_finite() && q.ahead.is_finite()))
+            {
+                return fail(
+                    at("stationing.equations"),
+                    "km eşitliğinin değerleri sonlu olmalı",
+                );
             }
         }
     }

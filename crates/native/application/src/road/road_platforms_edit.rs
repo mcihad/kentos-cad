@@ -2,7 +2,8 @@
 //! its) or removed; one undo step “Platform”. The shared cases are `fixtures/commands/v1/road.platforms.edit.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, PlatformDef, PlatformReport, PlatformsEdit, PlatformsWritten, RoadEditOperation,
+    CommandResult, CommandWarning, PlatformDef, PlatformReport, PlatformsEdit, PlatformsWritten,
+    RoadEditOperation,
 };
 
 use crate::ExecutionContext;
@@ -23,10 +24,15 @@ fn check(doc: &kentos_domain::Document, input: &PlatformsEdit) -> Result<Checked
     common::road_project(doc)?;
     let own = doc.road_platforms();
     let mut list = own.to_vec();
-    let found = input.platform.as_deref().and_then(|t| common::find(own, t, "platform").ok());
+    let found = input
+        .platform
+        .as_deref()
+        .and_then(|t| common::find(own, t, "platform").ok());
     if input.operation == RoadEditOperation::Remove && found.is_none() {
         let name = input.platform.clone().unwrap_or_default();
-        return Err(common::find(own, &name, "platform").err().unwrap_or(Stop::Cancelled));
+        return Err(common::find(own, &name, "platform")
+            .err()
+            .unwrap_or(Stop::Cancelled));
     }
     let surface = match input.surface.as_deref() {
         Some(s) => Some(crate::road_profiles::surface_id(doc, s, "surface")?),
@@ -53,7 +59,11 @@ fn check(doc: &kentos_domain::Document, input: &PlatformsEdit) -> Result<Checked
                 || input.reach.is_some()
                 || surface.is_some();
             if !given {
-                return Err(fail(codes::INVALID_PLATFORM, "Değiştirilecek bir şey yok: platformun bir alanını verin.".into(), ""));
+                return Err(fail(
+                    codes::INVALID_PLATFORM,
+                    "Değiştirilecek bir şey yok: platformun bir alanını verin.".into(),
+                    "",
+                ));
             }
             let mut d = old.clone();
             if let Some(v) = &input.name {
@@ -116,7 +126,17 @@ fn check(doc: &kentos_domain::Document, input: &PlatformsEdit) -> Result<Checked
                     field,
                 ));
             }
-            let (Some(name), Some(corners), Some(base), Some(cut), Some(fill), Some(step), Some(fan), Some(reach), Some(s)) = (
+            let (
+                Some(name),
+                Some(corners),
+                Some(base),
+                Some(cut),
+                Some(fill),
+                Some(step),
+                Some(fan),
+                Some(reach),
+                Some(s),
+            ) = (
                 &input.name,
                 &input.corners,
                 input.base,
@@ -126,11 +146,15 @@ fn check(doc: &kentos_domain::Document, input: &PlatformsEdit) -> Result<Checked
                 input.fan,
                 input.reach,
                 &surface,
-            ) else {
+            )
+            else {
                 return Err(Stop::Cancelled);
             };
             let id = input.platform.clone().unwrap_or_else(|| {
-                (1..).map(|n| format!("p-{n}")).find(|id| own.iter().all(|x| &x.id != id)).unwrap_or_default()
+                (1..)
+                    .map(|n| format!("p-{n}"))
+                    .find(|id| own.iter().all(|x| &x.id != id))
+                    .unwrap_or_default()
             });
             list.push(PlatformDef {
                 id: id.clone(),
@@ -154,9 +178,17 @@ fn check(doc: &kentos_domain::Document, input: &PlatformsEdit) -> Result<Checked
     let mut road = doc.settings().road.clone().unwrap_or_default();
     road.platforms = list.clone();
     judged(&road, codes::INVALID_PLATFORM, "Platform")?;
-    if let Some(d) = target.as_ref().and_then(|id| list.iter().find(|c| &c.id == id)) {
-        kentos_road::grading::ring_of(&common::platform_of(d))
-            .map_err(|e| fail(codes::INVALID_PLATFORM, format!("Platform tesviye edilemiyor: {e}"), "corners"))?;
+    if let Some(d) = target
+        .as_ref()
+        .and_then(|id| list.iter().find(|c| &c.id == id))
+    {
+        kentos_road::grading::ring_of(&common::platform_of(d)).map_err(|e| {
+            fail(
+                codes::INVALID_PLATFORM,
+                format!("Platform tesviye edilemiyor: {e}"),
+                "corners",
+            )
+        })?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
     Ok(Checked { list, target })
@@ -165,10 +197,19 @@ fn check(doc: &kentos_domain::Document, input: &PlatformsEdit) -> Result<Checked
 fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<PlatformsWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_platforms(c.list.clone(), STEP) {
-        return fail(codes::INVALID_PLATFORM, format!("Platform kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_PLATFORM,
+            format!("Platform kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
     let mut warnings = Vec::new();
-    let platform = match c.target.as_ref().and_then(|id| c.list.iter().find(|x| &x.id == id)) {
+    let platform = match c
+        .target
+        .as_ref()
+        .and_then(|id| c.list.iter().find(|x| &x.id == id))
+    {
         Some(d) => match common::read(doc, d) {
             Ok(r) => {
                 warnings = r.warnings;
@@ -179,7 +220,11 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<PlatformsWr
         None => None,
     };
     CommandResult::Completed {
-        output: PlatformsWritten { platform, platforms: common::listed(&c.list), revision: doc.revision().to_string() },
+        output: PlatformsWritten {
+            platform,
+            platforms: common::listed(&c.list),
+            revision: doc.revision().to_string(),
+        },
         warnings,
     }
 }
@@ -187,7 +232,10 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<PlatformsWr
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &PlatformsEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: vec![] },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -207,7 +255,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PlatformsEdit) -> CommandResult<P
 }
 
 /// Writes the pad: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: PlatformsEdit) -> CommandResult<PlatformsWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: PlatformsEdit,
+) -> CommandResult<PlatformsWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_PLATFORMS_EDIT,
@@ -221,10 +272,20 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: PlatformsEdit) -> CommandRe
 }
 
 /// The pad `input` would write, graded, for a window (no step written): its report and warnings, or why not.
-pub fn preview(doc: &kentos_domain::Document, input: &PlatformsEdit) -> Result<(PlatformReport, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &kentos_domain::Document,
+    input: &PlatformsEdit,
+) -> Result<(PlatformReport, Vec<CommandWarning>), String> {
     let c = check(doc, input).map_err(crate::road_corridors::words)?;
     let mut copy = doc.reading_copy();
-    copy.set_road_platforms(c.list.clone(), STEP).map_err(|r| r.0)?;
-    let def = c.target.as_ref().and_then(|id| c.list.iter().find(|x| &x.id == id)).ok_or("Platform yok.")?;
-    common::read(&copy, def).map(|r| (r.report, r.warnings)).map_err(crate::road_corridors::words)
+    copy.set_road_platforms(c.list.clone(), STEP)
+        .map_err(|r| r.0)?;
+    let def = c
+        .target
+        .as_ref()
+        .and_then(|id| c.list.iter().find(|x| &x.id == id))
+        .ok_or("Platform yok.")?;
+    common::read(&copy, def)
+        .map(|r| (r.report, r.warnings))
+        .map_err(crate::road_corridors::words)
 }

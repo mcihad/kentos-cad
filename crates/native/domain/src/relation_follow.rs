@@ -12,9 +12,9 @@ use std::sync::Arc;
 use kentos_contracts::{Entity, ProjectRelation, RelationDelete};
 use uuid::Uuid;
 
-use crate::{Document, ParentKey};
 use crate::history::Op;
 use crate::store::Stored;
+use crate::{Document, ParentKey};
 
 impl Document {
     /// The ops that follow the parents `ops` deletes, applied: the step takes them in.
@@ -287,12 +287,17 @@ impl Document {
 impl Document {
     /// Whether a parent of `r` other than those in `gone` still holds `code` (a parent key that is not unique): its
     /// children keep their parent. Never for a persistent id, which is one parent's alone.
-    fn code_still_held(&self, r: &ProjectRelation, key: &ParentKey, code: &str, gone: &HashSet<Uuid>) -> bool {
+    fn code_still_held(
+        &self,
+        r: &ProjectRelation,
+        key: &ParentKey,
+        code: &str,
+        gone: &HashSet<Uuid>,
+    ) -> bool {
         matches!(key, ParentKey::Field(_))
-            && self
-                .store
-                .on_layer(&r.parent)
-                .any(|p| !gone.contains(&p.uid) && key.code_of(p.uid, &p.entity).as_deref() == Some(code))
+            && self.store.on_layer(&r.parent).any(|p| {
+                !gone.contains(&p.uid) && key.code_of(p.uid, &p.entity).as_deref() == Some(code)
+            })
     }
 }
 

@@ -115,9 +115,15 @@ fn a_multi_leaf_sliding_door_takes_no_room_in_front_of_its_wall() {
         let spec = OpeningSpec::read_flat(&Json::parse(json).unwrap()).unwrap();
         assert!(opening::door_zones(&place, &spec).is_empty(), "{json}");
     }
-    let hung = OpeningSpec::read_flat(&Json::parse(r#"{"form":"door","operation":"slide","build":{"track":true}}"#).unwrap())
-        .unwrap();
-    assert_eq!(opening::door_zones(&place, &hung).len(), 1, "a one-leaf door on its track");
+    let hung = OpeningSpec::read_flat(
+        &Json::parse(r#"{"form":"door","operation":"slide","build":{"track":true}}"#).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        opening::door_zones(&place, &hung).len(),
+        1,
+        "a one-leaf door on its track"
+    );
 }
 
 fn cut_as_the_reference_says(text: &str) {
@@ -130,7 +136,10 @@ fn cut_as_the_reference_says(text: &str) {
             .iter()
             .map(|w| {
                 let pts = w["pts"].as_array().unwrap().iter().map(pt).collect();
-                (pts, Spec::read_flat(&Json::parse(&w.to_string()).unwrap()).unwrap())
+                (
+                    pts,
+                    Spec::read_flat(&Json::parse(&w.to_string()).unwrap()).unwrap(),
+                )
             })
             .collect();
         let mut intervals: Vec<Vec<opening::Hole>> = vec![Vec::new(); walls.len()];
@@ -149,23 +158,37 @@ fn cut_as_the_reference_says(text: &str) {
                 (Some(j), false) => {
                     let wj: Vec<Vec2> = want.as_array().unwrap().iter().map(pt).collect();
                     for (a, b) in j.iter().zip(&wj) {
-                        assert!(close(*a, *b), "{name}: {k}. açıklığın pervazı {a:?}, başvuru {b:?}");
+                        assert!(
+                            close(*a, *b),
+                            "{name}: {k}. açıklığın pervazı {a:?}, başvuru {b:?}"
+                        );
                     }
                     let symbol = opening::pieces(&j, &spec);
                     let ws = c["symbols"][k].as_array().unwrap();
-                    assert_eq!(symbol.len(), ws.len(), "{name}: {k}. açıklığın simgesinin parçaları {symbol:?}");
+                    assert_eq!(
+                        symbol.len(),
+                        ws.len(),
+                        "{name}: {k}. açıklığın simgesinin parçaları {symbol:?}"
+                    );
                     for (g, w) in symbol.iter().zip(ws) {
                         same_piece(name, g, w);
                     }
                     if let Some(zones) = c["zones"].get(k).filter(|z| !z.is_null()) {
                         let got = opening::swing_zones(&j, &spec);
                         let want = zones.as_array().unwrap();
-                        assert_eq!(got.len(), want.len(), "{name}: {k}. açıklığın süpürme alanları {got:?}");
+                        assert_eq!(
+                            got.len(),
+                            want.len(),
+                            "{name}: {k}. açıklığın süpürme alanları {got:?}"
+                        );
                         for (g, w) in got.iter().zip(want) {
                             let wp: Vec<Vec2> = w.as_array().unwrap().iter().map(pt).collect();
                             assert_eq!(g.len(), wp.len(), "{name}: süpürme alanının köşeleri");
                             for (a, b) in g.iter().zip(&wp) {
-                                assert!(close(*a, *b), "{name}: süpürme alanı {a:?}, başvuru {b:?}");
+                                assert!(
+                                    close(*a, *b),
+                                    "{name}: süpürme alanı {a:?}, başvuru {b:?}"
+                                );
                             }
                         }
                     }
@@ -183,15 +206,29 @@ fn cut_as_the_reference_says(text: &str) {
             .collect();
         let got = solve_with(&ins, &intervals, None);
         for (k, w) in c["drawn"].as_array().unwrap().iter().enumerate() {
-            let d = got.drawn[k].as_ref().unwrap_or_else(|| panic!("{name}: {k}. duvar çizilmedi"));
+            let d = got.drawn[k]
+                .as_ref()
+                .unwrap_or_else(|| panic!("{name}: {k}. duvar çizilmedi"));
             let lines = w["lines"].as_array().unwrap();
-            assert_eq!(d.lines.len(), lines.len(), "{name}: {k}. duvarın çizgi sayısı");
+            assert_eq!(
+                d.lines.len(),
+                lines.len(),
+                "{name}: {k}. duvarın çizgi sayısı"
+            );
             for (li, (g, want)) in d.lines.iter().zip(lines).enumerate() {
                 let want = want.as_array().unwrap();
-                assert_eq!(g.len(), want.len(), "{name}: {k}. duvarın {li}. çizgisinin parça sayısı");
+                assert_eq!(
+                    g.len(),
+                    want.len(),
+                    "{name}: {k}. duvarın {li}. çizgisinin parça sayısı"
+                );
                 for (si, (st, ws)) in g.iter().zip(want).enumerate() {
                     let wp: Vec<Vec2> = ws["pts"].as_array().unwrap().iter().map(pt).collect();
-                    assert_eq!(st.closed, ws["closed"].as_bool().unwrap(), "{name}: {k}/{li}/{si} kapalılık");
+                    assert_eq!(
+                        st.closed,
+                        ws["closed"].as_bool().unwrap(),
+                        "{name}: {k}/{li}/{si} kapalılık"
+                    );
                     assert_eq!(
                         st.line.pts.len(),
                         wp.len(),
@@ -199,12 +236,20 @@ fn cut_as_the_reference_says(text: &str) {
                         st.line.pts
                     );
                     for (a, b) in st.line.pts.iter().zip(&wp) {
-                        assert!(close(*a, *b), "{name}: {k}/{li}/{si} köşe {a:?}, başvuru {b:?}");
+                        assert!(
+                            close(*a, *b),
+                            "{name}: {k}/{li}/{si} köşe {a:?}, başvuru {b:?}"
+                        );
                     }
                 }
             }
             let caps = w["caps"].as_array().unwrap();
-            assert_eq!(d.caps.len(), caps.len(), "{name}: {k}. duvarın uç çizgileri {:?}", d.caps);
+            assert_eq!(
+                d.caps.len(),
+                caps.len(),
+                "{name}: {k}. duvarın uç çizgileri {:?}",
+                d.caps
+            );
             for (g, want) in d.caps.iter().zip(caps) {
                 assert!(
                     close(g.0, pt(&want[0])) && close(g.1, pt(&want[1])),
@@ -213,29 +258,48 @@ fn cut_as_the_reference_says(text: &str) {
             }
             let bands = w["bands"].as_array().unwrap();
             assert_eq!(d.bands.len(), bands.len(), "{name}: {k}. duvarın bantları");
-            let same_areas = |what: &str, got: &[kentos_geometry_core::geom::wall::Body], want: &[Value]| {
-                assert_eq!(got.len(), want.len(), "{name}: {k}. duvarın {what} parçaları");
-                for ((ring, holes), wa) in got.iter().zip(want) {
-                    let a = ring_area(ring) - holes.iter().flatten().map(|h| ring_area(h)).sum::<f64>();
-                    let wa = wa.as_f64().unwrap();
-                    assert!(
-                        (a - wa).abs() <= TOL * js_max(wa, 1.0),
-                        "{name}: {k} {what} alanı {a}, başvuru {wa}"
+            let same_areas =
+                |what: &str, got: &[kentos_geometry_core::geom::wall::Body], want: &[Value]| {
+                    assert_eq!(
+                        got.len(),
+                        want.len(),
+                        "{name}: {k}. duvarın {what} parçaları"
                     );
-                }
-            };
+                    for ((ring, holes), wa) in got.iter().zip(want) {
+                        let a = ring_area(ring)
+                            - holes.iter().flatten().map(|h| ring_area(h)).sum::<f64>();
+                        let wa = wa.as_f64().unwrap();
+                        assert!(
+                            (a - wa).abs() <= TOL * js_max(wa, 1.0),
+                            "{name}: {k} {what} alanı {a}, başvuru {wa}"
+                        );
+                    }
+                };
             for (ci, (g, want)) in d.bands.iter().zip(bands).enumerate() {
                 same_areas(&format!("{ci}. bandının"), g, want.as_array().unwrap());
             }
             // The body between the faces and a niche's or flue's inner sides (docs/adr/0719 §3).
             same_areas("dolgusunun", &d.fill, w["fill"].as_array().unwrap());
             let recesses = w["recesses"].as_array().unwrap();
-            assert_eq!(d.recesses.len(), recesses.len(), "{name}: {k}. duvarın oyuk kenarları {:?}", d.recesses);
+            assert_eq!(
+                d.recesses.len(),
+                recesses.len(),
+                "{name}: {k}. duvarın oyuk kenarları {:?}",
+                d.recesses
+            );
             for (st, ws) in d.recesses.iter().zip(recesses) {
                 let wp: Vec<Vec2> = ws["pts"].as_array().unwrap().iter().map(pt).collect();
-                assert_eq!(st.line.pts.len(), wp.len(), "{name}: oyuk kenarı {:?} başvuru {wp:?}", st.line.pts);
+                assert_eq!(
+                    st.line.pts.len(),
+                    wp.len(),
+                    "{name}: oyuk kenarı {:?} başvuru {wp:?}",
+                    st.line.pts
+                );
                 for (a, b) in st.line.pts.iter().zip(&wp) {
-                    assert!(close(*a, *b), "{name}: oyuk kenarının köşesi {a:?}, başvuru {b:?}");
+                    assert!(
+                        close(*a, *b),
+                        "{name}: oyuk kenarının köşesi {a:?}, başvuru {b:?}"
+                    );
                 }
             }
         }
@@ -269,15 +333,28 @@ fn a_niche_on_a_curved_wall_has_its_back_round_the_walls_centre() {
     assert!(marks.iter().all(|m| m.dashed), "above the cut: dashed");
     match &marks[1].shape {
         Shape::Arc { c, r, .. } => {
-            assert!(c.x.abs() < 1e-9 && c.y.abs() < 1e-9, "round the wall's centre: {c:?}");
-            assert!((r - 4.95).abs() < 1e-9, "the face's radius plus its depth: {r}");
+            assert!(
+                c.x.abs() < 1e-9 && c.y.abs() < 1e-9,
+                "round the wall's centre: {c:?}"
+            );
+            assert!(
+                (r - 4.95).abs() < 1e-9,
+                "the face's radius plus its depth: {r}"
+            );
         }
         other => panic!("its back is an arc: {other:?}"),
     }
     niche.sill = Some(0.9);
-    assert!(opening::pieces(&jambs, &niche).is_empty(), "a cut niche is the wall's");
+    assert!(
+        opening::pieces(&jambs, &niche).is_empty(),
+        "a cut niche is the wall's"
+    );
     let at = (s0 + s1) / 2.0;
-    let holes = vec![opening::hole(at, s1 - s0, &niche).into_iter().collect::<Vec<_>>()];
+    let holes = vec![
+        opening::hole(at, s1 - s0, &niche)
+            .into_iter()
+            .collect::<Vec<_>>(),
+    ];
     let ins = [WallIn {
         pts: &pts,
         bulges: Some(&bulges),
@@ -286,9 +363,15 @@ fn a_niche_on_a_curved_wall_has_its_back_round_the_walls_centre() {
     let d = solve_with(&ins, &holes, None).drawn[0].clone().unwrap();
     assert_eq!(d.recesses.len(), 1, "its back: {:?}", d.recesses);
     let back = &d.recesses[0].line;
-    assert!(back.bulges.iter().any(|b| b.abs() > 1e-6), "an arc: {back:?}");
+    assert!(
+        back.bulges.iter().any(|b| b.abs() > 1e-6),
+        "an arc: {back:?}"
+    );
     for p in &back.pts {
-        assert!((js_hypot_of(*p) - 4.95).abs() < 1e-9, "on the back's circle: {p:?}");
+        assert!(
+            (js_hypot_of(*p) - 4.95).abs() < 1e-9,
+            "on the back's circle: {p:?}"
+        );
     }
     // The inner face is broken at the niche, the outer one is whole.
     assert_eq!(d.lines[0].len(), 2);
@@ -306,41 +389,66 @@ const ARC_POCKETS: &str = include_str!("../../../../../fixtures/walls/v1/arc-poc
 #[test]
 fn pocket_doors_in_arc_walls_cut_their_walls_as_the_reference_says() {
     let cases: Value = serde_json::from_str(ARC_POCKETS).unwrap();
-    let same_line = |name: &str, what: &str, got: &kentos_geometry_core::geom::wall::Line, want: &Value| {
-        let wp: Vec<Vec2> = want["pts"].as_array().unwrap().iter().map(pt).collect();
-        let wb: Vec<f64> = want["bulges"].as_array().unwrap().iter().map(|b| b.as_f64().unwrap()).collect();
-        assert_eq!(got.pts.len(), wp.len(), "{name}: {what} köşeleri {got:?}, başvuru {want}");
-        for (a, b) in got.pts.iter().zip(&wp) {
-            assert!(close8(*a, *b), "{name}: {what} köşesi {a:?}, başvuru {b:?}");
-        }
-        for (a, b) in got.bulges.iter().zip(&wb) {
-            assert!(near8(*a, *b), "{name}: {what} bükümü {a}, başvuru {b}");
-        }
-    };
+    let same_line =
+        |name: &str, what: &str, got: &kentos_geometry_core::geom::wall::Line, want: &Value| {
+            let wp: Vec<Vec2> = want["pts"].as_array().unwrap().iter().map(pt).collect();
+            let wb: Vec<f64> = want["bulges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|b| b.as_f64().unwrap())
+                .collect();
+            assert_eq!(
+                got.pts.len(),
+                wp.len(),
+                "{name}: {what} köşeleri {got:?}, başvuru {want}"
+            );
+            for (a, b) in got.pts.iter().zip(&wp) {
+                assert!(close8(*a, *b), "{name}: {what} köşesi {a:?}, başvuru {b:?}");
+            }
+            for (a, b) in got.bulges.iter().zip(&wb) {
+                assert!(near8(*a, *b), "{name}: {what} bükümü {a}, başvuru {b}");
+            }
+        };
     for c in cases["cases"].as_array().unwrap() {
         let name = c["name"].as_str().unwrap();
         let w = &c["wall"];
         let pts: Vec<Vec2> = w["pts"].as_array().unwrap().iter().map(pt).collect();
-        let bulges: Vec<f64> = w["bulges"].as_array().unwrap().iter().map(|b| b.as_f64().unwrap()).collect();
+        let bulges: Vec<f64> = w["bulges"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|b| b.as_f64().unwrap())
+            .collect();
         let wall = Spec::read_flat(&Json::parse(&w.to_string()).unwrap()).unwrap();
         let o = &c["opening"];
         let spec = OpeningSpec::read_flat(&Json::parse(&o.to_string()).unwrap()).unwrap();
         let (at, width) = (o["at"].as_f64().unwrap(), o["width"].as_f64().unwrap());
         let (s0, s1) = opening::span(at, spec.anchor, width);
         let path = opening::wall_path(&pts, Some(&bulges), false).unwrap();
-        let j = opening::jambs(&path, &wall, s0, s1).unwrap_or_else(|| panic!("{name}: pervaz yok"));
+        let j =
+            opening::jambs(&path, &wall, s0, s1).unwrap_or_else(|| panic!("{name}: pervaz yok"));
         let wj: Vec<Vec2> = c["jambs"].as_array().unwrap().iter().map(pt).collect();
         for (a, b) in j.iter().zip(&wj) {
             assert!(close8(*a, *b), "{name}: pervaz {a:?}, başvuru {b:?}");
         }
         let symbol = opening::pieces(&j, &spec);
         let ws = c["symbol"].as_array().unwrap();
-        assert_eq!(symbol.len(), ws.len(), "{name}: simgenin parçaları {symbol:?}");
+        assert_eq!(
+            symbol.len(),
+            ws.len(),
+            "{name}: simgenin parçaları {symbol:?}"
+        );
         for (g, want) in symbol.iter().zip(ws) {
             same_piece_in(name, g, want);
             if let (Some(wb), Shape::Polyline { bulges, .. }) = (want.get("bulges"), &g.shape) {
                 let got = bulges.clone().unwrap_or_default();
-                let wb: Vec<f64> = wb.as_array().unwrap().iter().map(|b| b.as_f64().unwrap()).collect();
+                let wb: Vec<f64> = wb
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|b| b.as_f64().unwrap())
+                    .collect();
                 assert_eq!(got.len(), wb.len(), "{name}: kanadın bükümleri {got:?}");
                 for (a, b) in got.iter().zip(&wb) {
                     assert!(near8(*a, *b), "{name}: kanadın bükümü {a}, başvuru {b}");
@@ -358,13 +466,22 @@ fn pocket_doors_in_arc_walls_cut_their_walls_as_the_reference_says() {
         assert_eq!(d.lines.len(), lines.len(), "{name}: çizgiler");
         for (li, (g, want)) in d.lines.iter().zip(lines).enumerate() {
             let want = want.as_array().unwrap();
-            assert_eq!(g.len(), want.len(), "{name}: {li}. çizginin parçaları {g:?}");
+            assert_eq!(
+                g.len(),
+                want.len(),
+                "{name}: {li}. çizginin parçaları {g:?}"
+            );
             for (st, ws) in g.iter().zip(want) {
                 same_line(name, &format!("{li}. çizgi"), &st.line, ws);
             }
         }
         let caps = c["caps"].as_array().unwrap();
-        assert_eq!(d.caps.len(), caps.len(), "{name}: uç çizgileri {:?}", d.caps);
+        assert_eq!(
+            d.caps.len(),
+            caps.len(),
+            "{name}: uç çizgileri {:?}",
+            d.caps
+        );
         for (g, want) in d.caps.iter().zip(caps) {
             assert!(
                 close8(g.0, pt(&want[0])) && close8(g.1, pt(&want[1])),
@@ -372,7 +489,12 @@ fn pocket_doors_in_arc_walls_cut_their_walls_as_the_reference_says() {
             );
         }
         let rec = c["recesses"].as_array().unwrap();
-        assert_eq!(d.recesses.len(), rec.len(), "{name}: cebin iç çizgileri {:?}", d.recesses);
+        assert_eq!(
+            d.recesses.len(),
+            rec.len(),
+            "{name}: cebin iç çizgileri {:?}",
+            d.recesses
+        );
         for (g, want) in d.recesses.iter().zip(rec) {
             same_line(name, "cebin iç çizgisi", &g.line, want);
         }
@@ -381,10 +503,15 @@ fn pocket_doors_in_arc_walls_cut_their_walls_as_the_reference_says() {
         let body: f64 = d
             .fill
             .iter()
-            .map(|(ring, holes)| ring_area(ring) - holes.iter().flatten().map(|h| ring_area(h)).sum::<f64>())
+            .map(|(ring, holes)| {
+                ring_area(ring) - holes.iter().flatten().map(|h| ring_area(h)).sum::<f64>()
+            })
             .sum();
         let want = c["body"].as_f64().unwrap();
-        assert!((body - want).abs() <= 5e-3 * want, "{name}: gövdenin alanı {body}, başvuru {want}");
+        assert!(
+            (body - want).abs() <= 5e-3 * want,
+            "{name}: gövdenin alanı {body}, başvuru {want}"
+        );
     }
 }
 

@@ -68,7 +68,11 @@ fn a_dxf_goes_in_as_one_undo_step_with_its_layers_in_a_group_named_after_the_fil
     assert!(!group.children.is_empty());
     // The import's summary; what the file left out is said after it (its IMAGE of no size, docs/adr/9227).
     assert!(
-        app.log.lines().rev().take(3).any(|l| l.text.starts_with("“entities.dxf”:") && l.text.contains("nesne")),
+        app.log
+            .lines()
+            .rev()
+            .take(3)
+            .any(|l| l.text.starts_with("“entities.dxf”:") && l.text.contains("nesne")),
         "{}",
         last_said(&app)
     );
@@ -193,7 +197,10 @@ fn a_coordinate_list_takes_a_layer_of_the_drawing_only_when_it_is_picked() {
     app.picker = Picker::File(fixture("netcad.ncn"));
     run(&mut app, "file.import.ncn");
     let before = count(&app);
-    send(&mut app, Event::CoordImport(coord_import::Event::Name("çizim".into())));
+    send(
+        &mut app,
+        Event::CoordImport(coord_import::Event::Name("çizim".into())),
+    );
     send(&mut app, Event::CoordImport(coord_import::Event::Run));
     assert_eq!(count(&app), before, "a name a layer has takes nothing");
     let Some(Window::CoordImport(_)) = &app.exchange else {
@@ -211,17 +218,33 @@ fn a_coordinate_list_takes_a_layer_of_the_drawing_only_when_it_is_picked() {
         .find(|l| l.name == "Çizim")
         .map(|l| l.id.clone())
         .expect("the sample's Çizim");
-    send(&mut app, Event::CoordImport(coord_import::Event::Target(Some(cizim))));
+    send(
+        &mut app,
+        Event::CoordImport(coord_import::Event::Target(Some(cizim))),
+    );
     send(&mut app, Event::CoordImport(coord_import::Event::Run));
     assert!(count(&app) > before);
-    assert!(last_said(&app).contains("“Çizim” katmanına alındı"), "{}", last_said(&app));
+    assert!(
+        last_said(&app).contains("“Çizim” katmanına alındı"),
+        "{}",
+        last_said(&app)
+    );
     // The file's name offered next is free, and its new layer keeps where it came from.
     app.picker = Picker::File(fixture("netcad.ncn"));
     run(&mut app, "file.import.ncn");
     send(&mut app, Event::CoordImport(coord_import::Event::Run));
     let model = &app.document.as_ref().expect("open").model;
-    let made = model.layers().leaves().into_iter().find(|l| l.name == "netcad").expect("a new layer “netcad”");
-    let origin = model.layers().info_of(&made.id).and_then(|i| i.origin).expect("its origin");
+    let made = model
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "netcad")
+        .expect("a new layer “netcad”");
+    let origin = model
+        .layers()
+        .info_of(&made.id)
+        .and_then(|i| i.origin)
+        .expect("its origin");
     assert_eq!(origin.driver, "ncn");
     assert!(origin.address.ends_with("netcad.ncn"), "{}", origin.address);
     assert_eq!(origin.sha256.as_deref().map(str::len), Some(64));
@@ -349,10 +372,7 @@ fn a_dxfs_blocks_go_out_to_dxf_as_blocks() {
         .filter(|e| matches!(e, Entity::Insert(_)))
         .count();
     assert_eq!(placed, 2);
-    assert_eq!(
-        had, 4,
-        "every block the file defines came in"
-    );
+    assert_eq!(had, 4, "every block the file defines came in");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -877,7 +897,10 @@ fn closed_polylines_go_in_as_the_window_says() {
         };
         let noted = format!("{state:?}").contains("Genişlikli kapalı çoklu çizgi");
         if noted {
-            send(&mut app, Event::DrawingImport(drawing_import::Event::AllowPolylineLoss));
+            send(
+                &mut app,
+                Event::DrawingImport(drawing_import::Event::AllowPolylineLoss),
+            );
         }
         send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
         assert_eq!(app.dialog, None, "the window closes after the import");
@@ -1410,19 +1433,42 @@ fn polyline_loss_preview_requires_explicit_acceptance_and_each_new_file_resets_i
     let before = count(&app);
     run(&mut app, "file.import.dxf");
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
-    assert_eq!(count(&app), before, "preview is not permission to flatten a source");
+    assert_eq!(
+        count(&app),
+        before,
+        "preview is not permission to flatten a source"
+    );
     assert!(matches!(app.exchange, Some(Window::DrawingImport(_))));
-    send(&mut app, Event::DrawingImport(drawing_import::Event::AllowPolylineLoss));
-    send(&mut app, Event::DrawingImport(drawing_import::Event::Explode));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::AllowPolylineLoss),
+    );
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::Explode),
+    );
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
-    assert_eq!(count(&app), before, "changed read options need a fresh acceptance");
-    send(&mut app, Event::DrawingImport(drawing_import::Event::AllowPolylineLoss));
+    assert_eq!(
+        count(&app),
+        before,
+        "changed read options need a fresh acceptance"
+    );
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::AllowPolylineLoss),
+    );
     // Picking another file, even the same path, needs a fresh acceptance.
     app.picker = Picker::File(fixture("cad-io/ocs-1-width.dxf"));
-    send(&mut app, Event::DrawingImport(drawing_import::Event::Another));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::Another),
+    );
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     assert_eq!(count(&app), before);
-    send(&mut app, Event::DrawingImport(drawing_import::Event::AllowPolylineLoss));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::AllowPolylineLoss),
+    );
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     assert_eq!(count(&app), before + 1);
     assert!(app.exchange.is_none());
@@ -1431,11 +1477,26 @@ fn polyline_loss_preview_requires_explicit_acceptance_and_each_new_file_resets_i
 }
 
 #[test]
-fn import_scale_framing_keeps_a_four_millimetre_part_visible_within_camera_limits(){
-    let mut app=app_with_drawing();app.viewport.update(crate::viewport::Event::Resized(iced::Rectangle{x:0.,y:0.,width:1000.,height:700.}),None);
-    app.zoom_to_bounds(&kentos_commands::Bounds{min_x:10.,min_y:20.,max_x:10.004,max_y:20.003});
-    let view=app.viewport.named("small");assert!(view.width<=0.201 && view.height<=0.141,"{view:?}"); // At the camera limit the 4 mm part spans 20 logical pixels, rather than vanishing in 20 m.
-    assert!((view.center.x-10.002).abs()<1e-9 && (view.center.y-20.0015).abs()<1e-9);
+fn import_scale_framing_keeps_a_four_millimetre_part_visible_within_camera_limits() {
+    let mut app = app_with_drawing();
+    app.viewport.update(
+        crate::viewport::Event::Resized(iced::Rectangle {
+            x: 0.,
+            y: 0.,
+            width: 1000.,
+            height: 700.,
+        }),
+        None,
+    );
+    app.zoom_to_bounds(&kentos_commands::Bounds {
+        min_x: 10.,
+        min_y: 20.,
+        max_x: 10.004,
+        max_y: 20.003,
+    });
+    let view = app.viewport.named("small");
+    assert!(view.width <= 0.201 && view.height <= 0.141, "{view:?}"); // At the camera limit the 4 mm part spans 20 logical pixels, rather than vanishing in 20 m.
+    assert!((view.center.x - 10.002).abs() < 1e-9 && (view.center.y - 20.0015).abs() < 1e-9);
 }
 
 /// GIS-052 (docs/adr/1109): the TM39 NCZ in the TM36 project goes in moved when “Projenin sistemine çevir” is asked:
@@ -1447,7 +1508,9 @@ fn an_ncz_in_another_zone_goes_in_moved_when_asked() {
     app.picker = Picker::File(fixture("ncz/01-her-tur.ncz"));
     let before = count(&app);
     run(&mut app, "file.import.ncz");
-    let Some(super::Window::DrawingImport(s)) = &app.exchange else { panic!("the window") };
+    let Some(super::Window::DrawingImport(s)) = &app.exchange else {
+        panic!("the window")
+    };
     let first = s
         .result
         .as_ref()
@@ -1459,13 +1522,21 @@ fn an_ncz_in_another_zone_goes_in_moved_when_asked() {
             _ => None,
         })
         .expect("a point");
-    send(&mut app, Event::DrawingImport(drawing_import::Event::Convert(true)));
+    send(
+        &mut app,
+        Event::DrawingImport(drawing_import::Event::Convert(true)),
+    );
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-052-ncz-cevir");
     send(&mut app, Event::DrawingImport(drawing_import::Event::Run));
     let added = count(&app) - before;
-    assert!(added > 0 && added < 18, "the straight ones moved, the rest left out: {added}");
+    assert!(
+        added > 0 && added < 18,
+        "the straight ones moved, the rest left out: {added}"
+    );
     let model = &app.document.as_ref().expect("open").model;
     let moved = model
         .entities()
@@ -1475,7 +1546,11 @@ fn an_ncz_in_another_zone_goes_in_moved_when_asked() {
         })
         .expect("the point moved");
     // pyproj (PROJ 9, EPSG:5257 → EPSG:5256) puts 1284 (421 000, 4 448 000) at (676 579.8990742341, 4 449 648.080327207).
-    assert!((moved.0 - 676_579.899_074_234_1).abs() < 1e-6 && (moved.1 - 4_449_648.080_327_207).abs() < 1e-6, "{moved:?}");
+    assert!(
+        (moved.0 - 676_579.899_074_234_1).abs() < 1e-6
+            && (moved.1 - 4_449_648.080_327_207).abs() < 1e-6,
+        "{moved:?}"
+    );
     assert!(first.0 == 421_000.0 && first.1 == 4_448_000.0);
     let doc = app.document.as_mut().expect("open");
     assert!(doc.model.undo().is_some());

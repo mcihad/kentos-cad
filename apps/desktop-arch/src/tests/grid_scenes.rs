@@ -11,11 +11,11 @@
 //!
 //! Test code only.
 
-use crate::arch_ext::*;
 use crate::arch;
+use crate::arch::ArchState;
+use crate::arch_ext::*;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::tool_settings::Commit;
@@ -38,7 +38,12 @@ fn command(app: &mut App, name: &str, input: Value) {
 /// The view on `[x0, y0]`–`[x1, y1]` (from the drawing's origin).
 fn view_on(app: &mut App, a: [f64; 2], b: [f64; 2]) {
     app.viewport.camera.fit(
-        &kentos_render_wgpu::Bounds { min_x: E + a[0], min_y: N + a[1], max_x: E + b[0], max_y: N + b[1] },
+        &kentos_render_wgpu::Bounds {
+            min_x: E + a[0],
+            min_y: N + a[1],
+            max_x: E + b[0],
+            max_y: N + b[1],
+        },
         24.0,
     );
 }
@@ -161,11 +166,19 @@ fn duplicates(app: &mut App) {
             _ => None,
         })
         .expect("grid B");
-    let above: Vec<Value> = b.pts.iter().map(|q| json!({"x": q.x, "y": q.y + 2.5})).collect();
-    command(app, "cad.grids.create", json!({"layerId": layer, "grids": [
-        {"pts": b.pts, "label": "B", "arch": b.arch},
-        {"pts": above, "label": "B", "arch": b.arch}
-    ]}));
+    let above: Vec<Value> = b
+        .pts
+        .iter()
+        .map(|q| json!({"x": q.x, "y": q.y + 2.5}))
+        .collect();
+    command(
+        app,
+        "cad.grids.create",
+        json!({"layerId": layer, "grids": [
+            {"pts": b.pts, "label": "B", "arch": b.arch},
+            {"pts": above, "label": "B", "arch": b.arch}
+        ]}),
+    );
     app.selection.clear();
     run(app, "arch.audit");
     view_on(app, [-3.0, -3.0], [15.0, 13.0]);
@@ -174,7 +187,8 @@ fn duplicates(app: &mut App) {
         .iter()
         .position(|&i| {
             let f = &app
-                .modules.arch()
+                .modules
+                .arch()
                 .arch_audit
                 .audited
                 .as_ref()
@@ -203,7 +217,12 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
             let _ = app.update(message);
         };
         let at = crate::tools_screens::caption_at(s, app, "Genel", false);
-        s.input(app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(at, -7.0));
+        s.input(
+            app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(at, -7.0),
+        );
     })]
 }
 
@@ -227,7 +246,13 @@ mod tests {
     use kentos_commands::{ColumnAnchor, ColumnShape, Entity};
 
     fn objects(app: &App) -> Vec<Entity> {
-        app.document.as_ref().expect("a drawing").model.entities().cloned().collect()
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .cloned()
+            .collect()
     }
 
     /// The walkthrough as the pictures take it (docs/adr/0725): Eğrisel writes four radial grids, three arcs and twelve
@@ -239,12 +264,30 @@ mod tests {
         let mut app = app_with_drawing();
         radial_written(&mut app);
         let all = objects(&app);
-        let grids: Vec<_> = all.iter().filter_map(|e| match e { Entity::Grid(g) => Some(&g.grid), _ => None }).collect();
-        let columns: Vec<_> =
-            all.iter().filter_map(|e| match e { Entity::Column(c) => Some(&c.column), _ => None }).collect();
+        let grids: Vec<_> = all
+            .iter()
+            .filter_map(|e| match e {
+                Entity::Grid(g) => Some(&g.grid),
+                _ => None,
+            })
+            .collect();
+        let columns: Vec<_> = all
+            .iter()
+            .filter_map(|e| match e {
+                Entity::Column(c) => Some(&c.column),
+                _ => None,
+            })
+            .collect();
         assert_eq!((grids.len(), columns.len()), (7, 12));
-        assert_eq!(grids.iter().filter(|g| g.bulges.is_some()).count(), 3, "three arcs");
-        let b2 = columns.iter().find(|c| c.place.as_deref() == Some("B-2")).expect("B-2");
+        assert_eq!(
+            grids.iter().filter(|g| g.bulges.is_some()).count(),
+            3,
+            "three arcs"
+        );
+        let b2 = columns
+            .iter()
+            .find(|c| c.place.as_deref() == Some("B-2"))
+            .expect("B-2");
         assert!((b2.rotation - 30f64.to_radians()).abs() < 1e-9);
         // The centre where the click's pixel fell, within a hundredth of a millimetre of the origin.
         let r = (b2.at.x - E).hypot(b2.at.y - N);
@@ -253,7 +296,13 @@ mod tests {
         let mut app = app_with_drawing();
         column_l_written(&mut app);
         let all = objects(&app);
-        let ls: Vec<_> = all.iter().filter_map(|e| match e { Entity::Column(c) => Some(&c.column), _ => None }).collect();
+        let ls: Vec<_> = all
+            .iter()
+            .filter_map(|e| match e {
+                Entity::Column(c) => Some(&c.column),
+                _ => None,
+            })
+            .collect();
         assert_eq!(ls.len(), 9);
         assert!(ls.iter().all(|c| c.shape == ColumnShape::LShape
             && c.anchor == ColumnAnchor::BottomLeft
@@ -261,14 +310,27 @@ mod tests {
 
         let mut app = app_with_drawing();
         gapped(&mut app);
-        assert!(objects(&app).iter().all(|e| !matches!(e, Entity::Grid(g) if g.grid.ends != Some(12.0))));
+        assert!(
+            objects(&app)
+                .iter()
+                .all(|e| !matches!(e, Entity::Grid(g) if g.grid.ends != Some(12.0)))
+        );
 
         let mut app = app_with_drawing();
         equal(&mut app);
-        click(&mut app, [20.0 * 20f64.to_radians().cos(), 20.0 * 20f64.to_radians().sin()]);
+        click(
+            &mut app,
+            [
+                20.0 * 20f64.to_radians().cos(),
+                20.0 * 20f64.to_radians().sin(),
+            ],
+        );
         let xs: Vec<_> = objects(&app)
             .into_iter()
-            .filter_map(|e| match e { Entity::Grid(g) if g.grid.label.parse::<u32>().is_ok() => Some(g.grid.pts[0]), _ => None })
+            .filter_map(|e| match e {
+                Entity::Grid(g) if g.grid.label.parse::<u32>().is_ok() => Some(g.grid.pts[0]),
+                _ => None,
+            })
             .collect();
         assert_eq!(xs.len(), 4);
         let gap = (xs[1].x - xs[0].x).hypot(xs[1].y - xs[0].y);
@@ -278,7 +340,8 @@ mod tests {
         let mut app = app_with_drawing();
         duplicates(&mut app);
         let codes = |app: &App| -> Vec<String> {
-            app.modules.arch()
+            app.modules
+                .arch()
                 .arch_audit
                 .audited
                 .as_ref()
@@ -297,7 +360,17 @@ mod tests {
         );
         let before = objects(&app).len();
         duplicates_fixed(&mut app);
-        assert_eq!(objects(&app).len(), before - 1, "the grid lying on B deleted");
-        assert_eq!(codes(&app).iter().filter(|c| *c == "arch_grid_label_duplicate").count(), 1);
+        assert_eq!(
+            objects(&app).len(),
+            before - 1,
+            "the grid lying on B deleted"
+        );
+        assert_eq!(
+            codes(&app)
+                .iter()
+                .filter(|c| *c == "arch_grid_label_duplicate")
+                .count(),
+            1
+        );
     }
 }

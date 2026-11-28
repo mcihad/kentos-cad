@@ -41,7 +41,11 @@ impl PlaceStyle {
             out.push_str("</IconStyle>");
         }
         if let Some((c, w)) = &self.line {
-            let _ = write!(out, "<LineStyle><color>{c}</color><width>{}</width></LineStyle>", decimals(*w, 2));
+            let _ = write!(
+                out,
+                "<LineStyle><color>{c}</color><width>{}</width></LineStyle>",
+                decimals(*w, 2)
+            );
         }
         if self.area {
             let (color, fill) = match &self.fill {
@@ -49,7 +53,10 @@ impl PlaceStyle {
                 None => ("00ffffff", 0),
             };
             let outline = u8::from(self.line.is_some());
-            let _ = write!(out, "<PolyStyle><color>{color}</color><fill>{fill}</fill><outline>{outline}</outline></PolyStyle>");
+            let _ = write!(
+                out,
+                "<PolyStyle><color>{color}</color><fill>{fill}</fill><outline>{outline}</outline></PolyStyle>"
+            );
         }
         out.push_str("</Style>\n");
     }
@@ -137,8 +144,16 @@ impl<W: std::io::Write> LayerStream<W> {
         };
         let mut why = None;
         let (from, choices) = (&self.from, &self.choices);
-        let moved = g.map(&mut |p| match transform_in(from, &WGS84, kentos_geometry_core::Vec2::new(p.x, p.y), choices) {
-            Ok(t) => Some(Vec2 { x: t.point.x, y: t.point.y }),
+        let moved = g.map(&mut |p| match transform_in(
+            from,
+            &WGS84,
+            kentos_geometry_core::Vec2::new(p.x, p.y),
+            choices,
+        ) {
+            Ok(t) => Some(Vec2 {
+                x: t.point.x,
+                y: t.point.y,
+            }),
             Err(u) => {
                 why = Some(u);
                 None
@@ -190,8 +205,18 @@ impl<W: std::io::Write> LayerStream<W> {
     pub fn finish(mut self) -> (Result<W, std::io::Error>, ExportReport) {
         self.emit("</Folder>\n</Document>\n</kml>\n");
         say_unreached(&mut self.rep, std::mem::take(&mut self.unreached));
-        self.rep.note_n("Kot", "kotları deniz seviyesinden yükseklik (absolute) olarak, olduğu gibi yazıldı", 0, self.heights);
-        self.rep.note_n("Kotsuz köşe", "bir kısım köşesi kotsuz nesne yere oturtularak, kotsuz yazıldı", 0, self.mixed);
+        self.rep.note_n(
+            "Kot",
+            "kotları deniz seviyesinden yükseklik (absolute) olarak, olduğu gibi yazıldı",
+            0,
+            self.heights,
+        );
+        self.rep.note_n(
+            "Kotsuz köşe",
+            "bir kısım köşesi kotsuz nesne yere oturtularak, kotsuz yazıldı",
+            0,
+            self.mixed,
+        );
         let report = self.rep.export();
         match self.failed {
             Some(e) => (Err(e), report),
@@ -217,11 +242,19 @@ mod tests {
           {"kind":"point","id":1,"layerId":"k","attrs":{"Ad":"P1","no":"7"},"p":{"x":37.01,"y":39.75}},
           {"kind":"polygon","id":2,"layerId":"k","attrs":{"ada":"12"},"pts":[{"x":37.0,"y":39.7},{"x":37.0,"y":39.71},{"x":37.01,"y":39.71},{"x":37.01,"y":39.7}]}
         ]"#;
-        let entities: Vec<Entity> = serde_json::from_str::<crate::wire::Objects>(text).expect("objects").0;
+        let entities: Vec<Entity> = serde_json::from_str::<crate::wire::Objects>(text)
+            .expect("objects")
+            .0;
         let polygon: Vec<Entity> = entities[1..].to_vec();
         let input = KmlWriteInput {
             entities: polygon.clone(),
-            layers: vec![KmlLayer { id: "k".into(), name: "Parseller".into(), path: Vec::new(), color: "#d9c27a".into(), line_weight: None }],
+            layers: vec![KmlLayer {
+                id: "k".into(),
+                name: "Parseller".into(),
+                path: Vec::new(),
+                color: "#d9c27a".into(),
+                line_weight: None,
+            }],
             name: "Belge".into(),
             blocks: Vec::new(),
             kmz: false,
@@ -234,13 +267,24 @@ mod tests {
             fill: Some("667ac2d9".into()),
             area: true,
         };
-        let mut s = LayerStream::begin(Vec::new(), "Belge", "Parseller", &[style], wgs84(), Vec::new(), Placing::new(&[]));
+        let mut s = LayerStream::begin(
+            Vec::new(),
+            "Belge",
+            "Parseller",
+            &[style],
+            wgs84(),
+            Vec::new(),
+            Placing::new(&[]),
+        );
         for e in &polygon {
             s.put(e, Some(0));
         }
         let (out, report) = s.finish();
         let streamed = out.expect("written");
-        assert_eq!(String::from_utf8_lossy(&streamed), String::from_utf8_lossy(&whole));
+        assert_eq!(
+            String::from_utf8_lossy(&streamed),
+            String::from_utf8_lossy(&whole)
+        );
         assert_eq!(report.counts.values().sum::<u32>(), 1);
     }
 }

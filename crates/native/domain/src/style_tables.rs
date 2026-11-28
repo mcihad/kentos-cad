@@ -28,7 +28,13 @@ macro_rules! styled {
     )*};
 }
 
-styled!(TextStyleDef, DimensionStyleDef, LeaderStyleDef, WallStyleDef, TableStyleDef);
+styled!(
+    TextStyleDef,
+    DimensionStyleDef,
+    LeaderStyleDef,
+    WallStyleDef,
+    TableStyleDef
+);
 
 /// One style before and after the step, each with its place in the table; none: not there.
 #[derive(Clone, Debug, PartialEq)]
@@ -195,9 +201,17 @@ impl StyleTables {
             &self.dimension,
             dimension_styles_problem,
         );
-        apply(&mut settings.leader_styles, &self.leader, leader_styles_problem);
+        apply(
+            &mut settings.leader_styles,
+            &self.leader,
+            leader_styles_problem,
+        );
         apply(&mut settings.wall_styles, &self.wall, wall_styles_problem);
-        apply(&mut settings.table_styles, &self.table, table_style_defs_problem);
+        apply(
+            &mut settings.table_styles,
+            &self.table,
+            table_style_defs_problem,
+        );
     }
 }
 

@@ -2,17 +2,20 @@
 //! quadrant or along the selected line without writing, takes the selection as obstacles and draws the tracks in one
 //! step; and its pictures.
 
-use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::road;
+use crate::road::RoadState;
 use crate::swept_window::{Event as W, Source};
 
 /// `road.swept.query`'s drawing: the junctions' road project with a few lines, an arc, a circle and an island.
 fn app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.swept.query.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.swept.query.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -25,7 +28,10 @@ fn send(app: &mut App, e: W) {
 /// The uid of the setup's `k`th added object (road_swept_cases.py's order: line, ell, bend, arc, curb, post, …).
 fn select(app: &mut App, uids: &[&str]) {
     let doc = app.document.as_ref().expect("a drawing");
-    let slots: Vec<kentos_domain::Slot> = uids.iter().map(|u| doc.model.slot_of(u.parse().expect("a uid")).expect("drawn")).collect();
+    let slots: Vec<kentos_domain::Slot> = uids
+        .iter()
+        .map(|u| doc.model.slot_of(u.parse().expect("a uid")).expect("drawn"))
+        .collect();
     app.selection.set(slots);
 }
 
@@ -44,7 +50,10 @@ fn truck(app: &mut App) {
 fn the_window_previews_a_quadrant_and_draws_it() {
     let mut app = app();
     let _ = app.update(Message::Run("swept.editor"));
-    assert_eq!(app.dialog, Some(crate::road::dialog(road::RoadDialogKind::Swept)));
+    assert_eq!(
+        app.dialog,
+        Some(crate::road::dialog(road::RoadDialogKind::Swept))
+    );
     let w = app.modules.road().swept_window.as_ref().expect("open");
     assert_eq!(
         (w.source, w.junction.as_deref()),
@@ -52,7 +61,14 @@ fn the_window_previews_a_quadrant_and_draws_it() {
     );
     // Nothing is filled in: the sizes are the user's.
     send(&mut app, W::Preview);
-    match &app.modules.road().swept_window.as_ref().expect("open").preview {
+    match &app
+        .modules
+        .road()
+        .swept_window
+        .as_ref()
+        .expect("open")
+        .preview
+    {
         Some(Err(why)) => assert!(why.contains("yazılmalı"), "{why}"),
         other => panic!("refused: {other:?}"),
     }
@@ -67,12 +83,19 @@ fn the_window_previews_a_quadrant_and_draws_it() {
         Some(Ok(q)) => q.clone(),
         other => panic!("previewed: {other:?}"),
     };
-    assert!(q.offtracking > 1.0 && q.clearance.as_ref().is_some_and(|c| c.curb && c.distance > 0.0), "{q:?}");
+    assert!(
+        q.offtracking > 1.0
+            && q.clearance
+                .as_ref()
+                .is_some_and(|c| c.curb && c.distance > 0.0),
+        "{q:?}"
+    );
     assert_eq!(w.junction_read.as_ref().map(|j| j.returns.len()), Some(4));
     // A change says the preview is old.
     send(&mut app, W::Field(9, "0.5".into()));
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .swept_window
             .as_ref()
             .expect("open")
@@ -104,7 +127,15 @@ fn the_window_previews_a_quadrant_and_draws_it() {
         .count();
     assert_eq!(after, before + 1 + 4 + bodies + 1);
     let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .count(),
+        before
+    );
 }
 
 #[test]
@@ -117,7 +148,14 @@ fn a_trailer_along_the_selected_line_against_the_selected_obstacles() {
     truck(&mut app);
     send(&mut app, W::Trailer(true));
     send(&mut app, W::Preview);
-    match &app.modules.road().swept_window.as_ref().expect("open").preview {
+    match &app
+        .modules
+        .road()
+        .swept_window
+        .as_ref()
+        .expect("open")
+        .preview
+    {
         Some(Err(why)) => assert!(why.contains("Mafsal"), "{why}"),
         other => panic!("refused: {other:?}"),
     }
@@ -127,7 +165,8 @@ fn a_trailer_along_the_selected_line_against_the_selected_obstacles() {
     select(&mut app, &[ISLAND, POST]);
     send(&mut app, W::Obstacles);
     assert_eq!(
-        app.modules.road()
+        app.modules
+            .road()
             .swept_window
             .as_ref()
             .expect("open")
@@ -157,7 +196,8 @@ fn a_trailer_along_the_selected_line_against_the_selected_obstacles() {
     );
     send(&mut app, W::Clear);
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .swept_window
             .as_ref()
             .expect("open")
@@ -184,7 +224,9 @@ fn screens() {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -193,7 +235,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("yol-y17-arac-izi-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -213,7 +258,14 @@ fn screens() {
         let _ = app.update(Message::Run("swept.editor"));
         truck(&mut app);
         send(&mut app, W::Trailer(true));
-        for (k, v) in [(4, "0.3"), (5, "8"), (6, "1"), (7, "2"), (8, "2.5"), (12, "5")] {
+        for (k, v) in [
+            (4, "0.3"),
+            (5, "8"),
+            (6, "1"),
+            (7, "2"),
+            (8, "2.5"),
+            (12, "5"),
+        ] {
             send(&mut app, W::Field(k, v.into()));
         }
         select(&mut app, &[ISLAND, POST]);

@@ -9,8 +9,8 @@
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, ImportLandxml, LandxmlImported,
-    NewObject, SurfaceSources, TerrainSurfaceDef, Vec2,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, ImportLandxml,
+    LandxmlImported, NewObject, SurfaceSources, TerrainSurfaceDef, Vec2,
 };
 use kentos_formats::landxml::{self, LxSurface};
 
@@ -39,31 +39,56 @@ fn check(doc: &kentos_domain::Document, input: &ImportLandxml) -> Result<Read, S
     common::terrain_project(doc)?;
     let path = Path::new(&input.path);
     if !path.exists() {
-        return Err(fail(codes::FILE_NOT_FOUND, format!("{} yok; dosyanın yolunu denetleyin.", input.path), "path"));
+        return Err(fail(
+            codes::FILE_NOT_FOUND,
+            format!("{} yok; dosyanın yolunu denetleyin.", input.path),
+            "path",
+        ));
     }
     let bytes = std::fs::read(path).map_err(|e| {
         fail(
             codes::IMPORT_UNREADABLE,
-            format!("{} okunamadı: {e}. Dosyanın izinlerini denetleyin.", input.path),
+            format!(
+                "{} okunamadı: {e}. Dosyanın izinlerini denetleyin.",
+                input.path
+            ),
             "path",
         )
     })?;
     let file = landxml::read(&bytes).map_err(|e| {
-        fail(codes::IMPORT_UNREADABLE, format!("{} LandXML olarak okunamadı: {}.", input.path, e.words()), "path")
+        fail(
+            codes::IMPORT_UNREADABLE,
+            format!("{} LandXML olarak okunamadı: {}.", input.path, e.words()),
+            "path",
+        )
     })?;
-    let names: Vec<String> = file.surfaces.iter().map(|s| format!("“{}”", s.name)).collect();
+    let names: Vec<String> = file
+        .surfaces
+        .iter()
+        .map(|s| format!("“{}”", s.name))
+        .collect();
     let chosen = match &input.surface {
-        Some(name) => file.surfaces.iter().find(|s| s.name == *name).ok_or_else(|| {
+        Some(name) => file
+            .surfaces
+            .iter()
+            .find(|s| s.name == *name)
+            .ok_or_else(|| {
+                fail(
+                    codes::LANDXML_NO_SURFACE,
+                    format!(
+                        "“{name}” adlı yüzey dosyada yok; dosyanın yüzeyleri: {}.",
+                        names.join(", ")
+                    ),
+                    "surface",
+                )
+            })?,
+        None => file.surfaces.first().ok_or_else(|| {
             fail(
                 codes::LANDXML_NO_SURFACE,
-                format!("“{name}” adlı yüzey dosyada yok; dosyanın yüzeyleri: {}.", names.join(", ")),
-                "surface",
+                "Dosyada yüzey yok.".into(),
+                "path",
             )
         })?,
-        None => file
-            .surfaces
-            .first()
-            .ok_or_else(|| fail(codes::LANDXML_NO_SURFACE, "Dosyada yüzey yok.".into(), "path"))?,
     };
     if chosen.points.is_empty() {
         return Err(fail(
@@ -74,19 +99,30 @@ fn check(doc: &kentos_domain::Document, input: &ImportLandxml) -> Result<Read, S
     }
     let mut warnings = Vec::new();
     if chosen.broken_faces > 0 {
-        warnings.push(left(format!("{} üçgen dosyada olmayan bir noktayı anıyor; alınmadı.", chosen.broken_faces)));
+        warnings.push(left(format!(
+            "{} üçgen dosyada olmayan bir noktayı anıyor; alınmadı.",
+            chosen.broken_faces
+        )));
     }
     if chosen.twice > 0 {
-        warnings.push(left(format!("{} nokta kimliği iki kez yazılmış; ikincisi alınmadı.", chosen.twice)));
+        warnings.push(left(format!(
+            "{} nokta kimliği iki kez yazılmış; ikincisi alınmadı.",
+            chosen.twice
+        )));
     }
     if chosen.boundaries.iter().filter(|b| !b.void).count() > 1 {
-        warnings.push(left("Dosyada birden çok dış sınır var; yalnız ilki alındı.".into()));
+        warnings.push(left(
+            "Dosyada birden çok dış sınır var; yalnız ilki alındı.".into(),
+        ));
     }
     warnings.extend(checks::layer(doc, &input.layer_id)?);
-    let name = input
-        .name
-        .clone()
-        .unwrap_or_else(|| if chosen.name.trim().is_empty() { "LandXML".to_owned() } else { chosen.name.trim().to_owned() });
+    let name = input.name.clone().unwrap_or_else(|| {
+        if chosen.name.trim().is_empty() {
+            "LandXML".to_owned()
+        } else {
+            chosen.name.trim().to_owned()
+        }
+    });
     // The name judged as the surface will stand.
     let mut list = common::surfaces(doc).to_vec();
     list.push(TerrainSurfaceDef {
@@ -149,7 +185,13 @@ fn objects(s: &LxSurface) -> (Vec<NewObject>, usize, usize, bool, usize) {
     let mut out: Vec<NewObject> = s
         .points
         .iter()
-        .map(|p| object(EntityGeometry::Point { p: v([p.x, p.y]), z: Some(p.z), parts: None }))
+        .map(|p| {
+            object(EntityGeometry::Point {
+                p: v([p.x, p.y]),
+                z: Some(p.z),
+                parts: None,
+            })
+        })
         .collect();
     for line in &s.breaklines {
         out.push(object(EntityGeometry::Polyline {
@@ -179,10 +221,20 @@ fn objects(s: &LxSurface) -> (Vec<NewObject>, usize, usize, bool, usize) {
     for b in &voids {
         out.push(area(&b.points));
     }
-    (out, s.points.len(), s.breaklines.len(), outer.is_some(), voids.len())
+    (
+        out,
+        s.points.len(),
+        s.breaklines.len(),
+        outer.is_some(),
+        voids.len(),
+    )
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &ImportLandxml, read: Read) -> CommandResult<LandxmlImported> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &ImportLandxml,
+    read: Read,
+) -> CommandResult<LandxmlImported> {
     let (objects, points, lines, outer, voids) = objects(&read.surface);
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
@@ -208,7 +260,9 @@ fn write(cx: &mut ExecutionContext<'_>, input: &ImportLandxml, read: Read) -> Co
             layers: vec![],
             uids: take(points, lines),
         },
-        boundary: outer.then(|| take(points + lines, 1)).and_then(|u| u.into_iter().next()),
+        boundary: outer
+            .then(|| take(points + lines, 1))
+            .and_then(|u| u.into_iter().next()),
         voids: take(points + lines + usize::from(outer), voids),
         tolerance: None,
         max_edge: None,
@@ -229,7 +283,11 @@ fn write(cx: &mut ExecutionContext<'_>, input: &ImportLandxml, read: Read) -> Co
         .iter()
         .filter_map(|f| {
             let [a, b, c] = f.points.map(|i| &s.points[i]);
-            let (x, y, z) = ((a.x + b.x + c.x) / 3.0, (a.y + b.y + c.y) / 3.0, (a.z + b.z + c.z) / 3.0);
+            let (x, y, z) = (
+                (a.x + b.x + c.x) / 3.0,
+                (a.y + b.y + c.y) / 3.0,
+                (a.z + b.z + c.z) / 3.0,
+            );
             surface.height(x, y).z.map(|h| (h - z).abs())
         })
         .reduce(f64::max);
@@ -285,7 +343,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ImportLandxml) -> CommandResult<L
 }
 
 /// Reads the file and takes it in: one step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ImportLandxml) -> CommandResult<LandxmlImported> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ImportLandxml,
+) -> CommandResult<LandxmlImported> {
     crate::call::recorded(
         cx,
         kentos_commands::FILE_IMPORT_LANDXML,
@@ -295,7 +356,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ImportLandxml) -> CommandRe
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: ImportLandxml) -> CommandResult<LandxmlImported> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ImportLandxml,
+) -> CommandResult<LandxmlImported> {
     match check(cx.doc, &input) {
         Ok(read) => write(cx, &input, read),
         Err(stop) => stop.into(),

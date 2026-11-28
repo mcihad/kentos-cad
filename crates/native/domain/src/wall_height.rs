@@ -71,13 +71,19 @@ impl Document {
         let at = middle(w)?;
         let foot = self.slab_structure_top_under(at, floor).unwrap_or(floor);
         let (under, from) = self.underside_over(at, foot)?;
-        storey.is_none_or(|h| under < floor + h - 1e-9).then_some(from)
+        storey
+            .is_none_or(|h| under < floor + h - 1e-9)
+            .then_some(from)
     }
 
     /// The lowest underside over `foot` at `at`, a slab's or a beam's, and whose.
     fn underside_over(&self, at: Vec2, foot: f64) -> Option<(f64, WallTop)> {
-        let slab = self.slab_underside_over(at, foot).map(|u| (u, WallTop::Slab));
-        let beam = self.beam_underside_over(at, foot).map(|u| (u, WallTop::Beam));
+        let slab = self
+            .slab_underside_over(at, foot)
+            .map(|u| (u, WallTop::Slab));
+        let beam = self
+            .beam_underside_over(at, foot)
+            .map(|u| (u, WallTop::Beam));
         match (slab, beam) {
             (Some(s), Some(b)) => Some(if b.0 < s.0 { b } else { s }),
             (s, b) => s.or(b),
@@ -110,7 +116,11 @@ impl Document {
         let g = rise / length;
         let along = ((at.x - a.x) * (e.x - a.x) + (at.y - a.y) * (e.y - a.y)) / length;
         let upright = b.height * (1.0 + g * g).sqrt();
-        let start = if b.base_offset.is_some() { bottom } else { top - upright };
+        let start = if b.base_offset.is_some() {
+            bottom
+        } else {
+            top - upright
+        };
         Some(start + g * along)
     }
 
@@ -394,24 +404,40 @@ pub(crate) mod tests {
         ]));
         let h = doc.wall_height(&wall("zemin", 0.0, 4.0, None)).unwrap();
         assert!((h - 2.5).abs() < 1e-9, "{h}");
-        assert_eq!(doc.wall_top_from(&wall("zemin", 0.0, 4.0, None)), Some(WallTop::Beam));
+        assert_eq!(
+            doc.wall_top_from(&wall("zemin", 0.0, 4.0, None)),
+            Some(WallTop::Beam)
+        );
         // Out of the beam's band: the slab's.
         let off = doc.wall_height(&wall("zemin", 7.0, 9.0, None)).unwrap();
         assert!((off - 2.85).abs() < 1e-9, "{off}");
-        assert_eq!(doc.wall_top_from(&wall("zemin", 7.0, 9.0, None)), Some(WallTop::Slab));
+        assert_eq!(
+            doc.wall_top_from(&wall("zemin", 7.0, 9.0, None)),
+            Some(WallTop::Slab)
+        );
         // No slab: from its storey's top (3.00); 5 cm lower by its offset: 2.45.
-        let bare = document(serde_json::json!([beam(-0.5, 6.0, serde_json::json!({"offset": -0.05}))]));
+        let bare = document(serde_json::json!([beam(
+            -0.5,
+            6.0,
+            serde_json::json!({"offset": -0.05})
+        )]));
         let b = bare.wall_height(&wall("zemin", 0.0, 4.0, None)).unwrap();
         assert!((b - 2.45).abs() < 1e-9, "{b}");
         // A lintel (docs/adr/8041 §3) sits at its base, 2.10 to 2.30 over the floor, in the wall: the wall runs on to the
         // slab (2.85).
         let lintel = document(serde_json::json!([
             slab("k1", -1.0, 10.0, 0.15, 0.0),
-            beam(-0.5, 6.0, serde_json::json!({"role": "lintel", "baseOffset": 2.1, "height": 0.2}))
+            beam(
+                -0.5,
+                6.0,
+                serde_json::json!({"role": "lintel", "baseOffset": 2.1, "height": 0.2})
+            )
         ]));
         let w = wall("zemin", 0.0, 4.0, None);
         assert!((lintel.wall_height(&w).unwrap() - 2.85).abs() < 1e-9);
-        let Some(kentos_contracts::Entity::Beam(l)) = lintel.entities().find(|e| e.kind() == "beam") else {
+        let Some(kentos_contracts::Entity::Beam(l)) =
+            lintel.entities().find(|e| e.kind() == "beam")
+        else {
             panic!("the lintel")
         };
         assert!((lintel.beam_top(&l.beam).unwrap() - 2.3).abs() < 1e-9);

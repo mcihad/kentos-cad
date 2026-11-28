@@ -390,15 +390,23 @@ fn a_reference_network_moves_changes_and_packs_without_losing_its_ties() {
     let plan_slot = s
         .document()
         .entities()
-        .find(|e| matches!(e, kentos_commands::Entity::Insert(i)
-            if s.document().block(i.block).is_some_and(|b| b.name == "Plan")))
+        .find(|e| {
+            matches!(e, kentos_commands::Entity::Insert(i)
+            if s.document().block(i.block).is_some_and(|b| b.name == "Plan"))
+        })
         .map(|e| kentos_domain::Slot(e.base().id))
         .expect("Plan's insert");
     let explained = kentos_native_application::appearance_origin::explain(s.document(), plan_slot);
-    let part = explained.iter().find(|p| p.part == "xrefLayers").expect("the reference's layers explained");
+    let part = explained
+        .iter()
+        .find(|p| p.part == "xrefLayers")
+        .expect("the reference's layers explained");
     assert_eq!(part.viewports.len(), 2, "{part:?}");
     assert!(part.viewports[0].ends_with("— dondurulmuş"), "{part:?}");
-    assert!(part.viewports[1].contains("renk #FF0000, kalınlık 0,7 mm"), "{part:?}");
+    assert!(
+        part.viewports[1].contains("renk #FF0000, kalınlık 0,7 mm"),
+        "{part:?}"
+    );
 
     // Plan's file moved and renamed beside a different drawing of its old name: not found by the name, found by its
     // content as a candidate, bound only when asked.
@@ -704,12 +712,16 @@ fn a_reference_network_moves_changes_and_packs_without_losing_its_ties() {
         by_name(&listed, "Plan")["layerStates"],
         json!(["Pafta A", "Pafta B"])
     );
-    assert_eq!(viewports(&listed), want_viewports, "the two sheets' overrides came along");
+    assert_eq!(
+        viewports(&listed),
+        want_viewports,
+        "the two sheets' overrides came along"
+    );
     // The package says what it carries of the drawing's resources (docs/adr/1111): the built-in line type at least.
     assert!(
-        ok(&packed)["resources"]
-            .as_array()
-            .is_some_and(|r| r.iter().any(|x| x["kind"] == "lineType" && x["how"] == "builtIn")),
+        ok(&packed)["resources"].as_array().is_some_and(|r| r
+            .iter()
+            .any(|x| x["kind"] == "lineType" && x["how"] == "builtIn")),
         "{packed}"
     );
     // A reload inside the package finds the nested sources there: B beside A, C by its name beside them.

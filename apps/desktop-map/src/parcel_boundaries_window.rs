@@ -7,8 +7,8 @@
 //! then goes to it and the marks bring it forward (docs/adr/3020). Nothing is written. docs/adr/3420: an arc another
 //! parcel draws with chords is one problem; the window's distance lets a neighbour's rounded corners count as the arc's.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use iced::{Element, Task};
 use kentos_commands::{ParcelsBoundaries, ParcelsBounded};
 use kentos_domain::{Slot, Uuid};
@@ -106,7 +106,10 @@ pub fn problem_short(kind: &str) -> &'static str {
 /// A problem's size (docs/adr/2620): an arc and chord mismatch's boundaries, its sliver's area and how far apart the
 /// two curves are at their middles; an arc drawn with chords' (docs/adr/3420): the arc, the chain's first and last
 /// boundary and its count, the strip's area and its widest place; none for the others.
-pub fn problem_size(p: &kentos_commands::BoundaryProblem, f: &kentos_interaction::Format) -> String {
+pub fn problem_size(
+    p: &kentos_commands::BoundaryProblem,
+    f: &kentos_interaction::Format,
+) -> String {
     match (p.kind.as_str(), p.area, p.gap, p.boundaries.as_slice()) {
         ("approxArc", Some(area), Some(gap), [arc, first, .., last]) => format!(
             "{arc} ile {first}–{last} ({} kiriş) · {}, en geniş {}",
@@ -114,7 +117,12 @@ pub fn problem_size(p: &kentos_commands::BoundaryProblem, f: &kentos_interaction
             f.area(area),
             f.length(gap)
         ),
-        (_, Some(area), Some(gap), _) => format!("{} · {}, ortada {}", p.boundaries.join(" ile "), f.area(area), f.length(gap)),
+        (_, Some(area), Some(gap), _) => format!(
+            "{} · {}, ortada {}",
+            p.boundaries.join(" ile "),
+            f.area(area),
+            f.length(gap)
+        ),
         _ => "—".into(),
     }
 }
@@ -124,13 +132,24 @@ fn named(g: &ParcelsBounded, uid: &str) -> String {
     g.parcels
         .iter()
         .find(|p| p.uid == uid)
-        .map(|p| if p.name.is_empty() { format!("#{}", &uid[uid.len().saturating_sub(4)..]) } else { p.name.clone() })
+        .map(|p| {
+            if p.name.is_empty() {
+                format!("#{}", &uid[uid.len().saturating_sub(4)..])
+            } else {
+                p.name.clone()
+            }
+        })
         .unwrap_or_else(|| uid.to_owned())
 }
 
 /// The table's rows for `show`.
 pub fn rows(g: &ParcelsBounded, show: Show, f: &kentos_interaction::Format) -> Vec<Vec<String>> {
-    let names = |list: &[String]| list.iter().map(|u| named(g, u)).collect::<Vec<_>>().join(", ");
+    let names = |list: &[String]| {
+        list.iter()
+            .map(|u| named(g, u))
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
     match show {
         Show::Boundaries => g
             .boundaries
@@ -141,15 +160,32 @@ pub fn rows(g: &ParcelsBounded, show: Show, f: &kentos_interaction::Format) -> V
                     b.from.clone(),
                     b.to.clone(),
                     f.length(b.length),
-                    if b.bulge == 0.0 { "doğru".into() } else { "yay".into() },
-                    b.left.as_deref().map_or_else(|| "—".to_owned(), |u| named(g, u)),
-                    b.right.as_deref().map_or_else(|| "—".to_owned(), |u| named(g, u)),
+                    if b.bulge == 0.0 {
+                        "doğru".into()
+                    } else {
+                        "yay".into()
+                    },
+                    b.left
+                        .as_deref()
+                        .map_or_else(|| "—".to_owned(), |u| named(g, u)),
+                    b.right
+                        .as_deref()
+                        .map_or_else(|| "—".to_owned(), |u| named(g, u)),
                 ]
             })
             .collect(),
-        Show::Corners => {
-            g.corners.iter().map(|c| vec![c.id.clone(), f.coord(c.at[0]), f.coord(c.at[1]), names(&c.parcels)]).collect()
-        }
+        Show::Corners => g
+            .corners
+            .iter()
+            .map(|c| {
+                vec![
+                    c.id.clone(),
+                    f.coord(c.at[0]),
+                    f.coord(c.at[1]),
+                    names(&c.parcels),
+                ]
+            })
+            .collect(),
         Show::Problems => g
             .problems
             .iter()
@@ -178,9 +214,15 @@ pub(crate) trait ParcelBoundariesWindowApp {
 impl ParcelBoundariesWindowApp for App {
     fn parcel_boundaries_run(&mut self) {
         let s = &self.modules.map().parcel_boundaries;
-        let input = ParcelsBoundaries { uids: s.uids.clone(), arc_tolerance: (s.tolerance > 0.0).then_some(s.tolerance) };
-        let Some(doc) = self.document.as_ref() else { return };
-        self.modules.map_mut().parcel_boundaries.answer = Some(parcels_boundaries::preview(&doc.model, &input));
+        let input = ParcelsBoundaries {
+            uids: s.uids.clone(),
+            arc_tolerance: (s.tolerance > 0.0).then_some(s.tolerance),
+        };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        self.modules.map_mut().parcel_boundaries.answer =
+            Some(parcels_boundaries::preview(&doc.model, &input));
     }
 
     /// Sınır grafiği from Parsel alan denetimi: its parcels.
@@ -242,11 +284,17 @@ impl ParcelBoundariesWindowApp for App {
                 let (corners, problems) = (g.corners.len(), g.problems.len());
                 // The view on the corners, a tenth wider each way; on the chosen row's place when one is (docs/adr/3020).
                 let focus = self.modules.map().parcel_boundaries.chosen.and_then(|i| {
-                    crate::parcel_boundaries_marks::Focus::of(g, self.modules.map().parcel_boundaries.show, i)
+                    crate::parcel_boundaries_marks::Focus::of(
+                        g,
+                        self.modules.map().parcel_boundaries.show,
+                        i,
+                    )
                 });
                 let all = g.corners.iter().fold(None::<[f64; 4]>, |b, c| {
                     let [x, y] = c.at;
-                    Some(b.map_or([x, y, x, y], |b| [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]))
+                    Some(b.map_or([x, y, x, y], |b| {
+                        [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]
+                    }))
                 });
                 let bounds = focus.as_ref().and_then(|f| f.bounds(g, all)).or(all);
                 let mut shown = crate::parcel_boundaries_marks::Shown::new(
@@ -261,7 +309,12 @@ impl ParcelBoundariesWindowApp for App {
                 self.dialog = None;
                 if let Some([x0, y0, x1, y1]) = bounds {
                     let (mx, my) = ((x1 - x0).max(1.0) * 0.1, (y1 - y0).max(1.0) * 0.1);
-                    let b = kentos_commands::Bounds { min_x: x0 - mx, min_y: y0 - my, max_x: x1 + mx, max_y: y1 + my };
+                    let b = kentos_commands::Bounds {
+                        min_x: x0 - mx,
+                        min_y: y0 - my,
+                        max_x: x1 + mx,
+                        max_y: y1 + my,
+                    };
                     self.navigating(|app| app.zoom_to_bounds(&b));
                 }
                 self.say(
@@ -332,7 +385,12 @@ impl ParcelBoundariesWindowApp for App {
                 col("Solda", 220.0),
                 col("Sağda", 220.0),
             ],
-            Show::Corners => vec![col("Köşe", 60.0), num("Y", 130.0), num("X", 130.0), col("Parseller", 420.0)],
+            Show::Corners => vec![
+                col("Köşe", 60.0),
+                num("Y", 130.0),
+                num("X", 130.0),
+                col("Parseller", 420.0),
+            ],
             Show::Problems => vec![
                 col("Sorun", 200.0),
                 num("Y", 120.0),
@@ -341,7 +399,14 @@ impl ParcelBoundariesWindowApp for App {
                 col("Fark", 230.0),
             ],
         };
-        let table = sheet_chosen(cols, table_rows, "Gösterilecek satır yok.", 300.0, s.chosen, |i| msg(Event::Choose(i)));
+        let table = sheet_chosen(
+            cols,
+            table_rows,
+            "Gösterilecek satır yok.",
+            300.0,
+            s.chosen,
+            |i| msg(Event::Choose(i)),
+        );
         // docs/adr/3420: how far a neighbour's corner may lie from an arc it draws with chords.
         let tolerance = Form::new()
             .label_width(260.0)
@@ -355,11 +420,18 @@ impl ParcelBoundariesWindowApp for App {
             .width(iced::Fill)
             .push(words::summary(lines))
             .push(tolerance)
-            .push(Segmented::new([Show::Boundaries, Show::Corners, Show::Problems], s.show, |v| msg(Event::Show(v))))
+            .push(Segmented::new(
+                [Show::Boundaries, Show::Corners, Show::Problems],
+                s.show,
+                |v| msg(Event::Show(v)),
+            ))
             .push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         Frame::new(TITLE)
             .scroll(body)
-            .aside(words::secondary(SELECT, (problems > 0).then(|| msg(Event::Select))))
+            .aside(words::secondary(
+                SELECT,
+                (problems > 0).then(|| msg(Event::Select)),
+            ))
             .aside(words::secondary(SHOW, drawable.then(|| msg(Event::Draw))))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(1000.0)

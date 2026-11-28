@@ -2,9 +2,9 @@
 //! drawing's first two scans, the GNSS layer guessed; strip B within the interswath limit with its 4 cm shift, strip C
 //! out of it; the control points' KOH_Z; the CSV; nothing written; Harita and GIS offer it. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -13,8 +13,10 @@ use crate::app::{App, Message};
 use crate::overlap_window::{Event as O, View};
 
 fn opened(program: Option<Module>) -> App {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pointclouds.overlap.json")).expect("cases");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.pointclouds.overlap.json"
+    ))
+    .expect("cases");
     let mut text = cases["setup"].to_string();
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
     text = text.replace("$fixture:", &format!("{}/", root.display()));
@@ -31,10 +33,14 @@ fn two_scans_are_compared_and_the_shifted_one_fails() {
     let mut app = opened(Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("pointcloud.overlap"));
-    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Overlap)));
+    assert_eq!(
+        app.dialog,
+        Some(crate::map::dialog(map::MapDialogKind::Overlap))
+    );
     assert_eq!(app.modules.map().overlap.control, "gnss");
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .overlap
         .answer
         .clone()
@@ -46,7 +52,8 @@ fn two_scans_are_compared_and_the_shifted_one_fails() {
     let c = app.modules.map().overlap.clouds[2].0.clone();
     let _ = app.update(Message::from(map::Event::Overlap(O::B(c))));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .overlap
         .answer
         .clone()
@@ -58,15 +65,25 @@ fn two_scans_are_compared_and_the_shifted_one_fails() {
     let file = dir.join("uyum.csv");
     app.overlap_save(file.clone());
     let text = std::fs::read_to_string(&file).expect("written");
-    assert!(text.starts_with("Kural paketi;lidar-uyum-ornek;") && text.contains("\nK1;"), "{text}");
+    assert!(
+        text.starts_with("Kural paketi;lidar-uyum-ornek;") && text.contains("\nK1;"),
+        "{text}"
+    );
     let _ = std::fs::remove_dir_all(dir);
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
 }
 
 #[test]
 fn harita_and_gis_offer_it() {
     for module in [Module::Map, Module::Gis] {
-        assert!(opened(Some(module)).offers("pointcloud.overlap"), "{module:?}");
+        assert!(
+            opened(Some(module)).offers("pointcloud.overlap"),
+            "{module:?}"
+        );
     }
 }
 
@@ -80,14 +97,21 @@ fn harita_and_gis_offer_it() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tarama-uyumu-1500");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/tarama-uyumu-1500");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (second, view, stem) in [(1usize, View::Control, "1-b-kontrol"), (3, View::Worst, "2-d-arac-en-kotu")] {
-        for (theme, size, name) in
-            [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")]
-        {
+    for (second, view, stem) in [
+        (1usize, View::Control, "1-b-kontrol"),
+        (3, View::Worst, "2-d-arac-en-kotu"),
+    ] {
+        for (theme, size, name) in [
+            ("light", Size::new(1440.0, 900.0), "acik-genis"),
+            ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+        ] {
             let mut app = opened(Some(Module::Map));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -101,7 +125,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -118,6 +145,9 @@ fn screens() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("3-menu-bulut-sekmesi.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
 }

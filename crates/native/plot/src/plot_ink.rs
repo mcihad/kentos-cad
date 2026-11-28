@@ -1,23 +1,23 @@
 //! Plot profiles on raster fallback: vector ink through tiny-skia, opaque image/pattern batches through the CPU shader.
+use crate::{
+    images::Images,
+    vectors::{VectorScale, layer_paths},
+};
 use kentos_native_style::{
     StyledLayer,
-    batches::{BatchKind, FillPaintBatch, MarkerLook, Unit, Cap},
+    batches::{BatchKind, Cap, FillPaintBatch, MarkerLook, Unit},
     cpu::{CpuView, paint},
 };
 use kentos_sheet::{
+    LineCap, LineJoin,
+    pdf::MapPath,
     plot_profile::{
         PlotProfile, PlotStyle,
         apply::{self, Resolved},
     },
-    pdf::MapPath,
-    LineCap, LineJoin,
 };
 use resvg::tiny_skia::{
-    self, Pixmap, PixmapPaint, PathBuilder, FillRule, Transform, Stroke, StrokeDash,
-};
-use crate::{
-    images::Images,
-    vectors::{VectorScale, layer_paths},
+    self, FillRule, PathBuilder, Pixmap, PixmapPaint, Stroke, StrokeDash, Transform,
 };
 fn rgba(c: &mut [f64; 4], s: &PlotStyle) {
     let source = format!(
@@ -258,12 +258,30 @@ fn draw(
             };
             let ink = super::raster::ink(&s.color);
             match &dots {
-                None => target.stroke_path(&shape, &ink, &pen(Some((&dash, phase)), s.cap), Transform::identity(), None),
+                None => target.stroke_path(
+                    &shape,
+                    &ink,
+                    &pen(Some((&dash, phase)), s.cap),
+                    Transform::identity(),
+                    None,
+                ),
                 Some(d) => {
                     if let Some((dashes, phase)) = &d.dashes {
-                        target.stroke_path(&shape, &ink, &pen(Some((dashes, *phase)), s.cap), Transform::identity(), None);
+                        target.stroke_path(
+                            &shape,
+                            &ink,
+                            &pen(Some((dashes, *phase)), s.cap),
+                            Transform::identity(),
+                            None,
+                        );
                     }
-                    target.stroke_path(&shape, &ink, &pen(Some((&d.dots.0, d.dots.1)), LineCap::Round), Transform::identity(), None);
+                    target.stroke_path(
+                        &shape,
+                        &ink,
+                        &pen(Some((&d.dots.0, d.dots.1)), LineCap::Round),
+                        Transform::identity(),
+                        None,
+                    );
                 }
             }
         }

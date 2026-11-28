@@ -10,7 +10,14 @@ use crate::gis;
 use crate::labelling::{Event, PREVIEW, form::Key};
 
 fn lines(app: &App) -> Vec<String> {
-    app.gis.labelling.as_ref().expect("the window").lines.iter().map(|(_, l)| l.clone()).collect()
+    app.gis
+        .labelling
+        .as_ref()
+        .expect("the window")
+        .lines
+        .iter()
+        .map(|(_, l)| l.clone())
+        .collect()
 }
 
 fn send(app: &mut App, e: Event) {
@@ -24,7 +31,10 @@ fn bound(tag: &str) -> (App, String) {
     let path = parcels(tag, 6);
     let mut app = app_with_drawing();
     let id = app
-        .add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described")])
+        .add_data_layers(vec![
+            crate::data_layers::describe(&path.display().to_string(), "parseller")
+                .expect("described"),
+        ])
         .expect("added")
         .remove(0);
     let area = iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0));
@@ -40,24 +50,39 @@ fn a_data_layers_examples_come_from_its_sources_first_rows() {
     // Opened: the rows asked, said while read.
     let task = app.open_labelling(Some(id.clone()));
     let said = lines(&app);
-    assert!(said.iter().any(|l| l.contains("veri katmanı, satırları kaynağında")), "{said:#?}");
+    assert!(
+        said.iter()
+            .any(|l| l.contains("veri katmanı, satırları kaynağında")),
+        "{said:#?}"
+    );
     // The layer labels nothing until its labelling is turned on (docs/adr/9311): it opens on Yok; Tek etiket.
     send(&mut app, Event::Mode(kentos_commands::LabelsMode::Single));
     let said = lines(&app);
-    assert!(said.iter().any(|l| l == "Örnekler için kaynağın ilk satırları okunuyor…"), "{said:#?}");
+    assert!(
+        said.iter()
+            .any(|l| l == "Örnekler için kaynağın ilk satırları okunuyor…"),
+        "{said:#?}"
+    );
     drive(&mut app, task);
     send(&mut app, Event::Type(Key::Template, "{kullanim}".into()));
     let said = lines(&app);
     let has = |words: &str| said.iter().any(|l| l.contains(words));
     assert!(has("Örnekler tablonun ilk 6 satırından."), "{said:#?}");
     assert!(has("Örnek metin (ilk nesne): “Konut”."), "{said:#?}");
-    assert!(!has("nesne,"), "a data layer is not counted as the drawing's objects: {said:#?}");
+    assert!(
+        !has("nesne,"),
+        "a data layer is not counted as the drawing's objects: {said:#?}"
+    );
     let w = app.gis.labelling.as_ref().expect("the window");
     assert_eq!(w.sample.as_deref(), Some("Konut"));
     // A field the table has none of is said as before; the table's own are the picker's.
     assert!(w.fields.iter().any(|f| f == "kullanim") && w.fields.iter().any(|f| f == "ada"));
     send(&mut app, Event::Type(Key::Template, "{malik}".into()));
-    assert!(lines(&app).iter().any(|l| l.contains("malik")), "{:#?}", lines(&app));
+    assert!(
+        lines(&app).iter().any(|l| l.contains("malik")),
+        "{:#?}",
+        lines(&app)
+    );
 }
 
 #[test]
@@ -71,14 +96,22 @@ fn denetle_counts_a_data_layers_labels_on_the_rows_the_view_read() {
     // No read of the view yet: said so, the examples' rows giving the candidates.
     send(&mut app, Event::Report);
     let said = lines(&app);
-    assert!(said[0].starts_with("Veri katmanının etiketleri görünümün okuduğu satırlara yerleşir"), "{said:#?}");
-    assert!(said.iter().any(|l| l.contains("Konut")), "the candidates' sample: {said:#?}");
+    assert!(
+        said[0].starts_with("Veri katmanının etiketleri görünümün okuduğu satırlara yerleşir"),
+        "{said:#?}"
+    );
+    assert!(
+        said.iter().any(|l| l.contains("Konut")),
+        "the candidates' sample: {said:#?}"
+    );
     // The view's read held (its rows' document): counted there as the drawing's labels are.
     let rows = match &app.gis.labelling.as_ref().expect("the window").rows {
         Some(Ok(doc)) => (**doc).clone(),
         other => panic!("the rows: {other:?}"),
     };
-    app.gis.data_labels.push(crate::data_labels::DataLabels::of(&id, rows));
+    app.gis
+        .data_labels
+        .push(crate::data_labels::DataLabels::of(&id, rows));
     send(&mut app, Event::Report);
     let said = lines(&app);
     let placed: usize = said[0]
@@ -102,7 +135,10 @@ fn the_first_text_is_drawn_in_the_styles_look() {
         let _ = app.update(message);
     };
     shot.settle(&mut app, App::view, &mut update);
-    assert!(crate::files_testing::find_text(&mut shot, &app, PREVIEW).is_some(), "the example's strip");
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, PREVIEW).is_some(),
+        "the example's strip"
+    );
     // Yok: no label, no example.
     send(&mut app, Event::Mode(kentos_commands::LabelsMode::Off));
     shot.settle(&mut app, App::view, &mut update);
@@ -116,18 +152,34 @@ fn the_first_text_is_drawn_in_the_styles_look() {
 fn screens() {
     let prepared = |halo: bool| {
         move || {
-            let (mut app, id) = bound(if halo { "etiket-resim-bicim" } else { "etiket-resim" });
+            let (mut app, id) = bound(if halo {
+                "etiket-resim-bicim"
+            } else {
+                "etiket-resim"
+            });
             let task = app.open_labelling(Some(id));
             drive(&mut app, task);
-            send(&mut app, Event::Type(Key::Template, "{kullanim} · ada {ada}".into()));
+            send(
+                &mut app,
+                Event::Type(Key::Template, "{kullanim} · ada {ada}".into()),
+            );
             if halo {
                 // A larger, bold label on a round background, with a shadow: the strip draws it so.
                 send(&mut app, Event::Type(Key::Size, "16".into()));
-                send(&mut app, Event::Edit(crate::labelling::form::Edit::Bold(true)));
-                send(&mut app, Event::Edit(crate::labelling::form::Edit::Background(Some(
-                    kentos_commands::LabelShape::Round,
-                ))));
-                send(&mut app, Event::Edit(crate::labelling::form::Edit::Shadow(true)));
+                send(
+                    &mut app,
+                    Event::Edit(crate::labelling::form::Edit::Bold(true)),
+                );
+                send(
+                    &mut app,
+                    Event::Edit(crate::labelling::form::Edit::Background(Some(
+                        kentos_commands::LabelShape::Round,
+                    ))),
+                );
+                send(
+                    &mut app,
+                    Event::Edit(crate::labelling::form::Edit::Shadow(true)),
+                );
                 send(&mut app, Event::Tab(crate::labelling::Tab::Look));
             }
             app
@@ -152,17 +204,33 @@ fn a_label_tools_click_on_a_data_label_says_why_and_what_to_use() {
         other => panic!("the rows: {other:?}"),
     };
     send(&mut app, Event::Save);
-    app.gis.data_labels.push(crate::data_labels::DataLabels::of(&id, rows));
+    app.gis
+        .data_labels
+        .push(crate::data_labels::DataLabels::of(&id, rows));
     // A parcel's middle, where its label lies.
-    let at = *app.gis.data_labels[0].row_points().first().expect("a parcel");
-    let name = app.document.as_ref().and_then(|d| d.model.layers().get(&id).map(|n| n.name.clone())).expect("the layer");
-    assert_eq!(app.data_label_under(at, app.draft.pick_aperture), Some(name.clone()));
+    let at = *app.gis.data_labels[0]
+        .row_points()
+        .first()
+        .expect("a parcel");
+    let name = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.layers().get(&id).map(|n| n.name.clone()))
+        .expect("the layer");
+    assert_eq!(
+        app.data_label_under(at, app.draft.pick_aperture),
+        Some(name.clone())
+    );
     for tool in ["tool.labelMove", "tool.labelPin", "tool.labelHide"] {
         let task = app.update(Message::Run(tool));
         drive(&mut app, task);
         let [sx, sy] = app.viewport.camera.world_to_screen(at);
         let p = iced::Point::new(sx as f32, sy as f32);
-        for ev in [crate::viewport::Event::Moved(p), crate::viewport::Event::Pressed(p), crate::viewport::Event::Released(p)] {
+        for ev in [
+            crate::viewport::Event::Moved(p),
+            crate::viewport::Event::Pressed(p),
+            crate::viewport::Event::Released(p),
+        ] {
             let task = app.update(Message::Viewport(ev));
             drive(&mut app, task);
         }
@@ -180,19 +248,34 @@ fn a_point_layers_new_label_goes_around_and_apply_then_tamam_says_it_once() {
     let path = crate::data_layers_tests::municipal("etiket-nokta");
     let mut app = app_with_drawing();
     let id = app
-        .add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described")])
+        .add_data_layers(vec![
+            crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described"),
+        ])
         .expect("added")
         .remove(0);
     let task = app.open_labelling(Some(id.clone()));
     drive(&mut app, task);
     send(&mut app, Event::Mode(kentos_commands::LabelsMode::Single));
     let w = app.gis.labelling.as_ref().expect("the window");
-    assert_eq!(w.current().point, Some(kentos_commands::PointLabelMode::Around), "around its symbol");
+    assert_eq!(
+        w.current().point,
+        Some(kentos_commands::PointLabelMode::Around),
+        "around its symbol"
+    );
     send(&mut app, Event::Type(Key::Template, "{kod}".into()));
-    let said = |app: &App| app.log.lines().filter(|l| l.text.contains("etiketlemesi")).count();
+    let said = |app: &App| {
+        app.log
+            .lines()
+            .filter(|l| l.text.contains("etiketlemesi"))
+            .count()
+    };
     send(&mut app, Event::Apply);
     assert_eq!(said(&app), 1);
-    assert!(app.log.lines().any(|l| l.text == "“bakim” katmanının etiketlemesi uygulandı."));
+    assert!(
+        app.log
+            .lines()
+            .any(|l| l.text == "“bakim” katmanının etiketlemesi uygulandı.")
+    );
     send(&mut app, Event::Save);
     assert_eq!(said(&app), 1, "Tamam after Uygula says nothing more");
     assert!(app.dialog.is_none(), "closed");
@@ -213,11 +296,18 @@ fn a_label_tool_says_at_once_when_only_data_labels_are_on_the_map() {
         other => panic!("the rows: {other:?}"),
     };
     send(&mut app, Event::Save);
-    app.gis.data_labels.push(crate::data_labels::DataLabels::of(&id, rows));
+    app.gis
+        .data_labels
+        .push(crate::data_labels::DataLabels::of(&id, rows));
     {
         let model = &mut app.document.as_mut().expect("open").model;
-        let drawing: Vec<String> =
-            model.layers().leaves().iter().filter(|l| l.data.is_none()).map(|l| l.id.clone()).collect();
+        let drawing: Vec<String> = model
+            .layers()
+            .leaves()
+            .iter()
+            .filter(|l| l.data.is_none())
+            .map(|l| l.id.clone())
+            .collect();
         for l in drawing {
             model.set_layer_visible(&l, false);
         }
@@ -225,10 +315,16 @@ fn a_label_tool_says_at_once_when_only_data_labels_are_on_the_map() {
     let task = app.update(Message::Run("tool.labelPin"));
     drive(&mut app, task);
     let said = crate::files_testing::last_said(&app);
-    assert!(said.starts_with("Haritadaki etiketler veri katmanının (“parseller”)"), "{said}");
+    assert!(
+        said.starts_with("Haritadaki etiketler veri katmanının (“parseller”)"),
+        "{said}"
+    );
     let (title, action) = {
         let (_, toast, _) = app.toasts.iter().last().expect("a notice");
-        (toast.title().to_owned(), toast.action_of().map(|(l, m)| (l.to_owned(), m.clone())))
+        (
+            toast.title().to_owned(),
+            toast.action_of().map(|(l, m)| (l.to_owned(), m.clone())),
+        )
     };
     assert_eq!(title, "Veri katmanının etiketi");
     let (label, open) = action.expect("its action");
@@ -236,7 +332,10 @@ fn a_label_tool_says_at_once_when_only_data_labels_are_on_the_map() {
     let task = app.update(open);
     drive(&mut app, task);
     let w = app.gis.labelling.as_ref().expect("Etiketler open");
-    assert_eq!((w.layer.as_str(), w.tab), (id.as_str(), crate::labelling::form::Tab::Place));
+    assert_eq!(
+        (w.layer.as_str(), w.tab),
+        (id.as_str(), crate::labelling::form::Tab::Place)
+    );
 }
 
 /// The pictures of the second round's T22, T24 and T25 (`.run/gui-evidence/kullanim-9357/`): Kurallı at the window's
@@ -251,7 +350,10 @@ fn screens_9357() {
         let path = crate::data_layers_tests::municipal(tag);
         let mut app = app_with_drawing();
         let id = app
-            .add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described")])
+            .add_data_layers(vec![
+                crate::data_layers::describe(&path.display().to_string(), "bakim")
+                    .expect("described"),
+            ])
             .expect("added")
             .remove(0);
         let task = app.open_labelling(Some(id.clone()));
@@ -283,11 +385,18 @@ fn screens_9357() {
             other => panic!("the rows: {other:?}"),
         };
         send(&mut app, Event::Save);
-        app.gis.data_labels.push(crate::data_labels::DataLabels::of(&id, rows));
+        app.gis
+            .data_labels
+            .push(crate::data_labels::DataLabels::of(&id, rows));
         {
             let model = &mut app.document.as_mut().expect("open").model;
-            let drawing: Vec<String> =
-                model.layers().leaves().iter().filter(|l| l.data.is_none()).map(|l| l.id.clone()).collect();
+            let drawing: Vec<String> = model
+                .layers()
+                .leaves()
+                .iter()
+                .filter(|l| l.data.is_none())
+                .map(|l| l.id.clone())
+                .collect();
             for l in drawing {
                 model.set_layer_visible(&l, false);
             }

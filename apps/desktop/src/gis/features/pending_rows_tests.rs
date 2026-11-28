@@ -33,7 +33,14 @@ fn a_changed_row_shows_its_local_and_its_first_value_and_a_deleted_one_its_key()
             row: Arc::new(point(1, "acik")),
         }],
         deleted: vec![5],
-        originals: [(5, (kentos_domain::Uuid::from_bytes([8; 16]), Arc::new(point(5, "izleme"))))].into(),
+        originals: [(
+            5,
+            (
+                kentos_domain::Uuid::from_bytes([8; 16]),
+                Arc::new(point(5, "izleme")),
+            ),
+        )]
+        .into(),
     };
     let lines = pending_lines(&changes, &["durum".to_owned(), "not".to_owned()]);
     assert_eq!(lines.len(), 2);
@@ -50,7 +57,9 @@ fn a_changed_row_shows_its_local_and_its_first_value_and_a_deleted_one_its_key()
     let stamp = crate::cloud::local_time::stamp(at, crate::cloud::local_time::Zone::system());
     assert_eq!(
         pending_words(0, 1, 0, Some(at)),
-        format!("Bekleyen değişiklikler: 1 değişen satır; kaynak okunamadığı için doğrulanmadı (son doğrulama: {stamp})")
+        format!(
+            "Bekleyen değişiklikler: 1 değişen satır; kaynak okunamadığı için doğrulanmadı (son doğrulama: {stamp})"
+        )
     );
 }
 
@@ -60,13 +69,21 @@ fn the_table_of_an_unread_source_lists_the_sessions_rows_and_a_save_leaves_none(
     let path = parcels("bekleyen", 30);
     let address = path.display().to_string();
     let mut app = app_with_drawing();
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
-        .expect("added");
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "parseller").expect("described"),
+    ])
+    .expect("added");
     let layer = node(&app, "parseller").expect("the layer").clone();
     let id = layer.id.clone();
     let _ = app.data_edits_event(Event::Start(id.clone()));
     // The 22nd row taken and its kullanim made “Okul”.
-    let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+    let settings = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .clone();
     let rows = data_write::rows_to_take(&layer, &settings, &[22], &|| false).expect("read");
     let doc = app.document.as_mut().expect("a drawing");
     let uid = doc.model.take_data_rows(&id, rows).expect("taken")[0].expect("22");
@@ -81,16 +98,28 @@ fn the_table_of_an_unread_source_lists_the_sessions_rows_and_a_save_leaves_none(
     let _ = app.data_table_event(DataEvent::Range(0, 12));
     let _ = app.data_table_tasks();
     for (generation, page, _) in app.gis.features.data.pending() {
-        let _ = app.data_table_event(DataEvent::Answered(generation, page, Err("Kaynak okunamadı: bağlantı yok".into())));
+        let _ = app.data_table_event(DataEvent::Answered(
+            generation,
+            page,
+            Err("Kaynak okunamadı: bağlantı yok".into()),
+        ));
     }
     assert!(app.gis.features.data.error().is_some(), "the source unread");
     // What the table lists: the changed row, its local value and the value it had.
-    let changes = app.document.as_ref().expect("a drawing").model.data_changes(&id);
+    let changes = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .data_changes(&id);
     let fields: Vec<String> = layer.fields.iter().map(|f| f.name.clone()).collect();
     let lines = pending_lines(&changes, &fields);
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0].key, 22);
-    let at = fields.iter().position(|f| f == "kullanim").expect("kullanim");
+    let at = fields
+        .iter()
+        .position(|f| f == "kullanim")
+        .expect("kullanim");
     assert_eq!(lines[0].cells[at], "Okul (önce: Park)");
     // Back: read again, the taken row over the source's; saved, nothing waits.
     let _ = app.data_table_event(DataEvent::Apply);
@@ -98,7 +127,12 @@ fn the_table_of_an_unread_source_lists_the_sessions_rows_and_a_save_leaves_none(
     assert!(app.gis.features.data.error().is_none());
     let task = app.data_edits_event(Event::Save(vec![id.clone()]));
     drive(&mut app, task);
-    let left = app.document.as_ref().expect("a drawing").model.data_changes(&id);
+    let left = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .data_changes(&id);
     assert!(left.is_empty(), "nothing waits after the save");
     let _ = std::fs::remove_file(&path);
 }
@@ -118,12 +152,20 @@ fn the_last_verification_goes_with_the_journal_and_comes_back() {
     let file = dir.join("proje.kcad");
     let mut app = app_with_drawing();
     app.gis.data_journal = journals.clone();
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "parseller").expect("described")])
-        .expect("added");
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "parseller").expect("described"),
+    ])
+    .expect("added");
     let layer = node(&app, "parseller").expect("the layer").clone();
     let id = layer.id.clone();
     let _ = app.data_edits_event(Event::Start(id.clone()));
-    let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+    let settings = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .clone();
     let rows = data_write::rows_to_take(&layer, &settings, &[22], &|| false).expect("read");
     let doc = app.document.as_mut().expect("a drawing");
     let uid = doc.model.take_data_rows(&id, rows).expect("taken")[0].expect("22");
@@ -145,9 +187,14 @@ fn the_last_verification_goes_with_the_journal_and_comes_back() {
     app.picker = Picker::File(file.clone());
     let task = app.run("file.save");
     drive(&mut app, task);
-    let kept = journals.file(&crate::data_journal::file_place(&file)).expect("a journal's file");
+    let kept = journals
+        .file(&crate::data_journal::file_place(&file))
+        .expect("a journal's file");
     let journal = std::fs::read_to_string(&kept).expect("the journal");
-    assert!(journal.contains(&format!("\"verified\":{{\"{id}\":{verified}}}")), "{journal}");
+    assert!(
+        journal.contains(&format!("\"verified\":{{\"{id}\":{verified}}}")),
+        "{journal}"
+    );
     // Left keeping the draft, the app's memory of it forgotten, opened again with the table closed (an open table would
     // read its source and be checked now): it comes back from the journal.
     let _ = app.leave(Then::CloseTab);
@@ -159,10 +206,23 @@ fn the_last_verification_goes_with_the_journal_and_comes_back() {
     let task = app.run("file.open");
     drive(&mut app, task);
     assert_eq!(app.gis.data_edits.verified.get(&id), Some(&verified));
-    let c = app.document.as_ref().expect("opened").model.data_changes(&id);
+    let c = app
+        .document
+        .as_ref()
+        .expect("opened")
+        .model
+        .data_changes(&id);
     let stamp = crate::cloud::local_time::stamp(verified, crate::cloud::local_time::Zone::system());
-    let words = pending_words(c.added.len(), c.changed.len(), c.deleted.len(), app.gis.data_edits.verified.get(&id).copied());
-    assert!(words.ends_with(&format!("(son doğrulama: {stamp})")), "{words}");
+    let words = pending_words(
+        c.added.len(),
+        c.changed.len(),
+        c.deleted.len(),
+        app.gis.data_edits.verified.get(&id).copied(),
+    );
+    assert!(
+        words.ends_with(&format!("(son doğrulama: {stamp})")),
+        "{words}"
+    );
     let _ = std::fs::remove_file(&path);
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -195,7 +255,13 @@ fn on_postgresql_an_offline_opening_lists_the_waiting_row_and_writes_it_when_bac
     let layer = node(&app, &name).expect("the layer").clone();
     let id = layer.id.clone();
     let _ = app.data_edits_event(Event::Start(id.clone()));
-    let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+    let settings = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .clone();
     let rows = data_write::rows_to_take(&layer, &settings, &[22], &|| false).expect("read");
     let doc = app.document.as_mut().expect("a drawing");
     let uid = doc.model.take_data_rows(&id, rows).expect("taken")[0].expect("22");
@@ -230,17 +296,36 @@ fn on_postgresql_an_offline_opening_lists_the_waiting_row_and_writes_it_when_bac
     app.bottom_tab = crate::bottom::BottomTab::Table;
     let _ = app.data_table_event(DataEvent::Range(0, 12));
     answer_pages(&mut app);
-    assert!(app.gis.features.data.error().is_some(), "the server unreachable");
-    let changes = app.document.as_ref().expect("opened").model.data_changes(&id);
+    assert!(
+        app.gis.features.data.error().is_some(),
+        "the server unreachable"
+    );
+    let changes = app
+        .document
+        .as_ref()
+        .expect("opened")
+        .model
+        .data_changes(&id);
     let fields: Vec<String> = layer.fields.iter().map(|f| f.name.clone()).collect();
     let lines = pending_lines(&changes, &fields);
     assert_eq!(lines.len(), 1);
     assert_eq!(lines[0].key, 22);
-    let at = fields.iter().position(|f| f == "kullanim").expect("kullanim");
+    let at = fields
+        .iter()
+        .position(|f| f == "kullanim")
+        .expect("kullanim");
     assert_eq!(lines[0].cells[at], "Okul (önce: Park)");
     let stamp = crate::cloud::local_time::stamp(verified, crate::cloud::local_time::Zone::system());
-    let words = pending_words(changes.added.len(), changes.changed.len(), changes.deleted.len(), Some(verified));
-    assert!(words.ends_with(&format!("doğrulanmadı (son doğrulama: {stamp})")), "{words}");
+    let words = pending_words(
+        changes.added.len(),
+        changes.changed.len(),
+        changes.deleted.len(),
+        Some(verified),
+    );
+    assert!(
+        words.ends_with(&format!("doğrulanmadı (son doğrulama: {stamp})")),
+        "{words}"
+    );
     // The server back: read again, written; a second reader sees the row, nothing waits.
     relay.set_open(true);
     let _ = app.data_table_event(DataEvent::Apply);
@@ -248,7 +333,15 @@ fn on_postgresql_an_offline_opening_lists_the_waiting_row_and_writes_it_when_bac
     assert!(app.gis.features.data.error().is_none(), "read again");
     let task = app.data_edits_event(Event::Save(vec![id.clone()]));
     drive(&mut app, task);
-    assert!(app.document.as_ref().expect("opened").model.data_changes(&id).is_empty(), "nothing waits");
+    assert!(
+        app.document
+            .as_ref()
+            .expect("opened")
+            .model
+            .data_changes(&id)
+            .is_empty(),
+        "nothing waits"
+    );
     let mut seen = None;
     let request = kentos_data::Request {
         condition: Some(kentos_data::Condition::Fids(vec![22])),
@@ -279,12 +372,21 @@ fn screens() {
         let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let path = parcels(&format!("bekleyen-resim-{n}"), 30);
         let mut app = app_with_drawing();
-        app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described")])
-            .expect("added");
+        app.add_data_layers(vec![
+            crate::data_layers::describe(&path.display().to_string(), "parseller")
+                .expect("described"),
+        ])
+        .expect("added");
         let layer = node(&app, "parseller").expect("the layer").clone();
         let id = layer.id.clone();
         let _ = app.data_edits_event(Event::Start(id.clone()));
-        let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+        let settings = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .settings()
+            .clone();
         let rows = data_write::rows_to_take(&layer, &settings, &[22], &|| false).expect("read");
         let doc = app.document.as_mut().expect("a drawing");
         let uid = doc.model.take_data_rows(&id, rows).expect("taken")[0].expect("22");
@@ -293,7 +395,9 @@ fn screens() {
         e.base_mut().attrs.insert("kullanim".into(), "Okul".into());
         assert!(doc.model.update(slot, e));
         let mut new = doc.model.get(slot).cloned().expect("a shape");
-        new.base_mut().attrs.insert("kullanim".into(), "Yeni".into());
+        new.base_mut()
+            .attrs
+            .insert("kullanim".into(), "Yeni".into());
         new.base_mut().id = 0;
         doc.model.add(new).expect("a new row");
         // Unreadable for sure, an open connection too: the file emptied.
@@ -317,12 +421,21 @@ fn verified_screens() {
         let n = N.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         let path = parcels(&format!("son-dogrulama-resim-{n}"), 30);
         let mut app = app_with_drawing();
-        app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described")])
-            .expect("added");
+        app.add_data_layers(vec![
+            crate::data_layers::describe(&path.display().to_string(), "parseller")
+                .expect("described"),
+        ])
+        .expect("added");
         let layer = node(&app, "parseller").expect("the layer").clone();
         let id = layer.id.clone();
         let _ = app.data_edits_event(Event::Start(id.clone()));
-        let settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+        let settings = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .settings()
+            .clone();
         let rows = data_write::rows_to_take(&layer, &settings, &[22], &|| false).expect("read");
         let doc = app.document.as_mut().expect("a drawing");
         let uid = doc.model.take_data_rows(&id, rows).expect("taken")[0].expect("22");
@@ -332,7 +445,10 @@ fn verified_screens() {
         assert!(doc.model.update(slot, e));
         std::fs::write(&path, b"").expect("emptied");
         // Checked last on 22 November 2026, 11:32 UTC (as the journal would give it back).
-        app.gis.data_edits.verified.insert(id.clone(), 1_795_347_120_000);
+        app.gis
+            .data_edits
+            .verified
+            .insert(id.clone(), 1_795_347_120_000);
         app.gis.features.layer = Some(id);
         app.command_expanded = true;
         app.bottom_tab = crate::bottom::BottomTab::Table;

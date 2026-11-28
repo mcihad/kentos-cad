@@ -53,14 +53,18 @@ impl Room {
     /// A map's room: its centre and its content rectangle (paper micrometres) at 1:`scale`.
     pub fn of_map(center: [f64; 2], width_um: i32, height_um: i32, scale: f64) -> Room {
         let ground = |um: i32| f64::from(um) / 1e6 * scale;
-        Room { center, half: [0.5 * ground(width_um), 0.5 * ground(height_um)] }
+        Room {
+            center,
+            half: [0.5 * ground(width_um), 0.5 * ground(height_um)],
+        }
     }
 
     /// Whether the map shows the ground point `p`, its content turned `turn` degrees.
     pub fn holds(&self, p: [f64; 2], turn: f64) -> bool {
         let r = turn.to_radians();
         let d = [p[0] - self.center[0], p[1] - self.center[1]];
-        (d[0] * r.cos() + d[1] * r.sin()).abs() <= self.half[0] && (-d[0] * r.sin() + d[1] * r.cos()).abs() <= self.half[1]
+        (d[0] * r.cos() + d[1] * r.sin()).abs() <= self.half[0]
+            && (-d[0] * r.sin() + d[1] * r.cos()).abs() <= self.half[1]
     }
 }
 
@@ -77,7 +81,12 @@ pub fn with_axes(doc: &Document, scale: f64, turn: f64) -> Option<Document> {
 }
 
 /// [`with_axes`] on a copy already made (a map's copy at its scale), the curves' data kept inside `room` when given.
-pub fn with_axes_on(mut copy: Document, scale: f64, turn: f64, room: Option<Room>) -> Option<Document> {
+pub fn with_axes_on(
+    mut copy: Document,
+    scale: f64,
+    turn: f64,
+    room: Option<Room>,
+) -> Option<Document> {
     let objects = objects(&copy, scale, turn, room);
     if objects.is_empty() {
         return None;
@@ -246,8 +255,14 @@ fn schedule_for(
     doc: &Document,
     alignment: &str,
     b: &Built,
-) -> Option<(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)> {
-    let mut on = doc.road_superelevations().iter().filter(|d| d.alignment == alignment);
+) -> Option<(
+    kentos_road::superelevation::Schedule,
+    kentos_road::superelevation::Crossfall,
+)> {
+    let mut on = doc
+        .road_superelevations()
+        .iter()
+        .filter(|d| d.alignment == alignment);
     let def = on.next()?;
     if on.next().is_some() {
         return None;
@@ -285,11 +300,18 @@ pub fn curve_data(
     speed: Option<f64>,
     pi: [f64; 2],
     inner: Option<[f64; 2]>,
-    schedule: Option<&(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
+    schedule: Option<&(
+        kentos_road::superelevation::Schedule,
+        kentos_road::superelevation::Crossfall,
+    )>,
 ) -> Vec<String> {
     let side = if c.delta > 0.0 { "Sol" } else { "Sağ" };
     let clothoid = c.spiral_in > 0.0 || c.spiral_out > 0.0;
-    let dc = if clothoid { (c.arc / c.radius).max(0.0) } else { c.delta.abs() };
+    let dc = if clothoid {
+        (c.arc / c.radius).max(0.0)
+    } else {
+        c.delta.abs()
+    };
     let mut lines = vec![format!("S - {number} ({side})")];
     if let Some(v) = speed {
         lines.push(format!("V = {}", kmh(v)));
@@ -323,7 +345,11 @@ pub fn curve_data(
 
 /// A speed as KGM writes it: whole km/h without decimals (`V = 80`), else to one decimal.
 fn kmh(v: f64) -> String {
-    if (v - v.round()).abs() < 1e-9 { format!("{v:.0}") } else { format!("{v:.1}") }
+    if (v - v.round()).abs() < 1e-9 {
+        format!("{v:.0}")
+    } else {
+        format!("{v:.1}")
+    }
 }
 
 /// Where the lines through `a` and `b` in directions `ta` and `tb` (radians) meet; none when they are parallel.
@@ -348,9 +374,18 @@ pub fn objects(doc: &Document, scale: f64, turn: f64, room: Option<Room>) -> Vec
     let mut roads: Vec<[f64; 2]> = Vec::new();
     for b in made.iter().filter_map(|(_, b)| b.as_ref().ok()) {
         let n = ((b.length() / (0.5 * h)).ceil() as usize).clamp(1, 200_000);
-        roads.extend((0..=n).filter_map(|i| b.place(b.length() * i as f64 / n as f64)).map(|p| [p.x, p.y]));
+        roads.extend(
+            (0..=n)
+                .filter_map(|i| b.place(b.length() * i as f64 / n as f64))
+                .map(|p| [p.x, p.y]),
+        );
         // The main points' lines and their texts (`TS1=1+194.71`, 13 characters or so) stand out from the axis.
-        for c in b.core.curves.iter().filter(|c| c.radius > 0.0 && c.radius.is_finite()) {
+        for c in b
+            .core
+            .curves
+            .iter()
+            .filter(|c| c.radius > 0.0 && c.radius.is_finite())
+        {
             for s in c.stations {
                 let Some(p) = b.place(s) else { continue };
                 let (_, nrm) = frame(p.direction);
@@ -376,7 +411,15 @@ pub fn objects(doc: &Document, scale: f64, turn: f64, room: Option<Room>) -> Vec
         }
         hectometres(&mut out, &b, m, h, turn);
         let schedule = schedule_for(doc, &def.id, &b);
-        curves(&mut out, &def, &b, schedule.as_ref(), room, &roads, Paper { m, h, turn });
+        curves(
+            &mut out,
+            &def,
+            &b,
+            schedule.as_ref(),
+            room,
+            &roads,
+            Paper { m, h, turn },
+        );
         ends(&mut out, &b, m, h, turn, room);
         if let Some(room) = room {
             places(&mut out, &def, &b, m, h, turn, room);
@@ -488,7 +531,10 @@ fn curves(
     out: &mut Vec<NewObject>,
     def: &kentos_commands::AlignmentDef,
     b: &Built,
-    schedule: Option<&(kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
+    schedule: Option<&(
+        kentos_road::superelevation::Schedule,
+        kentos_road::superelevation::Crossfall,
+    )>,
     room: Option<Room>,
     roads: &[[f64; 2]],
     paper: Paper,
@@ -546,7 +592,9 @@ fn curves(
         let r = turn.to_radians();
         let (ex, ey) = ([r.cos(), r.sin()], [-r.sin(), r.cos()]);
         // Upright on the paper: a point `x` along and `y` up from `o`.
-        let on = |o: [f64; 2], x: f64, y: f64| [o[0] + ex[0] * x + ey[0] * y, o[1] + ex[1] * x + ey[1] * y];
+        let on = |o: [f64; 2], x: f64, y: f64| {
+            [o[0] + ex[0] * x + ey[0] * y, o[1] + ex[1] * x + ey[1] * y]
+        };
         // The PI as the 2024 sheets mark it: a triangle, 2.5 mm a side, and its name boxed on the curve's side.
         let side = 2.5 * m;
         let rise = side * 0.75_f64.sqrt();
@@ -564,8 +612,15 @@ fn curves(
         // The name beside the triangle, on the side the data box does not take: between the PI and the curve it sat on
         // the parallel axis and the PI lines (Y78's first picture).
         let name = format!("S - {named}");
-        let half = [0.5 * (name.chars().count() as f64 * WIDE + 0.6) * h, 0.7 * h];
-        let beside = if u[0] * ex[0] + u[1] * ex[1] >= 0.0 { -1.0 } else { 1.0 };
+        let half = [
+            0.5 * (name.chars().count() as f64 * WIDE + 0.6) * h,
+            0.7 * h,
+        ];
+        let beside = if u[0] * ex[0] + u[1] * ex[1] >= 0.0 {
+            -1.0
+        } else {
+            1.0
+        };
         let name_at = on(pt, beside * (0.5 * side + 1.0 * m + half[0]), 0.0);
         out.push(path(
             &[
@@ -579,7 +634,15 @@ fn curves(
             0.18,
             None,
         ));
-        out.push(text(name_at, name, h, turn, turn, TextAlign::MiddleCenter, None));
+        out.push(text(
+            name_at,
+            name,
+            h,
+            turn,
+            turn,
+            TextAlign::MiddleCenter,
+            None,
+        ));
         // The data box, 4 mm beyond the PI away from the curve: above it when the outside is up, below it otherwise;
         // to the right when the outside is to the right. KGM 2024's frame: a box, a double rule along the left, a rule
         // under the name and one over X, Y. A line is at most WIDE h a character (Barlow's figures measured 0.465 h).
@@ -593,8 +656,13 @@ fn curves(
         }
         let pitch = 1.6 * h;
         let height = pitch * lines.len() as f64 + 0.4 * h;
-        let width = lines.iter().map(|l| l.chars().count()).max().unwrap_or(0) as f64 * WIDE * h + 2.2 * h;
-        let mut left = if u[0] * ex[0] + u[1] * ex[1] >= 0.0 { 0.0 } else { -width };
+        let width =
+            lines.iter().map(|l| l.chars().count()).max().unwrap_or(0) as f64 * WIDE * h + 2.2 * h;
+        let mut left = if u[0] * ex[0] + u[1] * ex[1] >= 0.0 {
+            0.0
+        } else {
+            -width
+        };
         let up = u[0] * ey[0] + u[1] * ey[1] >= 0.0;
         let mut bottom = if up { 0.0 } else { -height };
         // Where it goes (docs/adr/0984): outside the PI as above when that is inside the map and 6 mm clear of every
@@ -608,20 +676,33 @@ fn curves(
         let near: Vec<[f64; 2]> = roads.iter().map(paper).collect();
         let clear = 6.0 * m;
         let free = |l: f64, b: f64| {
-            !near.iter().any(|q| q[0] > l - clear && q[0] < l + width + clear && q[1] > b - clear && q[1] < b + height + clear)
+            !near.iter().any(|q| {
+                q[0] > l - clear
+                    && q[0] < l + width + clear
+                    && q[1] > b - clear
+                    && q[1] < b + height + clear
+            })
         };
         let fits = |l: f64, b: f64| {
             room.is_none_or(|r| {
                 let d = [corner[0] - r.center[0], corner[1] - r.center[1]];
                 let c = [d[0] * ex[0] + d[1] * ex[1], d[0] * ey[0] + d[1] * ey[1]];
-                let (lo, hi) = ([-r.half[0] + 2.0 * m, -r.half[1] + 2.0 * m], [r.half[0] - 2.0 * m, r.half[1] - 2.0 * m]);
-                c[0] + l >= lo[0] && c[0] + l + width <= hi[0] && c[1] + b >= lo[1] && c[1] + b + height <= hi[1]
+                let (lo, hi) = (
+                    [-r.half[0] + 2.0 * m, -r.half[1] + 2.0 * m],
+                    [r.half[0] - 2.0 * m, r.half[1] - 2.0 * m],
+                );
+                c[0] + l >= lo[0]
+                    && c[0] + l + width <= hi[0]
+                    && c[1] + b >= lo[1]
+                    && c[1] + b + height <= hi[1]
             })
         };
         // Across this curve's own axis first (another axis crossing the box's width far off must not set it), then
         // past any axis the box still meets, a few times.
         let beyond = |pts: &mut dyn Iterator<Item = [f64; 2]>, l: f64| {
-            let ys = pts.filter(|q| q[0] > l - clear && q[0] < l + width + clear).map(|q| q[1]);
+            let ys = pts
+                .filter(|q| q[0] > l - clear && q[0] < l + width + clear)
+                .map(|q| q[1]);
             if up {
                 ys.fold(f64::INFINITY, f64::min) - clear - height
             } else {
@@ -630,13 +711,18 @@ fn curves(
         };
         let step = 0.5 * h;
         let n = ((b.length() / step).ceil() as usize).clamp(1, 200_000);
-        let mut own = (0..=n).filter_map(|i| b.place(b.length() * i as f64 / n as f64)).map(|p| paper(&[p.x, p.y]));
+        let mut own = (0..=n)
+            .filter_map(|i| b.place(b.length() * i as f64 / n as f64))
+            .map(|p| paper(&[p.x, p.y]));
         let mut across = beyond(&mut own, left);
         for _ in 0..6 {
             if !across.is_finite() || free(left, across) {
                 break;
             }
-            let mut met = near.iter().copied().filter(|q| q[1] > across - clear && q[1] < across + height + clear);
+            let mut met = near
+                .iter()
+                .copied()
+                .filter(|q| q[1] > across - clear && q[1] < across + height + clear);
             across = beyond(&mut met, left);
         }
         let placed = if fits(left, bottom) && free(left, bottom) {
@@ -653,7 +739,11 @@ fn curves(
             let keep = |from: f64, size: f64, half: f64, high_first: bool| {
                 let (lo, hi) = (-half + 2.0 * m, half - 2.0 * m);
                 if size > hi - lo {
-                    if high_first { hi - size - from } else { lo - from }
+                    if high_first {
+                        hi - size - from
+                    } else {
+                        lo - from
+                    }
                 } else if from < lo {
                     lo - from
                 } else if from + size > hi {
@@ -688,13 +778,29 @@ fn curves(
             out.push(line);
         }
         out.push(path(
-            &[at(left, bottom), at(left + width, bottom), at(left + width, top), at(left, top), at(left, bottom)],
+            &[
+                at(left, bottom),
+                at(left + width, bottom),
+                at(left + width, top),
+                at(left, top),
+                at(left, bottom),
+            ],
             None,
             0.25,
             None,
         ));
-        out.push(path(&[at(left + 0.45 * h, bottom), at(left + 0.45 * h, top)], None, 0.18, None));
-        out.push(path(&[at(left + 0.75 * h, bottom), at(left + 0.75 * h, top)], None, 0.5, None));
+        out.push(path(
+            &[at(left + 0.45 * h, bottom), at(left + 0.45 * h, top)],
+            None,
+            0.18,
+            None,
+        ));
+        out.push(path(
+            &[at(left + 0.75 * h, bottom), at(left + 0.75 * h, top)],
+            None,
+            0.5,
+            None,
+        ));
         let rule = |y: f64| path(&[at(left, y), at(left + width, y)], None, 0.35, None);
         out.push(rule(top - 0.2 * h - pitch));
         if let Some(ix) = ix {
@@ -706,11 +812,22 @@ fn curves(
 /// The places the road leads to beyond its ends (docs/adr/1028; KGM's June 2024 sample sheets: "← KAMAN" and
 /// "ANKARA-NİĞDE OTOYOLU →" in red at the plan's ends, on every sheet): at the first and the last of the alignment the map
 /// shows, 4 mm in from its edge, a red arrow 15 mm along the road pointing out, 4 mm beside it, and the name over it.
-fn places(out: &mut Vec<NewObject>, def: &kentos_commands::AlignmentDef, b: &Built, m: f64, h: f64, turn: f64, room: Room) {
+fn places(
+    out: &mut Vec<NewObject>,
+    def: &kentos_commands::AlignmentDef,
+    b: &Built,
+    m: f64,
+    h: f64,
+    turn: f64,
+    room: Room,
+) {
     if def.start_place.is_none() && def.end_place.is_none() {
         return;
     }
-    let inset = Room { center: room.center, half: [room.half[0] - 4.0 * m, room.half[1] - 4.0 * m] };
+    let inset = Room {
+        center: room.center,
+        half: [room.half[0] - 4.0 * m, room.half[1] - 4.0 * m],
+    };
     if inset.half[0] <= 0.0 || inset.half[1] <= 0.0 {
         return;
     }
@@ -719,7 +836,9 @@ fn places(out: &mut Vec<NewObject>, def: &kentos_commands::AlignmentDef, b: &Bui
         .map(|i| b.length() * i as f64 / n as f64)
         .filter(|s| b.place(*s).is_some_and(|p| inset.holds([p.x, p.y], turn)))
         .collect();
-    let (Some(&first), Some(&last)) = (shown.first(), shown.last()) else { return };
+    let (Some(&first), Some(&last)) = (shown.first(), shown.last()) else {
+        return;
+    };
     let (len, head, beside) = (15.0 * m, 3.0 * m, 4.0 * m);
     for (place, s, out_dir) in [(&def.start_place, first, -1.0), (&def.end_place, last, 1.0)] {
         let Some(name) = place else { continue };
@@ -743,7 +862,11 @@ fn places(out: &mut Vec<NewObject>, def: &kentos_commands::AlignmentDef, b: &Bui
             EntityGeometry::Hatch {
                 ring: arrow.iter().map(|q| Vec2 { x: q[0], y: q[1] }).collect(),
                 holes: None,
-                pattern: kentos_commands::HatchPattern::user(kentos_commands::HatchPatternType::Solid, 0.0, 1.0),
+                pattern: kentos_commands::HatchPattern::user(
+                    kentos_commands::HatchPatternType::Solid,
+                    0.0,
+                    1.0,
+                ),
                 assoc: None,
                 boundary: None,
                 annotative: None,
@@ -752,9 +875,20 @@ fn places(out: &mut Vec<NewObject>, def: &kentos_commands::AlignmentDef, b: &Bui
             None,
             None,
         ));
-        let mid = [0.5 * (tail[0] + tip[0]) + nrm[0] * 0.9 * h, 0.5 * (tail[1] + tip[1]) + nrm[1] * 0.9 * h];
+        let mid = [
+            0.5 * (tail[0] + tip[0]) + nrm[0] * 0.9 * h,
+            0.5 * (tail[1] + tip[1]) + nrm[1] * 0.9 * h,
+        ];
         let degrees = p.direction.to_degrees();
-        let mut words = text(mid, name.clone(), h, degrees, turn, TextAlign::MiddleCenter, Some(RED));
+        let mut words = text(
+            mid,
+            name.clone(),
+            h,
+            degrees,
+            turn,
+            TextAlign::MiddleCenter,
+            Some(RED),
+        );
         if let EntityGeometry::Text { mask, .. } = &mut words.geometry {
             *mask = true;
         }

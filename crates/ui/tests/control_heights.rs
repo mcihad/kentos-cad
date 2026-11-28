@@ -47,7 +47,10 @@ fn inputs<'a>() -> Vec<(&'static str, Element<'a, ()>)> {
                 .icon(kentos_ui::icon::Icon::Search)
                 .into(),
         ),
-        ("text_field", text_field("Ad", "değer").on_input(|_| ()).into()),
+        (
+            "text_field",
+            text_field("Ad", "değer").on_input(|_| ()).into(),
+        ),
         ("Select", select().into()),
         ("Select, önekli", select().prefix("Katman").into()),
         ("NumberInput", NumberInput::new(2.5, |_| ()).into()),
@@ -98,7 +101,10 @@ fn cells<'a>() -> Vec<(&'static str, Element<'a, ()>)> {
             Cell::new(InputField::new("", "a").on_input(|_| ()).cell()).into(),
         ),
         ("liste", Cell::new(select().cell()).into()),
-        ("sayı", Cell::new(NumberInput::new(1.0, |_| ()).cell()).into()),
+        (
+            "sayı",
+            Cell::new(NumberInput::new(1.0, |_| ()).cell()).into(),
+        ),
         (
             "tarih",
             Cell::new(
@@ -147,7 +153,10 @@ fn every_input_has_the_one_height_at_every_size() {
                 wrong.push(format!("{name}: {got}"));
             }
         }
-        assert!(wrong.is_empty(), "{size} px, hücre {row} isteniyor: {wrong:?}");
+        assert!(
+            wrong.is_empty(),
+            "{size} px, hücre {row} isteniyor: {wrong:?}"
+        );
         assert!(
             (height(&snapshot, bare_field("", "").on_input(|_| ()).into()) - want).abs() <= 0.51
         );
@@ -187,7 +196,11 @@ fn calls_it(line: &str) -> bool {
 fn the_apps_make_their_fields_with_the_kit() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let mut files = Vec::new();
-    for dir in ["apps/desktop/src", "apps/launcher/src", "crates/sheet-ui/src"] {
+    for dir in [
+        "apps/desktop/src",
+        "apps/launcher/src",
+        "crates/sheet-ui/src",
+    ] {
         sources(&root.join(dir), &mut files);
     }
     assert!(files.len() > 100, "the sources were found");

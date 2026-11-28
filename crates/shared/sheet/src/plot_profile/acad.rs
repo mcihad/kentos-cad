@@ -62,7 +62,10 @@ pub const LINETYPES: [&str; 31] = [
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/", rename = "PlotStyleFormat"))]
+#[cfg_attr(
+    feature = "ts",
+    ts(export, export_to = "sheet/", rename = "PlotStyleFormat")
+)]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotStyleFormat"))]
 #[serde(rename_all = "lowercase")]
 pub enum StyleFormat {
@@ -74,7 +77,10 @@ pub enum StyleFormat {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/", rename = "PlotSource"))]
+#[cfg_attr(
+    feature = "ts",
+    ts(export, export_to = "sheet/", rename = "PlotSource")
+)]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotSource"))]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct PlotSource {
@@ -89,7 +95,10 @@ pub struct PlotSource {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/", rename = "PlotLossSeverity"))]
+#[cfg_attr(
+    feature = "ts",
+    ts(export, export_to = "sheet/", rename = "PlotLossSeverity")
+)]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotLossSeverity"))]
 #[serde(rename_all = "camelCase")]
 pub enum Severity {
@@ -105,7 +114,10 @@ pub enum Severity {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/", rename = "PlotLossKind"))]
+#[cfg_attr(
+    feature = "ts",
+    ts(export, export_to = "sheet/", rename = "PlotLossKind")
+)]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotLossKind"))]
 #[serde(rename_all = "camelCase")]
 pub enum LossKind {
@@ -147,25 +159,47 @@ impl LossKind {
         use LossKind::*;
         match self {
             ColorKind => "Renk türü RGB ya da ACI değil; nesnenin rengi basılır.",
-            ModeColor => "mode_color rengi color'dan farklı; anlamı belgelenmediği için kullanılmadı.",
-            Grayscale => "Gri tonlama KentOS'un sRGB parlaklık kuralıyla (0,2126 R + 0,7152 G + 0,0722 B) yapılır; başka programların dönüşümü farklı olabilir.",
-            GrayscaleColor => "Gri tonlama ve açık renk birlikte: rengin gri karşılığı parlaklık kuralıyla hesaplandı.",
-            Dither => "Titreşim (dither) yok: tarama beyaz kâğıda düz karışım rengi olarak basılır.",
-            ScreenWithoutDither => "Titreşim kapalıyken tarama uygulanmaz; renk tam yoğunlukta basılır.",
+            ModeColor => {
+                "mode_color rengi color'dan farklı; anlamı belgelenmediği için kullanılmadı."
+            }
+            Grayscale => {
+                "Gri tonlama KentOS'un sRGB parlaklık kuralıyla (0,2126 R + 0,7152 G + 0,0722 B) yapılır; başka programların dönüşümü farklı olabilir."
+            }
+            GrayscaleColor => {
+                "Gri tonlama ve açık renk birlikte: rengin gri karşılığı parlaklık kuralıyla hesaplandı."
+            }
+            Dither => {
+                "Titreşim (dither) yok: tarama beyaz kâğıda düz karışım rengi olarak basılır."
+            }
+            ScreenWithoutDither => {
+                "Titreşim kapalıyken tarama uygulanmaz; renk tam yoğunlukta basılır."
+            }
             PolicyBits => "color_policy'de bilinmeyen bitler var; yok sayıldı.",
-            PhysicalPen => "Fiziksel kalem numarası kalemli çiziciye özgüdür; PDF ve resim çıktısında kullanılmaz.",
+            PhysicalPen => {
+                "Fiziksel kalem numarası kalemli çiziciye özgüdür; PDF ve resim çıktısında kullanılmaz."
+            }
             VirtualPen => "Sanal kalem numarası sürücüye özgüdür; kullanılmaz.",
-            Linetype => "Tablonun baskı çizgi tipi KentOS desenine eşlenmedi; nesnenin çizgi tipi basılır.",
-            LineweightOutside => "Kalınlık kalınlık tablosunun dışında; nesnenin kalınlığı basılır (bu değerin “Nesnenin kalınlığı” anlamına geldiği bağımsız olarak doğrulanmadı).",
+            Linetype => {
+                "Tablonun baskı çizgi tipi KentOS desenine eşlenmedi; nesnenin çizgi tipi basılır."
+            }
+            LineweightOutside => {
+                "Kalınlık kalınlık tablosunun dışında; nesnenin kalınlığı basılır (bu değerin “Nesnenin kalınlığı” anlamına geldiği bağımsız olarak doğrulanmadı)."
+            }
             LineweightRounded => "Kalınlık mikrometreye yuvarlandı (yarım sıfırdan uzağa).",
             EndStyle => "Elmas uç KentOS'ta yok; nesnenin ucu basılır.",
             JoinStyle => "Elmas birleşim KentOS'ta yok; nesnenin birleşimi basılır.",
             FillStyle => "Dolgu deseni eşlenmedi; nesnenin dolgusu basılır.",
             Description => "Stil açıklaması baskı profiline taşınmadı.",
-            NormalChanged => "Normal stili KentOS'ta nesnenin görünüşüdür; dosyadaki değişiklikleri alınmadı.",
+            NormalChanged => {
+                "Normal stili KentOS'ta nesnenin görünüşüdür; dosyadaki değişiklikleri alınmadı."
+            }
             UnknownField => "Bilinmeyen alanlar okunmadı.",
-            ScaleFactor => "ISO dışı çizgi tipi ve dolgu ölçeği uygulanmadı (çizgi tipi ve dolgu eşlenmediği için).",
-            Checksum => "Üst bilgideki Adler-32 sıkıştırılmış veriye uymuyor; zlib akışının kendi denetimi geçti.",
+            ScaleFactor => {
+                "ISO dışı çizgi tipi ve dolgu ölçeği uygulanmadı (çizgi tipi ve dolgu eşlenmediği için)."
+            }
+            Checksum => {
+                "Üst bilgideki Adler-32 sıkıştırılmış veriye uymuyor; zlib akışının kendi denetimi geçti."
+            }
             Length => "Üst bilgideki açılmış uzunluk metne uymuyor; metin zlib akışından okundu.",
         }
     }
@@ -191,7 +225,10 @@ pub struct Loss {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/", rename = "PlotStyleRead"))]
+#[cfg_attr(
+    feature = "ts",
+    ts(export, export_to = "sheet/", rename = "PlotStyleRead")
+)]
 #[cfg_attr(feature = "schema", schemars(rename = "PaperPlotStyleRead"))]
 #[serde(rename_all = "camelCase")]
 pub struct Read {
@@ -241,7 +278,10 @@ fn parse(text: &str) -> Result<Vec<(String, Node)>> {
         }
         if t == "}" {
             if stack.len() < 2 {
-                return Err(unreadable(format!("{}. satırda açılmamış bir blok kapanıyor.", n + 1)));
+                return Err(unreadable(format!(
+                    "{}. satırda açılmamış bir blok kapanıyor.",
+                    n + 1
+                )));
             }
             let (name, items) = stack.pop().unwrap_or_default();
             if let Some(top) = stack.last_mut() {
@@ -257,7 +297,10 @@ fn parse(text: &str) -> Result<Vec<(String, Node)>> {
                 top.1.push((k.trim().to_owned(), Node::Value(value(v))));
             }
         } else {
-            return Err(unreadable(format!("{}. satır “ad=değer” ya da blok değil.", n + 1)));
+            return Err(unreadable(format!(
+                "{}. satır “ad=değer” ya da blok değil.",
+                n + 1
+            )));
         }
     }
     if stack.len() != 1 {
@@ -275,15 +318,23 @@ fn boolean(v: &str, what: &str) -> Result<bool> {
     match v.to_ascii_uppercase().as_str() {
         "TRUE" => Ok(true),
         "FALSE" => Ok(false),
-        _ => Err(unreadable(format!("{what} TRUE ya da FALSE olmalı (“{v}”)."))),
+        _ => Err(unreadable(format!(
+            "{what} TRUE ya da FALSE olmalı (“{v}”)."
+        ))),
     }
 }
 
 /// Millimetres as written to micrometres: exact to three decimals, else rounded half away from zero (and said).
 fn micrometres(v: &str, what: &str) -> Result<(i32, bool)> {
-    let wrong = || unreadable(format!("{what} 0 ile 100 mm arasında ondalık bir sayı olmalı (“{v}”)."));
+    let wrong = || {
+        unreadable(format!(
+            "{what} 0 ile 100 mm arasında ondalık bir sayı olmalı (“{v}”)."
+        ))
+    };
     let (whole, frac) = v.split_once('.').unwrap_or((v, ""));
-    if whole.is_empty() || !whole.bytes().all(|b| b.is_ascii_digit()) || !frac.bytes().all(|b| b.is_ascii_digit())
+    if whole.is_empty()
+        || !whole.bytes().all(|b| b.is_ascii_digit())
+        || !frac.bytes().all(|b| b.is_ascii_digit())
     {
         return Err(wrong());
     }
@@ -365,7 +416,12 @@ fn style(
     report: &mut Report,
 ) -> Result<(PlotStyle, bool, String)> {
     let mut s = PlotStyle::default();
-    let before: usize = report.lines.iter().filter(|(k, _)| k.severity() != Severity::Note).map(|(_, (st, _))| st.iter().filter(|x| *x == key).count()).sum();
+    let before: usize = report
+        .lines
+        .iter()
+        .filter(|(k, _)| k.severity() != Severity::Note)
+        .map(|(_, (st, _))| st.iter().filter(|x| *x == key).count())
+        .sum();
     let get = |name: &str| {
         fields.iter().find_map(|(k, n)| match n {
             Node::Value(v) if k == name => Some(v.as_str()),
@@ -384,7 +440,10 @@ fn style(
         None => OBJECT_COLOR,
     };
     if !(-(1_i64 << 31)..(1_i64 << 32)).contains(&color) {
-        return Err(unreadable(format!("{} 32 bitlik bir renk olmalı.", at("color"))));
+        return Err(unreadable(format!(
+            "{} 32 bitlik bir renk olmalı.",
+            at("color")
+        )));
     }
     let mut rgb = None;
     if color != OBJECT_COLOR && color != OBJECT_COLOR2 {
@@ -441,10 +500,17 @@ fn style(
             report.add(LossKind::Dither, Some(key), None);
             s.screening = screen as u8;
         } else {
-            report.add(LossKind::ScreenWithoutDither, Some(key), Some(screen.to_string()));
+            report.add(
+                LossKind::ScreenWithoutDither,
+                Some(key),
+                Some(screen.to_string()),
+            );
         }
     }
-    for (field, kind) in [("physical_pen_number", LossKind::PhysicalPen), ("virtual_pen_number", LossKind::VirtualPen)] {
+    for (field, kind) in [
+        ("physical_pen_number", LossKind::PhysicalPen),
+        ("virtual_pen_number", LossKind::VirtualPen),
+    ] {
         let n = match get(field) {
             Some(v) => int(v, &at(field))?,
             None => 0,
@@ -462,7 +528,11 @@ fn style(
     };
     match linetype {
         0 => s.dash = Some(Vec::new()),
-        1..=30 => report.add(LossKind::Linetype, Some(key), Some(format!("{linetype}: {}", LINETYPES[linetype as usize]))),
+        1..=30 => report.add(
+            LossKind::Linetype,
+            Some(key),
+            Some(format!("{linetype}: {}", LINETYPES[linetype as usize])),
+        ),
         OBJECT_LINETYPE => {}
         _ => return Err(unreadable(format!("{} 0–31 olmalı.", at("linetype")))),
     }
@@ -472,7 +542,10 @@ fn style(
     if let Some(v) = get("linepattern_size")
         && v.parse::<f64>().map_or(true, |x| !x.is_finite())
     {
-        return Err(unreadable(format!("{} bir sayı olmalı.", at("linepattern_size"))));
+        return Err(unreadable(format!(
+            "{} bir sayı olmalı.",
+            at("linepattern_size")
+        )));
     }
     if let Some(v) = get("lineweight") {
         let i = int(v, &at("lineweight"))?;
@@ -519,7 +592,12 @@ fn style(
             None
         }
         5 => None,
-        _ => return Err(unreadable(format!("{} 0–3 ya da 5 olmalı.", at("join_style")))),
+        _ => {
+            return Err(unreadable(format!(
+                "{} 0–3 ya da 5 olmalı.",
+                at("join_style")
+            )));
+        }
     };
     let fill = match get("fill_style") {
         Some(v) => int(v, &at("fill_style"))?,
@@ -533,8 +611,17 @@ fn style(
     if get("description").is_some_and(|d| !d.is_empty()) {
         report.add(LossKind::Description, Some(key), None);
     }
-    let after: usize = report.lines.iter().filter(|(k, _)| k.severity() != Severity::Note).map(|(_, (st, _))| st.iter().filter(|x| *x == key).count()).sum();
-    Ok((s, after > before, get("name").unwrap_or_default().to_owned()))
+    let after: usize = report
+        .lines
+        .iter()
+        .filter(|(k, _)| k.severity() != Severity::Note)
+        .map(|(_, (st, _))| st.iter().filter(|x| *x == key).count())
+        .sum();
+    Ok((
+        s,
+        after > before,
+        get("name").unwrap_or_default().to_owned(),
+    ))
 }
 
 /// The SHA-256 of the bytes, lowercase hex.
@@ -559,7 +646,10 @@ fn adler32(bytes: &[u8]) -> u32 {
 /// Reads a `.ctb`/`.stb` file's bytes into a profile `id` named `name`; `file` is the file's name (its source's).
 pub fn read(bytes: &[u8], id: &str, name: &str, file: &str) -> Result<Read> {
     if bytes.len() > MAX_FILE {
-        return Err(bad("plot_style_file_too_large", "Baskı stili tablosu 4 MiB sınırını aşıyor."));
+        return Err(bad(
+            "plot_style_file_too_large",
+            "Baskı stili tablosu 4 MiB sınırını aşıyor.",
+        ));
     }
     let format = if bytes.starts_with(HEAD_CTB) {
         StyleFormat::Ctb
@@ -574,7 +664,14 @@ pub fn read(bytes: &[u8], id: &str, name: &str, file: &str) -> Result<Read> {
     if bytes.len() < HEADER {
         return Err(unreadable("Dosyanın üst bilgisi eksik."));
     }
-    let word = |k: usize| u32::from_le_bytes([bytes[48 + 4 * k], bytes[49 + 4 * k], bytes[50 + 4 * k], bytes[51 + 4 * k]]);
+    let word = |k: usize| {
+        u32::from_le_bytes([
+            bytes[48 + 4 * k],
+            bytes[49 + 4 * k],
+            bytes[50 + 4 * k],
+            bytes[51 + 4 * k],
+        ])
+    };
     let (sum, length, packed) = (word(0), word(1), word(2));
     let body = &bytes[HEADER..];
     if packed as usize != body.len() {
@@ -583,15 +680,22 @@ pub fn read(bytes: &[u8], id: &str, name: &str, file: &str) -> Result<Read> {
             body.len()
         )));
     }
-    let text = miniz_oxide::inflate::decompress_to_vec_zlib_with_limit(body, MAX_TEXT).map_err(|_| {
-        unreadable("Sıkıştırılmış metin açılamadı (zlib akışı bozuk ya da 8 MiB sınırını aşıyor).")
-    })?;
+    let text =
+        miniz_oxide::inflate::decompress_to_vec_zlib_with_limit(body, MAX_TEXT).map_err(|_| {
+            unreadable(
+                "Sıkıştırılmış metin açılamadı (zlib akışı bozuk ya da 8 MiB sınırını aşıyor).",
+            )
+        })?;
     let mut report = Report::default();
     if adler32(body) != sum {
         report.add(LossKind::Checksum, None, None);
     }
     if length as usize != text.len() {
-        report.add(LossKind::Length, None, Some(format!("{length} ≠ {}", text.len())));
+        report.add(
+            LossKind::Length,
+            None,
+            Some(format!("{length} ≠ {}", text.len())),
+        );
     }
     let mut end = text.len();
     while end > 0 && text[end - 1] == 0 {
@@ -650,7 +754,11 @@ pub fn read(bytes: &[u8], id: &str, name: &str, file: &str) -> Result<Read> {
     if let Some(v) = get("apply_factor")
         && boolean(v, "apply_factor")?
     {
-        report.add(LossKind::ScaleFactor, None, get("scale_factor").map(str::to_owned));
+        report.add(
+            LossKind::ScaleFactor,
+            None,
+            get("scale_factor").map(str::to_owned),
+        );
     }
     // The lineweight table: index → millimetres.
     let mut weights: Vec<(i32, bool)> = Vec::new();
@@ -661,7 +769,9 @@ pub fn read(bytes: &[u8], id: &str, name: &str, file: &str) -> Result<Read> {
             };
             let i = int(k, "Kalınlık tablosunun sırası")?;
             if i != weights.len() as i64 {
-                return Err(unreadable("Kalınlık tablosunun sıraları 0'dan başlayıp birer artmalı."));
+                return Err(unreadable(
+                    "Kalınlık tablosunun sıraları 0'dan başlayıp birer artmalı.",
+                ));
             }
             weights.push(micrometres(v, &format!("Kalınlık {i}"))?);
         }
@@ -675,7 +785,9 @@ pub fn read(bytes: &[u8], id: &str, name: &str, file: &str) -> Result<Read> {
             return Err(unreadable("plot_style'da her stil bir blok olmalı."));
         };
         if int(k, "Stilin sırası")? != n as i64 {
-            return Err(unreadable("Stillerin sıraları 0'dan başlayıp birer artmalı."));
+            return Err(unreadable(
+                "Stillerin sıraları 0'dan başlayıp birer artmalı.",
+            ));
         }
         let key = match format {
             StyleFormat::Ctb => (n + 1).to_string(),
@@ -690,7 +802,9 @@ pub fn read(bytes: &[u8], id: &str, name: &str, file: &str) -> Result<Read> {
         if format == StyleFormat::Stb && key.eq_ignore_ascii_case("normal") {
             let mut scratch = Report::default();
             let (s, _, _) = style(fields, &key, &weights, &mut scratch)?;
-            if s != PlotStyle::default() || scratch.lines.keys().any(|k| k.severity() != Severity::Note) {
+            if s != PlotStyle::default()
+                || scratch.lines.keys().any(|k| k.severity() != Severity::Note)
+            {
                 report.add(LossKind::NormalChanged, Some(&key), None);
             } else {
                 exact += 1;
@@ -702,13 +816,18 @@ pub fn read(bytes: &[u8], id: &str, name: &str, file: &str) -> Result<Read> {
             exact += 1;
         }
         let key = match format {
-            StyleFormat::Ctb => StyleKey::Aci { index: (n + 1) as u8 },
+            StyleFormat::Ctb => StyleKey::Aci {
+                index: (n + 1) as u8,
+            },
             StyleFormat::Stb => {
                 if key.trim().is_empty() || key.len() > 256 || key.chars().any(char::is_control) {
                     return Err(unreadable(format!("{}. stilin adı geçerli değil.", n + 1)));
                 }
                 if !names.insert(key.clone()) {
-                    return Err(bad("duplicate_plot_style", format!("“{key}” stili tabloda iki kez var.")));
+                    return Err(bad(
+                        "duplicate_plot_style",
+                        format!("“{key}” stili tabloda iki kez var."),
+                    ));
                 }
                 StyleKey::Named { name: key }
             }
@@ -722,7 +841,10 @@ pub fn read(bytes: &[u8], id: &str, name: &str, file: &str) -> Result<Read> {
         )));
     }
     if styles.len() > 4096 {
-        return Err(bad("plot_profile_too_large", "Tablo 4096 stil sınırını aşıyor."));
+        return Err(bad(
+            "plot_profile_too_large",
+            "Tablo 4096 stil sınırını aşıyor.",
+        ));
     }
     let profile = PlotProfile {
         id: id.to_owned(),
@@ -773,10 +895,21 @@ mod tests {
         assert_eq!(r.styles, 2);
         assert_eq!(r.profile.entries.len(), 1);
         let s = &r.profile.entries[0].style;
-        assert_eq!(s.color, PlotColor::Color { value: "#000000".into() });
-        assert_eq!((s.screening, s.line_weight, s.cap, s.join), (50, Some(500), Some(LineCap::Round), None));
+        assert_eq!(
+            s.color,
+            PlotColor::Color {
+                value: "#000000".into()
+            }
+        );
+        assert_eq!(
+            (s.screening, s.line_weight, s.cap, s.join),
+            (50, Some(500), Some(LineCap::Round), None)
+        );
         let kinds: Vec<LossKind> = r.losses.iter().map(|l| l.kind).collect();
-        assert_eq!(kinds, [LossKind::Dither, LossKind::Linetype, LossKind::JoinStyle]);
+        assert_eq!(
+            kinds,
+            [LossKind::Dither, LossKind::Linetype, LossKind::JoinStyle]
+        );
         assert_eq!(r.exact, 1);
     }
 

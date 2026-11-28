@@ -168,23 +168,40 @@ impl Seen {
                 w.wall.bulges.clone().unwrap_or_default(),
             ),
             // An opening's jambs (docs/adr/0341 §1).
-            Entity::Opening(o) => (o.opening.place.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
+            Entity::Opening(o) => (
+                o.opening.place.iter().map(|v| [v.x, v.y]).collect(),
+                Vec::new(),
+            ),
             // A space's first ring (docs/adr/0342 §1).
             Entity::Space(s) => (
-                s.space.parts.first().map(|p| p.outer.pts.iter().map(|v| [v.x, v.y]).collect()).unwrap_or_default(),
+                s.space
+                    .parts
+                    .first()
+                    .map(|p| p.outer.pts.iter().map(|v| [v.x, v.y]).collect())
+                    .unwrap_or_default(),
                 Vec::new(),
             ),
             // A slab's first ring (docs/adr/0722 §1).
             Entity::Slab(s) => (
-                s.slab.parts.first().map(|p| p.outer.pts.iter().map(|v| [v.x, v.y]).collect()).unwrap_or_default(),
+                s.slab
+                    .parts
+                    .first()
+                    .map(|p| p.outer.pts.iter().map(|v| [v.x, v.y]).collect())
+                    .unwrap_or_default(),
                 Vec::new(),
             ),
             // A grid's ends, a stair's or ramp's walking line, a column's centre (docs/adr/0343 §1).
             Entity::Grid(g) => (g.grid.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
-            Entity::Stair(st) => (st.stair.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
+            Entity::Stair(st) => (
+                st.stair.pts.iter().map(|v| [v.x, v.y]).collect(),
+                Vec::new(),
+            ),
             Entity::Ramp(r) => (r.ramp.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             Entity::Tag(t) => (vec![[t.tag.at.x, t.tag.at.y]], Vec::new()),
-            Entity::ViewMark(m) => (m.mark.points.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
+            Entity::ViewMark(m) => (
+                m.mark.points.iter().map(|v| [v.x, v.y]).collect(),
+                Vec::new(),
+            ),
             Entity::Column(c) => (vec![[c.column.at.x, c.column.at.y]], Vec::new()),
             Entity::Ellipse(e) => {
                 let at = |t: f64| {
@@ -551,7 +568,8 @@ impl<'a> Player<'a> {
         // Opened as a new drawing: no path, so a save goes to the picker's file. A KCAD v2 file (its constraints, a
         // drawing's bonds: docs/adr/0790) or the v1 JSON.
         let doc = if bytes.starts_with(b"\x89KCAD") {
-            let snapshot = kentos_kcad::decode(&bytes).map_err(|e| format!("{}: {e}", trace.document))?;
+            let snapshot =
+                kentos_kcad::decode(&bytes).map_err(|e| format!("{}: {e}", trace.document))?;
             Document::from_v2(snapshot, None)?
         } else {
             let text = String::from_utf8(bytes).map_err(|e| format!("{}: {e}", trace.document))?;
@@ -910,7 +928,10 @@ impl<'a> Player<'a> {
                 .into_iter()
                 .min_by(|a, b| away(a).unwrap_or(0.0).total_cmp(&away(b).unwrap_or(0.0)))
                 .ok_or("geçici ölçü ya da kilidi yok: duvar seçili ve imleç kenarında mı?")?;
-            return self.click([n.x - self.origin.x, n.y - self.origin.y], mouse::Button::Left);
+            return self.click(
+                [n.x - self.origin.x, n.y - self.origin.y],
+                mouse::Button::Left,
+            );
         }
         if let Some(at) = step.double_click {
             self.click(at, mouse::Button::Left)?;
@@ -994,10 +1015,15 @@ impl<'a> Player<'a> {
             let session = self.app.document.as_ref().map(|d| d.session);
             self.app.picker = Picker::File(self.file.clone());
             self.press(&chord_stroke("Ctrl+S", self.variant.layout)?)?;
-            self.apply(Message::DocTabs(crate::doc_tabs::Event::Close(self.app.doc_tabs.at)))?;
+            self.apply(Message::DocTabs(crate::doc_tabs::Event::Close(
+                self.app.doc_tabs.at,
+            )))?;
             self.press(&chord_stroke("Ctrl+O", self.variant.layout)?)?;
-            return if self.app.document.as_ref().is_some_and(|d|
-                d.path.as_ref() == Some(&self.file) && Some(d.session) != session)
+            return if self
+                .app
+                .document
+                .as_ref()
+                .is_some_and(|d| d.path.as_ref() == Some(&self.file) && Some(d.session) != session)
             {
                 Ok(())
             } else {
@@ -1203,7 +1229,12 @@ impl<'a> Player<'a> {
             .collect();
         let checks = step.check.iter().flat_map(|c| c.0.iter());
         controls.extend(checks.map(|(words, on)| Control::Check(words, *on)));
-        controls.extend(step.pick.iter().flat_map(|p| p.0.iter()).map(|(name, item)| Control::Pick(name, item)));
+        controls.extend(
+            step.pick
+                .iter()
+                .flat_map(|p| p.0.iter())
+                .map(|(name, item)| Control::Pick(name, item)),
+        );
         controls.extend(step.press.as_deref().map(Control::Press));
         for control in controls {
             if let Some(message) = self.app.dialog_control(control)? {

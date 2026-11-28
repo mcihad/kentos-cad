@@ -35,7 +35,9 @@ fn edges(s: &Surface) -> Vec<([f64; 3], [f64; 3])> {
         .flat_map(|t| [[t[0], t[1]], [t[1], t[2]], [t[2], t[0]]])
         .map(|[a, b]| if a < b { [a, b] } else { [b, a] })
         .collect();
-    set.into_iter().map(|[a, b]| (s.vertices[a as usize], s.vertices[b as usize])).collect()
+    set.into_iter()
+        .map(|[a, b]| (s.vertices[a as usize], s.vertices[b as usize]))
+        .collect()
 }
 
 /// The element's bounding box, a little wider.
@@ -63,7 +65,9 @@ fn crossings(e: &Element, a: [f64; 3], b: [f64; 3]) -> Vec<(f64, f64)> {
         return vec![];
     }
     let u_of = |p: [f64; 2]| ((p[0] - a[0]) * r[0] + (p[1] - a[1]) * r[1]) / len2;
-    let keep = |s: f64, u: f64| (-1e-12..=e.length + 1e-12).contains(&s) && (-1e-12..=1.0 + 1e-12).contains(&u);
+    let keep = |s: f64, u: f64| {
+        (-1e-12..=e.length + 1e-12).contains(&s) && (-1e-12..=1.0 + 1e-12).contains(&u)
+    };
     match e.kind {
         Kind::Tangent => {
             let d = [e.theta0.cos(), e.theta0.sin()];
@@ -74,7 +78,11 @@ fn crossings(e: &Element, a: [f64; 3], b: [f64; 3]) -> Vec<(f64, f64)> {
             let ap = [a[0] - e.start[0], a[1] - e.start[1]];
             let s = (ap[0] * r[1] - ap[1] * r[0]) / denom;
             let u = (ap[0] * d[1] - ap[1] * d[0]) / denom;
-            if keep(s, u) { vec![(s.clamp(0.0, e.length), u.clamp(0.0, 1.0))] } else { vec![] }
+            if keep(s, u) {
+                vec![(s.clamp(0.0, e.length), u.clamp(0.0, 1.0))]
+            } else {
+                vec![]
+            }
         }
         Kind::Arc => {
             let k = e.k0;
@@ -83,7 +91,11 @@ fn crossings(e: &Element, a: [f64; 3], b: [f64; 3]) -> Vec<(f64, f64)> {
             let rad = 1.0 / k.abs();
             // |a + u·r − c|² = R²
             let f = [a[0] - c[0], a[1] - c[1]];
-            let (qa, qb, qc) = (len2, 2.0 * (f[0] * r[0] + f[1] * r[1]), f[0] * f[0] + f[1] * f[1] - rad * rad);
+            let (qa, qb, qc) = (
+                len2,
+                2.0 * (f[0] * r[0] + f[1] * r[1]),
+                f[0] * f[0] + f[1] * f[1] - rad * rad,
+            );
             let disc = qb * qb - 4.0 * qa * qc;
             if disc < 0.0 {
                 return vec![];
@@ -91,7 +103,11 @@ fn crossings(e: &Element, a: [f64; 3], b: [f64; 3]) -> Vec<(f64, f64)> {
             let sq = disc.sqrt();
             // The stable pair of roots.
             let q = -0.5 * (qb + if qb >= 0.0 { sq } else { -sq });
-            let roots = if q == 0.0 { vec![0.0] } else { vec![q / qa, qc / q] };
+            let roots = if q == 0.0 {
+                vec![0.0]
+            } else {
+                vec![q / qa, qc / q]
+            };
             let r0 = [e.start[0] - c[0], e.start[1] - c[1]];
             let tau = std::f64::consts::TAU;
             let mut out = Vec::new();
@@ -113,7 +129,9 @@ fn crossings(e: &Element, a: [f64; 3], b: [f64; 3]) -> Vec<(f64, f64)> {
                 (p[0] - a[0]) * r[1] - (p[1] - a[1]) * r[0]
             };
             let turn = e.k0.abs().max(e.k1.abs()) * e.length;
-            let steps = ((turn / 0.01).ceil() as usize).max((e.length / 1.0).ceil() as usize).clamp(8, 1 << 16);
+            let steps = ((turn / 0.01).ceil() as usize)
+                .max((e.length / 1.0).ceil() as usize)
+                .clamp(8, 1 << 16);
             let mut out = Vec::new();
             let mut lo = 0.0;
             let mut f_lo = side(lo);
@@ -184,7 +202,11 @@ const BLOCK: usize = 4096;
 /// surface's edges the first half, a block of edges at a time; the points' heights the second, a point at a time.
 /// `tick` answering true stops it there: none. It does the same reckonings in the same order: the profile is
 /// [`terrain`]'s.
-pub fn terrain_told(surface: &Surface, al: &Alignment, tick: &dyn Fn(u64, u64) -> bool) -> Option<Vec<ProfilePoint>> {
+pub fn terrain_told(
+    surface: &Surface,
+    al: &Alignment,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Option<Vec<ProfilePoint>> {
     let whole = 2 * HALF;
     let all = edges(surface);
     let blocks = all.len().div_ceil(BLOCK) as u64;
@@ -200,7 +222,11 @@ pub fn terrain_told(surface: &Surface, al: &Alignment, tick: &dyn Fn(u64, u64) -
                 return None;
             }
             for &(a, b) in block {
-                if a[0].max(b[0]) < lo[0] || a[0].min(b[0]) > hi[0] || a[1].max(b[1]) < lo[1] || a[1].min(b[1]) > hi[1] {
+                if a[0].max(b[0]) < lo[0]
+                    || a[0].min(b[0]) > hi[0]
+                    || a[1].max(b[1]) < lo[1]
+                    || a[1].min(b[1]) > hi[1]
+                {
                     continue;
                 }
                 for (s, u) in crossings(e, a, b) {
@@ -236,9 +262,7 @@ pub fn terrain_told(surface: &Surface, al: &Alignment, tick: &dyn Fn(u64, u64) -
             let mid = place(0.5 * (s0 + s));
             let gap = mid.place != Place::Inside;
             // Pieces short enough that their sagitta times the plane's slope is within the tolerance.
-            if !gap
-                && let Some(t) = mid.triangle
-            {
+            if !gap && let Some(t) = mid.triangle {
                 let kmax = al
                     .elements
                     .iter()
@@ -250,17 +274,33 @@ pub fn terrain_told(surface: &Surface, al: &Alignment, tick: &dyn Fn(u64, u64) -
                 let n = if kmax == 0.0 || g == 0.0 {
                     1
                 } else {
-                    ((len * len * kmax * g / (8.0 * TOLERANCE)).sqrt().ceil() as usize).clamp(1, 1 << 16)
+                    ((len * len * kmax * g / (8.0 * TOLERANCE)).sqrt().ceil() as usize)
+                        .clamp(1, 1 << 16)
                 };
                 for j in 1..n {
                     let sj = s0 + len * j as f64 / n as f64;
-                    out.push(ProfilePoint { station: sj, z: place(sj).z, gap: false, crossing: false });
+                    out.push(ProfilePoint {
+                        station: sj,
+                        z: place(sj).z,
+                        gap: false,
+                        crossing: false,
+                    });
                 }
             }
             let z = z.or_else(|| place(s).z);
-            out.push(ProfilePoint { station: s, z, gap, crossing: kept[i].1.is_some() });
+            out.push(ProfilePoint {
+                station: s,
+                z,
+                gap,
+                crossing: kept[i].1.is_some(),
+            });
         } else {
-            out.push(ProfilePoint { station: s, z: z.or_else(|| place(s).z), gap: false, crossing: z.is_some() });
+            out.push(ProfilePoint {
+                station: s,
+                z: z.or_else(|| place(s).z),
+                gap: false,
+                crossing: z.is_some(),
+            });
         }
     }
     Some(out)

@@ -125,7 +125,10 @@ impl App {
 
     /// Where the camera stands.
     pub(crate) fn viewpoint(&self) -> Viewpoint {
-        Viewpoint { ceiling: self.spatial.ceiling_view().cloned(), ..self.viewport.viewpoint() }
+        Viewpoint {
+            ceiling: self.spatial.ceiling_view().cloned(),
+            ..self.viewport.viewpoint()
+        }
     }
 
     /// Runs a navigation: a change of the view whose old view the history
@@ -171,7 +174,9 @@ impl App {
     /// the pointer again where it is, so its preview follows (docs/adr/0283).
     /// Kaydır itself is left alone: it reads the drag, not the view.
     pub(crate) fn follow_view(&mut self, before: Viewpoint) {
-        if self.sheets.model_scope().is_some() { return; }
+        if self.sheets.model_scope().is_some() {
+            return;
+        }
         let resumed = self.session.take_resumed();
         if !resumed && self.viewpoint() == before {
             return;
@@ -202,7 +207,8 @@ impl App {
 
     fn restore_viewpoint(&mut self, mut view: Viewpoint) {
         if let Some(doc) = &self.document {
-            self.spatial.set_ceiling_view(&doc.model, view.ceiling.take());
+            self.spatial
+                .set_ceiling_view(&doc.model, view.ceiling.take());
         }
         self.viewport.restore(view);
     }
@@ -646,9 +652,13 @@ mod tests {
         let far = add_point(&mut app, "parsel", 0.0, 0.0);
         viewport(&mut app, Event::Extents);
         let shown = app.viewport.camera.visible_bounds();
-        assert!(shown.min_x > 1_000.0 && shown.min_y > 1_000.0, "the origin is out of the view: {shown:?}");
         assert!(
-            (app.viewport.camera.scale / before.scale - 1.0).abs() < 1e-9 && app.viewport.camera.center == before.center,
+            shown.min_x > 1_000.0 && shown.min_y > 1_000.0,
+            "the origin is out of the view: {shown:?}"
+        );
+        assert!(
+            (app.viewport.camera.scale / before.scale - 1.0).abs() < 1e-9
+                && app.viewport.camera.center == before.center,
             "the same view as without it"
         );
         assert_eq!(
@@ -657,7 +667,11 @@ mod tests {
         );
         assert_eq!(app.last_level, Some(Level::Warn));
         run(&mut app, "view.extentCheck");
-        assert_eq!(app.selection.ids(), [far], "Kapsam denetimi selects what was left out");
+        assert_eq!(
+            app.selection.ids(),
+            [far],
+            "Kapsam denetimi selects what was left out"
+        );
         // Deleted, nothing is left out and nothing is said.
         app.selection.set([far]);
         run(&mut app, "tool.erase");

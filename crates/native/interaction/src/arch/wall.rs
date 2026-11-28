@@ -16,8 +16,8 @@
 //! changed in Öznitelikler; on EK-2's Giydirme Cephe (MM-GIYC-GENEL).
 
 use kentos_commands::{
-    CommandResult, CurtainGrid, NewWall, WallJustify, WallStyleDef, WallsCreate, builtin_wall_styles,
-    fixed_width,
+    CommandResult, CurtainGrid, NewWall, WallJustify, WallStyleDef, WallsCreate,
+    builtin_wall_styles, fixed_width,
 };
 use kentos_geometry_core::geom::wall;
 use kentos_native_application::geometry::shape;
@@ -195,7 +195,11 @@ pub fn typed(ask: Ask, metres: f64, cx: &mut Context<'_>) {
         }
         Ask::Spacing | Ask::Rows => cx.say(
             Level::Warn,
-            format!("Panelin eni ve boyu {} ile {} m arasında olmalı.", CurtainGrid::LEAST, CurtainGrid::MOST),
+            format!(
+                "Panelin eni ve boyu {} ile {} m arasında olmalı.",
+                CurtainGrid::LEAST,
+                CurtainGrid::MOST
+            ),
         ),
     }
 }
@@ -298,8 +302,18 @@ pub fn layer_kind(cx: &Context<'_>, curtain: bool) -> crate::arch_layer::Kind {
 
 /// The command's input: the path as drawn (one bulge per edge, `closed` with the closing one) and the session's
 /// options, on the wall's layer (docs/adr/8008; the active one with the key off or until the layer opens).
-pub fn input(pts: &[Vec2], bulges: &[f64], closed: bool, curtain: bool, cx: &Context<'_>) -> WallsCreate {
-    let style = if curtain { None } else { chosen(cx.memory, cx.doc.settings()) };
+pub fn input(
+    pts: &[Vec2],
+    bulges: &[f64],
+    closed: bool,
+    curtain: bool,
+    cx: &Context<'_>,
+) -> WallsCreate {
+    let style = if curtain {
+        None
+    } else {
+        chosen(cx.memory, cx.doc.settings())
+    };
     let fixed = style
         .as_ref()
         .and_then(|s| fixed_width(&s.components))
@@ -478,12 +492,26 @@ pub fn add_joined(entities: &[kentos_commands::Entity], out: &mut Drawn) {
 }
 
 /// Writes the wall through `cad.walls.create` on its layer (docs/adr/8008); whether it was written.
-pub fn write(pts: &[Vec2], bulges: &[f64], closed: bool, curtain: bool, cx: &mut Context<'_>) -> bool {
+pub fn write(
+    pts: &[Vec2],
+    bulges: &[f64],
+    closed: bool,
+    curtain: bool,
+    cx: &mut Context<'_>,
+) -> bool {
     let kind = layer_kind(cx, curtain);
-    crate::arch_layer::writing(&kind, cx, |_, cx| write_on(pts, bulges, closed, curtain, cx))
+    crate::arch_layer::writing(&kind, cx, |_, cx| {
+        write_on(pts, bulges, closed, curtain, cx)
+    })
 }
 
-fn write_on(pts: &[Vec2], bulges: &[f64], closed: bool, curtain: bool, cx: &mut Context<'_>) -> bool {
+fn write_on(
+    pts: &[Vec2],
+    bulges: &[f64],
+    closed: bool,
+    curtain: bool,
+    cx: &mut Context<'_>,
+) -> bool {
     let input = input(pts, bulges, closed, curtain, cx);
     let result = walls_create::execute(&mut ExecutionContext::new(cx.doc), input);
     match points::written(result, cx) {

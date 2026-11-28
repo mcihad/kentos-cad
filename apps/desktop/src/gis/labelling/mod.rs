@@ -277,7 +277,12 @@ impl App {
     fn labelling_kind(&self, layer: &str) -> Option<&'static str> {
         let doc = self.document.as_ref()?;
         let node = doc.model.layers().get(layer)?;
-        if let Some(t) = node.data.as_ref().and_then(|d| d.geometry.as_ref()).map(|g| g.type_name.to_ascii_uppercase()) {
+        if let Some(t) = node
+            .data
+            .as_ref()
+            .and_then(|d| d.geometry.as_ref())
+            .map(|g| g.type_name.to_ascii_uppercase())
+        {
             return if t.contains("POINT") {
                 Some("point")
             } else if t.contains("LINE") || t.contains("CURVE") {
@@ -288,10 +293,15 @@ impl App {
                 None
             };
         }
-        let objects: Vec<&str> = doc.model.by_layer(layer).take(200).map(|e| e.kind()).collect();
-        ["point", "polyline", "polygon"]
-            .into_iter()
-            .find(|k| objects.iter().filter(|o| **o == *k).count() * 2 > objects.len() && !objects.is_empty())
+        let objects: Vec<&str> = doc
+            .model
+            .by_layer(layer)
+            .take(200)
+            .map(|e| e.kind())
+            .collect();
+        ["point", "polyline", "polygon"].into_iter().find(|k| {
+            objects.iter().filter(|o| **o == *k).count() * 2 > objects.len() && !objects.is_empty()
+        })
     }
 
     /// A point layer's symbol colour for the preview (T25); none for another layer.
@@ -301,7 +311,10 @@ impl App {
         }
         let node = self.document.as_ref()?.model.layers().get(layer)?;
         let palette = crate::viewport::palette(self.canvas());
-        Some(palette.resolve(&node.style.color).map_or_else(|| crate::view::hex_color(&node.style.color), crate::view::rgba_color))
+        Some(palette.resolve(&node.style.color).map_or_else(
+            || crate::view::hex_color(&node.style.color),
+            crate::view::rgba_color,
+        ))
     }
 
     /// The style a layer's single label starts from: its own, else its objects' most common kind's default.
@@ -336,7 +349,8 @@ impl App {
                     None
                 }
             });
-        let mut counts: Vec<(&'static str, usize)> = table_kind.map(|k| vec![(k, 1)]).unwrap_or_default();
+        let mut counts: Vec<(&'static str, usize)> =
+            table_kind.map(|k| vec![(k, 1)]).unwrap_or_default();
         for e in doc.model.by_layer(layer).take(2000) {
             let kind = e.kind();
             match counts.iter_mut().find(|(k, _)| *k == kind) {
@@ -360,16 +374,19 @@ impl App {
                 s
             })
         })
-            .unwrap_or_else(|| LabelStyle {
-                placement: LabelPlacement::Center,
-                size: 10.0,
-                ..LabelStyle::default()
-            })
+        .unwrap_or_else(|| LabelStyle {
+            placement: LabelPlacement::Center,
+            size: 10.0,
+            ..LabelStyle::default()
+        })
     }
 
     /// The window over a layer, its labelling as the drawing has it.
     fn labelling_window(&self, layer: String, tab: Tab) -> Window {
-        let node = self.document.as_ref().and_then(|d| d.model.layers().get(&layer));
+        let node = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(&layer));
         let labels = node.and_then(|n| n.style.labels.clone());
         // A layer with no labelling and no label style labels nothing (docs/adr/9311): the window opens on Yok.
         let unset = if node.is_some_and(|n| n.style.label.is_some()) {
@@ -424,7 +441,13 @@ impl App {
         let Some(doc) = &self.document else {
             return Task::none();
         };
-        let Some(node) = doc.model.layers().get(&w.layer).filter(|n| n.data.is_some()).cloned() else {
+        let Some(node) = doc
+            .model
+            .layers()
+            .get(&w.layer)
+            .filter(|n| n.data.is_some())
+            .cloned()
+        else {
             return Task::none();
         };
         let asked = ROWS_ASKED.fetch_add(1, Ordering::Relaxed);
@@ -432,11 +455,14 @@ impl App {
         w.rows = None;
         let settings = doc.model.settings().clone();
         let styles = doc.model.styles().clone();
-        iced_runtime::task::blocking(move |mut out: iced::futures::channel::mpsc::Sender<Message>| {
-            let read = rows::read(&node, &settings, &styles).map(Arc::new);
-            let done = msg(Event::Rows(asked, read));
-            let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, done));
-        })
+        iced_runtime::task::blocking(
+            move |mut out: iced::futures::channel::mpsc::Sender<Message>| {
+                let read = rows::read(&node, &settings, &styles).map(Arc::new);
+                let done = msg(Event::Rows(asked, read));
+                let _ =
+                    iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, done));
+            },
+        )
     }
 
     /// Etiketler (`layer.labels`): the window over `layer`, else the active layer; a data layer's first rows asked for
@@ -494,7 +520,11 @@ impl App {
             return;
         };
         let n = doc.model.by_layer(&w.layer).count();
-        let bound = doc.model.layers().get(&w.layer).is_some_and(|l| l.data.is_some());
+        let bound = doc
+            .model
+            .layers()
+            .get(&w.layer)
+            .is_some_and(|l| l.data.is_some());
         let what = match w.mode {
             LabelsMode::Rules => format!("{} sınıf", w.classes.len()),
             LabelsMode::Off => "etiketsiz".to_owned(),
@@ -530,20 +560,30 @@ impl App {
             let scale = self.viewport.camera.upright().scale;
             if bound {
                 match &w.rows {
-                    None => lines.push((Kind::Info, "Örnekler için kaynağın ilk satırları okunuyor…".to_owned())),
-                    Some(Err(why)) => lines.push((Kind::Warn, format!("Örnek satırlar okunamadı: {why}"))),
+                    None => lines.push((
+                        Kind::Info,
+                        "Örnekler için kaynağın ilk satırları okunuyor…".to_owned(),
+                    )),
+                    Some(Err(why)) => {
+                        lines.push((Kind::Warn, format!("Örnek satırlar okunamadı: {why}")))
+                    }
                     Some(Ok(sample)) => {
                         let mut plain = node.clone();
                         plain.data = None;
                         let read = sample.by_layer(&node.id).count();
-                        lines.push((Kind::Info, format!("Örnekler tablonun ilk {read} satırından.")));
+                        lines.push((
+                            Kind::Info,
+                            format!("Örnekler tablonun ilk {read} satırından."),
+                        ));
                         lines.extend(examples::example_lines(sample, &plain, read, scale));
                         w.sample = examples::texts(sample, &plain).first.map(|(text, _)| text);
                     }
                 }
             } else {
                 lines.extend(examples::example_lines(&doc.model, &node, n, scale));
-                w.sample = examples::texts(&doc.model, &node).first.map(|(text, _)| text);
+                w.sample = examples::texts(&doc.model, &node)
+                    .first
+                    .map(|(text, _)| text);
             }
             let unknown = candidates::unknown_fields(&doc.model, &node);
             if !unknown.is_empty() {
@@ -801,13 +841,14 @@ impl App {
             window: Some(window),
             layers: Some(vec![w.layer.clone()]),
         };
-        let draft_node = match layers_labels::plan(&ExecutionContext::new(&mut doc.model), &w.input()) {
-            CommandResult::Completed { output, .. } => output.node,
-            CommandResult::Failed { error }
-            | CommandResult::Conflict { error }
-            | CommandResult::NeedsInput { error } => return vec![(Kind::Warn, error.message)],
-            _ => return Vec::new(),
-        };
+        let draft_node =
+            match layers_labels::plan(&ExecutionContext::new(&mut doc.model), &w.input()) {
+                CommandResult::Completed { output, .. } => output.node,
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => return vec![(Kind::Warn, error.message)],
+                _ => return Vec::new(),
+            };
         // A data layer's labels are placed on the rows the view read, in a document of their own (data_labels.rs,
         // docs/adr/9186): counted there, the layer without its binding. Before the view holds them, the window says so
         // and its examples' rows give the candidates.
@@ -836,7 +877,11 @@ impl App {
         };
         // The bands round the parts are the ones the drawing is drawn with: no file is read on this thread. A data
         // layer's read has none.
-        let bands = if bound { Vec::new() } else { self.bands.given(target) };
+        let bands = if bound {
+            Vec::new()
+        } else {
+            self.bands.given(target)
+        };
         let draft = labels_report::Draft {
             layer: Some(&draft_node),
             texts: Some(texts),
@@ -1105,8 +1150,9 @@ impl App {
         let mut frame = Frame::new(TITLE).push(head).fill(body);
         // The example as the map draws it (docs/adr/9186): the first object's text in the current class's look.
         if let Some(text) = w.sample.clone().filter(|_| w.mode != LabelsMode::Off) {
-            let colors = crate::labels::colors(self.canvas(), &crate::viewport::palette(self.canvas()))
-                .in_mode(self.color_mode());
+            let colors =
+                crate::labels::colors(self.canvas(), &crate::viewport::palette(self.canvas()))
+                    .in_mode(self.color_mode());
             let font = self
                 .document
                 .as_ref()
@@ -1114,7 +1160,13 @@ impl App {
                 .unwrap_or(kentos_commands::DrawingFont::Barlow);
             frame = frame.push(words::field(
                 PREVIEW,
-                crate::labels::example(text, w.current().clone(), colors, font, self.labelling_point_symbol(&w.layer)),
+                crate::labels::example(
+                    text,
+                    w.current().clone(),
+                    colors,
+                    font,
+                    self.labelling_point_symbol(&w.layer),
+                ),
                 None,
             ));
         }

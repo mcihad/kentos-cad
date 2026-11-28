@@ -261,7 +261,9 @@ pub(super) fn lays_of(
             recipe: {
                 let mut recipe = placed_recipe(doc, &r.recipe, &mx, inst.mirror);
                 let rise = r.storey.saturating_sub(inst.storey.unwrap_or(0));
-                recipe.level = crate::modules_edit::storey_level(&order, inst.level.as_deref(), rise).flatten();
+                recipe.level =
+                    crate::modules_edit::storey_level(&order, inst.level.as_deref(), rise)
+                        .flatten();
                 recipe
             },
             record: inst

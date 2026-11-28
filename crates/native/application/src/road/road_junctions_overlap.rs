@@ -4,7 +4,8 @@
 //! `fixtures/commands/v1/road.junctions.overlap.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CorridorDef, JunctionOverlapAt, JunctionsOverlap, JunctionsOverlapped, MOST_OVERLAP_CELLS,
+    CommandResult, CommandWarning, CorridorDef, JunctionOverlapAt, JunctionsOverlap,
+    JunctionsOverlapped, MOST_OVERLAP_CELLS,
 };
 use kentos_domain::Document;
 use kentos_road::junction::{Located, shared_cells, shared_grid};
@@ -21,7 +22,10 @@ fn bad(words: String, path: &str) -> Stop {
     fail(codes::INVALID_OVERLAP, words, path)
 }
 
-fn answer(doc: &Document, input: &JunctionsOverlap) -> Result<(JunctionsOverlapped, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &Document,
+    input: &JunctionsOverlap,
+) -> Result<(JunctionsOverlapped, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_junctions(), &input.junction, "junction")?;
     let (report, mut warnings) = common::read(doc, def)?;
@@ -35,12 +39,31 @@ fn answer(doc: &Document, input: &JunctionsOverlap) -> Result<(JunctionsOverlapp
         }
         None => {
             for leg in &report.legs {
-                let on: Vec<&CorridorDef> = own.iter().filter(|c| c.alignment == leg.alignment).collect();
-                let name = alignments::alignments(doc).iter().find(|a| a.id == leg.alignment).map_or("", |a| a.name.as_str());
+                let on: Vec<&CorridorDef> = own
+                    .iter()
+                    .filter(|c| c.alignment == leg.alignment)
+                    .collect();
+                let name = alignments::alignments(doc)
+                    .iter()
+                    .find(|a| a.id == leg.alignment)
+                    .map_or("", |a| a.name.as_str());
                 match on.as_slice() {
                     [one] => chosen.push(one),
-                    [] => return Err(bad(format!("“{name}” aksının koridoru yok; corridors ile verin."), "corridors")),
-                    _ => return Err(bad(format!("“{name}” aksının {} koridoru var; hangisi, corridors ile verin.", on.len()), "corridors")),
+                    [] => {
+                        return Err(bad(
+                            format!("“{name}” aksının koridoru yok; corridors ile verin."),
+                            "corridors",
+                        ));
+                    }
+                    _ => {
+                        return Err(bad(
+                            format!(
+                                "“{name}” aksının {} koridoru var; hangisi, corridors ile verin.",
+                                on.len()
+                            ),
+                            "corridors",
+                        ));
+                    }
                 }
             }
         }
@@ -50,26 +73,52 @@ fn answer(doc: &Document, input: &JunctionsOverlap) -> Result<(JunctionsOverlapp
         made.push(corridors::make(doc, c, false)?);
     }
     if chosen.len() != 2 {
-        return Err(bad(format!("Kolların sırasıyla iki koridor verin; {} verildi.", chosen.len()), "corridors"));
+        return Err(bad(
+            format!(
+                "Kolların sırasıyla iki koridor verin; {} verildi.",
+                chosen.len()
+            ),
+            "corridors",
+        ));
     }
     for (k, (c, leg)) in chosen.iter().zip(&report.legs).enumerate() {
         if c.alignment != leg.alignment {
-            return Err(bad(format!("“{}” koridoru kavşağın {}. kolunun aksında değil.", c.name, k + 1), &format!("corridors[{k}]")));
+            return Err(bad(
+                format!(
+                    "“{}” koridoru kavşağın {}. kolunun aksında değil.",
+                    c.name,
+                    k + 1
+                ),
+                &format!("corridors[{k}]"),
+            ));
         }
     }
     if input.primary > 1 {
-        return Err(bad("Kavşağın alanının sayıldığı kol (primary) 0 ya da 1 olmalı.".into(), "primary"));
+        return Err(bad(
+            "Kavşağın alanının sayıldığı kol (primary) 0 ya da 1 olmalı.".into(),
+            "primary",
+        ));
     }
     if !(input.cell.is_finite() && input.cell > 0.0) {
-        return Err(bad("Izgara aralığı (cell) 0'dan büyük olmalı.".into(), "cell"));
+        return Err(bad(
+            "Izgara aralığı (cell) 0'dan büyük olmalı.".into(),
+            "cell",
+        ));
     }
     let (p, q) = (input.primary as usize, 1 - input.primary as usize);
     let Some(ground) = made[q].sampler.surface.as_ref() else {
-        return Err(bad(format!("“{}” koridorunun arazi yüzeyi kurulamıyor.", chosen[q].name), "corridors"));
+        return Err(bad(
+            format!("“{}” koridorunun arazi yüzeyi kurulamıyor.", chosen[q].name),
+            "corridors",
+        ));
     };
     for c in &chosen {
         if corridors::stale(doc, c) {
-            let now = doc.road_alignments().iter().find(|a| a.id == c.alignment).map_or(0, |a| a.revision);
+            let now = doc
+                .road_alignments()
+                .iter()
+                .find(|a| a.id == c.alignment)
+                .map_or(0, |a| a.revision);
             warnings.push(CommandWarning {
                 code: codes::CORRIDOR_STALE.into(),
                 message: format!(
@@ -80,11 +129,20 @@ fn answer(doc: &Document, input: &JunctionsOverlap) -> Result<(JunctionsOverlapp
             });
         }
     }
-    let (a, b) = (Located::new(&made[p].built.triangles), Located::new(&made[q].built.triangles));
+    let (a, b) = (
+        Located::new(&made[p].built.triangles),
+        Located::new(&made[q].built.triangles),
+    );
     if let Some((_, size)) = shared_grid(&a, &b, input.cell)
         && size[0].saturating_mul(size[1]) > MOST_OVERLAP_CELLS
     {
-        return Err(bad(format!("Aralık çok küçük: {} × {} hücre; en çok {MOST_OVERLAP_CELLS}.", size[0], size[1]), "cell"));
+        return Err(bad(
+            format!(
+                "Aralık çok küçük: {} × {} hücre; en çok {MOST_OVERLAP_CELLS}.",
+                size[0], size[1]
+            ),
+            "cell",
+        ));
     }
     let cells = shared_cells(&a, &b, input.cell);
     let area_of = input.cell * input.cell;
@@ -99,12 +157,24 @@ fn answer(doc: &Document, input: &JunctionsOverlap) -> Result<(JunctionsOverlapp
         }
         let d = c.a - c.b;
         sum += d.abs();
-        if largest.as_ref().is_none_or(|l| d.abs() > l.difference.abs()) {
-            largest = Some(JunctionOverlapAt { x: c.at[0], y: c.at[1], primary: c.a, secondary: c.b, difference: d });
+        if largest
+            .as_ref()
+            .is_none_or(|l| d.abs() > l.difference.abs())
+        {
+            largest = Some(JunctionOverlapAt {
+                x: c.at[0],
+                y: c.at[1],
+                primary: c.a,
+                secondary: c.b,
+                difference: d,
+            });
         }
         for (k, m) in [p, q].into_iter().enumerate() {
             if let Some(f) = made[m].sampler.alignment.core.locate(c.at).nearest {
-                ranges[k] = [ranges[k][0].min(f.at.station), ranges[k][1].max(f.at.station)];
+                ranges[k] = [
+                    ranges[k][0].min(f.at.station),
+                    ranges[k][1].max(f.at.station),
+                ];
             }
         }
     }
@@ -145,13 +215,19 @@ fn answer(doc: &Document, input: &JunctionsOverlap) -> Result<(JunctionsOverlapp
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &JunctionsOverlap) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &JunctionsOverlap) -> CommandResult<JunctionsOverlapped> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &JunctionsOverlap,
+) -> CommandResult<JunctionsOverlapped> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -159,11 +235,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &JunctionsOverlap) -> CommandResul
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: JunctionsOverlap) -> CommandResult<JunctionsOverlapped> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: JunctionsOverlap,
+) -> CommandResult<JunctionsOverlapped> {
     plan(cx, &input)
 }
 
 /// The overlap for a window, or why it does not read; and the overlapping cells' centres.
-pub fn preview(doc: &Document, input: &JunctionsOverlap) -> Result<(JunctionsOverlapped, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &JunctionsOverlap,
+) -> Result<(JunctionsOverlapped, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

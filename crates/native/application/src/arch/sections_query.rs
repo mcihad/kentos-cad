@@ -34,7 +34,10 @@ pub fn state_of(
     }
 }
 
-pub(crate) fn current_entities(doc: &Document, fields: &kentos_commands::ViewMarkFields) -> Option<Vec<Entity>> {
+pub(crate) fn current_entities(
+    doc: &Document,
+    fields: &kentos_commands::ViewMarkFields,
+) -> Option<Vec<Entity>> {
     let drawn = sections::draw_mark(doc, fields)?;
     // The block's objects name their layers by id; the drawing names them by their EK-4 names.
     let ids = |name: &str| -> String {
@@ -48,15 +51,17 @@ pub(crate) fn current_entities(doc: &Document, fields: &kentos_commands::ViewMar
             .find(|l| l.name.eq_ignore_ascii_case(name))
             .map_or(id, |l| l.id.clone())
     };
-    Some(drawn
-        .entities
-        .into_iter()
-        .map(|mut e| {
-            let id = ids(&e.base().layer_id);
-            e.base_mut().layer_id = id;
-            e
-        })
-        .collect())
+    Some(
+        drawn
+            .entities
+            .into_iter()
+            .map(|mut e| {
+                let id = ids(&e.base().layer_id);
+                e.base_mut().layer_id = id;
+                e
+            })
+            .collect(),
+    )
 }
 
 /// Every section mark of the drawing with its section's state, in the drawing's order; then the blocks of marks that
@@ -86,12 +91,10 @@ pub fn rows(doc: &Document) -> Vec<BuildingSectionRow> {
     for b in doc.blocks() {
         if (b.name.starts_with("MM-XXXX-KESIT") || b.name.starts_with("MM-XXXX-GORUNUS"))
             && !seen.contains(&b.id)
-            && b.description
-                .as_deref()
-                .is_some_and(|d| {
-                    d.contains("KentOS kesit işaretinden çıkarır")
-                        || d.contains("KentOS görünüş işaretinden çıkarır")
-                })
+            && b.description.as_deref().is_some_and(|d| {
+                d.contains("KentOS kesit işaretinden çıkarır")
+                    || d.contains("KentOS görünüş işaretinden çıkarır")
+            })
         {
             out.push(BuildingSectionRow {
                 mark: None,

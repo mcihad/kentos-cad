@@ -192,7 +192,9 @@ impl Calendar {
 /// The 2026 calendar, read once.
 pub fn calendar() -> Option<&'static Calendar> {
     static CALENDAR: OnceLock<Option<Calendar>> = OnceLock::new();
-    CALENDAR.get_or_init(|| Calendar::read(CALENDAR_JSON)).as_ref()
+    CALENDAR
+        .get_or_init(|| Calendar::read(CALENDAR_JSON))
+        .as_ref()
 }
 
 #[cfg(test)]
@@ -205,12 +207,22 @@ mod tests {
         assert_eq!(inputs().len(), 15);
         for i in inputs() {
             assert!(names.insert(i.name.as_str()), "{} twice", i.name);
-            assert!(i.name.bytes().all(|b| b.is_ascii_lowercase() || b == b'_'), "{}", i.name);
+            assert!(
+                i.name.bytes().all(|b| b.is_ascii_lowercase() || b == b'_'),
+                "{}",
+                i.name
+            );
             assert!(!i.label.is_empty());
             assert_eq!(i.kind == Kind::Choice, !i.choices.is_empty(), "{}", i.name);
         }
         let use_ = input("kullanim").map(|i| (i.kind, i.choices.clone()));
-        assert_eq!(use_, Some((Kind::Choice, vec!["konut".into(), "ticaret+konut".into(), "diğer".into()])));
+        assert_eq!(
+            use_,
+            Some((
+                Kind::Choice,
+                vec!["konut".into(), "ticaret+konut".into(), "diğer".into()]
+            ))
+        );
         assert!(input("yok").is_none());
     }
 
@@ -223,7 +235,20 @@ mod tests {
         }
         let (y, m, d): (u32, u32, u32) = (y.parse().ok()?, m.parse().ok()?, d.parse().ok()?);
         let leap = y % 4 == 0 && (y % 100 != 0 || y % 400 == 0);
-        let days = [31, if leap { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        let days = [
+            31,
+            if leap { 29 } else { 28 },
+            31,
+            30,
+            31,
+            30,
+            31,
+            31,
+            30,
+            31,
+            30,
+            31,
+        ];
         (1..=12).contains(&m).then_some(())?;
         (1..=days[m as usize - 1]).contains(&d).then_some((y, m, d))
     }
@@ -232,11 +257,18 @@ mod tests {
     fn the_calendar_reads_with_its_dates_in_order_and_every_rule_cited() {
         let c = calendar().expect("data/kapsam-2026.json reads");
         assert_eq!((c.format.as_str(), c.version), ("kentos.digitalScope", 1));
-        let force: Vec<_> = c.acts.iter().map(|a| (a.id.as_str(), a.in_force.as_str())).collect();
+        let force: Vec<_> = c
+            .acts
+            .iter()
+            .map(|a| (a.id.as_str(), a.in_force.as_str()))
+            .collect();
         assert_eq!(force, [("hazirlama", "2027-09-01"), ("epys", "2028-09-01")]);
         assert_eq!(c.acts[0].source.cite(), "Md. 16");
         assert_eq!(c.acts[1].source.cite(), "e-PYS Md. 8");
-        assert_eq!((c.scope.detached.most_storeys, c.scope.detached.most_area), (2, 200.0));
+        assert_eq!(
+            (c.scope.detached.most_storeys, c.scope.detached.most_area),
+            (2, 200.0)
+        );
         assert_eq!(c.scope.law_articles.articles, ["4", "26", "27"]);
         assert_eq!(c.uses.residential, ["konut", "ticaret+konut"]);
         assert!(day(&c.uses.from).is_some());
@@ -244,24 +276,38 @@ mod tests {
         let ids: Vec<_> = c.obligations.iter().map(|o| o.id.as_str()).collect();
         assert_eq!(ids, ["pdfa", "ifc", "modelden-pdfa", "epys"]);
         for o in &c.obligations {
-            assert!(!o.sources.is_empty() && o.sources.iter().all(|s| !s.cite().is_empty()), "{}", o.id);
+            assert!(
+                !o.sources.is_empty() && o.sources.iter().all(|s| !s.cite().is_empty()),
+                "{}",
+                o.id
+            );
             let mut last = None;
             for (i, st) in o.stages.iter().enumerate() {
                 let at = day(&st.from).unwrap_or_else(|| panic!("{}: {}", o.id, st.from));
                 assert!(last < Some(at), "{}: stages in order", o.id);
                 last = Some(at);
                 let open = st.province.is_none() && st.municipality.is_none() && st.area.is_none();
-                assert_eq!(open, i + 1 == o.stages.len(), "{}: only the last stage is every building", o.id);
+                assert_eq!(
+                    open,
+                    i + 1 == o.stages.len(),
+                    "{}: only the last stage is every building",
+                    o.id
+                );
                 assert!(st.source.cite().starts_with("Geçici Md. 1/1-"), "{}", o.id);
             }
             for other in o.ends_with.iter().map(|e| &e.obligation).chain(&o.follows) {
                 assert!(c.obligation(other).is_some(), "{}: no {other}", o.id);
             }
         }
-        let pdfa = c.obligation("pdfa").map(|o| o.stages.iter().map(|s| s.from.as_str()).collect::<Vec<_>>());
+        let pdfa = c
+            .obligation("pdfa")
+            .map(|o| o.stages.iter().map(|s| s.from.as_str()).collect::<Vec<_>>());
         assert_eq!(pdfa, Some(vec!["2027-09-01", "2029-03-01"]));
         let ifc = c.obligation("ifc").map(|o| {
-            o.stages.iter().map(|s| (s.from.as_str(), s.province, s.municipality, s.area)).collect::<Vec<_>>()
+            o.stages
+                .iter()
+                .map(|s| (s.from.as_str(), s.province, s.municipality, s.area))
+                .collect::<Vec<_>>()
         });
         assert_eq!(
             ifc,
@@ -272,14 +318,25 @@ mod tests {
                 ("2032-09-01", None, None, None),
             ])
         );
-        assert_eq!(c.obligation("epys").and_then(|o| o.decision.as_ref()).map(|d| d.source.cite()).as_deref(), Some("e-PYS Md. 4/4"));
+        assert_eq!(
+            c.obligation("epys")
+                .and_then(|o| o.decision.as_ref())
+                .map(|d| d.source.cite())
+                .as_deref(),
+            Some("e-PYS Md. 4/4")
+        );
     }
 
     /// The standards package carries a copy of the calendar, so that its rule runs where KentOS does not hand it the
     /// data (a cloud job, a test): the copy is this file, byte for byte.
     #[test]
     fn the_standards_package_carries_this_calendar() {
-        let copy = include_str!("../../../../catalog/standards/dijital-proje/src/dijital_proje/data/kapsam-2026.json");
-        assert_eq!(copy, CALENDAR_JSON, "copy data/kapsam-2026.json to the package");
+        let copy = include_str!(
+            "../../../../catalog/standards/dijital-proje/src/dijital_proje/data/kapsam-2026.json"
+        );
+        assert_eq!(
+            copy, CALENDAR_JSON,
+            "copy data/kapsam-2026.json to the package"
+        );
     }
 }

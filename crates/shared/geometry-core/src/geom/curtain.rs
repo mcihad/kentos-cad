@@ -31,7 +31,10 @@ pub fn frame_span(lines: &[f64], k: usize, face: f64) -> (f64, f64) {
 /// A cell's span along its line between the frames on the grid lines `k` and `k + 1`: from one frame's face to the
 /// other's.
 pub fn cell_span(lines: &[f64], k: usize, face: f64) -> (f64, f64) {
-    (frame_span(lines, k, face).1, frame_span(lines, k + 1, face).0)
+    (
+        frame_span(lines, k, face).1,
+        frame_span(lines, k + 1, face).0,
+    )
 }
 
 /// The curtain grid a wall's spec carries (its `curtain` JSON): its largest mullion spacing and its frame's face; none
@@ -82,21 +85,26 @@ pub fn fill(
     let middle = (s0 + s1) / 2.0;
     // Its cells in `lines` from `lo` to `hi`: those whose middles lie in `[lo, hi]`, else the one `at` is in; with
     // `from_first` from the first cell up to the one `hi` is in (the last that begins below it).
-    let chosen = |lines: &[f64], lo: f64, hi: f64, at: f64, from_first: bool| -> Option<(usize, usize)> {
-        let cells = lines.len().checked_sub(1)?;
-        if from_first {
-            return Some((0, (0..cells).rfind(|&k| lines[k] < hi - EPS).unwrap_or(0)));
-        }
-        let mid = |k: usize| {
-            let (a, b) = cell_span(lines, k, face);
-            (a + b) / 2.0
+    let chosen =
+        |lines: &[f64], lo: f64, hi: f64, at: f64, from_first: bool| -> Option<(usize, usize)> {
+            let cells = lines.len().checked_sub(1)?;
+            if from_first {
+                return Some((0, (0..cells).rfind(|&k| lines[k] < hi - EPS).unwrap_or(0)));
+            }
+            let mid = |k: usize| {
+                let (a, b) = cell_span(lines, k, face);
+                (a + b) / 2.0
+            };
+            let inside: Vec<usize> = (0..cells)
+                .filter(|&k| mid(k) >= lo - EPS && mid(k) <= hi + EPS)
+                .collect();
+            match (inside.first(), inside.last()) {
+                (Some(&a), Some(&b)) => Some((a, b)),
+                _ => (0..cells)
+                    .find(|&k| at >= lines[k] - EPS && at <= lines[k + 1] + EPS)
+                    .map(|k| (k, k)),
+            }
         };
-        let inside: Vec<usize> = (0..cells).filter(|&k| mid(k) >= lo - EPS && mid(k) <= hi + EPS).collect();
-        match (inside.first(), inside.last()) {
-            (Some(&a), Some(&b)) => Some((a, b)),
-            _ => (0..cells).find(|&k| at >= lines[k] - EPS && at <= lines[k + 1] + EPS).map(|k| (k, k)),
-        }
-    };
     let mut start = 0.0;
     for i in 0..stretches {
         let (a, b) = (pts[i], pts[(i + 1) % n]);
@@ -111,7 +119,12 @@ pub fn fill(
             if x1 - x0 <= EPS || z1 - z0 <= EPS {
                 return None;
             }
-            return Some(Fill { s0: start + x0, s1: start + x1, sill: if floor { 0.0 } else { z0 }, head: z1 });
+            return Some(Fill {
+                s0: start + x0,
+                s1: start + x1,
+                sill: if floor { 0.0 } else { z0 },
+                head: z1,
+            });
         }
         start += length;
     }
@@ -154,17 +167,39 @@ mod tests {
         };
         // A 0.90 m door round 2.25, its head 2.10: the second bay; from the floor up to the row 2.10 is in (the third,
         // 2.00–3.00): its head that row's top, 2.95. Asked 2.00, on a grid line: the second row's top, 1.975.
-        near(fill(&wall, false, grid, 3.0, (1.8, 2.7), (0.0, 2.1), true), (1.525, 2.975, 0.0, 2.95));
-        near(fill(&wall, false, grid, 3.0, (1.8, 2.7), (0.0, 2.0), true), (1.525, 2.975, 0.0, 1.975));
+        near(
+            fill(&wall, false, grid, 3.0, (1.8, 2.7), (0.0, 2.1), true),
+            (1.525, 2.975, 0.0, 2.95),
+        );
+        near(
+            fill(&wall, false, grid, 3.0, (1.8, 2.7), (0.0, 2.0), true),
+            (1.525, 2.975, 0.0, 1.975),
+        );
         // A 2 m window round 3.00 from 0.90 to 2.10: the middles 2.25 and 3.75, two bays; the middle row.
-        near(fill(&wall, false, grid, 3.0, (2.0, 4.0), (0.9, 2.1), false), (1.525, 4.475, 1.025, 1.975));
+        near(
+            fill(&wall, false, grid, 3.0, (2.0, 4.0), (0.9, 2.1), false),
+            (1.525, 4.475, 1.025, 1.975),
+        );
         // A small one covering no cell's middle across: the row its middle (1.30) is in.
-        near(fill(&wall, false, grid, 3.0, (0.2, 0.8), (1.2, 1.4), false), (0.05, 1.475, 1.025, 1.975));
+        near(
+            fill(&wall, false, grid, 3.0, (0.2, 0.8), (1.2, 1.4), false),
+            (0.05, 1.475, 1.025, 1.975),
+        );
         // On an L's second stretch (3 m north from (6, 0)): two bays of 1.50 there, from 6.00 along the line.
-        let l = [Vec2::new(0.0, 0.0), Vec2::new(6.0, 0.0), Vec2::new(6.0, 3.0)];
-        near(fill(&l, false, grid, 3.0, (7.9, 8.6), (0.0, 2.1), true), (7.525, 8.95, 0.0, 2.95));
+        let l = [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(6.0, 0.0),
+            Vec2::new(6.0, 3.0),
+        ];
+        near(
+            fill(&l, false, grid, 3.0, (7.9, 8.6), (0.0, 2.1), true),
+            (7.525, 8.95, 0.0, 2.95),
+        );
         // Off the wall: none.
-        assert_eq!(fill(&wall, false, grid, 3.0, (7.0, 8.0), (0.0, 2.1), true), None);
+        assert_eq!(
+            fill(&wall, false, grid, 3.0, (7.0, 8.0), (0.0, 2.1), true),
+            None
+        );
     }
 
     #[test]

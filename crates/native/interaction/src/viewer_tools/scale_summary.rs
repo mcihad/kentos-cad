@@ -23,7 +23,11 @@ pub struct ScaleRow {
 }
 
 fn row(label: &'static str, value: String, detail: impl Into<String>) -> ScaleRow {
-    ScaleRow { label, value, detail: detail.into() }
+    ScaleRow {
+        label,
+        value,
+        detail: detail.into(),
+    }
 }
 
 /// A factor and its parts per million from 1: `0.99960000 (−400.0 ppm)`.
@@ -71,7 +75,10 @@ pub fn rows(settings: &ProjectSettings, center: Vec2, screen: Option<f64>) -> Ve
         out.push(row(
             "Projeksiyon ölçeği",
             "Ulaşılmıyor".to_owned(),
-            format!("Ekranın ortası {} sisteminin ulaştığı yerin dışında.", named.title),
+            format!(
+                "Ekranın ortası {} sisteminin ulaştığı yerin dışında.",
+                named.title
+            ),
         ));
         return out;
     };
@@ -125,12 +132,17 @@ mod tests {
     }
 
     fn value(rows: &[ScaleRow], label: &str) -> Option<String> {
-        rows.iter().find(|r| r.label == label).map(|r| r.value.clone())
+        rows.iter()
+            .find(|r| r.label == label)
+            .map(|r| r.value.clone())
     }
 
     /// The number before the parentheses.
     fn number(text: &str) -> f64 {
-        text.split_whitespace().next().and_then(|n| n.parse().ok()).expect("a number")
+        text.split_whitespace()
+            .next()
+            .and_then(|n| n.parse().ok())
+            .expect("a number")
     }
 
     #[test]
@@ -147,18 +159,36 @@ mod tests {
         assert_eq!(value(&rows, "Ekran").as_deref(), Some("1:2.345"));
         let k = number(&value(&rows, "Projeksiyon ölçeği").expect("k"));
         assert!((k - 1.000_030_76).abs() <= 1e-8, "{k}");
-        assert!(value(&rows, "Projeksiyon ölçeği").expect("k").ends_with("(+30.8 ppm)"));
+        assert!(
+            value(&rows, "Projeksiyon ölçeği")
+                .expect("k")
+                .ends_with("(+30.8 ppm)")
+        );
         let hf = number(&value(&rows, "Yükseklik çarpanı").expect("height factor"));
         assert!((hf - 0.999_866_942_0).abs() <= 1e-8, "{hf}");
-        assert!(value(&rows, "Yükseklik çarpanı").expect("hf").ends_with("(−133.1 ppm)"));
+        assert!(
+            value(&rows, "Yükseklik çarpanı")
+                .expect("hf")
+                .ends_with("(−133.1 ppm)")
+        );
         let c = number(&value(&rows, "Birleşik çarpan").expect("combined"));
         assert!((c - 1.000_030_76 * 0.999_866_942_0).abs() <= 2e-8, "{c}");
-        assert_eq!(value(&rows, "Ölçülen uzunluklar").as_deref(), Some("Düzlemde kalır"));
+        assert_eq!(
+            value(&rows, "Ölçülen uzunluklar").as_deref(),
+            Some("Düzlemde kalır")
+        );
         // The labels in their order: what changes the drawing comes first, what only measures last.
         let labels: Vec<&str> = rows.iter().map(|r| r.label).collect();
         assert_eq!(
             labels,
-            ["Çizim ölçeği", "Ekran", "Projeksiyon ölçeği", "Yükseklik çarpanı", "Birleşik çarpan", "Ölçülen uzunluklar"]
+            [
+                "Çizim ölçeği",
+                "Ekran",
+                "Projeksiyon ölçeği",
+                "Yükseklik çarpanı",
+                "Birleşik çarpan",
+                "Ölçülen uzunluklar"
+            ]
         );
     }
 
@@ -169,15 +199,31 @@ mod tests {
         );
         let r = rows(&no_height, Vec2::new(500_000.0, 4_540_000.0), None);
         let labels: Vec<&str> = r.iter().map(|r| r.label).collect();
-        assert_eq!(labels, ["Çizim ölçeği", "Projeksiyon ölçeği", "Ölçülen uzunluklar"]);
+        assert_eq!(
+            labels,
+            ["Çizim ölçeği", "Projeksiyon ölçeği", "Ölçülen uzunluklar"]
+        );
         // On the central meridian a TM30 with k₀ = 1 has scale 1.
-        assert_eq!(value(&r, "Projeksiyon ölçeği").as_deref(), Some("1.00000000 (+0.0 ppm)"));
-        let local = settings(r#"{"srid":0,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":100}"#);
+        assert_eq!(
+            value(&r, "Projeksiyon ölçeği").as_deref(),
+            Some("1.00000000 (+0.0 ppm)")
+        );
+        let local = settings(
+            r#"{"srid":0,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":100}"#,
+        );
         let r = rows(&local, Vec2::new(0.0, 0.0), Some(50.0));
-        assert_eq!(value(&r, "Koordinat sistemi").as_deref(), Some("Yok (yerel)"));
-        let geographic = settings(r#"{"srid":4326,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":1000}"#);
+        assert_eq!(
+            value(&r, "Koordinat sistemi").as_deref(),
+            Some("Yok (yerel)")
+        );
+        let geographic = settings(
+            r#"{"srid":4326,"lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":1000}"#,
+        );
         let r = rows(&geographic, Vec2::new(30.0, 40.0), None);
-        assert_eq!(value(&r, "Projeksiyon ölçeği").as_deref(), Some("Tek değer yok"));
+        assert_eq!(
+            value(&r, "Projeksiyon ölçeği").as_deref(),
+            Some("Tek değer yok")
+        );
     }
 
     #[test]

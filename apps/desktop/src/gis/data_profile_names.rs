@@ -187,7 +187,9 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        let Some(mut m) = profile_files::find_mapping(Shelf::of(&doc.model, drawing.as_deref()), &name) else {
+        let Some(mut m) =
+            profile_files::find_mapping(Shelf::of(&doc.model, drawing.as_deref()), &name)
+        else {
             self.say(Level::Error, format!("“{name}” eşlemesi okunamadı."));
             return;
         };
@@ -222,49 +224,56 @@ impl App {
     pub(crate) fn data_profile_names_part<'a>(&'a self, names: &'a Names) -> Element<'a, Message> {
         let msg = |e: Event| Message::Gis(gis::Event::DataProfile(e));
         #[allow(clippy::type_complexity)]
-        let (lines, rows, problems): (Vec<Element<'_, Message>>, Vec<Vec<String>>, Vec<Option<String>>) =
-            match &names.answer {
-                Err(why) if why.is_empty() => (Vec::new(), Vec::new(), Vec::new()),
-                Err(why) => (vec![words::text_line(Kind::Warn, why.clone())], Vec::new(), Vec::new()),
-                Ok(a) => {
-                    let line = if a.holds {
-                        words::text_line(
-                            Kind::Ok,
-                            format!(
-                                "Kurumdaki adı profilinkinden başka olan alan: {} / {}; her alanın sınıfında kendi adı var.",
-                                a.renamed,
-                                a.rows.len()
-                            ),
-                        )
-                    } else {
-                        words::text_line(
-                            Kind::Warn,
-                            format!(
-                                "{} alanın adı bu biçimle yazılamıyor, {} alan başka bir alanın adına düşüyor: bu adları eşlemede yazın.",
-                                a.unfit, a.clashes
-                            ),
-                        )
-                    };
-                    let rows = a
-                        .rows
-                        .iter()
-                        .map(|r| {
-                            vec![
-                                r.class_title.clone(),
-                                r.field.clone(),
-                                match r.problem {
-                                    Some(NameProblem::Unfit) => "— yazılamıyor".to_owned(),
-                                    Some(NameProblem::Clash) => format!("{} — çakışıyor", r.name),
-                                    None => r.name.clone(),
-                                },
-                                source_words(r.source).to_owned(),
-                            ]
-                        })
-                        .collect();
-                    let problems = a.rows.iter().map(|r| r.message.clone()).collect();
-                    (vec![line], rows, problems)
-                }
-            };
+        let (lines, rows, problems): (
+            Vec<Element<'_, Message>>,
+            Vec<Vec<String>>,
+            Vec<Option<String>>,
+        ) = match &names.answer {
+            Err(why) if why.is_empty() => (Vec::new(), Vec::new(), Vec::new()),
+            Err(why) => (
+                vec![words::text_line(Kind::Warn, why.clone())],
+                Vec::new(),
+                Vec::new(),
+            ),
+            Ok(a) => {
+                let line = if a.holds {
+                    words::text_line(
+                        Kind::Ok,
+                        format!(
+                            "Kurumdaki adı profilinkinden başka olan alan: {} / {}; her alanın sınıfında kendi adı var.",
+                            a.renamed,
+                            a.rows.len()
+                        ),
+                    )
+                } else {
+                    words::text_line(
+                        Kind::Warn,
+                        format!(
+                            "{} alanın adı bu biçimle yazılamıyor, {} alan başka bir alanın adına düşüyor: bu adları eşlemede yazın.",
+                            a.unfit, a.clashes
+                        ),
+                    )
+                };
+                let rows = a
+                    .rows
+                    .iter()
+                    .map(|r| {
+                        vec![
+                            r.class_title.clone(),
+                            r.field.clone(),
+                            match r.problem {
+                                Some(NameProblem::Unfit) => "— yazılamıyor".to_owned(),
+                                Some(NameProblem::Clash) => format!("{} — çakışıyor", r.name),
+                                None => r.name.clone(),
+                            },
+                            source_words(r.source).to_owned(),
+                        ]
+                    })
+                    .collect();
+                let problems = a.rows.iter().map(|r| r.message.clone()).collect();
+                (vec![line], rows, problems)
+            }
+        };
         let can_write = self.data_profile_form_writable();
         let hint = names
             .chosen

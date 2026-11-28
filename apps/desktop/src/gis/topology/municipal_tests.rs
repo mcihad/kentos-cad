@@ -7,13 +7,13 @@
 use crate::app::{App, Message};
 use crate::gis;
 
-
 const DRAWING: &str = include_str!("../../../../../fixtures/interaction/v1/topology-rules.kcad");
 
 /// The drawing in a 1000 × 700 view, checked.
 fn checked() -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let area = iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0));

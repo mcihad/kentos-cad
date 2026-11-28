@@ -75,7 +75,11 @@ pub(crate) fn lower_inverse(l: &[f64], n: usize) -> Vec<f64> {
 
 /// A group's L⁻¹ from its baselines' own covariances and its cross blocks, times `scale`; none when the whole is not
 /// positive definite.
-pub(crate) fn whitener(own: &[[f64; 6]], cross: &[(usize, usize, [f64; 9])], scale: f64) -> Option<Vec<f64>> {
+pub(crate) fn whitener(
+    own: &[[f64; 6]],
+    cross: &[(usize, usize, [f64; 9])],
+    scale: f64,
+) -> Option<Vec<f64>> {
     let n = 3 * own.len();
     let mut a = vec![0.0; n * n];
     for (k, c) in own.iter().enumerate() {
@@ -104,8 +108,15 @@ mod tests {
 
     #[test]
     fn the_whitener_inverts_the_factor() {
-        let own = [[4e-6, 1e-6, 0.0, 9e-6, 0.0, 16e-6], [4e-6, 0.0, 0.0, 4e-6, 0.0, 4e-6]];
-        let cross = [(0usize, 1usize, [1e-6, 0.0, 0.0, 0.0, 2e-6, 0.0, 0.0, 0.0, 1e-6])];
+        let own = [
+            [4e-6, 1e-6, 0.0, 9e-6, 0.0, 16e-6],
+            [4e-6, 0.0, 0.0, 4e-6, 0.0, 4e-6],
+        ];
+        let cross = [(
+            0usize,
+            1usize,
+            [1e-6, 0.0, 0.0, 0.0, 2e-6, 0.0, 0.0, 0.0, 1e-6],
+        )];
         let w = whitener(&own, &cross, 2.0).expect("positive definite");
         // W·Σ·Wᵀ = I.
         let n = 6;
@@ -132,11 +143,18 @@ mod tests {
                         s += w[i * n + p] * a[p * n + q] * w[j * n + q];
                     }
                 }
-                assert!((s - if i == j { 1.0 } else { 0.0 }).abs() < 1e-9, "{i} {j}: {s}");
+                assert!(
+                    (s - if i == j { 1.0 } else { 0.0 }).abs() < 1e-9,
+                    "{i} {j}: {s}"
+                );
             }
         }
         // Correlations too strong for the deviations: not positive definite.
-        let bad = [(0usize, 1usize, [4e-6, 0.0, 0.0, 0.0, 6e-6, 0.0, 0.0, 0.0, 8e-6])];
+        let bad = [(
+            0usize,
+            1usize,
+            [4e-6, 0.0, 0.0, 0.0, 6e-6, 0.0, 0.0, 0.0, 8e-6],
+        )];
         assert!(whitener(&own, &bad, 1.0).is_none());
     }
 }

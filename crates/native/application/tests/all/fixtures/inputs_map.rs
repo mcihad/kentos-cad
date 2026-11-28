@@ -93,12 +93,24 @@ impl Input for kentos_commands::SurveyPoints {
                 "work.a.at.x",
             ) => Some(&mut at.x),
             // docs/adr/4100: a leg's zenith angle; docs/adr/4500: a back sight's.
-            (S::Traverse { heights: Some(h), .. }, _) if path.starts_with("work.heights.") => {
+            (
+                S::Traverse {
+                    heights: Some(h), ..
+                },
+                _,
+            ) if path.starts_with("work.heights.") => {
                 if let Some(i) = path.strip_prefix("work.heights.zeniths[") {
-                    return h.zeniths.get_mut(i.strip_suffix(']')?.parse::<usize>().ok()?);
+                    return h
+                        .zeniths
+                        .get_mut(i.strip_suffix(']')?.parse::<usize>().ok()?);
                 }
-                let i = path.strip_prefix("work.heights.back[")?.strip_suffix("].zenith")?;
-                h.back.get_mut(i.parse::<usize>().ok()?)?.as_mut().map(|b| &mut b.zenith)
+                let i = path
+                    .strip_prefix("work.heights.back[")?
+                    .strip_suffix("].zenith")?;
+                h.back
+                    .get_mut(i.parse::<usize>().ok()?)?
+                    .as_mut()
+                    .map(|b| &mut b.zenith)
             }
             (S::Traverse { angles, .. }, _) => {
                 let i = path.strip_prefix("work.angles[")?.strip_suffix(']')?;
@@ -167,7 +179,11 @@ impl Input for kentos_commands::PointCloudsPlace {
             (kentos_commands::CloudPlaceBy::Euler { yaw, .. }, "place.yaw") => Some(yaw),
             (kentos_commands::CloudPlaceBy::AxisAngle { angle, .. }, "place.angle") => Some(angle),
             (kentos_commands::CloudPlaceBy::Matrix { matrix }, p) => {
-                let i = p.strip_prefix("place.matrix[")?.strip_suffix(']')?.parse::<usize>().ok()?;
+                let i = p
+                    .strip_prefix("place.matrix[")?
+                    .strip_suffix(']')?
+                    .parse::<usize>()
+                    .ok()?;
                 matrix.get_mut(i)
             }
             _ => None,

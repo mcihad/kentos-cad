@@ -701,9 +701,10 @@ pub fn extract_watched(
     shown: &dyn Fn(&DimensionEntity, &str, &str, f64) -> String,
     watch: &Watch,
 ) -> Result<Extracted, Refusal> {
-    watch
-        .total
-        .store(drawings.iter().map(|d| d.objects.len()).sum(), Ordering::Relaxed);
+    watch.total.store(
+        drawings.iter().map(|d| d.objects.len()).sum(),
+        Ordering::Relaxed,
+    );
     if let Some((at, words)) = kentos_contracts::extraction_recipe_problem(recipe) {
         return Err(("invalid_extraction_recipe", at, words));
     }
@@ -756,7 +757,11 @@ pub fn extract_watched(
         for (n, (uid, e)) in d.objects.iter().enumerate() {
             watch.done.fetch_add(1, Ordering::Relaxed);
             if n % WATCH_EVERY == 0 && watch.stop.load(Ordering::Relaxed) {
-                return Err((CANCELLED, "recipe".into(), "Veri çıkarımı durduruldu; tablo yazılmadı.".into()));
+                return Err((
+                    CANCELLED,
+                    "recipe".into(),
+                    "Veri çıkarımı durduruldu; tablo yazılmadı.".into(),
+                ));
             }
             if let Some(&k) = item_of.get(uid) {
                 if !placed_arrays[k] {

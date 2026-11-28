@@ -33,10 +33,14 @@ impl Document {
         hatch_patterns: Vec<kentos_contracts::HatchPatternDef>,
         label: &str,
     ) {
-        if self.settings.line_types == line_types && self.settings.hatch_patterns == hatch_patterns {
+        if self.settings.line_types == line_types && self.settings.hatch_patterns == hatch_patterns
+        {
             return;
         }
-        let before = Arc::new((self.settings.line_types.clone(), self.settings.hatch_patterns.clone()));
+        let before = Arc::new((
+            self.settings.line_types.clone(),
+            self.settings.hatch_patterns.clone(),
+        ));
         let after = Arc::new((line_types, hatch_patterns));
         self.record(vec![Op::PatternTables { before, after }], label);
     }

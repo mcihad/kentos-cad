@@ -137,10 +137,13 @@ pub fn number<'a, M: Clone + 'a>(
         .on_input(on_input)
         .on_submit(on_submit);
     match unit_text {
-        Some(u) => row![field, container(unit(u)).width(typography::scaled(UNIT_SLOT))]
-            .spacing(6)
-            .align_y(Center)
-            .into(),
+        Some(u) => row![
+            field,
+            container(unit(u)).width(typography::scaled(UNIT_SLOT))
+        ]
+        .spacing(6)
+        .align_y(Center)
+        .into(),
         None => field.into(),
     }
 }

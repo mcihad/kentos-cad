@@ -150,7 +150,11 @@ impl PickObjects {
         };
         let kind = kind_name(e);
         let words = if let Some(layer) = &self.layer {
-            let name = cx.doc.layers().get(layer).map_or(layer.as_str(), |l| l.name.as_str());
+            let name = cx
+                .doc
+                .layers()
+                .get(layer)
+                .map_or(layer.as_str(), |l| l.name.as_str());
             format!(
                 "{}: yalnız “{name}” katmanının nesneleri alınır; tıklanan nesne ({kind}) başka katmanda.",
                 self.field

@@ -263,7 +263,12 @@ fn crosses_itself(pts: &[Vec2]) -> bool {
     let meets = |(a, b): (Vec2, Vec2), (c, d): (Vec2, Vec2)| {
         let (d1, d2) = (orient2d(a, b, c), orient2d(a, b, d));
         let (d3, d4) = (orient2d(c, d, a), orient2d(c, d, b));
-        (d1 > 0.0) != (d2 > 0.0) && (d3 > 0.0) != (d4 > 0.0) && d1 != 0.0 && d2 != 0.0 && d3 != 0.0 && d4 != 0.0
+        (d1 > 0.0) != (d2 > 0.0)
+            && (d3 > 0.0) != (d4 > 0.0)
+            && d1 != 0.0
+            && d2 != 0.0
+            && d3 != 0.0
+            && d4 != 0.0
     };
     (0..n).any(|i| {
         (i + 2..n)
@@ -280,9 +285,25 @@ mod tests {
     #[test]
     fn a_bow_tie_boundary_is_found() {
         let v = |x: f64, y: f64| Vec2::new(x, y);
-        assert!(crosses_itself(&[v(0.0, 0.0), v(10.0, 10.0), v(10.0, 0.0), v(0.0, 10.0)]));
-        assert!(!crosses_itself(&[v(0.0, 0.0), v(10.0, 0.0), v(10.0, 10.0), v(0.0, 10.0)]));
+        assert!(crosses_itself(&[
+            v(0.0, 0.0),
+            v(10.0, 10.0),
+            v(10.0, 0.0),
+            v(0.0, 10.0)
+        ]));
+        assert!(!crosses_itself(&[
+            v(0.0, 0.0),
+            v(10.0, 0.0),
+            v(10.0, 10.0),
+            v(0.0, 10.0)
+        ]));
         assert!(!crosses_itself(&[v(0.0, 0.0), v(10.0, 0.0), v(5.0, 8.0)]));
-        assert!(!crosses_itself(&[v(0.0, 0.0), v(10.0, 0.0), v(10.0, 10.0), v(5.0, 3.0), v(0.0, 10.0)]));
+        assert!(!crosses_itself(&[
+            v(0.0, 0.0),
+            v(10.0, 0.0),
+            v(10.0, 10.0),
+            v(5.0, 3.0),
+            v(0.0, 10.0)
+        ]));
     }
 }

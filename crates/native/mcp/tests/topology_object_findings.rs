@@ -11,10 +11,23 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn an_object_s_findings_over_mcp_are_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.topology.check.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "uids: A3 ve A5'in bulguları").unwrap().clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-topology-object-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.topology.check.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "uids: A3 ve A5'in bulguları")
+        .unwrap()
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-topology-object-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -27,19 +40,45 @@ fn an_object_s_findings_over_mcp_are_the_case_s() {
     let r = call(&mut server, "cad.topology.check", args);
     assert_eq!(r["isError"], false, "{r}");
     let got = &r["structuredContent"]["output"];
-    let keys = |v: &Value| v["findings"].as_array().unwrap().iter().map(|f| f["key"].clone()).collect::<Vec<_>>();
+    let keys = |v: &Value| {
+        v["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|f| f["key"].clone())
+            .collect::<Vec<_>>()
+    };
     assert_eq!(keys(got), keys(want));
-    for key in ["total", "open", "exceptions", "rules", "objects", "complete"] {
+    for key in [
+        "total",
+        "open",
+        "exceptions",
+        "rules",
+        "objects",
+        "complete",
+    ] {
         assert_eq!(got[key], want[key], "{key}");
     }
     let uids = cases["setup"]["uids"].as_array().unwrap();
     assert!(got["findings"].as_array().unwrap().iter().all(|f| {
-        f["uids"].as_array().unwrap().iter().any(|u| u == &uids[2] || u == &uids[4])
+        f["uids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|u| u == &uids[2] || u == &uids[4])
     }));
     // An id not in the drawing: refused, its place said.
-    let r = call(&mut server, "cad.topology.check", json!({"drawing": drawing, "uids": [uids[0], "0192f5a9-1414-7000-8000-000000000009"]}));
+    let r = call(
+        &mut server,
+        "cad.topology.check",
+        json!({"drawing": drawing, "uids": [uids[0], "0192f5a9-1414-7000-8000-000000000009"]}),
+    );
     assert_eq!(r["isError"], true, "{r}");
     let e = &r["structuredContent"]["error"];
-    assert_eq!((&e["code"], &e["path"]), (&json!("entity_not_found"), &json!("uids[1]")), "{r}");
+    assert_eq!(
+        (&e["code"], &e["path"]),
+        (&json!("entity_not_found"), &json!("uids[1]")),
+        "{r}"
+    );
     let _ = std::fs::remove_file(path);
 }

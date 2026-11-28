@@ -72,7 +72,9 @@ pub fn end_tangent(e: &Shape) -> Option<EndTangent> {
                 dir: segment_tangent(pts[k - 1], pts[0], bulge_at(bulges.as_deref(), k - 1), true),
             })
         }
-        Shape::Polyline { pts, .. } if pts.len() >= 2 && dist(pts[pts.len() - 2], pts[pts.len() - 1]) <= 1e-9 => {
+        Shape::Polyline { pts, .. }
+            if pts.len() >= 2 && dist(pts[pts.len() - 2], pts[pts.len() - 1]) <= 1e-9 =>
+        {
             None
         }
         Shape::Line { a, b } if dist(*a, *b) > 1e-9 => {

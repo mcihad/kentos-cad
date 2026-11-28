@@ -6,8 +6,8 @@
 //! their objects. One undo step, all or nothing. The shared cases are `fixtures/commands/v1/cad.profiles.carry.json`.
 
 use kentos_commands::{
-    CarriedClass, CatalogClassChangeKind as K, CommandResult, CommandWarning, DataProfile, ProfilesCarried,
-    ProfilesCarry, ProfilesCompare,
+    CarriedClass, CatalogClassChangeKind as K, CommandResult, CommandWarning, DataProfile,
+    ProfilesCarried, ProfilesCarry, ProfilesCompare,
 };
 use kentos_domain::{Document, Slot};
 
@@ -44,13 +44,22 @@ fn prepare(doc: &Document, input: &ProfilesCarry) -> Result<Plan, Stop> {
     };
     let (old, new) = crate::profiles_compare::catalogs(doc, &compare)?;
     let report = crate::profiles_compare::report(doc, &old, &new);
-    let field = input.field.clone().unwrap_or_else(|| kentos_commands::DEFAULT_CODE_FIELD.to_owned());
+    let field = input
+        .field
+        .clone()
+        .unwrap_or_else(|| kentos_commands::DEFAULT_CODE_FIELD.to_owned());
     let layers = doc.layers();
     let mut classes = Vec::new();
     for row in &report.classes {
-        let Some(from) = row.from.as_ref() else { continue };
-        let Some(c) = old.classes.iter().find(|k| k.id == *from) else { continue };
-        let Place::Layer(layer) = find(layers.nodes(), &c.layer) else { continue };
+        let Some(from) = row.from.as_ref() else {
+            continue;
+        };
+        let Some(c) = old.classes.iter().find(|k| k.id == *from) else {
+            continue;
+        };
+        let Place::Layer(layer) = find(layers.nodes(), &c.layer) else {
+            continue;
+        };
         let objects: Vec<(Slot, &kentos_commands::Entity)> = doc
             .entities_with_uids()
             .filter(|(_, e)| e.base().layer_id == layer)
@@ -64,35 +73,61 @@ fn prepare(doc: &Document, input: &ProfilesCarry) -> Result<Plan, Stop> {
             let target = match row.kind {
                 K::Retired | K::Added => None,
                 K::Split => code_of(e, &field).and_then(|code| {
-                    row.to.iter().find(|t| new.classes.iter().any(|k| k.id == **t && k.codes.contains(&code))).cloned()
+                    row.to
+                        .iter()
+                        .find(|t| {
+                            new.classes
+                                .iter()
+                                .any(|k| k.id == **t && k.codes.contains(&code))
+                        })
+                        .cloned()
                 }),
                 _ => row.to.first().cloned(),
             };
             // An object already on its target's layer does not move.
             let target = target.filter(|t| {
-                new.classes.iter().find(|k| k.id == *t).is_none_or(|k| find(layers.nodes(), &k.layer) != Place::Layer(layer.clone()))
+                new.classes
+                    .iter()
+                    .find(|k| k.id == *t)
+                    .is_none_or(|k| find(layers.nodes(), &k.layer) != Place::Layer(layer.clone()))
             });
             each.push((slot, target));
         }
         let moved = each.iter().filter(|(_, t)| t.is_some()).count();
-        let left = if matches!(row.kind, K::Retired | K::Split) { each.len() - moved } else { 0 };
+        let left = if matches!(row.kind, K::Retired | K::Split) {
+            each.len() - moved
+        } else {
+            0
+        };
         let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
         classes.push((
-            CarriedClass { from: from.clone(), to: row.to.clone(), kind: row.kind, moved: count(moved), left: count(left) },
+            CarriedClass {
+                from: from.clone(),
+                to: row.to.clone(),
+                kind: row.kind,
+                moved: count(moved),
+                left: count(left),
+            },
             each,
         ));
         // A layer the objects leave must be open.
         if moved > 0 && layers.is_locked(&layer) {
             return Err(Stop::failed(error(
                 codes::LAYER_LOCKED,
-                format!("“{}” katmanı kilitli; nesneleri yeni kataloğa taşınamaz. Kilidi Katmanlar panelinden açın.", c.title),
+                format!(
+                    "“{}” katmanı kilitli; nesneleri yeni kataloğa taşınamaz. Kilidi Katmanlar panelinden açın.",
+                    c.title
+                ),
                 None,
             )));
         }
     }
     // A layer they go to must be open too, and its path must lead to a layer (not through one, not to a group).
     for k in &new.classes {
-        let receives = classes.iter().any(|(_, each)| each.iter().any(|(_, t)| t.as_deref() == Some(k.id.as_str())));
+        let receives = classes.iter().any(|(_, each)| {
+            each.iter()
+                .any(|(_, t)| t.as_deref() == Some(k.id.as_str()))
+        });
         if receives && let Place::Blocked(_) = find(layers.nodes(), &k.layer) {
             return Err(Stop::failed(error(
                 codes::LAYER_REFUSED,
@@ -110,7 +145,10 @@ fn prepare(doc: &Document, input: &ProfilesCarry) -> Result<Plan, Stop> {
         {
             return Err(Stop::failed(error(
                 codes::LAYER_LOCKED,
-                format!("“{}” sınıfının katmanı kilitli; nesneler ona taşınamaz. Kilidi Katmanlar panelinden açın.", k.title),
+                format!(
+                    "“{}” sınıfının katmanı kilitli; nesneler ona taşınamaz. Kilidi Katmanlar panelinden açın.",
+                    k.title
+                ),
                 None,
             )));
         }
@@ -134,8 +172,17 @@ fn left_words(p: &Plan) -> Option<String> {
         .iter()
         .filter(|(c, _)| c.left > 0)
         .map(|(c, _)| {
-            let title = p.old.classes.iter().find(|k| k.id == c.from).map_or(c.from.as_str(), |k| k.title.as_str());
-            let why = if c.kind == K::Retired { "yeni katalogda yok" } else { "kodu yeni sınıflarda yok" };
+            let title = p
+                .old
+                .classes
+                .iter()
+                .find(|k| k.id == c.from)
+                .map_or(c.from.as_str(), |k| k.title.as_str());
+            let why = if c.kind == K::Retired {
+                "yeni katalogda yok"
+            } else {
+                "kodu yeni sınıflarda yok"
+            };
             format!("{title} ({why}) {}", c.left)
         })
         .collect();
@@ -155,14 +202,21 @@ fn output(p: &Plan, layers: Vec<String>, fields: Vec<String>, revision: String) 
 
 fn left_warning(p: &Plan) -> Vec<CommandWarning> {
     left_words(p)
-        .map(|m| CommandWarning { code: codes::CATALOG_OBJECTS_LEFT.into(), message: m, path: None })
+        .map(|m| CommandWarning {
+            code: codes::CATALOG_OBJECTS_LEFT.into(),
+            message: m,
+            path: None,
+        })
         .into_iter()
         .collect()
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ProfilesCarry) -> CommandResult<()> {
     match prepare(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -178,8 +232,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesCarry) -> CommandResult<P
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ProfilesCarry) -> CommandResult<ProfilesCarried> {
-    crate::call::recorded(cx, kentos_commands::CAD_PROFILES_CARRY, kentos_commands::CAD_PROFILES_CARRY_VERSION, input, write)
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProfilesCarry,
+) -> CommandResult<ProfilesCarried> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_PROFILES_CARRY,
+        kentos_commands::CAD_PROFILES_CARRY_VERSION,
+        input,
+        write,
+    )
 }
 
 /// The carrying, one recorded step.
@@ -193,7 +256,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: ProfilesCarry) -> CommandResult<P
     let done = cx.doc.transact(STEP, |doc| -> Result<(), Stop> {
         // The receiving classes' layers and their missing fields, in the new catalog's order.
         for k in &p.new.classes {
-            let receives = p.classes.iter().any(|(_, each)| each.iter().any(|(_, t)| t.as_deref() == Some(k.id.as_str())));
+            let receives = p.classes.iter().any(|(_, each)| {
+                each.iter()
+                    .any(|(_, t)| t.as_deref() == Some(k.id.as_str()))
+            });
             if !receives {
                 continue;
             }
@@ -207,9 +273,15 @@ fn write(cx: &mut ExecutionContext<'_>, input: ProfilesCarry) -> CommandResult<P
         for (_, each) in &p.classes {
             for (slot, target) in each {
                 let Some(t) = target else { continue };
-                let Some(k) = p.new.classes.iter().find(|k| k.id == *t) else { continue };
-                let Place::Layer(layer) = find(doc.layers().nodes(), &k.layer) else { continue };
-                let Some(mut e) = doc.get(*slot).cloned() else { continue };
+                let Some(k) = p.new.classes.iter().find(|k| k.id == *t) else {
+                    continue;
+                };
+                let Place::Layer(layer) = find(doc.layers().nodes(), &k.layer) else {
+                    continue;
+                };
+                let Some(mut e) = doc.get(*slot).cloned() else {
+                    continue;
+                };
                 e.base_mut().layer_id = layer;
                 changes.push((*slot, e));
             }
@@ -221,5 +293,8 @@ fn write(cx: &mut ExecutionContext<'_>, input: ProfilesCarry) -> CommandResult<P
         return stop.into();
     }
     warnings.extend(left_warning(&p));
-    CommandResult::Completed { output: output(&p, made, fields, cx.doc.revision().to_string()), warnings }
+    CommandResult::Completed {
+        output: output(&p, made, fields, cx.doc.revision().to_string()),
+        warnings,
+    }
 }

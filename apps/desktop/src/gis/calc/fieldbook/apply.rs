@@ -258,9 +258,31 @@ impl crate::app::App {
         let fore = fore.map(str::to_owned);
         // The heights' columns (docs/adr/4100) and the back sights' (docs/adr/4500) are left to the window.
         let blank = String::new;
-        let first = [String::new(), angle(0), leg(0), blank(), blank(), blank(), blank(), blank(), blank()];
+        let first = [
+            String::new(),
+            angle(0),
+            leg(0),
+            blank(),
+            blank(),
+            blank(),
+            blank(),
+            blank(),
+            blank(),
+        ];
         let rows: Vec<[String; 9]> = (1..n - 1)
-            .map(|i| [t.stations[i].clone(), angle(i), leg(i), blank(), blank(), blank(), blank(), blank(), blank()])
+            .map(|i| {
+                [
+                    t.stations[i].clone(),
+                    angle(i),
+                    leg(i),
+                    blank(),
+                    blank(),
+                    blank(),
+                    blank(),
+                    blank(),
+                    blank(),
+                ]
+            })
             .collect();
         let last_angle = if fore.is_some() {
             angle(n - 1)

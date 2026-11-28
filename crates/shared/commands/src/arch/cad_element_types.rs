@@ -35,7 +35,11 @@ pub enum ElementTypeRefused {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum ElementTypesOperation {
     /// Yeni tip: a new type `name` (its id `id`, else from its name) for `element` elements, version 1. Its values are

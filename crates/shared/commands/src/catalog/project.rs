@@ -2,7 +2,11 @@
 //! was cut into, so the compiler builds no single function of 19 000 lines (docs/adr/8054 §4).
 
 use super::*;
-use crate::{CommitResult, PROJECT_ACCESS_REVOKE, PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES, PROJECT_CHANGES_VERSION, PROJECT_SHARE, PROJECT_SHARE_VERSION, ProjectAccessChange, ProjectAccessRevoke, ProjectChanges, ProjectPermission, ProjectShare};
+use crate::{
+    CommitResult, PROJECT_ACCESS_REVOKE, PROJECT_ACCESS_REVOKE_VERSION, PROJECT_CHANGES,
+    PROJECT_CHANGES_VERSION, PROJECT_SHARE, PROJECT_SHARE_VERSION, ProjectAccessChange,
+    ProjectAccessRevoke, ProjectChanges, ProjectPermission, ProjectShare,
+};
 use serde_json::json;
 
 pub(super) fn descriptors() -> Vec<CommandDescriptor> {

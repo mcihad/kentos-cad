@@ -1,7 +1,7 @@
 //! Exact bytes, deletion/replacement, canonical aliases and bounded memory are observed independently of rendering.
 use super::*;
+use serde_json::{Value, json};
 use std::path::Path;
-use serde_json::{json, Value};
 fn source(root: &Path, image: bool, aliases: bool, second: bool) -> Document {
     let fx: Value = serde_json::from_str(include_str!(
         "../../../../fixtures/sheet/v1/source-snapshot.json"

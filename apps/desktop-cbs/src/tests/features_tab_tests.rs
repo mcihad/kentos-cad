@@ -1,9 +1,9 @@
 //! features › tests's tests that need the CBS module's surfaces (its project's bottom tabs and panels; docs/adr/9199
 //! §4.14): moved from the core's gis/features/tests.rs with the module's package; the work they test is the core's.
 
-use crate::features::{Event, Show};
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
+use crate::features::{Event, Show};
 use crate::gis;
 
 fn app_with_table() -> App {
@@ -133,8 +133,8 @@ fn app_with_secret() -> App {
         "id": "parsel-formu", "name": "Parsel formu", "layer": "parsel",
         "draft": {"revision": 1, "items": [{"type": "field", "id": "alan", "field": "Alan", "redact": true}]}
     }]);
-    let snapshot =
-        kentos_commands::DocumentSnapshotV1::from_json(&value.to_string()).expect("the drawing reads");
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&value.to_string())
+        .expect("the drawing reads");
     let (mut app, _) = App::boot(None);
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
@@ -148,7 +148,8 @@ fn headers(app: &App) -> Vec<String> {
 }
 
 #[test]
-fn a_hidden_column_is_out_of_the_table_the_copy_and_the_file_and_a_redacted_field_is_out_of_the_last_two() {
+fn a_hidden_column_is_out_of_the_table_the_copy_and_the_file_and_a_redacted_field_is_out_of_the_last_two()
+ {
     use crate::features::outgoing::ColumnsEvent as C;
     let mut app = app_with_secret();
     // The table shows the redacted field; what leaves it does not carry it (docs/adr/0546 §1).
@@ -164,12 +165,26 @@ fn a_hidden_column_is_out_of_the_table_the_copy_and_the_file_and_a_redacted_fiel
     let (sheet, left_out) = app.features_sheet().expect("rows");
     assert_eq!(left_out, ["Tapu alanı"]);
     let names: Vec<&str> = sheet.columns.iter().map(|c| c.name.as_str()).collect();
-    assert_eq!(names, ["Tür", "Ada", "Parsel", "Kullanım", "Ruhsat", "Tescil", "Not"]);
+    assert_eq!(
+        names,
+        [
+            "Tür",
+            "Ada",
+            "Parsel",
+            "Kullanım",
+            "Ruhsat",
+            "Tescil",
+            "Not"
+        ]
+    );
     // A column the reader hides leaves the table, the copy and the file.
     ev(&mut app, Event::Columns(C::Toggle("Parsel".into())));
     assert!(!headers(&app).contains(&"Parsel".to_owned()));
     let (text, _, _) = app.features_copy_text().expect("rows");
-    assert_eq!(text.lines().next(), Some("Ada\tKullanım\tRuhsat\tTescil\tNot"));
+    assert_eq!(
+        text.lines().next(),
+        Some("Ada\tKullanım\tRuhsat\tTescil\tNot")
+    );
     let (sheet, _) = app.features_sheet().expect("rows");
     assert!(sheet.columns.iter().all(|c| c.name != "Parsel"));
     // The copy is what the table shows: a search narrows its rows (and the lines under the header).
@@ -178,7 +193,11 @@ fn a_hidden_column_is_out_of_the_table_the_copy_and_the_file_and_a_redacted_fiel
     assert_eq!((count, text.lines().count()), (2, 3));
     // A hidden column is no column to paste into: Yapıştır reads the shown ones.
     let rows = app.feature_rows(app.document.as_ref().expect("a drawing"));
-    assert!(rows.visible.iter().all(|&j| rows.table.columns[j].key.as_deref() != Some("Parsel")));
+    assert!(
+        rows.visible
+            .iter()
+            .all(|&j| rows.table.columns[j].key.as_deref() != Some("Parsel"))
+    );
     ev(&mut app, Event::Columns(C::ShowAll));
     assert!(headers(&app).contains(&"Parsel".to_owned()));
 }
@@ -193,8 +212,14 @@ fn statistics_and_charts_over_the_tables_rows_follow_its_filter_and_leave_redact
     let (objects, summaries) = app.statistics_seen().expect("the tab is open");
     assert_eq!(objects, "2 nesne");
     // No summary of the redacted field, the others are there.
-    assert!(summaries.iter().all(|s| !s.starts_with("Tapu alanı")), "{summaries:?}");
-    assert!(summaries.iter().any(|s| s.starts_with("Kullanım")), "{summaries:?}");
+    assert!(
+        summaries.iter().all(|s| !s.starts_with("Tapu alanı")),
+        "{summaries:?}"
+    );
+    assert!(
+        summaries.iter().any(|s| s.starts_with("Kullanım")),
+        "{summaries:?}"
+    );
     // The table's filter changes: the tab follows; its own Göster takes the whole layer.
     ev(&mut app, Event::Search(String::new()));
     assert_eq!(app.statistics_seen().expect("open").0, "5 nesne");
@@ -234,13 +259,34 @@ fn kinds_app(keep: bool) -> App {
         .map(|e| kentos_domain::Slot(e.base().id))
         .collect();
     let values = [
-        ["9007199254740993", "2024-03-01T10:20:30.5+03:00", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001", r#"{"kot":[1.25,12345678901234567890]}"#, "QUJD"],
-        ["-9223372036854775808", "2024-03-01T07:20:30Z", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002", "[]", ""],
-        ["12", "2023-12-31T23:59:59.999999999-05:00", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003", r#""ç""#, "a2VudG9zIGNhZA=="],
+        [
+            "9007199254740993",
+            "2024-03-01T10:20:30.5+03:00",
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+            r#"{"kot":[1.25,12345678901234567890]}"#,
+            "QUJD",
+        ],
+        [
+            "-9223372036854775808",
+            "2024-03-01T07:20:30Z",
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+            "[]",
+            "",
+        ],
+        [
+            "12",
+            "2023-12-31T23:59:59.999999999-05:00",
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+            r#""ç""#,
+            "a2VudG9zIGNhZA==",
+        ],
     ];
     for (slot, row) in slots.iter().zip(values) {
         let mut e = model.get(*slot).cloned().expect("a parcel");
-        for (name, v) in ["Kimlik", "Ölçüm anı", "Cihaz", "Ek bilgi", "İmza"].into_iter().zip(row) {
+        for (name, v) in ["Kimlik", "Ölçüm anı", "Cihaz", "Ek bilgi", "İmza"]
+            .into_iter()
+            .zip(row)
+        {
             e.base_mut().attrs.insert(name.into(), v.into());
         }
         model.update(*slot, e);
@@ -291,7 +337,11 @@ fn the_table_shows_and_sorts_the_new_kinds() {
     sort_by(&mut app, "Kimlik");
     let sorted = rows(&app);
     let at = |s: &str| sorted.iter().position(|r| r.contains(s)).expect(s);
-    assert!(at("-9223372036854775808") < at("| 12 | 31.12.2023") && at("| 12 | 31.12.2023") < at("9007199254740993"), "{sorted:?}");
+    assert!(
+        at("-9223372036854775808") < at("| 12 | 31.12.2023")
+            && at("| 12 | 31.12.2023") < at("9007199254740993"),
+        "{sorted:?}"
+    );
 }
 
 /// GIS-048 (docs/adr/1105): a join view the drawing does not have (one of the last drawing's) never leaves Katman ▾
@@ -304,15 +354,23 @@ fn the_layer_picker_and_the_rows_never_disagree() {
     assert_eq!(app.bottom_tab, BottomTab::Table);
     app.gis.features.join.view = Some("baska-projenin-gorunumu".into());
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
     assert!(
-        crate::files_testing::find_text(&mut shot, &app, crate::features::texts::NO_LAYERS).is_none(),
+        crate::files_testing::find_text(&mut shot, &app, crate::features::texts::NO_LAYERS)
+            .is_none(),
         "the picker names the layer the rows are of"
     );
     let doc = app.document.as_ref().expect("open");
     let rows = app.feature_rows(doc);
     let layer = rows.layer.clone().expect("the rows' layer");
-    let (_, path, count) = rows.layers.iter().find(|(id, _, _)| *id == layer).cloned().expect("listed");
+    let (_, path, count) = rows
+        .layers
+        .iter()
+        .find(|(id, _, _)| *id == layer)
+        .cloned()
+        .expect("listed");
     assert!(
         crate::files_testing::find_text(&mut shot, &app, &format!("{path} ({count})")).is_some(),
         "the picker shows {path} ({count})"

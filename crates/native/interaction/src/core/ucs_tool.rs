@@ -323,7 +323,11 @@ impl Tool for UcsTool {
                     // Turkish case: İ is i, I is ı.
                     let word = text.replace('İ', "i").replace('I', "ı").to_lowercase();
                     if word == "kaydet" || word == "sil" {
-                        self.naming = if word == "sil" { Naming::Delete } else { Naming::Save };
+                        self.naming = if word == "sil" {
+                            Naming::Delete
+                        } else {
+                            Naming::Save
+                        };
                         return true;
                     }
                 }

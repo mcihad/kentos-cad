@@ -31,7 +31,12 @@ CIRCULARSTRING (488056.012496449 4422062.47437315,488056.012507266 4422062.47437
 const AREA: f64 = 38_956.519_339_831;
 const PERIMETER: f64 = 790.231_084_908_664;
 /// GDAL's envelope of `PARK`: min x, max x, min y, max y (the arcs' bulge past the vertices in).
-const GDAL_EXTENT: [f64; 4] = [487_822.411_117_886_25, 488_066.289_881_279_9, 4_422_062.470_525_288, 4_422_226.233_202_772];
+const GDAL_EXTENT: [f64; 4] = [
+    487_822.411_117_886_25,
+    488_066.289_881_279_9,
+    4_422_062.470_525_288,
+    4_422_226.233_202_772,
+];
 
 /// The area object's outer ring read from a WKT text.
 fn ring_of(wkt: &str) -> Ring {
@@ -63,13 +68,21 @@ fn perimeter(r: &Ring) -> f64 {
             let chord = (b.x - a.x).hypot(b.y - a.y);
             let k = r.bulges.as_ref().map_or(0.0, |v| v[i]);
             let half = 2.0 * k.atan();
-            if half == 0.0 { chord } else { chord * half / half.sin() }
+            if half == 0.0 {
+                chord
+            } else {
+                chord * half / half.sin()
+            }
         })
         .sum()
 }
 
 fn area(r: &Ring) -> f64 {
-    net_area(&Area { outer: r.clone(), holes: Vec::new() }).abs()
+    net_area(&Area {
+        outer: r.clone(),
+        holes: Vec::new(),
+    })
+    .abs()
 }
 
 /// `PARK` with every point turned by `deg` about its first vertex.
@@ -89,7 +102,11 @@ fn turned(deg: f64) -> String {
             None => *pending = Some(v),
             Some(x) => {
                 let (dx, dy) = (x - x0, v - y0);
-                out.push_str(&format!("{} {}", x0 + c * dx - s * dy, y0 + s * dx + c * dy));
+                out.push_str(&format!(
+                    "{} {}",
+                    x0 + c * dx - s * dy,
+                    y0 + s * dx + c * dy
+                ));
             }
         }
     };
@@ -131,7 +148,11 @@ fn turned_copies_keep_area_and_perimeter() {
     for deg in [37.0, 90.0, 213.5] {
         let r = ring_of(&turned(deg));
         assert!((area(&r) - AREA).abs() < 1e-3, "{deg}°: {}", area(&r));
-        assert!((perimeter(&r) - PERIMETER).abs() < 1e-5, "{deg}°: {}", perimeter(&r));
+        assert!(
+            (perimeter(&r) - PERIMETER).abs() < 1e-5,
+            "{deg}°: {}",
+            perimeter(&r)
+        );
     }
 }
 
@@ -141,7 +162,12 @@ fn a_real_arc_past_half_a_circle_keeps_its_sweep_and_direction() {
     let (cx, cy, r) = (487_900.0, 4_422_100.0, 50.0);
     let at = |deg: f64| {
         let t: f64 = deg.to_radians();
-        Coord { x: cx + r * t.cos(), y: cy + r * t.sin(), z: None, m: None }
+        Coord {
+            x: cx + r * t.cos(),
+            y: cy + r * t.sin(),
+            z: None,
+            m: None,
+        }
     };
     let want = (270f64.to_radians() / 4.0).tan();
     let ccw = arc_bulge(&at(0.0), &at(135.0), &at(270.0)).expect("an arc");

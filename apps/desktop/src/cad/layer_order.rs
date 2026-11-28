@@ -36,7 +36,9 @@ impl App {
     /// A row dropped on another: before or after it among its siblings, or into it (a group), last.
     pub(crate) fn layer_dropped(&mut self, from: usize, to: usize, place: Place) {
         let rows = self.layer_row_ids();
-        let (Some(Some(source)), Some(Some(target))) = (rows.get(from).cloned(), rows.get(to).cloned()) else {
+        let (Some(Some(source)), Some(Some(target))) =
+            (rows.get(from).cloned(), rows.get(to).cloned())
+        else {
             return;
         };
         let Some(doc) = &self.document else {
@@ -195,7 +197,10 @@ mod tests {
         let _ = app.update(Message::Run("edit.undo"));
         // Dragged: the rows as the tree shows them; Çizim dropped into Kadastro.
         let rows = app.layer_row_ids();
-        let from = rows.iter().position(|r| r.as_deref() == Some("cizim")).expect("cizim row");
+        let from = rows
+            .iter()
+            .position(|r| r.as_deref() == Some("cizim"))
+            .expect("cizim row");
         let to = rows
             .iter()
             .position(|r| r.as_deref() == Some("layer-g"))
@@ -208,7 +213,10 @@ mod tests {
         );
         // And back before Kadastro.
         let rows = app.layer_row_ids();
-        let from = rows.iter().position(|r| r.as_deref() == Some("cizim")).expect("cizim row");
+        let from = rows
+            .iter()
+            .position(|r| r.as_deref() == Some("cizim"))
+            .expect("cizim row");
         let to = rows
             .iter()
             .position(|r| r.as_deref() == Some("layer-g"))

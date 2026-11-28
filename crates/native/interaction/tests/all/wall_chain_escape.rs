@@ -34,12 +34,18 @@ fn escape_keeps_the_walls_drawn_and_stays_for_the_next_chain() {
     let before = b.log.len();
     assert!(b.run(|s, cx| s.cancel(cx)), "the first Esc keeps the tool");
     assert_eq!(b.doc.len(), 1);
-    assert_eq!(wall_points(&b), [[0.0, 0.0], [6.0, 0.0], [6.0, 4.0]], "the two segments drawn, not the rubber band");
+    assert_eq!(
+        wall_points(&b),
+        [[0.0, 0.0], [6.0, 0.0], [6.0, 4.0]],
+        "the two segments drawn, not the rubber band"
+    );
     assert_eq!(b.session.tool_id(), "wall");
     assert_eq!(b.points(), 0, "the next click starts a new chain");
     let said = b.said(before);
     assert!(
-        said.iter().any(|(level, text)| *level == Level::Info && *text == kentos_interaction::path::esc_kept(2)),
+        said.iter()
+            .any(|(level, text)| *level == Level::Info
+                && *text == kentos_interaction::path::esc_kept(2)),
         "Esc says what it kept: {said:?}"
     );
     assert!(!b.run(|s, cx| s.cancel(cx)), "the next Esc leaves");
@@ -66,7 +72,11 @@ fn escape_leaves_a_question_before_it_ends_the_chain() {
     b.click(4.0, 0.0);
     assert!(b.type_text("S"), "S asks the wall style's name");
     assert!(b.run(|s, cx| s.cancel(cx)));
-    assert_eq!(b.doc.len(), 0, "the question is left, the chain is still drawn");
+    assert_eq!(
+        b.doc.len(),
+        0,
+        "the question is left, the chain is still drawn"
+    );
     assert_eq!(b.points(), 2);
     assert!(b.run(|s, cx| s.cancel(cx)));
     assert_eq!(b.doc.len(), 1);
@@ -83,6 +93,9 @@ fn enter_still_writes_and_stays_as_before() {
     assert_eq!(b.doc.len(), 1);
     assert_eq!(wall_points(&b), [[0.0, 0.0], [5.0, 0.0]]);
     assert_eq!(b.session.tool_id(), "wall");
-    assert!(!b.run(|s, cx| s.cancel(cx)), "an empty chain: Esc leaves at once");
+    assert!(
+        !b.run(|s, cx| s.cancel(cx)),
+        "an empty chain: Esc leaves at once"
+    );
     assert_eq!(b.session.tool_id(), "select");
 }

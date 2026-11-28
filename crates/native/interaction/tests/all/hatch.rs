@@ -476,7 +476,9 @@ fn editor_reselect_exposes_boundary_and_region_options_and_preserves_undo() {
     b.start("hatchEdit");
     assert!(b.type_text("S"));
     let keys = b.options();
-    for key in ["B", "A", "İ", "Y"] { assert!(keys.contains(&key), "{keys:?}"); }
+    for key in ["B", "A", "İ", "Y"] {
+        assert!(keys.contains(&key), "{keys:?}");
+    }
     assert!(b.type_text("B"));
     assert!(b.memory.hatch_by_lines);
     assert!(b.options().contains(&"G"));
@@ -486,9 +488,17 @@ fn editor_reselect_exposes_boundary_and_region_options_and_preserves_undo() {
     let before = b.doc.to_snapshot_v2();
     b.click(8.0, -3.0);
     assert_eq!(b.last_level(), Some(Level::Success), "{:?}", b.last_text());
-    let Entity::Hatch(h) = b.doc.get(kentos_domain::Slot(original.base().id)).unwrap() else { panic!("hatch") };
+    let Entity::Hatch(h) = b.doc.get(kentos_domain::Slot(original.base().id)).unwrap() else {
+        panic!("hatch")
+    };
     assert!(h.assoc.is_some());
-    assert_eq!(h.pattern, match &original { Entity::Hatch(h) => h.pattern.clone(), _ => unreachable!() });
+    assert_eq!(
+        h.pattern,
+        match &original {
+            Entity::Hatch(h) => h.pattern.clone(),
+            _ => unreachable!(),
+        }
+    );
     assert_eq!(b.doc.undo().as_deref(), Some("Sınırı yeniden seç"));
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
@@ -534,18 +544,34 @@ fn existing_hatch_origin_moves_by_point_or_coordinate_without_resetting_its_patt
     b.click(-20.0, 1.0);
     let before = b.doc.to_snapshot_v2();
     b.move_to(-21.0, 2.0);
-    assert_eq!(b.doc.to_snapshot_v2(), before, "origin preview is not a write");
+    assert_eq!(
+        b.doc.to_snapshot_v2(),
+        before,
+        "origin preview is not a write"
+    );
     b.click(-21.0, 2.0);
-    let Entity::Hatch(h) = b.doc.get(id).unwrap() else { panic!("hatch") };
-    let Entity::Hatch(mut expected) = original.clone() else { unreachable!() };
-    expected.pattern.origin = Some(Wire { x: E - 21., y: N + 2. });
+    let Entity::Hatch(h) = b.doc.get(id).unwrap() else {
+        panic!("hatch")
+    };
+    let Entity::Hatch(mut expected) = original.clone() else {
+        unreachable!()
+    };
+    expected.pattern.origin = Some(Wire {
+        x: E - 21.,
+        y: N + 2.,
+    });
     assert_eq!(h, &expected);
     assert_eq!(b.doc.undo().as_deref(), Some("Tarama başlangıcı"));
     assert_eq!(b.doc.to_snapshot_v2(), before);
     b.spatial.sync(&b.doc);
     assert!(b.type_text(&format!("{},{}", E - 22., N + 3.)));
-    let Entity::Hatch(h) = b.doc.get(id).unwrap() else { panic!("hatch") };
-    expected.pattern.origin = Some(Wire { x: E - 22., y: N + 3. });
+    let Entity::Hatch(h) = b.doc.get(id).unwrap() else {
+        panic!("hatch")
+    };
+    expected.pattern.origin = Some(Wire {
+        x: E - 22.,
+        y: N + 3.,
+    });
     assert_eq!(h, &expected);
     assert_eq!(b.doc.undo().as_deref(), Some("Tarama başlangıcı"));
     assert_eq!(b.doc.to_snapshot_v2(), before);
@@ -567,23 +593,45 @@ fn trim_reaches_a_circle_beneath_its_hatch_and_one_undo_restores_the_tie() {
     let made = registry::run(&mut ExecutionContext::new(&mut b.doc), "cad.entities.hatch", CallOp::Execute,
         json!({"region":{"kind":"point","at":{"x":E+1.,"y":N+1.},"associative":true},"pattern":{"name":"ANSI31"},"layerId":"cizim"})).unwrap();
     assert_eq!(made["status"], "completed", "{made}");
-    let hatch_uid = kentos_domain::Uuid::parse_str(made["output"]["created"][0].as_str().unwrap()).unwrap();
+    let hatch_uid =
+        kentos_domain::Uuid::parse_str(made["output"]["created"][0].as_str().unwrap()).unwrap();
     let hatch_slot = b.doc.slot_of(hatch_uid).unwrap();
-    let Entity::Hatch(original) = b.doc.get(hatch_slot).unwrap().clone() else { panic!("hatch") };
+    let Entity::Hatch(original) = b.doc.get(hatch_slot).unwrap().clone() else {
+        panic!("hatch")
+    };
     let before = b.doc.to_snapshot_v2();
     b.start("trim");
     assert!(b.type_text("S"));
     b.click(0., -6.);
     b.confirm();
     b.move_to(5., 0.);
-    assert!(b.session.preview(&Default::default()).unwrap().strokes.iter().any(|s| s.tone == kentos_interaction::Tone::Danger));
+    assert!(
+        b.session
+            .preview(&Default::default())
+            .unwrap()
+            .strokes
+            .iter()
+            .any(|s| s.tone == kentos_interaction::Tone::Danger)
+    );
     b.click(5., 0.);
-    assert!(matches!(b.doc.get(Slot(1)), Some(Entity::Arc(_))), "source must be trimmed instead of refusing the overlaid hatch: {:?}", b.last_text());
-    let Entity::Hatch(now) = b.doc.get(hatch_slot).unwrap() else { panic!("hatch") };
-    assert!(now.assoc.is_none(), "open source cannot silently remain associative");
+    assert!(
+        matches!(b.doc.get(Slot(1)), Some(Entity::Arc(_))),
+        "source must be trimmed instead of refusing the overlaid hatch: {:?}",
+        b.last_text()
+    );
+    let Entity::Hatch(now) = b.doc.get(hatch_slot).unwrap() else {
+        panic!("hatch")
+    };
+    assert!(
+        now.assoc.is_none(),
+        "open source cannot silently remain associative"
+    );
     let mut expected = original;
     expected.assoc = None;
-    assert_eq!(now, &expected, "the frozen hatch keeps its analytic geometry and pattern");
+    assert_eq!(
+        now, &expected,
+        "the frozen hatch keeps its analytic geometry and pattern"
+    );
     assert_eq!(b.doc.undo().as_deref(), Some("Buda"));
     assert_eq!(b.doc.to_snapshot_v2(), before);
 }
@@ -599,14 +647,30 @@ fn a_text_inside_is_left_open_unless_asked() {
     b.run(|s, cx| s.text_typed(Some("Ad"), cx));
     assert!(matches!(b.newest(), Entity::Text(_)), "a text");
     b.start("hatch");
-    assert!(b.session.prompt().text().contains("Yazılar (Y): boş bırakılır"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .contains("Yazılar (Y): boş bırakılır")
+    );
     b.click(-17.0, 3.5);
-    let Entity::Hatch(h) = b.newest() else { panic!("a hatch") };
-    assert_eq!(h.assoc.as_ref().map(|a| a.cutouts.len()), Some(1), "the text is tied as a cut-out");
+    let Entity::Hatch(h) = b.newest() else {
+        panic!("a hatch")
+    };
+    assert_eq!(
+        h.assoc.as_ref().map(|a| a.cutouts.len()),
+        Some(1),
+        "the text is tied as a cut-out"
+    );
     let (bx, _, _, area) = newest(&b);
     assert_eq!(bx, [-24.0, -2.0, -16.0, 4.0]);
     assert!(area < 48.0 - 10.0, "the text's box is left open: {area}");
-    assert!(b.last_text().is_some_and(|t| t.ends_with(", 1 yazı boş bırakıldı")), "{:?}", b.last_text());
+    assert!(
+        b.last_text()
+            .is_some_and(|t| t.ends_with(", 1 yazı boş bırakıldı")),
+        "{:?}",
+        b.last_text()
+    );
 
     assert!(b.type_text("Y"));
     assert!(b.session.prompt().text().contains("Yazılar (Y): taranır"));
@@ -641,7 +705,12 @@ fn a_project_pattern_is_named_in_the_success_message() {
     // Back to a library pattern by its name: that one is named again.
     assert!(b.type_text("ansi32"));
     b.click(-20.0, 1.0);
-    assert!(b.last_text().is_some_and(|t| t.starts_with("ANSI32 tarama eklendi")), "{:?}", b.last_text());
+    assert!(
+        b.last_text()
+            .is_some_and(|t| t.starts_with("ANSI32 tarama eklendi")),
+        "{:?}",
+        b.last_text()
+    );
 }
 
 /// UR-089: a tied hatch copied with its boundary: the copy follows nothing (the decision of copies), and the command
@@ -650,10 +719,16 @@ fn a_project_pattern_is_named_in_the_success_message() {
 fn a_copied_tied_hatch_is_said_untied() {
     let mut b = bench();
     b.click(-20.0, 1.0);
-    let Entity::Hatch(h) = b.newest() else { panic!("a hatch") };
+    let Entity::Hatch(h) = b.newest() else {
+        panic!("a hatch")
+    };
     assert!(h.assoc.is_some(), "tied as drawn");
     let hatch = b.newest().base().id;
-    let uids: Vec<String> = [hatch].iter().filter_map(|s| b.doc.uid(kentos_domain::Slot(*s))).map(|u| u.to_string()).collect();
+    let uids: Vec<String> = [hatch]
+        .iter()
+        .filter_map(|s| b.doc.uid(kentos_domain::Slot(*s)))
+        .map(|u| u.to_string())
+        .collect();
     let input: kentos_commands::EntitiesTransform = serde_json::from_value(serde_json::json!({
         "uids": uids, "transform": {"kind": "move", "dx": 50.0, "dy": 0.0}, "copy": true
     }))
@@ -662,10 +737,14 @@ fn a_copied_tied_hatch_is_said_untied() {
         &mut kentos_native_application::ExecutionContext::new(&mut b.doc),
         input,
     );
-    let kentos_commands::CommandResult::Completed { warnings, .. } = result else { panic!("{result:?}") };
+    let kentos_commands::CommandResult::Completed { warnings, .. } = result else {
+        panic!("{result:?}")
+    };
     assert!(
-        warnings.iter().any(|w| w.code == kentos_commands::codes::HATCH_ASSOCIATION_LOST
-            && w.message.starts_with("1 kopya taramanın sınır bağı yok")),
+        warnings
+            .iter()
+            .any(|w| w.code == kentos_commands::codes::HATCH_ASSOCIATION_LOST
+                && w.message.starts_with("1 kopya taramanın sınır bağı yok")),
         "{warnings:?}"
     );
 }
@@ -676,8 +755,14 @@ fn a_copied_tied_hatch_is_said_untied() {
 fn deleting_a_hatchs_boundary_says_its_tie_is_lost() {
     let mut b = bench();
     b.click(-20.0, 1.0);
-    let Entity::Hatch(h) = b.newest() else { panic!("a hatch") };
-    let outer = h.assoc.as_ref().and_then(|a| a.outer).expect("tied to its closed object");
+    let Entity::Hatch(h) = b.newest() else {
+        panic!("a hatch")
+    };
+    let outer = h
+        .assoc
+        .as_ref()
+        .and_then(|a| a.outer)
+        .expect("tied to its closed object");
     let slot = b
         .doc
         .slot_of(kentos_domain::Uuid::from_bytes(outer.0))
@@ -686,7 +771,13 @@ fn deleting_a_hatchs_boundary_says_its_tie_is_lost() {
     b.selection.set([slot]);
     b.start("erase");
     let said: Vec<&str> = b.said(0).into_iter().map(|(_, t)| t).collect();
-    let count = said.iter().rposition(|t| t.ends_with("nesne silindi.")).expect("the count");
-    let lost = said.iter().rposition(|t| t.contains("sınır bağı koptu")).expect("the tie said");
+    let count = said
+        .iter()
+        .rposition(|t| t.ends_with("nesne silindi."))
+        .expect("the count");
+    let lost = said
+        .iter()
+        .rposition(|t| t.contains("sınır bağı koptu"))
+        .expect("the tie said");
     assert!(lost > count, "{said:?}");
 }

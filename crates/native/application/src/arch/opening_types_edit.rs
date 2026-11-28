@@ -265,7 +265,11 @@ fn check(doc: &Document, input: &OpeningTypesEdit) -> Result<Work, Stop> {
         }
         OpeningTypesOperation::RefreshList {} => {
             let Some(current) = doc.block(JOINERY_LIST_ID) else {
-                return Err(fail(codes::NOTHING_TO_SET, "Önce Doğrama listesi ile bir liste oluşturun.".into(), "operation"));
+                return Err(fail(
+                    codes::NOTHING_TO_SET,
+                    "Önce Doğrama listesi ile bir liste oluşturun.".into(),
+                    "operation",
+                ));
             };
             let block = doc.joinery_list_block();
             if *current != block {

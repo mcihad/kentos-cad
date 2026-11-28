@@ -10,8 +10,8 @@ mod density;
 mod figures;
 mod mesh;
 mod quality;
-mod tiled;
 mod query;
+mod tiled;
 
 use std::collections::HashMap;
 
@@ -20,14 +20,17 @@ use kentos_geometry_core::geom::delaunay::{self, NONE};
 use kentos_geometry_core::predicates::orient2d;
 use serde::{Deserialize, Serialize};
 
-pub use analysis::{AnalysisError, Band, BandParts, Bands, GridSlope, MAX_CELLS as MAX_GRID_CELLS, Measure, Roughness};
+pub use analysis::{
+    AnalysisError, Band, BandParts, Bands, GridSlope, MAX_CELLS as MAX_GRID_CELLS, Measure,
+    Roughness,
+};
+pub use contours::{ContourError, ContourLine, MAX_LEVELS, Slope};
 pub use coverage::{Coverage, Region, clipped_area, ring_area};
 pub use density::{Density, ring_holds};
-pub use contours::{ContourError, ContourLine, MAX_LEVELS, Slope};
 pub use figures::{Figures, SectionPoint};
 pub use quality::{Gaps, NearPair, Spike};
-pub use tiled::{Tiled, TiledError, build_tiled};
 pub use query::{Height, Place};
+pub use tiled::{Tiled, TiledError, build_tiled};
 
 use mesh::{Mesh, Walk};
 
@@ -330,7 +333,9 @@ fn check(input: &SurfaceInput) -> Result<f64, SurfaceError> {
             if p[0] == q[0] && p[1] == q[1] {
                 return Err(SurfaceError::new(
                     "invalid_input",
-                    format!("breaklines[{i}]: ardışık iki köşe aynı yerde; sıfır boylu parça olmaz."),
+                    format!(
+                        "breaklines[{i}]: ardışık iki köşe aynı yerde; sıfır boylu parça olmaz."
+                    ),
                     Some([p[0], p[1]]),
                 ));
             }
@@ -394,11 +399,19 @@ impl Surface {
 
 /// Whether the segments `e` and `p` (corner pairs) cross or overlap anywhere but at a shared end (exact signs).
 fn crosses(xy: &[Vec2], e: (u32, u32), p: (u32, u32)) -> bool {
-    let shared = [p.0, p.1].iter().filter(|c| **c == e.0 || **c == e.1).count();
+    let shared = [p.0, p.1]
+        .iter()
+        .filter(|c| **c == e.0 || **c == e.1)
+        .count();
     if shared == 2 {
         return true;
     }
-    let (a, b, c, d) = (xy[e.0 as usize], xy[e.1 as usize], xy[p.0 as usize], xy[p.1 as usize]);
+    let (a, b, c, d) = (
+        xy[e.0 as usize],
+        xy[e.1 as usize],
+        xy[p.0 as usize],
+        xy[p.1 as usize],
+    );
     let (d1, d2) = (orient2d(a, b, c), orient2d(a, b, d));
     let (d3, d4) = (orient2d(c, d, a), orient2d(c, d, b));
     if shared == 1 {
@@ -416,7 +429,9 @@ fn crosses(xy: &[Vec2], e: (u32, u32), p: (u32, u32)) -> bool {
     let between = |s: Vec2, t: Vec2, q: Vec2| {
         q.x >= s.x.min(t.x) && q.x <= s.x.max(t.x) && q.y >= s.y.min(t.y) && q.y <= s.y.max(t.y)
     };
-    if (d1 > 0.0 && d2 < 0.0 || d1 < 0.0 && d2 > 0.0) && (d3 > 0.0 && d4 < 0.0 || d3 < 0.0 && d4 > 0.0) {
+    if (d1 > 0.0 && d2 < 0.0 || d1 < 0.0 && d2 > 0.0)
+        && (d3 > 0.0 && d4 < 0.0 || d3 < 0.0 && d4 > 0.0)
+    {
         return true;
     }
     d1 == 0.0 && between(a, b, c)
@@ -498,20 +513,38 @@ pub fn build(input: &SurfaceInput) -> Result<Surface, SurfaceError> {
     // corner or it crosses a piece put in before it (a breakline, a ring, an earlier edge).
     let mut skipped = Vec::new();
     for e in &input.edges {
-        let (Some(&a), Some(&b)) = (corners.at.get(&key(e.from[0], e.from[1])), corners.at.get(&key(e.to[0], e.to[1])))
-        else {
-            skipped.push(Skipped { edit: e.edit, why: "no_corner" });
+        let (Some(&a), Some(&b)) = (
+            corners.at.get(&key(e.from[0], e.from[1])),
+            corners.at.get(&key(e.to[0], e.to[1])),
+        ) else {
+            skipped.push(Skipped {
+                edit: e.edit,
+                why: "no_corner",
+            });
             continue;
         };
         if a == b {
-            skipped.push(Skipped { edit: e.edit, why: "no_corner" });
+            skipped.push(Skipped {
+                edit: e.edit,
+                why: "no_corner",
+            });
             continue;
         }
-        if pieces.iter().any(|p| crosses(&corners.xy, (a, b), (p.a, p.b))) {
-            skipped.push(Skipped { edit: e.edit, why: "crosses" });
+        if pieces
+            .iter()
+            .any(|p| crosses(&corners.xy, (a, b), (p.a, p.b)))
+        {
+            skipped.push(Skipped {
+                edit: e.edit,
+                why: "crosses",
+            });
             continue;
         }
-        pieces.push(Piece { a, b, breakline: false });
+        pieces.push(Piece {
+            a,
+            b,
+            breakline: false,
+        });
     }
     let (mesh, split) = triangulate(&corners, &pieces, tolerance)?;
     let mut kinds = classify(&mesh, &corners.xy, input);
@@ -529,7 +562,10 @@ pub fn build(input: &SurfaceInput) -> Result<Surface, SurfaceError> {
                 removed += 1;
                 start = t;
             }
-            _ => skipped.push(Skipped { edit: r.edit, why: "no_triangle" }),
+            _ => skipped.push(Skipped {
+                edit: r.edit,
+                why: "no_triangle",
+            }),
         }
     }
     skipped.sort_by_key(|s| s.edit);

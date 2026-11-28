@@ -60,10 +60,21 @@ pub struct State {
 pub enum Event {
     /// The answer to an ask: the rows found under the point (the first is the card's), the tables that could not be
     /// asked, the rasters' cells under the point and whether a shown raster was there at all.
-    Answered(u64, Vec<Found>, Vec<String>, Vec<crate::rasters::cell_info::Cell>, bool),
+    Answered(
+        u64,
+        Vec<Found>,
+        Vec<String>,
+        Vec<crate::rasters::cell_info::Cell>,
+        bool,
+    ),
     /// What lies beside a click on an object (docs/adr/9137, 9167): the rasters' cells under it, the shown data layers'
     /// rows under it and the tables that could not be asked.
-    Beside(u64, Vec<crate::rasters::cell_info::Cell>, Vec<Found>, Vec<String>),
+    Beside(
+        u64,
+        Vec<crate::rasters::cell_info::Cell>,
+        Vec<Found>,
+        Vec<String>,
+    ),
 }
 
 fn message(event: Event) -> Message {
@@ -126,7 +137,9 @@ pub fn rows_at(
                     .zip(&f.values)
                     .filter_map(|(c, v)| crate::data_view::attribute(v).map(|a| (c.clone(), a)))
                     .collect();
-                if let Some(e) = kentos_native_application::geopackage::object_of(&g, &node.id, 0, attrs) {
+                if let Some(e) =
+                    kentos_native_application::geopackage::object_of(&g, &node.id, 0, attrs)
+                {
                     read.push((f.fid, e));
                 }
             }
@@ -156,26 +169,49 @@ pub fn rows_at(
     let p = kentos_geometry_core::Vec2::new(at.x, at.y);
     // Edges by their distance to the click (to a micrometre), equals by their key; then the areas holding it, as the
     // store orders them. One order at every click, whatever way the store's tree is walked.
-    let edges: HashMap<u32, f64> = store.hit_edge(p, reach).into_iter().map(|(id, d)| (id as u32, d)).collect();
-    let mut hits: Vec<u32> = store.hits(p, reach).into_iter().map(|id| id as u32).collect();
+    let edges: HashMap<u32, f64> = store
+        .hit_edge(p, reach)
+        .into_iter()
+        .map(|(id, d)| (id as u32, d))
+        .collect();
+    let mut hits: Vec<u32> = store
+        .hits(p, reach)
+        .into_iter()
+        .map(|id| id as u32)
+        .collect();
     let key = |id: &u32| objects.get(id).map_or(i64::MAX, |(k, _)| *k);
     hits.sort_by(|a, b| match (edges.get(a), edges.get(b)) {
-        (Some(x), Some(y)) => ((x * 1e6).round() as i64).cmp(&((y * 1e6).round() as i64)).then(key(a).cmp(&key(b))),
+        (Some(x), Some(y)) => ((x * 1e6).round() as i64)
+            .cmp(&((y * 1e6).round() as i64))
+            .then(key(a).cmp(&key(b))),
         (Some(_), None) => std::cmp::Ordering::Less,
         (None, Some(_)) => std::cmp::Ordering::Greater,
         (None, None) => std::cmp::Ordering::Equal,
     });
-    Ok(hits.into_iter().filter_map(|id| objects.remove(&id)).collect())
+    Ok(hits
+        .into_iter()
+        .filter_map(|id| objects.remove(&id))
+        .collect())
 }
 
 /// The row of `node`'s table a click under `at` means: the first of [`rows_at`].
-pub fn row_at(node: &LayerNode, settings: &ProjectSettings, at: Vec2, reach: f64) -> Result<Option<(i64, Entity)>, String> {
+pub fn row_at(
+    node: &LayerNode,
+    settings: &ProjectSettings,
+    at: Vec2,
+    reach: f64,
+) -> Result<Option<(i64, Entity)>, String> {
     Ok(rows_at(node, settings, at, reach)?.into_iter().next())
 }
 
 /// The first row found under `at` among `nodes` (the shown data layers, the top one first): the tests' question.
 #[cfg(test)]
-pub fn ask(nodes: &[LayerNode], settings: &ProjectSettings, at: Vec2, reach: f64) -> (Option<Found>, Vec<String>) {
+pub fn ask(
+    nodes: &[LayerNode],
+    settings: &ProjectSettings,
+    at: Vec2,
+    reach: f64,
+) -> (Option<Found>, Vec<String>) {
     let (rows, said) = ask_all(nodes, settings, at, reach);
     (rows.into_iter().next(), said)
 }
@@ -183,12 +219,22 @@ pub fn ask(nodes: &[LayerNode], settings: &ProjectSettings, at: Vec2, reach: f64
 /// The rows under `at` of `nodes` (the shown data layers, the top one first), each table's in a click's order: counted
 /// with the objects under a click (docs/adr/9167), or the candidates of a click on no object (docs/adr/9341); a table
 /// that could not be asked is said and the next one asked.
-pub fn ask_all(nodes: &[LayerNode], settings: &ProjectSettings, at: Vec2, reach: f64) -> (Vec<Found>, Vec<String>) {
+pub fn ask_all(
+    nodes: &[LayerNode],
+    settings: &ProjectSettings,
+    at: Vec2,
+    reach: f64,
+) -> (Vec<Found>, Vec<String>) {
     let mut rows = Vec::new();
     let mut said = Vec::new();
     for node in nodes {
         match rows_at(node, settings, at, reach) {
-            Ok(found) => rows.extend(found.into_iter().map(|(key, object)| Found { layer: node.id.clone(), key, object, at })),
+            Ok(found) => rows.extend(found.into_iter().map(|(key, object)| Found {
+                layer: node.id.clone(),
+                key,
+                object,
+                at,
+            })),
             Err(why) => said.push(format!("“{}” sorulamadı: {why}", node.name)),
         }
     }
@@ -201,11 +247,12 @@ impl App {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
-        let mut nodes: Vec<LayerNode> = kentos_plot::layers::shown_layers(doc.model.layers().nodes())
-            .into_iter()
-            .filter(|n| n.data.as_ref().is_some_and(|d| d.geometry.is_some()))
-            .cloned()
-            .collect();
+        let mut nodes: Vec<LayerNode> =
+            kentos_plot::layers::shown_layers(doc.model.layers().nodes())
+                .into_iter()
+                .filter(|n| n.data.as_ref().is_some_and(|d| d.geometry.is_some()))
+                .cloned()
+                .collect();
         nodes.reverse();
         nodes
     }
@@ -263,7 +310,9 @@ impl App {
                 let (found, said) = ask_all(&nodes, &settings, at, reach);
                 (found, said, crate::rasters::cell_info::read(rasters, at))
             },
-            move |(found, said, cells)| message(Event::Answered(asked, found, said, cells, any_raster)),
+            move |(found, said, cells)| {
+                message(Event::Answered(asked, found, said, cells, any_raster))
+            },
         );
         self.tool_reply(task)
     }
@@ -282,7 +331,10 @@ impl App {
                 // No row: the first raster's cell is the card; a click outside every shown raster is said.
                 self.gis.data_info.showing_raster = first.is_none() && !cells.is_empty();
                 if first.is_none() && cells.is_empty() && any_raster {
-                    self.say(kentos_interaction::Level::Info, "Tıklanan nokta gösterilen rasterlerin kapsamı dışında.");
+                    self.say(
+                        kentos_interaction::Level::Info,
+                        "Tıklanan nokta gösterilen rasterlerin kapsamı dışında.",
+                    );
                 }
                 self.gis.data_info.cells = cells;
                 // Every row under the click: Sonraki goes on to the next, round to the first (docs/adr/9341).
@@ -338,19 +390,28 @@ impl App {
                 .filter(|f| !withheld.contains(&f.name))
                 .map(|f| {
                     let v = match attrs.get(&f.name) {
-                        Some(raw) => crate::features::pending_rows::shown_value(Some(f), raw.clone()),
+                        Some(raw) => {
+                            crate::features::pending_rows::shown_value(Some(f), raw.clone())
+                        }
                         None => crate::features::texts::NULL.to_owned(),
                     };
                     (f.name.clone(), v)
                 })
                 .collect();
             if !withheld.is_empty() {
-                card.rows.push(("Rolünüz okumuyor".to_owned(), withheld.join(", ")));
+                card.rows
+                    .push(("Rolünüz okumuyor".to_owned(), withheld.join(", ")));
             }
         }
         // The layer too: a card template's title may not name it (docs/adr/9145).
         card.source = Some((
-            format!("{} katmanı · {} · {} {}", node.name, data.place_words(), data.key, found.key),
+            format!(
+                "{} katmanı · {} · {} {}",
+                node.name,
+                data.place_words(),
+                data.key,
+                found.key
+            ),
             false,
         ));
         let actions = if card.actions {

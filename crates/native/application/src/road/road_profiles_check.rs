@@ -1,7 +1,10 @@
 //! `road.profiles.check` v1 (plan/road.md Y21, docs/adr/0922 §2): a profile checked against the user's design rules
 //! (`kentos_road::profile::checks`). Reads only. The shared cases are `fixtures/commands/v1/road.profiles.check.json`.
 
-use kentos_commands::{CommandResult, CommandWarning, DesignFinding, DesignRule, RoadProfilesCheck, RoadProfilesChecked};
+use kentos_commands::{
+    CommandResult, CommandWarning, DesignFinding, DesignRule, RoadProfilesCheck,
+    RoadProfilesChecked,
+};
 use kentos_domain::Document;
 use kentos_road::profile::checks::{self, ProfileRules, Rule};
 
@@ -13,17 +16,30 @@ use crate::road_profiles as common;
 use crate::road_terrains::fail;
 
 fn words(rule: Rule, of: &[String], value: f64, limit: f64) -> String {
-    let (a, b) = (of.first().map_or("", String::as_str), of.get(1).map_or("", String::as_str));
+    let (a, b) = (
+        of.first().map_or("", String::as_str),
+        of.get(1).map_or("", String::as_str),
+    );
     match rule {
-        Rule::Grade => format!("{a}–{b} eğimi %{:.3}, en çok %{:.3}.", 100.0 * value, 100.0 * limit),
-        Rule::LeastGrade => format!("{a}–{b} eğimi %{:.3}, en az %{:.3}.", 100.0 * value, 100.0 * limit),
+        Rule::Grade => format!(
+            "{a}–{b} eğimi %{:.3}, en çok %{:.3}.",
+            100.0 * value,
+            100.0 * limit
+        ),
+        Rule::LeastGrade => format!(
+            "{a}–{b} eğimi %{:.3}, en az %{:.3}.",
+            100.0 * value,
+            100.0 * limit
+        ),
         // K in its unit, H as the radius it is (docs/adr/0961): a reader must not take K for a radius nor a percent.
         Rule::CrestK => format!("{a} tepe kurbunun K'si {value:.3} m/%, en az {limit} m/%."),
         Rule::SagK => format!("{a} çukur kurbunun K'si {value:.3} m/%, en az {limit} m/%."),
         Rule::CrestH => format!("{a} tepe kurbunun yarıçapı {value:.3} m, en az {limit} m."),
         Rule::SagH => format!("{a} çukur kurbunun yarıçapı {value:.3} m, en az {limit} m."),
         Rule::Curve => format!("{a} düşey kurbu {value:.3} m, en az {limit} m."),
-        Rule::GradeLength => format!("{a} ile {b} kurpları arasındaki düz eğim {value:.3} m, en az {limit} m."),
+        Rule::GradeLength => {
+            format!("{a} ile {b} kurpları arasındaki düz eğim {value:.3} m, en az {limit} m.")
+        }
     }
 }
 
@@ -41,7 +57,10 @@ fn rule_of(rule: Rule) -> DesignRule {
 }
 
 /// The check now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &RoadProfilesCheck) -> Result<(RoadProfilesChecked, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &RoadProfilesCheck,
+) -> Result<(RoadProfilesChecked, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(common::profiles(doc), &input.profile, "profile")?;
     let rules = ProfileRules {
@@ -74,21 +93,27 @@ pub(crate) fn answer(doc: &Document, input: &RoadProfilesCheck) -> Result<(RoadP
     }
     leasts(&given)?;
     let built = common::build(doc, def)?;
-    let mut findings: Vec<DesignFinding> = checks::check(&built.vertical, &common::pvis_of(def), &rules)
-        .into_iter()
-        .map(|f| DesignFinding {
-            rule: rule_of(f.rule),
-            message: words(f.rule, &f.pvis, f.value, f.limit),
-            of: f.pvis,
-            from: f.from,
-            to: f.to,
-            value: f.value,
-            limit: Some(f.limit),
-        })
-        .collect();
+    let mut findings: Vec<DesignFinding> =
+        checks::check(&built.vertical, &common::pvis_of(def), &rules)
+            .into_iter()
+            .map(|f| DesignFinding {
+                rule: rule_of(f.rule),
+                message: words(f.rule, &f.pvis, f.value, f.limit),
+                of: f.pvis,
+                from: f.from,
+                to: f.to,
+                value: f.value,
+                limit: Some(f.limit),
+            })
+            .collect();
     // A crossing whose clearance or cover the grade line does not keep (docs/adr/0946).
-    for (m, c) in common::crossing_margins(def, &built.vertical, &[]).into_iter().zip(&def.crossings) {
-        let (Some(z), Some(margin)) = (m.elevation, m.margin) else { continue };
+    for (m, c) in common::crossing_margins(def, &built.vertical, &[])
+        .into_iter()
+        .zip(&def.crossings)
+    {
+        let (Some(z), Some(margin)) = (m.elevation, m.margin) else {
+            continue;
+        };
         if margin >= -1e-9 {
             continue;
         }
@@ -127,23 +152,39 @@ pub(crate) fn answer(doc: &Document, input: &RoadProfilesCheck) -> Result<(RoadP
     if !findings.is_empty() {
         warnings.push(CommandWarning {
             code: codes::DESIGN_RULE_BROKEN.into(),
-            message: format!("“{}” boykesitinde {} yer verilen tasarım kurallarına uymuyor.", def.name, findings.len()),
+            message: format!(
+                "“{}” boykesitinde {} yer verilen tasarım kurallarına uymuyor.",
+                def.name,
+                findings.len()
+            ),
             path: Some("profile".into()),
         });
     }
-    Ok((RoadProfilesChecked { profile: def.id.clone(), findings }, warnings))
+    Ok((
+        RoadProfilesChecked {
+            profile: def.id.clone(),
+            findings,
+        },
+        warnings,
+    ))
 }
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RoadProfilesCheck) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &RoadProfilesCheck) -> CommandResult<RoadProfilesChecked> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &RoadProfilesCheck,
+) -> CommandResult<RoadProfilesChecked> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -151,11 +192,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &RoadProfilesCheck) -> CommandResu
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RoadProfilesCheck) -> CommandResult<RoadProfilesChecked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RoadProfilesCheck,
+) -> CommandResult<RoadProfilesChecked> {
     plan(cx, &input)
 }
 
 /// The check for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &RoadProfilesCheck) -> Result<(RoadProfilesChecked, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &RoadProfilesCheck,
+) -> Result<(RoadProfilesChecked, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

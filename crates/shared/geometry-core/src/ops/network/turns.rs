@@ -227,7 +227,11 @@ impl TurnTable {
     /// graph's order: `at` its pieces), from the coded table.
     pub fn turn_at(&self, node: u32, at: &[u32], k: usize, m: usize, c: usize) -> Option<f64> {
         let (in_arc, out_arc) = (at[k] ^ 1, at[m]);
-        let start = self.code_start.get(node as usize).copied().unwrap_or(UNCODED);
+        let start = self
+            .code_start
+            .get(node as usize)
+            .copied()
+            .unwrap_or(UNCODED);
         let code = if start == UNCODED {
             self.code(in_arc, out_arc, node)
         } else {

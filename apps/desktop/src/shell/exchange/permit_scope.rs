@@ -110,12 +110,19 @@ impl Scope {
             .filter(|f| !f.value.trim().is_empty())
             .map(|f| (f.name.clone(), f.value.trim().to_owned()))
             .collect();
-        serde_json::to_value(kentos_processing::audit_facts::permit::facts(doc, particulars)).unwrap_or(Value::Null)
+        serde_json::to_value(kentos_processing::audit_facts::permit::facts(
+            doc,
+            particulars,
+        ))
+        .unwrap_or(Value::Null)
     }
 
     /// The boxes' values by name: what the set writes into the drawing's variables.
     pub fn values(&self) -> Vec<(String, String)> {
-        self.fields.iter().map(|f| (f.name.clone(), f.value.clone())).collect()
+        self.fields
+            .iter()
+            .map(|f| (f.name.clone(), f.value.clone()))
+            .collect()
     }
 
     /// The rule's answer read; a row it does not give whole is left out.
@@ -232,7 +239,9 @@ impl App {
             }
             Event::ScopeChoice(i, k) => {
                 if let Some(f) = scope.fields.get_mut(i) {
-                    f.value = k.and_then(|k| f.choices.get(k).cloned()).unwrap_or_default();
+                    f.value = k
+                        .and_then(|k| f.choices.get(k).cloned())
+                        .unwrap_or_default();
                 }
                 self.permit_scope_ask()
             }
@@ -289,7 +298,12 @@ impl App {
                         .into()
                 }
             };
-            pair.push(column![label::caption(f.label.as_str()), input].spacing(2).width(Fill).into());
+            pair.push(
+                column![label::caption(f.label.as_str()), input]
+                    .spacing(2)
+                    .width(Fill)
+                    .into(),
+            );
             if pair.len() == 2 {
                 body = body.push(row(std::mem::take(&mut pair)).spacing(10));
             }
@@ -305,19 +319,36 @@ impl App {
                 for p in &given.problems {
                     body = body.push(label::caption(p).style(style::text::warning));
                 }
-                let cols = vec![col("Yükümlülük", 235.0), col("Durum", 120.0), col("Başlangıç", 150.0), col("Madde", 280.0)];
+                let cols = vec![
+                    col("Yükümlülük", 235.0),
+                    col("Durum", 120.0),
+                    col("Başlangıç", 150.0),
+                    col("Madde", 280.0),
+                ];
                 let rows = given
                     .rows
                     .iter()
-                    .map(|l| vec![l.title.clone(), l.words.clone(), days(l), l.articles.join(", ")])
+                    .map(|l| {
+                        vec![
+                            l.title.clone(),
+                            l.words.clone(),
+                            days(l),
+                            l.articles.join(", "),
+                        ]
+                    })
                     .collect();
                 let chosen = scope
                     .chosen
                     .or_else(|| given.rows.iter().position(|l| l.state == "confirm"))
                     .or(Some(0));
-                body = body.push(road_dialog::sheet_chosen(cols, rows, "Karar yok", 200.0, chosen, |k| {
-                    event(Event::ScopeChoose(k))
-                }));
+                body = body.push(road_dialog::sheet_chosen(
+                    cols,
+                    rows,
+                    "Karar yok",
+                    200.0,
+                    chosen,
+                    |k| event(Event::ScopeChoose(k)),
+                ));
                 if let Some(l) = chosen.and_then(|k| given.rows.get(k)) {
                     let words = format!("{}: {}", l.title, l.reason);
                     body = body.push(if l.state == "confirm" {
@@ -344,7 +375,12 @@ impl App {
         };
         let permit = s.scope.facts(&doc.model);
         let calendar: Value = serde_json::from_str(scope::CALENDAR_JSON).unwrap_or(Value::Null);
-        let answer = crate::standards::call(PACKAGE, MODULE, FUNCTION, vec![permit, Value::from(today), calendar]);
+        let answer = crate::standards::call(
+            PACKAGE,
+            MODULE,
+            FUNCTION,
+            vec![permit, Value::from(today), calendar],
+        );
         s.scope.verdict = match answer {
             Ok(answer) => Verdict::Given(Scope::given(&answer)),
             Err(why) => Verdict::Failed(why),

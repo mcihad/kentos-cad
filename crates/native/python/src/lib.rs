@@ -136,28 +136,37 @@ impl PySession {
             extension_tools(None);
             Session::new(&choices)
         })
-            .map(|inner| Self { inner })
-            .map_err(host)
+        .map(|inner| Self { inner })
+        .map_err(host)
     }
 
     /// A `.kcad` file (v2, or v1 JSON).
     #[staticmethod]
     #[pyo3(signature = (path, file_unit=None))]
     fn open(py: Python<'_>, path: PathBuf, file_unit: Option<String>) -> PyResult<Self> {
-        let unit = file_unit.map(|u| serde_json::from_value::<kentos_commands::FileUnit>(serde_json::Value::String(u)))
-            .transpose().map_err(|e| host(HeadlessError::new("invalid_input", e.to_string())))?;
+        let unit = file_unit
+            .map(|u| {
+                serde_json::from_value::<kentos_commands::FileUnit>(serde_json::Value::String(u))
+            })
+            .transpose()
+            .map_err(|e| host(HeadlessError::new("invalid_input", e.to_string())))?;
         py.detach(|| {
             extension_tools(None);
             Session::open_in(&path, unit)
         })
-            .map(|inner| Self { inner })
-            .map_err(host)
+        .map(|inner| Self { inner })
+        .map_err(host)
     }
 
     /// A project kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107), opened.
     #[staticmethod]
     #[pyo3(signature = (address, name, schema = None))]
-    fn open_from_source(py: Python<'_>, address: &str, name: &str, schema: Option<String>) -> PyResult<Self> {
+    fn open_from_source(
+        py: Python<'_>,
+        address: &str,
+        name: &str,
+        schema: Option<String>,
+    ) -> PyResult<Self> {
         let (address, name) = (address.to_owned(), name.to_owned());
         py.detach(|| {
             extension_tools(None);
@@ -170,9 +179,17 @@ impl PySession {
     /// Saves as a project kept in a GeoPackage or a PostgreSQL schema (docs/adr/9107); the answer (`address`,
     /// `schema`, `name`, `bytes`, `revision`) as JSON text.
     #[pyo3(signature = (address, name, schema = None))]
-    fn save_to_source(&mut self, py: Python<'_>, address: &str, name: &str, schema: Option<String>) -> PyResult<String> {
+    fn save_to_source(
+        &mut self,
+        py: Python<'_>,
+        address: &str,
+        name: &str,
+        schema: Option<String>,
+    ) -> PyResult<String> {
         let inner = &mut self.inner;
-        let saved = py.detach(|| inner.save_to_source(address, schema.as_deref(), name)).map_err(host)?;
+        let saved = py
+            .detach(|| inner.save_to_source(address, schema.as_deref(), name))
+            .map_err(host)?;
         text(&saved)
     }
 
@@ -185,8 +202,8 @@ impl PySession {
             extension_tools(None);
             Session::from_bytes(&data)
         })
-            .map(|inner| Self { inner })
-            .map_err(host)
+        .map(|inner| Self { inner })
+        .map_err(host)
     }
 
     /// Runs a catalog command: `op` is `validate`, `plan` or `execute`;
@@ -379,8 +396,12 @@ impl PySession {
     }
 
     fn select(&mut self, uids: &str) -> PyResult<usize> {
-        let given: Value = serde_json::from_str(uids).map_err(|e| host(HeadlessError::new(
-            "invalid_input", format!("uids bir kimlik listesi olmalı: {e}"))))?;
+        let given: Value = serde_json::from_str(uids).map_err(|e| {
+            host(HeadlessError::new(
+                "invalid_input",
+                format!("uids bir kimlik listesi olmalı: {e}"),
+            ))
+        })?;
         self.inner.select(&given).map_err(host)
     }
 
@@ -462,7 +483,9 @@ fn local_commands() -> Vec<(&'static str, u32)> {
 #[pyfunction]
 #[pyo3(signature = (address, schema = None))]
 fn projects_in(py: Python<'_>, address: &str, schema: Option<String>) -> PyResult<String> {
-    let list = py.detach(|| kentos_headless::Session::projects_in(address, schema.as_deref())).map_err(host)?;
+    let list = py
+        .detach(|| kentos_headless::Session::projects_in(address, schema.as_deref()))
+        .map_err(host)?;
     text(&list)
 }
 

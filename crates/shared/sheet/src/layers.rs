@@ -1,6 +1,6 @@
 //! Effective viewport layer visibility and appearance shared by rendering and model queries.
-use std::collections::HashMap;
 use kentos_contracts::{LayerNode, LayerNodeType};
+use std::collections::HashMap;
 
 pub fn map_layers<'a>(
     nodes: &'a [LayerNode],

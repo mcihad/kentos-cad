@@ -139,13 +139,25 @@ pub fn write_profile(
         }
         if let Some(d) = &node.derivation {
             let text = serde_json::to_string(d).map_err(|e| e.to_string())?;
-            gp.add_metadata(&t.table, DERIVATION_STANDARD, "application/json", &text, made)
-                .map_err(|e| e.0)?;
+            gp.add_metadata(
+                &t.table,
+                DERIVATION_STANDARD,
+                "application/json",
+                &text,
+                made,
+            )
+            .map_err(|e| e.0)?;
         }
         // The fields' rules (docs/adr/1075): KentOS's whole document, and the schema extension for other programs.
         if let Some(text) = crate::gpkg_fields::rules_document(&node.fields, &t.columns) {
-            gp.add_metadata(&t.table, crate::gpkg_fields::RULES_STANDARD, "application/json", &text, made)
-                .map_err(|e| e.0)?;
+            gp.add_metadata(
+                &t.table,
+                crate::gpkg_fields::RULES_STANDARD,
+                "application/json",
+                &text,
+                made,
+            )
+            .map_err(|e| e.0)?;
         }
         let (columns, rules) = crate::gpkg_fields::schema_rows(&t.table, &node.fields, &t.columns);
         gp.write_schema(&columns, &rules).map_err(|e| e.0)?;
@@ -369,8 +381,9 @@ pub fn read_profile(path: &Path) -> Result<Profile, String> {
         match kentos_qml::read(&text) {
             Ok(read) => {
                 if let Some(why) = crate::layers_renderer::renderer_problem(&read.renderer) {
-                    out.left
-                        .push(format!("“{table}” tablosunun katman stili (QML) alınmadı: {why}"));
+                    out.left.push(format!(
+                        "“{table}” tablosunun katman stili (QML) alınmadı: {why}"
+                    ));
                     continue;
                 }
                 out.styles.insert(
@@ -382,9 +395,9 @@ pub fn read_profile(path: &Path) -> Result<Profile, String> {
                     },
                 );
             }
-            Err(why) => out
-                .left
-                .push(format!("“{table}” tablosunun katman stili (QML) okunmadı: {why}")),
+            Err(why) => out.left.push(format!(
+                "“{table}” tablosunun katman stili (QML) okunmadı: {why}"
+            )),
         }
     }
     Ok(out)

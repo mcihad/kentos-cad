@@ -3,7 +3,9 @@
 //! code.
 
 use kentos_road::alignment::{PiInput, build};
-use kentos_road::superelevation::{Crossfall, CurveRule, Mark, Row, SuperError, from_curves, from_rows};
+use kentos_road::superelevation::{
+    Crossfall, CurveRule, Mark, Row, SuperError, from_curves, from_rows,
+};
 use serde_json::Value;
 
 const CASES: &str = include_str!("../../../../../fixtures/road/v1/superelevation.json");
@@ -33,7 +35,9 @@ fn kind(e: &SuperError) -> Value {
     match e {
         SuperError::NoCurve { pi } => serde_json::json!({"kind": "NoCurve", "pi": pi}),
         SuperError::Bad { pi } => serde_json::json!({"kind": "Bad", "pi": pi}),
-        SuperError::RateBelowNormal { pi } => serde_json::json!({"kind": "RateBelowNormal", "pi": pi}),
+        SuperError::RateBelowNormal { pi } => {
+            serde_json::json!({"kind": "RateBelowNormal", "pi": pi})
+        }
         SuperError::TooShort { pi } => serde_json::json!({"kind": "TooShort", "pi": pi}),
         SuperError::Overlap { a, b } => serde_json::json!({"kind": "Overlap", "a": a, "b": b}),
         SuperError::OffAlignment { pi } => serde_json::json!({"kind": "OffAlignment", "pi": pi}),
@@ -46,7 +50,10 @@ fn points(got: &[[f64; 2]], want: &Value, what: &str) {
     let want = want.as_array().expect("points");
     assert_eq!(got.len(), want.len(), "{what}: {got:?} vs {want:?}");
     for (a, b) in got.iter().zip(want) {
-        assert!((a[0] - n(&b[0])).abs() < WITHIN && (a[1] - n(&b[1])).abs() < WITHIN, "{what}: {a:?} vs {b}");
+        assert!(
+            (a[0] - n(&b[0])).abs() < WITHIN && (a[1] - n(&b[1])).abs() < WITHIN,
+            "{what}: {a:?} vs {b}"
+        );
     }
 }
 
@@ -55,14 +62,21 @@ fn every_schedule_is_what_the_reference_says() {
     let all: Value = serde_json::from_str(CASES).expect("json");
     for c in all["cases"].as_array().expect("cases") {
         let name = c["name"].as_str().unwrap();
-        let normal = Crossfall { left: n(&c["normal"][0]), right: n(&c["normal"][1]) };
+        let normal = Crossfall {
+            left: n(&c["normal"][0]),
+            right: n(&c["normal"][1]),
+        };
         let al = build(&pis(&c["pis"])).expect("the alignment builds");
         let got = if let Some(rows) = c.get("rows") {
             let rows: Vec<Row> = rows
                 .as_array()
                 .unwrap()
                 .iter()
-                .map(|r| Row { station: n(&r["station"]), left: n(&r["left"]), right: n(&r["right"]) })
+                .map(|r| Row {
+                    station: n(&r["station"]),
+                    left: n(&r["left"]),
+                    right: n(&r["right"]),
+                })
                 .collect();
             from_rows(&rows).map(|s| (s, Vec::new()))
         } else {
@@ -88,8 +102,16 @@ fn every_schedule_is_what_the_reference_says() {
                 let w = &c["schedule"];
                 points(&s.left, &w["left"], &format!("{name}: left"));
                 points(&s.right, &w["right"], &format!("{name}: right"));
-                points(&s.left_widening, &w["leftWidening"], &format!("{name}: left widening"));
-                points(&s.right_widening, &w["rightWidening"], &format!("{name}: right widening"));
+                points(
+                    &s.left_widening,
+                    &w["leftWidening"],
+                    &format!("{name}: left widening"),
+                );
+                points(
+                    &s.right_widening,
+                    &w["rightWidening"],
+                    &format!("{name}: right widening"),
+                );
                 let want = c["critical"].as_array().unwrap();
                 assert_eq!(critical.len(), want.len(), "{name}: critical");
                 for (a, b) in critical.iter().zip(want) {
@@ -99,15 +121,35 @@ fn every_schedule_is_what_the_reference_says() {
                         Mark::ReverseCrown => "reverseCrown",
                         Mark::Full => "full",
                     };
-                    assert_eq!((a.pi.as_str(), mark, a.exit), (b["pi"].as_str().unwrap(), b["mark"].as_str().unwrap(), b["exit"].as_bool().unwrap()), "{name}");
-                    assert!((a.station - n(&b["station"])).abs() < WITHIN, "{name}: {a:?} vs {b}");
+                    assert_eq!(
+                        (a.pi.as_str(), mark, a.exit),
+                        (
+                            b["pi"].as_str().unwrap(),
+                            b["mark"].as_str().unwrap(),
+                            b["exit"].as_bool().unwrap()
+                        ),
+                        "{name}"
+                    );
+                    assert!(
+                        (a.station - n(&b["station"])).abs() < WITHIN,
+                        "{name}: {a:?} vs {b}"
+                    );
                 }
                 for row in c["at"].as_array().unwrap() {
                     let s0 = n(&row["station"]);
                     let x = s.at(s0, normal);
                     let (wl, wr) = s.widening(s0);
-                    for (g, key) in [(x.left, "left"), (x.right, "right"), (wl, "leftWidening"), (wr, "rightWidening")] {
-                        assert!((g - n(&row[key])).abs() < WITHIN, "{name} at {s0}: {key} {g} vs {}", row[key]);
+                    for (g, key) in [
+                        (x.left, "left"),
+                        (x.right, "right"),
+                        (wl, "leftWidening"),
+                        (wr, "rightWidening"),
+                    ] {
+                        assert!(
+                            (g - n(&row[key])).abs() < WITHIN,
+                            "{name} at {s0}: {key} {g} vs {}",
+                            row[key]
+                        );
                     }
                 }
             }
@@ -120,15 +162,31 @@ fn every_schedule_is_what_the_reference_says() {
 #[test]
 fn the_pivot_changes_sides_where_the_slopes_cross() {
     use kentos_road::superelevation_physics::Pivot;
-    let row = |station: f64, left: f64, right: f64| Row { station, left, right };
-    let mut s = from_rows(&[row(100.0, -3.0, -2.0), row(200.0, 3.0, -3.0), row(400.0, 3.0, -3.0), row(500.0, -3.0, -2.0)])
-        .expect("builds");
-    let normal = Crossfall { left: -2.0, right: -2.0 };
+    let row = |station: f64, left: f64, right: f64| Row {
+        station,
+        left,
+        right,
+    };
+    let mut s = from_rows(&[
+        row(100.0, -3.0, -2.0),
+        row(200.0, 3.0, -3.0),
+        row(400.0, 3.0, -3.0),
+        row(500.0, -3.0, -2.0),
+    ])
+    .expect("builds");
+    let normal = Crossfall {
+        left: -2.0,
+        right: -2.0,
+    };
     for pivot in [Pivot::InsideEdge, Pivot::OutsideEdge] {
         s.pivot = pivot;
         let got = s.pivot_changes(normal);
         assert_eq!(got.len(), 2, "{got:?}");
-        assert!((got[0] - (100.0 + 100.0 / 7.0)).abs() < 1e-12 && (got[1] - (400.0 + 600.0 / 7.0)).abs() < 1e-12, "{got:?}");
+        assert!(
+            (got[0] - (100.0 + 100.0 / 7.0)).abs() < 1e-12
+                && (got[1] - (400.0 + 600.0 / 7.0)).abs() < 1e-12,
+            "{got:?}"
+        );
     }
     for pivot in [Pivot::Centerline, Pivot::LeftEdge, Pivot::RightEdge] {
         s.pivot = pivot;

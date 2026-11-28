@@ -296,7 +296,6 @@ fn file_name(path: &Path) -> String {
         .map_or_else(String::new, |n| n.to_string_lossy().into_owned())
 }
 
-
 impl App {
     pub(crate) fn drawing_exchange_command(&mut self, id: &str) -> Task<Message> {
         if self.document.is_none() {
@@ -323,7 +322,8 @@ impl App {
                         .map(|u| EntityId(*u.as_bytes()))
                         .collect();
                     if let (Some(c), Some(layer)) = (&copy, &rows) {
-                        let keys: Vec<i64> = self.gis.features.data.selected.iter().copied().collect();
+                        let keys: Vec<i64> =
+                            self.gis.features.data.selected.iter().copied().collect();
                         uids.extend(
                             c.uids_of(layer, &keys)
                                 .iter()
@@ -434,7 +434,8 @@ impl App {
                 let drawing = doc.model.to_snapshot_v2();
                 // Off the window's thread, as a save is (saving.rs).
                 return iced_runtime::task::blocking(move |mut out: mpsc::Sender<Message>| {
-                    let done = crate::exchange::selection_save::write_selection(&drawing, &uids, &path);
+                    let done =
+                        crate::exchange::selection_save::write_selection(&drawing, &uids, &path);
                     let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
                         &mut out,
                         msg(Event::Saved(done)),
@@ -1111,8 +1112,16 @@ mod lost_tie_tests {
         let h = doc.add(hatch).expect("a slot");
         let hu = doc.uid(h).expect("a uid");
         let snapshot = doc.to_snapshot_v2();
-        let id = |u: kentos_domain::Uuid| kentos_commands::EntityId::parse(&u.to_string()).expect("an id");
-        assert_eq!(crate::exchange::selection_save::lost_ties(&snapshot, &[id(hu)]), (1, 0));
-        assert_eq!(crate::exchange::selection_save::lost_ties(&snapshot, &[id(hu), id(cu)]), (0, 0));
+        let id = |u: kentos_domain::Uuid| {
+            kentos_commands::EntityId::parse(&u.to_string()).expect("an id")
+        };
+        assert_eq!(
+            crate::exchange::selection_save::lost_ties(&snapshot, &[id(hu)]),
+            (1, 0)
+        );
+        assert_eq!(
+            crate::exchange::selection_save::lost_ties(&snapshot, &[id(hu), id(cu)]),
+            (0, 0)
+        );
     }
 }

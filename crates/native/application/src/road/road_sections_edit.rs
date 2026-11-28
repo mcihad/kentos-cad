@@ -2,7 +2,9 @@
 //! replacing its), rebound to its alignment's present revision, or removed; one undo step “Kesit takımı”. The shared
 //! cases are `fixtures/commands/v1/road.sections.edit.json`.
 
-use kentos_commands::{CommandResult, RoadEditOperation, SectionSetDef, SectionsEdit, SectionsWritten};
+use kentos_commands::{
+    CommandResult, RoadEditOperation, SectionSetDef, SectionsEdit, SectionsWritten,
+};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -30,9 +32,20 @@ fn named(
         return Ok(Some(None));
     }
     let id = match kind {
-        "profile" => profiles::find(doc.road_profiles(), name, "profile")?.1.id.clone(),
-        "template" => common::find_template(doc.road_templates(), name, "template")?.1.id.clone(),
-        "superelevation" => crate::road_superelevations::find(doc.road_superelevations(), name, "superelevation")?.1.id.clone(),
+        "profile" => profiles::find(doc.road_profiles(), name, "profile")?
+            .1
+            .id
+            .clone(),
+        "template" => common::find_template(doc.road_templates(), name, "template")?
+            .1
+            .id
+            .clone(),
+        "superelevation" => {
+            crate::road_superelevations::find(doc.road_superelevations(), name, "superelevation")?
+                .1
+                .id
+                .clone()
+        }
         _ => crate::road_profiles::surface_id(doc, name, "surface")?,
     };
     Ok(Some(Some(id)))
@@ -42,13 +55,26 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
     common::road_project(doc)?;
     let own = doc.road_sections();
     let mut list = own.to_vec();
-    let found = input.set.as_deref().and_then(|t| common::find_set(own, t, "set").ok());
-    if matches!(input.operation, RoadEditOperation::Remove | RoadEditOperation::Rebind) && found.is_none() {
+    let found = input
+        .set
+        .as_deref()
+        .and_then(|t| common::find_set(own, t, "set").ok());
+    if matches!(
+        input.operation,
+        RoadEditOperation::Remove | RoadEditOperation::Rebind
+    ) && found.is_none()
+    {
         let name = input.set.clone().unwrap_or_default();
-        return Err(common::find_set(own, &name, "set").err().unwrap_or(Stop::Cancelled));
+        return Err(common::find_set(own, &name, "set")
+            .err()
+            .unwrap_or(Stop::Cancelled));
     }
     let alignment = match input.alignment.as_deref() {
-        Some(a) => Some(alignments::find(doc.road_alignments(), a, "alignment")?.1.clone()),
+        Some(a) => Some(
+            alignments::find(doc.road_alignments(), a, "alignment")?
+                .1
+                .clone(),
+        ),
         None => None,
     };
     let profile = named(doc, input.profile.as_deref(), "profile")?;
@@ -58,14 +84,20 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
     let target = match (input.operation, found) {
         (RoadEditOperation::Remove | RoadEditOperation::Rebind, None) => {
             let name = input.set.clone().unwrap_or_default();
-            return Err(common::find_set(own, &name, "set").err().unwrap_or(Stop::Cancelled));
+            return Err(common::find_set(own, &name, "set")
+                .err()
+                .unwrap_or(Stop::Cancelled));
         }
         (RoadEditOperation::Remove, Some((at, _))) => {
             list.remove(at);
             None
         }
         (RoadEditOperation::Rebind, Some((at, old))) => {
-            let now = doc.road_alignments().iter().find(|a| a.id == old.alignment).map_or(0, |a| a.revision);
+            let now = doc
+                .road_alignments()
+                .iter()
+                .find(|a| a.id == old.alignment)
+                .map_or(0, |a| a.revision);
             let mut d = old.clone();
             if d.alignment_revision != now {
                 d.alignment_revision = now;
@@ -154,7 +186,10 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
                         return Err(Stop::Cancelled);
                     };
                     let id = input.set.clone().unwrap_or_else(|| {
-                        (1..).map(|n| format!("k-{n}")).find(|id| own.iter().all(|s| &s.id != id)).unwrap_or_default()
+                        (1..)
+                            .map(|n| format!("k-{n}"))
+                            .find(|id| own.iter().all(|s| &s.id != id))
+                            .unwrap_or_default()
                     });
                     list.push(SectionSetDef {
                         id: id.clone(),
@@ -176,8 +211,15 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
             }
         }
     };
-    common::judged(&common::road_with(doc, None, Some(&list)), codes::INVALID_SECTION_SET, "Kesit takımı")?;
-    if let Some(d) = target.as_ref().and_then(|id| list.iter().find(|s| &s.id == id)) {
+    common::judged(
+        &common::road_with(doc, None, Some(&list)),
+        codes::INVALID_SECTION_SET,
+        "Kesit takımı",
+    )?;
+    if let Some(d) = target
+        .as_ref()
+        .and_then(|id| list.iter().find(|s| &s.id == id))
+    {
         let built = common::alignment_of(doc, d)?;
         common::stations_of(doc, d, &built)?;
     }
@@ -188,12 +230,21 @@ fn check(doc: &kentos_domain::Document, input: &SectionsEdit) -> Result<Checked,
 fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<SectionsWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_sections(c.list.clone(), STEP) {
-        return fail(codes::INVALID_SECTION_SET, format!("Kesit takımı kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_SECTION_SET,
+            format!("Kesit takımı kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
     let sets = common::reports(doc, &c.list);
     CommandResult::Completed {
         output: SectionsWritten {
-            set: c.target.as_ref().and_then(|id| sets.iter().find(|s| &s.id == id)).cloned(),
+            set: c
+                .target
+                .as_ref()
+                .and_then(|id| sets.iter().find(|s| &s.id == id))
+                .cloned(),
             sets,
             revision: doc.revision().to_string(),
         },
@@ -204,7 +255,10 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<SectionsWri
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &SectionsEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: vec![] },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -224,7 +278,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SectionsEdit) -> CommandResult<Se
 }
 
 /// Writes the set: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: SectionsEdit) -> CommandResult<SectionsWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SectionsEdit,
+) -> CommandResult<SectionsWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_SECTIONS_EDIT,

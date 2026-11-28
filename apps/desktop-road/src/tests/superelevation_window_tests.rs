@@ -2,9 +2,9 @@
 //! not build, and writes through `road.superelevations.edit`, each write one undo step; its axis of rotation and
 //! Denetim (docs/adr/0931); and its pictures.
 
-use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::road;
+use crate::road::RoadState;
 use crate::superelevation_window::Event as W;
 
 /// A road project with `road.superelevations.query`'s drawing: a surface, the main alignment with one curve (p1), the
@@ -18,9 +18,13 @@ fn app(schedules: bool) -> App {
     .expect("cases");
     let mut setup = cases["setup"].clone();
     if !schedules {
-        setup["settings"]["road"].as_object_mut().expect("road").remove("superelevations");
+        setup["settings"]["road"]
+            .as_object_mut()
+            .expect("road")
+            .remove("superelevations");
     }
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("the drawing reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -55,7 +59,12 @@ fn made(app: &mut App) {
 fn the_window_makes_a_schedule_and_shows_its_diagram() {
     let mut app = app(false);
     made(&mut app);
-    let w = app.modules.road().superelevation_window.as_ref().expect("open");
+    let w = app
+        .modules
+        .road()
+        .superelevation_window
+        .as_ref()
+        .expect("open");
     let report = w.report.as_ref().expect("built").as_ref().expect("builds");
     assert_eq!(report.critical.len(), 8, "NC, LC, RC and FS in and out");
     assert!(
@@ -81,7 +90,12 @@ fn a_rate_below_the_normal_slope_says_why_and_a_blank_is_refused() {
     let mut app = app(false);
     made(&mut app);
     send(&mut app, W::Cell(0, 1, "2".into()));
-    let w = app.modules.road().superelevation_window.as_ref().expect("open");
+    let w = app
+        .modules
+        .road()
+        .superelevation_window
+        .as_ref()
+        .expect("open");
     let why = w
         .report
         .as_ref()
@@ -125,7 +139,11 @@ fn a_stale_schedule_is_rebound_and_a_used_one_stays() {
     send(&mut app, W::Choose(0));
     send(&mut app, W::Remove);
     send(&mut app, W::Save);
-    assert_eq!(model(&mut app).road_superelevations().len(), 2, "the set's schedule stays");
+    assert_eq!(
+        model(&mut app).road_superelevations().len(),
+        2,
+        "the set's schedule stays"
+    );
 }
 
 #[test]
@@ -133,7 +151,12 @@ fn the_axis_is_written_and_denetim_reads_the_schedule_as_typed() {
     use kentos_commands::SuperelevationPivot as P;
     let mut app = app(false);
     made(&mut app);
-    let w = app.modules.road().superelevation_window.as_ref().expect("open");
+    let w = app
+        .modules
+        .road()
+        .superelevation_window
+        .as_ref()
+        .expect("open");
     assert_eq!(
         w.check_template.as_deref(),
         Some("tk-1"),
@@ -146,13 +169,17 @@ fn the_axis_is_written_and_denetim_reads_the_schedule_as_typed() {
         .as_ref()
         .expect("reads");
     assert!(c.curves.is_empty(), "no speed, no friction");
-    assert!(c.gradients.iter().any(|g| g.left > 0.0 || g.right > 0.0), "the slopes change on the runoff");
+    assert!(
+        c.gradients.iter().any(|g| g.left > 0.0 || g.right > 0.0),
+        "the slopes change on the runoff"
+    );
     // 80 km/h, friction at most 0,05 and 1:400: the limits break, before anything is saved.
     send(&mut app, W::Check(0, "80".into()));
     send(&mut app, W::Check(1, "0,05".into()));
     send(&mut app, W::Check(2, "400".into()));
     let c = app
-        .modules.road()
+        .modules
+        .road()
         .superelevation_window
         .as_ref()
         .unwrap()
@@ -174,7 +201,8 @@ fn the_axis_is_written_and_denetim_reads_the_schedule_as_typed() {
         .fold(0.0, f64::max);
     send(&mut app, W::Pivot(Some(P::InsideEdge)));
     let c = app
-        .modules.road()
+        .modules
+        .road()
         .superelevation_window
         .as_ref()
         .unwrap()
@@ -191,7 +219,8 @@ fn the_axis_is_written_and_denetim_reads_the_schedule_as_typed() {
     // n of 1:n at most 1 says why.
     send(&mut app, W::Check(2, "1".into()));
     let why = app
-        .modules.road()
+        .modules
+        .road()
         .superelevation_window
         .as_ref()
         .unwrap()
@@ -202,7 +231,10 @@ fn the_axis_is_written_and_denetim_reads_the_schedule_as_typed() {
     assert!(why.contains("1:200"), "{why}");
     send(&mut app, W::Check(2, "400".into()));
     send(&mut app, W::Save);
-    assert_eq!(model(&mut app).road_superelevations()[0].pivot, Some(P::InsideEdge));
+    assert_eq!(
+        model(&mut app).road_superelevations()[0].pivot,
+        Some(P::InsideEdge)
+    );
     // The centreline is stored as no field.
     let _ = app.update(Message::Run("superelevation.editor"));
     send(&mut app, W::Choose(0));
@@ -229,7 +261,9 @@ fn screens() {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app(true);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -242,7 +276,10 @@ fn screens() {
             } else {
                 out.join(format!("yol-y6-{file}-{name}.png"))
             };
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -260,19 +297,31 @@ fn screens() {
         // friction 0,16, relative gradient 1:154 written 150) as an example; the 40 m runoff is too steep about the inside edge.
         let _ = app.update(Message::Run("superelevation.editor"));
         send(&mut app, W::Choose(0));
-        send(&mut app, W::Pivot(Some(kentos_commands::SuperelevationPivot::InsideEdge)));
+        send(
+            &mut app,
+            W::Pivot(Some(kentos_commands::SuperelevationPivot::InsideEdge)),
+        );
         send(&mut app, W::Check(0, "50".into()));
         send(&mut app, W::Check(1, "0,16".into()));
         send(&mut app, W::Check(2, "150".into()));
         let y27 = |f: &str| format!("../yol-y26/y27-3-{f}");
         shot(&mut app, &y27("dever-eksen"));
-        send(&mut app, W::List(crate::superelevation_window::Listed::Gradients));
+        send(
+            &mut app,
+            W::List(crate::superelevation_window::Listed::Gradients),
+        );
         shot(&mut app, &y27("dever-goreli"));
-        send(&mut app, W::List(crate::superelevation_window::Listed::Findings));
+        send(
+            &mut app,
+            W::List(crate::superelevation_window::Listed::Findings),
+        );
         shot(&mut app, &y27("dever-bulgular"));
         // A longer runoff: the gradient falls under the limit, the findings go.
         send(&mut app, W::Cell(0, 2, "80".into()));
-        send(&mut app, W::List(crate::superelevation_window::Listed::Friction));
+        send(
+            &mut app,
+            W::List(crate::superelevation_window::Listed::Friction),
+        );
         shot(&mut app, &y27("dever-surtunme"));
         send(&mut app, W::Cancel);
         if name == "acik-genis" {
@@ -306,10 +355,18 @@ const EQUATION_CASE: &str = "Km eşitliği geçişin içinde: kritik km'ler iki 
 /// The query case's own drawing: the main alignment with a km equation inside the transition.
 fn equation_app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.superelevations.query.json")).expect("cases");
-    let c = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == EQUATION_CASE).expect("the case");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(c["setup"].clone()).expect("the drawing reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.superelevations.query.json"
+    ))
+    .expect("cases");
+    let c = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == EQUATION_CASE)
+        .expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(c["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -320,15 +377,24 @@ fn equation_app() -> App {
 #[test]
 fn the_critical_table_writes_the_km_across_an_equation() {
     let mut app = equation_app();
-    let input = kentos_commands::SuperelevationsQuery { superelevation: Some("d-1".into()), stations: vec![] };
+    let input = kentos_commands::SuperelevationsQuery {
+        superelevation: Some("d-1".into()),
+        stations: vec![],
+    };
     let kentos_commands::CommandResult::Completed { output, .. } =
-        kentos_native_application::road_superelevations_query::execute(&mut kentos_native_application::ExecutionContext::new(model(&mut app)), input)
+        kentos_native_application::road_superelevations_query::execute(
+            &mut kentos_native_application::ExecutionContext::new(model(&mut app)),
+            input,
+        )
     else {
         panic!("the query reads")
     };
     let rows = crate::superelevation_window::critical_rows(&output.superelevations[0].critical);
     let kms: Vec<&str> = rows.iter().map(|r| r[2].as_str()).collect();
-    assert_eq!(&kms[..4], &["1+178,046", "1+194,713", "1+511,379", "1+534,713"]);
+    assert_eq!(
+        &kms[..4],
+        &["1+178,046", "1+194,713", "1+511,379", "1+534,713"]
+    );
 }
 
 /// `.run/gui-evidence/yol-y68/`:
@@ -342,11 +408,17 @@ fn screens_equation() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y68");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y68");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = equation_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -357,7 +429,10 @@ fn screens_equation() {
         send(&mut app, W::Choose(0));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y68-km-esitligi-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -374,7 +449,8 @@ fn screens_own_speed() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y80");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y80");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
@@ -398,8 +474,13 @@ fn screens_own_speed() {
             &mut kentos_native_application::ExecutionContext::new(model(&mut app)),
             edit,
         );
-        assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        assert!(
+            matches!(done, kentos_commands::CommandResult::Completed { .. }),
+            "{done:?}"
+        );
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -409,15 +490,27 @@ fn screens_own_speed() {
         let _ = app.update(Message::Run("superelevation.editor"));
         send(&mut app, W::Choose(0));
         send(&mut app, W::Check(1, "0,10".into()));
-        send(&mut app, W::List(crate::superelevation_window::Listed::Friction));
+        send(
+            &mut app,
+            W::List(crate::superelevation_window::Listed::Friction),
+        );
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y80-surtunme-kendi-hizi-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
-        send(&mut app, W::List(crate::superelevation_window::Listed::Findings));
+        send(
+            &mut app,
+            W::List(crate::superelevation_window::Listed::Findings),
+        );
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y80-bulgular-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

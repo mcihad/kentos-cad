@@ -129,11 +129,18 @@ mod tests {
 
     #[test]
     fn isolation_limit_is_atomic() {
-        let mut doc=drawing();let before=doc.to_snapshot_v2();let generation=doc.generation();
-        let uid=doc.uid(Slot(1)).unwrap().to_string();
-        let result=call(&mut doc,CallOp::Execute,json!({"kind":"isolate","uids":vec![uid;MAX_SELECT_ITEMS+1]}));
-        assert_eq!(result["error"]["code"],"invalid_input");
-        assert_eq!(doc.to_snapshot_v2(),before);assert_eq!(doc.generation(),generation);
+        let mut doc = drawing();
+        let before = doc.to_snapshot_v2();
+        let generation = doc.generation();
+        let uid = doc.uid(Slot(1)).unwrap().to_string();
+        let result = call(
+            &mut doc,
+            CallOp::Execute,
+            json!({"kind":"isolate","uids":vec![uid;MAX_SELECT_ITEMS+1]}),
+        );
+        assert_eq!(result["error"]["code"], "invalid_input");
+        assert_eq!(doc.to_snapshot_v2(), before);
+        assert_eq!(doc.generation(), generation);
         assert!(!doc.objects_isolated());
     }
 

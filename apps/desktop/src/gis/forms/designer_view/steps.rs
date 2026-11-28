@@ -6,10 +6,11 @@ use super::*;
 impl App {
     /// The four steps for `form` as the window holds it.
     pub(super) fn design_steps<'a>(&self, w: &Window, form: &ProjectForm) -> Element<'a, Message> {
-        let placed = w
-            .body
-            .as_ref()
-            .is_some_and(|b| b.walk().iter().any(|(_, i)| matches!(i, FormItem::Field(_))));
+        let placed = w.body.as_ref().is_some_and(|b| {
+            b.walk()
+                .iter()
+                .any(|(_, i)| matches!(i, FormItem::Field(_)))
+        });
         let saved = !w.dirty;
         let published = saved
             && form

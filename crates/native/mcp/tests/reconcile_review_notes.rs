@@ -11,11 +11,27 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_decisions_are_review_notes_over_mcp() {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.features.reconcile.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().starts_with("Kararlar inceleme notu")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-reconcile-notes-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.features.reconcile.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .unwrap()
+                .starts_with("Kararlar inceleme notu")
+        })
+        .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-reconcile-notes-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let open = call(&mut server, "drawing.open", json!({"path": path}));
@@ -35,14 +51,25 @@ fn the_decisions_are_review_notes_over_mcp() {
     assert_eq!(r["isError"], false, "{r}");
     let out = &r["structuredContent"]["output"];
     assert_eq!(out["notes"], json!([4, 5, 6, 7]), "{out}");
-    let listed = call(&mut server, "cad.review.notes.list", json!({"drawing": drawing}));
+    let listed = call(
+        &mut server,
+        "cad.review.notes.list",
+        json!({"drawing": drawing}),
+    );
     assert_eq!(listed["isError"], false, "{listed}");
-    let notes = listed["structuredContent"]["output"]["notes"].as_array().unwrap().clone();
+    let notes = listed["structuredContent"]["output"]["notes"]
+        .as_array()
+        .unwrap()
+        .clone();
     assert_eq!(notes.len(), 5);
     let decisions = input["decisions"].as_array().unwrap();
     for (n, given) in notes[1..].iter().zip(decisions) {
         let note = &n["note"];
-        assert_eq!((note["status"].as_str(), note["author"].as_str()), (Some("resolved"), Some("Ayşe Demir")), "{note}");
+        assert_eq!(
+            (note["status"].as_str(), note["author"].as_str()),
+            (Some("resolved"), Some("Ayşe Demir")),
+            "{note}"
+        );
         assert_eq!(note["decision"]["candidate"], given["candidate"]);
         for key in ["accept", "class", "fields", "reject"] {
             assert_eq!(note["decision"].get(key), given.get(key), "{key}: {note}");
@@ -51,8 +78,15 @@ fn the_decisions_are_review_notes_over_mcp() {
     }
     // The asset written carries no review attributes.
     let asset = notes[1]["note"]["decision"]["asset"].clone();
-    let e = call(&mut server, "drawing.entity", json!({"drawing": drawing, "uid": asset}));
+    let e = call(
+        &mut server,
+        "drawing.entity",
+        json!({"drawing": drawing, "uid": asset}),
+    );
     assert_eq!(e["isError"], false, "{e}");
     let attrs = &e["structuredContent"]["entity"]["attrs"];
-    assert!(attrs.get("İnceleme").is_none() && attrs.get("Gözden geçiren").is_none(), "{attrs}");
+    assert!(
+        attrs.get("İnceleme").is_none() && attrs.get("Gözden geçiren").is_none(),
+        "{attrs}"
+    );
 }

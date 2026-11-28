@@ -33,7 +33,12 @@ fn curved_title(e: &Entity) -> Option<&'static str> {
 const PICKY: [(&str, fn(&Entity) -> bool, &str); 2] = [
     (
         "tool.vertex",
-        |e| matches!(e, Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)),
+        |e| {
+            matches!(
+                e,
+                Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)
+            )
+        },
         "çizgi, çoklu çizgi ya da kapalı alan",
     ),
     (
@@ -65,7 +70,12 @@ impl App {
     pub(crate) fn selection_misfit(&self, id: &str) -> Option<String> {
         let (_, fits, takes) = PICKY.iter().find(|(tool, _, _)| *tool == id)?;
         let doc = self.document.as_ref()?;
-        let selected: Vec<&Entity> = self.selection.ids().iter().filter_map(|s| doc.model.get(*s)).collect();
+        let selected: Vec<&Entity> = self
+            .selection
+            .ids()
+            .iter()
+            .filter_map(|s| doc.model.get(*s))
+            .collect();
         if selected.is_empty() || selected.iter().any(|e| fits(e)) {
             return None;
         }
@@ -78,6 +88,8 @@ impl App {
         }
         let title = crate::catalog::catalog().get(id).map_or(id, |c| c.title);
         let kinds = crate::layer_tree::lower_tr(&kinds.join(", "));
-        Some(format!("{title} seçili {kinds} için çalışmaz; {takes} seçin."))
+        Some(format!(
+            "{title} seçili {kinds} için çalışmaz; {takes} seçin."
+        ))
     }
 }

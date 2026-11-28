@@ -350,7 +350,11 @@ fn mask_named(text: &str) -> String {
         }
         // A traceback's last line names an exception, not a secret: `KeyError: 'parsel'` is the key it missed, the
         // clue a failure is read by (an extension's run, 14 November 2026: it was written `KeyError: '***'`).
-        if c == ':' && ["error", "exception", "warning"].iter().any(|e| name.ends_with(e)) {
+        if c == ':'
+            && ["error", "exception", "warning"]
+                .iter()
+                .any(|e| name.ends_with(e))
+        {
             continue;
         }
         // `scheme://` is not a name: `https:` would otherwise hide an address.

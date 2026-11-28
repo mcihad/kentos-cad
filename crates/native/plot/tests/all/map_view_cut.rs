@@ -11,7 +11,10 @@ use kentos_sheet::{
 use serde_json::json;
 
 fn fixture() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/viewport-annotations.json")).unwrap()
+    serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/viewport-annotations.json"
+    ))
+    .unwrap()
 }
 
 fn view(width: f64, height: f64, scale: Option<u32>) -> NamedView {
@@ -35,8 +38,10 @@ fn findings(v: NamedView) -> Vec<kentos_sheet::preflight::Finding> {
     let mut book = SheetBook::default();
     book.sheets
         .push(serde_json::from_value(fixture()["cases"][0]["sheet"].clone()).unwrap());
-    let op: Op = serde_json::from_value(json!({"op": "setViewport", "id": "viewport", "locked": false,
-        "source": {"type": "viewLink", "view": serde_json::to_value(&v).unwrap()}}))
+    let op: Op = serde_json::from_value(
+        json!({"op": "setViewport", "id": "viewport", "locked": false,
+        "source": {"type": "viewLink", "view": serde_json::to_value(&v).unwrap()}}),
+    )
     .unwrap();
     let book = ops::apply(&book, &op).unwrap().book;
     let render = RenderInputs {
@@ -49,14 +54,29 @@ fn findings(v: NamedView) -> Vec<kentos_sheet::preflight::Finding> {
 #[test]
 fn a_view_larger_than_its_frame_at_its_scale_is_a_finding() {
     let found = findings(view(400.0, 300.0, Some(20)));
-    let f = found.iter().find(|f| f.code == "map_view_cut").expect("the finding");
-    assert!(f.message.contains("“Detay”") && f.message.contains("1:20"), "{}", f.message);
+    let f = found
+        .iter()
+        .find(|f| f.code == "map_view_cut")
+        .expect("the finding");
+    assert!(
+        f.message.contains("“Detay”") && f.message.contains("1:20"),
+        "{}",
+        f.message
+    );
     assert!(f.message.contains("büyük"), "{}", f.message);
 }
 
 #[test]
 fn a_view_that_fits_or_is_fitted_says_nothing() {
-    assert!(findings(view(0.5, 0.4, Some(20))).iter().all(|f| f.code != "map_view_cut"));
+    assert!(
+        findings(view(0.5, 0.4, Some(20)))
+            .iter()
+            .all(|f| f.code != "map_view_cut")
+    );
     // No scale: the view's box is fitted to the frame, never cut.
-    assert!(findings(view(400.0, 300.0, None)).iter().all(|f| f.code != "map_view_cut"));
+    assert!(
+        findings(view(400.0, 300.0, None))
+            .iter()
+            .all(|f| f.code != "map_view_cut")
+    );
 }

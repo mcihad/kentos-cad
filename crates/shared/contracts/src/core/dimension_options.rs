@@ -183,10 +183,16 @@ pub struct DimensionLevel {
 impl DimensionLevel {
     /// What is wrong with it, in a refusal's words; none when it holds.
     pub fn problem(&self) -> Option<String> {
-        if self.id.trim() != self.id || self.id.is_empty() || self.id.chars().any(char::is_control) {
-            return Some("Kot işaretinin katı boş, kenarı boşluklu ya da denetim karakterli olamaz.".into());
+        if self.id.trim() != self.id || self.id.is_empty() || self.id.chars().any(char::is_control)
+        {
+            return Some(
+                "Kot işaretinin katı boş, kenarı boşluklu ya da denetim karakterli olamaz.".into(),
+            );
         }
-        if self.offset.is_some_and(|o| !(o.is_finite() && o.abs() <= MAX_LEVEL_OFFSET)) {
+        if self
+            .offset
+            .is_some_and(|o| !(o.is_finite() && o.abs() <= MAX_LEVEL_OFFSET))
+        {
             return Some(format!(
                 "Kot işaretinin kata göre farkı sonlu ve en çok {MAX_LEVEL_OFFSET} m olmalı."
             ));
@@ -275,7 +281,10 @@ impl DimensionOptions {
                 ));
             }
             if t.kind == ToleranceKind::Symmetric && t.lower.is_some() {
-                return Some("Simetrik toleransın alt değeri yoktur (üstü iki yana); lower'ı kaldırın.".into());
+                return Some(
+                    "Simetrik toleransın alt değeri yoktur (üstü iki yana); lower'ı kaldırın."
+                        .into(),
+                );
             }
             if t.decimals.is_some_and(|d| d > MAX_OPTION_DECIMALS) {
                 return Some(format!(

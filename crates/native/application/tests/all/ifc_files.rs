@@ -11,9 +11,12 @@ use kentos_native_application::{ExecutionContext, road_ifc};
 
 #[test]
 fn a_road_project_goes_out_as_ifc() {
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/file.export.landxml.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("setup");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/file.export.landxml.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("setup");
     let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
     let folder = if std::env::var_os("KENTOS_WRITE_IFC").is_some() {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/road/v1/ifc/out")

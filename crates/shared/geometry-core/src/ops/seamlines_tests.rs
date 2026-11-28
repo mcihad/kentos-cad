@@ -19,22 +19,53 @@ fn rect(x0: f64, y0: f64, x1: f64, y1: f64) -> Vec<Pt> {
 fn near(a: &[Pt], b: &[Pt]) {
     assert_eq!(a.len(), b.len(), "{a:?} {b:?}");
     for (p, q) in a.iter().zip(b) {
-        assert!((p[0] - q[0]).abs() < 1e-7 && (p[1] - q[1]).abs() < 1e-7, "{a:?} {b:?}");
+        assert!(
+            (p[0] - q[0]).abs() < 1e-7 && (p[1] - q[1]).abs() < 1e-7,
+            "{a:?} {b:?}"
+        );
     }
 }
 
 #[test]
 fn two_strips_side_by_side_meet_at_the_overlaps_middle() {
-    let fp = Footprints::new(&rect(500.0, 108.0, 520.0, 120.0), &rect(510.0, 108.0, 530.0, 120.0)).expect("a seam");
-    assert_eq!(fp.kinds(), &[EdgeKind::Shared, EdgeKind::SecondEnd, EdgeKind::Shared, EdgeKind::FirstEnd]);
+    let fp = Footprints::new(
+        &rect(500.0, 108.0, 520.0, 120.0),
+        &rect(510.0, 108.0, 530.0, 120.0),
+    )
+    .expect("a seam");
+    assert_eq!(
+        fp.kinds(),
+        &[
+            EdgeKind::Shared,
+            EdgeKind::SecondEnd,
+            EdgeKind::Shared,
+            EdgeKind::FirstEnd
+        ]
+    );
     let [(s, sc), (e, ec)] = fp.ends();
     near(&[s, e], &[at(515.0, 108.0), at(515.0, 120.0)]);
     assert!(!sc && !ec, "both on shared edges");
     let seam = fp.voronoi(1.0);
     near(&seam, &[at(515.0, 108.0), at(515.0, 120.0)]);
     let [a, b] = fp.rings(&seam);
-    near(&a, &[at(515.0, 120.0), at(500.0, 120.0), at(500.0, 108.0), at(515.0, 108.0)]);
-    near(&b, &[at(515.0, 108.0), at(530.0, 108.0), at(530.0, 120.0), at(515.0, 120.0)]);
+    near(
+        &a,
+        &[
+            at(515.0, 120.0),
+            at(500.0, 120.0),
+            at(500.0, 108.0),
+            at(515.0, 108.0),
+        ],
+    );
+    near(
+        &b,
+        &[
+            at(515.0, 108.0),
+            at(530.0, 108.0),
+            at(530.0, 120.0),
+            at(515.0, 120.0),
+        ],
+    );
     assert!((ring_area(&a) - 180.0).abs() < 1e-6 && (ring_area(&b) - 180.0).abs() < 1e-6);
     assert!((fp.overlap_area() - 120.0).abs() < 1e-9);
     assert!(simple(&a) && simple(&b));
@@ -44,13 +75,25 @@ fn two_strips_side_by_side_meet_at_the_overlaps_middle() {
 fn staggered_strips_take_the_corners_bisectors() {
     // Pan et al. 2009: the quadrilateral overlap ABCD, A and C the crossings; A's bisector meets D's at E, C's meets
     // B's at F; AEFC is the seam.
-    let fp = Footprints::new(&rect(500.0, 108.0, 520.0, 120.0), &rect(510.0, 105.0, 530.0, 117.0)).expect("a seam");
+    let fp = Footprints::new(
+        &rect(500.0, 108.0, 520.0, 120.0),
+        &rect(510.0, 105.0, 530.0, 117.0),
+    )
+    .expect("a seam");
     let [(s, sc), (e, ec)] = fp.ends();
     near(&[s, e], &[at(510.0, 108.0), at(520.0, 117.0)]);
     assert!(sc && ec, "both where the boundaries cross");
     for step in [0.25, 1.0, 5.0, 50.0] {
         let seam = fp.voronoi(step);
-        near(&seam, &[at(510.0, 108.0), at(514.5, 112.5), at(515.5, 112.5), at(520.0, 117.0)]);
+        near(
+            &seam,
+            &[
+                at(510.0, 108.0),
+                at(514.5, 112.5),
+                at(515.5, 112.5),
+                at(520.0, 117.0),
+            ],
+        );
     }
     let seam = fp.voronoi(1.0);
     let [a, b] = fp.rings(&seam);
@@ -60,8 +103,14 @@ fn staggered_strips_take_the_corners_bisectors() {
     // Every seam point is as far from the first's end as from the second's.
     for p in &seam[1..seam.len() - 1] {
         let q = [p[0] - X0, p[1] - Y0];
-        let d1 = js_min(to_polyline(q, &[[510.0, 117.0], [510.0, 108.0]]), to_polyline(q, &[[520.0, 117.0], [510.0, 117.0]]));
-        let d2 = js_min(to_polyline(q, &[[510.0, 108.0], [520.0, 108.0]]), to_polyline(q, &[[520.0, 108.0], [520.0, 117.0]]));
+        let d1 = js_min(
+            to_polyline(q, &[[510.0, 117.0], [510.0, 108.0]]),
+            to_polyline(q, &[[520.0, 117.0], [510.0, 117.0]]),
+        );
+        let d2 = js_min(
+            to_polyline(q, &[[510.0, 108.0], [520.0, 108.0]]),
+            to_polyline(q, &[[520.0, 108.0], [520.0, 117.0]]),
+        );
         assert!((d1 - d2).abs() < 1e-9, "{p:?}: {d1} {d2}");
     }
 }
@@ -69,23 +118,62 @@ fn staggered_strips_take_the_corners_bisectors() {
 #[test]
 fn faults() {
     let a = rect(500.0, 108.0, 520.0, 120.0);
-    assert_eq!(Footprints::new(&a, &rect(530.0, 108.0, 540.0, 120.0)).err(), Some(SeamFault::Apart));
-    assert_eq!(Footprints::new(&a, &rect(520.0, 108.0, 540.0, 120.0)).err(), Some(SeamFault::Apart), "touching");
-    assert_eq!(Footprints::new(&a, &rect(505.0, 110.0, 515.0, 118.0)).err(), Some(SeamFault::Inside(1)));
-    assert_eq!(Footprints::new(&rect(505.0, 110.0, 515.0, 118.0), &a).err(), Some(SeamFault::Inside(0)));
-    assert_eq!(Footprints::new(&a, &a).err(), Some(SeamFault::Inside(0)), "the same");
     assert_eq!(
-        Footprints::new(&rect(500.0, 110.0, 530.0, 120.0), &rect(510.0, 100.0, 520.0, 130.0)).err(),
+        Footprints::new(&a, &rect(530.0, 108.0, 540.0, 120.0)).err(),
+        Some(SeamFault::Apart)
+    );
+    assert_eq!(
+        Footprints::new(&a, &rect(520.0, 108.0, 540.0, 120.0)).err(),
+        Some(SeamFault::Apart),
+        "touching"
+    );
+    assert_eq!(
+        Footprints::new(&a, &rect(505.0, 110.0, 515.0, 118.0)).err(),
+        Some(SeamFault::Inside(1))
+    );
+    assert_eq!(
+        Footprints::new(&rect(505.0, 110.0, 515.0, 118.0), &a).err(),
+        Some(SeamFault::Inside(0))
+    );
+    assert_eq!(
+        Footprints::new(&a, &a).err(),
+        Some(SeamFault::Inside(0)),
+        "the same"
+    );
+    assert_eq!(
+        Footprints::new(
+            &rect(500.0, 110.0, 530.0, 120.0),
+            &rect(510.0, 100.0, 520.0, 130.0)
+        )
+        .err(),
         Some(SeamFault::Crossed)
     );
-    let notch = vec![at(500.0, 108.0), at(520.0, 108.0), at(510.0, 112.0), at(520.0, 120.0), at(500.0, 120.0)];
-    assert_eq!(Footprints::new(&notch, &a).err(), Some(SeamFault::NotConvex(0)));
-    assert_eq!(Footprints::new(&a, &[at(500.0, 108.0), at(510.0, 108.0)]).err(), Some(SeamFault::Degenerate(1)));
+    let notch = vec![
+        at(500.0, 108.0),
+        at(520.0, 108.0),
+        at(510.0, 112.0),
+        at(520.0, 120.0),
+        at(500.0, 120.0),
+    ];
+    assert_eq!(
+        Footprints::new(&notch, &a).err(),
+        Some(SeamFault::NotConvex(0))
+    );
+    assert_eq!(
+        Footprints::new(&a, &[at(500.0, 108.0), at(510.0, 108.0)]).err(),
+        Some(SeamFault::Degenerate(1))
+    );
 }
 
 #[test]
 fn a_footprint_given_clockwise_with_its_closing_point_and_a_straight_corner_is_the_same() {
-    let mut cw = vec![at(510.0, 108.0), at(510.0, 120.0), at(530.0, 120.0), at(530.0, 114.0), at(530.0, 108.0)];
+    let mut cw = vec![
+        at(510.0, 108.0),
+        at(510.0, 120.0),
+        at(530.0, 120.0),
+        at(530.0, 114.0),
+        at(530.0, 108.0),
+    ];
     cw.push(cw[0]);
     let fp = Footprints::new(&rect(500.0, 108.0, 520.0, 120.0), &cw).expect("a seam");
     near(&fp.voronoi(1.0), &[at(515.0, 108.0), at(515.0, 120.0)]);

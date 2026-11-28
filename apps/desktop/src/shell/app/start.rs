@@ -13,7 +13,9 @@ impl App {
         // through them (docs/adr/9196 §2). Registering again changes nothing.
         crate::data_layers::register();
         let (mut app, task) = Self::start(path, Settings::memory());
-        app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+        app.db_store = Box::leak(Box::new(
+            kentos_postgis::connections::ConnectionStore::open(None),
+        ));
         (app, task)
     }
 

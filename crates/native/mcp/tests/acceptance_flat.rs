@@ -14,10 +14,22 @@ use serde_json::{Value, json};
 
 const SCENARIO: &str = include_str!("../../../../fixtures/acceptance/v1/flat.json");
 const CORPUS: [(&str, &str); 4] = [
-    ("change", include_str!("../../../../fixtures/acceptance/v1/change.json")),
-    ("house", include_str!("../../../../fixtures/acceptance/v1/house.json")),
-    ("curved", include_str!("../../../../fixtures/acceptance/v1/curved.json")),
-    ("renovation", include_str!("../../../../fixtures/acceptance/v1/renovation.json")),
+    (
+        "change",
+        include_str!("../../../../fixtures/acceptance/v1/change.json"),
+    ),
+    (
+        "house",
+        include_str!("../../../../fixtures/acceptance/v1/house.json"),
+    ),
+    (
+        "curved",
+        include_str!("../../../../fixtures/acceptance/v1/curved.json"),
+    ),
+    (
+        "renovation",
+        include_str!("../../../../fixtures/acceptance/v1/renovation.json"),
+    ),
 ];
 
 fn tool_result(server: &mut Server, name: &str, arguments: Value) -> Value {
@@ -67,7 +79,10 @@ fn differs(actual: &Value, expected: &Value, tolerance: f64, at: &str, out: &mut
             _ => out.push(format!("{at}: {actual}, beklenen {expected}")),
         },
         Value::Number(n) => {
-            let ok = actual.as_f64().zip(n.as_f64()).is_some_and(|(a, e)| (a - e).abs() <= tolerance);
+            let ok = actual
+                .as_f64()
+                .zip(n.as_f64())
+                .is_some_and(|(a, e)| (a - e).abs() <= tolerance);
             if !ok {
                 out.push(format!("{at}: {actual}, beklenen {expected}"));
             }
@@ -83,7 +98,12 @@ fn differs(actual: &Value, expected: &Value, tolerance: f64, at: &str, out: &mut
 fn bind(value: &Value, names: &BTreeMap<String, String>) -> Value {
     match value {
         Value::String(s) if s.starts_with('$') => json!(names[&s[1..]]),
-        Value::Object(fields) => Value::Object(fields.iter().map(|(k, v)| (k.clone(), bind(v, names))).collect()),
+        Value::Object(fields) => Value::Object(
+            fields
+                .iter()
+                .map(|(k, v)| (k.clone(), bind(v, names)))
+                .collect(),
+        ),
         Value::Array(items) => Value::Array(items.iter().map(|v| bind(v, names)).collect()),
         other => other.clone(),
     }
@@ -101,7 +121,10 @@ fn bound(output: &Value, key: &Value, names: &mut BTreeMap<String, String>) {
             names.insert(name.clone(), text(uid));
         }
         Value::Array(keys) => {
-            let ids = output["created"].as_array().or(output["uids"].as_array()).expect("ids");
+            let ids = output["created"]
+                .as_array()
+                .or(output["uids"].as_array())
+                .expect("ids");
             for (k, u) in keys.iter().zip(ids) {
                 names.insert(text(k), text(u));
             }
@@ -121,14 +144,21 @@ impl Run {
         call(&mut self.server, tool, arguments)
     }
     fn count(&mut self) -> u64 {
-        self.on("drawing.summary", json!({}))["objects"].as_u64().expect("a count")
+        self.on("drawing.summary", json!({}))["objects"]
+            .as_u64()
+            .expect("a count")
     }
     fn entities(&mut self, names: &BTreeMap<String, String>) -> BTreeMap<String, Value> {
         names
             .iter()
             // The layer and the scenario's files (absolute paths) are not objects.
             .filter(|(k, u)| *k != "layer" && !u.contains('/'))
-            .map(|(k, u)| (k.clone(), self.on("drawing.entity", json!({ "uid": u }))["entity"].clone()))
+            .map(|(k, u)| {
+                (
+                    k.clone(),
+                    self.on("drawing.entity", json!({ "uid": u }))["entity"].clone(),
+                )
+            })
             .collect()
     }
 }
@@ -155,10 +185,19 @@ fn replay(text: &str, out_name: &str) {
     let made = call(&mut server, "drawing.new", scenario["project"].clone());
     let drawing = made["drawing"].as_str().expect("a handle").to_owned();
     let mut names = BTreeMap::new();
-    names.insert("layer".to_owned(), made["summary"]["activeLayer"].as_str().expect("a layer").to_owned());
+    names.insert(
+        "layer".to_owned(),
+        made["summary"]["activeLayer"]
+            .as_str()
+            .expect("a layer")
+            .to_owned(),
+    );
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
     for (k, path) in scenario["files"].as_object().into_iter().flatten() {
-        let file = root.join(path.as_str().expect("a path")).canonicalize().expect("the scenario's file");
+        let file = root
+            .join(path.as_str().expect("a path"))
+            .canonicalize()
+            .expect("the scenario's file");
         names.insert(k.clone(), file.to_string_lossy().into_owned());
     }
     let mut run = Run { server, drawing };
@@ -167,7 +206,12 @@ fn replay(text: &str, out_name: &str) {
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).expect("a folder");
     let mut undone = 0;
-    for (n, step) in scenario["steps"].as_array().expect("steps").iter().enumerate() {
+    for (n, step) in scenario["steps"]
+        .as_array()
+        .expect("steps")
+        .iter()
+        .enumerate()
+    {
         let name = step["name"].as_str().unwrap_or("");
         let mut output = Value::Null;
         if let Some(command) = step["command"].as_str() {
@@ -177,7 +221,10 @@ fn replay(text: &str, out_name: &str) {
             if let Some(code) = step["refuse"].as_str() {
                 let result = tool_result(&mut run.server, command, arguments);
                 assert_eq!(result["isError"], true, "{name}: {result}");
-                assert_eq!(result["structuredContent"]["error"]["code"], code, "{name}: {result}");
+                assert_eq!(
+                    result["structuredContent"]["error"]["code"], code,
+                    "{name}: {result}"
+                );
                 assert_eq!(run.count(), before, "{name}: a refusal writes nothing");
             } else {
                 let answer = call(&mut run.server, command, arguments);
@@ -191,7 +238,11 @@ fn replay(text: &str, out_name: &str) {
                     assert_eq!(run.count(), before, "{name}: undone");
                     assert_eq!(run.on("drawing.redo", json!({}))["step"], label, "{name}");
                     assert_eq!(run.count(), after, "{name}: redone");
-                    assert_eq!(run.entities(&names), shown, "{name}: redone the same objects");
+                    assert_eq!(
+                        run.entities(&names),
+                        shown,
+                        "{name}: redone the same objects"
+                    );
                     undone += 1;
                 }
             }
@@ -206,32 +257,60 @@ fn replay(text: &str, out_name: &str) {
             run.on("drawing.save", json!({ "path": path }));
             let opened = call(&mut run.server, "drawing.open", json!({ "path": path }));
             run.drawing = opened["drawing"].as_str().expect("a handle").to_owned();
-            assert_eq!(run.entities(&names), shown, "{name}: every bound object by its id");
+            assert_eq!(
+                run.entities(&names),
+                shown,
+                "{name}: every bound object by its id"
+            );
         }
         let expect = &step["expect"];
         let mut problems = Vec::new();
         for (key, want) in expect["objects"].as_object().into_iter().flatten() {
             let got = run.on("drawing.entity", json!({ "uid": names[key] }));
-            differs(&got["entity"], &bind(want, &names), tolerance, key, &mut problems);
+            differs(
+                &got["entity"],
+                &bind(want, &names),
+                tolerance,
+                key,
+                &mut problems,
+            );
         }
         for (key, want) in expect["measures"].as_object().into_iter().flatten() {
             let got = run.on("drawing.measure", json!({ "uid": names[key] }));
             differs(&got, want, tolerance, &format!("{key} ölçü"), &mut problems);
         }
         if let Some(count) = expect.get("count") {
-            differs(&json!(run.count()), count, 0.0, "nesne sayısı", &mut problems);
+            differs(
+                &json!(run.count()),
+                count,
+                0.0,
+                "nesne sayısı",
+                &mut problems,
+            );
         }
         for (kind, want) in expect["kinds"].as_object().into_iter().flatten() {
-            let page = run.on("drawing.entities", json!({ "kinds": [kind], "limit": 1000 }));
+            let page = run.on(
+                "drawing.entities",
+                json!({ "kinds": [kind], "limit": 1000 }),
+            );
             let got = page["items"].as_array().map_or(0, Vec::len);
-            differs(&json!(got), want, 0.0, &format!("tür {kind}"), &mut problems);
+            differs(
+                &json!(got),
+                want,
+                0.0,
+                &format!("tür {kind}"),
+                &mut problems,
+            );
         }
         if let Some(want) = expect.get("output") {
             differs(&output, &bind(want, &names), 1e-9, "cevap", &mut problems);
         }
         assert!(problems.is_empty(), "{name}: {problems:#?}");
     }
-    assert!(undone > scenario["undone"].as_u64().unwrap_or(10), "{undone} steps undone");
+    assert!(
+        undone > scenario["undone"].as_u64().unwrap_or(10),
+        "{undone} steps undone"
+    );
     if let Some(out) = std::env::var_os("KENTOS_ACCEPTANCE_OUT") {
         let file = std::path::PathBuf::from(out).join(out_name);
         std::fs::create_dir_all(file.parent().expect("a folder")).expect("the output folder");

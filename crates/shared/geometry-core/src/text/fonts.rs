@@ -87,7 +87,11 @@ pub fn resolve(name: &str) -> (Option<&'static str>, FontMatch) {
     }
     // A family the fonts folders gave, by its name or its files' (`Roboto`, `Roboto-Bold.ttf`; docs/adr/9313).
     for family in super::families::installed_families() {
-        let stem: String = family.to_lowercase().chars().filter(|c| c.is_ascii_alphanumeric()).collect();
+        let stem: String = family
+            .to_lowercase()
+            .chars()
+            .filter(|c| c.is_ascii_alphanumeric())
+            .collect();
         if !stem.is_empty() && family_style(&n, &stem) {
             return (Some(family), FontMatch::Folder);
         }
@@ -98,12 +102,31 @@ pub fn resolve(name: &str) -> (Option<&'static str>, FontMatch) {
 /// Exact family plus known style/weight labels; a prefix is not a metric
 /// guarantee (Arial Narrow, Helvetica Neue and Barlow Condensed differ).
 fn family_style(name: &str, family: &str) -> bool {
-    name.strip_prefix(family).is_some_and(|style| matches!(style,
-        "" | "regular" | "normal" | "roman" | "medium" | "semibold" |
-        "bold" | "italic" | "oblique" | "bolditalic" | "boldoblique" |
-        "400" | "500" | "600" | "700" | "400italic" |
-        "bd" | "bi" | "i" | "b" | "z"
-    ))
+    name.strip_prefix(family).is_some_and(|style| {
+        matches!(
+            style,
+            "" | "regular"
+                | "normal"
+                | "roman"
+                | "medium"
+                | "semibold"
+                | "bold"
+                | "italic"
+                | "oblique"
+                | "bolditalic"
+                | "boldoblique"
+                | "400"
+                | "500"
+                | "600"
+                | "700"
+                | "400italic"
+                | "bd"
+                | "bi"
+                | "i"
+                | "b"
+                | "z"
+        )
+    })
 }
 
 #[cfg(test)]
@@ -118,7 +141,10 @@ mod tests {
             (Some("plex-mono"), FontMatch::Own)
         );
         assert_eq!(resolve("arialbd.ttf"), (Some("arial"), FontMatch::Own));
-        assert_eq!(resolve("Times New Roman"), (Some("times-new-roman"), FontMatch::Own));
+        assert_eq!(
+            resolve("Times New Roman"),
+            (Some("times-new-roman"), FontMatch::Own)
+        );
         assert_eq!(
             resolve("LiberationSerif-Bold.ttf"),
             (Some("times-new-roman"), FontMatch::Equivalent)
@@ -132,29 +158,53 @@ mod tests {
             (Some("courier-prime"), FontMatch::Own)
         );
         assert_eq!(resolve("romans.shx"), (None, FontMatch::Shx));
-        assert_eq!(resolve("times.ttf"), (Some("times-new-roman"), FontMatch::Own));
+        assert_eq!(
+            resolve("times.ttf"),
+            (Some("times-new-roman"), FontMatch::Own)
+        );
         assert_eq!(resolve("calibri.ttf"), (None, FontMatch::Missing));
         assert!(FontMatch::Shx.substituted() && !FontMatch::Equivalent.substituted());
     }
 
     #[test]
     fn related_names_are_not_proof_of_equal_metrics() {
-        for name in ["Arial Narrow", "Arial Black", "Helvetica Neue", "Barlow Condensed",
-            "Barlow Semi Condensed", "Overpass Mono", "Arimo Display", "Courtney.ttf",
-            "Courier New Condensed", "Arial-custom.ttf", "NotArial.ttf"] {
+        for name in [
+            "Arial Narrow",
+            "Arial Black",
+            "Helvetica Neue",
+            "Barlow Condensed",
+            "Barlow Semi Condensed",
+            "Overpass Mono",
+            "Arimo Display",
+            "Courtney.ttf",
+            "Courier New Condensed",
+            "Arial-custom.ttf",
+            "NotArial.ttf",
+        ] {
             assert_eq!(resolve(name), (None, FontMatch::Missing), "{name}");
         }
     }
 
     #[test]
     fn file_paths_and_recognized_styles_share_the_family_rule() {
-        for name in [r"C:\Windows\Fonts\arialbd.ttf", "/fonts/Arial-BoldItalic.otf", "Arial Oblique"] {
+        for name in [
+            r"C:\Windows\Fonts\arialbd.ttf",
+            "/fonts/Arial-BoldItalic.otf",
+            "Arial Oblique",
+        ] {
             assert_eq!(resolve(name), (Some("arial"), FontMatch::Own), "{name}");
         }
         for name in ["LiberationSans-Regular.ttf", "Helvetica-Bold"] {
-            assert_eq!(resolve(name), (Some("arial"), FontMatch::Equivalent), "{name}");
+            assert_eq!(
+                resolve(name),
+                (Some("arial"), FontMatch::Equivalent),
+                "{name}"
+            );
         }
-        assert_eq!(resolve("/fonts/Barlow-400-italic.ttf"), (Some("barlow"), FontMatch::Own));
+        assert_eq!(
+            resolve("/fonts/Barlow-400-italic.ttf"),
+            (Some("barlow"), FontMatch::Own)
+        );
         assert_eq!(resolve(r"C:\Fonts\ROMANS.SHX"), (None, FontMatch::Shx));
     }
 }

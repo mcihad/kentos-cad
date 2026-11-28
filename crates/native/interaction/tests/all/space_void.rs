@@ -21,7 +21,10 @@ fn a_shaft_drawn_with_bosluk_is_a_void_crossed_and_summed_apart() {
         b.click(x, y);
     }
     b.move_to(0., 0.6);
-    let preview = b.session.preview(&Default::default()).expect("the plan drawn");
+    let preview = b
+        .session
+        .preview(&Default::default())
+        .expect("the plan drawn");
     let crossed = preview.strokes.iter().filter(|s| s.pts.len() == 2).count();
     assert!(crossed >= 2, "the void's cross in the preview: {crossed}");
     b.click(0., 0.6);
@@ -36,13 +39,18 @@ fn a_shaft_drawn_with_bosluk_is_a_void_crossed_and_summed_apart() {
         .expect("the shaft");
     assert!(space.void, "written a void");
     assert_eq!(space.name.as_deref(), Some("Şaft"));
-    let CommandResult::Completed { output, .. } =
-        spaces_quantities::plan(&ExecutionContext::new(&mut b.doc), &SpacesQuantities::default())
-    else {
+    let CommandResult::Completed { output, .. } = spaces_quantities::plan(
+        &ExecutionContext::new(&mut b.doc),
+        &SpacesQuantities::default(),
+    ) else {
         panic!("quantities");
     };
     assert_eq!(output.totals.space_area, 0.0, "a void is not a room's area");
-    assert!((output.totals.void_area - 0.48).abs() < 1e-9, "{:?}", output.totals);
+    assert!(
+        (output.totals.void_area - 0.48).abs() < 1e-9,
+        "{:?}",
+        output.totals
+    );
 }
 
 use kentos_commands::CommandResult;

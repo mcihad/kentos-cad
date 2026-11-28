@@ -80,7 +80,10 @@ pub struct Member {
 /// Whether the bytes begin a VRT (`<VRTDataset`, after a byte order mark and white space).
 pub fn sniff(head: &[u8]) -> bool {
     let head = head.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(head);
-    let start = head.iter().position(|b| !b.is_ascii_whitespace()).unwrap_or(head.len());
+    let start = head
+        .iter()
+        .position(|b| !b.is_ascii_whitespace())
+        .unwrap_or(head.len());
     head[start..].starts_with(b"<VRTDataset")
 }
 
@@ -124,7 +127,11 @@ pub fn epsg_of(srs: &str) -> Option<u32> {
         let mut from = 0;
         while let Some(at) = t[from..].find(key) {
             let after = &t[from + at + key.len()..];
-            let digits: String = after.trim_start_matches('"').chars().take_while(char::is_ascii_digit).collect();
+            let digits: String = after
+                .trim_start_matches('"')
+                .chars()
+                .take_while(char::is_ascii_digit)
+                .collect();
             if let Ok(n) = digits.parse::<u32>() {
                 found = Some((from + at, n));
             }
@@ -140,13 +147,21 @@ fn number(text: &str, what: &str) -> Result<f64, RasterError> {
         .parse::<f64>()
         .ok()
         .filter(|v| v.is_finite())
-        .ok_or_else(|| RasterError::new(format!("VRT'nin {what} değeri sayı değil: “{}”.", text.trim())))
+        .ok_or_else(|| {
+            RasterError::new(format!(
+                "VRT'nin {what} değeri sayı değil: “{}”.",
+                text.trim()
+            ))
+        })
 }
 
 fn rect(node: roxmltree::Node<'_, '_>, what: &str) -> Result<[f64; 4], RasterError> {
     let mut r = [0.0; 4];
     for (k, name) in ["xOff", "yOff", "xSize", "ySize"].into_iter().enumerate() {
-        r[k] = number(node.attribute(name).unwrap_or("0"), &format!("{what} {name}"))?;
+        r[k] = number(
+            node.attribute(name).unwrap_or("0"),
+            &format!("{what} {name}"),
+        )?;
     }
     if !(r[2] > 0.0 && r[3] > 0.0) {
         return Err(RasterError::new(format!("VRT'nin {what} dikdörtgeni boş.")));
@@ -163,7 +178,8 @@ pub fn parse(text: &str) -> Result<Vrt, RasterError> {
     if text.len() > MAX_TEXT {
         return Err(RasterError::new("VRT dosyası 16 MB'tan büyük."));
     }
-    let doc = xml::document(text).map_err(|_| RasterError::new("VRT dosyası okunamadı: XML değil ya da çok derin."))?;
+    let doc = xml::document(text)
+        .map_err(|_| RasterError::new("VRT dosyası okunamadı: XML değil ya da çok derin."))?;
     let root = doc.root_element();
     if !root.has_tag_name("VRTDataset") {
         return Err(RasterError::new("Dosya bir VRT (VRTDataset) değil."));
@@ -191,61 +207,89 @@ pub fn parse(text: &str) -> Result<Vrt, RasterError> {
                 a[k] = number(p, "GeoTransform")?;
             }
             if a[1] * a[5] - a[2] * a[4] == 0.0 {
-                return Err(RasterError::new("VRT'nin GeoTransform'u tersine çevrilemiyor."));
+                return Err(RasterError::new(
+                    "VRT'nin GeoTransform'u tersine çevrilemiyor.",
+                ));
             }
             Some(a)
         }
         None => None,
     };
-    let srs = child(root, "SRS").and_then(|s| s.text()).map(|s| s.trim().to_owned()).filter(|s| !s.is_empty());
+    let srs = child(root, "SRS")
+        .and_then(|s| s.text())
+        .map(|s| s.trim().to_owned())
+        .filter(|s| !s.is_empty());
     let epsg = srs.as_deref().and_then(epsg_of);
     let mut bands = Vec::new();
     let mut count = 0usize;
     for b in root.children().filter(|c| c.has_tag_name("VRTRasterBand")) {
         if let Some(sub) = b.attribute("subClass") {
-            return Err(RasterError::new(format!("VRT'nin bandı türetilmiş ({sub}); açılmaz.")));
+            return Err(RasterError::new(format!(
+                "VRT'nin bandı türetilmiş ({sub}); açılmaz."
+            )));
         }
         let t = b.attribute("dataType").unwrap_or("Byte");
-        let sample = sample_of(t).ok_or_else(|| RasterError::new(format!("VRT'nin “{t}” veri türü desteklenmiyor.")))?;
+        let sample = sample_of(t)
+            .ok_or_else(|| RasterError::new(format!("VRT'nin “{t}” veri türü desteklenmiyor.")))?;
         let nodata = match child(b, "NoDataValue").and_then(|n| n.text()) {
             Some(v) if v.trim().eq_ignore_ascii_case("nan") => Some(f64::NAN),
             Some(v) => Some(number(v, "NoDataValue")?),
             None => None,
         };
-        let color = child(b, "ColorInterp").and_then(|c| c.text()).map(|c| c.trim().to_owned());
+        let color = child(b, "ColorInterp")
+            .and_then(|c| c.text())
+            .map(|c| c.trim().to_owned());
         let mut sources = Vec::new();
         for s in b.children().filter(|c| c.is_element()) {
             let tag = s.tag_name().name();
             match tag {
                 "SimpleSource" | "ComplexSource" => {}
                 "AveragedSource" | "KernelFilteredSource" | "ArraySource" => {
-                    return Err(RasterError::new(format!("VRT'nin {tag} kaynağı desteklenmiyor; yalnız SimpleSource ve ComplexSource.")));
+                    return Err(RasterError::new(format!(
+                        "VRT'nin {tag} kaynağı desteklenmiyor; yalnız SimpleSource ve ComplexSource."
+                    )));
                 }
                 _ => continue,
             }
             for unsupported in ["ScaleOffset", "ScaleRatio", "LUT", "ComplexSourceRatio"] {
                 if child(s, unsupported).is_some() {
-                    return Err(RasterError::new(format!("VRT'nin kaynağında {unsupported} var; değer dönüştüren kaynak açılmaz.")));
+                    return Err(RasterError::new(format!(
+                        "VRT'nin kaynağında {unsupported} var; değer dönüştüren kaynak açılmaz."
+                    )));
                 }
             }
             count += 1;
             if count > MAX_SOURCES {
-                return Err(RasterError::new(format!("VRT'de {MAX_SOURCES}'dan çok kaynak var.")));
+                return Err(RasterError::new(format!(
+                    "VRT'de {MAX_SOURCES}'dan çok kaynak var."
+                )));
             }
-            let name = child(s, "SourceFilename").ok_or_else(|| RasterError::new("VRT'nin bir kaynağının dosyası yok."))?;
+            let name = child(s, "SourceFilename")
+                .ok_or_else(|| RasterError::new("VRT'nin bir kaynağının dosyası yok."))?;
             let file = name.text().unwrap_or("").trim().to_owned();
             if file.is_empty() {
                 return Err(RasterError::new("VRT'nin bir kaynağının dosya adı boş."));
             }
-            let relative = name.attribute("relativeToVRT").is_some_and(|v| v.trim() == "1");
+            let relative = name
+                .attribute("relativeToVRT")
+                .is_some_and(|v| v.trim() == "1");
             let band = match child(s, "SourceBand").and_then(|n| n.text()) {
-                Some(v) => v.trim().parse::<u32>().ok().filter(|&n| n > 0).ok_or_else(|| {
-                    RasterError::new(format!("VRT'nin kaynak bandı geçersiz: “{}”.", v.trim()))
-                })?,
+                Some(v) => v
+                    .trim()
+                    .parse::<u32>()
+                    .ok()
+                    .filter(|&n| n > 0)
+                    .ok_or_else(|| {
+                        RasterError::new(format!("VRT'nin kaynak bandı geçersiz: “{}”.", v.trim()))
+                    })?,
                 None => 1,
             };
             let props = child(s, "SourceProperties");
-            let whole = |k: &str| props.and_then(|p| p.attribute(k)).and_then(|v| v.parse::<f64>().ok());
+            let whole = |k: &str| {
+                props
+                    .and_then(|p| p.attribute(k))
+                    .and_then(|v| v.parse::<f64>().ok())
+            };
             let src = match child(s, "SrcRect") {
                 Some(r) => rect(r, "SrcRect")?,
                 None => match (whole("RasterXSize"), whole("RasterYSize")) {
@@ -262,14 +306,33 @@ pub fn parse(text: &str) -> Result<Vrt, RasterError> {
                 Some(v) => Some(number(v, "NODATA")?),
                 None => None,
             };
-            sources.push(VrtSource { file, relative, band, src, dst, nodata });
+            sources.push(VrtSource {
+                file,
+                relative,
+                band,
+                src,
+                dst,
+                nodata,
+            });
         }
-        bands.push(VrtBand { sample, nodata, color, sources });
+        bands.push(VrtBand {
+            sample,
+            nodata,
+            color,
+            sources,
+        });
     }
     if bands.is_empty() {
         return Err(RasterError::new("VRT'de band yok."));
     }
-    Ok(Vrt { width, height, affine, srs, epsg, bands })
+    Ok(Vrt {
+        width,
+        height,
+        affine,
+        srs,
+        epsg,
+        bands,
+    })
 }
 
 /// The mosaic's files, bottom first, as every band takes them; why not when the bands take different files or
@@ -293,12 +356,18 @@ pub fn members(v: &Vrt) -> Result<Vec<Member>, RasterError> {
         .collect();
     for b in &v.bands[1..] {
         if b.sample != first.sample {
-            return Err(RasterError::new("VRT'nin bantlarının veri türleri farklı; açılmaz."));
+            return Err(RasterError::new(
+                "VRT'nin bantlarının veri türleri farklı; açılmaz.",
+            ));
         }
         let same = b.sources.len() == out.len()
             && b.sources.iter().zip(&out).all(|(s, m)| {
-                s.file == m.file && s.relative == m.relative && s.src == m.src && s.dst == m.dst
-                    && (s.nodata == m.nodata || (s.nodata.is_some_and(f64::is_nan) && m.nodata.is_some_and(f64::is_nan)))
+                s.file == m.file
+                    && s.relative == m.relative
+                    && s.src == m.src
+                    && s.dst == m.dst
+                    && (s.nodata == m.nodata
+                        || (s.nodata.is_some_and(f64::is_nan) && m.nodata.is_some_and(f64::is_nan)))
             });
         if !same {
             return Err(RasterError::new(
@@ -351,7 +420,9 @@ pub fn open_mosaic(
     let mut paths = Vec::with_capacity(members.len());
     for m in members {
         let path = member_path(folder, &m);
-        let reader = open(&path, each).map_err(|why| RasterError::new(format!("Mozaiğin dosyası “{}” açılamadı: {why}", m.file)))?;
+        let reader = open(&path, each).map_err(|why| {
+            RasterError::new(format!("Mozaiğin dosyası “{}” açılamadı: {why}", m.file))
+        })?;
         paths.push(path);
         files.push((m, reader));
     }
@@ -398,7 +469,10 @@ fn rect_text(name: &str, r: &[f64; 4]) -> String {
 
 /// A VRT's text, as GDAL writes one: a source with nodata is a `ComplexSource`, one without a `SimpleSource`.
 pub fn write(v: &Vrt) -> String {
-    let mut s = format!("<VRTDataset rasterXSize=\"{}\" rasterYSize=\"{}\">\n", v.width, v.height);
+    let mut s = format!(
+        "<VRTDataset rasterXSize=\"{}\" rasterYSize=\"{}\">\n",
+        v.width, v.height
+    );
     if let Some(srs) = &v.srs {
         s.push_str(&format!("  <SRS>{}</SRS>\n", escaped(srs)));
     }
@@ -409,7 +483,11 @@ pub fn write(v: &Vrt) -> String {
         ));
     }
     for (k, b) in v.bands.iter().enumerate() {
-        s.push_str(&format!("  <VRTRasterBand dataType=\"{}\" band=\"{}\">\n", type_name(b.sample), k + 1));
+        s.push_str(&format!(
+            "  <VRTRasterBand dataType=\"{}\" band=\"{}\">\n",
+            type_name(b.sample),
+            k + 1
+        ));
         if let Some(n) = b.nodata {
             s.push_str(&format!("    <NoDataValue>{}</NoDataValue>\n", num(n)));
         }
@@ -417,7 +495,11 @@ pub fn write(v: &Vrt) -> String {
             s.push_str(&format!("    <ColorInterp>{}</ColorInterp>\n", escaped(c)));
         }
         for src in &b.sources {
-            let tag = if src.nodata.is_some() { "ComplexSource" } else { "SimpleSource" };
+            let tag = if src.nodata.is_some() {
+                "ComplexSource"
+            } else {
+                "SimpleSource"
+            };
             s.push_str(&format!("    <{tag}>\n"));
             s.push_str(&format!(
                 "      <SourceFilename relativeToVRT=\"{}\">{}</SourceFilename>\n",
@@ -482,7 +564,9 @@ mod tests {
     fn the_coordinate_systems_code_is_the_last_authority() {
         assert_eq!(epsg_of("EPSG:5254"), Some(5254));
         assert_eq!(
-            epsg_of("PROJCS[\"TUREF / TM30\",GEOGCS[\"TUREF\",AUTHORITY[\"EPSG\",\"5252\"]],AUTHORITY[\"EPSG\",\"5254\"]]"),
+            epsg_of(
+                "PROJCS[\"TUREF / TM30\",GEOGCS[\"TUREF\",AUTHORITY[\"EPSG\",\"5252\"]],AUTHORITY[\"EPSG\",\"5254\"]]"
+            ),
             Some(5254)
         );
         assert_eq!(epsg_of("LOCAL_CS[\"x\"]"), None);
@@ -490,7 +574,12 @@ mod tests {
 
     #[test]
     fn what_is_not_a_mosaic_is_refused() {
-        assert!(parse("<VRTDataset rasterXSize=\"2\" rasterYSize=\"2\" subClass=\"VRTWarpedDataset\"/>").is_err());
+        assert!(
+            parse(
+                "<VRTDataset rasterXSize=\"2\" rasterYSize=\"2\" subClass=\"VRTWarpedDataset\"/>"
+            )
+            .is_err()
+        );
         assert!(parse("<GDAL/>").is_err());
         let two = "<VRTDataset rasterXSize=\"2\" rasterYSize=\"2\"><VRTRasterBand dataType=\"Byte\" band=\"1\"><SimpleSource><SourceFilename>a.tif</SourceFilename><SrcRect xOff=\"0\" yOff=\"0\" xSize=\"2\" ySize=\"2\"/><DstRect xOff=\"0\" yOff=\"0\" xSize=\"2\" ySize=\"2\"/></SimpleSource></VRTRasterBand><VRTRasterBand dataType=\"Byte\" band=\"2\"><SimpleSource><SourceFilename>b.tif</SourceFilename><SrcRect xOff=\"0\" yOff=\"0\" xSize=\"2\" ySize=\"2\"/><DstRect xOff=\"0\" yOff=\"0\" xSize=\"2\" ySize=\"2\"/></SimpleSource></VRTRasterBand></VRTDataset>";
         assert!(members(&parse(two).unwrap()).is_err());

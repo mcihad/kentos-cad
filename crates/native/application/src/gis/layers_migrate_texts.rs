@@ -6,7 +6,9 @@
 //! What a table has no column for (a text's style, mask, curve, scales, link, paragraph formats) is counted and said;
 //! the words, the point, the height, the angle, the alignment and the width factor are written.
 
-use kentos_commands::{DataGeometry, DataLayer, DataText, LayerField, LayerFieldKind, ProjectSettings, TextEntity};
+use kentos_commands::{
+    DataGeometry, DataLayer, DataText, LayerField, LayerFieldKind, ProjectSettings, TextEntity,
+};
 use kentos_data::{Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable};
 use kentos_domain::Document;
 
@@ -29,7 +31,8 @@ pub(crate) fn of<'d>(doc: &'d Document, layer: &str) -> Vec<&'d TextEntity> {
 
 /// Whether the layer holds anything but texts.
 pub(crate) fn others(doc: &Document, layer: &str) -> bool {
-    doc.by_layer_with_uids(layer).any(|(_, e)| !matches!(e, kentos_commands::Entity::Text(_)))
+    doc.by_layer_with_uids(layer)
+        .any(|(_, e)| !matches!(e, kentos_commands::Entity::Text(_)))
 }
 
 /// The texts' table's name beside `table` (`schema.table` in a database): `_yazilar` after its name, which is shortened
@@ -52,13 +55,17 @@ pub(crate) fn beside(table: &str) -> String {
 
 /// How many of the texts have what their table keeps no column for.
 pub(crate) fn details_left(texts: &[&TextEntity]) -> u64 {
-    texts.iter().filter(|t| crate::data_text::details_left(t)).count() as u64
+    texts
+        .iter()
+        .filter(|t| crate::data_text::details_left(t))
+        .count() as u64
 }
 
 /// The texts' table: its key `fid`, its point and the columns of a text.
 fn new_table(table: &str, srid: Option<u32>) -> NewTable {
     let text = DataText::written();
-    let real = |name: &Option<String>| Field::new(name.as_deref().unwrap_or_default(), FieldKind::Real);
+    let real =
+        |name: &Option<String>| Field::new(name.as_deref().unwrap_or_default(), FieldKind::Real);
     NewTable {
         name: table.to_owned(),
         title: Some(table.to_owned()),
@@ -90,9 +97,12 @@ fn rows(texts: &[&TextEntity], system: Option<&TableSystem>) -> Result<Vec<NewFe
         .iter()
         .map(|t| {
             let (x, y) = match system {
-                Some(s) => s
-                    .to_table_point(t.p.x, t.p.y)
-                    .ok_or_else(|| format!("“{}” yazısının noktası tablonun sistemine çevrilemedi.", t.text))?,
+                Some(s) => s.to_table_point(t.p.x, t.p.y).ok_or_else(|| {
+                    format!(
+                        "“{}” yazısının noktası tablonun sistemine çevrilemedi.",
+                        t.text
+                    )
+                })?,
                 None => (t.p.x, t.p.y),
             };
             let values = text
@@ -100,7 +110,11 @@ fn rows(texts: &[&TextEntity], system: Option<&TableSystem>) -> Result<Vec<NewFe
                 .iter()
                 .map(|(c, v)| (c.clone(), crate::data_text::value_of(v)))
                 .collect();
-            Ok(NewFeature { fid: None, geometry: Some(Geometry::Point(Some(kentos_data::Coord::xy(x, y)))), values })
+            Ok(NewFeature {
+                fid: None,
+                geometry: Some(Geometry::Point(Some(kentos_data::Coord::xy(x, y)))),
+                values,
+            })
         })
         .collect()
 }
@@ -129,15 +143,29 @@ pub(crate) fn write(
     let written = (|| {
         let system = TableSystem::of(settings, srid)?;
         let rows = rows(texts, system.as_ref())?;
-        let source = kentos_data::registry().source(address).map_err(|e| e.to_string())?;
-        let there = !made && source.tables().map_err(|e| e.to_string())?.iter().any(|t| t.name == table);
+        let source = kentos_data::registry()
+            .source(address)
+            .map_err(|e| e.to_string())?;
+        let there = !made
+            && source
+                .tables()
+                .map_err(|e| e.to_string())?
+                .iter()
+                .any(|t| t.name == table);
         let append = there && existing == Some(kentos_commands::ExportExisting::Append);
         let replace = there && existing == Some(kentos_commands::ExportExisting::ReplaceLayer);
         let mut tx = source.begin().map_err(|e| e.to_string())?;
-        let made_table = if append { Ok(()) } else { tx.create_table(&new_table(table, srid), replace) };
+        let made_table = if append {
+            Ok(())
+        } else {
+            tx.create_table(&new_table(table, srid), replace)
+        };
         let done = made_table.and_then(|()| tx.insert(table, &rows).map(|_| ()));
         match done {
-            Ok(()) => tx.commit().map_err(|e| e.to_string()).map(|()| rows.len() as u64),
+            Ok(()) => tx
+                .commit()
+                .map_err(|e| e.to_string())
+                .map(|()| rows.len() as u64),
             Err(e) => {
                 let _ = tx.rollback();
                 Err(e.to_string())
@@ -173,15 +201,32 @@ pub(crate) fn take_back(address: &str, table: &str, made: bool) {
 }
 
 /// The data layer reading the texts' table, its rows drawn as texts, and its fields.
-pub(crate) fn data_layer(gpkg: bool, address: &str, table: &str, srid: Option<u32>) -> (DataLayer, Vec<LayerField>) {
+pub(crate) fn data_layer(
+    gpkg: bool,
+    address: &str,
+    table: &str,
+    srid: Option<u32>,
+) -> (DataLayer, Vec<LayerField>) {
     let text = DataText::written();
     let field = |name: &str, kind: LayerFieldKind| LayerField::new(name, kind);
     let fields = vec![
         field(&text.text, LayerFieldKind::Text),
-        field(text.height.as_deref().unwrap_or_default(), LayerFieldKind::Decimal),
-        field(text.angle.as_deref().unwrap_or_default(), LayerFieldKind::Decimal),
-        field(text.align.as_deref().unwrap_or_default(), LayerFieldKind::Text),
-        field(text.width.as_deref().unwrap_or_default(), LayerFieldKind::Decimal),
+        field(
+            text.height.as_deref().unwrap_or_default(),
+            LayerFieldKind::Decimal,
+        ),
+        field(
+            text.angle.as_deref().unwrap_or_default(),
+            LayerFieldKind::Decimal,
+        ),
+        field(
+            text.align.as_deref().unwrap_or_default(),
+            LayerFieldKind::Text,
+        ),
+        field(
+            text.width.as_deref().unwrap_or_default(),
+            LayerFieldKind::Decimal,
+        ),
     ];
     let data = DataLayer {
         driver: if gpkg { "gpkg" } else { "postgis" }.to_owned(),
@@ -189,7 +234,13 @@ pub(crate) fn data_layer(gpkg: bool, address: &str, table: &str, srid: Option<u3
         relative: None,
         table: table.to_owned(),
         key: "fid".into(),
-        geometry: Some(DataGeometry { column: "geom".into(), type_name: "POINT".into(), srid, z: false, m: false }),
+        geometry: Some(DataGeometry {
+            column: "geom".into(),
+            type_name: "POINT".into(),
+            srid,
+            z: false,
+            m: false,
+        }),
         extent: None,
         read_only: false,
         text: Some(text),

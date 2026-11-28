@@ -17,9 +17,9 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road_ext::*;
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
+use crate::road_ext::*;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Theme, mouse};
 use kentos_commands::{SuperelevationsTransitioned, SuperelevationsTransitions};
@@ -70,14 +70,22 @@ fn msg(e: Event) -> Message {
 impl Transition {
     /// The query from the typed fields; why not, in words.
     pub(crate) fn input(&self, superelevation: &str) -> Result<SuperelevationsTransitions, String> {
-        let read = |k: usize| number(&self.fields[k]).map_err(|()| format!("{} bir sayı olmalı.", FIELDS[k]));
+        let read = |k: usize| {
+            number(&self.fields[k]).map_err(|()| format!("{} bir sayı olmalı.", FIELDS[k]))
+        };
         let relative = read(0)?;
         if relative.is_some_and(|n| n <= 1.0) {
-            return Err(format!("{}: 1'den büyük bir n yazın (1:200 için 200).", FIELDS[0]));
+            return Err(format!(
+                "{}: 1'den büyük bir n yazın (1:200 için 200).",
+                FIELDS[0]
+            ));
         }
         Ok(SuperelevationsTransitions {
             superelevation: superelevation.to_owned(),
-            template: self.template.clone().ok_or("Bir tip kesit seçin: göreli eğim şeritlerin kenarında okunur.")?,
+            template: self
+                .template
+                .clone()
+                .ok_or("Bir tip kesit seçin: göreli eğim şeritlerin kenarında okunur.")?,
             most_relative: relative.map(|n| 1.0 / n),
             speed: read(1)?,
             comfort: read(2)?,
@@ -121,13 +129,18 @@ impl TransitionWindowApp for App {
             return;
         };
         let def = w.chosen.and_then(|i| w.rows.get(i)).map(|r| r.def());
-        let Some(x) = w.transition.as_mut() else { return };
+        let Some(x) = w.transition.as_mut() else {
+            return;
+        };
         x.warnings.clear();
         x.result = Some(match def {
             None => Err("Dever penceresinde bir çizelge seçin.".into()),
             Some(Err(e)) => Err(e),
             Some(Ok(def)) => x.input(&def.id).and_then(|q| {
-                kentos_native_application::road_superelevations_transitions::preview(&doc.model, &def, &q).map(|(out, warnings)| {
+                kentos_native_application::road_superelevations_transitions::preview(
+                    &doc.model, &def, &q,
+                )
+                .map(|(out, warnings)| {
                     x.warnings = warnings.into_iter().map(|w| w.message).collect();
                     out
                 })
@@ -156,8 +169,11 @@ impl TransitionWindowApp for App {
             }
             Event::Apply => {
                 let Some(Ok(out)) = &x.result else { return };
-                let proposed: Vec<(String, Option<f64>, Option<f64>)> =
-                    out.rows.iter().map(|r| (r.pi.clone(), r.runoff, r.on_tangent)).collect();
+                let proposed: Vec<(String, Option<f64>, Option<f64>)> = out
+                    .rows
+                    .iter()
+                    .map(|r| (r.pi.clone(), r.runoff, r.on_tangent))
+                    .collect();
                 if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
                     r.set_transitions(&proposed);
                     w.transition = None;
@@ -171,18 +187,26 @@ impl TransitionWindowApp for App {
 
     /// The window over Dever's.
     fn transition_view<'a>(&'a self, x: &'a Transition) -> Element<'a, Message> {
-        let templates: Vec<(String, String)> = self
-            .document
-            .as_ref()
-            .map_or_else(Vec::new, |d| d.model.road_templates().iter().map(|t| (t.id.clone(), t.name.clone())).collect());
+        let templates: Vec<(String, String)> = self.document.as_ref().map_or_else(Vec::new, |d| {
+            d.model
+                .road_templates()
+                .iter()
+                .map(|t| (t.id.clone(), t.name.clone()))
+                .collect()
+        });
         let ids: Vec<String> = templates.iter().map(|t| t.0.clone()).collect();
         let pick = Select::new(
             templates.iter().map(|t| Choice::new(t.1.clone())),
-            x.template.as_ref().and_then(|t| ids.iter().position(|i| i == t)),
+            x.template
+                .as_ref()
+                .and_then(|t| ids.iter().position(|i| i == t)),
             move |i| msg(Event::Template(ids[i].clone())),
         )
         .placeholder("Tip kesit");
-        let field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &x.fields[k]).on_input(move |t| msg(Event::Field(k, t)));
+        let field = |k: usize, hint: &'a str| {
+            kentos_ui::widget::text_field(hint, &x.fields[k])
+                .on_input(move |t| msg(Event::Field(k, t)))
+        };
         let form = Form::new()
             .label_width(170.0)
             .section("Geçiş boyu")
@@ -202,10 +226,14 @@ impl TransitionWindowApp for App {
             .help("Klotoidsiz kurpta geçişin kurptan önceki payı (0–1); klotoidli kurpta geçiş klotoidin üstündedir.")
             .field(FIELDS[6], field(6, "yok"))
             .help("Sınırlar standardınızındır; KentOS sayı vermez.");
-        let mut d = RoadDialog::new(TITLE, form, msg(Event::Back)).form_width(420.0).width(1200.0).close_caption(BACK);
+        let mut d = RoadDialog::new(TITLE, form, msg(Event::Back))
+            .form_width(420.0)
+            .width(1200.0)
+            .close_caption(BACK);
         let ok = x.result.as_ref().and_then(|r| r.as_ref().ok());
         let normal = self
-            .modules.road()
+            .modules
+            .road()
             .superelevation_window
             .as_ref()
             .and_then(|w| w.chosen.and_then(|i| w.rows.get(i)))
@@ -221,7 +249,14 @@ impl TransitionWindowApp for App {
                 let longest = out.rows.iter().filter_map(|r| r.runoff).fold(0.0, f64::max);
                 d = d.figure("En uzun geçiş", format!("{} m", comma_text(longest, 1)));
                 let spiral = out.rows.iter().filter_map(|r| r.spiral).fold(0.0, f64::max);
-                d = d.figure("En uzun klotoid", if spiral > 0.0 { format!("{} m", comma_text(spiral, 1)) } else { "—".into() });
+                d = d.figure(
+                    "En uzun klotoid",
+                    if spiral > 0.0 {
+                        format!("{} m", comma_text(spiral, 1))
+                    } else {
+                        "—".into()
+                    },
+                );
                 d = d.figure("Bulgu", out.findings.len().to_string());
                 for warning in &x.warnings {
                     d = d.note(Banner::warning(warning.clone()));
@@ -237,10 +272,17 @@ impl TransitionWindowApp for App {
                     });
                 }
                 if findings.len() > 3 {
-                    let rest: Vec<&str> = findings[3..].iter().map(|f| f.message.as_str()).collect();
-                    d = d.note(Banner::info(format!("{} bulgu daha: {}", rest.len(), rest.join(" "))));
+                    let rest: Vec<&str> =
+                        findings[3..].iter().map(|f| f.message.as_str()).collect();
+                    d = d.note(Banner::info(format!(
+                        "{} bulgu daha: {}",
+                        rest.len(),
+                        rest.join(" ")
+                    )));
                 }
-                let o = |v: Option<f64>, d: usize| v.map_or_else(|| "—".to_owned(), |v| comma_text(v, d));
+                let o = |v: Option<f64>, d: usize| {
+                    v.map_or_else(|| "—".to_owned(), |v| comma_text(v, d))
+                };
                 let rows = out
                     .rows
                     .iter()
@@ -249,10 +291,15 @@ impl TransitionWindowApp for App {
                             r.pi.clone(),
                             comma_text(r.radius, 1),
                             comma_text(100.0 * r.rate, 2),
-                            r.gradient_now.map_or_else(|| "—".into(), |g| format!("1:{:.0}", 1.0 / g)),
+                            r.gradient_now
+                                .map_or_else(|| "—".into(), |g| format!("1:{:.0}", 1.0 / g)),
                             o(r.runoff_gradient, 1),
                             o(r.spiral, 1),
-                            format!("{} / {}", comma_text(r.spiral_in, 1), comma_text(r.spiral_out, 1)),
+                            format!(
+                                "{} / {}",
+                                comma_text(r.spiral_in, 1),
+                                comma_text(r.spiral_out, 1)
+                            ),
                             format!("{} → {}", comma_text(r.runoff_now, 1), o(r.runoff, 1)),
                             o(r.on_tangent, 2),
                             o(r.runout, 1),
@@ -281,7 +328,11 @@ impl TransitionWindowApp for App {
             }
             None => {}
         }
-        let can = ok.is_some_and(|o| o.rows.iter().any(|r| r.runoff.is_some() || r.on_tangent.is_some()));
+        let can = ok.is_some_and(|o| {
+            o.rows
+                .iter()
+                .any(|r| r.runoff.is_some() || r.on_tangent.is_some())
+        });
         d.primary(APPLY, can.then(|| msg(Event::Apply))).view()
     }
 }
@@ -298,20 +349,46 @@ fn ramp(ts: f64, st: f64, runoff: f64, share: f64, n: f64, e: f64) -> Vec<[f64; 
     let lc_in = ts - share * runoff;
     let fs_in = ts + (1.0 - share) * runoff;
     let (fs_out, lc_out) = (st - (1.0 - share) * runoff, st + share * runoff);
-    vec![[lc_in - runout, n], [lc_in, 0.0], [fs_in, e], [fs_out, e], [lc_out, 0.0], [lc_out + runout, n]]
+    vec![
+        [lc_in - runout, n],
+        [lc_in, 0.0],
+        [fs_in, e],
+        [fs_out, e],
+        [lc_out, 0.0],
+        [lc_out + runout, n],
+    ]
 }
 
 impl canvas::Program<Message> for Ramps<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let t = Tokens::of(theme);
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let text = |frame: &mut canvas::Frame, s: String, at: Point, color: Color| {
-            frame.fill_text(Text { content: s, position: at, color, size: Pixels(typography::caption()), font: typography::ui(), ..Text::default() })
+            frame.fill_text(Text {
+                content: s,
+                position: at,
+                color,
+                size: Pixels(typography::caption()),
+                font: typography::ui(),
+                ..Text::default()
+            })
         };
         let Some(out) = self.out.filter(|o| !o.rows.is_empty()) else {
-            text(&mut frame, "Çizelgenin kurpları ve geçişleri burada çizilir.".into(), Point::new(16.0, 20.0), t.muted);
+            text(
+                &mut frame,
+                "Çizelgenin kurpları ve geçişleri burada çizilir.".into(),
+                Point::new(16.0, 20.0),
+                t.muted,
+            );
             return vec![frame.into_geometry()];
         };
         // The chart is in percent, as its labels are; the schedule and the rows hold grades (docs/adr/0977).
@@ -321,8 +398,22 @@ impl canvas::Program<Message> for Ramps<'_> {
             .rows
             .iter()
             .map(|r| {
-                let now = ramp(r.from, r.to, r.runoff_now, r.on_tangent_now, n, 100.0 * r.rate);
-                let new = ramp(r.from, r.to, r.runoff.unwrap_or(r.runoff_now), r.on_tangent.unwrap_or(r.on_tangent_now), n, 100.0 * r.rate);
+                let now = ramp(
+                    r.from,
+                    r.to,
+                    r.runoff_now,
+                    r.on_tangent_now,
+                    n,
+                    100.0 * r.rate,
+                );
+                let new = ramp(
+                    r.from,
+                    r.to,
+                    r.runoff.unwrap_or(r.runoff_now),
+                    r.on_tangent.unwrap_or(r.on_tangent_now),
+                    n,
+                    100.0 * r.rate,
+                );
                 (now, new)
             })
             .collect();
@@ -338,50 +429,108 @@ impl canvas::Program<Message> for Ramps<'_> {
         let (left, right, up, down) = (48.0, 12.0, 12.0, 24.0);
         let (w, h) = (bounds.width - left - right, bounds.height - up - down);
         let at = |s: f64, z: f64| {
-            Point::new(left + ((s - s0) / (s1 - s0).max(1e-9)) as f32 * w, up + ((z1 - z) / (z1 - z0)) as f32 * h)
+            Point::new(
+                left + ((s - s0) / (s1 - s0).max(1e-9)) as f32 * w,
+                up + ((z1 - z) / (z1 - z0)) as f32 * h,
+            )
         };
         // Zero, the normal slope and the rates, as a grid.
         for z in [0.0, n] {
             let line = Path::line(at(s0, z), at(s1, z));
-            frame.stroke(&line, Stroke::default().with_color(Color { a: 0.4, ..t.muted }).with_width(0.6));
-            text(&mut frame, format!("%{}", comma_text(z, 1)), Point::new(6.0, at(s0, z).y - 7.0), t.muted);
+            frame.stroke(
+                &line,
+                Stroke::default()
+                    .with_color(Color { a: 0.4, ..t.muted })
+                    .with_width(0.6),
+            );
+            text(
+                &mut frame,
+                format!("%{}", comma_text(z, 1)),
+                Point::new(6.0, at(s0, z).y - 7.0),
+                t.muted,
+            );
         }
         // The stations, every round step that leaves 70 px between labels.
         let every = crate::picture::step(70.0 * (s1 - s0) / f64::from(w.max(1.0)));
         let mut s = (s0 / every).ceil() * every;
         while s <= s1 + 1e-9 {
             let p = at(s, z0);
-            frame.stroke(&Path::line(Point::new(p.x, up + h), Point::new(p.x, up + h + 4.0)), Stroke::default().with_color(t.muted).with_width(0.8));
-            text(&mut frame, comma_text(s, crate::picture::decimals(every)), Point::new(p.x - 12.0, up + h + 6.0), t.muted);
+            frame.stroke(
+                &Path::line(Point::new(p.x, up + h), Point::new(p.x, up + h + 4.0)),
+                Stroke::default().with_color(t.muted).with_width(0.8),
+            );
+            text(
+                &mut frame,
+                comma_text(s, crate::picture::decimals(every)),
+                Point::new(p.x - 12.0, up + h + 6.0),
+                t.muted,
+            );
             s += every;
         }
         // The curves' extents.
         for r in &out.rows {
             let (a, b) = (at(r.from, z1), at(r.to, z0));
-            frame.fill_rectangle(Point::new(a.x, up), iced::Size::new((b.x - a.x).max(1.0), h), Color { a: 0.08, ..t.accent });
-            text(&mut frame, r.pi.clone(), Point::new(a.x + 3.0, up + 2.0), t.muted);
+            frame.fill_rectangle(
+                Point::new(a.x, up),
+                iced::Size::new((b.x - a.x).max(1.0), h),
+                Color {
+                    a: 0.08,
+                    ..t.accent
+                },
+            );
+            text(
+                &mut frame,
+                r.pi.clone(),
+                Point::new(a.x + 3.0, up + 2.0),
+                t.muted,
+            );
         }
         // The tangents too short: between the curves the finding names.
-        let danger = Color { a: 0.18, ..t.danger };
+        let danger = Color {
+            a: 0.18,
+            ..t.danger
+        };
         for f in out.findings.iter().filter(|f| f.kind == "tangent") {
             let mut ends = f.pi.split('–');
-            let (Some(a), Some(b)) = (ends.next(), ends.next()) else { continue };
-            let (Some(ra), Some(rb)) = (out.rows.iter().find(|r| r.pi == a), out.rows.iter().find(|r| r.pi == b)) else { continue };
+            let (Some(a), Some(b)) = (ends.next(), ends.next()) else {
+                continue;
+            };
+            let (Some(ra), Some(rb)) = (
+                out.rows.iter().find(|r| r.pi == a),
+                out.rows.iter().find(|r| r.pi == b),
+            ) else {
+                continue;
+            };
             let (p, q) = (at(ra.to, z1), at(rb.from, z0));
-            frame.fill_rectangle(Point::new(p.x, up), iced::Size::new((q.x - p.x).max(1.0), h), danger);
+            frame.fill_rectangle(
+                Point::new(p.x, up),
+                iced::Size::new((q.x - p.x).max(1.0), h),
+                danger,
+            );
         }
-        let stroke = |pts: &[[f64; 2]]| Path::new(|b| {
-            for (i, p) in pts.iter().enumerate() {
-                let q = at(p[0], p[1]);
-                if i == 0 { b.move_to(q) } else { b.line_to(q) }
-            }
-        });
+        let stroke = |pts: &[[f64; 2]]| {
+            Path::new(|b| {
+                for (i, p) in pts.iter().enumerate() {
+                    let q = at(p[0], p[1]);
+                    if i == 0 { b.move_to(q) } else { b.line_to(q) }
+                }
+            })
+        };
         for (now, new) in &ramps {
             frame.stroke(
                 &stroke(now),
-                Stroke { line_dash: LineDash { segments: &[5.0, 4.0], offset: 0 }, ..Stroke::default().with_color(t.muted).with_width(1.2) },
+                Stroke {
+                    line_dash: LineDash {
+                        segments: &[5.0, 4.0],
+                        offset: 0,
+                    },
+                    ..Stroke::default().with_color(t.muted).with_width(1.2)
+                },
             );
-            frame.stroke(&stroke(new), Stroke::default().with_color(t.accent).with_width(2.0));
+            frame.stroke(
+                &stroke(new),
+                Stroke::default().with_color(t.accent).with_width(2.0),
+            );
         }
         vec![frame.into_geometry()]
     }

@@ -2,8 +2,8 @@
 //! objects, 10 000 of them linked texts whose objects are gone, 10 000 texts naming a style the project lacks, with 20
 //! text styles of which ten are unused. The shared cases are `fixtures/commands/v1/cad.drawing.audit.json`.
 
-use kentos_domain::Document;
 use kentos_commands::{AuditPurge, CommandResult, DocumentSnapshotV1, DrawingAudit};
+use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, drawing_audit};
 use serde_json::json;
 

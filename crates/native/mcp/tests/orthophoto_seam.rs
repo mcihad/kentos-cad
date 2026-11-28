@@ -15,12 +15,19 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 /// A text with its `$fixture:` paths made absolute, as the shared runners make them.
 fn fixtures(v: &Value) -> Value {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/");
-    serde_json::from_str(&v.to_string().replace("$fixture:", &root.display().to_string())).unwrap()
+    serde_json::from_str(
+        &v.to_string()
+            .replace("$fixture:", &root.display().to_string()),
+    )
+    .unwrap()
 }
 
 /// Two places' lists alike: states and correlations, shifts within 10⁻⁹.
 fn alike(got: &Value, want: &Value, name: &str) {
-    let (g, w) = (got["patches"].as_array().unwrap(), want["patches"].as_array().unwrap());
+    let (g, w) = (
+        got["patches"].as_array().unwrap(),
+        want["patches"].as_array().unwrap(),
+    );
     assert_eq!(g.len(), w.len(), "{name}");
     for (a, b) in g.iter().zip(w) {
         assert_eq!(a["state"], b["state"], "{name}");
@@ -38,7 +45,10 @@ fn alike(got: &Value, want: &Value, name: &str) {
     for key in ["uid", "places", "outside"] {
         assert_eq!(got["line"][key], want["line"][key], "{name} line.{key}");
     }
-    match (got["line"]["length"].as_f64(), want["line"]["length"].as_f64()) {
+    match (
+        got["line"]["length"].as_f64(),
+        want["line"]["length"].as_f64(),
+    ) {
         (Some(x), Some(y)) => assert!((x - y).abs() < 1e-9, "{name} line.length"),
         (x, y) => assert_eq!(x.is_some(), y.is_some(), "{name} line.length"),
     }
@@ -46,7 +56,10 @@ fn alike(got: &Value, want: &Value, name: &str) {
 
 #[test]
 fn the_seam_over_mcp_is_the_cases() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.orthophoto.compare.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.orthophoto.compare.json"
+    ))
+    .unwrap();
     for name in [
         "dikiş: örtüşmede ölçülen kayma bilinen sentetik kaymadır; dokusuz ve değişen yerler ayrı",
         "dikiş: arama dar, tepe sınırda kalır",
@@ -61,9 +74,19 @@ fn the_seam_over_mcp_is_the_cases() {
         "dikiş: birinci görüntü 9° dönük, çift kübik piksel altı",
         "dikiş hattı boyunca, dönük birinci görüntü, 0,08 m pikselli ikinci, çift kübik piksel altı",
     ] {
-        let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap().clone();
-        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(fixtures(&case["setup"])).unwrap();
-        let path = std::env::temp_dir().join(format!("kentos-orthophoto-seam-{}.kcad", std::process::id()));
+        let case = cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"] == name)
+            .unwrap()
+            .clone();
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(fixtures(&case["setup"])).unwrap();
+        let path = std::env::temp_dir().join(format!(
+            "kentos-orthophoto-seam-{}.kcad",
+            std::process::id()
+        ));
         std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
         let mut server = Server::new();
         let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -73,7 +96,11 @@ fn the_seam_over_mcp_is_the_cases() {
         args["drawing"] = opened["structuredContent"]["drawing"].clone();
         let r = call(&mut server, "cad.orthophoto.compare", args);
         assert_eq!(r["isError"], false, "{name}: {r}");
-        alike(&r["structuredContent"]["output"]["seam"], &step["result"]["output"]["seam"], name);
+        alike(
+            &r["structuredContent"]["output"]["seam"],
+            &step["result"]["output"]["seam"],
+            name,
+        );
         let _ = std::fs::remove_file(path);
     }
 }

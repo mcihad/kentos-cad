@@ -6,7 +6,9 @@
 use std::ops::Range;
 use std::sync::Arc;
 
-use kentos_native_style::batches::{BatchKind, Cap, FillPaintBatch, StyledBatch, StyledLayer, Unit};
+use kentos_native_style::batches::{
+    BatchKind, Cap, FillPaintBatch, StyledBatch, StyledLayer, Unit,
+};
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
 use kentos_render_wgpu::{Camera, RenderSettings, Rgba8};
 
@@ -67,7 +69,9 @@ fn hatch(dash: Vec<f64>, offset: f64) -> StyledLayer {
     };
     b.reach = 0.0;
     StyledLayer {
-        data: vec![-128.0, -4.0, 128.0, -4.0, 128.0, 4.0, -128.0, -4.0, 128.0, 4.0, -128.0, 4.0],
+        data: vec![
+            -128.0, -4.0, 128.0, -4.0, 128.0, 4.0, -128.0, -4.0, 128.0, 4.0, -128.0, 4.0,
+        ],
         batches: vec![b],
         ..Default::default()
     }
@@ -80,7 +84,10 @@ pub(super) fn butt_ends_and_dash_edges_smooth_as_the_sides(gpu: &mut Gpu) {
     let pattern = vec![7.3, 4.6];
     let offset = 0.2;
     // A solid stroke, a dashed one and a dashed hatch line: a hatch's dashes start at the world's x = 0.
-    for (case, dash) in [None, Some(pattern.clone()), Some(pattern)].into_iter().enumerate() {
+    for (case, dash) in [None, Some(pattern.clone()), Some(pattern)]
+        .into_iter()
+        .enumerate()
+    {
         let hatched = case == 2;
         let layer = if hatched {
             hatch(dash.clone().expect("a pattern"), offset)
@@ -111,11 +118,25 @@ pub(super) fn butt_ends_and_dash_edges_smooth_as_the_sides(gpu: &mut Gpu) {
             }
         };
         gpu.styled = Some(StyledScene {
-            layers: vec![Arc::new(StyledLayerPart::new(98_000 + case as u64, layer.clone()))],
+            layers: vec![Arc::new(StyledLayerPart::new(
+                98_000 + case as u64,
+                layer.clone(),
+            ))],
             ..Default::default()
         });
-        let camera = Camera { width: W as f64, height: H as f64, scale: 1.0, ..Default::default() };
-        let image = gpu.draw(&[], &camera, &RenderSettings::new(Rgba8::rgb(0, 0, 0)), W as u32, H as u32);
+        let camera = Camera {
+            width: W as f64,
+            height: H as f64,
+            scale: 1.0,
+            ..Default::default()
+        };
+        let image = gpu.draw(
+            &[],
+            &camera,
+            &RenderSettings::new(Rgba8::rgb(0, 0, 0)),
+            W as u32,
+            H as u32,
+        );
         let cpu = kentos_native_style::cpu::paint(
             W as u32,
             H as u32,
@@ -135,7 +156,9 @@ pub(super) fn butt_ends_and_dash_edges_smooth_as_the_sides(gpu: &mut Gpu) {
             let c = x as f64 + 0.5 - W as f64 / 2.0;
             // The dashed stroke's own edges: away from the line's ends, where both would ramp; the hatch's away from
             // its band's.
-            if (case == 1 && (c < x0 + 3.0 || c > x1 - 3.0)) || (hatched && !(2..W - 2).contains(&x)) {
+            if (case == 1 && (c < x0 + 3.0 || c > x1 - 3.0))
+                || (hatched && !(2..W - 2).contains(&x))
+            {
                 continue;
             }
             let want = 255.0 * expected(c);
@@ -156,7 +179,10 @@ pub(super) fn butt_ends_and_dash_edges_smooth_as_the_sides(gpu: &mut Gpu) {
         }
         // The solid line's two ends, each a pixel inside and one outside; a dash's two edges each period.
         assert!(checked > 150, "case {case}: {checked} pixels checked");
-        assert!(on_edges >= if dash.is_some() { 24 } else { 2 }, "case {case}: {on_edges} pixels on an edge");
+        assert!(
+            on_edges >= if dash.is_some() { 24 } else { 2 },
+            "case {case}: {on_edges} pixels on an edge"
+        );
     }
     gpu.styled = previous;
 }

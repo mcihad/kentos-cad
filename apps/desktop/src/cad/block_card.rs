@@ -7,7 +7,8 @@
 use iced::widget::{Column, button, row, text};
 use iced::{Element, Task};
 use kentos_commands::{
-    BlockEditOperation, BlockElement, BlockElementClass, BlockId, BlockPublication, BlocksEdit, CommandResult,
+    BlockEditOperation, BlockElement, BlockElementClass, BlockId, BlockPublication, BlocksEdit,
+    CommandResult,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, blocks_edit};
@@ -73,14 +74,21 @@ pub struct ClassChoice(pub Option<BlockElementClass>);
 
 impl std::fmt::Display for ClassChoice {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(self.0.map_or("Yok (yapı elemanı değil)", BlockElementClass::label))
+        f.write_str(
+            self.0
+                .map_or("Yok (yapı elemanı değil)", BlockElementClass::label),
+        )
     }
 }
 
 /// The class choices in order.
 fn class_choices() -> Vec<ClassChoice> {
     std::iter::once(ClassChoice(None))
-        .chain(BlockElementClass::ALL.into_iter().map(|c| ClassChoice(Some(c))))
+        .chain(
+            BlockElementClass::ALL
+                .into_iter()
+                .map(|c| ClassChoice(Some(c))),
+        )
         .collect()
 }
 
@@ -105,7 +113,10 @@ fn element_of(w: &Window) -> Result<Option<Option<BlockElement>>, String> {
     };
     Ok(Some(Some(BlockElement {
         class,
-        predefined: w.predefined.clone().filter(|t| class.types().contains(&t.as_str())),
+        predefined: w
+            .predefined
+            .clone()
+            .filter(|t| class.types().contains(&t.as_str())),
         height: metres(&w.height, "Yükseklik")?,
         elevation: metres(&w.elevation, "Alt kot")?,
     })))
@@ -440,14 +451,30 @@ mod tests {
         };
         assert_eq!(element(&app), None);
         app.open_block_card(id);
-        let _ = app.block_card_event(Event::Class(ClassChoice(Some(BlockElementClass::SanitaryTerminal))));
+        let _ = app.block_card_event(Event::Class(ClassChoice(Some(
+            BlockElementClass::SanitaryTerminal,
+        ))));
         let _ = app.block_card_event(Event::Type("WASHHANDBASIN".into()));
-        let _ = app.block_card_event(Event::Class(ClassChoice(Some(BlockElementClass::Furniture))));
-        assert_eq!(app.block_card.as_ref().unwrap().predefined, None, "a basin is no furniture type");
+        let _ = app.block_card_event(Event::Class(ClassChoice(Some(
+            BlockElementClass::Furniture,
+        ))));
+        assert_eq!(
+            app.block_card.as_ref().unwrap().predefined,
+            None,
+            "a basin is no furniture type"
+        );
         let _ = app.block_card_event(Event::Type("TABLE".into()));
         let _ = app.block_card_event(Event::Height("0,75 m".into()));
         let _ = app.block_card_event(Event::Save);
-        assert!(app.block_card.as_ref().unwrap().refused.as_deref().unwrap_or("").contains("Yükseklik"));
+        assert!(
+            app.block_card
+                .as_ref()
+                .unwrap()
+                .refused
+                .as_deref()
+                .unwrap_or("")
+                .contains("Yükseklik")
+        );
         assert_eq!(element(&app), None);
         let _ = app.block_card_event(Event::Height("0,75".into()));
         let _ = app.block_card_event(Event::Save);
@@ -467,7 +494,10 @@ mod tests {
         let _ = app.block_card_event(Event::Save);
         assert_eq!(element(&app), None);
         app.document.as_mut().unwrap().model.undo().unwrap();
-        assert_eq!(element(&app).map(|e| e.class), Some(BlockElementClass::Furniture));
+        assert_eq!(
+            element(&app).map(|e| e.class),
+            Some(BlockElementClass::Furniture)
+        );
     }
 
     #[test]

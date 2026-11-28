@@ -102,8 +102,10 @@ fn the_window_asks_the_ways_and_the_links_left_out() {
 
 /// The exchange sample drawing (fixtures/exchange/v1/devir.json, docs/adr/1660) opened, no layer bound.
 fn sample() -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_str(include_str!("../../../../../fixtures/exchange/v1/devir.json")).expect("the sample");
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../../fixtures/exchange/v1/devir.json"
+    ))
+    .expect("the sample");
     let (mut app, _) = App::boot(None);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(crate::app::Message::Opened(Some(Ok(Box::new(doc)))));
@@ -117,15 +119,36 @@ fn the_window_asks_the_open_files_without_bound_layers() {
     let mut app = sample();
     run(&mut app, "file.package");
     let s = window(&app);
-    assert!(s.links.is_empty() && s.formats.is_empty(), "no link, no open file when it opens");
-    send(&mut app, Event::Package(P::Format(kentos_commands::ExchangeFormat::Dxf)));
-    send(&mut app, Event::Package(P::Format(kentos_commands::ExchangeFormat::Gpkg)));
-    send(&mut app, Event::Package(P::Format(kentos_commands::ExchangeFormat::Fgb)));
-    send(&mut app, Event::Package(P::Format(kentos_commands::ExchangeFormat::Fgb)));
+    assert!(
+        s.links.is_empty() && s.formats.is_empty(),
+        "no link, no open file when it opens"
+    );
+    send(
+        &mut app,
+        Event::Package(P::Format(kentos_commands::ExchangeFormat::Dxf)),
+    );
+    send(
+        &mut app,
+        Event::Package(P::Format(kentos_commands::ExchangeFormat::Gpkg)),
+    );
+    send(
+        &mut app,
+        Event::Package(P::Format(kentos_commands::ExchangeFormat::Fgb)),
+    );
+    send(
+        &mut app,
+        Event::Package(P::Format(kentos_commands::ExchangeFormat::Fgb)),
+    );
     let out = scratch("paket-devir-pencere").join("teslim");
     let input = app.package_input(&out).expect("an input");
     let asked = input.exchange.clone().expect("the open files asked");
-    assert_eq!(asked.formats, [kentos_commands::ExchangeFormat::Gpkg, kentos_commands::ExchangeFormat::Dxf]);
+    assert_eq!(
+        asked.formats,
+        [
+            kentos_commands::ExchangeFormat::Gpkg,
+            kentos_commands::ExchangeFormat::Dxf
+        ]
+    );
     let doc = &app.document.as_ref().expect("a drawing").model;
     let planned = kentos_headless::package::plan(doc, &input).expect("planned");
     kentos_headless::package::write(&planned).expect("packed");
@@ -140,13 +163,22 @@ fn the_window_asks_the_open_files_without_bound_layers() {
     assert!(out.join("devir/devir-raporu.csv").is_file());
     let warned = planned.warnings.iter().any(|w| w.code == "export_losses");
     assert!(warned, "the open files lose the text outside DXF");
-    send(&mut app, Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))));
+    send(
+        &mut app,
+        Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))),
+    );
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(
-        said.iter().any(|l| l.contains("2 devir dosyası: GeoPackage, DXF; kayıpları devir/devir-raporu.csv'de")),
+        said.iter()
+            .any(|l| l
+                .contains("2 devir dosyası: GeoPackage, DXF; kayıpları devir/devir-raporu.csv'de")),
         "{said:?}"
     );
-    assert!(said.iter().any(|l| l.contains("Devir dosyaları projenin her şeyini taşımaz")), "{said:?}");
+    assert!(
+        said.iter()
+            .any(|l| l.contains("Devir dosyaları projenin her şeyini taşımaz")),
+        "{said:?}"
+    );
 }
 
 /// docs/adr/3180: the package's message counts the grids it carries, not their notes.
@@ -158,7 +190,11 @@ fn the_message_counts_the_grids() {
     let input = app.package_input(&out).expect("an input");
     let doc = &app.document.as_ref().expect("a drawing").model;
     let mut planned = kentos_headless::package::plan(doc, &input).expect("planned");
-    for (path, links) in [("izgaralar/a.gtx", 1), ("izgaralar/a.json", 0), ("izgaralar/b.gsb", 2)] {
+    for (path, links) in [
+        ("izgaralar/a.gtx", 1),
+        ("izgaralar/a.json", 0),
+        ("izgaralar/b.gsb", 2),
+    ] {
         planned.output.files.push(kentos_commands::PackagedFile {
             path: path.into(),
             from: path.into(),
@@ -170,7 +206,10 @@ fn the_message_counts_the_grids() {
             rows: None,
         });
     }
-    send(&mut app, Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))));
+    send(
+        &mut app,
+        Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))),
+    );
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(said.iter().any(|l| l.contains(", 2 ızgara")), "{said:?}");
 }
@@ -187,25 +226,37 @@ fn grid_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/paket-izgara-3180");
+    let out =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/paket-izgara-3180");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let library = scratch("paket-izgara-kutuphane");
-    let bytes = std::fs::read(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/geoid/v1/tg.gtx")).expect("the geoid");
+    let bytes = std::fs::read(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/geoid/v1/tg.gtx"),
+    )
+    .expect("the geoid");
     let id = kentos_commands::encoding::sha256_hex(&bytes);
     std::fs::write(library.join(format!("{id}.gtx")), &bytes).expect("in the library");
     // SAFETY: a picture test run by hand on its own; no other thread reads the variable.
     unsafe { std::env::set_var("KENTOS_GRID_DIR", &library) };
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = sample();
         let doc = &mut app.document.as_mut().expect("a drawing").model;
         let mut settings = doc.settings().clone();
         settings.heights = Some(kentos_commands::HeightReference {
             kind: kentos_commands::HeightKind::Orthometric,
             vertical_srid: Some(5775),
-            geoid: Some(kentos_commands::GeoidModel { name: "TG-20".into(), sha256: Some(id.clone()) }),
+            geoid: Some(kentos_commands::GeoidModel {
+                name: "TG-20".into(),
+                sha256: Some(id.clone()),
+            }),
         });
         doc.set_settings(settings);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(crate::app::Message::WindowResized(size));
         let _ = app.update(crate::app::Message::Run("view.zoomExtents"));
@@ -217,14 +268,23 @@ fn grid_screens() {
         let planned = kentos_headless::package::plan(doc, &input).expect("planned");
         kentos_headless::package::write(&planned).expect("packed");
         let _ = app.update(crate::app::Message::DialogClosed);
-        send(&mut app, Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))));
+        send(
+            &mut app,
+            Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))),
+        );
         snapshot.settle(&mut app, App::view, &mut |app: &mut App, message| {
             let _ = app.update(message);
         });
         let path = out.join(format!("ileti-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&path)
+            .expect("writes the picture");
         println!("{}", path.display());
-        let _ = std::fs::copy(target.join("paket.json"), out.join(format!("paket-{name}.json")));
+        let _ = std::fs::copy(
+            target.join("paket.json"),
+            out.join(format!("paket-{name}.json")),
+        );
     }
 }
 
@@ -239,11 +299,17 @@ fn open_file_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/teslim-devir-2780");
+    let out =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/teslim-devir-2780");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = sample();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(crate::app::Message::WindowResized(size));
         let _ = app.update(crate::app::Message::Run("view.zoomExtents"));
@@ -253,11 +319,18 @@ fn open_file_screens() {
                 let _ = app.update(message);
             });
             let path = out.join(format!("{label}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes the picture");
             println!("{}", path.display());
         };
         run(&mut app, "file.package");
-        for f in [kentos_commands::ExchangeFormat::Gpkg, kentos_commands::ExchangeFormat::Shp, kentos_commands::ExchangeFormat::Dxf] {
+        for f in [
+            kentos_commands::ExchangeFormat::Gpkg,
+            kentos_commands::ExchangeFormat::Shp,
+            kentos_commands::ExchangeFormat::Dxf,
+        ] {
             send(&mut app, Event::Package(P::Format(f)));
         }
         picture(&mut app, "1-pencere");
@@ -267,10 +340,16 @@ fn open_file_screens() {
         let planned = kentos_headless::package::plan(doc, &input).expect("planned");
         kentos_headless::package::write(&planned).expect("packed");
         let _ = app.update(crate::app::Message::DialogClosed);
-        send(&mut app, Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))));
+        send(
+            &mut app,
+            Event::Package(P::Done(Ok(Box::new((planned.output, planned.warnings))))),
+        );
         picture(&mut app, "2-ileti");
         // The report as a spreadsheet would show it, for the owner to read beside the pictures.
-        let _ = std::fs::copy(target.join("devir/devir-raporu.csv"), out.join(format!("devir-raporu-{name}.csv")));
+        let _ = std::fs::copy(
+            target.join("devir/devir-raporu.csv"),
+            out.join(format!("devir-raporu-{name}.csv")),
+        );
     }
 }
 
@@ -348,11 +427,13 @@ fn package_with_own_geoid(folder: &std::path::Path) -> (PathBuf, String) {
     let sha = kentos_native_application::crs_models::sha256(&bytes);
     std::fs::create_dir_all(folder.join("izgaralar")).expect("a folder");
     std::fs::write(folder.join("izgaralar").join(format!("{sha}.gtx")), &bytes).expect("writes");
-    let mut drawing: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/exchange/v1/devir.json")).expect("the sample");
-    drawing["settings"]["heights"] =
-        serde_json::json!({ "kind": "orthometric", "verticalSrid": 5775, "geoid": { "name": "TG-20 (paket)", "sha256": sha } });
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(drawing).expect("reads");
+    let mut drawing: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/exchange/v1/devir.json"
+    ))
+    .expect("the sample");
+    drawing["settings"]["heights"] = serde_json::json!({ "kind": "orthometric", "verticalSrid": 5775, "geoid": { "name": "TG-20 (paket)", "sha256": sha } });
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(drawing).expect("reads");
     let path = folder.join("harita.kcad");
     std::fs::write(&path, kentos_kcad::encode(&snapshot).expect("encodes")).expect("writes");
     (path, sha)
@@ -370,11 +451,17 @@ fn a_package_s_grid_is_found_when_it_is_opened() {
     let _ = app.update(crate::app::Message::Opened(Some(Ok(Box::new(doc)))));
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(
-        said.iter().any(|l| l.contains("izgaralar/ klasöründen 1 ızgara kullanılıyor") && l.contains("TG-20 (paket)")),
+        said.iter().any(
+            |l| l.contains("izgaralar/ klasöründen 1 ızgara kullanılıyor")
+                && l.contains("TG-20 (paket)")
+        ),
         "{said:?}"
     );
     let kind = kentos_native_application::crs_models::ModelKind::Geoid;
-    assert!(kentos_native_application::crs_models::load(&sha, kind, Some(&folder.join("bos"))).is_ok(), "in the core");
+    assert!(
+        kentos_native_application::crs_models::load(&sha, kind, Some(&folder.join("bos"))).is_ok(),
+        "in the core"
+    );
 }
 
 /// docs/adr/3580: the drawing opened from its package, its message in the status bar and the history;
@@ -388,13 +475,19 @@ fn a_package_s_grid_is_found_when_it_is_opened() {
 fn found_grid_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/paket-izgara-acilis-3580");
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/paket-izgara-acilis-3580");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 700.0), "koyu-dar"),
+    ] {
         let folder = scratch(&format!("paket-izgara-acilis-{name}"));
         let (path, _) = package_with_own_geoid(&folder);
         let mut app = crate::files_testing::app_with_drawing();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(crate::app::Message::WindowResized(size));
         let snapshot = kentos_kcad::decode(&std::fs::read(&path).expect("reads")).expect("decodes");
@@ -408,7 +501,10 @@ fn found_grid_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("acilis-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -431,10 +527,21 @@ fn a_missing_document_is_said_and_the_package_is_not_called_whole() {
         .expect("an object");
     // The whole one first.
     let mut whole = planned.output.clone();
-    whole.left.retain(|l| !matches!(l.why, kentos_commands::LeftWhy::Missing | kentos_commands::LeftWhy::Unreadable));
-    send(&mut app, Event::Package(P::Done(Ok(Box::new((whole, Vec::new()))))));
+    whole.left.retain(|l| {
+        !matches!(
+            l.why,
+            kentos_commands::LeftWhy::Missing | kentos_commands::LeftWhy::Unreadable
+        )
+    });
+    send(
+        &mut app,
+        Event::Package(P::Done(Ok(Box::new((whole, Vec::new()))))),
+    );
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
-    assert!(said.iter().any(|l| l.ends_with("kaynaklarını bulur.")), "{said:?}");
+    assert!(
+        said.iter().any(|l| l.ends_with("kaynaklarını bulur.")),
+        "{said:?}"
+    );
     // A parcel's PDF missing.
     let mut missing = planned.output;
     missing.left.push(kentos_commands::PackageLeft {
@@ -445,13 +552,34 @@ fn a_missing_document_is_said_and_the_package_is_not_called_whole() {
         objects: None,
     });
     let before = app.log.lines().count();
-    send(&mut app, Event::Package(P::Done(Ok(Box::new((missing, Vec::new()))))));
-    let said: Vec<String> = app.log.lines().skip(before).map(|l| l.text.clone()).collect();
-    assert!(said.iter().all(|l| !l.contains("kaynaklarını bulur")), "{said:?}");
-    assert!(said.iter().any(|l| l.contains("Paket eksik: 1 bağlı dosya")), "{said:?}");
-    let line = said.iter().find(|l| l.starts_with("Eksik: “belgeler/tapu-101-5.pdf” bulunamadı")).expect("the file said");
+    send(
+        &mut app,
+        Event::Package(P::Done(Ok(Box::new((missing, Vec::new()))))),
+    );
+    let said: Vec<String> = app
+        .log
+        .lines()
+        .skip(before)
+        .map(|l| l.text.clone())
+        .collect();
+    assert!(
+        said.iter().all(|l| !l.contains("kaynaklarını bulur")),
+        "{said:?}"
+    );
+    assert!(
+        said.iter()
+            .any(|l| l.contains("Paket eksik: 1 bağlı dosya")),
+        "{said:?}"
+    );
+    let line = said
+        .iter()
+        .find(|l| l.starts_with("Eksik: “belgeler/tapu-101-5.pdf” bulunamadı"))
+        .expect("the file said");
     if let Some(label) = label.filter(|l| !l.trim().is_empty()) {
-        assert!(line.contains(&format!("“{}” nesnesinde", label.trim())), "{line}");
+        assert!(
+            line.contains(&format!("“{}” nesnesinde", label.trim())),
+            "{line}"
+        );
     }
     assert!(line.contains("yeniden bağlayın"), "{line}");
 }

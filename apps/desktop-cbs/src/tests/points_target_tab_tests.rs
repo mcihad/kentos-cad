@@ -18,8 +18,10 @@ fn ev(app: &mut App, e: Event) {
 fn new_cbs() -> App {
     crate::data_layers::register();
     let (mut app, _) = App::boot(None);
-    let mut d: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/interaction/v1/empty.kcad")).expect("reads");
+    let mut d: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/empty.kcad"
+    ))
+    .expect("reads");
     d["settings"]["workspace"] = json!("gis");
     d["layers"] = json!([{
         "id": "aciklama", "name": "Açıklama", "type": "layer", "visible": true, "locked": false, "expanded": true,
@@ -27,7 +29,8 @@ fn new_cbs() -> App {
         "children": []
     }]);
     d["activeLayer"] = json!("aciklama");
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&d.to_string()).expect("the drawing reads");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&d.to_string()).expect("the drawing reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -47,7 +50,10 @@ fn with_point_table(app: &mut App, tag: &str) {
             title: None,
             description: None,
             key: "fid".into(),
-            fields: vec![kentos_data::Field::new("ad", text()), kentos_data::Field::new("kod", text())],
+            fields: vec![
+                kentos_data::Field::new("ad", text()),
+                kentos_data::Field::new("kod", text()),
+            ],
             geometry: Some(kentos_data::GeometryField {
                 name: "geom".into(),
                 type_name: "POINT".into(),
@@ -70,7 +76,10 @@ fn with_point_table(app: &mut App, tag: &str) {
 fn typed(app: &mut App) {
     let _ = app.update(Message::Run("point.editor"));
     ev(app, Event::AddRow);
-    for (i, v) in ["QA-A", "500000", "4320000", "12.5", "QA"].iter().enumerate() {
+    for (i, v) in ["QA-A", "500000", "4320000", "12.5", "QA"]
+        .iter()
+        .enumerate()
+    {
         ev(app, Event::Input((*v).into()));
         if i < 4 {
             ev(app, Event::Finish(Some(Walk::Right)));
@@ -82,7 +91,11 @@ fn typed(app: &mut App) {
 fn a_rows_warning_leaves_noktalar_on_screen_in_a_cbs_project() {
     let mut app = new_cbs();
     typed(&mut app);
-    assert_eq!(app.bottom_tab, BottomTab::Points, "the tab is the module's and stays");
+    assert_eq!(
+        app.bottom_tab,
+        BottomTab::Points,
+        "the tab is the module's and stays"
+    );
     assert!(app.command_expanded);
 }
 
@@ -105,7 +118,9 @@ fn screens() {
         roomy(&mut app);
         ev(&mut app, Event::CreateLayer);
         let gpkg = crate::files_testing::scratch("resim-nokta").join("noktalar.gpkg");
-        let _ = app.update(Message::Gis(crate::gis::Event::LayerCreate(Create::Path(gpkg.display().to_string()))));
+        let _ = app.update(Message::Gis(crate::gis::Event::LayerCreate(Create::Path(
+            gpkg.display().to_string(),
+        ))));
         app
     });
     crate::files_testing::usage_shots("9320", "03-satir-tabloya-yazildi", || {
@@ -114,7 +129,9 @@ fn screens() {
         roomy(&mut app);
         ev(&mut app, Event::CreateLayer);
         let gpkg = crate::files_testing::scratch("resim-yazildi").join("noktalar.gpkg");
-        let _ = app.update(Message::Gis(crate::gis::Event::LayerCreate(Create::Path(gpkg.display().to_string()))));
+        let _ = app.update(Message::Gis(crate::gis::Event::LayerCreate(Create::Path(
+            gpkg.display().to_string(),
+        ))));
         let task = app.update(Message::Gis(crate::gis::Event::LayerCreate(Create::Run)));
         crate::files_testing::drive(&mut app, task);
         ev(&mut app, Event::Finish(Some(Walk::Down)));

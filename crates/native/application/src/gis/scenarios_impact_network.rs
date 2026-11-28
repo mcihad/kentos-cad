@@ -51,7 +51,10 @@ fn definition(doc: &Document, name: &str) -> Result<NetworkDef, Stop> {
         .ok_or_else(|| {
             refuse(
                 codes::UNKNOWN_NETWORK,
-                format!("“{}” kimlikli ya da adlı ağ projede yok; Ağlar'da tanımlı bir ağı seçin.", name.trim()),
+                format!(
+                    "“{}” kimlikli ya da adlı ağ projede yok; Ağlar'da tanımlı bir ağı seçin.",
+                    name.trim()
+                ),
                 "access.network",
             )
         })
@@ -59,7 +62,11 @@ fn definition(doc: &Document, name: &str) -> Result<NetworkDef, Stop> {
 
 /// The network's name and its graph on each side: the definition as it is on the field state's side; on the
 /// scenario's, every layer of it the scenario stands in for swapped for the scenario's layer.
-pub(crate) fn graphs(doc: &Document, pairs: &[(String, String)], name: &str) -> Result<(String, Graph, Graph), Stop> {
+pub(crate) fn graphs(
+    doc: &Document,
+    pairs: &[(String, String)],
+    name: &str,
+) -> Result<(String, Graph, Graph), Stop> {
     let base = definition(doc, name)?;
     let mut alt = base.clone();
     let swap = |l: &mut String| {
@@ -72,14 +79,23 @@ pub(crate) fn graphs(doc: &Document, pairs: &[(String, String)], name: &str) -> 
     let h = host().map_err(|e| Stop::failed(*e))?;
     let build = |def: &NetworkDef| {
         h.network_of(doc, def).map(|s| s.graph).map_err(|why| {
-            refuse(codes::INVALID_NETWORK, format!("“{}” ağı kurulamadı: {why}", def.name), "access.network")
+            refuse(
+                codes::INVALID_NETWORK,
+                format!("“{}” ağı kurulamadı: {why}", def.name),
+                "access.network",
+            )
         })
     };
     Ok((base.name.clone(), build(&base)?, build(&alt)?))
 }
 
 /// The access along `g` on a side whose areas are `areas`.
-pub(crate) fn along(g: &Graph, areas: &[MeasuredArea], access: &ImpactAccess, connect: f64) -> Along {
+pub(crate) fn along(
+    g: &Graph,
+    areas: &[MeasuredArea],
+    access: &ImpactAccess,
+    connect: f64,
+) -> Along {
     let mut r = Along::default();
     let place = |sh: &Shape| shape_centroid(sh).map(|c| (c, g.locate(c, connect)));
     let mut ends: Vec<(String, kentos_geometry_core::Vec2, Location)> = Vec::new();
@@ -112,7 +128,10 @@ pub(crate) fn along(g: &Graph, areas: &[MeasuredArea], access: &ImpactAccess, co
                 barriers: &[],
                 at: None,
             };
-            nearest(g, &mut searcher, &q, true).into_iter().next().unwrap_or_default()
+            nearest(g, &mut searcher, &q, true)
+                .into_iter()
+                .next()
+                .unwrap_or_default()
         };
         // The nearest in all, the legs counted; of equals the first in the drawing's order.
         let best = found
@@ -124,11 +143,22 @@ pub(crate) fn along(g: &Graph, areas: &[MeasuredArea], access: &ImpactAccess, co
                 let (tid, tc, tat) = &ends[k];
                 let mut pts = vec![[c.x, c.y], [at.p.x, at.p.y]];
                 if let Some(p) = path {
-                    pts.extend(polyline_of(&spans_edges(g, &p.spans)).0.iter().map(|q| [q.x, q.y]));
+                    pts.extend(
+                        polyline_of(&spans_edges(g, &p.spans))
+                            .0
+                            .iter()
+                            .map(|q| [q.x, q.y]),
+                    );
                 }
                 pts.extend([[tat.p.x, tat.p.y], [tc.x, tc.y]]);
                 pts.dedup();
-                r.routes.push(ImpactRoute { area: uid.clone(), target: tid.clone(), distance: total, legs: [at.d, tat.d], path: pts });
+                r.routes.push(ImpactRoute {
+                    area: uid.clone(),
+                    target: tid.clone(),
+                    distance: total,
+                    legs: [at.d, tat.d],
+                    path: pts,
+                });
                 if total <= access.distance {
                     r.got += area;
                     r.reached.push(uid.clone());

@@ -5,9 +5,9 @@
 
 use std::collections::HashMap;
 
+use iced::Element;
 use iced::widget::tooltip::Position;
 use iced::widget::{button, column, row};
-use iced::Element;
 use kentos_expression::js::number;
 use kentos_native_style::designer::{Choice, LayerPath, Patch, js_value, set};
 use kentos_ui::label;
@@ -137,7 +137,10 @@ fn expression<'a>(
         }
         edit(at, key, None, Some(set(key, v)))
     });
-    (block, fields::fx_line(true, edit(at, key, None, Some(set(key, back)))))
+    (
+        block,
+        fields::fx_line(true, edit(at, key, None, Some(set(key, back)))),
+    )
 }
 
 /// An ƒ value's expression (`key`: the layer's key, or `step.i.field` of a generator's step): its
@@ -272,7 +275,14 @@ pub(super) fn dd_color<'a>(
         let current = v.cloned().unwrap_or(Value::Null);
         let value = v.and_then(Value::as_str);
         (
-            color_control(env, key, label, none, move |t| color_patch(key, t, none), value),
+            color_control(
+                env,
+                key,
+                label,
+                none,
+                move |t| color_patch(key, t, none),
+                value,
+            ),
             fx_on(env, key, current),
         )
     };

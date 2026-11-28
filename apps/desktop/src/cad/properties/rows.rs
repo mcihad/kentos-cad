@@ -19,16 +19,16 @@ use super::{ArchField, Event, Field, Spot};
 
 mod arch;
 pub(crate) mod attachments;
-pub(crate) mod casework;
-mod opening_types;
-mod element_types;
-mod materials;
-mod modules;
-mod elevations;
 mod building_sections;
+pub(crate) mod casework;
 pub(crate) mod cloud;
 mod dimension;
 mod dimension_set;
+mod element_types;
+mod elevations;
+mod materials;
+mod modules;
+mod opening_types;
 pub(crate) mod params;
 pub(crate) mod raster;
 
@@ -125,7 +125,10 @@ pub struct Thumb {
 /// How a row is edited.
 #[derive(Clone)]
 pub enum Editor {
-    SurveyNavigation { previous: Option<Slot>, next: Option<Slot> },
+    SurveyNavigation {
+        previous: Option<Slot>,
+        next: Option<Slot>,
+    },
     /// A text cell: the committed text goes to the field.
     Text(Field),
     /// A number cell; the field reads the number as the web does.
@@ -141,25 +144,43 @@ pub enum Editor {
 }
 
 /// The displayed point can be changed while the scene keeps its entire selection.
-pub(super) fn survey_identity_section(doc: &Document, selected: &[Slot], active: Option<Slot>) -> Option<Section> {
-    let index = active.and_then(|slot| selected.iter().position(|s| *s == slot)).unwrap_or(0);
+pub(super) fn survey_identity_section(
+    doc: &Document,
+    selected: &[Slot],
+    active: Option<Slot>,
+) -> Option<Section> {
+    let index = active
+        .and_then(|slot| selected.iter().position(|s| *s == slot))
+        .unwrap_or(0);
     let slot = *selected.get(index)?;
-    let Entity::Point(point) = doc.model.get(slot)? else { return None };
+    let Entity::Point(point) = doc.model.get(slot)? else {
+        return None;
+    };
     let editable = !doc.model.layers().is_locked(&point.base.layer_id);
     let mut rows = Vec::new();
     if selected.len() > 1 {
-        rows.push(Row::text("Seçili nokta", format!("{} / {}", index + 1, selected.len()))
+        rows.push(
+            Row::text(
+                "Seçili nokta",
+                format!("{} / {}", index + 1, selected.len()),
+            )
             .editor(Some(Editor::SurveyNavigation {
                 previous: index.checked_sub(1).map(|i| selected[i]),
                 next: selected.get(index + 1).copied(),
-            })));
+            })),
+        );
     }
     use crate::points::edit::{EditColumn, cell_text};
     let unit = doc.settings().unit();
     let value = |column| cell_text(point, column, unit.per_metre(), true);
-    for (column, label) in [(EditColumn::Name, "Nokta adı"), (EditColumn::Code, "Nokta kodu")] {
-        rows.push(Row::text(label, value(column))
-            .editor(editable.then_some(Editor::Text(Field::SurveyPoint(slot, column)))));
+    for (column, label) in [
+        (EditColumn::Name, "Nokta adı"),
+        (EditColumn::Code, "Nokta kodu"),
+    ] {
+        rows.push(
+            Row::text(label, value(column))
+                .editor(editable.then_some(Editor::Text(Field::SurveyPoint(slot, column)))),
+        );
     }
     let kot = if point.parts.as_ref().is_some_and(|parts| !parts.is_empty()) {
         "İlk noktanın kotu"
@@ -169,11 +190,17 @@ pub(super) fn survey_identity_section(doc: &Document, selected: &[Slot], active:
     // Shown at the project's precision, edited from the stored figure (UR2-015: 103,82731135400061 at rest).
     let format = Format::of(doc.settings());
     let shown = point.z.map(|z| format.length_bare(z)).unwrap_or_default();
-    rows.push(Row::figure(kot, shown)
-        .full(value(EditColumn::Z))
-        .unit(format.length_unit_label())
-        .editor(editable.then_some(Editor::Number(Field::SurveyPoint(slot, EditColumn::Z)))));
-    Some(Section { id: "surveyIdentity".into(), title: "Nokta bilgileri".into(), rows })
+    rows.push(
+        Row::figure(kot, shown)
+            .full(value(EditColumn::Z))
+            .unit(format.length_unit_label())
+            .editor(editable.then_some(Editor::Number(Field::SurveyPoint(slot, EditColumn::Z)))),
+    );
+    Some(Section {
+        id: "surveyIdentity".into(),
+        title: "Nokta bilgileri".into(),
+        rows,
+    })
 }
 
 /// One entry of a drop-down.
@@ -413,7 +440,10 @@ pub(crate) fn panel(
                 sections: many_sections(doc, many, totals(selected), shown),
                 types: Vec::new(),
                 total: many.len(),
-                editable: many.iter().filter(|e| !layers.is_locked(&e.base().layer_id)).count(),
+                editable: many
+                    .iter()
+                    .filter(|e| !layers.is_locked(&e.base().layer_id))
+                    .count(),
             }
         }
     }

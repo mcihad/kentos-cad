@@ -27,7 +27,12 @@ pub const DAYS: [(&str, &str, u32, u32); 4] = [
 ];
 
 /// The hours: one of them, or the day's from 09:00 to 15:00 hour by hour.
-const HOURS: [(&str, &str); 4] = [("9", "09:00"), ("12", "12:00"), ("15", "15:00"), ("gun", "09:00–15:00 saatlik")];
+const HOURS: [(&str, &str); 4] = [
+    ("9", "09:00"),
+    ("12", "12:00"),
+    ("15", "15:00"),
+    ("gun", "09:00–15:00 saatlik"),
+];
 
 /// What the tool keeps from one run to the next: the latitude and longitude typed, the time zone (UTC+hours), the
 /// day's and the hours' places in their lists.
@@ -42,7 +47,13 @@ pub struct Kept {
 
 impl Kept {
     /// A new app's: no place, Türkiye's time, 21 Aralık at 12:00.
-    pub const DEFAULT: Kept = Kept { lat: None, lon: None, zone: 3.0, day: 0, hours: 1 };
+    pub const DEFAULT: Kept = Kept {
+        lat: None,
+        lon: None,
+        zone: 3.0,
+        day: 0,
+        hours: 1,
+    };
 }
 
 impl Default for Kept {
@@ -101,12 +112,20 @@ impl ShadowTool {
             .collect();
         let first = up.first().map(|(_, (s, _))| *s);
         let caster = shadows::caster(cx.doc);
-        let areas = shadows::shadows_of(&caster, &up.iter().map(|(_, (_, plan))| *plan).collect::<Vec<_>>());
-        let out: Vec<shadows::Hour> =
-            up.iter().zip(areas).map(|((h, (_, plan)), a)| (shadows::clock(*h), *plan, a)).collect();
+        let areas = shadows::shadows_of(
+            &caster,
+            &up.iter().map(|(_, (_, plan))| *plan).collect::<Vec<_>>(),
+        );
+        let out: Vec<shadows::Hour> = up
+            .iter()
+            .zip(areas)
+            .map(|((h, (_, plan)), a)| (shadows::clock(*h), *plan, a))
+            .collect();
         let when = HOURS[k.hours].1;
         if out.iter().all(|(_, _, a)| a.is_empty()) {
-            return Err(format!("{name} {when}: güneş ufkun altında ya da binanın gölgesi yok."));
+            return Err(format!(
+                "{name} {when}: güneş ufkun altında ya da binanın gölgesi yok."
+            ));
         }
         let mut said = match (out.len(), first) {
             (1, Some(s)) => format!(
@@ -161,10 +180,11 @@ impl ShadowTool {
         };
         let group = cx.doc.begin_group(shadows::STEP);
         let mut out = Err(String::new());
-        let written = crate::arch_layer::writing(&crate::arch_layer::Kind::Shadow, cx, |layer, cx| {
-            out = shadows::draw(cx.doc, layer, &list);
-            out.is_ok()
-        });
+        let written =
+            crate::arch_layer::writing(&crate::arch_layer::Kind::Shadow, cx, |layer, cx| {
+                out = shadows::draw(cx.doc, layer, &list);
+                out.is_ok()
+            });
         match (written, out) {
             (true, Ok(_)) => {
                 cx.doc.end_group(group);
@@ -238,8 +258,12 @@ impl Tool for ShadowTool {
             return prompt;
         }
         // A letter reaches the tool only as the prompt's option.
-        let degrees = |v: Option<f64>| v.map_or_else(|| "—".to_owned(), |v| format!("{v}°").replace('.', ","));
-        prompt.option_with("Enlem", "E", degrees(k.lat)).option_with("Boylam", "B", degrees(k.lon))
+        let degrees = |v: Option<f64>| {
+            v.map_or_else(|| "—".to_owned(), |v| format!("{v}°").replace('.', ","))
+        };
+        prompt
+            .option_with("Enlem", "E", degrees(k.lat))
+            .option_with("Boylam", "B", degrees(k.lon))
     }
 
     fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
@@ -265,7 +289,10 @@ impl Tool for ShadowTool {
                 Ask::Zone => "Z",
             };
             if !self.apply(key, text) {
-                cx.say(Level::Warn, "Değer okunamadı: enlem −90…90, boylam −180…180, saat dilimi −12…14.");
+                cx.say(
+                    Level::Warn,
+                    "Değer okunamadı: enlem −90…90, boylam −180…180, saat dilimi −12…14.",
+                );
                 return true;
             }
             self.ask = None;
@@ -296,13 +323,22 @@ impl Tool for ShadowTool {
 
     fn settings(&self, _f: &Format) -> Vec<Setting> {
         let k = &self.kept;
-        let number = |v: Option<f64>| v.map_or_else(|| "—".to_owned(), |v| v.to_string().replace('.', ","));
+        let number =
+            |v: Option<f64>| v.map_or_else(|| "—".to_owned(), |v| v.to_string().replace('.', ","));
         vec![
-            Setting::choice("T", "Tarih", choices(&DAYS.map(|(key, name, _, _)| (key, name)), DAYS[k.day].0)),
+            Setting::choice(
+                "T",
+                "Tarih",
+                choices(&DAYS.map(|(key, name, _, _)| (key, name)), DAYS[k.day].0),
+            ),
             Setting::choice("S", "Saat", choices(&HOURS, HOURS[k.hours].0)),
             Setting::text("E", "Enlem", number(k.lat)),
             Setting::text("B", "Boylam", number(k.lon)),
-            Setting::text("Z", "Saat dilimi (UTC+)", k.zone.to_string().replace('.', ",")),
+            Setting::text(
+                "Z",
+                "Saat dilimi (UTC+)",
+                k.zone.to_string().replace('.', ","),
+            ),
             Setting::hint(
                 "P",
                 shadows::STEP,
@@ -315,7 +351,10 @@ impl Tool for ShadowTool {
     }
 
     fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
-        self.settings(&Format::default()).into_iter().find(|s| s.key == key).map_or_else(Vec::new, |s| s.choices)
+        self.settings(&Format::default())
+            .into_iter()
+            .find(|s| s.key == key)
+            .map_or_else(Vec::new, |s| s.choices)
     }
 
     fn choose_option(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
@@ -324,8 +363,16 @@ impl Tool for ShadowTool {
 
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let took = match key {
-            "T" => DAYS.iter().position(|d| d.0 == value).map(|i| self.kept.day = i).is_some(),
-            "S" => HOURS.iter().position(|h| h.0 == value).map(|i| self.kept.hours = i).is_some(),
+            "T" => DAYS
+                .iter()
+                .position(|d| d.0 == value)
+                .map(|i| self.kept.day = i)
+                .is_some(),
+            "S" => HOURS
+                .iter()
+                .position(|h| h.0 == value)
+                .map(|i| self.kept.hours = i)
+                .is_some(),
             _ => self.apply(key, value),
         };
         if took {
@@ -348,10 +395,21 @@ impl Tool for ShadowTool {
         Preview {
             strokes: self.outlines.clone(),
             tag: self.hover.map(|at| {
-                let said = self.made.as_ref().map(|(_, _, said)| said.clone()).unwrap_or_default();
-                Tag { at, lines: vec![self.why.clone().unwrap_or(said)] }
+                let said = self
+                    .made
+                    .as_ref()
+                    .map(|(_, _, said)| said.clone())
+                    .unwrap_or_default();
+                Tag {
+                    at,
+                    lines: vec![self.why.clone().unwrap_or(said)],
+                }
             }),
-            tag_tone: if self.why.is_some() { Tone::Danger } else { Tone::Accent },
+            tag_tone: if self.why.is_some() {
+                Tone::Danger
+            } else {
+                Tone::Accent
+            },
             ..Preview::default()
         }
     }

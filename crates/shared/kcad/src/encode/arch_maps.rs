@@ -28,7 +28,10 @@ impl<'d> Encoder<'d> {
             self.path.push(Seg::Name(kind));
             return Err(self.fail(Code::BadValue, &problem));
         }
-        f.push((name, Val::Json(serde_json::to_value(fields).unwrap_or_default())));
+        f.push((
+            name,
+            Val::Json(serde_json::to_value(fields).unwrap_or_default()),
+        ));
         Ok(())
     }
 }

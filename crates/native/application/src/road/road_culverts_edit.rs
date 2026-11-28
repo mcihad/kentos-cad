@@ -2,7 +2,10 @@
 //! its), rebound to its corridor's present revision, or removed; one undo step “Menfez”. The shared cases are
 //! `fixtures/commands/v1/road.culverts.edit.json`.
 
-use kentos_commands::{CommandResult, CommandWarning, CulvertDef, CulvertReport, CulvertsEdit, CulvertsWritten, RoadEditOperation};
+use kentos_commands::{
+    CommandResult, CommandWarning, CulvertDef, CulvertReport, CulvertsEdit, CulvertsWritten,
+    RoadEditOperation,
+};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -23,13 +26,22 @@ fn check(doc: &kentos_domain::Document, input: &CulvertsEdit) -> Result<Checked,
     common::road_project(doc)?;
     let own = doc.road_culverts();
     let mut list = own.to_vec();
-    let found = input.culvert.as_deref().and_then(|t| common::find(own, t, "culvert").ok());
+    let found = input
+        .culvert
+        .as_deref()
+        .and_then(|t| common::find(own, t, "culvert").ok());
     if input.operation != RoadEditOperation::Set && found.is_none() {
         let name = input.culvert.clone().unwrap_or_default();
-        return Err(common::find(own, &name, "culvert").err().unwrap_or(Stop::Cancelled));
+        return Err(common::find(own, &name, "culvert")
+            .err()
+            .unwrap_or(Stop::Cancelled));
     }
     let corridor = match input.corridor.as_deref() {
-        Some(c) => Some(corridors::find(doc.road_corridors(), c, "corridor")?.1.clone()),
+        Some(c) => Some(
+            corridors::find(doc.road_corridors(), c, "corridor")?
+                .1
+                .clone(),
+        ),
         None => None,
     };
     let target = match (input.operation, found) {
@@ -38,7 +50,11 @@ fn check(doc: &kentos_domain::Document, input: &CulvertsEdit) -> Result<Checked,
             None
         }
         (RoadEditOperation::Rebind, Some((at, old))) => {
-            let now = doc.road_corridors().iter().find(|c| c.id == old.corridor).map_or(0, |c| c.revision);
+            let now = doc
+                .road_corridors()
+                .iter()
+                .find(|c| c.id == old.corridor)
+                .map_or(0, |c| c.revision);
             let mut d = old.clone();
             d.corridor_revision = now;
             if d != *old {
@@ -61,7 +77,11 @@ fn check(doc: &kentos_domain::Document, input: &CulvertsEdit) -> Result<Checked,
                 || input.material.is_some()
                 || input.roughness.is_some();
             if !given {
-                return Err(fail(codes::INVALID_CULVERT, "Değiştirilecek bir şey yok: menfezin bir alanını verin.".into(), ""));
+                return Err(fail(
+                    codes::INVALID_CULVERT,
+                    "Değiştirilecek bir şey yok: menfezin bir alanını verin.".into(),
+                    "",
+                ));
             }
             let mut d = old.clone();
             if let Some(n) = &input.name {
@@ -126,13 +146,31 @@ fn check(doc: &kentos_domain::Document, input: &CulvertsEdit) -> Result<Checked,
                     field,
                 ));
             }
-            let (Some(name), Some(c), Some(station), Some(shape), Some(invert), Some(slope), Some(flow)) =
-                (&input.name, &corridor, input.station, &input.shape, input.invert, input.slope, input.flow)
+            let (
+                Some(name),
+                Some(c),
+                Some(station),
+                Some(shape),
+                Some(invert),
+                Some(slope),
+                Some(flow),
+            ) = (
+                &input.name,
+                &corridor,
+                input.station,
+                &input.shape,
+                input.invert,
+                input.slope,
+                input.flow,
+            )
             else {
                 return Err(Stop::Cancelled);
             };
             let id = input.culvert.clone().unwrap_or_else(|| {
-                (1..).map(|n| format!("m-{n}")).find(|id| own.iter().all(|x| &x.id != id)).unwrap_or_default()
+                (1..)
+                    .map(|n| format!("m-{n}"))
+                    .find(|id| own.iter().all(|x| &x.id != id))
+                    .unwrap_or_default()
             });
             list.push(CulvertDef {
                 id: id.clone(),
@@ -158,7 +196,10 @@ fn check(doc: &kentos_domain::Document, input: &CulvertsEdit) -> Result<Checked,
     let mut road = doc.settings().road.clone().unwrap_or_default();
     road.culverts = list.clone();
     judged(&road, codes::INVALID_CULVERT, "Menfez")?;
-    if let Some(d) = target.as_ref().and_then(|id| list.iter().find(|c| &c.id == id)) {
+    if let Some(d) = target
+        .as_ref()
+        .and_then(|id| list.iter().find(|c| &c.id == id))
+    {
         common::read(doc, d)?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -168,9 +209,18 @@ fn check(doc: &kentos_domain::Document, input: &CulvertsEdit) -> Result<Checked,
 fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<CulvertsWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_culverts(c.list.clone(), STEP) {
-        return fail(codes::INVALID_CULVERT, format!("Menfez kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_CULVERT,
+            format!("Menfez kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
-    let culvert = match c.target.as_ref().and_then(|id| c.list.iter().find(|x| &x.id == id)) {
+    let culvert = match c
+        .target
+        .as_ref()
+        .and_then(|id| c.list.iter().find(|x| &x.id == id))
+    {
         Some(d) => match common::read(doc, d) {
             Ok(r) => Some(r.report),
             Err(stop) => return stop.into(),
@@ -178,7 +228,11 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<CulvertsWri
         None => None,
     };
     CommandResult::Completed {
-        output: CulvertsWritten { culvert, culverts: common::listed(&c.list), revision: doc.revision().to_string() },
+        output: CulvertsWritten {
+            culvert,
+            culverts: common::listed(&c.list),
+            revision: doc.revision().to_string(),
+        },
         warnings: vec![],
     }
 }
@@ -186,7 +240,10 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<CulvertsWri
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &CulvertsEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: vec![] },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -206,7 +263,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CulvertsEdit) -> CommandResult<Cu
 }
 
 /// Writes the culvert: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: CulvertsEdit) -> CommandResult<CulvertsWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CulvertsEdit,
+) -> CommandResult<CulvertsWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_CULVERTS_EDIT,
@@ -220,10 +280,20 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: CulvertsEdit) -> CommandRes
 }
 
 /// The culvert `input` would write, read, for a window (no step written): its report and warnings, or why not.
-pub fn preview(doc: &kentos_domain::Document, input: &CulvertsEdit) -> Result<(CulvertReport, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &kentos_domain::Document,
+    input: &CulvertsEdit,
+) -> Result<(CulvertReport, Vec<CommandWarning>), String> {
     let c = check(doc, input).map_err(crate::road_corridors::words)?;
     let mut copy = doc.reading_copy();
-    copy.set_road_culverts(c.list.clone(), STEP).map_err(|r| r.0)?;
-    let def = c.target.as_ref().and_then(|id| c.list.iter().find(|x| &x.id == id)).ok_or("Menfez yok.")?;
-    common::read(&copy, def).map(|r| (r.report, r.warnings)).map_err(crate::road_corridors::words)
+    copy.set_road_culverts(c.list.clone(), STEP)
+        .map_err(|r| r.0)?;
+    let def = c
+        .target
+        .as_ref()
+        .and_then(|id| c.list.iter().find(|x| &x.id == id))
+        .ok_or("Menfez yok.")?;
+    common::read(&copy, def)
+        .map(|r| (r.report, r.warnings))
+        .map_err(crate::road_corridors::words)
 }

@@ -22,14 +22,21 @@ fn moved(id: &mut EntityId, map: &Copies) {
 pub fn links_to(e: &Entity, originals: &Copies) -> bool {
     let named = |id: &EntityId| originals.contains_key(&id.0);
     match e {
-        Entity::Tag(t) => Uuid::parse_str(&t.tag.of).is_ok_and(|u| originals.contains_key(u.as_bytes())),
+        Entity::Tag(t) => {
+            Uuid::parse_str(&t.tag.of).is_ok_and(|u| originals.contains_key(u.as_bytes()))
+        }
         Entity::Text(t) => t.label_of.as_ref().is_some_and(named),
         Entity::Hatch(h) => h.assoc.as_ref().is_some_and(|a| a.objects().any(named)),
-        Entity::Table(t) => t.source.as_ref().is_some_and(|s| s.objects().iter().any(named)),
-        Entity::Dimension(d) => d
-            .refs
+        Entity::Table(t) => t
+            .source
             .as_ref()
-            .is_some_and(|r| [&r.a, &r.b, &r.c].into_iter().flatten().any(|s| named(&s.uid))),
+            .is_some_and(|s| s.objects().iter().any(named)),
+        Entity::Dimension(d) => d.refs.as_ref().is_some_and(|r| {
+            [&r.a, &r.b, &r.c]
+                .into_iter()
+                .flatten()
+                .any(|s| named(&s.uid))
+        }),
         _ => false,
     }
 }
@@ -38,7 +45,10 @@ pub fn links_to(e: &Entity, originals: &Copies) -> bool {
 pub fn relink(e: &mut Entity, map: &Copies) {
     match e {
         Entity::Tag(t) => {
-            if let Some(to) = Uuid::parse_str(&t.tag.of).ok().and_then(|u| map.get(u.as_bytes())) {
+            if let Some(to) = Uuid::parse_str(&t.tag.of)
+                .ok()
+                .and_then(|u| map.get(u.as_bytes()))
+            {
                 t.tag.of = Uuid::from_bytes(*to).to_string();
             }
         }
@@ -52,7 +62,12 @@ pub fn relink(e: &mut Entity, map: &Copies) {
                 if let Some(id) = &mut a.outer {
                     moved(id, map);
                 }
-                for id in a.bounds.iter_mut().chain(&mut a.islands).chain(&mut a.cutouts) {
+                for id in a
+                    .bounds
+                    .iter_mut()
+                    .chain(&mut a.islands)
+                    .chain(&mut a.cutouts)
+                {
                     moved(id, map);
                 }
             }

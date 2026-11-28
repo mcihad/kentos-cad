@@ -23,15 +23,17 @@ use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, Entity, PlatformBalanceAsk, PlatformBalanced, PlatformReport, PlatformSide, PlatformsDraw, PlatformsEdit,
-    PlatformsQuery, RoadEditOperation,
+    CommandWarning, Entity, PlatformBalanceAsk, PlatformBalanced, PlatformReport, PlatformSide,
+    PlatformsDraw, PlatformsEdit, PlatformsQuery, RoadEditOperation,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, road_platforms_draw, road_platforms_edit, road_platforms_query};
+use kentos_native_application::{
+    ExecutionContext, road_platforms_draw, road_platforms_edit, road_platforms_query,
+};
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::label;
 
 use crate::app::{App, Dialog, Message};
 use crate::exchange::words;
@@ -113,7 +115,9 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 /// Corners as typed, Y,X pairs (east, north) apart by `;` or a new line.
@@ -135,7 +139,11 @@ pub(crate) fn corners_of(text: &str) -> Result<Vec<[f64; 2]>, String> {
 }
 
 pub(crate) fn corners_text(corners: &[[f64; 2]]) -> String {
-    corners.iter().map(|c| format!("{},{}", trimmed(c[0]), trimmed(c[1]))).collect::<Vec<_>>().join("; ")
+    corners
+        .iter()
+        .map(|c| format!("{},{}", trimmed(c[0]), trimmed(c[1])))
+        .collect::<Vec<_>>()
+        .join("; ")
 }
 
 /// A closed boundary's corners: an area's ring, or a closed polyline's points (its arcs as their chords' ends).
@@ -150,7 +158,9 @@ fn boundary_of(e: &Entity) -> Option<Vec<[f64; 2]>> {
 impl Window {
     /// The edit as typed, or why it is not one.
     pub(crate) fn input(&self) -> Result<PlatformsEdit, String> {
-        let need = |k: usize| number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]));
+        let need = |k: usize| {
+            number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]))
+        };
         let may = |k: usize| number(&self.fields[k], FIELDS[k]).map(|v| v.unwrap_or(0.0));
         let corners = corners_of(&self.fields[1])?;
         if corners.is_empty() {
@@ -177,8 +187,14 @@ impl Window {
 
     /// The balance's bracket as typed.
     fn bracket(&self) -> Result<PlatformBalanceAsk, String> {
-        let need = |k: usize| number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]));
-        Ok(PlatformBalanceAsk { low: need(BRACKET_AT)?, high: need(BRACKET_AT + 1)?, tolerance: need(BRACKET_AT + 2)? })
+        let need = |k: usize| {
+            number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]))
+        };
+        Ok(PlatformBalanceAsk {
+            low: need(BRACKET_AT)?,
+            high: need(BRACKET_AT + 1)?,
+            tolerance: need(BRACKET_AT + 2)?,
+        })
     }
 }
 
@@ -190,11 +206,18 @@ impl App {
             return;
         };
         // A square, a car park, a building's pad: a map project's too (docs/adr/1580).
-        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work) {
+        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work)
+        {
             self.warn("Platform Harita ve Yol projelerinde olur.".to_owned());
             return;
         }
-        let surfaces = doc.model.settings().road.as_ref().map(|r| r.surfaces.clone()).unwrap_or_default();
+        let surfaces = doc
+            .model
+            .settings()
+            .road
+            .as_ref()
+            .map(|r| r.surfaces.clone())
+            .unwrap_or_default();
         let Some(first) = surfaces.first() else {
             self.warn("Platform bir arazi yüzeyine tesviye edilir: önce Arazi yüzeyleri'nde bir yüzey oluşturun.".to_owned());
             return;
@@ -209,7 +232,9 @@ impl App {
             layer,
             preview: Preview::default(),
         }));
-        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::Platforms));
+        self.dialog = Some(Dialog::TerrainWork(
+            crate::terrain_work::TerrainDialogKind::Platforms,
+        ));
         let _ = self.platform_event(Event::Choose(chosen));
         // A closed boundary selected when the window opens is a new pad's.
         if chosen_boundary(self).is_some()
@@ -255,22 +280,33 @@ impl App {
             let edit = w.input()?;
             let ask = w.bracket()?;
             let mut copy = doc.model.reading_copy();
-            let written = match road_platforms_edit::execute(&mut ExecutionContext::new(&mut copy), edit) {
-                kentos_commands::CommandResult::Completed { output, .. } => output,
-                kentos_commands::CommandResult::NeedsInput { error }
-                | kentos_commands::CommandResult::Conflict { error }
-                | kentos_commands::CommandResult::Failed { error } => return Err(error.message),
-                _ => return Err("Platform okunamadı.".into()),
-            };
+            let written =
+                match road_platforms_edit::execute(&mut ExecutionContext::new(&mut copy), edit) {
+                    kentos_commands::CommandResult::Completed { output, .. } => output,
+                    kentos_commands::CommandResult::NeedsInput { error }
+                    | kentos_commands::CommandResult::Conflict { error }
+                    | kentos_commands::CommandResult::Failed { error } => return Err(error.message),
+                    _ => return Err("Platform okunamadı.".into()),
+                };
             let id = written.platform.map(|p| p.id).ok_or("Platform yok.")?;
-            let (q, _) = road_platforms_query::preview(&copy, &PlatformsQuery { platform: Some(id), balance: Some(ask) })?;
+            let (q, _) = road_platforms_query::preview(
+                &copy,
+                &PlatformsQuery {
+                    platform: Some(id),
+                    balance: Some(ask),
+                },
+            )?;
             q.balance.ok_or_else(|| "Denge bulunamadı.".to_owned())
         })();
         w.preview.balance = Some(found);
     }
 
     pub(crate) fn platform_event(&mut self, event: Event) -> Task<Message> {
-        let kept = self.document.as_ref().map(|d| d.model.road_platforms().to_vec()).unwrap_or_default();
+        let kept = self
+            .document
+            .as_ref()
+            .map(|d| d.model.road_platforms().to_vec())
+            .unwrap_or_default();
         let picked = chosen_boundary(self);
         let Some(w) = self.terrain_work.platform_window.as_mut() else {
             return Task::none();
@@ -298,7 +334,11 @@ impl App {
                     None => {
                         // A new one: its slopes, spacing, fan and reach are the user's; only the name is filled in.
                         let n = kept.len() + 1;
-                        f[0] = if n == 1 { "Platform".into() } else { format!("Platform {n}") };
+                        f[0] = if n == 1 {
+                            "Platform".into()
+                        } else {
+                            format!("Platform {n}")
+                        };
                     }
                 }
                 // The bracket stays as typed between pads.
@@ -317,7 +357,9 @@ impl App {
                     }
                 }
                 None => {
-                    self.warn("Köşeleri almak için kapalı bir çoklu çizgi ya da alan seçin.".to_owned());
+                    self.warn(
+                        "Köşeleri almak için kapalı bir çoklu çizgi ya da alan seçin.".to_owned(),
+                    );
                     return Task::none();
                 }
             },
@@ -362,9 +404,14 @@ impl App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let result = road_platforms_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        let Some(out) = self.answered(result) else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result =
+            road_platforms_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(out) = self.answered(result) else {
+            return Task::none();
+        };
         if let Some(r) = &out.platform {
             let said = match (r.cut, r.fill) {
                 (Some(c), Some(f)) => format!("“{}”: kazı {c:.1} m³, dolgu {f:.1} m³.", r.name),
@@ -385,11 +432,22 @@ impl App {
             self.warn("Çizmek için önce platformu kaydedin ve bir katman seçin.".to_owned());
             return Task::none();
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let input = PlatformsDraw { platform: id, layer_id: layer, labels: true, expected_revision: None };
-        let result = road_platforms_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let input = PlatformsDraw {
+            platform: id,
+            layer_id: layer,
+            labels: true,
+            expected_revision: None,
+        };
+        let result =
+            road_platforms_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            self.say(Level::Success, format!("Platform planda, {} nesne.", out.uids.len()));
+            self.say(
+                Level::Success,
+                format!("Platform planda, {} nesne.", out.uids.len()),
+            );
             self.terrain_work.platform_window = None;
             self.dialog = None;
         }
@@ -424,9 +482,13 @@ impl App {
             surface: None,
             expected_revision: None,
         };
-        let result = road_platforms_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let result =
+            road_platforms_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
-            let next = self.document.as_ref().and_then(|d| d.model.road_platforms().first().map(|c| c.id.clone()));
+            let next = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.road_platforms().first().map(|c| c.id.clone()));
             return self.platform_event(Event::Choose(next));
         }
         Task::none()
@@ -436,14 +498,23 @@ impl App {
         let Some(w) = &self.terrain_work.platform_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let model = self.document.as_ref().map(|d| &d.model);
         let mut listed: Vec<(Option<String>, String)> = vec![(None, "Yeni platform".into())];
-        listed.extend(
-            model.map_or_else(Vec::new, |m| m.road_platforms().iter().map(|c| (Some(c.id.clone()), c.name.clone())).collect()),
-        );
+        listed.extend(model.map_or_else(Vec::new, |m| {
+            m.road_platforms()
+                .iter()
+                .map(|c| (Some(c.id.clone()), c.name.clone()))
+                .collect()
+        }));
         let ids: Vec<Option<String>> = listed.iter().map(|x| x.0.clone()).collect();
         let on_pad = Select::new(
             listed.iter().map(|x| Choice::new(x.1.clone())),
@@ -452,24 +523,35 @@ impl App {
         );
         let surfaces: Vec<(String, String)> = model
             .and_then(|m| m.settings().road.as_ref())
-            .map_or_else(Vec::new, |r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect());
+            .map_or_else(Vec::new, |r| {
+                r.surfaces
+                    .iter()
+                    .map(|s| (s.id.clone(), s.name.clone()))
+                    .collect()
+            });
         let sids: Vec<String> = surfaces.iter().map(|c| c.0.clone()).collect();
         let on_surface = Select::new(
             surfaces.iter().map(|c| Choice::new(c.1.clone())),
-            w.surface.as_ref().and_then(|c| sids.iter().position(|i| i == c)),
+            w.surface
+                .as_ref()
+                .and_then(|c| sids.iter().position(|i| i == c)),
             move |i| msg(Event::Surface(sids[i].clone())),
         );
         let field = |hint: &'static str, k: usize, width: f32| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(width),
                 None,
             )
         };
         let wide = |hint: &'static str, k: usize| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(Fill),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(Fill),
                 None,
             )
         };
@@ -497,17 +579,24 @@ impl App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top).push(plane);
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(10.0)
+            .push(top)
+            .push(plane);
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(r)) => {
                 let volumes = match (r.cut, r.fill, r.footprint) {
                     (Some(c), Some(f), Some(fp)) => {
-                        format!(" · taban {fp:.1} m² · kazı {c:.1} m³ · dolgu {f:.1} m³ · fark {:.1} m³", c - f)
+                        format!(
+                            " · taban {fp:.1} m² · kazı {c:.1} m³ · dolgu {f:.1} m³ · fark {:.1} m³",
+                            c - f
+                        )
                     }
                     _ => String::new(),
                 };
-                let counted = |side: PlatformSide| r.lines.iter().filter(|l| l.side == side).count();
+                let counted =
+                    |side: PlatformSide| r.lines.iter().filter(|l| l.side == side).count();
                 body = body.push(label::caption(format!(
                     "Platform alanı {:.1} m²{volumes} · {} şev çizgisi: {} yarma, {} dolgu, {} açık",
                     r.top_area,
@@ -523,13 +612,25 @@ impl App {
                     body = body.push(label::caption(why.clone()).style(danger));
                 }
                 // The summary text Planda çiz will write, at its real size and place (UR2-012).
-                let plot_scale = self.document.as_ref().map_or(1000.0, |d| d.model.settings().plot_scale);
-                let base = crate::road_dialog::decimal_of(&w.fields[4], FIELDS[4]).ok().flatten();
+                let plot_scale = self
+                    .document
+                    .as_ref()
+                    .map_or(1000.0, |d| d.model.settings().plot_scale);
+                let base = crate::road_dialog::decimal_of(&w.fields[4], FIELDS[4])
+                    .ok()
+                    .flatten();
                 let label = base.and_then(|b| {
-                    kentos_native_application::road_platforms_draw::platform_label(&r.name, b, r, plot_scale)
+                    kentos_native_application::road_platforms_draw::platform_label(
+                        &r.name, b, r, plot_scale,
+                    )
                 });
                 let picture = crate::picture::picture(
-                    iced::widget::canvas(Plan { report: r, label: label.clone() }).width(Fill).height(Fill),
+                    iced::widget::canvas(Plan {
+                        report: r,
+                        label: label.clone(),
+                    })
+                    .width(Fill)
+                    .height(Fill),
                     TITLE,
                 );
                 let mut side = Column::new()
@@ -537,9 +638,13 @@ impl App {
                     .width(360)
                     .push(label::caption("Kazı ile dolguyu dengele").style(muted))
                     .push(
-                        row![field("m", BRACKET_AT, 100.0), field("m", BRACKET_AT + 1, 100.0), field("m³", BRACKET_AT + 2, 110.0)]
-                            .spacing(10)
-                            .align_y(iced::alignment::Vertical::Bottom),
+                        row![
+                            field("m", BRACKET_AT, 100.0),
+                            field("m", BRACKET_AT + 1, 100.0),
+                            field("m³", BRACKET_AT + 2, 110.0)
+                        ]
+                        .spacing(10)
+                        .align_y(iced::alignment::Vertical::Bottom),
                     );
                 let found = matches!(&w.preview.balance, Some(Ok(_)));
                 side = side.push(
@@ -566,34 +671,46 @@ impl App {
                     label::caption("Taban kotu, aralıkta kazı ile dolgunun farkı toleransa inene dek aranır; Uygula yalnız alana yazar.")
                         .style(muted),
                 );
-                body = body.push_grow(row![picture, side].spacing(12).height(Fill), typography::scaled(300.0));
+                body = body.push_grow(
+                    row![picture, side].spacing(12).height(Fill),
+                    typography::scaled(300.0),
+                );
             }
             _ => {}
         }
-        let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let lids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let on_layer = Select::new(
             lnames.iter().map(|n| Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+            w.layer
+                .as_ref()
+                .and_then(|l| lids.iter().position(|id| id == l)),
             move |i| msg(Event::Layer(lids[i].clone())),
         )
         .placeholder("Katman");
         let saved = w.chosen.is_some();
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
-                space::horizontal().width(Fill),
-                label::caption("Katman").style(muted),
-                container(on_layer).width(150),
-                words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
-                space::horizontal().width(24),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-                words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
+        let footer = row![
+            words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
+            space::horizontal().width(Fill),
+            label::caption("Katman").style(muted),
+            container(on_layer).width(150),
+            words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
+            space::horizontal().width(24),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+            words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1180.0)
+            .modal(msg(Event::Close))
     }
 
     pub(crate) fn platform_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -621,7 +738,11 @@ impl App {
 fn chosen_boundary(app: &App) -> Option<Vec<[f64; 2]>> {
     let doc = app.document.as_ref()?;
     match app.selection.ids() {
-        [slot] => doc.model.get(*slot).and_then(boundary_of).filter(|c| c.len() >= 3),
+        [slot] => doc
+            .model
+            .get(*slot)
+            .and_then(boundary_of)
+            .filter(|c| c.len() >= 3),
         _ => None,
     }
 }
@@ -636,7 +757,14 @@ struct Plan<'a> {
 impl canvas::Program<Message> for Plan<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let r = self.report;
@@ -655,7 +783,12 @@ impl canvas::Program<Message> for Plan<'_> {
             .chain(r.lines.iter().filter_map(|l| l.to.map(|t| [t[0], t[1]])))
             .chain(r.lines.iter().map(|l| [l.from[0], l.from[1]]))
             .chain(label_box.iter().flat_map(|b| [[b[0], b[1]], [b[2], b[3]]]));
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in all {
             x0 = x0.min(p[0]);
             y0 = y0.min(p[1]);
@@ -666,10 +799,21 @@ impl canvas::Program<Message> for Plan<'_> {
             return vec![frame.into_geometry()];
         }
         let pad = 18.0_f64;
-        let (w, h) = (f64::from(bounds.width) - 2.0 * pad, f64::from(bounds.height) - 2.0 * pad);
+        let (w, h) = (
+            f64::from(bounds.width) - 2.0 * pad,
+            f64::from(bounds.height) - 2.0 * pad,
+        );
         let scale = (w / (x1 - x0).max(1e-6)).min(h / (y1 - y0).max(1e-6));
-        let (ox, oy) = (pad + (w - (x1 - x0) * scale) / 2.0, pad + (h - (y1 - y0) * scale) / 2.0);
-        let at = |x: f64, y: f64| Point::new((ox + (x - x0) * scale) as f32, (oy + (y1 - y) * scale) as f32);
+        let (ox, oy) = (
+            pad + (w - (x1 - x0) * scale) / 2.0,
+            pad + (h - (y1 - y0) * scale) / 2.0,
+        );
+        let at = |x: f64, y: f64| {
+            Point::new(
+                (ox + (x - x0) * scale) as f32,
+                (oy + (y1 - y) * scale) as f32,
+            )
+        };
         if r.daylight.len() >= 3 {
             let ring = Path::new(|p| {
                 p.move_to(at(r.daylight[0][0], r.daylight[0][1]));
@@ -679,7 +823,10 @@ impl canvas::Program<Message> for Plan<'_> {
                 p.close();
             });
             frame.fill(&ring, iced::Color { a: 0.08, ..tk.text });
-            frame.stroke(&ring, Stroke::default().with_width(1.2).with_color(tk.muted));
+            frame.stroke(
+                &ring,
+                Stroke::default().with_width(1.2).with_color(tk.muted),
+            );
         }
         for l in &r.lines {
             let (color, end) = match (l.side, l.to) {
@@ -702,12 +849,22 @@ impl canvas::Program<Message> for Plan<'_> {
             }
             p.close();
         });
-        frame.fill(&top, iced::Color { a: 0.22, ..tk.accent });
-        frame.stroke(&top, Stroke::default().with_width(1.8).with_color(tk.accent));
+        frame.fill(
+            &top,
+            iced::Color {
+                a: 0.22,
+                ..tk.accent
+            },
+        );
+        frame.stroke(
+            &top,
+            Stroke::default().with_width(1.8).with_color(tk.accent),
+        );
         for (i, c) in r.top.iter().enumerate() {
             frame.fill_text(Text {
                 content: format!("{:.2}", c[2]),
-                position: at(c[0], c[1]) + iced::Vector::new(4.0, if i % 2 == 0 { 2.0 } else { -14.0 }),
+                position: at(c[0], c[1])
+                    + iced::Vector::new(4.0, if i % 2 == 0 { 2.0 } else { -14.0 }),
                 color: tk.text,
                 size: Pixels(11.0),
                 ..Text::default()
@@ -718,9 +875,15 @@ impl canvas::Program<Message> for Plan<'_> {
             let room = Path::rectangle(a, iced::Size::new(c.x - a.x, c.y - a.y));
             frame.stroke(
                 &room,
-                Stroke { line_dash: canvas::LineDash { segments: &[4.0, 3.0], offset: 0 }, ..Stroke::default() }
-                    .with_width(1.0)
-                    .with_color(tk.text),
+                Stroke {
+                    line_dash: canvas::LineDash {
+                        segments: &[4.0, 3.0],
+                        offset: 0,
+                    },
+                    ..Stroke::default()
+                }
+                .with_width(1.0)
+                .with_color(tk.text),
             );
             let px = (l.height * scale) as f32;
             if px >= 6.0 {
@@ -735,7 +898,12 @@ impl canvas::Program<Message> for Plan<'_> {
                 }
             }
         }
-        let legend = [("yarma", tk.danger), ("dolgu", tk.success), ("açık", tk.warning), ("günışığı", tk.muted)];
+        let legend = [
+            ("yarma", tk.danger),
+            ("dolgu", tk.success),
+            ("açık", tk.warning),
+            ("günışığı", tk.muted),
+        ];
         let mut x = 8.0_f32;
         for (word, color) in legend {
             frame.stroke(

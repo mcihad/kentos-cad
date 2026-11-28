@@ -449,7 +449,12 @@ pub(super) const ENTRIES: &[Entry] = &[
     // Parselin plan kararları (docs/adr/8072 §5).
     Entry {
         id: "cad.zoning.parcel",
-        refusals: &[&["parcel_missing", "entity_not_found", "not_a_parcel", "invalid_input"]],
+        refusals: &[&[
+            "parcel_missing",
+            "entity_not_found",
+            "not_a_parcel",
+            "invalid_input",
+        ]],
         warnings: &[],
         targets: none,
     },
@@ -510,7 +515,11 @@ pub(super) const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["opening_type_override", "opening_type_kept", "opening_type_skipped"],
+        warnings: &[
+            "opening_type_override",
+            "opening_type_kept",
+            "opening_type_skipped",
+        ],
         targets: || {
             vec![target(
                 None,
@@ -569,7 +578,9 @@ pub(super) const ENTRIES: &[Entry] = &[
                 &["column", "beam", "slab", "roof", "railing", "stair"],
                 &[],
                 Some("element_type_kind"),
-                Some("Tipe bağla, Tipten ayır, Tipe döndür, Tipe uygula, Tipi yeniden uygula ve Tipe çevir (define from) yalnız bu nesnelerde; bağlanan nesne tipin türünden olmalı."),
+                Some(
+                    "Tipe bağla, Tipten ayır, Tipe döndür, Tipe uygula, Tipi yeniden uygula ve Tipe çevir (define from) yalnız bu nesnelerde; bağlanan nesne tipin türünden olmalı.",
+                ),
             )]
         },
     },
@@ -601,7 +612,15 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.modules.edit",
         refusals: &[
-            &["invalid_input", "no_entities", "invalid_uid", "entity_not_found", "layer_locked", "level_not_found", "not_finite"],
+            &[
+                "invalid_input",
+                "no_entities",
+                "invalid_uid",
+                "entity_not_found",
+                "layer_locked",
+                "level_not_found",
+                "not_finite",
+            ],
             &[
                 "module_exists",
                 "module_not_found",
@@ -638,7 +657,13 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.options.edit",
         refusals: &[
-            &["invalid_input", "no_entities", "invalid_uid", "entity_not_found", "layer_locked"],
+            &[
+                "invalid_input",
+                "no_entities",
+                "invalid_uid",
+                "entity_not_found",
+                "layer_locked",
+            ],
             &[
                 "option_set_exists",
                 "option_set_not_found",
@@ -661,7 +686,12 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.options.query",
         refusals: &[
-            &["option_set_not_found", "option_not_found", "option_combo_not_found", "invalid_uid"],
+            &[
+                "option_set_not_found",
+                "option_not_found",
+                "option_combo_not_found",
+                "invalid_uid",
+            ],
             &["entity_not_found", "not_in_option", "invalid_input"],
         ],
         warnings: &["option_member_gone"],
@@ -671,8 +701,19 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.elevations.edit",
         refusals: &[
-            &["invalid_input", "not_finite", "invalid_uid", "entity_not_found", "not_a_space"],
-            &["elevation_space_not_net", "elevation_no_sides", "layer_not_found", "elevation_not_found"],
+            &[
+                "invalid_input",
+                "not_finite",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_space",
+            ],
+            &[
+                "elevation_space_not_net",
+                "elevation_no_sides",
+                "layer_not_found",
+                "elevation_not_found",
+            ],
             &["elevation_source_gone", "layer_locked", "nothing_to_set"],
             REVISION,
         ],
@@ -710,7 +751,12 @@ pub(super) const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.sections.query",
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_section_mark", "section_jogged"]],
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_section_mark",
+            "section_jogged",
+        ]],
         warnings: &[],
         targets: none,
     },
@@ -727,7 +773,12 @@ pub(super) const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.modules.query",
-        refusals: &[&["module_not_found", "invalid_uid", "entity_not_found", "not_in_module"]],
+        refusals: &[&[
+            "module_not_found",
+            "invalid_uid",
+            "entity_not_found",
+            "not_in_module",
+        ]],
         warnings: &[],
         targets: none,
     },
@@ -735,7 +786,11 @@ pub(super) const ENTRIES: &[Entry] = &[
         id: "cad.openings.query",
         refusals: &[
             &["invalid_uid", "entity_not_found"],
-            &["not_an_opening", "opening_type_not_found", "level_not_found"],
+            &[
+                "not_an_opening",
+                "opening_type_not_found",
+                "level_not_found",
+            ],
         ],
         warnings: &[],
         targets: || {
@@ -830,7 +885,9 @@ pub(super) const ENTRIES: &[Entry] = &[
                 ],
                 &[],
                 Some("field_not_for_kind"),
-                Some("Acil çıkış yalnız kapıda ve merdivende; yangın dayanım sınıfı yapı elemanında (mahal, aks, blok ve çizgide değil)."),
+                Some(
+                    "Acil çıkış yalnız kapıda ve merdivende; yangın dayanım sınıfı yapı elemanında (mahal, aks, blok ve çizgide değil).",
+                ),
             )]
         },
     },
@@ -1143,7 +1200,13 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.masses.create",
         refusals: &[
-            &["no_objects", "not_finite", "invalid_space", "level_not_found", "invalid_line_weight"],
+            &[
+                "no_objects",
+                "not_finite",
+                "invalid_space",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
             LAYER,
             REVISION,
             ATTRS,

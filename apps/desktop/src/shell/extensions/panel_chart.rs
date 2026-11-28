@@ -237,7 +237,8 @@ mod tests {
         let Some(Body::Bars { bars, integer }) = work.model().map(|m| &m.body) else {
             panic!("bars: {:?}", work.model().map(|m| m.kind));
         };
-        let counted: Vec<(&str, usize)> = bars.iter().map(|b| (b.label.as_str(), b.objects)).collect();
+        let counted: Vec<(&str, usize)> =
+            bars.iter().map(|b| (b.label.as_str(), b.objects)).collect();
         assert_eq!(counted, [("Okul", 2), ("Park", 1)]);
         assert!(*integer, "a count is whole");
         drop(work);

@@ -147,7 +147,11 @@ fn panning_by_hundredths_of_a_millimetre_does_not_jitter() {
 #[test]
 fn panning_by_a_twentieth_of_a_pixel_does_not_jitter_at_the_deepest_zoom() {
     // 5 nm at a time at 0.1 µm a pixel, a point 430 px from the centre.
-    pan_without_jitter(MAX_SCALE, 0.05 / MAX_SCALE, Vec2::new(E + 371.0 / MAX_SCALE, N - 213.0 / MAX_SCALE));
+    pan_without_jitter(
+        MAX_SCALE,
+        0.05 / MAX_SCALE,
+        Vec2::new(E + 371.0 / MAX_SCALE, N - 213.0 / MAX_SCALE),
+    );
 }
 
 /// 2000 pans by (`step`, `step` / 2) at `scale`: the GPU keeps `fixed` where the camera's float64 arithmetic puts it,
@@ -171,8 +175,14 @@ fn pan_without_jitter(scale: f64, step: f64, fixed: Vec2) {
                 // Each step moves the point by exactly the pan, in pixels.
                 let moved = [gpu[0] - was[0], gpu[1] - was[1]];
                 let truth = [exact[0] - was_exact[0], exact[1] - was_exact[1]];
-                assert!(error(moved, truth) < 2.0 * most, "origin {origin:?}, step {i}: moved {moved:?}, not {truth:?}");
-                assert!((truth[0] + step * scale).abs() < 1e-3 + 2e-9 * scale, "step {i}: the camera moved {truth:?}");
+                assert!(
+                    error(moved, truth) < 2.0 * most,
+                    "origin {origin:?}, step {i}: moved {moved:?}, not {truth:?}"
+                );
+                assert!(
+                    (truth[0] + step * scale).abs() < 1e-3 + 2e-9 * scale,
+                    "step {i}: the camera moved {truth:?}"
+                );
             }
             last = Some((gpu, exact));
         }
@@ -226,7 +236,10 @@ fn a_two_millimetre_detail_is_inspectable_without_changing_its_source() {
     );
     for origin in origins() {
         let err = error(gpu_px(&cam, b, origin, 2.), exact_px(&cam, b, 2.));
-        assert!(err < bound(&cam, b, origin, 2.), "origin {origin:?}: {err} px off");
+        assert!(
+            err < bound(&cam, b, origin, 2.),
+            "origin {origin:?}: {err} px off"
+        );
     }
     // Beside the data, to 0.01 px at 40 000 device pixels from the centre (a float32's 2⁻²⁴ of it is 0.002 px).
     assert!(error(gpu_px(&cam, b, origins()[0], 2.), exact_px(&cam, b, 2.)) < 0.01);
@@ -389,12 +402,20 @@ fn a_deep_view_s_highlight_stays_on_its_exact_place_at_the_deepest_zoom() {
                         || ((p.x - E) * (q.x - E) <= 0.0 && (p.y - N) * (q.y - N) <= 0.0)
                 })
                 .expect("a piece through the view");
-            centre_line_offset(line_corners(piece.a_hi, piece.a_lo, piece.b_hi, piece.b_lo, &f))
+            centre_line_offset(line_corners(
+                piece.a_hi, piece.a_lo, piece.b_hi, piece.b_lo, &f,
+            ))
         };
         worst_deep = worst_deep.max((offset(Some(&deep)).abs() - 1.0).abs());
         worst_plain = worst_plain.max((offset(None).abs() - 1.0).abs());
     }
-    assert!(worst_deep < 0.05, "split at the deep view's box: up to {worst_deep} px off");
+    assert!(
+        worst_deep < 0.05,
+        "split at the deep view's box: up to {worst_deep} px off"
+    );
     // Cut at 128 m only, the pieces' ends 64 m away cost hundreds of pixels here: why the deep view splits them.
-    assert!(worst_plain > 1.0, "128 m pieces: up to {worst_plain} px off");
+    assert!(
+        worst_plain > 1.0,
+        "128 m pieces: up to {worst_plain} px off"
+    );
 }

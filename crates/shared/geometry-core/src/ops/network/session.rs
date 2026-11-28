@@ -8,8 +8,8 @@
 //! it is asked on every pointer move.
 
 use super::access::{Access, Varied, day_of};
-use super::blocked::{Blocked, blocked};
 use super::area::{AreaQuery, service_polygons};
+use super::blocked::{Blocked, blocked};
 use super::check::{Checked, ProblemKind, check};
 use super::closest::{Nearest, nearest};
 use super::graph::{BuildReport, Graph, Location, Role};
@@ -126,7 +126,12 @@ impl Refusal {
                     .into()
             }
             Refusal::Unreachable(a, b, why) => {
-                format!("{}. ve {}. duraklar arasında yol yok: {}.", a + 1, b + 1, why.words())
+                format!(
+                    "{}. ve {}. duraklar arasında yol yok: {}.",
+                    a + 1,
+                    b + 1,
+                    why.words()
+                )
             }
             Refusal::Breaks => "Aralıklar artan, sıfırdan büyük sayılar olmalı.".into(),
         }
@@ -140,7 +145,10 @@ impl Refusal {
             Refusal::TooMany => r#"{"error":"tooMany"}"#.into(),
             Refusal::NoOrder => r#"{"error":"noOrder"}"#.into(),
             Refusal::Unreachable(a, b, why) => {
-                format!(r#"{{"error":"unreachable","between":[{a},{b}],"blocked":{}}}"#, why.json())
+                format!(
+                    r#"{{"error":"unreachable","between":[{a},{b}],"blocked":{}}}"#,
+                    why.json()
+                )
             }
             Refusal::Breaks => r#"{"error":"breaks"}"#.into(),
         }
@@ -490,7 +498,11 @@ impl NetworkSession {
     /// Sets the vehicle and the day the questions are for (docs/adr/0567): `profile` by its name (none: no profile),
     /// `day` as `YYYY-MM-DD` (none: no day, no closure applied). An unknown profile or an unreadable day is refused;
     /// what the access closed is answered.
-    pub fn set_access(&mut self, profile: Option<&str>, day: Option<&str>) -> Result<Varied, String> {
+    pub fn set_access(
+        &mut self,
+        profile: Option<&str>,
+        day: Option<&str>,
+    ) -> Result<Varied, String> {
         let rules = &self.graph.rules.access;
         let profile = match profile.map(str::trim).filter(|p| !p.is_empty()) {
             None => None,
@@ -499,14 +511,18 @@ impl NetworkSession {
                     format!("Ağın araç profili yok; “{name}” profili kullanılamaz.")
                 } else {
                     let names: Vec<&str> = rules.profiles.iter().map(|p| p.name.as_str()).collect();
-                    format!("Ağda “{name}” araç profili yok; profiller: {}.", names.join(", "))
+                    format!(
+                        "Ağda “{name}” araç profili yok; profiller: {}.",
+                        names.join(", ")
+                    )
                 }
             })?),
         };
         let day = match day.map(str::trim).filter(|d| !d.is_empty()) {
             None => None,
             Some(t) => Some(
-                day_of(t).ok_or_else(|| format!("Tarih “{t}” okunamadı; 2026-11-03 gibi yazın."))?,
+                day_of(t)
+                    .ok_or_else(|| format!("Tarih “{t}” okunamadı; 2026-11-03 gibi yazın."))?,
             ),
         };
         Ok(self.vary(profile, day))
@@ -522,7 +538,9 @@ impl NetworkSession {
 
     /// Varies the graph for the vehicle and the day, and the time when a closure has hours.
     fn vary(&mut self, profile: Option<usize>, day: Option<i64>) -> Varied {
-        let time = self.time.filter(|_| day.is_some() && self.graph.rules.access.timed());
+        let time = self
+            .time
+            .filter(|_| day.is_some() && self.graph.rules.access.timed());
         let access = Access { profile, day, time };
         if access != self.graph.access()
             && let Some(t) = self.tree.take()
@@ -596,7 +614,13 @@ impl NetworkSession {
 
     /// Why `from` and `to` have no way with cost `cost` (docs/adr/0570); none when either finds no network within
     /// `reach`. Asked of a pair a question found unreachable.
-    pub fn blocked_between(&self, from: Vec2, to: Vec2, reach: f64, cost: usize) -> Option<Blocked> {
+    pub fn blocked_between(
+        &self,
+        from: Vec2,
+        to: Vec2,
+        reach: f64,
+        cost: usize,
+    ) -> Option<Blocked> {
         let g = &self.graph;
         let (a, b) = (g.locate(from, reach)?, g.locate(to, reach)?);
         Some(blocked(g, &a, &b, cost.min(g.costs - 1), &[]))
@@ -1032,8 +1056,7 @@ impl NetworkSession {
             .into_iter()
             .zip(groups)
             .map(|(r, group)| {
-                let mut edges: Vec<f64> =
-                    r.edges.iter().map(|&e| g.edges[e as usize].id).collect();
+                let mut edges: Vec<f64> = r.edges.iter().map(|&e| g.edges[e as usize].id).collect();
                 edges.dedup_by(|a, b| a.to_bits() == b.to_bits());
                 let mut junctions: Vec<f64> = r
                     .junctions
@@ -1054,10 +1077,7 @@ impl NetworkSession {
                     })
                     .count();
                 Subnet {
-                    controllers: group
-                        .iter()
-                        .map(|&c| g.junctions[c as usize].id)
-                        .collect(),
+                    controllers: group.iter().map(|&c| g.junctions[c as usize].id).collect(),
                     edges,
                     junctions,
                     length: r.length,

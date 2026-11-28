@@ -34,12 +34,17 @@ fn cells(app: &App, slot: kentos_domain::Slot) -> Vec<Vec<String>> {
 }
 
 /// The bar's keys as `text_editor` binds them (`bar_keys`): Shift+Enter a line break, Enter a submit.
-fn key(named: iced::keyboard::key::Named, modifiers: iced::keyboard::Modifiers) -> Option<iced::widget::text_editor::Binding<Message>> {
+fn key(
+    named: iced::keyboard::key::Named,
+    modifiers: iced::keyboard::Modifiers,
+) -> Option<iced::widget::text_editor::Binding<Message>> {
     use iced::keyboard::Key;
     super::bar_keys(iced::widget::text_editor::KeyPress {
         key: Key::Named(named),
         modified_key: Key::Named(named),
-        physical_key: iced::keyboard::key::Physical::Unidentified(iced::keyboard::key::NativeCode::Unidentified),
+        physical_key: iced::keyboard::key::Physical::Unidentified(
+            iced::keyboard::key::NativeCode::Unidentified,
+        ),
         modifiers,
         text: None,
         status: iced::widget::text_editor::Status::Focused { is_hovered: false },
@@ -56,26 +61,53 @@ fn shift_enter_breaks_the_cells_line_and_kaydet_keeps_it() {
     send(&mut app, Edit::Write);
     // Typed in the bar: “Zemin”, Shift+Enter, “kat”.
     use iced::keyboard::Modifiers;
-    assert!(matches!(key(Named::Enter, Modifiers::SHIFT), Some(iced::widget::text_editor::Binding::Enter)));
-    assert!(matches!(key(Named::Enter, Modifiers::ALT), Some(iced::widget::text_editor::Binding::Enter)), "Alt+Enter");
-    assert!(matches!(key(Named::Enter, Modifiers::default()), Some(iced::widget::text_editor::Binding::Custom(_))));
-    assert!(key(Named::Tab, Modifiers::default()).is_none(), "Tab is the window's");
+    assert!(matches!(
+        key(Named::Enter, Modifiers::SHIFT),
+        Some(iced::widget::text_editor::Binding::Enter)
+    ));
+    assert!(
+        matches!(
+            key(Named::Enter, Modifiers::ALT),
+            Some(iced::widget::text_editor::Binding::Enter)
+        ),
+        "Alt+Enter"
+    );
+    assert!(matches!(
+        key(Named::Enter, Modifiers::default()),
+        Some(iced::widget::text_editor::Binding::Custom(_))
+    ));
+    assert!(
+        key(Named::Tab, Modifiers::default()).is_none(),
+        "Tab is the window's"
+    );
     send(&mut app, Edit::Bar(Action::Edit(Typed::Enter)));
     for c in "kat".chars() {
         send(&mut app, Edit::Bar(Action::Edit(Typed::Insert(c))));
     }
     send(&mut app, Edit::Commit);
     send(&mut app, Edit::Save);
-    assert_eq!(cells(&app, slot)[1][0], "Zemin\nkat", "the cell keeps its line break");
+    assert_eq!(
+        cells(&app, slot)[1][0],
+        "Zemin\nkat",
+        "the cell keeps its line break"
+    );
     // The table's layout gives the cell two lines (docs/adr/1030 §7).
     let doc = app.document.as_ref().expect("a drawing");
     let shape = kentos_native_application::geometry::shape(doc.model.get(slot).expect("the table"));
     let t = kentos_geometry_core::geom::table::table_geom(&shape).expect("a table's layout");
     let laid = t.layout(kentos_geometry_core::text::Font::default());
-    let lines = laid.cells.iter().filter(|c| c.row == 1 && c.col == 0).count();
+    let lines = laid
+        .cells
+        .iter()
+        .filter(|c| c.row == 1 && c.col == 0)
+        .count();
     assert_eq!(lines, 2, "two lines laid out");
     let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(cells(&app, slot)[1][0], "Zemin", "one undo takes the edit back");
+    assert_eq!(
+        cells(&app, slot)[1][0],
+        "Zemin",
+        "one undo takes the edit back"
+    );
 }
 
 /// The shared cases' drawing (cad.schedules.edit) with its four openings and the door and window schedule (object
@@ -83,28 +115,40 @@ fn shift_enter_breaks_the_cells_line_and_kaydet_keeps_it() {
 fn schedule_app() -> (App, kentos_domain::Slot) {
     use kentos_native_application::ExecutionContext;
     let mut app = crate::files_testing::app_with_drawing();
-    let file: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.schedules.edit.json")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV1 = serde_json::from_value(file["setup"].clone()).unwrap();
+    let file: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.schedules.edit.json"
+    ))
+    .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(file["setup"].clone()).unwrap();
     let doc = crate::document::Document::new(snapshot, None).unwrap();
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let model = &mut app.document.as_mut().unwrap().model;
     let wall = |n: u32| model.uid(kentos_domain::Slot(n)).unwrap().to_string();
     let (w1, w2) = (wall(1), wall(2));
-    let openings: kentos_commands::OpeningsCreate = serde_json::from_value(json!({"layerId": "kapi", "openings": [
+    let openings: kentos_commands::OpeningsCreate =
+        serde_json::from_value(json!({"layerId": "kapi", "openings": [
         {"host": w1, "at": 2.0, "type": "Kapı 90", "number": "K01"},
         {"host": w1, "at": 6.0, "type": "Pencere 120", "number": "P01"},
         {"host": w2, "at": 3.0, "type": "Kapı 90", "number": "K01"},
         {"host": w2, "at": 8.0, "type": "Kapı 80"}]}))
-    .unwrap();
+        .unwrap();
     assert!(matches!(
-        kentos_native_application::openings_create::execute(&mut ExecutionContext::new(model), openings),
+        kentos_native_application::openings_create::execute(
+            &mut ExecutionContext::new(model),
+            openings
+        ),
         kentos_commands::CommandResult::Completed { .. }
     ));
-    let create: kentos_commands::SchedulesCreate =
-        serde_json::from_value(json!({"layerId": "cizelge", "at": {"x": 0.0, "y": -10.0}, "of": "openings"})).unwrap();
+    let create: kentos_commands::SchedulesCreate = serde_json::from_value(
+        json!({"layerId": "cizelge", "at": {"x": 0.0, "y": -10.0}, "of": "openings"}),
+    )
+    .unwrap();
     let kentos_commands::CommandResult::Completed { output, .. } =
-        kentos_native_application::schedules_create::execute(&mut ExecutionContext::new(model), create)
+        kentos_native_application::schedules_create::execute(
+            &mut ExecutionContext::new(model),
+            create,
+        )
     else {
         panic!("a schedule");
     };
@@ -117,7 +161,9 @@ fn width_of(app: &App, number: &str, form: &str) -> f64 {
         .find_map(|e| match e {
             kentos_commands::Entity::Opening(o)
                 if o.opening.number.as_deref().unwrap_or("") == number
-                    && format!("{:?}", o.opening.form).to_lowercase().contains(form) =>
+                    && format!("{:?}", o.opening.form)
+                        .to_lowercase()
+                        .contains(form) =>
             {
                 Some(o.opening.width)
             }
@@ -140,7 +186,10 @@ fn a_schedules_cell_is_drafted_and_kaydet_writes_its_objects() {
     send(&mut app, Edit::Commit);
     assert_eq!(problem(&app), None);
     assert_eq!(draft(&app)[3][3], "1.100");
-    assert!((width_of(&app, "P01", "window") - 1.2).abs() < 1e-12, "nothing written before Kaydet");
+    assert!(
+        (width_of(&app, "P01", "window") - 1.2).abs() < 1e-12,
+        "nothing written before Kaydet"
+    );
     send(&mut app, Edit::Cell(1, 3));
     send(&mut app, Edit::Words("0,8".into()));
     send(&mut app, Edit::Commit);
@@ -153,12 +202,19 @@ fn a_schedules_cell_is_drafted_and_kaydet_writes_its_objects() {
     assert!(problem(&app).is_some());
     assert_eq!(draft(&app)[2][3], "0.900");
     send(&mut app, Edit::Save);
-    assert!(app.table_editor.is_none(), "{:?}", app.table_editor.as_ref().and_then(|e| e.problem.clone()));
+    assert!(
+        app.table_editor.is_none(),
+        "{:?}",
+        app.table_editor.as_ref().and_then(|e| e.problem.clone())
+    );
     assert!((width_of(&app, "P01", "window") - 1.1).abs() < 1e-12);
     assert_eq!(cells(&app, slot)[3][3], "1.100");
     assert_eq!(cells(&app, slot)[1][3], "0.800");
     let _ = app.update(Message::Run("edit.undo"));
-    assert!((width_of(&app, "P01", "window") - 1.2).abs() < 1e-12, "one undo takes both back");
+    assert!(
+        (width_of(&app, "P01", "window") - 1.2).abs() < 1e-12,
+        "one undo takes both back"
+    );
     assert_eq!(cells(&app, slot)[1][3], "0.600");
 }
 

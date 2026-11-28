@@ -39,7 +39,10 @@ impl Section {
     /// Its full area and wetted perimeter.
     pub fn full(&self) -> (f64, f64) {
         match *self {
-            Section::Circle { diameter } => (std::f64::consts::PI * diameter * diameter / 4.0, std::f64::consts::PI * diameter),
+            Section::Circle { diameter } => (
+                std::f64::consts::PI * diameter * diameter / 4.0,
+                std::f64::consts::PI * diameter,
+            ),
             Section::Box { width, height } => (width * height, 2.0 * (width + height)),
         }
     }
@@ -49,7 +52,10 @@ impl Section {
         match *self {
             Section::Circle { diameter } => {
                 let theta = 2.0 * (1.0 - 2.0 * y / diameter).clamp(-1.0, 1.0).acos();
-                (diameter * diameter / 8.0 * (theta - theta.sin()), diameter * (theta / 2.0).sin())
+                (
+                    diameter * diameter / 8.0 * (theta - theta.sin()),
+                    diameter * (theta / 2.0).sin(),
+                )
             }
             Section::Box { width, .. } => (width * y, width),
         }
@@ -87,7 +93,11 @@ impl Section {
     pub fn critical_head(&self, q: f64) -> f64 {
         let y = self.critical(q);
         let (a, t) = self.wet(y);
-        if t > 0.0 && y < self.rise() { y + a / (2.0 * t) } else { y + (q / self.full().0).powi(2) / (2.0 * G) }
+        if t > 0.0 && y < self.rise() {
+            y + a / (2.0 * t)
+        } else {
+            y + (q / self.full().0).powi(2) / (2.0 * G)
+        }
     }
 }
 
@@ -106,13 +116,83 @@ pub struct Inlet {
 /// end in a headwall or projecting; concrete boxes with 30°–75°, 90° and 15°, or 0° wingwall flares, or a 90° headwall
 /// with chamfers.
 pub const INLETS: [(&str, Inlet); 7] = [
-    ("pipe-square-headwall", Inlet { form: 1, k: 0.0098, m: 2.0, c: 0.0398, y: 0.67, ks: -0.5 }),
-    ("pipe-groove-headwall", Inlet { form: 1, k: 0.0018, m: 2.0, c: 0.0292, y: 0.74, ks: -0.5 }),
-    ("pipe-groove-projecting", Inlet { form: 1, k: 0.0045, m: 2.0, c: 0.0317, y: 0.69, ks: -0.5 }),
-    ("box-wingwall-30-75", Inlet { form: 1, k: 0.026, m: 1.0, c: 0.0347, y: 0.81, ks: -0.5 }),
-    ("box-wingwall-90-15", Inlet { form: 1, k: 0.061, m: 0.75, c: 0.0400, y: 0.80, ks: -0.5 }),
-    ("box-wingwall-0", Inlet { form: 1, k: 0.061, m: 0.75, c: 0.0423, y: 0.82, ks: -0.5 }),
-    ("box-headwall-chamfer", Inlet { form: 2, k: 0.515, m: 0.667, c: 0.0375, y: 0.79, ks: -0.5 }),
+    (
+        "pipe-square-headwall",
+        Inlet {
+            form: 1,
+            k: 0.0098,
+            m: 2.0,
+            c: 0.0398,
+            y: 0.67,
+            ks: -0.5,
+        },
+    ),
+    (
+        "pipe-groove-headwall",
+        Inlet {
+            form: 1,
+            k: 0.0018,
+            m: 2.0,
+            c: 0.0292,
+            y: 0.74,
+            ks: -0.5,
+        },
+    ),
+    (
+        "pipe-groove-projecting",
+        Inlet {
+            form: 1,
+            k: 0.0045,
+            m: 2.0,
+            c: 0.0317,
+            y: 0.69,
+            ks: -0.5,
+        },
+    ),
+    (
+        "box-wingwall-30-75",
+        Inlet {
+            form: 1,
+            k: 0.026,
+            m: 1.0,
+            c: 0.0347,
+            y: 0.81,
+            ks: -0.5,
+        },
+    ),
+    (
+        "box-wingwall-90-15",
+        Inlet {
+            form: 1,
+            k: 0.061,
+            m: 0.75,
+            c: 0.0400,
+            y: 0.80,
+            ks: -0.5,
+        },
+    ),
+    (
+        "box-wingwall-0",
+        Inlet {
+            form: 1,
+            k: 0.061,
+            m: 0.75,
+            c: 0.0423,
+            y: 0.82,
+            ks: -0.5,
+        },
+    ),
+    (
+        "box-headwall-chamfer",
+        Inlet {
+            form: 2,
+            k: 0.515,
+            m: 0.667,
+            c: 0.0375,
+            y: 0.79,
+            ks: -0.5,
+        },
+    ),
 ];
 
 /// The inlet of `name` among [`INLETS`].
@@ -196,7 +276,9 @@ impl Culvert {
         let v = qc / a;
         let dc = self.section.critical(qc);
         let tw_eff = tw.max((dc + d) / 2.0);
-        let losses = (1.0 + self.ke + 2.0 * G * self.n * self.n * self.length / r.powf(4.0 / 3.0)) * v * v / (2.0 * G);
+        let losses =
+            (1.0 + self.ke + 2.0 * G * self.n * self.n * self.length / r.powf(4.0 / 3.0)) * v * v
+                / (2.0 * G);
         tw_eff + losses - self.slope * self.length
     }
 
@@ -207,7 +289,11 @@ impl Culvert {
             return ((tw - self.slope * self.length).max(0.0), Control::Outlet);
         }
         let (hi, ho) = (self.inlet_headwater(q), self.outlet_headwater(q, tw));
-        if hi >= ho { (hi, Control::Inlet) } else { (ho, Control::Outlet) }
+        if hi >= ho {
+            (hi, Control::Inlet)
+        } else {
+            (ho, Control::Outlet)
+        }
     }
 
     /// The flow the culvert passes at headwater `hw` (m above the inlet's invert): the headwater rises with the flow,
@@ -247,7 +333,13 @@ pub struct Weir {
 /// A flow hazard class (1 to 6) by the depth (m) and speed (m/s): AIDR guideline 7-3's limits.
 pub fn hazard(depth: f64, speed: f64) -> u8 {
     let dv = depth * speed;
-    const LIMITS: [(f64, f64, f64); 5] = [(0.3, 0.3, 2.0), (0.6, 0.5, 2.0), (0.6, 1.2, 2.0), (1.0, 2.0, 2.0), (4.0, 4.0, 4.0)];
+    const LIMITS: [(f64, f64, f64); 5] = [
+        (0.3, 0.3, 2.0),
+        (0.6, 0.5, 2.0),
+        (0.6, 1.2, 2.0),
+        (1.0, 2.0, 2.0),
+        (4.0, 4.0, 4.0),
+    ];
     for (k, (p, d, v)) in LIMITS.iter().enumerate() {
         if dv <= *p && depth <= *d && speed <= *v {
             return k as u8 + 1;

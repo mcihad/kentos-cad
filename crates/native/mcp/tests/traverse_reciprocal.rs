@@ -14,9 +14,16 @@ fn opened(server: &mut Server, setup: &Value) -> Value {
     // The cases' setup is a version 1 snapshot: as version 2 it takes persistent ids.
     let n = setup["entities"].as_array().unwrap().len();
     setup["version"] = json!(2);
-    setup["uids"] = json!((1..=n).map(|i| format!("0192f5c0-4500-7000-8000-{i:012x}")).collect::<Vec<_>>());
+    setup["uids"] = json!(
+        (1..=n)
+            .map(|i| format!("0192f5c0-4500-7000-8000-{i:012x}"))
+            .collect::<Vec<_>>()
+    );
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-traverse-reciprocal-{}.kcad", std::process::id()));
+    let path = std::env::temp_dir().join(format!(
+        "kentos-traverse-reciprocal-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let opened = call(server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
@@ -26,12 +33,19 @@ fn opened(server: &mut Server, setup: &Value) -> Value {
 
 #[test]
 fn reciprocal_zenith_angles_over_mcp_are_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.survey.points.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.survey.points.json"
+    ))
+    .unwrap();
     let case = cases["cases"]
         .as_array()
         .unwrap()
         .iter()
-        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Poligon hesabı karşılıklı başucu açılarıyla: havanın")))
+        .find(|c| {
+            c["name"].as_str().is_some_and(|n| {
+                n.starts_with("Poligon hesabı karşılıklı başucu açılarıyla: havanın")
+            })
+        })
         .cloned()
         .expect("the case");
     let mut server = Server::new();
@@ -42,17 +56,32 @@ fn reciprocal_zenith_angles_over_mcp_are_the_case_s() {
     let r = call(&mut server, "cad.survey.points", args.clone());
     assert_eq!(r["isError"], false, "{r}");
     let (got, want) = (&r["structuredContent"]["output"], &step["result"]["output"]);
-    assert!(got["heightMisclosure"].as_f64().unwrap().abs() < 1e-9, "{got}");
-    let (g, w) = (got["refractions"].as_array().unwrap(), want["refractions"].as_array().unwrap());
+    assert!(
+        got["heightMisclosure"].as_f64().unwrap().abs() < 1e-9,
+        "{got}"
+    );
+    let (g, w) = (
+        got["refractions"].as_array().unwrap(),
+        want["refractions"].as_array().unwrap(),
+    );
     assert_eq!(g.len(), w.len());
     for (a, b) in g.iter().zip(w) {
-        assert!((a.as_f64().unwrap() - b.as_f64().unwrap()).abs() < 1e-9, "{a} {b}");
+        assert!(
+            (a.as_f64().unwrap() - b.as_f64().unwrap()).abs() < 1e-9,
+            "{a} {b}"
+        );
     }
 
     // One back sight short: refused.
     let mut short = args;
-    short["work"]["heights"]["back"].as_array_mut().unwrap().pop();
+    short["work"]["heights"]["back"]
+        .as_array_mut()
+        .unwrap()
+        .pop();
     let r = call(&mut server, "cad.survey.points", short);
     assert_eq!(r["isError"], true, "{r}");
-    assert!(r.to_string().contains("geri nişanlar 3 kenar için olmalı"), "{r}");
+    assert!(
+        r.to_string().contains("geri nişanlar 3 kenar için olmalı"),
+        "{r}"
+    );
 }

@@ -1,8 +1,8 @@
 //! vertices › tests's tests that need the CBS module's surfaces (its project's bottom tabs and panels; docs/adr/9199
 //! §4.14): moved from the core's cad/vertices/tests.rs with the module's package; the work they test is the core's.
 
-use kentos_domain::Slot;
 use crate::vertices::edit::{At, Column};
+use kentos_domain::Slot;
 
 fn app_with_vertices() -> crate::app::App {
     let (mut app, _) = crate::app::App::boot(None);
@@ -32,8 +32,8 @@ fn parcel_x(app: &crate::app::App, i: usize) -> f64 {
 /// the table without writing it.
 #[test]
 fn the_table_selects_rows_and_edits_cells_in_place() {
-    use crate::vertices::{Cell, Event, Walk, texts};
     use crate::app::Message;
+    use crate::vertices::{Cell, Event, Walk, texts};
     let mut app = app_with_vertices();
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("view.coords"));

@@ -290,13 +290,26 @@ impl Document {
                 }
                 // Associative arrays made, changed and removed (docs/adr/1003 §1): a replay maps them.
                 if last.ops.iter().any(|op| {
-                    matches!(op, Op::ArrayAdd { .. } | Op::ArrayRemove { .. } | Op::ArrayUpdate { .. })
+                    matches!(
+                        op,
+                        Op::ArrayAdd { .. } | Op::ArrayRemove { .. } | Op::ArrayUpdate { .. }
+                    )
                 }) {
                     let report = crate::step::report_of(&last.ops);
                     row.arrays = kentos_contracts::NodeChanges {
                         added: report.arrays.added.iter().map(|id| id.to_text()).collect(),
-                        changed: report.arrays.changed.iter().map(|id| id.to_text()).collect(),
-                        removed: report.arrays.removed.iter().map(|id| id.to_text()).collect(),
+                        changed: report
+                            .arrays
+                            .changed
+                            .iter()
+                            .map(|id| id.to_text())
+                            .collect(),
+                        removed: report
+                            .arrays
+                            .removed
+                            .iter()
+                            .map(|id| id.to_text())
+                            .collect(),
                     };
                 }
                 row.truncated = truncated;

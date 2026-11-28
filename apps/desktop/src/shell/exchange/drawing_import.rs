@@ -730,7 +730,9 @@ impl App {
         let result = if self.drawing_moves(s) {
             let mut moved = (*result).clone();
             let srid = s.crs.srid;
-            let Some(doc) = &self.document else { return Task::none() };
+            let Some(doc) = &self.document else {
+                return Task::none();
+            };
             if let Err(why) = file_import::moved_into_project(&doc.model, srid, &mut moved) {
                 if let Some(Window::DrawingImport(s)) = &mut self.exchange {
                     s.status = Some((true, why));

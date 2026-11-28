@@ -20,7 +20,11 @@ fn main() -> std::process::ExitCode {
 /// for its own words, which take every module).
 fn module_of(args: &[OsString]) -> Option<Module> {
     let named = args.first().and_then(|a| Module::of_program_name(a));
-    named.or_else(|| kentos_launch::args::parse(args.iter().skip(1).cloned()).ok().and_then(|l| l.module))
+    named.or_else(|| {
+        kentos_launch::args::parse(args.iter().skip(1).cloned())
+            .ok()
+            .and_then(|l| l.module)
+    })
 }
 
 /// A module's package's parts among the program's; a new module does not build without its package here.

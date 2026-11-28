@@ -16,11 +16,23 @@ fn count(v: &Value) -> usize {
 
 #[test]
 fn the_road_regions_go_to_the_error_layer_over_mcp_as_the_case_says() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/processing/v1/zoning.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["id"] == "zoning-check-errors").unwrap().clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_str(include_str!("../../../../fixtures/processing/v1/zoning-yollar.kcad")).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-zoning-errors-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/processing/v1/zoning.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["id"] == "zoning-check-errors")
+        .unwrap()
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../fixtures/processing/v1/zoning-yollar.kcad"
+    ))
+    .unwrap();
+    let path =
+        std::env::temp_dir().join(format!("kentos-zoning-errors-{}.kcad", std::process::id()));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -28,14 +40,22 @@ fn the_road_regions_go_to_the_error_layer_over_mcp_as_the_case_says() {
     let drawing = opened["structuredContent"]["drawing"].clone();
 
     // Without the box: the findings' objects chosen, nothing written.
-    let read = call(&mut server, "cad.processing.run", json!({"drawing": drawing, "tool": "zoning.check", "parameters": {}}));
+    let read = call(
+        &mut server,
+        "cad.processing.run",
+        json!({"drawing": drawing, "tool": "zoning.check", "parameters": {}}),
+    );
     assert_eq!(read["isError"], false, "{read}");
     let out = &read["structuredContent"]["output"];
     assert_eq!(count(&out["added"]), 0, "{out}");
     assert_eq!(count(&out["selected"]), 8, "{out}");
 
     // With it: the case's summary, its layer and its areas.
-    let ran = call(&mut server, "cad.processing.run", json!({"drawing": drawing, "tool": "zoning.check", "parameters": case["values"]}));
+    let ran = call(
+        &mut server,
+        "cad.processing.run",
+        json!({"drawing": drawing, "tool": "zoning.check", "parameters": case["values"]}),
+    );
     assert_eq!(ran["isError"], false, "{ran}");
     let out = &ran["structuredContent"]["output"];
     let want = &case["expect"];
@@ -46,7 +66,11 @@ fn the_road_regions_go_to_the_error_layer_over_mcp_as_the_case_says() {
     let shapes = want["addedShapes"].as_array().unwrap();
     assert_eq!(added.len(), shapes.len());
     for (uid, shape) in added.iter().zip(shapes) {
-        let got = call(&mut server, "drawing.entity", json!({"drawing": drawing, "uid": uid}));
+        let got = call(
+            &mut server,
+            "drawing.entity",
+            json!({"drawing": drawing, "uid": uid}),
+        );
         let e = &got["structuredContent"]["entity"];
         assert_eq!(e["kind"], "polygon", "{e}");
         assert_eq!(e["attrs"], shape["attrs"], "{e}");
@@ -55,6 +79,10 @@ fn the_road_regions_go_to_the_error_layer_over_mcp_as_the_case_says() {
     let undone = call(&mut server, "drawing.undo", json!({"drawing": drawing}));
     assert_eq!(undone["isError"], false, "{undone}");
     let left = call(&mut server, "drawing.entities", json!({"drawing": drawing}));
-    assert_eq!(count(&left["structuredContent"]["items"]), snapshot.entities.len(), "{left}");
+    assert_eq!(
+        count(&left["structuredContent"]["items"]),
+        snapshot.entities.len(),
+        "{left}"
+    );
     let _ = std::fs::remove_file(path);
 }

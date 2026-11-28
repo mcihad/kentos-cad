@@ -249,7 +249,10 @@ type Source = (String, String, usize);
 type Target = Option<(String, kentos_commands::LayerStyle)>;
 
 /// Translates the layers (its checks passed); `cad.standards.apply` writes its merging so.
-pub(crate) fn write(doc: &mut Document, input: &LayersTranslate) -> CommandResult<LayersTranslated> {
+pub(crate) fn write(
+    doc: &mut Document,
+    input: &LayersTranslate,
+) -> CommandResult<LayersTranslated> {
     // What goes where, read before anything changes.
     let (sources, targets): (Vec<Source>, Vec<Target>) = {
         let plan = plan_of(doc, &input.rules);

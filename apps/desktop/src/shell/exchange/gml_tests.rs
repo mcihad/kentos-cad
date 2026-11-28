@@ -82,7 +82,14 @@ fn the_schema_can_be_left_out() {
         panic!("the export window");
     };
     assert!(!s.schema);
-    assert!(s.plan.as_ref().expect("planned").files.iter().all(|f| !f.name.ends_with(".xsd")));
+    assert!(
+        s.plan
+            .as_ref()
+            .expect("planned")
+            .files
+            .iter()
+            .all(|f| !f.name.ends_with(".xsd"))
+    );
 }
 
 #[test]

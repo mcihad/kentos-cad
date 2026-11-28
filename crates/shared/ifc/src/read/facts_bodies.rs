@@ -23,7 +23,12 @@ use super::header;
 /// A written file's facts with its bodies' under `bodies` ([`Model::facts`] and [`Model::body_facts`]): what the model
 /// quality control form reads (docs/adr/8074 §2), for a file `name` read within `limits`; `cancel` is asked between
 /// records and bodies.
-pub fn file_facts(bytes: &[u8], name: &str, limits: &super::Limits, cancel: &dyn Fn() -> bool) -> Result<Json, super::ReadError> {
+pub fn file_facts(
+    bytes: &[u8],
+    name: &str,
+    limits: &super::Limits,
+    cancel: &dyn Fn() -> bool,
+) -> Result<Json, super::ReadError> {
     let model = super::read(bytes, limits, cancel)?;
     let mut facts = model.facts(bytes, name)?;
     let bodies = model.bodies(bytes, cancel)?;
@@ -47,7 +52,9 @@ impl Model {
             out_bodies.push(json!({ "globalId": o.global_id, "zMin": lo, "zMax": hi, "box": plan_box(b), "rounding": b.rounding }));
             if schema.is_subtype_of(&o.class, "IfcSpace") {
                 let closed = closed(b);
-                let storey = self.storey_of_object(b.object).map(|s| self.objects[s].global_id.clone());
+                let storey = self
+                    .storey_of_object(b.object)
+                    .map(|s| self.objects[s].global_id.clone());
                 let ground = footprint(b, lo);
                 let area: f64 = union_areas(&ground).iter().map(net_area).sum();
                 space_json.push(json!({
@@ -64,10 +71,16 @@ impl Model {
             // A zone's footprint and its storey (docs/adr/8125; EK-9/10): IFC 4.3 gives a zone no area quantity, so its
             // area is its body's footprint, within twice its outline's length times its float32 bound.
             if schema.is_subtype_of(&o.class, "IfcSpatialZone") {
-                let storey = self.storey_of_object(b.object).map(|s| self.objects[s].global_id.clone());
+                let storey = self
+                    .storey_of_object(b.object)
+                    .map(|s| self.objects[s].global_id.clone());
                 let ground = union_areas(&footprint(b, lo));
                 let area: f64 = ground.iter().map(net_area).sum();
-                let outline: f64 = ground.iter().flat_map(|a| std::iter::once(&a.outer).chain(&a.holes)).map(ring_length).sum();
+                let outline: f64 = ground
+                    .iter()
+                    .flat_map(|a| std::iter::once(&a.outer).chain(&a.holes))
+                    .map(ring_length)
+                    .sum();
                 zone_json.push(json!({
                     "globalId": o.global_id,
                     "storey": storey,
@@ -88,7 +101,10 @@ impl Model {
     /// docs/adr/8125).
     fn storey_of_object(&self, i: usize) -> Option<usize> {
         let schema = header::version(self.summary.family);
-        let mut at = self.objects.get(i).and_then(|o| o.parent.or(o.container).or(o.reference));
+        let mut at = self
+            .objects
+            .get(i)
+            .and_then(|o| o.parent.or(o.container).or(o.reference));
         for _ in 0..self.objects.len() {
             let p = at?;
             let o = self.objects.get(p)?;
@@ -104,22 +120,41 @@ impl Model {
 /// A ring's length, its last corner back to its first.
 fn ring_length(r: &Ring) -> f64 {
     let n = r.pts.len();
-    (0..n).map(|i| {
-        let (a, b) = (r.pts[i], r.pts[(i + 1) % n]);
-        (b.x - a.x).hypot(b.y - a.y)
-    }).sum()
+    (0..n)
+        .map(|i| {
+            let (a, b) = (r.pts[i], r.pts[(i + 1) % n]);
+            (b.x - a.x).hypot(b.y - a.y)
+        })
+        .sum()
 }
 
 /// A body's lowest and highest corner.
 fn heights(b: &Body) -> (f64, f64) {
-    b.positions.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| (lo.min(p[2]), hi.max(p[2])))
+    b.positions
+        .iter()
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), p| {
+            (lo.min(p[2]), hi.max(p[2]))
+        })
 }
 
 /// A body's box in plan: `[min east, min north, max east, max north]`.
 fn plan_box(b: &Body) -> [f64; 4] {
-    b.positions.iter().fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |m, p| {
-        [m[0].min(p[0]), m[1].min(p[1]), m[2].max(p[0]), m[3].max(p[1])]
-    })
+    b.positions.iter().fold(
+        [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ],
+        |m, p| {
+            [
+                m[0].min(p[0]),
+                m[1].min(p[1]),
+                m[2].max(p[0]),
+                m[3].max(p[1]),
+            ]
+        },
+    )
 }
 
 /// Whether every edge of the body is two triangles' (an edge as its two corners, corners written alike the same).
@@ -128,7 +163,9 @@ fn closed(b: &Body) -> bool {
     let mut edges: HashMap<([u64; 3], [u64; 3]), u32> = HashMap::new();
     for t in &b.triangles {
         for (a, c) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {
-            let (Some(p), Some(q)) = (key(a), key(c)) else { return false };
+            let (Some(p), Some(q)) = (key(a), key(c)) else {
+                return false;
+            };
             if p == q {
                 continue;
             }
@@ -146,12 +183,24 @@ fn footprint(b: &Body, lowest: f64) -> Vec<Area> {
         .iter()
         .filter_map(|t| {
             let p = t.map(|i| b.positions.get(i as usize).copied());
-            let [Some(a), Some(c), Some(d)] = p else { return None };
+            let [Some(a), Some(c), Some(d)] = p else {
+                return None;
+            };
             if [a, c, d].iter().any(|q| (q[2] - lowest).abs() > bound) {
                 return None;
             }
-            let ring = Ring { pts: vec![Vec2::new(a[0], a[1]), Vec2::new(c[0], c[1]), Vec2::new(d[0], d[1])], bulges: None };
-            Some(Area { outer: ring, holes: Vec::new() })
+            let ring = Ring {
+                pts: vec![
+                    Vec2::new(a[0], a[1]),
+                    Vec2::new(c[0], c[1]),
+                    Vec2::new(d[0], d[1]),
+                ],
+                bulges: None,
+            };
+            Some(Area {
+                outer: ring,
+                holes: Vec::new(),
+            })
         })
         .collect()
 }
@@ -161,9 +210,14 @@ fn overlaps(model: &Model, spaces: &[(usize, Option<String>, Vec<Area>)]) -> Vec
     let boxes: Vec<Option<[f64; 4]>> = spaces
         .iter()
         .map(|(_, _, ground)| {
-            ground.iter().flat_map(|a| a.outer.pts.iter()).fold(None, |b: Option<[f64; 4]>, p| {
-                Some(b.map_or([p.x, p.y, p.x, p.y], |b| [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]))
-            })
+            ground
+                .iter()
+                .flat_map(|a| a.outer.pts.iter())
+                .fold(None, |b: Option<[f64; 4]>, p| {
+                    Some(b.map_or([p.x, p.y, p.x, p.y], |b| {
+                        [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
+                    }))
+                })
         })
         .collect();
     let mut by_storey: BTreeMap<Option<&String>, Vec<usize>> = BTreeMap::new();
@@ -174,7 +228,9 @@ fn overlaps(model: &Model, spaces: &[(usize, Option<String>, Vec<Area>)]) -> Vec
     for members in by_storey.values() {
         for (n, &i) in members.iter().enumerate() {
             for &j in &members[n + 1..] {
-                let (Some(p), Some(q)) = (boxes[i], boxes[j]) else { continue };
+                let (Some(p), Some(q)) = (boxes[i], boxes[j]) else {
+                    continue;
+                };
                 if p[2] <= q[0] || q[2] <= p[0] || p[3] <= q[1] || q[3] <= p[1] {
                     continue;
                 }

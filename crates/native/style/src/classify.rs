@@ -532,9 +532,10 @@ pub fn data_layer_present(node: &kentos_contracts::LayerNode) -> Option<Present>
     let name = name.trim_end_matches(['Z', 'M', ' ']);
     Some(match name {
         "POINT" | "MULTIPOINT" => one(0, 0, 1),
-        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "CURVE" | "MULTICURVE" => one(0, 1, 0),
-        "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "SURFACE" | "MULTISURFACE" | "TRIANGLE" | "TIN"
-        | "POLYHEDRALSURFACE" => one(1, 0, 0),
+        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "CURVE"
+        | "MULTICURVE" => one(0, 1, 0),
+        "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "SURFACE" | "MULTISURFACE" | "TRIANGLE"
+        | "TIN" | "POLYHEDRALSURFACE" => one(1, 0, 0),
         _ => by_layer(),
     })
 }

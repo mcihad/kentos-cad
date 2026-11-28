@@ -1,7 +1,7 @@
 //! Ephemeral paper/model mode. The host's existing model tools own all model edits.
-use crate::{Designer, Effect, Message};
 use crate::message::StageEvent;
-use kentos_sheet::model_scope::{Viewport, NavigateViewport};
+use crate::{Designer, Effect, Message};
+use kentos_sheet::model_scope::{NavigateViewport, Viewport};
 use kentos_sheet::ops::Op;
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum PointerAction {

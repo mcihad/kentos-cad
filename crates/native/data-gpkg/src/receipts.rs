@@ -24,9 +24,11 @@ const MAKE: &str = "CREATE TABLE IF NOT EXISTS kentos_writes (
 
 /// Whether the file has the table.
 pub(crate) fn has_table(conn: &rusqlite::Connection) -> Result<bool, DataError> {
-    conn.query_row("SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?1", [RECEIPTS_TABLE], |r| {
-        r.get::<_, i64>(0)
-    })
+    conn.query_row(
+        "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?1",
+        [RECEIPTS_TABLE],
+        |r| r.get::<_, i64>(0),
+    )
     .map(|n| n > 0)
     .map_err(failed)
 }
@@ -48,11 +50,17 @@ impl GpkgSource {
 
     pub(crate) fn set_up_receipts_in(&self) -> Result<(), DataError> {
         if !self.writable() {
-            return Err(DataError::Denied(format!("“{}” salt okunur; dosyanın izinlerini denetleyin.", self.path().display())));
+            return Err(DataError::Denied(format!(
+                "“{}” salt okunur; dosyanın izinlerini denetleyin.",
+                self.path().display()
+            )));
         }
-        let gp = GeoPackage::open(self.path(), true).map_err(|e| DataError::Denied(e.to_string()))?;
+        let gp =
+            GeoPackage::open(self.path(), true).map_err(|e| DataError::Denied(e.to_string()))?;
         prepare(&gp)?;
-        gp.connection().execute_batch(&format!("BEGIN IMMEDIATE; {MAKE} COMMIT;")).map_err(failed)
+        gp.connection()
+            .execute_batch(&format!("BEGIN IMMEDIATE; {MAKE} COMMIT;"))
+            .map_err(failed)
     }
 
     pub(crate) fn receipt_in(&self, id: &str) -> Result<Option<Receipt>, DataError> {
@@ -61,9 +69,17 @@ impl GpkgSource {
             if !has_table(conn)? {
                 return Ok(None);
             }
-            conn.query_row("SELECT by, written FROM kentos_writes WHERE id = ?1", [id], |r| {
-                Ok(Receipt { id: id.to_owned(), by: r.get(0)?, written: r.get(1)? })
-            })
+            conn.query_row(
+                "SELECT by, written FROM kentos_writes WHERE id = ?1",
+                [id],
+                |r| {
+                    Ok(Receipt {
+                        id: id.to_owned(),
+                        by: r.get(0)?,
+                        written: r.get(1)?,
+                    })
+                },
+            )
             .optional()
             .map_err(failed)
         })

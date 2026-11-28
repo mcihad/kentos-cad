@@ -294,7 +294,10 @@ impl App {
             return;
         }
         let gone = split.others.remove(i);
-        if let Some(crate::app::Dialog::RevisionMatches(at) | crate::app::Dialog::RevisionTake(at)) = self.dialog.as_mut() {
+        if let Some(
+            crate::app::Dialog::RevisionMatches(at) | crate::app::Dialog::RevisionTake(at),
+        ) = self.dialog.as_mut()
+        {
             if *at == i {
                 self.dialog = None;
             } else if *at > i {
@@ -801,7 +804,9 @@ impl App {
                 button(label::caption("Farkları al…"))
                     .padding([3, 8])
                     .style(style::button::flat)
-                    .on_press(Message::Split(Event::Take(crate::split_revision::TakeEvent::Open(i)))),
+                    .on_press(Message::Split(Event::Take(
+                        crate::split_revision::TakeEvent::Open(i),
+                    ))),
             );
             if !r.project_changes.is_empty() {
                 let details = r

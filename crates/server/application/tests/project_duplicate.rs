@@ -290,11 +290,7 @@ async fn a_copy_takes_the_content_and_ids_but_not_history_or_sharing() {
             copy.project.description.as_str(),
             copy.project.tags.clone()
         ),
-        (
-            ProjectType::Gis,
-            "İfraz",
-            vec!["Kadıköy".to_string()]
-        )
+        (ProjectType::Gis, "İfraz", vec!["Kadıköy".to_string()])
     );
     assert_eq!(copy.objects, "3");
     // The copy is the editor's own, and its first commit: data revision 1.

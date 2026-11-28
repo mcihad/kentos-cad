@@ -34,13 +34,22 @@ impl Document {
             .flat_map(|r| {
                 let n = r.pts.len();
                 (0..n).filter_map(move |i| {
-                    let b = r.bulges.as_ref().and_then(|b| b.get(i)).copied().unwrap_or(0.0);
+                    let b = r
+                        .bulges
+                        .as_ref()
+                        .and_then(|b| b.get(i))
+                        .copied()
+                        .unwrap_or(0.0);
                     (n >= 2).then(|| (r.pts[i], r.pts[(i + 1) % n], b))
                 })
             })
             .filter(|(a, b, _)| len(sub(*b, *a)) > ON)
             .collect();
-        let edges: Vec<(Vec2, Vec2)> = all.iter().filter(|e| e.2 == 0.0).map(|e| (e.0, e.1)).collect();
+        let edges: Vec<(Vec2, Vec2)> = all
+            .iter()
+            .filter(|e| e.2 == 0.0)
+            .map(|e| (e.0, e.1))
+            .collect();
         let arcs: Vec<(Vec2, Vec2, f64)> = all.iter().filter(|e| e.2 != 0.0).copied().collect();
         if all.is_empty() {
             return None;
@@ -55,21 +64,29 @@ impl Document {
         // (thickness or none for a face without a covering, length along it).
         let mut along: Vec<(Option<f64>, f64)> = Vec::new();
         for (a, b) in edges {
-            let mid = Vec2 { x: (a.x + b.x) / 2.0, y: (a.y + b.y) / 2.0 };
+            let mid = Vec2 {
+                x: (a.x + b.x) / 2.0,
+                y: (a.y + b.y) / 2.0,
+            };
             let dir = unit(sub(b, a));
             if let Some(t) = walls.iter().find_map(|w| facing(w, mid, dir)) {
                 along.push((t, len(sub(b, a))));
             }
         }
         for (a, b, bulge) in arcs {
-            let Some((centre, radius)) = arc(a, b, bulge) else { continue };
+            let Some((centre, radius)) = arc(a, b, bulge) else {
+                continue;
+            };
             let sweep = 4.0 * bulge.atan();
             let start = (a.y - centre.y).atan2(a.x - centre.x);
             let middle = Vec2 {
                 x: centre.x + radius * (start + sweep / 2.0).cos(),
                 y: centre.y + radius * (start + sweep / 2.0).sin(),
             };
-            if let Some(t) = walls.iter().find_map(|w| facing_arc(w, centre, radius, middle)) {
+            if let Some(t) = walls
+                .iter()
+                .find_map(|w| facing_arc(w, centre, radius, middle))
+            {
                 along.push((t, radius * sweep.abs()));
             }
         }
@@ -82,7 +99,9 @@ impl Document {
                 None => held.push((*t, *l)),
             }
         }
-        held.into_iter().find(|(_, l)| *l > total / 2.0).map(|(t, _)| t)
+        held.into_iter()
+            .find(|(_, l)| *l > total / 2.0)
+            .map(|(t, _)| t)
     }
 }
 
@@ -93,7 +112,11 @@ fn facing(w: &WallFields, mid: Vec2, dir: Vec2) -> Option<Option<f64>> {
     let runs = if w.closed { n } else { n.saturating_sub(1) };
     let left = w.offset + w.justify.left_face(w.width);
     for i in 0..runs {
-        let straight = w.bulges.as_ref().and_then(|b| b.get(i)).is_none_or(|b| *b == 0.0);
+        let straight = w
+            .bulges
+            .as_ref()
+            .and_then(|b| b.get(i))
+            .is_none_or(|b| *b == 0.0);
         let (p, q) = (w.pts[i], w.pts[(i + 1) % n]);
         let length = len(sub(q, p));
         if !straight || length <= ON {
@@ -127,7 +150,15 @@ fn facing_arc(w: &WallFields, centre: Vec2, radius: f64, middle: Vec2) -> Option
     let runs = if w.closed { n } else { n.saturating_sub(1) };
     let left = w.offset + w.justify.left_face(w.width);
     for i in 0..runs {
-        let Some(b) = w.bulges.as_ref().and_then(|b| b.get(i)).copied().filter(|b| *b != 0.0) else { continue };
+        let Some(b) = w
+            .bulges
+            .as_ref()
+            .and_then(|b| b.get(i))
+            .copied()
+            .filter(|b| *b != 0.0)
+        else {
+            continue;
+        };
         let (p, q) = (w.pts[i], w.pts[(i + 1) % n]);
         let Some((c, r)) = arc(p, q, b) else { continue };
         if len(sub(c, centre)) > ON {
@@ -137,7 +168,8 @@ fn facing_arc(w: &WallFields, centre: Vec2, radius: f64, middle: Vec2) -> Option
         let sweep = 4.0 * b.atan();
         let start = (p.y - c.y).atan2(p.x - c.x);
         let at = (middle.y - c.y).atan2(middle.x - c.x);
-        let turned = if sweep > 0.0 { at - start } else { start - at }.rem_euclid(std::f64::consts::TAU);
+        let turned =
+            if sweep > 0.0 { at - start } else { start - at }.rem_euclid(std::f64::consts::TAU);
         if turned > sweep.abs() + ON / r {
             continue;
         }
@@ -165,14 +197,23 @@ fn arc(p: Vec2, q: Vec2, b: f64) -> Option<(Vec2, f64)> {
     let radius = (l / 2.0 / half.sin()).abs();
     // From the chord's middle along its left normal: the centre stands left of a counter-clockwise arc.
     let h = l / 2.0 / half.tan();
-    Some((Vec2 { x: (p.x + q.x) / 2.0 - c.y / l * h, y: (p.y + q.y) / 2.0 + c.x / l * h }, radius))
+    Some((
+        Vec2 {
+            x: (p.x + q.x) / 2.0 - c.y / l * h,
+            y: (p.y + q.y) / 2.0 + c.x / l * h,
+        },
+        radius,
+    ))
 }
 
 /// The covering a face's outer component makes: its thickness (one without a thickness takes what the others leave of
 /// the wall's width) when it is a finish; none for a stronger one, or a wall without components.
 fn cover(w: &WallFields, c: Option<&kentos_contracts::WallComponent>) -> Option<f64> {
     let c = c?;
-    if c.priority.unwrap_or(kentos_contracts::DEFAULT_COMPONENT_PRIORITY) < FINISH {
+    if c.priority
+        .unwrap_or(kentos_contracts::DEFAULT_COMPONENT_PRIORITY)
+        < FINISH
+    {
         return None;
     }
     let t = match c.thickness {
@@ -183,7 +224,10 @@ fn cover(w: &WallFields, c: Option<&kentos_contracts::WallComponent>) -> Option<
 }
 
 fn sub(a: Vec2, b: Vec2) -> Vec2 {
-    Vec2 { x: a.x - b.x, y: a.y - b.y }
+    Vec2 {
+        x: a.x - b.x,
+        y: a.y - b.y,
+    }
 }
 
 fn len(v: Vec2) -> f64 {
@@ -192,7 +236,10 @@ fn len(v: Vec2) -> f64 {
 
 fn unit(v: Vec2) -> Vec2 {
     let l = len(v);
-    Vec2 { x: v.x / l, y: v.y / l }
+    Vec2 {
+        x: v.x / l,
+        y: v.y / l,
+    }
 }
 
 #[cfg(test)]
@@ -229,10 +276,16 @@ mod tests {
     fn a_room_s_wall_covering_is_the_finish_of_the_faces_it_lies_along() {
         // Under it a wall eastwards, its left face at y 1; over it one westwards, its left face at y 4: both show the
         // room their 2 cm İç sıva.
-        let doc = document(serde_json::json!([wall([[0.0, 0.9], [4.0, 0.9]], 5), wall([[4.0, 4.1], [0.0, 4.1]], 5)]));
+        let doc = document(serde_json::json!([
+            wall([[0.0, 0.9], [4.0, 0.9]], 5),
+            wall([[4.0, 4.1], [0.0, 4.1]], 5)
+        ]));
         assert_eq!(doc.room_wall_finish(&room()), Some(0.02));
         // The one over it eastwards: its right face, 3 cm Dış sıva, holds half the length, not more: none.
-        let doc = document(serde_json::json!([wall([[0.0, 0.9], [4.0, 0.9]], 5), wall([[0.0, 4.1], [4.0, 4.1]], 5)]));
+        let doc = document(serde_json::json!([
+            wall([[0.0, 0.9], [4.0, 0.9]], 5),
+            wall([[0.0, 4.1], [4.0, 4.1]], 5)
+        ]));
         assert_eq!(doc.room_wall_finish(&room()), None);
         // A third along its west side with 2 cm: 7 m of 11 hold 2 cm.
         let doc = document(serde_json::json!([
@@ -242,10 +295,16 @@ mod tests {
         ]));
         assert_eq!(doc.room_wall_finish(&room()), Some(0.02));
         // A face whose outer layer is the core (its strength 1) has no covering: no thickness holds.
-        let doc = document(serde_json::json!([wall([[0.0, 0.9], [4.0, 0.9]], 1), wall([[4.0, 4.1], [0.0, 4.1]], 1)]));
+        let doc = document(serde_json::json!([
+            wall([[0.0, 0.9], [4.0, 0.9]], 1),
+            wall([[4.0, 4.1], [0.0, 4.1]], 1)
+        ]));
         assert_eq!(doc.room_wall_finish(&room()), None);
         // A room 5 cm off its walls' faces lies along none.
-        let doc = document(serde_json::json!([wall([[0.0, 0.85], [4.0, 0.85]], 5), wall([[4.0, 4.15], [0.0, 4.15]], 5)]));
+        let doc = document(serde_json::json!([
+            wall([[0.0, 0.85], [4.0, 0.85]], 5),
+            wall([[4.0, 4.15], [0.0, 4.15]], 5)
+        ]));
         assert_eq!(doc.room_wall_finish(&room()), None);
     }
 

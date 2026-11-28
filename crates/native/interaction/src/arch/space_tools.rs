@@ -8,8 +8,8 @@
 //! - Mahali böl: a space, then the cut line's two points; the pieces are drawn, the second point writes.
 
 use kentos_commands::{
-    CommandResult, Entity, NewSpace, SpaceColumns, SpaceMethod, SpacePart, SpaceRing, SpacesCreate, SpacesEdit,
-    SpacesOperation,
+    CommandResult, Entity, NewSpace, SpaceColumns, SpaceMethod, SpacePart, SpaceRing, SpacesCreate,
+    SpacesEdit, SpacesOperation,
 };
 use kentos_domain::Slot;
 use kentos_geometry_core::text::edit::increment;
@@ -43,8 +43,17 @@ pub fn method_icon(m: Option<SpaceMethod>) -> &'static str {
 /// One set of persistent column policies shared by both room tools.
 pub fn column_choices(value: Option<SpaceColumns>) -> Vec<OptionChoice> {
     let value = value.unwrap_or(SpaceColumns::Net);
-    SpaceColumns::ALL.iter().map(|&m| OptionChoice { typed:m.name().into(),label:m.choice().into(),
-        icon:None,preview:None,checked:m==value,command:None }).collect()
+    SpaceColumns::ALL
+        .iter()
+        .map(|&m| OptionChoice {
+            typed: m.name().into(),
+            label: m.choice().into(),
+            icon: None,
+            preview: None,
+            checked: m == value,
+            command: None,
+        })
+        .collect()
 }
 
 /// Display rings for the preview fill; analytic source rings remain untouched.
@@ -75,10 +84,14 @@ fn drawn_space(e: &Entity, tone: Tone, out: &mut Preview) {
             .space
             .parts
             .iter()
-            .map(|p| CoreArea { outer: ring(&p.outer), holes: p.holes.iter().map(ring).collect() })
+            .map(|p| CoreArea {
+                outer: ring(&p.outer),
+                holes: p.holes.iter().map(ring).collect(),
+            })
             .collect();
         for line in kentos_geometry_core::geom::space::void_cross(&parts) {
-            out.strokes.extend(Outline::of(&line, None, 1.5, tone).strokes);
+            out.strokes
+                .extend(Outline::of(&line, None, 1.5, tone).strokes);
         }
     }
     out.areas.push(Area {
@@ -146,9 +159,17 @@ impl SpaceTool {
 
     fn new_space(&self, seed: Option<Vec2>, corners: Option<&[Vec2]>) -> NewSpace {
         NewSpace {
-            sources: if seed.is_some() {self.sources.sources()} else {None},
+            sources: if seed.is_some() {
+                self.sources.sources()
+            } else {
+                None
+            },
             seed: seed.map(points::wire),
-            scope: Some(if seed.is_some() { self.level.scope() } else { Default::default() }),
+            scope: Some(if seed.is_some() {
+                self.level.scope()
+            } else {
+                Default::default()
+            }),
             parts: corners.map(|c| {
                 vec![SpacePart {
                     outer: SpaceRing {
@@ -159,7 +180,11 @@ impl SpaceTool {
                 }]
             }),
             method: self.method,
-            columns: Some(if seed.is_some() { self.columns.unwrap_or(SpaceColumns::Net) } else { SpaceColumns::Ignore }),
+            columns: Some(if seed.is_some() {
+                self.columns.unwrap_or(SpaceColumns::Net)
+            } else {
+                SpaceColumns::Ignore
+            }),
             number: self.number.clone(),
             name: self.name.clone(),
             usage: self.usage.clone(),
@@ -244,18 +269,23 @@ impl SpaceTool {
 
     /// Written: the number one more, the drawn corners gone.
     fn write(&mut self, input: SpacesCreate, cx: &mut Context<'_>) -> bool {
-        let written = crate::arch_layer::writing(&crate::arch_layer::Kind::Space, cx, |layer, cx| {
-            let input = SpacesCreate {
-                layer_id: layer.to_owned(),
-                ..input
-            };
-            let result = spaces_create::execute(&mut ExecutionContext::new(cx.doc), input);
-            points::written(result, cx).is_some()
-        });
+        let written =
+            crate::arch_layer::writing(&crate::arch_layer::Kind::Space, cx, |layer, cx| {
+                let input = SpacesCreate {
+                    layer_id: layer.to_owned(),
+                    ..input
+                };
+                let result = spaces_create::execute(&mut ExecutionContext::new(cx.doc), input);
+                points::written(result, cx).is_some()
+            });
         if !written {
             return false;
         }
-        let kind = if self.void { "Döşeme boşluğu" } else { "Mahal" };
+        let kind = if self.void {
+            "Döşeme boşluğu"
+        } else {
+            "Mahal"
+        };
         let what = match (&self.number, &self.name) {
             (Some(n), Some(a)) => format!("{kind} {n} {a} oluşturuldu."),
             (Some(n), None) => format!("{kind} {n} oluşturuldu."),
@@ -357,7 +387,15 @@ impl Tool for SpaceTool {
                 self.usage.clone().unwrap_or_else(|| "Yok".into()),
             )
             .toggle("Döşeme boşluğu", "V", self.void)
-            .option_with("Sınır", "S", if self.draw { "Köşeleri çiz" } else { "Duvarlardan bul" });
+            .option_with(
+                "Sınır",
+                "S",
+                if self.draw {
+                    "Köşeleri çiz"
+                } else {
+                    "Duvarlardan bul"
+                },
+            );
         if self.draw && !self.pts.is_empty() {
             p = p.option("Geri al", "G");
         }
@@ -411,7 +449,9 @@ impl Tool for SpaceTool {
             return true;
         }
         match key.as_str() {
-            "B" if !self.draw => {self.sources.toggle();}
+            "B" if !self.draw => {
+                self.sources.toggle();
+            }
             "Y" => {
                 self.method = match self.method {
                     None => Some(SpaceMethod::Net),
@@ -427,7 +467,9 @@ impl Tool for SpaceTool {
             "L" => self.level.next(),
             "D" if !self.draw => {
                 self.columns = Some(match self.columns.unwrap_or(SpaceColumns::Net) {
-                    SpaceColumns::Ignore => SpaceColumns::Net, SpaceColumns::Net => SpaceColumns::All, SpaceColumns::All => SpaceColumns::Ignore,
+                    SpaceColumns::Ignore => SpaceColumns::Net,
+                    SpaceColumns::Net => SpaceColumns::All,
+                    SpaceColumns::All => SpaceColumns::Ignore,
                 });
             }
             // Sınır is S, as Döşeme's (docs/adr/8003); Ç, its old letter, still reads.
@@ -451,8 +493,12 @@ impl Tool for SpaceTool {
     }
 
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
-        if key == "B" && !self.draw {return self.sources.choices();}
-        if key == "D" && !self.draw { return column_choices(self.columns); }
+        if key == "B" && !self.draw {
+            return self.sources.choices();
+        }
+        if key == "D" && !self.draw {
+            return column_choices(self.columns);
+        }
         if key == "L" {
             return self.level_choices();
         }
@@ -570,17 +616,28 @@ impl Tool for SpaceTool {
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
         if key == "B" {
-            if self.draw || !self.sources.choose(typed) { return false; }
-            self.see(cx);return true;
+            if self.draw || !self.sources.choose(typed) {
+                return false;
+            }
+            self.see(cx);
+            return true;
         }
         if key == "D" {
-            if self.draw { return false; }
-            let Some(value) = SpaceColumns::ALL.into_iter().find(|m|m.name()==typed) else { return false; };
-            self.columns=Some(value);self.see(cx);return true;
+            if self.draw {
+                return false;
+            }
+            let Some(value) = SpaceColumns::ALL.into_iter().find(|m| m.name() == typed) else {
+                return false;
+            };
+            self.columns = Some(value);
+            self.see(cx);
+            return true;
         }
         if key == "L" {
             self.level.see(cx.doc.settings());
-            if !self.level.choose(typed) { return false; }
+            if !self.level.choose(typed) {
+                return false;
+            }
             self.see(cx);
             return true;
         }
@@ -632,7 +689,10 @@ impl Tool for SpaceTool {
                 (Some(why), _) if !self.draw || self.pts.len() >= 2 => {
                     vec!["Mahal".to_owned(), why.clone()]
                 }
-                (_, Some(a)) if self.void => vec![format!("Döşeme boşluğu · {}", format.area(a)), "Alanı mahal toplamına katılmaz".to_owned()],
+                (_, Some(a)) if self.void => vec![
+                    format!("Döşeme boşluğu · {}", format.area(a)),
+                    "Alanı mahal toplamına katılmaz".to_owned(),
+                ],
                 (_, Some(a)) => vec![format!("Mahal · {}", format.area(a))],
                 _ => vec!["Mahal".to_owned()],
             },
@@ -734,7 +794,11 @@ impl SpaceSplitTool {
                         kentos_geometry_core::display::fixed(d.area, 2)
                     ));
                     for p in &d.pieces {
-                        let finishes = if p.finishes.is_empty() { "kaplamasız" } else { "kaplamalarıyla" };
+                        let finishes = if p.finishes.is_empty() {
+                            "kaplamasız"
+                        } else {
+                            "kaplamalarıyla"
+                        };
                         self.said.push(format!(
                             "Yeni parça: numarası {}, {finishes}, {} m², {} donatı",
                             n(&p.number),
@@ -893,13 +957,19 @@ impl Tool for SpaceSplitTool {
             // The decision before anything is written (docs/adr/0773 §4).
             (None, Some(_), Some(at)) if !self.said.is_empty() => Some(Tag {
                 at,
-                lines: std::iter::once("Mahali böl".to_owned()).chain(self.said.iter().cloned()).collect(),
+                lines: std::iter::once("Mahali böl".to_owned())
+                    .chain(self.said.iter().cloned())
+                    .collect(),
             }),
             _ => None,
         };
         Preview {
             tag,
-            tag_tone: if self.why.is_some() { Tone::Danger } else { Tone::Accent },
+            tag_tone: if self.why.is_some() {
+                Tone::Danger
+            } else {
+                Tone::Accent
+            },
             ..self.drawn.clone()
         }
     }
@@ -915,76 +985,169 @@ pub struct SpaceReboundTool {
 }
 impl SpaceReboundTool {
     fn request(&self, at: Vec2, cx: &Context<'_>) -> Option<SpacesEdit> {
-        Some(SpacesEdit {uids:vec![cx.doc.uid(self.space?)?.to_string()],
-            operation:SpacesOperation::Rebound {seed:Some(points::wire(at))},expected_revision:None})
+        Some(SpacesEdit {
+            uids: vec![cx.doc.uid(self.space?)?.to_string()],
+            operation: SpacesOperation::Rebound {
+                seed: Some(points::wire(at)),
+            },
+            expected_revision: None,
+        })
     }
     fn see(&mut self, at: Vec2, cx: &Context<'_>) {
-        self.hover=Some(at); self.drawn=Preview::default(); self.why=None;
-        let Some(Entity::Space(s))=self.space.and_then(|slot|cx.doc.get(slot)) else{return};
-        let mut source=s.space.clone(); source.seed=Some(points::wire(at));
+        self.hover = Some(at);
+        self.drawn = Preview::default();
+        self.why = None;
+        let Some(Entity::Space(s)) = self.space.and_then(|slot| cx.doc.get(slot)) else {
+            return;
+        };
+        let mut source = s.space.clone();
+        source.seed = Some(points::wire(at));
         if !kentos_domain::space_follow::SpaceSearch::new(cx.doc).seed_is_room(&source) {
-            self.why=Some("İç nokta duvarın üzerinde değil, kullanılabilir odanın içinde olmalı.".into()); return;
+            self.why = Some(
+                "İç nokta duvarın üzerinde değil, kullanılabilir odanın içinde olmalı.".into(),
+            );
+            return;
         }
-        let Some(input)=self.request(at,cx) else{return};
-        match spaces_edit::plan_in(cx.doc,&input) {
-            CommandResult::Completed {output,..} => {
-                for e in output.spaces {drawn_space(&e,Tone::Accent,&mut self.drawn);}
+        let Some(input) = self.request(at, cx) else {
+            return;
+        };
+        match spaces_edit::plan_in(cx.doc, &input) {
+            CommandResult::Completed { output, .. } => {
+                for e in output.spaces {
+                    drawn_space(&e, Tone::Accent, &mut self.drawn);
+                }
             }
-            CommandResult::Failed {error} | CommandResult::Conflict {error} |
-                CommandResult::NeedsInput {error} => self.why=Some(error.message),
-            _=>{},
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.why = Some(error.message),
+            _ => {}
         }
     }
     fn write(&mut self, at: Vec2, cx: &mut Context<'_>) -> bool {
-        self.see(at,cx);
-        if let Some(why)=&self.why {cx.say(Level::Warn,why);return false;}
-        let Some(input)=self.request(at,cx) else{return false};
-        if points::written(spaces_edit::execute(&mut ExecutionContext::new(cx.doc),input),cx).is_none() {return false;}
-        self.space=None; self.hover=None; self.drawn=Preview::default();
-        cx.say(Level::Success,"Mahalın iç noktası ve sınırı güncellendi."); true
+        self.see(at, cx);
+        if let Some(why) = &self.why {
+            cx.say(Level::Warn, why);
+            return false;
+        }
+        let Some(input) = self.request(at, cx) else {
+            return false;
+        };
+        if points::written(
+            spaces_edit::execute(&mut ExecutionContext::new(cx.doc), input),
+            cx,
+        )
+        .is_none()
+        {
+            return false;
+        }
+        self.space = None;
+        self.hover = None;
+        self.drawn = Preview::default();
+        cx.say(Level::Success, "Mahalın iç noktası ve sınırı güncellendi.");
+        true
     }
 }
 impl Tool for SpaceReboundTool {
-    fn id(&self)->&'static str {REBOUND_ID}
-    fn label(&self)->&'static str {"Mahali yeniden sınırla"}
-    fn activate(&mut self,cx:&mut Context<'_>)->Flow {
-        if let [slot]=cx.selection.ids() && matches!(cx.doc.get(*slot),Some(Entity::Space(_))) {
-            self.space=Some(*slot);
+    fn id(&self) -> &'static str {
+        REBOUND_ID
+    }
+    fn label(&self) -> &'static str {
+        "Mahali yeniden sınırla"
+    }
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        if let [slot] = cx.selection.ids()
+            && matches!(cx.doc.get(*slot), Some(Entity::Space(_)))
+        {
+            self.space = Some(*slot);
         }
         Flow::Stay
     }
-    fn cursor(&self)->Cursor {if self.space.is_some(){Cursor::Cross}else{Cursor::Pick}}
-    fn snaps(&self)->bool {false}
-    fn point_count(&self)->usize {usize::from(self.space.is_some())}
-    fn undo_step(&mut self,_:&mut Context<'_>)->bool {
-        let had=self.space.take().is_some();
-        self.hover=None;self.drawn=Preview::default();self.why=None;had
+    fn cursor(&self) -> Cursor {
+        if self.space.is_some() {
+            Cursor::Cross
+        } else {
+            Cursor::Pick
+        }
     }
-    fn accepts_points(&self)->bool {self.space.is_some()}
-    fn prompt(&self)->Prompt {
-        Prompt::new(self.label(),if self.space.is_some(){"yeni oda iç noktasına tıklayın; önizleme yazmaz"}
-            else{"sınırı yeniden bulunacak mahalin içine tıklayın"}).option("Bitir","Enter")
+    fn snaps(&self) -> bool {
+        false
     }
-    fn pointer_move(&mut self,p:&Pointer,cx:&mut Context<'_>) {
-        if self.space.is_some(){self.see(p.raw,cx);}
-        else {cx.selection.set_hover(SpaceSplitTool::space_at(p.raw,cx));}
+    fn point_count(&self) -> usize {
+        usize::from(self.space.is_some())
     }
-    fn pointer_down(&mut self,p:&Pointer,cx:&mut Context<'_>) {
-        if self.space.is_some(){self.write(p.raw,cx);}
-        else {self.space=SpaceSplitTool::space_at(p.raw,cx);self.hover=None;}
+    fn undo_step(&mut self, _: &mut Context<'_>) -> bool {
+        let had = self.space.take().is_some();
+        self.hover = None;
+        self.drawn = Preview::default();
+        self.why = None;
+        had
     }
-    fn accept_point(&mut self,p:Vec2,cx:&mut Context<'_>)->bool {self.write(p,cx)}
-    fn input(&mut self,text:&str,cx:&mut Context<'_>)->bool {
-        let Some(p)=cx.typed_point(text,None,self.hover) else{return false};
-        self.write(p,cx)
+    fn accepts_points(&self) -> bool {
+        self.space.is_some()
     }
-    fn confirm(&mut self,cx:&mut Context<'_>)->Flow {
-        if self.space.is_none(){return Flow::Exit;}
-        if let Some(at)=self.hover && self.write(at,cx){Flow::Exit}else{Flow::Stay}
+    fn prompt(&self) -> Prompt {
+        Prompt::new(
+            self.label(),
+            if self.space.is_some() {
+                "yeni oda iç noktasına tıklayın; önizleme yazmaz"
+            } else {
+                "sınırı yeniden bulunacak mahalin içine tıklayın"
+            },
+        )
+        .option("Bitir", "Enter")
     }
-    fn preview(&self,_:&Format)->Preview {
-        let tag=self.hover.map(|at|Tag {at,lines:vec![self.why.clone().unwrap_or_else(||"Yeni iç noktaya tıklayın · tıklama uygular · Esc vazgeçer".into())]});
-        Preview {tag,tag_tone:if self.why.is_some(){Tone::Danger}else{Tone::Accent},..self.drawn.clone()}
+    fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if self.space.is_some() {
+            self.see(p.raw, cx);
+        } else {
+            cx.selection.set_hover(SpaceSplitTool::space_at(p.raw, cx));
+        }
+    }
+    fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if self.space.is_some() {
+            self.write(p.raw, cx);
+        } else {
+            self.space = SpaceSplitTool::space_at(p.raw, cx);
+            self.hover = None;
+        }
+    }
+    fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
+        self.write(p, cx)
+    }
+    fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        let Some(p) = cx.typed_point(text, None, self.hover) else {
+            return false;
+        };
+        self.write(p, cx)
+    }
+    fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        if self.space.is_none() {
+            return Flow::Exit;
+        }
+        if let Some(at) = self.hover
+            && self.write(at, cx)
+        {
+            Flow::Exit
+        } else {
+            Flow::Stay
+        }
+    }
+    fn preview(&self, _: &Format) -> Preview {
+        let tag = self.hover.map(|at| Tag {
+            at,
+            lines: vec![self.why.clone().unwrap_or_else(|| {
+                "Yeni iç noktaya tıklayın · tıklama uygular · Esc vazgeçer".into()
+            })],
+        });
+        Preview {
+            tag,
+            tag_tone: if self.why.is_some() {
+                Tone::Danger
+            } else {
+                Tone::Accent
+            },
+            ..self.drawn.clone()
+        }
     }
 }
 
@@ -1012,7 +1175,7 @@ mod tests {
 /// Review and replace the persistent UUID source set of one existing room.
 #[derive(Default)]
 pub struct SpaceSourcesTool {
-    history: Vec<(Vec<String>,bool)>,
+    history: Vec<(Vec<String>, bool)>,
     revision: Option<u64>,
     space: Option<Slot>,
     ids: Vec<String>,
@@ -1021,92 +1184,219 @@ pub struct SpaceSourcesTool {
     why: Option<String>,
 }
 impl SpaceSourcesTool {
-    fn target(&mut self, slot:Slot, cx:&Context<'_>) {
-        let Some(Entity::Space(s))=cx.doc.get(slot) else{return};
+    fn target(&mut self, slot: Slot, cx: &Context<'_>) {
+        let Some(Entity::Space(s)) = cx.doc.get(slot) else {
+            return;
+        };
         self.history.clear();
-        self.space=Some(slot);self.all=s.space.sources.is_none();
-        self.ids=s.space.sources.clone().unwrap_or_default();self.see(cx);
+        self.space = Some(slot);
+        self.all = s.space.sources.is_none();
+        self.ids = s.space.sources.clone().unwrap_or_default();
+        self.see(cx);
     }
-    fn request(&self,cx:&Context<'_>)->Option<SpacesEdit> {
-        Some(SpacesEdit {uids:vec![cx.doc.uid(self.space?)?.to_string()],
-            operation:SpacesOperation::Set(kentos_commands::SpaceChange {
-                sources:Some((!self.all).then(||self.ids.clone())),..Default::default()}),expected_revision:None})
+    fn request(&self, cx: &Context<'_>) -> Option<SpacesEdit> {
+        Some(SpacesEdit {
+            uids: vec![cx.doc.uid(self.space?)?.to_string()],
+            operation: SpacesOperation::Set(kentos_commands::SpaceChange {
+                sources: Some((!self.all).then(|| self.ids.clone())),
+                ..Default::default()
+            }),
+            expected_revision: None,
+        })
     }
-    fn see(&mut self,cx:&Context<'_>) {
-        self.revision=Some(cx.doc.revision());
-        self.drawn=Preview::default();self.why=None;
-        let Some(input)=self.request(cx) else{return};
-        match spaces_edit::plan_in(cx.doc,&input) {
-            CommandResult::Completed {output,..}=>for e in output.spaces {drawn_space(&e,Tone::Accent,&mut self.drawn)},
-            CommandResult::Failed {error}|CommandResult::Conflict {error}|CommandResult::NeedsInput {error}=>self.why=Some(error.message),
-            _=>{},
+    fn see(&mut self, cx: &Context<'_>) {
+        self.revision = Some(cx.doc.revision());
+        self.drawn = Preview::default();
+        self.why = None;
+        let Some(input) = self.request(cx) else {
+            return;
+        };
+        match spaces_edit::plan_in(cx.doc, &input) {
+            CommandResult::Completed { output, .. } => {
+                for e in output.spaces {
+                    drawn_space(&e, Tone::Accent, &mut self.drawn)
+                }
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.why = Some(error.message),
+            _ => {}
         }
         for id in self.ids.iter().filter(|_| !self.all) {
-            if let Ok(uid)=kentos_domain::Uuid::parse_str(id) && let Some(slot)=cx.doc.slot_of(uid)
-                && let Some(e)=cx.doc.get(slot) {
-                self.drawn.strokes.extend(Outline::of(&shape(e),Some([4.,3.]),2.,Tone::Snap).strokes);
+            if let Ok(uid) = kentos_domain::Uuid::parse_str(id)
+                && let Some(slot) = cx.doc.slot_of(uid)
+                && let Some(e) = cx.doc.get(slot)
+            {
+                self.drawn
+                    .strokes
+                    .extend(Outline::of(&shape(e), Some([4., 3.]), 2., Tone::Snap).strokes);
             }
         }
     }
 }
 impl Tool for SpaceSourcesTool {
-    fn id(&self)->&'static str {SOURCES_ID}
-    fn label(&self)->&'static str {"Mahal kaynakları"}
-    fn cursor(&self)->Cursor {Cursor::Pick}
-    fn snaps(&self)->bool {false}
-    fn activate(&mut self,cx:&mut Context<'_>)->Flow {
-        if let [slot]=cx.selection.ids() && matches!(cx.doc.get(*slot),Some(Entity::Space(_))) {self.target(*slot,cx);}
+    fn id(&self) -> &'static str {
+        SOURCES_ID
+    }
+    fn label(&self) -> &'static str {
+        "Mahal kaynakları"
+    }
+    fn cursor(&self) -> Cursor {
+        Cursor::Pick
+    }
+    fn snaps(&self) -> bool {
+        false
+    }
+    fn activate(&mut self, cx: &mut Context<'_>) -> Flow {
+        if let [slot] = cx.selection.ids()
+            && matches!(cx.doc.get(*slot), Some(Entity::Space(_)))
+        {
+            self.target(*slot, cx);
+        }
         Flow::Stay
     }
-    fn point_count(&self)->usize {usize::from(self.space.is_some())}
-    fn prompt(&self)->Prompt {
-        Prompt::new(self.label(),if self.space.is_some(){"duvar, kolon veya mahal ayırıcıya tıklayın; Enter uygular"}
-            else{"kaynakları değişecek mahalin içine tıklayın"}).option("Kaynaklar","B").option("Uygula","Enter")
+    fn point_count(&self) -> usize {
+        usize::from(self.space.is_some())
     }
-    fn pointer_move(&mut self,p:&Pointer,cx:&mut Context<'_>) {
-        if self.revision!=Some(cx.doc.revision()){self.see(cx);}
-        let hit=if self.space.is_none(){SpaceSplitTool::space_at(p.raw,cx)}else{
-            cx.spatial.hits(p.raw,cx.pick_tolerance()).into_iter().find(|&slot|
-                cx.doc.get(slot).is_some_and(kentos_domain::space_follow::is_source))
+    fn prompt(&self) -> Prompt {
+        Prompt::new(
+            self.label(),
+            if self.space.is_some() {
+                "duvar, kolon veya mahal ayırıcıya tıklayın; Enter uygular"
+            } else {
+                "kaynakları değişecek mahalin içine tıklayın"
+            },
+        )
+        .option("Kaynaklar", "B")
+        .option("Uygula", "Enter")
+    }
+    fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if self.revision != Some(cx.doc.revision()) {
+            self.see(cx);
+        }
+        let hit = if self.space.is_none() {
+            SpaceSplitTool::space_at(p.raw, cx)
+        } else {
+            cx.spatial
+                .hits(p.raw, cx.pick_tolerance())
+                .into_iter()
+                .find(|&slot| {
+                    cx.doc
+                        .get(slot)
+                        .is_some_and(kentos_domain::space_follow::is_source)
+                })
         };
         cx.selection.set_hover(hit);
     }
-    fn undo_step(&mut self,cx:&mut Context<'_>)->bool {
-        if let Some((ids,all))=self.history.pop(){self.ids=ids;self.all=all;self.see(cx);true}else{false}
+    fn undo_step(&mut self, cx: &mut Context<'_>) -> bool {
+        if let Some((ids, all)) = self.history.pop() {
+            self.ids = ids;
+            self.all = all;
+            self.see(cx);
+            true
+        } else {
+            false
+        }
     }
-    fn pointer_down(&mut self,p:&Pointer,cx:&mut Context<'_>) {
-        if self.space.is_none() {if let Some(slot)=SpaceSplitTool::space_at(p.raw,cx){self.target(slot,cx);}return;}
-        let hit=cx.spatial.hits(p.raw,cx.pick_tolerance()).into_iter().find(|&slot|
-            cx.doc.get(slot).is_some_and(kentos_domain::space_follow::is_source));
-        let Some(id)=hit.and_then(|slot|cx.doc.uid(slot)).map(|id|id.to_string()) else{
-            cx.say(Level::Info,"Kaynak olarak duvar, kolon veya mahal ayırıcı seçin.");return;
+    fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
+        if self.space.is_none() {
+            if let Some(slot) = SpaceSplitTool::space_at(p.raw, cx) {
+                self.target(slot, cx);
+            }
+            return;
+        }
+        let hit = cx
+            .spatial
+            .hits(p.raw, cx.pick_tolerance())
+            .into_iter()
+            .find(|&slot| {
+                cx.doc
+                    .get(slot)
+                    .is_some_and(kentos_domain::space_follow::is_source)
+            });
+        let Some(id) = hit
+            .and_then(|slot| cx.doc.uid(slot))
+            .map(|id| id.to_string())
+        else {
+            cx.say(
+                Level::Info,
+                "Kaynak olarak duvar, kolon veya mahal ayırıcı seçin.",
+            );
+            return;
         };
-        self.history.push((self.ids.clone(),self.all));
-        if self.all {self.all=false;self.ids.clear();}
-        if let Some(i)=self.ids.iter().position(|u|u==&id){self.ids.remove(i);}else{self.ids.push(id);self.ids.sort();}
+        self.history.push((self.ids.clone(), self.all));
+        if self.all {
+            self.all = false;
+            self.ids.clear();
+        }
+        if let Some(i) = self.ids.iter().position(|u| u == &id) {
+            self.ids.remove(i);
+        } else {
+            self.ids.push(id);
+            self.ids.sort();
+        }
         self.see(cx);
     }
-    fn settings(&self,_:&Format)->Vec<crate::tool_settings::Setting> {
-        use crate::tool_settings::{Setting,choices};
-        let mut rows=vec![Setting::choice("B","Kaynaklar",choices(&[("all","Tüm uygun kaynaklar"),("selected","Seçilenler")],if self.all{"all"}else{"selected"})),
-            Setting::text("N","Seçilen",self.ids.len().to_string()).read_only()];
-        if let Some(why)=&self.why {rows.push(Setting::notice("E","Durum",why));}rows
+    fn settings(&self, _: &Format) -> Vec<crate::tool_settings::Setting> {
+        use crate::tool_settings::{Setting, choices};
+        let mut rows = vec![
+            Setting::choice(
+                "B",
+                "Kaynaklar",
+                choices(
+                    &[("all", "Tüm uygun kaynaklar"), ("selected", "Seçilenler")],
+                    if self.all { "all" } else { "selected" },
+                ),
+            ),
+            Setting::text("N", "Seçilen", self.ids.len().to_string()).read_only(),
+        ];
+        if let Some(why) = &self.why {
+            rows.push(Setting::notice("E", "Durum", why));
+        }
+        rows
     }
-    fn configure(&mut self,key:&str,value:&str,cx:&mut Context<'_>)->bool {
-        if key!="B" || !matches!(value,"all"|"selected"){return false;}
-        if self.all != (value=="all") {self.history.push((self.ids.clone(),self.all));}
-        self.all=value=="all";self.see(cx);true
-    }
-    fn input(&mut self,text:&str,cx:&mut Context<'_>)->bool {
-        if upper_tr(text.trim())!="B"{return false;}
-        self.history.push((self.ids.clone(),self.all));
-        self.all = !self.all;self.see(cx);true
-    }
-    fn confirm(&mut self,cx:&mut Context<'_>)->Flow {
+    fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
+        if key != "B" || !matches!(value, "all" | "selected") {
+            return false;
+        }
+        if self.all != (value == "all") {
+            self.history.push((self.ids.clone(), self.all));
+        }
+        self.all = value == "all";
         self.see(cx);
-        if let Some(why)=&self.why {cx.say(Level::Warn,why);return Flow::Stay;}
-        let Some(input)=self.request(cx) else{cx.say(Level::Info,"Önce mahal seçin.");return Flow::Stay;};
-        if points::written(spaces_edit::execute(&mut ExecutionContext::new(cx.doc),input),cx).is_some(){Flow::Exit}else{Flow::Stay}
+        true
     }
-    fn preview(&self,_:&Format)->Preview {self.drawn.clone()}
+    fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
+        if upper_tr(text.trim()) != "B" {
+            return false;
+        }
+        self.history.push((self.ids.clone(), self.all));
+        self.all = !self.all;
+        self.see(cx);
+        true
+    }
+    fn confirm(&mut self, cx: &mut Context<'_>) -> Flow {
+        self.see(cx);
+        if let Some(why) = &self.why {
+            cx.say(Level::Warn, why);
+            return Flow::Stay;
+        }
+        let Some(input) = self.request(cx) else {
+            cx.say(Level::Info, "Önce mahal seçin.");
+            return Flow::Stay;
+        };
+        if points::written(
+            spaces_edit::execute(&mut ExecutionContext::new(cx.doc), input),
+            cx,
+        )
+        .is_some()
+        {
+            Flow::Exit
+        } else {
+            Flow::Stay
+        }
+    }
+    fn preview(&self, _: &Format) -> Preview {
+        self.drawn.clone()
+    }
 }

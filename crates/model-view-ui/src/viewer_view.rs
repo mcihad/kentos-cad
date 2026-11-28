@@ -23,17 +23,20 @@
 //! ```
 
 use iced::widget::{Row, button, column, container, row, scrollable, slider, space, text};
-use kentos_ui::widget::input_field::InputField;
-use kentos_ui::widget::sash::Sash;
 use iced::{Alignment, Background, Center, Element, Fill, Theme};
 use kentos_model_view::Cut;
 use kentos_model_view::section::Section;
 use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
+use kentos_ui::widget::input_field::InputField;
+use kentos_ui::widget::sash::Sash;
 use kentos_ui::widget::status_bar::Readout;
 use kentos_ui::widget::tree_view::{self, Node, Toggle, TreeView};
-use kentos_ui::widget::{EmptyState, Menu, PropertySheet, StatusBar, Tip, progress, property_grid, segmented::Segmented, strip};
+use kentos_ui::widget::{
+    EmptyState, Menu, PropertySheet, StatusBar, Tip, progress, property_grid, segmented::Segmented,
+    strip,
+};
 
 use crate::look;
 use crate::measuring::{Measured, Tool, Value};
@@ -84,7 +87,12 @@ impl Viewer {
         let tools: Vec<Element<'a, M>> = self.strip().into_iter().map(|e| e.map(to)).collect();
         let strip = strip::surface(
             row![
-                Row::from_vec(tools).spacing(1).align_y(Center).width(Fill).wrap().vertical_spacing(4),
+                Row::from_vec(tools)
+                    .spacing(1)
+                    .align_y(Center)
+                    .width(Fill)
+                    .wrap()
+                    .vertical_spacing(4),
                 Row::from_vec(end).spacing(1).align_y(Center)
             ]
             .spacing(6)
@@ -93,15 +101,21 @@ impl Viewer {
         let body: Element<'a, Message> = match &self.stage {
             Stage::Reading { phase, done, total } => reading(phase, *done, *total),
             Stage::Failed(why) => container(
-                EmptyState::error("Dosya açılamadı").description(why.as_str()).primary("Kapat", Message::Close),
+                EmptyState::error("Dosya açılamadı")
+                    .description(why.as_str())
+                    .primary("Kapat", Message::Close),
             )
             .center(Fill)
             .into(),
             Stage::Shown => {
                 // The side panes widen by their edges; a double click gives back their width (DESIGN.md §7.21); folded,
                 // a rail of their own (docs/adr/8121).
-                let tree = self.tree_width.unwrap_or_else(|| typography::scaled(TREE_WIDTH));
-                let details = self.details_width.unwrap_or_else(|| typography::scaled(DETAILS_WIDTH));
+                let tree = self
+                    .tree_width
+                    .unwrap_or_else(|| typography::scaled(TREE_WIDTH));
+                let details = self
+                    .details_width
+                    .unwrap_or_else(|| typography::scaled(DETAILS_WIDTH));
                 let mut panes: Vec<Element<'a, Message>> = Vec::new();
                 if self.tree_open {
                     panes.push(container(self.tree_panel()).width(tree).height(Fill).into());
@@ -123,7 +137,12 @@ impl Viewer {
                             .on_double_click(Message::DetailsWidth(None))
                             .into(),
                     );
-                    panes.push(container(self.details_panel(&host)).width(details).height(Fill).into());
+                    panes.push(
+                        container(self.details_panel(&host))
+                            .width(details)
+                            .height(Fill)
+                            .into(),
+                    );
                 } else {
                     panes.push(rail(Side::Details));
                 }
@@ -131,14 +150,18 @@ impl Viewer {
                 Row::from_vec(panes).width(Fill).height(Fill).into()
             }
         };
-        column![strip, strip::rule(), body.map(to), status].height(Fill).into()
+        column![strip, strip::rule(), body.map(to), status]
+            .height(Fill)
+            .into()
     }
 
     fn strip<'a>(&'a self) -> Vec<Element<'a, Message>> {
         let orbit = self.orbit;
         let shown = self.stage == Stage::Shown;
         let chosen = self.view().and_then(|v| v.selected()).is_some();
-        let partial = self.view().is_some_and(|v| v.is_isolated() || (0..v.input().objects.len()).any(|o| v.is_hidden(o)));
+        let partial = self.view().is_some_and(|v| {
+            v.is_isolated() || (0..v.input().objects.len()).any(|o| v.is_hidden(o))
+        });
         let when = |ok: bool, m: Message| ok.then_some(m);
         let mut out: Vec<Element<'a, Message>> = vec![
             strip::menu(
@@ -147,7 +170,12 @@ impl Viewer {
                 "Görünüş: modele hangi yönden bakıldığı. Döndürünce bakış serbesttir; bir görünüş seçmek modeli o yönden sığdırır.",
                 move || look::views_menu(&orbit, Message::View, Message::North),
             ),
-            strip::labelled(Icon::ZoomExtents, "Sığdır", "Sığdır: bütün modeli bu bakışla görünüme sığdırır.", when(shown, Message::Fit)),
+            strip::labelled(
+                Icon::ZoomExtents,
+                "Sığdır",
+                "Sığdır: bütün modeli bu bakışla görünüme sığdırır.",
+                when(shown, Message::Fit),
+            ),
             strip::labelled(
                 Icon::Target,
                 "Seçime yaklaş",
@@ -160,14 +188,24 @@ impl Viewer {
         }
         out.extend([
             strip::divider(),
-            strip::labelled(Icon::EyeOff, "Gizle", "Gizle: seçili nesneyi ve altındakileri gösterimden çıkarır.", when(chosen, Message::Hide)),
+            strip::labelled(
+                Icon::EyeOff,
+                "Gizle",
+                "Gizle: seçili nesneyi ve altındakileri gösterimden çıkarır.",
+                when(chosen, Message::Hide),
+            ),
             strip::labelled(
                 Icon::Filter,
                 "Yalnız bırak",
                 "Yalnız bırak: yalnız seçili nesneyi ve altındakileri gösterir.",
                 when(chosen, Message::Isolate),
             ),
-            strip::labelled(Icon::Eye, "Hepsini göster", "Hepsini göster: gizlenenleri geri getirir, yalnız bırakmayı kaldırır.", when(partial, Message::ShowAll)),
+            strip::labelled(
+                Icon::Eye,
+                "Hepsini göster",
+                "Hepsini göster: gizlenenleri geri getirir, yalnız bırakmayı kaldırır.",
+                when(partial, Message::ShowAll),
+            ),
             strip::divider(),
         ]);
         let v = self.view();
@@ -186,7 +224,12 @@ impl Viewer {
             Message::Openings,
         ));
         // Only when the model has zones (an emsal area, a compartment's shape): off until asked (docs/adr/8123).
-        if v.is_some_and(|v| v.input().objects.iter().any(|o| o.category == kentos_model_view::Category::Zone)) {
+        if v.is_some_and(|v| {
+            v.input()
+                .objects
+                .iter()
+                .any(|o| o.category == kentos_model_view::Category::Zone)
+        }) {
             out.push(strip::toggle(
                 Some(Icon::Layout),
                 "Zonlar",
@@ -246,13 +289,26 @@ impl Viewer {
                 ]
                 .spacing(10)
                 .align_y(Center),
-                strip::toggle(None, "Öbür yanı", "Öbür yanı: düzlemin öbür yanını gösterir.", flip, Message::Flip),
+                strip::toggle(
+                    None,
+                    "Öbür yanı",
+                    "Öbür yanı: düzlemin öbür yanını gösterir.",
+                    flip,
+                    Message::Flip
+                ),
             ]
             .spacing(6);
             Some(place.into())
         };
         let (title, place): (&str, Option<Element<'a, Message>>) = match self.section {
-            _ if self.facing => ("Yüzden kesit", Some(label::body("Düzlemin paralel olacağı yüze tıklayın.").style(muted).into())),
+            _ if self.facing => (
+                "Yüzden kesit",
+                Some(
+                    label::body("Düzlemin paralel olacağı yüze tıklayın.")
+                        .style(muted)
+                        .into(),
+                ),
+            ),
             Section::None => return None,
             Section::Box(_) => ("Seçimin çevresinde kutu", None),
             Section::Plane { cut, at, flip } => {
@@ -263,12 +319,18 @@ impl Viewer {
                 };
                 (title, Some(place(axis, at, flip)?))
             }
-            Section::Face { depth, flip, .. } => ("Yüze paralel kesit", Some(place("Derinlik", depth, flip)?)),
+            Section::Face { depth, flip, .. } => {
+                ("Yüze paralel kesit", Some(place("Derinlik", depth, flip)?))
+            }
         };
         let head = row![
             label::strong(title),
             space::horizontal(),
-            strip::icon_button(Icon::Close, "Kesiti kaldır: modeli bütün gösterir.", Some(Message::Uncut)),
+            strip::icon_button(
+                Icon::Close,
+                "Kesiti kaldır: modeli bütün gösterir.",
+                Some(Message::Uncut)
+            ),
         ]
         .align_y(Center);
         let mut body = column![head].spacing(6);
@@ -276,7 +338,13 @@ impl Viewer {
             body = body.push(place);
         }
         // The legend's frame: the scene's cards are one family.
-        Some(container(kentos_ui::widget::legend::frame(container(body).padding([2, 4]))).width(typography::scaled(CARD_WIDTH)).into())
+        Some(
+            container(kentos_ui::widget::legend::frame(
+                container(body).padding([2, 4]),
+            ))
+            .width(typography::scaled(CARD_WIDTH))
+            .into(),
+        )
     }
 
     /// The scene as a picture of it draws it (docs/adr/8175 §3.2): as the window shows it, the camera, the section with
@@ -312,8 +380,16 @@ impl Viewer {
 
     /// The view in words, a picture's name: its projection, the side it is seen from and whether it is cut.
     pub fn picture_name(&self) -> String {
-        let projection = if self.axonometric { "aksonometri" } else { "perspektif" };
-        let cut = if self.section.planes().is_empty() { "" } else { ", kesit" };
+        let projection = if self.axonometric {
+            "aksonometri"
+        } else {
+            "perspektif"
+        };
+        let cut = if self.section.planes().is_empty() {
+            ""
+        } else {
+            ", kesit"
+        };
         format!("3B görünüm, {projection}, {}{cut}", self.orbit.seen_from())
     }
 
@@ -332,7 +408,11 @@ impl Viewer {
             quality: host.quality,
             planes: self.planes(),
             // While measuring the clicked point's ring gives way to the measurement's points.
-            marked: self.picked.as_ref().filter(|_| !self.measuring.on).map(|p| p.point),
+            marked: self
+                .picked
+                .as_ref()
+                .filter(|_| !self.measuring.on)
+                .map(|p| p.point),
             marks: self.marks(&|v| written(host, v)),
             hover: self.measuring.on,
             handles: self.handles(),
@@ -370,81 +450,137 @@ impl Viewer {
             _ if !self.query.trim().is_empty() => self.found_list(),
             _ => {
                 let rows = self.rows();
-                TreeView::new([tree_view::Column::new("Nesne").width(Fill), tree_view::Column::new("Öğe").width(36).align_right()])
-                    .header(false)
-                    .virtualized(rows.len(), move |i| {
-                        let r = &rows[i];
-                        // Every row has its count's cell (empty when it holds nothing): the eyes stay in one column.
-                        let count = if r.count > 0 { r.count.to_string() } else { String::new() };
-                        let mut node = Node::new(r.label.as_str()).selected(r.chosen).muted(!r.shows).cells([label::caption(count).into()]);
-                        if r.count > 0 {
-                            node = node.expanded(r.open, Message::Open(r.id.clone()));
-                        }
-                        node = match r.object {
-                            Some(o) => node.on_press(Message::Choose(Some(o))).toggle(Toggle::visible(r.shows, Message::Eye(o))),
-                            None => node.on_press(Message::Open(r.id.clone())),
-                        };
-                        (r.depth, node)
-                    })
-                    .height(Fill)
-                    .empty("Modelde nesne yok.")
-                    .into()
+                TreeView::new([
+                    tree_view::Column::new("Nesne").width(Fill),
+                    tree_view::Column::new("Öğe").width(36).align_right(),
+                ])
+                .header(false)
+                .virtualized(rows.len(), move |i| {
+                    let r = &rows[i];
+                    // Every row has its count's cell (empty when it holds nothing): the eyes stay in one column.
+                    let count = if r.count > 0 {
+                        r.count.to_string()
+                    } else {
+                        String::new()
+                    };
+                    let mut node = Node::new(r.label.as_str())
+                        .selected(r.chosen)
+                        .muted(!r.shows)
+                        .cells([label::caption(count).into()]);
+                    if r.count > 0 {
+                        node = node.expanded(r.open, Message::Open(r.id.clone()));
+                    }
+                    node = match r.object {
+                        Some(o) => node
+                            .on_press(Message::Choose(Some(o)))
+                            .toggle(Toggle::visible(r.shows, Message::Eye(o))),
+                        None => node.on_press(Message::Open(r.id.clone())),
+                    };
+                    (r.depth, node)
+                })
+                .height(Fill)
+                .empty("Modelde nesne yok.")
+                .into()
             }
         };
-        let fold = strip::icon_button(Icon::ChevronLeft, "Ağacı daralt: sahne genişler; kenardaki düğme geri açar.", Some(Message::Pane(Side::Tree)));
-        let head = column![row![container(tabs).width(Fill), fold].spacing(4).align_y(Center), search].spacing(6);
-        column![container(head).padding(6), list].height(Fill).into()
+        let fold = strip::icon_button(
+            Icon::ChevronLeft,
+            "Ağacı daralt: sahne genişler; kenardaki düğme geri açar.",
+            Some(Message::Pane(Side::Tree)),
+        );
+        let head = column![
+            row![container(tabs).width(Fill), fold]
+                .spacing(4)
+                .align_y(Center),
+            search
+        ]
+        .spacing(6);
+        column![container(head).padding(6), list]
+            .height(Fill)
+            .into()
     }
 
     /// The objects the search finds, each with the storey it is on (its long name, as the tree writes it after “—”),
     /// else its class; pressed, it is chosen.
     fn found_list(&self) -> Element<'_, Message> {
-        let Some(v) = self.view() else { return space().into() };
+        let Some(v) = self.view() else {
+            return space().into();
+        };
         let found = self.found();
         let chosen = v.selected();
-        TreeView::new([tree_view::Column::new("Nesne").width(Fill), tree_view::Column::new("Kat").width(Fill)])
-            .header(false)
-            .virtualized(found.len(), move |i| {
-                let o = found[i];
-                let objects = &v.input().objects;
-                let object = &objects[o];
-                let where_ = match object.storey.and_then(|s| objects.get(s)) {
-                    Some(s) => s.label.rsplit_once(" — ").map_or(s.label.as_str(), |(_, long)| long),
-                    None => object.class.as_str(),
-                };
-                let node = Node::new(object.label.as_str())
-                    .selected(chosen == Some(o))
-                    .muted(!v.shows(o))
-                    .cells([label::caption(where_).into()])
-                    .on_press(Message::Choose(Some(o)));
-                (0, node)
-            })
-            .height(Fill)
-            .empty("Eşleşen nesne yok: başka bir ad, sınıf ya da GlobalId yazın.")
-            .into()
+        TreeView::new([
+            tree_view::Column::new("Nesne").width(Fill),
+            tree_view::Column::new("Kat").width(Fill),
+        ])
+        .header(false)
+        .virtualized(found.len(), move |i| {
+            let o = found[i];
+            let objects = &v.input().objects;
+            let object = &objects[o];
+            let where_ = match object.storey.and_then(|s| objects.get(s)) {
+                Some(s) => s
+                    .label
+                    .rsplit_once(" — ")
+                    .map_or(s.label.as_str(), |(_, long)| long),
+                None => object.class.as_str(),
+            };
+            let node = Node::new(object.label.as_str())
+                .selected(chosen == Some(o))
+                .muted(!v.shows(o))
+                .cells([label::caption(where_).into()])
+                .on_press(Message::Choose(Some(o)));
+            (0, node)
+        })
+        .height(Fill)
+        .empty("Eşleşen nesne yok: başka bir ad, sınıf ya da GlobalId yazın.")
+        .into()
     }
 
     /// The objects with a shape that could not be shown, each with why.
     fn not_shown_list(&self) -> Element<'_, Message> {
-        let Some(v) = self.view() else { return space().into() };
+        let Some(v) = self.view() else {
+            return space().into();
+        };
         let items = &v.input().not_shown;
-        TreeView::new([tree_view::Column::new("Nesne").width(Fill), tree_view::Column::new("Neden").width(Fill)])
-            .virtualized(items.len(), move |i| {
-                let (o, why) = &items[i];
-                let label = v.input().objects.get(*o).map_or("", |o| o.label.as_str());
-                (0, Node::new(label).cells([label::caption(why.as_str()).into()]).on_press(Message::Choose(Some(*o))))
-            })
-            .height(Fill)
-            .into()
+        TreeView::new([
+            tree_view::Column::new("Nesne").width(Fill),
+            tree_view::Column::new("Neden").width(Fill),
+        ])
+        .virtualized(items.len(), move |i| {
+            let (o, why) = &items[i];
+            let label = v.input().objects.get(*o).map_or("", |o| o.label.as_str());
+            (
+                0,
+                Node::new(label)
+                    .cells([label::caption(why.as_str()).into()])
+                    .on_press(Message::Choose(Some(*o))),
+            )
+        })
+        .height(Fill)
+        .into()
     }
 
     /// The chosen object's details, a group a folding section; else what a choice gives.
     fn details_panel<'a, M>(&'a self, host: &Host<'a, M>) -> Element<'a, Message> {
-        let fold = strip::icon_button(Icon::ChevronRight, "Özellikleri daralt: sahne genişler; kenardaki düğme geri açar.", Some(Message::Pane(Side::Details)));
-        let head = container(row![label::strong("Özellikler"), space::horizontal(), fold].align_y(Center))
-            .padding(iced::Padding { top: 4.0, right: 6.0, bottom: 4.0, left: 10.0 });
+        let fold = strip::icon_button(
+            Icon::ChevronRight,
+            "Özellikleri daralt: sahne genişler; kenardaki düğme geri açar.",
+            Some(Message::Pane(Side::Details)),
+        );
+        let head =
+            container(row![label::strong("Özellikler"), space::horizontal(), fold].align_y(Center))
+                .padding(iced::Padding {
+                    top: 4.0,
+                    right: 6.0,
+                    bottom: 4.0,
+                    left: 10.0,
+                });
         let Some(d) = self.details() else {
-            let what = if self.view().and_then(|v| v.selected()).is_some() { "Okunuyor…" } else { "Bir nesne seçin" };
+            let what = if self.view().and_then(|v| v.selected()).is_some() {
+                "Okunuyor…"
+            } else {
+                "Bir nesne seçin"
+            };
             return column![
                 head,
                 container(
@@ -457,26 +593,42 @@ impl Viewer {
         };
         let mut sheet = PropertySheet::new();
         for g in &d.groups {
-            sheet = sheet.section(g.title.as_str(), !self.is_folded(&g.title), Message::Fold(g.title.clone()));
+            sheet = sheet.section(
+                g.title.as_str(),
+                !self.is_folded(&g.title),
+                Message::Fold(g.title.clone()),
+            );
             for l in &g.lines {
                 let cell = match l.value.trim().parse::<f64>().ok().filter(|_| l.numeric) {
-                    Some(n) => property_grid::measured((host.measure)(n, l.unit.as_deref()), &l.value, l.unit.clone(), IN_FILE),
+                    Some(n) => property_grid::measured(
+                        (host.measure)(n, l.unit.as_deref()),
+                        &l.value,
+                        l.unit.clone(),
+                        IN_FILE,
+                    ),
                     None => property_grid::value(l.value.as_str(), l.numeric, l.unit.clone()),
                 };
                 sheet = sheet.row(l.name.as_str(), cell);
             }
         }
         // Room for the scroll bar beside the units: a long sheet (a layered slab's, docs/adr/8166) scrolls.
-        column![head, scrollable(container(sheet).padding(iced::Padding::ZERO.right(14))).height(Fill)].into()
+        column![
+            head,
+            scrollable(container(sheet).padding(iced::Padding::ZERO.right(14))).height(Fill)
+        ]
+        .into()
     }
 
     fn status<'a, M>(&'a self, host: &Host<'a, M>) -> Element<'a, Message> {
         let mut bar = StatusBar::new();
         bar = match &self.picked {
             // Yüzden kesit waits for its click (docs/adr/8132): what to click before the point clicked last.
-            _ if self.facing && self.stage == Stage::Shown => {
-                bar.push(Readout::new(label::body("Bir yüze tıklayın: kesit o yüze paralel kurulur.").style(muted)).icon(Icon::Crosshair))
-            }
+            _ if self.facing && self.stage == Stage::Shown => bar.push(
+                Readout::new(
+                    label::body("Bir yüze tıklayın: kesit o yüze paralel kurulur.").style(muted),
+                )
+                .icon(Icon::Crosshair),
+            ),
             Some(p) => {
                 let at = format!(
                     "{} {}   {} {}   Z {}",
@@ -492,9 +644,13 @@ impl Viewer {
                         .tip(Tip::new("Seçilen nokta").body("Tıklanan noktanın dosyadaki koordinatları; görüntüleyici koordinat dönüştürmez.")),
                 )
             }
-            None if self.stage == Stage::Shown => {
-                bar.push(Readout::new(label::body("Bir nesneye tıklayın: seçilir, özellikleri sağda okunur.").style(muted)).icon(Icon::Crosshair))
-            }
+            None if self.stage == Stage::Shown => bar.push(
+                Readout::new(
+                    label::body("Bir nesneye tıklayın: seçilir, özellikleri sağda okunur.")
+                        .style(muted),
+                )
+                .icon(Icon::Crosshair),
+            ),
             None => bar.push(Readout::new(label::body(self.title.as_str())).icon(Icon::Document)),
         };
         bar = bar.spacer();
@@ -515,7 +671,10 @@ impl Viewer {
             }
         }
         for (words, tip) in &self.facts {
-            bar = bar.separator().push(Readout::new(label::body(words.as_str())).tip(Tip::new(words.as_str()).body(tip.as_str())));
+            bar = bar.separator().push(
+                Readout::new(label::body(words.as_str()))
+                    .tip(Tip::new(words.as_str()).body(tip.as_str())),
+            );
         }
         bar.separator()
             .push(Readout::new(label::body("Fare")).icon(Icon::Help).tip(Tip::new("Fareyle gezinme").body(
@@ -528,12 +687,18 @@ impl Viewer {
 /// The reading's progress: its phase, how far, and İptal.
 fn reading<'a>(phase: &'a str, done: usize, total: usize) -> Element<'a, Message> {
     let fraction = (total > 0).then(|| done as f32 / total as f32);
-    let words = if total > 0 { format!("{phase}: {done} / {total}") } else { phase.to_owned() };
+    let words = if total > 0 {
+        format!("{phase}: {done} / {total}")
+    } else {
+        phase.to_owned()
+    };
     container(
         column![
             label::body(words),
             container(progress::bar(fraction)).width(typography::scaled(320.0)),
-            button(label::body("İptal")).style(kentos_ui::style::button::secondary).on_press(Message::Cancel),
+            button(label::body("İptal"))
+                .style(kentos_ui::style::button::secondary)
+                .on_press(Message::Cancel),
         ]
         .spacing(10)
         .align_x(Alignment::Center),
@@ -547,11 +712,27 @@ fn section_menu(section: Section, facing: bool, chosen: bool) -> Menu<Message> {
     let plane = |c: Cut| !facing && matches!(section, Section::Plane { cut, .. } if cut == c);
     let mut m = Menu::new()
         .radio("Yatay kesit", plane(Cut::Level), Message::Cut(Cut::Level))
-        .radio("Kuzey–güney düşey kesiti", plane(Cut::NorthSouth), Message::Cut(Cut::NorthSouth))
-        .radio("Doğu–batı düşey kesiti", plane(Cut::EastWest), Message::Cut(Cut::EastWest))
-        .radio("Yüzden kesit", facing || matches!(section, Section::Face { .. }), Message::FromFace);
+        .radio(
+            "Kuzey–güney düşey kesiti",
+            plane(Cut::NorthSouth),
+            Message::Cut(Cut::NorthSouth),
+        )
+        .radio(
+            "Doğu–batı düşey kesiti",
+            plane(Cut::EastWest),
+            Message::Cut(Cut::EastWest),
+        )
+        .radio(
+            "Yüzden kesit",
+            facing || matches!(section, Section::Face { .. }),
+            Message::FromFace,
+        );
     if chosen {
-        m = m.radio("Seçimin çevresinde kutu", matches!(section, Section::Box(_)), Message::Boxed);
+        m = m.radio(
+            "Seçimin çevresinde kutu",
+            matches!(section, Section::Box(_)),
+            Message::Boxed,
+        );
     }
     m.separator().item("Kesiti kaldır", Message::Uncut)
 }
@@ -569,7 +750,10 @@ fn rail<'a>(side: Side) -> Element<'a, Message> {
         .align_x(iced::alignment::Horizontal::Center)
         .style(|t: &Theme| {
             let k = Tokens::of(t);
-            container::Style { background: Some(Background::Color(k.surface)), ..container::Style::default() }
+            container::Style {
+                background: Some(Background::Color(k.surface)),
+                ..container::Style::default()
+            }
         })
         .into()
 }
@@ -592,13 +776,28 @@ impl Viewer {
         if !m.on && m.done.is_empty() {
             return None;
         }
-        let title = if m.done.is_empty() { "Ölçü".to_owned() } else { format!("Ölçü {}", m.done.len()) };
-        let (fold_glyph, fold_help) =
-            if m.folded { (Icon::ChevronUp, "Ölçüleri aç") } else { (Icon::ChevronDown, "Ölçüleri daralt: yalnız başlık kalır, ölçüler sahnede kalır.") };
+        let title = if m.done.is_empty() {
+            "Ölçü".to_owned()
+        } else {
+            format!("Ölçü {}", m.done.len())
+        };
+        let (fold_glyph, fold_help) = if m.folded {
+            (Icon::ChevronUp, "Ölçüleri aç")
+        } else {
+            (
+                Icon::ChevronDown,
+                "Ölçüleri daralt: yalnız başlık kalır, ölçüler sahnede kalır.",
+            )
+        };
         let head = row![
             label::strong(title),
             space::horizontal(),
-            Segmented::new([Tool::Distance, Tool::Angle, Tool::Area], m.tool, Message::Tool).compact(),
+            Segmented::new(
+                [Tool::Distance, Tool::Angle, Tool::Area],
+                m.tool,
+                Message::Tool
+            )
+            .compact(),
             strip::icon_button(fold_glyph, fold_help, Some(Message::MeasureFold)),
         ]
         .spacing(6)
@@ -606,59 +805,128 @@ impl Viewer {
         let mut body = column![head].spacing(8);
         if !m.folded {
             if m.on {
-                let mut hint = row![label::caption(m.tool.hint(m.points.len())).style(muted).width(Fill)].spacing(6).align_y(Center);
+                let mut hint = row![
+                    label::caption(m.tool.hint(m.points.len()))
+                        .style(muted)
+                        .width(Fill)
+                ]
+                .spacing(6)
+                .align_y(Center);
                 if !m.points.is_empty() {
-                    hint = hint.push(strip::text_button("Vazgeç", "Vazgeç: ölçülmekte olanı bırakır.", Some(Message::MeasureCancel)));
+                    hint = hint.push(strip::text_button(
+                        "Vazgeç",
+                        "Vazgeç: ölçülmekte olanı bırakır.",
+                        Some(Message::MeasureCancel),
+                    ));
                 }
                 body = body.push(hint);
             }
             if !m.done.is_empty() {
-                let rows = m.done.iter().enumerate().map(|(i, d)| self.measured_row(host, i, d));
-                body = body.push(container(scrollable(column(rows).spacing(6))).max_height(typography::scaled(LIST_HEIGHT)));
+                let rows = m
+                    .done
+                    .iter()
+                    .enumerate()
+                    .map(|(i, d)| self.measured_row(host, i, d));
+                body = body.push(
+                    container(scrollable(column(rows).spacing(6)))
+                        .max_height(typography::scaled(LIST_HEIGHT)),
+                );
                 body = body.push(
                     row![
-                        label::caption("Gösterilen gövdeden; eğri yüzde üçgenlerden.").style(muted).width(Fill),
-                        strip::text_button("Temizle", "Temizle: bütün ölçüleri siler.", Some(Message::MeasureClear)),
+                        label::caption("Gösterilen gövdeden; eğri yüzde üçgenlerden.")
+                            .style(muted)
+                            .width(Fill),
+                        strip::text_button(
+                            "Temizle",
+                            "Temizle: bütün ölçüleri siler.",
+                            Some(Message::MeasureClear)
+                        ),
                     ]
                     .spacing(6)
                     .align_y(Center),
                 );
             }
         }
-        Some(container(kentos_ui::widget::legend::frame(container(body).padding([4, 6]))).width(typography::scaled(CARD_WIDTH)).into())
+        Some(
+            container(kentos_ui::widget::legend::frame(
+                container(body).padding([4, 6]),
+            ))
+            .width(typography::scaled(CARD_WIDTH))
+            .into(),
+        )
     }
 
     /// A measurement in the card: its kind and value, under them its parts (a distance's horizontal length and
     /// components along the axes; an area's body), and × to remove it.
-    fn measured_row<'a, M>(&'a self, host: &Host<'a, M>, i: usize, d: &'a Measured) -> Element<'a, Message> {
+    fn measured_row<'a, M>(
+        &'a self,
+        host: &Host<'a, M>,
+        i: usize,
+        d: &'a Measured,
+    ) -> Element<'a, Message> {
         use kentos_model_view::measure::{Distance, angle};
         let (kind, value, parts): (&str, String, Option<Element<'a, Message>>) = match d {
             Measured::Distance { a, b } => {
                 let dist = Distance::between(*a, *b);
                 // The components along the axes, in metres; the length on the ground too when it rises or falls.
                 let n = |v: f64| (host.measure)(v, Some("m"));
-                let mut parts = format!("Δ{} {}   Δ{} {}   ΔZ {}", host.east, n(dist.delta[0]), host.north, n(dist.delta[1]), n(dist.delta[2]));
+                let mut parts = format!(
+                    "Δ{} {}   Δ{} {}   ΔZ {}",
+                    host.east,
+                    n(dist.delta[0]),
+                    host.north,
+                    n(dist.delta[1]),
+                    n(dist.delta[2])
+                );
                 if dist.delta[2].abs() > 1e-9 && dist.horizontal > 1e-9 {
                     parts = format!("Yatay {}   {parts}", n(dist.horizontal));
                 }
-                ("Uzaklık", written(host, Value::Length(dist.length)), Some(label::mono_caption(parts).style(muted).into()))
+                (
+                    "Uzaklık",
+                    written(host, Value::Length(dist.length)),
+                    Some(label::mono_caption(parts).style(muted).into()),
+                )
             }
-            Measured::Angle { a, at, b } => ("Açı", angle(*a, *at, *b).map_or_else(|| "—".to_owned(), |deg| written(host, Value::Angle(deg))), None),
-            Measured::Area { face, what, .. } => {
-                ("Alan", written(host, Value::Area(face.area)), Some(label::caption(what.as_str()).style(muted).into()))
-            }
+            Measured::Angle { a, at, b } => (
+                "Açı",
+                angle(*a, *at, *b)
+                    .map_or_else(|| "—".to_owned(), |deg| written(host, Value::Angle(deg))),
+                None,
+            ),
+            Measured::Area { face, what, .. } => (
+                "Alan",
+                written(host, Value::Area(face.area)),
+                Some(label::caption(what.as_str()).style(muted).into()),
+            ),
         };
-        let mut left = column![row![label::caption(kind).style(muted).width(Fill), label::mono(value)].spacing(8).align_y(Center)].spacing(2);
+        let mut left = column![
+            row![
+                label::caption(kind).style(muted).width(Fill),
+                label::mono(value)
+            ]
+            .spacing(8)
+            .align_y(Center)
+        ]
+        .spacing(2);
         if let Some(p) = parts {
             left = left.push(p);
         }
-        row![left.width(Fill), strip::icon_button(Icon::Close, "Bu ölçüyü siler.", Some(Message::MeasureRemove(i)))]
-            .spacing(6)
-            .align_y(Center)
-            .into()
+        row![
+            left.width(Fill),
+            strip::icon_button(
+                Icon::Close,
+                "Bu ölçüyü siler.",
+                Some(Message::MeasureRemove(i))
+            )
+        ]
+        .spacing(6)
+        .align_y(Center)
+        .into()
     }
 }
 
 fn muted(t: &Theme) -> text::Style {
-    text::Style { color: Some(Tokens::of(t).muted) }
+    text::Style {
+        color: Some(Tokens::of(t).muted),
+    }
 }

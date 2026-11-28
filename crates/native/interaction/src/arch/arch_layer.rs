@@ -99,7 +99,9 @@ impl Kind {
             Kind::Beam(kentos_commands::BeamRole::Lintel) => "LENT",
             Kind::Beam(kentos_commands::BeamRole::BondBeam) => "HATL",
             // EK-2 Tablo 2.3: Temel (docs/adr/8172).
-            Kind::Beam(kentos_commands::BeamRole::PadFooting | kentos_commands::BeamRole::StripFooting) => "TEML",
+            Kind::Beam(
+                kentos_commands::BeamRole::PadFooting | kentos_commands::BeamRole::StripFooting,
+            ) => "TEML",
             Kind::Roof(_) => "CATI",
             Kind::Railing(_) => "KORK",
             Kind::Elevator => "ASAN",
@@ -125,9 +127,11 @@ impl Kind {
     pub fn detail(&self) -> String {
         let word = |w: &str| w.to_owned();
         match self {
-            Kind::Wall(m) | Kind::Slab(m) | Kind::Roof(m) | Kind::Furniture(m) | Kind::Coping(m) => {
-                m.clone().unwrap_or_default()
-            }
+            Kind::Wall(m)
+            | Kind::Slab(m)
+            | Kind::Roof(m)
+            | Kind::Furniture(m)
+            | Kind::Coping(m) => m.clone().unwrap_or_default(),
             Kind::Void => word("BOSLUK"),
             Kind::Niche => word("NIS"),
             Kind::Casework => word("MUTFAK"),
@@ -276,7 +280,9 @@ impl Kind {
         };
         match self {
             Kind::Wall(_) | Kind::Column | Kind::Post => look("ink", 0.5),
-            Kind::Slab(_) | Kind::Raft | Kind::Roof(_) | Kind::Moulding | Kind::Coping(_) => look("ink", 0.35),
+            Kind::Slab(_) | Kind::Raft | Kind::Roof(_) | Kind::Moulding | Kind::Coping(_) => {
+                look("ink", 0.35)
+            }
             Kind::Covering(_) | Kind::CeilingDevice => look("ink", 0.18),
             Kind::Door
             | Kind::Window
@@ -296,7 +302,9 @@ impl Kind {
             },
             Kind::Casework | Kind::Furniture(_) => look("fg-dim", 0.18),
             Kind::Dimension => look("#56B6C2", 0.18),
-            Kind::Space | Kind::Tag | Kind::Legend | Kind::Schedule | Kind::Shadow => look("fg", 0.18),
+            Kind::Space | Kind::Tag | Kind::Legend | Kind::Schedule | Kind::Shadow => {
+                look("fg", 0.18)
+            }
             Kind::Symbol | Kind::Mass => look("fg", 0.25),
         }
     }
@@ -440,7 +448,12 @@ pub fn writing(
     let rooms = (*kind != Kind::Space)
         .then(|| {
             let name = Kind::Space.layer_name();
-            cx.doc.layers().leaves().into_iter().find(|l| l.name == name).map(|l| l.id.clone())
+            cx.doc
+                .layers()
+                .leaves()
+                .into_iter()
+                .find(|l| l.name == name)
+                .map(|l| l.id.clone())
         })
         .flatten()
         .and_then(|id| cx.doc.layers().place_of(&id))

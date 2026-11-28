@@ -29,22 +29,36 @@ fn open(name: &str) -> (Reader, Vec<Vec<u8>>) {
 }
 
 /// The region's pixels once every block it wants is handed over.
-fn region(r: &mut Reader, files: &[Vec<u8>], level: usize, w: u32, h: u32) -> kentos_formats::raster::source::Region {
+fn region(
+    r: &mut Reader,
+    files: &[Vec<u8>],
+    level: usize,
+    w: u32,
+    h: u32,
+) -> kentos_formats::raster::source::Region {
     let needs = r.needs(level, 0, 0, w, h);
     for n in &needs {
         assert!(n.member > 0, "a mosaic's block is one of its files'");
         let b = &files[n.member as usize - 1];
-        let put = r.put_block(n, &b[n.offset as usize..(n.offset + n.len) as usize]).unwrap();
+        let put = r
+            .put_block(n, &b[n.offset as usize..(n.offset + n.len) as usize])
+            .unwrap();
         assert_eq!(put, Put::Done);
     }
-    r.region(level, 0, 0, w, h).expect("every block handed over")
+    r.region(level, 0, 0, w, h)
+        .expect("every block handed over")
 }
 
 fn raw(name: &str, sample: RasterSample) -> Vec<f64> {
     let b = std::fs::read(folder().join(name)).unwrap();
     match sample {
         RasterSample::U8 => b.iter().map(|&v| f64::from(v)).collect(),
-        RasterSample::F32 => b.as_chunks::<4>().0.iter().map(|c| f64::from(f32::from_le_bytes([c[0], c[1], c[2], c[3]]))).collect(),
+        RasterSample::F32 => b
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|c| f64::from(f32::from_le_bytes([c[0], c[1], c[2], c[3]])))
+            .collect(),
         other => panic!("{other:?}"),
     }
 }
@@ -77,7 +91,10 @@ fn gdals_mosaics_read_as_gdal_reads_them() {
 fn kentos_mosaics_read_as_gdal_reads_its_own() {
     for name in ["dem-verilen", "dem-kaba", "orto"] {
         let k = format!("kentos-{name}.vrt");
-        assert!(folder().join(&k).exists(), "{k} yok: KENTOS_WRITE_VRT=1 cargo test -p kentos-native-application --test all mosaic_files");
+        assert!(
+            folder().join(&k).exists(),
+            "{k} yok: KENTOS_WRITE_VRT=1 cargo test -p kentos-native-application --test all mosaic_files"
+        );
         same_pixels(&k, &format!("gdal-{name}.raw"));
     }
 }
@@ -101,6 +118,8 @@ fn a_coarse_level_is_made_of_the_files_levels() {
     let got = region(&mut r, &files, 1, lv.width, lv.height);
     // The 2023 file lies on top: a pixel well inside it is one of its colours, not 0 (nothing).
     let n = got.samples.len() / 3;
-    let covered = (0..n).filter(|&k| (0..3).any(|b| got.samples.get(k * 3 + b) != 0.0)).count();
+    let covered = (0..n)
+        .filter(|&k| (0..3).any(|b| got.samples.get(k * 3 + b) != 0.0))
+        .count();
     assert!(covered > n / 2, "{covered} of {n}");
 }

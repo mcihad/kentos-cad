@@ -45,12 +45,24 @@ pub struct Shown {
 
 impl Shown {
     pub fn new(session: u64, input: ScenariosImpact) -> Self {
-        Self { session, input, near: false, slope: false, made: RefCell::new(None) }
+        Self {
+            session,
+            input,
+            near: false,
+            slope: false,
+            made: RefCell::new(None),
+        }
     }
 
     /// Altyapıyı çizimde göster's (docs/adr/3060).
     pub fn near(session: u64, input: ScenariosImpact) -> Self {
-        Self { session, input, near: true, slope: false, made: RefCell::new(None) }
+        Self {
+            session,
+            input,
+            near: true,
+            slope: false,
+            made: RefCell::new(None),
+        }
     }
 
     /// Eğimi çizimde göster's (docs/adr/5060): the comparison asked with its slope map.
@@ -58,7 +70,13 @@ impl Shown {
         if let Some(s) = input.slope.as_mut() {
             s.map = true;
         }
-        Self { session, input, near: false, slope: true, made: RefCell::new(None) }
+        Self {
+            session,
+            input,
+            near: false,
+            slope: true,
+            made: RefCell::new(None),
+        }
     }
 }
 
@@ -82,18 +100,40 @@ pub struct ReachMarks {
 
 /// An area of a ring and holes as the command writes them.
 fn area_of(ring: &[[f64; 2]], holes: &[Vec<[f64; 2]>]) -> Area {
-    let r = |pts: &[[f64; 2]]| Ring { pts: pts.iter().map(|p| kentos_geometry_core::Vec2::new(p[0], p[1])).collect(), bulges: None };
-    Area { outer: r(ring), holes: holes.iter().map(|h| r(h)).collect() }
+    let r = |pts: &[[f64; 2]]| Ring {
+        pts: pts
+            .iter()
+            .map(|p| kentos_geometry_core::Vec2::new(p[0], p[1]))
+            .collect(),
+        bulges: None,
+    };
+    Area {
+        outer: r(ring),
+        holes: holes.iter().map(|h| r(h)).collect(),
+    }
 }
 
 /// Class `k` of `n`'s colour: the success colour for the gentlest through the warning colour to the danger colour for
 /// the steepest.
 pub fn class_colour(k: usize, n: usize, tokens: &Tokens) -> iced::Color {
-    let t = if n > 1 { k as f32 / (n - 1) as f32 } else { 0.0 };
-    let mix = |a: iced::Color, b: iced::Color, t: f32| {
-        iced::Color::from_rgba(a.r + (b.r - a.r) * t, a.g + (b.g - a.g) * t, a.b + (b.b - a.b) * t, 1.0)
+    let t = if n > 1 {
+        k as f32 / (n - 1) as f32
+    } else {
+        0.0
     };
-    if t <= 0.5 { mix(tokens.success, tokens.warning, t * 2.0) } else { mix(tokens.warning, tokens.danger, t * 2.0 - 1.0) }
+    let mix = |a: iced::Color, b: iced::Color, t: f32| {
+        iced::Color::from_rgba(
+            a.r + (b.r - a.r) * t,
+            a.g + (b.g - a.g) * t,
+            a.b + (b.b - a.b) * t,
+            1.0,
+        )
+    };
+    if t <= 0.5 {
+        mix(tokens.success, tokens.warning, t * 2.0)
+    } else {
+        mix(tokens.warning, tokens.danger, t * 2.0 - 1.0)
+    }
 }
 
 impl ReachMarks {
@@ -113,10 +153,19 @@ impl ReachMarks {
             .map(|m| (m.label.clone(), f.area(m.alternative)))
             .collect();
         if key.is_empty() {
-            let whole: f64 = answer.slope_map.iter().flat_map(|m| &m.alternative).map(|p| p.size).sum();
+            let whole: f64 = answer
+                .slope_map
+                .iter()
+                .flat_map(|m| &m.alternative)
+                .map(|p| p.size)
+                .sum();
             key.push(("Ölçülen alan (sınıf sınırı yok)".to_owned(), f.area(whole)));
         }
-        Self { pieces, key, ..Self::default() }
+        Self {
+            pieces,
+            key,
+            ..Self::default()
+        }
     }
 
     /// The scenario side's areas of `r`, by their objects in `doc`.
@@ -133,7 +182,11 @@ impl ReachMarks {
             reached: areas(&r.alternative_reached),
             unreached: areas(&r.alternative_unreached),
             targets: areas(&r.alternative_targets),
-            routes: r.alternative_routes.iter().map(|w| w.path.clone()).collect(),
+            routes: r
+                .alternative_routes
+                .iter()
+                .map(|w| w.path.clone())
+                .collect(),
             ..Self::default()
         }
     }
@@ -148,26 +201,53 @@ impl ReachMarks {
                 .filter_map(|s| doc.get(s))
                 .collect()
         };
-        let areas = |uids: &[String]| -> Vec<Area> { entities(uids).into_iter().flat_map(|e| areas_of_entity(&shape(e))).collect() };
+        let areas = |uids: &[String]| -> Vec<Area> {
+            entities(uids)
+                .into_iter()
+                .flat_map(|e| areas_of_entity(&shape(e)))
+                .collect()
+        };
         let lines = entities(&n.alternative_lines)
             .into_iter()
             .filter_map(|e| match shape(e) {
                 kentos_geometry_core::entity::Shape::Line { a, b } => Some(vec![a, b]),
                 kentos_geometry_core::entity::Shape::Polyline { pts, bulges, .. } => {
-                    let size: f64 = pts.windows(2).map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y)).sum();
-                    Some(kentos_geometry_core::tessellate::bulge_path(&pts, bulges.as_deref(), false, (size / 2000.0).max(1e-6)))
+                    let size: f64 = pts
+                        .windows(2)
+                        .map(|w| (w[1].x - w[0].x).hypot(w[1].y - w[0].y))
+                        .sum();
+                    Some(kentos_geometry_core::tessellate::bulge_path(
+                        &pts,
+                        bulges.as_deref(),
+                        false,
+                        (size / 2000.0).max(1e-6),
+                    ))
                 }
                 _ => None,
             })
             .collect();
-        let links = n.alternative_links.iter().map(|l| (l.from, l.to, f.length(l.distance))).collect();
-        Self { reached: areas(&n.alternative_near), unreached: areas(&n.alternative_far), lines, links, ..Self::default() }
+        let links = n
+            .alternative_links
+            .iter()
+            .map(|l| (l.from, l.to, f.length(l.distance)))
+            .collect();
+        Self {
+            reached: areas(&n.alternative_near),
+            unreached: areas(&n.alternative_far),
+            lines,
+            links,
+            ..Self::default()
+        }
     }
 
     /// The box of every area's outer ring (their vertices), when there is one.
     pub fn bounds(&self) -> Option<[f64; 4]> {
-        let routes: Vec<kentos_geometry_core::Vec2> =
-            self.routes.iter().flatten().map(|p| kentos_geometry_core::Vec2::new(p[0], p[1])).collect();
+        let routes: Vec<kentos_geometry_core::Vec2> = self
+            .routes
+            .iter()
+            .flatten()
+            .map(|p| kentos_geometry_core::Vec2::new(p[0], p[1]))
+            .collect();
         self.reached
             .iter()
             .chain(&self.unreached)
@@ -176,12 +256,11 @@ impl ReachMarks {
             .flat_map(|a| a.outer.pts.iter())
             .chain(self.lines.iter().flatten())
             .chain(routes.iter())
-            .fold(
-            None,
-            |b: Option<[f64; 4]>, p| {
-                Some(b.map_or([p.x, p.y, p.x, p.y], |b| [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]))
-            },
-        )
+            .fold(None, |b: Option<[f64; 4]>, p| {
+                Some(b.map_or([p.x, p.y, p.x, p.y], |b| {
+                    [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
+                }))
+            })
     }
 }
 
@@ -201,15 +280,24 @@ impl App {
         {
             return made.clone();
         }
-        let made = scenarios_impact::preview(&doc.model, &shown.input).ok().and_then(|answer| {
-            if shown.slope {
-                answer.slope_map.is_some().then(|| Arc::new(ReachMarks::of_slope(&answer, &self.format())))
-            } else if shown.near {
-                answer.near.map(|n| Arc::new(ReachMarks::of_near(&doc.model, &n, &self.format())))
-            } else {
-                answer.reach.map(|reach| Arc::new(ReachMarks::of(&doc.model, &reach)))
-            }
-        });
+        let made = scenarios_impact::preview(&doc.model, &shown.input)
+            .ok()
+            .and_then(|answer| {
+                if shown.slope {
+                    answer
+                        .slope_map
+                        .is_some()
+                        .then(|| Arc::new(ReachMarks::of_slope(&answer, &self.format())))
+                } else if shown.near {
+                    answer
+                        .near
+                        .map(|n| Arc::new(ReachMarks::of_near(&doc.model, &n, &self.format())))
+                } else {
+                    answer
+                        .reach
+                        .map(|reach| Arc::new(ReachMarks::of(&doc.model, &reach)))
+                }
+            });
         *shown.made.borrow_mut() = Some((generation, revision, made.clone()));
         made
     }
@@ -239,12 +327,24 @@ fn path_of(areas: &[Area], camera: &Camera) -> Path {
 
 /// The marks on the screen: the reached and the unreached areas filled and outlined on a halo, then the targets
 /// outlined dashed.
-pub fn draw(frame: &mut canvas::Frame, m: &ReachMarks, camera: &Camera, colors: &MarkColors, tokens: &Tokens) {
-    let stroke = |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+pub fn draw(
+    frame: &mut canvas::Frame,
+    m: &ReachMarks,
+    camera: &Camera,
+    colors: &MarkColors,
+    tokens: &Tokens,
+) {
+    let stroke =
+        |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
     // The slope map (docs/adr/5060): each class's parts filled in its colour, outlined thinly on a halo.
     let classes = m.key.len().max(1);
     for k in 0..classes {
-        let parts: Vec<Area> = m.pieces.iter().filter(|(_, c)| *c == k).map(|(a, _)| a.clone()).collect();
+        let parts: Vec<Area> = m
+            .pieces
+            .iter()
+            .filter(|(_, c)| *c == k)
+            .map(|(a, _)| a.clone())
+            .collect();
         if parts.is_empty() {
             continue;
         }
@@ -252,7 +352,10 @@ pub fn draw(frame: &mut canvas::Frame, m: &ReachMarks, camera: &Camera, colors: 
         let shape = path_of(&parts, camera);
         frame.fill(
             &shape,
-            canvas::Fill { style: canvas::Style::Solid(colour.scale_alpha(0.55)), rule: canvas::fill::Rule::EvenOdd },
+            canvas::Fill {
+                style: canvas::Style::Solid(colour.scale_alpha(0.55)),
+                rule: canvas::fill::Rule::EvenOdd,
+            },
         );
         frame.stroke(&shape, stroke(2.5, colors.halo));
         frame.stroke(&shape, stroke(1.0, colour));
@@ -288,7 +391,10 @@ pub fn draw(frame: &mut canvas::Frame, m: &ReachMarks, camera: &Camera, colors: 
         let shape = path_of(areas, camera);
         frame.fill(
             &shape,
-            canvas::Fill { style: canvas::Style::Solid(color.scale_alpha(0.28)), rule: canvas::fill::Rule::EvenOdd },
+            canvas::Fill {
+                style: canvas::Style::Solid(color.scale_alpha(0.28)),
+                rule: canvas::fill::Rule::EvenOdd,
+            },
         );
         frame.stroke(&shape, stroke(3.5, colors.halo));
         frame.stroke(&shape, stroke(1.5, color));
@@ -298,7 +404,13 @@ pub fn draw(frame: &mut canvas::Frame, m: &ReachMarks, camera: &Camera, colors: 
         frame.stroke(&shape, stroke(4.5, colors.halo));
         frame.stroke(
             &shape,
-            Stroke { line_dash: canvas::LineDash { segments: &[8.0, 5.0], offset: 0 }, ..stroke(2.0, tokens.accent) },
+            Stroke {
+                line_dash: canvas::LineDash {
+                    segments: &[8.0, 5.0],
+                    offset: 0,
+                },
+                ..stroke(2.0, tokens.accent)
+            },
         );
     }
     // The infrastructure's lines over all, in the accent on a halo (docs/adr/3060).
@@ -330,7 +442,16 @@ pub fn draw(frame: &mut canvas::Frame, m: &ReachMarks, camera: &Camera, colors: 
         let (a, b) = (at(from), at(to));
         let link = Path::line(a, b);
         frame.stroke(&link, stroke(4.0, colors.halo));
-        frame.stroke(&link, Stroke { line_dash: canvas::LineDash { segments: &[6.0, 4.0], offset: 0 }, ..stroke(1.5, tokens.accent) });
+        frame.stroke(
+            &link,
+            Stroke {
+                line_dash: canvas::LineDash {
+                    segments: &[6.0, 4.0],
+                    offset: 0,
+                },
+                ..stroke(1.5, tokens.accent)
+            },
+        );
         frame.stroke(&Path::circle(b, 4.0), stroke(1.5, tokens.accent));
         let text = canvas::Text {
             content: words.clone(),
@@ -342,9 +463,15 @@ pub fn draw(frame: &mut canvas::Frame, m: &ReachMarks, camera: &Camera, colors: 
             ..canvas::Text::default()
         };
         for (ox, oy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
-            frame.fill_text(canvas::Text { position: text.position + iced::Vector::new(ox, oy), ..text.clone() });
+            frame.fill_text(canvas::Text {
+                position: text.position + iced::Vector::new(ox, oy),
+                ..text.clone()
+            });
         }
-        frame.fill_text(canvas::Text { color: tokens.accent, ..text });
+        frame.fill_text(canvas::Text {
+            color: tokens.accent,
+            ..text
+        });
     }
 }
 
@@ -360,24 +487,49 @@ fn slope_key(frame: &mut canvas::Frame, m: &ReachMarks, colors: &MarkColors, tok
     let left = 16.0;
     let panel = Path::rectangle(iced::Point::new(left, top), iced::Size::new(width, height));
     frame.fill(&panel, tokens.popover.scale_alpha(0.94));
-    frame.stroke(&panel, Stroke::default().with_color(tokens.border).with_width(1.0));
+    frame.stroke(
+        &panel,
+        Stroke::default().with_color(tokens.border).with_width(1.0),
+    );
     let text = |content: String, x: f32, y: f32, color: iced::Color, strong: bool| canvas::Text {
         content,
         position: iced::Point::new(x, y),
         color,
         size: iced::Pixels(size),
-        font: if strong { kentos_ui::theme::typography::ui_strong() } else { kentos_ui::theme::typography::ui() },
+        font: if strong {
+            kentos_ui::theme::typography::ui_strong()
+        } else {
+            kentos_ui::theme::typography::ui()
+        },
         align_y: iced::alignment::Vertical::Center,
         ..canvas::Text::default()
     };
-    frame.fill_text(text("Eğim sınıfları (senaryo)".to_owned(), left + pad, top + pad + row / 2.0, tokens.text, true));
+    frame.fill_text(text(
+        "Eğim sınıfları (senaryo)".to_owned(),
+        left + pad,
+        top + pad + row / 2.0,
+        tokens.text,
+        true,
+    ));
     let n = m.key.len().max(1);
     for (k, (words, area)) in m.key.iter().enumerate() {
         let y = top + pad + row * (k as f32 + 1.5);
-        let swatch = Path::rectangle(iced::Point::new(left + pad, y - size / 2.0), iced::Size::new(size * 1.4, size));
+        let swatch = Path::rectangle(
+            iced::Point::new(left + pad, y - size / 2.0),
+            iced::Size::new(size * 1.4, size),
+        );
         frame.fill(&swatch, class_colour(k, n, tokens).scale_alpha(0.75));
-        frame.stroke(&swatch, Stroke::default().with_color(colors.halo).with_width(1.0));
-        frame.fill_text(text(words.clone(), left + pad + size * 2.0, y, tokens.text, false));
+        frame.stroke(
+            &swatch,
+            Stroke::default().with_color(colors.halo).with_width(1.0),
+        );
+        frame.fill_text(text(
+            words.clone(),
+            left + pad + size * 2.0,
+            y,
+            tokens.text,
+            false,
+        ));
         frame.fill_text(canvas::Text {
             align_x: iced::alignment::Horizontal::Right.into(),
             ..text(area.clone(), left + width - pad, y, tokens.muted, false)

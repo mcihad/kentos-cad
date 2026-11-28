@@ -14,8 +14,9 @@
 //! then and now and their stamp. The project's system, epoch and heights come as the field package says them.
 
 use kentos_commands::{
-    CommandResult, RoadDrawingDef, RoadDrawingRecipe, RoadEdgeKind as E, RoadGraphEdge, RoadGraphKind as G, RoadGraphNode,
-    RoadNodeKind as N, RoadNodeState as S, RoadProjectGraph, RoadProjectGraphQuery, RoadSourceKind as K,
+    CommandResult, RoadDrawingDef, RoadDrawingRecipe, RoadEdgeKind as E, RoadGraphEdge,
+    RoadGraphKind as G, RoadGraphNode, RoadNodeKind as N, RoadNodeState as S, RoadProjectGraph,
+    RoadProjectGraphQuery, RoadSourceKind as K,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -69,32 +70,55 @@ fn source_kind(k: K) -> G {
 /// A fixed-view map's ground as a box (low, high corners); none for another item or an atlas map (docs/adr/1720 §5).
 pub fn map_ground(item: &kentos_sheet::model::Item) -> Option<([f64; 2], [f64; 2])> {
     let corners = kentos_sheet::display::fixed_corners(item)?;
-    Some(corners.iter().fold(([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]), |(lo, hi), c| {
-        ([lo[0].min(c[0]), lo[1].min(c[1])], [hi[0].max(c[0]), hi[1].max(c[1])])
-    }))
+    Some(corners.iter().fold(
+        ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]),
+        |(lo, hi), c| {
+            (
+                [lo[0].min(c[0]), lo[1].min(c[1])],
+                [hi[0].max(c[0]), hi[1].max(c[1])],
+            )
+        },
+    ))
 }
 
 /// Whether one of a drawing's objects there now lies within the ground `lo`–`hi`: its bounds meet the box.
 pub fn drawing_within(doc: &Document, d: &RoadDrawingDef, (lo, hi): ([f64; 2], [f64; 2])) -> bool {
     d.uids.iter().any(|u| {
-        Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)).is_some_and(|e| {
-            let b = kentos_geometry_core::entity::entity_bounds(&crate::geometry::shape(e));
-            b.max_x >= lo[0] && b.min_x <= hi[0] && b.max_y >= lo[1] && b.min_y <= hi[1]
-        })
+        Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+            .is_some_and(|e| {
+                let b = kentos_geometry_core::entity::entity_bounds(&crate::geometry::shape(e));
+                b.max_x >= lo[0] && b.min_x <= hi[0] && b.max_y >= lo[1] && b.min_y <= hi[1]
+            })
     })
 }
 
 /// A layer's fields as a recipe keeps them (docs/adr/4860): a bound table's column left out (the binding is this
 /// project's); a field linked to a list this project no longer has unlinked (it keeps its copy, ADR 0430); and the
 /// lists the fields link, as this project defines them, in the order the fields first link them.
-fn recipe_fields(doc: &Document, fields: &[kentos_commands::LayerField]) -> (Vec<kentos_commands::LayerField>, Vec<kentos_commands::FieldDomain>) {
+fn recipe_fields(
+    doc: &Document,
+    fields: &[kentos_commands::LayerField],
+) -> (
+    Vec<kentos_commands::LayerField>,
+    Vec<kentos_commands::FieldDomain>,
+) {
     let lists = &doc.settings().domains;
     let mut domains: Vec<kentos_commands::FieldDomain> = Vec::new();
     let fields = fields
         .iter()
         .map(|f| {
-            let mut f = kentos_commands::LayerField { column: None, ..f.clone() };
-            match f.domain.as_ref().and_then(|id| lists.iter().find(|d| d.id == *id)) {
+            let mut f = kentos_commands::LayerField {
+                column: None,
+                ..f.clone()
+            };
+            match f
+                .domain
+                .as_ref()
+                .and_then(|id| lists.iter().find(|d| d.id == *id))
+            {
                 Some(d) => {
                     if !domains.iter().any(|o| o.id == d.id) {
                         domains.push(d.clone());
@@ -129,7 +153,11 @@ fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::R
     }
     group.reverse();
     let line_type_def = node.style.line_pattern.as_deref().and_then(|name| {
-        doc.settings().line_types.iter().find(|t| kentos_commands::same_line_type_name(&t.name, name)).cloned()
+        doc.settings()
+            .line_types
+            .iter()
+            .find(|t| kentos_commands::same_line_type_name(&t.name, name))
+            .cloned()
     });
     let (fields, domains) = recipe_fields(doc, &node.fields);
     Some(kentos_commands::RoadRecipeLayer {
@@ -142,7 +170,12 @@ fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::R
         style: Some(node.style.clone()),
         line_type_def,
         compose: node.compose.as_ref().and_then(|c| {
-            kentos_commands::LayerCompose { opacity: c.opacity, blend: c.blend, mask: None }.normalized()
+            kentos_commands::LayerCompose {
+                opacity: c.opacity,
+                blend: c.blend,
+                mask: None,
+            }
+            .normalized()
         }),
         geometry: node.geometry,
         plot: node.plot.filter(|printed| !printed),
@@ -158,7 +191,11 @@ fn recipe_layer(doc: &Document, d: &RoadDrawingDef) -> Option<kentos_commands::R
             .forms
             .iter()
             .filter(|f| f.layer == id)
-            .map(|f| kentos_commands::RoadRecipeForm { id: f.id.clone(), name: f.name.clone(), draft: f.draft.clone() })
+            .map(|f| kentos_commands::RoadRecipeForm {
+                id: f.id.clone(),
+                name: f.name.clone(),
+                draft: f.draft.clone(),
+            })
             .collect(),
     })
 }
@@ -218,15 +255,30 @@ pub(crate) fn graph(doc: &Document, deep: bool) -> Result<RoadProjectGraph, Stop
     for l in &layers {
         let (name, state, why) = match doc.layers().get(l) {
             Some(n) => (n.name.clone(), S::Current, Vec::new()),
-            None => (l.clone(), S::Gone, vec![format!("“{l}” katmanı çizimde yok.")]),
+            None => (
+                l.clone(),
+                S::Gone,
+                vec![format!("“{l}” katmanı çizimde yok.")],
+            ),
         };
-        nodes.push(RoadGraphNode { kind: G::Layer, id: l.clone(), name, state, why, recipe: None });
+        nodes.push(RoadGraphNode {
+            kind: G::Layer,
+            id: l.clone(),
+            name,
+            state,
+            why,
+            recipe: None,
+        });
     }
     let base = nodes.len();
     let drawings = doc.road_drawings();
     let drawing_of = |id: &str| drawings.iter().find(|d| d.id == id);
     for n in &tree.nodes {
-        let recipe = if n.kind == N::Drawing { drawing_of(&n.id).map(|d| recipe_of(doc, d)) } else { None };
+        let recipe = if n.kind == N::Drawing {
+            drawing_of(&n.id).map(|d| recipe_of(doc, d))
+        } else {
+            None
+        };
         nodes.push(RoadGraphNode {
             kind: kind_of(n.kind),
             id: n.id.clone(),
@@ -253,10 +305,20 @@ pub(crate) fn graph(doc: &Document, deep: bool) -> Result<RoadProjectGraph, Stop
             edges.push(edge(base + p as usize, base + k, E::Basis));
         }
     }
-    for (k, n) in tree.nodes.iter().enumerate().filter(|(_, n)| n.kind == N::Drawing) {
+    for (k, n) in tree
+        .nodes
+        .iter()
+        .enumerate()
+        .filter(|(_, n)| n.kind == N::Drawing)
+    {
         let Some(d) = drawing_of(&n.id) else { continue };
         for (i, s) in d.sources.iter().enumerate() {
-            let Some(from) = nodes.iter().position(|x| x.kind == source_kind(s.kind) && x.id == s.id) else { continue };
+            let Some(from) = nodes
+                .iter()
+                .position(|x| x.kind == source_kind(s.kind) && x.id == s.id)
+            else {
+                continue;
+            };
             edges.push(RoadGraphEdge {
                 main: i == 0,
                 kept: Some(s.digest.clone()),
@@ -266,13 +328,25 @@ pub(crate) fn graph(doc: &Document, deep: bool) -> Result<RoadProjectGraph, Stop
         }
     }
     // The sheets: a document holds only a book that reads (Document::set_sheets checks it).
-    if let Some((book, _)) = doc.sheets().and_then(|s| kentos_sheet::project::read_project_sheets(s).ok()) {
+    if let Some((book, _)) = doc
+        .sheets()
+        .and_then(|s| kentos_sheet::project::read_project_sheets(s).ok())
+    {
         for sheet in &book.sheets {
-            let Ok(scene) = kentos_sheet::scene::Scene::new(&book, &sheet.id) else { continue };
+            let Ok(scene) = kentos_sheet::scene::Scene::new(&book, &sheet.id) else {
+                continue;
+            };
             let mut shows: Vec<(usize, String)> = Vec::new();
             for (item, _) in scene.all() {
-                let Some(ground) = map_ground(item) else { continue };
-                for (k, n) in tree.nodes.iter().enumerate().filter(|(_, n)| n.kind == N::Drawing) {
+                let Some(ground) = map_ground(item) else {
+                    continue;
+                };
+                for (k, n) in tree
+                    .nodes
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, n)| n.kind == N::Drawing)
+                {
                     if drawing_of(&n.id).is_some_and(|d| drawing_within(doc, d, ground)) {
                         shows.push((base + k, item.name.clone()));
                     }
@@ -285,8 +359,12 @@ pub(crate) fn graph(doc: &Document, deep: bool) -> Result<RoadProjectGraph, Stop
                 .iter()
                 .filter_map(|(k, map)| {
                     let n = &nodes[*k];
-                    crate::road_project::outdated_word(n.state)
-                        .map(|word| format!("“{map}” haritası {} çizimini gösteriyor ve çizim {word}.", n.name))
+                    crate::road_project::outdated_word(n.state).map(|word| {
+                        format!(
+                            "“{map}” haritası {} çizimini gösteriyor ve çizim {word}.",
+                            n.name
+                        )
+                    })
                 })
                 .collect();
             let at = nodes.len();
@@ -299,18 +377,26 @@ pub(crate) fn graph(doc: &Document, deep: bool) -> Result<RoadProjectGraph, Stop
                 recipe: None,
             });
             for (from, map) in shows {
-                edges.push(RoadGraphEdge { map: Some(map), ..edge(from, at, E::Shows) });
+                edges.push(RoadGraphEdge {
+                    map: Some(map),
+                    ..edge(from, at, E::Shows)
+                });
             }
         }
     }
-    let count = |f: &dyn Fn(&RoadGraphNode) -> bool| u32::try_from(nodes.iter().filter(|n| f(n)).count()).unwrap_or(u32::MAX);
+    let count = |f: &dyn Fn(&RoadGraphNode) -> bool| {
+        u32::try_from(nodes.iter().filter(|n| f(n)).count()).unwrap_or(u32::MAX)
+    };
     let drawings = count(&|n| n.kind == G::Drawing);
-    let outdated = count(&|n| n.kind == G::Drawing && crate::road_project::outdated_word(n.state).is_some());
+    let outdated =
+        count(&|n| n.kind == G::Drawing && crate::road_project::outdated_word(n.state).is_some());
     let sheets = count(&|n| n.kind == G::Sheet);
     let blocked = count(&|n| n.kind == G::Sheet && n.state == S::Stale);
     let settings = doc.settings();
     let facts = kentos_project::facts::coordinate_facts(settings);
-    let system = (!facts.epsg.is_empty()).then(|| kentos_project::crs::system(settings.srid).map(|s| s.name.clone())).flatten();
+    let system = (!facts.epsg.is_empty())
+        .then(|| kentos_project::crs::system(settings.srid).map(|s| s.name.clone()))
+        .flatten();
     Ok(RoadProjectGraph {
         nodes,
         edges,
@@ -330,21 +416,33 @@ pub(crate) fn graph(doc: &Document, deep: bool) -> Result<RoadProjectGraph, Stop
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RoadProjectGraphQuery) -> CommandResult<()> {
     match graph(cx.doc, input.deep) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &RoadProjectGraphQuery) -> CommandResult<RoadProjectGraph> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &RoadProjectGraphQuery,
+) -> CommandResult<RoadProjectGraph> {
     match graph(cx.doc, input.deep) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RoadProjectGraphQuery) -> CommandResult<RoadProjectGraph> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RoadProjectGraphQuery,
+) -> CommandResult<RoadProjectGraph> {
     plan(cx, &input)
 }
 

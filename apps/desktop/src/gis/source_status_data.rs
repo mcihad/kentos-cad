@@ -52,7 +52,11 @@ impl App {
                     } else {
                         format!(
                             "düzenleniyor; kaynağa yazılmadı: {}",
-                            crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len())
+                            crate::data_edits::counts_words(
+                                c.added.len(),
+                                c.changed.len(),
+                                c.deleted.len()
+                            )
                         )
                     }
                 } else {
@@ -62,7 +66,11 @@ impl App {
                     layer: n.id.clone(),
                     name: n.name.clone(),
                     place: data.place_words(),
-                    access: if data.read_only { "salt okunur" } else { "yazılabilir" },
+                    access: if data.read_only {
+                        "salt okunur"
+                    } else {
+                        "yazılabilir"
+                    },
                     session,
                     file: data.driver != "postgis",
                 })
@@ -102,15 +110,24 @@ impl App {
         if rows.is_empty() {
             return None;
         }
-        let cell = |t: String| Elided::new(t).size(typography::caption()).font(typography::ui()).width(Fill);
+        let cell = |t: String| {
+            Elided::new(t)
+                .size(typography::caption())
+                .font(typography::ui())
+                .width(Fill)
+        };
         let head = kentos_ui::widget::table::band(
             row![
-                container(kentos_ui::widget::table::title("Katman")).width(typography::scaled(120.0)),
+                container(kentos_ui::widget::table::title("Katman"))
+                    .width(typography::scaled(120.0)),
                 // The cells say “file › table” or “database › schema.table”.
                 container(kentos_ui::widget::table::title("Kaynak")).width(Fill),
-                container(kentos_ui::widget::table::title("Erişim")).width(typography::scaled(90.0)),
-                container(kentos_ui::widget::table::title("Düzenleme")).width(typography::scaled(200.0)),
-                container(kentos_ui::widget::table::title("Satır")).width(typography::scaled(100.0)),
+                container(kentos_ui::widget::table::title("Erişim"))
+                    .width(typography::scaled(90.0)),
+                container(kentos_ui::widget::table::title("Düzenleme"))
+                    .width(typography::scaled(200.0)),
+                container(kentos_ui::widget::table::title("Satır"))
+                    .width(typography::scaled(100.0)),
                 // The way out's column: Yeniden bağla… on a file not read (docs/adr/9155).
                 container(iced::widget::text("")).width(typography::scaled(ACT)),
             ]
@@ -135,13 +152,19 @@ impl App {
             .padding([4, 8]);
             // A file not read: pointed at its new place, every layer of the file with it (docs/adr/9155).
             let act: Element<'_, Message> = if unread && r.file {
-                words::secondary(RELINK, Some(super::msg(super::Event::RelinkData(r.layer.clone()))))
+                words::secondary(
+                    RELINK,
+                    Some(super::msg(super::Event::RelinkData(r.layer.clone()))),
+                )
             } else {
                 iced::widget::text("").into()
             };
             c.push(line.push(container(act).width(typography::scaled(ACT))))
         });
-        let failed: Vec<String> = counts.values().filter_map(|r| r.as_ref().err().cloned()).collect();
+        let failed: Vec<String> = counts
+            .values()
+            .filter_map(|r| r.as_ref().err().cloned())
+            .collect();
         let hint = if failed.is_empty() {
             "Satır sayısı tablonun kaynaktaki gerçek sayısıdır; kaynak yanıtlayana kadar “hesaplanmadı” yazar. Haritada ya da \
              tabloda o an yüklenen satırlar bu sayı değildir."
@@ -151,7 +174,9 @@ impl App {
         };
         Some(words::field(
             "Veri katmanları",
-            container(lines).style(kentos_ui::style::container::field_box).width(Fill),
+            container(lines)
+                .style(kentos_ui::style::container::field_box)
+                .width(Fill),
             Some(hint),
         ))
     }

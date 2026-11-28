@@ -162,7 +162,10 @@ pub fn accuracy(differences: &[f64], survey: Option<f64>) -> Option<Accuracy> {
     let mean = differences.iter().sum::<f64>() / nf;
     let rmse = (differences.iter().map(|d| d * d).sum::<f64>() / nf).sqrt();
     let ss = nf * rmse * rmse;
-    let (rmse_low, rmse_high) = ((ss / chi2_quantile(0.975, nf)).sqrt(), (ss / chi2_quantile(0.025, nf)).sqrt());
+    let (rmse_low, rmse_high) = (
+        (ss / chi2_quantile(0.975, nf)).sqrt(),
+        (ss / chi2_quantile(0.025, nf)).sqrt(),
+    );
     let by = sorted(differences.iter().copied());
     let median = quantile(&by, 0.5);
     let nmad = NMAD * quantile(&sorted(differences.iter().map(|d| (d - median).abs())), 0.5);
@@ -171,7 +174,11 @@ pub fn accuracy(differences: &[f64], survey: Option<f64>) -> Option<Accuracy> {
     let m2 = moment(2);
     // Equal differences have no spread: their mean's rounding leaves m₂ ~1e-36, not 0; within 1e-12 of RMSE² it is 0.
     let spread = m2 > 1e-12 * rmse * rmse;
-    let (skewness, kurtosis) = if spread { (moment(3) / m2.powf(1.5), moment(4) / (m2 * m2) - 3.0) } else { (0.0, 0.0) };
+    let (skewness, kurtosis) = if spread {
+        (moment(3) / m2.powf(1.5), moment(4) / (m2 * m2) - 3.0)
+    } else {
+        (0.0, 0.0)
+    };
     let far = differences
         .iter()
         .enumerate()

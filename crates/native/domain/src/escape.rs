@@ -561,15 +561,26 @@ pub fn escape(doc: &Document) -> Escape {
                 (Some(x), None) | (None, Some(x)) if ground => {
                     groups.push(vec![x]);
                     if is_door {
-                        out.exits_by.push(ExitBy { uid: p.uid.clone(), level: level.clone(), why: ExitWhy::Outside });
+                        out.exits_by.push(ExitBy {
+                            uid: p.uid.clone(),
+                            level: level.clone(),
+                            why: ExitWhy::Outside,
+                        });
                     }
                 }
                 _ => {}
             }
             // A door into an escape stair's room from a room that is none: its storey's exit.
             let stair_side = |n: Option<usize>| n.is_some_and(|k| rooms[g.room[k]].stair);
-            if is_door && stair_side(n1) != stair_side(n2) && !(ground && (n1.is_none() || n2.is_none())) {
-                out.exits_by.push(ExitBy { uid: p.uid.clone(), level: level.clone(), why: ExitWhy::IntoStair });
+            if is_door
+                && stair_side(n1) != stair_side(n2)
+                && !(ground && (n1.is_none() || n2.is_none()))
+            {
+                out.exits_by.push(ExitBy {
+                    uid: p.uid.clone(),
+                    level: level.clone(),
+                    why: ExitWhy::IntoStair,
+                });
             }
             // A unit's entrance: one side its room, the other side not.
             for (inner, outer) in [(n1, n2), (n2, n1)] {
@@ -625,11 +636,19 @@ pub fn escape(doc: &Document) -> Escape {
                     Some(r) if !rooms[r].dwelling && !rooms[r].stair => {
                         let k = g.node(at, r);
                         groups.push(vec![k]);
-                        out.exits_by.push(ExitBy { uid: uid.to_string(), level: own.clone(), why: ExitWhy::OpenStair });
+                        out.exits_by.push(ExitBy {
+                            uid: uid.to_string(),
+                            level: own.clone(),
+                            why: ExitWhy::OpenStair,
+                        });
                     }
                     // A stair standing in an escape stair's room is that exit's.
                     Some(r) if rooms[r].stair && on == own => {
-                        out.exits_by.push(ExitBy { uid: uid.to_string(), level: own.clone(), why: ExitWhy::StairRoom });
+                        out.exits_by.push(ExitBy {
+                            uid: uid.to_string(),
+                            level: own.clone(),
+                            why: ExitWhy::StairRoom,
+                        });
                     }
                     _ => {}
                 }
@@ -763,21 +782,19 @@ pub fn escape(doc: &Document) -> Escape {
                 })
                 .flatten();
             // To its own nearest passage, inside it (50/3).
-            let door = own_doors
-                .get(&i)
-                .and_then(|mine| {
-                    let (d, next) = g.reach(mine, |r| r == i);
-                    starts
-                        .iter()
-                        .filter_map(|&p| {
-                            best(&g, room, nodes, &d, p).map(|(k, l)| {
-                                let mut path = vec![p];
-                                path.extend(chain(k, &next).iter().map(|&n| g.at[n]));
-                                Route { path, length: l }
-                            })
+            let door = own_doors.get(&i).and_then(|mine| {
+                let (d, next) = g.reach(mine, |r| r == i);
+                starts
+                    .iter()
+                    .filter_map(|&p| {
+                        best(&g, room, nodes, &d, p).map(|(k, l)| {
+                            let mut path = vec![p];
+                            path.extend(chain(k, &next).iter().map(|&n| g.at[n]));
+                            Route { path, length: l }
                         })
-                        .max_by(|a, b| a.length.total_cmp(&b.length))
-                });
+                    })
+                    .max_by(|a, b| a.length.total_cmp(&b.length))
+            });
             // From the outer side of each of its doors to the nearest exit, the nearest (50/4, 50/5): the walk goes on
             // in the room the door opens into, as that room's own walks do. A door into an escape stair's room, or the
             // building's final exit, is at its exit.
@@ -794,7 +811,10 @@ pub fn escape(doc: &Document) -> Escape {
                 .filter(|(k, _)| g.room[*k] == i)
                 .filter_map(|&(k, outer)| {
                     let Some(o) = outer else {
-                        let exit = groups.iter().any(|s| s.contains(&k)).then(|| at_exit(g.at[k]))?;
+                        let exit = groups
+                            .iter()
+                            .any(|s| s.contains(&k))
+                            .then(|| at_exit(g.at[k]))?;
                         return Some(DoorExit { exit, into: None });
                     };
                     let r = g.room[o];
@@ -803,7 +823,12 @@ pub fn escape(doc: &Document) -> Escape {
                         at_exit(g.at[o])
                     } else {
                         let per_into = reached.get(&into.owner)?;
-                        exit_route(into, room_nodes.get(&r).unwrap_or(&empty), per_into, g.at[o])?
+                        exit_route(
+                            into,
+                            room_nodes.get(&r).unwrap_or(&empty),
+                            per_into,
+                            g.at[o],
+                        )?
                     };
                     Some(DoorExit {
                         exit,
@@ -814,7 +839,11 @@ pub fn escape(doc: &Document) -> Escape {
                 // whatever the drawing's order.
                 .min_by(|a, b| {
                     let id = |d: &DoorExit| d.into.map(|s| doc.uid(s));
-                    a.exit.route.length.total_cmp(&b.exit.route.length).then_with(|| id(a).cmp(&id(b)))
+                    a.exit
+                        .route
+                        .length
+                        .total_cmp(&b.exit.route.length)
+                        .then_with(|| id(a).cmp(&id(b)))
                 });
             out.rooms.push(RoomEscape {
                 room: room.slot,

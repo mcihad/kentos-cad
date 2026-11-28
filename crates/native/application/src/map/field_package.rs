@@ -17,11 +17,11 @@
 
 use std::path::{Path, PathBuf};
 
+use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{
     CommandResult, FIELD_NOTE_LENGTH, FIELD_NOTES_LIMIT, FIELD_PACKAGE_FILES, FIELD_PACKAGE_FORMAT,
     FIELD_PACKAGE_SURFACE_FILE, FieldPackage, FieldPackaged, PackagePoint, PackageSurface,
 };
-use kentos_commands::encoding::sha256_hex;
 use kentos_domain::Document;
 use kentos_formats::landxml_write::{WLandXml, WSurface};
 use kentos_formats::zip;
@@ -51,7 +51,11 @@ struct Checked {
 fn asked(input: &FieldPackage) -> Result<(), Stop> {
     let bad = |m: String, path: &str| Err(refuse(codes::INVALID_FIELD_PACKAGE, m, path));
     if input.design.is_none() && input.lines.is_none() {
-        return bad("Pakete girecek tasarım yok: tasarım noktalarının ya da çizgilerinin katmanını verin.".into(), "design");
+        return bad(
+            "Pakete girecek tasarım yok: tasarım noktalarının ya da çizgilerinin katmanını verin."
+                .into(),
+            "design",
+        );
     }
     for (v, path, words) in [
         (input.horizontal, "horizontal", "Yatay kabul sınırı"),
@@ -61,22 +65,41 @@ fn asked(input: &FieldPackage) -> Result<(), Stop> {
         if let Some(v) = v
             && !(v.is_finite() && v > 0.0)
         {
-            return bad(format!("{words} 0'dan büyük bir sayı olmalı (m); verilmeyecekse boş bırakın."), path);
+            return bad(
+                format!("{words} 0'dan büyük bir sayı olmalı (m); verilmeyecekse boş bırakın."),
+                path,
+            );
         }
     }
     if input.field.as_deref().is_some_and(|f| f.trim().is_empty()) {
-        return bad("Adların özniteliği boş; özniteliğin adını yazın (yoksa Ad).".into(), "field");
+        return bad(
+            "Adların özniteliği boş; özniteliğin adını yazın (yoksa Ad).".into(),
+            "field",
+        );
     }
     if input.notes.len() > FIELD_NOTES_LIMIT {
-        return bad(format!("Pakette en çok {FIELD_NOTES_LIMIT} kalite notu olur."), "notes");
+        return bad(
+            format!("Pakette en çok {FIELD_NOTES_LIMIT} kalite notu olur."),
+            "notes",
+        );
     }
-    if let Some(i) = input.notes.iter().position(|n| n.chars().count() > FIELD_NOTE_LENGTH) {
-        return bad(format!("Bir kalite notu en çok {FIELD_NOTE_LENGTH} harf olur."), &format!("notes[{i}]"));
+    if let Some(i) = input
+        .notes
+        .iter()
+        .position(|n| n.chars().count() > FIELD_NOTE_LENGTH)
+    {
+        return bad(
+            format!("Bir kalite notu en çok {FIELD_NOTE_LENGTH} harf olur."),
+            &format!("notes[{i}]"),
+        );
     }
     if let Some(s) = &input.stamp
         && crate::road_landxml::stamp_of(s).is_none()
     {
-        return bad(format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın."), "stamp");
+        return bad(
+            format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın."),
+            "stamp",
+        );
     }
     Ok(())
 }
@@ -87,7 +110,11 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
         if let Some(id) = layer
             && doc.layers().get(id).is_none()
         {
-            return Err(refuse(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), path));
+            return Err(refuse(
+                codes::LAYER_NOT_FOUND,
+                format!("“{id}” kimlikli katman çizimde yok."),
+                path,
+            ));
         }
     }
     let made;
@@ -95,7 +122,11 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
         Some(name) => {
             terrains::terrain_project(doc)?;
             let id = crate::road_profiles::surface_id(doc, name, "surface")?;
-            let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+            let def = terrains::surfaces(doc)
+                .iter()
+                .find(|s| s.id == id)
+                .cloned()
+                .ok_or(Stop::Cancelled)?;
             made = terrains::make(doc, &def);
             let surface = made.built()?;
             Some((def, made.gathered.digest.clone(), surface))
@@ -104,34 +135,73 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
     };
     let text = input.path.trim();
     if text.is_empty() || !Path::new(text).is_absolute() {
-        return Err(refuse(codes::INVALID_FILE_PATH, "Paketin yolu boş ya da göreli; mutlak bir .zip yolu verin.".into(), "path"));
+        return Err(refuse(
+            codes::INVALID_FILE_PATH,
+            "Paketin yolu boş ya da göreli; mutlak bir .zip yolu verin.".into(),
+            "path",
+        ));
     }
     if !text.to_ascii_lowercase().ends_with(".zip") {
-        return Err(refuse(codes::INVALID_FILE_PATH, format!("“{text}” bir .zip dosyası değil (saha paketi)."), "path"));
+        return Err(refuse(
+            codes::INVALID_FILE_PATH,
+            format!("“{text}” bir .zip dosyası değil (saha paketi)."),
+            "path",
+        ));
     }
     let path = PathBuf::from(text);
     let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
     if !folder.is_dir() {
         return Err(refuse(
             codes::INVALID_FILE_PATH,
-            format!("“{}” klasörü yok; paket var olan bir klasöre yazılır.", folder.display()),
+            format!(
+                "“{}” klasörü yok; paket var olan bir klasöre yazılır.",
+                folder.display()
+            ),
             "path",
         ));
     }
     if path.exists() && !input.overwrite {
-        return Err(refuse(codes::FILE_EXISTS, format!("{} var; üzerine yazmak için overwrite verin.", path.display()), "path"));
+        return Err(refuse(
+            codes::FILE_EXISTS,
+            format!(
+                "{} var; üzerine yazmak için overwrite verin.",
+                path.display()
+            ),
+            "path",
+        ));
     }
     let field = input.field.as_deref().unwrap_or(NAME_FIELD);
-    let design = input.design.as_deref().map(|l| asbuilt::points(doc, l, field, None)).unwrap_or_default();
-    let lines = input.lines.as_deref().map(|l| asbuilt::lines(doc, l)).unwrap_or_default();
+    let design = input
+        .design
+        .as_deref()
+        .map(|l| asbuilt::points(doc, l, field, None))
+        .unwrap_or_default();
+    let lines = input
+        .lines
+        .as_deref()
+        .map(|l| asbuilt::lines(doc, l))
+        .unwrap_or_default();
     let digest = asbuilt::digest(&design, &lines);
-    let points: Vec<PackagePoint> =
-        design.iter().map(|p| PackagePoint { name: p.name.clone(), at: [p.p.x, p.p.y], z: p.z, uid: p.uid.clone() }).collect();
+    let points: Vec<PackagePoint> = design
+        .iter()
+        .map(|p| PackagePoint {
+            name: p.name.clone(),
+            at: [p.p.x, p.p.y],
+            z: p.z,
+            uid: p.uid.clone(),
+        })
+        .collect();
     let vertices: usize = lines.iter().map(|l| l.pts.len()).sum();
     let settings = doc.settings();
     let facts = kentos_project::facts::coordinate_facts(settings);
-    let system = (!facts.epsg.is_empty()).then(|| kentos_project::crs::system(settings.srid).map(|s| s.name.clone())).flatten();
-    let (date, time) = input.stamp.as_deref().and_then(crate::road_landxml::stamp_of).unwrap_or_else(crate::road_landxml::now);
+    let system = (!facts.epsg.is_empty())
+        .then(|| kentos_project::crs::system(settings.srid).map(|s| s.name.clone()))
+        .flatten();
+    let (date, time) = input
+        .stamp
+        .as_deref()
+        .and_then(crate::road_landxml::stamp_of)
+        .unwrap_or_else(crate::road_landxml::now);
     let stamp = format!("{date}T{time}");
     // The surface itself (docs/adr/3220): a LandXML 1.2 TIN of the corners and the kept triangles, dated as the package.
     let surface_file = built.as_ref().map(|(def, _, s)| {
@@ -141,22 +211,29 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
             application: "KentOS Saha paketi".into(),
             version: env!("CARGO_PKG_VERSION").into(),
             project: doc.name().to_owned(),
-            surfaces: vec![WSurface { name: def.name.clone(), vertices: s.vertices.clone(), triangles: s.triangles.clone() }],
+            surfaces: vec![WSurface {
+                name: def.name.clone(),
+                vertices: s.vertices.clone(),
+                triangles: s.triangles.clone(),
+            }],
             coordinate_system: crate::road_field::coordinate_system(doc),
             ..WLandXml::default()
         })
         .into_bytes()
     });
     let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
-    let surface = built.as_ref().zip(surface_file.as_ref()).map(|((def, digest, s), file)| PackageSurface {
-        id: def.id.clone(),
-        name: def.name.clone(),
-        digest: digest.clone(),
-        file: Some(FIELD_PACKAGE_SURFACE_FILE.to_owned()),
-        vertices: Some(count(s.vertices.len())),
-        triangles: Some(count(s.triangles.len())),
-        sha256: Some(sha256_hex(file)),
-    });
+    let surface = built
+        .as_ref()
+        .zip(surface_file.as_ref())
+        .map(|((def, digest, s), file)| PackageSurface {
+            id: def.id.clone(),
+            name: def.name.clone(),
+            digest: digest.clone(),
+            file: Some(FIELD_PACKAGE_SURFACE_FILE.to_owned()),
+            vertices: Some(count(s.vertices.len())),
+            triangles: Some(count(s.triangles.len())),
+            sha256: Some(sha256_hex(file)),
+        });
     let mut names: Vec<&str> = FIELD_PACKAGE_FILES.to_vec();
     if surface_file.is_some() {
         names.push(FIELD_PACKAGE_SURFACE_FILE);
@@ -164,18 +241,35 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
     // The files.
     let mut csv = String::from("Ad;Y;X;Z;Kimlik\n");
     for p in &points {
-        csv.push_str(&format!("{};{};{};{};{}\n", p.name, num(p.at[0]), num(p.at[1]), p.z.map(num).unwrap_or_default(), p.uid));
+        csv.push_str(&format!(
+            "{};{};{};{};{}\n",
+            p.name,
+            num(p.at[0]),
+            num(p.at[1]),
+            p.z.map(num).unwrap_or_default(),
+            p.uid
+        ));
     }
     let mut strings = String::from("Kimlik;Sıra;Y;X;Bulge\n");
     for l in &lines {
         let id = &l.uid;
         for (k, v) in l.pts.iter().enumerate() {
             let bulge = l.bulges.get(k).copied().unwrap_or(0.0);
-            strings.push_str(&format!("{id};{};{};{};{}\n", k + 1, num(v.x), num(v.y), num(bulge)));
+            strings.push_str(&format!(
+                "{id};{};{};{};{}\n",
+                k + 1,
+                num(v.x),
+                num(v.y),
+                num(bulge)
+            ));
         }
     }
     let mut acceptance = serde_json::Map::new();
-    for (key, v) in [("horizontal", input.horizontal), ("vertical", input.vertical), ("quality", input.quality)] {
+    for (key, v) in [
+        ("horizontal", input.horizontal),
+        ("vertical", input.vertical),
+        ("quality", input.quality),
+    ] {
         if let Some(v) = v {
             acceptance.insert(key.into(), json!(v));
         }
@@ -198,7 +292,10 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
         "files": names,
     });
     let mut files = vec![
-        (FIELD_PACKAGE_FILES[0].to_owned(), serde_json::to_vec_pretty(&manifest).unwrap_or_default()),
+        (
+            FIELD_PACKAGE_FILES[0].to_owned(),
+            serde_json::to_vec_pretty(&manifest).unwrap_or_default(),
+        ),
         (FIELD_PACKAGE_FILES[1].to_owned(), csv.into_bytes()),
         (FIELD_PACKAGE_FILES[2].to_owned(), strings.into_bytes()),
     ];
@@ -234,7 +331,10 @@ fn check(doc: &Document, input: &FieldPackage) -> Result<Checked, Stop> {
 /// Checks `input` against the document and the file system, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &FieldPackage) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -242,7 +342,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &FieldPackage) -> CommandResul
 /// What execute would write (the file's size and digest left empty); writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &FieldPackage) -> CommandResult<FieldPackaged> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: c.out, warnings: Vec::new() },
+        Ok(c) => CommandResult::Completed {
+            output: c.out,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -253,10 +356,21 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: FieldPackage) -> CommandRes
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
-    let refs: Vec<(&str, &[u8], zip::Pack)> = c.files.iter().map(|(n, d)| (n.as_str(), d.as_slice(), zip::Pack::Fast)).collect();
+    let refs: Vec<(&str, &[u8], zip::Pack)> = c
+        .files
+        .iter()
+        .map(|(n, d)| (n.as_str(), d.as_slice(), zip::Pack::Fast))
+        .collect();
     let bytes = match zip::write_with(&refs) {
         Ok(b) => b,
-        Err(e) => return refuse(codes::FILE_UNWRITABLE, format!("Paket kurulamadı: {e}."), "path").into(),
+        Err(e) => {
+            return refuse(
+                codes::FILE_UNWRITABLE,
+                format!("Paket kurulamadı: {e}."),
+                "path",
+            )
+            .into();
+        }
     };
     // Whole or not at all: a temporary file beside it, then renamed.
     let tmp = c.path.with_extension("zip.part");
@@ -265,13 +379,20 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: FieldPackage) -> CommandRes
         let _ = std::fs::remove_file(&tmp);
         return refuse(
             codes::FILE_UNWRITABLE,
-            format!("{} yazılamadı: {e}. Klasöre yazılabildiğini denetleyin.", c.path.display()),
+            format!(
+                "{} yazılamadı: {e}. Klasöre yazılabildiğini denetleyin.",
+                c.path.display()
+            ),
             "path",
         )
         .into();
     }
     CommandResult::Completed {
-        output: FieldPackaged { bytes: bytes.len() as u64, sha256: sha256_hex(&bytes), ..c.out },
+        output: FieldPackaged {
+            bytes: bytes.len() as u64,
+            sha256: sha256_hex(&bytes),
+            ..c.out
+        },
         warnings: Vec::new(),
     }
 }

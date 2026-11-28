@@ -2,10 +2,10 @@
 //! heights (28/1-c) and doors (39/1) read on the drawing; each finding names its article and says what it measured. The
 //! storeys and the doors are the standards package's, by the application date's version (docs/adr/8083).
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use kentos_launch::Module;
 use serde_json::{Value, json};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -34,7 +34,12 @@ fn regulation(app: &mut App, checks: Value) -> Vec<(String, String, String)> {
         .unwrap_or_default()
         .iter()
         // The digital project's findings are the standards package's (docs/adr/8074), with their own tests.
-        .filter(|f| f["check"] == "regulation" && !f["code"].as_str().is_some_and(|c| c.starts_with("digital_")))
+        .filter(|f| {
+            f["check"] == "regulation"
+                && !f["code"]
+                    .as_str()
+                    .is_some_and(|c| c.starts_with("digital_"))
+        })
         .map(|f| {
             (
                 f["code"].as_str().unwrap_or_default().to_owned(),
@@ -48,9 +53,16 @@ fn regulation(app: &mut App, checks: Value) -> Vec<(String, String, String)> {
 /// The standards package's findings of the articles it reads by the application date (docs/adr/8083): 28/1-c's
 /// storeys, 39/1's doors, and the eksik veri of a door or a storey whose outcome turns on that date.
 fn dated_sizes(app: &mut App) -> Vec<(String, String, String)> {
-    let facts = app.arch_audit_regulation_facts().expect("the building's facts");
-    let python = crate::standards::call("mimari-mevzuat", "mimari_mevzuat.mimari", "denetle", vec![facts])
-        .expect("the national regulation's rule answers");
+    let facts = app
+        .arch_audit_regulation_facts()
+        .expect("the building's facts");
+    let python = crate::standards::call(
+        "mimari-mevzuat",
+        "mimari_mevzuat.mimari",
+        "denetle",
+        vec![facts],
+    )
+    .expect("the national regulation's rule answers");
     python["findings"]
         .as_array()
         .cloned()
@@ -58,8 +70,12 @@ fn dated_sizes(app: &mut App) -> Vec<(String, String, String)> {
         .iter()
         .filter(|f| {
             let rule = f["rule"].as_str().unwrap_or_default();
-            ["paiy_storey_height_over", "paiy_door_height_below", "paiy_door_width_below"]
-                .contains(&f["code"].as_str().unwrap_or_default())
+            [
+                "paiy_storey_height_over",
+                "paiy_door_height_below",
+                "paiy_door_width_below",
+            ]
+            .contains(&f["code"].as_str().unwrap_or_default())
                 || rule.contains("28/1-c")
                 || rule.contains("39/1")
         })
@@ -85,7 +101,11 @@ fn the_apartment_s_doors_are_narrower_than_the_regulation_asks() {
     // The flat has no section and no elevation drawn (PAİY 57/2-a-6, docs/adr/8042 §7, 8043 §9); the Mevzuat group
     // finds nothing else of its own.
     let codes: Vec<&str> = found.iter().map(|(c, ..)| c.as_str()).collect();
-    assert_eq!(codes, ["paiy_sections_missing", "paiy_elevations_missing"], "{found:?}");
+    assert_eq!(
+        codes,
+        ["paiy_sections_missing", "paiy_elevations_missing"],
+        "{found:?}"
+    );
     let found = dated_sizes(&mut app);
     let messages: Vec<&str> = found.iter().map(|(_, m, _)| m.as_str()).collect();
     assert_eq!(found.len(), 5, "{messages:?}");
@@ -106,7 +126,9 @@ fn the_apartment_s_doors_are_narrower_than_the_regulation_asks() {
         "{messages:?}"
     );
     assert!(
-        found.iter().all(|(.., r)| r == "PAİY 39/1-c · RG 13.8.2025/32985"),
+        found
+            .iter()
+            .all(|(.., r)| r == "PAİY 39/1-c · RG 13.8.2025/32985"),
         "{found:?}"
     );
     // Asked by name only, as the doors and the fixtures: an older call's findings stay as they were; Denetim's panel asks
@@ -194,8 +216,11 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
     assert_eq!(storey.len(), 1, "{storey:?}");
     assert_eq!(storey[0].0, "regulation_date_needed", "{storey:?}");
     assert!(
-        storey[0].1.contains("1.10.2017–11.8.2023 başvurusunda “Zemin kat” kat yüksekliği 4.20 m > 3.60 m")
-            && storey[0].1.contains("12.8.2023 ve sonrası başvurusunda “Zemin kat” kat yüksekliği 4.20 m > 4.00 m"),
+        storey[0].1.contains(
+            "1.10.2017–11.8.2023 başvurusunda “Zemin kat” kat yüksekliği 4.20 m > 3.60 m"
+        ) && storey[0].1.contains(
+            "12.8.2023 ve sonrası başvurusunda “Zemin kat” kat yüksekliği 4.20 m > 4.00 m"
+        ),
         "{storey:?}"
     );
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
@@ -236,9 +261,9 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
         "{messages:?}"
     );
     assert!(
-        messages
-            .iter()
-            .any(|m| m.starts_with("Koridor en dar yeri 0.8") && m.ends_with("< 1.20 m — PAİY 29/3")),
+        messages.iter().any(
+            |m| m.starts_with("Koridor en dar yeri 0.8") && m.ends_with("< 1.20 m — PAİY 29/3")
+        ),
         "{messages:?}"
     );
     let rules: Vec<&str> = found.iter().map(|(.., r)| r.as_str()).collect();
@@ -280,7 +305,12 @@ fn a_small_dwelling_s_rooms_corridor_kitchen_and_storey_are_said() {
     // An office's storey is not 28/1-c's: with no zone written its limit turns on the plan's use (docs/adr/8085).
     let storey = dated_sizes(&mut app);
     assert_eq!(storey.len(), 1, "{storey:?}");
-    assert!(storey[0].1.starts_with("Bölge yazılmamış: konut projesi olmayan binada"), "{storey:?}");
+    assert!(
+        storey[0]
+            .1
+            .starts_with("Bölge yazılmamış: konut projesi olmayan binada"),
+        "{storey:?}"
+    );
 }
 
 /// A blank Mimari drawing.
@@ -329,17 +359,27 @@ fn regulation_findings(app: &mut App) -> Vec<Value> {
         .cloned()
         .unwrap_or_default()
         .into_iter()
-        .filter(|f| !f["code"].as_str().is_some_and(|c| c.starts_with("digital_")))
+        .filter(|f| {
+            !f["code"]
+                .as_str()
+                .is_some_and(|c| c.starts_with("digital_"))
+        })
         .collect();
     // The articles whose version the application date chooses are the standards package's Python (docs/adr/8078):
     // listed after the group's own, as the Denetim tab and a headless audit list them.
-    let facts = app.arch_audit_regulation_facts().expect("the building's facts");
-    let python = crate::standards::call("mimari-mevzuat", "mimari_mevzuat.mimari", "denetle", vec![facts])
-        .expect("the national regulation's rule answers");
+    let facts = app
+        .arch_audit_regulation_facts()
+        .expect("the building's facts");
+    let python = crate::standards::call(
+        "mimari-mevzuat",
+        "mimari_mevzuat.mimari",
+        "denetle",
+        vec![facts],
+    )
+    .expect("the national regulation's rule answers");
     found.extend(python["findings"].as_array().cloned().unwrap_or_default());
     found
 }
-
 
 /// A four-storey building of two flats (M34, docs/adr/8034): its common stair (1.25 m, 0.1667 m risers, a railing on
 /// its left only), a ramp of 0.40 m over 4 m without railings, an air shaft of 0.40 × 0.90 m, a light well of 1.40 ×
@@ -593,12 +633,25 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
     set_arch(&mut app, |a| a.levels.retain(|l| l.id != "k3"));
     let dated: Vec<(String, String)> = regulation_findings(&mut app)
         .into_iter()
-        .filter(|f| f["code"] == "regulation_date_needed" && f["message"].as_str().is_some_and(|m| m.contains("asansör")))
-        .map(|f| (f["state"].as_str().unwrap_or_default().to_owned(), f["message"].as_str().unwrap_or_default().to_owned()))
+        .filter(|f| {
+            f["code"] == "regulation_date_needed"
+                && f["message"].as_str().is_some_and(|m| m.contains("asansör"))
+        })
+        .map(|f| {
+            (
+                f["state"].as_str().unwrap_or_default().to_owned(),
+                f["message"].as_str().unwrap_or_default().to_owned(),
+            )
+        })
         .collect();
     assert_eq!(dated.len(), 1, "{dated:#?}");
     assert_eq!(dated[0].0, "missingData");
-    assert!(dated[0].1.contains("10.11.2022–30.6.2026 başvurusunda Binada asansör yok (3 kat)"), "{dated:#?}");
+    assert!(
+        dated[0]
+            .1
+            .contains("10.11.2022–30.6.2026 başvurusunda Binada asansör yok (3 kat)"),
+        "{dated:#?}"
+    );
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     // Applied for on 2.7.2026: the toilet's door is 13.8.2025's 0.90 m against Sivas's 0.80 m.
     let conflict = said(&regulation_findings(&mut app))
@@ -608,8 +661,10 @@ fn a_four_storey_building_s_stairs_ramp_shafts_and_elevator_are_said() {
         .collect::<Vec<_>>();
     assert_eq!(
         conflict,
-        ["Tuvalet kapısının net genişliği 0.86 m: Sivas 39/1-c en az 0.80 m ister, uyuyor; PAİY 39/1-c (13.8.2025) en az \
-          0.90 m ister, uymuyor — çelişkide idare karar verir"]
+        [
+            "Tuvalet kapısının net genişliği 0.86 m: Sivas 39/1-c en az 0.80 m ister, uyuyor; PAİY 39/1-c (13.8.2025) en az \
+          0.90 m ister, uymuyor — çelişkide idare karar verir"
+        ]
     );
     let elevator = |app: &mut App| {
         said(&regulation_findings(app))
@@ -757,7 +812,14 @@ fn rooms_lower_than_paiy_28_asks_are_said_with_where_their_ceiling_is() {
 #[test]
 fn an_l_shaped_hall_is_as_wide_as_its_arms() {
     let hall = |app: &mut App, w: f64| {
-        let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+        let layer = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .layers()
+            .active()
+            .to_owned();
         run(
             app,
             "cad.program.edit",
@@ -774,16 +836,29 @@ fn an_l_shaped_hall_is_as_wide_as_its_arms() {
         );
     };
     let narrow = |app: &mut App| -> Vec<Value> {
-        regulation_findings(app).into_iter().filter(|f| f["code"] == "paiy_corridor_narrow").collect()
+        regulation_findings(app)
+            .into_iter()
+            .filter(|f| f["code"] == "paiy_corridor_narrow")
+            .collect()
     };
     let mut app = blank();
     hall(&mut app, 1.10);
     let found = narrow(&mut app);
     assert_eq!(found.len(), 1, "{found:?}");
-    assert_eq!(found[0]["message"], "Hol en dar yeri 1.10 m < 1.20 m — PAİY 29/3");
+    assert_eq!(
+        found[0]["message"],
+        "Hol en dar yeri 1.10 m < 1.20 m — PAİY 29/3"
+    );
     // At the neck's middle: across an arm where it meets the corner, not in the corner's circle.
-    let (x, y) = (found[0]["at"]["x"].as_f64().expect("x"), found[0]["at"]["y"].as_f64().expect("y"));
-    assert!((x - 1.10).abs() < 1e-6 && (y - 0.55).abs() < 1e-6 || (y - 1.10).abs() < 1e-6 && (x - 0.55).abs() < 1e-6, "{x}, {y}");
+    let (x, y) = (
+        found[0]["at"]["x"].as_f64().expect("x"),
+        found[0]["at"]["y"].as_f64().expect("y"),
+    );
+    assert!(
+        (x - 1.10).abs() < 1e-6 && (y - 0.55).abs() < 1e-6
+            || (y - 1.10).abs() < 1e-6 && (x - 0.55).abs() < 1e-6,
+        "{x}, {y}"
+    );
     let mut app = blank();
     hall(&mut app, 1.30);
     assert!(narrow(&mut app).is_empty());
@@ -796,7 +871,8 @@ fn corridor_neck_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/koridor-en-dar-8112");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/koridor-en-dar-8112");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
@@ -806,8 +882,19 @@ fn corridor_neck_screens() {
             let _ = app.update(message);
         }
         let mut app = blank();
-        let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
-        run(&mut app, "cad.program.edit", json!({"program": {"units": [{"id": "d1", "number": "1", "nature": "Konut"}]}}));
+        let layer = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .layers()
+            .active()
+            .to_owned();
+        run(
+            &mut app,
+            "cad.program.edit",
+            json!({"program": {"units": [{"id": "d1", "number": "1", "nature": "Konut"}]}}),
+        );
         let p = |x: f64, y: f64| json!({"x": x, "y": y});
         run(
             &mut app,
@@ -819,21 +906,39 @@ fn corridor_neck_screens() {
         );
         let _ = app.update(Message::Run("arch.audit"));
         app.arch_audit_standards_settle();
-        let group =
-            crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(kentos_commands::ArchAuditCheck::Regulation)));
+        let group = crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(
+            kentos_commands::ArchAuditCheck::Regulation,
+        )));
         let _ = app.update(Message::from(group));
         let shown = app.arch_audit_shown();
-        let findings = &app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings;
-        let row = shown.iter().position(|&i| findings[i].code == "paiy_corridor_narrow").expect("the finding shown");
-        let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let findings = &app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked")
+            .findings;
+        let row = shown
+            .iter()
+            .position(|&i| findings[i].code == "paiy_corridor_narrow")
+            .expect("the finding shown");
+        let _ = app.update(Message::from(crate::arch::Event::ArchAudit(
+            crate::arch_audit::Event::Press(row),
+        )));
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         app.toasts.clear();
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-l-hol-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

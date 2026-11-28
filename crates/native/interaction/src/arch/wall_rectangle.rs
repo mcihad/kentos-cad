@@ -515,7 +515,11 @@ impl Tool for WallRectangle {
         let prompt = Prompt::new(self.label(), text);
         // Oda's room name first: what the room is (docs/adr/8021).
         let prompt = if self.room {
-            prompt.option_with("Mahal adı", "A", self.room_name.as_deref().unwrap_or(NO_NAME))
+            prompt.option_with(
+                "Mahal adı",
+                "A",
+                self.room_name.as_deref().unwrap_or(NO_NAME),
+            )
         } else {
             prompt
         };
@@ -690,7 +694,10 @@ impl Tool for WallRectangle {
                     self.own = true;
                     true
                 } else {
-                    cx.say(Level::Warn, "Ortak duvar için Var olanı kullan ya da Ayrıca çiz seçin.");
+                    cx.say(
+                        Level::Warn,
+                        "Ortak duvar için Var olanı kullan ya da Ayrıca çiz seçin.",
+                    );
                     false
                 }
             }

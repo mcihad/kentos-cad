@@ -17,91 +17,91 @@
 //! messages are [`Event`]s. A late answer to an older read, or to a window
 //! closed since, carries a generation and is dropped.
 
+pub mod apply;
+#[cfg(test)]
+mod area_cloud_tests;
 mod area_queries;
 #[cfg(test)]
 mod area_tests;
-#[cfg(test)]
-mod area_cloud_tests;
-pub mod apply;
 mod atlas_export;
+#[cfg(test)]
+mod atlas_look_tests;
+#[cfg(test)]
+mod atlas_tests;
+#[cfg(test)]
+mod atlas_update_pdf_tests;
 pub(crate) mod permit_bim;
 pub(crate) mod permit_gate;
 pub(crate) mod permit_scope;
 pub mod permit_set;
 pub mod sheet_publish;
-#[cfg(test)]
-mod atlas_tests;
-#[cfg(test)]
-mod atlas_update_pdf_tests;
-#[cfg(test)]
-mod atlas_look_tests;
 // Tables bound on a thread of their own (docs/adr/0757).
 pub(crate) mod binding;
 pub(crate) mod coord_export;
+pub(crate) mod coord_import;
 mod csv_exchange;
 #[cfg(test)]
 mod csv_tests;
-mod fgb_exchange;
-#[cfg(test)]
-mod fgb_tests;
-mod gml_exchange;
-mod gpkg_tiles;
-#[cfg(test)]
-mod gpkg_tiles_tests;
-#[cfg(test)]
-mod gml_tests;
-mod xyz_exchange;
-pub(crate) mod coord_import;
 #[cfg(test)]
 mod dimension_tests;
 pub(crate) mod drawing_import;
 pub(crate) mod dxf_export;
+mod fgb_exchange;
+#[cfg(test)]
+mod fgb_tests;
 pub(crate) mod field_send;
 #[cfg(test)]
 mod field_send_tests;
-mod geojson_export;
-pub(crate) mod source_rows;
-pub mod source_copy;
-#[cfg(test)]
-#[path = "source_formats_tests.rs"]
-mod source_formats_tests;
-pub(crate) mod selection_save;
 #[cfg(test)]
 #[path = "file_menu_tests.rs"]
 mod file_menu_tests;
-#[cfg(test)]
-#[path = "selection_save_tests.rs"]
-mod selection_save_tests;
-#[cfg(test)]
-#[path = "source_export_tests.rs"]
-mod source_export_tests;
+mod geojson_export;
 mod gis_check;
-mod gis_export;
 #[cfg(test)]
 mod gis_derivation_tests;
+mod gis_export;
 pub(crate) mod gis_import;
 #[cfg(test)]
 mod gis_tests;
+mod gml_exchange;
+#[cfg(test)]
+mod gml_tests;
+mod gnss_import;
+mod gpkg_tiles;
+#[cfg(test)]
+mod gpkg_tiles_tests;
 mod merge_form;
 mod parquet_exchange;
 #[cfg(test)]
 mod parquet_tests;
-mod gnss_import;
+pub(crate) mod selection_save;
+#[cfg(test)]
+#[path = "selection_save_tests.rs"]
+mod selection_save_tests;
+pub mod source_copy;
+#[cfg(test)]
+#[path = "source_export_tests.rs"]
+mod source_export_tests;
+#[cfg(test)]
+#[path = "source_formats_tests.rs"]
+mod source_formats_tests;
+pub(crate) mod source_rows;
+mod xyz_exchange;
 // A new layer an import window makes, named free (docs/adr/9329).
-mod new_layer;
 #[cfg(test)]
 mod gnss_tests;
 pub(crate) mod gpkg;
 pub(crate) mod gpkg_out;
 pub(crate) mod gpkg_out_run;
-pub(crate) mod pdf_import;
 #[cfg(test)]
 mod gpkg_tests;
 #[cfg(test)]
 mod kml_tests;
+mod new_layer;
 pub(crate) mod package;
 #[cfg(test)]
 mod package_tests;
+pub(crate) mod pdf_import;
 pub(crate) mod photo_import;
 pub(crate) mod postgis;
 mod postgis_query;
@@ -429,8 +429,8 @@ impl App {
             "file.export.parquet" => self.parquet_export_open(),
             "file.import.parquet" => self.parquet_import_pick(),
             "file.export.atlas" => self.atlas_export_open(),
-            "file.publish.sheets"=>self.sheet_publish_open(),
-            "file.preflight.sheets"=>self.sheet_preflight_open(),
+            "file.publish.sheets" => self.sheet_publish_open(),
+            "file.preflight.sheets" => self.sheet_preflight_open(),
             "file.export.gis" => self.gis_export_open(),
             "gis.derivation" => self.gis_check_open(),
             "field.send" => self.field_send_selection(),
@@ -643,7 +643,7 @@ impl App {
             Event::Xyz(e) => self.xyz_event(e),
             Event::Area(e) => self.area_event(e),
             Event::Atlas(e) => self.atlas_export_event(e),
-            Event::SheetPublish(e)=>self.sheet_publish_event(e),
+            Event::SheetPublish(e) => self.sheet_publish_event(e),
             Event::PermitSet(e) => self.permit_set_event(e),
             Event::GisExport(e) => self.gis_export_event(e),
             Event::GisCheck(e) => self.gis_check_event(e),
@@ -659,7 +659,9 @@ impl App {
 
     /// Closes the window; a read still running is asked to stop, and dropped when it answers.
     pub(crate) fn close_exchange(&mut self) {
-        if self.sheet_publish_stop_for_close(){return;}
+        if self.sheet_publish_stop_for_close() {
+            return;
+        }
         if let Some(Window::DrawingImport(s)) = &self.exchange {
             s.stop_reading();
         }
@@ -695,7 +697,7 @@ impl App {
             Some(Window::Package(s)) => self.package_view(s),
             Some(Window::CsvExport(s)) => self.csv_export_view(s),
             Some(Window::AtlasExport(s)) => self.atlas_export_view(s),
-            Some(Window::SheetPublish(s))=>self.sheet_publish_view(s),
+            Some(Window::SheetPublish(s)) => self.sheet_publish_view(s),
             Some(Window::PermitSet(s)) => self.permit_set_view(s),
             Some(Window::CsvImport(s)) => self.csv_import_view(s),
             Some(Window::ServerWork(s)) => self.server_work_view(s),
@@ -722,7 +724,10 @@ impl App {
     /// in project-unit context without shrinking small but measurable CAD drawings (web `zoomToImported`).
     pub(crate) fn zoom_to(&mut self, slots: &[Slot]) {
         let Some(doc) = &self.document else { return };
-        let boxes=kentos_formats::import::placed_boxes(slots.iter().filter_map(|s|doc.model.get(*s)),doc.model.blocks().iter().map(|b|b.as_ref()));
+        let boxes = kentos_formats::import::placed_boxes(
+            slots.iter().filter_map(|s| doc.model.get(*s)),
+            doc.model.blocks().iter().map(|b| b.as_ref()),
+        );
         if let Some(b) = kentos_formats::import::view_bounds(&boxes) {
             self.zoom_to_bounds(&b);
         }
@@ -731,8 +736,14 @@ impl App {
     /// Fit measurable geometry at its own size; only a lone point needs surrounding context.
     pub fn zoom_to_bounds(&mut self, b: &kentos_commands::Bounds) {
         // A real extent determines its own zoom; a single point uses the project unit for context.
-        let span=(b.max_x-b.min_x).max(b.max_y-b.min_y);
-        let minimum=if span>0. {span*1e-6}else{self.document.as_ref().map_or(20.,|d|20.*kentos_commands::units::Scale::from_unit(d.model.settings().unit()).factor())};
+        let span = (b.max_x - b.min_x).max(b.max_y - b.min_y);
+        let minimum = if span > 0. {
+            span * 1e-6
+        } else {
+            self.document.as_ref().map_or(20., |d| {
+                20. * kentos_commands::units::Scale::from_unit(d.model.settings().unit()).factor()
+            })
+        };
         let grow = |lo: f64, hi: f64| {
             let pad = ((minimum - (hi - lo)) / 2.0).max(0.0);
             (lo - pad, hi + pad)
@@ -821,12 +832,14 @@ impl App {
 fn read_file(path: &PathBuf, kind: Kind) -> Result<Picked, String> {
     let bytes = if matches!(kind, Kind::Dxf | Kind::Dwg) {
         kentos_native_application::file_import::read_cad_bytes(path).map_err(|e| e.message)?
-    } else { std::fs::read(path).map_err(|e| {
-        format!(
-            "“{}” okunamadı: {e}. Dosyanın izinlerini denetleyin.",
-            path.display()
-        )
-    })? };
+    } else {
+        std::fs::read(path).map_err(|e| {
+            format!(
+                "“{}” okunamadı: {e}. Dosyanın izinlerini denetleyin.",
+                path.display()
+            )
+        })?
+    };
     let name = path.file_name().map_or_else(
         || path.display().to_string(),
         |n| n.to_string_lossy().into_owned(),
@@ -861,9 +874,20 @@ fn write_file(
 
 impl App {
     pub(crate) fn exchange_trace_title(&self) -> String {
-        match &self.exchange { Some(Window::DrawingImport(s)) => s.trace_title(), Some(Window::DxfExport(s)) => s.trace_title(), _ => "Dosya aktarımı".into() }
+        match &self.exchange {
+            Some(Window::DrawingImport(s)) => s.trace_title(),
+            Some(Window::DxfExport(s)) => s.trace_title(),
+            _ => "Dosya aktarımı".into(),
+        }
     }
-    pub(crate) fn exchange_trace_control(&self, control: crate::traces::Control<'_>) -> Result<Option<Message>, String> {
-        match &self.exchange { Some(Window::DrawingImport(s)) => s.trace_control(control), Some(Window::DxfExport(s)) => s.trace_control(control), _ => Err("Bu dosya penceresi izden yanıtlanamıyor".into()) }
+    pub(crate) fn exchange_trace_control(
+        &self,
+        control: crate::traces::Control<'_>,
+    ) -> Result<Option<Message>, String> {
+        match &self.exchange {
+            Some(Window::DrawingImport(s)) => s.trace_control(control),
+            Some(Window::DxfExport(s)) => s.trace_control(control),
+            _ => Err("Bu dosya penceresi izden yanıtlanamıyor".into()),
+        }
     }
 }

@@ -82,7 +82,11 @@ pub fn next_mark(mark: &str) -> String {
     {
         return char::from(*c as u8 + 1).to_string();
     }
-    let digits = chars.iter().rev().take_while(|c| c.is_ascii_digit()).count();
+    let digits = chars
+        .iter()
+        .rev()
+        .take_while(|c| c.is_ascii_digit())
+        .count();
     if digits == 0 {
         return mark.to_owned();
     }
@@ -158,7 +162,10 @@ impl ViewMarkTool {
         match self.form {
             ViewMarkForm::Section => {
                 // The pointer still on the point just given is no next point (UR-030): no cut of no length.
-                pts.extend(last.filter(|p| pts.last().is_none_or(|q| js_hypot(p.x - q.x, p.y - q.y) > 1e-9)));
+                pts.extend(last.filter(|p| {
+                    pts.last()
+                        .is_none_or(|q| js_hypot(p.x - q.x, p.y - q.y) > 1e-9)
+                }));
                 if pts.len() < 2 {
                     return None;
                 }
@@ -243,7 +250,10 @@ impl ViewMarkTool {
             };
             cx.say(
                 Level::Success,
-                format!("{kind} işareti {} yazıldı; hedefi yeniden adlandırılınca yazısı da değişir.", self.mark),
+                format!(
+                    "{kind} işareti {} yazıldı; hedefi yeniden adlandırılınca yazısı da değişir.",
+                    self.mark
+                ),
             );
             self.mark = next_mark(&self.mark);
         }
@@ -423,7 +433,9 @@ impl ViewMarkTool {
             "H" => {
                 let all = Self::targets(cx);
                 self.target = (self.target + 1) % (all.len() + 1);
-                self.target_name = self.chosen(cx).map_or_else(|| "Yok".to_owned(), |(_, name)| name);
+                self.target_name = self
+                    .chosen(cx)
+                    .map_or_else(|| "Yok".to_owned(), |(_, name)| name);
                 self.see(cx);
             }
             _ => {
@@ -565,7 +577,8 @@ impl FinishTool {
                         .flatten()
                         .map(|r| r.iter().map(|q| Vec2::new(q.x, q.y)).collect())
                         .collect();
-                    let pieces = pattern_pieces(&ring, &holes, &core_pattern(&h.pattern), PREVIEW_PIECES);
+                    let pieces =
+                        pattern_pieces(&ring, &holes, &core_pattern(&h.pattern), PREVIEW_PIECES);
                     if !pieces.capped {
                         self.drawn.hatch.extend(pieces.segments);
                     }
@@ -611,11 +624,18 @@ impl Tool for FinishTool {
     fn prompt(&self) -> Prompt {
         match self.ask {
             Some(FinishAsk::Pattern) => {
-                return Prompt::new(self.title(), "desenin adını yazın (NET, ANSI31, BRICK …; boş: mahalin kaplaması)")
-                    .option("Geri", "G");
+                return Prompt::new(
+                    self.title(),
+                    "desenin adını yazın (NET, ANSI31, BRICK …; boş: mahalin kaplaması)",
+                )
+                .option("Geri", "G");
             }
             Some(FinishAsk::Spacing) => {
-                return Prompt::new(self.title(), "ızgaranın aralığını yazın (0.6 ya da 0.6x1.2)").option("Geri", "G");
+                return Prompt::new(
+                    self.title(),
+                    "ızgaranın aralığını yazın (0.6 ya da 0.6x1.2)",
+                )
+                .option("Geri", "G");
             }
             None => {}
         }
@@ -624,7 +644,9 @@ impl Tool for FinishTool {
             FinishSurface::Floor => p.option_with(
                 "Desen",
                 "D",
-                self.pattern.clone().unwrap_or_else(|| "Kaplamaya göre".into()),
+                self.pattern
+                    .clone()
+                    .unwrap_or_else(|| "Kaplamaya göre".into()),
             ),
             FinishSurface::Ceiling => p
                 .option_with("Aralık", "A", format!("{} × {}", self.dx, self.dy))

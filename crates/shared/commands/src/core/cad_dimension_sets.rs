@@ -246,7 +246,10 @@ pub struct DimensionSetsPlan {
     pub placed: Vec<u32>,
     /// Each sheet scale's values that do not fit and those moved (docs/adr/0730 §1, §2).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<DimensionSetScaleNote>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<DimensionSetScaleNote>>", optional)
+    )]
     pub scales: Vec<DimensionSetScaleNote>,
     /// The rows whose rounded values do not add up to the rounded overall (docs/adr/0730 §3).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]

@@ -1,13 +1,13 @@
 //! A template is reviewed before it changes an existing drawing (ADR 0659).
 use crate::app::{App, Message};
 use crate::arch;
+use crate::arch::ArchState;
 use iced::Element;
 use iced::widget::{Column, button};
 use kentos_commands::{TemplateSettingsMode, TemplatesApplied, TemplatesApply};
 use kentos_native_application::{ExecutionContext, templates_apply};
 use kentos_ui::widget::{Choice, Dialog as Frame, Select};
 use kentos_ui::{label, style};
-use crate::arch::ArchState;
 
 /// The window's title, as a usage trace names it.
 pub const TITLE: &str = "Mimari şablonunu gözden geçir";
@@ -39,10 +39,10 @@ pub(crate) trait ArchitectureTemplateApp {
 }
 
 impl ArchitectureTemplateApp for App {
-    fn apply_arch_template(&mut self){
+    fn apply_arch_template(&mut self) {
         self.prepare_arch_template(TemplateSettingsMode::Keep, None);
     }
-    fn prepare_arch_template(&mut self, mode: TemplateSettingsMode, notice: Option<String>){
+    fn prepare_arch_template(&mut self, mode: TemplateSettingsMode, notice: Option<String>) {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return;
@@ -65,17 +65,24 @@ impl ArchitectureTemplateApp for App {
             plan,
             notice,
         });
-        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ArchTemplate));
+        self.dialog = Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::ArchTemplate,
+        ));
     }
-    fn architecture_template_event(&mut self, event: Event){
-        if self.dialog != Some(crate::arch::dialog(crate::arch::ArchDialogKind::ArchTemplate)) {
+    fn architecture_template_event(&mut self, event: Event) {
+        if self.dialog
+            != Some(crate::arch::dialog(
+                crate::arch::ArchDialogKind::ArchTemplate,
+            ))
+        {
             return;
         }
         match event {
             Event::Mode { session, mode } => {
                 if self.document.as_ref().is_some_and(|d| d.session == session)
                     && self
-                        .modules.arch()
+                        .modules
+                        .arch()
                         .arch_template
                         .as_ref()
                         .is_some_and(|w| w.session == session)
@@ -86,7 +93,8 @@ impl ArchitectureTemplateApp for App {
             Event::Apply { session, input } => {
                 if self.document.as_ref().is_none_or(|d| d.session != session)
                     || self
-                        .modules.arch()
+                        .modules
+                        .arch()
                         .arch_template
                         .as_ref()
                         .is_none_or(|w| w.session != session || w.input != input)
@@ -132,7 +140,7 @@ impl ArchitectureTemplateApp for App {
             }
         }
     }
-    fn architecture_template_view(&self) -> Element<'_, Message>{
+    fn architecture_template_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().arch_template else {
             return label::body("Önizleme yok.").into();
         };

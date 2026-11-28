@@ -23,7 +23,12 @@ fn finite(p: Vec2) -> bool {
 /// widths times |det M| / |M·t|, t its unit direction in the source (a strip between two parallel lines is again
 /// one under an affine map). None when the map is singular or an edge has no length (its direction, so its width,
 /// is not defined): the caller keeps its own way.
-pub fn exact_widths(m: &Affine, pts: &[Vec2], widths: &[[f64; 2]], closed: bool) -> Option<Vec<[f64; 2]>> {
+pub fn exact_widths(
+    m: &Affine,
+    pts: &[Vec2],
+    widths: &[[f64; 2]],
+    closed: bool,
+) -> Option<Vec<[f64; 2]>> {
     let det = (m[0] * m[3] - m[1] * m[2]).abs();
     if !(det.is_finite() && det > 0.0) {
         return None;
@@ -57,7 +62,10 @@ pub fn exact_widths(m: &Affine, pts: &[Vec2], widths: &[[f64; 2]], closed: bool)
 /// sagitta, c/2 · b.
 fn bulge_point(p: Vec2, q: Vec2, b: f64) -> Vec2 {
     let (dx, dy) = (q.x - p.x, q.y - p.y);
-    Vec2::new((p.x + q.x) / 2.0 + dy * b / 2.0, (p.y + q.y) / 2.0 - dx * b / 2.0)
+    Vec2::new(
+        (p.x + q.x) / 2.0 + dy * b / 2.0,
+        (p.y + q.y) / 2.0 - dx * b / 2.0,
+    )
 }
 
 /// An open vertex path with bulges under `m` as one rational quadratic B-spline: each edge a rational Bézier piece
@@ -66,7 +74,11 @@ fn bulge_point(p: Vec2, q: Vec2, b: f64) -> Vec2 {
 /// (double inner knots). The control points are mapped, the weights kept: a rational Bézier's image under an affine
 /// map is the Bézier of the mapped points (Piegl & Tiller, The NURBS Book §7.3–7.4). Control points, weights and
 /// knots; none when an edge has no length or a number is not finite.
-pub fn arcs_as_nurbs(m: &Affine, pts: &[Vec2], bulges: &[f64]) -> Option<(Vec<Vec2>, Vec<f64>, Vec<f64>)> {
+pub fn arcs_as_nurbs(
+    m: &Affine,
+    pts: &[Vec2],
+    bulges: &[f64],
+) -> Option<(Vec<Vec2>, Vec<f64>, Vec<f64>)> {
     if pts.len() < 2 {
         return None;
     }
@@ -125,5 +137,7 @@ pub fn arcs_as_nurbs(m: &Affine, pts: &[Vec2], bulges: &[f64]) -> Option<(Vec<Ve
         knots.push(k as f64);
     }
     knots.extend([n as f64; 3]);
-    ctrl.iter().all(|c| finite(*c)).then_some((ctrl, weights, knots))
+    ctrl.iter()
+        .all(|c| finite(*c))
+        .then_some((ctrl, weights, knots))
 }

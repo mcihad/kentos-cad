@@ -71,7 +71,10 @@ pub fn is_white(b: u8) -> bool {
 }
 
 pub fn is_delim(b: u8) -> bool {
-    matches!(b, b'(' | b')' | b'<' | b'>' | b'[' | b']' | b'{' | b'}' | b'/' | b'%')
+    matches!(
+        b,
+        b'(' | b')' | b'<' | b'>' | b'[' | b']' | b'{' | b'}' | b'/' | b'%'
+    )
 }
 
 /// The most nested arrays and dictionaries the reader follows.
@@ -140,7 +143,10 @@ impl<'a> Lexer<'a> {
             }
             _ => {
                 let start = self.pos;
-                while self.pos < self.src.len() && !is_white(self.src[self.pos]) && !is_delim(self.src[self.pos]) {
+                while self.pos < self.src.len()
+                    && !is_white(self.src[self.pos])
+                    && !is_delim(self.src[self.pos])
+                {
                     self.pos += 1;
                 }
                 let w = String::from_utf8_lossy(&self.src[start..self.pos]).into_owned();
@@ -157,7 +163,9 @@ impl<'a> Lexer<'a> {
     fn number(&mut self) -> Token {
         let start = self.pos;
         self.pos += 1;
-        while self.pos < self.src.len() && matches!(self.src[self.pos], b'0'..=b'9' | b'.' | b'-' | b'+') {
+        while self.pos < self.src.len()
+            && matches!(self.src[self.pos], b'0'..=b'9' | b'.' | b'-' | b'+')
+        {
             self.pos += 1;
         }
         let text = String::from_utf8_lossy(&self.src[start..self.pos]);
@@ -165,7 +173,10 @@ impl<'a> Lexer<'a> {
         let n = text.parse::<f64>().unwrap_or_else(|_| {
             let t = text.trim_start_matches(['+', '-']);
             let sign = if text.starts_with('-') { -1.0 } else { 1.0 };
-            let digits: String = t.chars().take_while(|c| c.is_ascii_digit() || *c == '.').collect();
+            let digits: String = t
+                .chars()
+                .take_while(|c| c.is_ascii_digit() || *c == '.')
+                .collect();
             sign * digits.parse::<f64>().unwrap_or(0.0)
         });
         Token::Obj(Obj::Num(n))
@@ -174,7 +185,10 @@ impl<'a> Lexer<'a> {
     fn name(&mut self) -> String {
         self.pos += 1;
         let mut out = Vec::new();
-        while self.pos < self.src.len() && !is_white(self.src[self.pos]) && !is_delim(self.src[self.pos]) {
+        while self.pos < self.src.len()
+            && !is_white(self.src[self.pos])
+            && !is_delim(self.src[self.pos])
+        {
             let b = self.src[self.pos];
             if b == b'#'
                 && let Some(h) = self.src.get(self.pos + 1..self.pos + 3)
@@ -235,7 +249,9 @@ impl<'a> Lexer<'a> {
                     out.push(b);
                 }
                 b'\\' => {
-                    let Some(&e) = self.src.get(self.pos) else { break };
+                    let Some(&e) = self.src.get(self.pos) else {
+                        break;
+                    };
                     self.pos += 1;
                     match e {
                         b'n' => out.push(b'\n'),

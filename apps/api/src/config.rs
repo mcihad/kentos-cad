@@ -282,7 +282,9 @@ impl Config {
                 .parse::<u32>()
                 .ok()
                 .filter(|n| (1..=10_000).contains(n))
-                .ok_or_else(|| format!("KENTOS_SIGNUP_PER_HOUR 1 ile 10000 arasında bir sayı olmalı: {v}"))?,
+                .ok_or_else(|| {
+                    format!("KENTOS_SIGNUP_PER_HOUR 1 ile 10000 arasında bir sayı olmalı: {v}")
+                })?,
         };
         let flag = |k: &str, default: bool| {
             get(k)
@@ -366,7 +368,10 @@ impl Config {
             signing: None,
             signups_per_hour,
         };
-        let delivery = crate::delivery::Delivery::configured(|k| env::lookup(&config.vars, k), &config.public_url)?;
+        let delivery = crate::delivery::Delivery::configured(
+            |k| env::lookup(&config.vars, k),
+            &config.public_url,
+        )?;
         config.delivery = delivery;
         config.signing = signing(|k| env::lookup(&config.vars, k))?;
         Ok(config)

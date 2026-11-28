@@ -8,8 +8,8 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit,
-    EntityGeometry, PointCreate, PointEntity, PropertiesOperation,
+    EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit, EntityGeometry,
+    PointCreate, PointEntity, PropertiesOperation,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::point_editor::follow_point;
@@ -405,7 +405,10 @@ pub fn write_draft(
     if let Some(node) = doc.layers().get(layer_id).filter(|n| n.data.is_some()) {
         let (name_column, code_column) = super::target::columns(&node.fields);
         let mut lost = Vec::new();
-        for (value, column, words) in [(&name, name_column, "ad sütunu"), (&code, code_column, "kod sütunu")] {
+        for (value, column, words) in [
+            (&name, name_column, "ad sütunu"),
+            (&code, code_column, "kod sütunu"),
+        ] {
             match column {
                 _ if value.is_empty() => {}
                 Some(column) => {
@@ -414,7 +417,13 @@ pub fn write_draft(
                 None => lost.push(words),
             }
         }
-        if z.is_some() && !node.data.as_ref().and_then(|d| d.geometry.as_ref()).is_some_and(|g| g.z) {
+        if z.is_some()
+            && !node
+                .data
+                .as_ref()
+                .and_then(|d| d.geometry.as_ref())
+                .is_some_and(|g| g.z)
+        {
             lost.push("geometride kot (Z)");
         }
         if !lost.is_empty() {

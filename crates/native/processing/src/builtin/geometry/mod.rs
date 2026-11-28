@@ -158,7 +158,10 @@ pub fn invalid_note(feedback: &mut dyn Feedback, inputs: &[&Entity], what: &str)
         }
     }
     if count > 0 {
-        let kinds: Vec<String> = kinds.iter().map(|k| crate::text::tr_lower(k.text())).collect();
+        let kinds: Vec<String> = kinds
+            .iter()
+            .map(|k| crate::text::tr_lower(k.text()))
+            .collect();
         feedback.warn(format!(
             "{count} nesnenin geometrisi geçersiz ({}): {what} çizildiği hâliyle alındı, onarılmadı. Geçerliliği \
              denetle ile yerlerini görün; gerekiyorsa Onar ile düzeltip yeniden çalıştırın.",

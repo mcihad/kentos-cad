@@ -34,10 +34,7 @@ pub fn uses(types: &[crate::LineTypeDef], file: &str) -> usize {
 /// Text styles whose SHX font or Big Font is this resource (ADR 1120 §4): a
 /// resource they draw with is in use like a linetype's shape file.
 pub fn font_uses(styles: &[crate::TextStyleDef], file: &str) -> usize {
-    let named = |f: &Option<String>| {
-        f.as_deref()
-            .is_some_and(|f| id(source_name(f)) == id(file))
-    };
+    let named = |f: &Option<String>| f.as_deref().is_some_and(|f| id(source_name(f)) == id(file));
     styles
         .iter()
         .filter(|s| named(&s.font_file) || named(&s.big_font_file))
@@ -178,7 +175,11 @@ mod tests {
         assert!(item("u.shx", &unifont(0)).is_ok());
         assert!(item("u.shx", &unifont(2)).is_ok(), "read-only embedding");
         for forbidden in [1, 3] {
-            assert!(item("u.shx", &unifont(forbidden)).unwrap_err().contains("izin vermiyor"));
+            assert!(
+                item("u.shx", &unifont(forbidden))
+                    .unwrap_err()
+                    .contains("izin vermiyor")
+            );
         }
         assert!(item("u.shx", &unifont(0)[..UNIFONT.len() + 7]).is_err());
         assert!(item("b.shx", b"AutoCAD-86 bigfont 1.0\r\n\x1a").is_ok());

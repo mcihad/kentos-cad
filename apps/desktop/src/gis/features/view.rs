@@ -110,7 +110,11 @@ impl App {
         let d = self.document.as_ref()?;
         let layers = d.model.layers();
         let active = layers.active();
-        (rows.layer.as_deref() != Some(active)).then(|| layers.get(active).map(|n| format!("Çizim hedefi: {}", n.name)))?
+        (rows.layer.as_deref() != Some(active)).then(|| {
+            layers
+                .get(active)
+                .map(|n| format!("Çizim hedefi: {}", n.name))
+        })?
     }
 
     /// The table's target words for the rows as they are now.
@@ -136,15 +140,21 @@ impl App {
         // Layers of the same name told apart by their sources: two “bakim” of two GeoPackages, or of a database read
         // through two connections.
         let same: std::collections::HashMap<&str, usize> =
-            rows.layers.iter().fold(std::collections::HashMap::new(), |mut m, (_, path, _)| {
-                *m.entry(path.as_str()).or_default() += 1;
-                m
-            });
+            rows.layers
+                .iter()
+                .fold(std::collections::HashMap::new(), |mut m, (_, path, _)| {
+                    *m.entry(path.as_str()).or_default() += 1;
+                    m
+                });
         rows.layers
             .iter()
             .map(|(id, path, c)| {
                 // A data layer's rows are in its source, not counted here (docs/adr/9102 §5).
-                let data = self.document.as_ref().and_then(|d| d.model.layers().get(id)).and_then(|n| n.data.clone());
+                let data = self
+                    .document
+                    .as_ref()
+                    .and_then(|d| d.model.layers().get(id))
+                    .and_then(|n| n.data.clone());
                 match data {
                     Some(d) => {
                         let mut words = vec!["veri".to_owned()];
@@ -201,7 +211,10 @@ impl App {
         if rows.layer.as_deref() != Some(pinned) || pinned == active {
             return None;
         }
-        Some((layers.get(pinned)?.name.clone(), layers.get(active)?.name.clone()))
+        Some((
+            layers.get(pinned)?.name.clone(),
+            layers.get(active)?.name.clone(),
+        ))
     }
 
     /// Katman ▾: the layers, then the project's join views (docs/adr/0527).
@@ -222,7 +235,10 @@ impl App {
         let n = ids.len();
         // The view chosen when the drawing has it; else the layer whose rows the table shows (GIS-048): the picker and
         // the rows never disagree, a view of another drawing never leaves it empty.
-        let layer_at = rows.layer.as_ref().and_then(|l| ids.iter().position(|id| id == l));
+        let layer_at = rows
+            .layer
+            .as_ref()
+            .and_then(|l| ids.iter().position(|id| id == l));
         let chosen = self
             .gis
             .features
@@ -383,7 +399,10 @@ impl App {
         // ⋯: what a table is rarely asked for: a record, a copy of the selected, values pasted, the fields.
         let selected = !self.selection.is_empty();
         // A typed layer takes no record without a geometry: the row is off and says why.
-        let record_refused = rows.layer.as_deref().and_then(|l| self.add_record_refusal(l));
+        let record_refused = rows
+            .layer
+            .as_deref()
+            .and_then(|l| self.add_record_refusal(l));
         let more = bar_menu(
             Icon::More,
             None,
@@ -396,7 +415,11 @@ impl App {
                         (has_layer && record_refused.is_none()).then(|| msg(Event::AddRecord)),
                     )
                     .icon(from_web(Some("tableRowBelow")))
-                    .detail(record_refused.clone().unwrap_or_else(|| texts::ADD_RECORD_HINT.to_owned()))
+                    .detail(
+                        record_refused
+                            .clone()
+                            .unwrap_or_else(|| texts::ADD_RECORD_HINT.to_owned()),
+                    )
                     .item(texts::DUPLICATE, selected.then(|| msg(Event::Duplicate)))
                     .icon(from_web(Some("copy")))
                     .detail(texts::DUPLICATE_HINT)
@@ -661,7 +684,11 @@ impl App {
                     // A value never written apart from an empty text (docs/adr/9188): the object has no such key.
                     let null = value.is_empty()
                         && problem.is_none()
-                        && c.key.as_ref().is_some_and(|k| model.get(slot).is_some_and(|e| !e.base().attrs.contains_key(k)));
+                        && c.key.as_ref().is_some_and(|k| {
+                            model
+                                .get(slot)
+                                .is_some_and(|e| !e.base().attrs.contains_key(k))
+                        });
                     let number = c.order == "number";
                     let face = Face {
                         muted: c.key.is_none(),
@@ -779,7 +806,10 @@ impl App {
         }
         // A field the role does not read is said, not shown empty (docs/adr/9150).
         if !rows.withheld.is_empty() {
-            words.push_str(&format!(" · {}", super::role_fields::withheld_words(&rows.withheld)));
+            words.push_str(&format!(
+                " · {}",
+                super::role_fields::withheld_words(&rows.withheld)
+            ));
         }
         foot_line(label::caption(words).style(style::text::muted).into(), None)
     }
@@ -878,14 +908,18 @@ impl App {
                 let mut body = iced::widget::column![label::muted(words)].spacing(10);
                 // The table's own layer goes to the designer, not the map's active one (GIS-026).
                 if formless && let Some(doc) = &self.document {
-                    let name = doc.model.layers().get(layer).map_or(layer, |n| n.name.as_str());
+                    let name = doc
+                        .model
+                        .layers()
+                        .get(layer)
+                        .map_or(layer, |n| n.name.as_str());
                     body = body.push(
                         iced::widget::button(label::body(format!("“{name}” için form oluştur")))
                             .style(style::button::secondary)
                             .padding(kentos_ui::theme::metrics::action_small())
-                            .on_press(Message::Gis(gis::Event::Features(super::Event::NewFormFor(
-                                layer.to_owned(),
-                            )))),
+                            .on_press(Message::Gis(gis::Event::Features(
+                                super::Event::NewFormFor(layer.to_owned()),
+                            ))),
                     );
                 }
                 container(body).padding(16).into()

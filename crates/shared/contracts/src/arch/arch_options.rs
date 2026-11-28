@@ -95,7 +95,10 @@ pub fn combo_choices(sets: &[OptionSet], combo: &OptionCombo) -> Vec<OptionChoic
 }
 
 /// What is wrong with a project's combinations of its sets' options: its path and why; none when nothing is.
-pub fn option_combos_problem(sets: &[OptionSet], combos: &[OptionCombo]) -> Option<(String, String)> {
+pub fn option_combos_problem(
+    sets: &[OptionSet],
+    combos: &[OptionCombo],
+) -> Option<(String, String)> {
     if combos.len() > MAX_OPTION_COMBOS {
         return Some((
             "optionCombos".into(),
@@ -109,26 +112,48 @@ pub fn option_combos_problem(sets: &[OptionSet], combos: &[OptionCombo]) -> Opti
         if !option_id_ok(&c.id) || !ids.insert(c.id.as_str()) {
             return Some((
                 format!("{at}.id"),
-                format!("“{}” bileşim kimliği olamaz ya da yineleniyor: küçük harf, rakam ve tire, en çok 64 karakter.", c.id),
+                format!(
+                    "“{}” bileşim kimliği olamaz ya da yineleniyor: küçük harf, rakam ve tire, en çok 64 karakter.",
+                    c.id
+                ),
             ));
         }
         let name = c.name.trim();
-        if name.is_empty() || name != c.name || name.chars().count() > 120 || name.chars().any(char::is_control) {
-            return Some((format!("{at}.name"), "Bileşimin adı boş olamaz; en çok 120 karakter.".into()));
+        if name.is_empty()
+            || name != c.name
+            || name.chars().count() > 120
+            || name.chars().any(char::is_control)
+        {
+            return Some((
+                format!("{at}.name"),
+                "Bileşimin adı boş olamaz; en çok 120 karakter.".into(),
+            ));
         }
         if !names.insert(name.to_lowercase()) {
-            return Some((format!("{at}.name"), format!("“{name}” adlı iki seçenek bileşimi var.")));
+            return Some((
+                format!("{at}.name"),
+                format!("“{name}” adlı iki seçenek bileşimi var."),
+            ));
         }
         for (j, ch) in c.choices.iter().enumerate() {
             let ca = format!("{at}.choices[{j}]");
             let Some(set) = sets.iter().find(|s| s.id == ch.set) else {
-                return Some((format!("{ca}.set"), format!("Bileşimin “{}” kümesi projede yok.", ch.set)));
+                return Some((
+                    format!("{ca}.set"),
+                    format!("Bileşimin “{}” kümesi projede yok.", ch.set),
+                ));
             };
             if !set.options.iter().any(|o| o.id == ch.option) {
-                return Some((format!("{ca}.option"), format!("“{}” kümesinde “{}” seçeneği yok.", set.name, ch.option)));
+                return Some((
+                    format!("{ca}.option"),
+                    format!("“{}” kümesinde “{}” seçeneği yok.", set.name, ch.option),
+                ));
             }
             if c.choices[..j].iter().any(|d| d.set == ch.set) {
-                return Some((ca, format!("“{}” kümesi bileşimde iki kez seçilmiş.", set.name)));
+                return Some((
+                    ca,
+                    format!("“{}” kümesi bileşimde iki kez seçilmiş.", set.name),
+                ));
             }
         }
     }
@@ -139,10 +164,11 @@ impl OptionSet {
     /// The option of this id, or else of this name (case aside).
     pub fn option(&self, key: &str) -> Option<&DesignOption> {
         let folded = key.trim().to_lowercase();
-        self.options
-            .iter()
-            .find(|o| o.id == key)
-            .or_else(|| self.options.iter().find(|o| o.name.to_lowercase() == folded))
+        self.options.iter().find(|o| o.id == key).or_else(|| {
+            self.options
+                .iter()
+                .find(|o| o.name.to_lowercase() == folded)
+        })
     }
 
     /// The option `choices` name for this set, else the primary.
@@ -179,7 +205,10 @@ pub fn option_set<'a>(sets: &'a [OptionSet], key: &str) -> Option<&'a OptionSet>
 }
 
 /// The set and option an object (by its persistent id) is in; none: the main model.
-pub fn option_of<'a>(sets: &'a [OptionSet], uid: &str) -> Option<(&'a OptionSet, &'a DesignOption)> {
+pub fn option_of<'a>(
+    sets: &'a [OptionSet],
+    uid: &str,
+) -> Option<(&'a OptionSet, &'a DesignOption)> {
     sets.iter().find_map(|s| {
         s.options
             .iter()
@@ -299,14 +328,21 @@ pub fn option_sets_problem(sets: &[OptionSet]) -> Option<(String, String)> {
 pub fn option_choices_problem(choices: &[OptionChoice]) -> Option<String> {
     for (i, c) in choices.iter().enumerate() {
         if !option_id_ok(&c.set) || !option_id_ok(&c.option) {
-            return Some("Görünüş tarifinin seçeneği bir kümenin ve seçeneğin kimliğiyle verilir.".into());
+            return Some(
+                "Görünüş tarifinin seçeneği bir kümenin ve seçeneğin kimliğiyle verilir.".into(),
+            );
         }
         if choices[..i].iter().any(|d| d.set == c.set) {
-            return Some(format!("“{}” kümesi görünüş tarifinde iki kez seçilmiş.", c.set));
+            return Some(format!(
+                "“{}” kümesi görünüş tarifinde iki kez seçilmiş.",
+                c.set
+            ));
         }
     }
     if choices.len() > MAX_OPTION_SETS {
-        return Some(format!("Görünüş tarifinde en çok {MAX_OPTION_SETS} seçenek seçilir."));
+        return Some(format!(
+            "Görünüş tarifinde en çok {MAX_OPTION_SETS} seçenek seçilir."
+        ));
     }
     None
 }
@@ -338,12 +374,18 @@ mod tests {
     #[test]
     fn the_primary_is_shown_unless_a_view_chooses() {
         let sets = vec![set()];
-        assert_eq!(option_hidden_uids(&sets, &[]), vec!["00000000-0000-4000-8000-000000000002"]);
+        assert_eq!(
+            option_hidden_uids(&sets, &[]),
+            vec!["00000000-0000-4000-8000-000000000002"]
+        );
         let b = [OptionChoice {
             set: "mutfak".into(),
             option: "b".into(),
         }];
-        assert_eq!(option_hidden_uids(&sets, &b), vec!["00000000-0000-4000-8000-000000000001"]);
+        assert_eq!(
+            option_hidden_uids(&sets, &b),
+            vec!["00000000-0000-4000-8000-000000000001"]
+        );
         assert!(option_sets_problem(&sets).is_none());
     }
 

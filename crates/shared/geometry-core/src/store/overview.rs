@@ -111,7 +111,14 @@ impl Store {
     /// The overview's picture of the extent (§3); none for an empty drawing.
     pub fn overview_picture(&self, request: &OverviewRequest<'_>) -> Option<OverviewPicture> {
         let extent = self.overview_extent()?;
-        Some(overview_picture_of(&[OverviewLayer { store: self, dot: 1.0 }], &extent, request))
+        Some(overview_picture_of(
+            &[OverviewLayer {
+                store: self,
+                dot: 1.0,
+            }],
+            &extent,
+            request,
+        ))
     }
 
     /// Its shown objects drawn on `canvas`, each in its layer's colour.
@@ -142,7 +149,11 @@ pub struct OverviewLayer<'a> {
 /// The overview's picture of `extent` from several stores (docs/adr/9327), each drawn by §3's rules over the ones before
 /// it: the data layers' outlines, whose rows the drawing does not hold, then the drawing's. The host gives the extent:
 /// the drawing's and the data layers' boxes as their sources say them.
-pub fn overview_picture_of(layers: &[OverviewLayer<'_>], extent: &Bounds, request: &OverviewRequest<'_>) -> OverviewPicture {
+pub fn overview_picture_of(
+    layers: &[OverviewLayer<'_>],
+    extent: &Bounds,
+    request: &OverviewRequest<'_>,
+) -> OverviewPicture {
     let f = fit(extent, (request.width, request.height));
     let mut canvas = Canvas::new(request.width, request.height, request.dpr, f);
     let own = canvas.dot;

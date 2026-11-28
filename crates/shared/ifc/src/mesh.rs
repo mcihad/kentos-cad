@@ -47,7 +47,14 @@ pub struct Mesh {
 
 impl Mesh {
     fn new(id: Option<u128>, kind: Kind, storey: usize, name: &str) -> Mesh {
-        Mesh { id, kind, storey, name: name.to_owned(), vertices: Vec::new(), triangles: Vec::new() }
+        Mesh {
+            id,
+            kind,
+            storey,
+            name: name.to_owned(),
+            vertices: Vec::new(),
+            triangles: Vec::new(),
+        }
     }
 
     fn vertex(&mut self, p: [f64; 3]) -> u32 {
@@ -61,14 +68,26 @@ pub fn meshes(b: &Building) -> Vec<Mesh> {
     let mut out = Vec::new();
     for (i, e) in b.elements.iter().enumerate() {
         let floor = b.zero + b.storeys.get(e.storey).map_or(0.0, |s| s.elevation);
-        let cuts: Vec<&Opening> = b.openings.iter().filter(|o| o.host == i && o.ring.len() >= 3).collect();
+        let cuts: Vec<&Opening> = b
+            .openings
+            .iter()
+            .filter(|o| o.host == i && o.ring.len() >= 3)
+            .collect();
         let mut m = Mesh::new(e.object.or(e.id), Kind::Element(e.class), e.storey, &e.name);
         // Its cut body (docs/adr/8071 §4): the Reference View's and the net volume's, each band's arcs flattened here.
         for shape in &crate::quantities::cut(&e.shapes, &cuts) {
             match shape {
-                Shape::Prism { rings, bulges, bottom, top } => {
-                    prism(&mut m, &flat_rings(rings, bulges), floor + bottom, floor + top)
-                }
+                Shape::Prism {
+                    rings,
+                    bulges,
+                    bottom,
+                    top,
+                } => prism(
+                    &mut m,
+                    &flat_rings(rings, bulges),
+                    floor + bottom,
+                    floor + top,
+                ),
                 Shape::Faces { vertices, faces } => polyhedron(&mut m, vertices, faces, floor),
             }
         }
@@ -78,10 +97,20 @@ pub fn meshes(b: &Building) -> Vec<Mesh> {
     }
     for s in &b.spaces {
         let floor = b.zero + b.storeys.get(s.storey).map_or(0.0, |x| x.elevation);
-        let mut m = Mesh::new(s.id, Kind::Space, s.storey, s.long_name.as_deref().unwrap_or(&s.name));
+        let mut m = Mesh::new(
+            s.id,
+            Kind::Space,
+            s.storey,
+            s.long_name.as_deref().unwrap_or(&s.name),
+        );
         // Under a roof its pieces (docs/adr/8071 §11), else its prism.
         if s.body.is_empty() {
-            prism(&mut m, &flat_rings(&s.rings, &s.bulges), floor + s.bottom, floor + s.top);
+            prism(
+                &mut m,
+                &flat_rings(&s.rings, &s.bulges),
+                floor + s.bottom,
+                floor + s.top,
+            );
         } else {
             for shape in &s.body {
                 if let Shape::Faces { vertices, faces } = shape {
@@ -102,7 +131,10 @@ fn v2(p: [f64; 2]) -> Vec2 {
 
 fn signed(pts: &[Vec2]) -> f64 {
     let n = pts.len();
-    (0..n).map(|i| pts[i].x * pts[(i + 1) % n].y - pts[(i + 1) % n].x * pts[i].y).sum::<f64>() / 2.0
+    (0..n)
+        .map(|i| pts[i].x * pts[(i + 1) % n].y - pts[(i + 1) % n].x * pts[i].y)
+        .sum::<f64>()
+        / 2.0
 }
 
 /// `rings` (even-odd) as areas: outer rings counterclockwise, holes clockwise.
@@ -119,7 +151,11 @@ fn areas(rings: &[Vec<[f64; 2]>]) -> Vec<Area> {
         .filter(|(o, _)| rings[*o].len() >= 3)
         .map(|(o, holes)| Area {
             outer: ring(&rings[o], true),
-            holes: holes.into_iter().filter(|h| rings[*h].len() >= 3).map(|h| ring(&rings[h], false)).collect(),
+            holes: holes
+                .into_iter()
+                .filter(|h| rings[*h].len() >= 3)
+                .map(|h| ring(&rings[h], false))
+                .collect(),
         })
         .collect()
 }
@@ -136,7 +172,9 @@ fn prism(m: &mut Mesh, rings: &[Vec<[f64; 2]>], bottom: f64, top: f64) {
 
 /// One area between two heights: its caps and its sides.
 fn band_of(m: &mut Mesh, a: &Area, z0: f64, z1: f64) {
-    let rings: Vec<&Vec<Vec2>> = std::iter::once(&a.outer.pts).chain(a.holes.iter().map(|h| &h.pts)).collect();
+    let rings: Vec<&Vec<Vec2>> = std::iter::once(&a.outer.pts)
+        .chain(a.holes.iter().map(|h| &h.pts))
+        .collect();
     let mut pts: Vec<Vec2> = Vec::new();
     let mut ranges: Vec<Range<usize>> = Vec::new();
     for r in &rings {
@@ -151,7 +189,9 @@ fn band_of(m: &mut Mesh, a: &Area, z0: f64, z1: f64) {
     let bottom: Vec<u32> = pts.iter().map(|p| m.vertex([p.x, p.y, z0])).collect();
     for t in tri.as_chunks::<3>().0.iter() {
         let (i, j, k) = (t[0] as usize, t[1] as usize, t[2] as usize);
-        let ccw = (pts[j].x - pts[i].x) * (pts[k].y - pts[i].y) - (pts[k].x - pts[i].x) * (pts[j].y - pts[i].y) > 0.0;
+        let ccw = (pts[j].x - pts[i].x) * (pts[k].y - pts[i].y)
+            - (pts[k].x - pts[i].x) * (pts[j].y - pts[i].y)
+            > 0.0;
         let (j, k) = if ccw { (j, k) } else { (k, j) };
         m.triangles.push([top[i], top[j], top[k]]);
         m.triangles.push([bottom[i], bottom[k], bottom[j]]);
@@ -170,9 +210,18 @@ fn band_of(m: &mut Mesh, a: &Area, z0: f64, z1: f64) {
 
 /// A closed set of faces (`vertices` over `floor`), each outward.
 fn polyhedron(m: &mut Mesh, vertices: &[[f64; 3]], faces: &[Vec<usize>], floor: f64) {
-    let at: Vec<u32> = vertices.iter().map(|v| m.vertex([v[0], v[1], v[2] + floor])).collect();
-    for face in faces.iter().filter(|f| f.len() >= 3 && f.iter().all(|k| *k < vertices.len())) {
-        let plan: Vec<Vec2> = face.iter().map(|k| Vec2::new(vertices[*k][0], vertices[*k][1])).collect();
+    let at: Vec<u32> = vertices
+        .iter()
+        .map(|v| m.vertex([v[0], v[1], v[2] + floor]))
+        .collect();
+    for face in faces
+        .iter()
+        .filter(|f| f.len() >= 3 && f.iter().all(|k| *k < vertices.len()))
+    {
+        let plan: Vec<Vec2> = face
+            .iter()
+            .map(|k| Vec2::new(vertices[*k][0], vertices[*k][1]))
+            .collect();
         if signed(&plan).abs() > 1e-9 {
             // Not edge-on from above: triangulated by its plan, in the face's own turn.
             let mut tri: Vec<u32> = Vec::new();
@@ -181,13 +230,16 @@ fn polyhedron(m: &mut Mesh, vertices: &[[f64; 3]], faces: &[Vec<usize>], floor: 
             let up = signed(&plan) > 0.0;
             for t in tri.as_chunks::<3>().0.iter() {
                 let (i, j, k) = (t[0] as usize, t[1] as usize, t[2] as usize);
-                let ccw = (plan[j].x - plan[i].x) * (plan[k].y - plan[i].y) - (plan[k].x - plan[i].x) * (plan[j].y - plan[i].y) > 0.0;
+                let ccw = (plan[j].x - plan[i].x) * (plan[k].y - plan[i].y)
+                    - (plan[k].x - plan[i].x) * (plan[j].y - plan[i].y)
+                    > 0.0;
                 let (j, k) = if ccw == up { (j, k) } else { (k, j) };
                 m.triangles.push([at[face[i]], at[face[j]], at[face[k]]]);
             }
         } else {
             for k in 1..face.len() - 1 {
-                m.triangles.push([at[face[0]], at[face[k]], at[face[k + 1]]]);
+                m.triangles
+                    .push([at[face[0]], at[face[k]], at[face[k + 1]]]);
             }
         }
     }

@@ -86,7 +86,12 @@ impl App {
         })
     }
 
-    pub(crate) fn value_field_input(&mut self, token: u64, text: String, pasted: bool) -> Task<Message> {
+    pub(crate) fn value_field_input(
+        &mut self,
+        token: u64,
+        text: String,
+        pasted: bool,
+    ) -> Task<Message> {
         let Some(field) = self.field.as_mut().filter(|f| f.token == token) else {
             return Task::none();
         };
@@ -422,8 +427,15 @@ impl App {
     /// Enter or Space in the value field (the web's `CursorInput.submit`).
     pub(super) fn submit_field(&mut self) -> Task<Message> {
         self.refresh_value_preview();
-        if self.field.as_ref().is_some_and(|f|f.preview==kentos_interaction::InputPreview::Invalid) {
-            self.warn("Önizleme geçerli değil; kutudaki değeri düzeltin veya Esc ile iptal edin.".to_owned());
+        if self
+            .field
+            .as_ref()
+            .is_some_and(|f| f.preview == kentos_interaction::InputPreview::Invalid)
+        {
+            self.warn(
+                "Önizleme geçerli değil; kutudaki değeri düzeltin veya Esc ile iptal edin."
+                    .to_owned(),
+            );
             return self.focus_value_field();
         }
         let Some(field) = self.field.take() else {
@@ -493,7 +505,10 @@ impl App {
                 // Çoklu çizgi were refused as a point): three letters at least, so that a mistyped option letter
                 // never starts another command.
                 if text.chars().count() >= 3
-                    && matches!(crate::typed_names::named(text, self.sheet_tab), crate::typed_names::Named::One(_, false))
+                    && matches!(
+                        crate::typed_names::named(text, self.sheet_tab),
+                        crate::typed_names::Named::One(_, false)
+                    )
                 {
                     return self.run_typed(text);
                 }
@@ -526,15 +541,17 @@ impl App {
                 self.echo_value(key);
                 // A step asking for words reads a typed letter as its text: its option's button is chosen as the
                 // option (UR2-048: Adlı UCS's Kaydet looked for a system named K).
-                let chosen =
-                    self.session.takes_words() && self.with_tool(|s, cx| s.choose_option(key, "", cx)) == Some(true);
+                let chosen = self.session.takes_words()
+                    && self.with_tool(|s, cx| s.choose_option(key, "", cx)) == Some(true);
                 if !chosen && self.with_tool(|s, cx| s.input(key, cx)) != Some(true) {
                     self.warn(format!("“{key}” seçeneği şu adımda kullanılamıyor."));
                 }
                 // The words the next step asks for are typed in the command line.
                 if self.session.takes_words() || !self.session.settings(&self.format()).is_empty() {
                     widget_operation::focus(COMMAND_INPUT)
-                } else { Task::none() }
+                } else {
+                    Task::none()
+                }
             }
         }
     }
@@ -548,7 +565,9 @@ impl App {
         }
         if !self.session.settings(&self.format()).is_empty() {
             widget_operation::focus(COMMAND_INPUT)
-        } else { Task::none() }
+        } else {
+            Task::none()
+        }
     }
 
     /// A tool's method from its ribbon menu (docs/adr/0032), as the web's

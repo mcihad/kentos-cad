@@ -15,8 +15,9 @@
 use std::collections::BTreeSet;
 
 use kentos_commands::{
-    CommandResult, StandardInstallAction as Action, StandardInstallRow, StandardOrigin, StandardResourceKind as Kind,
-    StandardsInstall, StandardsInstalled, StandardsResolved, STANDARDS_INSTALL_STEP,
+    CommandResult, STANDARDS_INSTALL_STEP, StandardInstallAction as Action, StandardInstallRow,
+    StandardOrigin, StandardResourceKind as Kind, StandardsInstall, StandardsInstalled,
+    StandardsResolved,
 };
 use kentos_domain::{Document, Uuid};
 use serde_json::Value;
@@ -75,7 +76,9 @@ struct Incoming {
 fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
     let s = doc.settings();
     let origin = |map: &std::collections::BTreeMap<String, StandardOrigin>, name: &str| {
-        map.get(name).cloned().unwrap_or_else(|| r.provenance.rules.clone())
+        map.get(name)
+            .cloned()
+            .unwrap_or_else(|| r.provenance.rules.clone())
     };
     let mut out = Vec::new();
     let p = &r.provenance;
@@ -84,7 +87,11 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             kind: Kind::LineType,
             name: t.name.clone(),
             look: appearance(t),
-            local: s.line_types.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
+            local: s
+                .line_types
+                .iter()
+                .find(|l| key(&l.name) == key(&t.name))
+                .map(appearance),
             source: origin(&p.line_types, &t.name),
             uses: 0,
         });
@@ -94,7 +101,11 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             kind: Kind::HatchPattern,
             name: t.name.clone(),
             look: appearance(t),
-            local: s.hatch_patterns.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
+            local: s
+                .hatch_patterns
+                .iter()
+                .find(|l| key(&l.name) == key(&t.name))
+                .map(appearance),
             source: origin(&p.hatch_patterns, &t.name),
             uses: 0,
         });
@@ -104,7 +115,11 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             kind: Kind::TextStyle,
             name: t.name.clone(),
             look: appearance(t),
-            local: s.text_styles.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
+            local: s
+                .text_styles
+                .iter()
+                .find(|l| key(&l.name) == key(&t.name))
+                .map(appearance),
             source: origin(&p.text_style_definitions, &t.name),
             uses: 0,
         });
@@ -114,7 +129,11 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             kind: Kind::DimensionStyle,
             name: t.name.clone(),
             look: appearance(t),
-            local: s.dimension_styles.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
+            local: s
+                .dimension_styles
+                .iter()
+                .find(|l| key(&l.name) == key(&t.name))
+                .map(appearance),
             source: origin(&p.dimension_style_definitions, &t.name),
             uses: 0,
         });
@@ -124,7 +143,11 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
             kind: Kind::LeaderStyle,
             name: t.name.clone(),
             look: appearance(t),
-            local: s.leader_styles.iter().find(|l| key(&l.name) == key(&t.name)).map(appearance),
+            local: s
+                .leader_styles
+                .iter()
+                .find(|l| key(&l.name) == key(&t.name))
+                .map(appearance),
             source: origin(&p.leader_styles, &t.name),
             uses: 0,
         });
@@ -147,11 +170,14 @@ fn incoming(doc: &Document, r: &StandardsResolved) -> Vec<Incoming> {
 
 /// The tables of the drawing and of its block definitions that follow table style `id` (docs/adr/1127 §1).
 fn tables_following(doc: &Document, id: &str) -> u32 {
-    let follows = |e: &kentos_commands::Entity| {
-        matches!(e, kentos_commands::Entity::Table(t) if t.table_style.as_deref() == Some(id))
-    };
+    let follows = |e: &kentos_commands::Entity| matches!(e, kentos_commands::Entity::Table(t) if t.table_style.as_deref() == Some(id));
     let n = doc.entities().filter(|e| follows(e)).count()
-        + doc.blocks().iter().flat_map(|b| &b.entities).filter(|e| follows(e)).count();
+        + doc
+            .blocks()
+            .iter()
+            .flat_map(|b| &b.entities)
+            .filter(|e| follows(e))
+            .count();
     u32::try_from(n).unwrap_or(u32::MAX)
 }
 
@@ -166,7 +192,11 @@ fn local_names(doc: &Document, kind: Kind) -> BTreeSet<String> {
         Kind::LeaderStyle => s.leader_styles.iter().map(|t| key(&t.name)).collect(),
         Kind::TableStyle => s.table_styles.iter().map(|t| key(&t.name)).collect(),
         Kind::Block => doc.blocks().iter().map(|b| key(&b.name)).collect(),
-        Kind::SheetTemplate => s.approved_sheet_templates.iter().map(|t| key(&t.template_id)).collect(),
+        Kind::SheetTemplate => s
+            .approved_sheet_templates
+            .iter()
+            .map(|t| key(&t.template_id))
+            .collect(),
     }
 }
 
@@ -174,7 +204,11 @@ fn local_names(doc: &Document, kind: Kind) -> BTreeSet<String> {
 type Rows = Vec<(StandardInstallRow, Option<LibraryIncoming>)>;
 
 /// The rows, every choice checked; why not.
-fn rows(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Result<(StandardsResolved, Rows), Stop> {
+fn rows(
+    doc: &Document,
+    input: &StandardsInstall,
+    libraries: &Libraries,
+) -> Result<(StandardsResolved, Rows), Stop> {
     let resolved = match resolve_project(doc) {
         CommandResult::Completed { output, .. } => output,
         CommandResult::Failed { error } => return Err(Stop::failed(error)),
@@ -189,14 +223,22 @@ fn rows(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Resu
                 None => ("missing", Vec::new()),
                 Some(local) => {
                     let fields = style_differences(local, &i.look);
-                    if fields.is_empty() { ("same", fields) } else { ("differs", fields) }
+                    if fields.is_empty() {
+                        ("same", fields)
+                    } else {
+                        ("differs", fields)
+                    }
                 }
             };
             let row = StandardInstallRow {
                 kind: i.kind,
                 name: i.name.clone(),
                 status: status.to_owned(),
-                action: if status == "missing" { Action::Add } else { Action::KeepLocal },
+                action: if status == "missing" {
+                    Action::Add
+                } else {
+                    Action::KeepLocal
+                },
                 new_name: None,
                 fields,
                 library: None,
@@ -209,11 +251,17 @@ fn rows(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Resu
     rows.extend(library::rows(doc, &resolved, libraries));
     let mut chosen = BTreeSet::new();
     let mut taken: Vec<(Kind, String)> = Vec::new();
-    let library_names: Vec<(Kind, String)> =
-        rows.iter().filter(|(r, _)| matches!(r.kind, Kind::Block | Kind::SheetTemplate)).map(|(r, _)| (r.kind, r.name.clone())).collect();
+    let library_names: Vec<(Kind, String)> = rows
+        .iter()
+        .filter(|(r, _)| matches!(r.kind, Kind::Block | Kind::SheetTemplate))
+        .map(|(r, _)| (r.kind, r.name.clone()))
+        .collect();
     for (n, c) in input.choices.iter().enumerate() {
         let at = format!("choices[{n}]");
-        let Some((row, _)) = rows.iter_mut().find(|(r, _)| r.kind == c.kind && key(&r.name) == key(&c.name)) else {
+        let Some((row, _)) = rows
+            .iter_mut()
+            .find(|(r, _)| r.kind == c.kind && key(&r.name) == key(&c.name))
+        else {
             return Err(fail(
                 codes::STANDARD_RESOURCE_NOT_FOUND,
                 format!(
@@ -227,7 +275,11 @@ fn rows(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Resu
         if !chosen.insert((c.kind, key(&c.name))) {
             return Err(fail(
                 codes::INVALID_INSTALL_CHOICE,
-                format!("“{}” {} için iki seçim verildi; her kaynağa bir seçim verin.", c.name, kind_words(c.kind)),
+                format!(
+                    "“{}” {} için iki seçim verildi; her kaynağa bir seçim verin.",
+                    c.name,
+                    kind_words(c.kind)
+                ),
                 at,
             ));
         }
@@ -241,13 +293,18 @@ fn rows(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Resu
         let allowed = match row.status.as_str() {
             "missing" => matches!(c.action, Action::Add | Action::KeepLocal),
             "same" | "unavailable" => matches!(c.action, Action::KeepLocal),
-            _ => matches!(c.action, Action::Replace | Action::KeepLocal | Action::RenameIncoming),
+            _ => matches!(
+                c.action,
+                Action::Replace | Action::KeepLocal | Action::RenameIncoming
+            ),
         };
         if !allowed {
             let why = match row.status.as_str() {
                 "missing" => "çizimde yok: eklenebilir ya da atlanabilir",
                 "same" => "çizimdekiyle aynı: değişecek bir şey yok",
-                _ => "çizimdekinden farklı: değiştirilebilir, yeni adla eklenebilir ya da çizimdeki korunabilir",
+                _ => {
+                    "çizimdekinden farklı: değiştirilebilir, yeni adla eklenebilir ya da çizimdeki korunabilir"
+                }
             };
             return Err(fail(
                 codes::INVALID_INSTALL_CHOICE,
@@ -259,13 +316,18 @@ fn rows(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Resu
             (Action::RenameIncoming, Some(new)) if !checks::is_blank(new) && new.trim() == new => {
                 let clash = local_names(doc, c.kind).contains(&key(new))
                     || (c.kind == Kind::Block && doc.block_named(new).is_some())
-                    || taken.iter().any(|(k, t)| *k == c.kind && key(t) == key(new))
+                    || taken
+                        .iter()
+                        .any(|(k, t)| *k == c.kind && key(t) == key(new))
                     || rows_with_name(&found, c.kind, new)
                     || library_rows_with_name(&library_names, c.kind, new);
                 if clash {
                     return Err(fail(
                         codes::DUPLICATE_NAME,
-                        format!("“{new}” adlı {} çizimde ya da standartta var; başka bir ad verin.", kind_words(c.kind)),
+                        format!(
+                            "“{new}” adlı {} çizimde ya da standartta var; başka bir ad verin.",
+                            kind_words(c.kind)
+                        ),
                         format!("{at}.newName"),
                     ));
                 }
@@ -274,7 +336,8 @@ fn rows(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Resu
             (Action::RenameIncoming, _) => {
                 return Err(fail(
                     codes::INVALID_INSTALL_CHOICE,
-                    "Yeni adla eklemek için kenarı boşluksuz, boş olmayan bir ad verin (newName).".into(),
+                    "Yeni adla eklemek için kenarı boşluksuz, boş olmayan bir ad verin (newName)."
+                        .into(),
                     format!("{at}.newName"),
                 ));
             }
@@ -295,7 +358,9 @@ fn rows(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Resu
 }
 
 fn rows_with_name(found: &[Incoming], kind: Kind, name: &str) -> bool {
-    found.iter().any(|i| i.kind == kind && key(&i.name) == key(name))
+    found
+        .iter()
+        .any(|i| i.kind == kind && key(&i.name) == key(name))
 }
 
 fn library_rows_with_name(names: &[(Kind, String)], kind: Kind, name: &str) -> bool {
@@ -304,12 +369,19 @@ fn library_rows_with_name(names: &[(Kind, String)], kind: Kind, name: &str) -> b
 
 fn counted(rows: Rows, revision: String) -> StandardsInstalled {
     let rows: Vec<StandardInstallRow> = rows.into_iter().map(|(r, _)| r).collect();
-    let n = |a: Action| rows.iter().filter(|r| r.action == a && r.status != "same").count() as u32;
+    let n = |a: Action| {
+        rows.iter()
+            .filter(|r| r.action == a && r.status != "same")
+            .count() as u32
+    };
     StandardsInstalled {
         added: n(Action::Add),
         replaced: n(Action::Replace),
         renamed: n(Action::RenameIncoming),
-        kept: rows.iter().filter(|r| r.action == Action::KeepLocal).count() as u32,
+        kept: rows
+            .iter()
+            .filter(|r| r.action == Action::KeepLocal)
+            .count() as u32,
         unavailable: rows.iter().filter(|r| r.status == "unavailable").count() as u32,
         rows,
         revision,
@@ -321,7 +393,11 @@ fn fresh() -> kentos_commands::BlockId {
 }
 
 /// The rows and the blocks they would write, every refusal checked.
-fn checked(doc: &Document, input: &StandardsInstall, libraries: &Libraries) -> Result<(StandardsResolved, Rows, library::BlockWrite), Stop> {
+fn checked(
+    doc: &Document,
+    input: &StandardsInstall,
+    libraries: &Libraries,
+) -> Result<(StandardsResolved, Rows, library::BlockWrite), Stop> {
     let libraries = given_libraries(input, libraries)?;
     let (resolved, rows) = rows(doc, input, &libraries)?;
     let blocks = library::plan_blocks(doc, &rows, fresh)?;
@@ -335,20 +411,34 @@ const LIBRARY_LIMIT: u64 = 16 * 1024 * 1024;
 /// an absolute `.kblok` path, read now; refused by the first that is not one, is missing or does not read.
 fn given_libraries(input: &StandardsInstall, libraries: &Libraries) -> Result<Libraries, Stop> {
     let mut out = libraries.clone();
-    let fail = |code: &str, message: String, i: usize| Stop::failed(error(code, message, Some(format!("libraries[{i}]"))));
+    let fail = |code: &str, message: String, i: usize| {
+        Stop::failed(error(code, message, Some(format!("libraries[{i}]"))))
+    };
     let mut read = Vec::new();
     for (i, path) in input.libraries.iter().enumerate() {
         let at = std::path::Path::new(path);
-        if !at.is_absolute() || at.extension().is_none_or(|e| !e.eq_ignore_ascii_case("kblok")) {
+        if !at.is_absolute()
+            || at
+                .extension()
+                .is_none_or(|e| !e.eq_ignore_ascii_case("kblok"))
+        {
             return Err(fail(
                 codes::INVALID_FILE_PATH,
-                format!("“{path}” bir blok kitaplığının (.kblok) mutlak yolu değil; tam yolu verin."),
+                format!(
+                    "“{path}” bir blok kitaplığının (.kblok) mutlak yolu değil; tam yolu verin."
+                ),
                 i,
             ));
         }
         let meta = match std::fs::metadata(at) {
             Ok(m) if m.is_file() => m,
-            _ => return Err(fail(codes::FILE_NOT_FOUND, format!("“{path}” yok; kitaplığın yolunu denetleyin."), i)),
+            _ => {
+                return Err(fail(
+                    codes::FILE_NOT_FOUND,
+                    format!("“{path}” yok; kitaplığın yolunu denetleyin."),
+                    i,
+                ));
+            }
         };
         if meta.len() > LIBRARY_LIMIT {
             return Err(fail(
@@ -357,11 +447,19 @@ fn given_libraries(input: &StandardsInstall, libraries: &Libraries) -> Result<Li
                 i,
             ));
         }
-        let name = at.file_stem().map_or_else(|| path.clone(), |s| s.to_string_lossy().into_owned());
+        let name = at
+            .file_stem()
+            .map_or_else(|| path.clone(), |s| s.to_string_lossy().into_owned());
         let library = std::fs::read_to_string(at)
             .map_err(|e| e.to_string())
             .and_then(|text| crate::standard_libraries::read_block_library(&name, &text))
-            .map_err(|why| fail(codes::BLOCK_LIBRARY_UNREADABLE, format!("“{path}” okunamadı: {why}."), i))?;
+            .map_err(|why| {
+                fail(
+                    codes::BLOCK_LIBRARY_UNREADABLE,
+                    format!("“{path}” okunamadı: {why}."),
+                    i,
+                )
+            })?;
         read.push(library);
     }
     for library in read.into_iter().rev() {
@@ -375,7 +473,10 @@ fn fresh_id(taken: &[&str], id: &str) -> String {
     if !taken.contains(&id) {
         return id.to_owned();
     }
-    (2..).map(|n| format!("{id}-{n}")).find(|c| !taken.contains(&c.as_str())).unwrap_or_default()
+    (2..)
+        .map(|n| format!("{id}-{n}"))
+        .find(|c| !taken.contains(&c.as_str()))
+        .unwrap_or_default()
 }
 
 /// The style table after the rows of `kind`.
@@ -432,7 +533,10 @@ fn write_rows(
         Kind::LineType,
         |t| t.name.as_str(),
         |t| t.name.as_str(),
-        |t, name, _| kentos_commands::LineTypeDef { name: name.unwrap_or_else(|| named(&t.name)), ..t.clone() },
+        |t, name, _| kentos_commands::LineTypeDef {
+            name: name.unwrap_or_else(|| named(&t.name)),
+            ..t.clone()
+        },
     );
     let hatch_patterns = styles(
         &s.hatch_patterns,
@@ -441,7 +545,10 @@ fn write_rows(
         Kind::HatchPattern,
         |t| t.name.as_str(),
         |t| t.name.as_str(),
-        |t, name, _| kentos_commands::HatchPatternDef { name: name.unwrap_or_else(|| named(&t.name)), ..t.clone() },
+        |t, name, _| kentos_commands::HatchPatternDef {
+            name: name.unwrap_or_else(|| named(&t.name)),
+            ..t.clone()
+        },
     );
     let text = styles(
         &s.text_styles,
@@ -519,15 +626,25 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &StandardsInstall) -> CommandR
 }
 
 /// [`validate`] reading the references from `libraries`.
-pub fn validate_with(cx: &ExecutionContext<'_>, input: &StandardsInstall, libraries: &Libraries) -> CommandResult<()> {
+pub fn validate_with(
+    cx: &ExecutionContext<'_>,
+    input: &StandardsInstall,
+    libraries: &Libraries,
+) -> CommandResult<()> {
     match checked(cx.doc, input, libraries) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// Every resource and what the install would do with it; the drawing stays.
-pub fn plan(cx: &ExecutionContext<'_>, input: &StandardsInstall) -> CommandResult<StandardsInstalled> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &StandardsInstall,
+) -> CommandResult<StandardsInstalled> {
     plan_with(cx, input, &Libraries::builtin())
 }
 
@@ -538,15 +655,19 @@ pub fn plan_with(
     libraries: &Libraries,
 ) -> CommandResult<StandardsInstalled> {
     match checked(cx.doc, input, libraries) {
-        Ok((_, rows, _)) => {
-            CommandResult::Completed { output: counted(rows, cx.doc.revision().to_string()), warnings: Vec::new() }
-        }
+        Ok((_, rows, _)) => CommandResult::Completed {
+            output: counted(rows, cx.doc.revision().to_string()),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// Installs as one undo step “Standart kaynaklarını kur”.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: StandardsInstall) -> CommandResult<StandardsInstalled> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: StandardsInstall,
+) -> CommandResult<StandardsInstalled> {
     execute_with(cx, input, &Libraries::builtin())
 }
 
@@ -567,7 +688,8 @@ pub fn execute_with(
                 Err(stop) => return stop.into(),
             };
             if let Err(message) = write_rows(cx.doc, &resolved, &rows, blocks) {
-                return Stop::failed(error(codes::BLOCK_REFUSED, message, Some("choices".into()))).into();
+                return Stop::failed(error(codes::BLOCK_REFUSED, message, Some("choices".into())))
+                    .into();
             }
             CommandResult::Completed {
                 output: counted(rows, cx.doc.revision().to_string()),

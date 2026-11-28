@@ -6,7 +6,10 @@ use crate::gis;
 
 /// Whether the record's form has tabs: a long form, which keeps the window's height.
 fn tabs_shown(e: &Entry) -> bool {
-    e.body.items.iter().any(|i| matches!(i, FormItem::Tab { .. }))
+    e.body
+        .items
+        .iter()
+        .any(|i| matches!(i, FormItem::Tab { .. }))
 }
 
 /// A short form's page as tall as its items (a row each) and the room round them (docs/adr/9346).
@@ -24,8 +27,16 @@ impl App {
         // One size a form, whether what is typed is saved or not (docs/adr/0746).
         let key = format!("{TITLE} · {name}");
         // A record only read says so in the window's name (docs/adr/9346): not “Formla düzenle”.
-        let shown = if e.read_only { format!("Kayıt formu · {name} · Salt okunur") } else { key.clone() };
-        let title = if e.dirty() { format!("{shown} ●") } else { shown };
+        let shown = if e.read_only {
+            format!("Kayıt formu · {name} · Salt okunur")
+        } else {
+            key.clone()
+        };
+        let title = if e.dirty() {
+            format!("{shown} ●")
+        } else {
+            shown
+        };
         // The pages take what the window has when it was given a size of its own (docs/adr/0746), else they
         // are 460 high (at 12 px text), less in a low window: the footer is always in sight (docs/adr/0749).
         let sized = kentos_ui::widget::sizable::sizes::get(&key).is_some();
@@ -36,9 +47,17 @@ impl App {
             head = head.push(tabs);
         }
         // A short form is as tall as its fields (docs/adr/9346), a long one scrolls in 460.
-        let tall = if sized { f32::INFINITY } else { typography::scaled(460.0) };
+        let tall = if sized {
+            f32::INFINITY
+        } else {
+            typography::scaled(460.0)
+        };
         let page = container(page.unwrap_or_else(|| space::vertical().into()))
-            .height(if sized || tabs_shown(e) { iced::Length::Fill } else { iced::Length::Fixed(short_height(e).min(tall)) })
+            .height(if sized || tabs_shown(e) {
+                iced::Length::Fill
+            } else {
+                iced::Length::Fixed(short_height(e).min(tall))
+            })
             .max_height(tall);
         let frame = Frame::new(title)
             .push(head)
@@ -106,17 +125,25 @@ impl App {
         if lines.is_empty() {
             return body;
         }
-        body.push(words::summary(lines.into_iter().map(|(kind, text)| words::text_line(kind, text)).collect()))
+        body.push(words::summary(
+            lines
+                .into_iter()
+                .map(|(kind, text)| words::text_line(kind, text))
+                .collect(),
+        ))
     }
 
     /// [`Self::entry_topology`]'s lines for the record of `uid`.
     pub(crate) fn entry_topology_lines(&self, uid: &str) -> Vec<(Kind, String)> {
         use crate::topology::object::ObjectFindings;
-        let slot = self
-            .document
-            .as_ref()
-            .and_then(|d| kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| d.model.slot_of(u)));
-        let Some(ObjectFindings::Checked { findings, old }) = slot.and_then(|s| self.object_findings(s)) else {
+        let slot = self.document.as_ref().and_then(|d| {
+            kentos_domain::Uuid::parse_str(uid)
+                .ok()
+                .and_then(|u| d.model.slot_of(u))
+        });
+        let Some(ObjectFindings::Checked { findings, old }) =
+            slot.and_then(|s| self.object_findings(s))
+        else {
             return Vec::new();
         };
         if findings.is_empty() {
@@ -127,12 +154,23 @@ impl App {
             format!(
                 "Topoloji: son denetimde {} bulgu{}.",
                 findings.len(),
-                if old { "; çizim denetimden sonra değişti" } else { "" }
+                if old {
+                    "; çizim denetimden sonra değişti"
+                } else {
+                    ""
+                }
             ),
         )];
         for f in findings {
-            let measure = if f.measure.is_empty() { String::new() } else { format!(" · {}", f.measure) };
-            lines.push((Kind::Info, format!("{} · {} · {}{measure}", f.problem, f.rule, f.state)));
+            let measure = if f.measure.is_empty() {
+                String::new()
+            } else {
+                format!(" · {}", f.measure)
+            };
+            lines.push((
+                Kind::Info,
+                format!("{} · {} · {}{measure}", f.problem, f.rule, f.state),
+            ));
         }
         lines
     }
@@ -143,18 +181,26 @@ impl App {
         let mut head = if e.members.is_empty() {
             // A data layer's row says its key too (docs/adr/9149): the record a table's row named, taken or only
             // shown (docs/adr/9159).
-            let key = e.row.as_ref().map(|(field, key)| format!(" · {field} {key}")).or_else(|| {
-                self.document.as_ref().and_then(|d| {
-                    let slot = e.uid_slot(self)?;
-                    let uid = d.model.uid(slot)?;
-                    let layer = d.model.get(slot)?.base().layer_id.clone();
-                    let key = d.model.taken_key(&layer, uid)?;
-                    let field = d.model.layers().get(&layer)?.data.as_ref()?.key.clone();
-                    Some(format!(" · {field} {key}"))
-                })
-            });
-            let mut named =
-                format!("{} · {}{}", e.screen.object.kind, e.screen.object.layer, key.unwrap_or_default());
+            let key = e
+                .row
+                .as_ref()
+                .map(|(field, key)| format!(" · {field} {key}"))
+                .or_else(|| {
+                    self.document.as_ref().and_then(|d| {
+                        let slot = e.uid_slot(self)?;
+                        let uid = d.model.uid(slot)?;
+                        let layer = d.model.get(slot)?.base().layer_id.clone();
+                        let key = d.model.taken_key(&layer, uid)?;
+                        let field = d.model.layers().get(&layer)?.data.as_ref()?.key.clone();
+                        Some(format!(" · {field} {key}"))
+                    })
+                });
+            let mut named = format!(
+                "{} · {}{}",
+                e.screen.object.kind,
+                e.screen.object.layer,
+                key.unwrap_or_default()
+            );
             // A record only read says so where it is named: a read-only connection's (docs/adr/9159), a row of a layer
             // not being edited or opened to be read (docs/adr/9319), a related item offered for reading.
             if e.read_only || self.read_only_source(&e.screen.layer).is_some() {
@@ -237,7 +283,10 @@ impl App {
             body = body.push(words::summary(vec![words::text_line(Kind::Warn, why)]));
         }
         // The record's topology findings of the Topoloji tab's last check (docs/adr/3800), one record's alone.
-        if e.members.is_empty() && !e.preview && self.shows_property_rows(crate::module_surfaces::PropertyRows::Topology) {
+        if e.members.is_empty()
+            && !e.preview
+            && self.shows_property_rows(crate::module_surfaces::PropertyRows::Topology)
+        {
             body = self.entry_topology(e, body);
         }
         // The lists' sources that are not ready, each with its way out (docs/adr/0763).
@@ -491,7 +540,11 @@ impl App {
             }
         }
         // A data layer's record goes into its edit session, not yet to its source: named so (docs/adr/9346).
-        let save = if self.entry_on_data_layer(e) { crate::data_edits::PREPARE } else { SAVE };
+        let save = if self.entry_on_data_layer(e) {
+            crate::data_edits::PREPARE
+        } else {
+            SAVE
+        };
         footer.push(words::primary(
             save,
             (!locked && !by_state).then(|| e.msg(Event::Save)),
@@ -502,7 +555,12 @@ impl App {
     pub(super) fn entry_on_data_layer(&self, e: &Entry) -> bool {
         self.document
             .as_ref()
-            .and_then(|d| d.model.layers().get(&e.screen.layer).map(|n| n.data.is_some()))
+            .and_then(|d| {
+                d.model
+                    .layers()
+                    .get(&e.screen.layer)
+                    .map(|n| n.data.is_some())
+            })
             .unwrap_or(false)
     }
 
@@ -517,7 +575,11 @@ impl App {
             return Some(why);
         }
         if e.read_only {
-            return Some(e.read_why.clone().unwrap_or_else(|| "Kayıt yalnız okumaya açıldı.".into()));
+            return Some(
+                e.read_why
+                    .clone()
+                    .unwrap_or_else(|| "Kayıt yalnız okumaya açıldı.".into()),
+            );
         }
         if let Some(why) = self.records_locked() {
             return Some(why);
@@ -534,7 +596,10 @@ impl App {
     /// The name of `layer` when it is a data layer of a read-only connection (docs/adr/9159).
     pub(crate) fn read_only_source(&self, layer: &str) -> Option<String> {
         let node = self.document.as_ref()?.model.layers().get(layer)?;
-        node.data.as_ref().filter(|d| d.read_only).map(|_| node.name.clone())
+        node.data
+            .as_ref()
+            .filter(|d| d.read_only)
+            .map(|_| node.name.clone())
     }
 
     /// Why a read-only connection's record is only shown, in the form's words.

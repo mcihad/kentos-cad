@@ -26,9 +26,9 @@
 //! Test code only.
 
 use crate::arch;
+use crate::arch::ArchState;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::make_cad;
@@ -106,7 +106,8 @@ fn repeat(app: &mut App) {
     // The project lists its levels 1. kat, zemin, 2. kat, bodrum: the ground floor is the second.
     event(app, Event::RepeatFrom(1));
     let k1 = app
-        .modules.arch()
+        .modules
+        .arch()
         .room_modules
         .as_ref()
         .and_then(|w| w.repeat_to.iter().position(|t| t.level == "kat1"))
@@ -130,13 +131,11 @@ fn floors(app: &mut App) {
 fn place(app: &mut App) {
     two(app);
     run(app, "tool.modulePlace");
-    let _ = app.update(Message::ToolSetting(
-        crate::tool_settings::Commit {
-            tool: "modulePlace",
-            key: "L",
-            value: "kat2".into(),
-        },
-    ));
+    let _ = app.update(Message::ToolSetting(crate::tool_settings::Commit {
+        tool: "modulePlace",
+        key: "L",
+        value: "kat2".into(),
+    }));
     hover(app, [16.0 - E, 0.0 - N]);
 }
 
@@ -170,7 +169,8 @@ fn again(app: &mut App) {
     run(app, "arch.modules");
     event(app, Event::RepeatFrom(1));
     let k2 = app
-        .modules.arch()
+        .modules
+        .arch()
         .room_modules
         .as_ref()
         .and_then(|w| w.repeat_to.iter().position(|t| t.level == "kat2"))
@@ -184,13 +184,11 @@ fn single(app: &mut App) {
     two(app);
     run(app, "tool.modulePlace");
     for (key, value) in [("L", "kat2"), ("K", "1")] {
-        let _ = app.update(Message::ToolSetting(
-            crate::tool_settings::Commit {
-                tool: "modulePlace",
-                key,
-                value: value.into(),
-            },
-        ));
+        let _ = app.update(Message::ToolSetting(crate::tool_settings::Commit {
+            tool: "modulePlace",
+            key,
+            value: value.into(),
+        }));
     }
     hover(app, [16.0 - E, 0.0 - N]);
 }
@@ -225,7 +223,8 @@ mod tests {
 
     fn plan(app: &App) -> kentos_commands::ModulesEdited {
         match &app
-            .modules.arch()
+            .modules
+            .arch()
             .room_modules
             .as_ref()
             .expect("the window")
@@ -243,7 +242,13 @@ mod tests {
         let mut app = crate::files_testing::app_with_drawing();
         again(&mut app);
         let p = plan(&app);
-        assert_eq!(p.copied.iter().map(|c| c.source.as_str()).collect::<Vec<_>>(), [uid(18)]);
+        assert_eq!(
+            p.copied
+                .iter()
+                .map(|c| c.source.as_str())
+                .collect::<Vec<_>>(),
+            [uid(18)]
+        );
         assert_eq!(p.report.matched.len(), 11);
         event(&mut app, Event::RepeatAgain(true));
         let p = plan(&app);
@@ -252,9 +257,15 @@ mod tests {
         event(&mut app, Event::RepeatAgain(false));
         let before = app.document.as_ref().unwrap().model.entities().count();
         event(&mut app, Event::Repeat);
-        assert_eq!(app.document.as_ref().unwrap().model.entities().count(), before + 1);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.entities().count(),
+            before + 1
+        );
         let _ = app.update(Message::Run("edit.undo"));
-        assert_eq!(app.document.as_ref().unwrap().model.entities().count(), before);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.entities().count(),
+            before
+        );
     }
 
     /// docs/adr/0811: Tek kat places the duplex's upper storey alone on the top level (the whole duplex finds no
@@ -267,9 +278,19 @@ mod tests {
         crate::tools_scenes::click(&mut app, [16.0 - E, 0.0 - N]);
         let doc = &app.document.as_ref().unwrap().model;
         assert_eq!(doc.entities().count(), before_single + 7);
-        let inst = doc.settings().arch.as_ref().unwrap().modules[0].instances.last().unwrap().clone();
-        assert_eq!((inst.storey, inst.level.as_deref(), inst.members.len()), (Some(1), Some("kat2"), 7));
+        let inst = doc.settings().arch.as_ref().unwrap().modules[0]
+            .instances
+            .last()
+            .unwrap()
+            .clone();
+        assert_eq!(
+            (inst.storey, inst.level.as_deref(), inst.members.len()),
+            (Some(1), Some("kat2"), 7)
+        );
         let _ = app.update(Message::Run("edit.undo"));
-        assert_eq!(app.document.as_ref().unwrap().model.entities().count(), before_single);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.entities().count(),
+            before_single
+        );
     }
 }

@@ -16,7 +16,11 @@ use kentos_native_application::jobs::Job;
 use kentos_ui::{
     label, style,
     theme::typography,
-    widget::{Dialog as Frame, NumberInput, VirtualList, number::units, select::{Choice as SelectChoice, Select}},
+    widget::{
+        Dialog as Frame, NumberInput, VirtualList,
+        number::units,
+        select::{Choice as SelectChoice, Select},
+    },
 };
 use std::{
     collections::HashSet,
@@ -98,7 +102,9 @@ impl Window {
         let source = self.source.as_ref()?;
         let path = if self.kind == ArrayFindKind::Path {
             Some(self.path.as_ref()?.uid.clone())
-        } else { None };
+        } else {
+            None
+        };
         let Entity::Insert(seed) = doc.get(doc.slot_of(source.parse().ok()?)?)? else {
             return None;
         };
@@ -190,20 +196,51 @@ fn layout_text(layout: &ArrayLayout, f: &kentos_interaction::Format) -> String {
             f.length(dx.abs()),
             f.length(dy.abs())
         ),
-        ArrayLayout::Lattice {rows,cols,dx,dy,column_angle,row_angle} => format!(
+        ArrayLayout::Lattice {
+            rows,
+            cols,
+            dx,
+            dy,
+            column_angle,
+            row_angle,
+        } => format!(
             "{rows} satır × {cols} sütun\nSütun {} / {} · Satır {} / {}\nDünya doğusu 0°; öğelerin kendi yönü korunur.",
-            f.length(dx.abs()),f.bearing(column_angle*400./360.),f.length(dy.abs()),f.bearing(row_angle*400./360.)
+            f.length(dx.abs()),
+            f.bearing(column_angle * 400. / 360.),
+            f.length(dy.abs()),
+            f.bearing(row_angle * 400. / 360.)
         ),
-        ArrayLayout::Polar { center, count, fill, rotate } => format!(
+        ArrayLayout::Polar {
+            center,
+            count,
+            fill,
+            rotate,
+        } => format!(
             "{} yer · {} · Açısal aralık {}\nMerkez (dünya X/Y): {} / {}\n{}",
-            count, f.bearing(fill * 400. / 360.), f.bearing(400. / count.max(1) as f64),
-            f.length(center.x), f.length(center.y),
-            if rotate { "Öğeler merkez etrafında döner" } else { "Öğelerin yönü korunur" }
+            count,
+            f.bearing(fill * 400. / 360.),
+            f.bearing(400. / count.max(1) as f64),
+            f.length(center.x),
+            f.length(center.y),
+            if rotate {
+                "Öğeler merkez etrafında döner"
+            } else {
+                "Öğelerin yönü korunur"
+            }
         ),
-        ArrayLayout::Path { count, spacing, align, .. } => format!(
+        ArrayLayout::Path {
+            count,
+            spacing,
+            align,
+            ..
+        } => format!(
             "{count} yer · Sabit aralık {}\n{} · Kılavuzun kayıtlı başlangıcından ve yönünde",
             f.length(spacing.unwrap_or(0.)),
-            if align { "Öğeler teğeti izler" } else { "Öğelerin yönü korunur" }
+            if align {
+                "Öğeler teğeti izler"
+            } else {
+                "Öğelerin yönü korunur"
+            }
         ),
         _ => format!("Aralık: {}", f.length(spacing(layout))),
     }
@@ -220,15 +257,23 @@ fn place_schema(layout: &ArrayLayout, items: &[ArrayItem]) -> String {
         }
         rows.join("\n")
     } else if matches!(layout, ArrayLayout::Polar { .. }) {
-        format!("↺ {}\nKaynak 1; yerler saat yönünün tersine ilerler.", places(items, 18))
+        format!(
+            "↺ {}\nKaynak 1; yerler saat yönünün tersine ilerler.",
+            places(items, 18)
+        )
     } else if matches!(layout, ArrayLayout::Path { .. }) {
-        format!("→ {}\nKaynak 1; yerler kılavuzun kayıtlı yönünde ilerler.", places(items, 18))
+        format!(
+            "→ {}\nKaynak 1; yerler kılavuzun kayıtlı yönünde ilerler.",
+            places(items, 18)
+        )
     } else {
         places(items, 18)
     }
 }
 fn keep_position(r: &Review) -> Element<'_, Message> {
-    if let ArrayLayout::Grid { rows, cols, .. } | ArrayLayout::Lattice { rows, cols, .. } = r.input.layout {
+    if let ArrayLayout::Grid { rows, cols, .. } | ArrayLayout::Lattice { rows, cols, .. } =
+        r.input.layout
+    {
         let index = (r.place - 1.).max(0.) as u32;
         column![
             row![
@@ -263,13 +308,16 @@ fn keep_position(r: &Review) -> Element<'_, Message> {
                 .range(1.0..=r.input.items.len() as f64)
                 .step(1.)
                 .decimals(0),
-            Some(if matches!(r.input.layout, ArrayLayout::Path { .. }) {
-                "Kaynak 1'dir; yerler kılavuzun kayıtlı yönünde ilerler. Dolu yere yazılmaz."
-            } else if matches!(r.input.layout, ArrayLayout::Polar { .. }) {
-                "Kaynak 1'dir; yerler saat yönünün tersine ilerler. Dolu yere yazılmaz."
-            } else {
-                "Yerler soldan/ilk uçtan 1 ile başlar. Dolu yerin üzerine yazılmaz."
-            }.into()),
+            Some(
+                if matches!(r.input.layout, ArrayLayout::Path { .. }) {
+                    "Kaynak 1'dir; yerler kılavuzun kayıtlı yönünde ilerler. Dolu yere yazılmaz."
+                } else if matches!(r.input.layout, ArrayLayout::Polar { .. }) {
+                    "Kaynak 1'dir; yerler saat yönünün tersine ilerler. Dolu yere yazılmaz."
+                } else {
+                    "Yerler soldan/ilk uçtan 1 ile başlar. Dolu yerin üzerine yazılmaz."
+                }
+                .into(),
+            ),
         )
     }
 }
@@ -328,8 +376,12 @@ impl App {
             );
             body=body.push(words::text_line(Kind::Info,"Bloklar taşınmaz veya yeniden oluşturulmaz. Boş yerler boş kalır; mevcut ölçü bağları ve proje birimi korunur."));
             if let ArrayLayout::Path { path, .. } = &r.input.layout
-                && let Some(choice) = w.paths.iter().find(|c| &c.uid == path) {
-                    body = body.push(label::caption(format!("Kılavuz: {}. Yol düzenlenince normal öğeler aynı kimliklerle izler.", choice.label)));
+                && let Some(choice) = w.paths.iter().find(|c| &c.uid == path)
+            {
+                body = body.push(label::caption(format!(
+                    "Kılavuz: {}. Yol düzenlenince normal öğeler aynı kimliklerle izler.",
+                    choice.label
+                )));
             }
             let choices = available_choices(r);
             if !r.choices.is_empty() {
@@ -347,9 +399,17 @@ impl App {
                 ));
             }
             if r.keep_options && !choices.is_empty() && !w.busy {
-                let picked = r.choice.as_ref().and_then(|c| choices.iter().position(|v| v == c));
-                let options = choices.iter().map(|c| SelectChoice::new(c.label.clone())).collect::<Vec<_>>();
-                let select = Select::new(options, picked, move |i| msg(Event::KeepObject(choices[i].clone())));
+                let picked = r
+                    .choice
+                    .as_ref()
+                    .and_then(|c| choices.iter().position(|v| v == c));
+                let options = choices
+                    .iter()
+                    .map(|c| SelectChoice::new(c.label.clone()))
+                    .collect::<Vec<_>>();
+                let select = Select::new(options, picked, move |i| {
+                    msg(Event::KeepObject(choices[i].clone()))
+                });
                 body=body.push(words::field("Eşleşmeyen blok",container(select).width(Fill),Some("Bu bloğu yalnız seçtiğiniz boş yere, mevcut konumunu koruyarak bağlayın.".into())))
                     .push(keep_position(r))
                     .push(row![words::secondary("Bloğu göster",r.choice.as_ref().map(|_|msg(Event::ShowKept))),words::secondary("Bu yere koru",r.choice.as_ref().map(|_|msg(Event::Assign)))].spacing(8));
@@ -393,9 +453,19 @@ impl App {
             if w.source.is_none() {
                 body=body.push(words::text_line(Kind::Warn,"Çizimde tek bir blok yerleştirmesi seçip yeniden açın. Bir bloğun tanımını değil, çizimdeki örneğini seçin."));
             }
-            let kinds = [ArrayFindKind::Line, ArrayFindKind::Grid, ArrayFindKind::Lattice, ArrayFindKind::Polar, ArrayFindKind::Path];
+            let kinds = [
+                ArrayFindKind::Line,
+                ArrayFindKind::Grid,
+                ArrayFindKind::Lattice,
+                ArrayFindKind::Polar,
+                ArrayFindKind::Path,
+            ];
             let chosen = kinds.iter().position(|k| *k == w.kind);
-            let kind_select = Select::new(kinds.iter().map(|k| SelectChoice::new(kind_name(*k))), chosen, move |i| msg(Event::PatternKind(kinds[i])));
+            let kind_select = Select::new(
+                kinds.iter().map(|k| SelectChoice::new(kind_name(*k))),
+                chosen,
+                move |i| msg(Event::PatternKind(kinds[i])),
+            );
             body=body.push(label::body("Aynı bloğun görünür yerleştirmelerinde seçilen düzen aranır. Sonuçlar çizimi değiştirmeden Bloklar panelinde açılır."))
                 .push(words::field("Düzen türü", container(kind_select).width(Fill), Some("Doğrusal ve yol en az üç; dikdörtgen ve kutupsal en az dört mevcut öğe gerektirir.".into())))
                 .push(words::field("Tolerans (mm)",NumberInput::new(w.tolerance,|n|msg(Event::Tolerance(n))).units(units::MILLIMETRE).range(0.0..=0.001).step(0.001).decimals(3),Some("Sıfırdan büyük, en çok 1 mm. Varsayılan 0,001 mm; çizim ölçeğini değiştirmez.".into())))
@@ -409,9 +479,16 @@ impl App {
                 }));
             if w.kind == ArrayFindKind::Path {
                 let paths = w.paths.clone();
-                let picked = w.path.as_ref().and_then(|p| paths.iter().position(|v| v == p));
-                let choices = paths.iter().map(|p| SelectChoice::new(p.label.clone())).collect::<Vec<_>>();
-                let path_select = Select::new(choices, picked, move |i| msg(Event::Path(paths[i].clone())));
+                let picked = w
+                    .path
+                    .as_ref()
+                    .and_then(|p| paths.iter().position(|v| v == p));
+                let choices = paths
+                    .iter()
+                    .map(|p| SelectChoice::new(p.label.clone()))
+                    .collect::<Vec<_>>();
+                let path_select =
+                    Select::new(choices, picked, move |i| msg(Event::Path(paths[i].clone())));
                 body = body.push(words::field("Kılavuz yol", container(path_select).width(Fill),
                     Some("Kaynak bloğu ve bir kılavuzu birlikte seçip açabilirsiniz. Başlangıçtaki blok kaynak olmalı; yön değiştirilmez. İlk 2048 görünür kılavuz listelenir. Kılavuz çizimde kalır.".into())));
             }
@@ -518,12 +595,19 @@ impl App {
             Control::Press("Bloğu göster") => Event::ShowKept,
             Control::Pick("Düzen türü", name) => Event::PatternKind(match name {
                 "Doğrusal" => ArrayFindKind::Line,
-                "Dikdörtgen (X/Y)" => ArrayFindKind::Grid, "Dönük/eğik ızgara" => ArrayFindKind::Lattice,
+                "Dikdörtgen (X/Y)" => ArrayFindKind::Grid,
+                "Dönük/eğik ızgara" => ArrayFindKind::Lattice,
                 "Kutupsal (tam çember)" => ArrayFindKind::Polar,
                 "Yol boyunca (sabit aralık)" => ArrayFindKind::Path,
                 _ => return Err("Düzen türü listede yok".into()),
             }),
-            Control::Pick("Kılavuz yol", name) => Event::Path(w.paths.iter().find(|p|p.label==name).cloned().ok_or("Kılavuz listede yok")?),
+            Control::Pick("Kılavuz yol", name) => Event::Path(
+                w.paths
+                    .iter()
+                    .find(|p| p.label == name)
+                    .cloned()
+                    .ok_or("Kılavuz listede yok")?,
+            ),
             Control::Fill("Tolerans (mm)", s) => Event::Tolerance(
                 kentos_ui::widget::number::evaluate(s, units::MILLIMETRE)
                     .map_err(|e| e.to_string())?,
@@ -611,8 +695,9 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
                 scrollable(top).height(Fill),
                 row![
                     words::secondary("Yeni kaynak", Some(msg(Event::Back))),
-                    words::secondary("Ayarlar", current.then(||msg(Event::Settings)))
-                ].spacing(6)
+                    words::secondary("Ayarlar", current.then(|| msg(Event::Settings)))
+                ]
+                .spacing(6)
             ]
             .spacing(8),
         )
@@ -623,10 +708,16 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
     if output.matches.is_empty() {
         top=top.push(label::body("Seçilen düzene uyan aday bulunamadı. Ayarlardaki kapsam ve düzen koşullarını gözden geçirin."));
     }
-    let row_height = typography::scaled(if w.kind == ArrayFindKind::Lattice { 128. } else { 96. });
+    let row_height = typography::scaled(if w.kind == ArrayFindKind::Lattice {
+        128.
+    } else {
+        96.
+    });
     let list = VirtualList::new(output.matches.len(), row_height, move |index| {
         let candidate = &output.matches[index];
-        let title = if let ArrayLayout::Grid { rows, cols, .. } | ArrayLayout::Lattice { rows, cols, .. } = candidate.adoption.layout {
+        let title = if let ArrayLayout::Grid { rows, cols, .. }
+        | ArrayLayout::Lattice { rows, cols, .. } = candidate.adoption.layout
+        {
             format!(
                 "{}{rows} × {cols} · {} dolu · {} boş",
                 if candidate.overlaps {
@@ -638,9 +729,15 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
                 candidate.missing
             )
         } else if let ArrayLayout::Polar { count, .. } = candidate.adoption.layout {
-            format!("Çember · {count} yer · {} dolu · {} boş", candidate.present, candidate.missing)
+            format!(
+                "Çember · {count} yer · {} dolu · {} boş",
+                candidate.present, candidate.missing
+            )
         } else if let ArrayLayout::Path { count, .. } = candidate.adoption.layout {
-            format!("Yol · {count} yer · {} dolu · {} boş", candidate.present, candidate.missing)
+            format!(
+                "Yol · {count} yer · {} dolu · {} boş",
+                candidate.present, candidate.missing
+            )
         } else {
             format!(
                 "Sıra {} · {} dolu · {} boş",
@@ -657,16 +754,54 @@ fn panel_height(app: &App, height: f32) -> Element<'_, Message> {
                     f.length(dy.abs())
                 ))
                 .into()
-            } else if let ArrayLayout::Lattice {dx,dy,column_angle,row_angle,..}=candidate.adoption.layout {
-                label::caption(format!("Sütun {} / {}\nSatır {} / {} · Yön korunur",f.length(dx.abs()),f.bearing(column_angle*400./360.),f.length(dy.abs()),f.bearing(row_angle*400./360.))).into()
+            } else if let ArrayLayout::Lattice {
+                dx,
+                dy,
+                column_angle,
+                row_angle,
+                ..
+            } = candidate.adoption.layout
+            {
+                label::caption(format!(
+                    "Sütun {} / {}\nSatır {} / {} · Yön korunur",
+                    f.length(dx.abs()),
+                    f.bearing(column_angle * 400. / 360.),
+                    f.length(dy.abs()),
+                    f.bearing(row_angle * 400. / 360.)
+                ))
+                .into()
             } else if let ArrayLayout::Polar { count, rotate, .. } = candidate.adoption.layout {
-                label::caption(format!("{} aralık · {}{}", f.bearing(400. / count.max(1) as f64),
-                    if rotate { "Öğeler döner" } else { "Yön korunur" },
-                    if candidate.overlaps { " · Ortak öğe" } else { "" })).into()
+                label::caption(format!(
+                    "{} aralık · {}{}",
+                    f.bearing(400. / count.max(1) as f64),
+                    if rotate {
+                        "Öğeler döner"
+                    } else {
+                        "Yön korunur"
+                    },
+                    if candidate.overlaps {
+                        " · Ortak öğe"
+                    } else {
+                        ""
+                    }
+                ))
+                .into()
             } else if let ArrayLayout::Path { spacing, align, .. } = candidate.adoption.layout {
-                label::caption(format!("{} · {}{}", f.length(spacing.unwrap_or(0.)),
-                    if align { "Teğeti izler" } else { "Yön korunur" },
-                    if candidate.overlaps { " · Ortak öğe" } else { "" })).into()
+                label::caption(format!(
+                    "{} · {}{}",
+                    f.length(spacing.unwrap_or(0.)),
+                    if align {
+                        "Teğeti izler"
+                    } else {
+                        "Yön korunur"
+                    },
+                    if candidate.overlaps {
+                        " · Ortak öğe"
+                    } else {
+                        ""
+                    }
+                ))
+                .into()
             } else {
                 row![
                     label::caption(format!(
@@ -765,16 +900,55 @@ impl App {
             return;
         };
         let selection = self.selection.ids();
-        let inserts: Vec<_> = selection.iter().copied().filter(|s|matches!(doc.model.get(*s),Some(Entity::Insert(_)))).collect();
-        let picked = inserts.first().filter(|_|inserts.len()==1).copied();
-        let paths:Vec<_> = doc.model.entities_with_uids().filter_map(|(uid,e)|{
-            let kind = match e {Entity::Line(_)=>"Çizgi",Entity::Arc(_)=>"Yay",Entity::Circle(_)=>"Çember",Entity::Polyline(_)=>"Çoklu çizgi",_=>return None};
-            if !doc.model.layers().is_visible(&e.base().layer_id) || doc.model.layers().is_frozen(&e.base().layer_id) {return None;}
-            Some(Choice {uid:uid.to_string(),label:format!("{kind} #{} · Katman {}",e.base().id,e.base().layer_id)})
-        }).take(2048).collect();
-        let selected_paths:Vec<_> = paths.iter().filter(|p|p.uid.parse().ok().and_then(|u|doc.model.slot_of(u)).is_some_and(|s|selection.contains(&s))).cloned().collect();
-        let path = selected_paths.first().filter(|_|selected_paths.len()==1).cloned();
-        let kind = if path.is_some() {ArrayFindKind::Path} else {ArrayFindKind::Line};
+        let inserts: Vec<_> = selection
+            .iter()
+            .copied()
+            .filter(|s| matches!(doc.model.get(*s), Some(Entity::Insert(_))))
+            .collect();
+        let picked = inserts.first().filter(|_| inserts.len() == 1).copied();
+        let paths: Vec<_> = doc
+            .model
+            .entities_with_uids()
+            .filter_map(|(uid, e)| {
+                let kind = match e {
+                    Entity::Line(_) => "Çizgi",
+                    Entity::Arc(_) => "Yay",
+                    Entity::Circle(_) => "Çember",
+                    Entity::Polyline(_) => "Çoklu çizgi",
+                    _ => return None,
+                };
+                if !doc.model.layers().is_visible(&e.base().layer_id)
+                    || doc.model.layers().is_frozen(&e.base().layer_id)
+                {
+                    return None;
+                }
+                Some(Choice {
+                    uid: uid.to_string(),
+                    label: format!("{kind} #{} · Katman {}", e.base().id, e.base().layer_id),
+                })
+            })
+            .take(2048)
+            .collect();
+        let selected_paths: Vec<_> = paths
+            .iter()
+            .filter(|p| {
+                p.uid
+                    .parse()
+                    .ok()
+                    .and_then(|u| doc.model.slot_of(u))
+                    .is_some_and(|s| selection.contains(&s))
+            })
+            .cloned()
+            .collect();
+        let path = selected_paths
+            .first()
+            .filter(|_| selected_paths.len() == 1)
+            .cloned();
+        let kind = if path.is_some() {
+            ArrayFindKind::Path
+        } else {
+            ArrayFindKind::Line
+        };
         let (source, name) = picked
             .and_then(|s| {
                 let Entity::Insert(i) = doc.model.get(s)? else {
@@ -898,7 +1072,10 @@ impl App {
                 w.refused = None;
             }
             Event::Path(path) if !w.busy => {
-                if w.paths.contains(&path) {w.path=Some(path);w.refused=None;}
+                if w.paths.contains(&path) {
+                    w.path = Some(path);
+                    w.refused = None;
+                }
             }
             Event::Tolerance(t) if !w.busy => {
                 w.tolerance = t;
@@ -1063,7 +1240,8 @@ impl App {
             Event::KeepRow(value) | Event::KeepCol(value) if !w.busy => {
                 let row = matches!(event, Event::KeepRow(_));
                 if let Some(r) = &mut w.review
-                    && let ArrayLayout::Grid { rows, cols, .. } | ArrayLayout::Lattice { rows, cols, .. } = r.input.layout
+                    && let ArrayLayout::Grid { rows, cols, .. }
+                    | ArrayLayout::Lattice { rows, cols, .. } = r.input.layout
                 {
                     let max = if row { rows } else { cols };
                     if !value.is_finite() || value.fract() != 0. || value < 1. || value > max as f64

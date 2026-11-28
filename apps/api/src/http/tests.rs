@@ -870,7 +870,9 @@ async fn a_machine_s_sign_up_is_refused_before_the_database() {
             "login": "bot", "password": "parola-1234", "displayName": "Bot", "email": "bot@x.test",
             "profession": "architect", "chamberNo": "1", "officeName": null, "phone": null, "province": null
         });
-        body.as_object_mut().unwrap().extend(extra.as_object().unwrap().clone());
+        body.as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
         Request::post("/v1/portal/signup")
             .header(header::CONTENT_TYPE, "application/json")
             .header("x-kentos-client", "web")
@@ -881,7 +883,11 @@ async fn a_machine_s_sign_up_is_refused_before_the_database() {
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     let e: ApiError = serde_json::from_slice(&body).unwrap();
     assert_eq!(e.path.as_deref(), Some("ticket"), "{e:?}");
-    let (status, _, body) = send(&app, form(serde_json::json!({ "website": "http://spam.test" }))).await;
+    let (status, _, body) = send(
+        &app,
+        form(serde_json::json!({ "website": "http://spam.test" })),
+    )
+    .await;
     assert_eq!(status, StatusCode::UNPROCESSABLE_ENTITY);
     assert!(String::from_utf8_lossy(&body).contains("Kayıt alınamadı"));
     // Twenty tries in ten minutes from one address; then 429 with when to try again.
@@ -901,7 +907,9 @@ async fn a_notification_reaches_the_person_s_open_stream_as_it_is_written() {
     let Some(db) = TestDb::create().await else {
         return;
     };
-    admin::create_local_user(&db.owner, "ayse", "Ayşe Yılmaz", None, "dogru-parola-1").await.unwrap();
+    admin::create_local_user(&db.owner, "ayse", "Ayşe Yılmaz", None, "dogru-parola-1")
+        .await
+        .unwrap();
     let notices = crate::hub::Notices::default();
     tokio::spawn(crate::hub::listen(db.app.clone(), notices.clone()));
     let app = router(AppState {
@@ -912,24 +920,48 @@ async fn a_notification_reaches_the_person_s_open_stream_as_it_is_written() {
         logins: Default::default(),
         signups: Default::default(),
         notices,
-        blobs: kentos_application::blobs::Blobs::new(std::env::temp_dir().join(format!("kentos-api-blobs-{}", uuid::Uuid::now_v7()))),
+        blobs: kentos_application::blobs::Blobs::new(
+            std::env::temp_dir().join(format!("kentos-api-blobs-{}", uuid::Uuid::now_v7())),
+        ),
         proxy: None,
         extension_catalog: None,
     });
     let (status, headers, body) = send(&app, login_request("ayse", "dogru-parola-1", true)).await;
     assert_eq!(status, StatusCode::OK);
     let me: Me = serde_json::from_slice(&body).unwrap();
-    let cookie = headers.get(header::SET_COOKIE).unwrap().to_str().unwrap().split(';').next().unwrap().to_string();
+    let cookie = headers
+        .get(header::SET_COOKIE)
+        .unwrap()
+        .to_str()
+        .unwrap()
+        .split(';')
+        .next()
+        .unwrap()
+        .to_string();
     let res = app
         .clone()
-        .oneshot(Request::get("/v1/me/notifications/stream").header(header::COOKIE, &cookie).body(Body::empty()).unwrap())
+        .oneshot(
+            Request::get("/v1/me/notifications/stream")
+                .header(header::COOKIE, &cookie)
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
     assert_eq!(res.status(), StatusCode::OK);
-    assert!(res.headers()[header::CONTENT_TYPE].to_str().unwrap().starts_with("text/event-stream"));
+    assert!(
+        res.headers()[header::CONTENT_TYPE]
+            .to_str()
+            .unwrap()
+            .starts_with("text/event-stream")
+    );
     let mut events = res.into_body().into_data_stream();
     let next = async |events: &mut axum::body::BodyDataStream| loop {
-        let chunk = tokio::time::timeout(std::time::Duration::from_secs(10), events.next()).await.unwrap().unwrap().unwrap();
+        let chunk = tokio::time::timeout(std::time::Duration::from_secs(10), events.next())
+            .await
+            .unwrap()
+            .unwrap()
+            .unwrap();
         let text = String::from_utf8_lossy(&chunk).to_string();
         if text.contains("event: unread") {
             return text;

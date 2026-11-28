@@ -38,7 +38,11 @@ pub(crate) fn sections(app: &App, slot: Slot) -> Vec<Section> {
         let photo = v.kind == AttachmentKind::Photo;
         // Where a linked file is looked for, whole: a line of the menu, not a choice.
         let place = v.linked.as_ref().map(|(path, missing)| Choice::Pick {
-            label: format!("{}: {}", if *missing { "Aranan yer" } else { "Konum" }, path.display()),
+            label: format!(
+                "{}: {}",
+                if *missing { "Aranan yer" } else { "Konum" },
+                path.display()
+            ),
             swatch: None,
             icon: None,
             wide: false,
@@ -46,7 +50,11 @@ pub(crate) fn sections(app: &App, slot: Slot) -> Vec<Section> {
             enabled: false,
             message: attachment(Event::Open(slot, v.index)),
         });
-        let mut items: Vec<Choice> = place.into_iter().chain([Choice::Separator]).filter(|_| v.linked.is_some()).collect();
+        let mut items: Vec<Choice> = place
+            .into_iter()
+            .chain([Choice::Separator])
+            .filter(|_| v.linked.is_some())
+            .collect();
         items.push(Choice::Action {
             label: if photo { "Görüntüle" } else { "Aç" },
             icon: if photo { "photo" } else { "externalOpen" },

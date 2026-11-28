@@ -62,7 +62,9 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     const RAILING: &[&str] = &["railing"];
     const MADE_OF: &[&str] = &["column", "beam", "roof"];
     const ROOF: &[&str] = &["roof"];
-    const ALL: &[&str] = &["grid", "column", "stair", "ramp", "beam", "roof", "railing", "mass"];
+    const ALL: &[&str] = &[
+        "grid", "column", "stair", "ramp", "beam", "roof", "railing", "mass",
+    ];
     let mut out = Vec::new();
     let mut add = |on: bool, name: &'static str, kinds: &'static [&'static str]| {
         if on {
@@ -85,7 +87,11 @@ fn given(c: &ArchChange) -> Vec<(&'static str, &'static [&'static str])> {
     add(c.risers.is_some(), "risers", STAIR);
     add(c.riser_height.is_some(), "riserHeight", STAIR);
     // A column's: its storey's height again (docs/adr/8070 §8).
-    add(c.height_from_level.is_some(), "heightFromLevel", STAIR_COLUMN);
+    add(
+        c.height_from_level.is_some(),
+        "heightFromLevel",
+        STAIR_COLUMN,
+    );
     add(c.post.is_some(), "post", STAIR);
     add(c.tread.is_some(), "tread", STAIR);
     add(c.landing.is_some(), "landing", FLIGHT);
@@ -154,7 +160,11 @@ fn numbers(c: &ArchChange) -> Result<(), Stop> {
         (c.rise, "rise", "Yükseklik"),
         (flat(c.slope), "slope", "Eğim"),
         (flat(c.base), "base", "Başlangıç kotu"),
-        (flat(c.base_offset), "baseOffset", "Kata göre başlangıç kotu"),
+        (
+            flat(c.base_offset),
+            "baseOffset",
+            "Kata göre başlangıç kotu",
+        ),
         (c.height, "height", "Yükseklik"),
         (c.offset, "offset", "Kot farkı"),
         (flat(c.thickness), "thickness", "Kalınlık"),
@@ -457,12 +467,20 @@ fn arch_mut(e: &mut Entity) -> Option<&mut kentos_commands::ArchInfo> {
 
 /// The project's levels.
 fn level_list(doc: &Document) -> &[kentos_commands::ArchLevel] {
-    doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice())
+    doc.settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.levels.as_slice())
 }
 
 /// `e` checked at `path`, a column settled on its grids, with the warnings a stair or a ramp gives; `binds`: the change
 /// binds a stair's rise to its level's height.
-fn settled(doc: &Document, e: Entity, path: &str, binds: bool) -> Result<(Entity, Vec<CommandWarning>), Stop> {
+fn settled(
+    doc: &Document,
+    e: Entity,
+    path: &str,
+    binds: bool,
+) -> Result<(Entity, Vec<CommandWarning>), Stop> {
     let mut warnings = Vec::new();
     let e = match e {
         Entity::Grid(g) => {
@@ -506,7 +524,11 @@ fn settled(doc: &Document, e: Entity, path: &str, binds: bool) -> Result<(Entity
         // A mass's rings and height follow a space's rules (docs/adr/8178).
         Entity::Mass(m) => {
             if let Some((field, words)) = m.mass.problem() {
-                return Err(fail(codes::INVALID_SPACE, words, &format!("{path}.{field}")));
+                return Err(fail(
+                    codes::INVALID_SPACE,
+                    words,
+                    &format!("{path}.{field}"),
+                ));
             }
             Entity::Mass(m)
         }
@@ -527,7 +549,8 @@ fn settled(doc: &Document, e: Entity, path: &str, binds: bool) -> Result<(Entity
         }
         // Its riser height read from its level's height (docs/adr/0724 §1); bound now, the level must have one.
         Entity::Stair(mut s) => {
-            if binds && s.stair.height_from_level && s.stair.level_riser(level_list(doc)).is_none() {
+            if binds && s.stair.height_from_level && s.stair.level_riser(level_list(doc)).is_none()
+            {
                 return Err(fail(
                     codes::INVALID_STAIR,
                     "Merdivenin katının yüksekliği yok; merdiven onu izleyemez. Proje ayarları › Mimari'de katın yüksekliğini verin."
@@ -683,7 +706,10 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
             let Entity::Column(c) = e else {
                 return Err(fail(
                     codes::NOT_A_COLUMN,
-                    format!("Mesafe yalnız kolonu kaydırır; {} kaydırılmaz.", kind_name(e)),
+                    format!(
+                        "Mesafe yalnız kolonu kaydırır; {} kaydırılmaz.",
+                        kind_name(e)
+                    ),
                     &format!("uids[{at}]"),
                 ));
             };
@@ -725,14 +751,16 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
             let around = crate::column_distances::Around::of(doc, *slot);
             let (walls, columns) = (around.walls(), around.columns());
             let to = match to {
-                kentos_commands::DistanceTo::Face => kentos_geometry_core::ops::column_shift::moved(
-                    &walls,
-                    &columns,
-                    0,
-                    *side as usize,
-                    *distance,
-                )
-                .map_err(|why| fail(codes::INVALID_COLUMN, why, "operation.side"))?,
+                kentos_commands::DistanceTo::Face => {
+                    kentos_geometry_core::ops::column_shift::moved(
+                        &walls,
+                        &columns,
+                        0,
+                        *side as usize,
+                        *distance,
+                    )
+                    .map_err(|why| fail(codes::INVALID_COLUMN, why, "operation.side"))?
+                }
                 kentos_commands::DistanceTo::Grid => {
                     // docs/adr/0728 §1: from the column's middle to the nearest grid parallel to the side.
                     let grids = crate::grid_refs::Grids::of(doc);

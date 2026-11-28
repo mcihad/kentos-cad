@@ -7,9 +7,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::Path;
 
 use kentos_commands::encoding::sha256_hex;
-use kentos_commands::{
-    Entity, ExportGml, GmlExported, GmlFileWritten, GmlLayerWritten, ImportGml,
-};
+use kentos_commands::{Entity, ExportGml, GmlExported, GmlFileWritten, GmlLayerWritten, ImportGml};
 use kentos_domain::Document;
 use kentos_geopackage as gpkg;
 use kentos_geopackage::{ColumnKind, Geometry, Value};
@@ -150,7 +148,8 @@ fn export_all(doc: &Document, input: &ExportGml) -> Result<Made, (String, String
                 .map(|c| gml_write::type_word(&c.kind).to_owned())
                 .collect(),
             geometry: {
-                let geoms: Vec<&Geometry> = features.iter().filter_map(|(g, _)| g.as_ref()).collect();
+                let geoms: Vec<&Geometry> =
+                    features.iter().filter_map(|(g, _)| g.as_ref()).collect();
                 if geoms.is_empty() {
                     "None".to_owned()
                 } else {
@@ -195,7 +194,12 @@ fn export_all(doc: &Document, input: &ExportGml) -> Result<Made, (String, String
         .map_or_else(|| "katman".to_owned(), |n| n.to_string_lossy().into_owned());
     let xsd_name = format!("{stem}.xsd");
     let mut notes = Notes::default();
-    let gml = gml_write::write(&types, srid, input.schema.then_some(xsd_name.as_str()), &mut notes);
+    let gml = gml_write::write(
+        &types,
+        srid,
+        input.schema.then_some(xsd_name.as_str()),
+        &mut notes,
+    );
     if notes.zero_z > 0 {
         lost.insert(format!(
             "{} konumun kotu yok: kotlu geometrilerde GML kotsuz konum tutmadığından 0 yazıldı",
@@ -223,12 +227,16 @@ fn export_all(doc: &Document, input: &ExportGml) -> Result<Made, (String, String
     let mut files: Vec<(String, Vec<u8>)> = Vec::new();
     if input.schema {
         let geoms: Vec<String> = written.iter().map(|w| w.geometry.clone()).collect();
-        let geoms: Vec<&str> = geoms.iter().map(|g| if g == "None" { "" } else { g.as_str() }).collect();
+        let geoms: Vec<&str> = geoms
+            .iter()
+            .map(|g| if g == "None" { "" } else { g.as_str() })
+            .collect();
         files.push((xsd_name, gml_write::schema(&types, &geoms).into_bytes()));
     }
-    let gml_name = Path::new(&input.path)
-        .file_name()
-        .map_or_else(|| "katman.gml".to_owned(), |n| n.to_string_lossy().into_owned());
+    let gml_name = Path::new(&input.path).file_name().map_or_else(
+        || "katman.gml".to_owned(),
+        |n| n.to_string_lossy().into_owned(),
+    );
     files.push((gml_name, gml.into_bytes()));
     let output = GmlExported {
         path: input.path.clone(),
@@ -246,7 +254,11 @@ fn export_all(doc: &Document, input: &ExportGml) -> Result<Made, (String, String
         left,
         lost: lost.into_iter().collect(),
     };
-    Ok(Made { files, output, time_left_out: 0 })
+    Ok(Made {
+        files,
+        output,
+        time_left_out: 0,
+    })
 }
 
 /// The file's feature types as the GeoPackage import reads tables; the schema and `.gfs` beside `path` are read when
@@ -270,7 +282,9 @@ pub fn read(path: &Path, bytes: &[u8], input: &ImportGml) -> Result<Read, String
     if let Some(other) = &parsed.other_crs
         && parsed.srid.is_none()
     {
-        losses.push(format!("dosyanın sistemi ({other}) bir EPSG kodu değil; tanınmadı"));
+        losses.push(format!(
+            "dosyanın sistemi ({other}) bir EPSG kodu değil; tanınmadı"
+        ));
     }
     let srid = parsed.srid.or(input.srid);
     let wanted: Vec<&String> = input.tables.iter().collect();

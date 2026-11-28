@@ -225,7 +225,12 @@ impl ModuleParts for Road {
         .to_owned()
     }
 
-    fn dialog_control(&self, app: &App, kind: u16, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn dialog_control(
+        &self,
+        app: &App,
+        kind: u16,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         let Some(kind) = K::of(kind) else {
             return Err(format!("Yol penceresi {kind} izden yanıtlanamıyor"));
         };
@@ -268,7 +273,9 @@ impl ModuleParts for Road {
 
     fn area_layers<'a>(&self, app: &'a App) -> Vec<Element<'a, Message>> {
         // A road project's alignments, km and curve points (alignment_layer.rs, plan/road.md Y3).
-        let Some(doc) = &app.document else { return Vec::new() };
+        let Some(doc) = &app.document else {
+            return Vec::new();
+        };
         let tokens = Tokens::of(&app.theme());
         crate::alignment_layer::layer(
             &doc.model,
@@ -314,7 +321,11 @@ impl ModuleParts for Road {
         None
     }
 
-    fn bottom_tab_view<'a>(&self, _app: &'a App, _tab: crate::bottom::BottomTab) -> Option<Element<'a, Message>> {
+    fn bottom_tab_view<'a>(
+        &self,
+        _app: &'a App,
+        _tab: crate::bottom::BottomTab,
+    ) -> Option<Element<'a, Message>> {
         None
     }
 

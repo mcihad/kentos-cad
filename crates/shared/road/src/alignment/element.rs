@@ -107,7 +107,11 @@ pub fn integral(theta0: f64, k0: f64, c: f64, s: f64) -> [f64; 2] {
 impl Element {
     /// The change of curvature per metre.
     pub fn rate(&self) -> f64 {
-        if self.length > 0.0 { (self.k1 - self.k0) / self.length } else { 0.0 }
+        if self.length > 0.0 {
+            (self.k1 - self.k0) / self.length
+        } else {
+            0.0
+        }
     }
 
     /// The direction `s` metres from the start.
@@ -122,8 +126,16 @@ impl Element {
 
     /// The place `s` metres from the start.
     pub fn point(&self, s: f64) -> [f64; 2] {
-        let c = if self.kind == Kind::Spiral { self.rate() } else { 0.0 };
-        let k = if self.kind == Kind::Tangent { 0.0 } else { self.k0 };
+        let c = if self.kind == Kind::Spiral {
+            self.rate()
+        } else {
+            0.0
+        };
+        let k = if self.kind == Kind::Tangent {
+            0.0
+        } else {
+            self.k0
+        };
         let [dx, dy] = integral(self.theta0, k, c, s);
         [self.start[0] + dx, self.start[1] + dy]
     }
@@ -145,7 +157,8 @@ impl Element {
 
     /// For a clothoid, its parameter A = √(L / |k1 − k0|) (A² = R·L when one end is straight); none otherwise.
     pub fn a(&self) -> Option<f64> {
-        (self.kind == Kind::Spiral && self.k1 != self.k0).then(|| (self.length / (self.k1 - self.k0).abs()).sqrt())
+        (self.kind == Kind::Spiral && self.k1 != self.k0)
+            .then(|| (self.length / (self.k1 - self.k0).abs()).sqrt())
     }
 }
 
@@ -157,13 +170,19 @@ mod tests {
     fn a_curve_closes_its_circle_and_a_spiral_matches_its_series() {
         let r = 100.0;
         let circle = integral(0.3, 1.0 / r, 0.0, 2.0 * std::f64::consts::PI * r);
-        assert!(circle[0].abs() < 1e-9 && circle[1].abs() < 1e-9, "{circle:?}");
+        assert!(
+            circle[0].abs() < 1e-9 && circle[1].abs() < 1e-9,
+            "{circle:?}"
+        );
         // A clothoid from straight: x = L(1 − τ²/10 + τ⁴/216 …), y = L(τ/3 − τ³/42 …), τ = L/(2R).
         let (l, rr) = (80.0, 250.0);
         let t: f64 = l / (2.0 * rr);
         let [x, y] = integral(0.0, 0.0, 1.0 / (rr * l), l);
         let sx = l * (1.0 - t.powi(2) / 10.0 + t.powi(4) / 216.0 - t.powi(6) / 9360.0);
         let sy = l * (t / 3.0 - t.powi(3) / 42.0 + t.powi(5) / 1320.0 - t.powi(7) / 75600.0);
-        assert!((x - sx).abs() < 1e-10 && (y - sy).abs() < 1e-10, "{x} {sx} {y} {sy}");
+        assert!(
+            (x - sx).abs() < 1e-10 && (y - sy).abs() < 1e-10,
+            "{x} {sx} {y} {sy}"
+        );
     }
 }

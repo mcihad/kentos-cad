@@ -1,6 +1,8 @@
 //! Each curve read at its own design speed (docs/adr/0985, 0986): on the shared cases' winding alignment g-5 (three
 //! curves), the alignment at 80 km/h and p2 at its own 50; checked against the same command run at one given speed.
-use kentos_commands::{CommandResult, DocumentSnapshotV2, SuperelevationsCheck, SuperelevationsChecked};
+use kentos_commands::{
+    CommandResult, DocumentSnapshotV2, SuperelevationsCheck, SuperelevationsChecked,
+};
 use kentos_domain::Document;
 use kentos_native_application::ExecutionContext;
 use kentos_native_application::road_superelevations_check::plan;
@@ -13,12 +15,23 @@ fn winding(speeds: bool) -> Document {
     let mut setup = cases["setup"].clone();
     if speeds {
         let road = &mut setup["settings"]["road"]["alignments"];
-        let g5 = road.as_array_mut().unwrap().iter_mut().find(|a| a["id"] == "g-5").unwrap();
+        let g5 = road
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|a| a["id"] == "g-5")
+            .unwrap();
         g5["designSpeed"] = serde_json::json!(80.0);
-        let p2 = g5["pis"].as_array_mut().unwrap().iter_mut().find(|p| p["id"] == "p2").unwrap();
+        let p2 = g5["pis"]
+            .as_array_mut()
+            .unwrap()
+            .iter_mut()
+            .find(|p| p["id"] == "p2")
+            .unwrap();
         p2["speed"] = serde_json::json!(50.0);
     }
-    Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(setup).unwrap()).unwrap()
+    Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(setup).unwrap())
+        .unwrap()
 }
 
 fn checked(doc: &mut Document, speed: Option<f64>) -> SuperelevationsChecked {
@@ -46,13 +59,17 @@ fn each_curve_is_read_at_its_own_speed() {
     let mut plain = winding(false);
     let at80 = checked(&mut plain, Some(80.0));
     let at50 = checked(&mut plain, Some(50.0));
-    let row = |c: &SuperelevationsChecked, pi: &str| c.curves.iter().find(|r| r.pi == pi).unwrap().clone();
+    let row = |c: &SuperelevationsChecked, pi: &str| {
+        c.curves.iter().find(|r| r.pi == pi).unwrap().clone()
+    };
     assert_eq!(row(&got, "p1"), row(&at80, "p1"));
     assert_eq!(row(&got, "p2"), row(&at50, "p2"), "p2 at its own 50 km/h");
     assert_eq!(row(&got, "p3"), row(&at80, "p3"));
     for (pi, v) in [("p1", "80"), ("p2", "50"), ("p3", "80")] {
         assert!(
-            got.findings.iter().any(|f| f.message.starts_with(&format!("{pi} kurbu {v} km/sa'te"))),
+            got.findings
+                .iter()
+                .any(|f| f.message.starts_with(&format!("{pi} kurbu {v} km/sa'te"))),
             "{pi} at {v}: {:?}",
             got.findings.iter().map(|f| &f.message).collect::<Vec<_>>()
         );

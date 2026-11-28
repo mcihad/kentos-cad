@@ -8,10 +8,10 @@ use kentos_commands::{
     DimensionSetsCreateInput, DimensionSetsEditInput, DimensionSetsPlan, DimensionSetsQueried,
     DimensionSetsQueryInput, Entity, EntityId, Vec2, dimension_sets_problem, scales_problem,
 };
+use kentos_domain::dimension_layout::member_value;
 use kentos_domain::dimension_sets::PlannedDimensionSetMember;
 use kentos_domain::dimension_spans::SpanRefusal;
 use kentos_domain::{Document, Uuid};
-use kentos_domain::dimension_layout::member_value;
 use kentos_geometry_core::ops::dimension_layout::rounding_gap;
 use kentos_geometry_core::ops::dimension_span::Why;
 use kentos_project::format::Format;
@@ -60,7 +60,10 @@ fn measured_edges(
         return Err(source_error(DimensionSetBreak::HostGone));
     };
     let Entity::Wall(w) = entity else {
-        return Err(fail("Kaynak bir duvar değil. Ölçülecek duvarı seçin.", "wall"));
+        return Err(fail(
+            "Kaynak bir duvar değil. Ölçülecek duvarı seçin.",
+            "wall",
+        ));
     };
     let edges = doc
         .dimension_set_wall_edges(wall)
@@ -238,7 +241,8 @@ fn span_error(r: SpanRefusal, path: &str) -> Stop {
             "Kaynak bulunamadı. Duvarları ya da mahali yeniden seçin.".to_owned()
         }
         (DimensionSetBreak::OpeningUnplaced, _) => {
-            "Duvarın bir açıklığı yerleştirilemedi. Önce açıklığın kaynak bağını düzeltin.".to_owned()
+            "Duvarın bir açıklığı yerleştirilemedi. Önce açıklığın kaynak bağını düzeltin."
+                .to_owned()
         }
     };
     let mut e = error("invalid_dimension_set", message, Some(path.into()));
@@ -334,7 +338,12 @@ fn four_sides(doc: &Document, base: &DimensionSet) -> Vec<DimensionSet> {
     let n = Vec2 { x: -d.y, y: d.x };
     let t = |p: Vec2| (p.x - origin.x) * d.x + (p.y - origin.y) * d.y;
     let o = |p: Vec2| (p.x - origin.x) * n.x + (p.y - origin.y) * n.y;
-    let (mut t0, mut t1, mut o0, mut o1) = (f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY);
+    let (mut t0, mut t1, mut o0, mut o1) = (
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+    );
     for p in &pts {
         (t0, t1) = (t0.min(t(*p)), t1.max(t(*p)));
         (o0, o1) = (o0.min(o(*p)), o1.max(o(*p)));
@@ -447,27 +456,35 @@ fn span_recipes(
         Some(Entity::Space(s)) => s.space.arch.level.clone(),
         _ => None,
     };
-    let direction = match input.direction {
-        Some(d) => {
-            checks::point(d, "Ölçü doğrultusu", "direction")?;
-            let l = d.x.hypot(d.y);
-            if l.is_nan() || l <= 1e-12 {
-                return Err(fail("Ölçü doğrultusu sıfır olamaz.", "direction"));
+    let direction =
+        match input.direction {
+            Some(d) => {
+                checks::point(d, "Ölçü doğrultusu", "direction")?;
+                let l = d.x.hypot(d.y);
+                if l.is_nan() || l <= 1e-12 {
+                    return Err(fail("Ölçü doğrultusu sıfır olamaz.", "direction"));
+                }
+                Vec2 {
+                    x: d.x / l,
+                    y: d.y / l,
+                }
             }
-            Vec2 {
-                x: d.x / l,
-                y: d.y / l,
+            None => match first {
+                Some(Entity::Wall(w)) => {
+                    longest_edge(&w.wall.pts, w.wall.bulges.as_deref(), w.wall.closed)
+                }
+                Some(Entity::Space(s)) => s.space.parts.first().and_then(|part| {
+                    longest_edge(&part.outer.pts, part.outer.bulges.as_deref(), true)
+                }),
+                _ => None,
             }
-        }
-        None => match first {
-            Some(Entity::Wall(w)) => longest_edge(&w.wall.pts, w.wall.bulges.as_deref(), w.wall.closed),
-            Some(Entity::Space(s)) => s.space.parts.first().and_then(|part| {
-                longest_edge(&part.outer.pts, part.outer.bulges.as_deref(), true)
-            }),
-            _ => None,
-        }
-        .ok_or_else(|| fail("Kaynağın düz kenarı yok; ölçü doğrultusunu (direction) verin.", "direction"))?,
-    };
+            .ok_or_else(|| {
+                fail(
+                    "Kaynağın düz kenarı yok; ölçü doğrultusunu (direction) verin.",
+                    "direction",
+                )
+            })?,
+        };
     let direction = readable(direction);
     let base = DimensionSet {
         id: DimensionSetId([1; 16]),
@@ -495,10 +512,16 @@ fn span_recipes(
         scales: input.scales.clone(),
         tight: input.tight,
     };
-    let sets = if input.around { four_sides(doc, &base) } else { vec![base] };
+    let sets = if input.around {
+        four_sides(doc, &base)
+    } else {
+        vec![base]
+    };
     for set in &sets {
         recipe_ok(set)?;
-        let (members, _) = doc.dimension_span_plan(set).map_err(|r| span_error(r, path))?;
+        let (members, _) = doc
+            .dimension_span_plan(set)
+            .map_err(|r| span_error(r, path))?;
         if members.is_empty() {
             return Err(fail(
                 "Bu kaynakta seçilen sıralarda ölçülecek aralık yok: başka sıra seçin ya da kaynakları değiştirin.",
@@ -511,7 +534,9 @@ fn span_recipes(
 
 /// The plan's account of its values (docs/adr/0729 §6, docs/adr/0730 §2): those that do not fit, those the recipe moved,
 /// and the same at each sheet scale, by their place among the members.
-fn value_notes(members: &[PlannedDimensionSetMember]) -> (Vec<u32>, Vec<u32>, Vec<DimensionSetScaleNote>) {
+fn value_notes(
+    members: &[PlannedDimensionSetMember],
+) -> (Vec<u32>, Vec<u32>, Vec<DimensionSetScaleNote>) {
     let pick = |f: &dyn Fn(&PlannedDimensionSetMember) -> bool| -> Vec<u32> {
         members
             .iter()
@@ -544,15 +569,27 @@ fn value_notes(members: &[PlannedDimensionSetMember]) -> (Vec<u32>, Vec<u32>, Ve
 /// The rows whose values, each rounded from its own measurement, add up to other than the overall reads (docs/adr/0730
 /// §3): a row running from the overall's first place to its last without a gap, its values and the overall's plain
 /// decimal numbers with as many decimals.
-fn rounding(doc: &Document, set: &DimensionSet, members: &[PlannedDimensionSetMember]) -> Vec<DimensionSetRounding> {
+fn rounding(
+    doc: &Document,
+    set: &DimensionSet,
+    members: &[PlannedDimensionSetMember],
+) -> Vec<DimensionSetRounding> {
     let format = Format::of(doc.settings());
-    let Some(overall) = members.iter().find(|m| m.segment.row == DimensionSetRow::Overall) else {
+    let Some(overall) = members
+        .iter()
+        .find(|m| m.segment.row == DimensionSetRow::Overall)
+    else {
         return Vec::new();
     };
     let shown = |m: &PlannedDimensionSetMember| member_value(&format, &m.dimension).1;
     let total = shown(overall);
     let mut out = Vec::new();
-    for row in set.rows.iter().copied().filter(|r| *r != DimensionSetRow::Overall) {
+    for row in set
+        .rows
+        .iter()
+        .copied()
+        .filter(|r| *r != DimensionSetRow::Overall)
+    {
         let chain: Vec<&PlannedDimensionSetMember> =
             members.iter().filter(|m| m.segment.row == row).collect();
         let (Some(first), Some(last)) = (chain.first(), chain.last()) else {
@@ -805,7 +842,10 @@ fn check_edit(doc: &Document, input: &DimensionSetsEditInput) -> Result<Dimensio
                 if ids.contains(&id) {
                     return Err(fail("Aynı duvar iki kez verildi.", &path));
                 }
-                match doc.slot_of(Uuid::from_bytes(id.0)).and_then(|slot| doc.get(slot)) {
+                match doc
+                    .slot_of(Uuid::from_bytes(id.0))
+                    .and_then(|slot| doc.get(slot))
+                {
                     Some(Entity::Wall(_)) => ids.push(id),
                     found => {
                         return Err(span_error(
@@ -924,7 +964,10 @@ fn visible_result<T>(doc: &Document, layer: &str, output: T) -> CommandResult<T>
 }
 fn with_warnings<T>(result: CommandResult<T>, extra: Vec<CommandWarning>) -> CommandResult<T> {
     match result {
-        CommandResult::Completed { output, mut warnings } => {
+        CommandResult::Completed {
+            output,
+            mut warnings,
+        } => {
             warnings.extend(extra);
             CommandResult::Completed { output, warnings }
         }
@@ -1010,7 +1053,9 @@ pub mod create {
                 recipe.id = id;
                 if let Some(existing) = doc.dimension_set(id) {
                     if doc.layers().is_locked(&existing.layer_id) {
-                        return Err(kentos_domain::Refusal("Plan ölçülerinin katmanı kilitli.".into()));
+                        return Err(kentos_domain::Refusal(
+                            "Plan ölçülerinin katmanı kilitli.".into(),
+                        ));
                     }
                     recipe.layer_id.clone_from(&existing.layer_id);
                     if recipe.span.as_ref().map(|span| span.direction)
@@ -1018,10 +1063,14 @@ pub mod create {
                     {
                         recipe.at = existing.at;
                         recipe.row_places = existing.row_places.clone();
-                        recipe.row_places.retain(|place| recipe.rows.contains(&place.row));
+                        recipe
+                            .row_places
+                            .retain(|place| recipe.rows.contains(&place.row));
                     }
                     recipe.suppressed = existing.suppressed.clone();
-                    recipe.suppressed.retain(|span| recipe.rows.contains(&span.row));
+                    recipe
+                        .suppressed
+                        .retain(|span| recipe.rows.contains(&span.row));
                     doc.update_dimension_set(recipe)?;
                 } else {
                     doc.add_dimension_set(recipe)?;
@@ -1083,23 +1132,26 @@ pub mod create {
             .filter_map(|id| cx.doc.dimension_set(*id))
             .flat_map(|s| s.members.iter().map(|m| m.uid.to_string()))
             .collect();
-        with_warnings(visible_result(
-            cx.doc,
-            &input.layer_id,
-            DimensionSetsChanged {
-                set: ids[0],
-                sets: if ids.len() > 1 || input.around {
-                    ids
-                } else {
-                    Vec::new()
+        with_warnings(
+            visible_result(
+                cx.doc,
+                &input.layer_id,
+                DimensionSetsChanged {
+                    set: ids[0],
+                    sets: if ids.len() > 1 || input.around {
+                        ids
+                    } else {
+                        Vec::new()
+                    },
+                    created: uids.clone(),
+                    uids,
+                    changed: Vec::new(),
+                    removed: Vec::new(),
+                    revision: cx.doc.revision().to_string(),
                 },
-                created: uids.clone(),
-                uids,
-                changed: Vec::new(),
-                removed: Vec::new(),
-                revision: cx.doc.revision().to_string(),
-            },
-        ), warnings)
+            ),
+            warnings,
+        )
     }
 }
 pub mod edit {
@@ -1217,9 +1269,9 @@ pub mod edit {
         let result_layer = set.layer_id.clone();
         // What the plan says of the rows written (docs/adr/0729 §5, §6), said with the write too.
         let said = match input.operation {
-            DimensionSetEdit::Detach | DimensionSetEdit::Delete | DimensionSetEdit::ResetText { .. } => {
-                Vec::new()
-            }
+            DimensionSetEdit::Detach
+            | DimensionSetEdit::Delete
+            | DimensionSetEdit::ResetText { .. } => Vec::new(),
             _ => planned(cx.doc, &set, true)
                 .map(|plan| plan_warnings(&plan))
                 .unwrap_or_default(),

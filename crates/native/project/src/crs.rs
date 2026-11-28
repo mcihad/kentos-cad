@@ -145,7 +145,11 @@ fn near_edge(rings: &[Vec<[f64; 2]>], x: f64, y: f64, d: f64) -> bool {
         let ([x1, y1], [x2, y2]) = (w[0], w[1]);
         let (vx, vy) = (x2 - x1, y2 - y1);
         let l2 = vx * vx + vy * vy;
-        let t = if l2 == 0.0 { 0.0 } else { (((x - x1) * vx + (y - y1) * vy) / l2).clamp(0.0, 1.0) };
+        let t = if l2 == 0.0 {
+            0.0
+        } else {
+            (((x - x1) * vx + (y - y1) * vy) / l2).clamp(0.0, 1.0)
+        };
         let (dx, dy) = (x - x1 - vx * t, y - y1 - vy * t);
         dx * dx + dy * dy <= d * d
     })
@@ -176,7 +180,11 @@ pub const EDGE: f64 = 1e-9;
 
 /// [`box_holds`] with every edge [`EDGE`] out (docs/adr/3700): the box a point's note reads.
 pub fn box_holds_near([west, south, east, north]: [f64; 4], lon: f64, lat: f64) -> bool {
-    box_holds([west - EDGE, south - EDGE, east + EDGE, north + EDGE], lon, lat)
+    box_holds(
+        [west - EDGE, south - EDGE, east + EDGE, north + EDGE],
+        lon,
+        lat,
+    )
 }
 
 /// Whether a box (degrees west, south, east, north) holds a longitude and latitude, its edges included.
@@ -207,13 +215,16 @@ pub fn areas() -> &'static [AreaOfUse] {
         struct Polygons {
             extents: Vec<Extent>,
         }
-        let mut areas = serde_json::from_str::<File>(include_str!("../../../../fixtures/crs/v1/areas.json"))
-            .map(|f| f.areas)
-            .unwrap_or_default();
+        let mut areas =
+            serde_json::from_str::<File>(include_str!("../../../../fixtures/crs/v1/areas.json"))
+                .map(|f| f.areas)
+                .unwrap_or_default();
         // docs/adr/4900: the polygons of the extents that are not just their boxes.
-        let polygons = serde_json::from_str::<Polygons>(include_str!("../../../../fixtures/crs/v1/area-polygons.json"))
-            .map(|p| p.extents)
-            .unwrap_or_default();
+        let polygons = serde_json::from_str::<Polygons>(include_str!(
+            "../../../../fixtures/crs/v1/area-polygons.json"
+        ))
+        .map(|p| p.extents)
+        .unwrap_or_default();
         for a in &mut areas {
             if let Some(x) = polygons.iter().find(|x| x.srids.contains(&a.srid)) {
                 a.polygon = x.rings.clone();
@@ -410,7 +421,10 @@ mod tests {
         let groups = others_by_datum(5254);
         let names: Vec<&str> = groups.iter().map(|(d, _)| *d).collect();
         assert_eq!(names, ["TUREF (ITRF96)", "ED50", "WGS 84"]);
-        let all: Vec<u32> = groups.iter().flat_map(|(_, list)| list.iter().map(|s| s.srid)).collect();
+        let all: Vec<u32> = groups
+            .iter()
+            .flat_map(|(_, list)| list.iter().map(|s| s.srid))
+            .collect();
         assert!(!all.contains(&5254) && !all.contains(&0));
         assert_eq!(all.len(), systems().len() - 2);
         assert!(all.contains(&2320) && all.contains(&4326));
@@ -432,17 +446,28 @@ mod tests {
     /// docs/adr/5300: the datum operations' area is extent 1237's polygon: Burgas is in their box, not in it.
     #[test]
     fn a_datum_operation_reads_its_extent_s_polygon() {
-        let ed50 = system(23035).and_then(System::transform_system).expect("ED50 / UTM 35N");
-        let turef = system(5252).and_then(System::transform_system).expect("TUREF");
-        let op = kentos_geometry_core::crs::operation::operation(&ed50, &turef, &[], false).expect("a way");
+        let ed50 = system(23035)
+            .and_then(System::transform_system)
+            .expect("ED50 / UTM 35N");
+        let turef = system(5252)
+            .and_then(System::transform_system)
+            .expect("TUREF");
+        let op = kentos_geometry_core::crs::operation::operation(&ed50, &turef, &[], false)
+            .expect("a way");
         let region = operation_region(&op).expect("an area");
         assert!(matches!(region, Region::Area(a) if a.extent == Some(1237)));
-        assert!(box_holds(op.area.expect("a box").1, 27.47, 42.5), "Burgas is in the box");
+        assert!(
+            box_holds(op.area.expect("a box").1, 27.47, 42.5),
+            "Burgas is in the box"
+        );
         assert!(!region.holds_near(27.47, 42.5), "not in the polygon");
         assert!(region.holds_near(32.86, 39.93), "Ankara");
         // The same datum: no operation's area.
-        let tm30 = system(5254).and_then(System::transform_system).expect("TM30");
-        let same = kentos_geometry_core::crs::operation::operation(&tm30, &turef, &[], false).expect("a way");
+        let tm30 = system(5254)
+            .and_then(System::transform_system)
+            .expect("TM30");
+        let same = kentos_geometry_core::crs::operation::operation(&tm30, &turef, &[], false)
+            .expect("a way");
         assert!(operation_region(&same).is_none());
     }
 

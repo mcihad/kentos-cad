@@ -23,14 +23,15 @@
 //! removed, each one undo step, and closes. Aksa yeniden bağla rebinds a saved, stale set; Çizime yaz draws a saved
 //! set's sections (`road.sections.draw`).
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    RoadEditOperation, SectionRow, SectionSetDef, SectionStations, SectionsDraw, SectionsEdit, TemplateComponentDef,
-    TemplateComponentKind, TemplateDef, TemplateDitchDef, TemplateSideDef, TemplatesEdit,
+    RoadEditOperation, SectionRow, SectionSetDef, SectionStations, SectionsDraw, SectionsEdit,
+    TemplateComponentDef, TemplateComponentKind, TemplateDef, TemplateDitchDef, TemplateSideDef,
+    TemplatesEdit,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{
@@ -142,13 +143,34 @@ impl SideRow {
             cut: trimmed(s.cut),
             fill: trimmed(s.fill),
             ditch: s.ditch.is_some(),
-            fore: s.ditch.as_ref().map_or_else(String::new, |d| trimmed(d.fore)),
-            depth: s.ditch.as_ref().map_or_else(String::new, |d| trimmed(d.depth)),
-            bottom: s.ditch.as_ref().map_or_else(String::new, |d| trimmed(d.bottom)),
+            fore: s
+                .ditch
+                .as_ref()
+                .map_or_else(String::new, |d| trimmed(d.fore)),
+            depth: s
+                .ditch
+                .as_ref()
+                .map_or_else(String::new, |d| trimmed(d.depth)),
+            bottom: s
+                .ditch
+                .as_ref()
+                .map_or_else(String::new, |d| trimmed(d.bottom)),
             bench: s.bench.is_some(),
-            bench_fields: s.bench.map_or_else(Default::default, |b| [trimmed(b.height), trimmed(b.width), road_dialog::percent_text(b.fall)]),
+            bench_fields: s.bench.map_or_else(Default::default, |b| {
+                [
+                    trimmed(b.height),
+                    trimmed(b.width),
+                    road_dialog::percent_text(b.fall),
+                ]
+            }),
             fill_bench: s.fill_bench.is_some(),
-            fill_bench_fields: s.fill_bench.map_or_else(Default::default, |b| [trimmed(b.height), trimmed(b.width), road_dialog::percent_text(b.fall)]),
+            fill_bench_fields: s.fill_bench.map_or_else(Default::default, |b| {
+                [
+                    trimmed(b.height),
+                    trimmed(b.width),
+                    road_dialog::percent_text(b.fall),
+                ]
+            }),
         }
     }
 
@@ -156,12 +178,24 @@ impl SideRow {
         let mut components = Vec::new();
         for (i, p) in self.parts.iter().enumerate() {
             components.push(TemplateComponentDef {
-                kind: if p.kind == 1 { TemplateComponentKind::Shoulder } else { TemplateComponentKind::Lane },
-                width: need(&p.width, &format!("{side} yanın {}. bileşeninin genişliği", i + 1))?,
+                kind: if p.kind == 1 {
+                    TemplateComponentKind::Shoulder
+                } else {
+                    TemplateComponentKind::Lane
+                },
+                width: need(
+                    &p.width,
+                    &format!("{side} yanın {}. bileşeninin genişliği", i + 1),
+                )?,
                 slope: road_dialog::grade_of(&p.slope)
                     .ok()
                     .flatten()
-                    .ok_or_else(|| format!("{side} yanın {}. bileşeninin enine eğimi bir sayı olmalı.", i + 1))?,
+                    .ok_or_else(|| {
+                        format!(
+                            "{side} yanın {}. bileşeninin enine eğimi bir sayı olmalı.",
+                            i + 1
+                        )
+                    })?,
             });
         }
         let ditch = if self.ditch {
@@ -173,7 +207,10 @@ impl SideRow {
         } else {
             None
         };
-        let benched = |on: bool, f: &[String; 3], what: &str| -> Result<Option<kentos_commands::TemplateBenchDef>, String> {
+        let benched = |on: bool,
+                       f: &[String; 3],
+                       what: &str|
+         -> Result<Option<kentos_commands::TemplateBenchDef>, String> {
             if !on {
                 return Ok(None);
             }
@@ -215,7 +252,17 @@ impl PavementRow {
         };
         Self {
             on: true,
-            layers: p.layers.iter().map(|l| [l.name.clone(), trimmed(l.thickness), l.material.clone().unwrap_or_default()]).collect(),
+            layers: p
+                .layers
+                .iter()
+                .map(|l| {
+                    [
+                        l.name.clone(),
+                        trimmed(l.thickness),
+                        l.material.clone().unwrap_or_default(),
+                    ]
+                })
+                .collect(),
             sloped,
             h,
         }
@@ -229,7 +276,10 @@ impl PavementRow {
         for (i, l) in self.layers.iter().enumerate() {
             let name = l[0].trim();
             if name.is_empty() {
-                return Err(format!("Üstyapının {}. tabakasına bir ad verin (aşınma, binder, temel …).", i + 1));
+                return Err(format!(
+                    "Üstyapının {}. tabakasına bir ad verin (aşınma, binder, temel …).",
+                    i + 1
+                ));
             }
             let material = l[2].trim();
             layers.push(kentos_commands::PavementLayerDef {
@@ -242,7 +292,9 @@ impl PavementRow {
             return Err("Üstyapının en az bir tabakası olmalı: Tabaka ekle ile ekleyin.".into());
         }
         let edge = if self.sloped {
-            kentos_commands::PavementEdge::Slope { h: need(&self.h, "üstyapı kenarının şevi")? }
+            kentos_commands::PavementEdge::Slope {
+                h: need(&self.h, "üstyapı kenarının şevi")?,
+            }
         } else {
             kentos_commands::PavementEdge::Vertical
         };
@@ -271,7 +323,10 @@ impl TemplateRow {
             name: t.name.clone(),
             revision: t.revision,
             left: SideRow::of(&t.left),
-            right: t.right.as_ref().map_or_else(|| SideRow::of(&t.left), SideRow::of),
+            right: t
+                .right
+                .as_ref()
+                .map_or_else(|| SideRow::of(&t.left), SideRow::of),
             mirror: t.right.is_none(),
             pavement: PavementRow::of(t.pavement.as_ref()),
         }
@@ -283,7 +338,11 @@ impl TemplateRow {
             name: self.name.clone(),
             revision: self.revision,
             left: self.left.def("Sol")?,
-            right: if self.mirror { None } else { Some(self.right.def("Sağ")?) },
+            right: if self.mirror {
+                None
+            } else {
+                Some(self.right.def("Sağ")?)
+            },
             pavement: self.pavement.def()?,
         })
     }
@@ -337,18 +396,36 @@ impl SetRow {
             ..Self::default()
         };
         match &d.stations {
-            SectionStations::Range { from, to, every, geometry, curve } => {
-                (r.from, r.to, r.every, r.geometry) = (trimmed(*from), trimmed(*to), trimmed(*every), *geometry);
+            SectionStations::Range {
+                from,
+                to,
+                every,
+                geometry,
+                curve,
+            } => {
+                (r.from, r.to, r.every, r.geometry) =
+                    (trimmed(*from), trimmed(*to), trimmed(*every), *geometry);
                 r.curve = curve.map(trimmed).unwrap_or_default();
             }
-            SectionStations::Breaks { from, to, tolerance, most, geometry } => {
+            SectionStations::Breaks {
+                from,
+                to,
+                tolerance,
+                most,
+                geometry,
+            } => {
                 r.method = 3;
-                (r.from, r.to, r.tolerance, r.geometry) = (trimmed(*from), trimmed(*to), trimmed(*tolerance), *geometry);
+                (r.from, r.to, r.tolerance, r.geometry) =
+                    (trimmed(*from), trimmed(*to), trimmed(*tolerance), *geometry);
                 r.most = most.map(trimmed).unwrap_or_default();
             }
             SectionStations::Stations { stations } => {
                 r.method = 1;
-                r.stations = stations.iter().map(|s| trimmed(*s)).collect::<Vec<_>>().join("; ");
+                r.stations = stations
+                    .iter()
+                    .map(|s| trimmed(*s))
+                    .collect::<Vec<_>>()
+                    .join("; ");
             }
             SectionStations::Lines { uids } => {
                 r.method = 2;
@@ -376,12 +453,19 @@ impl SetRow {
             },
             1 => {
                 let mut list = Vec::new();
-                for t in self.stations.split(';').map(str::trim).filter(|t| !t.is_empty()) {
+                for t in self
+                    .stations
+                    .split(';')
+                    .map(str::trim)
+                    .filter(|t| !t.is_empty())
+                {
                     list.push(need(t, "Her km")?);
                 }
                 SectionStations::Stations { stations: list }
             }
-            _ => SectionStations::Lines { uids: self.uids.clone() },
+            _ => SectionStations::Lines {
+                uids: self.uids.clone(),
+            },
         };
         Ok(SectionSetDef {
             id: self.id.clone(),
@@ -513,7 +597,13 @@ impl Window {
     fn side_mut(&mut self) -> Option<&mut SideRow> {
         let right = self.right;
         match self.chosen {
-            Some(Chosen::Template(i)) => self.templates.get_mut(i).map(|t| if right && !t.mirror { &mut t.right } else { &mut t.left }),
+            Some(Chosen::Template(i)) => self.templates.get_mut(i).map(|t| {
+                if right && !t.mirror {
+                    &mut t.right
+                } else {
+                    &mut t.left
+                }
+            }),
             _ => None,
         }
     }
@@ -620,20 +710,53 @@ impl SectionWindowApp for App {
         };
         let Some(r) = w.sets.get(i) else { return };
         w.preview = match r.def() {
-            Err(e) => Preview { why: Some(e), ..Preview::default() },
+            Err(e) => Preview {
+                why: Some(e),
+                ..Preview::default()
+            },
             Ok(def) => {
-                let typed = def.template.as_ref().and_then(|t| w.templates.iter().find(|q| q.id == *t)).map(TemplateRow::def);
+                let typed = def
+                    .template
+                    .as_ref()
+                    .and_then(|t| w.templates.iter().find(|q| q.id == *t))
+                    .map(TemplateRow::def);
                 match typed {
-                    Some(Err(e)) => Preview { why: Some(format!("Tip kesit: {e}")), ..Preview::default() },
-                    typed => match road_sections::preview(&doc.model, &def, typed.and_then(Result::ok).as_ref()) {
-                        Err(e) => Preview { why: Some(e), ..Preview::default() },
+                    Some(Err(e)) => Preview {
+                        why: Some(format!("Tip kesit: {e}")),
+                        ..Preview::default()
+                    },
+                    typed => match road_sections::preview(
+                        &doc.model,
+                        &def,
+                        typed.and_then(Result::ok).as_ref(),
+                    ) {
+                        Err(e) => Preview {
+                            why: Some(e),
+                            ..Preview::default()
+                        },
                         Ok((rows, warnings)) => Preview {
-                            sources: Some(sources_words(&kentos_native_application::road_sections_query::sources_of(&doc.model, &def))),
+                            sources: Some(sources_words(
+                                &kentos_native_application::road_sections_query::sources_of(
+                                    &doc.model, &def,
+                                ),
+                            )),
                             rows,
-                            why: warnings.iter().find(|w| w.code == "section_surface_gone").map(|w| w.message.clone()),
-                            open: warnings.iter().find(|w| w.code == "section_open").map(|w| w.message.clone()),
-                            crossing: warnings.iter().find(|w| w.code == "section_lines_cross").map(|w| w.message.clone()),
-                            missing: warnings.iter().find(|w| w.code == "section_ground_missing").map(|w| w.message.clone()),
+                            why: warnings
+                                .iter()
+                                .find(|w| w.code == "section_surface_gone")
+                                .map(|w| w.message.clone()),
+                            open: warnings
+                                .iter()
+                                .find(|w| w.code == "section_open")
+                                .map(|w| w.message.clone()),
+                            crossing: warnings
+                                .iter()
+                                .find(|w| w.code == "section_lines_cross")
+                                .map(|w| w.message.clone()),
+                            missing: warnings
+                                .iter()
+                                .find(|w| w.code == "section_ground_missing")
+                                .map(|w| w.message.clone()),
                         },
                     },
                 }
@@ -644,16 +767,25 @@ impl SectionWindowApp for App {
 
     fn section_names(&self) -> Names {
         self.document.as_ref().map_or_else(Default::default, |d| {
-            let alignments =
-                d.model.road_alignments().iter().filter(|a| a.offset_of.is_none()).map(|a| (a.id.clone(), a.name.clone())).collect();
-            let profiles =
-                d.model.road_profiles().iter().map(|p| (p.id.clone(), p.name.clone(), p.alignment.clone())).collect();
-            let surfaces = d
+            let alignments = d
                 .model
-                .settings()
-                .road
-                .as_ref()
-                .map_or_else(Vec::new, |r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect());
+                .road_alignments()
+                .iter()
+                .filter(|a| a.offset_of.is_none())
+                .map(|a| (a.id.clone(), a.name.clone()))
+                .collect();
+            let profiles = d
+                .model
+                .road_profiles()
+                .iter()
+                .map(|p| (p.id.clone(), p.name.clone(), p.alignment.clone()))
+                .collect();
+            let surfaces = d.model.settings().road.as_ref().map_or_else(Vec::new, |r| {
+                r.surfaces
+                    .iter()
+                    .map(|s| (s.id.clone(), s.name.clone()))
+                    .collect()
+            });
             (alignments, profiles, surfaces)
         })
     }
@@ -661,7 +793,11 @@ impl SectionWindowApp for App {
     fn section_event(&mut self, event: Event) -> Task<Message> {
         let (alignments, profiles, surfaces) = self.section_names();
         let revisions: Vec<(String, u32)> = self.document.as_ref().map_or_else(Vec::new, |d| {
-            d.model.road_alignments().iter().map(|a| (a.id.clone(), a.revision)).collect()
+            d.model
+                .road_alignments()
+                .iter()
+                .map(|a| (a.id.clone(), a.revision))
+                .collect()
         });
         let Some(w) = self.modules.road_mut().section_window.as_mut() else {
             return Task::none();
@@ -675,17 +811,34 @@ impl SectionWindowApp for App {
                 w.right = false;
             }
             Event::NewSet => match alignments.first() {
-                None => warning = Some("Kesit takımı bir aksın üstünde kurulur: önce Güzergâh'ta bir aks oluşturun."),
+                None => {
+                    warning = Some(
+                        "Kesit takımı bir aksın üstünde kurulur: önce Güzergâh'ta bir aks oluşturun.",
+                    )
+                }
                 Some((alignment, _)) => {
                     let taken: Vec<String> = w.sets.iter().map(|r| r.id.clone()).collect();
-                    let id = (1..).map(|n| format!("k-{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
+                    let id = (1..)
+                        .map(|n| format!("k-{n}"))
+                        .find(|id| !taken.contains(id))
+                        .unwrap_or_default();
                     let n = w.sets.len() + 1;
                     w.sets.push(SetRow {
                         id,
-                        name: if n == 1 { "Enkesitler".to_owned() } else { format!("Kesit takımı {n}") },
+                        name: if n == 1 {
+                            "Enkesitler".to_owned()
+                        } else {
+                            format!("Kesit takımı {n}")
+                        },
                         alignment: alignment.clone(),
-                        alignment_revision: revisions.iter().find(|(a, _)| a == alignment).map_or(0, |(_, r)| *r),
-                        profile: profiles.iter().find(|p| p.2 == *alignment).map(|p| p.0.clone()),
+                        alignment_revision: revisions
+                            .iter()
+                            .find(|(a, _)| a == alignment)
+                            .map_or(0, |(_, r)| *r),
+                        profile: profiles
+                            .iter()
+                            .find(|p| p.2 == *alignment)
+                            .map(|p| p.0.clone()),
                         template: w.templates.first().map(|t| t.id.clone()),
                         surface: surfaces.first().map(|(id, _)| id.clone()),
                         left: "25".into(),
@@ -698,11 +851,16 @@ impl SectionWindowApp for App {
                     });
                     // The range's end: the alignment's length, read once.
                     if let Some(doc) = &self.document
-                        && let Some(a) = doc.model.road_alignments().iter().find(|a| a.id == *alignment)
-                        && let Some(Ok(b)) = kentos_native_application::road_alignments::made_alignments(&doc.model)
-                            .into_iter()
-                            .find(|(d, _)| d.id == a.id)
-                            .map(|(_, b)| b)
+                        && let Some(a) = doc
+                            .model
+                            .road_alignments()
+                            .iter()
+                            .find(|a| a.id == *alignment)
+                        && let Some(Ok(b)) =
+                            kentos_native_application::road_alignments::made_alignments(&doc.model)
+                                .into_iter()
+                                .find(|(d, _)| d.id == a.id)
+                                .map(|(_, b)| b)
                         && let Some(r) = w.sets.last_mut()
                     {
                         r.to = trimmed((b.core.length * 1000.0).floor() / 1000.0);
@@ -713,10 +871,16 @@ impl SectionWindowApp for App {
             },
             Event::NewTemplate => {
                 let taken: Vec<String> = w.templates.iter().map(|r| r.id.clone()).collect();
-                let id = (1..).map(|n| format!("tk-{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
+                let id = (1..)
+                    .map(|n| format!("tk-{n}"))
+                    .find(|id| !taken.contains(id))
+                    .unwrap_or_default();
                 let n = w.templates.len() + 1;
                 // Nothing filled in for the user: the widths, slopes and the end condition come from the project.
-                let side = SideRow { parts: vec![PartRow::default()], ..SideRow::default() };
+                let side = SideRow {
+                    parts: vec![PartRow::default()],
+                    ..SideRow::default()
+                };
                 w.templates.push(TemplateRow {
                     id,
                     name: format!("Tip {n}"),
@@ -732,17 +896,26 @@ impl SectionWindowApp for App {
             Event::Remove => match w.chosen {
                 Some(Chosen::Set(i)) if i < w.sets.len() => {
                     w.sets.remove(i);
-                    w.chosen = (!w.sets.is_empty()).then_some(Chosen::Set(i.min(w.sets.len().saturating_sub(1))));
+                    w.chosen = (!w.sets.is_empty())
+                        .then_some(Chosen::Set(i.min(w.sets.len().saturating_sub(1))));
                 }
                 Some(Chosen::Template(i)) if i < w.templates.len() => {
                     let id = w.templates[i].id.clone();
-                    let users: Vec<&str> =
-                        w.sets.iter().filter(|s| s.template.as_deref() == Some(&id)).map(|s| s.name.as_str()).collect();
+                    let users: Vec<&str> = w
+                        .sets
+                        .iter()
+                        .filter(|s| s.template.as_deref() == Some(&id))
+                        .map(|s| s.name.as_str())
+                        .collect();
                     if users.is_empty() {
                         w.templates.remove(i);
-                        w.chosen = (!w.templates.is_empty()).then_some(Chosen::Template(i.min(w.templates.len().saturating_sub(1))));
+                        w.chosen = (!w.templates.is_empty()).then_some(Chosen::Template(
+                            i.min(w.templates.len().saturating_sub(1)),
+                        ));
                     } else {
-                        warning = Some("Bu tip kesiti bir kesit takımı kullanıyor; önce takımdan kaldırın.");
+                        warning = Some(
+                            "Bu tip kesiti bir kesit takımı kullanıyor; önce takımdan kaldırın.",
+                        );
                     }
                 }
                 _ => {}
@@ -765,9 +938,13 @@ impl SectionWindowApp for App {
                 let kept = w.kept_sets.iter().map(|k| k.id.clone()).collect::<Vec<_>>();
                 if let Some(r) = w.set_mut() {
                     if kept.contains(&r.id) {
-                        warning = Some("Kaydedilmiş takımın aksı değişmez; yeni bir takım oluşturun.");
+                        warning =
+                            Some("Kaydedilmiş takımın aksı değişmez; yeni bir takım oluşturun.");
                     } else {
-                        r.alignment_revision = revisions.iter().find(|(a, _)| *a == id).map_or(0, |(_, v)| *v);
+                        r.alignment_revision = revisions
+                            .iter()
+                            .find(|(a, _)| *a == id)
+                            .map_or(0, |(_, v)| *v);
                         r.profile = profiles.iter().find(|p| p.2 == id).map(|p| p.0.clone());
                         r.alignment = id;
                     }
@@ -811,7 +988,9 @@ impl SectionWindowApp for App {
             Event::Method(m) => {
                 if let Some(r) = w.set_mut() {
                     if m == 2 && r.uids.is_empty() {
-                        warning = Some("Çizgilerden km'ler Python ya da yapay zekâ ile verilir (road.sections.edit, lines).");
+                        warning = Some(
+                            "Çizgilerden km'ler Python ya da yapay zekâ ile verilir (road.sections.edit, lines).",
+                        );
                     } else {
                         r.method = m;
                     }
@@ -864,7 +1043,10 @@ impl SectionWindowApp for App {
             }
             Event::Add => {
                 if let Some(s) = w.side_mut() {
-                    s.parts.push(PartRow { kind: 1, ..PartRow::default() });
+                    s.parts.push(PartRow {
+                        kind: 1,
+                        ..PartRow::default()
+                    });
                 }
             }
             Event::RemovePart => {
@@ -970,7 +1152,9 @@ impl SectionWindowApp for App {
 
     fn chosen_saved_set(&mut self, what: &str) -> Option<SectionSetDef> {
         let w = self.modules.road().section_window.as_ref()?;
-        let Some(Chosen::Set(i)) = w.chosen else { return None };
+        let Some(Chosen::Set(i)) = w.chosen else {
+            return None;
+        };
         let def = w.sets.get(i)?.def().ok();
         if def.as_ref().is_some_and(|d| w.kept_sets.contains(d)) {
             def
@@ -982,7 +1166,9 @@ impl SectionWindowApp for App {
 
     /// Aksa yeniden bağla: the chosen saved set takes its alignment's present revision, one undo step.
     fn rebind_set(&mut self) -> Task<Message> {
-        let Some(def) = self.chosen_saved_set("yeniden bağlanır") else { return Task::none() };
+        let Some(def) = self.chosen_saved_set("yeniden bağlanır") else {
+            return Task::none();
+        };
         let edit = SectionsEdit {
             operation: RoadEditOperation::Rebind,
             set: Some(def.id.clone()),
@@ -1000,7 +1186,10 @@ impl SectionWindowApp for App {
         };
         if self.section_write(|cx| road_sections_edit::execute(cx, edit)) {
             self.reload_sections();
-            self.say(Level::Success, "Kesit takımı aksın bugünkü hâline bağlandı.");
+            self.say(
+                Level::Success,
+                "Kesit takımı aksın bugünkü hâline bağlandı.",
+            );
         }
         Task::none()
     }
@@ -1024,8 +1213,12 @@ impl SectionWindowApp for App {
     fn section_place(&mut self, def: &kentos_commands::SectionSetDef) -> Option<[f64; 2]> {
         let w = self.modules.road().section_window.as_ref()?;
         if !w.place.trim().is_empty() {
-            let parts: Vec<Option<f64>> =
-                w.place.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
+            let parts: Vec<Option<f64>> = w
+                .place
+                .split([';', ' '])
+                .filter(|s| !s.is_empty())
+                .map(|s| number(s).ok().flatten())
+                .collect();
             return match parts[..] {
                 [Some(x), Some(y)] => Some([x, y]),
                 _ => None,
@@ -1036,7 +1229,11 @@ impl SectionWindowApp for App {
             layer_id: w.layer.clone().unwrap_or_default(),
             at: [0.0, 0.0],
             stations: Vec::new(),
-            columns: number(&w.columns).ok().flatten().filter(|v| *v >= 1.0).map(|v| v as u32),
+            columns: number(&w.columns)
+                .ok()
+                .flatten()
+                .filter(|v| *v >= 1.0)
+                .map(|v| v as u32),
             exaggeration: number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0),
             height: None,
             expected_revision: None,
@@ -1045,7 +1242,12 @@ impl SectionWindowApp for App {
         let row = 2.4 * 2.5 * doc.model.settings().plot_scale / 1000.0;
         let up = match road_sections_draw::plan(&ExecutionContext::new(&mut doc.model), &probe) {
             kentos_commands::CommandResult::Completed { output, .. } => {
-                output.views.iter().map(|v| v.frame[1][1].max(v.frame[0][1])).fold(0.0, f64::max) + row
+                output
+                    .views
+                    .iter()
+                    .map(|v| v.frame[1][1].max(v.frame[0][1]))
+                    .fold(0.0, f64::max)
+                    + row
             }
             _ => row,
         };
@@ -1054,7 +1256,9 @@ impl SectionWindowApp for App {
 
     /// Çizime yaz: the chosen saved set's sections drawn on the chosen layer from the typed place, one undo step.
     fn draw_sections(&mut self) -> Task<Message> {
-        let Some(def) = self.chosen_saved_set("çizilir") else { return Task::none() };
+        let Some(def) = self.chosen_saved_set("çizilir") else {
+            return Task::none();
+        };
         let Some([x, y]) = self.section_place(&def) else {
             self.warn("Yeri “Y; X” olarak yazın ya da boş bırakın (çizimin altı).".to_owned());
             return Task::none();
@@ -1067,15 +1271,23 @@ impl SectionWindowApp for App {
             layer_id: w.layer.clone().unwrap_or_default(),
             at: [x, y],
             stations: Vec::new(),
-            columns: number(&w.columns).ok().flatten().filter(|v| *v >= 1.0).map(|v| v as u32),
+            columns: number(&w.columns)
+                .ok()
+                .flatten()
+                .filter(|v| *v >= 1.0)
+                .map(|v| v as u32),
             exaggeration: number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0),
             height: None,
             expected_revision: None,
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let result = road_sections_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            let (cut, fill) = out.views.iter().fold((0.0, 0.0), |(c, f), v| (c + v.cut.unwrap_or(0.0), f + v.fill.unwrap_or(0.0)));
+            let (cut, fill) = out.views.iter().fold((0.0, 0.0), |(c, f), v| {
+                (c + v.cut.unwrap_or(0.0), f + v.fill.unwrap_or(0.0))
+            });
             self.say(
                 Level::Success,
                 format!(
@@ -1093,7 +1305,9 @@ impl SectionWindowApp for App {
     /// Paftalara diz: the chosen saved set's views laid on sheets from the typed place at the typed scale
     /// (`road.sheets.sections`), one undo step; the sheets shown.
     fn section_sheets(&mut self) -> Task<Message> {
-        let Some(def) = self.chosen_saved_set("paftalara dizilir") else { return Task::none() };
+        let Some(def) = self.chosen_saved_set("paftalara dizilir") else {
+            return Task::none();
+        };
         let Some([x, y]) = self.section_place(&def) else {
             self.warn("Yeri “Y; X” olarak yazın ya da boş bırakın (çizimin altı).".to_owned());
             return Task::none();
@@ -1105,7 +1319,9 @@ impl SectionWindowApp for App {
             Ok(None) => None,
             Ok(Some(v)) if v >= 1.0 && v.fract() == 0.0 && v <= 1e6 => Some(v as u32),
             _ => {
-                self.warn("Paftaların ölçeği 1 ile 1 000 000 arası bir tam sayı olmalı.".to_owned());
+                self.warn(
+                    "Paftaların ölçeği 1 ile 1 000 000 arası bir tam sayı olmalı.".to_owned(),
+                );
                 return Task::none();
             }
         };
@@ -1123,10 +1339,16 @@ impl SectionWindowApp for App {
             first: None,
             expected_revision: None,
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let result =
-            kentos_native_application::road_sheets_sections::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        let Some(out) = self.answered(result) else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result = kentos_native_application::road_sheets_sections::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
+        let Some(out) = self.answered(result) else {
+            return Task::none();
+        };
         self.say(
             Level::Success,
             format!(
@@ -1170,7 +1392,12 @@ impl SectionWindowApp for App {
         }
         for d in &templates {
             let kept = w.kept_templates.iter().find(|k| k.id == d.id);
-            if kept.is_some_and(|k| k.left == d.left && k.right == d.right && k.name == d.name && k.pavement == d.pavement) {
+            if kept.is_some_and(|k| {
+                k.left == d.left
+                    && k.right == d.right
+                    && k.name == d.name
+                    && k.pavement == d.pavement
+            }) {
                 continue;
             }
             let edit = TemplatesEdit {
@@ -1203,7 +1430,11 @@ impl SectionWindowApp for App {
             clip: None,
             expected_revision: None,
         };
-        for k in w.kept_sets.iter().filter(|k| sets.iter().all(|d| d.id != k.id)) {
+        for k in w
+            .kept_sets
+            .iter()
+            .filter(|k| sets.iter().all(|d| d.id != k.id))
+        {
             let edit = blank(RoadEditOperation::Remove, &k.id);
             if !self.section_write(|cx| road_sections_edit::execute(cx, edit)) {
                 return Task::none();
@@ -1216,7 +1447,8 @@ impl SectionWindowApp for App {
             }
             let edit = SectionsEdit {
                 name: Some(d.name.clone()),
-                alignment: (kept.is_none_or(|k| k.alignment != d.alignment)).then(|| d.alignment.clone()),
+                alignment: (kept.is_none_or(|k| k.alignment != d.alignment))
+                    .then(|| d.alignment.clone()),
                 profile: Some(d.profile.clone().unwrap_or_default()),
                 template: Some(d.template.clone().unwrap_or_default()),
                 surface: Some(d.surface.clone().unwrap_or_default()),
@@ -1231,7 +1463,11 @@ impl SectionWindowApp for App {
                 return Task::none();
             }
         }
-        for k in w.kept_templates.iter().filter(|k| templates.iter().all(|d| d.id != k.id)) {
+        for k in w
+            .kept_templates
+            .iter()
+            .filter(|k| templates.iter().all(|d| d.id != k.id))
+        {
             let edit = TemplatesEdit {
                 operation: RoadEditOperation::Remove,
                 template: Some(k.id.clone()),
@@ -1249,7 +1485,10 @@ impl SectionWindowApp for App {
         }
         self.modules.road_mut().section_window = None;
         self.dialog = None;
-        self.say(Level::Success, "Tip kesitler ve kesit takımları kaydedildi.");
+        self.say(
+            Level::Success,
+            "Tip kesitler ve kesit takımları kaydedildi.",
+        );
         Task::none()
     }
 
@@ -1258,23 +1497,34 @@ impl SectionWindowApp for App {
         &mut self,
         write: impl FnOnce(&mut ExecutionContext<'_>) -> kentos_commands::CommandResult<T>,
     ) -> bool {
-        let Some(doc) = self.document.as_mut() else { return false };
+        let Some(doc) = self.document.as_mut() else {
+            return false;
+        };
         let result = write(&mut ExecutionContext::new(&mut doc.model));
         self.answered(result).is_some()
     }
-
 }
 
 /// The sources a set's sections are computed from in a line (docs/adr/1039).
 fn sources_words(s: &kentos_commands::SectionSources) -> String {
-    let mut words = format!("Kaynaklar: takım {} ({}), aks {} ({})", s.set.id, s.set.revision, s.alignment.id, s.alignment.revision);
-    for (what, src) in [("boykesit", &s.profile), ("tip kesit", &s.template), ("dever", &s.superelevation)] {
+    let mut words = format!(
+        "Kaynaklar: takım {} ({}), aks {} ({})",
+        s.set.id, s.set.revision, s.alignment.id, s.alignment.revision
+    );
+    for (what, src) in [
+        ("boykesit", &s.profile),
+        ("tip kesit", &s.template),
+        ("dever", &s.superelevation),
+    ] {
         if let Some(x) = src {
             words.push_str(&format!(", {what} {} ({})", x.id, x.revision));
         }
     }
     if let Some(g) = &s.surface {
-        words.push_str(&format!(", {}", crate::road_dialog::surface_source_words(g)));
+        words.push_str(&format!(
+            ", {}",
+            crate::road_dialog::surface_source_words(g)
+        ));
     }
     words
 }
@@ -1282,20 +1532,44 @@ fn sources_words(s: &kentos_commands::SectionSources) -> String {
 /// A sloping ground for a template's look, 16 m either side of the axis (from 40 m before docs/adr/0975 §3: the layers
 /// were not readable): over the axis on the left, under it on the right.
 fn sample_ground_near() -> Vec<GroundPoint> {
-    [(-16.0, 101.5 + 4.5 / 28.0 * 4.0), (-12.0, 101.5), (0.0, 100.0), (14.0, 98.0), (16.0, 98.0 - 4.0 / 26.0 * 2.0)]
-        .into_iter()
-        .map(|(offset, z)| GroundPoint { offset, z: Some(z), gap: false, crossing: false })
-        .collect()
+    [
+        (-16.0, 101.5 + 4.5 / 28.0 * 4.0),
+        (-12.0, 101.5),
+        (0.0, 100.0),
+        (14.0, 98.0),
+        (16.0, 98.0 - 4.0 / 26.0 * 2.0),
+    ]
+    .into_iter()
+    .map(|(offset, z)| GroundPoint {
+        offset,
+        z: Some(z),
+        gap: false,
+        crossing: false,
+    })
+    .collect()
 }
 
 /// A high cut on the left and a deep fill on the right for a template whose slopes are benched (docs/adr/0958): the
 /// ground climbs 7 m between 5 and 8 m out on the left and keeps rising 1 in 3.5; on the right it falls as much and
 /// keeps falling as fast, far enough for a benched fill to meet it. A few benches show on either before the slope meets the ground.
 pub(crate) fn sample_ground_benched() -> Vec<GroundPoint> {
-    [(-36.0, 116.0), (-8.0, 108.0), (-5.0, 101.0), (0.0, 100.0), (5.0, 99.0), (8.0, 92.0), (60.0, 77.14)]
-        .into_iter()
-        .map(|(offset, z)| GroundPoint { offset, z: Some(z), gap: false, crossing: false })
-        .collect()
+    [
+        (-36.0, 116.0),
+        (-8.0, 108.0),
+        (-5.0, 101.0),
+        (0.0, 100.0),
+        (5.0, 99.0),
+        (8.0, 92.0),
+        (60.0, 77.14),
+    ]
+    .into_iter()
+    .map(|(offset, z)| GroundPoint {
+        offset,
+        z: Some(z),
+        gap: false,
+        crossing: false,
+    })
+    .collect()
 }
 
 /// Which side the template editor shows.
@@ -1307,7 +1581,11 @@ enum SideChoice {
 
 impl std::fmt::Display for SideChoice {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(if *self == SideChoice::Left { "Sol yan" } else { "Sağ yan" })
+        f.write_str(if *self == SideChoice::Left {
+            "Sol yan"
+        } else {
+            "Sağ yan"
+        })
     }
 }
 
@@ -1320,17 +1598,27 @@ enum EdgeChoice {
 
 impl std::fmt::Display for EdgeChoice {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(if *self == EdgeChoice::Vertical { "Dik" } else { "Şevli" })
+        f.write_str(if *self == EdgeChoice::Vertical {
+            "Dik"
+        } else {
+            "Şevli"
+        })
     }
 }
 
 /// The core's pavement of a definition (the volumes' conversion, one place).
-fn road_volumes_core_pavement(p: &kentos_commands::PavementDef) -> kentos_road::section::pavement::Pavement {
+fn road_volumes_core_pavement(
+    p: &kentos_commands::PavementDef,
+) -> kentos_road::section::pavement::Pavement {
     kentos_native_application::road_volumes::core_pavement(p)
 }
 
 /// The alignments (id, name), the profiles (id, name, alignment) and the surfaces (id, name) the lists offer.
-type Names = (Vec<(String, String)>, Vec<(String, String, String)>, Vec<(String, String)>);
+type Names = (
+    Vec<(String, String)>,
+    Vec<(String, String, String)>,
+    Vec<(String, String)>,
+);
 
 /// The ground (offset, height, off the surface before), the design line and the daylight points a chart draws.
 type Drawn = (Vec<(f64, Option<f64>, bool)>, Vec<[f64; 2]>, Vec<[f64; 2]>);

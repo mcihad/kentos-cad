@@ -307,7 +307,8 @@ impl App {
         let alive = self.alive(r).len();
         // What it made is no longer in the drawing: taken back, said as such (docs/adr/9354), the success kept apart
         // from a failure and from a stop.
-        let undone = r.status == Status::Ok && !r.added.is_empty() && alive == 0 && self.run_undone(r);
+        let undone =
+            r.status == Status::Ok && !r.added.is_empty() && alive == 0 && self.run_undone(r);
         let (glyph, tone, state) = match r.status {
             Status::Ok if undone => (Icon::Undo, Tone::Muted, "Geri alındı"),
             Status::Ok => (Icon::Success, Tone::Success, "Başarılı"),
@@ -353,7 +354,9 @@ impl App {
             label::body(r.label.clone())
                 .font(typography::ui_strong())
                 .width(Fill),
-            container(label::caption(state)).padding([0, 6]).style(style::container::badge),
+            container(label::caption(state))
+                .padding([0, 6])
+                .style(style::container::badge),
             label::mono_caption(crate::cloud::local_time::clock(
                 r.started,
                 crate::cloud::local_time::Zone::system()
@@ -419,9 +422,11 @@ impl App {
                 tool.parameters
                     .iter()
                     .filter(|p| matches!(p.kind, kentos_processing::ParamKind::Layer { .. }))
-                    .filter_map(|p| match kentos_processing::LayerValue::read(r.values.get(&p.name)?)? {
-                        kentos_processing::LayerValue::New(name) => Some(name),
-                        kentos_processing::LayerValue::Existing(_) => None,
+                    .filter_map(|p| {
+                        match kentos_processing::LayerValue::read(r.values.get(&p.name)?)? {
+                            kentos_processing::LayerValue::New(name) => Some(name),
+                            kentos_processing::LayerValue::Existing(_) => None,
+                        }
                     })
                     .collect()
             })
@@ -448,7 +453,9 @@ impl App {
         };
         let layers = doc.model.layers();
         let leaves = layers.leaves();
-        self.run_new_layers(r).iter().all(|name| !leaves.iter().any(|l| &l.name == name))
+        self.run_new_layers(r)
+            .iter()
+            .all(|name| !leaves.iter().any(|l| &l.name == name))
     }
 
     /// What of a run's result is gone from the drawing (docs/adr/9354): all of it (taken back, its new layers named
@@ -470,7 +477,10 @@ impl App {
             return Some(if moved.is_empty() {
                 "Eklediği nesneler çizimde yok: silindi.".to_owned()
             } else {
-                format!("Sonucu veri kaynağına taşındı: {} katmanının satırları kaynağında.", moved.join(", "))
+                format!(
+                    "Sonucu veri kaynağına taşındı: {} katmanının satırları kaynağında.",
+                    moved.join(", ")
+                )
             });
         }
         if alive > 0 {
@@ -491,7 +501,10 @@ impl App {
         Some(if gone.is_empty() {
             "Geri alındı: eklediği nesneler çizimde yok.".to_owned()
         } else {
-            format!("Geri alındı: eklediği nesneler çizimde yok, {} katmanı kaldırıldı.", gone.join(", "))
+            format!(
+                "Geri alındı: eklediği nesneler çizimde yok, {} katmanı kaldırıldı.",
+                gone.join(", ")
+            )
         })
     }
 
@@ -505,8 +518,16 @@ impl App {
         let layers = doc.model.layers();
         let mut gone = Vec::new();
         let (mut now, mut counted) = (0usize, false);
-        for p in tool.parameters.iter().filter(|p| matches!(p.kind, kentos_processing::ParamKind::Features { .. })) {
-            let Some(v) = r.values.get(&p.name).and_then(kentos_processing::FeaturesValue::read) else {
+        for p in tool
+            .parameters
+            .iter()
+            .filter(|p| matches!(p.kind, kentos_processing::ParamKind::Features { .. }))
+        {
+            let Some(v) = r
+                .values
+                .get(&p.name)
+                .and_then(kentos_processing::FeaturesValue::read)
+            else {
                 continue;
             };
             match &v.scope {
@@ -514,9 +535,15 @@ impl App {
                     gone.push(format!("{}: “{id}” katmanı artık yok", p.label));
                 }
                 kentos_processing::Scope::Ids(ids) => {
-                    let missing = ids.iter().filter(|i| doc.model.get(kentos_domain::Slot(**i)).is_none()).count();
+                    let missing = ids
+                        .iter()
+                        .filter(|i| doc.model.get(kentos_domain::Slot(**i)).is_none())
+                        .count();
                     if missing > 0 {
-                        gone.push(format!("{}: önceki adımın {missing} nesnesi artık yok", p.label));
+                        gone.push(format!(
+                            "{}: önceki adımın {missing} nesnesi artık yok",
+                            p.label
+                        ));
                     }
                 }
                 _ => {}
@@ -527,14 +554,24 @@ impl App {
             }
         }
         let reading = self.data_location().is_some_and(|l| !l.reading.is_empty());
-        if gone.is_empty() && counted && !reading && r.status == Status::Ok && (now as u64) < r.records_in {
+        if gone.is_empty()
+            && counted
+            && !reading
+            && r.status == Status::Ok
+            && (now as u64) < r.records_in
+        {
             gone.push(format!(
                 "önceki çalıştırma {} nesne okudu, girdi şimdi {now} nesne; silinen nesneler ya da kaynağa yazılmadan \
                  atılan geçici kayıtlar artık girdide değil",
                 r.records_in
             ));
         }
-        (!gone.is_empty()).then(|| format!("Önceki çalıştırmanın girdisi değişti: {}. Girdiyi denetleyip yeniden seçin.", gone.join("; ")))
+        (!gone.is_empty()).then(|| {
+            format!(
+                "Önceki çalıştırmanın girdisi değişti: {}. Girdiyi denetleyip yeniden seçin.",
+                gone.join("; ")
+            )
+        })
     }
 
     /// What a run made (else what it changed or selected) that is still in the drawing.

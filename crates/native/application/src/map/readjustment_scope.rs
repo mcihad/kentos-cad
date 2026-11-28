@@ -13,19 +13,21 @@
 use std::collections::HashMap;
 
 use kentos_commands::{
-    CommandResult, Entity, PARCEL_AREA_RULE, PARCEL_LAYER, ReadjustmentScope, ReadjustmentScopeParcel,
-    ReadjustmentScoped, ScopePart, ScopeRing,
+    CommandResult, Entity, PARCEL_AREA_RULE, PARCEL_LAYER, ReadjustmentScope,
+    ReadjustmentScopeParcel, ReadjustmentScoped, ScopePart, ScopeRing,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::entity::entity_area;
 use kentos_geometry_core::geom::arrangement::{Area, Ring, edge_len};
 use kentos_geometry_core::geom::bulge::bulge_ring_area;
-use kentos_geometry_core::predicates::orientation;
-use kentos_geometry_core::vec2::Vec2;
 use kentos_geometry_core::geom::region::{intersect_area_sets, net_area, subtract_areas};
-use kentos_geometry_core::numeric::{RoundingMode, parse_decimal, round_decimal, subtract_exact, sum_exact};
+use kentos_geometry_core::numeric::{
+    RoundingMode, parse_decimal, round_decimal, subtract_exact, sum_exact,
+};
 use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_geometry_core::ops::geoprocess::boundary_edges;
+use kentos_geometry_core::predicates::orientation;
+use kentos_geometry_core::vec2::Vec2;
 
 use crate::checks::{self, Stop, error};
 use crate::geometry::shape;
@@ -58,7 +60,10 @@ pub(crate) fn padded(text: &str, scale: u32) -> Option<String> {
 
 /// A piece's mean width 2A/P (its holes' edges counted in P).
 fn width(a: &Area) -> f64 {
-    let p: f64 = boundary_edges(std::slice::from_ref(a)).iter().map(edge_len).sum();
+    let p: f64 = boundary_edges(std::slice::from_ref(a))
+        .iter()
+        .map(edge_len)
+        .sum();
     if p > 0.0 { 2.0 * net_area(a) / p } else { 0.0 }
 }
 
@@ -73,7 +78,14 @@ fn pieces(list: Vec<Area>) -> Vec<Area> {
 fn sheet_ring(r: &Ring, outer: bool) -> ScopeRing {
     let n = r.pts.len();
     let mut pts: Vec<Vec2> = r.pts.clone();
-    let mut bulges: Vec<f64> = (0..n).map(|i| r.bulges.as_ref().and_then(|b| b.get(i).copied()).unwrap_or(0.0)).collect();
+    let mut bulges: Vec<f64> = (0..n)
+        .map(|i| {
+            r.bulges
+                .as_ref()
+                .and_then(|b| b.get(i).copied())
+                .unwrap_or(0.0)
+        })
+        .collect();
     if n >= 3 && (bulge_ring_area(&pts, Some(&bulges)) > 0.0) != outer {
         // Reversed: the edge after corner i is the old edge before it, bowing the other way.
         pts = (0..n).map(|i| r.pts[n - 1 - i]).collect();
@@ -89,17 +101,27 @@ fn sheet_ring(r: &Ring, outer: bool) -> ScopeRing {
                 && orientation(a, b, c) == 0
                 && (b.x - a.x) * (c.x - b.x) + (b.y - a.y) * (c.y - b.y) > 0.0
         };
-        let Some(k) = (0..m).find(|&i| straight_on(i)) else { break };
+        let Some(k) = (0..m).find(|&i| straight_on(i)) else {
+            break;
+        };
         pts.remove(k);
         bulges.remove(k);
     }
-    let start = (0..pts.len()).min_by(|&a, &b| pts[a].x.total_cmp(&pts[b].x).then(pts[a].y.total_cmp(&pts[b].y)));
+    let start = (0..pts.len()).min_by(|&a, &b| {
+        pts[a]
+            .x
+            .total_cmp(&pts[b].x)
+            .then(pts[a].y.total_cmp(&pts[b].y))
+    });
     let s = start.unwrap_or(0);
     let m = pts.len();
     let order: Vec<usize> = (0..m).map(|i| (s + i) % m).collect();
     ScopeRing {
         pts: order.iter().map(|&i| [pts[i].x, pts[i].y]).collect(),
-        bulges: bulges.iter().any(|b| *b != 0.0).then(|| order.iter().map(|&i| bulges[i]).collect()),
+        bulges: bulges
+            .iter()
+            .any(|b| *b != 0.0)
+            .then(|| order.iter().map(|&i| bulges[i]).collect()),
         numbers: Vec::new(),
     }
 }
@@ -135,12 +157,19 @@ fn number(parts: &mut [ScopePart]) -> Vec<[f64; 2]> {
 fn sheet_part(a: &Area, side: &str) -> ScopePart {
     let mut holes: Vec<ScopeRing> = a.holes.iter().map(|h| sheet_ring(h, false)).collect();
     holes.sort_by(|p, q| {
-        let (a, b) = (p.pts.first().copied().unwrap_or_default(), q.pts.first().copied().unwrap_or_default());
+        let (a, b) = (
+            p.pts.first().copied().unwrap_or_default(),
+            q.pts.first().copied().unwrap_or_default(),
+        );
         a[0].total_cmp(&b[0]).then(a[1].total_cmp(&b[1]))
     });
     let mut rings = vec![sheet_ring(&a.outer, true)];
     rings.extend(holes);
-    ScopePart { side: side.to_owned(), area: net_area(a), rings }
+    ScopePart {
+        side: side.to_owned(),
+        area: net_area(a),
+        rings,
+    }
 }
 
 /// The pieces' areas added from +0 (an empty `sum` of floats is −0).
@@ -156,13 +185,23 @@ pub(crate) fn computed(v: f64, scale: u32, mode: RoundingMode) -> Option<String>
 
 fn object<'d>(doc: &'d Document, uid: &str, path: &str) -> Result<&'d Entity, Stop> {
     if !checks::is_uid_text(uid) {
-        return Err(fail(codes::INVALID_UID, format!("“{uid}” geçerli bir nesne kimliği değil."), path));
+        return Err(fail(
+            codes::INVALID_UID,
+            format!("“{uid}” geçerli bir nesne kimliği değil."),
+            path,
+        ));
     }
     Uuid::parse_str(uid)
         .ok()
         .and_then(|u| doc.slot_of(u))
         .and_then(|s| doc.get(s))
-        .ok_or_else(|| fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::ENTITY_NOT_FOUND,
+                format!("“{uid}” kimlikli nesne çizimde yok."),
+                path,
+            )
+        })
 }
 
 /// The basis and what the part outside keeps, or why there is none: the status first.
@@ -183,7 +222,9 @@ fn basis_of(
     if slivers > 0 {
         return ("sliver", None, None);
     }
-    let Some(text) = text else { return ("noRecord", None, None) };
+    let Some(text) = text else {
+        return ("noRecord", None, None);
+    };
     // The record as written, its comma a point: the decimal the distribution takes (never the float).
     let written = text.replace(',', ".");
     if recorded_value(text).is_none() || parse_decimal(&written).is_err() {
@@ -193,10 +234,18 @@ fn basis_of(
         return ("needsCorrection", None, None);
     }
     if kind == "whole" {
-        return if places(&written) > scale { ("finerThanPolicy", None, None) } else { ("registered", Some(written), None) };
+        return if places(&written) > scale {
+            ("finerThanPolicy", None, None)
+        } else {
+            ("registered", Some(written), None)
+        };
     }
-    let Some(basis) = computed(inside, scale, mode) else { return ("invalidRecord", None, None) };
-    let rest = subtract_exact(&written, &basis).ok().and_then(|r| padded(&r, places(&written).max(scale)));
+    let Some(basis) = computed(inside, scale, mode) else {
+        return ("invalidRecord", None, None);
+    };
+    let rest = subtract_exact(&written, &basis)
+        .ok()
+        .and_then(|r| padded(&r, places(&written).max(scale)));
     match rest {
         Some(r) if r.starts_with('-') => ("outsideTooSmall", None, Some(r)),
         Some(r) => ("computed", Some(basis), Some(r)),
@@ -207,25 +256,46 @@ fn basis_of(
 /// The scope's answer, or why there is none (the refusal's path is the input's).
 pub(crate) fn run(doc: &Document, input: &ReadjustmentScope) -> Result<ReadjustmentScoped, Stop> {
     if input.scale > MOST_PLACES {
-        return Err(fail(codes::INVALID_INPUT, format!("Basamak {} en çok {MOST_PLACES} olabilir.", input.scale), "scale"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Basamak {} en çok {MOST_PLACES} olabilir.", input.scale),
+            "scale",
+        ));
     }
     let Some(mode) = RoundingMode::parse(input.rounding.trim()) else {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("“{}” bir yuvarlama yönü değil (half_even, half_away_from_zero …).", input.rounding),
+            format!(
+                "“{}” bir yuvarlama yönü değil (half_even, half_away_from_zero …).",
+                input.rounding
+            ),
             "rounding",
         ));
     };
     let tolerance = input.tolerance.unwrap_or(FIRST_TOLERANCE);
     if !tolerance.is_finite() || tolerance < LEAST_TOLERANCE {
-        return Err(fail(codes::INVALID_INPUT, format!("Tolerans sonlu ve en az {LEAST_TOLERANCE} m olmalı (yazılan {tolerance})."), "tolerance"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Tolerans sonlu ve en az {LEAST_TOLERANCE} m olmalı (yazılan {tolerance})."),
+            "tolerance",
+        ));
     }
-    let field = input.field.as_deref().map(str::trim).filter(|f| !f.is_empty()).unwrap_or(RECORDED_FIELD).to_owned();
+    let field = input
+        .field
+        .as_deref()
+        .map(str::trim)
+        .filter(|f| !f.is_empty())
+        .unwrap_or(RECORDED_FIELD)
+        .to_owned();
     let b = input.boundary.trim();
     let boundary = object(doc, b, "boundary")?;
     let edge = areas_of_entity(&shape(boundary));
     if !matches!(boundary, Entity::Polygon(_)) || edge.is_empty() {
-        return Err(fail(codes::NOT_AN_AREA, format!("“{b}” bir alan değil; düzenleme sınırı kapalı bir alan olmalı."), "boundary"));
+        return Err(fail(
+            codes::NOT_AN_AREA,
+            format!("“{b}” bir alan değil; düzenleme sınırı kapalı bir alan olmalı."),
+            "boundary",
+        ));
     }
     let boundary_id = boundary.base().id;
     let (given, chosen): (bool, Vec<&Entity>) = match &input.uids {
@@ -247,14 +317,20 @@ pub(crate) fn run(doc: &Document, input: &ReadjustmentScope) -> Result<Readjustm
         }
         None => (
             false,
-            doc.by_layer(PARCEL_LAYER).filter(|e| matches!(e, Entity::Polygon(_)) && e.base().id != boundary_id).collect(),
+            doc.by_layer(PARCEL_LAYER)
+                .filter(|e| matches!(e, Entity::Polygon(_)) && e.base().id != boundary_id)
+                .collect(),
         ),
     };
     let mut parcels = Vec::new();
     for e in chosen {
         let s = shape(e);
         let areas = areas_of_entity(&s);
-        let inside_pieces = if areas.is_empty() { Vec::new() } else { pieces(intersect_area_sets(&[areas.clone(), edge.clone()])) };
+        let inside_pieces = if areas.is_empty() {
+            Vec::new()
+        } else {
+            pieces(intersect_area_sets(&[areas.clone(), edge.clone()]))
+        };
         if !given && inside_pieces.is_empty() {
             continue;
         }
@@ -269,19 +345,44 @@ pub(crate) fn run(doc: &Document, input: &ReadjustmentScope) -> Result<Readjustm
         };
         let (inside, outside) = (total(&inside_pieces), total(&outside_pieces));
         let calculated = entity_area(&s).unwrap_or(0.0);
-        let text = e.base().attrs.get(&field).map(|v| v.trim().to_owned()).filter(|v| !v.is_empty());
-        let difference = text.as_deref().and_then(recorded_value).map(|r| calculated - r);
+        let text = e
+            .base()
+            .attrs
+            .get(&field)
+            .map(|v| v.trim().to_owned())
+            .filter(|v| !v.is_empty());
+        let difference = text
+            .as_deref()
+            .and_then(recorded_value)
+            .map(|r| calculated - r);
         let limit = limit_of(calculated);
         let within = difference.map(|d| d.abs() <= limit);
-        let (status, basis, outside_recorded) = basis_of(kind, counted_in, slivers, text.as_deref(), within, inside, input.scale, mode);
+        let (status, basis, outside_recorded) = basis_of(
+            kind,
+            counted_in,
+            slivers,
+            text.as_deref(),
+            within,
+            inside,
+            input.scale,
+            mode,
+        );
         // The separation sheet's parts (docs/adr/2280): a partial parcel's counted pieces, inside then outside.
         let mut parts = Vec::new();
         if kind == "partial" {
             for (list, side) in [(&inside_pieces, "inside"), (&outside_pieces, "outside")] {
-                let mut these: Vec<ScopePart> =
-                    list.iter().filter(|a| width(a) > tolerance).map(|a| sheet_part(a, side)).collect();
+                let mut these: Vec<ScopePart> = list
+                    .iter()
+                    .filter(|a| width(a) > tolerance)
+                    .map(|a| sheet_part(a, side))
+                    .collect();
                 these.sort_by(|p, q| {
-                    let first = |s: &ScopePart| s.rings.first().and_then(|r| r.pts.first().copied()).unwrap_or_default();
+                    let first = |s: &ScopePart| {
+                        s.rings
+                            .first()
+                            .and_then(|r| r.pts.first().copied())
+                            .unwrap_or_default()
+                    };
                     let (a, b) = (first(p), first(q));
                     a[0].total_cmp(&b[0]).then(a[1].total_cmp(&b[1]))
                 });
@@ -289,7 +390,13 @@ pub(crate) fn run(doc: &Document, input: &ReadjustmentScope) -> Result<Readjustm
             }
         }
         let points = number(&mut parts);
-        let attr = |k: &str| e.base().attrs.get(k).map(|v| v.trim().to_owned()).unwrap_or_default();
+        let attr = |k: &str| {
+            e.base()
+                .attrs
+                .get(k)
+                .map(|v| v.trim().to_owned())
+                .unwrap_or_default()
+        };
         let (ada, parsel) = (attr("Ada"), attr("Parsel"));
         let parcel = match (ada.is_empty(), parsel.is_empty()) {
             (false, false) => format!("{ada}/{parsel}"),
@@ -297,7 +404,10 @@ pub(crate) fn run(doc: &Document, input: &ReadjustmentScope) -> Result<Readjustm
             (false, true) => ada.clone(),
         };
         parcels.push(ReadjustmentScopeParcel {
-            uid: doc.uid(kentos_domain::Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default(),
+            uid: doc
+                .uid(kentos_domain::Slot(e.base().id))
+                .map(|u| u.to_string())
+                .unwrap_or_default(),
             parcel,
             il: attr("İl"),
             ilce: attr("İlçe"),
@@ -324,13 +434,20 @@ pub(crate) fn run(doc: &Document, input: &ReadjustmentScope) -> Result<Readjustm
         });
     }
     // The records name a parcel by Ada/Parsel: two in the answer with one name cannot both take a record.
-    let names: Vec<String> = parcels.iter().filter(|p| !p.no_identity).map(|p| p.parcel.clone()).collect();
+    let names: Vec<String> = parcels
+        .iter()
+        .filter(|p| !p.no_identity)
+        .map(|p| p.parcel.clone())
+        .collect();
     for p in parcels.iter_mut().filter(|p| !p.no_identity) {
         p.duplicate = names.iter().filter(|n| **n == p.parcel).count() > 1;
     }
     let bases: Vec<&str> = parcels.iter().filter_map(|p| p.basis.as_deref()).collect();
     let most = bases.iter().map(|t| places(t)).max().unwrap_or(0);
-    let basis = sum_exact(&bases).ok().and_then(|t| padded(&t, most)).unwrap_or_else(|| "0".to_owned());
+    let basis = sum_exact(&bases)
+        .ok()
+        .and_then(|t| padded(&t, most))
+        .unwrap_or_else(|| "0".to_owned());
     let boundary_area = entity_area(&shape(boundary)).unwrap_or(0.0);
     let inside = parcels.iter().fold(0.0, |s, p| s + p.inside);
     let by_kind = |k: &str| count(parcels.iter().filter(|p| p.kind == k).count());
@@ -347,7 +464,12 @@ pub(crate) fn run(doc: &Document, input: &ReadjustmentScope) -> Result<Readjustm
         whole: by_kind("whole"),
         partial: by_kind("partial"),
         ready: count(bases.len()),
-        review: count(parcels.iter().filter(|p| !matches!(p.status.as_str(), "registered" | "computed" | "outside")).count()),
+        review: count(
+            parcels
+                .iter()
+                .filter(|p| !matches!(p.status.as_str(), "registered" | "computed" | "outside"))
+                .count(),
+        ),
         parcels,
     })
 }
@@ -355,21 +477,33 @@ pub(crate) fn run(doc: &Document, input: &ReadjustmentScope) -> Result<Readjustm
 /// Reads only: the same checks as the answer.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ReadjustmentScope) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &ReadjustmentScope) -> CommandResult<ReadjustmentScoped> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &ReadjustmentScope,
+) -> CommandResult<ReadjustmentScoped> {
     match run(cx.doc, input) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ReadjustmentScope) -> CommandResult<ReadjustmentScoped> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ReadjustmentScope,
+) -> CommandResult<ReadjustmentScoped> {
     plan(cx, &input)
 }
 

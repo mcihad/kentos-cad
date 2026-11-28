@@ -61,8 +61,16 @@ static NEXT: AtomicU64 = AtomicU64::new(1);
 /// A model in the viewer's input: where its objects start, and what their details are read from.
 #[derive(Clone)]
 enum Part {
-    Drawing { from: usize, bytes: Arc<Vec<u8>>, model: Arc<Model> },
-    Underlay { from: usize, id: String, loaded: Arc<Loaded> },
+    Drawing {
+        from: usize,
+        bytes: Arc<Vec<u8>>,
+        model: Arc<Model>,
+    },
+    Underlay {
+        from: usize,
+        id: String,
+        loaded: Arc<Loaded>,
+    },
 }
 
 impl Part {
@@ -83,7 +91,10 @@ pub struct Made {
 
 impl std::fmt::Debug for Made {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Made").field("objects", &self.input.objects.len()).field("bodies", &self.input.bodies.len()).finish()
+        f.debug_struct("Made")
+            .field("objects", &self.input.objects.len())
+            .field("bodies", &self.input.bodies.len())
+            .finish()
     }
 }
 
@@ -122,25 +133,47 @@ fn masses(doc: &Document) -> Option<Input> {
         .settings()
         .arch
         .as_ref()
-        .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.elevation)).collect())
+        .map(|a| {
+            a.levels
+                .iter()
+                .map(|l| (l.id.clone(), l.elevation))
+                .collect()
+        })
         .unwrap_or_default();
-    let floor = |id: Option<&str>| id.and_then(|id| levels.iter().find(|l| l.0 == id)).map_or(0.0, |l| l.1);
-    let mut objects =
-        vec![ObjectIn { key: String::new(), class: "Kütleler".into(), label: "Kütleler".into(), category: Category::Project, parent: None, storey: None }];
+    let floor = |id: Option<&str>| {
+        id.and_then(|id| levels.iter().find(|l| l.0 == id))
+            .map_or(0.0, |l| l.1)
+    };
+    let mut objects = vec![ObjectIn {
+        key: String::new(),
+        class: "Kütleler".into(),
+        label: "Kütleler".into(),
+        category: Category::Project,
+        parent: None,
+        storey: None,
+    }];
     let mut bodies = Vec::new();
     for (uid, e) in doc.entities_with_uids() {
         let Entity::Mass(m) = e else { continue };
         let (bottom, top) = m.mass.span(floor(m.mass.arch.level.as_deref()));
         let object = objects.len();
         let label = m.mass.name.clone().unwrap_or_else(|| "Kütle".into());
-        objects.push(ObjectIn { key: uid.to_string(), class: "Kütle".into(), label, category: Category::Mass, parent: Some(0), storey: None });
+        objects.push(ObjectIn {
+            key: uid.to_string(),
+            class: "Kütle".into(),
+            label,
+            category: Category::Mass,
+            parent: Some(0),
+            storey: None,
+        });
         for part in &m.mass.parts {
             let mut pts: Vec<P> = Vec::new();
             let mut rings = Vec::new();
             for (k, r) in std::iter::once(&part.outer).chain(&part.holes).enumerate() {
                 // Its arcs in points, as the section model's prism (a round tower's two half circles).
                 let corners: Vec<P> = r.pts.iter().map(|q| P::new(q.x, q.y)).collect();
-                let mut ring = kentos_geometry_core::entity::polygon_ring(&corners, r.bulges.as_deref());
+                let mut ring =
+                    kentos_geometry_core::entity::polygon_ring(&corners, r.bulges.as_deref());
                 if ring.len() > 1 && ring.first() == ring.last() {
                     ring.pop();
                 }
@@ -167,8 +200,11 @@ fn masses(doc: &Document) -> Option<Input> {
             let mut flat = Vec::new();
             kentos_geometry_core::triangulate::triangulate_into(&pts, &rings, &mut flat);
             let n = pts.len() as u32;
-            let positions: Vec<[f64; 3]> =
-                pts.iter().map(|q| [q.x, q.y, bottom]).chain(pts.iter().map(|q| [q.x, q.y, top])).collect();
+            let positions: Vec<[f64; 3]> = pts
+                .iter()
+                .map(|q| [q.x, q.y, bottom])
+                .chain(pts.iter().map(|q| [q.x, q.y, top]))
+                .collect();
             let mut triangles: Vec<[u32; 3]> = Vec::new();
             for t in flat.chunks_exact(3) {
                 // The top faces up, the bottom down, whatever way the triangulation turned.
@@ -188,10 +224,20 @@ fn masses(doc: &Document) -> Option<Input> {
                     triangles.push([i, j + n, i + n]);
                 }
             }
-            bodies.push(BodyIn { object, positions: Arc::new(positions), triangles });
+            bodies.push(BodyIn {
+                object,
+                positions: Arc::new(positions),
+                triangles,
+            });
         }
     }
-    (objects.len() > 1).then(|| Input { title: "Kütleler".into(), objects, bodies, not_shown: Vec::new(), apart: None })
+    (objects.len() > 1).then(|| Input {
+        title: "Kütleler".into(),
+        objects,
+        bodies,
+        not_shown: Vec::new(),
+        apart: None,
+    })
 }
 
 /// Makes the viewer's input of `doc` (a reading copy) and of the underlays shown: the model the export would write
@@ -210,38 +256,70 @@ fn make(doc: &Document, underlays: &[Shown], stop: &AtomicBool) -> Option<Result
     };
     // A massing study alone (docs/adr/8178) is something to look at too.
     let masses = masses(doc);
-    if masses.is_none() && !read.input.bodies.iter().any(|b| !read.input.objects[b.object].category.is_volume()) {
+    if masses.is_none()
+        && !read
+            .input
+            .bodies
+            .iter()
+            .any(|b| !read.input.objects[b.object].category.is_volume())
+    {
         return Some(Err(NO_BUILDING.to_owned()));
     }
-    let facts = vec![(read.model.summary.schema.clone(), crate::ifc_viewer::schema_tip(&read.model))];
+    let facts = vec![(
+        read.model.summary.schema.clone(),
+        crate::ifc_viewer::schema_tip(&read.model),
+    )];
     let mut input = read.input;
     // The masses are the drawing's own (its part, its colour, its shadows), not an underlay's.
     if let Some(m) = masses {
         input.join(m, MASS_OWNER);
     }
-    let mut parts = vec![Part::Drawing { from: 0, bytes: read.bytes, model: read.model }];
+    let mut parts = vec![Part::Drawing {
+        from: 0,
+        bytes: read.bytes,
+        model: read.model,
+    }];
     for (id, name, loaded) in underlays {
         if stop.load(Ordering::Relaxed) {
             return None;
         }
         // Its objects as its file says them, its project by the underlay's name; its bodies as they stand in the
         // drawing (placed when it was read).
-        let none = Bodies { bodies: Vec::new(), not_shown: Vec::new() };
+        let none = Bodies {
+            bodies: Vec::new(),
+            not_shown: Vec::new(),
+        };
         let mut other = kentos_ifc::read::view::input(name, &loaded.model, &none);
-        for o in other.objects.iter_mut().filter(|o| o.category == Category::Project) {
+        for o in other
+            .objects
+            .iter_mut()
+            .filter(|o| o.category == Category::Project)
+        {
             o.label = format!("{name} (altlık model)");
         }
         other.bodies = loaded
             .bodies
             .iter()
-            .map(|b| BodyIn { object: b.owner as usize, positions: b.positions.clone(), triangles: b.triangles.clone() })
+            .map(|b| BodyIn {
+                object: b.owner as usize,
+                positions: b.positions.clone(),
+                triangles: b.triangles.clone(),
+            })
             .collect();
         other.not_shown = loaded.not_shown.clone();
         let from = input.objects.len();
         input.append(other, &format!("{UNDERLAY_OWNER}{id}:"));
-        parts.push(Part::Underlay { from, id: id.clone(), loaded: loaded.clone() });
+        parts.push(Part::Underlay {
+            from,
+            id: id.clone(),
+            loaded: loaded.clone(),
+        });
     }
-    Some(Ok(Made { input, parts, facts }))
+    Some(Ok(Made {
+        input,
+        parts,
+        facts,
+    }))
 }
 
 /// A building in the window.
@@ -267,7 +345,10 @@ pub struct Building3d {
 
 impl std::fmt::Debug for Building3d {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Building3d").field("viewer", &self.viewer).field("made", &self.made).finish_non_exhaustive()
+        f.debug_struct("Building3d")
+            .field("viewer", &self.viewer)
+            .field("made", &self.made)
+            .finish_non_exhaustive()
     }
 }
 
@@ -291,10 +372,16 @@ impl Building3d {
     /// How many of the drawing's objects of `class` have a body (rooms, the far zones).
     #[cfg(any(test, feature = "testing"))]
     pub fn with_body_of(&self, class: &str) -> usize {
-        let Some(v) = self.viewer.view() else { return 0 };
+        let Some(v) = self.viewer.view() else {
+            return 0;
+        };
         let input = v.input();
-        let mut objects: Vec<usize> =
-            input.bodies.iter().map(|b| b.object).filter(|&o| !input.is_apart(o) && input.objects[o].class == class).collect();
+        let mut objects: Vec<usize> = input
+            .bodies
+            .iter()
+            .map(|b| b.object)
+            .filter(|&o| !input.is_apart(o) && input.objects[o].class == class)
+            .collect();
         objects.sort_unstable();
         objects.dedup();
         objects.len()
@@ -303,10 +390,16 @@ impl Building3d {
     /// How many of the drawing's objects of the categories `of` have a body (an object's bodies are one after another).
     #[cfg(any(test, feature = "testing"))]
     fn with_body(&self, of: impl Fn(Category) -> bool) -> usize {
-        let Some(v) = self.viewer.view() else { return 0 };
+        let Some(v) = self.viewer.view() else {
+            return 0;
+        };
         let input = v.input();
-        let mut objects: Vec<usize> =
-            input.bodies.iter().map(|b| b.object).filter(|&o| !input.is_apart(o) && of(input.objects[o].category)).collect();
+        let mut objects: Vec<usize> = input
+            .bodies
+            .iter()
+            .map(|b| b.object)
+            .filter(|&o| !input.is_apart(o) && of(input.objects[o].category))
+            .collect();
         objects.sort_unstable();
         objects.dedup();
         objects.len()
@@ -323,8 +416,13 @@ impl Building3d {
         let part = self.parts.iter().rev().find(|p| p.from() <= object)?;
         let at = object - part.from();
         Some(match part {
-            Part::Drawing { bytes, model, .. } => model.details(bytes, at).map_err(|e| e.to_string()),
-            Part::Underlay { loaded, .. } => loaded.model.details(&loaded.bytes, at).map_err(|e| e.to_string()),
+            Part::Drawing { bytes, model, .. } => {
+                model.details(bytes, at).map_err(|e| e.to_string())
+            }
+            Part::Underlay { loaded, .. } => loaded
+                .model
+                .details(&loaded.bytes, at)
+                .map_err(|e| e.to_string()),
         })
     }
 
@@ -361,14 +459,20 @@ impl Building3d {
     /// The drawing's storeys in the viewer: each one's object, its name as the drawing says it (the long name the
     /// tree writes after “—”), and whether it shows.
     fn storeys(&self) -> Vec<(usize, String, bool)> {
-        let Some(v) = self.viewer.view() else { return Vec::new() };
+        let Some(v) = self.viewer.view() else {
+            return Vec::new();
+        };
         v.input()
             .objects
             .iter()
             .enumerate()
             .filter(|(i, o)| o.category == Category::Storey && !v.input().is_apart(*i))
             .map(|(i, o)| {
-                let name = o.label.rsplit_once(" — ").map_or(o.label.as_str(), |(_, long)| long).to_owned();
+                let name = o
+                    .label
+                    .rsplit_once(" — ")
+                    .map_or(o.label.as_str(), |(_, long)| long)
+                    .to_owned();
                 (i, name, !v.is_hidden(i))
             })
             .collect()
@@ -397,7 +501,11 @@ impl Building3d {
     pub(crate) fn storeys_menu(&self) -> Element<'_, Message> {
         let storeys = self.storeys();
         let shown = storeys.iter().filter(|s| s.2).count();
-        let words = if shown == storeys.len() { STOREYS.to_owned() } else { format!("{STOREYS} {shown}/{}", storeys.len()) };
+        let words = if shown == storeys.len() {
+            STOREYS.to_owned()
+        } else {
+            format!("{STOREYS} {shown}/{}", storeys.len())
+        };
         strip::menu(
             crate::icons::from_web(Some("levelsAll")),
             &words,
@@ -405,10 +513,14 @@ impl Building3d {
             move || {
                 let mut m = Menu::new();
                 for (i, (_, name, on)) in storeys.iter().enumerate() {
-                    m = m.check(name.clone(), *on, Message::Scene3d(Event::Storey(i))).stay();
+                    m = m
+                        .check(name.clone(), *on, Message::Scene3d(Event::Storey(i)))
+                        .stay();
                 }
                 if storeys.iter().any(|s| !s.2) {
-                    m = m.separator().item(ALL_STOREYS, Message::Scene3d(Event::AllStoreys));
+                    m = m
+                        .separator()
+                        .item(ALL_STOREYS, Message::Scene3d(Event::AllStoreys));
                 }
                 m
             },
@@ -418,7 +530,9 @@ impl Building3d {
     /// The `i`th storey in Katlar shown or hidden.
     pub(crate) fn toggle_storey(&mut self, i: usize) {
         if let Some((object, ..)) = self.storeys().get(i) {
-            let _ = self.viewer.update(kentos_model_view_ui::Message::Eye(*object));
+            let _ = self
+                .viewer
+                .update(kentos_model_view_ui::Message::Eye(*object));
         }
     }
 
@@ -426,7 +540,9 @@ impl Building3d {
     pub(crate) fn show_all_storeys(&mut self) {
         for (object, _, on) in self.storeys() {
             if !on {
-                let _ = self.viewer.update(kentos_model_view_ui::Message::Eye(object));
+                let _ = self
+                    .viewer
+                    .update(kentos_model_view_ui::Message::Eye(object));
             }
         }
     }
@@ -435,9 +551,11 @@ impl Building3d {
     pub(crate) fn control(&self, control: &Control<'_>) -> Option<Message> {
         match control {
             Control::Press(ALL_STOREYS) => Some(Message::Scene3d(Event::AllStoreys)),
-            Control::Press(name) => {
-                self.storeys().iter().position(|s| s.1 == *name).map(|i| Message::Scene3d(Event::Storey(i)))
-            }
+            Control::Press(name) => self
+                .storeys()
+                .iter()
+                .position(|s| s.1 == *name)
+                .map(|i| Message::Scene3d(Event::Storey(i))),
             _ => None,
         }
     }
@@ -445,7 +563,10 @@ impl Building3d {
 
 /// The underlays as shown: their ids and files (a file read again is another).
 fn shown_ids(shown: &[Shown]) -> Vec<(String, usize)> {
-    shown.iter().map(|(id, _, l)| (id.clone(), Arc::as_ptr(l) as usize)).collect()
+    shown
+        .iter()
+        .map(|(id, _, l)| (id.clone(), Arc::as_ptr(l) as usize))
+        .collect()
 }
 
 /// The drawing's persistent id of a GlobalId key; none for an underlay's object or a key that is no GlobalId.
@@ -465,7 +586,9 @@ impl App {
     /// 3B görünüm of the drawing's building: the viewer over its model, made off this thread; a drawing without a
     /// building's body says so and opens nothing.
     pub(crate) fn open_building3d(&mut self) -> Task<Message> {
-        let Some(doc) = &self.document else { return Task::none() };
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
         if !has_building(&doc.model) {
             self.warn(NO_BUILDING.to_owned());
             return Task::none();
@@ -486,7 +609,12 @@ impl App {
             underlays: Vec::new(),
             sun: None,
         };
-        let mut window = Window::new(crate::scene3d_window::Scene::of(Vec::new(), 0), Vec::new(), Some(b), (0, 0));
+        let mut window = Window::new(
+            crate::scene3d_window::Scene::of(Vec::new(), 0),
+            Vec::new(),
+            Some(b),
+            (0, 0),
+        );
         // The scene drawn is the viewer's: its frames are the window's.
         window.seen = seen;
         self.scene3d_window = Some(Box::new(window));
@@ -496,10 +624,18 @@ impl App {
 
     /// The model made again from the drawing as it is now, off this thread; while one is being made, once more after.
     fn building3d_make(&mut self) -> Task<Message> {
-        let Some(doc) = self.document.as_ref() else { return Task::none() };
+        let Some(doc) = self.document.as_ref() else {
+            return Task::none();
+        };
         let now = (doc.model.generation(), doc.model.revision());
         let shown = self.building3d_shown();
-        let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) else { return Task::none() };
+        let Some(b) = self
+            .scene3d_window
+            .as_mut()
+            .and_then(|w| w.building.as_mut())
+        else {
+            return Task::none();
+        };
         if b.making.is_some() {
             b.again = true;
             return Task::none();
@@ -527,7 +663,10 @@ impl App {
                 Ok(Some(result)) => result.map(Arc::new),
                 // Stopped: what it would have given never shows.
                 Ok(None) => Err(String::new()),
-                Err(_) => Err("Çizimin modeli kurulurken iş yarıda kaldı; 3B görünümü yeniden açın.".to_owned()),
+                Err(_) => Err(
+                    "Çizimin modeli kurulurken iş yarıda kaldı; 3B görünümü yeniden açın."
+                        .to_owned(),
+                ),
             };
             Message::Scene3d(Event::Made(id, result))
         })
@@ -536,8 +675,18 @@ impl App {
     /// A making done: the viewer loaded the first time, else loaded again keeping its view; the chosen object's details
     /// read again; the plan's selection and the findings taken again. A drawing left without a building's body closes
     /// the window.
-    pub(crate) fn building3d_made(&mut self, id: u64, result: Result<Arc<Made>, String>) -> Task<Message> {
-        let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) else { return Task::none() };
+    pub(crate) fn building3d_made(
+        &mut self,
+        id: u64,
+        result: Result<Arc<Made>, String>,
+    ) -> Task<Message> {
+        let Some(b) = self
+            .scene3d_window
+            .as_mut()
+            .and_then(|w| w.building.as_mut())
+        else {
+            return Task::none();
+        };
         if b.making.as_ref().is_none_or(|(now, _)| *now != id) {
             return Task::none();
         }
@@ -568,14 +717,28 @@ impl App {
             Err(why) => self.warn(format!("3B görünüm yenilenemedi: {why}")),
         }
         self.building3d_follow_choice();
-        let again = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()).is_some_and(|b| std::mem::take(&mut b.again));
-        if again { self.building3d_make() } else { Task::none() }
+        let again = self
+            .scene3d_window
+            .as_mut()
+            .and_then(|w| w.building.as_mut())
+            .is_some_and(|b| std::mem::take(&mut b.again));
+        if again {
+            self.building3d_make()
+        } else {
+            Task::none()
+        }
     }
 
     /// A viewer's message: what it answers handled (a choice: the details read and the plan's object selected; İptal
     /// and Kapat: the window closes).
     pub(crate) fn building3d_viewer(&mut self, m: kentos_model_view_ui::Message) {
-        let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) else { return };
+        let Some(b) = self
+            .scene3d_window
+            .as_mut()
+            .and_then(|w| w.building.as_mut())
+        else {
+            return;
+        };
         match b.viewer.update(m) {
             Some(Out::Chosen(chosen)) => self.building3d_chosen(chosen),
             Some(Out::Cancel | Out::Close) => self.scene3d_gone(),
@@ -590,11 +753,20 @@ impl App {
             self.building3d_select(None);
             return;
         };
-        let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) else { return };
+        let Some(b) = self
+            .scene3d_window
+            .as_mut()
+            .and_then(|w| w.building.as_mut())
+        else {
+            return;
+        };
         let unread = b.read_details();
         let underlay = b.underlay_object(object);
         if let Some(e) = unread {
-            self.say(kentos_interaction::Level::Warn, format!("Nesnenin özellikleri okunamadı: {e}"));
+            self.say(
+                kentos_interaction::Level::Warn,
+                format!("Nesnenin özellikleri okunamadı: {e}"),
+            );
         }
         match underlay {
             Some((id, at)) => self.building3d_select(Some(format!("{UNDERLAY_OWNER}{id}:{at}"))),
@@ -606,19 +778,28 @@ impl App {
     /// selection, as a click on nothing in the plan does) and chosen in 3D; an underlay's object
     /// (`altlik:<underlay id>:<its index in the file>`) shown in Altlık modeller, the plan's selection kept.
     pub fn building3d_select(&mut self, owner: Option<String>) {
-        if let Some(rest) = owner.as_deref().and_then(|o| o.strip_prefix(UNDERLAY_OWNER))
+        if let Some(rest) = owner
+            .as_deref()
+            .and_then(|o| o.strip_prefix(UNDERLAY_OWNER))
             && let Some((id, object)) = rest.rsplit_once(':')
             && let Ok(object) = object.parse::<usize>()
         {
             self.module_choose_beside(id, object);
             return;
         }
-        let Some(doc) = self.document.as_ref() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         let uid = owner.as_deref().and_then(|u| Uuid::parse_str(u).ok());
-        let slots: Vec<kentos_domain::Slot> = uid.and_then(|u| doc.model.slot_of(u)).into_iter().collect();
+        let slots: Vec<kentos_domain::Slot> =
+            uid.and_then(|u| doc.model.slot_of(u)).into_iter().collect();
         self.selection.set(slots);
         let version = self.selection.version();
-        if let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) {
+        if let Some(b) = self
+            .scene3d_window
+            .as_mut()
+            .and_then(|w| w.building.as_mut())
+        {
             // Taken now: following the plan does not choose it again.
             b.taken = version;
             if let Some(u) = uid {
@@ -630,7 +811,9 @@ impl App {
     /// 3B görünüm follows the drawing while its window is open (`App::follow_scene3d`): the drawing or the underlays
     /// shown changed, the model is made again; the plan's selection and Denetim's findings are taken when they changed.
     pub(crate) fn building3d_follow(&mut self) -> Task<Message> {
-        let Some(doc) = self.document.as_ref() else { return Task::none() };
+        let Some(doc) = self.document.as_ref() else {
+            return Task::none();
+        };
         let now = (doc.model.generation(), doc.model.revision());
         let with = shown_ids(&self.building3d_shown());
         let stale = self
@@ -638,7 +821,11 @@ impl App {
             .as_ref()
             .and_then(|w| w.building.as_ref())
             .is_some_and(|b| b.made != now || b.made_with != with);
-        let task = if stale { self.building3d_make() } else { Task::none() };
+        let task = if stale {
+            self.building3d_make()
+        } else {
+            Task::none()
+        };
         self.building3d_follow_choice();
         task
     }
@@ -648,7 +835,11 @@ impl App {
     fn building3d_follow_choice(&mut self) {
         let version = self.selection.version();
         let key = self.building3d_found_key();
-        let Some(b) = self.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).filter(|b| b.viewer.stage == Stage::Shown)
+        let Some(b) = self
+            .scene3d_window
+            .as_ref()
+            .and_then(|w| w.building.as_ref())
+            .filter(|b| b.viewer.stage == Stage::Shown)
         else {
             return;
         };
@@ -670,7 +861,13 @@ impl App {
         } else {
             Vec::new()
         };
-        let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) else { return };
+        let Some(b) = self
+            .scene3d_window
+            .as_mut()
+            .and_then(|w| w.building.as_mut())
+        else {
+            return;
+        };
         if paint {
             b.found = Some(key);
             b.viewer.set_found(found.iter().map(String::as_str));

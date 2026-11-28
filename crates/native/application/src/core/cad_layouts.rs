@@ -304,7 +304,9 @@ pub fn diagnostics(layouts: &[CadLayout]) -> Vec<ReportItem> {
             severity: Some(ReportSeverity::Warning),
             what: "Görünüm penceresi (VIEWPORT)".into(),
             count: tiny as u32,
-            reason: "1 mm'den küçük görünüm pencereleri pafta kitabına alınmadı; kaynak dosyada durur.".into(),
+            reason:
+                "1 mm'den küçük görünüm pencereleri pafta kitabına alınmadı; kaynak dosyada durur."
+                    .into(),
             lines: Vec::new(),
             details: Vec::new(),
         });
@@ -445,8 +447,10 @@ pub fn export(doc: &Document) -> (Vec<CadLayout>, Vec<ReportItem>) {
                     {
                         omitted += 1;
                     }
-                    if let Ok(view) = kentos_sheet::viewport::effective_fixed_view(item,&doc.settings().drawn_views())
-                        && let Some(center) = &view.center
+                    if let Ok(view) = kentos_sheet::viewport::effective_fixed_view(
+                        item,
+                        &doc.settings().drawn_views(),
+                    ) && let Some(center) = &view.center
                     {
                         let rect = kentos_sheet::display::map_content_rect(item, map);
                         let c = world_point(item, rect.center(), layout.height_mm);

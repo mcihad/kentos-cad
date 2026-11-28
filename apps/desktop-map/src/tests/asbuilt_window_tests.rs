@@ -7,9 +7,9 @@
 //! (docs/adr/2820). İzleme (docs/adr/3620) sets the second epoch against the first by name with the control points; the
 //! form drops the design parts and the result speaks of movement. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -17,11 +17,15 @@ use crate::app::{App, Message};
 use crate::asbuilt_window::{Event as A, Show};
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.asbuilt.check.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.asbuilt.check.json"
+    ))
+    .expect("cases")
 }
 
 fn opened(program: Option<Module>) -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases()["setup"].clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases()["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -46,7 +50,10 @@ fn the_measured_points_against_the_design() {
     let mut app = opened(Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("asbuilt.check"));
-    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Asbuilt)));
+    assert_eq!(
+        app.dialog,
+        Some(crate::map::dialog(map::MapDialogKind::Asbuilt))
+    );
     assert_eq!(
         (
             app.modules.map().asbuilt.measured.as_str(),
@@ -58,7 +65,8 @@ fn the_measured_points_against_the_design() {
     );
     limits(&mut app);
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -80,7 +88,11 @@ fn the_measured_points_against_the_design() {
     assert_eq!(app.dialog, None);
     let faults = (r.outside + r.unmatched + r.ambiguous) as usize;
     assert_eq!(app.selection.ids().len(), faults);
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
 }
 
 #[test]
@@ -108,7 +120,11 @@ fn csv_kaydet_writes_the_table() {
     let text = std::fs::read_to_string(&file).expect("written");
     let lines: Vec<&str> = text.lines().collect();
     assert_eq!(lines.len(), 11, "a head and ten points");
-    assert!(lines[2].starts_with("P2;") && lines[2].contains(";Dışında;yatay dışında"), "{}", lines[2]);
+    assert!(
+        lines[2].starts_with("P2;") && lines[2].contains(";Dışında;yatay dışında"),
+        "{}",
+        lines[2]
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
 
@@ -132,26 +148,65 @@ fn the_field_package_is_written_from_the_form() {
     let listed = zip::list(&bytes, &limits).expect("a zip");
     let mut names = kentos_commands::FIELD_PACKAGE_FILES.to_vec();
     names.push(kentos_commands::FIELD_PACKAGE_SURFACE_FILE);
-    assert_eq!(listed.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(), names, "docs/adr/3220: the surface fourth");
+    assert_eq!(
+        listed.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(),
+        names,
+        "docs/adr/3220: the surface fourth"
+    );
     let files = zip::unpack(&bytes, &listed, &limits, |_| true).expect("unpacks");
     let manifest: Value = serde_json::from_slice(&files[0].data).expect("the manifest");
-    assert_eq!(manifest["notes"], serde_json::json!(["KN1 ve KN2'den başlanır.", "Kotlar TUDKA-99'a göredir."]));
-    assert_eq!(manifest["acceptance"], serde_json::json!({"horizontal": 0.02, "vertical": 0.03, "quality": 0.05}));
+    assert_eq!(
+        manifest["notes"],
+        serde_json::json!(["KN1 ve KN2'den başlanır.", "Kotlar TUDKA-99'a göredir."])
+    );
+    assert_eq!(
+        manifest["acceptance"],
+        serde_json::json!({"horizontal": 0.02, "vertical": 0.03, "quality": 0.05})
+    );
     assert_eq!(manifest["surface"]["name"], "Tasarım");
-    assert_eq!(manifest["designDigest"], cases()["cases"][0]["steps"][0]["result"]["output"]["designDigest"]);
+    assert_eq!(
+        manifest["designDigest"],
+        cases()["cases"][0]["steps"][0]["result"]["output"]["designDigest"]
+    );
     let points = String::from_utf8(files[1].data.clone()).expect("text");
     assert_eq!(points.lines().count(), 9, "a head and eight design points");
-    assert!(points.starts_with("Ad;Y;X;Z;Kimlik\nP1;487010;4420010;100.3;"), "{points}");
-    let said = app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
-    assert!(said.contains("Saha paketi yazıldı: 8 nokta, 2 çizgi, yüzey Tasarım (yuzey.xml, 200 üçgen), 2 not"), "{said}");
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written to the drawing");
+    assert!(
+        points.starts_with("Ad;Y;X;Z;Kimlik\nP1;487010;4420010;100.3;"),
+        "{points}"
+    );
+    let said = app
+        .log
+        .lines()
+        .map(|l| l.text.clone())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        said.contains(
+            "Saha paketi yazıldı: 8 nokta, 2 çizgi, yüzey Tasarım (yuzey.xml, 200 üçgen), 2 not"
+        ),
+        "{said}"
+    );
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written to the drawing"
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
 
 #[test]
 fn harita_yol_and_gis_offer_it_mimari_does_not() {
-    for (module, yes) in [(Module::Map, true), (Module::Road, true), (Module::Gis, true), (Module::Architecture, false)] {
-        assert_eq!(opened(Some(module)).offers("asbuilt.check"), yes, "{module:?}");
+    for (module, yes) in [
+        (Module::Map, true),
+        (Module::Road, true),
+        (Module::Gis, true),
+        (Module::Architecture, false),
+    ] {
+        assert_eq!(
+            opened(Some(module)).offers("asbuilt.check"),
+            yes,
+            "{module:?}"
+        );
     }
 }
 
@@ -165,11 +220,17 @@ fn harita_yol_and_gis_offer_it_mimari_does_not() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/uygulama-kontrolu-1700");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/uygulama-kontrolu-1700");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -184,20 +245,28 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-kontrol-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
         // The ribbon's place: Ölçme › Saha.
         let _ = app.update(Message::from(map::Event::Asbuilt(A::Close)));
         let _ = app.update(Message::RibbonTab("survey"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-serit-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
 
 fn fixture(rel: &str) -> std::path::PathBuf {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures").join(rel)
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures")
+        .join(rel)
 }
 
 /// docs/adr/2420: the record's package chosen with the form's limits empty gives the shared case's answer (its
@@ -212,7 +281,8 @@ fn the_record_s_package_gives_the_digest_and_the_limits() {
         fixture("asbuilt/v1/files/saha-paketi.zip"),
     )))));
     let r = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .asbuilt
             .answer
             .clone()
@@ -238,7 +308,8 @@ fn the_record_s_package_gives_the_digest_and_the_limits() {
         fixture("asbuilt/v1/files/eski-paket.zip"),
     )))));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -248,7 +319,8 @@ fn the_record_s_package_gives_the_digest_and_the_limits() {
     assert!(r.design_changed && !p.same_system && !p.same_epoch && !p.same_heights);
     let _ = app.update(Message::from(map::Event::Asbuilt(A::DropPackage)));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -267,14 +339,27 @@ fn the_record_s_package_gives_the_digest_and_the_limits() {
 fn package_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/saha-paketi-donus-2420");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/saha-paketi-donus-2420");
     std::fs::create_dir_all(&out).expect("a folder");
     for (theme, size, name, file) in [
-        ("light", Size::new(1440.0, 900.0), "acik-genis", "asbuilt/v1/files/saha-paketi.zip"),
-        ("dark", Size::new(1100.0, 760.0), "koyu-dar", "asbuilt/v1/files/eski-paket.zip"),
+        (
+            "light",
+            Size::new(1440.0, 900.0),
+            "acik-genis",
+            "asbuilt/v1/files/saha-paketi.zip",
+        ),
+        (
+            "dark",
+            Size::new(1100.0, 760.0),
+            "koyu-dar",
+            "asbuilt/v1/files/eski-paket.zip",
+        ),
     ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -294,7 +379,10 @@ fn package_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-paketle-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -317,7 +405,8 @@ fn the_record_is_checked_with_its_package_s_own_design() {
     )))));
     let _ = app.update(Message::from(map::Event::Asbuilt(A::PackageDesign(true))));
     let r = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .asbuilt
             .answer
             .clone()
@@ -333,7 +422,16 @@ fn the_record_is_checked_with_its_package_s_own_design() {
         .cloned()
         .expect("the case");
     let want = &case["steps"][0]["result"]["output"];
-    for key in ["designDigest", "designChanged", "within", "outside", "unmatched", "ambiguous", "lowQuality", "missing"] {
+    for key in [
+        "designDigest",
+        "designChanged",
+        "within",
+        "outside",
+        "unmatched",
+        "ambiguous",
+        "lowQuality",
+        "missing",
+    ] {
         assert_eq!(r[key], want[key], "{key}");
     }
     assert_eq!(r["package"]["design"], true);
@@ -343,7 +441,8 @@ fn the_record_is_checked_with_its_package_s_own_design() {
         "the box goes with the package"
     );
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -370,7 +469,8 @@ fn the_record_is_checked_with_its_package_s_own_surface() {
     )))));
     let _ = app.update(Message::from(map::Event::Asbuilt(A::PackageDesign(true))));
     let r = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .asbuilt
             .answer
             .clone()
@@ -386,15 +486,28 @@ fn the_record_is_checked_with_its_package_s_own_surface() {
         .cloned()
         .expect("the case");
     let want = &case["steps"][0]["result"]["output"];
-    for key in ["surfaceChanged", "within", "outside", "unmatched", "ambiguous", "lowQuality"] {
+    for key in [
+        "surfaceChanged",
+        "within",
+        "outside",
+        "unmatched",
+        "ambiguous",
+        "lowQuality",
+    ] {
         assert_eq!(r[key], want[key], "{key}");
     }
-    for (g, w) in r["points"].as_array().expect("points").iter().zip(want["points"].as_array().expect("points")) {
+    for (g, w) in r["points"]
+        .as_array()
+        .expect("points")
+        .iter()
+        .zip(want["points"].as_array().expect("points"))
+    {
         assert_eq!(g["flags"], w["flags"], "{}", w["name"]);
     }
     assert_eq!(r["package"]["surface"], true);
     let checked = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -411,7 +524,10 @@ fn the_record_is_checked_with_its_package_s_own_surface() {
         ]
     );
     let package = checked.package.as_ref().expect("the package");
-    assert_eq!(crate::asbuilt_window::package_design_words(package), "tasarım paketin noktaları, çizgileri ve yüzeyi");
+    assert_eq!(
+        crate::asbuilt_window::package_design_words(package),
+        "tasarım paketin noktaları, çizgileri ve yüzeyi"
+    );
 }
 
 /// `.run/gui-evidence/paketin-yuzeyi-3220/`:
@@ -424,11 +540,17 @@ fn the_record_is_checked_with_its_package_s_own_surface() {
 fn package_surface_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/paketin-yuzeyi-3220");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/paketin-yuzeyi-3220");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -449,7 +571,10 @@ fn package_surface_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-paketin-yuzeyi-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -464,11 +589,17 @@ fn package_surface_screens() {
 fn package_design_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/paketin-tasarimi-2820");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/paketin-tasarimi-2820");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -489,7 +620,10 @@ fn package_design_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-paketin-tasarimi-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -517,7 +651,8 @@ fn a_monitoring_job_sets_the_second_epoch_against_the_first() {
     let _ = app.update(Message::Run("asbuilt.check"));
     watch(&mut app);
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -528,10 +663,20 @@ fn a_monitoring_job_sets_the_second_epoch_against_the_first() {
         .as_array()
         .expect("cases")
         .iter()
-        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("izleme: iki dönem adla")))
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("izleme: iki dönem adla"))
+        })
         .expect("the case");
     let want = &case["steps"][0]["result"]["output"];
-    for (key, got) in [("within", r.within), ("outside", r.outside), ("unmatched", r.unmatched), ("ambiguous", r.ambiguous), ("lowQuality", r.low_quality)] {
+    for (key, got) in [
+        ("within", r.within),
+        ("outside", r.outside),
+        ("unmatched", r.unmatched),
+        ("ambiguous", r.ambiguous),
+        ("lowQuality", r.low_quality),
+    ] {
         assert_eq!(Value::from(got), want[key], "{key}");
     }
     assert_eq!(r.kind, Some(kentos_commands::AsbuiltKind::Monitoring));
@@ -577,7 +722,8 @@ fn a_monitoring_job_sets_the_second_epoch_against_the_first() {
         let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -601,11 +747,17 @@ fn a_monitoring_job_sets_the_second_epoch_against_the_first() {
 fn monitoring_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/izleme-3620");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/izleme-3620");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -657,7 +809,8 @@ fn the_nearest_distance_to_the_surface_is_the_shared_case_s() {
     }
     let want = case("yüzeye en yakın uzaklık: her noktanın");
     let r = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .asbuilt
             .answer
             .clone()
@@ -683,7 +836,8 @@ fn the_nearest_distance_to_the_surface_is_the_shared_case_s() {
     ))));
     let p3 = |app: &App| {
         let r = app
-            .modules.map()
+            .modules
+            .map()
             .asbuilt
             .answer
             .clone()
@@ -711,11 +865,17 @@ fn the_nearest_distance_to_the_surface_is_the_shared_case_s() {
 fn nearest_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yuzeye-en-yakin-4020");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yuzeye-en-yakin-4020");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("asbuilt.check"));
@@ -727,7 +887,10 @@ fn nearest_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("uygulama-kontrolu-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -739,14 +902,36 @@ fn no_tolerance_judges_no_conformity() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("asbuilt.check"));
     limits(&mut app);
-    let judged = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
+    let judged = app
+        .modules
+        .map()
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     assert!(judged.within > 0 && judged.untoleranced == 0);
     for e in [A::Horizontal(String::new()), A::Vertical(String::new())] {
         let _ = app.update(Message::from(map::Event::Asbuilt(e)));
     }
-    let r = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
-    assert_eq!((r.within, r.outside), (0, 0), "no conformity without a tolerance");
-    assert_eq!(r.untoleranced, judged.within + judged.outside, "the matched ones");
+    let r = app
+        .modules
+        .map()
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
+    assert_eq!(
+        (r.within, r.outside),
+        (0, 0),
+        "no conformity without a tolerance"
+    );
+    assert_eq!(
+        r.untoleranced,
+        judged.within + judged.outside,
+        "the matched ones"
+    );
     assert!(r.points.iter().all(|p| p.status != "within"));
     let size = iced::Size::new(1440.0, 900.0);
     let mut snapshot = crate::files_testing::offscreen(size);
@@ -756,14 +941,38 @@ fn no_tolerance_judges_no_conformity() {
     let _ = app.update(Message::WindowResized(size));
     snapshot.settle(&mut app, App::view, &mut update);
     crate::files_testing::evidence(&mut snapshot, &app, "ur2-026", "toleranssiz");
-    let said = format!("Tolerans verilmedi: {} noktanın sapması gösterilir, uygunluğu denetlenmedi. Yatay ya da düşey toleransı yazın.", r.untoleranced);
-    assert!(!crate::files_testing::find_texts(&mut snapshot, &app, &said).is_empty(), "{said}");
-    let _ = app.update(Message::from(map::Event::Asbuilt(A::Horizontal("0,02".into()))));
+    let said = format!(
+        "Tolerans verilmedi: {} noktanın sapması gösterilir, uygunluğu denetlenmedi. Yatay ya da düşey toleransı yazın.",
+        r.untoleranced
+    );
+    assert!(
+        !crate::files_testing::find_texts(&mut snapshot, &app, &said).is_empty(),
+        "{said}"
+    );
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Horizontal(
+        "0,02".into(),
+    ))));
     snapshot.settle(&mut app, App::view, &mut update);
-    assert!(!crate::files_testing::find_texts(&mut snapshot, &app, "Yalnız yatay sapma denetlendi.").is_empty());
-    let _ = app.update(Message::from(map::Event::Asbuilt(A::Vertical("0,03".into()))));
-    let back = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
-    assert_eq!((back.within, back.outside, back.untoleranced), (judged.within, judged.outside, 0), "the first classing again");
+    assert!(
+        !crate::files_testing::find_texts(&mut snapshot, &app, "Yalnız yatay sapma denetlendi.")
+            .is_empty()
+    );
+    let _ = app.update(Message::from(map::Event::Asbuilt(A::Vertical(
+        "0,03".into(),
+    ))));
+    let back = app
+        .modules
+        .map()
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
+    assert_eq!(
+        (back.within, back.outside, back.untoleranced),
+        (judged.within, judged.outside, 0),
+        "the first classing again"
+    );
 }
 
 /// The shared drawing with its measured points' name field written `ad`, as the review's layer had it.
@@ -777,15 +986,15 @@ fn opened_lowercase() -> App {
             attrs.insert("ad".into(), name);
         }
     }
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(iced::Rectangle::new(
-        iced::Point::ORIGIN,
-        iced::Size::new(1000.0, 700.0),
-    ))));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
+        iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0)),
+    )));
     app
 }
 
@@ -798,20 +1007,46 @@ fn the_name_field_is_the_layers_and_a_row_goes_to_its_point() {
     let _ = app.update(Message::Run("asbuilt.check"));
     let s = &app.modules.map().asbuilt;
     assert_eq!(s.field, "ad", "{:?}", s.name_fields);
-    assert!(s.name_fields.contains(&"Hassasiyet".to_owned()), "{:?}", s.name_fields);
+    assert!(
+        s.name_fields.contains(&"Hassasiyet".to_owned()),
+        "{:?}",
+        s.name_fields
+    );
     limits(&mut app);
-    let r = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
-    assert!(r.points.iter().all(|p| !p.name.is_empty()), "every row named");
+    let r = app
+        .modules
+        .map()
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
+    assert!(
+        r.points.iter().all(|p| !p.name.is_empty()),
+        "every row named"
+    );
     assert!(r.points.iter().any(|p| p.name == "P1"));
     // A field the points lack: their ids, and why.
     let _ = app.update(Message::from(map::Event::Asbuilt(A::Field("Kod".into()))));
-    let r = app.modules.map().asbuilt.answer.clone().expect("an answer").expect("checked");
+    let r = app
+        .modules
+        .map()
+        .asbuilt
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("checked");
     let first = &r.points[0];
     assert!(first.name.is_empty());
     let shown = crate::asbuilt_window::shown_name(first);
     assert!(shown.starts_with('#') && shown.len() == 9, "{shown}");
     let csv = crate::asbuilt_window::csv(&r);
-    assert!(csv.lines().nth(1).is_some_and(|l| l.starts_with(&format!("{shown};{}", first.uid))), "{csv}");
+    assert!(
+        csv.lines()
+            .nth(1)
+            .is_some_and(|l| l.starts_with(&format!("{shown};{}", first.uid))),
+        "{csv}"
+    );
     // Back to `ad`; a row pressed: the map goes to its point, the row marked.
     let _ = app.update(Message::from(map::Event::Asbuilt(A::Field("ad".into()))));
     let _ = app.update(Message::from(map::Event::Asbuilt(A::Show(Show::All))));
@@ -826,7 +1061,10 @@ fn the_name_field_is_the_layers_and_a_row_goes_to_its_point() {
         other => panic!("a point, not {other:?}"),
     };
     let c = app.viewport.camera.world_center();
-    assert!((c.x - at.x).abs() < 0.5 && (c.y - at.y).abs() < 0.5, "{c:?} {at:?}");
+    assert!(
+        (c.x - at.x).abs() < 0.5 && (c.y - at.y).abs() < 0.5,
+        "{c:?} {at:?}"
+    );
 }
 
 /// The pictures (`.run/gui-evidence/kullanim-9331/`): the name field the layer's `ad`, a row pressed and the map on
@@ -846,7 +1084,15 @@ fn screens_9331() {
     crate::files_testing::usage_shots("9331", "02-adsiz-satirlar", || {
         let mut app = opened_lowercase();
         // The measured points without any name: their ids, and why.
-        for slot in app.document.as_ref().expect("open").model.by_layer("olcum").map(|e| kentos_domain::Slot(e.base().id)).collect::<Vec<_>>() {
+        for slot in app
+            .document
+            .as_ref()
+            .expect("open")
+            .model
+            .by_layer("olcum")
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .collect::<Vec<_>>()
+        {
             let doc = app.document.as_mut().expect("open");
             if let Some(mut e) = doc.model.get(slot).cloned() {
                 e.base_mut().attrs.remove("ad");

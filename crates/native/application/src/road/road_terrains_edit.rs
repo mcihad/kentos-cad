@@ -6,7 +6,10 @@
 //! definition without `built`, and the surfaces with it; the expected revision; the surface is the project's; accept: a
 //! surface is made of what the sources give.
 
-use kentos_commands::{CommandResult, CommandWarning, TerrainSurfaceDef, TerrainsEdit, TerrainsEditOperation, TerrainsWritten};
+use kentos_commands::{
+    CommandResult, CommandWarning, TerrainSurfaceDef, TerrainsEdit, TerrainsEditOperation,
+    TerrainsWritten,
+};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -32,10 +35,18 @@ fn check(doc: &kentos_domain::Document, input: &TerrainsEdit) -> Result<Checked,
     let own = common::surfaces(doc);
     let op = input.operation;
     if op == TerrainsEditOperation::Set && input.surface.is_none() {
-        return Err(fail(codes::NO_TERRAIN, "Yazılacak yüzeyin tanımını (surface) verin.".into(), "surface"));
+        return Err(fail(
+            codes::NO_TERRAIN,
+            "Yazılacak yüzeyin tanımını (surface) verin.".into(),
+            "surface",
+        ));
     }
     if op != TerrainsEditOperation::Set && input.id.as_deref().is_none_or(str::is_empty) {
-        return Err(fail(codes::NO_ID, "Yüzeyin kimliğini (id) verin.".into(), "id"));
+        return Err(fail(
+            codes::NO_ID,
+            "Yüzeyin kimliğini (id) verin.".into(),
+            "id",
+        ));
     }
     if let (TerrainsEditOperation::Set, Some(s)) = (op, &input.surface) {
         if s.built.is_some() {
@@ -126,7 +137,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsEdit) -> CommandResult<Te
 }
 
 /// Writes the project's surfaces; a setting, not an undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsEdit) -> CommandResult<TerrainsWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsEdit,
+) -> CommandResult<TerrainsWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_TERRAINS_EDIT,
@@ -136,7 +150,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsEdit) -> CommandRes
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: TerrainsEdit) -> CommandResult<TerrainsWritten> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsEdit,
+) -> CommandResult<TerrainsWritten> {
     let c = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),

@@ -6,7 +6,10 @@
 //! The 9345 pictures: Uzaklıkta 6 m's matches kept by layer, the card under the form with `kontrol` chosen; İfadeyle
 //! seç on Tümü naming the layers it takes and the one field none of them holds.
 
-use kentos_data::{Coord, Curve, Driver as _, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value};
+use kentos_data::{
+    Coord, Curve, Driver as _, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable,
+    Value,
+};
 use serde_json::json;
 
 use crate::app::{App, Message};
@@ -19,9 +22,15 @@ const Y0: f64 = 4_420_000.0;
 fn triangle() -> std::path::PathBuf {
     let path = crate::files_testing::scratch("konum-veri-resim").join("ucgen.gpkg");
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
-    let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+    let source = kentos_data_gpkg::Gpkg
+        .open(path.to_str().expect("utf-8"))
+        .expect("open");
     let mut tx = source.begin().expect("begin");
-    for (table, kind) in [("ucgen", "LINESTRING"), ("koseler", "POINT"), ("kontrol", "POINT")] {
+    for (table, kind) in [
+        ("ucgen", "LINESTRING"),
+        ("koseler", "POINT"),
+        ("kontrol", "POINT"),
+    ] {
         tx.create_table(
             &NewTable {
                 name: table.into(),
@@ -29,7 +38,13 @@ fn triangle() -> std::path::PathBuf {
                 description: None,
                 key: "fid".into(),
                 fields: vec![Field::new("ad", FieldKind::Text { max: Some(16) })],
-                geometry: Some(GeometryField { name: "geom".into(), type_name: kind.into(), z: false, m: false, srid: Some(5256) }),
+                geometry: Some(GeometryField {
+                    name: "geom".into(),
+                    type_name: kind.into(),
+                    z: false,
+                    m: false,
+                    srid: Some(5256),
+                }),
                 spatial_index: true,
                 system: None,
             },
@@ -38,13 +53,26 @@ fn triangle() -> std::path::PathBuf {
         .expect("table");
     }
     let at = |x: f64, y: f64| Coord::xy(X0 + x, Y0 + y);
-    let row = |ad: &str, g: Geometry| NewFeature { fid: None, geometry: Some(g), values: vec![("ad".into(), Value::Text(ad.into()))] };
-    let ring = Curve::Line(vec![at(0.0, 0.0), at(40.0, 0.0), at(0.0, 30.0), at(0.0, 0.0)]);
-    tx.insert("ucgen", &[row("ABC", Geometry::Curve(ring))]).expect("the triangle");
-    let corners: Vec<NewFeature> =
-        [("A", 0.0, 0.0), ("B", 40.0, 0.0), ("C", 0.0, 30.0)].iter().map(|(ad, x, y)| row(ad, Geometry::Point(Some(at(*x, *y))))).collect();
+    let row = |ad: &str, g: Geometry| NewFeature {
+        fid: None,
+        geometry: Some(g),
+        values: vec![("ad".into(), Value::Text(ad.into()))],
+    };
+    let ring = Curve::Line(vec![
+        at(0.0, 0.0),
+        at(40.0, 0.0),
+        at(0.0, 30.0),
+        at(0.0, 0.0),
+    ]);
+    tx.insert("ucgen", &[row("ABC", Geometry::Curve(ring))])
+        .expect("the triangle");
+    let corners: Vec<NewFeature> = [("A", 0.0, 0.0), ("B", 40.0, 0.0), ("C", 0.0, 30.0)]
+        .iter()
+        .map(|(ad, x, y)| row(ad, Geometry::Point(Some(at(*x, *y)))))
+        .collect();
     tx.insert("koseler", &corners).expect("the corners");
-    tx.insert("kontrol", &[row("K", Geometry::Point(Some(at(-5.0, 0.0))))]).expect("the control");
+    tx.insert("kontrol", &[row("K", Geometry::Point(Some(at(-5.0, 0.0))))])
+        .expect("the control");
     tx.commit().expect("commit");
     path
 }
@@ -64,25 +92,37 @@ fn scene_of(file: &std::path::Path) -> (App, Vec<String>) {
     let mut app = crate::files_testing::app_with_drawing();
     {
         let model = &mut app.document.as_mut().expect("a drawing").model;
-        let all: Vec<kentos_domain::Slot> = model.entities().map(|e| kentos_domain::Slot(e.base().id)).collect();
+        let all: Vec<kentos_domain::Slot> = model
+            .entities()
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .collect();
         model.remove(&all);
         let mut settings = model.settings().clone();
         settings.workspace = Some(kentos_commands::Workspace::Gis);
         model.set_settings(settings);
     }
     let address = file.display().to_string();
-    let tables = ["ucgen", "koseler", "kontrol"].map(|t| crate::data_layers::describe(&address, t).expect("described"));
+    let tables = ["ucgen", "koseler", "kontrol"]
+        .map(|t| crate::data_layers::describe(&address, t).expect("described"));
     let ids = app.add_data_layers(tables.to_vec()).expect("added");
-    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(iced::Rectangle::new(
-        iced::Point::ORIGIN,
-        iced::Size::new(1000.0, 700.0),
-    ))));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
+        iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0)),
+    )));
     let task = app.update(Message::Run("view.zoomExtents"));
     drive(&mut app, task);
     let task = app.update(Message::Run("processing.run.selection.byLocation"));
     drive(&mut app, task);
-    event(&mut app, Event::Value("input".into(), json!({ "scope": "all" })));
-    event(&mut app, Event::Value("reference".into(), json!({ "scope": "layer", "layerId": ids[0] })));
+    event(
+        &mut app,
+        Event::Value("input".into(), json!({ "scope": "all" })),
+    );
+    event(
+        &mut app,
+        Event::Value(
+            "reference".into(),
+            json!({ "scope": "layer", "layerId": ids[0] }),
+        ),
+    );
     (app, ids)
 }
 
@@ -115,8 +155,14 @@ fn results_screens() {
         let (mut app, _) = scene_of(&file);
         let task = app.update(Message::Run("processing.run.selection.byExpression"));
         drive(&mut app, task);
-        event(&mut app, Event::Value("input".into(), json!({ "scope": "all" })));
-        event(&mut app, Event::Value("condition".into(), json!("durum = 'x' veya ad = 'A'")));
+        event(
+            &mut app,
+            Event::Value("input".into(), json!({ "scope": "all" })),
+        );
+        event(
+            &mut app,
+            Event::Value("condition".into(), json!("durum = 'x' veya ad = 'A'")),
+        );
         app
     });
 }
@@ -131,7 +177,13 @@ fn buffer_screens() {
         let (mut app, ids) = scene_of(&file);
         let task = app.update(Message::Run("processing.run.geometry.buffer"));
         drive(&mut app, task);
-        event(&mut app, Event::Value("input".into(), json!({ "scope": "layer", "layerId": ids[1] })));
+        event(
+            &mut app,
+            Event::Value(
+                "input".into(),
+                json!({ "scope": "layer", "layerId": ids[1] }),
+            ),
+        );
         let task = app.data_rows_tasks();
         drive(&mut app, task);
         event(&mut app, Event::Value("distance".into(), json!(3)));

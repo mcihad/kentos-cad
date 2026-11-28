@@ -1,7 +1,7 @@
 //! Independent drawing-set cases: atomic refusal, inverses, standard fields and live index order.
 use kentos_sheet::{
-    drawing_set::{DrawingIndex, rows},
     SheetBook,
+    drawing_set::{DrawingIndex, rows},
     ops::{Op, apply_all},
     validate::read_book,
 };

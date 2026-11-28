@@ -217,7 +217,11 @@ pub struct Categorized {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub other: Option<SymbolSet>,
     /// Only `false` is written: “Diğer değerler” is kept but draws nothing.
-    #[serde(default, rename = "otherEnabled", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        rename = "otherEnabled",
+        skip_serializing_if = "Option::is_none"
+    )]
     pub other_enabled: Option<bool>,
     #[serde(flatten)]
     pub extra: Map<String, Value>,

@@ -6,8 +6,8 @@
 
 use iced::widget::{column, container, row};
 use iced::{Element, Length};
-use kentos_interaction::capture::{Capture, Kind, Shape};
 use kentos_interaction::Level;
+use kentos_interaction::capture::{Capture, Kind, Shape};
 
 use crate::app::{App, Message};
 
@@ -34,19 +34,27 @@ pub(crate) fn extent_label(e: Extent) -> &'static str {
 pub(crate) type Sides = [String; 4];
 
 /// What the window says when the box is not four numbers around a place.
-pub(crate) const BAD_BOX: &str =
-    "Kutunun dört kenarını sayıyla yazın: batı doğudan, güney kuzeyden küçük olmalı. Görünümden alabilir ya da haritada çizebilirsiniz.";
+pub(crate) const BAD_BOX: &str = "Kutunun dört kenarını sayıyla yazın: batı doğudan, güney kuzeyden küçük olmalı. Görünümden alabilir ya da haritada çizebilirsiniz.";
 
 fn number(text: &str) -> Option<f64> {
     let t = text.trim();
     // A Turkish decimal comma reads as a point when the text has no point.
-    let t = if t.contains('.') { t.to_owned() } else { t.replace(',', ".") };
+    let t = if t.contains('.') {
+        t.to_owned()
+    } else {
+        t.replace(',', ".")
+    };
     t.parse::<f64>().ok().filter(|v| v.is_finite())
 }
 
 /// The box `[min x, min y, max x, max y]` the sides make; none unless all four read and the box has room.
 pub(crate) fn box_of(sides: &Sides) -> Option<[f64; 4]> {
-    let [w, s, e, n] = [number(&sides[0])?, number(&sides[1])?, number(&sides[2])?, number(&sides[3])?];
+    let [w, s, e, n] = [
+        number(&sides[0])?,
+        number(&sides[1])?,
+        number(&sides[2])?,
+        number(&sides[3])?,
+    ];
     (w < e && s < n).then_some([w, s, e, n])
 }
 
@@ -57,7 +65,9 @@ pub(crate) fn sides_of(b: [f64; 4], decimals: usize) -> Sides {
 
 impl App {
     fn export_decimals(&self) -> usize {
-        self.document.as_ref().map_or(3, |d| d.model.settings().length_decimals as usize)
+        self.document
+            .as_ref()
+            .map_or(3, |d| d.model.settings().length_decimals as usize)
     }
 
     /// Görünümden al: the view's box.
@@ -72,11 +82,18 @@ impl App {
     /// Katmanın kapsamı: a data layer's table box (as last read, moved into the project's system), a drawing layer's
     /// objects' box; said when it has none.
     pub(crate) fn export_box_from_layer(&mut self) {
-        let Some(layer) = self.gis.layer_export.as_ref().map(|w| w.layer_id().to_owned()) else {
+        let Some(layer) = self
+            .gis
+            .layer_export
+            .as_ref()
+            .map(|w| w.layer_id().to_owned())
+        else {
             return;
         };
         let Some(doc) = &self.document else { return };
-        let Some(node) = doc.model.layers().get(&layer) else { return };
+        let Some(node) = doc.model.layers().get(&layer) else {
+            return;
+        };
         let b = if node.data.is_some() {
             crate::data_layers::extent_in_project(node, doc.settings())
         } else {
@@ -104,11 +121,19 @@ impl App {
 
     /// Haritada çiz: the window steps aside and the box's two corners are clicked on the map.
     pub(crate) fn export_draw_box(&mut self) {
-        let Some(w) = self.gis.layer_export.as_mut() else { return };
+        let Some(w) = self.gis.layer_export.as_mut() else {
+            return;
+        };
         w.set_drawing(true);
         self.dialog = None;
-        self.say(Level::Command, "Dışa aktarma kapsamı: kutunun iki köşesini belirtin (Esc pencereye döner).");
-        self.session.run(Box::new(Capture::new("Dışa aktarma kapsamı", Kind::Rectangle)));
+        self.say(
+            Level::Command,
+            "Dışa aktarma kapsamı: kutunun iki köşesini belirtin (Esc pencereye döner).",
+        );
+        self.session.run(Box::new(Capture::new(
+            "Dışa aktarma kapsamı",
+            Kind::Rectangle,
+        )));
         self.with_tool(|s, cx| s.activate(cx));
     }
 
@@ -130,17 +155,18 @@ impl App {
             }
             w.set_box(sides_of([lo[0], lo[1], hi[0], hi[1]], decimals));
         }
-        self.dialog = Some(crate::app::Dialog::Gis(crate::gis::GisDialogKind::LayerExport));
+        self.dialog = Some(crate::app::Dialog::Gis(
+            crate::gis::GisDialogKind::LayerExport,
+        ));
         true
     }
 
     /// The project's names of its east and north axes, as its coordinates are named everywhere: a CAD project's X and
     /// Y, any other's Y (east) and X (north), the surveyor's.
     pub(crate) fn export_axis_names(&self) -> (&'static str, &'static str) {
-        let cad = self
-            .document
-            .as_ref()
-            .is_some_and(|d| d.model.settings().project_type() == Some(kentos_commands::Workspace::Cad));
+        let cad = self.document.as_ref().is_some_and(|d| {
+            d.model.settings().project_type() == Some(kentos_commands::Workspace::Cad)
+        });
         if cad { ("X", "Y") } else { ("Y", "X") }
     }
 }
@@ -158,17 +184,28 @@ pub(crate) fn sides_view<'a>(
     let side = |i: usize, label: String| -> Element<'a, Message> {
         row![
             container(kentos_ui::label::caption(label)).width(80),
-            container(kentos_ui::widget::text_field("", &sides[i]).on_input(move |t| on_side(i, t))).width(150),
+            container(
+                kentos_ui::widget::text_field("", &sides[i]).on_input(move |t| on_side(i, t))
+            )
+            .width(150),
         ]
         .spacing(6)
         .align_y(iced::Alignment::Center)
         .into()
     };
-    let middle = |e: Element<'a, Message>| container(e).width(Length::Fill).align_x(iced::alignment::Horizontal::Center);
+    let middle = |e: Element<'a, Message>| {
+        container(e)
+            .width(Length::Fill)
+            .align_x(iced::alignment::Horizontal::Center)
+    };
     column![
         middle(side(3, format!("Kuzey ({north})"))),
-        row![side(0, format!("Batı ({east})")), iced::widget::space::horizontal(), side(2, format!("Doğu ({east})"))]
-            .align_y(iced::Alignment::Center),
+        row![
+            side(0, format!("Batı ({east})")),
+            iced::widget::space::horizontal(),
+            side(2, format!("Doğu ({east})"))
+        ]
+        .align_y(iced::Alignment::Center),
         middle(side(1, format!("Güney ({north})"))),
         row![
             crate::exchange::words::secondary("Görünümden al", Some(from_view)),

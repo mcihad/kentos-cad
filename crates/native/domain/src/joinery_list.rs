@@ -377,7 +377,9 @@ impl Coverage {
     pub fn caption(self) -> String {
         format!(
             "Tüm çizim · {} kapı/pencere · {} kodlu · {} kod bekliyor",
-            self.total, self.coded, self.total - self.coded
+            self.total,
+            self.coded,
+            self.total - self.coded
         )
     }
 }
@@ -422,12 +424,17 @@ impl Document {
         let mut coverage = Coverage::default();
         for opening in self.entities().filter_map(|e| match e {
             Entity::Opening(o)
-                if matches!(o.opening.form, OpeningForm::Door | OpeningForm::Window) => Some(&o.opening),
+                if matches!(o.opening.form, OpeningForm::Door | OpeningForm::Window) =>
+            {
+                Some(&o.opening)
+            }
             _ => None,
         }) {
             coverage.total += 1;
             if opening.follows_type()
-                && let Some(kind) = self.opening_types().iter()
+                && let Some(kind) = self
+                    .opening_types()
+                    .iter()
                     .find(|kind| Some(kind.id.as_str()) == opening.style.as_deref())
             {
                 coverage.listed += 1;
@@ -452,13 +459,7 @@ impl Document {
             };
             let width = (LABEL_W + MIN_COL * 2.0).max(width_of(&caption, TEXT) + 2.0 * PAD);
             s.rect(0.0, 0.0, width, -HEAD_ROW);
-            s.text(
-                (PAD, -HEAD_ROW / 2.0),
-                &caption,
-                TEXT,
-                "middleLeft",
-                0.0,
-            );
+            s.text((PAD, -HEAD_ROW / 2.0), &caption, TEXT, "middleLeft", 0.0);
             top -= HEAD_ROW;
         }
         for band in rows.chunks(PER_BAND) {

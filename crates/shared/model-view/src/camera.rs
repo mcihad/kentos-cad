@@ -6,8 +6,12 @@
 use kentos_scene3d::{Aabb, Camera, Exaggeration, Projection};
 
 /// The view presets: name, azimuth and elevation.
-pub const VIEWS: [(&str, f64, f64); 4] =
-    [("Kuzeydoğu", 45.0, 30.0), ("Güneybatı", 225.0, 30.0), ("Kuzeybatı", 135.0, 30.0), ("Üst", -90.0, 89.0)];
+pub const VIEWS: [(&str, f64, f64); 4] = [
+    ("Kuzeydoğu", 45.0, 30.0),
+    ("Güneybatı", 225.0, 30.0),
+    ("Kuzeybatı", 135.0, 30.0),
+    ("Üst", -90.0, 89.0),
+];
 
 /// The vertical field of view, degrees.
 pub const FOV: f64 = 40.0;
@@ -24,8 +28,19 @@ pub struct OrbitCamera {
 impl OrbitCamera {
     /// Looking at `bounds`' middle from `azimuth` and `elevation`, from where all of it shows as `ex` shows it; `room`
     /// below 1 comes nearer (a flat, wide ground), 1 keeps all of a box that stands up in view.
-    pub fn fitted(bounds: &Aabb, ex: &Exaggeration, azimuth: f64, elevation: f64, room: f64) -> OrbitCamera {
-        let mut c = OrbitCamera { target: [0.0; 3], azimuth, elevation, distance: 1.0 };
+    pub fn fitted(
+        bounds: &Aabb,
+        ex: &Exaggeration,
+        azimuth: f64,
+        elevation: f64,
+        room: f64,
+    ) -> OrbitCamera {
+        let mut c = OrbitCamera {
+            target: [0.0; 3],
+            azimuth,
+            elevation,
+            distance: 1.0,
+        };
         c.fit(bounds, ex, room);
         c
     }
@@ -45,7 +60,11 @@ impl OrbitCamera {
         }
         self.target = bounds.center();
         let up = FOV.to_radians() / 2.0;
-        let half = if aspect > 0.0 && aspect < 1.0 { (up.tan() * aspect).atan() } else { up };
+        let half = if aspect > 0.0 && aspect < 1.0 {
+            (up.tan() * aspect).atan()
+        } else {
+            up
+        };
         self.distance = (ex.shown_box(bounds).diagonal() / 2.0).max(1.0) / half.sin() * room;
     }
 
@@ -104,8 +123,16 @@ impl OrbitCamera {
 
     /// The side the model is seen from, in words (“kuzeydoğudan”).
     pub fn seen_from(&self) -> &'static str {
-        const SIDES: [&str; 8] =
-            ["doğudan", "kuzeydoğudan", "kuzeyden", "kuzeybatıdan", "batıdan", "güneybatıdan", "güneyden", "güneydoğudan"];
+        const SIDES: [&str; 8] = [
+            "doğudan",
+            "kuzeydoğudan",
+            "kuzeyden",
+            "kuzeybatıdan",
+            "batıdan",
+            "güneybatıdan",
+            "güneyden",
+            "güneydoğudan",
+        ];
         let k = ((self.azimuth.rem_euclid(360.0) + 22.5) / 45.0).floor() as usize % 8;
         SIDES[k]
     }
@@ -124,19 +151,31 @@ impl OrbitCamera {
         let height = 2.0 * self.distance * (FOV.to_radians() / 2.0).tan();
         let reach = reach.max(0.0);
         let back = self.distance + reach + 1.0;
-        Camera::orbit(ex.shown(self.target), self.azimuth, self.elevation, back, Projection::Orthographic {
-            height,
-            depth: back + reach + 1.0,
-        })
+        Camera::orbit(
+            ex.shown(self.target),
+            self.azimuth,
+            self.elevation,
+            back,
+            Projection::Orthographic {
+                height,
+                depth: back + reach + 1.0,
+            },
+        )
     }
 
     /// The camera in the shown space.
     pub fn camera(&self, ex: &Exaggeration) -> Camera {
         let near = (self.distance * 1e-3).clamp(0.05, 5.0);
-        Camera::orbit(ex.shown(self.target), self.azimuth, self.elevation, self.distance, Projection::Perspective {
-            fov_y: FOV.to_radians(),
-            near,
-        })
+        Camera::orbit(
+            ex.shown(self.target),
+            self.azimuth,
+            self.elevation,
+            self.distance,
+            Projection::Perspective {
+                fov_y: FOV.to_radians(),
+                near,
+            },
+        )
     }
 }
 
@@ -146,11 +185,35 @@ mod tests {
 
     #[test]
     fn the_camera_orbits_pans_dollies_and_fits() {
-        let b = Aabb { min: [0.0, 0.0, 0.0], max: [10.0, 8.0, 6.0] };
-        let mut c = OrbitCamera::fitted(&b, &Exaggeration { factor: 1.0, datum: 0.0 }, 45.0, 30.0, 1.0);
+        let b = Aabb {
+            min: [0.0, 0.0, 0.0],
+            max: [10.0, 8.0, 6.0],
+        };
+        let mut c = OrbitCamera::fitted(
+            &b,
+            &Exaggeration {
+                factor: 1.0,
+                datum: 0.0,
+            },
+            45.0,
+            30.0,
+            1.0,
+        );
         assert_eq!(c.target, [5.0, 4.0, 3.0]);
-        let steep = OrbitCamera::fitted(&b, &Exaggeration { factor: 3.0, datum: 0.0 }, 45.0, 30.0, 1.0);
-        assert_eq!(steep.target, c.target, "the target stays in the source's heights");
+        let steep = OrbitCamera::fitted(
+            &b,
+            &Exaggeration {
+                factor: 3.0,
+                datum: 0.0,
+            },
+            45.0,
+            30.0,
+            1.0,
+        );
+        assert_eq!(
+            steep.target, c.target,
+            "the target stays in the source's heights"
+        );
         assert!(steep.distance > c.distance, "the shown box is taller");
         let d = c.distance;
         c.orbit(50.0, 20.0);
@@ -163,10 +226,24 @@ mod tests {
         assert_eq!(c.azimuth, -90.0);
         let before = c.target;
         c.pan(100.0, 0.0);
-        assert!(c.target != before && c.target[2] == before[2], "along the ground");
-        let at = c.camera(&Exaggeration { factor: 1.0, datum: 0.0 });
+        assert!(
+            c.target != before && c.target[2] == before[2],
+            "along the ground"
+        );
+        let at = c.camera(&Exaggeration {
+            factor: 1.0,
+            datum: 0.0,
+        });
         assert_eq!(at.target, c.target);
-        c.look(1, &b, &Exaggeration { factor: 1.0, datum: 0.0 }, 1.0);
+        c.look(
+            1,
+            &b,
+            &Exaggeration {
+                factor: 1.0,
+                datum: 0.0,
+            },
+            1.0,
+        );
         assert_eq!((c.preset(), c.target), (Some(1), [5.0, 4.0, 3.0]));
         c.orbit(10.0, 0.0);
         assert_eq!(c.preset(), None, "turned: no view");
@@ -175,24 +252,51 @@ mod tests {
     #[test]
     fn a_narrow_view_fits_the_box_across_too() {
         use kentos_scene3d::Viewport;
-        let b = Aabb { min: [0.0, 0.0, 0.0], max: [12.0, 9.0, 6.6] };
+        let b = Aabb {
+            min: [0.0, 0.0, 0.0],
+            max: [12.0, 9.0, 6.6],
+        };
         let ex = Exaggeration::NONE;
         // Each corner of the box on the screen, for a view of `width` by `height` fitted to its shape.
         let inside = |width: f64, height: f64, aspect: f64| {
-            let mut c = OrbitCamera { target: [0.0; 3], azimuth: 0.0, elevation: 0.0, distance: 1.0 };
+            let mut c = OrbitCamera {
+                target: [0.0; 3],
+                azimuth: 0.0,
+                elevation: 0.0,
+                distance: 1.0,
+            };
             c.look_in(0, &b, &ex, 1.0, aspect);
             let (cam, vp) = (c.camera(&ex), Viewport { width, height });
-            let pick = |k: usize, axis: usize| if (k >> axis) & 1 == 0 { b.min[axis] } else { b.max[axis] };
-            (0..8).map(|k| [pick(k, 0), pick(k, 1), pick(k, 2)]).all(|p| {
-                cam.project(p, &vp).is_some_and(|(x, y, _)| (0.0..=width).contains(&x) && (0.0..=height).contains(&y))
-            })
+            let pick = |k: usize, axis: usize| {
+                if (k >> axis) & 1 == 0 {
+                    b.min[axis]
+                } else {
+                    b.max[axis]
+                }
+            };
+            (0..8)
+                .map(|k| [pick(k, 0), pick(k, 1), pick(k, 2)])
+                .all(|p| {
+                    cam.project(p, &vp).is_some_and(|(x, y, _)| {
+                        (0.0..=width).contains(&x) && (0.0..=height).contains(&y)
+                    })
+                })
         };
         // A view half as wide as it is tall, fitted as if it were wide, loses the box's sides; fitted to its shape it
         // keeps them.
-        assert!(!inside(400.0, 800.0, 0.0), "the old fit crops a narrow view");
-        assert!(inside(400.0, 800.0, 0.5), "fitted to its shape, the whole box shows");
+        assert!(
+            !inside(400.0, 800.0, 0.0),
+            "the old fit crops a narrow view"
+        );
+        assert!(
+            inside(400.0, 800.0, 0.5),
+            "fitted to its shape, the whole box shows"
+        );
         // A wide view is fitted as before.
-        let (mut wide, mut known) = (OrbitCamera::fitted(&b, &ex, 45.0, 30.0, 1.0), OrbitCamera::fitted(&b, &ex, 45.0, 30.0, 1.0));
+        let (mut wide, mut known) = (
+            OrbitCamera::fitted(&b, &ex, 45.0, 30.0, 1.0),
+            OrbitCamera::fitted(&b, &ex, 45.0, 30.0, 1.0),
+        );
         known.fit_in(&b, &ex, 1.0, 1.6);
         wide.fit(&b, &ex, 1.0);
         assert_eq!(wide, known);
@@ -201,7 +305,12 @@ mod tests {
 
     #[test]
     fn the_north_arrow_and_the_side_follow_the_camera() {
-        let at = |azimuth: f64| OrbitCamera { target: [0.0; 3], azimuth, elevation: 30.0, distance: 10.0 };
+        let at = |azimuth: f64| OrbitCamera {
+            target: [0.0; 3],
+            azimuth,
+            elevation: 30.0,
+            distance: 10.0,
+        };
         // From the north-east the model is seen with north behind and to the right: down right on the screen.
         assert!((at(45.0).north_on_screen() - 135.0).abs() < 1e-4);
         // From the south, looking north (Üst, Kuzeye bak): north is up.
@@ -217,32 +326,57 @@ mod tests {
     #[test]
     fn the_axonometric_frames_the_target_as_the_perspective_does_and_sees_the_whole_model() {
         use kentos_scene3d::Viewport;
-        let c = OrbitCamera { target: [5.0, 4.0, 3.0], azimuth: 45.0, elevation: 30.0, distance: 20.0 };
+        let c = OrbitCamera {
+            target: [5.0, 4.0, 3.0],
+            azimuth: 45.0,
+            elevation: 30.0,
+            distance: 20.0,
+        };
         let ex = Exaggeration::NONE;
-        let viewport = Viewport { width: 800.0, height: 600.0 };
+        let viewport = Viewport {
+            width: 800.0,
+            height: 600.0,
+        };
         let (persp, axo) = (c.camera(&ex), c.axonometric(&ex, 12.0));
         assert!(matches!(axo.projection, Projection::Orthographic { .. }));
         // The target in the middle of both, a point beside it as far out in both (the same scale at the target).
         let (px, py, _) = persp.project(c.target, &viewport).unwrap();
         let (ax, ay, _) = axo.project(c.target, &viewport).unwrap();
-        assert!((px - 400.0).abs() < 1e-6 && (py - 300.0).abs() < 1e-6 && (ax - 400.0).abs() < 1e-6 && (ay - 300.0).abs() < 1e-6);
+        assert!(
+            (px - 400.0).abs() < 1e-6
+                && (py - 300.0).abs() < 1e-6
+                && (ax - 400.0).abs() < 1e-6
+                && (ay - 300.0).abs() < 1e-6
+        );
         // A point beside the target across the view (at its depth): as far out in both, the same scale there.
         let a = c.azimuth.to_radians();
         let beside = [c.target[0] - a.sin(), c.target[1] + a.cos(), c.target[2]];
         let (pb, _, _) = persp.project(beside, &viewport).unwrap();
         let (ab, _, _) = axo.project(beside, &viewport).unwrap();
-        assert!((pb - ab).abs() < 1e-6 && (pb - 400.0).abs() > 10.0, "{pb} {ab}");
+        assert!(
+            (pb - ab).abs() < 1e-6 && (pb - 400.0).abs() > 10.0,
+            "{pb} {ab}"
+        );
         // Parallel: two equal verticals far apart are drawn equally long.
         let len = |cam: &Camera, at: [f64; 3]| {
             let (_, a, _) = cam.project(at, &viewport).unwrap();
             let (_, b, _) = cam.project([at[0], at[1], at[2] + 1.0], &viewport).unwrap();
             a - b
         };
-        let (near, far) = ([c.target[0] - 5.0, c.target[1] - 5.0, 3.0], [c.target[0] + 5.0, c.target[1] + 5.0, 3.0]);
+        let (near, far) = (
+            [c.target[0] - 5.0, c.target[1] - 5.0, 3.0],
+            [c.target[0] + 5.0, c.target[1] + 5.0, 3.0],
+        );
         assert!((len(&axo, near) - len(&axo, far)).abs() < 1e-6);
-        assert!((len(&persp, near) - len(&persp, far)).abs() > 0.1, "the perspective's are not");
+        assert!(
+            (len(&persp, near) - len(&persp, far)).abs() > 0.1,
+            "the perspective's are not"
+        );
         // The model's farthest point within reach, behind the target as seen: still in front of the eye.
         let behind = [c.target[0] + 8.0, c.target[1] + 8.0, c.target[2]];
-        assert!(axo.project(behind, &viewport).is_some_and(|(_, _, z)| z > 0.0 && z < 1.0));
+        assert!(
+            axo.project(behind, &viewport)
+                .is_some_and(|(_, _, z)| z > 0.0 && z < 1.0)
+        );
     }
 }

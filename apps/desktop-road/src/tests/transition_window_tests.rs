@@ -2,19 +2,21 @@
 //! `road.superelevations.transitions` as the shared cases do, and Çizelgeye yaz puts the runoffs and shares into
 //! Dever's cells, which Kaydet writes; and its pictures.
 
-use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::road;
+use crate::road::RoadState;
 use crate::superelevation_window::Event as D;
 use crate::transition_window::Event as T;
 
-const CASES: &str = include_str!("../../../../fixtures/commands/v1/road.superelevations.transitions.json");
+const CASES: &str =
+    include_str!("../../../../fixtures/commands/v1/road.superelevations.transitions.json");
 
 /// The drawing of the shared cases: the main alignment's d-1, the side's d-2 by rows, the winding alignment's d-5.
 fn app() -> App {
     let (mut app, _) = App::boot(None);
     let cases: serde_json::Value = serde_json::from_str(CASES).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -30,7 +32,8 @@ fn send(app: &mut App, e: T) {
 fn typed(app: &mut App) {
     let _ = app.update(Message::Run("superelevation.editor"));
     let at = app
-        .modules.road()
+        .modules
+        .road()
         .superelevation_window
         .as_ref()
         .unwrap()
@@ -57,7 +60,13 @@ fn typed(app: &mut App) {
 
 fn shared(name: &str) -> serde_json::Value {
     let cases: serde_json::Value = serde_json::from_str(CASES).expect("cases");
-    cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).expect("the case")["steps"][0]["result"]["output"].clone()
+    cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case")["steps"][0]["result"]["output"]
+        .clone()
 }
 
 #[test]
@@ -65,7 +74,8 @@ fn the_proposal_is_the_shared_cases_and_is_written_into_the_schedule() {
     let mut app = app();
     typed(&mut app);
     let x = app
-        .modules.road()
+        .modules
+        .road()
         .superelevation_window
         .as_ref()
         .and_then(|w| w.transition.as_deref())
@@ -75,7 +85,10 @@ fn the_proposal_is_the_shared_cases_and_is_written_into_the_schedule() {
     assert_eq!(out.rows.len(), 3);
     for (r, w) in out.rows.iter().zip(want["rows"].as_array().unwrap()) {
         assert_eq!(r.pi, w["pi"].as_str().unwrap());
-        assert!((r.runoff.unwrap() - w["runoff"].as_f64().unwrap()).abs() < 1e-9, "{r:?}");
+        assert!(
+            (r.runoff.unwrap() - w["runoff"].as_f64().unwrap()).abs() < 1e-9,
+            "{r:?}"
+        );
     }
     assert_eq!(
         out.findings.len(),
@@ -97,7 +110,8 @@ fn a_schedule_by_rows_has_no_proposal_and_n_must_be_above_one() {
     let mut app = app();
     let _ = app.update(Message::Run("superelevation.editor"));
     let at = app
-        .modules.road()
+        .modules
+        .road()
         .superelevation_window
         .as_ref()
         .unwrap()
@@ -111,7 +125,8 @@ fn a_schedule_by_rows_has_no_proposal_and_n_must_be_above_one() {
     )));
     send(&mut app, T::Field(0, "1".into()));
     let x = app
-        .modules.road()
+        .modules
+        .road()
         .superelevation_window
         .as_ref()
         .and_then(|w| w.transition.as_deref())
@@ -120,7 +135,8 @@ fn a_schedule_by_rows_has_no_proposal_and_n_must_be_above_one() {
     assert!(why.contains("1'den büyük bir n"), "{why}");
     send(&mut app, T::Back);
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .superelevation_window
             .as_ref()
             .unwrap()
@@ -141,7 +157,8 @@ fn screens() {
     use kentos_ui::snapshot::Snapshot;
     use kentos_ui::widget::sizable::sizes;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y34");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y34");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name, full) in [
         ("light", Size::new(1440.0, 900.0), "acik", false),
@@ -149,21 +166,41 @@ fn screens() {
         ("light", Size::new(1920.0, 1080.0), "tam-ekran", true),
     ] {
         for step in ["oneri", "dever"] {
-            for key in [crate::transition_window::TITLE, crate::superelevation_window::TITLE] {
+            for key in [
+                crate::transition_window::TITLE,
+                crate::superelevation_window::TITLE,
+            ] {
                 if full {
-                    sizes::set(key, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
+                    sizes::set(
+                        key,
+                        sizes::Kept {
+                            width: 800.0,
+                            height: 600.0,
+                            maximized: true,
+                        },
+                    );
                 } else {
                     sizes::forget(key);
                 }
             }
             let mut app = app();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::RibbonTab("alignment"));
             typed(&mut app);
             if step == "dever" {
                 // Limits the alignment can take (the shared case "1:150 ve teğet payı 0, geçişler sığar"), written.
-                for (k, v) in [(0, "150"), (1, ""), (2, ""), (3, ""), (4, ""), (5, "0"), (6, "")] {
+                for (k, v) in [
+                    (0, "150"),
+                    (1, ""),
+                    (2, ""),
+                    (3, ""),
+                    (4, ""),
+                    (5, "0"),
+                    (6, ""),
+                ] {
                     send(&mut app, T::Field(k, v.into()));
                 }
                 send(&mut app, T::Apply);
@@ -174,11 +211,17 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("y34-{step}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         }
     }
-    for key in [crate::transition_window::TITLE, crate::superelevation_window::TITLE] {
+    for key in [
+        crate::transition_window::TITLE,
+        crate::superelevation_window::TITLE,
+    ] {
         sizes::forget(key);
     }
 }

@@ -23,12 +23,23 @@ fn the_weights_and_spreads_are_the_references() {
     assert!(cases.len() >= 20);
     for c in cases {
         let name = c["name"].as_str().unwrap();
-        let vertices: Vec<[f64; 3]> = c["vertices"].as_array().unwrap().iter().map(|v| [n(&v[0]), n(&v[1]), n(&v[2])]).collect();
+        let vertices: Vec<[f64; 3]> = c["vertices"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| [n(&v[0]), n(&v[1]), n(&v[2])])
+            .collect();
         let triangles: Vec<[u32; 3]> = c["triangles"]
             .as_array()
             .unwrap()
             .iter()
-            .map(|t| [t[0].as_u64().unwrap() as u32, t[1].as_u64().unwrap() as u32, t[2].as_u64().unwrap() as u32])
+            .map(|t| {
+                [
+                    t[0].as_u64().unwrap() as u32,
+                    t[1].as_u64().unwrap() as u32,
+                    t[2].as_u64().unwrap() as u32,
+                ]
+            })
             .collect();
         let design: Vec<[[f64; 3]; 3]> = c["design"]
             .as_array()
@@ -45,15 +56,39 @@ fn the_weights_and_spreads_are_the_references() {
         for (key, w) in [("cut", &got.cut), ("fill", &got.fill)] {
             let want: Vec<f64> = e[key].as_array().unwrap().iter().map(n).collect();
             for (j, (a, b)) in w.iter().zip(&want).enumerate() {
-                assert!((a - b).abs() <= 1e-9 * b.abs().max(1.0), "{name}: {key}[{j}] {a} ≠ {b}");
+                assert!(
+                    (a - b).abs() <= 1e-9 * b.abs().max(1.0),
+                    "{name}: {key}[{j}] {a} ≠ {b}"
+                );
             }
         }
-        assert!(close(got.cut_area, n(&e["cutArea"])) && close(got.fill_area, n(&e["fillArea"])), "{name}: areas");
-        assert!(close(got.near_area, n(&e["nearArea"])), "{name}: near {} ≠ {}", got.near_area, e["nearArea"]);
+        assert!(
+            close(got.cut_area, n(&e["cutArea"])) && close(got.fill_area, n(&e["fillArea"])),
+            "{name}: areas"
+        );
+        assert!(
+            close(got.near_area, n(&e["nearArea"])),
+            "{name}: near {} ≠ {}",
+            got.near_area,
+            e["nearArea"]
+        );
         let net: Vec<f64> = got.cut.iter().zip(&got.fill).map(|(a, b)| a - b).collect();
-        assert!(close(spread(&got.cut, sigma), n(&e["cutSigma"])), "{name}: σ cut");
-        assert!(close(spread(&got.fill, sigma), n(&e["fillSigma"])), "{name}: σ fill");
-        assert!(close(spread(&net, sigma), n(&e["netSigma"])), "{name}: σ net");
-        assert!(close(bias(&got.cut, beta), n(&e["cutBias"])) && close(bias(&got.fill, beta), n(&e["fillBias"])), "{name}: β");
+        assert!(
+            close(spread(&got.cut, sigma), n(&e["cutSigma"])),
+            "{name}: σ cut"
+        );
+        assert!(
+            close(spread(&got.fill, sigma), n(&e["fillSigma"])),
+            "{name}: σ fill"
+        );
+        assert!(
+            close(spread(&net, sigma), n(&e["netSigma"])),
+            "{name}: σ net"
+        );
+        assert!(
+            close(bias(&got.cut, beta), n(&e["cutBias"]))
+                && close(bias(&got.fill, beta), n(&e["fillBias"])),
+            "{name}: β"
+        );
     }
 }

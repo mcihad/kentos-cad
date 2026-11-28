@@ -151,12 +151,10 @@ fn may(p: &ProjectSummary, permission: ProjectPermission) -> bool {
 }
 
 /// Why a CAD type's file project does not go into the database (docs/adr/9196 §2).
-pub const FILE_ONLY_TEXT: &str =
-    "Bu türdeki projenin tamamı proje dosyasındadır; bulutta dosya revizyonu olarak saklanır, veritabanına aktarılmaz.";
+pub const FILE_ONLY_TEXT: &str = "Bu türdeki projenin tamamı proje dosyasındadır; bulutta dosya revizyonu olarak saklanır, veritabanına aktarılmaz.";
 
 /// Why a CBS project in the database does not become a file project (docs/adr/9196 §2).
-pub const DATABASE_ONLY_TEXT: &str =
-    "CBS projesinin verisi veritabanındadır; bulutta veritabanı projesi olarak saklanır, dosya projesine çevrilmez.";
+pub const DATABASE_ONLY_TEXT: &str = "CBS projesinin verisi veritabanındadır; bulutta veritabanı projesi olarak saklanır, dosya projesine çevrilmez.";
 
 /// The selected project's pane: `open` when it is the project open here.
 pub fn detail_plan(p: &ProjectSummary, open: bool) -> DetailPlan {
@@ -225,7 +223,9 @@ pub fn detail_plan(p: &ProjectSummary, open: bool) -> DetailPlan {
                     "PostGIS'e aktar…",
                     "server",
                     // A CAD type's project is its file (docs/adr/9196 §2): it does not go into the database.
-                    if crate::cloud::kinds::storages_of(p.project_type).contains(&ProjectStorage::Database) {
+                    if crate::cloud::kinds::storages_of(p.project_type)
+                        .contains(&ProjectStorage::Database)
+                    {
                         needs(P::Download, "dönüştürme")
                     } else {
                         Some(FILE_ONLY_TEXT.to_owned())
@@ -238,7 +238,9 @@ pub fn detail_plan(p: &ProjectSummary, open: bool) -> DetailPlan {
                     "Dosya projesine çevir…",
                     "save",
                     // A CBS project's data is its database (docs/adr/9196 §2): it does not become a file.
-                    if crate::cloud::kinds::storages_of(p.project_type).contains(&ProjectStorage::File) {
+                    if crate::cloud::kinds::storages_of(p.project_type)
+                        .contains(&ProjectStorage::File)
+                    {
                         needs(P::Download, "dönüştürme")
                     } else {
                         Some(DATABASE_ONLY_TEXT.to_owned())

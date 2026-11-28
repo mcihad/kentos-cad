@@ -369,11 +369,26 @@ impl Store {
 
     /// Reference binding also needs coincident points owned by different objects. The ordinary
     /// Tab cycle keeps one point; this query keeps one point per source object, in the same rank.
-    pub fn snap_sources(&self, p: Vec2, tol: f64, kinds: u32, from: Option<Vec2>, extras: &SnapExtras) -> Vec<SnapHit> {
+    pub fn snap_sources(
+        &self,
+        p: Vec2,
+        tol: f64,
+        kinds: u32,
+        from: Option<Vec2>,
+        extras: &SnapExtras,
+    ) -> Vec<SnapHit> {
         self.snap_candidate_sources(p, tol, kinds, from, extras, true)
     }
 
-    fn snap_candidate_sources(&self, p: Vec2, tol: f64, kinds: u32, from: Option<Vec2>, extras: &SnapExtras, sources: bool) -> Vec<SnapHit> {
+    fn snap_candidate_sources(
+        &self,
+        p: Vec2,
+        tol: f64,
+        kinds: u32,
+        from: Option<Vec2>,
+        extras: &SnapExtras,
+        sources: bool,
+    ) -> Vec<SnapHit> {
         let ch = self.choose(p, tol, kinds, from, extras, crossings, true);
         let mut ranked = ch.all.unwrap_or_default();
         // Stable: at equal weight the first considered stays first, as `best` keeps it.
@@ -386,7 +401,10 @@ impl Store {
             .chain(grid_node(p, kinds, extras));
         for h in ranked.into_iter().map(|(h, _)| h).chain(tail) {
             let h = self.jamb_owner(h);
-            if !out.iter().any(|o| o.point == h.point && (!sources || o.id == h.id)) {
+            if !out
+                .iter()
+                .any(|o| o.point == h.point && (!sources || o.id == h.id))
+            {
                 out.push(h);
             }
         }
@@ -1172,7 +1190,10 @@ fn shape_snaps(
                 if let Some([_, end]) = leader::layout_of(s).and_then(|l| l.landing) {
                     ch.consider(SnapKind::Endpoint, end, id);
                 }
-                if let Shape::Leader { arms: Some(arms), .. } = s {
+                if let Shape::Leader {
+                    arms: Some(arms), ..
+                } = s
+                {
                     for q in arms.iter().flat_map(|a| &a.pts) {
                         ch.consider(SnapKind::Endpoint, *q, id);
                     }

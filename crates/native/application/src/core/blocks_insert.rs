@@ -146,7 +146,8 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
     if input.block.is_none() && input.name.as_deref().is_none_or(checks::is_blank) {
         return Err(Stop::failed(error(
             codes::NO_BLOCK,
-            "Yerleştirilecek blok verilmedi. Bloğu kimliğiyle (block) ya da adıyla (name) verin.".into(),
+            "Yerleştirilecek blok verilmedi. Bloğu kimliğiyle (block) ya da adıyla (name) verin."
+                .into(),
             Some("block".into()),
         )));
     }
@@ -177,8 +178,17 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
         };
         return Err(Stop::failed(error(
             codes::UNKNOWN_BLOCK,
-            format!("{what} blok çizimde tanımlı değil. Bloklar panelindeki bir bloğun adını ya da kimliğini verin."),
-            Some(if input.block.is_some() { "block" } else { "name" }.into()),
+            format!(
+                "{what} blok çizimde tanımlı değil. Bloklar panelindeki bir bloğun adını ya da kimliğini verin."
+            ),
+            Some(
+                if input.block.is_some() {
+                    "block"
+                } else {
+                    "name"
+                }
+                .into(),
+            ),
         )));
     };
     let values: BTreeMap<String, String> = input.attributes.clone().unwrap_or_default();
@@ -212,7 +222,12 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
         )));
     }
     let fields = crate::blocks_sync::fields_of(doc, &block.attributes, &|_| {
-        if input.block.is_some() { "block" } else { "name" }.to_owned()
+        if input.block.is_some() {
+            "block"
+        } else {
+            "name"
+        }
+        .to_owned()
     })?;
     let mut warnings = checks::layer(doc, &input.layer_id)?;
     let factor = unit_factor(doc, block);
@@ -235,19 +250,33 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
     let sy = input.y_scale.map(|y| y * factor).filter(|y| *y != sx);
     // A dynamic block's values given, resolved as `cad.blocks.parameters` does (docs/adr/0318 §3).
     let parameters = match (&input.parameters, &block.dynamic) {
-        (None, Some(d)) => crate::block_params::resolve(d, &Default::default(), &Default::default()).map_err(
-            |(code, path, words)| Stop::failed(error(code, words, Some(path.replacen("values", "parameters", 1))))
-        )?,
+        (None, Some(d)) => {
+            crate::block_params::resolve(d, &Default::default(), &Default::default()).map_err(
+                |(code, path, words)| {
+                    Stop::failed(error(
+                        code,
+                        words,
+                        Some(path.replacen("values", "parameters", 1)),
+                    ))
+                },
+            )?
+        }
         (None, None) => Default::default(),
-        (Some(given), Some(d)) => crate::block_params::resolve(d, &Default::default(), given).map_err(
-            |(code, path, words)| {
-                Stop::failed(error(code, words, Some(path.replacen("values", "parameters", 1))))
-            },
-        )?,
+        (Some(given), Some(d)) => crate::block_params::resolve(d, &Default::default(), given)
+            .map_err(|(code, path, words)| {
+                Stop::failed(error(
+                    code,
+                    words,
+                    Some(path.replacen("values", "parameters", 1)),
+                ))
+            })?,
         (Some(_), None) => {
             return Err(Stop::failed(error(
                 codes::NOT_DYNAMIC,
-                format!("“{}” bloğunun parametresi yok; dinamik değil. parameters'ı vermeyin.", block.name),
+                format!(
+                    "“{}” bloğunun parametresi yok; dinamik değil. parameters'ı vermeyin.",
+                    block.name
+                ),
                 Some("parameters".into()),
             )));
         }
@@ -294,7 +323,11 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
         };
         let mut filled = Vec::new();
         for (tag, template) in &fields {
-            if input.attributes.as_ref().is_some_and(|v| v.contains_key(tag)) {
+            if input
+                .attributes
+                .as_ref()
+                .is_some_and(|v| v.contains_key(tag))
+            {
                 continue;
             }
             let text = template

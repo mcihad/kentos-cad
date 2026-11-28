@@ -51,7 +51,9 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         Some(b) if program.building(b).is_none() => {
             return Err(fail(
                 codes::BUILDING_NOT_FOUND,
-                format!("Bina programında “{b}” kimlikli bina yok. Var olan bir binanın kimliğini verin."),
+                format!(
+                    "Bina programında “{b}” kimlikli bina yok. Var olan bir binanın kimliğini verin."
+                ),
                 "building",
             ));
         }
@@ -111,7 +113,9 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
     let voids: Vec<(Option<String>, Vec<kentos_commands::SpacePart>)> = doc
         .entities()
         .filter_map(|e| match e {
-            Entity::Space(s) if s.space.void => Some((s.space.arch.level.clone(), s.space.parts.clone())),
+            Entity::Space(s) if s.space.void => {
+                Some((s.space.arch.level.clone(), s.space.parts.clone()))
+            }
             _ => None,
         })
         .collect();
@@ -124,7 +128,10 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
     let mut pocketed: BTreeMap<String, f64> = BTreeMap::new();
     // The options a set does not show are not built (docs/adr/0788 §5).
     let option_out = doc.option_out();
-    for e in doc.entities().filter(|e| !option_out.contains(&kentos_domain::Slot(e.base().id))) {
+    for e in doc
+        .entities()
+        .filter(|e| !option_out.contains(&kentos_domain::Slot(e.base().id)))
+    {
         let Entity::Opening(o) = e else { continue };
         let x = &o.opening;
         let wall = doc.wall_line_of(&x.host).is_some().then(|| x.host.clone());
@@ -168,7 +175,10 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
     let mut source_search = kentos_domain::space_follow::SpaceSearch::new(doc);
     // The options a set does not show are not built (docs/adr/0788 §5).
     let option_out = doc.option_out();
-    for e in doc.entities().filter(|e| !option_out.contains(&kentos_domain::Slot(e.base().id))) {
+    for e in doc
+        .entities()
+        .filter(|e| !option_out.contains(&kentos_domain::Slot(e.base().id)))
+    {
         match e {
             Entity::Space(s) => {
                 let f = &s.space;
@@ -265,7 +275,11 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
                 }
             }
             // Docs/adr/8041 §3; a rail (docs/adr/8070 §8) and a profile (docs/adr/8173) are no beams of the frame.
-            Entity::Beam(b) if input.usages.is_none() && b.beam.member.is_none() && b.beam.covering.is_none() => {
+            Entity::Beam(b)
+                if input.usages.is_none()
+                    && b.beam.member.is_none()
+                    && b.beam.covering.is_none() =>
+            {
                 if takes(e, &b.beam.arch) {
                     out.beams.push(beam_row(doc, uid(e), &b.beam));
                 }
@@ -320,13 +334,36 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
     out.transitions = crate::slab_quantities::transitions(&rooms, &passages);
     out.materials = crate::material_quantities::rows(doc.materials(), &wall_parts, &slab_parts);
     let summed = || out.slabs.iter().filter(|s| !s.excluded);
-    let edged = |k: kentos_commands::SlabEdgeKind| summed().filter(|s| s.edge == Some(k)).map(|s| s.edge_length).sum::<f64>() + 0.0;
-    let (slab_area, slab_volume) = (summed().map(|s| s.net_area).sum::<f64>() + 0.0, summed().map(|s| s.volume).sum::<f64>() + 0.0);
-    let (railing_length, parapet_length) =
-        (edged(kentos_commands::SlabEdgeKind::Railing), edged(kentos_commands::SlabEdgeKind::Parapet));
+    let edged = |k: kentos_commands::SlabEdgeKind| {
+        summed()
+            .filter(|s| s.edge == Some(k))
+            .map(|s| s.edge_length)
+            .sum::<f64>()
+            + 0.0
+    };
+    let (slab_area, slab_volume) = (
+        summed().map(|s| s.net_area).sum::<f64>() + 0.0,
+        summed().map(|s| s.volume).sum::<f64>() + 0.0,
+    );
+    let (railing_length, parapet_length) = (
+        edged(kentos_commands::SlabEdgeKind::Railing),
+        edged(kentos_commands::SlabEdgeKind::Parapet),
+    );
     out.totals = QuantityTotals {
-        space_area: out.spaces.iter().filter(|s| !s.void).map(|s| s.area).sum::<f64>() + 0.0,
-        void_area: out.spaces.iter().filter(|s| s.void).map(|s| s.area).sum::<f64>() + 0.0,
+        space_area: out
+            .spaces
+            .iter()
+            .filter(|s| !s.void)
+            .map(|s| s.area)
+            .sum::<f64>()
+            + 0.0,
+        void_area: out
+            .spaces
+            .iter()
+            .filter(|s| s.void)
+            .map(|s| s.area)
+            .sum::<f64>()
+            + 0.0,
         wall_length: out.walls.iter().map(|w| w.length).sum::<f64>() + 0.0,
         wall_net_area: out.walls.iter().filter_map(|w| w.net_area).sum::<f64>() + 0.0,
         openings: u32::try_from(out.openings.len()).unwrap_or(u32::MAX),
@@ -335,7 +372,8 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
             .iter()
             .filter(|o| !o.form.is_recess())
             .filter_map(|o| o.area)
-            .sum::<f64>() + 0.0,
+            .sum::<f64>()
+            + 0.0,
         baseboard_length: out.spaces.iter().filter_map(|s| s.baseboard).sum::<f64>() + 0.0,
         slab_area,
         slab_volume,
@@ -345,7 +383,11 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
         ramp_railing_length: out.ramps.iter().map(|r| r.railing_length).sum::<f64>() + 0.0,
         stair_area: out.stairs.iter().map(|s| s.area).sum::<f64>() + 0.0,
         stair_railing_length: out.stairs.iter().map(|s| s.railing_length).sum::<f64>() + 0.0,
-        stair_risers: out.stairs.iter().map(|s| s.risers).fold(0u32, u32::saturating_add),
+        stair_risers: out
+            .stairs
+            .iter()
+            .map(|s| s.risers)
+            .fold(0u32, u32::saturating_add),
         beam_volume: total(out.beams.iter().map(|b| b.volume)),
     };
     Ok(out)
@@ -353,7 +395,11 @@ fn check(doc: &Document, input: &SpacesQuantities) -> Result<SpacesQuantified, S
 
 /// A beam, a lintel or a bond beam measured (docs/adr/8041 §3): its axis's length; a beam's volume under the slab it
 /// hangs from, a lintel's and a bond beam's whole.
-pub(crate) fn beam_row(doc: &Document, uid: String, b: &kentos_commands::BeamFields) -> kentos_commands::BeamRow {
+pub(crate) fn beam_row(
+    doc: &Document,
+    uid: String,
+    b: &kentos_commands::BeamFields,
+) -> kentos_commands::BeamRow {
     let length = b.length();
     let slab = doc.beam_slab(b);
     let below = b.height - slab.unwrap_or(0.0);
@@ -413,7 +459,10 @@ pub(crate) fn ramp_row(uid: String, r: &kentos_commands::RampFields) -> kentos_c
 
 /// A stair measured (docs/adr/0724 §5): its walking line's length, its landings, its band's plan area and its
 /// railings from its line; a curved one's radius and inner tread.
-pub(crate) fn stair_row(uid: String, s: &kentos_commands::StairFields) -> kentos_commands::StairRow {
+pub(crate) fn stair_row(
+    uid: String,
+    s: &kentos_commands::StairFields,
+) -> kentos_commands::StairRow {
     let shape = kentos_formats::arch_elements::core_stair(s);
     let kentos_geometry_core::entity::Shape::Stair { pts, stair } = &shape else {
         unreachable!("core_stair makes a stair");
@@ -499,6 +548,10 @@ fn pockets_volume(doc: &Document, x: &kentos_commands::OpeningFields) -> Option<
         Edge::Arc { r, sweep, .. } if r > 0.0 => (r - middle * sweep.signum()) / r,
         _ => 1.0,
     };
-    let area: f64 = kentos_commands::opening_sizes(x).pockets.iter().map(|p| p.length * p.width).sum();
+    let area: f64 = kentos_commands::opening_sizes(x)
+        .pockets
+        .iter()
+        .map(|p| p.length * p.width)
+        .sum();
     (area > 0.0 && height > 0.0).then_some(area * scale * height)
 }

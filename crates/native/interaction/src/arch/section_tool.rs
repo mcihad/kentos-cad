@@ -207,9 +207,10 @@ impl SectionTool {
 
     /// Tümü: every facade not drawn yet (and four marks first when the drawing has none), one undo step.
     fn all(&mut self, cx: &mut Context<'_>) {
-        let marked = cx.doc.entities().any(
-            |e| matches!(e, Entity::ViewMark(v) if v.mark.form == ViewMarkForm::Elevation),
-        );
+        let marked = cx
+            .doc
+            .entities()
+            .any(|e| matches!(e, Entity::ViewMark(v) if v.mark.form == ViewMarkForm::Elevation));
         let group = cx.doc.begin_group(kentos_commands::FACADES_DERIVE_STEP);
         let mut outcome = None;
         if marked {
@@ -252,7 +253,9 @@ impl SectionTool {
                 };
                 cx.say(
                     Level::Success,
-                    format!("{marks}{which} çıkarıldı, çizimin sağında yan yana; tek geri alma adımı."),
+                    format!(
+                        "{marks}{which} çıkarıldı, çizimin sağında yan yana; tek geri alma adımı."
+                    ),
                 );
             }
             Some(Err(why)) => {
@@ -330,13 +333,21 @@ impl Tool for SectionTool {
     }
 
     fn prompt(&self) -> Prompt {
-        let step = match (self.elevations(), self.mark.is_none(), self.pieces.is_empty()) {
+        let step = match (
+            self.elevations(),
+            self.mark.is_none(),
+            self.pieces.is_empty(),
+        ) {
             (false, true, _) => "kesiti çıkarılacak kesit işaretinin çizgisine tıklayın",
             (true, true, _) => "görünüşü çıkarılacak görünüş işaretinin balonuna tıklayın",
             (false, false, true) => "kesit çıkarılmış: Enter ile yeniden çizin",
             (true, false, true) => "görünüş çıkarılmış: Enter ile yeniden çizin",
-            (false, false, false) => "kesitin sol ucunun ±0,00'ını tıklayın (Enter: çizimin sağına)",
-            (true, false, false) => "görünüşün sol ucunun ±0,00'ını tıklayın (Enter: çizimin sağına)",
+            (false, false, false) => {
+                "kesitin sol ucunun ±0,00'ını tıklayın (Enter: çizimin sağına)"
+            }
+            (true, false, false) => {
+                "görünüşün sol ucunun ±0,00'ını tıklayın (Enter: çizimin sağına)"
+            }
         };
         let prompt = Prompt::new(self.label(), step);
         if self.elevations() && self.mark.is_none() {
@@ -438,7 +449,12 @@ impl Tool for SectionTool {
             out.tag = Some(Tag {
                 at,
                 lines: vec![
-                    if self.elevations() { "Görünüş" } else { "Kesit" }.into(),
+                    if self.elevations() {
+                        "Görünüş"
+                    } else {
+                        "Kesit"
+                    }
+                    .into(),
                     note.clone(),
                 ],
             });

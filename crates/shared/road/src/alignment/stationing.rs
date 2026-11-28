@@ -33,8 +33,12 @@ pub struct Region {
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum StationingError {
     /// An equation's back km falls outside its region (index of the equation).
-    Outside { equation: usize },
-    NotFinite { equation: Option<usize> },
+    Outside {
+        equation: usize,
+    },
+    NotFinite {
+        equation: Option<usize>,
+    },
 }
 
 impl Stationing {
@@ -74,14 +78,19 @@ impl Stationing {
 
     /// The km at a station (the later region at an equation).
     pub fn km(regions: &[Region], station: f64) -> f64 {
-        let i = regions.partition_point(|r| r.at <= station).saturating_sub(1);
+        let i = regions
+            .partition_point(|r| r.at <= station)
+            .saturating_sub(1);
         let r = regions[i.min(regions.len() - 1)];
         r.ahead + r.dir * (station - r.at)
     }
 
     /// The region index a station falls in.
     pub fn region_of(regions: &[Region], station: f64) -> usize {
-        regions.partition_point(|r| r.at <= station).saturating_sub(1).min(regions.len().saturating_sub(1))
+        regions
+            .partition_point(|r| r.at <= station)
+            .saturating_sub(1)
+            .min(regions.len().saturating_sub(1))
     }
 
     /// Every station a km falls on, with its region.
@@ -92,7 +101,8 @@ impl Stationing {
             .filter_map(|(i, r)| {
                 let s = r.at + r.dir * (km - r.ahead);
                 let last = i + 1 == regions.len();
-                let inside = s >= r.at - 1e-9 && (s < r.until - 1e-9 || (last && s <= r.until + 1e-9));
+                let inside =
+                    s >= r.at - 1e-9 && (s < r.until - 1e-9 || (last && s <= r.until + 1e-9));
                 inside.then_some((i, s.clamp(r.at, r.until)))
             })
             .collect()
@@ -119,15 +129,29 @@ mod tests {
         let st = Stationing {
             start: 1000.0,
             equations: vec![
-                Equation { back: 1200.0, ahead: 1500.0, increasing: true },
-                Equation { back: 1600.0, ahead: 1650.0, increasing: false },
+                Equation {
+                    back: 1200.0,
+                    ahead: 1500.0,
+                    increasing: true,
+                },
+                Equation {
+                    back: 1600.0,
+                    ahead: 1650.0,
+                    increasing: false,
+                },
             ],
         };
         let r = st.regions(500.0).expect("fits");
-        assert_eq!(r.iter().map(|r| r.at).collect::<Vec<_>>(), vec![0.0, 200.0, 300.0]);
+        assert_eq!(
+            r.iter().map(|r| r.at).collect::<Vec<_>>(),
+            vec![0.0, 200.0, 300.0]
+        );
         assert_eq!(Stationing::km(&r, 250.0), 1550.0);
         assert_eq!(Stationing::km(&r, 400.0), 1550.0);
-        assert_eq!(Stationing::stations(&r, 1550.0), vec![(1, 250.0), (2, 400.0)]);
+        assert_eq!(
+            Stationing::stations(&r, 1550.0),
+            vec![(1, 250.0), (2, 400.0)]
+        );
         assert_eq!(km_text(2345.6784, 3), "2+345.678");
         assert_eq!(km_text(-12.0, 2), "-0+012.00");
         assert_eq!(km_text(999.9996, 3), "1+000.000");

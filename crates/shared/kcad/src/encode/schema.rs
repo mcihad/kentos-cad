@@ -41,12 +41,17 @@ use super::*;
 /// refused before the schema is written.)
 pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
     // Schema 257 (docs/adr/9314): a point's name, a text linked without a scale.
-    if objs.iter().any(|e| matches!(e, Entity::Text(t) if t.label_of.is_some() && t.label_scale.is_none())) {
+    if objs
+        .iter()
+        .any(|e| matches!(e, Entity::Text(t) if t.label_of.is_some() && t.label_scale.is_none()))
+    {
         return crate::SCHEMA_WITH_NAME_LINKS;
     }
     // Schema 256 (docs/adr/9198): a node's place on the mobile clients.
     fn mobile(nodes: &[kentos_contracts::LayerNode]) -> bool {
-        nodes.iter().any(|n| n.mobile.is_some() || mobile(&n.children))
+        nodes
+            .iter()
+            .any(|n| n.mobile.is_some() || mobile(&n.children))
     }
     if mobile(&doc.layers) {
         return crate::SCHEMA_WITH_LAYER_MOBILE;
@@ -64,7 +69,10 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_KEPT_ADJUSTMENTS;
     }
     // Schema 251 (docs/adr/5100): a point cloud file's place in the drawing.
-    if objs.iter().any(|e| matches!(e, Entity::PointCloud(c) if c.cloud.placed())) {
+    if objs
+        .iter()
+        .any(|e| matches!(e, Entity::PointCloud(c) if c.cloud.placed()))
+    {
         return crate::SCHEMA_WITH_CLOUD_POSES;
     }
     // Schema 250 (docs/adr/5040): a zoning plan's kept symbol choices and plan change drafts.
@@ -72,20 +80,40 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_ZONING_DRAFTS;
     }
     // Schema 249 (docs/adr/5020): the parcel register's stated lengths, drafts or an approval.
-    if doc.settings.parcel_register.as_ref().is_some_and(kentos_contracts::ParcelRegister::has_drafts) {
+    if doc
+        .settings
+        .parcel_register
+        .as_ref()
+        .is_some_and(kentos_contracts::ParcelRegister::has_drafts)
+    {
         return crate::SCHEMA_WITH_PARCEL_DRAFTS;
     }
     // Schema 248 (docs/adr/4920): a GNSS archive's baseline sessions, kept limits, a network point's velocity.
-    if doc.settings.map_survey.as_ref().is_some_and(kentos_contracts::MapSurvey::has_sessions) {
+    if doc
+        .settings
+        .map_survey
+        .as_ref()
+        .is_some_and(kentos_contracts::MapSurvey::has_sessions)
+    {
         return crate::SCHEMA_WITH_GNSS_SESSIONS;
     }
     // Schema 247 (docs/adr/4880): a map work item's typed layers' profile.
-    if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_profiles) {
+    if doc
+        .settings
+        .map_work
+        .as_ref()
+        .is_some_and(kentos_contracts::MapWork::has_profiles)
+    {
         return crate::SCHEMA_WITH_WORK_PROFILES;
     }
     // Schema 246 (docs/adr/4740): a sheet's contour lines kept as a drawing, a layer as a drawing's source, drawing
     // again whole.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_sheet_contour_drawings) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_sheet_contour_drawings)
+    {
         return crate::SCHEMA_WITH_SHEET_CONTOUR_DRAWINGS;
     }
     // Schema 245 (docs/adr/8050): a room module's columns, stairs, ramps, slabs, room separators and kitchen runs.
@@ -216,15 +244,30 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         matches!(e, Entity::Table(t)
             if matches!(t.source, Some(kentos_contracts::TableSource::Parking {} | kentos_contracts::TableSource::Shelter {})))
     };
-    if objs.iter().any(provision_table) || doc.blocks.iter().any(|b| b.entities.iter().any(provision_table)) {
+    if objs.iter().any(provision_table)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| b.entities.iter().any(provision_table))
+    {
         return crate::SCHEMA_WITH_PROVISION_TABLES;
     }
     // Schema 226 (docs/adr/8035): the building's sprinkler system.
-    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_sprinklers) {
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_sprinklers)
+    {
         return crate::SCHEMA_WITH_SPRINKLERS;
     }
     // Schema 225 (docs/adr/8034): the municipality's regulation.
-    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_local_rules) {
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_local_rules)
+    {
         return crate::SCHEMA_WITH_LOCAL_RULES;
     }
     // Schema 224 (docs/adr/8032): the site plan.
@@ -329,25 +372,49 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_SURFACE_PASTES;
     }
     // Schema 213 (docs/adr/3680): a map work item's approval with its objects' values.
-    if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_approved_values) {
+    if doc
+        .settings
+        .map_work
+        .as_ref()
+        .is_some_and(kentos_contracts::MapWork::has_approved_values)
+    {
         return crate::SCHEMA_WITH_APPROVED_VALUES;
     }
     // Schema 212 (docs/adr/3560): a pipe run profile kept as a drawing, a network its source.
     if doc.settings.road.as_ref().is_some_and(|r| {
-        r.drawings.iter().any(|d| d.command == "cad.pipes.profile" || d.sources.iter().any(|s| s.kind == kentos_contracts::RoadSourceKind::Network))
+        r.drawings.iter().any(|d| {
+            d.command == "cad.pipes.profile"
+                || d.sources
+                    .iter()
+                    .any(|s| s.kind == kentos_contracts::RoadSourceKind::Network)
+        })
     }) {
         return crate::SCHEMA_WITH_PIPE_PROFILE_DRAWINGS;
     }
     // Schema 211 (docs/adr/3280): a map work item's approval with its objects' parts' digests.
-    if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_approved_parts) {
+    if doc
+        .settings
+        .map_work
+        .as_ref()
+        .is_some_and(kentos_contracts::MapWork::has_approved_parts)
+    {
         return crate::SCHEMA_WITH_APPROVED_PARTS;
     }
     // Schema 210 (docs/adr/2880): a map work item's approval with its objects' digests.
-    if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_approved_objects) {
+    if doc
+        .settings
+        .map_work
+        .as_ref()
+        .is_some_and(kentos_contracts::MapWork::has_approved_objects)
+    {
         return crate::SCHEMA_WITH_APPROVED_OBJECTS;
     }
     // Schema 209 (docs/adr/2840): a road drawing's record with the version that drew it or the revision its write made.
-    if doc.settings.road.as_ref().is_some_and(|r| r.drawings.iter().any(|d| d.version.is_some() || d.revision.is_some())) {
+    if doc.settings.road.as_ref().is_some_and(|r| {
+        r.drawings
+            .iter()
+            .any(|d| d.version.is_some() || d.revision.is_some())
+    }) {
         return crate::SCHEMA_WITH_DRAWING_PROVENANCE;
     }
     // Schema 208 (docs/adr/2580): a constraint naming a boundary edge, a map bond.
@@ -360,61 +427,122 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_BOUNDARY_BONDS;
     }
     // Schema 207 (docs/adr/2520): a known point's own velocity.
-    if doc.settings.map_survey.as_ref().is_some_and(kentos_contracts::MapSurvey::has_velocities) {
+    if doc
+        .settings
+        .map_survey
+        .as_ref()
+        .is_some_and(kentos_contracts::MapSurvey::has_velocities)
+    {
         return crate::SCHEMA_WITH_KNOWN_VELOCITIES;
     }
     // Schema 206 (docs/adr/2080): a map work item's approval stamp, a derivation from an item without a file.
-    if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_stamps) {
+    if doc
+        .settings
+        .map_work
+        .as_ref()
+        .is_some_and(kentos_contracts::MapWork::has_stamps)
+    {
         return crate::SCHEMA_WITH_WORK_STAMPS;
     }
     // Schema 205 (docs/adr/1840): two surfaces' cut and fill zones kept as a drawing.
-    if doc.settings.road.as_ref().is_some_and(|r| r.drawings.iter().any(|d| d.command == "road.terrains.cutfill")) {
+    if doc.settings.road.as_ref().is_some_and(|r| {
+        r.drawings
+            .iter()
+            .any(|d| d.command == "road.terrains.cutfill")
+    }) {
         return crate::SCHEMA_WITH_CUTFILL_DRAWINGS;
     }
     // Schema 204 (docs/adr/1041): a volume approval's sources and algorithm.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_approval_sources) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_approval_sources)
+    {
         return crate::SCHEMA_WITH_ROAD_APPROVAL_SOURCES;
     }
     // Schema 203 (docs/adr/1032): a cloud record's heights as the call said them.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cloud_conversions) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_cloud_conversions)
+    {
         return crate::SCHEMA_WITH_ROAD_CLOUD_CONVERSIONS;
     }
     // Schema 202 (docs/adr/1029): a cloud record's vertical system.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cloud_heights) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_cloud_heights)
+    {
         return crate::SCHEMA_WITH_ROAD_CLOUD_HEIGHTS;
     }
     // Schema 201 (docs/adr/1028): an alignment's places beyond its ends.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_places) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_places)
+    {
         return crate::SCHEMA_WITH_ROAD_PLACES;
     }
     // Schema 200 (docs/adr/0985): an alignment's design speed or a PI's own.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_speed) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_speed)
+    {
         return crate::SCHEMA_WITH_ROAD_SPEED;
     }
     // Schema 199 (docs/adr/1740): a GNSS archive's baselines, known points, network adjustments and network points.
-    if doc.settings.map_survey.as_ref().is_some_and(kentos_contracts::MapSurvey::has_network) {
+    if doc
+        .settings
+        .map_survey
+        .as_ref()
+        .is_some_and(kentos_contracts::MapSurvey::has_network)
+    {
         return crate::SCHEMA_WITH_GNSS_NETWORK;
     }
     // Schema 198 (docs/adr/1720): a map project's drawings, and its drawing them again by itself; a zero line's drawing in
     // any project.
-    if doc.settings.road.as_ref().is_some_and(|r| r.drawings.iter().any(|d| d.command == "road.terrains.zeroline"))
-        || doc.settings.cad_work == Some(kentos_contracts::CadWork::Map)
-            && doc.settings.road.as_ref().is_some_and(|r| !r.drawings.is_empty() || r.auto_rebuild)
+    if doc.settings.road.as_ref().is_some_and(|r| {
+        r.drawings
+            .iter()
+            .any(|d| d.command == "road.terrains.zeroline")
+    }) || doc.settings.cad_work == Some(kentos_contracts::CadWork::Map)
+        && doc
+            .settings
+            .road
+            .as_ref()
+            .is_some_and(|r| !r.drawings.is_empty() || r.auto_rebuild)
     {
         return crate::SCHEMA_WITH_MAP_DRAWINGS;
     }
     // Schema 197 (docs/adr/1580): a map project's graded pads.
     if doc.settings.cad_work == Some(kentos_contracts::CadWork::Map)
-        && doc.settings.road.as_ref().is_some_and(|r| !r.platforms.is_empty())
+        && doc
+            .settings
+            .road
+            .as_ref()
+            .is_some_and(|r| !r.platforms.is_empty())
     {
         return crate::SCHEMA_WITH_MAP_PLATFORMS;
     }
     // Schema 196 (docs/adr/1560): a terrain surface's edits.
-    if doc.settings.road.as_ref().is_some_and(|r| r.surfaces.iter().any(|s| !s.edits.is_empty())) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(|r| r.surfaces.iter().any(|s| !s.edits.is_empty()))
+    {
         return crate::SCHEMA_WITH_SURFACE_EDITS;
     }
     // Schema 195 (docs/adr/1520): a map project's terrain surfaces.
-    if doc.settings.road.is_some() && doc.settings.cad_work == Some(kentos_contracts::CadWork::Map) {
+    if doc.settings.road.is_some() && doc.settings.cad_work == Some(kentos_contracts::CadWork::Map)
+    {
         return crate::SCHEMA_WITH_MAP_SURFACES;
     }
     // Schema 194 (docs/adr/1340 §5): a map project's GNSS archive.
@@ -422,15 +550,30 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_MAP_SURVEY;
     }
     // Schema 193 (docs/adr/1201 §1): a map work item's file with its relative path.
-    if doc.settings.map_work.as_ref().is_some_and(kentos_contracts::MapWork::has_relative) {
+    if doc
+        .settings
+        .map_work
+        .as_ref()
+        .is_some_and(kentos_contracts::MapWork::has_relative)
+    {
         return crate::SCHEMA_WITH_MAP_WORK_RELATIVE;
     }
     // Schema 192 (docs/adr/0979): an alignment PI's ove.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_ove) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_ove)
+    {
         return crate::SCHEMA_WITH_ROAD_OVE;
     }
     // Schema 191 (docs/adr/0977): a road project's grades as rise over run (a reader of 190 would take them for percent).
-    if doc.settings.road.as_ref().is_some_and(kentos_contracts::RoadSettings::has_grades) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(kentos_contracts::RoadSettings::has_grades)
+    {
         return crate::SCHEMA_WITH_ROAD_GRADES;
     }
     // Schema 190 (docs/adr/1129): standards findings the project accepts.
@@ -454,22 +597,42 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_MAP_WORK;
     }
     // Schema 187 (docs/adr/1025): a leader style that names the text style of its note.
-    if doc.settings.leader_styles.iter().any(|s| s.text_style.is_some()) {
+    if doc
+        .settings
+        .leader_styles
+        .iter()
+        .any(|s| s.text_style.is_some())
+    {
         return crate::SCHEMA_WITH_LEADER_TEXT_STYLES;
     }
     // Schema 186 (docs/adr/1023): a dimension style that names the text style of its value.
-    if doc.settings.dimension_styles.iter().any(|s| s.text_style.is_some()) {
+    if doc
+        .settings
+        .dimension_styles
+        .iter()
+        .any(|s| s.text_style.is_some())
+    {
         return crate::SCHEMA_WITH_DIMENSION_TEXT_STYLES;
     }
     // Schema 185 (docs/adr/1126 §2–§3): the project's table styles, a table that follows one.
     if !doc.settings.table_styles.is_empty()
-        || objs.iter().any(|e| matches!(e, Entity::Table(t) if t.table_style.is_some()))
+        || objs
+            .iter()
+            .any(|e| matches!(e, Entity::Table(t) if t.table_style.is_some()))
     {
         return crate::SCHEMA_WITH_TABLE_STYLES;
     }
     // Schema 184 (docs/adr/1120 §4): a Big Font beside a text style's font, an SHX unifont or Big Font resource.
-    if doc.settings.text_styles.iter().any(|s| s.big_font_file.is_some())
-        || doc.styles.items.iter().any(kentos_contracts::shape_resource::is_font_form)
+    if doc
+        .settings
+        .text_styles
+        .iter()
+        .any(|s| s.big_font_file.is_some())
+        || doc
+            .styles
+            .items
+            .iter()
+            .any(kentos_contracts::shape_resource::is_font_form)
     {
         return crate::SCHEMA_WITH_SHX_FONTS;
     }
@@ -496,59 +659,129 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_REVIEW_NOTES;
     }
     // Schema 179 (docs/adr/0974): an earthwork volume on a grid and its cell.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_grid) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_volume_grid)
+    {
         return crate::SCHEMA_WITH_VOLUME_GRID;
     }
     // Schema 178 (docs/adr/0960): a corridor region's slope transition.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_slope_transitions) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_slope_transitions)
+    {
         return crate::SCHEMA_WITH_SLOPE_TRANSITIONS;
     }
     // Schema 177 (docs/adr/0958): a template side's cut and fill slope benches.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_cut_benches) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_cut_benches)
+    {
         return crate::SCHEMA_WITH_CUT_BENCHES;
     }
     // Schema 176 (docs/adr/0957): a volume factor row's densities and source.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_states) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_volume_states)
+    {
         return crate::SCHEMA_WITH_VOLUME_STATES;
     }
     // Schema 175 (docs/adr/0955): a mass haul diagram's haul road network and its sites off the road.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_haul_network) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_haul_network)
+    {
         return crate::SCHEMA_WITH_HAUL_NETWORK;
     }
     // Schema 174 (docs/adr/0954): a mass haul diagram's approved plan and its history.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_haul_approval) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_haul_approval)
+    {
         return crate::SCHEMA_WITH_HAUL_APPROVAL;
     }
     // Schema 173 (docs/adr/0950): a volume's numbered approvals and their history.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_history) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_volume_history)
+    {
         return crate::SCHEMA_WITH_VOLUME_HISTORY;
     }
     // Schema 172 (docs/adr/0946): a profile's crossings.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_profile_crossings) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_profile_crossings)
+    {
         return crate::SCHEMA_WITH_PROFILE_CROSSINGS;
     }
     // Schema 171 (docs/adr/0944): a mass haul diagram's unsuitable cut or barriers.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_haul_sorting) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_haul_sorting)
+    {
         return crate::SCHEMA_WITH_HAUL_SORTING;
     }
     // Schema 170 (docs/adr/0939): a corridor's vertical chord height or sampling check.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_corridor_sampling) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_corridor_sampling)
+    {
         return crate::SCHEMA_WITH_CORRIDOR_SAMPLING;
     }
     // Schema 169 (docs/adr/0934 §2): an earthwork volume's curve correction.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_volume_curve) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_volume_curve)
+    {
         return crate::SCHEMA_WITH_VOLUME_CURVE;
     }
     // Schema 168 (docs/adr/0933 §3): a sample line set's clip, breaks method or curve step.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_section_breaks) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_section_breaks)
+    {
         return crate::SCHEMA_WITH_SECTION_BREAKS;
     }
     // Schema 167 (docs/adr/0931 §2): a superelevation's axis of rotation.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_pivot) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_pivot)
+    {
         return crate::SCHEMA_WITH_ROAD_PIVOT;
     }
     // Schema 166 (docs/adr/0975 §2): a road template's pavement or a volume's rule.
-    if doc.settings.road.as_ref().is_some_and(crate::decode::road_has_pavement) {
+    if doc
+        .settings
+        .road
+        .as_ref()
+        .is_some_and(crate::decode::road_has_pavement)
+    {
         return crate::SCHEMA_WITH_ROAD_PAVEMENT;
     }
     if !doc.settings.standard_docs.is_empty() {
@@ -562,8 +795,10 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
     {
         return crate::SCHEMA_WITH_SHAPE_RESOURCES;
     }
-    let new_text = |e: &Entity| matches!(e, Entity::Text(t)
-        if t.paragraph.layout.as_ref().is_some_and(|l| l.engine.is_some()));
+    let new_text = |e: &Entity| {
+        matches!(e, Entity::Text(t)
+        if t.paragraph.layout.as_ref().is_some_and(|l| l.engine.is_some()))
+    };
     if objs.iter().any(new_text) || doc.blocks.iter().any(|b| b.entities.iter().any(new_text)) {
         return crate::SCHEMA_WITH_TEXT_ENGINE;
     }
@@ -571,61 +806,113 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
     if doc.settings.cad_work == Some(kentos_contracts::CadWork::Road) {
         return crate::SCHEMA_WITH_ROAD_WORK;
     }
-    if doc.arrays.iter().any(|a|matches!(a.layout,kentos_contracts::ArrayLayout::Lattice {..})) {
+    if doc
+        .arrays
+        .iter()
+        .any(|a| matches!(a.layout, kentos_contracts::ArrayLayout::Lattice { .. }))
+    {
         return crate::SCHEMA_WITH_LATTICE_ARRAYS;
     }
-    if doc.blocks.iter().any(|b| b.dynamic.as_ref().is_some_and(|d| !d.type_parameters.is_empty() || !d.type_values.is_empty())) {
+    if doc.blocks.iter().any(|b| {
+        b.dynamic
+            .as_ref()
+            .is_some_and(|d| !d.type_parameters.is_empty() || !d.type_values.is_empty())
+    }) {
         return crate::SCHEMA_WITH_BLOCK_TYPE_VALUES;
     }
-    if doc.blocks.iter().any(|b| b.dynamic.as_ref().is_some_and(|d| !d.parameter_groups.is_empty())) {
+    if doc.blocks.iter().any(|b| {
+        b.dynamic
+            .as_ref()
+            .is_some_and(|d| !d.parameter_groups.is_empty())
+    }) {
         return crate::SCHEMA_WITH_BLOCK_PARAMETER_GROUPS;
     }
-    if doc.blocks.iter().any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some())) {
+    if doc
+        .blocks
+        .iter()
+        .any(|b| b.card.as_ref().is_some_and(|c| c.publication.is_some()))
+    {
         return crate::SCHEMA_WITH_BLOCK_PUBLICATIONS;
     }
     if doc.constraints.constraints.iter().any(|c| {
-        c.rule.elements().iter().any(|r| {
-            matches!(r.element, kentos_contracts::CadElement::ArcEdge { .. })
-        })
+        c.rule
+            .elements()
+            .iter()
+            .any(|r| matches!(r.element, kentos_contracts::CadElement::ArcEdge { .. }))
     }) {
         return crate::SCHEMA_WITH_ARC_EDGE_BONDS;
     }
     // Schema 155 (docs/adr/0811): a module instance holding one storey only.
-    if doc.settings.arch.as_ref().is_some_and(|a| kentos_contracts::modules_have_instance_storeys(&a.modules)) {
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| kentos_contracts::modules_have_instance_storeys(&a.modules))
+    {
         return crate::SCHEMA_WITH_INSTANCE_STOREYS;
     }
     // Schema 154 (docs/adr/0808): combinations of design options, a view recipe's combination.
-    if doc.settings.arch.as_ref().is_some_and(|a| !a.option_combos.is_empty())
-        || doc.settings.named_views.iter().any(|v| v.recipe.as_ref().is_some_and(|r| r.combo.is_some()))
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| !a.option_combos.is_empty())
+        || doc
+            .settings
+            .named_views
+            .iter()
+            .any(|v| v.recipe.as_ref().is_some_and(|r| r.combo.is_some()))
     {
         return crate::SCHEMA_WITH_OPTION_COMBOS;
     }
     // Schema 153 (docs/adr/0807): an XOX slide, two unequal sliding leaves.
     let more = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_slide_more);
-    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_slide_more)
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_slide_more)
         || more(objs)
         || doc.blocks.iter().any(|b| more(Objs::Plain(&b.entities)))
     {
         return crate::SCHEMA_WITH_SLIDE_MORE;
     }
     // Schema 152 (docs/adr/0796): a module member on a storey above its instance's base level.
-    if doc.settings.arch.as_ref().is_some_and(|a| kentos_contracts::modules_have_storeys(&a.modules)) {
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| kentos_contracts::modules_have_storeys(&a.modules))
+    {
         return crate::SCHEMA_WITH_MODULE_STOREYS;
     }
     // Schema 151 (docs/adr/0795): a schedule of the program's units, its fields, filter or rows' units.
-    if objs.iter().any(unit_schedules) || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(unit_schedules)) {
+    if objs.iter().any(unit_schedules)
+        || doc
+            .blocks
+            .iter()
+            .any(|b| Objs::Plain(&b.entities).iter().any(unit_schedules))
+    {
         return crate::SCHEMA_WITH_UNIT_SCHEDULES;
     }
     // Schema 150 (docs/adr/0792): a three- or four-leaf sliding door or window, its tracks, a schedule of them.
     let multi = |list: Objs<'_>| list.iter().any(kentos_contracts::needs_multi_slide);
-    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_multi_slide)
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_multi_slide)
         || multi(objs)
         || doc.blocks.iter().any(|b| multi(Objs::Plain(&b.entities)))
     {
         return crate::SCHEMA_WITH_MULTI_SLIDE;
     }
     // Schema 149 (docs/adr/0788): design option sets, a view recipe's options.
-    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_options)
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_options)
         || doc
             .settings
             .named_views
@@ -635,30 +922,55 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_OPTIONS;
     }
     // Schema 148 (docs/adr/0785): the project's materials, a component or a slab bound to one.
-    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_materials)
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_materials)
         || objs.iter().any(materials)
-        || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(materials))
-        || doc.settings.wall_styles.iter().any(|s| s.components.iter().any(|c| c.material_id.is_some()))
+        || doc
+            .blocks
+            .iter()
+            .any(|b| Objs::Plain(&b.entities).iter().any(materials))
+        || doc
+            .settings
+            .wall_styles
+            .iter()
+            .any(|s| s.components.iter().any(|c| c.material_id.is_some()))
     {
         return crate::SCHEMA_WITH_MATERIALS;
     }
     // Schema 147 (docs/adr/0784): the program's shares, a building's or a wing's levels, a schedule's share fields.
-    if doc.settings.arch.as_ref().is_some_and(|a| a.program.has_shares())
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.program.has_shares())
         || objs.iter().any(program_shares)
-        || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(program_shares))
+        || doc
+            .blocks
+            .iter()
+            .any(|b| Objs::Plain(&b.entities).iter().any(program_shares))
     {
         return crate::SCHEMA_WITH_PROGRAM_SHARES;
     }
     // Schema 146 (docs/adr/0783): view templates, a recipe's pens, black and white or template.
     if !doc.settings.view_templates.is_empty()
         || doc.settings.named_views.iter().any(|v| {
-            v.recipe.as_ref().is_some_and(|r| !r.pens.is_empty() || r.mono || r.template.is_some())
+            v.recipe
+                .as_ref()
+                .is_some_and(|r| !r.pens.is_empty() || r.mono || r.template.is_some())
         })
     {
         return crate::SCHEMA_WITH_VIEW_TEMPLATES;
     }
     // Schema 145 (docs/adr/0779): a module instance's building-program group.
-    if doc.settings.arch.as_ref().is_some_and(|a| kentos_contracts::modules_have_units(&a.modules)) {
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| kentos_contracts::modules_have_units(&a.modules))
+    {
         return crate::SCHEMA_WITH_MODULE_UNITS;
     }
     // Schema 144 (docs/adr/0777): a revolving, pocket or folding door, a sliding door's track, a schedule of them.
@@ -674,11 +986,20 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_SPECIAL_DOORS;
     }
     // Schema 143 (docs/adr/0781): a view recipe's walls' detail or crop.
-    if doc.settings.named_views.iter().any(|v| v.recipe.as_ref().is_some_and(|r| r.detail.is_some() || r.crop)) {
+    if doc.settings.named_views.iter().any(|v| {
+        v.recipe
+            .as_ref()
+            .is_some_and(|r| r.detail.is_some() || r.crop)
+    }) {
         return crate::SCHEMA_WITH_RECIPE_DETAIL;
     }
     // Schema 142 (docs/adr/0775): room modules and their instances.
-    if doc.settings.arch.as_ref().is_some_and(kentos_contracts::ArchSettings::has_modules) {
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(kentos_contracts::ArchSettings::has_modules)
+    {
         return crate::SCHEMA_WITH_MODULES;
     }
     // Schema 141 (docs/adr/0774): a named view's recipe.
@@ -686,9 +1007,16 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         return crate::SCHEMA_WITH_VIEW_RECIPES;
     }
     // Schema 140 (docs/adr/0773): the building program, a space's group, a schedule's program field.
-    if doc.settings.arch.as_ref().is_some_and(|a| !a.program.is_empty())
+    if doc
+        .settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| !a.program.is_empty())
         || objs.iter().any(building_program)
-        || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(building_program))
+        || doc
+            .blocks
+            .iter()
+            .any(|b| Objs::Plain(&b.entities).iter().any(building_program))
     {
         return crate::SCHEMA_WITH_BUILDING_PROGRAM;
     }
@@ -700,14 +1028,24 @@ pub(super) fn schema_of(doc: &DocumentSnapshotV2, objs: Objs<'_>) -> u32 {
         .as_ref()
         .is_some_and(kentos_contracts::ArchSettings::has_opening_types)
         || opening_typed(objs)
-        || doc.blocks.iter().any(|b| opening_typed(Objs::Plain(&b.entities)))
+        || doc
+            .blocks
+            .iter()
+            .any(|b| opening_typed(Objs::Plain(&b.entities)))
     {
         return crate::SCHEMA_WITH_OPENING_TYPES;
     }
     // Schema 138 (docs/adr/0771): a turning wall component, a node decision, a bound slab.
     if objs.iter().any(building_parts)
-        || doc.blocks.iter().any(|b| Objs::Plain(&b.entities).iter().any(building_parts))
-        || doc.settings.wall_styles.iter().any(|s| s.components.iter().any(|c| c.wrap))
+        || doc
+            .blocks
+            .iter()
+            .any(|b| Objs::Plain(&b.entities).iter().any(building_parts))
+        || doc
+            .settings
+            .wall_styles
+            .iter()
+            .any(|s| s.components.iter().any(|c| c.wrap))
     {
         return crate::SCHEMA_WITH_BUILDING_PARTS;
     }

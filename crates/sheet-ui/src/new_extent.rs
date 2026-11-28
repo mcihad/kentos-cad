@@ -86,11 +86,23 @@ pub fn picture(
         return None;
     }
     let mm = |um: kentos_sheet::units::Um| f64::from(um) / 1000.0;
-    let frame = [mm(item.frame.left), mm(item.frame.top), mm(item.frame.width), mm(item.frame.height)];
+    let frame = [
+        mm(item.frame.left),
+        mm(item.frame.top),
+        mm(item.frame.width),
+        mm(item.frame.height),
+    ];
     // A metre of ground at 1:N is 1000 / N millimetres of paper; the paper's y runs down.
     let k = 1000.0 / f64::from(scale);
     let (cx, cy) = (frame[0] + frame[2] / 2.0, frame[1] + frame[3] / 2.0);
-    let on_paper = |b: [f64; 4]| [cx + (b[0] - center.x) * k, cy - (b[3] - center.y) * k, (b[2] - b[0]) * k, (b[3] - b[1]) * k];
+    let on_paper = |b: [f64; 4]| {
+        [
+            cx + (b[0] - center.x) * k,
+            cy - (b[3] - center.y) * k,
+            (b[2] - b[0]) * k,
+            (b[3] - b[1]) * k,
+        ]
+    };
     Some(Picture {
         page: [mm(page.width), mm(page.height)],
         frame,
@@ -178,7 +190,10 @@ pub fn layer_name(ctx: &Context, i: usize) -> String {
     let Some((id, _)) = ctx.layer_bounds.get(i) else {
         return String::new();
     };
-    ctx.layers.iter().find(|(l, _)| l == id).map_or_else(|| id.clone(), |(_, name)| name.clone())
+    ctx.layers
+        .iter()
+        .find(|(l, _)| l == id)
+        .map_or_else(|| id.clone(), |(_, name)| name.clone())
 }
 
 /// The placement a choice gives the template at `paper`, and the sentence that says it.
@@ -194,7 +209,10 @@ pub fn place(
         scale: ctx.capabilities.plot_scale,
     };
     let Some(item) = main_map(t, paper, fixed) else {
-        return (fixed, "Şablonun yerleştirilecek bir haritası yok.".to_owned());
+        return (
+            fixed,
+            "Şablonun yerleştirilecek bir haritası yok.".to_owned(),
+        );
     };
     if extent == Extent::Fixed {
         let at = match item.kind {
@@ -208,7 +226,9 @@ pub fn place(
         if let Some(b) = ctx.drawing_bounds {
             match kentos_sheet::preflight::drawing_overrun(&item, b) {
                 Some(_) => {
-                    let need = fitted(&item, b).map(|(_, s)| scale_words(s)).unwrap_or_default();
+                    let need = fitted(&item, b)
+                        .map(|(_, s)| scale_words(s))
+                        .unwrap_or_default();
                     words.push_str(&format!(
                         " Çizimin bir kısmı dışarıda kalır; tamamı {need} ölçeğinde sığar. Kırpma bilerek korunur."
                     ));
@@ -234,6 +254,9 @@ pub fn place(
             },
             format!("{what} %5 payla sığar: ana harita {}.", scale_words(scale)),
         ),
-        None => (fixed, format!("{what} sığdırılamadı: kapsamı bilinmiyor ya da desteklenen ölçeğe sığmıyor.")),
+        None => (
+            fixed,
+            format!("{what} sığdırılamadı: kapsamı bilinmiyor ya da desteklenen ölçeğe sığmıyor."),
+        ),
     }
 }

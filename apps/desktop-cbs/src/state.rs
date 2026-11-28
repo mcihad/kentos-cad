@@ -56,12 +56,18 @@ impl CbsDialogKind {
 
 /// The module's window `kind` as the shell's.
 pub fn dialog(kind: CbsDialogKind) -> crate::app::Dialog {
-    crate::app::Dialog::Module(crate::module_parts::ModuleDialog { module: kentos_launch::Module::Gis, kind: kind.number() })
+    crate::app::Dialog::Module(crate::module_parts::ModuleDialog {
+        module: kentos_launch::Module::Gis,
+        kind: kind.number(),
+    })
 }
 
 impl From<Event> for Message {
     fn from(event: Event) -> Self {
-        Message::Module(crate::module_parts::ModuleEvent::new(kentos_launch::Module::Gis, event))
+        Message::Module(crate::module_parts::ModuleEvent::new(
+            kentos_launch::Module::Gis,
+            event,
+        ))
     }
 }
 
@@ -74,11 +80,13 @@ pub trait CbsState {
 impl CbsState for crate::module_parts::ModuleStates {
     fn cbs(&self) -> &CbsUiState {
         // Every program with the module's parts starts its state (ModuleStates::start).
-        self.get::<CbsUiState>().expect("CBS modülünün durumu başlatılmamış")
+        self.get::<CbsUiState>()
+            .expect("CBS modülünün durumu başlatılmamış")
     }
 
     fn cbs_mut(&mut self) -> &mut CbsUiState {
-        self.get_mut::<CbsUiState>().expect("CBS modülünün durumu başlatılmamış")
+        self.get_mut::<CbsUiState>()
+            .expect("CBS modülünün durumu başlatılmamış")
     }
 }
 
@@ -90,7 +98,7 @@ pub(crate) trait CbsStateApp {
 
 impl CbsStateApp for App {
     /// A message of the module; a window's own handler is in its file.
-    fn cbs_event(&mut self, event: Event) -> Task<Message>{
+    fn cbs_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Networks(event) => self.networks_event(event),
             Event::Subnetworks(event) => self.subnetworks_event(event),
@@ -98,7 +106,7 @@ impl CbsStateApp for App {
     }
 
     /// A window of the module.
-    fn cbs_dialog_view(&self, kind: CbsDialogKind) -> Element<'_, Message>{
+    fn cbs_dialog_view(&self, kind: CbsDialogKind) -> Element<'_, Message> {
         match kind {
             CbsDialogKind::Networks => self.networks_view(),
             CbsDialogKind::Subnetworks => self.subnetworks_view(),

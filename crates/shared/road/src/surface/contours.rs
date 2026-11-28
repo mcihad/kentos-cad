@@ -62,7 +62,9 @@ impl Surface {
         });
         let q = kentos_geometry_core::Vec2::new(x, y);
         let orient = kentos_geometry_core::predicates::orient2d;
-        let inside = [orient(a, b, q), orient(b, c, q), orient(c, a, q)].iter().all(|s| *s > 0.0);
+        let inside = [orient(a, b, q), orient(b, c, q), orient(c, a, q)]
+            .iter()
+            .all(|s| *s > 0.0);
         inside.then_some(t)
     }
 
@@ -82,15 +84,26 @@ impl Surface {
         let slope = gx.hypot(gy);
         let aspect = (slope > 0.0).then(|| {
             let az = (-gx).atan2(-gy);
-            if az < 0.0 { az + std::f64::consts::TAU } else { az }
+            if az < 0.0 {
+                az + std::f64::consts::TAU
+            } else {
+                az
+            }
         });
         Some(Slope { slope, aspect })
     }
 
     /// The contour lines every `interval` metres from `base`, every `major`-th level (counted from the base) a major
     /// one (0: none).
-    pub fn contours(&self, interval: f64, base: f64, major: u32) -> Result<Vec<ContourLine>, ContourError> {
-        Ok(self.contours_told(interval, base, major, &|_, _| false)?.unwrap_or_default())
+    pub fn contours(
+        &self,
+        interval: f64,
+        base: f64,
+        major: u32,
+    ) -> Result<Vec<ContourLine>, ContourError> {
+        Ok(self
+            .contours_told(interval, base, major, &|_, _| false)?
+            .unwrap_or_default())
     }
 
     /// [`Surface::contours`] telling `tick` how many levels it has drawn of all before each level (docs/adr/4040, as
@@ -106,9 +119,16 @@ impl Surface {
         if !(interval.is_finite() && interval > 0.0 && base.is_finite()) {
             return Err(ContourError::Interval);
         }
-        let used: Vec<f64> = self.triangles.iter().flatten().map(|&i| self.vertices[i as usize][2]).collect();
-        let (Some(lo), Some(hi)) = (used.iter().copied().reduce(f64::min), used.iter().copied().reduce(f64::max))
-        else {
+        let used: Vec<f64> = self
+            .triangles
+            .iter()
+            .flatten()
+            .map(|&i| self.vertices[i as usize][2])
+            .collect();
+        let (Some(lo), Some(hi)) = (
+            used.iter().copied().reduce(f64::min),
+            used.iter().copied().reduce(f64::max),
+        ) else {
             return Ok(Some(Vec::new()));
         };
         let first = ((lo - base) / interval).ceil();
@@ -129,7 +149,14 @@ impl Surface {
             let z = base + k * interval;
             let is_major = major > 0 && (k as i64).rem_euclid(i64::from(major)) == 0;
             out.extend(
-                self.level_lines(z, &|_| true).into_iter().map(|(points, closed)| ContourLine { z, major: is_major, closed, points }),
+                self.level_lines(z, &|_| true)
+                    .into_iter()
+                    .map(|(points, closed)| ContourLine {
+                        z,
+                        major: is_major,
+                        closed,
+                        points,
+                    }),
             );
             k += 1.0;
         }
@@ -153,7 +180,11 @@ impl Surface {
                 if points.len() < if closed { 3 } else { 2 } {
                     return None;
                 }
-                let points = if closed { start_closed(points) } else { start_open(points) };
+                let points = if closed {
+                    start_closed(points)
+                } else {
+                    start_open(points)
+                };
                 Some((points, closed))
             })
             .collect();
@@ -212,12 +243,22 @@ impl Surface {
                 continue;
             }
             let ends = pieces[start];
-            let from = if at[&ends[0]].len() == 1 { ends[0] } else if at[&ends[1]].len() == 1 { ends[1] } else { ends[0] };
+            let from = if at[&ends[0]].len() == 1 {
+                ends[0]
+            } else if at[&ends[1]].len() == 1 {
+                ends[1]
+            } else {
+                ends[0]
+            };
             let mut chain = vec![from];
             let (mut piece, mut edge) = (start, from);
             loop {
                 used[piece] = true;
-                let next_edge = if pieces[piece][0] == edge { pieces[piece][1] } else { pieces[piece][0] };
+                let next_edge = if pieces[piece][0] == edge {
+                    pieces[piece][1]
+                } else {
+                    pieces[piece][0]
+                };
                 chain.push(next_edge);
                 edge = next_edge;
                 match at[&edge].iter().copied().find(|&i| !used[i]) {
@@ -226,7 +267,10 @@ impl Surface {
                 }
             }
             let closed = chain.len() > 2 && chain.first() == chain.last();
-            lines.push((chain.iter().map(|e| cross(e[0], e[1])).collect::<Vec<_>>(), closed));
+            lines.push((
+                chain.iter().map(|e| cross(e[0], e[1])).collect::<Vec<_>>(),
+                closed,
+            ));
         }
         lines
     }
@@ -247,12 +291,24 @@ fn start_open(mut p: Vec<[f64; 2]>) -> Vec<[f64; 2]> {
 
 fn start_closed(p: Vec<[f64; 2]>) -> Vec<[f64; 2]> {
     let n = p.len();
-    let Some(s) = (0..n).min_by(|&i, &j| p[i][0].total_cmp(&p[j][0]).then(p[i][1].total_cmp(&p[j][1]))) else {
+    let Some(s) = (0..n).min_by(|&i, &j| {
+        p[i][0]
+            .total_cmp(&p[j][0])
+            .then(p[i][1].total_cmp(&p[j][1]))
+    }) else {
         return p;
     };
     let (next, prev) = (p[(s + 1) % n], p[(s + n - 1) % n]);
     let forward = less(&next, &prev);
-    (0..n).map(|k| if forward { p[(s + k) % n] } else { p[(s + n - k) % n] }).collect()
+    (0..n)
+        .map(|k| {
+            if forward {
+                p[(s + k) % n]
+            } else {
+                p[(s + n - k) % n]
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]
@@ -263,12 +319,26 @@ mod told_tests {
 
     /// A cone of points: 0 m at the rim, 10 m at the top; levels every metre cross it from 0 to 10.
     fn cone() -> crate::surface::Surface {
-        let mut points = vec![SpotPoint { x: 0.0, y: 0.0, z: 10.0, source: None }];
+        let mut points = vec![SpotPoint {
+            x: 0.0,
+            y: 0.0,
+            z: 10.0,
+            source: None,
+        }];
         for k in 0..12 {
             let a = f64::from(k) * std::f64::consts::TAU / 12.0;
-            points.push(SpotPoint { x: 20.0 * a.cos(), y: 20.0 * a.sin(), z: 0.0, source: None });
+            points.push(SpotPoint {
+                x: 20.0 * a.cos(),
+                y: 20.0 * a.sin(),
+                z: 0.0,
+                source: None,
+            });
         }
-        build(&SurfaceInput { points, ..SurfaceInput::default() }).expect("builds")
+        build(&SurfaceInput {
+            points,
+            ..SurfaceInput::default()
+        })
+        .expect("builds")
     }
 
     /// Docs/adr/4040: the levels are told one at a time within one whole; a stop asked at the fourth draws no level after
@@ -285,7 +355,10 @@ mod told_tests {
             .expect("draws")
             .expect("not stopped");
         assert_eq!(lines, s.contours(1.0, 0.0, 5).expect("draws"));
-        assert_eq!(seen.into_inner(), (0..11).map(|k| (k, 11)).collect::<Vec<_>>());
+        assert_eq!(
+            seen.into_inner(),
+            (0..11).map(|k| (k, 11)).collect::<Vec<_>>()
+        );
         let asked = Cell::new(0);
         let stopped = s.contours_told(1.0, 0.0, 5, &|_, _| {
             asked.set(asked.get() + 1);

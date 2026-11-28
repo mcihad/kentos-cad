@@ -75,7 +75,12 @@ impl ModuleParts for Cbs {
         }
     }
 
-    fn dialog_control(&self, app: &App, kind: u16, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn dialog_control(
+        &self,
+        app: &App,
+        kind: u16,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         match K::of(kind) {
             Some(K::Networks) => app.networks_control(control),
             Some(K::Subnetworks) => app.subnetworks_control(control),
@@ -154,7 +159,13 @@ impl ModuleParts for Cbs {
 struct NetworkMark(crate::topology::ProblemMark);
 
 impl ModuleMarks for NetworkMark {
-    fn draw(&self, frame: &mut canvas::Frame, camera: &Camera, colors: &MarkColors, tokens: &Tokens) {
+    fn draw(
+        &self,
+        frame: &mut canvas::Frame,
+        camera: &Camera,
+        colors: &MarkColors,
+        tokens: &Tokens,
+    ) {
         crate::marks::problem(frame, &self.0, camera, colors, tokens.danger);
     }
 }

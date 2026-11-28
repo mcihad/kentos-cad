@@ -475,7 +475,8 @@ impl RoofFields {
                 ));
             }
             for (i, l) in self.layers.iter().enumerate() {
-                if !(l.thickness.is_finite() && l.thickness > 0.0 && l.thickness <= MAX_ROOF_LAYER) {
+                if !(l.thickness.is_finite() && l.thickness > 0.0 && l.thickness <= MAX_ROOF_LAYER)
+                {
                     return Some((
                         format!("layers[{i}].thickness"),
                         format!(
@@ -498,7 +499,9 @@ impl RoofFields {
                 {
                     return Some((
                         format!("layers[{i}].material"),
-                        format!("Katmanın malzemesi boş ya da kenarı boşluklu olamaz; en çok {MAX_ROOF_TEXT} karakter."),
+                        format!(
+                            "Katmanın malzemesi boş ya da kenarı boşluklu olamaz; en çok {MAX_ROOF_TEXT} karakter."
+                        ),
                     ));
                 }
             }
@@ -506,7 +509,9 @@ impl RoofFields {
             if sum > MAX_ROOF_THICKNESS {
                 return Some((
                     "layers".into(),
-                    format!("Çatının katmanları toplam en çok {MAX_ROOF_THICKNESS} m olur; {sum} verildi."),
+                    format!(
+                        "Çatının katmanları toplam en çok {MAX_ROOF_THICKNESS} m olur; {sum} verildi."
+                    ),
                 ));
             }
         }

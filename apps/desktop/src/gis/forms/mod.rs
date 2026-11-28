@@ -16,23 +16,23 @@ pub mod designer;
 pub(crate) mod designer_view;
 pub mod domains;
 pub mod entry;
+#[cfg(test)]
+#[path = "../../tests/form_roles_tests.rs"]
+mod form_roles_tests;
 pub mod layer_indexes;
 pub mod layer_rules;
 pub mod library;
 pub mod location;
 pub mod map_pick;
+pub mod package;
 #[cfg(test)]
 mod related_actions_tests;
-#[cfg(test)]
-#[path = "../../tests/form_roles_tests.rs"]
-mod form_roles_tests;
+mod relation_checks;
+pub mod relations;
 #[cfg(test)]
 #[path = "../../tests/road_form_tests.rs"]
 mod road_form_tests;
-pub mod package;
-pub mod relations;
 pub mod row_target;
-mod relation_checks;
 pub mod subtypes;
 pub mod table_styles;
 
@@ -148,7 +148,12 @@ impl App {
             return Some(why.to_owned());
         }
         let source = self.document.as_ref()?.cloud_source()?;
-        if source.info.access.permissions.contains(&kentos_commands::ProjectPermission::FormsPublish) {
+        if source
+            .info
+            .access
+            .permissions
+            .contains(&kentos_commands::ProjectPermission::FormsPublish)
+        {
             return None;
         }
         Some(format!(
@@ -168,7 +173,9 @@ impl App {
             return Some("Proje arşivde: kayıtlar yalnız görüntülenir. Arşivden çıkarılıp yeniden açılınca yazılabilir.".into());
         }
         let may = |p| source.info.access.permissions.contains(&p);
-        if may(kentos_commands::ProjectPermission::FormsUse) || may(kentos_commands::ProjectPermission::FeatureWrite) {
+        if may(kentos_commands::ProjectPermission::FormsUse)
+            || may(kentos_commands::ProjectPermission::FeatureWrite)
+        {
             return None;
         }
         Some(format!(
@@ -196,7 +203,15 @@ impl App {
         let [slot] = self.selection.ids()[..] else {
             return None;
         };
-        Some(self.document.as_ref()?.model.get(slot)?.base().layer_id.clone())
+        Some(
+            self.document
+                .as_ref()?
+                .model
+                .get(slot)?
+                .base()
+                .layer_id
+                .clone(),
+        )
     }
 
     /// The object a drawing tool has just written opens its form (docs/adr/0403 §4): when the
@@ -222,7 +237,9 @@ impl App {
             .filter(|_| self.settings.bool(ON_CREATE) && self.dialog.is_none());
         // A new row of a data layer being edited (the second round's T8, docs/adr/9346): its form opens at once, the
         // layer's own (its draft too), else the default form of its fields; the layer gets no form (T17).
-        let new_row = self.settings.bool(ON_CREATE) && self.dialog.is_none() && self.edited_with_fields(&layer);
+        let new_row = self.settings.bool(ON_CREATE)
+            && self.dialog.is_none()
+            && self.edited_with_fields(&layer);
         let form = form.or_else(|| new_row.then(|| self.form_of_layer(&layer)).flatten());
         match form {
             Some(id) => {
@@ -246,7 +263,11 @@ impl App {
     /// Whether `layer` is a data layer being edited that has fields: its new rows' values are typed after drawing.
     fn edited_with_fields(&self, layer: &str) -> bool {
         self.document.as_ref().is_some_and(|d| {
-            d.model.editing(layer) && d.model.layers().get(layer).is_some_and(|n| !n.fields.is_empty())
+            d.model.editing(layer)
+                && d.model
+                    .layers()
+                    .get(layer)
+                    .is_some_and(|n| !n.fields.is_empty())
         })
     }
 
@@ -261,7 +282,12 @@ impl App {
             .fields
             .iter()
             .filter(|f| f.required)
-            .filter(|f| e.base().attrs.get(&f.name).is_none_or(|v| v.trim().is_empty()))
+            .filter(|f| {
+                e.base()
+                    .attrs
+                    .get(&f.name)
+                    .is_none_or(|v| v.trim().is_empty())
+            })
             .map(|f| f.alias.clone().unwrap_or_else(|| f.name.clone()))
             .collect();
         if empty.is_empty() {
@@ -269,7 +295,11 @@ impl App {
         }
         Some(format!(
             "Yeni nesnenin zorunlu {} boş: {}. Öznitelik tablosunda ya da Özellikler panelinde doldurun; boş zorunlu hücreler tabloda işaretlidir.",
-            if empty.len() == 1 { "alanı" } else { "alanları" },
+            if empty.len() == 1 {
+                "alanı"
+            } else {
+                "alanları"
+            },
             empty.join(", ")
         ))
     }
@@ -332,7 +362,11 @@ impl App {
                 );
                 return Task::none();
             }
-            let rows = if self.selection.is_empty() { self.data_rows_chosen() } else { self.selection.len() };
+            let rows = if self.selection.is_empty() {
+                self.data_rows_chosen()
+            } else {
+                self.selection.len()
+            };
             self.say(Level::Warn, crate::forms::row_target::choose_one(rows));
             return Task::none();
         };
@@ -394,10 +428,16 @@ impl App {
             }
             // One object of a layer without a form: its default form, built from the layer's fields (docs/adr/9346); the
             // layer gets no form (T17).
-            if let (Some(layer), Some(&slot)) = (self.one_object_layer(), self.selection.ids().first()) {
+            if let (Some(layer), Some(&slot)) =
+                (self.one_object_layer(), self.selection.ids().first())
+            {
                 return self.open_entry_default(slot, &layer);
             }
-            let rows = if self.selection.is_empty() { self.data_rows_chosen() } else { self.selection.len() };
+            let rows = if self.selection.is_empty() {
+                self.data_rows_chosen()
+            } else {
+                self.selection.len()
+            };
             self.say(Level::Warn, crate::forms::row_target::choose_one(rows));
             return Task::none();
         };

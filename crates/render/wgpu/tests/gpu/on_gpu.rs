@@ -80,7 +80,11 @@ fn scene(parts: &[&Arc<StyledLayerPart>]) -> StyledScene {
 }
 
 fn inked(rgba: &[u8]) -> usize {
-    rgba.as_chunks::<4>().0.iter().filter(|p| p[0] > 128).count()
+    rgba.as_chunks::<4>()
+        .0
+        .iter()
+        .filter(|p| p[0] > 128)
+        .count()
 }
 
 pub(super) fn styled_numbers_live_on_the_gpu(gpu: &mut Gpu) {
@@ -105,7 +109,11 @@ pub(super) fn styled_numbers_live_on_the_gpu(gpu: &mut Gpu) {
     // The app's part (its cache holds it) drawn: the CPU lets its numbers go.
     let part = Arc::new(StyledLayerPart::on_gpu(95_001, line()));
     let drawn = draw(gpu, scene(&[&part]));
-    assert!(inked(&drawn) >= SIZE as usize * 8, "the line draws: {} px", inked(&drawn));
+    assert!(
+        inked(&drawn) >= SIZE as usize * 8,
+        "the line draws: {} px",
+        inked(&drawn)
+    );
     assert!(part.numbers().is_none(), "the CPU let its numbers go");
     assert!(part.on_gpu_only());
     let resident = held(gpu);
@@ -117,14 +125,21 @@ pub(super) fn styled_numbers_live_on_the_gpu(gpu: &mut Gpu) {
         gpu.renderer.trim();
     }
     assert_eq!(held(gpu), resident, "kept while the app holds the part");
-    assert_eq!(draw(gpu, scene(&[&part])), drawn, "the same line, from the kept buffers");
+    assert_eq!(
+        draw(gpu, scene(&[&part])),
+        drawn,
+        "the same line, from the kept buffers"
+    );
     assert!(!gpu.renderer.stats(1).expect("the view").parts_lost);
 
     // Undrawn (a sheet over the drawing area): the view holding the only copy is not released.
     for _ in 0..4 {
         gpu.renderer.trim();
     }
-    assert!(gpu.renderer.stats(1).is_some(), "the view holding the only copy stays");
+    assert!(
+        gpu.renderer.stats(1).is_some(),
+        "the view holding the only copy stays"
+    );
 
     // A renderer that never had its buffers (one made again): nothing drawn for it, and it says it lost the part.
     let had = std::mem::replace(
@@ -132,10 +147,18 @@ pub(super) fn styled_numbers_live_on_the_gpu(gpu: &mut Gpu) {
         Renderer::new(&gpu.device, FORMAT).expect("the pipelines build"),
     );
     let lost = draw(gpu, scene(&[&part]));
-    assert_eq!(inked(&lost), 0, "nothing drawn from numbers it does not have");
+    assert_eq!(
+        inked(&lost),
+        0,
+        "nothing drawn from numbers it does not have"
+    );
     assert!(gpu.renderer.stats(1).expect("the view").parts_lost);
     gpu.renderer = had;
-    assert_eq!(draw(gpu, scene(&[&part])), drawn, "the renderer that has them draws it");
+    assert_eq!(
+        draw(gpu, scene(&[&part])),
+        drawn,
+        "the renderer that has them draws it"
+    );
 
     // The app lets go: the buffers go with it, and the undrawn view is released.
     drop(part);
@@ -144,14 +167,23 @@ pub(super) fn styled_numbers_live_on_the_gpu(gpu: &mut Gpu) {
     for _ in 0..4 {
         gpu.renderer.trim();
     }
-    assert!(gpu.renderer.stats(1).is_none(), "nothing keeps the undrawn view");
+    assert!(
+        gpu.renderer.stats(1).is_none(),
+        "nothing keeps the undrawn view"
+    );
 
     // A marker part lets its numbers go too; a part made `new` (a mask's source, docs/adr/0226 §3) keeps them.
     let marks = Arc::new(StyledLayerPart::on_gpu(95_002, mark()));
     let kept = Arc::new(StyledLayerPart::new(95_003, line()));
     let _ = draw(gpu, scene(&[&marks, &kept]));
-    assert!(marks.numbers().is_none(), "a marker part lets its numbers go");
-    assert!(kept.numbers().is_some(), "a part made new keeps its numbers");
+    assert!(
+        marks.numbers().is_none(),
+        "a marker part lets its numbers go"
+    );
+    assert!(
+        kept.numbers().is_some(),
+        "a part made new keeps its numbers"
+    );
     assert!(marks.on_gpu_only() && !kept.on_gpu_only());
     assert!(!gpu.renderer.stats(1).expect("the view").parts_lost);
 
@@ -174,10 +206,16 @@ pub(super) fn styled_numbers_live_on_the_gpu(gpu: &mut Gpu) {
         styled
     };
     let _ = draw(gpu, masked(&marks));
-    assert!(gpu.renderer.stats(1).expect("the view").parts_lost, "a mask's source without its numbers");
+    assert!(
+        gpu.renderer.stats(1).expect("the view").parts_lost,
+        "a mask's source without its numbers"
+    );
     let source = Arc::new(StyledLayerPart::new(95_004, mark()));
     let _ = draw(gpu, masked(&source));
-    assert!(!gpu.renderer.stats(1).expect("the view").parts_lost, "a mask's source made new");
+    assert!(
+        !gpu.renderer.stats(1).expect("the view").parts_lost,
+        "a mask's source made new"
+    );
 
     let _ = draw(gpu, StyledScene::default());
     gpu.styled = previous;

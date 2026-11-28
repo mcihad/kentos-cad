@@ -26,7 +26,15 @@ pub struct Cell {
 }
 
 /// A raster to ask: its layer's name, its tiles' key and origin, the cell, its unit.
-pub(crate) type Wanted = (String, String, super::tiles::Origin, i64, i64, Option<String>, bool);
+pub(crate) type Wanted = (
+    String,
+    String,
+    super::tiles::Origin,
+    i64,
+    i64,
+    Option<String>,
+    bool,
+);
 
 /// The cells read from the files, the asked order kept; a cell the file cannot give is left out.
 pub(crate) fn read(wanted: Vec<Wanted>, at: Vec2) -> Vec<Cell> {
@@ -38,7 +46,15 @@ pub(crate) fn read(wanted: Vec<Wanted>, at: Vec2) -> Vec<Cell> {
                 .into_iter()
                 .map(|v| (!v.is_nan() && nodata.is_none_or(|n| v != n)).then_some(v))
                 .collect();
-            Some(Cell { layer, values, column, row, at, units, float32 })
+            Some(Cell {
+                layer,
+                values,
+                column,
+                row,
+                at,
+                units,
+                float32,
+            })
         })
         .collect()
 }
@@ -50,7 +66,11 @@ impl App {
         let Some(doc) = &self.document else {
             return (Vec::new(), false);
         };
-        let folder = doc.path.as_deref().and_then(std::path::Path::parent).map(std::path::Path::to_path_buf);
+        let folder = doc
+            .path
+            .as_deref()
+            .and_then(std::path::Path::parent)
+            .map(std::path::Path::to_path_buf);
         let layers = doc.model.layers();
         let mut shown = false;
         let mut wanted = Vec::new();
@@ -63,12 +83,14 @@ impl App {
             }
             shown = true;
             let x = &r.raster;
-            let Some(q) =
-                kentos_geometry_core::geom::raster::pixel_of(x.affine, kentos_geometry_core::vec2::Vec2::new(at.x, at.y))
-            else {
+            let Some(q) = kentos_geometry_core::geom::raster::pixel_of(
+                x.affine,
+                kentos_geometry_core::vec2::Vec2::new(at.x, at.y),
+            ) else {
                 continue;
             };
-            if !(q.x >= 0.0 && q.y >= 0.0 && q.x < f64::from(x.width) && q.y < f64::from(x.height)) {
+            if !(q.x >= 0.0 && q.y >= 0.0 && q.x < f64::from(x.width) && q.y < f64::from(x.height))
+            {
                 continue;
             }
             let key = super::key_of(x);
@@ -98,8 +120,14 @@ impl App {
         let f = self
             .document
             .as_ref()
-            .map_or_else(kentos_interaction::Format::default, |d| kentos_interaction::Format::of(d.model.settings()));
-        let unit = cell.units.as_deref().map(|u| format!(" {u}")).unwrap_or_default();
+            .map_or_else(kentos_interaction::Format::default, |d| {
+                kentos_interaction::Format::of(d.model.settings())
+            });
+        let unit = cell
+            .units
+            .as_deref()
+            .map(|u| format!(" {u}"))
+            .unwrap_or_default();
         let mut rows: Vec<(String, String)> = cell
             .values
             .iter()
@@ -111,15 +139,25 @@ impl App {
                         || "değer yok (NoData)".to_owned(),
                         // A 32-bit float's shortest digits that give it back: the value the file holds.
                         |v| {
-                            let shown = if cell.float32 { (v as f32).to_string() } else { crate::crs::js_number(v) };
+                            let shown = if cell.float32 {
+                                (v as f32).to_string()
+                            } else {
+                                crate::crs::js_number(v)
+                            };
                             format!("{shown}{unit}")
                         },
                     ),
                 )
             })
             .collect();
-        rows.push(("Hücre".to_owned(), format!("sütun {}, satır {}", cell.column, cell.row)));
-        rows.push(("Konum".to_owned(), format!("Y {} · X {}", f.coord(cell.at.x), f.coord(cell.at.y))));
+        rows.push((
+            "Hücre".to_owned(),
+            format!("sütun {}, satır {}", cell.column, cell.row),
+        ));
+        rows.push((
+            "Konum".to_owned(),
+            format!("Y {} · X {}", f.coord(cell.at.x), f.coord(cell.at.y)),
+        ));
         let card = crate::object_info::ObjectCard {
             title: format!("Raster: {}", cell.layer),
             rows,

@@ -3,9 +3,9 @@
 //! undo step and the drawing saves as `.kcad` schema 199; Dışla leaves a baseline out and Geri al takes it back; a GVX
 //! file and the known point form fill an empty archive; Harita offers it, GIS and Mimari do not. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -13,11 +13,15 @@ use crate::app::{App, Message};
 use crate::survey_network_window::{Class, Event as N, Field, View};
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.survey.network.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.survey.network.json"
+    ))
+    .expect("cases")
 }
 
 fn opened_with(setup: Value, program: Option<Module>) -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -30,7 +34,11 @@ fn opened(program: Option<Module>) -> App {
 }
 
 fn survey(app: &App) -> kentos_commands::MapSurvey {
-    app.document.as_ref().and_then(|d| d.model.map_survey()).cloned().unwrap_or_default()
+    app.document
+        .as_ref()
+        .and_then(|d| d.model.map_survey())
+        .cloned()
+        .unwrap_or_default()
 }
 
 #[test]
@@ -42,7 +50,8 @@ fn the_window_shows_the_shared_case_s_network_and_kabul_et_writes_it_in_one_step
         Some(crate::map::dialog(map::MapDialogKind::SurveyNetwork))
     );
     let a = app
-        .modules.map()
+        .modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -51,12 +60,19 @@ fn the_window_shows_the_shared_case_s_network_and_kabul_et_writes_it_in_one_step
     let want = &cases()["cases"][0]["steps"][0]["result"]["output"];
     assert_eq!(Value::from(a.acceptable), want["acceptable"]);
     assert_eq!(Value::from(a.free.dof), want["free"]["dof"]);
-    assert!((a.constrained.m0.expect("m0") - want["constrained"]["m0"].as_f64().expect("m0")).abs() < 1e-6, "the shared cases' tolerance");
+    assert!(
+        (a.constrained.m0.expect("m0") - want["constrained"]["m0"].as_f64().expect("m0")).abs()
+            < 1e-6,
+        "the shared cases' tolerance"
+    );
     let marks: Vec<&str> = a.stations.iter().map(|s| s.mark.as_str()).collect();
     assert_eq!(marks, ["BN1", "N1", "BN2", "N4", "N5"]);
-    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Class(Class::C2))));
+    let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Class(
+        Class::C2,
+    ))));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -70,8 +86,16 @@ fn the_window_shows_the_shared_case_s_network_and_kabul_et_writes_it_in_one_step
     let s = survey(&app);
     assert_eq!(s.adjustments.len(), 1);
     assert_eq!(s.adjustments[0].class.as_deref(), Some("C2"));
-    let points: Vec<(&str, u32)> = s.points.iter().map(|p| (p.mark.as_str(), p.result.revision)).collect();
-    assert_eq!(points, [("N1", 2), ("N4", 1), ("N5", 1)], "N1 made again, N4 and N5 accepted");
+    let points: Vec<(&str, u32)> = s
+        .points
+        .iter()
+        .map(|p| (p.mark.as_str(), p.result.revision))
+        .collect();
+    assert_eq!(
+        points,
+        [("N1", 2), ("N4", 1), ("N5", 1)],
+        "N1 made again, N4 and N5 accepted"
+    );
     assert_eq!(s.points[0].history.len(), 1, "N1's older result kept");
     // The drawing saves as schema 199 and reads back the same archive.
     let doc = app.document.as_ref().expect("a drawing");
@@ -104,7 +128,8 @@ fn disla_leaves_a_baseline_out_and_geri_al_takes_it_back() {
         b.excluded
     );
     let a = app
-        .modules.map()
+        .modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -115,7 +140,8 @@ fn disla_leaves_a_baseline_out_and_geri_al_takes_it_back() {
         "bz-8".into(),
     ))));
     let a = app
-        .modules.map()
+        .modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -126,8 +152,10 @@ fn disla_leaves_a_baseline_out_and_geri_al_takes_it_back() {
 
 #[test]
 fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
-    let query: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.survey.query.json")).expect("cases");
+    let query: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.survey.query.json"
+    ))
+    .expect("cases");
     let mut app = opened_with(query["setup"].clone(), Some(Module::Map));
     let _ = app.update(Message::Run("map.survey.adjustment"));
     assert!(
@@ -139,10 +167,16 @@ fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
     app.survey_network_file(gvx);
     assert_eq!(survey(&app).baselines.len(), 8);
     // UR2-018: the eight baselines and the file's one session, counted apart, as the archive counts them.
-    let said = app.log.lines().last().map(|l| l.text.clone()).unwrap_or_default();
+    let said = app
+        .log
+        .lines()
+        .last()
+        .map(|l| l.text.clone())
+        .unwrap_or_default();
     assert_eq!(said, "8 baz ve 1 baz oturumu arşive alındı.");
     let why = app
-        .modules.map()
+        .modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -151,7 +185,10 @@ fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
     assert!(why.starts_with("Ağın bilinen noktası yok"), "{why}");
     let known = &cases()["setup"]["settings"]["mapSurvey"]["known"][0];
     for (field, value) in [
-        (Field::Mark, known["mark"].as_str().expect("mark").to_owned()),
+        (
+            Field::Mark,
+            known["mark"].as_str().expect("mark").to_owned(),
+        ),
         (Field::Lat, known["lat"].to_string()),
         (Field::Lon, known["lon"].to_string()),
         (Field::Height, known["height"].to_string()),
@@ -167,7 +204,8 @@ fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
     // The GVX file's vectors carry their GPS times: the measurement epoch is 2026's, the station's coordinate 2005.0's;
     // BÖHHBÜY Madde 15(1)(a) wants it moved there, so the campaign needs its velocity grid (docs/adr/2120).
     let why = app
-        .modules.map()
+        .modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -198,7 +236,8 @@ fn a_gvx_file_and_the_known_point_form_fill_an_empty_archive() {
     });
     app.survey_network_run();
     let a = app
-        .modules.map()
+        .modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -236,8 +275,16 @@ fn a_known_point_s_sigma_is_three_numbers_or_none() {
 
 #[test]
 fn harita_offers_it_gis_and_mimari_do_not() {
-    for (module, yes) in [(Module::Map, true), (Module::Gis, false), (Module::Architecture, false)] {
-        assert_eq!(opened(Some(module)).offers("map.survey.adjustment"), yes, "{module:?}");
+    for (module, yes) in [
+        (Module::Map, true),
+        (Module::Gis, false),
+        (Module::Architecture, false),
+    ] {
+        assert_eq!(
+            opened(Some(module)).offers("map.survey.adjustment"),
+            yes,
+            "{module:?}"
+        );
     }
 }
 
@@ -251,16 +298,24 @@ fn harita_offers_it_gis_and_mimari_do_not() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ag-dengelemesi-1740");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ag-dengelemesi-1740");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("map.survey.adjustment"));
-        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Class(Class::C2))));
+        let _ = app.update(Message::from(map::Event::SurveyNetwork(N::Class(
+            Class::C2,
+        ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -296,13 +351,19 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("5-arsiv-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
         // The ribbon's place: Ölçme › GNSS arşivi.
         let _ = app.update(Message::RibbonTab("survey"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("6-serit-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

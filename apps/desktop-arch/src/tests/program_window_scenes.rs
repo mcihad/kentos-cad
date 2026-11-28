@@ -1,17 +1,17 @@
 //! Bina programı's pictures (docs/adr/0773): the window and its tabs, Mahalleri birleştir, the blocks and the shared
 //! units. The house is built by the core's commands (program_scenes.rs). `arch_screens` takes them.
 
-use crate::arch_ext::*;
-use crate::arch;
-use std::sync::Arc;
-use crate::arch::ArchState;
-use kentos_commands::{Entity, ProgramCheck};
-use serde_json::json;
 use crate::app::{App, Message};
-use crate::program_window::{Event, Tab};
-use crate::tools_scenes::{click, run};
+use crate::arch;
+use crate::arch::ArchState;
+use crate::arch_ext::*;
 use crate::files_testing::command;
 use crate::program_scenes::{UP, fit, house, share_house, slot, unit_schedule};
+use crate::program_window::{Event, Tab};
+use crate::tools_scenes::{click, run};
+use kentos_commands::{Entity, ProgramCheck};
+use serde_json::json;
+use std::sync::Arc;
 
 /// The pictures of this file, for the module's `screens` (arch_screens.rs).
 pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {
@@ -122,9 +122,15 @@ fn blocks(app: &mut App) {
     ev(app, Event::BuildingUsage(0, "Konut".into()));
     ev(app, Event::BuildingZero(0, "0".into()));
     // A Blok stands on a commercial decision (docs/adr/8144): its own Bölge.
-    ev(app, Event::BuildingZone(0, Some(kentos_commands::Zone::Commercial)));
+    ev(
+        app,
+        Event::BuildingZone(0, Some(kentos_commands::Zone::Commercial)),
+    );
     // B Blok is built of cut stone with traditional elements (docs/adr/8145): its own structural system.
-    ev(app, Event::BuildingStructure(1, Some(kentos_commands::StructuralSystem::CutStoneMasonry)));
+    ev(
+        app,
+        Event::BuildingStructure(1, Some(kentos_commands::StructuralSystem::CutStoneMasonry)),
+    );
     ev(app, Event::BuildingTraditional(1, true));
     ev(app, Event::BuildingCode(1, "B1".into()));
     ev(app, Event::BuildingUsage(1, "Ticaret".into()));
@@ -138,7 +144,9 @@ fn blocks(app: &mut App) {
 /// B Blok chosen in Binalar (docs/adr/8145): its own structural system, cut stone masonry with traditional elements.
 fn blocks_structure(app: &mut App) {
     blocks(app);
-    let _ = app.update(Message::from(arch::Event::Program(Event::ChooseBuilding(1))));
+    let _ = app.update(Message::from(arch::Event::Program(Event::ChooseBuilding(
+        1,
+    ))));
 }
 
 /// Metraj on A Blok (docs/adr/8072 §4): the storeys it counts, the shared ground floor among them; its choice in the
@@ -147,7 +155,9 @@ fn blocks_quantities(app: &mut App) {
     blocks(app);
     let _ = app.update(Message::from(arch::Event::Program(Event::Close)));
     app.open_quantities();
-    let _ = app.update(Message::from(arch::Event::Quantities(crate::quantities::Event::Level(1))));
+    let _ = app.update(Message::from(arch::Event::Quantities(
+        crate::quantities::Event::Level(1),
+    )));
 }
 
 /// Ruhsat takımı on a two-block project (docs/adr/8072 §4): B Blok chosen, its storeys alone with its code.
@@ -190,8 +200,8 @@ fn units_settings(app: &mut App) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::program_scenes::*;
     use crate::files_testing::app_with_drawing;
+    use crate::program_scenes::*;
 
     /// Steps of a decimal “12.35”.
     fn steps(t: &str) -> i64 {
@@ -211,9 +221,19 @@ mod tests {
         assert_eq!(pool.unit, "ortak");
         let given: i64 = pool.shares.iter().map(|s| steps(&s.share)).sum();
         assert_eq!(given, steps(&pool.area), "the shares are the pool, exactly");
-        let gross: i64 = c.units.iter().filter_map(|u| u.share.as_ref()).map(|p| steps(&p.gross)).sum();
+        let gross: i64 = c
+            .units
+            .iter()
+            .filter_map(|u| u.share.as_ref())
+            .map(|p| steps(&p.gross))
+            .sum();
         assert_eq!(gross, steps(&sh.net) + steps(&sh.shared));
-        let d2 = c.units.iter().find(|u| u.id == "d2").and_then(|u| u.share.clone()).expect("flat 2's part");
+        let d2 = c
+            .units
+            .iter()
+            .find(|u| u.id == "d2")
+            .and_then(|u| u.share.clone())
+            .expect("flat 2's part");
         let model = &app.document.as_ref().expect("a drawing").model;
         // The house has its own room tags; the share tag is the one written with {share}.
         let tags: Vec<String> = model
@@ -226,13 +246,22 @@ mod tests {
         let want = format!("Pay {} m²", d2.share);
         assert!(tags.iter().any(|t| t.contains(&want)), "{want} in {tags:?}");
         // The ground floor is the east wing's only level: flat 2 has no space upstairs, flat 1 is in the west wing.
-        assert!(c.findings.iter().all(|f| f.code != "program_level_outside"), "{:?}", c.findings);
+        assert!(
+            c.findings.iter().all(|f| f.code != "program_level_outside"),
+            "{:?}",
+            c.findings
+        );
 
         window(&mut app, Tab::Buildings);
         let _ = app.update(Message::from(arch::Event::Program(Event::RemoveBuilding(
             0,
         ))));
-        let w = app.modules.arch().program_window.as_ref().expect("the window");
+        let w = app
+            .modules
+            .arch()
+            .program_window
+            .as_ref()
+            .expect("the window");
         assert_eq!(w.buildings_len(), 2, "A Blok stays: its flats name it");
         let said = crate::files_testing::last_said(&app);
         assert!(
@@ -258,8 +287,14 @@ mod tests {
         assert_eq!(program.buildings.len(), 2, "{program:?}");
         assert_eq!(program.buildings[1].name, "2. bina");
         assert_eq!(program.buildings[1].levels, vec!["zemin".to_owned()]);
-        assert_eq!(program.buildings[1].wings[0].levels, vec!["zemin".to_owned()]);
-        assert!(program.building("b").is_none(), "B Blok, which nothing named, is gone");
+        assert_eq!(
+            program.buildings[1].wings[0].levels,
+            vec!["zemin".to_owned()]
+        );
+        assert!(
+            program.building("b").is_none(),
+            "B Blok, which nothing named, is gone"
+        );
     }
 
     /// docs/adr/8072 §1: Binalar gives two blocks their codes (in capitals), uses and ±0.00 and the ground floor both span
@@ -274,26 +309,59 @@ mod tests {
         assert_eq!(program.buildings[0].usage.as_deref(), Some("Konut"));
         assert_eq!(program.buildings[1].code.as_deref(), Some("B1"));
         assert_eq!(program.buildings[1].zero, Some(1.2));
-        assert_eq!(program.shared, vec![kentos_commands::SharedLevel { level: "zemin".into(), building: "a".into() }]);
-        assert_eq!(program.building_of_level("zemin").map(|b| b.id.as_str()), Some("a"));
-        assert_eq!(program.building_of_level("kat-1").map(|b| b.id.as_str()), Some("a"));
+        assert_eq!(
+            program.shared,
+            vec![kentos_commands::SharedLevel {
+                level: "zemin".into(),
+                building: "a".into()
+            }]
+        );
+        assert_eq!(
+            program.building_of_level("zemin").map(|b| b.id.as_str()),
+            Some("a")
+        );
+        assert_eq!(
+            program.building_of_level("kat-1").map(|b| b.id.as_str()),
+            Some("a")
+        );
         // A Blok's own Bölge (docs/adr/8144): its storeys are read by it; B Blok's by the project's.
-        assert_eq!((program.buildings[0].zone, program.buildings[1].zone), (Some(kentos_commands::Zone::Commercial), None));
+        assert_eq!(
+            (program.buildings[0].zone, program.buildings[1].zone),
+            (Some(kentos_commands::Zone::Commercial), None)
+        );
         let doc = &app.document.as_ref().expect("a drawing").model;
         let mimari = doc.settings().arch.clone().expect("Mimari");
-        assert_eq!(mimari.zone_on("kat-1"), Some(kentos_commands::Zone::Commercial));
+        assert_eq!(
+            mimari.zone_on("kat-1"),
+            Some(kentos_commands::Zone::Commercial)
+        );
         let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
-        let storeys: Vec<(&str, Option<&str>, Option<&str>)> =
-            facts.storeys.iter().map(|s| (s.level.as_str(), s.building.as_deref(), s.zone.as_deref())).collect();
-        assert!(storeys.contains(&("kat-1", Some("a"), Some("commercial"))), "{storeys:?}");
+        let storeys: Vec<(&str, Option<&str>, Option<&str>)> = facts
+            .storeys
+            .iter()
+            .map(|s| (s.level.as_str(), s.building.as_deref(), s.zone.as_deref()))
+            .collect();
+        assert!(
+            storeys.contains(&("kat-1", Some("a"), Some("commercial"))),
+            "{storeys:?}"
+        );
         // B Blok's own structural system (docs/adr/8145); its storeys read by it, A Blok's by the project's.
         let own = program.buildings[1].structure.expect("B Blok's system");
         assert!(own.traditional_cut_stone(), "{own:?}");
-        assert!(!mimari.traditional_cut_stone_on(Some("kat-1")) && mimari.any_traditional_cut_stone());
-        let _ = app.update(Message::from(arch::Event::Program(Event::BuildingCode(1, "00".into()))));
+        assert!(
+            !mimari.traditional_cut_stone_on(Some("kat-1")) && mimari.any_traditional_cut_stone()
+        );
+        let _ = app.update(Message::from(arch::Event::Program(Event::BuildingCode(
+            1,
+            "00".into(),
+        ))));
         let _ = app.update(Message::from(arch::Event::Program(Event::Save)));
         let kept = app.document.as_ref().expect("a drawing").model.program();
-        assert_eq!(kept.buildings[1].code.as_deref(), Some("B1"), "nothing written");
+        assert_eq!(
+            kept.buildings[1].code.as_deref(),
+            Some("B1"),
+            "nothing written"
+        );
         let said = crate::files_testing::last_said(&app);
         assert!(said.contains("“00” tek binalı projenin kodudur"), "{said}");
     }
@@ -314,7 +382,12 @@ mod tests {
         let rows = cells(&app);
         assert_eq!(rows[0][0], "No");
         assert_eq!(rows[0][9], "Mahal sayısı");
-        let d2 = c.units.iter().find(|u| u.id == "d2").and_then(|u| u.share.clone()).expect("flat 2's part");
+        let d2 = c
+            .units
+            .iter()
+            .find(|u| u.id == "d2")
+            .and_then(|u| u.share.clone())
+            .expect("flat 2's part");
         let flat2 = rows.iter().find(|r| r[0] == "2").expect("flat 2's row");
         assert_eq!(flat2[6], d2.share, "the check's share");
         assert_eq!(flat2[7], d2.gross, "the check's gross");
@@ -323,41 +396,79 @@ mod tests {
         let input = json!({"uid": uid, "operation": {"kind": "cell", "row": 2, "column": 1, "value": "Dubleks"}});
         command(&mut app, "cad.schedules.edit", input);
         let model = &app.document.as_ref().expect("a drawing").model;
-        assert_eq!(model.program().unit("d2").and_then(|u| u.name.clone()).as_deref(), Some("Dubleks"));
+        assert_eq!(
+            model
+                .program()
+                .unit("d2")
+                .and_then(|u| u.name.clone())
+                .as_deref(),
+            Some("Dubleks")
+        );
         assert_eq!(cells(&app)[2][1], "Dubleks");
-        let said = crate::tables::editor::schedule_cell(model, &match model.get(s) {
-            Some(Entity::Table(t)) => *t.clone(),
-            _ => panic!("the schedule"),
-        }, (2, 1));
-        assert!(matches!(&said, Some(Ok(w)) if w.contains("Bina programına yazılır: 2 Dubleks")), "{said:?}");
+        let said = crate::tables::editor::schedule_cell(
+            model,
+            &match model.get(s) {
+                Some(Entity::Table(t)) => *t.clone(),
+                _ => panic!("the schedule"),
+            },
+            (2, 1),
+        );
+        assert!(
+            matches!(&said, Some(Ok(w)) if w.contains("Bina programına yazılır: 2 Dubleks")),
+            "{said:?}"
+        );
         let _ = app.update(Message::Run("edit.undo"));
         assert_eq!(cells(&app)[2][1], "Daire 2");
         // A space given to flat 1: both rows' areas follow in the same step.
         let before = cells(&app);
-        command(&mut app, "cad.program.edit", json!({"assign": [{"uids": [plan.space("203")], "unit": "d1"}]}));
+        command(
+            &mut app,
+            "cad.program.edit",
+            json!({"assign": [{"uids": [plan.space("203")], "unit": "d1"}]}),
+        );
         let after = cells(&app);
         assert_ne!(before[1][5], after[1][5], "flat 1 grew");
         assert_ne!(before[2][5], after[2][5], "flat 2 shrank");
         // The tool places one through the command.
         let count = |app: &App| {
-            app.document.as_ref().expect("a drawing").model.entities().filter(|e| matches!(e, Entity::Table(_))).count()
+            app.document
+                .as_ref()
+                .expect("a drawing")
+                .model
+                .entities()
+                .filter(|e| matches!(e, Entity::Table(_)))
+                .count()
         };
         let n = count(&app);
         run(&mut app, "tool.scheduleUnits");
         click(&mut app, [UP + 7.0, -4.0]);
-        assert_eq!(count(&app), n + 1, "{}", crate::files_testing::last_said(&app));
+        assert_eq!(
+            count(&app),
+            n + 1,
+            "{}",
+            crate::files_testing::last_said(&app)
+        );
     }
 
     fn checked(app: &App) -> kentos_commands::ProgramChecked {
         let doc = app.document.as_ref().expect("a drawing");
-        match kentos_native_application::program_check::check_in(&doc.model, &ProgramCheck::default()) {
+        match kentos_native_application::program_check::check_in(
+            &doc.model,
+            &ProgramCheck::default(),
+        ) {
             kentos_commands::CommandResult::Completed { output, .. } => output,
             other => panic!("{other:?}"),
         }
     }
 
-    fn row<'a>(c: &'a kentos_commands::ProgramChecked, number: &str) -> &'a kentos_commands::ProgramSpaceRow {
-        c.spaces.iter().find(|s| s.number.as_deref() == Some(number)).expect("the row")
+    fn row<'a>(
+        c: &'a kentos_commands::ProgramChecked,
+        number: &str,
+    ) -> &'a kentos_commands::ProgramSpaceRow {
+        c.spaces
+            .iter()
+            .find(|s| s.number.as_deref() == Some(number))
+            .expect("the row")
     }
 
     #[test]
@@ -367,35 +478,59 @@ mod tests {
         let doc = &app.document.as_ref().expect("a drawing").model;
         let layer = doc.layers().active().to_owned();
         let mut program = doc.program();
-        let brief = program.briefs.iter_mut().find(|brief| brief.usage == "Yatak odası").expect("a brief");
+        let brief = program
+            .briefs
+            .iter_mut()
+            .find(|brief| brief.usage == "Yatak odası")
+            .expect("a brief");
         brief.adjacent = vec!["Salon".into()];
         command(&mut app, "cad.program.edit", json!({"program": program}));
-        let door = uids(&command(&mut app, "cad.openings.create", json!({
-            "layerId": layer,
-            "openings": [{"host": plan.walls[7], "at": 1.6, "width": 0.9, "form": "door"}]
-        })));
+        let door = uids(&command(
+            &mut app,
+            "cad.openings.create",
+            json!({
+                "layerId": layer,
+                "openings": [{"host": plan.walls[7], "at": 1.6, "width": 0.9, "form": "door"}]
+            }),
+        ));
         let target = plan.space("203").to_owned();
         let source = plan.space("201").to_owned();
         let before = checked(&app);
-        assert_eq!(row(&before, "201").reach[0].by, std::slice::from_ref(&target));
-        assert_eq!(row(&before, "201").adjacent[0].by, std::slice::from_ref(&target));
+        assert_eq!(
+            row(&before, "201").reach[0].by,
+            std::slice::from_ref(&target)
+        );
+        assert_eq!(
+            row(&before, "201").adjacent[0].by,
+            std::slice::from_ref(&target)
+        );
 
         command(&mut app, "cad.entities.delete", json!({"uids": door}));
         let after = checked(&app);
         assert!(row(&after, "201").reach[0].by.is_empty());
-        assert_eq!(row(&after, "201").adjacent[0].by, std::slice::from_ref(&target));
+        assert_eq!(
+            row(&after, "201").adjacent[0].by,
+            std::slice::from_ref(&target)
+        );
         let subjects = [source.clone(), target.clone()];
-        let index = after.findings.iter().position(|finding| {
-            finding.code == "program_reach_missing" && finding.uids == subjects
-        }).expect("the failed passage names both rooms in the same flat");
+        let index = after
+            .findings
+            .iter()
+            .position(|finding| finding.code == "program_reach_missing" && finding.uids == subjects)
+            .expect("the failed passage names both rooms in the same flat");
 
         app.choose_level(Some("kat-1".into()));
         window(&mut app, Tab::Status);
         let expected = [slot(&app, &source), slot(&app, &target)];
-        let _ = app.update(Message::from(arch::Event::Program(Event::ShowFinding(index))));
+        let _ = app.update(Message::from(arch::Event::Program(Event::ShowFinding(
+            index,
+        ))));
         assert!(app.dialog.is_none());
         assert_eq!(app.active_level().as_deref(), Some("zemin"));
-        assert_eq!(app.level_view, kentos_interaction::level_view::LevelView::Active);
+        assert_eq!(
+            app.level_view,
+            kentos_interaction::level_view::LevelView::Active
+        );
         assert_eq!(app.selection.ids(), expected);
     }
 
@@ -409,22 +544,43 @@ mod tests {
         let before = checked(&app);
         // Asked to stop, the check answers cancelled and says nothing more (docs/adr/0773 §5).
         let doc = app.document.as_ref().expect("a drawing");
-        let stopped = kentos_native_application::program_check::check_watched(&doc.model, &ProgramCheck::default(), &|done, _| done >= 3);
-        assert!(matches!(stopped, kentos_commands::CommandResult::Cancelled), "{stopped:?}");
+        let stopped = kentos_native_application::program_check::check_watched(
+            &doc.model,
+            &ProgramCheck::default(),
+            &|done, _| done >= 3,
+        );
+        assert!(
+            matches!(stopped, kentos_commands::CommandResult::Cancelled),
+            "{stopped:?}"
+        );
         // The open kitchen opens into the living room: the living room's neighbour, the kitchen's reach met.
         let kitchen = row(&before, "103");
-        assert!(kitchen.reach.iter().all(|l| !l.by.is_empty()), "{:?}", kitchen.reach);
+        assert!(
+            kitchen.reach.iter().all(|l| !l.by.is_empty()),
+            "{:?}",
+            kitchen.reach
+        );
         let corridor = row(&before, "001");
-        assert!((corridor.passage.expect("measured") - 1.2).abs() < 1e-3, "{corridor:?}");
+        assert!(
+            (corridor.passage.expect("measured") - 1.2).abs() < 1e-3,
+            "{corridor:?}"
+        );
         assert!((corridor.area - 1.2 * 6.8).abs() < 1e-6);
         let bedroom = row(&before, "201");
         assert!((bedroom.area - 3.4 * 4.3).abs() < 1e-6, "{bedroom:?}");
         assert_eq!(bedroom.target_difference, Some(0.0));
         // Each space once: the units, the common area and the voids add up to all but the voids.
         let t = &before.totals;
-        assert!((t.units + t.unit_outdoor + t.common + t.outdoor + t.unassigned - t.all).abs() < 1e-9, "{t:?}");
+        assert!(
+            (t.units + t.unit_outdoor + t.common + t.outdoor + t.unassigned - t.all).abs() < 1e-9,
+            "{t:?}"
+        );
         let d1 = before.units.iter().find(|u| u.id == "d1").expect("flat 1");
-        assert_eq!(d1.levels, vec!["zemin".to_owned(), "kat-1".to_owned()], "a duplex");
+        assert_eq!(
+            d1.levels,
+            vec!["zemin".to_owned(), "kat-1".to_owned()],
+            "a duplex"
+        );
         let d1_rooms: f64 = before
             .spaces
             .iter()
@@ -432,8 +588,15 @@ mod tests {
             .map(|s| s.area)
             .sum();
         assert!((d1.rooms - d1_rooms).abs() < 1e-9);
-        assert!((t.common - corridor.area).abs() < 1e-9, "the corridor alone is common, the shaft a void");
-        assert_eq!(d1.recorded_area, Some(60.0), "the recorded area is read, never written");
+        assert!(
+            (t.common - corridor.area).abs() < 1e-9,
+            "the corridor alone is common, the shaft a void"
+        );
+        assert_eq!(
+            d1.recorded_area,
+            Some(60.0),
+            "the recorded area is read, never written"
+        );
 
         command(
             &mut app,
@@ -442,17 +605,35 @@ mod tests {
         );
         let after = checked(&app);
         let corridor = row(&after, "001");
-        assert!((corridor.passage.expect("measured") - 1.1).abs() < 1e-3, "{corridor:?}");
+        assert!(
+            (corridor.passage.expect("measured") - 1.1).abs() < 1e-3,
+            "{corridor:?}"
+        );
         assert!((corridor.passage_difference.expect("against the brief") + 0.1).abs() < 1e-3);
-        assert!(after.findings.iter().any(|f| f.code == "program_passage_narrow"));
+        assert!(
+            after
+                .findings
+                .iter()
+                .any(|f| f.code == "program_passage_narrow")
+        );
         let bedroom = row(&after, "201");
         assert!((bedroom.area - 3.5 * 4.3).abs() < 1e-6, "{bedroom:?}");
-        assert!((bedroom.target_difference.expect("a range") - (3.5 * 4.3 - 15.0)).abs() < 1e-6, "{bedroom:?}");
-        assert!(after.findings.iter().any(|f| f.code == "program_area_above" && f.uids == vec![plan.space("201").to_owned()]));
+        assert!(
+            (bedroom.target_difference.expect("a range") - (3.5 * 4.3 - 15.0)).abs() < 1e-6,
+            "{bedroom:?}"
+        );
+        assert!(after.findings.iter().any(
+            |f| f.code == "program_area_above" && f.uids == vec![plan.space("201").to_owned()]
+        ));
 
         // Bina programı's numbers are the command's.
         window(&mut app, Tab::Status);
-        let w = app.modules.arch().program_window.as_ref().expect("the window");
+        let w = app
+            .modules
+            .arch()
+            .program_window
+            .as_ref()
+            .expect("the window");
         let _ = w;
 
         // Mahalleri birleştir: asked with its decision, written on Birleştir.
@@ -477,7 +658,12 @@ mod tests {
         assert!(model.get(b).is_some(), "nothing written before Birleştir");
         let _ = app.update(Message::DialogConfirmed);
         let model = &app.document.as_ref().expect("a drawing").model;
-        assert!(model.get(b).is_none(), "the kitchen merged into the living room");
-        assert!(matches!(model.get(a), Some(Entity::Space(s)) if s.space.number.as_deref() == Some("102")));
+        assert!(
+            model.get(b).is_none(),
+            "the kitchen merged into the living room"
+        );
+        assert!(
+            matches!(model.get(a), Some(Entity::Space(s)) if s.space.number.as_deref() == Some("102"))
+        );
     }
 }

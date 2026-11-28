@@ -58,7 +58,9 @@ impl Piece {
                     take(s0 + (m - g0) / r);
                 }
             }
-            Piece::Circle { sc, radius, sag, .. } => {
+            Piece::Circle {
+                sc, radius, sag, ..
+            } => {
                 let k = m * radius / (1.0 + m * m).sqrt();
                 take(if sag { sc + k } else { sc - k });
             }
@@ -89,14 +91,26 @@ impl Vertical {
 
     /// The sight from station `s` ahead (`ahead`) or behind: the eye `eye` over the profile, the object `object` over
     /// it, looked up to `reach` metres in steps of `step`; none at the profile's end in that direction or off it.
-    pub fn sight(&self, s: f64, ahead: bool, eye: f64, object: f64, reach: f64, step: f64) -> Option<Seen> {
+    pub fn sight(
+        &self,
+        s: f64,
+        ahead: bool,
+        eye: f64,
+        object: f64,
+        reach: f64,
+        step: f64,
+    ) -> Option<Seen> {
         let (z, _, _) = self.at(s)?;
         let room = if ahead { self.end - s } else { s - self.start };
         if room <= 0.0 {
             return None;
         }
         let most = reach.min(room);
-        let until = if room <= reach { Until::End } else { Until::Reach };
+        let until = if room <= reach {
+            Until::End
+        } else {
+            Until::Reach
+        };
         let ze = z + eye;
         let sign = if ahead { 1.0 } else { -1.0 };
         let seen = |d: f64| -> (bool, f64) {
@@ -123,10 +137,18 @@ impl Vertical {
                         blocked = at;
                     }
                 }
-                return Some(Seen { distance: lo, until: Until::Hidden, blocked: Some(blocked) });
+                return Some(Seen {
+                    distance: lo,
+                    until: Until::Hidden,
+                    blocked: Some(blocked),
+                });
             }
             if d >= most {
-                return Some(Seen { distance: most, until, blocked: None });
+                return Some(Seen {
+                    distance: most,
+                    until,
+                    blocked: None,
+                });
             }
             lo = d;
             k += 1.0;

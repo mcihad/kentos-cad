@@ -216,7 +216,10 @@ impl App {
             Event::RelinkDataPicked(layer, Some(path)) => {
                 match self.relink_data_layers(&layer, &path) {
                     Ok(done) => {
-                        let file = path.file_name().map_or_else(|| path.display().to_string(), |f| f.to_string_lossy().into_owned());
+                        let file = path.file_name().map_or_else(
+                            || path.display().to_string(),
+                            |f| f.to_string_lossy().into_owned(),
+                        );
                         let name = self.data_layer_name(&layer);
                         self.say(
                             kentos_interaction::Level::Success,

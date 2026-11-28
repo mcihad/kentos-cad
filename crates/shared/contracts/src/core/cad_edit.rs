@@ -682,7 +682,10 @@ pub enum EntityGeometry {
             with = "crate::cad_properties::nullable",
             skip_serializing_if = "Option::is_none"
         )]
-        #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional, rename = "tableStyle"))]
+        #[cfg_attr(
+            feature = "ts",
+            ts(as = "Option<Option<String>>", optional, rename = "tableStyle")
+        )]
         #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
         table_style: Option<Option<String>>,
     },

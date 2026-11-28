@@ -83,7 +83,10 @@ fn diagnosis_skips() -> Skips {
     static SKIPS: std::sync::OnceLock<Skips> = std::sync::OnceLock::new();
     *SKIPS.get_or_init(|| {
         let asked = std::env::var("KENTOS_DIAG_SKIP").unwrap_or_default();
-        Skips { styled: asked.contains("styled"), plain: asked.contains("plain") }
+        Skips {
+            styled: asked.contains("styled"),
+            plain: asked.contains("plain"),
+        }
     })
 }
 
@@ -238,7 +241,14 @@ impl Renderer {
             push_constant_ranges: &[],
         });
         let compose = Compose::new(device, format);
-        let host = build_pipelines(device, &module, &pipeline_layout, format, 1, &compose.zoom_layout);
+        let host = build_pipelines(
+            device,
+            &module,
+            &pipeline_layout,
+            format,
+            1,
+            &compose.zoom_layout,
+        );
         if let Some(error) = pop_error_now(device) {
             return Err(RenderError(error.to_string()));
         }
@@ -616,7 +626,8 @@ impl Renderer {
         // What it shows but for the camera's place, when a moved picture would be its picture (docs/adr/1067 §2).
         let mut content = DefaultHasher::new();
         state.plain_content.hash(&mut content);
-        state.content = (styled.shift_key(&mut content) && !needs_compose(styled)).then(|| content.finish());
+        state.content =
+            (styled.shift_key(&mut content) && !needs_compose(styled)).then(|| content.finish());
         state.zoom_content = state.plain_zoom.and_then(|plain| {
             let mut zoomed = DefaultHasher::new();
             plain.hash(&mut zoomed);
@@ -637,7 +648,11 @@ impl Renderer {
         let moved = !effects && (state.shift().is_some() || state.zoom_plan().is_some());
         // On one sample a pixel the stretch has nothing to save: it would only be laid over once more.
         let multisampled = state.targets.as_ref().is_some_and(|t| t.samples > 1);
-        let singles = if moved || !state.single_runs || !multisampled { Vec::new() } else { styled.single_runs() };
+        let singles = if moved || !state.single_runs || !multisampled {
+            Vec::new()
+        } else {
+            styled.single_runs()
+        };
         if !singles.is_empty() {
             gpu.ensure(device, crate::styled::gpu::FLOAT_PICTURE);
         }
@@ -680,7 +695,8 @@ impl Renderer {
             }
         }
         state.stats.picture_zoomed = state.zoom.is_some();
-        state.stats.picture_zoomed_wide = state.zoom.as_ref().is_some_and(|(p, _)| p.wide.is_some());
+        state.stats.picture_zoomed_wide =
+            state.zoom.as_ref().is_some_and(|(p, _)| p.wide.is_some());
         pending
     }
 
@@ -705,7 +721,9 @@ impl Renderer {
             state.glyphs.clear();
             return false;
         }
-        let gpu = self.glyphs.get_or_insert_with(|| crate::glyphs::GlyphGpu::new(device, format));
+        let gpu = self
+            .glyphs
+            .get_or_insert_with(|| crate::glyphs::GlyphGpu::new(device, format));
         gpu.ensure(device, 1);
         let deadline = std::time::Instant::now() + GLYPH_BUDGET;
         let h = state.host;
@@ -721,7 +739,11 @@ impl Renderer {
         };
         let mut pending = false;
         for (i, set) in sets.iter().enumerate() {
-            if state.glyphs.get(i).is_none_or(|(version, layer)| *version != set.version || layer.pending) {
+            if state
+                .glyphs
+                .get(i)
+                .is_none_or(|(version, layer)| *version != set.version || layer.pending)
+            {
                 let layer = gpu.layer(device, queue, &set.texts, Some(deadline));
                 if i < state.glyphs.len() {
                     state.glyphs[i] = (set.version, layer);
@@ -732,7 +754,11 @@ impl Renderer {
             let Some((_, layer)) = state.glyphs.get_mut(i) else {
                 continue;
             };
-            let grow = if set.placed_px > 0.0 { (h.scale / set.placed_px) as f32 } else { 1.0 };
+            let grow = if set.placed_px > 0.0 {
+                (h.scale / set.placed_px) as f32
+            } else {
+                1.0
+            };
             gpu.prepare(device, queue, layer, &frame, grow);
             state.stats.glyphs += u64::from(layer.len());
             state.stats.draw_calls += u32::from(!layer.is_empty());
@@ -789,31 +815,61 @@ impl Renderer {
         let (sx, tx) = if dx >= 0 { (0, ax) } else { (ax, 0) };
         let (sy, ty) = if dy >= 0 { (0, ay) } else { (ay, 0) };
         let (cw, ch) = (w - ax, h - ay);
-        let copy = |enc: &mut wgpu::CommandEncoder, from: &wgpu::Texture, at: [u32; 2], to: &wgpu::Texture, into: [u32; 2]| {
+        let copy = |enc: &mut wgpu::CommandEncoder,
+                    from: &wgpu::Texture,
+                    at: [u32; 2],
+                    to: &wgpu::Texture,
+                    into: [u32; 2]| {
             enc.copy_texture_to_texture(
                 wgpu::TexelCopyTextureInfo {
                     texture: from,
                     mip_level: 0,
-                    origin: wgpu::Origin3d { x: at[0], y: at[1], z: 0 },
+                    origin: wgpu::Origin3d {
+                        x: at[0],
+                        y: at[1],
+                        z: 0,
+                    },
                     aspect: wgpu::TextureAspect::All,
                 },
                 wgpu::TexelCopyTextureInfo {
                     texture: to,
                     mip_level: 0,
-                    origin: wgpu::Origin3d { x: into[0], y: into[1], z: 0 },
+                    origin: wgpu::Origin3d {
+                        x: into[0],
+                        y: into[1],
+                        z: 0,
+                    },
                     aspect: wgpu::TextureAspect::All,
                 },
-                wgpu::Extent3d { width: cw, height: ch, depth_or_array_layers: 1 },
+                wgpu::Extent3d {
+                    width: cw,
+                    height: ch,
+                    depth_or_array_layers: 1,
+                },
             );
         };
-        copy(encoder, &targets.resolve_texture, [sx, sy], &targets.scratch, [tx, ty]);
+        copy(
+            encoder,
+            &targets.resolve_texture,
+            [sx, sy],
+            &targets.scratch,
+            [tx, ty],
+        );
         // The strips: the columns uncovered at the left or right edge, the rows at the top or bottom between them.
         let mut strips: Vec<[u32; 4]> = Vec::with_capacity(2);
         if ax > 0 {
-            strips.push(if dx > 0 { [0, 0, ax, h] } else { [w - ax, 0, w, h] });
+            strips.push(if dx > 0 {
+                [0, 0, ax, h]
+            } else {
+                [w - ax, 0, w, h]
+            });
         }
         if ay > 0 {
-            strips.push(if dy > 0 { [tx, 0, tx + cw, ay] } else { [tx, h - ay, tx + cw, h] });
+            strips.push(if dy > 0 {
+                [tx, 0, tx + cw, ay]
+            } else {
+                [tx, h - ay, tx + cw, h]
+            });
         }
         {
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -835,7 +891,13 @@ impl Renderer {
                 );
             }
         }
-        copy(encoder, &targets.scratch, [tx, ty], &targets.resolve_texture, [tx, ty]);
+        copy(
+            encoder,
+            &targets.scratch,
+            [tx, ty],
+            &targets.resolve_texture,
+            [tx, ty],
+        );
     }
 
     /// A zoomed view's picture (docs/adr/1068): the source scaled into the pixels it covers, sampled once with a
@@ -982,25 +1044,50 @@ impl Renderer {
             }
             targets.set_source(None);
             targets.set_wide_at(None);
-        } else if let Some(shift) = state.shift().filter(|_| !(state.keep && targets.holds(key))) {
+        } else if let Some(shift) = state
+            .shift()
+            .filter(|_| !(state.keep && targets.holds(key)))
+        {
             // Panned by whole pixels (docs/adr/1067 §2): the kept picture moved, the strips it uncovered drawn. The
             // move uses the spare texture: a zoom's source there is gone.
-            self.render_moved(encoder, state, targets, pipes, shift, wgpu::Color { r, g, b, a });
+            self.render_moved(
+                encoder,
+                state,
+                targets,
+                pipes,
+                shift,
+                wgpu::Color { r, g, b, a },
+            );
             targets.keep(key);
             targets.hold(state.held_now());
             targets.set_sharp(state.sharp_now());
             targets.set_source(None);
-        } else if let Some((plan, refresh)) = state.zoom.as_ref().filter(|_| !(state.keep && targets.holds(key))) {
+        } else if let Some((plan, refresh)) = state
+            .zoom
+            .as_ref()
+            .filter(|_| !(state.keep && targets.holds(key)))
+        {
             // Zoomed by the wheel (docs/adr/1068): the sharp picture scaled, the ring it does not cover drawn.
             if *refresh {
                 encoder.copy_texture_to_texture(
                     targets.resolve_texture.as_image_copy(),
                     targets.scratch.as_image_copy(),
-                    wgpu::Extent3d { width: targets.size[0], height: targets.size[1], depth_or_array_layers: 1 },
+                    wgpu::Extent3d {
+                        width: targets.size[0],
+                        height: targets.size[1],
+                        depth_or_array_layers: 1,
+                    },
                 );
                 targets.set_source(targets.sharp());
             }
-            self.render_zoomed(encoder, state, targets, pipes, plan, wgpu::Color { r, g, b, a });
+            self.render_zoomed(
+                encoder,
+                state,
+                targets,
+                pipes,
+                plan,
+                wgpu::Color { r, g, b, a },
+            );
             targets.keep(key);
             // A scaled picture is neither moved by a pan nor scaled again.
             targets.hold(None);
@@ -1027,11 +1114,19 @@ impl Renderer {
             targets.set_sharp(state.sharp_now());
             // The wide picture beside the source, for a zoom out's ring (docs/adr/1068 §2).
             if let Some((wide, from_source)) = state.new_wide() {
-                let from = if from_source { &targets.scratch } else { &targets.resolve_texture };
+                let from = if from_source {
+                    &targets.scratch
+                } else {
+                    &targets.resolve_texture
+                };
                 encoder.copy_texture_to_texture(
                     from.as_image_copy(),
                     targets.wide.as_image_copy(),
-                    wgpu::Extent3d { width: targets.size[0], height: targets.size[1], depth_or_array_layers: 1 },
+                    wgpu::Extent3d {
+                        width: targets.size[0],
+                        height: targets.size[1],
+                        depth_or_array_layers: 1,
+                    },
                 );
                 targets.set_wide_at(Some(wide));
             }
@@ -1159,7 +1254,11 @@ impl Renderer {
         self.views.retain(|_, view| {
             view.idle += 1;
             // Its styled layers' buffers may be the only copy of their numbers the app has (plan/render.md RM-19).
-            view.idle <= KEEP_IDLE_FRAMES || view.styled.as_ref().is_some_and(ViewStyled::holds_only_copies)
+            view.idle <= KEEP_IDLE_FRAMES
+                || view
+                    .styled
+                    .as_ref()
+                    .is_some_and(ViewStyled::holds_only_copies)
         });
     }
 
@@ -1197,7 +1296,8 @@ impl DrawBatches for Batches<'_> {
     }
 
     fn draw_single(&self, pass: &mut wgpu::RenderPass<'_>, seq: Range<usize>) {
-        self.gpu.draw_seq(pass, self.view, crate::styled::gpu::FLOAT_PICTURE, seq);
+        self.gpu
+            .draw_seq(pass, self.view, crate::styled::gpu::FLOAT_PICTURE, seq);
     }
 }
 
@@ -1272,7 +1372,13 @@ fn plan_composed(planner: &mut Planner<'_>, view: &ViewStyled, singles: &[Range<
 }
 
 /// A stretch split into its plain runs and its effect groups' runs.
-fn runs(planner: &mut Planner<'_>, view: &ViewStyled, range: Range<usize>, into: ComposeInto, singles: &[Range<usize>]) {
+fn runs(
+    planner: &mut Planner<'_>,
+    view: &ViewStyled,
+    range: Range<usize>,
+    into: ComposeInto,
+    singles: &[Range<usize>],
+) {
     let seq = &view.seq;
     let facts = |k: usize| view.batch_facts(seq[k].0, seq[k].1);
     let mut k = range.start;
@@ -1303,7 +1409,12 @@ fn runs(planner: &mut Planner<'_>, view: &ViewStyled, range: Range<usize>, into:
 
 /// A plain stretch into its place: into the picture, its parts in a one-sample stretch (docs/adr/9246) drawn so and
 /// laid over, the rest on the picture's samples; into a composed layer, as it is.
-fn plain(planner: &mut Planner<'_>, range: Range<usize>, into: ComposeInto, singles: &[Range<usize>]) {
+fn plain(
+    planner: &mut Planner<'_>,
+    range: Range<usize>,
+    into: ComposeInto,
+    singles: &[Range<usize>],
+) {
     if into != ComposeInto::Picture {
         planner.batches(range, into);
         return;
@@ -1395,8 +1506,16 @@ fn make_targets(
 ) -> Result<Targets, String> {
     device.push_error_scope(wgpu::ErrorFilter::OutOfMemory);
     device.push_error_scope(wgpu::ErrorFilter::Validation);
-    let new_pipelines = (!pipelines.contains_key(&samples))
-        .then(|| build_pipelines(device, module, layout, format, samples, &compose.zoom_layout));
+    let new_pipelines = (!pipelines.contains_key(&samples)).then(|| {
+        build_pipelines(
+            device,
+            module,
+            layout,
+            format,
+            samples,
+            &compose.zoom_layout,
+        )
+    });
     let targets = Targets::new(device, compose, format, size, samples, scaled);
     let validation = pop_error_now(device);
     let memory = pop_error_now(device);
@@ -1618,7 +1737,9 @@ impl View {
         }
         let content = self.content?;
         let (held, place) = self.targets.as_ref()?.held()?;
-        (held == content).then(|| place.shift_to(&self.place()?)).flatten()
+        (held == content)
+            .then(|| place.shift_to(&self.place()?))
+            .flatten()
     }
 
     /// The zoomed picture this frame shows while the wheel zooms (docs/adr/1068): from the source set aside (false), or
@@ -1642,7 +1763,9 @@ impl View {
             return Some((wide(plan), true));
         }
         let (held, at) = t.source()?;
-        (held == content).then(|| crate::zoomed::plan(&at, &now).map(|p| (wide(p), false))).flatten()
+        (held == content)
+            .then(|| crate::zoomed::plan(&at, &now).map(|p| (wide(p), false)))
+            .flatten()
     }
 
     /// What becomes the wide picture as a sharp picture is drawn whole this frame (docs/adr/1068 §2), when the one

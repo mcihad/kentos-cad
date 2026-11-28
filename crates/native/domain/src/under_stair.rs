@@ -50,7 +50,8 @@ fn holds(rings: &[Vec<Vec2>], at: Vec2) -> bool {
         let n = r.len();
         for i in 0..n {
             let (a, b) = (r[i], r[(i + 1) % n]);
-            if (a.y > at.y) != (b.y > at.y) && at.x < a.x + (at.y - a.y) * (b.x - a.x) / (b.y - a.y) {
+            if (a.y > at.y) != (b.y > at.y) && at.x < a.x + (at.y - a.y) * (b.x - a.x) / (b.y - a.y)
+            {
                 odd = !odd;
             }
         }
@@ -62,7 +63,14 @@ impl Document {
     /// The elevation of the floor of `level` (its storey's; 0 without one).
     fn level_floor(&self, level: Option<&str>) -> f64 {
         level
-            .and_then(|id| self.settings().arch.as_ref()?.levels.iter().find(|l| l.id == id))
+            .and_then(|id| {
+                self.settings()
+                    .arch
+                    .as_ref()?
+                    .levels
+                    .iter()
+                    .find(|l| l.id == id)
+            })
             .map_or(0.0, |l| l.elevation)
     }
 
@@ -88,14 +96,22 @@ impl Document {
                     .flat_map(|part| std::iter::once(&part.outer).chain(&part.holes))
                     .map(|r| r.pts.iter().map(|q| Vec2::new(q.x, q.y)).collect())
                     .collect();
-                (rings, self.level_floor(x.arch.level.as_deref()) + x.offset, x.thickness)
+                (
+                    rings,
+                    self.level_floor(x.arch.level.as_deref()) + x.offset,
+                    x.thickness,
+                )
             })
             .collect();
         let at = |p: &kentos_contracts::Vec2| Vec2::new(p.x, p.y);
         slabs
             .iter()
             .find(|(r, top, _)| holds(r, at(end)) && (top - arrive).abs() <= 0.5)
-            .or_else(|| slabs.iter().find(|(r, top, _)| holds(r, at(start)) && (top - base).abs() <= 0.5))
+            .or_else(|| {
+                slabs
+                    .iter()
+                    .find(|(r, top, _)| holds(r, at(start)) && (top - base).abs() <= 0.5)
+            })
             .map(|(_, _, t)| *t)
     }
 
@@ -190,6 +206,7 @@ pub(crate) fn taken(net: &[Area], low: &[Area]) -> f64 {
     if net.is_empty() || low.is_empty() {
         return 0.0;
     }
-    let both = kentos_geometry_core::geom::region::intersect_area_sets(&[net.to_vec(), low.to_vec()]);
+    let both =
+        kentos_geometry_core::geom::region::intersect_area_sets(&[net.to_vec(), low.to_vec()]);
     kentos_geometry_core::geom::space::area(&both)
 }

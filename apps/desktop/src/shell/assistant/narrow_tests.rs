@@ -8,7 +8,11 @@ use crate::app::{App, Message};
 /// The sample drawing with an agent (no provider is asked), Asistan open.
 fn with_agent() -> App {
     let mut app = crate::files_testing::app_with_drawing();
-    let mut agent = AgentProfile::new(ProviderKind::OpenAiCompatible, "Deneme ajanı", "deneme-modeli");
+    let mut agent = AgentProfile::new(
+        ProviderKind::OpenAiCompatible,
+        "Deneme ajanı",
+        "deneme-modeli",
+    );
     agent.base_url = Some("http://localhost:8000/v1".to_owned());
     agent.key = KeySource::Session;
     let store = &app.assistant.store;

@@ -14,16 +14,16 @@ use kentos_application::blobs::WriteError;
 use kentos_application::portal::{detail, dossiers, files, steps};
 use kentos_contracts::{
     ApplicationCreate, DossierActionRequest, DossierDashboard, DossierDetail, DossierEdit,
-    DossierFileFromUpload, DossierFileImport, DossierOfficeSet, DossierFileImported, DossierFileView, DossierList, DossierMessageView,
-    FromProject, MessagePost,
+    DossierFileFromUpload, DossierFileImport, DossierFileImported, DossierFileView, DossierList,
+    DossierMessageView, DossierOfficeSet, FromProject, MessagePost,
 };
 use serde::{Deserialize, Serialize};
 
 use super::{ListQuery, path_id};
 use crate::http::AppState;
 use crate::http::auth::Caller;
-use crate::http::error::{Body, Failure};
 use crate::http::download::{Stored, picture, respond};
+use crate::http::error::{Body, Failure};
 
 /// `GET /v1/me/dossiers`.
 pub async fn mine(
@@ -192,13 +192,19 @@ pub async fn upload(
             ));
         }
         // Scanned before the other side may see it (docs/adr/9000 §14); a refused file is not kept.
-        let scanned = match state.config.scanner.check(&state.blobs, &prepared.key, &q.name).await {
+        let scanned = match state
+            .config
+            .scanner
+            .check(&state.blobs, &prepared.key, &q.name)
+            .await
+        {
             Ok(Ok(s)) => s,
             Ok(Err(refusal)) => {
                 let _ = state.blobs.remove(&prepared.key).await;
-                return Err(
-                    kentos_application::uploads::refused(db, &caller.0, &q.name, &refusal, "dossier").await,
-                );
+                return Err(kentos_application::uploads::refused(
+                    db, &caller.0, &q.name, &refusal, "dossier",
+                )
+                .await);
             }
             Err(e) => {
                 let _ = state.blobs.remove(&prepared.key).await;
@@ -331,7 +337,14 @@ pub async fn from_upload(
     Body(input): Body<DossierFileFromUpload>,
 ) -> Result<(StatusCode, Json<DossierFileView>), Failure> {
     let run = async {
-        files::from_upload(state.db()?, &state.blobs, &caller.0, path_id(&id, "Dosya")?, &input).await
+        files::from_upload(
+            state.db()?,
+            &state.blobs,
+            &caller.0,
+            path_id(&id, "Dosya")?,
+            &input,
+        )
+        .await
     };
     run.await
         .map(|f| (StatusCode::CREATED, Json(f)))
@@ -357,8 +370,11 @@ pub async fn preview(
             &state.blobs,
             &caller.0,
             (path_id(&id, "Dosya")?, path_id(&file, "Dosya")?),
-            q.width.unwrap_or(kentos_application::preview::DEFAULT_WIDTH),
-            headers.get(header::IF_NONE_MATCH).and_then(|v| v.to_str().ok()),
+            q.width
+                .unwrap_or(kentos_application::preview::DEFAULT_WIDTH),
+            headers
+                .get(header::IF_NONE_MATCH)
+                .and_then(|v| v.to_str().ok()),
         )
         .await?;
         Ok(match p.picture {

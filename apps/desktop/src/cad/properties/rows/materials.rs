@@ -21,7 +21,13 @@ fn words(text: Option<&str>, id: Option<&str>, table: &[ArchMaterial]) -> String
 }
 
 /// The chooser of a target: Bağsız, each project material, then Malzemeler….
-fn chooser(id: Option<&str>, table: &[ArchMaterial], target: MaterialTarget, locked: bool, text: String) -> Option<Editor> {
+fn chooser(
+    id: Option<&str>,
+    table: &[ArchMaterial],
+    target: MaterialTarget,
+    locked: bool,
+    text: String,
+) -> Option<Editor> {
     let assign = |material: Option<String>| {
         Message::Properties(Event::Material(MaterialsOperation::Assign {
             material,
@@ -78,12 +84,19 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
             }
         }
         kentos_commands::Entity::Slab(s) => {
-            let text = words(s.slab.material.as_deref(), s.slab.material_id.as_deref(), table);
-            let target = MaterialTarget::Slab { uid: uid.clone() };
-            rows.push(
-                Row::text("Proje malzemesi", text.clone())
-                    .editor(chooser(s.slab.material_id.as_deref(), table, target, locked, text)),
+            let text = words(
+                s.slab.material.as_deref(),
+                s.slab.material_id.as_deref(),
+                table,
             );
+            let target = MaterialTarget::Slab { uid: uid.clone() };
+            rows.push(Row::text("Proje malzemesi", text.clone()).editor(chooser(
+                s.slab.material_id.as_deref(),
+                table,
+                target,
+                locked,
+                text,
+            )));
         }
         _ => return None,
     }
@@ -97,12 +110,23 @@ pub(super) fn section(doc: &Document, slot: Slot, locked: bool) -> Option<Sectio
     })
 }
 
-fn component_row(i: usize, c: &WallComponent, table: &[ArchMaterial], uid: &str, locked: bool) -> Row {
+fn component_row(
+    i: usize,
+    c: &WallComponent,
+    table: &[ArchMaterial],
+    uid: &str,
+    locked: bool,
+) -> Row {
     let text = words(c.material.as_deref(), c.material_id.as_deref(), table);
     let target = MaterialTarget::Wall {
         uid: uid.to_owned(),
         component: i as u32,
     };
-    Row::text(format!("{}. {}", i + 1, c.name), text.clone())
-        .editor(chooser(c.material_id.as_deref(), table, target, locked, text))
+    Row::text(format!("{}. {}", i + 1, c.name), text.clone()).editor(chooser(
+        c.material_id.as_deref(),
+        table,
+        target,
+        locked,
+        text,
+    ))
 }

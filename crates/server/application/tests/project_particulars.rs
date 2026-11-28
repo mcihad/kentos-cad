@@ -14,12 +14,15 @@ use kentos_application::blobs::Blobs;
 use kentos_application::commands::{CatalogPolicy, run};
 use kentos_application::jobs::{self, JobLimits};
 use kentos_application::portal::{accounts, dossiers, files as dossier_files, platform};
-use kentos_application::{AppError, admin, changes, checkpoints, files, identity, projects, snapshot};
+use kentos_application::{
+    AppError, admin, changes, checkpoints, files, identity, projects, snapshot,
+};
 use kentos_contracts::{
-    ApplicationCreate, CUT_PARTICULAR, CommandEnvelope, DocumentSnapshotV1, DossierSite, FileUploadBegin, FromProject,
-    GrantRole, NewOwner, OrganizationCategory, PROJECT_FILE_COMMIT, PlatformTenantCreate, Profession, ProfessionalReview,
-    ProfessionalStatus, ProjectChanges, ProjectCreate, ProjectPatch, ProjectSettings, ProjectStorage, ServerJobCreate,
-    ServerJobState, SignInMethod, Signup, TenantRole, VariableValue,
+    ApplicationCreate, CUT_PARTICULAR, CommandEnvelope, DocumentSnapshotV1, DossierSite,
+    FileUploadBegin, FromProject, GrantRole, NewOwner, OrganizationCategory, PROJECT_FILE_COMMIT,
+    PlatformTenantCreate, Profession, ProfessionalReview, ProfessionalStatus, ProjectChanges,
+    ProjectCreate, ProjectPatch, ProjectSettings, ProjectStorage, ServerJobCreate, ServerJobState,
+    SignInMethod, Signup, TenantRole, VariableValue,
 };
 use kentos_postgres::testing::TestDb;
 use serde_json::json;
@@ -33,7 +36,10 @@ const OWNER: &str = "Ayşe Yılmaz";
 const ARCHITECT: &str = "Ali Kaya";
 
 fn sha(bytes: &[u8]) -> String {
-    Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()
+    Sha256::digest(bytes)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// `settings` with the künye given: the owner, the architect and his registration number, the project's number, and
@@ -60,8 +66,16 @@ fn with_kunye(settings: &ProjectSettings) -> ProjectSettings {
 
 /// The values of the künye's variables a settings carries, by name, and who delivered.
 fn kunye(s: &ProjectSettings) -> (Vec<(String, VariableValue)>, Option<String>) {
-    let vars = s.variables.iter().map(|v| (v.name.clone(), v.value.clone())).collect();
-    let by = s.arch.as_ref().and_then(|a| a.deliveries.first()).and_then(|d| d.by.clone());
+    let vars = s
+        .variables
+        .iter()
+        .map(|v| (v.name.clone(), v.value.clone()))
+        .collect();
+    let by = s
+        .arch
+        .as_ref()
+        .and_then(|a| a.deliveries.first())
+        .and_then(|d| d.by.clone());
     (vars, by)
 }
 
@@ -80,7 +94,10 @@ fn whole() -> (Vec<(String, VariableValue)>, Option<String>) {
 fn cut() -> (Vec<(String, VariableValue)>, Option<String>) {
     (
         vec![
-            ("yapi_sahibi".into(), VariableValue::Text(CUT_PARTICULAR.into())),
+            (
+                "yapi_sahibi".into(),
+                VariableValue::Text(CUT_PARTICULAR.into()),
+            ),
             ("mimar".into(), VariableValue::Text(CUT_PARTICULAR.into())),
             ("sicil_no".into(), VariableValue::Null),
             ("proje_no".into(), VariableValue::Text("2026/14".into())),
@@ -102,7 +119,9 @@ async fn a_viewer_reads_the_kunye_cut_and_gets_no_stored_copy_that_carries_it() 
     let Some(db) = TestDb::create().await else {
         return;
     };
-    admin::create_tenant(&db.owner, "buro", "Mimarlık Bürosu", 4).await.unwrap();
+    admin::create_tenant(&db.owner, "buro", "Mimarlık Bürosu", 4)
+        .await
+        .unwrap();
     let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
     let dilek = member(&db, "buro", "dilek", TenantRole::Viewer).await;
     let emre = member(&db, "buro", "emre", TenantRole::Viewer).await;
@@ -112,11 +131,18 @@ async fn a_viewer_reads_the_kunye_cut_and_gets_no_stored_copy_that_carries_it() 
     let patch = ProjectChanges {
         blocks: Vec::new(),
         features: Vec::new(),
-        project: Some(ProjectPatch { settings: Some(with_kunye(&info.settings)), ..Default::default() }),
+        project: Some(ProjectPatch {
+            settings: Some(with_kunye(&info.settings)),
+            ..Default::default()
+        }),
     };
-    changes::commit(&db.app, &by, envelope(&ayse, project, patch, &[("@project", &info.meta_version)]))
-        .await
-        .unwrap();
+    changes::commit(
+        &db.app,
+        &by,
+        envelope(&ayse, project, patch, &[("@project", &info.meta_version)]),
+    )
+    .await
+    .unwrap();
     share(&db, &by, &dilek.actor, GrantRole::Viewer).await;
     share(&db, &by, &emre.actor, GrantRole::Editor).await;
     let viewer = open(&db, &dilek, project).await;
@@ -124,13 +150,29 @@ async fn a_viewer_reads_the_kunye_cut_and_gets_no_stored_copy_that_carries_it() 
     assert!(!viewer.sees_particulars() && editor.sees_particulars() && by.sees_particulars());
 
     // The metadata: whole for the editor, cut for the viewer.
-    assert_eq!(kunye(&projects::info(&db.app, &editor).await.unwrap().settings), whole());
-    assert_eq!(kunye(&projects::info(&db.app, &viewer).await.unwrap().settings), cut());
+    assert_eq!(
+        kunye(&projects::info(&db.app, &editor).await.unwrap().settings),
+        whole()
+    );
+    assert_eq!(
+        kunye(&projects::info(&db.app, &viewer).await.unwrap().settings),
+        cut()
+    );
 
     // The snapshot: the same.
     let read = |bytes: &[u8]| kentos_kcad::decode(bytes).unwrap().settings;
-    assert_eq!(kunye(&read(&snapshot::snapshot(&db.app, &editor).await.unwrap().bytes)), whole());
-    assert_eq!(kunye(&read(&snapshot::snapshot(&db.app, &viewer).await.unwrap().bytes)), cut());
+    assert_eq!(
+        kunye(&read(
+            &snapshot::snapshot(&db.app, &editor).await.unwrap().bytes
+        )),
+        whole()
+    );
+    assert_eq!(
+        kunye(&read(
+            &snapshot::snapshot(&db.app, &viewer).await.unwrap().bytes
+        )),
+        cut()
+    );
 
     // A checkpoint is kept whole: the editor takes it, the viewer does not.
     let store = blobs();
@@ -142,19 +184,43 @@ async fn a_viewer_reads_the_kunye_cut_and_gets_no_stored_copy_that_carries_it() 
         timeout_seconds: None,
         fresh: false,
     };
-    jobs::create(&db.app, &by, job("project.checkpoint", json!({"name": "Teslim"}), "k"), &limits).await.unwrap();
-    let done = jobs::work_once(&db.app, &store, Uuid::now_v7(), LEASE, &limits).await.unwrap().unwrap();
+    jobs::create(
+        &db.app,
+        &by,
+        job("project.checkpoint", json!({"name": "Teslim"}), "k"),
+        &limits,
+    )
+    .await
+    .unwrap();
+    let done = jobs::work_once(&db.app, &store, Uuid::now_v7(), LEASE, &limits)
+        .await
+        .unwrap()
+        .unwrap();
     assert_eq!(done.state, ServerJobState::Succeeded);
-    let id = Uuid::parse_str(&checkpoints::list(&db.app, &by).await.unwrap().checkpoints[0].id).unwrap();
-    assert!(checkpoints::download(&db.app, &store, &editor, id).await.is_ok());
+    let id =
+        Uuid::parse_str(&checkpoints::list(&db.app, &by).await.unwrap().checkpoints[0].id).unwrap();
+    assert!(
+        checkpoints::download(&db.app, &store, &editor, id)
+            .await
+            .is_ok()
+    );
     refused_for_the_kunye(checkpoints::download(&db.app, &store, &viewer, id).await);
 
     // An export the owner asked for is made for her: the viewer does not take it.
-    let export = jobs::create(&db.app, &by, job("project.export", json!({}), "e"), &limits).await.unwrap();
-    let done = jobs::work_once(&db.app, &store, Uuid::now_v7(), LEASE, &limits).await.unwrap().unwrap();
+    let export = jobs::create(&db.app, &by, job("project.export", json!({}), "e"), &limits)
+        .await
+        .unwrap();
+    let done = jobs::work_once(&db.app, &store, Uuid::now_v7(), LEASE, &limits)
+        .await
+        .unwrap()
+        .unwrap();
     assert_eq!(done.state, ServerJobState::Succeeded);
     let export = Uuid::parse_str(&export.id).unwrap();
-    assert!(jobs::artifact(&db.app, &store, &editor, export).await.is_ok());
+    assert!(
+        jobs::artifact(&db.app, &store, &editor, export)
+            .await
+            .is_ok()
+    );
     refused_for_the_kunye(jobs::artifact(&db.app, &store, &viewer, export).await);
     db.close().await;
 }
@@ -179,17 +245,33 @@ async fn file_project(db: &TestDb, who: &kentos_application::tenancy::Access) ->
         tags: None,
         storage: Some(ProjectStorage::File),
     };
-    Uuid::parse_str(&projects::create(&db.app, who, input, None).await.unwrap().id).unwrap()
+    Uuid::parse_str(
+        &projects::create(&db.app, who, input, None)
+            .await
+            .unwrap()
+            .id,
+    )
+    .unwrap()
 }
 
 /// Saves `bytes` as the file project's next revision after `expected`.
 async fn save(db: &TestDb, store: &Blobs, by: &ProjectAccess, bytes: &[u8], expected: u32) {
-    let begun =
-        files::begin(&db.app, by, FileUploadBegin { size: bytes.len() as u32, sha256: sha(bytes) }).await.unwrap();
+    let begun = files::begin(
+        &db.app,
+        by,
+        FileUploadBegin {
+            size: bytes.len() as u32,
+            sha256: sha(bytes),
+        },
+    )
+    .await
+    .unwrap();
     let id = Uuid::parse_str(&begun.id).unwrap();
     let mut receiving = files::start_receive(&db.app, store, by, id).await.unwrap();
     receiving.writer.write(bytes).await.unwrap();
-    files::finish_receive(&db.app, store, by, receiving).await.unwrap();
+    files::finish_receive(&db.app, store, by, receiving)
+        .await
+        .unwrap();
     let commit = CommandEnvelope {
         command_name: PROJECT_FILE_COMMIT.into(),
         version: 1,
@@ -197,10 +279,14 @@ async fn save(db: &TestDb, store: &Blobs, by: &ProjectAccess, bytes: &[u8], expe
         project_id: by.project.to_string(),
         request_id: format!("istek-{}", Uuid::new_v4()),
         idempotency_key: Uuid::new_v4().to_string(),
-        expected_versions: [("@file".to_string(), expected.to_string())].into_iter().collect(),
+        expected_versions: [("@file".to_string(), expected.to_string())]
+            .into_iter()
+            .collect(),
         input: json!({ "uploadId": id.to_string() }),
     };
-    run(&db.app, store, &CatalogPolicy::default(), by, commit).await.unwrap();
+    run(&db.app, store, &CatalogPolicy::default(), by, commit)
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
@@ -208,7 +294,9 @@ async fn a_file_project_s_revision_that_carries_the_kunye_is_not_the_viewer_s() 
     let Some(db) = TestDb::create().await else {
         return;
     };
-    admin::create_tenant(&db.owner, "buro", "Mimarlık Bürosu", 3).await.unwrap();
+    admin::create_tenant(&db.owner, "buro", "Mimarlık Bürosu", 3)
+        .await
+        .unwrap();
     let ayse = member(&db, "buro", "ayse", TenantRole::ProjectManager).await;
     let dilek = member(&db, "buro", "dilek", TenantRole::Viewer).await;
     let project = file_project(&db, &ayse).await;
@@ -225,12 +313,21 @@ async fn a_file_project_s_revision_that_carries_the_kunye_is_not_the_viewer_s() 
     let given = kentos_kcad::encode(&doc).unwrap();
     save(&db, &store, &by, &plain, 0).await;
     save(&db, &store, &by, &given, 1).await;
-    assert!(files::download(&db.app, &store, &viewer, 1).await.is_ok(), "no künye: the viewer's");
+    assert!(
+        files::download(&db.app, &store, &viewer, 1).await.is_ok(),
+        "no künye: the viewer's"
+    );
     refused_for_the_kunye(files::download(&db.app, &store, &viewer, 2).await);
     let (_, mut file) = files::download(&db.app, &store, &by, 2).await.unwrap();
     let mut bytes = Vec::new();
-    tokio::io::AsyncReadExt::read_to_end(&mut file, &mut bytes).await.unwrap();
-    assert_eq!(sha(&bytes), sha(&given), "the owner takes it as it was saved");
+    tokio::io::AsyncReadExt::read_to_end(&mut file, &mut bytes)
+        .await
+        .unwrap();
+    assert_eq!(
+        sha(&bytes),
+        sha(&given),
+        "the owner takes it as it was saved"
+    );
     db.close().await;
 }
 
@@ -238,13 +335,16 @@ async fn a_file_project_s_revision_that_carries_the_kunye_is_not_the_viewer_s() 
 /// verified architect, adds an office's project she is an İzleyici of to her application. The revision without the
 /// künye goes in; the one with it does not until she is a Düzenleyici, and then as it was saved.
 #[tokio::test]
-async fn a_file_project_s_revision_that_carries_the_kunye_goes_into_a_dossier_only_from_its_editors() {
+async fn a_file_project_s_revision_that_carries_the_kunye_goes_into_a_dossier_only_from_its_editors()
+ {
     let Some(db) = TestDb::create().await else {
         return;
     };
     let store = blobs();
     let root = account(&db, "sistem").await;
-    admin::set_platform_admin(&db.owner, "sistem", true).await.unwrap();
+    admin::set_platform_admin(&db.owner, "sistem", true)
+        .await
+        .unwrap();
     let municipality = PlatformTenantCreate {
         slug: "ornek".into(),
         name: "Örnek Belediyesi".into(),
@@ -260,7 +360,9 @@ async fn a_file_project_s_revision_that_carries_the_kunye_goes_into_a_dossier_on
             email: Some("mehmet@ornek.test".into()),
         }),
     };
-    let ornek = platform::create_tenant(&db.app, &root, &municipality).await.unwrap();
+    let ornek = platform::create_tenant(&db.app, &root, &municipality)
+        .await
+        .unwrap();
     let signup = Signup {
         login: "ayse".into(),
         password: PASSWORD.into(),
@@ -274,11 +376,24 @@ async fn a_file_project_s_revision_that_carries_the_kunye_goes_into_a_dossier_on
         ticket: None,
         website: None,
     };
-    let id = accounts::sign_up(&db.app, &signup, Some(&root)).await.unwrap();
-    let verified = ProfessionalReview { status: ProfessionalStatus::Verified, note: String::new() };
-    platform::review(&db.app, &root, id, &verified).await.unwrap();
-    let user = identity::check_local_login(&db.app, "ayse", PASSWORD).await.unwrap().expect("signs in");
-    let ayse = identity::actor_of(&db.app, user, SignInMethod::Local).await.unwrap().unwrap();
+    let id = accounts::sign_up(&db.app, &signup, Some(&root))
+        .await
+        .unwrap();
+    let verified = ProfessionalReview {
+        status: ProfessionalStatus::Verified,
+        note: String::new(),
+    };
+    platform::review(&db.app, &root, id, &verified)
+        .await
+        .unwrap();
+    let user = identity::check_local_login(&db.app, "ayse", PASSWORD)
+        .await
+        .unwrap()
+        .expect("signs in");
+    let ayse = identity::actor_of(&db.app, user, SignInMethod::Local)
+        .await
+        .unwrap()
+        .unwrap();
     let application = ApplicationCreate {
         tenant_id: ornek.to_string(),
         kind: "architectural_project".into(),
@@ -293,11 +408,17 @@ async fn a_file_project_s_revision_that_carries_the_kunye_goes_into_a_dossier_on
         owner_name: None,
         office_id: None,
     };
-    let dossier = dossiers::create_application(&db.app, &ayse, &application).await.unwrap();
+    let dossier = dossiers::create_application(&db.app, &ayse, &application)
+        .await
+        .unwrap();
     // An office's file project, shared with her as an İzleyici.
-    admin::create_tenant(&db.owner, "buro", "Mimarlık Bürosu", 3).await.unwrap();
+    admin::create_tenant(&db.owner, "buro", "Mimarlık Bürosu", 3)
+        .await
+        .unwrap();
     let mert = member(&db, "buro", "mert", TenantRole::ProjectManager).await;
-    admin::set_membership(&db.owner, "buro", "ayse", TenantRole::Viewer, true).await.unwrap();
+    admin::set_membership(&db.owner, "buro", "ayse", TenantRole::Viewer, true)
+        .await
+        .unwrap();
     let project = file_project(&db, &mert).await;
     let by = open(&db, &mert, project).await;
     share(&db, &by, &ayse, GrantRole::Viewer).await;
@@ -307,14 +428,28 @@ async fn a_file_project_s_revision_that_carries_the_kunye_goes_into_a_dossier_on
     let plain = kentos_kcad::encode(&doc).unwrap();
     doc.settings = with_kunye(&doc.settings);
     let given = kentos_kcad::encode(&doc).unwrap();
-    let from = FromProject { tenant_id: by.tenant.to_string(), project_id: project.to_string(), doc_type: None };
+    let from = FromProject {
+        tenant_id: by.tenant.to_string(),
+        project_id: project.to_string(),
+        doc_type: None,
+    };
     save(&db, &store, &by, &plain, 0).await;
-    let added = dossier_files::from_project(&db.app, &store, &ayse, dossier, &from).await.unwrap();
+    let added = dossier_files::from_project(&db.app, &store, &ayse, dossier, &from)
+        .await
+        .unwrap();
     assert_eq!(added.sha256, sha(&plain), "no künye: hers to add");
     save(&db, &store, &by, &given, 1).await;
-    refused_for_the_kunye(dossier_files::from_project(&db.app, &store, &ayse, dossier, &from).await);
+    refused_for_the_kunye(
+        dossier_files::from_project(&db.app, &store, &ayse, dossier, &from).await,
+    );
     share(&db, &by, &ayse, GrantRole::Editor).await;
-    let added = dossier_files::from_project(&db.app, &store, &ayse, dossier, &from).await.unwrap();
-    assert_eq!(added.sha256, sha(&given), "a Düzenleyici adds it as it was saved");
+    let added = dossier_files::from_project(&db.app, &store, &ayse, dossier, &from)
+        .await
+        .unwrap();
+    assert_eq!(
+        added.sha256,
+        sha(&given),
+        "a Düzenleyici adds it as it was saved"
+    );
     db.close().await;
 }

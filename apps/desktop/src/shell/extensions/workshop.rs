@@ -130,12 +130,7 @@ impl App {
         id: &str,
         folder: &Path,
     ) -> Result<kentos_extension_host::Installed, String> {
-        if let Some(run) = self
-            .extensions
-            .runners
-            .get(id)
-            .and_then(|r| r.run.as_ref())
-        {
+        if let Some(run) = self.extensions.runners.get(id).and_then(|r| r.run.as_ref()) {
             return Err(format!(
                 "“{}” sürüyor: bitince yeniden yükleyin (çalışan kod yarıda değiştirilmez).",
                 run.title
@@ -150,7 +145,9 @@ impl App {
                  kullanıcının."
             ));
         };
-        if view.source.kind != SourceKind::DeveloperFolder || Path::new(&view.source.location) != folder {
+        if view.source.kind != SourceKind::DeveloperFolder
+            || Path::new(&view.source.location) != folder
+        {
             return Err(format!(
                 "“{id}” bu atölyeden kurulmadı (kaynağı: {}): canlı yükleme yalnız kullanıcının bu klasörden kurduğuna. \
                  Yeni sürümü extension.workshop.review ile kullanıcıya açın.",
@@ -249,8 +246,10 @@ impl App {
             .menus
             .iter()
             .filter(|m| m.item.ext == id)
-            .map(|m| json!({ "menu": serde_json::to_value(m.target).unwrap_or(Value::Null),
-                             "item": self.preview_item(&m.item) }))
+            .map(|m| {
+                json!({ "menu": serde_json::to_value(m.target).unwrap_or(Value::Null),
+                             "item": self.preview_item(&m.item) })
+            })
             .collect();
         Ok(json!({
             "id": id,

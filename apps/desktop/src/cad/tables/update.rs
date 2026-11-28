@@ -66,8 +66,7 @@ impl App {
             return Vec::new();
         };
         let model = &doc.model;
-        let sourced =
-            |s: &Slot| matches!(model.get(*s), Some(Entity::Table(t)) if t.source.is_some() || !t.fields.is_empty());
+        let sourced = |s: &Slot| matches!(model.get(*s), Some(Entity::Table(t)) if t.source.is_some() || !t.fields.is_empty());
         if !self.selection.ids().is_empty() {
             return kentos_interaction::table::in_order(model, self.selection.ids())
                 .into_iter()

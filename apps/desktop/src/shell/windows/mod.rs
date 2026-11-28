@@ -41,7 +41,11 @@ pub enum Surface {
 }
 
 impl Surface {
-    pub(crate) const ALL: [Surface; 3] = [Surface::ProcessingTool, Surface::Scene3d, Surface::IfcViewer];
+    pub(crate) const ALL: [Surface; 3] = [
+        Surface::ProcessingTool,
+        Surface::Scene3d,
+        Surface::IfcViewer,
+    ];
 
     /// What the surface is: its own module's [`OwnWindow`].
     pub(crate) fn spec(self) -> &'static dyn OwnWindow {

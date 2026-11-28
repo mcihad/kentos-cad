@@ -867,20 +867,28 @@ fn write_checked(
             }
         }
         if let (Some(m), import_apply::LayerTarget::Existing(id)) = (&opts.merge, target) {
-            let (mine, rest): (Vec<kentos_commands::Entity>, Vec<kentos_commands::Entity>) = std::mem::take(&mut result.entities)
-                .into_iter()
-                .partition(|e| &e.base().layer_id == source);
+            let (mine, rest): (Vec<kentos_commands::Entity>, Vec<kentos_commands::Entity>) =
+                std::mem::take(&mut result.entities)
+                    .into_iter()
+                    .partition(|e| &e.base().layer_id == source);
             result.entities = rest;
             let rows: Vec<(kentos_domain::Uuid, kentos_commands::Entity)> = mine
                 .into_iter()
                 .enumerate()
                 .map(|(i, e)| {
                     let name = format!("{file}:{source}:{i}");
-                    (kentos_domain::Uuid::from_bytes(kentos_commands::identity::uuid_v5(&[0u8; 16], name.as_bytes())), e)
+                    (
+                        kentos_domain::Uuid::from_bytes(kentos_commands::identity::uuid_v5(
+                            &[0u8; 16],
+                            name.as_bytes(),
+                        )),
+                        e,
+                    )
                 })
                 .collect();
             let numbers: Vec<i64> = (1..=rows.len() as i64).collect();
-            let mut out = crate::import_merge::merge(doc, id, source, &rows, &numbers, &columns, m, false)?;
+            let mut out =
+                crate::import_merge::merge(doc, id, source, &rows, &numbers, &columns, m, false)?;
             result.entities.extend(out.add.drain(..).map(|(_, e)| e));
             updates.append(&mut out.update);
             merged.extend(out.report);
@@ -901,7 +909,11 @@ fn write_checked(
         let applied = import_apply::apply_import(doc, entities, Vec::new(), &plan)
             .map_err(|message| refuse(codes::IMPORT_UNREADABLE, message, "path"))?;
         if let (Some(path), Some(bytes)) = (&opts.rejects, &rejects_bytes) {
-            rejects_written = Some(crate::import_merge::write_rejects(path, bytes, rejected.len() as u32)?);
+            rejects_written = Some(crate::import_merge::write_rejects(
+                path,
+                bytes,
+                rejected.len() as u32,
+            )?);
         }
         Ok::<_, Stop>(applied)
     })?;

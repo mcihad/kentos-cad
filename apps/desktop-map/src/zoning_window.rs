@@ -7,11 +7,13 @@
 //! taslağı… opens the window that keeps a plan change draft beside the plan in force (`cad.zoning.draft`,
 //! docs/adr/5040).
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use iced::widget::{Column, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{CommandResult, ProfilesApply, ZONING_PROFILE, ZoningCheck, ZoningChecked, ZoningFinding};
+use kentos_commands::{
+    CommandResult, ProfilesApply, ZONING_PROFILE, ZoningCheck, ZoningChecked, ZoningFinding,
+};
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, profiles, zoning_check};
@@ -58,14 +60,31 @@ impl Group {
                 // docs/adr/5040: a plan change draft gone stale is the plan's business.
                 matches!(
                     kind,
-                    "missingLayer" | "noLevel" | "upperMissing" | "levelOrder" | "outsideUpper" | "noPlan" | "draftStale"
+                    "missingLayer"
+                        | "noLevel"
+                        | "upperMissing"
+                        | "levelOrder"
+                        | "outsideUpper"
+                        | "noPlan"
+                        | "draftStale"
                 )
             }
             Group::Decisions => {
-                matches!(kind, "noUse" | "unknownUse" | "missingValue" | "declaredValued" | "kaksReview" | "symbolMismatch")
+                matches!(
+                    kind,
+                    "noUse"
+                        | "unknownUse"
+                        | "missingValue"
+                        | "declaredValued"
+                        | "kaksReview"
+                        | "symbolMismatch"
+                )
             }
             Group::Areas => {
-                matches!(kind, "overlap" | "uncovered" | "outside" | "roadGap" | "roadWidth" | "roadParcel")
+                matches!(
+                    kind,
+                    "overlap" | "uncovered" | "outside" | "roadGap" | "roadWidth" | "roadParcel"
+                )
             }
             Group::Notes => matches!(kind, "noteMissing" | "noteUnused"),
         }
@@ -162,11 +181,14 @@ impl ZoningWindowApp for App {
             }
             Event::Group(g) => self.modules.map_mut().zoning.group = g,
             Event::Show => {
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
                 let mut slots: Vec<Slot> = Vec::new();
                 for f in self.zoning_shown() {
                     for uid in &f.uids {
-                        if let Some(s) = Uuid::parse_str(uid).ok().and_then(|u| doc.model.slot_of(u))
+                        if let Some(s) =
+                            Uuid::parse_str(uid).ok().and_then(|u| doc.model.slot_of(u))
                             && !slots.contains(&s)
                         {
                             slots.push(s);
@@ -190,7 +212,9 @@ impl ZoningWindowApp for App {
                 self.dialog = None;
                 let words = match hatched {
                     0 => format!("{TITLE}: bulgulardaki {n} nesne seçildi."),
-                    h => format!("{TITLE}: bulgulardaki {n} nesne seçildi; yola giren {h} kısım çizimde tarandı (İşareti kaldır siler)."),
+                    h => format!(
+                        "{TITLE}: bulgulardaki {n} nesne seçildi; yola giren {h} kısım çizimde tarandı (İşareti kaldır siler)."
+                    ),
                 };
                 self.say(Level::Info, words);
                 return Task::done(Message::Run("view.zoomSelection"));
@@ -204,7 +228,9 @@ impl ZoningWindowApp for App {
                     drawing: None,
                     expected_revision: None,
                 };
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
                 match profiles::apply::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { .. } => self.say(
                         Level::Success,
@@ -228,21 +254,33 @@ impl ZoningWindowApp for App {
     /// The parcels that enter road widths, each with the sum of its parts in every road it enters (docs/adr/3040): its
     /// name and roads, largest first; none without such findings.
     fn zoning_parcel_totals(&self) -> Vec<(String, usize, f64)> {
-        let (Some(doc), Some(Ok(r))) = (self.document.as_ref(), &self.modules.map().zoning.answer) else {
+        let (Some(doc), Some(Ok(r))) = (self.document.as_ref(), &self.modules.map().zoning.answer)
+        else {
             return Vec::new();
         };
         let mut by: Vec<(String, String, usize, f64)> = Vec::new();
         for f in r.findings.iter().filter(|f| f.kind == "roadParcel") {
             // The parcel is the finding's area object (the road is its axis).
             let Some((uid, e)) = f.uids.iter().find_map(|u| {
-                let e = Uuid::parse_str(u).ok().and_then(|x| doc.model.slot_of(x)).and_then(|s| doc.model.get(s))?;
+                let e = Uuid::parse_str(u)
+                    .ok()
+                    .and_then(|x| doc.model.slot_of(x))
+                    .and_then(|s| doc.model.get(s))?;
                 matches!(e, kentos_commands::Entity::Polygon(_)).then(|| (u.clone(), e))
             }) else {
                 continue;
             };
             let a = &e.base().attrs;
-            let name: Vec<&str> = ["Ada", "Parsel"].iter().filter_map(|k| a.get(*k).map(|v| v.trim())).filter(|v| !v.is_empty()).collect();
-            let name = if name.is_empty() { format!("#{}", e.base().id) } else { name.join("/") };
+            let name: Vec<&str> = ["Ada", "Parsel"]
+                .iter()
+                .filter_map(|k| a.get(*k).map(|v| v.trim()))
+                .filter(|v| !v.is_empty())
+                .collect();
+            let name = if name.is_empty() {
+                format!("#{}", e.base().id)
+            } else {
+                name.join("/")
+            };
             match by.iter_mut().find(|x| x.0 == uid) {
                 Some(x) => {
                     x.2 += 1;
@@ -252,25 +290,47 @@ impl ZoningWindowApp for App {
             }
         }
         by.sort_by(|a, b| b.3.total_cmp(&a.3));
-        by.into_iter().map(|(_, name, roads, area)| (name, roads, area)).collect()
+        by.into_iter()
+            .map(|(_, name, roads, area)| (name, roads, area))
+            .collect()
     }
 
     /// A finding's objects as the table names them: a plan by its PlanKimlik, a decision by its KararKimlik, a note
     /// by its number, a road axis by its YolKimlik (docs/adr/2020), a parcel by its Ada/Parsel (docs/adr/2640).
     fn zoning_names(&self, f: &ZoningFinding) -> String {
-        let Some(doc) = self.document.as_ref() else { return String::new() };
+        let Some(doc) = self.document.as_ref() else {
+            return String::new();
+        };
         let names: Vec<String> = f
             .uids
             .iter()
-            .filter_map(|u| Uuid::parse_str(u).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s)))
+            .filter_map(|u| {
+                Uuid::parse_str(u)
+                    .ok()
+                    .and_then(|u| doc.model.slot_of(u))
+                    .and_then(|s| doc.model.get(s))
+            })
             .map(|e| {
                 let a = &e.base().attrs;
-                let parcel: Vec<&str> =
-                    ["Ada", "Parsel"].iter().filter_map(|k| a.get(*k).map(|v| v.trim())).filter(|v| !v.is_empty()).collect();
+                let parcel: Vec<&str> = ["Ada", "Parsel"]
+                    .iter()
+                    .filter_map(|k| a.get(*k).map(|v| v.trim()))
+                    .filter(|v| !v.is_empty())
+                    .collect();
                 ["PlanKimlik", "KararKimlik", "NotNo", "YolKimlik"]
                     .iter()
-                    .find_map(|k| a.get(*k).filter(|v| !v.trim().is_empty()).map(|v| v.trim().to_owned()))
-                    .map(|v| if a.contains_key("NotNo") { format!("Not {v}") } else { v })
+                    .find_map(|k| {
+                        a.get(*k)
+                            .filter(|v| !v.trim().is_empty())
+                            .map(|v| v.trim().to_owned())
+                    })
+                    .map(|v| {
+                        if a.contains_key("NotNo") {
+                            format!("Not {v}")
+                        } else {
+                            v
+                        }
+                    })
                     .or_else(|| (!parcel.is_empty()).then(|| parcel.join("/")))
                     .unwrap_or_else(|| format!("#{}", e.base().id))
             })
@@ -284,8 +344,14 @@ impl ZoningWindowApp for App {
         let form = Form::new().label_width(110.0).field(
             "Tolerans (m)",
             row![
-                NumberInput::new(s.tolerance, |v| msg(Event::Tolerance(v))).step(0.01).decimals(3).point().width(140),
-                kentos_ui::label::caption(format!("Profil: {ZONING_PROFILE} (KentOS çalışma profili)"))
+                NumberInput::new(s.tolerance, |v| msg(Event::Tolerance(v)))
+                    .step(0.01)
+                    .decimals(3)
+                    .point()
+                    .width(140),
+                kentos_ui::label::caption(format!(
+                    "Profil: {ZONING_PROFILE} (KentOS çalışma profili)"
+                ))
             ]
             .spacing(14)
             .align_y(Center),
@@ -303,7 +369,11 @@ impl ZoningWindowApp for App {
                         r.plans,
                         r.decisions,
                         r.notes,
-                        if total == 0 { "bulgu yok".to_owned() } else { format!("{total} bulgu") }
+                        if total == 0 {
+                            "bulgu yok".to_owned()
+                        } else {
+                            format!("{total} bulgu")
+                        }
                     ),
                 ));
                 // Each parcel's parts in road widths summed, those in more than one road said (docs/adr/3040).
@@ -353,9 +423,20 @@ impl ZoningWindowApp for App {
                 ]
             })
             .collect();
-        let groups = [Group::All, Group::Plans, Group::Decisions, Group::Areas, Group::Notes];
+        let groups = [
+            Group::All,
+            Group::Plans,
+            Group::Decisions,
+            Group::Areas,
+            Group::Notes,
+        ];
         let table = sheet(
-            vec![col("Bulgu", 140.0), col("Nesne", 100.0), num("Alan", 160.0), rest("Açıklama")],
+            vec![
+                col("Bulgu", 140.0),
+                col("Nesne", 100.0),
+                num("Alan", 160.0),
+                rest("Açıklama"),
+            ],
             rows,
             "Bu grupta bulgu yok.",
             300.0,
@@ -367,7 +448,9 @@ impl ZoningWindowApp for App {
             .push(Segmented::new(groups, s.group, |g| msg(Event::Group(g))))
             .push(table);
         let any = !self.zoning_shown().is_empty();
-        let mut frame = Frame::new(TITLE).push(body).aside(words::secondary(SHOW, any.then(|| msg(Event::Show))));
+        let mut frame = Frame::new(TITLE)
+            .push(body)
+            .aside(words::secondary(SHOW, any.then(|| msg(Event::Show))));
         // Sembolü karardan ver (docs/adr/4240): the decision areas' symbols from their decisions.
         frame = frame.aside(words::secondary(
             crate::zoning_symbols_window::OPEN,
@@ -383,9 +466,15 @@ impl ZoningWindowApp for App {
             ))),
         ));
         if missing_layer {
-            frame = frame.aside(words::secondary(APPLY_PROFILE, Some(msg(Event::ApplyProfile))));
+            frame = frame.aside(words::secondary(
+                APPLY_PROFILE,
+                Some(msg(Event::ApplyProfile)),
+            ));
         }
-        frame.action(words::primary(CLOSE, Some(msg(Event::Close)))).width(1000.0).modal(msg(Event::Close))
+        frame
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(1000.0)
+            .modal(msg(Event::Close))
     }
 
     fn zoning_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -408,5 +497,9 @@ use crate::road_dialog::Col;
 
 /// A column that takes the rest of the width.
 fn rest(title: &str) -> Col<'_> {
-    Col { title, width: None, number: false }
+    Col {
+        title,
+        width: None,
+        number: false,
+    }
 }

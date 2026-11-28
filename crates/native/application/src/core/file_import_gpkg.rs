@@ -228,7 +228,7 @@ fn moved<'a>(
             }
             let mut one = ImportResult {
                 layouts: Vec::new(),
-        source_handles: Vec::new(),
+                source_handles: Vec::new(),
                 entities: vec![e],
                 layers: Vec::new(),
                 report: Default::default(),
@@ -314,7 +314,8 @@ pub(crate) fn run_with(
         .filter(|t| !t.indexes.is_empty())
         .map(|t| (t.name.clone(), t.indexes.clone()))
         .collect();
-    let (mut out, mut warnings) = run_read(doc, input, read, fresh, ("GeoPackage", ".gpkg"), write)?;
+    let (mut out, mut warnings) =
+        run_read(doc, input, read, fresh, ("GeoPackage", ".gpkg"), write)?;
     if !fresh {
         take_indexes(doc, &indexes, &mut out, &mut left);
         take_profile(doc, &profile, &foreign, &mut out, &mut left);
@@ -427,7 +428,9 @@ fn take_profile(
                     ));
                 }
             }
-            Err(why) => left.push(format!("“{table}” tablosunun katman stili (QML) alınmadı: {why}")),
+            Err(why) => left.push(format!(
+                "“{table}” tablosunun katman stili (QML) alınmadı: {why}"
+            )),
         }
     }
     // The tables' descriptions as datasets, on the layers the import made (docs/adr/0633 §5).
@@ -477,7 +480,10 @@ fn stamp_origins(
         return;
     }
     let address = path.to_owned();
-    for t in tables.iter().filter(|t| made.iter().any(|(id, _)| *id == t.layer)) {
+    for t in tables
+        .iter()
+        .filter(|t| made.iter().any(|(id, _)| *id == t.layer))
+    {
         let Some(mut info) = doc.layers().info_of(&t.layer) else {
             continue;
         };
@@ -515,14 +521,22 @@ pub(crate) fn run_read(
     // column, so one file may hold a table in the project's system beside one in WGS 84.
     let table_srid = |t: &geopackage::TableRead| -> Option<u32> {
         let (org, id) = read.systems.get(&t.srs_id?)?.as_ref()?;
-        org.eq_ignore_ascii_case("EPSG").then(|| u32::try_from(*id).ok()).flatten()
+        org.eq_ignore_ascii_case("EPSG")
+            .then(|| u32::try_from(*id).ok())
+            .flatten()
     };
     let srids: Vec<Option<u32>> = read.tables.iter().map(table_srid).collect();
     let declared: BTreeSet<u32> = srids.iter().flatten().copied().collect();
     let srid = declared.iter().next().copied();
     let project = doc.settings().srid;
     let mut was_moved = false;
-    if declared.is_empty() || read.tables.iter().zip(&srids).any(|(t, s)| s.is_none() && t.geometry.is_some()) {
+    if declared.is_empty()
+        || read
+            .tables
+            .iter()
+            .zip(&srids)
+            .any(|(t, s)| s.is_none() && t.geometry.is_some())
+    {
         warnings.push(CommandWarning {
             code: codes::CRS_UNDECLARED.into(),
             message: if declared.is_empty() {
@@ -541,7 +555,11 @@ pub(crate) fn run_read(
     }
     let foreign: BTreeSet<u32> = declared.iter().copied().filter(|&s| s != project).collect();
     if !foreign.is_empty() {
-        let names = foreign.iter().map(|s| format!("EPSG:{s}")).collect::<Vec<_>>().join(", ");
+        let names = foreign
+            .iter()
+            .map(|s| format!("EPSG:{s}"))
+            .collect::<Vec<_>>()
+            .join(", ");
         // One file in one other system says it as before; several systems or the project's beside name the tables.
         let alone = foreign.len() == 1 && declared.len() == 1;
         if !input.reproject && alone {
@@ -567,7 +585,11 @@ pub(crate) fn run_read(
                 format!(
                     "{} dosyasının {} tablosu {names} sisteminde, proje EPSG:{project}. Koordinatların projenin sistemine çevrilmesi için reproject verin, bu tabloları almayın ya da projeyi o sistemde açın.",
                     read.file,
-                    tables.iter().map(|t| format!("“{t}”")).collect::<Vec<_>>().join(", ")
+                    tables
+                        .iter()
+                        .map(|t| format!("“{t}”"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 ),
                 "reproject",
             ));
@@ -587,7 +609,10 @@ pub(crate) fn run_read(
     // The heights' system a table's compound definition names (docs/adr/0631 §4), once a system.
     for v in read.verticals.values() {
         let w = crate::crs_models::vertical_said(&read.file, v.srid, &v.name, doc.settings());
-        if !warnings.iter().any(|x: &CommandWarning| x.message == w.message) {
+        if !warnings
+            .iter()
+            .any(|x: &CommandWarning| x.message == w.message)
+        {
             warnings.push(w);
         }
     }
@@ -613,7 +638,9 @@ pub(crate) fn run_read(
         match (&input.merge, &to) {
             (Some(m), LayerTarget::Existing(id)) if !fresh => {
                 let numbered: Vec<i64> = t.fids.clone();
-                let mut m = crate::import_merge::merge(doc, id, &t.name, &t.objects, &numbered, &columns, m, true)?;
+                let mut m = crate::import_merge::merge(
+                    doc, id, &t.name, &t.objects, &numbered, &columns, m, true,
+                )?;
                 // The rows the merge adds keep the table's name as their layer: the plan routes them.
                 objects.append(&mut m.add);
                 updates.append(&mut m.update);
@@ -662,51 +689,61 @@ pub(crate) fn run_read(
         .filter(|_| write)
         .map(|_| crate::import_merge::rejects_csv(&rejected, &reject_columns));
     let mut rejects_written = None;
-    let applied = doc
-        .transact(&plan.label, |doc| {
-            if !updates.is_empty() {
-                doc.update_many(std::mem::take(&mut updates), &plan.label);
-            }
-            let applied = apply_import_with_uids(doc, objects, &plan)
-                .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "path"))?;
-            // A CBS project's new layer takes the type its table declares (docs/adr/1074): a POLYGON table's layer is an
-            // area layer that takes no point, whatever writes it later.
-            // A bound layer (`fresh`) stays of any kind: its table's later rows, a record among them, come as they are;
-            // a table with rows without geometry (records) too.
-            if !fresh && doc.settings().workspace == Some(kentos_commands::Workspace::Gis) {
-                for t in &read.tables {
-                    let (Some(g), Some((_, layer))) = (
-                        t.geometry.as_deref().and_then(geopackage::layer_geometry_of),
-                        applied.targets.iter().find(|(from, _)| *from == t.name),
-                    ) else {
-                        continue;
-                    };
-                    if !t.objects.iter().all(|(_, e)| g.admits(e.kind())) {
-                        continue;
-                    }
-                    if applied.made.iter().any(|(id, _)| id == layer) {
-                        doc.set_layer_geometry(layer, Some(g), &plan.label)
-                            .map_err(|r| refuse(codes::IMPORT_UNREADABLE, r.0, "path"))?;
-                    }
+    let applied = doc.transact(&plan.label, |doc| {
+        if !updates.is_empty() {
+            doc.update_many(std::mem::take(&mut updates), &plan.label);
+        }
+        let applied = apply_import_with_uids(doc, objects, &plan)
+            .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "path"))?;
+        // A CBS project's new layer takes the type its table declares (docs/adr/1074): a POLYGON table's layer is an
+        // area layer that takes no point, whatever writes it later.
+        // A bound layer (`fresh`) stays of any kind: its table's later rows, a record among them, come as they are;
+        // a table with rows without geometry (records) too.
+        if !fresh && doc.settings().workspace == Some(kentos_commands::Workspace::Gis) {
+            for t in &read.tables {
+                let (Some(g), Some((_, layer))) = (
+                    t.geometry
+                        .as_deref()
+                        .and_then(geopackage::layer_geometry_of),
+                    applied.targets.iter().find(|(from, _)| *from == t.name),
+                ) else {
+                    continue;
+                };
+                if !t.objects.iter().all(|(_, e)| g.admits(e.kind())) {
+                    continue;
+                }
+                if applied.made.iter().any(|(id, _)| id == layer) {
+                    doc.set_layer_geometry(layer, Some(g), &plan.label)
+                        .map_err(|r| refuse(codes::IMPORT_UNREADABLE, r.0, "path"))?;
                 }
             }
-            if declared.len() > 1 {
-                for (t, s) in read.tables.iter().zip(&srids) {
-                    let (Some(s), Some((_, layer))) = (s, applied.targets.iter().find(|(from, _)| *from == t.name))
-                    else {
-                        continue;
-                    };
-                    if applied.made.iter().any(|(id, _)| id == layer) {
-                        doc.set_layer_source_crs(layer, kentos_project::wkt2::source_crs(*s), &plan.label)
-                            .map_err(|r| refuse(codes::IMPORT_UNREADABLE, r.0, "path"))?;
-                    }
+        }
+        if declared.len() > 1 {
+            for (t, s) in read.tables.iter().zip(&srids) {
+                let (Some(s), Some((_, layer))) =
+                    (s, applied.targets.iter().find(|(from, _)| *from == t.name))
+                else {
+                    continue;
+                };
+                if applied.made.iter().any(|(id, _)| id == layer) {
+                    doc.set_layer_source_crs(
+                        layer,
+                        kentos_project::wkt2::source_crs(*s),
+                        &plan.label,
+                    )
+                    .map_err(|r| refuse(codes::IMPORT_UNREADABLE, r.0, "path"))?;
                 }
             }
-            if let (Some(path), Some(bytes)) = (&input.rejects, &rejects_bytes) {
-                rejects_written = Some(crate::import_merge::write_rejects(path, bytes, rejected.len() as u32)?);
-            }
-            Ok::<_, Stop>(applied)
-        })?;
+        }
+        if let (Some(path), Some(bytes)) = (&input.rejects, &rejects_bytes) {
+            rejects_written = Some(crate::import_merge::write_rejects(
+                path,
+                bytes,
+                rejected.len() as u32,
+            )?);
+        }
+        Ok::<_, Stop>(applied)
+    })?;
     if let Some(w) = crate::import_merge::warning(&merged, &read.file) {
         warnings.push(w);
     }

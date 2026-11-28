@@ -745,7 +745,9 @@ fn overlapping_lines(doc: &kentos_domain::Document, targets: &[kentos_domain::Sl
     let segs: Vec<(Vec2, Vec2)> = targets
         .iter()
         .filter_map(|s| match doc.get(*s) {
-            Some(kentos_commands::Entity::Line(l)) => Some((Vec2::new(l.a.x, l.a.y), Vec2::new(l.b.x, l.b.y))),
+            Some(kentos_commands::Entity::Line(l)) => {
+                Some((Vec2::new(l.a.x, l.a.y), Vec2::new(l.b.x, l.b.y)))
+            }
             _ => None,
         })
         .collect();

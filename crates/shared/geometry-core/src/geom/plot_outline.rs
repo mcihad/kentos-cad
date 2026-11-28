@@ -2,7 +2,7 @@
 use crate::{
     Vec2,
     entity::Shape,
-    jsmath::{TAU, cos, sin, js_hypot, js_max},
+    jsmath::{TAU, cos, js_hypot, js_max, sin},
 };
 pub const MAX_POINTS: usize = 65_536;
 fn complex() -> String {

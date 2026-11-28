@@ -50,7 +50,11 @@ impl Mesh {
     pub(super) fn new(d: Delaunay, n: usize) -> Self {
         let out = d.out_edges(n);
         let constrained = vec![false; d.halfedges.len()];
-        Self { d, constrained, out }
+        Self {
+            d,
+            constrained,
+            out,
+        }
     }
 
     pub(super) fn len(&self) -> usize {
@@ -165,10 +169,7 @@ impl Mesh {
         let pr = self.d.triangles[a as usize];
         let pl = self.d.triangles[al as usize];
         let p1 = self.d.triangles[bl as usize];
-        let (c_bl, c_ar) = (
-            self.constrained[bl as usize],
-            self.constrained[ar as usize],
-        );
+        let (c_bl, c_ar) = (self.constrained[bl as usize], self.constrained[ar as usize]);
         self.d.triangles[a as usize] = p1;
         self.d.triangles[b as usize] = p0;
         let hbl = self.twin(bl);
@@ -300,7 +301,8 @@ impl Mesh {
                 Ok(())
             }
             None => Err(
-                "Kırık hat yüzeye yerleştirilemedi; bu bir yazılım hatasıdır, durumu bildirin.".into(),
+                "Kırık hat yüzeye yerleştirilemedi; bu bir yazılım hatasıdır, durumu bildirin."
+                    .into(),
             ),
         }
     }
@@ -338,7 +340,13 @@ impl Mesh {
 
     /// The height at `q` on the plain triangulation (no triangle left out), and the triangle it is in, from which
     /// the next walk may start.
-    pub(super) fn height_in(&self, xy: &[Vec2], z: &[f64], q: [f64; 2], start: u32) -> (Option<f64>, u32) {
+    pub(super) fn height_in(
+        &self,
+        xy: &[Vec2],
+        z: &[f64],
+        q: [f64; 2],
+        start: u32,
+    ) -> (Option<f64>, u32) {
         match self.locate(xy, q, start) {
             Some(t) => (Some(self.interpolate(xy, z, t, q)), t),
             None => (None, start),

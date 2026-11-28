@@ -384,49 +384,91 @@ fn a_paper_only_file_imports_exports_and_undoes_without_model_objects() {
 #[test]
 fn polyline_integrity_is_shared_by_dxf_dwg_plan_execute_and_atomic_exports() {
     let folder = scratch("polyline-integrity");
-    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/formats/v1/cad-io/ocs-0-width.dxf");
+    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/formats/v1/cad-io/ocs-0-width.dxf");
     let dwg = folder.join("tilted.dwg");
-    let binary = kentos_dwg::encode(&std::fs::read(&source).unwrap(), kentos_commands::DwgVersion::AC1032).unwrap();
+    let binary = kentos_dwg::encode(
+        &std::fs::read(&source).unwrap(),
+        kentos_commands::DwgVersion::AC1032,
+    )
+    .unwrap();
     std::fs::write(&dwg, binary).unwrap();
-    for (command,path) in [("file.import.dxf",&source),("file.import.dwg",&dwg)] {
+    for (command, path) in [("file.import.dxf", &source), ("file.import.dwg", &dwg)] {
         let mut s = new_drawing();
         let before = s.summary();
-        for op in ["plan","execute"] {
-            let refused = s.call(json!({"command":command,"op":op,"input":{"path":path}})).unwrap();
-            assert_eq!(refused["error"]["code"],"polyline_geometry_loss","{refused}");
-            assert_eq!(s.summary(),before);
+        for op in ["plan", "execute"] {
+            let refused = s
+                .call(json!({"command":command,"op":op,"input":{"path":path}}))
+                .unwrap();
+            assert_eq!(
+                refused["error"]["code"], "polyline_geometry_loss",
+                "{refused}"
+            );
+            assert_eq!(s.summary(), before);
         }
-        let accepted = s.call(json!({"command":command,"input":{"path":path,"allowPolylineLoss":true}})).unwrap();
-        assert_eq!(accepted["status"],"completed","{accepted}");
-        assert!(accepted["output"]["report"]["notes"].as_array().unwrap().iter().any(|r| r["details"].as_array().is_some_and(|ds| ds.iter().any(|d| d["property"].as_str().is_some_and(|p| p.starts_with("polyline.loss."))))));
+        let accepted = s
+            .call(json!({"command":command,"input":{"path":path,"allowPolylineLoss":true}}))
+            .unwrap();
+        assert_eq!(accepted["status"], "completed", "{accepted}");
+        assert!(
+            accepted["output"]["report"]["notes"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(
+                    |r| r["details"]
+                        .as_array()
+                        .is_some_and(|ds| ds.iter().any(|d| d["property"]
+                            .as_str()
+                            .is_some_and(|p| p.starts_with("polyline.loss."))))
+                )
+        );
         s.undo().unwrap();
-        assert_eq!(s.summary()["objects"],before["objects"]);
+        assert_eq!(s.summary()["objects"], before["objects"]);
     }
-    for feature in ["width","bulge"] {
+    for feature in ["width", "bulge"] {
         let mut s = new_drawing();
         let layer = s.summary()["activeLayer"].as_str().unwrap().to_owned();
-        let mut geometry = json!({"kind":"polyline","pts":[{"x":0.,"y":0.},{"x":3.,"y":4.}],"zs":[7.,8.]});
-        if feature == "width" { geometry["widths"] = json!([[0.2,0.4],[0.,0.]]); }
-        else { geometry["bulges"] = json!([0.5]); }
+        let mut geometry =
+            json!({"kind":"polyline","pts":[{"x":0.,"y":0.},{"x":3.,"y":4.}],"zs":[7.,8.]});
+        if feature == "width" {
+            geometry["widths"] = json!([[0.2, 0.4], [0., 0.]]);
+        } else {
+            geometry["bulges"] = json!([0.5]);
+        }
         let made = s.call(json!({"command":"cad.entities.create","input":{"layerId":layer,"objects":[{"geometry":geometry}]}})).unwrap();
-        assert_eq!(made["status"],"completed","{made}");
-        let uid = made["output"]["created"][0].as_str().expect("created uid").to_owned();
+        assert_eq!(made["status"], "completed", "{made}");
+        let uid = made["output"]["created"][0]
+            .as_str()
+            .expect("created uid")
+            .to_owned();
         let before = s.summary();
-        for ext in ["dxf","dwg"] {
+        for ext in ["dxf", "dwg"] {
             let path = folder.join(format!("nonplanar-{feature}.{ext}"));
-            std::fs::write(&path,b"ORIGINAL TARGET").unwrap();
-            for op in ["plan","execute"] {
+            std::fs::write(&path, b"ORIGINAL TARGET").unwrap();
+            for op in ["plan", "execute"] {
                 let refused = s.call(json!({"command":format!("file.export.{ext}"),"op":op,"input":{"path":path,"overwrite":true}})).unwrap();
-                assert_eq!(refused["error"]["code"],"polyline_geometry_loss","{refused}");
-                assert_eq!(std::fs::read(&path).unwrap(),b"ORIGINAL TARGET");
-                assert_eq!(s.summary(),before);
+                assert_eq!(
+                    refused["error"]["code"], "polyline_geometry_loss",
+                    "{refused}"
+                );
+                assert_eq!(std::fs::read(&path).unwrap(), b"ORIGINAL TARGET");
+                assert_eq!(s.summary(), before);
             }
             let accepted = s.call(json!({"command":format!("file.export.{ext}"),"input":{"path":path,"overwrite":true,"allowPolylineLoss":true}})).unwrap();
-            assert_eq!(accepted["status"],"completed","{accepted}");
-            assert!(accepted["output"]["report"]["notes"].as_array().unwrap().iter().any(|n|
-                n["details"].as_array().is_some_and(|ds| ds.iter().any(|d| d["sourceId"] == uid))), "{accepted}");
-            assert_ne!(std::fs::read(&path).unwrap(),b"ORIGINAL TARGET");
-            assert_eq!(s.summary(),before);
+            assert_eq!(accepted["status"], "completed", "{accepted}");
+            assert!(
+                accepted["output"]["report"]["notes"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .any(|n| n["details"]
+                        .as_array()
+                        .is_some_and(|ds| ds.iter().any(|d| d["sourceId"] == uid))),
+                "{accepted}"
+            );
+            assert_ne!(std::fs::read(&path).unwrap(), b"ORIGINAL TARGET");
+            assert_eq!(s.summary(), before);
         }
     }
 }

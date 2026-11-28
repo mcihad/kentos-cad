@@ -181,7 +181,9 @@ pub fn seed_of(a: &Area) -> Option<Vec2> {
         }
     }
     xs.sort_by(f64::total_cmp);
-    xs.as_chunks::<2>().0.iter()
+    xs.as_chunks::<2>()
+        .0
+        .iter()
         .max_by(|a, b| (a[1] - a[0]).total_cmp(&(b[1] - b[0])))
         .filter(|w| w[1] > w[0])
         .map(|w| Vec2::new((w[0] + w[1]) / 2.0, y))
@@ -276,7 +278,10 @@ fn free_ends(s: &Shape) -> Vec<Vec2> {
                 a0: *a0,
                 a1: *a1,
             };
-            vec![crate::geom::arc::arc_start(&g), crate::geom::arc::arc_end(&g)]
+            vec![
+                crate::geom::arc::arc_start(&g),
+                crate::geom::arc::arc_end(&g),
+            ]
         }
         Shape::Polyline { closed: false, .. } => crate::entity::area_parts(s)
             .iter()
@@ -354,11 +359,7 @@ pub fn face_region(
     let bridged = bridges(&shapes, gap)
         .into_iter()
         .map(|b| Shape::Line { a: b.a, b: b.b });
-    let lines: Vec<Entity> = shapes
-        .into_iter()
-        .chain(bridged)
-        .map(Entity::new)
-        .collect();
+    let lines: Vec<Entity> = shapes.into_iter().chain(bridged).map(Entity::new).collect();
     let index = crate::geom::region::FaceIndex::new(&[crate::ops::areas::line_source(&lines)]);
     let face = index.at(seed, !islands.is_empty())?;
     if cutouts.is_empty() {

@@ -19,9 +19,9 @@ mod content;
 pub mod dots;
 mod fonts;
 mod geo;
+mod glyphs;
 mod images;
 mod maps;
-mod glyphs;
 pub use maps::includes_text_anchor;
 mod write;
 
@@ -349,9 +349,9 @@ pub struct RasterMap {
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct PdfMap {
     /// A page-specific rendering of a master map; absent is the legacy shared fallback.
-    #[serde(default,skip_serializing_if="Option::is_none")]
-    #[cfg_attr(feature="ts",ts(optional))]
-    pub sheet:Option<SheetId>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub sheet: Option<SheetId>,
     pub item: ItemId,
     pub content: MapContent,
     /// Latitude and longitude (degrees) of the content box's corners: top left, top right,

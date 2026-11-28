@@ -31,12 +31,29 @@ struct FixturePicture {
 }
 
 impl FixturePicture {
-    fn from_store(store: &kentos_geometry_core::store::Store, block: &kentos_commands::BlockDefinition) -> Self {
+    fn from_store(
+        store: &kentos_geometry_core::store::Store,
+        block: &kentos_commands::BlockDefinition,
+    ) -> Self {
         let id = block.id;
         Self {
-            paths: store.insert_outlines(&id.to_text(), kentos_interaction::Vec2::new(0., 0.), 1., 0., false),
-            bounds: kentos_native_application::blocks::fixture_housing_bounds(block)
-                .or_else(|| kentos_native_application::blocks::definition_box_in(store.blocks(), store.font(), id, None)),
+            paths: store.insert_outlines(
+                &id.to_text(),
+                kentos_interaction::Vec2::new(0., 0.),
+                1.,
+                0.,
+                false,
+            ),
+            bounds: kentos_native_application::blocks::fixture_housing_bounds(block).or_else(
+                || {
+                    kentos_native_application::blocks::definition_box_in(
+                        store.blocks(),
+                        store.font(),
+                        id,
+                        None,
+                    )
+                },
+            ),
         }
     }
 }
@@ -45,11 +62,16 @@ fn builtin_pictures() -> &'static HashMap<String, FixturePicture> {
     static PICTURES: OnceLock<HashMap<String, FixturePicture>> = OnceLock::new();
     PICTURES.get_or_init(|| {
         let libraries = kentos_native_application::standard_libraries::Libraries::builtin();
-        let Some(library) = libraries.blocks.first() else { return HashMap::new() };
+        let Some(library) = libraries.blocks.first() else {
+            return HashMap::new();
+        };
         let definitions: Vec<_> = library.blocks.iter().cloned().map(Arc::new).collect();
         let mut store = kentos_geometry_core::store::Store::new();
         store.set_blocks(kentos_native_application::blocks::core_blocks(&definitions));
-        definitions.iter().map(|b| (b.name.clone(), FixturePicture::from_store(&store, b))).collect()
+        definitions
+            .iter()
+            .map(|b| (b.name.clone(), FixturePicture::from_store(&store, b)))
+            .collect()
     })
 }
 
@@ -124,7 +146,12 @@ pub struct Item {
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    ReviewUpgrade(kentos_commands::BlockId, kentos_commands::BlockId, Arc<String>, String),
+    ReviewUpgrade(
+        kentos_commands::BlockId,
+        kentos_commands::BlockId,
+        Arc<String>,
+        String,
+    ),
     Search(String),
     AddRoot,
     RootChosen(Option<PathBuf>),
@@ -368,7 +395,9 @@ impl Library {
 impl App {
     pub(crate) fn blocks_library_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::ReviewUpgrade(from, to, library, label) => return self.blocks_upgrade(from, to, (*library).clone(), label),
+            Event::ReviewUpgrade(from, to, library, label) => {
+                return self.blocks_upgrade(from, to, (*library).clone(), label);
+            }
             Event::Search(t) => self.blocks_panel.library.query = t,
             Event::TakeBuiltin => self.blocks_take_builtin(),
             Event::Builtin(on) => self.blocks_panel.library.builtin = on,
@@ -663,40 +692,66 @@ impl App {
         if shown.is_empty() {
             let empty = column![
                 label::caption("Aramayla eşleşen donatı bulunamadı."),
-                button(label::caption("Aramayı temizle")).on_press(msg(Event::Search(String::new())))
+                button(label::caption("Aramayı temizle"))
+                    .on_press(msg(Event::Search(String::new())))
                     .style(style::button::ghost),
-            ].spacing(4).padding([6, 12]);
+            ]
+            .spacing(4)
+            .padding([6, 12]);
             return column![head, empty].into();
         }
         let list = VirtualList::new(shown.len(), typography::scaled(ROW), move |i| {
             let f = shown[i];
-            let local = self.document.as_ref().and_then(|d| d.model.block_named(&f.name).map(|b| (&d.model, b)));
-            let local_picture = local.map(|(_, b)| FixturePicture::from_store(self.spatial.store(), b));
-            let picture = local_picture.as_ref().or_else(|| builtin_pictures().get(&f.name));
-            let category = local.map_or(Some(f.category.as_str()), |(_, b)| b.card.as_ref()?.category.as_deref());
-            let wall_side = matches!(category.and_then(|c| c.split('/').next()), Some("Mobilya" | "Islak hacim" | "Mutfak"));
+            let local = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.block_named(&f.name).map(|b| (&d.model, b)));
+            let local_picture =
+                local.map(|(_, b)| FixturePicture::from_store(self.spatial.store(), b));
+            let picture = local_picture
+                .as_ref()
+                .or_else(|| builtin_pictures().get(&f.name));
+            let category = local.map_or(Some(f.category.as_str()), |(_, b)| {
+                b.card.as_ref()?.category.as_deref()
+            });
+            let wall_side = matches!(
+                category.and_then(|c| c.split('/').next()),
+                Some("Mobilya" | "Islak hacim" | "Mutfak")
+            );
             let bounds = picture.and_then(|p| p.bounds);
-            let unit = local.map_or(1., |(d,b)| kentos_native_application::blocks_insert::unit_factor(d, b));
-            let size = bounds.map(|[x0,y0,x1,y1]| format!("{} × {} {}",
-                format.plain((x1-x0)*unit), format.plain((y1-y0)*unit), format.length_unit_label()));
+            let unit = local.map_or(1., |(d, b)| {
+                kentos_native_application::blocks_insert::unit_factor(d, b)
+            });
+            let size = bounds.map(|[x0, y0, x1, y1]| {
+                format!(
+                    "{} × {} {}",
+                    format.plain((x1 - x0) * unit),
+                    format.plain((y1 - y0) * unit),
+                    format.length_unit_label()
+                )
+            });
             let side = typography::scaled(THUMB);
             let thumb = Thumb {
                 paths: picture.map(|p| p.paths.clone()).unwrap_or_default(),
-                placement: Some(PlacementGuide { back: bounds.filter(|_| wall_side).map(|[a,b,c,_]| [a,c,b]) }),
+                placement: Some(PlacementGuide {
+                    back: bounds.filter(|_| wall_side).map(|[a, b, c, _]| [a, c, b]),
+                }),
             };
-            let picture = container(Canvas::new(thumb).width(side).height(side)).style(|t| thumb_tile(t, false));
+            let picture = container(Canvas::new(thumb).width(side).height(side))
+                .style(|t| thumb_tile(t, false));
             let family = f.category.replace('/', " › ");
             let meta = size.map_or_else(|| family.clone(), |s| format!("{s} · {family}"));
-            let hint = if wall_side { "Nokta, blok tabanını gösterir. Renkli kenar duvara bakar." } else { "Nokta, blok tabanını gösterir." };
+            let hint = if wall_side {
+                "Nokta, blok tabanını gösterir. Renkli kenar duvara bakar."
+            } else {
+                "Nokta, blok tabanını gösterir."
+            };
             self.library_line(
                 picture.into(),
                 f.name.clone(),
                 Some(meta),
                 msg(Event::PlaceBuiltin(f.name.clone())),
-                Some((
-                    "Yerleştir".to_owned(),
-                    format!("{family} · {hint}"),
-                )),
+                Some(("Yerleştir".to_owned(), format!("{family} · {hint}"))),
             )
         })
         .height(Fill);
@@ -709,7 +764,10 @@ impl App {
         let builtin = self.library_line(
             icon(Icon::Folder).size(15.0).into(),
             "KentOS temel blokları".to_owned(),
-            Some(format!("{} blok: mobilya, donatı", crate::fixture_search::fixtures().len())),
+            Some(format!(
+                "{} blok: mobilya, donatı",
+                crate::fixture_search::fixtures().len()
+            )),
             msg(Event::Builtin(true)),
             None,
         );
@@ -858,9 +916,14 @@ impl App {
         items.extend(
             read.blocks
                 .iter()
-                .filter(|b| query.is_empty() || name_key(&b.name).contains(&query)
-                    || b.publication.as_ref().is_some_and(|p| name_key(&p.type_name).contains(&query)
-                        || p.family_id.to_text().contains(&query)))
+                .filter(|b| {
+                    query.is_empty()
+                        || name_key(&b.name).contains(&query)
+                        || b.publication.as_ref().is_some_and(|p| {
+                            name_key(&p.type_name).contains(&query)
+                                || p.family_id.to_text().contains(&query)
+                        })
+                })
                 .map(|b| (Some(b.name.clone()), b.clone())),
         );
         let can_place = read.unit.is_some();

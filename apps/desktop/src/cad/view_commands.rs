@@ -259,7 +259,8 @@ mod tests {
         if !app.docks.contains(Panel::Blocks) {
             app.docks.show(Panel::Blocks, Side::Right);
         }
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::Blocks));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(Panel::Blocks));
         assert!(app.docks.is_shown(Panel::Blocks) && !app.docks.is_shown(Panel::Layers));
         run(&mut app, "view.rightPanel");
         assert!(app.docks.is_shown(Panel::Layers), "the list in front");
@@ -267,24 +268,32 @@ mod tests {
         run(&mut app, "view.rightPanel");
         assert!(!app.right_panel_shown(), "with the list in front it closes");
         run(&mut app, "view.rightPanel");
-        assert!(app.docks.is_shown(Panel::Layers), "opened again with the list in front");
+        assert!(
+            app.docks.is_shown(Panel::Layers),
+            "opened again with the list in front"
+        );
     }
 
     /// UR-019's pictures (`.run/gui-evidence/kullanim-UR-019/`): Bloklar in front, then Katman paneli pressed.
     #[test]
     #[ignore = "pictures for the owner, run by hand"]
     fn layer_panel_screens() {
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-019");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.run/gui-evidence/kullanim-UR-019");
         std::fs::create_dir_all(&out).expect("a folder");
         for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
             let mut app = app_with_drawing();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             if !app.docks.contains(Panel::Blocks) {
                 app.docks.show(Panel::Blocks, Side::Right);
             }
-            app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::Blocks));
-            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            app.docks
+                .update(kentos_ui::widget::docking::Event::Selected(Panel::Blocks));
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0))
+                .expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
             };
@@ -294,7 +303,10 @@ mod tests {
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
                 let file = out.join(format!("katman-paneli-{step}-{name}.png"));
-                snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes");
                 println!("{}", file.display());
             }
         }

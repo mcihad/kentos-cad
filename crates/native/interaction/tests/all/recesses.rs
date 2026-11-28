@@ -46,7 +46,10 @@ fn tag(b: &Bench) -> Vec<String> {
 #[test]
 fn a_niche_is_cut_from_the_face_the_pointer_is_on() {
     let mut b = wall("niche");
-    assert!(row(&b, "D").is_some_and(|v| v.contains("türün")), "its type's depth");
+    assert!(
+        row(&b, "D").is_some_and(|v| v.contains("türün")),
+        "its type's depth"
+    );
     b.click(5., -0.3);
     let o = newest(&b);
     assert_eq!(o.form, OpeningForm::Niche);
@@ -62,7 +65,11 @@ fn a_niche_is_cut_from_the_face_the_pointer_is_on() {
     assert_eq!(newest(&b).side, OpeningSide::Left);
     assert!(set(&mut b, "Y", "Sağ"));
     b.click(15., 0.3);
-    assert_eq!(newest(&b).side, OpeningSide::Right, "Yüz chosen beats the pointer");
+    assert_eq!(
+        newest(&b).side,
+        OpeningSide::Right,
+        "Yüz chosen beats the pointer"
+    );
 }
 
 #[test]
@@ -72,7 +79,10 @@ fn a_flue_is_centred_until_yuzden_says_and_takes_the_depth_set() {
     assert!(set(&mut b, "D", "0.1"));
     b.click(5., 0.3);
     let o = newest(&b);
-    assert_eq!((o.form, o.depth, o.inset), (OpeningForm::Flue, Some(0.1), None));
+    assert_eq!(
+        (o.form, o.depth, o.inset),
+        (OpeningForm::Flue, Some(0.1), None)
+    );
     assert!(set(&mut b, "Z", "0.03"));
     b.click(10., 0.3);
     assert_eq!(newest(&b).inset, Some(0.03));
@@ -100,13 +110,19 @@ fn the_tag_says_whether_plan_cuts_it() {
     let mut b = wall("niche");
     b.move_to(5., 0.3);
     let lines = tag(&b).join(" ");
-    assert!(lines.contains("Planda kesilir"), "Niş 60 crosses the cut: {lines}");
+    assert!(
+        lines.contains("Planda kesilir"),
+        "Niş 60 crosses the cut: {lines}"
+    );
     assert!(lines.contains("derinlik"), "{lines}");
     assert!(set(&mut b, "L", "1.2"));
     assert!(set(&mut b, "Ü", "1.8"));
     b.move_to(5.1, 0.3);
     let lines = tag(&b).join(" ");
-    assert!(lines.contains("Planda kesik çizgi"), "above the cut: {lines}");
+    assert!(
+        lines.contains("Planda kesik çizgi"),
+        "above the cut: {lines}"
+    );
     b.click(5., 0.3);
     let o = newest(&b);
     assert_eq!((o.sill, o.head), (Some(1.2), Some(1.8)));

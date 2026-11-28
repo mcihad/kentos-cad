@@ -2,7 +2,10 @@
 //! stopping and passing sight, the headlights, comfort and the bisector (`kentos_road::profile::lengths`), with the
 //! user's values. Reads only. The shared cases are `fixtures/commands/v1/road.profiles.lengths.json`.
 
-use kentos_commands::{CommandResult, CommandWarning, CurveCriterion, CurveLengths, RoadProfileLengths, RoadProfilesLengths};
+use kentos_commands::{
+    CommandResult, CommandWarning, CurveCriterion, CurveLengths, RoadProfileLengths,
+    RoadProfilesLengths,
+};
 use kentos_domain::Document;
 use kentos_road::profile::lengths as len;
 use kentos_road::profile::vertical::VCurve;
@@ -27,9 +30,21 @@ fn judged(q: &RoadProfilesLengths) -> Result<(), Stop> {
         (q.time, "time", "Tepki süresi 0'dan büyük olmalı (s)."),
         (q.decel, "decel", "Yavaşlama 0'dan büyük olmalı (m/s²)."),
         (q.eye, "eye", "Göz yüksekliği 0'dan büyük olmalı (m)."),
-        (q.object, "object", "Engel yüksekliği 0'dan büyük olmalı (m)."),
-        (q.passing, "passing", "Geçme görüş mesafesi 0'dan büyük olmalı (m)."),
-        (q.headlight, "headlight", "Far yüksekliği 0'dan büyük olmalı (m)."),
+        (
+            q.object,
+            "object",
+            "Engel yüksekliği 0'dan büyük olmalı (m).",
+        ),
+        (
+            q.passing,
+            "passing",
+            "Geçme görüş mesafesi 0'dan büyük olmalı (m).",
+        ),
+        (
+            q.headlight,
+            "headlight",
+            "Far yüksekliği 0'dan büyük olmalı (m).",
+        ),
         (q.accel, "accel", "Düşey ivme 0'dan büyük olmalı (m/s²)."),
         (q.external, "external", "Bisektris 0'dan büyük olmalı (m)."),
         (q.step, "step", "Yuvarlama adımı 0'dan büyük olmalı (m)."),
@@ -38,22 +53,40 @@ fn judged(q: &RoadProfilesLengths) -> Result<(), Stop> {
             return Err(bad(path, words));
         }
     }
-    if !q.beam.is_none_or(|b| b.is_finite() && (0.0..45.0).contains(&b)) {
-        return Err(bad("beam", "Far ışınının açısı 0 ile 45 derece arası olmalı."));
+    if !q
+        .beam
+        .is_none_or(|b| b.is_finite() && (0.0..45.0).contains(&b))
+    {
+        return Err(bad(
+            "beam",
+            "Far ışınının açısı 0 ile 45 derece arası olmalı.",
+        ));
     }
     let crest = q.eye.is_some() || q.object.is_some();
     let sag = q.headlight.is_some() || q.beam.is_some();
     if crest && (q.eye.is_none() || q.object.is_none()) {
-        return Err(bad("eye", "Tepe görüşü göz ve engel yüksekliğini birlikte ister."));
+        return Err(bad(
+            "eye",
+            "Tepe görüşü göz ve engel yüksekliğini birlikte ister.",
+        ));
     }
     if sag && (q.headlight.is_none() || q.beam.is_none()) {
-        return Err(bad("headlight", "Far görüşü far yüksekliğini ve ışın açısını birlikte ister."));
+        return Err(bad(
+            "headlight",
+            "Far görüşü far yüksekliğini ve ışın açısını birlikte ister.",
+        ));
     }
     if (crest || sag) && (q.time.is_none() || q.decel.is_none()) {
-        return Err(bad("time", "Durma görüşü tepki süresini (time) ve yavaşlamayı (decel) ister."));
+        return Err(bad(
+            "time",
+            "Durma görüşü tepki süresini (time) ve yavaşlamayı (decel) ister.",
+        ));
     }
     if q.passing.is_some() && q.eye.is_none() {
-        return Err(bad("passing", "Geçme görüşü göz yüksekliğini (eye) ister: karşıdan gelen aracın yüksekliği de odur."));
+        return Err(bad(
+            "passing",
+            "Geçme görüşü göz yüksekliğini (eye) ister: karşıdan gelen aracın yüksekliği de odur.",
+        ));
     }
     if !crest && !sag && q.passing.is_none() && q.accel.is_none() && q.external.is_none() {
         return Err(bad(
@@ -65,7 +98,10 @@ fn judged(q: &RoadProfilesLengths) -> Result<(), Stop> {
 }
 
 /// The answer now and its warnings.
-pub(crate) fn answer(doc: &Document, q: &RoadProfilesLengths) -> Result<(RoadProfileLengths, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    q: &RoadProfilesLengths,
+) -> Result<(RoadProfileLengths, Vec<CommandWarning>), Stop> {
     judged(q)?;
     common::road_project(doc)?;
     let (_, def) = common::find(common::profiles(doc), &q.profile, "profile")?;
@@ -102,7 +138,10 @@ fn lengths_def(
         let length = match p.curve {
             VCurve::None => None,
             VCurve::Parabola { length } => Some(length),
-            VCurve::Asymmetric { length_in, length_out } => Some(length_in + length_out),
+            VCurve::Asymmetric {
+                length_in,
+                length_out,
+            } => Some(length_in + length_out),
             VCurve::Circle { radius } => Some(radius * a.abs() / 100.0),
         };
         // The stopping distance on each approach: ahead on the grade in, back on the grade out (its sign turned);
@@ -119,21 +158,41 @@ fn lengths_def(
         let mut criteria = Vec::new();
         if crest {
             if let (Some(eye), Some(object), Some(s)) = (q.eye, q.object, s) {
-                criteria.push(CurveCriterion { kind: "stopping".into(), sight: Some(s), length: len::crest(a, s, eye, object) });
+                criteria.push(CurveCriterion {
+                    kind: "stopping".into(),
+                    sight: Some(s),
+                    length: len::crest(a, s, eye, object),
+                });
             }
             if let (Some(ps), Some(eye)) = (q.passing, q.eye) {
-                criteria.push(CurveCriterion { kind: "passing".into(), sight: Some(ps), length: len::crest(a, ps, eye, eye) });
+                criteria.push(CurveCriterion {
+                    kind: "passing".into(),
+                    sight: Some(ps),
+                    length: len::crest(a, ps, eye, eye),
+                });
             }
         } else {
             if let (Some(h), Some(b), Some(s)) = (q.headlight, q.beam, s) {
-                criteria.push(CurveCriterion { kind: "headlight".into(), sight: Some(s), length: len::headlight(a, s, h, b) });
+                criteria.push(CurveCriterion {
+                    kind: "headlight".into(),
+                    sight: Some(s),
+                    length: len::headlight(a, s, h, b),
+                });
             }
             if let Some(acc) = q.accel {
-                criteria.push(CurveCriterion { kind: "comfort".into(), sight: None, length: len::comfort(a, speed, acc) });
+                criteria.push(CurveCriterion {
+                    kind: "comfort".into(),
+                    sight: None,
+                    length: len::comfort(a, speed, acc),
+                });
             }
         }
         if let Some(e) = q.external {
-            criteria.push(CurveCriterion { kind: "bisector".into(), sight: None, length: len::bisector(a, e) });
+            criteria.push(CurveCriterion {
+                kind: "bisector".into(),
+                sight: None,
+                length: len::bisector(a, e),
+            });
         }
         let governing = criteria.iter().max_by(|x, y| x.length.total_cmp(&y.length));
         let required = governing.map_or(0.0, |g| g.length);
@@ -165,27 +224,48 @@ fn lengths_def(
             path: Some("profile".into()),
         });
     }
-    let short: Vec<&str> = curves.iter().filter(|c| c.short).map(|c| c.pvi.as_str()).collect();
+    let short: Vec<&str> = curves
+        .iter()
+        .filter(|c| c.short)
+        .map(|c| c.pvi.as_str())
+        .collect();
     if !short.is_empty() {
         warnings.push(CommandWarning {
             code: codes::VERTICAL_CURVE_SHORT.into(),
-            message: format!("“{}” boykesitinde şu kurplar gereken boydan kısa: {}.", def.name, short.join(", ")),
+            message: format!(
+                "“{}” boykesitinde şu kurplar gereken boydan kısa: {}.",
+                def.name,
+                short.join(", ")
+            ),
             path: Some("profile".into()),
         });
     }
-    Ok((RoadProfileLengths { profile: def.id.clone(), stopping: level, curves }, warnings))
+    Ok((
+        RoadProfileLengths {
+            profile: def.id.clone(),
+            stopping: level,
+            curves,
+        },
+        warnings,
+    ))
 }
 
 /// Checks `q` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, q: &RoadProfilesLengths) -> CommandResult<()> {
     match answer(cx.doc, q) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, q: &RoadProfilesLengths) -> CommandResult<RoadProfileLengths> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    q: &RoadProfilesLengths,
+) -> CommandResult<RoadProfileLengths> {
     match answer(cx.doc, q) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -193,7 +273,10 @@ pub fn plan(cx: &ExecutionContext<'_>, q: &RoadProfilesLengths) -> CommandResult
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, q: RoadProfilesLengths) -> CommandResult<RoadProfileLengths> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    q: RoadProfilesLengths,
+) -> CommandResult<RoadProfileLengths> {
     plan(cx, &q)
 }
 

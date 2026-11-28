@@ -106,7 +106,9 @@ impl LayerData {
         let source: Vec<(Option<i64>, [f64; 4])> = keyed
             .iter()
             .map(|(k, _, e)| {
-                let b = kentos_geometry_core::entity::entity_bounds(&kentos_native_application::geometry::shape(e));
+                let b = kentos_geometry_core::entity::entity_bounds(
+                    &kentos_native_application::geometry::shape(e),
+                );
                 (*k, [b.min_x, b.min_y, b.max_x, b.max_y])
             })
             .collect();
@@ -119,16 +121,27 @@ impl LayerData {
             .collect();
         let entities: Vec<Entity> = keyed.into_iter().map(|(_, _, e)| e).collect();
         let model = &doc.model;
-        let fields = model.layers().get(layer).map(|n| n.fields.clone()).unwrap_or_default();
+        let fields = model
+            .layers()
+            .get(layer)
+            .map(|n| n.fields.clone())
+            .unwrap_or_default();
         let per_metre = model.settings().unit().per_metre();
         let refs: Vec<&Entity> = entities.iter().collect();
         let mut columns = layer_columns(&fields, &refs, None, per_metre);
         let redacted = app.redacted_fields();
         columns.retain(|c| !redacted.contains(&c.key) && !redacted.contains(&c.label));
-        let at = slots.iter().enumerate().map(|(i, s)| (*s, i as u32)).collect();
+        let at = slots
+            .iter()
+            .enumerate()
+            .map(|(i, s)| (*s, i as u32))
+            .collect();
         LayerData {
             layer: layer.to_owned(),
-            work: Work::new(DataSet { rows: slots.len(), columns }),
+            work: Work::new(DataSet {
+                rows: slots.len(),
+                columns,
+            }),
             slots,
             at,
             from,
@@ -169,13 +182,23 @@ impl LayerData {
         if !self.source.is_empty() {
             match show {
                 Show::Selected => {
-                    let keys: std::collections::BTreeSet<i64> =
-                        app.gis.features.data.selected_of(&self.layer).into_iter().collect();
-                    let chosen: std::collections::BTreeSet<u32> = self.selected_rows(app).into_iter().collect();
+                    let keys: std::collections::BTreeSet<i64> = app
+                        .gis
+                        .features
+                        .data
+                        .selected_of(&self.layer)
+                        .into_iter()
+                        .collect();
+                    let chosen: std::collections::BTreeSet<u32> =
+                        self.selected_rows(app).into_iter().collect();
                     return (0..self.slots.len() as u32)
                         .filter(|r| {
                             chosen.contains(r)
-                                || self.source.get(*r as usize).and_then(|(k, _)| *k).is_some_and(|k| keys.contains(&k))
+                                || self
+                                    .source
+                                    .get(*r as usize)
+                                    .and_then(|(k, _)| *k)
+                                    .is_some_and(|k| keys.contains(&k))
                         })
                         .collect();
                 }
@@ -185,7 +208,9 @@ impl LayerData {
                         .source
                         .iter()
                         .enumerate()
-                        .filter(|(_, (_, b))| b[2] >= v.min_x && b[0] <= v.max_x && b[3] >= v.min_y && b[1] <= v.max_y)
+                        .filter(|(_, (_, b))| {
+                            b[2] >= v.min_x && b[0] <= v.max_x && b[3] >= v.min_y && b[1] <= v.max_y
+                        })
                         .map(|(i, _)| i as u32)
                         .collect();
                 }

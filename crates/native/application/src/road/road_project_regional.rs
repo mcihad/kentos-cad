@@ -70,7 +70,10 @@ enum Look {
 
 fn look(e: &Entity) -> Look {
     if matches!(e, Entity::Line(_) | Entity::Polyline(_)) && e.base().label.is_none() {
-        Look::Stroke(e.base().color.clone(), e.base().look.transparency.map(f64::to_bits))
+        Look::Stroke(
+            e.base().color.clone(),
+            e.base().look.transparency.map(f64::to_bits),
+        )
     } else {
         Look::Ordered
     }
@@ -96,7 +99,9 @@ fn staying(old: &[String], new: &[String], looks: &[Look]) -> Vec<Option<usize>>
     for (j, c) in new.iter().enumerate() {
         let l = &looks[j];
         let candidate = alike.get_mut(c.as_str()).and_then(VecDeque::pop_front);
-        let blocked = |i: usize| written.iter().any(|w| !free(w, l)) || kept.iter().any(|(k, m)| *m > i && !free(k, l));
+        let blocked = |i: usize| {
+            written.iter().any(|w| !free(w, l)) || kept.iter().any(|(k, m)| *m > i && !free(k, l))
+        };
         match candidate {
             Some(i) if !blocked(i) => {
                 stays[j] = Some(i);
@@ -168,14 +173,25 @@ pub(crate) fn redraw_regional(
     let present: Vec<(&str, Slot)> = d
         .uids
         .iter()
-        .filter_map(|u| Uuid::parse_str(u).ok().and_then(|id| cx.doc.slot_of(id)).map(|s| (u.as_str(), s)))
+        .filter_map(|u| {
+            Uuid::parse_str(u)
+                .ok()
+                .and_then(|id| cx.doc.slot_of(id))
+                .map(|s| (u.as_str(), s))
+        })
         .collect();
     let slots: Vec<Slot> = present.iter().map(|(_, s)| *s).collect();
     // Made again on a copy, as drawing it again makes it: its objects removed, its command's check and write.
     let mut copy = cx.doc.reading_copy();
     let (made, warnings) = {
-        let mut on_copy = ExecutionContext { doc: &mut copy, store: None, call: None, job: cx.job };
-        run_drawing(&mut on_copy, &d.id, &d.command, &d.input, &slots).map_err(|(refused, _)| refused)?
+        let mut on_copy = ExecutionContext {
+            doc: &mut copy,
+            store: None,
+            call: None,
+            job: cx.job,
+        };
+        run_drawing(&mut on_copy, &d.id, &d.command, &d.input, &slots)
+            .map_err(|(refused, _)| refused)?
     };
     if more_than_objects(cx.doc, &copy) {
         let (mut r, w) = redraw(cx, d)?;
@@ -185,20 +201,34 @@ pub(crate) fn redraw_regional(
     let old: Vec<&Entity> = slots.iter().filter_map(|s| cx.doc.get(*s)).collect();
     let new_slots: Vec<(Uuid, Slot)> = made
         .iter()
-        .filter_map(|u| Uuid::parse_str(u).ok().and_then(|id| copy.slot_of(id).map(|s| (id, s))))
+        .filter_map(|u| {
+            Uuid::parse_str(u)
+                .ok()
+                .and_then(|id| copy.slot_of(id).map(|s| (id, s)))
+        })
         .collect();
     let new: Vec<&Entity> = new_slots.iter().filter_map(|(_, s)| copy.get(*s)).collect();
-    let own_old: HashMap<&str, usize> = present.iter().enumerate().map(|(k, (u, _))| (*u, k)).collect();
-    let own_new: HashMap<&str, usize> = made.iter().enumerate().map(|(k, u)| (u.as_str(), k)).collect();
+    let own_old: HashMap<&str, usize> = present
+        .iter()
+        .enumerate()
+        .map(|(k, (u, _))| (*u, k))
+        .collect();
+    let own_new: HashMap<&str, usize> = made
+        .iter()
+        .enumerate()
+        .map(|(k, u)| (u.as_str(), k))
+        .collect();
     let old_c: Vec<String> = old.iter().map(|e| content(e, &own_old)).collect();
     let new_c: Vec<String> = new.iter().map(|e| content(e, &own_new)).collect();
-    let rebuilt = |removed: usize, kept: usize, region: Option<[f64; 4]>, uids: Vec<String>| RoadDrawingRebuilt {
-        drawing: d.id.clone(),
-        command: d.command.clone(),
-        removed: u32::try_from(removed).unwrap_or(u32::MAX),
-        kept: Some(u32::try_from(kept).unwrap_or(u32::MAX)),
-        region,
-        uids,
+    let rebuilt = |removed: usize, kept: usize, region: Option<[f64; 4]>, uids: Vec<String>| {
+        RoadDrawingRebuilt {
+            drawing: d.id.clone(),
+            command: d.command.clone(),
+            removed: u32::try_from(removed).unwrap_or(u32::MAX),
+            kept: Some(u32::try_from(kept).unwrap_or(u32::MAX)),
+            region,
+            uids,
+        }
     };
 
     // Alike: nothing written, the record renewed.
@@ -213,10 +243,19 @@ pub(crate) fn redraw_regional(
     let stays = staying(&old_c, &new_c, &looks);
     let mut taken = vec![false; old.len()];
     stays.iter().flatten().for_each(|&i| taken[i] = true);
-    let gone: Vec<Slot> = (0..old.len()).filter(|&i| !taken[i]).map(|i| slots[i]).collect();
-    let written: Vec<(Uuid, Entity)> =
-        (0..new.len()).filter(|&j| stays[j].is_none()).map(|j| (new_slots[j].0, new[j].clone())).collect();
-    let changed = region(gone.iter().filter_map(|s| cx.doc.get(*s)).chain(written.iter().map(|(_, e)| e)));
+    let gone: Vec<Slot> = (0..old.len())
+        .filter(|&i| !taken[i])
+        .map(|i| slots[i])
+        .collect();
+    let written: Vec<(Uuid, Entity)> = (0..new.len())
+        .filter(|&j| stays[j].is_none())
+        .map(|j| (new_slots[j].0, new[j].clone()))
+        .collect();
+    let changed = region(
+        gone.iter()
+            .filter_map(|s| cx.doc.get(*s))
+            .chain(written.iter().map(|(_, e)| e)),
+    );
     let removed = gone.len();
     let kept = new.len() - written.len();
     let uids: Vec<String> = (0..new.len())
@@ -228,9 +267,16 @@ pub(crate) fn redraw_regional(
     if !written.is_empty() {
         cx.doc
             .add_many_with_uids(written, "Yeniden üret")
-            .map_err(|e| refused_with(Stop::failed(error(codes::ROAD_DRAWINGS_FULL, format!("Çizim yazılamadı: {}.", e.0), None))))?;
+            .map_err(|e| {
+                refused_with(Stop::failed(error(
+                    codes::ROAD_DRAWINGS_FULL,
+                    format!("Çizim yazılamadı: {}.", e.0),
+                    None,
+                )))
+            })?;
     }
-    road_drawings::keep(cx.doc, &d.command, &d.input, main, &uids, Some(&d.id)).map_err(refused_with)?;
+    road_drawings::keep(cx.doc, &d.command, &d.input, main, &uids, Some(&d.id))
+        .map_err(refused_with)?;
     Ok((rebuilt(removed, kept, changed, uids), warnings))
 }
 
@@ -243,20 +289,33 @@ mod tests {
     /// The shared cases' map project with the ground's contour lines drawn (cz-1) and one point of a hill raised: the
     /// drawing stale (`road.project.rebuild.regional.json`'s first case).
     fn stale() -> Document {
-        let cases: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.project.rebuild.regional.json")).expect("cases");
-        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let cases: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/commands/v1/road.project.rebuild.regional.json"
+        ))
+        .expect("cases");
+        let snapshot: DocumentSnapshotV2 =
+            serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
         let mut doc = Document::from_snapshot_v2(snapshot).expect("opens");
         let steps = cases["cases"][0]["steps"].as_array().expect("steps");
         for step in &steps[..2] {
             let mut input = step["input"].clone();
             // `$uidOf:n`, as the runner reads it.
             if let Some(change) = input.pointer_mut("/changes/0/uid") {
-                let slot: u32 = change.as_str().and_then(|t| t.strip_prefix("$uidOf:")).and_then(|n| n.parse().ok()).expect("a slot");
+                let slot: u32 = change
+                    .as_str()
+                    .and_then(|t| t.strip_prefix("$uidOf:"))
+                    .and_then(|n| n.parse().ok())
+                    .expect("a slot");
                 *change = json!(doc.uid(Slot(slot)).expect("an object").to_string());
             }
             let command = step["command"].as_str().expect("a command");
-            let r = crate::registry::run(&mut ExecutionContext::new(&mut doc), command, CallOp::Execute, input).expect("runs");
+            let r = crate::registry::run(
+                &mut ExecutionContext::new(&mut doc),
+                command,
+                CallOp::Execute,
+                input,
+            )
+            .expect("runs");
             assert_eq!(r["status"], "completed", "{command}: {r}");
         }
         doc
@@ -264,16 +323,36 @@ mod tests {
 
     fn rebuild(doc: &mut Document, regional: bool) -> Value {
         let input = json!({ "regional": regional });
-        crate::registry::run(&mut ExecutionContext::new(doc), kentos_commands::ROAD_PROJECT_REBUILD, CallOp::Execute, input).expect("runs")
+        crate::registry::run(
+            &mut ExecutionContext::new(doc),
+            kentos_commands::ROAD_PROJECT_REBUILD,
+            CallOp::Execute,
+            input,
+        )
+        .expect("runs")
     }
 
     /// The drawing's objects in its order, as the comparison reads them.
     fn drawn(doc: &Document) -> Vec<String> {
         let d = &doc.road_drawings()[0];
-        let own: HashMap<&str, usize> = d.uids.iter().enumerate().map(|(k, u)| (u.as_str(), k)).collect();
+        let own: HashMap<&str, usize> = d
+            .uids
+            .iter()
+            .enumerate()
+            .map(|(k, u)| (u.as_str(), k))
+            .collect();
         d.uids
             .iter()
-            .map(|u| content(doc.get(doc.slot_of(Uuid::parse_str(u).expect("a uid")).expect("there")).expect("an object"), &own))
+            .map(|u| {
+                content(
+                    doc.get(
+                        doc.slot_of(Uuid::parse_str(u).expect("a uid"))
+                            .expect("there"),
+                    )
+                    .expect("an object"),
+                    &own,
+                )
+            })
             .collect()
     }
 
@@ -296,7 +375,10 @@ mod tests {
         let stayed = p.uids.iter().filter(|u| before.contains(u)).count();
         assert_eq!(stayed as u64, kept);
         assert!(kept > 0 && (kept as usize) < p.uids.len());
-        assert!(w.uids.iter().all(|u| !before.contains(u)), "drawn whole, every line is new");
+        assert!(
+            w.uids.iter().all(|u| !before.contains(u)),
+            "drawn whole, every line is new"
+        );
     }
 
     /// One colour and one transparency, lines and polylines without a label: free in their order; a second colour, a
@@ -307,7 +389,11 @@ mod tests {
         let lines: Vec<Entity> = doc.road_drawings()[0]
             .uids
             .iter()
-            .filter_map(|u| doc.slot_of(Uuid::parse_str(u).ok()?).and_then(|s| doc.get(s)).cloned())
+            .filter_map(|u| {
+                doc.slot_of(Uuid::parse_str(u).ok()?)
+                    .and_then(|s| doc.get(s))
+                    .cloned()
+            })
             .collect();
         let (a, b) = (look(&lines[0]), look(&lines[1]));
         assert!(free(&a, &b));
@@ -322,7 +408,10 @@ mod tests {
         }
         assert!(!free(&a, &look(&labelled)));
         let point = doc.entities().next().cloned().expect("a ground point");
-        assert!(!free(&look(&point), &look(&point)), "a point keeps its order even against its like");
+        assert!(
+            !free(&look(&point), &look(&point)),
+            "a point keeps its order even against its like"
+        );
     }
 
     /// The rule's walk (docs/adr/4740): strokes alike stay whatever is written before them; an ordered object stays
@@ -335,21 +424,39 @@ mod tests {
         // Lines a, b, c and a text t: b changed to b2.
         let old = c(&["a", "b", "c", "t"]);
         let new = c(&["a", "b2", "c", "t"]);
-        assert_eq!(staying(&old, &new, &[s.clone(), s.clone(), s.clone(), o.clone()]), vec![Some(0), None, Some(2), None]);
+        assert_eq!(
+            staying(&old, &new, &[s.clone(), s.clone(), s.clone(), o.clone()]),
+            vec![Some(0), None, Some(2), None]
+        );
         // Nothing written before the text: it stays.
         let new = c(&["a", "b", "c", "t"]);
-        assert_eq!(staying(&old, &new, &[s.clone(), s.clone(), s.clone(), o.clone()]), vec![Some(0), Some(1), Some(2), Some(3)]);
+        assert_eq!(
+            staying(&old, &new, &[s.clone(), s.clone(), s.clone(), o.clone()]),
+            vec![Some(0), Some(1), Some(2), Some(3)]
+        );
         // Two texts in the other order: the second stays from an earlier place, the first is written.
         let old = c(&["t1", "t2"]);
         let new = c(&["t2", "t1"]);
-        assert_eq!(staying(&old, &new, &[o.clone(), o.clone()]), vec![Some(1), None]);
+        assert_eq!(
+            staying(&old, &new, &[o.clone(), o.clone()]),
+            vec![Some(1), None]
+        );
         // Two strokes of one look in the other order: both stay.
-        assert_eq!(staying(&old, &new, &[s.clone(), s.clone()]), vec![Some(1), Some(0)]);
+        assert_eq!(
+            staying(&old, &new, &[s.clone(), s.clone()]),
+            vec![Some(1), Some(0)]
+        );
         // A written object leaves its old one alike to a later one alike.
         let old = c(&["t", "x"]);
         let new = c(&["y", "t", "t"]);
-        assert_eq!(staying(&old, &new, &[o.clone(), o.clone(), o.clone()]), vec![None, None, None]);
-        assert_eq!(staying(&old, &new, &[s.clone(), s.clone(), s.clone()]), vec![None, Some(0), None]);
+        assert_eq!(
+            staying(&old, &new, &[o.clone(), o.clone(), o.clone()]),
+            vec![None, None, None]
+        );
+        assert_eq!(
+            staying(&old, &new, &[s.clone(), s.clone(), s.clone()]),
+            vec![None, Some(0), None]
+        );
     }
 
     /// A drawing's object naming another of the drawing reads its index, so two drawings made alike compare equal.
@@ -364,7 +471,10 @@ mod tests {
         let old = HashMap::from([("u-old", 3)]);
         let new = HashMap::from([("u-new", 3)]);
         assert_eq!(content(&a, &old), content(&b, &new));
-        assert_ne!(content(&a, &old), content(&b, &HashMap::from([("u-new", 4)])));
+        assert_ne!(
+            content(&a, &old),
+            content(&b, &HashMap::from([("u-new", 4)]))
+        );
     }
 
     /// A run that changed a setting on the copy is no objects-only run.

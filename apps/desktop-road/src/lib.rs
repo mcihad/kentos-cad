@@ -95,12 +95,6 @@ mod widening_window;
 
 // The module's tests (docs/adr/9199 §4.6).
 #[cfg(test)]
-#[path = "tests/design_check_window_tests.rs"]
-mod design_check_window_tests;
-#[cfg(test)]
-#[path = "tests/picture_tests.rs"]
-mod picture_tests;
-#[cfg(test)]
 #[path = "tests/alignment_window_tests.rs"]
 mod alignment_window_tests;
 #[cfg(test)]
@@ -109,6 +103,9 @@ mod corridor_window_tests;
 #[cfg(test)]
 #[path = "tests/culvert_window_tests.rs"]
 mod culvert_window_tests;
+#[cfg(test)]
+#[path = "tests/design_check_window_tests.rs"]
+mod design_check_window_tests;
 #[cfg(test)]
 #[path = "tests/guardrail_window_tests.rs"]
 mod guardrail_window_tests;
@@ -127,6 +124,9 @@ mod junction_window_tests;
 #[cfg(test)]
 #[path = "tests/pay_window_tests.rs"]
 mod pay_window_tests;
+#[cfg(test)]
+#[path = "tests/picture_tests.rs"]
+mod picture_tests;
 #[cfg(test)]
 #[path = "tests/platform_water_window_tests.rs"]
 mod platform_water_window_tests;

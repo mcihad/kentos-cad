@@ -269,8 +269,11 @@ fn drawn(app: &App) -> (Vec<kentos_commands::Entity>, Vec<(String, String)>) {
         .into_iter()
         .map(|l| (l.id.clone(), l.name.clone()))
         .collect();
-    let place: std::collections::HashMap<[u8; 16], usize> =
-        doc.entities_with_uids().enumerate().map(|(i, (uid, _))| (*uid.as_bytes(), i)).collect();
+    let place: std::collections::HashMap<[u8; 16], usize> = doc
+        .entities_with_uids()
+        .enumerate()
+        .map(|(i, (uid, _))| (*uid.as_bytes(), i))
+        .collect();
     let entities = doc
         .entities()
         .cloned()
@@ -589,9 +592,23 @@ fn a_remembered_kind_narrowing_does_not_come_back() {
     app.keep_tool_names();
     let window = app.gis.processing.dialog.as_ref().expect("open");
     // The input is the drawing's now, the tool's own default (docs/adr/9144): neither the last layer nor its narrowing.
-    assert!(window.values.get("input").is_some_and(|v| v.get("kinds").is_none()), "{:?}", window.values.get("input"));
-    assert_ne!(window.values.get("input"), Some(&json!({ "scope": "layer", "layerId": "parsel", "kinds": ["line"] })));
-    assert_eq!(window.values.get("decimals"), Some(&json!(2.0)), "the rest comes back");
+    assert!(
+        window
+            .values
+            .get("input")
+            .is_some_and(|v| v.get("kinds").is_none()),
+        "{:?}",
+        window.values.get("input")
+    );
+    assert_ne!(
+        window.values.get("input"),
+        Some(&json!({ "scope": "layer", "layerId": "parsel", "kinds": ["line"] }))
+    );
+    assert_eq!(
+        window.values.get("decimals"),
+        Some(&json!(2.0)),
+        "the rest comes back"
+    );
 }
 
 #[test]
@@ -777,7 +794,11 @@ fn the_toolbox_is_a_tab_beside_the_layers_with_search_and_this_session_s_runs() 
     app.selection.clear();
     event(&mut app, Event::Panel(PanelEvent::SelectRun(seq)));
     // The four new corner points and their names' texts (docs/adr/9311).
-    assert_eq!(app.selection.len(), 8, "the four new corner points and their texts");
+    assert_eq!(
+        app.selection.len(),
+        8,
+        "the four new corner points and their texts"
+    );
     event(&mut app, Event::Panel(PanelEvent::Reopen(seq)));
     let window = app.gis.processing.dialog.as_ref().expect("open again");
     assert_eq!(window.values.get("prefix"), Some(&json!("K")));
@@ -853,7 +874,14 @@ fn a_changed_advanced_setting_is_said_while_its_section_is_closed() {
     let mut app = app_with_parcels();
     let _ = app.update(Message::Run("processing.run.selection.byExpression"));
     app.keep_tool_names();
-    let changed = |app: &App| app.gis.processing.dialog.as_ref().expect("the window").advanced_changed();
+    let changed = |app: &App| {
+        app.gis
+            .processing
+            .dialog
+            .as_ref()
+            .expect("the window")
+            .advanced_changed()
+    };
     assert!(changed(&app).is_empty());
     event(&mut app, Event::Value("cadFilter".into(), json!(true)));
     assert_eq!(changed(&app), ["CAD özellik süzgeci"]);
@@ -883,15 +911,29 @@ fn a_search_puts_the_tool_named_exactly_first() {
     let mut app = app_with_parcels();
     let registry = &app.gis.processing.registry;
     let first = |q: &str| registry.named(q).first().map(|t| t.id.clone());
-    assert_eq!(first("En yakın tesis").as_deref(), Some("network.closestFacility"));
-    assert_eq!(first("En yakın merkeze bağla").as_deref(), Some("proximity.hub"));
+    assert_eq!(
+        first("En yakın tesis").as_deref(),
+        Some("network.closestFacility")
+    );
+    assert_eq!(
+        first("En yakın merkeze bağla").as_deref(),
+        Some("proximity.hub")
+    );
     // Turkish letters folded.
-    assert_eq!(first("en yakin tesis").as_deref(), Some("network.closestFacility"));
+    assert_eq!(
+        first("en yakin tesis").as_deref(),
+        Some("network.closestFacility")
+    );
     let _ = app.update(Message::Run("processing.toolbox"));
-    event(&mut app, Event::Panel(PanelEvent::Search("En yakın tesis".into())));
+    event(
+        &mut app,
+        Event::Panel(PanelEvent::Search("En yakın tesis".into())),
+    );
     if std::env::var_os("KENTOS_SHOTS").is_some() {
         let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+            drop(app.update(m))
+        });
         crate::files_testing::evidence(&mut shot, &app, "gis-015", "en-yakin-tesis-arama");
     }
 }
@@ -902,30 +944,68 @@ fn a_search_puts_the_tool_named_exactly_first() {
 #[test]
 fn metres_in_a_geographic_project_are_refused_before_the_run() {
     let open = |srid: u32| {
-        let mut drawing: serde_json::Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/empty.kcad")).expect("the drawing");
+        let mut drawing: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/interaction/v1/empty.kcad"
+        ))
+        .expect("the drawing");
         drawing["settings"]["srid"] = serde_json::json!(srid);
         drawing["settings"]["workspace"] = serde_json::json!("gis");
-        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+        let snapshot =
+            kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
         let doc = crate::document::Document::new(snapshot, None).expect("opens");
         let (mut app, _) = App::boot(None);
         let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
         app
     };
-    let issue = |app: &mut App, tool: &'static str, values: &[(&str, serde_json::Value)]| -> Option<String> {
+    let issue = |app: &mut App,
+                 tool: &'static str,
+                 values: &[(&str, serde_json::Value)]|
+     -> Option<String> {
         let _ = app.update(Message::Run(tool));
         app.keep_tool_names();
         for (k, v) in values {
-            let _ = app.update(Message::Gis(gis::Event::Processing(super::Event::Value((*k).into(), v.clone()))));
+            let _ = app.update(Message::Gis(gis::Event::Processing(super::Event::Value(
+                (*k).into(),
+                v.clone(),
+            ))));
         }
         let w = app.gis.processing.dialog.as_ref().expect("the window");
-        w.issues.iter().find(|i| i.message.contains("coğrafi")).map(|i| i.message.clone())
+        w.issues
+            .iter()
+            .find(|i| i.message.contains("coğrafi"))
+            .map(|i| i.message.clone())
     };
     let mut wgs = open(4326);
-    let said = issue(&mut wgs, "processing.run.geometry.buffer", &[("distance", serde_json::json!(10))]).expect("Tampon refused");
-    assert!(said.contains("“Uzaklık” metre ister") && said.contains("Koordinat dönüştür"), "{said}");
-    assert!(issue(&mut wgs, "processing.run.proximity.nearest", &[]).is_some(), "En yakını bul refused");
-    assert!(issue(&mut wgs, "processing.run.selection.byLocation", &[("distance", serde_json::json!(10))]).is_some(), "Konuma göre seç refused");
+    let said = issue(
+        &mut wgs,
+        "processing.run.geometry.buffer",
+        &[("distance", serde_json::json!(10))],
+    )
+    .expect("Tampon refused");
+    assert!(
+        said.contains("“Uzaklık” metre ister") && said.contains("Koordinat dönüştür"),
+        "{said}"
+    );
+    assert!(
+        issue(&mut wgs, "processing.run.proximity.nearest", &[]).is_some(),
+        "En yakını bul refused"
+    );
+    assert!(
+        issue(
+            &mut wgs,
+            "processing.run.selection.byLocation",
+            &[("distance", serde_json::json!(10))]
+        )
+        .is_some(),
+        "Konuma göre seç refused"
+    );
     let mut tm = open(5256);
-    assert!(issue(&mut tm, "processing.run.geometry.buffer", &[("distance", serde_json::json!(10))]).is_none());
+    assert!(
+        issue(
+            &mut tm,
+            "processing.run.geometry.buffer",
+            &[("distance", serde_json::json!(10))]
+        )
+        .is_none()
+    );
 }

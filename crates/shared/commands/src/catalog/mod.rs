@@ -2509,227 +2509,491 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::ROAD_SUPERELEVATIONS_TRANSITIONS => {
-                            serde_json::from_value::<crate::SuperelevationsTransitioned>(output.clone())
-                                .map(|_| ())
+                            serde_json::from_value::<crate::SuperelevationsTransitioned>(
+                                output.clone(),
+                            )
+                            .map(|_| ())
                         }
                         crate::ROAD_CORRIDORS_EDIT => {
-                            serde_json::from_value::<crate::CorridorsWritten>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CorridorsWritten>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CORRIDORS_QUERY => {
-                            serde_json::from_value::<crate::CorridorsQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CorridorsQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CORRIDORS_DRAW => {
-                            serde_json::from_value::<crate::CorridorsDrawn>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CorridorsDrawn>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CORRIDORS_WATER => {
-                            serde_json::from_value::<crate::CorridorsWatered>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CorridorsWatered>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CORRIDORS_DAYLIGHTS => {
-                            serde_json::from_value::<crate::CorridorDaylights>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CorridorDaylights>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CORRIDORS_PROTECTED => {
-                            serde_json::from_value::<crate::CorridorProtected>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CorridorProtected>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CORRIDORS_PREFLIGHT => {
-                            serde_json::from_value::<crate::CorridorPreflight>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CorridorPreflight>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_VOLUMES_EDIT => {
-                            serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::VolumesWritten>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_VOLUMES_QUERY => {
-                            serde_json::from_value::<crate::VolumesQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::VolumesQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_VOLUMES_APPROVE => {
-                            serde_json::from_value::<crate::VolumesWritten>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::VolumesWritten>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_VOLUMES_UNCERTAINTY => {
-                            serde_json::from_value::<crate::VolumeUncertaintyReport>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::VolumeUncertaintyReport>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_VOLUMES_PROGRESS => {
-                            serde_json::from_value::<crate::VolumeProgressReport>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::VolumeProgressReport>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_VOLUMES_COMPARE => {
-                            serde_json::from_value::<crate::VolumesCompared>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::VolumesCompared>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_VOLUMES_LEDGER => {
-                            serde_json::from_value::<crate::VolumeLedgerRead>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::VolumeLedgerRead>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_VOLUMES_STATES => {
-                            serde_json::from_value::<crate::VolumeStatesRead>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::VolumeStatesRead>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_PROFILES_IMPACT => {
-                            serde_json::from_value::<crate::ProfileImpact>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ProfileImpact>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_ALIGNMENTS_IMPACT => {
-                            serde_json::from_value::<crate::AlignmentImpact>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::AlignmentImpact>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_VOLUMES_HISTORY => {
-                            serde_json::from_value::<crate::VolumeHistoryRead>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::VolumeHistoryRead>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_HAULS_EDIT => {
-                            serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::HaulsWritten>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_HAULS_QUERY => {
-                            serde_json::from_value::<crate::HaulsQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::HaulsQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_HAULS_PLAN => {
                             serde_json::from_value::<crate::HaulPlanned>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_HAULS_APPROVE => {
-                            serde_json::from_value::<crate::HaulsWritten>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::HaulsWritten>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_HAULS_NETWORK => {
-                            serde_json::from_value::<crate::HaulNetworkRead>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::HaulNetworkRead>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_HAULS_TRUCKS => {
                             serde_json::from_value::<crate::HaulTrucked>(output.clone()).map(|_| ())
                         }
                         crate::ROAD_GUARDRAILS_EDIT => {
-                            serde_json::from_value::<crate::GuardrailsWritten>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::GuardrailsWritten>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_GUARDRAILS_QUERY => {
-                            serde_json::from_value::<crate::GuardrailsQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::GuardrailsQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_GUARDRAILS_DRAW => {
-                            serde_json::from_value::<crate::GuardrailsDrawn>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::GuardrailsDrawn>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CULVERTS_EDIT => {
-                            serde_json::from_value::<crate::CulvertsWritten>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CulvertsWritten>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CULVERTS_QUERY => {
-                            serde_json::from_value::<crate::CulvertsQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CulvertsQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CULVERTS_DRAW => {
-                            serde_json::from_value::<crate::CulvertsDrawn>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CulvertsDrawn>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CULVERTS_HYDRAULICS => {
-                            serde_json::from_value::<crate::CulvertHydraulicsRead>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CulvertHydraulicsRead>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_CULVERTS_CLOSURE => {
-                            serde_json::from_value::<crate::CulvertClosureRead>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::CulvertClosureRead>(output.clone())
+                                .map(|_| ())
                         }
-                        crate::ROAD_PLATFORMS_EDIT => serde_json::from_value::<crate::PlatformsWritten>(output.clone()).map(|_| ()),
-                        crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<crate::TerrainsFromCloudWritten>(output.clone()).map(|_| ()),
-                        crate::ROAD_DRAINAGE_QUERY => serde_json::from_value::<crate::DrainageQueried>(output.clone()).map(|_| ()),
-                        crate::ROAD_DRAINAGE_DRAW => serde_json::from_value::<crate::DrainageDrawn>(output.clone()).map(|_| ()),
-                        crate::ROAD_SWEPT_QUERY => serde_json::from_value::<crate::SweptQueried>(output.clone()).map(|_| ()),
-                        crate::ROAD_TERRAINS_ANALYSIS => serde_json::from_value::<crate::TerrainsAnalysed>(output.clone()).map(|_| ()),
-                        crate::ROAD_TERRAINS_COMPARE => serde_json::from_value::<crate::TerrainsCompared>(output.clone()).map(|_| ()),
-                        crate::ROAD_TERRAINS_QUALITY => serde_json::from_value::<crate::TerrainsQualityRead>(output.clone()).map(|_| ()),
-                        crate::ROAD_TERRAINS_REPAIR => serde_json::from_value::<crate::TerrainsRepaired>(output.clone()).map(|_| ()),
-                        crate::ROAD_TERRAINS_COVERAGE => serde_json::from_value::<crate::TerrainsCovered>(output.clone()).map(|_| ()),
-                        crate::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW => serde_json::from_value::<crate::TerrainsCoverageDrawn>(output.clone()).map(|_| ()),
-                        crate::ROAD_TERRAINS_DENSITY => serde_json::from_value::<crate::TerrainsDensityRead>(output.clone()).map(|_| ()),
-                        crate::ROAD_TERRAINS_STOCKPILE => serde_json::from_value::<crate::TerrainsStockpiled>(output.clone()).map(|_| ()),
-                        crate::ROAD_TERRAINS_SPARSE_DRAW => serde_json::from_value::<crate::TerrainsCoverageDrawn>(output.clone()).map(|_| ()),
-                        crate::ROAD_SWEPT_DRAW => serde_json::from_value::<crate::SweptDrawn>(output.clone()).map(|_| ()),
-                        crate::ROAD_PLATFORMS_QUERY => serde_json::from_value::<crate::PlatformsQueried>(output.clone()).map(|_| ()),
-                        crate::ROAD_PLATFORMS_DRAW => serde_json::from_value::<crate::PlatformsDrawn>(output.clone()).map(|_| ()),
+                        crate::ROAD_PLATFORMS_EDIT => {
+                            serde_json::from_value::<crate::PlatformsWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_FROM_CLOUD => serde_json::from_value::<
+                            crate::TerrainsFromCloudWritten,
+                        >(output.clone())
+                        .map(|_| ()),
+                        crate::ROAD_DRAINAGE_QUERY => {
+                            serde_json::from_value::<crate::DrainageQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_DRAINAGE_DRAW => {
+                            serde_json::from_value::<crate::DrainageDrawn>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SWEPT_QUERY => {
+                            serde_json::from_value::<crate::SweptQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_ANALYSIS => {
+                            serde_json::from_value::<crate::TerrainsAnalysed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_COMPARE => {
+                            serde_json::from_value::<crate::TerrainsCompared>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_QUALITY => {
+                            serde_json::from_value::<crate::TerrainsQualityRead>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_REPAIR => {
+                            serde_json::from_value::<crate::TerrainsRepaired>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_COVERAGE => {
+                            serde_json::from_value::<crate::TerrainsCovered>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW => {
+                            serde_json::from_value::<crate::TerrainsCoverageDrawn>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_DENSITY => {
+                            serde_json::from_value::<crate::TerrainsDensityRead>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_STOCKPILE => {
+                            serde_json::from_value::<crate::TerrainsStockpiled>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_TERRAINS_SPARSE_DRAW => {
+                            serde_json::from_value::<crate::TerrainsCoverageDrawn>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_SWEPT_DRAW => {
+                            serde_json::from_value::<crate::SweptDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_PLATFORMS_QUERY => {
+                            serde_json::from_value::<crate::PlatformsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PLATFORMS_DRAW => {
+                            serde_json::from_value::<crate::PlatformsDrawn>(output.clone())
+                                .map(|_| ())
+                        }
                         crate::ROAD_WALLS_EDIT => {
-                            serde_json::from_value::<crate::RetainingWallsWritten>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::RetainingWallsWritten>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_WALLS_QUERY => {
-                            serde_json::from_value::<crate::RetainingWallsQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::RetainingWallsQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_WALLS_DRAW => {
-                            serde_json::from_value::<crate::RetainingWallsDrawn>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::RetainingWallsDrawn>(output.clone())
+                                .map(|_| ())
                         }
-                        crate::ROAD_PAY_EDIT => serde_json::from_value::<crate::PayWritten>(output.clone()).map(|_| ()),
-                        crate::ROAD_PAY_QUERY => serde_json::from_value::<crate::PayQueried>(output.clone()).map(|_| ()),
-                        crate::ROAD_ROUTES_FIND => serde_json::from_value::<crate::RouteFound>(output.clone()).map(|_| ()),
-                        crate::ROAD_ROUTES_DRAW => serde_json::from_value::<crate::RoutesDrawn>(output.clone()).map(|_| ()),
-                        crate::ROAD_JUNCTIONS_EDIT => serde_json::from_value::<crate::JunctionsWritten>(output.clone()).map(|_| ()),
-                        crate::ROAD_JUNCTIONS_QUERY => serde_json::from_value::<crate::JunctionsQueried>(output.clone()).map(|_| ()),
-                        crate::ROAD_JUNCTIONS_CLEARANCE => serde_json::from_value::<crate::JunctionsCleared>(output.clone()).map(|_| ()),
-                        crate::ROAD_JUNCTIONS_TIE => serde_json::from_value::<crate::JunctionsTied>(output.clone()).map(|_| ()),
-                        crate::ROAD_JUNCTIONS_OVERLAP => serde_json::from_value::<crate::JunctionsOverlapped>(output.clone()).map(|_| ()),
-                        crate::ROAD_PROJECT_QUERY => serde_json::from_value::<crate::RoadProjectTree>(output.clone()).map(|_| ()),
-                        crate::ROAD_PROJECT_GRAPH => serde_json::from_value::<crate::RoadProjectGraph>(output.clone()).map(|_| ()),
-                        crate::ROAD_PROJECT_REBUILD => serde_json::from_value::<crate::RoadProjectRebuilt>(output.clone()).map(|_| ()),
-                        crate::ROAD_PROJECT_PRODUCE => serde_json::from_value::<crate::RoadProjectProduced>(output.clone()).map(|_| ()),
-                        crate::ROAD_PROJECT_EDIT => serde_json::from_value::<crate::RoadProjectEdited>(output.clone()).map(|_| ()),
-                        crate::MAP_WORK_QUERY => serde_json::from_value::<crate::MapWorkTree>(output.clone()).map(|_| ()),
-                        crate::MAP_WORK_EDIT => serde_json::from_value::<crate::MapWorkEdited>(output.clone()).map(|_| ()),
-                        crate::MAP_WORK_RESTORE => serde_json::from_value::<crate::MapWorkRestored>(output.clone()).map(|_| ()),
-                        crate::CAD_CRS_FACTORS => serde_json::from_value::<crate::CrsFactorsRead>(output.clone()).map(|_| ()),
-                        crate::MAP_FEATURES_CODE => serde_json::from_value::<crate::FeaturesCoded>(output.clone()).map(|_| ()),
-                        crate::CAD_SURVEY_BASELINES => serde_json::from_value::<crate::SurveyBaselinesAdjusted>(output.clone()).map(|_| ()),
-                        crate::CAD_ENTITIES_GRADE => serde_json::from_value::<crate::EntitiesGraded>(output.clone()).map(|_| ()),
-                        crate::CAD_ENTITIES_RAISE => serde_json::from_value::<crate::EntitiesRaised>(output.clone()).map(|_| ()),
-                        crate::CAD_ENTITIES_DRAPE => serde_json::from_value::<crate::EntitiesDraped>(output.clone()).map(|_| ()),
-                        crate::CAD_TOPOLOGY_CLEAN => serde_json::from_value::<crate::TopologyCleaned>(output.clone()).map(|_| ()),
-                        crate::CAD_PARCELS_CHECK => serde_json::from_value::<crate::ParcelsChecked>(output.clone()).map(|_| ()),
-                        crate::CAD_PARCELS_BOUNDARIES => serde_json::from_value::<crate::ParcelsBounded>(output.clone()).map(|_| ()),
-                        crate::CAD_PARCELS_RECORD => serde_json::from_value::<crate::ParcelsRecorded>(output.clone()).map(|_| ()),
-                        crate::CAD_PARCELS_RECORDS => serde_json::from_value::<crate::ParcelsRecordsListed>(output.clone()).map(|_| ()),
-                        crate::CAD_PARCELS_APPROVE => serde_json::from_value::<crate::ParcelsApproved>(output.clone()).map(|_| ()),
-                        crate::CAD_ASBUILT_REVIEW => serde_json::from_value::<crate::AsbuiltReviewed>(output.clone()).map(|_| ()),
-                        crate::CAD_PARCELS_WITHDRAW => serde_json::from_value::<crate::ParcelsWithdrawn>(output.clone()).map(|_| ()),
-                        crate::CAD_PIPES_CHECK => serde_json::from_value::<crate::PipesChecked>(output.clone()).map(|_| ()),
-                        crate::CAD_PIPES_PROFILE => serde_json::from_value::<crate::PipesProfiled>(output.clone()).map(|_| ()),
-                        crate::CAD_ASBUILT_CHECK => serde_json::from_value::<crate::AsbuiltChecked>(output.clone()).map(|_| ()),
-                        crate::CAD_FIELD_PACKAGE => serde_json::from_value::<crate::FieldPackaged>(output.clone()).map(|_| ()),
-                        crate::CAD_ZONING_CHECK => serde_json::from_value::<crate::ZoningChecked>(output.clone()).map(|_| ()),
-                        crate::CAD_ZONING_SYMBOLIZE => serde_json::from_value::<crate::ZoningSymbolized>(output.clone()).map(|_| ()),
-                        crate::CAD_ZONING_DRAFT => serde_json::from_value::<crate::ZoningDrafted>(output.clone()).map(|_| ()),
-                        crate::CAD_SCENARIOS_IMPACT => serde_json::from_value::<crate::ScenariosImpacted>(output.clone()).map(|_| ()),
-                        crate::CAD_SCENARIOS_RECORD => serde_json::from_value::<crate::ScenariosRecorded>(output.clone()).map(|_| ()),
-                        crate::CAD_READJUSTMENT_DISTRIBUTE => serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone()).map(|_| ()),
-                        crate::CAD_READJUSTMENT_SCOPE => serde_json::from_value::<crate::ReadjustmentScoped>(output.clone()).map(|_| ()),
-                        crate::CAD_READJUSTMENT_SHEETS => serde_json::from_value::<crate::ReadjustmentSheetsMade>(output.clone()).map(|_| ()),
-                        crate::CAD_ORTHOPHOTO_CHECK => serde_json::from_value::<crate::OrthophotoChecked>(output.clone()).map(|_| ()),
-                        crate::CAD_POINTCLOUDS_REGISTER => serde_json::from_value::<crate::PointCloudsRegistered>(output.clone()).map(|_| ()),
-                        crate::CAD_POINTCLOUDS_NETWORK => serde_json::from_value::<crate::PointCloudsNetworked>(output.clone()).map(|_| ()),
-                        crate::CAD_POINTCLOUDS_PLACE => serde_json::from_value::<crate::PointCloudsPlaced>(output.clone()).map(|_| ()),
-                        crate::CAD_ORTHOPHOTO_COMPARE => serde_json::from_value::<crate::OrthophotoCompared>(output.clone()).map(|_| ()),
-                        crate::CAD_ORTHOPHOTO_SEAMLINES => serde_json::from_value::<crate::OrthophotoSeamlinesBuilt>(output.clone()).map(|_| ()),
-                        crate::CAD_ORTHOPHOTO_NETWORK => serde_json::from_value::<crate::OrthophotoNetworkBuilt>(output.clone()).map(|_| ()),
-                        crate::CAD_ORTHOPHOTO_FOOTPRINT => serde_json::from_value::<crate::OrthophotoFootprintBuilt>(output.clone()).map(|_| ()),
-                        crate::CAD_POINTCLOUDS_OVERLAP => serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone()).map(|_| ()),
-                        crate::MAP_SURVEY_QUERY => serde_json::from_value::<crate::MapSurveyTree>(output.clone()).map(|_| ()),
-                        crate::MAP_SURVEY_NETWORK => serde_json::from_value::<crate::MapSurveyNetworked>(output.clone()).map(|_| ()),
-                        crate::MAP_FEATURES_RECONCILE => serde_json::from_value::<crate::FeaturesReconciled>(output.clone()).map(|_| ()),
-                        crate::MAP_SURVEY_EDIT => serde_json::from_value::<crate::MapSurveyEdited>(output.clone()).map(|_| ()),
-                        crate::ROAD_JUNCTIONS_DRAW => serde_json::from_value::<crate::JunctionsDrawn>(output.clone()).map(|_| ()),
+                        crate::ROAD_PAY_EDIT => {
+                            serde_json::from_value::<crate::PayWritten>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_PAY_QUERY => {
+                            serde_json::from_value::<crate::PayQueried>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_ROUTES_FIND => {
+                            serde_json::from_value::<crate::RouteFound>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_ROUTES_DRAW => {
+                            serde_json::from_value::<crate::RoutesDrawn>(output.clone()).map(|_| ())
+                        }
+                        crate::ROAD_JUNCTIONS_EDIT => {
+                            serde_json::from_value::<crate::JunctionsWritten>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_JUNCTIONS_QUERY => {
+                            serde_json::from_value::<crate::JunctionsQueried>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_JUNCTIONS_CLEARANCE => {
+                            serde_json::from_value::<crate::JunctionsCleared>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_JUNCTIONS_TIE => {
+                            serde_json::from_value::<crate::JunctionsTied>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_JUNCTIONS_OVERLAP => {
+                            serde_json::from_value::<crate::JunctionsOverlapped>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROJECT_QUERY => {
+                            serde_json::from_value::<crate::RoadProjectTree>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROJECT_GRAPH => {
+                            serde_json::from_value::<crate::RoadProjectGraph>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROJECT_REBUILD => {
+                            serde_json::from_value::<crate::RoadProjectRebuilt>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROJECT_PRODUCE => {
+                            serde_json::from_value::<crate::RoadProjectProduced>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_PROJECT_EDIT => {
+                            serde_json::from_value::<crate::RoadProjectEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::MAP_WORK_QUERY => {
+                            serde_json::from_value::<crate::MapWorkTree>(output.clone()).map(|_| ())
+                        }
+                        crate::MAP_WORK_EDIT => {
+                            serde_json::from_value::<crate::MapWorkEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::MAP_WORK_RESTORE => {
+                            serde_json::from_value::<crate::MapWorkRestored>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_CRS_FACTORS => {
+                            serde_json::from_value::<crate::CrsFactorsRead>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::MAP_FEATURES_CODE => {
+                            serde_json::from_value::<crate::FeaturesCoded>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_SURVEY_BASELINES => {
+                            serde_json::from_value::<crate::SurveyBaselinesAdjusted>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_GRADE => {
+                            serde_json::from_value::<crate::EntitiesGraded>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_RAISE => {
+                            serde_json::from_value::<crate::EntitiesRaised>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ENTITIES_DRAPE => {
+                            serde_json::from_value::<crate::EntitiesDraped>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_TOPOLOGY_CLEAN => {
+                            serde_json::from_value::<crate::TopologyCleaned>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_PARCELS_CHECK => {
+                            serde_json::from_value::<crate::ParcelsChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_PARCELS_BOUNDARIES => {
+                            serde_json::from_value::<crate::ParcelsBounded>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_PARCELS_RECORD => {
+                            serde_json::from_value::<crate::ParcelsRecorded>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_PARCELS_RECORDS => {
+                            serde_json::from_value::<crate::ParcelsRecordsListed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_PARCELS_APPROVE => {
+                            serde_json::from_value::<crate::ParcelsApproved>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ASBUILT_REVIEW => {
+                            serde_json::from_value::<crate::AsbuiltReviewed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_PARCELS_WITHDRAW => {
+                            serde_json::from_value::<crate::ParcelsWithdrawn>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_PIPES_CHECK => {
+                            serde_json::from_value::<crate::PipesChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_PIPES_PROFILE => {
+                            serde_json::from_value::<crate::PipesProfiled>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ASBUILT_CHECK => {
+                            serde_json::from_value::<crate::AsbuiltChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_FIELD_PACKAGE => {
+                            serde_json::from_value::<crate::FieldPackaged>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ZONING_CHECK => {
+                            serde_json::from_value::<crate::ZoningChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ZONING_SYMBOLIZE => {
+                            serde_json::from_value::<crate::ZoningSymbolized>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ZONING_DRAFT => {
+                            serde_json::from_value::<crate::ZoningDrafted>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_SCENARIOS_IMPACT => {
+                            serde_json::from_value::<crate::ScenariosImpacted>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_SCENARIOS_RECORD => {
+                            serde_json::from_value::<crate::ScenariosRecorded>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_READJUSTMENT_DISTRIBUTE => {
+                            serde_json::from_value::<crate::ReadjustmentDistributed>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_READJUSTMENT_SCOPE => {
+                            serde_json::from_value::<crate::ReadjustmentScoped>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_READJUSTMENT_SHEETS => {
+                            serde_json::from_value::<crate::ReadjustmentSheetsMade>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ORTHOPHOTO_CHECK => {
+                            serde_json::from_value::<crate::OrthophotoChecked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_POINTCLOUDS_REGISTER => {
+                            serde_json::from_value::<crate::PointCloudsRegistered>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_POINTCLOUDS_NETWORK => {
+                            serde_json::from_value::<crate::PointCloudsNetworked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_POINTCLOUDS_PLACE => {
+                            serde_json::from_value::<crate::PointCloudsPlaced>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ORTHOPHOTO_COMPARE => {
+                            serde_json::from_value::<crate::OrthophotoCompared>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ORTHOPHOTO_SEAMLINES => serde_json::from_value::<
+                            crate::OrthophotoSeamlinesBuilt,
+                        >(output.clone())
+                        .map(|_| ()),
+                        crate::CAD_ORTHOPHOTO_NETWORK => {
+                            serde_json::from_value::<crate::OrthophotoNetworkBuilt>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_ORTHOPHOTO_FOOTPRINT => serde_json::from_value::<
+                            crate::OrthophotoFootprintBuilt,
+                        >(output.clone())
+                        .map(|_| ()),
+                        crate::CAD_POINTCLOUDS_OVERLAP => {
+                            serde_json::from_value::<crate::PointCloudsOverlapped>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::MAP_SURVEY_QUERY => {
+                            serde_json::from_value::<crate::MapSurveyTree>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::MAP_SURVEY_NETWORK => {
+                            serde_json::from_value::<crate::MapSurveyNetworked>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::MAP_FEATURES_RECONCILE => {
+                            serde_json::from_value::<crate::FeaturesReconciled>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::MAP_SURVEY_EDIT => {
+                            serde_json::from_value::<crate::MapSurveyEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::ROAD_JUNCTIONS_DRAW => {
+                            serde_json::from_value::<crate::JunctionsDrawn>(output.clone())
+                                .map(|_| ())
+                        }
                         crate::ROAD_STAKEOUT_QUERY => {
-                            serde_json::from_value::<crate::StakeoutQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::StakeoutQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::FILE_EXPORT_LANDXML => {
-                            serde_json::from_value::<crate::LandxmlExported>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::LandxmlExported>(output.clone())
+                                .map(|_| ())
                         }
                         crate::FILE_EXPORT_IFC => {
                             serde_json::from_value::<crate::IfcExported>(output.clone()).map(|_| ())
                         }
                         crate::CAD_ARCH_IFC => {
-                            serde_json::from_value::<crate::IfcBuildingExported>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::IfcBuildingExported>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_IFC_INSPECT => {
-                            serde_json::from_value::<crate::IfcInspected>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::IfcInspected>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_IFC_COMPARE => {
                             serde_json::from_value::<crate::IfcCompared>(output.clone()).map(|_| ())
                         }
-                        crate::CAD_BCF_WRITE => serde_json::from_value::<crate::BcfWritten>(output.clone()).map(|_| ()),
+                        crate::CAD_BCF_WRITE => {
+                            serde_json::from_value::<crate::BcfWritten>(output.clone()).map(|_| ())
+                        }
                         crate::CAD_BCF_READ => {
-                            serde_json::from_value::<crate::BcfReadOutput>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::BcfReadOutput>(output.clone())
+                                .map(|_| ())
                         }
                         crate::FILE_EXPORT_GLTF => {
-                            serde_json::from_value::<crate::GltfExported>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::GltfExported>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_STAKEOUT_SEND => {
-                            serde_json::from_value::<crate::StakeoutSent>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::StakeoutSent>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_SHEETS_PLAN | crate::ROAD_SHEETS_SECTIONS => {
-                            serde_json::from_value::<crate::RoadSheetsLaid>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::RoadSheetsLaid>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_ALIGNMENTS_FIT => {
-                            serde_json::from_value::<crate::AlignmentFitted>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::AlignmentFitted>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_PROFILES_FIT => {
-                            serde_json::from_value::<crate::ProfileFitted>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ProfileFitted>(output.clone())
+                                .map(|_| ())
                         }
                         crate::ROAD_ALIGNMENTS_IMPORT => {
-                            serde_json::from_value::<crate::AlignmentsImported>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::AlignmentsImported>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_ADDRESSES_DEFINE => {
                             serde_json::from_value::<crate::AddressesDefined>(output.clone())
@@ -3048,13 +3312,16 @@ mod tests {
                             serde_json::from_value::<crate::WallsJoined>(output.clone()).map(|_| ())
                         }
                         crate::CAD_WALLS_DISTANCES => {
-                            serde_json::from_value::<crate::WallsDistances>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::WallsDistances>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_COLUMNS_DISTANCES => {
-                            serde_json::from_value::<crate::ColumnsDistances>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ColumnsDistances>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_DIMENSIONS_INTERIOR => {
-                            serde_json::from_value::<crate::EntitiesCreated>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::EntitiesCreated>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_OPENINGS_CREATE => {
                             serde_json::from_value::<crate::OpeningsCreated>(output.clone())
@@ -3065,10 +3332,12 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_SLABS_CREATE => {
-                            serde_json::from_value::<crate::SlabsCreated>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::SlabsCreated>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_SPACES_SEPARATORS => {
-                            serde_json::from_value::<crate::SpaceSeparatorsChanged>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::SpaceSeparatorsChanged>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_GRIDS_CREATE => {
                             serde_json::from_value::<crate::GridsCreated>(output.clone())
@@ -3083,25 +3352,32 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_OPENING_TYPES_EDIT => {
-                            serde_json::from_value::<crate::OpeningTypesEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::OpeningTypesEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_ELEMENT_TYPES_EDIT => {
-                            serde_json::from_value::<crate::ElementTypesEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ElementTypesEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_MODULES_EDIT => {
-                            serde_json::from_value::<crate::ModulesEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ModulesEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_MODULES_QUERY => {
-                            serde_json::from_value::<crate::ModulesQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ModulesQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_OPTIONS_EDIT => {
-                            serde_json::from_value::<crate::OptionsEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::OptionsEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_OPTIONS_QUERY => {
-                            serde_json::from_value::<crate::OptionsQueried>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::OptionsQueried>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_ELEVATIONS_EDIT => {
-                            serde_json::from_value::<crate::ElevationsEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ElevationsEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_ELEVATIONS_QUERY => {
                             serde_json::from_value::<crate::ElevationsQueried>(output.clone())
@@ -3130,10 +3406,12 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_PROGRAM_EDIT => {
-                            serde_json::from_value::<crate::ProgramEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ProgramEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_PROGRAM_CHECK => {
-                            serde_json::from_value::<crate::ProgramChecked>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ProgramChecked>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_LEVELS_ASSIGN => {
                             serde_json::from_value::<crate::LevelsAssigned>(output.clone())
@@ -3144,25 +3422,32 @@ mod tests {
                                 .map(|_| ())
                         }
                         crate::CAD_FORM_ANSWER => {
-                            serde_json::from_value::<crate::ArchFormAnswersDone>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ArchFormAnswersDone>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_UNDERLAY_EDIT => {
-                            serde_json::from_value::<crate::UnderlayEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::UnderlayEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_UNDERLAY_CHECK => {
-                            serde_json::from_value::<crate::UnderlayChecked>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::UnderlayChecked>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_DELIVERY_EDIT => {
-                            serde_json::from_value::<crate::DeliveryEdited>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::DeliveryEdited>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_ZONING_PARCEL => {
-                            serde_json::from_value::<crate::ZoningParcelDecided>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::ZoningParcelDecided>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_NORTH_CREATE => {
-                            serde_json::from_value::<crate::NorthCreated>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::NorthCreated>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_REVISIONS_MARK => {
-                            serde_json::from_value::<crate::RevisionMarked>(output.clone()).map(|_| ())
+                            serde_json::from_value::<crate::RevisionMarked>(output.clone())
+                                .map(|_| ())
                         }
                         crate::CAD_LEGENDS_MATERIALS => {
                             serde_json::from_value::<crate::LegendMade>(output.clone()).map(|_| ())
@@ -3201,9 +3486,15 @@ mod tests {
                     assert_eq!(a.is_some(), b.is_some(), "{}", whole.id);
                     continue;
                 };
-                assert!(b.get("$defs").is_none(), "{}: a schema keeps its $defs", whole.id);
+                assert!(
+                    b.get("$defs").is_none(),
+                    "{}: a schema keeps its $defs",
+                    whole.id
+                );
                 assert_eq!(
-                    &shared.standalone(b).unwrap_or_else(|e| panic!("{}: {e}", whole.id)),
+                    &shared
+                        .standalone(b)
+                        .unwrap_or_else(|e| panic!("{}: {e}", whole.id)),
                     a,
                     "{}: the schema read back from the shared catalog",
                     whole.id
@@ -3214,8 +3505,16 @@ mod tests {
         // Every definition is some schema's: the file carries no orphan.
         let mut used = std::collections::BTreeSet::new();
         for d in &c.commands {
-            for s in [Some(&d.input), Some(&d.output), d.plan.as_ref()].into_iter().flatten() {
-                for name in s.get("$defs").and_then(serde_json::Value::as_object).into_iter().flatten() {
+            for s in [Some(&d.input), Some(&d.output), d.plan.as_ref()]
+                .into_iter()
+                .flatten()
+            {
+                for name in s
+                    .get("$defs")
+                    .and_then(serde_json::Value::as_object)
+                    .into_iter()
+                    .flatten()
+                {
                     used.insert(name.0.clone());
                 }
             }

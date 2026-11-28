@@ -311,7 +311,11 @@ impl App {
 
     /// The run of `ext` ended or was stopped: its dialog closed, its code answered none (it hears Durdur after).
     pub(crate) fn ext_dialog_close_for(&mut self, ext: &str) {
-        if self.extensions.dialog.as_ref().is_some_and(|d| d.ext == ext)
+        if self
+            .extensions
+            .dialog
+            .as_ref()
+            .is_some_and(|d| d.ext == ext)
             && let Some(dialog) = self.extensions.dialog.take()
         {
             self.ext_dialog_reply(&dialog, Value::Null);
@@ -320,7 +324,8 @@ impl App {
 
     fn ext_dialog_reply(&self, dialog: &ExtDialog, answer: Value) {
         if let Some(runner) = self.extensions.runners.get(&dialog.ext) {
-            runner.send(&json!({ "type": "reply", "id": dialog.call, "ok": true, "result": answer }));
+            runner
+                .send(&json!({ "type": "reply", "id": dialog.call, "ok": true, "result": answer }));
         }
     }
 

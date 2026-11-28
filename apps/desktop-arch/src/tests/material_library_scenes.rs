@@ -26,13 +26,19 @@ const CASES: &str = include_str!("../../../../fixtures/commands/v1/cad.materials
 const SLABS: &str = include_str!("../../../../fixtures/commands/v1/cad.slabs.bound.json");
 
 pub(crate) fn open(app: &mut App, doc: Value, bounds: [f64; 4]) {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(doc).expect("the drawing reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(doc).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     make_cad(app);
     app.draft.snap = false;
     app.viewport.camera.fit(
-        &kentos_render_wgpu::Bounds { min_x: bounds[0], min_y: bounds[1], max_x: bounds[2], max_y: bounds[3] },
+        &kentos_render_wgpu::Bounds {
+            min_x: bounds[0],
+            min_y: bounds[1],
+            max_x: bounds[2],
+            max_y: bounds[3],
+        },
         24.0,
     );
 }
@@ -87,7 +93,11 @@ pub(crate) fn slab_row(app: &mut App) {
     let file: Value = serde_json::from_str(SLABS).expect("the slab cases");
     let mut doc = file["setup"].clone();
     doc["version"] = json!(2);
-    doc["uids"] = json!((1..=7).map(|i| format!("0192f5a1-7850-7000-8000-{i:012x}")).collect::<Vec<_>>());
+    doc["uids"] = json!(
+        (1..=7)
+            .map(|i| format!("0192f5a1-7850-7000-8000-{i:012x}"))
+            .collect::<Vec<_>>()
+    );
     open(app, doc, [-1.0, -1.5, 9.0, 6.5]);
     let model = &mut app.document.as_mut().expect("the drawing").model;
     let spaces: kentos_commands::SpacesCreate = serde_json::from_value(json!({"layerId": "mahal", "spaces": [
@@ -98,7 +108,10 @@ pub(crate) fn slab_row(app: &mut App) {
         &mut kentos_native_application::ExecutionContext::new(model),
         spaces,
     );
-    assert!(matches!(made, kentos_commands::CommandResult::Completed { .. }), "{made:?}");
+    assert!(
+        matches!(made, kentos_commands::CommandResult::Completed { .. }),
+        "{made:?}"
+    );
     let slab: kentos_commands::SlabsCreate = serde_json::from_value(json!({"layerId": "doseme", "slabs": [
         {"seed": {"x": 6.5, "y": 2.5}, "bound": true, "boundary": "room", "arch": {"level": "zemin"}}]}))
     .expect("slab");
@@ -106,7 +119,10 @@ pub(crate) fn slab_row(app: &mut App) {
         &mut kentos_native_application::ExecutionContext::new(model),
         slab,
     );
-    assert!(matches!(made, kentos_commands::CommandResult::Completed { .. }), "{made:?}");
+    assert!(
+        matches!(made, kentos_commands::CommandResult::Completed { .. }),
+        "{made:?}"
+    );
     let slab = model
         .entities()
         .find(|e| matches!(e, kentos_commands::Entity::Slab(_)))
@@ -119,11 +135,20 @@ pub(crate) fn slab_row(app: &mut App) {
         .expect("the salon")
         .to_string();
     app.selection.set([slab]);
-    let bind = kentos_commands::SlabsOperation::Bind { seed: None, boundary: None, space: Some(salon), offset: None };
-    let _ = app.update(Message::Properties(crate::properties::Event::Slab(slab, bind)));
+    let bind = kentos_commands::SlabsOperation::Bind {
+        seed: None,
+        boundary: None,
+        space: Some(salon),
+        offset: None,
+    };
+    let _ = app.update(Message::Properties(crate::properties::Event::Slab(
+        slab, bind,
+    )));
     let upper = docking::Slot::Docked(docking::Side::Right, 0);
     let _ = app.update(Message::Dock(docking::Event::Collapsed(upper, true)));
-    let _ = app.update(Message::Properties(crate::properties::Event::Toggle("general")));
+    let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+        "general",
+    )));
 }
 
 pub(crate) fn scenes() -> Vec<Scene> {

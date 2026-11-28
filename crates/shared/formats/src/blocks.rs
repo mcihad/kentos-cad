@@ -148,7 +148,8 @@ impl Placing {
                             box_width,
                             line_spacing,
                             runs: contract_runs(runs.as_deref()),
-                        }.into(),
+                        }
+                        .into(),
                         face: Default::default(),
                         path: path.map(contract_curve).map(Box::new),
                     },
@@ -257,11 +258,14 @@ pub fn core_table(t: &TableEntity) -> Shape {
         frame: t.frame,
         // Its corners and lines are what these formats ask of the core.
         source: None,
-        breaks: t.breaks.map(|b| kentos_geometry_core::entity::TableBreaks {
-            height: b.height,
-            gap: Some(b.gap),
-            once: b.once.then_some(true),
-        }).map(Box::new),
+        breaks: t
+            .breaks
+            .map(|b| kentos_geometry_core::entity::TableBreaks {
+                height: b.height,
+                gap: Some(b.gap),
+                once: b.once.then_some(true),
+            })
+            .map(Box::new),
         face: Box::new(core_face(&t.face)),
     }
 }
@@ -423,15 +427,21 @@ pub(crate) fn core_layout(
 ) -> Option<Box<kentos_geometry_core::text::paragraph::Flow>> {
     l.map(|l| {
         Box::new(kentos_geometry_core::text::paragraph::Flow {
-            engine:l.engine.map(|e|match e { kentos_contracts::TextLayoutEngine::UnicodeV1=>kentos_geometry_core::text::paragraph::Engine::UnicodeV1 }),
+            engine: l.engine.map(|e| match e {
+                kentos_contracts::TextLayoutEngine::UnicodeV1 => {
+                    kentos_geometry_core::text::paragraph::Engine::UnicodeV1
+                }
+            }),
             first: l.indent.unwrap_or(0.0),
             left: l.left_indent.unwrap_or(0.0),
             tabs: l.tabs.clone(),
-            columns: l.columns.map(|c| kentos_geometry_core::text::paragraph::Columns {
-                count: c.count,
-                gap: c.gap,
-                height: c.height,
-            }),
+            columns: l
+                .columns
+                .map(|c| kentos_geometry_core::text::paragraph::Columns {
+                    count: c.count,
+                    gap: c.gap,
+                    height: c.height,
+                }),
         })
     })
 }
@@ -442,7 +452,11 @@ pub(crate) fn contract_layout(
 ) -> Option<Box<kentos_contracts::ParagraphLayout>> {
     f.map(|f| {
         Box::new(kentos_contracts::ParagraphLayout {
-            engine:f.engine.map(|e|match e {kentos_geometry_core::text::paragraph::Engine::UnicodeV1=>kentos_contracts::TextLayoutEngine::UnicodeV1}),
+            engine: f.engine.map(|e| match e {
+                kentos_geometry_core::text::paragraph::Engine::UnicodeV1 => {
+                    kentos_contracts::TextLayoutEngine::UnicodeV1
+                }
+            }),
             indent: (f.first != 0.0).then_some(f.first),
             left_indent: (f.left != 0.0).then_some(f.left),
             tabs: f.tabs.clone(),
@@ -600,11 +614,14 @@ pub(crate) fn shape(e: &Entity) -> Shape {
             r: c.r,
         },
         Entity::Leader(l) => Shape::Leader {
-            blocks: (!l.blocks.is_empty()).then(|| l.blocks.iter().map(|b| uuid_text(b.0)).collect()),
+            blocks: (!l.blocks.is_empty())
+                .then(|| l.blocks.iter().map(|b| uuid_text(b.0)).collect()),
             arms: (!l.arms.is_empty()).then(|| {
                 l.arms
                     .iter()
-                    .map(|a| kentos_geometry_core::geom::leader::Arm { pts: points(&a.pts) })
+                    .map(|a| kentos_geometry_core::geom::leader::Arm {
+                        pts: points(&a.pts),
+                    })
                     .collect()
             }),
             pts: points(&l.pts),
@@ -753,15 +770,28 @@ pub(crate) fn shape(e: &Entity) -> Shape {
                 file: f.file.clone(),
                 url: f.url.clone(),
                 srid: f64::from(f.srid),
-                style: Box::new(kentos_geometry_core::api::json::Json::parse(&f.style.to_json_text())
-                    .unwrap_or(kentos_geometry_core::api::json::Json::Null)),
+                style: Box::new(
+                    kentos_geometry_core::api::json::Json::parse(&f.style.to_json_text())
+                        .unwrap_or(kentos_geometry_core::api::json::Json::Null),
+                ),
                 opacity: f.opacity,
-                dataset: f.dataset.as_ref().and_then(|d| {
-                    kentos_geometry_core::api::json::Json::parse(&d.to_json_text()).ok()
-                }).map(Box::new),
-                tiles: f.tiles.as_ref().and_then(|t| {
-                    kentos_geometry_core::api::json::Json::parse(&serde_json::to_string(t).ok()?).ok()
-                }).map(Box::new),
+                dataset: f
+                    .dataset
+                    .as_ref()
+                    .and_then(|d| {
+                        kentos_geometry_core::api::json::Json::parse(&d.to_json_text()).ok()
+                    })
+                    .map(Box::new),
+                tiles: f
+                    .tiles
+                    .as_ref()
+                    .and_then(|t| {
+                        kentos_geometry_core::api::json::Json::parse(
+                            &serde_json::to_string(t).ok()?,
+                        )
+                        .ok()
+                    })
+                    .map(Box::new),
             }
         }
         // Its attributes show as texts, which these formats leave out of a block.
@@ -969,7 +999,10 @@ fn entity(s: &Shape) -> Option<Entity> {
             arms: arms
                 .iter()
                 .flatten()
-                .map(|a| kentos_contracts::LeaderArm { pts: points_back(&a.pts), tip: None })
+                .map(|a| kentos_contracts::LeaderArm {
+                    pts: points_back(&a.pts),
+                    tip: None,
+                })
                 .collect(),
             annotative: None,
             base,
@@ -1014,7 +1047,8 @@ fn entity(s: &Shape) -> Option<Entity> {
                 box_width: *box_width,
                 line_spacing: *line_spacing,
                 runs: contract_runs(runs.as_deref()),
-            }.into(),
+            }
+            .into(),
             face: contract_face(face).into(),
         }),
         Shape::Dimension {
@@ -1139,15 +1173,17 @@ pub fn core_clip(
     clip: Option<&kentos_contracts::InsertClip>,
 ) -> Option<std::sync::Arc<kentos_geometry_core::entity::Clipping>> {
     let c = clip?;
-    Some(std::sync::Arc::new(kentos_geometry_core::entity::Clipping {
-        ring: c
-            .boundary
-            .iter()
-            .map(|p| kentos_geometry_core::Vec2::new(p.x, p.y))
-            .collect(),
-        inverted: c.inverted,
-        plot_frame: c.frame == kentos_contracts::ClipFrame::Plot,
-    }))
+    Some(std::sync::Arc::new(
+        kentos_geometry_core::entity::Clipping {
+            ring: c
+                .boundary
+                .iter()
+                .map(|p| kentos_geometry_core::Vec2::new(p.x, p.y))
+                .collect(),
+            inverted: c.inverted,
+            plot_frame: c.frame == kentos_contracts::ClipFrame::Plot,
+        },
+    ))
 }
 
 /// An insert's parameter values as the core draws them (docs/adr/0318 §3); none when it keeps none.
@@ -1177,7 +1213,14 @@ pub fn core_params(
 /// A persistent id's text: lowercase, with hyphens.
 fn uuid_text(b: [u8; 16]) -> String {
     let h: String = b.iter().map(|x| format!("{x:02x}")).collect();
-    format!("{}-{}-{}-{}-{}", &h[0..8], &h[8..12], &h[12..16], &h[16..20], &h[20..])
+    format!(
+        "{}-{}-{}-{}-{}",
+        &h[0..8],
+        &h[8..12],
+        &h[12..16],
+        &h[16..20],
+        &h[20..]
+    )
 }
 
 #[cfg(test)]

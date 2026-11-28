@@ -624,8 +624,15 @@ impl OpeningType {
 
     /// What is wrong with it: the field and the words.
     pub fn problem(&self) -> Option<(String, String)> {
-        if let Some(words) = self.fire_rating.as_ref().and_then(|d| d.problem("yangın dayanım sınıfı")) {
-            return Some(("fireRating".into(), format!("“{}” tipi: {words}", self.name)));
+        if let Some(words) = self
+            .fire_rating
+            .as_ref()
+            .and_then(|d| d.problem("yangın dayanım sınıfı"))
+        {
+            return Some((
+                "fireRating".into(),
+                format!("“{}” tipi: {words}", self.name),
+            ));
         }
         if !opening_type_id_ok(&self.id) {
             return Some((
@@ -963,7 +970,10 @@ pub struct SlidePanels {
 impl SlidePanels {
     /// Its leaves as `O` (stays) and `X` (slides) from its start.
     pub fn letters(&self) -> String {
-        self.leaves.iter().map(|l| if l.2 { 'X' } else { 'O' }).collect()
+        self.leaves
+            .iter()
+            .map(|l| if l.2 { 'X' } else { 'O' })
+            .collect()
     }
 }
 
@@ -985,10 +995,18 @@ pub fn slide_panels(
         // XOX (docs/adr/0807 §1): the outer leaves on track 1 slide over the middle one that stays on track 0.
         let w = (light + 2.0 * o) / 3.0;
         let leaves = vec![(0.0, 1, true), (w - o, 0, false), (2.0 * (w - o), 1, true)];
-        return Some(SlidePanels { tracks: 2, overlap: o, width: w, leaves, clear: w - o });
+        return Some(SlidePanels {
+            tracks: 2,
+            overlap: o,
+            width: w,
+            leaves,
+            clear: w - o,
+        });
     }
     let from_jamb = |count: u8| -> Vec<(u8, bool)> {
-        (0..count).map(|k| if k < t { (k, k > 0) } else { (0, false) }).collect()
+        (0..count)
+            .map(|k| if k < t { (k, k > 0) } else { (0, false) })
+            .collect()
     };
     let order: Vec<(u8, bool)> = if both && n == 4 {
         let mut a = from_jamb(2);
@@ -1024,7 +1042,13 @@ pub fn slide_panels(
         taken.push((0.0, w));
     }
     for (i, (s0, _, slides)) in leaves.iter().enumerate() {
-        let at_jamb = if both && n == 4 { i == 0 || i == 3 } else if hand_end { i + 1 == leaves.len() } else { i == 0 };
+        let at_jamb = if both && n == 4 {
+            i == 0 || i == 3
+        } else if hand_end {
+            i + 1 == leaves.len()
+        } else {
+            i == 0
+        };
         if !slides && !at_jamb {
             taken.push((*s0, s0 + w));
         }
@@ -1037,7 +1061,13 @@ pub fn slide_panels(
         reach = reach.max(*z);
     }
     clear = clear.max(light - reach);
-    Some(SlidePanels { tracks: t, overlap: o, width: w, leaves, clear })
+    Some(SlidePanels {
+        tracks: t,
+        overlap: o,
+        width: w,
+        leaves,
+        clear,
+    })
 }
 
 /// [`OpeningFields::sizes`].
@@ -1091,26 +1121,29 @@ pub fn opening_sizes(f: &OpeningFields) -> OpeningSizes {
             _ => vec![leaf],
         }
     };
-    let pockets: Vec<OpeningPocket> = if f.form == OpeningForm::Door && f.operation == OpeningOperation::Pocket {
-        let play = t + 2.0 * POCKET_PLAY;
-        let pocket = |at_end: bool, w: f64| OpeningPocket {
-            at_end,
-            length: (w - lip - fit - frame + POCKET_PLAY).max(0.0),
-            width: play,
+    let pockets: Vec<OpeningPocket> =
+        if f.form == OpeningForm::Door && f.operation == OpeningOperation::Pocket {
+            let play = t + 2.0 * POCKET_PLAY;
+            let pocket = |at_end: bool, w: f64| OpeningPocket {
+                at_end,
+                length: (w - lip - fit - frame + POCKET_PLAY).max(0.0),
+                width: play,
+            };
+            match leaves.as_slice() {
+                [w] => vec![pocket(f.hand == crate::OpeningHand::End, *w)],
+                [a, z] => vec![pocket(false, *a), pocket(true, *z)],
+                _ => Vec::new(),
+            }
+        } else {
+            Vec::new()
         };
-        match leaves.as_slice() {
-            [w] => vec![pocket(f.hand == crate::OpeningHand::End, *w)],
-            [a, z] => vec![pocket(false, *a), pocket(true, *z)],
-            _ => Vec::new(),
-        }
-    } else {
-        Vec::new()
-    };
     let (clear, clear_first) = match f.form {
         OpeningForm::Door => match (f.operation, leaves.as_slice()) {
             (OpeningOperation::Fixed, _) => (Some(0.0), None),
             (OpeningOperation::Slide, [_]) => (Some(leaf), None),
-            (OpeningOperation::Slide, _) if multi.is_some() => (multi.as_ref().map(|m| m.clear), None),
+            (OpeningOperation::Slide, _) if multi.is_some() => {
+                (multi.as_ref().map(|m| m.clear), None)
+            }
             (OpeningOperation::Slide, [a, z]) => (Some(leaf - a.max(*z)), None),
             // The throat between the drum's walls: the chord of its opening, 180° − 360°/n (docs/adr/0777 §1).
             (OpeningOperation::Revolving, ws) => {
@@ -1203,7 +1236,8 @@ pub fn special_door_problem(f: &OpeningFields) -> Option<(String, String)> {
                     ),
                 ));
             }
-        } else if let Some(why) = only("bothSides", "İki yana toplanma", OpeningOperation::Folding) {
+        } else if let Some(why) = only("bothSides", "İki yana toplanma", OpeningOperation::Folding)
+        {
             return Some(why);
         } else if both && f.leaves % 2 == 1 {
             return Some((
@@ -1233,7 +1267,10 @@ pub fn special_door_problem(f: &OpeningFields) -> Option<(String, String)> {
         if f.leaves == 2 && lap >= s.leaf {
             return Some((
                 "build.overlap".into(),
-                format!("Kanat bindirmesi ({lap} m) ışıktan ({:.3} m) küçük olmalı.", s.leaf),
+                format!(
+                    "Kanat bindirmesi ({lap} m) ışıktan ({:.3} m) küçük olmalı.",
+                    s.leaf
+                ),
             ));
         }
         // Three or four leaves (docs/adr/0792 §1): each overlap under a leaf's share of the light.
@@ -1260,7 +1297,10 @@ pub fn special_door_problem(f: &OpeningFields) -> Option<(String, String)> {
             ));
         }
         if !(2..=3).contains(&t) {
-            return Some(("build.tracks".into(), format!("Ray sayısı {t}; 2 ya da 3 olmalı.")));
+            return Some((
+                "build.tracks".into(),
+                format!("Ray sayısı {t}; 2 ya da 3 olmalı."),
+            ));
         }
         if t == 3 && b.both_sides == Some(true) && f.leaves == 3 {
             return Some((

@@ -83,7 +83,10 @@ pub enum Measure {
 }
 
 fn checked(breaks: &[f64]) -> Result<(), AnalysisError> {
-    if breaks.len() < 2 || breaks.iter().any(|b| !b.is_finite()) || breaks.windows(2).any(|w| w[0] >= w[1]) {
+    if breaks.len() < 2
+        || breaks.iter().any(|b| !b.is_finite())
+        || breaks.windows(2).any(|w| w[0] >= w[1])
+    {
         return Err(AnalysisError::Breaks);
     }
     Ok(())
@@ -114,7 +117,13 @@ fn area(poly: &[[f64; 3]]) -> f64 {
 
 /// The polygon's part with z on the `keep_above` side of `level` (z ≥ level, or z ≤ level).
 fn clip(poly: &[[f64; 3]], level: f64, keep_above: bool) -> Vec<[f64; 3]> {
-    let inside = |p: &[f64; 3]| if keep_above { p[2] >= level } else { p[2] <= level };
+    let inside = |p: &[f64; 3]| {
+        if keep_above {
+            p[2] >= level
+        } else {
+            p[2] <= level
+        }
+    };
     let mut out = Vec::with_capacity(poly.len() + 2);
     let n = poly.len();
     for i in 0..n {
@@ -144,18 +153,31 @@ impl Surface {
 
     /// The plan and 3D areas of the surface.
     pub fn areas(&self) -> (f64, f64) {
-        (0..self.triangles.len()).map(|t| self.stretch(t)).fold((0.0, 0.0), |(a, s), (pa, k)| (a + pa, s + pa * k))
+        (0..self.triangles.len())
+            .map(|t| self.stretch(t))
+            .fold((0.0, 0.0), |(a, s), (pa, k)| (a + pa, s + pa * k))
     }
 
     /// The areas in the ranges of `measure` between `breaks` (elevation in metres, slope in percent, aspect in degrees
     /// from north). With `pieces`, each range's parts as plan polygons too (elevation: the clipped parts; slope and
     /// aspect: the triangles).
-    pub fn bands(&self, measure: Measure, breaks: &[f64], pieces: bool) -> Result<(Bands, BandParts), AnalysisError> {
+    pub fn bands(
+        &self,
+        measure: Measure,
+        breaks: &[f64],
+        pieces: bool,
+    ) -> Result<(Bands, BandParts), AnalysisError> {
         checked(breaks)?;
         let n = breaks.len() - 1;
         let mut out = Bands {
             bands: (0..n)
-                .map(|i| Band { from: breaks[i], to: breaks[i + 1], area: 0.0, surface_area: 0.0, triangles: 0 })
+                .map(|i| Band {
+                    from: breaks[i],
+                    to: breaks[i + 1],
+                    area: 0.0,
+                    surface_area: 0.0,
+                    triangles: 0,
+                })
                 .collect(),
             outside_area: 0.0,
             outside_triangles: 0,
@@ -234,7 +256,11 @@ impl Surface {
             let p = t.map(|i| self.vertices[i as usize]);
             let u = [p[1][0] - p[0][0], p[1][1] - p[0][1], p[1][2] - p[0][2]];
             let v = [p[2][0] - p[0][0], p[2][1] - p[0][1], p[2][2] - p[0][2]];
-            let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+            let n = [
+                u[1] * v[2] - u[2] * v[1],
+                u[2] * v[0] - u[0] * v[2],
+                u[0] * v[1] - u[1] * v[0],
+            ];
             let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
             if len == 0.0 {
                 continue;
@@ -243,7 +269,9 @@ impl Surface {
             for k in 0..3 {
                 let (a, b, c) = (p[k], p[(k + 1) % 3], p[(k + 2) % 3]);
                 let (x, y) = ([b[0] - a[0], b[1] - a[1]], [c[0] - a[0], c[1] - a[1]]);
-                let angle = (x[0] * y[1] - x[1] * y[0]).abs().atan2(x[0] * y[0] + x[1] * y[1]);
+                let angle = (x[0] * y[1] - x[1] * y[0])
+                    .abs()
+                    .atan2(x[0] * y[0] + x[1] * y[1]);
                 let i = t[k] as usize;
                 for d in 0..3 {
                     sum[i][d] += angle * n[d];
@@ -271,7 +299,11 @@ impl Surface {
                 best = Some((r, at));
             }
         }
-        best.map(|(max, at)| Roughness { mean: total / count as f64, max, at })
+        best.map(|(max, at)| Roughness {
+            mean: total / count as f64,
+            max,
+            at,
+        })
     }
 
     /// The slope a raster of `cell` sampled from the surface gives by Horn's method, against the triangles': on the
@@ -281,7 +313,12 @@ impl Surface {
         if !(cell.is_finite() && cell > 0.0) {
             return Err(AnalysisError::Cell);
         }
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for t in &self.triangles {
             for i in t {
                 let v = self.vertices[*i as usize];
@@ -292,7 +329,13 @@ impl Surface {
             }
         }
         if !x0.is_finite() {
-            return Ok(GridSlope { cells: 0, mean: 0.0, mean_absolute: 0.0, max_absolute: 0.0, at: None });
+            return Ok(GridSlope {
+                cells: 0,
+                mean: 0.0,
+                mean_absolute: 0.0,
+                max_absolute: 0.0,
+                at: None,
+            });
         }
         let nx = ((x1 - x0) / cell).floor() as u64;
         let ny = ((y1 - y0) / cell).floor() as u64;
@@ -300,7 +343,12 @@ impl Surface {
             return Err(AnalysisError::TooMany);
         }
         let (nx, ny) = (nx as usize, ny as usize);
-        let centre = |i: usize, j: usize| [x0 + cell / 2.0 + i as f64 * cell, y0 + cell / 2.0 + j as f64 * cell];
+        let centre = |i: usize, j: usize| {
+            [
+                x0 + cell / 2.0 + i as f64 * cell,
+                y0 + cell / 2.0 + j as f64 * cell,
+            ]
+        };
         let mut z = vec![None; nx * ny];
         let mut start = 0u32;
         for j in 0..ny {
@@ -313,7 +361,9 @@ impl Surface {
         let (mut cells, mut sum, mut abs, mut best) = (0usize, 0.0, 0.0, None::<(f64, [f64; 2])>);
         for j in 1..ny.saturating_sub(1) {
             for i in 1..nx.saturating_sub(1) {
-                let Some((_, t)) = z[j * nx + i] else { continue };
+                let Some((_, t)) = z[j * nx + i] else {
+                    continue;
+                };
                 let mut w = [[0.0; 3]; 3];
                 let mut whole = true;
                 for (dj, row) in w.iter_mut().enumerate() {
@@ -328,10 +378,16 @@ impl Surface {
                     continue;
                 }
                 // Horn: rows run north (j + 1) to south; w[dj][di] is the cell (i + di − 1, j + dj − 1).
-                let gx = ((w[0][2] + 2.0 * w[1][2] + w[2][2]) - (w[0][0] + 2.0 * w[1][0] + w[2][0])) / (8.0 * cell);
-                let gy = ((w[2][0] + 2.0 * w[2][1] + w[2][2]) - (w[0][0] + 2.0 * w[0][1] + w[0][2])) / (8.0 * cell);
+                let gx = ((w[0][2] + 2.0 * w[1][2] + w[2][2])
+                    - (w[0][0] + 2.0 * w[1][0] + w[2][0]))
+                    / (8.0 * cell);
+                let gy = ((w[2][0] + 2.0 * w[2][1] + w[2][2])
+                    - (w[0][0] + 2.0 * w[0][1] + w[0][2]))
+                    / (8.0 * cell);
                 let raster = gx.hypot(gy) * 100.0;
-                let Some(facet) = self.slope_of(t) else { continue };
+                let Some(facet) = self.slope_of(t) else {
+                    continue;
+                };
                 let d = raster - facet.slope * 100.0;
                 cells += 1;
                 sum += d;

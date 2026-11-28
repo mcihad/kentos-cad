@@ -54,12 +54,12 @@ pub mod player;
 use std::path::{Path, PathBuf};
 
 pub use answers::Control;
-pub use format::Trace;
-pub use keyboard::{VARIANTS, Variant};
-pub use player::Player;
 /// The traces not played yet and why (format.rs), for the programs' test that plays every trace.
 #[cfg(any(test, feature = "testing"))]
 pub use format::PENDING;
+pub use format::Trace;
+pub use keyboard::{VARIANTS, Variant};
+pub use player::Player;
 
 #[cfg(any(test, feature = "testing"))]
 use crate::app::App;
@@ -77,9 +77,14 @@ pub fn folder() -> PathBuf {
 #[cfg(any(test, feature = "testing"))]
 pub fn flat() -> App {
     static REPLAY: std::sync::Mutex<()> = std::sync::Mutex::new(());
-    let _one = REPLAY.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let _one = REPLAY
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     let traces = Trace::all().expect("the traces read");
-    let trace = traces.iter().find(|t| t.id == "acceptance-flat").expect("the 2+1 trace");
+    let trace = traces
+        .iter()
+        .find(|t| t.id == "acceptance-flat")
+        .expect("the 2+1 trace");
     let variant = VARIANTS[0];
     let (mut app, _) = App::boot(None);
     app.memory.layer_keys = true;
@@ -121,26 +126,48 @@ pub fn play_trace(trace: &Trace, variant: Variant) -> Result<Vec<String>, String
 mod tests {
     use super::format::Step;
     use super::*;
-    
-    
-    
 
     #[test]
     fn a_dialog_pick_changes_the_import_unit_and_not_the_blocks_real_size() {
-        let trace = Trace::all().expect("traces").into_iter()
-            .find(|t| t.id == "cad-sheet-block-units").expect("unit trace");
+        let trace = Trace::all()
+            .expect("traces")
+            .into_iter()
+            .find(|t| t.id == "cad-sheet-block-units")
+            .expect("unit trace");
         let (mut app, _) = App::boot(None);
-        let mut player = Player::new(&mut app, &trace, VARIANTS[0], AREA, scratch_file(&trace, VARIANTS[0])).expect("player");
-        assert!(player.play(Some(5)).is_empty(), "through the import, before undo");
+        let mut player = Player::new(
+            &mut app,
+            &trace,
+            VARIANTS[0],
+            AREA,
+            scratch_file(&trace, VARIANTS[0]),
+        )
+        .expect("player");
+        assert!(
+            player.play(Some(5)).is_empty(),
+            "through the import, before undo"
+        );
         let doc = &player.app.document.as_ref().expect("drawing").model;
-        let child = doc.blocks().iter().find(|b| b.name == "CHILD").expect("child block");
-        let kentos_commands::Entity::Line(line) = &child.entities[0] else { panic!("line"); };
+        let child = doc
+            .blocks()
+            .iter()
+            .find(|b| b.name == "CHILD")
+            .expect("child block");
+        let kentos_commands::Entity::Line(line) = &child.entities[0] else {
+            panic!("line");
+        };
         assert!((line.b.x - line.a.x - 2.0).abs() < 1e-9);
-        let insert = doc.entities().find_map(|e| match e {
-            kentos_commands::Entity::Insert(i) if i.block == child.id => Some(i),
-            _ => None,
-        }).expect("child insert");
-        assert_eq!(insert.scale, 10.0, "cm selection was applied; ignoring it in this GIS drawing gives 1000");
+        let insert = doc
+            .entities()
+            .find_map(|e| match e {
+                kentos_commands::Entity::Insert(i) if i.block == child.id => Some(i),
+                _ => None,
+            })
+            .expect("child insert");
+        assert_eq!(
+            insert.scale, 10.0,
+            "cm selection was applied; ignoring it in this GIS drawing gives 1000"
+        );
     }
 
     /// A pending trace is still there and still cannot be read: once the

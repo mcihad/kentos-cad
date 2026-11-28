@@ -1,16 +1,16 @@
 //! A source snapshot is real: mutate the caller/file, compare exact output, and read its PDF metadata independently.
+use kentos_contracts::encoding::sha256_hex;
+use kentos_domain::Document;
+use kentos_plot::{
+    book::{book_pdf_at, book_pdf_captured},
+    provenance::Capture,
+};
+use serde_json::{Value, json};
 use std::{
     fs,
     path::{Path, PathBuf},
     process::Command,
 };
-use kentos_contracts::encoding::sha256_hex;
-use kentos_domain::Document;
-use kentos_plot::{
-    book::{book_pdf_captured, book_pdf_at},
-    provenance::Capture,
-};
-use serde_json::{Value, json};
 fn fixture() -> Value {
     serde_json::from_str(include_str!(
         "../../../../../fixtures/sheet/v1/source-snapshot.json"
@@ -145,7 +145,9 @@ fn info_keywords(data: &[u8]) -> String {
     if bytes.starts_with(&[0xfe, 0xff]) {
         String::from_utf16(
             &bytes[2..]
-                .as_chunks::<2>().0.iter()
+                .as_chunks::<2>()
+                .0
+                .iter()
                 .map(|b| u16::from_be_bytes([b[0], b[1]]))
                 .collect::<Vec<_>>(),
         )

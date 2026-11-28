@@ -280,7 +280,14 @@ impl<S: Stages> Modify<S> {
                     }
                     with_shape(
                         entity,
-                        transform_shape_in(&shape(entity), matrix, TextPolicy::Readable, kentos_native_application::geometry::drawing_font(cx.doc.settings().drawing_font)),
+                        transform_shape_in(
+                            &shape(entity),
+                            matrix,
+                            TextPolicy::Readable,
+                            kentos_native_application::geometry::drawing_font(
+                                cx.doc.settings().drawing_font,
+                            ),
+                        ),
                     )
                     .map(|after| (slot, after))
                 })

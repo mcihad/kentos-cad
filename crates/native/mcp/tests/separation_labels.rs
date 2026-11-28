@@ -11,10 +11,27 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_numbered_pieces_over_mcp_are_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.readjustment.sheets.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("üç parselin dış parçaları"))).unwrap().clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-separation-labels-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.readjustment.sheets.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("üç parselin dış parçaları"))
+        })
+        .unwrap()
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-separation-labels-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -25,11 +42,20 @@ fn the_numbered_pieces_over_mcp_are_the_case_s() {
     args["drawing"] = drawing.clone();
     let r = call(&mut server, "cad.readjustment.sheets", args);
     assert_eq!(r["isError"], false, "{r}");
-    let got = r["structuredContent"]["output"]["sheets"].as_array().unwrap().clone();
-    let want = step["result"]["output"]["sheets"].as_array().unwrap().clone();
+    let got = r["structuredContent"]["output"]["sheets"]
+        .as_array()
+        .unwrap()
+        .clone();
+    let want = step["result"]["output"]["sheets"]
+        .as_array()
+        .unwrap()
+        .clone();
     let mut numbers = Vec::new();
     for (g, w) in got.iter().zip(&want) {
-        let (gl, wl) = (g["labels"].as_array().unwrap(), w["labels"].as_array().unwrap());
+        let (gl, wl) = (
+            g["labels"].as_array().unwrap(),
+            w["labels"].as_array().unwrap(),
+        );
         assert_eq!(gl.len(), wl.len());
         for (a, b) in gl.iter().zip(wl) {
             assert_eq!((&a["part"], &a["number"]), (&b["part"], &b["number"]));
@@ -41,13 +67,31 @@ fn the_numbered_pieces_over_mcp_are_the_case_s() {
     }
     assert_eq!(numbers, ["101/30", "101/31", "101/24", "101/25"]);
     // The saved file: each number as an area's attribute and as a point's label.
-    let saved = std::env::temp_dir().join(format!("kentos-separation-labels-saved-{}.kcad", std::process::id()));
-    let s = call(&mut server, "drawing.save", json!({"drawing": drawing, "path": saved}));
+    let saved = std::env::temp_dir().join(format!(
+        "kentos-separation-labels-saved-{}.kcad",
+        std::process::id()
+    ));
+    let s = call(
+        &mut server,
+        "drawing.save",
+        json!({"drawing": drawing, "path": saved}),
+    );
     assert_eq!(s["isError"], false, "{s}");
-    let back = serde_json::to_value(kentos_kcad::decode(&std::fs::read(&saved).unwrap()).unwrap()).unwrap();
+    let back = serde_json::to_value(kentos_kcad::decode(&std::fs::read(&saved).unwrap()).unwrap())
+        .unwrap();
     for n in &numbers {
-        let areas = back["entities"].as_array().unwrap().iter().filter(|e| e["kind"] == "polygon" && e["attrs"]["ParselNo"] == json!(n)).count();
-        let points = back["entities"].as_array().unwrap().iter().filter(|e| e["kind"] == "point" && e["label"] == json!(n)).count();
+        let areas = back["entities"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|e| e["kind"] == "polygon" && e["attrs"]["ParselNo"] == json!(n))
+            .count();
+        let points = back["entities"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|e| e["kind"] == "point" && e["label"] == json!(n))
+            .count();
         assert_eq!((areas, points), (1, 1), "{n}");
     }
     let _ = std::fs::remove_file(path);

@@ -71,6 +71,10 @@ pub fn of(category: Category) -> Part {
         Category::Zone => ZONE,
         Category::Furnishing => 10,
         Category::Opening => OPENING,
-        Category::Project | Category::Site | Category::Building | Category::Storey | Category::Other => 15,
+        Category::Project
+        | Category::Site
+        | Category::Building
+        | Category::Storey
+        | Category::Other => 15,
     }
 }

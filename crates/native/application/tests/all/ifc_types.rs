@@ -19,16 +19,32 @@ fn every_wall_style_is_one_type_and_its_walls_are_typed_by_it() {
     let mut by_style: std::collections::BTreeMap<String, usize> = std::collections::BTreeMap::new();
     for e in doc.entities() {
         if let Entity::Wall(w) = e {
-            *by_style.entry(w.wall.style.clone().unwrap_or_default()).or_default() += 1;
+            *by_style
+                .entry(w.wall.style.clone().unwrap_or_default())
+                .or_default() += 1;
         }
     }
-    let styled: usize = by_style.iter().filter(|(s, _)| !s.is_empty()).map(|(_, n)| n).sum();
+    let styled: usize = by_style
+        .iter()
+        .filter(|(s, _)| !s.is_empty())
+        .map(|(_, n)| n)
+        .sum();
     assert!(styled > 0, "{by_style:?}");
-    assert_eq!(b.types.len(), by_style.keys().filter(|s| !s.is_empty()).count());
-    assert_eq!(b.types.iter().map(|t| t.members.len()).sum::<usize>(), styled);
+    assert_eq!(
+        b.types.len(),
+        by_style.keys().filter(|s| !s.is_empty()).count()
+    );
+    assert_eq!(
+        b.types.iter().map(|t| t.members.len()).sum::<usize>(),
+        styled
+    );
     for t in &b.types {
         assert_eq!(t.entity, "IFCWALLTYPE");
-        assert!(t.members.iter().all(|&i| b.elements[i].class == kentos_ifc::building::Class::Wall));
+        assert!(
+            t.members
+                .iter()
+                .all(|&i| b.elements[i].class == kentos_ifc::building::Class::Wall)
+        );
         let (_, layers) = t.layer_set.as_ref().expect("its layers");
         assert!(!layers.is_empty() && layers.iter().all(|l| l.thickness > 0.0));
     }
@@ -90,7 +106,10 @@ fn every_wall_style_is_one_type_and_its_walls_are_typed_by_it() {
             _ => None,
         })
         .collect();
-    assert!(!slabs.is_empty(), "the declared section building's slabs are layered");
+    assert!(
+        !slabs.is_empty(),
+        "the declared section building's slabs are layered"
+    );
     let kept = json!({"file": "kesit-binasi-tipli.ifc", "styles": styles, "slabs": slabs});
     let note = serde_json::to_string_pretty(&kept).unwrap() + "\n";
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc");
@@ -98,6 +117,12 @@ fn every_wall_style_is_one_type_and_its_walls_are_typed_by_it() {
         std::fs::write(dir.join("kesit-binasi-tipli.ifc"), &text).unwrap();
         std::fs::write(dir.join("kesit-binasi-tipli.json"), &note).unwrap();
     }
-    assert_eq!(std::fs::read_to_string(dir.join("kesit-binasi-tipli.ifc")).expect("the kept file"), text);
-    assert_eq!(std::fs::read_to_string(dir.join("kesit-binasi-tipli.json")).expect("the kept note"), note);
+    assert_eq!(
+        std::fs::read_to_string(dir.join("kesit-binasi-tipli.ifc")).expect("the kept file"),
+        text
+    );
+    assert_eq!(
+        std::fs::read_to_string(dir.join("kesit-binasi-tipli.json")).expect("the kept note"),
+        note
+    );
 }

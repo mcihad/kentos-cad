@@ -152,7 +152,10 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
         }
         let method = n.method.unwrap_or_else(|| spaces::project_method(doc));
         let mut s = SpaceFields {
-            sources: n.sources.clone().map(|mut ids| { ids.sort(); ids }),
+            sources: n.sources.clone().map(|mut ids| {
+                ids.sort();
+                ids
+            }),
             parts: n.parts.clone().unwrap_or_default(),
             seed: n.seed,
             scope: n.scope.unwrap_or_default(),
@@ -172,7 +175,7 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             emsal: None,
         };
         spaces::level_known(doc, &s.arch, &format!("{at}.arch.level"))?;
-        spaces::scope_valid(&s,&at)?;
+        spaces::scope_valid(&s, &at)?;
         match (n.seed, &n.parts) {
             (Some(_), _) => {
                 s = search.found(&s);

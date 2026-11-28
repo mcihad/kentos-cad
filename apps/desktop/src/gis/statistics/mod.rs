@@ -133,7 +133,11 @@ pub struct StatsNow {
 impl StatsNow {
     /// The rows the tab counts: Göster's, or a data layer's every row as its source counted them.
     pub(crate) fn shown(&self) -> usize {
-        if self.counted.is_some() { self.objects } else { self.rows.len() }
+        if self.counted.is_some() {
+            self.objects
+        } else {
+            self.rows.len()
+        }
     }
 }
 
@@ -304,15 +308,23 @@ impl App {
             Event::Value(i) => {
                 let (row, picked) = {
                     let now = self.gis.charts.stats.borrow();
-                    let row = now.detail.as_ref().and_then(|d| d.values.get(i)).map(|v| (v.rows.clone(), v.text.clone()));
-                    let picked = row.as_ref().and_then(|(rows, _)| now.grouped.as_ref().map(|p| p.picked(rows)));
+                    let row = now
+                        .detail
+                        .as_ref()
+                        .and_then(|d| d.values.get(i))
+                        .map(|v| (v.rows.clone(), v.text.clone()));
+                    let picked = row
+                        .as_ref()
+                        .and_then(|(rows, _)| now.grouped.as_ref().map(|p| p.picked(rows)));
                     (row, picked)
                 };
                 let Some((rows, text)) = row else {
                     return Task::none();
                 };
                 // A data layer counted by its source (docs/adr/9181): the value's rows asked of the source.
-                if let (Some(picked), Some(layer), Some(field)) = (picked, self.chart_layer(), self.gis.charts.field.clone()) {
+                if let (Some(picked), Some(layer), Some(field)) =
+                    (picked, self.chart_layer(), self.gis.charts.field.clone())
+                {
                     return self.pick_values(&layer, &field, Some(text), picked);
                 }
                 return self.pick_rows(&rows);
@@ -323,14 +335,27 @@ impl App {
                 };
                 let layer = self.chart_layer();
                 // A data layer's columns are its fields, its rows unread (docs/adr/9181).
-                let shape = self.document.as_ref().zip(layer.as_ref()).and_then(|(doc, l)| {
-                    doc.model.layers().get(l)?.data.as_ref()?;
-                    let columns = shape_columns(self, doc, l).into_iter().map(|(c, _)| c).collect();
-                    Some(kentos_geometry_core::ops::charts::data::DataSet { rows: 0, columns })
-                });
+                let shape = self
+                    .document
+                    .as_ref()
+                    .zip(layer.as_ref())
+                    .and_then(|(doc, l)| {
+                        doc.model.layers().get(l)?.data.as_ref()?;
+                        let columns = shape_columns(self, doc, l)
+                            .into_iter()
+                            .map(|(c, _)| c)
+                            .collect();
+                        Some(kentos_geometry_core::ops::charts::data::DataSet { rows: 0, columns })
+                    });
                 let spec = match shape {
                     Some(data) => Some(for_column(&data, &field)),
-                    None => self.gis.charts.layer_data.borrow().as_ref().map(|(_, d)| for_column(&d.work.data, &field)),
+                    None => self
+                        .gis
+                        .charts
+                        .layer_data
+                        .borrow()
+                        .as_ref()
+                        .map(|(_, d)| for_column(&d.work.data, &field)),
                 };
                 if let Some(spec) = spec {
                     self.open_chart(layer, None, Some(spec));

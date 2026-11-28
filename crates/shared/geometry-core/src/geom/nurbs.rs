@@ -347,8 +347,10 @@ impl<'a> Nurbs<'a> {
             lo = Vec2::new(js_min(lo.x, p.x), js_min(lo.y, p.y));
             hi = Vec2::new(js_max(hi.x, p.x), js_max(hi.y, p.y));
         }
-        let near =
-            !(hi.x + far < b.min_x || lo.x - far > b.max_x || hi.y + far < b.min_y || lo.y - far > b.max_y);
+        let near = !(hi.x + far < b.min_x
+            || lo.x - far > b.max_x
+            || hi.y + far < b.min_y
+            || lo.y - far > b.max_y);
         let tol = if near { near_tol } else { TOLERANCE };
         if depth < DEPTH && (depth < min || far > tol) {
             self.refine_in_box(b, near_tol, [u0, um], [p0, pm], depth + 1, min, out);
@@ -534,7 +536,10 @@ impl<'a> Nurbs<'a> {
         // the right (A5.1), not the left span used for endpoint evaluation.
         // Otherwise the last inserted control repeats and loses the endpoint.
         let k = if u == self.domain().1 && s < p {
-            self.knots.iter().rposition(|k| *k == u).unwrap_or_else(|| self.span(u))
+            self.knots
+                .iter()
+                .rposition(|k| *k == u)
+                .unwrap_or_else(|| self.span(u))
         } else {
             self.span(u)
         };
@@ -749,12 +754,25 @@ mod tests {
     #[test]
     fn a_curve_in_a_box_is_round_to_the_box_s_tolerance() {
         let (c, k, w) = quarter();
-        let n = Nurbs { degree: 2, ctrl: &c, knots: &k, weights: Some(&w) };
+        let n = Nurbs {
+            degree: 2,
+            ctrl: &c,
+            knots: &k,
+            weights: Some(&w),
+        };
         let h = std::f64::consts::FRAC_1_SQRT_2;
-        let b = crate::geometry::Bounds { min_x: h - 1e-3, min_y: h - 1e-3, max_x: h + 1e-3, max_y: h + 1e-3 };
+        let b = crate::geometry::Bounds {
+            min_x: h - 1e-3,
+            min_y: h - 1e-3,
+            max_x: h + 1e-3,
+            max_y: h + 1e-3,
+        };
         let pts = n.tessellate_in_box(&b, 1e-9);
         for p in &pts {
-            assert!(((p.x * p.x + p.y * p.y).sqrt() - 1.0).abs() < 1e-14, "{p:?}");
+            assert!(
+                ((p.x * p.x + p.y * p.y).sqrt() - 1.0).abs() < 1e-14,
+                "{p:?}"
+            );
         }
         // A chord in the box strays from the circle by at most the tolerance: its sagitta 1 − cos(half its angle).
         let mut inside = 0;
@@ -762,13 +780,28 @@ mod tests {
             let m = Vec2::new(0.5 * (s[0].x + s[1].x), 0.5 * (s[0].y + s[1].y));
             if m.x >= b.min_x && m.x <= b.max_x && m.y >= b.min_y && m.y <= b.max_y {
                 inside += 1;
-                assert!(1.0 - (m.x * m.x + m.y * m.y).sqrt() <= 1e-9 + 1e-15, "{s:?}");
+                assert!(
+                    1.0 - (m.x * m.x + m.y * m.y).sqrt() <= 1e-9 + 1e-15,
+                    "{s:?}"
+                );
             }
         }
-        assert!(inside > 0 && pts.len() < 200, "{inside} chords in the box, {} points", pts.len());
+        assert!(
+            inside > 0 && pts.len() < 200,
+            "{inside} chords in the box, {} points",
+            pts.len()
+        );
         // Coarser than the drawing nowhere: over everything at its tolerance, the same points.
-        let all = crate::geometry::Bounds { min_x: -1e9, min_y: -1e9, max_x: 1e9, max_y: 1e9 };
-        assert_eq!(n.tessellate_in_box(&all, TOLERANCE), n.tessellate(TOLERANCE));
+        let all = crate::geometry::Bounds {
+            min_x: -1e9,
+            min_y: -1e9,
+            max_x: 1e9,
+            max_y: 1e9,
+        };
+        assert_eq!(
+            n.tessellate_in_box(&all, TOLERANCE),
+            n.tessellate(TOLERANCE)
+        );
         assert_eq!(n.tessellate_in_box(&all, 0.01), n.tessellate(TOLERANCE));
     }
 

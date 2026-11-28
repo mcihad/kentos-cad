@@ -67,10 +67,19 @@ pub enum Problem {
     /// Two roads cross along their length with no join there (`at`): they do not join.
     Crossing { a: usize, b: usize, at: [f64; 2] },
     /// A road crosses the alignment along its length (not at an end): it does not join it there.
-    CrossesAlignment { road: usize, station: f64, at: [f64; 2] },
+    CrossesAlignment {
+        road: usize,
+        station: f64,
+        at: [f64; 2],
+    },
     /// An end that joins nothing: no road, no alignment, no site; `gap` how far the nearest road or the alignment
     /// lies (m), if any.
-    Loose { road: usize, end: bool, at: [f64; 2], gap: Option<f64> },
+    Loose {
+        road: usize,
+        end: bool,
+        at: [f64; 2],
+        gap: Option<f64>,
+    },
 }
 
 /// How a site meets the network.
@@ -78,7 +87,12 @@ pub enum Problem {
 pub enum Connection {
     /// It reaches the alignment: its access length (m), the station and offset where it joins, and the roads on the
     /// way, from the site.
-    Joined { length: f64, station: f64, offset: f64, roads: Vec<usize> },
+    Joined {
+        length: f64,
+        station: f64,
+        offset: f64,
+        roads: Vec<usize>,
+    },
     /// No road lies within the tolerance; the nearest's distance, if any road.
     NoRoad { nearest: Option<f64> },
     /// It meets a road, but the roads it joins never reach the alignment.
@@ -119,7 +133,11 @@ fn foot(points: &[[f64; 2]], along: &[f64], p: [f64; 2]) -> (f64, f64, [f64; 2])
         let (a, b) = (points[i], points[i + 1]);
         let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
         let l2 = dx * dx + dy * dy;
-        let t = if l2 > 0.0 { (((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2).clamp(0.0, 1.0) } else { 0.0 };
+        let t = if l2 > 0.0 {
+            (((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / l2).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
         let q = [a[0] + t * dx, a[1] + t * dy];
         let d = dist(p, q);
         if d < best.0 {
@@ -130,7 +148,12 @@ fn foot(points: &[[f64; 2]], along: &[f64], p: [f64; 2]) -> (f64, f64, [f64; 2])
 }
 
 /// Where segments `a0 a1` and `b0 b1` cross properly (inside both), if they do.
-fn crossing(a0: [f64; 2], a1: [f64; 2], b0: [f64; 2], b1: [f64; 2]) -> Option<([f64; 2], f64, f64)> {
+fn crossing(
+    a0: [f64; 2],
+    a1: [f64; 2],
+    b0: [f64; 2],
+    b1: [f64; 2],
+) -> Option<([f64; 2], f64, f64)> {
     let (rx, ry) = (a1[0] - a0[0], a1[1] - a0[1]);
     let (sx, sy) = (b1[0] - b0[0], b1[1] - b0[1]);
     let den = rx * sy - ry * sx;
@@ -140,7 +163,8 @@ fn crossing(a0: [f64; 2], a1: [f64; 2], b0: [f64; 2], b1: [f64; 2]) -> Option<([
     let (qx, qy) = (b0[0] - a0[0], b0[1] - a0[1]);
     let t = (qx * sy - qy * sx) / den;
     let u = (qx * ry - qy * rx) / den;
-    ((0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u)).then(|| ([a0[0] + t * rx, a0[1] + t * ry], t, u))
+    ((0.0..=1.0).contains(&t) && (0.0..=1.0).contains(&u))
+        .then(|| ([a0[0] + t * rx, a0[1] + t * ry], t, u))
 }
 
 struct Union(Vec<usize>);
@@ -170,7 +194,14 @@ impl Union {
 /// The network of `roads` against `alignment` (its centre line `shift` m to the right of the geometry's, offsets right
 /// positive, for an offset alignment), and how each of `sites` (points in plan) reaches it: ends join within `connect` (m), a road end joins
 /// the alignment within `reach` (m) of its centre line.
-pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64; 2]], connect: f64, reach: f64) -> Network {
+pub fn network(
+    alignment: &Alignment,
+    shift: f64,
+    roads: &[Road],
+    sites: &[[f64; 2]],
+    connect: f64,
+    reach: f64,
+) -> Network {
     let along: Vec<Vec<f64>> = roads
         .iter()
         .map(|r| {
@@ -181,10 +212,26 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
             acc
         })
         .collect();
-    let lengths: Vec<f64> = along.iter().map(|a| a.last().copied().unwrap_or(0.0)).collect();
-    let mut out = Network { lengths: lengths.clone(), ..Network::default() };
-    let usable: Vec<bool> = roads.iter().zip(&lengths).map(|(r, l)| r.points.len() >= 2 && *l > 0.0).collect();
-    let end_at = |r: usize, end: bool| if end { *roads[r].points.last().unwrap_or(&[0.0, 0.0]) } else { roads[r].points[0] };
+    let lengths: Vec<f64> = along
+        .iter()
+        .map(|a| a.last().copied().unwrap_or(0.0))
+        .collect();
+    let mut out = Network {
+        lengths: lengths.clone(),
+        ..Network::default()
+    };
+    let usable: Vec<bool> = roads
+        .iter()
+        .zip(&lengths)
+        .map(|(r, l)| r.points.len() >= 2 && *l > 0.0)
+        .collect();
+    let end_at = |r: usize, end: bool| {
+        if end {
+            *roads[r].points.last().unwrap_or(&[0.0, 0.0])
+        } else {
+            roads[r].points[0]
+        }
+    };
     // Nodes: each road's two ends (2r, 2r + 1), then the cuts along roads.
     let mut cuts: Vec<Vec<(f64, usize)>> = vec![Vec::new(); roads.len()];
     let mut nodes = 2 * roads.len();
@@ -208,9 +255,10 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
                 joined_end[2 * r] = true;
             }
             for o in (0..roads.len()).filter(|o| *o != r && usable[*o]) {
-                let near_end = [false, true].into_iter().filter(|e| dist(p, end_at(o, *e)) <= connect).min_by(|a, b| {
-                    dist(p, end_at(o, *a)).total_cmp(&dist(p, end_at(o, *b)))
-                });
+                let near_end = [false, true]
+                    .into_iter()
+                    .filter(|e| dist(p, end_at(o, *e)) <= connect)
+                    .min_by(|a, b| dist(p, end_at(o, *a)).total_cmp(&dist(p, end_at(o, *b))));
                 if let Some(e) = near_end {
                     links.push((me, 2 * o + usize::from(e)));
                     joined_end[me] = true;
@@ -240,7 +288,12 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
                 && (f.offset - shift).abs() <= reach
             {
                 junction_of[2 * r + usize::from(end)] = Some(out.junctions.len());
-                out.junctions.push(Junction { road: r, end, station: f.at.station, offset: f.offset - shift });
+                out.junctions.push(Junction {
+                    road: r,
+                    end,
+                    station: f.at.station,
+                    offset: f.offset - shift,
+                });
             }
         }
     }
@@ -262,7 +315,9 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
             }
             other => {
                 site_node.push(None);
-                site_conn.push(Some(Connection::NoRoad { nearest: other.map(|o| o.1.0) }));
+                site_conn.push(Some(Connection::NoRoad {
+                    nearest: other.map(|o| o.1.0),
+                }));
             }
         }
     }
@@ -287,7 +342,9 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
         for (k, j) in junction_of.iter().enumerate() {
             if let Some(j) = j {
                 let root = union.find(k);
-                let better = t[root].is_none_or(|old: usize| out.junctions[*j].station < out.junctions[old].station);
+                let better = t[root].is_none_or(|old: usize| {
+                    out.junctions[*j].station < out.junctions[old].station
+                });
                 if better {
                     t[root] = Some(*j);
                 }
@@ -297,7 +354,11 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
     };
     for (i, sn) in site_node.iter().enumerate() {
         let Some((k, road)) = *sn else {
-            out.sites.push(site_conn[i].take().unwrap_or(Connection::NoRoad { nearest: None }));
+            out.sites.push(
+                site_conn[i]
+                    .take()
+                    .unwrap_or(Connection::NoRoad { nearest: None }),
+            );
             continue;
         };
         let start = union.find(k);
@@ -306,7 +367,10 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
         let mut via: Vec<Option<(usize, usize)>> = vec![None; nodes];
         let mut done = vec![false; nodes];
         d[start] = 0.0;
-        while let Some(u) = (0..nodes).filter(|u| !done[*u] && d[*u].is_finite()).min_by(|a, b| d[*a].total_cmp(&d[*b])) {
+        while let Some(u) = (0..nodes)
+            .filter(|u| !done[*u] && d[*u].is_finite())
+            .min_by(|a, b| d[*a].total_cmp(&d[*b]))
+        {
             done[u] = true;
             for &(v, l, r) in &adjacency[u] {
                 if d[u] + l < d[v] {
@@ -321,7 +385,13 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
             .min_by(|a, b| {
                 let (la, lb) = (d[a.0], d[b.0]);
                 let same = (la - lb).abs() <= 1e-9 * la.max(lb).max(1.0);
-                if same { out.junctions[a.1].station.total_cmp(&out.junctions[b.1].station) } else { la.total_cmp(&lb) }
+                if same {
+                    out.junctions[a.1]
+                        .station
+                        .total_cmp(&out.junctions[b.1].station)
+                } else {
+                    la.total_cmp(&lb)
+                }
             });
         match best {
             Some((u, j)) => {
@@ -338,7 +408,12 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
                 }
                 on.reverse();
                 let jn = &out.junctions[j];
-                out.sites.push(Connection::Joined { length: d[u], station: jn.station, offset: jn.offset, roads: on });
+                out.sites.push(Connection::Joined {
+                    length: d[u],
+                    station: jn.station,
+                    offset: jn.offset,
+                    roads: on,
+                });
             }
             None => out.sites.push(Connection::Cut { road }),
         }
@@ -346,9 +421,13 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
     // Crossings along the roads' lengths with no join near: they do not join.
     let joined_near = |a: usize, b: usize, x: [f64; 2], union: &mut Union| -> bool {
         // A node both roads pass through within the tolerance of the crossing.
-        let on_a: Vec<(usize, [f64; 2])> = cuts[a].iter().map(|(s, k)| (union.find(*k), point_at(&roads[a].points, &along[a], *s))).collect();
+        let on_a: Vec<(usize, [f64; 2])> = cuts[a]
+            .iter()
+            .map(|(s, k)| (union.find(*k), point_at(&roads[a].points, &along[a], *s)))
+            .collect();
         let on_b: Vec<usize> = cuts[b].iter().map(|(_, k)| union.find(*k)).collect();
-        on_a.iter().any(|(k, p)| on_b.contains(k) && dist(*p, x) <= connect)
+        on_a.iter()
+            .any(|(k, p)| on_b.contains(k) && dist(*p, x) <= connect)
     };
     for a in (0..roads.len()).filter(|r| usable[*r]) {
         for b in (a + 1..roads.len()).filter(|r| usable[*r]) {
@@ -375,13 +454,20 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
         let mut seen: Vec<[f64; 2]> = Vec::new();
         for i in 0..pts.len() - 1 {
             let side = |p: [f64; 2]| alignment.locate(p).nearest.map(|f| f.offset - shift);
-            let (Some(o0), Some(o1)) = (side(pts[i]), side(pts[i + 1])) else { continue };
+            let (Some(o0), Some(o1)) = (side(pts[i]), side(pts[i + 1])) else {
+                continue;
+            };
             if (o0 > 0.0) == (o1 > 0.0) || o0 == 0.0 {
                 continue;
             }
             // Bisect the sign change along the segment.
             let (mut lo, mut hi) = (0.0, 1.0);
-            let at = |t: f64| [pts[i][0] + t * (pts[i + 1][0] - pts[i][0]), pts[i][1] + t * (pts[i + 1][1] - pts[i][1])];
+            let at = |t: f64| {
+                [
+                    pts[i][0] + t * (pts[i + 1][0] - pts[i][0]),
+                    pts[i][1] + t * (pts[i + 1][1] - pts[i][1]),
+                ]
+            };
             for _ in 0..60 {
                 let m = 0.5 * (lo + hi);
                 match side(at(m)) {
@@ -390,13 +476,19 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
                 }
             }
             let x = at(0.5 * (lo + hi));
-            let ends_here = [false, true].into_iter().any(|e| dist(end_at(r, e), x) <= reach);
+            let ends_here = [false, true]
+                .into_iter()
+                .any(|e| dist(end_at(r, e), x) <= reach);
             if ends_here || seen.iter().any(|y| dist(*y, x) <= connect) {
                 continue;
             }
             seen.push(x);
             if let Some(f) = alignment.locate(x).nearest {
-                out.problems.push(Problem::CrossesAlignment { road: r, station: f.at.station, at: x });
+                out.problems.push(Problem::CrossesAlignment {
+                    road: r,
+                    station: f.at.station,
+                    at: x,
+                });
             }
         }
     }
@@ -406,12 +498,17 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
         for end in [false, true] {
             let k = 2 * r + usize::from(end);
             let p = end_at(r, end);
-            if joined_end[k] || junction_of[k].is_some() || site_points.iter().any(|s| dist(*s, p) <= connect) {
+            if joined_end[k]
+                || junction_of[k].is_some()
+                || site_points.iter().any(|s| dist(*s, p) <= connect)
+            {
                 continue;
             }
             // Something else joined to this end (another's end merged into it) makes it no loose end.
             let root = union.find(k);
-            let others = (0..2 * roads.len()).filter(|x| *x != k && usable[*x / 2]).any(|x| union.find(x) == root)
+            let others = (0..2 * roads.len())
+                .filter(|x| *x != k && usable[*x / 2])
+                .any(|x| union.find(x) == root)
                 || (2 * roads.len()..nodes).any(|x| union.find(x) == root);
             if others {
                 continue;
@@ -420,9 +517,17 @@ pub fn network(alignment: &Alignment, shift: f64, roads: &[Road], sites: &[[f64;
                 .filter(|o| *o != r && usable[*o])
                 .map(|o| foot(&roads[o].points, &along[o], p).0)
                 .fold(f64::INFINITY, f64::min);
-            let to_axis = alignment.locate(p).nearest.map_or(f64::INFINITY, |f| (f.offset - shift).abs());
+            let to_axis = alignment
+                .locate(p)
+                .nearest
+                .map_or(f64::INFINITY, |f| (f.offset - shift).abs());
             let gap = to_road.min(to_axis);
-            out.problems.push(Problem::Loose { road: r, end, at: p, gap: gap.is_finite().then_some(gap) });
+            out.problems.push(Problem::Loose {
+                road: r,
+                end,
+                at: p,
+                gap: gap.is_finite().then_some(gap),
+            });
         }
     }
     out
@@ -433,7 +538,11 @@ fn point_at(points: &[[f64; 2]], along: &[f64], s: f64) -> [f64; 2] {
     let i = along.partition_point(|x| *x < s).clamp(1, points.len() - 1);
     let (a, b) = (points[i - 1], points[i]);
     let l = along[i] - along[i - 1];
-    let t = if l > 0.0 { ((s - along[i - 1]) / l).clamp(0.0, 1.0) } else { 0.0 };
+    let t = if l > 0.0 {
+        ((s - along[i - 1]) / l).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
     [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]
 }
 
@@ -444,16 +553,26 @@ mod tests {
     #[test]
     fn a_quarter_circle_flattens_to_its_length() {
         // A bulge of tan(π/8) is a quarter circle; radius 10 from (10, 0) to (0, 10) about the origin.
-        let pts = flatten(&[[10.0, 0.0], [0.0, 10.0]], &[(std::f64::consts::PI / 8.0).tan()], false);
+        let pts = flatten(
+            &[[10.0, 0.0], [0.0, 10.0]],
+            &[(std::f64::consts::PI / 8.0).tan()],
+            false,
+        );
         let length: f64 = pts.windows(2).map(|w| dist(w[0], w[1])).sum();
         let exact = 10.0 * std::f64::consts::FRAC_PI_2;
-        assert!(exact - length >= 0.0 && exact - length <= exact * SAG / (3.0 * 10.0) * 1.01, "{length} vs {exact}");
+        assert!(
+            exact - length >= 0.0 && exact - length <= exact * SAG / (3.0 * 10.0) * 1.01,
+            "{length} vs {exact}"
+        );
         assert!(pts.iter().all(|p| (p[0].hypot(p[1]) - 10.0).abs() < 1e-9));
     }
 
     #[test]
     fn crossing_is_found_inside_both() {
-        assert!(crossing([0.0, 0.0], [2.0, 2.0], [0.0, 2.0], [2.0, 0.0]).is_some_and(|c| dist(c.0, [1.0, 1.0]) < 1e-12));
+        assert!(
+            crossing([0.0, 0.0], [2.0, 2.0], [0.0, 2.0], [2.0, 0.0])
+                .is_some_and(|c| dist(c.0, [1.0, 1.0]) < 1e-12)
+        );
         assert!(crossing([0.0, 0.0], [1.0, 1.0], [3.0, 0.0], [3.0, 5.0]).is_none());
     }
 }

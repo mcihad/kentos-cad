@@ -11,11 +11,28 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_links_over_mcp_are_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.scenarios.impact.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("senaryonun yerine geçtiği katman altyapı"))).unwrap().clone();
-    let setup = case.get("setup").cloned().unwrap_or_else(|| cases["setup"].clone());
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.scenarios.impact.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("senaryonun yerine geçtiği katman altyapı"))
+        })
+        .unwrap()
+        .clone();
+    let setup = case
+        .get("setup")
+        .cloned()
+        .unwrap_or_else(|| cases["setup"].clone());
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-impact-links-{}.kcad", std::process::id()));
+    let path =
+        std::env::temp_dir().join(format!("kentos-impact-links-{}.kcad", std::process::id()));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -35,10 +52,16 @@ fn the_links_over_mcp_are_the_case_s() {
             assert_eq!((&a["area"], &a["line"]), (&b["area"], &b["line"]), "{key}");
             for k in ["from", "to"] {
                 for i in 0..2 {
-                    assert!((a[k][i].as_f64().unwrap() - b[k][i].as_f64().unwrap()).abs() < 1e-6, "{key} {k}");
+                    assert!(
+                        (a[k][i].as_f64().unwrap() - b[k][i].as_f64().unwrap()).abs() < 1e-6,
+                        "{key} {k}"
+                    );
                 }
             }
-            assert!((a["distance"].as_f64().unwrap() - b["distance"].as_f64().unwrap()).abs() < 1e-6, "{key}");
+            assert!(
+                (a["distance"].as_f64().unwrap() - b["distance"].as_f64().unwrap()).abs() < 1e-6,
+                "{key}"
+            );
         }
     }
     let _ = std::fs::remove_file(path);

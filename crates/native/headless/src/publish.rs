@@ -1,21 +1,18 @@
 //! Atomic sheet delivery. Planning writes nothing; publication exposes the whole folder in one rename.
+use crate::file_commands::Refused;
+use kentos_commands::{
+    CallOp, CommandError, CommandResult, FileEffect, PublishSheets, SheetPublishFrame,
+    SheetPublishIssue, SheetPublishMode, SheetPublishPin, SheetPublishScope, SheetPublishedFile,
+    SheetPublishedPage, SheetsPublished, encoding::sha256_hex,
+};
+use kentos_domain::Document;
+use kentos_native_application::jobs::Progress;
+use kentos_sheet::{SheetBook, VarValue, project::read_project_sheets};
 use std::{
     collections::BTreeSet,
     fs,
     path::{Path, PathBuf},
 };
-use kentos_commands::{
-    PublishSheets, SheetPublishMode, SheetPublishPin, SheetPublishedFile, SheetPublishIssue,
-    SheetsPublished, CallOp, CommandResult, CommandError, FileEffect, encoding::sha256_hex,
-    SheetPublishFrame, SheetPublishScope, SheetPublishedPage,
-};
-use kentos_domain::Document;
-use kentos_native_application::jobs::Progress;
-use kentos_sheet::{
-    SheetBook, VarValue,
-    project::read_project_sheets,
-};
-use crate::file_commands::Refused;
 const MANIFEST: &str = "yayin.json";
 /// A PDF/A publication's delivery list (docs/adr/8066): each file with its digest, its sheet's number, name and revision,
 /// and the drawing's revision and digest it was made from.
@@ -41,7 +38,7 @@ pub(crate) fn stopped(progress: Option<&Progress>) -> Result<(), Refused> {
 }
 /// A deterministic document pin. Linked-resource version pinning extends this at the plot boundary.
 pub fn pin(doc: &Document) -> Result<SheetPublishPin, Refused> {
-    kentos_plot::provenance::document_pin(doc).map_err(|e|refuse(&e.code,e.message,"pin"))
+    kentos_plot::provenance::document_pin(doc).map_err(|e| refuse(&e.code, e.message, "pin"))
 }
 fn stem(value: &str) -> String {
     let mut s: String = value
@@ -244,7 +241,13 @@ fn stage(target: &Path) -> Result<Stage, Refused> {
         keep: false,
     })
 }
-pub(crate) fn issue(sheet: &str, code: &str, message: String, error: bool, fix: String) -> SheetPublishIssue {
+pub(crate) fn issue(
+    sheet: &str,
+    code: &str,
+    message: String,
+    error: bool,
+    fix: String,
+) -> SheetPublishIssue {
     SheetPublishIssue {
         sheet: sheet.into(),
         code: code.into(),
@@ -283,7 +286,11 @@ fn journal_options(input: &PublishSheets) -> serde_json::Value {
 }
 
 /// The scope summary of the chosen sheets (docs/adr/1090 §7).
-pub(crate) fn scope_of(book: &SheetBook, chosen: &[String], views: &[kentos_commands::NamedView]) -> Vec<SheetPublishScope> {
+pub(crate) fn scope_of(
+    book: &SheetBook,
+    chosen: &[String],
+    views: &[kentos_commands::NamedView],
+) -> Vec<SheetPublishScope> {
     chosen
         .iter()
         .filter_map(|id| book.sheet(id))
@@ -293,23 +300,29 @@ pub(crate) fn scope_of(book: &SheetBook, chosen: &[String], views: &[kentos_comm
                 .items
                 .iter()
                 .filter_map(|item| match &item.kind {
-                    kentos_sheet::ItemKind::Map(m) if m.overview_of.is_none() => Some(SheetPublishFrame {
-                        item: item.id.clone(),
-                        name: item.name.clone(),
-                        denominator: match &m.view {
-                            kentos_sheet::MapView::Fixed(_) => kentos_sheet::viewport::effective_fixed_view(item, views)
-                                .ok()
-                                .map(|v| v.denominator()),
-                            kentos_sheet::MapView::Atlas(_) => None,
-                        },
-                        locked: m.view_locked,
-                        layers: match &m.layers {
-                            kentos_sheet::kinds::MapLayers::All(_) => "drawing".into(),
-                            kentos_sheet::kinds::MapLayers::List(_) => "list".into(),
-                            kentos_sheet::kinds::MapLayers::Theme(t) => format!("theme:{}", t.name),
-                        },
-                        annotation: m.annotation_scale,
-                    }),
+                    kentos_sheet::ItemKind::Map(m) if m.overview_of.is_none() => {
+                        Some(SheetPublishFrame {
+                            item: item.id.clone(),
+                            name: item.name.clone(),
+                            denominator: match &m.view {
+                                kentos_sheet::MapView::Fixed(_) => {
+                                    kentos_sheet::viewport::effective_fixed_view(item, views)
+                                        .ok()
+                                        .map(|v| v.denominator())
+                                }
+                                kentos_sheet::MapView::Atlas(_) => None,
+                            },
+                            locked: m.view_locked,
+                            layers: match &m.layers {
+                                kentos_sheet::kinds::MapLayers::All(_) => "drawing".into(),
+                                kentos_sheet::kinds::MapLayers::List(_) => "list".into(),
+                                kentos_sheet::kinds::MapLayers::Theme(t) => {
+                                    format!("theme:{}", t.name)
+                                }
+                            },
+                            annotation: m.annotation_scale,
+                        })
+                    }
                     _ => None,
                 })
                 .collect();
@@ -318,10 +331,20 @@ pub(crate) fn scope_of(book: &SheetBook, chosen: &[String], views: &[kentos_comm
                 name: s.name.clone(),
                 number: info.number,
                 revision: info.revision,
-                paper: [f64::from(s.page.size.width) / 1000., f64::from(s.page.size.height) / 1000.],
-                profile: kentos_sheet::plot_profile::for_sheet(book, &s.id).ok().flatten().map(|p| p.name.clone()),
+                paper: [
+                    f64::from(s.page.size.width) / 1000.,
+                    f64::from(s.page.size.height) / 1000.,
+                ],
+                profile: kentos_sheet::plot_profile::for_sheet(book, &s.id)
+                    .ok()
+                    .flatten()
+                    .map(|p| p.name.clone()),
                 frames,
-                tables: s.items.iter().filter(|i| matches!(i.kind, kentos_sheet::ItemKind::Table(_))).count() as u32,
+                tables: s
+                    .items
+                    .iter()
+                    .filter(|i| matches!(i.kind, kentos_sheet::ItemKind::Table(_)))
+                    .count() as u32,
             }
         })
         .collect()
@@ -330,28 +353,81 @@ pub(crate) fn scope_of(book: &SheetBook, chosen: &[String], views: &[kentos_comm
 /// A written page's audit as the contract carries it, with its findings (docs/adr/1090 §4): a zero-width line, lines
 /// under 0,05 mm, transparency, a viewport drawn as a picture or empty, a viewport that follows the drawing's live
 /// layer visibility. None is an error by itself.
-pub(crate) fn page_of(a: &kentos_sheet::pdf::PageAudit, file: &str, digest: &str, scope: Option<&SheetPublishScope>) -> SheetPublishedPage {
+pub(crate) fn page_of(
+    a: &kentos_sheet::pdf::PageAudit,
+    file: &str,
+    digest: &str,
+    scope: Option<&SheetPublishScope>,
+) -> SheetPublishedPage {
     let mut findings = Vec::new();
     let mut note = |code: &str, message: String, fix: &str| {
         findings.push(issue(&a.sheet, code, message, false, fix.into()));
     };
     if a.hairlines > 0 {
-        note("pdf_hairline", format!("{} çizgi sıfır kalınlıkta (cihazın en ince çizgisi): yazıcıdan yazıcıya değişir.", a.hairlines), "Baskı profilinde ya da katmanda bir çizgi kalınlığı verin.");
+        note(
+            "pdf_hairline",
+            format!(
+                "{} çizgi sıfır kalınlıkta (cihazın en ince çizgisi): yazıcıdan yazıcıya değişir.",
+                a.hairlines
+            ),
+            "Baskı profilinde ya da katmanda bir çizgi kalınlığı verin.",
+        );
     }
     if a.thin_lines > 0 {
-        note("pdf_thin_line", format!("{} çizgi {} mm'den ince; en incesi {:.3} mm.", a.thin_lines, kentos_sheet::pdf::THIN_LINE_MM, a.min_stroke_mm.unwrap_or(0.)), "Okunmayacak kadar ince çizgileri baskı profilinde kalınlaştırın.");
+        note(
+            "pdf_thin_line",
+            format!(
+                "{} çizgi {} mm'den ince; en incesi {:.3} mm.",
+                a.thin_lines,
+                kentos_sheet::pdf::THIN_LINE_MM,
+                a.min_stroke_mm.unwrap_or(0.)
+            ),
+            "Okunmayacak kadar ince çizgileri baskı profilinde kalınlaştırın.",
+        );
     }
     if a.transparent > 0 {
-        note("pdf_transparency", format!("{} boyama saydam; bazı yazıcılar ve RIP'ler saydamlığı düzleştirir.", a.transparent), "Baskı önizlemesiyle denetleyin; gerekirse saydamlığı kaldırın.");
+        note(
+            "pdf_transparency",
+            format!(
+                "{} boyama saydam; bazı yazıcılar ve RIP'ler saydamlığı düzleştirir.",
+                a.transparent
+            ),
+            "Baskı önizlemesiyle denetleyin; gerekirse saydamlığı kaldırın.",
+        );
     }
     if a.raster_maps > 0 {
-        note("pdf_rasterized_view", format!("{} görünüm penceresi resim olarak yazıldı: çizgileri ve taramaları vektör değil, yazıları aranamaz.", a.raster_maps), "Resme dönmeyi gerektiren kaynağı (raster, nokta bulutu, servis) denetleyin ya da çözünürlüğü artırın.");
+        note(
+            "pdf_rasterized_view",
+            format!(
+                "{} görünüm penceresi resim olarak yazıldı: çizgileri ve taramaları vektör değil, yazıları aranamaz.",
+                a.raster_maps
+            ),
+            "Resme dönmeyi gerektiren kaynağı (raster, nokta bulutu, servis) denetleyin ya da çözünürlüğü artırın.",
+        );
     }
     if a.placeholders > 0 {
-        note("pdf_empty_view", format!("{} görünüm penceresi boş “harita” kutusu olarak yazıldı.", a.placeholders), "Görünüm penceresinin kaynağını ve yerleşimini denetleyin.");
+        note(
+            "pdf_empty_view",
+            format!(
+                "{} görünüm penceresi boş “harita” kutusu olarak yazıldı.",
+                a.placeholders
+            ),
+            "Görünüm penceresinin kaynağını ve yerleşimini denetleyin.",
+        );
     }
-    for f in scope.into_iter().flat_map(|s| s.frames.iter()).filter(|f| f.layers == "drawing" && f.denominator.is_some()) {
-        note("viewport_live_layers", format!("“{}” görünümü çizimin anlık katman görünürlüğünü izliyor: aynı projede biri katman açıp kapatırsa baskı değişir.", f.name), "Görünüme bir katman durumu (tema) atayın.");
+    for f in scope
+        .into_iter()
+        .flat_map(|s| s.frames.iter())
+        .filter(|f| f.layers == "drawing" && f.denominator.is_some())
+    {
+        note(
+            "viewport_live_layers",
+            format!(
+                "“{}” görünümü çizimin anlık katman görünürlüğünü izliyor: aynı projede biri katman açıp kapatırsa baskı değişir.",
+                f.name
+            ),
+            "Görünüme bir katman durumu (tema) atayın.",
+        );
     }
     SheetPublishedPage {
         sheet: a.sheet.clone(),
@@ -390,9 +466,23 @@ pub(crate) fn digests(
     for id in chosen {
         stopped(progress)?;
         // A page's digest is its content's, archival or not (docs/adr/8037).
-        let opts = kentos_sheet::pdf::PdfOptions { sheets: vec![id.clone()], geo, layers, pdfa: false };
-        let got = match kentos_plot::book::book_pdf_captured(&neutral, std::slice::from_ref(id), Some(opts), None) {
-            Ok(pdf) => pdf.pages.first().map(|p| p.digest.clone()).ok_or_else(|| ("pdf_no_page".to_owned(), "Sayfa yazılmadı.".to_owned())),
+        let opts = kentos_sheet::pdf::PdfOptions {
+            sheets: vec![id.clone()],
+            geo,
+            layers,
+            pdfa: false,
+        };
+        let got = match kentos_plot::book::book_pdf_captured(
+            &neutral,
+            std::slice::from_ref(id),
+            Some(opts),
+            None,
+        ) {
+            Ok(pdf) => pdf
+                .pages
+                .first()
+                .map(|p| p.digest.clone())
+                .ok_or_else(|| ("pdf_no_page".to_owned(), "Sayfa yazılmadı.".to_owned())),
             Err(e) if e.code == "cancelled" => return Err(refuse("cancelled", e.message, "path")),
             Err(e) => Err((e.code, e.message)),
         };
@@ -413,7 +503,11 @@ fn work(
     let target = crate::package::target(&input.path)?;
     stopped(progress)?;
     let source = pin(doc)?;
-    if input.pin.as_ref().is_some_and(|p| p.revision != source.revision || p.sha256 != source.sha256) {
+    if input
+        .pin
+        .as_ref()
+        .is_some_and(|p| p.revision != source.revision || p.sha256 != source.sha256)
+    {
         return Err(refuse(
             "pin_mismatch",
             "Çizim önizlemeden sonra değişti; yayını yeniden denetleyin.",
@@ -530,19 +624,40 @@ fn work(
         None
     };
     let (user, date) = match &journal {
-        Some(j) => (j["user"].as_str().unwrap_or_default().to_owned(), j["date"].as_str().unwrap_or_default().to_owned()),
-        None => (kentos_plot::book::current_user(), kentos_plot::book::today()),
+        Some(j) => (
+            j["user"].as_str().unwrap_or_default().to_owned(),
+            j["date"].as_str().unwrap_or_default().to_owned(),
+        ),
+        None => (
+            kentos_plot::book::current_user(),
+            kentos_plot::book::today(),
+        ),
     };
-    let mut captured=kentos_plot::provenance::Capture::new(doc,&user,&date,input.drawing.as_deref()).map_err(|e|refuse(&e.code,e.message,"pin"))?;
-    if input.pin.as_ref().is_some_and(|p|!captured.matches(p)){return Err(refuse("pin_mismatch","Çizim, bağlı resim sürümü veya başlık bilgileri ön denetimden sonra değişti; yeniden denetleyin.","pin"));}
-    captured.dpi_override(input.dpi).map_err(|e|refuse(&e.code,e.message,"dpi"))?;
-    let source=captured.pin().clone();
+    let mut captured =
+        kentos_plot::provenance::Capture::new(doc, &user, &date, input.drawing.as_deref())
+            .map_err(|e| refuse(&e.code, e.message, "pin"))?;
+    if input.pin.as_ref().is_some_and(|p| !captured.matches(p)) {
+        return Err(refuse(
+            "pin_mismatch",
+            "Çizim, bağlı resim sürümü veya başlık bilgileri ön denetimden sonra değişti; yeniden denetleyin.",
+            "pin",
+        ));
+    }
+    captured
+        .dpi_override(input.dpi)
+        .map_err(|e| refuse(&e.code, e.message, "dpi"))?;
+    let source = captured.pin().clone();
     if let Some(j) = &journal {
         let was: Option<SheetPublishPin> = serde_json::from_value(j["source"].clone()).ok();
         let same_source = was.as_ref().is_some_and(|w| {
-            w.sha256 == source.sha256 && w.resources_sha256 == source.resources_sha256 && w.context_sha256 == source.context_sha256
+            w.sha256 == source.sha256
+                && w.resources_sha256 == source.resources_sha256
+                && w.context_sha256 == source.context_sha256
         });
-        if !same_source || j["options"] != journal_options(input) || j["sheets"] != serde_json::json!(chosen) {
+        if !same_source
+            || j["options"] != journal_options(input)
+            || j["sheets"] != serde_json::json!(chosen)
+        {
             return Err(refuse(
                 "resume_stale",
                 "Çizim, bağlı kaynakları ya da yayın seçenekleri durdurulan yayından sonra değişti; bitmiş sayfalar yeni kaynakla karıştırılmaz. Yayını baştan başlatın.",
@@ -590,16 +705,35 @@ fn work(
         None
     };
     let resources = resource_plan.as_ref().map(|p| p.output.clone());
-    let total_work = 2 * chosen.len() as u64 + resources.as_ref().map_or(0, |r| r.files.len() as u64);
+    let total_work =
+        2 * chosen.len() as u64 + resources.as_ref().map_or(0, |r| r.files.len() as u64);
     let mut staging = if resumable {
-        let dir = journal_at.clone().ok_or_else(|| refuse("invalid_file_path", "Teslim klasörünün adı yok.", "path"))?;
+        let dir = journal_at
+            .clone()
+            .ok_or_else(|| refuse("invalid_file_path", "Teslim klasörünün adı yok.", "path"))?;
         if journal.is_none() && dir.exists() {
-            fs::remove_dir_all(&dir).map_err(|e| refuse("file_unwritable", format!("Eski devam klasörü silinemedi: {e}"), "path"))?;
+            fs::remove_dir_all(&dir).map_err(|e| {
+                refuse(
+                    "file_unwritable",
+                    format!("Eski devam klasörü silinemedi: {e}"),
+                    "path",
+                )
+            })?;
         }
         if !dir.exists() {
-            fs::create_dir(&dir).map_err(|e| refuse("file_unwritable", format!("Devam klasörü açılamadı: {e}"), "path"))?;
+            fs::create_dir(&dir).map_err(|e| {
+                refuse(
+                    "file_unwritable",
+                    format!("Devam klasörü açılamadı: {e}"),
+                    "path",
+                )
+            })?;
         }
-        Some(Stage { path: dir, committed: false, keep: true })
+        Some(Stage {
+            path: dir,
+            committed: false,
+            keep: true,
+        })
     } else if matches!(op, CallOp::Execute) {
         Some(stage(&target)?)
     } else {
@@ -617,7 +751,11 @@ fn work(
     let mut pages: Vec<SheetPublishedPage> = Vec::new();
     let mut resumed = Vec::new();
     let mut carried: Vec<String> = Vec::new();
-    let save = |files: &[SheetPublishedFile], pages: &[SheetPublishedPage], issues: &[SheetPublishIssue], reason: &str, at: Option<&Path>| {
+    let save = |files: &[SheetPublishedFile],
+                pages: &[SheetPublishedPage],
+                issues: &[SheetPublishIssue],
+                reason: &str,
+                at: Option<&Path>| {
         if let (true, Some(dir)) = (resumable, at) {
             let j = serde_json::json!({"format":JOURNAL_FORMAT,"path":input.path,"user":user,"date":date,"source":source,"options":journal_options(input),"sheets":chosen,"files":files,"pages":pages,"issues":issues,"reason":reason});
             let tmp = dir.join(format!("{JOURNAL}.tmp"));
@@ -631,19 +769,53 @@ fn work(
     if let Some(p) = progress {
         p.set(0, total_work);
     }
-    let digest_of = digests(&captured, &chosen, input.geo, input.layers, progress.map(|p| p.span(0, chosen.len() as u64, total_work)).as_ref())
-        .inspect_err(|_| save(&files, &pages, &issues, "cancelled", staging.as_ref().map(|s| s.path.as_path())))?;
+    let digest_of = digests(
+        &captured,
+        &chosen,
+        input.geo,
+        input.layers,
+        progress
+            .map(|p| p.span(0, chosen.len() as u64, total_work))
+            .as_ref(),
+    )
+    .inspect_err(|_| {
+        save(
+            &files,
+            &pages,
+            &issues,
+            "cancelled",
+            staging.as_ref().map(|s| s.path.as_path()),
+        )
+    })?;
     // Pages are carried only into an output made the earlier delivery's way.
     let carrying = previous.as_ref().filter(|p| p.same_output(input, &source));
-    let digest_for = |id: &str| digest_of.iter().find(|(s, _)| s == id).and_then(|(_, d)| d.as_ref().ok()).cloned().unwrap_or_default();
+    let digest_for = |id: &str| {
+        digest_of
+            .iter()
+            .find(|(s, _)| s == id)
+            .and_then(|(_, d)| d.as_ref().ok())
+            .cloned()
+            .unwrap_or_default()
+    };
     let base = chosen.len() as u64;
     for (n, (name, sheets)) in planned.iter().enumerate() {
         if let Err(e) = stopped(progress) {
-            save(&files, &pages, &issues, "cancelled", staging.as_ref().map(|s| s.path.as_path()));
+            save(
+                &files,
+                &pages,
+                &issues,
+                "cancelled",
+                staging.as_ref().map(|s| s.path.as_path()),
+            );
             return Err(e);
         }
         // A finished page of the stopped publication is kept when its file still has its bytes.
-        if let (Some(stage), Some(f)) = (&staging, kept_files.iter().find(|f| &f.name == name && &f.sheets == sheets && !f.sha256.is_empty())) {
+        if let (Some(stage), Some(f)) = (
+            &staging,
+            kept_files
+                .iter()
+                .find(|f| &f.name == name && &f.sheets == sheets && !f.sha256.is_empty()),
+        ) {
             let on_disk = fs::read(stage.path.join(name)).ok().map(|b| sha256_hex(&b));
             if on_disk.as_deref() == Some(f.sha256.as_str()) {
                 files.push(f.clone());
@@ -691,14 +863,23 @@ fn work(
                 total_work,
             )
         });
-        match kentos_plot::book::book_pdf_captured(&captured,sheets,Some(opts),page_progress.as_ref()) {
+        match kentos_plot::book::book_pdf_captured(
+            &captured,
+            sheets,
+            Some(opts),
+            page_progress.as_ref(),
+        ) {
             Ok(pdf) => {
                 // An archival file read back by the PDF reader's PDF/A-2 rules before it is delivered (docs/adr/8037):
                 // a broken rule blocks the publication, never a file that only says it is PDF/A.
                 if input.pdfa {
                     let read = kentos_formats::pdf::pdfa::pdfa2_report(&pdf.bytes);
                     let broken: Vec<String> = match &read {
-                        Ok(r) => r.findings.iter().map(|f| format!("PDF/A-2 {}: {}", f.clause, f.message)).collect(),
+                        Ok(r) => r
+                            .findings
+                            .iter()
+                            .map(|f| format!("PDF/A-2 {}: {}", f.clause, f.message))
+                            .collect(),
                         Err(e) => vec![format!("PDF/A-2 denetimi dosyayı okuyamadı: {e}")],
                     };
                     for message in broken {
@@ -731,7 +912,13 @@ fn work(
                     ));
                 }
                 if let Err(e) = stopped(progress) {
-                    save(&files, &pages, &issues, "cancelled", staging.as_ref().map(|s| s.path.as_path()));
+                    save(
+                        &files,
+                        &pages,
+                        &issues,
+                        "cancelled",
+                        staging.as_ref().map(|s| s.path.as_path()),
+                    );
                     return Err(e);
                 }
                 if let Some(stage) = &staging {
@@ -752,7 +939,10 @@ fn work(
                     let mut page = page_of(a, name, &digest, own);
                     page.date = Some(date.clone());
                     pages.push(page);
-                    if let Some(note) = previous.as_ref().and_then(|p| p.revision_note(&a.sheet, &digest, own)) {
+                    if let Some(note) = previous
+                        .as_ref()
+                        .and_then(|p| p.revision_note(&a.sheet, &digest, own))
+                    {
                         issues.push(note);
                     }
                 }
@@ -762,19 +952,36 @@ fn work(
                     bytes: pdf.bytes.len() as u64,
                     sha256: sha256_hex(&pdf.bytes),
                 });
-                save(&files, &pages, &issues, "cancelled", staging.as_ref().map(|s| s.path.as_path()));
+                save(
+                    &files,
+                    &pages,
+                    &issues,
+                    "cancelled",
+                    staging.as_ref().map(|s| s.path.as_path()),
+                );
             }
             Err(e) => {
                 let before = issues.len();
                 if e.code == "cancelled" {
-                    save(&files, &pages, &issues, "cancelled", staging.as_ref().map(|s| s.path.as_path()));
+                    save(
+                        &files,
+                        &pages,
+                        &issues,
+                        "cancelled",
+                        staging.as_ref().map(|s| s.path.as_path()),
+                    );
                     return Err(refuse("cancelled", e.message, "path"));
                 }
                 // A single combined failure is diagnosed page by page so the whole missing-source report is useful.
                 if sheets.len() > 1 {
                     for id in sheets {
                         stopped(progress)?;
-                        if let Err(page)=kentos_plot::book::book_pdf_captured(&captured,std::slice::from_ref(id),None,progress) {
+                        if let Err(page) = kentos_plot::book::book_pdf_captured(
+                            &captured,
+                            std::slice::from_ref(id),
+                            None,
+                            progress,
+                        ) {
                             issues.push(issue(
                                 id,
                                 &page.code,
@@ -814,20 +1021,45 @@ fn work(
         }
     }
     if let Err(e) = stopped(progress) {
-        save(&files, &pages, &issues, "cancelled", staging.as_ref().map(|s| s.path.as_path()));
+        save(
+            &files,
+            &pages,
+            &issues,
+            "cancelled",
+            staging.as_ref().map(|s| s.path.as_path()),
+        );
         return Err(e);
     }
     // A BIM permit package (docs/adr/8075): the model and the form beside the sheets, read back from the stage and
     // decided on before anything is exposed; what it finds is an error issue like any other.
     #[cfg(all(feature = "mod-arch", feature = "mod-gis"))]
     let bim = input.bim.as_ref().and_then(|b| {
-        crate::publish_bim::package(doc, input, b, staging.as_ref().map(|s| s.path.as_path()), &files, &scope, &date, &mut issues)
-            .map(|p| (p.report, p.files, p.manifest))
+        crate::publish_bim::package(
+            doc,
+            input,
+            b,
+            staging.as_ref().map(|s| s.path.as_path()),
+            &files,
+            &scope,
+            &date,
+            &mut issues,
+        )
+        .map(|p| (p.report, p.files, p.manifest))
     });
     #[cfg(not(all(feature = "mod-arch", feature = "mod-gis")))]
-    let bim: Option<(kentos_commands::BimPackaged, Vec<SheetPublishedFile>, serde_json::Value)> = {
+    let bim: Option<(
+        kentos_commands::BimPackaged,
+        Vec<SheetPublishedFile>,
+        serde_json::Value,
+    )> = {
         if input.bim.is_some() {
-            issues.push(issue("model", "not_in_build", "Bu yapıda Mimari modülü yok: BIM paketi yapılamaz.".into(), true, "KentOS'un Mimari modüllü yapısını kullanın.".into()));
+            issues.push(issue(
+                "model",
+                "not_in_build",
+                "Bu yapıda Mimari modülü yok: BIM paketi yapılamaz.".into(),
+                true,
+                "KentOS'un Mimari modüllü yapısını kullanın.".into(),
+            ));
         }
         None
     };
@@ -844,7 +1076,8 @@ fn work(
     if let Some((_, _, part)) = &bim {
         manifest["bim"] = part.clone();
     }
-    let bytes=serde_json::to_vec_pretty(&manifest).map_err(|e|refuse("file_unwritable",e.to_string(),"path"))?;
+    let bytes = serde_json::to_vec_pretty(&manifest)
+        .map_err(|e| refuse("file_unwritable", e.to_string(), "path"))?;
     let report = SheetsPublished {
         resources,
         path: input.path.clone(),
@@ -865,7 +1098,18 @@ fn work(
     if let Some(stage) = &mut staging {
         if !ready {
             let kept = report.files.iter().filter(|f| !f.sha256.is_empty()).count();
-            save(&report.files.iter().filter(|f| !f.sha256.is_empty()).cloned().collect::<Vec<_>>(), &report.pages, &report.issues, "failed", Some(stage.path.as_path()));
+            save(
+                &report
+                    .files
+                    .iter()
+                    .filter(|f| !f.sha256.is_empty())
+                    .cloned()
+                    .collect::<Vec<_>>(),
+                &report.pages,
+                &report.issues,
+                "failed",
+                Some(stage.path.as_path()),
+            );
             let mut message = report
                 .issues
                 .iter()
@@ -891,7 +1135,13 @@ fn work(
             resources.write(&stage.path, phase.as_ref())?;
         }
         if let Err(e) = stopped(progress) {
-            save(&report.files, &report.pages, &report.issues, "cancelled", Some(stage.path.as_path()));
+            save(
+                &report.files,
+                &report.pages,
+                &report.issues,
+                "cancelled",
+                Some(stage.path.as_path()),
+            );
             return Err(e);
         }
         let _ = fs::remove_file(stage.path.join(JOURNAL));
@@ -951,7 +1201,11 @@ pub(crate) fn run(
 /// A build without Mimari draws no section again, so it finds none stale (docs/adr/8054 §11).
 /// The delivery list (docs/adr/8066): UTF-8 with its byte order mark, `;` between fields (a spreadsheet in Turkish
 /// reads `,` as the decimal comma), one line a file in the publication's order.
-fn delivery_list(files: &[SheetPublishedFile], scope: &[kentos_commands::SheetPublishScope], source: &SheetPublishPin) -> String {
+fn delivery_list(
+    files: &[SheetPublishedFile],
+    scope: &[kentos_commands::SheetPublishScope],
+    source: &SheetPublishPin,
+) -> String {
     let cell = |t: &str| {
         if t.contains([';', '"', '\n']) {
             format!("\"{}\"", t.replace('"', "\"\""))
@@ -959,7 +1213,9 @@ fn delivery_list(files: &[SheetPublishedFile], scope: &[kentos_commands::SheetPu
             t.to_owned()
         }
     };
-    let mut out = String::from("\u{feff}Sıra;Dosya;SHA-256;Bayt;Pafta no;Pafta adı;Revizyon;Model revizyonu;Model özeti\n");
+    let mut out = String::from(
+        "\u{feff}Sıra;Dosya;SHA-256;Bayt;Pafta no;Pafta adı;Revizyon;Model revizyonu;Model özeti\n",
+    );
     // A BIM package's model and form are no sheet: their role in the sheet's name's column (docs/adr/8075).
     let role = |f: &SheetPublishedFile| -> Option<&'static str> {
         if !f.sheets.is_empty() {

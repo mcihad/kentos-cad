@@ -23,17 +23,33 @@ impl App {
                 return Task::none();
             }
             // An object's record: the same form editable.
-            if let Some(e) = self.gis.form_entry.as_mut().filter(|e| e.edit_slot.is_some()) {
+            if let Some(e) = self
+                .gis
+                .form_entry
+                .as_mut()
+                .filter(|e| e.edit_slot.is_some())
+            {
                 e.read_only = false;
                 e.read_why = None;
                 e.edit_slot = None;
                 return Task::none();
             }
-            let Some((layer, key)) = self.gis.form_entry.as_ref().and_then(|e| e.edit_row.clone()) else {
+            let Some((layer, key)) = self
+                .gis
+                .form_entry
+                .as_ref()
+                .and_then(|e| e.edit_row.clone())
+            else {
                 return Task::none();
             };
-            let editing = self.document.as_ref().is_some_and(|d| d.model.editing(&layer));
-            if !editing && let Err(why) = self.data_session(kentos_commands::SessionAction::Start, vec![layer.clone()]) {
+            let editing = self
+                .document
+                .as_ref()
+                .is_some_and(|d| d.model.editing(&layer));
+            if !editing
+                && let Err(why) =
+                    self.data_session(kentos_commands::SessionAction::Start, vec![layer.clone()])
+            {
                 self.warn(why);
                 return Task::none();
             }
@@ -655,7 +671,12 @@ impl App {
     /// Kaydet: the record through the form; the window closes when it went in.
     pub(super) fn save_entry(&mut self) -> Task<Message> {
         // A read-only connection's record is only shown (docs/adr/9159): Kaydet writes nothing, pressed or keyed.
-        if let Some(why) = self.gis.form_entry.as_ref().and_then(|e| self.read_only_source_words(&e.screen.layer)) {
+        if let Some(why) = self
+            .gis
+            .form_entry
+            .as_ref()
+            .and_then(|e| self.read_only_source_words(&e.screen.layer))
+        {
             self.warn(why);
             return Task::none();
         }
@@ -811,7 +832,10 @@ impl App {
                 // form's Kaydet is not the source's.
                 match self.waiting_words_of(&written_uid) {
                     Some(waiting) if done.committed.is_none() && !done.changes.is_empty() => {
-                        self.say(Level::Info, format!("Değişiklik uygulandı: kayıt katmanda bekler. {waiting}"));
+                        self.say(
+                            Level::Info,
+                            format!("Değişiklik uygulandı: kayıt katmanda bekler. {waiting}"),
+                        );
                     }
                     _ => self.say(Level::Success, said),
                 }
@@ -851,7 +875,12 @@ impl App {
             color: None,
             line_weight: None,
             symbol: None,
-            attrs: Some(values.into_iter().map(|(k, v)| (k, (!v.trim().is_empty()).then_some(v))).collect()),
+            attrs: Some(
+                values
+                    .into_iter()
+                    .map(|(k, v)| (k, (!v.trim().is_empty()).then_some(v)))
+                    .collect(),
+            ),
             label: None,
             unlink: false,
             name_text: false,
@@ -868,7 +897,10 @@ impl App {
         }
         let back = self.entry_closed();
         match self.waiting_words_of(&uid) {
-            Some(waiting) => self.say(Level::Info, format!("Değişiklik uygulandı: kayıt katmanda bekler. {waiting}")),
+            Some(waiting) => self.say(
+                Level::Info,
+                format!("Değişiklik uygulandı: kayıt katmanda bekler. {waiting}"),
+            ),
             None => self.say(Level::Success, "Kayıt yazıldı."),
         }
         back
@@ -990,7 +1022,8 @@ impl App {
         if locked {
             lines.push(format!(
                 "Salt okunur: {}",
-                self.entry_lock_words(e).unwrap_or_else(|| "kayıt yazılamaz.".into())
+                self.entry_lock_words(e)
+                    .unwrap_or_else(|| "kayıt yazılamaz.".into())
             ));
         } else if e.screen.prepared.locked_by_state(&e.before) {
             lines.push("Salt okunur: kaydın iş akışı durumu kilitli.".into());

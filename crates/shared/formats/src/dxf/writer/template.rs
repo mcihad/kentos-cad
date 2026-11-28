@@ -382,7 +382,12 @@ pub fn dimstyle_record(
 /// layout, then the drawing's blocks and the dimensions' anonymous ones
 /// (handle, name), as they were written.
 pub fn block_record_table(out: &mut Out, records: &[(u64, String, i64)], papers: &[Paper<'_>]) {
-    table(out, "BLOCK_RECORD", BLOCK_RECORD_TABLE, 2 + records.len() + papers.len().saturating_sub(1));
+    table(
+        out,
+        "BLOCK_RECORD",
+        BLOCK_RECORD_TABLE,
+        2 + records.len() + papers.len().saturating_sub(1),
+    );
     for (handle, name, layout) in [
         (MODEL_SPACE, "*Model_Space", "1A"),
         (PAPER_SPACE, "*Paper_Space", "1E"),
@@ -400,8 +405,18 @@ pub fn block_record_table(out: &mut Out, records: &[(u64, String, i64)], papers:
         );
     }
     for paper in papers.iter().skip(1) {
-        record(out, "BLOCK_RECORD", paper.record, BLOCK_RECORD_TABLE, "AcDbBlockTableRecord");
-        out.str(2, &paper.block); out.handle(340, paper.layout); out.int(70, 0); out.int(280, 1); out.int(281, 0);
+        record(
+            out,
+            "BLOCK_RECORD",
+            paper.record,
+            BLOCK_RECORD_TABLE,
+            "AcDbBlockTableRecord",
+        );
+        out.str(2, &paper.block);
+        out.handle(340, paper.layout);
+        out.int(70, 0);
+        out.int(280, 1);
+        out.int(281, 0);
     }
     for (handle, name, units) in records {
         record(
@@ -459,12 +474,23 @@ pub fn blocks(out: &mut Out, written: &str, papers: &[Paper<'_>]) {
         );
     }
     for paper in papers.iter().skip(1) {
-        out.str(0, "BLOCK"); out.handle(5, paper.begin); out.handle(330, paper.record);
-        out.str(100, "AcDbEntity"); out.str(8, "0"); out.str(100, "AcDbBlockBegin");
-        out.str(2, &paper.block); out.int(70, 0); out.xyz(10, kentos_contracts::Vec2 { x: 0., y: 0. });
-        out.str(3, &paper.block); out.str(1, "");
-        out.str(0, "ENDBLK"); out.handle(5, paper.end); out.handle(330, paper.record);
-        out.str(100, "AcDbEntity"); out.str(8, "0"); out.str(100, "AcDbBlockEnd");
+        out.str(0, "BLOCK");
+        out.handle(5, paper.begin);
+        out.handle(330, paper.record);
+        out.str(100, "AcDbEntity");
+        out.str(8, "0");
+        out.str(100, "AcDbBlockBegin");
+        out.str(2, &paper.block);
+        out.int(70, 0);
+        out.xyz(10, kentos_contracts::Vec2 { x: 0., y: 0. });
+        out.str(3, &paper.block);
+        out.str(1, "");
+        out.str(0, "ENDBLK");
+        out.handle(5, paper.end);
+        out.handle(330, paper.record);
+        out.str(100, "AcDbEntity");
+        out.str(8, "0");
+        out.str(100, "AcDbBlockEnd");
     }
     out.s.push_str(written);
     out.str(0, "ENDSEC");
@@ -496,8 +522,12 @@ fn layout(
     block_record: &str,
     paper: Option<&kentos_contracts::CadLayout>,
 ) {
-    let width = paper.map(|p| crate::num::dxf_real(p.width_mm)).unwrap_or_else(|| "420.0".into());
-    let height = paper.map(|p| crate::num::dxf_real(p.height_mm)).unwrap_or_else(|| "297.0".into());
+    let width = paper
+        .map(|p| crate::num::dxf_real(p.width_mm))
+        .unwrap_or_else(|| "420.0".into());
+    let height = paper
+        .map(|p| crate::num::dxf_real(p.height_mm))
+        .unwrap_or_else(|| "297.0".into());
     fixed(
         out,
         &[
@@ -639,7 +669,12 @@ fn material(out: &mut Out, handle: &str, name: &str) {
 
 /// OBJECTS: the root dictionary and what it names; `table_styles` the TABLESTYLE objects written for the project's
 /// table styles and `table_entries` their names and handles in ACAD_TABLESTYLE (docs/adr/1128 §3).
-pub fn objects(out: &mut Out, papers: &[Paper<'_>], table_styles: &str, table_entries: &[(String, String)]) {
+pub fn objects(
+    out: &mut Out,
+    papers: &[Paper<'_>],
+    table_styles: &str,
+    table_entries: &[(String, String)],
+) {
     out.section("OBJECTS");
     fixed(
         out,
@@ -669,11 +704,25 @@ pub fn objects(out: &mut Out, papers: &[Paper<'_>], table_styles: &str, table_en
     }
     dictionary(out, "B", &[]);
     dictionary(out, "C", &[]);
-    if papers.is_empty() { dictionary(out, "D", &[("Model", "1A"), ("Layout1", "1E")]); }
-    else {
+    if papers.is_empty() {
+        dictionary(out, "D", &[("Model", "1A"), ("Layout1", "1E")]);
+    } else {
         let entries: Vec<_> = std::iter::once(("Model".to_owned(), "1A".to_owned()))
-            .chain(papers.iter().map(|p| (super::blocks::one_line(&p.data.name), format!("{:X}", p.layout)))).collect();
-        dictionary(out, "D", &entries.iter().map(|(n, h)| (n.as_str(), h.as_str())).collect::<Vec<_>>());
+            .chain(papers.iter().map(|p| {
+                (
+                    super::blocks::one_line(&p.data.name),
+                    format!("{:X}", p.layout),
+                )
+            }))
+            .collect();
+        dictionary(
+            out,
+            "D",
+            &entries
+                .iter()
+                .map(|(n, h)| (n.as_str(), h.as_str()))
+                .collect::<Vec<_>>(),
+        );
     }
     dictionary(
         out,
@@ -704,13 +753,26 @@ pub fn objects(out: &mut Out, papers: &[Paper<'_>], table_styles: &str, table_en
     dictionary(
         out,
         "15",
-        &table_entries.iter().map(|(n, h)| (n.as_str(), h.as_str())).collect::<Vec<_>>(),
+        &table_entries
+            .iter()
+            .map(|(n, h)| (n.as_str(), h.as_str()))
+            .collect::<Vec<_>>(),
     );
     dictionary(out, "16", &[]);
     layout(out, "1A", "Model", "1024", "0", "17", None);
-    if papers.is_empty() { layout(out, "1E", "Layout1", "0", "1", "1B", None); }
+    if papers.is_empty() {
+        layout(out, "1E", "Layout1", "0", "1", "1B", None);
+    }
     for (i, p) in papers.iter().enumerate() {
-        layout(out, &format!("{:X}", p.layout), &super::blocks::one_line(&p.data.name), "0", &(i + 1).to_string(), &format!("{:X}", p.record), Some(p.data));
+        layout(
+            out,
+            &format!("{:X}", p.layout),
+            &super::blocks::one_line(&p.data.name),
+            "0",
+            &(i + 1).to_string(),
+            &format!("{:X}", p.record),
+            Some(p.data),
+        );
     }
     out.s.push_str(table_styles);
     material(out, "1F", "ByBlock");

@@ -10,9 +10,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+use crate::Vec2;
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::Vec2;
 
 pub const CAD_TOPOLOGY_CLEAN: &str = "cad.topology.clean";
 pub const CAD_TOPOLOGY_CLEAN_VERSION: u32 = 1;

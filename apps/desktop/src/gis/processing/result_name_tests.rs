@@ -16,7 +16,12 @@ fn ev(app: &mut App, e: Event) {
 
 fn result_name(app: &App) -> String {
     let w = app.gis.processing.dialog.as_ref().expect("the window");
-    w.values.get("layer").and_then(|v| v.get("newName")).and_then(|v| v.as_str()).unwrap_or_default().to_owned()
+    w.values
+        .get("layer")
+        .and_then(|v| v.get("newName"))
+        .and_then(|v| v.as_str())
+        .unwrap_or_default()
+        .to_owned()
 }
 
 #[test]
@@ -26,7 +31,10 @@ fn tampon_reads_the_selection_and_proposes_its_result_by_it() {
     app.gis.processing.memory.remember(
         "geometry.buffer",
         &[
-            ("input".to_owned(), json!({ "scope": "layer", "layerId": "cizim" })),
+            (
+                "input".to_owned(),
+                json!({ "scope": "layer", "layerId": "cizim" }),
+            ),
             ("distance".to_owned(), json!(10.0)),
             ("layer".to_owned(), json!({ "newName": "Park koruma 10 m" })),
         ]
@@ -36,19 +44,41 @@ fn tampon_reads_the_selection_and_proposes_its_result_by_it() {
     // The parcel selected.
     let parcel = {
         let doc = app.document.as_ref().expect("open");
-        doc.model.by_layer("parsel").next().map(|e| kentos_domain::Slot(e.base().id)).expect("a parcel")
+        doc.model
+            .by_layer("parsel")
+            .next()
+            .map(|e| kentos_domain::Slot(e.base().id))
+            .expect("a parcel")
     };
     app.selection.set([parcel]);
     let _ = app.update(Message::Run("processing.run.geometry.buffer"));
     let w = app.gis.processing.dialog.as_ref().expect("the window");
-    assert_eq!(w.values.get("input"), Some(&json!({ "scope": "selection" })), "the selection, not the last layer");
-    assert_eq!(result_name(&app), "Parsel — tampon 10 m", "named after what the run reads, not the last run's");
+    assert_eq!(
+        w.values.get("input"),
+        Some(&json!({ "scope": "selection" })),
+        "the selection, not the last layer"
+    );
+    assert_eq!(
+        result_name(&app),
+        "Parsel — tampon 10 m",
+        "named after what the run reads, not the last run's"
+    );
     assert!(!w.input_empty());
     // The input's line names the selection's layer and its count (docs/adr/9157).
-    let said = w.inputs.get("input").map(|i| i.description.clone()).unwrap_or_default();
-    assert!(said.ends_with("seçili, “Parsel” katmanından (katmanda 1 nesne)"), "{said}");
+    let said = w
+        .inputs
+        .get("input")
+        .map(|i| i.description.clone())
+        .unwrap_or_default();
+    assert!(
+        said.ends_with("seçili, “Parsel” katmanından (katmanda 1 nesne)"),
+        "{said}"
+    );
     // A name typed is the person's: it stays.
-    ev(&mut app, Event::LayerName("layer".into(), "Parsel etki alanı".into()));
+    ev(
+        &mut app,
+        Event::LayerName("layer".into(), "Parsel etki alanı".into()),
+    );
     ev(&mut app, Event::Number("distance".into(), "30".into()));
     assert_eq!(result_name(&app), "Parsel etki alanı");
 }
@@ -68,7 +98,10 @@ fn an_input_that_reads_nothing_leaves_calistir_off() {
     app.selection.set([text]);
     let _ = app.update(Message::Run("processing.run.geometry.buffer"));
     let w = app.gis.processing.dialog.as_ref().expect("the window");
-    assert_eq!(w.values.get("input"), Some(&json!({ "scope": "selection" })));
+    assert_eq!(
+        w.values.get("input"),
+        Some(&json!({ "scope": "selection" }))
+    );
     assert!(w.input_empty(), "the selection holds nothing Tampon takes");
 }
 
@@ -81,7 +114,10 @@ fn the_derived_name_follows_the_input_and_the_measure_until_a_name_is_typed() {
     let _ = app.update(Message::Run("processing.run.geometry.buffer"));
     // The active layer, Parsel, at the tool's distance.
     let first = result_name(&app);
-    assert!(first.starts_with("Parsel — tampon ") && first.ends_with(" m"), "{first}");
+    assert!(
+        first.starts_with("Parsel — tampon ") && first.ends_with(" m"),
+        "{first}"
+    );
     ev(&mut app, Event::Number("distance".into(), "2.5".into()));
     assert_eq!(result_name(&app), "Parsel — tampon 2.5 m");
     ev(&mut app, Event::Scope("input".into(), "layer".into()));
@@ -95,7 +131,12 @@ fn the_derived_name_follows_the_input_and_the_measure_until_a_name_is_typed() {
         let doc = app.document.as_ref().expect("open");
         ["parsel", "bina"]
             .iter()
-            .filter_map(|l| doc.model.by_layer(l).next().map(|e| kentos_domain::Slot(e.base().id)))
+            .filter_map(|l| {
+                doc.model
+                    .by_layer(l)
+                    .next()
+                    .map(|e| kentos_domain::Slot(e.base().id))
+            })
             .collect()
     };
     app.selection.set(two);
@@ -105,12 +146,18 @@ fn the_derived_name_follows_the_input_and_the_measure_until_a_name_is_typed() {
     ev(&mut app, Event::Scope("input".into(), "view".into()));
     assert_eq!(result_name(&app), "Seçim — tampon 2.5 m");
     // A name typed stops it.
-    ev(&mut app, Event::LayerName("layer".into(), "Koruma bandı".into()));
+    ev(
+        &mut app,
+        Event::LayerName("layer".into(), "Koruma bandı".into()),
+    );
     ev(&mut app, Event::Number("distance".into(), "5".into()));
     assert_eq!(result_name(&app), "Koruma bandı");
     // History's values keep their name: Yeniden aç is what was run.
     let values: kentos_processing::Values = [
-        ("input".to_owned(), json!({ "scope": "layer", "layerId": "parsel" })),
+        (
+            "input".to_owned(),
+            json!({ "scope": "layer", "layerId": "parsel" }),
+        ),
         ("distance".to_owned(), json!(10.0)),
         ("layer".to_owned(), json!({ "newName": "Park koruma 10 m" })),
     ]
@@ -119,7 +166,6 @@ fn the_derived_name_follows_the_input_and_the_measure_until_a_name_is_typed() {
     app.open_processing("geometry.buffer", Some(values));
     assert_eq!(result_name(&app), "Park koruma 10 m");
 }
-
 
 /// The picture (`.run/gui-evidence/kullanim-9189/`): Tampon run over the selected parcel at 10 m; its new layer, named
 /// after what it read, in Katmanlar.
@@ -130,7 +176,11 @@ fn screens() {
         let mut app = app_with_drawing();
         let parcel = {
             let doc = app.document.as_ref().expect("open");
-            doc.model.by_layer("parsel").next().map(|e| kentos_domain::Slot(e.base().id)).expect("a parcel")
+            doc.model
+                .by_layer("parsel")
+                .next()
+                .map(|e| kentos_domain::Slot(e.base().id))
+                .expect("a parcel")
         };
         app.selection.set([parcel]);
         let _ = app.update(Message::Run("processing.run.geometry.buffer"));

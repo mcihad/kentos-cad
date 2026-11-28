@@ -1,24 +1,27 @@
 //! Enkesit (section_window.rs, plan/road.md Y5): the window builds sections as it is typed and writes through
 //! `road.templates.edit`, `road.sections.edit` and `road.sections.draw`, each write one undo step; and its pictures.
 
-use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::road;
+use crate::road::RoadState;
 use crate::section_window::{Chosen, Event as W};
 
 /// A road project with `road.sections.query`'s drawing: 120 points with heights, a surface, the main and the side
 /// alignment, their profiles, two templates and two sample line sets; or without the sets and templates.
 fn app(sets: bool) -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.sections.query.json")).expect("cases");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.sections.query.json"
+    ))
+    .expect("cases");
     let mut setup = cases["setup"].clone();
     if !sets {
         let road = setup["settings"]["road"].as_object_mut().expect("road");
         road.remove("sections");
         road.remove("templates");
     }
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("the drawing reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -70,7 +73,10 @@ fn the_window_makes_a_template_and_a_set_and_shows_their_sections() {
         "the platform is built on the profile"
     );
     send(&mut app, W::Next);
-    assert_eq!(app.modules.road().section_window.as_ref().expect("open").at, 1);
+    assert_eq!(
+        app.modules.road().section_window.as_ref().expect("open").at,
+        1
+    );
     send(&mut app, W::Save);
     assert!(
         app.modules.road().section_window.is_none(),
@@ -79,10 +85,20 @@ fn the_window_makes_a_template_and_a_set_and_shows_their_sections() {
     let doc = model(&mut app);
     assert_eq!(doc.road_templates().len(), 1);
     assert_eq!(doc.road_templates()[0].left.components.len(), 2);
-    assert!(doc.road_templates()[0].right.is_none(), "the right side mirrors the left");
+    assert!(
+        doc.road_templates()[0].right.is_none(),
+        "the right side mirrors the left"
+    );
     let sets = doc.road_sections().to_vec();
     assert_eq!(sets.len(), 1);
-    assert_eq!((sets[0].id.as_str(), sets[0].template.as_deref(), sets[0].profile.as_deref()), ("k-1", Some("tk-1"), Some("b-1")));
+    assert_eq!(
+        (
+            sets[0].id.as_str(),
+            sets[0].template.as_deref(),
+            sets[0].profile.as_deref()
+        ),
+        ("k-1", Some("tk-1"), Some("b-1"))
+    );
     assert_eq!(doc.undo().as_deref(), Some("Kesit takımı"));
     assert_eq!(doc.undo().as_deref(), Some("Tip kesit"));
 }
@@ -97,13 +113,17 @@ fn a_saved_set_is_drawn_and_a_used_template_is_kept() {
     send(&mut app, W::Place("0; -300".into()));
     send(&mut app, W::Draw);
     let doc = model(&mut app);
-    assert!(doc.entities().count() > before + 100, "eight views with their grids, lines and words");
+    assert!(
+        doc.entities().count() > before + 100,
+        "eight views with their grids, lines and words"
+    );
     assert_eq!(doc.undo().as_deref(), Some("Enkesit çiz"));
     // A template a set uses stays.
     send(&mut app, W::Choose(Chosen::Template(0)));
     send(&mut app, W::Remove);
     assert_eq!(
-        app.modules.road()
+        app.modules
+            .road()
             .section_window
             .as_ref()
             .expect("open")
@@ -152,7 +172,11 @@ fn a_saved_set_is_laid_on_sheets_as_one_step() {
     assert_eq!(app.sheets.book().sheets.len(), sets[0].sheets.len());
     let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Model));
     let doc = model(&mut app);
-    assert_eq!(doc.undo().as_deref(), Some("Enkesit paftaları"), "one undo step");
+    assert_eq!(
+        doc.undo().as_deref(),
+        Some("Enkesit paftaları"),
+        "one undo step"
+    );
     assert!(doc.road_sheet_sets().is_empty());
     assert_eq!(doc.entities().count(), before);
 }
@@ -170,9 +194,14 @@ fn sheet_screens() {
 
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = app(true);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -181,7 +210,10 @@ fn sheet_screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("yol-y10-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -215,7 +247,9 @@ fn screens() {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app(true);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -224,7 +258,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("yol-y5-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -251,7 +288,12 @@ fn screens() {
             let _ = app.update(Message::Run("view.zoomExtents"));
             shot(&mut app, "enkesit-cizimde");
             // Closer: the first view, its grids, numbers and areas.
-            app.zoom_to_bounds(&kentos_commands::Bounds { min_x: -5.0, min_y: -160.0, max_x: 80.0, max_y: -95.0 });
+            app.zoom_to_bounds(&kentos_commands::Bounds {
+                min_x: -5.0,
+                min_y: -160.0,
+                max_x: 80.0,
+                max_y: -95.0,
+            });
             shot(&mut app, "enkesit-gorunus");
         }
     }
@@ -263,9 +305,14 @@ fn paved(app: &mut App) {
     let _ = app.update(Message::Run("section.editor"));
     send(app, W::Choose(Chosen::Template(0)));
     send(app, W::Pavement);
-    for (j, (name, t, m)) in [("Aşınma", "0,05", "KGM-a"), ("Binder", "0,08", ""), ("Plentmiks temel", "0,20", ""), ("Alttemel", "0,25", "")]
-        .into_iter()
-        .enumerate()
+    for (j, (name, t, m)) in [
+        ("Aşınma", "0,05", "KGM-a"),
+        ("Binder", "0,08", ""),
+        ("Plentmiks temel", "0,20", ""),
+        ("Alttemel", "0,25", ""),
+    ]
+    .into_iter()
+    .enumerate()
     {
         if j > 0 {
             send(app, W::AddLayer);
@@ -290,9 +337,18 @@ fn the_template_takes_a_pavement_and_the_sections_show_it() {
     assert_eq!(p.edge, kentos_commands::PavementEdge::Slope { h: 1.5 });
     let made = kentos_native_application::road_sections::made_sections(model(&mut app));
     let rows = made[0].1.as_ref().expect("sections");
-    let r = rows.iter().find(|r| r.pavement.is_some()).expect("a section with its pavement");
+    let r = rows
+        .iter()
+        .find(|r| r.pavement.is_some())
+        .expect("a section with its pavement");
     let pv = r.pavement.as_ref().expect("pavement");
-    assert_eq!(pv.layers.iter().map(|l| l.name.as_str()).collect::<Vec<_>>(), ["Aşınma", "Binder", "Plentmiks temel", "Alttemel"]);
+    assert_eq!(
+        pv.layers
+            .iter()
+            .map(|l| l.name.as_str())
+            .collect::<Vec<_>>(),
+        ["Aşınma", "Binder", "Plentmiks temel", "Alttemel"]
+    );
     assert!(pv.formation_cut >= r.cut.unwrap_or(0.0) && pv.formation_fill <= r.fill.unwrap_or(0.0));
     // Taken off again: removePavement.
     let _ = app.update(Message::Run("section.editor"));
@@ -313,14 +369,17 @@ fn screens_pavement() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y26");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y26");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app(true);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -329,7 +388,10 @@ fn screens_pavement() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y26-3-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -383,7 +445,10 @@ fn breaks_and_crossing_arms_are_typed_said_and_clipped() {
         .map(|r| (r.ends[0][0] - r.ends[1][0]).hypot(r.ends[0][1] - r.ends[1][1]))
         .collect();
     assert!(lengths.iter().all(|l| *l <= 205.0 + 1e-6), "{lengths:?}");
-    assert!(lengths.iter().any(|l| (l - 175.0).abs() < 1e-6), "150 + 25 on the circle: {lengths:?}");
+    assert!(
+        lengths.iter().any(|l| (l - 175.0).abs() < 1e-6),
+        "150 + 25 on the circle: {lengths:?}"
+    );
     send(&mut app, W::Save);
     let doc = model(&mut app);
     assert!(doc.road_sections()[0].clip);
@@ -400,14 +465,17 @@ fn screens_breaks() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y26");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y26");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app(true);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -416,7 +484,10 @@ fn screens_breaks() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y29-3-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -465,19 +536,44 @@ fn the_template_takes_a_cut_bench_and_its_slope_walks_over_it() {
     send(&mut app, W::Save);
     let t = model(&mut app).road_templates()[0].clone();
     let b = t.left.bench.expect("written");
-    assert_eq!((b.height, b.width, b.fall), (3.0, 2.0, 0.04), "the window's 4 % is the grade 0.04");
+    assert_eq!(
+        (b.height, b.width, b.fall),
+        (3.0, 2.0, 0.04),
+        "the window's 4 % is the grade 0.04"
+    );
     let f = t.left.fill_bench.expect("written");
-    assert_eq!((f.height, f.width, f.fall), (3.0, 2.0, 0.0), "no fall typed: level");
+    assert_eq!(
+        (f.height, f.width, f.fall),
+        (3.0, 2.0, 0.0),
+        "no fall typed: level"
+    );
     assert!(t.right.is_none(), "the right is the left's mirror");
     let core = kentos_native_application::road_sections::core_template(&t);
-    let s = kentos_road::section::template::build(&core, 100.0, &crate::section_window::sample_ground_benched()).expect("builds");
+    let s = kentos_road::section::template::build(
+        &core,
+        100.0,
+        &crate::section_window::sample_ground_benched(),
+    )
+    .expect("builds");
     assert_eq!(s.left.kind, kentos_road::section::template::Kind::Cut);
     // Past the ditch, faces of 3 m rise at 1:1 and benches 2 m wide fall 4 % outward: each bench is a level pair.
-    let flats = |p: &[[f64; 2]]| p.windows(2).filter(|p| (p[1][0] - p[0][0]).abs() > 1.99 && (p[1][1] - p[0][1]).abs() < 0.1).count();
-    assert!(flats(&s.left.points) >= 2, "at least two benches on the 10 m cut: {:?}", s.left.points);
+    let flats = |p: &[[f64; 2]]| {
+        p.windows(2)
+            .filter(|p| (p[1][0] - p[0][0]).abs() > 1.99 && (p[1][1] - p[0][1]).abs() < 0.1)
+            .count()
+    };
+    assert!(
+        flats(&s.left.points) >= 2,
+        "at least two benches on the 10 m cut: {:?}",
+        s.left.points
+    );
     // On the right, faces of 3 m fall at 1:1.5 and level benches 2 m wide: the fill is benched too.
     assert_eq!(s.right.kind, kentos_road::section::template::Kind::Fill);
-    assert!(flats(&s.right.points) >= 2, "at least two benches on the deep fill: {:?}", s.right.points);
+    assert!(
+        flats(&s.right.points) >= 2,
+        "at least two benches on the deep fill: {:?}",
+        s.right.points
+    );
     // Taken off again.
     let _ = app.update(Message::Run("section.editor"));
     send(&mut app, W::Choose(Chosen::Template(0)));
@@ -499,7 +595,8 @@ fn screens_benches() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y53");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y53");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name, full) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis", false),
@@ -508,12 +605,21 @@ fn screens_benches() {
     ] {
         use kentos_ui::widget::sizable::sizes;
         if full {
-            sizes::set(crate::section_window::TITLE, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
+            sizes::set(
+                crate::section_window::TITLE,
+                sizes::Kept {
+                    width: 800.0,
+                    height: 600.0,
+                    maximized: true,
+                },
+            );
         } else {
             sizes::forget(crate::section_window::TITLE);
         }
         let mut app = app(false);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -522,7 +628,10 @@ fn screens_benches() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y53-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -547,7 +656,8 @@ fn an_empty_place_puts_the_sections_under_the_drawing() {
         let mut app = app(true);
         let _ = app.update(Message::Run("section.editor"));
         assert!(
-            app.modules.road()
+            app.modules
+                .road()
                 .section_window
                 .as_ref()
                 .is_some_and(|w| w.place.is_empty()),
@@ -567,11 +677,20 @@ fn an_empty_place_puts_the_sections_under_the_drawing() {
             send(&mut app, W::Draw);
         }
         let doc = &app.document.as_ref().expect("doc").model;
-        let new: Vec<f64> = doc.entities().filter(|e| !before_ids.contains(&e.base().id)).map(|e| f64::from(e.base().id)).collect();
+        let new: Vec<f64> = doc
+            .entities()
+            .filter(|e| !before_ids.contains(&e.base().id))
+            .map(|e| f64::from(e.base().id))
+            .collect();
         assert!(!new.is_empty(), "the sections are drawn (sheets: {sheets})");
         app.spatial.sync(doc);
         let drawn = app.spatial.store().extent(Some(&new)).expect("their box");
-        assert!(drawn.max_y < before.min_y, "sheets {sheets}: the sections ({}) stay under the drawing ({})", drawn.max_y, before.min_y);
+        assert!(
+            drawn.max_y < before.min_y,
+            "sheets {sheets}: the sections ({}) stay under the drawing ({})",
+            drawn.max_y,
+            before.min_y
+        );
     }
 }
 
@@ -586,7 +705,8 @@ fn screens_place_under() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y91");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y91");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut app = app(true);
     let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
@@ -598,14 +718,20 @@ fn screens_place_under() {
     send(&mut app, W::DrawLayer("0".into()));
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("y91-pencere.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes the picture");
     println!("{}", file.display());
     send(&mut app, W::Draw);
     send(&mut app, W::Cancel);
     let _ = app.update(Message::Run("view.zoomExtents"));
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("y91-model.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes the picture");
     println!("{}", file.display());
 }
 
@@ -628,7 +754,8 @@ fn the_window_says_where_the_design_has_no_ground() {
     );
     send(&mut app, W::Choose(Chosen::Set(0)));
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .section_window
             .as_ref()
             .expect("open")
@@ -650,11 +777,17 @@ fn screens_missing() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y99");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y99");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 760.0), "koyu")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1100.0, 760.0), "koyu"),
+    ] {
         let mut app = app(true);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::RibbonTab("alignment"));
         let _ = app.update(Message::Run("section.editor"));
@@ -665,7 +798,10 @@ fn screens_missing() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y99-enkesit-arazisiz-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -677,7 +813,8 @@ fn the_window_says_what_the_sections_are_computed_from() {
     let _ = app.update(Message::Run("section.editor"));
     send(&mut app, W::Choose(Chosen::Set(0)));
     let said = app
-        .modules.road()
+        .modules
+        .road()
         .section_window
         .as_ref()
         .expect("open")
@@ -693,6 +830,9 @@ fn the_window_says_what_the_sections_are_computed_from() {
     );
     // Docs/adr/1040: the ground by its digest of now, to eight digits, and its acceptance.
     let ground = said.split(", arazi t-1 (").nth(1).expect("the ground");
-    assert!(ground.len() > 8 && ground[..8].bytes().all(|b| b.is_ascii_hexdigit()), "{said}");
+    assert!(
+        ground.len() > 8 && ground[..8].bytes().all(|b| b.is_ascii_hexdigit()),
+        "{said}"
+    );
     assert!(ground.ends_with("…, kabul edilmedi)"), "{said}");
 }

@@ -75,7 +75,10 @@ fn an_imported_viewport_is_named_by_what_it_is() {
         &std::fs::read_to_string(root.join("commands/v1/file.import.dwg.json")).unwrap(),
     )
     .unwrap();
-    let doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap()).unwrap();
+    let doc = Document::from_snapshot(
+        DocumentSnapshotV1::from_json(&fixture["setup"].to_string()).unwrap(),
+    )
+    .unwrap();
     let view: kentos_commands::CadViewport = serde_json::from_value(serde_json::json!({
         "paperClipMm": [], "framePlot": true, "locked": false,
         "paperCenterMm": {"x": 100.0, "y": 80.0}, "widthMm": 120.0, "heightMm": 90.0,
@@ -89,8 +92,14 @@ fn an_imported_viewport_is_named_by_what_it_is() {
         viewports: vec![view.clone(), view],
         ..Default::default()
     };
-    let sheets = cad_layouts::merge(&doc, &[layout]).expect("merged").expect("a sheet");
+    let sheets = cad_layouts::merge(&doc, &[layout])
+        .expect("merged")
+        .expect("a sheet");
     let (book, _) = kentos_sheet::project::read_project_sheets(&sheets).unwrap();
-    let names: Vec<&str> = book.sheets[0].items.iter().map(|i| i.name.as_str()).collect();
+    let names: Vec<&str> = book.sheets[0]
+        .items
+        .iter()
+        .map(|i| i.name.as_str())
+        .collect();
     assert_eq!(names, ["Görünüm penceresi 1", "Görünüm penceresi 2"]);
 }

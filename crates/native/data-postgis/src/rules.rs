@@ -36,13 +36,26 @@ pub(crate) fn check_sql(column: &str, rule: &ColumnRule) -> String {
             let list: Vec<String> = values.iter().map(|(v, _)| literal(v)).collect();
             format!("{column} IS NULL OR {column} IN ({})", list.join(", "))
         }
-        ColumnRule::Range { min, min_included, max, max_included } => {
+        ColumnRule::Range {
+            min,
+            min_included,
+            max,
+            max_included,
+        } => {
             let mut parts = Vec::new();
             if let Some(m) = min {
-                parts.push(format!("{column} {} {}", if *min_included { ">=" } else { ">" }, number(*m)));
+                parts.push(format!(
+                    "{column} {} {}",
+                    if *min_included { ">=" } else { ">" },
+                    number(*m)
+                ));
             }
             if let Some(m) = max {
-                parts.push(format!("{column} {} {}", if *max_included { "<=" } else { "<" }, number(*m)));
+                parts.push(format!(
+                    "{column} {} {}",
+                    if *max_included { "<=" } else { "<" },
+                    number(*m)
+                ));
             }
             if parts.is_empty() {
                 return "TRUE".to_owned();
@@ -53,7 +66,9 @@ pub(crate) fn check_sql(column: &str, rule: &ColumnRule) -> String {
 }
 
 fn escape(text: &str) -> String {
-    text.replace('\\', "\\\\").replace('\t', "\\t").replace('\n', "\\n")
+    text.replace('\\', "\\\\")
+        .replace('\t', "\\t")
+        .replace('\n', "\\n")
 }
 
 fn unescape(text: &str) -> String {
@@ -79,10 +94,19 @@ pub(crate) fn comment_of(column: &str, rule: &ColumnRule) -> String {
     match rule {
         ColumnRule::Values(values) => {
             let mut lines = vec![format!("{HEAD}\t{}\tdegerler", escape(column))];
-            lines.extend(values.iter().map(|(v, l)| format!("{}\t{}", escape(v), escape(l.as_deref().unwrap_or("")))));
+            lines.extend(
+                values
+                    .iter()
+                    .map(|(v, l)| format!("{}\t{}", escape(v), escape(l.as_deref().unwrap_or("")))),
+            );
             lines.join("\n")
         }
-        ColumnRule::Range { min, min_included, max, max_included } => {
+        ColumnRule::Range {
+            min,
+            min_included,
+            max,
+            max_included,
+        } => {
             let end = |v: &Option<f64>| v.map(number).unwrap_or_default();
             format!(
                 "{HEAD}\t{}\taralik\n{}\t{}\t{}\t{}",
@@ -127,7 +151,10 @@ pub(crate) fn rule_of(comment: &str) -> Option<RuledColumn> {
         }
         _ => return None,
     };
-    Some(RuledColumn { column: unescape(column), rule: Some(rule) })
+    Some(RuledColumn {
+        column: unescape(column),
+        rule: Some(rule),
+    })
 }
 
 #[cfg(test)]
@@ -141,13 +168,27 @@ mod tests {
             ("B\tx".into(), Some("Satır\nsonu".into())),
             ("C".into(), None),
         ]);
-        let range = ColumnRule::Range { min: Some(1.5), min_included: true, max: None, max_included: false };
+        let range = ColumnRule::Range {
+            min: Some(1.5),
+            min_included: true,
+            max: None,
+            max_included: false,
+        };
         for rule in [list, range] {
             let back = rule_of(&comment_of("durum", &rule)).expect("read back");
-            assert_eq!(back, RuledColumn { column: "durum".into(), rule: Some(rule.clone()) });
+            assert_eq!(
+                back,
+                RuledColumn {
+                    column: "durum".into(),
+                    rule: Some(rule.clone())
+                }
+            );
         }
         assert_eq!(rule_of("Başka bir açıklama"), None);
-        assert_eq!(check_sql("\"kod\"", &ColumnRule::Values(vec![("A'B".into(), None)])), "\"kod\" IS NULL OR \"kod\" IN ('A''B')");
+        assert_eq!(
+            check_sql("\"kod\"", &ColumnRule::Values(vec![("A'B".into(), None)])),
+            "\"kod\" IS NULL OR \"kod\" IN ('A''B')"
+        );
         assert_eq!(constraint_name(&"x".repeat(80)).len(), 63);
     }
 }

@@ -288,7 +288,12 @@ pub(super) const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "cad.entities.isolate",
-        refusals: &[&["invalid_input", "no_entities", "invalid_uid", "entity_not_found"]],
+        refusals: &[&[
+            "invalid_input",
+            "no_entities",
+            "invalid_uid",
+            "entity_not_found",
+        ]],
         warnings: &[],
         targets: none,
     },
@@ -818,14 +823,24 @@ pub(super) const ENTRIES: &[Entry] = &[
     // Dışa aktarma kaybı denetimi (plan/map-cad.md MAP-17, docs/adr/1660).
     Entry {
         id: "file.exchange.check",
-        refusals: &[&["invalid_tolerance", "layer_not_found", "exchange_unreadable", "file_unwritable"]],
+        refusals: &[&[
+            "invalid_tolerance",
+            "layer_not_found",
+            "exchange_unreadable",
+            "file_unwritable",
+        ]],
         warnings: &[],
         targets: none,
     },
     // Destek matrisi (plan/map-cad.md MAP-17, docs/adr/1880).
     Entry {
         id: "file.exchange.matrix",
-        refusals: &[&["invalid_tolerance", "layer_not_found", "exchange_unreadable", "file_unwritable"]],
+        refusals: &[&[
+            "invalid_tolerance",
+            "layer_not_found",
+            "exchange_unreadable",
+            "file_unwritable",
+        ]],
         warnings: &[],
         targets: none,
     },

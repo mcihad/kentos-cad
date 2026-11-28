@@ -22,7 +22,11 @@ fn check(doc: &kentos_domain::Document, input: &PayEdit) -> Result<Option<PayBoo
             None
         }
         RoadEditOperation::Rebind => {
-            return Err(fail(codes::INVALID_PAY_BOOK, "Poz defteri bir koridora bağlı değil; yeniden bağlanmaz.".into(), "operation"));
+            return Err(fail(
+                codes::INVALID_PAY_BOOK,
+                "Poz defteri bir koridora bağlı değil; yeniden bağlanmaz.".into(),
+                "operation",
+            ));
         }
         RoadEditOperation::Set => match old {
             Some(old) => {
@@ -32,7 +36,11 @@ fn check(doc: &kentos_domain::Document, input: &PayEdit) -> Result<Option<PayBoo
                     || input.items.is_some()
                     || input.rules.is_some();
                 if !given {
-                    return Err(fail(codes::INVALID_PAY_BOOK, "Değiştirilecek bir şey yok: defterin bir alanını verin.".into(), ""));
+                    return Err(fail(
+                        codes::INVALID_PAY_BOOK,
+                        "Değiştirilecek bir şey yok: defterin bir alanını verin.".into(),
+                        "",
+                    ));
                 }
                 let mut d = old.clone();
                 if let Some(v) = &input.source {
@@ -56,13 +64,23 @@ fn check(doc: &kentos_domain::Document, input: &PayEdit) -> Result<Option<PayBoo
                 Some(d)
             }
             None => {
-                let missing = [("source", input.source.is_none()), ("version", input.version.is_none()), ("items", input.items.is_none())]
-                    .into_iter()
-                    .find(|(_, m)| *m);
+                let missing = [
+                    ("source", input.source.is_none()),
+                    ("version", input.version.is_none()),
+                    ("items", input.items.is_none()),
+                ]
+                .into_iter()
+                .find(|(_, m)| *m);
                 if let Some((field, _)) = missing {
-                    return Err(fail(codes::INVALID_PAY_BOOK, "Yeni poz defteri için source, version ve items verilmeli.".into(), field));
+                    return Err(fail(
+                        codes::INVALID_PAY_BOOK,
+                        "Yeni poz defteri için source, version ve items verilmeli.".into(),
+                        field,
+                    ));
                 }
-                let (Some(source), Some(version), Some(items)) = (&input.source, &input.version, &input.items) else {
+                let (Some(source), Some(version), Some(items)) =
+                    (&input.source, &input.version, &input.items)
+                else {
                     return Err(Stop::Cancelled);
                 };
                 Some(PayBookDef {
@@ -86,15 +104,29 @@ fn check(doc: &kentos_domain::Document, input: &PayEdit) -> Result<Option<PayBoo
 fn write(cx: &mut ExecutionContext<'_>, next: Option<PayBookDef>) -> CommandResult<PayWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_pay(next.clone(), STEP) {
-        return fail(codes::INVALID_PAY_BOOK, format!("Poz defteri kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_PAY_BOOK,
+            format!("Poz defteri kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
-    CommandResult::Completed { output: PayWritten { book: next, revision: doc.revision().to_string() }, warnings: vec![] }
+    CommandResult::Completed {
+        output: PayWritten {
+            book: next,
+            revision: doc.revision().to_string(),
+        },
+        warnings: vec![],
+    }
 }
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &PayEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: vec![] },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -103,7 +135,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &PayEdit) -> CommandResult<()>
 pub fn plan(cx: &ExecutionContext<'_>, input: &PayEdit) -> CommandResult<PayWritten> {
     match check(cx.doc, input) {
         Ok(next) => CommandResult::Completed {
-            output: PayWritten { book: next, revision: cx.doc.revision().to_string() },
+            output: PayWritten {
+                book: next,
+                revision: cx.doc.revision().to_string(),
+            },
             warnings: vec![],
         },
         Err(stop) => stop.into(),
@@ -112,16 +147,29 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PayEdit) -> CommandResult<PayWrit
 
 /// Writes the book: one undo step.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: PayEdit) -> CommandResult<PayWritten> {
-    crate::call::recorded(cx, kentos_commands::ROAD_PAY_EDIT, kentos_commands::ROAD_PAY_EDIT_VERSION, input, |cx, input| {
-        match check(cx.doc, &input) {
+    crate::call::recorded(
+        cx,
+        kentos_commands::ROAD_PAY_EDIT,
+        kentos_commands::ROAD_PAY_EDIT_VERSION,
+        input,
+        |cx, input| match check(cx.doc, &input) {
             Ok(next) => write(cx, next),
             Err(stop) => stop.into(),
-        }
-    })
+        },
+    )
 }
 
 /// The book `input` would write and its quantities, for a window (no step written), or why not.
-pub fn preview(doc: &kentos_domain::Document, input: &PayEdit) -> Result<(kentos_commands::PayQueried, Vec<kentos_commands::CommandWarning>), String> {
+pub fn preview(
+    doc: &kentos_domain::Document,
+    input: &PayEdit,
+) -> Result<
+    (
+        kentos_commands::PayQueried,
+        Vec<kentos_commands::CommandWarning>,
+    ),
+    String,
+> {
     let next = check(doc, input).map_err(crate::road_corridors::words)?;
     let mut copy = doc.reading_copy();
     copy.set_road_pay(next, STEP).map_err(|r| r.0)?;

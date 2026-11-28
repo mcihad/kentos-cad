@@ -347,7 +347,12 @@ impl App {
             hot: self.session.hot_grips(),
             marked: self.marked_points(),
             ways: self.vertex_ways(),
-            range: self.grade_marks().0.into_iter().map(|p| kentos_interaction::Vec2::new(p.x, p.y)).collect(),
+            range: self
+                .grade_marks()
+                .0
+                .into_iter()
+                .map(|p| kentos_interaction::Vec2::new(p.x, p.y))
+                .collect(),
             found: self.address_mark_label().or_else(|| self.data_mark_label()),
             extent: self.extent_mark(),
             problem: self.topology_problem(),
@@ -374,8 +379,8 @@ impl App {
             } else {
                 None
             })
-                .or_else(|| self.session.preview(&format))
-                .or_else(|| self.module_preview()),
+            .or_else(|| self.session.preview(&format))
+            .or_else(|| self.module_preview()),
             None,
             None,
             doc.model
@@ -710,13 +715,20 @@ impl App {
                         .color(color)
                         .into(),
                 };
-                let mark = if data.driver == "gpkg" { "fileOpen" } else { "sourceDatabase" };
+                let mark = if data.driver == "gpkg" {
+                    "fileOpen"
+                } else {
+                    "sourceDatabase"
+                };
                 // One cell (Öğe): where its rows are, and the pencil while it is being edited.
-                let mut marks = iced::widget::Row::new().spacing(4).align_y(iced::Alignment::Center).push(
-                    kentos_ui::icon::icon(crate::icons::from_web(Some(mark)))
-                        .size(11.0)
-                        .tone(kentos_ui::icon::Tone::Muted),
-                );
+                let mut marks = iced::widget::Row::new()
+                    .spacing(4)
+                    .align_y(iced::Alignment::Center)
+                    .push(
+                        kentos_ui::icon::icon(crate::icons::from_web(Some(mark)))
+                            .size(11.0)
+                            .tone(kentos_ui::icon::Tone::Muted),
+                    );
                 // Being edited, a pencil; with changes not saved, the pencil in the warning's tone (docs/adr/9103 §5).
                 let mut session = String::new();
                 if doc.model.editing(&node.id) {
@@ -734,7 +746,11 @@ impl App {
                     session = if modified {
                         format!(
                             "\nDüzenleniyor; kaynağa yazılmadı: {}",
-                            crate::data_edits::counts_words(c.added.len(), c.changed.len(), c.deleted.len())
+                            crate::data_edits::counts_words(
+                                c.added.len(),
+                                c.changed.len(),
+                                c.deleted.len()
+                            )
                         )
                     } else {
                         "\nDüzenleniyor".to_owned()
@@ -768,11 +784,9 @@ impl App {
         };
         // A layer whose style has classes opens and closes them under it (docs/adr/9105 §2).
         let classed = node.kind == LayerNodeType::Layer
-            && node
-                .style
-                .renderer
-                .as_ref()
-                .is_some_and(|r| kentos_native_application::style_classes::classes_kind(r).is_some());
+            && node.style.renderer.as_ref().is_some_and(|r| {
+                kentos_native_application::style_classes::classes_kind(r).is_some()
+            });
         if classed {
             built.expanded(node.expanded, Message::LayerExpanded(node.id.clone()))
         } else {

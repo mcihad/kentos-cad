@@ -210,7 +210,10 @@ impl<'a> Region<'a> {
                 let w = sub(a, o);
                 let s = cross(w, e) / den;
                 let t = cross(w, u) / den;
-                if s > NEAR && (-1e-12..=1.0 + 1e-12).contains(&t) && best.is_none_or(|(bs, _)| s < bs) {
+                if s > NEAR
+                    && (-1e-12..=1.0 + 1e-12).contains(&t)
+                    && best.is_none_or(|(bs, _)| s < bs)
+                {
                     best = Some((
                         s,
                         At {
@@ -251,14 +254,25 @@ impl<'a> Region<'a> {
     /// The chord square from the point `t` along an edge.
     fn square(&self, r: usize, i: usize, t: f64) -> Option<Chord> {
         let u = self.inward(r, i)?;
-        self.ray(At { ring: r, edge: i, t }, u, &[(r, i)])
+        self.ray(
+            At {
+                ring: r,
+                edge: i,
+                t,
+            },
+            u,
+            &[(r, i)],
+        )
     }
 
     /// Whether a ring's point is a reflex corner of the region.
     fn reflex(&self, r: usize, k: usize) -> bool {
         let ring = &self.rings[r];
         let n = ring.len();
-        let turn = cross(sub(ring[k], ring[(k + n - 1) % n]), sub(ring[(k + 1) % n], ring[k]));
+        let turn = cross(
+            sub(ring[k], ring[(k + n - 1) % n]),
+            sub(ring[(k + 1) % n], ring[k]),
+        );
         if self.left[r] { turn < 0.0 } else { turn > 0.0 }
     }
 
@@ -292,7 +306,10 @@ impl<'a> Region<'a> {
             let n = self.rings[r].len();
             let v = self.rings[r][k];
             let own = [(r, (k + n - 1) % n), (r, k)];
-            let mut toward: Vec<Vec2> = own.iter().filter_map(|&(rr, i)| self.inward(rr, i)).collect();
+            let mut toward: Vec<Vec2> = own
+                .iter()
+                .filter_map(|&(rr, i)| self.inward(rr, i))
+                .collect();
             for (rr, ring) in self.rings.iter().enumerate() {
                 for i in 0..ring.len() {
                     if own.contains(&(rr, i)) {
@@ -325,12 +342,22 @@ impl<'a> Region<'a> {
                 if !inside_rings(step, self.rings) {
                     continue;
                 }
-                if let Some(chord) = self.ray(At { ring: r, edge: k, t: 0.0 }, u, &own) {
+                if let Some(chord) = self.ray(
+                    At {
+                        ring: r,
+                        edge: k,
+                        t: 0.0,
+                    },
+                    u,
+                    &own,
+                ) {
                     out.push(Tried { chord, from: None });
                 }
             }
         }
-        out.retain(|x| x.chord.a.ring == x.chord.b.ring && x.chord.len > 0.0 && x.chord.len <= reach);
+        out.retain(|x| {
+            x.chord.a.ring == x.chord.b.ring && x.chord.len > 0.0 && x.chord.len <= reach
+        });
         out
     }
 
@@ -338,8 +365,14 @@ impl<'a> Region<'a> {
     fn least(&self) -> Option<Chord> {
         let tried = self.chords();
         let key = |x: &Tried| {
-            let m = Vec2::new((x.chord.p.x + x.chord.q.x) / 2.0, (x.chord.p.y + x.chord.q.y) / 2.0);
-            ((x.chord.len / SAME).floor(), (m.x - self.c.x) * (m.x - self.c.x) + (m.y - self.c.y) * (m.y - self.c.y))
+            let m = Vec2::new(
+                (x.chord.p.x + x.chord.q.x) / 2.0,
+                (x.chord.p.y + x.chord.q.y) / 2.0,
+            );
+            (
+                (x.chord.len / SAME).floor(),
+                (m.x - self.c.x) * (m.x - self.c.x) + (m.y - self.c.y) * (m.y - self.c.y),
+            )
         };
         let mut order: Vec<usize> = (0..tried.len()).collect();
         order.sort_by(|&a, &b| {
@@ -358,15 +391,26 @@ impl<'a> Region<'a> {
         }
         let mut best = first?;
         // Along a sloping wall: between a chord that is no neck and the longer one next to it that is.
-        let at: HashMap<(usize, usize, usize), usize> =
-            tried.iter().enumerate().filter_map(|(x, t)| t.from.map(|f| (f, x))).collect();
-        let mut failed: Vec<usize> = status.iter().filter(|(_, ok)| !**ok).map(|(x, _)| *x).collect();
+        let at: HashMap<(usize, usize, usize), usize> = tried
+            .iter()
+            .enumerate()
+            .filter_map(|(x, t)| t.from.map(|f| (f, x)))
+            .collect();
+        let mut failed: Vec<usize> = status
+            .iter()
+            .filter(|(_, ok)| !**ok)
+            .map(|(x, _)| *x)
+            .collect();
         failed.sort_unstable();
         for x in failed {
-            let Some((r, i, j)) = tried[x].from else { continue };
+            let Some((r, i, j)) = tried[x].from else {
+                continue;
+            };
             let k = self.points_on(r, i);
             for nj in [j.checked_sub(1), Some(j + 1)].into_iter().flatten() {
-                let Some(&nx) = at.get(&(r, i, nj)) else { continue };
+                let Some(&nx) = at.get(&(r, i, nj)) else {
+                    continue;
+                };
                 if tried[nx].chord.len <= tried[x].chord.len + SAME {
                     continue;
                 }
@@ -420,7 +464,12 @@ impl<'a> Region<'a> {
         let half = ch.len / 2.0;
         let need = js_max(half - self.precision, 0.0);
         let outer = &side[0];
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in outer {
             x0 = js_min(x0, p.x);
             y0 = js_min(y0, p.y);
@@ -430,12 +479,16 @@ impl<'a> Region<'a> {
         if x1 - x0 < 2.0 * need || y1 - y0 < 2.0 * need {
             return false;
         }
-        let area = signed_area(outer).abs() - side[1..].iter().map(|h| signed_area(h).abs()).sum::<f64>();
+        let area =
+            signed_area(outer).abs() - side[1..].iter().map(|h| signed_area(h).abs()).sum::<f64>();
         if area < PI * need * need {
             return false;
         }
         // The region's largest circle, on this side and clear of the chord, is circle enough.
-        if self.d >= need && segment_distance2(self.c, ch.p, ch.q) >= need * need && inside_rings(self.c, side) {
+        if self.d >= need
+            && segment_distance2(self.c, ch.p, ch.q) >= need * need
+            && inside_rings(self.c, side)
+        {
             return true;
         }
         fits(side, half, self.precision)
@@ -525,7 +578,12 @@ fn fits(rings: &[Vec<Vec2>], r: f64, margin: f64) -> bool {
     let Some(outer) = rings.first().filter(|o| o.len() >= 3) else {
         return false;
     };
-    let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+    let (mut x0, mut y0, mut x1, mut y1) = (
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    );
     for p in outer {
         x0 = js_min(x0, p.x);
         y0 = js_min(y0, p.y);
@@ -633,7 +691,14 @@ mod tests {
 
     #[test]
     fn an_l_a_t_and_a_cross_are_as_wide_as_their_arms() {
-        let l = ring(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.8), (1.8, 1.8), (1.8, 10.0), (0.0, 10.0)]);
+        let l = ring(&[
+            (0.0, 0.0),
+            (10.0, 0.0),
+            (10.0, 1.8),
+            (1.8, 1.8),
+            (1.8, 10.0),
+            (0.0, 10.0),
+        ]);
         near(width(&[l]).width, 1.8, 1e-9);
         let t = ring(&[
             (0.0, 0.0),
@@ -722,7 +787,11 @@ mod tests {
         let taper = ring(&[(0.0, 0.0), (10.0, 0.0), (10.0, 2.5), (0.0, 1.5)]);
         let w = width(&[taper]);
         assert!(!w.neck, "{w:?}");
-        near(w.width, 2.5 / ((1.0 + 1.01f64.sqrt()) / 2.0 + 0.05), 4.0 * P);
+        near(
+            w.width,
+            2.5 / ((1.0 + 1.01f64.sqrt()) / 2.0 + 0.05),
+            4.0 * P,
+        );
     }
 
     #[test]
@@ -743,7 +812,14 @@ mod tests {
 
     #[test]
     fn a_ring_drawn_either_way_round_gives_one_width() {
-        let mut l = ring(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.8), (1.8, 1.8), (1.8, 10.0), (0.0, 10.0)]);
+        let mut l = ring(&[
+            (0.0, 0.0),
+            (10.0, 0.0),
+            (10.0, 1.8),
+            (1.8, 1.8),
+            (1.8, 10.0),
+            (0.0, 10.0),
+        ]);
         let a = width(std::slice::from_ref(&l)).width;
         l.reverse();
         near(width(&[l]).width, a, 1e-12);

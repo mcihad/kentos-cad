@@ -191,7 +191,11 @@ pub fn write(file: &WLandXml) -> String {
         escape(&file.time)
     ));
     // The velocity's unit only where speeds are written (docs/adr/0988): a file without them stays as it was.
-    let velocity = if file.alignments.iter().any(|a| !a.speeds.is_empty()) { " velocityUnit=\"kilometersPerHour\"" } else { "" };
+    let velocity = if file.alignments.iter().any(|a| !a.speeds.is_empty()) {
+        " velocityUnit=\"kilometersPerHour\""
+    } else {
+        ""
+    };
     o.push_str(&format!(
         "  <Units>\n    <Metric areaUnit=\"squareMeter\" linearUnit=\"meter\" volumeUnit=\"cubicMeter\" temperatureUnit=\"celsius\" \
          pressureUnit=\"milliBars\" angularUnit=\"decimal degrees\" directionUnit=\"decimal degrees\"{velocity}/>\n  </Units>\n",
@@ -214,7 +218,10 @@ pub fn write(file: &WLandXml) -> String {
         }
         o.push_str("/>\n");
     }
-    o.push_str(&format!("  <Project name=\"{}\"/>\n", escape(&file.project)));
+    o.push_str(&format!(
+        "  <Project name=\"{}\"/>\n",
+        escape(&file.project)
+    ));
     o.push_str(&format!(
         "  <Application name=\"{}\" manufacturer=\"KentOS\" version=\"{}\"/>\n",
         escape(&file.application),
@@ -223,13 +230,27 @@ pub fn write(file: &WLandXml) -> String {
     if !file.surfaces.is_empty() {
         o.push_str("  <Surfaces>\n");
         for s in &file.surfaces {
-            o.push_str(&format!("    <Surface name=\"{}\">\n      <Definition surfType=\"TIN\">\n        <Pnts>\n", escape(&s.name)));
+            o.push_str(&format!(
+                "    <Surface name=\"{}\">\n      <Definition surfType=\"TIN\">\n        <Pnts>\n",
+                escape(&s.name)
+            ));
             for (i, v) in s.vertices.iter().enumerate() {
-                o.push_str(&format!("          <P id=\"{}\">{} {} {}</P>\n", i + 1, n(v[1]), n(v[0]), n(v[2])));
+                o.push_str(&format!(
+                    "          <P id=\"{}\">{} {} {}</P>\n",
+                    i + 1,
+                    n(v[1]),
+                    n(v[0]),
+                    n(v[2])
+                ));
             }
             o.push_str("        </Pnts>\n        <Faces>\n");
             for t in &s.triangles {
-                o.push_str(&format!("          <F>{} {} {}</F>\n", t[0] + 1, t[1] + 1, t[2] + 1));
+                o.push_str(&format!(
+                    "          <F>{} {} {}</F>\n",
+                    t[0] + 1,
+                    t[1] + 1,
+                    t[2] + 1
+                ));
             }
             o.push_str("        </Faces>\n      </Definition>\n    </Surface>\n");
         }
@@ -297,7 +318,10 @@ pub fn write(file: &WLandXml) -> String {
                 ));
             }
             for p in &a.profiles {
-                o.push_str(&format!("      <Profile name=\"{0}\">\n        <ProfAlign name=\"{0}\">\n", escape(&p.name)));
+                o.push_str(&format!(
+                    "      <Profile name=\"{0}\">\n        <ProfAlign name=\"{0}\">\n",
+                    escape(&p.name)
+                ));
                 for v in &p.pvis {
                     let at = format!("{} {}", n(v.station), n(v.elevation));
                     o.push_str(&match v.curve {
@@ -342,12 +366,22 @@ pub fn write(file: &WLandXml) -> String {
         o.push_str("  </Roadways>\n");
     }
     if !file.features.is_empty() {
-        o.push_str(&format!("  <PlanFeatures name=\"{}\">\n", escape(&file.features_name)));
+        o.push_str(&format!(
+            "  <PlanFeatures name=\"{}\">\n",
+            escape(&file.features_name)
+        ));
         for f in &file.features {
-            o.push_str(&format!("    <PlanFeature name=\"{}\">\n      <CoordGeom>\n", escape(&f.name)));
+            o.push_str(&format!(
+                "    <PlanFeature name=\"{}\">\n      <CoordGeom>\n",
+                escape(&f.name)
+            ));
             for w in f.points.windows(2) {
                 let p = |q: [f64; 3]| format!("{} {} {}", n(q[1]), n(q[0]), n(q[2]));
-                o.push_str(&format!("        <Line><Start>{}</Start><End>{}</End></Line>\n", p(w[0]), p(w[1])));
+                o.push_str(&format!(
+                    "        <Line><Start>{}</Start><End>{}</End></Line>\n",
+                    p(w[0]),
+                    p(w[1])
+                ));
             }
             o.push_str("      </CoordGeom>\n    </PlanFeature>\n");
         }

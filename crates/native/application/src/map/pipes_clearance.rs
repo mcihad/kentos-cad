@@ -14,13 +14,15 @@
 //! exact too. No limit is the program's.
 
 use kentos_commands::{
-    Entity, NetworkDef, PIPE_FINDING_LIMIT, PIPE_LIMIT, PipeAbove, PipeClearanceAsk, PipeCrossing, PipeDiameter,
-    PipeInverts, PipeNear,
+    Entity, NetworkDef, PIPE_FINDING_LIMIT, PIPE_LIMIT, PipeAbove, PipeClearanceAsk, PipeCrossing,
+    PipeDiameter, PipeInverts, PipeNear,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geom::arrangement::tight_box;
 use kentos_geometry_core::geom::bulge::bulge_path_edges;
-use kentos_geometry_core::geom::intersect::{Edge, closest_on_edge, intersect_edges, on_edge_arc, point_at};
+use kentos_geometry_core::geom::intersect::{
+    Edge, closest_on_edge, intersect_edges, on_edge_arc, point_at,
+};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::network::{Graph, NetworkSession};
 use kentos_geometry_core::store::rtree::PackedTree;
@@ -28,7 +30,9 @@ use kentos_geometry_core::vec2::Vec2;
 
 use crate::checks::Stop;
 use crate::codes;
-use crate::pipes_check::{Path, asked_values, attr, diameter_of, network_def, path_of, refuse, wall_of};
+use crate::pipes_check::{
+    Path, asked_values, attr, diameter_of, network_def, path_of, refuse, wall_of,
+};
 use crate::processing_host::host;
 
 /// A stop of the other network's question or loading, its place under `clearance.`.
@@ -46,14 +50,28 @@ fn under(stop: Stop) -> Stop {
 pub(crate) fn asked(c: &PipeClearanceAsk) -> Result<(), Stop> {
     asked_values(&c.inverts, c.diameter.as_ref(), None).map_err(under)?;
     let limits = [
-        (c.vertical, "clearance.vertical", "En az düşey açıklık", "yalnız çakışmalar aranacaksa boş bırakın"),
-        (c.horizontal, "clearance.horizontal", "En az yatay açıklık", "yatay açıklık denetlenmeyecekse boş bırakın"),
+        (
+            c.vertical,
+            "clearance.vertical",
+            "En az düşey açıklık",
+            "yalnız çakışmalar aranacaksa boş bırakın",
+        ),
+        (
+            c.horizontal,
+            "clearance.horizontal",
+            "En az yatay açıklık",
+            "yatay açıklık denetlenmeyecekse boş bırakın",
+        ),
     ];
     for (v, path, words, empty) in limits {
         if let Some(v) = v
             && !(v.is_finite() && v > 0.0)
         {
-            return Err(refuse(codes::INVALID_PIPE_CHECK, format!("{words} 0'dan büyük bir sayı olmalı; {empty}."), path));
+            return Err(refuse(
+                codes::INVALID_PIPE_CHECK,
+                format!("{words} 0'dan büyük bir sayı olmalı; {empty}."),
+                path,
+            ));
         }
     }
     Ok(())
@@ -61,14 +79,24 @@ pub(crate) fn asked(c: &PipeClearanceAsk) -> Result<(), Stop> {
 
 /// The other network asked by its id or name, built; refused under `clearance.network`, and when it is the network
 /// checked.
-pub(crate) fn load(doc: &Document, c: &PipeClearanceAsk, checked: &NetworkDef) -> Result<(NetworkDef, NetworkSession), Stop> {
+pub(crate) fn load(
+    doc: &Document,
+    c: &PipeClearanceAsk,
+    checked: &NetworkDef,
+) -> Result<(NetworkDef, NetworkSession), Stop> {
     load_other(
         doc,
         &c.network,
         checked,
         "clearance.network",
-        |name| format!("Açıklık başka bir ağın borularına ölçülür; “{name}” denetlenen ağın kendisi."),
-        |name, n| format!("“{name}” ağında {n} boru var; en çok {PIPE_LIMIT} boruya açıklık ölçülür. Ağı süzgeçle bölün."),
+        |name| {
+            format!("Açıklık başka bir ağın borularına ölçülür; “{name}” denetlenen ağın kendisi.")
+        },
+        |name, n| {
+            format!(
+                "“{name}” ağında {n} boru var; en çok {PIPE_LIMIT} boruya açıklık ölçülür. Ağı süzgeçle bölün."
+            )
+        },
     )
 }
 
@@ -92,11 +120,16 @@ pub(crate) fn load_other(
     if def.id == checked.id {
         return Err(refuse(codes::INVALID_PIPE_CHECK, same(&def.name), at));
     }
-    let (_, session) = host()
-        .map_err(|e| Stop::failed(*e))
-        .and_then(|h| h.network(doc, &def.id).map_err(|why| refuse(codes::INVALID_NETWORK, why, at)))?;
+    let (_, session) = host().map_err(|e| Stop::failed(*e)).and_then(|h| {
+        h.network(doc, &def.id)
+            .map_err(|why| refuse(codes::INVALID_NETWORK, why, at))
+    })?;
     if session.graph.edges.len() > PIPE_LIMIT {
-        return Err(refuse(codes::INVALID_PIPE_CHECK, large(&def.name, session.graph.edges.len()), at));
+        return Err(refuse(
+            codes::INVALID_PIPE_CHECK,
+            large(&def.name, session.graph.edges.len()),
+            at,
+        ));
     }
     Ok((def, session))
 }
@@ -158,18 +191,39 @@ fn plan_of(e: Option<&Entity>, path: &Path) -> Vec<Edge> {
     match e {
         Some(Entity::Arc(a)) => {
             let sweep = (a.a1 - a.a0).rem_euclid(std::f64::consts::TAU);
-            let sweep = if sweep == 0.0 { std::f64::consts::TAU } else { sweep };
-            vec![Edge::Arc { c: Vec2::new(a.c.x, a.c.y), r: a.r, a0: a.a0, sweep }]
+            let sweep = if sweep == 0.0 {
+                std::f64::consts::TAU
+            } else {
+                sweep
+            };
+            vec![Edge::Arc {
+                c: Vec2::new(a.c.x, a.c.y),
+                r: a.r,
+                a0: a.a0,
+                sweep,
+            }]
         }
         Some(Entity::Polyline(p)) if p.pts.len() >= 2 => {
             let pts: Vec<Vec2> = p.pts.iter().map(|q| Vec2::new(q.x, q.y)).collect();
             bulge_path_edges(&pts, p.bulges.as_deref(), false)
         }
-        _ => path.pts.windows(2).map(|w| Edge::Seg { a: v(w[0]), b: v(w[1]) }).collect(),
+        _ => path
+            .pts
+            .windows(2)
+            .map(|w| Edge::Seg {
+                a: v(w[0]),
+                b: v(w[1]),
+            })
+            .collect(),
     }
 }
 
-fn pipes_of(doc: &Document, g: &Graph, inverts: &PipeInverts, diameter: Option<&PipeDiameter>) -> Vec<Pipe> {
+fn pipes_of(
+    doc: &Document,
+    g: &Graph,
+    inverts: &PipeInverts,
+    diameter: Option<&PipeDiameter>,
+) -> Vec<Pipe> {
     g.edges
         .iter()
         .map(|edge| {
@@ -177,7 +231,12 @@ fn pipes_of(doc: &Document, g: &Graph, inverts: &PipeInverts, diameter: Option<&
             let e = doc.get(slot);
             let path = path_of(e, [edge.a.x, edge.a.y], [edge.b.x, edge.b.y]);
             let edges = plan_of(e, &path);
-            let mut bounds = Bounds { min_x: f64::INFINITY, min_y: f64::INFINITY, max_x: f64::NEG_INFINITY, max_y: f64::NEG_INFINITY };
+            let mut bounds = Bounds {
+                min_x: f64::INFINITY,
+                min_y: f64::INFINITY,
+                max_x: f64::NEG_INFINITY,
+                max_y: f64::NEG_INFINITY,
+            };
             for b in edges.iter().map(tight_box) {
                 bounds.min_x = bounds.min_x.min(b.min_x);
                 bounds.min_y = bounds.min_y.min(b.min_y);
@@ -185,7 +244,9 @@ fn pipes_of(doc: &Document, g: &Graph, inverts: &PipeInverts, diameter: Option<&
                 bounds.max_y = bounds.max_y.max(b.max_y);
             }
             let inverts = match inverts {
-                PipeInverts::Fields { start, end } => Inverts::Ends(e.and_then(|e| attr(e, start).zip(attr(e, end)))),
+                PipeInverts::Fields { start, end } => {
+                    Inverts::Ends(e.and_then(|e| attr(e, start).zip(attr(e, end))))
+                }
                 PipeInverts::Heights => Inverts::Heights,
             };
             let radius = match diameter {
@@ -219,16 +280,37 @@ pub(crate) struct Other<'a> {
 }
 
 impl<'a> Other<'a> {
-    pub(crate) fn new(doc: &Document, ask: &'a PipeClearanceAsk, session: &NetworkSession) -> Other<'a> {
+    pub(crate) fn new(
+        doc: &Document,
+        ask: &'a PipeClearanceAsk,
+        session: &NetworkSession,
+    ) -> Other<'a> {
         let pipes = pipes_of(doc, &session.graph, &ask.inverts, ask.diameter.as_ref());
         let boxes: Vec<(u32, Bounds)> = pipes
             .iter()
             .enumerate()
-            .filter(|(_, p)| [p.bounds.min_x, p.bounds.min_y, p.bounds.max_x, p.bounds.max_y].iter().all(|x| x.is_finite()))
+            .filter(|(_, p)| {
+                [
+                    p.bounds.min_x,
+                    p.bounds.min_y,
+                    p.bounds.max_x,
+                    p.bounds.max_y,
+                ]
+                .iter()
+                .all(|x| x.is_finite())
+            })
             .map(|(k, p)| (k as u32, p.bounds))
             .collect();
-        let reach = pipes.iter().filter_map(|p| p.radius.map(|r| r + p.wall)).fold(0.0, f64::max);
-        Other { ask, pipes, tree: PackedTree::build(&boxes), reach }
+        let reach = pipes
+            .iter()
+            .filter_map(|p| p.radius.map(|r| r + p.wall))
+            .fold(0.0, f64::max);
+        Other {
+            ask,
+            pipes,
+            tree: PackedTree::build(&boxes),
+            reach,
+        }
     }
 }
 
@@ -276,7 +358,20 @@ fn closest(a: &Edge, b: &Edge) -> (f64, Vec2, Vec2) {
                 take(dist(p, q), p, q);
             }
         }
-        (Edge::Arc { c: c1, r: r1, a0: a01, sweep: s1 }, Edge::Arc { c: c2, r: r2, a0: a02, sweep: s2 }) => {
+        (
+            Edge::Arc {
+                c: c1,
+                r: r1,
+                a0: a01,
+                sweep: s1,
+            },
+            Edge::Arc {
+                c: c2,
+                r: r2,
+                a0: a02,
+                sweep: s2,
+            },
+        ) => {
             let d = dist(c1, c2);
             if d > 0.0 {
                 let u = Vec2::new((c2.x - c1.x) / d, (c2.y - c1.y) / d);
@@ -335,12 +430,18 @@ fn crossings_along(edges: &[Edge], path: &Path, o: &Pipe) -> Vec<(f64, f64, Vec2
         _ => 0.0,
     };
     let mut out: Vec<(f64, f64, Vec2)> = Vec::new();
-    let (tol_p, tol_o) = (1e-9 * path.length().max(1.0), 1e-9 * o.path.length().max(1.0));
+    let (tol_p, tol_o) = (
+        1e-9 * path.length().max(1.0),
+        1e-9 * o.path.length().max(1.0),
+    );
     for (i, ep) in edges.iter().enumerate() {
         for (j, eo) in o.edges.iter().enumerate() {
             for h in intersect_edges(ep, eo) {
                 let (sp, so) = (station(i, h.t), o.station(j, h.u));
-                if out.iter().any(|x| (x.0 - sp).abs() <= tol_p && (x.1 - so).abs() <= tol_o) {
+                if out
+                    .iter()
+                    .any(|x| (x.0 - sp).abs() <= tol_p && (x.1 - so).abs() <= tol_o)
+                {
                     continue;
                 }
                 out.push((sp, so, h.p));
@@ -367,14 +468,22 @@ pub(crate) struct Crossed {
 /// The other network's pipes the pipe `e` (its plan `path`) crosses, along it.
 pub(crate) fn crossing_pipes(e: Option<&Entity>, path: &Path, other: &Other<'_>) -> Vec<Crossed> {
     let edges = plan_of(e, path);
-    let mut bounds = Bounds { min_x: f64::INFINITY, min_y: f64::INFINITY, max_x: f64::NEG_INFINITY, max_y: f64::NEG_INFINITY };
+    let mut bounds = Bounds {
+        min_x: f64::INFINITY,
+        min_y: f64::INFINITY,
+        max_x: f64::NEG_INFINITY,
+        max_y: f64::NEG_INFINITY,
+    };
     for b in edges.iter().map(tight_box) {
         bounds.min_x = bounds.min_x.min(b.min_x);
         bounds.min_y = bounds.min_y.min(b.min_y);
         bounds.max_x = bounds.max_x.max(b.max_x);
         bounds.max_y = bounds.max_y.max(b.max_y);
     }
-    if ![bounds.min_x, bounds.min_y, bounds.max_x, bounds.max_y].iter().all(|v| v.is_finite()) {
+    if ![bounds.min_x, bounds.min_y, bounds.max_x, bounds.max_y]
+        .iter()
+        .all(|v| v.is_finite())
+    {
         return Vec::new();
     }
     let mut found = Vec::new();
@@ -395,7 +504,11 @@ pub(crate) fn crossing_pipes(e: Option<&Entity>, path: &Path, other: &Other<'_>)
             });
         }
     }
-    out.sort_by(|a, b| a.station.total_cmp(&b.station).then_with(|| a.uid.cmp(&b.uid)));
+    out.sort_by(|a, b| {
+        a.station
+            .total_cmp(&b.station)
+            .then_with(|| a.uid.cmp(&b.uid))
+    });
     out
 }
 
@@ -409,13 +522,19 @@ pub(crate) fn measure(
 ) -> Measured {
     let pipes = pipes_of(doc, g, inverts, diameter);
     let ask = other.ask;
-    let mut out = Measured { crossings: Vec::new(), near: Vec::new(), marks: Vec::new() };
+    let mut out = Measured {
+        crossings: Vec::new(),
+        near: Vec::new(),
+        marks: Vec::new(),
+    };
     let mut found: Vec<u32> = Vec::new();
     for p in &pipes {
         if !p.bounds.min_x.is_finite() {
             continue;
         }
-        let grow = ask.horizontal.map_or(0.0, |h| h + p.radius.unwrap_or(0.0) + p.wall + other.reach);
+        let grow = ask
+            .horizontal
+            .map_or(0.0, |h| h + p.radius.unwrap_or(0.0) + p.wall + other.reach);
         let q = Bounds {
             min_x: p.bounds.min_x - grow,
             min_y: p.bounds.min_y - grow,
@@ -439,14 +558,26 @@ pub(crate) fn measure(
                         } else {
                             (io - o.wall) - (ip + 2.0 * rp + p.wall)
                         };
-                        Some((c, if pipe_up { PipeAbove::Pipe } else { PipeAbove::Other }))
+                        Some((
+                            c,
+                            if pipe_up {
+                                PipeAbove::Pipe
+                            } else {
+                                PipeAbove::Other
+                            },
+                        ))
                     }
                     _ => None,
                 };
                 let place = [at.x, at.y];
                 if let Some((c, above)) = level {
                     let mut mark = |kind: &'static str| {
-                        out.marks.push(Mark { kind, uid: p.uid.clone(), at: place, value: Some(c) })
+                        out.marks.push(Mark {
+                            kind,
+                            uid: p.uid.clone(),
+                            at: place,
+                            value: Some(c),
+                        })
                     };
                     if c < 0.0 {
                         mark("clash");
@@ -480,10 +611,20 @@ pub(crate) fn measure(
                     }
                 }
             }
-            let Some((d, at, other_at)) = best else { continue };
-            let clearance = p.radius.zip(o.radius).map(|(rp, ro)| d - (rp + p.wall) - (ro + o.wall));
+            let Some((d, at, other_at)) = best else {
+                continue;
+            };
+            let clearance = p
+                .radius
+                .zip(o.radius)
+                .map(|(rp, ro)| d - (rp + p.wall) - (ro + o.wall));
             if clearance.map_or(d < h, |c| c < h) {
-                out.marks.push(Mark { kind: "closeAlongside", uid: p.uid.clone(), at: [at.x, at.y], value: clearance });
+                out.marks.push(Mark {
+                    kind: "closeAlongside",
+                    uid: p.uid.clone(),
+                    at: [at.x, at.y],
+                    value: clearance,
+                });
                 out.near.push(PipeNear {
                     pipe: p.uid.clone(),
                     other: o.uid.clone(),

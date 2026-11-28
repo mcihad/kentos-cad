@@ -196,6 +196,9 @@ impl ModuleProfile for Map {
     }
 
     fn project_tree(&self) -> (&'static str, &'static str) {
-        ("Proje ağacı", "Projede yüzey yok: Arazi sekmesinden yüzey oluşturun; ondan çizilen eş yükselti, platform ve sıfır hattı burada görünür.")
+        (
+            "Proje ağacı",
+            "Projede yüzey yok: Arazi sekmesinden yüzey oluşturun; ondan çizilen eş yükselti, platform ve sıfır hattı burada görünür.",
+        )
     }
 }

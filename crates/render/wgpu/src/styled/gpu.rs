@@ -13,7 +13,9 @@ use std::hash::{Hash, Hasher};
 use std::ops::Range;
 use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
-use kentos_native_style::batches::{BatchKind, FillPaintBatch, Picture, StyledBatch, StyledLayer, Unit};
+use kentos_native_style::batches::{
+    BatchKind, FillPaintBatch, Picture, StyledBatch, StyledLayer, Unit,
+};
 use wgpu::util::DeviceExt;
 
 use super::atlas::{Atlas, PAGE};
@@ -311,21 +313,38 @@ fn parts_add(
             let definition = if g.proxied {
                 p.proxy.as_ref().map_or(0, |r| u64::from(r.end - r.start)) / per
             } else if let Some(lod) = &b.lod {
-                lod.ranges(g.level).iter().map(|r| r.len() as u64).sum::<u64>() / floats as u64
+                lod.ranges(g.level)
+                    .iter()
+                    .map(|r| r.len() as u64)
+                    .sum::<u64>()
+                    / floats as u64
             } else {
                 u64::from(p.vertices) / per
             };
             // The placements the view draws (docs/adr/9244), or all.
-            let placed = g.placed_shown.as_ref().map_or(u64::from(p.count), |r| r.iter().map(|r| u64::from(r.len() as u32)).sum());
-            (definition * placed, if g.proxied { "örnekli vekil" } else { "örnekli" })
+            let placed = g.placed_shown.as_ref().map_or(u64::from(p.count), |r| {
+                r.iter().map(|r| u64::from(r.len() as u32)).sum()
+            });
+            (
+                definition * placed,
+                if g.proxied {
+                    "örnekli vekil"
+                } else {
+                    "örnekli"
+                },
+            )
         }
         None => (drawn, ""),
     };
     let kind = match &b.kind {
         BatchKind::Stroke { dash: Some(_), .. } => "çizgi kesikli",
         BatchKind::Stroke { .. } => "çizgi",
-        BatchKind::Fill { paint: FillPaintBatch::Solid { .. } } => "dolgu",
-        BatchKind::Fill { paint: FillPaintBatch::Hatch { .. } } => "tarama",
+        BatchKind::Fill {
+            paint: FillPaintBatch::Solid { .. },
+        } => "dolgu",
+        BatchKind::Fill {
+            paint: FillPaintBatch::Hatch { .. },
+        } => "tarama",
         BatchKind::Fill { .. } => "dolgu (desen/resim)",
         BatchKind::Marker { .. } => "işaret",
     };
@@ -340,8 +359,14 @@ fn parts_add(
             format!("{name} d{}", g.level)
         }
     };
-    let size = if b.range.len() / floats < 1024 { "<1024" } else { "≥1024" };
-    let e = parts.entry(format!("{kind} {how} | {levels} | {size}")).or_insert((0, 0));
+    let size = if b.range.len() / floats < 1024 {
+        "<1024"
+    } else {
+        "≥1024"
+    };
+    let e = parts
+        .entry(format!("{kind} {how} | {levels} | {size}"))
+        .or_insert((0, 0));
     e.0 += work;
     e.1 += 1;
 }
@@ -363,7 +388,11 @@ fn print_items(parts: &std::collections::BTreeMap<String, (u64, u32)>, total: u6
 
 fn forced_level() -> Option<usize> {
     static LEVEL: std::sync::OnceLock<Option<usize>> = std::sync::OnceLock::new();
-    *LEVEL.get_or_init(|| std::env::var("KENTOS_DIAG_LEVEL").ok().and_then(|v| v.parse().ok()))
+    *LEVEL.get_or_init(|| {
+        std::env::var("KENTOS_DIAG_LEVEL")
+            .ok()
+            .and_then(|v| v.parse().ok())
+    })
 }
 
 /// Instances (strokes, marks, a block's placements) the draws were given since this was last read: a measurement's
@@ -699,8 +728,11 @@ impl StyledGpu {
             // A view of one sample a pixel draws a stroke's quad a twentieth of a pixel past its smoothing (docs/adr/9250):
             // nothing of it is drawn on samples, so no other quad has to match it. The picture's samples and the
             // stretches laid over them keep three quarters (docs/adr/9247).
-            let margin: &[(&str, f64)] =
-                if samples == 1 { &[("strokeMargin", super::shader::ONE_SAMPLE_VIEW_MARGIN)] } else { &[] };
+            let margin: &[(&str, f64)] = if samples == 1 {
+                &[("strokeMargin", super::shader::ONE_SAMPLE_VIEW_MARGIN)]
+            } else {
+                &[]
+            };
             // A pipeline of a spec; a stroke's quad drawn as a strip of four corners (docs/adr/9247).
             // The strip's stage reads the low halves, as the stroke's precise stage does (the stroke's spec always has
             // one, so `corners` holds); a spec without them keeps its own list.
@@ -765,7 +797,10 @@ impl StyledGpu {
                 raster,
                 cloud,
             ] = &STYLED_PIPELINES;
-            let instanced = |name: &'static str, vertex: &'static str, fragment: &'static str, mesh: wgpu::VertexBufferLayout<'static>| {
+            let instanced = |name: &'static str,
+                             vertex: &'static str,
+                             fragment: &'static str,
+                             mesh: wgpu::VertexBufferLayout<'static>| {
                 device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
                     label: Some(name),
                     layout: Some(layout),
@@ -773,7 +808,11 @@ impl StyledGpu {
                         module,
                         entry_point: Some(vertex),
                         compilation_options: wgpu::PipelineCompilationOptions {
-                            constants: if vertex == "strokeVsInstanced" { margin } else { &[] },
+                            constants: if vertex == "strokeVsInstanced" {
+                                margin
+                            } else {
+                                &[]
+                            },
                             ..wgpu::PipelineCompilationOptions::default()
                         },
                         buffers: &[mesh, INSTANCE_BUFFER],
@@ -803,8 +842,18 @@ impl StyledGpu {
                 })
             };
             Pipelines {
-                stroke_instanced: instanced("stroke-instanced", "strokeVsInstanced", "strokeFs", STROKE_MESH_BUFFER),
-                solid_instanced: instanced("solid-instanced", "areaVsInstanced", "solidFs", AREA_BUFFER),
+                stroke_instanced: instanced(
+                    "stroke-instanced",
+                    "strokeVsInstanced",
+                    "strokeFs",
+                    STROKE_MESH_BUFFER,
+                ),
+                solid_instanced: instanced(
+                    "solid-instanced",
+                    "areaVsInstanced",
+                    "solidFs",
+                    AREA_BUFFER,
+                ),
                 tile_vector: pipe(&TILE_VECTOR),
                 stroke: pipe_as(stroke, Some(STROKE_STRIP)),
                 solid: pipe(solid),
@@ -882,7 +931,13 @@ impl StyledGpu {
             // A pattern tile of SVG marks takes their program (plan/render.md RM-11) where a line takes its long dashes.
             let vectors = match &b.kind {
                 BatchKind::Fill {
-                    paint: FillPaintBatch::Tile { image, size, unit: Unit::World, .. },
+                    paint:
+                        FillPaintBatch::Tile {
+                            image,
+                            size,
+                            unit: Unit::World,
+                            ..
+                        },
                 } => kentos_native_style::vector_tiles::switch(image, *size)
                     .zip(kentos_native_style::vector_tiles::program(image)),
                 _ => None,
@@ -895,7 +950,9 @@ impl StyledGpu {
                 block.u[2] = pattern_offset;
                 block.u[3] = pattern_count;
             }
-            let vectors = vectors.filter(|_| pattern_count > 0).map(|(switch, _)| switch);
+            let vectors = vectors
+                .filter(|_| pattern_count > 0)
+                .map(|(switch, _)| switch);
             let offset = (i as u64 * self.align) as u32;
             blocks.extend_from_slice(&block.bytes());
             blocks.resize((i + 1) * self.align as usize, 0);
@@ -1007,28 +1064,36 @@ impl StyledGpu {
             contents: &blocks,
             usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
         });
-        let pattern_bytes: usize = patterns.pages.iter().map(|p|p.len()*4).sum();
-        let bind = patterns.pages.iter().map(|values| {
-            let pattern = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("kentos.styled.long-patterns"),
-                contents: bytemuck::cast_slice(values),
-                usage: wgpu::BufferUsages::STORAGE,
-            });
-            device.create_bind_group(&wgpu::BindGroupDescriptor {
-                label: Some("kentos.styled.styles"),
-                layout: &self.style_layout,
-                entries: &[
-                    wgpu::BindGroupEntry {
-                        binding: 0,
-                        resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
-                            buffer: &styles, offset: 0,
-                            size: wgpu::BufferSize::new(STYLE_BYTES as u64),
-                        }),
-                    },
-                    wgpu::BindGroupEntry { binding: 1, resource: pattern.as_entire_binding() },
-                ],
+        let pattern_bytes: usize = patterns.pages.iter().map(|p| p.len() * 4).sum();
+        let bind = patterns
+            .pages
+            .iter()
+            .map(|values| {
+                let pattern = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("kentos.styled.long-patterns"),
+                    contents: bytemuck::cast_slice(values),
+                    usage: wgpu::BufferUsages::STORAGE,
+                });
+                device.create_bind_group(&wgpu::BindGroupDescriptor {
+                    label: Some("kentos.styled.styles"),
+                    layout: &self.style_layout,
+                    entries: &[
+                        wgpu::BindGroupEntry {
+                            binding: 0,
+                            resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
+                                buffer: &styles,
+                                offset: 0,
+                                size: wgpu::BufferSize::new(STYLE_BYTES as u64),
+                            }),
+                        },
+                        wgpu::BindGroupEntry {
+                            binding: 1,
+                            resource: pattern.as_entire_binding(),
+                        },
+                    ],
+                })
             })
-        }).collect();
+            .collect();
         let bytes = (numbers.data.len() * 8 + blocks.len() + pattern_bytes) as u64 + own_bytes;
         drop((uploaded, lows));
         drop(held);
@@ -1068,14 +1133,33 @@ impl StyledGpu {
         let data = layer.data.get(b.range.clone())?;
         let mesh = data.get(..inst.mesh)?;
         let own = data.get(inst.mesh..)?;
-        let low = |at: usize| layer.low.get(b.range.start + inst.mesh + at).copied().unwrap_or(0.0);
+        let low = |at: usize| {
+            layer
+                .low
+                .get(b.range.start + inst.mesh + at)
+                .copied()
+                .unwrap_or(0.0)
+        };
         let per = kentos_native_style::batches::INSTANCE_FLOATS;
         let mut instances = Vec::with_capacity(inst.count as usize * INSTANCE_GPU_FLOATS);
         for (n, x) in own.chunks_exact(per).enumerate() {
-            instances.extend([x[0], x[1], x[2], x[3], x[4], x[5], low(n * per + 4), low(n * per + 5), x[6], 0.0]);
+            instances.extend([
+                x[0],
+                x[1],
+                x[2],
+                x[3],
+                x[4],
+                x[5],
+                low(n * per + 4),
+                low(n * per + 5),
+                x[6],
+                0.0,
+            ]);
         }
         let mesh: Vec<f32> = if stroke {
-            mesh.as_chunks::<STROKE_FLOATS>().0.iter()
+            mesh.as_chunks::<STROKE_FLOATS>()
+                .0
+                .iter()
                 .flat_map(|seg| std::iter::repeat_n(seg, 6).flatten().copied())
                 .collect()
         } else {
@@ -1092,7 +1176,11 @@ impl StyledGpu {
             })
         };
         // The definition's own vertices, then its far proxy's (docs/adr/1065 §2).
-        let (floats, per_item) = if stroke { (STROKE_FLOATS, 6) } else { (AREA_FLOATS, 1) };
+        let (floats, per_item) = if stroke {
+            (STROKE_FLOATS, 6)
+        } else {
+            (AREA_FLOATS, 1)
+        };
         let own_vertices = (inst.definition() / floats) as u32 * per_item;
         let proxy = inst
             .proxy
@@ -1170,7 +1258,8 @@ impl StyledGpu {
             let generation = self.atlas.generation;
             for layer in &mut view.layers {
                 let batches = &layer.source.layer.batches;
-                let mut cells = (0..batches.len()).map(|i| layer.source.layer.cells.get(i).and_then(|c| c.as_deref()));
+                let mut cells = (0..batches.len())
+                    .map(|i| layer.source.layer.cells.get(i).and_then(|c| c.as_deref()));
                 for (g, b) in layer.batches.iter_mut().zip(batches) {
                     // A curve's detail level for this view (docs/adr/1063 §3), a block's far proxy (docs/adr/1065 §2).
                     g.level = b.lod.as_ref().map_or(0, |lod| {
@@ -1188,8 +1277,16 @@ impl StyledGpu {
                         && b.legible(px_per_m, frame.dpr);
                     // Every batch takes its own cells, shown or not: the list follows the batches one for one.
                     let own = cells.next().flatten();
-                    g.shown = if g.visible { culled(b, own, g.level, box_, px_per_m, frame.dpr) } else { None };
-                    g.placed_shown = if g.visible { placed_in(b, own, box_, px_per_m, frame.dpr) } else { None };
+                    g.shown = if g.visible {
+                        culled(b, own, g.level, box_, px_per_m, frame.dpr)
+                    } else {
+                        None
+                    };
+                    g.placed_shown = if g.visible {
+                        placed_in(b, own, box_, px_per_m, frame.dpr)
+                    } else {
+                        None
+                    };
                     if !g.visible || g.vector_tile(px_per_m) {
                         continue;
                     }
@@ -1421,7 +1518,8 @@ impl StyledGpu {
                     continue;
                 }
                 let batches = &layer.source.layer.batches;
-                let mut cells = (0..batches.len()).map(|i| layer.source.layer.cells.get(i).and_then(|c| c.as_deref()));
+                let mut cells = (0..batches.len())
+                    .map(|i| layer.source.layer.cells.get(i).and_then(|c| c.as_deref()));
                 for (g, b) in layer.batches.iter_mut().zip(batches) {
                     // A curve's detail level for this view (docs/adr/1063 §3), a block's far proxy (docs/adr/1065 §2).
                     g.level = b.lod.as_ref().map_or(0, |lod| {
@@ -1439,8 +1537,16 @@ impl StyledGpu {
                         && b.legible(px_per_m, frame.dpr);
                     // Every batch takes its own cells, shown or not: the list follows the batches one for one.
                     let own = cells.next().flatten();
-                    g.shown = if g.visible { culled(b, own, g.level, box_, px_per_m, frame.dpr) } else { None };
-                    g.placed_shown = if g.visible { placed_in(b, own, box_, px_per_m, frame.dpr) } else { None };
+                    g.shown = if g.visible {
+                        culled(b, own, g.level, box_, px_per_m, frame.dpr)
+                    } else {
+                        None
+                    };
+                    g.placed_shown = if g.visible {
+                        placed_in(b, own, box_, px_per_m, frame.dpr)
+                    } else {
+                        None
+                    };
                     if !g.visible || g.vector_tile(px_per_m) {
                         continue;
                     }
@@ -1536,7 +1642,12 @@ impl StyledGpu {
                         ),
                         None => 0..0,
                     };
-                    let origin = [tile[0] as f32, tile[1] as f32, g.block.origin[2], g.block.origin[3]];
+                    let origin = [
+                        tile[0] as f32,
+                        tile[1] as f32,
+                        g.block.origin[2],
+                        g.block.origin[3],
+                    ];
                     if g.block.origin != origin {
                         g.block.origin = origin;
                         queue.write_buffer(&layer.styles, u64::from(g.offset), &g.block.bytes());
@@ -1680,7 +1791,13 @@ impl StyledGpu {
 
     /// A strip of the view's own picture (docs/adr/1067 §2): its batches as [`StyledGpu::draw`] draws them, those
     /// that do not reach `strip` (the view's coordinates, the camera's centre from the origin) left out.
-    pub fn draw_strip(&self, pass: &mut wgpu::RenderPass<'_>, view: &ViewStyled, samples: u32, strip: [f64; 4]) {
+    pub fn draw_strip(
+        &self,
+        pass: &mut wgpu::RenderPass<'_>,
+        view: &ViewStyled,
+        samples: u32,
+        strip: [f64; 4],
+    ) {
         let (_, px_per_m, dpr, _, _) = view.frame_facts();
         self.draw_through(
             pass,
@@ -1834,8 +1951,14 @@ impl StyledGpu {
             };
             // A pattern tile magnified past its bitmap draws from its marks' triangles (plan/render.md RM-11), the lens at
             // its own scale.
-            let px_per_m = seen.map_or(f64::from(view.uniform.px_per_m), |(_, px_per_m, _)| px_per_m);
-            let pipe = if b.vector_tile(px_per_m) { Pipe::TileVector } else { b.pipe };
+            let px_per_m = seen.map_or(f64::from(view.uniform.px_per_m), |(_, px_per_m, _)| {
+                px_per_m
+            });
+            let pipe = if b.vector_tile(px_per_m) {
+                Pipe::TileVector
+            } else {
+                b.pipe
+            };
             if current != Some(pipe) {
                 pass.set_pipeline(pipes.get(pipe));
                 current = Some(pipe);
@@ -1849,7 +1972,9 @@ impl StyledGpu {
             let level = match (seen, source.and_then(|s| s.lod.as_ref())) {
                 (Some((_, px_per_m, dpr)), Some(lod)) => lod.level(
                     px_per_m / dpr.max(1e-9),
-                    source.and_then(|s| s.instances.as_ref()).map_or(1.0, |i| i.scale),
+                    source
+                        .and_then(|s| s.instances.as_ref())
+                        .map_or(1.0, |i| i.scale),
                 ),
                 _ => b.level,
             };
@@ -1862,32 +1987,47 @@ impl StyledGpu {
             // A batch with cells draws the cells its view meets (plan/render.md RM-08): the lens its own.
             let cells = layer.source.layer.cells.get(i).and_then(|c| c.as_deref());
             let shown = match (seen, source) {
-                (Some((box_, px_per_m, dpr)), Some(s)) => culled(s, cells, level, box_, px_per_m, dpr),
+                (Some((box_, px_per_m, dpr)), Some(s)) => {
+                    culled(s, cells, level, box_, px_per_m, dpr)
+                }
                 _ => b.shown.clone(),
             };
             if let Some(placed) = &b.own {
                 pass.set_vertex_buffer(0, placed.mesh.slice(..));
                 pass.set_vertex_buffer(1, placed.instances.slice(..));
-                let floats = if matches!(b.pipe, Pipe::StrokeInstanced) { STROKE_FLOATS } else { AREA_FLOATS };
+                let floats = if matches!(b.pipe, Pipe::StrokeInstanced) {
+                    STROKE_FLOATS
+                } else {
+                    AREA_FLOATS
+                };
                 // The placements the view meets, in their order (docs/adr/9244): the lens its own.
                 let placements = match (seen, source) {
-                    (Some((box_, px_per_m, dpr)), Some(s)) => placed_in(s, cells, box_, px_per_m, dpr),
+                    (Some((box_, px_per_m, dpr)), Some(s)) => {
+                        placed_in(s, cells, box_, px_per_m, dpr)
+                    }
                     _ => b.placed_shown.clone(),
                 }
                 .unwrap_or_else(|| std::iter::once(0..placed.count).collect());
-                let definition: Vec<Range<u32>> = match (lod, placed.proxy.clone().filter(|_| proxied)) {
-                    (_, Some(proxy)) => std::iter::once(proxy).collect(),
-                    (Some(lod), None) => lod
-                        .ranges(level)
-                        .into_iter()
-                        .map(|r| (r.start / floats) as u32 * placed.per_item..(r.end / floats) as u32 * placed.per_item)
-                        .filter(|r| r.end > r.start)
-                        .collect(),
-                    (None, None) => std::iter::once(0..placed.vertices).collect(),
-                };
+                let definition: Vec<Range<u32>> =
+                    match (lod, placed.proxy.clone().filter(|_| proxied)) {
+                        (_, Some(proxy)) => std::iter::once(proxy).collect(),
+                        (Some(lod), None) => lod
+                            .ranges(level)
+                            .into_iter()
+                            .map(|r| {
+                                (r.start / floats) as u32 * placed.per_item
+                                    ..(r.end / floats) as u32 * placed.per_item
+                            })
+                            .filter(|r| r.end > r.start)
+                            .collect(),
+                        (None, None) => std::iter::once(0..placed.vertices).collect(),
+                    };
                 for d in &definition {
                     for p in &placements {
-                        DRAWN_INSTANCES.fetch_add(u64::from(p.end - p.start), std::sync::atomic::Ordering::Relaxed);
+                        DRAWN_INSTANCES.fetch_add(
+                            u64::from(p.end - p.start),
+                            std::sync::atomic::Ordering::Relaxed,
+                        );
                         pass.draw(d.clone(), p.clone());
                     }
                 }
@@ -1914,14 +2054,18 @@ impl StyledGpu {
                         for r in shown {
                             let (a, z) = ((r.start / floats) as u32, (r.end / floats) as u32);
                             if z > a {
-                                DRAWN_INSTANCES.fetch_add(u64::from(z - a), std::sync::atomic::Ordering::Relaxed);
+                                DRAWN_INSTANCES.fetch_add(
+                                    u64::from(z - a),
+                                    std::sync::atomic::Ordering::Relaxed,
+                                );
                                 pass.draw(0..corners(b.pipe), a..z);
                             }
                         }
                     }
                     (_, false) if let Some(shown) = shown.as_ref().filter(|_| end == i) => {
                         for r in shown {
-                            let (a, z) = ((r.start / AREA_FLOATS) as u32, (r.end / AREA_FLOATS) as u32);
+                            let (a, z) =
+                                ((r.start / AREA_FLOATS) as u32, (r.end / AREA_FLOATS) as u32);
                             if z > a {
                                 pass.draw(a..z, 0..1);
                             }
@@ -1935,19 +2079,24 @@ impl StyledGpu {
                         for r in lod.ranges(level) {
                             let (a, z) = ((r.start / floats) as u32, (r.end / floats) as u32);
                             if z > a {
-                                DRAWN_INSTANCES.fetch_add(u64::from(z - a), std::sync::atomic::Ordering::Relaxed);
+                                DRAWN_INSTANCES.fetch_add(
+                                    u64::from(z - a),
+                                    std::sync::atomic::Ordering::Relaxed,
+                                );
                                 pass.draw(0..corners(b.pipe), a..z);
                             }
                         }
                     }
                     (_, true) => {
-                        DRAWN_INSTANCES.fetch_add(u64::from(b.count), std::sync::atomic::Ordering::Relaxed);
+                        DRAWN_INSTANCES
+                            .fetch_add(u64::from(b.count), std::sync::atomic::Ordering::Relaxed);
                         pass.draw(0..corners(b.pipe), 0..b.count)
                     }
                     // A solid fill with levels: the level's vertices.
                     (Some(lod), false) if end == i => {
                         for r in lod.ranges(level) {
-                            let (a, z) = ((r.start / AREA_FLOATS) as u32, (r.end / AREA_FLOATS) as u32);
+                            let (a, z) =
+                                ((r.start / AREA_FLOATS) as u32, (r.end / AREA_FLOATS) as u32);
                             if z > a {
                                 pass.draw(a..z, 0..1);
                             }
@@ -1983,7 +2132,9 @@ impl StyledGpu {
                     }
                     Pipe::Solid | Pipe::SolidInstanced => asked.contains("solid"),
                     Pipe::Hatch => asked.contains("hatch"),
-                    Pipe::Pattern | Pipe::Tile | Pipe::TileVector | Pipe::Gradient => asked.contains("pattern"),
+                    Pipe::Pattern | Pipe::Tile | Pipe::TileVector | Pipe::Gradient => {
+                        asked.contains("pattern")
+                    }
                     Pipe::Marker => asked.contains("marker"),
                     Pipe::Image | Pipe::Raster | Pipe::Cloud => asked.contains("raster"),
                 }
@@ -2034,8 +2185,10 @@ impl StyledGpu {
             if let Some(layer) = view.layers.get(l as usize) {
                 if seen.is_none() && layer.batches.get(b as usize).is_some_and(far) {
                     while let Some(&(nl, nb)) = pairs.get(end + 1) {
-                        let (Some(last), Some(next)) = (layer.batches.get(pairs[end].1 as usize), layer.batches.get(nb as usize))
-                        else {
+                        let (Some(last), Some(next)) = (
+                            layer.batches.get(pairs[end].1 as usize),
+                            layer.batches.get(nb as usize),
+                        ) else {
                             break;
                         };
                         if nl != l || nb != pairs[end].1 + 1 || !far(next) || !alike(last, next) {
@@ -2212,17 +2365,17 @@ fn no_single_asked() -> bool {
 /// inside the quad), and no effect of its own. Drawn one sample a pixel and laid over, it is the same picture; a fill's
 /// edge is smoothed by the samples themselves.
 fn whole_pixels(g: &GpuBatch, b: &StyledBatch) -> bool {
-    matches!(g.pipe, Pipe::Stroke | Pipe::Marker | Pipe::StrokeInstanced) && (b.group == 0 || b.effect.is_none())
+    matches!(g.pipe, Pipe::Stroke | Pipe::Marker | Pipe::StrokeInstanced)
+        && (b.group == 0 || b.effect.is_none())
 }
 
 /// The items a drawn batch's draws take: its shown or level ranges' items, an instanced batch's definition times its
 /// placements drawn.
 fn work(g: &GpuBatch, b: &StyledBatch) -> u64 {
     if let Some(p) = &g.own {
-        let placements: u64 = g
-            .placed_shown
-            .as_ref()
-            .map_or(u64::from(p.count), |r| r.iter().map(|r| u64::from(r.end - r.start)).sum());
+        let placements: u64 = g.placed_shown.as_ref().map_or(u64::from(p.count), |r| {
+            r.iter().map(|r| u64::from(r.end - r.start)).sum()
+        });
         return u64::from(p.vertices / p.per_item.max(1)) * placements;
     }
     let floats = match b.kind {
@@ -2232,7 +2385,11 @@ fn work(g: &GpuBatch, b: &StyledBatch) -> u64 {
     };
     match (&g.shown, &b.lod) {
         (Some(shown), _) => shown.iter().map(|r| (r.len() / floats) as u64).sum(),
-        (None, Some(lod)) => lod.ranges(g.level).iter().map(|r| (r.len() / floats) as u64).sum(),
+        (None, Some(lod)) => lod
+            .ranges(g.level)
+            .iter()
+            .map(|r| (r.len() / floats) as u64)
+            .sum(),
         _ => u64::from(g.count),
     }
 }
@@ -2255,7 +2412,11 @@ fn culled(
     }
     let reach = cell_reach(b, px_per_m, dpr);
     let ranges: Vec<Range<usize>> = match &b.lod {
-        Some(lod) => lod.ranges(level).into_iter().filter(|r| !r.is_empty()).collect(),
+        Some(lod) => lod
+            .ranges(level)
+            .into_iter()
+            .filter(|r| !r.is_empty())
+            .collect(),
         None => std::iter::once(0..b.range.len()).collect(),
     };
     let mut out = Vec::new();
@@ -2304,7 +2465,8 @@ impl GpuBatch {
     /// Whether this pattern tile draws from its marks' program at `px_per_m` device pixels a metre: past the scale where
     /// its bitmap would be magnified (`vector_tiles::switch`), as a symbol's vectors take over (`svg_marks`).
     fn vector_tile(&self, px_per_m: f64) -> bool {
-        self.vectors.is_some_and(|s| s * px_per_m > kentos_native_style::svg_marks::VECTORS_FROM_PX)
+        self.vectors
+            .is_some_and(|s| s * px_per_m > kentos_native_style::svg_marks::VECTORS_FROM_PX)
     }
 }
 
@@ -2466,7 +2628,8 @@ impl ViewStyled {
     }
 
     fn content_key(&self, hasher: &mut impl Hasher, scale: bool) -> bool {
-        if !self.cloud_targets.is_empty() || !self.compose.is_empty() || !self.quads.data.is_empty() {
+        if !self.cloud_targets.is_empty() || !self.compose.is_empty() || !self.quads.data.is_empty()
+        {
             return false;
         }
         self.under.hash(hasher);
@@ -2476,14 +2639,25 @@ impl ViewStyled {
             self.pictures_rev.hash(hasher);
             u.px_per_m.to_bits().hash(hasher);
         }
-        (u.dpr.to_bits(), u.viewport.map(f32::to_bits), u.twist.map(f32::to_bits)).hash(hasher);
+        (
+            u.dpr.to_bits(),
+            u.viewport.map(f32::to_bits),
+            u.twist.map(f32::to_bits),
+        )
+            .hash(hasher);
         for layer in &self.layers {
             if scale {
                 layer.id.hash(hasher);
             }
             for b in &layer.batches {
-                let on_screen = matches!(b.pipe, Pipe::Hatch | Pipe::Pattern | Pipe::Tile) && b.block.u[0] == 1;
-                if !b.vector.is_empty() || b.raster.is_some() || b.service.is_some() || b.cloud.is_some() || on_screen {
+                let on_screen =
+                    matches!(b.pipe, Pipe::Hatch | Pipe::Pattern | Pipe::Tile) && b.block.u[0] == 1;
+                if !b.vector.is_empty()
+                    || b.raster.is_some()
+                    || b.service.is_some()
+                    || b.cloud.is_some()
+                    || on_screen
+                {
                     return false;
                 }
                 if let Some((generation, uv)) = b.placed.filter(|_| scale) {
@@ -2552,9 +2726,13 @@ impl ViewStyled {
                         continue;
                     }
                     let tile = [centre[0] - b.origin[0], centre[1] - b.origin[1]];
-                    for (middle, size, turn) in kentos_native_style::svg_marks::boxes(data, lows, b) {
+                    for (middle, size, turn) in kentos_native_style::svg_marks::boxes(data, lows, b)
+                    {
                         let (w, h) = (size[0] * px_per_m, size[1] * px_per_m);
-                        let (dx, dy) = ((middle[0] - tile[0]) * px_per_m, (middle[1] - tile[1]) * px_per_m);
+                        let (dx, dy) = (
+                            (middle[0] - tile[0]) * px_per_m,
+                            (middle[1] - tile[1]) * px_per_m,
+                        );
                         let (u, v) = (dx * tc + dy * ts, dy * tc - dx * ts);
                         let (x, y) = (vw / 2.0 + u, vh / 2.0 - v);
                         let reach = w.max(h) + f64::from(grow) + 2.0;
@@ -2562,7 +2740,15 @@ impl ViewStyled {
                             continue;
                         }
                         let (sa, ca) = (turn - twist).sin_cos();
-                        out.push([x as f32, y as f32, (w / 2.0) as f32, (h / 2.0) as f32, ca as f32, -sa as f32, grow]);
+                        out.push([
+                            x as f32,
+                            y as f32,
+                            (w / 2.0) as f32,
+                            (h / 2.0) as f32,
+                            ca as f32,
+                            -sa as f32,
+                            grow,
+                        ]);
                     }
                     continue;
                 }
@@ -2589,7 +2775,14 @@ impl ViewStyled {
                     MarkerLook::Shape { .. } => (0, 1.0),
                 };
                 let tile = [centre[0] - b.origin[0], centre[1] - b.origin[1]];
-                for (at, m) in data.get(b.range.clone()).unwrap_or(&[]).as_chunks::<5>().0.iter().enumerate() {
+                for (at, m) in data
+                    .get(b.range.clone())
+                    .unwrap_or(&[])
+                    .as_chunks::<5>()
+                    .0
+                    .iter()
+                    .enumerate()
+                {
                     let mut w = f64::from(m[3]) * k;
                     let mut h = f64::from(m[4]) * k;
                     match fit {
@@ -2605,8 +2798,16 @@ impl ViewStyled {
                     let (sa, ca) = (f64::from(m[2]) - twist).sin_cos();
                     let turned = [ca * q[0] - sa * q[1], sa * q[0] + ca * q[1]];
                     let (dx, dy) = (
-                        (f64::from(m[0]) + f64::from(lows.get(b.range.start + at * 5).copied().unwrap_or(0.0)) - tile[0]) * px_per_m,
-                        (f64::from(m[1]) + f64::from(lows.get(b.range.start + at * 5 + 1).copied().unwrap_or(0.0)) - tile[1]) * px_per_m,
+                        (f64::from(m[0])
+                            + f64::from(lows.get(b.range.start + at * 5).copied().unwrap_or(0.0))
+                            - tile[0])
+                            * px_per_m,
+                        (f64::from(m[1])
+                            + f64::from(
+                                lows.get(b.range.start + at * 5 + 1).copied().unwrap_or(0.0),
+                            )
+                            - tile[1])
+                            * px_per_m,
                     );
                     let (u, v) = (dx * tc + dy * ts, dy * tc - dx * ts);
                     let x = vw / 2.0 + u + turned[0];
@@ -2664,10 +2865,12 @@ impl ViewStyled {
             *items = 0;
         };
         for (k, &(l, b)) in self.seq.iter().enumerate() {
-            let pair = self
-                .layers
-                .get(l as usize)
-                .and_then(|layer| Some((layer.batches.get(b as usize)?, layer.source.layer.batches.get(b as usize)?)));
+            let pair = self.layers.get(l as usize).and_then(|layer| {
+                Some((
+                    layer.batches.get(b as usize)?,
+                    layer.source.layer.batches.get(b as usize)?,
+                ))
+            });
             let Some((g, source)) = pair else {
                 close(k, &mut start, &mut items);
                 continue;
@@ -2691,7 +2894,8 @@ impl ViewStyled {
     pub fn items(&self) -> u64 {
         let mut n = 0u64;
         let diag = diag_items_asked();
-        let mut parts: std::collections::BTreeMap<String, (u64, u32)> = std::collections::BTreeMap::new();
+        let mut parts: std::collections::BTreeMap<String, (u64, u32)> =
+            std::collections::BTreeMap::new();
         for layer in &self.layers {
             for (g, b) in layer.batches.iter().zip(&layer.source.layer.batches) {
                 if !g.visible {
@@ -2705,7 +2909,11 @@ impl ViewStyled {
                 // A batch with levels draws one of them (docs/adr/1063 §3, 9207); one with cells those in view (RM-08).
                 let k = match (&g.shown, &b.lod, &b.instances) {
                     (Some(shown), ..) => shown.iter().map(|r| (r.len() / floats) as u64).sum(),
-                    (None, Some(lod), None) => lod.ranges(g.level).iter().map(|r| (r.len() / floats) as u64).sum(),
+                    (None, Some(lod), None) => lod
+                        .ranges(g.level)
+                        .iter()
+                        .map(|r| (r.len() / floats) as u64)
+                        .sum(),
                     _ => u64::from(g.count),
                 };
                 n += k;
@@ -2728,7 +2936,12 @@ impl ViewStyled {
             .flat_map(|l| l.batches.iter())
             .filter(|b| b.visible && b.count > 0)
             .count() as u32;
-        let held = self.layers.iter().chain(self.parked.values()).map(|l| l.bytes).sum();
+        let held = self
+            .layers
+            .iter()
+            .chain(self.parked.values())
+            .map(|l| l.bytes)
+            .sum();
         (drawn, held)
     }
 
@@ -2743,7 +2956,11 @@ impl ViewStyled {
     /// Whether a mask's source layer has markers whose boxes it cannot read: its numbers were let go.
     fn masks_lack_numbers(&self) -> bool {
         let reads = |b: &StyledBatch| {
-            matches!(b.kind, BatchKind::Marker { .. }) || b.instances.as_ref().and_then(|i| i.mark).is_some_and(|m| m.boxes)
+            matches!(b.kind, BatchKind::Marker { .. })
+                || b.instances
+                    .as_ref()
+                    .and_then(|i| i.mark)
+                    .is_some_and(|m| m.boxes)
         };
         self.compose
             .iter()

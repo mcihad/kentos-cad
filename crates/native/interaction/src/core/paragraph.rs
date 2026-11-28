@@ -365,7 +365,9 @@ impl Tool for ParagraphText {
             if !text.is_empty() {
                 let m = *cx.memory;
                 let geometry = EntityGeometry::Text {
-                    layout: layout.filter(|l| !l.is_plain()).map(|l| Box::new(l.clone())),
+                    layout: layout
+                        .filter(|l| !l.is_plain())
+                        .map(|l| Box::new(l.clone())),
                     annotative: None,
                     p: points::wire(at),
                     text: text.clone(),

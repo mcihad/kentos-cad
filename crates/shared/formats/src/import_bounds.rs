@@ -1,7 +1,7 @@
 //! CAD extents use visible curve spans and placed definitions, with cached local boxes rather than instance expansion.
-use std::collections::{HashMap, HashSet};
 use kentos_contracts::{BlockDefinition, BlockId, Bounds, Entity};
-use kentos_geometry_core::{block::insert_matrix_xy, geom::affine::apply, Vec2 as Point};
+use kentos_geometry_core::{Vec2 as Point, block::insert_matrix_xy, geom::affine::apply};
+use std::collections::{HashMap, HashSet};
 pub(crate) struct ModelBounds<'a> {
     definitions: HashMap<BlockId, &'a BlockDefinition>,
     cached: HashMap<BlockId, Option<Bounds>>,

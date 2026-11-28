@@ -1,12 +1,10 @@
 //! Plot table drafts; one shared operation writes the library, optionally applying a captured profile to the open page.
-use crate::{
-    designer::{Designer, Dialog as Window},
-};
+use crate::designer::{Designer, Dialog as Window};
 use kentos_sheet::{
     ops::Op,
     plot_profile::{
-        PlotProfile, PlotStyle, PlotColor, StyleKey, StyleEntry, TableKind, Assignment, Target,
-        SavePlotProfiles,
+        Assignment, PlotColor, PlotProfile, PlotStyle, SavePlotProfiles, StyleEntry, StyleKey,
+        TableKind, Target,
     },
     print_setup::{AppliedPageSetup, SetSheetPlot},
 };

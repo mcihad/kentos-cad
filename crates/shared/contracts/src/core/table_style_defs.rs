@@ -121,13 +121,17 @@ impl TableCellStyleDef {
             .or_else(|| size(self.vertical_margin, false, "dikey kenar boşluğu"))
             .or_else(|| size(self.border_weight, false, "kenar çizgisi kalınlığı"))
             .or_else(|| {
-                [("yazı rengi", &self.color), ("dolgu rengi", &self.fill), ("kenar çizgisi rengi", &self.border_color)]
-                    .into_iter()
-                    .find_map(|(field, c)| {
-                        c.as_deref()
-                            .filter(|c| !is_hex_colour(c))
-                            .map(|c| format!("{what} {field} “{c}” #rrggbb olmalı"))
-                    })
+                [
+                    ("yazı rengi", &self.color),
+                    ("dolgu rengi", &self.fill),
+                    ("kenar çizgisi rengi", &self.border_color),
+                ]
+                .into_iter()
+                .find_map(|(field, c)| {
+                    c.as_deref()
+                        .filter(|c| !is_hex_colour(c))
+                        .map(|c| format!("{what} {field} “{c}” #rrggbb olmalı"))
+                })
             })
     }
 }
@@ -135,20 +139,27 @@ impl TableCellStyleDef {
 impl TableStyleDef {
     /// What is wrong with it.
     pub fn problem(&self) -> Option<String> {
-        [("başlık hücresi", &self.title), ("sütun başı hücresi", &self.header), ("veri hücresi", &self.data)]
-            .into_iter()
-            .find_map(|(what, cell)| {
-                cell.as_ref()?
-                    .problem(&format!("“{}” tablo stilinin {what}", self.name))
-            })
+        [
+            ("başlık hücresi", &self.title),
+            ("sütun başı hücresi", &self.header),
+            ("veri hücresi", &self.data),
+        ]
+        .into_iter()
+        .find_map(|(what, cell)| {
+            cell.as_ref()?
+                .problem(&format!("“{}” tablo stilinin {what}", self.name))
+        })
     }
 }
 
 /// What is wrong with the project's table styles: ids and names as every style table's (`names_problem`), then
 /// each style's own.
 pub fn table_style_defs_problem(styles: &[TableStyleDef]) -> Option<String> {
-    names_problem("tablo stili", styles.iter().map(|s| (s.id.as_str(), s.name.as_str())))
-        .or_else(|| styles.iter().find_map(TableStyleDef::problem))
+    names_problem(
+        "tablo stili",
+        styles.iter().map(|s| (s.id.as_str(), s.name.as_str())),
+    )
+    .or_else(|| styles.iter().find_map(TableStyleDef::problem))
 }
 
 /// The rows of `t` each cell style takes: the title (its first row when that row is one merged range across every
@@ -160,10 +171,16 @@ pub fn table_style_rows(t: &TableEntity) -> [(usize, usize); 3] {
     let title = usize::from(
         n > 0
             && cols > 1
-            && t.merges.iter().any(|m| m.row == 0 && m.col == 0 && m.rows == 1 && m.cols as usize == cols),
+            && t.merges
+                .iter()
+                .any(|m| m.row == 0 && m.col == 0 && m.rows == 1 && m.cols as usize == cols),
     );
     let header = usize::from(t.header && n > title);
-    [(0, title), (title, header), (title + header, n - title - header)]
+    [
+        (0, title),
+        (title, header),
+        (title + header, n - title - header),
+    ]
 }
 
 /// `t` as its table style draws it (docs/adr/1126 §3): what the table sets itself stays; where it sets nothing the
@@ -181,10 +198,11 @@ pub fn styled<'a>(t: &'a TableEntity, settings: &ProjectSettings) -> Cow<'a, Tab
     };
     let cols = t.columns.len() as u32;
     let mut given: Vec<CellStyle> = Vec::new();
-    for ((first, count), (cell, kind)) in table_style_rows(t)
-        .into_iter()
-        .zip([(&style.title, 0), (&style.header, 1), (&style.data, 2)])
-    {
+    for ((first, count), (cell, kind)) in table_style_rows(t).into_iter().zip([
+        (&style.title, 0),
+        (&style.header, 1),
+        (&style.data, 2),
+    ]) {
         let Some(cell) = cell else { continue };
         if count == 0 || cols == 0 {
             continue;
@@ -194,7 +212,12 @@ pub fn styled<'a>(t: &'a TableEntity, settings: &ProjectSettings) -> Cow<'a, Tab
             continue;
         }
         given.push(CellStyle {
-            range: CellRange { row: first as u32, col: 0, rows: count as u32, cols },
+            range: CellRange {
+                row: first as u32,
+                col: 0,
+                rows: count as u32,
+                cols,
+            },
             align,
             bold: None,
             color: cell.color.clone(),
@@ -205,7 +228,12 @@ pub fn styled<'a>(t: &'a TableEntity, settings: &ProjectSettings) -> Cow<'a, Tab
     let face = (t.face.text_style.is_none() && t.face.font.is_none())
         .then(|| style.data.as_ref()?.text_style.as_deref())
         .flatten()
-        .and_then(|name| settings.text_styles.iter().find(|s| s.name.eq_ignore_ascii_case(name)))
+        .and_then(|name| {
+            settings
+                .text_styles
+                .iter()
+                .find(|s| s.name.eq_ignore_ascii_case(name))
+        })
         .map(|s| TextFace {
             text_style: Some(s.id.clone()),
             font: Some(s.font),
@@ -232,10 +260,15 @@ mod tests {
     use serde_json::json;
 
     fn settings(styles: serde_json::Value) -> ProjectSettings {
-        let mut s: ProjectSettings = serde_json::from_value(json!({"srid":5256,"lengthDecimals":3,"areaDecimals":2,
-            "areaUnit":"m2","angleUnit":"grad","plotScale":100.0})).unwrap();
+        let mut s: ProjectSettings =
+            serde_json::from_value(json!({"srid":5256,"lengthDecimals":3,"areaDecimals":2,
+            "areaUnit":"m2","angleUnit":"grad","plotScale":100.0}))
+            .unwrap();
         s.table_styles = serde_json::from_value(styles).unwrap();
-        s.text_styles = serde_json::from_value(json!([{"id":"t1","name":"A-TABLO","font":"arimo","bold":true}])).unwrap();
+        s.text_styles = serde_json::from_value(
+            json!([{"id":"t1","name":"A-TABLO","font":"arimo","bold":true}]),
+        )
+        .unwrap();
         s
     }
 
@@ -278,12 +311,18 @@ mod tests {
         assert_eq!(drawn.face.font, Some(crate::DrawingFont::Arimo));
         assert!(drawn.face.bold);
         // Its own cell style, column alignments and face stay over the style's.
-        let own = table(json!({"styles":[{"row":3,"col":1,"rows":1,"cols":1,"align":"left","fill":"#123456"}],
-            "aligns":["left","center","left"],"textStyle":"other"}));
+        let own = table(
+            json!({"styles":[{"row":3,"col":1,"rows":1,"cols":1,"align":"left","fill":"#123456"}],
+            "aligns":["left","center","left"],"textStyle":"other"}),
+        );
         let drawn = styled(&own, &s);
         assert_eq!(drawn.cell_style(3, 1).align, Some(TableAlign::Left));
         assert_eq!(drawn.cell_style(3, 1).fill.as_deref(), Some("#123456"));
-        assert_eq!(drawn.cell_style(2, 1).align, None, "the data rows keep the table's column alignments");
+        assert_eq!(
+            drawn.cell_style(2, 1).align,
+            None,
+            "the data rows keep the table's column alignments"
+        );
         assert_eq!(drawn.face.text_style.as_deref(), Some("other"));
         // No style, or one the project lacks: the table itself.
         let none = table(json!({"tableStyle": null}));
@@ -297,19 +336,36 @@ mod tests {
         let mut list: Vec<TableStyleDef> = serde_json::from_str(STYLE).unwrap();
         assert_eq!(table_style_defs_problem(&list), None);
         let base = list[0].clone();
-        for (field, value) in [("height", json!(0.0)), ("height", json!(101.0)), ("horizontalMargin", json!(-1.0)),
-            ("borderWeight", json!(f64::MAX)), ("color", json!("red")), ("borderColor", json!("#12345")),
-            ("textStyle", json!(" X")), ("textStyle", json!(""))]
-        {
+        for (field, value) in [
+            ("height", json!(0.0)),
+            ("height", json!(101.0)),
+            ("horizontalMargin", json!(-1.0)),
+            ("borderWeight", json!(f64::MAX)),
+            ("color", json!("red")),
+            ("borderColor", json!("#12345")),
+            ("textStyle", json!(" X")),
+            ("textStyle", json!("")),
+        ] {
             let mut v = serde_json::to_value(&base).unwrap();
             v["data"][field] = value;
             list[0] = serde_json::from_value(v).unwrap();
             assert!(table_style_defs_problem(&list).is_some(), "{field}");
         }
         list[0] = base.clone();
-        list.push(TableStyleDef { id: "ts2".into(), ..base.clone() });
-        assert!(table_style_defs_problem(&list).unwrap().contains("OFIS"), "a name twice, case aside");
-        let unknown = serde_json::from_value::<TableStyleDef>(json!({"id":"x","name":"X","data":{"flow":"up"}}));
-        assert!(unknown.is_err(), "an unknown field is refused, never dropped");
+        list.push(TableStyleDef {
+            id: "ts2".into(),
+            ..base.clone()
+        });
+        assert!(
+            table_style_defs_problem(&list).unwrap().contains("OFIS"),
+            "a name twice, case aside"
+        );
+        let unknown = serde_json::from_value::<TableStyleDef>(
+            json!({"id":"x","name":"X","data":{"flow":"up"}}),
+        );
+        assert!(
+            unknown.is_err(),
+            "an unknown field is refused, never dropped"
+        );
     }
 }

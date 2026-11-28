@@ -101,18 +101,6 @@ mod zoning_window;
 
 // The module's tests (docs/adr/9199 §4.2).
 #[cfg(test)]
-#[path = "tests/map_aids_tests.rs"]
-mod map_aids_tests;
-#[cfg(test)]
-#[path = "tests/map_points_tests.rs"]
-mod map_points_tests;
-#[cfg(test)]
-#[path = "tests/map_road_panel_tests.rs"]
-mod map_road_panel_tests;
-#[cfg(test)]
-#[path = "tests/map_topology_tests.rs"]
-mod map_topology_tests;
-#[cfg(test)]
 #[path = "tests/asbuilt_review_tests.rs"]
 mod asbuilt_review_tests;
 #[cfg(test)]
@@ -140,6 +128,15 @@ mod gnss_sessions_tests;
 #[path = "tests/independent_baselines_tests.rs"]
 mod independent_baselines_tests;
 #[cfg(test)]
+#[path = "tests/map_aids_tests.rs"]
+mod map_aids_tests;
+#[cfg(test)]
+#[path = "tests/map_points_tests.rs"]
+mod map_points_tests;
+#[cfg(test)]
+#[path = "tests/map_road_panel_tests.rs"]
+mod map_road_panel_tests;
+#[cfg(test)]
 #[path = "tests/map_survey_limits_tests.rs"]
 mod map_survey_limits_tests;
 #[cfg(test)]
@@ -148,6 +145,9 @@ mod map_survey_network_rows_tests;
 #[cfg(test)]
 #[path = "tests/map_survey_panel_tests.rs"]
 mod map_survey_panel_tests;
+#[cfg(test)]
+#[path = "tests/map_topology_tests.rs"]
+mod map_topology_tests;
 #[cfg(test)]
 #[path = "tests/map_work_changes_tests.rs"]
 mod map_work_changes_tests;
@@ -212,11 +212,11 @@ mod parcels_check_window_tests;
 #[path = "tests/pipes_check_window_tests.rs"]
 mod pipes_check_window_tests;
 #[cfg(test)]
-#[path = "tests/pipes_profile_walls_tests.rs"]
-mod pipes_profile_walls_tests;
-#[cfg(test)]
 #[path = "tests/pipes_prerequisite_tests.rs"]
 mod pipes_prerequisite_tests;
+#[cfg(test)]
+#[path = "tests/pipes_profile_walls_tests.rs"]
+mod pipes_profile_walls_tests;
 #[cfg(test)]
 #[path = "tests/pipes_rules_tests.rs"]
 mod pipes_rules_tests;

@@ -27,8 +27,6 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
-/// A table's columns' kinds read from the cells a tool shows (docs/adr/9190).
-pub mod table_kinds;
 pub mod address;
 pub mod audit_facts;
 pub mod audit_job;
@@ -62,6 +60,8 @@ pub mod registry;
 pub mod runner;
 pub mod source_inputs;
 pub mod staged;
+/// A table's columns' kinds read from the cells a tool shows (docs/adr/9190).
+pub mod table_kinds;
 pub mod text;
 pub mod types;
 pub mod values;
@@ -78,8 +78,8 @@ pub use runner::{
     Job, Level, LogLine, Outcome, Prepared, RunRecord, Runner, Status, WORKER_THRESHOLD,
 };
 pub use types::{
-    ActsOn, ChangeSet, DefaultValue, Defaults, EnumOption, FeatureSet, Feedback, OutputDef, OutputKind,
-    ParamDef, ParamKind, Patch, Resolved, Returns, RunContext, RunResult, ScopeKind, ShownWhen,
-    Target, TargetLayer, Tool, Values,
+    ActsOn, ChangeSet, DefaultValue, Defaults, EnumOption, FeatureSet, Feedback, OutputDef,
+    OutputKind, ParamDef, ParamKind, Patch, Resolved, Returns, RunContext, RunResult, ScopeKind,
+    ShownWhen, Target, TargetLayer, Tool, Values,
 };
 pub use values::{FeaturesValue, LayerValue, Scope};

@@ -117,14 +117,22 @@ pub struct ZoningTexts {
 /// Taşıyıcı sistem's choices (docs/adr/8094): not said, or a system.
 fn structure_choices() -> Vec<(Option<kentos_commands::StructuralSystem>, &'static str)> {
     std::iter::once((None, "Yazılmamış"))
-        .chain(kentos_commands::StructuralSystem::ALL.into_iter().map(|s| (Some(s), s.label())))
+        .chain(
+            kentos_commands::StructuralSystem::ALL
+                .into_iter()
+                .map(|s| (Some(s), s.label())),
+        )
         .collect()
 }
 
 /// Bölge's choices (docs/adr/8085): not said, or the plan's use.
 fn zone_choices() -> Vec<(Option<kentos_commands::Zone>, &'static str)> {
     std::iter::once((None, "Yazılmamış (konut projesinde konut alanı sayılır)"))
-        .chain(kentos_commands::Zone::ALL.into_iter().map(|z| (Some(z), z.label())))
+        .chain(
+            kentos_commands::Zone::ALL
+                .into_iter()
+                .map(|z| (Some(z), z.label())),
+        )
         .collect()
 }
 
@@ -171,7 +179,10 @@ impl ZoningTexts {
     /// The project's zoning as the form shows it.
     pub fn of(arch: Option<&ArchSettings>) -> Self {
         let z = arch.and_then(|a| a.zoning.as_ref());
-        let fire = || arch.and_then(|a| a.performance.as_ref()).and_then(|p| p.fire_protection_class.as_ref());
+        let fire = || {
+            arch.and_then(|a| a.performance.as_ref())
+                .and_then(|p| p.fire_protection_class.as_ref())
+        };
         let t = |v: Option<f64>| {
             v.map(kentos_processing::text::js_number)
                 .unwrap_or_default()
@@ -181,7 +192,9 @@ impl ZoningTexts {
             far: t(z.and_then(|z| z.far)),
             coverage: t(z.and_then(|z| z.coverage)),
             far_source: z.and_then(|z| z.far_source.clone()).unwrap_or_default(),
-            coverage_source: z.and_then(|z| z.coverage_source.clone()).unwrap_or_default(),
+            coverage_source: z
+                .and_then(|z| z.coverage_source.clone())
+                .unwrap_or_default(),
             datum: t(arch.and_then(|a| a.site.as_ref()).and_then(|s| s.datum)),
             local: arch.and_then(|a| a.local_rules),
             sprinklers: arch.is_some_and(|a| a.sprinklers),
@@ -208,7 +221,12 @@ impl ZoningTexts {
     }
 
     /// The zoning of these values with the sources as typed, their ends trimmed; an empty one is none (docs/adr/8140).
-    fn sourced(&self, parcel_area: f64, far: Option<f64>, coverage: Option<f64>) -> kentos_commands::Zoning {
+    fn sourced(
+        &self,
+        parcel_area: f64,
+        far: Option<f64>,
+        coverage: Option<f64>,
+    ) -> kentos_commands::Zoning {
         let source = |s: &str| Some(s.trim().to_owned()).filter(|s| !s.is_empty());
         kentos_commands::Zoning {
             parcel_area,
@@ -248,7 +266,11 @@ impl ZoningTexts {
                     n.value = text(v);
                     n.source.clone_from(&t.source);
                 }
-                None => self.plan_notes.push(super::plan_notes::Note { key, value: text(v), source: t.source.clone() }),
+                None => self.plan_notes.push(super::plan_notes::Note {
+                    key,
+                    value: text(v),
+                    source: t.source.clone(),
+                }),
             }
         }
     }
@@ -258,11 +280,15 @@ impl ZoningTexts {
         let same = |typed: &str, v: f64| number(typed) == Ok(Some(v));
         let note = |key, v: Option<f64>| {
             v.is_none_or(|v| {
-                self.plan_notes.iter().any(|n| n.key == key && same(&n.value, v) && n.source.trim() == t.source)
+                self.plan_notes
+                    .iter()
+                    .any(|n| n.key == key && same(&n.value, v) && n.source.trim() == t.source)
             })
         };
-        t.far.is_none_or(|v| same(&self.far, v) && self.far_source.trim() == t.source)
-            && t.coverage.is_none_or(|v| same(&self.coverage, v) && self.coverage_source.trim() == t.source)
+        t.far
+            .is_none_or(|v| same(&self.far, v) && self.far_source.trim() == t.source)
+            && t.coverage
+                .is_none_or(|v| same(&self.coverage, v) && self.coverage_source.trim() == t.source)
             && t.layout.is_none_or(|l| self.layout == Some(l))
             && t.zone.is_none_or(|z| self.zone == Some(z))
             && note(kentos_commands::PlanNoteKey::BuildingHeight, t.height)
@@ -274,16 +300,23 @@ impl ZoningTexts {
         let value = self.fire_class.trim();
         if value.is_empty() {
             if !self.fire_basis.trim().is_empty() {
-                return Err("Dayanak belgesi binanın yangın koruma sınıfınındır: önce sınıfı yazın.".into());
+                return Err(
+                    "Dayanak belgesi binanın yangın koruma sınıfınındır: önce sınıfı yazın.".into(),
+                );
             }
             return Ok(None);
         }
         let basis = kentos_commands::DeclaredBasis::read(&self.fire_basis)?;
-        let class = kentos_commands::Declared { value: value.to_owned(), basis };
+        let class = kentos_commands::Declared {
+            value: value.to_owned(),
+            basis,
+        };
         if let Some(why) = class.problem("binanın yangın koruma sınıfı") {
             return Err(why);
         }
-        Ok(Some(kentos_commands::BuildingPerformance { fire_protection_class: Some(class) }))
+        Ok(Some(kentos_commands::BuildingPerformance {
+            fire_protection_class: Some(class),
+        }))
     }
 
     /// The zoning typed: none when all three are empty; the parcel's area when any is given.
@@ -294,10 +327,12 @@ impl ZoningTexts {
         let coverage = number(&self.coverage).map_err(|()| "TAKS bir sayı olmalı.".to_owned())?;
         match parcel {
             // Nothing typed but a source: the source's own words (docs/adr/8140).
-            None if far.is_none() && coverage.is_none() => match self.sourced(0.0, None, None).sources_problem() {
-                Some((_, why)) => Err(why),
-                None => Ok(None),
-            },
+            None if far.is_none() && coverage.is_none() => {
+                match self.sourced(0.0, None, None).sources_problem() {
+                    Some((_, why)) => Err(why),
+                    None => Ok(None),
+                }
+            }
             None => Err("Emsal ya da TAKS için parsel alanı da verilmeli.".into()),
             Some(parcel_area) => Ok(Some(self.sourced(parcel_area, far, coverage))),
         }
@@ -340,8 +375,13 @@ pub(super) fn zoning_view<'a>(
     let source = |name: &'static str, value: &'a str, of: &'a str, f: ZoningField| {
         row![
             container(label::body(name)).width(typography::scaled(140.0)),
-            container(field("İmar durum belgesi 12.3.2025/1234", value, source_wrong(value, of), move |v| on(f, v)))
-                .width(Fill),
+            container(field(
+                "İmar durum belgesi 12.3.2025/1234",
+                value,
+                source_wrong(value, of),
+                move |v| on(f, v)
+            ))
+            .width(Fill),
         ]
         .spacing(8)
         .align_y(Center)
@@ -435,19 +475,28 @@ pub(super) fn zoning_view<'a>(
         body = body.push(label::body("Parselin plan kararları").font(typography::ui_strong()));
         for (i, (words, warn)) in plan.into_iter().enumerate() {
             let line = label::body(words);
-            body = body.push(if warn { line.style(kentos_ui::style::text::warning) } else { line });
+            body = body.push(if warn {
+                line.style(kentos_ui::style::text::warning)
+            } else {
+                line
+            });
             for (_, take) in takes.iter().filter(|(after, _)| *after == i) {
                 let held = t.holds(take);
                 let take_button = button(
-                    row![icon(crate::icons::from_web(Some("import"))).size(13.0), label::body("Değerlerini al")]
-                        .spacing(5)
-                        .align_y(Center),
+                    row![
+                        icon(crate::icons::from_web(Some("import"))).size(13.0),
+                        label::body("Değerlerini al")
+                    ]
+                    .spacing(5)
+                    .align_y(Center),
                 )
                 .on_press_maybe((!held).then(|| on_take(take.clone())))
                 .padding([4, 10])
                 .style(style::button::secondary);
                 body = body.push(
-                    row![take_button, label::caption(take.words(held)).width(Fill)].spacing(8).align_y(Center),
+                    row![take_button, label::caption(take.words(held)).width(Fill)]
+                        .spacing(8)
+                        .align_y(Center),
                 );
             }
         }
@@ -470,14 +519,16 @@ pub(super) fn fire_view<'a>(
     on: impl Fn(bool) -> Message + 'a,
     on_text: impl Fn(ZoningField, String) -> Message + Copy + 'a,
 ) -> Element<'a, Message> {
-    let line = |name: &'static str, holder: &'static str, value: &'a str, wrong: bool, f: ZoningField| {
-        row![
-            container(label::body(name)).width(typography::scaled(140.0)),
-            container(field(holder, value, wrong, move |v| on_text(f, v))).width(typography::scaled(330.0)),
-        ]
-        .spacing(8)
-        .align_y(Center)
-    };
+    let line =
+        |name: &'static str, holder: &'static str, value: &'a str, wrong: bool, f: ZoningField| {
+            row![
+                container(label::body(name)).width(typography::scaled(140.0)),
+                container(field(holder, value, wrong, move |v| on_text(f, v)))
+                    .width(typography::scaled(330.0)),
+            ]
+            .spacing(8)
+            .align_y(Center)
+        };
     let basis_wrong = kentos_commands::DeclaredBasis::read(&t.fire_basis).is_err();
     let body = Column::new()
         .spacing(6)
@@ -508,7 +559,9 @@ pub(super) fn structure_view<'a>(
     on_traditional: impl Fn(bool) -> Message + 'a,
 ) -> Element<'a, Message> {
     let choices = structure_choices();
-    let at = choices.iter().position(|(s, _)| *s == t.structure.map(|x| x.system));
+    let at = choices
+        .iter()
+        .position(|(s, _)| *s == t.structure.map(|x| x.system));
     let mut body = Column::new().spacing(6).push(
         row![
             container(label::body("Sistem")).width(typography::scaled(140.0)),
@@ -524,7 +577,10 @@ pub(super) fn structure_view<'a>(
         .align_y(Center),
     );
     // Traditional elements are read of a cut stone masonry building only (PAİY 20/8-j, 22/1-m, 28/1-d).
-    if let Some(x) = t.structure.filter(|x| x.system == kentos_commands::StructuralSystem::CutStoneMasonry) {
+    if let Some(x) = t
+        .structure
+        .filter(|x| x.system == kentos_commands::StructuralSystem::CutStoneMasonry)
+    {
         body = body.push(
             kentos_ui::widget::Switch::new(x.traditional, on_traditional)
                 .label("Geleneksel mimari öğeler barındırıyor"),

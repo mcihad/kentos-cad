@@ -4,7 +4,6 @@
 //! its mark, as the app runs them. The trace `data-search.json` plays the
 //! whole flow with the mouse and the keyboard.
 
-
 use super::{COLUMNS, Event, LIMIT, count_text, field_cell, next_sort, texts};
 use crate::app::{App, Message};
 

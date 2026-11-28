@@ -444,7 +444,10 @@ pub(crate) fn run_to_sink(
                 text.push(' ');
                 // A part of a table: the window's switch, not the channels' input (docs/adr/9354).
                 if w.code == kentos_commands::codes::PARTIAL_SCOPE {
-                    let head = w.message.split_once("; araç").map_or(w.message.as_str(), |(h, _)| h);
+                    let head = w
+                        .message
+                        .split_once("; araç")
+                        .map_or(w.message.as_str(), |(h, _)| h);
                     text.push_str(&format!(
                         "{head}; araç o parçayla çalıştı. Bütün tablo için girdinin altındaki Bütün tablo (kaynaktan oku) \
                          anahtarını açın."
@@ -454,11 +457,20 @@ pub(crate) fn run_to_sink(
                 }
             }
             let written = ran.sink.as_ref().map_or_else(
-                || Written { address: String::new(), file: false, tables: Vec::new(), added: false },
+                || Written {
+                    address: String::new(),
+                    file: false,
+                    tables: Vec::new(),
+                    added: false,
+                },
                 |s| Written {
                     address: s.path.clone(),
                     file: !kentos_commands::is_database(&s.path),
-                    tables: s.tables.iter().map(|t| (t.table.clone(), u64::from(t.rows))).collect(),
+                    tables: s
+                        .tables
+                        .iter()
+                        .map(|t| (t.table.clone(), u64::from(t.rows)))
+                        .collect(),
                     added: false,
                 },
             );
@@ -480,9 +492,15 @@ pub(crate) fn run_to_sink(
 fn refusal_words(e: &kentos_commands::CommandError, input: &ProcessingRun) -> String {
     use kentos_commands::codes;
     let path = input.sink.as_ref().map_or("", |s| s.path.as_str());
-    let name = std::path::Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned());
+    let name = std::path::Path::new(path)
+        .file_name()
+        .map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned());
     // The table's name between the quotes of the channel's sentence.
-    let table = e.message.split_once('“').and_then(|(_, r)| r.split_once('”')).map(|(t, _)| t.to_owned());
+    let table = e
+        .message
+        .split_once('“')
+        .and_then(|(_, r)| r.split_once('”'))
+        .map(|(t, _)| t.to_owned());
     match e.code.as_str() {
         codes::FILE_EXISTS => format!(
             "Bu GeoPackage zaten var: {name}. Başka dosya seçin ya da Varsa üzerine yaz'ı açın. Dosyaya dokunulmadı."
@@ -559,7 +577,13 @@ pub(super) fn asked_of(window: &ToolDialog) -> Asked {
         .parameters
         .iter()
         .filter(|p| matches!(p.kind, ParamKind::Features { .. }))
-        .filter_map(|p| Some(format!("{}: {}", p.label, window.inputs.get(&p.name)?.description)))
+        .filter_map(|p| {
+            Some(format!(
+                "{}: {}",
+                p.label,
+                window.inputs.get(&p.name)?.description
+            ))
+        })
         .collect();
     words.push(target_words(&window.sink));
     Asked {
@@ -578,14 +602,19 @@ fn target_words(s: &LocalSink) -> String {
         Place::Drawing => "Sonucun yeri: çizim".to_owned(),
         Place::File => {
             let path = s.path.trim();
-            let name = std::path::Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned());
+            let name = std::path::Path::new(path)
+                .file_name()
+                .map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned());
             format!("Sonucun yeri: {name} (GeoPackage dosyası)")
         }
         Place::Database => {
             let at = s.address.trim();
             let at = at.split_once("://").map_or(at, |(_, r)| r);
             let at = at.rsplit_once('@').map_or(at, |(_, h)| h);
-            format!("Sonucun yeri: {at}, şema {} (PostGIS veritabanı)", s.schema.trim())
+            format!(
+                "Sonucun yeri: {at}, şema {} (PostGIS veritabanı)",
+                s.schema.trim()
+            )
         }
     }
 }
@@ -595,14 +624,29 @@ fn sink_record(a: Asked, end: &Result<Ran, String>) -> kentos_processing::RunRec
     let mut words = a.words;
     let (status, summary, records_in, records_out) = match end {
         Ok(ran) => {
-            let tables: Vec<String> = ran.written.tables.iter().map(|(t, n)| format!("{t} ({n} satır)")).collect();
+            let tables: Vec<String> = ran
+                .written
+                .tables
+                .iter()
+                .map(|(t, n)| format!("{t} ({n} satır)"))
+                .collect();
             if !tables.is_empty() {
                 words.push(format!("Yazılan tablolar: {}", tables.join(", ")));
             }
-            (kentos_processing::Status::Ok, ran.text.clone(), ran.records_in, ran.records_out)
+            (
+                kentos_processing::Status::Ok,
+                ran.text.clone(),
+                ran.records_in,
+                ran.records_out,
+            )
         }
         Err(why) if why == STOPPED => (kentos_processing::Status::Canceled, why.clone(), 0, 0),
-        Err(why) => (kentos_processing::Status::Error, format!("Yazılmadı: {why}"), 0, 0),
+        Err(why) => (
+            kentos_processing::Status::Error,
+            format!("Yazılmadı: {why}"),
+            0,
+            0,
+        ),
     };
     kentos_processing::RunRecord {
         seq: 0,
@@ -630,31 +674,54 @@ pub(crate) fn written_card(w: &Written) -> Element<'_, Message> {
     let place = if w.file {
         w.address.clone()
     } else {
-        let at = w.address.split_once("://").map_or(w.address.as_str(), |(_, r)| r);
+        let at = w
+            .address
+            .split_once("://")
+            .map_or(w.address.as_str(), |(_, r)| r);
         at.rsplit_once('@').map_or(at, |(_, h)| h).to_owned()
     };
-    let tables: Vec<String> = w.tables.iter().map(|(t, n)| format!("{t} ({n} satır)")).collect();
+    let tables: Vec<String> = w
+        .tables
+        .iter()
+        .map(|(t, n)| format!("{t} ({n} satır)"))
+        .collect();
     let action = |text: &'static str, glyph: Icon, e: Option<SinkEvent>| {
-        button(row![icon(glyph).size(14.0), label::caption(text)].spacing(5).align_y(Center))
-            .padding(kentos_ui::theme::metrics::action_small())
-            .style(style::button::secondary)
-            .on_press_maybe(e.map(ev))
+        button(
+            row![icon(glyph).size(14.0), label::caption(text)]
+                .spacing(5)
+                .align_y(Center),
+        )
+        .padding(kentos_ui::theme::metrics::action_small())
+        .style(style::button::secondary)
+        .on_press_maybe(e.map(ev))
     };
     let mut actions = row![].spacing(6).align_y(Center);
     actions = actions.push(if w.added {
         action("Katman olarak eklendi", Icon::Success, None)
     } else {
-        action("Katman olarak ekle", Icon::Layers, Some(SinkEvent::AddLayer))
+        action(
+            "Katman olarak ekle",
+            Icon::Layers,
+            Some(SinkEvent::AddLayer),
+        )
     });
     if w.file {
-        actions = actions.push(action("Dosya konumunu aç", Icon::Open, Some(SinkEvent::Reveal)));
+        actions = actions.push(action(
+            "Dosya konumunu aç",
+            Icon::Open,
+            Some(SinkEvent::Reveal),
+        ));
     }
     container(
         column![
             row![
                 icon(Icon::Success).size(14.0).tone(Tone::Success),
-                label::caption(if w.file { "Sonuç dosyaya yazıldı" } else { "Sonuç veritabanına yazıldı" })
-                    .font(kentos_ui::theme::typography::ui_strong()),
+                label::caption(if w.file {
+                    "Sonuç dosyaya yazıldı"
+                } else {
+                    "Sonuç veritabanına yazıldı"
+                })
+                .font(kentos_ui::theme::typography::ui_strong()),
             ]
             .spacing(6)
             .align_y(Center),
@@ -662,10 +729,14 @@ pub(crate) fn written_card(w: &Written) -> Element<'_, Message> {
                 .spacing_x(10.0)
                 .spacing_y(2.0)
                 .push(
-                    label::caption(if w.file { "Dosya" } else { "Veritabanı" }).style(style::text::muted),
+                    label::caption(if w.file { "Dosya" } else { "Veritabanı" })
+                        .style(style::text::muted),
                     label::caption(place).wrapping(iced::widget::text::Wrapping::WordOrGlyph),
                 )
-                .push(label::caption("Tablolar").style(style::text::muted), label::caption(tables.join(", "))),
+                .push(
+                    label::caption("Tablolar").style(style::text::muted),
+                    label::caption(tables.join(", "))
+                ),
             actions,
         ]
         .spacing(8),
@@ -683,7 +754,14 @@ impl App {
         };
         let s = &mut window.sink;
         // Another target: the card of what was written goes.
-        if matches!(e, SinkEvent::Place(_) | SinkEvent::Path(_) | SinkEvent::Mode(_) | SinkEvent::Address(_) | SinkEvent::Schema(_)) {
+        if matches!(
+            e,
+            SinkEvent::Place(_)
+                | SinkEvent::Path(_)
+                | SinkEvent::Mode(_)
+                | SinkEvent::Address(_)
+                | SinkEvent::Schema(_)
+        ) {
             s.written = None;
         }
         match e {
@@ -752,20 +830,25 @@ impl App {
                     return Task::none();
                 };
                 w.added = true;
-                let (address, tables) = (w.address.clone(), w.tables.iter().map(|(t, _)| t.clone()).collect());
+                let (address, tables) = (
+                    w.address.clone(),
+                    w.tables.iter().map(|(t, _)| t.clone()).collect(),
+                );
                 return self.add_tables(address, tables);
             }
             SinkEvent::Reveal => {
-                let Some(folder) = s
-                    .written
-                    .as_ref()
-                    .filter(|w| w.file)
-                    .and_then(|w| std::path::Path::new(&w.address).parent().map(std::path::Path::to_path_buf))
-                else {
+                let Some(folder) = s.written.as_ref().filter(|w| w.file).and_then(|w| {
+                    std::path::Path::new(&w.address)
+                        .parent()
+                        .map(std::path::Path::to_path_buf)
+                }) else {
                     return Task::none();
                 };
                 if let Err(e) = crate::attachments::open_in_system(&folder) {
-                    self.warn(format!("Dosyanın klasörü açılamadı: {e}. Klasör: {}", folder.display()));
+                    self.warn(format!(
+                        "Dosyanın klasörü açılamadı: {e}. Klasör: {}",
+                        folder.display()
+                    ));
                 }
             }
         }
@@ -828,13 +911,19 @@ impl App {
             return Task::none();
         }
         if let Some(l) = located.as_ref().filter(|l| !l.reading.is_empty()) {
-            window.status =
-                RunStatus::Invalid(format!("Kaynaktan okunuyor: {}. Satırlar okununca çalıştırın.", l.reading.join(", ")));
+            window.status = RunStatus::Invalid(format!(
+                "Kaynaktan okunuyor: {}. Satırlar okununca çalıştırın.",
+                l.reading.join(", ")
+            ));
             return Task::none();
         }
         let mut copy = match &located {
             Some(l) => {
-                input.selection.extend(l.chosen().iter().filter_map(|s| l.doc.uid(*s).map(|u| u.to_string())));
+                input.selection.extend(
+                    l.chosen()
+                        .iter()
+                        .filter_map(|s| l.doc.uid(*s).map(|u| u.to_string())),
+                );
                 l.doc.reading_copy()
             }
             None => doc.model.reading_copy(),

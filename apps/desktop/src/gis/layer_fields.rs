@@ -44,7 +44,6 @@ const REFRESH: &str = "Kaynak şemasını yenile";
 /// The fields' lists and ranges written into the data layer's table (docs/adr/9324).
 const RULES: &str = "Kuralları kaynağa yaz";
 
-
 /// A field as the window edits it: every value as typed, and the name it had
 /// when the window opened (none: new). The web's `FieldRow`.
 #[derive(Debug, Clone, PartialEq)]
@@ -376,7 +375,10 @@ pub enum Cell {
 
 /// A row's box's id: `layer-field-1-name` (what a test clicks into).
 pub(crate) fn cell_id(row: usize, cell: Cell) -> iced::widget::Id {
-    iced::widget::Id::from(format!("layer-field-{row}-{}", format!("{cell:?}").to_lowercase()))
+    iced::widget::Id::from(format!(
+        "layer-field-{row}-{}",
+        format!("{cell:?}").to_lowercase()
+    ))
 }
 
 #[derive(Debug, Clone)]
@@ -491,7 +493,14 @@ impl App {
         // The rules the data layer's source keeps, read from its catalog (docs/adr/9324).
         let source_rules = node.data.as_ref().and_then(|d| {
             let source = kentos_data::registry().source(&d.address).ok()?;
-            Some(source.rules(&d.table).ok()?.into_iter().map(|r| r.column).collect())
+            Some(
+                source
+                    .rules(&d.table)
+                    .ok()?
+                    .into_iter()
+                    .map(|r| r.column)
+                    .collect(),
+            )
         });
         self.gis.layer_fields = Some(Window {
             layer: layer.to_owned(),
@@ -861,8 +870,17 @@ impl App {
         // A data layer's field is a column of its table (docs/adr/9318): a new one is added to the table first
         // (`cad.layers.columns`); a renamed one is refused, the table's column keeps its name and the layer would read a
         // column the table does not have. A field taken off the layer is no longer read; the column stays.
-        if doc.model.layers().get(&w.layer).is_some_and(|n| n.data.is_some()) {
-            if let Some(r) = w.rows.iter().find(|r| r.from.as_deref().is_some_and(|f| f != r.name)) {
+        if doc
+            .model
+            .layers()
+            .get(&w.layer)
+            .is_some_and(|n| n.data.is_some())
+        {
+            if let Some(r) = w
+                .rows
+                .iter()
+                .find(|r| r.from.as_deref().is_some_and(|f| f != r.name))
+            {
                 w.said = Some((
                     Kind::Error,
                     format!(
@@ -872,7 +890,12 @@ impl App {
                 ));
                 return Task::none();
             }
-            let new: Vec<LayerField> = w.rows.iter().filter(|r| r.from.is_none()).map(field_of).collect();
+            let new: Vec<LayerField> = w
+                .rows
+                .iter()
+                .filter(|r| r.from.is_none())
+                .map(field_of)
+                .collect();
             if !new.is_empty() {
                 let input = kentos_commands::LayersColumns {
                     action: kentos_commands::LayerColumnsAction::Add,
@@ -880,7 +903,10 @@ impl App {
                     fields: Some(new),
                     expected_revision: None,
                 };
-                match kentos_native_application::layers_columns::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+                match kentos_native_application::layers_columns::execute(
+                    &mut ExecutionContext::new(&mut doc.model),
+                    input,
+                ) {
                     CommandResult::Completed { .. } => {}
                     CommandResult::Failed { error }
                     | CommandResult::Conflict { error }
@@ -956,13 +982,27 @@ impl App {
             fields: None,
             expected_revision: None,
         };
-        let said = match kentos_native_application::layers_columns::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+        let said = match kentos_native_application::layers_columns::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        ) {
             CommandResult::Completed { output, .. } => {
-                let names = |list: &[String]| list.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ");
+                let names = |list: &[String]| {
+                    list.iter()
+                        .map(|n| format!("“{n}”"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                };
                 let text = match (output.added.is_empty(), output.removed.is_empty()) {
-                    (true, true) => "Katmanın alanları tablonun sütunlarıyla aynı; bir şey değişmedi.".to_owned(),
+                    (true, true) => {
+                        "Katmanın alanları tablonun sütunlarıyla aynı; bir şey değişmedi."
+                            .to_owned()
+                    }
                     (false, true) => format!("Tablodan alındı: {}.", names(&output.added)),
-                    (true, false) => format!("Tabloda artık olmayan alanlar katmandan çıktı: {}.", names(&output.removed)),
+                    (true, false) => format!(
+                        "Tabloda artık olmayan alanlar katmandan çıktı: {}.",
+                        names(&output.removed)
+                    ),
                     (false, false) => format!(
                         "Tablodan alındı: {}. Tabloda artık olmayan alanlar katmandan çıktı: {}.",
                         names(&output.added),
@@ -971,9 +1011,9 @@ impl App {
                 };
                 (Kind::Info, text)
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                (Kind::Error, error.message)
-            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => (Kind::Error, error.message),
             CommandResult::Queued { .. } | CommandResult::Cancelled => return Task::none(),
         };
         let rows: Vec<FieldRow> = doc
@@ -998,23 +1038,42 @@ impl App {
             return Task::none();
         };
         // A database keeps its check constraints at every write; a GeoPackage's schema extension is read, not enforced.
-        let database = doc.model.layers().get(layer).and_then(|n| n.data.as_ref()).is_some_and(|d| d.driver == "postgis");
+        let database = doc
+            .model
+            .layers()
+            .get(layer)
+            .and_then(|n| n.data.as_ref())
+            .is_some_and(|d| d.driver == "postgis");
         let input = kentos_commands::LayersColumns {
             action: kentos_commands::LayerColumnsAction::Rules,
             layer: layer.to_owned(),
             fields: None,
             expected_revision: None,
         };
-        let said = match kentos_native_application::layers_columns::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+        let said = match kentos_native_application::layers_columns::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        ) {
             CommandResult::Completed { output, .. } => {
-                let names = output.ruled.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ");
+                let names = output
+                    .ruled
+                    .iter()
+                    .map(|n| format!("“{n}”"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
                 let outside: Vec<String> = output
                     .outside
                     .iter()
-                    .flat_map(|o| o.values.iter().map(move |v| format!("{} {} ({} satır)", o.field, v.value, v.rows)))
+                    .flat_map(|o| {
+                        o.values
+                            .iter()
+                            .map(move |v| format!("{} {} ({} satır)", o.field, v.value, v.rows))
+                    })
                     .collect();
                 let mut text = if database {
-                    format!("Kaynağa kural olarak yazıldı: {names}. Veritabanı bundan sonraki her yazmayı bu kurallarla denetler.")
+                    format!(
+                        "Kaynağa kural olarak yazıldı: {names}. Veritabanı bundan sonraki her yazmayı bu kurallarla denetler."
+                    )
                 } else {
                     format!(
                         "Kaynağa kural olarak yazıldı: {names}. GeoPackage şema uzantısında tutar; başka programlar alanın \
@@ -1022,16 +1081,26 @@ impl App {
                     )
                 };
                 if !outside.is_empty() {
-                    text.push_str(&format!(" Kurala uymayan eski değerler satırlarında kaldı: {}.", outside.join(", ")));
+                    text.push_str(&format!(
+                        " Kurala uymayan eski değerler satırlarında kaldı: {}.",
+                        outside.join(", ")
+                    ));
                     if database {
                         text.push_str(" O satırlar değer düzeltilmeden değiştirilemez.");
                     }
                 }
-                (if outside.is_empty() { Kind::Info } else { Kind::Warn }, text)
+                (
+                    if outside.is_empty() {
+                        Kind::Info
+                    } else {
+                        Kind::Warn
+                    },
+                    text,
+                )
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                (Kind::Error, error.message)
-            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => (Kind::Error, error.message),
             CommandResult::Queued { .. } | CommandResult::Cancelled => return Task::none(),
         };
         let ruled = said.0 != Kind::Error;
@@ -1173,7 +1242,6 @@ impl App {
     }
 }
 
-
 impl App {
     /// The layer's values written in their fields' canonical texts through `cad.fields.migrate`, as one
     /// undo step; the window says what changed and what did not fit (docs/adr/0439 §8).
@@ -1259,7 +1327,7 @@ mod tests {
         });
     }
 
-/// Where the box of `id` is drawn.
+    /// Where the box of `id` is drawn.
     fn box_at(
         snapshot: &mut kentos_ui::snapshot::Snapshot,
         app: &crate::app::App,
@@ -1291,7 +1359,14 @@ mod tests {
     fn a_click_into_a_rows_box_chooses_that_row() {
         use kentos_ui::snapshot::Input;
         let mut app = crate::files_testing::app_with_drawing();
-        let layer = app.document.as_ref().expect("open").model.layers().active().to_owned();
+        let layer = app
+            .document
+            .as_ref()
+            .expect("open")
+            .model
+            .layers()
+            .active()
+            .to_owned();
         let _ = app.update(Message::Run("layer.fields"));
         for (i, name) in ["park_kodu", "bank_sayisi"].into_iter().enumerate() {
             let _ = app.update(msg(Event::Add));
@@ -1307,17 +1382,31 @@ mod tests {
         let mut update = |app: &mut crate::app::App, m| drop(app.update(m));
         shot.settle(&mut app, crate::app::App::view, &mut update);
         // The list's second field pressed (docs/adr/9349): its settings are the form's, its name box there.
-        let at = crate::files_testing::find_text(&mut shot, &app, "bank_sayisi").expect("the second field in the list");
-        shot.input(&mut app, crate::app::App::view, &mut update, Input::Click(at.center()));
-        assert_eq!(app.gis.layer_fields.as_ref().expect("open").chosen, Some(1), "the clicked row is chosen");
+        let at = crate::files_testing::find_text(&mut shot, &app, "bank_sayisi")
+            .expect("the second field in the list");
+        shot.input(
+            &mut app,
+            crate::app::App::view,
+            &mut update,
+            Input::Click(at.center()),
+        );
+        assert_eq!(
+            app.gis.layer_fields.as_ref().expect("open").chosen,
+            Some(1),
+            "the clicked row is chosen"
+        );
         shot.settle(&mut app, crate::app::App::view, &mut update);
-        assert!(box_at(&mut shot, &app, cell_id(1, Cell::Name)).is_some(), "its name box in the settings");
+        assert!(
+            box_at(&mut shot, &app, cell_id(1, Cell::Name)).is_some(),
+            "its name box in the settings"
+        );
         crate::files_testing::evidence(&mut shot, &app, "gis-003", "ikinci-satir-secili");
         let _ = app.update(msg(Event::Unique(true)));
         let _ = app.update(msg(Event::Save));
         let doc = &app.document.as_ref().expect("open").model;
         let fields = &doc.layers().get(&layer).expect("the layer").fields;
-        let unique: Vec<(&str, bool)> = fields.iter().map(|f| (f.name.as_str(), f.unique)).collect();
+        let unique: Vec<(&str, bool)> =
+            fields.iter().map(|f| (f.name.as_str(), f.unique)).collect();
         assert_eq!(unique, [("park_kodu", true), ("bank_sayisi", true)]);
     }
 

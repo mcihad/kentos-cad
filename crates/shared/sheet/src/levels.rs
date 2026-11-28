@@ -7,8 +7,7 @@
 use std::collections::BTreeSet;
 
 use crate::{
-    ItemKind, MapView, Result, SheetError,
-    create,
+    ItemKind, MapView, Result, SheetError, create,
     model::SheetBook,
     ops::{Op, SetItemProps},
     template::{AssetWithBytes, InstanceIds, InstanceOptions, Template},
@@ -196,16 +195,17 @@ pub fn level_sheets(
             id: item.id.clone(),
             patch,
         }));
-        out.ops.push(Op::SetDrawingInfo(crate::drawing_set::SetDrawingInfo {
-            id: ids.sheet.clone(),
-            info: Some(crate::drawing_set::DrawingInfo {
-                number: number.clone(),
-                title,
-                revision: String::new(),
-                status: String::new(),
-                subset: SUBSET.iter().map(|s| (*s).to_owned()).collect(),
-            }),
-        }));
+        out.ops
+            .push(Op::SetDrawingInfo(crate::drawing_set::SetDrawingInfo {
+                id: ids.sheet.clone(),
+                info: Some(crate::drawing_set::DrawingInfo {
+                    number: number.clone(),
+                    title,
+                    revision: String::new(),
+                    status: String::new(),
+                    subset: SUBSET.iter().map(|s| (*s).to_owned()).collect(),
+                }),
+            }));
         out.made.push(LevelSheet {
             sheet: ids.sheet,
             level: level.clone(),

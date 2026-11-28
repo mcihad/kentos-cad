@@ -87,170 +87,686 @@ fn reached() -> BTreeMap<String, BTreeSet<String>> {
 
 /// The listed codes no shared case reaches, and why.
 const UNREACHED: &[(&str, &str, &str)] = &[
-    ("cad.survey.baselines", "network_too_large", "Zarfı 30 milyon girdiyi aşan ağ (180 × 180 istasyonluk ızgara 35 milyon) bir ortak durumda taşınmaz; sınır geometry-core'un gnss::adjust'ında MAX_ENVELOPE ile denetlenir, gnss::tests::large_grids ölçer (ADR 4560)."),
-    ("map.survey.network", "network_too_large", "Zarfı 30 milyon girdiyi aşan ağ bir ortak durumda taşınmaz; arşivin ağı aynı çekirdekten (gnss::adjust, MAX_ENVELOPE) geçer (ADR 1740, ADR 4560)."),
-    ("map.survey.edit", "network_too_large", "1500 bilinmeyenin (500 işaret) üstü bir ortak durumda taşınmaz; ağın kabulü map.survey.network'ün çözümlemesinden geçer (ADR 1740)."),
-    ("map.survey.network", "invalid_covariance", "Arşivin kuralı (map_survey_problem) pozitif tanımlı olmayan baz kovaryansını yazdırmaz; varyans çarpanı 0'dan büyük olduğundan ölçeklenmiş kovaryans, σ'ları 0'dan büyük olduğundan bilinen noktanınki de pozitif tanımlı kalır (ADR 1740)."),
-    ("map.survey.edit", "invalid_covariance", "Ağın çekirdeğe giden kovaryansları arşivin kuralıyla hep pozitif tanımlıdır (map.survey.network'ün gerekçesi); bazın kendi kovaryans reddi invalid_survey_value'dur (ADR 1740)."),
-    ("map.features.reconcile", "invalid_profile", "Okunamayan proje profili ortak profil okuyucusundan (profiles::profile_only) gelir; cad.profiles.check'in ve .apply'ın ortak durumlarında sınanır (ADR 1760)."),
-    ("map.features.code", "invalid_profile", "Okunamayan proje profili ortak profil okuyucusundan (profiles::profile_only) gelir; cad.profiles.check'in ve .apply'ın ortak durumlarında sınanır."),
-    ("cad.standards.install", "no_standard", "Bağlı standart olmayan çizim review_take::installing_needs_a_readable_bound_standard testinde sınanır."),
-    ("cad.standards.install", "invalid_standard", "Okunamayan bağlı standart review_take::installing_needs_a_readable_bound_standard testinde sınanır."),
-    ("cad.standards.palettes", "invalid_standard", "cad.settings.set okunmayan paketi bağlamaz; dosyada kalmış okunmayan paketin reddi review_take::palettes_need_a_readable_bound_standard testinde sınanır."),
-    ("cad.standards.install", "block_refused", "KentOS kitaplıklarının blokları kurallara uyar; kurallara uymayan bir proje kitaplığı office_profiles::a_library_block_that_breaks_the_block_rules_is_refused testinde sınanır."),
-    ("cad.linetypes.edit", "pattern_too_long_for_lin", "12 öğeyi aşan desenin LIN dışa aktarımı review_take::a_long_pattern_is_kept_and_left_out_of_a_lin_file testinde sınanır."),
-    ("cad.drawing.take", "unknown_block", "Tanımı kaybolmuş blok yerleştirmesi review_take::an_insert_whose_definition_the_drawing_lost_is_not_taken testinde sınanır."),
-    ("cad.drawing.take", "block_definition_differs", "Tanımı değişmiş bloğun yerleştirmesini alma review_take::a_changed_definition_makes_the_insert_note_stale_and_the_take_warns testinde sınanır."),
-    ("cad.review.notes.edit", "too_many_review_replies", "200 yanıt sınırı review_take::replies_and_notes_stop_at_their_limits testinde sınanır."),
-    ("cad.review.notes.edit", "too_many_review_notes", "10 000 not sınırı review_take::replies_and_notes_stop_at_their_limits testinde sınanır."),
-    ("cad.delivery.edit", "too_many_deliveries", "1000 kayıt sınırı delivery_limit::the_thousand_and_first_delivery_is_refused_and_nothing_is_written testinde sınanır."),
-    // Baskı stili tablosu (docs/adr/1130).
-    ("cad.plotstyles.import", "plot_style_file_too_large", "4 MiB'tan büyük bir tablo ortak durum olarak repoya konmaz; sınır plot_style_files_beyond_the_limit_and_unreadable_files_are_refused testinde sınanır."),
-    ("cad.plotstyles.import", "book_unreadable", "Ortak kurulum geçersiz kitap vermez; kitap cad.sheets.details'in aynı read_project_sheets yolundan okunur ve orada korunur (ADR 1090)."),
-    ("cad.plotstyles.import", "file_unreadable", "Okuma izni olmayan dosya ortak durumda kurulamaz (repo izinleri taşımaz); plot_style_files_beyond_the_limit_and_unreadable_files_are_refused testinde sınanır."),
-    // Veri çıkarımı (docs/adr/1030).
-    ("cad.extract.run", "extraction_too_large", "Bir milyon oluşum sınırı ortak durumda yazılamayacak kadar büyük bir çizim ister; sınır kentos_formats::extract::Walk::counted'te tek yerdedir ve çıkarımı kesmeden reddeder."),
-    ("cad.extract.table", "extraction_too_large", "cad.extract.run ile aynı sınır ve aynı kod; tablo komutu aynı çıkarımı çağırır."),
-    ("cad.extract.run", "extraction_too_deep", "Belgeler blok iç içeliğini 16 düzeyde keser (kentos_contracts::blocks); bu uyarı yalnız bu kurala uymayan bir dosyaya karşı savunmadır."),
-    ("cad.extract.table", "extraction_too_deep", "cad.extract.run ile aynı savunma uyarısı."),
-    ("cad.tables.edit", "extraction_too_deep", "cad.extract.run ile aynı savunma uyarısı; yenileme aynı çıkarımı çağırır."),
-    ("cad.extract.table", "xref_unloaded", "Yüklü olmayan dış referans uyarısı cad.extract.run.json'da verilir; tablo komutu aynı çıkarımın uyarılarını aynen aktarır."),
-    ("cad.tables.edit", "xref_unloaded", "Yüklü olmayan dış referans uyarısı cad.extract.run.json'da verilir; yenileme aynı çıkarımın uyarılarını aynen aktarır."),
-    ("cad.tables.edit", "dimension_overrides", "Elle yazılmış ölçü uyarısı cad.extract.run.json'un metraj durumlarında ve cad.extract.table.json'da verilir; yenileme aynı çıkarımın uyarılarını aktarır."),
-    ("road.volumes.query", "volume_curve_past_centre", "Kesitin kurbun merkezini geçmesi için iç yanının yarıçaptan (ortak çizimde 150 m) uzun olması gerekir; ortak çizimin arazisi buna yetmez. Kural kentos_road::volume::effective'tedir ve tests/all/curve_volumes.rs'de (merkezi geçen kesit durumu) sınanır; kübaj aynı fonksiyonu kullanır."),
-    ("cad.standards.resolve", "invalid_standard", "Standart paketinin geçersizliği standards_cmd::project_standards_resolve_by_order testinde sınanır."),
-    ("cad.standards.resolve", "no_standard", "Boş belge listesi standards_cmd::project_standards_resolve_by_order testinde sınanır."),
-    ("cad.standards.conflicts", "invalid_standard", "Okunamayan bağlı belge standards_cmd::project_standard_conflicts_report_sources_and_fields_without_mutating testinde sınanır."),
-    ("cad.entities.delete", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.entities.transform", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.entities.edit", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.hatches.edit", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.entities.trim", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.entities.extend", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.entities.fillet", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.entities.chamfer", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.entities.stretch", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.entities.break", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.entities.join", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.entities.lengthen", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.changeset.apply", "hatch_association_lost", "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır."),
-    ("cad.drawing.inspect", "inspection_scope_limit", "drawing_inspect::caps_and_stale_revision_are_explicit_and_read_only testinde sınır ve revizyon reddi veya kısmi sonuç doğrulanır; ortak durum dosyası küçük girdiler kullanır."),
-    ("cad.drawing.inspect", "inspection_truncated", "drawing_inspect::caps_and_stale_revision_are_explicit_and_read_only testinde sınır ve revizyon reddi veya kısmi sonuç doğrulanır; ortak durum dosyası küçük girdiler kullanır."),
-    ("cad.drawing.inspect", "invalid_revision", "drawing_inspect::caps_and_stale_revision_are_explicit_and_read_only testinde sınır ve revizyon reddi veya kısmi sonuç doğrulanır; ortak durum dosyası küçük girdiler kullanır."),
-    ("cad.drawing.inspect", "revision_conflict", "drawing_inspect::caps_and_stale_revision_are_explicit_and_read_only testinde sınır ve revizyon reddi veya kısmi sonuç doğrulanır; ortak durum dosyası küçük girdiler kullanır."),
-    ("road.junctions.overlap","invalid_junction","Kavşak road_junctions::read ile okunur; okunamayan kavşak (kollar kesişmiyor, paralel) road.junctions.query'nin durumlarında aynı kodla sınanır (ADR 0910 §2)."),
-    ("road.junctions.clearance","profile_curves_overlap","Kolların boykesitleri road.junctions.tie ile aynı yoldan (road_junctions::leg_profiles) kurulur; kurpları çakışan boykesit orada sınanır (ADR 0918 §3)."),
-    ("road.terrains.coverage","terrain_unbuildable","Yüzey road_terrains::make ile kurulur; kurulamayan yüzey (aynı yerde farklı kotlar, kesişen kırık hatlar) road.terrains.query ve .create'in durumlarında aynı kodla sınanır (ADR 0900 §11)."),
-    ("road.terrains.lowconfidence","terrain_unbuildable","Yüzey road_terrains::make ile kurulur; kurulamayan yüzey road.terrains.query ve .create'in durumlarında aynı kodla sınanır (ADR 0900 §11)."),
-    ("road.corridors.water","corridor_folded","Komut koridorun kendi uyarılarını road_corridors::make ile aynen geçirir; katlanan şerit road.corridors.query'nin dar kurp durumunda sınanır (ADR 0905)."),
-    ("road.terrains.density","terrain_unbuildable","Yüzey road_terrains::make ile kurulur; kurulamayan yüzey road.terrains.query ve .create'in durumlarında aynı kodla sınanır (ADR 0900 §11)."),
-    ("road.terrains.sparse","terrain_unbuildable","Yüzey road_terrains::make ile kurulur; kurulamayan yüzey road.terrains.query ve .create'in durumlarında aynı kodla sınanır (ADR 0900 §11)."),
-    ("road.terrains.repair","terrain_unbuildable","Bırakılacak yer yüzeyin bir nokta kaydı olmalı; kaydı olan ama kurulamayan yüzey (aynı yerde farklı kotlar, kesişen kırık hatlar) road.terrains.query ve .create'in durumlarında sınanır (ADR 0900 §11); onarım onu aynı kodla reddeder (ADR 0916 §6)."),
-    ("road.drainage.query","invalid_culvert","Menfezin girişi koridorundan okunur; koridoru okunamayan menfezin reddi road.culverts.query'nin durumlarında sınanır (ADR 0909 §2)."),
-    ("cad.pointclouds.register","too_many_cloud_points","Bir bulut en çok 400 000 voksel noktası verir (REGISTER_MOST_POINTS) ve bir çağrı en çok 200 milyon nokta okur; ortak durumun taramaları 2 400 voksel noktası verir, okuma sınırı cad.pointclouds.region'ın durumlarında sınanır (ADR 0552, 1800)."),
-    ("cad.pointclouds.overlap","too_many_cloud_points","Bir çağrı en çok 200 milyon nokta okur (POINTCLOUD_MOST_COUNTED); ortak durumun dört taraması bu sınırın çok altında, sınır cad.pointclouds.region'ın durumlarında sınanır (ADR 0552, 1500)."),
-    ("cad.pointclouds.register","cloud_source_unreadable","Taramalar betiğin yazdığı metin dosyalarıdır, her durumda okunur; okunamayan kaynağın uyarısı pointcloud_areas::Scan'ındır ve cad.pointclouds.region'ın durumlarında sınanır (ADR 0552, 1800)."),
-    ("cad.pointclouds.overlap","cloud_source_unreadable","Taramalar betiğin yazdığı metin dosyalarıdır, her durumda okunur; okunamayan kaynağın uyarısı pointcloud_areas::Scan'ındır ve cad.pointclouds.region'ın durumlarında sınanır (ADR 0552, 1500)."),
-    ("road.terrains.cloud","too_many_cloud_points","Bir çağrı en çok 200 milyon nokta okur (POINTCLOUD_MOST_COUNTED); ortak durumun bulutu bu sınırın çok altında, sınır cad.pointclouds.region'ın durumlarında sınanır (ADR 0552)."),
-    ("map.survey.edit","survey_full","GNSS arşivi en çok 1000 kampanya, 10 000 oturum, 100 000 çözüm, 10 000 nokta ve 10 000 dayanan tutar; sınır sözleşmenin map_survey_problem kuralındadır, o kadar kayıtlı çizim ortak durumda taşınmaz (ADR 1340 §2)."),
-    ("map.survey.edit","geoid_missing","Projenin kotları ortometrikse kabul noktası projenin geoit modeliyle taşınır; model bu cihazda yoksa zincirin reddi aynen döner ve cad.crs.transform'un durumlarında sınanır (ADR 0631 §1)."),
-    ("map.survey.edit","no_system","Koordinat sistemi olmayan (yerel) harita projesine nokta zincirle taşınamaz; zincirin reddi aynen döner ve cad.crs.transform'un durumlarında sınanır (ADR 1230 §1)."),
-    ("map.survey.edit","velocity_missing","Kampanyanın hız ızgarası bu cihazın kitaplığında yoksa zincirin reddi aynen döner; ret cad.crs.transform'un durumlarında sınanır (ADR 0631 §3)."),
-    ("map.work.edit","work_full","Harita işi en çok 1000 öğe ve 10 000 türetme kaydı tutar; sınır sözleşmenin map_work_problem kuralındadır; 1000 öğelik çizim ortak durumda taşınmaz (ADR 1200 §1)."),
-    ("road.project.rebuild","road_drawings_full","Yeniden üretme kaydı yerinde yazar, sayıyı artırmaz; sınır sözleşmenin a_drawing_record_is_judged testinde (ADR 0911 §3)."),
-    ("road.alignments.label","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
-    ("road.profiles.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
-    ("road.sections.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
-    ("road.profiles.draw","invalid_road_corridor","Şev ve platform satırları koridoru road_corridors::make ile kurar; bu ret koridor kurulamayınca gelir ve road.corridors.draw/query durumlarında sınanır (ADR 0989)."),
-    ("road.profiles.draw","no_terrain","Şev ve platform satırları koridoru road_corridors::make ile kurar; bu ret koridor kurulamayınca gelir ve road.corridors.draw/query durumlarında sınanır (ADR 0989)."),
-    ("road.sheets.plan","unknown_corridor","Pafta, şev ve platform satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun corridor durumlarında sınanır (ADR 0989)."),
-    ("road.sheets.plan","invalid_label","Pafta, şev ve platform satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun corridor durumlarında sınanır (ADR 0989)."),
-    ("road.sheets.plan","invalid_road_corridor","Pafta, şev ve platform satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun corridor durumlarında sınanır (ADR 0989)."),
-    ("road.sheets.plan","no_terrain","Pafta, şev ve platform satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun corridor durumlarında sınanır (ADR 0989)."),
-    ("road.profiles.draw","invalid_haul","Hafriyat satırları Brükneri road_hauls::read ve kübajı road_volumes::compute_on ile okur; bu ret onlar okunamayınca gelir ve road.hauls.query durumlarında sınanır (ADR 0995)."),
-    ("road.profiles.draw","unknown_volume","Hafriyat satırları Brükneri road_hauls::read ve kübajı road_volumes::compute_on ile okur; bu ret onlar okunamayınca gelir ve road.hauls.query durumlarında sınanır (ADR 0995)."),
-    ("road.sheets.plan","unknown_haul","Pafta, hafriyat satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun haul durumlarında ya da road.hauls.query'de sınanır (ADR 0995)."),
-    ("road.sheets.plan","invalid_haul","Pafta, hafriyat satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun haul durumlarında ya da road.hauls.query'de sınanır (ADR 0995)."),
-    ("road.sheets.plan","unknown_volume","Pafta, hafriyat satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun haul durumlarında ya da road.hauls.query'de sınanır (ADR 0995)."),
-    ("road.corridors.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
-    ("road.guardrails.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
-    ("road.culverts.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
-    ("road.walls.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
-    ("road.platforms.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
-    ("road.platforms.draw","invalid_platform","Çizimin denetimi platformu okuyarak yapar; okunamayan platform (kurulamayan yüzey, tesviye edilemeyen sınır) road.platforms.query'nin durumlarında, sınır retleri road.platforms.edit'te sınanır; tanımı geçerli bir platform yazıldıktan sonra yüzeyin bozulması ayrı bir sahne ister."),
-    ("road.junctions.draw","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
-    ("road.terrains.contours","road_drawings_full","Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1)."),
-    ("road.stakeout.send", "stakeout_unsolved", "Ortak çizimde kesitsiz km yalnız yüzeysiz koridorda olur, o da hiç nokta vermez ve gönderme reddedilir; uyarının metni road.stakeout.query'nin durumlarında sınanır, gönderme cetvelin uyarılarını olduğu gibi taşır (ADR 0908 §9)."),
-    ("cad.blocks.convert", "recognition_scope_limit", "Toplam 204000 köşe blocks_convert::aggregate_vertex_limit_is_inherited_from_the_same_recognition_gate_without_a_partial_write testinde oluşturulup ortak aramanın ret kodu, değişmez snapshot ve Undo yokluğu sınanır (ADR0871)."),
-    ("cad.blocks.convert", "block_refused", "Yazmadan önce aynı tanım block_rules ile doğrulanır; add_block reddi yalnız savunmadır. Yeni tanım saf analitik üyelerden ve yeni UUID ile oluşur; yinelenen ad ortak durumda duplicate_block olur (ADR0871)."),
-    ("cad.blocks.convert", "layer_not_found", "Kaynak ve aday nesneler geçerli belgeden okunur; kayıp katman bir dosya bütünlüğü hatasıdır. Dönüşüm katmanı istemciden ayrı almaz; ortak katman denetiminin savunma kodudur (ADR0871)."),
-    ("cad.blocks.convert", "not_a_layer", "Geçerli belge nesnesi bir gruba çizilmez; dönüşüm katmanını kaynağından alır. Grup katman savunması ortak checks::layer yolundadır; kilitli katmanın gerçek reddi dönüşüm ortak durumunda sınanır (ADR0871)."),
-    ("cad.blocks.find", "recognition_scope_limit", "50 001 nesnelik liste ortak JSON'a şişirilmez; blocks_find::limits_and_cancellation_keep_the_source_exact testinde üretilip ret ve değişmezlik sınanır (ADR 0866)"),
-    ("cad.parameters.edit", "parameter_kind", "Birim boyutu ön denetimi parameter_dimensions.rs içinde validate/plan/execute eşitliği, bağımlı üs, eski pi, atomiklik ve Undo ile sınanır; ortak ADR0336 durumları eski sayısal grameri korur (ADR0840)."),
-    ("cad.constraints.query", "parameter_units_legacy", "Eski pi ifadesi Number türünde olan V2 dosyası parameter_dimensions.rs içinde salt okunur uyarı, yeniden adlandırma, açık onarım ve Undo ile sınanır; yeni komutlar bu uyumsuz ifadeyi oluşturamaz (ADR0840)."),
     (
-        "cad.entities.isolate", "invalid_input",
+        "cad.survey.baselines",
+        "network_too_large",
+        "Zarfı 30 milyon girdiyi aşan ağ (180 × 180 istasyonluk ızgara 35 milyon) bir ortak durumda taşınmaz; sınır geometry-core'un gnss::adjust'ında MAX_ENVELOPE ile denetlenir, gnss::tests::large_grids ölçer (ADR 4560).",
+    ),
+    (
+        "map.survey.network",
+        "network_too_large",
+        "Zarfı 30 milyon girdiyi aşan ağ bir ortak durumda taşınmaz; arşivin ağı aynı çekirdekten (gnss::adjust, MAX_ENVELOPE) geçer (ADR 1740, ADR 4560).",
+    ),
+    (
+        "map.survey.edit",
+        "network_too_large",
+        "1500 bilinmeyenin (500 işaret) üstü bir ortak durumda taşınmaz; ağın kabulü map.survey.network'ün çözümlemesinden geçer (ADR 1740).",
+    ),
+    (
+        "map.survey.network",
+        "invalid_covariance",
+        "Arşivin kuralı (map_survey_problem) pozitif tanımlı olmayan baz kovaryansını yazdırmaz; varyans çarpanı 0'dan büyük olduğundan ölçeklenmiş kovaryans, σ'ları 0'dan büyük olduğundan bilinen noktanınki de pozitif tanımlı kalır (ADR 1740).",
+    ),
+    (
+        "map.survey.edit",
+        "invalid_covariance",
+        "Ağın çekirdeğe giden kovaryansları arşivin kuralıyla hep pozitif tanımlıdır (map.survey.network'ün gerekçesi); bazın kendi kovaryans reddi invalid_survey_value'dur (ADR 1740).",
+    ),
+    (
+        "map.features.reconcile",
+        "invalid_profile",
+        "Okunamayan proje profili ortak profil okuyucusundan (profiles::profile_only) gelir; cad.profiles.check'in ve .apply'ın ortak durumlarında sınanır (ADR 1760).",
+    ),
+    (
+        "map.features.code",
+        "invalid_profile",
+        "Okunamayan proje profili ortak profil okuyucusundan (profiles::profile_only) gelir; cad.profiles.check'in ve .apply'ın ortak durumlarında sınanır.",
+    ),
+    (
+        "cad.standards.install",
+        "no_standard",
+        "Bağlı standart olmayan çizim review_take::installing_needs_a_readable_bound_standard testinde sınanır.",
+    ),
+    (
+        "cad.standards.install",
+        "invalid_standard",
+        "Okunamayan bağlı standart review_take::installing_needs_a_readable_bound_standard testinde sınanır.",
+    ),
+    (
+        "cad.standards.palettes",
+        "invalid_standard",
+        "cad.settings.set okunmayan paketi bağlamaz; dosyada kalmış okunmayan paketin reddi review_take::palettes_need_a_readable_bound_standard testinde sınanır.",
+    ),
+    (
+        "cad.standards.install",
+        "block_refused",
+        "KentOS kitaplıklarının blokları kurallara uyar; kurallara uymayan bir proje kitaplığı office_profiles::a_library_block_that_breaks_the_block_rules_is_refused testinde sınanır.",
+    ),
+    (
+        "cad.linetypes.edit",
+        "pattern_too_long_for_lin",
+        "12 öğeyi aşan desenin LIN dışa aktarımı review_take::a_long_pattern_is_kept_and_left_out_of_a_lin_file testinde sınanır.",
+    ),
+    (
+        "cad.drawing.take",
+        "unknown_block",
+        "Tanımı kaybolmuş blok yerleştirmesi review_take::an_insert_whose_definition_the_drawing_lost_is_not_taken testinde sınanır.",
+    ),
+    (
+        "cad.drawing.take",
+        "block_definition_differs",
+        "Tanımı değişmiş bloğun yerleştirmesini alma review_take::a_changed_definition_makes_the_insert_note_stale_and_the_take_warns testinde sınanır.",
+    ),
+    (
+        "cad.review.notes.edit",
+        "too_many_review_replies",
+        "200 yanıt sınırı review_take::replies_and_notes_stop_at_their_limits testinde sınanır.",
+    ),
+    (
+        "cad.review.notes.edit",
+        "too_many_review_notes",
+        "10 000 not sınırı review_take::replies_and_notes_stop_at_their_limits testinde sınanır.",
+    ),
+    (
+        "cad.delivery.edit",
+        "too_many_deliveries",
+        "1000 kayıt sınırı delivery_limit::the_thousand_and_first_delivery_is_refused_and_nothing_is_written testinde sınanır.",
+    ),
+    // Baskı stili tablosu (docs/adr/1130).
+    (
+        "cad.plotstyles.import",
+        "plot_style_file_too_large",
+        "4 MiB'tan büyük bir tablo ortak durum olarak repoya konmaz; sınır plot_style_files_beyond_the_limit_and_unreadable_files_are_refused testinde sınanır.",
+    ),
+    (
+        "cad.plotstyles.import",
+        "book_unreadable",
+        "Ortak kurulum geçersiz kitap vermez; kitap cad.sheets.details'in aynı read_project_sheets yolundan okunur ve orada korunur (ADR 1090).",
+    ),
+    (
+        "cad.plotstyles.import",
+        "file_unreadable",
+        "Okuma izni olmayan dosya ortak durumda kurulamaz (repo izinleri taşımaz); plot_style_files_beyond_the_limit_and_unreadable_files_are_refused testinde sınanır.",
+    ),
+    // Veri çıkarımı (docs/adr/1030).
+    (
+        "cad.extract.run",
+        "extraction_too_large",
+        "Bir milyon oluşum sınırı ortak durumda yazılamayacak kadar büyük bir çizim ister; sınır kentos_formats::extract::Walk::counted'te tek yerdedir ve çıkarımı kesmeden reddeder.",
+    ),
+    (
+        "cad.extract.table",
+        "extraction_too_large",
+        "cad.extract.run ile aynı sınır ve aynı kod; tablo komutu aynı çıkarımı çağırır.",
+    ),
+    (
+        "cad.extract.run",
+        "extraction_too_deep",
+        "Belgeler blok iç içeliğini 16 düzeyde keser (kentos_contracts::blocks); bu uyarı yalnız bu kurala uymayan bir dosyaya karşı savunmadır.",
+    ),
+    (
+        "cad.extract.table",
+        "extraction_too_deep",
+        "cad.extract.run ile aynı savunma uyarısı.",
+    ),
+    (
+        "cad.tables.edit",
+        "extraction_too_deep",
+        "cad.extract.run ile aynı savunma uyarısı; yenileme aynı çıkarımı çağırır.",
+    ),
+    (
+        "cad.extract.table",
+        "xref_unloaded",
+        "Yüklü olmayan dış referans uyarısı cad.extract.run.json'da verilir; tablo komutu aynı çıkarımın uyarılarını aynen aktarır.",
+    ),
+    (
+        "cad.tables.edit",
+        "xref_unloaded",
+        "Yüklü olmayan dış referans uyarısı cad.extract.run.json'da verilir; yenileme aynı çıkarımın uyarılarını aynen aktarır.",
+    ),
+    (
+        "cad.tables.edit",
+        "dimension_overrides",
+        "Elle yazılmış ölçü uyarısı cad.extract.run.json'un metraj durumlarında ve cad.extract.table.json'da verilir; yenileme aynı çıkarımın uyarılarını aktarır.",
+    ),
+    (
+        "road.volumes.query",
+        "volume_curve_past_centre",
+        "Kesitin kurbun merkezini geçmesi için iç yanının yarıçaptan (ortak çizimde 150 m) uzun olması gerekir; ortak çizimin arazisi buna yetmez. Kural kentos_road::volume::effective'tedir ve tests/all/curve_volumes.rs'de (merkezi geçen kesit durumu) sınanır; kübaj aynı fonksiyonu kullanır.",
+    ),
+    (
+        "cad.standards.resolve",
+        "invalid_standard",
+        "Standart paketinin geçersizliği standards_cmd::project_standards_resolve_by_order testinde sınanır.",
+    ),
+    (
+        "cad.standards.resolve",
+        "no_standard",
+        "Boş belge listesi standards_cmd::project_standards_resolve_by_order testinde sınanır.",
+    ),
+    (
+        "cad.standards.conflicts",
+        "invalid_standard",
+        "Okunamayan bağlı belge standards_cmd::project_standard_conflicts_report_sources_and_fields_without_mutating testinde sınanır.",
+    ),
+    (
+        "cad.entities.delete",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.entities.transform",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.entities.edit",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.hatches.edit",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.entities.trim",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.entities.extend",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.entities.fillet",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.entities.chamfer",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.entities.stretch",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.entities.break",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.entities.join",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.entities.lengthen",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.changeset.apply",
+        "hatch_association_lost",
+        "Ortak işlem raporu tarama bağını kaybettiğinde uyarır; kaynak silme ve geri alma drawing_inspect::deleted_source_warns_and_undo_restores_association testinde ve arayüzde sınanır.",
+    ),
+    (
+        "cad.drawing.inspect",
+        "inspection_scope_limit",
+        "drawing_inspect::caps_and_stale_revision_are_explicit_and_read_only testinde sınır ve revizyon reddi veya kısmi sonuç doğrulanır; ortak durum dosyası küçük girdiler kullanır.",
+    ),
+    (
+        "cad.drawing.inspect",
+        "inspection_truncated",
+        "drawing_inspect::caps_and_stale_revision_are_explicit_and_read_only testinde sınır ve revizyon reddi veya kısmi sonuç doğrulanır; ortak durum dosyası küçük girdiler kullanır.",
+    ),
+    (
+        "cad.drawing.inspect",
+        "invalid_revision",
+        "drawing_inspect::caps_and_stale_revision_are_explicit_and_read_only testinde sınır ve revizyon reddi veya kısmi sonuç doğrulanır; ortak durum dosyası küçük girdiler kullanır.",
+    ),
+    (
+        "cad.drawing.inspect",
+        "revision_conflict",
+        "drawing_inspect::caps_and_stale_revision_are_explicit_and_read_only testinde sınır ve revizyon reddi veya kısmi sonuç doğrulanır; ortak durum dosyası küçük girdiler kullanır.",
+    ),
+    (
+        "road.junctions.overlap",
+        "invalid_junction",
+        "Kavşak road_junctions::read ile okunur; okunamayan kavşak (kollar kesişmiyor, paralel) road.junctions.query'nin durumlarında aynı kodla sınanır (ADR 0910 §2).",
+    ),
+    (
+        "road.junctions.clearance",
+        "profile_curves_overlap",
+        "Kolların boykesitleri road.junctions.tie ile aynı yoldan (road_junctions::leg_profiles) kurulur; kurpları çakışan boykesit orada sınanır (ADR 0918 §3).",
+    ),
+    (
+        "road.terrains.coverage",
+        "terrain_unbuildable",
+        "Yüzey road_terrains::make ile kurulur; kurulamayan yüzey (aynı yerde farklı kotlar, kesişen kırık hatlar) road.terrains.query ve .create'in durumlarında aynı kodla sınanır (ADR 0900 §11).",
+    ),
+    (
+        "road.terrains.lowconfidence",
+        "terrain_unbuildable",
+        "Yüzey road_terrains::make ile kurulur; kurulamayan yüzey road.terrains.query ve .create'in durumlarında aynı kodla sınanır (ADR 0900 §11).",
+    ),
+    (
+        "road.corridors.water",
+        "corridor_folded",
+        "Komut koridorun kendi uyarılarını road_corridors::make ile aynen geçirir; katlanan şerit road.corridors.query'nin dar kurp durumunda sınanır (ADR 0905).",
+    ),
+    (
+        "road.terrains.density",
+        "terrain_unbuildable",
+        "Yüzey road_terrains::make ile kurulur; kurulamayan yüzey road.terrains.query ve .create'in durumlarında aynı kodla sınanır (ADR 0900 §11).",
+    ),
+    (
+        "road.terrains.sparse",
+        "terrain_unbuildable",
+        "Yüzey road_terrains::make ile kurulur; kurulamayan yüzey road.terrains.query ve .create'in durumlarında aynı kodla sınanır (ADR 0900 §11).",
+    ),
+    (
+        "road.terrains.repair",
+        "terrain_unbuildable",
+        "Bırakılacak yer yüzeyin bir nokta kaydı olmalı; kaydı olan ama kurulamayan yüzey (aynı yerde farklı kotlar, kesişen kırık hatlar) road.terrains.query ve .create'in durumlarında sınanır (ADR 0900 §11); onarım onu aynı kodla reddeder (ADR 0916 §6).",
+    ),
+    (
+        "road.drainage.query",
+        "invalid_culvert",
+        "Menfezin girişi koridorundan okunur; koridoru okunamayan menfezin reddi road.culverts.query'nin durumlarında sınanır (ADR 0909 §2).",
+    ),
+    (
+        "cad.pointclouds.register",
+        "too_many_cloud_points",
+        "Bir bulut en çok 400 000 voksel noktası verir (REGISTER_MOST_POINTS) ve bir çağrı en çok 200 milyon nokta okur; ortak durumun taramaları 2 400 voksel noktası verir, okuma sınırı cad.pointclouds.region'ın durumlarında sınanır (ADR 0552, 1800).",
+    ),
+    (
+        "cad.pointclouds.overlap",
+        "too_many_cloud_points",
+        "Bir çağrı en çok 200 milyon nokta okur (POINTCLOUD_MOST_COUNTED); ortak durumun dört taraması bu sınırın çok altında, sınır cad.pointclouds.region'ın durumlarında sınanır (ADR 0552, 1500).",
+    ),
+    (
+        "cad.pointclouds.register",
+        "cloud_source_unreadable",
+        "Taramalar betiğin yazdığı metin dosyalarıdır, her durumda okunur; okunamayan kaynağın uyarısı pointcloud_areas::Scan'ındır ve cad.pointclouds.region'ın durumlarında sınanır (ADR 0552, 1800).",
+    ),
+    (
+        "cad.pointclouds.overlap",
+        "cloud_source_unreadable",
+        "Taramalar betiğin yazdığı metin dosyalarıdır, her durumda okunur; okunamayan kaynağın uyarısı pointcloud_areas::Scan'ındır ve cad.pointclouds.region'ın durumlarında sınanır (ADR 0552, 1500).",
+    ),
+    (
+        "road.terrains.cloud",
+        "too_many_cloud_points",
+        "Bir çağrı en çok 200 milyon nokta okur (POINTCLOUD_MOST_COUNTED); ortak durumun bulutu bu sınırın çok altında, sınır cad.pointclouds.region'ın durumlarında sınanır (ADR 0552).",
+    ),
+    (
+        "map.survey.edit",
+        "survey_full",
+        "GNSS arşivi en çok 1000 kampanya, 10 000 oturum, 100 000 çözüm, 10 000 nokta ve 10 000 dayanan tutar; sınır sözleşmenin map_survey_problem kuralındadır, o kadar kayıtlı çizim ortak durumda taşınmaz (ADR 1340 §2).",
+    ),
+    (
+        "map.survey.edit",
+        "geoid_missing",
+        "Projenin kotları ortometrikse kabul noktası projenin geoit modeliyle taşınır; model bu cihazda yoksa zincirin reddi aynen döner ve cad.crs.transform'un durumlarında sınanır (ADR 0631 §1).",
+    ),
+    (
+        "map.survey.edit",
+        "no_system",
+        "Koordinat sistemi olmayan (yerel) harita projesine nokta zincirle taşınamaz; zincirin reddi aynen döner ve cad.crs.transform'un durumlarında sınanır (ADR 1230 §1).",
+    ),
+    (
+        "map.survey.edit",
+        "velocity_missing",
+        "Kampanyanın hız ızgarası bu cihazın kitaplığında yoksa zincirin reddi aynen döner; ret cad.crs.transform'un durumlarında sınanır (ADR 0631 §3).",
+    ),
+    (
+        "map.work.edit",
+        "work_full",
+        "Harita işi en çok 1000 öğe ve 10 000 türetme kaydı tutar; sınır sözleşmenin map_work_problem kuralındadır; 1000 öğelik çizim ortak durumda taşınmaz (ADR 1200 §1).",
+    ),
+    (
+        "road.project.rebuild",
+        "road_drawings_full",
+        "Yeniden üretme kaydı yerinde yazar, sayıyı artırmaz; sınır sözleşmenin a_drawing_record_is_judged testinde (ADR 0911 §3).",
+    ),
+    (
+        "road.alignments.label",
+        "road_drawings_full",
+        "Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1).",
+    ),
+    (
+        "road.profiles.draw",
+        "road_drawings_full",
+        "Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1).",
+    ),
+    (
+        "road.sections.draw",
+        "road_drawings_full",
+        "Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1).",
+    ),
+    (
+        "road.profiles.draw",
+        "invalid_road_corridor",
+        "Şev ve platform satırları koridoru road_corridors::make ile kurar; bu ret koridor kurulamayınca gelir ve road.corridors.draw/query durumlarında sınanır (ADR 0989).",
+    ),
+    (
+        "road.profiles.draw",
+        "no_terrain",
+        "Şev ve platform satırları koridoru road_corridors::make ile kurar; bu ret koridor kurulamayınca gelir ve road.corridors.draw/query durumlarında sınanır (ADR 0989).",
+    ),
+    (
+        "road.sheets.plan",
+        "unknown_corridor",
+        "Pafta, şev ve platform satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun corridor durumlarında sınanır (ADR 0989).",
+    ),
+    (
+        "road.sheets.plan",
+        "invalid_label",
+        "Pafta, şev ve platform satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun corridor durumlarında sınanır (ADR 0989).",
+    ),
+    (
+        "road.sheets.plan",
+        "invalid_road_corridor",
+        "Pafta, şev ve platform satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun corridor durumlarında sınanır (ADR 0989).",
+    ),
+    (
+        "road.sheets.plan",
+        "no_terrain",
+        "Pafta, şev ve platform satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun corridor durumlarında sınanır (ADR 0989).",
+    ),
+    (
+        "road.profiles.draw",
+        "invalid_haul",
+        "Hafriyat satırları Brükneri road_hauls::read ve kübajı road_volumes::compute_on ile okur; bu ret onlar okunamayınca gelir ve road.hauls.query durumlarında sınanır (ADR 0995).",
+    ),
+    (
+        "road.profiles.draw",
+        "unknown_volume",
+        "Hafriyat satırları Brükneri road_hauls::read ve kübajı road_volumes::compute_on ile okur; bu ret onlar okunamayınca gelir ve road.hauls.query durumlarında sınanır (ADR 0995).",
+    ),
+    (
+        "road.sheets.plan",
+        "unknown_haul",
+        "Pafta, hafriyat satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun haul durumlarında ya da road.hauls.query'de sınanır (ADR 0995).",
+    ),
+    (
+        "road.sheets.plan",
+        "invalid_haul",
+        "Pafta, hafriyat satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun haul durumlarında ya da road.hauls.query'de sınanır (ADR 0995).",
+    ),
+    (
+        "road.sheets.plan",
+        "unknown_volume",
+        "Pafta, hafriyat satırlarını road.profiles.draw'ın denetiminden geçirir; bu ret onun haul durumlarında ya da road.hauls.query'de sınanır (ADR 0995).",
+    ),
+    (
+        "road.corridors.draw",
+        "road_drawings_full",
+        "Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1).",
+    ),
+    (
+        "road.guardrails.draw",
+        "road_drawings_full",
+        "Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1).",
+    ),
+    (
+        "road.culverts.draw",
+        "road_drawings_full",
+        "Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1).",
+    ),
+    (
+        "road.walls.draw",
+        "road_drawings_full",
+        "Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1).",
+    ),
+    (
+        "road.platforms.draw",
+        "road_drawings_full",
+        "Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1).",
+    ),
+    (
+        "road.platforms.draw",
+        "invalid_platform",
+        "Çizimin denetimi platformu okuyarak yapar; okunamayan platform (kurulamayan yüzey, tesviye edilemeyen sınır) road.platforms.query'nin durumlarında, sınır retleri road.platforms.edit'te sınanır; tanımı geçerli bir platform yazıldıktan sonra yüzeyin bozulması ayrı bir sahne ister.",
+    ),
+    (
+        "road.junctions.draw",
+        "road_drawings_full",
+        "Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1).",
+    ),
+    (
+        "road.terrains.contours",
+        "road_drawings_full",
+        "Proje en çok 1000 yol çizimi tutar; sınır sözleşmenin a_drawing_record_is_judged testinde, kaydı geri alan adım road_drawings birim testinde sınanır (ADR 0911 §1).",
+    ),
+    (
+        "road.stakeout.send",
+        "stakeout_unsolved",
+        "Ortak çizimde kesitsiz km yalnız yüzeysiz koridorda olur, o da hiç nokta vermez ve gönderme reddedilir; uyarının metni road.stakeout.query'nin durumlarında sınanır, gönderme cetvelin uyarılarını olduğu gibi taşır (ADR 0908 §9).",
+    ),
+    (
+        "cad.blocks.convert",
+        "recognition_scope_limit",
+        "Toplam 204000 köşe blocks_convert::aggregate_vertex_limit_is_inherited_from_the_same_recognition_gate_without_a_partial_write testinde oluşturulup ortak aramanın ret kodu, değişmez snapshot ve Undo yokluğu sınanır (ADR0871).",
+    ),
+    (
+        "cad.blocks.convert",
+        "block_refused",
+        "Yazmadan önce aynı tanım block_rules ile doğrulanır; add_block reddi yalnız savunmadır. Yeni tanım saf analitik üyelerden ve yeni UUID ile oluşur; yinelenen ad ortak durumda duplicate_block olur (ADR0871).",
+    ),
+    (
+        "cad.blocks.convert",
+        "layer_not_found",
+        "Kaynak ve aday nesneler geçerli belgeden okunur; kayıp katman bir dosya bütünlüğü hatasıdır. Dönüşüm katmanı istemciden ayrı almaz; ortak katman denetiminin savunma kodudur (ADR0871).",
+    ),
+    (
+        "cad.blocks.convert",
+        "not_a_layer",
+        "Geçerli belge nesnesi bir gruba çizilmez; dönüşüm katmanını kaynağından alır. Grup katman savunması ortak checks::layer yolundadır; kilitli katmanın gerçek reddi dönüşüm ortak durumunda sınanır (ADR0871).",
+    ),
+    (
+        "cad.blocks.find",
+        "recognition_scope_limit",
+        "50 001 nesnelik liste ortak JSON'a şişirilmez; blocks_find::limits_and_cancellation_keep_the_source_exact testinde üretilip ret ve değişmezlik sınanır (ADR 0866)",
+    ),
+    (
+        "cad.parameters.edit",
+        "parameter_kind",
+        "Birim boyutu ön denetimi parameter_dimensions.rs içinde validate/plan/execute eşitliği, bağımlı üs, eski pi, atomiklik ve Undo ile sınanır; ortak ADR0336 durumları eski sayısal grameri korur (ADR0840).",
+    ),
+    (
+        "cad.constraints.query",
+        "parameter_units_legacy",
+        "Eski pi ifadesi Number türünde olan V2 dosyası parameter_dimensions.rs içinde salt okunur uyarı, yeniden adlandırma, açık onarım ve Undo ile sınanır; yeni komutlar bu uyumsuz ifadeyi oluşturamaz (ADR0840).",
+    ),
+    (
+        "cad.entities.isolate",
+        "invalid_input",
         "MAX_SELECT_ITEMS sınırından bir fazla UID, entities_select/isolation.rs içindeki isolation_limit_is_atomic testinde; büyük tekrarlı liste ortak JSON durumuna yazılmaz (ADR 0820).",
     ),
-    ("cad.walls.edit", "constraint_conflict", "Bağların çelişkisi cad.constraints.edit.arch.json'un cad.walls.edit adımlarında (sabit duvarı kaydırmak, kilitli katmandaki bağlı duvar) verilir; o dosyanın komutu cad.constraints.edit olduğundan sayım onu orada bulur (ADR 0770 §4)."),
-    ("cad.walls.edit", "constraints_relaxed", "Gevşeterek düzenleme cad.constraints.edit.arch.json'un cad.walls.edit adımında (relaxConstraints) verilir, uyarıları \"$any\" ile karşılaştırılır (ADR 0770 §4)."),
-    ("cad.walls.edit", "constraints_removed", "Kenar sayısı değişen duvarın bağları ADR 0337'deki gibi gider; uyarı kentos-domain'in constraints testlerinde sınanır (ADR 0770 §4)."),
-    ("cad.walls.edit", "invalid_constraint", "Mesafe'nin keep'inin bağı kuralına uymazsa invalid_constraint verilir; komutun kurduğu bağ hep uyduğu için yalnız savunmadır, aynı ret cad.constraints.edit.arch.json'un altı ret durumunda verilir (ADR 0770 §5)."),
-    ("cad.openings.edit", "opening_type_not_found", "Tipe döndür, Tipi yeniden uygula ve Tipe uygula açıklığın izlediği tipi projenin tablosunda arar; tip silinirken izleyenler ondan ayrıldığı (opening_type_in_use, detach) için komutlarla tipsiz izleyen kalmaz. Ret yalnız elle yazılmış bir dosyanın açıklığına karşı savunmadır; aynı arama cad.openingtypes.edit'in update ve cad.openings.query'nin type durumlarında verilir (ADR 0772)."),
-    ("cad.program.check", "cancelled", "Durdurma işin kendisine sorulur; ortak durum iş başlatmaz. program_scenes.rs'in kabul testi check_watched'ı durdurup Cancelled cevabını sınar (ADR 0773 §5)."),
-    ("cad.addresses.compare", "register_cut", "Uyarı 250 000 satırdan uzun kayıtta verilir; o boyda bir dosya ortak durumlara konmaz, addresses_compare.rs'in a_register_longer_than_is_read_says_so testi sınırdan uzun bir kayıtla sınar (ADR 0736)."),
-    ("file.export.block", "dimension_set_owned", "Dosya yazımı ve mevcut dosyanın korunumu headless dimension_set_exports.rs içinde gerçek validate/plan/execute + açık detach sonrası byte doğrulamasıyla sınanır (ADR0695)."),
-    ("cad.entities.copy", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),
-    ("cad.entities.array", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),
-    ("cad.entities.transform", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),
-    ("cad.blocks.define", "dimension_set_owned", "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695)."),
-
-    ("cad.slabs.create", "invalid_attribute", "Katmanın alanlarına göre öznitelik her oluşturan komutun ortak denetimidir (checks::object_attrs); uyumsuz alan cad.polygon.create ve cad.entities.create ortak durumlarında sınanır (ADR 0199 §2, ADR 0722)."),
-    ("cad.slabs.create", "attribute_required", "Katmanın zorunlu alanı her oluşturan komutun ortak denetimidir (checks::object_attrs); cad.polygon.create ortak durumlarında sınanır (ADR 0199 §2, ADR 0722)."),
-    ("cad.spaces.separators","invalid_attribute","Oluşturma mevcut polyline::plan_in/checks::object_attrs yolunu kullanır; alan doğrulaması cad.polyline.create ve cad.polygon.create bağımsız durumlarında sınanır (ADR 0679)."),
-    ("cad.spaces.separators","attribute_required","Zorunlu alan denetimi değiştirilmeden mevcut polyline::plan_in/checks::object_attrs yoluna gider (ADR 0679)."),
-    ("cad.spaces.separators","slots_exhausted","Document::add_many bütün toplu yazmayı reddeder; son slot ve atomiklik domain the_last_slot_is_given_and_then_adding_is_refused_whole testinde sınanır (ADR 0679)."),
-    ("cad.spaces.discover", "space_not_enclosed", "Bulunan seed aynı değişmez duvar ağı üzerinde mevcut spaces_create yazıcısıyla yeniden denetlenir. Eşzamanlı geometri değişimi mümkün değildir; bu savunma korunur, asıl kapanmama yolu cad.spaces.create ortak durumlarında sınanır (ADR 0671)."),
-    ("cad.arch.recognize", "invalid_wall", "Planı tanı her duvarı çizilen bir duvar gibi denetler (walls::build): okuyucu duvarı iki yüzünün bandından, kalınlığı en ince ile en kalın duvar arasında ve uçları ayrı olarak kurar; ortak durumların bantları 0,05–0,6 m kalındır, ret ancak bandın bir duvarın sınırlarının (en çok 100 m) dışına düştüğü bir okumada gelir (ADR 8048)."),
-    ("cad.arch.recognize", "opening_off_wall", "Okuyucu açıklığı duvarın yüzlerindeki boşluktan, duvarın uçları arasında çıkarır ve duvar kendi yüzlerinin ortasına, birleştiği duvarlara doğru uzar; yerleşimin denetimi (openings::placed) çizilen açıklığın savunması olarak kalır (ADR 8048)."),
-    ("cad.walls.partition", "attribute_required", "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02)."),
-    ("cad.walls.partition", "invalid_attribute", "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02)."),
-    ("cad.walls.partition", "coincident_points", "Yalnız iki noktalı düz yol ve eksen hizası üretilir; yolun kaynakta çakışması çekirdekte invalid_wall olur. Kalan çok küçük/büyük sayı ve yüz ötelemesi savunması mevcut walls::build/drawable yolundadır; onun ortak duvar başvuruları korunur (ARCH-DRAW-02)."),
-    ("cad.walls.partition", "wall_collapses", "Yalnız iki noktalı düz yol ve eksen hizası üretilir; yolun kaynakta çakışması çekirdekte invalid_wall olur. Kalan çok küçük/büyük sayı ve yüz ötelemesi savunması mevcut walls::build/drawable yolundadır; onun ortak duvar başvuruları korunur (ARCH-DRAW-02)."),
-    ("cad.walls.partition", "wall_join_acute", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
-    ("cad.walls.partition", "wall_join_crowded", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
-    ("cad.walls.partition", "wall_join_overlap", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
-    ("cad.walls.partition", "wall_join_unresolved", "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02)."),
     (
-        "cad.walls.rectangle", "coincident_points",
+        "cad.walls.edit",
+        "constraint_conflict",
+        "Bağların çelişkisi cad.constraints.edit.arch.json'un cad.walls.edit adımlarında (sabit duvarı kaydırmak, kilitli katmandaki bağlı duvar) verilir; o dosyanın komutu cad.constraints.edit olduğundan sayım onu orada bulur (ADR 0770 §4).",
+    ),
+    (
+        "cad.walls.edit",
+        "constraints_relaxed",
+        "Gevşeterek düzenleme cad.constraints.edit.arch.json'un cad.walls.edit adımında (relaxConstraints) verilir, uyarıları \"$any\" ile karşılaştırılır (ADR 0770 §4).",
+    ),
+    (
+        "cad.walls.edit",
+        "constraints_removed",
+        "Kenar sayısı değişen duvarın bağları ADR 0337'deki gibi gider; uyarı kentos-domain'in constraints testlerinde sınanır (ADR 0770 §4).",
+    ),
+    (
+        "cad.walls.edit",
+        "invalid_constraint",
+        "Mesafe'nin keep'inin bağı kuralına uymazsa invalid_constraint verilir; komutun kurduğu bağ hep uyduğu için yalnız savunmadır, aynı ret cad.constraints.edit.arch.json'un altı ret durumunda verilir (ADR 0770 §5).",
+    ),
+    (
+        "cad.openings.edit",
+        "opening_type_not_found",
+        "Tipe döndür, Tipi yeniden uygula ve Tipe uygula açıklığın izlediği tipi projenin tablosunda arar; tip silinirken izleyenler ondan ayrıldığı (opening_type_in_use, detach) için komutlarla tipsiz izleyen kalmaz. Ret yalnız elle yazılmış bir dosyanın açıklığına karşı savunmadır; aynı arama cad.openingtypes.edit'in update ve cad.openings.query'nin type durumlarında verilir (ADR 0772).",
+    ),
+    (
+        "cad.program.check",
+        "cancelled",
+        "Durdurma işin kendisine sorulur; ortak durum iş başlatmaz. program_scenes.rs'in kabul testi check_watched'ı durdurup Cancelled cevabını sınar (ADR 0773 §5).",
+    ),
+    (
+        "cad.addresses.compare",
+        "register_cut",
+        "Uyarı 250 000 satırdan uzun kayıtta verilir; o boyda bir dosya ortak durumlara konmaz, addresses_compare.rs'in a_register_longer_than_is_read_says_so testi sınırdan uzun bir kayıtla sınar (ADR 0736).",
+    ),
+    (
+        "file.export.block",
+        "dimension_set_owned",
+        "Dosya yazımı ve mevcut dosyanın korunumu headless dimension_set_exports.rs içinde gerçek validate/plan/execute + açık detach sonrası byte doğrulamasıyla sınanır (ADR0695).",
+    ),
+    (
+        "cad.entities.copy",
+        "dimension_set_owned",
+        "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695).",
+    ),
+    (
+        "cad.entities.array",
+        "dimension_set_owned",
+        "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695).",
+    ),
+    (
+        "cad.entities.transform",
+        "dimension_set_owned",
+        "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695).",
+    ),
+    (
+        "cad.blocks.define",
+        "dimension_set_owned",
+        "Bu komutun ortak durum dosyası otomatik ölçü tarifi kurmaz; V2 tarifli dimension_set_copy.rs her validate/plan/execute yolunun yazmadan ret ve açık detach sonrasını sınar (ADR0695).",
+    ),
+    (
+        "cad.slabs.create",
+        "invalid_attribute",
+        "Katmanın alanlarına göre öznitelik her oluşturan komutun ortak denetimidir (checks::object_attrs); uyumsuz alan cad.polygon.create ve cad.entities.create ortak durumlarında sınanır (ADR 0199 §2, ADR 0722).",
+    ),
+    (
+        "cad.slabs.create",
+        "attribute_required",
+        "Katmanın zorunlu alanı her oluşturan komutun ortak denetimidir (checks::object_attrs); cad.polygon.create ortak durumlarında sınanır (ADR 0199 §2, ADR 0722).",
+    ),
+    (
+        "cad.spaces.separators",
+        "invalid_attribute",
+        "Oluşturma mevcut polyline::plan_in/checks::object_attrs yolunu kullanır; alan doğrulaması cad.polyline.create ve cad.polygon.create bağımsız durumlarında sınanır (ADR 0679).",
+    ),
+    (
+        "cad.spaces.separators",
+        "attribute_required",
+        "Zorunlu alan denetimi değiştirilmeden mevcut polyline::plan_in/checks::object_attrs yoluna gider (ADR 0679).",
+    ),
+    (
+        "cad.spaces.separators",
+        "slots_exhausted",
+        "Document::add_many bütün toplu yazmayı reddeder; son slot ve atomiklik domain the_last_slot_is_given_and_then_adding_is_refused_whole testinde sınanır (ADR 0679).",
+    ),
+    (
+        "cad.spaces.discover",
+        "space_not_enclosed",
+        "Bulunan seed aynı değişmez duvar ağı üzerinde mevcut spaces_create yazıcısıyla yeniden denetlenir. Eşzamanlı geometri değişimi mümkün değildir; bu savunma korunur, asıl kapanmama yolu cad.spaces.create ortak durumlarında sınanır (ADR 0671).",
+    ),
+    (
+        "cad.arch.recognize",
+        "invalid_wall",
+        "Planı tanı her duvarı çizilen bir duvar gibi denetler (walls::build): okuyucu duvarı iki yüzünün bandından, kalınlığı en ince ile en kalın duvar arasında ve uçları ayrı olarak kurar; ortak durumların bantları 0,05–0,6 m kalındır, ret ancak bandın bir duvarın sınırlarının (en çok 100 m) dışına düştüğü bir okumada gelir (ADR 8048).",
+    ),
+    (
+        "cad.arch.recognize",
+        "opening_off_wall",
+        "Okuyucu açıklığı duvarın yüzlerindeki boşluktan, duvarın uçları arasında çıkarır ve duvar kendi yüzlerinin ortasına, birleştiği duvarlara doğru uzar; yerleşimin denetimi (openings::placed) çizilen açıklığın savunması olarak kalır (ADR 8048).",
+    ),
+    (
+        "cad.walls.partition",
+        "attribute_required",
+        "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02).",
+    ),
+    (
+        "cad.walls.partition",
+        "invalid_attribute",
+        "Bölmenin öznitelikleri değişmeden walls_create::plan_in/execute ve checks::object_attrs yoluna gider; zorunlu/uyumsuz alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-02).",
+    ),
+    (
+        "cad.walls.partition",
+        "coincident_points",
+        "Yalnız iki noktalı düz yol ve eksen hizası üretilir; yolun kaynakta çakışması çekirdekte invalid_wall olur. Kalan çok küçük/büyük sayı ve yüz ötelemesi savunması mevcut walls::build/drawable yolundadır; onun ortak duvar başvuruları korunur (ARCH-DRAW-02).",
+    ),
+    (
+        "cad.walls.partition",
+        "wall_collapses",
+        "Yalnız iki noktalı düz yol ve eksen hizası üretilir; yolun kaynakta çakışması çekirdekte invalid_wall olur. Kalan çok küçük/büyük sayı ve yüz ötelemesi savunması mevcut walls::build/drawable yolundadır; onun ortak duvar başvuruları korunur (ARCH-DRAW-02).",
+    ),
+    (
+        "cad.walls.partition",
+        "wall_join_acute",
+        "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02).",
+    ),
+    (
+        "cad.walls.partition",
+        "wall_join_crowded",
+        "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02).",
+    ),
+    (
+        "cad.walls.partition",
+        "wall_join_overlap",
+        "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02).",
+    ),
+    (
+        "cad.walls.partition",
+        "wall_join_unresolved",
+        "Yeni duvar mevcut walls_create planı ve yazmasıyla eklenir; mevcut walls::join_warnings davranışı cad.walls.create ortak birleşim başvurularında sınanır. Bölmenin seçilmiş iki sınırdaki T ve mahal/kapı korunumu ayrı native kabulündedir (ARCH-DRAW-02).",
+    ),
+    (
+        "cad.walls.rectangle",
+        "coincident_points",
         "Türetilmiş dört köşe mevcut walls::path_numbers ile denetlenir; çok büyük sonlu koordinatta yuvarlanıp aynı yere gelen köşeler bu miras ret yolundadır. Olağan dört çeyrek/uzak koordinat başvuruları farklı köşeler üretir (ARCH-DRAW-01).",
     ),
     (
-        "cad.walls.rectangle", "wall_collapses",
+        "cad.walls.rectangle",
+        "wall_collapses",
         "Mevcut walls::drawable yüz ötelemesi güvenlik denetimi korunur. Dikdörtgende iç boşluğun kapanması yeni komutta invalid_wall/frame olur; kalan sayısal öteleme hataları ortak wall_collapses yolunu korur (ARCH-DRAW-01).",
     ),
     (
-        "cad.walls.rectangle", "invalid_attribute",
+        "cad.walls.rectangle",
+        "invalid_attribute",
         "walls_create::plan_in ve execute aynı checks::object_attrs yolunu çalıştırır; alan doğrulaması cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-01).",
     ),
     (
-        "cad.walls.rectangle", "attribute_required",
+        "cad.walls.rectangle",
+        "attribute_required",
         "walls_create::plan_in ve execute aynı checks::object_attrs yolunu çalıştırır; zorunlu alanlar cad.walls.create ve cad.polygon.create ortak başvurularında sınanır (ARCH-DRAW-01).",
     ),
     (
-        "cad.walls.rectangle", "wall_join_overlap",
+        "cad.walls.rectangle",
+        "wall_join_overlap",
         "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
     ),
     (
-        "cad.walls.rectangle", "wall_join_crowded",
+        "cad.walls.rectangle",
+        "wall_join_crowded",
         "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
     ),
     (
-        "cad.walls.rectangle", "wall_join_acute",
+        "cad.walls.rectangle",
+        "wall_join_acute",
         "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
     ),
     (
-        "cad.walls.rectangle", "wall_join_unresolved",
+        "cad.walls.rectangle",
+        "wall_join_unresolved",
         "Yeni kapalı duvar mevcut walls_create::plan_in ve execute ile üretilir; başka duvarlarla birleşim uyarısı ortak walls::join_warnings yoludur ve cad.walls.create başvurularında sınanır (ADR 0340, ARCH-DRAW-01).",
     ),
     (
@@ -1179,23 +1695,28 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "PDF altlığının çizgisine bağlanan ölçü; altlık PDF dosyasından yüklenir, ortak durumların çizimleri dosyasızdır: xrefs.rs'in a_dimension_on_a_pdf_underlay_is_said_to_be_read_off_paper'ı (ADR 0351 §6)",
     ),
     (
-        "cad.templates.apply", "*",
+        "cad.templates.apply",
+        "*",
         "Paket yalnız sabit doğrulanmış A3 ekleme işlemleri üretir; alttaki sheets_edit çekirdeğinin savunma retleri mirastır (çekirdek testleri ve sheets.edit başvuruları). Okunamayan mevcut kitap ve stale revision, templates_safe::unreadable_book_and_stale_revision_are_atomic_refusals testinde validate/plan/execute ile yazmasız doğrulanır (ADR 0659).",
     ),
     (
-        "cad.sheets.create", "*",
+        "cad.sheets.create",
+        "*",
         "Şablon okuyucusunun ve aynı cad.sheets.edit çekirdeğinin retleri; template.rs/validate.rs testleri ve 22 bağımsız oluşturma durumu (ADR 0592).",
     ),
     (
-        "cad.sheets.levels", "*",
+        "cad.sheets.levels",
+        "*",
         "Şablon okuyucusunun ve cad.sheets.edit çekirdeğinin retleri (cad.sheets.create'inkiler gibi; çekirdeğin testleri); kat retleri ve levels_have_sheets, not_fixed_map, bad_drawing_info ortak durumlarda (ADR 0718).",
     ),
     (
-        "cad.readjustment.sheets", "*",
+        "cad.readjustment.sheets",
+        "*",
         "Şablon okuyucusunun ve cad.sheets.edit çekirdeğinin retleri (cad.sheets.levels'inkiler gibi; çekirdeğin testleri) ve cad.readjustment.scope'un kendi retleri (onun ortak durumlarında); kısmen giren parsel, kimlik, şablon, seçenek ve var olan pafta retleri ortak durumlarda (ADR 2680).",
     ),
     (
-        "cad.sheets.details", "*",
+        "cad.sheets.details",
+        "*",
         "Şablon okuyucusunun ve cad.sheets.edit çekirdeğinin retleri (cad.sheets.levels'inkiler gibi; çekirdeğin testleri); detay, tablo parçası ve yerleşim retleri ortak durumlarda (ADR 1090).",
     ),
     (
@@ -1353,8 +1874,11 @@ fn refusal(doc: &mut Document, command: &str, input: Value) -> Option<String> {
 type Form = fn(&mut kentos_commands::Entity);
 fn curved_space(e: &mut kentos_commands::Entity) {
     if let kentos_commands::Entity::Space(s) = e {
-        s.space.parts = vec![serde_json::from_value(json!({"outer":{
-            "pts":[{"x":-1.,"y":0.},{"x":1.,"y":0.}],"bulges":[1.,1.]}})).unwrap()];
+        s.space.parts = vec![
+            serde_json::from_value(json!({"outer":{
+            "pts":[{"x":-1.,"y":0.},{"x":1.,"y":0.}],"bulges":[1.,1.]}}))
+            .unwrap(),
+        ];
         s.space.seed = None;
         s.space.columns = kentos_commands::SpaceColumns::Ignore;
     }
@@ -1362,20 +1886,37 @@ fn curved_space(e: &mut kentos_commands::Entity) {
 // Kind capabilities need a geometry that fits the requested operation. In particular a two-vertex arc
 // cannot stand in for a straight corner, and a straight polyline cannot prove the radius target's arc support.
 fn straight_path(e: &mut kentos_commands::Entity) {
-    if let kentos_commands::Entity::Polyline(p) | kentos_commands::Entity::Polygon(p)=e {
-        p.pts=vec![kentos_commands::Vec2{x:0.,y:0.},kentos_commands::Vec2{x:5.,y:0.},kentos_commands::Vec2{x:5.,y:5.}];
-        p.bulges=None;p.parts=None;p.holes=None;p.widths=None;p.zs=None;p.ms=None;
+    if let kentos_commands::Entity::Polyline(p) | kentos_commands::Entity::Polygon(p) = e {
+        p.pts = vec![
+            kentos_commands::Vec2 { x: 0., y: 0. },
+            kentos_commands::Vec2 { x: 5., y: 0. },
+            kentos_commands::Vec2 { x: 5., y: 5. },
+        ];
+        p.bulges = None;
+        p.parts = None;
+        p.holes = None;
+        p.widths = None;
+        p.zs = None;
+        p.ms = None;
     }
 }
 fn curved_path(e: &mut kentos_commands::Entity) {
     straight_path(e);
-    if let kentos_commands::Entity::Polyline(p) | kentos_commands::Entity::Polygon(p)=e {p.bulges=Some(vec![1.,0.,0.]);}
+    if let kentos_commands::Entity::Polyline(p) | kentos_commands::Entity::Polygon(p) = e {
+        p.bulges = Some(vec![1., 0., 0.]);
+    }
 }
 const FORMS: &[(&str, &str, Form)] = &[
     ("cad.blocks.find", "text", |e| {
-        if let kentos_commands::Entity::Text(t)=e {
-            t.label_of=None;t.label_scale=None;t.annotative=None;t.path=None;
-            t.paragraph=Default::default();t.text="TEST".into();t.height=1.;t.rotation=0.;
+        if let kentos_commands::Entity::Text(t) = e {
+            t.label_of = None;
+            t.label_scale = None;
+            t.annotative = None;
+            t.path = None;
+            t.paragraph = Default::default();
+            t.text = "TEST".into();
+            t.height = 1.;
+            t.rotation = 0.;
         }
     }),
     ("cad.dimensions.create", "polyline", curved_path),
@@ -1383,9 +1924,21 @@ const FORMS: &[(&str, &str, Form)] = &[
     ("cad.entities.fillet", "polyline", straight_path),
     ("cad.entities.chamfer", "polyline", straight_path),
     ("cad.points.construct", "polyline", straight_path),
-    ("cad.spaces.separators","polyline",|e|if let kentos_commands::Entity::Polyline(p)=e {
-        p.pts=vec![kentos_commands::Vec2{x:0.,y:0.},kentos_commands::Vec2{x:5.,y:0.}];
-        p.bulges=None;p.closed=false;p.parts=None;p.holes=None;p.widths=None;p.zs=None;p.ms=None;p.space_separator=None;
+    ("cad.spaces.separators", "polyline", |e| {
+        if let kentos_commands::Entity::Polyline(p) = e {
+            p.pts = vec![
+                kentos_commands::Vec2 { x: 0., y: 0. },
+                kentos_commands::Vec2 { x: 5., y: 0. },
+            ];
+            p.bulges = None;
+            p.closed = false;
+            p.parts = None;
+            p.holes = None;
+            p.widths = None;
+            p.zs = None;
+            p.ms = None;
+            p.space_separator = None;
+        }
     }),
     ("cad.dimensions.create", "space", curved_space),
     // Kat ver: a polyline takes a level as a room separator (docs/adr/0717).
@@ -1418,11 +1971,27 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
     // The command, the operation its targets name (none: the whole), the input for an object.
     type Make = fn(&str) -> Value;
     let tries: &[(&str, Option<&str>, Make)] = &[
-        ("cad.spaces.number",None,|u|json!({"uids":[u],"first":"TEST-001"})),
+        (
+            "cad.spaces.number",
+            None,
+            |u| json!({"uids":[u],"first":"TEST-001"}),
+        ),
         // A level the sample drawing lacks: a kind with a level is refused for it, another for its kind (docs/adr/0717).
-        ("cad.levels.assign", None, |u| json!({ "uids": [u], "level": "yok" })),
-        ("cad.spaces.separators",Some("set"),|u|json!({"operation":{"kind":"set","uids":[u]}})),
-        ("cad.spaces.separators",Some("clear"),|u|json!({"operation":{"kind":"clear","uids":[u]}})),
+        (
+            "cad.levels.assign",
+            None,
+            |u| json!({ "uids": [u], "level": "yok" }),
+        ),
+        (
+            "cad.spaces.separators",
+            Some("set"),
+            |u| json!({"operation":{"kind":"set","uids":[u]}}),
+        ),
+        (
+            "cad.spaces.separators",
+            Some("clear"),
+            |u| json!({"operation":{"kind":"clear","uids":[u]}}),
+        ),
         (
             "cad.entities.offset",
             None,
@@ -1516,7 +2085,11 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
         }),
         // Parsel alan çizelgesi: an area is listed, another object is refused as no parcel (docs/adr/9306).
         ("cad.parcels.report", None, |u| json!({ "uids": [u] })),
-        ("cad.parcels.table", None, |u| json!({ "uids": [u], "at": { "x": 0.0, "y": 0.0 } })),
+        (
+            "cad.parcels.table",
+            None,
+            |u| json!({ "uids": [u], "at": { "x": 0.0, "y": 0.0 } }),
+        ),
         // Çoklu çizgiye çevir: a NURBS curve takes it, a polyline is refused for the edit (not its kind).
         (
             "cad.curves.edit",

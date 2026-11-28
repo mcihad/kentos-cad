@@ -1,4 +1,10 @@
 //! Pin linked CAD image versions before rendering; each physical file supplies one immutable byte set per job.
+use kentos_contracts::{
+    Entity,
+    encoding::{sha256_hex, sha256_reader_hex},
+};
+use kentos_domain::Document;
+use serde::Serialize;
 use std::{
     collections::BTreeMap,
     fs,
@@ -6,12 +12,6 @@ use std::{
     path::PathBuf,
     sync::{Arc, Mutex},
 };
-use kentos_contracts::{
-    Entity,
-    encoding::{sha256_hex, sha256_reader_hex},
-};
-use kentos_domain::Document;
-use serde::Serialize;
 
 const CACHE_BYTES: u64 = 512 * 1024 * 1024;
 #[derive(Clone, Debug, Serialize)]

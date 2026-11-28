@@ -4,13 +4,16 @@
 //! factor adjust it again; robust estimation (docs/adr/4960, Huber or Danish) reweights the baselines and shows each
 //! one's factor. Nothing is written: taking the coordinates is a later, separate step.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use std::path::PathBuf;
 
 use iced::widget::{Column, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{BaselineDatum, BaselineRobust, CommandResult, RobustMethod, SurveyBaselines, SurveyBaselinesAdjusted};
+use kentos_commands::{
+    BaselineDatum, BaselineRobust, CommandResult, RobustMethod, SurveyBaselines,
+    SurveyBaselinesAdjusted,
+};
 use kentos_native_application::{ExecutionContext, survey_baselines};
 use kentos_ui::label;
 use kentos_ui::widget::{Dialog as Frame, Form, NumberInput, Segmented, Switch};
@@ -120,20 +123,23 @@ impl BaselinesWindowApp for App {
         };
         let input = SurveyBaselines {
             text: Some(text),
-            scale: (self.modules.map().baselines.scale != 1.0).then_some(self.modules.map().baselines.scale),
+            scale: (self.modules.map().baselines.scale != 1.0)
+                .then_some(self.modules.map().baselines.scale),
             datum: if self.modules.map().baselines.minimal {
                 BaselineDatum::Minimal
             } else {
                 BaselineDatum::Given
             },
             robust: self
-                .modules.map_mut()
+                .modules
+                .map_mut()
                 .baselines
                 .robust
                 .method()
                 .map(|method| BaselineRobust {
                     method,
-                    c: (self.modules.map().baselines.c > 0.0).then_some(self.modules.map().baselines.c),
+                    c: (self.modules.map().baselines.c > 0.0)
+                        .then_some(self.modules.map().baselines.c),
                 }),
             ..SurveyBaselines::default()
         };
@@ -174,7 +180,8 @@ impl BaselinesWindowApp for App {
                 self.baselines_run();
             }
             Err(e) => {
-                self.modules.map_mut().baselines.answer = Some(Err(format!("{} okunamadı: {e}", path.display())))
+                self.modules.map_mut().baselines.answer =
+                    Some(Err(format!("{} okunamadı: {e}", path.display())))
             }
         }
     }
@@ -229,15 +236,43 @@ impl BaselinesWindowApp for App {
 
     fn baselines_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().baselines;
-        let file = s.file.as_ref().and_then(|p| p.file_name()).map_or("Dosya seçilmedi".to_owned(), |n| n.to_string_lossy().into_owned());
+        let file = s
+            .file
+            .as_ref()
+            .and_then(|p| p.file_name())
+            .map_or("Dosya seçilmedi".to_owned(), |n| {
+                n.to_string_lossy().into_owned()
+            });
         // One label column, the boxes the same width (the owner: a form's fields line up).
         let head = Form::new()
             .label_width(130.0)
-            .field("Baz dosyası", row![words::secondary(OPEN, Some(msg(Event::Pick))), label::caption(file)].spacing(10).align_y(Center))
-            .field("Varyans çarpanı", NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(0.5).decimals(2).point().width(140))
-            .row(Switch::new(s.minimal, |on| msg(Event::Minimal(on))).label("Minimal datum (sabit yokken ilk bilinen istasyonu tut)"))
+            .field(
+                "Baz dosyası",
+                row![
+                    words::secondary(OPEN, Some(msg(Event::Pick))),
+                    label::caption(file)
+                ]
+                .spacing(10)
+                .align_y(Center),
+            )
+            .field(
+                "Varyans çarpanı",
+                NumberInput::new(s.scale, |v| msg(Event::Scale(v)))
+                    .step(0.5)
+                    .decimals(2)
+                    .point()
+                    .width(140),
+            )
+            .row(
+                Switch::new(s.minimal, |on| msg(Event::Minimal(on)))
+                    .label("Minimal datum (sabit yokken ilk bilinen istasyonu tut)"),
+            )
             .field("Dayanıklı kestirim", {
-                let choice = Segmented::new([Robust::Off, Robust::Huber, Robust::Danish], s.robust, |r| msg(Event::Robust(r)));
+                let choice = Segmented::new(
+                    [Robust::Off, Robust::Huber, Robust::Danish],
+                    s.robust,
+                    |r| msg(Event::Robust(r)),
+                );
                 // The constant shares the row: it belongs to the weight function (the owner: related small controls).
                 let used = match &s.answer {
                     Some(Ok(a)) => a.robust.as_ref().map(|r| r.c),
@@ -245,9 +280,17 @@ impl BaselinesWindowApp for App {
                 };
                 match (s.robust, used) {
                     (Robust::Off, _) | (_, None) => row![choice].align_y(Center),
-                    (_, Some(c)) => row![choice, label::caption("c"), NumberInput::new(c, |v| msg(Event::C(v))).step(0.5).decimals(2).point().width(110)]
-                        .spacing(10)
-                        .align_y(Center),
+                    (_, Some(c)) => row![
+                        choice,
+                        label::caption("c"),
+                        NumberInput::new(c, |v| msg(Event::C(v)))
+                            .step(0.5)
+                            .decimals(2)
+                            .point()
+                            .width(110)
+                    ]
+                    .spacing(10)
+                    .align_y(Center),
                 }
             });
         let mut body = Column::new().spacing(10).push(head);
@@ -259,58 +302,130 @@ impl BaselinesWindowApp for App {
         match &s.answer {
             Some(Ok(a)) => {
                 let test = match (a.m0, a.passed) {
-                    (Some(m0), Some(true)) => (Kind::Ok, format!("m0 = {m0:.3}; χ² testi geçti (vᵀPv {:.2} ≤ {:.2}); serbestlik {}.", a.omega, a.chi2.unwrap_or(0.0), a.f)),
-                    (Some(m0), Some(false)) => (Kind::Warn, format!("m0 = {m0:.3}; χ² testi geçmedi (vᵀPv {:.2} > {:.2}): ağırlıklar ya da kaba hata.", a.omega, a.chi2.unwrap_or(0.0))),
-                    _ => (Kind::Warn, "Fazlalık yok: m0 ve χ² testi yok, bazlar denetlenemez.".to_owned()),
+                    (Some(m0), Some(true)) => (
+                        Kind::Ok,
+                        format!(
+                            "m0 = {m0:.3}; χ² testi geçti (vᵀPv {:.2} ≤ {:.2}); serbestlik {}.",
+                            a.omega,
+                            a.chi2.unwrap_or(0.0),
+                            a.f
+                        ),
+                    ),
+                    (Some(m0), Some(false)) => (
+                        Kind::Warn,
+                        format!(
+                            "m0 = {m0:.3}; χ² testi geçmedi (vᵀPv {:.2} > {:.2}): ağırlıklar ya da kaba hata.",
+                            a.omega,
+                            a.chi2.unwrap_or(0.0)
+                        ),
+                    ),
+                    _ => (
+                        Kind::Warn,
+                        "Fazlalık yok: m0 ve χ² testi yok, bazlar denetlenemez.".to_owned(),
+                    ),
                 };
                 lines.push(words::text_line(test.0, test.1));
                 // Docs/adr/4560: the network's size (the normal equations are solved sparse, so a large one is read too).
                 lines.push(words::text_line(
                     Kind::Info,
-                    format!("{} istasyon, {} baz: {} bilinmeyen, {} gözlem denklemi.", a.stations.len(), a.baselines.len(), a.u, a.n),
+                    format!(
+                        "{} istasyon, {} baz: {} bilinmeyen, {} gözlem denklemi.",
+                        a.stations.len(),
+                        a.baselines.len(),
+                        a.u,
+                        a.n
+                    ),
                 ));
                 // Docs/adr/4960: robust estimation weighs a baseline down, it does not remove it; the regulation wants
                 // a discordant measurement measured again.
                 if let Some(r) = &a.robust {
-                    let name = if r.method == RobustMethod::Huber { "Huber" } else { "Danimarka" };
+                    let name = if r.method == RobustMethod::Huber {
+                        "Huber"
+                    } else {
+                        "Danimarka"
+                    };
                     let settled = if r.converged {
                         format!("{} adımda oturdu", r.rounds)
                     } else {
                         format!("{} adımda oturmadı", r.rounds)
                     };
                     let (kind, text) = match r.downweighted {
-                        0 => (Kind::Ok, format!("Dayanıklı kestirim ({name}, c {:.2}): {settled}; hiçbir bazın ağırlığı düşmedi.", r.c)),
+                        0 => (
+                            Kind::Ok,
+                            format!(
+                                "Dayanıklı kestirim ({name}, c {:.2}): {settled}; hiçbir bazın ağırlığı düşmedi.",
+                                r.c
+                            ),
+                        ),
                         n => (
                             Kind::Warn,
-                            format!("Dayanıklı kestirim ({name}, c {:.2}): {settled}; {n} bazın ağırlığı düştü, silinmedi: denetleyip yeniden ölçün.", r.c),
+                            format!(
+                                "Dayanıklı kestirim ({name}, c {:.2}): {settled}; {n} bazın ağırlığı düştü, silinmedi: denetleyip yeniden ölçün.",
+                                r.c
+                            ),
                         ),
                     };
-                    lines.push(words::text_line(if r.converged { kind } else { Kind::Warn }, text));
+                    lines.push(words::text_line(
+                        if r.converged { kind } else { Kind::Warn },
+                        text,
+                    ));
                 }
                 if let Some(h) = &a.held {
-                    lines.push(words::text_line(Kind::Info, format!("Minimal datum: “{h}” tutuldu.")));
+                    lines.push(words::text_line(
+                        Kind::Info,
+                        format!("Minimal datum: “{h}” tutuldu."),
+                    ));
                 }
                 if let Some(i) = a.worst
                     && let Some(b) = a.baselines.get(i as usize)
                 {
-                    let kind = if b.flag == "blunder" { Kind::Error } else { Kind::Info };
-                    lines.push(words::text_line(kind, format!("En kötü baz: {} → {} (w {}).", b.from, b.to, b.w.map_or("—".to_owned(), |w| format!("{w:.2}")))));
+                    let kind = if b.flag == "blunder" {
+                        Kind::Error
+                    } else {
+                        Kind::Info
+                    };
+                    lines.push(words::text_line(
+                        kind,
+                        format!(
+                            "En kötü baz: {} → {} (w {}).",
+                            b.from,
+                            b.to,
+                            b.w.map_or("—".to_owned(), |w| format!("{w:.2}"))
+                        ),
+                    ));
                 }
                 // The results in the kit's data table: its rows scroll inside it (the owner: data tables scroll).
                 table = Some(match s.view {
                     View::Stations => sheet(
-                        vec![col("İstasyon", 140.0), num("σ doğu (mm)", 110.0), num("σ kuzey (mm)", 110.0), num("σ yukarı (mm)", 110.0)],
+                        vec![
+                            col("İstasyon", 140.0),
+                            num("σ doğu (mm)", 110.0),
+                            num("σ kuzey (mm)", 110.0),
+                            num("σ yukarı (mm)", 110.0),
+                        ],
                         a.stations
                             .iter()
                             .filter(|st| !st.held)
-                            .map(|st| vec![st.name.clone(), mm(st.senu[0]), mm(st.senu[1]), mm(st.senu[2])])
+                            .map(|st| {
+                                vec![
+                                    st.name.clone(),
+                                    mm(st.senu[0]),
+                                    mm(st.senu[1]),
+                                    mm(st.senu[2]),
+                                ]
+                            })
                             .collect(),
                         "Yeni istasyon yok.",
                         240.0,
                     ),
                     View::Baselines => sheet(
                         {
-                            let mut cols = vec![col("Başlangıç", 90.0), col("Bitiş", 90.0), num("Artık (mm)", 90.0), num("w", 60.0)];
+                            let mut cols = vec![
+                                col("Başlangıç", 90.0),
+                                col("Bitiş", 90.0),
+                                num("Artık (mm)", 90.0),
+                                num("w", 60.0),
+                            ];
                             if a.robust.is_some() {
                                 cols.push(num("Ağırlık çarpanı", 120.0));
                             }
@@ -321,7 +436,8 @@ impl BaselinesWindowApp for App {
                             .iter()
                             .enumerate()
                             .map(|(i, b)| {
-                                let len = (b.v[0] * b.v[0] + b.v[1] * b.v[1] + b.v[2] * b.v[2]).sqrt();
+                                let len =
+                                    (b.v[0] * b.v[0] + b.v[1] * b.v[1] + b.v[2] * b.v[2]).sqrt();
                                 let state = match (b.flag.as_str(), a.worst == Some(i as u32)) {
                                     ("blunder", _) => "Kaba hata",
                                     _ if b.factor.is_some_and(|f| f < 1.0) => "Ağırlık düştü",
@@ -329,7 +445,12 @@ impl BaselinesWindowApp for App {
                                     _ if b.w.is_none() => "Denetlenemez",
                                     _ => "Geçti",
                                 };
-                                let mut cells = vec![b.from.clone(), b.to.clone(), mm(len), b.w.map_or("—".to_owned(), |w| format!("{w:.2}"))];
+                                let mut cells = vec![
+                                    b.from.clone(),
+                                    b.to.clone(),
+                                    mm(len),
+                                    b.w.map_or("—".to_owned(), |w| format!("{w:.2}")),
+                                ];
                                 if let Some(f) = b.factor {
                                     cells.push(format!("{f:.4}"));
                                 }
@@ -348,10 +469,18 @@ impl BaselinesWindowApp for App {
         body = body.push(words::summary(lines));
         if let Some(table) = table {
             body = body
-                .push(Segmented::new([View::Baselines, View::Stations], s.view, |v| msg(Event::View(v))))
+                .push(Segmented::new(
+                    [View::Baselines, View::Stations],
+                    s.view,
+                    |v| msg(Event::View(v)),
+                ))
                 .push(table);
         }
-        Frame::new(TITLE).push(body).action(words::primary(CLOSE, Some(msg(Event::Close)))).width(680.0).modal(msg(Event::Close))
+        Frame::new(TITLE)
+            .push(body)
+            .action(words::primary(CLOSE, Some(msg(Event::Close))))
+            .width(680.0)
+            .modal(msg(Event::Close))
     }
 
     fn baselines_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

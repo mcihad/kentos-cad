@@ -111,7 +111,10 @@ impl App {
             return None;
         }
         let doc = self.document.as_ref()?;
-        let input = window.values.get("input").and_then(kentos_processing::FeaturesValue::read)?;
+        let input = window
+            .values
+            .get("input")
+            .and_then(kentos_processing::FeaturesValue::read)?;
         let kentos_processing::Scope::Layer(id) = input.scope else {
             return None;
         };
@@ -133,14 +136,24 @@ impl App {
                     crate::view::thousands(rows.len() as f64)
                 ),
             ),
-            Ok(None) => (1, format!("“{}” veri katmanı: satırları kaynaktan okunuyor.", node.name)),
+            Ok(None) => (
+                1,
+                format!(
+                    "“{}” veri katmanı: satırları kaynaktan okunuyor.",
+                    node.name
+                ),
+            ),
             Err(why) => (0, format!("“{}” veri katmanı okunamadı: {why}", node.name)),
         };
         Some(kentos_processing::InputSummary {
             count,
             description,
             by_kind: Vec::new(),
-            fields: node.fields.iter().map(|f| (f.name.clone(), count)).collect(),
+            fields: node
+                .fields
+                .iter()
+                .map(|f| (f.name.clone(), count))
+                .collect(),
             rows: true,
             ..kentos_processing::InputSummary::default()
         })
@@ -154,8 +167,18 @@ impl App {
         if window.values.get("cadFilter").and_then(Value::as_bool) == Some(true) {
             return Some(Err(words::CAD.to_owned()));
         }
-        let text = |name: &str| window.values.get(name).and_then(Value::as_str).unwrap_or_default().trim().to_owned();
-        let mode = Some(text("mode")).filter(|m| !m.is_empty()).unwrap_or_else(|| "new".to_owned());
+        let text = |name: &str| {
+            window
+                .values
+                .get(name)
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .trim()
+                .to_owned()
+        };
+        let mode = Some(text("mode"))
+            .filter(|m| !m.is_empty())
+            .unwrap_or_else(|| "new".to_owned());
         Some(Ok(Asked {
             node,
             condition: text("condition"),
@@ -176,23 +199,30 @@ impl App {
             expression: Some(asked.condition.clone()),
             ..kentos_commands::LayerFilter::default()
         };
-        let compiled = match kentos_native_application::layer_filter::compile_filter(&filter, unit) {
+        let compiled = match kentos_native_application::layer_filter::compile_filter(&filter, unit)
+        {
             Ok(c) => c,
             Err(why) => return Some(why),
         };
         let fields: Vec<String> = asked.node.fields.iter().map(|f| f.name.clone()).collect();
-        if let Some(why) = compiled
-            .expr()
-            .and_then(|e| kentos_native_application::layers_rows::missing_fields(&e.fields, &fields, &asked.node.name))
-        {
+        if let Some(why) = compiled.expr().and_then(|e| {
+            kentos_native_application::layers_rows::missing_fields(
+                &e.fields,
+                &fields,
+                &asked.node.name,
+            )
+        }) {
             return Some(why);
         }
         Some(match self.data_layer_rows(&asked.node.id)? {
             Ok(None) => words::READING.to_owned(),
             Err(why) => why,
             Ok(Some(rows)) => {
-                let (kept, total) =
-                    kentos_native_application::layers_filter::count_rows(&doc.model, &rows, Some(&compiled));
+                let (kept, total) = kentos_native_application::layers_filter::count_rows(
+                    &doc.model,
+                    &rows,
+                    Some(&compiled),
+                );
                 format!(
                     "{} / {} satır koşulu sağlıyor.",
                     crate::view::thousands(f64::from(kept)),
@@ -230,7 +260,9 @@ impl App {
             label: words::ASKING.to_owned(),
             background: true,
         };
-        let Asked { node, condition, .. } = asked;
+        let Asked {
+            node, condition, ..
+        } = asked;
         Some(crate::db_connections::off_thread(
             move || keys_kept(&node, &settings, &condition, &stop),
             move |answer| msg(SelectEvent::Ran(id, answer)),
@@ -259,8 +291,11 @@ impl App {
                 Err(why) => RunStatus::Error(why),
                 Ok((kept, total)) => {
                     let data = &self.gis.features.data;
-                    let current: BTreeSet<i64> =
-                        if data.any_selected_of(&run.layer) { data.selected.clone() } else { BTreeSet::new() };
+                    let current: BTreeSet<i64> = if data.any_selected_of(&run.layer) {
+                        data.selected.clone()
+                    } else {
+                        BTreeSet::new()
+                    };
                     let hits: BTreeSet<i64> = kept.into_iter().collect();
                     let chosen = combine(&run.mode, &current, &hits);
                     let count = chosen.len();

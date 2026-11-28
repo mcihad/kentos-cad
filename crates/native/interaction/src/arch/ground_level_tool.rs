@@ -47,8 +47,16 @@ impl GroundLevelTool {
 
     /// The site's grounds as set now.
     fn grounds(cx: &Context<'_>) -> (Option<SiteGround>, Option<SiteGround>) {
-        let site = cx.doc.settings().arch.as_ref().and_then(|a| a.site.as_ref());
-        (site.and_then(|s| s.natural_ground.clone()), site.and_then(|s| s.graded_ground.clone()))
+        let site = cx
+            .doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.site.as_ref());
+        (
+            site.and_then(|s| s.natural_ground.clone()),
+            site.and_then(|s| s.graded_ground.clone()),
+        )
     }
 
     /// The grounds made, made again when the drawing or the site's grounds changed.
@@ -57,7 +65,11 @@ impl GroundLevelTool {
         match &self.made {
             Some(m) if m.revision == revision && m.grounds == grounds => m.clone(),
             _ => {
-                let m = Rc::new(Made { revision, grounds, surfaces: site_ground::surfaces(cx.doc) });
+                let m = Rc::new(Made {
+                    revision,
+                    grounds,
+                    surfaces: site_ground::surfaces(cx.doc),
+                });
                 self.made = Some(m.clone());
                 m
             }
@@ -67,7 +79,13 @@ impl GroundLevelTool {
     /// The mark's lines at `at`; none where neither ground is.
     fn lines_at(&mut self, at: Vec2, cx: &Context<'_>) -> Vec<String> {
         let (natural, graded) = self.made(cx).surfaces.heights(at.x, at.y);
-        let datum = cx.doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()).and_then(|s| s.datum);
+        let datum = cx
+            .doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.site.as_ref())
+            .and_then(|s| s.datum);
         site_ground::level_lines(natural, graded, datum)
     }
 
@@ -82,7 +100,10 @@ impl GroundLevelTool {
 
     /// The mark's objects at `at`: the symbol and the lines, `h` the drawing's text height.
     fn objects(at: Vec2, lines: &[String], h: f64, cx: &Context<'_>) -> Vec<NewObject> {
-        let p = |x: f64, y: f64| kentos_commands::Vec2 { x: at.x + x, y: at.y + y };
+        let p = |x: f64, y: f64| kentos_commands::Vec2 {
+            x: at.x + x,
+            y: at.y + y,
+        };
         let object = |geometry, what: &str| NewObject {
             geometry,
             color: None,
@@ -97,16 +118,30 @@ impl GroundLevelTool {
             order: None,
             transparency: None,
         };
-        let line = |a, b| EntityGeometry::Line { a, b, zs: None, ms: None };
+        let line = |a, b| EntityGeometry::Line {
+            a,
+            b,
+            zs: None,
+            ms: None,
+        };
         let mut out = vec![
-            object(EntityGeometry::Circle { c: p(0.0, 0.0), r: 0.4 * h }, "simge"),
+            object(
+                EntityGeometry::Circle {
+                    c: p(0.0, 0.0),
+                    r: 0.4 * h,
+                },
+                "simge",
+            ),
             object(line(p(-0.7 * h, 0.0), p(0.7 * h, 0.0)), "simge"),
             object(line(p(0.0, -0.7 * h), p(0.0, 0.7 * h)), "simge"),
         ];
         // One line beside the symbol's middle; two over and under it, tzk on top.
         let placed: Vec<(f64, TextAlign)> = match lines.len() {
             1 => vec![(0.0, TextAlign::MiddleLeft)],
-            _ => vec![(0.25 * h, TextAlign::BottomLeft), (-0.25 * h, TextAlign::TopLeft)],
+            _ => vec![
+                (0.25 * h, TextAlign::BottomLeft),
+                (-0.25 * h, TextAlign::TopLeft),
+            ],
         };
         for (text, (dy, align)) in lines.iter().zip(placed) {
             let what = text.split(' ').next().unwrap_or_default().to_owned();
@@ -143,14 +178,29 @@ impl GroundLevelTool {
         }
         let h = cx.annotation_height(kentos_commands::AnnotationKind::Text);
         let objects = Self::objects(at, &lines, h, cx);
-        let written = crate::arch_layer::writing(&crate::arch_layer::Kind::Symbol, cx, |layer, cx| {
-            let input = EntitiesCreate { layer_id: layer.to_owned(), objects, operation: None, expected_revision: None };
-            let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
-            points::written(result, cx).is_some()
-        });
+        let written =
+            crate::arch_layer::writing(&crate::arch_layer::Kind::Symbol, cx, |layer, cx| {
+                let input = EntitiesCreate {
+                    layer_id: layer.to_owned(),
+                    objects,
+                    operation: None,
+                    expected_revision: None,
+                };
+                let result = create::execute(&mut ExecutionContext::new(cx.doc), input);
+                points::written(result, cx).is_some()
+            });
         if written {
-            cx.say(Level::Success, format!("Zemin kotu yazıldı: {}.", lines.join(", ")));
-            let datum = cx.doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()).and_then(|s| s.datum);
+            cx.say(
+                Level::Success,
+                format!("Zemin kotu yazıldı: {}.", lines.join(", ")),
+            );
+            let datum = cx
+                .doc
+                .settings()
+                .arch
+                .as_ref()
+                .and_then(|a| a.site.as_ref())
+                .and_then(|s| s.datum);
             if datum.is_none() {
                 cx.say(
                     Level::Info,
@@ -188,7 +238,10 @@ impl Tool for GroundLevelTool {
     }
 
     fn prompt(&self) -> Prompt {
-        Prompt::new("Zemin kotu", "tabii ve tesviye zemin kotunun yazılacağı noktaya tıklayın")
+        Prompt::new(
+            "Zemin kotu",
+            "tabii ve tesviye zemin kotunun yazılacağı noktaya tıklayın",
+        )
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -222,9 +275,17 @@ impl Tool for GroundLevelTool {
         Preview {
             tag: self.hover.map(|at| Tag {
                 at,
-                lines: if self.lines.is_empty() { vec!["Zemin yok".to_owned()] } else { self.lines.clone() },
+                lines: if self.lines.is_empty() {
+                    vec!["Zemin yok".to_owned()]
+                } else {
+                    self.lines.clone()
+                },
             }),
-            tag_tone: if self.lines.is_empty() { Tone::Danger } else { Tone::Accent },
+            tag_tone: if self.lines.is_empty() {
+                Tone::Danger
+            } else {
+                Tone::Accent
+            },
             ..Preview::default()
         }
     }

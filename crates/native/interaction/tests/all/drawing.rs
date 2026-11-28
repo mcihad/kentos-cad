@@ -501,7 +501,6 @@ fn divide_places_blocks_aligned_the_ends_and_a_first_distance() {
     assert!(b.session.prompt().text().contains("İlk (İ): aralıkta"));
 }
 
-
 /// UR-108: a revision cloud's polygon whose edges cross is refused as crossing, not as having its corners on one
 /// line; the symmetric bow tie (no area) and an uneven one both.
 #[test]
@@ -519,7 +518,8 @@ fn a_crossing_cloud_is_said_crossing() {
         b.confirm();
         assert_eq!(b.doc.len(), before, "nothing written");
         assert!(
-            b.last_text().is_some_and(|t| t.starts_with("Bulutun sınırı kendini kesiyor")),
+            b.last_text()
+                .is_some_and(|t| t.starts_with("Bulutun sınırı kendini kesiyor")),
             "{:?}",
             b.last_text()
         );

@@ -65,7 +65,11 @@ impl SlabSlope {
     pub fn over(&self, p: Vec2) -> f64 {
         let (dx, dy) = (self.to.x - self.from.x, self.to.y - self.from.y);
         let l2 = dx * dx + dy * dy;
-        if l2 > 0.0 { self.rise * ((p.x - self.from.x) * dx + (p.y - self.from.y) * dy) / l2 } else { 0.0 }
+        if l2 > 0.0 {
+            self.rise * ((p.x - self.from.x) * dx + (p.y - self.from.y) * dy) / l2
+        } else {
+            0.0
+        }
     }
 
     /// How tall upright a thickness square to its top stands: √(1 + grade²).
@@ -78,15 +82,24 @@ impl SlabSlope {
     pub fn problem(&self) -> Option<(String, String)> {
         let finite = |p: Vec2| p.x.is_finite() && p.y.is_finite();
         if !finite(self.from) || !finite(self.to) || !self.rise.is_finite() {
-            return Some(("slope".into(), "Eğim okunun noktaları ve yükselişi sonlu olmalı.".into()));
+            return Some((
+                "slope".into(),
+                "Eğim okunun noktaları ve yükselişi sonlu olmalı.".into(),
+            ));
         }
         if self.run() < 0.001 {
-            return Some(("slope.to".into(), "Eğim okunun başı kuyruğundan en az 1 mm uzakta olmalı.".into()));
+            return Some((
+                "slope.to".into(),
+                "Eğim okunun başı kuyruğundan en az 1 mm uzakta olmalı.".into(),
+            ));
         }
         if self.rise.abs() > MAX_SLAB_OFFSET {
             return Some((
                 "slope.rise".into(),
-                format!("Eğimin yükselişi en çok ±{MAX_SLAB_OFFSET} m olur; {} verildi.", self.rise),
+                format!(
+                    "Eğimin yükselişi en çok ±{MAX_SLAB_OFFSET} m olur; {} verildi.",
+                    self.rise
+                ),
             ));
         }
         if self.grade().abs() > MAX_SLAB_GRADE {
@@ -292,7 +305,12 @@ pub enum SlabRole {
 }
 
 impl SlabRole {
-    pub const ALL: [SlabRole; 4] = [SlabRole::Floor, SlabRole::Balcony, SlabRole::Terrace, SlabRole::Raft];
+    pub const ALL: [SlabRole; 4] = [
+        SlabRole::Floor,
+        SlabRole::Balcony,
+        SlabRole::Terrace,
+        SlabRole::Raft,
+    ];
 
     pub fn label(self) -> &'static str {
         match self {
@@ -319,12 +337,20 @@ impl SlabRole {
     /// Its `IfcSlab`'s predefined type (EK-6 Tablo 6.56): a raft's BASESLAB (IFC 4.3: a slab foundation is no
     /// `IfcFooting`), every other FLOOR.
     pub fn ifc_type(self) -> &'static str {
-        if self == SlabRole::Raft { "BASESLAB" } else { "FLOOR" }
+        if self == SlabRole::Raft {
+            "BASESLAB"
+        } else {
+            "FLOOR"
+        }
     }
 
     /// Its IFC name's words (EK-5 §5.5): a raft's Radye, every other Döşeme.
     pub fn ifc_words(self) -> &'static str {
-        if self == SlabRole::Raft { "Radye" } else { "Döşeme" }
+        if self == SlabRole::Raft {
+            "Radye"
+        } else {
+            "Döşeme"
+        }
     }
 }
 
@@ -475,8 +501,12 @@ impl SlabBreak {
                 "Duvarlar döşemenin iç noktasının çevresini artık kapatmıyor; son sınırı korundu."
             }
             SlabBreak::SourceGone => "Döşemenin bağlı olduğu mahal yok; son sınırı korundu.",
-            SlabBreak::EdgeSourceGone => "Bağlı duvar, doğrusal parça veya bileşen yüzü artık bulunamıyor; son sınır korundu.",
-            SlabBreak::EdgeShapeInvalid => "Bağlı kenarlar kapalı, geçerli bir kontur oluşturmuyor; son sınır korundu.",
+            SlabBreak::EdgeSourceGone => {
+                "Bağlı duvar, doğrusal parça veya bileşen yüzü artık bulunamıyor; son sınır korundu."
+            }
+            SlabBreak::EdgeShapeInvalid => {
+                "Bağlı kenarlar kapalı, geçerli bir kontur oluşturmuyor; son sınır korundu."
+            }
         }
     }
 }
@@ -563,25 +593,48 @@ impl SlabBound {
     /// What is wrong with it: the field (relative to the slab) and the words.
     pub fn problem(&self) -> Option<(String, String)> {
         if self.source == SlabSourceKind::Edges {
-            let invalid = || ("bound.edges".into(), "Kenar bağlantıları geçerli, tek parçalı ve doğrusal bir döşeme konturuna ait olmalı.".into());
-            let Some(edges) = &self.edges else { return Some(invalid()); };
+            let invalid = || {
+                ("bound.edges".into(), "Kenar bağlantıları geçerli, tek parçalı ve doğrusal bir döşeme konturuna ait olmalı.".into())
+            };
+            let Some(edges) = &self.edges else {
+                return Some(invalid());
+            };
             let ring = &edges.reference.outer;
             let mut seen = std::collections::BTreeSet::new();
-            if self.seed.is_some() || self.space.is_some() || self.offset != 0.0
-                || !(3..=512).contains(&ring.pts.len()) || ring.bulges.as_ref().is_some_and(|b| b.iter().any(|v| *v != 0.0))
+            if self.seed.is_some()
+                || self.space.is_some()
+                || self.offset != 0.0
+                || !(3..=512).contains(&ring.pts.len())
+                || ring
+                    .bulges
+                    .as_ref()
+                    .is_some_and(|b| b.iter().any(|v| *v != 0.0))
                 || ring_problem_of(ring, "bound.edges.reference.outer", "Döşemenin").is_some()
-                || edges.links.is_empty() || edges.links.iter().any(|l| {
-                    l.edge as usize >= ring.pts.len() || !seen.insert(l.edge) || l.wall.trim().is_empty()
-                    || !l.offset.is_finite() || l.offset.abs() > MAX_BOUND_OFFSET
+                || edges.links.is_empty()
+                || edges.links.iter().any(|l| {
+                    l.edge as usize >= ring.pts.len()
+                        || !seen.insert(l.edge)
+                        || l.wall.trim().is_empty()
+                        || !l.offset.is_finite()
+                        || l.offset.abs() > MAX_BOUND_OFFSET
                 })
-            { return Some(invalid()); }
+            {
+                return Some(invalid());
+            }
             for (i, hole) in edges.reference.holes.iter().enumerate() {
-                if let Some(failure) = ring_problem_of(hole, &format!("bound.edges.reference.holes[{i}]"), "Döşemenin") {
+                if let Some(failure) = ring_problem_of(
+                    hole,
+                    &format!("bound.edges.reference.holes[{i}]"),
+                    "Döşemenin",
+                ) {
                     return Some(failure);
                 }
             }
         } else if self.edges.is_some() {
-            return Some(("bound.edges".into(), "Tekil kenar bağları yalnız Kenarlar kaynağında verilir.".into()));
+            return Some((
+                "bound.edges".into(),
+                "Tekil kenar bağları yalnız Kenarlar kaynağında verilir.".into(),
+            ));
         }
         match self.source {
             SlabSourceKind::Walls if self.seed.is_none() || self.space.is_some() => {
@@ -598,13 +651,22 @@ impl SlabBound {
             }
             _ => {}
         }
-        if self.seed.is_some_and(|p| !(p.x.is_finite() && p.y.is_finite())) {
-            return Some(("bound.seed".into(), "Döşemenin iç noktası sonlu olmalı.".into()));
+        if self
+            .seed
+            .is_some_and(|p| !(p.x.is_finite() && p.y.is_finite()))
+        {
+            return Some((
+                "bound.seed".into(),
+                "Döşemenin iç noktası sonlu olmalı.".into(),
+            ));
         }
         if !(self.offset.is_finite() && self.offset.abs() <= MAX_BOUND_OFFSET) {
             return Some((
                 "bound.offset".into(),
-                format!("Kenar ötelemesi en çok ±{MAX_BOUND_OFFSET} m olur; {} verildi.", self.offset),
+                format!(
+                    "Kenar ötelemesi en çok ±{MAX_BOUND_OFFSET} m olur; {} verildi.",
+                    self.offset
+                ),
             ));
         }
         None
@@ -688,7 +750,11 @@ pub struct SlabEntity {
 
 /// A text's problem as a slab's material: blank, edged with spaces, a control character, too long.
 pub fn material_problem(m: &str) -> Option<String> {
-    if m.trim().is_empty() || m.trim() != m || m.chars().any(char::is_control) || m.chars().count() > MAX_SLAB_MATERIAL {
+    if m.trim().is_empty()
+        || m.trim() != m
+        || m.chars().any(char::is_control)
+        || m.chars().count() > MAX_SLAB_MATERIAL
+    {
         return Some(format!(
             "Döşemenin malzemesi boş, kenarı boşluklu ya da denetim karakterli olamaz; en çok {MAX_SLAB_MATERIAL} karakter."
         ));
@@ -741,16 +807,23 @@ impl SlabFields {
     /// What is wrong with the slab, said so a reader can fix it: the field and the words; none: it holds.
     pub fn problem(&self) -> Option<(String, String)> {
         if self.parts.is_empty() {
-            return Some(("parts".into(), "Döşemenin sınırı yok: en az bir halka verin.".into()));
+            return Some((
+                "parts".into(),
+                "Döşemenin sınırı yok: en az bir halka verin.".into(),
+            ));
         }
         let mut total = 0;
         for (i, p) in self.parts.iter().enumerate() {
-            if let Some(found) = ring_problem_of(&p.outer, &format!("parts[{i}].outer"), "Döşemenin") {
+            if let Some(found) =
+                ring_problem_of(&p.outer, &format!("parts[{i}].outer"), "Döşemenin")
+            {
                 return Some(found);
             }
             total += p.outer.pts.len();
             for (k, h) in p.holes.iter().enumerate() {
-                if let Some(found) = ring_problem_of(h, &format!("parts[{i}].holes[{k}]"), "Döşemenin") {
+                if let Some(found) =
+                    ring_problem_of(h, &format!("parts[{i}].holes[{k}]"), "Döşemenin")
+                {
                     return Some(found);
                 }
                 total += h.pts.len();
@@ -762,7 +835,10 @@ impl SlabFields {
                 format!("Döşemenin halkalarında {total} köşe var; en çok {MAX_SPACE_POINTS}."),
             ));
         }
-        if !(self.thickness.is_finite() && self.thickness > 0.0 && self.thickness <= MAX_SLAB_THICKNESS) {
+        if !(self.thickness.is_finite()
+            && self.thickness > 0.0
+            && self.thickness <= MAX_SLAB_THICKNESS)
+        {
             return Some((
                 "thickness".into(),
                 format!(
@@ -774,7 +850,10 @@ impl SlabFields {
         if !(self.offset.is_finite() && self.offset.abs() <= MAX_SLAB_OFFSET) {
             return Some((
                 "offset".into(),
-                format!("Döşemenin kata göre kotu sonlu, en çok ±{MAX_SLAB_OFFSET} m olmalı; {} verildi.", self.offset),
+                format!(
+                    "Döşemenin kata göre kotu sonlu, en çok ±{MAX_SLAB_OFFSET} m olmalı; {} verildi.",
+                    self.offset
+                ),
             ));
         }
         if let Some(words) = self.material.as_deref().and_then(material_problem) {
@@ -805,10 +884,16 @@ impl SlabFields {
         // A raft (docs/adr/8172 §6): the building's level base, no railing or parapet along it.
         if self.role == SlabRole::Raft {
             if self.slope.is_some() {
-                return Some(("slope".into(), "Radyeye eğim verilmez: radye binanın düz tabanıdır.".into()));
+                return Some((
+                    "slope".into(),
+                    "Radyeye eğim verilmez: radye binanın düz tabanıdır.".into(),
+                ));
             }
             if self.edge.is_some() {
-                return Some(("edge".into(), "Radyenin kenarı (korkuluk, parapet) olmaz.".into()));
+                return Some((
+                    "edge".into(),
+                    "Radyenin kenarı (korkuluk, parapet) olmaz.".into(),
+                ));
             }
         }
         // A covering is a plate of its own (docs/adr/8070 §10): no layers, no edge, no balcony, terrace or raft.
@@ -819,14 +904,21 @@ impl SlabFields {
             if !self.layers.is_empty() {
                 return Some((
                     "covering".into(),
-                    "Kaplamanın katmanları olmaz: kalınlığı kendisinindir; katmanları kaldırın.".into(),
+                    "Kaplamanın katmanları olmaz: kalınlığı kendisinindir; katmanları kaldırın."
+                        .into(),
                 ));
             }
             if self.edge.is_some() {
-                return Some(("covering".into(), "Kaplamanın kenarı (korkuluk, parapet) olmaz.".into()));
+                return Some((
+                    "covering".into(),
+                    "Kaplamanın kenarı (korkuluk, parapet) olmaz.".into(),
+                ));
             }
             if self.role == SlabRole::Raft {
-                return Some(("covering".into(), "Radye kaplama olamaz; kaplamanın türü Döşeme olmalı.".into()));
+                return Some((
+                    "covering".into(),
+                    "Radye kaplama olamaz; kaplamanın türü Döşeme olmalı.".into(),
+                ));
             }
             if self.role != SlabRole::Floor {
                 return Some((

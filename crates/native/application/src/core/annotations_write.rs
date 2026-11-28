@@ -508,7 +508,11 @@ fn along_of(
 
 /// The lasting place of a selected object `p` is a vertex of (UR-020): a line's start or end, a polyline's vertex,
 /// an area's vertex on its outer ring or a hole, in its own part or a further one; the first object that has it.
-fn vertex_ref(ids: &[String], shapes: &[kentos_geometry_core::entity::Shape], p: Vec2) -> Option<kentos_commands::SubRef> {
+fn vertex_ref(
+    ids: &[String],
+    shapes: &[kentos_geometry_core::entity::Shape],
+    p: Vec2,
+) -> Option<kentos_commands::SubRef> {
     use kentos_commands::SubPlace;
     use kentos_geometry_core::entity::Shape;
     let vertex = |part: usize, ring: usize, pts: &[Vec2]| {
@@ -527,15 +531,26 @@ fn vertex_ref(ids: &[String], shapes: &[kentos_geometry_core::entity::Shape], p:
             Shape::Polygon {
                 pts, holes, parts, ..
             } => {
-                let rings = |part: usize, pts: &[Vec2], holes: &[kentos_geometry_core::geom::arrangement::Ring]| {
-                    vertex(part, 0, pts).or_else(|| {
-                        holes.iter().enumerate().find_map(|(h, ring)| vertex(part, h + 1, &ring.pts))
-                    })
-                };
+                let rings =
+                    |part: usize,
+                     pts: &[Vec2],
+                     holes: &[kentos_geometry_core::geom::arrangement::Ring]| {
+                        vertex(part, 0, pts).or_else(|| {
+                            holes
+                                .iter()
+                                .enumerate()
+                                .find_map(|(h, ring)| vertex(part, h + 1, &ring.pts))
+                        })
+                    };
                 rings(0, pts, holes.as_deref().unwrap_or_default()).or_else(|| {
-                    parts.as_deref().unwrap_or_default().iter().enumerate().find_map(|(k, part)| {
-                        rings(k + 1, &part.pts, part.holes.as_deref().unwrap_or_default())
-                    })
+                    parts
+                        .as_deref()
+                        .unwrap_or_default()
+                        .iter()
+                        .enumerate()
+                        .find_map(|(k, part)| {
+                            rings(k + 1, &part.pts, part.holes.as_deref().unwrap_or_default())
+                        })
                 })
             }
             _ => None,

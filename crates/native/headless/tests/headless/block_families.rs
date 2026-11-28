@@ -7,10 +7,27 @@ use kentos_headless::{NewDrawing, Session};
 use serde_json::{Value, json};
 
 const FAMILIES: &[&str] = &[
-    "Toplantı masası 4 kişilik", "Toplantı masası 6 kişilik", "Toplantı masası 8 kişilik", "İş istasyonu",
-    "Arşiv dolabı", "Öğrenci sırası (tek)", "Öğrenci sırası (çift)", "Öğretmen masası", "Yazı tahtası",
-    "Hasta yatağı", "Muayene masası", "Lavabo (sağlık)", "Erişilebilir klozet", "Erişilebilir lavabo",
-    "Dönüş alanı Ø150", "Ağaç Ø3 m", "Ağaç Ø5 m", "Ağaç Ø8 m", "Çalı", "Otomobil", "Bisiklet park yeri",
+    "Toplantı masası 4 kişilik",
+    "Toplantı masası 6 kişilik",
+    "Toplantı masası 8 kişilik",
+    "İş istasyonu",
+    "Arşiv dolabı",
+    "Öğrenci sırası (tek)",
+    "Öğrenci sırası (çift)",
+    "Öğretmen masası",
+    "Yazı tahtası",
+    "Hasta yatağı",
+    "Muayene masası",
+    "Lavabo (sağlık)",
+    "Erişilebilir klozet",
+    "Erişilebilir lavabo",
+    "Dönüş alanı Ø150",
+    "Ağaç Ø3 m",
+    "Ağaç Ø5 m",
+    "Ağaç Ø8 m",
+    "Çalı",
+    "Otomobil",
+    "Bisiklet park yeri",
 ];
 
 fn project(work: CadWork) -> Session {
@@ -30,15 +47,23 @@ fn project(work: CadWork) -> Session {
 }
 
 fn answer(s: &mut Session, command: &str, input: Value) -> Value {
-    s.call(json!({ "command": command, "input": input })).expect("answers")
+    s.call(json!({ "command": command, "input": input }))
+        .expect("answers")
 }
 
 #[test]
 fn every_new_family_places_by_name_in_each_cad_work() {
     for work in [CadWork::Architecture, CadWork::Map, CadWork::Road] {
         let mut s = project(work);
-        let layer = s.summary()["activeLayer"].as_str().expect("a layer").to_owned();
-        let taken = answer(&mut s, "cad.blocks.edit", json!({ "operation": "import", "name": "kentos-temel" }));
+        let layer = s.summary()["activeLayer"]
+            .as_str()
+            .expect("a layer")
+            .to_owned();
+        let taken = answer(
+            &mut s,
+            "cad.blocks.edit",
+            json!({ "operation": "import", "name": "kentos-temel" }),
+        );
         assert_eq!(taken["status"], "completed", "{work:?}: {taken}");
         for (i, name) in FAMILIES.iter().enumerate() {
             let placed = answer(

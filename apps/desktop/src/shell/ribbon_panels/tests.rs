@@ -53,14 +53,20 @@ fn giris_has_the_webs_katmanlar_sablonlar_and_ozellikler_which_step_down_to_one_
             .unwrap_or_else(|| panic!("{label} on the desktop"));
         let w = group.widths();
         // The fields shorten, the buttons keep their names (no icon-only step, DESIGN.md §7.3.1), then the panel folds.
-        assert!(w[0] >= w[1] && (w[1] - w[2]).abs() < 0.01 && w[2] > w[3], "{label}: {w:?}");
+        assert!(
+            w[0] >= w[1] && (w[1] - w[2]).abs() < 0.01 && w[2] > w[3],
+            "{label}: {w:?}"
+        );
     }
     // Seçim is the contextual tab's panel.
     let group = app
         .ribbon_group("selection", panel("selection", "Seçim"))
         .expect("Seçim");
     let w = group.widths();
-    assert!(w[0] >= w[2] && (w[1] - w[2]).abs() < 0.01 && w[2] > w[3], "Seçim: {w:?}");
+    assert!(
+        w[0] >= w[2] && (w[1] - w[2]).abs() < 0.01 && w[2] > w[3],
+        "Seçim: {w:?}"
+    );
 }
 
 /// Şablonlar's field lists the templates drawn with last, then every
@@ -422,10 +428,11 @@ fn the_look_panel_says_it_is_the_new_objects_while_something_is_selected() {
     assert_eq!(properties_title("Özellikler", true), "Yeni nesneler");
     let mut app = app_with_drawing();
     app.selection.set([Slot(1)]);
-    let p = catalog()
-        .tabs()
-        .flat_map(|t| t.panels.iter())
-        .find(|p| p.items.iter().any(|i| matches!(i, crate::catalog::Item::Builtin(b) if *b == "properties")));
+    let p = catalog().tabs().flat_map(|t| t.panels.iter()).find(|p| {
+        p.items
+            .iter()
+            .any(|i| matches!(i, crate::catalog::Item::Builtin(b) if *b == "properties"))
+    });
     if let Some(p) = p {
         assert!(app.properties_group(p).is_some());
     }
@@ -444,9 +451,11 @@ fn look_panel_screens() {
         let tab = app
             .ribbon_tabs()
             .find(|t| {
-                t.panels
-                    .iter()
-                    .any(|p| p.items.iter().any(|i| matches!(i, crate::catalog::Item::Builtin(b) if *b == "properties")))
+                t.panels.iter().any(|p| {
+                    p.items.iter().any(
+                        |i| matches!(i, crate::catalog::Item::Builtin(b) if *b == "properties"),
+                    )
+                })
             })
             .map(|t| t.id)
             .expect("the look panel's tab");

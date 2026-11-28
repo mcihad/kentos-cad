@@ -51,7 +51,9 @@ impl App {
             return Task::none();
         };
         // The data layers' rows written too (docs/adr/9344).
-        let copy = self.source_copy().map_or_else(|| doc.model.reading_copy(), |c| c.doc.reading_copy());
+        let copy = self
+            .source_copy()
+            .map_or_else(|| doc.model.reading_copy(), |c| c.doc.reading_copy());
         let run = RUNS.fetch_add(1, Ordering::Relaxed) + 1;
         let stop = Arc::new(AtomicBool::new(false));
         if let Some(Window::GpkgOut(s)) = &mut self.exchange {
@@ -66,24 +68,30 @@ impl App {
             s.status = None;
         }
         let (out, replies) = mpsc::unbounded::<Event>();
-        let spawned = std::thread::Builder::new().name("kentos-gpkg-teslim".into()).spawn(move || {
-            let told = out.clone();
-            let last: Cell<Option<Instant>> = Cell::new(None);
-            let stopped = || stop.load(Ordering::Relaxed);
-            let progress = |done: u64, total: u64| {
-                let now = Instant::now();
-                if last.get().is_none_or(|t| now.duration_since(t) >= PROGRESS_EVERY) {
-                    last.set(Some(now));
-                    let _ = told.unbounded_send(Event::Progress(run, done, total));
-                }
-            };
-            let flow = Flow {
-                stopped: &stopped,
-                progress: &progress,
-            };
-            let answer = kentos_headless::file_commands::export_gpkg_flow(&copy, &input, &flow).map_err(|e| *e);
-            let _ = out.unbounded_send(Event::Done(run, Box::new(answer)));
-        });
+        let spawned = std::thread::Builder::new()
+            .name("kentos-gpkg-teslim".into())
+            .spawn(move || {
+                let told = out.clone();
+                let last: Cell<Option<Instant>> = Cell::new(None);
+                let stopped = || stop.load(Ordering::Relaxed);
+                let progress = |done: u64, total: u64| {
+                    let now = Instant::now();
+                    if last
+                        .get()
+                        .is_none_or(|t| now.duration_since(t) >= PROGRESS_EVERY)
+                    {
+                        last.set(Some(now));
+                        let _ = told.unbounded_send(Event::Progress(run, done, total));
+                    }
+                };
+                let flow = Flow {
+                    stopped: &stopped,
+                    progress: &progress,
+                };
+                let answer = kentos_headless::file_commands::export_gpkg_flow(&copy, &input, &flow)
+                    .map_err(|e| *e);
+                let _ = out.unbounded_send(Event::Done(run, Box::new(answer)));
+            });
         match spawned {
             Ok(_) => Task::run(replies, event),
             Err(e) => Task::done(event(Event::Done(
@@ -153,7 +161,10 @@ impl App {
 pub(super) fn foot(r: &Running) -> Element<'_, Message> {
     let thousands = |n: u64| crate::view::thousands(n as f64);
     let (said, share) = if r.stopping {
-        ("Durduruluyor; dosyaya hiçbir şey yazılmayacak…".to_owned(), None)
+        (
+            "Durduruluyor; dosyaya hiçbir şey yazılmayacak…".to_owned(),
+            None,
+        )
     } else if r.total == 0 {
         ("Hazırlanıyor…".to_owned(), None)
     } else {

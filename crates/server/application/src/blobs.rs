@@ -338,7 +338,14 @@ impl Blobs {
 
     /// Removes everything of a project removed for good.
     pub async fn remove_project(&self, tenant: Uuid, project: Uuid) -> io::Result<()> {
-        for kind in ["uploads", "revisions", "checkpoints", "jobs", "attachments", "previews"] {
+        for kind in [
+            "uploads",
+            "revisions",
+            "checkpoints",
+            "jobs",
+            "attachments",
+            "previews",
+        ] {
             let dir = self
                 .root
                 .join(kind)
@@ -360,7 +367,13 @@ impl Blobs {
     pub async fn projects(&self, settled: Duration) -> io::Result<Vec<(Uuid, Uuid)>> {
         let mut found = Vec::new();
         let now = SystemTime::now();
-        for kind in ["revisions", "checkpoints", "jobs", "attachments", "previews"] {
+        for kind in [
+            "revisions",
+            "checkpoints",
+            "jobs",
+            "attachments",
+            "previews",
+        ] {
             let Ok(mut tenants) = tokio::fs::read_dir(self.root.join(kind)).await else {
                 continue;
             };

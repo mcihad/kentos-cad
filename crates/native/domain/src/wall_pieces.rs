@@ -25,18 +25,33 @@ fn meets(a: &Box4, b: &Box4) -> bool {
 }
 
 fn join(a: Box4, b: Box4) -> Box4 {
-    [a[0].min(b[0]), a[1].min(b[1]), a[2].max(b[2]), a[3].max(b[3])]
+    [
+        a[0].min(b[0]),
+        a[1].min(b[1]),
+        a[2].max(b[2]),
+        a[3].max(b[3]),
+    ]
 }
 
 /// A wall's reach: its points, each arc's bulge out of its chord, and its width and offset either side.
 pub fn reach(e: &Entity) -> Option<Box4> {
     let Entity::Wall(w) = e else { return None };
     let w = &w.wall;
-    let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     let n = w.pts.len();
     for (i, p) in w.pts.iter().enumerate() {
         b = join(b, [p.x, p.y, p.x, p.y]);
-        let bulge = w.bulges.as_ref().and_then(|bs| bs.get(i)).copied().unwrap_or(0.0);
+        let bulge = w
+            .bulges
+            .as_ref()
+            .and_then(|bs| bs.get(i))
+            .copied()
+            .unwrap_or(0.0);
         if bulge != 0.0 && (i + 1 < n || w.closed) {
             let q = &w.pts[(i + 1) % n];
             // The arc lies within its chord's box grown by its sagitta (|bulge| half chords), and that by the radius
@@ -45,7 +60,13 @@ pub fn reach(e: &Entity) -> Option<Box4> {
             let sagitta = bulge.abs() * half;
             let radius = half * (1.0 + bulge * bulge) / (2.0 * bulge.abs());
             let out = sagitta.max(radius) + 1e-9;
-            b = join(b, grow([p.x.min(q.x), p.y.min(q.y), p.x.max(q.x), p.y.max(q.y)], out));
+            b = join(
+                b,
+                grow(
+                    [p.x.min(q.x), p.y.min(q.y), p.x.max(q.x), p.y.max(q.y)],
+                    out,
+                ),
+            );
         }
     }
     let r = w.width.abs() + w.offset.abs();
@@ -62,7 +83,11 @@ fn find(parent: &mut [usize], mut i: usize) -> usize {
 
 /// The level's walls (as `takes_level` reads it) the face round `seed` can read, in the drawing's order; none when
 /// every wall is needed (then the caller reads them all).
-pub fn walls_round(doc: &Document, seed: kentos_contracts::Vec2, level: Option<&str>) -> Option<Vec<CoreWall>> {
+pub fn walls_round(
+    doc: &Document,
+    seed: kentos_contracts::Vec2,
+    level: Option<&str>,
+) -> Option<Vec<CoreWall>> {
     let walls: Vec<(&Entity, Box4)> = doc
         .entities()
         .filter(|e| takes_level(e, level))
@@ -94,17 +119,27 @@ pub fn walls_round(doc: &Document, seed: kentos_contracts::Vec2, level: Option<&
     let roots: Vec<usize> = (0..n).map(|i| find(&mut parent, i)).collect();
     for i in 0..n {
         let b = boxes[i];
-        piece_box.entry(roots[i]).and_modify(|x| *x = join(*x, b)).or_insert(b);
+        piece_box
+            .entry(roots[i])
+            .and_modify(|x| *x = join(*x, b))
+            .or_insert(b);
     }
     // The pieces round the seed, and every piece their box meets, until none more; and the first wall's.
     let at = [seed.x, seed.y, seed.x, seed.y];
-    let mut taken: std::collections::BTreeSet<usize> =
-        piece_box.iter().filter(|(_, b)| meets(b, &at)).map(|(r, _)| *r).collect();
+    let mut taken: std::collections::BTreeSet<usize> = piece_box
+        .iter()
+        .filter(|(_, b)| meets(b, &at))
+        .map(|(r, _)| *r)
+        .collect();
     if taken.is_empty() {
         return None;
     }
     loop {
-        let reach = taken.iter().map(|r| piece_box[r]).reduce(join).unwrap_or(at);
+        let reach = taken
+            .iter()
+            .map(|r| piece_box[r])
+            .reduce(join)
+            .unwrap_or(at);
         let more: Vec<usize> = piece_box
             .iter()
             .filter(|(r, b)| !taken.contains(r) && meets(b, &reach))

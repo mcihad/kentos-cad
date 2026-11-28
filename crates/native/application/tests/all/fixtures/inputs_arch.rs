@@ -12,8 +12,12 @@ impl Input for kentos_commands::ReviewNotesList {
 impl Input for kentos_commands::ReviewNotesEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match (&mut self.change, path) {
-            (kentos_commands::ReviewNoteOp::Add { at: Some(p), .. }, "change.at.x") => Some(&mut p.x),
-            (kentos_commands::ReviewNoteOp::Add { at: Some(p), .. }, "change.at.y") => Some(&mut p.y),
+            (kentos_commands::ReviewNoteOp::Add { at: Some(p), .. }, "change.at.x") => {
+                Some(&mut p.x)
+            }
+            (kentos_commands::ReviewNoteOp::Add { at: Some(p), .. }, "change.at.y") => {
+                Some(&mut p.y)
+            }
             _ => None,
         }
     }
@@ -39,11 +43,21 @@ impl Input for kentos_commands::WallsCreate {
 
 impl Input for kentos_commands::WallsPartition {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        if path == "distance" { return Some(&mut self.distance); }
-        if let Some(rest) = path.strip_prefix("wall.") { return self.wall.number(rest); }
-        if let kentos_commands::PartitionExtent::Length {anchor,length,..} = &mut self.extent {
-            match path { "extent.anchor" => Some(anchor), "extent.length" => Some(length), _ => None }
-        } else { None }
+        if path == "distance" {
+            return Some(&mut self.distance);
+        }
+        if let Some(rest) = path.strip_prefix("wall.") {
+            return self.wall.number(rest);
+        }
+        if let kentos_commands::PartitionExtent::Length { anchor, length, .. } = &mut self.extent {
+            match path {
+                "extent.anchor" => Some(anchor),
+                "extent.length" => Some(length),
+                _ => None,
+            }
+        } else {
+            None
+        }
     }
 }
 
@@ -64,15 +78,27 @@ impl Input for kentos_commands::WallsRectangle {
                 "width" => Some(width),
                 _ => coordinate(a, "a", field).or_else(|| coordinate(b, "b", field)),
             },
-            F::Size { corner, length, width, toward } => match field {
+            F::Size {
+                corner,
+                length,
+                width,
+                toward,
+            } => match field {
                 "length" => Some(length),
                 "width" => Some(width),
-                _ => coordinate(corner, "corner", field).or_else(|| coordinate(toward, "toward", field)),
+                _ => coordinate(corner, "corner", field)
+                    .or_else(|| coordinate(toward, "toward", field)),
             },
-            F::Area { corner, area, length, toward } => match field {
+            F::Area {
+                corner,
+                area,
+                length,
+                toward,
+            } => match field {
                 "area" => Some(area),
                 "length" => Some(length),
-                _ => coordinate(corner, "corner", field).or_else(|| coordinate(toward, "toward", field)),
+                _ => coordinate(corner, "corner", field)
+                    .or_else(|| coordinate(toward, "toward", field)),
             },
         }
     }
@@ -105,9 +131,11 @@ impl Input for kentos_commands::ArchRecognize {
 
 impl Input for kentos_commands::SpacesNumber {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        let kentos_commands::SpaceNumberOrder::Direction {from,to} = &mut self.order else {return None};
+        let kentos_commands::SpaceNumberOrder::Direction { from, to } = &mut self.order else {
+            return None;
+        };
         let path = path.strip_prefix("order.")?;
-        coordinate(from,"from",path).or_else(||coordinate(to,"to",path))
+        coordinate(from, "from", path).or_else(|| coordinate(to, "to", path))
     }
 }
 
@@ -118,13 +146,26 @@ impl Input for kentos_commands::SpacesDiscover {
 }
 
 impl Input for kentos_commands::SpacesSeparators {
-    fn number(&mut self,path:&str)->Option<&mut f64> {
-        let kentos_commands::SpaceSeparatorOperation::Create {paths,line_weight,..}=&mut self.operation else{return None};
-        if path=="operation.lineWeight" {return line_weight.as_mut();}
-        let (i,rest)=path.strip_prefix("operation.paths[")?.split_once("].")?;
-        let p=paths.get_mut(i.parse::<usize>().ok()?)?;
-        if rest.starts_with("pts["){return named_point(&mut p.pts,"pts",rest);}
-        let i=rest.strip_prefix("bulges[")?.strip_suffix(']')?.parse::<usize>().ok()?;
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let kentos_commands::SpaceSeparatorOperation::Create {
+            paths, line_weight, ..
+        } = &mut self.operation
+        else {
+            return None;
+        };
+        if path == "operation.lineWeight" {
+            return line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("operation.paths[")?.split_once("].")?;
+        let p = paths.get_mut(i.parse::<usize>().ok()?)?;
+        if rest.starts_with("pts[") {
+            return named_point(&mut p.pts, "pts", rest);
+        }
+        let i = rest
+            .strip_prefix("bulges[")?
+            .strip_suffix(']')?
+            .parse::<usize>()
+            .ok()?;
         p.bulges.as_mut()?.get_mut(i)
     }
 }
@@ -547,14 +588,18 @@ impl Input for kentos_commands::UnderlayEdit {
 impl Input for kentos_commands::UnderlayCheck {
     /// `tolerance` (docs/adr/8102).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        (path == "tolerance").then_some(self.tolerance.as_mut()).flatten()
+        (path == "tolerance")
+            .then_some(self.tolerance.as_mut())
+            .flatten()
     }
 }
 
 impl Input for kentos_commands::ZoningParcel {
     /// `tolerance` (docs/adr/8072 §5).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        (path == "tolerance").then_some(self.tolerance.as_mut()).flatten()
+        (path == "tolerance")
+            .then_some(self.tolerance.as_mut())
+            .flatten()
     }
 }
 
@@ -614,7 +659,10 @@ impl Input for kentos_commands::ElevationsQuery {
 impl Input for kentos_commands::ElevationsEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match (&mut self.operation, path) {
-            (kentos_commands::ElevationsOperation::Derive { gap: Some(g), .. }, "operation.gap") => Some(g),
+            (
+                kentos_commands::ElevationsOperation::Derive { gap: Some(g), .. },
+                "operation.gap",
+            ) => Some(g),
             _ => None,
         }
     }
@@ -629,8 +677,14 @@ impl Input for kentos_commands::BuildingSectionsQuery {
 impl Input for kentos_commands::BuildingSectionsEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match (&mut self.operation, path) {
-            (kentos_commands::BuildingSectionsOperation::Derive { at: Some(p), .. }, "operation.at.x") => Some(&mut p.x),
-            (kentos_commands::BuildingSectionsOperation::Derive { at: Some(p), .. }, "operation.at.y") => Some(&mut p.y),
+            (
+                kentos_commands::BuildingSectionsOperation::Derive { at: Some(p), .. },
+                "operation.at.x",
+            ) => Some(&mut p.x),
+            (
+                kentos_commands::BuildingSectionsOperation::Derive { at: Some(p), .. },
+                "operation.at.y",
+            ) => Some(&mut p.y),
             _ => None,
         }
     }
@@ -658,10 +712,18 @@ impl Input for kentos_commands::ModulesEdit {
     /// A placement's point and turn, a definition's base (docs/adr/0775).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match (&mut self.operation, path) {
-            (kentos_commands::ModulesOperation::Place { at, .. }, "operation.at.x") => Some(&mut at.x),
-            (kentos_commands::ModulesOperation::Place { at, .. }, "operation.at.y") => Some(&mut at.y),
-            (kentos_commands::ModulesOperation::Place { rotation, .. }, "operation.rotation") => rotation.as_mut(),
-            (kentos_commands::ModulesOperation::Define { base, .. }, "operation.base.x") => Some(&mut base.x),
+            (kentos_commands::ModulesOperation::Place { at, .. }, "operation.at.x") => {
+                Some(&mut at.x)
+            }
+            (kentos_commands::ModulesOperation::Place { at, .. }, "operation.at.y") => {
+                Some(&mut at.y)
+            }
+            (kentos_commands::ModulesOperation::Place { rotation, .. }, "operation.rotation") => {
+                rotation.as_mut()
+            }
+            (kentos_commands::ModulesOperation::Define { base, .. }, "operation.base.x") => {
+                Some(&mut base.x)
+            }
             _ => None,
         }
     }
@@ -718,7 +780,12 @@ impl Input for kentos_commands::CaseworkRun {
         }
         if let Some(rest) = path.strip_prefix("perModule[") {
             let i = rest.strip_suffix("].width")?;
-            return self.per_module.as_mut()?.get_mut(i.parse::<usize>().ok()?)?.width.as_mut();
+            return self
+                .per_module
+                .as_mut()?
+                .get_mut(i.parse::<usize>().ok()?)?
+                .width
+                .as_mut();
         }
         match path {
             "from.x" => Some(&mut self.from.x),
@@ -737,7 +804,9 @@ impl Input for kentos_commands::CaseworkEdit {
     /// `edit.width` of a module edit; a recipe's numbers after `edit.recipe.` (docs/adr/0727 §6).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match &mut self.edit {
-            kentos_commands::CaseworkChange::Module { width, .. } if path == "edit.width" => width.as_mut(),
+            kentos_commands::CaseworkChange::Module { width, .. } if path == "edit.width" => {
+                width.as_mut()
+            }
             kentos_commands::CaseworkChange::Recipe { recipe } => {
                 recipe.number(path.strip_prefix("edit.recipe.")?)
             }
@@ -806,8 +875,12 @@ impl Input for kentos_commands::WallsEdit {
                 };
             }
             WallsOperation::Shift { by, .. } => return (path == "operation.by").then_some(by),
-            WallsOperation::Distance { distance, .. } => return (path == "operation.distance").then_some(distance),
-            WallsOperation::Length { length, .. } => return (path == "operation.length").then_some(length),
+            WallsOperation::Distance { distance, .. } => {
+                return (path == "operation.distance").then_some(distance);
+            }
+            WallsOperation::Length { length, .. } => {
+                return (path == "operation.length").then_some(length);
+            }
             WallsOperation::Set(c) => c,
             _ => return None,
         };
@@ -867,7 +940,9 @@ impl Input for kentos_commands::IfcInspect {
 impl Input for kentos_commands::IfcCompare {
     /// `tolerance` (docs/adr/8103).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        (path == "tolerance").then_some(self.tolerance.as_mut()).flatten()
+        (path == "tolerance")
+            .then_some(self.tolerance.as_mut())
+            .flatten()
     }
 }
 

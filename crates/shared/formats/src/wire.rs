@@ -369,7 +369,8 @@ impl Fields {
                     box_width: self.box_width,
                     line_spacing: self.line_spacing,
                     runs: self.runs.unwrap_or_default(),
-                }.into(),
+                }
+                .into(),
                 face: TextFace {
                     overrides: Vec::new(),
                     text_style: self.text_style,
@@ -377,7 +378,8 @@ impl Fields {
                     bold: self.bold.unwrap_or(false),
                     italic: self.italic.unwrap_or(false),
                     oblique: self.oblique,
-                }.into(),
+                }
+                .into(),
                 path: self.path.map(Box::new),
             }),
             "dimension" => Entity::Dimension(Box::new(DimensionEntity {

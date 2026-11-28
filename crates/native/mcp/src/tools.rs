@@ -184,8 +184,13 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             object(json!({ "drawing": drawing_arg() }), &["drawing"]),
             annotations(true, false),
         ),
-        tool("drawing.selection", "Seçili nesneler", "Çizimin seçili nesnelerinin kalıcı kimlikleri. Masaüstüne bağlıysa ekrandaki seçimdir; silinmiş nesneler dönmez.",
-            object(json!({"drawing":drawing_arg()}), &["drawing"]), annotations(true, false)),
+        tool(
+            "drawing.selection",
+            "Seçili nesneler",
+            "Çizimin seçili nesnelerinin kalıcı kimlikleri. Masaüstüne bağlıysa ekrandaki seçimdir; silinmiş nesneler dönmez.",
+            object(json!({"drawing":drawing_arg()}), &["drawing"]),
+            annotations(true, false),
+        ),
         tool(
             "drawing.view",
             "Görünüm ve ölçeği",
@@ -197,8 +202,16 @@ pub fn list(catalog: &Value) -> Vec<Value> {
             object(json!({ "drawing": drawing_arg() }), &["drawing"]),
             annotations(true, false),
         ),
-        tool("drawing.select", "Nesneleri seç", "uids kimliklerini seçer; [] seçimi kaldırır. Bilinmeyen kimlikte hiçbir seçim değişmez. Masaüstüne bağlıysa şeridin bağlamsal sekmesi de bu seçimi izler. Belgeyi değiştirmez, geri alma adımı değildir.",
-            object(json!({"drawing":drawing_arg(), "uids":{"type":"array", "items":{"type":"string"}}}), &["drawing", "uids"]), annotations(false, false)),
+        tool(
+            "drawing.select",
+            "Nesneleri seç",
+            "uids kimliklerini seçer; [] seçimi kaldırır. Bilinmeyen kimlikte hiçbir seçim değişmez. Masaüstüne bağlıysa şeridin bağlamsal sekmesi de bu seçimi izler. Belgeyi değiştirmez, geri alma adımı değildir.",
+            object(
+                json!({"drawing":drawing_arg(), "uids":{"type":"array", "items":{"type":"string"}}}),
+                &["drawing", "uids"],
+            ),
+            annotations(false, false),
+        ),
         tool(
             "drawing.layers",
             "Katman ağacı",
@@ -823,7 +836,9 @@ fn command_tool(c: &Value) -> Value {
     // (the destructive ones above, the file commands but the print check) (docs/adr/0622 §8).
     let read_only = c["effect"] == "query"
         && !destructive
-        && (!id.starts_with("file.") || id == "file.preflight.sheets" || id == "file.publish.status");
+        && (!id.starts_with("file.")
+            || id == "file.preflight.sheets"
+            || id == "file.publish.status");
     let description = format!(
         "{}\n\nSonuç protokolün cevabıdır (docs/adr/0253): status completed (output, warnings) ya da failed, \
          needs_input, conflict (error: code, message, path, uids, retryable); yanında summary (eklenen, değişen, \
@@ -1208,10 +1223,15 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
         "drawing.open" => {
             let path =
                 text(args, "path").ok_or_else(|| refused("invalid_input", "path gerekli."))?;
-            let file_unit = args.get("fileUnit").map(|u| serde_json::from_value(u.clone()))
-                .transpose().map_err(|e| refused("invalid_input", format!("fileUnit: {e}")))?;
+            let file_unit = args
+                .get("fileUnit")
+                .map(|u| serde_json::from_value(u.clone()))
+                .transpose()
+                .map_err(|e| refused("invalid_input", format!("fileUnit: {e}")))?;
             let session = match text(args, "project") {
-                Some(project) => Session::open_geopackage(Path::new(path), Some(project)).map_err(host)?,
+                Some(project) => {
+                    Session::open_geopackage(Path::new(path), Some(project)).map_err(host)?
+                }
                 None => Session::open_in(Path::new(path), file_unit).map_err(host)?,
             };
             opened(server, session)

@@ -7,11 +7,12 @@
 use std::path::Path;
 
 use kentos_commands::{
-    AcceptMethod, CommandResult, CommandWarning, CorrelationBlock, Entity, EntityBase, EntityId, GnssPoint, MapSurvey,
-    MapSurveyEdit, PointVelocity, SurveyBaselineSession, SurveyTolerance,
-    MapSurveyEdited, MapSurveyNetwork, MapSurveyOperation as Op, PointEntity, PointRevision, SolutionKind,
-    SurveyAdjustment, SurveyAntenna, SurveyBaseline, SurveyCampaign, SurveyFile, SurveyFileFormat, SurveyGrid,
-    SurveyKnown, SurveyPoint, SurveyReceiver, SurveyResult, SurveySession, SurveySolution, SurveyUse, TimeSystem, Vec2,
+    AcceptMethod, CommandResult, CommandWarning, CorrelationBlock, Entity, EntityBase, EntityId,
+    GnssPoint, MapSurvey, MapSurveyEdit, MapSurveyEdited, MapSurveyNetwork,
+    MapSurveyOperation as Op, PointEntity, PointRevision, PointVelocity, SolutionKind,
+    SurveyAdjustment, SurveyAntenna, SurveyBaseline, SurveyBaselineSession, SurveyCampaign,
+    SurveyFile, SurveyFileFormat, SurveyGrid, SurveyKnown, SurveyPoint, SurveyReceiver,
+    SurveyResult, SurveySession, SurveySolution, SurveyTolerance, SurveyUse, TimeSystem, Vec2,
     baseline_numbers_problem, known_numbers_problem, next_survey_id, survey_text_ok, survey_time,
 };
 use kentos_domain::{Document, Slot, Uuid};
@@ -39,15 +40,27 @@ fn value(path: &str, message: String) -> Stop {
 }
 
 fn nothing() -> Stop {
-    fail(codes::NOTHING_TO_SET, "Değişecek bir şey yok.".into(), "operation")
+    fail(
+        codes::NOTHING_TO_SET,
+        "Değişecek bir şey yok.".into(),
+        "operation",
+    )
 }
 
 fn full(what: &str) -> Stop {
-    fail(codes::SURVEY_FULL, format!("GNSS arşivinde en çok {what} olur."), "operation")
+    fail(
+        codes::SURVEY_FULL,
+        format!("GNSS arşivinde en çok {what} olur."),
+        "operation",
+    )
 }
 
 fn unknown(what: &str, id: &str, path: &str) -> Stop {
-    fail(codes::UNKNOWN_SURVEY_RECORD, format!("GNSS arşivinde “{id}” kimlikli {what} yok."), path)
+    fail(
+        codes::UNKNOWN_SURVEY_RECORD,
+        format!("GNSS arşivinde “{id}” kimlikli {what} yok."),
+        path,
+    )
 }
 
 fn epoch_ok(e: Option<f64>, path: &str) -> Result<(), Stop> {
@@ -80,8 +93,12 @@ fn time_ok(t: Option<&str>, path: &str) -> Result<(), Stop> {
 fn receiver_ok(r: Option<&SurveyReceiver>) -> Result<(), Stop> {
     let Some(r) = r else { return Ok(()) };
     let bad = !survey_text_ok(&r.kind, SHORT)
-        || r.serial.as_deref().is_some_and(|t| !survey_text_ok(t, SHORT))
-        || r.firmware.as_deref().is_some_and(|t| !survey_text_ok(t, SHORT));
+        || r.serial
+            .as_deref()
+            .is_some_and(|t| !survey_text_ok(t, SHORT))
+        || r.firmware
+            .as_deref()
+            .is_some_and(|t| !survey_text_ok(t, SHORT));
     if bad {
         return Err(fail(
             codes::INVALID_SURVEY_TEXT,
@@ -94,7 +111,10 @@ fn receiver_ok(r: Option<&SurveyReceiver>) -> Result<(), Stop> {
 
 fn antenna_ok(a: Option<&SurveyAntenna>) -> Result<(), Stop> {
     match a.and_then(SurveyAntenna::problem) {
-        Some((field, why)) => Err(value(&format!("operation.antenna.{field}"), format!("Anten: {why}."))),
+        Some((field, why)) => Err(value(
+            &format!("operation.antenna.{field}"),
+            format!("Anten: {why}."),
+        )),
         None => Ok(()),
     }
 }
@@ -109,11 +129,26 @@ fn file_at(path: &str, at: &str) -> Result<(Vec<u8>, String), Stop> {
         ));
     }
     if !Path::new(path).is_file() {
-        return Err(fail(codes::FILE_NOT_FOUND, format!("“{path}” dosyası yok."), at));
+        return Err(fail(
+            codes::FILE_NOT_FOUND,
+            format!("“{path}” dosyası yok."),
+            at,
+        ));
     }
-    let bytes = std::fs::read(path).map_err(|_| fail(codes::FILE_NOT_FOUND, format!("“{path}” dosyası okunamadı."), at))?;
-    let sha = crate::map_work::file_sha(path)
-        .ok_or_else(|| fail(codes::FILE_NOT_FOUND, format!("“{path}” dosyası okunamadı."), at))?;
+    let bytes = std::fs::read(path).map_err(|_| {
+        fail(
+            codes::FILE_NOT_FOUND,
+            format!("“{path}” dosyası okunamadı."),
+            at,
+        )
+    })?;
+    let sha = crate::map_work::file_sha(path).ok_or_else(|| {
+        fail(
+            codes::FILE_NOT_FOUND,
+            format!("“{path}” dosyası okunamadı."),
+            at,
+        )
+    })?;
     Ok((bytes, sha))
 }
 
@@ -123,7 +158,9 @@ fn frame_ok(srid: u32) -> Result<(), Stop> {
     if !geographic {
         return Err(fail(
             codes::UNKNOWN_FRAME,
-            format!("EPSG:{srid} kayıttaki coğrafi bir sistem değil; çözümün çerçevesini (4326 WGS 84, 5252 TUREF) verin."),
+            format!(
+                "EPSG:{srid} kayıttaki coğrafi bir sistem değil; çözümün çerçevesini (4326 WGS 84, 5252 TUREF) verin."
+            ),
             "operation.srid",
         ));
     }
@@ -132,7 +169,10 @@ fn frame_ok(srid: u32) -> Result<(), Stop> {
 
 fn applied_ok(v: f64) -> Result<(), Stop> {
     if !(v.is_finite() && (0.0..=kentos_commands::MOST_ANTENNA_HEIGHT).contains(&v)) {
-        return Err(value("operation.antennaApplied", "Uygulanmış anten yüksekliği 0 ile 100 m arasında olmalı.".into()));
+        return Err(value(
+            "operation.antennaApplied",
+            "Uygulanmış anten yüksekliği 0 ile 100 m arasında olmalı.".into(),
+        ));
     }
     Ok(())
 }
@@ -196,7 +236,11 @@ fn read_session_file(path: &str) -> Result<Read, Stop> {
         let header = kentos_formats::gnss::rinex::read_header(&bytes)
             .map_err(|why| fail(codes::UNREADABLE_GNSS_FILE, format!("“{path}”: {why}"), at))?;
         return Ok(Read {
-            file: SurveyFile { path: path.to_owned(), revision: sha, format: SurveyFileFormat::Rinex },
+            file: SurveyFile {
+                path: path.to_owned(),
+                revision: sha,
+                format: SurveyFileFormat::Rinex,
+            },
             header: Some(header),
             observations: Vec::new(),
             skipped: Vec::new(),
@@ -208,11 +252,23 @@ fn read_session_file(path: &str) -> Result<Read, Stop> {
             || "RINEX gözlem dosyası, GPX ya da NMEA kaydı değil".to_owned(),
             |p| p.message.clone(),
         );
-        return Err(fail(codes::UNREADABLE_GNSS_FILE, format!("“{path}” dosyasında okunan konum yok: {why}"), at));
+        return Err(fail(
+            codes::UNREADABLE_GNSS_FILE,
+            format!("“{path}” dosyasında okunan konum yok: {why}"),
+            at,
+        ));
     }
-    let format = if read.format == "gpx" { SurveyFileFormat::Gpx } else { SurveyFileFormat::Nmea };
+    let format = if read.format == "gpx" {
+        SurveyFileFormat::Gpx
+    } else {
+        SurveyFileFormat::Nmea
+    };
     Ok(Read {
-        file: SurveyFile { path: path.to_owned(), revision: sha, format },
+        file: SurveyFile {
+            path: path.to_owned(),
+            revision: sha,
+            format,
+        },
         header: None,
         observations: read.points,
         skipped: read.problems.into_iter().map(|p| p.message).collect(),
@@ -220,7 +276,10 @@ fn read_session_file(path: &str) -> Result<Read, Stop> {
 }
 
 fn file_name(path: &str) -> &str {
-    Path::new(path).file_name().and_then(|n| n.to_str()).unwrap_or(path)
+    Path::new(path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or(path)
 }
 
 /// A session made of what was given and what its file says.
@@ -240,8 +299,18 @@ fn new_session(
     if survey.campaign(campaign).is_none() {
         return Err(unknown("arazi ölçümü", campaign, "operation.campaign"));
     }
-    text(mark.map(String::as_str), SHORT, "operation.mark", "İşaretin adı")?;
-    text(operator.map(String::as_str), SHORT, "operation.operator", "Operatörün adı")?;
+    text(
+        mark.map(String::as_str),
+        SHORT,
+        "operation.mark",
+        "İşaretin adı",
+    )?;
+    text(
+        operator.map(String::as_str),
+        SHORT,
+        "operation.operator",
+        "Operatörün adı",
+    )?;
     receiver_ok(receiver)?;
     antenna_ok(antenna)?;
     time_ok(start.map(String::as_str), "operation.start")?;
@@ -251,7 +320,10 @@ fn new_session(
         None => None,
     };
     let mut warnings = Vec::new();
-    let header = read.as_ref().and_then(|r| r.header.clone()).unwrap_or_default();
+    let header = read
+        .as_ref()
+        .and_then(|r| r.header.clone())
+        .unwrap_or_default();
     let mut s = SurveySession {
         id: String::new(),
         campaign: campaign.to_owned(),
@@ -263,8 +335,14 @@ fn new_session(
         antenna: antenna.cloned().or(header.antenna.clone()),
         operator: operator.cloned(),
         file: read.as_ref().map(|r| r.file.clone()),
-        rinex: read.as_ref().and_then(|r| r.header.as_ref()).map(|h| h.facts.clone()),
-        observations: read.as_ref().map(|r| r.observations.clone()).unwrap_or_default(),
+        rinex: read
+            .as_ref()
+            .and_then(|r| r.header.as_ref())
+            .map(|h| h.facts.clone()),
+        observations: read
+            .as_ref()
+            .map(|r| r.observations.clone())
+            .unwrap_or_default(),
     };
     if s.mark.is_empty() {
         return Err(fail(
@@ -284,27 +362,42 @@ fn new_session(
         && let Some((field, why)) = h.problem()
         && antenna.is_none()
     {
-        return Err(value(&format!("operation.file.antenna.{field}"), format!("RINEX başlığının anteni: {why}.")));
+        return Err(value(
+            &format!("operation.file.antenna.{field}"),
+            format!("RINEX başlığının anteni: {why}."),
+        ));
     }
     // An NMEA log's or a GPX file's first and last full times (both UTC by their standards).
     if read.as_ref().is_some_and(|r| r.header.is_none()) {
-        let times: Vec<&str> =
-            s.observations.iter().filter_map(|o| o.time.as_deref()).filter(|t| survey_time(t).is_some()).collect();
+        let times: Vec<&str> = s
+            .observations
+            .iter()
+            .filter_map(|o| o.time.as_deref())
+            .filter(|t| survey_time(t).is_some())
+            .collect();
         if s.start.is_none() && s.end.is_none() && !times.is_empty() {
             s.start = times.first().map(|t| (*t).to_owned());
             s.end = times.last().map(|t| (*t).to_owned());
             s.time_system = s.time_system.or(Some(TimeSystem::Utc));
         }
     }
-    if let (Some(a), Some(b)) = (s.start.as_deref().and_then(survey_time), s.end.as_deref().and_then(survey_time))
-        && b < a
+    if let (Some(a), Some(b)) = (
+        s.start.as_deref().and_then(survey_time),
+        s.end.as_deref().and_then(survey_time),
+    ) && b < a
     {
-        return Err(value("operation.end", "Bitiş başlangıçtan önce olamaz.".into()));
+        return Err(value(
+            "operation.end",
+            "Bitiş başlangıçtan önce olamaz.".into(),
+        ));
     }
     if s.observations.len() > kentos_commands::MAX_SESSION_OBSERVATIONS {
         return Err(value(
             "operation.file",
-            format!("Dosyada {} konum var; bir oturumda en çok 86400 konum olur.", s.observations.len()),
+            format!(
+                "Dosyada {} konum var; bir oturumda en çok 86400 konum olur.",
+                s.observations.len()
+            ),
         ));
     }
     if let Some(r) = &read {
@@ -395,22 +488,33 @@ fn point_entity(layer: &str, r: &SurveyResult, mark: &str, id: &str, campaign: &
 }
 
 fn campaign_name(survey: &MapSurvey, r: &SurveyResult) -> String {
-    crate::map_survey::campaign_of_result(survey, r).map(|c| c.name.clone()).unwrap_or_default()
+    crate::map_survey::campaign_of_result(survey, r)
+        .map(|c| c.name.clone())
+        .unwrap_or_default()
 }
 
 /// What an accepted point's object says it was made of: its solutions, or its network adjustment.
 fn made_of(r: &SurveyResult) -> String {
-    r.adjustment.clone().unwrap_or_else(|| r.solutions.join(", "))
+    r.adjustment
+        .clone()
+        .unwrap_or_else(|| r.solutions.join(", "))
 }
 
 fn layer_ok(doc: &Document, layer: &str, at: &str, words: &str) -> Result<(), Stop> {
     if doc.layers().get(layer).is_none() {
-        return Err(fail(codes::LAYER_NOT_FOUND, format!("“{layer}” kimlikli katman çizimde yok."), at));
+        return Err(fail(
+            codes::LAYER_NOT_FOUND,
+            format!("“{layer}” kimlikli katman çizimde yok."),
+            at,
+        ));
     }
     if doc.layers().is_locked(layer) {
         return Err(fail(
             codes::LAYER_LOCKED,
-            format!("“{}” katmanı kilitli: {words} Kilidi açın.", doc.layers().path(layer)),
+            format!(
+                "“{}” katmanı kilitli: {words} Kilidi açın.",
+                doc.layers().path(layer)
+            ),
             at,
         ));
     }
@@ -424,30 +528,43 @@ type FileSessions = Vec<kentos_formats::gnss::gvx::GvxSession>;
 /// A baseline file's vectors (records without their id, campaign and file yet), its sessions, its format and what was
 /// not read: a GVX 1.0 file, else KentOS's baseline text (docs/adr/1740).
 #[allow(clippy::type_complexity)]
-fn read_baselines(bytes: &[u8]) -> Result<(Vec<SurveyBaseline>, FileSessions, SurveyFileFormat, Vec<CommandWarning>), Stop> {
+fn read_baselines(
+    bytes: &[u8],
+) -> Result<
+    (
+        Vec<SurveyBaseline>,
+        FileSessions,
+        SurveyFileFormat,
+        Vec<CommandWarning>,
+    ),
+    Stop,
+> {
     use kentos_formats::gnss::gvx;
-    let blank = |from: String, to: String, d: [f64; 3], covariance: [f64; 6], source: String| SurveyBaseline {
-        id: String::new(),
-        campaign: String::new(),
-        from,
-        to,
-        d,
-        covariance,
-        start: None,
-        end: None,
-        solution: None,
-        software: None,
-        epochs: None,
-        satellites: None,
-        file: None,
-        source: Some(source),
-        recipe: None,
-        excluded: None,
-        adjust: true,
+    let blank = |from: String, to: String, d: [f64; 3], covariance: [f64; 6], source: String| {
+        SurveyBaseline {
+            id: String::new(),
+            campaign: String::new(),
+            from,
+            to,
+            d,
+            covariance,
+            start: None,
+            end: None,
+            solution: None,
+            software: None,
+            epochs: None,
+            satellites: None,
+            file: None,
+            source: Some(source),
+            recipe: None,
+            excluded: None,
+            adjust: true,
+        }
     };
     let mut warnings = Vec::new();
     if gvx::is_gvx(bytes) {
-        let read = gvx::read(bytes).map_err(|why| fail(codes::UNREADABLE_GNSS_FILE, why, "operation.file"))?;
+        let read = gvx::read(bytes)
+            .map_err(|why| fail(codes::UNREADABLE_GNSS_FILE, why, "operation.file"))?;
         if !read.ignored.is_empty() {
             warnings.push(CommandWarning {
                 code: codes::GVX_CORRELATIONS_IGNORED.into(),
@@ -480,8 +597,13 @@ fn read_baselines(bytes: &[u8]) -> Result<(Vec<SurveyBaseline>, FileSessions, Su
     }
     let (enc, bom) = kentos_formats::text::sniff(bytes);
     let body = kentos_formats::text::decode(&bytes[bom..], enc);
-    let (stations, vectors) = crate::survey_baselines::read_text(&body)
-        .map_err(|stop| fail(codes::UNREADABLE_GNSS_FILE, stop.into_error().message, "operation.file"))?;
+    let (stations, vectors) = crate::survey_baselines::read_text(&body).map_err(|stop| {
+        fail(
+            codes::UNREADABLE_GNSS_FILE,
+            stop.into_error().message,
+            "operation.file",
+        )
+    })?;
     if vectors.is_empty() {
         return Err(fail(
             codes::UNREADABLE_GNSS_FILE,
@@ -499,7 +621,11 @@ fn read_baselines(bytes: &[u8]) -> Result<(Vec<SurveyBaseline>, FileSessions, Su
             path: Some("operation.file".into()),
         });
     }
-    let out = vectors.into_iter().enumerate().map(|(k, v)| blank(v.from, v.to, v.d, v.cov, format!("B{}", k + 1))).collect();
+    let out = vectors
+        .into_iter()
+        .enumerate()
+        .map(|(k, v)| blank(v.from, v.to, v.d, v.cov, format!("B{}", k + 1)))
+        .collect();
     Ok((out, Vec::new(), SurveyFileFormat::Text, warnings))
 }
 
@@ -524,7 +650,11 @@ fn network(
     }
     for st in [&a.out.free, &a.out.constrained] {
         if st.blunders > 0 {
-            let which = if std::ptr::eq(st, &a.out.free) { "Serbest dengelemede" } else { "Bilinen noktalara dayalı dengelemede" };
+            let which = if std::ptr::eq(st, &a.out.free) {
+                "Serbest dengelemede"
+            } else {
+                "Bilinen noktalara dayalı dengelemede"
+            };
             return Err(fail(
                 codes::NETWORK_BLUNDER,
                 format!(
@@ -592,15 +722,24 @@ fn network(
             reasons: Vec::new(),
             adjustment: Some(da.clone()),
             // docs/adr/4920: its velocity read from the grid the user gave, kept with the grid's name and SHA-256.
-            velocity: n.velocity.zip(a.velocity_grid.clone()).map(|(enu, grid)| PointVelocity { enu, grid }),
+            velocity: n
+                .velocity
+                .zip(a.velocity_grid.clone())
+                .map(|(enu, grid)| PointVelocity { enu, grid }),
         };
         match now.points.iter().find(|p| p.mark == n.mark) {
             Some(old) => {
-                let slot = doc.slot_of(Uuid::from_bytes(old.uid.0)).filter(|_| present(doc, &old.uid));
-                let Some((slot, entity)) = slot.and_then(|s| doc.get(s).map(|e| (s, e.clone()))) else {
+                let slot = doc
+                    .slot_of(Uuid::from_bytes(old.uid.0))
+                    .filter(|_| present(doc, &old.uid));
+                let Some((slot, entity)) = slot.and_then(|s| doc.get(s).map(|e| (s, e.clone())))
+                else {
                     return Err(fail(
                         codes::ENTITY_NOT_FOUND,
-                        format!("“{}” noktasının nesnesi çizimde yok; geri alın ya da kaydı çıkarıp ağı yeniden kabul edin.", old.id),
+                        format!(
+                            "“{}” noktasının nesnesi çizimde yok; geri alın ya da kaydı çıkarıp ağı yeniden kabul edin.",
+                            old.id
+                        ),
                         "operation",
                     ));
                 };
@@ -608,7 +747,11 @@ fn network(
                 if doc.layers().is_locked(&on) {
                     return Err(fail(
                         codes::LAYER_LOCKED,
-                        format!("“{}” katmanı kilitli: “{}” noktası yeni yerine taşınamaz. Kilidi açın.", doc.layers().path(&on), old.id),
+                        format!(
+                            "“{}” katmanı kilitli: “{}” noktası yeni yerine taşınamaz. Kilidi açın.",
+                            doc.layers().path(&on),
+                            old.id
+                        ),
                         "operation",
                     ));
                 }
@@ -619,10 +762,17 @@ fn network(
                 result.reasons = vec![format!("“{da}” ağ dengelemesiyle üretildi.")];
                 let mut moved = entity.clone();
                 if let Entity::Point(pt) = &mut moved {
-                    pt.p = Vec2 { x: result.x, y: result.y };
+                    pt.p = Vec2 {
+                        x: result.x,
+                        y: result.y,
+                    };
                     pt.z = result.z;
-                    pt.base.attrs.insert("Revizyon".into(), result.revision.to_string());
-                    pt.base.attrs.insert("Yöntem".into(), result.method.title().into());
+                    pt.base
+                        .attrs
+                        .insert("Revizyon".into(), result.revision.to_string());
+                    pt.base
+                        .attrs
+                        .insert("Yöntem".into(), result.method.title().into());
                     pt.base.attrs.insert("Çözüm".into(), made_of(&result));
                 }
                 if let Some(p) = next.points.iter_mut().find(|p| p.id == old.id) {
@@ -634,7 +784,12 @@ fn network(
             }
             None => {
                 if !layer_checked {
-                    layer_ok(doc, &layer, "operation.layer", "kabul edilen nokta kilitli katmana çizilmez.")?;
+                    layer_ok(
+                        doc,
+                        &layer,
+                        "operation.layer",
+                        "kabul edilen nokta kilitli katmana çizilmez.",
+                    )?;
                     layer_checked = true;
                 }
                 if next.points.len() >= kentos_commands::MAX_SURVEY_POINTS {
@@ -681,22 +836,41 @@ fn network(
         let mut shapes: Vec<(Entity, Option<Entity>)> = Vec::new();
         for n in &a.new {
             let Ok(placed) = &n.placed else { continue };
-            let Some(e) = a.out.stations.iter().find(|s| s.mark == n.mark).and_then(|s| s.ellipse.as_ref()) else {
+            let Some(e) = a
+                .out
+                .stations
+                .iter()
+                .find(|s| s.mark == n.mark)
+                .and_then(|s| s.ellipse.as_ref())
+            else {
                 continue;
             };
-            let at = Vec2 { x: placed.x, y: placed.y };
+            let at = Vec2 {
+                x: placed.x,
+                y: placed.y,
+            };
             let turn = crate::network_ellipses::convergence(doc, at, &n.mark)?;
-            let bar = with.heights.then(|| crate::network_ellipses::height_bar(&n.mark, &da, at, e, with));
-            shapes.push((crate::network_ellipses::ellipse(&n.mark, &da, at, e, with, turn), bar));
+            let bar = with
+                .heights
+                .then(|| crate::network_ellipses::height_bar(&n.mark, &da, at, e, with));
+            shapes.push((
+                crate::network_ellipses::ellipse(&n.mark, &da, at, e, with, turn),
+                bar,
+            ));
             stations.push((n.mark.clone(), at, e.clone()));
             if let Some(p) = next.points.iter().find(|p| p.mark == n.mark) {
-                points.push(PointRevision { point: p.id.clone(), revision: p.result.revision });
+                points.push(PointRevision {
+                    point: p.id.clone(),
+                    revision: p.result.revision,
+                });
             }
         }
         // Docs/adr/3760, 4160: each label at its first free place, recorded with them.
         let labels = if with.labels {
-            let obstacles: Vec<Entity> =
-                shapes.iter().flat_map(|(e, b)| std::iter::once(e.clone()).chain(b.clone())).collect();
+            let obstacles: Vec<Entity> = shapes
+                .iter()
+                .flat_map(|(e, b)| std::iter::once(e.clone()).chain(b.clone()))
+                .collect();
             let (labels, moved, crowded) = crate::network_ellipses::placed_labels(
                 doc,
                 &stations,
@@ -723,14 +897,25 @@ fn network(
                 return Err(full("10 000 dayanan kaydı"));
             }
             let id = next_survey_id(next.uses.iter().map(|u| u.id.as_str()), "kb-");
-            next.uses.push(SurveyUse { id, operation: format!("Hata elipsleri ({da})"), uids: Vec::new(), points });
+            next.uses.push(SurveyUse {
+                id,
+                operation: format!("Hata elipsleri ({da})"),
+                uids: Vec::new(),
+                points,
+            });
             change.drawn_use = Some(next.uses.len() - 1);
         }
     }
     // The new points' objects, drawn once the archive after knows their records' places and campaign.
     for (at, p) in next.points.iter().enumerate() {
         if p.uid == EntityId([0; 16]) {
-            let entity = point_entity(&layer, &p.result, &p.mark, &p.id, &campaign_name(&next, &p.result));
+            let entity = point_entity(
+                &layer,
+                &p.result,
+                &p.mark,
+                &p.id,
+                &campaign_name(&next, &p.result),
+            );
             change.adds.push((entity, at));
         }
     }
@@ -746,7 +931,11 @@ fn used_by<'a>(survey: &'a MapSurvey, sessions: &[&str]) -> Option<(&'a str, &'a
         .solutions
         .iter()
         .filter(|s| sessions.contains(&s.session.as_str()))
-        .find_map(|s| survey.point_using(&s.id).map(|p| (s.id.as_str(), p.id.as_str())))
+        .find_map(|s| {
+            survey
+                .point_using(&s.id)
+                .map(|p| (s.id.as_str(), p.id.as_str()))
+        })
 }
 
 #[allow(clippy::too_many_lines)]
@@ -756,10 +945,21 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
     let now = doc.map_survey().cloned().unwrap_or_default();
     let mut next = now.clone();
     match &input.operation {
-        Op::Campaign { name, work, operator, epoch, velocity } => {
+        Op::Campaign {
+            name,
+            work,
+            operator,
+            epoch,
+            velocity,
+        } => {
             text(Some(name), SHORT, "operation.name", "Arazi ölçümünün adı")?;
             work_ok(doc, work.as_deref())?;
-            text(operator.as_deref(), SHORT, "operation.operator", "Operatörün adı")?;
+            text(
+                operator.as_deref(),
+                SHORT,
+                "operation.operator",
+                "Operatörün adı",
+            )?;
             epoch_ok(*epoch, "operation.epoch")?;
             grid_ok(velocity.as_ref(), "operation.velocity")?;
             if now.campaigns.len() >= kentos_commands::MAX_SURVEY_CAMPAIGNS {
@@ -774,15 +974,35 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 epoch: *epoch,
                 velocity: velocity.clone(),
             });
-            Ok(Change { id: Some(id), ..Change::new(next, "Arazi ölçümü ekle") })
+            Ok(Change {
+                id: Some(id),
+                ..Change::new(next, "Arazi ölçümü ekle")
+            })
         }
-        Op::SetCampaign { campaign, name, work, operator, epoch, velocity } => {
+        Op::SetCampaign {
+            campaign,
+            name,
+            work,
+            operator,
+            epoch,
+            velocity,
+        } => {
             let Some(old) = now.campaign(campaign) else {
                 return Err(unknown("arazi ölçümü", campaign, "operation.campaign"));
             };
-            text(name.as_deref(), SHORT, "operation.name", "Arazi ölçümünün adı")?;
+            text(
+                name.as_deref(),
+                SHORT,
+                "operation.name",
+                "Arazi ölçümünün adı",
+            )?;
             work_ok(doc, work.as_deref())?;
-            text(operator.as_deref(), SHORT, "operation.operator", "Operatörün adı")?;
+            text(
+                operator.as_deref(),
+                SHORT,
+                "operation.operator",
+                "Operatörün adı",
+            )?;
             epoch_ok(*epoch, "operation.epoch")?;
             grid_ok(velocity.as_ref(), "operation.velocity")?;
             let mut c = old.clone();
@@ -807,9 +1027,22 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if let Some(slot) = next.campaigns.iter_mut().find(|x| x.id == *campaign) {
                 *slot = c;
             }
-            Ok(Change { id: Some(campaign.clone()), ..Change::new(next, "Arazi ölçümünü değiştir") })
+            Ok(Change {
+                id: Some(campaign.clone()),
+                ..Change::new(next, "Arazi ölçümünü değiştir")
+            })
         }
-        Op::Session { campaign, mark, file, start, end, time_system, receiver, antenna, operator } => {
+        Op::Session {
+            campaign,
+            mark,
+            file,
+            start,
+            end,
+            time_system,
+            receiver,
+            antenna,
+            operator,
+        } => {
             let (mut s, warnings) = new_session(
                 &now,
                 campaign,
@@ -829,14 +1062,33 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             let id = s.id.clone();
             let observations = u32::try_from(s.observations.len()).unwrap_or(u32::MAX);
             next.sessions.push(s);
-            Ok(Change { id: Some(id), observations, warnings, ..Change::new(next, "GNSS oturumu ekle") })
+            Ok(Change {
+                id: Some(id),
+                observations,
+                warnings,
+                ..Change::new(next, "GNSS oturumu ekle")
+            })
         }
-        Op::SetSession { session, mark, start, end, time_system, receiver, antenna, operator } => {
+        Op::SetSession {
+            session,
+            mark,
+            start,
+            end,
+            time_system,
+            receiver,
+            antenna,
+            operator,
+        } => {
             let Some(old) = now.session(session) else {
                 return Err(unknown("oturum", session, "operation.session"));
             };
             text(mark.as_deref(), SHORT, "operation.mark", "İşaretin adı")?;
-            text(operator.as_deref(), SHORT, "operation.operator", "Operatörün adı")?;
+            text(
+                operator.as_deref(),
+                SHORT,
+                "operation.operator",
+                "Operatörün adı",
+            )?;
             receiver_ok(receiver.as_ref())?;
             antenna_ok(antenna.as_ref())?;
             time_ok(start.as_deref(), "operation.start")?;
@@ -871,21 +1123,39 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             {
                 return Err(fail(
                     codes::SURVEY_IN_USE,
-                    format!("“{session}” oturumunun çözümü “{p}” noktasında; oturumun işareti değişmez."),
+                    format!(
+                        "“{session}” oturumunun çözümü “{p}” noktasında; oturumun işareti değişmez."
+                    ),
                     "operation.mark",
                 ));
             }
-            if let (Some(a), Some(b)) = (s.start.as_deref().and_then(survey_time), s.end.as_deref().and_then(survey_time))
-                && b < a
+            if let (Some(a), Some(b)) = (
+                s.start.as_deref().and_then(survey_time),
+                s.end.as_deref().and_then(survey_time),
+            ) && b < a
             {
-                return Err(value("operation.end", "Bitiş başlangıçtan önce olamaz.".into()));
+                return Err(value(
+                    "operation.end",
+                    "Bitiş başlangıçtan önce olamaz.".into(),
+                ));
             }
             if let Some(slot) = next.sessions.iter_mut().find(|x| x.id == *session) {
                 *slot = s;
             }
-            Ok(Change { id: Some(session.clone()), ..Change::new(next, "Oturumu değiştir") })
+            Ok(Change {
+                id: Some(session.clone()),
+                ..Change::new(next, "Oturumu değiştir")
+            })
         }
-        Op::Solve { session, srid, antenna_applied, epoch, from, to, fixes } => {
+        Op::Solve {
+            session,
+            srid,
+            antenna_applied,
+            epoch,
+            from,
+            to,
+            fixes,
+        } => {
             let Some(s) = now.session(session) else {
                 return Err(unknown("oturum", session, "operation.session"));
             };
@@ -896,14 +1166,19 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if n == 0 {
                 return Err(fail(
                     codes::NO_OBSERVATIONS,
-                    format!("“{session}” oturumunda ham ölçüm yok; NMEA ya da GPX dosyasıyla eklenen oturum çözülür."),
+                    format!(
+                        "“{session}” oturumunda ham ölçüm yok; NMEA ya da GPX dosyasıyla eklenen oturum çözülür."
+                    ),
                     "operation.session",
                 ));
             }
             let a = from.unwrap_or(0) as usize;
             let b = to.map_or(n - 1, |t| t as usize);
             if a > b || b >= n {
-                return Err(value("operation.to", format!("Aralık oturumun 0–{} konumları içinde olmalı.", n - 1)));
+                return Err(value(
+                    "operation.to",
+                    format!("Aralık oturumun 0–{} konumları içinde olmalı.", n - 1),
+                ));
             }
             let taken: Vec<&GnssPoint> = s.observations[a..=b]
                 .iter()
@@ -918,7 +1193,10 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             }
             // A position without an ellipsoidal height (GPX's `ele`, a GGA without its geoid separation) is left out;
             // none left is refused.
-            let taken: Vec<&GnssPoint> = taken.into_iter().filter(|o| o.ellipsoidal.is_some()).collect();
+            let taken: Vec<&GnssPoint> = taken
+                .into_iter()
+                .filter(|o| o.ellipsoidal.is_some())
+                .collect();
             if taken.is_empty() {
                 return Err(fail(
                     codes::NO_ELLIPSOIDAL_HEIGHT,
@@ -934,9 +1212,18 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             }
             let k = taken.len() as f64;
             let first_fix = taken[0].fix.clone();
-            let fix = taken.iter().all(|o| o.fix == first_fix).then_some(first_fix).flatten();
+            let fix = taken
+                .iter()
+                .all(|o| o.fix == first_fix)
+                .then_some(first_fix)
+                .flatten();
             let satellites = taken.iter().filter_map(|o| o.satellites).min();
-            let hdop = taken.iter().filter_map(|o| o.hdop).fold(None, |m: Option<f64>, v| Some(m.map_or(v, |m| if v > m { v } else { m })));
+            let hdop = taken
+                .iter()
+                .filter_map(|o| o.hdop)
+                .fold(None, |m: Option<f64>, v| {
+                    Some(m.map_or(v, |m| if v > m { v } else { m }))
+                });
             if now.solutions.len() >= kentos_commands::MAX_SURVEY_SOLUTIONS {
                 return Err(full("100 000 çözüm"));
             }
@@ -967,7 +1254,10 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 excluded: None,
                 adjust: false,
             });
-            Ok(Change { id: Some(id), ..Change::new(next, "Alıcı çözümü") })
+            Ok(Change {
+                id: Some(id),
+                ..Change::new(next, "Alıcı çözümü")
+            })
         }
         Op::Solution {
             session,
@@ -994,8 +1284,18 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             }
             frame_ok(*srid)?;
             text(fix.as_deref(), SHORT, "operation.fix", "Fix")?;
-            text(correction.as_deref(), SHORT, "operation.correction", "Düzeltme kaynağı")?;
-            text(recipe.as_deref(), kentos_commands::MOST_RECIPE_TEXT, "operation.recipe", "Yeniden işleme tarifi")?;
+            text(
+                correction.as_deref(),
+                SHORT,
+                "operation.correction",
+                "Düzeltme kaynağı",
+            )?;
+            text(
+                recipe.as_deref(),
+                kentos_commands::MOST_RECIPE_TEXT,
+                "operation.recipe",
+                "Yeniden işleme tarifi",
+            )?;
             let mut s = SurveySolution {
                 id: String::new(),
                 session: session.clone(),
@@ -1023,11 +1323,18 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 adjust: false,
             };
             if let Some((field, why)) = kentos_commands::solution_numbers_problem(&s) {
-                return Err(value(&format!("operation.{field}"), format!("Çözüm: {why}.")));
+                return Err(value(
+                    &format!("operation.{field}"),
+                    format!("Çözüm: {why}."),
+                ));
             }
             if let Some(path) = report {
                 let (_, sha) = file_at(path, "operation.report")?;
-                s.report = Some(SurveyFile { path: path.clone(), revision: sha, format: SurveyFileFormat::Report });
+                s.report = Some(SurveyFile {
+                    path: path.clone(),
+                    revision: sha,
+                    format: SurveyFileFormat::Report,
+                });
             }
             if now.solutions.len() >= kentos_commands::MAX_SURVEY_SOLUTIONS {
                 return Err(full("100 000 çözüm"));
@@ -1035,14 +1342,30 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             s.id = next_survey_id(now.solutions.iter().map(|x| x.id.as_str()), "cz-");
             let id = s.id.clone();
             next.solutions.push(s);
-            Ok(Change { id: Some(id), ..Change::new(next, "Çözüm ekle") })
+            Ok(Change {
+                id: Some(id),
+                ..Change::new(next, "Çözüm ekle")
+            })
         }
-        Op::Exclude { solution, reason } if solution.starts_with("bz-") || solution.starts_with("bn-") => {
-            text(Some(reason), kentos_commands::MOST_REASON_TEXT, "operation.reason", "Dışlama nedeni")?;
+        Op::Exclude { solution, reason }
+            if solution.starts_with("bz-") || solution.starts_with("bn-") =>
+        {
+            text(
+                Some(reason),
+                kentos_commands::MOST_REASON_TEXT,
+                "operation.reason",
+                "Dışlama nedeni",
+            )?;
             let was = match (now.baseline(solution), now.known_point(solution)) {
                 (Some(b), _) => b.excluded.clone(),
                 (_, Some(k)) => k.excluded.clone(),
-                _ => return Err(unknown("baz ya da bilinen nokta", solution, "operation.solution")),
+                _ => {
+                    return Err(unknown(
+                        "baz ya da bilinen nokta",
+                        solution,
+                        "operation.solution",
+                    ));
+                }
             };
             if was.as_ref() == Some(reason) {
                 return Err(nothing());
@@ -1053,24 +1376,43 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if let Some(k) = next.known.iter_mut().find(|x| x.id == *solution) {
                 k.excluded = Some(reason.clone());
             }
-            let label = if solution.starts_with("bz-") { "Bazı dışla" } else { "Bilinen noktayı dışla" };
-            Ok(Change { id: Some(solution.clone()), ..Change::new(next, label) })
+            let label = if solution.starts_with("bz-") {
+                "Bazı dışla"
+            } else {
+                "Bilinen noktayı dışla"
+            };
+            Ok(Change {
+                id: Some(solution.clone()),
+                ..Change::new(next, label)
+            })
         }
         Op::Include { solution } if solution.starts_with("bz-") || solution.starts_with("bn-") => {
             let was = match (now.baseline(solution), now.known_point(solution)) {
                 (Some(b), _) => b.excluded.clone(),
                 (_, Some(k)) => k.excluded.clone(),
-                _ => return Err(unknown("baz ya da bilinen nokta", solution, "operation.solution")),
+                _ => {
+                    return Err(unknown(
+                        "baz ya da bilinen nokta",
+                        solution,
+                        "operation.solution",
+                    ));
+                }
             };
             if was.is_none() {
                 return Err(nothing());
             }
             if let Some(k) = now.known_point(solution)
-                && let Some(other) = now.known.iter().find(|x| x.mark == k.mark && x.excluded.is_none())
+                && let Some(other) = now
+                    .known
+                    .iter()
+                    .find(|x| x.mark == k.mark && x.excluded.is_none())
             {
                 return Err(value(
                     "operation.solution",
-                    format!("“{}” işaretinin dışlanmamış bilinen noktası var (“{}”); önce onu dışlayın.", k.mark, other.id),
+                    format!(
+                        "“{}” işaretinin dışlanmamış bilinen noktası var (“{}”); önce onu dışlayın.",
+                        k.mark, other.id
+                    ),
                 ));
             }
             if let Some(b) = next.baselines.iter_mut().find(|x| x.id == *solution) {
@@ -1079,14 +1421,21 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if let Some(k) = next.known.iter_mut().find(|x| x.id == *solution) {
                 k.excluded = None;
             }
-            Ok(Change { id: Some(solution.clone()), ..Change::new(next, "Dışlamayı kaldır") })
+            Ok(Change {
+                id: Some(solution.clone()),
+                ..Change::new(next, "Dışlamayı kaldır")
+            })
         }
-        Op::Adjust { solution, adjust } if solution.starts_with("bz-") || solution.starts_with("bn-") => {
+        Op::Adjust { solution, adjust }
+            if solution.starts_with("bz-") || solution.starts_with("bn-") =>
+        {
             let Some(old) = now.baseline(solution) else {
                 if now.known_point(solution).is_some() {
                     return Err(value(
                         "operation.solution",
-                        format!("“{solution}” bilinen nokta; bilinen nokta hep dengelemeye girer, çıkarmak için dışlayın."),
+                        format!(
+                            "“{solution}” bilinen nokta; bilinen nokta hep dengelemeye girer, çıkarmak için dışlayın."
+                        ),
                     ));
                 }
                 return Err(unknown("baz", solution, "operation.solution"));
@@ -1094,7 +1443,9 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if *adjust && old.excluded.is_some() {
                 return Err(fail(
                     codes::SOLUTION_EXCLUDED,
-                    format!("“{solution}” bazı dışlanmış; dengelemeye girmez. Önce dışlamayı kaldırın."),
+                    format!(
+                        "“{solution}” bazı dışlanmış; dengelemeye girmez. Önce dışlamayı kaldırın."
+                    ),
                     "operation.adjust",
                 ));
             }
@@ -1104,7 +1455,10 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if let Some(b) = next.baselines.iter_mut().find(|x| x.id == *solution) {
                 b.adjust = *adjust;
             }
-            Ok(Change { id: Some(solution.clone()), ..Change::new(next, "Dengeleme seçimi") })
+            Ok(Change {
+                id: Some(solution.clone()),
+                ..Change::new(next, "Dengeleme seçimi")
+            })
         }
         Op::Baselines { campaign, file } => {
             if now.campaign(campaign).is_none() {
@@ -1116,19 +1470,28 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 return Err(full("100 000 baz"));
             }
             let mut ids = Vec::new();
-            let mut by_source: std::collections::HashMap<String, String> = std::collections::HashMap::new();
+            let mut by_source: std::collections::HashMap<String, String> =
+                std::collections::HashMap::new();
             for v in vectors {
                 let id = next_survey_id(next.baselines.iter().map(|x| x.id.as_str()), "bz-");
                 let b = SurveyBaseline {
                     id: id.clone(),
                     campaign: campaign.clone(),
-                    file: Some(SurveyFile { path: file.clone(), revision: sha.clone(), format }),
+                    file: Some(SurveyFile {
+                        path: file.clone(),
+                        revision: sha.clone(),
+                        format,
+                    }),
                     ..v
                 };
                 if let Some((field, why)) = baseline_numbers_problem(&b) {
                     return Err(value(
                         "operation.file",
-                        format!("“{}” bazı ({}): {why}.", b.source.clone().unwrap_or_default(), field),
+                        format!(
+                            "“{}” bazı ({}): {why}.",
+                            b.source.clone().unwrap_or_default(),
+                            field
+                        ),
                     ));
                 }
                 by_source.insert(b.source.clone().unwrap_or_default(), id.clone());
@@ -1136,18 +1499,25 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 ids.push(id);
             }
             // docs/adr/4920: each GVX session kept as `bo-N`, its vectors and blocks by their new `bz-N`.
-            if next.baseline_sessions.len() + sessions.len() > kentos_commands::MAX_BASELINE_SESSIONS {
+            if next.baseline_sessions.len() + sessions.len()
+                > kentos_commands::MAX_BASELINE_SESSIONS
+            {
                 return Err(full("10 000 baz oturumu"));
             }
             for g in sessions {
                 if g.vectors.len() > kentos_commands::MAX_SESSION_BASELINES {
                     return Err(value(
                         "operation.file",
-                        format!("“{}” oturumunda {} baz var; bir oturumda en çok 100 baz alınır.", g.id, g.vectors.len()),
+                        format!(
+                            "“{}” oturumunda {} baz var; bir oturumda en çok 100 baz alınır.",
+                            g.id,
+                            g.vectors.len()
+                        ),
                     ));
                 }
                 let bz = |v: &String| by_source.get(v).cloned().unwrap_or_default();
-                let id = next_survey_id(next.baseline_sessions.iter().map(|x| x.id.as_str()), "bo-");
+                let id =
+                    next_survey_id(next.baseline_sessions.iter().map(|x| x.id.as_str()), "bo-");
                 next.baseline_sessions.push(SurveyBaselineSession {
                     id: id.clone(),
                     campaign: campaign.clone(),
@@ -1155,33 +1525,77 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                     start: g.start.clone(),
                     end: g.end.clone(),
                     baselines: g.vectors.iter().map(bz).collect(),
-                    blocks: g.blocks.iter().map(|(r, c, v)| CorrelationBlock { row: bz(r), col: bz(c), r: *v }).collect(),
-                    file: Some(SurveyFile { path: file.clone(), revision: sha.clone(), format }),
+                    blocks: g
+                        .blocks
+                        .iter()
+                        .map(|(r, c, v)| CorrelationBlock {
+                            row: bz(r),
+                            col: bz(c),
+                            r: *v,
+                        })
+                        .collect(),
+                    file: Some(SurveyFile {
+                        path: file.clone(),
+                        revision: sha.clone(),
+                        format,
+                    }),
                 });
                 ids.push(id);
             }
             let first = ids.first().cloned();
-            let mut c = Change { id: first, records: ids, ..Change::new(next, "Baz ekle") };
+            let mut c = Change {
+                id: first,
+                records: ids,
+                ..Change::new(next, "Baz ekle")
+            };
             c.warnings.append(&mut warnings);
             Ok(c)
         }
-        Op::Baseline { campaign, from, to, d, covariance, start, end, solution, recipe } => {
+        Op::Baseline {
+            campaign,
+            from,
+            to,
+            d,
+            covariance,
+            start,
+            end,
+            solution,
+            recipe,
+        } => {
             if now.campaign(campaign).is_none() {
                 return Err(unknown("arazi ölçümü", campaign, "operation.campaign"));
             }
-            text(Some(from), SHORT, "operation.from", "Bazın başlangıç işareti")?;
+            text(
+                Some(from),
+                SHORT,
+                "operation.from",
+                "Bazın başlangıç işareti",
+            )?;
             text(Some(to), SHORT, "operation.to", "Bazın bitiş işareti")?;
             if from == to {
-                return Err(value("operation.to", "Bazın iki ucu aynı işaret olamaz.".into()));
+                return Err(value(
+                    "operation.to",
+                    "Bazın iki ucu aynı işaret olamaz.".into(),
+                ));
             }
             time_ok(start.as_deref(), "operation.start")?;
             time_ok(end.as_deref(), "operation.end")?;
-            if let (Some(a), Some(b)) = (start.as_deref().and_then(survey_time), end.as_deref().and_then(survey_time))
-                && b < a
+            if let (Some(a), Some(b)) = (
+                start.as_deref().and_then(survey_time),
+                end.as_deref().and_then(survey_time),
+            ) && b < a
             {
-                return Err(value("operation.end", "Bitiş başlangıçtan önce olamaz.".into()));
+                return Err(value(
+                    "operation.end",
+                    "Bitiş başlangıçtan önce olamaz.".into(),
+                ));
             }
-            text(recipe.as_deref(), kentos_commands::MOST_RECIPE_TEXT, "operation.recipe", "Yeniden işleme tarifi")?;
+            text(
+                recipe.as_deref(),
+                kentos_commands::MOST_RECIPE_TEXT,
+                "operation.recipe",
+                "Yeniden işleme tarifi",
+            )?;
             if now.baselines.len() >= kentos_commands::MAX_SURVEY_BASELINES {
                 return Err(full("100 000 baz"));
             }
@@ -1209,11 +1623,29 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 return Err(value(&format!("operation.{field}"), format!("Baz: {why}.")));
             }
             next.baselines.push(b);
-            Ok(Change { id: Some(id), ..Change::new(next, "Baz ekle") })
+            Ok(Change {
+                id: Some(id),
+                ..Change::new(next, "Baz ekle")
+            })
         }
-        Op::Known { mark, lat, lon, height, srid, epoch, sigma, velocity, source } => {
+        Op::Known {
+            mark,
+            lat,
+            lon,
+            height,
+            srid,
+            epoch,
+            sigma,
+            velocity,
+            source,
+        } => {
             text(Some(mark), SHORT, "operation.mark", "İşaretin adı")?;
-            text(source.as_deref(), kentos_commands::MOST_REASON_TEXT, "operation.source", "Kaynak")?;
+            text(
+                source.as_deref(),
+                kentos_commands::MOST_REASON_TEXT,
+                "operation.source",
+                "Kaynak",
+            )?;
             let k = SurveyKnown {
                 id: next_survey_id(now.known.iter().map(|x| x.id.as_str()), "bn-"),
                 mark: mark.clone(),
@@ -1228,13 +1660,23 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 excluded: None,
             };
             if let Some((field, why)) = known_numbers_problem(&k) {
-                return Err(value(&format!("operation.{field}"), format!("Bilinen nokta: {why}.")));
+                return Err(value(
+                    &format!("operation.{field}"),
+                    format!("Bilinen nokta: {why}."),
+                ));
             }
             frame_ok(*srid)?;
-            if let Some(other) = now.known.iter().find(|x| x.mark == *mark && x.excluded.is_none()) {
+            if let Some(other) = now
+                .known
+                .iter()
+                .find(|x| x.mark == *mark && x.excluded.is_none())
+            {
                 return Err(value(
                     "operation.mark",
-                    format!("“{mark}” işaretinin dışlanmamış bilinen noktası var (“{}”); önce onu dışlayın.", other.id),
+                    format!(
+                        "“{mark}” işaretinin dışlanmamış bilinen noktası var (“{}”); önce onu dışlayın.",
+                        other.id
+                    ),
                 ));
             }
             if now.known.len() >= kentos_commands::MAX_SURVEY_KNOWN {
@@ -1242,9 +1684,23 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             }
             let id = k.id.clone();
             next.known.push(k);
-            Ok(Change { id: Some(id), ..Change::new(next, "Bilinen nokta ekle") })
+            Ok(Change {
+                id: Some(id),
+                ..Change::new(next, "Bilinen nokta ekle")
+            })
         }
-        Op::Network { campaign, scale, class, rules, hold, epoch, correlations, velocities, layer, ellipses } => network(
+        Op::Network {
+            campaign,
+            scale,
+            class,
+            rules,
+            hold,
+            epoch,
+            correlations,
+            velocities,
+            layer,
+            ellipses,
+        } => network(
             doc,
             &now,
             next,
@@ -1265,14 +1721,22 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             let Some(old) = now.solution(solution) else {
                 return Err(unknown("çözüm", solution, "operation.solution"));
             };
-            text(Some(reason), kentos_commands::MOST_REASON_TEXT, "operation.reason", "Dışlama nedeni")?;
+            text(
+                Some(reason),
+                kentos_commands::MOST_REASON_TEXT,
+                "operation.reason",
+                "Dışlama nedeni",
+            )?;
             if old.excluded.as_ref() == Some(reason) {
                 return Err(nothing());
             }
             if let Some(s) = next.solutions.iter_mut().find(|x| x.id == *solution) {
                 s.excluded = Some(reason.clone());
             }
-            Ok(Change { id: Some(solution.clone()), ..Change::new(next, "Çözümü dışla") })
+            Ok(Change {
+                id: Some(solution.clone()),
+                ..Change::new(next, "Çözümü dışla")
+            })
         }
         Op::Include { solution } => {
             let Some(old) = now.solution(solution) else {
@@ -1284,7 +1748,10 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if let Some(s) = next.solutions.iter_mut().find(|x| x.id == *solution) {
                 s.excluded = None;
             }
-            Ok(Change { id: Some(solution.clone()), ..Change::new(next, "Dışlamayı kaldır") })
+            Ok(Change {
+                id: Some(solution.clone()),
+                ..Change::new(next, "Dışlamayı kaldır")
+            })
         }
         Op::Adjust { solution, adjust } => {
             let Some(old) = now.solution(solution) else {
@@ -1293,7 +1760,9 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if *adjust && old.excluded.is_some() {
                 return Err(fail(
                     codes::SOLUTION_EXCLUDED,
-                    format!("“{solution}” çözümü dışlanmış; dengelemeye girmez. Önce dışlamayı kaldırın."),
+                    format!(
+                        "“{solution}” çözümü dışlanmış; dengelemeye girmez. Önce dışlamayı kaldırın."
+                    ),
                     "operation.adjust",
                 ));
             }
@@ -1303,21 +1772,43 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if let Some(s) = next.solutions.iter_mut().find(|x| x.id == *solution) {
                 s.adjust = *adjust;
             }
-            Ok(Change { id: Some(solution.clone()), ..Change::new(next, "Dengeleme seçimi") })
+            Ok(Change {
+                id: Some(solution.clone()),
+                ..Change::new(next, "Dengeleme seçimi")
+            })
         }
-        Op::Accept { mark, solutions, method, layer } => {
+        Op::Accept {
+            mark,
+            solutions,
+            method,
+            layer,
+        } => {
             text(Some(mark), SHORT, "operation.mark", "İşaretin adı")?;
             if let Some(p) = now.points.iter().find(|p| p.mark == *mark) {
                 return Err(fail(
                     codes::ALREADY_ACCEPTED,
-                    format!("“{mark}” işaretinin kabul edilen noktası var (“{}”); Yeniden üret ile güncelleyin.", p.id),
+                    format!(
+                        "“{mark}” işaretinin kabul edilen noktası var (“{}”); Yeniden üret ile güncelleyin.",
+                        p.id
+                    ),
                     "operation.mark",
                 ));
             }
-            let method = method.unwrap_or(if solutions.len() == 1 { AcceptMethod::Single } else { AcceptMethod::Mean });
+            let method = method.unwrap_or(if solutions.len() == 1 {
+                AcceptMethod::Single
+            } else {
+                AcceptMethod::Mean
+            });
             let result = compute(doc, &now, mark, solutions, method, "operation.solutions")?;
-            let layer = layer.clone().unwrap_or_else(|| doc.layers().active().to_owned());
-            layer_ok(doc, &layer, "operation.layer", "kabul edilen nokta kilitli katmana çizilmez.")?;
+            let layer = layer
+                .clone()
+                .unwrap_or_else(|| doc.layers().active().to_owned());
+            layer_ok(
+                doc,
+                &layer,
+                "operation.layer",
+                "kabul edilen nokta kilitli katmana çizilmez.",
+            )?;
             if now.points.len() >= kentos_commands::MAX_SURVEY_POINTS {
                 return Err(full("10 000 kabul edilen nokta"));
             }
@@ -1338,15 +1829,23 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 ..Change::new(next, "Noktayı kabul et")
             })
         }
-        Op::Regenerate { point, solutions, method } => {
+        Op::Regenerate {
+            point,
+            solutions,
+            method,
+        } => {
             let Some(old) = now.point(point) else {
                 return Err(unknown("kabul edilen nokta", point, "operation.point"));
             };
-            let slot = doc.slot_of(Uuid::from_bytes(old.uid.0)).filter(|_| present(doc, &old.uid));
+            let slot = doc
+                .slot_of(Uuid::from_bytes(old.uid.0))
+                .filter(|_| present(doc, &old.uid));
             let Some((slot, entity)) = slot.and_then(|s| doc.get(s).map(|e| (s, e.clone()))) else {
                 return Err(fail(
                     codes::ENTITY_NOT_FOUND,
-                    format!("“{point}” noktasının nesnesi çizimde yok; geri alın ya da kaydı çıkarıp noktayı yeniden kabul edin."),
+                    format!(
+                        "“{point}” noktasının nesnesi çizimde yok; geri alın ya da kaydı çıkarıp noktayı yeniden kabul edin."
+                    ),
                     "operation.point",
                 ));
             };
@@ -1354,12 +1853,20 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if old.result.method == AcceptMethod::Network && solutions.is_none() {
                 return Err(value(
                     "operation.point",
-                    format!("“{point}” ağ dengelemesiyle üretildi; ağı yeniden dengeleyip kabul edin ya da çözümlerini verin."),
+                    format!(
+                        "“{point}” ağ dengelemesiyle üretildi; ağı yeniden dengeleyip kabul edin ya da çözümlerini verin."
+                    ),
                 ));
             }
-            let ids = solutions.clone().unwrap_or_else(|| old.result.solutions.clone());
+            let ids = solutions
+                .clone()
+                .unwrap_or_else(|| old.result.solutions.clone());
             let method = method.unwrap_or(if old.result.method == AcceptMethod::Network {
-                if ids.len() == 1 { AcceptMethod::Single } else { AcceptMethod::Mean }
+                if ids.len() == 1 {
+                    AcceptMethod::Single
+                } else {
+                    AcceptMethod::Mean
+                }
             } else {
                 old.result.method
             });
@@ -1378,12 +1885,19 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 ));
             }
             if method != old.result.method {
-                reasons.push(format!("Yöntem {} iken {} oldu.", old.result.method.title(), method.title()));
+                reasons.push(format!(
+                    "Yöntem {} iken {} oldu.",
+                    old.result.method.title(),
+                    method.title()
+                ));
             }
             if doc.layers().is_locked(&layer) {
                 return Err(fail(
                     codes::LAYER_LOCKED,
-                    format!("“{}” katmanı kilitli: nokta yeni yerine taşınamaz. Kilidi açın.", doc.layers().path(&layer)),
+                    format!(
+                        "“{}” katmanı kilitli: nokta yeni yerine taşınamaz. Kilidi açın.",
+                        doc.layers().path(&layer)
+                    ),
                     "operation.point",
                 ));
             }
@@ -1394,10 +1908,17 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             result.reasons = reasons;
             let mut moved = entity.clone();
             if let Entity::Point(pt) = &mut moved {
-                pt.p = Vec2 { x: result.x, y: result.y };
+                pt.p = Vec2 {
+                    x: result.x,
+                    y: result.y,
+                };
                 pt.z = result.z;
-                pt.base.attrs.insert("Revizyon".into(), result.revision.to_string());
-                pt.base.attrs.insert("Yöntem".into(), result.method.title().into());
+                pt.base
+                    .attrs
+                    .insert("Revizyon".into(), result.revision.to_string());
+                pt.base
+                    .attrs
+                    .insert("Yöntem".into(), result.method.title().into());
                 pt.base.attrs.insert("Çözüm".into(), made_of(&result));
             }
             let revision = result.revision;
@@ -1412,10 +1933,17 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 ..Change::new(next, "Noktayı yeniden üret")
             })
         }
-        Op::Use { uids, points, operation } => {
+        Op::Use {
+            uids,
+            points,
+            operation,
+        } => {
             text(Some(operation), SHORT, "operation.operation", "İşlem")?;
             if points.is_empty() {
-                return Err(value("operation.points", "Dayanan en az bir kabul edilen noktaya dayanır.".into()));
+                return Err(value(
+                    "operation.points",
+                    "Dayanan en az bir kabul edilen noktaya dayanır.".into(),
+                ));
             }
             let mut revs = Vec::new();
             for (i, p) in points.iter().enumerate() {
@@ -1426,7 +1954,10 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 if points[..i].contains(p) {
                     return Err(value(&at, format!("“{p}” noktası iki kez verilmiş.")));
                 }
-                revs.push(PointRevision { point: p.clone(), revision: found.result.revision });
+                revs.push(PointRevision {
+                    point: p.clone(),
+                    revision: found.result.revision,
+                });
             }
             if uids.is_empty() {
                 return Err(fail(
@@ -1439,16 +1970,30 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             for (i, u) in uids.iter().enumerate() {
                 let at = format!("operation.uids[{i}]");
                 if !checks::is_uid_text(u) {
-                    return Err(fail(codes::INVALID_UID, format!("“{u}” geçerli bir nesne kimliği değil."), &at));
+                    return Err(fail(
+                        codes::INVALID_UID,
+                        format!("“{u}” geçerli bir nesne kimliği değil."),
+                        &at,
+                    ));
                 }
-                let Some(uuid) = Uuid::parse_str(u).ok().filter(|x| doc.slot_of(*x).is_some()) else {
-                    return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{u}” kimlikli nesne çizimde yok."), &at));
+                let Some(uuid) = Uuid::parse_str(u)
+                    .ok()
+                    .filter(|x| doc.slot_of(*x).is_some())
+                else {
+                    return Err(fail(
+                        codes::ENTITY_NOT_FOUND,
+                        format!("“{u}” kimlikli nesne çizimde yok."),
+                        &at,
+                    ));
                 };
                 let id = EntityId(*uuid.as_bytes());
                 if let Some(other) = now.uses.iter().find(|x| x.uids.contains(&id)) {
                     return Err(fail(
                         codes::SURVEY_IN_USE,
-                        format!("“{u}” nesnesi “{}” dayanan kaydında; önce o kaydı çıkarın.", other.id),
+                        format!(
+                            "“{u}” nesnesi “{}” dayanan kaydında; önce o kaydı çıkarın.",
+                            other.id
+                        ),
                         &at,
                     ));
                 }
@@ -1460,10 +2005,22 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 return Err(full("10 000 dayanan"));
             }
             let id = next_survey_id(now.uses.iter().map(|x| x.id.as_str()), "kb-");
-            next.uses.push(SurveyUse { id: id.clone(), operation: operation.clone(), uids: ids, points: revs });
-            Ok(Change { id: Some(id), ..Change::new(next, "Dayanan kaydı") })
+            next.uses.push(SurveyUse {
+                id: id.clone(),
+                operation: operation.clone(),
+                uids: ids,
+                points: revs,
+            });
+            Ok(Change {
+                id: Some(id),
+                ..Change::new(next, "Dayanan kaydı")
+            })
         }
-        Op::Tolerance { horizontal, vertical, source } => {
+        Op::Tolerance {
+            horizontal,
+            vertical,
+            source,
+        } => {
             // docs/adr/4920: the known points' place limits kept in the project, with their source.
             if horizontal.is_none() && vertical.is_none() && source.is_none() {
                 if now.tolerance.is_none() {
@@ -1472,22 +2029,41 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 next.tolerance = None;
                 return Ok(Change::new(next, "Kabul farkı sınırını kaldır"));
             }
-            for (v, what, path) in [(horizontal, "Yatay", "operation.horizontal"), (vertical, "Düşey", "operation.vertical")] {
+            for (v, what, path) in [
+                (horizontal, "Yatay", "operation.horizontal"),
+                (vertical, "Düşey", "operation.vertical"),
+            ] {
                 if v.is_some_and(|v| !(v.is_finite() && v > 0.0)) {
-                    return Err(value(path, format!("{what} sınır 0'dan büyük bir uzunluk olmalı (m).")));
+                    return Err(value(
+                        path,
+                        format!("{what} sınır 0'dan büyük bir uzunluk olmalı (m)."),
+                    ));
                 }
             }
             if horizontal.is_none() && vertical.is_none() {
-                return Err(value("operation.horizontal", "Kabul farkı sınırı boş: yatay ya da düşey sınırı verin (m).".into()));
+                return Err(value(
+                    "operation.horizontal",
+                    "Kabul farkı sınırı boş: yatay ya da düşey sınırı verin (m).".into(),
+                ));
             }
             let Some(source) = source.clone() else {
                 return Err(value(
                     "operation.source",
-                    "Sınırın kaynağını yazın: yönetmeliğin maddesi ya da idarenin şartnamesi.".into(),
+                    "Sınırın kaynağını yazın: yönetmeliğin maddesi ya da idarenin şartnamesi."
+                        .into(),
                 ));
             };
-            text(Some(source.as_str()), kentos_commands::MOST_REASON_TEXT, "operation.source", "Sınırın kaynağı")?;
-            let t = SurveyTolerance { horizontal: *horizontal, vertical: *vertical, source };
+            text(
+                Some(source.as_str()),
+                kentos_commands::MOST_REASON_TEXT,
+                "operation.source",
+                "Sınırın kaynağı",
+            )?;
+            let t = SurveyTolerance {
+                horizontal: *horizontal,
+                vertical: *vertical,
+                source,
+            };
             if now.tolerance.as_ref() == Some(&t) {
                 return Err(nothing());
             }
@@ -1497,9 +2073,12 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
         Op::Independent { session } => {
             // docs/adr/5320: the session's (every session's) independent baselines in, its dependent ones out.
             let sessions: Vec<&kentos_commands::SurveyBaselineSession> = match session {
-                Some(id) => vec![now.baseline_sessions.iter().find(|s| s.id == *id).ok_or_else(|| {
-                    unknown("baz oturumu", id, "operation.session")
-                })?],
+                Some(id) => vec![
+                    now.baseline_sessions
+                        .iter()
+                        .find(|s| s.id == *id)
+                        .ok_or_else(|| unknown("baz oturumu", id, "operation.session"))?,
+                ],
                 None => now.baseline_sessions.iter().collect(),
             };
             if sessions.is_empty() {
@@ -1529,37 +2108,58 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
             if changed == 0 {
                 return Err(nothing());
             }
-            Ok(Change { id: session.clone(), ..Change::new(next, "Bağımsız bazlar") })
+            Ok(Change {
+                id: session.clone(),
+                ..Change::new(next, "Bağımsız bazlar")
+            })
         }
         Op::Remove { id } => {
             let at = "operation.id";
             let removed = if now.campaign(id).is_some() {
-                let sessions: Vec<&str> =
-                    now.sessions.iter().filter(|s| s.campaign == *id).map(|s| s.id.as_str()).collect();
+                let sessions: Vec<&str> = now
+                    .sessions
+                    .iter()
+                    .filter(|s| s.campaign == *id)
+                    .map(|s| s.id.as_str())
+                    .collect();
                 if let Some((s, p)) = used_by(&now, &sessions) {
                     return Err(fail(
                         codes::SURVEY_IN_USE,
-                        format!("“{id}” kaydının “{s}” çözümü “{p}” noktasında; önce noktayı çıkarın ya da yeniden üretin."),
+                        format!(
+                            "“{id}” kaydının “{s}” çözümü “{p}” noktasında; önce noktayı çıkarın ya da yeniden üretin."
+                        ),
                         at,
                     ));
                 }
-                if let Some((b, a)) = now
-                    .baselines
-                    .iter()
-                    .filter(|b| b.campaign == *id)
-                    .find_map(|b| now.adjustments.iter().find(|a| a.baselines.contains(&b.id)).map(|a| (b.id.as_str(), a.id.as_str())))
+                if let Some((b, a)) =
+                    now.baselines
+                        .iter()
+                        .filter(|b| b.campaign == *id)
+                        .find_map(|b| {
+                            now.adjustments
+                                .iter()
+                                .find(|a| a.baselines.contains(&b.id))
+                                .map(|a| (b.id.as_str(), a.id.as_str()))
+                        })
                 {
                     return Err(fail(
                         codes::SURVEY_IN_USE,
-                        format!("“{id}” kaydının “{b}” bazı “{a}” ağ dengelemesinde; önce dengelemeyi çıkarın."),
+                        format!(
+                            "“{id}” kaydının “{b}” bazı “{a}” ağ dengelemesinde; önce dengelemeyi çıkarın."
+                        ),
                         at,
                     ));
                 }
                 let count = |m: &MapSurvey| {
-                    m.sessions.len() + m.solutions.len() + m.campaigns.len() + m.baselines.len() + m.baseline_sessions.len()
+                    m.sessions.len()
+                        + m.solutions.len()
+                        + m.campaigns.len()
+                        + m.baselines.len()
+                        + m.baseline_sessions.len()
                 };
                 let before = count(&now);
-                next.solutions.retain(|s| !sessions.contains(&s.session.as_str()));
+                next.solutions
+                    .retain(|s| !sessions.contains(&s.session.as_str()));
                 next.sessions.retain(|s| s.campaign != *id);
                 next.baselines.retain(|b| b.campaign != *id);
                 next.baseline_sessions.retain(|s| s.campaign != *id);
@@ -1569,7 +2169,9 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 if let Some((s, p)) = used_by(&now, &[id.as_str()]) {
                     return Err(fail(
                         codes::SURVEY_IN_USE,
-                        format!("“{id}” kaydının “{s}” çözümü “{p}” noktasında; önce noktayı çıkarın ya da yeniden üretin."),
+                        format!(
+                            "“{id}” kaydının “{s}” çözümü “{p}” noktasında; önce noktayı çıkarın ya da yeniden üretin."
+                        ),
                         at,
                     ));
                 }
@@ -1581,17 +2183,27 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 if let Some(p) = now.point_using(id) {
                     return Err(fail(
                         codes::SURVEY_IN_USE,
-                        format!("“{id}” çözümü “{}” noktasında; önce noktayı çıkarın ya da yeniden üretin.", p.id),
+                        format!(
+                            "“{id}” çözümü “{}” noktasında; önce noktayı çıkarın ya da yeniden üretin.",
+                            p.id
+                        ),
                         at,
                     ));
                 }
                 next.solutions.retain(|s| s.id != *id);
                 1
             } else if now.point(id).is_some() {
-                if let Some(u) = now.uses.iter().find(|u| u.points.iter().any(|p| p.point == *id)) {
+                if let Some(u) = now
+                    .uses
+                    .iter()
+                    .find(|u| u.points.iter().any(|p| p.point == *id))
+                {
                     return Err(fail(
                         codes::SURVEY_IN_USE,
-                        format!("“{id}” noktasına “{}” dayanan kaydı dayanıyor; önce onu çıkarın.", u.id),
+                        format!(
+                            "“{id}” noktasına “{}” dayanan kaydı dayanıyor; önce onu çıkarın.",
+                            u.id
+                        ),
                         at,
                     ));
                 }
@@ -1601,17 +2213,27 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 next.uses.retain(|u| u.id != *id);
                 1
             } else if now.baseline(id).is_some() || now.known_point(id).is_some() {
-                if let Some(a) = now.adjustments.iter().find(|a| a.baselines.contains(id) || a.known.contains(id)) {
+                if let Some(a) = now
+                    .adjustments
+                    .iter()
+                    .find(|a| a.baselines.contains(id) || a.known.contains(id))
+                {
                     return Err(fail(
                         codes::SURVEY_IN_USE,
-                        format!("“{id}” kaydı “{}” ağ dengelemesinde; önce dengelemeyi çıkarın ya da kaydı dışlayın.", a.id),
+                        format!(
+                            "“{id}” kaydı “{}” ağ dengelemesinde; önce dengelemeyi çıkarın ya da kaydı dışlayın.",
+                            a.id
+                        ),
                         at,
                     ));
                 }
                 if let Some(s) = now.session_of(id) {
                     return Err(fail(
                         codes::SURVEY_IN_USE,
-                        format!("“{id}” bazı “{}” baz oturumunda; önce oturumu çıkarın ya da bazı dışlayın.", s.id),
+                        format!(
+                            "“{id}” bazı “{}” baz oturumunda; önce oturumu çıkarın ya da bazı dışlayın.",
+                            s.id
+                        ),
                         at,
                     ));
                 }
@@ -1622,7 +2244,10 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 if let Some(a) = now.adjustments.iter().find(|a| a.sessions.contains(id)) {
                     return Err(fail(
                         codes::SURVEY_IN_USE,
-                        format!("“{id}” baz oturumu “{}” ağ dengelemesinde; önce dengelemeyi çıkarın.", a.id),
+                        format!(
+                            "“{id}” baz oturumu “{}” ağ dengelemesinde; önce dengelemeyi çıkarın.",
+                            a.id
+                        ),
                         at,
                     ));
                 }
@@ -1632,7 +2257,10 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
                 if let Some(p) = now.point_by(id) {
                     return Err(fail(
                         codes::SURVEY_IN_USE,
-                        format!("“{}” noktası “{id}” ağ dengelemesiyle üretildi; önce noktayı yeniden üretin ya da çıkarın.", p.id),
+                        format!(
+                            "“{}” noktası “{id}” ağ dengelemesiyle üretildi; önce noktayı yeniden üretin ya da çıkarın.",
+                            p.id
+                        ),
                         at,
                     ));
                 }
@@ -1653,7 +2281,10 @@ fn check(doc: &Document, input: &MapSurveyEdit) -> Result<Change, Stop> {
 /// The map's work item a campaign names: a campaign item of the project.
 fn work_ok(doc: &Document, work: Option<&str>) -> Result<(), Stop> {
     let Some(w) = work else { return Ok(()) };
-    let found = doc.map_work().and_then(|mw| mw.item(w)).is_some_and(|i| i.kind == kentos_commands::WorkKind::Campaign);
+    let found = doc
+        .map_work()
+        .and_then(|mw| mw.item(w))
+        .is_some_and(|i| i.kind == kentos_commands::WorkKind::Campaign);
     if !found {
         return Err(fail(
             codes::UNKNOWN_WORK_ITEM,
@@ -1671,9 +2302,21 @@ fn output(doc: &Document, c: &Change, uid: Option<String>, revision: String) -> 
         point_revision: c.point_revision,
         observations: c.observations,
         removed: c.removed,
-        ellipses: c.drawn.iter().filter(|e| matches!(e, Entity::Ellipse(_))).count() as u32,
-        bars: c.drawn.iter().filter(|e| matches!(e, Entity::Polyline(_))).count() as u32,
-        labels: c.drawn.iter().filter(|e| matches!(e, Entity::Text(_))).count() as u32,
+        ellipses: c
+            .drawn
+            .iter()
+            .filter(|e| matches!(e, Entity::Ellipse(_)))
+            .count() as u32,
+        bars: c
+            .drawn
+            .iter()
+            .filter(|e| matches!(e, Entity::Polyline(_)))
+            .count() as u32,
+        labels: c
+            .drawn
+            .iter()
+            .filter(|e| matches!(e, Entity::Text(_)))
+            .count() as u32,
         labels_moved: c.labels_moved,
         labels_crowded: c.labels_crowded,
         stale: stale_count(doc, &c.survey),
@@ -1694,44 +2337,56 @@ fn write(cx: &mut ExecutionContext<'_>, input: MapSurveyEdit) -> CommandResult<M
     let drawn_use = change.drawn_use;
     let single = adds.len() + updates.len() == 1;
     let mut survey = change.survey.clone();
-    let written = cx.doc.transact(label, |doc| -> Result<Option<String>, Stop> {
-        let mut uid = None;
-        for (entity, at) in adds {
-            let (_, text, _) = checks::add(doc, entity)?;
-            let id = Uuid::parse_str(&text).map(|u| EntityId(*u.as_bytes())).unwrap_or(EntityId([0; 16]));
-            if let Some(p) = survey.points.get_mut(at) {
-                p.uid = id;
+    let written = cx
+        .doc
+        .transact(label, |doc| -> Result<Option<String>, Stop> {
+            let mut uid = None;
+            for (entity, at) in adds {
+                let (_, text, _) = checks::add(doc, entity)?;
+                let id = Uuid::parse_str(&text)
+                    .map(|u| EntityId(*u.as_bytes()))
+                    .unwrap_or(EntityId([0; 16]));
+                if let Some(p) = survey.points.get_mut(at) {
+                    p.uid = id;
+                }
+                uid = Some(text);
             }
-            uid = Some(text);
-        }
-        for (slot, entity) in updates {
-            uid = doc.uid(slot).map(|u| u.to_string());
-            doc.update(slot, entity);
-        }
-        // The error ellipses after the points, their ids in the use that records them (docs/adr/2960).
-        for entity in drawn {
-            let (_, text, _) = checks::add(doc, entity)?;
-            let id = Uuid::parse_str(&text).map(|u| EntityId(*u.as_bytes())).unwrap_or(EntityId([0; 16]));
-            if let Some(u) = drawn_use.and_then(|k| survey.uses.get_mut(k)) {
-                u.uids.push(id);
+            for (slot, entity) in updates {
+                uid = doc.uid(slot).map(|u| u.to_string());
+                doc.update(slot, entity);
             }
-        }
-        doc.set_map_survey(Some(survey.clone()), label);
-        Ok(uid.filter(|_| single))
-    });
+            // The error ellipses after the points, their ids in the use that records them (docs/adr/2960).
+            for entity in drawn {
+                let (_, text, _) = checks::add(doc, entity)?;
+                let id = Uuid::parse_str(&text)
+                    .map(|u| EntityId(*u.as_bytes()))
+                    .unwrap_or(EntityId([0; 16]));
+                if let Some(u) = drawn_use.and_then(|k| survey.uses.get_mut(k)) {
+                    u.uids.push(id);
+                }
+            }
+            doc.set_map_survey(Some(survey.clone()), label);
+            Ok(uid.filter(|_| single))
+        });
     let uid = match written {
         Ok(uid) => uid,
         Err(stop) => return stop.into(),
     };
     change.survey = survey;
     let output = output(cx.doc, &change, uid, cx.doc.revision().to_string());
-    CommandResult::Completed { output, warnings: change.warnings }
+    CommandResult::Completed {
+        output,
+        warnings: change.warnings,
+    }
 }
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &MapSurveyEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -1745,12 +2400,24 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &MapSurveyEdit) -> CommandResult<M
                 _ => None,
             };
             let output = output(cx.doc, &c, uid, cx.doc.revision().to_string());
-            CommandResult::Completed { output, warnings: c.warnings }
+            CommandResult::Completed {
+                output,
+                warnings: c.warnings,
+            }
         }
         Err(stop) => stop.into(),
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: MapSurveyEdit) -> CommandResult<MapSurveyEdited> {
-    crate::call::recorded(cx, kentos_commands::MAP_SURVEY_EDIT, kentos_commands::MAP_SURVEY_EDIT_VERSION, input, write)
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: MapSurveyEdit,
+) -> CommandResult<MapSurveyEdited> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::MAP_SURVEY_EDIT,
+        kentos_commands::MAP_SURVEY_EDIT_VERSION,
+        input,
+        write,
+    )
 }

@@ -19,8 +19,8 @@ use kentos_commands::{
     BlockCard, BlockFileImported, BlockFileMode, BlockId, BlockSize, CommandResult,
     DocumentSnapshotV1, DocumentSnapshotV2, DrawingUnit, FileUnit, ImportBlock, UnitDecision,
 };
-use kentos_domain::{Document, Slot};
 use kentos_domain::exchange::{self, Picks, Same, block_key};
+use kentos_domain::{Document, Slot};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
@@ -114,9 +114,10 @@ fn input_checks(input: &ImportBlock) -> Result<(), Stop> {
             element: None,
         };
         let bad_part = c.split('/').any(|part| part.trim().is_empty());
-        if let Some(why) = kentos_commands::blocks::card_problem(&card)
-            .or_else(|| bad_part.then(|| format!("“{c}” kategorisinin bir parçası boş; “/” iki ad arasında olur.")))
-        {
+        if let Some(why) = kentos_commands::blocks::card_problem(&card).or_else(|| {
+            bad_part
+                .then(|| format!("“{c}” kategorisinin bir parçası boş; “/” iki ad arasında olur."))
+        }) {
             return Err(Stop::failed(error(
                 codes::INVALID_BLOCK_CARD,
                 format!("Kategori kurallarına uymuyor: {why}"),
@@ -280,17 +281,14 @@ fn check(doc: &Document, input: &ImportBlock) -> Result<Checked, Stop> {
         .filter(|b| doc.block(b.id).is_none_or(|old| old != *b))
         .map(|b| b.id)
         .collect();
-    checked.changes = crate::block_params::refresh_definitions(
-        doc,
-        &mut checked.drawing.blocks,
-        &incoming,
-    )
-    .map_err(|stop| {
-        let mut fault = stop.into_error();
-        fault.code = codes::BLOCK_REFUSED.into();
-        fault.path = Some("path".into());
-        Stop::failed(fault)
-    })?;
+    checked.changes =
+        crate::block_params::refresh_definitions(doc, &mut checked.drawing.blocks, &incoming)
+            .map_err(|stop| {
+                let mut fault = stop.into_error();
+                fault.code = codes::BLOCK_REFUSED.into();
+                fault.path = Some("path".into());
+                Stop::failed(fault)
+            })?;
     Ok(checked)
 }
 

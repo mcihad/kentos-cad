@@ -10,8 +10,8 @@
 //! footprint writes it in one undo step, and the tool stays for the next.
 
 use kentos_commands::{
-    Entity, MAX_MASS_HEIGHT, MAX_MASS_NAME, MAX_MASS_OFFSET, MAX_SPACE_POINTS, MassesCreate, NewMass, SpacePart,
-    SpaceRing,
+    Entity, MAX_MASS_HEIGHT, MAX_MASS_NAME, MAX_MASS_OFFSET, MAX_SPACE_POINTS, MassesCreate,
+    NewMass, SpacePart, SpaceRing,
 };
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, masses_create};
@@ -109,49 +109,87 @@ impl Default for MassTool {
 
 /// A ring of `pts` and their bulges, a straight one without them.
 fn ring(pts: &[kentos_commands::Vec2], bulges: Option<&Vec<f64>>) -> SpaceRing {
-    SpaceRing { pts: pts.to_vec(), bulges: bulges.filter(|b| b.iter().any(|x| *x != 0.0)).cloned() }
+    SpaceRing {
+        pts: pts.to_vec(),
+        bulges: bulges.filter(|b| b.iter().any(|x| *x != 0.0)).cloned(),
+    }
 }
 
 /// One part of the corners `pts`, no holes.
 fn part(pts: &[Vec2]) -> SpacePart {
-    SpacePart { outer: ring(&points::wire_all(pts), None), holes: Vec::new() }
+    SpacePart {
+        outer: ring(&points::wire_all(pts), None),
+        holes: Vec::new(),
+    }
 }
 
 /// The rectangle of opposite corners `a` and `b` along the drawing's axes, counter-clockwise.
 fn rectangle(a: Vec2, b: Vec2) -> SpacePart {
     let (x0, x1) = (a.x.min(b.x), a.x.max(b.x));
     let (y0, y1) = (a.y.min(b.y), a.y.max(b.y));
-    part(&[Vec2::new(x0, y0), Vec2::new(x1, y0), Vec2::new(x1, y1), Vec2::new(x0, y1)])
+    part(&[
+        Vec2::new(x0, y0),
+        Vec2::new(x1, y0),
+        Vec2::new(x1, y1),
+        Vec2::new(x0, y1),
+    ])
 }
 
 /// The footprint of a closed line, a polygon (its parts and holes) or a circle; none for any other object.
 fn footprint_of(e: &Entity) -> Option<Vec<SpacePart>> {
     let holes = |h: &Option<Vec<kentos_commands::RingGeometry>>| {
-        h.iter().flatten().map(|r| ring(&r.pts, r.bulges.as_ref())).collect::<Vec<_>>()
+        h.iter()
+            .flatten()
+            .map(|r| ring(&r.pts, r.bulges.as_ref()))
+            .collect::<Vec<_>>()
     };
     match e {
         Entity::Polygon(p) if p.pts.len() >= 3 => {
-            let mut out = vec![SpacePart { outer: ring(&p.pts, p.bulges.as_ref()), holes: holes(&p.holes) }];
-            out.extend(p.parts.iter().flatten().filter(|a| a.pts.len() >= 3).map(|a| SpacePart {
-                outer: ring(&a.pts, a.bulges.as_ref()),
-                holes: holes(&a.holes),
-            }));
+            let mut out = vec![SpacePart {
+                outer: ring(&p.pts, p.bulges.as_ref()),
+                holes: holes(&p.holes),
+            }];
+            out.extend(
+                p.parts
+                    .iter()
+                    .flatten()
+                    .filter(|a| a.pts.len() >= 3)
+                    .map(|a| SpacePart {
+                        outer: ring(&a.pts, a.bulges.as_ref()),
+                        holes: holes(&a.holes),
+                    }),
+            );
             Some(out)
         }
-        Entity::Polyline(p) if p.closed && p.pts.len() >= 3 => {
-            Some(vec![SpacePart { outer: ring(&p.pts, p.bulges.as_ref()), holes: Vec::new() }])
-        }
+        Entity::Polyline(p) if p.closed && p.pts.len() >= 3 => Some(vec![SpacePart {
+            outer: ring(&p.pts, p.bulges.as_ref()),
+            holes: Vec::new(),
+        }]),
         // An open line whose last vertex is its first: closed but not said so (a drawing from elsewhere).
-        Entity::Polyline(p) if p.pts.len() >= 4 && p.pts.first() == p.pts.last() && p.parts.is_none() => {
+        Entity::Polyline(p)
+            if p.pts.len() >= 4 && p.pts.first() == p.pts.last() && p.parts.is_none() =>
+        {
             let n = p.pts.len() - 1;
-            let bulges = p.bulges.as_ref().map(|b| b.iter().take(n).copied().collect::<Vec<_>>());
-            Some(vec![SpacePart { outer: ring(&p.pts[..n], bulges.as_ref()), holes: Vec::new() }])
+            let bulges = p
+                .bulges
+                .as_ref()
+                .map(|b| b.iter().take(n).copied().collect::<Vec<_>>());
+            Some(vec![SpacePart {
+                outer: ring(&p.pts[..n], bulges.as_ref()),
+                holes: Vec::new(),
+            }])
         }
         // Two half circles counter-clockwise.
         Entity::Circle(c) if c.r > 0.0 => {
-            let at = |dx: f64| kentos_commands::Vec2 { x: c.c.x + dx, y: c.c.y };
+            let at = |dx: f64| kentos_commands::Vec2 {
+                x: c.c.x + dx,
+                y: c.c.y,
+            };
             Some(vec![SpacePart {
-                outer: SpaceRing { pts: vec![at(c.r), at(-c.r)], bulges: Some(vec![1.0, 1.0]) },
+                outer: SpaceRing {
+                    pts: vec![at(c.r), at(-c.r)],
+                    bulges: Some(vec![1.0, 1.0]),
+                },
                 holes: Vec::new(),
             }])
         }
@@ -194,7 +232,9 @@ impl MassTool {
             .hits(at, cx.pick_tolerance())
             .into_iter()
             .find_map(|s| footprint_of(cx.doc.get(s)?))
-            .ok_or_else(|| "Burada kapalı bir çizgi, alan ya da daire yok: kenarına tıklayın.".into())
+            .ok_or_else(|| {
+                "Burada kapalı bir çizgi, alan ya da daire yok: kenarına tıklayın.".into()
+            })
     }
 
     /// The corners so far and the pointer.
@@ -244,7 +284,9 @@ impl MassTool {
             kentos_commands::CommandResult::Completed { output, .. } => {
                 for e in &output.masses {
                     let shape = kentos_native_application::geometry::shape(e);
-                    self.drawn.strokes.extend(Outline::of(&shape, None, 2.0, Tone::Accent).strokes);
+                    self.drawn
+                        .strokes
+                        .extend(Outline::of(&shape, None, 2.0, Tone::Accent).strokes);
                     let Entity::Mass(m) = e else { continue };
                     self.drawn.areas.push(Area {
                         rings: crate::slab_tools::rings_of(&m.mass.parts),
@@ -256,13 +298,16 @@ impl MassTool {
                     let area = area_of(&m.mass.parts);
                     self.size = Some((area, area * m.mass.height));
                     if area < FLAT {
-                        self.why = Some("Oturumun alanı yok: köşeleri bir doğrunun üstünde.".into());
+                        self.why =
+                            Some("Oturumun alanı yok: köşeleri bir doğrunun üstünde.".into());
                     }
                 }
             }
             kentos_commands::CommandResult::Failed { error }
             | kentos_commands::CommandResult::Conflict { error }
-            | kentos_commands::CommandResult::NeedsInput { error } => self.why = Some(error.message),
+            | kentos_commands::CommandResult::NeedsInput { error } => {
+                self.why = Some(error.message)
+            }
             _ => {}
         }
     }
@@ -272,7 +317,10 @@ impl MassTool {
     fn write(&self, parts: &[SpacePart], cx: &mut Context<'_>) -> bool {
         let area = area_of(parts);
         if area < FLAT {
-            cx.say(Level::Warn, "Oturumun alanı yok: köşeleri bir doğrunun üstünde. Kütle çizilmedi.");
+            cx.say(
+                Level::Warn,
+                "Oturumun alanı yok: köşeleri bir doğrunun üstünde. Kütle çizilmedi.",
+            );
             return false;
         }
         let written = crate::arch_layer::writing(&Kind::Mass, cx, |layer, cx| {
@@ -282,7 +330,10 @@ impl MassTool {
         });
         if written {
             let f = cx.format();
-            let name = self.name.as_ref().map_or_else(String::new, |n| format!(" ({n})"));
+            let name = self
+                .name
+                .as_ref()
+                .map_or_else(String::new, |n| format!(" ({n})"));
             cx.say(
                 Level::Success,
                 format!(
@@ -345,13 +396,18 @@ impl MassTool {
 
     fn refusal(key: &str, f: &Format) -> String {
         match key {
-            "Y" => format!("Kütlenin yüksekliği sıfırdan büyük ve en çok {} olmalı.", f.length(MAX_MASS_HEIGHT)),
+            "Y" => format!(
+                "Kütlenin yüksekliği sıfırdan büyük ve en çok {} olmalı.",
+                f.length(MAX_MASS_HEIGHT)
+            ),
             "F" => format!(
                 "Kot farkı {} ile {} arasında olmalı.",
                 f.length(-MAX_MASS_OFFSET),
                 f.length(MAX_MASS_OFFSET)
             ),
-            "A" => format!("Kütlenin adı en çok {MAX_MASS_NAME} karakter olur ve denetim karakteri taşımaz."),
+            "A" => format!(
+                "Kütlenin adı en çok {MAX_MASS_NAME} karakter olur ve denetim karakteri taşımaz."
+            ),
             _ => "Geçerli bir kütle seçeneği belirleyin.".into(),
         }
     }
@@ -398,7 +454,9 @@ impl Tool for MassTool {
         if let Some(ask) = self.ask {
             let words = match ask {
                 Ask::Height => "tabanından tepesine yüksekliğini yazın",
-                Ask::Offset => "tabanının katın döşemesinden kot farkını yazın (0: katın döşemesinde)",
+                Ask::Offset => {
+                    "tabanının katın döşemesinden kot farkını yazın (0: katın döşemesinde)"
+                }
                 Ask::Name => "adını yazın (Blok A); boş: adsız",
             };
             return Prompt::new("Kütle", words).option("Geri", "G");
@@ -469,7 +527,10 @@ impl Tool for MassTool {
                     return true;
                 }
                 if self.pts.len() == MAX_SPACE_POINTS {
-                    cx.say(Level::Warn, "Köşe sınırına ulaşıldı: Enter ile yazın ya da son köşeyi geri alın.");
+                    cx.say(
+                        Level::Warn,
+                        "Köşe sınırına ulaşıldı: Enter ile yazın ya da son köşeyi geri alın.",
+                    );
                     return true;
                 }
                 self.pts.push(p);
@@ -501,8 +562,15 @@ impl Tool for MassTool {
         }
         self.ask = match key.as_str() {
             "S" => {
-                let i = Footprint::ALL.iter().position(|f| *f == self.footprint).unwrap_or(0);
-                self.apply("S", Footprint::ALL[(i + 1) % Footprint::ALL.len()].name(), cx);
+                let i = Footprint::ALL
+                    .iter()
+                    .position(|f| *f == self.footprint)
+                    .unwrap_or(0);
+                self.apply(
+                    "S",
+                    Footprint::ALL[(i + 1) % Footprint::ALL.len()].name(),
+                    cx,
+                );
                 self.see(cx);
                 return true;
             }
@@ -526,9 +594,16 @@ impl Tool for MassTool {
     }
 
     fn settings(&self, f: &Format) -> Vec<Setting> {
-        let footprints: Vec<(&str, &str)> = Footprint::ALL.iter().map(|x| (x.name(), x.label())).collect();
+        let footprints: Vec<(&str, &str)> = Footprint::ALL
+            .iter()
+            .map(|x| (x.name(), x.label()))
+            .collect();
         vec![
-            Setting::choice("S", "Oturum", crate::tool_settings::choices(&footprints, self.footprint.name())),
+            Setting::choice(
+                "S",
+                "Oturum",
+                crate::tool_settings::choices(&footprints, self.footprint.name()),
+            ),
             Setting::text("Y", "Yükseklik", f.length(self.height)),
             Setting::text("F", "Kot farkı", f.length(self.offset)),
             Setting::text("A", "Ad", self.name.clone().unwrap_or_default()),
@@ -546,7 +621,10 @@ impl Tool for MassTool {
     }
 
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
-        self.settings(&Format::default()).into_iter().find(|s| s.key == key).map_or_else(Vec::new, |s| s.choices)
+        self.settings(&Format::default())
+            .into_iter()
+            .find(|s| s.key == key)
+            .map_or_else(Vec::new, |s| s.choices)
     }
 
     fn choose_option(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
@@ -610,7 +688,11 @@ impl Tool for MassTool {
             }
             Tag { at, lines }
         });
-        out.tag_tone = if self.why.is_some() { Tone::Danger } else { Tone::Accent };
+        out.tag_tone = if self.why.is_some() {
+            Tone::Danger
+        } else {
+            Tone::Accent
+        };
         out
     }
 }

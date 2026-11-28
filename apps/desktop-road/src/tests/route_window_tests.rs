@@ -1,17 +1,20 @@
 //! Ön güzergâh (route_window.rs, plan/road.md Y12.1): the window reads the route as it is typed and draws it, one undo
 //! step; and its pictures.
 
-use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::road;
+use crate::road::RoadState;
 use crate::route_window::Event as W;
 
 /// A road project with `road.routes.find`'s drawing: the terrain and an area to avoid.
 fn app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.routes.find.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.routes.find.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -22,7 +25,17 @@ fn send(app: &mut App, e: W) {
 }
 
 fn typed(app: &mut App) {
-    for (k, v) in [(0, "70"), (1, "80"), (2, "520"), (3, "280"), (4, "10"), (5, "30"), (6, "8"), (7, "10"), (8, "3")] {
+    for (k, v) in [
+        (0, "70"),
+        (1, "80"),
+        (2, "520"),
+        (3, "280"),
+        (4, "10"),
+        (5, "30"),
+        (6, "8"),
+        (7, "10"),
+        (8, "3"),
+    ] {
         send(app, W::Field(k, v.into()));
     }
 }
@@ -31,9 +44,13 @@ fn typed(app: &mut App) {
 fn the_window_finds_and_draws_the_route() {
     let mut app = app();
     let _ = app.update(Message::Run("route.finder"));
-    assert_eq!(app.dialog, Some(crate::road::dialog(road::RoadDialogKind::Route)));
+    assert_eq!(
+        app.dialog,
+        Some(crate::road::dialog(road::RoadDialogKind::Route))
+    );
     let why = app
-        .modules.road()
+        .modules
+        .road()
         .route_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -41,14 +58,16 @@ fn the_window_finds_and_draws_the_route() {
     assert!(why.contains("yazılmalı"), "{why}");
     typed(&mut app);
     let open = app
-        .modules.road()
+        .modules
+        .road()
         .route_window
         .as_ref()
         .and_then(|w| w.preview.route.clone())
         .expect("a route");
     send(&mut app, W::Avoid("yasak".into()));
     let around = app
-        .modules.road()
+        .modules
+        .road()
         .route_window
         .as_ref()
         .and_then(|w| w.preview.route.clone())
@@ -61,7 +80,8 @@ fn the_window_finds_and_draws_the_route() {
     );
     send(&mut app, W::Field(6, "0.5".into()));
     let why = app
-        .modules.road()
+        .modules
+        .road()
         .route_window
         .as_ref()
         .and_then(|w| w.preview.why.clone())
@@ -117,7 +137,9 @@ fn screens() {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -126,7 +148,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("yol-y12-guzergah-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));

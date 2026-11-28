@@ -193,18 +193,29 @@ impl Job {
     fn words(&self) -> Vec<String> {
         let mut out = Vec::new();
         for p in &self.tool.parameters {
-            let given = self.values.get(&p.name).cloned().or_else(|| match &p.default {
-                Some(crate::types::DefaultValue::Value(v)) => Some(v.clone()),
-                _ => None,
-            });
+            let given = self
+                .values
+                .get(&p.name)
+                .cloned()
+                .or_else(|| match &p.default {
+                    Some(crate::types::DefaultValue::Value(v)) => Some(v.clone()),
+                    _ => None,
+                });
             // A parameter that acts on only some of its input's objects (docs/adr/9333): not used when the input held
             // none of them; when it held others too, a choice other than theirs says how many it reached.
             let acted = p.acts_on.as_ref().and_then(|a| {
                 let input = self.inputs.get(&a.input).filter(|i| !i.ids.is_empty())?;
-                Some((a, input.acting.get(&p.name).copied().unwrap_or(0), input.ids.len()))
+                Some((
+                    a,
+                    input.acting.get(&p.name).copied().unwrap_or(0),
+                    input.ids.len(),
+                ))
             });
             if let Some((a, 0, _)) = acted {
-                out.push(format!("{}: kullanılmadı ({}; nesneler {})", p.label, a.none, a.others));
+                out.push(format!(
+                    "{}: kullanılmadı ({}; nesneler {})",
+                    p.label, a.none, a.others
+                ));
                 continue;
             }
             match &p.kind {
@@ -215,7 +226,11 @@ impl Job {
                 }
                 ParamKind::Number { unit, .. } => {
                     if let Some(n) = given.as_ref().and_then(serde_json::Value::as_f64) {
-                        let unit = if unit.is_empty() { String::new() } else { format!(" {unit}") };
+                        let unit = if unit.is_empty() {
+                            String::new()
+                        } else {
+                            format!(" {unit}")
+                        };
                         out.push(format!("{}: {}{unit}", p.label, crate::text::js_number(n)));
                     }
                 }
@@ -226,9 +241,16 @@ impl Job {
                         .and_then(|v| options.iter().find(|o| o.value == v))
                     {
                         let reach = acted
-                            .filter(|(a, n, all)| n < all && a.otherwise.as_deref() != Some(o.value.as_str()))
+                            .filter(|(a, n, all)| {
+                                n < all && a.otherwise.as_deref() != Some(o.value.as_str())
+                            })
                             .map(|(a, n, all)| {
-                                format!(" ({}; öbür {} nesne {})", a.some.replace("{n}", &n.to_string()), all - n, a.others)
+                                format!(
+                                    " ({}; öbür {} nesne {})",
+                                    a.some.replace("{n}", &n.to_string()),
+                                    all - n,
+                                    a.others
+                                )
                             })
                             .unwrap_or_default();
                         out.push(format!("{}: {}{reach}", p.label, o.label));
@@ -236,7 +258,11 @@ impl Job {
                 }
                 ParamKind::Layer { .. } => {
                     if let Some(t) = self.layers.get(&p.name).filter(|t| !t.name.is_empty()) {
-                        let how = if t.is_new { "yeni katman" } else { "var olan katmana yazıldı" };
+                        let how = if t.is_new {
+                            "yeni katman"
+                        } else {
+                            "var olan katmana yazıldı"
+                        };
                         out.push(format!("{}: “{}” ({how})", p.label, t.name));
                     }
                 }
@@ -540,7 +566,12 @@ impl Runner {
                     if let Some(fv) = values.get(&p.name).and_then(FeaturesValue::read) {
                         out.insert(
                             p.name.clone(),
-                            summarize_features(&fv, kinds.as_deref(), scene, &acting_on(tool, &p.name)),
+                            summarize_features(
+                                &fv,
+                                kinds.as_deref(),
+                                scene,
+                                &acting_on(tool, &p.name),
+                            ),
                         );
                     }
                 }
@@ -821,7 +852,9 @@ impl Runner {
                         }
                         let acting = acting_on(tool, &p.name)
                             .into_iter()
-                            .map(|(name, acts)| (name.to_owned(), entities.iter().filter(|e| acts(e)).count()))
+                            .map(|(name, acts)| {
+                                (name.to_owned(), entities.iter().filter(|e| acts(e)).count())
+                            })
                             .collect();
                         inputs.insert(
                             p.name.clone(),

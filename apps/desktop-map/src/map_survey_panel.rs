@@ -9,9 +9,9 @@
 //! network adjustments (map_survey_network_rows.rs, docs/adr/2920). Harita only: GIS reads the accepted point in
 //! Öznitelikler.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -20,7 +20,8 @@ use iced::widget::{column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     AcceptMethod, MapSurveyEdit, MapSurveyOperation as Op, MapSurveyTree, SurveyFileState as F,
-    SurveyMarkRow, SurveyPointRow, SurveySessionRow, SurveySolutionRow, SurveyState as S, SurveyUseRow,
+    SurveyMarkRow, SurveyPointRow, SurveySessionRow, SurveySolutionRow, SurveyState as S,
+    SurveyUseRow,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
@@ -76,7 +77,12 @@ pub(crate) fn msg(e: Event) -> Message {
     Message::from(map::Event::MapSurvey(e))
 }
 
-type Read = (String, bool, Option<kentos_commands::SurveyPlaceTolerance>, Result<MapSurveyTree, String>);
+type Read = (
+    String,
+    bool,
+    Option<kentos_commands::SurveyPlaceTolerance>,
+    Result<MapSurveyTree, String>,
+);
 
 /// The panel's state: deep or quick, the toolbar's text, the user's folds, the filter, and the last tree.
 #[derive(Default)]
@@ -96,7 +102,9 @@ pub struct PanelState {
 
 impl std::fmt::Debug for PanelState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PanelState").field("deep", &self.deep).finish()
+        f.debug_struct("PanelState")
+            .field("deep", &self.deep)
+            .finish()
     }
 }
 
@@ -110,20 +118,33 @@ use crate::properties::{survey_kind_words as kind_words, survey_state_words as s
 
 /// σ in millimetres: north, east, up.
 fn sigma_mm(g: [f64; 3]) -> String {
-    format!("σ {:.0}/{:.0}/{:.0} mm", g[0] * 1000.0, g[1] * 1000.0, g[2] * 1000.0)
+    format!(
+        "σ {:.0}/{:.0}/{:.0} mm",
+        g[0] * 1000.0,
+        g[1] * 1000.0,
+        g[2] * 1000.0
+    )
 }
 
 /// A baseline's end on the map (docs/adr/3320, 4120): its mark's accepted point; else the own place in the project of
 /// a known point on it that is not left out; none with neither.
 fn end_of(tree: &MapSurveyTree, mark: &str) -> Option<crate::survey_baseline_marks::End> {
     use crate::survey_baseline_marks::End;
-    if let Some(uid) = crate::map_survey_network_rows::objects_of(tree, &[mark]).into_iter().next() {
+    if let Some(uid) = crate::map_survey_network_rows::objects_of(tree, &[mark])
+        .into_iter()
+        .next()
+    {
         return Some(End::Object(uid));
     }
     tree.known
         .iter()
         .filter(|k| k.mark == mark && k.excluded.is_none())
-        .find_map(|k| tree.known_places.iter().find(|p| p.id == k.id).and_then(|p| Some(End::Known([p.x?, p.y?], mark.to_owned()))))
+        .find_map(|k| {
+            tree.known_places
+                .iter()
+                .find(|p| p.id == k.id)
+                .and_then(|p| Some(End::Known([p.x?, p.y?], mark.to_owned())))
+        })
 }
 
 /// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
@@ -183,27 +204,54 @@ impl MapSurveyPanelApp for App {
     fn map_survey_save_limits(&mut self) {
         let source = self.modules.map().map_survey.limit_source.trim().to_owned();
         let Some(limits) = self.map_survey_limits() else {
-            let kept = self.document.as_ref().and_then(|d| d.model.map_survey()).is_some_and(|s| s.tolerance.is_some());
+            let kept = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.map_survey())
+                .is_some_and(|s| s.tolerance.is_some());
             if !kept {
-                self.say(Level::Warn, "Yatay ya da düşey kabul farkı sınırını yazın (m), sonra Projeye yaz.");
-            } else if self.map_survey_edit(Op::Tolerance { horizontal: None, vertical: None, source: None }).is_some() {
+                self.say(
+                    Level::Warn,
+                    "Yatay ya da düşey kabul farkı sınırını yazın (m), sonra Projeye yaz.",
+                );
+            } else if self
+                .map_survey_edit(Op::Tolerance {
+                    horizontal: None,
+                    vertical: None,
+                    source: None,
+                })
+                .is_some()
+            {
                 self.say(Level::Success, "Projedeki kabul farkı sınırı kaldırıldı.");
             }
             return;
         };
         if source.is_empty() {
-            self.say(Level::Warn, "Sınırın kaynağını yazın: yönetmeliğin maddesi ya da idarenin şartnamesi.");
+            self.say(
+                Level::Warn,
+                "Sınırın kaynağını yazın: yönetmeliğin maddesi ya da idarenin şartnamesi.",
+            );
             return;
         }
-        let op = Op::Tolerance { horizontal: limits.horizontal, vertical: limits.vertical, source: Some(source.clone()) };
+        let op = Op::Tolerance {
+            horizontal: limits.horizontal,
+            vertical: limits.vertical,
+            source: Some(source.clone()),
+        };
         if self.map_survey_edit(op).is_some() {
-            self.say(Level::Success, format!("Kabul farkı sınırı projeye yazıldı; kaynağı: {source}."));
+            self.say(
+                Level::Success,
+                format!("Kabul farkı sınırı projeye yazıldı; kaynağı: {source}."),
+            );
         }
     }
 
     fn map_survey_edit(&mut self, operation: Op) -> Option<kentos_commands::MapSurveyEdited> {
         let doc = self.document.as_mut()?;
-        let input = MapSurveyEdit { operation, expected_revision: None };
+        let input = MapSurveyEdit {
+            operation,
+            expected_revision: None,
+        };
         let result = map_survey_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         self.answered(result)
     }
@@ -216,12 +264,17 @@ impl MapSurveyPanelApp for App {
         if !self.right_panel_shown() {
             self.toggle_right_panel();
         }
-        self.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::MapSurvey));
+        self.docks
+            .update(kentos_ui::widget::docking::Event::Selected(
+                Panel::MapSurvey,
+            ));
     }
 
     /// `map.survey.select`: every accepted point's object selected and shown (Harita and GIS).
     fn select_accepted_points(&mut self) {
-        let Some(doc) = self.document.as_ref() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         let uids: Vec<String> = match map_survey::preview(&doc.model, false, None, false) {
             Ok(tree) => tree.points.iter().map(|p| p.uid.clone()).collect(),
             Err(why) => {
@@ -241,8 +294,12 @@ impl MapSurveyPanelApp for App {
     /// known point's own place in the project (docs/adr/4120), said; a mark with neither says so.
     fn show_baseline(&mut self, id: &str) {
         use crate::survey_baseline_marks::End;
-        let Some(Ok(tree)) = self.map_survey_read() else { return };
-        let Some(b) = tree.baselines.iter().find(|b| b.id == id).cloned() else { return };
+        let Some(Ok(tree)) = self.map_survey_read() else {
+            return;
+        };
+        let Some(b) = tree.baselines.iter().find(|b| b.id == id).cloned() else {
+            return;
+        };
         let (from, to) = (end_of(&tree, &b.from), end_of(&tree, &b.to));
         let uids: Vec<String> = [&from, &to]
             .into_iter()
@@ -300,8 +357,12 @@ impl MapSurveyPanelApp for App {
     /// selected and shown; the ends at known points' own places named, those that cannot be drawn counted.
     fn show_network(&mut self) {
         use crate::survey_baseline_marks::End;
-        let Some(Ok(tree)) = self.map_survey_read() else { return };
-        let Some(session) = self.document.as_ref().map(|d| d.session) else { return };
+        let Some(Ok(tree)) = self.map_survey_read() else {
+            return;
+        };
+        let Some(session) = self.document.as_ref().map(|d| d.session) else {
+            return;
+        };
         let mut lines = Vec::new();
         let mut uids: Vec<String> = Vec::new();
         let mut own: Vec<String> = Vec::new();
@@ -317,7 +378,12 @@ impl MapSurveyPanelApp for App {
                         }
                     }
                     let words = format!("{} · {:.3} m", b.id, b.length);
-                    lines.push(crate::survey_baseline_marks::ShownLine { from, to, words, excluded: b.excluded.is_some() });
+                    lines.push(crate::survey_baseline_marks::ShownLine {
+                        from,
+                        to,
+                        words,
+                        excluded: b.excluded.is_some(),
+                    });
                 }
                 _ => missing += 1,
             }
@@ -336,7 +402,10 @@ impl MapSurveyPanelApp for App {
             (n, k) => format!("Ağ: {n} baz çizildi; {k}'i dışlandı, kırmızı noktalı."),
         };
         if drawn > 0 && !own.is_empty() {
-            said.push_str(&format!(" {} bilinen noktanın projedeki kendi yerinde (üçgen).", own.join(", ")));
+            said.push_str(&format!(
+                " {} bilinen noktanın projedeki kendi yerinde (üçgen).",
+                own.join(", ")
+            ));
         }
         if missing > 0 && drawn > 0 {
             said.push_str(&format!(
@@ -349,18 +418,37 @@ impl MapSurveyPanelApp for App {
     /// The view on every drawn baseline's two ends, 96 px in from the edges (docs/adr/4120: a known point's own place
     /// is no object of the drawing, so the selection's box would leave it out).
     fn fit_baselines(&mut self) {
-        let Some(marks) = self.baseline_marks() else { return };
+        let Some(marks) = self.baseline_marks() else {
+            return;
+        };
         let ends = marks.lines.iter().flat_map(|l| [l.from, l.to]);
-        let (mut min_x, mut min_y, mut max_x, mut max_y) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut min_x, mut min_y, mut max_x, mut max_y) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for [x, y] in ends {
             (min_x, min_y, max_x, max_y) = (min_x.min(x), min_y.min(y), max_x.max(x), max_y.max(y));
         }
-        let bounds = kentos_render_wgpu::Bounds { min_x, min_y, max_x, max_y };
-        self.navigating(|app| app.viewport.change(kentos_interaction::ViewChange::Fit { bounds, padding: 96.0 }));
+        let bounds = kentos_render_wgpu::Bounds {
+            min_x,
+            min_y,
+            max_x,
+            max_y,
+        };
+        self.navigating(|app| {
+            app.viewport.change(kentos_interaction::ViewChange::Fit {
+                bounds,
+                padding: 96.0,
+            })
+        });
     }
 
     fn select_uids(&mut self, uids: &[String]) {
-        let Some(doc) = self.document.as_ref() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         let slots: Vec<Slot> = uids
             .iter()
             .filter_map(|u| Uuid::parse_str(u).ok())
@@ -388,16 +476,33 @@ impl MapSurveyPanelApp for App {
     }
 
     fn add_survey_campaign(&mut self) -> Option<String> {
-        let n = self.document.as_ref().and_then(|d| d.model.map_survey()).map_or(0, |s| s.campaigns.len()) + 1;
+        let n = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.map_survey())
+            .map_or(0, |s| s.campaigns.len())
+            + 1;
         let name = format!("Arazi ölçümü {n}");
-        let out = self.map_survey_edit(Op::Campaign { name: name.clone(), work: None, operator: None, epoch: None, velocity: None })?;
-        self.say(Level::Success, format!("“{name}” eklendi ({}).", out.id.clone().unwrap_or_default()));
+        let out = self.map_survey_edit(Op::Campaign {
+            name: name.clone(),
+            work: None,
+            operator: None,
+            epoch: None,
+            velocity: None,
+        })?;
+        self.say(
+            Level::Success,
+            format!("“{name}” eklendi ({}).", out.id.clone().unwrap_or_default()),
+        );
         out.id
     }
 
     fn import_session(&mut self, path: PathBuf) {
-        let Some(campaign) = self.survey_campaign() else { return };
-        let mark = Some(self.modules.map().map_survey.text.trim().to_owned()).filter(|m| !m.is_empty());
+        let Some(campaign) = self.survey_campaign() else {
+            return;
+        };
+        let mark =
+            Some(self.modules.map().map_survey.text.trim().to_owned()).filter(|m| !m.is_empty());
         let operation = Op::Session {
             campaign,
             mark,
@@ -412,7 +517,10 @@ impl MapSurveyPanelApp for App {
         if let Some(out) = self.map_survey_edit(operation) {
             let words = match out.observations {
                 0 => format!("Ölçüm oturumu {} eklendi.", out.id.unwrap_or_default()),
-                n => format!("Ölçüm oturumu {} eklendi: {n} ham ölçüm.", out.id.unwrap_or_default()),
+                n => format!(
+                    "Ölçüm oturumu {} eklendi: {n} ham ölçüm.",
+                    out.id.unwrap_or_default()
+                ),
             };
             self.say(Level::Success, words);
         }
@@ -421,11 +529,22 @@ impl MapSurveyPanelApp for App {
     /// A mark's point accepted from its solutions not excluded that share the last measured one's frame and epoch:
     /// their mean, or the one alone.
     fn accept_mark(&mut self, mark: &str) {
-        let Some(Ok(tree)) = self.map_survey_read() else { return };
-        let Some(m) = tree.marks.iter().find(|m| m.mark == mark) else { return };
-        let open: Vec<&SurveySolutionRow> = m.solutions.iter().filter(|s| s.excluded.is_none()).collect();
+        let Some(Ok(tree)) = self.map_survey_read() else {
+            return;
+        };
+        let Some(m) = tree.marks.iter().find(|m| m.mark == mark) else {
+            return;
+        };
+        let open: Vec<&SurveySolutionRow> = m
+            .solutions
+            .iter()
+            .filter(|s| s.excluded.is_none())
+            .collect();
         let Some(lead) = open.iter().find(|s| s.latest).or(open.last()).copied() else {
-            self.say(Level::Warn, format!("“{mark}” işaretinin dışlanmamış çözümü yok."));
+            self.say(
+                Level::Warn,
+                format!("“{mark}” işaretinin dışlanmamış çözümü yok."),
+            );
             return;
         };
         let ids: Vec<String> = open
@@ -433,9 +552,25 @@ impl MapSurveyPanelApp for App {
             .filter(|s| s.srid == lead.srid && s.epoch == lead.epoch)
             .map(|s| s.id.clone())
             .collect();
-        let method = if ids.len() == 1 { AcceptMethod::Single } else { AcceptMethod::Mean };
-        if let Some(out) = self.map_survey_edit(Op::Accept { mark: mark.to_owned(), solutions: ids, method: Some(method), layer: None }) {
-            self.say(Level::Success, format!("“{mark}” kabul edildi ({}, {}).", out.id.unwrap_or_default(), method.title()));
+        let method = if ids.len() == 1 {
+            AcceptMethod::Single
+        } else {
+            AcceptMethod::Mean
+        };
+        if let Some(out) = self.map_survey_edit(Op::Accept {
+            mark: mark.to_owned(),
+            solutions: ids,
+            method: Some(method),
+            layer: None,
+        }) {
+            self.say(
+                Level::Success,
+                format!(
+                    "“{mark}” kabul edildi ({}, {}).",
+                    out.id.unwrap_or_default(),
+                    method.title()
+                ),
+            );
         }
     }
 
@@ -468,13 +603,24 @@ impl MapSurveyPanelApp for App {
                 let reason = self.modules.map().map_survey.text.trim().to_owned();
                 if reason.is_empty() {
                     self.say(Level::Warn, "Dışlama nedenini araç çubuğundaki kutuya yazın; çözüm silinmez, nedeniyle dışlanır.");
-                } else if self.map_survey_edit(Op::Exclude { solution: id.clone(), reason }).is_some() {
+                } else if self
+                    .map_survey_edit(Op::Exclude {
+                        solution: id.clone(),
+                        reason,
+                    })
+                    .is_some()
+                {
                     self.modules.map_mut().map_survey.text.clear();
                     self.say(Level::Info, format!("“{id}” dışlandı; kayıtta kalır."));
                 }
             }
             Event::Include(id) => {
-                if self.map_survey_edit(Op::Include { solution: id.clone() }).is_some() {
+                if self
+                    .map_survey_edit(Op::Include {
+                        solution: id.clone(),
+                    })
+                    .is_some()
+                {
                     self.say(Level::Info, format!("“{id}” yeniden kullanılabilir."));
                 }
             }
@@ -490,7 +636,13 @@ impl MapSurveyPanelApp for App {
                     fixes: vec!["RTK sabit".into()],
                 };
                 if let Some(out) = self.map_survey_edit(op) {
-                    self.say(Level::Success, format!("Alıcı çözümü {}: “{session}” oturumunun RTK sabit ölçümleri.", out.id.unwrap_or_default()));
+                    self.say(
+                        Level::Success,
+                        format!(
+                            "Alıcı çözümü {}: “{session}” oturumunun RTK sabit ölçümleri.",
+                            out.id.unwrap_or_default()
+                        ),
+                    );
                 }
             }
             Event::Antenna(session) => {
@@ -521,15 +673,27 @@ impl MapSurveyPanelApp for App {
                 };
                 if self.map_survey_edit(op).is_some() {
                     self.modules.map_mut().map_survey.text.clear();
-                    self.say(Level::Info, format!("“{session}” oturumunun anten yüksekliği {height:.3} m (ARP'ye düşey)."));
+                    self.say(
+                        Level::Info,
+                        format!(
+                            "“{session}” oturumunun anten yüksekliği {height:.3} m (ARP'ye düşey)."
+                        ),
+                    );
                 }
             }
             Event::Accept(mark) => self.accept_mark(&mark),
             Event::Regenerate(point) => {
-                if let Some(out) = self.map_survey_edit(Op::Regenerate { point: point.clone(), solutions: None, method: None }) {
+                if let Some(out) = self.map_survey_edit(Op::Regenerate {
+                    point: point.clone(),
+                    solutions: None,
+                    method: None,
+                }) {
                     self.say(
                         Level::Success,
-                        format!("“{point}” yeniden üretildi: {}. revizyon; eski sonuç geçmişte.", out.point_revision.unwrap_or(0)),
+                        format!(
+                            "“{point}” yeniden üretildi: {}. revizyon; eski sonuç geçmişte.",
+                            out.point_revision.unwrap_or(0)
+                        ),
                     );
                 }
             }
@@ -549,7 +713,9 @@ impl MapSurveyPanelApp for App {
 
     fn map_survey_view(&self) -> Element<'_, Message> {
         let Some(read) = self.map_survey_read() else {
-            return container(label::caption("Açık çizim yok.")).padding([8, 12]).into();
+            return container(label::caption("Açık çizim yok."))
+                .padding([8, 12])
+                .into();
         };
         let tree = match read {
             Ok(t) => t,
@@ -580,7 +746,10 @@ impl MapSurveyPanelApp for App {
         let head: Element<'_, Message> = if tree.known.is_empty() {
             container(bar).padding([4, 12]).width(Fill).into()
         } else {
-            let bad = |t: &str| !t.trim().is_empty() && crate::numbers::read_number(t).is_none_or(|v| !(v.is_finite() && v > 0.0));
+            let bad = |t: &str| {
+                !t.trim().is_empty()
+                    && crate::numbers::read_number(t).is_none_or(|v| !(v.is_finite() && v > 0.0))
+            };
             let limits = row![
                 label::caption("Kabul farkı sınırı (m)"),
                 container(
@@ -611,8 +780,15 @@ impl MapSurveyPanelApp for App {
             let kept = tree.tolerance.as_ref().map_or_else(
                 || "Projede sınır yok.".to_owned(),
                 |t| {
-                    let m = |v: Option<f64>| v.map_or("—".to_owned(), |v| format!("{v}").replace('.', ","));
-                    format!("Projede: yatay {}, düşey {} m · {}", m(t.horizontal), m(t.vertical), t.source)
+                    let m = |v: Option<f64>| {
+                        v.map_or("—".to_owned(), |v| format!("{v}").replace('.', ","))
+                    };
+                    format!(
+                        "Projede: yatay {}, düşey {} m · {}",
+                        m(t.horizontal),
+                        m(t.vertical),
+                        t.source
+                    )
                 },
             );
             let source = row![
@@ -628,7 +804,10 @@ impl MapSurveyPanelApp for App {
             ]
             .spacing(6)
             .align_y(Center);
-            container(iced::widget::column![bar, limits, source, label::caption(kept)].spacing(4)).padding([4, 12]).width(Fill).into()
+            container(iced::widget::column![bar, limits, source, label::caption(kept)].spacing(4))
+                .padding([4, 12])
+                .width(Fill)
+                .into()
         };
         let mut items = Vec::new();
         if !tree.campaigns.is_empty() {
@@ -654,7 +833,10 @@ impl MapSurveyPanelApp for App {
                 .icon(icon(glyph("gnssAccepted")).size(14.0))
                 .meta(format!("{}", tree.marks.len()));
             for m in &tree.marks {
-                group = group.push(mark_item(m, tree.points.iter().find(|p| Some(&p.id) == m.point.as_ref())));
+                group = group.push(mark_item(
+                    m,
+                    tree.points.iter().find(|p| Some(&p.id) == m.point.as_ref()),
+                ));
             }
             items.push(group);
         }
@@ -674,7 +856,10 @@ impl MapSurveyPanelApp for App {
             .filter(self.modules.map().map_survey.filter, |f| msg(Event::Filter(f)))
             .counted("Dikkat", "Sorun")
             .empty("Arşivde arazi ölçümü yok: araç çubuğundan ekleyin ya da bir ölçüm oturumu dosyası seçin.");
-        column![head, kentos_ui::widget::horizontal_divider(), body.view()].spacing(4).padding([6, 0]).into()
+        column![head, kentos_ui::widget::horizontal_divider(), body.view()]
+            .spacing(4)
+            .padding([6, 0])
+            .into()
     }
 }
 
@@ -688,7 +873,10 @@ fn campaign_detail(c: &kentos_commands::SurveyCampaignRow) -> String {
         out.push(format!("Hız ızgarası: {v}."));
     }
     if let Some(w) = &c.work {
-        out.push(format!("Harita işi öğesi {w}{}.", if c.work_missing { " (projede yok)" } else { "" }));
+        out.push(format!(
+            "Harita işi öğesi {w}{}.",
+            if c.work_missing { " (projede yok)" } else { "" }
+        ));
     }
     out.join(" ")
 }
@@ -704,7 +892,9 @@ fn session_item<'a>(s: &SurveySessionRow) -> StatusItem<'a, Message> {
         kentos_commands::SurveyFileFormat::Gvx => "GVX",
         kentos_commands::SurveyFileFormat::Text => "baz metni",
     });
-    let height = s.vertical.map_or("anten yok".to_owned(), |h| format!("{h:.3} m"));
+    let height = s
+        .vertical
+        .map_or("anten yok".to_owned(), |h| format!("{h:.3} m"));
     let mut detail = Vec::new();
     if let (Some(a), Some(b)) = (&s.start, &s.end) {
         detail.push(format!("{a} – {b}."));
@@ -717,29 +907,48 @@ fn session_item<'a>(s: &SurveySessionRow) -> StatusItem<'a, Message> {
             "Anten {}: {:.3} m {}.",
             a.kind.as_deref().unwrap_or("türü yok"),
             a.height,
-            if a.reference == kentos_commands::AntennaReference::Slant { "eğik" } else { "ARP'ye düşey" }
+            if a.reference == kentos_commands::AntennaReference::Slant {
+                "eğik"
+            } else {
+                "ARP'ye düşey"
+            }
         ));
     }
     if s.observations > 0 {
         detail.push(format!("{} ham ölçüm.", s.observations));
     }
     if let Some(r) = &s.replay {
-        let fixes: Vec<String> = r.fixes.iter().map(|f| format!("{} {}", f.fix, f.count)).collect();
+        let fixes: Vec<String> = r
+            .fixes
+            .iter()
+            .map(|f| format!("{} {}", f.fix, f.count))
+            .collect();
         detail.push(format!(
             "Oynatma: {}; RTK sabitten {} düşüş, {} zaman atlaması{}.",
             fixes.join(", "),
             r.float_drops,
             r.time_jumps,
-            r.nominal.map_or(String::new(), |n| format!(" (olağan adım {n} sn)"))
+            r.nominal
+                .map_or(String::new(), |n| format!(" (olağan adım {n} sn)"))
         ));
     }
     if let Some(f) = &s.file {
-        detail.push(format!("Dosya: {} (revizyon {}).", f.path, &f.revision[..12.min(f.revision.len())]));
+        detail.push(format!(
+            "Dosya: {} (revizyon {}).",
+            f.path,
+            &f.revision[..12.min(f.revision.len())]
+        ));
     }
     let (tone, words) = match s.file.as_ref().map(|f| f.state) {
         Some(F::Missing) => (Status::Danger, "Dosyası yok"),
         Some(F::Changed) => (Status::Warning, "Dosyası değişti"),
-        _ if s.replay.as_ref().is_some_and(|r| r.float_drops > 0 || r.time_jumps > 0) => (Status::Warning, "Kopma var"),
+        _ if s
+            .replay
+            .as_ref()
+            .is_some_and(|r| r.float_drops > 0 || r.time_jumps > 0) =>
+        {
+            (Status::Warning, "Kopma var")
+        }
         _ => (Status::Ok, format),
     };
     let mut item = StatusItem::new(format!("os:{}", s.id), format!("{} · {}", s.mark, s.id))
@@ -810,7 +1019,11 @@ fn point_detail(p: &SurveyPointRow) -> String {
         r.method.title(),
         r.solutions.join(", "),
         r.height,
-        if r.chain == "complete" { "zincir tam" } else { "zincir sınırlı: hassas dönüşüm sayılmaz" }
+        if r.chain == "complete" {
+            "zincir tam"
+        } else {
+            "zincir sınırlı: hassas dönüşüm sayılmaz"
+        }
     ));
     if let Some(g) = r.sigma {
         out.push(format!("{}.", sigma_mm(g)));
@@ -855,7 +1068,11 @@ fn solution_item<'a>(s: &SurveySolutionRow) -> StatusItem<'a, Message> {
     if let Some(why) = &s.excluded {
         detail.push(format!("Dışlama nedeni: {why}. Kayıtta kalır."));
     }
-    detail.push(format!("Çerçeve EPSG:{}{}.", s.srid, s.epoch.map_or(String::new(), |e| format!(", epok {e:.2}"))));
+    detail.push(format!(
+        "Çerçeve EPSG:{}{}.",
+        s.srid,
+        s.epoch.map_or(String::new(), |e| format!(", epok {e:.2}"))
+    ));
     if let Some(f) = &s.fix {
         detail.push(format!("Fix {f} (doğruluk garantisi değildir)."));
     }
@@ -867,12 +1084,19 @@ fn solution_item<'a>(s: &SurveySolutionRow) -> StatusItem<'a, Message> {
         (Some(h), None) => format!("h {h:.3}"),
         _ => "anten yok".into(),
     };
-    let item = StatusItem::new(format!("cz:{}", s.id), format!("{} · {}", kind_words(s.kind), s.id))
-        .meta(meta)
-        .status(tone, words)
-        .detail(detail.join(" "));
+    let item = StatusItem::new(
+        format!("cz:{}", s.id),
+        format!("{} · {}", kind_words(s.kind), s.id),
+    )
+    .meta(meta)
+    .status(tone, words)
+    .detail(detail.join(" "));
     if s.excluded.is_some() {
-        item.action(icon(Icon::Undo).size(13.0), "Dışlamayı kaldır", msg(Event::Include(s.id.clone())))
+        item.action(
+            icon(Icon::Undo).size(13.0),
+            "Dışlamayı kaldır",
+            msg(Event::Include(s.id.clone())),
+        )
     } else {
         item.action(
             icon(glyph("gnssExclude")).size(13.0),
@@ -887,7 +1111,11 @@ fn use_item<'a>(u: &SurveyUseRow) -> StatusItem<'a, Message> {
         S::Current => Status::Ok,
         S::Stale | S::Missing => Status::Warning,
     };
-    let meta = if u.objects == u.recorded { format!("{} nesne", u.objects) } else { format!("{}/{} nesne", u.objects, u.recorded) };
+    let meta = if u.objects == u.recorded {
+        format!("{} nesne", u.objects)
+    } else {
+        format!("{}/{} nesne", u.objects, u.recorded)
+    };
     StatusItem::new(format!("kb:{}", u.id), u.operation.clone())
         .meta(meta)
         .status(tone, state_words(u.state))

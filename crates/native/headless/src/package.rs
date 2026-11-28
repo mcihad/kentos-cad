@@ -83,7 +83,11 @@ pub struct Planned {
     _scratch: Option<Scratch>,
 }
 
-impl Planned { pub(crate) fn manifest_bytes(&self)->&[u8]{&self.manifest} }
+impl Planned {
+    pub(crate) fn manifest_bytes(&self) -> &[u8] {
+        &self.manifest
+    }
+}
 
 /// The copies named so far.
 #[derive(Default)]
@@ -275,14 +279,19 @@ pub fn plan_reading(
     read: bool,
 ) -> Result<Planned, Refused> {
     let target = target(&input.path)?;
-    plan_at(doc,input,target,read)
+    plan_at(doc, input, target, read)
 }
 /// A child delivery is planned before its parent is exposed; encoded absolute links name the final child.
-pub(crate) fn plan_nested(doc:&Document,input:&PackageProject)->Result<Planned,Refused>{
-    let outer=target(&input.path)?;
-    plan_at(doc,input,outer.join("kaynaklar"),true)
+pub(crate) fn plan_nested(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> {
+    let outer = target(&input.path)?;
+    plan_at(doc, input, outer.join("kaynaklar"), true)
 }
-fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result<Planned,Refused>{
+fn plan_at(
+    doc: &Document,
+    input: &PackageProject,
+    target: PathBuf,
+    read: bool,
+) -> Result<Planned, Refused> {
     let name = file_name(input, doc)?;
     let from = match input.from.as_deref() {
         Some(f) if !(Path::new(f).is_absolute() && Path::new(f).is_dir()) => {
@@ -346,7 +355,16 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
                             objects: None,
                         });
                     } else {
-                        xref(x, &name, from_ref, &search, &target, &mut copies, &mut left, &mut sources_found);
+                        xref(
+                            x,
+                            &name,
+                            from_ref,
+                            &search,
+                            &target,
+                            &mut copies,
+                            &mut left,
+                            &mut sources_found,
+                        );
                     }
                 }
                 continue;
@@ -481,22 +499,46 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
     // Data layers' sources (docs/adr/9338): a GeoPackage copied under veri/ or kept, a database table copied as a
     // GeoPackage or kept, each said.
     if let Some(Value::Array(layers)) = value.get_mut("layers") {
-        let ways = crate::package_data::Ways { geopackages, databases, from: from_ref, target: &target, read };
-        let mut out = crate::package_data::Planned { copies: &mut copies, left: &mut left, scratch: &mut scratch };
+        let ways = crate::package_data::Ways {
+            geopackages,
+            databases,
+            from: from_ref,
+            target: &target,
+            read,
+        };
+        let mut out = crate::package_data::Planned {
+            copies: &mut copies,
+            left: &mut left,
+            scratch: &mut scratch,
+        };
         crate::package_data::plan_layers(doc, layers, &ways, &mut out)?;
     }
     // A map work item's file (docs/adr/1201 §2): copied, its link the copy, found as a source's is (its relative path,
     // the search paths); a file a raster also shows is copied once.
     if let Some(Value::Array(items)) = value.pointer_mut("/settings/mapWork/items") {
         for item in items.iter_mut() {
-            let id = item.get("id").and_then(Value::as_str).unwrap_or_default().to_owned();
+            let id = item
+                .get("id")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_owned();
             let Some(f) = item.get_mut("file").filter(|f| f.is_object()) else {
                 continue;
             };
-            let path = f.get("path").and_then(Value::as_str).unwrap_or_default().to_owned();
+            let path = f
+                .get("path")
+                .and_then(Value::as_str)
+                .unwrap_or_default()
+                .to_owned();
             let relative = f.get("relative").and_then(Value::as_str).map(str::to_owned);
             let Some(at) = find_in(&path, relative.as_deref(), from_ref, &search).at else {
-                left.push(PackageLeft { kind: PackagedKind::WorkFile, path, why: LeftWhy::Missing, at: id, objects: None });
+                left.push(PackageLeft {
+                    kind: PackagedKind::WorkFile,
+                    path,
+                    why: LeftWhy::Missing,
+                    at: id,
+                    objects: None,
+                });
                 continue;
             };
             let rel = copies.take(&at, PackagedKind::WorkFile);
@@ -506,7 +548,12 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
         }
     }
     profile_files(from_ref, &mut copies, &mut left);
-    grid_files(&value, kentos_native_application::crs_models::device_dir().as_deref(), &mut copies, &mut left);
+    grid_files(
+        &value,
+        kentos_native_application::crs_models::device_dir().as_deref(),
+        &mut copies,
+        &mut left,
+    );
     // The typefaces: KentOS's own faces come with it; a style naming another is drawn in a substitute.
     let (fonts, _) = kentos_native_application::fonts_report::report(doc, &FontsReport::default());
     for f in &fonts.styles {
@@ -542,7 +589,9 @@ fn plan_at(doc:&Document,input:&PackageProject,target:PathBuf,read:bool)->Result
             scratch = Some(Scratch::new()?);
         }
         let dir = scratch.as_ref().map(|d| d.0.clone()).unwrap_or_default();
-        let stem = Path::new(&name).file_stem().map_or_else(|| "proje".to_owned(), |s| s.to_string_lossy().into_owned());
+        let stem = Path::new(&name)
+            .file_stem()
+            .map_or_else(|| "proje".to_owned(), |s| s.to_string_lossy().into_owned());
         // The data layers' rows from their sources (docs/adr/9338): what the map shows of them is in the open files too.
         let open = crate::package_data::with_rows(doc)?;
         let made = crate::package_exchange::make(open.as_ref().unwrap_or(doc), ask, &dir, &stem)?;
@@ -713,19 +762,39 @@ fn named_grids(value: &Value) -> Vec<NamedGrid> {
     if let Some(Value::Array(list)) = value.pointer("/settings/datumTransforms") {
         for (i, t) in list.iter().enumerate() {
             if let Some(g) = t.get("grid").filter(|g| g.is_object()) {
-                let name = text(g, "file").or_else(|| text(t, "name")).unwrap_or_default();
-                out.push((text(g, "id"), name, format!("datumTransforms[{i}].grid"), &["gsb"]));
+                let name = text(g, "file")
+                    .or_else(|| text(t, "name"))
+                    .unwrap_or_default();
+                out.push((
+                    text(g, "id"),
+                    name,
+                    format!("datumTransforms[{i}].grid"),
+                    &["gsb"],
+                ));
             }
         }
     }
-    if let Some(g) = value.pointer("/settings/heights/geoid").filter(|g| g.is_object()) {
-        out.push((text(g, "sha256"), text(g, "name").unwrap_or_default(), "heights.geoid".to_owned(), &["gtx", "tif"]));
+    if let Some(g) = value
+        .pointer("/settings/heights/geoid")
+        .filter(|g| g.is_object())
+    {
+        out.push((
+            text(g, "sha256"),
+            text(g, "name").unwrap_or_default(),
+            "heights.geoid".to_owned(),
+            &["gtx", "tif"],
+        ));
     }
     if let Some(Value::Array(list)) = value.pointer("/settings/mapSurvey/campaigns") {
         for (i, c) in list.iter().enumerate() {
             if let Some(g) = c.get("velocity").filter(|g| g.is_object()) {
                 let at = format!("mapSurvey.campaigns[{i}].velocity");
-                out.push((text(g, "sha256"), text(g, "name").unwrap_or_default(), at, &["tif", "gtx"]));
+                out.push((
+                    text(g, "sha256"),
+                    text(g, "name").unwrap_or_default(),
+                    at,
+                    &["tif", "gtx"],
+                ));
             }
         }
     }
@@ -744,17 +813,29 @@ fn grid_files(value: &Value, dir: Option<&Path>, copies: &mut Copies, left: &mut
             continue;
         }
         let found = id.as_ref().zip(dir).and_then(|(i, d)| {
-            exts.iter().map(|e| (d.join(format!("{i}.{e}")), *e)).find(|(p, _)| p.is_file())
+            exts.iter()
+                .map(|e| (d.join(format!("{i}.{e}")), *e))
+                .find(|(p, _)| p.is_file())
         });
         let (Some(id), Some((path, ext))) = (id, found) else {
-            left.push(PackageLeft { kind: PackagedKind::Grid, path: name, why: LeftWhy::Missing, at, objects: None });
+            left.push(PackageLeft {
+                kind: PackagedKind::Grid,
+                path: name,
+                why: LeftWhy::Missing,
+                at,
+                objects: None,
+            });
             continue;
         };
         done.insert(id.clone(), copies.list.len());
         let note = path.with_extension("json");
-        copies.list.push((path, format!("{GRIDS}/{id}.{ext}"), PackagedKind::Grid, 1));
+        copies
+            .list
+            .push((path, format!("{GRIDS}/{id}.{ext}"), PackagedKind::Grid, 1));
         if note.is_file() {
-            copies.list.push((note, format!("{GRIDS}/{id}.json"), PackagedKind::Grid, 0));
+            copies
+                .list
+                .push((note, format!("{GRIDS}/{id}.json"), PackagedKind::Grid, 0));
         }
     }
 }
@@ -816,10 +897,22 @@ fn xref(
         .unwrap_or_default()
         .to_owned();
     let relative = x.get("relative").and_then(Value::as_str).map(str::to_owned);
-    let digest = x.get("digest").and_then(Value::as_str).unwrap_or_default().to_owned();
+    let digest = x
+        .get("digest")
+        .and_then(Value::as_str)
+        .unwrap_or_default()
+        .to_owned();
     // Found as the reference finds it (docs/adr/1060 §6): a fallback of the same name is copied only when its bytes
     // are the ones last loaded, never another drawing that happens to share the name.
-    match kentos_native_application::xrefs::found_source_in(&path, relative.as_deref(), &digest, from, search).at {
+    match kentos_native_application::xrefs::found_source_in(
+        &path,
+        relative.as_deref(),
+        &digest,
+        from,
+        search,
+    )
+    .at
+    {
         Some(at) => {
             found.push((name.to_owned(), at.clone()));
             let rel = copies.take(&at, PackagedKind::Xref);
@@ -943,15 +1036,33 @@ fn walk_entity(
 /// Writes the package planned: the copies and the project file into a temporary folder beside the target, each copy
 /// read back against its SHA-256, then the folder renamed into place. Nothing is left on a failure.
 pub fn write(planned: &Planned) -> Result<(), Refused> {
-    write_at(planned,&planned.target,None)
+    write_at(planned, &planned.target, None)
 }
-pub(crate) fn write_into(planned:&Planned,to:&Path,progress:Option<&kentos_native_application::jobs::Progress>)->Result<(),Refused>{
+pub(crate) fn write_into(
+    planned: &Planned,
+    to: &Path,
+    progress: Option<&kentos_native_application::jobs::Progress>,
+) -> Result<(), Refused> {
     target(&to.display().to_string())?;
-    write_at(planned,to,progress)
+    write_at(planned, to, progress)
 }
-fn write_at(planned:&Planned,target:&Path,progress:Option<&kentos_native_application::jobs::Progress>)->Result<(),Refused>{
-    let stop=|| if progress.is_some_and(kentos_native_application::jobs::Progress::stopped){Err(refuse("cancelled","Kaynak paketi iptal edildi; teslim oluşturulmadı.","path"))}else{Ok(())};
-    let total=planned.copies.len() as u64+2;
+fn write_at(
+    planned: &Planned,
+    target: &Path,
+    progress: Option<&kentos_native_application::jobs::Progress>,
+) -> Result<(), Refused> {
+    let stop = || {
+        if progress.is_some_and(kentos_native_application::jobs::Progress::stopped) {
+            Err(refuse(
+                "cancelled",
+                "Kaynak paketi iptal edildi; teslim oluşturulmadı.",
+                "path",
+            ))
+        } else {
+            Ok(())
+        }
+    };
+    let total = planned.copies.len() as u64 + 2;
     let parent = target.parent().unwrap_or(Path::new("."));
     let leaf = target
         .file_name()
@@ -963,8 +1074,12 @@ fn write_at(planned:&Planned,target:&Path,progress:Option<&kentos_native_applica
         fs::create_dir_all(&temp)
             .map_err(|e| fail(format!("{} açılamadı: {e}", temp.display())))?;
         stop()?;
-        if let Some(p)=progress{p.set(0,total);}
-        for (n,((from, rel), meant)) in planned.copies.iter().zip(&planned.output.files).enumerate() {
+        if let Some(p) = progress {
+            p.set(0, total);
+        }
+        for (n, ((from, rel), meant)) in
+            planned.copies.iter().zip(&planned.output.files).enumerate()
+        {
             stop()?;
             let to = rel.split('/').fold(temp.clone(), |p, part| p.join(part));
             // `veri/` and `profiller/`: each folder is made by its first copy.
@@ -983,12 +1098,16 @@ fn write_at(planned:&Planned,target:&Path,progress:Option<&kentos_native_applica
                     from.display()
                 )));
             }
-            if let Some(p)=progress{p.set(n as u64+1,total);}
+            if let Some(p) = progress {
+                p.set(n as u64 + 1, total);
+            }
         }
         stop()?;
         files::write_bytes(&planned.project, &temp.join(&planned.name))
             .map_err(|e| fail(e.message))?;
-        if let Some(p)=progress{p.set(total-1,total);}
+        if let Some(p) = progress {
+            p.set(total - 1, total);
+        }
         stop()?;
         let manifest = temp.join(MANIFEST);
         fs::write(&manifest, &planned.manifest)
@@ -1002,7 +1121,9 @@ fn write_at(planned:&Planned,target:&Path,progress:Option<&kentos_native_applica
             )));
         }
         stop()?;
-        if let Some(p)=progress{p.set(total,total);}
+        if let Some(p) = progress {
+            p.set(total, total);
+        }
         if target.is_dir() {
             fs::remove_dir(target)
                 .map_err(|e| fail(format!("{} kaldırılamadı: {e}", target.display())))?;
@@ -1080,14 +1201,20 @@ mod tests {
             ]
         );
         assert!(copies.list.iter().all(|c| c.2 == PackagedKind::Grid));
-        let said: Vec<(&str, &str)> = left.iter().map(|l| (l.path.as_str(), l.at.as_str())).collect();
+        let said: Vec<(&str, &str)> = left
+            .iter()
+            .map(|l| (l.path.as_str(), l.at.as_str()))
+            .collect();
         assert_eq!(said, [("Hız", "mapSurvey.campaigns[0].velocity")]);
         // A geoid named without its SHA-256: left out, no library looked in.
         let unnamed = serde_json::json!({ "settings": { "heights": { "kind": "orthometric", "geoid": { "name": "TG-20" } } } });
         let (mut copies, mut left) = (Copies::default(), Vec::new());
         grid_files(&unnamed, Some(&dir), &mut copies, &mut left);
         assert!(copies.list.is_empty());
-        assert_eq!(left.iter().map(|l| l.at.as_str()).collect::<Vec<_>>(), ["heights.geoid"]);
+        assert_eq!(
+            left.iter().map(|l| l.at.as_str()).collect::<Vec<_>>(),
+            ["heights.geoid"]
+        );
         let _ = fs::remove_dir_all(dir);
     }
 }

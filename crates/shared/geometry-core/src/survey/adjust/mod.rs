@@ -12,18 +12,18 @@ pub mod chi2;
 pub mod gnss;
 pub mod horizontal;
 pub mod levelling;
-pub mod robust;
-pub mod student;
 mod linalg;
-mod sparse;
+pub mod robust;
 pub mod session;
+mod sparse;
+pub mod student;
 
 use crate::api::Op;
 use crate::text::edit::fold;
 
 pub use chi2::chi2_quantile;
-pub use student::t_quantile;
 pub use linalg::Normal;
+pub use student::t_quantile;
 
 /// The a priori standard deviations (docs/adr/0203 §1), as the window
 /// resolves them (the project's, else the defaults): a direction's and a

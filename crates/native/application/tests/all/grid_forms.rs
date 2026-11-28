@@ -3,7 +3,9 @@
 use super::wall_contours::{completed, drawing};
 use kentos_commands::*;
 use kentos_domain::Slot;
-use kentos_native_application::{ExecutionContext, arch_edit, dimensions_create, schedules_create, transform};
+use kentos_native_application::{
+    ExecutionContext, arch_edit, dimensions_create, schedules_create, transform,
+};
 use serde_json::json;
 
 fn table_values(doc: &kentos_domain::Document, slot: Slot) -> String {
@@ -30,40 +32,79 @@ fn dimensions_and_schedules_follow_their_grids() {
     let column = doc.uid(Slot(3)).unwrap().to_string();
     completed(arch_edit::execute(
         &mut ExecutionContext::new(&mut doc),
-        serde_json::from_value(json!({"uids":[column],"operation":{"kind":"attach","grids":[a, one]}})).unwrap(),
+        serde_json::from_value(
+            json!({"uids":[column],"operation":{"kind":"attach","grids":[a, one]}}),
+        )
+        .unwrap(),
     ));
     // A dimension from grid A's start to grid 1's middle, tied to both.
-    let dim: DimensionsCreate = serde_json::from_value(json!({"layerId":"cizim","at":p(3.,-3.),"measure":{"kind":"aligned",
+    let dim: DimensionsCreate = serde_json::from_value(
+        json!({"layerId":"cizim","at":p(3.,-3.),"measure":{"kind":"aligned",
         "a":{"kind":"place","uid":a,"place":{"kind":"start"}},
-        "b":{"kind":"place","uid":one,"place":{"kind":"mid","part":0,"ring":0,"index":0}}}}))
+        "b":{"kind":"place","uid":one,"place":{"kind":"mid","part":0,"ring":0,"index":0}}}}),
+    )
     .unwrap();
-    let dim = Slot(completed(dimensions_create::execute(&mut ExecutionContext::new(&mut doc), dim)).ids[0]);
+    let dim = Slot(
+        completed(dimensions_create::execute(
+            &mut ExecutionContext::new(&mut doc),
+            dim,
+        ))
+        .ids[0],
+    );
     let table: SchedulesCreate = serde_json::from_value(
         json!({"layerId":"cizim","at":p(20.,0.),"of":"columns","columns":[{"field":"tag"},{"field":"place"}]}),
     )
     .unwrap();
-    let table = Slot(completed(schedules_create::execute(&mut ExecutionContext::new(&mut doc), table)).id);
-    assert!(table_values(&doc, table).contains("A-1"), "{}", table_values(&doc, table));
+    let table = Slot(
+        completed(schedules_create::execute(
+            &mut ExecutionContext::new(&mut doc),
+            table,
+        ))
+        .id,
+    );
+    assert!(
+        table_values(&doc, table).contains("A-1"),
+        "{}",
+        table_values(&doc, table)
+    );
 
     // Grid A moves 2 m east: the dimension's first point and the column follow it.
     completed(transform::execute(
         &mut ExecutionContext::new(&mut doc),
-        serde_json::from_value(json!({"uids":[a],"transform":{"kind":"move","dx":2.0,"dy":0.0}})).unwrap(),
+        serde_json::from_value(json!({"uids":[a],"transform":{"kind":"move","dx":2.0,"dy":0.0}}))
+            .unwrap(),
     ));
-    let Entity::Dimension(d) = doc.get(dim).unwrap() else { panic!() };
+    let Entity::Dimension(d) = doc.get(dim).unwrap() else {
+        panic!()
+    };
     assert_eq!((d.a.x, d.a.y), (2.0, -2.0), "the start of A");
     assert_eq!((d.b.x, d.b.y), (5.0, 0.0), "the middle of 1");
-    let Entity::Column(c) = doc.get(Slot(3)).unwrap() else { panic!() };
-    assert_eq!((c.column.at.x, c.column.at.y), (2.0, 0.0), "the column's lower left on the crossing");
+    let Entity::Column(c) = doc.get(Slot(3)).unwrap() else {
+        panic!()
+    };
+    assert_eq!(
+        (c.column.at.x, c.column.at.y),
+        (2.0, 0.0),
+        "the column's lower left on the crossing"
+    );
 
     // Grid A named D: the column's place and the schedule's Yer in the same step.
     completed(arch_edit::execute(
         &mut ExecutionContext::new(&mut doc),
         serde_json::from_value(json!({"uids":[a],"operation":{"kind":"set","label":"D"}})).unwrap(),
     ));
-    let Entity::Column(c) = doc.get(Slot(3)).unwrap() else { panic!() };
+    let Entity::Column(c) = doc.get(Slot(3)).unwrap() else {
+        panic!()
+    };
     assert_eq!(c.column.place.as_deref(), Some("D-1"));
-    assert!(table_values(&doc, table).contains("D-1"), "{}", table_values(&doc, table));
+    assert!(
+        table_values(&doc, table).contains("D-1"),
+        "{}",
+        table_values(&doc, table)
+    );
     doc.undo().unwrap();
-    assert!(table_values(&doc, table).contains("A-1"), "one undo takes back both");
+    assert!(
+        table_values(&doc, table).contains("A-1"),
+        "one undo takes back both"
+    );
 }

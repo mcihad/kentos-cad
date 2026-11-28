@@ -3,10 +3,10 @@
 //! answer; Eşit weights — the unweighted case's; the links and loops tables; Dönüşüm uygula on the chosen scan with its
 //! matrix; two scans are said and nothing opens. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::gis;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -15,7 +15,10 @@ use crate::app::{App, Dialog, Message};
 use crate::scan_network_window::{Event as N, Show, Weights};
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pointclouds.network.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.pointclouds.network.json"
+    ))
+    .expect("cases")
 }
 
 pub(crate) fn opened() -> App {
@@ -32,8 +35,12 @@ pub(crate) fn opened() -> App {
 
 /// The output of the shared case whose name starts so.
 fn case_output(start: &str) -> Value {
-    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(start))).expect(start)["steps"][0]
-        ["result"]["output"]
+    cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(start)))
+        .expect(start)["steps"][0]["result"]["output"]
         .clone()
 }
 
@@ -55,7 +62,11 @@ fn near(got: &Value, want: &Value, at: &str) {
             keys.sort();
             keys.dedup();
             for k in keys {
-                near(a.get(k).unwrap_or(&Value::Null), b.get(k).unwrap_or(&Value::Null), &format!("{at}.{k}"));
+                near(
+                    a.get(k).unwrap_or(&Value::Null),
+                    b.get(k).unwrap_or(&Value::Null),
+                    &format!("{at}.{k}"),
+                );
             }
         }
         _ => assert_eq!(got, want, "{at}"),
@@ -76,7 +87,8 @@ fn three() -> App {
 
 fn answer(app: &App) -> Value {
     serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .scan_network
             .answer
             .clone()
@@ -119,7 +131,8 @@ fn equal_weights_and_the_tables() {
 fn donusum_uygula_takes_the_chosen_scan_with_its_matrix() {
     let mut app = three();
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .scan_network
         .answer
         .clone()
@@ -162,7 +175,8 @@ fn donusum_uygula_takes_the_chosen_scan_with_its_matrix() {
 fn nesnede_tut_keeps_the_chosen_scan_s_matrix_on_its_object() {
     let mut app = three();
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .scan_network
         .answer
         .clone()
@@ -186,7 +200,8 @@ fn nesnede_tut_keeps_the_chosen_scan_s_matrix_on_its_object() {
         "pose",
     );
     let again = app
-        .modules.map()
+        .modules
+        .map()
         .scan_network
         .answer
         .clone()
@@ -199,7 +214,12 @@ fn nesnede_tut_keeps_the_chosen_scan_s_matrix_on_its_object() {
         .expect("the chosen scan");
     let t = left.translation.iter().map(|v| v * v).sum::<f64>().sqrt();
     let w = left.rotation.iter().map(|v| v * v).sum::<f64>().sqrt();
-    println!("left: {:.3} mm, {:.2e} rad (was {:.1} mm)", t * 1000.0, w, scan.translation.iter().map(|v| v * v).sum::<f64>().sqrt() * 1000.0);
+    println!(
+        "left: {:.3} mm, {:.2e} rad (was {:.1} mm)",
+        t * 1000.0,
+        w,
+        scan.translation.iter().map(|v| v * v).sum::<f64>().sqrt() * 1000.0
+    );
     assert!(t < 0.005 && w < 1e-3, "what is left: {t} m, {w} rad");
 }
 
@@ -213,8 +233,16 @@ fn five_rounds_are_the_shared_case() {
     let want = case_output("dış döngü: üç tarama");
     near(&got["rounds"], &want["rounds"], "rounds");
     for k in 0..3 {
-        near(&got["scans"][k]["rotation"], &want["scans"][k]["rotation"], "rotation");
-        near(&got["scans"][k]["translation"], &want["scans"][k]["translation"], "translation");
+        near(
+            &got["scans"][k]["rotation"],
+            &want["scans"][k]["rotation"],
+            "rotation",
+        );
+        near(
+            &got["scans"][k]["translation"],
+            &want["scans"][k]["translation"],
+            "translation",
+        );
     }
     let (lines, _) = app.scan_network_lines();
     assert!(lines.len() >= 5, "the notes with the outer loop's");
@@ -238,12 +266,14 @@ fn two_scans_are_said_and_nothing_opens() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tarama-agi-4720");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/tarama-agi-4720");
     std::fs::create_dir_all(&out).expect("a folder");
     let shoot = |app: &mut App, size: Size, file: &str| {
         // The clouds' indexes are made in the background; their cards would cover the window.
         let until = std::time::Instant::now() + std::time::Duration::from_secs(60);
-        while !crate::pointclouds::index::progress().is_empty() && std::time::Instant::now() < until {
+        while !crate::pointclouds::index::progress().is_empty() && std::time::Instant::now() < until
+        {
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -252,11 +282,16 @@ fn screens() {
         };
         snapshot.settle(app, App::view, &mut update);
         let file = out.join(file);
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     };
     let set = |app: &mut App, theme: &str, size: Size| {
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -296,7 +331,10 @@ fn a_disconnected_scan_is_named_by_its_file() {
         Some(Err(why)) => why.clone(),
         other => panic!("refused: {other:?}"),
     };
-    assert!(why.contains(".xyz” taraması bağlarla hiçbir sabit taramaya bağlanmıyor"), "{why}");
+    assert!(
+        why.contains(".xyz” taraması bağlarla hiçbir sabit taramaya bağlanmıyor"),
+        "{why}"
+    );
     let size = iced::Size::new(1440.0, 900.0);
     let mut snapshot = crate::files_testing::offscreen(size);
     let mut update = |app: &mut App, message| {
@@ -308,7 +346,10 @@ fn a_disconnected_scan_is_named_by_its_file() {
         "bir bağ ekleyin ya da onu da sabit yapın.",
         "bağlı taramaları birlikte seçip pencereyi yeniden açın ya da bu taramayı seçimden çıkarın.",
     );
-    assert!(!crate::files_testing::find_texts(&mut snapshot, &app, &shown).is_empty(), "{shown}");
+    assert!(
+        !crate::files_testing::find_texts(&mut snapshot, &app, &shown).is_empty(),
+        "{shown}"
+    );
 }
 
 /// GIS-037 (docs/adr/1094): the flat ground's scans E, F, G: the notes name the weak links and scans by their files,
@@ -318,27 +359,68 @@ fn the_notes_name_the_scans_and_a_click_marks_the_link() {
     let mut app = opened();
     app.selection.set(vec![Slot(5), Slot(6), Slot(7)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    let r = app.modules.map().scan_network.answer.clone().expect("an answer").expect("adjusted");
-    let uids: Vec<String> = app.modules.map().scan_network.scans.iter().map(|(u, _)| u.clone()).collect();
+    let r = app
+        .modules
+        .map()
+        .scan_network
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("adjusted");
+    let uids: Vec<String> = app
+        .modules
+        .map()
+        .scan_network
+        .scans
+        .iter()
+        .map(|(u, _)| u.clone())
+        .collect();
     let weak: Vec<&String> = r.notes.iter().filter(|n| n.contains("zayıf")).collect();
     assert!(!weak.is_empty(), "the shared case's notes");
     // What the window shows: each note with the names in.
     let text = |app: &App| {
         let s = &app.modules.map().scan_network;
-        r.notes.iter().map(|n| s.scans.iter().fold(n.clone(), |t, (u, name)| t.replace(u.as_str(), name))).collect::<Vec<_>>()
+        r.notes
+            .iter()
+            .map(|n| {
+                s.scans
+                    .iter()
+                    .fold(n.clone(), |t, (u, name)| t.replace(u.as_str(), name))
+            })
+            .collect::<Vec<_>>()
     };
     for n in text(&app) {
         assert!(uids.iter().all(|u| !n.contains(u.as_str())), "{n}");
     }
-    assert!(text(&app).iter().any(|n| n.contains("“ag-e.xyz” ile “ag-f.xyz” bağında") || n.contains("“ag-e.xyz” ile “ag-g.xyz” bağında") || n.contains("“ag-f.xyz” ile “ag-g.xyz” bağında")), "{:?}", text(&app));
+    assert!(
+        text(&app)
+            .iter()
+            .any(|n| n.contains("“ag-e.xyz” ile “ag-f.xyz” bağında")
+                || n.contains("“ag-e.xyz” ile “ag-g.xyz” bağında")
+                || n.contains("“ag-f.xyz” ile “ag-g.xyz” bağında")),
+        "{:?}",
+        text(&app)
+    );
     // A link's note clicked: Bağlar, its row marked.
-    let pair = r.notes.iter().find(|n| n.contains("bağında")).expect("a link's note");
-    let named: Vec<String> = uids.iter().filter(|u| pair.contains(u.as_str())).cloned().collect();
+    let pair = r
+        .notes
+        .iter()
+        .find(|n| n.contains("bağında"))
+        .expect("a link's note");
+    let named: Vec<String> = uids
+        .iter()
+        .filter(|u| pair.contains(u.as_str()))
+        .cloned()
+        .collect();
     assert_eq!(named.len(), 2);
     let _ = app.update(Message::from(map::Event::ScanNetwork(N::Mark(named))));
     assert_eq!(app.modules.map().scan_network.show, Show::Links);
     let (_, rows) = app.scan_network_lines();
-    assert_eq!(rows.iter().filter(|r| r[0].starts_with("▸ ")).count(), 1, "{rows:?}");
+    assert_eq!(
+        rows.iter().filter(|r| r[0].starts_with("▸ ")).count(),
+        1,
+        "{rows:?}"
+    );
     // Run again: nothing marked.
     let _ = app.update(Message::from(map::Event::ScanNetwork(N::Spacing(0.5))));
     assert!(app.modules.map().scan_network.marked.is_empty());
@@ -348,10 +430,14 @@ fn the_notes_name_the_scans_and_a_click_marks_the_link() {
 #[test]
 fn scans_sharing_a_name_are_told_apart() {
     let dir = crate::files_testing::scratch("ayni-adli-tarama");
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/pointcloud/v1/files");
+    let root =
+        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/pointcloud/v1/files");
     std::fs::copy(root.join("ag-f.xyz"), dir.join("ag-e.xyz")).expect("a copy");
     let mut text = cases()["setup"].to_string();
-    text = text.replace("$fixture:pointcloud/v1/files/ag-f.xyz", &dir.join("ag-e.xyz").to_string_lossy());
+    text = text.replace(
+        "$fixture:pointcloud/v1/files/ag-f.xyz",
+        &dir.join("ag-e.xyz").to_string_lossy(),
+    );
     let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures");
     text = text.replace("$fixture:", &format!("{}/", root.display()));
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(&text).expect("reads");
@@ -361,8 +447,19 @@ fn scans_sharing_a_name_are_told_apart() {
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.selection.set(vec![Slot(5), Slot(6), Slot(7)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    let names: Vec<String> = app.modules.map().scan_network.scans.iter().map(|(_, n)| n.clone()).collect();
-    assert_eq!(names, ["ag-e.xyz #5", "ag-e.xyz #6", "ag-g.xyz"], "same layer: by number");
+    let names: Vec<String> = app
+        .modules
+        .map()
+        .scan_network
+        .scans
+        .iter()
+        .map(|(_, n)| n.clone())
+        .collect();
+    assert_eq!(
+        names,
+        ["ag-e.xyz #5", "ag-e.xyz #6", "ag-g.xyz"],
+        "same layer: by number"
+    );
 }
 
 /// The flat ground's notes by name, a link's note clicked: picture `gis-037-ag-uyarilari`.
@@ -371,14 +468,47 @@ fn the_named_notes_on_the_screen() {
     let mut app = opened();
     app.selection.set(vec![Slot(5), Slot(6), Slot(7)]);
     let _ = app.update(Message::Run("pointcloud.network"));
-    let r = app.modules.map().scan_network.answer.clone().expect("an answer").expect("adjusted");
-    let uids: Vec<String> = app.modules.map().scan_network.scans.iter().map(|(u, _)| u.clone()).collect();
-    let pair = r.notes.iter().find(|n| n.contains("bağında")).expect("a link's note");
-    let named: Vec<String> = uids.iter().filter(|u| pair.contains(u.as_str())).cloned().collect();
+    let r = app
+        .modules
+        .map()
+        .scan_network
+        .answer
+        .clone()
+        .expect("an answer")
+        .expect("adjusted");
+    let uids: Vec<String> = app
+        .modules
+        .map()
+        .scan_network
+        .scans
+        .iter()
+        .map(|(u, _)| u.clone())
+        .collect();
+    let pair = r
+        .notes
+        .iter()
+        .find(|n| n.contains("bağında"))
+        .expect("a link's note");
+    let named: Vec<String> = uids
+        .iter()
+        .filter(|u| pair.contains(u.as_str()))
+        .cloned()
+        .collect();
     let _ = app.update(Message::from(map::Event::ScanNetwork(N::Mark(named))));
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
-    let shown = app.modules.map().scan_network.scans.iter().fold(pair.clone(), |t, (u, n)| t.replace(u.as_str(), n));
-    assert!(crate::files_testing::find_text(&mut shot, &app, &shown).is_some(), "{shown}");
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
+    let shown = app
+        .modules
+        .map()
+        .scan_network
+        .scans
+        .iter()
+        .fold(pair.clone(), |t, (u, n)| t.replace(u.as_str(), n));
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, &shown).is_some(),
+        "{shown}"
+    );
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-037-ag-uyarilari");
 }

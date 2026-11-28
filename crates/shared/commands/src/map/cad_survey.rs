@@ -60,7 +60,10 @@ pub struct SurveyTraverseHeights {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
     pub targets: Vec<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<Option<SurveyBackSight>>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<Option<SurveyBackSight>>>", optional)
+    )]
     pub back: Vec<Option<SurveyBackSight>>,
 }
 
@@ -289,7 +292,8 @@ impl MeasuredRefraction {
         }
         let n = ks.len() as f64;
         let mean = ks.iter().sum::<f64>() / n;
-        let sd = (ks.len() > 1).then(|| (ks.iter().map(|k| (k - mean) * (k - mean)).sum::<f64>() / (n - 1.0)).sqrt());
+        let sd = (ks.len() > 1)
+            .then(|| (ks.iter().map(|k| (k - mean) * (k - mean)).sum::<f64>() / (n - 1.0)).sqrt());
         Some(MeasuredRefraction {
             mean,
             pairs: u32::try_from(ks.len()).unwrap_or(u32::MAX),

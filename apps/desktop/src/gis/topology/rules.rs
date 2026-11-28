@@ -175,7 +175,9 @@ pub fn profile_of(
     }
     let length = |s: &str| decimal(s).map(|v| format.to_metres(v));
     let (Some(precision), Some(acceptance)) = (length(precision), length(acceptance)) else {
-        return Err("Kalite profili: depolama hassasiyeti ve kabul eşiği birer uzunluk olmalı.".to_owned());
+        return Err(
+            "Kalite profili: depolama hassasiyeti ve kabul eşiği birer uzunluk olmalı.".to_owned(),
+        );
     };
     let p = TopologyProfile {
         name: name.to_owned(),
@@ -597,7 +599,8 @@ impl App {
             // What each length is compared to, with the values typed (docs/adr/9146).
             .push(label::muted(super::tolerance_words::explained(
                 &w.tolerance,
-                (!w.profile.trim().is_empty()).then_some((w.precision.as_str(), w.acceptance.as_str())),
+                (!w.profile.trim().is_empty())
+                    .then_some((w.precision.as_str(), w.acceptance.as_str())),
                 unit,
             )));
         let ready = problem.is_none() && self.rules_changed(w);

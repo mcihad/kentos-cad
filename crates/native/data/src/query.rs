@@ -52,12 +52,21 @@ pub fn check(sql: &str) -> Result<(), String> {
     if body.is_empty() {
         return Err("Sorgu boş; bir SELECT yazın.".to_owned());
     }
-    let first: String = body.chars().take_while(|c| c.is_ascii_alphabetic()).collect::<String>().to_ascii_uppercase();
+    let first: String = body
+        .chars()
+        .take_while(|c| c.is_ascii_alphabetic())
+        .collect::<String>()
+        .to_ascii_uppercase();
     if first != "SELECT" && first != "WITH" {
-        return Err("Sorgu SELECT ya da WITH ile başlamalı: katman yalnız okuyan bir sorgudan yapılır.".to_owned());
+        return Err(
+            "Sorgu SELECT ya da WITH ile başlamalı: katman yalnız okuyan bir sorgudan yapılır."
+                .to_owned(),
+        );
     }
     if body.contains(';') {
-        return Err("Tek bir sorgu yazın: noktalı virgülle ayrılmış birden çok deyim olmaz.".to_owned());
+        return Err(
+            "Tek bir sorgu yazın: noktalı virgülle ayrılmış birden çok deyim olmaz.".to_owned(),
+        );
     }
     Ok(())
 }
@@ -141,12 +150,20 @@ impl QueryTable {
                 _ => {}
             }
         }
-        Some(QueryTable { sql: sql.trim().trim_end_matches(';').trim().to_owned(), key: key?, geometry })
+        Some(QueryTable {
+            sql: sql.trim().trim_end_matches(';').trim().to_owned(),
+            key: key?,
+            geometry,
+        })
     }
 
     /// The table's text: the line, then the query.
     pub fn text(&self) -> String {
-        let geometry = self.geometry.as_deref().map(|g| format!(" geometry={g}")).unwrap_or_default();
+        let geometry = self
+            .geometry
+            .as_deref()
+            .map(|g| format!(" geometry={g}"))
+            .unwrap_or_default();
         format!("{HEAD} key={}{geometry}\n{}", self.key, self.sql.trim())
     }
 
@@ -181,7 +198,8 @@ pub fn is_query(table: &str) -> bool {
 pub fn refuse_write(table: &str) -> Result<(), crate::DataError> {
     if is_query(table) {
         return Err(crate::DataError::Unsupported(
-            "Sorgu katmanı salt okunurdur: satırları sorgunun okuduğu tabloda değiştirilir.".to_owned(),
+            "Sorgu katmanı salt okunurdur: satırları sorgunun okuduğu tabloda değiştirilir."
+                .to_owned(),
         ));
     }
     Ok(())
@@ -193,23 +211,48 @@ mod tests {
 
     #[test]
     fn a_query_reads_back_from_its_text() {
-        let q = QueryTable { sql: "SELECT fid, geom FROM kbs.parseller WHERE alan > 500".into(), key: "fid".into(), geometry: Some("geom".into()) };
+        let q = QueryTable {
+            sql: "SELECT fid, geom FROM kbs.parseller WHERE alan > 500".into(),
+            key: "fid".into(),
+            geometry: Some("geom".into()),
+        };
         let text = q.text();
-        assert_eq!(text, "-- kentos: key=fid geometry=geom\nSELECT fid, geom FROM kbs.parseller WHERE alan > 500");
+        assert_eq!(
+            text,
+            "-- kentos: key=fid geometry=geom\nSELECT fid, geom FROM kbs.parseller WHERE alan > 500"
+        );
         assert_eq!(QueryTable::parse(&text), Some(q.clone()));
         assert_eq!(q.shown(), "Sorgu: parseller");
-        let none = QueryTable { geometry: None, ..q };
+        let none = QueryTable {
+            geometry: None,
+            ..q
+        };
         assert_eq!(QueryTable::parse(&none.text()), Some(none));
-        assert!(QueryTable::parse("kbs.parseller").is_none(), "a table's name");
-        assert!(QueryTable::parse("SELECT 1\nFROM x").is_none(), "a query without the line");
-        assert!(QueryTable::parse("-- kentos: geometry=geom\nSELECT 1").is_none(), "no key");
+        assert!(
+            QueryTable::parse("kbs.parseller").is_none(),
+            "a table's name"
+        );
+        assert!(
+            QueryTable::parse("SELECT 1\nFROM x").is_none(),
+            "a query without the line"
+        );
+        assert!(
+            QueryTable::parse("-- kentos: geometry=geom\nSELECT 1").is_none(),
+            "no key"
+        );
     }
 
     #[test]
     fn only_one_reading_statement_is_a_query() {
         assert!(check("SELECT * FROM t").is_ok());
-        assert!(check("  with a as (select 1) select * from a;").is_ok(), "a trailing semicolon");
-        assert!(check("-- yorum\nSELECT 'a;b' FROM t").is_ok(), "a semicolon in a text, a comment");
+        assert!(
+            check("  with a as (select 1) select * from a;").is_ok(),
+            "a trailing semicolon"
+        );
+        assert!(
+            check("-- yorum\nSELECT 'a;b' FROM t").is_ok(),
+            "a semicolon in a text, a comment"
+        );
         assert!(check("SELECT 1; DROP TABLE t").is_err());
         assert!(check("DELETE FROM t").is_err());
         assert!(check("/* SELECT */ UPDATE t SET a = 1").is_err());

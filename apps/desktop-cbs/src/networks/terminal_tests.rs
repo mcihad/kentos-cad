@@ -4,10 +4,10 @@
 //! no source reaches. A trace goes through the transformer along its path only; Ağlar writes the devices and the
 //! subnetworks; Alt ağlar says what each source reaches and writes the names in one step.
 
+use crate::cbs::CbsState;
 use crate::cbs_ext::*;
 use kentos_commands::DocumentSnapshotV1;
 use serde_json::{Value, json};
-use crate::cbs::CbsState;
 
 use super::Event as Networks;
 use super::tests::click_at;
@@ -26,7 +26,10 @@ fn send(app: &mut App, message: Message) {
 }
 
 fn window(app: &mut App, e: Event) {
-    send(app, Message::from(crate::cbs::Event::Networks(Networks::Window(e))));
+    send(
+        app,
+        Message::from(crate::cbs::Event::Networks(Networks::Window(e))),
+    );
 }
 
 /// The network's definition: devices and subnetworks as the ADR describes them.
@@ -262,7 +265,8 @@ fn aglar_writes_a_devices_configurations_and_shows_them_again() {
     // The form shows what was written; Güncel tut stays.
     send(&mut app, Message::Run("network.manage"));
     let shown = app
-        .modules.cbs()
+        .modules
+        .cbs()
         .networks
         .window
         .as_ref()

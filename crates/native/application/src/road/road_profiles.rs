@@ -4,8 +4,8 @@
 //! [`crate::road_profiles_create`], [`crate::road_profiles_edit`] and [`crate::road_profiles_query`].
 
 use kentos_commands::{
-    CommandResult, CommandWarning, ProfileAt, ProfileCurveRow, ProfileDef, ProfileGradeRow, RoadProfileListed,
-    ProfileReport, ProfilesWritten, RoadSettings,
+    CommandResult, CommandWarning, ProfileAt, ProfileCurveRow, ProfileDef, ProfileGradeRow,
+    ProfileReport, ProfilesWritten, RoadProfileListed, RoadSettings,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -37,12 +37,25 @@ pub(crate) fn profiles(doc: &Document) -> &[ProfileDef] {
 }
 
 /// The profile of an id, else of a name (case aside).
-pub(crate) fn find<'a>(list: &'a [ProfileDef], name: &str, path: &str) -> Result<(usize, &'a ProfileDef), Stop> {
+pub(crate) fn find<'a>(
+    list: &'a [ProfileDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a ProfileDef), Stop> {
     list.iter()
         .position(|p| p.id == name)
-        .or_else(|| list.iter().position(|p| p.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .position(|p| p.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|i| (i, &list[i]))
-        .ok_or_else(|| fail(codes::UNKNOWN_ROAD_PROFILE, format!("“{name}” kimlikli ya da adlı boykesit projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_ROAD_PROFILE,
+                format!("“{name}” kimlikli ya da adlı boykesit projede yok."),
+                path,
+            )
+        })
 }
 
 /// The surface of an id, else of a name (case aside): its id.
@@ -50,9 +63,18 @@ pub(crate) fn surface_id(doc: &Document, name: &str, path: &str) -> Result<Strin
     let list = terrains::surfaces(doc);
     list.iter()
         .find(|s| s.id == name)
-        .or_else(|| list.iter().find(|s| s.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .find(|s| s.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|s| s.id.clone())
-        .ok_or_else(|| fail(codes::UNKNOWN_TERRAIN, format!("“{name}” kimlikli ya da adlı yüzey projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_TERRAIN,
+                format!("“{name}” kimlikli ya da adlı yüzey projede yok."),
+                path,
+            )
+        })
 }
 
 /// The profiles judged by the contract's rules with the project's alignments; a refusal's path is the field's.
@@ -68,7 +90,11 @@ pub(crate) fn judged(doc: &Document, list: &[ProfileDef]) -> Result<(), Stop> {
             .strip_prefix("profiles[")
             .and_then(|rest| rest.split_once("]."))
             .map_or_else(String::new, |(_, field)| field.to_owned());
-        return Err(fail(codes::INVALID_ROAD_PROFILE, format!("Boykesit kurallarına uymuyor: {words}."), &path));
+        return Err(fail(
+            codes::INVALID_ROAD_PROFILE,
+            format!("Boykesit kurallarına uymuyor: {words}."),
+            &path,
+        ));
     }
     Ok(())
 }
@@ -107,15 +133,21 @@ fn vertical_stop(e: VerticalError, def: &ProfileDef) -> Stop {
     let index = |id: &str| def.pvis.iter().position(|p| p.id == id);
     let at = |id: &str| index(id).map_or_else(|| "pvis".to_owned(), |i| format!("pvis[{i}]"));
     match e {
-        VerticalError::TooFewPoints => {
-            fail(codes::INVALID_ROAD_PROFILE, "Boykesitin en az iki PVI'si olur.".into(), "pvis")
-        }
-        VerticalError::DuplicateId { pvi } => {
-            fail(codes::INVALID_ROAD_PROFILE, format!("“{pvi}” kimliği boykesitte iki kez var."), &at(&pvi))
-        }
-        VerticalError::NotFinite { pvi } => {
-            fail(codes::INVALID_ROAD_PROFILE, format!("{pvi} PVI'sinin sayıları sonlu değil."), &at(&pvi))
-        }
+        VerticalError::TooFewPoints => fail(
+            codes::INVALID_ROAD_PROFILE,
+            "Boykesitin en az iki PVI'si olur.".into(),
+            "pvis",
+        ),
+        VerticalError::DuplicateId { pvi } => fail(
+            codes::INVALID_ROAD_PROFILE,
+            format!("“{pvi}” kimliği boykesitte iki kez var."),
+            &at(&pvi),
+        ),
+        VerticalError::NotFinite { pvi } => fail(
+            codes::INVALID_ROAD_PROFILE,
+            format!("{pvi} PVI'sinin sayıları sonlu değil."),
+            &at(&pvi),
+        ),
         VerticalError::NotIncreasing { pvi } => fail(
             codes::INVALID_ROAD_PROFILE,
             format!("{pvi} PVI'sinin km'si bir öncekinden büyük olmalı."),
@@ -130,7 +162,8 @@ fn vertical_stop(e: VerticalError, def: &ProfileDef) -> Stop {
         ),
         VerticalError::Overlap { a, b, excess } => {
             // The PVI whose curve does not fit: the later one that carries a curve.
-            let carries = |id: &str| index(id).is_some_and(|i| pvis_of(def)[i].curve != VCurve::None);
+            let carries =
+                |id: &str| index(id).is_some_and(|i| pvis_of(def)[i].curve != VCurve::None);
             let who = if carries(&b) { b.clone() } else { a.clone() };
             fail(
                 codes::PROFILE_CURVES_OVERLAP,
@@ -147,7 +180,11 @@ fn vertical_stop(e: VerticalError, def: &ProfileDef) -> Stop {
 pub(crate) fn build(doc: &Document, def: &ProfileDef) -> Result<Built, Stop> {
     let list = alignments::alignments(doc);
     let adef = list.iter().find(|a| a.id == def.alignment).ok_or_else(|| {
-        fail(codes::UNKNOWN_ALIGNMENT, format!("“{}” kimlikli aks projede yok.", def.alignment), "alignment")
+        fail(
+            codes::UNKNOWN_ALIGNMENT,
+            format!("“{}” kimlikli aks projede yok.", def.alignment),
+            "alignment",
+        )
     })?;
     let alignment = alignments::build(list, adef, "")?;
     let vertical = core::vertical::build(&pvis_of(def)).map_err(|e| vertical_stop(e, def))?;
@@ -156,12 +193,18 @@ pub(crate) fn build(doc: &Document, def: &ProfileDef) -> Result<Built, Stop> {
         if p.station < -1e-9 || p.station > length + 1e-9 {
             return Err(fail(
                 codes::INVALID_ROAD_PROFILE,
-                format!("{} PVI'si aksın dışında: aksın km'si 0 ile {length:.3} m arası.", p.id),
+                format!(
+                    "{} PVI'si aksın dışında: aksın km'si 0 ile {length:.3} m arası.",
+                    p.id
+                ),
                 &format!("pvis[{i}].station"),
             ));
         }
     }
-    Ok(Built { vertical, alignment })
+    Ok(Built {
+        vertical,
+        alignment,
+    })
 }
 
 /// The red line at `station` of a saved profile as `road.profiles.query` reads it (red, grade, rate and radius of
@@ -192,7 +235,10 @@ pub(crate) fn reversed(def: &ProfileDef, length: f64, revision: u32) -> ProfileD
         crossings: def
             .crossings
             .iter()
-            .map(|c| kentos_commands::ProfileCrossingDef { station: length - c.station, ..c.clone() })
+            .map(|c| kentos_commands::ProfileCrossingDef {
+                station: length - c.station,
+                ..c.clone()
+            })
             .collect(),
         alignment_revision: revision,
         revision: def.revision.saturating_add(1),
@@ -202,7 +248,11 @@ pub(crate) fn reversed(def: &ProfileDef, length: f64, revision: u32) -> ProfileD
 
 /// Whether the profile's alignment changed since it was made or rebound, and the alignment's present revision.
 pub(crate) fn stale(doc: &Document, def: &ProfileDef) -> (bool, u32) {
-    let now = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
+    let now = doc
+        .road_alignments()
+        .iter()
+        .find(|a| a.id == def.alignment)
+        .map_or(0, |a| a.revision);
     (now != def.alignment_revision, now)
 }
 
@@ -269,13 +319,20 @@ pub(crate) fn surface(doc: &Document, def: &ProfileDef) -> Option<Result<Surface
     let id = def.surface.as_deref()?;
     let gone = |why: &str| CommandWarning {
         code: codes::PROFILE_SURFACE_GONE.into(),
-        message: format!("“{}” boykesitinin yüzeyi {why}; siyah kot verilmedi.", def.name),
+        message: format!(
+            "“{}” boykesitinin yüzeyi {why}; siyah kot verilmedi.",
+            def.name
+        ),
         path: Some("profile".into()),
     };
     let Some(sdef) = terrains::surfaces(doc).iter().find(|s| s.id == id) else {
         return Some(Err(gone(&format!("({id}) projede yok"))));
     };
-    Some(terrains::make(doc, sdef).surface.map_err(|_| gone(&format!("“{}” kurulamıyor", sdef.name))))
+    Some(
+        terrains::make(doc, sdef)
+            .surface
+            .map_err(|_| gone(&format!("“{}” kurulamıyor", sdef.name))),
+    )
 }
 
 /// The elevations at a station on the alignment; none off it.
@@ -292,7 +349,9 @@ pub(crate) fn at(built: &Built, surface: Option<&Surface>, station: f64) -> Opti
         grade: red.map(|r| r.1),
         // The curvature there (docs/adr/0966): z″ and the plane curve's radius (1 + z′²)^{3/2}/|z″|.
         rate: red.map(|r| r.2),
-        radius: red.filter(|r| r.2 != 0.0).map(|r| (1.0 + r.1 * r.1).powf(1.5) / r.2.abs()),
+        radius: red
+            .filter(|r| r.2 != 0.0)
+            .map(|r| (1.0 + r.1 * r.1).powf(1.5) / r.2.abs()),
         along3d: built.vertical.length_to(station),
         black,
         difference: red.zip(black).map(|(r, b)| r.0 - b),
@@ -343,7 +402,12 @@ pub(crate) fn write(
 ) -> CommandResult<ProfilesWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_profiles(next.clone(), label) {
-        return fail(codes::INVALID_ROAD_PROFILE, format!("Boykesit kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_ROAD_PROFILE,
+            format!("Boykesit kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
     let profile = match target.and_then(|id| next.iter().find(|p| p.id == id)) {
         Some(def) => match build(doc, def) {
@@ -363,7 +427,9 @@ pub(crate) fn write(
 }
 
 /// A profile's crossings for the core (docs/adr/0946).
-pub(crate) fn crossings_of(def: &kentos_commands::ProfileDef) -> Vec<kentos_road::profile::crossings::Crossing> {
+pub(crate) fn crossings_of(
+    def: &kentos_commands::ProfileDef,
+) -> Vec<kentos_road::profile::crossings::Crossing> {
     use kentos_road::profile::crossings::{Crossing, CrossingKind};
     def.crossings
         .iter()

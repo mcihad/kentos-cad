@@ -109,7 +109,9 @@ fn wants(kind: Kind, first: Option<&CadElement>) -> Vec<Want> {
         // A circle first takes a line or a circle next, as a line first takes a circle (UR-035): the order is the
         // user's.
         Kind::Tangent => match first {
-            Some(CadElement::Circle | CadElement::ArcEdge { .. }) => vec![SegmentOrCircle, SegmentOrCircle],
+            Some(CadElement::Circle | CadElement::ArcEdge { .. }) => {
+                vec![SegmentOrCircle, SegmentOrCircle]
+            }
             _ => vec![SegmentOrCircle, Circle],
         },
         Kind::Concentric => vec![Circle, Circle],
@@ -404,8 +406,13 @@ impl ConstraintTool {
             // The line first, as when it was picked first (UR-035): the rule reads its edge and the curve after it.
             Kind::Tangent => {
                 let b = b()?;
-                let curve = |e: &CadElement| matches!(e, CadElement::Circle | CadElement::ArcEdge { .. });
-                let (a, b) = if curve(&a.element) && !curve(&b.element) { (b, a) } else { (a, b) };
+                let curve =
+                    |e: &CadElement| matches!(e, CadElement::Circle | CadElement::ArcEdge { .. });
+                let (a, b) = if curve(&a.element) && !curve(&b.element) {
+                    (b, a)
+                } else {
+                    (a, b)
+                };
                 ConstraintRule::Tangent {
                     a,
                     b,

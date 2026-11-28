@@ -37,7 +37,10 @@ fn the_window_opens_on_the_field_holding_dates_and_says_the_untimed_and_utc() {
     let mut app = gpx();
     app.open_time_layer(Some("sample".into()));
     let w = app.gis.time.layer.clone().expect("the window");
-    assert_eq!(w.start, "Zaman", "the field holding the dates, not the first name");
+    assert_eq!(
+        w.start, "Zaman",
+        "the field holding the dates, not the first name"
+    );
     let names: Vec<&str> = w.fields.iter().map(|f| f.name.as_str()).collect();
     assert_eq!(names, ["Zaman", "Ad"], "the fields holding dates first");
     assert_eq!(w.fields[0].detail(), "9 tarih · ör. 12.05.2024 09:31 UTC");
@@ -45,10 +48,22 @@ fn the_window_opens_on_the_field_holding_dates_and_says_the_untimed_and_utc() {
     let (ready, lines) = app.time_layer_summary(&w);
     assert!(ready);
     let lines: Vec<String> = lines.into_iter().map(|(_, l)| l).collect();
-    assert!(lines[0].starts_with("10 nesne: 9 zamanlı, 1 zamansız"), "{lines:?}");
-    assert!(lines.contains(&"1 zamansız nesne sürgü açıkken de hep görünür.".to_owned()), "{lines:?}");
-    assert!(lines.iter().any(|l| l.starts_with("Saatler UTC'dir")), "{lines:?}");
-    assert!(!lines.iter().any(|l| l.contains("tarih olarak okunamadı")), "{lines:?}");
+    assert!(
+        lines[0].starts_with("10 nesne: 9 zamanlı, 1 zamansız"),
+        "{lines:?}"
+    );
+    assert!(
+        lines.contains(&"1 zamansız nesne sürgü açıkken de hep görünür.".to_owned()),
+        "{lines:?}"
+    );
+    assert!(
+        lines.iter().any(|l| l.starts_with("Saatler UTC'dir")),
+        "{lines:?}"
+    );
+    assert!(
+        !lines.iter().any(|l| l.contains("tarih olarak okunamadı")),
+        "{lines:?}"
+    );
 }
 
 /// Zaman ayarları saved on Zaman, the slider on.

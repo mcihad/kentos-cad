@@ -13,19 +13,36 @@ use crate::road_project_panel::Event as P;
 /// guardrail drawn, then a template renamed.
 fn app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.project.query.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.project.query.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    crate::files_testing::command(&mut app, "road.corridors.draw", json!({"corridor": "c-1", "layerId": "0"}));
-    crate::files_testing::command(&mut app, "road.guardrails.draw", json!({"guardrail": "o-1", "layerId": "korkuluk", "labels": true}));
-    crate::files_testing::command(&mut app, "road.templates.edit", json!({"template": "tk-2", "operation": "set", "name": "Tip 2b"}));
+    crate::files_testing::command(
+        &mut app,
+        "road.corridors.draw",
+        json!({"corridor": "c-1", "layerId": "0"}),
+    );
+    crate::files_testing::command(
+        &mut app,
+        "road.guardrails.draw",
+        json!({"guardrail": "o-1", "layerId": "korkuluk", "labels": true}),
+    );
+    crate::files_testing::command(
+        &mut app,
+        "road.templates.edit",
+        json!({"template": "tk-2", "operation": "set", "name": "Tip 2b"}),
+    );
     app
 }
 
 fn send(app: &mut App, e: P) {
-    let _ = app.update(Message::TerrainWork(crate::terrain_work::Event::RoadProject(e)));
+    let _ = app.update(Message::TerrainWork(
+        crate::terrain_work::Event::RoadProject(e),
+    ));
 }
 
 /// A rebuild, run as a job (docs/adr/2440): the panel looked at until it is over.
@@ -43,14 +60,20 @@ fn rebuild(app: &mut App, e: P) {
 }
 
 fn tree(app: &App) -> kentos_commands::RoadProjectTree {
-    app.road_project_read().expect("a drawing").expect("a road project")
+    app.road_project_read()
+        .expect("a drawing")
+        .expect("a road project")
 }
 
 #[test]
 fn the_panel_rebuilds_what_went_stale() {
     let mut app = app();
     let t = tree(&app);
-    let drawings: Vec<_> = t.nodes.iter().filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).collect();
+    let drawings: Vec<_> = t
+        .nodes
+        .iter()
+        .filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing)
+        .collect();
     assert_eq!(drawings.len(), 2);
     assert!(drawings.iter().all(|d| d.state == S::Stale), "{drawings:?}");
     assert_eq!(t.rebuildable, 2);
@@ -58,7 +81,12 @@ fn the_panel_rebuilds_what_went_stale() {
     rebuild(&mut app, P::Rebuild(None, false));
     let t = tree(&app);
     assert_eq!(t.rebuildable, 0);
-    assert!(t.nodes.iter().filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).all(|d| d.state == S::Current));
+    assert!(
+        t.nodes
+            .iter()
+            .filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing)
+            .all(|d| d.state == S::Current)
+    );
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(tree(&app).rebuildable, 2, "undone, they are stale again");
     // Kendiliğinden yeniden üret on: the project says so.
@@ -74,7 +102,10 @@ fn the_panel_rebuilds_what_went_stale() {
         .position(|n| n.id == "c-1")
         .expect("the corridor");
     send(&mut app, P::Open(k));
-    assert!(app.modules.road().corridor_window.is_some(), "Koridor opens");
+    assert!(
+        app.modules.road().corridor_window.is_some(),
+        "Koridor opens"
+    );
 }
 
 /// The panel in the dock, wide and light, narrow and dark: two stale drawings, then drawn again; deep with its
@@ -90,12 +121,20 @@ fn screens() {
     use kentos_ui::snapshot::Snapshot;
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::RoadProject));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(
+                Panel::RoadProject,
+            ));
         // The panel the dock's whole height, for the picture.
         app.docks.close(Panel::Properties);
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -105,7 +144,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("yol-proje-agaci-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("corridor"));
@@ -126,16 +168,32 @@ fn screens() {
 fn map_app() -> App {
     let (mut app, _) = App::boot(None);
     app.program = Some(kentos_launch::Module::Map);
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.terrains.zeroline.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["setup"]["settings"]["cadWork"] == "map").expect("a map case");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.terrains.zeroline.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["setup"]["settings"]["cadWork"] == "map")
+        .expect("a map case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    crate::files_testing::command(&mut app, "road.terrains.zeroline", json!({"base": "Düz", "comparison": "Tümsek", "layerId": "sifir"}));
+    crate::files_testing::command(
+        &mut app,
+        "road.terrains.zeroline",
+        json!({"base": "Düz", "comparison": "Tümsek", "layerId": "sifir"}),
+    );
     let surface = json!({"id": "t-10", "name": "Tümsek", "points": {"layers": ["tumsek"]},
                          "edits": [{"op": "setHeight", "x": 6000.0, "y": 0.0, "z": 119.0}]});
-    crate::files_testing::command(&mut app, "road.terrains.edit", json!({"operation": "set", "surface": surface}));
+    crate::files_testing::command(
+        &mut app,
+        "road.terrains.edit",
+        json!({"operation": "set", "surface": surface}),
+    );
     app
 }
 
@@ -145,28 +203,69 @@ fn map_app() -> App {
 fn a_map_project_s_cut_and_fill_zones_go_stale_and_are_drawn_again() {
     let (mut app, _) = App::boot(None);
     app.program = Some(kentos_launch::Module::Map);
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.terrains.cutfill.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["setup"]["settings"]["cadWork"] == "map").expect("a map case");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.terrains.cutfill.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["setup"]["settings"]["cadWork"] == "map")
+        .expect("a map case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    let count = |app: &App| app.document.as_ref().map_or(0, |d| d.model.entities().filter(|e| e.base().layer_id == "kazi-dolgu").count());
-    crate::files_testing::command(&mut app, "road.terrains.cutfill", json!({"base": "Düz", "comparison": "Tümsek", "layerId": "kazi-dolgu"}));
-    assert_eq!(count(&app), 4, "a cut and a fill zone, each a hatch and an area");
+    let count = |app: &App| {
+        app.document.as_ref().map_or(0, |d| {
+            d.model
+                .entities()
+                .filter(|e| e.base().layer_id == "kazi-dolgu")
+                .count()
+        })
+    };
+    crate::files_testing::command(
+        &mut app,
+        "road.terrains.cutfill",
+        json!({"base": "Düz", "comparison": "Tümsek", "layerId": "kazi-dolgu"}),
+    );
+    assert_eq!(
+        count(&app),
+        4,
+        "a cut and a fill zone, each a hatch and an area"
+    );
     let surface = json!({"id": "t-10", "name": "Tümsek", "points": {"layers": ["tumsek"]},
                          "edits": [{"op": "setHeight", "x": 6000.0, "y": 0.0, "z": 119.0}]});
-    crate::files_testing::command(&mut app, "road.terrains.edit", json!({"operation": "set", "surface": surface}));
+    crate::files_testing::command(
+        &mut app,
+        "road.terrains.edit",
+        json!({"operation": "set", "surface": surface}),
+    );
     let t = tree(&app);
-    let zones = t.nodes.iter().find(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).expect("the zones");
+    let zones = t
+        .nodes
+        .iter()
+        .find(|n| n.kind == kentos_commands::RoadNodeKind::Drawing)
+        .expect("the zones");
     assert_eq!(zones.state, S::Stale, "{zones:?}");
     assert_eq!(zones.why, ["“Tümsek” yüzeyi çizildiğinden beri değişti."]);
     rebuild(&mut app, P::Rebuild(None, false));
-    assert!(tree(&app).nodes.iter().filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing).all(|d| d.state == S::Current));
+    assert!(
+        tree(&app)
+            .nodes
+            .iter()
+            .filter(|n| n.kind == kentos_commands::RoadNodeKind::Drawing)
+            .all(|d| d.state == S::Current)
+    );
     assert_eq!(count(&app), 4, "drawn again in place");
     let doc = app.document.as_ref().expect("a drawing");
     let bytes = kentos_kcad::encode(&doc.model.to_snapshot_v2());
-    assert!(bytes.is_ok(), "a map project with its zones saves: {:?}", bytes.err());
+    assert!(
+        bytes.is_ok(),
+        "a map project with its zones saves: {:?}",
+        bytes.err()
+    );
 }
 
 /// `.run/gui-evidence/harita-proje-agaci-1720/`:
@@ -179,15 +278,24 @@ fn a_map_project_s_cut_and_fill_zones_go_stale_and_are_drawn_again() {
 fn map_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/harita-proje-agaci-1720");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/harita-proje-agaci-1720");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = map_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::RoadProject));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(
+                Panel::RoadProject,
+            ));
         app.docks.close(Panel::Properties);
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -196,7 +304,10 @@ fn map_screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("terrain"));
@@ -224,11 +335,22 @@ fn a_rebuild_runs_as_a_job_and_durdur_writes_nothing() {
         "Yeniden üretim durduruldu; hiçbir şey yazılmadı."
     );
     assert_eq!(tree(&app).rebuildable, 2);
-    assert_eq!(app.document.as_ref().map(|d| d.model.undo_labels().len()), steps, "nothing written");
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.undo_labels().len()),
+        steps,
+        "nothing written"
+    );
     rebuild(&mut app, P::Rebuild(None, false));
     assert_eq!(tree(&app).rebuildable, 0);
-    assert!(crate::files_testing::last_said(&app).starts_with("2 çizim yeniden üretildi"), "{}", crate::files_testing::last_said(&app));
-    assert_eq!(app.document.as_ref().map(|d| d.model.undo_labels().len()), steps.map(|n| n + 1));
+    assert!(
+        crate::files_testing::last_said(&app).starts_with("2 çizim yeniden üretildi"),
+        "{}",
+        crate::files_testing::last_said(&app)
+    );
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.undo_labels().len()),
+        steps.map(|n| n + 1)
+    );
 }
 
 /// `.run/gui-evidence/yeniden-uretim-isi-2440/`: the panel with the rebuild running (its bar and Durdur), then done.
@@ -241,15 +363,24 @@ fn a_rebuild_runs_as_a_job_and_durdur_writes_nothing() {
 fn job_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yeniden-uretim-isi-2440");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yeniden-uretim-isi-2440");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::RoadProject));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(
+                Panel::RoadProject,
+            ));
         app.docks.close(Panel::Properties);
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -258,7 +389,10 @@ fn job_screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         send(&mut app, P::Rebuild(None, false));
@@ -274,8 +408,12 @@ fn pipes_app() -> App {
     kentos_processing::command::register_as("desktop");
     let (mut app, _) = App::boot(None);
     app.program = Some(kentos_launch::Module::Map);
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pipes.profile.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.pipes.profile.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -304,26 +442,58 @@ fn pipe_material(app: &mut App) {
 fn a_pipe_profile_goes_stale_when_its_network_changes_and_is_drawn_again() {
     use kentos_commands::RoadNodeKind as N;
     let mut app = pipes_app();
-    let count = |app: &App| app.document.as_ref().map_or(0, |d| d.model.entities().filter(|e| e.base().layer_id == "profil").count());
+    let count = |app: &App| {
+        app.document.as_ref().map_or(0, |d| {
+            d.model
+                .entities()
+                .filter(|e| e.base().layer_id == "profil")
+                .count()
+        })
+    };
     crate::files_testing::command(&mut app, "cad.pipes.profile", pipe_profile());
     let drawn = count(&app);
     assert_eq!(drawn, 112, "the shared case's objects");
     let t = tree(&app);
-    let at = t.nodes.iter().position(|n| n.kind == N::Network).expect("the network");
+    let at = t
+        .nodes
+        .iter()
+        .position(|n| n.kind == N::Network)
+        .expect("the network");
     assert_eq!(t.nodes[at].name, "Atıksu");
-    let profile = t.nodes.iter().find(|n| n.kind == N::Drawing).expect("the profile");
-    assert_eq!((profile.name.as_str(), profile.state, profile.parent), ("Hat profili · Profil", S::Current, Some(at as u32)));
+    let profile = t
+        .nodes
+        .iter()
+        .find(|n| n.kind == N::Drawing)
+        .expect("the profile");
+    assert_eq!(
+        (profile.name.as_str(), profile.state, profile.parent),
+        ("Hat profili · Profil", S::Current, Some(at as u32))
+    );
     pipe_material(&mut app);
     let t = tree(&app);
-    let profile = t.nodes.iter().find(|n| n.kind == N::Drawing).expect("the profile");
+    let profile = t
+        .nodes
+        .iter()
+        .find(|n| n.kind == N::Drawing)
+        .expect("the profile");
     assert_eq!(profile.state, S::Stale, "{profile:?}");
     assert_eq!(profile.why, ["“Atıksu” ağı çizildiğinden beri değişti."]);
     rebuild(&mut app, P::Rebuild(None, false));
-    assert!(tree(&app).nodes.iter().filter(|n| n.kind == N::Drawing).all(|d| d.state == S::Current));
+    assert!(
+        tree(&app)
+            .nodes
+            .iter()
+            .filter(|n| n.kind == N::Drawing)
+            .all(|d| d.state == S::Current)
+    );
     assert_eq!(count(&app), drawn, "drawn again in place");
     let doc = app.document.as_ref().expect("a drawing");
-    let bytes = kentos_kcad::encode(&doc.model.to_snapshot_v2()).expect("a map project with its profile saves");
-    assert!(bytes.windows(10).any(|w| w == b"\x67version\x18\xd4"), "schema 212");
+    let bytes = kentos_kcad::encode(&doc.model.to_snapshot_v2())
+        .expect("a map project with its profile saves");
+    assert!(
+        bytes.windows(10).any(|w| w == b"\x67version\x18\xd4"),
+        "schema 212"
+    );
 }
 
 /// docs/adr/3560: the profile stale after P1 changed, then drawn again; light wide and dark narrow,
@@ -337,17 +507,26 @@ fn a_pipe_profile_goes_stale_when_its_network_changes_and_is_drawn_again() {
 fn pipe_profile_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/hat-profili-canli-3560");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/hat-profili-canli-3560");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = pipes_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         crate::files_testing::command(&mut app, "cad.pipes.profile", pipe_profile());
         pipe_material(&mut app);
         let _ = app.update(Message::Run("view.zoomExtents"));
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::RoadProject));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(
+                Panel::RoadProject,
+            ));
         app.docks.close(Panel::Properties);
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
@@ -356,7 +535,10 @@ fn pipe_profile_screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         shot(&mut app, "1-hat-profili-guncel-degil");

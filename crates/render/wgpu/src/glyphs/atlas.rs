@@ -28,7 +28,9 @@ static EXTRA: std::sync::Mutex<Vec<&'static [u8]>> = std::sync::Mutex::new(Vec::
 /// The id of a face the geometry core does not bundle (an interface's: the drawing area's marks are lettered in it,
 /// docs/adr/9214), given by its bytes; the same bytes, the same id.
 pub fn extra_face(bytes: &'static [u8]) -> FontId {
-    let mut all = EXTRA.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let mut all = EXTRA
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     let i = match all.iter().position(|b| std::ptr::eq(*b, bytes)) {
         Some(i) => i,
         None => {
@@ -42,7 +44,11 @@ pub fn extra_face(bytes: &'static [u8]) -> FontId {
 /// A face's bytes: a bundled one's or one given.
 fn face_bytes(font: FontId) -> Option<&'static [u8]> {
     match font.0.checked_sub(EXTRA_FACES) {
-        Some(i) => EXTRA.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(usize::from(i)).copied(),
+        Some(i) => EXTRA
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .get(usize::from(i))
+            .copied(),
         None => font_bytes(font),
     }
 }
@@ -155,7 +161,10 @@ impl GlyphAtlas {
             return Lookup::Later;
         }
         let (field, program) = match self.face(key.font) {
-            Some(face) => (sdf::field(face, GlyphId(key.glyph)), super::vector::program(face, GlyphId(key.glyph))),
+            Some(face) => (
+                sdf::field(face, GlyphId(key.glyph)),
+                super::vector::program(face, GlyphId(key.glyph)),
+            ),
             None => (None, None),
         };
         // The glyph's outline beside its field, for when it is shown past the field's size (docs/adr/9240).
@@ -212,16 +221,34 @@ impl GlyphAtlas {
         for row in 0..f.height {
             let at = ((y + row) * self.side + x) as usize;
             let from = (row * f.width) as usize;
-            bytes[at..at + f.width as usize].copy_from_slice(&f.data[from..from + f.width as usize]);
+            bytes[at..at + f.width as usize]
+                .copy_from_slice(&f.data[from..from + f.width as usize]);
         }
         let side = self.side as f32;
         let slot = Slot {
             page,
-            uv: [x as f32 / side, y as f32 / side, f.width as f32 / side, f.height as f32 / side],
-            em: [f.left / EM_PX, f.bottom / EM_PX, f.width as f32 / EM_PX, f.height as f32 / EM_PX],
+            uv: [
+                x as f32 / side,
+                y as f32 / side,
+                f.width as f32 / side,
+                f.height as f32 / side,
+            ],
+            em: [
+                f.left / EM_PX,
+                f.bottom / EM_PX,
+                f.width as f32 / EM_PX,
+                f.height as f32 / EM_PX,
+            ],
             program: 0,
         };
-        self.uploads.push(PageUpload { page, x, y, width: f.width, height: f.height, data: f.data });
+        self.uploads.push(PageUpload {
+            page,
+            x,
+            y,
+            width: f.width,
+            height: f.height,
+            data: f.data,
+        });
         Some(slot)
     }
 }
@@ -233,15 +260,21 @@ mod tests {
 
     /// The drawing's default face (Barlow 400) and a glyph of it.
     fn key(c: char) -> GlyphKey {
-        let font = kentos_geometry_core::text::shaping::select_font("barlow", 400, false).expect("Barlow");
+        let font =
+            kentos_geometry_core::text::shaping::select_font("barlow", 400, false).expect("Barlow");
         let face = Face::parse(font_bytes(font).expect("bytes"), 0).expect("a face");
-        GlyphKey { font, glyph: face.glyph_index(c).expect("in the face").0 }
+        GlyphKey {
+            font,
+            glyph: face.glyph_index(c).expect("in the face").0,
+        }
     }
 
     #[test]
     fn a_glyph_is_made_once_and_a_space_is_blank() {
         let mut atlas = GlyphAtlas::default();
-        let Lookup::Ready(a) = atlas.lookup(key('A'), None) else { panic!("A has a field") };
+        let Lookup::Ready(a) = atlas.lookup(key('A'), None) else {
+            panic!("A has a field")
+        };
         assert_eq!(atlas.take_uploads().len(), 1);
         assert_eq!(atlas.lookup(key('A'), None), Lookup::Ready(a));
         assert!(atlas.take_uploads().is_empty(), "made once");
@@ -250,10 +283,19 @@ mod tests {
         assert!(a.em[1] < -0.1 && a.em[1] > -0.2, "{:?}", a.em);
         assert!(a.em[3] > 0.8 && a.em[3] < 1.1, "{:?}", a.em);
         // Its bytes are on the page where its rectangle says.
-        let (x, y) = ((a.uv[0] * PAGE as f32) as usize, (a.uv[1] * PAGE as f32) as usize);
-        let (w, h) = ((a.uv[2] * PAGE as f32) as usize, (a.uv[3] * PAGE as f32) as usize);
+        let (x, y) = (
+            (a.uv[0] * PAGE as f32) as usize,
+            (a.uv[1] * PAGE as f32) as usize,
+        );
+        let (w, h) = (
+            (a.uv[2] * PAGE as f32) as usize,
+            (a.uv[3] * PAGE as f32) as usize,
+        );
         let page = &atlas.pages()[0];
-        let inked = (y..y + h).flat_map(|r| (x..x + w).map(move |c| (r, c))).filter(|&(r, c)| page[r * PAGE as usize + c] > 128).count();
+        let inked = (y..y + h)
+            .flat_map(|r| (x..x + w).map(move |c| (r, c)))
+            .filter(|&(r, c)| page[r * PAGE as usize + c] > 128)
+            .count();
         assert!(inked > 100, "{inked} pixels inside the A");
     }
 
@@ -273,7 +315,10 @@ mod tests {
         // Every slot where it was put: the first letters are still there after the last.
         for (k, s) in letters.iter().zip(&slots) {
             assert_eq!(atlas.lookup(*k, None), Lookup::Ready(*s));
-            assert!(s.uv[0] + s.uv[2] <= 1.0 && s.uv[1] + s.uv[3] <= 1.0, "{s:?}");
+            assert!(
+                s.uv[0] + s.uv[2] <= 1.0 && s.uv[1] + s.uv[3] <= 1.0,
+                "{s:?}"
+            );
         }
         // No two on a page overlap.
         for (i, a) in slots.iter().enumerate() {
@@ -297,7 +342,10 @@ mod tests {
         assert!(!atlas.take_pending(), "said once");
         assert!(matches!(atlas.lookup(key('B'), None), Lookup::Ready(_)));
         // A field already made is there past any deadline.
-        assert!(matches!(atlas.lookup(key('B'), Some(past)), Lookup::Ready(_)));
+        assert!(matches!(
+            atlas.lookup(key('B'), Some(past)),
+            Lookup::Ready(_)
+        ));
         assert!(!atlas.take_pending());
     }
 }

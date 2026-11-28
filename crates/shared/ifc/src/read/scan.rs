@@ -40,7 +40,11 @@ impl Lines {
 }
 
 /// The first pass over `bytes`.
-pub(super) fn scan(bytes: &[u8], limits: &Limits, cancel: &dyn Fn() -> bool) -> Result<Scanned, ReadError> {
+pub(super) fn scan(
+    bytes: &[u8],
+    limits: &Limits,
+    cancel: &dyn Fn() -> bool,
+) -> Result<Scanned, ReadError> {
     let mut index = EntityIndex::with_capacity_and_hasher(bytes.len() / 64, Default::default());
     let mut findings = Vec::new();
     let mut scanner = EntityScanner::new(bytes);
@@ -49,14 +53,20 @@ pub(super) fn scan(bytes: &[u8], limits: &Limits, cancel: &dyn Fn() -> bool) -> 
     while let Some((id, _, start, end)) = scanner.next_entity() {
         n += 1;
         if n > limits.records {
-            return Err(ReadError::TooManyRecords { limit: limits.records });
+            return Err(ReadError::TooManyRecords {
+                limit: limits.records,
+            });
         }
         if n.is_multiple_of(CANCEL_EVERY) && cancel() {
             return Err(ReadError::Cancelled);
         }
         let line = lines.at(bytes, start);
         if end.saturating_sub(start) > limits.record_bytes {
-            return Err(ReadError::Record { line, what: RecordLimit::Length, limit: limits.record_bytes });
+            return Err(ReadError::Record {
+                line,
+                what: RecordLimit::Length,
+                limit: limits.record_bytes,
+            });
         }
         measure(&bytes[start..end.min(bytes.len())], limits).map_err(|what| ReadError::Record {
             line,
@@ -98,7 +108,9 @@ pub(super) fn scan(bytes: &[u8], limits: &Limits, cancel: &dyn Fn() -> bool) -> 
             severity: Severity::Error,
             step: None,
             line: None,
-            message: format!("{oversized} kaydın numarası 4 294 967 295'ten büyük; bu kayıtlar okunmadı."),
+            message: format!(
+                "{oversized} kaydın numarası 4 294 967 295'ten büyük; bu kayıtlar okunmadı."
+            ),
         });
     }
     if index.is_empty() {

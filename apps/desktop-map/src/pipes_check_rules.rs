@@ -15,7 +15,10 @@ pub fn choices() -> Vec<(String, String)> {
 }
 
 fn system(id: &str) -> Option<PipeRuleSystem> {
-    pipe_rules_default()?.systems.into_iter().find(|s| s.id == id)
+    pipe_rules_default()?
+        .systems
+        .into_iter()
+        .find(|s| s.id == id)
 }
 
 /// A slope 1:A in per mille, two decimals and a comma.
@@ -27,7 +30,10 @@ fn per_mille(a: f64) -> String {
 /// nothing is a verdict of conformity. None when no system is chosen (or the package does not have it).
 pub fn line(id: &str, f: &kentos_interaction::Format) -> Option<String> {
     let s = system(id)?;
-    let cover = s.min_cover.map(|c| format!(", en az örtü {}", f.length(c))).unwrap_or_default();
+    let cover = s
+        .min_cover
+        .map(|c| format!(", en az örtü {}", f.length(c)))
+        .unwrap_or_default();
     let spans: Vec<String> = s
         .spans
         .iter()
@@ -37,7 +43,11 @@ pub fn line(id: &str, f: &kentos_interaction::Format) -> Option<String> {
             _ => f.length(c.greatest),
         })
         .collect();
-    let spans = if spans.is_empty() { String::new() } else { format!(", baca aralığı en çok {}", spans.join(", ")) };
+    let spans = if spans.is_empty() {
+        String::new()
+    } else {
+        format!(", baca aralığı en çok {}", spans.join(", "))
+    };
     Some(format!(
         "Kural: {} — {}. Eğim borunun çap sınıfına göre ({} sınıf){cover}{spans}. Yazdığınız sınır kuralınkinin yerine \
          geçer. Yönetmeliğin değerleri öneridir (“olabilir”, “alınabilir”); uygunluk kararı idarenindir.",
@@ -51,6 +61,14 @@ pub fn line(id: &str, f: &kentos_interaction::Format) -> Option<String> {
 pub fn limits(id: &str, class: &str) -> Option<String> {
     let s = system(id)?;
     let c = s.slopes.iter().find(|c| c.name == class)?;
-    let exceptional = c.exceptional.filter(|e| *e > c.least).map(|e| format!(" (istisnai {})", per_mille(e))).unwrap_or_default();
-    Some(format!("{}–{}{exceptional}", per_mille(c.least), per_mille(c.greatest)))
+    let exceptional = c
+        .exceptional
+        .filter(|e| *e > c.least)
+        .map(|e| format!(" (istisnai {})", per_mille(e)))
+        .unwrap_or_default();
+    Some(format!(
+        "{}–{}{exceptional}",
+        per_mille(c.least),
+        per_mille(c.greatest)
+    ))
 }

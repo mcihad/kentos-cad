@@ -213,8 +213,7 @@ fn screens() {
                 click(&mut app, at(-260.0, 120.0));
                 match name {
                     "kkes" => {
-                        let _ =
-                            app.update(Message::PointCalc(CalcKind::Distances));
+                        let _ = app.update(Message::PointCalc(CalcKind::Distances));
                         let a = at(-60.0, 40.0);
                         let b = at(60.0, 40.0);
                         click(&mut app, a);

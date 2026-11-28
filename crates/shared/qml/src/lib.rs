@@ -16,8 +16,8 @@ use std::fmt::Write as _;
 use serde_json::{Map, Value, json};
 
 use kentos_formats::sld::{
-    self, Filter, Lit, Op, colour, colour_with, esc, field_of, filter_text, num,
-    parse_filter, parse_qgis, round3,
+    self, Filter, Lit, Op, colour, colour_with, esc, field_of, filter_text, num, parse_filter,
+    parse_qgis, round3,
 };
 pub use kentos_formats::sld::{Kinds, Read, StyleAsset, Written};
 
@@ -660,7 +660,10 @@ fn svg_marker_layer(
             ("horizontal_anchor_point", "1".into()),
             (
                 "name",
-                format!("base64:{}", kentos_formats::style_extras::b64_encode(svg.as_bytes())),
+                format!(
+                    "base64:{}",
+                    kentos_formats::style_extras::b64_encode(svg.as_bytes())
+                ),
             ),
             ("offset", "0,0".into()),
             ("offset_unit", "MM".into()),
@@ -699,10 +702,7 @@ fn font_marker_layer(
     let (chr, dd) = match text {
         Some(t) if t.get("expr").is_some() => {
             let fallback = t.get("fallback").and_then(Value::as_str).unwrap_or("");
-            let dd = t
-                .get("expr")
-                .and_then(Value::as_str)
-                .and_then(qgis_value);
+            let dd = t.get("expr").and_then(Value::as_str).and_then(qgis_value);
             if dd.is_none() {
                 lost.push(format!(
                     "{what}: yazı işaretinin metni bir ifadeyle (veriye göre); QML'e yedek değeri yazıldı"
@@ -789,12 +789,7 @@ fn font_marker_layer(
 /// its second, a radial one from the first outward to the second's distance; its fractions are of the object's box.
 /// So KentOS's linear gradient is the box's west-to-east pair turned by the angle (QML turns counter-clockwise too);
 /// the sphere is the box's centre out to its corner; the cylinder is the half-box with `spread` reflecting.
-fn gradient_layer(
-    layer: &Value,
-    pad: &str,
-    lost: &mut Vec<String>,
-    what: &str,
-) -> Option<String> {
+fn gradient_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> Option<String> {
     let mut dds = Vec::new();
     let mut c1 = (
         colour_value(layer, "color", "fillColor", &mut dds, lost, what),
@@ -1429,12 +1424,9 @@ fn element(
                         esc(value)
                     );
                 }
-                if let Some(n) = symbols.add(
-                    renderer.get("other"),
-                    library,
-                    lost,
-                    "“Diğerleri” sınıfı",
-                ) {
+                if let Some(n) =
+                    symbols.add(renderer.get("other"), library, lost, "“Diğerleri” sınıfı")
+                {
                     rules += 1;
                     let _ = writeln!(
                         body,
@@ -2056,7 +2048,8 @@ fn read_font_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) 
     if style.to_ascii_lowercase().contains("bold") {
         v["weight"] = json!(700);
     }
-    if style.to_ascii_lowercase().contains("italic") || style.to_ascii_lowercase().contains("oblique")
+    if style.to_ascii_lowercase().contains("italic")
+        || style.to_ascii_lowercase().contains("oblique")
     {
         v["italic"] = json!(true);
     }
@@ -2101,7 +2094,9 @@ fn read_gradient(
     };
     let p1 = pair("reference_point1", (0.5, 0.0));
     let p2 = pair("reference_point2", (0.5, 1.0));
-    let kind = prop(m, "type").or_else(|| prop(m, "gradient_type")).unwrap_or("0");
+    let kind = prop(m, "type")
+        .or_else(|| prop(m, "gradient_type"))
+        .unwrap_or("0");
     let spread = prop(m, "spread").unwrap_or("0");
     let (mut c1, mut c2) = (
         colour_in(prop(m, "color")),
@@ -2479,7 +2474,9 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
                     .into_iter()
                     .filter_map(|(k, v)| v.map(|v| (k.to_owned(), v.clone())))
                     .collect();
-                    if let Some(l) = read_line(&line, format!("o{i}"), has("outlineColor"), lost, what) {
+                    if let Some(l) =
+                        read_line(&line, format!("o{i}"), has("outlineColor"), lost, what)
+                    {
                         taken.push(l);
                     }
                 }
@@ -2751,7 +2748,8 @@ fn renderer_in(
                 // Its labels are taken still (docs/adr/0635 §3).
                 None => {
                     lost.push(
-                        "QML'in simgesi KentOS'un çizebileceği bir simge değil; görünüş alınmadı".into(),
+                        "QML'in simgesi KentOS'un çizebileceği bir simge değil; görünüş alınmadı"
+                            .into(),
                     );
                     (Value::Null, 0)
                 }
@@ -3055,7 +3053,10 @@ mod tests {
         );
         // With functions, word by word (docs/adr/0635 §6); what neither says stays out.
         assert_eq!(qgis_value("abs([a])").as_deref(), Some("abs(\"a\")"));
-        assert_eq!(kentos_value("round(\"a\", 1)").as_deref(), Some("yuvarla([a], 1)"));
+        assert_eq!(
+            kentos_value("round(\"a\", 1)").as_deref(),
+            Some("yuvarla([a], 1)")
+        );
         assert_eq!(qgis_value("$alan * 2"), None);
         assert_eq!(kentos_value("regexp_match(\"a\", 'x')"), None);
         assert_eq!(negated(&negated("\"a\" * 2")), "\"a\" * 2");
@@ -3113,12 +3114,20 @@ mod tests {
         let w = write(&area_look(json!([g])), &[], area(), &none);
         assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
         assert!(w.lost[0].contains("açılı degradenin"));
-        let conic = w
-            .xml
-            .replace("name=\"type\" type=\"QString\" value=\"0\"", "name=\"type\" type=\"QString\" value=\"2\"");
+        let conic = w.xml.replace(
+            "name=\"type\" type=\"QString\" value=\"0\"",
+            "name=\"type\" type=\"QString\" value=\"2\"",
+        );
         let back = read(&conic).expect("reads");
-        assert!(back.lost.iter().any(|l| l.contains("konik degrade")), "{:?}", back.lost);
-        assert_eq!(back.renderer["symbols"]["fill"]["layers"][0]["shape"], "linear");
+        assert!(
+            back.lost.iter().any(|l| l.contains("konik degrade")),
+            "{:?}",
+            back.lost
+        );
+        assert_eq!(
+            back.renderer["symbols"]["fill"]["layers"][0]["shape"],
+            "linear"
+        );
     }
 
     #[test]
@@ -3136,10 +3145,19 @@ mod tests {
         let back = read(&w.xml).expect("reads");
         assert_eq!(back.lost, Vec::<String>::new());
         let l = &back.renderer["symbols"]["fill"]["layers"];
-        assert_eq!(l[0]["color"], json!({ "expr": "[Renk]", "fallback": "#ff0000" }));
+        assert_eq!(
+            l[0]["color"],
+            json!({ "expr": "[Renk]", "fallback": "#ff0000" })
+        );
         assert_eq!(l[0]["color2"], json!({ "expr": "[Renk2]" }));
-        assert_eq!(l[1]["color"], json!({ "expr": "[Dolgu]", "fallback": "#00ff00" }));
-        assert_eq!(l[2]["color"], json!({ "expr": "[Kenar]", "fallback": "#000000" }));
+        assert_eq!(
+            l[1]["color"],
+            json!({ "expr": "[Dolgu]", "fallback": "#00ff00" })
+        );
+        assert_eq!(
+            l[2]["color"],
+            json!({ "expr": "[Kenar]", "fallback": "#000000" })
+        );
         // An expression that is not fields and operators is said, its fallback written.
         let text = area_look(json!([
             { "id": "f", "type": "simpleFill", "color": { "expr": "renk_tablosu([a])", "fallback": "#00ff00" } },
@@ -3154,7 +3172,10 @@ mod tests {
         let w = write(&m, &[], points(), &none);
         let back = read(&w.xml).expect("reads");
         let p = &back.renderer["symbols"]["marker"]["layers"][0];
-        assert_eq!(p["fill"], json!({ "expr": "[Renk]", "fallback": "#ff0000" }));
+        assert_eq!(
+            p["fill"],
+            json!({ "expr": "[Renk]", "fallback": "#ff0000" })
+        );
         assert_eq!(p["stroke"], json!({ "expr": "[Çizgi]" }));
         assert!(back.lost.is_empty(), "{:?}", back.lost);
     }
@@ -3171,14 +3192,32 @@ mod tests {
         assert!(w.lost[0].contains("dizilimi"), "{:?}", w.lost);
         assert!(w.xml.contains("class=\"PointPatternFill\""), "{}", w.xml);
         // QML turns the grid clockwise and counts the offset's y downward.
-        assert!(w.xml.contains("name=\"angle\" type=\"QString\" value=\"-30\""), "{}", w.xml);
-        assert!(w.xml.contains("name=\"offset_y\" type=\"QString\" value=\"-2\""), "{}", w.xml);
-        assert!(w.xml.contains("name=\"displacement_x\" type=\"QString\" value=\"3\""), "{}", w.xml);
+        assert!(
+            w.xml
+                .contains("name=\"angle\" type=\"QString\" value=\"-30\""),
+            "{}",
+            w.xml
+        );
+        assert!(
+            w.xml
+                .contains("name=\"offset_y\" type=\"QString\" value=\"-2\""),
+            "{}",
+            w.xml
+        );
+        assert!(
+            w.xml
+                .contains("name=\"displacement_x\" type=\"QString\" value=\"3\""),
+            "{}",
+            w.xml
+        );
         let back = read(&w.xml).expect("reads");
         assert_eq!(back.lost, Vec::<String>::new());
         let l = &back.renderer["symbols"]["fill"]["layers"][0];
         assert_eq!(l["type"], "patternFill");
-        assert_eq!((l["spacingX"].as_f64(), l["spacingY"].as_f64()), (Some(6.0), Some(4.0)));
+        assert_eq!(
+            (l["spacingX"].as_f64(), l["spacingY"].as_f64()),
+            (Some(6.0), Some(4.0))
+        );
         assert_eq!(l["stagger"], true);
         assert_eq!(l["angle"], 30.0);
         assert_eq!(l["offset"], json!([1.0, 2.0]));
@@ -3188,7 +3227,12 @@ mod tests {
             { "id": "p", "type": "patternFill", "unit": "mm", "spacingX": 6, "spacingY": 4, "jitter": 0.3, "coverage": 0.5,
               "marker": { "type": "marker", "layers": [{ "id": "m", "type": "shape", "shape": "circle", "size": 2 }] } },
         ]));
-        assert!(write(&more, &[], area(), &none).lost.iter().any(|l| l.contains("rastgele sapması")));
+        assert!(
+            write(&more, &[], area(), &none)
+                .lost
+                .iter()
+                .any(|l| l.contains("rastgele sapması"))
+        );
     }
 
     #[test]
@@ -3211,11 +3255,26 @@ mod tests {
         assert_eq!(v["asset"], back.assets[0].id);
         assert_eq!(v["rotation"], 30.0);
         assert_eq!(v["fill"], "#112233");
-        assert_eq!(v["stroke"], json!({ "expr": "[Çizgi]", "fallback": "#445566" }));
+        assert_eq!(
+            v["stroke"],
+            json!({ "expr": "[Çizgi]", "fallback": "#445566" })
+        );
         // A marker whose drawing the library lacks, and one that names a file, are said.
-        let none_there = point_look(json!([{ "id": "v", "type": "svg", "asset": "yok", "size": 4 }]));
-        assert!(write(&none_there, &[], points(), &none).lost.iter().any(|l| l.contains("çizimi kitaplıkta yok")));
-        let file = w.xml.replace(&format!("base64:{}", kentos_formats::style_extras::b64_encode(svg.as_bytes())), "/usr/share/agac.svg");
+        let none_there =
+            point_look(json!([{ "id": "v", "type": "svg", "asset": "yok", "size": 4 }]));
+        assert!(
+            write(&none_there, &[], points(), &none)
+                .lost
+                .iter()
+                .any(|l| l.contains("çizimi kitaplıkta yok"))
+        );
+        let file = w.xml.replace(
+            &format!(
+                "base64:{}",
+                kentos_formats::style_extras::b64_encode(svg.as_bytes())
+            ),
+            "/usr/share/agac.svg",
+        );
         let back = read(&file).expect_err("nothing is left to read");
         assert!(back.contains("çizebileceği"), "{back}");
     }
@@ -3229,22 +3288,42 @@ mod tests {
         let w = write(&r, &[], points(), &none);
         assert!(w.lost.is_empty(), "{:?}", w.lost);
         assert!(w.xml.contains("class=\"FontMarker\""), "{}", w.xml);
-        assert!(w.xml.contains("name=\"font_style\" type=\"QString\" value=\"Bold Italic\""), "{}", w.xml);
+        assert!(
+            w.xml
+                .contains("name=\"font_style\" type=\"QString\" value=\"Bold Italic\""),
+            "{}",
+            w.xml
+        );
         let back = read(&w.xml).expect("reads");
         assert_eq!(back.lost, Vec::<String>::new());
         let t = &back.renderer["symbols"]["marker"]["layers"][0];
         assert_eq!(t["text"], "★");
-        assert_eq!((t["font"].as_str(), t["weight"].as_f64(), t["italic"].as_bool()), (Some("Arial"), Some(700.0), Some(true)));
+        assert_eq!(
+            (
+                t["font"].as_str(),
+                t["weight"].as_f64(),
+                t["italic"].as_bool()
+            ),
+            (Some("Arial"), Some(700.0), Some(true))
+        );
         assert_eq!(t["rotation"], 15.0);
-        assert_eq!(t["color"], json!({ "expr": "[Renk]", "fallback": "#aa0000" }));
+        assert_eq!(
+            t["color"],
+            json!({ "expr": "[Renk]", "fallback": "#aa0000" })
+        );
         assert_eq!(t["halo"], json!({ "color": "#ffffff", "width": 0.4 }));
         // QML's marker is one character, and its character may come from a field.
-        let long = point_look(json!([{ "id": "t", "type": "text", "text": { "expr": "[Kod]", "fallback": "AB" }, "size": 3 }]));
+        let long = point_look(
+            json!([{ "id": "t", "type": "text", "text": { "expr": "[Kod]", "fallback": "AB" }, "size": 3 }]),
+        );
         let w = write(&long, &[], points(), &none);
         assert_eq!(w.lost.len(), 1, "{:?}", w.lost);
         assert!(w.lost[0].contains("yalnız ilk karakter"), "{:?}", w.lost);
         let back = read(&w.xml).expect("reads");
-        assert_eq!(back.renderer["symbols"]["marker"]["layers"][0]["text"], json!({ "expr": "[Kod]", "fallback": "A" }));
+        assert_eq!(
+            back.renderer["symbols"]["marker"]["layers"][0]["text"],
+            json!({ "expr": "[Kod]", "fallback": "A" })
+        );
     }
 }
 

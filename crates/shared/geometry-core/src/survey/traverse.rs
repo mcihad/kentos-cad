@@ -116,7 +116,11 @@ pub struct TraverseBackSight {
     pub target: f64,
 }
 
-crate::json_struct!(TraverseBackSight { zenith, instrument, target });
+crate::json_struct!(TraverseBackSight {
+    zenith,
+    instrument,
+    target
+});
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct TraverseLeg {
@@ -209,9 +213,16 @@ struct Heights {
 fn heights_of(input: &TraverseInput, h: &TraverseHeights) -> Result<Heights, String> {
     let unit = Unit::parse(&input.unit)?;
     let legs = input.distances.len();
-    for (list, what) in [(&h.zeniths, "başucu açısı"), (&h.instruments, "alet yüksekliği"), (&h.targets, "işaret yüksekliği")] {
+    for (list, what) in [
+        (&h.zeniths, "başucu açısı"),
+        (&h.instruments, "alet yüksekliği"),
+        (&h.targets, "işaret yüksekliği"),
+    ] {
         if list.len() != legs {
-            return Err(format!("{legs} kenarlı bu poligonda {legs} {what} olmalı, {} verildi.", list.len()));
+            return Err(format!(
+                "{legs} kenarlı bu poligonda {legs} {what} olmalı, {} verildi.",
+                list.len()
+            ));
         }
     }
     finite(h.start, "Başlangıç noktasının kotu")?;
@@ -224,8 +235,16 @@ fn heights_of(input: &TraverseInput, h: &TraverseHeights) -> Result<Heights, Str
             return Err(format!(
                 "{}. başucu açısı 0 ile {} arasında olmalı (yatay nişan {}).",
                 i + 1,
-                if unit == Unit::GRAD { "200 grad" } else { "180°" },
-                if unit == Unit::GRAD { "100 grad" } else { "90°" }
+                if unit == Unit::GRAD {
+                    "200 grad"
+                } else {
+                    "180°"
+                },
+                if unit == Unit::GRAD {
+                    "100 grad"
+                } else {
+                    "90°"
+                }
             ));
         }
         finite(h.instruments[i], &format!("{}. alet yüksekliği", i + 1))?;
@@ -237,21 +256,41 @@ fn heights_of(input: &TraverseInput, h: &TraverseHeights) -> Result<Heights, Str
     // docs/adr/4500: a back sight a leg, each finite, its zenith angle between straight up and straight down.
     if let Some(back) = &h.back {
         if back.len() != legs {
-            return Err(format!("{legs} kenarlı bu poligonda geri nişanlar {legs} kenar için olmalı, {} verildi.", back.len()));
+            return Err(format!(
+                "{legs} kenarlı bu poligonda geri nişanlar {legs} kenar için olmalı, {} verildi.",
+                back.len()
+            ));
         }
         for (i, b) in back.iter().enumerate() {
             let Some(b) = b else { continue };
-            let z = unit.rad(finite(b.zenith, &format!("{}. kenarın geri başucu açısı", i + 1))?);
+            let z = unit.rad(finite(
+                b.zenith,
+                &format!("{}. kenarın geri başucu açısı", i + 1),
+            )?);
             if !(z > 0.0 && z < PI) {
                 return Err(format!(
                     "{}. kenarın geri başucu açısı 0 ile {} arasında olmalı (yatay nişan {}).",
                     i + 1,
-                    if unit == Unit::GRAD { "200 grad" } else { "180°" },
-                    if unit == Unit::GRAD { "100 grad" } else { "90°" }
+                    if unit == Unit::GRAD {
+                        "200 grad"
+                    } else {
+                        "180°"
+                    },
+                    if unit == Unit::GRAD {
+                        "100 grad"
+                    } else {
+                        "90°"
+                    }
                 ));
             }
-            finite(b.instrument, &format!("{}. kenarın geri nişandaki alet yüksekliği", i + 1))?;
-            finite(b.target, &format!("{}. kenarın geri nişandaki işaret yüksekliği", i + 1))?;
+            finite(
+                b.instrument,
+                &format!("{}. kenarın geri nişandaki alet yüksekliği", i + 1),
+            )?;
+            finite(
+                b.target,
+                &format!("{}. kenarın geri nişandaki işaret yüksekliği", i + 1),
+            )?;
         }
     }
     if let Some(n) = &h.undulations {
@@ -283,7 +322,11 @@ fn heights_of(input: &TraverseInput, h: &TraverseHeights) -> Result<Heights, Str
                 let same = b.target == h.instruments[i] && b.instrument == h.targets[i];
                 let chord = s / sin(z);
                 let r = super::fieldbook::EARTH_RADIUS;
-                refraction.push(same.then(|| sin(z) / 2.0 + sin(zb) / 2.0 + 2.0 * r / chord * cos((z + zb) / 2.0)));
+                refraction.push(
+                    same.then(|| {
+                        sin(z) / 2.0 + sin(zb) / 2.0 + 2.0 * r / chord * cos((z + zb) / 2.0)
+                    }),
+                );
             }
             None => {
                 let mut d = forward;
@@ -311,9 +354,18 @@ fn heights_of(input: &TraverseInput, h: &TraverseHeights) -> Result<Heights, Str
     }
     // Each leg's own ellipsoidal height: the mean of its ends' H + N.
     let own = h.undulations.as_ref().map(|n| {
-        (0..legs).map(|i| ((heights[i] + n[i]) + (heights[i + 1] + n[i + 1])) / 2.0).collect()
+        (0..legs)
+            .map(|i| ((heights[i] + n[i]) + (heights[i + 1] + n[i + 1])) / 2.0)
+            .collect()
     });
-    Ok(Heights { dh, vh, at: heights, misclosure, own, refraction })
+    Ok(Heights {
+        dh,
+        vh,
+        at: heights,
+        misclosure,
+        own,
+        refraction,
+    })
 }
 
 /// `result` with the heights `h` written into it: its legs' height differences and corrections, its new points'
@@ -365,7 +417,14 @@ pub fn traverse(input: &TraverseInput) -> Result<TraverseResult, String> {
         for (i, leg) in result.legs.iter().enumerate() {
             let next = Vec2::new(at.x + leg.dy, at.y + leg.dx);
             let factor = match &own {
-                Some(own) => grid_factor(&Grid { system: grid.system.clone(), height: own[i] }, at, next)?,
+                Some(own) => grid_factor(
+                    &Grid {
+                        system: grid.system.clone(),
+                        height: own[i],
+                    },
+                    at,
+                    next,
+                )?,
                 None => grid_factor(grid, at, next)?,
             };
             factors.push(factor);
@@ -383,7 +442,13 @@ pub fn traverse(input: &TraverseInput) -> Result<TraverseResult, String> {
             ..input.clone()
         })?;
     }
-    for (i, ((leg, f), ground)) in result.legs.iter_mut().zip(&factors).zip(&input.distances).enumerate() {
+    for (i, ((leg, f), ground)) in result
+        .legs
+        .iter_mut()
+        .zip(&factors)
+        .zip(&input.distances)
+        .enumerate()
+    {
         leg.ground = Some(*ground);
         leg.scale = Some(f.scale);
         leg.height_factor = Some(f.height_factor);

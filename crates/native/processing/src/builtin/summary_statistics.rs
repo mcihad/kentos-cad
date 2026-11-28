@@ -131,8 +131,14 @@ fn run(v: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> 
                 .zip(&kinds)
                 .map(|(cell, kind)| match *kind {
                     _ if js_trim(cell).is_empty() => serde_json::Value::Null,
-                    "integer" => cell.parse::<i64>().map_or(serde_json::Value::Null, |n| json!(n)),
-                    "real" => cell.parse::<f64>().ok().filter(|v| v.is_finite()).map_or(serde_json::Value::Null, |v| json!(v)),
+                    "integer" => cell
+                        .parse::<i64>()
+                        .map_or(serde_json::Value::Null, |n| json!(n)),
+                    "real" => cell
+                        .parse::<f64>()
+                        .ok()
+                        .filter(|v| v.is_finite())
+                        .map_or(serde_json::Value::Null, |v| json!(v)),
                     _ => json!(cell),
                 })
                 .collect();

@@ -18,17 +18,35 @@ fn history(app: &App) -> Vec<kentos_processing::RunRecord> {
 }
 
 fn reopen(app: &mut App, seq: u64) {
-    send(app, Message::Gis(crate::gis::Event::Processing(Event::Panel(PanelEvent::Reopen(seq)))));
+    send(
+        app,
+        Message::Gis(crate::gis::Event::Processing(Event::Panel(
+            PanelEvent::Reopen(seq),
+        ))),
+    );
 }
 
 /// The layer named `name`.
 fn layer(app: &App, name: &str) -> String {
     let model = &app.document.as_ref().expect("open").model;
-    model.layers().leaves().into_iter().find(|n| n.name == name).map(|n| n.id.clone()).expect(name)
+    model
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|n| n.name == name)
+        .map(|n| n.id.clone())
+        .expect(name)
 }
 
 fn network(app: &App) -> String {
-    app.document.as_ref().expect("open").model.settings().networks[0].id.clone()
+    app.document
+        .as_ref()
+        .expect("open")
+        .model
+        .settings()
+        .networks[0]
+        .id
+        .clone()
 }
 
 /// Hizmet alanı at 35 m from A, the lines written too: its run.
@@ -55,8 +73,17 @@ fn a_service_area_is_a_run_reopened_with_its_values_and_its_layer_keeps_what_mad
     let mut app = served();
     let net = network(&app);
     let runs = history(&app);
-    let [r] = &runs[..] else { panic!("one run: {runs:?}") };
-    assert_eq!((r.tool_id.as_str(), r.label.as_str(), r.status), ("tool.netServiceArea", "Hizmet alanı", kentos_processing::Status::Ok));
+    let [r] = &runs[..] else {
+        panic!("one run: {runs:?}")
+    };
+    assert_eq!(
+        (r.tool_id.as_str(), r.label.as_str(), r.status),
+        (
+            "tool.netServiceArea",
+            "Hizmet alanı",
+            kentos_processing::Status::Ok
+        )
+    );
     assert_eq!(r.values["network"], json!(net));
     assert_eq!(r.values["cost"], json!("Uzunluk"));
     assert_eq!(r.values["breaks"], json!([35.0]));
@@ -80,31 +107,70 @@ fn a_service_area_is_a_run_reopened_with_its_values_and_its_layer_keeps_what_mad
     // The layers it opened say what made them.
     let area = layer(&app, "Yaklaşık hizmet alanı");
     let model = &app.document.as_ref().expect("open").model;
-    let d = model.layers().info_of(&area).and_then(|i| i.derivation).expect("a derivation");
-    assert_eq!((d.tool.as_str(), d.label.as_str(), d.tool_version), ("tool.netServiceArea", "Hizmet alanı", 1));
+    let d = model
+        .layers()
+        .info_of(&area)
+        .and_then(|i| i.derivation)
+        .expect("a derivation");
+    assert_eq!(
+        (d.tool.as_str(), d.label.as_str(), d.tool_version),
+        ("tool.netServiceArea", "Hizmet alanı", 1)
+    );
     assert_eq!(d.parameters["breaks"], json!([35.0]));
     assert_eq!(d.parameters["network"], json!(net));
-    assert_eq!(d.inputs.iter().map(|i| i.name.as_str()).collect::<Vec<_>>(), ["qa_yollar"]);
-    assert_eq!(kentos_commands::derivation_problem(&d), None, "a record that holds");
+    assert_eq!(
+        d.inputs.iter().map(|i| i.name.as_str()).collect::<Vec<_>>(),
+        ["qa_yollar"]
+    );
+    assert_eq!(
+        kentos_commands::derivation_problem(&d),
+        None,
+        "a record that holds"
+    );
     let lines = layer(&app, "Ulaşılan yollar");
-    assert!(model.layers().info_of(&lines).and_then(|i| i.derivation).is_some());
+    assert!(
+        model
+            .layers()
+            .info_of(&lines)
+            .and_then(|i| i.derivation)
+            .is_some()
+    );
     // Written and opened again: the record is there and its input is still what it read.
     let path = crate::files_testing::scratch("analiz-kaydi").join("analiz.kcad");
     crate::document::write(&model.to_snapshot_v2(), &path).expect("written");
     let again = crate::document::Document::read(&path).expect("read again");
-    assert_eq!(again.model.layers().info_of(&area).and_then(|i| i.derivation), Some(d));
+    assert_eq!(
+        again
+            .model
+            .layers()
+            .info_of(&area)
+            .and_then(|i| i.derivation),
+        Some(d)
+    );
     let mut opened = crate::files_testing::app_with_drawing();
     let _ = opened.update(Message::Opened(Some(Ok(Box::new(again)))));
-    let described = crate::files_testing::command(&mut opened, "cad.datasets.describe", json!({ "layers": [area] }));
+    let described = crate::files_testing::command(
+        &mut opened,
+        "cad.datasets.describe",
+        json!({ "layers": [area] }),
+    );
     let set = &described["output"]["datasets"][0];
-    assert_eq!(set["derivation"]["tool"], json!("tool.netServiceArea"), "{described}");
+    assert_eq!(
+        set["derivation"]["tool"],
+        json!("tool.netServiceArea"),
+        "{described}"
+    );
     assert_eq!(set["inputs"][0]["state"], json!("current"), "{described}");
     // A stale derivation says so; a current one leaves the word out.
     assert_ne!(set["stale"], json!(true), "{described}");
     // Yeniden aç: the tool again with its breaks, margin, lines and the facility at A; the areas as they were.
     reopen(&mut app, r.seq);
     assert_eq!(app.session.tool_id(), "netServiceArea");
-    assert!(prompt(&app).contains("1 tesis; 3 çizgi, 1 alan"), "{}", prompt(&app));
+    assert!(
+        prompt(&app).contains("1 tesis; 3 çizgi, 1 alan"),
+        "{}",
+        prompt(&app)
+    );
     let rows = settings(&app);
     assert_eq!((rows[4].1.as_str(), rows[7].1.as_str()), ("35", "Açık"));
 }
@@ -115,29 +181,63 @@ fn a_route_and_a_trace_are_runs_too_and_reopen_with_their_points() {
     routed_and_traced(&mut app);
     let runs = history(&app);
     let labels: Vec<&str> = runs.iter().map(|r| r.label.as_str()).collect();
-    assert_eq!(labels, ["Şebeke izleme", "En kısa yol", "Hizmet alanı"], "newest first");
+    assert_eq!(
+        labels,
+        ["Şebeke izleme", "En kısa yol", "Hizmet alanı"],
+        "newest first"
+    );
     // En kısa yol: two stops, the route on Rota, which says what made it.
     let route = &runs[1];
     assert_eq!(route.tool_id, "tool.netRoute");
     assert_eq!(route.values["stops"], json!([[A.0, A.1], [B.0, B.1]]));
-    assert!(route.words.contains(&"Duraklar: 2".to_owned()), "{:?}", route.words);
-    assert!(route.words.contains(&"Çıktı katmanı: “Rota” (yeni katman)".to_owned()), "{:?}", route.words);
+    assert!(
+        route.words.contains(&"Duraklar: 2".to_owned()),
+        "{:?}",
+        route.words
+    );
+    assert!(
+        route
+            .words
+            .contains(&"Çıktı katmanı: “Rota” (yeni katman)".to_owned()),
+        "{:?}",
+        route.words
+    );
     assert_eq!(route.added.len(), 1);
     let rota = layer(&app, "Rota");
     let model = &app.document.as_ref().expect("open").model;
-    let d = model.layers().info_of(&rota).and_then(|i| i.derivation).expect("Rota's derivation");
+    let d = model
+        .layers()
+        .info_of(&rota)
+        .and_then(|i| i.derivation)
+        .expect("Rota's derivation");
     assert_eq!(d.tool, "tool.netRoute");
     // Şebeke izleme: what it chose, no layer.
     let trace = &runs[0];
     assert_eq!(trace.tool_id, "tool.netTrace");
-    assert!(trace.words.contains(&"Tür: bağlı".to_owned()), "{:?}", trace.words);
-    assert!(trace.words.contains(&"Başlangıç noktaları: 1".to_owned()), "{:?}", trace.words);
-    assert!(trace.words.contains(&"Seçilen nesneler: 3".to_owned()), "{:?}", trace.words);
+    assert!(
+        trace.words.contains(&"Tür: bağlı".to_owned()),
+        "{:?}",
+        trace.words
+    );
+    assert!(
+        trace.words.contains(&"Başlangıç noktaları: 1".to_owned()),
+        "{:?}",
+        trace.words
+    );
+    assert!(
+        trace.words.contains(&"Seçilen nesneler: 3".to_owned()),
+        "{:?}",
+        trace.words
+    );
     assert_eq!((trace.added.len(), trace.touched.len()), (0, 3));
     // Yeniden aç: En kısa yol with A and B, the direct 50 m road; Şebeke izleme with A.
     reopen(&mut app, route.seq);
     assert_eq!(app.session.tool_id(), "netRoute");
-    assert!(prompt(&app).contains("2 durak") && prompt(&app).contains("Uzunluk 50.000 m"), "{}", prompt(&app));
+    assert!(
+        prompt(&app).contains("2 durak") && prompt(&app).contains("Uzunluk 50.000 m"),
+        "{}",
+        prompt(&app)
+    );
     reopen(&mut app, trace.seq);
     assert_eq!(app.session.tool_id(), "netTrace");
     assert!(prompt(&app).contains("120.000 m"), "{}", prompt(&app));
@@ -174,7 +274,12 @@ fn screens() {
         let mut opened = crate::files_testing::app_with_drawing();
         let _ = opened.update(Message::Opened(Some(Ok(Box::new(again)))));
         send(&mut opened, Message::Run("layer.dataset"));
-        send(&mut opened, Message::Gis(crate::gis::Event::DatasetInfo(crate::dataset_window::Event::Tab(2))));
+        send(
+            &mut opened,
+            Message::Gis(crate::gis::Event::DatasetInfo(
+                crate::dataset_window::Event::Tab(2),
+            )),
+        );
         opened
     });
 }

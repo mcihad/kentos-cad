@@ -678,7 +678,11 @@ impl Document {
             rows.push(vec![
                 who,
                 row.base.clone(),
-                if row.assumed && row.persons == 0 { "?".into() } else { row.persons.to_string() },
+                if row.assumed && row.persons == 0 {
+                    "?".into()
+                } else {
+                    row.persons.to_string()
+                },
                 String::new(),
             ]);
             if row.assumed {

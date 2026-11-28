@@ -18,8 +18,7 @@ pub const TOO_FEW: &str = "Alanla bölmek için en az üç köşeli, alanı olan
 pub const NO_EDGE: &str = "Bu alanda böyle bir kenar yok.";
 pub const ZERO_EDGE: &str = "Referans kenarın uzunluğu yok; başka bir kenar seçin.";
 pub const TARGET: &str = "Ayrılacak alan sıfırdan büyük ve alanın tamamından küçük olmalı.";
-pub const MORE_PIECES: &str =
-    "Bu alanı veren kesim çizgisi alanı ikiden çok parçaya böler; başka bir kenar seçin ya da Alan böl ile elle kesin.";
+pub const MORE_PIECES: &str = "Bu alanı veren kesim çizgisi alanı ikiden çok parçaya böler; başka bir kenar seçin ya da Alan böl ile elle kesin.";
 
 /// The cut: its two ends on the boundary (in the edge's direction), how far it lies from the edge, and the two
 /// pieces' areas, the one beside the edge first.
@@ -64,7 +63,11 @@ fn below(ring: &[Local], d: f64) -> f64 {
             out.push(crossing(p, q, d));
         }
     }
-    if out.len() < 3 { 0.0 } else { signed_area(&out).abs() }
+    if out.len() < 3 {
+        0.0
+    } else {
+        signed_area(&out).abs()
+    }
 }
 
 /// Where the edge p → q meets the line h = d.
@@ -91,7 +94,10 @@ fn crossings(ring: &[Local], d: f64) -> Vec<f64> {
 
 /// The cut's length at height t: the inside stretches of the line h = t.
 fn width(ring: &[Local], t: f64) -> f64 {
-    crossings(ring, t).chunks(2).map(|c| if c.len() == 2 { c[1] - c[0] } else { 0.0 }).sum()
+    crossings(ring, t)
+        .chunks(2)
+        .map(|c| if c.len() == 2 { c[1] - c[0] } else { 0.0 })
+        .sum()
 }
 
 /// The cut parallel to edge `edge` (from vertex `edge` to the next) that leaves `target` square metres beside it.
@@ -115,14 +121,24 @@ pub fn cut_for_area(ring: &[Vec2], edge: usize, target: f64) -> Result<Cut, &'st
     }
     let u = Vec2::new((p1.x - p0.x) / length, (p1.y - p0.y) / length);
     // The ring's turn, worked about the edge's first vertex.
-    let around: Vec<Local> = pts.iter().map(|v| Local { s: v.x - p0.x, h: v.y - p0.y }).collect();
+    let around: Vec<Local> = pts
+        .iter()
+        .map(|v| Local {
+            s: v.x - p0.x,
+            h: v.y - p0.y,
+        })
+        .collect();
     let turn = signed_area(&around);
     if turn == 0.0 || !turn.is_finite() {
         return Err(TOO_FEW);
     }
     // Into the area: the left of the edge on a counter-clockwise ring, its right on a clockwise one. The frame is then
     // counter-clockwise either way.
-    let normal = if turn > 0.0 { Vec2::new(-u.y, u.x) } else { Vec2::new(u.y, -u.x) };
+    let normal = if turn > 0.0 {
+        Vec2::new(-u.y, u.x)
+    } else {
+        Vec2::new(u.y, -u.x)
+    };
     let local: Vec<Local> = pts
         .iter()
         .map(|v| {
@@ -149,12 +165,19 @@ pub fn cut_for_area(ring: &[Vec2], edge: usize, target: f64) -> Result<Cut, &'st
             continue;
         }
         let span = hi - lo;
-        let (w1, w2) = (width(&local, lo + span / 3.0), width(&local, lo + 2.0 * span / 3.0));
+        let (w1, w2) = (
+            width(&local, lo + span / 3.0),
+            width(&local, lo + 2.0 * span / 3.0),
+        );
         let k = (w2 - w1) * 3.0 / span;
         let w0 = w1 - k * span / 3.0;
         let c = target - a_lo;
         let root = crate::jsmath::js_max(w0 * w0 + 2.0 * k * c, 0.0).sqrt();
-        let x = if w0 + root > 0.0 { 2.0 * c / (w0 + root) } else { 0.0 };
+        let x = if w0 + root > 0.0 {
+            2.0 * c / (w0 + root)
+        } else {
+            0.0
+        };
         d = Some(lo + x.clamp(0.0, span));
         break;
     }

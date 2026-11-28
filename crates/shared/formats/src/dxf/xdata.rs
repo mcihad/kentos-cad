@@ -376,7 +376,9 @@ pub fn groups(meta: &Meta) -> Vec<(i32, String)> {
         item("tablestyle", &mut out, |o| string(t, o));
     }
     if let Some(h) = meta.table_style_ref {
-        item("tablestyleref", &mut out, |o| o.push((1005, format!("{h:X}"))));
+        item("tablestyleref", &mut out, |o| {
+            o.push((1005, format!("{h:X}")))
+        });
     }
     if let Some(l) = &meta.layout {
         item("layout", &mut out, |o| string(l, o));

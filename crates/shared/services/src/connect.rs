@@ -636,7 +636,11 @@ impl Connecting {
             self.collections = list
                 .iter()
                 .filter_map(|c| {
-                    let title = if c.title.is_empty() { c.id.clone() } else { c.title.clone() };
+                    let title = if c.title.is_empty() {
+                        c.id.clone()
+                    } else {
+                        c.title.clone()
+                    };
                     c.tiles.clone().map(|t| (title, t))
                 })
                 .collect();
@@ -1189,7 +1193,9 @@ mod collection_tests {
     /// only: Park zemini and Bisiklet yolu both offered; a collection whose list cannot be read is left and named.
     #[test]
     fn every_collection_s_tile_sets_are_offered() {
-        let (mut c, first) = Connecting::start(ServiceKind::OgcTiles, "https://ornek.org/ogc/collections").expect("starts");
+        let (mut c, first) =
+            Connecting::start(ServiceKind::OgcTiles, "https://ornek.org/ogc/collections")
+                .expect("starts");
         assert!(first.is_some());
         let collections = serde_json::json!({ "collections": [
             { "id": "park", "title": "Park zemini", "links": [{ "rel": "http://www.opengis.net/def/rel/ogc/1.0/tilesets-map",
@@ -1201,7 +1207,11 @@ mod collection_tests {
         ]})
         .to_string();
         let mut next = c.answer(&collections).expect("collections read");
-        let mut answers = vec![tile_sets("WebMercatorQuad", "park"), tile_sets("WebMercatorQuad", "yol"), "<html>".to_owned()];
+        let mut answers = vec![
+            tile_sets("WebMercatorQuad", "park"),
+            tile_sets("WebMercatorQuad", "yol"),
+            "<html>".to_owned(),
+        ];
         answers.reverse();
         while next.is_some() {
             let Some(body) = answers.pop() else { break };
@@ -1209,7 +1219,14 @@ mod collection_tests {
         }
         let offer = c.offer().expect("an offer");
         let titles: Vec<&str> = offer.items.iter().map(|i| i.title.as_str()).collect();
-        assert_eq!(titles, ["Park zemini — WebMercatorQuad", "Bisiklet yolu — WebMercatorQuad"], "{titles:?}");
+        assert_eq!(
+            titles,
+            [
+                "Park zemini — WebMercatorQuad",
+                "Bisiklet yolu — WebMercatorQuad"
+            ],
+            "{titles:?}"
+        );
         assert_eq!(offer.pickable, 2);
         assert_eq!(c.collections_failed(), ["Bozuk"]);
     }

@@ -1,8 +1,8 @@
 //! Independent preflight matrix through the actual native command, without output directories.
-use std::{fs, path::Path};
 use kentos_commands::{CallEnvelope, CallOp, CommandResult, SheetsPreflighted};
 use kentos_domain::Document;
-use serde_json::{json, Value};
+use serde_json::{Value, json};
+use std::{fs, path::Path};
 const FX: &str = include_str!("../../../../../fixtures/commands/v1/file.preflight.sheets.json");
 fn replace(v: &Value, work: &Path) -> Value {
     match v {
@@ -23,7 +23,11 @@ fn source(fx: &Value, c: &Value, root: &Path) -> Document {
         for f in files {
             let to = root.join(f["to"].as_str().unwrap());
             fs::create_dir_all(to.parent().unwrap()).unwrap();
-            if let Some(file)=f["fixture"].as_str(){fs::copy(fixture.join(file),to).unwrap();}else{fs::write(to,f["text"].as_str().unwrap().as_bytes()).unwrap();}
+            if let Some(file) = f["fixture"].as_str() {
+                fs::copy(fixture.join(file), to).unwrap();
+            } else {
+                fs::write(to, f["text"].as_str().unwrap().as_bytes()).unwrap();
+            }
         }
     }
     let mut model = fx["model"].clone();
@@ -43,7 +47,10 @@ fn source(fx: &Value, c: &Value, root: &Path) -> Document {
         model["layers"][1]["service"] =
             json!({"kind":"xyz","url":"https://invalid.example/{z}/{x}/{y}.png"});
     }
-    if c["fontMissing"]==true {model["settings"]["textStyles"]=json!([{"id":"font-style","name":"Özgün","font":"barlow","fontFile":"romans.shx"}]);}
+    if c["fontMissing"] == true {
+        model["settings"]["textStyles"] =
+            json!([{"id":"font-style","name":"Özgün","font":"barlow","fontFile":"romans.shx"}]);
+    }
     let mut doc = Document::from_snapshot(serde_json::from_value(model).unwrap()).unwrap();
     if c["noBook"] == true {
         return doc;
@@ -61,7 +68,9 @@ fn source(fx: &Value, c: &Value, root: &Path) -> Document {
             .unwrap()
             .extend(patch.clone());
     }
-    if let Some(center)=c.get("center"){book["sheets"][0]["items"][0]["kind"]["view"]["center"]=center.clone();}
+    if let Some(center) = c.get("center") {
+        book["sheets"][0]["items"][0]["kind"]["view"]["center"] = center.clone();
+    }
     if let Some(scale) = c.get("scale") {
         book["sheets"][0]["items"][0]["kind"]["view"]["scale"] = scale.clone();
     }
@@ -74,7 +83,10 @@ fn source(fx: &Value, c: &Value, root: &Path) -> Document {
             .unwrap()
             .push(item.clone());
     }
-    if c["png"]==true{book["assets"]=json!([c["assetMeta"]]);book["sheets"][0]["items"].as_array_mut().unwrap().push(json!({"id":"png","name":"PNG","frame":c["pictureFrame"],"kind":{"type":"picture","asset":c["assetMeta"]["sha256"],"fit":c["fit"]}}));}
+    if c["png"] == true {
+        book["assets"] = json!([c["assetMeta"]]);
+        book["sheets"][0]["items"].as_array_mut().unwrap().push(json!({"id":"png","name":"PNG","frame":c["pictureFrame"],"kind":{"type":"picture","asset":c["assetMeta"]["sha256"],"fit":c["fit"]}}));
+    }
     if c.get("svg").is_some() {
         book["assets"] = json!([c["svgMeta"]]);
         book["sheets"][0]["items"].as_array_mut().unwrap().push(json!({"id":"svg","name":"SVG","frame":{"left":10000,"top":10000,"width":10000,"height":10000},"kind":{"type":"picture","asset":c["svgMeta"]["sha256"],"fit":"contain"}}));
@@ -82,7 +94,9 @@ fn source(fx: &Value, c: &Value, root: &Path) -> Document {
     let book: kentos_sheet::SheetBook = serde_json::from_value(book).unwrap();
     doc.set_sheets(
         kentos_sheet::project::project_sheets(&book, |sha| {
-            if c["assetMeta"]["sha256"].as_str()==Some(sha){Some(fs::read(fixture.join("interaction/v1/logo.png")).unwrap())}else if c["svgMeta"]["sha256"].as_str() == Some(sha) {
+            if c["assetMeta"]["sha256"].as_str() == Some(sha) {
+                Some(fs::read(fixture.join("interaction/v1/logo.png")).unwrap())
+            } else if c["svgMeta"]["sha256"].as_str() == Some(sha) {
                 Some(c["svg"].as_str().unwrap().as_bytes().to_vec())
             } else {
                 None

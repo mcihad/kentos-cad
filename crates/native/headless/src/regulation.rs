@@ -12,7 +12,8 @@
 //!   written as zones of their rooms; one that does not answer writes the file without them and says so.
 
 use kentos_commands::{
-    ArchAuditCheck, ArchAuditExceptionView, ArchAuditFinding, ArchAuditState, CommandResult, CommandWarning, Vec2,
+    ArchAuditCheck, ArchAuditExceptionView, ArchAuditFinding, ArchAuditState, CommandResult,
+    CommandWarning, Vec2,
 };
 use kentos_domain::Document;
 use kentos_extensions::audit_facts::ProjectAuditFacts;
@@ -61,11 +62,14 @@ pub fn compartments(doc: &Document, command: &str, input: &mut Value) -> Option<
                 .map(|list| list.iter().map(|c| json!({"rooms": c.get("rooms").cloned().unwrap_or_else(|| json!([]))})).collect())
                 .unwrap_or_default();
             input["compartments"] = Value::Array(rooms);
-            answer.get("note").and_then(Value::as_str).map(|note| CommandWarning {
-                code: kentos_commands::codes::EXPORT_LOSSES.into(),
-                message: format!("Yangın kompartımanları IFC'ye yazılmadı: {note}"),
-                path: None,
-            })
+            answer
+                .get("note")
+                .and_then(Value::as_str)
+                .map(|note| CommandWarning {
+                    code: kentos_commands::codes::EXPORT_LOSSES.into(),
+                    message: format!("Yangın kompartımanları IFC'ye yazılmadı: {note}"),
+                    path: None,
+                })
         }
         Err(why) => {
             input["compartments"] = json!([]);
@@ -149,7 +153,13 @@ fn findings(answer: &Value) -> Vec<ArchAuditFinding> {
     for f in answer["findings"].as_array().into_iter().flatten() {
         let text = |k: &str| f[k].as_str().unwrap_or_default().to_owned();
         let code = text("code");
-        let uids: Vec<String> = f["uids"].as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_owned).collect();
+        let uids: Vec<String> = f["uids"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .map(str::to_owned)
+            .collect();
         let mut key = format!("{code}:{}", uids.join(","));
         if uids.is_empty() {
             key.push(':');
@@ -166,7 +176,12 @@ fn findings(answer: &Value) -> Vec<ArchAuditFinding> {
         // Where it is and its fix as one step, as the desktop's Denetim reads them (docs/adr/8159).
         let at = f["at"]
             .as_array()
-            .and_then(|a| Some(Vec2 { x: a.first()?.as_f64()?, y: a.get(1)?.as_f64()? }))
+            .and_then(|a| {
+                Some(Vec2 {
+                    x: a.first()?.as_f64()?,
+                    y: a.get(1)?.as_f64()?,
+                })
+            })
             .unwrap_or(Vec2 { x: 0.0, y: 0.0 });
         let fix = Some(&f["fix"]).filter(|x| !x.is_null()).and_then(|x| {
             Some(kentos_commands::ArchAuditFix {
@@ -207,9 +222,13 @@ mod tests {
     #[test]
     fn only_the_regulation_group_of_the_whole_drawing_asks() {
         assert!(asks(&json!({"checks": ["regulation"]})));
-        assert!(asks(&json!({"checks": ["walls", "regulation"], "within": null})));
+        assert!(asks(
+            &json!({"checks": ["walls", "regulation"], "within": null})
+        ));
         assert!(!asks(&json!({"checks": ["walls"]})));
         assert!(!asks(&json!({})));
-        assert!(!asks(&json!({"checks": ["regulation"], "within": {"levels": ["k1"]}})));
+        assert!(!asks(
+            &json!({"checks": ["regulation"], "within": {"levels": ["k1"]}})
+        ));
     }
 }

@@ -58,4 +58,3 @@ pub fn schedule(doc: &Document, kind: ScheduleKind, slots: &[Slot], f: &Format) 
         .collect();
     rules::schedule(kind, &objects, &units(f))
 }
-

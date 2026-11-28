@@ -4,7 +4,8 @@
 use super::*;
 use crate::exchange::{Window, sheet_publish::Event as E};
 
-const CASES: &str = include_str!("../../../../fixtures/commands/v1/file.publish.sheets.update.json");
+const CASES: &str =
+    include_str!("../../../../fixtures/commands/v1/file.publish.sheets.update.json");
 
 fn parcel_set_app(theme: &str, text: u32) -> App {
     let fx: serde_json::Value = serde_json::from_str(CASES).unwrap();

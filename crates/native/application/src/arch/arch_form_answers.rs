@@ -50,14 +50,20 @@ fn check(doc: &Document, input: &ArchFormAnswers) -> Result<Vec<FormAnswer>, Sto
                     let field = if c.note.is_some() { "note" } else { "basis" };
                     return Err(fail(
                         codes::INVALID_INPUT,
-                        format!("{}. sorunun cevabı kaldırılırken not ya da dayanak verilemez; onları bir cevapla verin.", c.no),
+                        format!(
+                            "{}. sorunun cevabı kaldırılırken not ya da dayanak verilemez; onları bir cevapla verin.",
+                            c.no
+                        ),
                         format!("answers[{i}].{field}"),
                     ));
                 }
                 if !(1..=21).contains(&c.no) {
                     return Err(fail(
                         codes::INVALID_INPUT,
-                        format!("Sorunun numarası 1 ile 21 arasında olmalı (EK-9 Tablo 9.1); {} verildi.", c.no),
+                        format!(
+                            "Sorunun numarası 1 ile 21 arasında olmalı (EK-9 Tablo 9.1); {} verildi.",
+                            c.no
+                        ),
                         format!("answers[{i}].no"),
                     ));
                 }
@@ -73,9 +79,18 @@ fn check(doc: &Document, input: &ArchFormAnswers) -> Result<Vec<FormAnswer>, Sto
                     Some(b) => b.trim().to_owned(),
                     None => held.map(|a| a.basis.clone()).unwrap_or_default(),
                 };
-                let answer = FormAnswer { no: c.no, yes, note, basis };
+                let answer = FormAnswer {
+                    no: c.no,
+                    yes,
+                    note,
+                    basis,
+                };
                 if let Some((field, why)) = answer.problem() {
-                    return Err(fail(codes::INVALID_INPUT, why, format!("answers[{i}].{field}")));
+                    return Err(fail(
+                        codes::INVALID_INPUT,
+                        why,
+                        format!("answers[{i}].{field}"),
+                    ));
                 }
                 next.retain(|a| a.no != c.no);
                 next.push(answer);
@@ -89,13 +104,19 @@ fn check(doc: &Document, input: &ArchFormAnswers) -> Result<Vec<FormAnswer>, Sto
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ArchFormAnswers) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What it would write, nothing written.
-pub fn plan(cx: &ExecutionContext<'_>, input: &ArchFormAnswers) -> CommandResult<ArchFormAnswersDone> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &ArchFormAnswers,
+) -> CommandResult<ArchFormAnswersDone> {
     plan_in(cx.doc, input)
 }
 
@@ -103,14 +124,20 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ArchFormAnswers) -> CommandResult
 pub fn plan_in(doc: &Document, input: &ArchFormAnswers) -> CommandResult<ArchFormAnswersDone> {
     match check(doc, input) {
         Ok(answers) => CommandResult::Completed {
-            output: ArchFormAnswersDone { answers, revision: doc.revision().to_string() },
+            output: ArchFormAnswersDone {
+                answers,
+                revision: doc.revision().to_string(),
+            },
             warnings: Vec::new(),
         },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ArchFormAnswers) -> CommandResult<ArchFormAnswersDone> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ArchFormAnswers,
+) -> CommandResult<ArchFormAnswersDone> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_FORM_ANSWER,
@@ -120,17 +147,25 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ArchFormAnswers) -> Command
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: ArchFormAnswers) -> CommandResult<ArchFormAnswersDone> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ArchFormAnswers,
+) -> CommandResult<ArchFormAnswersDone> {
     let answers = match check(cx.doc, &input) {
         Ok(next) => next,
         Err(stop) => return stop.into(),
     };
     let doc = &mut *cx.doc;
     if let Err(e) = doc.set_form_answers(answers.clone(), STEP) {
-        return CommandResult::Failed { error: error(codes::INVALID_INPUT, e.0, Some("answers".into())) };
+        return CommandResult::Failed {
+            error: error(codes::INVALID_INPUT, e.0, Some("answers".into())),
+        };
     }
     CommandResult::Completed {
-        output: ArchFormAnswersDone { answers, revision: doc.revision().to_string() },
+        output: ArchFormAnswersDone {
+            answers,
+            revision: doc.revision().to_string(),
+        },
         warnings: Vec::new(),
     }
 }

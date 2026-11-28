@@ -17,7 +17,8 @@ pub(super) fn section(doc: &Document, slot: Slot) -> Option<Section> {
     let (mark_uid, mark) = match e {
         Entity::Insert(i) => doc.model.entities_with_uids().find_map(|(u, x)| match x {
             Entity::ViewMark(v)
-                if drawn(v.mark.form) && kentos_native_application::sections::block_id(u) == i.block =>
+                if drawn(v.mark.form)
+                    && kentos_native_application::sections::block_id(u) == i.block =>
             {
                 Some((u, v.mark.clone()))
             }
@@ -44,7 +45,9 @@ pub(super) fn section(doc: &Document, slot: Slot) -> Option<Section> {
     let words = match state {
         BuildingSectionState::Current => "Güncel".to_owned(),
         BuildingSectionState::Stale => "Eski: plan değişti, yeniden çizin".to_owned(),
-        BuildingSectionState::NotDrawn if facade => "Çıkarılmadı: Görünüş çıkar ile çizin".to_owned(),
+        BuildingSectionState::NotDrawn if facade => {
+            "Çıkarılmadı: Görünüş çıkar ile çizin".to_owned()
+        }
         BuildingSectionState::NotDrawn => "Çıkarılmadı: Kesit çıkar ile çizin".to_owned(),
         BuildingSectionState::Gone if facade => "Kaynağı yok: görünüş işareti silinmiş".to_owned(),
         BuildingSectionState::Gone => "Kaynağı yok: kesit işareti silinmiş".to_owned(),

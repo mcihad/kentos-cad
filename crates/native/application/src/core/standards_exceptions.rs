@@ -6,8 +6,9 @@
 //! `fixtures/commands/v1/cad.standards.exceptions.json`.
 
 use kentos_commands::{
-    CommandResult, ProjectSettings, StandardException, StandardExceptionOperation, StandardIssueState,
-    StandardsExceptions, StandardsExceptionsEdited, standard_exception_reason_problem, MAX_STANDARD_EXCEPTION_NAME, MAX_STANDARD_EXCEPTION_REASON,
+    CommandResult, MAX_STANDARD_EXCEPTION_NAME, MAX_STANDARD_EXCEPTION_REASON, ProjectSettings,
+    StandardException, StandardExceptionOperation, StandardIssueState, StandardsExceptions,
+    StandardsExceptionsEdited, standard_exception_reason_problem,
 };
 use kentos_domain::Document;
 
@@ -44,7 +45,11 @@ fn check_input(input: &StandardsExceptions) -> Result<(), Stop> {
         }
     }
     let withdraw = input.operation == StandardExceptionOperation::Withdraw;
-    for (field, given) in [("reason", &input.reason), ("by", &input.by), ("at", &input.at)] {
+    for (field, given) in [
+        ("reason", &input.reason),
+        ("by", &input.by),
+        ("at", &input.at),
+    ] {
         if withdraw && given.is_some() {
             return Err(fail(
                 codes::INVALID_INPUT,
@@ -55,11 +60,15 @@ fn check_input(input: &StandardsExceptions) -> Result<(), Stop> {
     }
     for (field, given) in [("by", &input.by), ("at", &input.at)] {
         if let Some(v) = given
-            && (v.trim().is_empty() || v.chars().count() > MAX_STANDARD_EXCEPTION_NAME || v.chars().any(char::is_control))
+            && (v.trim().is_empty()
+                || v.chars().count() > MAX_STANDARD_EXCEPTION_NAME
+                || v.chars().any(char::is_control))
         {
             return Err(fail(
                 codes::INVALID_INPUT,
-                format!("{field} boş, satır sonlu ya da {MAX_STANDARD_EXCEPTION_NAME} karakterden uzun olamaz."),
+                format!(
+                    "{field} boş, satır sonlu ya da {MAX_STANDARD_EXCEPTION_NAME} karakterden uzun olamaz."
+                ),
                 field,
             ));
         }
@@ -93,7 +102,13 @@ fn check_input(input: &StandardsExceptions) -> Result<(), Stop> {
 fn check(doc: &Document, input: &StandardsExceptions) -> Result<Checked, Stop> {
     check_input(input)?;
     let standard = standard_of(input.name.as_deref(), input.standard.as_ref())?;
-    let report = checked_report(doc, input.name.as_deref(), input.standard.as_ref(), input.resources.as_ref(), input.origin.as_ref())?;
+    let report = checked_report(
+        doc,
+        input.name.as_deref(),
+        input.standard.as_ref(),
+        input.resources.as_ref(),
+        input.origin.as_ref(),
+    )?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     let origin = source_of(&standard, input.origin.as_ref());
     let mut exceptions = doc.settings().standard_exceptions.clone();
@@ -105,7 +120,10 @@ fn check(doc: &Document, input: &StandardsExceptions) -> Result<Checked, Stop> {
             .find(|f| f.kind == key.kind && f.subject == key.subject && f.layer == key.layer);
         let kind = kind_name(key.kind);
         let ours = |e: &StandardException| {
-            e.kind == kind && e.subject == key.subject && e.layer == key.layer && e.standard == origin.id
+            e.kind == kind
+                && e.subject == key.subject
+                && e.layer == key.layer
+                && e.standard == origin.id
         };
         match input.operation {
             StandardExceptionOperation::Accept => {
@@ -156,7 +174,10 @@ fn check(doc: &Document, input: &StandardsExceptions) -> Result<Checked, Stop> {
             }
         }
     }
-    Ok(Checked { exceptions, changed })
+    Ok(Checked {
+        exceptions,
+        changed,
+    })
 }
 
 fn edited(doc: &Document, checked: &Checked) -> StandardsExceptionsEdited {
@@ -169,19 +190,31 @@ fn edited(doc: &Document, checked: &Checked) -> StandardsExceptionsEdited {
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &StandardsExceptions) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, input: &StandardsExceptions) -> CommandResult<StandardsExceptionsEdited> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &StandardsExceptions,
+) -> CommandResult<StandardsExceptionsEdited> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: edited(cx.doc, &c), warnings: Vec::new() },
+        Ok(c) => CommandResult::Completed {
+            output: edited(cx.doc, &c),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: StandardsExceptions) -> CommandResult<StandardsExceptionsEdited> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: StandardsExceptions,
+) -> CommandResult<StandardsExceptionsEdited> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_STANDARDS_EXCEPTIONS,
@@ -192,14 +225,23 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: StandardsExceptions) -> Com
 }
 
 /// [`execute`]'s write; `call::recorded` runs it as one step of the document (docs/adr/0253 §1, §3).
-fn write_execute(cx: &mut ExecutionContext<'_>, input: StandardsExceptions) -> CommandResult<StandardsExceptionsEdited> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: StandardsExceptions,
+) -> CommandResult<StandardsExceptionsEdited> {
     let checked = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
     if checked.changed > 0 {
         let doc = &mut *cx.doc;
-        doc.set_settings(ProjectSettings { standard_exceptions: checked.exceptions.clone(), ..doc.settings().clone() });
+        doc.set_settings(ProjectSettings {
+            standard_exceptions: checked.exceptions.clone(),
+            ..doc.settings().clone()
+        });
     }
-    CommandResult::Completed { output: edited(cx.doc, &checked), warnings: Vec::new() }
+    CommandResult::Completed {
+        output: edited(cx.doc, &checked),
+        warnings: Vec::new(),
+    }
 }

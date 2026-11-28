@@ -38,12 +38,17 @@ fn find_last(hay: &[u8], needle: &[u8]) -> Option<usize> {
 }
 
 fn find_from(hay: &[u8], needle: &[u8], from: usize) -> Option<usize> {
-    hay.get(from..)?.windows(needle.len()).position(|w| w == needle).map(|i| i + from)
+    hay.get(from..)?
+        .windows(needle.len())
+        .position(|w| w == needle)
+        .map(|i| i + from)
 }
 
 impl<'a> PdfFile<'a> {
     pub fn open(bytes: &'a [u8]) -> Result<Self, String> {
-        if !bytes.starts_with(b"%PDF-") && find_from(&bytes[..bytes.len().min(1024)], b"%PDF-", 0).is_none() {
+        if !bytes.starts_with(b"%PDF-")
+            && find_from(&bytes[..bytes.len().min(1024)], b"%PDF-", 0).is_none()
+        {
             return Err("dosya bir PDF değil (%PDF- başlığı yok)".into());
         }
         let mut file = PdfFile {
@@ -69,7 +74,8 @@ impl<'a> PdfFile<'a> {
 
     fn read_xrefs(&mut self) -> Result<(), String> {
         let tail_from = self.bytes.len().saturating_sub(2048);
-        let at = find_last(&self.bytes[tail_from..], b"startxref").ok_or("startxref yok")? + tail_from;
+        let at =
+            find_last(&self.bytes[tail_from..], b"startxref").ok_or("startxref yok")? + tail_from;
         let mut lx = Lexer::new(self.bytes, at + 9);
         let Some(Token::Obj(Obj::Num(n))) = lx.token()? else {
             return Err("startxref'ten sonra sayı yok".into());
@@ -86,7 +92,17 @@ impl<'a> PdfFile<'a> {
                 let _ = self.read_section(*x as usize);
             }
             for (k, v) in &trailer {
-                if !matches!(k.as_str(), "Prev" | "XRefStm" | "Type" | "W" | "Index" | "Filter" | "DecodeParms" | "Length") {
+                if !matches!(
+                    k.as_str(),
+                    "Prev"
+                        | "XRefStm"
+                        | "Type"
+                        | "W"
+                        | "Index"
+                        | "Filter"
+                        | "DecodeParms"
+                        | "Length"
+                ) {
                     self.trailer.entry(k.clone()).or_insert_with(|| v.clone());
                 }
             }
@@ -110,7 +126,9 @@ impl<'a> PdfFile<'a> {
                             return Err("xref alt bölümünün sayısı yok".into());
                         };
                         for i in 0..count as u32 {
-                            let Some(Token::Obj(Obj::Num(o))) = lx.token()? else { return Err("xref satırı".into()) };
+                            let Some(Token::Obj(Obj::Num(o))) = lx.token()? else {
+                                return Err("xref satırı".into());
+                            };
                             let _ = lx.token()?;
                             let kind = lx.token()?;
                             let num = start as u32 + i;
@@ -156,7 +174,9 @@ impl<'a> PdfFile<'a> {
                 if n == 0 {
                     return default;
                 }
-                row[from..from + n].iter().fold(0usize, |a, &b| a << 8 | usize::from(b))
+                row[from..from + n]
+                    .iter()
+                    .fold(0usize, |a, &b| a << 8 | usize::from(b))
             };
             let mut rows = data.chunks_exact(width.max(1));
             for pair in index.chunks(2) {
@@ -172,7 +192,9 @@ impl<'a> PdfFile<'a> {
                             self.entries.entry(num).or_insert(Entry::At(a));
                         }
                         2 => {
-                            self.entries.entry(num).or_insert(Entry::InStream(a as u32, b as u32));
+                            self.entries
+                                .entry(num)
+                                .or_insert(Entry::InStream(a as u32, b as u32));
                         }
                         _ => {}
                     }
@@ -248,7 +270,9 @@ impl<'a> PdfFile<'a> {
     /// The indirect object at a byte: its number and the object (a stream with its raw bytes).
     fn indirect_at(&self, off: usize) -> Result<(u32, Obj), String> {
         let mut lx = Lexer::new(self.bytes, off);
-        let Some(Token::Obj(Obj::Num(n))) = lx.token()? else { return Err(format!("{off}. baytta nesne yok")) };
+        let Some(Token::Obj(Obj::Num(n))) = lx.token()? else {
+            return Err(format!("{off}. baytta nesne yok"));
+        };
         let _ = lx.token()?;
         match lx.token()? {
             Some(Token::Word(w)) if w == "obj" => {}
@@ -269,14 +293,20 @@ impl<'a> PdfFile<'a> {
             }
             let declared = match d.get("Length") {
                 Some(Obj::Num(l)) => Some(*l as usize),
-                Some(Obj::Ref(r, _)) if *r != n as u32 => self.get(*r).ok().and_then(|o| o.num()).map(|l| l as usize),
+                Some(Obj::Ref(r, _)) if *r != n as u32 => {
+                    self.get(*r).ok().and_then(|o| o.num()).map(|l| l as usize)
+                }
                 _ => None,
             };
             let end = match declared {
                 Some(l)
                     if start + l <= self.bytes.len()
-                        && find_from(&self.bytes[start + l..(start + l + 32).min(self.bytes.len())], b"endstream", 0)
-                            .is_some() =>
+                        && find_from(
+                            &self.bytes[start + l..(start + l + 32).min(self.bytes.len())],
+                            b"endstream",
+                            0,
+                        )
+                        .is_some() =>
                 {
                     start + l
                 }
@@ -292,7 +322,10 @@ impl<'a> PdfFile<'a> {
                     e2
                 }
             };
-            return Ok((n as u32, Obj::Stream(d.clone(), self.bytes[start..end].to_vec())));
+            return Ok((
+                n as u32,
+                Obj::Stream(d.clone(), self.bytes[start..end].to_vec()),
+            ));
         }
         let _ = save;
         Ok((n as u32, obj))
@@ -307,7 +340,12 @@ impl<'a> PdfFile<'a> {
                 // A cross-reference pointing elsewhere (a file edited by hand, a broken writer): the object where the
                 // file's own text has it.
                 _ => {
-                    let at = self.scanned.borrow_mut().get_or_insert_with(|| self.scan()).get(&n).copied();
+                    let at = self
+                        .scanned
+                        .borrow_mut()
+                        .get_or_insert_with(|| self.scan())
+                        .get(&n)
+                        .copied();
                     let Some(at) = at.filter(|a| *a != off) else {
                         return Err(format!("{n}. nesne yerinde değil"));
                     };
@@ -346,7 +384,11 @@ impl<'a> PdfFile<'a> {
         let mut lx = Lexer::new(&data, 0);
         let mut heads = Vec::with_capacity(count);
         for _ in 0..count {
-            let (Some(Token::Obj(Obj::Num(k))), Some(Token::Obj(Obj::Num(o)))) = (lx.token()?, lx.token()?) else { break };
+            let (Some(Token::Obj(Obj::Num(k))), Some(Token::Obj(Obj::Num(o)))) =
+                (lx.token()?, lx.token()?)
+            else {
+                break;
+            };
             heads.push((k as u32, o as usize));
         }
         let mut out = Vec::with_capacity(heads.len());
@@ -373,7 +415,9 @@ impl<'a> PdfFile<'a> {
 
     /// A dictionary with its values' references followed one level (for a stream's filters and lengths).
     pub fn resolved_dict(&self, d: &Dict) -> Dict {
-        d.iter().map(|(k, v)| (k.clone(), self.resolve(v))).collect()
+        d.iter()
+            .map(|(k, v)| (k.clone(), self.resolve(v)))
+            .collect()
     }
 
     /// A stream's bytes decoded; none for another object.

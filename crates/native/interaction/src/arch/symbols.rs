@@ -11,7 +11,8 @@
 //!   Yenile (Y), when the drawing has a legend: made again in its place, nothing placed. The tool leaves after it.
 
 use kentos_commands::{
-    BlockDefinition, CommandResult, Entity, LegendsMaterials, NorthCreate, NorthDirection, MAX_NORTH_SIZE, NORTH_SIZE,
+    BlockDefinition, CommandResult, Entity, LegendsMaterials, MAX_NORTH_SIZE, NORTH_SIZE,
+    NorthCreate, NorthDirection,
 };
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
 use kentos_native_application::{ExecutionContext, legends, north};
@@ -45,7 +46,11 @@ pub(crate) fn definition_ghost(def: &BlockDefinition, insert: &Entity) -> Vec<St
         if matches!(e, Entity::Text(_)) {
             continue;
         }
-        let placed = kentos_geometry_core::block::place(&kentos_native_application::geometry::shape(e), &m, similar);
+        let placed = kentos_geometry_core::block::place(
+            &kentos_native_application::geometry::shape(e),
+            &m,
+            similar,
+        );
         kentos_geometry_core::store::tools::outline_paths(&placed, &mut paths);
     }
     crate::modify::ghosts(&paths).0
@@ -147,8 +152,12 @@ impl NorthArrow {
     fn see(&mut self, at: Option<Vec2>, cx: &Context<'_>) {
         self.ghost.clear();
         let Some(at) = at else { return };
-        if let CommandResult::Completed { output, .. } = north::plan_in(cx.doc, &self.request(at, cx)) {
-            let Entity::Insert(i) = &output.insert else { return };
+        if let CommandResult::Completed { output, .. } =
+            north::plan_in(cx.doc, &self.request(at, cx))
+        {
+            let Entity::Insert(i) = &output.insert else {
+                return;
+            };
             let def = output.block.or_else(|| cx.doc.block(i.block).cloned());
             if let Some(def) = def {
                 self.ghost = definition_ghost(&def, &output.insert);
@@ -224,7 +233,10 @@ impl Tool for NorthArrow {
 
     fn prompt(&self) -> Prompt {
         match self.ask {
-            Some(Ask::Angle) => Prompt::new(NORTH_LABEL, "kuzeyin açısını derece olarak yazın (saat yönünün tersine)"),
+            Some(Ask::Angle) => Prompt::new(
+                NORTH_LABEL,
+                "kuzeyin açısını derece olarak yazın (saat yönünün tersine)",
+            ),
             Some(_) => Prompt::new(NORTH_LABEL, "okun kâğıttaki enini milimetre olarak yazın"),
             None => {
                 let way = match self.way {
@@ -261,7 +273,11 @@ impl Tool for NorthArrow {
     }
 
     fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
-        if key == "Y" { self.way_choices() } else { Vec::new() }
+        if key == "Y" {
+            self.way_choices()
+        } else {
+            Vec::new()
+        }
     }
 
     fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
@@ -271,14 +287,25 @@ impl Tool for NorthArrow {
     fn settings(&self, _f: &Format) -> Vec<Setting> {
         let mut out = vec![Setting::choice("Y", "Yön", self.way_choices())];
         if self.way == Way::Angle {
-            out.push(Setting::text("A", "Açı", format!("{}°", js_number(self.degrees))));
+            out.push(Setting::text(
+                "A",
+                "Açı",
+                format!("{}°", js_number(self.degrees)),
+            ));
         }
-        out.push(Setting::text("B", "Boyut", format!("{} mm", js_number(self.size))));
+        out.push(Setting::text(
+            "B",
+            "Boyut",
+            format!("{} mm", js_number(self.size)),
+        ));
         out
     }
 
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
-        let text = js_trim(value).trim_end_matches(['°', ' ']).trim_end_matches("mm").trim();
+        let text = js_trim(value)
+            .trim_end_matches(['°', ' '])
+            .trim_end_matches("mm")
+            .trim();
         self.see_drawing(cx);
         match key {
             "Y" => {
@@ -307,7 +334,10 @@ impl Tool for NorthArrow {
             "B" => match parse_number(text) {
                 Some(s) if s > 0.0 && s <= MAX_NORTH_SIZE => self.size = s,
                 _ => {
-                    cx.say(Level::Warn, "Boyu 0'dan büyük, en çok 200 mm bir sayıyla yazın.");
+                    cx.say(
+                        Level::Warn,
+                        "Boyu 0'dan büyük, en çok 200 mm bir sayıyla yazın.",
+                    );
                     return false;
                 }
             },
@@ -422,7 +452,8 @@ impl MaterialLegend {
         self.has = cx.doc.block_named(kentos_commands::LEGEND_BLOCK).is_some();
         self.ghost.clear();
         let Some(at) = self.hover else { return };
-        if let CommandResult::Completed { output, .. } = legends::plan_in(cx.doc, &self.request(Some(at), cx))
+        if let CommandResult::Completed { output, .. } =
+            legends::plan_in(cx.doc, &self.request(Some(at), cx))
             && let Some(insert) = &output.insert
         {
             self.ghost = definition_ghost(&output.block, insert);
@@ -470,11 +501,21 @@ impl Tool for MaterialLegend {
 
     fn prompt(&self) -> Prompt {
         if self.ask.is_some() {
-            return Prompt::new(LEGEND_LABEL, "yazının kâğıttaki yüksekliğini milimetre olarak yazın");
+            return Prompt::new(
+                LEGEND_LABEL,
+                "yazının kâğıttaki yüksekliğini milimetre olarak yazın",
+            );
         }
-        let prompt = Prompt::new(LEGEND_LABEL, "lejandın sol üst köşesini belirtin")
-            .option_with("Yazı yüksekliği", "H", format!("{} mm", js_number(self.height)));
-        if self.has { prompt.option("Yenile", "Y") } else { prompt }
+        let prompt = Prompt::new(LEGEND_LABEL, "lejandın sol üst köşesini belirtin").option_with(
+            "Yazı yüksekliği",
+            "H",
+            format!("{} mm", js_number(self.height)),
+        );
+        if self.has {
+            prompt.option("Yenile", "Y")
+        } else {
+            prompt
+        }
     }
 
     fn point_count(&self) -> usize {
@@ -499,7 +540,11 @@ impl Tool for MaterialLegend {
 
     fn settings(&self, _f: &Format) -> Vec<Setting> {
         // Its text's height: Yükseklik alone is a building's, Y in the contract (docs/adr/8003).
-        vec![Setting::text("H", "Yazı yüksekliği", format!("{} mm", js_number(self.height)))]
+        vec![Setting::text(
+            "H",
+            "Yazı yüksekliği",
+            format!("{} mm", js_number(self.height)),
+        )]
     }
 
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
@@ -514,7 +559,10 @@ impl Tool for MaterialLegend {
                 true
             }
             _ => {
-                cx.say(Level::Warn, "Yüksekliği 0'dan büyük, en çok 50 mm bir sayıyla yazın.");
+                cx.say(
+                    Level::Warn,
+                    "Yüksekliği 0'dan büyük, en çok 50 mm bir sayıyla yazın.",
+                );
                 false
             }
         }

@@ -22,7 +22,8 @@ macro_rules! sized {
 }
 
 /// The wordmarks' widths and the mark's sides, in device pixels; each list grows.
-const LIGHT: [(u32, &[u8]); 8] = sized!("kentos_light_logo"; 100, 150, 160, 200, 260, 300, 320, 520);
+const LIGHT: [(u32, &[u8]); 8] =
+    sized!("kentos_light_logo"; 100, 150, 160, 200, 260, 300, 320, 520);
 const DARK: [(u32, &[u8]); 8] = sized!("kentos_dark_logo"; 100, 150, 160, 200, 260, 300, 320, 520);
 const MARK: [(u32, &[u8]); 4] = sized!("kentos_app_icon"; 20, 28, 40, 56);
 
@@ -56,15 +57,27 @@ fn decode(bytes: &[u8]) -> Option<Picture> {
     let source = &buffer[..info.buffer_size()];
     let rgba: Vec<u8> = match info.color_type {
         png::ColorType::Rgba => source.to_vec(),
-        png::ColorType::Rgb => source.as_chunks::<3>().0.iter().flat_map(|p| [p[0], p[1], p[2], 255]).collect(),
+        png::ColorType::Rgb => source
+            .as_chunks::<3>()
+            .0
+            .iter()
+            .flat_map(|p| [p[0], p[1], p[2], 255])
+            .collect(),
         _ => return None,
     };
     let (width, height) = (info.width, info.height);
-    Some(Picture { width, height, handle: Handle::from_rgba(width, height, rgba) })
+    Some(Picture {
+        width,
+        height,
+        handle: Handle::from_rgba(width, height, rgba),
+    })
 }
 
 /// A picture's sizes (each width with its bytes) and the pictures made of them, one per size.
-type Sizes = (&'static [(u32, &'static [u8])], &'static [OnceLock<Option<Picture>>]);
+type Sizes = (
+    &'static [(u32, &'static [u8])],
+    &'static [OnceLock<Option<Picture>>],
+);
 
 /// The sizes of a picture: the mark's, or the wordmark's for the theme.
 fn sizes(logo: bool, dark: bool) -> Sizes {
@@ -81,18 +94,27 @@ fn sizes(logo: bool, dark: bool) -> Sizes {
 /// The picture for `width` device pixels: the smallest made at least that wide (half a pixel spared), else the largest.
 fn picture(logo: bool, dark: bool, width: f32) -> Option<&'static Picture> {
     let (files, cache) = sizes(logo, dark);
-    let i = files.iter().position(|(w, _)| *w as f32 + 0.5 >= width).unwrap_or(files.len() - 1);
+    let i = files
+        .iter()
+        .position(|(w, _)| *w as f32 + 0.5 >= width)
+        .unwrap_or(files.len() - 1);
     cache[i].get_or_init(|| decode(files[i].1)).as_ref()
 }
 
 /// A square application mark: title bars, launchers and compact surfaces.
 pub fn brand_mark<'a, M: 'a>(size: f32) -> Element<'a, M> {
-    canvas::Canvas::new(Brand { logo: false }).width(size).height(size).into()
+    canvas::Canvas::new(Brand { logo: false })
+        .width(size)
+        .height(size)
+        .into()
 }
 
 /// Full supplied wordmark, automatically following the actual light/dark theme.
 pub fn brand_logo<'a, M: 'a>(width: f32) -> Element<'a, M> {
-    canvas::Canvas::new(Brand { logo: true }).width(width).height(width / 4.).into()
+    canvas::Canvas::new(Brand { logo: true })
+        .width(width)
+        .height(width / 4.)
+        .into()
 }
 
 /// Window/taskbar icon; macOS Dock/Finder additionally use the bundle's ICNS.
@@ -134,7 +156,14 @@ fn place(bounds: Size, scale: f32, aspect: f32, made: (u32, u32)) -> Rectangle {
 
 impl<M> canvas::Program<M> for Brand {
     type State = ();
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<Geometry> {
         let (dark, scale) = (Mode::of(theme).is_dark(), device_scale());
         // The aspect of the largest picture, the closest to the original's.
         let Some(largest) = picture(self.logo, dark, f32::INFINITY) else {
@@ -181,14 +210,30 @@ mod tests {
         // The ribbon's 100-pixel wordmark on a Retina screen: the 200-pixel picture, at its own size.
         let p = picture(true, false, 200.0).expect("a picture");
         assert_eq!(p.width, 200);
-        let r = place(Size::new(100.0, 25.0), 2.0, p.width as f32 / p.height as f32, (p.width, p.height));
-        assert_eq!((r.width * 2.0, r.height * 2.0), (p.width as f32, p.height as f32));
-        assert_eq!(((r.x * 2.0).fract(), (r.y * 2.0).fract()), (0.0, 0.0), "its corner on a device pixel");
+        let r = place(
+            Size::new(100.0, 25.0),
+            2.0,
+            p.width as f32 / p.height as f32,
+            (p.width, p.height),
+        );
+        assert_eq!(
+            (r.width * 2.0, r.height * 2.0),
+            (p.width as f32, p.height as f32)
+        );
+        assert_eq!(
+            ((r.x * 2.0).fract(), (r.y * 2.0).fract()),
+            (0.0, 0.0),
+            "its corner on a device pixel"
+        );
         // On a screen of one device pixel each: the 100-pixel picture; a width between sizes takes the next above.
         assert_eq!(picture(true, false, 100.0).map(|p| p.width), Some(100));
         assert_eq!(picture(true, true, 210.0).map(|p| p.width), Some(260));
         assert_eq!(picture(false, false, 56.0).map(|p| p.width), Some(56));
-        assert_eq!(picture(true, false, 4000.0).map(|p| p.width), Some(520), "past the largest: the largest");
+        assert_eq!(
+            picture(true, false, 4000.0).map(|p| p.width),
+            Some(520),
+            "past the largest: the largest"
+        );
     }
 
     #[test]

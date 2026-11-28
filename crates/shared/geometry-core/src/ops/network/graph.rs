@@ -355,7 +355,10 @@ impl Graph {
     /// back along the one piece when both points are on it. None when a point is on no piece or they share no node.
     fn turn_key(&self, first: Vec2, last: Vec2, via: Vec2, reach: f64) -> Option<u64> {
         let (a, b) = (self.locate(first, reach)?, self.locate(last, reach)?);
-        let (pa, pb) = (&self.pieces[a.piece as usize], &self.pieces[b.piece as usize]);
+        let (pa, pb) = (
+            &self.pieces[a.piece as usize],
+            &self.pieces[b.piece as usize],
+        );
         let d = |n: u32| {
             let q = self.nodes[n as usize];
             js_hypot(q.x - via.x, q.y - via.y)
@@ -471,7 +474,6 @@ impl Graph {
         }
     }
 
-
     /// The pieces at node `n`: `piece * 2` leaving its start the way it is drawn, `piece * 2 + 1` leaving its end against it.
     pub fn at_node(&self, n: u32) -> &[u32] {
         &self.adj[self.adj_start[n as usize] as usize..self.adj_start[n as usize + 1] as usize]
@@ -525,7 +527,10 @@ impl Graph {
 
     /// The edges on parts of the network that none of `nodes` is on.
     pub fn edges_apart_from(&self, nodes: &[u32]) -> usize {
-        let mut parts: Vec<u32> = nodes.iter().filter_map(|&n| self.part.get(n as usize).copied()).collect();
+        let mut parts: Vec<u32> = nodes
+            .iter()
+            .filter_map(|&n| self.part.get(n as usize).copied())
+            .collect();
         parts.sort_unstable();
         parts.dedup();
         let total: u32 = self.part_edges.iter().sum();
@@ -657,9 +662,11 @@ impl Graph {
         self.varied.hours_unasked = self.varied.by_hours > 0 && access.time.is_none();
         // An edge closed in hours is closed to a question only when its cost passes none at the question's moment.
         for (e, c) in closing.iter_mut().enumerate() {
-            let shut_now = access
-                .time
-                .is_some_and(|t| windows.get(e).is_some_and(|w| w.iter().any(|w| w.0 <= t && t < w.1)));
+            let shut_now = access.time.is_some_and(|t| {
+                windows
+                    .get(e)
+                    .is_some_and(|w| w.iter().any(|w| w.0 <= t && t < w.1))
+            });
             if *c == Closing::Hours && !shut_now {
                 *c = Closing::Open;
             }

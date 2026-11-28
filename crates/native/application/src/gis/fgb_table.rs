@@ -32,14 +32,18 @@ fn type_word(gs: &[&Geometry]) -> String {
             Geometry::Curve(gpkg::Curve::Line(_)) => "Line String",
             Geometry::Curve(gpkg::Curve::Arc(_)) => "Circular String",
             Geometry::Curve(gpkg::Curve::Compound(_)) => "Compound Curve",
-            Geometry::Polygon(r) if r.iter().all(|c| matches!(c, gpkg::Curve::Line(_))) => "Polygon",
+            Geometry::Polygon(r) if r.iter().all(|c| matches!(c, gpkg::Curve::Line(_))) => {
+                "Polygon"
+            }
             Geometry::Polygon(_) => "Curve Polygon",
             Geometry::MultiCurve(c) if c.iter().all(|c| matches!(c, gpkg::Curve::Line(_))) => {
                 "Multi Line String"
             }
             Geometry::MultiCurve(_) => "Multi Curve",
             Geometry::MultiPolygon(p)
-                if p.iter().flatten().all(|c| matches!(c, gpkg::Curve::Line(_))) =>
+                if p.iter()
+                    .flatten()
+                    .all(|c| matches!(c, gpkg::Curve::Line(_))) =>
             {
                 "Multi Polygon"
             }
@@ -92,7 +96,9 @@ fn export_all(doc: &Document, input: &ExportFgb) -> Result<Made, (String, String
                     .iter_mut()
                     .find(|(n, _, _)| n.eq_ignore_ascii_case(&f.name))
                 {
-                    Some(have) if ColumnType::for_kind(&have.1) != ColumnType::for_kind(&c.kind) => {
+                    Some(have)
+                        if ColumnType::for_kind(&have.1) != ColumnType::for_kind(&c.kind) =>
+                    {
                         lost.insert(format!(
                             "“{}” alanı katmanlarda farklı türlerde: metin sütunu olarak yazıldı",
                             f.name
@@ -129,7 +135,10 @@ fn export_all(doc: &Document, input: &ExportFgb) -> Result<Made, (String, String
     let mut sources: Vec<(String, ColumnKind)> = Vec::new();
     for (name, kind, length) in &fields {
         let mut written = name.clone();
-        while columns.iter().any(|c| c.name.eq_ignore_ascii_case(&written)) {
+        while columns
+            .iter()
+            .any(|c| c.name.eq_ignore_ascii_case(&written))
+        {
             lost.insert(format!(
                 "“{written}” alanı “{written}_” sütunu olarak yazıldı (adı başka bir sütunun)"
             ));
@@ -139,12 +148,18 @@ fn export_all(doc: &Document, input: &ExportFgb) -> Result<Made, (String, String
         columns.push(FgbColumn {
             name: written,
             kind: kind_out,
-            width: if kind_out == ColumnType::String { *length } else { None },
+            width: if kind_out == ColumnType::String {
+                *length
+            } else {
+                None
+            },
         });
         sources.push((name.clone(), kind.clone()));
     }
     if fields.iter().any(|(_, k, _)| *k == ColumnKind::Date) {
-        lost.insert("tarih alanları tarih-saat sütunu olarak yazıldı (değerleri yalnız gün)".into());
+        lost.insert(
+            "tarih alanları tarih-saat sütunu olarak yazıldı (değerleri yalnız gün)".into(),
+        );
     }
     let mut features: Vec<(Option<Geometry>, Vec<Value>)> = Vec::new();
     let mut left: BTreeMap<String, u32> = BTreeMap::new();
@@ -236,7 +251,11 @@ fn export_all(doc: &Document, input: &ExportFgb) -> Result<Made, (String, String
         left,
         lost: lost.into_iter().collect(),
     };
-    Ok(Made { bytes, output, time_left_out: 0 })
+    Ok(Made {
+        bytes,
+        output,
+        time_left_out: 0,
+    })
 }
 
 /// The file's layer as the GeoPackage import reads a table.
@@ -251,7 +270,9 @@ pub fn read(path: &std::path::Path, bytes: &[u8], input: &ImportFgb) -> Result<R
     let r = fgb::read(bytes)?;
     let mut losses: Vec<String> = Vec::new();
     if let Some(other) = &r.other_crs {
-        losses.push(format!("dosyanın sistemi ({other}) bir EPSG kodu değil; tanınmadı"));
+        losses.push(format!(
+            "dosyanın sistemi ({other}) bir EPSG kodu değil; tanınmadı"
+        ));
     }
     let srid = r.srid.or(input.srid);
     let has_geometry = r.features.iter().any(|(g, _)| g.is_some());
@@ -265,7 +286,11 @@ pub fn read(path: &std::path::Path, bytes: &[u8], input: &ImportFgb) -> Result<R
             values,
         })
         .collect();
-    let name = if r.name.trim().is_empty() { stem } else { r.name };
+    let name = if r.name.trim().is_empty() {
+        stem
+    } else {
+        r.name
+    };
     let layer = gpkg::Layer {
         name,
         data_type: if has_geometry {

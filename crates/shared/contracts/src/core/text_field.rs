@@ -290,9 +290,7 @@ impl FieldSource {
                     Some("Blok sayısı alanı bloğun adını ister (`name`).".to_owned())
                 }
                 (ProjectValue::Variable | ProjectValue::BlockCount, true) | (_, false) => None,
-                (_, true) => {
-                    Some("Ad yalnız değişken ve blok sayısı alanında verilir.".to_owned())
-                }
+                (_, true) => Some("Ad yalnız değişken ve blok sayısı alanında verilir.".to_owned()),
             },
         }
     }

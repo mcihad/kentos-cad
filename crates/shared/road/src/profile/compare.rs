@@ -58,7 +58,13 @@ pub fn changes(old: &Vertical, new: &Vertical, tolerance: f64) -> Vec<Change> {
         (new.end.max(old.start), old.end, Kind::Removed),
     ] {
         if b - a > 1e-9 {
-            ends.push(Change { kind, from: a, to: b, most: None, at: None });
+            ends.push(Change {
+                kind,
+                from: a,
+                to: b,
+                most: None,
+                at: None,
+            });
         }
     }
     if hi > lo {
@@ -80,11 +86,17 @@ pub fn changes(old: &Vertical, new: &Vertical, tolerance: f64) -> Vec<Change> {
             };
             let d = |s: f64| diff(s).0.abs();
             let over = |s: f64| d(s) - tolerance;
-            let samples: Vec<f64> = (0..=SAMPLES).map(|i| a + (b - a) * i as f64 / SAMPLES as f64).collect();
+            let samples: Vec<f64> = (0..=SAMPLES)
+                .map(|i| a + (b - a) * i as f64 / SAMPLES as f64)
+                .collect();
             // The zeros of Δz and of Δg: |Δz| is monotone between consecutive points.
             let mut pts = samples.clone();
             // A sample where Δg is exactly zero is a peak itself.
-            let mut peaks: Vec<f64> = samples.iter().copied().filter(|s| diff(*s).1 == 0.0).collect();
+            let mut peaks: Vec<f64> = samples
+                .iter()
+                .copied()
+                .filter(|s| diff(*s).1 == 0.0)
+                .collect();
             for q in samples.windows(2) {
                 let (x0, x1) = (q[0], q[1]);
                 for (k, store) in [(0usize, false), (1usize, true)] {
@@ -158,11 +170,22 @@ fn bisect(f: impl Fn(f64) -> f64, x0: f64, x1: f64) -> f64 {
 /// earliest where several are as great, to 1e-9 m).
 fn stretch(from: f64, to: f64, peaks: &[f64], d: &impl Fn(f64) -> f64) -> Change {
     let mut best = (from, d(from));
-    for x in peaks.iter().copied().filter(|x| *x > from && *x < to).chain([to]) {
+    for x in peaks
+        .iter()
+        .copied()
+        .filter(|x| *x > from && *x < to)
+        .chain([to])
+    {
         let v = d(x);
         if v > best.1 + 1e-9 {
             best = (x, v);
         }
     }
-    Change { kind: Kind::Changed, from, to, most: Some(best.1), at: Some(best.0) }
+    Change {
+        kind: Kind::Changed,
+        from,
+        to,
+        most: Some(best.1),
+        at: Some(best.0),
+    }
 }

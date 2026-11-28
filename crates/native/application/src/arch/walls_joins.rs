@@ -99,7 +99,9 @@ fn answer(doc: &Document, input: &WallsJoins) -> CommandResult<WallsJoined> {
                     // With `nodes` (docs/adr/0771 §1): who decided the end, and a tee's joining components' passes.
                     let user = m.end.is_some_and(|e| {
                         joins_of(m.wall).is_some_and(|js| js.decided(e == End::Start))
-                    }) || (j.kind == JointKind::Tee && m.end.is_some() && j.node.as_ref().is_some_and(|n| n.user));
+                    }) || (j.kind == JointKind::Tee
+                        && m.end.is_some()
+                        && j.node.as_ref().is_some_and(|n| n.user));
                     WallJointMember {
                         uid: uid(m.wall),
                         end: m.end.map(end_of),
@@ -109,7 +111,11 @@ fn answer(doc: &Document, input: &WallsJoins) -> CommandResult<WallsJoined> {
                             kentos_commands::WallNodeDecision::Auto
                         }),
                         passes: (input.nodes && m.end.is_some() && j.kind == JointKind::Tee)
-                            .then(|| j.node.as_ref().map(|n| n.depth.iter().map(|&d| d.min(255) as u8).collect()))
+                            .then(|| {
+                                j.node
+                                    .as_ref()
+                                    .map(|n| n.depth.iter().map(|&d| d.min(255) as u8).collect())
+                            })
                             .flatten(),
                     }
                 })

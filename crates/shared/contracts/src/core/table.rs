@@ -394,7 +394,9 @@ pub fn cell_problem(words: &str) -> Option<String> {
     }
     let lines = words.split('\n').count();
     if lines > MAX_CELL_LINES {
-        return Some(format!("{lines} satır; bir hücre en çok {MAX_CELL_LINES} satırdır"));
+        return Some(format!(
+            "{lines} satır; bir hücre en çok {MAX_CELL_LINES} satırdır"
+        ));
     }
     let n = words.chars().count();
     (n > MAX_CELL_LETTERS).then(|| format!("{n} harf; en çok {MAX_CELL_LETTERS}"))
@@ -642,7 +644,9 @@ impl TableShape<'_> {
                             .to_owned(),
                     ));
                 }
-                if members.len() > MAX_TABLE_ROWS || members.iter().flatten().any(|u| u.trim().is_empty()) {
+                if members.len() > MAX_TABLE_ROWS
+                    || members.iter().flatten().any(|u| u.trim().is_empty())
+                {
                     return Some((
                         "source",
                         "Çizelgenin satırlarının nesneleri boş kimlik tutamaz.".to_owned(),
@@ -659,9 +663,15 @@ impl TableShape<'_> {
                 ..
             }) => {
                 if key_column.is_some_and(|c| c as usize >= self.columns.len()) {
-                    return Some(("source", "Satır anahtarı tablonun bir sütunu olmalı.".to_owned()));
+                    return Some((
+                        "source",
+                        "Satır anahtarı tablonun bir sütunu olmalı.".to_owned(),
+                    ));
                 }
-                if path.as_deref().is_some_and(|p| p.trim().is_empty() || p.chars().any(char::is_control)) {
+                if path
+                    .as_deref()
+                    .is_some_and(|p| p.trim().is_empty() || p.chars().any(char::is_control))
+                {
                     return Some((
                         "source",
                         "Tablonun bağlı dosyasının yolu boş olamaz.".to_owned(),
@@ -673,12 +683,16 @@ impl TableShape<'_> {
                 {
                     return Some((
                         "source",
-                        "Tablonun bağlı dosyasının özeti 64 onaltılık rakamlık bir SHA-256 olmalı.".to_owned(),
+                        "Tablonun bağlı dosyasının özeti 64 onaltılık rakamlık bir SHA-256 olmalı."
+                            .to_owned(),
                     ));
                 }
                 if let Some(copy) = copy
                     && (copy.len() > MAX_TABLE_ROWS
-                        || copy.iter().any(|r| r.len() > MAX_TABLE_COLUMNS || r.iter().any(|w| line_problem(w).is_some())))
+                        || copy.iter().any(|r| {
+                            r.len() > MAX_TABLE_COLUMNS
+                                || r.iter().any(|w| line_problem(w).is_some())
+                        }))
                 {
                     return Some((
                         "source",
@@ -699,7 +713,9 @@ impl TableShape<'_> {
                 }
             }
             Some(TableSource::Extraction(x)) => {
-                if let Some((at, words)) = crate::extraction::extraction_source_problem(x, self.columns.len()) {
+                if let Some((at, words)) =
+                    crate::extraction::extraction_source_problem(x, self.columns.len())
+                {
                     let _ = at;
                     return Some(("source", words));
                 }
@@ -740,11 +756,24 @@ impl TableEntity {
 
     /// What is wrong with it: its shape's problem, then its styles', formulas' and fields' (docs/adr/0327).
     pub fn problem(&self) -> Option<(&'static str, String)> {
-        if matches!(&self.source, Some(TableSource::File { key_column: Some(_), .. })) && !self.header {
-            return Some(("source", "Satır anahtarı için başlık satırı açık olmalı.".to_owned()));
+        if matches!(
+            &self.source,
+            Some(TableSource::File {
+                key_column: Some(_),
+                ..
+            })
+        ) && !self.header
+        {
+            return Some((
+                "source",
+                "Satır anahtarı için başlık satırı açık olmalı.".to_owned(),
+            ));
         }
         if matches!(&self.source, Some(TableSource::Extraction(_))) && !self.header {
-            return Some(("source", "Çıkarım tablosunun ilk satırı başlıktır; başlık satırı açık olmalı.".to_owned()));
+            return Some((
+                "source",
+                "Çıkarım tablosunun ilk satırı başlıktır; başlık satırı açık olmalı.".to_owned(),
+            ));
         }
         self.shape()
             .problem()

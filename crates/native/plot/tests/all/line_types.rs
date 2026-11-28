@@ -26,7 +26,9 @@ fn pattern(kind: &str) -> Value {
             json!({"name":"P","unit":"paper","elements":[{"length":2.},{"length":0.,"shape":{"name":"FENCE","file":"missing.shx"}}]})
         }
         "short" => json!({"name":"P","unit":"paper","elements":[{"length":3.},{"length":-1.}]}),
-        "unavailable" => json!({"name":"P","unit":"paper","elements":[{"length":2.},{"length":-1.},{"length":0.,"text":{"text":"HW","style":"MISSING_FONT_STYLE","scale":0.1}},{"length":-1.}]}),
+        "unavailable" => {
+            json!({"name":"P","unit":"paper","elements":[{"length":2.},{"length":-1.},{"length":0.,"text":{"text":"HW","style":"MISSING_FONT_STYLE","scale":0.1}},{"length":-1.}]})
+        }
         _ => {
             json!({"name":"P","unit":"paper","elements":[{"length":2.},{"length":-1.},{"length":0.,"text":{"text":"HW","style":"STANDARD","scale":0.1}},{"length":-1.}]})
         }
@@ -116,7 +118,8 @@ fn named_pattern_loss_follows_actual_visibility_and_overrides() {
             let (doc, book) = document(raw, page);
             let before = doc.to_snapshot_v2();
             let found = losses(&doc, &book);
-            let blocked = !matches!(kind, "short" | "long" | "text") && matches!(mode, "own" | "layer");
+            let blocked =
+                !matches!(kind, "short" | "long" | "text") && matches!(mode, "own" | "layer");
             assert_eq!(!found.is_empty(), blocked, "{kind}/{mode}: {found:?}");
             let pdf = book::book_pdf(&doc, &[], "Test", "2026-11-04");
             if blocked {
@@ -373,43 +376,83 @@ fn long_custom_stroke_phase_reaches_the_actual_pdf_content_stream() {
 
 #[test]
 fn text_mark_workload_limit_is_a_visible_read_only_preflight_error() {
-    let (mut raw,page)=source();
-    let mut p=pattern("text");
+    let (mut raw, page) = source();
+    let mut p = pattern("text");
     // Ten million repeats on the visible line must not allocate a prefix
     // and then pretend that the omitted suffix was rendered.
     for e in p["elements"].as_array_mut().unwrap() {
-        if e["length"].as_f64().is_some_and(|n|n!=0.) {e["length"]=json!(e["length"].as_f64().unwrap()*1e-7);}
+        if e["length"].as_f64().is_some_and(|n| n != 0.) {
+            e["length"] = json!(e["length"].as_f64().unwrap() * 1e-7);
+        }
     }
-    raw["settings"]["lineTypes"]=json!([p]);raw["entities"][0]["linePattern"]=json!("P");
-    let (doc,book)=document(raw,page);let before=doc.to_snapshot_v2();
-    assert!(!losses(&doc,&book).is_empty());
-    assert_eq!(book::book_pdf(&doc,&[],"Test","2026-11-04").unwrap_err().code,"linetype_unsupported");
-    assert_eq!(doc.to_snapshot_v2(),before);
+    raw["settings"]["lineTypes"] = json!([p]);
+    raw["entities"][0]["linePattern"] = json!("P");
+    let (doc, book) = document(raw, page);
+    let before = doc.to_snapshot_v2();
+    assert!(!losses(&doc, &book).is_empty());
+    assert_eq!(
+        book::book_pdf(&doc, &[], "Test", "2026-11-04")
+            .unwrap_err()
+            .code,
+        "linetype_unsupported"
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
 }
 
 #[test]
 fn geometric_width_patterns_are_inspected_before_pdf_delivery() {
     // ADR 1121: a dot on a band with width is drawn (its cross-section); one where the band is 0 wide is refused.
-    for mode in ["short","long","text","unavailable","missing","shape","dense","dot","dot_zero","builtin"] {
-        let (mut raw,page)=source();
-        let def=match mode {
-            "dense" => json!({"name":"P","unit":"paper","elements":[{"length":0.00001},{"length":-0.00001}]}),
-            "dot" | "dot_zero" => json!({"name":"P","unit":"paper","elements":[{"length":0.},{"length":-2.}]}),
+    for mode in [
+        "short",
+        "long",
+        "text",
+        "unavailable",
+        "missing",
+        "shape",
+        "dense",
+        "dot",
+        "dot_zero",
+        "builtin",
+    ] {
+        let (mut raw, page) = source();
+        let def = match mode {
+            "dense" => {
+                json!({"name":"P","unit":"paper","elements":[{"length":0.00001},{"length":-0.00001}]})
+            }
+            "dot" | "dot_zero" => {
+                json!({"name":"P","unit":"paper","elements":[{"length":0.},{"length":-2.}]})
+            }
             _ => pattern(mode),
         };
-        if mode!="missing" {raw["settings"]["lineTypes"]=json!([def]);}
-        raw["entities"][0]=json!({"kind":"polyline","id":1,"layerId":"cizim","attrs":{},
+        if mode != "missing" {
+            raw["settings"]["lineTypes"] = json!([def]);
+        }
+        raw["entities"][0] = json!({"kind":"polyline","id":1,"layerId":"cizim","attrs":{},
             "pts":[{"x":0.,"y":0.},{"x":2.,"y":0.}],"widths":[[0.1,0.3],[0.,0.]],"linePattern":"P"});
-        if mode=="builtin" {raw["entities"][0].as_object_mut().unwrap().remove("linePattern");raw["entities"][0]["lineType"]=json!("dashed");}
-        if mode=="dot_zero" {raw["entities"][0]["widths"]=json!([[0.,0.3],[0.,0.]]);}
-        let (doc,book)=document(raw,page);
-        let before=doc.to_snapshot_v2();
-        let blocked=matches!(mode,"unavailable"|"missing"|"shape"|"dense"|"dot_zero");
-        assert_eq!(!losses(&doc,&book).is_empty(),blocked,"{mode}");
-        let pdf=book::book_pdf(&doc,&[],"Test","2026-11-04");
-        if blocked {assert_eq!(pdf.err().unwrap().code,"linetype_unsupported","{mode}");}
-        else {pdf.unwrap_or_else(|e|panic!("{mode}: {e:?}"));}
-        assert_eq!(doc.to_snapshot_v2(),before);
+        if mode == "builtin" {
+            raw["entities"][0]
+                .as_object_mut()
+                .unwrap()
+                .remove("linePattern");
+            raw["entities"][0]["lineType"] = json!("dashed");
+        }
+        if mode == "dot_zero" {
+            raw["entities"][0]["widths"] = json!([[0., 0.3], [0., 0.]]);
+        }
+        let (doc, book) = document(raw, page);
+        let before = doc.to_snapshot_v2();
+        let blocked = matches!(
+            mode,
+            "unavailable" | "missing" | "shape" | "dense" | "dot_zero"
+        );
+        assert_eq!(!losses(&doc, &book).is_empty(), blocked, "{mode}");
+        let pdf = book::book_pdf(&doc, &[], "Test", "2026-11-04");
+        if blocked {
+            assert_eq!(pdf.err().unwrap().code, "linetype_unsupported", "{mode}");
+        } else {
+            pdf.unwrap_or_else(|e| panic!("{mode}: {e:?}"));
+        }
+        assert_eq!(doc.to_snapshot_v2(), before);
     }
 }
 
@@ -543,16 +586,52 @@ fn a_loss_blocks_only_inside_the_polygon_or_turned_viewport_shape() {
     // The fixture's frame is 390 × 230 mm at 1:50: 19.5 × 11.5 m of ground about (2.5, 0).
     let cases: [(&str, Value, i64, [f64; 4], bool); 6] = [
         // The upper left triangle: ground x −7.25…−1.4, y 2.3…5.75; the line at y = 0 is in the box only.
-        ("triangle_outside", json!({"type":"polygon","points":[[0,0],[300000,0],[0,300000]]}), 0, [0., 0., 5., 0.], false),
+        (
+            "triangle_outside",
+            json!({"type":"polygon","points":[[0,0],[300000,0],[0,300000]]}),
+            0,
+            [0., 0., 5., 0.],
+            false,
+        ),
         // The upper right half (frame y ≤ x): the line's right part reaches it.
-        ("triangle_inside", json!({"type":"polygon","points":[[0,0],[1000000,0],[1000000,1000000]]}), 0, [0., 0., 5., 0.], true),
+        (
+            "triangle_inside",
+            json!({"type":"polygon","points":[[0,0],[1000000,0],[1000000,1000000]]}),
+            0,
+            [0., 0., 5., 0.],
+            true,
+        ),
         // Turned 45°: (12, 10)…(12.5, 10) is 14 m along one of the frame's axes from the centre, past both halves
         // (9.75 and 5.75 m), yet inside the turned frame's box (±10.96 m).
-        ("turned_corner", json!({"type":"frame"}), 45000, [12., 10., 12.5, 10.], false),
-        ("turned_centre", json!({"type":"frame"}), 45000, [0., 0., 5., 0.], true),
-        ("turned_opposite", json!({"type":"frame"}), 315000, [12., 10., 12.5, 10.], false),
+        (
+            "turned_corner",
+            json!({"type":"frame"}),
+            45000,
+            [12., 10., 12.5, 10.],
+            false,
+        ),
+        (
+            "turned_centre",
+            json!({"type":"frame"}),
+            45000,
+            [0., 0., 5., 0.],
+            true,
+        ),
+        (
+            "turned_opposite",
+            json!({"type":"frame"}),
+            315000,
+            [12., 10., 12.5, 10.],
+            false,
+        ),
         // A rectangle clip in the right quarter, turned: the line at the centre is outside it.
-        ("turned_rectangle", json!({"type":"rectangle","bounds":[800000,0,1000000,1000000]}), 30000, [0., 0., 5., 0.], false),
+        (
+            "turned_rectangle",
+            json!({"type":"rectangle","bounds":[800000,0,1000000,1000000]}),
+            30000,
+            [0., 0., 5., 0.],
+            false,
+        ),
     ];
     for (name, clip, rotation, [x0, y0, x1, y1], blocked) in cases {
         let (mut raw, mut page) = source();
@@ -597,7 +676,8 @@ fn clip_picture() {
     kind["clip"] = json!({"type":"polygon","points":[[0,0],[300000,0],[0,300000]]});
     let (doc, book) = document(raw, page);
     assert!(losses(&doc, &book).is_empty());
-    let image = kentos_plot::preview::page(&doc, "ground", "Test", "2026-11-04", None, 110).expect("delivered");
+    let image = kentos_plot::preview::page(&doc, "ground", "Test", "2026-11-04", None, 110)
+        .expect("delivered");
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence");
     std::fs::create_dir_all(&dir).unwrap();
     std::fs::write(dir.join("adr1007-ucgen-kirpma.png"), &image.png).unwrap();

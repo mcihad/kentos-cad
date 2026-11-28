@@ -125,7 +125,11 @@ pub enum Event {
     /// the camera it started at to the one it stopped at. Wheel turns and pans reach the app so, once a gesture. `at`:
     /// where a pan's drag left the pointer (logical pixels from the area's top-left), which no move told the app
     /// (docs/adr/9251); none after the wheel.
-    ViewChanged { from: Camera, to: Camera, at: Option<Point> },
+    ViewChanged {
+        from: Camera,
+        to: Camera,
+        at: Option<Point>,
+    },
     /// Put this world point in the middle of the area.
     CenterOn(Vec2),
     /// The left button went down here (logical pixels from the area's top-left).
@@ -352,7 +356,15 @@ pub struct Viewport {
     /// an origin and two colours (the cut lines, the edges under the cut).
     underlay: Option<(u64, Arc<Vec<kentos_ifc::underlay::PlanLine>>)>,
     #[allow(clippy::type_complexity)]
-    underlay_part: RefCell<Option<(u64, Vec2, [Rgba8; 2], Option<&'static kentos_geometry_core::crs::map::MapProjection>, Arc<ScenePart>)>>,
+    underlay_part: RefCell<
+        Option<(
+            u64,
+            Vec2,
+            [Rgba8; 2],
+            Option<&'static kentos_geometry_core::crs::map::MapProjection>,
+            Arc<ScenePart>,
+        )>,
+    >,
     status: Arc<Mutex<Status>>,
     /// The drawing's layers through the style engine, as last built (docs/adr/0090).
     styled: RefCell<crate::style::scene::StyledCache>,
@@ -686,7 +698,9 @@ impl shader::Program<Message> for Program {
         // scene stretched to the new one) until it settled (docs/adr/0637 §1).
         if state.bounds != Some(bounds) {
             state.bounds = Some(bounds);
-            return Some(shader::Action::publish(self.message(Event::Resized(bounds))));
+            return Some(shader::Action::publish(
+                self.message(Event::Resized(bounds)),
+            ));
         }
         // A held right button: told once its time is up, else a frame then.
         if let iced::Event::Window(iced::window::Event::RedrawRequested(now)) = event
@@ -705,7 +719,11 @@ impl shader::Program<Message> for Program {
                 return Some(shader::Action::request_redraw_at(at));
             }
             if let Some((from, to, at)) = self.live.take() {
-                return Some(shader::Action::publish(self.message(Event::ViewChanged { from, to, at })));
+                return Some(shader::Action::publish(self.message(Event::ViewChanged {
+                    from,
+                    to,
+                    at,
+                })));
             }
         }
         // Screen-sized symbols wait for the wheel to stop, then are built again (docs/adr/0090).
@@ -1070,7 +1088,11 @@ impl shader::Primitive for Frame {
                 };
                 // The overlays over the picture in the stack's order (docs/adr/9212 §4, 9214): an empty list takes the
                 // last away.
-                let sets: Vec<_> = self.glyphs.iter().map(crate::labels::GlyphSlot::get).collect();
+                let sets: Vec<_> = self
+                    .glyphs
+                    .iter()
+                    .map(crate::labels::GlyphSlot::get)
+                    .collect();
                 let glyphs_pending = renderer.prepare_glyphs(device, queue, self.id, &sets);
                 Status {
                     stats: renderer.stats(self.id).unwrap_or_default(),

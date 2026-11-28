@@ -200,7 +200,11 @@ impl Camera {
     /// The farthest and the deepest scale, logical pixels per world unit: [`MIN_SCALE`] and [`MAX_SCALE`] by the
     /// metres a world unit is (1 when that is not a positive number).
     pub fn scale_limits(&self) -> (f64, f64) {
-        let unit = if self.metres_per_unit.is_finite() && self.metres_per_unit > 0.0 { self.metres_per_unit } else { 1.0 };
+        let unit = if self.metres_per_unit.is_finite() && self.metres_per_unit > 0.0 {
+            self.metres_per_unit
+        } else {
+            1.0
+        };
         (MIN_SCALE * unit, MAX_SCALE * unit)
     }
 
@@ -662,18 +666,43 @@ mod tests {
     /// along one axis still fits its length.
     #[test]
     fn a_box_of_no_size_keeps_the_scale_and_centres_its_place() {
-        let mut c = Camera { width: 800.0, height: 600.0, scale: 2.5, ..Camera::default() };
-        let at = Bounds { min_x: 412_345.5, min_y: 4_512_000.25, max_x: 412_345.5, max_y: 4_512_000.25 };
+        let mut c = Camera {
+            width: 800.0,
+            height: 600.0,
+            scale: 2.5,
+            ..Camera::default()
+        };
+        let at = Bounds {
+            min_x: 412_345.5,
+            min_y: 4_512_000.25,
+            max_x: 412_345.5,
+            max_y: 4_512_000.25,
+        };
         c.fit(&at, FIT_PADDING);
         assert_eq!(c.scale, 2.5);
         let [x, y] = c.world_to_screen(Vec2::new(at.min_x, at.min_y));
-        assert!((x - 400.0).abs() < 1e-6 && (y - 300.0).abs() < 1e-6, "{x} {y}");
+        assert!(
+            (x - 400.0).abs() < 1e-6 && (y - 300.0).abs() < 1e-6,
+            "{x} {y}"
+        );
         c.fit_size(Vec2::new(10.0, 20.0), 0.0, 0.0, FIT_PADDING);
         assert_eq!(c.scale, 2.5);
         assert_eq!(c.world_center(), Vec2::new(10.0, 20.0));
         // A line along x: its 100 units across the area less its margins.
-        c.fit(&Bounds { min_x: 0.0, min_y: 5.0, max_x: 100.0, max_y: 5.0 }, FIT_PADDING);
-        assert!((c.scale - (800.0 - 2.0 * FIT_PADDING) / 100.0).abs() < 1e-9, "{}", c.scale);
+        c.fit(
+            &Bounds {
+                min_x: 0.0,
+                min_y: 5.0,
+                max_x: 100.0,
+                max_y: 5.0,
+            },
+            FIT_PADDING,
+        );
+        assert!(
+            (c.scale - (800.0 - 2.0 * FIT_PADDING) / 100.0).abs() < 1e-9,
+            "{}",
+            c.scale
+        );
     }
 
     /// A drawing in degrees (a WGS 84 city extract): its 0.002° × 0.0024° neighbourhood fills the area, and the view
@@ -681,17 +710,40 @@ mod tests {
     #[test]
     fn a_camera_of_degrees_fits_a_neighbourhood_and_zooms_as_deep_as_one_of_metres() {
         let degree = 6_378_137.0 * std::f64::consts::PI / 180.0;
-        let mut c = Camera { width: 800.0, height: 600.0, metres_per_unit: degree, ..Camera::default() };
-        c.fit(&Bounds { min_x: 32.85, min_y: 39.92, max_x: 32.852, max_y: 39.9224 }, FIT_PADDING);
+        let mut c = Camera {
+            width: 800.0,
+            height: 600.0,
+            metres_per_unit: degree,
+            ..Camera::default()
+        };
+        c.fit(
+            &Bounds {
+                min_x: 32.85,
+                min_y: 39.92,
+                max_x: 32.852,
+                max_y: 39.9224,
+            },
+            FIT_PADDING,
+        );
         // The height binds: 600 − 2 × 48 pixels for 0.0024°.
         assert!((c.scale * 0.0024 - 504.0).abs() < 1e-6, "{}", c.scale);
         c.zoom_at(1e12, 400.0, 300.0);
         assert_eq!(c.scale, MAX_SCALE * degree);
         assert_eq!(c.scale_limits(), (MIN_SCALE * degree, MAX_SCALE * degree));
         // A camera of metres keeps its own limit; one whose unit is not a number takes metres.
-        let mut m = Camera { metres_per_unit: 1.0, ..c };
+        let mut m = Camera {
+            metres_per_unit: 1.0,
+            ..c
+        };
         m.zoom_at(2.0, 400.0, 300.0);
         assert_eq!(m.scale, MAX_SCALE);
-        assert_eq!(Camera { metres_per_unit: f64::NAN, ..c }.scale_limits(), (MIN_SCALE, MAX_SCALE));
+        assert_eq!(
+            Camera {
+                metres_per_unit: f64::NAN,
+                ..c
+            }
+            .scale_limits(),
+            (MIN_SCALE, MAX_SCALE)
+        );
     }
 }

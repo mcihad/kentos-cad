@@ -10,7 +10,14 @@ use std::cmp::Ordering;
 const ALPHABET: &str = "abcçdefgğhıijklmnoöpqrsştuüvwxyz";
 
 /// The circumflexed vowels and their plain ones.
-const CIRCUMFLEX: [(char, char); 6] = [('â', 'a'), ('Â', 'a'), ('î', 'i'), ('Î', 'i'), ('û', 'u'), ('Û', 'u')];
+const CIRCUMFLEX: [(char, char); 6] = [
+    ('â', 'a'),
+    ('Â', 'a'),
+    ('î', 'i'),
+    ('Î', 'i'),
+    ('û', 'u'),
+    ('Û', 'u'),
+];
 
 /// A letter's small plain form: `İ` is `i`, `I` is `ı`, `Â` is `a`.
 fn plain(c: char) -> char {
@@ -44,7 +51,11 @@ pub fn compare(a: &str, b: &str) -> Ordering {
         .map(primary)
         .cmp(b.chars().map(primary))
         .then_with(|| a.chars().map(circumflexed).cmp(b.chars().map(circumflexed)))
-        .then_with(|| a.chars().map(char::is_uppercase).cmp(b.chars().map(char::is_uppercase)))
+        .then_with(|| {
+            a.chars()
+                .map(char::is_uppercase)
+                .cmp(b.chars().map(char::is_uppercase))
+        })
         .then_with(|| a.cmp(b))
 }
 
@@ -87,12 +98,23 @@ pub fn sort_key(text: &str) -> Vec<u8> {
             (_, code) => {
                 key.push(0x80);
                 let mut b = [0u8; 4];
-                key.extend_from_slice(char::from_u32(code).unwrap_or(c).encode_utf8(&mut b).as_bytes());
+                key.extend_from_slice(
+                    char::from_u32(code)
+                        .unwrap_or(c)
+                        .encode_utf8(&mut b)
+                        .as_bytes(),
+                );
             }
         }
     }
     key.push(0);
-    key.extend(text.chars().map(|c| if CIRCUMFLEX.iter().any(|(x, _)| *x == c) { 2 } else { 1 }));
+    key.extend(text.chars().map(|c| {
+        if CIRCUMFLEX.iter().any(|(x, _)| *x == c) {
+            2
+        } else {
+            1
+        }
+    }));
     key.push(0);
     key.extend(text.chars().map(|c| if c.is_uppercase() { 2 } else { 1 }));
     key.push(0);
@@ -107,15 +129,49 @@ mod tests {
     #[test]
     fn words_sort_in_the_turkish_alphabet_s_order() {
         let mut w = vec![
-            "Zafer", "Çınar", "cami", "Ceylan", "ırmak", "İnci", "ilçe", "Şehir", "Su", "Öğretmen", "Okul", "Ünal",
-            "Uzun", "Ağaç", "ağaç", "2. Cadde", "10. Sokak", "âlem", "alan",
+            "Zafer",
+            "Çınar",
+            "cami",
+            "Ceylan",
+            "ırmak",
+            "İnci",
+            "ilçe",
+            "Şehir",
+            "Su",
+            "Öğretmen",
+            "Okul",
+            "Ünal",
+            "Uzun",
+            "Ağaç",
+            "ağaç",
+            "2. Cadde",
+            "10. Sokak",
+            "âlem",
+            "alan",
         ];
         w.sort_by(|a, b| compare(a, b));
         assert_eq!(
             w,
             [
-                "10. Sokak", "2. Cadde", "ağaç", "Ağaç", "alan", "âlem", "cami", "Ceylan", "Çınar", "ırmak", "ilçe",
-                "İnci", "Okul", "Öğretmen", "Su", "Şehir", "Uzun", "Ünal", "Zafer",
+                "10. Sokak",
+                "2. Cadde",
+                "ağaç",
+                "Ağaç",
+                "alan",
+                "âlem",
+                "cami",
+                "Ceylan",
+                "Çınar",
+                "ırmak",
+                "ilçe",
+                "İnci",
+                "Okul",
+                "Öğretmen",
+                "Su",
+                "Şehir",
+                "Uzun",
+                "Ünal",
+                "Zafer",
             ]
         );
     }
@@ -123,8 +179,30 @@ mod tests {
     #[test]
     fn the_sort_key_orders_as_compare_does() {
         let words = [
-            "Zafer", "Çınar", "cami", "Ceylan", "ırmak", "İnci", "ilçe", "Şehir", "Su", "Öğretmen", "Okul", "Ünal",
-            "Uzun", "Ağaç", "ağaç", "2. Cadde", "10. Sokak", "âlem", "alan", "alem", "Su yolu", "su", "émile", "",
+            "Zafer",
+            "Çınar",
+            "cami",
+            "Ceylan",
+            "ırmak",
+            "İnci",
+            "ilçe",
+            "Şehir",
+            "Su",
+            "Öğretmen",
+            "Okul",
+            "Ünal",
+            "Uzun",
+            "Ağaç",
+            "ağaç",
+            "2. Cadde",
+            "10. Sokak",
+            "âlem",
+            "alan",
+            "alem",
+            "Su yolu",
+            "su",
+            "émile",
+            "",
         ];
         for a in words {
             for b in words {

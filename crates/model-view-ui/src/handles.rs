@@ -19,7 +19,11 @@ pub fn on_screen(h: &Handle, camera: &Camera, vp: &Viewport) -> Option<(Point, P
     let foot = Point::new(x as f32, y as f32);
     let (dx, dy) = screen_way(h, camera, vp).map_or((0.0, 0.0), |(dx, dy)| (dx as f32, dy as f32));
     let l = dx.hypot(dy);
-    let tip = if l > 0.0 { Point::new(foot.x + dx / l * LENGTH, foot.y + dy / l * LENGTH) } else { foot };
+    let tip = if l > 0.0 {
+        Point::new(foot.x + dx / l * LENGTH, foot.y + dy / l * LENGTH)
+    } else {
+        foot
+    };
     Some((foot, tip))
 }
 
@@ -51,22 +55,37 @@ pub fn at(handles: &[Handle], camera: &Camera, vp: &Viewport, p: Point) -> Optio
 /// The metres along the handle's arrow a pointer's move (`dx`, `dy` logical pixels) asks: its part along the arrow's
 /// line on the screen over the pixels a metre takes there; 0 when the arrow points at the eye.
 pub fn along(h: &Handle, camera: &Camera, vp: &Viewport, dx: f32, dy: f32) -> f64 {
-    let Some((wx, wy)) = screen_way(h, camera, vp) else { return 0.0 };
+    let Some((wx, wy)) = screen_way(h, camera, vp) else {
+        return 0.0;
+    };
     (f64::from(dx) * wx + f64::from(dy) * wy) / (wx * wx + wy * wy)
 }
 
 fn to_segment(p: Point, a: Point, b: Point) -> f32 {
     let (vx, vy) = (b.x - a.x, b.y - a.y);
     let l2 = vx * vx + vy * vy;
-    let t = if l2 > 0.0 { (((p.x - a.x) * vx + (p.y - a.y) * vy) / l2).clamp(0.0, 1.0) } else { 0.0 };
+    let t = if l2 > 0.0 {
+        (((p.x - a.x) * vx + (p.y - a.y) * vy) / l2).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
     (p.x - (a.x + vx * t)).hypot(p.y - (a.y + vy * t))
 }
 
 /// The handles drawn over the scene: each a white-edged accent arrow from a dot; the one under the pointer or being
 /// dragged (`hot`) larger and filled.
-pub(crate) fn draw(frame: &mut Frame, handles: &[Handle], camera: &Camera, vp: &Viewport, hot: Option<usize>, t: &Tokens) {
+pub(crate) fn draw(
+    frame: &mut Frame,
+    handles: &[Handle],
+    camera: &Camera,
+    vp: &Viewport,
+    hot: Option<usize>,
+    t: &Tokens,
+) {
     for (i, h) in handles.iter().enumerate() {
-        let Some((foot, tip)) = on_screen(h, camera, vp) else { continue };
+        let Some((foot, tip)) = on_screen(h, camera, vp) else {
+            continue;
+        };
         let lit = hot == Some(i);
         let (shaft, dot) = if lit { (3.0, 6.5) } else { (2.0, 5.0) };
         if tip != foot {
@@ -84,14 +103,33 @@ pub(crate) fn draw(frame: &mut Frame, handles: &[Handle], camera: &Camera, vp: &
                 p.close();
             });
             let line = Path::line(foot, base);
-            frame.stroke(&line, Stroke::default().with_color(iced::Color::WHITE.scale_alpha(0.9)).with_width(shaft + 2.5));
-            frame.stroke(&arrow, Stroke::default().with_color(iced::Color::WHITE.scale_alpha(0.9)).with_width(2.5));
-            frame.stroke(&line, Stroke::default().with_color(t.accent).with_width(shaft));
+            frame.stroke(
+                &line,
+                Stroke::default()
+                    .with_color(iced::Color::WHITE.scale_alpha(0.9))
+                    .with_width(shaft + 2.5),
+            );
+            frame.stroke(
+                &arrow,
+                Stroke::default()
+                    .with_color(iced::Color::WHITE.scale_alpha(0.9))
+                    .with_width(2.5),
+            );
+            frame.stroke(
+                &line,
+                Stroke::default().with_color(t.accent).with_width(shaft),
+            );
             frame.fill(&arrow, t.accent);
         }
         frame.fill(&Path::circle(foot, dot + 1.8), iced::Color::WHITE);
-        frame.fill(&Path::circle(foot, dot), if lit { t.accent } else { t.field });
-        frame.stroke(&Path::circle(foot, dot), Stroke::default().with_color(t.accent).with_width(2.0));
+        frame.fill(
+            &Path::circle(foot, dot),
+            if lit { t.accent } else { t.field },
+        );
+        frame.stroke(
+            &Path::circle(foot, dot),
+            Stroke::default().with_color(t.accent).with_width(2.0),
+        );
     }
 }
 
@@ -110,21 +148,51 @@ mod tests {
             eye: [0.0, 0.0, 100.0],
             target: [0.0, 0.0, 0.0],
             up: [0.0, 1.0, 0.0],
-            projection: Projection::Orthographic { height: 20.0, depth: 400.0 },
+            projection: Projection::Orthographic {
+                height: 20.0,
+                depth: 400.0,
+            },
         };
-        let vp = Viewport { width: 200.0, height: 200.0 };
-        let level = Handle { at: [0.0, 0.0, 3.0], dir: [0.0, 0.0, 1.0] };
+        let vp = Viewport {
+            width: 200.0,
+            height: 200.0,
+        };
+        let level = Handle {
+            at: [0.0, 0.0, 3.0],
+            dir: [0.0, 0.0, 1.0],
+        };
         let (foot, tip) = on_screen(&level, &camera, &vp).expect("in view");
         assert_eq!(foot, tip, "pointing at the eye: no arrow");
         assert_eq!(along(&level, &camera, &vp, 25.0, 0.0), 0.0);
-        let east = Handle { at: [2.0, 0.0, 0.0], dir: [1.0, 0.0, 0.0] };
+        let east = Handle {
+            at: [2.0, 0.0, 0.0],
+            dir: [1.0, 0.0, 0.0],
+        };
         let (foot, tip) = on_screen(&east, &camera, &vp).expect("in view");
-        assert!((foot.x - 120.0).abs() < 1e-3 && (foot.y - 100.0).abs() < 1e-3, "{foot:?}");
-        assert!((tip.x - foot.x - LENGTH).abs() < 1e-3 && (tip.y - foot.y).abs() < 1e-3, "{tip:?}");
+        assert!(
+            (foot.x - 120.0).abs() < 1e-3 && (foot.y - 100.0).abs() < 1e-3,
+            "{foot:?}"
+        );
+        assert!(
+            (tip.x - foot.x - LENGTH).abs() < 1e-3 && (tip.y - foot.y).abs() < 1e-3,
+            "{tip:?}"
+        );
         let handles = [level, east];
-        assert_eq!(at(&handles, &camera, &vp, Point::new(140.0, 103.0)), Some(1), "on its arrow");
-        assert_eq!(at(&handles, &camera, &vp, Point::new(140.0, 112.0)), None, "beside it");
-        assert_eq!(at(&handles, &camera, &vp, Point::new(101.0, 101.0)), Some(0), "the level cut's dot");
+        assert_eq!(
+            at(&handles, &camera, &vp, Point::new(140.0, 103.0)),
+            Some(1),
+            "on its arrow"
+        );
+        assert_eq!(
+            at(&handles, &camera, &vp, Point::new(140.0, 112.0)),
+            None,
+            "beside it"
+        );
+        assert_eq!(
+            at(&handles, &camera, &vp, Point::new(101.0, 101.0)),
+            Some(0),
+            "the level cut's dot"
+        );
         assert!((along(&east, &camera, &vp, 25.0, 0.0) - 2.5).abs() < 1e-9);
         assert!(along(&east, &camera, &vp, 0.0, -25.0).abs() < 1e-9);
     }

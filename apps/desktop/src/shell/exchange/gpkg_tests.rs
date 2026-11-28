@@ -12,10 +12,10 @@ use crate::app::{App, Message, Picker};
 use crate::files_testing::{app_with_drawing, scratch};
 
 mod delivery;
-mod write_into;
 mod neighbours;
 mod reconcile;
 mod status;
+mod write_into;
 
 use reconcile::reconcile_scene;
 
@@ -86,11 +86,21 @@ fn a_cbs_projects_geopackage_tables_are_added_as_data_layers() {
         .layers()
         .leaves()
         .into_iter()
-        .filter(|n| n.data.as_ref().is_some_and(|d| d.address.ends_with("qgis.gpkg")))
+        .filter(|n| {
+            n.data
+                .as_ref()
+                .is_some_and(|d| d.address.ends_with("qgis.gpkg"))
+        })
         .count();
-    assert!(data > 0, "{:?}", app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>());
     assert!(
-        app.log.lines().any(|l| l.text.contains("veri katmanı eklendi")),
+        data > 0,
+        "{:?}",
+        app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>()
+    );
+    assert!(
+        app.log
+            .lines()
+            .any(|l| l.text.contains("veri katmanı eklendi")),
         "{:?}",
         app.log.lines().last().map(|l| l.text.clone())
     );
@@ -742,7 +752,11 @@ fn a_geopackages_tables_each_keep_their_own_system() {
     assert!(app.exchange.is_some(), "the import waits for the move");
     send(&mut app, Event::Gpkg(G::Reproject));
     send(&mut app, Event::Gpkg(G::Run));
-    assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    assert!(
+        app.exchange.is_none(),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
     let (a, a_crs) = points_of(&app, "A_TM33");
     let (b, b_crs) = points_of(&app, "B_WGS84");
     assert_eq!(a_crs, Some(5255));
@@ -755,7 +769,10 @@ fn a_geopackages_tables_each_keep_their_own_system() {
     for (got, want) in [(&a, &reference), (&b, &reference)] {
         assert_eq!(got.len(), 3);
         for (p, w) in got.iter().zip(want.iter()) {
-            assert!((p.0 - w.0).abs() < 1e-3 && (p.1 - w.1).abs() < 1e-3, "{p:?} for {w:?}");
+            assert!(
+                (p.0 - w.0).abs() < 1e-3 && (p.1 - w.1).abs() < 1e-3,
+                "{p:?} for {w:?}"
+            );
         }
     }
 }
@@ -765,7 +782,10 @@ fn the_wgs84_table_alone_asks_for_the_move() {
     let mut app = two_systems();
     send(&mut app, Event::Gpkg(G::Toggle(0)));
     send(&mut app, Event::Gpkg(G::Run));
-    assert!(app.exchange.is_some(), "the WGS 84 table waits for the move");
+    assert!(
+        app.exchange.is_some(),
+        "the WGS 84 table waits for the move"
+    );
     send(&mut app, Event::Gpkg(G::Reproject));
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
     let mut update = |app: &mut App, m| drop(app.update(m));
@@ -782,8 +802,16 @@ fn inventory() -> App {
     use serde_json::json;
     let (mut app, _) = App::boot(None);
     let mut o = crate::tools_scenes::Objects::new();
-    o.path("parsel", &[[0.0, 0.0], [20.0, 0.0], [20.0, 15.0], [0.0, 15.0]], true);
-    o.path("parsel", &[[30.0, 0.0], [50.0, 0.0], [50.0, 15.0], [30.0, 15.0]], true);
+    o.path(
+        "parsel",
+        &[[0.0, 0.0], [20.0, 0.0], [20.0, 15.0], [0.0, 15.0]],
+        true,
+    );
+    o.path(
+        "parsel",
+        &[[30.0, 0.0], [50.0, 0.0], [50.0, 15.0], [30.0, 15.0]],
+        true,
+    );
     o.line("yol", [-5.0, -5.0], [55.0, -5.0]);
     for x in [5.0, 25.0, 45.0] {
         o.point("agac", [x, -8.0], None);
@@ -811,7 +839,10 @@ fn inventory() -> App {
 /// The rows of each table the file at `path` holds, by table name.
 fn rows_of(path: &std::path::Path) -> Vec<(String, usize)> {
     let read = kentos_native_application::geopackage::read(path, None).expect("the file reads");
-    read.tables.iter().map(|t| (t.name.clone(), t.objects.len())).collect()
+    read.tables
+        .iter()
+        .map(|t| (t.name.clone(), t.objects.len()))
+        .collect()
 }
 
 /// GIS-007 (docs/adr/1073): GeoPackage dışa aktar asks what goes in before the file, each scope counted; with one park
@@ -825,7 +856,11 @@ fn the_geopackage_export_writes_the_scope_it_shows() {
     let Some(Window::GpkgOut(s)) = &app.exchange else {
         panic!("the export window");
     };
-    assert_eq!(s.scope, Scope::Selection, "something is selected: the selection first");
+    assert_eq!(
+        s.scope,
+        Scope::Selection,
+        "something is selected: the selection first"
+    );
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
     let mut update = |app: &mut App, m| drop(app.update(m));
     shot.settle(&mut app, App::view, &mut update);
@@ -833,7 +868,15 @@ fn the_geopackage_export_writes_the_scope_it_shows() {
     for (scope, file, want) in [
         (Scope::Selection, "secili.gpkg", vec![("Park sınırları", 1)]),
         (Scope::Active, "etkin.gpkg", vec![("Park sınırları", 2)]),
-        (Scope::All, "tum.gpkg", vec![("Park sınırları", 2), ("Yürüyüş yolları", 1), ("Ağaçlar", 3)]),
+        (
+            Scope::All,
+            "tum.gpkg",
+            vec![
+                ("Park sınırları", 2),
+                ("Yürüyüş yolları", 1),
+                ("Ağaçlar", 3),
+            ],
+        ),
     ] {
         if app.exchange.is_none() {
             run(&mut app, "file.export.gpkg");
@@ -842,10 +885,15 @@ fn the_geopackage_export_writes_the_scope_it_shows() {
         let out = dir.join(file);
         app.picker = Picker::File(out.clone());
         send(&mut app, Event::GpkgOut(O::Save));
-        assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+        assert!(
+            app.exchange.is_none(),
+            "{:?}",
+            app.log.lines().last().map(|l| l.text.clone())
+        );
         let mut got = rows_of(&out);
         got.sort();
-        let mut want: Vec<(String, usize)> = want.into_iter().map(|(n, r)| (n.to_owned(), r)).collect();
+        let mut want: Vec<(String, usize)> =
+            want.into_iter().map(|(n, r)| (n.to_owned(), r)).collect();
         want.sort();
         assert_eq!(got, want, "{scope:?}");
     }
@@ -868,22 +916,42 @@ fn a_geopackage_tables_declared_type_types_its_layer() {
         run(&mut app, "file.import.gpkg");
         send(&mut app, Event::Gpkg(G::Reproject));
         send(&mut app, Event::Gpkg(G::Run));
-        assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+        assert!(
+            app.exchange.is_none(),
+            "{:?}",
+            app.log.lines().last().map(|l| l.text.clone())
+        );
         app
     };
     let type_of = |app: &App, name: &str| {
         let doc = &app.document.as_ref().expect("open").model;
-        doc.layers().leaves().into_iter().find(|l| l.name == name).and_then(|l| l.geometry)
+        doc.layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == name)
+            .and_then(|l| l.geometry)
     };
     let mut app = open("gis", "egri-tampon.gpkg");
     assert_eq!(type_of(&app, "Park koruma 10 m"), Some(LayerGeometry::Area));
     let doc = &mut app.document.as_mut().expect("open").model;
-    let id = doc.layers().leaves().into_iter().find(|l| l.name == "Park koruma 10 m").map(|l| l.id.clone()).unwrap();
+    let id = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "Park koruma 10 m")
+        .map(|l| l.id.clone())
+        .unwrap();
     assert!(doc.set_active_layer(&id));
-    assert!(crate::layer_types::misfit(doc, "tool.point").is_some(), "the point tool is off");
+    assert!(
+        crate::layer_types::misfit(doc, "tool.point").is_some(),
+        "the point tool is off"
+    );
     assert!(crate::layer_types::misfit(doc, "tool.polygon").is_none());
     let again = kentos_domain::Document::from_snapshot(doc.to_snapshot()).expect("opens again");
-    assert_eq!(again.layers().get(&id).and_then(|l| l.geometry), Some(LayerGeometry::Area));
+    assert_eq!(
+        again.layers().get(&id).and_then(|l| l.geometry),
+        Some(LayerGeometry::Area)
+    );
     let app = open("gis", "cift-sistem.gpkg");
     assert_eq!(type_of(&app, "A_TM33"), Some(LayerGeometry::Point));
     assert_eq!(type_of(&app, "B_WGS84"), Some(LayerGeometry::Point));
@@ -908,7 +976,10 @@ fn a_layers_empty_template_goes_out_as_an_empty_table() {
         let mut route = crate::tools_scenes::layer("rota", "Bakım rotaları", "#E5484D", 0.5);
         route["geometry"] = json!("line");
         route["fields"] = json!([{ "name": "rota_kodu", "alias": "Rota kodu", "kind": "text", "required": true }]);
-        d["layers"] = json!([crate::tools_scenes::layer("nokta", "Saha noktaları", "#30A46C", 0.25), route]);
+        d["layers"] = json!([
+            crate::tools_scenes::layer("nokta", "Saha noktaları", "#30A46C", 0.25),
+            route
+        ]);
         d["activeLayer"] = json!("nokta");
     });
     run(&mut app, "file.export.gpkg");
@@ -919,19 +990,37 @@ fn a_layers_empty_template_goes_out_as_an_empty_table() {
     let out = dir.join("saha.gpkg");
     app.picker = Picker::File(out.clone());
     send(&mut app, Event::GpkgOut(O::Save));
-    assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    assert!(
+        app.exchange.is_none(),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
     let gp = kentos_geopackage::GeoPackage::open(&out, false).expect("opens");
     let layers = gp.layers().expect("tables");
-    let route = layers.iter().find(|l| l.name == "Bakım rotaları").expect("the empty template");
-    assert_eq!(route.geometry.as_ref().map(|g| g.type_name.as_str()), Some("LINESTRING"));
+    let route = layers
+        .iter()
+        .find(|l| l.name == "Bakım rotaları")
+        .expect("the empty template");
+    assert_eq!(
+        route.geometry.as_ref().map(|g| g.type_name.as_str()),
+        Some("LINESTRING")
+    );
     assert!(route.columns.iter().any(|c| c.name == "rota_kodu"));
     assert_eq!(gp.count(route).expect("rows"), 0);
     drop(gp);
     // Read back, the template is a typed line layer with its field and no object.
     let read = kentos_native_application::geopackage::read(&out, None).expect("reads");
-    let t = read.tables.iter().find(|t| t.name == "Bakım rotaları").expect("read");
+    let t = read
+        .tables
+        .iter()
+        .find(|t| t.name == "Bakım rotaları")
+        .expect("read");
     assert!(t.objects.is_empty());
-    assert!(t.fields.iter().any(|f| f.name == "rota_kodu" && f.alias.as_deref() == Some("Rota kodu") && f.required));
+    assert!(
+        t.fields.iter().any(|f| f.name == "rota_kodu"
+            && f.alias.as_deref() == Some("Rota kodu")
+            && f.required)
+    );
     // The box cleared: only the layer with objects.
     run(&mut app, "file.export.gpkg");
     send(&mut app, Event::GpkgOut(O::Empty));
@@ -939,14 +1028,25 @@ fn a_layers_empty_template_goes_out_as_an_empty_table() {
     app.picker = Picker::File(out.clone());
     send(&mut app, Event::GpkgOut(O::Save));
     let gp = kentos_geopackage::GeoPackage::open(&out, false).expect("opens");
-    assert!(gp.layers().expect("tables").iter().all(|l| l.name != "Bakım rotaları"));
+    assert!(
+        gp.layers()
+            .expect("tables")
+            .iter()
+            .all(|l| l.name != "Bakım rotaları")
+    );
 }
 
 /// The area's length and area, each bulged edge its arc (geometry-core's own sums).
 fn arc_measures(e: &kentos_commands::Entity) -> (f64, f64) {
-    let kentos_commands::Entity::Polygon(p) = e else { panic!("an area: {}", e.kind()) };
+    let kentos_commands::Entity::Polygon(p) = e else {
+        panic!("an area: {}", e.kind())
+    };
     let bulges = p.bulges.as_deref();
-    let pts: Vec<kentos_geometry_core::Vec2> = p.pts.iter().map(|q| kentos_geometry_core::Vec2::new(q.x, q.y)).collect();
+    let pts: Vec<kentos_geometry_core::Vec2> = p
+        .pts
+        .iter()
+        .map(|q| kentos_geometry_core::Vec2::new(q.x, q.y))
+        .collect();
     (
         kentos_geometry_core::geom::bulge::bulge_path_length(&pts, bulges, true),
         kentos_geometry_core::geom::bulge::bulge_ring_area(&pts, bulges).abs(),
@@ -973,13 +1073,27 @@ fn the_park_buffer_keeps_its_arcs_through_fgb_gml_and_csv() {
     run(&mut app, "file.import.gpkg");
     send(&mut app, Event::Gpkg(G::Run));
     let doc = &app.document.as_ref().expect("open").model;
-    let buffer = doc.entities().find(|e| e.kind() == "polygon").expect("the buffer").clone();
+    let buffer = doc
+        .entities()
+        .find(|e| e.kind() == "polygon")
+        .expect("the buffer")
+        .clone();
     let (perimeter, area) = arc_measures(&buffer);
-    assert!((perimeter - PERIMETER).abs() < 1e-3 && (area - AREA).abs() < 1e-4, "{perimeter} {area}");
+    assert!(
+        (perimeter - PERIMETER).abs() < 1e-3 && (area - AREA).abs() < 1e-4,
+        "{perimeter} {area}"
+    );
     // The exchange check's round trips through FlatGeobuf and GML.
     let _ = app.update(Message::Run("file.exchangeCheck"));
-    let _ = app.update(Message::ExchangeCheck(crate::exchange_check_window::Event::Matrix));
-    let m = app.exchange_check.matrix.clone().expect("a matrix").expect("checked");
+    let _ = app.update(Message::ExchangeCheck(
+        crate::exchange_check_window::Event::Matrix,
+    ));
+    let m = app
+        .exchange_check
+        .matrix
+        .clone()
+        .expect("a matrix")
+        .expect("checked");
     for f in [F::Fgb, F::Gml] {
         for aspect in ["curves", "position", "shape", "length", "area"] {
             let cell = m
@@ -988,7 +1102,12 @@ fn the_park_buffer_keeps_its_arcs_through_fgb_gml_and_csv() {
                 .find(|r| r.aspect == aspect)
                 .and_then(|r| r.cells.iter().find(|c| c.format == f))
                 .expect("a cell");
-            assert_eq!(cell.state, S::Kept, "{f:?} {aspect}: {:?}", m.checks.iter().find(|c| c.format == f).map(|c| &c.numeric));
+            assert_eq!(
+                cell.state,
+                S::Kept,
+                "{f:?} {aspect}: {:?}",
+                m.checks.iter().find(|c| c.format == f).map(|c| &c.numeric)
+            );
         }
     }
     // A CSV with WKT: written and read back by KentOS's own CSV writer and reader.
@@ -1000,13 +1119,28 @@ fn the_park_buffer_keeps_its_arcs_through_fgb_gml_and_csv() {
     let made = kentos_native_application::csv_table::export(doc, &export).expect("written");
     let import: kentos_commands::ImportCsv =
         serde_json::from_value(json!({ "path": path.to_string_lossy() })).expect("the input");
-    let read = kentos_native_application::csv_table::read(&path, &made.csv, &import).expect("read back");
-    let back = read.tables[0].objects.iter().map(|(_, e)| e).find(|e| e.kind() == "polygon").expect("the buffer back");
+    let read =
+        kentos_native_application::csv_table::read(&path, &made.csv, &import).expect("read back");
+    let back = read.tables[0]
+        .objects
+        .iter()
+        .map(|(_, e)| e)
+        .find(|e| e.kind() == "polygon")
+        .expect("the buffer back");
     let (perimeter, area) = arc_measures(back);
-    assert!((perimeter - PERIMETER).abs() < 1e-3, "CSV perimeter {perimeter}");
+    assert!(
+        (perimeter - PERIMETER).abs() < 1e-3,
+        "CSV perimeter {perimeter}"
+    );
     assert!((area - AREA).abs() < 1e-4, "CSV area {area}");
-    let kentos_commands::Entity::Polygon(p) = back else { unreachable!() };
-    assert!(p.bulges.iter().flatten().all(|b| b.abs() < 0.5), "{:?}", p.bulges);
+    let kentos_commands::Entity::Polygon(p) = back else {
+        unreachable!()
+    };
+    assert!(
+        p.bulges.iter().flatten().all(|b| b.abs() < 0.5),
+        "{:?}",
+        p.bulges
+    );
 }
 
 /// GIS-047 (docs/adr/1104): with the link's key set (parsel_no), each conflict's row starts with the key and its value
@@ -1018,16 +1152,35 @@ fn a_conflict_s_row_names_the_key_and_the_layer() {
     let mut settings = doc.settings().clone();
     settings.sources[0].key = Some("parsel_no".into());
     doc.set_settings(settings);
-    let _ = app.update(Message::Bound(crate::bound::Event::Write(Some("import-parsel".into()))));
+    let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
+        "import-parsel".into(),
+    ))));
     let titles = app.reconcile_titles();
     assert!(!titles.is_empty(), "the window with its conflicts");
     let layer = app
         .document
         .as_ref()
-        .and_then(|d| d.model.layers().get("import-parsel").map(|n| n.name.clone()))
+        .and_then(|d| {
+            d.model
+                .layers()
+                .get("import-parsel")
+                .map(|n| n.name.clone())
+        })
         .expect("the layer");
-    assert!(titles.iter().any(|t| t.starts_with("parsel_no 6") && t.ends_with(&format!("({layer})"))), "{titles:?}");
-    assert!(titles.iter().filter(|t| t.starts_with("parsel_no ")).count() >= 2, "{titles:?}");
+    assert!(
+        titles
+            .iter()
+            .any(|t| t.starts_with("parsel_no 6") && t.ends_with(&format!("({layer})"))),
+        "{titles:?}"
+    );
+    assert!(
+        titles
+            .iter()
+            .filter(|t| t.starts_with("parsel_no "))
+            .count()
+            >= 2,
+        "{titles:?}"
+    );
 }
 
 /// Writing over a GeoPackage that is there (docs/adr/9168, 9191): the window asks how, “Yalnız bu tabloları yeniden
@@ -1040,7 +1193,9 @@ fn writing_over_a_geopackage_says_which_of_its_tables_go() {
     let out = dir.join("var-olan.gpkg");
     // A file there with a table of its own.
     kentos_geopackage::GeoPackage::create(&out).expect("a file");
-    let source = kentos_data_gpkg::Gpkg.open(out.to_str().expect("utf-8")).expect("open");
+    let source = kentos_data_gpkg::Gpkg
+        .open(out.to_str().expect("utf-8"))
+        .expect("open");
     crate::data_layers_tests::point_table(
         &*source,
         "eski_tablo",
@@ -1052,48 +1207,128 @@ fn writing_over_a_geopackage_says_which_of_its_tables_go() {
     let mut app = app_with_drawing();
     app.picker = Picker::File(out.clone());
     run(&mut app, "file.export.gpkg");
-    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)));
+    send(
+        &mut app,
+        Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)),
+    );
     send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
-    let Some(super::Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
+    let Some(super::Window::GpkgOut(state)) = &app.exchange else {
+        panic!("the window")
+    };
     let confirm = state.confirm.clone().expect("asked before writing over");
-    assert_eq!(confirm.tables.as_deref(), Some(&["eski_tablo".to_owned()][..]));
+    assert_eq!(
+        confirm.tables.as_deref(),
+        Some(&["eski_tablo".to_owned()][..])
+    );
     // Only these tables, first: the file's own table stays.
     assert_eq!(state.write, kentos_commands::GpkgWrite::Tables);
-    let lines: Vec<String> = app.gpkg_out_confirm_lines(state, &confirm).into_iter().map(|(_, l)| l).collect();
-    assert!(lines.iter().any(|l| l == "Olduğu gibi kalan tablolar (1): eski_tablo."), "{lines:#?}");
-    assert!(lines.iter().any(|l| l.starts_with("Yeni tablolar: ")), "{lines:#?}");
-    assert!(!lines.iter().any(|l| l.starts_with("Dosyadan silinen")), "{lines:#?}");
+    let lines: Vec<String> = app
+        .gpkg_out_confirm_lines(state, &confirm)
+        .into_iter()
+        .map(|(_, l)| l)
+        .collect();
+    assert!(
+        lines
+            .iter()
+            .any(|l| l == "Olduğu gibi kalan tablolar (1): eski_tablo."),
+        "{lines:#?}"
+    );
+    assert!(
+        lines.iter().any(|l| l.starts_with("Yeni tablolar: ")),
+        "{lines:#?}"
+    );
+    assert!(
+        !lines.iter().any(|l| l.starts_with("Dosyadan silinen")),
+        "{lines:#?}"
+    );
     // A new file in its place: the table goes, and the way to keep it is said.
-    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Write(kentos_commands::GpkgWrite::File)));
-    let Some(super::Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
-    let lines: Vec<String> = app.gpkg_out_confirm_lines(state, &confirm).into_iter().map(|(_, l)| l).collect();
-    assert!(lines.iter().any(|l| l == "Dosyadan silinen tablolar (1): eski_tablo."), "{lines:#?}");
-    assert!(lines.iter().any(|l| l == super::gpkg_out::KEEP_TABLES), "{lines:#?}");
-    assert!(lines.iter().any(|l| l.starts_with("Yeni tablolar: ")), "{lines:#?}");
-    assert!(lines.iter().any(|l| l.starts_with("Yazılan: ")), "{lines:#?}");
+    send(
+        &mut app,
+        Event::GpkgOut(super::gpkg_out::Event::Write(
+            kentos_commands::GpkgWrite::File,
+        )),
+    );
+    let Some(super::Window::GpkgOut(state)) = &app.exchange else {
+        panic!("the window")
+    };
+    let lines: Vec<String> = app
+        .gpkg_out_confirm_lines(state, &confirm)
+        .into_iter()
+        .map(|(_, l)| l)
+        .collect();
+    assert!(
+        lines
+            .iter()
+            .any(|l| l == "Dosyadan silinen tablolar (1): eski_tablo."),
+        "{lines:#?}"
+    );
+    assert!(
+        lines.iter().any(|l| l == super::gpkg_out::KEEP_TABLES),
+        "{lines:#?}"
+    );
+    assert!(
+        lines.iter().any(|l| l.starts_with("Yeni tablolar: ")),
+        "{lines:#?}"
+    );
+    assert!(
+        lines.iter().any(|l| l.starts_with("Yazılan: ")),
+        "{lines:#?}"
+    );
     // Geri: the file as it was.
     let before = std::fs::read(&out).expect("the file");
     send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Back));
     assert_eq!(std::fs::read(&out).expect("the file"), before);
     let names = |out: &std::path::Path| -> Vec<String> {
         let gp = kentos_geopackage::GeoPackage::open(out, false).expect("opens");
-        gp.layers().expect("tables").into_iter().map(|t| t.name).collect()
+        gp.layers()
+            .expect("tables")
+            .into_iter()
+            .map(|t| t.name)
+            .collect()
     };
     // Tabloları yeniden yaz: the delivery's tables in, the old table kept.
     send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
-    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Write(kentos_commands::GpkgWrite::Tables)));
+    send(
+        &mut app,
+        Event::GpkgOut(super::gpkg_out::Event::Write(
+            kentos_commands::GpkgWrite::Tables,
+        )),
+    );
     send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Confirm));
-    assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    assert!(
+        app.exchange.is_none(),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
     let kept = names(&out);
-    assert!(kept.contains(&"eski_tablo".to_owned()) && kept.len() > 1, "{kept:?}");
-    assert!(said(&app, "“var-olan.gpkg” yazıldı: "), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    assert!(
+        kept.contains(&"eski_tablo".to_owned()) && kept.len() > 1,
+        "{kept:?}"
+    );
+    assert!(
+        said(&app, "“var-olan.gpkg” yazıldı: "),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
     // Üstüne yaz: the new file, without the old table.
     run(&mut app, "file.export.gpkg");
-    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)));
+    send(
+        &mut app,
+        Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)),
+    );
     send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
-    send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Write(kentos_commands::GpkgWrite::File)));
+    send(
+        &mut app,
+        Event::GpkgOut(super::gpkg_out::Event::Write(
+            kentos_commands::GpkgWrite::File,
+        )),
+    );
     send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Confirm));
-    assert!(app.exchange.is_none(), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    assert!(
+        app.exchange.is_none(),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
     let written = names(&out);
     assert!(!written.contains(&"eski_tablo".to_owned()), "{written:?}");
     assert!(!written.is_empty());
@@ -1112,7 +1347,9 @@ fn writing_over_screens() {
         let dir = scratch(&format!("gpkg-uzerine-resim-{n}"));
         let out = dir.join("teslim.gpkg");
         kentos_geopackage::GeoPackage::create(&out).expect("a file");
-        let source = kentos_data_gpkg::Gpkg.open(out.to_str().expect("utf-8")).expect("open");
+        let source = kentos_data_gpkg::Gpkg
+            .open(out.to_str().expect("utf-8"))
+            .expect("open");
         crate::data_layers_tests::point_table(
             &*source,
             "eski_tablo",
@@ -1124,7 +1361,10 @@ fn writing_over_screens() {
         let mut app = app_with_drawing();
         app.picker = Picker::File(out);
         run(&mut app, "file.export.gpkg");
-        send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)));
+        send(
+            &mut app,
+            Event::GpkgOut(super::gpkg_out::Event::Scope(super::gpkg_out::Scope::All)),
+        );
         send(&mut app, Event::GpkgOut(super::gpkg_out::Event::Save));
         app
     });

@@ -5,9 +5,9 @@
 //! GNSS arşivi's Projeye yaz keeps the typed limits with their source, and they judge the known points' places. And the
 //! pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_commands::NetworkCorrelations;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -22,8 +22,10 @@ const MOVING: &str = "Yeni noktaların hızı arazi ölçümünün";
 /// A shared case's drawing, GNSS ağ dengelemesi open on it.
 fn opened(starts: &str) -> App {
     crate::survey_epoch_tests::grids();
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.survey.network.json")).expect("cases");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.survey.network.json"
+    ))
+    .expect("cases");
     let case = cases["cases"]
         .as_array()
         .expect("cases")
@@ -31,7 +33,8 @@ fn opened(starts: &str) -> App {
         .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(starts)))
         .expect("the case")
         .clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -49,7 +52,8 @@ fn send(app: &mut App, e: N) {
 }
 
 fn answer(app: &App) -> kentos_commands::MapSurveyNetworked {
-    app.modules.map()
+    app.modules
+        .map()
         .survey_network
         .answer
         .clone()
@@ -62,24 +66,50 @@ fn the_sessions_go_in_when_asked_and_the_summary_says_which() {
     let mut app = opened(SESSIONS);
     let plain = answer(&app);
     let c = plain.correlations.as_ref().expect("said");
-    assert_eq!((c.used, c.unused.clone()), (NetworkCorrelations::None, vec!["bo-1".to_owned(), "bo-2".to_owned()]));
+    assert_eq!(
+        (c.used, c.unused.clone()),
+        (
+            NetworkCorrelations::None,
+            vec!["bo-1".to_owned(), "bo-2".to_owned()]
+        )
+    );
     let (_, text) = crate::survey_network_window::sessions_line(&plain).expect("a line");
     assert!(text.contains("kullanılmadı"), "{text}");
     send(&mut app, N::Correlated(true));
     let with = answer(&app);
     let c = with.correlations.as_ref().expect("said");
-    assert_eq!((c.used, c.sessions.len()), (NetworkCorrelations::Session, 2));
+    assert_eq!(
+        (c.used, c.sessions.len()),
+        (NetworkCorrelations::Session, 2)
+    );
     let (_, text) = crate::survey_network_window::sessions_line(&with).expect("a line");
-    assert!(text.starts_with("2 baz oturumu (bo-1, bo-2) tam kovaryansıyla girdi"), "{text}");
+    assert!(
+        text.starts_with("2 baz oturumu (bo-1, bo-2) tam kovaryansıyla girdi"),
+        "{text}"
+    );
     assert!(with.acceptable, "{:?}", with.why);
     // Bazlar: each baseline's session, from the archive.
     send(&mut app, N::View(View::Baselines));
-    let survey = app.document.as_ref().and_then(|d| d.model.map_survey()).expect("an archive");
-    assert_eq!(survey.session_of("bz-6").map(|s| s.id.as_str()), Some("bo-2"));
+    let survey = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.map_survey())
+        .expect("an archive");
+    assert_eq!(
+        survey.session_of("bz-6").map(|s| s.id.as_str()),
+        Some("bo-2")
+    );
     // Kabul et keeps the sessions in the adjustment's record, in one step.
     send(&mut app, N::Accept);
-    let survey = app.document.as_ref().and_then(|d| d.model.map_survey()).expect("an archive");
-    assert_eq!(survey.adjustments.last().map(|a| a.sessions.clone()), Some(vec!["bo-1".to_owned(), "bo-2".to_owned()]));
+    let survey = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.map_survey())
+        .expect("an archive");
+    assert_eq!(
+        survey.adjustments.last().map(|a| a.sessions.clone()),
+        Some(vec!["bo-1".to_owned(), "bo-2".to_owned()])
+    );
 }
 
 #[test]
@@ -87,15 +117,33 @@ fn the_new_marks_velocities_come_from_the_grid_and_are_kept() {
     let mut app = opened(MOVING);
     send(&mut app, N::Velocities(true));
     let a = answer(&app);
-    assert_eq!(a.velocity_grid.as_ref().map(|g| g.name.as_str()), Some("Hız alanı (sentetik)"));
+    assert_eq!(
+        a.velocity_grid.as_ref().map(|g| g.name.as_str()),
+        Some("Hız alanı (sentetik)")
+    );
     let n1 = a.stations.iter().find(|s| s.mark == "N1").expect("N1");
     let v = n1.velocity.expect("its velocity");
     // ~2.4 cm a year west, 0.8 cm north on the synthetic grid.
     assert!(v[0] < -0.02 && v[1] > 0.005, "{v:?}");
-    assert!(a.stations.iter().filter(|s| s.known.is_some()).all(|s| s.velocity.is_none()), "known points have none");
+    assert!(
+        a.stations
+            .iter()
+            .filter(|s| s.known.is_some())
+            .all(|s| s.velocity.is_none()),
+        "known points have none"
+    );
     send(&mut app, N::Accept);
-    let survey = app.document.as_ref().and_then(|d| d.model.map_survey()).expect("an archive");
-    let kept = survey.points.iter().find(|p| p.mark == "N1").and_then(|p| p.result.velocity.clone()).expect("kept");
+    let survey = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.map_survey())
+        .expect("an archive");
+    let kept = survey
+        .points
+        .iter()
+        .find(|p| p.mark == "N1")
+        .and_then(|p| p.result.velocity.clone())
+        .expect("kept");
     assert_eq!(kept.enu, v);
 }
 
@@ -108,15 +156,26 @@ fn the_limits_are_kept_with_their_source_and_judge_the_places() {
     };
     mp(&mut app, P::LimitHorizontal("0,02".into()));
     mp(&mut app, P::LimitSave);
-    let kept = |app: &App| app.document.as_ref().and_then(|d| d.model.map_survey()).and_then(|s| s.tolerance.clone());
+    let kept = |app: &App| {
+        app.document
+            .as_ref()
+            .and_then(|d| d.model.map_survey())
+            .and_then(|s| s.tolerance.clone())
+    };
     assert_eq!(kept(&app), None, "no source: not written");
     mp(&mut app, P::LimitSource("İdarenin şartnamesi".into()));
     mp(&mut app, P::LimitSave);
     let t = kept(&app).expect("written");
-    assert_eq!((t.horizontal, t.vertical, t.source.as_str()), (Some(0.02), None, "İdarenin şartnamesi"));
+    assert_eq!(
+        (t.horizontal, t.vertical, t.source.as_str()),
+        (Some(0.02), None, "İdarenin şartnamesi")
+    );
     // The typed boxes emptied: the kept limits judge the places (the tree says them).
     mp(&mut app, P::LimitHorizontal(String::new()));
-    let tree = app.map_survey_read().expect("a drawing").expect("an archive");
+    let tree = app
+        .map_survey_read()
+        .expect("a drawing")
+        .expect("an archive");
     assert_eq!(tree.tolerance.map(|t| t.horizontal), Some(Some(0.02)));
     // Nothing typed: Projeye yaz takes the kept limits away; one undo brings them back.
     mp(&mut app, P::LimitSave);
@@ -135,7 +194,8 @@ fn the_limits_are_kept_with_their_source_and_judge_the_places() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/gnss-oturum-hiz-4920");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/gnss-oturum-hiz-4920");
     std::fs::create_dir_all(&out).expect("a folder");
     let shoot = |app: &mut App, size: Size, file: &str| {
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -144,25 +204,41 @@ fn screens() {
         };
         snapshot.settle(app, App::view, &mut update);
         let file = out.join(file);
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     };
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let setup = |app: &mut App| {
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
         };
         let mut app = opened(SESSIONS);
         setup(&mut app);
         send(&mut app, N::Correlated(true));
-        shoot(&mut app, size, &format!("1-oturum-korelasyonlari-{name}.png"));
+        shoot(
+            &mut app,
+            size,
+            &format!("1-oturum-korelasyonlari-{name}.png"),
+        );
         send(&mut app, N::View(View::Baselines));
         shoot(&mut app, size, &format!("2-bazlarin-oturumu-{name}.png"));
         let mut app = opened(MOVING);
         setup(&mut app);
         send(&mut app, N::Velocities(true));
-        shoot(&mut app, size, &format!("3-yeni-noktalarin-hizi-{name}.png"));
+        shoot(
+            &mut app,
+            size,
+            &format!("3-yeni-noktalarin-hizi-{name}.png"),
+        );
         send(&mut app, N::Close);
         app.docks
             .update(kentos_ui::widget::docking::Event::Selected(

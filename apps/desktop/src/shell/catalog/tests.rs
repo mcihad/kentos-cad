@@ -332,7 +332,11 @@ fn the_ribbon_keeps_every_command_the_old_one_placed() {
             }
         }
     }
-    for tabs in raw["layout"]["ribbonByMode"].as_object().expect("the modes").values() {
+    for tabs in raw["layout"]["ribbonByMode"]
+        .as_object()
+        .expect("the modes")
+        .values()
+    {
         for tab in tabs.as_array().into_iter().flatten() {
             for panel in tab["panels"].as_array().into_iter().flatten() {
                 walk(&panel["items"], &mut old);
@@ -346,11 +350,7 @@ fn the_ribbon_keeps_every_command_the_old_one_placed() {
     }
     let catalog = Catalog::load(INVENTORY, ADDITIONS, RIBBON).expect("the catalog loads");
     let mut now: BTreeSet<&str> = BTreeSet::new();
-    for tab in catalog
-        .mode_tabs
-        .iter()
-        .flat_map(|(_, tabs)| tabs.iter())
-    {
+    for tab in catalog.mode_tabs.iter().flat_map(|(_, tabs)| tabs.iter()) {
         for panel in &tab.panels {
             now.extend(panel.overflow.iter().copied());
             if let Some(Launcher {
@@ -384,7 +384,11 @@ fn the_ribbon_keeps_every_command_the_old_one_placed() {
         .iter()
         .filter(|id| !now.contains(id.as_str()))
         .filter(|id| !id.starts_with("processing.run.") && !id.starts_with("workspace."))
-        .filter(|id| catalog.get(id).is_some_and(|c| c.standing == Standing::Ported))
+        .filter(|id| {
+            catalog
+                .get(id)
+                .is_some_and(|c| c.standing == Standing::Ported)
+        })
         .collect();
     assert!(lost.is_empty(), "the ribbon lost {lost:?}");
     // And every İşlemler tool the old ribbon placed is a tool the toolbox lists.
@@ -400,7 +404,12 @@ fn the_ribbon_keeps_every_command_the_old_one_placed() {
     let gone: Vec<&String> = old
         .iter()
         .filter_map(|id| id.strip_prefix("processing.run.").map(|t| (id, t)))
-        .filter(|(id, t)| !tools.contains(*t) && catalog.get(id).is_some_and(|c| c.standing == Standing::Ported))
+        .filter(|(id, t)| {
+            !tools.contains(*t)
+                && catalog
+                    .get(id)
+                    .is_some_and(|c| c.standing == Standing::Ported)
+        })
         .map(|(id, _)| id)
         .collect();
     assert!(gone.is_empty(), "not in the toolbox: {gone:?}");

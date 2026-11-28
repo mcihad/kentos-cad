@@ -158,7 +158,8 @@ fn bind(dir: &Path, bytes: &[u8], host: Host, options: Options) -> Result<DryRun
         }
     }
     if registry.extensions().iter().any(|v| v.id == id) {
-        out.residue.push("kayıt defterinde girdisi kaldı".to_owned());
+        out.residue
+            .push("kayıt defterinde girdisi kaldı".to_owned());
     }
     let leases = registry
         .contributions()

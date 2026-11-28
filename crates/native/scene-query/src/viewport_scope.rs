@@ -1,7 +1,7 @@
 //! Read-only derived geometry for an explicit paper viewport; all records retain original model slots.
 use kentos_commands::{CommandError, Entity, SheetModelScope};
 use kentos_domain::Document;
-use kentos_geometry_core::{entity::Shape, store::Store, Vec2};
+use kentos_geometry_core::{Vec2, entity::Shape, store::Store};
 pub use kentos_sheet::model_scope::Viewport;
 
 pub fn resolve(doc: &Document, scope: &SheetModelScope) -> Result<Viewport, Box<CommandError>> {
@@ -28,7 +28,7 @@ pub fn resolve(doc: &Document, scope: &SheetModelScope) -> Result<Viewport, Box<
 }
 
 pub fn entity_at(entity: &Entity, scale: Option<f64>) -> Option<std::borrow::Cow<'_, Entity>> {
-    use kentos_commands::annotative::{at_scale, AtScale};
+    use kentos_commands::annotative::{AtScale, at_scale};
     match scale.map(|s| at_scale(entity, s)) {
         Some(AtScale::Hidden) => None,
         Some(AtScale::Drawn(e)) => Some(std::borrow::Cow::Owned(*e)),

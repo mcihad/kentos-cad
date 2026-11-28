@@ -2,23 +2,19 @@
 //! the inspector edits the point shown and the grid follows. Harita's profile shows the tab, so these run with the
 //! module registered (docs/adr/9199 §4.2); the rest of the points' tests are the core's (gis/points/display_tests.rs).
 
+use crate::app::{App, Message};
 use crate::gis;
-use kentos_commands::Entity;
-use kentos_domain::Slot;
 use crate::points::Event;
 use crate::points::edit::EditColumn;
-use crate::app::{App, Message};
+use kentos_commands::Entity;
+use kentos_domain::Slot;
 
 fn ev(app: &mut App, e: Event) {
     let _ = app.update(Message::Gis(gis::Event::Points(e)));
 }
 
 /// The task's widget operations run in the picture, as iced's runtime runs them.
-fn operate(
-    snapshot: &mut kentos_ui::snapshot::Snapshot,
-    app: &App,
-    task: iced::Task<Message>,
-) {
+fn operate(snapshot: &mut kentos_ui::snapshot::Snapshot, app: &App, task: iced::Task<Message>) {
     use iced::futures::StreamExt as _;
     if let Some(mut stream) = iced_runtime::task::into_stream(task) {
         while let Some(action) = iced::futures::executor::block_on(stream.next()) {

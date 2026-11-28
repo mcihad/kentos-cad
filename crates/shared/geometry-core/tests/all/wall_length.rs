@@ -46,9 +46,15 @@ fn a_free_end_moves_alone_and_the_start_stays() {
     assert_eq!(m.len(), 1);
     assert!(near(m[0].pts[0], (0., 0.)) && near(m[0].pts[1], (5.5, 0.)));
     let m = lengthen(&w, 0, 0, 3.0, Anchor::End).unwrap();
-    assert!(near(m[0].pts[0], (1., 0.)) && near(m[0].pts[1], (4., 0.)), "the start moved");
+    assert!(
+        near(m[0].pts[0], (1., 0.)) && near(m[0].pts[1], (4., 0.)),
+        "the start moved"
+    );
     let m = lengthen(&w, 0, 0, 5.0, Anchor::Middle).unwrap();
-    assert!(near(m[0].pts[0], (-0.5, 0.)) && near(m[0].pts[1], (4.5, 0.)), "half each way");
+    assert!(
+        near(m[0].pts[0], (-0.5, 0.)) && near(m[0].pts[1], (4.5, 0.)),
+        "half each way"
+    );
 }
 
 #[test]
@@ -81,16 +87,30 @@ fn a_wall_end_to_end_shortens_and_a_tee_or_a_path_corner_is_refused() {
     let m = lengthen(&w, 0, 0, 4.0, Anchor::Start).unwrap();
     assert!(near(m[0].pts[1], (4., 0.)));
     let next = m.iter().find(|x| x.wall == 1).expect("the next wall");
-    assert!(near(next.pts[0], (4., 0.)) && near(next.pts[1], (6., 0.)), "it shortened");
-    assert!(lengthen(&w, 0, 0, 6.0, Anchor::Start).unwrap_err().contains("yok ediyor"));
+    assert!(
+        near(next.pts[0], (4., 0.)) && near(next.pts[1], (6., 0.)),
+        "it shortened"
+    );
+    assert!(
+        lengthen(&w, 0, 0, 6.0, Anchor::Start)
+            .unwrap_err()
+            .contains("yok ediyor")
+    );
 
     // A wall standing in another one's body (a tee).
     let p = paths(&[&[(2., 3.), (2., 0.)], &[(0., 0.), (5., 0.)]]);
     let w = ins(&p, &s);
-    assert_eq!(free_ends(&w, 0, 0), [true, false], "the end in the other wall's body cannot move");
+    assert_eq!(
+        free_ends(&w, 0, 0),
+        [true, false],
+        "the end in the other wall's body cannot move"
+    );
     let why = lengthen(&w, 0, 0, 2.0, Anchor::Start).unwrap_err();
     assert!(why.contains("saplı"), "{why}");
-    assert!(lengthen(&w, 0, 0, 2.0, Anchor::End).is_ok(), "its free end moves");
+    assert!(
+        lengthen(&w, 0, 0, 2.0, Anchor::End).is_ok(),
+        "its free end moves"
+    );
 
     // A wall of two edges: its corner does not move.
     let p = paths(&[&[(0., 0.), (4., 0.), (4., 3.)]]);
@@ -105,9 +125,17 @@ fn a_wall_end_to_end_shortens_and_a_tee_or_a_path_corner_is_refused() {
 #[test]
 fn a_crowded_end_and_a_bad_length_are_refused() {
     let s = spec(r#"{"width":0.2,"justify":"center"}"#);
-    let p = paths(&[&[(0., 0.), (3., 0.)], &[(3., 0.), (3., 3.)], &[(3., 0.), (5., -2.)]]);
+    let p = paths(&[
+        &[(0., 0.), (3., 0.)],
+        &[(3., 0.), (3., 3.)],
+        &[(3., 0.), (5., -2.)],
+    ]);
     let w = ins(&p, &s);
-    assert_eq!(free_ends(&w, 0, 0), [true, false], "where three walls meet the end cannot move");
+    assert_eq!(
+        free_ends(&w, 0, 0),
+        [true, false],
+        "where three walls meet the end cannot move"
+    );
     let why = lengthen(&w, 0, 0, 4.0, Anchor::Start).unwrap_err();
     assert!(why.contains("birden çok"), "{why}");
     assert!(lengthen(&w, 0, 0, 0.0, Anchor::Start).is_err());
@@ -115,5 +143,9 @@ fn a_crowded_end_and_a_bad_length_are_refused() {
     let p = paths(&[&[(0., 0.), (4., 0.), (4., 3.), (0., 3.)]]);
     let closed = spec(r#"{"width":0.2,"justify":"center","closed":true}"#);
     let w = ins(&p, &closed);
-    assert_eq!(free_ends(&w, 0, 1), [false, false], "a closed wall has no ends");
+    assert_eq!(
+        free_ends(&w, 0, 1),
+        [false, false],
+        "a closed wall has no ends"
+    );
 }

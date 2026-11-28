@@ -335,7 +335,9 @@ impl Document {
         while let Some((i, _)) = kentos_contracts::casework_problem(&kept) {
             kept.remove(i);
         }
-        if self.casework.len() == kept.len() && self.casework.iter().zip(&kept).all(|(a, b)| **a == *b) {
+        if self.casework.len() == kept.len()
+            && self.casework.iter().zip(&kept).all(|(a, b)| **a == *b)
+        {
             return;
         }
         self.casework = kept

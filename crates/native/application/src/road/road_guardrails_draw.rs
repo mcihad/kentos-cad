@@ -5,8 +5,8 @@
 //! shared cases are `fixtures/commands/v1/road.guardrails.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, GuardrailsDraw, GuardrailsDrawn,
-    NewObject, TextAlign, TextFace, Vec2,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, GuardrailsDraw,
+    GuardrailsDrawn, NewObject, TextAlign, TextFace, Vec2,
 };
 use kentos_domain::Document;
 
@@ -29,7 +29,9 @@ struct Checked {
 fn hinge_at(sides: &[Side], s: f64) -> f64 {
     let i = sides.partition_point(|x| x.station <= s);
     match (i.checked_sub(1).and_then(|k| sides.get(k)), sides.get(i)) {
-        (Some(a), Some(b)) if b.station > a.station => a.hinge + (b.hinge - a.hinge) * (s - a.station) / (b.station - a.station),
+        (Some(a), Some(b)) if b.station > a.station => {
+            a.hinge + (b.hinge - a.hinge) * (s - a.station) / (b.station - a.station)
+        }
         (Some(a), _) => a.hinge,
         (None, Some(b)) => b.hinge,
         (None, None) => 0.0,
@@ -53,7 +55,11 @@ fn object(geometry: EntityGeometry) -> NewObject {
     }
 }
 
-fn check(doc: &Document, input: &GuardrailsDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
+fn check(
+    doc: &Document,
+    input: &GuardrailsDraw,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_guardrails(), &input.guardrail, "guardrail")?;
@@ -75,9 +81,17 @@ fn check(doc: &Document, input: &GuardrailsDraw, told: &dyn Fn(u64, u64) -> bool
             })
         };
         let mut stations = vec![run.from];
-        stations.extend(sides.iter().map(|x| x.station).filter(|&s| s > run.from + 1e-9 && s < run.to - 1e-9));
+        stations.extend(
+            sides
+                .iter()
+                .map(|x| x.station)
+                .filter(|&s| s > run.from + 1e-9 && s < run.to - 1e-9),
+        );
         stations.push(run.to);
-        let pts: Vec<[f64; 2]> = stations.iter().filter_map(|&s| at(s).map(|p| p.0)).collect();
+        let pts: Vec<[f64; 2]> = stations
+            .iter()
+            .filter_map(|&s| at(s).map(|p| p.0))
+            .collect();
         if pts.len() < 2 {
             continue;
         }
@@ -105,8 +119,16 @@ fn check(doc: &Document, input: &GuardrailsDraw, told: &dyn Fn(u64, u64) -> bool
             objects.push(object(EntityGeometry::Text {
                 layout: None,
                 annotative: None,
-                p: Vec2 { x: p[0] + sin * h * side, y: p[1] - cos * h * side },
-                text: format!("Otokorkuluk km {} – {}, {:.1} m", text(run.from), text(run.to), run.to - run.from),
+                p: Vec2 {
+                    x: p[0] + sin * h * side,
+                    y: p[1] - cos * h * side,
+                },
+                text: format!(
+                    "Otokorkuluk km {} – {}, {:.1} m",
+                    text(run.from),
+                    text(run.to),
+                    run.to - run.from
+                ),
                 height: h,
                 rotation: angle,
                 align: Some(TextAlign::MiddleCenter),
@@ -120,10 +142,20 @@ fn check(doc: &Document, input: &GuardrailsDraw, told: &dyn Fn(u64, u64) -> bool
             }));
         }
     }
-    Ok(Checked { id: def.id.clone(), runs: read.runs.len() as u32, length, objects, warnings })
+    Ok(Checked {
+        id: def.id.clone(),
+        runs: read.runs.len() as u32,
+        length,
+        objects,
+        warnings,
+    })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &GuardrailsDraw, c: Checked) -> CommandResult<GuardrailsDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &GuardrailsDraw,
+    c: Checked,
+) -> CommandResult<GuardrailsDrawn> {
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects: c.objects,
@@ -149,7 +181,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &GuardrailsDraw, c: Checked) -> C
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &GuardrailsDraw) -> CommandResult<()> {
     match check(cx.doc, input, &cx.stop_only()) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -172,7 +207,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &GuardrailsDraw) -> CommandResult<
 /// Draws the runs: one undo step.
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::GuardrailsDraw) -> CommandResult<kentos_commands::GuardrailsDrawn> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &kentos_commands::GuardrailsDraw,
+) -> CommandResult<kentos_commands::GuardrailsDrawn> {
     let checked = check(cx.doc, input, &cx.told());
     match checked {
         Ok(c) => write(cx, input, c),
@@ -180,7 +218,10 @@ pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::Guard
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: GuardrailsDraw) -> CommandResult<GuardrailsDrawn> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: GuardrailsDraw,
+) -> CommandResult<GuardrailsDrawn> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_GUARDRAILS_DRAW,
@@ -192,7 +233,14 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: GuardrailsDraw) -> CommandR
                 Ok(c) => write(cx, &input, c),
                 Err(stop) => stop.into(),
             };
-            crate::road_drawings::kept(cx, kentos_commands::ROAD_GUARDRAILS_DRAW, &input, (kentos_commands::RoadSourceKind::Guardrail, "guardrail"), r, |o| &o.uids)
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_GUARDRAILS_DRAW,
+                &input,
+                (kentos_commands::RoadSourceKind::Guardrail, "guardrail"),
+                r,
+                |o| &o.uids,
+            )
         },
     )
 }
@@ -202,17 +250,20 @@ mod stop_tests {
     //! Docs/adr/4860: the corridor's sections, then the crosses told and a stop heard within (`crate::told_tests`), on the shared cases' project.
     use super::*;
 
-    const CASES: &str = include_str!("../../../../../fixtures/commands/v1/road.guardrails.draw.json");
+    const CASES: &str =
+        include_str!("../../../../../fixtures/commands/v1/road.guardrails.draw.json");
 
     #[test]
     fn its_reckoning_is_told_and_hears_a_stop() {
-        let (doc, input): (kentos_domain::Document, kentos_commands::GuardrailsDraw) = crate::told_tests::project(CASES);
+        let (doc, input): (kentos_domain::Document, kentos_commands::GuardrailsDraw) =
+            crate::told_tests::project(CASES);
         crate::told_tests::told_and_stopped(|told| check(&doc, &input, told));
     }
 
     #[test]
     fn a_stopped_job_draws_nothing() {
-        let (mut doc, input): (kentos_domain::Document, kentos_commands::GuardrailsDraw) = crate::told_tests::project(CASES);
+        let (mut doc, input): (kentos_domain::Document, kentos_commands::GuardrailsDraw) =
+            crate::told_tests::project(CASES);
         crate::told_tests::stopped_job_draws_nothing(&mut doc, |cx| draw(cx, &input));
     }
 }

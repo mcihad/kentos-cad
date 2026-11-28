@@ -107,7 +107,12 @@ impl Document {
         if let Some((_, problem)) = next.problem() {
             return Err(Refusal(problem));
         }
-        let before = self.settings.arch.as_ref().map(|a| a.program.clone()).unwrap_or_default();
+        let before = self
+            .settings
+            .arch
+            .as_ref()
+            .map(|a| a.program.clone())
+            .unwrap_or_default();
         let changes: Vec<(Slot, kentos_contracts::Entity)> = units
             .into_iter()
             .filter_map(|(slot, unit)| {
@@ -142,7 +147,11 @@ impl Document {
 
     /// The building program (docs/adr/0773); empty when the project has none.
     pub fn program(&self) -> kentos_contracts::BuildingProgram {
-        self.settings.arch.as_ref().map(|a| a.program.clone()).unwrap_or_default()
+        self.settings
+            .arch
+            .as_ref()
+            .map(|a| a.program.clone())
+            .unwrap_or_default()
     }
 
     /// Each group's rooms (docs/adr/0784 §2), m², summed in the drawing's order: its spaces that are not voids and
@@ -150,13 +159,23 @@ impl Document {
     pub fn program_rooms(&self, program: &kentos_contracts::BuildingProgram) -> Vec<(String, f64)> {
         let mut out: Vec<(String, f64)> = Vec::new();
         for e in self.entities() {
-            let kentos_contracts::Entity::Space(s) = e else { continue };
+            let kentos_contracts::Entity::Space(s) = e else {
+                continue;
+            };
             let x = &s.space;
-            let Some(unit) = x.unit.as_deref().filter(|u| program.unit(u).is_some()) else { continue };
-            if x.void || x.usage.as_deref().and_then(|u| program.brief(u)).is_some_and(|b| b.outdoor) {
+            let Some(unit) = x.unit.as_deref().filter(|u| program.unit(u).is_some()) else {
+                continue;
+            };
+            if x.void
+                || x.usage
+                    .as_deref()
+                    .and_then(|u| program.brief(u))
+                    .is_some_and(|b| b.outdoor)
+            {
                 continue;
             }
-            let area = kentos_geometry_core::geom::space::area(&crate::arch_values::core_areas(&x.parts));
+            let area =
+                kentos_geometry_core::geom::space::area(&crate::arch_values::core_areas(&x.parts));
             match out.iter_mut().find(|(u, _)| u == unit) {
                 Some((_, a)) => *a += area,
                 None => out.push((unit.to_owned(), area)),
@@ -169,7 +188,10 @@ impl Document {
     /// when the program shares nothing.
     pub fn program_shares(
         &self,
-    ) -> Option<(kentos_contracts::ProgramShares, Vec<(String, kentos_contracts::ProgramUnitShare)>)> {
+    ) -> Option<(
+        kentos_contracts::ProgramShares,
+        Vec<(String, kentos_contracts::ProgramUnitShare)>,
+    )> {
         let program = self.program();
         program.share_rule?;
         let rooms = self.program_rooms(&program);

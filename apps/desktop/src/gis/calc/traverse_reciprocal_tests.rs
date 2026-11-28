@@ -17,12 +17,18 @@ fn one_way(z: f64, i: f64, t: f64) -> f64 {
 
 /// The pair's k (Baselga et al. 2014, eq. 11): ½ sin z + ½ sin z′ + (2R/s) cos((z + z′)/2), s = S / sin z.
 fn pair_k(z: f64, zb: f64) -> f64 {
-    let (z, zb) = (z * std::f64::consts::PI / 200.0, zb * std::f64::consts::PI / 200.0);
+    let (z, zb) = (
+        z * std::f64::consts::PI / 200.0,
+        zb * std::f64::consts::PI / 200.0,
+    );
     z.sin() / 2.0 + zb.sin() / 2.0 + 2.0 * 6_371_000.0 / (100.0 / z.sin()) * ((z + zb) / 2.0).cos()
 }
 
 fn typed(app: &mut App) {
-    use traverse::{ANGLE, BACK_INSTRUMENT, BACK_TARGET, BACK_ZENITH, DISTANCE, INSTRUMENT, NAME, TARGET, ZENITH};
+    use traverse::{
+        ANGLE, BACK_INSTRUMENT, BACK_TARGET, BACK_ZENITH, DISTANCE, INSTRUMENT, NAME, TARGET,
+        ZENITH,
+    };
     let _ = app.run("calc.traverse");
     calc(app, Event::TraverseKind(traverse::Kind::Open));
     calc(app, Event::Known(Field::Start, "0,0".into()));
@@ -42,7 +48,14 @@ fn typed(app: &mut App) {
     ] {
         calc(app, Event::Cell(0, col, v.into()));
     }
-    for (col, v) in [(NAME, "P1"), (ANGLE, "200"), (DISTANCE, "100"), (ZENITH, "100,2"), (INSTRUMENT, "1,5"), (TARGET, "1,6")] {
+    for (col, v) in [
+        (NAME, "P1"),
+        (ANGLE, "200"),
+        (DISTANCE, "100"),
+        (ZENITH, "100,2"),
+        (INSTRUMENT, "1,5"),
+        (TARGET, "1,6"),
+    ] {
         calc(app, Event::Cell(1, col, v.into()));
     }
     calc(app, Event::Cell(2, NAME, "P2".into()));
@@ -64,8 +77,16 @@ fn a_leg_sighted_back_takes_the_mean_and_says_its_pair_s_k() {
     let k = doc.settings().refraction();
     let first = (one_way(99.4, 1.5, 1.6) - one_way(100.6009, 1.6, 1.5)) / 2.0;
     let second = one_way(100.2, 1.5, 1.6) + (1.0 - k) * 100.0 * 100.0 / (2.0 * 6_371_000.0);
-    assert!((r.legs[0].dh.expect("a difference") - first).abs() < 1e-9, "{:?}", r.legs[0]);
-    assert!((r.legs[1].dh.expect("a difference") - second).abs() < 1e-9, "{:?}", r.legs[1]);
+    assert!(
+        (r.legs[0].dh.expect("a difference") - first).abs() < 1e-9,
+        "{:?}",
+        r.legs[0]
+    );
+    assert!(
+        (r.legs[1].dh.expect("a difference") - second).abs() < 1e-9,
+        "{:?}",
+        r.legs[1]
+    );
     let pair = r.legs[0].refraction.expect("one chord: its pair's k");
     assert!((pair - pair_k(99.4, 100.6009)).abs() < 1e-9, "{pair}");
     assert!(r.legs[1].refraction.is_none(), "one way");
@@ -84,7 +105,10 @@ fn a_leg_sighted_back_takes_the_mean_and_says_its_pair_s_k() {
     );
     calc(&mut app, Event::AddPoints);
     let (_, work) = last_work(&app);
-    assert_eq!(work["heights"]["back"][0]["zenith"], serde_json::json!(100.6009));
+    assert_eq!(
+        work["heights"]["back"][0]["zenith"],
+        serde_json::json!(100.6009)
+    );
     assert_eq!(work["heights"]["back"][1], serde_json::Value::Null);
 }
 
@@ -118,11 +142,17 @@ fn a_back_sight_without_its_heights_is_one_chord_with_the_forward_sight() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/karsilikli-basucu-4500");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/karsilikli-basucu-4500");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = app_with_drawing();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         typed(&mut app);
@@ -132,7 +162,10 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-karsilikli-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -168,7 +201,11 @@ fn projeye_yaz_makes_the_measured_k_the_project_s() {
         r.legs[1]
     );
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
-    assert!(said.iter().any(|l| l.starts_with("Projenin kırılma katsayısı k =")), "{said:?}");
+    assert!(
+        said.iter()
+            .any(|l| l.starts_with("Projenin kırılma katsayısı k =")),
+        "{said:?}"
+    );
 }
 
 /// `.run/gui-evidence/olculen-k-4900/`: the measured k under the summary, with Projeye yaz.
@@ -181,11 +218,17 @@ fn projeye_yaz_makes_the_measured_k_the_project_s() {
 fn screens_measured() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/olculen-k-4900");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/olculen-k-4900");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = app_with_drawing();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         typed(&mut app);
@@ -195,7 +238,10 @@ fn screens_measured() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-olculen-k-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

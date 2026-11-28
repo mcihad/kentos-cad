@@ -4,7 +4,10 @@
 //! `volume::Ground`, strip by strip), with the cut and fill factors of the stretch's middle, and the running totals.
 //! Nothing computed is kept: every read computes again (ROAD-MOD-06).
 
-use kentos_commands::{CommandWarning, PavementEdge, VolumeDef, VolumeLayer, VolumeListed, VolumeMethod, VolumeReport, VolumeRow};
+use kentos_commands::{
+    CommandWarning, PavementEdge, VolumeDef, VolumeLayer, VolumeListed, VolumeMethod, VolumeReport,
+    VolumeRow,
+};
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
 use kentos_road::section::pavement::{self as pav, Edge, Pavement};
@@ -21,17 +24,34 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work == Some(kentos_commands::CadWork::Road) {
         Ok(())
     } else {
-        Err(fail(codes::NOT_A_ROAD_PROJECT, "Kübaj yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(), ""))
+        Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "Kübaj yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(),
+            "",
+        ))
     }
 }
 
 /// The volume of `name`: by its id, else by its name (case aside).
-pub(crate) fn find<'a>(list: &'a [VolumeDef], name: &str, path: &str) -> Result<(usize, &'a VolumeDef), Stop> {
+pub(crate) fn find<'a>(
+    list: &'a [VolumeDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a VolumeDef), Stop> {
     list.iter()
         .position(|v| v.id == name)
-        .or_else(|| list.iter().position(|v| v.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .position(|v| v.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|i| (i, &list[i]))
-        .ok_or_else(|| fail(codes::UNKNOWN_VOLUME, format!("“{name}” kimlikli ya da adlı kübaj hesabı projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_VOLUME,
+                format!("“{name}” kimlikli ya da adlı kübaj hesabı projede yok."),
+                path,
+            )
+        })
 }
 
 pub(crate) fn listed(list: &[VolumeDef]) -> Vec<VolumeListed> {
@@ -48,7 +68,11 @@ pub(crate) fn listed(list: &[VolumeDef]) -> Vec<VolumeListed> {
 }
 
 fn warning(code: &str, message: String) -> CommandWarning {
-    CommandWarning { code: code.into(), message, path: Some("volume".into()) }
+    CommandWarning {
+        code: code.into(),
+        message,
+        path: Some("volume".into()),
+    }
 }
 
 /// The factors of the stretch whose middle is `m`: the row with `from ≤ m < to` (the last row's end included).
@@ -127,16 +151,25 @@ pub fn core_pavement(def: &kentos_commands::PavementDef) -> Pavement {
 
 /// The report's layers, by name in the order met over the regions' templates (the first one's material), and for each
 /// region the index of each of its layers among them.
-fn layers_of(regions: &[Option<&kentos_commands::PavementDef>]) -> (Vec<VolumeLayer>, Vec<Vec<usize>>) {
+fn layers_of(
+    regions: &[Option<&kentos_commands::PavementDef>],
+) -> (Vec<VolumeLayer>, Vec<Vec<usize>>) {
     let mut out: Vec<VolumeLayer> = Vec::new();
     let mut at = Vec::new();
     for r in regions {
         let mut idx = Vec::new();
         for l in r.map(|p| p.layers.as_slice()).unwrap_or_default() {
-            let i = out.iter().position(|o| o.name == l.name).unwrap_or_else(|| {
-                out.push(VolumeLayer { name: l.name.clone(), material: l.material.clone(), volume: 0.0 });
-                out.len() - 1
-            });
+            let i = out
+                .iter()
+                .position(|o| o.name == l.name)
+                .unwrap_or_else(|| {
+                    out.push(VolumeLayer {
+                        name: l.name.clone(),
+                        material: l.material.clone(),
+                        volume: 0.0,
+                    });
+                    out.len() - 1
+                });
             idx.push(i);
         }
         at.push(idx);
@@ -145,7 +178,10 @@ fn layers_of(regions: &[Option<&kentos_commands::PavementDef>]) -> (Vec<VolumeLa
 }
 
 /// The volume computed now, with its warnings; refused where its corridor does not build.
-pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, Vec<CommandWarning>), Stop> {
+pub(crate) fn compute(
+    doc: &Document,
+    def: &VolumeDef,
+) -> Result<(VolumeReport, Vec<CommandWarning>), Stop> {
     compute_on(doc, def).map(|(r, w, _)| (r, w))
 }
 
@@ -153,32 +189,75 @@ pub(crate) fn compute(doc: &Document, def: &VolumeDef) -> Result<(VolumeReport, 
 pub(crate) fn compute_on(
     doc: &Document,
     def: &VolumeDef,
-) -> Result<(VolumeReport, Vec<CommandWarning>, crate::road_alignments::Built), Stop> {
-    let cdef = doc.road_corridors().iter().find(|c| c.id == def.corridor).ok_or_else(|| {
-        fail(codes::UNKNOWN_CORRIDOR, format!("“{}” kimlikli koridor projede yok.", def.corridor), "corridor")
+) -> Result<
+    (
+        VolumeReport,
+        Vec<CommandWarning>,
+        crate::road_alignments::Built,
+    ),
+    Stop,
+> {
+    let cdef = doc
+        .road_corridors()
+        .iter()
+        .find(|c| c.id == def.corridor)
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_CORRIDOR,
+                format!("“{}” kimlikli koridor projede yok.", def.corridor),
+                "corridor",
+            )
+        })?;
+    let made = corridors::make(doc, cdef, false).map_err(|stop| {
+        fail(
+            codes::INVALID_VOLUME,
+            format!(
+                "“{}” koridoru kurulamıyor: {}",
+                cdef.name,
+                corridors::words(stop)
+            ),
+            "corridor",
+        )
     })?;
-    let made = corridors::make(doc, cdef, false)
-        .map_err(|stop| fail(codes::INVALID_VOLUME, format!("“{}” koridoru kurulamıyor: {}", cdef.name, corridors::words(stop)), "corridor"))?;
-    let mut warnings: Vec<CommandWarning> =
-        made.warnings.iter().filter(|w| w.code == codes::CORRIDOR_STALE).cloned().collect();
+    let mut warnings: Vec<CommandWarning> = made
+        .warnings
+        .iter()
+        .filter(|w| w.code == codes::CORRIDOR_STALE)
+        .cloned()
+        .collect();
     let mut raws: Vec<Raw> = Vec::new();
     let (mut cut_area, mut fill_area, mut uncovered) = (0.0, 0.0, 0.0);
-    let bench = def.bench.as_ref().map(|b| tpl::Bench { slope: b.slope, height: b.height });
+    let bench = def.bench.as_ref().map(|b| tpl::Bench {
+        slope: b.slope,
+        height: b.height,
+    });
     // The rule (docs/adr/0975 §2): without one, the road against the ground, stripped where it strips (as before).
     let formation = def.rule.is_some_and(|r| r.formation());
     let topsoil = def.rule.map_or(!def.strip.is_empty(), |r| r.topsoil());
     let pavements: Vec<Option<&kentos_commands::PavementDef>> = cdef
         .regions
         .iter()
-        .map(|r| doc.road_templates().iter().find(|t| t.id == r.template).and_then(|t| t.pavement.as_ref()))
+        .map(|r| {
+            doc.road_templates()
+                .iter()
+                .find(|t| t.id == r.template)
+                .and_then(|t| t.pavement.as_ref())
+        })
         .collect();
     if let Some(rule) = def.rule.filter(|r| r.formation()) {
         for (r, p) in cdef.regions.iter().zip(&pavements) {
             if p.is_none() {
-                let name = doc.road_templates().iter().find(|t| t.id == r.template).map_or(r.template.as_str(), |t| t.name.as_str());
+                let name = doc
+                    .road_templates()
+                    .iter()
+                    .find(|t| t.id == r.template)
+                    .map_or(r.template.as_str(), |t| t.name.as_str());
                 return Err(fail(
                     codes::INVALID_VOLUME,
-                    format!("{} kuralı formasyonu ister: “{name}” tip kesitinde üstyapı yok. Tip kesite üstyapı tabakalarını yazın.", rule.words()),
+                    format!(
+                        "{} kuralı formasyonu ister: “{name}” tip kesitinde üstyapı yok. Tip kesite üstyapı tabakalarını yazın.",
+                        rule.words()
+                    ),
                     "rule",
                 ));
             }
@@ -202,10 +281,29 @@ pub(crate) fn compute_on(
                     let depth = depth_at(def, s);
                     let used = if topsoil { depth } else { 0.0 };
                     let e = tpl::earthwork(&sec, &terrain, used, bench);
-                    let strip = if used == depth { e.strip } else { tpl::earthwork(&sec, &terrain, depth, None).strip };
-                    let (qc, qf) = if curved { tpl::moments(&sec, &terrain, used) } else { (0.0, 0.0) };
-                    let centroid = (if e.cut > 0.0 { qc / e.cut } else { 0.0 }, if e.fill > 0.0 { qf / e.fill } else { 0.0 });
-                    let curvature = if curved { made.sampler.alignment.core.at(s).map_or(0.0, |p| p.curvature) } else { 0.0 };
+                    let strip = if used == depth {
+                        e.strip
+                    } else {
+                        tpl::earthwork(&sec, &terrain, depth, None).strip
+                    };
+                    let (qc, qf) = if curved {
+                        tpl::moments(&sec, &terrain, used)
+                    } else {
+                        (0.0, 0.0)
+                    };
+                    let centroid = (
+                        if e.cut > 0.0 { qc / e.cut } else { 0.0 },
+                        if e.fill > 0.0 { qf / e.fill } else { 0.0 },
+                    );
+                    let curvature = if curved {
+                        made.sampler
+                            .alignment
+                            .core
+                            .at(s)
+                            .map_or(0.0, |p| p.curvature)
+                    } else {
+                        0.0
+                    };
                     let reach = (
                         sec.left.points.last().map_or(0.0, |p| p[0]),
                         sec.right.points.last().map_or(0.0, |p| p[0]),
@@ -221,8 +319,13 @@ pub(crate) fn compute_on(
                         reach,
                     };
                     if let Some(p) = &pavement {
-                        let lowered: Vec<_> =
-                            terrain.iter().map(|g| kentos_road::section::GroundPoint { z: g.z.map(|z| z - used), ..*g }).collect();
+                        let lowered: Vec<_> = terrain
+                            .iter()
+                            .map(|g| kentos_road::section::GroundPoint {
+                                z: g.z.map(|z| z - used),
+                                ..*g
+                            })
+                            .collect();
                         match pav::build(&made.sampler.template_at(&built, s), &sec, p, &lowered) {
                             Ok(built) => {
                                 for (k, a) in built.layers.iter().enumerate() {
@@ -272,7 +375,12 @@ pub(crate) fn compute_on(
                                 fill,
                                 strip: avg(a.strip, b.strip),
                                 bench: avg(a.bench, b.bench),
-                                layers: a.layers.iter().zip(&b.layers).map(|(x, y)| x.zip(*y).map(|(x, y)| avg(x, y))).collect(),
+                                layers: a
+                                    .layers
+                                    .iter()
+                                    .zip(&b.layers)
+                                    .map(|(x, y)| x.zip(*y).map(|(x, y)| avg(x, y)))
+                                    .collect(),
                                 centroid: (0.0, 0.0),
                                 curvature: 0.0,
                                 reach: (0.0, 0.0),
@@ -303,7 +411,11 @@ pub(crate) fn compute_on(
                         volumes: both.as_ref().map(|v| (v.cut, v.fill)),
                         plain,
                         extra: both.as_ref().map(|v| (v.strip, v.bench)),
-                        layers: if paved { both.map_or_else(|| vec![None; layer_list.len()], |v| v.layers) } else { Vec::new() },
+                        layers: if paved {
+                            both.map_or_else(|| vec![None; layer_list.len()], |v| v.layers)
+                        } else {
+                            Vec::new()
+                        },
                     });
                 }
             }
@@ -315,16 +427,30 @@ pub(crate) fn compute_on(
                     let l = s1 - s0;
                     let volumes = match (&w[0].section, &w[1].section) {
                         (Some(a), Some(b)) => match def.method {
-                            VolumeMethod::EndArea => Some((l * (a.cut + b.cut) / 2.0, l * (a.fill + b.fill) / 2.0)),
+                            VolumeMethod::EndArea => {
+                                Some((l * (a.cut + b.cut) / 2.0, l * (a.fill + b.fill) / 2.0))
+                            }
                             _ => made
                                 .sampler
                                 .cross(&made.template_at(ri, (s0 + s1) / 2.0), (s0 + s1) / 2.0)
                                 .and_then(|c| c.section)
-                                .map(|m| (prismoidal(a.cut, m.cut, b.cut, l), prismoidal(a.fill, m.fill, b.fill, l))),
+                                .map(|m| {
+                                    (
+                                        prismoidal(a.cut, m.cut, b.cut, l),
+                                        prismoidal(a.fill, m.fill, b.fill, l),
+                                    )
+                                }),
                         },
                         _ => None,
                     };
-                    raws.push(Raw { from: s0, to: s1, volumes, plain: None, extra: None, layers: Vec::new() });
+                    raws.push(Raw {
+                        from: s0,
+                        to: s1,
+                        volumes,
+                        plain: None,
+                        extra: None,
+                        layers: Vec::new(),
+                    });
                 }
             }
         }
@@ -332,28 +458,47 @@ pub(crate) fn compute_on(
             let Some(surface) = &made.sampler.surface else {
                 return Err(fail(
                     codes::INVALID_VOLUME,
-                    format!("“{}” koridorunun yüzeyi kurulamıyor; yüzeyler arası hacim hesaplanamaz.", cdef.name),
+                    format!(
+                        "“{}” koridorunun yüzeyi kurulamıyor; yüzeyler arası hacim hesaplanamaz.",
+                        cdef.name
+                    ),
                     "corridor",
                 ));
             };
             let terrain: Vec<Triangle> = surface
                 .triangles
                 .iter()
-                .map(|t| [surface.vertices[t[0] as usize], surface.vertices[t[1] as usize], surface.vertices[t[2] as usize]])
+                .map(|t| {
+                    [
+                        surface.vertices[t[0] as usize],
+                        surface.vertices[t[1] as usize],
+                        surface.vertices[t[2] as usize],
+                    ]
+                })
                 .collect();
             let mut ground = Ground::new(&terrain);
             let strips = &made.built.strips;
             for (ri, region) in made.regions.iter().enumerate() {
                 for w in region.crosses.windows(2) {
                     let (s0, s1) = (w[0].line.station, w[1].line.station);
-                    let volumes = strips.iter().find(|s| s.0 == ri && s.1 == s0 && s.2 == s1).map(|s| {
-                        let v = ground.volumes(&made.built.triangles[s.3.clone()]);
-                        cut_area += v.cut_area;
-                        fill_area += v.fill_area;
-                        uncovered += v.uncovered;
-                        (v.cut, v.fill)
+                    let volumes = strips
+                        .iter()
+                        .find(|s| s.0 == ri && s.1 == s0 && s.2 == s1)
+                        .map(|s| {
+                            let v = ground.volumes(&made.built.triangles[s.3.clone()]);
+                            cut_area += v.cut_area;
+                            fill_area += v.fill_area;
+                            uncovered += v.uncovered;
+                            (v.cut, v.fill)
+                        });
+                    raws.push(Raw {
+                        from: s0,
+                        to: s1,
+                        volumes,
+                        plain: None,
+                        extra: None,
+                        layers: Vec::new(),
                     });
-                    raws.push(Raw { from: s0, to: s1, volumes, plain: None, extra: None, layers: Vec::new() });
                 }
             }
         }
@@ -362,14 +507,23 @@ pub(crate) fn compute_on(
             let (Some(surface), Some(cell)) = (&made.sampler.surface, def.cell) else {
                 return Err(fail(
                     codes::INVALID_VOLUME,
-                    format!("“{}” koridorunun yüzeyi kurulamıyor; ızgara hacmi hesaplanamaz.", cdef.name),
+                    format!(
+                        "“{}” koridorunun yüzeyi kurulamıyor; ızgara hacmi hesaplanamaz.",
+                        cdef.name
+                    ),
                     "corridor",
                 ));
             };
             let terrain: Vec<Triangle> = surface
                 .triangles
                 .iter()
-                .map(|t| [surface.vertices[t[0] as usize], surface.vertices[t[1] as usize], surface.vertices[t[2] as usize]])
+                .map(|t| {
+                    [
+                        surface.vertices[t[0] as usize],
+                        surface.vertices[t[1] as usize],
+                        surface.vertices[t[2] as usize],
+                    ]
+                })
                 .collect();
             let ground = Ground::new(&terrain);
             let mut counted = std::collections::HashSet::new();
@@ -377,14 +531,28 @@ pub(crate) fn compute_on(
             for (ri, region) in made.regions.iter().enumerate() {
                 for w in region.crosses.windows(2) {
                     let (s0, s1) = (w[0].line.station, w[1].line.station);
-                    let volumes = strips.iter().find(|s| s.0 == ri && s.1 == s0 && s.2 == s1).map(|s| {
-                        let v = ground.grid_volumes(&made.built.triangles[s.3.clone()], cell, &mut counted);
-                        cut_area += v.cut_area;
-                        fill_area += v.fill_area;
-                        uncovered += v.uncovered;
-                        (v.cut, v.fill)
+                    let volumes = strips
+                        .iter()
+                        .find(|s| s.0 == ri && s.1 == s0 && s.2 == s1)
+                        .map(|s| {
+                            let v = ground.grid_volumes(
+                                &made.built.triangles[s.3.clone()],
+                                cell,
+                                &mut counted,
+                            );
+                            cut_area += v.cut_area;
+                            fill_area += v.fill_area;
+                            uncovered += v.uncovered;
+                            (v.cut, v.fill)
+                        });
+                    raws.push(Raw {
+                        from: s0,
+                        to: s1,
+                        volumes,
+                        plain: None,
+                        extra: None,
+                        layers: Vec::new(),
                     });
-                    raws.push(Raw { from: s0, to: s1, volumes, plain: None, extra: None, layers: Vec::new() });
                 }
             }
         }
@@ -425,7 +593,9 @@ pub(crate) fn compute_on(
             fill: f,
             cut_factor: cf,
             fill_factor: ff,
-            strip: (!def.strip.is_empty()).then_some(r.extra.map(|e| e.0)).flatten(),
+            strip: (!def.strip.is_empty())
+                .then_some(r.extra.map(|e| e.0))
+                .flatten(),
             bench: def.bench.as_ref().and(r.extra.map(|e| e.1)),
             layers: r.layers.clone(),
             total_cut: fcut,
@@ -447,11 +617,23 @@ pub(crate) fn compute_on(
         }
     }
     if !joined.is_empty() {
-        let words: Vec<String> = joined.iter().take(8).map(|g| format!("{} – {}", text(g[0]), text(g[1]))).collect();
-        let more = if joined.len() > 8 { format!(" ve {} aralık daha", joined.len() - 8) } else { String::new() };
+        let words: Vec<String> = joined
+            .iter()
+            .take(8)
+            .map(|g| format!("{} – {}", text(g[0]), text(g[1])))
+            .collect();
+        let more = if joined.len() > 8 {
+            format!(" ve {} aralık daha", joined.len() - 8)
+        } else {
+            String::new()
+        };
         warnings.push(warning(
             codes::VOLUME_GAP,
-            format!("“{}” kübajında hacmi olmayan aralıklar: {}{more}.", def.name, words.join(", ")),
+            format!(
+                "“{}” kübajında hacmi olmayan aralıklar: {}{more}.",
+                def.name,
+                words.join(", ")
+            ),
         ));
     }
     let mut unbuilt = unbuilt.into_inner();
@@ -459,7 +641,11 @@ pub(crate) fn compute_on(
     unbuilt.dedup();
     if !unbuilt.is_empty() {
         let words: Vec<String> = unbuilt.iter().take(8).map(|s| text(*s)).collect();
-        let more = if unbuilt.len() > 8 { format!(" ve {} kesit daha", unbuilt.len() - 8) } else { String::new() };
+        let more = if unbuilt.len() > 8 {
+            format!(" ve {} kesit daha", unbuilt.len() - 8)
+        } else {
+            String::new()
+        };
         warnings.push(warning(
             codes::PAVEMENT_UNBUILT,
             format!(
@@ -532,7 +718,11 @@ pub(crate) fn compute_on(
                     .map(|(v, p)| if k == 0 { v.0 - p.0 } else { v.1 - p.1 })
                     .sum::<f64>()
             };
-            kentos_commands::VolumeCurve { cut: delta(0), fill: delta(1), plain: past }
+            kentos_commands::VolumeCurve {
+                cut: delta(0),
+                fill: delta(1),
+                plain: past,
+            }
         }),
     };
     let mut report = report;
@@ -570,13 +760,21 @@ pub(crate) struct Figures<'a> {
 
 impl<'a> Figures<'a> {
     pub(crate) fn of_approval(a: &'a kentos_commands::VolumeApprovalDef) -> Self {
-        Figures { totals: [a.cut, a.fill, a.factored_cut, a.factored_fill], rows: std::borrow::Cow::Borrowed(&a.rows) }
+        Figures {
+            totals: [a.cut, a.fill, a.factored_cut, a.factored_fill],
+            rows: std::borrow::Cow::Borrowed(&a.rows),
+        }
     }
 
     pub(crate) fn of_report(r: &VolumeReport) -> Figures<'static> {
         Figures {
             totals: [r.cut, r.fill, r.factored_cut, r.factored_fill],
-            rows: std::borrow::Cow::Owned(r.rows.iter().filter_map(|x| Some([x.from, x.to, x.cut?, x.fill?])).collect()),
+            rows: std::borrow::Cow::Owned(
+                r.rows
+                    .iter()
+                    .filter_map(|x| Some([x.from, x.to, x.cut?, x.fill?]))
+                    .collect(),
+            ),
         }
     }
 }
@@ -590,19 +788,43 @@ pub(crate) fn change(before: &Figures<'_>, after: &Figures<'_>) -> kentos_comman
     let mut rows = Vec::new();
     let mut used = vec![false; today.len()];
     for p in before.rows.iter() {
-        match today.iter().position(|t| same(t[0], p[0]) && same(t[1], p[1])) {
+        match today
+            .iter()
+            .position(|t| same(t[0], p[0]) && same(t[1], p[1]))
+        {
             Some(i) => {
                 used[i] = true;
                 let t = today[i];
                 if !same(t[2], p[2]) || !same(t[3], p[3]) {
-                    rows.push(VolumeRowChange { from: p[0], to: p[1], approved_cut: Some(p[2]), approved_fill: Some(p[3]), cut: Some(t[2]), fill: Some(t[3]) });
+                    rows.push(VolumeRowChange {
+                        from: p[0],
+                        to: p[1],
+                        approved_cut: Some(p[2]),
+                        approved_fill: Some(p[3]),
+                        cut: Some(t[2]),
+                        fill: Some(t[3]),
+                    });
                 }
             }
-            None => rows.push(VolumeRowChange { from: p[0], to: p[1], approved_cut: Some(p[2]), approved_fill: Some(p[3]), cut: None, fill: None }),
+            None => rows.push(VolumeRowChange {
+                from: p[0],
+                to: p[1],
+                approved_cut: Some(p[2]),
+                approved_fill: Some(p[3]),
+                cut: None,
+                fill: None,
+            }),
         }
     }
     for (t, _) in today.iter().zip(&used).filter(|(_, u)| !**u) {
-        rows.push(VolumeRowChange { from: t[0], to: t[1], approved_cut: None, approved_fill: None, cut: Some(t[2]), fill: Some(t[3]) });
+        rows.push(VolumeRowChange {
+            from: t[0],
+            to: t[1],
+            approved_cut: None,
+            approved_fill: None,
+            cut: Some(t[2]),
+            fill: Some(t[3]),
+        });
     }
     rows.sort_by(|x, y| x.from.total_cmp(&y.from).then(x.to.total_cmp(&y.to)));
     let c: Vec<f64> = (0..4).map(|k| after.totals[k] - before.totals[k]).collect();
@@ -617,7 +839,10 @@ pub(crate) fn change(before: &Figures<'_>, after: &Figures<'_>) -> kentos_comman
 }
 
 /// The approved figures against today's: the totals' changes and the stretches that changed, are new or gone.
-pub(crate) fn compare(a: &kentos_commands::VolumeApprovalDef, now: &VolumeReport) -> kentos_commands::VolumeApprovalReport {
+pub(crate) fn compare(
+    a: &kentos_commands::VolumeApprovalDef,
+    now: &VolumeReport,
+) -> kentos_commands::VolumeApprovalReport {
     let c = change(&Figures::of_approval(a), &Figures::of_report(now));
     kentos_commands::VolumeApprovalReport {
         approved: a.clone(),
@@ -646,26 +871,79 @@ pub(crate) fn moved(
         for (id, v) in &a {
             let found = b.iter().find(|x| x.0 == *id).map(|x| x.1.clone());
             if found.as_ref() != Some(v) {
-                out.push(VolumeSourceMove { source, id: id.clone(), then: Some(v.clone()), now: found });
+                out.push(VolumeSourceMove {
+                    source,
+                    id: id.clone(),
+                    then: Some(v.clone()),
+                    now: found,
+                });
             }
         }
         for (id, w) in b.iter().filter(|x| !a.iter().any(|y| y.0 == x.0)) {
-            out.push(VolumeSourceMove { source, id: id.clone(), then: None, now: Some(w.clone()) });
+            out.push(VolumeSourceMove {
+                source,
+                id: id.clone(),
+                then: None,
+                now: Some(w.clone()),
+            });
         }
     }
     let rev = |r: &RoadSource| (r.id.clone(), r.revision.to_string());
-    let digest = |s: &RoadSurfaceSource| s.digest.iter().map(|d| (s.id.clone(), d.clone())).collect::<Side>();
+    let digest = |s: &RoadSurfaceSource| {
+        s.digest
+            .iter()
+            .map(|d| (s.id.clone(), d.clone()))
+            .collect::<Side>()
+    };
     let named = |t: Option<&str>| {
-        t.and_then(|t| t.split_once('/')).map(|(name, version)| (name.to_owned(), version.to_owned())).into_iter().collect::<Side>()
+        t.and_then(|t| t.split_once('/'))
+            .map(|(name, version)| (name.to_owned(), version.to_owned()))
+            .into_iter()
+            .collect::<Side>()
     };
     let mut out = Vec::new();
-    pair(&mut out, K::Corridor, vec![rev(&then.corridor)], vec![rev(&now.corridor)]);
-    pair(&mut out, K::Alignment, vec![rev(&then.alignment)], vec![rev(&now.alignment)]);
-    pair(&mut out, K::Profile, vec![rev(&then.profile)], vec![rev(&now.profile)]);
-    pair(&mut out, K::Template, then.templates.iter().map(rev).collect(), now.templates.iter().map(rev).collect());
-    pair(&mut out, K::Superelevation, then.superelevation.iter().map(rev).collect(), now.superelevation.iter().map(rev).collect());
-    pair(&mut out, K::Surface, digest(&then.surface), digest(&now.surface));
-    pair(&mut out, K::Algorithm, named(algorithm_then), named(algorithm_now));
+    pair(
+        &mut out,
+        K::Corridor,
+        vec![rev(&then.corridor)],
+        vec![rev(&now.corridor)],
+    );
+    pair(
+        &mut out,
+        K::Alignment,
+        vec![rev(&then.alignment)],
+        vec![rev(&now.alignment)],
+    );
+    pair(
+        &mut out,
+        K::Profile,
+        vec![rev(&then.profile)],
+        vec![rev(&now.profile)],
+    );
+    pair(
+        &mut out,
+        K::Template,
+        then.templates.iter().map(rev).collect(),
+        now.templates.iter().map(rev).collect(),
+    );
+    pair(
+        &mut out,
+        K::Superelevation,
+        then.superelevation.iter().map(rev).collect(),
+        now.superelevation.iter().map(rev).collect(),
+    );
+    pair(
+        &mut out,
+        K::Surface,
+        digest(&then.surface),
+        digest(&now.surface),
+    );
+    pair(
+        &mut out,
+        K::Algorithm,
+        named(algorithm_then),
+        named(algorithm_now),
+    );
     out
 }
 
@@ -678,7 +956,13 @@ pub(crate) fn approval_of(
     at: String,
     note: Option<String>,
 ) -> kentos_commands::VolumeApprovalDef {
-    let last = def.history.iter().chain(&def.approved).map(|a| a.number).max().unwrap_or(0);
+    let last = def
+        .history
+        .iter()
+        .chain(&def.approved)
+        .map(|a| a.number)
+        .max()
+        .unwrap_or(0);
     // An approval from before the numbers counts as one: the next is its successor, not the first.
     let before = def.history.len() + usize::from(def.approved.is_some());
     kentos_commands::VolumeApprovalDef {
@@ -693,7 +977,11 @@ pub(crate) fn approval_of(
         factored_fill: now.factored_fill,
         strip: now.strip,
         bench: now.bench,
-        rows: now.rows.iter().filter_map(|r| Some([r.from, r.to, r.cut?, r.fill?])).collect(),
+        rows: now
+            .rows
+            .iter()
+            .filter_map(|r| Some([r.from, r.to, r.cut?, r.fill?]))
+            .collect(),
         sources: sources_of(doc, def),
         algorithm: basis_of(now).map(|b| b.algorithm),
     }
@@ -704,15 +992,29 @@ pub(crate) fn approval_of(
 /// stations; how it is computed (docs/adr/1040): its method's algorithm, the curved end area where it corrects on
 /// curves; none without a row.
 pub fn basis_of(report: &VolumeReport) -> Option<kentos_commands::VolumeBasis> {
-    use kentos_commands::{MaterialState, VolumeBasis, VolumeLine, VolumeMethod, VolumeRule, VolumeSides};
+    use kentos_commands::{
+        MaterialState, VolumeBasis, VolumeLine, VolumeMethod, VolumeRule, VolumeSides,
+    };
     let (first, last) = (report.rows.first()?, report.rows.last()?);
-    let rule = report.rule.unwrap_or(if report.strip.is_some() { VolumeRule::RoadTopsoil } else { VolumeRule::RoadGround });
+    let rule = report.rule.unwrap_or(if report.strip.is_some() {
+        VolumeRule::RoadTopsoil
+    } else {
+        VolumeRule::RoadGround
+    });
     Some(VolumeBasis {
         name: rule.words().to_owned(),
         given: report.rule.is_some(),
         version: kentos_commands::VOLUME_RULE_VERSION.to_owned(),
-        top: if rule.formation() { VolumeLine::Formation } else { VolumeLine::Road },
-        bottom: if rule.topsoil() { VolumeLine::Topsoil } else { VolumeLine::Ground },
+        top: if rule.formation() {
+            VolumeLine::Formation
+        } else {
+            VolumeLine::Road
+        },
+        bottom: if rule.topsoil() {
+            VolumeLine::Topsoil
+        } else {
+            VolumeLine::Ground
+        },
         sides: match report.method {
             VolumeMethod::EndArea | VolumeMethod::Prismoidal => VolumeSides::Daylights,
             VolumeMethod::Surfaces | VolumeMethod::Grid => VolumeSides::Corridor,
@@ -786,7 +1088,10 @@ pub fn made_volumes(doc: &Document) -> Vec<(VolumeDef, MadeVolume)> {
     if road_project(doc).is_err() {
         return Vec::new();
     }
-    doc.road_volumes().iter().map(|v| (v.clone(), compute(doc, v).map_err(corridors::words))).collect()
+    doc.road_volumes()
+        .iter()
+        .map(|v| (v.clone(), compute(doc, v).map_err(corridors::words)))
+        .collect()
 }
 
 /// A volume (perhaps not written) computed now, for the Kübaj window.
@@ -805,7 +1110,11 @@ fn decimal(v: f64) -> String {
 pub fn sheet(report: &VolumeReport) -> kentos_commands::WorkbookSheet {
     use kentos_commands::{CellKind, WorkbookColumn};
     let (strips, benches) = (report.strip.is_some(), report.bench.is_some());
-    let column = |name: &str, kind: CellKind, decimals: Option<u32>| WorkbookColumn { name: name.into(), kind, decimals };
+    let column = |name: &str, kind: CellKind, decimals: Option<u32>| WorkbookColumn {
+        name: name.into(),
+        kind,
+        decimals,
+    };
     let n = |name: &str| column(name, CellKind::Number, Some(3));
     let mut columns = vec![
         column("Başlangıç km", CellKind::Text, None),
@@ -834,7 +1143,13 @@ pub fn sheet(report: &VolumeReport) -> kentos_commands::WorkbookSheet {
         .rows
         .iter()
         .map(|r| {
-            let mut row = vec![r.from_text.clone(), r.to_text.clone(), decimal(r.to - r.from), opt(r.cut), opt(r.fill)];
+            let mut row = vec![
+                r.from_text.clone(),
+                r.to_text.clone(),
+                decimal(r.to - r.from),
+                opt(r.cut),
+                opt(r.fill),
+            ];
             if strips {
                 row.push(opt(r.strip));
             }
@@ -853,8 +1168,19 @@ pub fn sheet(report: &VolumeReport) -> kentos_commands::WorkbookSheet {
             row
         })
         .collect();
-    let length: f64 = report.rows.iter().filter(|r| r.cut.is_some()).map(|r| r.to - r.from).sum();
-    let mut total = vec!["Toplam".into(), String::new(), decimal(length), decimal(report.cut), decimal(report.fill)];
+    let length: f64 = report
+        .rows
+        .iter()
+        .filter(|r| r.cut.is_some())
+        .map(|r| r.to - r.from)
+        .sum();
+    let mut total = vec![
+        "Toplam".into(),
+        String::new(),
+        decimal(length),
+        decimal(report.cut),
+        decimal(report.fill),
+    ];
     if let Some(v) = report.strip {
         total.push(decimal(v));
     }
@@ -871,6 +1197,19 @@ pub fn sheet(report: &VolumeReport) -> kentos_commands::WorkbookSheet {
         decimal(report.factored_cut - report.factored_fill),
     ]);
     rows.push(total);
-    let name: String = report.name.chars().filter(|c| !"[]:*?/\\".contains(*c)).take(31).collect();
-    kentos_commands::WorkbookSheet { name: if name.is_empty() { "Kübaj".into() } else { name }, columns, rows }
+    let name: String = report
+        .name
+        .chars()
+        .filter(|c| !"[]:*?/\\".contains(*c))
+        .take(31)
+        .collect();
+    kentos_commands::WorkbookSheet {
+        name: if name.is_empty() {
+            "Kübaj".into()
+        } else {
+            name
+        },
+        columns,
+        rows,
+    }
 }

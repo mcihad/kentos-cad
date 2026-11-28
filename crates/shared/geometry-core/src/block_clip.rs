@@ -6,11 +6,11 @@
 
 use crate::block::Piece;
 use crate::entity::{Clipping, Shape, entity_bounds};
+use crate::geom::affine::{Affine, apply};
 use crate::geom::arrangement::{Area, WindingIndex};
 use crate::geometry::Bounds;
 use crate::ops::geoprocess::clip::within;
 use crate::ops::geoprocess::{Class, Place, Region, boundary_edges, chain, class_of, shape_of};
-use crate::geom::affine::{Affine, apply};
 use crate::vec2::Vec2;
 
 /// The boundary in the drawing: its corners in the definition's coordinates through the insert's placement (`m`
@@ -160,21 +160,45 @@ mod tests {
 
     #[test]
     fn a_line_across_the_boundary_keeps_its_inside_or_its_outside() {
-        let kept = clipped(vec![piece(line((-5.0, 5.0), (15.0, 5.0)))], &SQUARE, false, false);
-        let Shape::Polyline { pts, .. } = &kept[0].shape else { panic!("{kept:?}") };
+        let kept = clipped(
+            vec![piece(line((-5.0, 5.0), (15.0, 5.0)))],
+            &SQUARE,
+            false,
+            false,
+        );
+        let Shape::Polyline { pts, .. } = &kept[0].shape else {
+            panic!("{kept:?}")
+        };
         assert_eq!(pts, &[Vec2::new(0.0, 5.0), Vec2::new(10.0, 5.0)]);
-        let outside = clipped(vec![piece(line((-5.0, 5.0), (15.0, 5.0)))], &SQUARE, true, false);
-        let Shape::Polyline { pts, parts, .. } = &outside[0].shape else { panic!("{outside:?}") };
+        let outside = clipped(
+            vec![piece(line((-5.0, 5.0), (15.0, 5.0)))],
+            &SQUARE,
+            true,
+            false,
+        );
+        let Shape::Polyline { pts, parts, .. } = &outside[0].shape else {
+            panic!("{outside:?}")
+        };
         assert_eq!(pts, &[Vec2::new(-5.0, 5.0), Vec2::new(0.0, 5.0)]);
         assert_eq!(parts.as_ref().map(Vec::len), Some(1));
     }
 
     #[test]
     fn a_piece_away_from_the_boundary_and_the_frame() {
-        let far = clipped(vec![piece(line((20.0, 20.0), (30.0, 20.0)))], &SQUARE, false, true);
+        let far = clipped(
+            vec![piece(line((20.0, 20.0), (30.0, 20.0)))],
+            &SQUARE,
+            false,
+            true,
+        );
         assert_eq!(far.len(), 1, "only the frame");
         assert!(matches!(far[0].shape, Shape::Polyline { closed: true, .. }));
-        let kept = clipped(vec![piece(line((20.0, 20.0), (30.0, 20.0)))], &SQUARE, true, false);
+        let kept = clipped(
+            vec![piece(line((20.0, 20.0), (30.0, 20.0)))],
+            &SQUARE,
+            true,
+            false,
+        );
         assert_eq!(kept.len(), 1);
     }
 }

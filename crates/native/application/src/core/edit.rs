@@ -972,7 +972,10 @@ fn check_resolved(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop>
     // than cad.texts.edit. They must refuse the same unsupported explicit
     // Unicode result before the first write. Imports may retain bad source
     // content for inspection; this does not silently convert legacy text.
-    if matches!(input.operation, EditOperation::ReplaceText | EditOperation::Properties) {
+    if matches!(
+        input.operation,
+        EditOperation::ReplaceText | EditOperation::Properties
+    ) {
         for change in &checked.changed {
             if let Entity::Text(t) = &change.entity {
                 crate::texts_edit::profile_ready(doc, t)?;

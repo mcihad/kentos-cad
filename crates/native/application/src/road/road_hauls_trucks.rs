@@ -5,7 +5,8 @@
 //! Reads only. The shared cases are `fixtures/commands/v1/road.hauls.trucks.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, HaulTrack, HaulTrucked, HaulsPlan, HaulsTrucks, TruckFleet, TruckHaul, TruckTrace,
+    CommandResult, CommandWarning, HaulTrack, HaulTrucked, HaulsPlan, HaulsTrucks, TruckFleet,
+    TruckHaul, TruckTrace,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -26,35 +27,117 @@ fn judged(q: &HaulsTrucks) -> Result<(), Stop> {
     let t = &q.truck;
     let positive = |v: f64| v.is_finite() && v > 0.0;
     for (ok, path, words) in [
-        (positive(t.empty), "truck.empty", "Kamyonun boş kütlesi 0'dan büyük olmalı (t)."),
-        (t.gross.is_finite() && t.gross > t.empty, "truck.gross", "Kamyonun yüklü kütlesi boş kütlesinden büyük olmalı (t)."),
-        (positive(t.power), "truck.power", "Motor gücü 0'dan büyük olmalı (kW)."),
-        (positive(t.efficiency) && t.efficiency <= 1.0, "truck.efficiency", "Aktarma verimi 0 ile 1 arası olmalı."),
-        (positive(t.top), "truck.top", "En yüksek hız 0'dan büyük olmalı (km/sa)."),
-        (t.downhill.is_none_or(positive), "truck.downhill", "İniş hızı 0'dan büyük olmalı (km/sa)."),
-        (positive(t.traction) && t.traction <= 2.0, "truck.traction", "Çekiş katsayısı 0 ile 2 arası olmalı."),
-        (positive(t.drive) && t.drive <= 1.0, "truck.drive", "Tahrik dingilindeki ağırlık payı 0 ile 1 arası olmalı."),
-        (positive(t.brake), "truck.brake", "Fren yavaşlaması 0'dan büyük olmalı (m/s²)."),
-        (q.rolling.is_finite() && (0.0..50.0).contains(&q.rolling), "rolling", "Yuvarlanma direnci 0 ile %50 arası olmalı."),
-        (positive(q.load), "load", "Kamyonun taşıdığı hacim 0'dan büyük olmalı (m³)."),
-        (positive(q.loading), "loading", "Yükleme süresi 0'dan büyük olmalı (dk)."),
-        (q.dumping.is_finite() && q.dumping >= 0.0, "dumping", "Boşaltma süresi negatif olamaz (dk)."),
-        (q.spotting.is_none_or(|v| v.is_finite() && v >= 0.0), "spotting", "Manevra süresi negatif olamaz (dk)."),
-        (q.trucks.is_none_or(|n| (1..=500).contains(&n)), "trucks", "Kamyon sayısı 1 ile 500 arası olmalı."),
-        (q.hour.is_none_or(|h| positive(h) && h <= 60.0), "hour", "Saatte çalışılan dakika 0 ile 60 arası olmalı."),
-        (q.fuel.is_none_or(positive), "fuel", "Özgül yakıt tüketimi 0'dan büyük olmalı (L/kWh)."),
-        (q.idle.is_none_or(|v| v.is_finite() && v >= 0.0), "idle", "Rölanti yakıtı negatif olamaz (L/sa)."),
-        (q.co2.is_none_or(positive), "co2", "Yakıtın CO₂ salımı 0'dan büyük olmalı (kg/L)."),
+        (
+            positive(t.empty),
+            "truck.empty",
+            "Kamyonun boş kütlesi 0'dan büyük olmalı (t).",
+        ),
+        (
+            t.gross.is_finite() && t.gross > t.empty,
+            "truck.gross",
+            "Kamyonun yüklü kütlesi boş kütlesinden büyük olmalı (t).",
+        ),
+        (
+            positive(t.power),
+            "truck.power",
+            "Motor gücü 0'dan büyük olmalı (kW).",
+        ),
+        (
+            positive(t.efficiency) && t.efficiency <= 1.0,
+            "truck.efficiency",
+            "Aktarma verimi 0 ile 1 arası olmalı.",
+        ),
+        (
+            positive(t.top),
+            "truck.top",
+            "En yüksek hız 0'dan büyük olmalı (km/sa).",
+        ),
+        (
+            t.downhill.is_none_or(positive),
+            "truck.downhill",
+            "İniş hızı 0'dan büyük olmalı (km/sa).",
+        ),
+        (
+            positive(t.traction) && t.traction <= 2.0,
+            "truck.traction",
+            "Çekiş katsayısı 0 ile 2 arası olmalı.",
+        ),
+        (
+            positive(t.drive) && t.drive <= 1.0,
+            "truck.drive",
+            "Tahrik dingilindeki ağırlık payı 0 ile 1 arası olmalı.",
+        ),
+        (
+            positive(t.brake),
+            "truck.brake",
+            "Fren yavaşlaması 0'dan büyük olmalı (m/s²).",
+        ),
+        (
+            q.rolling.is_finite() && (0.0..50.0).contains(&q.rolling),
+            "rolling",
+            "Yuvarlanma direnci 0 ile %50 arası olmalı.",
+        ),
+        (
+            positive(q.load),
+            "load",
+            "Kamyonun taşıdığı hacim 0'dan büyük olmalı (m³).",
+        ),
+        (
+            positive(q.loading),
+            "loading",
+            "Yükleme süresi 0'dan büyük olmalı (dk).",
+        ),
+        (
+            q.dumping.is_finite() && q.dumping >= 0.0,
+            "dumping",
+            "Boşaltma süresi negatif olamaz (dk).",
+        ),
+        (
+            q.spotting.is_none_or(|v| v.is_finite() && v >= 0.0),
+            "spotting",
+            "Manevra süresi negatif olamaz (dk).",
+        ),
+        (
+            q.trucks.is_none_or(|n| (1..=500).contains(&n)),
+            "trucks",
+            "Kamyon sayısı 1 ile 500 arası olmalı.",
+        ),
+        (
+            q.hour.is_none_or(|h| positive(h) && h <= 60.0),
+            "hour",
+            "Saatte çalışılan dakika 0 ile 60 arası olmalı.",
+        ),
+        (
+            q.fuel.is_none_or(positive),
+            "fuel",
+            "Özgül yakıt tüketimi 0'dan büyük olmalı (L/kWh).",
+        ),
+        (
+            q.idle.is_none_or(|v| v.is_finite() && v >= 0.0),
+            "idle",
+            "Rölanti yakıtı negatif olamaz (L/sa).",
+        ),
+        (
+            q.co2.is_none_or(positive),
+            "co2",
+            "Yakıtın CO₂ salımı 0'dan büyük olmalı (kg/L).",
+        ),
     ] {
         if !ok {
             return Err(bad(path, words.into()));
         }
     }
     if q.idle.is_some() && q.fuel.is_none() {
-        return Err(bad("idle", "Rölanti yakıtı özgül yakıt tüketimiyle (fuel) birlikte verilir.".into()));
+        return Err(bad(
+            "idle",
+            "Rölanti yakıtı özgül yakıt tüketimiyle (fuel) birlikte verilir.".into(),
+        ));
     }
     if q.co2.is_some() && q.fuel.is_none() {
-        return Err(bad("co2", "CO₂ yakıttan hesaplanır: özgül yakıt tüketimini (fuel) de verin.".into()));
+        return Err(bad(
+            "co2",
+            "CO₂ yakıttan hesaplanır: özgül yakıt tüketimini (fuel) de verin.".into(),
+        ));
     }
     Ok(())
 }
@@ -91,7 +174,10 @@ impl Heights<'_> {
             Heights::Ground(points) => {
                 let at = |s: f64| -> Result<f64, f64> {
                     let i = points.partition_point(|p| p.station < s);
-                    let (p0, p1) = (points.get(i.saturating_sub(1)).ok_or(s)?, points.get(i).ok_or(s)?);
+                    let (p0, p1) = (
+                        points.get(i.saturating_sub(1)).ok_or(s)?,
+                        points.get(i).ok_or(s)?,
+                    );
                     if (p1.station - s).abs() < 1e-9 {
                         return p1.z.ok_or(s);
                     }
@@ -99,7 +185,11 @@ impl Heights<'_> {
                         return Err(s);
                     }
                     let (z0, z1) = (p0.z.ok_or(s)?, p1.z.ok_or(s)?);
-                    let t = if p1.station > p0.station { (s - p0.station) / (p1.station - p0.station) } else { 0.0 };
+                    let t = if p1.station > p0.station {
+                        (s - p0.station) / (p1.station - p0.station)
+                    } else {
+                        0.0
+                    };
                     Ok(z0 + t * (z1 - z0))
                 };
                 pts.push((lo, at(lo)?));
@@ -119,13 +209,26 @@ impl Heights<'_> {
 }
 
 /// The answer now and its warnings.
-pub(crate) fn answer(doc: &Document, q: &HaulsTrucks) -> Result<(HaulTrucked, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    q: &HaulsTrucks,
+) -> Result<(HaulTrucked, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     common::find(doc.road_hauls(), &q.haul, "haul")?;
     judged(q)?;
-    let (plan, warnings) = crate::road_hauls_plan::answer(doc, &HaulsPlan { haul: q.haul.clone(), objective: q.objective })?;
+    let (plan, warnings) = crate::road_hauls_plan::answer(
+        doc,
+        &HaulsPlan {
+            haul: q.haul.clone(),
+            objective: q.objective,
+        },
+    )?;
     let (_, def) = common::find(doc.road_hauls(), &q.haul, "haul")?;
-    let vdef = doc.road_volumes().iter().find(|v| v.id == def.volume).ok_or_else(|| bad("haul", "Brüknerin kübajı yok.".into()))?;
+    let vdef = doc
+        .road_volumes()
+        .iter()
+        .find(|v| v.id == def.volume)
+        .ok_or_else(|| bad("haul", "Brüknerin kübajı yok.".into()))?;
     let cdef = doc
         .road_corridors()
         .iter()
@@ -134,23 +237,42 @@ pub(crate) fn answer(doc: &Document, q: &HaulsTrucks) -> Result<(HaulTrucked, Ve
     let pdef = crate::road_profiles::profiles(doc)
         .iter()
         .find(|p| p.id == cdef.profile)
-        .ok_or_else(|| bad("track", format!("“{}” koridorunun boykesiti projede yok.", cdef.name)))?;
+        .ok_or_else(|| {
+            bad(
+                "track",
+                format!("“{}” koridorunun boykesiti projede yok.", cdef.name),
+            )
+        })?;
     let built = crate::road_profiles::build(doc, pdef)?;
     let heights = match q.track {
         HaulTrack::Profile => {
             let mut breaks: Vec<f64> = pdef.pvis.iter().map(|p| p.station).collect();
-            breaks.extend(built.vertical.curves.iter().flat_map(|c| [c.start[0], c.end[0]]));
+            breaks.extend(
+                built
+                    .vertical
+                    .curves
+                    .iter()
+                    .flat_map(|c| [c.start[0], c.end[0]]),
+            );
             Heights::Profile(&built.vertical, breaks)
         }
         HaulTrack::Ground => {
             let sdef = crate::road_terrains::surfaces(doc)
                 .iter()
                 .find(|s| s.id == cdef.surface)
-                .ok_or_else(|| bad("track", format!("“{}” koridorunun yüzeyi projede yok.", cdef.name)))?;
+                .ok_or_else(|| {
+                    bad(
+                        "track",
+                        format!("“{}” koridorunun yüzeyi projede yok.", cdef.name),
+                    )
+                })?;
             let surface = crate::road_terrains::make(doc, sdef)
                 .surface
                 .map_err(|_| bad("track", format!("“{}” yüzeyi kurulamıyor.", sdef.name)))?;
-            Heights::Ground(kentos_road::profile::terrain(&surface, &built.alignment.core))
+            Heights::Ground(kentos_road::profile::terrain(
+                &surface,
+                &built.alignment.core,
+            ))
         }
     };
     let km = |s: f64| km_text(built.alignment.km(s), 3);
@@ -167,11 +289,24 @@ pub(crate) fn answer(doc: &Document, q: &HaulsTrucks) -> Result<(HaulTrucked, Ve
     };
     let rolling = q.rolling / 100.0;
     let fixed = 60.0 * (q.loading + q.dumping + q.spotting.unwrap_or(0.0));
-    let split = hauls(&plan.segments.iter().map(|s| (s.from, s.to, s.flow)).collect::<Vec<_>>());
+    let split = hauls(
+        &plan
+            .segments
+            .iter()
+            .map(|s| (s.from, s.to, s.flow))
+            .collect::<Vec<_>>(),
+    );
     if let Some(i) = q.trace
         && i as usize >= split.len()
     {
-        return Err(bad("trace", format!("Planda {} taşıma var; {} sıralı taşıma yok.", split.len(), i)));
+        return Err(bad(
+            "trace",
+            format!(
+                "Planda {} taşıma var; {} sıralı taşıma yok.",
+                split.len(),
+                i
+            ),
+        ));
     }
     let mut out_hauls = Vec::new();
     let mut runs: Vec<(Run, Run)> = Vec::new();
@@ -186,7 +321,8 @@ pub(crate) fn answer(doc: &Document, q: &HaulsTrucks) -> Result<(HaulTrucked, Ve
                 format!("Arazi km {} noktasında yok (yüzeyin dışı ya da boşluğu); taşıma {} – {} arası.", km(s), km(h.from), km(h.to)),
             ),
         })?;
-        let sample = (q.trace == Some(i as u32)).then(|| (path.last().map_or(0.0, |p| p[0]) / 200.0).max(2.0));
+        let sample = (q.trace == Some(i as u32))
+            .then(|| (path.last().map_or(0.0, |p| p[0]) / 200.0).max(2.0));
         // Where it stalls depends on the steps; the haul it stalls on does not.
         let stalls = |loaded: bool| {
             fail(
@@ -202,14 +338,18 @@ pub(crate) fn answer(doc: &Document, q: &HaulsTrucks) -> Result<(HaulTrucked, Ve
             )
         };
         let loaded = run(&path, truck.gross, &truck, rolling, sample).map_err(|_| stalls(true))?;
-        let empty = run(&reversed(&path), truck.empty, &truck, rolling, sample).map_err(|_| stalls(false))?;
+        let empty = run(&reversed(&path), truck.empty, &truck, rolling, sample)
+            .map_err(|_| stalls(false))?;
         let cycle = loaded.time + empty.time + fixed;
         let trips = (h.volume / q.load - 1e-9).ceil().max(1.0);
         let fuel = q.fuel.map(|f| {
             let engine = (loaded.work + empty.work) / truck.efficiency / 3.6e6;
             f * engine + q.idle.unwrap_or(0.0) * (loaded.idle + empty.idle + fixed) / 3600.0
         });
-        let (z0, z1) = (path.first().map_or(0.0, |p| p[1]), path.last().map_or(0.0, |p| p[1]));
+        let (z0, z1) = (
+            path.first().map_or(0.0, |p| p[1]),
+            path.last().map_or(0.0, |p| p[1]),
+        );
         out_hauls.push(TruckHaul {
             from: h.from,
             to: h.to,
@@ -228,9 +368,13 @@ pub(crate) fn answer(doc: &Document, q: &HaulsTrucks) -> Result<(HaulTrucked, Ve
         runs.push((loaded, empty));
     }
     let trips: f64 = out_hauls.iter().map(|h| h.trips).sum();
-    let cycle = (trips > 0.0).then(|| out_hauls.iter().map(|h| h.trips * h.cycle).sum::<f64>() / trips);
-    let energy: f64 =
-        out_hauls.iter().zip(&runs).map(|(h, (l, e))| h.trips * (l.work + e.work) / truck.efficiency / 3.6e6).sum();
+    let cycle =
+        (trips > 0.0).then(|| out_hauls.iter().map(|h| h.trips * h.cycle).sum::<f64>() / trips);
+    let energy: f64 = out_hauls
+        .iter()
+        .zip(&runs)
+        .map(|(h, (l, e))| h.trips * (l.work + e.work) / truck.efficiency / 3.6e6)
+        .sum();
     let service = 60.0 * q.loading;
     let hour = q.hour.unwrap_or(60.0);
     let fleet = q.trucks.filter(|_| trips > 0.0).map(|n| {
@@ -257,16 +401,30 @@ pub(crate) fn answer(doc: &Document, q: &HaulsTrucks) -> Result<(HaulTrucked, Ve
         }
     });
     let fuel = q.fuel.map(|_| {
-        let trips_fuel: f64 = out_hauls.iter().map(|h| h.trips * h.fuel.unwrap_or(0.0)).sum();
-        trips_fuel + fleet.as_ref().map_or(0.0, |f| q.idle.unwrap_or(0.0) * f.wait * trips / 3600.0)
+        let trips_fuel: f64 = out_hauls
+            .iter()
+            .map(|h| h.trips * h.fuel.unwrap_or(0.0))
+            .sum();
+        trips_fuel
+            + fleet
+                .as_ref()
+                .map_or(0.0, |f| q.idle.unwrap_or(0.0) * f.wait * trips / 3600.0)
     });
     let trace = q.trace.map(|i| {
         let (h, (l, e)) = (&split[i as usize], &runs[i as usize]);
         let sign = if h.to >= h.from { 1.0 } else { -1.0 };
         TruckTrace {
             haul: i,
-            loaded: l.speeds.iter().map(|p| [h.from + sign * p[0], p[1] * 3.6]).collect(),
-            empty: e.speeds.iter().map(|p| [h.to - sign * p[0], p[1] * 3.6]).collect(),
+            loaded: l
+                .speeds
+                .iter()
+                .map(|p| [h.from + sign * p[0], p[1] * 3.6])
+                .collect(),
+            empty: e
+                .speeds
+                .iter()
+                .map(|p| [h.to - sign * p[0], p[1] * 3.6])
+                .collect(),
         }
     });
     Ok((
@@ -290,7 +448,10 @@ pub(crate) fn answer(doc: &Document, q: &HaulsTrucks) -> Result<(HaulTrucked, Ve
 /// Checks `q` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, q: &HaulsTrucks) -> CommandResult<()> {
     match answer(cx.doc, q) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -309,6 +470,9 @@ pub fn execute(cx: &mut ExecutionContext<'_>, q: HaulsTrucks) -> CommandResult<H
 }
 
 /// The answer for a window, or why it does not read.
-pub fn preview(doc: &Document, q: &HaulsTrucks) -> Result<(HaulTrucked, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    q: &HaulsTrucks,
+) -> Result<(HaulTrucked, Vec<CommandWarning>), String> {
     answer(doc, q).map_err(crate::road_corridors::words)
 }

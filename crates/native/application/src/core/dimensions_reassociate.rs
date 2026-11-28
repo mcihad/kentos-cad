@@ -303,7 +303,10 @@ fn write_execute(
     let (value, unit) = measured(&c.dimension);
     let doc = &mut *cx.doc;
     if c.changed > 0 {
-        doc.update_many(vec![(c.slot, Entity::Dimension(Box::new(c.dimension)))], LABEL);
+        doc.update_many(
+            vec![(c.slot, Entity::Dimension(Box::new(c.dimension)))],
+            LABEL,
+        );
     }
     CommandResult::Completed {
         output: DimensionsReassociated {

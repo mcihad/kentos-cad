@@ -108,7 +108,8 @@ impl Document {
             // The places under its storey's stairs lower than 1.80 m it lies over (4/1-ğ-3).
             let low = crate::under_stair::low_on(&unders, &x.arch.level);
             let under = if net > 0.0 && !low.is_empty() {
-                crate::under_stair::taken(&measured(&mut search, x, SpaceMethod::Net), &low).min(net)
+                crate::under_stair::taken(&measured(&mut search, x, SpaceMethod::Net), &low)
+                    .min(net)
             } else {
                 0.0
             };
@@ -132,7 +133,11 @@ impl Document {
                     .any(|r| !r.void && r.group.as_deref() == Some(u.id.as_str()))
             })
             .map(|u| {
-                let mine = || rooms.iter().filter(|r| r.counts && r.group.as_deref() == Some(u.id.as_str()));
+                let mine = || {
+                    rooms
+                        .iter()
+                        .filter(|r| r.counts && r.group.as_deref() == Some(u.id.as_str()))
+                };
                 (
                     u.id.clone(),
                     PaiyGroup {

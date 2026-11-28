@@ -392,7 +392,13 @@ pub fn covering(shapes: &[Shape]) -> Option<Qto> {
 pub fn column(shapes: &[Shape], cuts: &[&Opening]) -> Option<Qto> {
     let mut prisms = Vec::new();
     for s in shapes {
-        let Shape::Prism { rings, bulges, bottom, top } = s else {
+        let Shape::Prism {
+            rings,
+            bulges,
+            bottom,
+            top,
+        } = s
+        else {
             return None;
         };
         prisms.push((area(rings, bulges), *bottom, *top));
@@ -402,7 +408,11 @@ pub fn column(shapes: &[Shape], cuts: &[&Opening]) -> Option<Qto> {
     if prisms.is_empty() {
         return None;
     }
-    let section: f64 = prisms.iter().filter(|p| (p.1 - bottom).abs() <= 1e-9).map(|p| p.0).sum();
+    let section: f64 = prisms
+        .iter()
+        .filter(|p| (p.1 - bottom).abs() <= 1e-9)
+        .map(|p| p.0)
+        .sum();
     Some(Qto {
         name: "Qto_ColumnBaseQuantities".into(),
         quantities: vec![
@@ -449,9 +459,15 @@ pub fn footing(fields: &BeamFields, shapes: &[Shape], cuts: &[&Opening]) -> Qto 
     let mut q = beam(fields, shapes, cuts);
     q.name = "Qto_FootingBaseQuantities".into();
     // After Length: its width and its height, then its section and volumes as a beam's.
-    let at = q.quantities.iter().position(|(n, _)| n == "Length").map_or(0, |k| k + 1);
-    q.quantities.insert(at, ("Width".into(), Value::Length(fields.width)));
-    q.quantities.insert(at + 1, ("Height".into(), Value::Length(fields.height)));
+    let at = q
+        .quantities
+        .iter()
+        .position(|(n, _)| n == "Length")
+        .map_or(0, |k| k + 1);
+    q.quantities
+        .insert(at, ("Width".into(), Value::Length(fields.width)));
+    q.quantities
+        .insert(at + 1, ("Height".into(), Value::Length(fields.height)));
     q
 }
 

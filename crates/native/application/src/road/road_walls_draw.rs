@@ -4,8 +4,8 @@
 //! çiz”. The shared cases are `fixtures/commands/v1/road.walls.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, RetainingWallsDraw,
-    RetainingWallsDrawn, TextAlign, TextFace, Vec2, WallSide,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject,
+    RetainingWallsDraw, RetainingWallsDrawn, TextAlign, TextFace, Vec2, WallSide,
 };
 use kentos_domain::Document;
 use kentos_road::corridor::place;
@@ -54,7 +54,11 @@ fn polyline(pts: &[[f64; 2]], closed: bool) -> NewObject {
 }
 
 /// Checks `input`, `told` the wall's corridor sections and stations and answering whether to stop (docs/adr/4040).
-fn check(doc: &Document, input: &RetainingWallsDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
+fn check(
+    doc: &Document,
+    input: &RetainingWallsDraw,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_walls(), &input.wall, "wall")?;
@@ -63,15 +67,34 @@ fn check(doc: &Document, input: &RetainingWallsDraw, told: &dyn Fn(u64, u64) -> 
     warnings.extend(read.warnings);
     let r = &read.report;
     let face: Vec<[f64; 2]> = r.rows.iter().map(|w| [w.x, w.y]).collect();
-    let edges: Vec<[f64; 2]> = r.rows.iter().map(|w| common::footing_edges(def, w.offset, w.fill)).collect();
-    let mut outline: Vec<[f64; 2]> = read.lines.iter().zip(&edges).map(|(l, e)| place(l, e[0])).collect();
-    outline.extend(read.lines.iter().zip(&edges).rev().map(|(l, e)| place(l, e[1])));
+    let edges: Vec<[f64; 2]> = r
+        .rows
+        .iter()
+        .map(|w| common::footing_edges(def, w.offset, w.fill))
+        .collect();
+    let mut outline: Vec<[f64; 2]> = read
+        .lines
+        .iter()
+        .zip(&edges)
+        .map(|(l, e)| place(l, e[0]))
+        .collect();
+    outline.extend(
+        read.lines
+            .iter()
+            .zip(&edges)
+            .rev()
+            .map(|(l, e)| place(l, e[1])),
+    );
     let mut objects = vec![polyline(&face, false), polyline(&outline, true)];
     if input.labels {
         let h = TEXT_MM * doc.settings().plot_scale / 1000.0;
         let k = r.rows.len() / 2;
         let (row, line) = (&r.rows[k], &read.lines[k]);
-        let out = if def.side == WallSide::Right { 1.0 } else { -1.0 };
+        let out = if def.side == WallSide::Right {
+            1.0
+        } else {
+            -1.0
+        };
         let reach = edges[k][0].max(edges[k][1]).max(row.offset) * f64::from(out > 0.0)
             + edges[k][0].min(edges[k][1]).min(row.offset) * f64::from(out < 0.0);
         let p = place(line, reach + out * 2.0 * h);
@@ -101,10 +124,19 @@ fn check(doc: &Document, input: &RetainingWallsDraw, told: &dyn Fn(u64, u64) -> 
             path: None,
         }));
     }
-    Ok(Checked { id: def.id.clone(), length: r.length, objects, warnings })
+    Ok(Checked {
+        id: def.id.clone(),
+        length: r.length,
+        objects,
+        warnings,
+    })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &RetainingWallsDraw, c: Checked) -> CommandResult<RetainingWallsDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &RetainingWallsDraw,
+    c: Checked,
+) -> CommandResult<RetainingWallsDrawn> {
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects: c.objects,
@@ -129,13 +161,19 @@ fn write(cx: &mut ExecutionContext<'_>, input: &RetainingWallsDraw, c: Checked) 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RetainingWallsDraw) -> CommandResult<()> {
     match check(cx.doc, input, &cx.stop_only()) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What execute would draw now, on a reading copy; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &RetainingWallsDraw) -> CommandResult<RetainingWallsDrawn> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &RetainingWallsDraw,
+) -> CommandResult<RetainingWallsDrawn> {
     let c = match check(cx.doc, input, &cx.stop_only()) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -152,7 +190,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &RetainingWallsDraw) -> CommandRes
 /// Draws the wall: one undo step.
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::RetainingWallsDraw) -> CommandResult<kentos_commands::RetainingWallsDrawn> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &kentos_commands::RetainingWallsDraw,
+) -> CommandResult<kentos_commands::RetainingWallsDrawn> {
     let checked = check(cx.doc, input, &cx.told());
     match checked {
         Ok(c) => write(cx, input, c),
@@ -160,7 +201,10 @@ pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::Retai
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RetainingWallsDraw) -> CommandResult<RetainingWallsDrawn> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RetainingWallsDraw,
+) -> CommandResult<RetainingWallsDrawn> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_WALLS_DRAW,
@@ -172,7 +216,14 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: RetainingWallsDraw) -> Comm
                 Ok(c) => write(cx, &input, c),
                 Err(stop) => stop.into(),
             };
-            crate::road_drawings::kept(cx, kentos_commands::ROAD_WALLS_DRAW, &input, (kentos_commands::RoadSourceKind::Wall, "wall"), r, |o| &o.uids)
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_WALLS_DRAW,
+                &input,
+                (kentos_commands::RoadSourceKind::Wall, "wall"),
+                r,
+                |o| &o.uids,
+            )
         },
     )
 }
@@ -188,11 +239,15 @@ mod tests {
 
     /// The shared cases' project and their first case's input.
     fn project() -> (kentos_domain::Document, kentos_commands::RetainingWallsDraw) {
-        let cases: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.walls.draw.json")).expect("cases");
-        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let cases: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/commands/v1/road.walls.draw.json"
+        ))
+        .expect("cases");
+        let snapshot: DocumentSnapshotV2 =
+            serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
         let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
-        let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+        let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone())
+            .expect("an input");
         (doc, input)
     }
 
@@ -208,9 +263,20 @@ mod tests {
         assert!(whole.is_ok());
         let seen = seen.into_inner();
         assert!(seen.len() > 4, "{} ticks", seen.len());
-        assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1), "{seen:?}");
-        assert!(seen.iter().any(|t| t.0 < crate::road_corridors::TICKS) && seen.iter().any(|t| t.0 >= crate::road_corridors::TICKS), "{seen:?}");
-        assert!(seen.iter().all(|t| t.1 == 2 * crate::road_corridors::TICKS), "{seen:?}");
+        assert!(
+            seen.windows(2)
+                .all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1),
+            "{seen:?}"
+        );
+        assert!(
+            seen.iter().any(|t| t.0 < crate::road_corridors::TICKS)
+                && seen.iter().any(|t| t.0 >= crate::road_corridors::TICKS),
+            "{seen:?}"
+        );
+        assert!(
+            seen.iter().all(|t| t.1 == 2 * crate::road_corridors::TICKS),
+            "{seen:?}"
+        );
         let asked = Cell::new(0);
         let stopped = check(&doc, &input, &|_, _| {
             asked.set(asked.get() + 1);

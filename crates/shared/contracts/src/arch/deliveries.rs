@@ -39,8 +39,12 @@ pub enum DeliveryChannel {
 }
 
 impl DeliveryChannel {
-    pub const ALL: [DeliveryChannel; 4] =
-        [DeliveryChannel::Epys, DeliveryChannel::Authority, DeliveryChannel::Paper, DeliveryChannel::Other];
+    pub const ALL: [DeliveryChannel; 4] = [
+        DeliveryChannel::Epys,
+        DeliveryChannel::Authority,
+        DeliveryChannel::Paper,
+        DeliveryChannel::Other,
+    ];
 
     /// As the form names it.
     pub fn label(self) -> &'static str {
@@ -172,7 +176,9 @@ pub fn is_delivery_day(s: &str) -> bool {
         return false;
     }
     let n = |r: std::ops::Range<usize>| s.get(r).and_then(|t| t.parse::<u32>().ok());
-    let (Some(y), Some(m), Some(d)) = (n(0..4), n(5..7), n(8..10)) else { return false };
+    let (Some(y), Some(m), Some(d)) = (n(0..4), n(5..7), n(8..10)) else {
+        return false;
+    };
     let leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
     let days = match m {
         1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
@@ -207,80 +213,151 @@ impl Delivery {
     /// return's reason said; the texts' lengths; a response's notes unique.
     pub fn list_problem(list: &[Delivery]) -> Option<(String, String)> {
         if list.len() > MAX_DELIVERIES {
-            return Some(("deliveries".into(), format!("En çok {MAX_DELIVERIES} teslim kaydı tutulur.")));
+            return Some((
+                "deliveries".into(),
+                format!("En çok {MAX_DELIVERIES} teslim kaydı tutulur."),
+            ));
         }
         for (i, d) in list.iter().enumerate() {
             let at = |f: &str| format!("deliveries.{i}.{f}");
             let n = d.number;
             if !is_delivery_id(&d.id) {
-                return Some((at("id"), format!("{n}. teslimin kimliği küçük harfli, tireli bir UUID olmalı.")));
+                return Some((
+                    at("id"),
+                    format!("{n}. teslimin kimliği küçük harfli, tireli bir UUID olmalı."),
+                ));
             }
             if list[..i].iter().any(|e| e.id == d.id) {
-                return Some((at("id"), format!("{n}. teslimin kimliği başka bir teslimde de var.")));
+                return Some((
+                    at("id"),
+                    format!("{n}. teslimin kimliği başka bir teslimde de var."),
+                ));
             }
             if n == 0 || list[..i].iter().any(|e| e.number == n) {
-                return Some((at("number"), format!("Teslimin numarası ({n}) birden başlar ve tektir.")));
+                return Some((
+                    at("number"),
+                    format!("Teslimin numarası ({n}) birden başlar ve tektir."),
+                ));
             }
             if !(d.revision.len() == 3 && d.revision.bytes().all(|c| c.is_ascii_digit())) {
-                return Some((at("revision"), format!(
-                    "{n}. teslimin revizyon numarası üç rakam olmalı (EK-2: 000 revizyonsuz, 001, 002 …); “{}” verildi.",
-                    d.revision
-                )));
+                return Some((
+                    at("revision"),
+                    format!(
+                        "{n}. teslimin revizyon numarası üç rakam olmalı (EK-2: 000 revizyonsuz, 001, 002 …); “{}” verildi.",
+                        d.revision
+                    ),
+                ));
             }
             let m = &d.package.manifest;
-            if !(m.len() == 64 && m.bytes().all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c))) {
-                return Some((at("package.manifest"), format!(
-                    "{n}. teslimin paketi yayının yayin.json'unun SHA-256'sıyla (64 küçük onaltılık rakam) anılır."
-                )));
+            if !(m.len() == 64
+                && m.bytes()
+                    .all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(&c)))
+            {
+                return Some((
+                    at("package.manifest"),
+                    format!(
+                        "{n}. teslimin paketi yayının yayin.json'unun SHA-256'sıyla (64 küçük onaltılık rakam) anılır."
+                    ),
+                ));
             }
-            for (field, value) in [("package.path", &d.package.path), ("package.source", &d.package.source)] {
-                if let Some(why) = value.as_deref().and_then(|v| text_problem(v, MAX_DELIVERY_LABEL, true)) {
-                    return Some((at(field), format!("{n}. teslimin paketinin yeri ya da kaynağı {why}.")));
+            for (field, value) in [
+                ("package.path", &d.package.path),
+                ("package.source", &d.package.source),
+            ] {
+                if let Some(why) = value
+                    .as_deref()
+                    .and_then(|v| text_problem(v, MAX_DELIVERY_LABEL, true))
+                {
+                    return Some((
+                        at(field),
+                        format!("{n}. teslimin paketinin yeri ya da kaynağı {why}."),
+                    ));
                 }
             }
             if let Some(why) = text_problem(&d.to, MAX_DELIVERY_LABEL, true) {
                 return Some((at("to"), format!("{n}. teslimin kurumu {why}.")));
             }
             if !is_delivery_day(&d.at) {
-                return Some((at("at"), format!("{n}. teslimin günü YYYY-AA-GG olmalı (2026-11-17); “{}” verildi.", d.at)));
+                return Some((
+                    at("at"),
+                    format!(
+                        "{n}. teslimin günü YYYY-AA-GG olmalı (2026-11-17); “{}” verildi.",
+                        d.at
+                    ),
+                ));
             }
-            for (field, value, words) in [("by", &d.by, "yayımlayanı"), ("receipt", &d.receipt, "makbuz numarası")] {
-                if let Some(why) = value.as_deref().and_then(|v| text_problem(v, MAX_DELIVERY_LABEL, true)) {
+            for (field, value, words) in [
+                ("by", &d.by, "yayımlayanı"),
+                ("receipt", &d.receipt, "makbuz numarası"),
+            ] {
+                if let Some(why) = value
+                    .as_deref()
+                    .and_then(|v| text_problem(v, MAX_DELIVERY_LABEL, true))
+                {
                     return Some((at(field), format!("{n}. teslimin {words} {why}.")));
                 }
             }
             if let Some(r) = &d.response {
                 if !is_delivery_day(&r.at) {
-                    return Some((at("response.at"), format!(
-                        "{n}. teslimin cevabının günü YYYY-AA-GG olmalı; “{}” verildi.",
-                        r.at
-                    )));
+                    return Some((
+                        at("response.at"),
+                        format!(
+                            "{n}. teslimin cevabının günü YYYY-AA-GG olmalı; “{}” verildi.",
+                            r.at
+                        ),
+                    ));
                 }
                 if r.at < d.at {
-                    return Some((at("response.at"), format!(
-                        "{n}. teslimin cevabı ({}) tesliminden ({}) önce olamaz.",
-                        r.at, d.at
-                    )));
+                    return Some((
+                        at("response.at"),
+                        format!(
+                            "{n}. teslimin cevabı ({}) tesliminden ({}) önce olamaz.",
+                            r.at, d.at
+                        ),
+                    ));
                 }
-                if r.outcome == DeliveryOutcome::Returned && r.reason.as_deref().is_none_or(|t| t.trim().is_empty()) {
-                    return Some((at("response.reason"), format!("{n}. teslimin iadesinin gerekçesini yazın.")));
+                if r.outcome == DeliveryOutcome::Returned
+                    && r.reason.as_deref().is_none_or(|t| t.trim().is_empty())
+                {
+                    return Some((
+                        at("response.reason"),
+                        format!("{n}. teslimin iadesinin gerekçesini yazın."),
+                    ));
                 }
-                if let Some(why) = r.reason.as_deref().and_then(|v| text_problem(v, MAX_DELIVERY_TEXT, true)) {
-                    return Some((at("response.reason"), format!("{n}. teslimin cevabının gerekçesi {why}.")));
+                if let Some(why) = r
+                    .reason
+                    .as_deref()
+                    .and_then(|v| text_problem(v, MAX_DELIVERY_TEXT, true))
+                {
+                    return Some((
+                        at("response.reason"),
+                        format!("{n}. teslimin cevabının gerekçesi {why}."),
+                    ));
                 }
-                if let Some(why) = r.receipt.as_deref().and_then(|v| text_problem(v, MAX_DELIVERY_LABEL, true)) {
-                    return Some((at("response.receipt"), format!("{n}. teslimin cevabının makbuz numarası {why}.")));
+                if let Some(why) = r
+                    .receipt
+                    .as_deref()
+                    .and_then(|v| text_problem(v, MAX_DELIVERY_LABEL, true))
+                {
+                    return Some((
+                        at("response.receipt"),
+                        format!("{n}. teslimin cevabının makbuz numarası {why}."),
+                    ));
                 }
                 if r.notes.len() > MAX_DELIVERY_NOTES {
-                    return Some((at("response.notes"), format!(
-                        "Bir cevap en çok {MAX_DELIVERY_NOTES} inceleme notuna bağlanır."
-                    )));
+                    return Some((
+                        at("response.notes"),
+                        format!("Bir cevap en çok {MAX_DELIVERY_NOTES} inceleme notuna bağlanır."),
+                    ));
                 }
                 for (j, note) in r.notes.iter().enumerate() {
                     if !is_delivery_id(note) || r.notes[..j].contains(note) {
-                        return Some((at(&format!("response.notes.{j}")), format!(
-                            "{n}. teslimin cevabının inceleme notları tek ve kimlikleri UUID olmalı."
-                        )));
+                        return Some((
+                            at(&format!("response.notes.{j}")),
+                            format!(
+                                "{n}. teslimin cevabının inceleme notları tek ve kimlikleri UUID olmalı."
+                            ),
+                        ));
                     }
                 }
             }
@@ -290,7 +367,9 @@ impl Delivery {
 
     /// The delivery before it to the same authority: the one of the largest number below its own.
     pub fn previous<'a>(&self, list: &'a [Delivery]) -> Option<&'a Delivery> {
-        list.iter().filter(|d| d.to == self.to && d.number < self.number).max_by_key(|d| d.number)
+        list.iter()
+            .filter(|d| d.to == self.to && d.number < self.number)
+            .max_by_key(|d| d.number)
     }
 }
 
@@ -303,7 +382,12 @@ mod tests {
             id: format!("00000000-0000-4000-8000-{n:012}"),
             number: n,
             revision: "000".into(),
-            package: DeliveryPackage { manifest: "a".repeat(64), files: 12, path: None, source: None },
+            package: DeliveryPackage {
+                manifest: "a".repeat(64),
+                files: 12,
+                path: None,
+                source: None,
+            },
             to: "Sivas Belediyesi İmar ve Şehircilik Müdürlüğü".into(),
             channel: DeliveryChannel::Epys,
             at: "2026-11-17".into(),
@@ -334,7 +418,11 @@ mod tests {
         let path = |l: &[Delivery]| Delivery::list_problem(l).map(|p| p.0);
         let mut bad = list.clone();
         bad[0].response.as_mut().unwrap().reason = None;
-        assert_eq!(path(&bad).as_deref(), Some("deliveries.0.response.reason"), "a return says why");
+        assert_eq!(
+            path(&bad).as_deref(),
+            Some("deliveries.0.response.reason"),
+            "a return says why"
+        );
         let mut bad = list.clone();
         bad[1].revision = "1".into();
         assert_eq!(path(&bad).as_deref(), Some("deliveries.1.revision"));
@@ -343,7 +431,11 @@ mod tests {
         assert_eq!(path(&bad).as_deref(), Some("deliveries.1.at"));
         let mut bad = list.clone();
         bad[0].response.as_mut().unwrap().at = "2026-11-16".into();
-        assert_eq!(path(&bad).as_deref(), Some("deliveries.0.response.at"), "no answer before the delivery");
+        assert_eq!(
+            path(&bad).as_deref(),
+            Some("deliveries.0.response.at"),
+            "no answer before the delivery"
+        );
         let mut bad = list.clone();
         bad[1].number = 1;
         assert_eq!(path(&bad).as_deref(), Some("deliveries.1.number"));

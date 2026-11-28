@@ -32,7 +32,9 @@ impl App {
             if found == 0 {
                 "Eşleşen satır yok. Hazır altlıklar ve kayıtlı bağlantılar kapalı dallarda da aranır; klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz.".to_owned()
             } else {
-                format!("{found} satır eşleşti. Klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz.")
+                format!(
+                    "{found} satır eşleşti. Klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz."
+                )
             },
             false,
             0,
@@ -277,12 +279,25 @@ impl App {
     }
 
     /// The projects kept at a place (docs/adr/9107), as rows that open them.
-    pub(super) fn stored_lines(&self, address: &str, schema: Option<&str>, depth: usize, lines: &mut Vec<Line>) {
+    pub(super) fn stored_lines(
+        &self,
+        address: &str,
+        schema: Option<&str>,
+        depth: usize,
+        lines: &mut Vec<Line>,
+    ) {
         let key = crate::sources::stored_key(address, schema);
         for p in self.gis.sources.stored.get(&key).into_iter().flatten() {
             let mut meta = Vec::new();
             meta.extend(p.user.clone());
-            meta.extend(p.modified.as_deref().map(|m| crate::cloud::local_time::when(m, crate::cloud::local_time::Zone::system())).filter(|w| !w.is_empty()));
+            meta.extend(
+                p.modified
+                    .as_deref()
+                    .map(|m| {
+                        crate::cloud::local_time::when(m, crate::cloud::local_time::Zone::system())
+                    })
+                    .filter(|w| !w.is_empty()),
+            );
             lines.push(Line::Stored {
                 key: format!("pj:{key}\0{}", p.name),
                 at: Box::new(crate::document::StoredSource {

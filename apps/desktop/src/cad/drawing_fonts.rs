@@ -14,7 +14,9 @@ use kentos_commands::DrawingFont;
 
 // The faces and their names are the plotter's: the headless host's PDF embeds the same bytes (docs/adr/0252).
 
-use kentos_geometry_core::text::font_data::{ADDED_FACES, ADDED_KEYS, added_face, given, installed};
+use kentos_geometry_core::text::font_data::{
+    ADDED_FACES, ADDED_KEYS, added_face, given, installed,
+};
 use kentos_plot::fonts::{FACE_KEYS, FACES};
 
 /// Puts the faces in Iced's text system before the first frame; later calls do nothing. The added faces (Arial, Times
@@ -30,7 +32,12 @@ pub fn load() {
         // The twins always (a sheet names them), the system's own faces where they were given.
         let added = (0..ADDED_KEYS.len()).filter_map(added_face);
         let folders = installed().iter().map(|f| f.bytes);
-        for face in FACES.into_iter().chain(ADDED_FACES).chain(added).chain(folders) {
+        for face in FACES
+            .into_iter()
+            .chain(ADDED_FACES)
+            .chain(added)
+            .chain(folders)
+        {
             if loaded.iter().any(|f| std::ptr::eq(*f, face)) {
                 continue;
             }
@@ -46,14 +53,22 @@ pub fn load() {
 /// families of Arial and Times New Roman given in place of their twins.
 pub fn load_font_folders() -> Vec<&'static str> {
     kentos_native_application::font_folders::load();
-    ["arial", "times-new-roman"].into_iter().filter(|f| given(f)).collect()
+    ["arial", "times-new-roman"]
+        .into_iter()
+        .filter(|f| given(f))
+        .collect()
 }
 
 /// Whether the family has an italic face of its own; one without is leant
 /// as a browser leans it (docs/adr/0183 §2: `SYNTHETIC_ITALIC`).
 pub fn has_italic(font: DrawingFont) -> bool {
-    let id = kentos_geometry_core::text::Font::from_id(font.id()).drawn().id();
-    FACE_KEYS.iter().chain(ADDED_KEYS.iter()).any(|&(f, _, italic)| italic && f == id)
+    let id = kentos_geometry_core::text::Font::from_id(font.id())
+        .drawn()
+        .id();
+    FACE_KEYS
+        .iter()
+        .chain(ADDED_KEYS.iter())
+        .any(|&(f, _, italic)| italic && f == id)
         || installed().iter().any(|f| f.italic && f.family == id)
 }
 
@@ -66,7 +81,9 @@ pub const SYNTHETIC_ITALIC: f32 = 0.25;
 /// folders do not hold (docs/adr/9313).
 pub fn family(font: DrawingFont) -> &'static str {
     match font {
-        DrawingFont::Installed(f) if kentos_geometry_core::text::Font::from_id(f.name()).missing() => {
+        DrawingFont::Installed(f)
+            if kentos_geometry_core::text::Font::from_id(f.name()).missing() =>
+        {
             family(DrawingFont::Arial)
         }
         DrawingFont::Installed(f) => f.name(),

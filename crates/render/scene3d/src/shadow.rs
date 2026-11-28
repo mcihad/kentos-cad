@@ -35,10 +35,20 @@ pub struct Projection {
 /// shown space) and a map of `side` texels: the box's corners as the sun sees them bound it, padded by a texel, and
 /// their shadows on its floor (the plane at `low`'s height): those lie along the rays, deeper than any corner, and a
 /// ground's shadow beyond the box's depth would read as lit.
-pub fn projection(low: [f64; 3], high: [f64; 3], eye: [f64; 3], towards: [f64; 3], side: u32) -> Projection {
+pub fn projection(
+    low: [f64; 3],
+    high: [f64; 3],
+    eye: [f64; 3],
+    towards: [f64; 3],
+    side: u32,
+) -> Projection {
     // The sun's frame: forward from the sun into the scene, right and up across it.
     let forward = math::normalize([-towards[0], -towards[1], -towards[2]]);
-    let up = if forward[2].abs() < 0.99 { [0.0, 0.0, 1.0] } else { [0.0, 1.0, 0.0] };
+    let up = if forward[2].abs() < 0.99 {
+        [0.0, 0.0, 1.0]
+    } else {
+        [0.0, 1.0, 0.0]
+    };
     let right = math::normalize(cross(forward, up));
     let up = cross(right, forward);
     let (mut lo, mut hi) = ([f64::MAX; 3], [f64::MIN; 3]);
@@ -54,7 +64,11 @@ pub fn projection(low: [f64; 3], high: [f64; 3], eye: [f64; 3], towards: [f64; 3
                 continue;
             }
             let down = (corner[2] + eye[2] - low[2]) / towards[2];
-            corner = [corner[0] - towards[0] * down, corner[1] - towards[1] * down, corner[2] - towards[2] * down];
+            corner = [
+                corner[0] - towards[0] * down,
+                corner[1] - towards[1] * down,
+                corner[2] - towards[2] * down,
+            ];
         }
         let at = [dot(corner, right), dot(corner, up), dot(corner, forward)];
         for i in 0..3 {
@@ -64,13 +78,26 @@ pub fn projection(low: [f64; 3], high: [f64; 3], eye: [f64; 3], towards: [f64; 3
     }
     let width = (hi[0] - lo[0]).max(hi[1] - lo[1]).max(1e-3);
     let texel = width / f64::from(side.max(1));
-    let (half, middle) = (width / 2.0 + texel, [(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0]);
+    let (half, middle) = (
+        width / 2.0 + texel,
+        [(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0],
+    );
     let (near, depth) = (lo[2] - texel, (hi[2] - lo[2]) + 2.0 * texel);
     // Rows: x' = (p·right − middle.x) / half, y' likewise, z' = (p·forward − near) / depth.
     let rows = [
-        [right[0] / half, right[1] / half, right[2] / half, -middle[0] / half],
+        [
+            right[0] / half,
+            right[1] / half,
+            right[2] / half,
+            -middle[0] / half,
+        ],
         [up[0] / half, up[1] / half, up[2] / half, -middle[1] / half],
-        [forward[0] / depth, forward[1] / depth, forward[2] / depth, -near / depth],
+        [
+            forward[0] / depth,
+            forward[1] / depth,
+            forward[2] / depth,
+            -near / depth,
+        ],
         [0.0, 0.0, 0.0, 1.0],
     ];
     let mut clip = [0.0f32; 16];
@@ -89,7 +116,11 @@ pub fn projection(low: [f64; 3], high: [f64; 3], eye: [f64; 3], towards: [f64; 3
 }
 
 fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
 }
 
 fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
@@ -133,7 +164,10 @@ impl Shadows {
                 compilation_options: wgpu::PipelineCompilationOptions::default(),
                 buffers: &[crate::vertex_layout()],
             },
-            primitive: wgpu::PrimitiveState { cull_mode: None, ..wgpu::PrimitiveState::default() },
+            primitive: wgpu::PrimitiveState {
+                cull_mode: None,
+                ..wgpu::PrimitiveState::default()
+            },
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: DEPTH_FORMAT,
                 depth_write_enabled: true,
@@ -176,7 +210,9 @@ impl Shadows {
         if self.map.is_some() {
             return false;
         }
-        self.map = Some(map_texture(device, self.side).create_view(&wgpu::TextureViewDescriptor::default()));
+        self.map = Some(
+            map_texture(device, self.side).create_view(&wgpu::TextureViewDescriptor::default()),
+        );
         true
     }
 
@@ -190,7 +226,11 @@ impl Shadows {
 fn map_texture(device: &wgpu::Device, side: u32) -> wgpu::Texture {
     device.create_texture(&wgpu::TextureDescriptor {
         label: Some("kentos.scene3d.shadowMap"),
-        size: wgpu::Extent3d { width: side, height: side, depth_or_array_layers: 1 },
+        size: wgpu::Extent3d {
+            width: side,
+            height: side,
+            depth_or_array_layers: 1,
+        },
         mip_level_count: 1,
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
@@ -206,7 +246,10 @@ mod tests {
 
     fn apply(m: &[f32; 16], p: [f64; 3]) -> [f64; 3] {
         let at = |row: usize| {
-            f64::from(m[row]) * p[0] + f64::from(m[4 + row]) * p[1] + f64::from(m[8 + row]) * p[2] + f64::from(m[12 + row])
+            f64::from(m[row]) * p[0]
+                + f64::from(m[4 + row]) * p[1]
+                + f64::from(m[8 + row]) * p[2]
+                + f64::from(m[12 + row])
         };
         [at(0), at(1), at(2)]
     }
@@ -219,11 +262,24 @@ mod tests {
         let rel = |q: [f64; 3]| [q[0] - eye[0], q[1] - eye[1], q[2] - eye[2]];
         let top = apply(&p.clip, rel([5.0, 5.0, 10.0]));
         let bottom = apply(&p.clip, rel([5.0, 5.0, 0.0]));
-        assert!(top[0].abs() < 1e-6 && top[1].abs() < 1e-6, "the middle: {top:?}");
-        assert!(top[2] < bottom[2] && top[2] >= 0.0 && bottom[2] <= 1.0, "nearer the sun, shallower: {top:?} {bottom:?}");
+        assert!(
+            top[0].abs() < 1e-6 && top[1].abs() < 1e-6,
+            "the middle: {top:?}"
+        );
+        assert!(
+            top[2] < bottom[2] && top[2] >= 0.0 && bottom[2] <= 1.0,
+            "nearer the sun, shallower: {top:?} {bottom:?}"
+        );
         let corner = apply(&p.clip, rel([0.0, 0.0, 0.0]));
-        assert!(corner[0].abs() < 1.0 && corner[0].abs() > 0.99, "a corner at the map's edge less a texel: {corner:?}");
-        assert!((f64::from(p.texel_m) - 10.0 / 4096.0).abs() < 1e-5, "{}", p.texel_m);
+        assert!(
+            corner[0].abs() < 1.0 && corner[0].abs() > 0.99,
+            "a corner at the map's edge less a texel: {corner:?}"
+        );
+        assert!(
+            (f64::from(p.texel_m) - 10.0 / 4096.0).abs() < 1e-5,
+            "{}",
+            p.texel_m
+        );
         // A low sun from the south: the box's top is nearer the sun than its foot on the north side.
         let s = projection(low, high, eye, math::normalize([0.0, -1.0, 0.3]), 4096);
         let top_south = apply(&s.clip, rel([5.0, 0.0, 10.0]));
@@ -231,6 +287,9 @@ mod tests {
         assert!(top_south[2] < foot_north[2], "{top_south:?} {foot_north:?}");
         // The top's shadow on the floor, 33 m north of the box: inside the map, its depth within 0…1.
         let far = apply(&s.clip, rel([5.0, 10.0 + 10.0 / 0.3 * 0.9578, 0.0]));
-        assert!(far[2] <= 1.0 && far[2] > foot_north[2] && far[1].abs() <= 1.0, "{far:?}");
+        assert!(
+            far[2] <= 1.0 && far[2] > foot_north[2] && far[1].abs() <= 1.0,
+            "{far:?}"
+        );
     }
 }

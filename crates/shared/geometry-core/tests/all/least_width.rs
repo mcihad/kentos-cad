@@ -12,8 +12,12 @@ const PRECISION: f64 = 1e-4;
 
 #[test]
 fn every_case_is_what_the_reference_finds() {
-    let path = format!("{}/../../../fixtures/geometry/v1/least-width.json", env!("CARGO_MANIFEST_DIR"));
-    let file: Value = serde_json::from_str(&std::fs::read_to_string(path).expect("the cases")).expect("JSON");
+    let path = format!(
+        "{}/../../../fixtures/geometry/v1/least-width.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let file: Value =
+        serde_json::from_str(&std::fs::read_to_string(path).expect("the cases")).expect("JSON");
     let cases = file["cases"].as_array().expect("cases");
     assert!(cases.len() >= 20, "{} cases", cases.len());
     let mut wrong = Vec::new();
@@ -36,7 +40,10 @@ fn every_case_is_what_the_reference_finds() {
         let got = least_width(&rings, PRECISION).expect("a region");
         // A neck's length is exact; a largest circle's diameter within twice the precision.
         if (got.width - want).abs() > 2.0 * PRECISION + 1e-6 || got.neck != neck {
-            wrong.push(format!("{id}: {} {:?} ≠ reference {want} (neck {neck})", got.width, got.neck));
+            wrong.push(format!(
+                "{id}: {} {:?} ≠ reference {want} (neck {neck})",
+                got.width, got.neck
+            ));
         }
     }
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));

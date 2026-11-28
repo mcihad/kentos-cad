@@ -56,7 +56,10 @@ impl Erase {
                     .into_iter()
                     .partition(|w| w.code == kentos_commands::codes::HATCH_ASSOCIATION_LOST);
                 (
-                    kentos_native_application::CommandResult::Completed { output, warnings: first },
+                    kentos_native_application::CommandResult::Completed {
+                        output,
+                        warnings: first,
+                    },
                     later,
                 )
             }

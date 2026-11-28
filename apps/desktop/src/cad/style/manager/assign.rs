@@ -184,7 +184,10 @@ impl App {
             .filter_map(|id| self.styles.library.get(id))
             .map(|(item, _)| format!("“{}”", item.name()))
             .collect();
-        self.output(format!("Kitaplığım'dan projeye alındı: {}.", names.join(", ")));
+        self.output(format!(
+            "Kitaplığım'dan projeye alındı: {}.",
+            names.join(", ")
+        ));
     }
 
     /// Katman stili's “Kitaplığıma kaydet”: the slot's own symbol goes to

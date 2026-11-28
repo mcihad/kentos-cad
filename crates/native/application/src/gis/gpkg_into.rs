@@ -16,7 +16,9 @@ use kentos_geopackage as gpkg;
 use kentos_geopackage::GeoPackage;
 
 use crate::codes;
-use crate::geopackage::{BATCH_ROWS, Clash, Flow, Row, TableWritten, WriteStop, Written, row_of, write_in};
+use crate::geopackage::{
+    BATCH_ROWS, Clash, Flow, Row, TableWritten, WriteStop, Written, row_of, write_in,
+};
 
 /// A layer's rows added to a table of the file's: the table as the file has it, the columns written with the attribute
 /// each reads, the lasting ids it has, the attributes it has no column for.
@@ -61,24 +63,42 @@ pub fn write_into(
     let session = gp.session()?;
     let mut out = write_in(doc, layers, &session, Some(clash), BATCH_ROWS, flow)?;
     session.commit()?;
-    let replaced: BTreeSet<String> =
-        out.tables.iter().filter(|t| t.replaced).map(|t| t.table.to_lowercase()).collect();
+    let replaced: BTreeSet<String> = out
+        .tables
+        .iter()
+        .filter(|t| t.replaced)
+        .map(|t| t.table.to_lowercase())
+        .collect();
     let mut gone = Vec::new();
     for r in gp.relations()? {
-        if replaced.contains(&r.base_table.to_lowercase()) || replaced.contains(&r.related_table.to_lowercase()) {
+        if replaced.contains(&r.base_table.to_lowercase())
+            || replaced.contains(&r.related_table.to_lowercase())
+        {
             gp.drop_relation(&r)?;
             gone.push(r);
         }
     }
     let fresh: Vec<TableWritten> = out.tables.iter().filter(|t| !t.appended).cloned().collect();
     let mut profile =
-        crate::gpkg_profile::write_profile(doc, &fresh, &mut gp, &crate::gis_derive::utc_now()).map_err(WriteStop::Failed)?;
+        crate::gpkg_profile::write_profile(doc, &fresh, &mut gp, &crate::gis_derive::utc_now())
+            .map_err(WriteStop::Failed)?;
     // The project's relations with an appended side: the file's table keeps its own (its mapping is its rows').
-    let appended: BTreeSet<&str> = out.tables.iter().filter(|t| t.appended).filter_map(|t| t.layer.as_deref()).collect();
-    let written: BTreeSet<&str> = out.tables.iter().filter_map(|t| t.layer.as_deref()).collect();
+    let appended: BTreeSet<&str> = out
+        .tables
+        .iter()
+        .filter(|t| t.appended)
+        .filter_map(|t| t.layer.as_deref())
+        .collect();
+    let written: BTreeSet<&str> = out
+        .tables
+        .iter()
+        .filter_map(|t| t.layer.as_deref())
+        .collect();
     for r in &doc.settings().relations {
         let (child, parent) = (r.child.as_str(), r.parent.as_str());
-        if !(appended.contains(child) || appended.contains(parent)) || !(written.contains(child) && written.contains(parent)) {
+        if !(appended.contains(child) || appended.contains(parent))
+            || !(written.contains(child) && written.contains(parent))
+        {
             continue;
         }
         let said = format!("“{}” ilişkisi yazılmadı:", r.name);
@@ -89,7 +109,8 @@ pub fn write_into(
     }
     for r in gone {
         let again = profile.relations.iter().any(|(_, base, related, _)| {
-            base.eq_ignore_ascii_case(&r.base_table) && related.eq_ignore_ascii_case(&r.related_table)
+            base.eq_ignore_ascii_case(&r.base_table)
+                && related.eq_ignore_ascii_case(&r.related_table)
         });
         if !again {
             profile.left.push(format!(
@@ -100,7 +121,10 @@ pub fn write_into(
     }
     out.profile = profile;
     let touched: BTreeSet<String> = out.tables.iter().map(|t| t.table.to_lowercase()).collect();
-    out.kept = before.into_iter().filter(|t| !touched.contains(&t.to_lowercase())).collect();
+    out.kept = before
+        .into_iter()
+        .filter(|t| !touched.contains(&t.to_lowercase()))
+        .collect();
     gp.close()?;
     Ok(out)
 }
@@ -158,7 +182,9 @@ fn geometry_unfit(have: &str, rows: &str) -> Option<String> {
         return Some("katmanda çok parçalı nesneler var, tablonun sütunu tek parçalı".to_owned());
     }
     if rc && !tc {
-        return Some("katmanda yay içeren nesneler var, tablonun sütunu yalnız doğru parçalı".to_owned());
+        return Some(
+            "katmanda yay içeren nesneler var, tablonun sütunu yalnız doğru parçalı".to_owned(),
+        );
     }
     None
 }
@@ -167,8 +193,12 @@ fn geometry_unfit(have: &str, rows: &str) -> Option<String> {
 /// prohibited, 1 mandatory, 2 optional); none when they can.
 fn dims_unfit(have: u8, rows: u8, what: &str) -> Option<String> {
     match (have, rows) {
-        (0, 1 | 2) => Some(format!("katmanda {what} değeri olan nesneler var, tablonun sütunu {what} almıyor")),
-        (1, 0 | 2) => Some(format!("tablonun sütunu her satırda {what} istiyor, katmanda {what} değeri olmayan nesneler var")),
+        (0, 1 | 2) => Some(format!(
+            "katmanda {what} değeri olan nesneler var, tablonun sütunu {what} almıyor"
+        )),
+        (1, 0 | 2) => Some(format!(
+            "tablonun sütunu her satırda {what} istiyor, katmanda {what} değeri olmayan nesneler var"
+        )),
         _ => None,
     }
 }
@@ -179,7 +209,11 @@ fn system_words(session: &gpkg::Session<'_>, id: Option<i32>) -> Result<String, 
         return Ok("tanımsız".to_owned());
     };
     Ok(match session.srs(id)? {
-        Some(s) if s.organization_id > 0 => format!("{}:{}", s.organization.to_ascii_uppercase(), s.organization_id),
+        Some(s) if s.organization_id > 0 => format!(
+            "{}:{}",
+            s.organization.to_ascii_uppercase(),
+            s.organization_id
+        ),
         _ => format!("{id} kimlikli sistem"),
     })
 }
@@ -200,16 +234,23 @@ pub(crate) fn append_plan(
     keys: &[String],
     srs_id: i32,
 ) -> Result<(Append, u32), WriteStop> {
-    let name = doc.layers().get(layer).map_or_else(|| layer.to_owned(), |n| n.name.clone());
+    let name = doc
+        .layers()
+        .get(layer)
+        .map_or_else(|| layer.to_owned(), |n| n.name.clone());
     let Some(have) = session.table(table)? else {
-        return Err(WriteStop::Failed(format!("“{table}” tablosu dosyada okunamadı")));
+        return Err(WriteStop::Failed(format!(
+            "“{table}” tablosu dosyada okunamadı"
+        )));
     };
     let again = "Tabloyu yeniden yazmayı seçin ya da başka bir dosyaya yazın.";
     match (&have.geometry, type_name) {
         (None, Some(_)) => {
             return Err(unfit(
                 codes::GEOMETRY_MISMATCH,
-                format!("“{table}” dosyada geometrisiz bir tablo; “{name}” katmanının geometrileri ona eklenemez. {again}"),
+                format!(
+                    "“{table}” dosyada geometrisiz bir tablo; “{name}” katmanının geometrileri ona eklenemez. {again}"
+                ),
             ));
         }
         (Some(g), Some(rows)) => {
@@ -219,7 +260,9 @@ pub(crate) fn append_plan(
             if let Some(why) = why {
                 return Err(unfit(
                     codes::GEOMETRY_MISMATCH,
-                    format!("“{name}” katmanının satırları “{table}” tablosuna eklenemez: {why}. {again}"),
+                    format!(
+                        "“{name}” katmanının satırları “{table}” tablosuna eklenemez: {why}. {again}"
+                    ),
                 ));
             }
             if have.srs_id != Some(srs_id) {
@@ -257,9 +300,16 @@ pub(crate) fn append_plan(
         .by_layer_with_uids(layer)
         .filter(|(_, e)| !matches!(row_of(e), Row::Left(_)))
         .collect();
-    let already = objects.iter().filter(|(u, _)| uids.contains(&u.to_string())).count() as u32;
+    let already = objects
+        .iter()
+        .filter(|(u, _)| uids.contains(&u.to_string()))
+        .count() as u32;
     // A NOT NULL column without a default: every row added fills it.
-    for h in have.columns.iter().filter(|h| h.not_null && h.default.is_none() && gpkg::Making::of(h) == gpkg::Making::Plain) {
+    for h in have
+        .columns
+        .iter()
+        .filter(|h| h.not_null && h.default.is_none() && gpkg::Making::of(h) == gpkg::Making::Plain)
+    {
         let Some(i) = out_columns.iter().position(|o| o.name == h.name) else {
             return Err(unfit(
                 codes::SOURCE_NOT_NULL,
@@ -272,7 +322,12 @@ pub(crate) fn append_plan(
         let empty = objects
             .iter()
             .filter(|(u, _)| !uids.contains(&u.to_string()))
-            .filter(|(_, e)| e.base().attrs.get(&out_keys[i]).is_none_or(|v| v.trim().is_empty()))
+            .filter(|(_, e)| {
+                e.base()
+                    .attrs
+                    .get(&out_keys[i])
+                    .is_none_or(|v| v.trim().is_empty())
+            })
             .count();
         if empty > 0 {
             return Err(unfit(
@@ -307,10 +362,18 @@ mod tests {
         assert_eq!(geometry_unfit("GEOMETRY", "POINT"), None);
         assert_eq!(geometry_unfit("MULTICURVE", "LINESTRING"), None);
         assert_eq!(geometry_unfit("COMPOUNDCURVE", "LINESTRING"), None);
-        assert!(geometry_unfit("POLYGON", "POINT").is_some_and(|w| w.contains("alan") && w.contains("nokta")));
-        assert!(geometry_unfit("POLYGON", "MULTIPOLYGON").is_some_and(|w| w.contains("çok parçalı")));
+        assert!(
+            geometry_unfit("POLYGON", "POINT")
+                .is_some_and(|w| w.contains("alan") && w.contains("nokta"))
+        );
+        assert!(
+            geometry_unfit("POLYGON", "MULTIPOLYGON").is_some_and(|w| w.contains("çok parçalı"))
+        );
         assert!(geometry_unfit("LINESTRING", "COMPOUNDCURVE").is_some_and(|w| w.contains("yay")));
-        assert!(geometry_unfit("POINT", "GEOMETRY").is_some(), "mixed rows into one family");
+        assert!(
+            geometry_unfit("POINT", "GEOMETRY").is_some(),
+            "mixed rows into one family"
+        );
         assert!(geometry_unfit("GEOMETRYCOLLECTION", "POINT").is_some());
     }
 

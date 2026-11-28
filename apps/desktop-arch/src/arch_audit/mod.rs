@@ -9,11 +9,11 @@
 //! new outlines dashed, those they remove in the danger colour, from a reading copy (nothing written). The writes are
 //! write.rs's, the preview preview.rs's, the tab's drawing view.rs's.
 
-use crate::arch_ext::*;
 use crate::arch;
+use crate::arch::ArchState;
+use crate::arch_ext::*;
 use std::cell::RefCell;
 use std::collections::BTreeSet;
-use crate::arch::ArchState;
 
 use iced::widget::{button, row};
 use iced::{Center, Element, Fill, Task};
@@ -369,7 +369,7 @@ pub(crate) trait ArchAuditApp {
 
 impl ArchAuditApp for App {
     /// Mimari denetim (`arch.audit`): the tab, checked.
-    fn open_arch_audit(&mut self) -> Task<Message>{
+    fn open_arch_audit(&mut self) -> Task<Message> {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -387,13 +387,18 @@ impl ArchAuditApp for App {
     }
 
     /// The bar's thresholds and profiles as the command's input: the findings `cad.arch.exceptions` names.
-    fn arch_audit_finding_input(&self) -> ArchAudit{
+    fn arch_audit_finding_input(&self) -> ArchAudit {
         ArchAudit {
             // Every group, Kapılar too (docs/adr/0772 §6): it is asked only by name.
             checks: ArchAuditCheck::ALL.to_vec(),
             min_clear_width: (self.modules.arch().arch_audit.min_clear > 0.0)
                 .then_some(self.modules.arch().arch_audit.min_clear),
-            door_approach: self.modules.arch().arch_audit.door_approach.then_some(DoorApproachProfile::FRONT),
+            door_approach: self
+                .modules
+                .arch()
+                .arch_audit
+                .door_approach
+                .then_some(DoorApproachProfile::FRONT),
             max_gap: Some(self.modules.arch().arch_audit.max_gap),
             min_area: Some(self.modules.arch().arch_audit.min_area),
             min_width: Some(self.modules.arch().arch_audit.min_width),
@@ -415,7 +420,7 @@ impl ArchAuditApp for App {
 
     /// The bar's choices as the command's input: its thresholds, its profiles, its scope (docs/adr/0732 §2) and its
     /// exceptions (§3). A selection's objects since gone are left out of the scope.
-    fn arch_audit_input(&self) -> ArchAudit{
+    fn arch_audit_input(&self) -> ArchAudit {
         let within = match &self.modules.arch().arch_audit.scope {
             AuditScope::All => None,
             AuditScope::ActiveLevel => Some(ArchAuditWithin {
@@ -448,13 +453,14 @@ impl ArchAuditApp for App {
     }
 
     /// Denetle: every group checked; the chosen findings kept, by their keys, when they are still there.
-    fn arch_audit_check(&mut self){
+    fn arch_audit_check(&mut self) {
         let Some(doc) = self.document.as_ref() else {
             return;
         };
         let input = self.arch_audit_input();
         let key_of = |i: usize| {
-            self.modules.arch()
+            self.modules
+                .arch()
                 .arch_audit
                 .audited
                 .as_ref()
@@ -463,7 +469,8 @@ impl ArchAuditApp for App {
         };
         let kept = self.modules.arch().arch_audit.selected.and_then(key_of);
         let chosen: Vec<String> = self
-            .modules.arch()
+            .modules
+            .arch()
             .arch_audit
             .chosen
             .iter()
@@ -473,7 +480,8 @@ impl ArchAuditApp for App {
             CommandResult::Completed { output, warnings } => {
                 let place = |key: &str| output.findings.iter().position(|f| f.key == key);
                 self.modules.arch_mut().arch_audit.selected = kept.as_deref().and_then(place);
-                self.modules.arch_mut().arch_audit.chosen = chosen.iter().filter_map(|k| place(k)).collect();
+                self.modules.arch_mut().arch_audit.chosen =
+                    chosen.iter().filter_map(|k| place(k)).collect();
                 self.modules.arch_mut().arch_audit.audited = Some(Audited {
                     findings: output.findings,
                     generation: doc.model.generation(),
@@ -496,7 +504,7 @@ impl ArchAuditApp for App {
     }
 
     /// The chosen findings, in the findings' order: those chosen with Ctrl/⌘ and Shift, else the one pressed.
-    fn arch_audit_chosen(&self) -> Vec<&ArchAuditFinding>{
+    fn arch_audit_chosen(&self) -> Vec<&ArchAuditFinding> {
         let Some(a) = self.modules.arch().arch_audit.audited.as_ref() else {
             return Vec::new();
         };
@@ -511,18 +519,20 @@ impl ArchAuditApp for App {
     }
 
     /// A row menu's row, by its place shown: it becomes the choice unless it is among the rows chosen already.
-    fn arch_audit_take_row(&mut self, row: Option<usize>){
+    fn arch_audit_take_row(&mut self, row: Option<usize>) {
         let Some(i) = row.and_then(|at| self.arch_audit_shown().get(at).copied()) else {
             return;
         };
-        if self.modules.arch().arch_audit.selected != Some(i) && !self.modules.arch().arch_audit.chosen.contains(&i) {
+        if self.modules.arch().arch_audit.selected != Some(i)
+            && !self.modules.arch().arch_audit.chosen.contains(&i)
+        {
             self.modules.arch_mut().arch_audit.chosen.clear();
             self.modules.arch_mut().arch_audit.selected = Some(i);
         }
     }
 
     /// Whether the drawing changed since the check.
-    fn arch_audit_stale(&self) -> bool{
+    fn arch_audit_stale(&self) -> bool {
         match (&self.modules.arch().arch_audit.audited, &self.document) {
             (Some(a), Some(d)) => {
                 a.generation != d.model.generation() || a.revision != d.model.revision()
@@ -532,8 +542,9 @@ impl ArchAuditApp for App {
     }
 
     /// The rows shown, as places in the findings.
-    fn arch_audit_shown(&self) -> Vec<usize>{
-        self.modules.arch()
+    fn arch_audit_shown(&self) -> Vec<usize> {
+        self.modules
+            .arch()
             .arch_audit
             .audited
             .as_ref()
@@ -541,13 +552,19 @@ impl ArchAuditApp for App {
                 a.findings
                     .iter()
                     .enumerate()
-                    .filter(|(_, f)| self.modules.arch().arch_audit.group.is_none_or(|g| f.check == g))
+                    .filter(|(_, f)| {
+                        self.modules
+                            .arch()
+                            .arch_audit
+                            .group
+                            .is_none_or(|g| f.check == g)
+                    })
                     .map(|(i, _)| i)
                     .collect()
             })
     }
 
-    fn arch_audit_event(&mut self, event: Event) -> Task<Message>{
+    fn arch_audit_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Check => self.arch_audit_check(),
             Event::Group(g) => {
@@ -561,7 +578,8 @@ impl ArchAuditApp for App {
                     if m.command() {
                         // Ctrl/⌘: one more row, or one less (docs/adr/0732 §5).
                         if let Some(was) = self
-                            .modules.arch()
+                            .modules
+                            .arch()
                             .arch_audit
                             .selected
                             .filter(|_| self.modules.arch().arch_audit.chosen.is_empty())
@@ -576,13 +594,15 @@ impl ArchAuditApp for App {
                     } else if m.shift() {
                         // Shift: the rows shown from the one pressed last to this one.
                         let from = self
-                            .modules.arch()
+                            .modules
+                            .arch()
                             .arch_audit
                             .selected
                             .and_then(|s| shown.iter().position(|x| *x == s))
                             .unwrap_or(at);
                         let (a, b) = (from.min(at), from.max(at));
-                        self.modules.arch_mut().arch_audit.chosen = shown[a..=b].iter().copied().collect();
+                        self.modules.arch_mut().arch_audit.chosen =
+                            shown[a..=b].iter().copied().collect();
                         self.modules.arch_mut().arch_audit.selected = Some(i);
                         self.arch_audit_show_chosen();
                     } else {
@@ -680,7 +700,8 @@ impl ArchAuditApp for App {
                 }
             }
             Event::RampProfile(i) => {
-                self.modules.arch_mut().arch_audit.ramp_profile = RAMP_PROFILES[i.min(RAMP_PROFILES.len() - 1)].0;
+                self.modules.arch_mut().arch_audit.ramp_profile =
+                    RAMP_PROFILES[i.min(RAMP_PROFILES.len() - 1)].0;
                 self.arch_audit_check();
             }
             Event::StairProfile(i) => {
@@ -688,7 +709,9 @@ impl ArchAuditApp for App {
                     STAIR_PROFILES[i.min(STAIR_PROFILES.len() - 1)].0;
                 self.arch_audit_check();
             }
-            Event::Standards(generation, answer) => self.arch_audit_standards_answer(generation, answer),
+            Event::Standards(generation, answer) => {
+                self.arch_audit_standards_answer(generation, answer)
+            }
             Event::DeliveredModel(on) => {
                 self.modules.arch_mut().arch_audit.delivered_model = on;
                 self.arch_audit_check();
@@ -698,7 +721,7 @@ impl ArchAuditApp for App {
     }
 
     /// The chosen findings' objects selected together and the view fitted on them all.
-    fn arch_audit_show_chosen(&mut self){
+    fn arch_audit_show_chosen(&mut self) {
         let Some(doc) = self.document.as_ref() else {
             return;
         };
@@ -723,9 +746,10 @@ impl ArchAuditApp for App {
     }
 
     /// A finding's objects selected and the view fitted on them.
-    fn arch_audit_show(&mut self, finding: usize){
+    fn arch_audit_show(&mut self, finding: usize) {
         let Some(f) = self
-            .modules.arch()
+            .modules
+            .arch()
             .arch_audit
             .audited
             .as_ref()
@@ -752,8 +776,9 @@ impl ArchAuditApp for App {
     }
 
     /// The level findings' objects of the last check.
-    fn arch_audit_levelless(&self) -> Vec<String>{
-        self.modules.arch()
+    fn arch_audit_levelless(&self) -> Vec<String> {
+        self.modules
+            .arch()
             .arch_audit
             .audited
             .as_ref()

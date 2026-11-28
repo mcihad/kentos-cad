@@ -1136,7 +1136,9 @@ fn collapses(before: Option<&kentos_commands::Entity>, after: &kentos_commands::
     let edges = |pts: &[kentos_commands::Vec2], closed: bool| -> Vec<f64> {
         let n = pts.len();
         let count = if closed { n } else { n.saturating_sub(1) };
-        (0..count).map(|i| len(&pts[i], &pts[(i + 1) % n])).collect()
+        (0..count)
+            .map(|i| len(&pts[i], &pts[(i + 1) % n]))
+            .collect()
     };
     let sizes = |e: &Entity| -> Vec<f64> {
         match e {
@@ -1152,4 +1154,3 @@ fn collapses(before: Option<&kentos_commands::Entity>, after: &kentos_commands::
     let (was, now) = (sizes(before), sizes(after));
     was.len() == now.len() && was.iter().zip(&now).any(|(w, n)| *w > NONE && *n <= NONE)
 }
-

@@ -408,10 +408,18 @@ pub const PARTICULARS: [(&str, &str, Option<&str>); 32] = [
     ("bina_kodu", "Bina kodu (tek binada 00)", Some("00")),
     ("revizyon_no", "Revizyon no (revizyonsuz 000)", Some("000")),
     // The IFC model's project description (Dijital Proje Yön. EK-7 Tablo 7.1, docs/adr/8074 §3): no sheet reads it.
-    ("proje_aciklama", "Proje açıklaması (IFC modelinde)", Some("—")),
+    (
+        "proje_aciklama",
+        "Proje açıklaması (IFC modelinde)",
+        Some("—"),
+    ),
     // The building's mail drop (Dijital Proje Yön. EK-6 Tablo 6.7 `Pset_Address.PostalBox`, docs/adr/8076 §5): the
     // author's own words, none filled in for them; no sheet reads it.
-    ("posta_kutusu", "Posta kutusu (IFC modelinde; yoksa “Yok”)", Some("—")),
+    (
+        "posta_kutusu",
+        "Posta kutusu (IFC modelinde; yoksa “Yok”)",
+        Some("—"),
+    ),
 ];
 
 /// EK-2 Tablo 2.14: each storey's code by its place: the one at ±0.00 (else the lowest above it) K00, those above K01,

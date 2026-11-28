@@ -114,7 +114,12 @@ pub struct Picker {
 
 impl Grouped {
     /// The field `f` (as the column `shape`) from the source's `groups`, then the drawing's rows of the layer.
-    pub(crate) fn of(shape: &Column, f: &LayerField, groups: &Arc<Vec<FieldGroup>>, drawn: &[&Entity]) -> Grouped {
+    pub(crate) fn of(
+        shape: &Column,
+        f: &LayerField,
+        groups: &Arc<Vec<FieldGroup>>,
+        drawn: &[&Entity],
+    ) -> Grouped {
         let total = groups.iter().map(|g| g.rows as usize).sum::<usize>() + drawn.len();
         let mut cells = Vec::with_capacity(groups.len() + drawn.len());
         let mut rows = Vec::with_capacity(total);
@@ -127,9 +132,15 @@ impl Grouped {
             cells.push(cell_of(f, e.base().attrs.get(&f.name).map(String::as_str)));
         }
         Grouped {
-            column: Column { cells, ..shape.clone() },
+            column: Column {
+                cells,
+                ..shape.clone()
+            },
             rows,
-            picker: Picker { groups: groups.clone(), drawn: drawn.iter().map(|e| Slot(e.base().id)).collect() },
+            picker: Picker {
+                groups: groups.clone(),
+                drawn: drawn.iter().map(|e| Slot(e.base().id)).collect(),
+            },
         }
     }
 }
@@ -185,7 +196,13 @@ pub(crate) fn shape_columns(app: &App, doc: &Document, layer: &str) -> Vec<(Colu
     layer_columns(&node.fields, &[], None, per_metre)
         .into_iter()
         .filter(|c| !redacted.contains(&c.key) && !redacted.contains(&c.label))
-        .filter_map(|c| node.fields.iter().find(|f| f.name == c.key).cloned().map(|f| (c, f)))
+        .filter_map(|c| {
+            node.fields
+                .iter()
+                .find(|f| f.name == c.key)
+                .cloned()
+                .map(|f| (c, f))
+        })
         .collect()
 }
 
@@ -235,14 +252,18 @@ impl App {
 
     /// After every message: the fields a tab asked for counted by their sources, off the interface's thread.
     pub(crate) fn data_counts_tasks(&mut self) -> Task<Message> {
-        let wanted: Vec<(String, String)> = self.gis.data_counts.wanted.borrow_mut().drain().collect();
+        let wanted: Vec<(String, String)> =
+            self.gis.data_counts.wanted.borrow_mut().drain().collect();
         let (Some(doc), Some(stamp)) = (self.document.as_ref(), self.counts_stamp()) else {
             return Task::none();
         };
         let mut held_of: HashMap<String, Arc<BTreeSet<i64>>> = HashMap::new();
         let mut tasks = Vec::new();
         for (layer, field) in wanted {
-            let held = held_of.entry(layer.clone()).or_insert_with(|| Arc::new(doc.model.data_hidden(&layer))).clone();
+            let held = held_of
+                .entry(layer.clone())
+                .or_insert_with(|| Arc::new(doc.model.data_hidden(&layer)))
+                .clone();
             let key = (layer.clone(), field.clone());
             let asked = self
                 .gis
@@ -250,18 +271,35 @@ impl App {
                 .kept
                 .borrow()
                 .get(&key)
-                .is_some_and(|k| k.stamp == stamp && k.held == held && matches!(k.counts, Counts::Counting));
+                .is_some_and(|k| {
+                    k.stamp == stamp && k.held == held && matches!(k.counts, Counts::Counting)
+                });
             if asked {
                 continue;
             }
             let Some(node) = doc.model.layers().get(&layer).cloned() else {
                 continue;
             };
-            self.gis.data_counts.kept.borrow_mut().insert(key, Kept { stamp, held: held.clone(), counts: Counts::Counting });
+            self.gis.data_counts.kept.borrow_mut().insert(
+                key,
+                Kept {
+                    stamp,
+                    held: held.clone(),
+                    counts: Counts::Counting,
+                },
+            );
             let (name, leave) = (field.clone(), held.clone());
             tasks.push(crate::db_connections::off_thread(
                 move || field_counts(&node, &name, &leave),
-                move |counted| message(Event::Counted { layer, field, stamp, held, counted }),
+                move |counted| {
+                    message(Event::Counted {
+                        layer,
+                        field,
+                        stamp,
+                        held,
+                        counted,
+                    })
+                },
             ));
         }
         Task::batch(tasks)
@@ -269,9 +307,18 @@ impl App {
 
     pub(crate) fn data_counts_event(&mut self, event: Event) -> Task<Message> {
         match event {
-            Event::Counted { layer, field, stamp, held, counted } => {
+            Event::Counted {
+                layer,
+                field,
+                stamp,
+                held,
+                counted,
+            } => {
                 let fresh = self.counts_stamp() == Some(stamp)
-                    && self.document.as_ref().is_some_and(|d| d.model.data_hidden(&layer) == *held);
+                    && self
+                        .document
+                        .as_ref()
+                        .is_some_and(|d| d.model.data_hidden(&layer) == *held);
                 if !fresh {
                     return Task::none();
                 }
@@ -284,9 +331,21 @@ impl App {
                     Ok(None) => Counts::Rows,
                     Err(why) => Counts::Failed(why),
                 };
-                self.gis.data_counts.kept.borrow_mut().insert((layer, field), Kept { stamp, held, counts });
+                self.gis.data_counts.kept.borrow_mut().insert(
+                    (layer, field),
+                    Kept {
+                        stamp,
+                        held,
+                        counts,
+                    },
+                );
             }
-            Event::Keys { layer, label, pick, keys } => match keys {
+            Event::Keys {
+                layer,
+                label,
+                pick,
+                keys,
+            } => match keys {
                 Ok((keys, more)) => {
                     let n = keys.len();
                     let data = &mut self.gis.features.data;
@@ -349,7 +408,14 @@ impl App {
         let (layer, field) = (layer.to_owned(), field.to_owned());
         crate::db_connections::off_thread(
             move || value_keys(&node, &field, &values, &held, SELECT_MOST, &|| false),
-            move |keys| message(Event::Keys { layer, label, pick, keys }),
+            move |keys| {
+                message(Event::Keys {
+                    layer,
+                    label,
+                    pick,
+                    keys,
+                })
+            },
         )
     }
 }

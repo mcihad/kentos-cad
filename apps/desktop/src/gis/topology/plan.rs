@@ -34,8 +34,7 @@ pub mod texts {
     pub const UNMARK_HINT: &str = "Seçili bulguların istisnasını kaldırır.";
     pub const NO_RULES: &str =
         "Projede topoloji kuralı yok. Kurallar… ile katmanlara kural ekleyin.";
-    pub const STALE: &str =
-        "Çizim son denetimden sonra değişti; sonuçlar eski olabilir. Değişenleri denetle ya da Denetle ile yenileyin.";
+    pub const STALE: &str = "Çizim son denetimden sonra değişti; sonuçlar eski olabilir. Değişenleri denetle ya da Denetle ile yenileyin.";
     pub const RECHECK: &str = "Değişenleri denetle";
     pub const RECHECK_HINT: &str = "Yalnız son denetimden sonra değişen nesneleri, komşularını ve boşluk kuralında bağlı alan kümelerini yeniden denetler; diğer bulgular kalır. Sonuç bütün çizimi denetlemekle aynıdır.";
     pub const RUNNING: &str = "Topoloji denetleniyor…";
@@ -45,11 +44,13 @@ pub mod texts {
     pub const ERROR: &str = "Hata işaretle";
     pub const ERROR_HINT: &str = "Seçili bulguları değerlendirilmiş, düzeltilecek hata sayar; Gerekçe'deki sözle projede saklanır. Geometri ya da kural değişince yeniden değerlendirilir.";
     pub const REASON: &str = "Gerekçe";
-    pub const REASON_HINT: &str = "İstisna ve hata işaretinin gerekçesi; kalite profili olan projede zorunlu.";
+    pub const REASON_HINT: &str =
+        "İstisna ve hata işaretinin gerekçesi; kalite profili olan projede zorunlu.";
     pub const RECIPE: &str = "Tarifle onar";
     pub const RECIPE_HINT: &str = "Seçili bulguları gösterildikleri sırayla, her birini ilk düzeltmesiyle onaran tarifi önce önizler: değişen nesneler, taşınan kaynak köşeler, alan farkı, önce ve sonra açık bulgular. Uygula tek geri alma adımında yazar.";
     pub const APPLY: &str = "Uygula";
-    pub const APPLY_HINT: &str = "Önizlenen tarifi tek geri alma adımında yazar; denetim yinelenir.";
+    pub const APPLY_HINT: &str =
+        "Önizlenen tarifi tek geri alma adımında yazar; denetim yinelenir.";
     pub const DROP: &str = "Vazgeç";
     pub const DROP_HINT: &str = "Tarifi bırakır; çizim değişmez.";
 }
@@ -70,8 +71,14 @@ pub fn no_findings(rules: usize, objects: usize, sources: &[(String, usize)]) ->
     if sources.is_empty() {
         return format!("Bulgu yok: {rules} kural, {objects} nesne denetlendi.");
     }
-    let read: Vec<String> = sources.iter().map(|(name, n)| format!("{name}: kaynaktan {n} satır")).collect();
-    format!("Bulgu yok: {rules} kural, {objects} nesne denetlendi ({}).", read.join(", "))
+    let read: Vec<String> = sources
+        .iter()
+        .map(|(name, n)| format!("{name}: kaynaktan {n} satır"))
+        .collect();
+    format!(
+        "Bulgu yok: {rules} kural, {objects} nesne denetlendi ({}).",
+        read.join(", ")
+    )
 }
 
 /// What the last check covered (docs/adr/9146): the rules' layers, the rules, the objects, the whole drawing or what
@@ -93,12 +100,17 @@ pub fn scope_text(
     } else {
         format!("çizim sürümü {seen} (şimdi {now})")
     };
-    format!("Kapsam: {} · {rules} kural · {objects} nesne · {over} · {version} · tolerans {tolerance}", layers.join(", "))
+    format!(
+        "Kapsam: {} · {rules} kural · {objects} nesne · {over} · {version} · tolerans {tolerance}",
+        layers.join(", ")
+    )
 }
 
 /// No object at all in the rules' layers: nothing was checked, said so rather than clean.
 pub fn nothing_checked(rules: usize) -> String {
-    format!("Denetlenecek nesne yok: {rules} kuralın katmanlarında nesne ya da kaynak satırı bulunmadı; katman temiz sayılmaz.")
+    format!(
+        "Denetlenecek nesne yok: {rules} kuralın katmanlarında nesne ya da kaynak satırı bulunmadı; katman temiz sayılmaz."
+    )
 }
 
 /// Rules whose layer (or other layer) the project no longer has.
@@ -107,7 +119,9 @@ pub fn missing_layers(n: usize) -> String {
 }
 
 /// The table's columns.
-pub const COLUMNS: [&str; 7] = ["Sıra", "Katman", "Kural", "Sorun", "Durum", "Nesneler", "Ölçü"];
+pub const COLUMNS: [&str; 7] = [
+    "Sıra", "Katman", "Kural", "Sorun", "Durum", "Nesneler", "Ölçü",
+];
 
 /// What the rows show: the findings left open, those marked as exceptions, or all.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -168,7 +182,9 @@ pub fn lapsed_text(n: usize) -> String {
 
 /// No finding, but a part's neighbours not all read: not said to be clean.
 pub fn not_clean(rules: usize, objects: usize) -> String {
-    format!("Bulgu yok ama denetim eksik: {rules} kural, {objects} nesne; komşuların bir kısmı denetlenmedi.")
+    format!(
+        "Bulgu yok ama denetim eksik: {rules} kural, {objects} nesne; komşuların bir kısmı denetlenmedi."
+    )
 }
 
 /// What a fix would do (docs/adr/0589 §4): each object's measure before and after, the objects removed, the bound
@@ -254,14 +270,20 @@ pub fn finding_view(b: &Bounds) -> Bounds {
 /// A fix as Düzelt ▾ lists it: its name and what it acts on (the object an
 /// area is subtracted from or merged into, the one a vertex is added to or
 /// deleted) or how far an end or a point moves.
-pub fn fix_label(f: &Finding, key: &str, words: &[String], length: impl Fn(f64) -> String) -> String {
+pub fn fix_label(
+    f: &Finding,
+    key: &str,
+    words: &[String],
+    length: impl Fn(f64) -> String,
+) -> String {
     let label = kentos_geometry_core::ops::topology_rules::fix_label(key);
     // The object as the table says it ([`Checked::object_words`]): “#12”, “satır 2”, “dışarıdaki”.
     let id = |k: Option<usize>| {
-        k.and_then(|k| words.get(k)).map_or_else(String::new, |w| match w.as_str() {
-            "dışarıda" => " (dışarıdaki)".to_owned(),
-            w => format!(" ({w})"),
-        })
+        k.and_then(|k| words.get(k))
+            .map_or_else(String::new, |w| match w.as_str() {
+                "dışarıda" => " (dışarıdaki)".to_owned(),
+                w => format!(" ({w})"),
+            })
     };
     match key {
         "subtractFirst" | "addVertex" => format!("{label}{}", id(f.objects.first().copied())),

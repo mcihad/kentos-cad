@@ -301,7 +301,9 @@ fn an_embedded_laz_is_named_as_point_data() {
         .model
         .entities_with_uids()
         .find_map(|(uid, e)| match e {
-            kentos_commands::Entity::PointCloud(c) => doc.model.slot_of(uid).map(|s| (s, c.clone())),
+            kentos_commands::Entity::PointCloud(c) => {
+                doc.model.slot_of(uid).map(|s| (s, c.clone()))
+            }
             _ => None,
         })
         .expect("the cloud");
@@ -316,5 +318,8 @@ fn an_embedded_laz_is_named_as_point_data() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     crate::files_testing::evidence(&mut snapshot, &app, "ur2-028", "gomulu-laz");
-    assert!(!crate::files_testing::find_texts(&mut snapshot, &app, &words).is_empty(), "Öznitelikler shows {words}");
+    assert!(
+        !crate::files_testing::find_texts(&mut snapshot, &app, &words).is_empty(),
+        "Öznitelikler shows {words}"
+    );
 }

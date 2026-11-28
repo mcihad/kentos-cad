@@ -7,8 +7,8 @@
 use std::collections::{BTreeMap, HashSet};
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, EntityId, LayerNodeType, MapWorkRestore, MapWorkRestored, WorkItem, WorkStatus,
-    uuid_text,
+    CommandResult, CommandWarning, Entity, EntityId, LayerNodeType, MapWorkRestore,
+    MapWorkRestored, WorkItem, WorkStatus, uuid_text,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use serde_json::Value;
@@ -69,7 +69,10 @@ fn approval_of(it: &WorkItem) -> Result<(), Stop> {
     if it.status != WorkStatus::Approved {
         return Err(refuse(
             codes::WORK_NOT_APPROVED,
-            format!("“{}” onaylı değil; onaylı hâline getirilecek bir onayı yok.", it.name),
+            format!(
+                "“{}” onaylı değil; onaylı hâline getirilecek bir onayı yok.",
+                it.name
+            ),
             "item",
         ));
     }
@@ -101,7 +104,11 @@ fn check(doc: &Document, input: &MapWorkRestore) -> Result<Checked, Stop> {
     let empty = kentos_commands::MapWork::default();
     let work = doc.map_work().unwrap_or(&empty);
     let Some(it) = work.items.iter().find(|i| i.id == input.item.trim()) else {
-        return Err(refuse(codes::UNKNOWN_WORK_ITEM, format!("Harita işinde “{}” kimlikli öğe yok.", input.item.trim()), "item"));
+        return Err(refuse(
+            codes::UNKNOWN_WORK_ITEM,
+            format!("Harita işinde “{}” kimlikli öğe yok.", input.item.trim()),
+            "item",
+        ));
     };
     approval_of(it)?;
     // Each approved object now: not in the drawing, changed (its digest now another), or as approved.
@@ -110,13 +117,19 @@ fn check(doc: &Document, input: &MapWorkRestore) -> Result<Checked, Stop> {
         match doc.slot_of(Uuid::from_bytes(uid.0)) {
             None => Now::Removed,
             Some(slot) => {
-                let same = doc.get(slot).is_some_and(|e| crate::sheets_sources::object_digest(e) == digest);
+                let same = doc
+                    .get(slot)
+                    .is_some_and(|e| crate::sheets_sources::object_digest(e) == digest);
                 if same { Now::Same } else { Now::Changed(slot) }
             }
         }
     };
-    let approved: BTreeMap<EntityId, (usize, &String)> =
-        it.approved_objects.iter().enumerate().map(|(k, (u, d))| (*u, (k, d))).collect();
+    let approved: BTreeMap<EntityId, (usize, &String)> = it
+        .approved_objects
+        .iter()
+        .enumerate()
+        .map(|(k, (u, d))| (*u, (k, d)))
+        .collect();
     let added = now.keys().filter(|u| !approved.contains_key(*u)).count();
     // The objects asked: those named, or every one removed or changed.
     let mut asked: Vec<(EntityId, usize, Now, String)> = Vec::new();
@@ -130,7 +143,10 @@ fn check(doc: &Document, input: &MapWorkRestore) -> Result<Checked, Stop> {
         if asked.is_empty() {
             return Err(refuse(
                 codes::NOTHING_TO_RESTORE,
-                format!("“{}” onaylandığından beri silinen ya da değişen nesnesi yok; onaylı hâline getirilecek bir şey yok.", it.name),
+                format!(
+                    "“{}” onaylandığından beri silinen ya da değişen nesnesi yok; onaylı hâline getirilecek bir şey yok.",
+                    it.name
+                ),
                 "item",
             ));
         }
@@ -138,7 +154,10 @@ fn check(doc: &Document, input: &MapWorkRestore) -> Result<Checked, Stop> {
         let mut seen = HashSet::new();
         for (i, text) in input.uids.iter().enumerate() {
             let path = format!("uids[{i}]");
-            let Some(uid) = Uuid::parse_str(text.trim()).ok().filter(|_| checks::is_uid_text(text.trim())) else {
+            let Some(uid) = Uuid::parse_str(text.trim())
+                .ok()
+                .filter(|_| checks::is_uid_text(text.trim()))
+            else {
                 return Err(refuse(
                     codes::INVALID_UID,
                     format!(
@@ -151,7 +170,11 @@ fn check(doc: &Document, input: &MapWorkRestore) -> Result<Checked, Stop> {
             let Some((k, d)) = approved.get(&u) else {
                 return Err(refuse(
                     codes::NOT_APPROVED_OBJECT,
-                    format!("“{}” “{}” öğesinin onaylı nesnelerinden biri değil.", text.trim(), it.name),
+                    format!(
+                        "“{}” “{}” öğesinin onaylı nesnelerinden biri değil.",
+                        text.trim(),
+                        it.name
+                    ),
                     &path,
                 ));
             };
@@ -159,7 +182,10 @@ fn check(doc: &Document, input: &MapWorkRestore) -> Result<Checked, Stop> {
             if s == Now::Same {
                 return Err(refuse(
                     codes::NOTHING_TO_RESTORE,
-                    format!("“{}” onaylandığı gibi; onaylı hâline getirilecek bir şey yok.", text.trim()),
+                    format!(
+                        "“{}” onaylandığı gibi; onaylı hâline getirilecek bir şey yok.",
+                        text.trim()
+                    ),
                     &path,
                 ));
             }
@@ -178,7 +204,10 @@ fn check(doc: &Document, input: &MapWorkRestore) -> Result<Checked, Stop> {
         let Some(value) = entity_of(&it.approved_values[k]) else {
             return Err(refuse(
                 codes::NO_APPROVED_VALUES,
-                format!("“{}” nesnesinin onaylanan değeri okunamadı; öğeyi yeniden onaylayın.", uuid_text(&u.0)),
+                format!(
+                    "“{}” nesnesinin onaylanan değeri okunamadı; öğeyi yeniden onaylayın.",
+                    uuid_text(&u.0)
+                ),
                 &path,
             ));
         };
@@ -200,7 +229,10 @@ fn check(doc: &Document, input: &MapWorkRestore) -> Result<Checked, Stop> {
             ));
         }
         for w in checks::layer_at(doc, &layer, &path)? {
-            if !warnings.iter().any(|x: &CommandWarning| x.message == w.message) {
+            if !warnings
+                .iter()
+                .any(|x: &CommandWarning| x.message == w.message)
+            {
                 warnings.push(w);
             }
         }
@@ -209,10 +241,14 @@ fn check(doc: &Document, input: &MapWorkRestore) -> Result<Checked, Stop> {
                 if let Some(e) = doc.get(slot)
                     && layers.is_locked(&e.base().layer_id)
                 {
-                    let name = layers.get(&e.base().layer_id).map_or_else(|| e.base().layer_id.clone(), |n| n.name.clone());
+                    let name = layers
+                        .get(&e.base().layer_id)
+                        .map_or_else(|| e.base().layer_id.clone(), |n| n.name.clone());
                     return Err(refuse(
                         codes::LAYER_LOCKED,
-                        format!("“{name}” katmanı kilitli; üstündeki nesne onaylı hâline getirilemez. Kilidi Katmanlar panelinden açın."),
+                        format!(
+                            "“{name}” katmanı kilitli; üstündeki nesne onaylı hâline getirilemez. Kilidi Katmanlar panelinden açın."
+                        ),
                         &path,
                     ));
                 }
@@ -256,7 +292,8 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<MapWorkRest
         cx.doc.update_many(set, STEP);
     }
     let empty = kentos_commands::MapWork::default();
-    let as_approved = content_objects(cx.doc, cx.doc.map_work().unwrap_or(&empty), &c.item) == c.approved;
+    let as_approved =
+        content_objects(cx.doc, cx.doc.map_work().unwrap_or(&empty), &c.item) == c.approved;
     CommandResult::Completed {
         output: MapWorkRestored {
             item: c.item,
@@ -273,7 +310,10 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<MapWorkRest
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &MapWorkRestore) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -293,11 +333,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &MapWorkRestore) -> CommandResult<
 }
 
 /// Puts the objects back: one undo step “Onaylı hâline getir”.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: MapWorkRestore) -> CommandResult<MapWorkRestored> {
-    crate::call::recorded(cx, kentos_commands::MAP_WORK_RESTORE, kentos_commands::MAP_WORK_RESTORE_VERSION, input, |cx, input| {
-        match check(cx.doc, &input) {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: MapWorkRestore,
+) -> CommandResult<MapWorkRestored> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::MAP_WORK_RESTORE,
+        kentos_commands::MAP_WORK_RESTORE_VERSION,
+        input,
+        |cx, input| match check(cx.doc, &input) {
             Ok(c) => write(cx, c),
             Err(stop) => stop.into(),
-        }
-    })
+        },
+    )
 }

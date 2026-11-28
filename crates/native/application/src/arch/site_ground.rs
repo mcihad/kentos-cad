@@ -5,7 +5,9 @@
 //! zeminden kotlandırmada, ± 0.00 kotu binanın köşe kotlarının aritmetik ortalaması alınarak bulunur"). The building is
 //! its footprint level's walls' outline: the lowest level at or over ±0.00 with walls (its zemin kat).
 
-use kentos_commands::{Entity, ProjectSettings, SiteGround, SurfaceSources, TerrainSurfaceDef, Vec2};
+use kentos_commands::{
+    Entity, ProjectSettings, SiteGround, SurfaceSources, TerrainSurfaceDef, Vec2,
+};
 use kentos_domain::{Document, Uuid};
 use kentos_road::surface::{Region, Surface};
 use kentos_road::volume_materials;
@@ -44,7 +46,11 @@ pub fn made_of(doc: &Document, ground: &SiteGround, graded: bool) -> Option<Surf
 /// `ground` as a terrain surface's definition: its id and name, its layers its points' sources; serde's defaults for
 /// the rest (the contract derives no Default).
 fn definition(ground: &SiteGround, graded: bool) -> Result<TerrainSurfaceDef, String> {
-    let (id, name) = if graded { (GRADED_ID, GRADED_NAME) } else { (NATURAL_ID, NATURAL_NAME) };
+    let (id, name) = if graded {
+        (GRADED_ID, GRADED_NAME)
+    } else {
+        (NATURAL_ID, NATURAL_NAME)
+    };
     serde_json::from_value(serde_json::json!({
         "id": id, "name": name, "points": SurfaceSources { layers: ground.layers.clone(), uids: Vec::new() },
     }))
@@ -53,22 +59,44 @@ fn definition(ground: &SiteGround, graded: bool) -> Result<TerrainSurfaceDef, St
 
 /// The settings with the site's natural ground (or `graded`) made of the points on `layer`, the surface made; or why
 /// none is: too few points, or the other ground's layer (the earthwork is the two's difference).
-pub fn with_ground(doc: &Document, layer: &str, graded: bool) -> Result<(ProjectSettings, Made), String> {
+pub fn with_ground(
+    doc: &Document,
+    layer: &str,
+    graded: bool,
+) -> Result<(ProjectSettings, Made), String> {
     let name = if graded { GRADED_NAME } else { NATURAL_NAME };
     let ground = SiteGround::of_layer(layer);
     let site = doc.settings().arch.as_ref().and_then(|a| a.site.as_ref());
-    let other = site.and_then(|s| if graded { s.natural_ground.as_ref() } else { s.graded_ground.as_ref() });
+    let other = site.and_then(|s| {
+        if graded {
+            s.natural_ground.as_ref()
+        } else {
+            s.graded_ground.as_ref()
+        }
+    });
     if other == Some(&ground) {
         return Err(format!(
             "Bu katman {} katmanı: tabii ve tesviye zemin ayrı noktalardan kurulur, hafriyat ikisinin farkıdır.",
-            if graded { "tabii zeminin" } else { "tesviye zeminin" }
+            if graded {
+                "tabii zeminin"
+            } else {
+                "tesviye zeminin"
+            }
         ));
     }
-    let surface = made_of(doc, &ground, graded)
-        .ok_or_else(|| format!("Bu katmanın noktalarından {} kurulamadı: kotlu en az üç nokta gerekir.", name.to_lowercase()))?;
+    let surface = made_of(doc, &ground, graded).ok_or_else(|| {
+        format!(
+            "Bu katmanın noktalarından {} kurulamadı: kotlu en az üç nokta gerekir.",
+            name.to_lowercase()
+        )
+    })?;
     let made = made(&surface);
     let mut settings = doc.settings().clone();
-    let site = settings.arch.get_or_insert_with(Default::default).site.get_or_insert_with(Default::default);
+    let site = settings
+        .arch
+        .get_or_insert_with(Default::default)
+        .site
+        .get_or_insert_with(Default::default);
     if graded {
         site.graded_ground = Some(ground);
     } else {
@@ -79,16 +107,29 @@ pub fn with_ground(doc: &Document, layer: &str, graded: bool) -> Result<(Project
 
 fn made(s: &Surface) -> Made {
     let f = s.figures();
-    Made { triangles: f.triangles, area: f.area, low: f.min_z.unwrap_or(0.0), high: f.max_z.unwrap_or(0.0) }
+    Made {
+        triangles: f.triangles,
+        area: f.area,
+        low: f.min_z.unwrap_or(0.0),
+        high: f.max_z.unwrap_or(0.0),
+    }
 }
-
 
 /// The parcel's outline: the site's parcel, a closed line or a polygon by its persistent id.
 fn parcel(doc: &Document) -> Option<Vec<[f64; 2]>> {
-    let uid = doc.settings().arch.as_ref()?.site.as_ref()?.parcel.as_deref()?;
+    let uid = doc
+        .settings()
+        .arch
+        .as_ref()?
+        .site
+        .as_ref()?
+        .parcel
+        .as_deref()?;
     let slot = doc.slot_of(Uuid::parse_str(uid).ok()?)?;
     match doc.get(slot)? {
-        Entity::Polyline(p) | Entity::Polygon(p) if p.pts.len() >= 3 => Some(p.pts.iter().map(|q| [q.x, q.y]).collect()),
+        Entity::Polyline(p) | Entity::Polygon(p) if p.pts.len() >= 3 => {
+            Some(p.pts.iter().map(|q| [q.x, q.y]).collect())
+        }
         _ => None,
     }
 }
@@ -100,11 +141,27 @@ pub fn earthwork(doc: &Document) -> Option<Earthwork> {
     let natural = made_of(doc, site.natural_ground.as_ref()?, false)?;
     let graded = made_of(doc, site.graded_ground.as_ref()?, true)?;
     let ring = parcel(doc)?;
-    let holes = building_corners(doc).map(|c| c.iter().map(|p| [p.x, p.y]).collect()).into_iter().collect();
-    let triangles = |s: &Surface| -> Vec<_> { s.triangles.iter().map(|t| t.map(|i| s.vertices[i as usize])).collect() };
-    let m = volume_materials::measure(&triangles(&graded), &triangles(&natural), &[Region { outer: ring, holes }]);
+    let holes = building_corners(doc)
+        .map(|c| c.iter().map(|p| [p.x, p.y]).collect())
+        .into_iter()
+        .collect();
+    let triangles = |s: &Surface| -> Vec<_> {
+        s.triangles
+            .iter()
+            .map(|t| t.map(|i| s.vertices[i as usize]))
+            .collect()
+    };
+    let m = volume_materials::measure(
+        &triangles(&graded),
+        &triangles(&natural),
+        &[Region { outer: ring, holes }],
+    );
     let m = m.first()?;
-    Some(Earthwork { cut: m.cut, fill: m.fill, area: m.covered })
+    Some(Earthwork {
+        cut: m.cut,
+        fill: m.fill,
+        area: m.covered,
+    })
 }
 
 /// The level whose walls make the building's footprint: the lowest at or over ±0.00 with walls (its zemin kat), else
@@ -117,10 +174,20 @@ fn footprint_level(doc: &Document) -> Option<String> {
             _ => None,
         })
         .collect();
-    let mut levels: Vec<_> =
-        doc.settings().arch.as_ref()?.levels.iter().filter(|l| walled.contains(l.id.as_str())).collect();
+    let mut levels: Vec<_> = doc
+        .settings()
+        .arch
+        .as_ref()?
+        .levels
+        .iter()
+        .filter(|l| walled.contains(l.id.as_str()))
+        .collect();
     levels.sort_by(|a, b| a.elevation.total_cmp(&b.elevation));
-    levels.iter().find(|l| l.elevation >= -0.005).or(levels.last()).map(|l| l.id.clone())
+    levels
+        .iter()
+        .find(|l| l.elevation >= -0.005)
+        .or(levels.last())
+        .map(|l| l.id.clone())
 }
 
 /// The building's corners: the outermost outline of its footprint level's walls' line work to their outer faces, found
@@ -144,7 +211,10 @@ pub fn building_corners(doc: &Document) -> Option<Vec<Vec2>> {
             }
             let (nx, ny) = (-(b.y - a.y) / len * off, (b.x - a.x) / len * off);
             for s in [1.0, -1.0] {
-                let seed = Vec2 { x: (a.x + b.x) / 2.0 + s * nx, y: (a.y + b.y) / 2.0 + s * ny };
+                let seed = Vec2 {
+                    x: (a.x + b.x) / 2.0 + s * nx,
+                    y: (a.y + b.y) / 2.0 + s * ny,
+                };
                 if let Some(part) = doc.slab_from_walls(seed, level, false) {
                     return Some(corners(&part.outer.pts));
                 }
@@ -177,8 +247,10 @@ fn corners(ring: &[Vec2]) -> Vec<Vec2> {
 pub fn datum_from_corners(doc: &Document) -> Option<f64> {
     let site = doc.settings().arch.as_ref()?.site.as_ref()?;
     let natural = made_of(doc, site.natural_ground.as_ref()?, false)?;
-    let heights: Option<Vec<f64>> =
-        building_corners(doc)?.iter().map(|p| natural.height(p.x, p.y).z).collect();
+    let heights: Option<Vec<f64>> = building_corners(doc)?
+        .iter()
+        .map(|p| natural.height(p.x, p.y).z)
+        .collect();
     let heights = heights?;
     (!heights.is_empty()).then(|| heights.iter().sum::<f64>() / heights.len() as f64)
 }
@@ -209,8 +281,14 @@ pub fn surfaces(doc: &Document) -> SiteSurfaces {
         return SiteSurfaces::default();
     };
     SiteSurfaces {
-        natural: site.natural_ground.as_ref().and_then(|g| made_of(doc, g, false)),
-        graded: site.graded_ground.as_ref().and_then(|g| made_of(doc, g, true)),
+        natural: site
+            .natural_ground
+            .as_ref()
+            .and_then(|g| made_of(doc, g, false)),
+        graded: site
+            .graded_ground
+            .as_ref()
+            .and_then(|g| made_of(doc, g, true)),
     }
 }
 
@@ -224,5 +302,9 @@ pub fn level_lines(natural: Option<f64>, graded: Option<f64>, datum: Option<f64>
         Some(d) => format!("{word} {z:.2} ({:+.2})", z - d),
         None => format!("{word} {z:.2}"),
     };
-    natural.map(|z| line("tzk", z)).into_iter().chain(graded.map(|z| line("tsk", z))).collect()
+    natural
+        .map(|z| line("tzk", z))
+        .into_iter()
+        .chain(graded.map(|z| line("tsk", z)))
+        .collect()
 }

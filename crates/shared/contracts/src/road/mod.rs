@@ -226,7 +226,10 @@ pub struct RoadDrawingDef {
     pub id: String,
     pub command: String,
     #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
-    #[cfg_attr(feature = "schema", schemars(with = "std::collections::BTreeMap<String, serde_json::Value>"))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "std::collections::BTreeMap<String, serde_json::Value>")
+    )]
     pub input: std::collections::BTreeMap<String, serde_json::Value>,
     pub sources: Vec<RoadDrawingSource>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -250,7 +253,10 @@ impl RoadSettings {
     /// Whether a grade (rise over run) is held: a template's cross slopes, a superelevation schedule, a culvert's fall,
     /// a pad's grade or a volume's benched ground slope (docs/adr/0977; KCAD schema 191 holds them as grades).
     pub fn has_grades(&self) -> bool {
-        !(self.templates.is_empty() && self.superelevations.is_empty() && self.culverts.is_empty() && self.platforms.is_empty())
+        !(self.templates.is_empty()
+            && self.superelevations.is_empty()
+            && self.culverts.is_empty()
+            && self.platforms.is_empty())
             || self.volumes.iter().any(|v| v.bench.is_some())
     }
 
@@ -270,7 +276,9 @@ impl RoadSettings {
             p(&mut d.normal_left);
             p(&mut d.normal_right);
             match &mut d.method {
-                SuperelevationMethod::Curves { curves } => curves.iter_mut().for_each(|c| p(&mut c.rate)),
+                SuperelevationMethod::Curves { curves } => {
+                    curves.iter_mut().for_each(|c| p(&mut c.rate))
+                }
                 SuperelevationMethod::Stations { rows } => rows.iter_mut().for_each(|r| {
                     p(&mut r.left);
                     p(&mut r.right);
@@ -289,13 +297,22 @@ impl RoadSettings {
     /// Whether it says nothing (and is not written).
     /// Whether it holds terrain surfaces only, as a map project's may (`.kcad` schema 195, docs/adr/1520).
     pub fn surfaces_only(&self) -> bool {
-        Self { surfaces: Vec::new(), ..self.clone() }.is_empty()
+        Self {
+            surfaces: Vec::new(),
+            ..self.clone()
+        }
+        .is_empty()
     }
 
     /// Whether it holds only what a map project may: terrain surfaces and graded pads (`.kcad` schema 197,
     /// docs/adr/1580).
     pub fn map_part_only(&self) -> bool {
-        Self { surfaces: Vec::new(), platforms: Vec::new(), ..self.clone() }.is_empty()
+        Self {
+            surfaces: Vec::new(),
+            platforms: Vec::new(),
+            ..self.clone()
+        }
+        .is_empty()
     }
 
     /// Whether it holds only what a map project may since `.kcad` schema 198 (docs/adr/1720): terrain surfaces,
@@ -368,21 +385,30 @@ fn is_zero_f64(v: &f64) -> bool {
 pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     if road.surfaces.len() > MAX_TERRAIN_SURFACES {
-        return fail("surfaces".into(), &format!("en çok {MAX_TERRAIN_SURFACES} yüzey olur"));
+        return fail(
+            "surfaces".into(),
+            &format!("en çok {MAX_TERRAIN_SURFACES} yüzey olur"),
+        );
     }
     let mut ids = std::collections::BTreeSet::new();
     let mut names = std::collections::BTreeSet::new();
     for (i, s) in road.surfaces.iter().enumerate() {
         let at = |field: &str| format!("surfaces[{i}].{field}");
         if !word_ok(&s.id) {
-            return fail(at("id"), "yüzeyin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı");
+            return fail(
+                at("id"),
+                "yüzeyin kimliği boş olmayan, en çok 64 karakterlik bir sözcük olmalı",
+            );
         }
         if !ids.insert(s.id.as_str()) {
             return fail(at("id"), "bu kimlikte başka bir yüzey var");
         }
         let name = s.name.trim();
         if name.is_empty() || name != s.name || s.name.chars().count() > 120 {
-            return fail(at("name"), "yüzeyin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter");
+            return fail(
+                at("name"),
+                "yüzeyin adı boş olmamalı, başında ve sonunda boşluk olmamalı, en çok 120 karakter",
+            );
         }
         if !names.insert(name.to_lowercase()) {
             return fail(at("name"), "bu adda başka bir yüzey var");
@@ -404,29 +430,45 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         if s.boundary.as_ref().is_some_and(|b| s.voids.contains(b)) {
             return fail(at("voids"), "sınır aynı zamanda boşluk olamaz");
         }
-        if s.tolerance.is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 1.0)) {
-            return fail(at("tolerance"), "kot toleransı 0'dan büyük, en çok 1 m olmalı");
+        if s.tolerance
+            .is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 1.0))
+        {
+            return fail(
+                at("tolerance"),
+                "kot toleransı 0'dan büyük, en çok 1 m olmalı",
+            );
         }
         if s.max_edge.is_some_and(|l| !(l.is_finite() && l > 0.0)) {
             return fail(at("maxEdge"), "en uzun dış kenar 0'dan büyük olmalı");
         }
-        if s
-            .built
-            .as_deref()
-            .is_some_and(|d| d.len() != 64 || !d.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f')))
-        {
+        if s.built.as_deref().is_some_and(|d| {
+            d.len() != 64 || !d.bytes().all(|b| matches!(b, b'0'..=b'9' | b'a'..=b'f'))
+        }) {
             return fail(at("built"), "özet 64 küçük onaltılık rakam olmalı");
         }
         if let Some(words) = clouds_problem(&s.clouds) {
             return fail(at("clouds"), &words);
         }
         if s.excluded.len() > MOST_SURFACE_EXCLUSIONS {
-            return fail(at("excluded"), "bir yüzey en çok 100 000 noktayı dışarıda bırakır");
+            return fail(
+                at("excluded"),
+                "bir yüzey en çok 100 000 noktayı dışarıda bırakır",
+            );
         }
-        if s.excluded.iter().any(|e| !(e.x.is_finite() && e.y.is_finite())) {
-            return fail(at("excluded"), "dışarıda bırakılan yer sonlu iki sayı olmalı");
+        if s.excluded
+            .iter()
+            .any(|e| !(e.x.is_finite() && e.y.is_finite()))
+        {
+            return fail(
+                at("excluded"),
+                "dışarıda bırakılan yer sonlu iki sayı olmalı",
+            );
         }
-        let mut places: Vec<(u64, u64)> = s.excluded.iter().map(|e| ((e.x + 0.0).to_bits(), (e.y + 0.0).to_bits())).collect();
+        let mut places: Vec<(u64, u64)> = s
+            .excluded
+            .iter()
+            .map(|e| ((e.x + 0.0).to_bits(), (e.y + 0.0).to_bits()))
+            .collect();
         places.sort_unstable();
         if places.windows(2).any(|w| w[0] == w[1]) {
             return fail(at("excluded"), "bir yer dışarıda bırakılanlarda iki kez");
@@ -434,11 +476,20 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
         if s.edits.len() > MOST_SURFACE_EDITS {
             return fail(at("edits"), "bir yüzeyin en çok 10 000 düzenlemesi olur");
         }
-        if let Some((k, words)) = s.edits.iter().enumerate().find_map(|(k, e)| e.problem().map(|w| (k, w))) {
+        if let Some((k, words)) = s
+            .edits
+            .iter()
+            .enumerate()
+            .find_map(|(k, e)| e.problem().map(|w| (k, w)))
+        {
             return fail(at(&format!("edits[{k}]")), words);
         }
         // Docs/adr/3920: a surface does not paste itself (another surface pasting it back is said when it is made).
-        if let Some(k) = s.edits.iter().position(|e| matches!(e, SurfaceEdit::Paste { terrain } if *terrain == s.id)) {
+        if let Some(k) = s
+            .edits
+            .iter()
+            .position(|e| matches!(e, SurfaceEdit::Paste { terrain } if *terrain == s.id))
+        {
             return fail(at(&format!("edits[{k}]")), "yüzey kendini yapıştıramaz");
         }
     }
@@ -461,30 +512,48 @@ pub fn road_problem(road: &RoadSettings) -> Option<(String, String)> {
 }
 
 fn stamp_ok(s: &str) -> bool {
-    s.len() == 16 && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    s.len() == 16
+        && s.bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
 fn drawings_problem(road: &RoadSettings) -> Option<(String, String)> {
     let fail = |path: String, words: &str| Some((path, words.to_string()));
     if road.drawings.len() > MAX_ROAD_DRAWINGS {
-        return fail("drawings".into(), &format!("en çok {MAX_ROAD_DRAWINGS} yol çizimi kaydedilir"));
+        return fail(
+            "drawings".into(),
+            &format!("en çok {MAX_ROAD_DRAWINGS} yol çizimi kaydedilir"),
+        );
     }
     let mut ids = std::collections::BTreeSet::new();
     for (i, d) in road.drawings.iter().enumerate() {
         let at = |field: &str| format!("drawings[{i}].{field}");
         if !word_ok(&d.id) || !ids.insert(d.id.as_str()) {
-            return fail(at("id"), "çizimin kimliği boş olmayan, en çok 64 karakterlik ve tek bir sözcük olmalı");
+            return fail(
+                at("id"),
+                "çizimin kimliği boş olmayan, en çok 64 karakterlik ve tek bir sözcük olmalı",
+            );
         }
         if !ROAD_DRAWING_COMMANDS.contains(&d.command.as_str()) {
-            return fail(at("command"), "çizimin komutu çizime yazan bir yol komutu olmalı");
+            return fail(
+                at("command"),
+                "çizimin komutu çizime yazan bir yol komutu olmalı",
+            );
         }
         if d.sources.is_empty() || d.sources.len() > MAX_DRAWING_SOURCES {
-            return fail(at("sources"), &format!("çizimin 1 ile {MAX_DRAWING_SOURCES} arası kaynağı olur"));
+            return fail(
+                at("sources"),
+                &format!("çizimin 1 ile {MAX_DRAWING_SOURCES} arası kaynağı olur"),
+            );
         }
         let mut seen = std::collections::BTreeSet::new();
         for (k, s) in d.sources.iter().enumerate() {
             // A layer's id is the drawing's own (docs/adr/4740): it may hold spaces.
-            let id_ok = if s.kind == RoadSourceKind::Layer { !s.id.is_empty() && s.id.chars().count() <= 256 } else { word_ok(&s.id) };
+            let id_ok = if s.kind == RoadSourceKind::Layer {
+                !s.id.is_empty() && s.id.chars().count() <= 256
+            } else {
+                word_ok(&s.id)
+            };
             if !id_ok || !stamp_ok(&s.digest) || !seen.insert((s.kind, s.id.as_str())) {
                 return fail(
                     format!("drawings[{i}].sources[{k}]"),
@@ -493,17 +562,31 @@ fn drawings_problem(road: &RoadSettings) -> Option<(String, String)> {
             }
         }
         if d.uids.len() > MAX_DRAWING_OBJECTS || d.uids.iter().any(|u| !word_ok(u)) {
-            return fail(at("uids"), &format!("çizimin en çok {MAX_DRAWING_OBJECTS} nesnesi olur, her biri bir kimlik"));
+            return fail(
+                at("uids"),
+                &format!("çizimin en çok {MAX_DRAWING_OBJECTS} nesnesi olur, her biri bir kimlik"),
+            );
         }
         if !stamp_ok(&d.digest) {
             return fail(at("digest"), "nesnelerin özeti 16 onaltılık hane olur");
         }
         // Docs/adr/2840: a command's version is 1 or more; a revision is a whole number as the commands write it.
         if d.version == Some(0) {
-            return fail(at("version"), "çizimin işlem sürümü 1 ya da daha büyük olur");
+            return fail(
+                at("version"),
+                "çizimin işlem sürümü 1 ya da daha büyük olur",
+            );
         }
-        if d.revision.as_deref().is_some_and(|r| r.is_empty() || r.len() > 20 || !r.bytes().all(|b| b.is_ascii_digit()) || r.parse::<u64>().is_err()) {
-            return fail(at("revision"), "çizimin çıktı revizyonu bir doğal sayı olur (en çok 20 hane)");
+        if d.revision.as_deref().is_some_and(|r| {
+            r.is_empty()
+                || r.len() > 20
+                || !r.bytes().all(|b| b.is_ascii_digit())
+                || r.parse::<u64>().is_err()
+        }) {
+            return fail(
+                at("revision"),
+                "çizimin çıktı revizyonu bir doğal sayı olur (en çok 20 hane)",
+            );
         }
     }
     None
@@ -533,10 +616,14 @@ fn digest_ok(d: &str) -> bool {
 /// An algorithm by name and version (docs/adr/1040): `kentos.end-area/1`; lower-case letters, digits, dots and dashes,
 /// a slash and the version's digits, at most 64 characters.
 fn algorithm_ok(t: &str) -> bool {
-    let Some((name, version)) = t.split_once('/') else { return false };
+    let Some((name, version)) = t.split_once('/') else {
+        return false;
+    };
     t.len() <= 64
         && !name.is_empty()
-        && name.bytes().all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'.' | b'-'))
+        && name
+            .bytes()
+            .all(|b| matches!(b, b'a'..=b'z' | b'0'..=b'9' | b'.' | b'-'))
         && !version.is_empty()
         && version.bytes().all(|b| b.is_ascii_digit())
 }
@@ -569,17 +656,33 @@ mod tests {
             assert!(algorithm_ok(good), "{good}");
         }
         let long = format!("{}/1", "a".repeat(63));
-        for bad in ["", "kentos.end-area", "kentos.end-area/", "/1", "Kentos.end-area/1", "kentos.end area/1", "kentos.end-area/1a", &long] {
+        for bad in [
+            "",
+            "kentos.end-area",
+            "kentos.end-area/",
+            "/1",
+            "Kentos.end-area/1",
+            "kentos.end area/1",
+            "kentos.end-area/1a",
+            &long,
+        ] {
             assert!(!algorithm_ok(bad), "{bad}");
         }
-        let source = |id: &str| RoadSource { id: id.into(), revision: 1 };
+        let source = |id: &str| RoadSource {
+            id: id.into(),
+            revision: 1,
+        };
         let ok = VolumeSources {
             corridor: source("c-1"),
             alignment: source("g-1"),
             profile: source("b-1"),
             templates: vec![source("tk-1")],
             superelevation: None,
-            surface: RoadSurfaceSource { id: "t-1".into(), digest: Some("a".repeat(64)), built: None },
+            surface: RoadSurfaceSource {
+                id: "t-1".into(),
+                digest: Some("a".repeat(64)),
+                built: None,
+            },
         };
         assert_eq!(volume_sources_problem(&ok), None);
         let mut spaced = ok.clone();
@@ -619,15 +722,28 @@ mod tests {
             id: id.into(),
             command: "road.corridors.draw".into(),
             input: std::collections::BTreeMap::new(),
-            sources: vec![RoadDrawingSource { kind: RoadSourceKind::Corridor, id: "c-1".into(), digest: "0123456789abcdef".into() }],
+            sources: vec![RoadDrawingSource {
+                kind: RoadSourceKind::Corridor,
+                id: "c-1".into(),
+                digest: "0123456789abcdef".into(),
+            }],
             uids: vec!["u-1".into()],
             digest: "fedcba9876543210".into(),
             version: Some(1),
             revision: Some("12".into()),
         };
-        let of = |drawings: Vec<RoadDrawingDef>| road_problem(&RoadSettings { drawings, ..RoadSettings::default() }).map(|p| p.0);
+        let of = |drawings: Vec<RoadDrawingDef>| {
+            road_problem(&RoadSettings {
+                drawings,
+                ..RoadSettings::default()
+            })
+            .map(|p| p.0)
+        };
         assert_eq!(of(vec![drawing("cz-1")]), None);
-        assert_eq!(of(vec![drawing("cz-1"), drawing("cz-1")]).as_deref(), Some("drawings[1].id"));
+        assert_eq!(
+            of(vec![drawing("cz-1"), drawing("cz-1")]).as_deref(),
+            Some("drawings[1].id")
+        );
         let mut d = drawing("cz-1");
         d.command = "road.routes.draw".into();
         assert_eq!(of(vec![d]).as_deref(), Some("drawings[0].command"));
@@ -647,15 +763,27 @@ mod tests {
         for bad in ["", "1a", "-3", "123456789012345678901"] {
             let mut d = drawing("cz-1");
             d.revision = Some(bad.into());
-            assert_eq!(of(vec![d]).as_deref(), Some("drawings[0].revision"), "{bad:?}");
+            assert_eq!(
+                of(vec![d]).as_deref(),
+                Some("drawings[0].revision"),
+                "{bad:?}"
+            );
         }
         let mut d = drawing("cz-1");
         (d.version, d.revision) = (None, None);
         assert_eq!(of(vec![d]), None);
         // The most a project keeps: the 1001st is refused (what road_drawings_full answers).
-        let many: Vec<RoadDrawingDef> = (0..=MAX_ROAD_DRAWINGS).map(|k| drawing(&format!("cz-{k}"))).collect();
+        let many: Vec<RoadDrawingDef> = (0..=MAX_ROAD_DRAWINGS)
+            .map(|k| drawing(&format!("cz-{k}")))
+            .collect();
         assert_eq!(of(many).as_deref(), Some("drawings"));
-        assert!(!RoadSettings { auto_rebuild: true, ..RoadSettings::default() }.is_empty());
+        assert!(
+            !RoadSettings {
+                auto_rebuild: true,
+                ..RoadSettings::default()
+            }
+            .is_empty()
+        );
     }
 
     #[test]
@@ -674,22 +802,42 @@ mod tests {
         let bad = |f: fn(&mut TerrainSurfaceDef), path: &str| {
             let mut s = surface();
             f(&mut s);
-            let got = road_problem(&RoadSettings { surfaces: vec![s], ..RoadSettings::default() }).map(|p| p.0);
+            let got = road_problem(&RoadSettings {
+                surfaces: vec![s],
+                ..RoadSettings::default()
+            })
+            .map(|p| p.0);
             assert_eq!(got.as_deref(), Some(path));
         };
         bad(|s| s.id = String::new(), "surfaces[0].id");
         bad(|s| s.name = " a".into(), "surfaces[0].name");
-        bad(|s| s.points = SurfaceSources::default(), "surfaces[0].points");
-        bad(|s| s.points.uids = vec!["a".into(), "a".into()], "surfaces[0].points");
+        bad(
+            |s| s.points = SurfaceSources::default(),
+            "surfaces[0].points",
+        );
+        bad(
+            |s| s.points.uids = vec!["a".into(), "a".into()],
+            "surfaces[0].points",
+        );
         bad(|s| s.voids = vec!["u-sinir".into()], "surfaces[0].voids");
         bad(|s| s.tolerance = Some(0.0), "surfaces[0].tolerance");
         bad(|s| s.max_edge = Some(f64::NAN), "surfaces[0].maxEdge");
         bad(|s| s.built = Some("AB".into()), "surfaces[0].built");
         let two = RoadSettings {
-            surfaces: vec![surface(), TerrainSurfaceDef { id: "t-2".into(), name: "mevcut ZEMIN".into(), ..surface() }],
+            surfaces: vec![
+                surface(),
+                TerrainSurfaceDef {
+                    id: "t-2".into(),
+                    name: "mevcut ZEMIN".into(),
+                    ..surface()
+                },
+            ],
             ..RoadSettings::default()
         };
-        assert_eq!(road_problem(&two).map(|p| p.0).as_deref(), Some("surfaces[1].name"));
+        assert_eq!(
+            road_problem(&two).map(|p| p.0).as_deref(),
+            Some("surfaces[1].name")
+        );
     }
 
     #[test]
@@ -708,8 +856,26 @@ mod tests {
             name: "Ana aks".into(),
             revision: 1,
             pis: vec![
-                AlignmentPi { id: "a".into(), x: 0.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false, speed: None },
-                AlignmentPi { id: "b".into(), x: 100.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false, speed: None },
+                AlignmentPi {
+                    id: "a".into(),
+                    x: 0.0,
+                    y: 0.0,
+                    radius: 0.0,
+                    spiral_in: 0.0,
+                    spiral_out: 0.0,
+                    ove: false,
+                    speed: None,
+                },
+                AlignmentPi {
+                    id: "b".into(),
+                    x: 100.0,
+                    y: 0.0,
+                    radius: 0.0,
+                    spiral_in: 0.0,
+                    spiral_out: 0.0,
+                    ove: false,
+                    speed: None,
+                },
             ],
             offset_of: None,
             stationing: None,
@@ -721,7 +887,10 @@ mod tests {
             id: "g-2".into(),
             name: "Kenar".into(),
             pis: vec![],
-            offset_of: Some(AlignmentOffset { alignment: "g-1".into(), offset: 3.0 }),
+            offset_of: Some(AlignmentOffset {
+                alignment: "g-1".into(),
+                offset: 3.0,
+            }),
             ..line.clone()
         };
         let profile = ProfileDef {
@@ -745,11 +914,26 @@ mod tests {
             .map(|p| p.0)
         };
         assert_eq!(judge(|_| {}), None);
-        assert_eq!(judge(|p| p.alignment = "g-2".into()).as_deref(), Some("profiles[0].alignment"));
-        assert_eq!(judge(|p| p.alignment = "yok".into()).as_deref(), Some("profiles[0].alignment"));
-        assert_eq!(judge(|p| p.pvis.truncate(1)).as_deref(), Some("profiles[0].pvis"));
-        assert_eq!(judge(|p| p.pvis[1].radius = -1.0).as_deref(), Some("profiles[0].pvis[1].length"));
-        assert_eq!(judge(|p| p.pvis[1].length_in = 5.0).as_deref(), Some("profiles[0].pvis[1].lengthIn"));
+        assert_eq!(
+            judge(|p| p.alignment = "g-2".into()).as_deref(),
+            Some("profiles[0].alignment")
+        );
+        assert_eq!(
+            judge(|p| p.alignment = "yok".into()).as_deref(),
+            Some("profiles[0].alignment")
+        );
+        assert_eq!(
+            judge(|p| p.pvis.truncate(1)).as_deref(),
+            Some("profiles[0].pvis")
+        );
+        assert_eq!(
+            judge(|p| p.pvis[1].radius = -1.0).as_deref(),
+            Some("profiles[0].pvis[1].length")
+        );
+        assert_eq!(
+            judge(|p| p.pvis[1].length_in = 5.0).as_deref(),
+            Some("profiles[0].pvis[1].lengthIn")
+        );
         assert_eq!(
             judge(|p| {
                 p.pvis[1].length = 5.0;
@@ -759,5 +943,4 @@ mod tests {
             Some("profiles[0].pvis[1].length")
         );
     }
-
 }

@@ -44,7 +44,12 @@ pub struct CloudTrees {
 /// (Rᵀ(p − t)).
 fn view_in_file(m: &[f64; 16], view: [f64; 4], z: [f64; 2]) -> [f64; 4] {
     let (mut lo, mut hi) = ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]);
-    for (x, y) in [(view[0], view[1]), (view[2], view[1]), (view[2], view[3]), (view[0], view[3])] {
+    for (x, y) in [
+        (view[0], view[1]),
+        (view[2], view[1]),
+        (view[2], view[3]),
+        (view[0], view[3]),
+    ] {
         for h in z {
             let d = [x - m[3], y - m[7], h - m[11]];
             for (a, slot) in [(0, 0usize), (1, 1)] {
@@ -404,14 +409,7 @@ impl PointsGpu {
                     Some(pose) => view_in_file(&pose, view_box, trees.z),
                     None => view_box,
                 };
-                visible(
-                    tree,
-                    seen,
-                    px_per_unit,
-                    point_px,
-                    budget,
-                    &mut self.picked,
-                );
+                visible(tree, seen, px_per_unit, point_px, budget, &mut self.picked);
                 for &i in &self.picked {
                     let count = tree.counts[i as usize];
                     budget = budget.saturating_sub(count);

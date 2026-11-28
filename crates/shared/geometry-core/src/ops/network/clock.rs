@@ -65,12 +65,20 @@ impl Frame {
 
     /// Where the copy a place at `shift` is in ends going forward (its next copy starts there).
     fn cap(self, shift: f64) -> f64 {
-        if shift < 0.0 { self.lead + self.cycle } else { self.end }
+        if shift < 0.0 {
+            self.lead + self.cycle
+        } else {
+            self.end
+        }
     }
 
     /// Where the copy a place at `shift` is in begins going back.
     fn cap_before(self, shift: f64) -> f64 {
-        if shift > 0.0 { self.end - self.cycle } else { self.lead }
+        if shift > 0.0 {
+            self.end - self.cycle
+        } else {
+            self.lead
+        }
     }
 }
 
@@ -123,7 +131,11 @@ impl Clock {
                 }
                 let speed = match p.factor {
                     Some(f) => kmh * f,
-                    None => match values.get(e).and_then(|v| v.get(k)).and_then(Option::as_deref) {
+                    None => match values
+                        .get(e)
+                        .and_then(|v| v.get(k))
+                        .and_then(Option::as_deref)
+                    {
                         None => kmh,
                         Some(t) if t.trim().is_empty() => kmh,
                         Some(t) => match super::rules::number(t).filter(|v| *v >= 0.0) {
@@ -181,7 +193,11 @@ impl Clock {
     /// The clock of closures in hours (docs/adr/0568 §3, 0640 §1): `days[e]` each edge's steps through a day repeated,
     /// `windows[e]` the minutes it is closed (each `[from, to)` within its frame) and `frames[e]` its frame (none: no
     /// window, the day repeated). Each edge with windows steps through its frame, its day's steps a day after a day.
-    pub fn framed(days: &[Vec<(f64, f64)>], windows: &[Vec<(f64, f64)>], frames: &[Option<(f64, f64)>]) -> Clock {
+    pub fn framed(
+        days: &[Vec<(f64, f64)>],
+        windows: &[Vec<(f64, f64)>],
+        frames: &[Option<(f64, f64)>],
+    ) -> Clock {
         let mut clock = Clock {
             start: Vec::with_capacity(days.len() + 1),
             steps: Vec::new(),
@@ -191,7 +207,12 @@ impl Clock {
         for (e, day) in days.iter().enumerate() {
             clock.start.push(clock.steps.len() as u32);
             let shut = windows.get(e).map_or(&[][..], Vec::as_slice);
-            let Some((lead, end)) = frames.get(e).copied().flatten().filter(|_| !shut.is_empty()) else {
+            let Some((lead, end)) = frames
+                .get(e)
+                .copied()
+                .flatten()
+                .filter(|_| !shut.is_empty())
+            else {
                 clock.frames.push(Frame::repeated(DAY));
                 if day.iter().any(|s| s.1 > 0.0) {
                     clock.steps.extend_from_slice(day);
@@ -469,7 +490,11 @@ mod tests {
         // A day without a window as the day's own clock.
         assert_eq!(clock.forward(0, 600.0, 3000.0), 3.0);
         // Closed the whole week: never.
-        let shut = Clock::framed(&[vec![(0.0, 1000.0)]], &[vec![(0.0, week)]], &[Some((0.0, week))]);
+        let shut = Clock::framed(
+            &[vec![(0.0, 1000.0)]],
+            &[vec![(0.0, week)]],
+            &[Some((0.0, week))],
+        );
         assert_eq!(shut.forward(0, 0.0, 1.0), f64::INFINITY);
     }
 
@@ -477,9 +502,18 @@ mod tests {
     fn a_framed_clock_keeps_the_days_before_and_after_its_closure() {
         // Closed every night 22:00–06:00 from the tenth day on; the frame holds days 0 to 17, then its last week repeats.
         let windows: Vec<(f64, f64)> = (10..17)
-            .map(|d| (f64::from(d) * DAY + 1320.0, crate::jsmath::js_min(f64::from(d) * DAY + 1800.0, 17.0 * DAY)))
+            .map(|d| {
+                (
+                    f64::from(d) * DAY + 1320.0,
+                    crate::jsmath::js_min(f64::from(d) * DAY + 1800.0, 17.0 * DAY),
+                )
+            })
             .collect();
-        let clock = Clock::framed(&[vec![(0.0, 1000.0)]], &[windows], &[Some((0.0, 17.0 * DAY))]);
+        let clock = Clock::framed(
+            &[vec![(0.0, 1000.0)]],
+            &[windows],
+            &[Some((0.0, 17.0 * DAY))],
+        );
         let night = |d: f64| d * DAY + 1319.0;
         // The second night is open, the twelfth closed: a minute, eight hours' wait, a minute.
         assert_eq!(clock.forward(0, night(2.0), 2000.0), 2.0);

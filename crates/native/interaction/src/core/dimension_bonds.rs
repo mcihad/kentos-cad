@@ -57,7 +57,8 @@ fn bonds_of(
         };
         let mut object = core_entity(e);
         if !r.path.is_empty() {
-            let blocks = blocks.get_or_insert_with(|| kentos_native_application::blocks::drawing_blocks(doc));
+            let blocks = blocks
+                .get_or_insert_with(|| kentos_native_application::blocks::drawing_blocks(doc));
             let Some(p) = piece(blocks, &object, &r.path) else {
                 continue;
             };

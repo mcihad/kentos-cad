@@ -4,7 +4,8 @@
 //! Reads only. The shared cases are `fixtures/commands/v1/road.corridors.preflight.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CorridorFold, CorridorOverlap, CorridorPreflight, CorridorSeam, CorridorTight, CorridorsPreflight,
+    CommandResult, CommandWarning, CorridorFold, CorridorOverlap, CorridorPreflight, CorridorSeam,
+    CorridorTight, CorridorsPreflight,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -35,10 +36,18 @@ pub fn code_words(code: &str) -> String {
         "ditchToe" => "hendek ayağı".to_owned(),
         "ditchBottom" => "hendek tabanı".to_owned(),
         p if p.starts_with('c') && p[1..].parse::<u32>().is_ok() => format!("{}. bileşen", &p[1..]),
-        p if p.strip_prefix("bench").and_then(|r| r.strip_suffix("In")).is_some_and(|k| k.parse::<u32>().is_ok()) => {
+        p if p
+            .strip_prefix("bench")
+            .and_then(|r| r.strip_suffix("In"))
+            .is_some_and(|k| k.parse::<u32>().is_ok()) =>
+        {
             format!("{}. basamak içi", &p[5..p.len() - 2])
         }
-        p if p.strip_prefix("bench").and_then(|r| r.strip_suffix("Out")).is_some_and(|k| k.parse::<u32>().is_ok()) => {
+        p if p
+            .strip_prefix("bench")
+            .and_then(|r| r.strip_suffix("Out"))
+            .is_some_and(|k| k.parse::<u32>().is_ok()) =>
+        {
             format!("{}. basamak ucu", &p[5..p.len() - 3])
         }
         p => p.to_owned(),
@@ -47,23 +56,46 @@ pub fn code_words(code: &str) -> String {
 }
 
 fn bad(words: String, path: &str) -> Stop {
-    fail(codes::INVALID_PREFLIGHT, format!("Koridor ön denetimi sorusu geçerli değil: {words}"), path)
+    fail(
+        codes::INVALID_PREFLIGHT,
+        format!("Koridor ön denetimi sorusu geçerli değil: {words}"),
+        path,
+    )
 }
 
 /// The check now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &CorridorsPreflight) -> Result<(CorridorPreflight, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &CorridorsPreflight,
+) -> Result<(CorridorPreflight, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_corridors(), &input.corridor, "corridor")?;
     check(doc, def, input)
 }
 
 /// The check of `def` (saved or as typed) with `input`'s margin and tolerance.
-fn check(doc: &Document, def: &kentos_commands::CorridorDef, input: &CorridorsPreflight) -> Result<(CorridorPreflight, Vec<CommandWarning>), Stop> {
-    if input.margin.is_some_and(|m| !(m.is_finite() && (0.0..1.0).contains(&m))) {
-        return Err(bad("istenen pay 0 ile 1 arası olur (1: hiç daralmayan).".into(), "margin"));
+fn check(
+    doc: &Document,
+    def: &kentos_commands::CorridorDef,
+    input: &CorridorsPreflight,
+) -> Result<(CorridorPreflight, Vec<CommandWarning>), Stop> {
+    if input
+        .margin
+        .is_some_and(|m| !(m.is_finite() && (0.0..1.0).contains(&m)))
+    {
+        return Err(bad(
+            "istenen pay 0 ile 1 arası olur (1: hiç daralmayan).".into(),
+            "margin",
+        ));
     }
-    if input.tolerance.is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 10.0)) {
-        return Err(bad("dikiş toleransı 0'dan büyük, en çok 10 m olur.".into(), "tolerance"));
+    if input
+        .tolerance
+        .is_some_and(|t| !(t.is_finite() && t > 0.0 && t <= 10.0))
+    {
+        return Err(bad(
+            "dikiş toleransı 0'dan büyük, en çok 10 m olur.".into(),
+            "tolerance",
+        ));
     }
     let made = common::make(doc, def, false)?;
     let al = &made.sampler.alignment;
@@ -113,7 +145,13 @@ fn check(doc: &Document, def: &kentos_commands::CorridorDef, input: &CorridorsPr
         .built
         .folded
         .iter()
-        .map(|f| CorridorFold { region: f.0 as u32, from: f.1, to: f.2, from_text: text(f.1), to_text: text(f.2) })
+        .map(|f| CorridorFold {
+            region: f.0 as u32,
+            from: f.1,
+            to: f.2,
+            from_text: text(f.1),
+            to_text: text(f.2),
+        })
         .collect();
     let over: Vec<CorridorOverlap> = overlaps(&made.built)
         .into_iter()
@@ -138,7 +176,10 @@ fn check(doc: &Document, def: &kentos_commands::CorridorDef, input: &CorridorsPr
             shift_code: s.shift_code,
             step: s.step,
             step_code: s.step_code,
-            meets: s.shift <= tolerance && s.step <= tolerance && s.only_before.is_empty() && s.only_after.is_empty(),
+            meets: s.shift <= tolerance
+                && s.step <= tolerance
+                && s.only_before.is_empty()
+                && s.only_after.is_empty(),
             only_before: s.only_before,
             only_after: s.only_after,
         })
@@ -150,17 +191,31 @@ fn check(doc: &Document, def: &kentos_commands::CorridorDef, input: &CorridorsPr
             .iter()
             .take(6)
             .map(|t| {
-                let km = if t.from == t.to { format!("km {}", t.from_text) } else { format!("km {} – {}", t.from_text, t.to_text) };
-                let r = t.radius.map_or_else(String::new, |r| format!(", R {r:.1} m"));
+                let km = if t.from == t.to {
+                    format!("km {}", t.from_text)
+                } else {
+                    format!("km {} – {}", t.from_text, t.to_text)
+                };
+                let r = t
+                    .radius
+                    .map_or_else(String::new, |r| format!(", R {r:.1} m"));
                 format!("{km} (pay {:.3}, {:.2} m ofsette{r})", t.least, t.offset)
             })
             .collect();
-        let more = if tight.len() > 6 { format!(" ve {} aralık daha", tight.len() - 6) } else { String::new() };
+        let more = if tight.len() > 6 {
+            format!(" ve {} aralık daha", tight.len() - 6)
+        } else {
+            String::new()
+        };
         warnings.push(CommandWarning {
             code: codes::CORRIDOR_TIGHT.into(),
             message: format!(
                 "“{name}” koridorunda kesit kurbun iç tarafında yarıçapa {}: {}{more}.",
-                if limit > 0.0 { format!("yaklaşıyor (pay {limit:.2} altında)") } else { "ulaşıyor ya da onu aşıyor".into() },
+                if limit > 0.0 {
+                    format!("yaklaşıyor (pay {limit:.2} altında)")
+                } else {
+                    "ulaşıyor ya da onu aşıyor".into()
+                },
                 words.join("; ")
             ),
             path: Some("margin".into()),
@@ -173,14 +228,27 @@ fn check(doc: &Document, def: &kentos_commands::CorridorDef, input: &CorridorsPr
             .map(|o| {
                 format!(
                     "km {} – {} ile km {} – {} ({:.1} m², aradaki kot {:.2}–{:.2} m)",
-                    o.first_text[0], o.first_text[1], o.second_text[0], o.second_text[1], o.area, o.least, o.most
+                    o.first_text[0],
+                    o.first_text[1],
+                    o.second_text[0],
+                    o.second_text[1],
+                    o.area,
+                    o.least,
+                    o.most
                 )
             })
             .collect();
-        let more = if over.len() > 6 { format!(" ve {} yer daha", over.len() - 6) } else { String::new() };
+        let more = if over.len() > 6 {
+            format!(" ve {} yer daha", over.len() - 6)
+        } else {
+            String::new()
+        };
         warnings.push(CommandWarning {
             code: codes::CORRIDOR_OVERLAP.into(),
-            message: format!("“{name}” koridorunun üst yüzeyi kendi üstüne biniyor: {}{more}.", words.join("; ")),
+            message: format!(
+                "“{name}” koridorunun üst yüzeyi kendi üstüne biniyor: {}{more}.",
+                words.join("; ")
+            ),
             path: Some("corridor".into()),
         });
     }
@@ -191,30 +259,65 @@ fn check(doc: &Document, def: &kentos_commands::CorridorDef, input: &CorridorsPr
             .map(|s| {
                 let mut parts = Vec::new();
                 if s.step > tolerance {
-                    parts.push(format!("kotta {:.3} m ({})", s.step, code_words(s.step_code.as_deref().unwrap_or_default())));
+                    parts.push(format!(
+                        "kotta {:.3} m ({})",
+                        s.step,
+                        code_words(s.step_code.as_deref().unwrap_or_default())
+                    ));
                 }
                 if s.shift > tolerance {
-                    parts.push(format!("planda {:.3} m ({})", s.shift, code_words(s.shift_code.as_deref().unwrap_or_default())));
+                    parts.push(format!(
+                        "planda {:.3} m ({})",
+                        s.shift,
+                        code_words(s.shift_code.as_deref().unwrap_or_default())
+                    ));
                 }
                 if !s.only_before.is_empty() {
-                    parts.push(format!("yalnız öncekinde {}", s.only_before.iter().map(|c| code_words(c)).collect::<Vec<_>>().join(", ")));
+                    parts.push(format!(
+                        "yalnız öncekinde {}",
+                        s.only_before
+                            .iter()
+                            .map(|c| code_words(c))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ));
                 }
                 if !s.only_after.is_empty() {
-                    parts.push(format!("yalnız sonrakinde {}", s.only_after.iter().map(|c| code_words(c)).collect::<Vec<_>>().join(", ")));
+                    parts.push(format!(
+                        "yalnız sonrakinde {}",
+                        s.only_after
+                            .iter()
+                            .map(|c| code_words(c))
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    ));
                 }
-                format!("km {} ({}. ve {}. bölge: {})", s.km, s.before + 1, s.after + 1, parts.join(", "))
+                format!(
+                    "km {} ({}. ve {}. bölge: {})",
+                    s.km,
+                    s.before + 1,
+                    s.after + 1,
+                    parts.join(", ")
+                )
             })
             .collect();
         warnings.push(CommandWarning {
             code: codes::CORRIDOR_SEAM.into(),
-            message: format!("“{name}” koridorunun bölgeleri buluşmuyor: {}.", words.join("; ")),
+            message: format!(
+                "“{name}” koridorunun bölgeleri buluşmuyor: {}.",
+                words.join("; ")
+            ),
             path: Some("regions".into()),
         });
     }
     let clear = tight.is_empty() && folds.is_empty() && over.is_empty() && apart.is_empty();
     let out = CorridorPreflight {
         corridor: def.id.clone(),
-        crosses: made.regions.iter().map(|r| r.crosses.iter().filter(|c| c.section.is_some()).count()).sum::<usize>() as u32,
+        crosses: made
+            .regions
+            .iter()
+            .map(|r| r.crosses.iter().filter(|c| c.section.is_some()).count())
+            .sum::<usize>() as u32,
         strips: made.built.strips.len() as u32,
         triangles: made.built.triangles.len() as u32,
         least: least.map(|m| m.margin),
@@ -231,13 +334,19 @@ fn check(doc: &Document, def: &kentos_commands::CorridorDef, input: &CorridorsPr
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &CorridorsPreflight) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &CorridorsPreflight) -> CommandResult<CorridorPreflight> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &CorridorsPreflight,
+) -> CommandResult<CorridorPreflight> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -245,13 +354,29 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CorridorsPreflight) -> CommandRes
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: CorridorsPreflight) -> CommandResult<CorridorPreflight> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CorridorsPreflight,
+) -> CommandResult<CorridorPreflight> {
     plan(cx, &input)
 }
 
 /// The check of a corridor as typed in the Koridor window (perhaps not saved): a slope transition typed shows what
 /// it does to the seam before it is written (docs/adr/0960).
-pub fn preview_of(doc: &Document, def: &kentos_commands::CorridorDef, margin: Option<f64>) -> Result<(CorridorPreflight, Vec<CommandWarning>), String> {
+pub fn preview_of(
+    doc: &Document,
+    def: &kentos_commands::CorridorDef,
+    margin: Option<f64>,
+) -> Result<(CorridorPreflight, Vec<CommandWarning>), String> {
     common::road_project(doc).map_err(common::words)?;
-    check(doc, def, &CorridorsPreflight { corridor: def.id.clone(), margin, tolerance: None }).map_err(common::words)
+    check(
+        doc,
+        def,
+        &CorridorsPreflight {
+            corridor: def.id.clone(),
+            margin,
+            tolerance: None,
+        },
+    )
+    .map_err(common::words)
 }

@@ -8,11 +8,12 @@
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::entity::Entity;
+use kentos_geometry_core::jsmath::js_hypot;
 use kentos_geometry_core::ops::subref::{
-    Followed, Place, follow, follow_in, follow_path, follow_range, place_in, point, point_in, range_length,
+    Followed, Place, follow, follow_in, follow_path, follow_range, place_in, point, point_in,
+    range_length,
 };
 use kentos_geometry_core::vec2::Vec2;
-use kentos_geometry_core::jsmath::js_hypot;
 use serde_json::Value;
 use serde_json::json;
 
@@ -324,7 +325,12 @@ fn a_click_falls_on_the_sub_object_the_reference_names() {
     let cases: Value = serde_json::from_str(CASES).expect("the cases");
     let nears = cases["nears"].as_array().expect("nears");
     assert!(nears.len() >= 15);
-    let at = |c: &Value| Vec2::new(c["at"]["x"].as_f64().unwrap(), c["at"]["y"].as_f64().unwrap());
+    let at = |c: &Value| {
+        Vec2::new(
+            c["at"]["x"].as_f64().unwrap(),
+            c["at"]["y"].as_f64().unwrap(),
+        )
+    };
     for c in nears {
         let name = c["name"].as_str().unwrap();
         let tol = c["tolerance"].as_f64().unwrap();
@@ -338,7 +344,12 @@ fn a_click_falls_on_the_sub_object_the_reference_names() {
     for c in cases["pieceNears"].as_array().expect("piece nears") {
         let name = c["name"].as_str().unwrap();
         let tol = c["tolerance"].as_f64().unwrap();
-        let got = place_near_in(&blocks(&c["definitions"]), &entity(&c["insert"]), at(c), tol);
+        let got = place_near_in(
+            &blocks(&c["definitions"]),
+            &entity(&c["insert"]),
+            at(c),
+            tol,
+        );
         let want = &c["expect"];
         match (got, want.is_null()) {
             (None, true) => {}
@@ -360,7 +371,13 @@ fn a_wall_face_place_follows_a_new_width() {
     use kentos_geometry_core::ops::subref::{Followed, Place, follow, place_at, point};
     use kentos_geometry_core::store::snap::SnapKind;
     let wall = |width: f64| {
-        let spec = Spec::read_flat(&Json::parse(&format!(r#"{{"width":{width},"justify":"center","closed":true}}"#)).unwrap()).unwrap();
+        let spec = Spec::read_flat(
+            &Json::parse(&format!(
+                r#"{{"width":{width},"justify":"center","closed":true}}"#
+            ))
+            .unwrap(),
+        )
+        .unwrap();
         kentos_geometry_core::entity::Entity::new(kentos_geometry_core::entity::Shape::Wall {
             pts: vec![
                 kentos_geometry_core::Vec2::new(0.0, 0.0),
@@ -376,16 +393,36 @@ fn a_wall_face_place_follows_a_new_width() {
     // The inner face (left of a counter-clockwise ring) at the second vertex.
     let corner = kentos_geometry_core::Vec2::new(4.9, 0.1);
     let place = place_at(&before, SnapKind::Endpoint, corner).unwrap();
-    assert_eq!(place, Place::Vertex { part: 0, ring: 0, index: 1 });
+    assert_eq!(
+        place,
+        Place::Vertex {
+            part: 0,
+            ring: 0,
+            index: 1
+        }
+    );
     let after = wall(0.3);
     match follow(place, &before, Some(&after)) {
         Followed::At(p, at) => {
             assert_eq!(p, place);
-            assert!((at.x - 4.85).abs() < 1e-12 && (at.y - 0.15).abs() < 1e-12, "{at:?}");
+            assert!(
+                (at.x - 4.85).abs() < 1e-12 && (at.y - 0.15).abs() < 1e-12,
+                "{at:?}"
+            );
         }
         other => panic!("{other:?}"),
     }
-    assert!(point(&after, Place::Mid { part: 1, ring: 0, index: 0 }).is_some());
+    assert!(
+        point(
+            &after,
+            Place::Mid {
+                part: 1,
+                ring: 0,
+                index: 0
+            }
+        )
+        .is_some()
+    );
 }
 
 #[test]
@@ -657,13 +694,28 @@ fn nonclamped_nurbs_end_references_are_evaluated_curve_ends_not_control_points()
 /// reference on its first corner follows to vertex 0, not broken as two places; on another corner it follows as before.
 #[test]
 fn the_first_corner_and_its_closing_repeat_are_one_corner() {
-    let before = entity(&json!({"kind": "polygon", "pts": [{"x":0,"y":0},{"x":30,"y":0},{"x":30,"y":10},{"x":0,"y":10}]}));
-    let after = entity(&json!({"kind": "polyline", "pts": [{"x":0,"y":0},{"x":30,"y":0},{"x":30,"y":10},{"x":0,"y":10},{"x":0,"y":0}]}));
-    let first = Place::Vertex { part: 0, ring: 0, index: 0 };
+    let before = entity(
+        &json!({"kind": "polygon", "pts": [{"x":0,"y":0},{"x":30,"y":0},{"x":30,"y":10},{"x":0,"y":10}]}),
+    );
+    let after = entity(
+        &json!({"kind": "polyline", "pts": [{"x":0,"y":0},{"x":30,"y":0},{"x":30,"y":10},{"x":0,"y":10},{"x":0,"y":0}]}),
+    );
+    let first = Place::Vertex {
+        part: 0,
+        ring: 0,
+        index: 0,
+    };
     match follow(first, &before, Some(&after)) {
         Followed::At(Place::Vertex { index: 0, .. }, p) => assert_eq!((p.x, p.y), (0.0, 0.0)),
         other => panic!("the first corner: {other:?}"),
     }
-    let second = Place::Vertex { part: 0, ring: 0, index: 1 };
-    assert!(matches!(follow(second, &before, Some(&after)), Followed::At(Place::Vertex { index: 1, .. }, _)));
+    let second = Place::Vertex {
+        part: 0,
+        ring: 0,
+        index: 1,
+    };
+    assert!(matches!(
+        follow(second, &before, Some(&after)),
+        Followed::At(Place::Vertex { index: 1, .. }, _)
+    ));
 }

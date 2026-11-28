@@ -68,7 +68,11 @@ pub(crate) fn same_appearance(a: &InsertEntity, b: &InsertEntity) -> bool {
         && a.base.look == b.base.look
 }
 
-pub(crate) fn prototype<'a>(doc: &'a Document, uid: Uuid, path: &str) -> Result<&'a InsertEntity, Stop> {
+pub(crate) fn prototype<'a>(
+    doc: &'a Document,
+    uid: Uuid,
+    path: &str,
+) -> Result<&'a InsertEntity, Stop> {
     let source = insert(doc, uid, path)?;
     if !plain(source) {
         return Err(refused(

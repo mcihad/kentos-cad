@@ -27,30 +27,40 @@ fn dimension_object_association_loss_is_reported_in_every_export_form_and_metada
     for form in [DxfForm::Native, DxfForm::Block] {
         for metadata in [false, true] {
             let mut entity = dimensions().remove(0);
-            let Entity::Dimension(dimension) = &mut entity else { unreachable!() };
-            dimension.refs = Some(serde_json::from_value(serde_json::json!({
-                "a":{"uid":"0192f5a1-2900-7000-8000-0000000000d1","place":{"kind":"start"}},
-                "b":{"uid":"0192f5a1-2900-7000-8000-0000000000d1","place":{"kind":"end"}}
-            })).unwrap());
+            let Entity::Dimension(dimension) = &mut entity else {
+                unreachable!()
+            };
+            dimension.refs = Some(
+                serde_json::from_value(serde_json::json!({
+                    "a":{"uid":"0192f5a1-2900-7000-8000-0000000000d1","place":{"kind":"start"}},
+                    "b":{"uid":"0192f5a1-2900-7000-8000-0000000000d1","place":{"kind":"end"}}
+                }))
+                .unwrap(),
+            );
             let mut i = input(vec![entity]);
             i.annotations.dimensions = form;
             i.annotations.metadata = metadata;
             let before = serde_json::to_value(&i).unwrap();
-            let (text,report) = write(&i);
+            let (text, report) = write(&i);
             let warning = report.notes.iter().find(|n| n.what == "Ölçü bağı").unwrap();
-            assert_eq!(warning.count,1);
-            assert_eq!(warning.severity,Some(ReportSeverity::Warning));
-            assert_eq!(warning.reason,dxf::DIMENSION_REFERENCE_LOSS);
-            assert_eq!(serde_json::to_value(&i).unwrap(),before);
+            assert_eq!(warning.count, 1);
+            assert_eq!(warning.severity, Some(ReportSeverity::Warning));
+            assert_eq!(warning.reason, dxf::DIMENSION_REFERENCE_LOSS);
+            assert_eq!(serde_json::to_value(&i).unwrap(), before);
             let back = read(&text);
-            assert!(back.entities.iter().all(|e| !matches!(e, Entity::Dimension(d) if d.refs.is_some())));
-            let Entity::Dimension(d) = &mut i.entities[0] else { unreachable!() };
+            assert!(
+                back.entities
+                    .iter()
+                    .all(|e| !matches!(e, Entity::Dimension(d) if d.refs.is_some()))
+            );
+            let Entity::Dimension(d) = &mut i.entities[0] else {
+                unreachable!()
+            };
             d.refs = None;
             assert!(!write(&i).1.notes.iter().any(|n| n.what == "Ölçü bağı"));
         }
     }
 }
-
 
 /// The report's notes but the one each table, dimension and leader gets of how it was written (docs/adr/0327 §6).
 fn other_notes(r: &ExportReport) -> Vec<&kentos_contracts::ReportItem> {
@@ -625,10 +635,7 @@ fn every_kind_reads_back_as_the_same_object() {
         .iter()
         .map(|f| (f.label.as_str(), f.value.as_str()))
         .collect();
-    assert!(
-        facts.contains(&("Sürüm", "DXF 2007 (AC1021)")),
-        "{facts:?}"
-    );
+    assert!(facts.contains(&("Sürüm", "DXF 2007 (AC1021)")), "{facts:?}");
     assert!(facts.contains(&("Karakter kodlaması", "UTF-8")));
     assert!(facts.contains(&("Birim ($INSUNITS)", "metre")));
     // The writer's own report: every object by kind, the holes said.
@@ -2452,7 +2459,10 @@ fn an_attrib_edited_elsewhere_wins() {
         .expect("Direk's first insert");
     let data: Vec<&str> = first.iter().filter(|g| g.0 == 1000).map(|g| g.1).collect();
     assert!(
-        data.contains(&"Bakım") && !data.contains(&"Malzeme") && !data.contains(&"No") && !data.contains(&"Tür"),
+        data.contains(&"Bakım")
+            && !data.contains(&"Malzeme")
+            && !data.contains(&"No")
+            && !data.contains(&"Tür"),
         "{data:?}"
     );
     // Another program sets its No to 8.
@@ -2478,7 +2488,12 @@ fn an_attrib_edited_elsewhere_wins() {
     let values = insert_values(&back, "Direk");
     assert_eq!(
         values[0],
-        [("Kol boyu", "2.5 m"), ("Malzeme", "Çelik"), ("No", "7"), ("Tür", "LED")]
+        [
+            ("Kol boyu", "2.5 m"),
+            ("Malzeme", "Çelik"),
+            ("No", "7"),
+            ("Tür", "LED")
+        ]
     );
 }
 
@@ -2493,44 +2508,80 @@ fn an_attrib_edited_elsewhere_wins() {
 #[test]
 fn attributes_without_a_definition_go_out_as_invisible_attribs() {
     let mut input = blocks_input();
-    let Entity::Insert(first) = &mut input.entities[0] else { panic!("Direk's first insert") };
+    let Entity::Insert(first) = &mut input.entities[0] else {
+        panic!("Direk's first insert")
+    };
     first.base.attrs.insert("Bakım notu".into(), "2026".into());
     first.base.attrs.insert("NOT".into(), "a".into());
     first.base.attrs.insert("Not".into(), "b".into());
-    first.base.attrs.insert("Açıklama".into(), "iki\nsatır".into());
+    first
+        .base
+        .attrs
+        .insert("Açıklama".into(), "iki\nsatır".into());
     let given = first.base.attrs.clone();
     let (text, report) = write(&input);
     let p = pairs(&text);
-    let insert_at = p.iter().position(|g| *g == (0, "INSERT")).expect("an INSERT");
+    let insert_at = p
+        .iter()
+        .position(|g| *g == (0, "INSERT"))
+        .expect("an INSERT");
     let after = &p[insert_at + 1..];
-    let seqend = after.iter().position(|g| *g == (0, "SEQEND")).expect("its SEQEND");
+    let seqend = after
+        .iter()
+        .position(|g| *g == (0, "SEQEND"))
+        .expect("its SEQEND");
     let attribs: Vec<Vec<(i32, &str)>> = entities_of(&after[..seqend], "ATTRIB");
     let invisible: Vec<(&str, &str)> = attribs
         .iter()
         .filter(|a| group(a, 70) == Some("1"))
-        .map(|a| (group(a, 2).unwrap_or_default(), group(a, 1).unwrap_or_default()))
+        .map(|a| {
+            (
+                group(a, 2).unwrap_or_default(),
+                group(a, 1).unwrap_or_default(),
+            )
+        })
         .collect();
     assert_eq!(
         invisible,
-        [("Bakım_notu", "2026"), ("Malzeme", "Çelik"), ("NOT", "a"), ("Not_2", "b")],
+        [
+            ("Bakım_notu", "2026"),
+            ("Malzeme", "Çelik"),
+            ("NOT", "a"),
+            ("Not_2", "b")
+        ],
         "the two lines' value is not one line"
     );
     assert!(
-        report.notes.iter().any(|n| n.what == "Öznitelik" && n.reason.contains("yalnız KentOS verisinde kaldı")),
+        report
+            .notes
+            .iter()
+            .any(|n| n.what == "Öznitelik" && n.reason.contains("yalnız KentOS verisinde kaldı")),
         "{:?}",
         report.notes
     );
-    let renamed = report.notes.iter().filter(|n| n.what == "Öznitelik etiketi" && n.reason.contains("KentOS geri okurken düzeltir")).count();
+    let renamed = report
+        .notes
+        .iter()
+        .filter(|n| {
+            n.what == "Öznitelik etiketi" && n.reason.contains("KentOS geri okurken düzeltir")
+        })
+        .count();
     // The two extra names and the definition's Kol boyu (docs/adr/4800).
     assert_eq!(renamed, 3, "{:?}", report.notes);
     let back = read(&text);
     let values = insert_values(&back, "Direk");
     // Every attribute back as it was; and, as before, the definition's default shown (Kol boyu, its name back by docs/adr/4800) as the insert's value.
-    let mut want: Vec<(&str, &str)> = given.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    let mut want: Vec<(&str, &str)> = given
+        .iter()
+        .map(|(k, v)| (k.as_str(), v.as_str()))
+        .collect();
     want.push(("Kol boyu", "2.5 m"));
     want.sort_unstable();
     assert_eq!(values[0], want, "every attribute back as it was");
-    assert!(!back.entities.iter().any(|e| matches!(e, Entity::Text(_))), "no ATTRIB comes back as a text");
+    assert!(
+        !back.entities.iter().any(|e| matches!(e, Entity::Text(_))),
+        "no ATTRIB comes back as a text"
+    );
 }
 
 /// docs/adr/4380: a name with a space goes out under its tag (“Bakım_notu”), the name in KentOS's data; read back,
@@ -2544,10 +2595,19 @@ fn a_tag_written_for_a_name_comes_back_by_kentos_data_and_the_file_wins() {
         i.base.attrs.insert("Bakım notu".into(), "2026".into());
     }
     let (text, _) = write(&input);
-    assert!(text.contains("  2\r\nBakım_notu\r\n 70\r\n1\r\n"), "its invisible ATTRIB under its tag");
-    assert!(text.contains("1000\r\ntagname\r\n1000\r\nBakım_notu\r\n1000\r\nBakım notu\r\n"), "its name in KentOS's data");
+    assert!(
+        text.contains("  2\r\nBakım_notu\r\n 70\r\n1\r\n"),
+        "its invisible ATTRIB under its tag"
+    );
+    assert!(
+        text.contains("1000\r\ntagname\r\n1000\r\nBakım_notu\r\n1000\r\nBakım notu\r\n"),
+        "its name in KentOS's data"
+    );
     let value = |back: &ImportResult, k: &str| {
-        insert_values(back, "Direk")[0].iter().find(|(n, _)| *n == k).map(|(_, v)| v.to_string())
+        insert_values(back, "Direk")[0]
+            .iter()
+            .find(|(n, _)| *n == k)
+            .map(|(_, v)| v.to_string())
     };
     let back = read(&text);
     assert_eq!(value(&back, "Bakım notu").as_deref(), Some("2026"));
@@ -2561,14 +2621,20 @@ fn a_tag_written_for_a_name_comes_back_by_kentos_data_and_the_file_wins() {
     assert_eq!(value(&read(&upper), "Bakım notu").as_deref(), Some("2026"));
     // Deleted elsewhere: the ATTRIB's groups gone, the attribute gone.
     let start = text.find("  2\r\nBakım_notu\r\n").expect("its tag");
-    let begin = text[..start].rfind("  0\r\nATTRIB\r\n").expect("its ATTRIB");
+    let begin = text[..start]
+        .rfind("  0\r\nATTRIB\r\n")
+        .expect("its ATTRIB");
     let end = begin + 1 + text[begin + 1..].find("  0\r\n").expect("the next entity");
     let deleted = format!("{}{}", &text[..begin], &text[end..]);
     let back = read(&deleted);
     assert_eq!(value(&back, "Bakım notu"), None);
     assert_eq!(value(&back, "Bakım_notu"), None);
     // KentOS's data names it No, which an ATTRIB holds: No stays the file's 7, the tag keeps its value.
-    let clash = text.replacen("1000\r\nBakım_notu\r\n1000\r\nBakım notu\r\n", "1000\r\nBakım_notu\r\n1000\r\nNo\r\n", 1);
+    let clash = text.replacen(
+        "1000\r\nBakım_notu\r\n1000\r\nBakım notu\r\n",
+        "1000\r\nBakım_notu\r\n1000\r\nNo\r\n",
+        1,
+    );
     assert_ne!(clash, text);
     let back = read(&clash);
     assert_eq!(value(&back, "No").as_deref(), Some("7"));
@@ -2584,7 +2650,11 @@ fn a_tag_written_for_a_name_comes_back_by_kentos_data_and_the_file_wins() {
 fn a_definition_s_tag_comes_back_by_its_attdef_s_kentos_data_and_the_file_wins() {
     let (text, _) = write(&blocks_input());
     let record = "1001\r\nKENTOS\r\n1002\r\n{\r\n1000\r\ntagname\r\n1000\r\nKol_boyu\r\n1000\r\nKol boyu\r\n1002\r\n}\r\n";
-    assert_eq!(text.matches(record).count(), 1, "the name in Kol_boyu's ATTDEF alone");
+    assert_eq!(
+        text.matches(record).count(),
+        1,
+        "the name in Kol_boyu's ATTDEF alone"
+    );
     let attdef = text.find("  0\r\nATTDEF\r\n").expect("an ATTDEF");
     let no_record = |s: &str| !s.contains("tagname");
     let p = pairs(&text);
@@ -2592,12 +2662,25 @@ fn a_definition_s_tag_comes_back_by_its_attdef_s_kentos_data_and_the_file_wins()
         let own = d.iter().any(|g| g.0 == 1000 && g.1 == "tagname");
         assert_eq!(own, group(&d, 2) == Some("Kol_boyu"), "{:?}", group(&d, 2));
     }
-    assert!(no_record(&text[..attdef]), "no record before the definitions");
+    assert!(
+        no_record(&text[..attdef]),
+        "no record before the definitions"
+    );
     let tags = |r: &ImportResult| -> Vec<String> {
-        r.blocks.iter().find(|b| b.name == "Direk").expect("Direk").attributes.iter().map(|a| a.tag.clone()).collect()
+        r.blocks
+            .iter()
+            .find(|b| b.name == "Direk")
+            .expect("Direk")
+            .attributes
+            .iter()
+            .map(|a| a.tag.clone())
+            .collect()
     };
     let first = |r: &ImportResult, k: &str| {
-        insert_values(r, "Direk")[0].iter().find(|(n, _)| *n == k).map(|(_, v)| v.to_string())
+        insert_values(r, "Direk")[0]
+            .iter()
+            .find(|(n, _)| *n == k)
+            .map(|(_, v)| v.to_string())
     };
     let back = read(&text);
     assert_eq!(tags(&back), ["No", "Tür", "Kol boyu"]);
@@ -2616,7 +2699,12 @@ fn a_definition_s_tag_comes_back_by_its_attdef_s_kentos_data_and_the_file_wins()
     assert_eq!(first(&back, "KOL_UZUNLUK").as_deref(), Some("2.5 m"));
     assert_eq!(first(&back, "Kol boyu"), None);
     assert!(
-        back.report.notes.iter().any(|n| n.what == "Öznitelik etiketi" && n.reason.contains("“KOL_UZUNLUK” etiketi KentOS'un yazdığı “Kol_boyu” değil")),
+        back.report
+            .notes
+            .iter()
+            .any(|n| n.what == "Öznitelik etiketi"
+                && n.reason
+                    .contains("“KOL_UZUNLUK” etiketi KentOS'un yazdığı “Kol_boyu” değil")),
         "{:?}",
         back.report.notes
     );
@@ -2626,7 +2714,10 @@ fn a_definition_s_tag_comes_back_by_its_attdef_s_kentos_data_and_the_file_wins()
     assert_eq!(tags(&back), ["No", "Tür", "Kol_boyu"]);
     assert_eq!(first(&back, "Kol_boyu").as_deref(), Some("2.5 m"));
     // The record names it No, an ATTDEF's tag: the tag stays.
-    let clash = text.replace("1000\r\nKol_boyu\r\n1000\r\nKol boyu\r\n", "1000\r\nKol_boyu\r\n1000\r\nNo\r\n");
+    let clash = text.replace(
+        "1000\r\nKol_boyu\r\n1000\r\nKol boyu\r\n",
+        "1000\r\nKol_boyu\r\n1000\r\nNo\r\n",
+    );
     let back = read(&clash);
     assert_eq!(tags(&back), ["No", "Tür", "Kol_boyu"]);
     assert_eq!(first(&back, "No").as_deref(), Some("7"));
@@ -3640,7 +3731,9 @@ fn complex_linetype_exports_its_actual_style_handle_fixed_height_and_degree_angl
     assert!(
         text.lines()
             .collect::<Vec<_>>()
-            .as_chunks::<2>().0.iter()
+            .as_chunks::<2>()
+            .0
+            .iter()
             .any(|p| p[0].trim() == "50" && p[1].parse::<f64>().ok() == Some(90.)),
         "raw DXF angle must be degrees"
     );
@@ -3742,10 +3835,20 @@ fn a_leaders_arms_read_back_as_they_were() {
         .expect("a noted leader");
     let p = first.pts[0];
     first.arms = vec![
-        kentos_contracts::LeaderArm { pts: vec![v(p.x + 3.0, p.y - 2.0)], tip: None },
-        kentos_contracts::LeaderArm { pts: vec![v(p.x - 1.5, p.y + 4.0), v(p.x + 0.5, p.y + 5.0)], tip: None },
+        kentos_contracts::LeaderArm {
+            pts: vec![v(p.x + 3.0, p.y - 2.0)],
+            tip: None,
+        },
+        kentos_contracts::LeaderArm {
+            pts: vec![v(p.x - 1.5, p.y + 4.0), v(p.x + 0.5, p.y + 5.0)],
+            tip: None,
+        },
     ];
-    let one = DxfWriteInput { entities: vec![Entity::Leader(first.clone())], blocks: Vec::new(), ..input };
+    let one = DxfWriteInput {
+        entities: vec![Entity::Leader(first.clone())],
+        blocks: Vec::new(),
+        ..input
+    };
     let (text, report) = write(&one);
     assert_eq!(entities_of(&pairs(&text), "LEADER").len(), 3);
     assert!(other_notes(&report).is_empty(), "{:?}", report.notes);
@@ -3771,7 +3874,10 @@ fn annotations_come_back_by_the_form_and_data_they_were_written_with() {
     use kentos_contracts::{DxfAnnotations, DxfForm};
     let kinds = |r: &ImportResult, k: &str| r.entities.iter().filter(|e| e.kind() == k).count();
     // Dimensions and leaders as blocks, with KentOS's data.
-    for (name, kind, what) in [("dimensions", "dimension", "Ölçü"), ("leaders", "leader", "Kılavuz")] {
+    for (name, kind, what) in [
+        ("dimensions", "dimension", "Ölçü"),
+        ("leaders", "leader", "Kılavuz"),
+    ] {
         let mut input = fixture_input(name);
         input.annotations = DxfAnnotations {
             dimensions: DxfForm::Block,
@@ -3788,9 +3894,16 @@ fn annotations_come_back_by_the_form_and_data_they_were_written_with() {
             .flat_map(|b| &b.entities)
             .filter(|e| matches!(e.kind(), "dimension" | "leader"))
             .count();
-        assert_eq!(entities_of(&p, "DIMENSION").len() + entities_of(&p, "LEADER").len(), inside, "{name}");
+        assert_eq!(
+            entities_of(&p, "DIMENSION").len() + entities_of(&p, "LEADER").len(),
+            inside,
+            "{name}"
+        );
         assert!(
-            report.notes.iter().any(|n| n.what == what && n.reason.starts_with("blok görünüşü olarak")),
+            report
+                .notes
+                .iter()
+                .any(|n| n.what == what && n.reason.starts_with("blok görünüşü olarak")),
             "{:?}",
             report.notes
         );
@@ -3798,13 +3911,33 @@ fn annotations_come_back_by_the_form_and_data_they_were_written_with() {
         assert_eq!(kinds(&r, kind), n, "{name}: {:?}", r.report);
         let geometry = |e: &Entity| {
             let mut v = serde_json::to_value(e).expect("JSON");
-            for k in ["id", "layerId", "attrs", "label", "color", "lineWeight", "refs", "tip", "blocks"] {
+            for k in [
+                "id",
+                "layerId",
+                "attrs",
+                "label",
+                "color",
+                "lineWeight",
+                "refs",
+                "tip",
+                "blocks",
+            ] {
                 v.as_object_mut().expect("object").remove(k);
             }
             v
         };
-        let wrote: Vec<serde_json::Value> = input.entities.iter().filter(|e| e.kind() == kind).map(geometry).collect();
-        let back: Vec<serde_json::Value> = r.entities.iter().filter(|e| e.kind() == kind).map(geometry).collect();
+        let wrote: Vec<serde_json::Value> = input
+            .entities
+            .iter()
+            .filter(|e| e.kind() == kind)
+            .map(geometry)
+            .collect();
+        let back: Vec<serde_json::Value> = r
+            .entities
+            .iter()
+            .filter(|e| e.kind() == kind)
+            .map(geometry)
+            .collect();
         assert_eq!(wrote, back, "{name}");
     }
     // A table without KentOS's data: its block, no table.
@@ -3815,7 +3948,10 @@ fn annotations_come_back_by_the_form_and_data_they_were_written_with() {
     };
     let (text, report) = write(&input);
     assert!(
-        report.notes.iter().any(|n| n.what == "Tablo" && n.reason.contains("KentOS verisi olmadan")),
+        report
+            .notes
+            .iter()
+            .any(|n| n.what == "Tablo" && n.reason.contains("KentOS verisi olmadan")),
         "{:?}",
         report.notes
     );
@@ -3825,7 +3961,11 @@ fn annotations_come_back_by_the_form_and_data_they_were_written_with() {
     let mut input = fixture_input("dimensions");
     input.annotations.metadata = false;
     let (text, _) = write(&input);
-    let n = input.entities.iter().filter(|e| e.kind() == "dimension").count();
+    let n = input
+        .entities
+        .iter()
+        .filter(|e| e.kind() == "dimension")
+        .count();
     let r = read(&text);
     // What DXF cannot say of a dimension KentOS draws its own way comes in as its lines and texts, and is said.
     let exploded: u32 = r
@@ -3835,7 +3975,12 @@ fn annotations_come_back_by_the_form_and_data_they_were_written_with() {
         .filter(|n| n.what == "Ölçü (DIMENSION)")
         .map(|n| n.count)
         .sum();
-    assert_eq!(kinds(&r, "dimension") + exploded as usize, n, "{:?}", r.report);
+    assert_eq!(
+        kinds(&r, "dimension") + exploded as usize,
+        n,
+        "{:?}",
+        r.report
+    );
     assert!(kinds(&r, "dimension") >= 4);
 }
 
@@ -3924,13 +4069,32 @@ fn a_hatch_boundary_goes_out_and_comes_back_exact() {
             match (a, b) {
                 (None, None) => {}
                 (
-                    Some(HatchCurve::Ellipse { c, major, ratio, t0, t1 }),
-                    Some(HatchCurve::Ellipse { c: c2, major: m2, ratio: r2, t0: s0, t1: s1 }),
+                    Some(HatchCurve::Ellipse {
+                        c,
+                        major,
+                        ratio,
+                        t0,
+                        t1,
+                    }),
+                    Some(HatchCurve::Ellipse {
+                        c: c2,
+                        major: m2,
+                        ratio: r2,
+                        t0: s0,
+                        t1: s1,
+                    }),
                 ) => {
                     assert!(near(*c, c2) && near(*major, m2) && (ratio - r2).abs() < 1e-12);
                     assert!(((t1 - t0) - (s1 - s0)).abs() < 1e-9, "{t0} {t1}");
                 }
-                (Some(HatchCurve::Nurbs { ctrl, weights, .. }), Some(HatchCurve::Nurbs { ctrl: c2, weights: w2, .. })) => {
+                (
+                    Some(HatchCurve::Nurbs { ctrl, weights, .. }),
+                    Some(HatchCurve::Nurbs {
+                        ctrl: c2,
+                        weights: w2,
+                        ..
+                    }),
+                ) => {
                     assert!(ctrl.iter().zip(&c2).all(|(a, b)| near(*a, *b)));
                     assert_eq!(weights.as_deref(), w2.as_deref());
                 }
@@ -3973,7 +4137,10 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
             justify: Default::default(),
             offset: 0.0,
             style: None,
-            components: vec![component("Tuğla", None, Some("ANSI31")), component("Sıva", Some(0.03), None)],
+            components: vec![
+                component("Tuğla", None, Some("ANSI31")),
+                component("Sıva", Some(0.03), None),
+            ],
             caps: Default::default(),
             fill: Some("#5A5A5A".into()),
             height: None,
@@ -3987,9 +4154,15 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
     let mut whole = input(vec![wall.clone()]);
     whole.wall_detail = Some(WallDetail::Standard);
     let (text, report) = write(&whole);
-    assert!(report.notes.iter().any(|n| n.what == "Duvar"), "{:?}", report.notes);
+    assert!(
+        report.notes.iter().any(|n| n.what == "Duvar"),
+        "{:?}",
+        report.notes
+    );
     let back = read(&text);
-    let Entity::Wall(sent) = &wall else { unreachable!() };
+    let Entity::Wall(sent) = &wall else {
+        unreachable!()
+    };
     assert!(
         matches!(back.entities.as_slice(), [Entity::Wall(w)] if w.wall == sent.wall),
         "{:?}",
@@ -4001,24 +4174,52 @@ fn a_wall_goes_out_as_its_pieces_at_its_detail() {
         i.wall_detail = Some(detail);
         i.annotations.metadata = false;
         let (text, report) = write(&i);
-        assert!(report.notes.iter().any(|n| n.what == "Duvar"), "{:?}", report.notes);
+        assert!(
+            report.notes.iter().any(|n| n.what == "Duvar"),
+            "{:?}",
+            report.notes
+        );
         let r = read(&text);
         let mut kinds: Vec<String> = r
             .entities
             .iter()
-            .map(|e| serde_json::to_value(e).unwrap()["kind"].as_str().unwrap().to_owned())
+            .map(|e| {
+                serde_json::to_value(e).unwrap()["kind"]
+                    .as_str()
+                    .unwrap()
+                    .to_owned()
+            })
             .collect();
         kinds.sort();
         (r, kinds)
     };
     let (r, standard) = kinds(WallDetail::Standard);
     assert!(standard.iter().any(|k| k == "hatch"), "{standard:?}");
-    assert!(standard.iter().filter(|k| *k == "polyline" || *k == "line").count() >= 4, "{standard:?}");
-    let ansi = r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.pattern.name.as_deref() == Some("ANSI31")));
+    assert!(
+        standard
+            .iter()
+            .filter(|k| *k == "polyline" || *k == "line")
+            .count()
+            >= 4,
+        "{standard:?}"
+    );
+    let ansi = r
+        .entities
+        .iter()
+        .any(|e| matches!(e, Entity::Hatch(h) if h.pattern.name.as_deref() == Some("ANSI31")));
     assert!(ansi, "the brick's hatch");
     let (r, schematic) = kinds(WallDetail::Schematic);
-    assert!(r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.pattern.kind == HatchPatternType::Solid)), "{schematic:?}");
-    assert!(!r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.pattern.name.as_deref() == Some("ANSI31"))));
+    assert!(
+        r.entities
+            .iter()
+            .any(|e| matches!(e, Entity::Hatch(h) if h.pattern.kind == HatchPatternType::Solid)),
+        "{schematic:?}"
+    );
+    assert!(
+        !r.entities
+            .iter()
+            .any(|e| matches!(e, Entity::Hatch(h) if h.pattern.name.as_deref() == Some("ANSI31")))
+    );
 }
 
 /// Walls with a tadilat durumu (docs/adr/8039 §4): each wall's lines on its layer's state layer, the iptal one dashed
@@ -4255,7 +4456,8 @@ fn a_text_in_kentos_s_own_face_is_as_wide_in_arial_as_kentos_draws_it() {
                 bold,
                 font,
                 ..Default::default()
-            }.into(),
+            }
+            .into(),
             path: None,
         })
     };
@@ -4316,9 +4518,19 @@ fn a_text_in_kentos_s_own_face_is_as_wide_in_arial_as_kentos_draws_it() {
 /// object whole: none comes as its block's lines with “KentOS verisi okunamadı”.
 #[test]
 fn kentos_architectural_objects_read_back_whole() {
-    let bytes = std::fs::read(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/formats/v1/dxf-arch/mimari.dxf"))
-        .expect("the fixture");
-    let r = dxf::read(&bytes, &DxfReadOptions { unit: Some(DrawingUnit::M), ..DxfReadOptions::default() }).expect("reads");
+    let bytes = std::fs::read(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/formats/v1/dxf-arch/mimari.dxf"
+    ))
+    .expect("the fixture");
+    let r = dxf::read(
+        &bytes,
+        &DxfReadOptions {
+            unit: Some(DrawingUnit::M),
+            ..DxfReadOptions::default()
+        },
+    )
+    .expect("reads");
     let broken: Vec<_> = r
         .report
         .notes
@@ -4327,7 +4539,10 @@ fn kentos_architectural_objects_read_back_whole() {
         .filter(|n| n.reason.contains("okunamadı"))
         .collect();
     assert!(broken.is_empty(), "{broken:?}");
-    assert!(r.entities.iter().any(|e| matches!(e, Entity::Stair(_))), "the stair whole");
+    assert!(
+        r.entities.iter().any(|e| matches!(e, Entity::Stair(_))),
+        "the stair whole"
+    );
 }
 
 /// UR-085: a hatch written with the circle it follows keeps its tie and is not said to lose it; written without the
@@ -4352,23 +4567,49 @@ fn a_hatch_written_with_its_boundary_is_not_said_untied() {
     }))
     .expect("a hatch");
     let mut with = input(vec![circle, hatch.clone()]);
-    with.uids.insert(1, kentos_contracts::EntityId::parse(circle_uid).expect("a uid"));
-    with.uids.insert(2, kentos_contracts::EntityId::parse("0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c02").expect("a uid"));
+    with.uids.insert(
+        1,
+        kentos_contracts::EntityId::parse(circle_uid).expect("a uid"),
+    );
+    with.uids.insert(
+        2,
+        kentos_contracts::EntityId::parse("0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c02").expect("a uid"),
+    );
     let (text, report) = write(&with);
-    assert!(report.notes.iter().all(|n| n.what != "Tarama"), "{:?}", report.notes);
+    assert!(
+        report.notes.iter().all(|n| n.what != "Tarama"),
+        "{:?}",
+        report.notes
+    );
     assert!(text.contains("AcDbHatch"));
     let mut without = input(vec![hatch]);
-    without.uids.insert(2, kentos_contracts::EntityId::parse("0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c02").expect("a uid"));
+    without.uids.insert(
+        2,
+        kentos_contracts::EntityId::parse("0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c02").expect("a uid"),
+    );
     let (_, report) = write(&without);
-    let said: Vec<&str> = report.notes.iter().filter(|n| n.what == "Tarama").map(|n| n.reason.as_str()).collect();
-    assert_eq!(said, ["sınır nesneleri dosyaya yazılmadığından ilişkili tarama ilişkisiz yazıldı; DXF'te sınırını izlemez"]);
+    let said: Vec<&str> = report
+        .notes
+        .iter()
+        .filter(|n| n.what == "Tarama")
+        .map(|n| n.reason.as_str())
+        .collect();
+    assert_eq!(
+        said,
+        [
+            "sınır nesneleri dosyaya yazılmadığından ilişkili tarama ilişkisiz yazıldı; DXF'te sınırını izlemez"
+        ]
+    );
 }
 
 /// UR-092: a tied hatch whose island was added over its seed: the file's seed is moved into the hatched ring, so the
 /// hatch read back keeps its tie to both circles.
 #[test]
 fn an_island_over_the_seed_does_not_lose_the_tie() {
-    let (outer, island) = ("0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c11", "0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c12");
+    let (outer, island) = (
+        "0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c11",
+        "0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c12",
+    );
     let circle = |id: u32, r: f64| -> Entity {
         serde_json::from_value(serde_json::json!({
             "kind": "circle", "id": id, "layerId": "0", "attrs": {}, "c": {"x": 20.0, "y": 5.0}, "r": r
@@ -4390,11 +4631,19 @@ fn an_island_over_the_seed_does_not_lose_the_tie() {
     }))
     .expect("a hatch");
     let mut i = input(vec![circle(1, 2.0), circle(2, 0.5), hatch]);
-    for (id, uid) in [(1, outer), (2, island), (3, "0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c13")] {
-        i.uids.insert(id, kentos_contracts::EntityId::parse(uid).expect("a uid"));
+    for (id, uid) in [
+        (1, outer),
+        (2, island),
+        (3, "0b5e6c1a-2f4d-4c8e-9a71-3d2b8f6e4c13"),
+    ] {
+        i.uids
+            .insert(id, kentos_contracts::EntityId::parse(uid).expect("a uid"));
     }
     let (text, _) = write(&i);
     let r = read(&text);
-    let tied = r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.assoc.is_some()));
+    let tied = r
+        .entities
+        .iter()
+        .any(|e| matches!(e, Entity::Hatch(h) if h.assoc.is_some()));
     assert!(tied, "{:?}", r.report);
 }

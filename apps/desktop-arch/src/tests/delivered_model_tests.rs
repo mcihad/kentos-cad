@@ -4,9 +4,9 @@
 //! Denetim names it over the table; asked, it reads the EK-9 form from the delivered file; a wall moved after the
 //! delivery is counted; a folder changed after the delivery is said, and the form goes back to the drawing.
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use std::path::{Path, PathBuf};
-use crate::arch::ArchState;
 
 use iced::Size;
 use kentos_commands::Entity;
@@ -25,7 +25,10 @@ fn send(app: &mut App, e: Event) {
 }
 
 fn folder(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("kentos-teslim-modeli-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-teslim-modeli-{}-{name}",
+        std::process::id()
+    ));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(dir.join("kaynaklar")).expect("a folder");
     dir
@@ -36,8 +39,13 @@ fn folder(name: &str) -> PathBuf {
 /// file name.
 fn deliver(app: &mut App, dir: &Path, carried: bool) -> String {
     let doc = &app.document.as_ref().expect("a drawing").model;
-    let planned = kentos_native_application::ifc_facts::plan(doc, None, "2026-11-18T00:00:00", "KentOS Mimari 0.1.0")
-        .expect("a building");
+    let planned = kentos_native_application::ifc_facts::plan(
+        doc,
+        None,
+        "2026-11-18T00:00:00",
+        "KentOS Mimari 0.1.0",
+    )
+    .expect("a building");
     let name = planned.file_name();
     let model = planned.text().into_bytes();
     std::fs::write(dir.join(&name), &model).expect("writes");
@@ -65,15 +73,27 @@ fn deliver(app: &mut App, dir: &Path, carried: bool) -> String {
     let bytes = serde_json::to_vec_pretty(&list).expect("json");
     std::fs::write(dir.join("yayin.json"), &bytes).expect("writes");
     let path = dir.display().to_string();
-    run(app, "cad.delivery.edit", json!({"change": {"kind": "add", "revision": "000",
+    run(
+        app,
+        "cad.delivery.edit",
+        json!({"change": {"kind": "add", "revision": "000",
         "package": {"manifest": sha256_hex(&bytes), "files": 2, "path": path, "source": revision},
-        "to": "Örnek Belediyesi", "at": "2026-11-18"}}));
+        "to": "Örnek Belediyesi", "at": "2026-11-18"}}),
+    );
     name
 }
 
 /// The Dijital proje package's findings now: their codes, sorted.
 fn digital(app: &App) -> Vec<String> {
-    let mut codes: Vec<String> = app.modules.arch().arch_audit.standards.iter().map(|f| f.code.clone()).filter(|c| c.starts_with("digital_")).collect();
+    let mut codes: Vec<String> = app
+        .modules
+        .arch()
+        .arch_audit
+        .standards
+        .iter()
+        .map(|f| f.code.clone())
+        .filter(|c| c.starts_with("digital_"))
+        .collect();
     codes.sort();
     codes
 }
@@ -81,12 +101,20 @@ fn digital(app: &App) -> Vec<String> {
 /// A wall of the drawing, by its persistent id.
 fn a_wall(app: &App) -> String {
     let doc = &app.document.as_ref().expect("a drawing").model;
-    doc.entities_with_uids().find(|(_, e)| matches!(e, Entity::Wall(_))).map(|(u, _)| u.to_string()).expect("a wall")
+    doc.entities_with_uids()
+        .find(|(_, e)| matches!(e, Entity::Wall(_)))
+        .map(|(u, _)| u.to_string())
+        .expect("a wall")
 }
 
 /// The line over the table.
 fn line(app: &App) -> crate::arch_audit::DeliveredLine {
-    app.modules.arch().arch_audit.delivered.clone().expect("the delivered model's line")
+    app.modules
+        .arch()
+        .arch_audit
+        .delivered
+        .clone()
+        .expect("the delivered model's line")
 }
 
 #[test]
@@ -97,10 +125,17 @@ fn denetim_reads_the_form_from_the_delivered_model_and_counts_what_changed_since
     // On the drawing: the line names the delivery; nothing changed since.
     checked(&mut app);
     let l = line(&app);
-    assert_eq!((l.error.as_deref(), l.used, l.drift), (None, false, Some(Drift::default())), "{}", l.words());
+    assert_eq!(
+        (l.error.as_deref(), l.used, l.drift),
+        (None, false, Some(Drift::default())),
+        "{}",
+        l.words()
+    );
     assert_eq!(
         l.words(),
-        format!("EK-9 formu çizimin şimdiki hâlinden. 1. teslimin modeli: {name}, 18.11.2026. Çizimin modeli teslim edilenle aynı.")
+        format!(
+            "EK-9 formu çizimin şimdiki hâlinden. 1. teslimin modeli: {name}, 18.11.2026. Çizimin modeli teslim edilenle aynı."
+        )
     );
     assert_eq!(l.switch(false), Some(("Teslim edileni denetle", true)));
     let on_drawing = digital(&app);
@@ -109,18 +144,39 @@ fn denetim_reads_the_form_from_the_delivered_model_and_counts_what_changed_since
     send(&mut app, Event::DeliveredModel(true));
     app.arch_audit_standards_settle();
     let l = line(&app);
-    assert!(l.used && l.expectations && l.error.is_none(), "{}", l.words());
-    assert_eq!(l.words(), format!("EK-9 formu 1. teslimin modelinden ({name}, 18.11.2026). Çizimin modeli teslim edilenle aynı."));
+    assert!(
+        l.used && l.expectations && l.error.is_none(),
+        "{}",
+        l.words()
+    );
+    assert_eq!(
+        l.words(),
+        format!(
+            "EK-9 formu 1. teslimin modelinden ({name}, 18.11.2026). Çizimin modeli teslim edilenle aynı."
+        )
+    );
     assert_eq!(l.switch(true), Some(("Şimdiki çizimi denetle", false)));
-    assert_eq!(digital(&app), on_drawing, "the delivered model is the drawing's");
+    assert_eq!(
+        digital(&app),
+        on_drawing,
+        "the delivered model is the drawing's"
+    );
     // A wall moved half a metre after the delivery: counted; the form still reads the file as it went.
     let wall = a_wall(&app);
-    run(&mut app, "cad.entities.transform", json!({"uids": [wall], "transform": {"kind": "move", "dx": 0.0, "dy": 0.5}}));
+    run(
+        &mut app,
+        "cad.entities.transform",
+        json!({"uids": [wall], "transform": {"kind": "move", "dx": 0.0, "dy": 0.5}}),
+    );
     checked(&mut app);
     let l = line(&app);
     let drift = l.drift.expect("compared");
     assert!(l.used && drift.changed >= 1, "{drift:?}: {}", l.words());
-    assert!(l.words().contains("Teslimden bu yana çizimde ") && l.words().contains(" nesne değişti"), "{}", l.words());
+    assert!(
+        l.words().contains("Teslimden bu yana çizimde ") && l.words().contains(" nesne değişti"),
+        "{}",
+        l.words()
+    );
     // Back to the drawing.
     send(&mut app, Event::DeliveredModel(false));
     app.arch_audit_standards_settle();
@@ -136,24 +192,41 @@ fn the_delivered_file_answers_the_version_question_the_memory_file_leaves_to_the
     deliver(&mut app, &dir, true);
     let doc = &app.document.as_ref().expect("a drawing").model;
     let row18 = |facts: serde_json::Value| -> String {
-        let rows = crate::standards::call("dijital-proje", "dijital_proje.form", "tablo", vec![facts, json!([])])
-            .expect("the form answers");
+        let rows = crate::standards::call(
+            "dijital-proje",
+            "dijital_proje.form",
+            "tablo",
+            vec![facts, json!([])],
+        )
+        .expect("the form answers");
         let rows: Vec<Vec<String>> = serde_json::from_value(rows).expect("rows");
-        rows.iter().find(|r| r.first().map(String::as_str) == Some("18")).map(|r| r.join(" | ")).expect("row 18")
+        rows.iter()
+            .find(|r| r.first().map(String::as_str) == Some("18"))
+            .map(|r| r.join(" | "))
+            .expect("row 18")
     };
-    let memory = kentos_native_application::ifc_facts::plan(doc, None, "", "KentOS Mimari").expect("a building").facts().expect("facts");
-    let kentos_native_application::delivered_model::Last::Found(d) = kentos_native_application::delivered_model::last(doc) else {
+    let memory = kentos_native_application::ifc_facts::plan(doc, None, "", "KentOS Mimari")
+        .expect("a building")
+        .facts()
+        .expect("facts");
+    let kentos_native_application::delivered_model::Last::Found(d) =
+        kentos_native_application::delivered_model::last(doc)
+    else {
         panic!("the delivered model");
     };
     let delivered = d.read(doc).expect("reads").facts;
-    assert!(row18(memory).contains("Teslim edilen dosyayı denetleyin"), "the memory file leaves it to the author");
+    assert!(
+        row18(memory).contains("Teslim edilen dosyayı denetleyin"),
+        "the memory file leaves it to the author"
+    );
     let answered = row18(delivered);
     assert!(answered.contains("IFC4X3_ADD2, .ifc."), "{answered}");
     let _ = std::fs::remove_dir_all(&dir);
 }
 
 #[test]
-fn a_package_without_its_drawing_after_a_change_leaves_the_source_questions_and_a_changed_folder_is_said() {
+fn a_package_without_its_drawing_after_a_change_leaves_the_source_questions_and_a_changed_folder_is_said()
+ {
     let mut app = declared_building();
     let dir = folder("tasimayan");
     deliver(&mut app, &dir, false);
@@ -163,17 +236,41 @@ fn a_package_without_its_drawing_after_a_change_leaves_the_source_questions_and_
     assert!(line(&app).expectations, "{}", line(&app).words());
     // Changed and no carried drawing: the three questions are left to review, and the line says why.
     let wall = a_wall(&app);
-    run(&mut app, "cad.entities.transform", json!({"uids": [wall], "transform": {"kind": "move", "dx": 0.5, "dy": 0.0}}));
+    run(
+        &mut app,
+        "cad.entities.transform",
+        json!({"uids": [wall], "transform": {"kind": "move", "dx": 0.5, "dy": 0.0}}),
+    );
     checked(&mut app);
     let l = line(&app);
     assert!(l.used && !l.expectations, "{}", l.words());
-    assert!(l.words().ends_with("Paket kaynak çizimini taşımadığından 8., 17. ve 21. sorular incelemeye kaldı."), "{}", l.words());
+    assert!(
+        l.words().ends_with(
+            "Paket kaynak çizimini taşımadığından 8., 17. ve 21. sorular incelemeye kaldı."
+        ),
+        "{}",
+        l.words()
+    );
     // The list rewritten after the delivery: said; the form reads the drawing; the button takes it back to it.
-    std::fs::write(dir.join("yayin.json"), b"{\"format\": \"kentos.publish/1\", \"files\": []}").expect("writes");
+    std::fs::write(
+        dir.join("yayin.json"),
+        b"{\"format\": \"kentos.publish/1\", \"files\": []}",
+    )
+    .expect("writes");
     checked(&mut app);
     let l = line(&app);
-    assert!(!l.used && l.error.as_deref().is_some_and(|w| w.contains("teslimden sonra değişmiş")), "{}", l.words());
-    assert!(l.words().starts_with("1. teslimin modeli okunamadı: ") && l.words().ends_with("EK-9 formu çizimin şimdiki hâlinden."));
+    assert!(
+        !l.used
+            && l.error
+                .as_deref()
+                .is_some_and(|w| w.contains("teslimden sonra değişmiş")),
+        "{}",
+        l.words()
+    );
+    assert!(
+        l.words().starts_with("1. teslimin modeli okunamadı: ")
+            && l.words().ends_with("EK-9 formu çizimin şimdiki hâlinden.")
+    );
     assert_eq!(l.switch(true), Some(("Şimdiki çizimi denetle", false)));
     assert_eq!(l.switch(false), None);
     let _ = std::fs::remove_dir_all(&dir);
@@ -184,7 +281,8 @@ fn a_package_without_its_drawing_after_a_change_leaves_the_source_questions_and_
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {
-    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/teslim-modeli-8116");
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/teslim-modeli-8116");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
@@ -196,22 +294,37 @@ fn screens() {
         let mut app = declared_building();
         let dir = folder(&format!("resim-{suffix}"));
         deliver(&mut app, &dir, false);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        for (step, delivered, moved) in [("1-cizimden", false, false), ("2-teslim-edilenden", true, true)] {
+        for (step, delivered, moved) in [
+            ("1-cizimden", false, false),
+            ("2-teslim-edilenden", true, true),
+        ] {
             if moved {
                 let wall = a_wall(&app);
-                run(&mut app, "cad.entities.transform", json!({"uids": [wall], "transform": {"kind": "move", "dx": 0.0, "dy": 0.5}}));
+                run(
+                    &mut app,
+                    "cad.entities.transform",
+                    json!({"uids": [wall], "transform": {"kind": "move", "dx": 0.0, "dy": 0.5}}),
+                );
             }
             send(&mut app, Event::DeliveredModel(delivered));
             checked(&mut app);
-            send(&mut app, Event::Group(Some(kentos_commands::ArchAuditCheck::Regulation)));
+            send(
+                &mut app,
+                Event::Group(Some(kentos_commands::ArchAuditCheck::Regulation)),
+            );
             let mut snapshot = Snapshot::new(size).expect("a renderer");
             app.toasts.clear();
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{step}-{suffix}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         }
         let _ = std::fs::remove_dir_all(&dir);

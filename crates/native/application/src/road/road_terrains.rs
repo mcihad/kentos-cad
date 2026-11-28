@@ -35,7 +35,10 @@ pub(crate) fn terrain_project(doc: &Document) -> Result<(), Stop> {
 
 /// The project's surfaces.
 pub(crate) fn surfaces(doc: &Document) -> &[TerrainSurfaceDef] {
-    doc.settings().road.as_ref().map_or(&[], |r| &r.surfaces[..])
+    doc.settings()
+        .road
+        .as_ref()
+        .map_or(&[], |r| &r.surfaces[..])
 }
 
 /// The surfaces judged by the contract's rules; a refusal's path is the input's `field`'s.
@@ -52,7 +55,11 @@ pub(crate) fn judged(list: &[TerrainSurfaceDef], at: usize, field: &str) -> Resu
             Some(rest) => format!("{field}.{rest}"),
             None => field.to_owned(),
         };
-        return Err(fail(codes::INVALID_TERRAIN, format!("Yüzey kurallarına uymuyor: {words}."), &path));
+        return Err(fail(
+            codes::INVALID_TERRAIN,
+            format!("Yüzey kurallarına uymuyor: {words}."),
+            &path,
+        ));
     }
     Ok(())
 }
@@ -65,21 +72,32 @@ pub(crate) struct Made {
 
 /// The digest of what `def` is made of now (its sources and method, `sources::gather`'s), without making it.
 pub(crate) fn sources_digest(doc: &Document, def: &TerrainSurfaceDef) -> String {
-    let uids: Vec<(String, &kentos_commands::Entity)> =
-        doc.entities_with_uids().map(|(uid, e)| (uid.to_string(), e)).collect();
-    sources::gather_among(def, surfaces(doc), doc.layers().nodes(), uids.iter().map(|(uid, entity)| SourceObject { uid, entity }))
-        .digest
+    let uids: Vec<(String, &kentos_commands::Entity)> = doc
+        .entities_with_uids()
+        .map(|(uid, e)| (uid.to_string(), e))
+        .collect();
+    sources::gather_among(
+        def,
+        surfaces(doc),
+        doc.layers().nodes(),
+        uids.iter()
+            .map(|(uid, entity)| SourceObject { uid, entity }),
+    )
+    .digest
 }
 
 pub(crate) fn make(doc: &Document, def: &TerrainSurfaceDef) -> Made {
-    let uids: Vec<(String, &kentos_commands::Entity)> =
-        doc.entities_with_uids().map(|(uid, e)| (uid.to_string(), e)).collect();
+    let uids: Vec<(String, &kentos_commands::Entity)> = doc
+        .entities_with_uids()
+        .map(|(uid, e)| (uid.to_string(), e))
+        .collect();
     // Docs/adr/3920: a paste edit finds the surface it pastes among the project's.
     let gathered = sources::gather_among(
         def,
         surfaces(doc),
         doc.layers().nodes(),
-        uids.iter().map(|(uid, entity)| SourceObject { uid, entity }),
+        uids.iter()
+            .map(|(uid, entity)| SourceObject { uid, entity }),
     );
     let surface = surface::build(&gathered.input).map_err(|e| TerrainProblem {
         code: e.code.to_owned(),
@@ -118,7 +136,10 @@ impl Made {
                     why: why.to_owned(),
                 }))
                 .collect(),
-            algorithm: self.surface.is_ok().then(|| kentos_road::surface::ALGORITHM.to_owned()),
+            algorithm: self
+                .surface
+                .is_ok()
+                .then(|| kentos_road::surface::ALGORITHM.to_owned()),
             figures: self.surface.as_ref().ok().map(|s| {
                 let f = s.figures();
                 let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
@@ -149,12 +170,20 @@ impl Made {
 
     /// The warnings of what it could not use.
     pub(crate) fn warnings(&self) -> Vec<CommandWarning> {
-        let left = self.gathered.left.iter().map(|l| (l.id.clone(), l.role, l.why));
+        let left = self
+            .gathered
+            .left
+            .iter()
+            .map(|l| (l.id.clone(), l.role, l.why));
         let skipped = self.skipped_edits().map(|(id, why)| (id, "edits", why));
         left.chain(skipped)
             .map(|(id, role, why)| CommandWarning {
                 code: codes::TERRAIN_SOURCE_LEFT.into(),
-                message: format!("{id} ({}) kullanılamadı: {}.", role_words(role), why_words(why)),
+                message: format!(
+                    "{id} ({}) kullanılamadı: {}.",
+                    role_words(role),
+                    why_words(why)
+                ),
                 path: Some(role.to_owned()),
             })
             .collect()
@@ -163,7 +192,8 @@ impl Made {
     /// The surface, or the refusal that none is made.
     pub(crate) fn built(&self) -> Result<&Surface, Stop> {
         self.surface.as_ref().map_err(|p| {
-            let place = p.at.map_or(String::new(), |[x, y]| format!(" (yer: {x}, {y})"));
+            let place =
+                p.at.map_or(String::new(), |[x, y]| format!(" (yer: {x}, {y})"));
             fail(
                 codes::TERRAIN_UNBUILDABLE,
                 format!("Kaynaklardan yüzey kurulamıyor: {}{place}.", p.message),
@@ -181,7 +211,9 @@ fn problem_words(code: &str) -> &'static str {
         "height_conflict" => "bir nokta bir kırık hattın üstünde ama kotu hattınkinden farklı",
         "constraints_cross" => "iki kırık hat ya da bir kırık hatla bir halka birbirini kesiyor",
         "boundary_outside" => "sınırın ya da bir boşluğun köşesi noktaların dışında",
-        "invalid_input" => "bir kaynağın geometrisi geçersiz (sıfır boylu parça ya da üçten az köşeli halka)",
+        "invalid_input" => {
+            "bir kaynağın geometrisi geçersiz (sıfır boylu parça ya da üçten az köşeli halka)"
+        }
         _ => "üçgenleme tamamlanamadı",
     }
 }
@@ -210,7 +242,9 @@ pub fn why_words(why: &str) -> &'static str {
         "crosses" => "bir kırık hatla, halkayla ya da önceki bir kenarla kesişiyor",
         "no_triangle" => "o yerde yüzeyin üçgeni yok",
         "no_surface" => "projede bu kimlikli yüzey yok",
-        "cycle" => "yapıştırılan yüzey, doğrudan ya da başka bir yüzey üzerinden, bu yüzeyi yapıştırıyor",
+        "cycle" => {
+            "yapıştırılan yüzey, doğrudan ya da başka bir yüzey üzerinden, bu yüzeyi yapıştırıyor"
+        }
         "unbuildable" => "yapıştırılan yüzey kaynaklarından kurulamıyor",
         _ => "köşesi az",
     }

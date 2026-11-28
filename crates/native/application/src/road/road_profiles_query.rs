@@ -3,7 +3,8 @@
 //! only. The shared cases are `fixtures/commands/v1/road.profiles.query.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, MAX_ALIGNMENT_PLACES, ProfileAt, ProfileGroundRow, ProfilesQueried, ProfilesQuery,
+    CommandResult, CommandWarning, MAX_ALIGNMENT_PLACES, ProfileAt, ProfileGroundRow,
+    ProfilesQueried, ProfilesQuery,
 };
 use kentos_road::profile::terrain;
 
@@ -14,11 +15,19 @@ use crate::road_alignments as alignments;
 use crate::road_profiles::{self as common, Built};
 use crate::road_terrains::fail;
 
-fn at(built: &Built, surface: Option<&kentos_road::surface::Surface>, s: f64, path: &str) -> Result<ProfileAt, Stop> {
+fn at(
+    built: &Built,
+    surface: Option<&kentos_road::surface::Surface>,
+    s: f64,
+    path: &str,
+) -> Result<ProfileAt, Stop> {
     common::at(built, surface, s).ok_or_else(|| {
         fail(
             codes::STATION_OUTSIDE,
-            format!("{s} m aksın üstünde değil (aks {:.3} m).", built.alignment.core.length),
+            format!(
+                "{s} m aksın üstünde değil (aks {:.3} m).",
+                built.alignment.core.length
+            ),
             path,
         )
     })
@@ -35,10 +44,15 @@ fn stale_warning(report: &kentos_commands::ProfileReport) -> Option<CommandWarni
     })
 }
 
-fn answer(doc: &kentos_domain::Document, input: &ProfilesQuery) -> Result<(ProfilesQueried, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &kentos_domain::Document,
+    input: &ProfilesQuery,
+) -> Result<(ProfilesQueried, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let own = common::profiles(doc);
-    if !(input.stations.iter().all(|s| s.is_finite()) && input.every.is_none_or(|e| e.is_finite() && e > 0.0)) {
+    if !(input.stations.iter().all(|s| s.is_finite())
+        && input.every.is_none_or(|e| e.is_finite() && e > 0.0))
+    {
         return Err(fail(
             codes::INVALID_PLACES,
             "Km'ler sonlu sayılar, every 0'dan büyük olmalı.".into(),
@@ -58,7 +72,8 @@ fn answer(doc: &kentos_domain::Document, input: &ProfilesQuery) -> Result<(Profi
         if asks {
             return Err(fail(
                 codes::INVALID_PLACES,
-                "Kot bir boykesitte sorulur: boykesitin kimliğini ya da adını (profile) verin.".into(),
+                "Kot bir boykesitte sorulur: boykesitin kimliğini ya da adını (profile) verin."
+                    .into(),
                 "profile",
             ));
         }
@@ -86,7 +101,10 @@ fn answer(doc: &kentos_domain::Document, input: &ProfilesQuery) -> Result<(Profi
     if input.terrain && def.surface.is_none() {
         return Err(fail(
             codes::NO_TERRAIN,
-            format!("“{}” boykesitinin yüzeyi yok: arazi boykesiti için önce bir yüzey verin.", def.name),
+            format!(
+                "“{}” boykesitinin yüzeyi yok: arazi boykesiti için önce bir yüzey verin.",
+                def.name
+            ),
             "terrain",
         ));
     }
@@ -145,7 +163,10 @@ fn answer(doc: &kentos_domain::Document, input: &ProfilesQuery) -> Result<(Profi
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ProfilesQuery) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -159,6 +180,9 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesQuery) -> CommandResult<P
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ProfilesQuery) -> CommandResult<ProfilesQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProfilesQuery,
+) -> CommandResult<ProfilesQueried> {
     plan(cx, &input)
 }

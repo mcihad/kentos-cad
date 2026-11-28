@@ -37,10 +37,22 @@ fn every_bohhbuy_sign_sits_in_its_class_with_its_number_and_draws() {
     let paths: BTreeSet<Vec<String>> = categories
         .iter()
         .filter_map(|c| c["path"].as_array())
-        .map(|p| p.iter().filter_map(Value::as_str).map(str::to_owned).collect())
+        .map(|p| {
+            p.iter()
+                .filter_map(Value::as_str)
+                .map(str::to_owned)
+                .collect()
+        })
         .collect();
-    let signs: Vec<&Value> =
-        items.iter().filter(|i| i["kind"] == "symbol" && i["id"].as_str().is_some_and(|id| id.starts_with("bohhbuy."))).collect();
+    let signs: Vec<&Value> = items
+        .iter()
+        .filter(|i| {
+            i["kind"] == "symbol"
+                && i["id"]
+                    .as_str()
+                    .is_some_and(|id| id.starts_with("bohhbuy."))
+        })
+        .collect();
     let palette = StylePalette::paper();
     let mut problems = Vec::new();
     let mut per_class: BTreeMap<String, usize> = BTreeMap::new();
@@ -51,10 +63,19 @@ fn every_bohhbuy_sign_sits_in_its_class_with_its_number_and_draws() {
             problems.push(format!("{id}: not bohhbuy.<four digits>"));
             continue;
         }
-        if !item["name"].as_str().is_some_and(|n| n.starts_with(&format!("{number} ")) && n.len() > 5) {
+        if !item["name"]
+            .as_str()
+            .is_some_and(|n| n.starts_with(&format!("{number} ")) && n.len() > 5)
+        {
             problems.push(format!("{id}: the name does not lead with its number"));
         }
-        let path: Vec<String> = item["path"].as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_owned).collect();
+        let path: Vec<String> = item["path"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .map(str::to_owned)
+            .collect();
         // The class is the number's hundreds rounded down to an even one: 0607 is under 0600, 1211 under 1200.
         let head: u32 = number[..2].parse().unwrap_or(0);
         let code = format!("{:02}00", head - head % 2);
@@ -69,21 +90,29 @@ fn every_bohhbuy_sign_sits_in_its_class_with_its_number_and_draws() {
         if let Some(class) = path.get(1) {
             *per_class.entry(class.clone()).or_default() += 1;
         }
-        if !item["reference"].as_str().is_some_and(|r| r.starts_with("BÖHHBÜY Ek-3")) {
+        if !item["reference"]
+            .as_str()
+            .is_some_and(|r| r.starts_with("BÖHHBÜY Ek-3"))
+        {
             problems.push(format!("{id}: no reference to Ek-3"));
         }
         if item["description"].as_str().is_none_or(str::is_empty) {
             problems.push(format!("{id}: no description"));
         }
         let kind = item["symbol"]["type"].as_str().unwrap_or("");
-        let layers = item["symbol"]["layers"].as_array().cloned().unwrap_or_default();
+        let layers = item["symbol"]["layers"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
         if layers.is_empty() {
             problems.push(format!("{id}: no layers"));
         }
         check_layers(id, kind, &layers, &lib, &mut problems);
         match preview(&item["symbol"], None, (96.0, 64.0), None, &palette, &lib) {
             Err(why) => problems.push(format!("{id}: no preview: {why}")),
-            Ok(p) if p.layer.batches.is_empty() => problems.push(format!("{id}: the preview draws nothing")),
+            Ok(p) if p.layer.batches.is_empty() => {
+                problems.push(format!("{id}: the preview draws nothing"))
+            }
             Ok(_) => {}
         }
     }

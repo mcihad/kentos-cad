@@ -200,7 +200,11 @@ pub enum HatchRegion {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         also_at: Vec<Vec2>,
         /// How the islands are taken; when given it is what counts, not `islands` (docs/adr/0329 §1).
-        #[serde(default, rename = "islandStyle", skip_serializing_if = "Option::is_none")]
+        #[serde(
+            default,
+            rename = "islandStyle",
+            skip_serializing_if = "Option::is_none"
+        )]
         #[cfg_attr(feature = "ts", ts(optional))]
         island_style: Option<IslandStyle>,
         /// `lines`: gaps in the line work up to this many metres are closed, each dangling end bridged to the
@@ -228,7 +232,11 @@ pub enum HatchRegion {
         #[cfg_attr(feature = "ts", ts(optional))]
         associative: Option<bool>,
         /// How the islands are taken; when given it is what counts, not `islands` (docs/adr/0329 §1).
-        #[serde(default, rename = "islandStyle", skip_serializing_if = "Option::is_none")]
+        #[serde(
+            default,
+            rename = "islandStyle",
+            skip_serializing_if = "Option::is_none"
+        )]
         #[cfg_attr(feature = "ts", ts(optional))]
         island_style: Option<IslandStyle>,
     },

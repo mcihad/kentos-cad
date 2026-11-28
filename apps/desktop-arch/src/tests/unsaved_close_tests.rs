@@ -2,11 +2,11 @@
 //! close at once when they do not; F1 closes on Esc over its search box; Çizimden seç steps a window aside and brings
 //! it back.
 
-use crate::arch_ext::*;
 use crate::arch;
+use crate::arch::ArchState;
+use crate::arch_ext::*;
 use kentos_commands::{CadWork, Workspace};
 use kentos_domain::Slot;
-use crate::arch::ArchState;
 
 use crate::app::{App, Dialog, Message};
 use crate::files_testing::app_with_drawing;
@@ -66,7 +66,8 @@ fn a_changed_editor_asks_and_vazgec_keeps_it() {
         crate::wall_styles::Event::Answer(Answer::Stay),
     )));
     let w = app
-        .modules.arch()
+        .modules
+        .arch()
         .wall_styles
         .as_ref()
         .expect("Vazgeç keeps the window");
@@ -74,7 +75,11 @@ fn a_changed_editor_asks_and_vazgec_keeps_it() {
     // Esc is Kapat: it asks again; over the question, Esc is Vazgeç.
     app.close_dialog();
     assert!(
-        app.modules.arch().wall_styles.as_ref().is_some_and(|w| w.closing()),
+        app.modules
+            .arch()
+            .wall_styles
+            .as_ref()
+            .is_some_and(|w| w.closing()),
         "Esc asks"
     );
     assert_eq!(
@@ -83,7 +88,11 @@ fn a_changed_editor_asks_and_vazgec_keeps_it() {
     );
     app.close_dialog();
     assert!(
-        app.modules.arch().wall_styles.as_ref().is_some_and(|w| !w.closing()),
+        app.modules
+            .arch()
+            .wall_styles
+            .as_ref()
+            .is_some_and(|w| !w.closing()),
         "Esc over the question stays"
     );
     let _ = app.update(Message::from(arch::Event::WallStyles(
@@ -109,7 +118,8 @@ fn kaydet_ve_kapat_writes_then_closes() {
         crate::program_window::Event::Close,
     )));
     assert!(
-        app.modules.arch()
+        app.modules
+            .arch()
             .program_window
             .as_ref()
             .is_some_and(|w| w.closing()),
@@ -144,7 +154,10 @@ fn esc_closes_f1_over_its_search_box() {
     let _ = app.open_shortcuts();
     assert_eq!(app.dialog, Some(Dialog::Shortcuts));
     let _ = app.update(Message::CapturedEscape);
-    assert_eq!(app.dialog, None, "Esc in the search box closes F1 (plan G11)");
+    assert_eq!(
+        app.dialog, None,
+        "Esc in the search box closes F1 (plan G11)"
+    );
 }
 
 #[test]
@@ -153,7 +166,9 @@ fn cizimden_sec_steps_the_window_aside_and_brings_it_back() {
     app.open_room_modules();
     assert_eq!(
         app.dialog,
-        Some(crate::arch::dialog(crate::arch::ArchDialogKind::RoomModules))
+        Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::RoomModules
+        ))
     );
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::from(arch::Event::RoomModules(
@@ -161,13 +176,18 @@ fn cizimden_sec_steps_the_window_aside_and_brings_it_back() {
     )));
     assert_eq!(app.dialog, None, "the window steps aside");
     assert_eq!(app.session.tool_id(), kentos_interaction::pick_objects::ID);
-    assert!(app.modules.arch().room_modules.is_some(), "it keeps what it held");
+    assert!(
+        app.modules.arch().room_modules.is_some(),
+        "it keeps what it held"
+    );
     // Esc: the selection before comes back with the window.
     app.selection.set([Slot(2)]);
     assert!(app.window_picked(false));
     assert_eq!(
         app.dialog,
-        Some(crate::arch::dialog(crate::arch::ArchDialogKind::RoomModules))
+        Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::RoomModules
+        ))
     );
     assert_eq!(app.selection.ids(), &[Slot(1)]);
     // Enter keeps what was picked.
@@ -190,13 +210,18 @@ fn cizimden_sec_steps_the_window_aside_and_brings_it_back() {
 fn drawing_question_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-001");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-UR-001");
     std::fs::create_dir_all(&out).expect("a folder");
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         let mut app = crate::files_testing::app_with_drawing();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
-        let layer = app.document.as_ref().expect("a drawing").layers()[0].id.clone();
+        let layer = app.document.as_ref().expect("a drawing").layers()[0]
+            .id
+            .clone();
         let _ = app.update(Message::LayerLocked(layer));
         let _ = app.leave(crate::app::Then::CloseTab);
         app.follow.flash = None;
@@ -207,7 +232,10 @@ fn drawing_question_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("kapat-sorusu-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

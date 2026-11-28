@@ -252,7 +252,10 @@ fn raster_oturt_sets_an_affine_as_one_step() {
     let record = r.raster.georef.as_ref().expect("the record");
     assert_eq!(record.method, kentos_commands::GeorefMethod::Affine);
     assert_eq!(record.points.len(), 3);
-    assert_eq!((record.source.width, record.source.height), (r.raster.width, r.raster.height));
+    assert_eq!(
+        (record.source.width, record.source.height),
+        (r.raster.width, r.raster.height)
+    );
     let doc = app.document.as_mut().expect("a drawing");
     assert_eq!(doc.model.undo().as_deref(), Some("Raster oturt"));
 }
@@ -279,8 +282,17 @@ fn raster_oturt_points_go_to_a_file_and_back() {
     let written = std::fs::read_to_string(&file).expect("written");
     // The targets' system first, the project's here (docs/adr/0594 §2), then the header.
     let mut lines = written.lines();
-    assert!(lines.next().is_some_and(|l| l.starts_with("#CRS: PROJCRS[")), "{written}");
-    assert_eq!(lines.next(), Some(kentos_formats::raster::gcp::HEADER), "{written}");
+    assert!(
+        lines
+            .next()
+            .is_some_and(|l| l.starts_with("#CRS: PROJCRS[")),
+        "{written}"
+    );
+    assert_eq!(
+        lines.next(),
+        Some(kentos_formats::raster::gcp::HEADER),
+        "{written}"
+    );
     assert!(written.contains(",check,D1"), "{written}");
     let before = app.gis.calc.raster_fit.points();
     app.gis.calc.raster_fit.rows = vec![Default::default(); 4];
@@ -321,7 +333,10 @@ fn raster_oturt_takes_a_files_system_and_writes_it_back() {
     send(&mut app, raster_fit_event(Fit::Export));
     let written = std::fs::read_to_string(&out).expect("written");
     let one_line = defined.split_whitespace().collect::<Vec<_>>().join(" ");
-    assert!(written.starts_with(&format!("#CRS: {one_line}\n")), "{written}");
+    assert!(
+        written.starts_with(&format!("#CRS: {one_line}\n")),
+        "{written}"
+    );
     send(&mut app, raster_fit_event(Fit::Apply));
     let r = rasters(&app).remove(0);
     let record = r.raster.georef.as_ref().expect("the record");
@@ -332,8 +347,11 @@ fn raster_oturt_takes_a_files_system_and_writes_it_back() {
         PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",30],\
         PARAMETER[\"scale_factor\",1],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1]]";
     let registered = dir.join("kayitli.points");
-    std::fs::write(&registered, format!("#CRS: {tm30}\nmapX,mapY,sourceX,sourceY\n1,2,0,0\n3,4,10,-10\n5,6,0,-10\n"))
-        .expect("written");
+    std::fs::write(
+        &registered,
+        format!("#CRS: {tm30}\nmapX,mapY,sourceX,sourceY\n1,2,0,0\n3,4,10,-10\n5,6,0,-10\n"),
+    )
+    .expect("written");
     // The window opens again on the raster: its record's definition first.
     let task = app.run("raster.georef");
     drive(&mut app, task);
@@ -419,10 +437,19 @@ fn raster_oturt_resamples_beside_a_linked_file() {
     assert_eq!((r.raster.affine[2], r.raster.affine[4]), (0.0, 0.0));
     // The record names the source the points' pixels are of, its digest, and the output grid (docs/adr/0518).
     let record = r.raster.georef.as_ref().expect("the record");
-    assert!(record.source.file.as_deref().is_some_and(|f| f.ends_with("tarama.png")));
+    assert!(
+        record
+            .source
+            .file
+            .as_deref()
+            .is_some_and(|f| f.ends_with("tarama.png"))
+    );
     assert!(record.source.digest.is_some());
     let output = record.output.as_ref().expect("the output grid");
-    assert_eq!((output.affine, output.width, output.height), (r.raster.affine, r.raster.width, r.raster.height));
+    assert_eq!(
+        (output.affine, output.width, output.height),
+        (r.raster.affine, r.raster.width, r.raster.height)
+    );
     assert!(output.digest.is_some());
     let doc = app.document.as_mut().expect("a drawing");
     assert_eq!(doc.model.undo().as_deref(), Some("Raster oturt"));
@@ -622,7 +649,11 @@ fn a_linked_tile_table_draws_from_its_file() {
     use kentos_native_application::gpkg_tiles::read;
     use kentos_native_application::raster_files;
     let tiles = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/gpkg-tiles/v1");
-    for (file, levels) in [("orto.gpkg", 3usize), ("jpeg.gpkg", 2), ("kapsam-float.gpkg", 2)] {
+    for (file, levels) in [
+        ("orto.gpkg", 3usize),
+        ("jpeg.gpkg", 2),
+        ("kapsam-float.gpkg", 2),
+    ] {
         let setup = serde_json::json!({
             "format": "kentos.document", "version": 1, "name": "Bağlı",
             "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
@@ -633,7 +664,8 @@ fn a_linked_tile_table_draws_from_its_file() {
                          "children": [] }],
             "activeLayer": "altlik", "entities": [], "styles": { "items": [], "categories": [] }
         });
-        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+        let snapshot =
+            kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
         let mut model = kentos_domain::Document::from_snapshot(snapshot).expect("setup");
         let path = tiles.join(file);
         let kentos_commands::CommandResult::Completed { output, .. } = read::execute(
@@ -653,7 +685,8 @@ fn a_linked_tile_table_draws_from_its_file() {
         ) else {
             panic!("{file}: not linked")
         };
-        let uid = kentos_domain::Uuid::parse_str(output.uid.as_deref().expect("added")).expect("a uid");
+        let uid =
+            kentos_domain::Uuid::parse_str(output.uid.as_deref().expect("added")).expect("a uid");
         let slot = model.slot_of(uid).expect("the raster");
         let Some(Entity::Raster(r)) = model.get(slot) else {
             panic!("{file}: no raster")
@@ -662,14 +695,21 @@ fn a_linked_tile_table_draws_from_its_file() {
         let key = super::key_of(&fields);
         assert!(key.starts_with("gpkg:"), "{key}");
         let origin = super::origin_of(&key, &model, None).expect("the table's origin");
-        assert!(matches!(&origin, super::tiles::Origin::Table(p, _) if *p == path), "{origin:?}");
+        assert!(
+            matches!(&origin, super::tiles::Origin::Table(p, _) if *p == path),
+            "{origin:?}"
+        );
         let opened = super::tiles::open(&origin, None).expect("opens");
         assert!(
-            opened.identity.as_deref().is_some_and(|id| id.starts_with("gpkg|")),
+            opened
+                .identity
+                .as_deref()
+                .is_some_and(|id| id.starts_with("gpkg|")),
             "{:?}",
             opened.identity
         );
-        let mut theirs = raster_files::open_tiles(&path, &fields).expect("the application opens it");
+        let mut theirs =
+            raster_files::open_tiles(&path, &fields).expect("the application opens it");
         let sizes: Vec<(u32, u32)> = {
             let reader = opened.reader.lock().expect("the reader");
             reader.levels.iter().map(|l| (l.width, l.height)).collect()
@@ -683,7 +723,10 @@ fn a_linked_tile_table_draws_from_its_file() {
                 .expect("the reader")
                 .region(k, 0, 0, w, h)
                 .expect("the level's pixels");
-            let want = theirs.region_at(k, 0, 0, w, h).expect("read").expect("pixels");
+            let want = theirs
+                .region_at(k, 0, 0, w, h)
+                .expect("read")
+                .expect("pixels");
             assert_eq!(ours.samples, want.samples, "{file} level {k}");
         }
     }
@@ -709,10 +752,18 @@ fn an_address_without_ranges_is_downloaded_and_added_as_a_file() {
         send(app, Message::Gis(gis::Event::Rasters(super::Event::Add(e))))
     };
     add(&mut app, super::add::Event::From(super::add::From::Address));
-    add(&mut app, super::add::Event::Address(format!("{url}?imza=1")));
+    add(
+        &mut app,
+        super::add::Event::Address(format!("{url}?imza=1")),
+    );
     add(&mut app, super::add::Event::ReadAddress);
     let s = app.gis.rasters.add.as_ref().expect("the window");
-    let why = s.read.as_ref().expect("read").as_ref().expect_err("refused");
+    let why = s
+        .read
+        .as_ref()
+        .expect("read")
+        .as_ref()
+        .expect_err("refused");
     assert!(super::add::downloadable(why), "{why}");
     add(&mut app, super::add::Event::Download);
     let s = app.gis.rasters.add.as_ref().expect("the window");
@@ -742,8 +793,12 @@ fn the_pyramid_files_keep_within_their_budget_the_oldest_going_first() {
     let file = |name: &str, len: usize, ago: u64| {
         let p = dir.join(name);
         std::fs::write(&p, vec![0u8; len]).expect("written");
-        let f = std::fs::File::options().write(true).open(&p).expect("opened");
-        f.set_modified(now - Duration::from_secs(ago)).expect("time");
+        let f = std::fs::File::options()
+            .write(true)
+            .open(&p)
+            .expect("opened");
+        f.set_modified(now - Duration::from_secs(ago))
+            .expect("time");
         p
     };
     let oldest = file("a.tif", 400, 3600 * 24);
@@ -772,7 +827,10 @@ fn first_view_of_a_large_cog() {
     use std::time::Instant;
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/perf/orto-buyuk.tif");
     let Ok(meta) = std::fs::metadata(&path) else {
-        println!("{} yok: önce /usr/bin/python3 scripts/perf/big_cog.py", path.display());
+        println!(
+            "{} yok: önce /usr/bin/python3 scripts/perf/big_cog.py",
+            path.display()
+        );
         return;
     };
     let size = meta.len();
@@ -791,7 +849,10 @@ fn first_view_of_a_large_cog() {
     let t = Instant::now();
     let opened = super::tiles::open(&super::tiles::Origin::Url(url.clone()), None).expect("opens");
     let levels: Vec<(u32, u32)> = {
-        let r = opened.reader.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let r = opened
+            .reader
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         r.levels.iter().map(|l| (l.width, l.height)).collect()
     };
     row(
@@ -807,8 +868,9 @@ fn first_view_of_a_large_cog() {
     // Every tile of a window at a level, made by the service as the scene asks for them.
     let view = |level: usize, x0: u32, y0: u32, w: u32, h: u32| {
         let (tx0, ty0, tx1, ty1) = (x0 / 256, y0 / 256, (x0 + w - 1) / 256, (y0 + h - 1) / 256);
-        let mut left: Vec<(u32, u32)> =
-            (ty0..=ty1).flat_map(|ty| (tx0..=tx1).map(move |tx| (tx, ty))).collect();
+        let mut left: Vec<(u32, u32)> = (ty0..=ty1)
+            .flat_map(|ty| (tx0..=tx1).map(move |tx| (tx, ty)))
+            .collect();
         let n = left.len();
         for _ in 0..60_000 {
             s.register(&key, || Some(super::tiles::Origin::Url(url.clone())));
@@ -860,16 +922,20 @@ fn first_view_of_a_large_cog() {
 #[test]
 fn a_geographic_mesh_s_cells_are_in_degrees() {
     let open = |srid: u32| {
-        let mut drawing: serde_json::Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/empty.kcad")).expect("the drawing");
+        let mut drawing: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/interaction/v1/empty.kcad"
+        ))
+        .expect("the drawing");
         drawing["settings"]["srid"] = serde_json::json!(srid);
         drawing["settings"]["workspace"] = serde_json::json!("gis");
-        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+        let snapshot =
+            kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
         let doc = crate::document::Document::new(snapshot, None).expect("opens");
         let (mut app, _) = App::boot(None);
         let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
         app.picker = Picker::File(
-            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/meshes/v1/files/quad-static.nc"),
+            PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../fixtures/meshes/v1/files/quad-static.nc"),
         );
         let task = app.run("mesh.add");
         drive(&mut app, task);
@@ -877,16 +943,32 @@ fn a_geographic_mesh_s_cells_are_in_degrees() {
     };
     let mut app = open(4326);
     let s = app.gis.rasters.multidim.as_ref().expect("the window");
-    assert!(matches!(s.read, Some(Ok(_))), "read: {:?}", s.read.as_ref().map(|r| r.as_ref().err()));
+    assert!(
+        matches!(s.read, Some(Ok(_))),
+        "read: {:?}",
+        s.read.as_ref().map(|r| r.as_ref().err())
+    );
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
-    assert!(crate::files_testing::find_text(&mut shot, &app, "Hücre boyu (°)").is_some(), "the field's unit");
-    assert!(crate::files_testing::find_text(&mut shot, &app, "0.01 × 0.01 °").is_some(), "the preview's cells");
-    assert!(crate::files_testing::find_text(&mut shot, &app, "21 × 21 hücre (sanal ızgara)").is_some());
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, "Hücre boyu (°)").is_some(),
+        "the field's unit"
+    );
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, "0.01 × 0.01 °").is_some(),
+        "the preview's cells"
+    );
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, "21 × 21 hücre (sanal ızgara)").is_some()
+    );
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-041-mesh-derece");
     // A projected project: metres.
     let mut app = open(5254);
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
     assert!(crate::files_testing::find_text(&mut shot, &app, "Hücre boyu (m)").is_some());
 }

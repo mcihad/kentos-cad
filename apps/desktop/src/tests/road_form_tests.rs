@@ -14,7 +14,12 @@ use crate::tools_scenes::run;
 
 /// A value list: each value its own code and label.
 fn choices(values: &[&str]) -> Value {
-    Value::Array(values.iter().map(|v| json!({ "code": v, "label": v })).collect())
+    Value::Array(
+        values
+            .iter()
+            .map(|v| json!({ "code": v, "label": v }))
+            .collect(),
+    )
 }
 
 /// A published release of a form's `items`, numbered `version`.
@@ -38,8 +43,10 @@ fn road_items() -> Value {
 /// Yol (Y1, planlı, a 100 m axis) and Bakım (B1 on Y1), their relation by the road's code, and a published form on
 /// each; durum's list planlı, kontrol, tamam.
 fn roads() -> App {
-    let mut drawing: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/interaction/v1/empty.kcad")).expect("the drawing");
+    let mut drawing: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/empty.kcad"
+    ))
+    .expect("the drawing");
     drawing["settings"]["workspace"] = json!("gis");
     let text = |name: &str| json!({ "name": name, "kind": "text" });
     let layer = |id: &str, name: &str, geometry: &str, fields: Value| {
@@ -57,13 +64,24 @@ fn roads() -> App {
         ),
         layer("bakim", "Bakım", "point", json!([text("kod"), text("yol"), { "name": "bedel", "kind": "decimal" }])),
     ]);
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let (mut app, _) = App::boot(None);
     let _ = app.update(crate::app::Message::Opened(Some(Ok(Box::new(doc)))));
     let p = |x: f64, y: f64| json!({ "x": 500_000.0 + x, "y": 4_400_000.0 + y });
-    create(&mut app, "yol", json!({ "kind": "line", "a": p(0.0, 0.0), "b": p(100.0, 0.0) }), json!({ "kod": "Y1", "durum": "planlı" }));
-    create(&mut app, "bakim", json!({ "kind": "point", "p": p(50.0, 5.0) }), json!({ "kod": "B1", "yol": "Y1", "bedel": "100" }));
+    create(
+        &mut app,
+        "yol",
+        json!({ "kind": "line", "a": p(0.0, 0.0), "b": p(100.0, 0.0) }),
+        json!({ "kod": "Y1", "durum": "planlı" }),
+    );
+    create(
+        &mut app,
+        "bakim",
+        json!({ "kind": "point", "p": p(50.0, 5.0) }),
+        json!({ "kod": "B1", "yol": "Y1", "bedel": "100" }),
+    );
     let road = json!({ "id": "yol-formu", "name": "Yol formu", "layer": "yol", "draft": { "revision": 1, "items": road_items() },
                        "releases": [release(1, &road_items())] });
     let work_items = json!([
@@ -77,26 +95,43 @@ fn roads() -> App {
                            "field": "yol", "parentKey": "kod" });
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.model.settings().clone();
-    settings.forms.push(serde_json::from_value(road).expect("the road's form"));
-    settings.forms.push(serde_json::from_value(work).expect("the works' form"));
-    settings.relations.push(serde_json::from_value(relation).expect("the relation"));
+    settings
+        .forms
+        .push(serde_json::from_value(road).expect("the road's form"));
+    settings
+        .forms
+        .push(serde_json::from_value(work).expect("the works' form"));
+    settings
+        .relations
+        .push(serde_json::from_value(relation).expect("the relation"));
     doc.model.set_settings(settings);
     app
 }
 
 fn create(app: &mut App, layer: &str, geometry: Value, attrs: Value) {
-    let input =
-        serde_json::from_value(json!({ "layerId": layer, "objects": [{ "geometry": geometry, "attrs": attrs }] })).expect("an input");
+    let input = serde_json::from_value(
+        json!({ "layerId": layer, "objects": [{ "geometry": geometry, "attrs": attrs }] }),
+    )
+    .expect("an input");
     let doc = app.document.as_mut().expect("a drawing");
     let done = kentos_native_application::create::execute(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
         input,
     );
-    assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+    assert!(
+        matches!(done, kentos_commands::CommandResult::Completed { .. }),
+        "{done:?}"
+    );
 }
 
 /// The first object of `layer` and its attributes.
-fn first(app: &App, layer: &str) -> (kentos_domain::Slot, std::collections::BTreeMap<String, String>) {
+fn first(
+    app: &App,
+    layer: &str,
+) -> (
+    kentos_domain::Slot,
+    std::collections::BTreeMap<String, String>,
+) {
     let doc = &app.document.as_ref().expect("a drawing").model;
     let e = doc.by_layer(layer).next().expect("an object");
     (kentos_domain::Slot(e.base().id), e.base().attrs.clone())
@@ -112,12 +147,17 @@ fn open_road(app: &mut App) {
 }
 
 fn issues(app: &App) -> Vec<String> {
-    app.gis.form_entry.as_ref().map(|e| e.issues.iter().map(|i| i.message.clone()).collect()).unwrap_or_default()
+    app.gis
+        .form_entry
+        .as_ref()
+        .map(|e| e.issues.iter().map(|i| i.message.clone()).collect())
+        .unwrap_or_default()
 }
 
 fn shown(app: &App, id: &str) -> (bool, bool) {
     let e = app.gis.form_entry.as_ref().expect("the form");
-    e.state_for_tests(id).map_or((false, false), |s| (s.shown, s.required))
+    e.state_for_tests(id)
+        .map_or((false, false), |s| (s.shown, s.required))
 }
 
 /// The open drawing as a cloud project this account holds `role` in, with `permissions`.
@@ -144,45 +184,118 @@ fn the_road_form_holds_its_list_its_condition_its_works_the_role_and_a_new_relea
     entry(&mut app, fe::Event::Value("durum".into(), "bozuk".into()));
     entry(&mut app, fe::Event::Save);
     assert!(app.gis.form_entry.is_some(), "refused: the form stays");
-    assert!(issues(&app).iter().any(|i| i.contains("bozuk")), "{:#?}", issues(&app));
-    assert_eq!(first(&app, "yol").1.get("durum").map(String::as_str), Some("planlı"));
+    assert!(
+        issues(&app).iter().any(|i| i.contains("bozuk")),
+        "{:#?}",
+        issues(&app)
+    );
+    assert_eq!(
+        first(&app, "yol").1.get("durum").map(String::as_str),
+        Some("planlı")
+    );
 
     // Koşullu alan: kontrol_tarihi is hidden while planlı, shown and asked for under kontrol.
     open_road(&mut app);
-    assert_eq!(shown(&app, "kontrol-tarihi"), (false, false), "hidden while planlı");
+    assert_eq!(
+        shown(&app, "kontrol-tarihi"),
+        (false, false),
+        "hidden while planlı"
+    );
     entry(&mut app, fe::Event::Value("durum".into(), "kontrol".into()));
-    assert_eq!(shown(&app, "kontrol-tarihi"), (true, true), "shown and asked for under kontrol");
+    assert_eq!(
+        shown(&app, "kontrol-tarihi"),
+        (true, true),
+        "shown and asked for under kontrol"
+    );
     entry(&mut app, fe::Event::Save);
-    assert!(app.gis.form_entry.is_some(), "kontrol without its date is refused");
+    assert!(
+        app.gis.form_entry.is_some(),
+        "kontrol without its date is refused"
+    );
     assert!(!issues(&app).is_empty(), "the date is asked for");
-    entry(&mut app, fe::Event::Value("kontrol_tarihi".into(), "2026-11-20".into()));
+    entry(
+        &mut app,
+        fe::Event::Value("kontrol_tarihi".into(), "2026-11-20".into()),
+    );
     entry(&mut app, fe::Event::Save);
     assert!(app.gis.form_entry.is_none(), "written: {:#?}", issues(&app));
     let (_, road) = first(&app, "yol");
     assert_eq!(road.get("durum").map(String::as_str), Some("kontrol"));
-    assert_eq!(road.get("kontrol_tarihi").map(String::as_str), Some("2026-11-20"));
+    assert_eq!(
+        road.get("kontrol_tarihi").map(String::as_str),
+        Some("2026-11-20")
+    );
 
     // Alt bakım kayıtları: B1 listed by the road's code; a new work gets the code, not an id.
     open_road(&mut app);
-    assert_eq!(app.gis.form_entry.as_ref().expect("the form").related_now("bakimlar").len(), 1, "B1");
+    assert_eq!(
+        app.gis
+            .form_entry
+            .as_ref()
+            .expect("the form")
+            .related_now("bakimlar")
+            .len(),
+        1,
+        "B1"
+    );
     entry(&mut app, fe::Event::NewRelated("bakimlar".into()));
     let doc = &app.document.as_ref().expect("a drawing").model;
-    let codes: Vec<Option<String>> = doc.by_layer("bakim").map(|e| e.base().attrs.get("yol").cloned()).collect();
-    assert_eq!(codes, [Some("Y1".to_owned()), Some("Y1".to_owned())], "the new work holds the road's code");
+    let codes: Vec<Option<String>> = doc
+        .by_layer("bakim")
+        .map(|e| e.base().attrs.get("yol").cloned())
+        .collect();
+    assert_eq!(
+        codes,
+        [Some("Y1".to_owned()), Some("Y1".to_owned())],
+        "the new work holds the road's code"
+    );
     open_road(&mut app);
-    assert_eq!(app.gis.form_entry.as_ref().expect("the form").related_now("bakimlar").len(), 2, "both works listed");
+    assert_eq!(
+        app.gis
+            .form_entry
+            .as_ref()
+            .expect("the form")
+            .related_now("bakimlar")
+            .len(),
+        2,
+        "both works listed"
+    );
 
     // Rol kısıtı: a Veri girişi changes the road's values but makes no work.
-    as_role(&mut app, ProjectRole::Entry, vec![ProjectPermission::Read, ProjectPermission::FormsUse]);
-    app.document.as_mut().expect("a drawing").model.set_object_policy(kentos_domain::ObjectPolicy::AttributesOnly);
+    as_role(
+        &mut app,
+        ProjectRole::Entry,
+        vec![ProjectPermission::Read, ProjectPermission::FormsUse],
+    );
+    app.document
+        .as_mut()
+        .expect("a drawing")
+        .model
+        .set_object_policy(kentos_domain::ObjectPolicy::AttributesOnly);
     open_road(&mut app);
     entry(&mut app, fe::Event::NewRelated("bakimlar".into()));
-    assert_eq!(app.document.as_ref().expect("a drawing").model.by_layer("bakim").count(), 2, "no work made");
+    assert_eq!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .by_layer("bakim")
+            .count(),
+        2,
+        "no work made"
+    );
     open_road(&mut app);
     entry(&mut app, fe::Event::Value("durum".into(), "tamam".into()));
     entry(&mut app, fe::Event::Save);
-    assert!(app.gis.form_entry.is_none(), "written by the role: {:#?}", issues(&app));
-    assert_eq!(first(&app, "yol").1.get("durum").map(String::as_str), Some("tamam"));
+    assert!(
+        app.gis.form_entry.is_none(),
+        "written by the role: {:#?}",
+        issues(&app)
+    );
+    assert_eq!(
+        first(&app, "yol").1.get("durum").map(String::as_str),
+        Some("tamam")
+    );
 
     // Sürüm yükseltmesi: release 2 adds yuzey (asfalt, parke); the road written under release 1 opens with it, its
     // values kept, and takes the new field.
@@ -194,25 +307,55 @@ fn the_road_form_holds_its_list_its_condition_its_works_the_role_and_a_new_relea
     ]))
     .expect("the fields");
     let doc = app.document.as_mut().expect("a drawing");
-    doc.model.set_layer_fields("yol", fields, &[]).expect("a field added");
+    doc.model
+        .set_layer_fields("yol", fields, &[])
+        .expect("a field added");
     let mut items = road_items();
-    items.as_array_mut().expect("items").push(json!({ "type": "field", "id": "yuzey", "field": "yuzey" }));
+    items
+        .as_array_mut()
+        .expect("items")
+        .push(json!({ "type": "field", "id": "yuzey", "field": "yuzey" }));
     let mut settings = doc.model.settings().clone();
-    let form = settings.forms.iter_mut().find(|f| f.id == "yol-formu").expect("the road's form");
-    form.releases.push(serde_json::from_value(release(2, &items)).expect("release 2"));
-    form.draft = serde_json::from_value(json!({ "revision": 2, "items": items })).expect("the draft");
+    let form = settings
+        .forms
+        .iter_mut()
+        .find(|f| f.id == "yol-formu")
+        .expect("the road's form");
+    form.releases
+        .push(serde_json::from_value(release(2, &items)).expect("release 2"));
+    form.draft =
+        serde_json::from_value(json!({ "revision": 2, "items": items })).expect("the draft");
     doc.model.set_settings(settings);
     open_road(&mut app);
-    assert!(app.gis.form_entry.as_ref().expect("the form").state_for_tests("yuzey").is_some(), "opened with release 2");
+    assert!(
+        app.gis
+            .form_entry
+            .as_ref()
+            .expect("the form")
+            .state_for_tests("yuzey")
+            .is_some(),
+        "opened with release 2"
+    );
     entry(&mut app, fe::Event::Value("yuzey".into(), "beton".into()));
     entry(&mut app, fe::Event::Save);
-    assert!(app.gis.form_entry.is_some(), "release 2's list refuses beton");
+    assert!(
+        app.gis.form_entry.is_some(),
+        "release 2's list refuses beton"
+    );
     entry(&mut app, fe::Event::Value("yuzey".into(), "asfalt".into()));
     entry(&mut app, fe::Event::Save);
-    assert!(app.gis.form_entry.is_none(), "the new field taken: {:#?}", issues(&app));
+    assert!(
+        app.gis.form_entry.is_none(),
+        "the new field taken: {:#?}",
+        issues(&app)
+    );
     let (_, road) = first(&app, "yol");
     assert_eq!(road.get("yuzey").map(String::as_str), Some("asfalt"));
-    assert_eq!(road.get("kontrol_tarihi").map(String::as_str), Some("2026-11-20"), "release 1's values kept");
+    assert_eq!(
+        road.get("kontrol_tarihi").map(String::as_str),
+        Some("2026-11-20"),
+        "release 1's values kept"
+    );
     assert_eq!(road.get("durum").map(String::as_str), Some("tamam"));
 }
 

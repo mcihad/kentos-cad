@@ -190,7 +190,10 @@ impl Tool for Break {
             return;
         }
         self.target = Some((slot, p.world));
-        self.round = matches!(cx.doc.get(slot), Some(kentos_commands::Entity::Circle(_) | kentos_commands::Entity::Ellipse(_)));
+        self.round = matches!(
+            cx.doc.get(slot),
+            Some(kentos_commands::Entity::Circle(_) | kentos_commands::Entity::Ellipse(_))
+        );
         cx.selection.set_hover(None);
     }
 

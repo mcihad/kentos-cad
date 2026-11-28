@@ -149,7 +149,10 @@ pub(super) fn by_place(mut added: Vec<Value>, now: &State, before: &State) -> Ve
         .map(|id| format!("$slot:{id}"))
         .collect();
     for a in &mut added {
-        let place = a.get("labelOf").and_then(Value::as_str).and_then(|of| slots.iter().position(|s| s == of));
+        let place = a
+            .get("labelOf")
+            .and_then(Value::as_str)
+            .and_then(|of| slots.iter().position(|s| s == of));
         if let Some(k) = place {
             a["labelOf"] = json!(format!("$added:{k}"));
         }

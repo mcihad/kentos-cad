@@ -8,8 +8,8 @@ use std::path::Path;
 
 use kentos_commands::encoding::sha256_reader_hex;
 use kentos_commands::{
-    AssetCounts, AssetKind, AssetState, AssetStatus, AssetVia, AssetsCheck, AssetsChecked, BlockId, CommandResult,
-    Entity, SourceKind, TableSource,
+    AssetCounts, AssetKind, AssetState, AssetStatus, AssetVia, AssetsCheck, AssetsChecked, BlockId,
+    CommandResult, Entity, SourceKind, TableSource,
 };
 use kentos_domain::{Document, Slot};
 
@@ -57,17 +57,25 @@ impl Walk<'_> {
             return;
         }
         let Found { at, via, tried } = if kind == AssetKind::Xref {
-            crate::xrefs::found_source(path, relative, digest.unwrap_or(""), self.input.drawing.as_deref(), search)
+            crate::xrefs::found_source(
+                path,
+                relative,
+                digest.unwrap_or(""),
+                self.input.drawing.as_deref(),
+                search,
+            )
         } else {
             find(path, relative, self.input.drawing.as_deref(), search)
         };
         let (state, current) = match (&at, digest) {
             (None, _) => (AssetState::Missing, None),
-            (Some(p), Some(kept)) if self.digests() => match std::fs::File::open(p).and_then(sha256_reader_hex) {
-                Ok((_, now)) if now == kept => (AssetState::Ok, None),
-                Ok((_, now)) => (AssetState::Changed, Some(now)),
-                Err(_) => (AssetState::Missing, None),
-            },
+            (Some(p), Some(kept)) if self.digests() => {
+                match std::fs::File::open(p).and_then(sha256_reader_hex) {
+                    Ok((_, now)) if now == kept => (AssetState::Ok, None),
+                    Ok((_, now)) => (AssetState::Changed, Some(now)),
+                    Err(_) => (AssetState::Missing, None),
+                }
+            }
             (Some(_), _) => (AssetState::Ok, None),
         };
         self.out.push(AssetStatus {
@@ -88,7 +96,14 @@ impl Walk<'_> {
     }
 
     /// An address, not looked at; called `name`, else its last part.
-    fn address(&mut self, kind: AssetKind, url: &str, uid: Option<String>, block: Option<BlockId>, name: Option<String>) {
+    fn address(
+        &mut self,
+        kind: AssetKind,
+        url: &str,
+        uid: Option<String>,
+        block: Option<BlockId>,
+        name: Option<String>,
+    ) {
         if !self.wants(kind) {
             return;
         }
@@ -115,13 +130,33 @@ impl Walk<'_> {
             Entity::Image(i) => {
                 if let Some(f) = &i.image.file {
                     let search = self.search.clone();
-                    self.file(AssetKind::Image, f, None, &search, None, uid.clone(), block, None, None);
+                    self.file(
+                        AssetKind::Image,
+                        f,
+                        None,
+                        &search,
+                        None,
+                        uid.clone(),
+                        block,
+                        None,
+                        None,
+                    );
                 }
             }
             Entity::Raster(r) => {
                 if let Some(f) = &r.raster.file {
                     let search = self.search.clone();
-                    self.file(AssetKind::Raster, f, None, &search, None, uid.clone(), block, None, None);
+                    self.file(
+                        AssetKind::Raster,
+                        f,
+                        None,
+                        &search,
+                        None,
+                        uid.clone(),
+                        block,
+                        None,
+                        None,
+                    );
                 }
                 if let Some(u) = &r.raster.url {
                     self.address(AssetKind::Raster, u, uid.clone(), block, None);
@@ -130,7 +165,17 @@ impl Walk<'_> {
             Entity::PointCloud(c) => {
                 for s in &c.cloud.sources {
                     if let Some(f) = &s.file {
-                        self.file(AssetKind::PointCloud, f, None, &[], None, uid.clone(), block, None, None);
+                        self.file(
+                            AssetKind::PointCloud,
+                            f,
+                            None,
+                            &[],
+                            None,
+                            uid.clone(),
+                            block,
+                            None,
+                            None,
+                        );
                     }
                     if let Some(u) = &s.url {
                         self.address(AssetKind::PointCloud, u, uid.clone(), block, None);
@@ -138,8 +183,23 @@ impl Walk<'_> {
                 }
             }
             Entity::Table(t) => {
-                if let Some(TableSource::File { path: Some(p), digest, .. }) = &t.source {
-                    self.file(AssetKind::Table, p, None, &[], digest.as_deref(), uid.clone(), block, None, None);
+                if let Some(TableSource::File {
+                    path: Some(p),
+                    digest,
+                    ..
+                }) = &t.source
+                {
+                    self.file(
+                        AssetKind::Table,
+                        p,
+                        None,
+                        &[],
+                        digest.as_deref(),
+                        uid.clone(),
+                        block,
+                        None,
+                        None,
+                    );
                 }
             }
             _ => {}
@@ -147,7 +207,17 @@ impl Walk<'_> {
         for a in &e.base().attachments {
             let name = (!a.name.trim().is_empty()).then(|| a.name.clone());
             if let Some(f) = &a.file {
-                self.file(AssetKind::Attachment, f, None, &[], None, uid.clone(), block, None, name.clone());
+                self.file(
+                    AssetKind::Attachment,
+                    f,
+                    None,
+                    &[],
+                    None,
+                    uid.clone(),
+                    block,
+                    None,
+                    name.clone(),
+                );
             }
             if let Some(u) = &a.url {
                 self.address(AssetKind::Attachment, u, uid.clone(), block, name);
@@ -159,14 +229,20 @@ impl Walk<'_> {
 /// Whether `e` can link anything [`Walk::entity`] reports: a picture, a raster, a point cloud, a table read from a
 /// file, or an attachment.
 fn links_anything(e: &Entity) -> bool {
-    matches!(e, Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_) | Entity::Table(_))
-        || !e.base().attachments.is_empty()
+    matches!(
+        e,
+        Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_) | Entity::Table(_)
+    ) || !e.base().attachments.is_empty()
 }
 
 /// The drawing's linked files.
 pub fn check_in(doc: &Document, input: &AssetsCheck) -> AssetsChecked {
     let search = doc.settings().xref_paths.clone();
-    let mut w = Walk { input, search: search.clone(), out: Vec::new() };
+    let mut w = Walk {
+        input,
+        search: search.clone(),
+        out: Vec::new(),
+    };
     // External references, in the drawing's block order.
     for b in doc.blocks() {
         let Some(x) = &b.xref else { continue };
@@ -279,15 +355,25 @@ pub fn check_in(doc: &Document, input: &AssetsCheck) -> AssetsChecked {
             _ => counts.other += 1,
         }
     }
-    AssetsChecked { assets: w.out, counts, revision: doc.revision().to_string() }
+    AssetsChecked {
+        assets: w.out,
+        counts,
+        revision: doc.revision().to_string(),
+    }
 }
 
 pub fn validate(_cx: &ExecutionContext<'_>, _input: &AssetsCheck) -> CommandResult<()> {
-    CommandResult::Completed { output: (), warnings: Vec::new() }
+    CommandResult::Completed {
+        output: (),
+        warnings: Vec::new(),
+    }
 }
 
 pub fn plan(cx: &ExecutionContext<'_>, input: &AssetsCheck) -> CommandResult<AssetsChecked> {
-    CommandResult::Completed { output: check_in(cx.doc, input), warnings: Vec::new() }
+    CommandResult::Completed {
+        output: check_in(cx.doc, input),
+        warnings: Vec::new(),
+    }
 }
 
 /// Read-only: the same answer as the plan.

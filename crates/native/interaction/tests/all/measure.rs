@@ -229,7 +229,11 @@ fn a_geographic_project_measures_on_the_ellipsoid() {
         at(&mut b, 32.0, lat);
         at(&mut b, 32.103, lat);
         b.confirm();
-        assert_eq!(b.last_text(), Some(format!("Elipsoit üstünde: uzunluk {want} (1 kenar)").as_str()), "{lat}");
+        assert_eq!(
+            b.last_text(),
+            Some(format!("Elipsoit üstünde: uzunluk {want} (1 kenar)").as_str()),
+            "{lat}"
+        );
     }
     let mut b = geographic("area");
     for (lon, lat) in [(32.0, 36.0), (34.0, 36.0), (34.0, 38.0), (32.0, 38.0)] {
@@ -237,6 +241,9 @@ fn a_geographic_project_measures_on_the_ellipsoid() {
     }
     b.confirm();
     let said = b.last_text().unwrap_or_default().to_owned();
-    assert!(said.starts_with("Elipsoit üstünde: Alan 39510856108.41 m²"), "{said}");
+    assert!(
+        said.starts_with("Elipsoit üstünde: Alan 39510856108.41 m²"),
+        "{said}"
+    );
     assert!(said.ends_with("Çevre 799896.451 m"), "{said}");
 }

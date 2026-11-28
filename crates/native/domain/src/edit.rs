@@ -109,51 +109,90 @@ impl Document {
     /// Copy groups with room source identities remapped before any follower
     /// runs. A partial dependency group becomes an independent drawn boundary.
     /// Legacy objects and rooms without explicit sources use the old add path.
-    pub fn add_room_copies(&mut self, entities: Vec<Entity>, origins: &[crate::Uuid], label: &str)
-        -> Result<(Vec<Slot>, usize), Refusal> {
+    pub fn add_room_copies(
+        &mut self,
+        entities: Vec<Entity>,
+        origins: &[crate::Uuid],
+        label: &str,
+    ) -> Result<(Vec<Slot>, usize), Refusal> {
         // An opening copied with its wall goes on the wall's copy (docs/adr/0730 §4), a space with its sources on theirs.
-        let hosted = |e: &Entity| matches!(e, Entity::Opening(o)
-            if origins.iter().any(|id| id.to_string() == o.opening.host));
+        let hosted = |e: &Entity| {
+            matches!(e, Entity::Opening(o)
+            if origins.iter().any(|id| id.to_string() == o.opening.host))
+        };
         // A tag, a label, a hatch, a table or a dimension tied to an object copied with it (docs/adr/0793 §2).
-        let originals: crate::copy_links::Copies = origins.iter().map(|u| (*u.as_bytes(), [0; 16])).collect();
+        let originals: crate::copy_links::Copies =
+            origins.iter().map(|u| (*u.as_bytes(), [0; 16])).collect();
         let linked = |e: &Entity| crate::copy_links::links_to(e, &originals);
-        if !entities.iter().any(|e| matches!(e,Entity::Space(s) if s.space.sources.is_some()) || hosted(e) || linked(e)) {
-            return self.add_many(entities,label).map(|slots|(slots,0)).map_err(|e|Refusal(e.to_string()));
+        if !entities.iter().any(|e| {
+            matches!(e,Entity::Space(s) if s.space.sources.is_some()) || hosted(e) || linked(e)
+        }) {
+            return self
+                .add_many(entities, label)
+                .map(|slots| (slots, 0))
+                .map_err(|e| Refusal(e.to_string()));
         }
         if origins.is_empty() || !entities.len().is_multiple_of(origins.len()) {
-            return Err(Refusal("Kopyanın kaynak grubu eksik; hiçbir nesne eklenmedi.".into()));
+            return Err(Refusal(
+                "Kopyanın kaynak grubu eksik; hiçbir nesne eklenmedi.".into(),
+            ));
         }
-        let mut detached=0;
-        let mut copies=Vec::with_capacity(entities.len());
+        let mut detached = 0;
+        let mut copies = Vec::with_capacity(entities.len());
         for group in entities.chunks(origins.len()) {
-            let ids:Vec<_>=group.iter().map(|_|new_uid()).collect();
-            let map:HashMap<_,_>=origins.iter().map(ToString::to_string).zip(ids.iter().map(ToString::to_string)).collect();
-            let copied:crate::copy_links::Copies=origins.iter().map(|u|*u.as_bytes()).zip(ids.iter().map(|u|*u.as_bytes())).collect();
-            for (entity,uid) in group.iter().zip(ids) {
-                let mut entity=entity.clone();
-                crate::copy_links::relink(&mut entity,&copied);
-                if let Entity::Opening(o)=&mut entity && let Some(host)=map.get(&o.opening.host) {
+            let ids: Vec<_> = group.iter().map(|_| new_uid()).collect();
+            let map: HashMap<_, _> = origins
+                .iter()
+                .map(ToString::to_string)
+                .zip(ids.iter().map(ToString::to_string))
+                .collect();
+            let copied: crate::copy_links::Copies = origins
+                .iter()
+                .map(|u| *u.as_bytes())
+                .zip(ids.iter().map(|u| *u.as_bytes()))
+                .collect();
+            for (entity, uid) in group.iter().zip(ids) {
+                let mut entity = entity.clone();
+                crate::copy_links::relink(&mut entity, &copied);
+                if let Entity::Opening(o) = &mut entity
+                    && let Some(host) = map.get(&o.opening.host)
+                {
                     // Read back from its moved jambs onto its wall's copy, as a moved opening is (docs/adr/0341):
                     // a mirrored wall's path runs back, so its place along it is another.
-                    let wall=origins.iter().position(|id| id.to_string()==o.opening.host)
+                    let wall = origins
+                        .iter()
+                        .position(|id| id.to_string() == o.opening.host)
                         .and_then(|i| crate::opening_follow::wall_line(&group[i]));
-                    if let Some(line)=wall {
-                        *o.opening=crate::opening_follow::placed_on(&o.opening,Some(&line),true);
+                    if let Some(line) = wall {
+                        *o.opening =
+                            crate::opening_follow::placed_on(&o.opening, Some(&line), true);
                     }
-                    o.opening.host=host.clone();
+                    o.opening.host = host.clone();
                 }
-                if let Entity::Space(s)=&mut entity && let Some(sources)=&s.space.sources {
-                    if let Some(mut mapped)=sources.iter().map(|id|map.get(id).cloned()).collect::<Option<Vec<_>>>() {
-                        mapped.sort();s.space.sources=Some(mapped);
+                if let Entity::Space(s) = &mut entity
+                    && let Some(sources) = &s.space.sources
+                {
+                    if let Some(mut mapped) = sources
+                        .iter()
+                        .map(|id| map.get(id).cloned())
+                        .collect::<Option<Vec<_>>>()
+                    {
+                        mapped.sort();
+                        s.space.sources = Some(mapped);
                     } else {
-                        s.space.sources=None;s.space.seed=None;s.space.scope=Default::default();
-                        s.space.columns=Default::default();s.space.broken=None;detached+=1;
+                        s.space.sources = None;
+                        s.space.seed = None;
+                        s.space.scope = Default::default();
+                        s.space.columns = Default::default();
+                        s.space.broken = None;
+                        detached += 1;
                     }
                 }
-                copies.push((uid,entity));
+                copies.push((uid, entity));
             }
         }
-        self.add_many_with_uids(copies,label).map(|slots|(slots,detached))
+        self.add_many_with_uids(copies, label)
+            .map(|slots| (slots, detached))
     }
 
     /// Adds objects with the persistent ids given (a caller's new records, docs/adr/0440 §2) as one change;
@@ -642,7 +681,11 @@ impl Document {
                     "“{name}” bir grup; veri kümesi bilgisi, türetim kaydı ve kaynağı yalnız katmanın olur."
                 )));
             }
-            if let Some(problem) = next.origin.as_ref().and_then(kentos_contracts::layer_origin_problem) {
+            if let Some(problem) = next
+                .origin
+                .as_ref()
+                .and_then(kentos_contracts::layer_origin_problem)
+            {
                 return Err(Refusal(problem));
             }
             if let Some(problem) = next

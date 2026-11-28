@@ -56,7 +56,10 @@ pub(super) fn distances(route: &Route, path: &[Vec2]) -> Option<Vec<f64>> {
                 u = lo;
             }
             // A closed curve's last vertex is its first point: the end, not the start again.
-            if u < u_prev && i + 1 == path.len() && js_hypot(p.x - c.point(hi).x, p.y - c.point(hi).y) <= far {
+            if u < u_prev
+                && i + 1 == path.len()
+                && js_hypot(p.x - c.point(hi).x, p.y - c.point(hi).y) <= far
+            {
                 u = hi;
             }
             let q = c.point(u);
@@ -96,7 +99,9 @@ pub(super) fn distances(route: &Route, path: &[Vec2]) -> Option<Vec<f64>> {
             // Move on while the next edge holds the vertex at least as closely.
             while k + 1 < edges.len() {
                 let (dn, en) = place(k + 1, *p);
-                if en < err || (en == err && dn >= d && i > 0 && d >= edges[k].start + edges[k].length) {
+                if en < err
+                    || (en == err && dn >= d && i > 0 && d >= edges[k].start + edges[k].length)
+                {
                     k += 1;
                     (d, err) = (dn, en);
                 } else {
@@ -230,7 +235,11 @@ pub(super) fn ink(
                 if piece.is_empty() {
                     piece.push(cut(a, b, s0, s1, s0 + at));
                 }
-                piece.push(if to >= len { b } else { cut(a, b, s0, s1, s0 + to) });
+                piece.push(if to >= len {
+                    b
+                } else {
+                    cut(a, b, s0, s1, s0 + to)
+                });
             }
             at = to;
             left -= amount;
@@ -310,7 +319,15 @@ pub(super) fn emit(
         return false;
     };
     let exact = |t: f64| route.point_at(t);
-    let Some(ink) = ink(path, &dist, closed, route.total, dash, style.dash_offset, &exact) else {
+    let Some(ink) = ink(
+        path,
+        &dist,
+        closed,
+        route.total,
+        dash,
+        style.dash_offset,
+        &exact,
+    ) else {
         return false;
     };
     let mut solid = style.clone();

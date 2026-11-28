@@ -2,10 +2,10 @@
 //! Öznitelikler, Mimari and Yol neither. Moved from the map package's map_survey_panel_tests.rs: it spans the modules
 //! (docs/adr/9199 §4.14).
 
+use crate::app::{App, Message, Panel};
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
-use crate::app::{App, Message, Panel};
 
 fn fixtures() -> String {
     std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -41,28 +41,45 @@ fn survey_rows(app: &mut App, slot: u32) -> Vec<(String, String)> {
         .sections
         .iter()
         .find(|s| s.id == "mapSurvey")
-        .map(|s| s.rows.iter().map(|r| (r.label.to_string(), r.value.clone())).collect())
+        .map(|s| {
+            s.rows
+                .iter()
+                .map(|r| (r.label.to_string(), r.value.clone()))
+                .collect()
+        })
         .unwrap_or_default()
 }
 
 fn row<'a>(rows: &'a [(String, String)], label: &str) -> Option<&'a str> {
-    rows.iter().find(|(l, _)| l == label).map(|(_, v)| v.as_str())
+    rows.iter()
+        .find(|(l, _)| l == label)
+        .map(|(_, v)| v.as_str())
 }
 
 #[test]
 fn harita_edits_the_archive_gis_reads_the_point_mimari_and_yol_neither() {
     let mut map = opened(snapshot(), Some(Module::Map));
-    assert!(map.offers("map.survey") && map.offers("map.survey.import") && map.offers("map.survey.select"));
+    assert!(
+        map.offers("map.survey")
+            && map.offers("map.survey.import")
+            && map.offers("map.survey.select")
+    );
     assert!(!survey_rows(&mut map, 1).is_empty());
     let mut gis = opened(snapshot(), Some(Module::Gis));
     assert!(!gis.shows_panel(Panel::MapSurvey));
     assert!(!gis.offers("map.survey") && !gis.offers("map.survey.import"));
     assert!(gis.offers("map.survey.select"));
-    assert_eq!(row(&survey_rows(&mut gis, 1), "Kabul edilen nokta"), Some("kn-1 · 1. revizyon"));
+    assert_eq!(
+        row(&survey_rows(&mut gis, 1), "Kabul edilen nokta"),
+        Some("kn-1 · 1. revizyon")
+    );
     for module in [Module::Architecture, Module::Road] {
         let mut app = opened(snapshot(), Some(module));
         assert!(!app.shows_panel(Panel::MapSurvey), "{module:?}");
-        assert!(!app.offers("map.survey") && !app.offers("map.survey.select"), "{module:?}");
+        assert!(
+            !app.offers("map.survey") && !app.offers("map.survey.select"),
+            "{module:?}"
+        );
         assert!(survey_rows(&mut app, 1).is_empty(), "{module:?}");
     }
 }

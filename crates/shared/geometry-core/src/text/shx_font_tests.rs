@@ -77,7 +77,11 @@ fn unifont_subshape_operand_is_two_bytes_high_first() {
     let data = unifont(
         0,
         0,
-        &[(0x41, A), (0x100, &[7, 0x00, 0x41, 0]), (0x102, &[7, 0x01, 0x00, 0])],
+        &[
+            (0x41, A),
+            (0x100, &[7, 0x00, 0x41, 0]),
+            (0x102, &[7, 0x01, 0x00, 0]),
+        ],
     );
     let f = ShapeFile::read(&data).unwrap();
     let direct = draw_text(&[(&f, f.glyph('A').unwrap())]).unwrap();
@@ -91,7 +95,10 @@ fn a_unifont_that_is_not_unicode_or_has_a_bad_descriptor_is_refused() {
     let shapes = unifont(2, 0, &[(0x41, A)]);
     let f = ShapeFile::read(&shapes).unwrap();
     assert!(f.glyph('A').unwrap_err().contains("Unicode değil"));
-    assert!(f.draw_number(0x41).is_ok(), "a shape-file unifont still serves shapes");
+    assert!(
+        f.draw_number(0x41).is_ok(),
+        "a shape-file unifont still serves shapes"
+    );
     let mut bad = unifont(0, 0, &[(0x41, A)]);
     let modes = UNIFONT.len() + 4 + 2 + b"KENTOS TEST\0".len() + 2;
     bad[modes] = 1;
@@ -146,7 +153,10 @@ fn extended_bigfont_primitives_are_refused_unless_skipped_as_vertical() {
             .unwrap_err()
             .contains("Genişletilmiş")
     );
-    let g = bigfont(&ext, &[(0x8140, &[14, 7, 0, 0x81, 0x41, 0, 0, 16, 16, 0x10, 0])]);
+    let g = bigfont(
+        &ext,
+        &[(0x8140, &[14, 7, 0, 0x81, 0x41, 0, 0, 16, 16, 0x10, 0])],
+    );
     let big = ShapeFile::read(&g).unwrap();
     assert_eq!(
         draw_text(&[(&big, 0x8140)]).unwrap(),

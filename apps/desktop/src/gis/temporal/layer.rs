@@ -62,7 +62,11 @@ impl TimeField {
     /// What its choice says under its name: its dates and one of them as read (UTC), or why it holds none.
     fn detail(&self) -> String {
         match self.sample {
-            Some(t) => format!("{} tarih · ör. {} UTC", self.dates, time::show(t, Unit::Minute)),
+            Some(t) => format!(
+                "{} tarih · ör. {} UTC",
+                self.dates,
+                time::show(t, Unit::Minute)
+            ),
             None if self.filled == 0 => "boş".to_owned(),
             None => format!("tarih değil ({} değer)", self.filled),
         }
@@ -182,9 +186,17 @@ impl App {
         let fields = self.time_fields(&layer);
         let looks = |n: &str| {
             let n = n.to_lowercase();
-            ["tarih", "baslangic", "başlangıç", "start", "date", "zaman", "time"]
-                .iter()
-                .any(|w| n.contains(w))
+            [
+                "tarih",
+                "baslangic",
+                "başlangıç",
+                "start",
+                "date",
+                "zaman",
+                "time",
+            ]
+            .iter()
+            .any(|w| n.contains(w))
         };
         let most = fields.first().map_or(0, |f| f.dates);
         let guess = fields
@@ -391,7 +403,10 @@ impl App {
         if s.timeless > 0 {
             lines.push((
                 Kind::Info,
-                format!("{} zamansız nesne sürgü açıkken de hep görünür.", s.timeless),
+                format!(
+                    "{} zamansız nesne sürgü açıkken de hep görünür.",
+                    s.timeless
+                ),
             ));
         }
         if s.timed > 0 {

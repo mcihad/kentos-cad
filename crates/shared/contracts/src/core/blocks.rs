@@ -163,7 +163,10 @@ impl BlockFault {
                 definition,
                 problem,
                 ..
-            } => format!("“{}” bloğunun dinamik parametreleri: {problem}.", name(*definition)),
+            } => format!(
+                "“{}” bloğunun dinamik parametreleri: {problem}.",
+                name(*definition)
+            ),
             BlockFault::BadValues { problem, .. } => {
                 format!("Yerleştirmenin parametre değeri bloğa uymuyor: {problem}.")
             }
@@ -179,7 +182,9 @@ pub fn options_problem(o: &crate::entity::AttributeOptions) -> Option<String> {
         return Some("sabit öznitelik sorulmaz; doğrula ve ön ayarlı seçilemez.".into());
     }
     if o.constant && o.movable {
-        return Some("sabit özniteliğin yeri yerleştirmede değişmez; taşınabilir seçilemez.".into());
+        return Some(
+            "sabit özniteliğin yeri yerleştirmede değişmez; taşınabilir seçilemez.".into(),
+        );
     }
     if o.constant && o.field.is_some() {
         return Some("sabit öznitelik alan olamaz: değeri tanımındakidir.".into());
@@ -205,8 +210,14 @@ pub fn card_problem(card: &crate::entity::BlockCard) -> Option<String> {
         if p.family_id.0 == [0; 16] || p.type_id.0 == [0; 16] {
             return Some("bileşen ailesinin ve tipinin kimliği sıfır olamaz.".into());
         }
-        if p.type_name.trim().is_empty() || p.type_name.trim() != p.type_name || p.type_name.chars().count() > 128 || p.type_name.chars().any(char::is_control) {
-            return Some("bileşen tipi 1–128 karakter olmalı; başında/sonunda boşluk bulunmamalı.".into());
+        if p.type_name.trim().is_empty()
+            || p.type_name.trim() != p.type_name
+            || p.type_name.chars().count() > 128
+            || p.type_name.chars().any(char::is_control)
+        {
+            return Some(
+                "bileşen tipi 1–128 karakter olmalı; başında/sonunda boşluk bulunmamalı.".into(),
+            );
         }
         if p.release == 0 {
             return Some("yayın numarası en az 1 olmalı.".into());
@@ -215,18 +226,26 @@ pub fn card_problem(card: &crate::entity::BlockCard) -> Option<String> {
     if card.version == 0 {
         return Some("sürüm en az 1 olmalı.".into());
     }
-    if let Some(problem) = card.element.as_ref().and_then(crate::entity::BlockElement::problem) {
+    if let Some(problem) = card
+        .element
+        .as_ref()
+        .and_then(crate::entity::BlockElement::problem)
+    {
         return Some(format!("yapı elemanı: {problem}"));
     }
     if let Some(c) = &card.category
         && (c.trim().is_empty() || c.trim() != c)
     {
-        return Some(format!("“{c}” kategorisi boş ya da başında, sonunda boşluk var."));
+        return Some(format!(
+            "“{c}” kategorisi boş ya da başında, sonunda boşluk var."
+        ));
     }
     let mut seen = std::collections::HashSet::with_capacity(card.tags.len());
     for t in &card.tags {
         if t.trim().is_empty() || t.trim() != t {
-            return Some(format!("“{t}” etiketi boş ya da başında, sonunda boşluk var."));
+            return Some(format!(
+                "“{t}” etiketi boş ya da başında, sonunda boşluk var."
+            ));
         }
         if !seen.insert(name_key(t)) {
             return Some(format!("“{t}” etiketi iki kez var."));
@@ -519,7 +538,9 @@ pub fn places<B: Borrow<BlockDefinition>, E: Borrow<Entity>>(
         {
             let problem = match &blocks[k].borrow().dynamic {
                 None => Some("blok dinamik değil".to_owned()),
-                Some(d) => crate::block_dynamic::values_problem(d, &insert.parameters).map(|(_, m)| m),
+                Some(d) => {
+                    crate::block_dynamic::values_problem(d, &insert.parameters).map(|(_, m)| m)
+                }
             };
             if let Some(problem) = problem {
                 return Err(BlockFault::BadValues {

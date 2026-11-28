@@ -306,7 +306,10 @@ pub fn edge_on(c: Vec2, u: Vec2, w: Vec2, t0: f64, t1: f64, full: bool) -> Optio
     if !(hi - lo > 1e-12 * l) {
         return None;
     }
-    Some((v(c.x + e.x * lo, c.y + e.y * lo), v(c.x + e.x * hi, c.y + e.y * hi)))
+    Some((
+        v(c.x + e.x * lo, c.y + e.y * lo),
+        v(c.x + e.x * hi, c.y + e.y * hi),
+    ))
 }
 
 /// Segments of an arc of `sweep` radians, by the app's rule (`tessellateArc`,

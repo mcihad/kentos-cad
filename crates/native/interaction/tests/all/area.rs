@@ -277,9 +277,15 @@ fn a_second_click_in_the_same_region_selects_the_area_already_there() {
     assert_eq!(b.doc.len(), count, "no second area");
     assert_eq!(b.selected(), first, "the area there is selected");
     let said = b.last_text().unwrap_or_default().to_owned();
-    assert!(said.starts_with("Bu bölge “Çizim” katmanında zaten bir alan"), "{said}");
+    assert!(
+        said.starts_with("Bu bölge “Çizim” katmanında zaten bir alan"),
+        "{said}"
+    );
     // Another layer active: a copy there, on purpose.
-    let other = ["parsel", "bina", "0"].into_iter().find(|id| b.doc.set_active_layer(id)).expect("another layer");
+    let other = ["parsel", "bina", "0"]
+        .into_iter()
+        .find(|id| b.doc.set_active_layer(id))
+        .expect("another layer");
     b.click(-23.0, -10.0);
     assert_eq!(b.doc.len(), count + 1, "a copy on {other}");
 }
@@ -558,9 +564,17 @@ fn a_circle_apart_keeps_its_kind_in_a_union() {
     let circle = b.add_circle("parsel", [500.0, 500.0], 2.0);
     select(&mut b, &[1, 2, circle.0]);
     b.start("areaUnion");
-    assert!(matches!(b.doc.get(circle), Some(kentos_commands::Entity::Circle(_))), "the circle stays a circle");
+    assert!(
+        matches!(b.doc.get(circle), Some(kentos_commands::Entity::Circle(_))),
+        "the circle stays a circle"
+    );
     let said = b.last_text().unwrap_or_default().to_owned();
-    assert!(said.ends_with("Başkalarına değmeyen 1 nesne olduğu gibi bırakıldı (türü ve bağları korunur)."), "{said}");
+    assert!(
+        said.ends_with(
+            "Başkalarına değmeyen 1 nesne olduğu gibi bırakıldı (türü ve bağları korunur)."
+        ),
+        "{said}"
+    );
 }
 
 /// UR-094: an area with a tied hatch split in two: the result says the hatch follows the first piece only.
@@ -584,7 +598,11 @@ fn splitting_an_area_says_its_tied_hatch_follows_one_piece() {
     b.click(5.0, 13.0);
     b.confirm();
     let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
-    assert!(said.iter().any(|t| t.starts_with("Bölünen alana bağlı 1 tarama yalnız ilk parçayı izler")), "{said:?}");
+    assert!(
+        said.iter()
+            .any(|t| t.starts_with("Bölünen alana bağlı 1 tarama yalnız ilk parçayı izler")),
+        "{said:?}"
+    );
 }
 
 /// UR-106: an ellipse split in two: the result says its pieces are straight-edged areas, not ellipses.
@@ -606,5 +624,9 @@ fn splitting_an_ellipse_says_its_pieces_are_polygons() {
     b.click(300.0, 10.0);
     b.confirm();
     let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
-    assert!(said.iter().any(|t| t.starts_with("Bölünen 1 elips ya da eğrinin parçaları düz kenarlı")), "{said:?}");
+    assert!(
+        said.iter()
+            .any(|t| t.starts_with("Bölünen 1 elips ya da eğrinin parçaları düz kenarlı")),
+        "{said:?}"
+    );
 }

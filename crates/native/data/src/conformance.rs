@@ -320,15 +320,18 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
     {
         let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
         let asked = [keys[2], keys[0], i64::MAX - 7];
-        let got = tx.rows(table_name, &asked).map_err(|e| format!("rows: {e}"))?;
+        let got = tx
+            .rows(table_name, &asked)
+            .map_err(|e| format!("rows: {e}"))?;
         report.check(fids(&got) == sorted(vec![keys[0], keys[2]]), || {
             format!("işlemde okunan anahtarlar {:?}", fids(&got))
         });
         for f in &got {
             if let Some((_, r)) = truth.rows.iter().find(|(k, _)| *k == f.fid) {
-                report.check(f.values == r.values && f.shape() == r.geometry.as_ref(), || {
-                    format!("{}: işlemde okunan satır farklı", f.fid)
-                });
+                report.check(
+                    f.values == r.values && f.shape() == r.geometry.as_ref(),
+                    || format!("{}: işlemde okunan satır farklı", f.fid),
+                );
             }
         }
         tx.rollback().map_err(|e| format!("rollback: {e}"))?;
@@ -534,15 +537,23 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
     let mut want: Vec<(Value, u64)> = KULLANIM
         .iter()
         .map(|k| {
-            let n = data.iter().filter(|r| r.values[at] == Value::Text((*k).into())).count();
+            let n = data
+                .iter()
+                .filter(|r| r.values[at] == Value::Text((*k).into()))
+                .count();
             (Value::Text((*k).into()), n as u64)
         })
         .collect();
-    want.push((Value::Null, data.iter().filter(|r| r.values[at] == Value::Null).count() as u64));
+    want.push((
+        Value::Null,
+        data.iter().filter(|r| r.values[at] == Value::Null).count() as u64,
+    ));
     let got = source
         .groups(table_name, "kullanim", None, 10)
         .map_err(|e| format!("groups: {e}"))?;
-    report.check(got == want, || format!("gruplar {got:?}, beklenen {want:?}"));
+    report.check(got == want, || {
+        format!("gruplar {got:?}, beklenen {want:?}")
+    });
     let got = source
         .groups(table_name, "kullanim", None, 2)
         .map_err(|e| format!("groups 2: {e}"))?;
@@ -553,7 +564,10 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
         .groups(table_name, "ada", Some(&parks), 1000)
         .map_err(|e| format!("groups ada: {e}"))?;
     let mut ada_want: Vec<(Value, u64)> = Vec::new();
-    for r in data.iter().filter(|r| r.values[at] == Value::Text("Park".into())) {
+    for r in data
+        .iter()
+        .filter(|r| r.values[at] == Value::Text("Park".into()))
+    {
         match ada_want.iter_mut().find(|(v, _)| *v == r.values[ada]) {
             Some((_, n)) => *n += 1,
             None => ada_want.push((r.values[ada].clone(), 1)),
@@ -561,7 +575,14 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
     }
     ada_want.sort_by(|(a, _), (b, _)| crate::driver::group_order(a, b));
     report.check(got == ada_want, || format!("ada grupları {got:?}"));
-    report.check(got.iter().map(|(_, n)| n).sum::<u64>() == data.iter().filter(|r| r.values[at] == Value::Text("Park".into())).count() as u64, || "ada gruplarının toplamı".into());
+    report.check(
+        got.iter().map(|(_, n)| n).sum::<u64>()
+            == data
+                .iter()
+                .filter(|r| r.values[at] == Value::Text("Park".into()))
+                .count() as u64,
+        || "ada gruplarının toplamı".into(),
+    );
 
     // Simplified geometry: rings keep closing, the nearly straight vertex goes.
     let got = collect(
@@ -717,65 +738,118 @@ pub fn run(source: &dyn Source, table_name: &str, srid: i32) -> Result<Report, S
 /// range read back as written; a list written again holds what it holds now; a rule taken away is gone.
 fn rules_checks(source: &dyn Source, table_name: &str, report: &mut Report) -> Result<(), String> {
     use crate::schema::{ColumnRule, RuledColumn};
-    let caps = source.capabilities(table_name).map_err(|e| format!("capabilities: {e}"))?;
-    report.check(caps.set_rules, || "yazılabilir tabloya kural yazılamıyor".into());
+    let caps = source
+        .capabilities(table_name)
+        .map_err(|e| format!("capabilities: {e}"))?;
+    report.check(caps.set_rules, || {
+        "yazılabilir tabloya kural yazılamıyor".into()
+    });
     let list = |values: &[(&str, &str)]| {
-        ColumnRule::Values(values.iter().map(|(v, l)| ((*v).to_owned(), Some((*l).to_owned()))).collect())
+        ColumnRule::Values(
+            values
+                .iter()
+                .map(|(v, l)| ((*v).to_owned(), Some((*l).to_owned())))
+                .collect(),
+        )
     };
-    let first = RuledColumn { column: "not_1".into(), rule: Some(list(&[("A", "Aktif"), ("B", "Bakımda")])) };
+    let first = RuledColumn {
+        column: "not_1".into(),
+        rule: Some(list(&[("A", "Aktif"), ("B", "Bakımda")])),
+    };
     let range = RuledColumn {
         column: "sayi_1".into(),
-        rule: Some(ColumnRule::Range { min: Some(1.0), min_included: true, max: Some(40.0), max_included: false }),
+        rule: Some(ColumnRule::Range {
+            min: Some(1.0),
+            min_included: true,
+            max: Some(40.0),
+            max_included: false,
+        }),
     };
     let ruled = |source: &dyn Source| -> Result<Vec<RuledColumn>, String> {
-        let mut r = source.rules(table_name).map_err(|e| format!("rules: {e}"))?;
+        let mut r = source
+            .rules(table_name)
+            .map_err(|e| format!("rules: {e}"))?;
         r.sort_by(|a, b| a.column.cmp(&b.column));
         Ok(r)
     };
     let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
-    tx.set_rules(table_name, std::slice::from_ref(&first)).map_err(|e| format!("set_rules: {e}"))?;
+    tx.set_rules(table_name, std::slice::from_ref(&first))
+        .map_err(|e| format!("set_rules: {e}"))?;
     tx.rollback().map_err(|e| format!("rollback: {e}"))?;
-    report.check(ruled(source)?.is_empty(), || "geri alınan kural kaynakta kaldı".into());
+    report.check(ruled(source)?.is_empty(), || {
+        "geri alınan kural kaynakta kaldı".into()
+    });
     let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
-    tx.set_rules(table_name, &[first.clone(), range.clone()]).map_err(|e| format!("set_rules: {e}"))?;
+    tx.set_rules(table_name, &[first.clone(), range.clone()])
+        .map_err(|e| format!("set_rules: {e}"))?;
     tx.commit().map_err(|e| format!("commit: {e}"))?;
     let read = ruled(source)?;
-    report.check(read == [first.clone(), range.clone()], || format!("yazılan kurallar {read:?}"));
+    report.check(read == [first.clone(), range.clone()], || {
+        format!("yazılan kurallar {read:?}")
+    });
     // Written again: the list holds what it holds now, not what it held.
-    let again = RuledColumn { column: "not_1".into(), rule: Some(list(&[("C", "Kapalı")])) };
-    let gone = RuledColumn { column: "sayi_1".into(), rule: None };
+    let again = RuledColumn {
+        column: "not_1".into(),
+        rule: Some(list(&[("C", "Kapalı")])),
+    };
+    let gone = RuledColumn {
+        column: "sayi_1".into(),
+        rule: None,
+    };
     let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
-    tx.set_rules(table_name, &[again.clone(), gone]).map_err(|e| format!("set_rules: {e}"))?;
+    tx.set_rules(table_name, &[again.clone(), gone])
+        .map_err(|e| format!("set_rules: {e}"))?;
     tx.commit().map_err(|e| format!("commit: {e}"))?;
     let read = ruled(source)?;
-    report.check(read == [again], || format!("yeniden yazılan kurallar {read:?}"));
+    report.check(read == [again], || {
+        format!("yeniden yazılan kurallar {read:?}")
+    });
     Ok(())
 }
 
 /// Columns added to the table (docs/adr/9318): a rolled back add leaves it as it was; added ones come last, nullable,
 /// empty (NULL) in every row, and take a value like any field.
-fn columns_checks(source: &dyn Source, table_name: &str, report: &mut Report) -> Result<(), String> {
-    let caps = source.capabilities(table_name).map_err(|e| format!("capabilities: {e}"))?;
-    report.check(caps.add_columns, || "yazılabilir tabloya sütun eklenemiyor".into());
+fn columns_checks(
+    source: &dyn Source,
+    table_name: &str,
+    report: &mut Report,
+) -> Result<(), String> {
+    let caps = source
+        .capabilities(table_name)
+        .map_err(|e| format!("capabilities: {e}"))?;
+    report.check(caps.add_columns, || {
+        "yazılabilir tabloya sütun eklenemiyor".into()
+    });
     let added = [
         crate::schema::Field::new("not_1", FieldKind::Text { max: None }),
         crate::schema::Field::new("sayi_1", FieldKind::INT32),
     ];
     let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
-    tx.add_columns(table_name, &added[..1]).map_err(|e| format!("add_columns: {e}"))?;
+    tx.add_columns(table_name, &added[..1])
+        .map_err(|e| format!("add_columns: {e}"))?;
     tx.rollback().map_err(|e| format!("rollback: {e}"))?;
-    let kept = source.schema(table_name).map_err(|e| format!("schema: {e}"))?;
-    report.check(kept.field("not_1").is_none(), || "geri alınan sütun tabloda kaldı".into());
+    let kept = source
+        .schema(table_name)
+        .map_err(|e| format!("schema: {e}"))?;
+    report.check(kept.field("not_1").is_none(), || {
+        "geri alınan sütun tabloda kaldı".into()
+    });
     let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
-    tx.add_columns(table_name, &added).map_err(|e| format!("add_columns: {e}"))?;
+    tx.add_columns(table_name, &added)
+        .map_err(|e| format!("add_columns: {e}"))?;
     tx.commit().map_err(|e| format!("commit: {e}"))?;
-    let grown = source.schema(table_name).map_err(|e| format!("schema: {e}"))?;
+    let grown = source
+        .schema(table_name)
+        .map_err(|e| format!("schema: {e}"))?;
     let names: Vec<&str> = grown.fields.iter().map(|f| f.name.as_str()).collect();
     report.check(
         names.ends_with(&["not_1", "sayi_1"]) && grown.field("not_1").is_some_and(|f| f.nullable),
         || format!("eklenen sütunlar {names:?}"),
     );
-    let asked = Request { columns: Some(vec!["not_1".into(), "sayi_1".into()]), ..Request::all() };
+    let asked = Request {
+        columns: Some(vec!["not_1".into(), "sayi_1".into()]),
+        ..Request::all()
+    };
     let read = collect(source, table_name, &asked).map_err(|e| format!("added read: {e}"))?;
     report.check(
         !read.is_empty() && read.iter().all(|f| f.values.iter().all(Value::is_null)),
@@ -785,14 +859,27 @@ fn columns_checks(source: &dyn Source, table_name: &str, report: &mut Report) ->
     let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
     tx.update(
         table_name,
-        &[Change { fid: first, geometry: None, values: vec![("not_1".into(), Value::Text("yeni".into()))] }],
+        &[Change {
+            fid: first,
+            geometry: None,
+            values: vec![("not_1".into(), Value::Text("yeni".into()))],
+        }],
     )
     .map_err(|e| format!("update added: {e}"))?;
     tx.commit().map_err(|e| format!("commit: {e}"))?;
-    let again = collect(source, table_name, &Request { columns: Some(vec!["not_1".into()]), ..Request::fids(vec![first]) })
-        .map_err(|e| format!("added read: {e}"))?;
+    let again = collect(
+        source,
+        table_name,
+        &Request {
+            columns: Some(vec!["not_1".into()]),
+            ..Request::fids(vec![first])
+        },
+    )
+    .map_err(|e| format!("added read: {e}"))?;
     report.check(
-        again.first().is_some_and(|f| f.values.first() == Some(&Value::Text("yeni".into()))),
+        again
+            .first()
+            .is_some_and(|f| f.values.first() == Some(&Value::Text("yeni".into()))),
         || "eklenen sütuna yazılan değer okunmadı".into(),
     );
     Ok(())
@@ -801,11 +888,23 @@ fn columns_checks(source: &dyn Source, table_name: &str, report: &mut Report) ->
 /// A query read as a table (docs/adr/9113 §2): its shape (the key and the geometry chosen, its fields in its order, the
 /// system of its geometry), never writable; its rows, a box and a condition over it and its groups as the table's
 /// truth says them; a write refused; a text key and a writing statement refused.
-fn query_checks(source: &dyn Source, table_name: &str, srid: i32, truth: &Truth, report: &mut Report) -> Result<(), String> {
+fn query_checks(
+    source: &dyn Source,
+    table_name: &str,
+    srid: i32,
+    truth: &Truth,
+    report: &mut Report,
+) -> Result<(), String> {
     use crate::query::QueryTable;
     let quote = |n: &str| format!("\"{}\"", n.replace('"', "\"\""));
-    let schema = source.schema(table_name).map_err(|e| format!("schema: {e}"))?;
-    let geometry = schema.geometry.as_ref().map(|g| g.name.clone()).unwrap_or_default();
+    let schema = source
+        .schema(table_name)
+        .map_err(|e| format!("schema: {e}"))?;
+    let geometry = schema
+        .geometry
+        .as_ref()
+        .map(|g| g.name.clone())
+        .unwrap_or_default();
     let from: Vec<String> = table_name.split('.').map(quote).collect();
     let q = QueryTable {
         sql: format!(
@@ -819,52 +918,115 @@ fn query_checks(source: &dyn Source, table_name: &str, srid: i32, truth: &Truth,
     };
     let text = q.text();
     // Its columns before a key and a geometry are chosen, the key offered first.
-    let cols = source.query_columns(&q.sql).map_err(|e| format!("sorgunun sütunları: {e}"))?;
-    let read: Vec<(&str, bool, bool)> = cols.iter().map(|c| (c.name.as_str(), c.integer, c.geometry)).collect();
+    let cols = source
+        .query_columns(&q.sql)
+        .map_err(|e| format!("sorgunun sütunları: {e}"))?;
+    let read: Vec<(&str, bool, bool)> = cols
+        .iter()
+        .map(|c| (c.name.as_str(), c.integer, c.geometry))
+        .collect();
     report.check(
-        read == [("anahtar", true, false), ("ada", true, false), ("kullanim", false, false), ("alan", false, false), ("sekil", false, true)],
+        read == [
+            ("anahtar", true, false),
+            ("ada", true, false),
+            ("kullanim", false, false),
+            ("alan", false, false),
+            ("sekil", false, true),
+        ],
         || format!("sorgunun sütunları {read:?}"),
     );
-    report.check(crate::query::likely_key(&cols) == Some("anahtar"), || "sorgunun anahtarı önerilmedi".into());
-    let shape = source.schema(&text).map_err(|e| format!("sorgunun şekli: {e}"))?;
+    report.check(crate::query::likely_key(&cols) == Some("anahtar"), || {
+        "sorgunun anahtarı önerilmedi".into()
+    });
+    let shape = source
+        .schema(&text)
+        .map_err(|e| format!("sorgunun şekli: {e}"))?;
     let names: Vec<&str> = shape.fields.iter().map(|f| f.name.as_str()).collect();
-    report.check(shape.key == "anahtar" && names == ["ada", "kullanim", "alan"], || format!("sorgunun şekli {shape:?}"));
     report.check(
-        shape.geometry.as_ref().is_some_and(|g| g.name == "sekil" && g.srid == Some(srid)),
+        shape.key == "anahtar" && names == ["ada", "kullanim", "alan"],
+        || format!("sorgunun şekli {shape:?}"),
+    );
+    report.check(
+        shape
+            .geometry
+            .as_ref()
+            .is_some_and(|g| g.name == "sekil" && g.srid == Some(srid)),
         || format!("sorgunun geometrisi {:?}", shape.geometry),
     );
-    let can = source.capabilities(&text).map_err(|e| format!("sorgunun yetenekleri: {e}"))?;
+    let can = source
+        .capabilities(&text)
+        .map_err(|e| format!("sorgunun yetenekleri: {e}"))?;
     report.check(!can.writable(), || "sorgu yazılabilir sayıldı".into());
     let park = Condition::eq("kullanim", "Park");
     let all = truth.keep(None, Some(&park));
-    let got = collect(source, &text, &Request::all()).map_err(|e| format!("sorgunun satırları: {e}"))?;
-    report.check(sorted(fids(&got)) == all, || format!("sorgunun satırları {} ≠ {}", got.len(), all.len()));
-    let n = source.count(&text, &Request::all(), true).map_err(|e| format!("sorgunun sayısı: {e}"))?;
-    report.check(n == all.len() as u64, || format!("sorgunun sayısı {n} ≠ {}", all.len()));
+    let got =
+        collect(source, &text, &Request::all()).map_err(|e| format!("sorgunun satırları: {e}"))?;
+    report.check(sorted(fids(&got)) == all, || {
+        format!("sorgunun satırları {} ≠ {}", got.len(), all.len())
+    });
+    let n = source
+        .count(&text, &Request::all(), true)
+        .map_err(|e| format!("sorgunun sayısı: {e}"))?;
+    report.check(n == all.len() as u64, || {
+        format!("sorgunun sayısı {n} ≠ {}", all.len())
+    });
     // A box and a condition asked of the query as of a table.
     let b = [X0, Y0, X0 + 10.0 * CELL, Y0 + 10.0 * CELL];
     let big = Condition::cmp("alan", Op::Gt, 900.0);
-    let want = truth.keep(Some(b), Some(&Condition::and(vec![park.clone(), big.clone()])));
-    let got = collect(source, &text, &Request { bbox: Some(b), condition: Some(big), ..Request::all() })
-        .map_err(|e| format!("sorgunun kutusu: {e}"))?;
-    report.check(sorted(fids(&got)) == want, || format!("sorgunun kutusu {:?} ≠ {want:?}", sorted(fids(&got))));
-    let groups = source.groups(&text, "kullanim", None, 10).map_err(|e| format!("sorgunun grupları: {e}"))?;
-    report.check(groups == vec![(Value::Text("Park".into()), all.len() as u64)], || format!("sorgunun grupları {groups:?}"));
+    let want = truth.keep(
+        Some(b),
+        Some(&Condition::and(vec![park.clone(), big.clone()])),
+    );
+    let got = collect(
+        source,
+        &text,
+        &Request {
+            bbox: Some(b),
+            condition: Some(big),
+            ..Request::all()
+        },
+    )
+    .map_err(|e| format!("sorgunun kutusu: {e}"))?;
+    report.check(sorted(fids(&got)) == want, || {
+        format!("sorgunun kutusu {:?} ≠ {want:?}", sorted(fids(&got)))
+    });
+    let groups = source
+        .groups(&text, "kullanim", None, 10)
+        .map_err(|e| format!("sorgunun grupları: {e}"))?;
+    report.check(
+        groups == vec![(Value::Text("Park".into()), all.len() as u64)],
+        || format!("sorgunun grupları {groups:?}"),
+    );
     let mut tx = source.begin().map_err(|e| format!("begin: {e}"))?;
-    let refused = tx.insert(&text, &[]).is_err() && tx.update(&text, &[]).is_err() && tx.delete(&text, &[1]).is_err();
+    let refused = tx.insert(&text, &[]).is_err()
+        && tx.update(&text, &[]).is_err()
+        && tx.delete(&text, &[1]).is_err();
     let _ = tx.rollback();
     report.check(refused, || "sorguya yazma reddedilmedi".into());
-    let text_key = QueryTable { key: "kullanim".into(), ..q.clone() };
-    report.check(source.schema(&text_key.text()).is_err(), || "metin anahtar reddedilmedi".into());
-    let writing = QueryTable { sql: format!("DELETE FROM {}", from.join(".")), ..q };
-    report.check(source.schema(&writing.text()).is_err(), || "yazan sorgu reddedilmedi".into());
+    let text_key = QueryTable {
+        key: "kullanim".into(),
+        ..q.clone()
+    };
+    report.check(source.schema(&text_key.text()).is_err(), || {
+        "metin anahtar reddedilmedi".into()
+    });
+    let writing = QueryTable {
+        sql: format!("DELETE FROM {}", from.join(".")),
+        ..q
+    };
+    report.check(source.schema(&writing.text()).is_err(), || {
+        "yazan sorgu reddedilmedi".into()
+    });
     Ok(())
 }
 
 /// The questions a source that keeps projects (docs/adr/9107) answers the same way: a project written, listed, read
 /// back byte for byte (every byte value, a Turkish name with spaces), written over, removed; a missing one and a bad
 /// name refused. `schema` is a database's (a file passes none). Leaves no project behind.
-pub fn projects(store: &dyn crate::projects::ProjectStore, schema: Option<&str>) -> Result<Report, String> {
+pub fn projects(
+    store: &dyn crate::projects::ProjectStore,
+    schema: Option<&str>,
+) -> Result<Report, String> {
     use crate::error::DataError;
     let mut report = Report::default();
     let name = "Uygunluk projesi — Şehir İçi Ölçüm";
@@ -872,62 +1034,110 @@ pub fn projects(store: &dyn crate::projects::ProjectStore, schema: Option<&str>)
     let second: Vec<u8> = b"KCAD\x00\x01ikinci s\xc3\xbcr\xc3\xbcm".to_vec();
     // Nothing of a run before.
     let _ = store.delete_project(schema, name);
-    let before = store.projects(schema).map_err(|e| format!("projects: {e}"))?;
-    report.check(before.iter().all(|p| p.name != name), || "deneme projesi baştan var".into());
+    let before = store
+        .projects(schema)
+        .map_err(|e| format!("projects: {e}"))?;
+    report.check(before.iter().all(|p| p.name != name), || {
+        "deneme projesi baştan var".into()
+    });
 
     store
         .write_project(schema, name, &first, Some("uygunluk"))
         .map_err(|e| format!("write_project: {e}"))?;
-    let listed = store.projects(schema).map_err(|e| format!("projects: {e}"))?;
+    let listed = store
+        .projects(schema)
+        .map_err(|e| format!("projects: {e}"))?;
     let entry = listed.iter().find(|p| p.name == name);
     report.check(entry.is_some(), || "yazılan proje listede yok".into());
     report.check(entry.is_some_and(|p| p.size == first.len() as u64), || {
-        format!("boyutu {:?}, {} beklendi", entry.map(|p| p.size), first.len())
-    });
-    report.check(entry.is_some_and(|p| p.user.as_deref() == Some("uygunluk")), || {
-        format!("yazanı {:?}", entry.and_then(|p| p.user.clone()))
+        format!(
+            "boyutu {:?}, {} beklendi",
+            entry.map(|p| p.size),
+            first.len()
+        )
     });
     report.check(
-        entry.is_some_and(|p| p.modified.as_deref().is_some_and(|m| m.len() == 20 && m.ends_with('Z'))),
+        entry.is_some_and(|p| p.user.as_deref() == Some("uygunluk")),
+        || format!("yazanı {:?}", entry.and_then(|p| p.user.clone())),
+    );
+    report.check(
+        entry.is_some_and(|p| {
+            p.modified
+                .as_deref()
+                .is_some_and(|m| m.len() == 20 && m.ends_with('Z'))
+        }),
         || format!("yazıldığı an {:?}", entry.and_then(|p| p.modified.clone())),
     );
-    let back = store.read_project(schema, name).map_err(|e| format!("read_project: {e}"))?;
-    report.check(back == first, || format!("geri okunan {} bayt yazılandan farklı", back.len()));
+    let back = store
+        .read_project(schema, name)
+        .map_err(|e| format!("read_project: {e}"))?;
+    report.check(back == first, || {
+        format!("geri okunan {} bayt yazılandan farklı", back.len())
+    });
 
     // Written over: one entry, the new bytes.
     store
         .write_project(schema, name, &second, None)
         .map_err(|e| format!("write_project (üstüne): {e}"))?;
-    let listed = store.projects(schema).map_err(|e| format!("projects: {e}"))?;
-    report.check(listed.iter().filter(|p| p.name == name).count() == 1, || {
-        "üstüne yazılan proje iki kez listelendi".into()
+    let listed = store
+        .projects(schema)
+        .map_err(|e| format!("projects: {e}"))?;
+    report.check(
+        listed.iter().filter(|p| p.name == name).count() == 1,
+        || "üstüne yazılan proje iki kez listelendi".into(),
+    );
+    let back = store
+        .read_project(schema, name)
+        .map_err(|e| format!("read_project: {e}"))?;
+    report.check(back == second, || {
+        "üstüne yazılan proje eski baytlarla okundu".into()
     });
-    let back = store.read_project(schema, name).map_err(|e| format!("read_project: {e}"))?;
-    report.check(back == second, || "üstüne yazılan proje eski baytlarla okundu".into());
     // A name is kept trimmed and read by it.
-    let padded = store.read_project(schema, &format!("  {name} ")).map_err(|e| format!("read_project: {e}"))?;
-    report.check(padded == second, || "boşluklu ad aynı projeyi okumadı".into());
+    let padded = store
+        .read_project(schema, &format!("  {name} "))
+        .map_err(|e| format!("read_project: {e}"))?;
+    report.check(padded == second, || {
+        "boşluklu ad aynı projeyi okumadı".into()
+    });
 
     // Refusals.
     report.check(
-        matches!(store.read_project(schema, "yok böyle bir proje"), Err(DataError::NoProject(_))),
+        matches!(
+            store.read_project(schema, "yok böyle bir proje"),
+            Err(DataError::NoProject(_))
+        ),
         || "olmayan proje NoProject ile reddedilmedi".into(),
     );
     report.check(
-        matches!(store.write_project(schema, "  ", b"x", None), Err(DataError::Invalid(_))),
+        matches!(
+            store.write_project(schema, "  ", b"x", None),
+            Err(DataError::Invalid(_))
+        ),
         || "boş ad reddedilmedi".into(),
     );
     report.check(
-        matches!(store.write_project(schema, "iki\nsatır", b"x", None), Err(DataError::Invalid(_))),
+        matches!(
+            store.write_project(schema, "iki\nsatır", b"x", None),
+            Err(DataError::Invalid(_))
+        ),
         || "satır sonlu ad reddedilmedi".into(),
     );
 
     // Removed.
-    store.delete_project(schema, name).map_err(|e| format!("delete_project: {e}"))?;
-    let listed = store.projects(schema).map_err(|e| format!("projects: {e}"))?;
-    report.check(listed.iter().all(|p| p.name != name), || "silinen proje listede".into());
+    store
+        .delete_project(schema, name)
+        .map_err(|e| format!("delete_project: {e}"))?;
+    let listed = store
+        .projects(schema)
+        .map_err(|e| format!("projects: {e}"))?;
+    report.check(listed.iter().all(|p| p.name != name), || {
+        "silinen proje listede".into()
+    });
     report.check(
-        matches!(store.delete_project(schema, name), Err(DataError::NoProject(_))),
+        matches!(
+            store.delete_project(schema, name),
+            Err(DataError::NoProject(_))
+        ),
         || "silinmiş proje yeniden silinirken NoProject ile reddedilmedi".into(),
     );
     Ok(report)

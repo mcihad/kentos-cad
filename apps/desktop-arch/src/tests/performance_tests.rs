@@ -3,16 +3,18 @@
 //! style's fire resistance class reaches its walls, taken away they are in the finding again; the IFC file writes what is
 //! declared and never an empty word; EK-9's 9th question is read from the model.
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use kentos_commands::Entity;
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 
 fn app() -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/section-building.kcad"))
-        .expect("decodes");
+    let snapshot = kentos_kcad::decode(include_bytes!(
+        "../../../../fixtures/arch/v1/section-building.kcad"
+    ))
+    .expect("decodes");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -35,7 +37,8 @@ fn run(app: &mut App, command: &str, input: serde_json::Value) -> serde_json::Va
 fn required(app: &mut App) -> Vec<(String, Vec<String>)> {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    app.modules.arch()
+    app.modules
+        .arch()
         .arch_audit
         .audited
         .as_ref()
@@ -62,7 +65,11 @@ fn ifc(app: &mut App) -> String {
     let dir = std::env::temp_dir().join(format!("kentos-yangin-{}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
     let path = dir.join("bina.ifc");
-    run(app, "cad.arch.ifc", serde_json::json!({"path": path.to_string_lossy(), "overwrite": true}));
+    run(
+        app,
+        "cad.arch.ifc",
+        serde_json::json!({"path": path.to_string_lossy(), "overwrite": true}),
+    );
     let text = std::fs::read_to_string(&path).expect("the file");
     let _ = std::fs::remove_dir_all(&dir);
     text
@@ -74,11 +81,14 @@ fn a_wall_style_s_class_reaches_its_walls_and_taken_away_they_are_in_the_finding
     // As drawn: no wall declares a class, every wall is in the finding.
     let before = required(&mut app);
     let fire = |found: &[(String, Vec<String>)]| {
-        found.iter().find(|(m, _)| m.contains("Pset_WallCommon.FireRating")).map(|(_, u)| {
-            let mut u = u.clone();
-            u.sort();
-            u
-        })
+        found
+            .iter()
+            .find(|(m, _)| m.contains("Pset_WallCommon.FireRating"))
+            .map(|(_, u)| {
+                let mut u = u.clone();
+                u.sort();
+                u
+            })
     };
     assert_eq!(fire(&before), Some(walls(&app, None)), "{before:?}");
     // Every style used by a wall given REI 120: no wall misses its class, the file carries it.
@@ -102,7 +112,10 @@ fn a_wall_style_s_class_reaches_its_walls_and_taken_away_they_are_in_the_finding
     }
     assert_eq!(fire(&required(&mut app)), None);
     let text = ifc(&mut app);
-    assert!(text.contains("'FireRating'") && text.contains("IFCLABEL('REI 120')"), "the class written");
+    assert!(
+        text.contains("'FireRating'") && text.contains("IFCLABEL('REI 120')"),
+        "the class written"
+    );
     // One style's class taken away: its walls are in the finding again, nothing empty is written.
     let first = &styles[0];
     run(
@@ -128,25 +141,42 @@ fn a_wall_style_s_class_reaches_its_walls_and_taken_away_they_are_in_the_finding
             "exit": {"exit": true, "basis": {"kind": "author"}}}}),
     );
     let text = ifc(&mut app);
-    assert!(text.contains("IFCLABEL('EI 60')") && text.contains("'FireExit'"), "the door's class and exit role");
+    assert!(
+        text.contains("IFCLABEL('EI 60')") && text.contains("'FireExit'"),
+        "the door's class and exit role"
+    );
 }
 
 #[test]
 fn ek9_s_9th_question_is_read_from_the_model() {
     let app = app();
     let row9 = |app: &App| {
-        let rows = crate::ifc_facts::form_rows(&app.document.as_ref().expect("the building").model).expect("the form");
-        rows.into_iter().find(|r| r.first().is_some_and(|c| c == "9")).expect("row 9").join(" | ")
+        let rows = crate::ifc_facts::form_rows(&app.document.as_ref().expect("the building").model)
+            .expect("the form");
+        rows.into_iter()
+            .find(|r| r.first().is_some_and(|c| c == "9"))
+            .expect("row 9")
+            .join(" | ")
     };
     let before = row9(&app);
-    assert!(before.contains("Hayır") && before.contains("zorunlu alan eksik"), "{before}");
-    assert!(before.contains("IfcBeam Yangın Dayanım Sınıfı (8/8)"), "{before}");
+    assert!(
+        before.contains("Hayır") && before.contains("zorunlu alan eksik"),
+        "{before}"
+    );
+    assert!(
+        before.contains("IfcBeam Yangın Dayanım Sınıfı (8/8)"),
+        "{before}"
+    );
 }
 
 /// Öznitelikler's rows now, every section's in order.
 fn property_rows(app: &App) -> Vec<crate::properties::Row> {
     let doc = app.document.as_ref().expect("open");
-    app.properties_panel(doc).sections.into_iter().flat_map(|s| s.rows).collect()
+    app.properties_panel(doc)
+        .sections
+        .into_iter()
+        .flat_map(|s| s.rows)
+        .collect()
 }
 
 /// The first object of a kind, its slot and persistent id.
@@ -165,24 +195,61 @@ fn ozniteliklerde_a_wall_s_class_and_a_door_s_exit_role_are_written_and_taken_aw
     app.selection.set(vec![wall]);
     // The rows: Yangın dayanımı empty, its note “missing”.
     let rows = property_rows(&app);
-    let at = rows.iter().position(|r| r.label == "Yangın dayanımı").expect("the class's row");
+    let at = rows
+        .iter()
+        .position(|r| r.label == "Yangın dayanımı")
+        .expect("the class's row");
     assert_eq!(rows[at].value, "");
-    assert!(rows[at + 1].value.starts_with("Yok: modelde eksik"), "{}", rows[at + 1].value);
-    let _ = app.update(crate::app::Message::Properties(Event::Commit(Field::Arch(wall, ArchField::FireRating), " REI 90 ".into())));
+    assert!(
+        rows[at + 1].value.starts_with("Yok: modelde eksik"),
+        "{}",
+        rows[at + 1].value
+    );
+    let _ = app.update(crate::app::Message::Properties(Event::Commit(
+        Field::Arch(wall, ArchField::FireRating),
+        " REI 90 ".into(),
+    )));
     let doc = &app.document.as_ref().expect("the building").model;
-    let Some(Entity::Wall(w)) = doc.get(wall) else { panic!("the wall") };
-    assert_eq!(w.wall.arch.fire_rating.as_ref().map(|d| d.value.as_str()), Some("REI 90"), "trimmed, the author's");
-    assert_eq!(doc.undo_labels().first().map(String::as_str), Some("Yangın ve performans"));
+    let Some(Entity::Wall(w)) = doc.get(wall) else {
+        panic!("the wall")
+    };
+    assert_eq!(
+        w.wall.arch.fire_rating.as_ref().map(|d| d.value.as_str()),
+        Some("REI 90"),
+        "trimmed, the author's"
+    );
+    assert_eq!(
+        doc.undo_labels().first().map(String::as_str),
+        Some("Yangın ve performans")
+    );
     // Empty takes it away: missing again, never an empty word.
-    let _ = app.update(crate::app::Message::Properties(Event::Commit(Field::Arch(wall, ArchField::FireRating), String::new())));
-    let Some(Entity::Wall(w)) = app.document.as_ref().expect("the building").model.get(wall) else { panic!("the wall") };
+    let _ = app.update(crate::app::Message::Properties(Event::Commit(
+        Field::Arch(wall, ArchField::FireRating),
+        String::new(),
+    )));
+    let Some(Entity::Wall(w)) = app.document.as_ref().expect("the building").model.get(wall) else {
+        panic!("the wall")
+    };
     assert!(w.wall.arch.fire_rating.is_none());
     // A door: Acil çıkış Evet.
-    let (door, _) = first(&app, |e| matches!(e, Entity::Opening(o) if o.opening.form == kentos_commands::OpeningForm::Door));
+    let (door, _) = first(
+        &app,
+        |e| matches!(e, Entity::Opening(o) if o.opening.form == kentos_commands::OpeningForm::Door),
+    );
     app.selection.set(vec![door]);
-    assert!(property_rows(&app).iter().any(|r| r.label == "Acil çıkış" && r.value == "Bilinmiyor"));
-    let _ = app.update(crate::app::Message::Properties(Event::Exit(door, Some(true))));
-    let Some(Entity::Opening(o)) = app.document.as_ref().expect("the building").model.get(door) else { panic!("the door") };
+    assert!(
+        property_rows(&app)
+            .iter()
+            .any(|r| r.label == "Acil çıkış" && r.value == "Bilinmiyor")
+    );
+    let _ = app.update(crate::app::Message::Properties(Event::Exit(
+        door,
+        Some(true),
+    )));
+    let Some(Entity::Opening(o)) = app.document.as_ref().expect("the building").model.get(door)
+    else {
+        panic!("the door")
+    };
     assert_eq!(o.opening.exit.as_ref().map(|x| x.exit), Some(true));
 }
 
@@ -202,11 +269,17 @@ fn screens() {
     use crate::app::Message;
     use crate::wall_styles::Event as Styles;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yangin-performans-8068");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yangin-performans-8068");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 1180.0), "acik"), ("dark", Size::new(1280.0, 1100.0), "koyu")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 1180.0), "acik"),
+        ("dark", Size::new(1280.0, 1100.0), "koyu"),
+    ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::RibbonTab("arch"));
@@ -217,7 +290,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         // Duvar stilleri: the walls' style given REI 120 (a KentOS style is taken into the project).
@@ -227,8 +303,12 @@ fn screens() {
             _ => unreachable!(),
         };
         let _ = app.update(Message::Run("arch.wallStyles"));
-        let _ = app.update(Message::from(crate::arch::Event::WallStyles(Styles::Choose(Some(style.clone())))));
-        let _ = app.update(Message::from(crate::arch::Event::WallStyles(Styles::FireRating("REI 120".into()))));
+        let _ = app.update(Message::from(crate::arch::Event::WallStyles(
+            Styles::Choose(Some(style.clone())),
+        )));
+        let _ = app.update(Message::from(crate::arch::Event::WallStyles(
+            Styles::FireRating("REI 120".into()),
+        )));
         shot(&mut app, "1-duvar-stili");
         run(
             &mut app,
@@ -241,7 +321,10 @@ fn screens() {
         app.selection.set(vec![wall]);
         shot(&mut app, "2-duvar-oznitelikler");
         // A door: its own class from a test report and its exit role.
-        let (door, uid) = first(&app, |e| matches!(e, Entity::Opening(o) if o.opening.form == kentos_commands::OpeningForm::Door));
+        let (door, uid) = first(
+            &app,
+            |e| matches!(e, Entity::Opening(o) if o.opening.form == kentos_commands::OpeningForm::Door),
+        );
         run(
             &mut app,
             "cad.arch.performance",
@@ -256,9 +339,30 @@ fn screens() {
         let found = required(&mut app);
         assert!(!found.is_empty());
         app.modules.arch_mut().arch_audit.group = Some(kentos_commands::ArchAuditCheck::Regulation);
-        let at = app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter()
-            .position(|f| f.code == "digital_required_field" && f.message.contains("Pset_WallCommon.FireRating"))
-            .or_else(|| app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter().position(|f| f.code == "digital_required_field"))
+        let at = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked")
+            .findings
+            .iter()
+            .position(|f| {
+                f.code == "digital_required_field"
+                    && f.message.contains("Pset_WallCommon.FireRating")
+            })
+            .or_else(|| {
+                app.modules
+                    .arch()
+                    .arch_audit
+                    .audited
+                    .as_ref()
+                    .expect("checked")
+                    .findings
+                    .iter()
+                    .position(|f| f.code == "digital_required_field")
+            })
             .expect("a mandatory field finding");
         app.modules.arch_mut().arch_audit.selected = Some(at);
         shot(&mut app, "4-denetim-zorunlu-alanlar");
@@ -273,7 +377,10 @@ fn a_wall_style_s_load_bearing_role_reaches_its_walls() {
     use crate::properties::Event;
     use crate::wall_styles::Event as Styles;
     let mut app = app();
-    let (wall, uid) = first(&app, |e| matches!(e, Entity::Wall(w) if w.wall.style.is_some()));
+    let (wall, uid) = first(
+        &app,
+        |e| matches!(e, Entity::Wall(w) if w.wall.style.is_some()),
+    );
     let style = match app.document.as_ref().expect("the building").model.get(wall) {
         Some(Entity::Wall(w)) => w.wall.style.clone().expect("a style"),
         _ => unreachable!(),
@@ -287,9 +394,16 @@ fn a_wall_style_s_load_bearing_role_reaches_its_walls() {
     styles(&mut app, Styles::Save);
     let held = |app: &App| {
         let doc = &app.document.as_ref().expect("the building").model;
-        doc.settings().wall_styles.iter().find(|s| s.id == style).and_then(|s| s.load_bearing.clone())
+        doc.settings()
+            .wall_styles
+            .iter()
+            .find(|s| s.id == style)
+            .and_then(|s| s.load_bearing.clone())
     };
-    assert_eq!(held(&app).map(|b| (b.bearing, b.basis)), Some((true, kentos_commands::DeclaredBasis::Author)));
+    assert_eq!(
+        held(&app).map(|b| (b.bearing, b.basis)),
+        Some((true, kentos_commands::DeclaredBasis::Author))
+    );
     app.dialog = None;
     app.modules.arch_mut().wall_styles = None;
     let row = |app: &App| {
@@ -301,20 +415,41 @@ fn a_wall_style_s_load_bearing_role_reaches_its_walls() {
             .flat_map(|s| s.rows)
             .map(|r| (r.label.to_string(), r.value))
             .collect();
-        let at = rows.iter().position(|r| r.0 == "Taşıyıcı").expect("a Taşıyıcı row");
-        (rows[at].1.clone(), rows.get(at + 1).map(|r| r.1.clone()).unwrap_or_default())
+        let at = rows
+            .iter()
+            .position(|r| r.0 == "Taşıyıcı")
+            .expect("a Taşıyıcı row");
+        (
+            rows[at].1.clone(),
+            rows.get(at + 1).map(|r| r.1.clone()).unwrap_or_default(),
+        )
     };
     app.selection.set(vec![wall]);
-    assert_eq!(row(&app), ("Stilinden (Evet)".to_owned(), "Duvar stilinden: taşıyıcı.".to_owned()));
+    assert_eq!(
+        row(&app),
+        (
+            "Stilinden (Evet)".to_owned(),
+            "Duvar stilinden: taşıyıcı.".to_owned()
+        )
+    );
     let facts = |app: &App| {
         let doc = &app.document.as_ref().expect("the building").model;
         let f = kentos_processing::audit_facts::building::measure(doc).normalized();
-        f.elements.iter().find(|e| e.uid == uid).and_then(|e| e.load_bearing)
+        f.elements
+            .iter()
+            .find(|e| e.uid == uid)
+            .and_then(|e| e.load_bearing)
     };
     assert_eq!(facts(&app), Some(true), "the facts read the style's role");
     // The wall's own Hayır wins over its style's Evet.
     let _ = app.update(Message::Properties(Event::LoadBearing(wall, Some(false))));
-    assert_eq!(row(&app), ("Hayır".to_owned(), "Beyan duvar stilinin rolünü geçer.".to_owned()));
+    assert_eq!(
+        row(&app),
+        (
+            "Hayır".to_owned(),
+            "Beyan duvar stilinin rolünü geçer.".to_owned()
+        )
+    );
     assert_eq!(facts(&app), Some(false));
     // Back to the style's, then the style's taken away: unknown.
     let _ = app.update(Message::Properties(Event::LoadBearing(wall, None)));
@@ -343,11 +478,17 @@ fn style_bearing_screens() {
 
     use crate::wall_styles::Event as Styles;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/stil-tasiyici-8137");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/stil-tasiyici-8137");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 1180.0), "acik"), ("dark", Size::new(1280.0, 1100.0), "koyu")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 1180.0), "acik"),
+        ("dark", Size::new(1280.0, 1100.0), "koyu"),
+    ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::RibbonTab("arch"));
@@ -364,10 +505,16 @@ fn style_bearing_screens() {
                 snapshot.settle(app, App::view, &mut update);
             }
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
-        let (wall, _) = first(&app, |e| matches!(e, Entity::Wall(w) if w.wall.style.is_some()));
+        let (wall, _) = first(
+            &app,
+            |e| matches!(e, Entity::Wall(w) if w.wall.style.is_some()),
+        );
         let style = match app.document.as_ref().expect("the building").model.get(wall) {
             Some(Entity::Wall(w)) => w.wall.style.clone().expect("a style"),
             _ => unreachable!(),

@@ -19,7 +19,9 @@ use std::sync::Arc;
 
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::geometry::signed_area;
-use kentos_geometry_core::jsmath::{atan2, cos, js_cmp, js_hypot, js_max, js_round, sin, stable_sort};
+use kentos_geometry_core::jsmath::{
+    atan2, cos, js_cmp, js_hypot, js_max, js_round, sin, stable_sort,
+};
 use kentos_geometry_core::triangulate::fill_into;
 
 use super::prim::{EffectSpec, FillPaint, Look, MarkerStyle, Sink, StrokeStyle, group_key, num};
@@ -163,7 +165,9 @@ impl Entry {
     fn drawn(&self) -> bool {
         match self.kind {
             _ if self.inst.is_some() => !self.data.is_empty(),
-            Kind::Stroke | Kind::Fill => self.data.len() + self.lods.iter().map(Vec::len).sum::<usize>() >= 6,
+            Kind::Stroke | Kind::Fill => {
+                self.data.len() + self.lods.iter().map(Vec::len).sum::<usize>() >= 6
+            }
             Kind::Marker => self.data.len() >= 5,
         }
     }
@@ -373,14 +377,27 @@ impl BatchSink {
             if e.data.len() + lods < 6 {
                 continue;
             }
-            if e.tile != [0.0, 0.0] || e.kind == Kind::Marker || e.group != 0 || e.scale != Scale::default() {
+            if e.tile != [0.0, 0.0]
+                || e.kind == Kind::Marker
+                || e.group != 0
+                || e.scale != Scale::default()
+            {
                 return None;
             }
             // A far proxy for strokes that draw many segments even at their coarsest level (docs/adr/1065 §2).
             let coarsest = e.data.len() + e.lods.last().map_or(0, Vec::len);
-            let boxed = e.bounds.iter().all(|v| v.is_finite()) && e.bounds[0] <= e.bounds[2] && e.bounds[1] <= e.bounds[3];
-            let (proxy, extent) = if proxies && e.kind == Kind::Stroke && boxed && coarsest / 6 >= PROXY_LEAST_SEGMENTS {
-                (proxy_box(&e.bounds), js_max(e.bounds[2] - e.bounds[0], e.bounds[3] - e.bounds[1]))
+            let boxed = e.bounds.iter().all(|v| v.is_finite())
+                && e.bounds[0] <= e.bounds[2]
+                && e.bounds[1] <= e.bounds[3];
+            let (proxy, extent) = if proxies
+                && e.kind == Kind::Stroke
+                && boxed
+                && coarsest / 6 >= PROXY_LEAST_SEGMENTS
+            {
+                (
+                    proxy_box(&e.bounds),
+                    js_max(e.bounds[2] - e.bounds[0], e.bounds[3] - e.bounds[1]),
+                )
             } else {
                 (Vec::new(), 0.0)
             };
@@ -468,11 +485,23 @@ impl BatchSink {
                 }
             };
             let e = &mut self.entries[e];
-            e.data.extend([m[0], m[1], m[2], m[3], t.x - e.base.x, t.y - e.base.y, k, 0.0]);
+            e.data.extend([
+                m[0],
+                m[1],
+                m[2],
+                m[3],
+                t.x - e.base.x,
+                t.y - e.base.y,
+                k,
+                0.0,
+            ]);
             e.kmax = js_max(e.kmax, k);
             let [x0, y0, x1, y1] = b.bounds;
             for (x, y) in [(x0, y0), (x1, y0), (x0, y1), (x1, y1)] {
-                e.grow(m[0] * x + m[2] * y + m[4] - ox, m[1] * x + m[3] * y + m[5] - oy);
+                e.grow(
+                    m[0] * x + m[2] * y + m[4] - ox,
+                    m[1] * x + m[3] * y + m[5] - oy,
+                );
             }
         }
     }
@@ -544,7 +573,11 @@ impl BatchSink {
     ) -> usize {
         let raw = key.to_owned();
         // A ground width and a paper one never share a batch, though their styles read alike (docs/adr/0793 §1).
-        let key = if ground { format!("{key}|g") } else { key.to_owned() };
+        let key = if ground {
+            format!("{key}|g")
+        } else {
+            key.to_owned()
+        };
         let k = format!(
             "{key}|{}|{}|{}|{}|{}",
             scale_key(self.scale.min),
@@ -671,7 +704,10 @@ impl BatchSink {
             .map(|e| match &e.inst {
                 Some((def, j)) => {
                     let d = &def.batches[*j];
-                    d.data.len() + d.lods.iter().map(Vec::len).sum::<usize>() + d.proxy.len() + e.data.len()
+                    d.data.len()
+                        + d.lods.iter().map(Vec::len).sum::<usize>()
+                        + d.proxy.len()
+                        + e.data.len()
                 }
                 None => e.data.len() + e.lods.iter().map(Vec::len).sum::<usize>(),
             })
@@ -710,7 +746,16 @@ impl BatchSink {
                     def.batches[*j].proxy.as_slice(),
                     Some(e.data.as_slice()),
                 ),
-                None => (e.data.as_slice(), if e.lods.is_empty() { empty } else { e.lods.as_slice() }, &[], None),
+                None => (
+                    e.data.as_slice(),
+                    if e.lods.is_empty() {
+                        empty
+                    } else {
+                        e.lods.as_slice()
+                    },
+                    &[],
+                    None,
+                ),
             };
             let total = main.len()
                 + levels.iter().map(Vec::len).sum::<usize>()
@@ -814,7 +859,14 @@ impl BatchSink {
 
 /// A path's segments through its `kept` vertices (indices into `pts`, in order) as a stroke batch takes them: each
 /// from the tile's base `t`, its start's length along the path (`along`), its end caps when the path is `open`.
-fn push_segments(out: &mut Vec<f64>, pts: &[Vec2], along: &[f64], kept: &[usize], open: bool, [tx, ty]: [f64; 2]) {
+fn push_segments(
+    out: &mut Vec<f64>,
+    pts: &[Vec2],
+    along: &[f64],
+    kept: &[usize],
+    open: bool,
+    [tx, ty]: [f64; 2],
+) {
     let count = kept.len().saturating_sub(1);
     let drawn: Vec<(usize, usize, usize)> = kept
         .windows(2)
@@ -822,11 +874,25 @@ fn push_segments(out: &mut Vec<f64>, pts: &[Vec2], along: &[f64], kept: &[usize]
         .filter(|(_, w)| js_hypot(pts[w[1]].x - pts[w[0]].x, pts[w[1]].y - pts[w[0]].y) >= 1e-12)
         .map(|(j, w)| (j, w[0], w[1]))
         .collect();
-    let joins = joins(&drawn.iter().map(|&(_, a, b)| (pts[a], pts[b])).collect::<Vec<_>>(), !open);
+    let joins = joins(
+        &drawn
+            .iter()
+            .map(|&(_, a, b)| (pts[a], pts[b]))
+            .collect::<Vec<_>>(),
+        !open,
+    );
     for (&(j, a, b), [start, end]) in drawn.iter().zip(joins) {
         let (pa, pb) = (pts[a], pts[b]);
-        let ends = if open && j == 0 { 1.0 } else { 0.0 } + if open && j + 1 == count { 2.0 } else { 0.0 };
-        out.extend([pa.x - tx, pa.y - ty, pb.x - tx, pb.y - ty, along[a], segment_meta(ends, start, end)]);
+        let ends =
+            if open && j == 0 { 1.0 } else { 0.0 } + if open && j + 1 == count { 2.0 } else { 0.0 };
+        out.extend([
+            pa.x - tx,
+            pa.y - ty,
+            pb.x - tx,
+            pb.y - ty,
+            along[a],
+            segment_meta(ends, start, end),
+        ]);
     }
 }
 
@@ -840,7 +906,11 @@ fn turn_code(a: (Vec2, Vec2), b: (Vec2, Vec2)) -> f64 {
     let (dx1, dy1) = (b.1.x - b.0.x, b.1.y - b.0.y);
     let turn = atan2(dx0 * dy1 - dy0 * dx1, dx0 * dx1 + dy0 * dy1);
     let steps = js_round(turn / std::f64::consts::PI * TURN_STEPS);
-    if steps.is_finite() && steps.abs() < TURN_STEPS { steps + TURN_STEPS } else { 0.0 }
+    if steps.is_finite() && steps.abs() < TURN_STEPS {
+        steps + TURN_STEPS
+    } else {
+        0.0
+    }
 }
 
 /// Each drawn segment's join codes, at its start and its end: the turn from the segment before it and to the one after
@@ -849,8 +919,20 @@ fn joins(segments: &[(Vec2, Vec2)], closed: bool) -> Vec<[f64; 2]> {
     let n = segments.len();
     (0..n)
         .map(|k| {
-            let before = if k > 0 { Some(k - 1) } else if closed && n > 1 { Some(n - 1) } else { None };
-            let after = if k + 1 < n { Some(k + 1) } else if closed && n > 1 { Some(0) } else { None };
+            let before = if k > 0 {
+                Some(k - 1)
+            } else if closed && n > 1 {
+                Some(n - 1)
+            } else {
+                None
+            };
+            let after = if k + 1 < n {
+                Some(k + 1)
+            } else if closed && n > 1 {
+                Some(0)
+            } else {
+                None
+            };
             [
                 before.map_or(0.0, |b| turn_code(segments[b], segments[k])),
                 after.map_or(0.0, |a| turn_code(segments[k], segments[a])),
@@ -898,9 +980,14 @@ impl Sink for BatchSink {
             None => {
                 let mut key = String::from("s|");
                 style.write_json(&mut key);
-                let e = self.entry(&key, Kind::Stroke, style.level, tile, style.ground && style.width > 0.0, || {
-                    key[2..].to_string()
-                });
+                let e = self.entry(
+                    &key,
+                    Kind::Stroke,
+                    style.level,
+                    tile,
+                    style.ground && style.width > 0.0,
+                    || key[2..].to_string(),
+                );
                 self.recent_strokes
                     .remember(style, self.scale, tile, self.group, e);
                 e
@@ -969,7 +1056,10 @@ impl Sink for BatchSink {
             })
             .collect();
         let joins = joins(
-            &drawn.iter().map(|&i| (path[i], path[(i + 1) % n])).collect::<Vec<_>>(),
+            &drawn
+                .iter()
+                .map(|&i| (path[i], path[(i + 1) % n]))
+                .collect::<Vec<_>>(),
             closed,
         );
         for (&i, [start, end]) in drawn.iter().zip(joins) {
@@ -978,7 +1068,14 @@ impl Sink for BatchSink {
             let len = js_hypot(b.x - a.x, b.y - a.y);
             let ends = if !closed && i == 0 { 1.0 } else { 0.0 }
                 + if !closed && i + 1 == count { 2.0 } else { 0.0 };
-            out.extend([a.x - tx, a.y - ty, b.x - tx, b.y - ty, d, segment_meta(ends, start, end)]);
+            out.extend([
+                a.x - tx,
+                a.y - ty,
+                b.x - tx,
+                b.y - ty,
+                d,
+                segment_meta(ends, start, end),
+            ]);
             grow_box(bounds, a.x - ox, a.y - oy);
             d += len;
         }
@@ -1029,13 +1126,17 @@ impl Sink for BatchSink {
             self.refused = true;
         }
         let count = self.cad_points.saturating_add(points);
-        if count > 2_000_000 { return false; }
+        if count > 2_000_000 {
+            return false;
+        }
         self.cad_points = count;
         true
     }
 
     fn cad_mark(&mut self, paint: &FillPaint, rings: &[Vec<Vec2>]) {
-        if self.hide_strokes || self.lod.is_some_and(|l| l > 0) { return; }
+        if self.hide_strokes || self.lod.is_some_and(|l| l > 0) {
+            return;
+        }
         if self.recording {
             self.refused = true;
         }
@@ -1319,9 +1420,14 @@ impl BatchSink {
             None => {
                 let mut key = String::from("f|");
                 paint.write_json(&mut key);
-                let e = self.entry(&key, Kind::Fill, paint.level(), tile, paint.ground(), || {
-                    key[2..].to_string()
-                });
+                let e = self.entry(
+                    &key,
+                    Kind::Fill,
+                    paint.level(),
+                    tile,
+                    paint.ground(),
+                    || key[2..].to_string(),
+                );
                 self.recent_fills
                     .remember(paint, self.scale, tile, self.group, e);
                 e
@@ -1478,7 +1584,10 @@ mod tests {
         let batches: serde_json::Value = serde_json::from_str(&out.json).expect("reads");
         let batches = batches.as_array().expect("an array");
         assert_eq!(batches.len(), 3, "paper, ground, a hairline");
-        assert_eq!(batches[0]["style"], batches[1]["style"], "the page reads them alike");
+        assert_eq!(
+            batches[0]["style"], batches[1]["style"],
+            "the page reads them alike"
+        );
         assert!(batches[1]["style"].get("ground").is_none());
         // A zero width is a hairline either way: never listed.
         assert_eq!(out.ground, [1]);
@@ -1540,13 +1649,33 @@ mod tests {
     fn cad_mark_mesh_uses_mapped_contours_for_nonlinear_projection() {
         use kentos_geometry_core::crs::map::{MapProjection, interned};
         use kentos_geometry_core::crs::{Datum, System};
-        let source = System::Tm { datum: Datum::Turef, central_meridian: 36., scale_factor: 1., false_easting: 500_000., false_northing: 0., latitude_of_origin: None };
+        let source = System::Tm {
+            datum: Datum::Turef,
+            central_meridian: 36.,
+            scale_factor: 1.,
+            false_easting: 500_000.,
+            false_northing: 0.,
+            latitude_of_origin: None,
+        };
         let projection = interned(MapProjection::new(source, System::Mercator {}, Vec::new()));
         let anchor = projection.forward(ANCHOR).unwrap();
-        let rings = vec![vec![ANCHOR, Vec2::new(ANCHOR.x + 6000., ANCHOR.y), Vec2::new(ANCHOR.x + 6000., ANCHOR.y + 4000.), Vec2::new(ANCHOR.x, ANCHOR.y + 4000.)]];
-        let paint = FillPaint::Solid { color: "#884422".into(), opacity: 0.5, level: 0. };
-        let mut expected = BatchSink::new(anchor); expected.set_map(Some(projection)); expected.cad_mark(&paint, &rings);
-        let mut actual = BatchSink::new(anchor); actual.set_map(Some(projection)); actual.cad_mark_mesh(&paint, &rings, &[0, 1, 2, 0, 2, 3]);
+        let rings = vec![vec![
+            ANCHOR,
+            Vec2::new(ANCHOR.x + 6000., ANCHOR.y),
+            Vec2::new(ANCHOR.x + 6000., ANCHOR.y + 4000.),
+            Vec2::new(ANCHOR.x, ANCHOR.y + 4000.),
+        ]];
+        let paint = FillPaint::Solid {
+            color: "#884422".into(),
+            opacity: 0.5,
+            level: 0.,
+        };
+        let mut expected = BatchSink::new(anchor);
+        expected.set_map(Some(projection));
+        expected.cad_mark(&paint, &rings);
+        let mut actual = BatchSink::new(anchor);
+        actual.set_map(Some(projection));
+        actual.cad_mark_mesh(&paint, &rings, &[0, 1, 2, 0, 2, 3]);
         let (expected, actual) = (expected.finish(), actual.finish());
         assert!(!actual.data.is_empty());
         assert_eq!(actual.json, expected.json);

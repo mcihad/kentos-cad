@@ -9,8 +9,8 @@ use kentos_application::AppError;
 use kentos_application::portal::fees;
 use kentos_application::tenancy::{self, Access};
 use kentos_contracts::{
-    FeeAssess, FeeAssessment, FeeCancel, FeeDefinition, FeePaid, FeePreview, FeeSchedule, FeeScheduleCopy,
-    FeeScheduleEdit, FeeTry,
+    FeeAssess, FeeAssessment, FeeCancel, FeeDefinition, FeePaid, FeePreview, FeeSchedule,
+    FeeScheduleCopy, FeeScheduleEdit, FeeTry,
 };
 
 use super::path_id;
@@ -33,7 +33,8 @@ pub async fn schedules(
     caller: Caller,
     Path(tenant): Path<String>,
 ) -> Result<Json<Vec<FeeSchedule>>, Failure> {
-    let run = async { fees::schedules(state.db()?, &access(&state, &caller, &tenant).await?).await };
+    let run =
+        async { fees::schedules(state.db()?, &access(&state, &caller, &tenant).await?).await };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
@@ -45,8 +46,17 @@ pub async fn create(
     Path(tenant): Path<String>,
     Body(input): Body<FeeScheduleEdit>,
 ) -> Result<(StatusCode, Json<FeeSchedule>), Failure> {
-    let run = async { fees::create_schedule(state.db()?, &access(&state, &caller, &tenant).await?, &input).await };
-    run.await.map(|s| (StatusCode::CREATED, Json(s))).map_err(|e| Failure::with(e, &headers))
+    let run = async {
+        fees::create_schedule(
+            state.db()?,
+            &access(&state, &caller, &tenant).await?,
+            &input,
+        )
+        .await
+    };
+    run.await
+        .map(|s| (StatusCode::CREATED, Json(s)))
+        .map_err(|e| Failure::with(e, &headers))
 }
 
 /// `GET /v1/tenants/{tenant}/fees/schedules/{id}`.
@@ -57,7 +67,12 @@ pub async fn schedule(
     Path((tenant, id)): Path<(String, String)>,
 ) -> Result<Json<FeeSchedule>, Failure> {
     let run = async {
-        fees::schedule(state.db()?, &access(&state, &caller, &tenant).await?, schedule_id(&id)?).await
+        fees::schedule(
+            state.db()?,
+            &access(&state, &caller, &tenant).await?,
+            schedule_id(&id)?,
+        )
+        .await
     };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
@@ -88,7 +103,9 @@ pub async fn remove(
         let access = access(&state, &caller, &tenant).await?;
         fees::delete_schedule(state.db()?, &access, schedule_id(&id)?).await
     };
-    run.await.map(|()| StatusCode::NO_CONTENT).map_err(|e| Failure::with(e, &headers))
+    run.await
+        .map(|()| StatusCode::NO_CONTENT)
+        .map_err(|e| Failure::with(e, &headers))
 }
 
 /// `POST /v1/tenants/{tenant}/fees/schedules/{id}/activate`: the draft in force; the one it replaces retired.
@@ -117,7 +134,9 @@ pub async fn copy(
         let access = access(&state, &caller, &tenant).await?;
         fees::copy_schedule(state.db()?, &access, schedule_id(&id)?, &input).await
     };
-    run.await.map(|s| (StatusCode::CREATED, Json(s))).map_err(|e| Failure::with(e, &headers))
+    run.await
+        .map(|s| (StatusCode::CREATED, Json(s)))
+        .map_err(|e| Failure::with(e, &headers))
 }
 
 /// `GET /v1/tenants/{tenant}/fees/template`: the structure of 2464 sayılı Kanun's fees, every rate 0, to start from.
@@ -181,7 +200,9 @@ pub async fn issue(
     Body(input): Body<FeeAssess>,
 ) -> Result<(StatusCode, Json<FeeAssessment>), Failure> {
     let run = async { fees::issue(state.db()?, &caller.0, path_id(&id, "Dosya")?, &input).await };
-    run.await.map(|f| (StatusCode::CREATED, Json(f))).map_err(|e| Failure::with(e, &headers))
+    run.await
+        .map(|f| (StatusCode::CREATED, Json(f)))
+        .map_err(|e| Failure::with(e, &headers))
 }
 
 fn fee_id(id: &str) -> Result<uuid::Uuid, AppError> {
@@ -196,7 +217,16 @@ pub async fn paid(
     Path((id, fee)): Path<(String, String)>,
     Body(input): Body<FeePaid>,
 ) -> Result<Json<FeeAssessment>, Failure> {
-    let run = async { fees::paid(state.db()?, &caller.0, path_id(&id, "Dosya")?, fee_id(&fee)?, &input).await };
+    let run = async {
+        fees::paid(
+            state.db()?,
+            &caller.0,
+            path_id(&id, "Dosya")?,
+            fee_id(&fee)?,
+            &input,
+        )
+        .await
+    };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
 
@@ -208,6 +238,15 @@ pub async fn cancel(
     Path((id, fee)): Path<(String, String)>,
     Body(input): Body<FeeCancel>,
 ) -> Result<Json<FeeAssessment>, Failure> {
-    let run = async { fees::cancel(state.db()?, &caller.0, path_id(&id, "Dosya")?, fee_id(&fee)?, &input).await };
+    let run = async {
+        fees::cancel(
+            state.db()?,
+            &caller.0,
+            path_id(&id, "Dosya")?,
+            fee_id(&fee)?,
+            &input,
+        )
+        .await
+    };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }

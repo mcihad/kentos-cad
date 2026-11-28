@@ -13,7 +13,9 @@ use super::{FORMAT, Gpu, RedTiles};
 const SIDE: f64 = 20_000.0;
 
 fn scatter(seed: &mut u64) -> f64 {
-    *seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+    *seed = seed
+        .wrapping_mul(6_364_136_223_846_793_005)
+        .wrapping_add(1_442_695_040_888_963_407);
     (*seed >> 11) as f64 / (1u64 << 53) as f64
 }
 
@@ -36,7 +38,10 @@ fn city(n: usize, per: usize, dash: bool, alpha: f64) -> StyledLayer {
         while data.len() < start + per * 6 && data.len() < n * 6 {
             let (mut x, mut y) = (scatter(&mut seed) * SIDE, scatter(&mut seed) * SIDE);
             for _ in 0..4 {
-                let (a, l) = (scatter(&mut seed) * std::f64::consts::TAU, 5.0 + scatter(&mut seed) * 25.0);
+                let (a, l) = (
+                    scatter(&mut seed) * std::f64::consts::TAU,
+                    5.0 + scatter(&mut seed) * 25.0,
+                );
                 let (nx, ny) = (x + a.cos() * l, y + a.sin() * l);
                 data.extend([x as f32, y as f32, nx as f32, ny as f32, 0.0, 3.0]);
                 (x, y) = (nx, ny);
@@ -61,15 +66,29 @@ fn city(n: usize, per: usize, dash: bool, alpha: f64) -> StyledLayer {
             instances: None,
         });
     }
-    StyledLayer { data, batches, ..Default::default() }
+    StyledLayer {
+        data,
+        batches,
+        ..Default::default()
+    }
 }
 
 /// The milliseconds of `frames` frames of `scene` through `camera`, each submitted and waited for, no read back.
-fn frames_ms(gpu: &mut Gpu, scene: StyledScene, camera: &Camera, settings: &RenderSettings, frames: usize) -> Vec<f64> {
+fn frames_ms(
+    gpu: &mut Gpu,
+    scene: StyledScene,
+    camera: &Camera,
+    settings: &RenderSettings,
+    frames: usize,
+) -> Vec<f64> {
     let (width, height) = (camera.width as u32, camera.height as u32);
     let texture = gpu.device.create_texture(&wgpu::TextureDescriptor {
         label: Some("far"),
-        size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        size: wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
         mip_level_count: 1,
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
@@ -102,10 +121,14 @@ fn frames_ms(gpu: &mut Gpu, scene: StyledScene, camera: &Camera, settings: &Rend
             )
             .expect("the frame prepares");
         if let Some(scene) = &gpu.styled {
-            let _ = gpu.renderer.prepare_styled(&gpu.device, &gpu.queue, 1, scene, &RedTiles);
+            let _ = gpu
+                .renderer
+                .prepare_styled(&gpu.device, &gpu.queue, 1, scene, &RedTiles);
         }
         let t = Instant::now();
-        let mut encoder = gpu.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+        let mut encoder = gpu
+            .device
+            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
         {
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: None,
@@ -113,7 +136,10 @@ fn frames_ms(gpu: &mut Gpu, scene: StyledScene, camera: &Camera, settings: &Rend
                     view: &view,
                     depth_slice: None,
                     resolve_target: None,
-                    ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::WHITE), store: wgpu::StoreOp::Store },
+                    ops: wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                        store: wgpu::StoreOp::Store,
+                    },
                 })],
                 depth_stencil_attachment: None,
                 timestamp_writes: None,
@@ -124,11 +150,15 @@ fn frames_ms(gpu: &mut Gpu, scene: StyledScene, camera: &Camera, settings: &Rend
             }
         }
         if gpu.renderer.owns_targets(1) {
-            gpu.renderer.render(&mut encoder, &view, [0, 0, width, height], 1);
+            gpu.renderer
+                .render(&mut encoder, &view, [0, 0, width, height], 1);
         }
         let index = gpu.queue.submit([encoder.finish()]);
         gpu.device
-            .poll(wgpu::PollType::Wait { submission_index: Some(index), timeout: None })
+            .poll(wgpu::PollType::Wait {
+                submission_index: Some(index),
+                timeout: None,
+            })
             .expect("the frame finishes");
         // The first two warm the caches up.
         if k >= 2 {
@@ -147,13 +177,24 @@ fn median(mut v: Vec<f64>) -> f64 {
 /// One fill over the whole view: two triangles, every pixel of the target blended once (what laying a picture over
 /// the target costs).
 fn cover(alpha: f64) -> StyledLayer {
-    let data: Vec<f32> = [[-10.0, -10.0], [SIDE + 10.0, -10.0], [SIDE + 10.0, SIDE + 10.0], [-10.0, -10.0], [SIDE + 10.0, SIDE + 10.0], [-10.0, SIDE + 10.0]]
-        .iter()
-        .flat_map(|p| [p[0] as f32, p[1] as f32])
-        .collect();
+    let data: Vec<f32> = [
+        [-10.0, -10.0],
+        [SIDE + 10.0, -10.0],
+        [SIDE + 10.0, SIDE + 10.0],
+        [-10.0, -10.0],
+        [SIDE + 10.0, SIDE + 10.0],
+        [-10.0, SIDE + 10.0],
+    ]
+    .iter()
+    .flat_map(|p| [p[0] as f32, p[1] as f32])
+    .collect();
     let batch = StyledBatch {
         range: 0..data.len(),
-        kind: BatchKind::Fill { paint: kentos_native_style::batches::FillPaintBatch::Solid { color: [0.2, 0.4, 0.6, alpha] } },
+        kind: BatchKind::Fill {
+            paint: kentos_native_style::batches::FillPaintBatch::Solid {
+                color: [0.2, 0.4, 0.6, alpha],
+            },
+        },
         level: 0.0,
         key: 1,
         bounds: [-10.0, -10.0, SIDE + 10.0, SIDE + 10.0],
@@ -169,7 +210,11 @@ fn cover(alpha: f64) -> StyledLayer {
         lod: None,
         instances: None,
     };
-    StyledLayer { data, batches: vec![batch], ..Default::default() }
+    StyledLayer {
+        data,
+        batches: vec![batch],
+        ..Default::default()
+    }
 }
 
 pub(super) fn a_far_city_by_variant(gpu: &mut Gpu) {
@@ -180,12 +225,20 @@ pub(super) fn a_far_city_by_variant(gpu: &mut Gpu) {
         scale: 1440.0 / SIDE / 1.05,
         ..Default::default()
     };
-    for (name, layers, samples) in [("boş, 4×", 0usize, 4u32), ("tam ekran dolgu ×1, 4×", 1, 4), ("tam ekran dolgu ×10, 4×", 10, 4)] {
+    for (name, layers, samples) in [
+        ("boş, 4×", 0usize, 4u32),
+        ("tam ekran dolgu ×1, 4×", 1, 4),
+        ("tam ekran dolgu ×10, 4×", 10, 4),
+    ] {
         let mut settings = RenderSettings::new(Rgba8::rgb(255, 255, 255));
         settings.samples = samples;
-        let parts: Vec<Arc<StyledLayerPart>> =
-            (0..layers).map(|k| Arc::new(StyledLayerPart::new(80_000 + k as u64, cover(0.3)))).collect();
-        let scene = StyledScene { layers: parts, ..Default::default() };
+        let parts: Vec<Arc<StyledLayerPart>> = (0..layers)
+            .map(|k| Arc::new(StyledLayerPart::new(80_000 + k as u64, cover(0.3))))
+            .collect();
+        let scene = StyledScene {
+            layers: parts,
+            ..Default::default()
+        };
         let ms = frames_ms(gpu, scene, &camera0, &settings, 30);
         eprintln!("ÖRTÜ {name}: kare medyan {:.2} ms", median(ms));
     }
@@ -197,23 +250,57 @@ pub(super) fn a_far_city_by_variant(gpu: &mut Gpu) {
         scale: 1440.0 / SIDE / 1.05,
         ..Default::default()
     };
-    let n: usize = std::env::var("KENTOS_FAR_ITEMS").ok().and_then(|v| v.parse().ok()).unwrap_or(1_000_000);
+    let n: usize = std::env::var("KENTOS_FAR_ITEMS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(1_000_000);
     let mut id = 70_000u64;
     for (name, per, dash, alpha, samples, single) in [
         ("düz, saydam, 4×, örneklerde", 8_000, false, 0.6, 4, false),
-        ("düz, saydam, 4×, tek örnekli koşu", 8_000, false, 0.6, 4, true),
+        (
+            "düz, saydam, 4×, tek örnekli koşu",
+            8_000,
+            false,
+            0.6,
+            4,
+            true,
+        ),
         ("düz, saydam, 1×", 8_000, false, 0.6, 1, false),
         ("düz, opak, 4×, örneklerde", 8_000, false, 1.0, 4, false),
-        ("kesikli, saydam, 4×, örneklerde", 8_000, true, 0.6, 4, false),
-        ("kesikli, saydam, 4×, tek örnekli koşu", 8_000, true, 0.6, 4, true),
-        ("düz, saydam, 4×, toplu 100 000, örneklerde", 100_000, false, 0.6, 4, false),
+        (
+            "kesikli, saydam, 4×, örneklerde",
+            8_000,
+            true,
+            0.6,
+            4,
+            false,
+        ),
+        (
+            "kesikli, saydam, 4×, tek örnekli koşu",
+            8_000,
+            true,
+            0.6,
+            4,
+            true,
+        ),
+        (
+            "düz, saydam, 4×, toplu 100 000, örneklerde",
+            100_000,
+            false,
+            0.6,
+            4,
+            false,
+        ),
     ] {
         let mut settings = RenderSettings::new(Rgba8::rgb(255, 255, 255));
         settings.samples = samples;
         settings.single_runs = single;
         id += 1;
         let layer = city(n, per, dash, alpha);
-        let scene = StyledScene { layers: vec![Arc::new(StyledLayerPart::new(id, layer))], ..Default::default() };
+        let scene = StyledScene {
+            layers: vec![Arc::new(StyledLayerPart::new(id, layer))],
+            ..Default::default()
+        };
         let ms = frames_ms(gpu, scene, &camera, &settings, 30);
         let m = median(ms.clone());
         eprintln!(

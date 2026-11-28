@@ -100,19 +100,36 @@ fn suggest(form: &Form) -> Element<'_, Message> {
 /// Sayı girişi (Proje ayarları › Ondalık basamak, yazı yükseklikleri): the value is the field's until Enter.
 #[test]
 fn a_number_field_draws_each_key_at_once() {
-    let mut form = Form { number: 2.5, ..Form::default() };
+    let mut form = Form {
+        number: 2.5,
+        ..Form::default()
+    };
     assert_eq!(keys(number, &mut form, "12"), [true, true]);
-    assert!(form.numbers.is_empty(), "nothing goes to the application before Enter: {:?}", form.numbers);
+    assert!(
+        form.numbers.is_empty(),
+        "nothing goes to the application before Enter: {:?}",
+        form.numbers
+    );
 }
 
 /// Düzenlenen hücre (Nesne denetçisi, Poz metraj ve yol pencerelerinin ızgaraları): text and numbers alike.
 #[test]
 fn an_edited_cell_draws_each_key_at_once() {
-    let mut form = Form { text: "Yol".into(), ..Form::default() };
+    let mut form = Form {
+        text: "Yol".into(),
+        ..Form::default()
+    };
     assert_eq!(keys(cell, &mut form, "ab"), [true, true]);
-    let mut form = Form { text: "1".into(), ..Form::default() };
+    let mut form = Form {
+        text: "1".into(),
+        ..Form::default()
+    };
     assert_eq!(keys(numeric_cell, &mut form, "25"), [true, true]);
-    assert!(form.commits.is_empty(), "nothing goes to the application before Enter: {:?}", form.commits);
+    assert!(
+        form.commits.is_empty(),
+        "nothing goes to the application before Enter: {:?}",
+        form.commits
+    );
 }
 
 #[test]
@@ -141,8 +158,12 @@ fn the_fields_that_send_each_key_are_drawn_too() {
 fn a_searchable_list_draws_each_key_at_once() {
     fn list(_: &Form) -> Element<'_, Message> {
         placed(
-            Select::new(["Ankara", "Sivas", "Kayseri"].into_iter().map(Choice::new), Some(0), Message::Pick)
-                .searchable(true),
+            Select::new(
+                ["Ankara", "Sivas", "Kayseri"].into_iter().map(Choice::new),
+                Some(0),
+                Message::Pick,
+            )
+            .searchable(true),
         )
     }
     let mut form = Form::default();

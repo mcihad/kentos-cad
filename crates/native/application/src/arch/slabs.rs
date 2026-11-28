@@ -2,7 +2,8 @@
 //! point, moved by an edge offset, and the slab's fields checked.
 
 use kentos_commands::{
-    Entity, NewSlabEdge, SlabBound, SlabBoundary, SlabEdge, SlabFace, SlabFields, SlabSourceKind, SpacePart, Vec2,
+    Entity, NewSlabEdge, SlabBound, SlabBoundary, SlabEdge, SlabFace, SlabFields, SlabSourceKind,
+    SpacePart, Vec2,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::geom::arrangement::Area;
@@ -23,12 +24,25 @@ pub(crate) fn valid(s: &SlabFields, path: &str) -> Result<(), Stop> {
 pub(crate) fn parts_finite(parts: &[SpacePart], path: &str) -> Result<(), Stop> {
     for (k, p) in parts.iter().enumerate() {
         for (h, ring) in std::iter::once(&p.outer).chain(&p.holes).enumerate() {
-            let at = if h == 0 { format!("{path}[{k}].outer") } else { format!("{path}[{k}].holes[{}]", h - 1) };
+            let at = if h == 0 {
+                format!("{path}[{k}].outer")
+            } else {
+                format!("{path}[{k}].holes[{}]", h - 1)
+            };
             for (j, q) in ring.pts.iter().enumerate() {
-                checks::point(*q, &format!("{}. köşenin", j + 1), &format!("{at}.pts[{j}]"))?;
+                checks::point(
+                    *q,
+                    &format!("{}. köşenin", j + 1),
+                    &format!("{at}.pts[{j}]"),
+                )?;
             }
             for (j, b) in ring.bulges.iter().flatten().enumerate() {
-                checks::finite(*b, "Büküm", "Sonlu bir sayı verin.", &format!("{at}.bulges[{j}]"))?;
+                checks::finite(
+                    *b,
+                    "Büküm",
+                    "Sonlu bir sayı verin.",
+                    &format!("{at}.bulges[{j}]"),
+                )?;
             }
         }
     }
@@ -47,7 +61,12 @@ pub(crate) fn edge_of(e: &NewSlabEdge) -> SlabEdge {
 /// `not_finite` for an edge's width that is NaN or infinite.
 pub(crate) fn edge_finite(e: &NewSlabEdge, path: &str) -> Result<(), Stop> {
     if let Some(w) = e.width {
-        checks::finite(w, &format!("{} eni", e.kind.whose()), "Sonlu bir sayı verin.", &format!("{path}.width"))?;
+        checks::finite(
+            w,
+            &format!("{} eni", e.kind.whose()),
+            "Sonlu bir sayı verin.",
+            &format!("{path}.width"),
+        )?;
     }
     Ok(())
 }
@@ -98,7 +117,10 @@ pub(crate) fn areas(parts: &[SpacePart]) -> Vec<Area> {
 
 /// The core's areas as parts.
 pub(crate) fn parts_of(areas: &[Area]) -> Vec<SpacePart> {
-    areas.iter().map(kentos_domain::space_follow::part).collect()
+    areas
+        .iter()
+        .map(kentos_domain::space_follow::part)
+        .collect()
 }
 
 /// `parts` with every edge moved by `d` (out when positive); `slab_offset_failed` when a ring turns over or crosses.
@@ -123,7 +145,11 @@ pub(crate) fn moved(parts: &[SpacePart], d: f64, path: &str) -> Result<Vec<Space
                 Some(h) => format!("{}. parçanın {}. deliği", f.part + 1, h + 1),
                 None => format!("{}. parçanın dış halkası", f.part + 1),
             };
-            Err(fail(codes::SLAB_OFFSET_FAILED, format!("{} ({ring}).", f.words.trim_end_matches('.')), path))
+            Err(fail(
+                codes::SLAB_OFFSET_FAILED,
+                format!("{} ({ring}).", f.words.trim_end_matches('.')),
+                path,
+            ))
         }
     }
 }
@@ -138,10 +164,16 @@ pub(crate) fn space_parts(doc: &Document, uid: &str, path: &str) -> Result<Vec<S
             format!("“{uid}” geçerli bir nesne kimliği değil; mahalin kalıcı kimliğini verin."),
         );
     }
-    let found = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
+    let found = kentos_domain::Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s));
     match found {
         Some(Entity::Space(s)) => Ok(s.space.parts.clone()),
-        Some(_) => bad(codes::NOT_A_SPACE, "Döşemenin bağlanacağı nesne mahal değil.".into()),
+        Some(_) => bad(
+            codes::NOT_A_SPACE,
+            "Döşemenin bağlanacağı nesne mahal değil.".into(),
+        ),
         None => bad(
             codes::ENTITY_NOT_FOUND,
             format!("“{uid}” kimlikli mahal çizimde yok; var olan bir mahalin kimliğini verin."),
@@ -150,11 +182,24 @@ pub(crate) fn space_parts(doc: &Document, uid: &str, path: &str) -> Result<Vec<S
 }
 
 /// The bound a slab takes from walls round `seed` (by `boundary`) or from `space`, moved by `offset`.
-pub(crate) fn bound_of(seed: Option<Vec2>, boundary: Option<SlabBoundary>, space: Option<&String>, offset: f64) -> SlabBound {
+pub(crate) fn bound_of(
+    seed: Option<Vec2>,
+    boundary: Option<SlabBoundary>,
+    space: Option<&String>,
+    offset: f64,
+) -> SlabBound {
     SlabBound {
-        source: if space.is_some() { SlabSourceKind::Space } else { SlabSourceKind::Walls },
+        source: if space.is_some() {
+            SlabSourceKind::Space
+        } else {
+            SlabSourceKind::Walls
+        },
         seed: if space.is_some() { None } else { seed },
-        face: if boundary.unwrap_or_default() == SlabBoundary::Room { SlabFace::Room } else { SlabFace::Outline },
+        face: if boundary.unwrap_or_default() == SlabBoundary::Room {
+            SlabFace::Room
+        } else {
+            SlabFace::Outline
+        },
         space: space.cloned(),
         offset,
         uids: Vec::new(),
@@ -177,13 +222,21 @@ pub(crate) fn with_bound_uids(doc: &Document, mut s: SlabFields) -> SlabFields {
 /// A slope arrow across `parts` rising along `dir` (radians counter-clockwise from east) at `grade` (rise over run;
 /// docs/adr/8071 §6): its tail at the outline's lowest point along it, straight along it to its highest; none for an
 /// outline with no length that way. The slab's top at its tail is its offset.
-pub fn slope_across(parts: &[kentos_commands::SpacePart], dir: f64, grade: f64) -> Option<kentos_commands::SlabSlope> {
+pub fn slope_across(
+    parts: &[kentos_commands::SpacePart],
+    dir: f64,
+    grade: f64,
+) -> Option<kentos_commands::SlabSlope> {
     let u = (dir.cos(), dir.sin());
     let pts: Vec<kentos_commands::Vec2> = parts
         .iter()
         .flat_map(|part| {
-            let pts: Vec<kentos_geometry_core::Vec2> =
-                part.outer.pts.iter().map(|q| kentos_geometry_core::Vec2::new(q.x, q.y)).collect();
+            let pts: Vec<kentos_geometry_core::Vec2> = part
+                .outer
+                .pts
+                .iter()
+                .map(|q| kentos_geometry_core::Vec2::new(q.x, q.y))
+                .collect();
             kentos_geometry_core::entity::polygon_ring(&pts, part.outer.bulges.as_deref())
         })
         .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
@@ -193,7 +246,10 @@ pub fn slope_across(parts: &[kentos_commands::SpacePart], dir: f64, grade: f64) 
     let run = pts.iter().map(along).fold(f64::MIN, f64::max) - along(low);
     (run >= 0.001).then_some(kentos_commands::SlabSlope {
         from: *low,
-        to: kentos_commands::Vec2 { x: low.x + u.0 * run, y: low.y + u.1 * run },
+        to: kentos_commands::Vec2 {
+            x: low.x + u.0 * run,
+            y: low.y + u.1 * run,
+        },
         rise: grade * run,
     })
 }

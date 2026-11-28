@@ -11,12 +11,23 @@ fn opened(tag: &str, field: usize) -> App {
     crate::data_layers::register();
     let path = crate::data_layers_tests::municipal(tag);
     let mut app = app_with_drawing();
-    app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described")])
-        .expect("added");
-    let bakim = crate::data_layers_tests::node(&app, "bakim").expect("bakim").id.clone();
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described"),
+    ])
+    .expect("added");
+    let bakim = crate::data_layers_tests::node(&app, "bakim")
+        .expect("bakim")
+        .id
+        .clone();
     {
         let doc = app.document.as_mut().expect("open");
-        let mut fields = doc.model.layers().get(&bakim).expect("the layer").fields.clone();
+        let mut fields = doc
+            .model
+            .layers()
+            .get(&bakim)
+            .expect("the layer")
+            .fields
+            .clone();
         if let Some(f) = fields.iter_mut().find(|f| f.name == "mahalle") {
             f.alias = Some("Mahalle".into());
             f.required = true;
@@ -29,7 +40,9 @@ fn opened(tag: &str, field: usize) -> App {
         if let Some(f) = fields.iter_mut().find(|f| f.name == "kod") {
             f.alias = Some("Bakım kodu".into());
         }
-        doc.model.set_layer_fields(&bakim, fields, &[]).expect("set");
+        doc.model
+            .set_layer_fields(&bakim, fields, &[])
+            .expect("set");
     }
     let task = app.open_layer_fields(&bakim);
     drive(&mut app, task);
@@ -47,9 +60,15 @@ fn the_chosen_fields_settings_are_its_own_and_editing_them_changes_it() {
     let _ = app.update(msg(Event::Choose(0)));
     let _ = app.update(msg(Event::Save));
     let doc = &app.document.as_ref().expect("open").model;
-    let bakim = crate::data_layers_tests::node(&app, "bakim").expect("bakim").id.clone();
+    let bakim = crate::data_layers_tests::node(&app, "bakim")
+        .expect("bakim")
+        .id
+        .clone();
     let fields = &doc.layers().get(&bakim).expect("the layer").fields;
-    let aliases: Vec<(&str, Option<&str>)> = fields.iter().map(|f| (f.name.as_str(), f.alias.as_deref())).collect();
+    let aliases: Vec<(&str, Option<&str>)> = fields
+        .iter()
+        .map(|f| (f.name.as_str(), f.alias.as_deref()))
+        .collect();
     assert_eq!(aliases[2], ("mahalle", Some("Mahalle kodu")));
     assert_eq!(aliases[0], ("kod", Some("Bakım kodu")));
 }

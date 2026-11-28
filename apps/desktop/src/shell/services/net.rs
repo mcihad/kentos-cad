@@ -612,7 +612,6 @@ pub(super) fn name_of(entry: &Entry) -> String {
         .map(|p| p.name.clone())
         .unwrap_or_else(|| {
             let url = &entry.service.url;
-            kentos_commands::origin_of(url)
-                .unwrap_or_else(|| entry.service.kind.label().to_owned())
+            kentos_commands::origin_of(url).unwrap_or_else(|| entry.service.kind.label().to_owned())
         })
 }

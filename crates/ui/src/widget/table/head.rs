@@ -13,9 +13,9 @@
 //! ipucunda okunur.
 
 use iced::advanced::layout::{self, Layout, Node};
+use iced::advanced::mouse::{Click, click};
 use iced::advanced::renderer::{self, Quad, Renderer as _};
 use iced::advanced::widget::{Operation, Tree, Widget, tree};
-use iced::advanced::mouse::{Click, click};
 use iced::advanced::{Clipboard, Shell, overlay};
 use iced::alignment::Horizontal;
 use iced::widget::container;
@@ -438,9 +438,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Head<'a, Mess
                 t.layer(if pressed { 0.1 } else { 0.05 }),
             );
         }
-        let text = renderer::Style {
-            text_color: t.text,
-        };
+        let text = renderer::Style { text_color: t.text };
         self.line.as_widget().draw(
             &tree.children[0],
             renderer,

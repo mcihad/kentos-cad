@@ -229,7 +229,10 @@ impl App {
         );
         match &w.answer {
             None => {
-                let why = w.failed.clone().unwrap_or_else(|| "Denetim yapılamadı.".to_owned());
+                let why = w
+                    .failed
+                    .clone()
+                    .unwrap_or_else(|| "Denetim yapılamadı.".to_owned());
                 body = body.push(words::text_line(Kind::Error, why));
                 body = body.push(
                     row![
@@ -300,15 +303,14 @@ impl App {
         }
         let some = w.answer.as_ref().is_some_and(|a| !a.records.is_empty());
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                words::secondary(SELECT_ALL, some.then(|| msg(Event::SelectAll))),
-                space::horizontal().width(Fill),
-                words::secondary(AGAIN, Some(msg(Event::Again))),
-                words::primary(CLOSE, Some(msg(Event::Close))),
-            ]
-            .spacing(8)
-            .align_y(Center);
+        let footer = row![
+            words::secondary(SELECT_ALL, some.then(|| msg(Event::SelectAll))),
+            space::horizontal().width(Fill),
+            words::secondary(AGAIN, Some(msg(Event::Again))),
+            words::primary(CLOSE, Some(msg(Event::Close))),
+        ]
+        .spacing(8)
+        .align_y(Center);
         Frame::new(format!("{TITLE} · {}", w.name))
             .scroll(body)
             .footer(footer)
@@ -350,12 +352,16 @@ mod tests {
     /// designer; a readable rule gives the counts.
     #[test]
     fn a_rule_that_cannot_be_read_is_said_in_the_window() {
-        let mut drawing: serde_json::Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/forms.kcad")).expect("the drawing");
+        let mut drawing: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/interaction/v1/forms.kcad"
+        ))
+        .expect("the drawing");
         let form = &mut drawing["settings"]["forms"][0];
         form["releases"] = serde_json::json!([]);
-        form["draft"]["items"][0]["items"][2]["checks"][0]["rule"] = serde_json::json!("uzunluk(Açıklama)) >= 10");
-        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+        form["draft"]["items"][0]["items"][2]["checks"][0]["rule"] =
+            serde_json::json!("uzunluk(Açıklama)) >= 10");
+        let snapshot =
+            kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
         let doc = crate::document::Document::new(snapshot, None).expect("opens");
         let (mut app, _) = App::boot(None);
         let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
@@ -363,15 +369,30 @@ mod tests {
         let w = app.gis.form_audit.as_ref().expect("the window");
         let why = w.failed.clone().expect("the reason kept");
         assert!(w.answer.is_none());
-        assert!(why.contains("uzunluk(Açıklama)) >= 10") || why.contains("karakter"), "{why}");
+        assert!(
+            why.contains("uzunluk(Açıklama)) >= 10") || why.contains("karakter"),
+            "{why}"
+        );
         let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
-        assert!(crate::files_testing::find_text(&mut shot, &app, &why).is_some(), "{why}");
-        assert!(why.contains("Bina denetimi") && why.contains("karakterde"), "the form and where: {why}");
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+            drop(app.update(m))
+        });
+        assert!(
+            crate::files_testing::find_text(&mut shot, &app, &why).is_some(),
+            "{why}"
+        );
+        assert!(
+            why.contains("Bina denetimi") && why.contains("karakterde"),
+            "the form and where: {why}"
+        );
         assert!(crate::files_testing::find_text(&mut shot, &app, DESIGNER).is_some());
         crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-049-form-denetim");
         let _ = app.update(msg(Event::Designer));
-        assert_eq!(app.dialog, Some(Dialog::Gis(gis::GisDialogKind::Forms)), "the designer opens");
+        assert_eq!(
+            app.dialog,
+            Some(Dialog::Gis(gis::GisDialogKind::Forms)),
+            "the designer opens"
+        );
         assert!(app.gis.form_audit.is_none());
     }
 }

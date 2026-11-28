@@ -14,8 +14,8 @@ use std::collections::HashMap;
 use iced::widget::canvas::{self, Frame, Path, Stroke};
 use iced::{Color, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    AnnotationStyleKind, CommandResult, DrawingFont, Entity, StyleEditOperation, StylesEdit, TableAlign,
-    TableCellStyleDef, TableStyleDef, table_style_defs_problem,
+    AnnotationStyleKind, CommandResult, DrawingFont, Entity, StyleEditOperation, StylesEdit,
+    TableAlign, TableCellStyleDef, TableStyleDef, table_style_defs_problem,
 };
 use kentos_interaction::Level;
 use kentos_ui::widget::Form;
@@ -122,7 +122,10 @@ fn cell_mut(s: &mut TableStyleDef, c: Cell) -> &mut TableCellStyleDef {
 /// A field's value as the style holds it, as the form shows it.
 fn shown(cell: Option<&TableCellStyleDef>, f: Field) -> String {
     let Some(c) = cell else { return String::new() };
-    let n = |v: Option<f64>| v.map(|v| format!("{v}").replace('.', ",")).unwrap_or_default();
+    let n = |v: Option<f64>| {
+        v.map(|v| format!("{v}").replace('.', ","))
+            .unwrap_or_default()
+    };
     match f {
         Field::Height => n(c.height),
         Field::Horizontal => n(c.horizontal_margin),
@@ -142,14 +145,19 @@ fn write(cell: &mut TableCellStyleDef, f: Field, text: &str) -> Result<(), Strin
         if t.is_empty() {
             return Ok(None);
         }
-        t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("“{t}” bir sayı değil"))
+        t.replace(',', ".")
+            .parse::<f64>()
+            .map(Some)
+            .map_err(|_| format!("“{t}” bir sayı değil"))
     };
     let colour = || -> Result<Option<String>, String> {
         if t.is_empty() {
             return Ok(None);
         }
-        let ok = t.len() == 7 && t.starts_with('#') && t[1..].chars().all(|c| c.is_ascii_hexdigit());
-        ok.then(|| Some(t.to_lowercase())).ok_or_else(|| format!("“{t}” #rrggbb biçiminde bir renk değil"))
+        let ok =
+            t.len() == 7 && t.starts_with('#') && t[1..].chars().all(|c| c.is_ascii_hexdigit());
+        ok.then(|| Some(t.to_lowercase()))
+            .ok_or_else(|| format!("“{t}” #rrggbb biçiminde bir renk değil"))
     };
     match f {
         Field::Height => cell.height = number()?,
@@ -171,10 +179,16 @@ impl Window {
     /// What keeps Kaydet closed: a field typed that does not read, then the table's own rule.
     fn problem(&self) -> Option<String> {
         for ((id, cell, field), text) in &self.typed {
-            let Some(s) = self.styles.iter().find(|s| &s.id == id) else { continue };
+            let Some(s) = self.styles.iter().find(|s| &s.id == id) else {
+                continue;
+            };
             let mut probe = cell_of(s, *cell).cloned().unwrap_or_default();
             if let Err(why) = write(&mut probe, *field, text) {
-                return Some(format!("“{}” {} hücresi: {why}", s.name, cell.to_string().to_lowercase()));
+                return Some(format!(
+                    "“{}” {} hücresi: {why}",
+                    s.name,
+                    cell.to_string().to_lowercase()
+                ));
             }
         }
         table_style_defs_problem(&self.styles)
@@ -184,7 +198,10 @@ impl Window {
 /// How many tables follow each table style: the drawing's and its block definitions'.
 fn usage(doc: &kentos_domain::Document) -> HashMap<String, usize> {
     let mut out = HashMap::new();
-    for e in doc.entities().chain(doc.blocks().iter().flat_map(|b| &b.entities)) {
+    for e in doc
+        .entities()
+        .chain(doc.blocks().iter().flat_map(|b| &b.entities))
+    {
         if let Entity::Table(t) = e
             && let Some(id) = &t.table_style
         {
@@ -196,12 +213,17 @@ fn usage(doc: &kentos_domain::Document) -> HashMap<String, usize> {
 
 impl App {
     fn saved_table_styles(&self) -> Vec<TableStyleDef> {
-        self.document.as_ref().map(|d| d.model.settings().table_styles.clone()).unwrap_or_default()
+        self.document
+            .as_ref()
+            .map(|d| d.model.settings().table_styles.clone())
+            .unwrap_or_default()
     }
 
     pub(crate) fn table_style_window_event(&mut self, event: Event) -> Task<Message> {
         if let Event::Open = event {
-            let Some(doc) = self.document.as_ref() else { return Task::none() };
+            let Some(doc) = self.document.as_ref() else {
+                return Task::none();
+            };
             let styles = doc.model.settings().table_styles.clone();
             self.table_style_window = Some(Window {
                 chosen: (!styles.is_empty()).then_some(0),
@@ -225,9 +247,18 @@ impl App {
         let text_styles: Vec<String> = self
             .document
             .as_ref()
-            .map(|d| d.model.settings().text_styles.iter().map(|s| s.name.clone()).collect())
+            .map(|d| {
+                d.model
+                    .settings()
+                    .text_styles
+                    .iter()
+                    .map(|s| s.name.clone())
+                    .collect()
+            })
             .unwrap_or_default();
-        let Some(w) = self.table_style_window.as_mut() else { return Task::none() };
+        let Some(w) = self.table_style_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Choose(i) => w.chosen = Some(i).filter(|i| *i < w.styles.len()),
             Event::Cell(c) => w.cell = c,
@@ -268,8 +299,19 @@ impl App {
                     data: None,
                 });
                 let taken: Vec<String> = w.styles.iter().map(|s| s.name.to_lowercase()).collect();
-                let base = if s.name.is_empty() { "Tablo stili".to_owned() } else { s.name.clone() };
-                s.name = (1..).map(|k| if k == 1 && s.name.is_empty() { base.clone() } else { format!("{base} {k}") })
+                let base = if s.name.is_empty() {
+                    "Tablo stili".to_owned()
+                } else {
+                    s.name.clone()
+                };
+                s.name = (1..)
+                    .map(|k| {
+                        if k == 1 && s.name.is_empty() {
+                            base.clone()
+                        } else {
+                            format!("{base} {k}")
+                        }
+                    })
                     .find(|n| !taken.contains(&n.to_lowercase()))
                     .unwrap_or(base);
                 s.id = kentos_domain::Uuid::now_v7().to_string();
@@ -279,7 +321,11 @@ impl App {
             Event::Remove => {
                 if let Some(i) = w.chosen.filter(|i| *i < w.styles.len()) {
                     w.styles.remove(i);
-                    w.chosen = if w.styles.is_empty() { None } else { Some(i.min(w.styles.len() - 1)) };
+                    w.chosen = if w.styles.is_empty() {
+                        None
+                    } else {
+                        Some(i.min(w.styles.len() - 1))
+                    };
                 }
             }
             Event::Open | Event::Close | Event::Save => {}
@@ -289,12 +335,16 @@ impl App {
 
     /// Kaydet: each style removed, made or changed through `cad.styles.edit`, in one undo step.
     fn save_table_style_window(&mut self) {
-        let Some(w) = self.table_style_window.clone() else { return };
+        let Some(w) = self.table_style_window.clone() else {
+            return;
+        };
         if w.problem().is_some() {
             return;
         }
         let saved = self.saved_table_styles();
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         let edit = |operation, style: Option<String>, table: Option<TableStyleDef>| StylesEdit {
             kind: AnnotationStyleKind::Table,
             operation,
@@ -311,13 +361,18 @@ impl App {
             expected_revision: None,
         };
         let mut calls = Vec::new();
-        for s in saved.iter().filter(|s| !w.styles.iter().any(|n| n.id == s.id)) {
+        for s in saved
+            .iter()
+            .filter(|s| !w.styles.iter().any(|n| n.id == s.id))
+        {
             calls.push(edit(StyleEditOperation::Remove, Some(s.id.clone()), None));
         }
         for s in &w.styles {
             match saved.iter().find(|o| o.id == s.id) {
                 None => calls.push(edit(StyleEditOperation::Create, None, Some(s.clone()))),
-                Some(o) if o != s => calls.push(edit(StyleEditOperation::Update, None, Some(s.clone()))),
+                Some(o) if o != s => {
+                    calls.push(edit(StyleEditOperation::Update, None, Some(s.clone())))
+                }
                 Some(_) => {}
             }
         }
@@ -332,7 +387,9 @@ impl App {
                     followed += output.followed;
                     locked += output.locked;
                 }
-                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => {
                     refused = Some(error.message);
                     break;
                 }
@@ -349,10 +406,16 @@ impl App {
             said.push_str(&format!("; {followed} tablo silinen stilden ayrıldı"));
         }
         if locked > 0 {
-            said.push_str(&format!("; kilitli katmandaki {locked} tablo olduğu gibi kaldı"));
+            said.push_str(&format!(
+                "; kilitli katmandaki {locked} tablo olduğu gibi kaldı"
+            ));
         }
         self.say(Level::Success, format!("{said}. Geri almak için Geri al."));
-        let usage = self.document.as_ref().map(|d| usage(&d.model)).unwrap_or_default();
+        let usage = self
+            .document
+            .as_ref()
+            .map(|d| usage(&d.model))
+            .unwrap_or_default();
         if let Some(w) = self.table_style_window.as_mut() {
             w.typed.clear();
             w.usage = usage;
@@ -365,8 +428,11 @@ impl App {
         };
         let settings = doc.model.settings();
         // The styles, each with how many tables follow it.
-        let names: Vec<(String, usize)> =
-            w.styles.iter().map(|s| (s.name.clone(), w.usage.get(&s.id).copied().unwrap_or(0))).collect();
+        let names: Vec<(String, usize)> = w
+            .styles
+            .iter()
+            .map(|s| (s.name.clone(), w.usage.get(&s.id).copied().unwrap_or(0)))
+            .collect();
         let list = road_dialog::edit_table(
             vec![col("Ad", 170.0), num("Tablo", 56.0)],
             names.len(),
@@ -385,34 +451,56 @@ impl App {
         let mut form = Form::new().label_width(130.0);
         if let Some(s) = w.chosen() {
             let cell = cell_of(s, w.cell);
-            let texts: Vec<String> = settings.text_styles.iter().map(|t| t.name.clone()).collect();
-            let text_at = cell.and_then(|c| c.text_style.as_ref()).and_then(|n| texts.iter().position(|t| t.eq_ignore_ascii_case(n)));
+            let texts: Vec<String> = settings
+                .text_styles
+                .iter()
+                .map(|t| t.name.clone())
+                .collect();
+            let text_at = cell
+                .and_then(|c| c.text_style.as_ref())
+                .and_then(|n| texts.iter().position(|t| t.eq_ignore_ascii_case(n)));
             let text_pick = {
-                let options: Vec<String> = std::iter::once("Tablonun".to_owned()).chain(texts.iter().cloned()).collect();
+                let options: Vec<String> = std::iter::once("Tablonun".to_owned())
+                    .chain(texts.iter().cloned())
+                    .collect();
                 let texts = texts.clone();
-                road_dialog::pick(
-                    options,
-                    Some(text_at.map_or(0, |i| i + 1)),
-                    move |i| msg(Event::TextStyle(i.checked_sub(1).and_then(|i| texts.get(i).cloned()))),
-                )
+                road_dialog::pick(options, Some(text_at.map_or(0, |i| i + 1)), move |i| {
+                    msg(Event::TextStyle(
+                        i.checked_sub(1).and_then(|i| texts.get(i).cloned()),
+                    ))
+                })
             };
-            let aligns = [None, Some(TableAlign::Left), Some(TableAlign::Center), Some(TableAlign::Right)];
+            let aligns = [
+                None,
+                Some(TableAlign::Left),
+                Some(TableAlign::Center),
+                Some(TableAlign::Right),
+            ];
             let align_at = aligns.iter().position(|a| *a == cell.and_then(|c| c.align));
-            let align_pick = road_dialog::pick(["Tablonun", "Sol", "Orta", "Sağ"], align_at, move |i| {
-                msg(Event::Align(aligns.get(i).copied().flatten()))
-            });
+            let align_pick =
+                road_dialog::pick(["Tablonun", "Sol", "Orta", "Sağ"], align_at, move |i| {
+                    msg(Event::Align(aligns.get(i).copied().flatten()))
+                });
             form = form
                 .section("Stil")
-                .field("Ad", kentos_ui::widget::text_field("Ad", &s.name).on_input(|t| msg(Event::Name(t))))
+                .field(
+                    "Ad",
+                    kentos_ui::widget::text_field("Ad", &s.name).on_input(|t| msg(Event::Name(t))),
+                )
                 .section("Hücre")
                 .row(Segmented::new(CELLS, w.cell, |c| msg(Event::Cell(c))).compact())
                 .field("Yazı stili", text_pick)
                 .field("Hizalama", align_pick);
             for (f, label) in FIELDS {
-                let typed = w.typed.get(&(s.id.clone(), w.cell, f)).cloned().unwrap_or_else(|| shown(cell, f));
+                let typed = w
+                    .typed
+                    .get(&(s.id.clone(), w.cell, f))
+                    .cloned()
+                    .unwrap_or_else(|| shown(cell, f));
                 let colour = matches!(f, Field::Color | Field::Fill | Field::BorderColor);
                 let hint = "Tablonun";
-                let field = kentos_ui::widget::text_field(hint, &typed).on_input(move |t| msg(Event::Field(f, t)));
+                let field = kentos_ui::widget::text_field(hint, &typed)
+                    .on_input(move |t| msg(Event::Field(f, t)));
                 if colour {
                     // A colour chosen from the kit's picker too (UR-033), its swatch the colour now; the code may still be
                     // typed, and empty is the table's own.
@@ -426,7 +514,9 @@ impl App {
         let problem = w.problem();
         let saved = self.saved_table_styles();
         let changed = w.styles != saved;
-        let mut d = RoadDialog::new(TITLE, form, msg(Event::Close)).head(list).form_width(330.0);
+        let mut d = RoadDialog::new(TITLE, form, msg(Event::Close))
+            .head(list)
+            .form_width(330.0);
         match w.chosen() {
             None => d = d.empty("Bir stil seçin ya da Yeni ile ekleyin."),
             Some(s) => {
@@ -446,8 +536,12 @@ impl App {
                 };
                 d = d
                     .picture(canvas::Canvas::new(preview).width(Fill).height(Fill), 240.0)
-                    .legend("Örnek tablo, kâğıtta basıldığı gibi: başlık, sütun başı ve veri satırları");
-                let mm = |v: Option<f64>| v.map_or_else(|| "—".to_owned(), |v| road_dialog::grouped(v, 2));
+                    .legend(
+                        "Örnek tablo, kâğıtta basıldığı gibi: başlık, sütun başı ve veri satırları",
+                    );
+                let mm = |v: Option<f64>| {
+                    v.map_or_else(|| "—".to_owned(), |v| road_dialog::grouped(v, 2))
+                };
                 let rows = CELLS
                     .iter()
                     .map(|c| {
@@ -455,12 +549,14 @@ impl App {
                         let get = |f: fn(&TableCellStyleDef) -> Option<f64>| mm(x.and_then(f));
                         vec![
                             c.to_string(),
-                            x.and_then(|x| x.text_style.clone()).unwrap_or_else(|| "—".into()),
+                            x.and_then(|x| x.text_style.clone())
+                                .unwrap_or_else(|| "—".into()),
                             get(|x| x.height),
                             get(|x| x.horizontal_margin),
                             get(|x| x.vertical_margin),
                             get(|x| x.border_weight),
-                            x.and_then(|x| x.border_color.clone()).unwrap_or_else(|| "—".into()),
+                            x.and_then(|x| x.border_color.clone())
+                                .unwrap_or_else(|| "—".into()),
                         ]
                     })
                     .collect();
@@ -480,14 +576,21 @@ impl App {
                 let n = w.usage.get(&s.id).copied().unwrap_or(0);
                 d = d.status(match &problem {
                     Some(p) => p.clone(),
-                    None if n > 0 => format!("{n} tablo bu stili izliyor; kendi değeri olmayan yerde stili çizer."),
-                    None => "Bu stili izleyen tablo yok; tablonun özelliklerinden seçilir.".to_owned(),
+                    None if n > 0 => format!(
+                        "{n} tablo bu stili izliyor; kendi değeri olmayan yerde stili çizer."
+                    ),
+                    None => {
+                        "Bu stili izleyen tablo yok; tablonun özelliklerinden seçilir.".to_owned()
+                    }
                 });
             }
         }
         d.ghost(NEW, Some(msg(Event::New)))
             .ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove)))
-            .primary(SAVE, (changed && problem.is_none()).then(|| msg(Event::Save)))
+            .primary(
+                SAVE,
+                (changed && problem.is_none()).then(|| msg(Event::Save)),
+            )
             .width(1120.0)
             .view()
     }
@@ -520,19 +623,34 @@ struct Preview {
 impl canvas::Program<Message> for Preview {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, _: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        _: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         use kentos_geometry_core::geom::table::table_geom;
         let mut frame = Frame::new(renderer, bounds.size());
         frame.fill_rectangle(Point::ORIGIN, bounds.size(), self.colors.halo);
-        let Some(g) = table_geom(&self.shape) else { return vec![frame.into_geometry()] };
+        let Some(g) = table_geom(&self.shape) else {
+            return vec![frame.into_geometry()];
+        };
         let (width, depth) = g.size();
-        let k = ((f64::from(bounds.width) - 32.0) / width.max(1e-9)).min((f64::from(bounds.height) - 32.0) / depth.max(1e-9));
+        let k = ((f64::from(bounds.width) - 32.0) / width.max(1e-9))
+            .min((f64::from(bounds.height) - 32.0) / depth.max(1e-9));
         let (left, top) = (
             (f64::from(bounds.width) - width * k) / 2.0,
             (f64::from(bounds.height) - depth * k) / 2.0,
         );
         // The table's top left is its point; y runs down the screen.
-        let at = |p: kentos_geometry_core::Vec2| Point::new((left + (p.x - g.p.x) * k) as f32, (top + (g.p.y - p.y) * k) as f32);
+        let at = |p: kentos_geometry_core::Vec2| {
+            Point::new(
+                (left + (p.x - g.p.x) * k) as f32,
+                (top + (g.p.y - p.y) * k) as f32,
+            )
+        };
         for f in g.fills() {
             let q = f.corners.map(at);
             let path = Path::new(|b| {
@@ -545,26 +663,47 @@ impl canvas::Program<Message> for Preview {
             frame.fill(&path, crate::view::hex_color(&f.fill));
         }
         for [a, b] in g.plain_lines() {
-            frame.stroke(&Path::line(at(a), at(b)), Stroke::default().with_width(1.0).with_color(self.colors.fg));
+            frame.stroke(
+                &Path::line(at(a), at(b)),
+                Stroke::default().with_width(1.0).with_color(self.colors.fg),
+            );
         }
         // A paper millimetre in pixels at this fit.
         let px_mm = self.plot_scale / 1000.0 * k;
         for b in g.borders() {
             let width = b.weight.map_or(1.0, |w| (w * px_mm).max(1.0)) as f32;
-            let color = b.color.as_deref().map_or(self.colors.fg, crate::view::hex_color);
-            frame.stroke(&Path::line(at(b.line[0]), at(b.line[1])), Stroke::default().with_width(width).with_color(color));
+            let color = b
+                .color
+                .as_deref()
+                .map_or(self.colors.fg, crate::view::hex_color);
+            frame.stroke(
+                &Path::line(at(b.line[0]), at(b.line[1])),
+                Stroke::default().with_width(width).with_color(color),
+            );
         }
-        let cells = g.layout(kentos_native_application::geometry::drawing_font(Some(self.font))).cells;
+        let cells = g
+            .layout(kentos_native_application::geometry::drawing_font(Some(
+                self.font,
+            )))
+            .cells;
         for c in cells {
-            let Some(words) = g.cells.get(c.row).and_then(|r| r.get(c.col)) else { continue };
+            let Some(words) = g.cells.get(c.row).and_then(|r| r.get(c.col)) else {
+                continue;
+            };
             let h = g.style_at(c.row, c.col).height.unwrap_or(g.height);
-            let ink = c.color.as_deref().map_or(self.colors.label, crate::view::hex_color);
+            let ink = c
+                .color
+                .as_deref()
+                .map_or(self.colors.label, crate::view::hex_color);
             crate::labels::sample_text(
                 &mut frame,
                 kentos_geometry_core::geom::table::cell_line(words, c.line),
                 at(c.at),
                 (h * k) as f32,
-                &kentos_commands::TextFace { bold: c.bold || self.face.bold, ..self.face.clone() },
+                &kentos_commands::TextFace {
+                    bold: c.bold || self.face.bold,
+                    ..self.face.clone()
+                },
                 1.0,
                 self.font,
                 (ink, Color::TRANSPARENT),
@@ -588,7 +727,9 @@ pub(crate) fn scenes() -> Vec<crate::tools_screens::Scene> {
             let slot = tests::drawing(app);
             app.selection.set([slot]);
             // Genel folded: the table's rows, Tablo stili among them, in view.
-            let _ = app.update(Message::Properties(crate::properties::Event::Toggle("general")));
+            let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+                "general",
+            )));
         }),
     ]
 }
@@ -615,9 +756,15 @@ fn colour_field<'a>(
             },
             ..iced::widget::container::Style::default()
         });
-    let picker = ColorPicker::new(shown.unwrap_or(Color::BLACK), move |c| msg(Event::Field(f, to_hex(c)))).anchor(face);
+    let picker = ColorPicker::new(shown.unwrap_or(Color::BLACK), move |c| {
+        msg(Event::Field(f, to_hex(c)))
+    })
+    .anchor(face);
     let field: Element<'a, Message> = field.into();
-    iced::widget::row![picker, field].spacing(8).align_y(iced::Center).into()
+    iced::widget::row![picker, field]
+        .spacing(8)
+        .align_y(iced::Center)
+        .into()
 }
 
 #[cfg(test)]
@@ -631,7 +778,9 @@ pub(crate) mod tests {
         let doc = app.document.as_mut().expect("a drawing");
         let mut settings = doc.settings().clone();
         settings.plot_scale = 100.0;
-        settings.text_styles = serde_json::from_value(json!([{"id":"yazi-tablo","name":"A-TABLO","font":"arimo"}])).unwrap();
+        settings.text_styles =
+            serde_json::from_value(json!([{"id":"yazi-tablo","name":"A-TABLO","font":"arimo"}]))
+                .unwrap();
         settings.table_styles = serde_json::from_value(json!([
             {"id":"ofis-cetvel","name":"CETVEL","title":{"align":"center","height":3.5,"borderWeight":0.7,"borderColor":"#c0392b","fill":"#f3e9e7"},
              "header":{"height":2.5,"borderColor":"#2244dd","fill":"#e8edf9"},"data":{"textStyle":"A-TABLO","align":"right","horizontalMargin":1.5}},
@@ -643,7 +792,15 @@ pub(crate) mod tests {
             "cells":[["Parsel listesi","",""],["Ada","Parsel","Alan (m²)"],["101","12","512,40"],["102","7","640,15"]],
             "merges":[{"row":0,"col":0,"rows":1,"cols":3}],"header":true,"tableStyle":"ofis-cetvel"})).unwrap();
         let slot = doc.model.add(t).expect("a slot");
-        app.viewport.camera.fit(&kentos_render_wgpu::Bounds { min_x: -1.0, min_y: -0.6, max_x: 9.8, max_y: 3.6 }, 24.0);
+        app.viewport.camera.fit(
+            &kentos_render_wgpu::Bounds {
+                min_x: -1.0,
+                min_y: -0.6,
+                max_x: 9.8,
+                max_y: 3.6,
+            },
+            24.0,
+        );
         slot
     }
 
@@ -655,11 +812,20 @@ pub(crate) mod tests {
             Some(Entity::Table(t)) => t.table_style.clone(),
             _ => panic!("the table"),
         };
-        let _ = app.update(Message::Properties(crate::properties::Event::TableStyle(vec![slot], Some("yerel-sade".into()))));
+        let _ = app.update(Message::Properties(crate::properties::Event::TableStyle(
+            vec![slot],
+            Some("yerel-sade".into()),
+        )));
         assert_eq!(table_style(&app).as_deref(), Some("yerel-sade"));
-        let _ = app.update(Message::Properties(crate::properties::Event::TableStyle(vec![slot], None)));
+        let _ = app.update(Message::Properties(crate::properties::Event::TableStyle(
+            vec![slot],
+            None,
+        )));
         assert_eq!(table_style(&app), None, "Yok takes the style away");
-        assert_eq!(app.document.as_mut().unwrap().model.undo().as_deref(), Some("Değiştir"));
+        assert_eq!(
+            app.document.as_mut().unwrap().model.undo().as_deref(),
+            Some("Değiştir")
+        );
         assert_eq!(table_style(&app).as_deref(), Some("yerel-sade"));
     }
 
@@ -667,24 +833,31 @@ pub(crate) mod tests {
     #[test]
     #[ignore = "pictures for the owner, run by hand"]
     fn colour_field_screens() {
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-033");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.run/gui-evidence/kullanim-UR-033");
         std::fs::create_dir_all(&out).expect("a folder");
         for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
             let mut app = crate::files_testing::app_with_drawing();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             drawing(&mut app);
             let _ = app.table_style_window_event(Event::Open);
             let _ = app.table_style_window_event(Event::Choose(0));
             let _ = app.table_style_window_event(Event::Cell(Cell::Data));
             let _ = app.table_style_window_event(Event::Field(Field::Fill, "#ffe8a3".into()));
-            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0))
+                .expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("tablo-stili-renk-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -699,7 +872,10 @@ pub(crate) mod tests {
         let _ = app.table_style_window_event(Event::Cell(Cell::Data));
         let _ = app.table_style_window_event(Event::Field(Field::Height, "2,2".into()));
         let _ = app.table_style_window_event(Event::Field(Field::Weight, "kalın".into()));
-        assert!(app.table_style_window.as_ref().unwrap().problem().is_some(), "a weight that does not read keeps Kaydet");
+        assert!(
+            app.table_style_window.as_ref().unwrap().problem().is_some(),
+            "a weight that does not read keeps Kaydet"
+        );
         let _ = app.table_style_window_event(Event::Field(Field::Weight, "".into()));
         assert_eq!(app.table_style_window.as_ref().unwrap().problem(), None);
         let _ = app.table_style_window_event(Event::Choose(1));

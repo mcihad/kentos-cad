@@ -6,7 +6,10 @@
 use kentos_contracts::{BlockDefinition, BlockElement, BlockElementClass};
 
 fn sample() -> kentos_contracts::DocumentSnapshotV2 {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/arch/v1/section-building.kcad");
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/arch/v1/section-building.kcad"
+    );
     kentos_kcad::decode(&std::fs::read(path).expect("the building")).expect("decodes")
 }
 
@@ -36,9 +39,16 @@ fn a_block_s_building_element_round_trips_under_arch_data_2() {
         elevation: None,
     })));
     assert!(kentos_kcad::uses_elements(&doc));
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_ELEMENTS);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_ELEMENTS
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the element read back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the element read back"
+    );
     // A wall unit's underside and a user-defined type.
     let mut wall_unit = doc.clone();
     wall_unit.blocks[0].card.as_mut().unwrap().element = Some(BlockElement {
@@ -64,10 +74,19 @@ fn electrical_cards_require_their_new_readers() {
         height: None,
         elevation: None,
     })));
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_ELECTRIC_APPLIANCES);
-    assert_eq!(kentos_contracts::block_library_version(&doc.blocks), kentos_contracts::BLOCKS_APPLIANCE_VERSION);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_ELECTRIC_APPLIANCES
+    );
+    assert_eq!(
+        kentos_contracts::block_library_version(&doc.blocks),
+        kentos_contracts::BLOCKS_APPLIANCE_VERSION
+    );
     let bytes = kentos_kcad::encode(&doc).expect("writes the appliance");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("reads the appliance"), doc);
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("reads the appliance"),
+        doc
+    );
 }
 
 #[test]
@@ -84,9 +103,15 @@ fn kitchen_placement_requires_arch_39_and_preserves_legacy_files() {
         } else {
             recipe.filler_ends = vec![Some(kentos_contracts::CaseworkEnd::Start)];
         }
-        assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_CASEWORK_PLACEMENT);
+        assert_eq!(
+            kentos_kcad::arch_version(&doc),
+            kentos_kcad::ARCH_WITH_CASEWORK_PLACEMENT
+        );
         let bytes = kentos_kcad::encode(&doc).expect("writes the new placement");
-        assert_eq!(kentos_kcad::decode(&bytes).expect("reads the placement"), doc);
+        assert_eq!(
+            kentos_kcad::decode(&bytes).expect("reads the placement"),
+            doc
+        );
     }
 }
 
@@ -100,7 +125,11 @@ fn a_type_its_class_does_not_have_is_refused() {
         elevation: None,
     })));
     let refused = kentos_kcad::encode(&doc).expect_err("a basin is no furniture type");
-    assert!(refused.message.contains("WASHHANDBASIN"), "{}", refused.message);
+    assert!(
+        refused.message.contains("WASHHANDBASIN"),
+        "{}",
+        refused.message
+    );
     let mut low = sample();
     low.blocks.push(table(Some(BlockElement {
         class: BlockElementClass::SanitaryTerminal,
@@ -109,7 +138,11 @@ fn a_type_its_class_does_not_have_is_refused() {
         elevation: None,
     })));
     let refused = kentos_kcad::encode(&low).expect_err("no height");
-    assert!(refused.message.contains("yüksekliği 0"), "{}", refused.message);
+    assert!(
+        refused.message.contains("yüksekliği 0"),
+        "{}",
+        refused.message
+    );
 }
 
 /// Architecture data 3 (docs/adr/8070 §7): a curtain wall's grid is written with `modules.arch = 3` and read back as it
@@ -134,12 +167,21 @@ fn a_curtain_wall_round_trips_under_arch_data_3() {
         panel: Some("Cam".into()),
         frames: Some("Alüminyum".into()),
     });
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_CURTAIN_WALLS);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_CURTAIN_WALLS
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the grid read back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the grid read back"
+    );
     let mut bad = doc.clone();
-    if let Some(kentos_contracts::Entity::Wall(w)) =
-        bad.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Wall(w) if w.wall.curtain.is_some()))
+    if let Some(kentos_contracts::Entity::Wall(w)) = bad
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Wall(w) if w.wall.curtain.is_some()))
     {
         w.wall.curtain.as_mut().unwrap().frame = Some(0.8);
     }
@@ -174,33 +216,64 @@ fn a_post_and_a_rail_round_trip_under_arch_data_4() {
         })
         .expect("a beam");
     beam.beam.member = Some(kentos_contracts::Member::rail());
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_MEMBERS);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_MEMBERS
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the post and the rail read back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the post and the rail read back"
+    );
     // A column of its own height alone needs version 4 too.
     let mut tall = sample();
-    if let Some(kentos_contracts::Entity::Column(c)) =
-        tall.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Column(_)))
+    if let Some(kentos_contracts::Entity::Column(c)) = tall
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Column(_)))
     {
         c.column.height = Some(4.5);
     }
-    assert_eq!(kentos_kcad::arch_version(&tall), kentos_kcad::ARCH_WITH_MEMBERS);
+    assert_eq!(
+        kentos_kcad::arch_version(&tall),
+        kentos_kcad::ARCH_WITH_MEMBERS
+    );
     let mut bad = doc.clone();
-    if let Some(kentos_contracts::Entity::Column(c)) =
-        bad.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Column(c) if c.column.member.is_some()))
+    if let Some(kentos_contracts::Entity::Column(c)) = bad
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Column(c) if c.column.member.is_some()))
     {
-        c.column.member = Some(kentos_contracts::Member { predefined: "NOTDEFINED".into(), name: None });
+        c.column.member = Some(kentos_contracts::Member {
+            predefined: "NOTDEFINED".into(),
+            name: None,
+        });
     }
     let refused = kentos_kcad::encode(&bad).expect_err("NOTDEFINED is no type");
-    assert!(refused.message.contains("NOTDEFINED"), "{}", refused.message);
+    assert!(
+        refused.message.contains("NOTDEFINED"),
+        "{}",
+        refused.message
+    );
     let mut nameless = doc.clone();
-    if let Some(kentos_contracts::Entity::Beam(b)) =
-        nameless.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(b) if b.beam.member.is_some()))
+    if let Some(kentos_contracts::Entity::Beam(b)) = nameless
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Beam(b) if b.beam.member.is_some()))
     {
-        b.beam.member = Some(kentos_contracts::Member { predefined: "USERDEFINED".into(), name: None });
+        b.beam.member = Some(kentos_contracts::Member {
+            predefined: "USERDEFINED".into(),
+            name: None,
+        });
     }
-    let refused = kentos_kcad::encode(&nameless).expect_err("a user-defined member says what it is");
-    assert!(refused.message.contains("USERDEFINED"), "{}", refused.message);
+    let refused =
+        kentos_kcad::encode(&nameless).expect_err("a user-defined member says what it is");
+    assert!(
+        refused.message.contains("USERDEFINED"),
+        "{}",
+        refused.message
+    );
 }
 
 /// Architecture data 22 (docs/adr/8130): a sloped member (a beam's `rise`) is written with `modules.arch = 22` and read
@@ -220,12 +293,21 @@ fn a_sloped_member_round_trips_under_arch_data_22() {
     beam.beam.pts.truncate(2);
     beam.beam.member = Some(kentos_contracts::Member::rail());
     beam.beam.rise = Some(1.2);
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_SLOPED_MEMBERS);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_SLOPED_MEMBERS
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the sloped member reads back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the sloped member reads back"
+    );
     let mut frame = doc.clone();
-    if let Some(kentos_contracts::Entity::Beam(b)) =
-        frame.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(b) if b.beam.rise.is_some()))
+    if let Some(kentos_contracts::Entity::Beam(b)) = frame
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Beam(b) if b.beam.rise.is_some()))
     {
         b.beam.member = None;
     }
@@ -251,12 +333,21 @@ fn a_covering_round_trips_under_arch_data_5() {
     slab.slab.edge = None;
     slab.slab.role = kentos_contracts::SlabRole::Floor;
     slab.slab.covering = Some(kentos_contracts::Covering::ceiling());
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_COVERINGS);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_COVERINGS
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the covering read back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the covering read back"
+    );
     let mut layered = doc.clone();
-    if let Some(kentos_contracts::Entity::Slab(s)) =
-        layered.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.covering.is_some()))
+    if let Some(kentos_contracts::Entity::Slab(s)) = layered
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.covering.is_some()))
     {
         s.slab.layers.over.push(kentos_contracts::SlabLayer {
             kind: kentos_contracts::SlabLayerKind::Finish,
@@ -265,7 +356,11 @@ fn a_covering_round_trips_under_arch_data_5() {
         });
     }
     let refused = kentos_kcad::encode(&layered).expect_err("a covering has no layers");
-    assert!(refused.message.contains("Kaplamanın katmanları"), "{}", refused.message);
+    assert!(
+        refused.message.contains("Kaplamanın katmanları"),
+        "{}",
+        refused.message
+    );
 }
 
 /// Architecture data 7 (docs/adr/8071 §6): a sloped slab (a slab's `slope`) is written with `modules.arch = 7` and read
@@ -288,21 +383,37 @@ fn a_sloped_slab_round_trips_under_arch_data_7() {
     let from = slab.slab.parts[0].outer.pts[0];
     slab.slab.slope = Some(kentos_contracts::SlabSlope {
         from,
-        to: kentos_contracts::Vec2 { x: from.x, y: from.y + 4.0 },
+        to: kentos_contracts::Vec2 {
+            x: from.x,
+            y: from.y + 4.0,
+        },
         rise: 0.2,
     });
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_SLAB_SLOPES);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_SLAB_SLOPES
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the slope read back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the slope read back"
+    );
     let mut steep = doc.clone();
-    if let Some(kentos_contracts::Entity::Slab(s)) =
-        steep.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.slope.is_some()))
+    if let Some(kentos_contracts::Entity::Slab(s)) = steep
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Slab(s) if s.slab.slope.is_some()))
         && let Some(sl) = s.slab.slope.as_mut()
     {
         sl.rise = 5.0;
     }
     let refused = kentos_kcad::encode(&steep).expect_err("steeper than 100 %");
-    assert!(refused.message.contains("en çok %100"), "{}", refused.message);
+    assert!(
+        refused.message.contains("en çok %100"),
+        "{}",
+        refused.message
+    );
 }
 
 /// Architecture data 8 (docs/adr/8071 §8): a roof's layers are written with `modules.arch = 8` and read back as they
@@ -329,10 +440,18 @@ fn a_layered_roof_round_trips_under_arch_data_8() {
     uid[15] = 0x81;
     doc.uids.push(kentos_contracts::EntityId(uid));
     assert!(kentos_kcad::uses_roof_layers(&doc));
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_ROOF_LAYERS);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_ROOF_LAYERS
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the layers read back");
-    let edit = |doc: &kentos_contracts::DocumentSnapshotV2, change: &dyn Fn(&mut kentos_contracts::RoofFields)| {
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the layers read back"
+    );
+    let edit = |doc: &kentos_contracts::DocumentSnapshotV2,
+                change: &dyn Fn(&mut kentos_contracts::RoofFields)| {
         let mut doc = doc.clone();
         if let Some(kentos_contracts::Entity::Roof(r)) = doc.entities.last_mut() {
             change(&mut r.roof);
@@ -344,7 +463,11 @@ fn a_layered_roof_round_trips_under_arch_data_8() {
     assert!(refused.message.contains("sırasıyla"), "{}", refused.message);
     let both = edit(&doc, &|r| r.thickness = Some(0.25));
     let refused = kentos_kcad::encode(&both).expect_err("a thickness beside its layers");
-    assert!(refused.message.contains("katmanlarının toplamıdır"), "{}", refused.message);
+    assert!(
+        refused.message.contains("katmanlarının toplamıdır"),
+        "{}",
+        refused.message
+    );
 }
 
 /// Architecture data 9 (docs/adr/8072 §1): two buildings' codes, uses and ±0.00 and their shared basement's building
@@ -374,10 +497,20 @@ fn building_places_round_trip_under_arch_data_9() {
             ..Default::default()
         },
     ];
-    arch.program.shared = vec![kentos_contracts::SharedLevel { level: levels[0].clone(), building: "a".into() }];
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_BUILDING_PLACES);
+    arch.program.shared = vec![kentos_contracts::SharedLevel {
+        level: levels[0].clone(),
+        building: "a".into(),
+    }];
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_BUILDING_PLACES
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the buildings read back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the buildings read back"
+    );
     let mut wrong = doc.clone();
     if let Some(a) = wrong.settings.arch.as_mut() {
         a.program.buildings[1].code = Some("b-1".into());
@@ -405,19 +538,36 @@ fn a_footing_round_trips_under_arch_data_40() {
     beam.beam.width = 0.6;
     beam.beam.base_offset = Some(-0.8);
     beam.beam.offset = 0.0;
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_FOOTINGS);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_FOOTINGS
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the strip footing reads back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the strip footing reads back"
+    );
     let mut pad = doc.clone();
-    if let Some(kentos_contracts::Entity::Beam(b)) = pad.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(_))) {
+    if let Some(kentos_contracts::Entity::Beam(b)) = pad
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Beam(_)))
+    {
         b.beam.role = kentos_contracts::BeamRole::PadFooting;
         b.beam.pts.truncate(2);
     }
     let bytes = kentos_kcad::encode(&pad).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), pad, "the pad footing reads back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        pad,
+        "the pad footing reads back"
+    );
     let mut baseless = doc.clone();
-    if let Some(kentos_contracts::Entity::Beam(b)) =
-        baseless.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(_)))
+    if let Some(kentos_contracts::Entity::Beam(b)) = baseless
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Beam(_)))
     {
         b.beam.base_offset = None;
     }
@@ -442,9 +592,16 @@ fn a_raft_round_trips_under_arch_data_41() {
     slab.slab.offset = -0.3;
     slab.slab.edge = None;
     slab.slab.slope = None;
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_RAFTS);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_RAFTS
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the raft reads back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the raft reads back"
+    );
     // A raft with a parapet is refused while written (docs/adr/8172 §6).
     let mut edged = doc.clone();
     if let Some(kentos_contracts::Entity::Slab(s)) =
@@ -481,13 +638,22 @@ fn a_profile_round_trips_under_arch_data_42() {
     beam.beam.width = 0.35;
     beam.beam.height = 0.05;
     beam.beam.covering = Some(kentos_contracts::Covering::coping());
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_PROFILES);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_PROFILES
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the coping reads back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the coping reads back"
+    );
     // A profile stands at its base: without one it is refused while written.
     let mut baseless = doc.clone();
-    if let Some(kentos_contracts::Entity::Beam(b)) =
-        baseless.entities.iter_mut().find(|e| matches!(e, kentos_contracts::Entity::Beam(_)))
+    if let Some(kentos_contracts::Entity::Beam(b)) = baseless
+        .entities
+        .iter_mut()
+        .find(|e| matches!(e, kentos_contracts::Entity::Beam(_)))
     {
         b.beam.base_offset = None;
     }
@@ -508,21 +674,50 @@ fn a_site_s_ground_round_trips_under_arch_data_43() {
     let site = arch.site.get_or_insert_with(Default::default);
     site.datum = Some(1285.4);
     site.natural_ground = Some(SiteGround::of_layer("arazi"));
-    site.graded_ground = Some(SiteGround { layers: vec!["tesviye".into(), "bahce".into()] });
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_GROUND);
+    site.graded_ground = Some(SiteGround {
+        layers: vec!["tesviye".into(), "bahce".into()],
+    });
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_GROUND
+    );
     let bytes = kentos_kcad::encode(&doc).expect("an architecture project writes its grounds");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the grounds read back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the grounds read back"
+    );
     let refused = |change: &dyn Fn(&mut kentos_contracts::SitePlan)| {
         let mut wrong = doc.clone();
-        change(wrong.settings.arch.as_mut().and_then(|a| a.site.as_mut()).unwrap());
+        change(
+            wrong
+                .settings
+                .arch
+                .as_mut()
+                .and_then(|a| a.site.as_mut())
+                .unwrap(),
+        );
         kentos_kcad::encode(&wrong).expect_err("refused").message
     };
     // The same layers cannot be both: the earthwork is their difference.
-    let same = refused(&|s| s.graded_ground = Some(SiteGround { layers: vec!["arazi".into()] }));
+    let same = refused(&|s| {
+        s.graded_ground = Some(SiteGround {
+            layers: vec!["arazi".into()],
+        })
+    });
     assert!(same.contains("aynı katmanlardan"), "{same}");
     assert!(refused(&|s| s.natural_ground = Some(SiteGround::default())).contains("en az bir"));
-    assert!(refused(&|s| s.natural_ground = Some(SiteGround { layers: vec![" ".into()] })).contains("boş olamaz"));
-    let twice = refused(&|s| s.natural_ground = Some(SiteGround { layers: vec!["arazi".into(), "arazi".into()] }));
+    assert!(
+        refused(&|s| s.natural_ground = Some(SiteGround {
+            layers: vec![" ".into()]
+        }))
+        .contains("boş olamaz")
+    );
+    let twice = refused(&|s| {
+        s.natural_ground = Some(SiteGround {
+            layers: vec!["arazi".into(), "arazi".into()],
+        })
+    });
     assert!(twice.contains("birer kez"), "{twice}");
 }
 
@@ -549,11 +744,22 @@ fn a_mass_round_trips_under_arch_data_45() {
     uid[15] = 0x85;
     doc.uids.push(kentos_contracts::EntityId(uid));
     assert!(kentos_kcad::uses_masses(&doc));
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_MASSES);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_MASSES
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the mass reads back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the mass reads back"
+    );
     // The independent reader's (tools/kcad/kcad.py) file to read: `kcad.py validate` on it.
-    std::fs::write(std::path::Path::new(env!("CARGO_TARGET_TMPDIR")).join("mass.kcad"), &bytes).expect("written");
+    std::fs::write(
+        std::path::Path::new(env!("CARGO_TARGET_TMPDIR")).join("mass.kcad"),
+        &bytes,
+    )
+    .expect("written");
     let edit = |change: &dyn Fn(&mut kentos_contracts::MassFields)| {
         let mut doc = doc.clone();
         if let Some(kentos_contracts::Entity::Mass(m)) = doc.entities.last_mut() {

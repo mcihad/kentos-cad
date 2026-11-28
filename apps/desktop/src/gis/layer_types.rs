@@ -32,11 +32,11 @@ pub(crate) fn tool_makes(tool: &str) -> Option<&'static [&'static str]> {
         "ray" => &["ray"],
         // Menzil halkaları: its rings and its rays (docs/adr/0197 §3).
         "rangeRings" => &["circle", "line"],
-        "polygon" | "rectangle" | "rectangle3" | "regularPolygon" | "sector" | "adjoin" | "revcloud" | "wipeout" | "planRoad"
-        | "boundary" | "polygonize" => &["polygon"],
+        "polygon" | "rectangle" | "rectangle3" | "regularPolygon" | "sector" | "adjoin"
+        | "revcloud" | "wipeout" | "planRoad" | "boundary" | "polygonize" => &["polygon"],
         "text" | "mtext" | "textAlong" | "placeTextFile" => &["text"],
-        "dimension" | "dimContinue" | "dimBaseline" | "quickDimension" | "centerMark" | "dimCenterLine"
-        | "dimElevation" => &["dimension"],
+        "dimension" | "dimContinue" | "dimBaseline" | "quickDimension" | "centerMark"
+        | "dimCenterLine" | "dimElevation" => &["dimension"],
         "leader" => &["leader"],
         // Halka is a solid hatch (docs/adr/0057).
         "hatch" | "hatchSelected" | "donut" => &["hatch"],
@@ -82,7 +82,10 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
             ));
         }
         let Some(table) = data.geometry.as_ref().map(|g| data_geometry(&g.type_name)) else {
-            return Some(format!("Etkin katman “{}” geometrisiz bir tablo; nesne çizilmez, satır tablodan eklenir.", active.name));
+            return Some(format!(
+                "Etkin katman “{}” geometrisiz bir tablo; nesne çizilmez, satır tablodan eklenir.",
+                active.name
+            ));
         };
         let geometry = table?;
         let kind = kinds.iter().find(|k| !geometry.admits(k))?;
@@ -93,15 +96,27 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
                 && n.data.as_ref().is_some_and(|d| {
                     !d.read_only
                         && d.geometry.as_ref().is_some_and(|g| {
-                            data_geometry(&g.type_name).is_none_or(|g| kinds.iter().all(|k| g.admits(k)))
+                            data_geometry(&g.type_name)
+                                .is_none_or(|g| kinds.iter().all(|k| g.admits(k)))
                         })
                 })
         };
         let leaves = layers.leaves();
-        let fits: Vec<&kentos_commands::LayerNode> = leaves.iter().copied().filter(|n| fitting(n)).collect();
-        let way = match fits.iter().find(|n| doc.editing(&n.id)).or_else(|| fits.first()) {
-            Some(n) if doc.editing(&n.id) => format!("“{}” düzenleniyor ve bu türü alır: onu etkin yapın.", n.name),
-            Some(n) => format!("“{}” bu türü alır: onu etkin yapıp düzenlemesini başlatın.", n.name),
+        let fits: Vec<&kentos_commands::LayerNode> =
+            leaves.iter().copied().filter(|n| fitting(n)).collect();
+        let way = match fits
+            .iter()
+            .find(|n| doc.editing(&n.id))
+            .or_else(|| fits.first())
+        {
+            Some(n) if doc.editing(&n.id) => format!(
+                "“{}” düzenleniyor ve bu türü alır: onu etkin yapın.",
+                n.name
+            ),
+            Some(n) => format!(
+                "“{}” bu türü alır: onu etkin yapıp düzenlemesini başlatın.",
+                n.name
+            ),
             None => "Türüne uyan bir veri katmanını etkin yapın.".to_owned(),
         };
         return Some(format!(
@@ -121,7 +136,8 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
                 && n.data.as_ref().is_some_and(|d| {
                     !d.read_only
                         && d.geometry.as_ref().is_some_and(|g| {
-                            data_geometry(&g.type_name).is_none_or(|g| kinds.iter().all(|k| g.admits(k)))
+                            data_geometry(&g.type_name)
+                                .is_none_or(|g| kinds.iter().all(|k| g.admits(k)))
                         })
                 })
         });
@@ -174,10 +190,11 @@ pub(crate) fn misfit(doc: &kentos_domain::Document, id: &str) -> Option<String> 
 pub(crate) fn data_geometry(type_name: &str) -> Option<LayerGeometry> {
     match type_name {
         "POINT" | "MULTIPOINT" => Some(LayerGeometry::Point),
-        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "MULTICURVE" | "CURVE" => {
-            Some(LayerGeometry::Line)
+        "LINESTRING" | "MULTILINESTRING" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "MULTICURVE"
+        | "CURVE" => Some(LayerGeometry::Line),
+        "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "MULTISURFACE" | "SURFACE" => {
+            Some(LayerGeometry::Area)
         }
-        "POLYGON" | "MULTIPOLYGON" | "CURVEPOLYGON" | "MULTISURFACE" | "SURFACE" => Some(LayerGeometry::Area),
         _ => None,
     }
 }
@@ -281,7 +298,10 @@ impl App {
         if self.edit_layers(input).is_some() {
             // Its row is chosen and scrolled into view, the open groups as they were (GIS-004); a search that leaves
             // it out stays as it is and the message says so.
-            let id = self.document.as_ref().map(|d| d.model.layers().active().to_owned());
+            let id = self
+                .document
+                .as_ref()
+                .map(|d| d.model.layers().active().to_owned());
             let hidden = id.as_ref().is_some_and(|id| self.layer_row_hidden(id));
             if let Some(id) = id {
                 self.selected_layer = Some(id.clone());
@@ -345,7 +365,8 @@ impl App {
             return;
         }
         let said = if on {
-            "Otomatik seçim açık: tıklama ve kutu bütün görünen katmanların nesnelerini seçer.".to_owned()
+            "Otomatik seçim açık: tıklama ve kutu bütün görünen katmanların nesnelerini seçer."
+                .to_owned()
         } else {
             let active = self.active_layer_name();
             format!(
@@ -387,7 +408,9 @@ impl App {
     fn active_layer_name(&self) -> String {
         self.document.as_ref().map_or_else(String::new, |d| {
             let layers = d.model.layers();
-            layers.get(layers.active()).map_or_else(String::new, |n| n.name.clone())
+            layers
+                .get(layers.active())
+                .map_or_else(String::new, |n| n.name.clone())
         })
     }
 
@@ -408,7 +431,9 @@ impl App {
         match (here, other) {
             (_, 0) => String::new(),
             (0, n) => format!("Bu katmanda nesne yok; başka katmanlardaki {n} nesne seçilemez."),
-            (h, n) => format!("Bu katmanda {h} nesne var; başka katmanlardaki {n} nesne seçilemez."),
+            (h, n) => {
+                format!("Bu katmanda {h} nesne var; başka katmanlardaki {n} nesne seçilemez.")
+            }
         }
     }
 
@@ -463,10 +488,23 @@ mod tests {
         }
         // The table's tools are the session's.
         for tool in [
-            "point", "line", "polyline", "polygon", "circle", "text", "dimension", "hatch", "leader",
-            "blockInsert", "imageInsert", "rangeRings",
+            "point",
+            "line",
+            "polyline",
+            "polygon",
+            "circle",
+            "text",
+            "dimension",
+            "hatch",
+            "leader",
+            "blockInsert",
+            "imageInsert",
+            "rangeRings",
         ] {
-            assert!(kentos_interaction::Session::tools().contains(&tool), "{tool}");
+            assert!(
+                kentos_interaction::Session::tools().contains(&tool),
+                "{tool}"
+            );
         }
     }
 
@@ -501,7 +539,11 @@ mod tests {
         let mut app = crate::files_testing::app_with_drawing();
         let doc = &mut app.document.as_mut().expect("a drawing").model;
         let active = doc.layers().active().to_owned();
-        let name = doc.layers().get(&active).map(|n| n.name.clone()).expect("the active layer");
+        let name = doc
+            .layers()
+            .get(&active)
+            .map(|n| n.name.clone())
+            .expect("the active layer");
         // Karışık: everything.
         assert_eq!(misfit(doc, "tool.line"), None);
         // An area layer.
@@ -509,11 +551,21 @@ mod tests {
             .expect("its objects are areas");
         assert_eq!(misfit(doc, "tool.polygon"), None);
         assert_eq!(misfit(doc, "tool.rectangle3"), None);
-        assert_eq!(misfit(doc, "tool.circle"), None, "a closed curve fits an area layer");
-        assert_eq!(misfit(doc, "tool.move"), None, "a tool that writes nothing new");
+        assert_eq!(
+            misfit(doc, "tool.circle"),
+            None,
+            "a closed curve fits an area layer"
+        );
+        assert_eq!(
+            misfit(doc, "tool.move"),
+            None,
+            "a tool that writes nothing new"
+        );
         let why = misfit(doc, "tool.line").expect("a line on an area layer");
         assert!(
-            why.starts_with(&format!("Etkin katman “{name}” bir alan katmanı; çizgi bu katmana yazılmaz.")),
+            why.starts_with(&format!(
+                "Etkin katman “{name}” bir alan katmanı; çizgi bu katmana yazılmaz."
+            )),
             "{why}"
         );
         assert!(misfit(doc, "table.insert").is_some());
@@ -522,9 +574,15 @@ mod tests {
         assert!(app.available("tool.polygon"));
         app.new_typed_layer(LayerGeometry::Line);
         assert!(!app.available("tool.polygon"));
-        assert!(!app.available("tool.rectangle3"), "a rotated rectangle is an area too");
+        assert!(
+            !app.available("tool.rectangle3"),
+            "a rotated rectangle is an area too"
+        );
         assert!(app.available("tool.line"));
-        assert!(app.available("tool.spot"), "spot elevations use their own layer");
+        assert!(
+            app.available("tool.spot"),
+            "spot elevations use their own layer"
+        );
     }
 }
 

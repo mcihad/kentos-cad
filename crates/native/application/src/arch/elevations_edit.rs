@@ -11,8 +11,9 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, ELEVATION_GROUP, ELEVATION_STEP, ELEVATION_TOOL, ElevationRecord,
-    ElevationsEdit, ElevationsEdited, ElevationsOperation, Entity, LayerDerivation, LayerNodeType,
+    CommandResult, CommandWarning, ELEVATION_GROUP, ELEVATION_STEP, ELEVATION_TOOL,
+    ElevationRecord, ElevationsEdit, ElevationsEdited, ElevationsOperation, Entity,
+    LayerDerivation, LayerNodeType,
 };
 use kentos_domain::{Document, NewLayer, Slot, Uuid};
 
@@ -91,7 +92,9 @@ fn target(doc: &Document, name: Option<&str>, label: &str) -> Result<Target, Sto
             if layers.is_locked(&g.id) {
                 return Err(fail(
                     codes::LAYER_LOCKED,
-                    format!("“{ELEVATION_GROUP}” grubu kilitli; iç görünüş katmanı açılamaz. Kilidi Katmanlar panelinden açın."),
+                    format!(
+                        "“{ELEVATION_GROUP}” grubu kilitli; iç görünüş katmanı açılamaz. Kilidi Katmanlar panelinden açın."
+                    ),
                     "operation.space",
                 ));
             }
@@ -123,14 +126,19 @@ fn elevation_layer(doc: &Document, layer: &str) -> Result<(String, ElevationReco
     let Some(node) = doc.layers().get(layer) else {
         return Err(fail(
             codes::LAYER_NOT_FOUND,
-            format!("“{layer}” kimlikli katman çizimde yok. Bir iç görünüş katmanının kimliğini verin."),
+            format!(
+                "“{layer}” kimlikli katman çizimde yok. Bir iç görünüş katmanının kimliğini verin."
+            ),
             "operation.layer",
         ));
     };
     let Some((_, r)) = elevations::on_layer(doc, layer) else {
         return Err(fail(
             codes::ELEVATION_NOT_FOUND,
-            format!("“{}” katmanı bir oda iç görünüşü değil (türetim kaydı yok).", node.name),
+            format!(
+                "“{}” katmanı bir oda iç görünüşü değil (türetim kaydı yok).",
+                node.name
+            ),
             "operation.layer",
         ));
     };
@@ -141,7 +149,9 @@ fn locked_layer(doc: &Document, layer: &str, name: &str, r: &ElevationRecord) ->
     if doc.layers().is_locked(layer) || locked_member(doc, r) {
         return Err(fail(
             codes::LAYER_LOCKED,
-            format!("“{name}” iç görünüşünün katmanı ya da bir nesnesinin katmanı kilitli. Kilidi Katmanlar panelinden açın."),
+            format!(
+                "“{name}” iç görünüşünün katmanı ya da bir nesnesinin katmanı kilitli. Kilidi Katmanlar panelinden açın."
+            ),
             "operation.layer",
         ));
     }
@@ -182,14 +192,23 @@ fn check(doc: &Document, input: &ElevationsEdit) -> Result<Checked, Stop> {
         }
         ElevationsOperation::Refresh { layer } => {
             let (name, record) = elevation_layer(doc, layer)?;
-            let drawn = match elevations::draw(doc, &record.space, &record.sides, Some(record.at), Some(record.gap), layer) {
+            let drawn = match elevations::draw(
+                doc,
+                &record.space,
+                &record.sides,
+                Some(record.at),
+                Some(record.gap),
+                layer,
+            ) {
                 Ok(d) => d,
                 Err(stop) => {
                     let e = stop.into_error();
                     if e.code == codes::ENTITY_NOT_FOUND || e.code == codes::NOT_A_SPACE {
                         return Err(fail(
                             codes::ELEVATION_SOURCE_GONE,
-                            format!("“{name}” iç görünüşünün mahali çizimde yok; yeniden üretilemez. Bağı koparıp çizimi koruyabilir ya da katmanı silebilirsiniz."),
+                            format!(
+                                "“{name}” iç görünüşünün mahali çizimde yok; yeniden üretilemez. Bağı koparıp çizimi koruyabilir ya da katmanı silebilirsiniz."
+                            ),
                             "operation.layer",
                         ));
                     }
@@ -200,7 +219,10 @@ fn check(doc: &Document, input: &ElevationsEdit) -> Result<Checked, Stop> {
             locked_layer(doc, layer, &name, &record)?;
             let mut changes = Changes::default();
             for (role, want) in &drawn.items {
-                let had = record.members.get(role).and_then(|u| Uuid::parse_str(u).ok());
+                let had = record
+                    .members
+                    .get(role)
+                    .and_then(|u| Uuid::parse_str(u).ok());
                 match had.and_then(|u| doc.slot_of(u).map(|s| (u, s))) {
                     Some((_, slot)) => {
                         if doc.get(slot).is_some_and(|now| &bare(now) != want) {
@@ -219,7 +241,11 @@ fn check(doc: &Document, input: &ElevationsEdit) -> Result<Checked, Stop> {
                 }
             }
             let same = elevations::digest(&drawn.items) == record.digest;
-            if same && changes.add.is_empty() && changes.update.is_empty() && changes.remove.is_empty() {
+            if same
+                && changes.add.is_empty()
+                && changes.update.is_empty()
+                && changes.remove.is_empty()
+            {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
                     format!("“{name}” iç görünüşü güncel; yeniden üretilecek bir şey yok."),
@@ -367,7 +393,10 @@ pub fn plan_in(doc: &Document, input: &ElevationsEdit) -> CommandResult<Elevatio
     CommandResult::Completed { output, warnings }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ElevationsEdit) -> CommandResult<ElevationsEdited> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ElevationsEdit,
+) -> CommandResult<ElevationsEdited> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_ELEVATIONS_EDIT,
@@ -377,7 +406,11 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ElevationsEdit) -> CommandR
     )
 }
 
-fn refused(doc: &mut Document, group: kentos_domain::Group, why: String) -> CommandResult<ElevationsEdited> {
+fn refused(
+    doc: &mut Document,
+    group: kentos_domain::Group,
+    why: String,
+) -> CommandResult<ElevationsEdited> {
     doc.cancel_group(group);
     Stop::failed(error(codes::LAYER_REFUSED, why, Some("operation".into()))).into()
 }
@@ -417,7 +450,10 @@ fn members_of(doc: &Document, roles: &[String], slots: &[Slot]) -> BTreeMap<Stri
         .collect()
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: ElevationsEdit) -> CommandResult<ElevationsEdited> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ElevationsEdit,
+) -> CommandResult<ElevationsEdited> {
     let c = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -450,7 +486,8 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ElevationsEdit) -> Comman
                 Ok(s) => s,
                 Err(full) => {
                     doc.cancel_group(group);
-                    return Stop::failed(error(codes::SLOTS_EXHAUSTED, full.to_string(), None)).into();
+                    return Stop::failed(error(codes::SLOTS_EXHAUSTED, full.to_string(), None))
+                        .into();
                 }
             };
             let record = ElevationRecord {
@@ -469,7 +506,10 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ElevationsEdit) -> Comman
                 return refused(doc, group, why);
             }
             doc.end_group(group);
-            let made = slots.iter().filter_map(|s| doc.get(*s).cloned()).collect::<Vec<_>>();
+            let made = slots
+                .iter()
+                .filter_map(|s| doc.get(*s).cloned())
+                .collect::<Vec<_>>();
             CommandResult::Completed {
                 output: ElevationsEdited {
                     layer: target.layer,
@@ -525,11 +565,15 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ElevationsEdit) -> Comman
                 }
             }
             if !fresh.is_empty() {
-                match doc.add_many(fresh.iter().map(|(_, e, _)| e.clone()).collect(), ELEVATION_STEP) {
+                match doc.add_many(
+                    fresh.iter().map(|(_, e, _)| e.clone()).collect(),
+                    ELEVATION_STEP,
+                ) {
                     Ok(slots) => added.extend(fresh.iter().map(|(r, _, _)| r.clone()).zip(slots)),
                     Err(full) => {
                         doc.cancel_group(group);
-                        return Stop::failed(error(codes::SLOTS_EXHAUSTED, full.to_string(), None)).into();
+                        return Stop::failed(error(codes::SLOTS_EXHAUSTED, full.to_string(), None))
+                            .into();
                     }
                 }
             }
@@ -576,7 +620,12 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ElevationsEdit) -> Comman
         Checked::Release { layer, name, .. } => {
             let Some(mut info) = doc.layers().info_of(&layer) else {
                 doc.cancel_group(group);
-                return fail(codes::LAYER_NOT_FOUND, "Katman bulunamadı.".into(), "operation.layer").into();
+                return fail(
+                    codes::LAYER_NOT_FOUND,
+                    "Katman bulunamadı.".into(),
+                    "operation.layer",
+                )
+                .into();
             };
             info.derivation = None;
             if let Err(r) = doc.set_layer_info(&layer, info, ELEVATION_STEP) {

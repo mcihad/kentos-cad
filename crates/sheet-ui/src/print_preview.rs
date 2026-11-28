@@ -108,7 +108,10 @@ impl canvas::Program<Message> for &Page {
             Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                 let at = cursor.position_in(bounds)?;
                 let now = std::time::Instant::now();
-                if look.last_click.is_some_and(|t| now.duration_since(t).as_millis() < 400) {
+                if look
+                    .last_click
+                    .is_some_and(|t| now.duration_since(t).as_millis() < 400)
+                {
                     *look = Look::default();
                     return Some(canvas::Action::request_redraw().and_capture());
                 }
@@ -151,7 +154,12 @@ impl canvas::Program<Message> for &Page {
         }
         vec![frame.into_geometry()]
     }
-    fn mouse_interaction(&self, look: &Look, bounds: Rectangle, cursor: mouse::Cursor) -> mouse::Interaction {
+    fn mouse_interaction(
+        &self,
+        look: &Look,
+        bounds: Rectangle,
+        cursor: mouse::Cursor,
+    ) -> mouse::Interaction {
         if look.grab.is_some() {
             mouse::Interaction::Grabbing
         } else if cursor.is_over(bounds) {
@@ -177,7 +185,9 @@ mod tests {
         let shot = snapshot.render(super::view(&page), &iced::Theme::Dark);
         let white = shot
             .rgba
-            .as_chunks::<4>().0.iter()
+            .as_chunks::<4>()
+            .0
+            .iter()
             .filter(|p| p[0] > 248 && p[1] > 248 && p[2] > 248)
             .count();
         assert!(white > 70_000, "{white}");
@@ -199,7 +209,9 @@ mod tests {
         );
         let white = shot
             .rgba
-            .as_chunks::<4>().0.iter()
+            .as_chunks::<4>()
+            .0
+            .iter()
             .filter(|p| p[0] > 248 && p[1] > 248 && p[2] > 248)
             .count();
         assert!(white > 70_000, "{white}");

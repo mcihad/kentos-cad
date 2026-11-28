@@ -51,7 +51,11 @@ pub struct CommandCatalog {
     #[serde(default)]
     pub effects: Vec<crate::change_effects::CatalogEffect>,
     /// Version 2 (docs/adr/0731): every definition a schema names by `#/$defs/Name`, once; empty in version 1.
-    #[serde(default, rename = "$defs", skip_serializing_if = "std::collections::BTreeMap::is_empty")]
+    #[serde(
+        default,
+        rename = "$defs",
+        skip_serializing_if = "std::collections::BTreeMap::is_empty"
+    )]
     #[cfg_attr(feature = "ts", ts(optional, type = "Record<string, unknown>"))]
     pub defs: std::collections::BTreeMap<String, serde_json::Value>,
 }
@@ -138,7 +142,8 @@ impl CommandCatalog {
         let reached = reached(schema, &self.defs);
         let mut defs = serde_json::Map::new();
         for (name, def) in reached {
-            let def = def.ok_or_else(|| format!("“{name}” is not among the catalog's definitions"))?;
+            let def =
+                def.ok_or_else(|| format!("“{name}” is not among the catalog's definitions"))?;
             defs.insert(name.to_owned(), def.clone());
         }
         let mut out = schema.clone();

@@ -115,9 +115,17 @@ fn weight_of(entity: &Entity, layer: f64) -> f64 {
 }
 
 /// `l` as its SHX strokes: its words are these lines (ADR 1125); its mask, when it has one, the text's box.
-fn shx(l: &mut MapLabel, p: &kentos_native_application::shx_text::Placed, weight: f64, masked: bool) {
+fn shx(
+    l: &mut MapLabel,
+    p: &kentos_native_application::shx_text::Placed,
+    weight: f64,
+    masked: bool,
+) {
     l.shx = Some((
-        p.paths.iter().map(|line| line.iter().map(|q| [q.x, q.y]).collect()).collect(),
+        p.paths
+            .iter()
+            .map(|line| line.iter().map(|q| [q.x, q.y]).collect())
+            .collect(),
         weight,
     ));
     l.mask = masked.then(|| p.outline.iter().map(|q| [q.x, q.y]).collect());
@@ -183,7 +191,10 @@ pub fn map_labels(doc: &Document, spatial: &Spatial, m: &MapPrim) -> Vec<MapLabe
 /// A text laid out in the project's system moved to the paper's (docs/adr/0638 §1): its point and its rings moved
 /// point by point, its turn by the angle the system turns the east there (grid convergence); none when its point is
 /// out of the paper's system's reach.
-pub fn moved(mut l: MapLabel, map: &kentos_geometry_core::crs::map::MapProjection) -> Option<MapLabel> {
+pub fn moved(
+    mut l: MapLabel,
+    map: &kentos_geometry_core::crs::map::MapProjection,
+) -> Option<MapLabel> {
     let at = map.forward(l.at)?;
     // The east a metre on, moved: the turn of the paper's east against the project's.
     let east = map.forward(Vec2::new(l.at.x + 1.0, l.at.y))?;
@@ -194,7 +205,11 @@ pub fn moved(mut l: MapLabel, map: &kentos_geometry_core::crs::map::MapProjectio
             .collect()
     };
     l.at = at;
-    if let Some(u) = &mut l.unicode { u.rotation += turn.to_radians(); } else { l.rotation += turn; }
+    if let Some(u) = &mut l.unicode {
+        u.rotation += turn.to_radians();
+    } else {
+        l.rotation += turn;
+    }
     l.mask = match l.mask.take() {
         Some(r) => Some(ring(&r)?),
         None => None,
@@ -238,13 +253,20 @@ pub fn labels_in_view(
         return Vec::new();
     };
     // A linked view's recipe (docs/adr/0774 §3): the words of the objects its phase or categories leave out, out too.
-    let mut recipe_out: std::collections::HashSet<u32> = if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.4.is_empty() {
-        crate::layers::map_phasing_of(doc, recipe.0, recipe.1, recipe.4).hidden().collect()
-    } else {
-        Default::default()
-    };
+    let mut recipe_out: std::collections::HashSet<u32> =
+        if recipe.0.is_some() || !recipe.1.is_empty() || !recipe.4.is_empty() {
+            crate::layers::map_phasing_of(doc, recipe.0, recipe.1, recipe.4)
+                .hidden()
+                .collect()
+        } else {
+            Default::default()
+        };
     if let Some(range) = recipe.5 {
-        recipe_out.extend(kentos_scene_query::ceiling_plan::hidden(doc, level.map(|l| l.id.as_str()), range));
+        recipe_out.extend(kentos_scene_query::ceiling_plan::hidden(
+            doc,
+            level.map(|l| l.id.as_str()),
+            range,
+        ));
     }
     // A level's plan (docs/adr/0716): the other levels' words out, the one under it faint.
     let (left_out, faint) = level
@@ -266,7 +288,7 @@ pub fn labels_in_view(
         Vec2::new(bounds[2], bounds[3]),
         pixels,
         Default::default(),
-        &|id|visible.contains_key(id),
+        &|id| visible.contains_key(id),
     );
     let format = Format::of(doc.settings());
     let font = doc.settings().drawing_font.unwrap_or(DrawingFont::Barlow);
@@ -283,7 +305,11 @@ pub fn labels_in_view(
     let fade = |out: &mut [MapLabel]| {
         for l in out {
             l.color = crate::layers::faint_on_paper(&l.color);
-            if let Some(u)=&mut l.unicode {for c in u.colors.iter_mut().flatten() {*c=crate::layers::faint_on_paper(c);}}
+            if let Some(u) = &mut l.unicode {
+                for c in u.colors.iter_mut().flatten() {
+                    *c = crate::layers::faint_on_paper(c);
+                }
+            }
         }
     };
     // A recipe's pens and black and white (docs/adr/0783 §1): the words of an object take its category's pen colour,
@@ -301,7 +327,9 @@ pub fn labels_in_view(
     let recolor = |out: &mut [MapLabel], c: &str| {
         for l in out {
             l.color = c.to_owned();
-            if let Some(u)=&mut l.unicode {u.colors.fill(Some(c.to_owned()));}
+            if let Some(u) = &mut l.unicode {
+                u.colors.fill(Some(c.to_owned()));
+            }
         }
     };
     for spot in spots {
@@ -378,7 +406,12 @@ pub fn labels_in_view(
                     &l.text,
                 ) && let Some(Ok(p)) = shx_of(&t).as_deref()
                 {
-                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), *masked);
+                    shx(
+                        &mut l,
+                        p,
+                        weight_of(entity, layer.style.line_weight),
+                        *masked,
+                    );
                     ground_mask = 0.;
                 }
             }
@@ -401,7 +434,12 @@ pub fn labels_in_view(
                 face(&mut l, &t.face);
                 // In its style's embedded SHX font (ADR 1125): the font's strokes, its mask its own box.
                 if let Some(Ok(p)) = shx_of(t).as_deref() {
-                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), t.mask);
+                    shx(
+                        &mut l,
+                        p,
+                        weight_of(entity, layer.style.line_weight),
+                        t.mask,
+                    );
                     ground_mask = 0.;
                 }
             }
@@ -427,7 +465,12 @@ pub fn labels_in_view(
                     &l.text,
                 ) && let Some(Ok(p)) = shx_of(&n).as_deref()
                 {
-                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), *mask > 0.0);
+                    shx(
+                        &mut l,
+                        p,
+                        weight_of(entity, layer.style.line_weight),
+                        *mask > 0.0,
+                    );
                     ground_mask = 0.;
                 }
             }
@@ -459,7 +502,10 @@ pub fn labels_in_view(
                     &entity.base().attrs,
                 )
                 .into();
-                face(&mut l, &kentos_native_application::geometry::contract_face(f.clone()));
+                face(
+                    &mut l,
+                    &kentos_native_application::geometry::contract_face(f.clone()),
+                );
                 // A block's text in its style's embedded SHX font (docs/adr/1020), as the text object is (ADR 1125):
                 // the insert's line weight, the piece's own box as its mask.
                 if let Some(t) = placed
@@ -467,7 +513,12 @@ pub fn labels_in_view(
                     .and_then(|s| kentos_native_application::shx_text::piece_text(s, &l.text))
                     && let Some(Ok(p)) = shx_of(&t).as_deref()
                 {
-                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), t.mask);
+                    shx(
+                        &mut l,
+                        p,
+                        weight_of(entity, layer.style.line_weight),
+                        t.mask,
+                    );
                     ground_mask = 0.;
                 }
             }
@@ -519,19 +570,40 @@ pub fn labels_in_view(
                     &l.text,
                 ) && let Some(Ok(p)) = shx_of(&t).as_deref()
                 {
-                    shx(&mut l, p, weight_of(entity, layer.style.line_weight), *masked);
+                    shx(
+                        &mut l,
+                        p,
+                        weight_of(entity, layer.style.line_weight),
+                        *masked,
+                    );
                     ground_mask = 0.;
                 }
             }
-            (LabelSpot::Line {unicode:Some(text),at,height,..},_)=> {
+            (
+                LabelSpot::Line {
+                    unicode: Some(text),
+                    at,
+                    height,
+                    ..
+                },
+                _,
+            ) => {
                 l.at = *at;
                 l.text = text.source.clone();
                 ground_height = *height;
                 l.unicode = Some(crate::maps::UnicodeLabel {
-                    text: text.clone(), scale: 1., rotation: 0.,
-                    colors: text.runs.iter().map(|r| r.color.as_deref().map(|c| paper_color(Some(c)))).collect(),
+                    text: text.clone(),
+                    scale: 1.,
+                    rotation: 0.,
+                    colors: text
+                        .runs
+                        .iter()
+                        .map(|r| r.color.as_deref().map(|c| paper_color(Some(c))))
+                        .collect(),
                 });
-                l.mask = text.mask_outline().map(|points| points.map(|[x,y]| [at.x+x,at.y+y]).to_vec());
+                l.mask = text
+                    .mask_outline()
+                    .map(|points| points.map(|[x, y]| [at.x + x, at.y + y]).to_vec());
             }
             (
                 LabelSpot::Line {
@@ -562,7 +634,8 @@ pub fn labels_in_view(
                         && let Some(Ok(p)) = shx_of(&t).as_deref()
                     {
                         l.text = t.text.clone();
-                        l.size = kentos_sheet::projection::Scale::for_rendering(scale).paper_mm(*height);
+                        l.size =
+                            kentos_sheet::projection::Scale::for_rendering(scale).paper_mm(*height);
                         shx(&mut l, p, weight_of(entity, layer.style.line_weight), false);
                         out.push(l);
                     }
@@ -582,7 +655,8 @@ pub fn labels_in_view(
                             && let Some(Ok(p)) = shx_of(t).as_deref()
                         {
                             l.text = t.text.clone();
-                            l.size = kentos_sheet::projection::Scale::for_rendering(scale).paper_mm(*height);
+                            l.size = kentos_sheet::projection::Scale::for_rendering(scale)
+                                .paper_mm(*height);
                             shx(&mut l, p, weight_of(entity, layer.style.line_weight), false);
                             out.push(l);
                         }
@@ -645,7 +719,10 @@ pub fn labels_in_view(
             ) => {
                 // As its table style draws it where it sets nothing itself (docs/adr/1126 §3, 1127 §1).
                 if drawn_table.as_ref().is_none_or(|(of, _)| *of != id) {
-                    drawn_table = Some((id, kentos_native_application::geometry::styled_table(t, doc.settings())));
+                    drawn_table = Some((
+                        id,
+                        kentos_native_application::geometry::styled_table(t, doc.settings()),
+                    ));
                 }
                 let drawn = kentos_contracts::styled(t, doc.settings());
                 let t: &kentos_contracts::TableEntity = &drawn;

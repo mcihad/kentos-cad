@@ -635,7 +635,7 @@ pub const SCHEMA_WITH_MODULES: u32 = 142;
 pub const SCHEMA_WITH_RECIPE_DETAIL: u32 = 143;
 /// Schema 144 (docs/adr/0777): revolving, pocket and folding doors, a sliding door's track and overlap (an opening's or a
 /// type's `operation`, `leaves` up to 6, `build.drum`, `.overlap`, `.track`, `.bothSides`, `.lip`), a schedule's
-/// `operation`, `leaves`, `drum`, `pocket`; written only when one is. 
+/// `operation`, `leaves`, `drum`, `pocket`; written only when one is.
 pub const SCHEMA_WITH_SPECIAL_DOORS: u32 = 144;
 /// Schema 145 (docs/adr/0779): a room module instance's building-program group (`unit`: a flat placed again is its own
 /// flat); written only when an instance has one.

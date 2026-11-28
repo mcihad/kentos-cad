@@ -7,8 +7,8 @@
 //! scripts/fixtures/curved_ifc_check.py's location part, which reads it with IfcOpenShell.
 
 use kentos_commands::{
-    CallOp, CrsBase, CrsDefinition, CrsPlane, CrsSystem, DocumentSnapshotV2, HeightKind, HeightReference,
-    LocalDefinition, SitePlan,
+    CallOp, CrsBase, CrsDefinition, CrsPlane, CrsSystem, DocumentSnapshotV2, HeightKind,
+    HeightReference, LocalDefinition, SitePlan,
 };
 use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, arch_ifc, ifc_system, registry};
@@ -34,21 +34,31 @@ fn placed(plane: impl Fn(CrsPlane) -> CrsPlane, datum: Option<f64>) -> Document 
         .unwrap()
         .iter()
         .map(|p| {
-            let typed: Vec<String> =
-                p["typed"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_owned()).collect();
+            let typed: Vec<String> = p["typed"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| v.as_str().unwrap().to_owned())
+                .collect();
             typed.try_into().unwrap()
         })
         .collect();
-    let fit = fit_plane(&rows, PlaneKind::Similarity).expect("three control points fit a similarity");
-    let snap: DocumentSnapshotV2 =
-        kentos_kcad::decode(include_bytes!("../../../../../fixtures/arch/v1/section-building.kcad")).unwrap();
+    let fit =
+        fit_plane(&rows, PlaneKind::Similarity).expect("three control points fit a similarity");
+    let snap: DocumentSnapshotV2 = kentos_kcad::decode(include_bytes!(
+        "../../../../../fixtures/arch/v1/section-building.kcad"
+    ))
+    .unwrap();
     let mut doc = Document::from_snapshot_v2(snap).unwrap();
     let mut settings = doc.settings().clone();
     settings.srid = 0;
     settings.custom_crs = Some(CrsDefinition {
         name: "Şantiye".into(),
         system: CrsSystem::Local(LocalDefinition {
-            base: CrsBase { srid: Some(5256), definition: None },
+            base: CrsBase {
+                srid: Some(5256),
+                definition: None,
+            },
             plane: plane(fit.plane),
         }),
     });
@@ -57,8 +67,14 @@ fn placed(plane: impl Fn(CrsPlane) -> CrsPlane, datum: Option<f64>) -> Document 
         vertical_srid: Some(5775),
         geoid: None,
     });
-    settings.arch.as_mut().expect("the building's settings").site =
-        datum.map(|d| SitePlan { datum: Some(d), ..Default::default() });
+    settings
+        .arch
+        .as_mut()
+        .expect("the building's settings")
+        .site = datum.map(|d| SitePlan {
+        datum: Some(d),
+        ..Default::default()
+    });
     doc.set_settings(settings);
     doc
 }
@@ -84,26 +100,51 @@ fn warnings(doc: &mut Document, name: &str) -> Vec<Value> {
 #[test]
 fn a_local_model_is_turned_and_scaled_onto_its_base() {
     let c = case();
-    let (metres, relative, degrees) =
-        (f(&c["tolerance"]["metres"]), f(&c["tolerance"]["relative"]), f(&c["tolerance"]["degrees"]));
+    let (metres, relative, degrees) = (
+        f(&c["tolerance"]["metres"]),
+        f(&c["tolerance"]["relative"]),
+        f(&c["tolerance"]["degrees"]),
+    );
     let mut doc = placed(|p| p, Some(f(&c["datum"])));
-    let Some(CrsSystem::Local(local)) = doc.settings().custom_crs.as_ref().map(|d| &d.system) else {
+    let Some(CrsSystem::Local(local)) = doc.settings().custom_crs.as_ref().map(|d| &d.system)
+    else {
         panic!("a local system")
     };
-    let CrsPlane::Similarity { east, north, rotation, scale } = local.plane else {
+    let CrsPlane::Similarity {
+        east,
+        north,
+        rotation,
+        scale,
+    } = local.plane
+    else {
         panic!("a similarity")
     };
     let want = &c["plane"];
-    assert!((east - f(&want["east"])).abs() <= metres && (north - f(&want["north"])).abs() <= metres);
+    assert!(
+        (east - f(&want["east"])).abs() <= metres && (north - f(&want["north"])).abs() <= metres
+    );
     assert!((rotation - f(&want["rotation"])).abs() <= degrees);
     assert!((scale - f(&want["scale"])).abs() <= relative * scale);
     let (b, _) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     let crs = b.crs.as_ref().expect("the base system");
     assert_eq!(
-        (crs.name.as_str(), crs.geodetic_datum.as_deref(), crs.map_zone.as_deref(), crs.vertical_datum.as_deref()),
-        ("EPSG:5256", Some("TUREF"), Some("36"), Some("Antalya height (EPSG:5775)"))
+        (
+            crs.name.as_str(),
+            crs.geodetic_datum.as_deref(),
+            crs.map_zone.as_deref(),
+            crs.vertical_datum.as_deref()
+        ),
+        (
+            "EPSG:5256",
+            Some("TUREF"),
+            Some("36"),
+            Some("Antalya height (EPSG:5775)")
+        )
     );
-    assert_eq!((crs.origin, crs.factors), ([east, north, f(&c["datum"])], [scale, scale]));
+    assert_eq!(
+        (crs.origin, crs.factors),
+        ([east, north, f(&c["datum"])], [scale, scale])
+    );
     for p in c["points"].as_array().unwrap() {
         let (x, y) = (f(&p["local"][0]), f(&p["local"][1]));
         let [ct, st] = crs.x_axis;
@@ -111,7 +152,8 @@ fn a_local_model_is_turned_and_scaled_onto_its_base() {
         let n = crs.origin[1] + crs.factors[0] * st * x + crs.factors[1] * ct * y;
         let (de, dn) = (e - f(&p["map"][0]), n - f(&p["map"][1]));
         assert!(
-            (de - f(&p["residual"][0])).abs() <= metres && (dn - f(&p["residual"][1])).abs() <= metres,
+            (de - f(&p["residual"][0])).abs() <= metres
+                && (dn - f(&p["residual"][1])).abs() <= metres,
             "{}: {de} {dn} against {}",
             p["name"],
             p["residual"]
@@ -124,7 +166,10 @@ fn a_local_model_is_turned_and_scaled_onto_its_base() {
     // fixtures/ifc/v1/olgular/yerel-sistem.json, its answer catalog/standards/tests/dijital-proje/test_form.py's.
     // The road's alignments in the same place: the same plane, their heights the project's own.
     let road = ifc_system::of(&doc, Some(0.0)).expect("the road's system");
-    assert_eq!((road.origin, road.x_axis, road.factors), ([east, north, 0.0], crs.x_axis, crs.factors));
+    assert_eq!(
+        (road.origin, road.x_axis, road.factors),
+        ([east, north, 0.0], crs.x_axis, crs.factors)
+    );
     assert_eq!(warnings(&mut doc, "yerel"), Vec::<Value>::new());
     if std::env::var_os("KENTOS_WRITE_IFC_LOCATION").is_some() {
         let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -142,22 +187,46 @@ fn what_the_file_cannot_say_is_said_and_nothing_is_assumed() {
     let mut doc = placed(|p| p, None);
     let (b, _) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     assert!(b.crs.is_none());
-    assert!(b.crs_why.as_deref().is_some_and(|w| w.contains("±0,00'ın mutlak kotu bilinmiyor")), "{:?}", b.crs_why);
+    assert!(
+        b.crs_why
+            .as_deref()
+            .is_some_and(|w| w.contains("±0,00'ın mutlak kotu bilinmiyor")),
+        "{:?}",
+        b.crs_why
+    );
     let text = kentos_ifc::building::write(&b);
     assert!(!text.contains("IFCMAPCONVERSION") && !text.contains("IFCPROJECTEDCRS"));
     let said = warnings(&mut doc, "kotsuz");
     assert_eq!(said.len(), 1, "{said:?}");
     assert_eq!(said[0]["code"], "export_losses");
-    assert!(said[0]["message"].as_str().unwrap().contains("konum") && said[0]["message"].as_str().unwrap().contains("İmar durumu"));
+    assert!(
+        said[0]["message"].as_str().unwrap().contains("konum")
+            && said[0]["message"].as_str().unwrap().contains("İmar durumu")
+    );
     // The reason is the export's, and EK-9's sixth question says it (the package's test_form.py, docs/adr/8074).
-    assert!(ifc_system::of(&doc, Some(0.0)).is_ok(), "the road's heights are the project's own");
+    assert!(
+        ifc_system::of(&doc, Some(0.0)).is_ok(),
+        "the road's heights are the project's own"
+    );
     // A shear: no similarity is fitted in its place.
-    let sheared = placed(|_| CrsPlane::Affine { a: 1.0, b: 0.01, c: 587_000.0, d: 0.0, e: 1.0, f: 4_400_000.0 }, Some(1285.4));
+    let sheared = placed(
+        |_| CrsPlane::Affine {
+            a: 1.0,
+            b: 0.01,
+            c: 587_000.0,
+            d: 0.0,
+            e: 1.0,
+            f: 4_400_000.0,
+        },
+        Some(1285.4),
+    );
     let why = ifc_system::of(&sheared, Some(1285.4)).expect_err("a shear");
     assert!(why.contains("“Şantiye”") && why.contains("kayma"), "{why}");
     // No system at all: quiet at export.
-    let snap: DocumentSnapshotV2 =
-        kentos_kcad::decode(include_bytes!("../../../../../fixtures/arch/v1/section-building.kcad")).unwrap();
+    let snap: DocumentSnapshotV2 = kentos_kcad::decode(include_bytes!(
+        "../../../../../fixtures/arch/v1/section-building.kcad"
+    ))
+    .unwrap();
     let mut local = Document::from_snapshot_v2(snap).unwrap();
     assert!(!ifc_system::has_system(&local));
     assert_eq!(warnings(&mut local, "sistemsiz"), Vec::<Value>::new());

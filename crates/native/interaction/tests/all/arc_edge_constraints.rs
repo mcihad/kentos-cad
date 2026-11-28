@@ -148,12 +148,29 @@ fn horizontal_then_vertical_on_one_line_is_refused_not_collapsed() {
     let slot = Slot(line.base().id);
     let flat = b.doc.get(slot).cloned().expect("the line");
     let flat_length = length(&flat);
-    assert!(flat_length > 1.0, "made horizontal, a line still: {flat_length}");
+    assert!(
+        flat_length > 1.0,
+        "made horizontal, a line still: {flat_length}"
+    );
     assert!(b.type_text("D"));
-    let ends = match &flat { kentos_commands::Entity::Line(l) => (l.a, l.b), _ => unreachable!() };
-    b.click((ends.0.x + ends.1.x) / 2.0 - E, (ends.0.y + ends.1.y) / 2.0 - N);
-    assert_eq!(b.doc.constraints().constraints.len(), 1, "the vertical not added: {:?}", b.log);
-    assert!((length(b.doc.get(slot).expect("the line")) - flat_length).abs() < 1e-9, "not collapsed, unchanged");
+    let ends = match &flat {
+        kentos_commands::Entity::Line(l) => (l.a, l.b),
+        _ => unreachable!(),
+    };
+    b.click(
+        (ends.0.x + ends.1.x) / 2.0 - E,
+        (ends.0.y + ends.1.y) / 2.0 - N,
+    );
+    assert_eq!(
+        b.doc.constraints().constraints.len(),
+        1,
+        "the vertical not added: {:?}",
+        b.log
+    );
+    assert!(
+        (length(b.doc.get(slot).expect("the line")) - flat_length).abs() < 1e-9,
+        "not collapsed, unchanged"
+    );
     assert!(
         b.log.iter().any(|l| l.text.contains("sıfır uzunluğa")),
         "{:?}",
@@ -177,13 +194,28 @@ fn tangent_takes_the_circle_or_the_line_first() {
         let circle_at = (3., 0.);
         b.start("constraint");
         assert!(b.type_text("T"));
-        let (first, second) = if circle_first { (circle_at, line_at) } else { (line_at, circle_at) };
+        let (first, second) = if circle_first {
+            (circle_at, line_at)
+        } else {
+            (line_at, circle_at)
+        };
         b.click(first.0, first.1);
         b.click(second.0, second.1);
         let cs = &b.doc.constraints().constraints;
-        assert_eq!(cs.len(), 1, "circle first: {circle_first}: {:?}", b.log.iter().map(|l| l.text.clone()).collect::<Vec<_>>());
-        let kentos_commands::ConstraintRule::Tangent { a, b: c, .. } = &cs[0].rule else { panic!("a tangent") };
-        assert!(matches!(a.element, CadElement::Segment { .. }), "the line first: {:?}", a.element);
+        assert_eq!(
+            cs.len(),
+            1,
+            "circle first: {circle_first}: {:?}",
+            b.log.iter().map(|l| l.text.clone()).collect::<Vec<_>>()
+        );
+        let kentos_commands::ConstraintRule::Tangent { a, b: c, .. } = &cs[0].rule else {
+            panic!("a tangent")
+        };
+        assert!(
+            matches!(a.element, CadElement::Segment { .. }),
+            "the line first: {:?}",
+            a.element
+        );
         assert!(matches!(c.element, CadElement::Circle), "{:?}", c.element);
     }
 }

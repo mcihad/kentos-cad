@@ -88,7 +88,10 @@ pub fn put_blocks(
     blocks: &[BlockDefinition],
     counts: &mut Counts,
 ) -> Result<(), String> {
-    let added = blocks.iter().filter(|b| model.block(b.id).is_none()).count();
+    let added = blocks
+        .iter()
+        .filter(|b| model.block(b.id).is_none())
+        .count();
     let redefined = blocks
         .iter()
         .filter(|b| model.block(b.id).is_some_and(|old| old != *b))

@@ -411,19 +411,34 @@ mod tests {
         let disciplines: Vec<_> = c.list(DISCIPLINES).map(|d| d.code.as_str()).collect();
         assert_eq!(
             disciplines,
-            ["MM", "IM", "ST", "EE", "MK", "HR", "AL", "PY", "ZE", "YN", "GS", "AK"]
+            [
+                "MM", "IM", "ST", "EE", "MK", "HR", "AL", "PY", "ZE", "YN", "GS", "AK"
+            ]
         );
         let mm = c.code(DISCIPLINES, "MM").expect("Mimari");
-        assert_eq!((mm.name.as_str(), mm.table.as_str(), mm.page), ("Mimari", "2.2", 3));
+        assert_eq!(
+            (mm.name.as_str(), mm.table.as_str(), mm.page),
+            ("Mimari", "2.2", 3)
+        );
         let ks = c.code(FILE_KINDS, "KS").expect("Kesit");
         assert_eq!(ks.note.as_deref(), Some("Tip kesitler de dahil"));
         let mkf = c.code(FILE_TYPES, "MKF").expect("Model Kontrol Formu");
-        assert_eq!(mkf.group.as_deref(), Some("TÜM DİSİPLİNLERDE OLABİLECEK DOSYALAR"));
-        assert_eq!(c.code(STOREYS, "K00").map(|s| s.name.as_str()), Some("Zemin Kat"));
+        assert_eq!(
+            mkf.group.as_deref(),
+            Some("TÜM DİSİPLİNLERDE OLABİLECEK DOSYALAR")
+        );
+        assert_eq!(
+            c.code(STOREYS, "K00").map(|s| s.name.as_str()),
+            Some("Zemin Kat")
+        );
         assert_eq!(c.code(ROOMS, "SLN").map(|s| s.name.as_str()), Some("Salon"));
         assert!(c.list(ROOMS).count() > 140);
         let t = c.template("2.1").expect("Tablo 2.1");
-        let lengths: Vec<_> = t.fields.iter().map(|f| f.length.clone().unwrap_or_default()).collect();
+        let lengths: Vec<_> = t
+            .fields
+            .iter()
+            .map(|f| f.length.clone().unwrap_or_default())
+            .collect();
         assert_eq!(lengths, ["6", "2", "2", "4", "2", "3", "3", "2", "3"]);
         assert_eq!(items_list("MM"), Some("item:MM"));
         assert!(c.list("item:MM").any(|i| i.code == "EMSL"));

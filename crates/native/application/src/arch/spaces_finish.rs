@@ -215,7 +215,9 @@ fn check(doc: &Document, input: &SpacesFinish) -> Result<Checked, Stop> {
                 &format!("uids[{at}]"),
             ));
         };
-        let Ok(u) = Uuid::parse_str(uid) else { continue };
+        let Ok(u) = Uuid::parse_str(uid) else {
+            continue;
+        };
         spaces.push((*at, s, u));
     }
     if let Some(s) = input.scale {
@@ -223,19 +225,37 @@ fn check(doc: &Document, input: &SpacesFinish) -> Result<Checked, Stop> {
     }
     if let Some(g) = &input.grid {
         for (v, f) in [(g.dx, "dx"), (g.dy, "dy"), (g.angle, "angle")] {
-            checks::finite(v, "Izgaranın değeri", "Sonlu bir sayı verin.", &format!("grid.{f}"))?;
+            checks::finite(
+                v,
+                "Izgaranın değeri",
+                "Sonlu bir sayı verin.",
+                &format!("grid.{f}"),
+            )?;
         }
     }
     match input.surface {
         FinishSurface::Floor if input.grid.is_some() => {
-            return Err(bad("Döşemeye ızgara değil desen yazılır; tavan için surface: ceiling verin.", "grid"));
+            return Err(bad(
+                "Döşemeye ızgara değil desen yazılır; tavan için surface: ceiling verin.",
+                "grid",
+            ));
         }
         FinishSurface::Ceiling if input.pattern.is_some() || input.scale.is_some() => {
-            let at = if input.pattern.is_some() { "pattern" } else { "scale" };
-            return Err(bad("Tavana desen değil ızgara yazılır; aralıkları grid ile verin.", at));
+            let at = if input.pattern.is_some() {
+                "pattern"
+            } else {
+                "scale"
+            };
+            return Err(bad(
+                "Tavana desen değil ızgara yazılır; aralıkları grid ile verin.",
+                at,
+            ));
         }
         FinishSurface::Ceiling if input.grid.is_none() => {
-            return Err(bad("Tavan ızgarasının aralıkları verilmedi; grid ile dx ve dy verin.", "grid"));
+            return Err(bad(
+                "Tavan ızgarasının aralıkları verilmedi; grid ile dx ve dy verin.",
+                "grid",
+            ));
         }
         _ => {}
     }
@@ -252,7 +272,10 @@ fn check(doc: &Document, input: &SpacesFinish) -> Result<Checked, Stop> {
     if let Some(s) = input.scale
         && !(s > 0.0 && s <= MOST_SCALE)
     {
-        return Err(bad("Desenin ölçeği sıfırdan büyük, en çok 10 000 olmalı.", "scale"));
+        return Err(bad(
+            "Desenin ölçeği sıfırdan büyük, en çok 10 000 olmalı.",
+            "scale",
+        ));
     }
     if let Some(name) = &input.pattern
         && !pattern_known(doc, name)
@@ -353,7 +376,11 @@ fn check(doc: &Document, input: &SpacesFinish) -> Result<Checked, Stop> {
             if pattern_too_dense(&h.ring, &holes, &h.pattern) {
                 return Err(bad(
                     "Desen bu mahal için çok sık; ölçeği ya da ızgaranın aralığını büyütün.",
-                    if input.grid.is_some() { "grid" } else { "scale" },
+                    if input.grid.is_some() {
+                        "grid"
+                    } else {
+                        "scale"
+                    },
                 ));
             }
             hatches.push(Entity::Hatch(h));
@@ -407,7 +434,10 @@ pub fn plan_in(doc: &Document, input: &SpacesFinish) -> CommandResult<SpacesFini
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: SpacesFinish) -> CommandResult<SpacesFinished> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SpacesFinish,
+) -> CommandResult<SpacesFinished> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_SPACES_FINISH,
@@ -417,7 +447,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SpacesFinish) -> CommandRes
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: SpacesFinish) -> CommandResult<SpacesFinished> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SpacesFinish,
+) -> CommandResult<SpacesFinished> {
     let c = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -444,10 +477,7 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: SpacesFinish) -> CommandR
         }
     };
     doc.end_group(group);
-    let hatches = slots
-        .iter()
-        .filter_map(|s| doc.get(*s).cloned())
-        .collect();
+    let hatches = slots.iter().filter_map(|s| doc.get(*s).cloned()).collect();
     CommandResult::Completed {
         output: SpacesFinished {
             hatches,

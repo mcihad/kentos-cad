@@ -23,7 +23,11 @@ pub const LEAST_STEP: f64 = 0.01;
 /// The horizontal step that keeps the straight join of a vertical curve within `tolerance` (m) of it, where its
 /// second derivative is at most `bend` in size (1/m): `√(8t/k)`; infinite on a straight grade.
 pub fn vertical_step(tolerance: f64, bend: f64) -> f64 {
-    if bend.abs() <= 0.0 { f64::INFINITY } else { (8.0 * tolerance / bend.abs()).sqrt() }
+    if bend.abs() <= 0.0 {
+        f64::INFINITY
+    } else {
+        (8.0 * tolerance / bend.abs()).sqrt()
+    }
 }
 
 /// How far a section strays from the straight join of its neighbours: the largest plan distance of a coded point
@@ -45,20 +49,35 @@ pub type Coded = Option<Vec<(String, [f64; 3])>>;
 /// its plan projection on it, kept within the chord's ends.
 pub fn stray(a: &Coded, middle: &Coded, b: &Coded) -> Stray {
     let (Some(a), Some(m), Some(b)) = (a, middle, b) else {
-        return Stray { changed: !(a.is_none() && middle.is_none() && b.is_none()), ..Stray::default() };
+        return Stray {
+            changed: !(a.is_none() && middle.is_none() && b.is_none()),
+            ..Stray::default()
+        };
     };
     fn codes(v: &[(String, [f64; 3])]) -> Vec<&str> {
         let mut c: Vec<&str> = v.iter().map(|p| p.0.as_str()).collect();
         c.sort_unstable();
         c
     }
-    let mut out = Stray { changed: codes(a) != codes(m) || codes(m) != codes(b), ..Stray::default() };
+    let mut out = Stray {
+        changed: codes(a) != codes(m) || codes(m) != codes(b),
+        ..Stray::default()
+    };
     for (code, p) in m {
-        let (Some(pa), Some(pb)) = (a.iter().find(|x| &x.0 == code), b.iter().find(|x| &x.0 == code)) else { continue };
+        let (Some(pa), Some(pb)) = (
+            a.iter().find(|x| &x.0 == code),
+            b.iter().find(|x| &x.0 == code),
+        ) else {
+            continue;
+        };
         let (pa, pb) = (pa.1, pb.1);
         let (dx, dy) = (pb[0] - pa[0], pb[1] - pa[1]);
         let len2 = dx * dx + dy * dy;
-        let t = if len2 > 0.0 { (((p[0] - pa[0]) * dx + (p[1] - pa[1]) * dy) / len2).clamp(0.0, 1.0) } else { 0.0 };
+        let t = if len2 > 0.0 {
+            (((p[0] - pa[0]) * dx + (p[1] - pa[1]) * dy) / len2).clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
         let (cx, cy, cz) = (pa[0] + t * dx, pa[1] + t * dy, pa[2] + t * (pb[2] - pa[2]));
         let plan = ((p[0] - cx).powi(2) + (p[1] - cy).powi(2)).sqrt();
         let height = (p[2] - cz).abs();
@@ -127,19 +146,33 @@ pub fn refine<T>(
     mut make: impl FnMut(f64) -> T,
     coded: impl Fn(&T) -> Coded,
 ) -> Refined<T> {
-    let mut out = Refined { added: Vec::new(), before: Vec::new(), after: Vec::new(), left: Vec::new() };
+    let mut out = Refined {
+        added: Vec::new(),
+        before: Vec::new(),
+        after: Vec::new(),
+        left: Vec::new(),
+    };
     let mut built = 0usize;
     for w in stations.windows(2) {
         let (a, b) = (&w[0], &w[1]);
         // Depth first, left half before right, so the leaves come out in order.
-        let mut stack: Vec<(f64, Coded, f64, Coded, bool)> = vec![(a.0, coded(&a.1), b.0, coded(&b.1), true)];
+        let mut stack: Vec<(f64, Coded, f64, Coded, bool)> =
+            vec![(a.0, coded(&a.1), b.0, coded(&b.1), true)];
         while let Some((s0, c0, s1, c1, first)) = stack.pop() {
             let half = (s1 - s0) / 2.0;
             if half < tol.least {
                 continue;
             }
             if built >= budget {
-                out.left.push((Measured { from: s0, to: s1, stray: Stray::default(), within: false }, Left::Budget));
+                out.left.push((
+                    Measured {
+                        from: s0,
+                        to: s1,
+                        stray: Stray::default(),
+                        within: false,
+                    },
+                    Left::Budget,
+                ));
                 continue;
             }
             let sm = s0 + half;
@@ -148,7 +181,12 @@ pub fn refine<T>(
             let cm = coded(&m);
             let stray = stray(&c0, &cm, &c1);
             let ok = within(&stray, tol);
-            let measured = Measured { from: s0, to: s1, stray, within: ok };
+            let measured = Measured {
+                from: s0,
+                to: s1,
+                stray,
+                within: ok,
+            };
             if first {
                 out.before.push(measured.clone());
             }
@@ -176,7 +214,11 @@ pub fn refine<T>(
 /// them (§1): each parabola or circle piece over `region` divided equally into the fewest steps of at most
 /// [`vertical_step`] at its largest second derivative (a parabola's constant one; a circle's at its end farther from
 /// its centre), the divisions inside the piece and the region; grades are not divided.
-pub fn vertical_divisions(pieces: &[crate::profile::vertical::Piece], tolerance: f64, region: [f64; 2]) -> Vec<f64> {
+pub fn vertical_divisions(
+    pieces: &[crate::profile::vertical::Piece],
+    tolerance: f64,
+    region: [f64; 2],
+) -> Vec<f64> {
     use crate::profile::vertical::Piece;
     let mut out = Vec::new();
     for p in pieces {

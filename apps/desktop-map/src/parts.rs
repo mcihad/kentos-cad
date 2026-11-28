@@ -134,7 +134,12 @@ impl ModuleParts for Map {
         .to_owned()
     }
 
-    fn dialog_control(&self, app: &App, kind: u16, control: Control<'_>) -> Result<Option<Message>, String> {
+    fn dialog_control(
+        &self,
+        app: &App,
+        kind: u16,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         let Some(kind) = K::of(kind) else {
             return Err(format!("Harita penceresi {kind} izden yanıtlanamıyor"));
         };
@@ -253,7 +258,11 @@ impl ModuleParts for Map {
         None
     }
 
-    fn bottom_tab_view<'a>(&self, _app: &'a App, _tab: crate::bottom::BottomTab) -> Option<Element<'a, Message>> {
+    fn bottom_tab_view<'a>(
+        &self,
+        _app: &'a App,
+        _tab: crate::bottom::BottomTab,
+    ) -> Option<Element<'a, Message>> {
         None
     }
 
@@ -278,25 +287,56 @@ struct Pipes(Arc<crate::pipes_marks::PipesMarks>);
 struct Graph(Arc<crate::parcel_boundaries_marks::GraphMarks>);
 
 impl ModuleMarks for Zoning {
-    fn draw(&self, frame: &mut canvas::Frame, camera: &Camera, colors: &MarkColors, tokens: &Tokens) {
+    fn draw(
+        &self,
+        frame: &mut canvas::Frame,
+        camera: &Camera,
+        colors: &MarkColors,
+        tokens: &Tokens,
+    ) {
         crate::zoning_marks::draw(frame, &self.0, camera, colors, tokens);
     }
 }
 
 impl ModuleMarks for Baseline {
-    fn draw(&self, frame: &mut canvas::Frame, camera: &Camera, colors: &MarkColors, tokens: &Tokens) {
+    fn draw(
+        &self,
+        frame: &mut canvas::Frame,
+        camera: &Camera,
+        colors: &MarkColors,
+        tokens: &Tokens,
+    ) {
         crate::survey_baseline_marks::draw(frame, &self.0, camera, colors, tokens);
     }
 }
 
 impl ModuleMarks for Pipes {
-    fn draw(&self, frame: &mut canvas::Frame, camera: &Camera, colors: &MarkColors, tokens: &Tokens) {
+    fn draw(
+        &self,
+        frame: &mut canvas::Frame,
+        camera: &Camera,
+        colors: &MarkColors,
+        tokens: &Tokens,
+    ) {
         crate::pipes_marks::draw(frame, &self.0, camera, colors, tokens);
     }
 }
 
 impl ModuleMarks for Graph {
-    fn draw(&self, frame: &mut canvas::Frame, camera: &Camera, colors: &MarkColors, tokens: &Tokens) {
-        crate::parcel_boundaries_marks::draw(frame, &self.0, camera, colors, tokens.accent, tokens.danger);
+    fn draw(
+        &self,
+        frame: &mut canvas::Frame,
+        camera: &Camera,
+        colors: &MarkColors,
+        tokens: &Tokens,
+    ) {
+        crate::parcel_boundaries_marks::draw(
+            frame,
+            &self.0,
+            camera,
+            colors,
+            tokens.accent,
+            tokens.danger,
+        );
     }
 }

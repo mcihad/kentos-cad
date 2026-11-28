@@ -220,7 +220,11 @@ impl ArchAuditRuleSet {
                 None => format!("{} {}", r.rule, r.state.label()),
             })
             .collect();
-        let out = self.rules.iter().filter(|r| r.state == ArchAuditOutcome::OutOfScope).count();
+        let out = self
+            .rules
+            .iter()
+            .filter(|r| r.state == ArchAuditOutcome::OutOfScope)
+            .count();
         if out > 0 {
             rules.push(format!("{out} madde kapsam dışı"));
         }
@@ -832,7 +836,9 @@ pub const ARCH_PROFILES: &[(&str, &str)] = &[
     ),
     (
         "imar-merdiven-konut-asansorsuz/1",
-        include_str!("../../../../../catalog/v1/arch-profiles/imar-merdiven-konut-asansorsuz-1.json"),
+        include_str!(
+            "../../../../../catalog/v1/arch-profiles/imar-merdiven-konut-asansorsuz-1.json"
+        ),
     ),
     (
         "imar-merdiven-diger/1",
@@ -854,7 +860,10 @@ impl RampRules {
     /// The steepest slope a ramp of rise `rise` (its size) may have, per cent.
     pub fn slope_for(&self, rise: f64) -> Option<f64> {
         let r = rise.abs();
-        self.slopes.iter().find(|b| b.up_to.is_none_or(|u| r <= u)).map(|b| b.max)
+        self.slopes
+            .iter()
+            .find(|b| b.up_to.is_none_or(|u| r <= u))
+            .map(|b| b.max)
     }
 }
 
@@ -870,19 +879,32 @@ mod profile_tests {
             assert_eq!(p.format, "kentos.arch-profile");
             assert!(p.ramp.is_some() || p.stair.is_some(), "{id}: rules");
             if let Some(r) = &p.ramp {
-                assert!(r.slopes.last().is_some_and(|b| b.up_to.is_none()), "the last band has no bound");
-                assert!(r.slopes.windows(2).all(|w| w[0].up_to < w[1].up_to || w[1].up_to.is_none()));
+                assert!(
+                    r.slopes.last().is_some_and(|b| b.up_to.is_none()),
+                    "the last band has no bound"
+                );
+                assert!(
+                    r.slopes
+                        .windows(2)
+                        .all(|w| w[0].up_to < w[1].up_to || w[1].up_to.is_none())
+                );
             }
             if let Some(s) = &p.stair {
                 assert!(s.step[0] < s.step[1] && s.riser > 0.0 && s.tread > 0.0 && s.width > 0.0);
             }
         }
-        let r = arch_profile("erisilebilirlik-rampa/1").unwrap().ramp.unwrap();
+        let r = arch_profile("erisilebilirlik-rampa/1")
+            .unwrap()
+            .ramp
+            .unwrap();
         assert_eq!(r.slope_for(0.15), Some(8.0));
         assert_eq!(r.slope_for(-0.16), Some(7.0));
         assert_eq!(r.slope_for(1.0), Some(6.0));
         assert_eq!(r.slope_for(1.01), Some(5.0));
-        let s = arch_profile("imar-merdiven-konut-asansorsuz/1").unwrap().stair.unwrap();
+        let s = arch_profile("imar-merdiven-konut-asansorsuz/1")
+            .unwrap()
+            .stair
+            .unwrap();
         assert_eq!((s.riser, s.width), (0.16, 1.2));
     }
 }

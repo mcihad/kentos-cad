@@ -38,10 +38,24 @@ struct Read {
 
 fn main() -> iced::Result {
     typography::load();
-    let path = std::env::args().nth(1).map_or_else(|| PathBuf::from("fixtures/arch/v1/ifc/kesit-binasi.ifc"), PathBuf::from);
-    let title = path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned());
+    let path = std::env::args().nth(1).map_or_else(
+        || PathBuf::from("fixtures/arch/v1/ifc/kesit-binasi.ifc"),
+        PathBuf::from,
+    );
+    let title = path.file_name().map_or_else(
+        || path.display().to_string(),
+        |n| n.to_string_lossy().into_owned(),
+    );
     iced::application(
-        move || (App { viewer: Viewer::new(title.clone()), file: None }, start(path.clone())),
+        move || {
+            (
+                App {
+                    viewer: Viewer::new(title.clone()),
+                    file: None,
+                },
+                start(path.clone()),
+            )
+        },
         App::update,
         App::view,
     )
@@ -58,7 +72,10 @@ fn start(path: PathBuf) -> Task<Msg> {
     std::thread::spawn(move || {
         let _ = tx.send(read(&path).map(Arc::new));
     });
-    Task::perform(async move { rx.await.unwrap_or_else(|_| Err("Okuma durdu.".to_owned())) }, Msg::Read)
+    Task::perform(
+        async move { rx.await.unwrap_or_else(|_| Err("Okuma durdu.".to_owned())) },
+        Msg::Read,
+    )
 }
 
 fn read(path: &std::path::Path) -> Result<Read, String> {
@@ -66,13 +83,22 @@ fn read(path: &std::path::Path) -> Result<Read, String> {
     let bytes = std::fs::read(path).map_err(|e| format!("{} okunamadı: {e}", path.display()))?;
     let model = ifc::read(&bytes, &Limits::default(), &never).map_err(|e| e.to_string())?;
     let mut bodies = model.bodies(&bytes, &never).map_err(|e| e.to_string())?;
-    let openings = model.opening_bodies(&bytes, &never).map_err(|e| e.to_string())?;
+    let openings = model
+        .opening_bodies(&bytes, &never)
+        .map_err(|e| e.to_string())?;
     bodies.bodies.extend(openings.bodies);
     bodies.not_shown.extend(openings.not_shown);
-    let name = path.file_name().map_or_else(String::new, |n| n.to_string_lossy().into_owned());
+    let name = path
+        .file_name()
+        .map_or_else(String::new, |n| n.to_string_lossy().into_owned());
     let input = ifc::view::input(&name, &model, &bodies);
     let schema = model.summary.schema.clone();
-    Ok(Read { bytes: Arc::new(bytes), model: Arc::new(model), input, schema })
+    Ok(Read {
+        bytes: Arc::new(bytes),
+        model: Arc::new(model),
+        input,
+        schema,
+    })
 }
 
 impl App {
@@ -85,7 +111,13 @@ impl App {
                     input: r.input.clone(),
                     schema: r.schema.clone(),
                 });
-                self.viewer.load(r.input, vec![(r.schema, "Dosyanın şeması, başlığında yazdığı gibi.".to_owned())]);
+                self.viewer.load(
+                    r.input,
+                    vec![(
+                        r.schema,
+                        "Dosyanın şeması, başlığında yazdığı gibi.".to_owned(),
+                    )],
+                );
                 self.file = Some((r.bytes, r.model));
             }
             Msg::Read(Err(why)) => self.viewer.failed(why),

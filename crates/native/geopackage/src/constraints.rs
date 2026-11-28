@@ -91,9 +91,7 @@ pub fn checks_of(create: &str) -> (Vec<Check>, Vec<String>) {
     let Some(defs) = definitions(&t) else {
         return (Vec::new(), Vec::new());
     };
-    let word = |x: &Token, w: &str| {
-        x.0 == Kind::Word && create[x.1..x.2].eq_ignore_ascii_case(w)
-    };
+    let word = |x: &Token, w: &str| x.0 == Kind::Word && create[x.1..x.2].eq_ignore_ascii_case(w);
     let mut checks = Vec::new();
     let mut collated = Vec::new();
     for def in defs {

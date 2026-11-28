@@ -1,9 +1,9 @@
 //! Narrow architectural workspaces keep the drawing scale and every drafting aid reachable: KentOS Mimari's tabs, its
 //! status bar's aids (the narrow one's Yardımcılar menu is status.rs's `compact_aids_menu`).
 
+use crate::app::Panel;
 use crate::app::{App, Message};
 use crate::catalog::catalog;
-use crate::app::Panel;
 use crate::files_testing::{app_with_drawing, make_cad};
 use kentos_ui::theme::typography::{self, Typography};
 use kentos_ui::widget::ribbon::{self, Group};

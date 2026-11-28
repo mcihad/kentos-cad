@@ -23,7 +23,8 @@ fn ifc_timing() {
         .ok()
         .map(|v| v.split(',').filter_map(|n| n.trim().parse().ok()).collect())
         .unwrap_or_else(|| vec![1, 20, 100]);
-    let package = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../catalog/standards/dijital-proje/src");
+    let package = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../catalog/standards/dijital-proje/src");
     println!(
         "daire | nesne | duvar | mahal | okuma kopyası ms | kesit modeli ms | model ms | yazma ms | MB dosya | \
          okuma+gövde+olgu ms | tepe MB | olgu MB | form ms | 3B okuma+gövde ms | 3B gövde"
@@ -43,24 +44,40 @@ fn ifc_timing() {
         let _ = kentos_native_application::sections::model(doc);
         let section = t.elapsed().as_secs_f64() * 1e3;
         let t = Instant::now();
-        let (b, written) = kentos_native_application::arch_ifc::building(doc, "2026-11-16T12:00:00", "KentOS Mimari");
+        let (b, written) = kentos_native_application::arch_ifc::building(
+            doc,
+            "2026-11-16T12:00:00",
+            "KentOS Mimari",
+        );
         let model = t.elapsed().as_secs_f64() * 1e3;
         let t = Instant::now();
         let text = kentos_ifc::building::write(&b);
         let write = t.elapsed().as_secs_f64() * 1e3;
         let limits = kentos_ifc::read::Limits::default();
         let t = Instant::now();
-        let (facts, top) = peak(|| kentos_ifc::read::file_facts(text.as_bytes(), "bina.ifc", &limits, &|| false));
+        let (facts, top) =
+            peak(|| kentos_ifc::read::file_facts(text.as_bytes(), "bina.ifc", &limits, &|| false));
         let read = t.elapsed().as_secs_f64() * 1e3;
         let facts = facts.expect("the file reads back");
         // 3B görünüm's reading (docs/adr/8119): the model, its bodies and its openings' volumes.
         let t = Instant::now();
-        let m = kentos_ifc::read::read(text.as_bytes(), &limits, &|| false).expect("the file reads back");
-        let shown = m.bodies(text.as_bytes(), &|| false).expect("its bodies").bodies.len()
-            + m.opening_bodies(text.as_bytes(), &|| false).expect("its openings").bodies.len();
+        let m = kentos_ifc::read::read(text.as_bytes(), &limits, &|| false)
+            .expect("the file reads back");
+        let shown = m
+            .bodies(text.as_bytes(), &|| false)
+            .expect("its bodies")
+            .bodies
+            .len()
+            + m.opening_bodies(text.as_bytes(), &|| false)
+                .expect("its openings")
+                .bodies
+                .len();
         let view3d = t.elapsed().as_secs_f64() * 1e3;
         let json = serde_json::to_string(&facts).expect("the facts as text");
-        let path = std::env::temp_dir().join(format!("kentos-ifc-olgular-{}-{n}.json", std::process::id()));
+        let path = std::env::temp_dir().join(format!(
+            "kentos-ifc-olgular-{}-{n}.json",
+            std::process::id()
+        ));
         std::fs::write(&path, &json).expect("the facts kept");
         let t = Instant::now();
         let answered = std::process::Command::new("python3")
@@ -77,7 +94,11 @@ fn ifc_timing() {
         } else {
             println!("{}", path.display());
         }
-        assert!(answered.status.success(), "{}", String::from_utf8_lossy(&answered.stderr));
+        assert!(
+            answered.status.success(),
+            "{}",
+            String::from_utf8_lossy(&answered.stderr)
+        );
         assert_eq!(String::from_utf8_lossy(&answered.stdout).trim(), "21");
         println!(
             "{n} | {objects} | {} | {} | {copied:.2} | {section:.1} | {model:.1} | {write:.1} | {:.2} | {read:.1} | {top:.0} | {:.2} | \

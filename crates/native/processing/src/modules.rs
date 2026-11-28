@@ -240,10 +240,22 @@ pub fn refusal(doc: &Document, tool: &Tool) -> Option<String> {
     if tool.modules.has(here) {
         return None;
     }
-    let there: Vec<&str> = tool.modules.modules().into_iter().map(project_word).collect();
+    let there: Vec<&str> = tool
+        .modules
+        .modules()
+        .into_iter()
+        .map(project_word)
+        .collect();
     Some(match there.as_slice() {
-        [] => format!("“{}” hiçbir projede çalışmaz: aracın modülü yok.", tool.label),
-        [one] => format!("“{}” {} yok; {one} projelerinde var.", tool.label, here.in_project()),
+        [] => format!(
+            "“{}” hiçbir projede çalışmaz: aracın modülü yok.",
+            tool.label
+        ),
+        [one] => format!(
+            "“{}” {} yok; {one} projelerinde var.",
+            tool.label,
+            here.in_project()
+        ),
         [rest @ .., last] => format!(
             "“{}” {} yok; {} ve {last} projelerinde var.",
             tool.label,
@@ -268,11 +280,18 @@ mod tests {
         let mut placed_ids = BTreeSet::new();
         for (id, set) in PLACED {
             assert!(placed_ids.insert(*id), "{id} is placed twice");
-            assert!(ids.contains(id), "{id} is placed but no built-in tool has it");
+            assert!(
+                ids.contains(id),
+                "{id} is placed but no built-in tool has it"
+            );
             assert!(!set.is_empty(), "{id} is placed in no module");
         }
         for t in &tools {
-            assert!(placed_ids.contains(t.id.as_str()), "{} is not placed: add it to PLACED", t.id);
+            assert!(
+                placed_ids.contains(t.id.as_str()),
+                "{} is not placed: add it to PLACED",
+                t.id
+            );
             assert_eq!(t.modules, placed(&t.id), "{}", t.id);
         }
     }
@@ -281,13 +300,20 @@ mod tests {
     fn drawing(module: Module) -> Document {
         use kentos_commands::{CadWork, Workspace};
         let text = std::fs::read_to_string(
-            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/processing/v1/parcels.kcad"),
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                .join("../../../fixtures/processing/v1/parcels.kcad"),
         )
         .expect("the drawing");
-        let mut doc =
-            Document::from_snapshot(kentos_commands::DocumentSnapshotV1::from_json(&text).expect("reads")).expect("opens");
+        let mut doc = Document::from_snapshot(
+            kentos_commands::DocumentSnapshotV1::from_json(&text).expect("reads"),
+        )
+        .expect("opens");
         let mut settings = doc.settings().clone();
-        settings.workspace = Some(if module == Module::Gis { Workspace::Gis } else { Workspace::Cad });
+        settings.workspace = Some(if module == Module::Gis {
+            Workspace::Gis
+        } else {
+            Workspace::Cad
+        });
         settings.cad_work = match module {
             Module::Architecture => Some(CadWork::Architecture),
             Module::Map => Some(CadWork::Map),
@@ -308,15 +334,26 @@ mod tests {
         let run = |tool: &str| -> kentos_commands::ProcessingRun {
             serde_json::from_value(serde_json::json!({ "tool": tool })).expect("a run")
         };
-        let refused = |module: Module, tool: &str| match crate::command::ready(&registry, &drawing(module), &run(tool)) {
+        let refused = |module: Module, tool: &str| match crate::command::ready(
+            &registry,
+            &drawing(module),
+            &run(tool),
+        ) {
             Err(e) => Some((e.code.clone(), e.message.clone())),
             Ok(_) => None,
         };
-        let (code, message) = refused(Module::Architecture, "network.serviceAreas").expect("refused");
+        let (code, message) =
+            refused(Module::Architecture, "network.serviceAreas").expect("refused");
         assert_eq!(code, kentos_commands::codes::TOOL_NOT_IN_MODULE);
-        assert_eq!(message, "“Hizmet alanları” bu mimari projede yok; CBS projelerinde var.");
+        assert_eq!(
+            message,
+            "“Hizmet alanları” bu mimari projede yok; CBS projelerinde var."
+        );
         let (_, message) = refused(Module::Gis, "annotation.edgeLengths").expect("refused");
-        assert_eq!(message, "“Kenar uzunluklarını yaz” bu CBS projesinde yok; harita ve yol projelerinde var.");
+        assert_eq!(
+            message,
+            "“Kenar uzunluklarını yaz” bu CBS projesinde yok; harita ve yol projelerinde var."
+        );
         // Where it is offered, the module is no reason to refuse it.
         assert!(
             refused(Module::Map, "annotation.edgeLengths")
@@ -334,7 +371,10 @@ mod tests {
                 .collect()
         };
         assert!(listed(Module::Map, "hizmet alanları").is_empty());
-        assert_eq!(listed(Module::Gis, "hizmet alanları"), ["network.serviceAreas"]);
+        assert_eq!(
+            listed(Module::Gis, "hizmet alanları"),
+            ["network.serviceAreas"]
+        );
         let edge = listed(Module::Road, "annotation.edgeLengths");
         assert_eq!(edge, ["annotation.edgeLengths"]);
     }

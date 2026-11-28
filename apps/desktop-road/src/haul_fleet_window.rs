@@ -15,8 +15,8 @@
 //! └─────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Theme, mouse};
 use kentos_commands::{HaulObjective, HaulTrack, HaulTruckDef, HaulTrucked, HaulsTrucks};
@@ -119,7 +119,11 @@ fn number(text: &str) -> Result<Option<f64>, ()> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().ok().filter(|v| v.is_finite()).map(Some).ok_or(())
+    t.parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .map(Some)
+        .ok_or(())
 }
 
 fn comma(v: f64, digits: usize) -> String {
@@ -129,7 +133,9 @@ fn comma(v: f64, digits: usize) -> String {
 /// Thousands parted by a thin space.
 fn grouped(v: f64, places: usize) -> String {
     let text = format!("{:.places$}", v.abs());
-    let (whole, part) = text.split_once('.').map_or((text.as_str(), None), |(a, b)| (a, Some(b)));
+    let (whole, part) = text
+        .split_once('.')
+        .map_or((text.as_str(), None), |(a, b)| (a, Some(b)));
     let mut out = String::new();
     for (i, c) in whole.chars().enumerate() {
         if i > 0 && (whole.len() - i) % 3 == 0 {
@@ -149,8 +155,14 @@ fn grouped(v: f64, places: usize) -> String {
 
 impl Fleet {
     /// The query from the typed fields; why not, in words.
-    pub(crate) fn input(&self, haul: &str, objective: HaulObjective) -> Result<HaulsTrucks, String> {
-        let read = |k: usize| number(&self.fields[k]).map_err(|()| format!("{} bir sayı olmalı.", FIELDS[k]));
+    pub(crate) fn input(
+        &self,
+        haul: &str,
+        objective: HaulObjective,
+    ) -> Result<HaulsTrucks, String> {
+        let read = |k: usize| {
+            number(&self.fields[k]).map_err(|()| format!("{} bir sayı olmalı.", FIELDS[k]))
+        };
         let need = |k: usize| read(k)?.ok_or_else(|| format!("{} yazın.", FIELDS[k]));
         let truck = HaulTruckDef {
             empty: need(0)?,
@@ -223,12 +235,19 @@ impl HaulFleetWindowApp for App {
             return;
         };
         let haul = w.haul.clone();
-        let objective = if w.aim == Aim::Cost { HaulObjective::Cost } else { HaulObjective::Moment };
+        let objective = if w.aim == Aim::Cost {
+            HaulObjective::Cost
+        } else {
+            HaulObjective::Moment
+        };
         let Some(x) = w.fleet.as_mut() else { return };
         let read = |x: &Fleet| -> Result<(HaulTrucked, Vec<String>), String> {
-            let haul = haul.clone().ok_or("Taşıma planı penceresinde bir Brükner seçin.")?;
+            let haul = haul
+                .clone()
+                .ok_or("Taşıma planı penceresinde bir Brükner seçin.")?;
             let q = x.input(&haul, objective)?;
-            let (out, warnings) = kentos_native_application::road_hauls_trucks::preview(&doc.model, &q)?;
+            let (out, warnings) =
+                kentos_native_application::road_hauls_trucks::preview(&doc.model, &q)?;
             Ok((out, warnings.into_iter().map(|w| w.message).collect()))
         };
         let mut result = read(x);
@@ -278,7 +297,10 @@ impl HaulFleetWindowApp for App {
 
     /// The window over Taşıma planı's.
     fn haul_fleet_view<'a>(&'a self, x: &'a Fleet) -> Element<'a, Message> {
-        let field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &x.fields[k]).on_input(move |t| msg(Event::Field(k, t)));
+        let field = |k: usize, hint: &'a str| {
+            kentos_ui::widget::text_field(hint, &x.fields[k])
+                .on_input(move |t| msg(Event::Field(k, t)))
+        };
         let ok = x.result.as_ref().and_then(|r| r.as_ref().ok());
         let mut form = Form::new()
             .label_width(150.0)
@@ -318,16 +340,23 @@ impl HaulFleetWindowApp for App {
         if let Some(out) = ok
             && !out.hauls.is_empty()
         {
-            let names: Vec<String> =
-                out.hauls.iter().enumerate().map(|(i, h)| format!("{}: {} → {}", i + 1, h.from_text, h.to_text)).collect();
-            let pick = Select::new(names.iter().map(|n| Choice::new(n.clone())), Some(x.trace.min(names.len() - 1)), |i| {
-                msg(Event::Trace(i))
-            });
+            let names: Vec<String> = out
+                .hauls
+                .iter()
+                .enumerate()
+                .map(|(i, h)| format!("{}: {} → {}", i + 1, h.from_text, h.to_text))
+                .collect();
+            let pick = Select::new(
+                names.iter().map(|n| Choice::new(n.clone())),
+                Some(x.trace.min(names.len() - 1)),
+                |i| msg(Event::Trace(i)),
+            );
             form = form.section("Grafik").field("İzlenen taşıma", pick);
         }
-        let name = ok
-            .and_then(|o| o.hauls.get(x.trace))
-            .map_or_else(|| TITLE.to_owned(), |h| format!("Kamyon hızı — {} → {}", h.from_text, h.to_text));
+        let name = ok.and_then(|o| o.hauls.get(x.trace)).map_or_else(
+            || TITLE.to_owned(),
+            |h| format!("Kamyon hızı — {} → {}", h.from_text, h.to_text),
+        );
         let mut d = RoadDialog::new(TITLE, form, msg(Event::Back))
             .form_width(400.0)
             .width(1200.0)
@@ -342,7 +371,8 @@ impl HaulFleetWindowApp for App {
                 d = d.figure("Sefer", grouped(out.trips, 0));
                 d = d.figure(
                     "Ortalama çevrim",
-                    out.cycle.map_or_else(|| "—".into(), |c| format!("{} dk", comma(c / 60.0, 2))),
+                    out.cycle
+                        .map_or_else(|| "—".into(), |c| format!("{} dk", comma(c / 60.0, 2))),
                 );
                 match &out.fleet {
                     Some(f) => {
@@ -361,7 +391,10 @@ impl HaulFleetWindowApp for App {
                     }
                     None => {
                         d = d
-                            .figure("Denge sayısı", out.balance.map_or_else(|| "—".into(), |b| comma(b, 2)))
+                            .figure(
+                                "Denge sayısı",
+                                out.balance.map_or_else(|| "—".into(), |b| comma(b, 2)),
+                            )
                             .figure("Motor enerjisi", format!("{} kWh", grouped(out.energy, 0)));
                     }
                 }
@@ -407,27 +440,60 @@ impl HaulFleetWindowApp for App {
                 if let Some(f) = &out.fleet {
                     rows.push(vec!["Kamyon".to_owned(), f.trucks.to_string()]);
                     rows.push(vec!["Uyum katsayısı".to_owned(), comma(f.match_factor, 2)]);
-                    rows.push(vec!["Üretim, belirlenimci".to_owned(), format!("{} m³/sa", grouped(f.steady, 1))]);
-                    rows.push(vec!["Üretim, kuyrukla".to_owned(), format!("{} m³/sa", grouped(f.queued, 1))]);
-                    rows.push(vec!["Yükleyicinin doluluğu".to_owned(), format!("%{}", comma(f.busy * 100.0, 1))]);
-                    rows.push(vec!["Yükleyicide bekleme".to_owned(), format!("{} dk/çevrim", comma(f.wait / 60.0, 2))]);
-                    rows.push(vec!["Süre, belirlenimci".to_owned(), format!("{} sa", comma(f.hours_steady, 1))]);
-                    rows.push(vec!["Süre, kuyrukla".to_owned(), format!("{} sa", comma(f.hours_queued, 1))]);
+                    rows.push(vec![
+                        "Üretim, belirlenimci".to_owned(),
+                        format!("{} m³/sa", grouped(f.steady, 1)),
+                    ]);
+                    rows.push(vec![
+                        "Üretim, kuyrukla".to_owned(),
+                        format!("{} m³/sa", grouped(f.queued, 1)),
+                    ]);
+                    rows.push(vec![
+                        "Yükleyicinin doluluğu".to_owned(),
+                        format!("%{}", comma(f.busy * 100.0, 1)),
+                    ]);
+                    rows.push(vec![
+                        "Yükleyicide bekleme".to_owned(),
+                        format!("{} dk/çevrim", comma(f.wait / 60.0, 2)),
+                    ]);
+                    rows.push(vec![
+                        "Süre, belirlenimci".to_owned(),
+                        format!("{} sa", comma(f.hours_steady, 1)),
+                    ]);
+                    rows.push(vec![
+                        "Süre, kuyrukla".to_owned(),
+                        format!("{} sa", comma(f.hours_queued, 1)),
+                    ]);
                 }
-                rows.push(vec!["Denge sayısı".to_owned(), out.balance.map_or_else(|| "—".into(), |b| comma(b, 2))]);
-                rows.push(vec!["Motor enerjisi".to_owned(), format!("{} kWh", grouped(out.energy, 0))]);
+                rows.push(vec![
+                    "Denge sayısı".to_owned(),
+                    out.balance.map_or_else(|| "—".into(), |b| comma(b, 2)),
+                ]);
+                rows.push(vec![
+                    "Motor enerjisi".to_owned(),
+                    format!("{} kWh", grouped(out.energy, 0)),
+                ]);
                 if let Some(fuel) = out.fuel {
                     rows.push(vec!["Yakıt".to_owned(), format!("{} L", grouped(fuel, 0))]);
                 }
                 if let Some(co2) = out.co2 {
-                    rows.push(vec!["CO₂".to_owned(), format!("{} t", comma(co2 / 1000.0, 2))]);
+                    rows.push(vec![
+                        "CO₂".to_owned(),
+                        format!("{} t", comma(co2 / 1000.0, 2)),
+                    ]);
                 }
-                let fleet = road_dialog::table(vec![col("Kalem", 220.0), num("Değer", 180.0)], rows, "");
+                let fleet =
+                    road_dialog::table(vec![col("Kalem", 220.0), num("Değer", 180.0)], rows, "");
                 let shown = match x.list {
                     Listed::Hauls => hauls,
                     Listed::Fleet => fleet,
                 };
-                d = d.detail(road_dialog::detail_choice([Listed::Hauls, Listed::Fleet], x.list, |l| msg(Event::List(l)), shown));
+                d = d.detail(road_dialog::detail_choice(
+                    [Listed::Hauls, Listed::Fleet],
+                    x.list,
+                    |l| msg(Event::List(l)),
+                    shown,
+                ));
             }
         }
         d.view()
@@ -442,10 +508,21 @@ struct Speeds<'a> {
 impl canvas::Program<Message> for Speeds<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let t = Tokens::of(theme);
         let mut frame = canvas::Frame::new(renderer, bounds.size());
-        let Some(trace) = self.out.and_then(|o| o.trace.as_ref()).filter(|tr| tr.loaded.len() > 1) else {
+        let Some(trace) = self
+            .out
+            .and_then(|o| o.trace.as_ref())
+            .filter(|tr| tr.loaded.len() > 1)
+        else {
             crate::picture::label(
                 &mut frame,
                 "Kamyonun değerlerini yazınca izlenen taşımanın hızı burada çizilir.".into(),
@@ -465,7 +542,12 @@ impl canvas::Program<Message> for Speeds<'_> {
         }
         let top = top * 1.12;
         // Room on the right for the last km's label, centred on the plot's edge.
-        let plot = Rectangle { x: 48.0, y: 12.0, width: bounds.width - 84.0, height: bounds.height - 36.0 };
+        let plot = Rectangle {
+            x: 48.0,
+            y: 12.0,
+            width: bounds.width - 84.0,
+            height: bounds.height - 36.0,
+        };
         let x = |s: f64| plot.x + ((s - s0) / (s1 - s0).max(1e-9) * f64::from(plot.width)) as f32;
         let y = |v: f64| plot.y + plot.height - (v / top * f64::from(plot.height)) as f32;
         let shown = crate::picture::Shown::of(bounds.size());
@@ -477,7 +559,13 @@ impl canvas::Program<Message> for Speeds<'_> {
         let mut speeds = Vec::new();
         while v <= top {
             if shown.has_y(y(v)) {
-                frame.stroke(&Path::line(Point::new(plot.x, y(v)), Point::new(plot.x + plot.width, y(v))), thin(t.border));
+                frame.stroke(
+                    &Path::line(
+                        Point::new(plot.x, y(v)),
+                        Point::new(plot.x + plot.width, y(v)),
+                    ),
+                    thin(t.border),
+                );
                 speeds.push(v);
             }
             v += vstep;
@@ -486,7 +574,13 @@ impl canvas::Program<Message> for Speeds<'_> {
         let mut s = (s0 / sstep).ceil() * sstep;
         while s <= s1 + 1e-9 {
             if shown.has_x(x(s)) {
-                frame.stroke(&Path::line(Point::new(x(s), plot.y), Point::new(x(s), plot.y + plot.height)), thin(t.border));
+                frame.stroke(
+                    &Path::line(
+                        Point::new(x(s), plot.y),
+                        Point::new(x(s), plot.y + plot.height),
+                    ),
+                    thin(t.border),
+                );
                 stations.push(s);
             }
             s += sstep;
@@ -501,14 +595,31 @@ impl canvas::Program<Message> for Speeds<'_> {
             frame.stroke(&line, Stroke::default().with_color(color).with_width(2.0));
         }
         let left = shown.left(4.0);
-        let base = shown.bottom(plot.y + plot.height + 6.0, kentos_ui::theme::typography::caption());
+        let base = shown.bottom(
+            plot.y + plot.height + 6.0,
+            kentos_ui::theme::typography::caption(),
+        );
         let ground = t.field.scale_alpha(0.9);
         // Not into the stations' row at the bottom (a corner shared by both rows).
         for v in speeds.into_iter().filter(|v| y(*v) < base - 8.0) {
-            crate::picture::label(&mut frame, comma(v, crate::picture::decimals(vstep)), Point::new(left, y(v) - 7.0), t.muted, false, (left > 4.5).then_some(ground));
+            crate::picture::label(
+                &mut frame,
+                comma(v, crate::picture::decimals(vstep)),
+                Point::new(left, y(v) - 7.0),
+                t.muted,
+                false,
+                (left > 4.5).then_some(ground),
+            );
         }
         for s in stations {
-            crate::picture::label(&mut frame, format!("{} m", comma(s, crate::picture::decimals(sstep))), Point::new(x(s), base), t.muted, true, (base < plot.y + plot.height + 5.5).then_some(ground));
+            crate::picture::label(
+                &mut frame,
+                format!("{} m", comma(s, crate::picture::decimals(sstep))),
+                Point::new(x(s), base),
+                t.muted,
+                true,
+                (base < plot.y + plot.height + 5.5).then_some(ground),
+            );
         }
         vec![frame.into_geometry()]
     }

@@ -199,7 +199,9 @@ pub fn svg(layout: &Layout, palette: &Palette) -> String {
                 alpha,
             } => {
                 let points: Vec<String> = pts
-                    .as_chunks::<2>().0.iter()
+                    .as_chunks::<2>()
+                    .0
+                    .iter()
                     .map(|c| format!("{},{}", n(c[0]), n(c[1])))
                     .collect();
                 let _ = write!(

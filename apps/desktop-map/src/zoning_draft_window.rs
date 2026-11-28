@@ -5,10 +5,13 @@
 //! Yönetmeliği m. 26 asks of the change. Taslağı kaydet keeps the draft in the project in one undo step and Taslağı
 //! sil takes a kept one out; the decision areas in force are never written. A draft is not an approved change.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use iced::{Element, Length, Task};
-use kentos_commands::{CommandResult, DRAFT_FIELDS, ZONING_PROFILE, ZoningDraft, ZoningDraftChange, ZoningDrafted, builtin_profile};
+use kentos_commands::{
+    CommandResult, DRAFT_FIELDS, ZONING_PROFILE, ZoningDraft, ZoningDraftChange, ZoningDrafted,
+    builtin_profile,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, zoning_draft};
 use kentos_ui::widget::grow::Grows;
@@ -135,7 +138,12 @@ fn value_word(field: &str, value: &str) -> String {
         return "—".to_owned();
     }
     domain_of(field)
-        .and_then(|d| choices(d).into_iter().find(|(c, _)| c == value).map(|(_, l)| l))
+        .and_then(|d| {
+            choices(d)
+                .into_iter()
+                .find(|(c, _)| c == value)
+                .map(|(_, l)| l)
+        })
         .unwrap_or_else(|| value.to_owned())
 }
 
@@ -151,9 +159,18 @@ fn kind_word(kind: &str) -> &'static str {
 /// The article and, shortly, what it asks; the whole sentence is the command's message.
 fn asks(kind: &str) -> (&'static str, &'static str) {
     match kind {
-        "infrastructureLess" => ("m. 26(3)", "Zorunluluk, ilgili kurumun görüşü, hizmet etki alanında eşdeğer alan"),
-        "densityUp" => ("m. 26(5)(a)", "Artan nüfusun sosyal ve teknik altyapı alanları"),
-        "heightUp" => ("m. 26(4), (5)(b)", "Doku ve silüet; cepheler arası K = (Y1 + Y2)/2 + 7,00 m"),
+        "infrastructureLess" => (
+            "m. 26(3)",
+            "Zorunluluk, ilgili kurumun görüşü, hizmet etki alanında eşdeğer alan",
+        ),
+        "densityUp" => (
+            "m. 26(5)(a)",
+            "Artan nüfusun sosyal ve teknik altyapı alanları",
+        ),
+        "heightUp" => (
+            "m. 26(4), (5)(b)",
+            "Doku ve silüet; cepheler arası K = (Y1 + Y2)/2 + 7,00 m",
+        ),
         _ => ("", ""),
     }
 }
@@ -222,8 +239,14 @@ impl ZoningDraftWindowApp for App {
             return Task::none();
         };
         let plans = zoning_draft::plans(&doc.model);
-        let taken: Vec<String> = zoning_draft::drafts(&doc.model).into_iter().map(|d| d.id).collect();
-        let id = (1..).map(|n| format!("T-{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
+        let taken: Vec<String> = zoning_draft::drafts(&doc.model)
+            .into_iter()
+            .map(|d| d.id)
+            .collect();
+        let id = (1..)
+            .map(|n| format!("T-{n}"))
+            .find(|id| !taken.contains(id))
+            .unwrap_or_default();
         self.modules.map_mut().zoning_draft = State {
             id,
             plan: plans.first().map(|(id, _)| id.clone()).unwrap_or_default(),
@@ -247,8 +270,15 @@ impl ZoningDraftWindowApp for App {
                 if id == NEW {
                     return self.open_zoning_draft();
                 }
-                let Some(doc) = self.document.as_ref() else { return Task::none() };
-                let Some(d) = zoning_draft::drafts(&doc.model).into_iter().find(|d| d.id == id) else { return Task::none() };
+                let Some(doc) = self.document.as_ref() else {
+                    return Task::none();
+                };
+                let Some(d) = zoning_draft::drafts(&doc.model)
+                    .into_iter()
+                    .find(|d| d.id == id)
+                else {
+                    return Task::none();
+                };
                 let s = &mut self.modules.map_mut().zoning_draft;
                 s.id = d.id;
                 s.plan = d.plan;
@@ -256,7 +286,11 @@ impl ZoningDraftWindowApp for App {
                 s.changes = d
                     .changes
                     .into_iter()
-                    .map(|c| ZoningDraftChange { uid: c.area, field: c.field, value: c.after })
+                    .map(|c| ZoningDraftChange {
+                        uid: c.area,
+                        field: c.field,
+                        value: c.after,
+                    })
                     .collect();
                 s.chosen = None;
             }
@@ -285,8 +319,16 @@ impl ZoningDraftWindowApp for App {
                 if s.area.is_empty() || s.value.trim().is_empty() {
                     return Task::none();
                 }
-                let change = ZoningDraftChange { uid: s.area.clone(), field: s.field.clone(), value: s.value.trim().to_owned() };
-                match s.changes.iter().position(|c| c.uid == change.uid && c.field == change.field) {
+                let change = ZoningDraftChange {
+                    uid: s.area.clone(),
+                    field: s.field.clone(),
+                    value: s.value.trim().to_owned(),
+                };
+                match s
+                    .changes
+                    .iter()
+                    .position(|c| c.uid == change.uid && c.field == change.field)
+                {
                     Some(at) => s.changes[at] = change,
                     None => s.changes.push(change),
                 }
@@ -308,9 +350,15 @@ impl ZoningDraftWindowApp for App {
                 let remove = matches!(event, Event::Remove);
                 let mut input = self.zoning_draft_input();
                 if remove {
-                    input = ZoningDraft { id: input.id, remove: true, ..ZoningDraft::default() };
+                    input = ZoningDraft {
+                        id: input.id,
+                        remove: true,
+                        ..ZoningDraft::default()
+                    };
                 }
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
                 match zoning_draft::execute(&mut ExecutionContext::new(&mut doc.model), input) {
                     CommandResult::Completed { output, .. } => {
                         let id = self.modules.map().zoning_draft.id.trim().to_owned();
@@ -329,7 +377,9 @@ impl ZoningDraftWindowApp for App {
                             return self.open_zoning_draft();
                         }
                     }
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => {
                         self.warn(format!("{TITLE}: {}", error.message));
                     }
                     _ => {}
@@ -348,7 +398,9 @@ impl ZoningDraftWindowApp for App {
     fn zoning_draft_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().zoning_draft;
         let f = self.format();
-        let Some(doc) = self.document.as_ref() else { return iced::widget::Space::new().into() };
+        let Some(doc) = self.document.as_ref() else {
+            return iced::widget::Space::new().into();
+        };
         let kept = zoning_draft::drafts(&doc.model);
         let is_kept = kept.iter().any(|d| d.id == s.id.trim());
         let mut lines = vec![words::text_line(
@@ -358,7 +410,12 @@ impl ZoningDraftWindowApp for App {
         let mut table_rows: Vec<Vec<String>> = Vec::new();
         let plan_line = match &s.answer {
             Some(Ok(r)) => {
-                let less: f64 = r.findings.iter().filter(|x| x.kind == "infrastructureLess").filter_map(|x| x.area).sum();
+                let less: f64 = r
+                    .findings
+                    .iter()
+                    .filter(|x| x.kind == "infrastructureLess")
+                    .filter_map(|x| x.area)
+                    .sum();
                 let asks = r.findings.len();
                 lines.push(words::text_line(
                     if asks > 0 { Kind::Warn } else { Kind::Ok },
@@ -372,7 +429,14 @@ impl ZoningDraftWindowApp for App {
                         format!("{} değişiklik; kullanım alanlarının toplamı korunuyor, mevzuatın sorduğu bir konu yok.", s.changes.len())
                     },
                 ));
-                words::text_line(Kind::Ok, format!("Kaydedilebilir: “{}”, {} değişiklik.", s.id.trim(), s.changes.len()))
+                words::text_line(
+                    Kind::Ok,
+                    format!(
+                        "Kaydedilebilir: “{}”, {} değişiklik.",
+                        s.id.trim(),
+                        s.changes.len()
+                    ),
+                )
             }
             Some(Err(why)) => words::text_line(Kind::Info, why.clone()),
             None => words::text_line(Kind::Info, "Önizleme yok."),
@@ -389,20 +453,34 @@ impl ZoningDraftWindowApp for App {
                         value_word(&c.field, &c.value),
                     ]);
                 }
-                vec![col("Karar", 140.0), col("Alan", 140.0), col("Önce", 200.0), col("Sonra", 200.0)]
+                vec![
+                    col("Karar", 140.0),
+                    col("Alan", 140.0),
+                    col("Önce", 200.0),
+                    col("Sonra", 200.0),
+                ]
             }
             Show::Uses => {
                 if let Some(Ok(r)) = &s.answer {
                     for u in &r.uses {
                         table_rows.push(vec![
-                            if u.usage.is_empty() { "Kullanımı yok".to_owned() } else { value_word("Kullanim", &u.usage) },
+                            if u.usage.is_empty() {
+                                "Kullanımı yok".to_owned()
+                            } else {
+                                value_word("Kullanim", &u.usage)
+                            },
                             f.area(u.before),
                             f.area(u.after),
                             f.area(u.difference),
                         ]);
                     }
                 }
-                vec![col("Kullanım", 220.0), num("Önce", 150.0), num("Sonra", 150.0), num("Fark", 150.0)]
+                vec![
+                    col("Kullanım", 220.0),
+                    num("Önce", 150.0),
+                    num("Sonra", 150.0),
+                    num("Fark", 150.0),
+                ]
             }
             Show::Findings => {
                 if let Some(Ok(r)) = &s.answer {
@@ -410,33 +488,71 @@ impl ZoningDraftWindowApp for App {
                         let (article, what) = asks(&x.kind);
                         table_rows.push(vec![
                             kind_word(&x.kind).to_owned(),
-                            x.uid.as_deref().map(|u| self.zoning_draft_name(u)).or_else(|| x.usage.as_deref().map(|u| value_word("Kullanim", u))).unwrap_or_default(),
+                            x.uid
+                                .as_deref()
+                                .map(|u| self.zoning_draft_name(u))
+                                .or_else(|| x.usage.as_deref().map(|u| value_word("Kullanim", u)))
+                                .unwrap_or_default(),
                             x.area.map(|a| f.area(a)).unwrap_or_default(),
                             article.to_owned(),
                             what.to_owned(),
                         ]);
                     }
                 }
-                vec![col("Konu", 170.0), col("Karar", 90.0), num("Alan", 110.0), col("Madde", 120.0), col("Ne ister", 420.0)]
+                vec![
+                    col("Konu", 170.0),
+                    col("Karar", 90.0),
+                    num("Alan", 110.0),
+                    col("Madde", 120.0),
+                    col("Ne ister", 420.0),
+                ]
             }
         };
         let empty = match s.show {
-            Show::Changes => "Değişiklik yok: karar alanını, alanı ve yeni değeri seçip Değişikliğe ekle'ye basın.",
+            Show::Changes => {
+                "Değişiklik yok: karar alanını, alanı ve yeni değeri seçip Değişikliğe ekle'ye basın."
+            }
             Show::Uses => "Planın karar alanı yok.",
             Show::Findings => "Mevzuatın sorduğu bir konu yok.",
         };
-        let chosen = if s.show == Show::Changes { s.chosen } else { None };
-        let table = sheet_chosen(cols, table_rows, empty, 220.0, chosen, |i| msg(Event::Choose(i)));
-        let choose = Segmented::new([Show::Changes, Show::Uses, Show::Findings], s.show, |v| msg(Event::Show(v)));
+        let chosen = if s.show == Show::Changes {
+            s.chosen
+        } else {
+            None
+        };
+        let table = sheet_chosen(cols, table_rows, empty, 220.0, chosen, |i| {
+            msg(Event::Choose(i))
+        });
+        let choose = Segmented::new([Show::Changes, Show::Uses, Show::Findings], s.show, |v| {
+            msg(Event::Show(v))
+        });
         let text = |placeholder: &'static str, value: &str, on: fn(String) -> Event| {
-            kentos_ui::widget::text_field(placeholder, value).on_input(move |v| msg(on(v))).width(Length::Fill)
+            kentos_ui::widget::text_field(placeholder, value)
+                .on_input(move |v| msg(on(v)))
+                .width(Length::Fill)
         };
         let mut draft_choices = vec![(NEW.to_owned(), "Yeni taslak".to_owned())];
-        draft_choices.extend(kept.iter().map(|d| (d.id.clone(), format!("{} · {}", d.id, d.plan))));
-        let current = if is_kept { s.id.trim().to_owned() } else { NEW.to_owned() };
+        draft_choices.extend(
+            kept.iter()
+                .map(|d| (d.id.clone(), format!("{} · {}", d.id, d.plan))),
+        );
+        let current = if is_kept {
+            s.id.trim().to_owned()
+        } else {
+            NEW.to_owned()
+        };
         let plans: Vec<(String, String)> = zoning_draft::plans(&doc.model)
             .into_iter()
-            .map(|(id, level)| (id.clone(), if level.is_empty() { id } else { format!("{id} ({})", level.to_uppercase()) }))
+            .map(|(id, level)| {
+                (
+                    id.clone(),
+                    if level.is_empty() {
+                        id
+                    } else {
+                        format!("{id} ({})", level.to_uppercase())
+                    },
+                )
+            })
             .collect();
         let areas: Vec<(String, String)> = self
             .zoning_draft_areas()
@@ -446,8 +562,14 @@ impl ZoningDraftWindowApp for App {
                 (u, format!("{shown} · {}", value_word("Kullanim", &usage)))
             })
             .collect();
-        let field_choices: Vec<(String, String)> = DRAFT_FIELDS.iter().map(|f| ((*f).to_owned(), field_word(f).to_owned())).collect();
-        let now = value_word(&s.field, &zoning_draft::value(&doc.model, &s.area, &s.field));
+        let field_choices: Vec<(String, String)> = DRAFT_FIELDS
+            .iter()
+            .map(|f| ((*f).to_owned(), field_word(f).to_owned()))
+            .collect();
+        let now = value_word(
+            &s.field,
+            &zoning_draft::value(&doc.model, &s.area, &s.field),
+        );
         let value: Element<'_, Message> = match domain_of(&s.field) {
             Some(d) => {
                 let mut c = vec![(String::new(), "— seçin".to_owned())];

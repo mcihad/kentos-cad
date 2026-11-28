@@ -246,7 +246,9 @@ fn side_records<'d>(
     node: &LayerNode,
     rows: &dyn Fn(&LayerNode) -> SourceRows,
 ) -> Result<Option<Records<'d>>, String> {
-    let held = doc.by_layer_with_uids(&node.id).map(|(u, e)| (u, Cow::Borrowed(e)));
+    let held = doc
+        .by_layer_with_uids(&node.id)
+        .map(|(u, e)| (u, Cow::Borrowed(e)));
     let Some(data) = &node.data else {
         return Ok(Some(held.collect()));
     };
@@ -264,7 +266,12 @@ fn side_records<'d>(
     let mut out: Records<'d> = read
         .iter()
         .filter(|(k, _)| !hidden.contains(k))
-        .map(|(k, e)| (crate::geopackage::data_row_uid(&data.address, &data.table, *k), Cow::Owned(e.clone())))
+        .map(|(k, e)| {
+            (
+                crate::geopackage::data_row_uid(&data.address, &data.table, *k),
+                Cow::Owned(e.clone()),
+            )
+        })
         .collect();
     out.extend(held);
     Ok(Some(out))
@@ -272,7 +279,9 @@ fn side_records<'d>(
 
 /// A data layer's rows read from its source now (`cad.joins.query`'s reading); another layer's are the drawing's.
 fn rows_now(doc: &Document, node: &LayerNode) -> SourceRows {
-    match crate::data_write::all_records(node, doc.settings(), &doc.data_hidden(&node.id), &|| false) {
+    match crate::data_write::all_records(node, doc.settings(), &doc.data_hidden(&node.id), &|| {
+        false
+    }) {
         Ok(read) => SourceRows::Ready(Arc::new(read.rows)),
         Err(why) => SourceRows::Failed(why),
     }
@@ -282,7 +291,10 @@ fn rows_now(doc: &Document, node: &LayerNode) -> SourceRows {
 fn waiting(node: &LayerNode) -> JoinRead {
     JoinRead {
         broken: None,
-        waiting: Some(format!("“{}” veri katmanının satırları kaynaktan okunuyor…", node.name)),
+        waiting: Some(format!(
+            "“{}” veri katmanının satırları kaynaktan okunuyor…",
+            node.name
+        )),
         refused: None,
         columns: Vec::new(),
         rows: Vec::new(),
@@ -307,7 +319,11 @@ pub fn read(doc: &Document, v: &JoinView) -> JoinRead {
 }
 
 /// The view `v` read from `doc` as it is now, a data layer's rows as `rows` gives them (docs/adr/9134).
-pub fn read_with(doc: &Document, v: &JoinView, rows: &dyn Fn(&LayerNode) -> SourceRows) -> JoinRead {
+pub fn read_with(
+    doc: &Document,
+    v: &JoinView,
+    rows: &dyn Fn(&LayerNode) -> SourceRows,
+) -> JoinRead {
     if let Some(why) = broken_reason(doc, v) {
         return broken(why);
     }
@@ -321,7 +337,9 @@ pub fn read_with(doc: &Document, v: &JoinView, rows: &dyn Fn(&LayerNode) -> Sour
     let left_read = side_records(doc, left, rows);
     // The joined layer's records when it is a data layer (a layer of the drawing's are borrowed below).
     let right_read = match (&v.source, layer(doc, &v.with)) {
-        (None, Some(right)) if right.data.is_some() => Some((right, side_records(doc, right, rows))),
+        (None, Some(right)) if right.data.is_some() => {
+            Some((right, side_records(doc, right, rows)))
+        }
         _ => None,
     };
     let lefts = match left_read {

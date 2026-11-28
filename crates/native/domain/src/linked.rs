@@ -69,14 +69,25 @@ fn point_at(object: &Entity) -> Option<Vec2> {
 /// A point's name `text` after a step that changed its point from `before` (none: the step made it) to `object`:
 /// moved as far as the point, unless the step `moved` the text itself; its text the point's name. None when the
 /// point has no name now: the text goes with it.
-fn named(text: &TextEntity, before: Option<&Entity>, object: &Entity, moved: bool) -> Option<TextEntity> {
+fn named(
+    text: &TextEntity,
+    before: Option<&Entity>,
+    object: &Entity,
+    moved: bool,
+) -> Option<TextEntity> {
     let name = object.base().label.as_deref().filter(|l| !l.is_empty())?;
     let shift = match (before.and_then(point_at), point_at(object)) {
-        (Some(a), Some(b)) if !moved => Vec2 { x: b.x - a.x, y: b.y - a.y },
+        (Some(a), Some(b)) if !moved => Vec2 {
+            x: b.x - a.x,
+            y: b.y - a.y,
+        },
         _ => Vec2 { x: 0.0, y: 0.0 },
     };
     Some(TextEntity {
-        p: Vec2 { x: text.p.x + shift.x, y: text.p.y + shift.y },
+        p: Vec2 {
+            x: text.p.x + shift.x,
+            y: text.p.y + shift.y,
+        },
         text: name.to_owned(),
         ..text.clone()
     })
@@ -185,7 +196,9 @@ impl Document {
                 objects.push(stored.uid);
             }
             if let Some(before) = before {
-                befores.entry(stored.uid).or_insert_with(|| before.entity.clone());
+                befores
+                    .entry(stored.uid)
+                    .or_insert_with(|| before.entity.clone());
             }
             if let (Some(before), Entity::Text(after)) = (before, &*stored.entity)
                 && let Entity::Text(was) = &*before.entity

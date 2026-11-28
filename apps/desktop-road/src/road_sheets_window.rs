@@ -13,18 +13,18 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{CommandWarning, RoadSheetsLaid, RoadSheetsPlan};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_alignments, road_sheets};
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::label;
 
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -95,7 +95,10 @@ fn number(text: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("“{t}” bir sayı değil."))
+    t.replace(',', ".")
+        .parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("“{t}” bir sayı değil."))
 }
 
 impl Window {
@@ -110,8 +113,11 @@ impl Window {
         let at = if self.profile.is_some() && self.fields[0].trim().is_empty() && auto.is_some() {
             auto
         } else if self.profile.is_some() {
-            let parts: Vec<Option<f64>> =
-                self.fields[0].split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
+            let parts: Vec<Option<f64>> = self.fields[0]
+                .split([';', ' '])
+                .filter(|s| !s.is_empty())
+                .map(|s| number(s).ok().flatten())
+                .collect();
             match parts[..] {
                 [Some(x), Some(y)] => Some([x, y]),
                 _ => return Err("Boykesit görünümlerinin yerini “Y; X” olarak yazın.".into()),
@@ -133,10 +139,23 @@ impl Window {
             layer_id: self.profile.as_ref().and(self.layer.clone()),
             at,
             exaggeration: number(&self.fields[2])?,
-            bands: (self.profile.is_some() && self.kgm).then_some(kentos_commands::ProfileBands::Kgm),
-            superelevation: if self.profile.is_some() && self.kgm { self.dever.clone() } else { None },
-            corridor: if self.profile.is_some() && self.kgm { self.corridor.clone() } else { None },
-            haul: if self.profile.is_some() && self.kgm { self.haul.clone() } else { None },
+            bands: (self.profile.is_some() && self.kgm)
+                .then_some(kentos_commands::ProfileBands::Kgm),
+            superelevation: if self.profile.is_some() && self.kgm {
+                self.dever.clone()
+            } else {
+                None
+            },
+            corridor: if self.profile.is_some() && self.kgm {
+                self.corridor.clone()
+            } else {
+                None
+            },
+            haul: if self.profile.is_some() && self.kgm {
+                self.haul.clone()
+            } else {
+                None
+            },
             match_lines: (self.profile.is_some() && self.match_lines).then_some(true),
             scale,
             overlap: number(&self.fields[3])?,
@@ -170,19 +189,39 @@ impl RoadSheetsWindowApp for App {
             self.warn("Yol paftaları yalnız yol projesinde (KentOS Yol) olur.".to_owned());
             return;
         }
-        let Some(first) = doc.model.road_alignments().iter().find(|a| a.offset_of.is_none()) else {
-            self.warn("Yol paftaları bir aksın paftalarıdır: önce Güzergâh'ta bir aks oluşturun.".to_owned());
+        let Some(first) = doc
+            .model
+            .road_alignments()
+            .iter()
+            .find(|a| a.offset_of.is_none())
+        else {
+            self.warn(
+                "Yol paftaları bir aksın paftalarıdır: önce Güzergâh'ta bir aks oluşturun."
+                    .to_owned(),
+            );
             return;
         };
         let alignment = first.id.clone();
-        let profile = doc.model.road_profiles().iter().find(|p| p.alignment == alignment).map(|p| p.id.clone());
+        let profile = doc
+            .model
+            .road_profiles()
+            .iter()
+            .find(|p| p.alignment == alignment)
+            .map(|p| p.id.clone());
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         self.modules.road_mut().road_sheets_window = Some(Box::new(Window {
             alignment: Some(alignment),
             profile,
             layer,
             // Docs/adr/0991: Yer empty, the views go under the drawing.
-            fields: [String::new(), "1000".into(), "5".into(), String::new(), String::new(), String::new()],
+            fields: [
+                String::new(),
+                "1000".into(),
+                "5".into(),
+                String::new(),
+                String::new(),
+                String::new(),
+            ],
             kgm: false,
             dever: None,
             corridor: None,
@@ -203,16 +242,32 @@ impl RoadSheetsWindowApp for App {
         let line = w
             .alignment
             .as_ref()
-            .and_then(|id| road_alignments::made_alignments(&doc.model).into_iter().find(|(d, _)| &d.id == id))
+            .and_then(|id| {
+                road_alignments::made_alignments(&doc.model)
+                    .into_iter()
+                    .find(|(d, _)| &d.id == id)
+            })
             .and_then(|(_, b)| b.ok())
             .map(|b| {
                 let n = 400;
-                (0..=n).filter_map(|i| b.core.at(b.core.length * i as f64 / n as f64)).map(|p| [p.x, p.y]).collect()
+                (0..=n)
+                    .filter_map(|i| b.core.at(b.core.length * i as f64 / n as f64))
+                    .map(|p| [p.x, p.y])
+                    .collect()
             })
             .unwrap_or_default();
         w.preview = match input.and_then(|q| road_sheets::preview(&doc.model, &q)) {
-            Err(why) => Preview { why: Some(why), line, ..Preview::default() },
-            Ok((laid, warnings)) => Preview { laid: Some(laid), warnings, why: None, line },
+            Err(why) => Preview {
+                why: Some(why),
+                line,
+                ..Preview::default()
+            },
+            Ok((laid, warnings)) => Preview {
+                laid: Some(laid),
+                warnings,
+                why: None,
+                line,
+            },
         };
     }
 
@@ -260,18 +315,28 @@ impl RoadSheetsWindowApp for App {
         let up = match &self.document {
             Some(doc) => {
                 let rows = if probe.corridor.is_some() {
-                    kentos_native_application::road_profiles_draw::corridor_rows_height(&doc.model, 2.5)
+                    kentos_native_application::road_profiles_draw::corridor_rows_height(
+                        &doc.model, 2.5,
+                    )
                 } else {
                     0.0
                 };
                 road_sheets::preview(&doc.model, &probe)
-                    .map(|(laid, _)| laid.sheets.iter().filter_map(|s| s.view).map(|v| v[1][1]).fold(0.0, f64::max) + rows)
+                    .map(|(laid, _)| {
+                        laid.sheets
+                            .iter()
+                            .filter_map(|s| s.view)
+                            .map(|v| v[1][1])
+                            .fold(0.0, f64::max)
+                            + rows
+                    })
                     .unwrap_or(0.0)
             }
             None => 0.0,
         };
         let at = self.under_drawing(up);
-        self.modules.road()
+        self.modules
+            .road()
             .road_sheets_window
             .as_ref()
             .map_or(Err(String::new()), |w| w.input_with(Some(at)))
@@ -289,14 +354,23 @@ impl RoadSheetsWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let result = road_sheets::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        let Some(out) = self.answered(result) else { return Task::none() };
+        let Some(out) = self.answered(result) else {
+            return Task::none();
+        };
         let views = out.sheets.iter().filter(|s| s.view.is_some()).count();
         self.say(
             Level::Success,
-            format!("“{}”: {} pafta, {views} boykesit görünümü ({}–{}).", out.name, out.sheets.len(),
-                out.sheets.first().map_or("", |s| s.number.as_str()), out.sheets.last().map_or("", |s| s.number.as_str())),
+            format!(
+                "“{}”: {} pafta, {views} boykesit görünümü ({}–{}).",
+                out.name,
+                out.sheets.len(),
+                out.sheets.first().map_or("", |s| s.number.as_str()),
+                out.sheets.last().map_or("", |s| s.number.as_str())
+            ),
         );
         self.modules.road_mut().road_sheets_window = None;
         self.dialog = None;
@@ -308,45 +382,66 @@ impl RoadSheetsWindowApp for App {
         let Some(w) = &self.modules.road().road_sheets_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let model = self.document.as_ref().map(|d| &d.model);
         let alignments: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
-            m.road_alignments().iter().filter(|a| a.offset_of.is_none()).map(|a| (a.id.clone(), a.name.clone())).collect()
+            m.road_alignments()
+                .iter()
+                .filter(|a| a.offset_of.is_none())
+                .map(|a| (a.id.clone(), a.name.clone()))
+                .collect()
         });
         let ids: Vec<String> = alignments.iter().map(|a| a.0.clone()).collect();
         let on_alignment = Select::new(
             alignments.iter().map(|a| Choice::new(a.1.clone())),
-            w.alignment.as_ref().and_then(|c| ids.iter().position(|i| i == c)),
+            w.alignment
+                .as_ref()
+                .and_then(|c| ids.iter().position(|i| i == c)),
             move |i| msg(Event::Alignment(ids[i].clone())),
         )
         .placeholder("Aks");
-        let profiles: Vec<(Option<String>, String)> = std::iter::once((None, "Yok (yalnız plan)".to_owned()))
-            .chain(model.map_or_else(Vec::new, |m| {
-                m.road_profiles()
-                    .iter()
-                    .filter(|p| Some(&p.alignment) == w.alignment.as_ref())
-                    .map(|p| (Some(p.id.clone()), p.name.clone()))
-                    .collect()
-            }))
-            .collect();
+        let profiles: Vec<(Option<String>, String)> =
+            std::iter::once((None, "Yok (yalnız plan)".to_owned()))
+                .chain(model.map_or_else(Vec::new, |m| {
+                    m.road_profiles()
+                        .iter()
+                        .filter(|p| Some(&p.alignment) == w.alignment.as_ref())
+                        .map(|p| (Some(p.id.clone()), p.name.clone()))
+                        .collect()
+                }))
+                .collect();
         let pids: Vec<Option<String>> = profiles.iter().map(|p| p.0.clone()).collect();
         let on_profile = Select::new(
             profiles.iter().map(|p| Choice::new(p.1.clone())),
             pids.iter().position(|p| *p == w.profile),
             move |i| msg(Event::Profile(pids[i].clone())),
         );
-        let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let lids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let on_layer = Select::new(
             lnames.iter().map(|n| Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+            w.layer
+                .as_ref()
+                .and_then(|l| lids.iter().position(|id| id == l)),
             move |i| msg(Event::Layer(lids[i].clone())),
         )
         .placeholder("Katman");
         let field = |hint: &'static str, k: usize, width: f32| {
-            kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width)
+            kentos_ui::widget::text_field(hint, &w.fields[k])
+                .on_input(move |t| msg(Event::Field(k, t)))
+                .width(width)
         };
         let mut top = row![
             words::field("Aks", container(on_alignment).width(170), None),
@@ -356,7 +451,11 @@ impl RoadSheetsWindowApp for App {
         if w.profile.is_some() {
             top = top
                 .push(words::field("Katman", container(on_layer).width(150), None))
-                .push(words::field("Yer (Y; X)", field("Çizimin altı", 0, 130.0), None))
+                .push(words::field(
+                    "Yer (Y; X)",
+                    field("Çizimin altı", 0, 130.0),
+                    None,
+                ))
                 .push(words::field("Abartma", field("10", 2, 70.0), None));
         }
         top = top
@@ -364,16 +463,22 @@ impl RoadSheetsWindowApp for App {
             .push(words::field("Bindirme (m)", field("0", 3, 90.0), None))
             .push(words::field("Baş km (m)", field("baştan", 4, 90.0), None))
             .push(words::field("Son km (m)", field("sona", 5, 90.0), None));
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top.align_y(iced::alignment::Vertical::Bottom));
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(10.0)
+            .push(top.align_y(iced::alignment::Vertical::Bottom));
         // Docs/adr/0980: the profile views' bands, KentOS's or KGM's 2019 order with its Dever band's schedule.
         if w.profile.is_some() {
-            let bands = Select::new(["KentOS", "KGM 2019"].into_iter().map(Choice::new), Some(usize::from(w.kgm)), |i| {
-                msg(Event::Kgm(i == 1))
-            });
+            let bands = Select::new(
+                ["KentOS", "KGM 2019"].into_iter().map(Choice::new),
+                Some(usize::from(w.kgm)),
+                |i| msg(Event::Kgm(i == 1)),
+            );
             // Docs/adr/0998: Civil 3D's match lines; KGM's sheets have none.
-            let lines = Select::new(["Yok", "Var"].into_iter().map(Choice::new), Some(usize::from(w.match_lines)), |i| {
-                msg(Event::MatchLines(i == 1))
-            });
+            let lines = Select::new(
+                ["Yok", "Var"].into_iter().map(Choice::new),
+                Some(usize::from(w.match_lines)),
+                |i| msg(Event::MatchLines(i == 1)),
+            );
             let mut second = row![
                 words::field("Eşleşme çizgisi", container(lines).width(110), None),
                 words::field("Bantlar", container(bands).width(130), None),
@@ -392,14 +497,26 @@ impl RoadSheetsWindowApp for App {
                             .collect()
                     })
                     .unwrap_or_default();
-                let chosen = w.dever.as_ref().and_then(|id| schedules.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
-                let ids: Vec<Option<String>> = std::iter::once(None).chain(schedules.iter().map(|(i, _)| Some(i.clone()))).collect();
+                let chosen = w
+                    .dever
+                    .as_ref()
+                    .and_then(|id| schedules.iter().position(|(i, _)| i == id))
+                    .map_or(0, |i| i + 1);
+                let ids: Vec<Option<String>> = std::iter::once(None)
+                    .chain(schedules.iter().map(|(i, _)| Some(i.clone())))
+                    .collect();
                 let dever = Select::new(
-                    std::iter::once("Çizelge yok".to_owned()).chain(schedules.iter().map(|(_, n)| n.clone())).map(Choice::new),
+                    std::iter::once("Çizelge yok".to_owned())
+                        .chain(schedules.iter().map(|(_, n)| n.clone()))
+                        .map(Choice::new),
                     Some(chosen),
                     move |i| msg(Event::Dever(ids[i].clone())),
                 );
-                second = second.push(words::field("Dever bandı", container(dever).width(170), None));
+                second = second.push(words::field(
+                    "Dever bandı",
+                    container(dever).width(170),
+                    None,
+                ));
                 // Docs/adr/0989: the corridor KGM's slope and platform rows read.
                 let corridors: Vec<(String, String)> = self
                     .document
@@ -413,20 +530,43 @@ impl RoadSheetsWindowApp for App {
                             .collect()
                     })
                     .unwrap_or_default();
-                let chosen = w.corridor.as_ref().and_then(|id| corridors.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
-                let ids: Vec<Option<String>> = std::iter::once(None).chain(corridors.iter().map(|(i, _)| Some(i.clone()))).collect();
+                let chosen = w
+                    .corridor
+                    .as_ref()
+                    .and_then(|id| corridors.iter().position(|(i, _)| i == id))
+                    .map_or(0, |i| i + 1);
+                let ids: Vec<Option<String>> = std::iter::once(None)
+                    .chain(corridors.iter().map(|(i, _)| Some(i.clone())))
+                    .collect();
                 let corridor = Select::new(
-                    std::iter::once("Satır yok".to_owned()).chain(corridors.iter().map(|(_, n)| n.clone())).map(Choice::new),
+                    std::iter::once("Satır yok".to_owned())
+                        .chain(corridors.iter().map(|(_, n)| n.clone()))
+                        .map(Choice::new),
                     Some(chosen),
                     move |i| msg(Event::Corridor(ids[i].clone())),
                 );
-                second = second.push(words::field("Şev ve platform", container(corridor).width(170), None));
+                second = second.push(words::field(
+                    "Şev ve platform",
+                    container(corridor).width(170),
+                    None,
+                ));
                 // Docs/adr/0995: the mass haul diagram KGM's earthwork rows read.
-                let hauls = crate::road_place::hauls_on(self.document.as_ref().map(|d| &d.model), w.alignment.as_deref());
-                let chosen = w.haul.as_ref().and_then(|id| hauls.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
-                let ids: Vec<Option<String>> = std::iter::once(None).chain(hauls.iter().map(|(i, _)| Some(i.clone()))).collect();
+                let hauls = crate::road_place::hauls_on(
+                    self.document.as_ref().map(|d| &d.model),
+                    w.alignment.as_deref(),
+                );
+                let chosen = w
+                    .haul
+                    .as_ref()
+                    .and_then(|id| hauls.iter().position(|(i, _)| i == id))
+                    .map_or(0, |i| i + 1);
+                let ids: Vec<Option<String>> = std::iter::once(None)
+                    .chain(hauls.iter().map(|(i, _)| Some(i.clone())))
+                    .collect();
                 let haul = Select::new(
-                    std::iter::once("Satır yok".to_owned()).chain(hauls.iter().map(|(_, n)| n.clone())).map(Choice::new),
+                    std::iter::once("Satır yok".to_owned())
+                        .chain(hauls.iter().map(|(_, n)| n.clone()))
+                        .map(Choice::new),
                     Some(chosen),
                     move |i| msg(Event::Haul(ids[i].clone())),
                 );
@@ -444,15 +584,32 @@ impl RoadSheetsWindowApp for App {
                     l.length,
                     l.height,
                     l.scale,
-                    if views > 0 { format!(" · {views} boykesit görünümü çizilecek") } else { String::new() }
+                    if views > 0 {
+                        format!(" · {views} boykesit görünümü çizilecek")
+                    } else {
+                        String::new()
+                    }
                 )));
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
-                let picture = crate::picture::picture(iced::widget::canvas(Plan { laid: l, line: &w.preview.line }).width(Fill).height(Fill), TITLE);
+                let picture = crate::picture::picture(
+                    iced::widget::canvas(Plan {
+                        laid: l,
+                        line: &w.preview.line,
+                    })
+                    .width(Fill)
+                    .height(Fill),
+                    TITLE,
+                );
                 use crate::road_dialog::{col, num};
                 let list = crate::road_dialog::sheet_fill(
-                    vec![col("No", 64.0), col("Km", 230.0), num("Dönüş", 80.0), col("", 90.0)],
+                    vec![
+                        col("No", 64.0),
+                        col("Km", 230.0),
+                        num("Dönüş", 80.0),
+                        col("", 90.0),
+                    ],
                     l.sheets
                         .iter()
                         .map(|s| {
@@ -467,25 +624,27 @@ impl RoadSheetsWindowApp for App {
                     "Pafta yok",
                 );
                 body = body.push_grow(
-                    row![picture, list]
-                        .spacing(12)
-                        .height(Fill),
+                    row![picture, list].spacing(12).height(Fill),
                     typography::scaled(300.0),
                 );
             }
             _ => {}
         }
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                label::caption("Boykesit görünümleri, takım ve paftalar tek geri alma adımı.").style(muted),
-                space::horizontal().width(Fill),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-                words::primary(MAKE, w.preview.laid.as_ref().map(|_| msg(Event::Make))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
+        let footer = row![
+            label::caption("Boykesit görünümleri, takım ve paftalar tek geri alma adımı.")
+                .style(muted),
+            space::horizontal().width(Fill),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+            words::primary(MAKE, w.preview.laid.as_ref().map(|_| msg(Event::Make))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1080.0)
+            .modal(msg(Event::Close))
     }
 
     fn road_sheets_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -513,14 +672,22 @@ struct Plan<'a> {
 impl canvas::Program<Message> for Plan<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let (hw, hh) = (0.5 * self.laid.length, 0.5 * self.laid.height);
         let corners = |c: [f64; 2], deg: f64| {
             let t = deg.to_radians();
             let (co, si) = (t.cos(), t.sin());
-            [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]].map(|[u, v]| [c[0] + u * co - v * si, c[1] + u * si + v * co])
+            [[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]]
+                .map(|[u, v]| [c[0] + u * co - v * si, c[1] + u * si + v * co])
         };
         let mut pts: Vec<[f64; 2]> = self.line.to_vec();
         for s in &self.laid.sheets {
@@ -529,7 +696,12 @@ impl canvas::Program<Message> for Plan<'_> {
         if pts.is_empty() {
             return vec![frame.into_geometry()];
         }
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in &pts {
             x0 = x0.min(p[0]);
             x1 = x1.max(p[0]);
@@ -537,7 +709,8 @@ impl canvas::Program<Message> for Plan<'_> {
             y1 = y1.max(p[1]);
         }
         let pad = 14.0;
-        let scale = ((bounds.width - 2.0 * pad) as f64 / (x1 - x0).max(1e-6)).min((bounds.height - 2.0 * pad) as f64 / (y1 - y0).max(1e-6));
+        let scale = ((bounds.width - 2.0 * pad) as f64 / (x1 - x0).max(1e-6))
+            .min((bounds.height - 2.0 * pad) as f64 / (y1 - y0).max(1e-6));
         let (cx, cy) = (0.5 * (x0 + x1), 0.5 * (y0 + y1));
         let at = |p: [f64; 2]| {
             Point::new(
@@ -574,7 +747,10 @@ impl canvas::Program<Message> for Plan<'_> {
                     b.line_to(at(*p));
                 }
             });
-            frame.stroke(&path, Stroke::default().with_width(1.6).with_color(tk.danger));
+            frame.stroke(
+                &path,
+                Stroke::default().with_width(1.6).with_color(tk.danger),
+            );
         }
         vec![frame.into_geometry()]
     }

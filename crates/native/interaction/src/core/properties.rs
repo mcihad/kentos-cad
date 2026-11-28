@@ -33,10 +33,16 @@ pub fn uids_of(doc: &Document, slots: &[Slot]) -> Vec<String> {
 /// Real model height, through the same semantic command used by Python and MCP.
 pub fn set_text_heights(doc: &mut Document, slots: &[Slot], height: f64) -> Vec<String> {
     let input = kentos_commands::TextsEdit {
-        edit: kentos_commands::TextEdit::Height { uids: uids_of(doc, slots), height },
+        edit: kentos_commands::TextEdit::Height {
+            uids: uids_of(doc, slots),
+            height,
+        },
         expected_revision: None,
     };
-    said(kentos_native_application::texts_edit::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::texts_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// Sets objects' layer, colour, symbol, attributes or label; what to say:
@@ -96,13 +102,18 @@ pub fn replace_block(doc: &mut Document, slot: Slot, to: kentos_commands::BlockI
         expected_revision: None,
     };
     said(kentos_native_application::blocks_replace::execute(
-        &mut ExecutionContext::new(doc), input,
+        &mut ExecutionContext::new(doc),
+        input,
     ))
 }
 
 /// A wall's own fields from Öznitelikler (docs/adr/0339 §6) through `cad.walls.edit`'s `set`, one undo step “Duvarı
 /// düzenle”; what to say: the command's warnings or refusal.
-pub fn edit_wall(doc: &mut Document, slot: Slot, change: kentos_commands::WallChange) -> Vec<String> {
+pub fn edit_wall(
+    doc: &mut Document,
+    slot: Slot,
+    change: kentos_commands::WallChange,
+) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
@@ -111,12 +122,19 @@ pub fn edit_wall(doc: &mut Document, slot: Slot, change: kentos_commands::WallCh
         operation: kentos_commands::WallsOperation::Set(change),
         expected_revision: None,
     };
-    said(kentos_native_application::walls_edit::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::walls_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// A space's field, or its boundary found again, from Öznitelikler (docs/adr/0342 §5): `operation` through
 /// `cad.spaces.edit`; what to say.
-pub fn edit_space(doc: &mut Document, slot: Slot, operation: kentos_commands::SpacesOperation) -> Vec<String> {
+pub fn edit_space(
+    doc: &mut Document,
+    slot: Slot,
+    operation: kentos_commands::SpacesOperation,
+) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
@@ -125,16 +143,30 @@ pub fn edit_space(doc: &mut Document, slot: Slot, operation: kentos_commands::Sp
         operation,
         expected_revision: None,
     };
-    said(kentos_native_application::spaces_edit::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::spaces_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// A slab's own field from Öznitelikler (docs/adr/0722 §6): through `cad.slabs.edit`; what to say.
-pub fn edit_slab(doc: &mut Document, slot: Slot, operation: kentos_commands::SlabsOperation) -> Vec<String> {
+pub fn edit_slab(
+    doc: &mut Document,
+    slot: Slot,
+    operation: kentos_commands::SlabsOperation,
+) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
-    let input = kentos_commands::SlabsEdit { uids: vec![uid.to_string()], operation, expected_revision: None };
-    said(kentos_native_application::slabs_edit::execute(&mut ExecutionContext::new(doc), input))
+    let input = kentos_commands::SlabsEdit {
+        uids: vec![uid.to_string()],
+        operation,
+        expected_revision: None,
+    };
+    said(kentos_native_application::slabs_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// A tag's template, frame, words' height or leader from Öznitelikler (docs/adr/0344 §5): through `cad.tags.edit`;
@@ -148,12 +180,19 @@ pub fn edit_tag(doc: &mut Document, slot: Slot, change: kentos_commands::TagChan
         change,
         expected_revision: None,
     };
-    said(kentos_native_application::tags_edit::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::tags_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// A view mark's field or target from Öznitelikler (docs/adr/0345 §5): `operation` through `cad.viewmarks.edit`; what
 /// to say.
-pub fn edit_viewmark(doc: &mut Document, slot: Slot, operation: kentos_commands::ViewMarksOperation) -> Vec<String> {
+pub fn edit_viewmark(
+    doc: &mut Document,
+    slot: Slot,
+    operation: kentos_commands::ViewMarksOperation,
+) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
@@ -162,19 +201,42 @@ pub fn edit_viewmark(doc: &mut Document, slot: Slot, operation: kentos_commands:
         operation,
         expected_revision: None,
     };
-    said(kentos_native_application::viewmarks_edit::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::viewmarks_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// A grid's, column's, stair's or ramp's field from Öznitelikler (docs/adr/0343 §5): `operation` through
 /// `cad.arch.edit`; what to say.
-pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_commands::ArchOperation) -> Vec<String> {
-    if let Some(mut info)=doc.get(slot).and_then(kentos_domain::space_follow::separator_path).and_then(|p|p.space_separator.clone()) {
-        let kentos_commands::ArchOperation::Set(change)=operation else{return vec!["Mahal ayırıcıda yalnız kat ve tadilat durumu bu menüden değişir.".into()]};
-        let allowed=kentos_commands::ArchChange {level:change.level.clone(),phase:change.phase,..Default::default()};
-        if *change!=allowed {return vec!["Bu mimari alan mahal ayırıcıda yok.".into()];}
-        if let Some(level)=change.level {info.level=level;}
-        if let Some(phase)=change.phase {info.phase=phase;}
-        return set_space_separator(doc,slot,Some(*info));
+pub fn edit_arch(
+    doc: &mut Document,
+    slot: Slot,
+    operation: kentos_commands::ArchOperation,
+) -> Vec<String> {
+    if let Some(mut info) = doc
+        .get(slot)
+        .and_then(kentos_domain::space_follow::separator_path)
+        .and_then(|p| p.space_separator.clone())
+    {
+        let kentos_commands::ArchOperation::Set(change) = operation else {
+            return vec!["Mahal ayırıcıda yalnız kat ve tadilat durumu bu menüden değişir.".into()];
+        };
+        let allowed = kentos_commands::ArchChange {
+            level: change.level.clone(),
+            phase: change.phase,
+            ..Default::default()
+        };
+        if *change != allowed {
+            return vec!["Bu mimari alan mahal ayırıcıda yok.".into()];
+        }
+        if let Some(level) = change.level {
+            info.level = level;
+        }
+        if let Some(phase) = change.phase {
+            info.phase = phase;
+        }
+        return set_space_separator(doc, slot, Some(*info));
     }
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
@@ -184,7 +246,10 @@ pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_commands::Arc
         operation,
         expected_revision: None,
     };
-    said(kentos_native_application::arch_edit::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::arch_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// Yangın dayanımı, Acil çıkış (a roof's Kaçış yolu), a wall's or a column's Taşıyıcı and a wall's or a slab's
@@ -214,7 +279,10 @@ pub fn edit_performance(
         },
         expected_revision: None,
     };
-    said(kentos_native_application::arch_performance::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::arch_performance::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// Baca alanı and Basınçlandırılır of a lift shaft room (docs/adr/8135, BYKHY 62/4): through
@@ -240,7 +308,10 @@ pub fn edit_shaft_vent(
         },
         expected_revision: None,
     };
-    said(kentos_native_application::arch_performance::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::arch_performance::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// Korunumlu of a shaft room and Yangın kesici of a wall or a slab (docs/adr/8136; BYKHY Ek-3/B 8, 10): through
@@ -264,14 +335,25 @@ pub fn edit_roles(
             load_bearing: None,
             external: None,
             shaft_vent: None,
-            protected: protected
-                .map(|v| v.map(|protected| kentos_commands::DeclaredProtected { protected, basis: author() })),
-            fire_stop: fire_stop
-                .map(|v| v.map(|fire_stop| kentos_commands::DeclaredFireStop { fire_stop, basis: author() })),
+            protected: protected.map(|v| {
+                v.map(|protected| kentos_commands::DeclaredProtected {
+                    protected,
+                    basis: author(),
+                })
+            }),
+            fire_stop: fire_stop.map(|v| {
+                v.map(|fire_stop| kentos_commands::DeclaredFireStop {
+                    fire_stop,
+                    basis: author(),
+                })
+            }),
         },
         expected_revision: None,
     };
-    said(kentos_native_application::arch_performance::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::arch_performance::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// Kat ▾ of several architectural objects (docs/adr/0717 §2): `level` given to them all through
@@ -290,20 +372,44 @@ pub fn assign_level(doc: &mut Document, slots: &[Slot], level: &str) -> Vec<Stri
         uids: Some(uids),
         expected_revision: None,
     };
-    said(kentos_native_application::levels_assign::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::levels_assign::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
-pub fn set_space_separator(doc:&mut Document,slot:Slot,arch:Option<kentos_commands::ArchInfo>)->Vec<String> {
-    let Some(uid)=doc.uid(slot) else{return Vec::new()};
-    let operation=match arch {
-        Some(arch)=>kentos_commands::SpaceSeparatorOperation::Set {uids:vec![uid.to_string()],arch:Some(arch)},
-        None=>kentos_commands::SpaceSeparatorOperation::Clear {uids:vec![uid.to_string()]},
+pub fn set_space_separator(
+    doc: &mut Document,
+    slot: Slot,
+    arch: Option<kentos_commands::ArchInfo>,
+) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
     };
-    said(kentos_native_application::spaces_separators::execute(&mut ExecutionContext::new(doc),kentos_commands::SpacesSeparators {operation,expected_revision:None}))
+    let operation = match arch {
+        Some(arch) => kentos_commands::SpaceSeparatorOperation::Set {
+            uids: vec![uid.to_string()],
+            arch: Some(arch),
+        },
+        None => kentos_commands::SpaceSeparatorOperation::Clear {
+            uids: vec![uid.to_string()],
+        },
+    };
+    said(kentos_native_application::spaces_separators::execute(
+        &mut ExecutionContext::new(doc),
+        kentos_commands::SpacesSeparators {
+            operation,
+            expected_revision: None,
+        },
+    ))
 }
 
 /// An opening's field or type from Öznitelikler (docs/adr/0341 §5): `operation` through `cad.openings.edit`; what to say.
-pub fn edit_opening(doc: &mut Document, slot: Slot, operation: kentos_commands::OpeningsOperation) -> Vec<String> {
+pub fn edit_opening(
+    doc: &mut Document,
+    slot: Slot,
+    operation: kentos_commands::OpeningsOperation,
+) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
@@ -312,29 +418,48 @@ pub fn edit_opening(doc: &mut Document, slot: Slot, operation: kentos_commands::
         operation,
         expected_revision: None,
     };
-    said(kentos_native_application::openings_edit::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::openings_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// Take a KentOS preset into the project and bind the selected opening to
 /// it together. A clearance or lock refusal rolls back both writes.
 pub fn take_opening_type(doc: &mut Document, slot: Slot, preset: &str) -> Vec<String> {
-    use kentos_commands::{OpeningTypesEdit, OpeningTypesOperation, OpeningsEdit, OpeningsOperation};
-    let Some(uid) = doc.uid(slot) else { return Vec::new() };
-    let Some(ready) = kentos_commands::builtin_opening_types().into_iter().find(|kind| kind.id == preset) else {
+    use kentos_commands::{
+        OpeningTypesEdit, OpeningTypesOperation, OpeningsEdit, OpeningsOperation,
+    };
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let Some(ready) = kentos_commands::builtin_opening_types()
+        .into_iter()
+        .find(|kind| kind.id == preset)
+    else {
         return vec!["Hazır tür bulunamadı.".into()];
     };
     let name = std::iter::once(ready.name.clone())
         .chain((2..).map(|i| format!("{} {i}", ready.name)))
-        .find(|name| !doc.opening_types().iter().any(|kind| kind.name.to_lowercase() == name.to_lowercase()))
+        .find(|name| {
+            !doc.opening_types()
+                .iter()
+                .any(|kind| kind.name.to_lowercase() == name.to_lowercase())
+        })
         .unwrap_or_else(|| ready.name.clone());
     let group = doc.begin_group("Proje tipi ata");
     let made = kentos_native_application::opening_types_edit::execute(
-        &mut ExecutionContext::new(doc), OpeningTypesEdit {
+        &mut ExecutionContext::new(doc),
+        OpeningTypesEdit {
             operation: OpeningTypesOperation::Define {
-                name: name.clone(), id: None, copy_of: Some(preset.to_owned()),
-                form: None, change: Default::default(),
+                name: name.clone(),
+                id: None,
+                copy_of: Some(preset.to_owned()),
+                form: None,
+                change: Default::default(),
             },
-            expected_revision: None, on_refused: Default::default(),
+            expected_revision: None,
+            on_refused: Default::default(),
         },
     );
     if !matches!(made, CommandResult::Completed { .. }) {
@@ -342,9 +467,14 @@ pub fn take_opening_type(doc: &mut Document, slot: Slot, preset: &str) -> Vec<St
         return said(made);
     }
     let bound = kentos_native_application::openings_edit::execute(
-        &mut ExecutionContext::new(doc), OpeningsEdit {
+        &mut ExecutionContext::new(doc),
+        OpeningsEdit {
             uids: vec![uid.to_string()],
-            operation: OpeningsOperation::ReplaceType { from: None, to: name, level: None },
+            operation: OpeningsOperation::ReplaceType {
+                from: None,
+                to: name,
+                level: None,
+            },
             expected_revision: None,
         },
     );
@@ -358,22 +488,49 @@ pub fn take_opening_type(doc: &mut Document, slot: Slot, preset: &str) -> Vec<St
 
 /// A component's or a slab's project material from Öznitelikler (docs/adr/0785): `operation` through
 /// `cad.materials.edit`; what to say.
-pub fn edit_material(doc: &mut Document, operation: kentos_commands::MaterialsOperation) -> Vec<String> {
-    let input = kentos_commands::MaterialsEdit { operation, expected_revision: None };
-    said(kentos_native_application::materials_edit::execute(&mut ExecutionContext::new(doc), input))
+pub fn edit_material(
+    doc: &mut Document,
+    operation: kentos_commands::MaterialsOperation,
+) -> Vec<String> {
+    let input = kentos_commands::MaterialsEdit {
+        operation,
+        expected_revision: None,
+    };
+    said(kentos_native_application::materials_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// A room module's action from Öznitelikler (docs/adr/0775 §3): `operation` through `cad.modules.edit`; what to say.
-pub fn edit_module(doc: &mut Document, operation: kentos_commands::ModulesOperation) -> Vec<String> {
-    let input = kentos_commands::ModulesEdit { operation, expected_revision: None };
-    said(kentos_native_application::modules_edit::execute(&mut ExecutionContext::new(doc), input))
+pub fn edit_module(
+    doc: &mut Document,
+    operation: kentos_commands::ModulesOperation,
+) -> Vec<String> {
+    let input = kentos_commands::ModulesEdit {
+        operation,
+        expected_revision: None,
+    };
+    said(kentos_native_application::modules_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// A derived interior elevation's action from Öznitelikler (docs/adr/0799 §5): Yeniden üret or Bağı kopar through
 /// `cad.elevations.edit`; what to say.
-pub fn edit_elevation(doc: &mut Document, operation: kentos_commands::ElevationsOperation) -> Vec<String> {
-    let input = kentos_commands::ElevationsEdit { operation, expected_revision: None };
-    said(kentos_native_application::elevations_edit::execute(&mut ExecutionContext::new(doc), input))
+pub fn edit_elevation(
+    doc: &mut Document,
+    operation: kentos_commands::ElevationsOperation,
+) -> Vec<String> {
+    let input = kentos_commands::ElevationsEdit {
+        operation,
+        expected_revision: None,
+    };
+    said(kentos_native_application::elevations_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// A section's Yeniden çiz from Öznitelikler (docs/adr/8042 §5): `operation` through `cad.sections.edit`; what to say.
@@ -405,12 +562,19 @@ pub fn edit_wall_op(
         operation,
         expected_revision: None,
     };
-    said(kentos_native_application::walls_edit::execute(&mut ExecutionContext::new(doc), input))
+    said(kentos_native_application::walls_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    ))
 }
 
 /// Sınırı yeniden oluştur from Öznitelikler (docs/adr/0329 §4): the hatch's boundary written as `form` on its layer,
 /// the hatch then following it, through `cad.hatches.edit`; what to say: the command's warnings or refusal.
-pub fn recreate_boundary(doc: &mut Document, slot: Slot, form: kentos_commands::BoundaryForm) -> Vec<String> {
+pub fn recreate_boundary(
+    doc: &mut Document,
+    slot: Slot,
+    form: kentos_commands::BoundaryForm,
+) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
@@ -510,7 +674,9 @@ pub fn apply_table_style(doc: &mut Document, slots: &[Slot], id: Option<&str>) -
         .iter()
         .filter_map(|&slot| {
             let entity = doc.get(slot)?;
-            let Entity::Table(t) = entity else { return None };
+            let Entity::Table(t) = entity else {
+                return None;
+            };
             if t.table_style.as_deref() == id {
                 return None;
             }
@@ -518,13 +684,20 @@ pub fn apply_table_style(doc: &mut Document, slots: &[Slot], id: Option<&str>) -
             if let kentos_commands::EntityGeometry::Table { table_style, .. } = &mut geometry {
                 *table_style = Some(id.map(str::to_owned));
             }
-            Some(EntityEdit::Update { uid: doc.uid(slot)?.to_string(), geometry })
+            Some(EntityEdit::Update {
+                uid: doc.uid(slot)?.to_string(),
+                geometry,
+            })
         })
         .collect();
     if changes.is_empty() {
         return Vec::new();
     }
-    let input = EntitiesEdit { operation: EditOperation::Properties, changes, expected_revision: None };
+    let input = EntitiesEdit {
+        operation: EditOperation::Properties,
+        changes,
+        expected_revision: None,
+    };
     said(edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
@@ -1122,22 +1295,41 @@ pub fn edit_wall_kept(
     {
         out.extend(effects_words(&e, keep));
     }
-    out.extend(said(kentos_native_application::walls_edit::execute(&mut ExecutionContext::new(doc), input)));
+    out.extend(said(kentos_native_application::walls_edit::execute(
+        &mut ExecutionContext::new(doc),
+        input,
+    )));
     out
 }
 
 /// What a wall change kept at `keep` does round it, in words: each space's area and the openings' depth.
-pub fn effects_words(e: &kentos_commands::WallEffects, keep: kentos_commands::WallReference) -> Vec<String> {
+pub fn effects_words(
+    e: &kentos_commands::WallEffects,
+    keep: kentos_commands::WallReference,
+) -> Vec<String> {
     let mut out = Vec::new();
     let n = |x: f64| format!("{x:.2}").replace('.', ",");
     if e.spaces.is_empty() {
-        out.push(format!("{} sabit: hiçbir mahalin alanı değişmedi.", keep.label()));
+        out.push(format!(
+            "{} sabit: hiçbir mahalin alanı değişmedi.",
+            keep.label()
+        ));
     }
     for s in &e.spaces {
-        out.push(format!("{} sabit: mahalin alanı {} → {} m².", keep.label(), n(s.before), n(s.after)));
+        out.push(format!(
+            "{} sabit: mahalin alanı {} → {} m².",
+            keep.label(),
+            n(s.before),
+            n(s.after)
+        ));
     }
     if let Some(o) = e.depths.first() {
-        out.push(format!("{} açıklığın kasa derinliği {} → {} m.", e.depths.len(), n(o.before), n(o.after)));
+        out.push(format!(
+            "{} açıklığın kasa derinliği {} → {} m.",
+            e.depths.len(),
+            n(o.before),
+            n(o.after)
+        ));
     }
     out
 }

@@ -165,7 +165,12 @@ pub(crate) fn list_lines(
     let mut out = Vec::new();
     let starred: Vec<String> = favorites
         .iter()
-        .filter(|t| schemas.iter().flat_map(|(_, rs)| rs.iter()).any(|r| r.table() == **t && shown(r, filter)))
+        .filter(|t| {
+            schemas
+                .iter()
+                .flat_map(|(_, rs)| rs.iter())
+                .any(|r| r.table() == **t && shown(r, filter))
+        })
         .cloned()
         .collect();
     if !starred.is_empty() {
@@ -373,7 +378,12 @@ impl App {
         if !spatial || s.extents.contains_key(&table) {
             return Task::none();
         }
-        let Some(address) = s.connection.as_deref().and_then(|n| self.db_store.get(n)).map(|c| c.address()) else {
+        let Some(address) = s
+            .connection
+            .as_deref()
+            .and_then(|n| self.db_store.get(n))
+            .map(|c| c.address())
+        else {
             return Task::none();
         };
         let asked = table.clone();
@@ -501,7 +511,11 @@ impl App {
             let mut tables = Column::new().spacing(4);
             let mut any = false;
             // The list's lines (docs/adr/9172): the starred tables first, then the tree of schemas.
-            let favorites = s.connection.as_ref().map(|c| self.db_store.favorites(c)).unwrap_or_default();
+            let favorites = s
+                .connection
+                .as_ref()
+                .map(|c| self.db_store.favorites(c))
+                .unwrap_or_default();
             let lines = list_lines(catalog, &connection, &favorites, &s.closed, &s.filter);
             let by_table: std::collections::HashMap<String, &Relation> = catalog
                 .schemas(&connection)
@@ -532,14 +546,26 @@ impl App {
                 let on = favorites.contains(&r.table());
                 let star = kentos_ui::widget::tip(
                     iced::widget::button(
-                        kentos_ui::icon::icon(crate::icons::from_web(Some(if on { "starOn" } else { "star" })))
-                            .size(13.0)
-                            .tone(if on { kentos_ui::icon::Tone::Accent } else { kentos_ui::icon::Tone::Muted }),
+                        kentos_ui::icon::icon(crate::icons::from_web(Some(if on {
+                            "starOn"
+                        } else {
+                            "star"
+                        })))
+                        .size(13.0)
+                        .tone(if on {
+                            kentos_ui::icon::Tone::Accent
+                        } else {
+                            kentos_ui::icon::Tone::Muted
+                        }),
                     )
                     .padding(kentos_ui::theme::metrics::icon_small(13.0))
                     .style(kentos_ui::style::button::ghost)
                     .on_press(event(Event::Favorite(r.table()))),
-                    kentos_ui::widget::Tip::new(if on { "Sık kullanılanlardan çıkar" } else { "Sık kullanılanlara ekle" }),
+                    kentos_ui::widget::Tip::new(if on {
+                        "Sık kullanılanlardan çıkar"
+                    } else {
+                        "Sık kullanılanlara ekle"
+                    }),
                     iced::widget::tooltip::Position::Top,
                 );
                 row![star, check].spacing(4).align_y(Center).into()
@@ -547,7 +573,9 @@ impl App {
             for l in &lines {
                 any = true;
                 let element: Element<'a, Message> = match l {
-                    ListLine::Starred(n) => label::strong(format!("Sık kullanılanlar ({n})")).into(),
+                    ListLine::Starred(n) => {
+                        label::strong(format!("Sık kullanılanlar ({n})")).into()
+                    }
                     ListLine::Favorite(t) | ListLine::Table(t) => match by_table.get(t) {
                         Some(r) => line(r, matches!(l, ListLine::Favorite(_))),
                         None => continue,
@@ -585,16 +613,28 @@ impl App {
                 format!("{hidden} geometrisiz tablo gizli; göstermek için Düzenle… ile “Geometrisiz tabloları da listele”yi açın.")
             });
             let list = iced::widget::container(
-                iced::widget::scrollable(iced::widget::container(tables).padding([4, 8]).width(iced::Fill))
-                    .width(iced::Fill)
-                    .height(kentos_ui::theme::typography::scaled(LIST_HEIGHT)),
+                iced::widget::scrollable(
+                    iced::widget::container(tables)
+                        .padding([4, 8])
+                        .width(iced::Fill),
+                )
+                .width(iced::Fill)
+                .height(kentos_ui::theme::typography::scaled(LIST_HEIGHT)),
             )
             .style(kentos_ui::style::container::field_box)
             .width(iced::Fill);
-            body = body.push(words::field("Tablolar", iced::widget::column![tools, list].spacing(6), hint));
+            body = body.push(words::field(
+                "Tablolar",
+                iced::widget::column![tools, list].spacing(6),
+                hint,
+            ));
             // Each chosen table as it will be bound: where it is, its key, its geometry and system, whether it may be
             // written.
-            let chosen: Vec<&Relation> = catalog.relations.iter().filter(|r| s.chosen.contains(&r.table())).collect();
+            let chosen: Vec<&Relation> = catalog
+                .relations
+                .iter()
+                .filter(|r| s.chosen.contains(&r.table()))
+                .collect();
             if !chosen.is_empty() {
                 // Each with its extent (docs/adr/9183) and the tables a foreign key ties to it, one press to choose.
                 let mut lines: Vec<Element<'a, Message>> = Vec::new();
@@ -605,18 +645,28 @@ impl App {
                         None => identity(r),
                     };
                     lines.push(words::text_line(Line::Info, text));
-                    let ties: Vec<&String> =
-                        r.related.iter().filter(|t| catalog.relations.iter().any(|x| x.table() == **t)).collect();
+                    let ties: Vec<&String> = r
+                        .related
+                        .iter()
+                        .filter(|t| catalog.relations.iter().any(|x| x.table() == **t))
+                        .collect();
                     if !ties.is_empty() {
                         let mut tie_row = row![label::caption(RELATED)].spacing(6).align_y(Center);
                         for t in ties {
                             let on = s.chosen.contains(t);
-                            tie_row = tie_row.push(words::ghost(t.clone(), (!on).then(|| event(Event::Toggle(t.clone())))));
+                            tie_row = tie_row.push(words::ghost(
+                                t.clone(),
+                                (!on).then(|| event(Event::Toggle(t.clone()))),
+                            ));
                         }
                         lines.push(tie_row.wrap().into());
                     }
                 }
-                body = body.push(words::field("Seçilen tablolar", words::summary(lines), None));
+                body = body.push(words::field(
+                    "Seçilen tablolar",
+                    words::summary(lines),
+                    None,
+                ));
             }
             other = catalog.relations.iter().any(|r| {
                 s.chosen.contains(&r.table()) && r.srid.is_some_and(|srid| srid != project)
@@ -697,8 +747,15 @@ const LIST_HEIGHT: f32 = 280.0;
 /// A chosen table as it will be bound (docs/adr/9140): its schema and name, the column its rows are keyed by, its
 /// geometry and system, and whether this connection may write it.
 pub(crate) fn identity(r: &Relation) -> String {
-    let key = r.key.as_deref().map_or_else(|| "anahtar yok".to_owned(), |k| format!("anahtar {k}"));
-    let right = if r.writable { "yazılabilir" } else { "salt okunur (yazma yetkisi yok ya da görünüm)" };
+    let key = r
+        .key
+        .as_deref()
+        .map_or_else(|| "anahtar yok".to_owned(), |k| format!("anahtar {k}"));
+    let right = if r.writable {
+        "yazılabilir"
+    } else {
+        "salt okunur (yazma yetkisi yok ya da görünüm)"
+    };
     // The geometry column the layer draws (docs/adr/9183): the first of several.
     let column = match (&r.geometry_column, r.geometry_columns) {
         (Some(c), n) if n > 1 => format!(" · geometri sütunu {c} ({n} sütundan ilki)"),
@@ -713,7 +770,10 @@ const RELATED: &str = "İlişkili tablolar:";
 
 /// A chosen table's extent as the database gave it (docs/adr/9183), in the table's own system, east (Y) before north
 /// (X); while it is asked, so said; none for a table without geometry.
-pub(crate) fn extent_words(r: &Relation, extent: Option<&Result<Option<[f64; 4]>, String>>) -> Option<String> {
+pub(crate) fn extent_words(
+    r: &Relation,
+    extent: Option<&Result<Option<[f64; 4]>, String>>,
+) -> Option<String> {
     r.geometry.as_ref()?;
     Some(match extent {
         None => "kapsam okunuyor…".to_owned(),
@@ -721,7 +781,11 @@ pub(crate) fn extent_words(r: &Relation, extent: Option<&Result<Option<[f64; 4]>
         Some(Err(why)) => format!("kapsam okunamadı: {why}"),
         Some(Ok(Some([a, b, c, d]))) => {
             // Degrees for a geographic system's values, else metres (shown only, the extent is not used further).
-            let n = if [a, b, c, d].iter().all(|v| v.abs() <= 360.0) { 6 } else { 2 };
+            let n = if [a, b, c, d].iter().all(|v| v.abs() <= 360.0) {
+                6
+            } else {
+                2
+            };
             format!("kapsam Y {a:.n$}–{c:.n$}, X {b:.n$}–{d:.n$}")
         }
     })

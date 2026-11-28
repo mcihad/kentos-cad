@@ -16,12 +16,23 @@ fn opened(tag: &str) -> (App, String) {
         settings.workspace = Some(kentos_commands::Workspace::Gis);
         model.set_settings(settings);
     }
-    app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described")])
-        .expect("added");
-    let bakim = crate::data_layers_tests::node(&app, "bakim").expect("bakim").id.clone();
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described"),
+    ])
+    .expect("added");
+    let bakim = crate::data_layers_tests::node(&app, "bakim")
+        .expect("bakim")
+        .id
+        .clone();
     {
         let doc = app.document.as_mut().expect("open");
-        let mut fields = doc.model.layers().get(&bakim).expect("the layer").fields.clone();
+        let mut fields = doc
+            .model
+            .layers()
+            .get(&bakim)
+            .expect("the layer")
+            .fields
+            .clone();
         if let Some(f) = fields.iter_mut().find(|f| f.name == "mahalle") {
             f.alias = Some("Mahalle".into());
             f.required = true;
@@ -30,7 +41,9 @@ fn opened(tag: &str) -> (App, String) {
                 kentos_commands::FieldChoice::new("M2", "İstasyon"),
             ]);
         }
-        doc.model.set_layer_fields(&bakim, fields, &[]).expect("set");
+        doc.model
+            .set_layer_fields(&bakim, fields, &[])
+            .expect("set");
     }
     (app, bakim)
 }
@@ -41,15 +54,24 @@ fn the_menus_last_entry_opens_the_layers_summary() {
     // The menu entry is placed by the CBS profile: kentos-cad's layer_menu_tests read it in every module and kind.
     let task = app.update(super::open(bakim.clone()));
     drive(&mut app, task);
-    assert_eq!(app.dialog, Some(Dialog::Gis(crate::gis::GisDialogKind::LayerProperties)));
-    assert_eq!(app.gis.layer_properties.as_ref().map(|w| w.section), Some(Section::General));
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(crate::gis::GisDialogKind::LayerProperties))
+    );
+    assert_eq!(
+        app.gis.layer_properties.as_ref().map(|w| w.section),
+        Some(Section::General)
+    );
     // The source's rows counted for Kaynak.
     let _ = app.update(msg(Event::Show(Section::Source)));
     // Asked as Kaynak asks it while drawn, then counted.
     let _ = app.source_count_of(&bakim);
     let task = app.source_counts_tasks();
     drive(&mut app, task);
-    assert_eq!(app.source_count_of(&bakim), crate::source_counts::Counted::Ready(6));
+    assert_eq!(
+        app.source_count_of(&bakim),
+        crate::source_counts::Counted::Ready(6)
+    );
     let _ = app.update(msg(Event::Close));
     assert!(app.dialog.is_none() && app.gis.layer_properties.is_none());
 }
@@ -62,7 +84,11 @@ fn the_sections_lead_on_and_the_keys_go_round_them() {
     let task = app.update(super::open(bakim.clone()));
     drive(&mut app, task);
     let w = |app: &App| app.gis.layer_properties.clone().expect("open");
-    assert_eq!((w(&app).section, w(&app).focus), (Section::General, Focus::List), "the list has the keys");
+    assert_eq!(
+        (w(&app).section, w(&app).focus),
+        (Section::General, Focus::List),
+        "the list has the keys"
+    );
     // ↓ Kaynak; Tab its action, Yolu kopyala; Enter copies the file's path.
     let _ = app.update(super::key(Key::Down));
     assert_eq!(w(&app).section, Section::Source);
@@ -70,7 +96,10 @@ fn the_sections_lead_on_and_the_keys_go_round_them() {
     assert_eq!(w(&app).focus, Focus::Action);
     let _ = app.update(super::key(Key::Enter));
     let said = crate::files_testing::last_said(&app);
-    assert!(said.starts_with("Yol panoya kopyalandı: ") && said.ends_with(".gpkg"), "{said}");
+    assert!(
+        said.starts_with("Yol panoya kopyalandı: ") && said.ends_with(".gpkg"),
+        "{said}"
+    );
     // Tab Kapat, Tab the list again; Koordinat sistemi has no action, so Tab goes from the list to Kapat.
     let _ = app.update(super::key(Key::Tab(false)));
     assert_eq!(w(&app).focus, Focus::Close);
@@ -95,7 +124,12 @@ fn the_sections_lead_on_and_the_keys_go_round_them() {
     let task = app.update(msg(Event::Act(super::Action::Fields)));
     drive(&mut app, task);
     assert!(app.gis.layer_properties.is_none(), "the summary closed");
-    assert!(app.dialog.is_some() && app.dialog != Some(Dialog::Gis(crate::gis::GisDialogKind::LayerProperties)), "{:?}", app.dialog);
+    assert!(
+        app.dialog.is_some()
+            && app.dialog != Some(Dialog::Gis(crate::gis::GisDialogKind::LayerProperties)),
+        "{:?}",
+        app.dialog
+    );
     // Esc from the keyboard: closed, the layer tree has the keys on the layer.
     app.dialog = None;
     let task = app.update(super::open(bakim.clone()));

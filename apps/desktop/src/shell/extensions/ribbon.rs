@@ -309,8 +309,9 @@ impl App {
             .collect();
         self.extensions.python_reasons = reasons.clone();
         let fallback = self.python_setup.why_not();
-        let python_of =
-            |ext: &str| -> Option<&str> { reasons.get(ext).map_or(Some(fallback), Option::as_deref) };
+        let python_of = |ext: &str| -> Option<&str> {
+            reasons.get(ext).map_or(Some(fallback), Option::as_deref)
+        };
         let mut tabs = Vec::new();
         if let Some(registry) = self.extensions.registry.as_ref() {
             let contributions = registry.contributions();

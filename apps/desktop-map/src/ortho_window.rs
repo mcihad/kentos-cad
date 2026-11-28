@@ -4,8 +4,8 @@
 //! package's), the ground sampling distance against Article 54's, the fit points apart, and a KOH under half a pixel;
 //! the table lists every point's error (centimetres). CSV kaydet writes them.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
@@ -134,11 +134,20 @@ impl OrthoWindowApp for App {
             self.warn("Ortofoto doğruluğu: önce denetlenecek ortofotoyu (bir raster) seçin.");
             return Task::none();
         };
-        let layers: Vec<(String, String)> =
-            doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+        let layers: Vec<(String, String)> = doc
+            .model
+            .layers()
+            .leaves()
+            .iter()
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect();
         let with_points: Vec<&(String, String)> = layers
             .iter()
-            .filter(|(id, _)| doc.model.entities().any(|e| e.base().layer_id == *id && matches!(e, Entity::Point(_))))
+            .filter(|(id, _)| {
+                doc.model
+                    .entities()
+                    .any(|e| e.base().layer_id == *id && matches!(e, Entity::Point(_)))
+            })
             .collect();
         let find = |words: &[&str]| {
             with_points
@@ -146,10 +155,17 @@ impl OrthoWindowApp for App {
                 .find(|(_, n)| words.iter().any(|w| n.to_lowercase().contains(w)))
                 .map(|(id, _)| id.clone())
         };
-        let known = find(&["gnss", "arazi", "denetim"]).or_else(|| with_points.first().map(|(id, _)| id.clone())).unwrap_or_default();
+        let known = find(&["gnss", "arazi", "denetim"])
+            .or_else(|| with_points.first().map(|(id, _)| id.clone()))
+            .unwrap_or_default();
         let observed = find(&["okun", "ortofoto", "görüntü"])
             .filter(|o| *o != known)
-            .or_else(|| with_points.iter().map(|(id, _)| id.clone()).find(|id| *id != known))
+            .or_else(|| {
+                with_points
+                    .iter()
+                    .map(|(id, _)| id.clone())
+                    .find(|id| *id != known)
+            })
             .unwrap_or_default();
         self.modules.map_mut().ortho = State {
             raster,
@@ -171,7 +187,14 @@ impl OrthoWindowApp for App {
             return;
         };
         match std::fs::write(&path, csv(r)) {
-            Ok(()) => self.say(Level::Success, format!("{TITLE}: {} nokta {} dosyasına yazıldı.", r.points.len(), path.display())),
+            Ok(()) => self.say(
+                Level::Success,
+                format!(
+                    "{TITLE}: {} nokta {} dosyasına yazıldı.",
+                    r.points.len(),
+                    path.display()
+                ),
+            ),
             Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
         }
     }
@@ -218,9 +241,17 @@ impl OrthoWindowApp for App {
             .field(
                 "Arazi noktaları",
                 row![
-                    container(fields::select_owned(s.layers.clone(), &s.known, |v| msg(Event::Known(v)))).width(230),
+                    container(fields::select_owned(s.layers.clone(), &s.known, |v| msg(
+                        Event::Known(v)
+                    )))
+                    .width(230),
                     label::caption("Görüntüde okunan"),
-                    container(fields::select_owned(s.layers.clone(), &s.observed, |v| msg(Event::Observed(v)))).width(230)
+                    container(fields::select_owned(
+                        s.layers.clone(),
+                        &s.observed,
+                        |v| msg(Event::Observed(v))
+                    ))
+                    .width(230)
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -228,9 +259,16 @@ impl OrthoWindowApp for App {
             .field(
                 "Nokta adı alanı",
                 row![
-                    container(fields::input(None, "Ad", &s.field, false, false).on_input(|v| msg(Event::Field(v)))).width(120),
+                    container(
+                        fields::input(None, "Ad", &s.field, false, false)
+                            .on_input(|v| msg(Event::Field(v)))
+                    )
+                    .width(120),
                     label::caption("Ölçek 1/"),
-                    NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(500.0).decimals(0).width(110)
+                    NumberInput::new(s.scale, |v| msg(Event::Scale(v)))
+                        .step(500.0)
+                        .decimals(0)
+                        .width(110)
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -260,15 +298,28 @@ impl OrthoWindowApp for App {
                 if let (Some(kz), Some(ok)) = (c.koh_z, r.passed_z) {
                     lines.push(words::text_line(
                         if ok { Kind::Ok } else { Kind::Error },
-                        format!("KOH_Z {} cm ({} nokta), sınır {} cm.", cm(kz), c.n_z, cm(r.limit_z)),
+                        format!(
+                            "KOH_Z {} cm ({} nokta), sınır {} cm.",
+                            cm(kz),
+                            c.n_z,
+                            cm(r.limit_z)
+                        ),
                     ));
                 }
                 lines.push(match (r.gsd_limit, r.gsd_ok) {
                     (Some(l), Some(ok)) => words::text_line(
                         if ok { Kind::Ok } else { Kind::Warn },
-                        format!("Yer örnekleme aralığı {} cm; 1/{} için en çok {} cm (m. 54, ±%10).", cm(r.gsd), r.scale, cm(l)),
+                        format!(
+                            "Yer örnekleme aralığı {} cm; 1/{} için en çok {} cm (m. 54, ±%10).",
+                            cm(r.gsd),
+                            r.scale,
+                            cm(l)
+                        ),
                     ),
-                    _ => words::text_line(Kind::Info, format!("Yer örnekleme aralığı {} cm.", cm(r.gsd))),
+                    _ => words::text_line(
+                        Kind::Info,
+                        format!("Yer örnekleme aralığı {} cm.", cm(r.gsd)),
+                    ),
                 });
                 if let Some(f) = &r.fit {
                     lines.push(words::text_line(
@@ -283,7 +334,10 @@ impl OrthoWindowApp for App {
                     ));
                 }
                 if !r.unmatched.is_empty() {
-                    lines.push(words::text_line(Kind::Warn, format!("Eşi bulunmayan noktalar: {}.", r.unmatched.join(", "))));
+                    lines.push(words::text_line(
+                        Kind::Warn,
+                        format!("Eşi bulunmayan noktalar: {}.", r.unmatched.join(", ")),
+                    ));
                 }
                 for p in &r.points {
                     rows.push(vec![
@@ -300,12 +354,23 @@ impl OrthoWindowApp for App {
             None => {}
         }
         let table = sheet(
-            vec![col("Nokta", 100.0), col("Rol", 90.0), num("dx (cm)", 90.0), num("dy (cm)", 90.0), num("dz (cm)", 90.0), num("Yatay (cm)", 100.0)],
+            vec![
+                col("Nokta", 100.0),
+                col("Rol", 90.0),
+                num("dx (cm)", 90.0),
+                num("dy (cm)", 90.0),
+                num("dz (cm)", 90.0),
+                num("Yatay (cm)", 100.0),
+            ],
             rows,
             "Eşleşen nokta yok.",
             260.0,
         );
-        let body = Column::new().spacing(12).push(form).push(words::summary(lines)).push(table);
+        let body = Column::new()
+            .spacing(12)
+            .push(form)
+            .push(words::summary(lines))
+            .push(table);
         let ready = matches!(&s.answer, Some(Ok(r)) if !r.points.is_empty());
         Frame::new(TITLE)
             .push(body)

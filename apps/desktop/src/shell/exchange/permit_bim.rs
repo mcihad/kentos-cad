@@ -39,18 +39,35 @@ pub(crate) fn answer(s: &mut State, no: u8, yes: Option<bool>) {
         .and_then(|b| b.rows.iter().find(|r| r.no == no))
         .map(|r| r.basis.clone())
         .unwrap_or_default();
-    let Some(bim) = s.input.bim.as_mut() else { return };
-    let note = bim.answers.iter().find(|a| a.no == no).map(|a| a.note.clone()).unwrap_or_default();
+    let Some(bim) = s.input.bim.as_mut() else {
+        return;
+    };
+    let note = bim
+        .answers
+        .iter()
+        .find(|a| a.no == no)
+        .map(|a| a.note.clone())
+        .unwrap_or_default();
     bim.answers.retain(|a| a.no != no);
     if let Some(yes) = yes {
-        bim.answers.push(FormAnswer { no, yes, note, basis });
+        bim.answers.push(FormAnswer {
+            no,
+            yes,
+            note,
+            basis,
+        });
         bim.answers.sort_by_key(|a| a.no);
     }
 }
 
 /// The author's note on question `no` (kept with an answer only).
 pub(crate) fn note(s: &mut State, no: u8, text: String) {
-    if let Some(a) = s.input.bim.as_mut().and_then(|b| b.answers.iter_mut().find(|a| a.no == no)) {
+    if let Some(a) = s
+        .input
+        .bim
+        .as_mut()
+        .and_then(|b| b.answers.iter_mut().find(|a| a.no == no))
+    {
         a.note = text;
     }
 }
@@ -59,7 +76,9 @@ impl App {
     /// Writes the window's answers to the drawing (`cad.form.answer`, docs/adr/8077) where they differ from it: the
     /// questions given and the ones taken back. Whether the check or the publication may go on (a refusal is said).
     pub(crate) fn permit_bim_keep(&mut self) -> bool {
-        let (Some(crate::exchange::Window::SheetPublish(s)), Some(doc)) = (&self.exchange, self.document.as_mut()) else {
+        let (Some(crate::exchange::Window::SheetPublish(s)), Some(doc)) =
+            (&self.exchange, self.document.as_mut())
+        else {
             return true;
         };
         let Some(bim) = s.input.bim.as_ref() else {
@@ -70,7 +89,9 @@ impl App {
             .answers
             .iter()
             .filter(|a| !held.contains(a))
-            .map(|a| serde_json::json!({"no": a.no, "yes": a.yes, "note": a.note, "basis": a.basis}))
+            .map(
+                |a| serde_json::json!({"no": a.no, "yes": a.yes, "note": a.note, "basis": a.basis}),
+            )
             .collect();
         changes.extend(
             held.iter()
@@ -89,12 +110,21 @@ impl App {
         match answer {
             Ok(v) if v["status"] == "completed" => true,
             Ok(v) => {
-                let words = v["error"]["message"].as_str().unwrap_or("komut reddetti").to_owned();
-                self.say(kentos_interaction::Level::Error, format!("Kontrol formunun cevapları yazılamadı: {words}"));
+                let words = v["error"]["message"]
+                    .as_str()
+                    .unwrap_or("komut reddetti")
+                    .to_owned();
+                self.say(
+                    kentos_interaction::Level::Error,
+                    format!("Kontrol formunun cevapları yazılamadı: {words}"),
+                );
                 false
             }
             Err(unrun) => {
-                self.say(kentos_interaction::Level::Error, format!("Kontrol formunun cevapları yazılamadı: {}", unrun.message));
+                self.say(
+                    kentos_interaction::Level::Error,
+                    format!("Kontrol formunun cevapları yazılamadı: {}", unrun.message),
+                );
                 false
             }
         }
@@ -121,22 +151,44 @@ impl App {
                 .into();
         };
         out = out.push(results(bim));
-        let open: Vec<_> = bim.rows.iter().filter(|r| r.evidence == "inceleme").collect();
+        let open: Vec<_> = bim
+            .rows
+            .iter()
+            .filter(|r| r.evidence == "inceleme")
+            .collect();
         if !open.is_empty() {
-            out = out.push(label::body("Müellifin cevabı (EK-9)").font(kentos_ui::theme::typography::ui_strong()));
+            out = out.push(
+                label::body("Müellifin cevabı (EK-9)")
+                    .font(kentos_ui::theme::typography::ui_strong()),
+            );
         }
         for r in open {
-            let given = s.input.bim.as_ref().and_then(|b| b.answers.iter().find(|a| a.no == r.no));
+            let given = s
+                .input
+                .bim
+                .as_ref()
+                .and_then(|b| b.answers.iter().find(|a| a.no == r.no));
             let choice = |yes: bool, words: &'static str| {
                 let chosen = given.is_some_and(|a| a.yes == yes);
                 // The chosen answer's words on the accent, as a primary button writes them.
-                let words = label::caption(words).style(if chosen { style::text::on_accent } else { style::text::default });
+                let words = label::caption(words).style(if chosen {
+                    style::text::on_accent
+                } else {
+                    style::text::default
+                });
                 button(words)
                     .padding(kentos_ui::theme::metrics::action())
-                    .style(if chosen { style::button::primary } else { style::button::secondary })
-                    .on_press_maybe((!busy).then(|| event(Event::BimAnswer(r.no, (!chosen).then_some(yes)))))
+                    .style(if chosen {
+                        style::button::primary
+                    } else {
+                        style::button::secondary
+                    })
+                    .on_press_maybe(
+                        (!busy).then(|| event(Event::BimAnswer(r.no, (!chosen).then_some(yes)))),
+                    )
             };
-            let mut note = kentos_ui::widget::text_field("Not", given.map_or("", |a| a.note.as_str()));
+            let mut note =
+                kentos_ui::widget::text_field("Not", given.map_or("", |a| a.note.as_str()));
             if !busy && given.is_some() {
                 let no = r.no;
                 note = note.on_input(move |v| event(Event::BimNote(no, v)));
@@ -144,9 +196,13 @@ impl App {
             out = out.push(
                 column![
                     label::caption(format!("{}. {} — {}", r.no, r.title, r.note)),
-                    row![choice(true, "Evet"), choice(false, "Hayır"), note.width(Fill)]
-                        .spacing(6)
-                        .align_y(iced::Alignment::Center),
+                    row![
+                        choice(true, "Evet"),
+                        choice(false, "Hayır"),
+                        note.width(Fill)
+                    ]
+                    .spacing(6)
+                    .align_y(iced::Alignment::Center),
                 ]
                 .spacing(4),
             );
@@ -165,15 +221,19 @@ fn results<'a>(bim: &'a BimPackaged) -> Element<'a, Message> {
         "idare" => "İdare kabulü",
         _ => "",
     };
-    let mut out = column![label::body(format!("BIM paketi · {}", bim.model)).font(kentos_ui::theme::typography::ui_strong())]
-        .spacing(2);
+    let mut out = column![
+        label::body(format!("BIM paketi · {}", bim.model))
+            .font(kentos_ui::theme::typography::ui_strong())
+    ]
+    .spacing(2);
     for r in &bim.results {
         let (mark, text): (&str, fn(&iced::Theme) -> iced::widget::text::Style) = match r.holds {
             Some(true) => ("Tutuyor", style::text::default),
             Some(false) => ("Tutmuyor", style::text::danger),
             None => ("Bekleniyor", style::text::muted),
         };
-        out = out.push(label::caption(format!("{} · {mark} · {}", name(&r.key), r.words)).style(text));
+        out = out
+            .push(label::caption(format!("{} · {mark} · {}", name(&r.key), r.words)).style(text));
     }
     out.into()
 }

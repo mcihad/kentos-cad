@@ -141,7 +141,14 @@ pub fn decode(bytes: &[u8]) -> Result<Png, RasterError> {
                     data[12],
                 ));
             }
-            b"PLTE" => palette = data.as_chunks::<3>().0.iter().map(|c| [c[0], c[1], c[2]]).collect(),
+            b"PLTE" => {
+                palette = data
+                    .as_chunks::<3>()
+                    .0
+                    .iter()
+                    .map(|c| [c[0], c[1], c[2]])
+                    .collect()
+            }
             b"tRNS" => trns = data.to_vec(),
             b"IDAT" => idat.extend_from_slice(data),
             b"IEND" => break,
@@ -308,7 +315,9 @@ pub fn decode(bytes: &[u8]) -> Result<Png, RasterError> {
         (4, _) => {
             // 16-bit grey with alpha: the grey band; a transparent pixel nodata (0).
             let out: Vec<u16> = values
-                .as_chunks::<2>().0.iter()
+                .as_chunks::<2>()
+                .0
+                .iter()
                 .map(|px| if px[1] == 0 { 0 } else { px[0] })
                 .collect();
             Ok(png(1, Samples::U16(out), Some(0.0)))
@@ -347,7 +356,11 @@ fn crc32(parts: &[&[u8]]) -> u32 {
     for (n, slot) in table.iter_mut().enumerate() {
         let mut c = n as u32;
         for _ in 0..8 {
-            c = if c & 1 == 1 { 0xEDB8_8320 ^ (c >> 1) } else { c >> 1 };
+            c = if c & 1 == 1 {
+                0xEDB8_8320 ^ (c >> 1)
+            } else {
+                c >> 1
+            };
         }
         *slot = c;
     }
@@ -406,7 +419,12 @@ pub fn encode(
 
 /// A PNG of one 16-bit grey band (docs/adr/0627 §2: a gridded coverage's integer tile): rows without a filter,
 /// samples big-endian as PNG holds them, Deflate-coded by `level`; the same samples make the same file.
-pub fn encode16(width: u32, height: u32, samples: &[u16], level: u8) -> Result<Vec<u8>, RasterError> {
+pub fn encode16(
+    width: u32,
+    height: u32,
+    samples: &[u16],
+    level: u8,
+) -> Result<Vec<u8>, RasterError> {
     let w = width as usize;
     if width == 0 || height == 0 || samples.len() != w * height as usize {
         return Err(RasterError::new("PNG'nin örnekleri boyutuna uymuyor."));
@@ -439,7 +457,10 @@ mod tests {
         let p = decode(&encode16(7, 3, &v, 6).unwrap()).unwrap();
         assert_eq!((p.width, p.height, p.bands), (7, 3, 1));
         assert_eq!(p.samples, Samples::U16(v.clone()));
-        assert_eq!(encode16(7, 3, &v, 6).unwrap(), encode16(7, 3, &v, 6).unwrap());
+        assert_eq!(
+            encode16(7, 3, &v, 6).unwrap(),
+            encode16(7, 3, &v, 6).unwrap()
+        );
         assert!(encode16(7, 3, &v[..20], 6).is_err());
     }
 
@@ -464,7 +485,10 @@ mod tests {
     #[test]
     fn the_same_pixels_make_the_same_file_and_bad_input_is_refused() {
         let px = vec![1u8, 2, 3, 4];
-        assert_eq!(encode(2, 2, 1, &px, 6).unwrap(), encode(2, 2, 1, &px, 6).unwrap());
+        assert_eq!(
+            encode(2, 2, 1, &px, 6).unwrap(),
+            encode(2, 2, 1, &px, 6).unwrap()
+        );
         assert!(encode(2, 2, 1, &px[..3], 6).is_err());
         assert!(encode(2, 2, 5, &px, 6).is_err());
         assert!(encode(0, 2, 1, &[], 6).is_err());

@@ -59,12 +59,21 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
     // R 150 and clothoids of 40 m: D, L and T are the circular part's, Dc = Δ − 2·Ls/(2R) (KGM 2019 EK-10: A and S-A).
     let (r, ls) = (150.0_f64, 40.0_f64);
     let dc = delta - ls / r;
-    assert!(has("S - 1 (Sol)"), "a left turn: the bearing grows; {words:?}");
+    assert!(
+        has("S - 1 (Sol)"),
+        "a left turn: the bearing grows; {words:?}"
+    );
     assert!(has(&format!("D = {:.4}", grad(dc))), "D in {words:?}");
     assert!(has("R = 150.00"));
     assert!(has(&format!("L = {:.2}", r * dc)), "L in {words:?}");
-    assert!(has(&format!("T = {:.2}", r * (0.5 * dc).tan())), "T in {words:?}");
-    assert!(has(&format!("S-D = {:.4}", grad(delta))), "S-D in {words:?}");
+    assert!(
+        has(&format!("T = {:.2}", r * (0.5 * dc).tan())),
+        "T in {words:?}"
+    );
+    assert!(
+        has(&format!("S-D = {:.4}", grad(delta))),
+        "S-D in {words:?}"
+    );
     // The sample's only schedule, rows on the right (outside): −2.5 % at 150 to +6 % at 200 and back from 300 to 350.
     // Level at 150 + 50 · 2.5/8.5: Lt = 250/17, Lr = 600/17 each way. TS from the clothoids' series (p, k), ST = TS +
     // R·Δ + Ls: the rise starts 44.7 m before TS, and the way out is back to normal 7.9 m before ST (La 0).
@@ -73,14 +82,35 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
     let ts = (b[0] - a[0]).hypot(b[1] - a[1]) - ((r + shift) * (0.5 * delta).tan() + k);
     let st = ts + r * delta + ls;
     assert!(has("Se = % 6.00"), "Se in {words:?}");
-    assert!(has(&format!("Lr = {0:.2} - {0:.2}", 600.0 / 17.0)), "Lr in {words:?}");
-    assert!(has(&format!("Lt = {0:.2} - {0:.2}", 250.0 / 17.0)), "Lt in {words:?}");
-    assert!(has(&format!("La = {:.2} - {:.2}", ts - 150.0, (350.0 - st).max(0.0))), "La in {words:?}");
+    assert!(
+        has(&format!("Lr = {0:.2} - {0:.2}", 600.0 / 17.0)),
+        "Lr in {words:?}"
+    );
+    assert!(
+        has(&format!("Lt = {0:.2} - {0:.2}", 250.0 / 17.0)),
+        "Lt in {words:?}"
+    );
+    assert!(
+        has(&format!(
+            "La = {:.2} - {:.2}",
+            ts - 150.0,
+            (350.0 - st).max(0.0)
+        )),
+        "La in {words:?}"
+    );
     assert!(has("Gn = 0.00"));
     // KGM 2024's order, then the 2019 sheets' whole curve.
-    let at = |w: &str| words.iter().position(|(t, _)| t.starts_with(w)).unwrap_or_else(|| panic!("{w} in {words:?}"));
-    let order = ["S - 1", "D =", "R =", "L =", "T =", "Se =", "Lr =", "Lt =", "La =", "Gn =", "X =", "Y =", "S-D =",
-        "S-X =", "S-Y ="].map(at);
+    let at = |w: &str| {
+        words
+            .iter()
+            .position(|(t, _)| t.starts_with(w))
+            .unwrap_or_else(|| panic!("{w} in {words:?}"))
+    };
+    let order = [
+        "S - 1", "D =", "R =", "L =", "T =", "Se =", "Lr =", "Lt =", "La =", "Gn =", "X =", "Y =",
+        "S-D =", "S-X =", "S-Y =",
+    ]
+    .map(at);
     assert!(order.windows(2).all(|w| w[0] < w[1]), "{order:?}");
     // X, Y: where the tangents at SC and CS meet, on the bisector inside the PI by the two external distances'
     // difference, (R + p)·sec(Δ/2) − R less R·sec(Dc/2) − R. S-X, S-Y: the PI. North first, in groups of three.
@@ -92,11 +122,17 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
         let l = v[0].hypot(v[1]);
         [v[0] / l, v[1] / l]
     };
-    let (ua, uc) = (unit([a[0] - b[0], a[1] - b[1]]), unit([c[0] - b[0], c[1] - b[1]]));
+    let (ua, uc) = (
+        unit([a[0] - b[0], a[1] - b[1]]),
+        unit([c[0] - b[0], c[1] - b[1]]),
+    );
     let w = unit([ua[0] + uc[0], ua[1] + uc[1]]);
     let inside = ((r + shift) / (0.5 * delta).cos() - r) - (r / (0.5 * dc).cos() - r);
     let inner = [b[0] + w[0] * inside, b[1] + w[1] * inside];
-    assert!((value("X =") - inner[1]).abs() < 1e-3 && (value("Y =") - inner[0]).abs() < 1e-3, "{inner:?}");
+    assert!(
+        (value("X =") - inner[1]).abs() < 1e-3 && (value("Y =") - inner[0]).abs() < 1e-3,
+        "{inner:?}"
+    );
     assert!((value("S-X =") - b[1]).abs() < 1e-4 && (value("S-Y =") - b[0]).abs() < 1e-4);
 
     // The main points: TS1, SC1, CS1, ST1 and a km of two decimals (KGM 2024: `TO1=0+100.42`).
@@ -120,7 +156,10 @@ fn a_map_draws_the_alignments_and_the_drawing_stays() {
         );
     }
     // The project's ends with their km and coordinates (KGM 2019 şartname; the 2024 sheets).
-    assert!(has("PROJE BAŞI KM : 1+000.00") && has("X = 50.0000") && has("Y = 20.0000"), "{words:?}");
+    assert!(
+        has("PROJE BAŞI KM : 1+000.00") && has("X = 50.0000") && has("Y = 20.0000"),
+        "{words:?}"
+    );
     // Every text reads left to right on the paper turned 29.847°.
     for (t, r) in &words {
         let on = (r - 29.847).rem_euclid(360.0);
@@ -148,7 +187,10 @@ fn the_curve_data_stays_inside_the_map() {
     let (doc, setup) = sample();
     let pi = &setup["settings"]["road"]["alignments"][0]["pis"][1];
     let center = [pi["x"].as_f64().unwrap(), pi["y"].as_f64().unwrap()];
-    let room = Room { center, half: [200.0, 40.0] };
+    let room = Room {
+        center,
+        half: [200.0, 40.0],
+    };
     let copy = with_axes_on(doc.reading_copy(), 1000.0, 0.0, Some(room)).expect("a copy");
     let lines: Vec<(String, [f64; 2])> = copy
         .entities()
@@ -157,13 +199,20 @@ fn the_curve_data_stays_inside_the_map() {
             Entity::Text(t) => Some((t.text.clone(), [t.p.x, t.p.y])),
             _ => None,
         })
-        .filter(|(t, _)| ["D =", "Lr =", "X =", "Y =", "S-D =", "S-Y ="].iter().any(|w| t.starts_with(w)))
+        .filter(|(t, _)| {
+            ["D =", "Lr =", "X =", "Y =", "S-D =", "S-Y ="]
+                .iter()
+                .any(|w| t.starts_with(w))
+        })
         // The box's, not the project ends' X and Y (260 m and 280 m from this PI, outside the map).
         .filter(|(_, p)| (p[0] - center[0]).abs() < 200.0)
         .collect();
     assert!(lines.len() >= 6, "{lines:?}");
     for (t, p) in &lines {
-        assert!((p[1] - center[1]).abs() <= 40.0 - 2.0 + 1e-9, "{t} at {p:?}");
+        assert!(
+            (p[1] - center[1]).abs() <= 40.0 - 2.0 + 1e-9,
+            "{t} at {p:?}"
+        );
     }
     // Without the map the box hangs below the PI as before.
     let free = with_axes_on(doc.reading_copy(), 1000.0, 0.0, None).expect("a copy");
@@ -187,20 +236,36 @@ fn a_map_that_does_not_show_the_pi_has_no_box() {
     let (doc, setup) = sample();
     let pi = &setup["settings"]["road"]["alignments"][0]["pis"][1];
     let pi = [pi["x"].as_f64().unwrap(), pi["y"].as_f64().unwrap()];
-    let far = Room { center: [pi[0], pi[1] - 1000.0], half: [300.0, 100.0] };
+    let far = Room {
+        center: [pi[0], pi[1] - 1000.0],
+        half: [300.0, 100.0],
+    };
     let words = |room: Room| -> Vec<String> {
         let copy = with_axes_on(doc.reading_copy(), 1000.0, 0.0, Some(room)).expect("a copy");
         copy.entities()
             .filter_map(|e| match e {
-                Entity::Text(t) if ["D =", "S-Y =", "PROJE"].iter().any(|w| t.text.starts_with(w)) => Some(t.text.clone()),
+                Entity::Text(t)
+                    if ["D =", "S-Y =", "PROJE"]
+                        .iter()
+                        .any(|w| t.text.starts_with(w)) =>
+                {
+                    Some(t.text.clone())
+                }
                 _ => None,
             })
             .collect()
     };
     assert!(words(far).is_empty(), "the far map writes {:?}", words(far));
-    let all = Room { center: pi, half: [5000.0, 5000.0] };
+    let all = Room {
+        center: pi,
+        half: [5000.0, 5000.0],
+    };
     let near = words(all);
-    assert!(near.iter().any(|w| w.starts_with("S-Y =")) && near.iter().any(|w| w.starts_with("PROJE BAŞI")), "{near:?}");
+    assert!(
+        near.iter().any(|w| w.starts_with("S-Y ="))
+            && near.iter().any(|w| w.starts_with("PROJE BAŞI")),
+        "{near:?}"
+    );
 }
 
 #[test]
@@ -208,15 +273,25 @@ fn the_box_writes_the_curves_design_speed() {
     // Docs/adr/0985: V is the PI's own speed, else the alignment's; none, no V line (KGM 2024: `V = 80`).
     let (_, mut setup) = sample();
     let v_line = |setup: &serde_json::Value| -> Vec<String> {
-        let doc = Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(setup.clone()).unwrap())
-            .unwrap();
-        texts(&with_axes(&doc, 1000.0, 0.0).expect("a copy")).into_iter().map(|(t, _)| t).filter(|t| t.starts_with("V =")).collect()
+        let doc = Document::from_snapshot_v2(
+            serde_json::from_value::<DocumentSnapshotV2>(setup.clone()).unwrap(),
+        )
+        .unwrap();
+        texts(&with_axes(&doc, 1000.0, 0.0).expect("a copy"))
+            .into_iter()
+            .map(|(t, _)| t)
+            .filter(|t| t.starts_with("V ="))
+            .collect()
     };
     assert!(v_line(&setup).is_empty(), "no speed, no V");
     setup["settings"]["road"]["alignments"][0]["designSpeed"] = serde_json::json!(80.0);
     assert_eq!(v_line(&setup), vec!["V = 80".to_owned()]);
     setup["settings"]["road"]["alignments"][0]["pis"][1]["speed"] = serde_json::json!(62.5);
-    assert_eq!(v_line(&setup), vec!["V = 62.5".to_owned()], "the curve's own speed stands for it");
+    assert_eq!(
+        v_line(&setup),
+        vec!["V = 62.5".to_owned()],
+        "the curve's own speed stands for it"
+    );
 }
 
 #[test]
@@ -230,7 +305,10 @@ fn the_places_beyond_the_ends_are_named_on_the_map() {
     alignment["endPlace"] = serde_json::json!("Ankara–Niğde Otoyolu");
     let pi = &setup["settings"]["road"]["alignments"][0]["pis"][1];
     let pi = [pi["x"].as_f64().unwrap(), pi["y"].as_f64().unwrap()];
-    let doc = Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(setup.clone()).unwrap()).unwrap();
+    let doc = Document::from_snapshot_v2(
+        serde_json::from_value::<DocumentSnapshotV2>(setup.clone()).unwrap(),
+    )
+    .unwrap();
     let named = |room: Room| -> Vec<(String, Option<String>)> {
         let copy = with_axes_on(doc.reading_copy(), 1000.0, 0.0, Some(room)).expect("a copy");
         copy.entities()
@@ -242,11 +320,37 @@ fn the_places_beyond_the_ends_are_named_on_the_map() {
             })
             .collect()
     };
-    let all = named(Room { center: pi, half: [5000.0, 5000.0] });
+    let all = named(Room {
+        center: pi,
+        half: [5000.0, 5000.0],
+    });
     assert_eq!(all.len(), 2, "{all:?}");
-    assert!(all.iter().all(|(_, c)| c.as_deref() == Some("#d62828")), "red: {all:?}");
-    assert!(named(Room { center: [pi[0], pi[1] - 100_000.0], half: [300.0, 100.0] }).is_empty(), "a map elsewhere");
+    assert!(
+        all.iter().all(|(_, c)| c.as_deref() == Some("#d62828")),
+        "red: {all:?}"
+    );
+    assert!(
+        named(Room {
+            center: [pi[0], pi[1] - 100_000.0],
+            half: [300.0, 100.0]
+        })
+        .is_empty(),
+        "a map elsewhere"
+    );
     let (plain, _) = sample();
-    let copy = with_axes_on(plain.reading_copy(), 1000.0, 0.0, Some(Room { center: pi, half: [5000.0, 5000.0] })).expect("a copy");
-    assert!(copy.entities().all(|e| !matches!(e, Entity::Text(t) if t.text == "Kaman")), "no places, no names");
+    let copy = with_axes_on(
+        plain.reading_copy(),
+        1000.0,
+        0.0,
+        Some(Room {
+            center: pi,
+            half: [5000.0, 5000.0],
+        }),
+    )
+    .expect("a copy");
+    assert!(
+        copy.entities()
+            .all(|e| !matches!(e, Entity::Text(t) if t.text == "Kaman")),
+        "no places, no names"
+    );
 }

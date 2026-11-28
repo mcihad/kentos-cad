@@ -22,7 +22,9 @@ use crate::codes;
 fn not_found(key: &str) -> Stop {
     Stop::failed(error(
         codes::CASEWORK_NOT_FOUND,
-        format!("“{key}” çizimdeki bir mutfak dizisinin ya da bir nesnesinin kimliği değil. Dizinin kimliğini ya da bir nesnesinin kalıcı kimliğini verin."),
+        format!(
+            "“{key}” çizimdeki bir mutfak dizisinin ya da bir nesnesinin kimliği değil. Dizinin kimliğini ya da bir nesnesinin kalıcı kimliğini verin."
+        ),
         Some("run".into()),
     ))
 }
@@ -181,7 +183,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: CaseworkEdit) -> CommandRes
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: CaseworkEdit) -> CommandResult<CaseworkBuilt> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CaseworkEdit,
+) -> CommandResult<CaseworkBuilt> {
     let edited = match check(cx.doc, &input) {
         Ok(e) => e,
         Err(stop) => return stop.into(),
@@ -261,7 +266,10 @@ pub mod query {
 
     fn read(doc: &Document, input: &CaseworkQuery) -> Result<CaseworkRuns, Stop> {
         let runs = match &input.run {
-            Some(key) => vec![info(doc, doc.casework_of(key).ok_or_else(|| not_found(key))?)],
+            Some(key) => vec![info(
+                doc,
+                doc.casework_of(key).ok_or_else(|| not_found(key))?,
+            )],
             None => doc.casework().iter().map(|r| info(doc, r)).collect(),
         };
         Ok(CaseworkRuns {
@@ -295,7 +303,10 @@ pub mod query {
         }
     }
 
-    pub fn execute(cx: &mut ExecutionContext<'_>, input: CaseworkQuery) -> CommandResult<CaseworkRuns> {
+    pub fn execute(
+        cx: &mut ExecutionContext<'_>,
+        input: CaseworkQuery,
+    ) -> CommandResult<CaseworkRuns> {
         plan_in(cx.doc, &input)
     }
 }

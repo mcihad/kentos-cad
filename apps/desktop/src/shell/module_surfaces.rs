@@ -204,7 +204,10 @@ impl App {
     /// Whether the bottom panel has `tab` here: Eklenti denetimi only while an extension offers this module an audit
     /// rule or a rule's run is on it, an agent's too (docs/adr/9195 §5).
     pub fn shows_bottom_tab(&self, tab: BottomTab) -> bool {
-        if tab == BottomTab::ExtAudit && self.extensions.audit.is_none() && !self.offers_ext_audits() {
+        if tab == BottomTab::ExtAudit
+            && self.extensions.audit.is_none()
+            && !self.offers_ext_audits()
+        {
             return false;
         }
         self.surfaces().is_none_or(|s| s.bottom(tab))
@@ -416,8 +419,10 @@ impl App {
             }
             // Each in its place among Katmanlar' slot, as a module's program docks them.
             if let Some(slot) = docks.slot(Panel::Layers) {
-                let in_slot: Vec<Panel> =
-                    Panel::TOP_SLOT.into_iter().filter(|p| docks.slot(*p) == Some(slot)).collect();
+                let in_slot: Vec<Panel> = Panel::TOP_SLOT
+                    .into_iter()
+                    .filter(|p| docks.slot(*p) == Some(slot))
+                    .collect();
                 for (i, panel) in in_slot.into_iter().enumerate() {
                     docks.update(kentos_ui::widget::docking::Event::Moved(
                         panel,
@@ -480,8 +485,8 @@ impl App {
         let ext = extension(&path);
         // kentos-cad opens a GeoPackage as a CBS project in a tab of its own, beside the project on screen
         // (docs/adr/9195 §2: its tabs hold every module's projects).
-        let gpkg =
-            self.program.is_none() && kentos_native_application::project_store::is_geopackage(&path);
+        let gpkg = self.program.is_none()
+            && kentos_native_application::project_store::is_geopackage(&path);
         if DROPPED_DRAWINGS.contains(&ext.as_str()) || gpkg {
             return self.update(Message::Opening(crate::opening::Event::PickedTab(Some(
                 path,
@@ -501,7 +506,10 @@ impl App {
             )));
         }
         let takes = match self.program {
-            Some(m) => format!("{} çizimleri (KCAD, DWG, DXF, NCZ) açar, PDF'i içe aktarır.", m.title()),
+            Some(m) => format!(
+                "{} çizimleri (KCAD, DWG, DXF, NCZ) açar, PDF'i içe aktarır.",
+                m.title()
+            ),
             None => "Bu proje çizimleri (KCAD, DWG, DXF, NCZ) açar, PDF'i içe aktarır.".to_owned(),
         };
         let here = self.here_words();

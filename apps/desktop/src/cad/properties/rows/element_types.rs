@@ -54,7 +54,11 @@ fn typed<'d>(doc: &'d Document, e: &Entity) -> Option<(&'d ElementType, Vec<Stri
     let link = type_link(e)?;
     let t = doc.model.element_type(&link.id)?;
     let behind = link.version < t.version;
-    let own = if behind { link.overrides.clone() } else { fields_off_type(e, t) };
+    let own = if behind {
+        link.overrides.clone()
+    } else {
+        fields_off_type(e, t)
+    };
     Some((t, own, behind))
 }
 
@@ -81,7 +85,9 @@ pub(super) fn section(doc: &Document, e: &Entity, locked: bool) -> Option<Sectio
     let kind = ElementTypeKind::of(e)?;
     let mine = typed(doc, e);
     let open = |m: Event| (!locked).then(|| msg(m));
-    let shown = mine.as_ref().map_or_else(|| "Tipsiz".to_owned(), |(t, ..)| t.name.clone());
+    let shown = mine
+        .as_ref()
+        .map_or_else(|| "Tipsiz".to_owned(), |(t, ..)| t.name.clone());
     let mut items: Vec<Choice> = doc
         .model
         .element_types()
@@ -115,7 +121,12 @@ pub(super) fn section(doc: &Document, e: &Entity, locked: bool) -> Option<Sectio
         icon: crate::icons::from_web(Some("elementTypes")),
         id: "arch.elementTypes",
     });
-    let mut rows = vec![Row::text("Tip", shown.clone()).editor(Some(Editor::Select { text: shown, swatch: None, icon: None, items }))];
+    let mut rows = vec![Row::text("Tip", shown.clone()).editor(Some(Editor::Select {
+        text: shown,
+        swatch: None,
+        icon: None,
+        items,
+    }))];
     if let (Some((t, own, behind)), Some(link)) = (&mine, type_link(e)) {
         rows.push(Row::text(
             "Tip sürümü",
@@ -128,7 +139,11 @@ pub(super) fn section(doc: &Document, e: &Entity, locked: bool) -> Option<Sectio
         let words = if own.is_empty() {
             "Yok".to_owned()
         } else {
-            own.iter().filter_map(|k| t.kind.field(k)).map(|f| f.label).collect::<Vec<_>>().join(", ")
+            own.iter()
+                .filter_map(|k| t.kind.field(k))
+                .map(|f| f.label)
+                .collect::<Vec<_>>()
+                .join(", ")
         };
         let items = vec![
             Choice::Command {
@@ -140,12 +155,16 @@ pub(super) fn section(doc: &Document, e: &Entity, locked: bool) -> Option<Sectio
             Choice::Action {
                 label: "Tipe uygula",
                 icon: "elementPush",
-                message: (!own.is_empty()).then_some(()).and_then(|()| open(Event::Push)),
+                message: (!own.is_empty())
+                    .then_some(())
+                    .and_then(|()| open(Event::Push)),
             },
             Choice::Action {
                 label: "Tipe döndür",
                 icon: "elementReset",
-                message: (!own.is_empty() || *behind).then_some(()).and_then(|()| open(Event::Reset)),
+                message: (!own.is_empty() || *behind)
+                    .then_some(())
+                    .and_then(|()| open(Event::Reset)),
             },
             Choice::Action {
                 label: "Tipi yeniden uygula",
@@ -153,12 +172,14 @@ pub(super) fn section(doc: &Document, e: &Entity, locked: bool) -> Option<Sectio
                 message: behind.then_some(()).and_then(|()| open(Event::Refresh)),
             },
         ];
-        rows.push(Row::text("İstisnalar", words.clone()).editor(Some(Editor::Select {
-            text: words,
-            swatch: None,
-            icon: None,
-            items,
-        })));
+        rows.push(
+            Row::text("İstisnalar", words.clone()).editor(Some(Editor::Select {
+                text: words,
+                swatch: None,
+                icon: None,
+                items,
+            })),
+        );
     } else {
         rows.push(Row::note("Değerleri bu elemanındır. Tipe çevir ile tipi yapılır ya da Tip listesinden bir tipe bağlanır."));
     }

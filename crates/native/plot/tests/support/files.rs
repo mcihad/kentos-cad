@@ -268,12 +268,28 @@ fn array_after<'a>(head: &'a str, key: &str) -> Option<&'a str> {
     Some(&head[open..close])
 }
 
-#[derive(Clone,Debug)]
-pub struct PdfInk {pub segment:[f64;4],pub width:f64,pub dash:Vec<f64>,pub cap:u8,pub join:u8,pub color:[f64;3]}
 #[derive(Clone, Debug)]
-pub struct PdfCubic { pub points: [f64;8], pub color:[f64;3] }
+pub struct PdfInk {
+    pub segment: [f64; 4],
+    pub width: f64,
+    pub dash: Vec<f64>,
+    pub cap: u8,
+    pub join: u8,
+    pub color: [f64; 3],
+}
+#[derive(Clone, Debug)]
+pub struct PdfCubic {
+    pub points: [f64; 8],
+    pub color: [f64; 3],
+}
 #[derive(Clone)]
-struct Pen {width:f64,dash:Vec<f64>,cap:u8,join:u8,color:[f64;3]}
+struct Pen {
+    width: f64,
+    dash: Vec<f64>,
+    cap: u8,
+    join: u8,
+    color: [f64; 3],
+}
 /// The stroked straight segments of a content stream, in page points, through `cm`.
 fn styled_segments(content: &[u8]) -> (Vec<PdfInk>, Vec<PdfCubic>) {
     let mut out = Vec::new();
@@ -337,10 +353,7 @@ fn styled_segments(content: &[u8]) -> (Vec<PdfInk>, Vec<PdfCubic>) {
         }
         if c == b'/' {
             i = start + 1;
-            while i < n
-                && !content[i].is_ascii_whitespace()
-                && !b"[]()<>/".contains(&content[i])
-            {
+            while i < n && !content[i].is_ascii_whitespace() && !b"[]()<>/".contains(&content[i]) {
                 i += 1;
             }
             continue;
@@ -457,12 +470,17 @@ pub struct Page {
     pub width: f64,
     pub height: f64,
     pub segments: Vec<[f64; 4]>,
-    pub ink:Vec<PdfInk>,
-    pub cubics:Vec<PdfCubic>,
+    pub ink: Vec<PdfInk>,
+    pub cubics: Vec<PdfCubic>,
 }
 
 /// All decoded streams, independently extracted: fonts, images and page instructions.
-pub fn pdf_streams(data:&[u8])->Vec<Vec<u8>> { objects(data).into_values().filter_map(|(_,stream)|stream).collect() }
+pub fn pdf_streams(data: &[u8]) -> Vec<Vec<u8>> {
+    objects(data)
+        .into_values()
+        .filter_map(|(_, stream)| stream)
+        .collect()
+}
 
 /// Each page in order.
 pub fn pdf_pages(data: &[u8]) -> Vec<Page> {

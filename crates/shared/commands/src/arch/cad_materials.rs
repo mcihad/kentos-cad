@@ -10,7 +10,9 @@ use ts_rs::TS;
 
 #[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
-use crate::{ArchMaterial, ComponentEdge, ComponentHatch, MaterialCategory, MaterialQuantity, MaterialsFile};
+use crate::{
+    ArchMaterial, ComponentEdge, ComponentHatch, MaterialCategory, MaterialQuantity, MaterialsFile,
+};
 
 pub const CAD_MATERIALS_EDIT: &str = "cad.materials.edit";
 pub const CAD_MATERIALS_EDIT_VERSION: u32 = 1;
@@ -62,7 +64,11 @@ impl MaterialChange {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum MaterialTarget {
     /// A project wall style's component (from its left face, 0 first); the walls of the style follow it.
@@ -106,7 +112,11 @@ pub enum MaterialConflict {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[serde(
+    tag = "kind",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase"
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum MaterialsOperation {
     /// Yeni malzeme: a material `name` (its id `id`, else from its name), its other fields from `change` (`name`
@@ -120,7 +130,10 @@ pub enum MaterialsOperation {
         change: MaterialChange,
     },
     /// Malzemeyi değiştir: the material (its id or name) changed by `change`; everything bound to it follows.
-    Update { material: String, change: MaterialChange },
+    Update {
+        material: String,
+        change: MaterialChange,
+    },
     /// Sil: the material; refused while anything is bound to it (`material_in_use`, with the walls' and slabs' ids).
     Remove { material: String },
     /// Bağla: the targets bound to the material (its id or name; absent or null: left, each keeping its text and look).

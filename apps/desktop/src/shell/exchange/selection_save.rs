@@ -17,7 +17,9 @@ use std::sync::atomic::AtomicBool;
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_commands::{CallOp, CreateTarget, DocumentSnapshotV2, EntityId, ExportExisting, LayersMigrate};
+use kentos_commands::{
+    CallOp, CreateTarget, DocumentSnapshotV2, EntityId, ExportExisting, LayersMigrate,
+};
 use kentos_native_application::{ExecutionContext, registry};
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::{Dialog, overlay};
@@ -32,7 +34,11 @@ pub struct Kind(pub bool);
 
 impl fmt::Display for Kind {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(if self.0 { "CBS projesi ve GeoPackage" } else { "Çizim kopyası" })
+        f.write_str(if self.0 {
+            "CBS projesi ve GeoPackage"
+        } else {
+            "Çizim kopyası"
+        })
     }
 }
 
@@ -82,12 +88,20 @@ pub(crate) fn held_layers(drawing: &DocumentSnapshotV2, uids: &[EntityId]) -> Ve
     let Ok(doc) = kentos_domain::Document::from_snapshot_v2(made) else {
         return Vec::new();
     };
-    kentos_native_application::layer_kind::held_in_file(&doc).into_iter().map(|h| h.name).collect()
+    kentos_native_application::layer_kind::held_in_file(&doc)
+        .into_iter()
+        .map(|h| h.name)
+        .collect()
 }
 
 impl App {
     /// The window of a CBS project's selection: its kind and a same-named table's fate asked.
-    pub(crate) fn selection_save_open(&mut self, uids: Vec<EntityId>, drawing: DocumentSnapshotV2, layers: Vec<String>) {
+    pub(crate) fn selection_save_open(
+        &mut self,
+        uids: Vec<EntityId>,
+        drawing: DocumentSnapshotV2,
+        layers: Vec<String>,
+    ) {
         self.open_window(Window::SelectionSave(State {
             tables: true,
             same: ExportExisting::Refuse,
@@ -113,8 +127,19 @@ impl App {
                 if let Picker::File(path) = &self.picker {
                     return Task::done(event(Event::Picked(Some(path.clone()))));
                 }
-                let name = self.document.as_ref().map(|d| d.model.name().to_owned()).unwrap_or_default();
-                let suggested = format!("{} - seçim.kcad", if name.is_empty() { "Çizim" } else { name.as_str() });
+                let name = self
+                    .document
+                    .as_ref()
+                    .map(|d| d.model.name().to_owned())
+                    .unwrap_or_default();
+                let suggested = format!(
+                    "{} - seçim.kcad",
+                    if name.is_empty() {
+                        "Çizim"
+                    } else {
+                        name.as_str()
+                    }
+                );
                 return Task::perform(
                     async move {
                         let file = rfd::AsyncFileDialog::new()
@@ -134,7 +159,13 @@ impl App {
                     return Task::none();
                 };
                 self.close_exchange();
-                let State { tables, same, uids, drawing, .. } = s;
+                let State {
+                    tables,
+                    same,
+                    uids,
+                    drawing,
+                    ..
+                } = s;
                 return off_thread(
                     move || {
                         if tables {
@@ -159,7 +190,9 @@ impl App {
     }
 
     pub(super) fn selection_save_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {
-        let kinds = Segmented::new([Kind(true), Kind(false)], Kind(s.tables), |k: Kind| event(Event::Tables(k.0)));
+        let kinds = Segmented::new([Kind(true), Kind(false)], Kind(s.tables), |k: Kind| {
+            event(Event::Tables(k.0))
+        });
         let mut body = Column::new().spacing(12).push(words::field(
             "Kopyanın türü",
             kinds,
@@ -170,7 +203,12 @@ impl App {
             }),
         ));
         if s.tables {
-            let same = [ExportExisting::Refuse, ExportExisting::ReplaceLayer, ExportExisting::Append].map(Same);
+            let same = [
+                ExportExisting::Refuse,
+                ExportExisting::ReplaceLayer,
+                ExportExisting::Append,
+            ]
+            .map(Same);
             body = body.push(words::field(
                 "GeoPackage'da aynı adlı tablo varsa",
                 Segmented::new(same, Same(s.same), |x: Same| event(Event::Same(x.0))),
@@ -186,7 +224,11 @@ impl App {
         }
         let mut lines = vec![words::text_line(
             Line::Info,
-            format!("{} nesne seçili. Tabloya yazılacak katmanlar: {}.", s.uids.len(), s.layers.join(", ")),
+            format!(
+                "{} nesne seçili. Tabloya yazılacak katmanlar: {}.",
+                s.uids.len(),
+                s.layers.join(", ")
+            ),
         )];
         if s.tables {
             lines.push(words::text_line(
@@ -209,11 +251,20 @@ impl App {
 
 /// The selection written as a CBS project and its GeoPackage at `path` (the GeoPackage beside it, `<stem>.gpkg`): what
 /// to say, or why not (then nothing is left of the copy).
-pub fn write_tables(drawing: &DocumentSnapshotV2, uids: &[EntityId], path: &Path, same: ExportExisting) -> Result<String, String> {
-    let stem = path.file_stem().map_or_else(|| "Çizim".to_owned(), |s| s.to_string_lossy().into_owned());
-    let made = kentos_domain::exchange::selection(drawing, uids, &stem).map_err(|why| format!("Seçilenler yazılamadı: {why}"))?;
+pub fn write_tables(
+    drawing: &DocumentSnapshotV2,
+    uids: &[EntityId],
+    path: &Path,
+    same: ExportExisting,
+) -> Result<String, String> {
+    let stem = path
+        .file_stem()
+        .map_or_else(|| "Çizim".to_owned(), |s| s.to_string_lossy().into_owned());
+    let made = kentos_domain::exchange::selection(drawing, uids, &stem)
+        .map_err(|why| format!("Seçilenler yazılamadı: {why}"))?;
     let objects = made.entities.len();
-    let mut doc = kentos_domain::Document::from_snapshot_v2(made).map_err(|why| format!("Seçilenler yazılamadı: {why}"))?;
+    let mut doc = kentos_domain::Document::from_snapshot_v2(made)
+        .map_err(|why| format!("Seçilenler yazılamadı: {why}"))?;
     let gpkg = path.with_extension("gpkg");
     let existed = gpkg.exists();
     let mut taken: BTreeSet<String> = if existed {
@@ -231,7 +282,13 @@ pub fn write_tables(drawing: &DocumentSnapshotV2, uids: &[EntityId], path: &Path
         let (table, existing) = match (taken.contains(&base), same) {
             (false, _) => (base, None),
             (true, ExportExisting::ReplaceLayer | ExportExisting::Append) => (base, Some(same)),
-            (true, _) => ((2..).map(|n| format!("{base}_{n}")).find(|t| !taken.contains(t)).unwrap_or(base), None),
+            (true, _) => (
+                (2..)
+                    .map(|n| format!("{base}_{n}"))
+                    .find(|t| !taken.contains(t))
+                    .unwrap_or(base),
+                None,
+            ),
         };
         taken.insert(table.clone());
         inputs.push(LayersMigrate {
@@ -245,17 +302,30 @@ pub fn write_tables(drawing: &DocumentSnapshotV2, uids: &[EntityId], path: &Path
     }
     let run = |doc: &mut kentos_domain::Document, input: &LayersMigrate, op: CallOp| {
         let value = serde_json::to_value(input).unwrap_or_default();
-        let answer = registry::run(&mut ExecutionContext::new(doc), "cad.layers.migrate", op, value)
-            .map_err(|e| format!("{e:?}"))?;
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.layers.migrate",
+            op,
+            value,
+        )
+        .map_err(|e| format!("{e:?}"))?;
         if answer["status"] == "completed" {
-            Ok(answer["output"]["table"].as_str().unwrap_or_default().to_owned())
+            Ok(answer["output"]["table"]
+                .as_str()
+                .unwrap_or_default()
+                .to_owned())
         } else {
-            Err(answer["error"]["message"].as_str().unwrap_or("taşınamadı").to_owned())
+            Err(answer["error"]["message"]
+                .as_str()
+                .unwrap_or("taşınamadı")
+                .to_owned())
         }
     };
     // Every move planned first: a refusal writes nothing.
     for input in &inputs {
-        run(&mut doc, input, CallOp::Plan).map_err(|why| format!("Seçilenler CBS projesi olarak yazılamadı: {why} Hiçbir dosya yazılmadı."))?;
+        run(&mut doc, input, CallOp::Plan).map_err(|why| {
+            format!("Seçilenler CBS projesi olarak yazılamadı: {why} Hiçbir dosya yazılmadı.")
+        })?;
     }
     let undo = |why: String| {
         if !existed {
@@ -266,20 +336,31 @@ pub fn write_tables(drawing: &DocumentSnapshotV2, uids: &[EntityId], path: &Path
     };
     let mut tables = Vec::new();
     for input in &inputs {
-        let table = run(&mut doc, input, CallOp::Execute).map_err(|why| undo(format!("Seçilenler CBS projesi olarak yazılamadı: {why}")))?;
+        let table = run(&mut doc, input, CallOp::Execute)
+            .map_err(|why| undo(format!("Seçilenler CBS projesi olarak yazılamadı: {why}")))?;
         tables.push(table);
     }
     let mut snapshot = doc.to_snapshot_v2();
     kentos_native_application::source_places::with_relative_layers(&mut snapshot.layers, path);
-    crate::saving::write_watched(&snapshot, path, &AtomicBool::new(false), &mut |_| {}, &crate::saving::Faults::NONE).map_err(
-        |e| {
-            undo(match e {
-                crate::saving::SaveError::Failed(why) => format!("Seçilenler yazılamadı: {why}"),
-                crate::saving::SaveError::Stopped => "Seçilenler yazılamadı: kayıt durduruldu.".to_owned(),
-            })
-        },
-    )?;
-    let name = |p: &Path| p.file_name().map_or_else(String::new, |n| n.to_string_lossy().into_owned());
+    crate::saving::write_watched(
+        &snapshot,
+        path,
+        &AtomicBool::new(false),
+        &mut |_| {},
+        &crate::saving::Faults::NONE,
+    )
+    .map_err(|e| {
+        undo(match e {
+            crate::saving::SaveError::Failed(why) => format!("Seçilenler yazılamadı: {why}"),
+            crate::saving::SaveError::Stopped => {
+                "Seçilenler yazılamadı: kayıt durduruldu.".to_owned()
+            }
+        })
+    })?;
+    let name = |p: &Path| {
+        p.file_name()
+            .map_or_else(String::new, |n| n.to_string_lossy().into_owned())
+    };
     Ok(format!(
         "Seçilenler CBS projesi olarak kaydedildi: {objects} nesne → “{}”; verisi “{}” içinde ({}). Açık çizim değişmedi.",
         name(path),
@@ -289,11 +370,13 @@ pub fn write_tables(drawing: &DocumentSnapshotV2, uids: &[EntityId], path: &Path
 }
 
 fn stem(path: &Path) -> String {
-    path.file_stem().map_or_else(|| "Çizim".to_owned(), |s| s.to_string_lossy().into_owned())
+    path.file_stem()
+        .map_or_else(|| "Çizim".to_owned(), |s| s.to_string_lossy().into_owned())
 }
 
 fn name_of(path: &Path) -> String {
-    path.file_name().map_or_else(String::new, |n| n.to_string_lossy().into_owned())
+    path.file_name()
+        .map_or_else(String::new, |n| n.to_string_lossy().into_owned())
 }
 
 /// The selection's drawing written to `path` (docs/adr/0193 §1): what to say, or why not.
@@ -367,7 +450,11 @@ pub(crate) fn lost_ties(drawing: &DocumentSnapshotV2, uids: &[EntityId]) -> (usi
         match e {
             Entity::Hatch(h) => {
                 if h.assoc.as_ref().is_some_and(|a| {
-                    a.outer.iter().chain(&a.bounds).chain(&a.islands).any(|id| !chosen.contains(&id.to_string()))
+                    a.outer
+                        .iter()
+                        .chain(&a.bounds)
+                        .chain(&a.islands)
+                        .any(|id| !chosen.contains(&id.to_string()))
                 }) {
                     hatches += 1;
                 }

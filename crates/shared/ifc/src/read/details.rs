@@ -15,12 +15,22 @@ use super::{Model, ReadError, Units, Value, ValueKind, guarded, header};
 impl Model {
     /// The details of object `object` (an index into [`Model::objects`]); `bytes` are the bytes it was read from.
     pub fn details(&self, bytes: &[u8], object: usize) -> Result<Details, ReadError> {
-        let Some(o) = self.objects.get(object) else { return Ok(Details::default()) };
+        let Some(o) = self.objects.get(object) else {
+            return Ok(Details::default());
+        };
         let schema = header::version(self.summary.family);
-        let mut own = Group { title: "Nesne".to_owned(), lines: Vec::new() };
+        let mut own = Group {
+            title: "Nesne".to_owned(),
+            lines: Vec::new(),
+        };
         let mut add = |name: &str, value: Option<String>| {
             if let Some(value) = value.filter(|v| !v.trim().is_empty()) {
-                own.lines.push(Line { name: name.to_owned(), value, unit: None, numeric: false });
+                own.lines.push(Line {
+                    name: name.to_owned(),
+                    value,
+                    unit: None,
+                    numeric: false,
+                });
             }
         };
         add("Sınıf", Some(o.class.clone()));
@@ -31,8 +41,17 @@ impl Model {
         add("Uzun ad", o.long_name.clone());
         add("Etiket", o.tag.clone());
         add("Ön tanımlı tür", o.predefined.clone());
-        add("Tip", o.type_object.map(|t| &self.objects[t]).map(|t| format!("{} ({})", t.name.as_deref().unwrap_or("adsız"), t.class)));
-        add("Kat", self.storey_of(schema, object).map(|s| s.name.clone().unwrap_or_else(|| s.class.clone())));
+        add(
+            "Tip",
+            o.type_object
+                .map(|t| &self.objects[t])
+                .map(|t| format!("{} ({})", t.name.as_deref().unwrap_or("adsız"), t.class)),
+        );
+        add(
+            "Kat",
+            self.storey_of(schema, object)
+                .map(|s| s.name.clone().unwrap_or_else(|| s.class.clone())),
+        );
         // The storeys it rises into besides its own (docs/adr/8168; `IfcRelReferencedInSpatialStructure`).
         for storey in self.spanned_storeys(schema, object) {
             add("Uzandığı kat", Some(storey));
@@ -40,22 +59,41 @@ impl Model {
         for group in self.groups_of(schema, object) {
             add("Grup", Some(group));
         }
-        add("Malzeme", self.materials(bytes, object).ok().filter(|m| !m.is_empty()).map(|m| m.join("; ")));
+        add(
+            "Malzeme",
+            self.materials(bytes, object)
+                .ok()
+                .filter(|m| !m.is_empty())
+                .map(|m| m.join("; ")),
+        );
         add("Kayıt", Some(format!("#{}", o.step)));
         let mut groups = vec![own];
         // A grid's axes (docs/adr/8169): its U, V and W axes' tags as the file lists them.
         let axes = self.axes(bytes, schema, object)?;
         if !axes.is_empty() {
-            groups.push(Group { title: "Akslar".to_owned(), lines: axes });
+            groups.push(Group {
+                title: "Akslar".to_owned(),
+                lines: axes,
+            });
         }
         // Its material layers (docs/adr/8166): how a usage lays them, then each in order, its thickness in the
         // project's length unit.
         if let Some(list) = self.layers(bytes, object)? {
-            let length = self.summary.units.length.as_ref().map(|u| symbol(u.prefix.as_deref(), &u.name));
+            let length = self
+                .summary
+                .units
+                .length
+                .as_ref()
+                .map(|u| symbol(u.prefix.as_deref(), &u.name));
             let mut lines = Vec::new();
             if let Some((direction, sense, offset)) = &list.usage {
                 let value = laid(direction, sense);
-                lines.push(Line { name: "Diziliş".to_owned(), value, unit: None, numeric: false });
+                lines.push(Line {
+                    name: "Diziliş".to_owned(),
+                    value,
+                    unit: None,
+                    numeric: false,
+                });
                 lines.push(Line {
                     name: "Taban çizgisi".to_owned(),
                     value: offset.to_string(),
@@ -67,14 +105,30 @@ impl Model {
             for (i, (name, material, thickness)) in list.layers.iter().enumerate() {
                 let name = format!("{}. {name}", i + 1);
                 if let Some(m) = material {
-                    materials.push(Line { name: name.clone(), value: m.clone(), unit: None, numeric: false });
+                    materials.push(Line {
+                        name: name.clone(),
+                        value: m.clone(),
+                        unit: None,
+                        numeric: false,
+                    });
                 }
-                lines.push(Line { name, value: thickness.to_string(), unit: length.clone(), numeric: true });
+                lines.push(Line {
+                    name,
+                    value: thickness.to_string(),
+                    unit: length.clone(),
+                    numeric: true,
+                });
             }
-            groups.push(Group { title: "Malzeme katmanları".to_owned(), lines });
+            groups.push(Group {
+                title: "Malzeme katmanları".to_owned(),
+                lines,
+            });
             // What each layer is made of, apart: a name and a material side by side would not fit the panel.
             if !materials.is_empty() {
-                groups.push(Group { title: "Katmanların malzemesi".to_owned(), lines: materials });
+                groups.push(Group {
+                    title: "Katmanların malzemesi".to_owned(),
+                    lines: materials,
+                });
             }
         }
         // Its section (docs/adr/8167): its own material profile set's, else its type's (a column type's, a beam
@@ -87,10 +141,20 @@ impl Model {
             },
         };
         for p in sections {
-            let length = self.summary.units.length.as_ref().map(|u| symbol(u.prefix.as_deref(), &u.name));
+            let length = self
+                .summary
+                .units
+                .length
+                .as_ref()
+                .map(|u| symbol(u.prefix.as_deref(), &u.name));
             let mut lines = Vec::new();
             if let Some(n) = p.name.filter(|n| !n.trim().is_empty()) {
-                lines.push(Line { name: "Ad".to_owned(), value: n, unit: None, numeric: false });
+                lines.push(Line {
+                    name: "Ad".to_owned(),
+                    value: n,
+                    unit: None,
+                    numeric: false,
+                });
             }
             let shape = match p.class.to_ascii_uppercase().as_str() {
                 "IFCRECTANGLEPROFILEDEF" => "Dikdörtgen".to_owned(),
@@ -98,19 +162,48 @@ impl Model {
                 "IFCARBITRARYCLOSEDPROFILEDEF" => "Serbest biçim".to_owned(),
                 _ => p.class.clone(),
             };
-            lines.push(Line { name: "Biçim".to_owned(), value: shape, unit: None, numeric: false });
+            lines.push(Line {
+                name: "Biçim".to_owned(),
+                value: shape,
+                unit: None,
+                numeric: false,
+            });
             for (key, v) in &p.measures {
-                lines.push(Line { name: (*key).to_owned(), value: v.to_string(), unit: length.clone(), numeric: true });
+                lines.push(Line {
+                    name: (*key).to_owned(),
+                    value: v.to_string(),
+                    unit: length.clone(),
+                    numeric: true,
+                });
             }
             if let Some(m) = p.material {
-                lines.push(Line { name: "Malzeme".to_owned(), value: m, unit: None, numeric: false });
+                lines.push(Line {
+                    name: "Malzeme".to_owned(),
+                    value: m,
+                    unit: None,
+                    numeric: false,
+                });
             }
             let title = if from_type { "Kesit (tipten)" } else { "Kesit" };
-            groups.push(Group { title: title.to_owned(), lines });
+            groups.push(Group {
+                title: title.to_owned(),
+                lines,
+            });
         }
         for set in self.property_sets(bytes, object)? {
-            let title = if set.from_type { format!("{} (tipten)", set.name) } else { set.name.clone() };
-            groups.push(Group { title, lines: set.values.iter().map(|v| line(v, &self.summary.units)).collect() });
+            let title = if set.from_type {
+                format!("{} (tipten)", set.name)
+            } else {
+                set.name.clone()
+            };
+            groups.push(Group {
+                title,
+                lines: set
+                    .values
+                    .iter()
+                    .map(|v| line(v, &self.summary.units))
+                    .collect(),
+            });
         }
         Ok(Details { groups })
     }
@@ -118,27 +211,53 @@ impl Model {
     /// The groups the object is assigned to (`IfcRelAssignsToGroup`: a zone, such as a unit or a fire compartment,
     /// docs/adr/8088), each by its long name, else its name, else its object type, else its class.
     fn groups_of(&self, schema: SchemaVersion, object: usize) -> Vec<String> {
-        let Some(o) = self.objects.get(object) else { return Vec::new() };
+        let Some(o) = self.objects.get(object) else {
+            return Vec::new();
+        };
         self.relations_of(o.step)
             .iter()
             .map(|&r| &self.relations[r])
-            .filter(|r| schema.is_subtype_of(&r.class, "IfcRelAssignsToGroup") && r.related.contains(&o.step))
+            .filter(|r| {
+                schema.is_subtype_of(&r.class, "IfcRelAssignsToGroup")
+                    && r.related.contains(&o.step)
+            })
             .filter_map(|r| self.object(r.relating?))
-            .map(|g| g.long_name.clone().or_else(|| g.name.clone()).or_else(|| g.object_type.clone()).unwrap_or_else(|| g.class.clone()))
+            .map(|g| {
+                g.long_name
+                    .clone()
+                    .or_else(|| g.name.clone())
+                    .or_else(|| g.object_type.clone())
+                    .unwrap_or_else(|| g.class.clone())
+            })
             .collect()
     }
 
     /// A grid's axes (docs/adr/8169): a line for each of its U, V and W lists, its axes' tags in the file's order; none
     /// for another object.
-    fn axes(&self, bytes: &[u8], schema: SchemaVersion, object: usize) -> Result<Vec<Line>, ReadError> {
-        let Some(o) = self.objects.get(object).filter(|o| schema.is_subtype_of(&o.class, "IfcGrid")) else {
+    fn axes(
+        &self,
+        bytes: &[u8],
+        schema: SchemaVersion,
+        object: usize,
+    ) -> Result<Vec<Line>, ReadError> {
+        let Some(o) = self
+            .objects
+            .get(object)
+            .filter(|o| schema.is_subtype_of(&o.class, "IfcGrid"))
+        else {
             return Ok(Vec::new());
         };
         guarded(|| {
             let mut decoder = EntityDecoder::with_arc_index(bytes, self.index.clone());
-            let Ok(grid) = decoder.decode_by_id(o.step) else { return Ok(Vec::new()) };
+            let Ok(grid) = decoder.decode_by_id(o.step) else {
+                return Ok(Vec::new());
+            };
             let mut lines = Vec::new();
-            for (list, name) in [("UAxes", "U aksları"), ("VAxes", "V aksları"), ("WAxes", "W aksları")] {
+            for (list, name) in [
+                ("UAxes", "U aksları"),
+                ("VAxes", "V aksları"),
+                ("WAxes", "W aksları"),
+            ] {
                 let ids: Vec<u32> = named(schema, &grid, list)
                     .and_then(AttributeValue::as_list)
                     .map(|l| l.iter().filter_map(AttributeValue::as_entity_ref).collect())
@@ -146,10 +265,20 @@ impl Model {
                 let tags: Vec<String> = ids
                     .into_iter()
                     .filter_map(|id| decoder.decode_by_id(id).ok())
-                    .map(|a| named(schema, &a, "AxisTag").and_then(AttributeValue::as_string).unwrap_or("?").to_owned())
+                    .map(|a| {
+                        named(schema, &a, "AxisTag")
+                            .and_then(AttributeValue::as_string)
+                            .unwrap_or("?")
+                            .to_owned()
+                    })
                     .collect();
                 if !tags.is_empty() {
-                    lines.push(Line { name: name.to_owned(), value: tags.join(", "), unit: None, numeric: false });
+                    lines.push(Line {
+                        name: name.to_owned(),
+                        value: tags.join(", "),
+                        unit: None,
+                        numeric: false,
+                    });
                 }
             }
             Ok(lines)
@@ -159,7 +288,9 @@ impl Model {
     /// The storeys that reference the object without containing it (`IfcRelReferencedInSpatialStructure`,
     /// docs/adr/8168: an element spanning storeys), each by its name, else its class.
     fn spanned_storeys(&self, schema: SchemaVersion, object: usize) -> Vec<String> {
-        let Some(o) = self.objects.get(object) else { return Vec::new() };
+        let Some(o) = self.objects.get(object) else {
+            return Vec::new();
+        };
         self.relations_of(o.step)
             .iter()
             .map(|&r| &self.relations[r])
@@ -173,7 +304,10 @@ impl Model {
 
     /// The storey the object stands on: the nearest up its parts and containers.
     fn storey_of(&self, schema: SchemaVersion, object: usize) -> Option<&super::Object> {
-        let mut at = self.objects.get(object).and_then(|o| o.parent.or(o.container));
+        let mut at = self
+            .objects
+            .get(object)
+            .and_then(|o| o.parent.or(o.container));
         for _ in 0..self.objects.len() {
             let o = self.objects.get(at?)?;
             if schema.is_subtype_of(&o.class, "IfcBuildingStorey") {
@@ -209,7 +343,12 @@ fn line(v: &Value, units: &Units) -> Line {
         Some(own) => Some(written(own)),
         None => measure.and_then(|m| of_measure(m, units)),
     };
-    Line { name: v.name.clone(), value, unit, numeric }
+    Line {
+        name: v.name.clone(),
+        value,
+        unit,
+        numeric,
+    }
 }
 
 /// A value in words, whether it is a number, and the measure it is written with.
@@ -222,7 +361,15 @@ fn words(v: &ValueKind) -> (String, bool, Option<&str>) {
         ValueKind::Logical(Some(false)) => ("Yanlış".to_owned(), false, None),
         ValueKind::Logical(None) => ("Bilinmiyor".to_owned(), false, None),
         ValueKind::Enumeration(items) => (items.join(", "), false, None),
-        ValueKind::List(items) => (items.iter().map(|i| words(i).0).collect::<Vec<_>>().join(", "), false, None),
+        ValueKind::List(items) => (
+            items
+                .iter()
+                .map(|i| words(i).0)
+                .collect::<Vec<_>>()
+                .join(", "),
+            false,
+            None,
+        ),
         ValueKind::Bounded { lower, upper } => {
             let (lo, hi) = (words(lower), words(upper));
             (format!("{} – {}", lo.0, hi.0), lo.1 || hi.1, lo.2.or(hi.2))
@@ -235,7 +382,9 @@ fn words(v: &ValueKind) -> (String, bool, Option<&str>) {
 /// The project's unit of a measure (`IFCLENGTHMEASURE`: its length unit), as a symbol.
 fn of_measure(measure: &str, units: &Units) -> Option<String> {
     let u = match measure.to_ascii_uppercase().as_str() {
-        "IFCLENGTHMEASURE" | "IFCPOSITIVELENGTHMEASURE" | "IFCNONNEGATIVELENGTHMEASURE" => units.length.as_ref(),
+        "IFCLENGTHMEASURE" | "IFCPOSITIVELENGTHMEASURE" | "IFCNONNEGATIVELENGTHMEASURE" => {
+            units.length.as_ref()
+        }
         "IFCAREAMEASURE" => units.area.as_ref(),
         "IFCVOLUMEMEASURE" => units.volume.as_ref(),
         "IFCPLANEANGLEMEASURE" | "IFCPOSITIVEPLANEANGLEMEASURE" => units.plane_angle.as_ref(),
@@ -248,7 +397,11 @@ fn of_measure(measure: &str, units: &Units) -> Option<String> {
 fn written(unit: &str) -> String {
     PREFIXES
         .iter()
-        .find_map(|(p, _)| unit.strip_prefix(p).filter(|rest| base(rest).is_some()).map(|rest| symbol(Some(p), rest)))
+        .find_map(|(p, _)| {
+            unit.strip_prefix(p)
+                .filter(|rest| base(rest).is_some())
+                .map(|rest| symbol(Some(p), rest))
+        })
         .unwrap_or_else(|| symbol(None, unit))
 }
 
@@ -268,8 +421,16 @@ const PREFIXES: [(&str, &str); 10] = [
 
 /// An SI unit's symbol; a unit the file names itself (a conversion's `foot`) keeps its name.
 fn symbol(prefix: Option<&str>, name: &str) -> String {
-    let Some(b) = base(name) else { return name.to_owned() };
-    let p = prefix.and_then(|p| PREFIXES.iter().find(|(n, _)| p.trim_matches('.').eq_ignore_ascii_case(n))).map_or("", |(_, s)| s);
+    let Some(b) = base(name) else {
+        return name.to_owned();
+    };
+    let p = prefix
+        .and_then(|p| {
+            PREFIXES
+                .iter()
+                .find(|(n, _)| p.trim_matches('.').eq_ignore_ascii_case(n))
+        })
+        .map_or("", |(_, s)| s);
     format!("{p}{b}")
 }
 
@@ -302,17 +463,30 @@ mod tests {
         assert_eq!(written("SQUARE_METRE"), "m²");
         assert_eq!(symbol(Some(".MILLI."), "CUBIC_METRE"), "mm³");
         assert_eq!(written("foot"), "foot");
-        assert_eq!(symbol(None, "DEGREE"), "DEGREE", "a conversion's name stays as written");
+        assert_eq!(
+            symbol(None, "DEGREE"),
+            "DEGREE",
+            "a conversion's name stays as written"
+        );
     }
 
     #[test]
     fn a_wall_s_details_are_its_attributes_and_sets_as_the_file_writes_them() {
         let (_, bytes) = WRITTEN[0];
         let m = read_ok(bytes);
-        let wall = m.objects.iter().position(|o| o.class == "IfcWall").expect("a wall");
+        let wall = m
+            .objects
+            .iter()
+            .position(|o| o.class == "IfcWall")
+            .expect("a wall");
         let d = m.details(bytes, wall).expect("the details");
         let own = &d.groups[0];
-        let value = |name: &str| own.lines.iter().find(|l| l.name == name).map(|l| l.value.as_str());
+        let value = |name: &str| {
+            own.lines
+                .iter()
+                .find(|l| l.name == name)
+                .map(|l| l.value.as_str())
+        };
         assert_eq!(value("Sınıf"), Some("IfcWall"));
         assert_eq!(value("GlobalId"), Some(m.objects[wall].global_id.as_str()));
         assert!(value("Kat").is_some(), "{own:?}");
@@ -329,12 +503,39 @@ mod tests {
         // them, docs/adr/8117), one (Tuğla) before.
         assert_eq!(value("Malzeme"), Some("Dış duvar 25"), "its layer set");
         // A quantity is a number as written with the project's unit for its measure.
-        let quantities = d.groups.iter().find(|g| g.title == "Qto_WallBaseQuantities").expect("the wall's quantities");
-        let at = |name: &str| quantities.lines.iter().find(|l| l.name == name).expect(name);
-        assert_eq!((at("Length").value.as_str(), at("Length").unit.as_deref(), at("Length").numeric), ("12", Some("m"), true));
-        assert_eq!((at("NetSideArea").value.as_str(), at("NetSideArea").unit.as_deref()), ("28.74", Some("m²")));
+        let quantities = d
+            .groups
+            .iter()
+            .find(|g| g.title == "Qto_WallBaseQuantities")
+            .expect("the wall's quantities");
+        let at = |name: &str| {
+            quantities
+                .lines
+                .iter()
+                .find(|l| l.name == name)
+                .expect(name)
+        };
+        assert_eq!(
+            (
+                at("Length").value.as_str(),
+                at("Length").unit.as_deref(),
+                at("Length").numeric
+            ),
+            ("12", Some("m"), true)
+        );
+        assert_eq!(
+            (
+                at("NetSideArea").value.as_str(),
+                at("NetSideArea").unit.as_deref()
+            ),
+            ("28.74", Some("m²"))
+        );
         assert_eq!(at("NetVolume").unit.as_deref(), Some("m³"));
-        let common = d.groups.iter().find(|g| g.title == "Pset_WallCommon").expect("the common set");
+        let common = d
+            .groups
+            .iter()
+            .find(|g| g.title == "Pset_WallCommon")
+            .expect("the common set");
         assert_eq!(common.lines[0].value, "Doğru");
         assert_eq!(value("Grup"), None, "a wall is in no group");
     }
@@ -346,11 +547,20 @@ mod tests {
     fn a_layered_slab_s_details_list_its_layers_and_how_they_are_laid() {
         let (_, bytes) = WRITTEN[0];
         let m = read_ok(bytes);
-        let floors: Vec<usize> = (0..m.objects.len()).filter(|&i| m.objects[i].class == "IfcSlab").collect();
+        let floors: Vec<usize> = (0..m.objects.len())
+            .filter(|&i| m.objects[i].class == "IfcSlab")
+            .collect();
         let lines = |i: usize| -> Vec<(String, String, Option<String>)> {
             let d = m.details(bytes, i).expect("the details");
-            let g = d.groups.iter().find(|g| g.title == "Malzeme katmanları").expect("its layers");
-            g.lines.iter().map(|l| (l.name.clone(), l.value.clone(), l.unit.clone())).collect()
+            let g = d
+                .groups
+                .iter()
+                .find(|g| g.title == "Malzeme katmanları")
+                .expect("its layers");
+            g.lines
+                .iter()
+                .map(|l| (l.name.clone(), l.value.clone(), l.unit.clone()))
+                .collect()
         };
         let m_ = || Some("m".to_owned());
         let ground = floors
@@ -371,12 +581,27 @@ mod tests {
             ]
         );
         // Their materials apart: the structure's alone is given.
-        let ground_at = *floors.iter().find(|&&i| lines(i).len() == 7).expect("the ground floor");
+        let ground_at = *floors
+            .iter()
+            .find(|&&i| lines(i).len() == 7)
+            .expect("the ground floor");
         let d = m.details(bytes, ground_at).expect("the details");
-        let made = d.groups.iter().find(|g| g.title == "Katmanların malzemesi").expect("their materials");
-        let made: Vec<(&str, &str)> = made.lines.iter().map(|l| (l.name.as_str(), l.value.as_str())).collect();
+        let made = d
+            .groups
+            .iter()
+            .find(|g| g.title == "Katmanların malzemesi")
+            .expect("their materials");
+        let made: Vec<(&str, &str)> = made
+            .lines
+            .iter()
+            .map(|l| (l.name.as_str(), l.value.as_str()))
+            .collect();
         assert_eq!(made, [("5. Taşıyıcı", "Betonarme")]);
-        let wall = m.objects.iter().position(|o| o.class == "IfcWall").expect("a wall");
+        let wall = m
+            .objects
+            .iter()
+            .position(|o| o.class == "IfcWall")
+            .expect("a wall");
         let w = lines(wall);
         assert!(w.iter().all(|(n, ..)| n != "Diziliş"), "{w:?}");
         assert_eq!(w.len(), 4, "the style's four layers: {w:?}");
@@ -386,13 +611,25 @@ mod tests {
     /// rectangle, its XDim and YDim in metres and its material.
     #[test]
     fn a_typed_column_shows_its_type_s_section() {
-        let bytes: &[u8] = include_bytes!("../../../../../fixtures/arch/v1/ifc/kesit-binasi-eleman-tipli.ifc");
+        let bytes: &[u8] =
+            include_bytes!("../../../../../fixtures/arch/v1/ifc/kesit-binasi-eleman-tipli.ifc");
         let m = read_ok(bytes);
-        let column = m.objects.iter().position(|o| o.class == "IfcColumn").expect("a column");
+        let column = m
+            .objects
+            .iter()
+            .position(|o| o.class == "IfcColumn")
+            .expect("a column");
         let d = m.details(bytes, column).expect("the details");
-        let g = d.groups.iter().find(|g| g.title == "Kesit (tipten)").expect("its type's section");
-        let lines: Vec<(&str, &str, Option<&str>)> =
-            g.lines.iter().map(|l| (l.name.as_str(), l.value.as_str(), l.unit.as_deref())).collect();
+        let g = d
+            .groups
+            .iter()
+            .find(|g| g.title == "Kesit (tipten)")
+            .expect("its type's section");
+        let lines: Vec<(&str, &str, Option<&str>)> = g
+            .lines
+            .iter()
+            .map(|l| (l.name.as_str(), l.value.as_str(), l.unit.as_deref()))
+            .collect();
         assert_eq!(
             lines,
             [
@@ -404,14 +641,25 @@ mod tests {
             ]
         );
         // A wall has no section.
-        let wall = m.objects.iter().position(|o| o.class == "IfcWall").expect("a wall");
-        assert!(m.details(bytes, wall).expect("the details").groups.iter().all(|g| !g.title.starts_with("Kesit")));
+        let wall = m
+            .objects
+            .iter()
+            .position(|o| o.class == "IfcWall")
+            .expect("a wall");
+        assert!(
+            m.details(bytes, wall)
+                .expect("the details")
+                .groups
+                .iter()
+                .all(|g| !g.title.starts_with("Kesit"))
+        );
     }
 
     /// A space of the file written with fire compartments (docs/adr/8088) says its compartment's zone.
     #[test]
     fn a_space_says_the_zones_it_is_grouped_in() {
-        let bytes: &[u8] = include_bytes!("../../../../../fixtures/arch/v1/ifc/kesit-binasi-kompartiman.ifc");
+        let bytes: &[u8] =
+            include_bytes!("../../../../../fixtures/arch/v1/ifc/kesit-binasi-kompartiman.ifc");
         let m = read_ok(bytes);
         // Each space's groups, one line each: its compartment's long name among them.
         let zoned: Vec<Vec<String>> = m
@@ -421,11 +669,23 @@ mod tests {
             .filter(|(_, o)| o.class == "IfcSpace")
             .map(|(i, _)| {
                 let d = m.details(bytes, i).expect("the details");
-                d.groups[0].lines.iter().filter(|l| l.name == "Grup").map(|l| l.value.clone()).collect()
+                d.groups[0]
+                    .lines
+                    .iter()
+                    .filter(|l| l.name == "Grup")
+                    .map(|l| l.value.clone())
+                    .collect()
             })
             .collect();
         assert_eq!(zoned.len(), 10, "{zoned:?}");
         let count = |n: &str| zoned.iter().filter(|g| g.iter().any(|x| x == n)).count();
-        assert_eq!((count("Yangın kompartımanı 1"), count("Yangın kompartımanı 2")), (5, 5), "{zoned:?}");
+        assert_eq!(
+            (
+                count("Yangın kompartımanı 1"),
+                count("Yangın kompartımanı 2")
+            ),
+            (5, 5),
+            "{zoned:?}"
+        );
     }
 }

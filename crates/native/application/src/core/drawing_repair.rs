@@ -13,8 +13,9 @@
 use std::collections::BTreeSet;
 
 use kentos_commands::{
-    BlockDefinition, BlockId, BlocksMerged, CommandResult, DRAWING_REPAIR_STEP, DrawingRepair, DrawingRepaired,
-    EdgeStraightened, Entity, JunctionFixed, LineEnd, RepairRecipe, RepairStep, Vec2,
+    BlockDefinition, BlockId, BlocksMerged, CommandResult, DRAWING_REPAIR_STEP, DrawingRepair,
+    DrawingRepaired, EdgeStraightened, Entity, JunctionFixed, LineEnd, RepairRecipe, RepairStep,
+    Vec2,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -40,7 +41,10 @@ fn measured(doc: &Document, uid: &str) -> bool {
         return true;
     }
     doc.entities().any(|e| match e {
-        Entity::Dimension(d) => d.refs.as_ref().is_some_and(|r| serde_json::to_string(r).unwrap_or_default().contains(uid)),
+        Entity::Dimension(d) => d
+            .refs
+            .as_ref()
+            .is_some_and(|r| serde_json::to_string(r).unwrap_or_default().contains(uid)),
         _ => false,
     })
 }
@@ -52,7 +56,10 @@ fn meeting(target: &Entity, from: Vec2, end: Vec2, gap: f64) -> Option<Vec2> {
     if length <= NEAR {
         return None;
     }
-    let d = Vec2 { x: (end.x - from.x) / length, y: (end.y - from.y) / length };
+    let d = Vec2 {
+        x: (end.x - from.x) / length,
+        y: (end.y - from.y) / length,
+    };
     let mut best: Option<(f64, Vec2)> = None;
     for edge in kentos_geometry_core::ops::edges::entity_edges(&shape(target)) {
         let kentos_geometry_core::geom::intersect::Edge::Seg { a, b } = edge else {
@@ -68,8 +75,19 @@ fn meeting(target: &Entity, from: Vec2, end: Vec2, gap: f64) -> Option<Vec2> {
         let t = (wx * uy - wy * ux) / den;
         let u = (wx * d.y - wy * d.x) / den;
         let inside = NEAR / edge_len.max(NEAR);
-        if u > inside && u < 1.0 - inside && t.abs() <= gap && -t < length && best.is_none_or(|(bt, _)| t.abs() < bt.abs()) {
-            best = Some((t, Vec2 { x: end.x + t * d.x, y: end.y + t * d.y }));
+        if u > inside
+            && u < 1.0 - inside
+            && t.abs() <= gap
+            && -t < length
+            && best.is_none_or(|(bt, _)| t.abs() < bt.abs())
+        {
+            best = Some((
+                t,
+                Vec2 {
+                    x: end.x + t * d.x,
+                    y: end.y + t * d.y,
+                },
+            ));
         }
     }
     best.map(|(_, p)| p)
@@ -87,13 +105,21 @@ struct Planned {
 }
 
 /// The line `uid` of a fix, its slot; why not.
-fn line_of<'a>(doc: &'a Document, text: &str, at: &str) -> Result<(Slot, &'a kentos_commands::LineEntity), Stop> {
+fn line_of<'a>(
+    doc: &'a Document,
+    text: &str,
+    at: &str,
+) -> Result<(Slot, &'a kentos_commands::LineEntity), Stop> {
     let (slot, e) = Uuid::parse_str(text)
         .ok()
         .and_then(|u| doc.slot_of(u))
         .and_then(|s| Some((s, doc.get(s)?)))
         .ok_or_else(|| {
-            fail(codes::ENTITY_NOT_FOUND, format!("“{text}” kimlikli nesne çizimde yok; denetimi yenileyin."), at.into())
+            fail(
+                codes::ENTITY_NOT_FOUND,
+                format!("“{text}” kimlikli nesne çizimde yok; denetimi yenileyin."),
+                at.into(),
+            )
         })?;
     let Entity::Line(line) = e else {
         return Err(fail(
@@ -104,10 +130,14 @@ fn line_of<'a>(doc: &'a Document, text: &str, at: &str) -> Result<(Slot, &'a ken
     };
     let layers = doc.layers();
     if layers.is_locked(&e.base().layer_id) {
-        let name = layers.get(&e.base().layer_id).map_or(e.base().layer_id.clone(), |n| n.name.clone());
+        let name = layers
+            .get(&e.base().layer_id)
+            .map_or(e.base().layer_id.clone(), |n| n.name.clone());
         return Err(fail(
             codes::LAYER_LOCKED,
-            format!("“{name}” katmanı kilitli; çizgi onarılamaz, hiçbir şey yazılmadı. Kilidi Katmanlar panelinden açın."),
+            format!(
+                "“{name}” katmanı kilitli; çizgi onarılamaz, hiçbir şey yazılmadı. Kilidi Katmanlar panelinden açın."
+            ),
             at.into(),
         ));
     }
@@ -150,7 +180,9 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
             if !checks::is_uid_text(text) {
                 return Err(fail(
                     codes::INVALID_UID,
-                    format!("“{text}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği denetimin bulgusundan alın."),
+                    format!(
+                        "“{text}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği denetimin bulgusundan alın."
+                    ),
                     format!("fixes[{i}].{field}"),
                 ));
             }
@@ -168,7 +200,10 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
         if !checks::is_uid_text(&f.uid) {
             return Err(fail(
                 codes::INVALID_UID,
-                format!("“{}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği denetimin bulgusundan alın.", f.uid),
+                format!(
+                    "“{}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği denetimin bulgusundan alın.",
+                    f.uid
+                ),
                 format!("angles[{i}].uid"),
             ));
         }
@@ -185,17 +220,25 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
         if m.merge.is_empty() || m.merge.len() > 100 {
             return Err(fail(
                 codes::INVALID_INPUT,
-                format!("Bir birleştirme 1 ile 100 tanım alır; {} verildi.", m.merge.len()),
+                format!(
+                    "Bir birleştirme 1 ile 100 tanım alır; {} verildi.",
+                    m.merge.len()
+                ),
                 format!("blocks[{i}].merge"),
             ));
         }
-        for (name, at) in std::iter::once((&m.keep, format!("blocks[{i}].keep")))
-            .chain(m.merge.iter().enumerate().map(|(j, n)| (n, format!("blocks[{i}].merge[{j}]"))))
-        {
+        for (name, at) in std::iter::once((&m.keep, format!("blocks[{i}].keep"))).chain(
+            m.merge
+                .iter()
+                .enumerate()
+                .map(|(j, n)| (n, format!("blocks[{i}].merge[{j}]"))),
+        ) {
             if !named.insert(name.as_str()) {
                 return Err(fail(
                     codes::INVALID_INPUT,
-                    format!("“{name}” tanımı iki kez verildi; bir tanım bir birleştirmede bir kez yer alır."),
+                    format!(
+                        "“{name}” tanımı iki kez verildi; bir tanım bir birleştirmede bir kez yer alır."
+                    ),
                     at,
                 ));
             }
@@ -218,7 +261,8 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
         ));
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
-    let mut lines: std::collections::BTreeMap<Slot, kentos_commands::LineEntity> = std::collections::BTreeMap::new();
+    let mut lines: std::collections::BTreeMap<Slot, kentos_commands::LineEntity> =
+        std::collections::BTreeMap::new();
     let mut fixed = Vec::new();
     for (i, f) in input.fixes.iter().enumerate() {
         let at = format!("fixes[{i}]");
@@ -261,7 +305,9 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
         let Some(to) = meeting(target, from, end, gap) else {
             return Err(fail(
                 codes::REPAIR_TARGET_MISSING,
-                format!("Çizginin ucu {gap} m içinde hedefin bir doğru kenarına değmiyor; denetimi yenileyin ya da eşiği büyütün."),
+                format!(
+                    "Çizginin ucu {gap} m içinde hedefin bir doğru kenarına değmiyor; denetimi yenileyin ya da eşiği büyütün."
+                ),
                 format!("{at}.target"),
             ));
         };
@@ -283,7 +329,11 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
     let mut steps: Vec<RepairStep> = input
         .fixes
         .iter()
-        .map(|f| RepairStep::Junction { uid: f.uid.clone(), end: f.end, target: f.target.clone() })
+        .map(|f| RepairStep::Junction {
+            uid: f.uid.clone(),
+            end: f.end,
+            target: f.target.clone(),
+        })
         .collect();
     // Angles, after the junctions: a line both moved and turned turns as it was moved.
     let mut straightened = Vec::new();
@@ -298,7 +348,11 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
         };
         let length = len(pivot, other);
         if length <= NEAR {
-            return Err(fail(codes::REPAIR_UNSUPPORTED, "Boyu sıfır çizginin doğrultusu yok; döndürülemez.".into(), at));
+            return Err(fail(
+                codes::REPAIR_UNSUPPORTED,
+                "Boyu sıfır çizginin doğrultusu yok; döndürülemez.".into(),
+                at,
+            ));
         }
         let (deviation, dir) = axis((other.y - pivot.y).atan2(other.x - pivot.x));
         if deviation > tolerance {
@@ -311,7 +365,10 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
                 at,
             ));
         }
-        let to = Vec2 { x: pivot.x + length * dir.x, y: pivot.y + length * dir.y };
+        let to = Vec2 {
+            x: pivot.x + length * dir.x,
+            y: pivot.y + length * dir.y,
+        };
         let mut next = current.clone();
         match f.pivot {
             LineEnd::Start => next.b = to,
@@ -323,22 +380,35 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
             deviation: deviation.to_degrees(),
             moved: len(other, to),
         });
-        steps.push(RepairStep::Angle { uid: f.uid.clone(), pivot: f.pivot });
+        steps.push(RepairStep::Angle {
+            uid: f.uid.clone(),
+            pivot: f.pivot,
+        });
         lines.insert(slot, next);
     }
-    let mut writes: Vec<(Slot, Entity)> = lines.into_iter().map(|(s, l)| (s, Entity::Line(l))).collect();
+    let mut writes: Vec<(Slot, Entity)> = lines
+        .into_iter()
+        .map(|(s, l)| (s, Entity::Line(l)))
+        .collect();
     // Block merges.
-    let mut relink: std::collections::BTreeMap<BlockId, BlockId> = std::collections::BTreeMap::new();
+    let mut relink: std::collections::BTreeMap<BlockId, BlockId> =
+        std::collections::BTreeMap::new();
     let mut merged = Vec::new();
     for (i, m) in input.blocks.iter().enumerate() {
         let find = |name: &str, at: String| -> Result<&BlockDefinition, Stop> {
             let b = doc.block_named(name).ok_or_else(|| {
-                fail(codes::UNKNOWN_BLOCK, format!("“{name}” adlı blok tanımı çizimde yok; denetimi yenileyin."), at.clone())
+                fail(
+                    codes::UNKNOWN_BLOCK,
+                    format!("“{name}” adlı blok tanımı çizimde yok; denetimi yenileyin."),
+                    at.clone(),
+                )
             })?;
             if b.xref.is_some() {
                 return Err(fail(
                     codes::REPAIR_UNSUPPORTED,
-                    format!("“{name}” bir dış başvurunun tanımı; içeriği kaynağındadır, burada birleştirilmez."),
+                    format!(
+                        "“{name}” bir dış başvurunun tanımı; içeriği kaynağındadır, burada birleştirilmez."
+                    ),
                     at,
                 ));
             }
@@ -352,24 +422,38 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
             if crate::drawing_inspect::health::content_key(b) != key {
                 return Err(fail(
                     codes::REPAIR_BLOCKS_DIFFER,
-                    format!("“{name}” ile “{}” tanımlarının içeriği aynı değil; biri öbürünün yerine geçemez.", m.keep),
+                    format!(
+                        "“{name}” ile “{}” tanımlarının içeriği aynı değil; biri öbürünün yerine geçemez.",
+                        m.keep
+                    ),
                     at,
                 ));
             }
             if doc.arrays().iter().any(|a| a.block == b.id) {
                 return Err(fail(
                     codes::REPAIR_UNSUPPORTED,
-                    format!("“{name}” bir ilişkili dizinin bloğu; dizi kendi tanımına bağlı kalır, birleştirilmez."),
+                    format!(
+                        "“{name}” bir ilişkili dizinin bloğu; dizi kendi tanımına bağlı kalır, birleştirilmez."
+                    ),
                     at,
                 ));
             }
             relink.insert(b.id, keep.id);
         }
         merged.push((i, m.keep.clone(), m.merge.clone()));
-        steps.push(RepairStep::Blocks { keep: m.keep.clone(), merge: m.merge.clone() });
+        steps.push(RepairStep::Blocks {
+            keep: m.keep.clone(),
+            merge: m.merge.clone(),
+        });
     }
     let mut counts = vec![0u32; input.blocks.len()];
-    let which = |id: BlockId| input.blocks.iter().position(|m| m.merge.iter().any(|n| doc.block_named(n).is_some_and(|b| b.id == id)));
+    let which = |id: BlockId| {
+        input.blocks.iter().position(|m| {
+            m.merge
+                .iter()
+                .any(|n| doc.block_named(n).is_some_and(|b| b.id == id))
+        })
+    };
     let mut holders = Vec::new();
     if !relink.is_empty() {
         for (uid, e) in doc.entities_with_uids() {
@@ -406,7 +490,11 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
     }
     let merged: Vec<BlocksMerged> = merged
         .into_iter()
-        .map(|(i, keep, names)| BlocksMerged { keep, merged: names, inserts: counts[i] })
+        .map(|(i, keep, names)| BlocksMerged {
+            keep,
+            merged: names,
+            inserts: counts[i],
+        })
         .collect();
     let max_moved = fixed.iter().map(|f| f.moved).fold(0.0, f64::max);
     let recipe = RepairRecipe {
@@ -416,25 +504,46 @@ fn check(doc: &Document, input: &DrawingRepair) -> Result<Planned, Stop> {
         objects: (writes.len() + holders.len()) as u32,
         definitions_removed: relink.len() as u32,
     };
-    let output = DrawingRepaired { fixed, straightened, merged, recipe, max_moved, revision: doc.revision().to_string() };
-    Ok(Planned { writes, holders, removed: relink.into_keys().collect(), output })
+    let output = DrawingRepaired {
+        fixed,
+        straightened,
+        merged,
+        recipe,
+        max_moved,
+        revision: doc.revision().to_string(),
+    };
+    Ok(Planned {
+        writes,
+        holders,
+        removed: relink.into_keys().collect(),
+        output,
+    })
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &DrawingRepair) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 pub fn plan(cx: &ExecutionContext<'_>, input: &DrawingRepair) -> CommandResult<DrawingRepaired> {
     match check(cx.doc, input) {
-        Ok(planned) => CommandResult::Completed { output: planned.output, warnings: Vec::new() },
+        Ok(planned) => CommandResult::Completed {
+            output: planned.output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: DrawingRepair) -> CommandResult<DrawingRepaired> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: DrawingRepair,
+) -> CommandResult<DrawingRepaired> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_DRAWING_REPAIR,
@@ -445,7 +554,12 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: DrawingRepair) -> CommandRe
                 Ok(done) => done,
                 Err(stop) => return stop.into(),
             };
-            let Planned { writes, holders, removed, mut output } = planned;
+            let Planned {
+                writes,
+                holders,
+                removed,
+                mut output,
+            } = planned;
             cx.doc.name_step(DRAWING_REPAIR_STEP);
             // One step: the lines and inserts, the definitions holding relinked inserts, the merged ones removed. A
             // definition the rules will not let go takes all of it back.
@@ -460,10 +574,18 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: DrawingRepair) -> CommandRe
                 Ok::<(), String>(())
             });
             if let Err(reason) = done {
-                return Stop::failed(error(codes::REPAIR_UNSUPPORTED, reason, Some("blocks".into()))).into();
+                return Stop::failed(error(
+                    codes::REPAIR_UNSUPPORTED,
+                    reason,
+                    Some("blocks".into()),
+                ))
+                .into();
             }
             output.revision = cx.doc.revision().to_string();
-            CommandResult::Completed { output, warnings: Vec::new() }
+            CommandResult::Completed {
+                output,
+                warnings: Vec::new(),
+            }
         },
     )
 }

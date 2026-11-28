@@ -32,19 +32,33 @@ pub struct GridAxis {
 
 /// An axis curve's first and last points: a polyline's (`Points`), an indexed curve's point list's
 /// (`IfcCartesianPointList2D`/`3D` `CoordList`), a trimmed curve's trimming points (its `Trim1` and `Trim2` points).
-fn ends(schema: SchemaVersion, curve: &DecodedEntity, decoder: &mut EntityDecoder) -> Option<([f64; 3], [f64; 3])> {
-    let point =
-        |decoder: &mut EntityDecoder, id: u32| decoder.decode_by_id(id).ok().and_then(|p| coordinates(schema, &p));
+fn ends(
+    schema: SchemaVersion,
+    curve: &DecodedEntity,
+    decoder: &mut EntityDecoder,
+) -> Option<([f64; 3], [f64; 3])> {
+    let point = |decoder: &mut EntityDecoder, id: u32| {
+        decoder
+            .decode_by_id(id)
+            .ok()
+            .and_then(|p| coordinates(schema, &p))
+    };
     if schema.is_subtype_of(curve.ifc_type.name(), "IfcTrimmedCurve") {
         let mut trim = |name: &str| {
-            let id = named(schema, curve, name)?.as_list()?.iter().find_map(AttributeValue::as_entity_ref)?;
+            let id = named(schema, curve, name)?
+                .as_list()?
+                .iter()
+                .find_map(AttributeValue::as_entity_ref)?;
             point(decoder, id)
         };
         return Some((trim("Trim1")?, trim("Trim2")?));
     }
     let points = named(schema, curve, "Points")?;
     if let Some(list) = points.as_list() {
-        let ids: Vec<u32> = list.iter().filter_map(AttributeValue::as_entity_ref).collect();
+        let ids: Vec<u32> = list
+            .iter()
+            .filter_map(AttributeValue::as_entity_ref)
+            .collect();
         if ids.len() < 2 {
             return None;
         }
@@ -53,7 +67,11 @@ fn ends(schema: SchemaVersion, curve: &DecodedEntity, decoder: &mut EntityDecode
     let list = decoder.decode_by_id(points.as_entity_ref()?).ok()?;
     let rows = named(schema, &list, "CoordList")?.as_list()?;
     let row = |r: &AttributeValue| {
-        let v: Vec<f64> = r.as_list()?.iter().filter_map(AttributeValue::as_float).collect();
+        let v: Vec<f64> = r
+            .as_list()?
+            .iter()
+            .filter_map(AttributeValue::as_float)
+            .collect();
         (v.len() >= 2).then(|| [v[0], v[1], v.get(2).copied().unwrap_or(0.0)])
     };
     let (first, last) = (row(rows.first()?)?, row(rows.last()?)?);
@@ -64,7 +82,13 @@ fn ends(schema: SchemaVersion, curve: &DecodedEntity, decoder: &mut EntityDecode
 fn coordinates(schema: SchemaVersion, p: &DecodedEntity) -> Option<[f64; 3]> {
     let c = named(schema, p, "Coordinates").and_then(AttributeValue::as_list)?;
     let v: Vec<f64> = c.iter().filter_map(AttributeValue::as_float).collect();
-    (!v.is_empty()).then(|| [v[0], v.get(1).copied().unwrap_or(0.0), v.get(2).copied().unwrap_or(0.0)])
+    (!v.is_empty()).then(|| {
+        [
+            v[0],
+            v.get(1).copied().unwrap_or(0.0),
+            v.get(2).copied().unwrap_or(0.0),
+        ]
+    })
 }
 
 impl Model {
@@ -90,7 +114,11 @@ impl Model {
                     .filter(|n| !n.trim().is_empty())
                     .or_else(|| o.name.clone())
                     .unwrap_or_default();
-                out.push(Storey { object: i, name, elevation });
+                out.push(Storey {
+                    object: i,
+                    name,
+                    elevation,
+                });
             }
             Ok(out)
         })
@@ -107,9 +135,12 @@ impl Model {
                 if !schema.is_subtype_of(&o.class, "IfcGrid") {
                     continue;
                 }
-                let Ok(grid) = decoder.decode_by_id(o.step) else { continue };
+                let Ok(grid) = decoder.decode_by_id(o.step) else {
+                    continue;
+                };
                 // The grid's world placement, in the file's units; `$` is the world itself.
-                let placed = ifc_lite_geometry::placement::resolve_object_placement(&grid, &mut decoder);
+                let placed =
+                    ifc_lite_geometry::placement::resolve_object_placement(&grid, &mut decoder);
                 let m = match placed {
                     Ok(Some(m)) => Some(m),
                     Ok(None) => None,
@@ -132,14 +163,28 @@ impl Model {
                         .map(|l| l.iter().filter_map(AttributeValue::as_entity_ref).collect())
                         .unwrap_or_default();
                     for id in ids {
-                        let Ok(axis) = decoder.decode_by_id(id) else { continue };
-                        let tag = named(schema, &axis, "AxisTag").and_then(AttributeValue::as_string).unwrap_or("").to_owned();
-                        let Some(curve) = named(schema, &axis, "AxisCurve").and_then(AttributeValue::as_entity_ref) else {
+                        let Ok(axis) = decoder.decode_by_id(id) else {
                             continue;
                         };
-                        let Ok(curve) = decoder.decode_by_id(curve) else { continue };
+                        let tag = named(schema, &axis, "AxisTag")
+                            .and_then(AttributeValue::as_string)
+                            .unwrap_or("")
+                            .to_owned();
+                        let Some(curve) = named(schema, &axis, "AxisCurve")
+                            .and_then(AttributeValue::as_entity_ref)
+                        else {
+                            continue;
+                        };
+                        let Ok(curve) = decoder.decode_by_id(curve) else {
+                            continue;
+                        };
                         if let Some((a, b)) = ends(schema, &curve, &mut decoder) {
-                            out.push(GridAxis { grid: i, tag, a: world(a), b: world(b) });
+                            out.push(GridAxis {
+                                grid: i,
+                                tag,
+                                a: world(a),
+                                b: world(b),
+                            });
                         }
                     }
                 }

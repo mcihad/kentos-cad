@@ -5,8 +5,8 @@
 //! default, as data). Nothing is written. The shared cases are `fixtures/commands/v1/cad.orthophoto.check.json`.
 
 use kentos_commands::{
-    CommandResult, Entity, LayerNodeType, OrthoPoint, OrthoRules, OrthoStats, OrthophotoCheck, OrthophotoChecked,
-    ortho_rules_default,
+    CommandResult, Entity, LayerNodeType, OrthoPoint, OrthoRules, OrthoStats, OrthophotoCheck,
+    OrthophotoChecked, ortho_rules_default,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -21,11 +21,23 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 /// A layer's named points in the drawing's order (the first of a name): name, east, north, height.
-pub(crate) fn named_points(doc: &Document, layer: &str, field: &str) -> Vec<(String, f64, f64, Option<f64>)> {
+pub(crate) fn named_points(
+    doc: &Document,
+    layer: &str,
+    field: &str,
+) -> Vec<(String, f64, f64, Option<f64>)> {
     let mut out: Vec<(String, f64, f64, Option<f64>)> = Vec::new();
     for e in doc.entities().filter(|e| e.base().layer_id == layer) {
         let Entity::Point(p) = e else { continue };
-        let Some(name) = e.base().attrs.get(field).map(|v| v.trim().to_owned()).filter(|v| !v.is_empty()) else { continue };
+        let Some(name) = e
+            .base()
+            .attrs
+            .get(field)
+            .map(|v| v.trim().to_owned())
+            .filter(|v| !v.is_empty())
+        else {
+            continue;
+        };
         if !out.iter().any(|(n, ..)| *n == name) {
             out.push((name, p.p.x, p.p.y, p.z));
         }
@@ -36,7 +48,18 @@ pub(crate) fn named_points(doc: &Document, layer: &str, field: &str) -> Vec<(Str
 pub(crate) fn stats(points: &[&OrthoPoint]) -> OrthoStats {
     let n = points.len();
     if n == 0 {
-        return OrthoStats { n: 0, rmse_x: 0.0, rmse_y: 0.0, koh_xy: 0.0, rmse_r: 0.0, mean_x: 0.0, mean_y: 0.0, max_d: 0.0, n_z: 0, koh_z: None };
+        return OrthoStats {
+            n: 0,
+            rmse_x: 0.0,
+            rmse_y: 0.0,
+            koh_xy: 0.0,
+            rmse_r: 0.0,
+            mean_x: 0.0,
+            mean_y: 0.0,
+            max_d: 0.0,
+            n_z: 0,
+            koh_z: None,
+        };
     }
     let k = n as f64;
     let sx: f64 = points.iter().map(|p| p.dx * p.dx).sum();
@@ -52,20 +75,37 @@ pub(crate) fn stats(points: &[&OrthoPoint]) -> OrthoStats {
         mean_y: points.iter().map(|p| p.dy).sum::<f64>() / k,
         max_d: points.iter().map(|p| p.d).fold(0.0, f64::max),
         n_z: zs.len() as u32,
-        koh_z: (!zs.is_empty()).then(|| (zs.iter().map(|z| z * z).sum::<f64>() / zs.len() as f64).sqrt()),
+        koh_z: (!zs.is_empty())
+            .then(|| (zs.iter().map(|z| z * z).sum::<f64>() / zs.len() as f64).sqrt()),
     }
 }
 
 pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoChecked, Stop> {
     let uid = input.raster.trim();
     if !checks::is_uid_text(uid) {
-        return Err(fail(codes::INVALID_UID, format!("“{uid}” geçerli bir nesne kimliği değil."), "raster"));
+        return Err(fail(
+            codes::INVALID_UID,
+            format!("“{uid}” geçerli bir nesne kimliği değil."),
+            "raster",
+        ));
     }
-    let Some(e) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)) else {
-        return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), "raster"));
+    let Some(e) = Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s))
+    else {
+        return Err(fail(
+            codes::ENTITY_NOT_FOUND,
+            format!("“{uid}” kimlikli nesne çizimde yok."),
+            "raster",
+        ));
     };
     let Entity::Raster(r) = e else {
-        return Err(fail(codes::NOT_A_RASTER, format!("“{uid}” bir raster değil; ortofotoyu seçin."), "raster"));
+        return Err(fail(
+            codes::NOT_A_RASTER,
+            format!("“{uid}” bir raster değil; ortofotoyu seçin."),
+            "raster",
+        ));
     };
     let project = doc.settings().srid;
     if r.raster.srid != 0 && r.raster.srid != project {
@@ -79,26 +119,60 @@ pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoC
         ));
     }
     for (layer, path) in [(&input.known, "known"), (&input.observed, "observed")] {
-        if !doc.layers().get(layer.trim()).is_some_and(|n| n.kind == LayerNodeType::Layer) {
-            return Err(fail(codes::LAYER_NOT_FOUND, format!("“{}” katmanı çizimde yok.", layer.trim()), path));
+        if !doc
+            .layers()
+            .get(layer.trim())
+            .is_some_and(|n| n.kind == LayerNodeType::Layer)
+        {
+            return Err(fail(
+                codes::LAYER_NOT_FOUND,
+                format!("“{}” katmanı çizimde yok.", layer.trim()),
+                path,
+            ));
         }
     }
     let scale = match input.scale {
-        Some(0) => return Err(fail(codes::INVALID_INPUT, "Ölçek paydası 0 olamaz.".into(), "scale")),
+        Some(0) => {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                "Ölçek paydası 0 olamaz.".into(),
+                "scale",
+            ));
+        }
         Some(s) => s,
         None => doc.settings().plot_scale.round().max(1.0) as u32,
     };
     let rules: OrthoRules = match &input.rules {
         Some(r) => r.clone(),
-        None => ortho_rules_default().ok_or_else(|| fail(codes::INVALID_INPUT, "Yerleşik kural paketi okunamadı.".into(), "rules"))?,
+        None => ortho_rules_default().ok_or_else(|| {
+            fail(
+                codes::INVALID_INPUT,
+                "Yerleşik kural paketi okunamadı.".into(),
+                "rules",
+            )
+        })?,
     };
     if rules.id.trim().is_empty() || rules.source.trim().is_empty() {
         return Err(fail(codes::INVALID_INPUT, "Kural paketinin kimliği ya da kaynağı boş; sınırın dayanağı yazılmadan denetim yapılmaz.".into(), "rules"));
     }
-    if rules.xy.iter().chain([&rules.z_factor, &rules.gsd_tolerance]).any(|v| !v.is_finite()) {
-        return Err(fail(codes::INVALID_INPUT, "Kural paketinin bir sınırı sonlu bir sayı değil.".into(), "rules"));
+    if rules
+        .xy
+        .iter()
+        .chain([&rules.z_factor, &rules.gsd_tolerance])
+        .any(|v| !v.is_finite())
+    {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Kural paketinin bir sınırı sonlu bir sayı değil.".into(),
+            "rules",
+        ));
     }
-    let field = input.field.as_deref().map(str::trim).filter(|f| !f.is_empty()).unwrap_or(FIELD);
+    let field = input
+        .field
+        .as_deref()
+        .map(str::trim)
+        .filter(|f| !f.is_empty())
+        .unwrap_or(FIELD);
     let known = named_points(doc, input.known.trim(), field);
     let observed = named_points(doc, input.observed.trim(), field);
     // The names the image was fitted to: its georeference's control points.
@@ -106,7 +180,13 @@ pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoC
         .raster
         .georef
         .as_ref()
-        .map(|g| g.points.iter().filter(|p| !p.check).filter_map(|p| p.name.as_ref().map(|n| n.trim().to_owned())).collect())
+        .map(|g| {
+            g.points
+                .iter()
+                .filter(|p| !p.check)
+                .filter_map(|p| p.name.as_ref().map(|n| n.trim().to_owned()))
+                .collect()
+        })
         .unwrap_or_default();
     let mut points = Vec::new();
     let mut unmatched = Vec::new();
@@ -116,7 +196,11 @@ pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoC
                 let (dx, dy) = (ox - x, oy - y);
                 points.push(OrthoPoint {
                     name: name.clone(),
-                    role: if fitted.contains(name) { "fit".into() } else { "check".into() },
+                    role: if fitted.contains(name) {
+                        "fit".into()
+                    } else {
+                        "check".into()
+                    },
                     dx,
                     dy,
                     dz: oz.zip(*z).map(|(a, b)| a - b),
@@ -131,7 +215,12 @@ pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoC
             unmatched.push(name.clone());
         }
     }
-    let check = stats(&points.iter().filter(|p| p.role == "check").collect::<Vec<_>>());
+    let check = stats(
+        &points
+            .iter()
+            .filter(|p| p.role == "check")
+            .collect::<Vec<_>>(),
+    );
     let fits: Vec<&OrthoPoint> = points.iter().filter(|p| p.role == "fit").collect();
     let fit = (!fits.is_empty()).then(|| stats(&fits));
     let s = scale as f64;
@@ -146,10 +235,15 @@ pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoC
         "Denetim noktalarının sayısı ve dağılımı (BÖHHBÜY m. 91(1): detay noktalarının en az %5'i) bu denetimde bilinmez; elle gözden geçirin.".to_owned(),
     ];
     if gsd_limit.is_none() {
-        notes.push(format!("Kural paketi 1/{scale} ölçeği için yer örnekleme aralığı vermiyor."));
+        notes.push(format!(
+            "Kural paketi 1/{scale} ölçeği için yer örnekleme aralığı vermiyor."
+        ));
     }
     if !unmatched.is_empty() {
-        notes.push(format!("Eşi bulunmayan noktalar: {}.", unmatched.join(", ")));
+        notes.push(format!(
+            "Eşi bulunmayan noktalar: {}.",
+            unmatched.join(", ")
+        ));
     }
     Ok(OrthophotoChecked {
         rules: rules.id.clone(),
@@ -173,20 +267,32 @@ pub(crate) fn run(doc: &Document, input: &OrthophotoCheck) -> Result<OrthophotoC
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &OrthophotoCheck) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &OrthophotoCheck) -> CommandResult<OrthophotoChecked> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &OrthophotoCheck,
+) -> CommandResult<OrthophotoChecked> {
     match run(cx.doc, input) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: OrthophotoCheck) -> CommandResult<OrthophotoChecked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: OrthophotoCheck,
+) -> CommandResult<OrthophotoChecked> {
     plan(cx, &input)
 }

@@ -9,7 +9,14 @@ pub const ROAD_TERRAINS_STOCKPILE: &str = "road.terrains.stockpile";
 pub const ROAD_TERRAINS_STOCKPILE_VERSION: u32 = 1;
 
 /// The bases a stockpile's volume is measured from.
-pub const STOCKPILE_BASES: [&str; 6] = ["lowest", "highest", "average", "fit", "triangulated", "elevation"];
+pub const STOCKPILE_BASES: [&str; 6] = [
+    "lowest",
+    "highest",
+    "average",
+    "fit",
+    "triangulated",
+    "elevation",
+];
 
 /// Input of `road.terrains.stockpile` v1 (docs/adr/3140): the surface (its id or name), the boundary (a closed object
 /// as in `road.terrains.coverage`: straight edges, one part, an area's holes out) and the base: `lowest`, `highest` or

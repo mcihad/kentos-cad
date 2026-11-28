@@ -19,7 +19,8 @@
 use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Task, Theme};
 use kentos_commands::{
-    CloudReturns, CommandResult, Entity, HeightKind, HeightReference, SurfaceSources, TerrainsFromCloud, TerrainsFromCloudWritten,
+    CloudReturns, CommandResult, Entity, HeightKind, HeightReference, SurfaceSources,
+    TerrainsFromCloud, TerrainsFromCloudWritten,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_terrain_cloud};
@@ -41,14 +42,23 @@ const CLOSE: &str = "Kapat";
 const FROM_SELECTION: &str = "Seçimden al";
 const CLEAR_AREA: &str = "Kaldır";
 /// The typed fields, in order.
-pub(crate) const FIELDS: [&str; 4] = ["Hücre (m)", "Kot toleransı (m)", "Kırık hat erimi (m)", "Yeni yüzeyin adı"];
+pub(crate) const FIELDS: [&str; 4] = [
+    "Hücre (m)",
+    "Kot toleransı (m)",
+    "Kırık hat erimi (m)",
+    "Yeni yüzeyin adı",
+];
 /// The classes offered (ASPRS's, LAS 1.4 R15 Table 17): the bridge deck and the overhead structure are never the
 /// ground and are not offered.
 pub(crate) const CLASSES: [u8; 12] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
 /// The clouds' heights as the user says them (docs/adr/1032): the files' own, ellipsoidal (turned into the project's
 /// by its geoid model), or the project's.
 pub(crate) const HEIGHTS: &str = "Bulutun kotları";
-pub(crate) const HEIGHTS_CHOICES: [&str; 3] = ["Dosyanın söylediği", "Elipsoit yüksekliği (geoitle çevir)", "Projeninki"];
+pub(crate) const HEIGHTS_CHOICES: [&str; 3] = [
+    "Dosyanın söylediği",
+    "Elipsoit yüksekliği (geoitle çevir)",
+    "Projeninki",
+];
 const RETURNS: [(CloudReturns, &str); 4] = [
     (CloudReturns::All, "Bütün dönüşler"),
     (CloudReturns::Last, "Son dönüş"),
@@ -99,14 +109,17 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 impl Window {
     /// The command's input as chosen, or why it is not one yet.
     pub(crate) fn input(&self, drawing: Option<String>) -> Result<TerrainsFromCloud, String> {
         let cloud = self.cloud.clone().ok_or("Bir nokta bulutu seçin.")?;
-        let cell = number(&self.fields[0], FIELDS[0])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[0]))?;
+        let cell = number(&self.fields[0], FIELDS[0])?
+            .ok_or_else(|| format!("{} yazılmalı.", FIELDS[0]))?;
         let name = self.fields[3].trim();
         if self.surface.is_none() && name.is_empty() {
             return Err("Yeni yüzeyin adını yazın ya da projedeki bir yüzeyi seçin.".into());
@@ -119,7 +132,10 @@ impl Window {
             cell,
             z_tolerance: number(&self.fields[1], FIELDS[1])?,
             near: number(&self.fields[2], FIELDS[2])?,
-            layer_id: self.layer.clone().ok_or("Noktaların yazılacağı katmanı seçin.")?,
+            layer_id: self
+                .layer
+                .clone()
+                .ok_or("Noktaların yazılacağı katmanı seçin.")?,
             surface: self.surface.clone(),
             name: self.surface.is_none().then(|| name.to_owned()),
             breaklines: SurfaceSources::default(),
@@ -127,8 +143,16 @@ impl Window {
             drawing,
             expected_revision: None,
             heights: match self.heights {
-                1 => Some(HeightReference { kind: HeightKind::Ellipsoidal, vertical_srid: None, geoid: None }),
-                2 => Some(self.project_heights.clone().ok_or("Projenin kotları söylenmemiş: Proje ayarları › Kotlar'da seçin.")?),
+                1 => Some(HeightReference {
+                    kind: HeightKind::Ellipsoidal,
+                    vertical_srid: None,
+                    geoid: None,
+                }),
+                2 => Some(
+                    self.project_heights
+                        .clone()
+                        .ok_or("Projenin kotları söylenmemiş: Proje ayarları › Kotlar'da seçin.")?,
+                ),
                 _ => None,
             },
         })
@@ -138,7 +162,9 @@ impl Window {
 /// The selected closed polyline's or area's id and corners' count.
 fn chosen_area(app: &App) -> Option<(String, usize)> {
     let doc = app.document.as_ref()?;
-    let [slot] = app.selection.ids() else { return None };
+    let [slot] = app.selection.ids() else {
+        return None;
+    };
     let corners = match doc.model.get(*slot)? {
         Entity::Polygon(p) => p.pts.len(),
         Entity::Polyline(p) if p.closed => p.pts.len(),
@@ -154,7 +180,8 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         };
-        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work) {
+        if !kentos_native_application::road_terrains::holds_surfaces(doc.model.settings().cad_work)
+        {
             self.warn("Buluttan arazi Harita ve Yol projelerinde olur.".to_owned());
             return;
         }
@@ -163,10 +190,19 @@ impl App {
             .entities_with_uids()
             .find_map(|(u, e)| matches!(e, Entity::PointCloud(_)).then(|| u.to_string()));
         let Some(cloud) = cloud else {
-            self.warn("Çizimde nokta bulutu yok: önce Ekle › Nokta bulutu ile bir bulut ekleyin.".to_owned());
+            self.warn(
+                "Çizimde nokta bulutu yok: önce Ekle › Nokta bulutu ile bir bulut ekleyin."
+                    .to_owned(),
+            );
             return;
         };
-        let n = doc.model.settings().road.as_ref().map_or(0, |r| r.surfaces.len()) + 1;
+        let n = doc
+            .model
+            .settings()
+            .road
+            .as_ref()
+            .map_or(0, |r| r.surfaces.len())
+            + 1;
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         let area = chosen_area(self);
         self.terrain_work.terrain_cloud_window = Some(Box::new(Window {
@@ -178,11 +214,18 @@ impl App {
             area,
             surface: None,
             layer,
-            fields: [String::new(), String::new(), String::new(), format!("Buluttan yüzey {n}")],
+            fields: [
+                String::new(),
+                String::new(),
+                String::new(),
+                format!("Buluttan yüzey {n}"),
+            ],
             preview: None,
             warnings: Vec::new(),
         }));
-        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::TerrainCloud));
+        self.dialog = Some(Dialog::TerrainWork(
+            crate::terrain_work::TerrainDialogKind::TerrainCloud,
+        ));
     }
 
     fn preview_terrain_cloud(&mut self) {
@@ -193,13 +236,17 @@ impl App {
         };
         let (preview, warnings) = match w.input(drawing) {
             Err(why) => (Err(why), Vec::new()),
-            Ok(input) => match road_terrain_cloud::plan(&ExecutionContext::new(&mut doc.model.reading_copy()), &input) {
-                CommandResult::Completed { output, warnings } => {
-                    (Ok(output), warnings.into_iter().map(|x| x.message).collect())
-                }
-                CommandResult::Failed { error } | CommandResult::NeedsInput { error } | CommandResult::Conflict { error } => {
-                    (Err(error.message), Vec::new())
-                }
+            Ok(input) => match road_terrain_cloud::plan(
+                &ExecutionContext::new(&mut doc.model.reading_copy()),
+                &input,
+            ) {
+                CommandResult::Completed { output, warnings } => (
+                    Ok(output),
+                    warnings.into_iter().map(|x| x.message).collect(),
+                ),
+                CommandResult::Failed { error }
+                | CommandResult::NeedsInput { error }
+                | CommandResult::Conflict { error } => (Err(error.message), Vec::new()),
                 _ => (Err("Önizlenemedi.".into()), Vec::new()),
             },
         };
@@ -267,7 +314,9 @@ impl App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let result = road_terrain_cloud::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.say(
@@ -290,16 +339,28 @@ impl App {
         let Some(w) = &self.terrain_work.terrain_cloud_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let model = self.document.as_ref().map(|d| &d.model);
         let clouds: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
             m.entities_with_uids()
                 .filter_map(|(u, e)| match e {
                     Entity::PointCloud(c) => Some((
                         u.to_string(),
-                        format!("{} · {} nokta", m.layers().get(&c.base.layer_id).map_or("—", |l| l.name.as_str()), c.cloud.count),
+                        format!(
+                            "{} · {} nokta",
+                            m.layers()
+                                .get(&c.base.layer_id)
+                                .map_or("—", |l| l.name.as_str()),
+                            c.cloud.count
+                        ),
                     )),
                     _ => None,
                 })
@@ -308,7 +369,9 @@ impl App {
         let cids: Vec<String> = clouds.iter().map(|c| c.0.clone()).collect();
         let on_cloud = Select::new(
             clouds.iter().map(|c| Choice::new(c.1.clone())),
-            w.cloud.as_ref().and_then(|c| cids.iter().position(|i| i == c)),
+            w.cloud
+                .as_ref()
+                .and_then(|c| cids.iter().position(|i| i == c)),
             move |i| msg(Event::Cloud(cids[i].clone())),
         );
         let on_returns = Select::new(
@@ -316,11 +379,15 @@ impl App {
             RETURNS.iter().position(|r| r.0 == w.returns),
             |i| msg(Event::Returns(RETURNS[i].0)),
         );
-        let on_heights = Select::new(HEIGHTS_CHOICES.map(Choice::new), Some(w.heights), |i| msg(Event::Heights(i)));
+        let on_heights = Select::new(HEIGHTS_CHOICES.map(Choice::new), Some(w.heights), |i| {
+            msg(Event::Heights(i))
+        });
         let field = |hint: &'static str, k: usize, width: f32| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(width),
                 None,
             )
         };
@@ -335,42 +402,75 @@ impl App {
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
         let check = |c: u8| {
-            let on = if w.classes.contains(&c) { Check::Checked } else { Check::Unchecked };
-            crate::style::fields::check(on, format!("{c} {}", kentos_pointcloud::classes::name(c)), Some(msg(Event::Class(c))))
+            let on = if w.classes.contains(&c) {
+                Check::Checked
+            } else {
+                Check::Unchecked
+            };
+            crate::style::fields::check(
+                on,
+                format!("{c} {}", kentos_pointcloud::classes::name(c)),
+                Some(msg(Event::Class(c))),
+            )
         };
         let classes = Column::new()
             .spacing(2)
             .push(label::caption("Sınıflar (ASPRS)").style(muted))
-            .push(row(CLASSES[..6].iter().map(|c| container(check(*c)).width(180).into())).spacing(4))
-            .push(row(CLASSES[6..].iter().map(|c| container(check(*c)).width(180).into())).spacing(4));
+            .push(
+                row(CLASSES[..6]
+                    .iter()
+                    .map(|c| container(check(*c)).width(180).into()))
+                .spacing(4),
+            )
+            .push(
+                row(CLASSES[6..]
+                    .iter()
+                    .map(|c| container(check(*c)).width(180).into()))
+                .spacing(4),
+            );
         let area_words = match &w.area {
             Some((_, n)) => format!("Alan: seçili alan ({n} köşe)"),
             None => "Alan: bulutun tümü".to_owned(),
         };
-        let surfaces: Vec<(Option<String>, String)> = std::iter::once((None, "Yeni yüzey".to_owned()))
-            .chain(
-                model
-                    .and_then(|m| m.settings().road.as_ref())
-                    .map_or_else(Vec::new, |r| r.surfaces.iter().map(|s| (Some(s.id.clone()), s.name.clone())).collect()),
-            )
-            .collect();
+        let surfaces: Vec<(Option<String>, String)> =
+            std::iter::once((None, "Yeni yüzey".to_owned()))
+                .chain(
+                    model
+                        .and_then(|m| m.settings().road.as_ref())
+                        .map_or_else(Vec::new, |r| {
+                            r.surfaces
+                                .iter()
+                                .map(|s| (Some(s.id.clone()), s.name.clone()))
+                                .collect()
+                        }),
+                )
+                .collect();
         let sids: Vec<Option<String>> = surfaces.iter().map(|s| s.0.clone()).collect();
         let on_surface = Select::new(
             surfaces.iter().map(|s| Choice::new(s.1.clone())),
             sids.iter().position(|s| *s == w.surface),
             move |i| msg(Event::Surface(sids[i].clone())),
         );
-        let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let lids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let on_layer = Select::new(
             lnames.iter().map(|n| Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+            w.layer
+                .as_ref()
+                .and_then(|l| lids.iter().position(|id| id == l)),
             move |i| msg(Event::Layer(lids[i].clone())),
         )
         .placeholder("Katman");
         let mut target = row![
             label::body(area_words),
-            words::secondary(FROM_SELECTION, chosen_area(self).map(|_| msg(Event::FromSelection))),
+            words::secondary(
+                FROM_SELECTION,
+                chosen_area(self).map(|_| msg(Event::FromSelection))
+            ),
             words::secondary(CLEAR_AREA, w.area.as_ref().map(|_| msg(Event::ClearArea))),
             space::horizontal().width(Fill),
             words::field("Yüzey", container(on_surface).width(170), None),
@@ -381,7 +481,11 @@ impl App {
             target = target.push(field("Ad", 3, 170.0));
         }
         target = target.push(words::field("Katman", container(on_layer).width(170), None));
-        let mut body = Column::new().spacing(12).push(top).push(classes).push(target);
+        let mut body = Column::new()
+            .spacing(12)
+            .push(top)
+            .push(classes)
+            .push(target);
         match &w.preview {
             None => {
                 body = body.push(
@@ -436,19 +540,25 @@ impl App {
         }
         let ready = matches!(w.preview, Some(Ok(_)));
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                words::secondary(PREVIEW, Some(msg(Event::Preview))),
-                space::horizontal().width(Fill),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-                words::primary(APPLY, ready.then(|| msg(Event::Apply))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1100.0).modal(msg(Event::Close))
+        let footer = row![
+            words::secondary(PREVIEW, Some(msg(Event::Preview))),
+            space::horizontal().width(Fill),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+            words::primary(APPLY, ready.then(|| msg(Event::Apply))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1100.0)
+            .modal(msg(Event::Close))
     }
 
-    pub(crate) fn terrain_cloud_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn terrain_cloud_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         if self.terrain_work.terrain_cloud_window.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
@@ -457,7 +567,10 @@ impl App {
             Control::Press(PREVIEW) => Some(msg(Event::Preview)),
             Control::Press(APPLY) => Some(msg(Event::Apply)),
             Control::Pick(HEIGHTS, words) => {
-                let at = HEIGHTS_CHOICES.iter().position(|c| *c == words).ok_or_else(|| format!("“{HEIGHTS}” için “{words}” yok"))?;
+                let at = HEIGHTS_CHOICES
+                    .iter()
+                    .position(|c| *c == words)
+                    .ok_or_else(|| format!("“{HEIGHTS}” için “{words}” yok"))?;
                 Some(msg(Event::Heights(at)))
             }
             Control::Press(FROM_SELECTION) => Some(msg(Event::FromSelection)),

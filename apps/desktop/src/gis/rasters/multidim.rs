@@ -1051,7 +1051,9 @@ impl App {
     /// The drawing's plan unit a mesh's cells are in (GIS-041): “°” in a geographic project (its coordinates are
     /// degrees), else the length unit's mark.
     fn multidim_plan_unit(&self) -> &'static str {
-        let Some(doc) = self.document.as_ref() else { return "m" };
+        let Some(doc) = self.document.as_ref() else {
+            return "m";
+        };
         if kentos_project::systems::own(doc.settings()).is_some_and(|n| n.geographic()) {
             "°"
         } else {

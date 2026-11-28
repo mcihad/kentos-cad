@@ -306,7 +306,9 @@ impl Document {
                 return false;
             };
             let indexed = match &r.element {
-                CadElement::Segment { .. } | CadElement::ArcEdge { .. } | CadElement::Boundary { .. } => true,
+                CadElement::Segment { .. }
+                | CadElement::ArcEdge { .. }
+                | CadElement::Boundary { .. } => true,
                 CadElement::Point { place } => {
                     matches!(place, SubPlace::Vertex { .. } | SubPlace::Node { .. })
                 }

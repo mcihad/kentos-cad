@@ -206,14 +206,20 @@ fn a_file_project_goes_to_postgis_and_the_new_project_opens() {
     let mut app = picked(ProjectStorage::File);
     // A CAD type's file project does not go into the database (docs/adr/9196 §2): Dönüştür is closed, saying why.
     form(&mut app, FormEvent::Convert);
-    assert!(catalog(&app).form.is_none(), "a general CAD project's file stays a file");
+    assert!(
+        catalog(&app).form.is_none(),
+        "a general CAD project's file stays a file"
+    );
     let picked_one = catalog(&app).picked().cloned().expect("picked");
     let convert = crate::cloud::plan::detail_plan(&picked_one, false)
         .actions
         .into_iter()
         .find(|a| a.id == crate::cloud::plan::DetailAction::Convert)
         .expect("Dönüştür");
-    assert_eq!(convert.why.as_deref(), Some(crate::cloud::plan::FILE_ONLY_TEXT));
+    assert_eq!(
+        convert.why.as_deref(),
+        Some(crate::cloud::plan::FILE_ONLY_TEXT)
+    );
     // A CBS project's file goes into the database.
     let mut app = picked_as(ProjectStorage::File, ProjectType::Gis);
     form(&mut app, FormEvent::Convert);

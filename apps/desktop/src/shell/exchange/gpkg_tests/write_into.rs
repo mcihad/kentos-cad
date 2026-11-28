@@ -23,7 +23,9 @@ fn out(e: Out) -> Event {
 /// A point layer of the drawing's, “Duraklar”: its id.
 fn stops(app: &mut App) -> String {
     let doc = app.document.as_mut().expect("a drawing");
-    doc.model.add_layer(kentos_domain::NewLayer::layer("Duraklar"), None, false).expect("a layer")
+    doc.model
+        .add_layer(kentos_domain::NewLayer::layer("Duraklar"), None, false)
+        .expect("a layer")
 }
 
 /// `n` points on `layer` from `from` on, by `cad.entities.create`.
@@ -31,16 +33,25 @@ fn points(app: &mut App, layer: &str, from: u32, n: u32) {
     let objects: Vec<_> = (from..from + n)
         .map(|i| json!({"geometry": {"kind": "point", "p": {"x": 1000.0 + f64::from(i % 400), "y": 2000.0 + f64::from(i / 400)}}}))
         .collect();
-    let input = serde_json::from_value(json!({"layerId": layer, "objects": objects})).expect("an input");
+    let input =
+        serde_json::from_value(json!({"layerId": layer, "objects": objects})).expect("an input");
     let doc = app.document.as_mut().expect("a drawing");
-    let r = kentos_native_application::create::execute(&mut ExecutionContext::new(&mut doc.model), input);
-    assert!(matches!(r, kentos_commands::CommandResult::Completed { .. }), "{r:?}");
+    let r = kentos_native_application::create::execute(
+        &mut ExecutionContext::new(&mut doc.model),
+        input,
+    );
+    assert!(
+        matches!(r, kentos_commands::CommandResult::Completed { .. }),
+        "{r:?}"
+    );
 }
 
 /// The rows of the file's “Duraklar”.
 fn rows(path: &Path) -> i64 {
     let gp = kentos_geopackage::GeoPackage::open(path, false).expect("opens");
-    gp.connection().query_row("SELECT count(*) FROM \"Duraklar\"", [], |r| r.get(0)).expect("counted")
+    gp.connection()
+        .query_row("SELECT count(*) FROM \"Duraklar\"", [], |r| r.get(0))
+        .expect("counted")
 }
 
 fn last(app: &App) -> Option<String> {
@@ -61,7 +72,9 @@ fn ask_again(app: &mut App) {
     run(app, "file.export.gpkg");
     send(app, out(Out::Scope(Scope::All)));
     send(app, out(Out::Save));
-    let Some(Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
+    let Some(Window::GpkgOut(state)) = &app.exchange else {
+        panic!("the window")
+    };
     assert!(state.confirm.is_some(), "asked before writing into it");
 }
 
@@ -77,22 +90,47 @@ fn rows_are_added_to_the_files_table_through_the_window() {
     points(&mut app, &layer, 4, 3);
     ask_again(&mut app);
     send(&mut app, out(Out::Write(GpkgWrite::Append)));
-    let Some(Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
+    let Some(Window::GpkgOut(state)) = &app.exchange else {
+        panic!("the window")
+    };
     let confirm = state.confirm.clone().expect("asked");
-    let lines: Vec<String> = app.gpkg_out_confirm_lines(state, &confirm).into_iter().map(|(_, l)| l).collect();
-    assert!(lines[0].contains("Ekle satırları dosyanın aynı adlı tablolarına ekler"), "{lines:#?}");
+    let lines: Vec<String> = app
+        .gpkg_out_confirm_lines(state, &confirm)
+        .into_iter()
+        .map(|(_, l)| l)
+        .collect();
     assert!(
-        lines.iter().any(|l| l.starts_with("Satır eklenen tablolar: ") && l.contains("Duraklar (dosyada 4 satır, en çok 7 eklenir)")),
+        lines[0].contains("Ekle satırları dosyanın aynı adlı tablolarına ekler"),
         "{lines:#?}"
     );
-    assert!(lines.iter().any(|l| l.starts_with("Tabloda sütunu olmayan alanlar yazılmaz")), "{lines:#?}");
+    assert!(
+        lines
+            .iter()
+            .any(|l| l.starts_with("Satır eklenen tablolar: ")
+                && l.contains("Duraklar (dosyada 4 satır, en çok 7 eklenir)")),
+        "{lines:#?}"
+    );
+    assert!(
+        lines
+            .iter()
+            .any(|l| l.starts_with("Tabloda sütunu olmayan alanlar yazılmaz")),
+        "{lines:#?}"
+    );
     send(&mut app, out(Out::Confirm));
     assert!(app.exchange.is_none(), "{:?}", last(&app));
     assert_eq!(rows(&file), 7, "the three new points added");
     assert!(said(&app, "“teslim.gpkg” yazıldı: "), "{:?}", last(&app));
     let log: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
-    assert!(log.iter().any(|l| l.contains("“Duraklar” tablosuna 3 satır eklendi")), "{log:#?}");
-    assert!(log.iter().any(|l| l.contains("“Duraklar” tablosunda 4 nesne zaten vardı")), "{log:#?}");
+    assert!(
+        log.iter()
+            .any(|l| l.contains("“Duraklar” tablosuna 3 satır eklendi")),
+        "{log:#?}"
+    );
+    assert!(
+        log.iter()
+            .any(|l| l.contains("“Duraklar” tablosunda 4 nesne zaten vardı")),
+        "{log:#?}"
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -110,24 +148,39 @@ fn durdur_stops_the_write_and_the_file_stays() {
     let before = std::fs::read(&file).expect("the file");
     let task = app.update(Message::Exchange(Box::new(out(Out::Confirm))));
     // The window waits for its write; Durdur asks it to stop.
-    let Some(Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
+    let Some(Window::GpkgOut(state)) = &app.exchange else {
+        panic!("the window")
+    };
     assert!(state.running.is_some(), "the write runs on its own thread");
     let _ = app.update(Message::Exchange(Box::new(out(Out::Stop))));
-    let Some(Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
+    let Some(Window::GpkgOut(state)) = &app.exchange else {
+        panic!("the window")
+    };
     assert!(state.running.as_ref().is_some_and(|r| r.stopping));
     drive(&mut app, task);
-    let Some(Window::GpkgOut(state)) = &app.exchange else { panic!("the window stays") };
+    let Some(Window::GpkgOut(state)) = &app.exchange else {
+        panic!("the window stays")
+    };
     assert!(state.running.is_none());
     assert_eq!(
         state.status,
-        Some((false, "Dışa aktarma durduruldu; dosyaya hiçbir şey yazılmadı.".to_owned())),
+        Some((
+            false,
+            "Dışa aktarma durduruldu; dosyaya hiçbir şey yazılmadı.".to_owned()
+        )),
         "{:?}",
         last(&app)
     );
-    assert_eq!(std::fs::read(&file).expect("the file"), before, "the file as it was");
+    assert_eq!(
+        std::fs::read(&file).expect("the file"),
+        before,
+        "the file as it was"
+    );
     // Geri, and the file written into as asked.
     send(&mut app, out(Out::Back));
-    let Some(Window::GpkgOut(state)) = &app.exchange else { panic!("the window") };
+    let Some(Window::GpkgOut(state)) = &app.exchange else {
+        panic!("the window")
+    };
     assert!(state.confirm.is_none() && state.status.is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -150,7 +203,9 @@ fn writing_into_screens() {
         // The file's own table, kept by the first way.
         {
             use kentos_data::Driver as _;
-            let source = kentos_data_gpkg::Gpkg.open(file.to_str().expect("utf-8")).expect("open");
+            let source = kentos_data_gpkg::Gpkg
+                .open(file.to_str().expect("utf-8"))
+                .expect("open");
             crate::data_layers_tests::point_table(
                 &*source,
                 "eski_tablo",
@@ -175,8 +230,16 @@ fn writing_into_screens() {
         }
         app
     };
-    crate::files_testing::usage_shots("9191", "01-yalniz-bu-tablolar", || prepare(GpkgWrite::Tables, false));
-    crate::files_testing::usage_shots("9191", "02-tablolara-ekle", || prepare(GpkgWrite::Append, false));
-    crate::files_testing::usage_shots("9191", "03-dosyanin-yerine", || prepare(GpkgWrite::File, false));
-    crate::files_testing::usage_shots("9191", "04-yaziliyor-durdur", || prepare(GpkgWrite::Append, true));
+    crate::files_testing::usage_shots("9191", "01-yalniz-bu-tablolar", || {
+        prepare(GpkgWrite::Tables, false)
+    });
+    crate::files_testing::usage_shots("9191", "02-tablolara-ekle", || {
+        prepare(GpkgWrite::Append, false)
+    });
+    crate::files_testing::usage_shots("9191", "03-dosyanin-yerine", || {
+        prepare(GpkgWrite::File, false)
+    });
+    crate::files_testing::usage_shots("9191", "04-yaziliyor-durdur", || {
+        prepare(GpkgWrite::Append, true)
+    });
 }

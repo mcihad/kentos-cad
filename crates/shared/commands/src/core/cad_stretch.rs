@@ -170,7 +170,13 @@ mod tests {
             "dx": 1.0, "dy": 0.0, "topology": {}
         }))
         .expect("reads");
-        assert_eq!(input.topology, Some(StretchTopology { points: false, stop_on_locked: false }));
+        assert_eq!(
+            input.topology,
+            Some(StretchTopology {
+                points: false,
+                stop_on_locked: false
+            })
+        );
         assert!(input.uids.is_none());
     }
 }

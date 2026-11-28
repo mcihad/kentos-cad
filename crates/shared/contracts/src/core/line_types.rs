@@ -20,7 +20,9 @@ pub const MAX_STORED_PATTERN_ELEMENTS: usize = 256;
 
 /// Whether a type's pattern is longer than a LIN file's (docs/adr/1001 §1).
 pub fn has_long_patterns(types: &[LineTypeDef]) -> bool {
-    types.iter().any(|t| t.elements.len() > MAX_PATTERN_ELEMENTS)
+    types
+        .iter()
+        .any(|t| t.elements.len() > MAX_PATTERN_ELEMENTS)
 }
 /// The longest element, in its unit.
 pub const MAX_PATTERN_LENGTH: f64 = 1.0e6;

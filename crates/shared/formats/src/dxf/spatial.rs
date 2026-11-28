@@ -1,7 +1,7 @@
 //! DXF placements stay in XYZ until the final projection. Dropping Z before
 //! composing a tilted parent loses both plan coordinates and elevations.
 use super::entity::P3;
-use crate::geom::{ocs_axes, Tf};
+use crate::geom::{Tf, ocs_axes};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) struct Map3 {

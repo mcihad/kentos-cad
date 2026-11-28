@@ -84,7 +84,6 @@ pub struct SheetsSet {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
     pub dependencies: bool,
-
 }
 
 /// A series of the set.
@@ -154,7 +153,10 @@ pub struct SetFrame {
     /// the drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional, type = "Record<string, unknown>"))]
-    #[cfg_attr(feature = "schema", schemars(with = "Option<kentos_sheet::details::SheetDetail>"))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "Option<kentos_sheet::details::SheetDetail>")
+    )]
     pub detail: Option<serde_json::Value>,
     /// With `recipes`: its camera is locked, zooming on the screen leaves its print scale (docs/adr/0594).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -237,11 +239,17 @@ pub struct SheetsSetResult {
     pub revision: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional, type = "unknown"))]
-    #[cfg_attr(feature = "schema", schemars(with = "Option<kentos_sheet::model::SheetBook>"))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "Option<kentos_sheet::model::SheetBook>")
+    )]
     pub book: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional, type = "Array<unknown>"))]
-    #[cfg_attr(feature = "schema", schemars(with = "Option<Vec<kentos_sheet::template::Template>>"))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "Option<Vec<kentos_sheet::template::Template>>")
+    )]
     pub templates: Option<Vec<serde_json::Value>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -251,14 +259,14 @@ pub struct SheetsSetResult {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub standard_ratios: Option<Vec<kentos_contracts::PaperScaleRatio>>,
     /// With details: the same current named-view registry the desktop source picker uses.
-    #[serde(default,skip_serializing_if="Option::is_none")]
-    #[cfg_attr(feature="ts",ts(optional))]
-    pub named_views:Option<Vec<kentos_contracts::NamedView>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub named_views: Option<Vec<kentos_contracts::NamedView>>,
     /// Available source annotation representations, ordered; with details.
-    #[serde(default,skip_serializing_if="Option::is_none")]
-    #[cfg_attr(feature="ts",ts(optional))]
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature="schema",schemars(extend("x-unit"="scale")))]
-    pub annotation_scales:Option<Vec<f64>>,
+    pub annotation_scales: Option<Vec<f64>>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -266,7 +274,14 @@ pub struct SheetsSetResult {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
-pub enum SheetDependencyState { Current, Stale, NotDrawn, SourceGone, Edited, Legacy }
+pub enum SheetDependencyState {
+    Current,
+    Stale,
+    NotDrawn,
+    SourceGone,
+    Edited,
+    Legacy,
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

@@ -111,7 +111,9 @@ pub fn ramp_type(c: &Course) -> Option<&'static str> {
 pub fn stair_type(c: &Course) -> Option<&'static str> {
     let quarters: Vec<i32> = c.stops.iter().map(|s| s.quarters).collect();
     // The same quarter turn at every stop, as many as `n`.
-    let quarter_turns = |n: usize| quarters.len() == n && quarters.iter().all(|q| q.abs() == 1 && *q == quarters[0]);
+    let quarter_turns = |n: usize| {
+        quarters.len() == n && quarters.iter().all(|q| q.abs() == 1 && *q == quarters[0])
+    };
     if !c.stops.is_empty() && c.stops.iter().all(|s| s.winding) {
         // Winders are steps of the one flight they turn (IFC: "a stair making a 90° turn, consisting of one flight
         // with quarter winders"): the flights between them are not counted.
@@ -242,7 +244,13 @@ mod tests {
     #[test]
     fn a_straight_line_is_one_flight() {
         let c = course(&[p(0.0, 0.0), p(6.0, 0.0)], &[]).unwrap();
-        assert_eq!(c, Course { flights: 1, stops: vec![] });
+        assert_eq!(
+            c,
+            Course {
+                flights: 1,
+                stops: vec![]
+            }
+        );
         assert_eq!(ramp_type(&c), Some("STRAIGHT_RUN_RAMP"));
         assert_eq!(stair_type(&c), Some("STRAIGHT_RUN_STAIR"));
     }
@@ -250,8 +258,21 @@ mod tests {
     #[test]
     fn a_corner_with_its_landing_is_a_quarter_turn_and_a_u_a_half_or_two_quarters() {
         // L: 6 m east, 4 m north, a 1.5 m landing round the corner.
-        let l = course(&[p(0.0, 0.0), p(6.0, 0.0), p(6.0, 4.0)], &[((5.25, 6.75), false)]).unwrap();
-        assert_eq!(l, Course { flights: 2, stops: vec![Stop { quarters: 1, winding: false }] });
+        let l = course(
+            &[p(0.0, 0.0), p(6.0, 0.0), p(6.0, 4.0)],
+            &[((5.25, 6.75), false)],
+        )
+        .unwrap();
+        assert_eq!(
+            l,
+            Course {
+                flights: 2,
+                stops: vec![Stop {
+                    quarters: 1,
+                    winding: false
+                }]
+            }
+        );
         assert_eq!(ramp_type(&l), Some("QUARTER_TURN_RAMP"));
         // U whose landings touch: one stop turning twice to the left.
         let u = course(
@@ -259,7 +280,16 @@ mod tests {
             &[((5.25, 6.75), false), ((6.75, 8.25), false)],
         )
         .unwrap();
-        assert_eq!(u, Course { flights: 2, stops: vec![Stop { quarters: 2, winding: false }] });
+        assert_eq!(
+            u,
+            Course {
+                flights: 2,
+                stops: vec![Stop {
+                    quarters: 2,
+                    winding: false
+                }]
+            }
+        );
         assert_eq!(ramp_type(&u), Some("HALF_TURN_RAMP"));
         assert_eq!(stair_type(&u), Some("HALF_TURN_STAIR"));
         // U with a sloped middle: two quarter landings and three flights.
@@ -274,10 +304,20 @@ mod tests {
 
     #[test]
     fn a_landing_on_a_straight_line_makes_two_straight_runs_and_an_odd_angle_has_no_item() {
-        let two = course(&[p(0.0, 0.0), p(9.0, 0.0), p(18.0, 0.0)], &[((8.25, 9.75), false)]).unwrap();
+        let two = course(
+            &[p(0.0, 0.0), p(9.0, 0.0), p(18.0, 0.0)],
+            &[((8.25, 9.75), false)],
+        )
+        .unwrap();
         assert_eq!(ramp_type(&two), Some("TWO_STRAIGHT_RUN_RAMP"));
         assert_eq!(stair_type(&two), Some("TWO_STRAIGHT_RUN_STAIR"));
-        assert_eq!(course(&[p(0.0, 0.0), p(6.0, 0.0), p(9.0, 3.0)], &[((5.0, 7.0), false)]), None);
+        assert_eq!(
+            course(
+                &[p(0.0, 0.0), p(6.0, 0.0), p(9.0, 3.0)],
+                &[((5.0, 7.0), false)]
+            ),
+            None
+        );
         let three = course(
             &[p(0.0, 0.0), p(9.0, 0.0), p(18.0, 0.0), p(27.0, 0.0)],
             &[((8.25, 9.75), false), ((17.25, 18.75), false)],
@@ -289,7 +329,11 @@ mod tests {
 
     #[test]
     fn winders_name_the_winding_items() {
-        let c = course(&[p(0.0, 0.0), p(3.0, 0.0), p(3.0, 3.0)], &[((2.0, 4.0), true)]).unwrap();
+        let c = course(
+            &[p(0.0, 0.0), p(3.0, 0.0), p(3.0, 3.0)],
+            &[((2.0, 4.0), true)],
+        )
+        .unwrap();
         assert_eq!(stair_type(&c), Some("QUARTER_WINDING_STAIR"));
         let right = course(
             &[p(0.0, 0.0), p(3.0, 0.0), p(3.0, -3.0), p(0.0, -3.0)],
@@ -299,7 +343,11 @@ mod tests {
         assert_eq!(right.stops[0].quarters, -1);
         assert_eq!(stair_type(&right), Some("TWO_QUARTER_WINDING_STAIR"));
         // Winders reaching both ends: still one flight turning a quarter (IFC counts winders as its steps).
-        let whole = course(&[p(0.0, 0.0), p(1.0, 0.0), p(1.0, 1.0)], &[((0.0, 2.0), true)]).unwrap();
+        let whole = course(
+            &[p(0.0, 0.0), p(1.0, 0.0), p(1.0, 1.0)],
+            &[((0.0, 2.0), true)],
+        )
+        .unwrap();
         assert_eq!(whole.flights, 0);
         assert_eq!(stair_type(&whole), Some("QUARTER_WINDING_STAIR"));
         // A landing and winders on one stair: no item.

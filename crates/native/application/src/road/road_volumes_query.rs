@@ -8,7 +8,10 @@ use crate::checks::Stop;
 use crate::road_corridors::words;
 use crate::road_volumes as common;
 
-fn answer(doc: &kentos_domain::Document, input: &VolumesQuery) -> Result<(VolumesQueried, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &kentos_domain::Document,
+    input: &VolumesQuery,
+) -> Result<(VolumesQueried, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let own = doc.road_volumes();
     let Some(name) = input.volume.as_deref() else {
@@ -38,7 +41,10 @@ fn answer(doc: &kentos_domain::Document, input: &VolumesQuery) -> Result<(Volume
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &VolumesQuery) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -52,6 +58,9 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &VolumesQuery) -> CommandResult<Vo
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: VolumesQuery) -> CommandResult<VolumesQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: VolumesQuery,
+) -> CommandResult<VolumesQueried> {
     plan(cx, &input)
 }

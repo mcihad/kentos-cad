@@ -693,7 +693,10 @@ fn export_all(doc: &Document, input: &ExportParquet) -> Result<Made, (String, St
             ParquetCompression::None => Codec::None,
         },
         key_value: std::iter::once(("geo".into(), geo.to_string()))
-            .chain((!kinds.is_empty()).then(|| ("kentos".into(), json!({ "kinds": kinds }).to_string())))
+            .chain(
+                (!kinds.is_empty())
+                    .then(|| ("kentos".into(), json!({ "kinds": kinds }).to_string())),
+            )
             .collect(),
         created_by: "KentOS CAD".into(),
         ..Options::default()
@@ -727,7 +730,11 @@ fn export_all(doc: &Document, input: &ExportParquet) -> Result<Made, (String, St
         left,
         lost: lost.into_iter().collect(),
     };
-    Ok(Made { bytes, output, time_left_out: 0 })
+    Ok(Made {
+        bytes,
+        output,
+        time_left_out: 0,
+    })
 }
 
 #[cfg(test)]
@@ -739,13 +746,28 @@ mod tests {
     #[test]
     fn a_small_arc_at_map_coordinates_keeps_its_corners_on_the_circle() {
         let (cx, cy, r) = (487_080.0, 4_420_080.0, 0.6);
-        let at = |t: f64| Coord { x: cx + r * t.cos(), y: cy + r * t.sin(), z: None, m: None };
-        let (a, m, b) = (at(0.0), at(std::f64::consts::FRAC_PI_2), at(std::f64::consts::PI));
+        let at = |t: f64| Coord {
+            x: cx + r * t.cos(),
+            y: cy + r * t.sin(),
+            z: None,
+            m: None,
+        };
+        let (a, m, b) = (
+            at(0.0),
+            at(std::f64::consts::FRAC_PI_2),
+            at(std::f64::consts::PI),
+        );
         let (x, y, rr) = circle(&a, &m, &b).expect("a circle");
-        assert!((x - cx).abs() < 1e-9 && (y - cy).abs() < 1e-9 && (rr - r).abs() < 1e-9, "{x} {y} {rr}");
+        assert!(
+            (x - cx).abs() < 1e-9 && (y - cy).abs() < 1e-9 && (rr - r).abs() < 1e-9,
+            "{x} {y} {rr}"
+        );
         let mut out = vec![a];
         arc(&a, &m, &b, &mut out);
-        let worst = out.iter().map(|p| ((p.x - cx).hypot(p.y - cy) - r).abs()).fold(0.0, f64::max);
+        let worst = out
+            .iter()
+            .map(|p| ((p.x - cx).hypot(p.y - cy) - r).abs())
+            .fold(0.0, f64::max);
         assert!(worst < 1e-9, "{worst}");
     }
 }

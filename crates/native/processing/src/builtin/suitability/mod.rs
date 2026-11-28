@@ -139,7 +139,11 @@ pub(crate) fn cells_said(valid: u64, cells: u64) -> String {
             count_words(cells)
         )
     } else {
-        format!(" {}/{} hücrede değer var.", count_words(valid), count_words(cells))
+        format!(
+            " {}/{} hücrede değer var.",
+            count_words(valid),
+            count_words(cells)
+        )
     }
 }
 

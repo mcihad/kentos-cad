@@ -10,7 +10,10 @@ use crate::codes;
 use crate::road_sections as common;
 use crate::road_terrains::fail;
 
-fn answer(doc: &kentos_domain::Document, input: &SectionsQuery) -> Result<(SectionsQueried, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &kentos_domain::Document,
+    input: &SectionsQuery,
+) -> Result<(SectionsQueried, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let own = doc.road_sections();
     let Some(name) = input.set.as_deref() else {
@@ -21,8 +24,18 @@ fn answer(doc: &kentos_domain::Document, input: &SectionsQuery) -> Result<(Secti
                 "set",
             ));
         }
-        let warnings = own.iter().filter_map(|d| common::stale_warning(doc, d)).collect();
-        return Ok((SectionsQueried { sets: common::reports(doc, own), sections: vec![], sources: None }, warnings));
+        let warnings = own
+            .iter()
+            .filter_map(|d| common::stale_warning(doc, d))
+            .collect();
+        return Ok((
+            SectionsQueried {
+                sets: common::reports(doc, own),
+                sections: vec![],
+                sources: None,
+            },
+            warnings,
+        ));
     };
     let (_, def) = common::find_set(own, name, "set")?;
     let built = common::alignment_of(doc, def)?;
@@ -32,12 +45,18 @@ fn answer(doc: &kentos_domain::Document, input: &SectionsQuery) -> Result<(Secti
     } else {
         let mut out = Vec::new();
         for (i, s) in input.stations.iter().enumerate() {
-            match stations.iter().find(|k| (*k - s).abs() < common::SAME_STATION) {
+            match stations
+                .iter()
+                .find(|k| (*k - s).abs() < common::SAME_STATION)
+            {
                 Some(k) => out.push(*k),
                 None => {
                     return Err(fail(
                         codes::INVALID_PLACES,
-                        format!("{s} m “{}” kesit takımının km'lerinden biri değil.", def.name),
+                        format!(
+                            "{s} m “{}” kesit takımının km'lerinden biri değil.",
+                            def.name
+                        ),
                         &format!("stations[{i}]"),
                     ));
                 }
@@ -49,39 +68,74 @@ fn answer(doc: &kentos_domain::Document, input: &SectionsQuery) -> Result<(Secti
     let (rows, more) = common::sections(doc, def, &built, &asked);
     warnings.extend(more);
     Ok((
-        SectionsQueried { sets: vec![common::report(doc, def, stations)], sections: rows, sources: Some(sources_of(doc, def)) },
+        SectionsQueried {
+            sets: vec![common::report(doc, def, stations)],
+            sections: rows,
+            sources: Some(sources_of(doc, def)),
+        },
         warnings,
     ))
 }
 
 /// What a set's sections are computed from, each as it is now (docs/adr/1039): an id the project does not have reads
 /// revision 0.
-pub fn sources_of(doc: &kentos_domain::Document, def: &kentos_commands::SectionSetDef) -> kentos_commands::SectionSources {
+pub fn sources_of(
+    doc: &kentos_domain::Document,
+    def: &kentos_commands::SectionSetDef,
+) -> kentos_commands::SectionSources {
     use kentos_commands::RoadSource;
-    let alignment = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
+    let alignment = doc
+        .road_alignments()
+        .iter()
+        .find(|a| a.id == def.alignment)
+        .map_or(0, |a| a.revision);
     kentos_commands::SectionSources {
-        set: RoadSource { id: def.id.clone(), revision: def.revision },
-        alignment: RoadSource { id: def.alignment.clone(), revision: alignment },
+        set: RoadSource {
+            id: def.id.clone(),
+            revision: def.revision,
+        },
+        alignment: RoadSource {
+            id: def.alignment.clone(),
+            revision: alignment,
+        },
         profile: def.profile.as_ref().map(|id| RoadSource {
             id: id.clone(),
-            revision: doc.road_profiles().iter().find(|p| p.id == *id).map_or(0, |p| p.revision),
+            revision: doc
+                .road_profiles()
+                .iter()
+                .find(|p| p.id == *id)
+                .map_or(0, |p| p.revision),
         }),
         template: def.template.as_ref().map(|id| RoadSource {
             id: id.clone(),
-            revision: doc.road_templates().iter().find(|t| t.id == *id).map_or(0, |t| t.revision),
+            revision: doc
+                .road_templates()
+                .iter()
+                .find(|t| t.id == *id)
+                .map_or(0, |t| t.revision),
         }),
         superelevation: def.superelevation.as_ref().map(|id| RoadSource {
             id: id.clone(),
-            revision: doc.road_superelevations().iter().find(|s| s.id == *id).map_or(0, |s| s.revision),
+            revision: doc
+                .road_superelevations()
+                .iter()
+                .find(|s| s.id == *id)
+                .map_or(0, |s| s.revision),
         }),
-        surface: def.surface.as_ref().map(|id| crate::road_sources::surface(doc, id)),
+        surface: def
+            .surface
+            .as_ref()
+            .map(|id| crate::road_sources::surface(doc, id)),
     }
 }
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &SectionsQuery) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -95,6 +149,9 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SectionsQuery) -> CommandResult<S
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: SectionsQuery) -> CommandResult<SectionsQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SectionsQuery,
+) -> CommandResult<SectionsQueried> {
     plan(cx, &input)
 }

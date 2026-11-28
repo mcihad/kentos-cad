@@ -94,7 +94,10 @@ fn count_of(n: f64) -> Option<u32> {
 fn axis_degrees(text: &str) -> Option<f64> {
     use kentos_geometry_core::tools::point_text::{Len, parse_length};
     let raw = js_trim(text);
-    let raw = raw.strip_suffix('°').or_else(|| raw.strip_suffix("deg")).unwrap_or(raw);
+    let raw = raw
+        .strip_suffix('°')
+        .or_else(|| raw.strip_suffix("deg"))
+        .unwrap_or(raw);
     match parse_length(raw) {
         Some(Len::Unit(n)) if n.is_finite() => Some(n),
         _ => None,
@@ -194,10 +197,18 @@ impl ArrayEdit {
             c
         };
         match (&mut layout, ask) {
-            (ArrayLayout::Grid { rows, .. } | ArrayLayout::Lattice { rows, .. }, Ask::Rows) => *rows = whole()?,
-            (ArrayLayout::Grid { cols, .. } | ArrayLayout::Lattice { cols, .. }, Ask::Cols) => *cols = whole()?,
-            (ArrayLayout::Grid { dx, .. } | ArrayLayout::Lattice { dx, .. }, Ask::ColumnGap) => *dx = length,
-            (ArrayLayout::Grid { dy, .. } | ArrayLayout::Lattice { dy, .. }, Ask::RowGap) => *dy = length,
+            (ArrayLayout::Grid { rows, .. } | ArrayLayout::Lattice { rows, .. }, Ask::Rows) => {
+                *rows = whole()?
+            }
+            (ArrayLayout::Grid { cols, .. } | ArrayLayout::Lattice { cols, .. }, Ask::Cols) => {
+                *cols = whole()?
+            }
+            (ArrayLayout::Grid { dx, .. } | ArrayLayout::Lattice { dx, .. }, Ask::ColumnGap) => {
+                *dx = length
+            }
+            (ArrayLayout::Grid { dy, .. } | ArrayLayout::Lattice { dy, .. }, Ask::RowGap) => {
+                *dy = length
+            }
             (
                 ArrayLayout::Line { count, .. }
                 | ArrayLayout::Polar { count, .. }
@@ -207,10 +218,18 @@ impl ArrayEdit {
             (ArrayLayout::Line { count, dx, dy, fit }, Ask::Spacing) => {
                 let old = dx.hypot(*dy);
                 if !length.is_finite() || length <= 0.0 || !old.is_finite() || old <= 1e-9 {
-                    cx.say(Level::Warn, "Aralık sıfırdan büyük olmalı; dizinin yönü korunur.");
+                    cx.say(
+                        Level::Warn,
+                        "Aralık sıfırdan büyük olmalı; dizinin yönü korunur.",
+                    );
                     return None;
                 }
-                let extent = length * if *fit { count.saturating_sub(1).max(1) as f64 } else { 1.0 };
+                let extent = length
+                    * if *fit {
+                        count.saturating_sub(1).max(1) as f64
+                    } else {
+                        1.0
+                    };
                 // Normalise before multiplying: a tiny current step must not overflow
                 // the ratio. The common command still validates the resulting places.
                 *dx = (*dx / old) * extent;
@@ -218,8 +237,8 @@ impl ArrayEdit {
             }
             (ArrayLayout::Path { spacing, .. }, Ask::Spacing) => *spacing = Some(length),
             (ArrayLayout::Polar { fill, .. }, Ask::Fill) => *fill = n,
-            (ArrayLayout::Lattice {column_angle,..},Ask::ColumnAngle)=>*column_angle=n,
-            (ArrayLayout::Lattice {row_angle,..},Ask::RowAngle)=>*row_angle=n,
+            (ArrayLayout::Lattice { column_angle, .. }, Ask::ColumnAngle) => *column_angle = n,
+            (ArrayLayout::Lattice { row_angle, .. }, Ask::RowAngle) => *row_angle = n,
             _ => return None,
         }
         Some(layout)
@@ -297,8 +316,12 @@ impl Tool for ArrayEdit {
             Some(Ask::Cols) => return Prompt::new(LABEL, "sütun sayısını yazın"),
             Some(Ask::ColumnGap) => return Prompt::new(LABEL, "sütunlar arasındaki aralığı yazın"),
             Some(Ask::RowGap) => return Prompt::new(LABEL, "satırlar arasındaki aralığı yazın"),
-            Some(Ask::ColumnAngle) => return Prompt::new(LABEL,"sütun yönünü derece olarak yazın (dünya doğusu 0°)"),
-            Some(Ask::RowAngle) => return Prompt::new(LABEL,"satır yönünü derece olarak yazın (dünya doğusu 0°)"),
+            Some(Ask::ColumnAngle) => {
+                return Prompt::new(LABEL, "sütun yönünü derece olarak yazın (dünya doğusu 0°)");
+            }
+            Some(Ask::RowAngle) => {
+                return Prompt::new(LABEL, "satır yönünü derece olarak yazın (dünya doğusu 0°)");
+            }
             Some(Ask::Count) => return Prompt::new(LABEL, "öğe sayısını yazın"),
             Some(Ask::Spacing) => return Prompt::new(LABEL, "öğeler arasındaki aralığı yazın"),
             Some(Ask::Fill) => {
@@ -322,16 +345,34 @@ impl Tool for ArrayEdit {
                 .option_with("Sütun", "T", cols.to_string())
                 .option_with("Sütun aralığı", "A", f.length(dx))
                 .option_with("Satır aralığı", "R", f.length(dy)),
-            ArrayLayout::Lattice {rows,cols,dx,dy,column_angle,row_angle} => prompt
-                .option_with("Satır","S",rows.to_string())
-                .option_with("Sütun","T",cols.to_string())
-                .option_with("Sütun aralığı","A",f.length(dx))
-                .option_with("Satır aralığı","R",f.length(dy))
-                .option_with("Sütun yönü","Y",format!("{column_angle:.4}°"))
-                .option_with("Satır yönü","N",format!("{row_angle:.4}°")),
+            ArrayLayout::Lattice {
+                rows,
+                cols,
+                dx,
+                dy,
+                column_angle,
+                row_angle,
+            } => prompt
+                .option_with("Satır", "S", rows.to_string())
+                .option_with("Sütun", "T", cols.to_string())
+                .option_with("Sütun aralığı", "A", f.length(dx))
+                .option_with("Satır aralığı", "R", f.length(dy))
+                .option_with("Sütun yönü", "Y", format!("{column_angle:.4}°"))
+                .option_with("Satır yönü", "N", format!("{row_angle:.4}°")),
             ArrayLayout::Line { count, dx, dy, fit } => prompt
                 .option_with("Adet", "D", count.to_string())
-                .option_with("Aralık", "A", f.length(dx.hypot(dy) / if fit { count.saturating_sub(1).max(1) as f64 } else { 1.0 })),
+                .option_with(
+                    "Aralık",
+                    "A",
+                    f.length(
+                        dx.hypot(dy)
+                            / if fit {
+                                count.saturating_sub(1).max(1) as f64
+                            } else {
+                                1.0
+                            },
+                    ),
+                ),
             ArrayLayout::Polar { count, fill, .. } => prompt
                 .option_with("Adet", "D", count.to_string())
                 .option_with("Açı", "Ç", format!("{fill}°")),
@@ -436,10 +477,18 @@ impl Tool for ArrayEdit {
             return true;
         }
         if let Some(ask) = self.ask {
-            if matches!(ask,Ask::ColumnAngle|Ask::RowAngle) {
-                let value=axis_degrees(text);
-                let Some(n)=value else {cx.say(Level::Warn,"Yönü derece olarak yazın (ör. 30 veya 30°); uzunluk birimi kullanmayın.");return true;};
-                if let Some(layout)=self.layout_with(ask,n,0.,cx) {self.apply(Edit::Layout {layout},cx);}
+            if matches!(ask, Ask::ColumnAngle | Ask::RowAngle) {
+                let value = axis_degrees(text);
+                let Some(n) = value else {
+                    cx.say(
+                        Level::Warn,
+                        "Yönü derece olarak yazın (ör. 30 veya 30°); uzunluk birimi kullanmayın.",
+                    );
+                    return true;
+                };
+                if let Some(layout) = self.layout_with(ask, n, 0., cx) {
+                    self.apply(Edit::Layout { layout }, cx);
+                }
                 return true;
             }
             let Some((n, length)) = points::plain_value(text, cx)
@@ -456,8 +505,12 @@ impl Tool for ArrayEdit {
         let ask = match (upper_tr(js_trim(text)).as_str(), kind) {
             ("S", Some(ArrayLayout::Grid { .. } | ArrayLayout::Lattice { .. })) => Some(Ask::Rows),
             ("T", Some(ArrayLayout::Grid { .. } | ArrayLayout::Lattice { .. })) => Some(Ask::Cols),
-            ("A", Some(ArrayLayout::Grid { .. } | ArrayLayout::Lattice { .. })) => Some(Ask::ColumnGap),
-            ("R", Some(ArrayLayout::Grid { .. } | ArrayLayout::Lattice { .. })) => Some(Ask::RowGap),
+            ("A", Some(ArrayLayout::Grid { .. } | ArrayLayout::Lattice { .. })) => {
+                Some(Ask::ColumnGap)
+            }
+            ("R", Some(ArrayLayout::Grid { .. } | ArrayLayout::Lattice { .. })) => {
+                Some(Ask::RowGap)
+            }
             (
                 "D",
                 Some(
@@ -466,8 +519,8 @@ impl Tool for ArrayEdit {
             ) => Some(Ask::Count),
             ("A", Some(ArrayLayout::Line { .. } | ArrayLayout::Path { .. })) => Some(Ask::Spacing),
             ("Ç", Some(ArrayLayout::Polar { .. })) => Some(Ask::Fill),
-            ("Y",Some(ArrayLayout::Lattice {..}))=>Some(Ask::ColumnAngle),
-            ("N",Some(ArrayLayout::Lattice {..}))=>Some(Ask::RowAngle),
+            ("Y", Some(ArrayLayout::Lattice { .. })) => Some(Ask::ColumnAngle),
+            ("N", Some(ArrayLayout::Lattice { .. })) => Some(Ask::RowAngle),
             ("B", _) => Some(Ask::Base),
             ("G", _) if item.is_some() => Some(Ask::Block),
             ("L", _) => {
@@ -534,13 +587,16 @@ impl Tool for ArrayEdit {
     }
 }
 
-
 #[cfg(test)]
 mod axis_input_tests {
     use super::axis_degrees;
     #[test]
     fn explicit_degree_input_never_accepts_project_length_units() {
-        for text in ["30", "30°", "30deg", " 30 "] {assert_eq!(axis_degrees(text),Some(30.));}
-        for text in ["30mm", "30m", "NaN", "inf", ""] {assert_eq!(axis_degrees(text),None);}
+        for text in ["30", "30°", "30deg", " 30 "] {
+            assert_eq!(axis_degrees(text), Some(30.));
+        }
+        for text in ["30mm", "30m", "NaN", "inf", ""] {
+            assert_eq!(axis_degrees(text), None);
+        }
     }
 }

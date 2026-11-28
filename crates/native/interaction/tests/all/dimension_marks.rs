@@ -150,10 +150,17 @@ fn a_kot_away_from_everything_takes_the_active_level_and_follows_it() {
     let mut b = levelled();
     b.level = Some("kat-1".into());
     b.start("dimElevation");
-    assert_eq!(b.options(), ["K", "F"], "Kat and Fark while the project has levels");
+    assert_eq!(
+        b.options(),
+        ["K", "F"],
+        "Kat and Fark while the project has levels"
+    );
     // Away from everything: not asked, Etkin kat's elevation.
     b.click(30.0, 30.0);
-    assert_eq!(b.session.prompt().text().split(" [").next(), Some("Kot: değerin yerini belirtin"));
+    assert_eq!(
+        b.session.prompt().text().split(" [").next(),
+        Some("Kot: değerin yerini belirtin")
+    );
     b.click(33.0, 31.0);
     let d = newest(&b);
     assert_eq!((d.za, level_of(d)), (Some(3.25), Some(("kat-1", None))));
@@ -175,15 +182,26 @@ fn kat_and_fark_choose_the_level_and_the_offset() {
     // Kat: 1. kat chosen; Fark −0.02 typed after F.
     assert!(b.run(|s, cx| s.configure("K", "id:kat-1", cx)));
     assert!(b.type_text("F"));
-    assert!(b.session.prompt().text().starts_with("Kot: kata göre farkı yazın"));
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .starts_with("Kot: kata göre farkı yazın")
+    );
     assert!(b.type_text("-0.02"));
     b.draft.snap = true;
     // On the point with its own elevation: a level chosen still wins.
     b.click(0.0, 0.0);
     b.click(2.0, 2.0);
     let d = newest(&b);
-    assert_eq!((d.za, level_of(d)), (Some(3.25 + -0.02), Some(("kat-1", Some(-0.02)))));
-    assert!(d.refs.as_ref().is_some_and(|r| r.a.is_some()), "bound to the point for its place");
+    assert_eq!(
+        (d.za, level_of(d)),
+        (Some(3.25 + -0.02), Some(("kat-1", Some(-0.02))))
+    );
+    assert!(
+        d.refs.as_ref().is_some_and(|r| r.a.is_some()),
+        "bound to the point for its place"
+    );
     // Etkin kat again: the point's own elevation is read, no level.
     assert!(b.run(|s, cx| s.configure("K", "etkin", cx)));
     b.click(0.0, 0.0);
@@ -194,7 +212,10 @@ fn kat_and_fark_choose_the_level_and_the_offset() {
     assert!(b.run(|s, cx| s.configure("K", "yok", cx)));
     b.draft.snap = false;
     b.click(40.0, 40.0);
-    assert_eq!(b.session.prompt().text().split(" [").next(), Some("Kot: noktanın kotunu yazın"));
+    assert_eq!(
+        b.session.prompt().text().split(" [").next(),
+        Some("Kot: noktanın kotunu yazın")
+    );
     assert!(b.type_text("1.5"));
     b.click(42.0, 41.0);
     let d = newest(&b);
@@ -221,5 +242,8 @@ fn a_kot_waiting_reads_the_new_active_level_at_once() {
     b.level = None;
     b.run(|s, cx| s.level_changed(cx));
     b.click(50.0, 50.0);
-    assert_eq!(b.session.prompt().text().split(" [").next(), Some("Kot: noktanın kotunu yazın"));
+    assert_eq!(
+        b.session.prompt().text().split(" [").next(),
+        Some("Kot: noktanın kotunu yazın")
+    );
 }

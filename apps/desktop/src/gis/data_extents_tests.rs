@@ -19,12 +19,19 @@ fn data_only() -> App {
     settings.workspace = Some(kentos_commands::Workspace::Gis);
     doc.model.set_settings(settings);
     doc.model.set_layer_locked("bina", false);
-    let uids: Vec<String> = doc.model.entities_with_uids().map(|(u, _)| u.to_string()).collect();
-    crate::files_testing::command(&mut app, "cad.entities.delete", serde_json::json!({ "uids": uids }));
-    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(iced::Rectangle::new(
-        iced::Point::ORIGIN,
-        iced::Size::new(1000.0, 700.0),
-    ))));
+    let uids: Vec<String> = doc
+        .model
+        .entities_with_uids()
+        .map(|(u, _)| u.to_string())
+        .collect();
+    crate::files_testing::command(
+        &mut app,
+        "cad.entities.delete",
+        serde_json::json!({ "uids": uids }),
+    );
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
+        iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0)),
+    )));
     app
 }
 
@@ -42,13 +49,22 @@ fn empty_layer(app: &mut App, tag: &str) -> String {
         description: None,
         key: "fid".into(),
         fields: Vec::new(),
-        geometry: Some(GeometryField { name: "geom".into(), type_name: "POINT".into(), z: false, m: false, srid: Some(5256) }),
+        geometry: Some(GeometryField {
+            name: "geom".into(),
+            type_name: "POINT".into(),
+            z: false,
+            m: false,
+            srid: Some(5256),
+        }),
         spatial_index: true,
         system: None,
     };
     tx.create_table(&made, false).expect("made");
     tx.commit().expect("committed");
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "yeni").expect("described")]).expect("added");
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "yeni").expect("described"),
+    ])
+    .expect("added");
     node(app, "yeni").expect("the layer").id.clone()
 }
 
@@ -61,15 +77,29 @@ fn write_point(app: &mut App, layer: &str, x: f64, y: f64) {
     }))
     .expect("an input");
     let doc = &mut app.document.as_mut().expect("a drawing").model;
-    let made = kentos_native_application::create::execute(&mut kentos_native_application::ExecutionContext::new(doc), input);
-    assert!(matches!(made, kentos_commands::CommandResult::Completed { .. }), "{made:?}");
+    let made = kentos_native_application::create::execute(
+        &mut kentos_native_application::ExecutionContext::new(doc),
+        input,
+    );
+    assert!(
+        matches!(made, kentos_commands::CommandResult::Completed { .. }),
+        "{made:?}"
+    );
     let doc = &app.document.as_ref().expect("a drawing").model;
     let writes = data_write::writes_of(doc, layer).expect("being edited");
-    let outcome =
-        data_write::write_group(std::slice::from_ref(&writes), doc.settings(), false).map(|keys| (vec![writes], keys));
+    let outcome = data_write::write_group(std::slice::from_ref(&writes), doc.settings(), false)
+        .map(|keys| (vec![writes], keys));
     assert!(outcome.is_ok(), "written");
-    let _ = app.data_edits_event(crate::data_edits::Event::Saved(vec![layer.to_owned()], Box::new(outcome)));
-    assert!(app.document.as_ref().is_some_and(|d| d.model.by_layer(layer).next().is_none()), "taken out of the drawing");
+    let _ = app.data_edits_event(crate::data_edits::Event::Saved(
+        vec![layer.to_owned()],
+        Box::new(outcome),
+    ));
+    assert!(
+        app.document
+            .as_ref()
+            .is_some_and(|d| d.model.by_layer(layer).next().is_none()),
+        "taken out of the drawing"
+    );
 }
 
 /// Tümünü göster, its reads from the sources answered.
@@ -88,7 +118,11 @@ fn tumunu_goster_frames_the_rows_a_layer_made_empty_was_written_since() {
     let mut app = data_only();
     let layer = empty_layer(&mut app, "kapsam-yeni");
     let layer_node = node(&app, "yeni").expect("the layer").clone();
-    assert_eq!(layer_node.data.as_ref().and_then(|d| d.extent), None, "made empty, it kept no box");
+    assert_eq!(
+        layer_node.data.as_ref().and_then(|d| d.extent),
+        None,
+        "made empty, it kept no box"
+    );
     // Nothing yet: the table has no row.
     show_all(&mut app);
     assert_eq!(app.data_extent_of(&layer), Some(Extent::Read(None)));
@@ -102,10 +136,20 @@ fn tumunu_goster_frames_the_rows_a_layer_made_empty_was_written_since() {
         "the layer keeps the box it had"
     );
     show_all(&mut app);
-    assert_eq!(last_said(&app), super::FITTED, "it said it waited, and that the view is on the rows");
+    assert_eq!(
+        last_said(&app),
+        super::FITTED,
+        "it said it waited, and that the view is on the rows"
+    );
     let (x, y) = centre(&app);
-    assert!((x - 486_510.0).abs() < 1e-6 && (y - 4_420_210.0).abs() < 1e-6, "on the point: {x} {y}");
-    assert_eq!(app.viewport.camera.scale, scale, "a lone point keeps the view's scale");
+    assert!(
+        (x - 486_510.0).abs() < 1e-6 && (y - 4_420_210.0).abs() < 1e-6,
+        "on the point: {x} {y}"
+    );
+    assert_eq!(
+        app.viewport.camera.scale, scale,
+        "a lone point keeps the view's scale"
+    );
     let words = crate::screen_scale::scale_words(app.view_scale());
     assert!(!words.contains(":0") && !words.starts_with("0:"), "{words}");
     // A second row: both in the view.
@@ -113,7 +157,10 @@ fn tumunu_goster_frames_the_rows_a_layer_made_empty_was_written_since() {
     show_all(&mut app);
     let b = app.viewport.camera.visible_bounds();
     for (px, py) in [(486_510.0, 4_420_210.0), (486_910.0, 4_420_510.0)] {
-        assert!(b.min_x < px && px < b.max_x && b.min_y < py && py < b.max_y, "{px} {py} in {b:?}");
+        assert!(
+            b.min_x < px && px < b.max_x && b.min_y < py && py < b.max_y,
+            "{px} {py} in {b:?}"
+        );
     }
     // Katmana yakınlaştır frames the same box.
     app.viewport.camera.zoom_at(0.01, 500.0, 350.0);
@@ -136,12 +183,18 @@ fn katmana_yakinlastir_waits_for_the_box_and_says_why_there_is_none() {
     assert!(app.data_layer_below(&n), "the menu offers it");
     app.viewport.camera.zoom_at(0.01, 500.0, 350.0);
     app.zoom_to_layer(&layer);
-    assert_eq!(last_said(&app), "“yeni” kapsamı kaynaktan okunuyor; gelince yakınlaştırılır.");
+    assert_eq!(
+        last_said(&app),
+        "“yeni” kapsamı kaynaktan okunuyor; gelince yakınlaştırılır."
+    );
     let task = app.data_extents_tasks();
     drive(&mut app, task);
     let b = app.viewport.camera.visible_bounds();
     for (px, py) in [(486_510.0, 4_420_210.0), (486_910.0, 4_420_510.0)] {
-        assert!(b.min_x < px && px < b.max_x && b.min_y < py && py < b.max_y, "{px} {py} in {b:?}");
+        assert!(
+            b.min_x < px && px < b.max_x && b.min_y < py && py < b.max_y,
+            "{px} {py} in {b:?}"
+        );
     }
     // A table without rows: said once its box is read, the view kept.
     let empty = empty_layer(&mut app, "kapsam-bos");
@@ -149,7 +202,10 @@ fn katmana_yakinlastir_waits_for_the_box_and_says_why_there_is_none() {
     app.zoom_to_layer(&empty);
     let task = app.data_extents_tasks();
     drive(&mut app, task);
-    assert_eq!(last_said(&app), "“yeni” tablosunda geometrili satır yok; yakınlaştırılacak kapsam yok.");
+    assert_eq!(
+        last_said(&app),
+        "“yeni” tablosunda geometrili satır yok; yakınlaştırılacak kapsam yok."
+    );
     assert_eq!(app.viewport.camera.visible_bounds(), before);
 }
 
@@ -157,13 +213,20 @@ fn katmana_yakinlastir_waits_for_the_box_and_says_why_there_is_none() {
 fn genel_bakis_draws_a_data_only_project_and_says_why_it_is_empty() {
     let mut app = data_only();
     app.toggle_overview();
-    assert_eq!(app.overview_words(), Some("Çizimde gösterilecek nesne yok."), "a project with nothing");
+    assert_eq!(
+        app.overview_words(),
+        Some("Çizimde gösterilecek nesne yok."),
+        "a project with nothing"
+    );
     let layer = empty_layer(&mut app, "kapsam-genel");
     write_point(&mut app, &layer, 486_510.0, 4_420_210.0);
     write_point(&mut app, &layer, 486_910.0, 4_420_510.0);
     // The box is read off the thread: until it is in, the overview says so.
     app.overview_now();
-    assert_eq!(app.overview_words(), Some("Veri katmanları kaynaklarından okunuyor…"));
+    assert_eq!(
+        app.overview_words(),
+        Some("Veri katmanları kaynaklarından okunuyor…")
+    );
     let task = app.data_extents_tasks();
     drive(&mut app, task);
     // The box in, the outline asked; once both are in, the picture holds the two rows in the layer's colour.
@@ -175,19 +238,29 @@ fn genel_bakis_draws_a_data_only_project_and_says_why_it_is_empty() {
     let extent = app.overview_extent().flatten().expect("its extent");
     assert_eq!(extent, [486_510.0, 4_420_210.0, 486_910.0, 4_420_510.0]);
     for (x, y) in [(486_510.0, 4_420_210.0), (486_910.0, 4_420_510.0)] {
-        let px = app.overview_pixel(kentos_render_wgpu::Vec2::new(x, y)).expect("in the picture");
+        let px = app
+            .overview_pixel(kentos_render_wgpu::Vec2::new(x, y))
+            .expect("in the picture");
         assert_eq!(px[3], 255, "the row's dot at {x} {y}: {px:?}");
     }
     // A press on the picture moves the main view there.
-    let at = app.overview_point(kentos_render_wgpu::Vec2::new(486_910.0, 4_420_510.0)).expect("on the picture");
+    let at = app
+        .overview_point(kentos_render_wgpu::Vec2::new(486_910.0, 4_420_510.0))
+        .expect("on the picture");
     app.navigation_event(crate::navigation_cards::Event::Press(at));
     let (x, y) = centre(&app);
-    assert!((x - 486_910.0).abs() < 5.0 && (y - 4_420_510.0).abs() < 5.0, "{x} {y}");
+    assert!(
+        (x - 486_910.0).abs() < 5.0 && (y - 4_420_510.0).abs() < 5.0,
+        "{x} {y}"
+    );
     // The layer hidden: the overview says hidden layers are not shown.
     let _ = app.update(Message::LayerVisible(layer.clone()));
     assert!(node(&app, "yeni").is_some_and(|n| !n.visible), "hidden");
     app.overview_now();
-    assert_eq!(app.overview_words(), Some("Görünen katmanlarda nesne yok; gizli katmanlar gösterilmez."));
+    assert_eq!(
+        app.overview_words(),
+        Some("Görünen katmanlarda nesne yok; gizli katmanlar gösterilmez.")
+    );
 }
 
 /// A data-only CBS project whose layer, made empty, had six rows written through its edit session, Tümünü göster run.
@@ -218,10 +291,9 @@ fn screens() {
     crate::files_testing::usage_shots("9327", "01-en-yakin-olcek", || {
         let mut app = app_with_drawing();
         // Sized first: the drawing's opening fit is spent, and the zoom below stays.
-        let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(iced::Rectangle::new(
-            iced::Point::ORIGIN,
-            iced::Size::new(1100.0, 650.0),
-        ))));
+        let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
+            iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1100.0, 650.0)),
+        )));
         let _ = app.update(Message::Run("view.splitLink"));
         let _ = app.update(Message::Run("view.splitAdd"));
         let _ = app.update(Message::Viewport(crate::viewport::Event::Zoomed {
@@ -242,8 +314,13 @@ fn screens() {
         }
         app.toggle_magnifier();
         // A little off the row, so the lens shows it beside its cross.
-        let at = app.viewport.camera.world_to_screen(kentos_render_wgpu::Vec2::new(486_794.0, 4_420_416.0));
-        let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(iced::Point::new(at[0] as f32, at[1] as f32))));
+        let at = app
+            .viewport
+            .camera
+            .world_to_screen(kentos_render_wgpu::Vec2::new(486_794.0, 4_420_416.0));
+        let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(
+            iced::Point::new(at[0] as f32, at[1] as f32),
+        )));
         app
     });
     crate::files_testing::usage_shots_in("9327", "03-gizli-katman", |theme| {

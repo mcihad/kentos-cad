@@ -19,9 +19,18 @@ use kentos_commands::{
 /// list equal to the catalog's commands marked `desktop`, as the server's
 /// `SERVER_COMMANDS` is kept to those marked `server`.
 pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
-    (kentos_commands::CAD_DIMENSION_SETS_CREATE, kentos_commands::CAD_DIMENSION_SETS_VERSION),
-    (kentos_commands::CAD_DIMENSION_SETS_EDIT, kentos_commands::CAD_DIMENSION_SETS_VERSION),
-    (kentos_commands::CAD_DIMENSION_SETS_QUERY, kentos_commands::CAD_DIMENSION_SETS_VERSION),
+    (
+        kentos_commands::CAD_DIMENSION_SETS_CREATE,
+        kentos_commands::CAD_DIMENSION_SETS_VERSION,
+    ),
+    (
+        kentos_commands::CAD_DIMENSION_SETS_EDIT,
+        kentos_commands::CAD_DIMENSION_SETS_VERSION,
+    ),
+    (
+        kentos_commands::CAD_DIMENSION_SETS_QUERY,
+        kentos_commands::CAD_DIMENSION_SETS_VERSION,
+    ),
     (CAD_POLYGON_CREATE, CAD_POLYGON_CREATE_VERSION),
     (CAD_LINE_CREATE, CAD_LINE_CREATE_VERSION),
     (CAD_POLYLINE_CREATE, CAD_POLYLINE_CREATE_VERSION),
@@ -274,8 +283,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_SCHEDULES_CREATE,
         kentos_commands::CAD_SCHEDULES_CREATE_VERSION,
     ),
-    (kentos_commands::CAD_EXTRACT_RUN, kentos_commands::CAD_EXTRACT_RUN_VERSION),
-    (kentos_commands::CAD_EXTRACT_TABLE, kentos_commands::CAD_EXTRACT_TABLE_VERSION),
+    (
+        kentos_commands::CAD_EXTRACT_RUN,
+        kentos_commands::CAD_EXTRACT_RUN_VERSION,
+    ),
+    (
+        kentos_commands::CAD_EXTRACT_TABLE,
+        kentos_commands::CAD_EXTRACT_TABLE_VERSION,
+    ),
     (
         kentos_commands::CAD_SCHEDULES_EDIT,
         kentos_commands::CAD_SCHEDULES_EDIT_VERSION,
@@ -424,9 +439,18 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_RASTERS_GEOREF_VERSION,
     ),
     // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
-    (kentos_commands::CAD_SPACES_DISCOVER, kentos_commands::CAD_SPACES_DISCOVER_VERSION),
-    (kentos_commands::CAD_SPACES_NUMBER,kentos_commands::CAD_SPACES_NUMBER_VERSION),
-    (kentos_commands::CAD_SPACES_SEPARATORS,kentos_commands::CAD_SPACES_SEPARATORS_VERSION),
+    (
+        kentos_commands::CAD_SPACES_DISCOVER,
+        kentos_commands::CAD_SPACES_DISCOVER_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SPACES_NUMBER,
+        kentos_commands::CAD_SPACES_NUMBER_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SPACES_SEPARATORS,
+        kentos_commands::CAD_SPACES_SEPARATORS_VERSION,
+    ),
     (
         kentos_commands::CAD_SPACES_CREATE,
         kentos_commands::CAD_SPACES_CREATE_VERSION,
@@ -449,8 +473,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_SPACES_QUANTITIES_VERSION,
     ),
     // Döşeme and Döşemeyi düzenle ([`slabs_create`], [`slabs_edit`], docs/adr/0722).
-    (kentos_commands::CAD_SLABS_CREATE, kentos_commands::CAD_SLABS_CREATE_VERSION),
-    (kentos_commands::CAD_SLABS_EDIT, kentos_commands::CAD_SLABS_EDIT_VERSION),
+    (
+        kentos_commands::CAD_SLABS_CREATE,
+        kentos_commands::CAD_SLABS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SLABS_EDIT,
+        kentos_commands::CAD_SLABS_EDIT_VERSION,
+    ),
     // Kapı, Pencere, Boşluk and Açıklığı düzenle ([`openings_create`], [`openings_edit`], docs/adr/0341).
     (
         kentos_commands::CAD_OPENINGS_CREATE,
@@ -475,13 +505,28 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_OPENINGS_QUERY_VERSION,
     ),
     // Malzemeler ([`materials_edit`], docs/adr/0785).
-    (kentos_commands::CAD_MATERIALS_EDIT, kentos_commands::CAD_MATERIALS_EDIT_VERSION),
+    (
+        kentos_commands::CAD_MATERIALS_EDIT,
+        kentos_commands::CAD_MATERIALS_EDIT_VERSION,
+    ),
     // Oda modülleri ([`modules_edit`], [`modules_query`], docs/adr/0775).
-    (kentos_commands::CAD_MODULES_EDIT, kentos_commands::CAD_MODULES_EDIT_VERSION),
-    (kentos_commands::CAD_MODULES_QUERY, kentos_commands::CAD_MODULES_QUERY_VERSION),
+    (
+        kentos_commands::CAD_MODULES_EDIT,
+        kentos_commands::CAD_MODULES_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_MODULES_QUERY,
+        kentos_commands::CAD_MODULES_QUERY_VERSION,
+    ),
     // Tasarım seçenekleri ([`options_edit`], [`options_query`], docs/adr/0788).
-    (kentos_commands::CAD_OPTIONS_EDIT, kentos_commands::CAD_OPTIONS_EDIT_VERSION),
-    (kentos_commands::CAD_OPTIONS_QUERY, kentos_commands::CAD_OPTIONS_QUERY_VERSION),
+    (
+        kentos_commands::CAD_OPTIONS_EDIT,
+        kentos_commands::CAD_OPTIONS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_OPTIONS_QUERY,
+        kentos_commands::CAD_OPTIONS_QUERY_VERSION,
+    ),
     // Oda iç görünüşü ([`elevations_edit`], [`elevations_query`], docs/adr/0799).
     (
         kentos_commands::CAD_ELEVATIONS_EDIT,
@@ -520,7 +565,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_ARCH_AUDIT,
         kentos_commands::CAD_ARCH_AUDIT_VERSION,
     ),
-    (kentos_commands::CAD_ARCH_WALK, kentos_commands::CAD_ARCH_WALK_VERSION),
+    (
+        kentos_commands::CAD_ARCH_WALK,
+        kentos_commands::CAD_ARCH_WALK_VERSION,
+    ),
     // Denetim istisnası ([`arch_exceptions`], docs/adr/0732 §3).
     (
         kentos_commands::CAD_ARCH_EXCEPTIONS,
@@ -598,7 +646,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_WALLS_RECTANGLE,
         kentos_commands::CAD_WALLS_RECTANGLE_VERSION,
     ),
-    (kentos_commands::CAD_WALLS_PARTITION, kentos_commands::CAD_WALLS_PARTITION_VERSION),
+    (
+        kentos_commands::CAD_WALLS_PARTITION,
+        kentos_commands::CAD_WALLS_PARTITION_VERSION,
+    ),
     (
         kentos_commands::CAD_WALLS_FROM_LINES,
         kentos_commands::CAD_WALLS_FROM_LINES_VERSION,
@@ -615,7 +666,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_WALLS_JOINS,
         kentos_commands::CAD_WALLS_JOINS_VERSION,
     ),
-    (kentos_commands::CAD_DONUT_CREATE, kentos_commands::CAD_DONUT_CREATE_VERSION),
+    (
+        kentos_commands::CAD_DONUT_CREATE,
+        kentos_commands::CAD_DONUT_CREATE_VERSION,
+    ),
     // Rectangles and regular polygons ([`shapes`], docs/adr/0290).
     (
         kentos_commands::CAD_RECTANGLE_CREATE,
@@ -625,20 +679,62 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_POLYGON_REGULAR,
         kentos_commands::CAD_POLYGON_REGULAR_VERSION,
     ),
-    (kentos_commands::CAD_SECTOR_CREATE, kentos_commands::CAD_SECTOR_CREATE_VERSION),
-    (kentos_commands::CAD_REVCLOUD_CREATE, kentos_commands::CAD_REVCLOUD_CREATE_VERSION),
-    (kentos_commands::CAD_ENTITIES_ADJOIN, kentos_commands::CAD_ENTITIES_ADJOIN_VERSION),
-    (kentos_commands::CAD_PARCELS_CREATE, kentos_commands::CAD_PARCELS_CREATE_VERSION),
-    (kentos_commands::CAD_CONSTRUCTIONS_CREATE, kentos_commands::CAD_CONSTRUCTIONS_CREATE_VERSION),
-    (kentos_commands::CAD_AREAS_EDIT, kentos_commands::CAD_AREAS_EDIT_VERSION),
-    (kentos_commands::CAD_ANNOTATIONS_WRITE, kentos_commands::CAD_ANNOTATIONS_WRITE_VERSION),
-    (kentos_commands::CAD_OBJECTS_DERIVE, kentos_commands::CAD_OBJECTS_DERIVE_VERSION),
-    (kentos_commands::CAD_ROADS_EDIT, kentos_commands::CAD_ROADS_EDIT_VERSION),
-    (kentos_commands::CAD_IMAGES_CLIP, kentos_commands::CAD_IMAGES_CLIP_VERSION),
-    (kentos_commands::CAD_TIME_VERSION, kentos_commands::CAD_TIME_VERSION_VERSION),
-    (kentos_commands::CAD_SURVEY_POINTS, kentos_commands::CAD_SURVEY_POINTS_VERSION),
-    (kentos_commands::CAD_SURVEY_ADJUST, kentos_commands::CAD_SURVEY_ADJUST_VERSION),
-    (kentos_commands::CAD_SHAPES_EDIT, kentos_commands::CAD_SHAPES_EDIT_VERSION),
+    (
+        kentos_commands::CAD_SECTOR_CREATE,
+        kentos_commands::CAD_SECTOR_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_REVCLOUD_CREATE,
+        kentos_commands::CAD_REVCLOUD_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ENTITIES_ADJOIN,
+        kentos_commands::CAD_ENTITIES_ADJOIN_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PARCELS_CREATE,
+        kentos_commands::CAD_PARCELS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_CONSTRUCTIONS_CREATE,
+        kentos_commands::CAD_CONSTRUCTIONS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_AREAS_EDIT,
+        kentos_commands::CAD_AREAS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ANNOTATIONS_WRITE,
+        kentos_commands::CAD_ANNOTATIONS_WRITE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_OBJECTS_DERIVE,
+        kentos_commands::CAD_OBJECTS_DERIVE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ROADS_EDIT,
+        kentos_commands::CAD_ROADS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_IMAGES_CLIP,
+        kentos_commands::CAD_IMAGES_CLIP_VERSION,
+    ),
+    (
+        kentos_commands::CAD_TIME_VERSION,
+        kentos_commands::CAD_TIME_VERSION_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SURVEY_POINTS,
+        kentos_commands::CAD_SURVEY_POINTS_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SURVEY_ADJUST,
+        kentos_commands::CAD_SURVEY_ADJUST_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SHAPES_EDIT,
+        kentos_commands::CAD_SHAPES_EDIT_VERSION,
+    ),
     // A path's vertices and edges ([`entities_vertex`], docs/adr/0279).
     (
         kentos_commands::CAD_ENTITIES_VERTEX,
@@ -845,127 +941,454 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::ROAD_SUPERELEVATIONS_TRANSITIONS,
         kentos_commands::ROAD_SUPERELEVATIONS_TRANSITIONS_VERSION,
     ),
-    (kentos_commands::ROAD_CORRIDORS_EDIT, kentos_commands::ROAD_CORRIDORS_EDIT_VERSION),
-    (kentos_commands::ROAD_CORRIDORS_QUERY, kentos_commands::ROAD_CORRIDORS_QUERY_VERSION),
-    (kentos_commands::ROAD_CORRIDORS_WATER, kentos_commands::ROAD_CORRIDORS_WATER_VERSION),
-    (kentos_commands::ROAD_CORRIDORS_DAYLIGHTS, kentos_commands::ROAD_CORRIDORS_DAYLIGHTS_VERSION),
-    (kentos_commands::ROAD_CORRIDORS_PROTECTED, kentos_commands::ROAD_CORRIDORS_PROTECTED_VERSION),
-    (kentos_commands::ROAD_CORRIDORS_PREFLIGHT, kentos_commands::ROAD_CORRIDORS_PREFLIGHT_VERSION),
-    (kentos_commands::ROAD_CORRIDORS_DRAW, kentos_commands::ROAD_CORRIDORS_DRAW_VERSION),
-    (kentos_commands::ROAD_VOLUMES_EDIT, kentos_commands::ROAD_VOLUMES_EDIT_VERSION),
-    (kentos_commands::ROAD_VOLUMES_QUERY, kentos_commands::ROAD_VOLUMES_QUERY_VERSION),
-    (kentos_commands::ROAD_VOLUMES_APPROVE, kentos_commands::ROAD_VOLUMES_APPROVE_VERSION),
-    (kentos_commands::ROAD_VOLUMES_UNCERTAINTY, kentos_commands::ROAD_VOLUMES_UNCERTAINTY_VERSION),
-    (kentos_commands::ROAD_VOLUMES_PROGRESS, kentos_commands::ROAD_VOLUMES_PROGRESS_VERSION),
-    (kentos_commands::ROAD_VOLUMES_COMPARE, kentos_commands::ROAD_VOLUMES_COMPARE_VERSION),
-    (kentos_commands::ROAD_VOLUMES_LEDGER, kentos_commands::ROAD_VOLUMES_LEDGER_VERSION),
-    (kentos_commands::ROAD_VOLUMES_STATES, kentos_commands::ROAD_VOLUMES_STATES_VERSION),
-    (kentos_commands::ROAD_PROFILES_IMPACT, kentos_commands::ROAD_PROFILES_IMPACT_VERSION),
-    (kentos_commands::ROAD_ALIGNMENTS_IMPACT, kentos_commands::ROAD_ALIGNMENTS_IMPACT_VERSION),
-    (kentos_commands::ROAD_VOLUMES_HISTORY, kentos_commands::ROAD_VOLUMES_HISTORY_VERSION),
-    (kentos_commands::ROAD_HAULS_EDIT, kentos_commands::ROAD_HAULS_EDIT_VERSION),
-    (kentos_commands::ROAD_HAULS_QUERY, kentos_commands::ROAD_HAULS_QUERY_VERSION),
-    (kentos_commands::ROAD_HAULS_PLAN, kentos_commands::ROAD_HAULS_PLAN_VERSION),
-    (kentos_commands::ROAD_HAULS_APPROVE, kentos_commands::ROAD_HAULS_APPROVE_VERSION),
-    (kentos_commands::ROAD_HAULS_NETWORK, kentos_commands::ROAD_HAULS_NETWORK_VERSION),
-    (kentos_commands::ROAD_HAULS_TRUCKS, kentos_commands::ROAD_HAULS_TRUCKS_VERSION),
-    (kentos_commands::ROAD_GUARDRAILS_EDIT, kentos_commands::ROAD_GUARDRAILS_EDIT_VERSION),
-    (kentos_commands::ROAD_GUARDRAILS_QUERY, kentos_commands::ROAD_GUARDRAILS_QUERY_VERSION),
-    (kentos_commands::ROAD_GUARDRAILS_DRAW, kentos_commands::ROAD_GUARDRAILS_DRAW_VERSION),
-    (kentos_commands::ROAD_CULVERTS_EDIT, kentos_commands::ROAD_CULVERTS_EDIT_VERSION),
-    (kentos_commands::ROAD_CULVERTS_QUERY, kentos_commands::ROAD_CULVERTS_QUERY_VERSION),
-    (kentos_commands::ROAD_CULVERTS_DRAW, kentos_commands::ROAD_CULVERTS_DRAW_VERSION),
-    (kentos_commands::ROAD_CULVERTS_HYDRAULICS, kentos_commands::ROAD_CULVERTS_HYDRAULICS_VERSION),
-    (kentos_commands::ROAD_CULVERTS_CLOSURE, kentos_commands::ROAD_CULVERTS_CLOSURE_VERSION),
-    (kentos_commands::ROAD_WALLS_EDIT, kentos_commands::ROAD_WALLS_EDIT_VERSION),
-    (kentos_commands::ROAD_WALLS_QUERY, kentos_commands::ROAD_WALLS_QUERY_VERSION),
-    (kentos_commands::ROAD_WALLS_DRAW, kentos_commands::ROAD_WALLS_DRAW_VERSION),
-    (kentos_commands::ROAD_PLATFORMS_EDIT, kentos_commands::ROAD_PLATFORMS_EDIT_VERSION),
-    (kentos_commands::ROAD_TERRAINS_FROM_CLOUD, kentos_commands::ROAD_TERRAINS_FROM_CLOUD_VERSION),
-    (kentos_commands::ROAD_DRAINAGE_QUERY, kentos_commands::ROAD_DRAINAGE_QUERY_VERSION),
-    (kentos_commands::ROAD_DRAINAGE_DRAW, kentos_commands::ROAD_DRAINAGE_DRAW_VERSION),
-    (kentos_commands::ROAD_SWEPT_QUERY, kentos_commands::ROAD_SWEPT_QUERY_VERSION),
-    (kentos_commands::ROAD_SWEPT_DRAW, kentos_commands::ROAD_SWEPT_DRAW_VERSION),
-    (kentos_commands::ROAD_TERRAINS_ANALYSIS, kentos_commands::ROAD_TERRAINS_ANALYSIS_VERSION),
-    (kentos_commands::ROAD_TERRAINS_COMPARE, kentos_commands::ROAD_TERRAINS_COMPARE_VERSION),
-    (kentos_commands::ROAD_TERRAINS_QUALITY, kentos_commands::ROAD_TERRAINS_QUALITY_VERSION),
-    (kentos_commands::ROAD_TERRAINS_REPAIR, kentos_commands::ROAD_TERRAINS_REPAIR_VERSION),
-    (kentos_commands::ROAD_TERRAINS_COVERAGE, kentos_commands::ROAD_TERRAINS_COVERAGE_VERSION),
-    (kentos_commands::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW, kentos_commands::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW_VERSION),
-    (kentos_commands::ROAD_TERRAINS_DENSITY, kentos_commands::ROAD_TERRAINS_DENSITY_VERSION),
-    (kentos_commands::ROAD_TERRAINS_STOCKPILE, kentos_commands::ROAD_TERRAINS_STOCKPILE_VERSION),
-    (kentos_commands::ROAD_TERRAINS_SPARSE_DRAW, kentos_commands::ROAD_TERRAINS_SPARSE_DRAW_VERSION),
-    (kentos_commands::ROAD_PLATFORMS_QUERY, kentos_commands::ROAD_PLATFORMS_QUERY_VERSION),
-    (kentos_commands::ROAD_PLATFORMS_DRAW, kentos_commands::ROAD_PLATFORMS_DRAW_VERSION),
-    (kentos_commands::ROAD_PAY_EDIT, kentos_commands::ROAD_PAY_EDIT_VERSION),
-    (kentos_commands::ROAD_PAY_QUERY, kentos_commands::ROAD_PAY_QUERY_VERSION),
-    (kentos_commands::ROAD_ROUTES_FIND, kentos_commands::ROAD_ROUTES_FIND_VERSION),
-    (kentos_commands::ROAD_ROUTES_DRAW, kentos_commands::ROAD_ROUTES_DRAW_VERSION),
-    (kentos_commands::ROAD_JUNCTIONS_EDIT, kentos_commands::ROAD_JUNCTIONS_EDIT_VERSION),
-    (kentos_commands::ROAD_JUNCTIONS_QUERY, kentos_commands::ROAD_JUNCTIONS_QUERY_VERSION),
-    (kentos_commands::ROAD_JUNCTIONS_DRAW, kentos_commands::ROAD_JUNCTIONS_DRAW_VERSION),
-    (kentos_commands::ROAD_JUNCTIONS_CLEARANCE, kentos_commands::ROAD_JUNCTIONS_CLEARANCE_VERSION),
-    (kentos_commands::ROAD_JUNCTIONS_TIE, kentos_commands::ROAD_JUNCTIONS_TIE_VERSION),
-    (kentos_commands::ROAD_JUNCTIONS_OVERLAP, kentos_commands::ROAD_JUNCTIONS_OVERLAP_VERSION),
-    (kentos_commands::ROAD_PROJECT_QUERY, kentos_commands::ROAD_PROJECT_QUERY_VERSION),
-    (kentos_commands::ROAD_PROJECT_GRAPH, kentos_commands::ROAD_PROJECT_GRAPH_VERSION),
-    (kentos_commands::ROAD_PROJECT_REBUILD, kentos_commands::ROAD_PROJECT_REBUILD_VERSION),
-    (kentos_commands::ROAD_PROJECT_PRODUCE, kentos_commands::ROAD_PROJECT_PRODUCE_VERSION),
-    (kentos_commands::ROAD_PROJECT_EDIT, kentos_commands::ROAD_PROJECT_EDIT_VERSION),
+    (
+        kentos_commands::ROAD_CORRIDORS_EDIT,
+        kentos_commands::ROAD_CORRIDORS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CORRIDORS_QUERY,
+        kentos_commands::ROAD_CORRIDORS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CORRIDORS_WATER,
+        kentos_commands::ROAD_CORRIDORS_WATER_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CORRIDORS_DAYLIGHTS,
+        kentos_commands::ROAD_CORRIDORS_DAYLIGHTS_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CORRIDORS_PROTECTED,
+        kentos_commands::ROAD_CORRIDORS_PROTECTED_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CORRIDORS_PREFLIGHT,
+        kentos_commands::ROAD_CORRIDORS_PREFLIGHT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CORRIDORS_DRAW,
+        kentos_commands::ROAD_CORRIDORS_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_VOLUMES_EDIT,
+        kentos_commands::ROAD_VOLUMES_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_VOLUMES_QUERY,
+        kentos_commands::ROAD_VOLUMES_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_VOLUMES_APPROVE,
+        kentos_commands::ROAD_VOLUMES_APPROVE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_VOLUMES_UNCERTAINTY,
+        kentos_commands::ROAD_VOLUMES_UNCERTAINTY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_VOLUMES_PROGRESS,
+        kentos_commands::ROAD_VOLUMES_PROGRESS_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_VOLUMES_COMPARE,
+        kentos_commands::ROAD_VOLUMES_COMPARE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_VOLUMES_LEDGER,
+        kentos_commands::ROAD_VOLUMES_LEDGER_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_VOLUMES_STATES,
+        kentos_commands::ROAD_VOLUMES_STATES_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROFILES_IMPACT,
+        kentos_commands::ROAD_PROFILES_IMPACT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ALIGNMENTS_IMPACT,
+        kentos_commands::ROAD_ALIGNMENTS_IMPACT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_VOLUMES_HISTORY,
+        kentos_commands::ROAD_VOLUMES_HISTORY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_HAULS_EDIT,
+        kentos_commands::ROAD_HAULS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_HAULS_QUERY,
+        kentos_commands::ROAD_HAULS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_HAULS_PLAN,
+        kentos_commands::ROAD_HAULS_PLAN_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_HAULS_APPROVE,
+        kentos_commands::ROAD_HAULS_APPROVE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_HAULS_NETWORK,
+        kentos_commands::ROAD_HAULS_NETWORK_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_HAULS_TRUCKS,
+        kentos_commands::ROAD_HAULS_TRUCKS_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_GUARDRAILS_EDIT,
+        kentos_commands::ROAD_GUARDRAILS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_GUARDRAILS_QUERY,
+        kentos_commands::ROAD_GUARDRAILS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_GUARDRAILS_DRAW,
+        kentos_commands::ROAD_GUARDRAILS_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CULVERTS_EDIT,
+        kentos_commands::ROAD_CULVERTS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CULVERTS_QUERY,
+        kentos_commands::ROAD_CULVERTS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CULVERTS_DRAW,
+        kentos_commands::ROAD_CULVERTS_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CULVERTS_HYDRAULICS,
+        kentos_commands::ROAD_CULVERTS_HYDRAULICS_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_CULVERTS_CLOSURE,
+        kentos_commands::ROAD_CULVERTS_CLOSURE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_WALLS_EDIT,
+        kentos_commands::ROAD_WALLS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_WALLS_QUERY,
+        kentos_commands::ROAD_WALLS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_WALLS_DRAW,
+        kentos_commands::ROAD_WALLS_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PLATFORMS_EDIT,
+        kentos_commands::ROAD_PLATFORMS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_FROM_CLOUD,
+        kentos_commands::ROAD_TERRAINS_FROM_CLOUD_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_DRAINAGE_QUERY,
+        kentos_commands::ROAD_DRAINAGE_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_DRAINAGE_DRAW,
+        kentos_commands::ROAD_DRAINAGE_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SWEPT_QUERY,
+        kentos_commands::ROAD_SWEPT_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_SWEPT_DRAW,
+        kentos_commands::ROAD_SWEPT_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_ANALYSIS,
+        kentos_commands::ROAD_TERRAINS_ANALYSIS_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_COMPARE,
+        kentos_commands::ROAD_TERRAINS_COMPARE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_QUALITY,
+        kentos_commands::ROAD_TERRAINS_QUALITY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_REPAIR,
+        kentos_commands::ROAD_TERRAINS_REPAIR_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_COVERAGE,
+        kentos_commands::ROAD_TERRAINS_COVERAGE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW,
+        kentos_commands::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_DENSITY,
+        kentos_commands::ROAD_TERRAINS_DENSITY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_STOCKPILE,
+        kentos_commands::ROAD_TERRAINS_STOCKPILE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_TERRAINS_SPARSE_DRAW,
+        kentos_commands::ROAD_TERRAINS_SPARSE_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PLATFORMS_QUERY,
+        kentos_commands::ROAD_PLATFORMS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PLATFORMS_DRAW,
+        kentos_commands::ROAD_PLATFORMS_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PAY_EDIT,
+        kentos_commands::ROAD_PAY_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PAY_QUERY,
+        kentos_commands::ROAD_PAY_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ROUTES_FIND,
+        kentos_commands::ROAD_ROUTES_FIND_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_ROUTES_DRAW,
+        kentos_commands::ROAD_ROUTES_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_JUNCTIONS_EDIT,
+        kentos_commands::ROAD_JUNCTIONS_EDIT_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_JUNCTIONS_QUERY,
+        kentos_commands::ROAD_JUNCTIONS_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_JUNCTIONS_DRAW,
+        kentos_commands::ROAD_JUNCTIONS_DRAW_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_JUNCTIONS_CLEARANCE,
+        kentos_commands::ROAD_JUNCTIONS_CLEARANCE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_JUNCTIONS_TIE,
+        kentos_commands::ROAD_JUNCTIONS_TIE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_JUNCTIONS_OVERLAP,
+        kentos_commands::ROAD_JUNCTIONS_OVERLAP_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROJECT_QUERY,
+        kentos_commands::ROAD_PROJECT_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROJECT_GRAPH,
+        kentos_commands::ROAD_PROJECT_GRAPH_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROJECT_REBUILD,
+        kentos_commands::ROAD_PROJECT_REBUILD_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROJECT_PRODUCE,
+        kentos_commands::ROAD_PROJECT_PRODUCE_VERSION,
+    ),
+    (
+        kentos_commands::ROAD_PROJECT_EDIT,
+        kentos_commands::ROAD_PROJECT_EDIT_VERSION,
+    ),
     // KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200).
-    (kentos_commands::MAP_WORK_QUERY, kentos_commands::MAP_WORK_QUERY_VERSION),
-    (kentos_commands::MAP_WORK_EDIT, kentos_commands::MAP_WORK_EDIT_VERSION),
+    (
+        kentos_commands::MAP_WORK_QUERY,
+        kentos_commands::MAP_WORK_QUERY_VERSION,
+    ),
+    (
+        kentos_commands::MAP_WORK_EDIT,
+        kentos_commands::MAP_WORK_EDIT_VERSION,
+    ),
     // An approved item's objects put back as approved (plan/map-cad.md MAP-01, docs/adr/4080).
-    (kentos_commands::MAP_WORK_RESTORE, kentos_commands::MAP_WORK_RESTORE_VERSION),
+    (
+        kentos_commands::MAP_WORK_RESTORE,
+        kentos_commands::MAP_WORK_RESTORE_VERSION,
+    ),
     // The scales between the ground, the ellipsoid and the map (plan/map-cad.md MAP-02, docs/adr/1231).
-    (kentos_commands::CAD_CRS_FACTORS, kentos_commands::CAD_CRS_FACTORS_VERSION),
+    (
+        kentos_commands::CAD_CRS_FACTORS,
+        kentos_commands::CAD_CRS_FACTORS_VERSION,
+    ),
     // Kodla çiz (plan/map-cad.md MAP-04, docs/adr/1360).
-    (kentos_commands::MAP_FEATURES_CODE, kentos_commands::MAP_FEATURES_CODE_VERSION),
+    (
+        kentos_commands::MAP_FEATURES_CODE,
+        kentos_commands::MAP_FEATURES_CODE_VERSION,
+    ),
     // GNSS baz ağı dengelemesi (plan/map-cad.md MAP-05, docs/adr/1380).
-    (kentos_commands::CAD_SURVEY_BASELINES, kentos_commands::CAD_SURVEY_BASELINES_VERSION),
+    (
+        kentos_commands::CAD_SURVEY_BASELINES,
+        kentos_commands::CAD_SURVEY_BASELINES_VERSION,
+    ),
     // Eğimle kot ver (plan/map-cad.md MAP-06, docs/adr/1290).
-    (kentos_commands::CAD_ENTITIES_GRADE, kentos_commands::CAD_ENTITIES_GRADE_VERSION),
+    (
+        kentos_commands::CAD_ENTITIES_GRADE,
+        kentos_commands::CAD_ENTITIES_GRADE_VERSION,
+    ),
     // Referanstan kot ver (plan/map-cad.md MAP-06, docs/adr/3780).
-    (kentos_commands::CAD_ENTITIES_RAISE, kentos_commands::CAD_ENTITIES_RAISE_VERSION),
+    (
+        kentos_commands::CAD_ENTITIES_RAISE,
+        kentos_commands::CAD_ENTITIES_RAISE_VERSION,
+    ),
     // Yüzeyden kot ver (plan/map-cad.md MAP-06, docs/adr/4180).
-    (kentos_commands::CAD_ENTITIES_DRAPE, kentos_commands::CAD_ENTITIES_DRAPE_VERSION),
-    (kentos_commands::CAD_TOPOLOGY_CLEAN, kentos_commands::CAD_TOPOLOGY_CLEAN_VERSION),
-    (kentos_commands::CAD_PARCELS_CHECK, kentos_commands::CAD_PARCELS_CHECK_VERSION),
-    (kentos_commands::CAD_PARCELS_BOUNDARIES, kentos_commands::CAD_PARCELS_BOUNDARIES_VERSION),
-    (kentos_commands::CAD_PARCELS_RECORD, kentos_commands::CAD_PARCELS_RECORD_VERSION),
-    (kentos_commands::CAD_PARCELS_RECORDS, kentos_commands::CAD_PARCELS_RECORDS_VERSION),
+    (
+        kentos_commands::CAD_ENTITIES_DRAPE,
+        kentos_commands::CAD_ENTITIES_DRAPE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_TOPOLOGY_CLEAN,
+        kentos_commands::CAD_TOPOLOGY_CLEAN_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PARCELS_CHECK,
+        kentos_commands::CAD_PARCELS_CHECK_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PARCELS_BOUNDARIES,
+        kentos_commands::CAD_PARCELS_BOUNDARIES_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PARCELS_RECORD,
+        kentos_commands::CAD_PARCELS_RECORD_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PARCELS_RECORDS,
+        kentos_commands::CAD_PARCELS_RECORDS_VERSION,
+    ),
     // Parsel alan çizelgesi and its table ([`crate::parcels_report`], docs/adr/9306).
-    (kentos_commands::CAD_PARCELS_REPORT, kentos_commands::CAD_PARCELS_REPORT_VERSION),
-    (kentos_commands::CAD_PARCELS_TABLE, kentos_commands::CAD_PARCELS_TABLE_VERSION),
-    (kentos_commands::CAD_PARCELS_APPROVE, kentos_commands::CAD_PARCELS_APPROVE_VERSION),
-    (kentos_commands::CAD_PARCELS_WITHDRAW, kentos_commands::CAD_PARCELS_WITHDRAW_VERSION),
-    (kentos_commands::CAD_PIPES_CHECK, kentos_commands::CAD_PIPES_CHECK_VERSION),
-    (kentos_commands::CAD_PIPES_PROFILE, kentos_commands::CAD_PIPES_PROFILE_VERSION),
-    (kentos_commands::CAD_ASBUILT_CHECK, kentos_commands::CAD_ASBUILT_CHECK_VERSION),
+    (
+        kentos_commands::CAD_PARCELS_REPORT,
+        kentos_commands::CAD_PARCELS_REPORT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PARCELS_TABLE,
+        kentos_commands::CAD_PARCELS_TABLE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PARCELS_APPROVE,
+        kentos_commands::CAD_PARCELS_APPROVE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PARCELS_WITHDRAW,
+        kentos_commands::CAD_PARCELS_WITHDRAW_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PIPES_CHECK,
+        kentos_commands::CAD_PIPES_CHECK_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PIPES_PROFILE,
+        kentos_commands::CAD_PIPES_PROFILE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ASBUILT_CHECK,
+        kentos_commands::CAD_ASBUILT_CHECK_VERSION,
+    ),
     // İzleme incelemesi (plan/map-cad.md MAP-19, docs/adr/5220).
-    (kentos_commands::CAD_ASBUILT_REVIEW, kentos_commands::CAD_ASBUILT_REVIEW_VERSION),
-    (kentos_commands::CAD_FIELD_PACKAGE, kentos_commands::CAD_FIELD_PACKAGE_VERSION),
-    (kentos_commands::CAD_ZONING_CHECK, kentos_commands::CAD_ZONING_CHECK_VERSION),
-    (kentos_commands::CAD_ZONING_SYMBOLIZE, kentos_commands::CAD_ZONING_SYMBOLIZE_VERSION),
-    (kentos_commands::CAD_ZONING_DRAFT, kentos_commands::CAD_ZONING_DRAFT_VERSION),
-    (kentos_commands::CAD_SCENARIOS_IMPACT, kentos_commands::CAD_SCENARIOS_IMPACT_VERSION),
-    (kentos_commands::CAD_SCENARIOS_RECORD, kentos_commands::CAD_SCENARIOS_RECORD_VERSION),
-    (kentos_commands::CAD_READJUSTMENT_DISTRIBUTE, kentos_commands::CAD_READJUSTMENT_DISTRIBUTE_VERSION),
-    (kentos_commands::CAD_READJUSTMENT_SCOPE, kentos_commands::CAD_READJUSTMENT_SCOPE_VERSION),
-    (kentos_commands::CAD_READJUSTMENT_SHEETS, kentos_commands::CAD_READJUSTMENT_SHEETS_VERSION),
-    (kentos_commands::CAD_ORTHOPHOTO_CHECK, kentos_commands::CAD_ORTHOPHOTO_CHECK_VERSION),
-    (kentos_commands::CAD_ORTHOPHOTO_COMPARE, kentos_commands::CAD_ORTHOPHOTO_COMPARE_VERSION),
-    (kentos_commands::CAD_ORTHOPHOTO_SEAMLINES, kentos_commands::CAD_ORTHOPHOTO_SEAMLINES_VERSION),
+    (
+        kentos_commands::CAD_ASBUILT_REVIEW,
+        kentos_commands::CAD_ASBUILT_REVIEW_VERSION,
+    ),
+    (
+        kentos_commands::CAD_FIELD_PACKAGE,
+        kentos_commands::CAD_FIELD_PACKAGE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ZONING_CHECK,
+        kentos_commands::CAD_ZONING_CHECK_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ZONING_SYMBOLIZE,
+        kentos_commands::CAD_ZONING_SYMBOLIZE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ZONING_DRAFT,
+        kentos_commands::CAD_ZONING_DRAFT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SCENARIOS_IMPACT,
+        kentos_commands::CAD_SCENARIOS_IMPACT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SCENARIOS_RECORD,
+        kentos_commands::CAD_SCENARIOS_RECORD_VERSION,
+    ),
+    (
+        kentos_commands::CAD_READJUSTMENT_DISTRIBUTE,
+        kentos_commands::CAD_READJUSTMENT_DISTRIBUTE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_READJUSTMENT_SCOPE,
+        kentos_commands::CAD_READJUSTMENT_SCOPE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_READJUSTMENT_SHEETS,
+        kentos_commands::CAD_READJUSTMENT_SHEETS_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ORTHOPHOTO_CHECK,
+        kentos_commands::CAD_ORTHOPHOTO_CHECK_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ORTHOPHOTO_COMPARE,
+        kentos_commands::CAD_ORTHOPHOTO_COMPARE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ORTHOPHOTO_SEAMLINES,
+        kentos_commands::CAD_ORTHOPHOTO_SEAMLINES_VERSION,
+    ),
     // Birleşme çizgisi ağı ve ayak izi (plan/map-cad.md MAP-12, docs/adr/5260).
-    (kentos_commands::CAD_ORTHOPHOTO_NETWORK, kentos_commands::CAD_ORTHOPHOTO_NETWORK_VERSION),
-    (kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT, kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT_VERSION),
-    (kentos_commands::CAD_POINTCLOUDS_OVERLAP, kentos_commands::CAD_POINTCLOUDS_OVERLAP_VERSION),
-    (kentos_commands::CAD_POINTCLOUDS_REGISTER, kentos_commands::CAD_POINTCLOUDS_REGISTER_VERSION),
-    (kentos_commands::CAD_POINTCLOUDS_NETWORK, kentos_commands::CAD_POINTCLOUDS_NETWORK_VERSION),
-    (kentos_commands::CAD_POINTCLOUDS_PLACE, kentos_commands::CAD_POINTCLOUDS_PLACE_VERSION),
+    (
+        kentos_commands::CAD_ORTHOPHOTO_NETWORK,
+        kentos_commands::CAD_ORTHOPHOTO_NETWORK_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT,
+        kentos_commands::CAD_ORTHOPHOTO_FOOTPRINT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_POINTCLOUDS_OVERLAP,
+        kentos_commands::CAD_POINTCLOUDS_OVERLAP_VERSION,
+    ),
+    (
+        kentos_commands::CAD_POINTCLOUDS_REGISTER,
+        kentos_commands::CAD_POINTCLOUDS_REGISTER_VERSION,
+    ),
+    (
+        kentos_commands::CAD_POINTCLOUDS_NETWORK,
+        kentos_commands::CAD_POINTCLOUDS_NETWORK_VERSION,
+    ),
+    (
+        kentos_commands::CAD_POINTCLOUDS_PLACE,
+        kentos_commands::CAD_POINTCLOUDS_PLACE_VERSION,
+    ),
     // The catalog's migration report (plan/map-cad.md MAP-04, docs/adr/4940).
-    (kentos_commands::CAD_PROFILES_COMPARE, kentos_commands::CAD_PROFILES_COMPARE_VERSION),
-    (kentos_commands::CAD_PROFILES_CARRY, kentos_commands::CAD_PROFILES_CARRY_VERSION),
+    (
+        kentos_commands::CAD_PROFILES_COMPARE,
+        kentos_commands::CAD_PROFILES_COMPARE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PROFILES_CARRY,
+        kentos_commands::CAD_PROFILES_CARRY_VERSION,
+    ),
     // KentOS Harita's GNSS campaign archive (plan/map-cad.md MAP-03, docs/adr/1340).
     (
         kentos_commands::MAP_SURVEY_QUERY,
@@ -1007,8 +1430,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_IFC_COMPARE,
         kentos_commands::CAD_IFC_COMPARE_VERSION,
     ),
-    (kentos_commands::CAD_BCF_WRITE, kentos_commands::CAD_BCF_WRITE_VERSION),
-    (kentos_commands::CAD_BCF_READ, kentos_commands::CAD_BCF_READ_VERSION),
+    (
+        kentos_commands::CAD_BCF_WRITE,
+        kentos_commands::CAD_BCF_WRITE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_BCF_READ,
+        kentos_commands::CAD_BCF_READ_VERSION,
+    ),
     (
         kentos_commands::FILE_EXPORT_GLTF,
         kentos_commands::FILE_EXPORT_GLTF_VERSION,
@@ -1181,8 +1610,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_ENTITIES_LENGTHEN,
         kentos_commands::CAD_ENTITIES_LENGTHEN_VERSION,
     ),
-    (kentos_commands::CAD_DRAWING_INSPECT, kentos_commands::CAD_DRAWING_INSPECT_VERSION),
-    (kentos_commands::CAD_ARRAYS_FIND, kentos_commands::CAD_ARRAYS_FIND_VERSION),
+    (
+        kentos_commands::CAD_DRAWING_INSPECT,
+        kentos_commands::CAD_DRAWING_INSPECT_VERSION,
+    ),
+    (
+        kentos_commands::CAD_ARRAYS_FIND,
+        kentos_commands::CAD_ARRAYS_FIND_VERSION,
+    ),
     (
         kentos_commands::CAD_ARRAYS_ADOPT,
         kentos_commands::CAD_ARRAYS_ADOPT_VERSION,
@@ -1392,8 +1827,14 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::CAD_BLOCKS_QUERY_VERSION,
     ),
     // A dynamic block's inserts' parameter values ([`block_params`], docs/adr/0318 §3).
-    (kentos_commands::CAD_BLOCKS_FIND, kentos_commands::CAD_BLOCKS_FIND_VERSION),
-    (kentos_commands::CAD_BLOCKS_CONVERT, kentos_commands::CAD_BLOCKS_CONVERT_VERSION),
+    (
+        kentos_commands::CAD_BLOCKS_FIND,
+        kentos_commands::CAD_BLOCKS_FIND_VERSION,
+    ),
+    (
+        kentos_commands::CAD_BLOCKS_CONVERT,
+        kentos_commands::CAD_BLOCKS_CONVERT_VERSION,
+    ),
     (
         kentos_commands::CAD_BLOCKS_PARAMETERS,
         kentos_commands::CAD_BLOCKS_PARAMETERS_VERSION,
@@ -1434,7 +1875,10 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::FILE_IMPORT_DXF,
         kentos_commands::FILE_IMPORT_DXF_VERSION,
     ),
-    (kentos_commands::FILE_IMPORT_DWG, kentos_commands::FILE_IMPORT_DWG_VERSION),
+    (
+        kentos_commands::FILE_IMPORT_DWG,
+        kentos_commands::FILE_IMPORT_DWG_VERSION,
+    ),
     // Toplu yazma of the attribute table ([`fields_write`], docs/adr/0507).
     (
         kentos_commands::CAD_FIELDS_WRITE,
@@ -1609,14 +2053,29 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_commands::FILE_IMPORT_PDF,
         kentos_commands::FILE_IMPORT_PDF_VERSION,
     ),
-    (kentos_commands::CAD_SHEETS_CREATE, kentos_commands::CAD_SHEETS_CREATE_VERSION),
-    (kentos_commands::CAD_SHEETS_FIT, kentos_commands::CAD_SHEETS_FIT_VERSION),
+    (
+        kentos_commands::CAD_SHEETS_CREATE,
+        kentos_commands::CAD_SHEETS_CREATE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SHEETS_FIT,
+        kentos_commands::CAD_SHEETS_FIT_VERSION,
+    ),
     // Kat planı paftaları ([`sheets_levels`], docs/adr/0718).
-    (kentos_commands::CAD_SHEETS_LEVELS, kentos_commands::CAD_SHEETS_LEVELS_VERSION),
+    (
+        kentos_commands::CAD_SHEETS_LEVELS,
+        kentos_commands::CAD_SHEETS_LEVELS_VERSION,
+    ),
     // Detay paftaları ([`sheets_details`], docs/adr/1090 §2).
-    (kentos_commands::CAD_SHEETS_DETAILS, kentos_commands::CAD_SHEETS_DETAILS_VERSION),
+    (
+        kentos_commands::CAD_SHEETS_DETAILS,
+        kentos_commands::CAD_SHEETS_DETAILS_VERSION,
+    ),
     // Baskı stili tablosu içe aktar ([`plot_styles_import`], docs/adr/1130).
-    (kentos_commands::CAD_PLOTSTYLES_IMPORT, kentos_commands::CAD_PLOTSTYLES_IMPORT_VERSION),
+    (
+        kentos_commands::CAD_PLOTSTYLES_IMPORT,
+        kentos_commands::CAD_PLOTSTYLES_IMPORT_VERSION,
+    ),
     // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
     (
         kentos_commands::CAD_SHEETS_EDIT,

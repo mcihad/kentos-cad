@@ -6,8 +6,8 @@
 //! opens the same parcels' boundary graph (docs/adr/2000); Parsel kayıtları… the drawing's parcel register, whose new
 //! document makes the selected areas (docs/adr/4220).
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use std::path::PathBuf;
 
 use iced::widget::Column;
@@ -175,8 +175,18 @@ impl ParcelsCheckWindowApp for App {
             return;
         };
         match std::fs::write(&path, csv(r)) {
-            Ok(()) => self.say(Level::Success, format!("{TITLE}: {} parsel {} dosyasına yazıldı.", r.parcels.len(), path.display())),
-            Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.", path.display())),
+            Ok(()) => self.say(
+                Level::Success,
+                format!(
+                    "{TITLE}: {} parsel {} dosyasına yazıldı.",
+                    r.parcels.len(),
+                    path.display()
+                ),
+            ),
+            Err(e) => self.warn(format!(
+                "{TITLE}: {} yazılamadı: {e}. Başka bir klasör seçin.",
+                path.display()
+            )),
         }
     }
 
@@ -194,13 +204,20 @@ impl ParcelsCheckWindowApp for App {
                     .parcels
                     .iter()
                     .filter(|p| p.status == "outside")
-                    .filter_map(|p| Uuid::parse_str(&p.uid).ok().and_then(|u| doc.model.slot_of(u)))
+                    .filter_map(|p| {
+                        Uuid::parse_str(&p.uid)
+                            .ok()
+                            .and_then(|u| doc.model.slot_of(u))
+                    })
                     .collect();
                 let n = slots.len();
                 self.selection.set(slots);
                 self.modules.map_mut().parcels_check = State::default();
                 self.dialog = None;
-                self.say(Level::Info, format!("{TITLE}: yanılma sınırı dışındaki {n} parsel seçildi."));
+                self.say(
+                    Level::Info,
+                    format!("{TITLE}: yanılma sınırı dışındaki {n} parsel seçildi."),
+                );
             }
             Event::Save => {
                 return Task::perform(
@@ -311,7 +328,10 @@ impl ParcelsCheckWindowApp for App {
         Frame::new(TITLE)
             .push(body)
             .aside(words::secondary(SAVE, ready.then(|| msg(Event::Save))))
-            .aside(words::secondary(SELECT, (outside > 0).then(|| msg(Event::Select))))
+            .aside(words::secondary(
+                SELECT,
+                (outside > 0).then(|| msg(Event::Select)),
+            ))
             // Sınır grafiği (docs/adr/2000): the same parcels' boundaries as a graph.
             .aside(words::secondary(
                 crate::parcel_boundaries_window::OPEN,

@@ -131,7 +131,10 @@ impl ModulePlace {
 
     fn learn(&mut self, cx: &Context<'_>) {
         self.known = Self::modules(cx);
-        let chosen = self.module.clone().or_else(|| self.known.first().map(|m| m.0.clone()));
+        let chosen = self
+            .module
+            .clone()
+            .or_else(|| self.known.first().map(|m| m.0.clone()));
         self.storeys = cx
             .doc
             .settings()
@@ -442,9 +445,13 @@ impl Tool for ModulePlace {
                     },
                 )
             }));
-            let refs: Vec<(&str, &str)> =
-                parts.iter().map(|(a, b)| (a.as_str(), b.as_str())).collect();
-            let now = self.storey.map_or_else(|| "all".to_owned(), |n| n.to_string());
+            let refs: Vec<(&str, &str)> = parts
+                .iter()
+                .map(|(a, b)| (a.as_str(), b.as_str()))
+                .collect();
+            let now = self
+                .storey
+                .map_or_else(|| "all".to_owned(), |n| n.to_string());
             rows.push(Setting::choice("K", "Tek kat", choices(&refs, &now)));
         }
         let phase = self.phase.map_or_else(|| "none".to_owned(), serde_name);
@@ -458,7 +465,11 @@ impl Tool for ModulePlace {
             .iter()
             .map(|(a, b)| (a.as_str(), b.as_str()))
             .collect();
-        rows.push(Setting::choice("E", "Tadilat durumu", choices(&refs, &phase)));
+        rows.push(Setting::choice(
+            "E",
+            "Tadilat durumu",
+            choices(&refs, &phase),
+        ));
         rows.push(Setting::text(
             "P",
             "Numara öneki",

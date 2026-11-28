@@ -281,18 +281,51 @@ fn the_overview_draws_the_data_layers_outlines_under_the_drawing() {
         .to_string(),
     )
     .expect("rows");
-    let colors: HashMap<String, [u8; 3]> =
-        [("a".to_owned(), [200, 0, 0]), ("veri".to_owned(), [0, 0, 200])].into_iter().collect();
-    let request = OverviewRequest { width: 240.0, height: 160.0, dpr: 1.0, colors: &colors };
+    let colors: HashMap<String, [u8; 3]> = [
+        ("a".to_owned(), [200, 0, 0]),
+        ("veri".to_owned(), [0, 0, 200]),
+    ]
+    .into_iter()
+    .collect();
+    let request = OverviewRequest {
+        width: 240.0,
+        height: 160.0,
+        dpr: 1.0,
+        colors: &colors,
+    };
     // The drawing alone, over its own extent: the store's own picture, bit for bit.
     let own = drawing.overview_picture(&request).expect("a picture");
     let extent = drawing.overview_extent().expect("an extent");
-    assert_eq!(overview_picture_of(&[OverviewLayer { store: &drawing, dot: 1.0 }], &extent, &request), own);
+    assert_eq!(
+        overview_picture_of(
+            &[OverviewLayer {
+                store: &drawing,
+                dot: 1.0
+            }],
+            &extent,
+            &request
+        ),
+        own
+    );
     // The data layer's box with the drawing's: the point a dot of three pixels about its place, the line the drawing's
     // colour over the outline's.
-    let both = Bounds { min_x: 0.0, min_y: 0.0, max_x: 100.0, max_y: 50.0 };
+    let both = Bounds {
+        min_x: 0.0,
+        min_y: 0.0,
+        max_x: 100.0,
+        max_y: 50.0,
+    };
     let picture = overview_picture_of(
-        &[OverviewLayer { store: &data, dot: 3.0 }, OverviewLayer { store: &drawing, dot: 1.0 }],
+        &[
+            OverviewLayer {
+                store: &data,
+                dot: 3.0,
+            },
+            OverviewLayer {
+                store: &drawing,
+                dot: 1.0,
+            },
+        ],
         &both,
         &request,
     );
@@ -303,10 +336,18 @@ fn the_overview_draws_the_data_layers_outlines_under_the_drawing() {
     };
     let (i, j) = (u.floor() as i64, v.floor() as i64);
     for (di, dj) in [(-1, -1), (0, 0), (1, 1), (1, -1)] {
-        assert_eq!(pixel(i + di, j + dj)[..3], [0, 0, 200], "the data point's dot at {di} {dj}");
+        assert_eq!(
+            pixel(i + di, j + dj)[..3],
+            [0, 0, 200],
+            "the data point's dot at {di} {dj}"
+        );
     }
     assert_eq!(pixel(i + 2, j)[3], 0, "three pixels across");
     let (u, v) = picture.fit.to_card((240.0, 160.0), 5.0, 0.0);
-    assert_eq!(pixel(u.floor() as i64, v.floor() as i64)[..3], [200, 0, 0], "the drawing over the outline");
+    assert_eq!(
+        pixel(u.floor() as i64, v.floor() as i64)[..3],
+        [200, 0, 0],
+        "the drawing over the outline"
+    );
     assert_eq!(picture.fit, fit(&both, (240.0, 160.0)));
 }

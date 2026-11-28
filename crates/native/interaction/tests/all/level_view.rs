@@ -5,8 +5,8 @@
 use crate::common::{Bench, E, N};
 use kentos_commands::{DrawingUnit, Entity, Workspace};
 use kentos_domain::Slot;
-use kentos_interaction::level_view::{LevelLooks, LevelView, looks};
 use kentos_interaction::Vec2;
+use kentos_interaction::level_view::{LevelLooks, LevelView, looks};
 
 /// Three levels 3 m apart; a 10 m wall on each (y 0, 4 and 8), a door on the 1. kat's, a line on none.
 fn building() -> (Bench, [Slot; 5]) {
@@ -101,19 +101,42 @@ fn the_faint_level_is_snapped_to_not_picked_and_the_hidden_one_neither() {
     assert_eq!(b.spatial.pick(at(3.0, 8.1), 0.2), Some(second));
     b.spatial
         .set_level_view(&b.doc, LevelView::Below, Some("kat-1".into()));
-    assert_eq!(b.spatial.pick(at(3.0, 0.1), 0.2), None, "the faint level is not picked");
+    assert_eq!(
+        b.spatial.pick(at(3.0, 0.1), 0.2),
+        None,
+        "the faint level is not picked"
+    );
     assert_eq!(snapped(&b, 0.05, 0.05), Some(ground), "but snapped to");
-    assert_eq!(b.spatial.pick(at(3.0, 8.1), 0.2), None, "the hidden level is not picked");
+    assert_eq!(
+        b.spatial.pick(at(3.0, 8.1), 0.2),
+        None,
+        "the hidden level is not picked"
+    );
     assert_ne!(snapped(&b, 0.05, 8.05), Some(second), "nor snapped to");
-    assert_eq!(b.spatial.pick(at(3.0, 4.1), 0.2), Some(first), "the active level is");
-    assert_eq!(b.spatial.pick(at(3.0, 12.0), 0.2), Some(line), "and what is on no level");
+    assert_eq!(
+        b.spatial.pick(at(3.0, 4.1), 0.2),
+        Some(first),
+        "the active level is"
+    );
+    assert_eq!(
+        b.spatial.pick(at(3.0, 12.0), 0.2),
+        Some(line),
+        "and what is on no level"
+    );
     // A window round everything takes the active level's and the line only.
     let mut window = b.spatial.in_rect(at(-1.0, -1.0), at(11.0, 13.0), true);
     window.sort();
-    assert!(!window.contains(&ground) && !window.contains(&second), "{window:?}");
-    assert!(window.contains(&first) && window.contains(&line), "{window:?}");
+    assert!(
+        !window.contains(&ground) && !window.contains(&second),
+        "{window:?}"
+    );
+    assert!(
+        window.contains(&first) && window.contains(&line),
+        "{window:?}"
+    );
     // Back to Bütün katlar: all of them again.
-    b.spatial.set_level_view(&b.doc, LevelView::All, Some("kat-1".into()));
+    b.spatial
+        .set_level_view(&b.doc, LevelView::All, Some("kat-1".into()));
     assert_eq!(b.spatial.pick(at(3.0, 0.1), 0.2), Some(ground));
     assert!(b.spatial.level_looks().1.is_empty());
 }
@@ -150,7 +173,8 @@ fn a_click_takes_the_active_levels_wall_where_walls_lie_over_each_other() {
     }
     let at = Vec2::new(E + 3.0, N + 0.1);
     b.spatial.sync(&b.doc);
-    b.spatial.set_level_view(&b.doc, LevelView::All, Some("kat-1".into()));
+    b.spatial
+        .set_level_view(&b.doc, LevelView::All, Some("kat-1".into()));
     assert_eq!(b.spatial.pick(at, 0.2), Some(walls[1]), "1. kat's first");
     assert_eq!(b.spatial.hits(at, 0.2), vec![walls[1], walls[0]]);
     b.start("door");
@@ -162,7 +186,8 @@ fn a_click_takes_the_active_levels_wall_where_walls_lie_over_each_other() {
     let wall_uid = |s: Slot| b.doc.uid(s).expect("a uid").to_string();
     assert_eq!(host, wall_uid(walls[1]), "the door is in 1. kat's wall");
     b.session.exit();
-    b.spatial.set_level_view(&b.doc, LevelView::All, Some("zemin".into()));
+    b.spatial
+        .set_level_view(&b.doc, LevelView::All, Some("zemin".into()));
     b.spatial.sync(&b.doc);
     assert_eq!(b.spatial.pick(at, 0.2), Some(walls[0]), "Zemin kat's now");
 }
@@ -225,9 +250,21 @@ fn a_sheet_maps_level_is_what_its_model_edit_picks() {
     assert_eq!(b.spatial.pick(at(3.0, 0.1), 0.2), Some(ground));
     let s = scope(&b);
     b.spatial.set_sheet_view(&b.doc, Some(s));
-    assert_eq!(b.spatial.pick(at(3.0, 4.1), 0.2), Some(first), "the map's level");
-    assert_eq!(b.spatial.pick(at(3.0, 12.0), 0.2), Some(line), "what is on no level");
-    assert_eq!(b.spatial.pick(at(3.0, 0.1), 0.2), None, "not the session's level");
+    assert_eq!(
+        b.spatial.pick(at(3.0, 4.1), 0.2),
+        Some(first),
+        "the map's level"
+    );
+    assert_eq!(
+        b.spatial.pick(at(3.0, 12.0), 0.2),
+        Some(line),
+        "what is on no level"
+    );
+    assert_eq!(
+        b.spatial.pick(at(3.0, 0.1), 0.2),
+        None,
+        "not the session's level"
+    );
     assert_ne!(snapped(&b, 0.05, 0.05), Some(ground), "nor snapped to");
     assert_eq!(b.spatial.pick(at(3.0, 8.1), 0.2), None);
     // Alt kat soluk: Zemin kat snapped to, not picked.
@@ -237,7 +274,11 @@ fn a_sheet_maps_level_is_what_its_model_edit_picks() {
     );
     let s = scope(&b);
     b.spatial.set_sheet_view(&b.doc, Some(s));
-    assert_eq!(b.spatial.pick(at(3.0, 0.1), 0.2), None, "the faint level is not picked");
+    assert_eq!(
+        b.spatial.pick(at(3.0, 0.1), 0.2),
+        None,
+        "the faint level is not picked"
+    );
     assert_eq!(snapped(&b, 0.05, 0.05), Some(ground), "but snapped to");
     assert_ne!(snapped(&b, 0.05, 8.05), Some(second));
     // Bütün katlar on the map: every wall.

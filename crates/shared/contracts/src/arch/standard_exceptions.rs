@@ -58,7 +58,10 @@ pub struct StandardException {
 impl StandardException {
     /// Whether it names the same finding against the same source as `other` (revision and values aside).
     pub fn same_finding(&self, other: &StandardException) -> bool {
-        self.kind == other.kind && self.subject == other.subject && self.layer == other.layer && self.standard == other.standard
+        self.kind == other.kind
+            && self.subject == other.subject
+            && self.layer == other.layer
+            && self.standard == other.standard
     }
 }
 
@@ -68,8 +71,9 @@ pub fn standard_exception_reason_problem(reason: &str) -> Option<String> {
         return Some("istisnanın gerekçesi boş olamaz; neden kabul edildiğini yazın".into());
     }
     let n = reason.chars().count();
-    (n > MAX_STANDARD_EXCEPTION_REASON)
-        .then(|| format!("istisnanın gerekçesi {n} karakter; en çok {MAX_STANDARD_EXCEPTION_REASON} olur"))
+    (n > MAX_STANDARD_EXCEPTION_REASON).then(|| {
+        format!("istisnanın gerekçesi {n} karakter; en çok {MAX_STANDARD_EXCEPTION_REASON} olur")
+    })
 }
 
 /// What is wrong with the project's accepted findings: one without a kind, subject or source, a reason as
@@ -77,25 +81,45 @@ pub fn standard_exception_reason_problem(reason: &str) -> Option<String> {
 /// finding against the same source.
 pub fn standard_exceptions_problem(list: &[StandardException]) -> Option<String> {
     if list.len() > MAX_STANDARD_EXCEPTIONS {
-        return Some(format!("en çok {MAX_STANDARD_EXCEPTIONS} kabul edilmiş bulgu olur; {} verildi", list.len()));
+        return Some(format!(
+            "en çok {MAX_STANDARD_EXCEPTIONS} kabul edilmiş bulgu olur; {} verildi",
+            list.len()
+        ));
     }
-    let bad = |s: &str| s.chars().count() > MAX_STANDARD_EXCEPTION_NAME || s.chars().any(char::is_control);
+    let bad = |s: &str| {
+        s.chars().count() > MAX_STANDARD_EXCEPTION_NAME || s.chars().any(char::is_control)
+    };
     for (i, e) in list.iter().enumerate() {
         let n = i + 1;
         if e.kind.trim().is_empty() || e.subject.is_empty() || e.standard.trim().is_empty() {
-            return Some(format!("{n}. kabul edilmiş bulgunun türü, konusu ya da standardı boş"));
+            return Some(format!(
+                "{n}. kabul edilmiş bulgunun türü, konusu ya da standardı boş"
+            ));
         }
         if bad(&e.kind) || bad(&e.standard) || bad(&e.revision) {
-            return Some(format!("{n}. kabul edilmiş bulgunun türü, standardı ya da revizyonu geçersiz"));
+            return Some(format!(
+                "{n}. kabul edilmiş bulgunun türü, standardı ya da revizyonu geçersiz"
+            ));
         }
         if let Some(p) = standard_exception_reason_problem(&e.reason) {
             return Some(format!("{n}. kabul edilmiş bulgu: {p}"));
         }
-        if e.by.as_deref().is_some_and(|b| b.trim().is_empty() || bad(b)) || e.at.as_deref().is_some_and(|a| a.trim().is_empty() || bad(a)) {
-            return Some(format!("{n}. kabul edilmiş bulgunun kabul edeni ya da zamanı geçersiz"));
+        if e.by
+            .as_deref()
+            .is_some_and(|b| b.trim().is_empty() || bad(b))
+            || e.at
+                .as_deref()
+                .is_some_and(|a| a.trim().is_empty() || bad(a))
+        {
+            return Some(format!(
+                "{n}. kabul edilmiş bulgunun kabul edeni ya da zamanı geçersiz"
+            ));
         }
         if list[..i].iter().any(|o| o.same_finding(e)) {
-            return Some(format!("“{}” ({}) bulgusu aynı standart için iki kez kabul edilmiş", e.subject, e.kind));
+            return Some(format!(
+                "“{}” ({}) bulgusu aynı standart için iki kez kabul edilmiş",
+                e.subject, e.kind
+            ));
         }
     }
     None
@@ -137,7 +161,10 @@ mod tests {
         }
         let mut other = one();
         other.revision = "2026.2".into();
-        assert!(standard_exceptions_problem(&[one(), other]).is_some(), "one finding against one source once");
+        assert!(
+            standard_exceptions_problem(&[one(), other]).is_some(),
+            "one finding against one source once"
+        );
         let mut elsewhere = one();
         elsewhere.standard = "ofis-b".into();
         assert_eq!(standard_exceptions_problem(&[one(), elsewhere]), None);

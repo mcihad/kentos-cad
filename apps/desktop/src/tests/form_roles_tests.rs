@@ -12,7 +12,12 @@ use crate::forms::entry as fe;
 use crate::tools_scenes::run;
 
 /// The open drawing as a cloud database project this account holds `role` in, with `permissions`.
-fn as_role(app: &mut App, role: ProjectRole, permissions: Vec<ProjectPermission>, state: ProjectState) {
+fn as_role(
+    app: &mut App,
+    role: ProjectRole,
+    permissions: Vec<ProjectPermission>,
+    state: ProjectState,
+) {
     let mut info = crate::cloud::tests::info(ProjectStorage::Database, false, state);
     info.access.role = role;
     info.access.permissions = permissions;
@@ -49,9 +54,17 @@ fn type_and_save(app: &mut App) {
 fn a_veri_girisi_writes_the_record_and_may_not_design_the_form() {
     let mut app = App::boot(None).0;
     buildings(&mut app, true);
-    as_role(&mut app, ProjectRole::Entry, vec![ProjectPermission::Read, ProjectPermission::FormsUse], ProjectState::Active);
+    as_role(
+        &mut app,
+        ProjectRole::Entry,
+        vec![ProjectPermission::Read, ProjectPermission::FormsUse],
+        ProjectState::Active,
+    );
     assert!(app.records_locked().is_none(), "forms.use writes records");
-    assert!(app.forms_locked().is_some(), "but designs and publishes no form");
+    assert!(
+        app.forms_locked().is_some(),
+        "but designs and publishes no form"
+    );
     type_and_save(&mut app);
     assert_eq!(storeys(&app).as_deref(), Some("5"), "{:#?}", said(&app));
     assert!(app.gis.form_entry.is_none(), "saved and closed");
@@ -61,9 +74,17 @@ fn a_veri_girisi_writes_the_record_and_may_not_design_the_form() {
 fn a_goruntuleyici_opens_the_form_and_changes_nothing() {
     let mut app = App::boot(None).0;
     buildings(&mut app, true);
-    as_role(&mut app, ProjectRole::Viewer, vec![ProjectPermission::Read], ProjectState::Active);
+    as_role(
+        &mut app,
+        ProjectRole::Viewer,
+        vec![ProjectPermission::Read],
+        ProjectState::Active,
+    );
     let why = app.records_locked().expect("a viewer writes no record");
-    assert!(why.contains("rolünüz (Görüntüleyici) kayıt yazmaz"), "{why}");
+    assert!(
+        why.contains("rolünüz (Görüntüleyici) kayıt yazmaz"),
+        "{why}"
+    );
     type_and_save(&mut app);
     assert_eq!(storeys(&app).as_deref(), Some("2"), "unchanged");
 }
@@ -72,8 +93,16 @@ fn a_goruntuleyici_opens_the_form_and_changes_nothing() {
 fn an_archived_project_is_read_only_whatever_the_role() {
     let mut app = App::boot(None).0;
     buildings(&mut app, true);
-    as_role(&mut app, ProjectRole::Entry, vec![ProjectPermission::Read, ProjectPermission::FormsUse], ProjectState::Archived);
-    assert!(app.records_locked().is_some_and(|w| w.starts_with("Proje arşivde")));
+    as_role(
+        &mut app,
+        ProjectRole::Entry,
+        vec![ProjectPermission::Read, ProjectPermission::FormsUse],
+        ProjectState::Archived,
+    );
+    assert!(
+        app.records_locked()
+            .is_some_and(|w| w.starts_with("Proje arşivde"))
+    );
 }
 
 #[test]
@@ -91,8 +120,16 @@ fn a_local_drawing_writes_its_records_as_before() {
 #[ignore = "pictures: cargo test -p kentos-desktop --lib form_roles_tests::screens -- --ignored --nocapture"]
 fn screens() {
     for (name, role, permissions) in [
-        ("01-veri-girisi", ProjectRole::Entry, vec![ProjectPermission::Read, ProjectPermission::FormsUse]),
-        ("02-goruntuleyici", ProjectRole::Viewer, vec![ProjectPermission::Read]),
+        (
+            "01-veri-girisi",
+            ProjectRole::Entry,
+            vec![ProjectPermission::Read, ProjectPermission::FormsUse],
+        ),
+        (
+            "02-goruntuleyici",
+            ProjectRole::Viewer,
+            vec![ProjectPermission::Read],
+        ),
     ] {
         crate::files_testing::usage_shots("9125", name, || {
             let mut app = App::boot(None).0;
@@ -119,21 +156,40 @@ fn a_role_that_designs_but_does_not_publish_is_refused_yayinla_with_why() {
         ProjectPermission::FormsDesign,
         ProjectPermission::FormsUse,
     ];
-    as_role(&mut app, ProjectRole::Manager, designs.clone(), ProjectState::Active);
+    as_role(
+        &mut app,
+        ProjectRole::Manager,
+        designs.clone(),
+        ProjectState::Active,
+    );
     assert!(app.forms_locked().is_none(), "it designs");
     let why = app.forms_publish_locked().expect("it does not publish");
-    assert!(why.contains("formu yayınlamaz") && why.contains("taslağı kaydedebilirsiniz"), "{why}");
+    assert!(
+        why.contains("formu yayınlamaz") && why.contains("taslağı kaydedebilirsiniz"),
+        "{why}"
+    );
     run(&mut app, "data.forms");
     let releases = |app: &App| app.chosen_form().map(|f| f.releases.len());
     let before = releases(&app);
     assert!(before.is_some(), "a form chosen");
-    let _ = app.update(crate::app::Message::Gis(crate::gis::Event::Forms(D::Publish)));
+    let _ = app.update(crate::app::Message::Gis(crate::gis::Event::Forms(
+        D::Publish,
+    )));
     assert_eq!(releases(&app), before, "nothing published");
-    assert!(said(&app).iter().any(|l| l.contains("formu yayınlamaz")), "{:#?}", said(&app));
+    assert!(
+        said(&app).iter().any(|l| l.contains("formu yayınlamaz")),
+        "{:#?}",
+        said(&app)
+    );
     // Given forms.publish: open.
     let mut publishes = designs;
     publishes.push(ProjectPermission::FormsPublish);
-    as_role(&mut app, ProjectRole::Manager, publishes, ProjectState::Active);
+    as_role(
+        &mut app,
+        ProjectRole::Manager,
+        publishes,
+        ProjectState::Active,
+    );
     assert!(app.forms_publish_locked().is_none());
 }
 
@@ -147,7 +203,12 @@ fn publisher_screens() {
         as_role(
             &mut app,
             ProjectRole::Manager,
-            vec![ProjectPermission::Read, ProjectPermission::Edit, ProjectPermission::FormsDesign, ProjectPermission::FormsUse],
+            vec![
+                ProjectPermission::Read,
+                ProjectPermission::Edit,
+                ProjectPermission::FormsDesign,
+                ProjectPermission::FormsUse,
+            ],
             ProjectState::Active,
         );
         run(&mut app, "data.forms");

@@ -266,7 +266,14 @@ fn header(out: &mut Out, h: &Header) {
     out.section("HEADER");
     let var = |out: &mut Out, name: &str| out.str(9, name);
     var(out, "$ACADVER");
-    out.str(1, if h.upright_linetypes { "AC1027" } else { "AC1021" });
+    out.str(
+        1,
+        if h.upright_linetypes {
+            "AC1027"
+        } else {
+            "AC1021"
+        },
+    );
     var(out, "$ACADMAINTVER");
     out.int(70, if h.upright_linetypes { 0 } else { 25 });
     // AutoCAD 2007 and later read text as UTF-8 whatever the code page says; Turkish is named for older tools.
@@ -445,7 +452,11 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
             .chain(input.blocks.iter().flat_map(|b| b.entities.iter())),
     );
     // The table styles' TABLESTYLE objects take their handles before the tables that name them (docs/adr/1128 §3).
-    style_names.tables = input.table_styles.iter().map(|s| (s.id.clone(), handles.take())).collect();
+    style_names.tables = input
+        .table_styles
+        .iter()
+        .map(|s| (s.id.clone(), handles.take()))
+        .collect();
     for def in order {
         let Some(name) = names.get(&def.id) else {
             continue;
@@ -560,19 +571,49 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     let mut paper_body = Out::default();
     for paper in &papers {
         let mut objects = paper.data.entities.clone();
-        for e in &mut objects { units::entity(e, units::Scale { mul: 1000., div: 1. }); }
+        for e in &mut objects {
+            units::entity(
+                e,
+                units::Scale {
+                    mul: 1000.,
+                    div: 1.,
+                },
+            );
+        }
         {
             let mut w = Writer {
-                out: &mut paper_body, uids: &input.uids, blocks: &mut blocks, records: &mut records,
-                dimensions: &mut dimensions, anonymous: &mut anonymous, values: &no_values,
-                decimals: input.length_decimals, grads: input.grads, handles: &mut handles,
-                layers: &layers, report: &mut report, extent: None, points: false,
-                owner: paper.record, paper: Some(&paper.data.name), defining: false,
-                names: &names, defined: &defined, placing: &placing, styles: &style_names,
-                per_metre: 1000., ltypes: &mut ltypes, arrows: &mut arrows,
-                pen: entities::Pen::default(), forms: input.annotations, ties: &ties, wholes: &no_wholes,
+                out: &mut paper_body,
+                uids: &input.uids,
+                blocks: &mut blocks,
+                records: &mut records,
+                dimensions: &mut dimensions,
+                anonymous: &mut anonymous,
+                values: &no_values,
+                decimals: input.length_decimals,
+                grads: input.grads,
+                handles: &mut handles,
+                layers: &layers,
+                report: &mut report,
+                extent: None,
+                points: false,
+                owner: paper.record,
+                paper: Some(&paper.data.name),
+                defining: false,
+                names: &names,
+                defined: &defined,
+                placing: &placing,
+                styles: &style_names,
+                per_metre: 1000.,
+                ltypes: &mut ltypes,
+                arrows: &mut arrows,
+                pen: entities::Pen::default(),
+                forms: input.annotations,
+                ties: &ties,
+                wholes: &no_wholes,
             };
-            for e in &objects { w.entity(e); }
+            for e in &objects {
+                w.entity(e);
+            }
         }
         // The overall paper editor is viewport 1. DWG does not persist DXF
         // viewport IDs; a real first record keeps model frames numbered >=2.
@@ -716,8 +757,20 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     out.s.push_str(&paper_body.s);
     out.str(0, "ENDSEC");
     let mut table_styles = Out::default();
-    table_style_objects::write(&mut table_styles, &input.table_styles, &style_names, &input.text_styles, paper, &mut report);
-    template::objects(&mut out, &papers, &table_styles.s, &table_style_objects::entries(&input.table_styles, &style_names));
+    table_style_objects::write(
+        &mut table_styles,
+        &input.table_styles,
+        &style_names,
+        &input.text_styles,
+        paper,
+        &mut report,
+    );
+    template::objects(
+        &mut out,
+        &papers,
+        &table_styles.s,
+        &table_style_objects::entries(&input.table_styles, &style_names),
+    );
     out.str(0, "EOF");
     (out.s.into_bytes(), report.export())
 }
@@ -871,24 +924,37 @@ fn plain_walls(
         .iter()
         .filter(|e| crate::arch_elements::core_of(e).is_some())
         .count();
-    let separators = input.entities.iter().filter(|e| matches!(e,
-        kentos_contracts::Entity::Polyline(p) if p.space_separator.is_some())).count();
+    let separators = input
+        .entities
+        .iter()
+        .filter(|e| {
+            matches!(e,
+        kentos_contracts::Entity::Polyline(p) if p.space_separator.is_some())
+        })
+        .count();
     let slabs = input
         .entities
         .iter()
         .filter(|e| matches!(e, kentos_contracts::Entity::Slab(_)))
         .count();
-    if walls == 0 && openings == 0 && spaces == 0 && elements == 0 && separators == 0 && slabs == 0 {
+    if walls == 0 && openings == 0 && spaces == 0 && elements == 0 && separators == 0 && slabs == 0
+    {
         return None;
     }
-    let scale = if input.scale.is_finite() && input.scale > 0.0 { input.scale } else { 100.0 };
+    let scale = if input.scale.is_finite() && input.scale > 0.0 {
+        input.scale
+    } else {
+        100.0
+    };
     let detail = input
         .wall_detail
         .unwrap_or_else(|| kentos_contracts::WallDetail::at_scale(scale));
     let view = kentos_geometry_core::geom::wall::View {
         detail: crate::walls::detail(detail),
         scale,
-        cut: input.cut_height.unwrap_or(kentos_contracts::PLAN_CUT_HEIGHT),
+        cut: input
+            .cut_height
+            .unwrap_or(kentos_contracts::PLAN_CUT_HEIGHT),
         // A DXF line keeps its object's own weight (docs/adr/8013): a plot style gives AutoCAD its weight by scale.
         pens: 1.0,
     };
@@ -1061,7 +1127,11 @@ fn plain_walls(
         );
     }
     if left > 0 {
-        report.skip("Duvar", "çizilemeyen duvar (yayı duvarın genişliğinden dar) yazılmadı", 0);
+        report.skip(
+            "Duvar",
+            "çizilemeyen duvar (yayı duvarın genişliğinden dar) yazılmadı",
+            0,
+        );
     }
     Some((out, wholes))
 }

@@ -72,7 +72,14 @@ pub fn paint(
                 colors,
             );
             if let Some(a) = ucs {
-                ucs_icon(frame, ucs_origin(size, a - twist), colors, a - twist, ["Y", "X"], false);
+                ucs_icon(
+                    frame,
+                    ucs_origin(size, a - twist),
+                    colors,
+                    a - twist,
+                    ["Y", "X"],
+                    false,
+                );
             }
         }
         Axes::Cad => {
@@ -149,7 +156,10 @@ pub fn ucs_at(size: Size) -> Point {
 pub fn ucs_origin(size: Size, angle: f64) -> Point {
     let (left, bottom) = ucs_reach(angle);
     let at = ucs_at(size);
-    Point::new(at.x.max(UCS_PAD + left), at.y.min(size.height - UCS_PAD - bottom))
+    Point::new(
+        at.x.max(UCS_PAD + left),
+        at.y.min(size.height - UCS_PAD - bottom),
+    )
 }
 
 /// How far the icon turned by `angle` reaches left of and below its origin, in pixels: its arms' tips with their
@@ -158,9 +168,18 @@ fn ucs_reach(angle: f64) -> (f32, f32) {
     let (c, s) = (angle.cos() as f32, angle.sin() as f32);
     let turn = |dx: f32, dy: f32| (dx * c + dy * s, -dx * s + dy * c);
     // The ends: the origin, each tip with its arrow, each name with room for its letter round it.
-    let mut points = vec![(0.0, 0.0), turn(UCS_ARM + 2.0, 0.0), turn(0.0, -UCS_ARM - 2.0)];
+    let mut points = vec![
+        (0.0, 0.0),
+        turn(UCS_ARM + 2.0, 0.0),
+        turn(0.0, -UCS_ARM - 2.0),
+    ];
     for (cx, cy) in [turn(UCS_ARM + 9.0, 4.0), turn(0.0, -UCS_ARM - 5.0)] {
-        for (ox, oy) in [(-UCS_NAME, -UCS_NAME), (UCS_NAME, UCS_NAME), (-UCS_NAME, UCS_NAME), (UCS_NAME, -UCS_NAME)] {
+        for (ox, oy) in [
+            (-UCS_NAME, -UCS_NAME),
+            (UCS_NAME, UCS_NAME),
+            (-UCS_NAME, UCS_NAME),
+            (UCS_NAME, -UCS_NAME),
+        ] {
             points.push((cx + ox, cy + oy));
         }
     }
@@ -287,7 +306,10 @@ pub fn metres_per_unit(settings: &kentos_commands::ProjectSettings, camera: &Cam
     let half = TARGET / 2.0 / camera.scale;
     let c = camera.center;
     let ring = kentos_geometry_core::crs::measure::Ring {
-        pts: vec![kentos_geometry_core::Vec2::new(c.x - half, c.y), kentos_geometry_core::Vec2::new(c.x + half, c.y)],
+        pts: vec![
+            kentos_geometry_core::Vec2::new(c.x - half, c.y),
+            kentos_geometry_core::Vec2::new(c.x + half, c.y),
+        ],
         bulges: None,
     };
     match kentos_geometry_core::crs::ground::ground_measures(&system, &[ring], false, None) {
@@ -433,12 +455,18 @@ mod tests {
     fn a_turned_ucs_icon_stays_inside_the_drawing_area() {
         let size = Size::new(800.0, 600.0);
         assert_eq!(ucs_origin(size, 0.0), ucs_at(size));
-        for deg in [0.0, 45.0, 90.0, 135.0, 180.0, 206.5651, 225.0, 270.0, 315.0, 359.0] {
+        for deg in [
+            0.0, 45.0, 90.0, 135.0, 180.0, 206.5651, 225.0, 270.0, 315.0, 359.0,
+        ] {
             let a: f64 = f64::to_radians(deg);
             let o = ucs_origin(size, a);
             let (left, bottom) = ucs_reach(a);
             assert!(o.x - left >= UCS_PAD - 1e-3, "{deg}°: left {}", o.x - left);
-            assert!(o.y + bottom <= size.height - UCS_PAD + 1e-3, "{deg}°: bottom {}", o.y + bottom);
+            assert!(
+                o.y + bottom <= size.height - UCS_PAD + 1e-3,
+                "{deg}°: bottom {}",
+                o.y + bottom
+            );
             // The tips themselves, as the icon draws them.
             let (c, s) = (a.cos() as f32, a.sin() as f32);
             for (dx, dy) in [(UCS_ARM + 2.0, 0.0), (0.0, -UCS_ARM - 2.0)] {
@@ -522,15 +550,27 @@ mod tests {
     fn origin_screens() {
         use crate::app::{App, Message};
         use crate::tools_scenes::{E, N, Objects, open};
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-005");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.run/gui-evidence/kullanim-UR-005");
         std::fs::create_dir_all(&out).expect("a folder");
         for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
             let (mut app, _) = App::boot(None);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let mut o = Objects::new();
             o.line("cizim", [-E, -N], [10.0 - E, -N]);
-            o.path("parsel", &[[-8.0 - E, -6.0 - N], [-2.0 - E, -6.0 - N], [-2.0 - E, -2.0 - N], [-8.0 - E, -2.0 - N]], true);
+            o.path(
+                "parsel",
+                &[
+                    [-8.0 - E, -6.0 - N],
+                    [-2.0 - E, -6.0 - N],
+                    [-2.0 - E, -2.0 - N],
+                    [-8.0 - E, -2.0 - N],
+                ],
+                true,
+            );
             open(&mut app, o);
             crate::files_testing::make_cad(&mut app);
             let doc = app.document.as_mut().expect("a drawing");
@@ -546,7 +586,10 @@ mod tests {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("orijin-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -590,8 +633,10 @@ mod ucs_screens {
     #[test]
     fn a_geographic_view_s_scale_bar_is_in_metres() {
         let settings = |srid: u32| -> kentos_commands::ProjectSettings {
-            serde_json::from_value(serde_json::json!({ "srid": srid, "lengthDecimals": 3, "areaDecimals": 2,
-                "areaUnit": "m2", "angleUnit": "deg", "plotScale": 1000 }))
+            serde_json::from_value(
+                serde_json::json!({ "srid": srid, "lengthDecimals": 3, "areaDecimals": 2,
+                "areaUnit": "m2", "angleUnit": "deg", "plotScale": 1000 }),
+            )
             .expect("settings")
         };
         let at = |lat: f64| kentos_render_wgpu::Camera {
@@ -607,10 +652,10 @@ mod ucs_screens {
         }
         assert_eq!(super::metres_per_unit(&settings(5256), &at(36.0)), 1.0);
         // At 1 000 px a degree, 120 px are about 10.8 km: the bar is 10 km, not 5 cm.
-        let (length, words) = super::scale_length(1000.0 / super::metres_per_unit(&settings(4326), &at(36.0)));
+        let (length, words) =
+            super::scale_length(1000.0 / super::metres_per_unit(&settings(4326), &at(36.0)));
         assert_eq!((length, words.as_str()), (10000.0, "10 km"));
     }
-
 }
 
 /// GIS-040: a geographic project's view, its scale bar in kilometres; picture `gis-040-olcek-cubugu`.
@@ -618,27 +663,43 @@ mod ucs_screens {
 #[test]
 fn a_geographic_project_s_scale_bar_on_the_screen() {
     use crate::app::{App, Message};
-    let mut drawing: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/interaction/v1/empty.kcad")).expect("the drawing");
+    let mut drawing: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/empty.kcad"
+    ))
+    .expect("the drawing");
     drawing["settings"]["srid"] = serde_json::json!(4326);
     drawing["settings"]["workspace"] = serde_json::json!("gis");
-    let pts: Vec<serde_json::Value> =
-        [(32.0, 36.0), (32.2, 36.0), (32.2, 36.2), (32.0, 36.2)].iter().map(|(x, y)| serde_json::json!({"x": x, "y": y})).collect();
+    let pts: Vec<serde_json::Value> = [(32.0, 36.0), (32.2, 36.0), (32.2, 36.2), (32.0, 36.2)]
+        .iter()
+        .map(|(x, y)| serde_json::json!({"x": x, "y": y}))
+        .collect();
     let layer = drawing["activeLayer"].clone();
     drawing["entities"] = serde_json::json!([{ "kind": "polygon", "id": 1, "layerId": layer, "attrs": {}, "pts": pts }]);
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string()).expect("reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let (mut app, _) = App::boot(None);
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let _ = app.update(Message::QuickAccess("view.zoomExtents".into(), true));
-    let per = metres_per_unit(app.document.as_ref().expect("open").model.settings(), &app.viewport.camera);
+    let per = metres_per_unit(
+        app.document.as_ref().expect("open").model.settings(),
+        &app.viewport.camera,
+    );
     assert!(per > 80_000.0, "{per}");
     // The status bar's 1:N is of metres too, and 1:100 000 chosen gives it back (the camera's deepest zoom, 10⁴
     // pixels a unit, is about 1:42 000 in degrees).
     assert!(app.view_scale() > 10_000.0, "{}", app.view_scale());
-    let _ = app.update(Message::ScreenScale(crate::screen_scale::Event::Choose(100_000.0)));
-    assert!((app.view_scale() - 100_000.0).abs() < 100.0, "{}", app.view_scale());
+    let _ = app.update(Message::ScreenScale(crate::screen_scale::Event::Choose(
+        100_000.0,
+    )));
+    assert!(
+        (app.view_scale() - 100_000.0).abs() < 100.0,
+        "{}",
+        app.view_scale()
+    );
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-040-olcek-cubugu");
 }

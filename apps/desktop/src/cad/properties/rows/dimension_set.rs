@@ -1,8 +1,8 @@
 //! A wall dimension recipe, shown in the existing inspector without exposing ids; a façade's or a space's too
 //! (docs/adr/0729 §7).
 use kentos_commands::{
-    DimensionSetBreak, DimensionSetFace, DimensionSetOpenings, DimensionSetReference, DimensionSetRow,
-    DimensionSetTight,
+    DimensionSetBreak, DimensionSetFace, DimensionSetOpenings, DimensionSetReference,
+    DimensionSetRow, DimensionSetTight,
 };
 use kentos_domain::Slot;
 
@@ -143,7 +143,10 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
         };
         out.insert(1, Row::text("Kaynak", &source));
         let angle = span.direction.y.atan2(span.direction.x).to_degrees();
-        out.push(Row::text("Doğrultu", format!("{:.2}°", (angle + 360.0) % 360.0)));
+        out.push(Row::text(
+            "Doğrultu",
+            format!("{:.2}°", (angle + 360.0) % 360.0),
+        ));
         let names = [
             (DimensionSetRow::Openings, "Açıklıklar", "toggle:openings"),
             (DimensionSetRow::Walls, "Duvarlar", "toggle:walls"),
@@ -156,15 +159,21 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
             .map(|(_, n, _)| *n)
             .collect::<Vec<_>>()
             .join(", ");
-        out.push(Row::text("Ölçü sıraları", &label).editor(select(
-            &label,
-            names
-                .iter()
-                .map(|(r, n, name)| pick(&format!("{n} sırası"), name, set.rows.contains(r)))
-                .collect(),
-        )));
+        out.push(
+            Row::text("Ölçü sıraları", &label).editor(select(
+                &label,
+                names
+                    .iter()
+                    .map(|(r, n, name)| pick(&format!("{n} sırası"), name, set.rows.contains(r)))
+                    .collect(),
+            )),
+        );
         let centers = set.openings == DimensionSetOpenings::Centers;
-        let label = if centers { "Açıklık merkezleri" } else { "Açıklık uçları" };
+        let label = if centers {
+            "Açıklık merkezleri"
+        } else {
+            "Açıklık uçları"
+        };
         out.push(Row::text("Açıklıkları ölç", label).editor(select(
             label,
             vec![
@@ -177,7 +186,10 @@ pub(super) fn rows(doc: &Document, slot: Slot, locked: bool) -> Vec<Row> {
             let label = if core { "Çekirdek" } else { "Dış yüzler" };
             out.push(Row::text("Ölçülen çizgi", label).editor(select(
                 label,
-                vec![pick("Dış yüzler", "faces", !core), pick("Çekirdek", "core", core)],
+                vec![
+                    pick("Dış yüzler", "faces", !core),
+                    pick("Çekirdek", "core", core),
+                ],
             )));
         }
         out.push(

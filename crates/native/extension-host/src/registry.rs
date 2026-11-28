@@ -39,7 +39,9 @@ use crate::watchdog::{Bisection, CRASHES_TO_FAIL, Finding};
 pub struct ToolCheck(pub std::sync::Arc<ToolCheckFn>);
 
 /// What a tool check calls: the manifest, the tool's id and its definition; why it would not be made, or nothing.
-pub type ToolCheckFn = dyn Fn(&kentos_extensions::Manifest, &str, &serde_json::Value) -> Result<(), String> + Send + Sync;
+pub type ToolCheckFn = dyn Fn(&kentos_extensions::Manifest, &str, &serde_json::Value) -> Result<(), String>
+    + Send
+    + Sync;
 
 impl std::fmt::Debug for ToolCheck {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

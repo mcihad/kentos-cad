@@ -81,9 +81,8 @@ fn sheet_step5_screens() {
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
-            let mut snapshot =
-                kentos_ui::snapshot::Snapshot::software(Size::new(1440.0, 900.0))
-                    .expect("a renderer");
+            let mut snapshot = kentos_ui::snapshot::Snapshot::software(Size::new(1440.0, 900.0))
+                .expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
             };
@@ -215,9 +214,7 @@ fn sheet_step6_screens() {
             l.prims
                 .iter()
                 .filter_map(|p| match p {
-                    kentos_sheet::display::Prim::Text(t) if t.item == arrow => {
-                        Some(t.text.clone())
-                    }
+                    kentos_sheet::display::Prim::Text(t) if t.item == arrow => Some(t.text.clone()),
                     _ => None,
                 })
                 .collect()
@@ -231,9 +228,8 @@ fn sheet_step6_screens() {
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
-            let mut snapshot =
-                kentos_ui::snapshot::Snapshot::software(Size::new(1440.0, 900.0))
-                    .expect("a renderer");
+            let mut snapshot = kentos_ui::snapshot::Snapshot::software(Size::new(1440.0, 900.0))
+                .expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
             };
@@ -272,8 +268,7 @@ fn sheet_step6_screens() {
 #[test]
 #[ignore = "files for the acceptance tools, run by hand"]
 fn sheet_pdf_files() {
-    let out =
-        std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots/sheet-pdf");
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots/sheet-pdf");
     std::fs::create_dir_all(&out).expect("a folder for the files");
     let (mut app, ifraz) = demo_ifraz("pafta-pdf-kabul");
     assert_eq!(
@@ -291,12 +286,9 @@ fn sheet_pdf_files() {
             .starts_with(b"%PDF-1.7")
     );
     // The map frames as the sheet places them, for the corner check against `gdalinfo`.
-    let list = kentos_sheet::display::display_list(
-        app.sheets.book(),
-        &ifraz,
-        &app.sheets.export_inputs(),
-    )
-    .expect("the display list");
+    let list =
+        kentos_sheet::display::display_list(app.sheets.book(), &ifraz, &app.sheets.export_inputs())
+            .expect("the display list");
     let maps: Vec<&kentos_sheet::display::MapPrim> = list
         .prims
         .iter()
@@ -329,8 +321,7 @@ pub(super) fn demo_ifraz(store: &str) -> (App, String) {
         )
         .to_owned()
     });
-    let text =
-        std::fs::read_to_string(&path).expect("the web's demo drawing (see the comment)");
+    let text = std::fs::read_to_string(&path).expect("the web's demo drawing (see the comment)");
     let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&text).expect("reads");
     let mut doc = Document::new(snapshot, None).expect("opens");
     doc.model.set_name("Ornek_1244-1249_Ada.kcad");
@@ -340,9 +331,8 @@ pub(super) fn demo_ifraz(store: &str) -> (App, String) {
     let home = doc.model.home_view();
     let (mut app, _) = App::boot(None);
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    app.sheet_store = Some(
-        kentos_sheet_ui::Store::open(&crate::files_testing::scratch(store)).expect("a store"),
-    );
+    app.sheet_store =
+        Some(kentos_sheet_ui::Store::open(&crate::files_testing::scratch(store)).expect("a store"));
     // The sheets look where the web's do: the drawing's home view.
     if let Some(h) = home {
         app.viewport.camera.center =
@@ -461,9 +451,13 @@ fn sheet_comparison_screens() {
         &mut app,
         Sheet::SaveTemplate(SaveMessage::Name("Belediye ifraz paftası".into())),
     );
-    sheet(&mut app, Sheet::SaveTemplate(SaveMessage::Description(
-        "Belediyenin ifraz paftası: Kızılırmak mahallesi düzeni, parsel tablosu ve imzalar.".into(),
-    )));
+    sheet(
+        &mut app,
+        Sheet::SaveTemplate(SaveMessage::Description(
+            "Belediyenin ifraz paftası: Kızılırmak mahallesi düzeni, parsel tablosu ve imzalar."
+                .into(),
+        )),
+    );
     sheet(
         &mut app,
         Sheet::SaveTemplate(SaveMessage::Category("kadastro".into())),
@@ -590,8 +584,8 @@ fn sheet_comparison_screens() {
         app.apply_settings();
         for (scene, open, close) in &scenes {
             for (w, h) in [(1440.0, 900.0), (1100.0, 650.0)] {
-                let mut snapshot = kentos_ui::snapshot::Snapshot::software(Size::new(w, h))
-                    .expect("a renderer");
+                let mut snapshot =
+                    kentos_ui::snapshot::Snapshot::software(Size::new(w, h)).expect("a renderer");
                 let mut update = |app: &mut App, m: Message| {
                     let _ = app.update(m);
                 };
@@ -701,8 +695,8 @@ fn sheet_step8_screens() {
             .settings
             .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
-        let mut snapshot = kentos_ui::snapshot::Snapshot::software(Size::new(1440.0, 900.0))
-            .expect("a renderer");
+        let mut snapshot =
+            kentos_ui::snapshot::Snapshot::software(Size::new(1440.0, 900.0)).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
         };
@@ -791,9 +785,8 @@ fn sheet_step9_screens() {
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
-            let mut snapshot =
-                kentos_ui::snapshot::Snapshot::software(Size::new(1440.0, 900.0))
-                    .expect("a renderer");
+            let mut snapshot = kentos_ui::snapshot::Snapshot::software(Size::new(1440.0, 900.0))
+                .expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
             };

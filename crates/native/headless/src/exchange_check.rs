@@ -21,10 +21,13 @@ use std::path::PathBuf;
 
 use kentos_commands::{
     CallOp, CommandError, CommandResult, EXCHANGE_LOSSES, EXCHANGE_TOLERANCE, EXCHANGE_UIDS_LISTED,
-    Entity, ExchangeCheck, ExchangeChecked, ExchangeKindCount, ExchangeLoss, ExchangeNumeric, PathEntity, Vec2, codes,
+    Entity, ExchangeCheck, ExchangeChecked, ExchangeKindCount, ExchangeLoss, ExchangeNumeric,
+    PathEntity, Vec2, codes,
 };
 use kentos_domain::{Document, Slot};
-use kentos_geometry_core::entity::{entity_area, entity_bounds, entity_length, entity_outline, entity_vertices};
+use kentos_geometry_core::entity::{
+    entity_area, entity_bounds, entity_length, entity_outline, entity_vertices,
+};
 use kentos_native_application::ExecutionContext;
 use kentos_native_application::geometry::shape;
 use serde_json::{Value, json};
@@ -32,7 +35,14 @@ use serde_json::{Value, json};
 use crate::exchange_parts as parts;
 
 fn refused(code: &str, message: String, path: Option<String>) -> CommandResult<Value> {
-    CommandResult::Failed { error: CommandError { code: code.into(), message, path, ..CommandError::default() } }
+    CommandResult::Failed {
+        error: CommandError {
+            code: code.into(),
+            message,
+            path,
+            ..CommandError::default()
+        },
+    }
 }
 
 /// What an object is to the formats: a point, a line or an area; anything else they do not carry as geometry.
@@ -40,9 +50,12 @@ fn class(e: &Entity) -> &'static str {
     match e {
         Entity::Point(_) => "point",
         Entity::Polygon(_) | Entity::Circle(_) => "area",
-        Entity::Line(_) | Entity::Polyline(_) | Entity::Arc(_) | Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_) => {
-            "line"
-        }
+        Entity::Line(_)
+        | Entity::Polyline(_)
+        | Entity::Arc(_)
+        | Entity::Ellipse(_)
+        | Entity::Spline(_)
+        | Entity::Nurbs(_) => "line",
         _ => "other",
     }
 }
@@ -51,13 +64,20 @@ fn path_curved(p: &PathEntity) -> bool {
     let bent = |b: &Option<Vec<f64>>| b.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0));
     bent(&p.bulges)
         || p.holes.iter().flatten().any(|h| bent(&h.bulges))
-        || p.parts.iter().flatten().any(|q| bent(&q.bulges) || q.holes.iter().flatten().any(|h| bent(&h.bulges)))
+        || p.parts
+            .iter()
+            .flatten()
+            .any(|q| bent(&q.bulges) || q.holes.iter().flatten().any(|h| bent(&h.bulges)))
 }
 
 /// Whether the object has a curve: an arc, a circle, an ellipse, a spline, a NURBS or a bulged edge.
 fn curved(e: &Entity) -> bool {
     match e {
-        Entity::Circle(_) | Entity::Arc(_) | Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_) => true,
+        Entity::Circle(_)
+        | Entity::Arc(_)
+        | Entity::Ellipse(_)
+        | Entity::Spline(_)
+        | Entity::Nurbs(_) => true,
         Entity::Polyline(p) | Entity::Polygon(p) => path_curved(p),
         _ => false,
     }
@@ -69,7 +89,8 @@ fn heights(e: &Entity) -> (Vec<Option<f64>>, Vec<Option<f64>>) {
         Entity::Point(p) => (vec![p.z], vec![None]),
         Entity::Line(l) => (vec![l.za, l.zb], vec![None, None]),
         Entity::Polyline(p) | Entity::Polygon(p) => {
-            let of = |v: &Option<Vec<Option<f64>>>, n: usize| v.clone().unwrap_or_else(|| vec![None; n]);
+            let of =
+                |v: &Option<Vec<Option<f64>>>, n: usize| v.clone().unwrap_or_else(|| vec![None; n]);
             let mut z = of(&p.zs, p.pts.len());
             let mut m = of(&p.ms, p.pts.len());
             for h in p.holes.iter().flatten() {
@@ -101,7 +122,13 @@ fn to_segment(p: Vec2, a: Vec2, b: Vec2) -> f64 {
         return dist(p, a);
     }
     let t = (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0);
-    dist(p, Vec2 { x: a.x + t * dx, y: a.y + t * dy })
+    dist(
+        p,
+        Vec2 {
+            x: a.x + t * dx,
+            y: a.y + t * dy,
+        },
+    )
 }
 
 /// The distance from `p` to the arc of centre `c`, radius `r`, from angle `a0` counter-clockwise by `sweep`
@@ -133,10 +160,17 @@ fn to_edge(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
     let (mx, my) = ((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
     let (ux, uy) = ((b.x - a.x) / chord, (b.y - a.y) / chord);
     let k = chord * (1.0 - bulge * bulge) / (4.0 * bulge);
-    let c = Vec2 { x: mx - uy * k, y: my + ux * k };
+    let c = Vec2 {
+        x: mx - uy * k,
+        y: my + ux * k,
+    };
     let (sa, sb) = ((a.y - c.y).atan2(a.x - c.x), (b.y - c.y).atan2(b.x - c.x));
     let sweep = theta.abs();
-    if bulge > 0.0 { to_arc(p, c, r, sa, sweep, (a, b)) } else { to_arc(p, c, r, sb, sweep, (a, b)) }
+    if bulge > 0.0 {
+        to_arc(p, c, r, sa, sweep, (a, b))
+    } else {
+        to_arc(p, c, r, sb, sweep, (a, b))
+    }
 }
 
 fn ring_dist(p: Vec2, pts: &[Vec2], bulges: Option<&Vec<f64>>, closed: bool) -> f64 {
@@ -146,7 +180,14 @@ fn ring_dist(p: Vec2, pts: &[Vec2], bulges: Option<&Vec<f64>>, closed: bool) -> 
     }
     let edges = if closed { n } else { n - 1 };
     (0..edges)
-        .map(|i| to_edge(p, pts[i], pts[(i + 1) % n], bulges.and_then(|b| b.get(i).copied()).unwrap_or(0.0)))
+        .map(|i| {
+            to_edge(
+                p,
+                pts[i],
+                pts[(i + 1) % n],
+                bulges.and_then(|b| b.get(i).copied()).unwrap_or(0.0),
+            )
+        })
         .fold(f64::INFINITY, f64::min)
 }
 
@@ -177,17 +218,30 @@ pub(crate) fn to_original(o: &Entity, p: Vec2) -> f64 {
         }
         Entity::Circle(c) => (dist(p, c.c) - c.r).abs(),
         Entity::Arc(a) => {
-            let at = |t: f64| Vec2 { x: a.c.x + a.r * t.cos(), y: a.c.y + a.r * t.sin() };
+            let at = |t: f64| Vec2 {
+                x: a.c.x + a.r * t.cos(),
+                y: a.c.y + a.r * t.sin(),
+            };
             let sweep = (a.a1 - a.a0).rem_euclid(std::f64::consts::TAU);
-            let sweep = if sweep == 0.0 { std::f64::consts::TAU } else { sweep };
+            let sweep = if sweep == 0.0 {
+                std::f64::consts::TAU
+            } else {
+                sweep
+            };
             to_arc(p, a.c, a.r, a.a0, sweep, (at(a.a0), at(a.a1)))
         }
         other => {
-            let outline: Vec<Vec2> = entity_outline(&shape(other), 1024.0).into_iter().map(|q| Vec2 { x: q.x, y: q.y }).collect();
+            let outline: Vec<Vec2> = entity_outline(&shape(other), 1024.0)
+                .into_iter()
+                .map(|q| Vec2 { x: q.x, y: q.y })
+                .collect();
             if outline.len() < 2 {
                 return outline.first().map_or(f64::NAN, |q| dist(p, *q));
             }
-            outline.windows(2).map(|w| to_segment(p, w[0], w[1])).fold(f64::INFINITY, f64::min)
+            outline
+                .windows(2)
+                .map(|w| to_segment(p, w[0], w[1]))
+                .fold(f64::INFINITY, f64::min)
         }
     }
 }
@@ -199,14 +253,26 @@ pub(crate) fn places(e: &Entity) -> Vec<Vec2> {
         Entity::Circle(c) => (0..4)
             .map(|k| {
                 let t = k as f64 * std::f64::consts::FRAC_PI_2;
-                Vec2 { x: c.c.x + c.r * t.cos(), y: c.c.y + c.r * t.sin() }
+                Vec2 {
+                    x: c.c.x + c.r * t.cos(),
+                    y: c.c.y + c.r * t.sin(),
+                }
             })
             .collect(),
         Entity::Arc(a) => {
             let sweep = (a.a1 - a.a0).rem_euclid(std::f64::consts::TAU);
-            [a.a0, a.a0 + sweep / 2.0, a.a0 + sweep].iter().map(|t| Vec2 { x: a.c.x + a.r * t.cos(), y: a.c.y + a.r * t.sin() }).collect()
+            [a.a0, a.a0 + sweep / 2.0, a.a0 + sweep]
+                .iter()
+                .map(|t| Vec2 {
+                    x: a.c.x + a.r * t.cos(),
+                    y: a.c.y + a.r * t.sin(),
+                })
+                .collect()
         }
-        other => entity_vertices(&shape(other)).into_iter().map(|q| Vec2 { x: q.x, y: q.y }).collect(),
+        other => entity_vertices(&shape(other))
+            .into_iter()
+            .map(|q| Vec2 { x: q.x, y: q.y })
+            .collect(),
     }
 }
 
@@ -222,9 +288,18 @@ fn arc_points(a: Vec2, b: Vec2, bulge: f64) -> Vec<Vec2> {
     let (mx, my) = ((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
     let (ux, uy) = ((b.x - a.x) / chord, (b.y - a.y) / chord);
     let k = chord * (1.0 - bulge * bulge) / (4.0 * bulge);
-    let c = Vec2 { x: mx - uy * k, y: my + ux * k };
+    let c = Vec2 {
+        x: mx - uy * k,
+        y: my + ux * k,
+    };
     let sa = (a.y - c.y).atan2(a.x - c.x);
-    [0.25, 0.5, 0.75].iter().map(|t| Vec2 { x: c.x + r * (sa + theta * t).cos(), y: c.y + r * (sa + theta * t).sin() }).collect()
+    [0.25, 0.5, 0.75]
+        .iter()
+        .map(|t| Vec2 {
+            x: c.x + r * (sa + theta * t).cos(),
+            y: c.y + r * (sa + theta * t).sin(),
+        })
+        .collect()
 }
 
 /// The points of an object read back between its vertices, on its curved edges (GIS-039): a wrong arc whose ends are
@@ -234,7 +309,9 @@ pub(crate) fn curve_points(e: &Entity) -> Vec<Vec2> {
         let n = pts.len();
         let Some(b) = bulges else { return Vec::new() };
         let edges = if closed { n } else { n.saturating_sub(1) };
-        (0..edges).flat_map(|i| arc_points(pts[i], pts[(i + 1) % n], b.get(i).copied().unwrap_or(0.0))).collect()
+        (0..edges)
+            .flat_map(|i| arc_points(pts[i], pts[(i + 1) % n], b.get(i).copied().unwrap_or(0.0)))
+            .collect()
     };
     match e {
         Entity::Polyline(p) | Entity::Polygon(p) => {
@@ -260,7 +337,9 @@ fn plain(text: &str) -> Option<f64> {
     let body = t.strip_prefix('-').unwrap_or(t);
     let (w, f) = body.split_once('.').unwrap_or((body, "0"));
     let digits = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
-    (digits(w) && digits(f)).then(|| t.parse::<f64>().ok()).flatten()
+    (digits(w) && digits(f))
+        .then(|| t.parse::<f64>().ok())
+        .flatten()
 }
 
 /// Two attribute values the same: as text (trimmed), or as the same plain number (`12.50` and `12.5`).
@@ -274,7 +353,10 @@ struct Losses {
 
 impl Losses {
     fn add(&mut self, kind: &str, detail: impl Into<String>, uid: &str) {
-        let order = EXCHANGE_LOSSES.iter().position(|k| *k == kind).unwrap_or(EXCHANGE_LOSSES.len());
+        let order = EXCHANGE_LOSSES
+            .iter()
+            .position(|k| *k == kind)
+            .unwrap_or(EXCHANGE_LOSSES.len());
         let e = self.found.entry((order, detail.into())).or_default();
         e.0 += 1;
         if e.1.len() < EXCHANGE_UIDS_LISTED && !uid.is_empty() {
@@ -284,7 +366,14 @@ impl Losses {
 }
 
 fn messages(answer: &Value, key: &str) -> Vec<String> {
-    answer[key].as_array().map(|w| w.iter().filter_map(|x| x["message"].as_str().map(str::to_owned)).collect()).unwrap_or_default()
+    answer[key]
+        .as_array()
+        .map(|w| {
+            w.iter()
+                .filter_map(|x| x["message"].as_str().map(str::to_owned))
+                .collect()
+        })
+        .unwrap_or_default()
 }
 
 /// The temporary folder of one check, removed when it goes.
@@ -302,26 +391,38 @@ pub fn run(doc: &Document, input: &ExchangeCheck, op: CallOp) -> CommandResult<V
         return refusal;
     }
     if op == CallOp::Validate {
-        return CommandResult::Completed { output: Value::Null, warnings: Vec::new() };
+        return CommandResult::Completed {
+            output: Value::Null,
+            warnings: Vec::new(),
+        };
     }
     // The process, the time and a count: two checks at once (a clock of microseconds) never share a folder.
     static COUNT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
     let n = COUNT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
-    let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_nanos());
-    let folder = std::env::temp_dir().join(format!("kentos-devir-{}-{stamp}-{n}", std::process::id()));
+    let stamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
+    let folder =
+        std::env::temp_dir().join(format!("kentos-devir-{}-{stamp}-{n}", std::process::id()));
     if let Err(e) = std::fs::create_dir_all(&folder) {
         return refused(
             codes::FILE_UNWRITABLE,
-            format!("Geçici klasör {} açılamadı: {e}. Sistemin geçici klasörüne yazılabildiğini denetleyin.", folder.display()),
+            format!(
+                "Geçici klasör {} açılamadı: {e}. Sistemin geçici klasörüne yazılabildiğini denetleyin.",
+                folder.display()
+            ),
             None,
         );
     }
     let scratch = Scratch(folder);
-    let file = scratch.0.join(format!("devir.{}", input.format.extension()));
+    let file = scratch
+        .0
+        .join(format!("devir.{}", input.format.extension()));
     match trip(doc, input, &file) {
-        Ok(output) => {
-            CommandResult::Completed { output: serde_json::to_value(output).unwrap_or(Value::Null), warnings: Vec::new() }
-        }
+        Ok(output) => CommandResult::Completed {
+            output: serde_json::to_value(output).unwrap_or(Value::Null),
+            warnings: Vec::new(),
+        },
         Err(refusal) => refusal,
     }
 }
@@ -339,7 +440,11 @@ pub(crate) fn asked(doc: &Document, input: &ExchangeCheck) -> Result<(), Command
     }
     for (i, id) in input.layers.iter().enumerate() {
         if doc.layers().get(id).is_none() {
-            return Err(refused(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), Some(format!("layers[{i}]"))));
+            return Err(refused(
+                codes::LAYER_NOT_FOUND,
+                format!("“{id}” kimlikli katman çizimde yok."),
+                Some(format!("layers[{i}]")),
+            ));
         }
     }
     Ok(())
@@ -349,7 +454,11 @@ pub(crate) fn asked(doc: &Document, input: &ExchangeCheck) -> Result<(), Command
 /// read back from it into an empty copy, compared. The delivery package keeps the file (docs/adr/2780); the check
 /// removes its folder.
 #[allow(clippy::result_large_err)]
-pub(crate) fn trip(doc: &Document, input: &ExchangeCheck, file: &std::path::Path) -> Result<ExchangeChecked, CommandResult<Value>> {
+pub(crate) fn trip(
+    doc: &Document,
+    input: &ExchangeCheck,
+    file: &std::path::Path,
+) -> Result<ExchangeChecked, CommandResult<Value>> {
     let tolerance = input.tolerance.unwrap_or(EXCHANGE_TOLERANCE);
     let path = file.display().to_string();
     let (export, import) = input.format.commands();
@@ -361,7 +470,13 @@ pub(crate) fn trip(doc: &Document, input: &ExchangeCheck, file: &std::path::Path
     }
     let written = match crate::file_commands::run(&mut copy, export, CallOp::Execute, asked) {
         Ok(v) => v,
-        Err(why) => return Err(refused(codes::EXCHANGE_UNREADABLE, format!("{export} çalışmadı: {why}"), None)),
+        Err(why) => {
+            return Err(refused(
+                codes::EXCHANGE_UNREADABLE,
+                format!("{export} çalışmadı: {why}"),
+                None,
+            ));
+        }
     };
     if written["status"] != "completed" {
         let e = &written["error"];
@@ -377,11 +492,20 @@ pub(crate) fn trip(doc: &Document, input: &ExchangeCheck, file: &std::path::Path
     bare.blocks.clear();
     bare.settings.relations.clear();
     let Ok(mut empty) = Document::from_snapshot_v2(bare) else {
-        return Err(refused(codes::EXCHANGE_UNREADABLE, "Çizimin boş kopyası kurulamadı.".into(), None));
+        return Err(refused(
+            codes::EXCHANGE_UNREADABLE,
+            "Çizimin boş kopyası kurulamadı.".into(),
+            None,
+        ));
     };
     let read = {
         let mut cx = ExecutionContext::new(&mut empty);
-        kentos_native_application::registry::run(&mut cx, import, CallOp::Execute, json!({"path": path}))
+        kentos_native_application::registry::run(
+            &mut cx,
+            import,
+            CallOp::Execute,
+            json!({"path": path}),
+        )
     };
     let read = match read {
         Ok(v) if v["status"] == "completed" => v,
@@ -396,14 +520,30 @@ pub(crate) fn trip(doc: &Document, input: &ExchangeCheck, file: &std::path::Path
                 None,
             ));
         }
-        Err(e) => return Err(refused(codes::EXCHANGE_UNREADABLE, format!("{import} çalışmadı: {e:?}"), None)),
+        Err(e) => {
+            return Err(refused(
+                codes::EXCHANGE_UNREADABLE,
+                format!("{import} çalışmadı: {e:?}"),
+                None,
+            ));
+        }
     };
-    Ok(compare(doc, &empty, input, tolerance, messages(&written, "warnings"), messages(&read, "warnings")))
+    Ok(compare(
+        doc,
+        &empty,
+        input,
+        tolerance,
+        messages(&written, "warnings"),
+        messages(&read, "warnings"),
+    ))
 }
 
 /// The objects the check takes: those of the layers asked (a group gives its layers), else every object.
 fn originals(doc: &Document, layers: &[String]) -> Vec<Slot> {
-    let ids: Vec<String> = layers.iter().flat_map(|l| doc.layers().leaves_of(l).into_iter().map(|n| n.id.clone())).collect();
+    let ids: Vec<String> = layers
+        .iter()
+        .flat_map(|l| doc.layers().leaves_of(l).into_iter().map(|n| n.id.clone()))
+        .collect();
     doc.entities()
         .filter(|e| layers.is_empty() || ids.contains(&e.base().layer_id))
         .map(|e| Slot(e.base().id))
@@ -412,7 +552,10 @@ fn originals(doc: &Document, layers: &[String]) -> Vec<Slot> {
 
 fn centre(e: &Entity) -> Vec2 {
     let b = entity_bounds(&shape(e));
-    Vec2 { x: (b.min_x + b.max_x) / 2.0, y: (b.min_y + b.max_y) / 2.0 }
+    Vec2 {
+        x: (b.min_x + b.max_x) / 2.0,
+        y: (b.min_y + b.max_y) / 2.0,
+    }
 }
 
 fn compare(
@@ -429,7 +572,11 @@ fn compare(
     let mut pair: Vec<Option<Slot>> = vec![None; olds.len()];
     let mut taken = vec![false; news.len()];
     // By persistent id.
-    let index: HashMap<String, usize> = olds.iter().enumerate().map(|(i, s)| (uid(doc, *s), i)).collect();
+    let index: HashMap<String, usize> = olds
+        .iter()
+        .enumerate()
+        .map(|(i, s)| (uid(doc, *s), i))
+        .collect();
     for (k, s) in news.iter().enumerate() {
         if let Some(&i) = index.get(&uid(back, *s))
             && pair[i].is_none()
@@ -458,7 +605,12 @@ fn compare(
                             (a, b) => any_class || a == b,
                         })
                 })
-                .map(|(i, o)| (i, doc.get(*o).map_or(f64::INFINITY, |o| dist(centre(o), at))))
+                .map(|(i, o)| {
+                    (
+                        i,
+                        doc.get(*o).map_or(f64::INFINITY, |o| dist(centre(o), at)),
+                    )
+                })
                 .min_by(|a, b| a.1.total_cmp(&b.1).then(a.0.cmp(&b.0)));
             if let Some((i, _)) = best {
                 pair[i] = Some(*s);
@@ -466,7 +618,9 @@ fn compare(
             }
         }
     }
-    let mut losses = Losses { found: BTreeMap::new() };
+    let mut losses = Losses {
+        found: BTreeMap::new(),
+    };
     let mut numeric = ExchangeNumeric::default();
     let mut not_written: BTreeMap<String, u32> = BTreeMap::new();
     let bigger = |slot: &mut Option<f64>, v: f64| {
@@ -491,7 +645,10 @@ fn compare(
             losses.add("chorded", o.kind(), &ouid);
         }
         // Numeric: the places read back to the original's geometry.
-        let offset = places(n).into_iter().map(|p| to_original(o, p)).fold(0.0, f64::max);
+        let offset = places(n)
+            .into_iter()
+            .map(|p| to_original(o, p))
+            .fold(0.0, f64::max);
         if numeric.offset.is_none_or(|m| offset > m) {
             numeric.offset = Some(offset);
             numeric.offset_uid = Some(ouid.clone());
@@ -500,9 +657,10 @@ fn compare(
             numeric.above += 1;
         }
         // The curves' shape between the vertices (GIS-039), apart from the vertices' places.
-        let bend = curve_points(n).into_iter().map(|p| to_original(o, p)).fold(None, |m: Option<f64>, d| {
-            Some(m.map_or(d, |m| m.max(d)))
-        });
+        let bend = curve_points(n)
+            .into_iter()
+            .map(|p| to_original(o, p))
+            .fold(None, |m: Option<f64>, d| Some(m.map_or(d, |m| m.max(d))));
         if let Some(bend) = bend.filter(|b| b.is_finite()) {
             if numeric.shape.is_none_or(|m| bend > m) {
                 numeric.shape = Some(bend);
@@ -592,8 +750,15 @@ fn compare(
         }
         // A block's definition and a table's cells (docs/adr/2380).
         match (o, n) {
-            (Entity::Insert(a), Entity::Insert(b)) if parts::block_changed(doc, a, back, b, tolerance) => {
-                losses.add("blockChanged", doc.block(a.block).map_or_else(String::new, |d| d.name.clone()), &ouid);
+            (Entity::Insert(a), Entity::Insert(b))
+                if parts::block_changed(doc, a, back, b, tolerance) =>
+            {
+                losses.add(
+                    "blockChanged",
+                    doc.block(a.block)
+                        .map_or_else(String::new, |d| d.name.clone()),
+                    &ouid,
+                );
             }
             (Entity::Table(a), Entity::Table(b)) => {
                 if let Some(what) = parts::table_changed(a, b, tolerance) {
@@ -611,9 +776,14 @@ fn compare(
         }
     }
     // The project's relations between the layers written (docs/adr/2380).
-    let asked: std::collections::HashSet<String> =
-        input.layers.iter().flat_map(|l| doc.layers().leaves_of(l).into_iter().map(|n| n.id.clone())).collect();
-    for name in parts::relations_lost(doc, back, |id| input.layers.is_empty() || asked.contains(id)) {
+    let asked: std::collections::HashSet<String> = input
+        .layers
+        .iter()
+        .flat_map(|l| doc.layers().leaves_of(l).into_iter().map(|n| n.id.clone()))
+        .collect();
+    for name in parts::relations_lost(doc, back, |id| {
+        input.layers.is_empty() || asked.contains(id)
+    }) {
         losses.add("relationLost", name, "");
     }
     ExchangeChecked {
@@ -621,13 +791,20 @@ fn compare(
         tolerance,
         objects: olds.len().min(u32::MAX as usize) as u32,
         matched,
-        not_written: not_written.into_iter().map(|(kind, count)| ExchangeKindCount { kind, count }).collect(),
+        not_written: not_written
+            .into_iter()
+            .map(|(kind, count)| ExchangeKindCount { kind, count })
+            .collect(),
         numeric,
         losses: losses
             .found
             .into_iter()
             .map(|((order, detail), (count, uids))| ExchangeLoss {
-                kind: EXCHANGE_LOSSES.get(order).copied().unwrap_or("other").to_owned(),
+                kind: EXCHANGE_LOSSES
+                    .get(order)
+                    .copied()
+                    .unwrap_or("other")
+                    .to_owned(),
                 detail: (!detail.is_empty()).then_some(detail),
                 count,
                 uids,
@@ -650,15 +827,24 @@ mod tests {
     }
 
     fn checked(format: ExchangeFormat) -> ExchangeChecked {
-        let input = ExchangeCheck { format, layers: Vec::new(), tolerance: None };
+        let input = ExchangeCheck {
+            format,
+            layers: Vec::new(),
+            tolerance: None,
+        };
         match run(&drawing(), &input, CallOp::Execute) {
-            CommandResult::Completed { output, .. } => serde_json::from_value(output).expect("the answer"),
+            CommandResult::Completed { output, .. } => {
+                serde_json::from_value(output).expect("the answer")
+            }
             other => panic!("{other:?}"),
         }
     }
 
     fn loss(r: &ExchangeChecked, kind: &str, detail: Option<&str>) -> u32 {
-        r.losses.iter().find(|l| l.kind == kind && l.detail.as_deref() == detail).map_or(0, |l| l.count)
+        r.losses
+            .iter()
+            .find(|l| l.kind == kind && l.detail.as_deref() == detail)
+            .map_or(0, |l| l.count)
     }
 
     /// GeoPackage keeps the ids, the arcs (as circular strings), Z and M: the text is not written, the circle comes
@@ -667,13 +853,30 @@ mod tests {
     fn a_geopackage_trip_keeps_ids_arcs_heights_and_measures() {
         let r = checked(ExchangeFormat::Gpkg);
         assert_eq!((r.objects, r.matched), (8, 7));
-        assert_eq!(r.not_written, [ExchangeKindCount { kind: "text".into(), count: 1 }]);
+        assert_eq!(
+            r.not_written,
+            [ExchangeKindCount {
+                kind: "text".into(),
+                count: 1
+            }]
+        );
         assert_eq!(loss(&r, "kindChanged", Some("circle → polygon")), 1);
         assert_eq!(loss(&r, "styleLost", Some("color")), 1);
-        for k in ["chorded", "zLost", "mLost", "identityLost", "attrLost", "extra"] {
+        for k in [
+            "chorded",
+            "zLost",
+            "mLost",
+            "identityLost",
+            "attrLost",
+            "extra",
+        ] {
             assert!(r.losses.iter().all(|l| l.kind != k), "{k}: {:?}", r.losses);
         }
-        assert!(r.numeric.offset.is_some_and(|o| o < 1e-9) && r.numeric.above == 0, "{:?}", r.numeric);
+        assert!(
+            r.numeric.offset.is_some_and(|o| o < 1e-9) && r.numeric.above == 0,
+            "{:?}",
+            r.numeric
+        );
     }
 
     /// DXF has no M and no ids of its own here; the parcel's hole is a polyline of its own.
@@ -695,20 +898,40 @@ mod tests {
         let r = checked(ExchangeFormat::Parquet);
         assert_eq!(loss(&r, "chorded", Some("circle")), 1);
         assert_eq!(loss(&r, "chorded", Some("polyline")), 1);
-        assert!(r.numeric.offset.is_some_and(|o| o < 1e-6), "{:?}", r.numeric);
+        assert!(
+            r.numeric.offset.is_some_and(|o| o < 1e-6),
+            "{:?}",
+            r.numeric
+        );
     }
 
     #[test]
     fn the_refusals_and_the_drawing_untouched() {
         let doc = drawing();
         let before = doc.revision();
-        let bad = ExchangeCheck { format: ExchangeFormat::Gpkg, layers: Vec::new(), tolerance: Some(0.0) };
-        assert!(matches!(run(&doc, &bad, CallOp::Execute), CommandResult::Failed { error } if error.code == "invalid_tolerance"));
-        let bad = ExchangeCheck { format: ExchangeFormat::Gpkg, layers: vec!["yok".into()], tolerance: None };
+        let bad = ExchangeCheck {
+            format: ExchangeFormat::Gpkg,
+            layers: Vec::new(),
+            tolerance: Some(0.0),
+        };
+        assert!(
+            matches!(run(&doc, &bad, CallOp::Execute), CommandResult::Failed { error } if error.code == "invalid_tolerance")
+        );
+        let bad = ExchangeCheck {
+            format: ExchangeFormat::Gpkg,
+            layers: vec!["yok".into()],
+            tolerance: None,
+        };
         assert!(matches!(run(&doc, &bad, CallOp::Execute),
             CommandResult::Failed { error } if error.code == "layer_not_found" && error.path.as_deref() == Some("layers[0]")));
-        let only = ExchangeCheck { format: ExchangeFormat::Shp, layers: vec!["baca".into()], tolerance: None };
-        let CommandResult::Completed { output, .. } = run(&doc, &only, CallOp::Execute) else { panic!() };
+        let only = ExchangeCheck {
+            format: ExchangeFormat::Shp,
+            layers: vec!["baca".into()],
+            tolerance: None,
+        };
+        let CommandResult::Completed { output, .. } = run(&doc, &only, CallOp::Execute) else {
+            panic!()
+        };
         assert_eq!(output["objects"], 1);
         assert_eq!(doc.revision(), before);
     }
@@ -716,7 +939,12 @@ mod tests {
     /// A drawing of one area at Ankara's coordinates: a square, or a 10 m buffer's half-disc end (`bulge` on its last
     /// edge).
     fn one_area(bulge: Option<f64>) -> Document {
-        let pts = [(487100.0, 4420200.0), (487140.0, 4420200.0), (487140.0, 4420220.0), (487100.0, 4420220.0)];
+        let pts = [
+            (487100.0, 4420200.0),
+            (487140.0, 4420200.0),
+            (487140.0, 4420220.0),
+            (487100.0, 4420220.0),
+        ];
         let mut e = serde_json::json!({ "kind": "polygon", "id": 1, "layerId": "0", "attrs": {},
             "pts": pts.iter().map(|(x, y)| serde_json::json!({"x": x, "y": y})).collect::<Vec<_>>() });
         if let Some(b) = bulge {
@@ -724,7 +952,8 @@ mod tests {
         }
         // The exchange sample's settings and layers, this one area alone.
         let mut text: serde_json::Value =
-            serde_json::from_str(include_str!("../../../../fixtures/exchange/v1/devir.json")).expect("the sample");
+            serde_json::from_str(include_str!("../../../../fixtures/exchange/v1/devir.json"))
+                .expect("the sample");
         text["entities"] = serde_json::json!([e]);
         text["uids"] = serde_json::json!(["0192f660-1660-7000-8000-000000000001"]);
         let snapshot: DocumentSnapshotV2 = serde_json::from_value(text).expect("the drawing");
@@ -732,7 +961,11 @@ mod tests {
     }
 
     fn compared(doc: &Document, back: &Document) -> ExchangeChecked {
-        let input = ExchangeCheck { format: ExchangeFormat::Gpkg, layers: Vec::new(), tolerance: Some(0.001) };
+        let input = ExchangeCheck {
+            format: ExchangeFormat::Gpkg,
+            layers: Vec::new(),
+            tolerance: Some(0.001),
+        };
         compare(doc, back, &input, 0.001, Vec::new(), Vec::new())
     }
 
@@ -749,27 +982,54 @@ mod tests {
         // The flipped half-disc's far point (487110, 4420210) lies 10 m from the square's long edges, its nearest
         // original geometry; its area 2 × π·10²/2 off.
         assert!(n.shape.is_some_and(|d| (d - 10.0).abs() < 1e-6), "{n:?}");
-        assert!(n.area.is_some_and(|a| (a - 100.0 * std::f64::consts::PI).abs() < 1e-6), "{n:?}");
+        assert!(
+            n.area
+                .is_some_and(|a| (a - 100.0 * std::f64::consts::PI).abs() < 1e-6),
+            "{n:?}"
+        );
         assert_eq!(n.area_above, 1, "{n:?}");
         assert_eq!(n.length_above, 0, "the same arc's length: {n:?}");
         let uid = doc.uid(Slot(1)).map(|u| u.to_string());
-        assert_eq!((n.shape_uid.clone(), n.area_uid.clone()), (uid.clone(), uid));
-        let cells: Vec<ExchangeState> =
-            ["shape", "length", "area"].iter().map(|a| crate::exchange_matrix::cell_of(&r, a).state).collect();
-        assert_eq!(cells, [ExchangeState::Converted, ExchangeState::Kept, ExchangeState::Converted]);
+        assert_eq!(
+            (n.shape_uid.clone(), n.area_uid.clone()),
+            (uid.clone(), uid)
+        );
+        let cells: Vec<ExchangeState> = ["shape", "length", "area"]
+            .iter()
+            .map(|a| crate::exchange_matrix::cell_of(&r, a).state)
+            .collect();
+        assert_eq!(
+            cells,
+            [
+                ExchangeState::Converted,
+                ExchangeState::Kept,
+                ExchangeState::Converted
+            ]
+        );
         // A straight edge read back as an arc: the length too.
         let r = compared(&one_area(None), &one_area(Some(1.0)));
-        assert!(r.numeric.length_above == 1 && r.numeric.shape_above == 1, "{:?}", r.numeric);
+        assert!(
+            r.numeric.length_above == 1 && r.numeric.shape_above == 1,
+            "{:?}",
+            r.numeric
+        );
         // Unchanged: nothing above.
         let square = one_area(None);
         let r = compared(&square, &one_area(None));
         let n = &r.numeric;
-        assert_eq!((n.above, n.shape_above, n.length_above, n.area_above), (0, 0, 0, 0), "{n:?}");
+        assert_eq!(
+            (n.above, n.shape_above, n.length_above, n.area_above),
+            (0, 0, 0, 0),
+            "{n:?}"
+        );
         let buffer = one_area(Some(1.0));
         let r = compared(&buffer, &one_area(Some(1.0)));
         let n = &r.numeric;
-        assert_eq!((n.above, n.shape_above, n.length_above, n.area_above), (0, 0, 0, 0), "{n:?}");
+        assert_eq!(
+            (n.above, n.shape_above, n.length_above, n.area_above),
+            (0, 0, 0, 0),
+            "{n:?}"
+        );
         assert!(n.shape.is_some_and(|d| d < 1e-6), "{n:?}");
     }
-
 }

@@ -264,7 +264,9 @@ impl App {
         let doc = self.document.as_ref();
         let settings = doc.map(|d| d.model.settings());
         Names {
-            levels: settings.and_then(|s| s.arch.as_ref()).map_or(&[], |a| a.levels.as_slice()),
+            levels: settings
+                .and_then(|s| s.arch.as_ref())
+                .map_or(&[], |a| a.levels.as_slice()),
             opening_types: doc.map_or(&[], |d| d.model.opening_types()),
             wall_styles: settings.map_or(&[], |s| s.wall_styles.as_slice()),
             format: self.format(),

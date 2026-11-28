@@ -13,7 +13,10 @@ use kentos_sheet::{
 use serde_json::{Value, json};
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/viewport-annotations.json")).unwrap()
+    serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/viewport-annotations.json"
+    ))
+    .unwrap()
 }
 
 /// Two rooms over each other, ALT on Zemin kat and UST on 1. kat, and a text ORTAK on no level.
@@ -44,8 +47,10 @@ fn book(level: Value) -> SheetBook {
     let mut book = SheetBook::default();
     book.sheets
         .push(serde_json::from_value(fixture()["cases"][0]["sheet"].clone()).unwrap());
-    let op: Op = serde_json::from_value(json!({"op": "setViewport", "id": "viewport", "scale": 50, "locked": false,
-        "center": {"x": 0.0, "y": 0.0}, "level": level}))
+    let op: Op = serde_json::from_value(
+        json!({"op": "setViewport", "id": "viewport", "scale": 50, "locked": false,
+        "center": {"x": 0.0, "y": 0.0}, "level": level}),
+    )
     .unwrap();
     ops::apply(&book, &op).unwrap().book
 }
@@ -72,23 +77,45 @@ fn words(doc: &Document, level: Value) -> Vec<(String, String)> {
 }
 
 fn has(words: &[(String, String)], text: &str) -> Option<String> {
-    words.iter().find(|(t, _)| t == text).map(|(_, c)| c.clone())
+    words
+        .iter()
+        .find(|(t, _)| t == text)
+        .map(|(_, c)| c.clone())
 }
 
 #[test]
 fn a_map_draws_its_level_and_the_one_below_faint() {
     let doc = drawing();
     let all = words(&doc, json!({"type": "all"}));
-    assert!(has(&all, "ALT").is_some() && has(&all, "UST").is_some() && has(&all, "ORTAK").is_some(), "{all:?}");
+    assert!(
+        has(&all, "ALT").is_some() && has(&all, "UST").is_some() && has(&all, "ORTAK").is_some(),
+        "{all:?}"
+    );
     let upper = words(&doc, json!({"type": "level", "id": "kat-1"}));
-    assert!(has(&upper, "ALT").is_none(), "Zemin kat left out: {upper:?}");
-    assert!(has(&upper, "UST").is_some() && has(&upper, "ORTAK").is_some(), "{upper:?}");
+    assert!(
+        has(&upper, "ALT").is_none(),
+        "Zemin kat left out: {upper:?}"
+    );
+    assert!(
+        has(&upper, "UST").is_some() && has(&upper, "ORTAK").is_some(),
+        "{upper:?}"
+    );
     let over = words(&doc, json!({"type": "level", "id": "kat-1", "below": true}));
-    let (faint, own) = (has(&over, "ALT").expect("ALT faint"), has(&over, "UST").expect("UST"));
+    let (faint, own) = (
+        has(&over, "ALT").expect("ALT faint"),
+        has(&over, "UST").expect("UST"),
+    );
     assert_ne!(faint, own, "the level below is faint");
-    assert_eq!(faint, kentos_plot::layers::faint_on_paper(&own), "faint as a faded object on white");
+    assert_eq!(
+        faint,
+        kentos_plot::layers::faint_on_paper(&own),
+        "faint as a faded object on white"
+    );
     let ground = words(&doc, json!({"type": "level", "id": "zemin", "below": true}));
-    assert!(has(&ground, "UST").is_none() && has(&ground, "ALT").is_some(), "no level under Zemin kat: {ground:?}");
+    assert!(
+        has(&ground, "UST").is_none() && has(&ground, "ALT").is_some(),
+        "no level under Zemin kat: {ground:?}"
+    );
 }
 
 /// The roof plan (docs/adr/8044 §7): every level's objects out but its roofs; the words on no level stay.
@@ -116,7 +143,9 @@ fn a_level_gone_from_the_project_is_a_finding_with_its_fix() {
     )
     .unwrap()
     .book;
-    let found = kentos_plot::preflight::inspect(&doc, &book, "page", &RenderInputs::default(), None).unwrap();
+    let found =
+        kentos_plot::preflight::inspect(&doc, &book, "page", &RenderInputs::default(), None)
+            .unwrap();
     let f = found
         .iter()
         .find(|f| f.code == "map_level_missing")
@@ -124,6 +153,8 @@ fn a_level_gone_from_the_project_is_a_finding_with_its_fix() {
     assert!(f.message.contains("kat-9"), "{}", f.message);
     assert_eq!(f.fixes.len(), 1);
     let fixed = ops::apply(&book, &f.fixes[0].ops[0]).unwrap().book;
-    let found = kentos_plot::preflight::inspect(&doc, &fixed, "page", &RenderInputs::default(), None).unwrap();
+    let found =
+        kentos_plot::preflight::inspect(&doc, &fixed, "page", &RenderInputs::default(), None)
+            .unwrap();
     assert!(found.iter().all(|f| f.code != "map_level_missing"));
 }

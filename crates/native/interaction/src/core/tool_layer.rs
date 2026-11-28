@@ -9,7 +9,11 @@ use kentos_domain::Document;
 pub fn layer_for(doc: &Document, tool: AnnotationTool) -> String {
     let layers = doc.layers();
     kentos_commands::tool_layer(&doc.settings().tool_layers, tool)
-        .filter(|id| layers.get(id).is_some_and(|n| n.kind == LayerNodeType::Layer))
+        .filter(|id| {
+            layers
+                .get(id)
+                .is_some_and(|n| n.kind == LayerNodeType::Layer)
+        })
         .unwrap_or_else(|| layers.active())
         .to_owned()
 }
@@ -23,7 +27,10 @@ pub fn tool_of(geometries: &[&EntityGeometry]) -> Option<AnnotationTool> {
         _ => None,
     };
     let first = kind(geometries.first()?)?;
-    geometries.iter().all(|g| kind(g) == Some(first)).then_some(first)
+    geometries
+        .iter()
+        .all(|g| kind(g) == Some(first))
+        .then_some(first)
 }
 
 /// The lock sentence of `tool`'s layer, when it is locked (the drawing tools' words).

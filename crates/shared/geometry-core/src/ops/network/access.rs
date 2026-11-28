@@ -137,10 +137,14 @@ impl AccessRules {
                     if let Json::Arr(ls) = p.get("limits") {
                         for l in ls {
                             let field = text(l.get("field"), "sınır alanı")?;
-                            let value = match l.get("value") {
-                                Json::Num(v) if v.is_finite() && *v > 0.0 => *v,
-                                _ => return Err("ağın araç profilinin sınırı sıfırdan büyük sayı olmalı".into()),
-                            };
+                            let value =
+                                match l.get("value") {
+                                    Json::Num(v) if v.is_finite() && *v > 0.0 => *v,
+                                    _ => return Err(
+                                        "ağın araç profilinin sınırı sıfırdan büyük sayı olmalı"
+                                            .into(),
+                                    ),
+                                };
                             limits.push((fact(&mut rules.facts, &field), value));
                         }
                     }
@@ -153,16 +157,24 @@ impl AccessRules {
                                     .iter()
                                     .map(|v| text(v, "yasak değeri").map(|s| caseless(&s)))
                                     .collect::<Result<Vec<_>, _>>()?,
-                                _ => return Err("ağın araç profilinin yasak değerleri liste olmalı".into()),
+                                _ => {
+                                    return Err(
+                                        "ağın araç profilinin yasak değerleri liste olmalı".into(),
+                                    );
+                                }
                             };
                             forbidden.push((fact(&mut rules.facts, &field), values));
                         }
                     }
-                    let top_speed = match p.get("topSpeed") {
-                        Json::Null => None,
-                        Json::Num(v) if v.is_finite() && *v > 0.0 => Some(*v),
-                        _ => return Err("ağın araç profilinin en yüksek hızı sıfırdan büyük sayı olmalı".into()),
-                    };
+                    let top_speed =
+                        match p.get("topSpeed") {
+                            Json::Null => None,
+                            Json::Num(v) if v.is_finite() && *v > 0.0 => Some(*v),
+                            _ => return Err(
+                                "ağın araç profilinin en yüksek hızı sıfırdan büyük sayı olmalı"
+                                    .into(),
+                            ),
+                        };
                     let both_ways = matches!(p.get("bothWays"), Json::Bool(true));
                     rules.profiles.push(ProfileRule {
                         key: caseless(&name),
@@ -188,7 +200,11 @@ impl AccessRules {
                 };
                 let weekdays = optional("days")?;
                 let hours = optional("hours")?;
-                rules.closures = Some(ClosureRule { days, weekdays, hours });
+                rules.closures = Some(ClosureRule {
+                    days,
+                    weekdays,
+                    hours,
+                });
             }
         }
         Ok(rules)
@@ -251,34 +267,49 @@ impl AccessRules {
             return Closing::Open;
         };
         // Each value read in turn; one not read closes nothing.
-        let mut read = |i: Option<usize>, how: &dyn Fn(&str) -> Option<Reading>| match i.and_then(fact) {
-            None => Some(None),
-            Some(t) => match how(t) {
-                Some(r) => Some(Some(r)),
-                None => {
-                    *unread = true;
-                    None
-                }
-            },
-        };
+        let mut read =
+            |i: Option<usize>, how: &dyn Fn(&str) -> Option<Reading>| match i.and_then(fact) {
+                None => Some(None),
+                Some(t) => match how(t) {
+                    Some(r) => Some(Some(r)),
+                    None => {
+                        *unread = true;
+                        None
+                    }
+                },
+            };
         let as_day = |t: &str| day_of(t).map(Reading::Day);
         let as_weekdays = |t: &str| weekdays_of(t).map(Reading::Weekdays);
         let as_hours = |t: &str| hours_of(t).map(Reading::Hours);
         let [a, b] = rule.days;
-        let Some(from) = read(Some(a), &as_day) else { return Closing::Open };
-        let Some(to) = read(Some(b), &as_day) else { return Closing::Open };
-        let Some(weekdays) = read(rule.weekdays, &as_weekdays) else { return Closing::Open };
-        let Some(hours) = read(rule.hours, &as_hours) else { return Closing::Open };
+        let Some(from) = read(Some(a), &as_day) else {
+            return Closing::Open;
+        };
+        let Some(to) = read(Some(b), &as_day) else {
+            return Closing::Open;
+        };
+        let Some(weekdays) = read(rule.weekdays, &as_weekdays) else {
+            return Closing::Open;
+        };
+        let Some(hours) = read(rule.hours, &as_hours) else {
+            return Closing::Open;
+        };
         if from.is_none() && to.is_none() && weekdays.is_none() && hours.is_none() {
             return Closing::Open;
         }
         let (from, to) = (from.map(Reading::day), to.map(Reading::day));
         let mask = weekdays.map_or(ALL_WEEKDAYS, Reading::weekdays);
         let closed_on = |d: i64| {
-            from.is_none_or(|f| f <= d) && to.is_none_or(|t| d <= t) && mask & (1 << weekday_of(d)) != 0
+            from.is_none_or(|f| f <= d)
+                && to.is_none_or(|t| d <= t)
+                && mask & (1 << weekday_of(d)) != 0
         };
         let Some(hours) = hours.map(Reading::hours) else {
-            return if closed_on(day) { Closing::Date } else { Closing::Open };
+            return if closed_on(day) {
+                Closing::Date
+            } else {
+                Closing::Open
+            };
         };
         // Closed on no day within the horizon: open to this question.
         let (lo, hi) = (
@@ -315,7 +346,11 @@ impl AccessRules {
                 }
             }
         }
-        if windows.len() > first { Closing::Hours } else { Closing::Open }
+        if windows.len() > first {
+            Closing::Hours
+        } else {
+            Closing::Open
+        }
     }
 }
 
@@ -392,7 +427,10 @@ fn weekday_named(name: &str) -> Option<u32> {
         &["7", "pazar", "paz", "pzr"],
     ];
     let key = caseless(name);
-    names.iter().position(|n| n.contains(&key.as_str())).map(|d| d as u32)
+    names
+        .iter()
+        .position(|n| n.contains(&key.as_str()))
+        .map(|d| d as u32)
 }
 
 /// The hours a text names (docs/adr/0568 §1): windows `H:MM-H:MM` apart by commas or semicolons, minutes of the day
@@ -433,8 +471,9 @@ pub fn day_of(text: &str) -> Option<i64> {
         return None;
     }
     let digits = |s: &[u8]| -> Option<i64> {
-        s.iter()
-            .try_fold(0i64, |n, c| c.is_ascii_digit().then(|| n * 10 + i64::from(c - b'0')))
+        s.iter().try_fold(0i64, |n, c| {
+            c.is_ascii_digit().then(|| n * 10 + i64::from(c - b'0'))
+        })
     };
     let (y, m, d) = (digits(&b[0..4])?, digits(&b[5..7])?, digits(&b[8..10])?);
     if !(1..=12).contains(&m) || d < 1 || d > month_days(y, m) {
@@ -510,7 +549,10 @@ mod tests {
         assert_eq!(weekdays_of("Pzt,"), None);
         assert_eq!(weekdays_of("8"), None);
         assert_eq!(hours_of("22:00-06:00"), Some(vec![(1320.0, 360.0)]));
-        assert_eq!(hours_of("7:00 - 9:30, 17:00-24:00"), Some(vec![(420.0, 570.0), (1020.0, 1440.0)]));
+        assert_eq!(
+            hours_of("7:00 - 9:30, 17:00-24:00"),
+            Some(vec![(420.0, 570.0), (1020.0, 1440.0)])
+        );
         assert_eq!(hours_of("00:00-24:00"), Some(vec![(0.0, 1440.0)]));
         assert_eq!(hours_of("08:00-08:00"), None);
         assert_eq!(hours_of("24:00-06:00"), None);

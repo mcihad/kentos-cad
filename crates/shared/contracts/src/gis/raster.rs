@@ -714,7 +714,9 @@ impl RasterFields {
                 return Some(format!("Rasterin oturtma kaydı: {p}"));
             }
             if self.dataset.is_some() {
-                return Some("Veri setini gösteren raster oturtulmaz; oturtma kaydı olamaz.".into());
+                return Some(
+                    "Veri setini gösteren raster oturtulmaz; oturtma kaydı olamaz.".into(),
+                );
             }
         }
         if let Some(t) = &self.tiles {
@@ -730,7 +732,9 @@ impl RasterFields {
                 ));
             }
             if t.x < 0 || t.y < 0 {
-                return Some("Karo tablosundaki pencerenin ilk sütunu ve satırı eksi olamaz.".into());
+                return Some(
+                    "Karo tablosundaki pencerenin ilk sütunu ve satırı eksi olamaz.".into(),
+                );
             }
             if self.dataset.is_some() {
                 return Some("Karo tablosunu gösteren raster veri seti gösteremez.".into());

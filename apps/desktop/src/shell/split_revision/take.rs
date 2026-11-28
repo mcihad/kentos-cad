@@ -50,11 +50,24 @@ impl Revision {
             .iter()
             .map(|(uid, kind)| {
                 let (what, label) = match kind {
-                    Kind::Changed(_) => ("Değişti", super::candidates::object_label(now, &uid.to_string())),
-                    Kind::Removed(_) => ("Yalnız sürümde", super::candidates::object_label(&self.doc.model, &uid.to_string())),
-                    Kind::Added => ("Yalnız açık çizimde", super::candidates::object_label(now, &uid.to_string())),
+                    Kind::Changed(_) => (
+                        "Değişti",
+                        super::candidates::object_label(now, &uid.to_string()),
+                    ),
+                    Kind::Removed(_) => (
+                        "Yalnız sürümde",
+                        super::candidates::object_label(&self.doc.model, &uid.to_string()),
+                    ),
+                    Kind::Added => (
+                        "Yalnız açık çizimde",
+                        super::candidates::object_label(now, &uid.to_string()),
+                    ),
                 };
-                Row { uid: *uid, what, label }
+                Row {
+                    uid: *uid,
+                    what,
+                    label,
+                }
             })
             .collect();
         rows.sort_by(|a, b| a.what.cmp(b.what).then(a.uid.cmp(&b.uid)));
@@ -129,7 +142,10 @@ impl App {
             .parent()
             .map_or(Ok(()), std::fs::create_dir_all)
             .map_err(|e| e.to_string())
-            .and_then(|()| kentos_kcad::encode_verified(&r.doc.model.to_snapshot_v2()).map_err(|e| e.to_string()))
+            .and_then(|()| {
+                kentos_kcad::encode_verified(&r.doc.model.to_snapshot_v2())
+                    .map_err(|e| e.to_string())
+            })
             .and_then(|bytes| std::fs::write(&path, bytes).map_err(|e| e.to_string()));
         if let Err(why) = written {
             self.warn(format!(
@@ -138,7 +154,9 @@ impl App {
             return;
         }
         let input = DrawingTake {
-            against: CompareAgainst::File { path: path.to_string_lossy().into_owned() },
+            against: CompareAgainst::File {
+                path: path.to_string_lossy().into_owned(),
+            },
             uids,
             base: None,
             overwrite: false,
@@ -185,9 +203,13 @@ impl App {
             .map(|row| {
                 let on = r.take_chosen.contains(&row.uid);
                 table::Row::new(
-                    [if on { "✓" } else { "" }.to_owned(), row.label.clone(), row.what.to_owned()]
-                        .into_iter()
-                        .map(|s| label::caption(s).into()),
+                    [
+                        if on { "✓" } else { "" }.to_owned(),
+                        row.label.clone(),
+                        row.what.to_owned(),
+                    ]
+                    .into_iter()
+                    .map(|s| label::caption(s).into()),
                 )
                 .selected(on)
                 .on_press(msg(Event::Toggle(i, row.uid)))
@@ -217,7 +239,10 @@ impl App {
         Frame::new("Farkları al")
             .scroll(body)
             .action(words::secondary("Kapat", Some(Message::DialogClosed)))
-            .action(words::primary("Seçilenleri al", (chosen > 0).then(|| msg(Event::Take(i)))))
+            .action(words::primary(
+                "Seçilenleri al",
+                (chosen > 0).then(|| msg(Event::Take(i))),
+            ))
             .width(560.0)
             .modal(Message::DialogClosed)
     }

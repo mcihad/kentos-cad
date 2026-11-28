@@ -213,11 +213,20 @@ pub struct DataProfile {
 
 /// KentOS's profiles, by name.
 pub const BUILTIN_PROFILES: &[(&str, &str)] = &[
-    ("tucbs-temel", include_str!("../../../../../catalog/v1/profiles/tucbs-temel.json")),
+    (
+        "tucbs-temel",
+        include_str!("../../../../../catalog/v1/profiles/tucbs-temel.json"),
+    ),
     // Harita's field-coded assets (docs/adr/1360 §3).
-    ("harita-varliklari", include_str!("../../../../../catalog/v1/profiles/harita-varliklari.json")),
+    (
+        "harita-varliklari",
+        include_str!("../../../../../catalog/v1/profiles/harita-varliklari.json"),
+    ),
     // The zoning plan's typed decisions (docs/adr/1420).
-    ("imar-plani", include_str!("../../../../../catalog/v1/profiles/imar-plani.json")),
+    (
+        "imar-plani",
+        include_str!("../../../../../catalog/v1/profiles/imar-plani.json"),
+    ),
 ];
 
 /// A built-in profile by its name (case aside); none for a name KentOS has not.
@@ -289,13 +298,26 @@ pub fn profile_problem(p: &DataProfile) -> Option<String> {
                 ));
             }
             if c.geometry == ProfileGeometry::Record {
-                return Some(format!("“{}” geometrisiz kayıt sınıfı; saha kodu olmaz.", c.title));
+                return Some(format!(
+                    "“{}” geometrisiz kayıt sınıfı; saha kodu olmaz.",
+                    c.title
+                ));
             }
-            if let Some(other) = p.classes.iter().find(|o| o.id != c.id && o.codes.contains(code)) {
-                return Some(format!("“{code}” saha kodu iki sınıfta: “{}” ve “{}”.", c.title, other.title));
+            if let Some(other) = p
+                .classes
+                .iter()
+                .find(|o| o.id != c.id && o.codes.contains(code))
+            {
+                return Some(format!(
+                    "“{code}” saha kodu iki sınıfta: “{}” ve “{}”.",
+                    c.title, other.title
+                ));
             }
             if c.codes.iter().filter(|x| *x == code).count() > 1 {
-                return Some(format!("“{}” sınıfında “{code}” saha kodu iki kez yazılmış.", c.title));
+                return Some(format!(
+                    "“{}” sınıfında “{code}” saha kodu iki kez yazılmış.",
+                    c.title
+                ));
             }
         }
         let field = |name: &str| c.fields.iter().find(|f| f.name == name);

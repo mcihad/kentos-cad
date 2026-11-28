@@ -38,8 +38,8 @@ fn drawing(file: &Value) -> kentos_domain::Document {
         "origin": { "x": 0, "y": 0 }, "layers": layers, "activeLayer": "cizim", "entities": file["objects"],
         "styles": { "items": [], "categories": [] }
     });
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&snapshot.to_string())
-        .expect("the drawing");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("the drawing");
     kentos_domain::Document::from_snapshot(snapshot).expect("opens")
 }
 

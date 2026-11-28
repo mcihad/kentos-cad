@@ -206,7 +206,10 @@ fn footprint(ring: &[Pt], o: Pt, k: usize) -> Result<Vec<Pt>, SeamFault> {
 /// edge dropped, counter-clockwise, convex; or why not (`k` its place).
 pub fn convex_footprint(ring: &[Pt], k: usize) -> Result<Vec<Pt>, SeamFault> {
     let o = *ring.first().ok_or(SeamFault::Degenerate(k))?;
-    Ok(footprint(ring, o, k)?.into_iter().map(|p| [p[0] + o[0], p[1] + o[1]]).collect())
+    Ok(footprint(ring, o, k)?
+        .into_iter()
+        .map(|p| [p[0] + o[0], p[1] + o[1]])
+        .collect())
 }
 
 /// Where segment p–q crosses the line a→b.
@@ -279,7 +282,11 @@ struct Run {
 fn runs(kinds: &[EdgeKind]) -> Vec<Run> {
     let n = kinds.len();
     let Some(s) = (0..n).find(|&i| kinds[i] != kinds[(i + n - 1) % n]) else {
-        return vec![Run { kind: kinds[0], from: 0, to: n - 1 }];
+        return vec![Run {
+            kind: kinds[0],
+            from: 0,
+            to: n - 1,
+        }];
     };
     let mut out = Vec::new();
     let mut k = 0;
@@ -289,7 +296,11 @@ fn runs(kinds: &[EdgeKind]) -> Vec<Run> {
         while e + 1 < n && kinds[(s + e + 1) % n] == kinds[i] {
             e += 1;
         }
-        out.push(Run { kind: kinds[i], from: i, to: (s + e) % n });
+        out.push(Run {
+            kind: kinds[i],
+            from: i,
+            to: (s + e) % n,
+        });
         k = e + 1;
     }
     out
@@ -307,7 +318,11 @@ impl Footprints {
         }
         // From its southernmost corner (the westernmost of equals): the ring does not depend on the clip's order.
         let first_corner = (0..overlap.len())
-            .min_by(|&i, &j| overlap[i][1].total_cmp(&overlap[j][1]).then(overlap[i][0].total_cmp(&overlap[j][0])))
+            .min_by(|&i, &j| {
+                overlap[i][1]
+                    .total_cmp(&overlap[j][1])
+                    .then(overlap[i][0].total_cmp(&overlap[j][0]))
+            })
             .unwrap_or(0);
         overlap.rotate_left(first_corner);
         let n = overlap.len();
@@ -363,7 +378,16 @@ impl Footprints {
         };
         // After the first's run, the boundary reaches the second's: the start; after the second's, the end. A shared
         // run between is walked from the run before it (its `f` < 0 after the first's run, > 0 after the second's).
-        let after = |r: Run| -> (usize, usize) { ((r.to + 1) % n, if r.kind == EdgeKind::FirstEnd { r2.from } else { r1.from }) };
+        let after = |r: Run| -> (usize, usize) {
+            (
+                (r.to + 1) % n,
+                if r.kind == EdgeKind::FirstEnd {
+                    r2.from
+                } else {
+                    r1.from
+                },
+            )
+        };
         for (k, r) in [r1, r2].into_iter().enumerate() {
             let (s, stop) = after(r);
             let (at, crossing) = if s == stop {
@@ -444,7 +468,10 @@ impl Footprints {
 
     /// The seam's start and end, each with whether the footprints' boundaries cross there.
     pub fn ends(&self) -> [(Pt, bool); 2] {
-        [(self.global(self.start), self.start_crossing), (self.global(self.end), self.end_crossing)]
+        [
+            (self.global(self.start), self.start_crossing),
+            (self.global(self.end), self.end_crossing),
+        ]
     }
 
     /// Whether a point lies inside the overlap (on its boundary too).
@@ -558,18 +585,36 @@ impl Footprints {
 
     /// Between two roots of different pairs: the turns (and the roots of a curved piece between) in order.
     #[allow(clippy::too_many_arguments)]
-    fn resolve(&self, sa: f64, qa: Pt, pa: (Near, Near), sb: f64, qb: Pt, pb: (Near, Near), depth: u32, out: &mut Vec<(Pt, bool)>) {
+    fn resolve(
+        &self,
+        sa: f64,
+        qa: Pt,
+        pa: (Near, Near),
+        sb: f64,
+        qb: Pt,
+        pb: (Near, Near),
+        depth: u32,
+        out: &mut Vec<(Pt, bool)>,
+    ) {
         if let (Some(la), Some(lb)) = (self.line_of(pa, qa), self.line_of(pb, qb))
             && let Some(x) = meet(la, lb)
         {
             let s = self.param(x);
-            if s >= sa - 1e-9 && s <= sb + 1e-9 && self.in_overlap(self.global(x)) && self.f(x).abs() <= 1e-6 {
+            if s >= sa - 1e-9
+                && s <= sb + 1e-9
+                && self.in_overlap(self.global(x))
+                && self.f(x).abs() <= 1e-6
+            {
                 out.push((x, true));
                 return;
             }
         }
         let mid = (sa + sb) / 2.0;
-        let Some(qm) = (if depth < 60 && sb - sa > 1e-12 { self.root(mid) } else { None }) else {
+        let Some(qm) = (if depth < 60 && sb - sa > 1e-12 {
+            self.root(mid)
+        } else {
+            None
+        }) else {
             // Found to a double's precision without a straight turn: the root there.
             out.push((lerp(qa, qb, 0.5), false));
             return;
@@ -594,12 +639,25 @@ impl Footprints {
     pub fn voronoi(&self, step: f64) -> Vec<Pt> {
         let l = len(sub(self.end, self.start));
         let q = l / step;
-        let n = js_max(if (q - q.round_ties_even()).abs() <= 1e-9 { q.round_ties_even() } else { q.ceil() }, 2.0) as usize;
+        let n = js_max(
+            if (q - q.round_ties_even()).abs() <= 1e-9 {
+                q.round_ties_even()
+            } else {
+                q.ceil()
+            },
+            2.0,
+        ) as usize;
         // Every root with its pair; the first and last a hair inside the ends, for the pieces they start and end.
         let mut stations: Vec<(f64, Pt, (Near, Near))> = Vec::with_capacity(n + 1);
         let hair = 1e-6;
         for k in 0..=n {
-            let s = if k == 0 { hair } else if k == n { 1.0 - hair } else { k as f64 / n as f64 };
+            let s = if k == 0 {
+                hair
+            } else if k == n {
+                1.0 - hair
+            } else {
+                k as f64 / n as f64
+            };
             if let Some(p) = self.root(s) {
                 stations.push((s, p, self.pair(p)));
             }
@@ -620,14 +678,21 @@ impl Footprints {
             seam.push(p);
         }
         seam.push(self.end);
-        deduped_open(&seam).into_iter().map(|p| self.global(p)).collect()
+        deduped_open(&seam)
+            .into_iter()
+            .map(|p| self.global(p))
+            .collect()
     }
 
     /// The two polygons' rings (counter-clockwise) for a seam from the start to the end: the first's boundary from
     /// the end to the start, then the seam; the second's from the start to the end, then the seam back.
     pub fn rings(&self, seam: &[Pt]) -> [Vec<Pt>; 2] {
         let s: Vec<Pt> = seam.iter().map(|p| self.local(*p)).collect();
-        let inner = if s.len() > 2 { &s[1..s.len() - 1] } else { &[][..] };
+        let inner = if s.len() > 2 {
+            &s[1..s.len() - 1]
+        } else {
+            &[][..]
+        };
         let arc = |ring: &[Pt], from: Pt, to: Pt| -> Vec<Pt> {
             let (a, b) = (position(ring, from), position(ring, to));
             let n = ring.len() as f64;
@@ -674,7 +739,14 @@ fn position(ring: &[Pt], p: Pt) -> f64 {
         if d < best.0 {
             let ab = sub(b, a);
             let t = (dot(sub(p, a), ab) / dot(ab, ab)).clamp(0.0, 1.0);
-            best = (d, if len(sub(p, b)) <= SAME { ((i + 1) % n) as f64 } else { i as f64 + t });
+            best = (
+                d,
+                if len(sub(p, b)) <= SAME {
+                    ((i + 1) % n) as f64
+                } else {
+                    i as f64 + t
+                },
+            );
         }
     }
     best.1
@@ -713,7 +785,12 @@ fn nearest(g: &[Pt], p: Pt) -> Near {
 fn meet(a: (Pt, f64), b: (Pt, f64)) -> Option<Pt> {
     let ((n1, c1), (n2, c2)) = (a, b);
     let det = cross(n1, n2);
-    (det.abs() > 1e-12 * len(n1) * len(n2)).then(|| [(c1 * n2[1] - c2 * n1[1]) / det, (n1[0] * c2 - n2[0] * c1) / det])
+    (det.abs() > 1e-12 * len(n1) * len(n2)).then(|| {
+        [
+            (c1 * n2[1] - c2 * n1[1]) / det,
+            (n1[0] * c2 - n2[0] * c1) / det,
+        ]
+    })
 }
 
 /// A cell's queue entry: smaller key first, then the smaller index.
@@ -728,7 +805,10 @@ impl Eq for Entry {}
 impl Ord for Entry {
     fn cmp(&self, other: &Self) -> Ordering {
         // Reversed: BinaryHeap pops the greatest.
-        other.key.total_cmp(&self.key).then_with(|| other.at.cmp(&self.at))
+        other
+            .key
+            .total_cmp(&self.key)
+            .then_with(|| other.at.cmp(&self.at))
     }
 }
 
@@ -739,7 +819,16 @@ impl PartialOrd for Entry {
 }
 
 /// The eight moves (row, column), in the order they are tried.
-const MOVES: [(i64, i64); 8] = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)];
+const MOVES: [(i64, i64); 8] = [
+    (-1, -1),
+    (-1, 0),
+    (-1, 1),
+    (0, -1),
+    (0, 1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
+];
 
 /// A path through the grid: its cells from `from` to `to`, and its largest difference.
 #[derive(Clone, Debug, PartialEq)]
@@ -753,22 +842,38 @@ pub struct GridPath {
 /// not above it the path of least cost. None when no path joins them.
 pub fn grid_path(w: usize, h: usize, diff: &[f64], from: usize, to: usize) -> Option<GridPath> {
     let searched = |i: usize| !diff[i].is_nan();
-    if diff.len() != w * h || from >= diff.len() || to >= diff.len() || !searched(from) || !searched(to) {
+    if diff.len() != w * h
+        || from >= diff.len()
+        || to >= diff.len()
+        || !searched(from)
+        || !searched(to)
+    {
         return None;
     }
     let neighbours = |i: usize| {
         let (r, c) = ((i / w) as i64, (i % w) as i64);
         MOVES.iter().filter_map(move |&(dr, dc)| {
             let (nr, nc) = (r + dr, c + dc);
-            (nr >= 0 && nc >= 0 && nr < h as i64 && nc < w as i64)
-                .then(|| ((nr as usize) * w + nc as usize, if dr != 0 && dc != 0 { std::f64::consts::SQRT_2 } else { 1.0 }))
+            (nr >= 0 && nc >= 0 && nr < h as i64 && nc < w as i64).then(|| {
+                (
+                    (nr as usize) * w + nc as usize,
+                    if dr != 0 && dc != 0 {
+                        std::f64::consts::SQRT_2
+                    } else {
+                        1.0
+                    },
+                )
+            })
         })
     };
     // The bottleneck: Dijkstra on the largest difference so far.
     let mut best = vec![f64::INFINITY; diff.len()];
     let mut heap = BinaryHeap::new();
     best[from] = diff[from];
-    heap.push(Entry { key: best[from], at: from });
+    heap.push(Entry {
+        key: best[from],
+        at: from,
+    });
     while let Some(Entry { key, at }) = heap.pop() {
         if key > best[at] {
             continue;
@@ -834,7 +939,12 @@ pub fn turns(cells: &[usize], w: usize) -> Vec<usize> {
     if cells.len() <= 2 {
         return cells.to_vec();
     }
-    let step = |a: usize, b: usize| ((b / w) as i64 - (a / w) as i64, (b % w) as i64 - (a % w) as i64);
+    let step = |a: usize, b: usize| {
+        (
+            (b / w) as i64 - (a / w) as i64,
+            (b % w) as i64 - (a % w) as i64,
+        )
+    };
     let mut out = vec![cells[0]];
     for k in 1..cells.len() - 1 {
         if step(cells[k - 1], cells[k]) != step(cells[k], cells[k + 1]) {

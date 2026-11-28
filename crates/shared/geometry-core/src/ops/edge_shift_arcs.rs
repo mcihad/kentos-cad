@@ -47,7 +47,10 @@ pub(crate) fn curve_of(a: Vec2, b: Vec2, bulge: f64) -> Option<Curve> {
     }
     let t = sub(b, a);
     let l = js_hypot(t.x, t.y);
-    (l > 0.0).then(|| Curve::Line { p: a, dir: Vec2::new(t.x / l, t.y / l) })
+    (l > 0.0).then(|| Curve::Line {
+        p: a,
+        dir: Vec2::new(t.x / l, t.y / l),
+    })
 }
 
 /// Where `u` meets `v`, the point nearer `near`; none when they do not meet (parallel lines, a line missing a
@@ -63,7 +66,8 @@ pub(crate) fn meet(u: Curve, v: Curve, near: Vec2) -> Option<Vec2> {
             let t = cross(sub(q, p), e) / x;
             Some(Vec2::new(p.x + d.x * t, p.y + d.y * t))
         }
-        (Curve::Line { p, dir: d }, Curve::Circle { c, r }) | (Curve::Circle { c, r }, Curve::Line { p, dir: d }) => {
+        (Curve::Line { p, dir: d }, Curve::Circle { c, r })
+        | (Curve::Circle { c, r }, Curve::Line { p, dir: d }) => {
             // |p + t·d − c|² = r², d a unit vector.
             let w = sub(p, c);
             let b = dot(d, w);
@@ -84,7 +88,10 @@ pub(crate) fn meet(u: Curve, v: Curve, near: Vec2) -> Option<Vec2> {
             let h = js_max(r1 * r1 - a * a, 0.0).sqrt();
             let e = Vec2::new((c2.x - c1.x) / k, (c2.y - c1.y) / k);
             let m = Vec2::new(c1.x + e.x * a, c1.y + e.y * a);
-            Some(nearer(Vec2::new(m.x - e.y * h, m.y + e.x * h), Vec2::new(m.x + e.y * h, m.y - e.x * h)))
+            Some(nearer(
+                Vec2::new(m.x - e.y * h, m.y + e.x * h),
+                Vec2::new(m.x + e.y * h, m.y - e.x * h),
+            ))
         }
     }
 }
@@ -127,10 +134,17 @@ pub(crate) fn shifted(
     let own = curve_of(a, b, own_bulge).ok_or(NO_EDGE)?;
     // The moved edge's curve: the line moved along the normal, the circle grown away from (or towards) its centre.
     let moved = match own {
-        Curve::Line { p, dir } => Curve::Line { p: Vec2::new(p.x + normal.x * d, p.y + normal.y * d), dir },
+        Curve::Line { p, dir } => Curve::Line {
+            p: Vec2::new(p.x + normal.x * d, p.y + normal.y * d),
+            dir,
+        },
         Curve::Circle { c, r } => {
             let mid = crate::geom::bulge::segment_mid(a, b, own_bulge);
-            let away = if dot(normal, sub(mid, c)) > 0.0 { 1.0 } else { -1.0 };
+            let away = if dot(normal, sub(mid, c)) > 0.0 {
+                1.0
+            } else {
+                -1.0
+            };
             let r2 = r + away * d;
             if !(r2 > 0.0) {
                 return Err(PASSED);
@@ -165,7 +179,11 @@ pub(crate) fn shifted(
             continue;
         };
         let nb_bulge = bulge_at(bulges, segment);
-        let (s0, s1) = if before { (pts[far], at) } else { (at, pts[far]) };
+        let (s0, s1) = if before {
+            (pts[far], at)
+        } else {
+            (at, pts[far])
+        };
         let nb = curve_of(s0, s1, nb_bulge).ok_or(PASSED)?;
         if let (Curve::Line { dir: e, .. }, Curve::Line { dir: f, .. }) = (moved, nb)
             && cross(e, f).abs() <= PARALLEL_SINE
@@ -183,7 +201,11 @@ pub(crate) fn shifted(
             }
             Curve::Circle { c, .. } => {
                 let old = bulge_arc(s0, s1, nb_bulge).map_or(0.0, |a| a.sweep);
-                let (p, q) = if before { (pts[far], to) } else { (to, pts[far]) };
+                let (p, q) = if before {
+                    (pts[far], to)
+                } else {
+                    (to, pts[far])
+                };
                 let sweep = sweep_to(c, p, q, old).ok_or(PASSED)?;
                 new_bulges[segment] = bulge_of_sweep(sweep);
             }
@@ -203,7 +225,10 @@ pub(crate) fn shifted(
             new_bulges[i] = bulge_of_sweep(sweep);
         }
     }
-    Ok(Moved { pts: new_pts, bulges: new_bulges })
+    Ok(Moved {
+        pts: new_pts,
+        bulges: new_bulges,
+    })
 }
 
 /// Whether the edge or a neighbour of it is an arc: the case this module takes.
@@ -211,7 +236,10 @@ pub(crate) fn involves_arcs(n: usize, bulges: Option<&[f64]>, closed: bool, edge
     let j = (edge + 1) % n;
     let before = (closed || edge > 0).then(|| (edge + n - 1) % n);
     let after = (closed || j + 1 < n).then_some(j);
-    [Some(edge), before, after].into_iter().flatten().any(|k| bulge_at(bulges, k) != 0.0)
+    [Some(edge), before, after]
+        .into_iter()
+        .flatten()
+        .any(|k| bulge_at(bulges, k) != 0.0)
 }
 
 /// The edge's length: its chord's, else its arc's.
@@ -245,7 +273,14 @@ pub(crate) fn for_area(
     let (mut lo, mut flo) = (0.0, f0);
     let mut hi = None;
     for k in 0..64 {
-        let d = dir * guess * f64::from(1u32 << k.min(31)) * if k > 31 { f64::from(1u32 << (k - 31)) } else { 1.0 };
+        let d = dir
+            * guess
+            * f64::from(1u32 << k.min(31))
+            * if k > 31 {
+                f64::from(1u32 << (k - 31))
+            } else {
+                1.0
+            };
         let f = area(d)? - target;
         if f == 0.0 {
             return Ok(d);
@@ -276,4 +311,3 @@ pub(crate) fn for_area(
     }
     Ok(if flo.abs() <= fhi.abs() { lo } else { hi })
 }
-

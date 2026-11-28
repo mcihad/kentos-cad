@@ -13,13 +13,13 @@
 use iced::widget::tooltip::Position;
 use iced::widget::{Column, button, container, row, text};
 use iced::{Element, Task};
-use kentos_commands::{BlockId, Vec2, BlocksEdit, BlockEditOperation, CommandResult, Entity};
-use kentos_native_application::{ExecutionContext, blocks_edit};
+use kentos_commands::{BlockEditOperation, BlockId, BlocksEdit, CommandResult, Entity, Vec2};
 use kentos_domain::Slot;
 use kentos_interaction::blocks as actions;
+use kentos_native_application::{ExecutionContext, blocks_edit};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::style;
-use kentos_ui::widget::{Dialog as Frame, Select, select::Choice, Tip, tip};
+use kentos_ui::widget::{Dialog as Frame, Select, Tip, select::Choice, tip};
 
 use crate::app::{App, Dialog, Message};
 use crate::attribute_table::{self as table, COLUMNS, Extent, Row};
@@ -265,8 +265,12 @@ impl App {
             session: doc.session,
             revision: model.revision().to_string(),
             rename_nested: false,
-            nested_uses: model.blocks().iter().flat_map(|b| &b.entities)
-                .filter(|e| matches!(e, Entity::Insert(i) if i.block == id)).count(),
+            nested_uses: model
+                .blocks()
+                .iter()
+                .flat_map(|b| &b.entities)
+                .filter(|e| matches!(e, Entity::Insert(i) if i.block == id))
+                .count(),
             preview: None,
             name: block.name.clone(),
             base: block.base,
@@ -326,24 +330,40 @@ impl App {
                         let mut names = Vec::new();
                         let mut count = 0;
                         for next in &output.changed {
-                            if next.id == w.block { continue; }
-                            let Some(old) = doc.model.block(next.id) else { continue; };
-                            count += old.entities.iter().zip(&next.entities).filter(|(a,b)| a != b).count();
+                            if next.id == w.block {
+                                continue;
+                            }
+                            let Some(old) = doc.model.block(next.id) else {
+                                continue;
+                            };
+                            count += old
+                                .entities
+                                .iter()
+                                .zip(&next.entities)
+                                .filter(|(a, b)| a != b)
+                                .count();
                             names.push(next.name.clone());
                         }
                         w.preview = Some(if count == 0 {
                             "Tanım içi kayıtlarda taşınacak eski etiket yok; ek değer değiştirilmez.".into()
                         } else {
-                            format!("{count} tanım içi yerleştirmenin etiketi taşınacak: {}. Farklı değerler ve özel yazı konumları korunur. Kayıt tek geri alma adımıdır.", names.join(", "))
+                            format!(
+                                "{count} tanım içi yerleştirmenin etiketi taşınacak: {}. Farklı değerler ve özel yazı konumları korunur. Kayıt tek geri alma adımıdır.",
+                                names.join(", ")
+                            )
                         });
                     } else {
-                        w.preview = Some(format!("{} tanım içi kullanım kapsam dışında. Bu kayıtlardaki eski etiket taşınmaz; yeni etiket varsayılanını gösterebilir. Mevcut değerleri taşımak için kapsamı genişletin.", w.nested_uses));
+                        w.preview = Some(format!(
+                            "{} tanım içi kullanım kapsam dışında. Bu kayıtlardaki eski etiket taşınmaz; yeni etiket varsayılanını gösterebilir. Mevcut değerleri taşımak için kapsamı genişletin.",
+                            w.nested_uses
+                        ));
                     }
                 }
                 Ok(())
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error }
-                | CommandResult::NeedsInput { error } => Err(error.message),
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => Err(error.message),
             _ => Err("Etiket taşıma planı hazırlanamadı; yeniden deneyin.".into()),
         };
     }
@@ -353,7 +373,10 @@ impl App {
             return Task::none();
         };
         let task = match event {
-            Event::Scope(nested) => { w.rename_nested = nested; Task::none() }
+            Event::Scope(nested) => {
+                w.rename_nested = nested;
+                Task::none()
+            }
             Event::Cell(row, col, text) => {
                 w.set(row, col, text);
                 Task::none()
@@ -514,19 +537,31 @@ impl App {
                 )]
             },
         );
-        let mut body = Column::new()
-            .spacing(12)
-            .push(summary);
+        let mut body = Column::new().spacing(12).push(summary);
         if w.nested_uses > 0 {
-            body = body.push(row![
-                kentos_ui::label::caption(SCOPE).width(170),
-                Select::new([Choice::new(ROOTS), Choice::new(NESTED)], Some(usize::from(w.rename_nested)),
-                    |i| msg(Event::Scope(i == 1))),
-            ].spacing(12).align_y(iced::Center));
+            body = body.push(
+                row![
+                    kentos_ui::label::caption(SCOPE).width(170),
+                    Select::new(
+                        [Choice::new(ROOTS), Choice::new(NESTED)],
+                        Some(usize::from(w.rename_nested)),
+                        |i| msg(Event::Scope(i == 1))
+                    ),
+                ]
+                .spacing(12)
+                .align_y(iced::Center),
+            );
         }
         body = body.push(sheet).push(options_view(w));
         if let Some(preview) = &w.preview {
-            body = body.push(words::text_line(if w.rename_nested {Kind::Info} else {Kind::Warn}, preview.clone()));
+            body = body.push(words::text_line(
+                if w.rename_nested {
+                    Kind::Info
+                } else {
+                    Kind::Warn
+                },
+                preview.clone(),
+            ));
         }
         if let Err(why) = &w.answer {
             body = body.push(words::text_line(Kind::Error, why.clone()));
@@ -534,7 +569,9 @@ impl App {
         // Scope feedback appears while typing. Keep the editor's table and actions stationary.
         let frame = Frame::new(ATTRIBUTES_TITLE);
         let frame = if w.nested_uses > 0 {
-            frame.scroll_fill(container(body).width(iced::Fill)).max_height(420.0)
+            frame
+                .scroll_fill(container(body).width(iced::Fill))
+                .max_height(420.0)
         } else {
             frame.scroll(container(body).width(iced::Fill))
         };
@@ -566,9 +603,13 @@ impl App {
         }
         let missing = |what: String| format!("“{ATTRIBUTES_TITLE}” penceresinde {what} yok");
         Ok(match control {
-            Control::Pick(SCOPE, value) if w.nested_uses > 0 => Some(msg(Event::Scope(match value {
-                ROOTS => false, NESTED => true, _ => return Err(missing(control.to_string())),
-            }))),
+            Control::Pick(SCOPE, value) if w.nested_uses > 0 => {
+                Some(msg(Event::Scope(match value {
+                    ROOTS => false,
+                    NESTED => true,
+                    _ => return Err(missing(control.to_string())),
+                })))
+            }
             Control::Fill(label, t) => {
                 let found = numbered(label).and_then(|(r, rest)| {
                     let col = COLUMNS
@@ -695,7 +736,8 @@ mod tests {
     fn parametric() -> (App, BlockId) {
         let snapshot = kentos_kcad::decode(include_bytes!(
             "../../../../fixtures/interaction/v1/block-parametric-component.kcad"
-        )).unwrap();
+        ))
+        .unwrap();
         let id = snapshot.blocks[0].id;
         let (mut app, _) = App::boot(None);
         let doc = Document::from_v2(snapshot, None).unwrap();
@@ -705,62 +747,89 @@ mod tests {
 
     #[test]
     fn nested_scope_is_explicit_previews_actual_changes_and_cancel_is_readonly() {
-        let (mut app,id) = parametric();
+        let (mut app, id) = parametric();
         let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
         app.open_block_attributes(id);
         assert!(!app.block_attributes.as_ref().unwrap().rename_nested);
-        send(&mut app,Event::Cell(0,super::table::TAG,"ODA".into()));
-        assert!(app.block_attributes.as_ref().unwrap().preview.as_ref().unwrap().contains("kapsam dışında"));
-        let event = app.dialog_control(Control::Pick(super::SCOPE,super::NESTED)).unwrap().unwrap();
+        send(&mut app, Event::Cell(0, super::table::TAG, "ODA".into()));
+        assert!(
+            app.block_attributes
+                .as_ref()
+                .unwrap()
+                .preview
+                .as_ref()
+                .unwrap()
+                .contains("kapsam dışında")
+        );
+        let event = app
+            .dialog_control(Control::Pick(super::SCOPE, super::NESTED))
+            .unwrap()
+            .unwrap();
         let _ = app.update(event);
         let w = app.block_attributes.as_ref().unwrap();
         assert!(w.rename_nested);
         assert!(w.preview.as_ref().unwrap().contains("1 tanım içi"));
         assert!(w.preview.as_ref().unwrap().contains("İç içe kapılı giriş"));
-        assert_eq!(w.input().rename_nested,Some(true));
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
-        send(&mut app,Event::Close);
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+        assert_eq!(w.input().rename_nested, Some(true));
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        send(&mut app, Event::Close);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
         app.open_block_attributes(id);
         assert!(!app.block_attributes.as_ref().unwrap().rename_nested);
     }
 
     #[test]
     fn nested_save_preserves_distinct_values_with_one_undo_and_stale_revision_refuses() {
-        let (mut app,id) = parametric();
+        let (mut app, id) = parametric();
         let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
         app.open_block_attributes(id);
-        send(&mut app,Event::Scope(true));
-        send(&mut app,Event::Cell(0,super::table::TAG,"O".into()));
-        send(&mut app,Event::Cell(0,super::table::TAG,"ODA".into()));
-        send(&mut app,Event::Save);
+        send(&mut app, Event::Scope(true));
+        send(&mut app, Event::Cell(0, super::table::TAG, "O".into()));
+        send(&mut app, Event::Cell(0, super::table::TAG, "ODA".into()));
+        send(&mut app, Event::Save);
         assert!(app.block_attributes.is_none());
-        let model=&mut app.document.as_mut().unwrap().model;
-        let after=model.to_snapshot_v2();
-        assert_eq!(after.entities[0].base().attrs["ODA"],"K-1");
-        assert_eq!(after.entities[1].base().attrs["ODA"],"K-2");
-        assert_eq!(after.blocks[1].entities[0].base().attrs["ODA"],"İÇ-1");
-        model.undo();assert_eq!(model.to_snapshot_v2(),before);
-        model.redo();assert_eq!(model.to_snapshot_v2(),after);
+        let model = &mut app.document.as_mut().unwrap().model;
+        let after = model.to_snapshot_v2();
+        assert_eq!(after.entities[0].base().attrs["ODA"], "K-1");
+        assert_eq!(after.entities[1].base().attrs["ODA"], "K-2");
+        assert_eq!(after.blocks[1].entities[0].base().attrs["ODA"], "İÇ-1");
+        model.undo();
+        assert_eq!(model.to_snapshot_v2(), before);
+        model.redo();
+        assert_eq!(model.to_snapshot_v2(), after);
         app.open_block_attributes(id);
-        send(&mut app,Event::Scope(true));
-        send(&mut app,Event::Cell(0,super::table::TAG,"KOD".into()));
+        send(&mut app, Event::Scope(true));
+        send(&mut app, Event::Cell(0, super::table::TAG, "KOD".into()));
         app.document.as_mut().unwrap().model.undo();
-        let current=app.document.as_ref().unwrap().model.to_snapshot_v2();
-        send(&mut app,Event::Save);
-        assert!(matches!(answer(&app),Some(Err(_))));
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),current);
+        let current = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        send(&mut app, Event::Save);
+        assert!(matches!(answer(&app), Some(Err(_))));
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            current
+        );
     }
 
     #[test]
     fn nested_editor_cannot_write_to_another_open_document_session() {
-        let (mut app,id)=parametric();app.open_block_attributes(id);
-        send(&mut app,Event::Cell(0,super::table::TAG,"ODA".into()));
-        let doc=app.document.as_mut().unwrap();doc.session+=1;
-        let before=doc.model.to_snapshot_v2();
-        send(&mut app,Event::Save);
+        let (mut app, id) = parametric();
+        app.open_block_attributes(id);
+        send(&mut app, Event::Cell(0, super::table::TAG, "ODA".into()));
+        let doc = app.document.as_mut().unwrap();
+        doc.session += 1;
+        let before = doc.model.to_snapshot_v2();
+        send(&mut app, Event::Save);
         assert!(matches!(answer(&app),Some(Err(why)) if why.contains("Çizim değişti")));
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
     }
 
     #[test]

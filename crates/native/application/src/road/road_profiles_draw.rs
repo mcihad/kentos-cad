@@ -9,8 +9,8 @@
 //! `fixtures/commands/v1/road.profiles.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, ProfileAt, ProfileBands,
-    ProfilesDraw, ProfilesDrawn, TextAlign, TextFace, Vec2,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject,
+    ProfileAt, ProfileBands, ProfilesDraw, ProfilesDrawn, TextAlign, TextFace, Vec2,
 };
 use kentos_road::alignment::km_text;
 use kentos_road::profile::{Piece, VCurve};
@@ -30,8 +30,14 @@ pub const BANDS: [&str; 5] = ["Km", "Siyah kot", "Kırmızı kot", "Fark", "Eği
 /// KGM's bands (docs/adr/0980; KGM 2019 technical specification: "Profiller alt kısımda sırası ile Kırmızı Kot, Siyah
 /// Kot, Kilometre, Yatay Geometri, Düşey Geometri ve Dever Bandı"), top down, and each one's depth in text heights:
 /// the values of the first three are written up the band, as on KGM's and the schools' sheets.
-pub const KGM_BANDS: [(&str, f64); 6] =
-    [("Kırmızı Kot", 7.0), ("Siyah Kot", 7.0), ("Kilometre", 9.0), ("Yatay Geometri", 6.0), ("Düşey Geometri", 7.0), ("Dever", 7.0)];
+pub const KGM_BANDS: [(&str, f64); 6] = [
+    ("Kırmızı Kot", 7.0),
+    ("Siyah Kot", 7.0),
+    ("Kilometre", 9.0),
+    ("Yatay Geometri", 6.0),
+    ("Düşey Geometri", 7.0),
+    ("Dever", 7.0),
+];
 const RED: &str = "#d62828";
 /// KGM's 2024 sheets mark the cut unsuitable for fill (DKY) in green.
 const GREEN: &str = "#2a9d3a";
@@ -61,7 +67,11 @@ struct Checked {
     warnings: Vec<CommandWarning>,
     bands: ProfileBands,
     /// The Dever band's schedule (docs/adr/0980): its name, break points and normal slopes.
-    dever: Option<(String, kentos_road::superelevation::Schedule, kentos_road::superelevation::Crossfall)>,
+    dever: Option<(
+        String,
+        kentos_road::superelevation::Schedule,
+        kentos_road::superelevation::Crossfall,
+    )>,
     /// KGM's earthwork rows under the frame (docs/adr/0995).
     earthwork: Option<crate::road_earthwork_bands::Earthwork>,
     /// The view's parts (docs/adr/0990): one with the datum without a `span`, split with one.
@@ -82,16 +92,26 @@ const TICKS: u64 = 1000;
 
 /// The terrain's points inside the range `s0`–`s1`, and its ends: station, height (none off the surface). The walk
 /// tells `told` how far it has come (`kentos_road::profile::terrain_told`); none when `told` stops it.
-fn terrain(built: &Built, surface: &Surface, s0: f64, s1: f64, told: &dyn Fn(u64, u64) -> bool) -> Option<Vec<(f64, Option<f64>)>> {
+fn terrain(
+    built: &Built,
+    surface: &Surface,
+    s0: f64,
+    s1: f64,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Option<Vec<(f64, Option<f64>)>> {
     let core = &built.alignment.core;
-    let ends: Vec<f64> =
-        std::iter::once(0.0).chain(core.elements.iter().map(|e| e.station)).chain(std::iter::once(core.length)).collect();
+    let ends: Vec<f64> = std::iter::once(0.0)
+        .chain(core.elements.iter().map(|e| e.station))
+        .chain(std::iter::once(core.length))
+        .collect();
     let black = |s: f64| core.at(s).and_then(|p| surface.height(p.x, p.y).z);
     let mut out = vec![(s0, black(s0))];
     out.extend(
         kentos_road::profile::terrain_told(surface, core, told)?
             .into_iter()
-            .filter(|p| (p.crossing || ends.contains(&p.station)) && p.station > s0 && p.station < s1)
+            .filter(|p| {
+                (p.crossing || ends.contains(&p.station)) && p.station > s0 && p.station < s1
+            })
             .map(|p| (p.station, p.z)),
     );
     out.push((s1, black(s1)));
@@ -101,11 +121,22 @@ fn terrain(built: &Built, surface: &Surface, s0: f64, s1: f64, told: &dyn Fn(u64
 /// The stations whose red elevations bound the design line between `s0` and `s1`: its pieces' ends and its curves'
 /// highest or lowest points there, and the range's ends.
 fn design_stations(built: &Built, s0: f64, s1: f64) -> Vec<f64> {
-    let mut out: Vec<f64> = built.vertical.pieces.iter().flat_map(|p| {
-        let (a, b) = p.range();
-        [a, b]
-    }).collect();
-    out.extend(built.vertical.curves.iter().filter_map(|c| c.extreme.map(|e| e[0])));
+    let mut out: Vec<f64> = built
+        .vertical
+        .pieces
+        .iter()
+        .flat_map(|p| {
+            let (a, b) = p.range();
+            [a, b]
+        })
+        .collect();
+    out.extend(
+        built
+            .vertical
+            .curves
+            .iter()
+            .filter_map(|c| c.extreme.map(|e| e[0])),
+    );
     out.retain(|s| *s >= s0 - 1e-9 && *s <= s1 + 1e-9);
     out.extend([s0, s1]);
     out
@@ -113,7 +144,11 @@ fn design_stations(built: &Built, s0: f64, s1: f64) -> Vec<f64> {
 
 /// Checks `input`, its terrain walked once telling `told` the first half of the view's progress (docs/adr/4860);
 /// `told` answering true stops it there, cancelled.
-fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
+fn check(
+    doc: &kentos_domain::Document,
+    input: &ProfilesDraw,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Checked, Stop> {
     common::road_project(doc)?;
     let own = common::profiles(doc);
     let (_, def) = common::find(own, &input.profile, "profile")?;
@@ -122,10 +157,18 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64,
     let exaggeration = input.exaggeration.unwrap_or(10.0);
     let positive = |v: f64| v.is_finite() && v > 0.0;
     if !positive(every) {
-        return Err(fail(codes::INVALID_LABEL, "Km aralığı (every) 0'dan büyük olmalı.".into(), "every"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            "Km aralığı (every) 0'dan büyük olmalı.".into(),
+            "every",
+        ));
     }
     if !positive(height) {
-        return Err(fail(codes::INVALID_LABEL, "Yazı yüksekliği (height) 0'dan büyük olmalı.".into(), "height"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            "Yazı yüksekliği (height) 0'dan büyük olmalı.".into(),
+            "height",
+        ));
     }
     if !positive(exaggeration) {
         return Err(fail(
@@ -140,13 +183,25 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64,
     let s0 = input.from.unwrap_or(p0);
     let s1 = input.to.unwrap_or(p1);
     if !s0.is_finite() || s0 < p0 - 1e-9 || s0 > p1 + 1e-9 {
-        return Err(fail(codes::INVALID_LABEL, format!("{} m boykesitin üstünde değil: {span}.", num(s0)), "from"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            format!("{} m boykesitin üstünde değil: {span}.", num(s0)),
+            "from",
+        ));
     }
     if !s1.is_finite() || s1 < p0 - 1e-9 || s1 > p1 + 1e-9 {
-        return Err(fail(codes::INVALID_LABEL, format!("{} m boykesitin üstünde değil: {span}.", num(s1)), "to"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            format!("{} m boykesitin üstünde değil: {span}.", num(s1)),
+            "to",
+        ));
     }
     if s1 <= s0 {
-        return Err(fail(codes::INVALID_LABEL, "Aralığın sonu başından sonra olmalı.".into(), "to"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            "Aralığın sonu başından sonra olmalı.".into(),
+            "to",
+        ));
     }
     let (s0, s1) = (s0.clamp(p0, p1), s1.clamp(p0, p1));
     if (s1 - s0) / every > MOST as f64 {
@@ -166,22 +221,33 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64,
         None => None,
     };
     // The terrain's points in the range, walked once.
-    let first_half = |done: u64, all: u64| told((done * TICKS).checked_div(all).unwrap_or(0), 2 * TICKS);
+    let first_half =
+        |done: u64, all: u64| told((done * TICKS).checked_div(all).unwrap_or(0), 2 * TICKS);
     let ground = match &surface {
         Some(s) => Some(terrain(&built, s, s0, s1, &first_half).ok_or(Stop::Cancelled)?),
         None => None,
     };
     // The elevations shown: the design line's bounds and the terrain's points in the range.
-    let mut zs: Vec<f64> =
-        design_stations(&built, s0, s1).into_iter().filter_map(|s| built.vertical.at(s).map(|r| r.0)).collect();
+    let mut zs: Vec<f64> = design_stations(&built, s0, s1)
+        .into_iter()
+        .filter_map(|s| built.vertical.at(s).map(|r| r.0))
+        .collect();
     if let Some(g) = &ground {
         zs.extend(g.iter().filter_map(|(_, z)| *z));
     }
-    let (lo, hi) = zs.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| (lo.min(*z), hi.max(*z)));
+    let (lo, hi) = zs
+        .iter()
+        .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| {
+            (lo.min(*z), hi.max(*z))
+        });
     let span = match (input.span, input.datum) {
         (None, _) => None,
         (Some(v), _) if !v.is_finite() || v <= 0.0 => {
-            return Err(fail(codes::INVALID_LABEL, "Kot aralığı (span) 0'dan büyük olmalı.".into(), "span"));
+            return Err(fail(
+                codes::INVALID_LABEL,
+                "Kot aralığı (span) 0'dan büyük olmalı.".into(),
+                "span",
+            ));
         }
         (Some(_), Some(_)) => {
             return Err(fail(
@@ -194,7 +260,11 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64,
     };
     let datum = match input.datum {
         Some(d) if !d.is_finite() => {
-            return Err(fail(codes::INVALID_LABEL, "Kıyas kotu (datum) sonlu bir sayı olmalı.".into(), "datum"));
+            return Err(fail(
+                codes::INVALID_LABEL,
+                "Kıyas kotu (datum) sonlu bir sayı olmalı.".into(),
+                "datum",
+            ));
         }
         Some(d) if d > lo + 1e-9 => {
             return Err(fail(
@@ -210,13 +280,24 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64,
     let mut datum = datum;
     // Docs/adr/0990: a fixed span splits the view where the lines would leave it.
     let parts = match span {
-        None => vec![crate::road_profile_splits::Part { from: s0, to: s1, datum }],
+        None => vec![crate::road_profile_splits::Part {
+            from: s0,
+            to: s1,
+            datum,
+        }],
         Some(span) => {
             let points = ground.clone().unwrap_or_default();
             let lines = crate::road_profile_splits::Lines {
                 vertical: &built.vertical,
-                terrain: points.iter().filter_map(|(s, z)| z.map(|z| (*s, z))).collect(),
-                gaps: points.iter().filter(|(_, z)| z.is_none()).map(|(s, _)| *s).collect(),
+                terrain: points
+                    .iter()
+                    .filter_map(|(s, z)| z.map(|z| (*s, z)))
+                    .collect(),
+                gaps: points
+                    .iter()
+                    .filter(|(_, z)| z.is_none())
+                    .map(|(s, _)| *s)
+                    .collect(),
             };
             let parts = crate::road_profile_splits::split(&lines, s0, s1, span).map_err(|(a, b)| {
                 fail(
@@ -263,7 +344,11 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64,
             ));
         }
         (Some(name), ProfileBands::Kgm) => {
-            let (_, sdef) = crate::road_superelevations::find(doc.road_superelevations(), name, "superelevation")?;
+            let (_, sdef) = crate::road_superelevations::find(
+                doc.road_superelevations(),
+                name,
+                "superelevation",
+            )?;
             if sdef.alignment != def.alignment {
                 return Err(fail(
                     codes::INVALID_LABEL,
@@ -274,7 +359,11 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64,
             let on = crate::road_superelevations::alignment_of(doc, sdef)?;
             let (schedule, _) = crate::road_superelevations::schedule(sdef, &on)?;
             layer_warnings.extend(crate::road_superelevations::stale_warning(doc, sdef));
-            Some((sdef.name.clone(), schedule, crate::road_superelevations::normal(sdef)))
+            Some((
+                sdef.name.clone(),
+                schedule,
+                crate::road_superelevations::normal(sdef),
+            ))
         }
     };
     // KGM's slope and platform rows above the frame (docs/adr/0989).
@@ -320,7 +409,10 @@ fn check(doc: &kentos_domain::Document, input: &ProfilesDraw, told: &dyn Fn(u64,
             if on.as_deref() != Some(def.alignment.as_str()) {
                 return Err(fail(
                     codes::INVALID_LABEL,
-                    format!("“{}” Brüknerinin kübajı boykesitin aksında değil.", hdef.name),
+                    format!(
+                        "“{}” Brüknerinin kübajı boykesitin aksında değil.",
+                        hdef.name
+                    ),
                     "haul",
                 ));
             }
@@ -404,7 +496,12 @@ fn object(geometry: EntityGeometry, color: Option<&str>, weight: Option<f64>) ->
     }
 }
 
-pub(crate) fn line(a: [f64; 2], b: [f64; 2], color: Option<&str>, weight: Option<f64>) -> NewObject {
+pub(crate) fn line(
+    a: [f64; 2],
+    b: [f64; 2],
+    color: Option<&str>,
+    weight: Option<f64>,
+) -> NewObject {
     object(
         EntityGeometry::Line {
             a: Vec2 { x: a[0], y: a[1] },
@@ -433,12 +530,25 @@ fn path(pts: &[[f64; 2]], closed: bool, color: Option<&str>, weight: Option<f64>
     )
 }
 
-fn text(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Option<&str>) -> NewObject {
+fn text(
+    at: [f64; 2],
+    words: String,
+    height: f64,
+    align: TextAlign,
+    color: Option<&str>,
+) -> NewObject {
     turned(at, words, height, align, color, 0.0)
 }
 
 /// A text turned `rotation` degrees counterclockwise (up the band: 90; the contract's unit).
-pub(crate) fn turned(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Option<&str>, rotation: f64) -> NewObject {
+pub(crate) fn turned(
+    at: [f64; 2],
+    words: String,
+    height: f64,
+    align: TextAlign,
+    color: Option<&str>,
+    rotation: f64,
+) -> NewObject {
     object(
         EntityGeometry::Text {
             layout: None,
@@ -492,7 +602,12 @@ pub fn terrain_runs(points: &[(f64, Option<f64>)], on: impl Fn(f64) -> bool) -> 
     runs
 }
 
-fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at: [f64; 2]) -> Vec<NewObject> {
+fn objects(
+    doc: &kentos_domain::Document,
+    c: &Checked,
+    columns: &[ProfileAt],
+    at: [f64; 2],
+) -> Vec<NewObject> {
     let mm = doc.settings().plot_scale / 1000.0;
     let h = c.height * mm;
     let row = 2.4 * h;
@@ -502,13 +617,23 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     // Docs/adr/0990: each part of a split view has its own datum; `y` the first's, `yi` part `i`'s.
     let span = c.top - c.datum;
     let yi = |i: usize, z: f64| at[1] + (z - c.parts[i].datum) * c.exaggeration;
-    let part = |s: f64| c.parts.iter().position(|p| s <= p.to + 1e-9).unwrap_or(c.parts.len() - 1);
+    let part = |s: f64| {
+        c.parts
+            .iter()
+            .position(|p| s <= p.to + 1e-9)
+            .unwrap_or(c.parts.len() - 1)
+    };
     let y = |z: f64| yi(0, z);
     let ys = |s: f64, z: f64| yi(part(s), z);
     let mut out = Vec::new();
     // The frame and the grid.
     let (x0, x1, y0, y1) = (x(s0), x(s1), y(c.datum), y(c.top));
-    out.push(path(&[[x0, y0], [x1, y0], [x1, y1], [x0, y1]], true, None, Some(0.35)));
+    out.push(path(
+        &[[x0, y0], [x1, y0], [x1, y1], [x0, y1]],
+        true,
+        None,
+        Some(0.35),
+    ));
     let g = grid_step(c.datum, c.top);
     let heights = |datum: f64| {
         let mut k = (datum / g).ceil();
@@ -526,7 +651,13 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             out.push(line([xa, y0], [xa, y1], None, Some(0.35)));
             let before = c.parts[i - 1].datum;
             for v in heights(before) {
-                out.push(masked(text([xa - 0.5 * h, y0 + (v - before) * c.exaggeration], format!("{v:.2}"), h, TextAlign::MiddleRight, None)));
+                out.push(masked(text(
+                    [xa - 0.5 * h, y0 + (v - before) * c.exaggeration],
+                    format!("{v:.2}"),
+                    h,
+                    TextAlign::MiddleRight,
+                    None,
+                )));
             }
         }
         for v in heights(p.datum) {
@@ -535,10 +666,22 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
                 out.push(line([xa, yv], [xb, yv], None, Some(0.13)));
             }
             if i == 0 {
-                out.push(text([x0 - h, yv], format!("{v:.2}"), h, TextAlign::MiddleRight, None));
+                out.push(text(
+                    [x0 - h, yv],
+                    format!("{v:.2}"),
+                    h,
+                    TextAlign::MiddleRight,
+                    None,
+                ));
             } else {
                 // Masked: the grid's lines run through the heights at a split (Y84's first picture).
-                out.push(masked(text([xa + 0.5 * h, yv], format!("{v:.2}"), h, TextAlign::MiddleLeft, None)));
+                out.push(masked(text(
+                    [xa + 0.5 * h, yv],
+                    format!("{v:.2}"),
+                    h,
+                    TextAlign::MiddleLeft,
+                    None,
+                )));
             }
         }
     }
@@ -547,7 +690,13 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     if let Some(last) = c.parts.last() {
         let i = c.parts.len() - 1;
         for v in heights(last.datum) {
-            out.push(text([x1 + h, yi(i, v)], format!("{v:.2}"), h, TextAlign::MiddleLeft, None));
+            out.push(text(
+                [x1 + h, yi(i, v)],
+                format!("{v:.2}"),
+                h,
+                TextAlign::MiddleLeft,
+                None,
+            ));
         }
     }
     // A line in station and elevation drawn in each part it crosses.
@@ -556,7 +705,11 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             .iter()
             .enumerate()
             .filter_map(|(i, p)| {
-                let run = if c.split { crate::road_profile_splits::cut(pts, p.from, p.to)? } else { pts.to_vec() };
+                let run = if c.split {
+                    crate::road_profile_splits::cut(pts, p.from, p.to)?
+                } else {
+                    pts.to_vec()
+                };
                 Some(run.iter().map(|q| [x(q[0]), yi(i, q[1])]).collect())
             })
             .collect()
@@ -564,7 +717,10 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     // The terrain.
     if let (Some(surface), Some(ground)) = (&c.surface, &c.ground) {
         let core = &c.built.alignment.core;
-        let on = |s: f64| core.at(s).is_some_and(|p| surface.height(p.x, p.y).z.is_some());
+        let on = |s: f64| {
+            core.at(s)
+                .is_some_and(|p| surface.height(p.x, p.y).z.is_some())
+        };
         for run in terrain_runs(ground, on) {
             for pts in pieces(&run) {
                 out.push(path(&pts, false, None, Some(0.25)));
@@ -579,7 +735,11 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
             continue;
         }
         let (a, b) = (a.max(s0), b.min(s1));
-        let n = if matches!(p, Piece::Grade { .. }) { 1 } else { 16 };
+        let n = if matches!(p, Piece::Grade { .. }) {
+            1
+        } else {
+            16
+        };
         for i in 0..=n {
             let s = a + (b - a) * i as f64 / n as f64;
             let z = p.at(s).0;
@@ -591,13 +751,24 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     for pts in pieces(&pts) {
         out.push(path(&pts, false, Some(RED), Some(0.5)));
     }
-    for cu in c.built.vertical.curves.iter().filter(|cu| cu.start[0] < s1 - 1e-9 && cu.end[0] > s0 + 1e-9) {
+    for cu in c
+        .built
+        .vertical
+        .curves
+        .iter()
+        .filter(|cu| cu.start[0] < s1 - 1e-9 && cu.end[0] > s0 + 1e-9)
+    {
         let size = match cu.curve {
-            VCurve::Asymmetric { length_in, length_out } => format!("L1={length_in:.2} L2={length_out:.2}"),
+            VCurve::Asymmetric {
+                length_in,
+                length_out,
+            } => format!("L1={length_in:.2} L2={length_out:.2}"),
             VCurve::Circle { radius } => format!("R={radius:.2} L={:.2}", cu.end[0] - cu.start[0]),
             _ => format!("L={:.2}", cu.end[0] - cu.start[0]),
         };
-        let top = cu.start[1].max(cu.end[1]).max(cu.extreme.map_or(f64::NEG_INFINITY, |e| e[1]));
+        let top = cu.start[1]
+            .max(cu.end[1])
+            .max(cu.extreme.map_or(f64::NEG_INFINITY, |e| e[1]));
         let mid = 0.5 * (cu.start[0].max(s0) + cu.end[0].min(s1));
         out.push(text(
             [x(mid), ys(mid, top) + 2.0 * h],
@@ -639,7 +810,11 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
                 EntityGeometry::Hatch {
                     ring: flag.iter().map(|q| Vec2 { x: q[0], y: q[1] }).collect(),
                     holes: None,
-                    pattern: kentos_commands::HatchPattern::user(kentos_commands::HatchPatternType::Solid, 0.0, 1.0),
+                    pattern: kentos_commands::HatchPattern::user(
+                        kentos_commands::HatchPatternType::Solid,
+                        0.0,
+                        1.0,
+                    ),
                     assoc: None,
                     boundary: None,
                     annotative: None,
@@ -648,7 +823,11 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
                 None,
             ));
             let km = km_text(c.built.alignment.km(s), 2);
-            let (over, under) = if down { (near_y, far_y) } else { (far_y, near_y) };
+            let (over, under) = if down {
+                (near_y, far_y)
+            } else {
+                (far_y, near_y)
+            };
             let side = |bottom: bool| match (start, bottom) {
                 (true, true) => TextAlign::BottomLeft,
                 (true, false) => TextAlign::TopLeft,
@@ -656,40 +835,97 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
                 (false, false) => TextAlign::TopRight,
             };
             let tx = foot[0] + dir * 0.5 * h;
-            out.push(masked(text([tx, over + 0.3 * h], words.to_owned(), h, side(true), None)));
-            out.push(masked(text([tx, under - 0.3 * h], format!("KM : {km}"), h, side(false), None)));
+            out.push(masked(text(
+                [tx, over + 0.3 * h],
+                words.to_owned(),
+                h,
+                side(true),
+                None,
+            )));
+            out.push(masked(text(
+                [tx, under - 0.3 * h],
+                format!("KM : {km}"),
+                h,
+                side(false),
+                None,
+            )));
             // Beside the point, past the leader's side away from the frame's edge.
-            let align = if start { TextAlign::MiddleLeft } else { TextAlign::MiddleRight };
+            let align = if start {
+                TextAlign::MiddleLeft
+            } else {
+                TextAlign::MiddleRight
+            };
             let bx = p[0] + dir * 3.0 * h;
-            let (y_km, y_kot) = if down { (p[1] - 1.2 * h, p[1] - 1.2 * h - pitch) } else { (p[1] + 1.2 * h + pitch, p[1] + 1.2 * h) };
-            out.push(masked(text([bx, y_km], format!("KM = {km}"), h, align, None)));
-            out.push(masked(text([bx, y_kot], format!("KOT = {z:.3}"), h, align, None)));
+            let (y_km, y_kot) = if down {
+                (p[1] - 1.2 * h, p[1] - 1.2 * h - pitch)
+            } else {
+                (p[1] + 1.2 * h + pitch, p[1] + 1.2 * h)
+            };
+            out.push(masked(text(
+                [bx, y_km],
+                format!("KM = {km}"),
+                h,
+                align,
+                None,
+            )));
+            out.push(masked(text(
+                [bx, y_kot],
+                format!("KOT = {z:.3}"),
+                h,
+                align,
+                None,
+            )));
         }
     }
     // KGM's slope and platform rows right above the frame (docs/adr/0989): the names' column, a line over each row,
     // each run of a value its words in the middle and a line where it changes.
     if let Some(rows) = &c.corridor {
         let n = rows.len() as f64;
-        out.push(line([x0 - names, y1], [x0 - names, y1 + n * row], None, Some(0.25)));
+        out.push(line(
+            [x0 - names, y1],
+            [x0 - names, y1 + n * row],
+            None,
+            Some(0.25),
+        ));
         out.push(line([x0, y1], [x0, y1 + n * row], None, Some(0.25)));
         for (k, cells) in rows.iter().enumerate() {
             let (bottom, top) = (y1 + row * (n - 1.0 - k as f64), y1 + row * (n - k as f64));
             out.push(line([x0 - names, top], [x1, top], None, Some(0.18)));
             let mid = 0.5 * (bottom + top);
-            out.push(text([x0 - names + 0.5 * h, mid], crate::road_corridor_bands::ROWS[k].to_owned(), h, TextAlign::MiddleLeft, None));
+            out.push(text(
+                [x0 - names + 0.5 * h, mid],
+                crate::road_corridor_bands::ROWS[k].to_owned(),
+                h,
+                TextAlign::MiddleLeft,
+                None,
+            ));
             for (i, cell) in cells.iter().enumerate() {
                 if !cell.text.is_empty() {
-                    out.push(text([x(0.5 * (cell.from + cell.to)), mid], cell.text.clone(), h, TextAlign::MiddleCenter, None));
+                    out.push(text(
+                        [x(0.5 * (cell.from + cell.to)), mid],
+                        cell.text.clone(),
+                        h,
+                        TextAlign::MiddleCenter,
+                        None,
+                    ));
                 }
                 if i + 1 < cells.len() {
-                    out.push(line([x(cell.to), bottom], [x(cell.to), top], None, Some(0.18)));
+                    out.push(line(
+                        [x(cell.to), bottom],
+                        [x(cell.to), top],
+                        None,
+                        Some(0.18),
+                    ));
                 }
             }
         }
     }
     if c.bands == ProfileBands::Kgm {
         // KGM's earthwork rows right under the frame, the bands under them (docs/adr/0995).
-        let below = c.earthwork.as_ref().map_or(0.0, |e| earthwork_rows(&mut out, c, e, at, h, names));
+        let below = c
+            .earthwork
+            .as_ref()
+            .map_or(0.0, |e| earthwork_rows(&mut out, c, e, at, h, names));
         kgm_bands(&mut out, c, columns, [at[0], at[1] - below], h, names);
         return out;
     }
@@ -697,22 +933,52 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
     for (i, name) in BANDS.iter().enumerate() {
         let bottom = y0 - row * (i + 1) as f64;
         out.push(line([x0 - names, bottom], [x1, bottom], None, Some(0.13)));
-        out.push(text([x0 - names + 0.5 * h, bottom + 0.5 * row], (*name).to_owned(), h, TextAlign::MiddleLeft, None));
+        out.push(text(
+            [x0 - names + 0.5 * h, bottom + 0.5 * row],
+            (*name).to_owned(),
+            h,
+            TextAlign::MiddleLeft,
+            None,
+        ));
     }
     let mid = |i: usize| y0 - row * (i as f64 + 0.5);
     for col in columns {
         let cx = x(col.station);
         out.push(line([cx, y0], [cx, y0 - row * 4.0], None, Some(0.13)));
         let round = (col.km / c.every - (col.km / c.every).round()).abs() <= 1e-9;
-        out.push(text([cx, mid(0)], km_text(col.km, if round { 0 } else { 2 }), h, TextAlign::MiddleCenter, None));
+        out.push(text(
+            [cx, mid(0)],
+            km_text(col.km, if round { 0 } else { 2 }),
+            h,
+            TextAlign::MiddleCenter,
+            None,
+        ));
         if let Some(b) = col.black {
-            out.push(text([cx, mid(1)], format!("{b:.2}"), h, TextAlign::MiddleCenter, None));
+            out.push(text(
+                [cx, mid(1)],
+                format!("{b:.2}"),
+                h,
+                TextAlign::MiddleCenter,
+                None,
+            ));
         }
         if let Some(r) = col.red {
-            out.push(text([cx, mid(2)], format!("{r:.2}"), h, TextAlign::MiddleCenter, Some(RED)));
+            out.push(text(
+                [cx, mid(2)],
+                format!("{r:.2}"),
+                h,
+                TextAlign::MiddleCenter,
+                Some(RED),
+            ));
         }
         if let Some(d) = col.difference {
-            out.push(text([cx, mid(3)], format!("{d:+.2}"), h, TextAlign::MiddleCenter, None));
+            out.push(text(
+                [cx, mid(3)],
+                format!("{d:+.2}"),
+                h,
+                TextAlign::MiddleCenter,
+                None,
+            ));
         }
     }
     for w in c.pvis.windows(2) {
@@ -733,7 +999,12 @@ fn objects(doc: &kentos_domain::Document, c: &Checked, columns: &[ProfileAt], at
 }
 
 /// Writes the view of `c` with its bands' columns `cols` (read told before, docs/adr/4860).
-fn write(cx: &mut ExecutionContext<'_>, input: &ProfilesDraw, c: Checked, cols: Vec<ProfileAt>) -> CommandResult<ProfilesDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &ProfilesDraw,
+    c: Checked,
+    cols: Vec<ProfileAt>,
+) -> CommandResult<ProfilesDrawn> {
     let objects = objects(cx.doc, &c, &cols, input.at);
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
@@ -752,7 +1023,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &ProfilesDraw, c: Checked, cols: 
             profile: c.id,
             frame: [
                 [input.at[0], input.at[1]],
-                [input.at[0] + (s1 - s0), input.at[1] + (c.top - c.datum) * c.exaggeration],
+                [
+                    input.at[0] + (s1 - s0),
+                    input.at[1] + (c.top - c.datum) * c.exaggeration,
+                ],
             ],
             datum: c.datum,
             top: c.top,
@@ -773,7 +1047,15 @@ fn splits(c: &Checked) -> Vec<kentos_commands::ProfileSplit> {
     if !c.split {
         return Vec::new();
     }
-    c.parts.iter().map(|p| kentos_commands::ProfileSplit { from: p.from, to: p.to, datum: p.datum, top: p.datum + span }).collect()
+    c.parts
+        .iter()
+        .map(|p| kentos_commands::ProfileSplit {
+            from: p.from,
+            to: p.to,
+            datum: p.datum,
+            top: p.datum + span,
+        })
+        .collect()
 }
 
 /// A profile view as a sheet set draws it (docs/adr/0908 §10): its objects, what `road.profiles.draw` would answer
@@ -790,7 +1072,10 @@ pub(crate) fn view(
         profile: c.id.clone(),
         frame: [
             [input.at[0], input.at[1]],
-            [input.at[0] + (c.s1 - c.s0), input.at[1] + (c.top - c.datum) * c.exaggeration],
+            [
+                input.at[0] + (c.s1 - c.s0),
+                input.at[1] + (c.top - c.datum) * c.exaggeration,
+            ],
         ],
         datum: c.datum,
         top: c.top,
@@ -807,7 +1092,8 @@ pub(crate) fn view(
 /// How tall KGM's slope and platform rows over a view are (docs/adr/0989), in drawing units, with texts `height` paper
 /// millimetres high.
 pub fn corridor_rows_height(doc: &kentos_domain::Document, height: f64) -> f64 {
-    crate::road_corridor_bands::ROWS.len() as f64 * 2.4 * height * doc.settings().plot_scale / 1000.0
+    crate::road_corridor_bands::ROWS.len() as f64 * 2.4 * height * doc.settings().plot_scale
+        / 1000.0
 }
 
 /// KGM's earthwork rows under the frame whose lower left is `at` (docs/adr/0995; the June 2024 sample sheets): the
@@ -828,35 +1114,76 @@ fn earthwork_rows(
     let (x0, x1, y0) = (x(s0), x(s1), at[1]);
     let row = 2.4 * h;
     let depth = ROWS.len() as f64 * row;
-    out.push(line([x0 - names, y0], [x0 - names, y0 - depth], None, Some(0.13)));
+    out.push(line(
+        [x0 - names, y0],
+        [x0 - names, y0 - depth],
+        None,
+        Some(0.13),
+    ));
     out.push(line([x0, y0], [x0, y0 - depth], None, Some(0.13)));
     for (k, name) in ROWS.iter().enumerate() {
         let bottom = y0 - row * (k + 1) as f64;
         out.push(line([x0 - names, bottom], [x1, bottom], None, Some(0.13)));
-        out.push(text([x0 - names + 0.5 * h, bottom + 0.5 * row], (*name).to_owned(), h, TextAlign::MiddleLeft, None));
+        out.push(text(
+            [x0 - names + 0.5 * h, bottom + 0.5 * row],
+            (*name).to_owned(),
+            h,
+            TextAlign::MiddleLeft,
+            None,
+        ));
     }
-    for sec in e.sections.iter().filter(|q| q.to > s0 + 1e-9 && q.from < s1 - 1e-9) {
+    for sec in e
+        .sections
+        .iter()
+        .filter(|q| q.to > s0 + 1e-9 && q.from < s1 - 1e-9)
+    {
         let mid = x(0.5 * (sec.from.max(s0) + sec.to.min(s1)));
         for (k, v) in sec.values.iter().enumerate() {
             let y = y0 - row * (k as f64 + 0.5);
-            out.push(text([mid, y], volume_text(*v), h, TextAlign::MiddleCenter, None));
+            out.push(text(
+                [mid, y],
+                volume_text(*v),
+                h,
+                TextAlign::MiddleCenter,
+                None,
+            ));
         }
     }
     // A line at each section's end inside the view; the ends of the volume too.
-    let mut ends: Vec<f64> = e.sections.iter().flat_map(|q| [q.from, q.to]).filter(|s| *s > s0 + 1e-9 && *s < s1 - 1e-9).collect();
+    let mut ends: Vec<f64> = e
+        .sections
+        .iter()
+        .flat_map(|q| [q.from, q.to])
+        .filter(|s| *s > s0 + 1e-9 && *s < s1 - 1e-9)
+        .collect();
     ends.sort_by(f64::total_cmp);
     ends.dedup_by(|a, b| (*a - *b).abs() <= 1e-9);
     for s in ends {
         out.push(line([x(s), y0], [x(s), y0 - depth], None, Some(0.18)));
     }
-    for s in e.balance.iter().filter(|s| **s > s0 - 1e-9 && **s < s1 + 1e-9) {
+    for s in e
+        .balance
+        .iter()
+        .filter(|s| **s > s0 - 1e-9 && **s < s1 + 1e-9)
+    {
         let words = format!("DN : {}", km_text(c.built.alignment.km(*s), 2));
         // Left of the line, as the 2024 sheets write it: turned a quarter, the words grow to the left of their foot
         // (Y89's first picture had the line through them).
         // Masked: the rows' lines ran across them.
         // At the view's start inside it, right of the frame's edge (Y90's picture had it in the names' column).
-        let foot = if *s <= s0 + 1e-9 { x(*s) + 1.1 * h } else { x(*s) - 0.3 * h };
-        out.push(masked(turned([foot, y0 - 0.5 * depth], words, 0.8 * h, TextAlign::BottomCenter, None, 90.0)));
+        let foot = if *s <= s0 + 1e-9 {
+            x(*s) + 1.1 * h
+        } else {
+            x(*s) - 0.3 * h
+        };
+        out.push(masked(turned(
+            [foot, y0 - 0.5 * depth],
+            words,
+            0.8 * h,
+            TextAlign::BottomCenter,
+            None,
+            90.0,
+        )));
     }
     if e.unsuitable.is_empty() {
         return depth;
@@ -864,16 +1191,45 @@ fn earthwork_rows(
     // DKY (docs/adr/0996): a row under DEPO, each stretch of unsuitable cut in the view its km and volume as the 2024
     // sheets note it, a line at each of its ends.
     let (top, bottom) = (y0 - depth, y0 - depth - row);
-    out.push(line([x0 - names, top], [x0 - names, bottom], None, Some(0.13)));
+    out.push(line(
+        [x0 - names, top],
+        [x0 - names, bottom],
+        None,
+        Some(0.13),
+    ));
     out.push(line([x0, top], [x0, bottom], None, Some(0.13)));
     out.push(line([x0 - names, bottom], [x1, bottom], None, Some(0.13)));
-    out.push(text([x0 - names + 0.5 * h, bottom + 0.5 * row], "DKY".to_owned(), h, TextAlign::MiddleLeft, None));
+    out.push(text(
+        [x0 - names + 0.5 * h, bottom + 0.5 * row],
+        "DKY".to_owned(),
+        h,
+        TextAlign::MiddleLeft,
+        None,
+    ));
     let km = |s: f64| km_text(c.built.alignment.km(s), 2);
-    for u in e.unsuitable.iter().filter(|u| u[1] > s0 + 1e-9 && u[0] < s1 - 1e-9) {
+    for u in e
+        .unsuitable
+        .iter()
+        .filter(|u| u[1] > s0 + 1e-9 && u[0] < s1 - 1e-9)
+    {
         let mid = x(0.5 * (u[0].max(s0) + u[1].min(s1)));
-        let words = format!("KM : {} – {} : {} m³", km(u[0]), km(u[1]), volume_text(u[2]));
-        out.push(text([mid, bottom + 0.5 * row], words, h, TextAlign::MiddleCenter, Some(GREEN)));
-        for q in [u[0], u[1]].into_iter().filter(|q| *q > s0 + 1e-9 && *q < s1 - 1e-9) {
+        let words = format!(
+            "KM : {} – {} : {} m³",
+            km(u[0]),
+            km(u[1]),
+            volume_text(u[2])
+        );
+        out.push(text(
+            [mid, bottom + 0.5 * row],
+            words,
+            h,
+            TextAlign::MiddleCenter,
+            Some(GREEN),
+        ));
+        for q in [u[0], u[1]]
+            .into_iter()
+            .filter(|q| *q > s0 + 1e-9 && *q < s1 - 1e-9)
+        {
             out.push(line([x(q), top], [x(q), bottom], Some(GREEN), Some(0.25)));
         }
     }
@@ -883,7 +1239,11 @@ fn earthwork_rows(
 /// How deep KGM's earthwork rows under a view are (docs/adr/0995), in drawing units, with texts `height` paper mm; a
 /// DKY row more where the mass haul diagram has unsuitable cut (docs/adr/0996).
 pub fn earthwork_rows_height(doc: &kentos_domain::Document, height: f64, dky: bool) -> f64 {
-    (crate::road_earthwork_bands::ROWS.len() + usize::from(dky)) as f64 * 2.4 * height * doc.settings().plot_scale / 1000.0
+    (crate::road_earthwork_bands::ROWS.len() + usize::from(dky)) as f64
+        * 2.4
+        * height
+        * doc.settings().plot_scale
+        / 1000.0
 }
 
 /// How deep the bands under a view are, in drawing units, with texts `height` paper millimetres high.
@@ -897,7 +1257,14 @@ pub(crate) fn bands_depth(doc: &kentos_domain::Document, height: f64) -> f64 {
 /// grad, L, a clothoid's A), Düşey Geometri (the grades as KGM writes them, a crest a step up and a sag down with its
 /// length and K, each PVI's km and elevation) and Dever (the left side's slope solid, the right's dashed, about the
 /// band's axis, each break point's two slopes).
-fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [f64; 2], h: f64, names: f64) {
+fn kgm_bands(
+    out: &mut Vec<NewObject>,
+    c: &Checked,
+    columns: &[ProfileAt],
+    at: [f64; 2],
+    h: f64,
+    names: f64,
+) {
     use kentos_road::alignment::Kind;
     use kentos_road::profile::grade_text;
     let (s0, s1) = (c.s0, c.s1);
@@ -909,7 +1276,13 @@ fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [
     for (name, depth) in KGM_BANDS {
         let bottom = top - depth * h;
         out.push(line([x0 - names, bottom], [x1, bottom], None, Some(0.13)));
-        out.push(text([x0 - names + 0.5 * h, 0.5 * (top + bottom)], name.to_owned(), h, TextAlign::MiddleLeft, None));
+        out.push(text(
+            [x0 - names + 0.5 * h, 0.5 * (top + bottom)],
+            name.to_owned(),
+            h,
+            TextAlign::MiddleLeft,
+            None,
+        ));
         rows.push((top, bottom));
         top = bottom;
     }
@@ -921,28 +1294,72 @@ fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [
         let cx = x(col.station);
         out.push(line([cx, y0], [cx, rows[2].1], None, Some(0.13)));
         let round = (col.km / c.every - (col.km / c.every).round()).abs() <= 1e-9;
-        let km = if round { km_text(col.km, 0) } else { km_text(col.km, 2) };
+        let km = if round {
+            km_text(col.km, 0)
+        } else {
+            km_text(col.km, 2)
+        };
         if let Some(r) = col.red {
-            out.push(turned([cx - 0.2 * h, mid(0)], format!("{r:.2}"), h, TextAlign::BottomCenter, Some(RED), up));
+            out.push(turned(
+                [cx - 0.2 * h, mid(0)],
+                format!("{r:.2}"),
+                h,
+                TextAlign::BottomCenter,
+                Some(RED),
+                up,
+            ));
         }
         if let Some(b) = col.black {
-            out.push(turned([cx - 0.2 * h, mid(1)], format!("{b:.2}"), h, TextAlign::BottomCenter, None, up));
+            out.push(turned(
+                [cx - 0.2 * h, mid(1)],
+                format!("{b:.2}"),
+                h,
+                TextAlign::BottomCenter,
+                None,
+                up,
+            ));
         }
-        out.push(turned([cx - 0.2 * h, mid(2)], km, h, TextAlign::BottomCenter, None, up));
+        out.push(turned(
+            [cx - 0.2 * h, mid(2)],
+            km,
+            h,
+            TextAlign::BottomCenter,
+            None,
+            up,
+        ));
     }
     // Yatay Geometri: the elements in the range, each at its step.
     let core = &c.built.alignment.core;
     let step = 1.5 * h;
-    let off = |k: f64| if k > 1e-12 { -step } else if k < -1e-12 { step } else { 0.0 };
+    let off = |k: f64| {
+        if k > 1e-12 {
+            -step
+        } else if k < -1e-12 {
+            step
+        } else {
+            0.0
+        }
+    };
     let ym = mid(3);
     let mut pts: Vec<[f64; 2]> = Vec::new();
-    for e in core.elements.iter().filter(|e| e.station < s1 - 1e-9 && e.station + e.length > s0 + 1e-9) {
+    for e in core
+        .elements
+        .iter()
+        .filter(|e| e.station < s1 - 1e-9 && e.station + e.length > s0 + 1e-9)
+    {
         let (a, b) = (e.station.max(s0), (e.station + e.length).min(s1));
-        let (oa, ob) = (off(e.curvature(a - e.station)), off(e.curvature(b - e.station)));
+        let (oa, ob) = (
+            off(e.curvature(a - e.station)),
+            off(e.curvature(b - e.station)),
+        );
         // A clothoid from or to a tangent slopes between the two steps; one between two curves stays at theirs.
         let (oa, ob) = match e.kind {
-            Kind::Spiral if e.k0 == 0.0 || e.k1 == 0.0 => (off(e.k0) * (1.0 - (a - e.station) / e.length) + off(e.k1) * ((a - e.station) / e.length),
-                                                              off(e.k0) * (1.0 - (b - e.station) / e.length) + off(e.k1) * ((b - e.station) / e.length)),
+            Kind::Spiral if e.k0 == 0.0 || e.k1 == 0.0 => (
+                off(e.k0) * (1.0 - (a - e.station) / e.length)
+                    + off(e.k1) * ((a - e.station) / e.length),
+                off(e.k0) * (1.0 - (b - e.station) / e.length)
+                    + off(e.k1) * ((b - e.station) / e.length),
+            ),
             _ => (oa, ob),
         };
         pts.push([x(a), ym + oa]);
@@ -952,9 +1369,18 @@ fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [
         let words = match e.kind {
             Kind::Tangent => format!("L={:.2}", e.length),
             Kind::Arc => {
-                let delta = core.curves.iter().find(|cu| e.id.starts_with(&format!("{}/", cu.pi))).map(|cu| cu.delta.abs());
+                let delta = core
+                    .curves
+                    .iter()
+                    .find(|cu| e.id.starts_with(&format!("{}/", cu.pi)))
+                    .map(|cu| cu.delta.abs());
                 match delta {
-                    Some(d) => format!("R={:.2} A={:.4}g L={:.2}", 1.0 / e.k0.abs(), d * 200.0 / std::f64::consts::PI, e.length),
+                    Some(d) => format!(
+                        "R={:.2} A={:.4}g L={:.2}",
+                        1.0 / e.k0.abs(),
+                        d * 200.0 / std::f64::consts::PI,
+                        e.length
+                    ),
                     None => format!("R={:.2} L={:.2}", 1.0 / e.k0.abs(), e.length),
                 }
             }
@@ -962,7 +1388,11 @@ fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [
         };
         // The words on the step's far side from the axis, a tangent's over it.
         let side = 0.5 * (oa + ob);
-        let (wy, align) = if side < 0.0 { (ym + side - 0.3 * h, TextAlign::TopCenter) } else { (ym + side + 0.3 * h, TextAlign::BottomCenter) };
+        let (wy, align) = if side < 0.0 {
+            (ym + side - 0.3 * h, TextAlign::TopCenter)
+        } else {
+            (ym + side + 0.3 * h, TextAlign::BottomCenter)
+        };
         out.push(text([cx, wy], words, 0.8 * h, align, None));
     }
     pts.dedup_by(|a, b| (a[0] - b[0]).abs() < 1e-9 && (a[1] - b[1]).abs() < 1e-9);
@@ -975,7 +1405,13 @@ fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [
     let step = h;
     let km_of = |s: f64| kentos_road::alignment::Stationing::km(&c.built.alignment.regions, s);
     let mut vpts: Vec<[f64; 2]> = vec![[x0, ym]];
-    for cu in c.built.vertical.curves.iter().filter(|cu| cu.start[0] < s1 - 1e-9 && cu.end[0] > s0 + 1e-9) {
+    for cu in c
+        .built
+        .vertical
+        .curves
+        .iter()
+        .filter(|cu| cu.start[0] < s1 - 1e-9 && cu.end[0] > s0 + 1e-9)
+    {
         let (a, b) = (cu.start[0].max(s0), cu.end[0].min(s1));
         let o = if cu.crest { step } else { -step };
         vpts.extend([[x(a), ym], [x(a), ym + o], [x(b), ym + o], [x(b), ym]]);
@@ -1004,15 +1440,36 @@ fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [
             None,
         ));
     }
-    for &(sp, zp) in c.pvis.iter().filter(|(sp, _)| *sp >= s0 - 1e-9 && *sp <= s1 + 1e-9) {
-        out.push(line([x(sp), rows[4].1], [x(sp), rows[4].1 + 0.8 * h], None, Some(0.13)));
-        out.push(text([x(sp), rows[4].1 + 0.15 * h], format!("{} {zp:.2}", km_text(km_of(sp), 3)), 0.7 * h, TextAlign::BottomCenter, None));
+    for &(sp, zp) in c
+        .pvis
+        .iter()
+        .filter(|(sp, _)| *sp >= s0 - 1e-9 && *sp <= s1 + 1e-9)
+    {
+        out.push(line(
+            [x(sp), rows[4].1],
+            [x(sp), rows[4].1 + 0.8 * h],
+            None,
+            Some(0.13),
+        ));
+        out.push(text(
+            [x(sp), rows[4].1 + 0.15 * h],
+            format!("{} {zp:.2}", km_text(km_of(sp), 3)),
+            0.7 * h,
+            TextAlign::BottomCenter,
+            None,
+        ));
     }
     // Dever: about the band's axis, the left solid and the right dashed, each break point's slopes.
     let (top5, bottom5) = rows[5];
     let ym = mid(5);
     match &c.dever {
-        None => out.push(text([0.5 * (x0 + x1), ym], "Dever çizelgesi verilmedi".into(), 0.8 * h, TextAlign::MiddleCenter, None)),
+        None => out.push(text(
+            [0.5 * (x0 + x1), ym],
+            "Dever çizelgesi verilmedi".into(),
+            0.8 * h,
+            TextAlign::MiddleCenter,
+            None,
+        )),
         Some((name, schedule, normal)) => {
             out.push(line([x0, ym], [x1, ym], None, Some(0.13)));
             let side = |points: &[[f64; 2]], n: f64| -> Vec<[f64; 2]> {
@@ -1025,8 +1482,16 @@ fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [
                 v[last][1] = value_at(points, s1, n);
                 v
             };
-            let (l, r) = (side(&schedule.left, normal.left), side(&schedule.right, normal.right));
-            let most = l.iter().chain(&r).map(|p| p[1].abs()).fold(0.0_f64, f64::max).max(1e-9);
+            let (l, r) = (
+                side(&schedule.left, normal.left),
+                side(&schedule.right, normal.right),
+            );
+            let most = l
+                .iter()
+                .chain(&r)
+                .map(|p| p[1].abs())
+                .fold(0.0_f64, f64::max)
+                .max(1e-9);
             let scale = (0.5 * (top5 - bottom5) - 1.2 * h) / most;
             let yv = |e: f64| ym + e * scale;
             let left: Vec<[f64; 2]> = l.iter().map(|p| [x(p[0]), yv(p[1])]).collect();
@@ -1036,12 +1501,26 @@ fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [
             let mut dashed = path(&right, false, None, Some(0.35));
             dashed.line_type = Some(kentos_commands::layer::LineType::Dashed);
             out.push(dashed);
-            let mut breaks: Vec<f64> = schedule.left.iter().chain(&schedule.right).map(|p| p[0]).filter(|s| *s >= s0 && *s <= s1).collect();
+            let mut breaks: Vec<f64> = schedule
+                .left
+                .iter()
+                .chain(&schedule.right)
+                .map(|p| p[0])
+                .filter(|s| *s >= s0 && *s <= s1)
+                .collect();
             breaks.sort_by(f64::total_cmp);
             breaks.dedup_by(|a, b| (*a - *b).abs() < 1e-6);
             for s in breaks {
-                let (el, er) = (value_at(&schedule.left, s, normal.left), value_at(&schedule.right, s, normal.right));
-                out.push(line([x(s), bottom5], [x(s), bottom5 + 0.6 * h], None, Some(0.13)));
+                let (el, er) = (
+                    value_at(&schedule.left, s, normal.left),
+                    value_at(&schedule.right, s, normal.right),
+                );
+                out.push(line(
+                    [x(s), bottom5],
+                    [x(s), bottom5 + 0.6 * h],
+                    None,
+                    Some(0.13),
+                ));
                 out.push(turned(
                     [x(s) - 0.2 * h, bottom5 + 0.7 * h],
                     format!("{} {}", grade_text(el), grade_text(er)),
@@ -1051,7 +1530,13 @@ fn kgm_bands(out: &mut Vec<NewObject>, c: &Checked, columns: &[ProfileAt], at: [
                     up,
                 ));
             }
-            out.push(text([x0 + 0.5 * h, top5 - 0.3 * h], format!("{name}: sol düz, sağ kesikli"), 0.7 * h, TextAlign::TopLeft, None));
+            out.push(text(
+                [x0 + 0.5 * h, top5 - 0.3 * h],
+                format!("{name}: sol düz, sağ kesikli"),
+                0.7 * h,
+                TextAlign::TopLeft,
+                None,
+            ));
         }
     }
 }
@@ -1065,9 +1550,16 @@ fn value_at(points: &[[f64; 2]], s: f64, normal: f64) -> f64 {
         _ if s <= points[0][0] => points[0][1],
         _ if s >= points[points.len() - 1][0] => points[points.len() - 1][1],
         _ => {
-            let i = points.windows(2).position(|w| s >= w[0][0] && s <= w[1][0]).unwrap_or(0);
+            let i = points
+                .windows(2)
+                .position(|w| s >= w[0][0] && s <= w[1][0])
+                .unwrap_or(0);
             let (a, b) = (points[i], points[i + 1]);
-            if b[0] > a[0] { a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0]) } else { b[1] }
+            if b[0] > a[0] {
+                a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0])
+            } else {
+                b[1]
+            }
         }
     }
 }
@@ -1091,10 +1583,11 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ProfilesDraw) -> CommandResul
 /// What execute would write now, on a reading copy; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesDraw) -> CommandResult<ProfilesDrawn> {
     let stop = cx.stop_only();
-    let (c, cols) = match check(cx.doc, input, &stop).and_then(|c| columns(&c, &stop).map(|cols| (c, cols))) {
-        Ok(read) => read,
-        Err(stop) => return stop.into(),
-    };
+    let (c, cols) =
+        match check(cx.doc, input, &stop).and_then(|c| columns(&c, &stop).map(|cols| (c, cols))) {
+            Ok(read) => read,
+            Err(stop) => return stop.into(),
+        };
     let mut copy = cx.doc.reading_copy();
     let mut planned = write(&mut ExecutionContext::new(&mut copy), input, c, cols);
     if let CommandResult::Completed { output, .. } = &mut planned {
@@ -1107,7 +1600,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesDraw) -> CommandResult<Pr
 /// Writes the drawing: one undo step.
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::ProfilesDraw) -> CommandResult<kentos_commands::ProfilesDrawn> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &kentos_commands::ProfilesDraw,
+) -> CommandResult<kentos_commands::ProfilesDrawn> {
     write_execute(cx, input.clone())
 }
 
@@ -1119,12 +1615,22 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ProfilesDraw) -> CommandRes
         input,
         |cx, input| {
             let r = write_execute(cx, input.clone());
-            crate::road_drawings::kept(cx, kentos_commands::ROAD_PROFILES_DRAW, &input, (kentos_commands::RoadSourceKind::Profile, "profile"), r, |o| &o.uids)
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_PROFILES_DRAW,
+                &input,
+                (kentos_commands::RoadSourceKind::Profile, "profile"),
+                r,
+                |o| &o.uids,
+            )
         },
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: ProfilesDraw) -> CommandResult<ProfilesDrawn> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProfilesDraw,
+) -> CommandResult<ProfilesDrawn> {
     let read = {
         let told = cx.told();
         check(cx.doc, &input, &told).and_then(|c| columns(&c, &told).map(|cols| (c, cols)))
@@ -1144,13 +1650,17 @@ mod stop_tests {
 
     #[test]
     fn its_reckoning_is_told_and_hears_a_stop() {
-        let (doc, input): (kentos_domain::Document, kentos_commands::ProfilesDraw) = crate::told_tests::project(CASES);
-        crate::told_tests::told_and_stopped(|told| check(&doc, &input, told).and_then(|c| columns(&c, told)));
+        let (doc, input): (kentos_domain::Document, kentos_commands::ProfilesDraw) =
+            crate::told_tests::project(CASES);
+        crate::told_tests::told_and_stopped(|told| {
+            check(&doc, &input, told).and_then(|c| columns(&c, told))
+        });
     }
 
     #[test]
     fn a_stopped_job_draws_nothing() {
-        let (mut doc, input): (kentos_domain::Document, kentos_commands::ProfilesDraw) = crate::told_tests::project(CASES);
+        let (mut doc, input): (kentos_domain::Document, kentos_commands::ProfilesDraw) =
+            crate::told_tests::project(CASES);
         crate::told_tests::stopped_job_draws_nothing(&mut doc, |cx| draw(cx, &input));
     }
 }

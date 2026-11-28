@@ -127,7 +127,12 @@ impl crate::api::json::Flat for Spec {
             if let Some(e) = &look.edge {
                 out.push_str("\"edge\":{");
                 let mut f = true;
-                field(out, &mut f, "kind", if e.parapet { "parapet" } else { "railing" });
+                field(
+                    out,
+                    &mut f,
+                    "kind",
+                    if e.parapet { "parapet" } else { "railing" },
+                );
                 field(out, &mut f, "width", &e.width);
                 out.push_str(",\"runs\":[");
                 for (i, r) in e.runs.iter().enumerate() {
@@ -422,7 +427,12 @@ pub fn void_cross(parts: &[Area]) -> Vec<Shape> {
             v0 = crate::jsmath::js_min(v0, v);
             v1 = js_max(v1, v);
         }
-        let at = |u: f64, v: f64| Vec2::new(o.x + along.x * u + across.x * v, o.y + along.y * u + across.y * v);
+        let at = |u: f64, v: f64| {
+            Vec2::new(
+                o.x + along.x * u + across.x * v,
+                o.y + along.y * u + across.y * v,
+            )
+        };
         for (a, b) in [(at(u0, v0), at(u1, v1)), (at(u1, v0), at(u0, v1))] {
             let mut ts = vec![0.0, 1.0];
             for ring in std::iter::once(&outer).chain(&holes) {
@@ -439,9 +449,14 @@ pub fn void_cross(parts: &[Area]) -> Vec<Shape> {
             ts.dedup_by(|x, y| (*x - *y).abs() < 1e-9);
             for w in ts.windows(2) {
                 let (t0, t1) = (w[0], w[1]);
-                let mid = Vec2::new(a.x + (b.x - a.x) * (t0 + t1) / 2.0, a.y + (b.y - a.y) * (t0 + t1) / 2.0);
+                let mid = Vec2::new(
+                    a.x + (b.x - a.x) * (t0 + t1) / 2.0,
+                    a.y + (b.y - a.y) * (t0 + t1) / 2.0,
+                );
                 let inside = crate::geometry::point_in_polygon(mid, &outer)
-                    && !holes.iter().any(|h| crate::geometry::point_in_polygon(mid, h));
+                    && !holes
+                        .iter()
+                        .any(|h| crate::geometry::point_in_polygon(mid, h));
                 if inside {
                     out.push(Shape::Line {
                         a: Vec2::new(a.x + (b.x - a.x) * t0, a.y + (b.y - a.y) * t0),

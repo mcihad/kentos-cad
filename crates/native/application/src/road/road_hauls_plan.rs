@@ -3,11 +3,14 @@
 //! Reads only. The shared cases are `fixtures/commands/v1/road.hauls.plan.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, HaulObjective, HaulPlanCost, HaulPlanSite, HaulPlanned, HaulSegment, HaulSiteKind, HaulsPlan,
+    CommandResult, CommandWarning, HaulObjective, HaulPlanCost, HaulPlanSite, HaulPlanned,
+    HaulSegment, HaulSiteKind, HaulsPlan,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
-use kentos_road::haul_plan::{Barrier, PlanSite, Prices, SortedStretch, plan as solve, plan_priced, plan_sorted};
+use kentos_road::haul_plan::{
+    Barrier, PlanSite, Prices, SortedStretch, plan as solve, plan_priced, plan_sorted,
+};
 
 use crate::ExecutionContext;
 use crate::checks::Stop;
@@ -19,15 +22,30 @@ use crate::road_volumes as volumes;
 /// The plan now, and its warnings.
 /// The plan now, and against its approval where the diagram has one (docs/adr/0954): the plan made again with the
 /// approved objective, its figures and sources against the approved ones.
-pub(crate) fn answer(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &HaulsPlan,
+) -> Result<(HaulPlanned, Vec<CommandWarning>), Stop> {
     let (mut out, mut warnings) = raw(doc, input)?;
     let (_, def) = hauls::find(doc.road_hauls(), &input.haul, "haul")?;
     if let Some(a) = &def.approved {
-        let objective = if a.cost { HaulObjective::Cost } else { HaulObjective::Moment };
+        let objective = if a.cost {
+            HaulObjective::Cost
+        } else {
+            HaulObjective::Moment
+        };
         let today = if objective == out.objective {
             Some(out.clone())
         } else {
-            raw(doc, &HaulsPlan { haul: def.id.clone(), objective: Some(objective) }).ok().map(|r| r.0)
+            raw(
+                doc,
+                &HaulsPlan {
+                    haul: def.id.clone(),
+                    objective: Some(objective),
+                },
+            )
+            .ok()
+            .map(|r| r.0)
         };
         let report = approval_against(doc, def, a, today.as_ref());
         if report.stale {
@@ -65,16 +83,37 @@ pub(crate) fn approval_against(
     use kentos_commands::HaulSiteChange;
     let mut reasons = Vec::new();
     if def.revision != a.revision {
-        reasons.push(format!("Brüknerin tanımı değişti (sürüm {} → {})", a.revision, def.revision));
+        reasons.push(format!(
+            "Brüknerin tanımı değişti (sürüm {} → {})",
+            a.revision, def.revision
+        ));
     }
     let volume = doc.road_volumes().iter().find(|v| v.id == def.volume);
-    let (vrev, vnum) = volume.map_or((0, 0), |v| (v.revision, v.approved.as_ref().map_or(0, |x| x.number.max(1))));
+    let (vrev, vnum) = volume.map_or((0, 0), |v| {
+        (
+            v.revision,
+            v.approved.as_ref().map_or(0, |x| x.number.max(1)),
+        )
+    });
     if vrev != a.volume_revision {
-        reasons.push(format!("kübajın tanımı değişti (sürüm {} → {vrev})", a.volume_revision));
+        reasons.push(format!(
+            "kübajın tanımı değişti (sürüm {} → {vrev})",
+            a.volume_revision
+        ));
     }
     if vnum != a.volume_approval {
-        let words = |n: u32| if n == 0 { "onaysız".to_owned() } else { format!("{n}. onay") };
-        reasons.push(format!("kübajın onayı değişti ({} → {})", words(a.volume_approval), words(vnum)));
+        let words = |n: u32| {
+            if n == 0 {
+                "onaysız".to_owned()
+            } else {
+                format!("{n}. onay")
+            }
+        };
+        reasons.push(format!(
+            "kübajın onayı değişti ({} → {})",
+            words(a.volume_approval),
+            words(vnum)
+        ));
     }
     // The sites: capacities from the definition, uses from today's plan.
     let mut sites = Vec::new();
@@ -85,7 +124,10 @@ pub(crate) fn approval_against(
         let capacity_changed = capacity.is_none_or(|c| differ(c, s.capacity));
         if capacity_changed {
             reasons.push(match capacity {
-                Some(c) => format!("{} alanının kapasitesi değişti ({:.1} → {:.1} m³)", s.name, s.capacity, c),
+                Some(c) => format!(
+                    "{} alanının kapasitesi değişti ({:.1} → {:.1} m³)",
+                    s.name, s.capacity, c
+                ),
                 None => format!("{} alanı kalktı", s.name),
             });
         }
@@ -99,7 +141,11 @@ pub(crate) fn approval_against(
             });
         }
     }
-    for d in def.sites.iter().filter(|d| !a.sites.iter().any(|s| s.name == d.name)) {
+    for d in def
+        .sites
+        .iter()
+        .filter(|d| !a.sites.iter().any(|s| s.name == d.name))
+    {
         reasons.push(format!("{} alanı eklendi ({:.1} m³)", d.name, d.volume));
         sites.push(HaulSiteChange {
             name: d.name.clone(),
@@ -122,7 +168,9 @@ pub(crate) fn approval_against(
                 parts.push(format!("taşınan {:+.1} m³", t.moved - a.moved));
             }
             match (t.cost.as_ref(), a.total) {
-                (Some(c), Some(y)) if differ(c.total, y) => parts.push(format!("tutar {:+.0} {}", c.total - y, c.currency)),
+                (Some(c), Some(y)) if differ(c.total, y) => {
+                    parts.push(format!("tutar {:+.0} {}", c.total - y, c.currency))
+                }
                 (None, Some(_)) => parts.push("tutar bugün hesaplanamıyor".into()),
                 (Some(_), None) => parts.push("tutar onayda yoktu".into()),
                 _ => {}
@@ -132,24 +180,55 @@ pub(crate) fn approval_against(
             }
         }
     }
-    kentos_commands::HaulPlanApproval { approved: a.clone(), stale: !reasons.is_empty(), reasons, moment_change, sites }
+    kentos_commands::HaulPlanApproval {
+        approved: a.clone(),
+        stale: !reasons.is_empty(),
+        reasons,
+        moment_change,
+        sites,
+    }
 }
 
 /// The plan now, without its approval.
 fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWarning>), Stop> {
     hauls::road_project(doc)?;
     let (_, def) = hauls::find(doc.road_hauls(), &input.haul, "haul")?;
-    let vdef = doc.road_volumes().iter().find(|v| v.id == def.volume).ok_or_else(|| {
-        fail(codes::UNKNOWN_VOLUME, format!("“{}” kimlikli kübaj hesabı projede yok.", def.volume), "volume")
-    })?;
+    let vdef = doc
+        .road_volumes()
+        .iter()
+        .find(|v| v.id == def.volume)
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_VOLUME,
+                format!("“{}” kimlikli kübaj hesabı projede yok.", def.volume),
+                "volume",
+            )
+        })?;
     let (report, vwarnings, alignment) = volumes::compute_on(doc, vdef).map_err(|stop| {
-        fail(codes::INVALID_HAUL, format!("“{}” kübajı hesaplanamıyor: {}", vdef.name, crate::road_corridors::words(stop)), "volume")
+        fail(
+            codes::INVALID_HAUL,
+            format!(
+                "“{}” kübajı hesaplanamıyor: {}",
+                vdef.name,
+                crate::road_corridors::words(stop)
+            ),
+            "volume",
+        )
     })?;
-    let mut warnings: Vec<CommandWarning> =
-        vwarnings.into_iter().filter(|w| w.code == codes::CORRIDOR_STALE || w.code == codes::VOLUME_GAP).collect();
+    let mut warnings: Vec<CommandWarning> = vwarnings
+        .into_iter()
+        .filter(|w| w.code == codes::CORRIDOR_STALE || w.code == codes::VOLUME_GAP)
+        .collect();
     let curve = hauls::ordinate(&report);
     if curve.len() < 2 {
-        return Err(fail(codes::INVALID_HAUL, format!("“{}” kübajının hacimli aralığı yok; taşınacak bir şey yok.", vdef.name), "volume"));
+        return Err(fail(
+            codes::INVALID_HAUL,
+            format!(
+                "“{}” kübajının hacimli aralığı yok; taşınacak bir şey yok.",
+                vdef.name
+            ),
+            "volume",
+        ));
     }
     let (first, last) = (curve[0][0], curve[curve.len() - 1][0]);
     // Docs/adr/0955: a site off the road at the station its access meets the alignment, its access the extra way.
@@ -162,7 +241,15 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
         .zip(&placed.unconnected)
         .enumerate()
         .filter(|(_, (_, off))| !**off)
-        .map(|(j, ((s, p), _))| (j, kentos_commands::HaulSiteDef { station: p.station, ..s.clone() }))
+        .map(|(j, ((s, p), _))| {
+            (
+                j,
+                kentos_commands::HaulSiteDef {
+                    station: p.station,
+                    ..s.clone()
+                },
+            )
+        })
         .collect();
     order.sort_by(|a, b| a.1.station.total_cmp(&b.1.station).then(a.0.cmp(&b.0)));
     for (j, site) in order {
@@ -185,7 +272,10 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
         if objective == HaulObjective::Cost {
             return Err(fail(
                 codes::INVALID_HAUL,
-                format!("“{}” Brüknerinde uygunsuz malzeme ya da engel var; ekonomik plan onlarla henüz çözülmez, momentle planlayın.", def.name),
+                format!(
+                    "“{}” Brüknerinde uygunsuz malzeme ya da engel var; ekonomik plan onlarla henüz çözülmez, momentle planlayın.",
+                    def.name
+                ),
                 "objective",
             ));
         }
@@ -200,11 +290,24 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
             let overhaul = c.overhaul.filter(|o| *o > 0.0).ok_or_else(|| {
                 fail(codes::INVALID_HAUL, format!("“{}” Brüknerinin fazla taşıma birim fiyatı yok ya da 0; ekonomik plan onu ister.", def.name), "objective")
             })?;
-            for (kind, price, words) in
-                [(HaulSiteKind::Waste, c.waste, "döküm alanı var ama döküm birim fiyatı yok"), (HaulSiteKind::Borrow, c.borrow, "ödünç alanı var ama ödünç birim fiyatı yok")]
-            {
+            for (kind, price, words) in [
+                (
+                    HaulSiteKind::Waste,
+                    c.waste,
+                    "döküm alanı var ama döküm birim fiyatı yok",
+                ),
+                (
+                    HaulSiteKind::Borrow,
+                    c.borrow,
+                    "ödünç alanı var ama ödünç birim fiyatı yok",
+                ),
+            ] {
                 if price.is_none() && def.sites.iter().any(|s| s.kind == kind) {
-                    return Err(fail(codes::INVALID_HAUL, format!("“{}” Brüknerinin {words}.", def.name), "objective"));
+                    return Err(fail(
+                        codes::INVALID_HAUL,
+                        format!("“{}” Brüknerinin {words}.", def.name),
+                        "objective",
+                    ));
                 }
             }
             let prices = Prices {
@@ -214,7 +317,8 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
                 borrow: c.borrow.unwrap_or(0.0),
             };
             let costed = plan_priced(&curve, &sites, prices);
-            let economic = (c.waste.is_some() || c.borrow.is_some()).then(|| prices.free + (prices.waste + prices.borrow) / prices.overhaul);
+            let economic = (c.waste.is_some() || c.borrow.is_some())
+                .then(|| prices.free + (prices.waste + prices.borrow) / prices.overhaul);
             let cost = costed.plan.feasible.then(|| HaulPlanCost {
                 currency: c.currency.clone(),
                 over_moment: costed.over_moment,
@@ -263,7 +367,16 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
                     unconnected: placed.unconnected[j],
                 })
                 .collect(),
-            segments: p.segments.iter().map(|&(from, to, flow)| HaulSegment { from, to, flow, unsuitable_flow: None }).collect(),
+            segments: p
+                .segments
+                .iter()
+                .map(|&(from, to, flow)| HaulSegment {
+                    from,
+                    to,
+                    flow,
+                    unsuitable_flow: None,
+                })
+                .collect(),
             shortage: p.shortage,
             surplus: p.surplus,
             objective,
@@ -273,7 +386,11 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
             stranded: None,
             unsuitable_moment: None,
             barriers: Vec::new(),
-            access_moment: placed.access.iter().any(Option::is_some).then_some(p.access_moment),
+            access_moment: placed
+                .access
+                .iter()
+                .any(Option::is_some)
+                .then_some(p.access_moment),
         },
         warnings,
     ))
@@ -281,7 +398,10 @@ fn raw(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWar
 
 /// The share (0 to 1) of the cut unsuitable at station `s`: the row it falls in, none outside them.
 fn share_at(def: &kentos_commands::HaulDef, s: f64) -> f64 {
-    def.unsuitable.iter().find(|u| u.from <= s && s < u.to).map_or(0.0, |u| u.share / 100.0)
+    def.unsuitable
+        .iter()
+        .find(|u| u.from <= s && s < u.to)
+        .map_or(0.0, |u| u.share / 100.0)
 }
 
 /// The plan of a diagram with unsuitable cut or barriers (docs/adr/0944): each stretch's factored cut and fill, the cut's
@@ -306,14 +426,29 @@ fn sorted(
             })
         })
         .collect();
-    let barriers: Vec<Barrier> = def.barriers.iter().map(|b| Barrier { station: b.station, detour: b.detour }).collect();
+    let barriers: Vec<Barrier> = def
+        .barriers
+        .iter()
+        .map(|b| Barrier {
+            station: b.station,
+            detour: b.detour,
+        })
+        .collect();
     let p = plan_sorted(&stretches, sites, &barriers);
     // As the plain plan says them: the cut more than the fill and the fill more than the cut over the stretches.
     let cut: f64 = stretches.iter().map(|r| (r.cut - r.fill).max(0.0)).sum();
     let fill: f64 = stretches.iter().map(|r| (r.fill - r.cut).max(0.0)).sum();
     // What leaves its stretch: the suitable cut beyond its own fill and the unsuitable cut, placed; and the borrow.
-    let leaves: f64 = stretches.iter().map(|r| (r.cut * (1.0 - r.unsuitable) - r.fill).max(0.0) + r.cut * r.unsuitable).sum();
-    let borrowed: f64 = sites.iter().zip(&p.used).filter(|(s, _)| s.borrow).map(|(_, u)| u).sum();
+    let leaves: f64 = stretches
+        .iter()
+        .map(|r| (r.cut * (1.0 - r.unsuitable) - r.fill).max(0.0) + r.cut * r.unsuitable)
+        .sum();
+    let borrowed: f64 = sites
+        .iter()
+        .zip(&p.used)
+        .filter(|(s, _)| s.borrow)
+        .map(|(_, u)| u)
+        .sum();
     let moved = (leaves - p.surplus - p.stranded).max(0.0) + borrowed;
     if !p.feasible {
         warnings.push(CommandWarning {
@@ -345,7 +480,8 @@ fn sorted(
                     station: placed.sites[j].station,
                     capacity: s.volume,
                     used: p.used[j],
-                    used_unsuitable: (s.kind == HaulSiteKind::Waste).then_some(p.used_unsuitable[j]),
+                    used_unsuitable: (s.kind == HaulSiteKind::Waste)
+                        .then_some(p.used_unsuitable[j]),
                     access: placed.access[j],
                     unconnected: placed.unconnected[j],
                 })
@@ -353,7 +489,12 @@ fn sorted(
             segments: p
                 .segments
                 .iter()
-                .map(|&(from, to, good, bad)| HaulSegment { from, to, flow: good + bad, unsuitable_flow: Some(bad) })
+                .map(|&(from, to, good, bad)| HaulSegment {
+                    from,
+                    to,
+                    flow: good + bad,
+                    unsuitable_flow: Some(bad),
+                })
                 .collect(),
             shortage: p.shortage,
             surplus: p.surplus,
@@ -367,9 +508,18 @@ fn sorted(
                 .barriers
                 .iter()
                 .zip(&p.crossed)
-                .map(|(b, c)| kentos_commands::HaulPlanBarrier { name: b.name.clone(), station: b.station, detour: b.detour, crossed: *c })
+                .map(|(b, c)| kentos_commands::HaulPlanBarrier {
+                    name: b.name.clone(),
+                    station: b.station,
+                    detour: b.detour,
+                    crossed: *c,
+                })
                 .collect(),
-            access_moment: placed.access.iter().any(Option::is_some).then_some(p.access_moment),
+            access_moment: placed
+                .access
+                .iter()
+                .any(Option::is_some)
+                .then_some(p.access_moment),
         },
         warnings,
     )
@@ -378,7 +528,10 @@ fn sorted(
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &HaulsPlan) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -397,7 +550,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: HaulsPlan) -> CommandResult
 }
 
 /// The plan for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &HaulsPlan) -> Result<(HaulPlanned, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &HaulsPlan,
+) -> Result<(HaulPlanned, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }
 
@@ -412,28 +568,64 @@ fn decimal(v: f64) -> String {
 /// direction and length; Alanlar — the borrow and waste sites; Engeller where there are barriers.
 pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::WorkbookSheet> {
     use kentos_commands::{CellKind, WorkbookColumn, WorkbookSheet};
-    let column = |name: &str, kind: CellKind, decimals: Option<u32>| WorkbookColumn { name: name.into(), kind, decimals };
+    let column = |name: &str, kind: CellKind, decimals: Option<u32>| WorkbookColumn {
+        name: name.into(),
+        kind,
+        decimals,
+    };
     let text = |name: &str| column(name, CellKind::Text, None);
     let n = |name: &str| column(name, CellKind::Number, Some(3));
     let haul = doc.road_hauls().iter().find(|h| h.id == planned.haul);
     let volume = haul.and_then(|h| doc.road_volumes().iter().find(|v| v.id == h.volume));
-    let alignment = volume.and_then(|v| volumes::compute_on(doc, v).ok()).map(|(_, _, a)| a);
-    let km = |s: f64| alignment.as_ref().map_or_else(|| decimal(s), |a| km_text(a.km(s), 3));
+    let alignment = volume
+        .and_then(|v| volumes::compute_on(doc, v).ok())
+        .map(|(_, _, a)| a);
+    let km = |s: f64| {
+        alignment
+            .as_ref()
+            .map_or_else(|| decimal(s), |a| km_text(a.km(s), 3))
+    };
     let row = |k: &str, v: String, unit: &str| vec![k.to_owned(), v, unit.to_owned()];
     let mut summary = vec![
-        row("Brükner", haul.map_or(planned.haul.clone(), |h| h.name.clone()), ""),
-        row("Brükner sürümü", haul.map_or_else(String::new, |h| h.revision.to_string()), ""),
-        row("Kübaj", volume.map_or_else(String::new, |v| v.name.clone()), ""),
-        row("Kübaj sürümü", volume.map_or_else(String::new, |v| v.revision.to_string()), ""),
+        row(
+            "Brükner",
+            haul.map_or(planned.haul.clone(), |h| h.name.clone()),
+            "",
+        ),
+        row(
+            "Brükner sürümü",
+            haul.map_or_else(String::new, |h| h.revision.to_string()),
+            "",
+        ),
+        row(
+            "Kübaj",
+            volume.map_or_else(String::new, |v| v.name.clone()),
+            "",
+        ),
+        row(
+            "Kübaj sürümü",
+            volume.map_or_else(String::new, |v| v.revision.to_string()),
+            "",
+        ),
         row(
             "Kübaj onayı",
             volume.and_then(|v| v.approved.as_ref()).map_or_else(
                 || "onaysız".into(),
-                |a| if a.number > 0 { format!("{}. onay · {}", a.number, a.at) } else { format!("onaylı · {}", a.at) },
+                |a| {
+                    if a.number > 0 {
+                        format!("{}. onay · {}", a.number, a.at)
+                    } else {
+                        format!("onaylı · {}", a.at)
+                    }
+                },
             ),
             "",
         ),
-        row("Hacimler", "kübajın düzeltilmiş hacmi: yarma gevşek, dolgu sıkışık".into(), ""),
+        row(
+            "Hacimler",
+            "kübajın düzeltilmiş hacmi: yarma gevşek, dolgu sıkışık".into(),
+            "",
+        ),
         row(
             "Amaç",
             match planned.objective {
@@ -443,12 +635,25 @@ pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::Wor
             .into(),
             "",
         ),
-        row("Durum", if planned.feasible { "Kurulur" } else { "Kurulamaz" }.into(), ""),
+        row(
+            "Durum",
+            if planned.feasible {
+                "Kurulur"
+            } else {
+                "Kurulamaz"
+            }
+            .into(),
+            "",
+        ),
         row("Yarma fazlası", decimal(planned.cut), "m³"),
         row("Dolgu fazlası", decimal(planned.fill), "m³"),
         row("Taşınan", decimal(planned.moved), "m³"),
         row("Taşıma momenti", decimal(planned.moment), "m³·m"),
-        row("Ortalama uzaklık", planned.average.map_or_else(String::new, decimal), "m"),
+        row(
+            "Ortalama uzaklık",
+            planned.average.map_or_else(String::new, decimal),
+            "m",
+        ),
         row("Karşılanmayan dolgu", decimal(planned.shortage), "m³"),
         row("Yerleşmeyen yarma", decimal(planned.surplus), "m³"),
     ];
@@ -457,27 +662,68 @@ pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::Wor
     }
     if let Some(c) = &planned.cost {
         summary.push(row("Fazla taşıma momenti", decimal(c.over_moment), "m³·m"));
-        for (k, v) in [("Fazla taşıma", c.overhaul), ("Döküm", c.waste), ("Ödünç", c.borrow), ("Toplam maliyet", c.total)] {
+        for (k, v) in [
+            ("Fazla taşıma", c.overhaul),
+            ("Döküm", c.waste),
+            ("Ödünç", c.borrow),
+            ("Toplam maliyet", c.total),
+        ] {
             summary.push(row(k, decimal(v), &c.currency));
         }
     }
     if let Some(u) = planned.unsuitable {
         summary.push(row("Uygunsuz yarma", decimal(u), "m³"));
-        summary.push(row("Dökülemeyen uygunsuz", planned.stranded.map_or_else(String::new, decimal), "m³"));
-        summary.push(row("Uygunsuzun momenti", planned.unsuitable_moment.map_or_else(String::new, decimal), "m³·m"));
+        summary.push(row(
+            "Dökülemeyen uygunsuz",
+            planned.stranded.map_or_else(String::new, decimal),
+            "m³",
+        ));
+        summary.push(row(
+            "Uygunsuzun momenti",
+            planned.unsuitable_moment.map_or_else(String::new, decimal),
+            "m³·m",
+        ));
     }
     // The plan's approval (docs/adr/0954): its number and day, what it approved, and whether it went stale and why.
     if let Some(a) = &planned.approval {
         let x = &a.approved;
-        let note = x.note.as_ref().map_or_else(String::new, |n| format!(" · {n}"));
-        summary.push(row("Taşıma planı onayı", format!("{}. onay · {}{note}", x.number, x.at), ""));
-        summary.push(row("Onaylı amaç", if x.cost { "En düşük maliyet" } else { "En küçük moment" }.into(), ""));
+        let note = x
+            .note
+            .as_ref()
+            .map_or_else(String::new, |n| format!(" · {n}"));
+        summary.push(row(
+            "Taşıma planı onayı",
+            format!("{}. onay · {}{note}", x.number, x.at),
+            "",
+        ));
+        summary.push(row(
+            "Onaylı amaç",
+            if x.cost {
+                "En düşük maliyet"
+            } else {
+                "En küçük moment"
+            }
+            .into(),
+            "",
+        ));
         summary.push(row("Onaylı taşınan", decimal(x.moved), "m³"));
         summary.push(row("Onaylı taşıma momenti", decimal(x.moment), "m³·m"));
         if let Some(t) = x.total {
-            summary.push(row("Onaylı toplam", decimal(t), planned.cost.as_ref().map_or("", |c| c.currency.as_str())));
+            summary.push(row(
+                "Onaylı toplam",
+                decimal(t),
+                planned.cost.as_ref().map_or("", |c| c.currency.as_str()),
+            ));
         }
-        summary.push(row("Onay", if a.stale { format!("eskidi: {}", a.reasons.join("; ")) } else { "güncel".into() }, ""));
+        summary.push(row(
+            "Onay",
+            if a.stale {
+                format!("eskidi: {}", a.reasons.join("; "))
+            } else {
+                "güncel".into()
+            },
+            "",
+        ));
     }
     let sorted = planned.unsuitable.is_some();
     // A stretch's haul length is its stations' difference plus the detours of the barriers on it ([from, to)): the
@@ -485,7 +731,12 @@ pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::Wor
     // run opposite ways (docs/adr/0944).
     let detour = |s: &HaulSegment| -> f64 {
         // Folded from +0: an empty f64 sum is −0, which a sheet writes as “-0.0”.
-        planned.barriers.iter().filter(|b| s.from <= b.station && b.station < s.to).filter_map(|b| b.detour).fold(0.0, |a, d| a + d)
+        planned
+            .barriers
+            .iter()
+            .filter(|b| s.from <= b.station && b.station < s.to)
+            .filter_map(|b| b.detour)
+            .fold(0.0, |a, d| a + d)
     };
     let barriers = !planned.barriers.is_empty();
     let mut flow_columns = vec![text("Başlangıç km"), text("Bitiş km"), n("Uzunluk (m)")];
@@ -521,7 +772,13 @@ pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::Wor
             r
         })
         .collect();
-    let mut site_columns = vec![text("Alan"), text("Tür"), text("Km"), n("Kapasite (m³)"), n("Kullanılan (m³)")];
+    let mut site_columns = vec![
+        text("Alan"),
+        text("Tür"),
+        text("Km"),
+        n("Kapasite (m³)"),
+        n("Kullanılan (m³)"),
+    ];
     if sorted {
         site_columns.push(n("Uygunsuz (m³)"));
     }
@@ -537,7 +794,12 @@ pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::Wor
         .map(|s| {
             let mut r = vec![
                 s.name.clone(),
-                if s.kind == kentos_commands::HaulSiteKind::Borrow { "ödünç" } else { "döküm" }.to_owned(),
+                if s.kind == kentos_commands::HaulSiteKind::Borrow {
+                    "ödünç"
+                } else {
+                    "döküm"
+                }
+                .to_owned(),
                 km(s.station),
                 decimal(s.capacity),
                 decimal(s.used),
@@ -548,7 +810,16 @@ pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::Wor
             if reached {
                 r.push(s.access.map_or_else(String::new, decimal));
                 r.push(s.access.map_or_else(String::new, |a| decimal(a * s.used)));
-                r.push(if s.unconnected { "bağlanmıyor" } else if s.access.is_some() { "ağdan" } else { "yol üstünde" }.to_owned());
+                r.push(
+                    if s.unconnected {
+                        "bağlanmıyor"
+                    } else if s.access.is_some() {
+                        "ağdan"
+                    } else {
+                        "yol üstünde"
+                    }
+                    .to_owned(),
+                );
             }
             r
         })
@@ -557,18 +828,42 @@ pub fn sheets(doc: &Document, planned: &HaulPlanned) -> Vec<kentos_commands::Wor
         summary.push(row("Erişim yollarının momenti", decimal(a), "m³·m"));
     }
     let mut out = vec![
-        WorkbookSheet { name: "Özet".into(), columns: vec![text("Kalem"), text("Değer"), text("Birim")], rows: summary },
-        WorkbookSheet { name: "Taşımalar".into(), columns: flow_columns, rows: flows },
-        WorkbookSheet { name: "Alanlar".into(), columns: site_columns, rows: sites },
+        WorkbookSheet {
+            name: "Özet".into(),
+            columns: vec![text("Kalem"), text("Değer"), text("Birim")],
+            rows: summary,
+        },
+        WorkbookSheet {
+            name: "Taşımalar".into(),
+            columns: flow_columns,
+            rows: flows,
+        },
+        WorkbookSheet {
+            name: "Alanlar".into(),
+            columns: site_columns,
+            rows: sites,
+        },
     ];
     if !planned.barriers.is_empty() {
         out.push(WorkbookSheet {
             name: "Engeller".into(),
-            columns: vec![text("Engel"), text("Km"), text("Dolaşma (m)"), n("Geçen (m³)")],
+            columns: vec![
+                text("Engel"),
+                text("Km"),
+                text("Dolaşma (m)"),
+                n("Geçen (m³)"),
+            ],
             rows: planned
                 .barriers
                 .iter()
-                .map(|b| vec![b.name.clone(), km(b.station), b.detour.map_or_else(|| "kapalı".into(), decimal), decimal(b.crossed)])
+                .map(|b| {
+                    vec![
+                        b.name.clone(),
+                        km(b.station),
+                        b.detour.map_or_else(|| "kapalı".into(), decimal),
+                        decimal(b.crossed),
+                    ]
+                })
                 .collect(),
         });
     }

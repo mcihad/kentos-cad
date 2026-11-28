@@ -4,9 +4,9 @@
 //! parcels; Çizimde göster leaves the graph's marks on the drawing, worked out again as it changes, until İşareti
 //! kaldır (docs/adr/2220); nothing is written to the drawing. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_launch::Module;
 use serde_json::Value;
 
@@ -14,17 +14,27 @@ use crate::app::{App, Message};
 use crate::parcel_boundaries_window::{Event as B, Show, rows};
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.parcels.boundaries.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.parcels.boundaries.json"
+    ))
+    .expect("cases")
 }
 
 /// The drawing of the case named `name` (none: the file's own), open in Harita.
 fn opened(name: Option<&str>) -> App {
     let c = cases();
     let setup = match name {
-        Some(n) => c["cases"].as_array().expect("cases").iter().find(|x| x["name"] == n).expect("the case")["setup"].clone(),
+        Some(n) => c["cases"]
+            .as_array()
+            .expect("cases")
+            .iter()
+            .find(|x| x["name"] == n)
+            .expect("the case")["setup"]
+            .clone(),
         None => c["setup"].clone(),
     };
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -46,7 +56,8 @@ fn an_arc_drawn_with_chords_is_one_problem_with_a_distance() {
     let _ = app.update(Message::Run("parcels.check"));
     let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     let g = app
-        .modules.map()
+        .modules
+        .map()
         .parcel_boundaries
         .answer
         .clone()
@@ -63,7 +74,8 @@ fn an_arc_drawn_with_chords_is_one_problem_with_a_distance() {
         0.01,
     ))));
     let g = app
-        .modules.map()
+        .modules
+        .map()
         .parcel_boundaries
         .answer
         .clone()
@@ -78,8 +90,15 @@ fn an_arc_drawn_with_chords_is_one_problem_with_a_distance() {
         .expect("the case")["steps"][0]["result"]["output"]["problems"][0];
     assert_eq!(g.problems.len(), 1);
     let got = &g.problems[0];
-    assert_eq!((got.kind.as_str(), serde_json::to_value(&got.boundaries).expect("json")), ("approxArc", want["boundaries"].clone()));
-    let close = |a: Option<f64>, key: &str| (a.expect(key) - want[key].as_f64().expect(key)).abs() < 1e-9;
+    assert_eq!(
+        (
+            got.kind.as_str(),
+            serde_json::to_value(&got.boundaries).expect("json")
+        ),
+        ("approxArc", want["boundaries"].clone())
+    );
+    let close =
+        |a: Option<f64>, key: &str| (a.expect(key) - want[key].as_f64().expect(key)).abs() < 1e-9;
     assert!(close(got.area, "area") && close(got.gap, "gap"), "{got:?}");
     let f = app.format();
     let shown = rows(&g, Show::Problems, &f);
@@ -87,7 +106,14 @@ fn an_arc_drawn_with_chords_is_one_problem_with_a_distance() {
     let b = &got.boundaries;
     assert_eq!(
         shown[0][4],
-        format!("{} ile {}–{} (4 kiriş) · {}, en geniş {}", b[0], b[1], b[4], f.area(got.area.expect("area")), f.length(got.gap.expect("gap")))
+        format!(
+            "{} ile {}–{} (4 kiriş) · {}, en geniş {}",
+            b[0],
+            b[1],
+            b[4],
+            f.area(got.area.expect("area")),
+            f.length(got.gap.expect("gap"))
+        )
     );
 }
 
@@ -102,15 +128,22 @@ fn an_arc_drawn_with_chords_is_one_problem_with_a_distance() {
 fn approx_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kirisli-yay-3420");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kirisli-yay-3420");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (draw, file) in [(false, "1-pencere"), (true, "2-cizimde")] {
             let mut app = opened(Some(APPROX));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
-            app.selection.set([kentos_domain::Slot(1), kentos_domain::Slot(3)]);
+            app.selection
+                .set([kentos_domain::Slot(1), kentos_domain::Slot(3)]);
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("parcels.check"));
             let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
@@ -131,7 +164,10 @@ fn approx_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }
@@ -146,7 +182,8 @@ fn an_arc_against_its_chord_is_listed_with_its_sliver() {
     let _ = app.update(Message::Run("parcels.check"));
     let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     let g = app
-        .modules.map()
+        .modules
+        .map()
         .parcel_boundaries
         .answer
         .clone()
@@ -164,16 +201,31 @@ fn an_arc_against_its_chord_is_listed_with_its_sliver() {
     assert_eq!(g.problems.len(), want.len());
     for (got, w) in g.problems.iter().zip(want) {
         assert_eq!(got.kind, w["kind"].as_str().expect("kind"));
-        assert_eq!(serde_json::to_value(&got.boundaries).expect("json"), w["boundaries"]);
-        assert_eq!(serde_json::to_value(&got.parcels).expect("json"), w["parcels"]);
+        assert_eq!(
+            serde_json::to_value(&got.boundaries).expect("json"),
+            w["boundaries"]
+        );
+        assert_eq!(
+            serde_json::to_value(&got.parcels).expect("json"),
+            w["parcels"]
+        );
         // The case's numbers within its own 1e-9 (the reference's arcs are mpmath's).
-        let close = |a: Option<f64>, key: &str| (a.expect(key) - w[key].as_f64().expect(key)).abs() < 1e-9;
+        let close =
+            |a: Option<f64>, key: &str| (a.expect(key) - w[key].as_f64().expect(key)).abs() < 1e-9;
         assert!(close(got.area, "area") && close(got.gap, "gap"), "{got:?}");
     }
     let shown = rows(&g, Show::Problems, &app.format());
     assert_eq!(shown[0][0], "Yay ile kiriş uyuşmuyor");
     let f = app.format();
-    assert_eq!(shown[0][4], format!("{} · {}, ortada {}", g.problems[0].boundaries.join(" ile "), f.area(6.719699229259696), f.length(1.0)));
+    assert_eq!(
+        shown[0][4],
+        format!(
+            "{} · {}, ortada {}",
+            g.problems[0].boundaries.join(" ile "),
+            f.area(6.719699229259696),
+            f.length(1.0)
+        )
+    );
 }
 
 #[test]
@@ -187,7 +239,8 @@ fn the_clean_block_s_graph_from_the_parcel_check() {
         Some(crate::map::dialog(map::MapDialogKind::ParcelBoundaries))
     );
     let g = app
-        .modules.map()
+        .modules
+        .map()
         .parcel_boundaries
         .answer
         .clone()
@@ -209,7 +262,11 @@ fn the_clean_block_s_graph_from_the_parcel_check() {
     assert!(g.problems.is_empty());
     let first = &rows(&g, Show::Boundaries, &app.format())[0];
     assert_eq!(first[0], "S1");
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
 }
 
 #[test]
@@ -218,7 +275,8 @@ fn the_problems_are_listed_and_their_parcels_selected() {
     let _ = app.update(Message::Run("parcels.check"));
     let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     let g = app
-        .modules.map()
+        .modules
+        .map()
         .parcel_boundaries
         .answer
         .clone()
@@ -260,7 +318,8 @@ fn the_graph_stays_on_the_drawing_until_unmarked() {
     let _ = app.update(Message::Run("parcels.check"));
     let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     let g = app
-        .modules.map()
+        .modules
+        .map()
         .parcel_boundaries
         .answer
         .clone()
@@ -277,9 +336,20 @@ fn the_graph_stays_on_the_drawing_until_unmarked() {
     let words: Vec<&str> = m.problems.iter().map(|(_, w)| w.as_str()).collect();
     assert_eq!(
         words,
-        ["Komşuda eksik köşe", "Komşuda eksik köşe", "Komşuda eksik köşe", "Ayrık köşe", "Ayrık köşe", "Çakışan kenar"]
+        [
+            "Komşuda eksik köşe",
+            "Komşuda eksik köşe",
+            "Komşuda eksik köşe",
+            "Ayrık köşe",
+            "Ayrık köşe",
+            "Çakışan kenar"
+        ]
     );
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
     app.selection.set(vec![kentos_domain::Slot(7)]);
     let _ = app.update(Message::Run("tool.erase"));
     let m = app.parcel_graph_marks().expect("the marks again");
@@ -298,7 +368,8 @@ fn the_chosen_row_is_brought_forward_on_the_drawing() {
     let _ = app.update(Message::Run("parcels.check"));
     let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
     let g = app
-        .modules.map()
+        .modules
+        .map()
         .parcel_boundaries
         .answer
         .clone()
@@ -320,12 +391,18 @@ fn the_chosen_row_is_brought_forward_on_the_drawing() {
     // The view goes to it: a box round its place, narrower than the whole graph's.
     let all = g.corners.iter().fold(None::<[f64; 4]>, |b, c| {
         let [x, y] = c.at;
-        Some(b.map_or([x, y, x, y], |b| [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]))
+        Some(b.map_or([x, y, x, y], |b| {
+            [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]
+        }))
     });
-    let focus = crate::parcel_boundaries_marks::Focus::of(&g, Show::Problems, last).expect("the row");
+    let focus =
+        crate::parcel_boundaries_marks::Focus::of(&g, Show::Problems, last).expect("the row");
     let b = focus.bounds(&g, all).expect("a box");
     let a = all.expect("the graph's box");
-    assert!(b[0] < p[0] && p[0] < b[2] && b[1] < p[1] && p[1] < b[3], "{b:?} {p:?}");
+    assert!(
+        b[0] < p[0] && p[0] < b[2] && b[1] < p[1] && p[1] < b[3],
+        "{b:?} {p:?}"
+    );
     assert!(b[2] - b[0] < a[2] - a[0], "{b:?} within {a:?}");
     // A boundary, chosen in the boundaries' table: along its curve; another table clears the choice.
     let _ = app.update(Message::Run("parcels.check"));
@@ -364,19 +441,30 @@ fn the_chosen_row_is_brought_forward_on_the_drawing() {
 fn drawing_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    const ARC: &str = "yaylı sınırda eksik köşe: üstteki iki parselin köşesi alttakinin yayının tepesinde";
-    let out =
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/sinir-grafigi-cizimde-2220");
+    const ARC: &str =
+        "yaylı sınırda eksik köşe: üstteki iki parselin köşesi alttakinin yayının tepesinde";
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/sinir-grafigi-cizimde-2220");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
-        for (case, draw, file) in [(PROBLEMS, false, "1-pencere"), (PROBLEMS, true, "2-sorunlar-cizimde"), (ARC, true, "3-yay-cizimde")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
+        for (case, draw, file) in [
+            (PROBLEMS, false, "1-pencere"),
+            (PROBLEMS, true, "2-sorunlar-cizimde"),
+            (ARC, true, "3-yay-cizimde"),
+        ] {
             let mut app = opened(Some(case));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             if case == ARC {
-                app.selection.set((1..=3).map(kentos_domain::Slot).collect::<Vec<_>>());
+                app.selection
+                    .set((1..=3).map(kentos_domain::Slot).collect::<Vec<_>>());
             }
             let _ = app.update(Message::Run("parcels.check"));
             let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
@@ -393,7 +481,10 @@ fn drawing_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }
@@ -409,12 +500,21 @@ fn drawing_screens() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/sinir-grafigi-2000");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/sinir-grafigi-2000");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
-        for (case, show, file) in [(None, Show::Boundaries, "1-sinirlar"), (Some(PROBLEMS), Show::Problems, "2-sorunlar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
+        for (case, show, file) in [
+            (None, Show::Boundaries, "1-sinirlar"),
+            (Some(PROBLEMS), Show::Problems, "2-sorunlar"),
+        ] {
             let mut app = opened(case);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -427,7 +527,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }
@@ -443,12 +546,18 @@ fn screens() {
 fn mismatch_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yay-kiris-2620");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yay-kiris-2620");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (draw, file) in [(false, "1-pencere"), (true, "2-cizimde")] {
             let mut app = opened(Some(MISMATCH));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -467,7 +576,10 @@ fn mismatch_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }
@@ -484,12 +596,19 @@ fn mismatch_screens() {
 fn focus_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    const ARC: &str = "yaylı sınırda eksik köşe: üstteki iki parselin köşesi alttakinin yayının tepesinde";
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/satir-cizimde-3020");
+    const ARC: &str =
+        "yaylı sınırda eksik köşe: üstteki iki parselin köşesi alttakinin yayının tepesinde";
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/satir-cizimde-3020");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(ARC));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -500,7 +619,8 @@ fn focus_screens() {
         let _ = app.update(Message::Run("parcels.check"));
         let _ = app.update(Message::from(map::Event::ParcelBoundaries(B::Open)));
         let g = app
-            .modules.map()
+            .modules
+            .map()
             .parcel_boundaries
             .answer
             .clone()

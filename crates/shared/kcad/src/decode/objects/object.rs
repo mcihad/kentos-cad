@@ -286,7 +286,8 @@ pub(crate) fn object(
                 f.table_style = Some(id);
             }
             "breaks" if kind == Kind::Table => {
-                let (v, at): (kentos_contracts::TableBreaks, usize) = json_part(r, "tablonun parçaları")?;
+                let (v, at): (kentos_contracts::TableBreaks, usize) =
+                    json_part(r, "tablonun parçaları")?;
                 if let Some(words) = v.problem() {
                     return Err(r.fail_at(Code::BadValue, at, &words));
                 }
@@ -390,7 +391,9 @@ pub(crate) fn object(
             "slab" if kind == Kind::Slab => f.slab = Some(json_part(r, "döşemenin alanları")?.0),
             "beam" if kind == Kind::Beam => f.beam = Some(json_part(r, "kirişin alanları")?.0),
             "roof" if kind == Kind::Roof => f.roof = Some(json_part(r, "çatının alanları")?.0),
-            "railing" if kind == Kind::Railing => f.railing = Some(json_part(r, "korkuluğun alanları")?.0),
+            "railing" if kind == Kind::Railing => {
+                f.railing = Some(json_part(r, "korkuluğun alanları")?.0)
+            }
             "mass" if kind == Kind::Mass => f.mass = Some(json_part(r, "kütlenin alanları")?.0),
             // Schema 78 (docs/adr/0342 §1): a space's parts and the rest of its fields.
             "parts" if kind == Kind::Space => {
@@ -618,7 +621,8 @@ pub(crate) fn object(
             // A curtain wall's grid (architecture data 3, docs/adr/8070 §7): the document's reader refuses it in a file
             // that does not name that version.
             "curtain" => {
-                let (v, _): (kentos_contracts::CurtainGrid, usize) = json_part(r, "giydirme cephenin ızgarası")?;
+                let (v, _): (kentos_contracts::CurtainGrid, usize) =
+                    json_part(r, "giydirme cephenin ızgarası")?;
                 f.wall_curtain = Some(v);
             }
             // A wall's, and since schema 131 a block insert's level and phase (docs/adr/0733 §1).
@@ -671,7 +675,11 @@ pub(crate) fn object(
                 let (l, at): (kentos_contracts::ParagraphLayout, usize) =
                     json_part(r, "yazının düzeni")?;
                 if l.engine.is_some() && !has.text_engine {
-                    return Err(r.fail_at(Code::UnknownField, at, "bu şemada yazı yerleşim motoru yok"));
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "bu şemada yazı yerleşim motoru yok",
+                    ));
                 }
                 f.layout_at = at;
                 f.paragraph.layout = Some(Box::new(l));
@@ -1224,23 +1232,38 @@ pub(crate) fn object(
     let entity = build(r, kind, index, &mut f)?;
     // Schema 138 (docs/adr/0771): a turning component, a node decision, a bound slab.
     if !has.building_parts && crate::encode::building_parts(&entity) {
-        return Err(r.fail(Code::UnknownField, "dönen bileşen, düğüm kararı ya da bağlı döşeme şema 138 ister"));
+        return Err(r.fail(
+            Code::UnknownField,
+            "dönen bileşen, düğüm kararı ya da bağlı döşeme şema 138 ister",
+        ));
     }
     // Schema 151 (docs/adr/0795): a schedule of the program's units, its fields, filter or rows' units.
     if !has.unit_schedules && crate::encode::unit_schedules(&entity) {
-        return Err(r.fail(Code::UnknownField, "bölüm çizelgesi, alanları, süzgeci ya da satırların bölümleri şema 151 ister"));
+        return Err(r.fail(
+            Code::UnknownField,
+            "bölüm çizelgesi, alanları, süzgeci ya da satırların bölümleri şema 151 ister",
+        ));
     }
     // Schema 147 (docs/adr/0784): a schedule's share field.
     if !has.program_shares && crate::encode::program_shares(&entity) {
-        return Err(r.fail(Code::UnknownField, "çizelgenin pay ya da brüt alanı şema 147 ister"));
+        return Err(r.fail(
+            Code::UnknownField,
+            "çizelgenin pay ya da brüt alanı şema 147 ister",
+        ));
     }
     // Schema 148 (docs/adr/0785): a component or a slab bound to a project material.
     if !has.materials && crate::encode::materials(&entity) {
-        return Err(r.fail(Code::UnknownField, "malzemeye bağlı bileşen ya da döşeme şema 148 ister"));
+        return Err(r.fail(
+            Code::UnknownField,
+            "malzemeye bağlı bileşen ya da döşeme şema 148 ister",
+        ));
     }
     // Schema 140 (docs/adr/0773): a space's group, a schedule's program field.
     if !has.building_program && crate::encode::building_program(&entity) {
-        return Err(r.fail(Code::UnknownField, "mahalın bölümü ya da çizelgenin program alanı şema 140 ister"));
+        return Err(r.fail(
+            Code::UnknownField,
+            "mahalın bölümü ya da çizelgenin program alanı şema 140 ister",
+        ));
     }
     // Schema 115 (docs/adr/0705): a stair's or ramp's railings.
     let railed = match &entity {
@@ -1334,7 +1357,10 @@ pub(crate) fn object(
     }
     // Schema 235 (docs/adr/8041 §2): a column's material.
     if matches!(&entity, Entity::Column(c) if c.column.material.is_some()) && !has.column_material {
-        return Err(r.fail(Code::UnknownField, "kolonun malzemesi (material) şema 235 ister"));
+        return Err(r.fail(
+            Code::UnknownField,
+            "kolonun malzemesi (material) şema 235 ister",
+        ));
     }
     // Schema 233 (docs/adr/8040 §3): a room's floor offset and asma tavan.
     if kentos_contracts::needs_room_heights(&entity) && !has.room_heights {

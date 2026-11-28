@@ -2,9 +2,9 @@
 //! `road.superelevations.widen`, and Çizelgeye yaz puts the suggestion into Dever's Genişleme cell, which Kaydet
 //! writes; and its pictures.
 
-use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::road;
+use crate::road::RoadState;
 use crate::superelevation_window::Event as D;
 use crate::widening_window::{Event as W, Method};
 
@@ -12,9 +12,12 @@ use crate::widening_window::{Event as W, Method};
 /// it (6 %, widening 0,5) and d-2 from rows on the side alignment.
 fn app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.superelevations.query.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.superelevations.query.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -29,7 +32,14 @@ fn typed(app: &mut App) {
     let _ = app.update(Message::Run("superelevation.editor"));
     let _ = app.update(Message::from(road::Event::Superelevations(D::Choose(0))));
     let _ = app.update(Message::from(road::Event::Superelevations(D::OpenWiden)));
-    for (k, v) in [(0, "6,6"), (1, "1,2"), (2, "2,59"), (6, "0,9"), (7, "80"), (8, "0,1")] {
+    for (k, v) in [
+        (0, "6,6"),
+        (1, "1,2"),
+        (2, "2,59"),
+        (6, "0,9"),
+        (7, "80"),
+        (8, "0,1"),
+    ] {
         send(app, W::Field(k, v.into()));
     }
     send(app, W::Trailer(true));
@@ -38,7 +48,8 @@ fn typed(app: &mut App) {
 }
 
 fn widen(app: &App) -> &crate::widening_window::Widen {
-    app.modules.road()
+    app.modules
+        .road()
         .superelevation_window
         .as_ref()
         .and_then(|w| w.widen.as_deref())
@@ -50,11 +61,18 @@ fn the_suggestion_is_read_and_written_into_the_schedule() {
     let mut app = app();
     typed(&mut app);
     let out = widen(&app).result.clone().expect("read").expect("reads");
-    assert_eq!((out.lanes, out.tangent), (2, 7.0), "Tip 1's two 3,5 m lanes");
+    assert_eq!(
+        (out.lanes, out.tangent),
+        (2, 7.0),
+        "Tip 1's two 3,5 m lanes"
+    );
     let p1 = &out.curves[0];
     assert_eq!(p1.pi, "p1");
     assert!((p1.offtracking - 0.6654).abs() < 1e-3, "{p1:?}");
-    assert!((p1.suggested - 2.1).abs() < 1e-9, "2,0215 rounded up: {p1:?}");
+    assert!(
+        (p1.suggested - 2.1).abs() < 1e-9,
+        "2,0215 rounded up: {p1:?}"
+    );
     assert!((p1.current - 0.5).abs() < 1e-9);
     // Basit drops F_A and Z; Sür drives the curve, under the steady state.
     send(&mut app, W::Method(Method::Simple));
@@ -62,12 +80,18 @@ fn the_suggestion_is_read_and_written_into_the_schedule() {
     assert!(simple < p1.widening - 0.6, "{simple}");
     send(&mut app, W::Method(Method::Standard));
     send(&mut app, W::Drive(true));
-    let driven = widen(&app).result.clone().unwrap().unwrap().curves[0].driven.expect("driven");
-    assert!(driven <= p1.offtracking + 0.01 && driven > 0.9 * p1.offtracking, "{driven}");
+    let driven = widen(&app).result.clone().unwrap().unwrap().curves[0]
+        .driven
+        .expect("driven");
+    assert!(
+        driven <= p1.offtracking + 0.01 && driven > 0.9 * p1.offtracking,
+        "{driven}"
+    );
     // Çizelgeye yaz: back to Dever with 2,1 in p1's cell; Kaydet writes it.
     send(&mut app, W::Apply);
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .superelevation_window
             .as_ref()
             .unwrap()
@@ -78,7 +102,9 @@ fn the_suggestion_is_read_and_written_into_the_schedule() {
     let _ = app.update(Message::from(road::Event::Superelevations(D::Save)));
     let doc = &app.document.as_ref().unwrap().model;
     match &doc.road_superelevations()[0].method {
-        kentos_commands::SuperelevationMethod::Curves { curves } => assert!((curves[0].widening - 2.1).abs() < 1e-9),
+        kentos_commands::SuperelevationMethod::Curves { curves } => {
+            assert!((curves[0].widening - 2.1).abs() < 1e-9)
+        }
         other => panic!("{other:?}"),
     }
 }
@@ -89,7 +115,11 @@ fn a_missing_size_says_what_to_type_and_rows_are_not_written() {
     let _ = app.update(Message::Run("superelevation.editor"));
     let _ = app.update(Message::from(road::Event::Superelevations(D::Choose(0))));
     let _ = app.update(Message::from(road::Event::Superelevations(D::OpenWiden)));
-    let why = widen(&app).result.clone().expect("read").expect_err("not yet");
+    let why = widen(&app)
+        .result
+        .clone()
+        .expect("read")
+        .expect_err("not yet");
     assert!(why.contains("Dingil aralığı"), "{why}");
     send(&mut app, W::Back);
     // d-2 is from rows: the suggestion reads, Çizelgeye yaz is not offered.
@@ -112,14 +142,17 @@ fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y26");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y26");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -128,7 +161,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y28-3-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -154,7 +190,8 @@ fn screens_full_screen() {
     use kentos_ui::snapshot::Snapshot;
     use kentos_ui::widget::sizable::sizes;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y26");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y26");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut app = app();
     let mut snapshot = Snapshot::new(Size::new(1920.0, 1080.0)).expect("a renderer");
@@ -164,11 +201,21 @@ fn screens_full_screen() {
     let mut shot = |app: &mut App, file: &str| {
         snapshot.settle(app, App::view, &mut update);
         let file = out.join(format!("tam-ekran-{file}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     };
     for key in ["Dever", "Genişletme önerisi", "Enkesit", "Kübaj"] {
-        sizes::set(key, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
+        sizes::set(
+            key,
+            sizes::Kept {
+                width: 800.0,
+                height: 600.0,
+                maximized: true,
+            },
+        );
     }
     let _ = app.update(Message::Run("superelevation.editor"));
     let _ = app.update(Message::from(road::Event::Superelevations(D::Choose(1))));
@@ -186,8 +233,19 @@ fn screens_full_screen() {
         crate::section_window::Event::Cancel,
     )));
     // The other road windows whose buttons moved to the footer.
-    for (key, run, file) in [("Boykesit", "profile.new", "boykesit"), ("Güzergâh", "alignment.new", "guzergah"), ("Otokorkuluk", "guardrail.editor", "otokorkuluk")] {
-        sizes::set(key, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
+    for (key, run, file) in [
+        ("Boykesit", "profile.new", "boykesit"),
+        ("Güzergâh", "alignment.new", "guzergah"),
+        ("Otokorkuluk", "guardrail.editor", "otokorkuluk"),
+    ] {
+        sizes::set(
+            key,
+            sizes::Kept {
+                width: 800.0,
+                height: 600.0,
+                maximized: true,
+            },
+        );
         let _ = app.update(Message::Run(run));
         shot(&mut app, file);
         let _ = app.update(Message::CapturedEscape);

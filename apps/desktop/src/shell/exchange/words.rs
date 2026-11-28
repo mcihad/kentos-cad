@@ -187,9 +187,21 @@ pub fn decision_topic(topic: kentos_commands::ImportDecisionTopic) -> &'static s
 /// the topic (“Birim”, “Katman”, “Pafta”) is not said twice.
 pub fn decision_text(d: &kentos_commands::ImportDecision) -> String {
     let topic = decision_topic(d.topic);
-    let general = d.subject == topic || matches!(d.subject.as_str(), "Blok birimi" | "Blok ölçeği" | "Ölçek doğrulaması");
-    let head = if general { topic.to_owned() } else { format!("{topic} “{}”", d.subject) };
-    let times = if d.count > 1 { format!(" ({} kez)", d.count) } else { String::new() };
+    let general = d.subject == topic
+        || matches!(
+            d.subject.as_str(),
+            "Blok birimi" | "Blok ölçeği" | "Ölçek doğrulaması"
+        );
+    let head = if general {
+        topic.to_owned()
+    } else {
+        format!("{topic} “{}”", d.subject)
+    };
+    let times = if d.count > 1 {
+        format!(" ({} kez)", d.count)
+    } else {
+        String::new()
+    };
     format!("{head}: {}{times}", d.decision)
 }
 
@@ -202,18 +214,33 @@ pub fn decision_lines<'a, Message: 'a>(
         return Vec::new();
     }
     let mut lines = vec![line(Kind::Info, label::strong("Okuma kararları"))];
-    lines.extend(decisions.iter().take(max).map(|d| text_line(Kind::Info, decision_text(d))));
+    lines.extend(
+        decisions
+            .iter()
+            .take(max)
+            .map(|d| text_line(Kind::Info, decision_text(d))),
+    );
     if decisions.len() > max {
-        lines.push(text_line(Kind::Info, format!("… ve {} başka karar.", decisions.len() - max)));
+        lines.push(text_line(
+            Kind::Info,
+            format!("… ve {} başka karar.", decisions.len() - max),
+        ));
     }
     lines
 }
 
 /// The notes a decision does not already say (docs/adr/1010): shown once, under the decisions.
-pub fn notes_beside(notes: &[ReportItem], decisions: &[kentos_commands::ImportDecision]) -> Vec<ReportItem> {
+pub fn notes_beside(
+    notes: &[ReportItem],
+    decisions: &[kentos_commands::ImportDecision],
+) -> Vec<ReportItem> {
     notes
         .iter()
-        .filter(|n| !decisions.iter().any(|d| d.subject == n.what && d.decision == n.reason))
+        .filter(|n| {
+            !decisions
+                .iter()
+                .any(|d| d.subject == n.what && d.decision == n.reason)
+        })
         .cloned()
         .collect()
 }

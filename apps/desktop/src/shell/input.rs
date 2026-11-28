@@ -277,7 +277,10 @@ impl App {
         let tool = self.session.tool_id();
         let mut log = Vec::new();
         let mut changes = Vec::new();
-        let view = PaperCameraView { camera: CameraView(&self.viewport.camera), scale: paper_scale };
+        let view = PaperCameraView {
+            camera: CameraView(&self.viewport.camera),
+            scale: paper_scale,
+        };
         let out = act(
             &mut self.session,
             &mut Context {
@@ -359,7 +362,10 @@ impl App {
                     // the shown data layers' rows, counted with the objects (docs/adr/9167).
                     self.gis.data_info.rows.clear();
                     if let Some((_, at)) = card {
-                        self.gis.data_info.beside.push((at, self.gis.data_info.reach));
+                        self.gis
+                            .data_info
+                            .beside
+                            .push((at, self.gis.data_info.reach));
                     } else {
                         self.gis.data_info.cells.clear();
                         self.gis.data_info.showing_raster = false;
@@ -430,7 +436,9 @@ impl App {
         // A label tool's click found no drawing label: a data layer's there is said, with what to use (docs/adr/9341).
         use kentos_interaction::label_tools::{HIDE_ID, MOVE_ID, PIN_ID, ROTATE_ID};
         let missed = [MOVE_ID, ROTATE_ID, PIN_ID, HIDE_ID].contains(&tool)
-            && log.iter().any(|l| l.level == kentos_interaction::Level::Warn && l.text.contains("etikete tıklayın"));
+            && log.iter().any(|l| {
+                l.level == kentos_interaction::Level::Warn && l.text.contains("etikete tıklayın")
+            });
         for line in log {
             self.say(line.level, line.text);
         }
@@ -463,7 +471,10 @@ impl App {
                 self.toast(
                     kentos_ui::widget::Toast::info("Katman düzenlemeye kapalı")
                         .body(why)
-                        .action("Düzenlemeyi başlat", crate::data_edits::event(crate::data_edits::Event::Start(layer))),
+                        .action(
+                            "Düzenlemeyi başlat",
+                            crate::data_edits::event(crate::data_edits::Event::Start(layer)),
+                        ),
                 );
             }
             return Task::none();
@@ -500,7 +511,10 @@ impl App {
                 }
             }
             if !self.session.settings(&self.format()).is_empty() {
-                self.docks.show(crate::app::Panel::Properties, kentos_ui::widget::docking::Side::Right);
+                self.docks.show(
+                    crate::app::Panel::Properties,
+                    kentos_ui::widget::docking::Side::Right,
+                );
                 return crate::tool_settings::reveal();
             }
         }
@@ -538,7 +552,11 @@ impl App {
     /// takes no confirm (Kaydır, Pencere yakınlaştır), the last one starts
     /// again (the web's `t.confirm ? t.confirm() : tools.repeatLast()`).
     pub(crate) fn confirm(&mut self) -> Task<Message> {
-        if self.field.as_ref().is_some_and(|f| f.preview != kentos_interaction::InputPreview::Off) {
+        if self
+            .field
+            .as_ref()
+            .is_some_and(|f| f.preview != kentos_interaction::InputPreview::Off)
+        {
             return self.submit_field();
         }
         if self.session.confirms() {
@@ -688,7 +706,11 @@ impl App {
                 self.with_tool(|s, cx| s.pointer_move(&p, cx));
             }
             viewport::Event::Pressed(at) => {
-                if self.field.as_ref().is_some_and(|f| f.preview != kentos_interaction::InputPreview::Off) {
+                if self
+                    .field
+                    .as_ref()
+                    .is_some_and(|f| f.preview != kentos_interaction::InputPreview::Off)
+                {
                     return self.submit_field();
                 }
                 // A new drag of Kaydır records its start again.
@@ -767,7 +789,9 @@ impl App {
                 // An edited data layer's rows snap too (data_labels.rs, docs/adr/9103 §5): the nearer of the two.
                 match (own, self.data_snap(raw, &view, &draft)) {
                     (Some(a), Some(b)) => {
-                        let far = |h: &kentos_geometry_core::store::snap::SnapHit| (h.point.x - raw.x).hypot(h.point.y - raw.y);
+                        let far = |h: &kentos_geometry_core::store::snap::SnapHit| {
+                            (h.point.x - raw.x).hypot(h.point.y - raw.y)
+                        };
                         Some(if far(&b) < far(&a) { b } else { a })
                     }
                     (a, b) => a.or(b),
@@ -1205,7 +1229,12 @@ impl App {
     /// starts another one by them; a KentOS letter did, so E pressed for a stair's width (G then) started Esnet. The
     /// command stays and is told how to leave; tools that run over a command (Kaydır, Pencere yakınlaştır, the
     /// measures) and commands that start no tool still run.
-    fn letter_keeps_command(&self, press: &KeyPress, chord: &str, id: &'static str) -> Option<String> {
+    fn letter_keeps_command(
+        &self,
+        press: &KeyPress,
+        chord: &str,
+        id: &'static str,
+    ) -> Option<String> {
         if !self.session.is_running() || keys::option_letter(press).is_none() {
             return None;
         }
@@ -1219,7 +1248,6 @@ impl App {
             "{running} sürüyor: “{chord}” bu adımın seçeneği değil. {target} için önce Esc'ye basın."
         ))
     }
-
 }
 
 /// The command a chord runs while a text field has the keyboard: one the web

@@ -24,13 +24,22 @@ pub enum SetKind {
 pub enum ValueKind {
     Text(String),
     /// A real, with the measure type it is written with (`IFCLENGTHMEASURE`), when it has one.
-    Number { value: f64, measure: Option<String> },
-    Integer { value: i64, measure: Option<String> },
+    Number {
+        value: f64,
+        measure: Option<String>,
+    },
+    Integer {
+        value: i64,
+        measure: Option<String>,
+    },
     /// `.T.`, `.F.`, or unknown (`.U.`).
     Logical(Option<bool>),
     Enumeration(Vec<String>),
     List(Vec<ValueKind>),
-    Bounded { lower: Box<ValueKind>, upper: Box<ValueKind> },
+    Bounded {
+        lower: Box<ValueKind>,
+        upper: Box<ValueKind>,
+    },
     /// A record the value refers to (`IfcPropertyReferenceValue`).
     Reference(u32),
     /// Unset (`$`).
@@ -61,18 +70,28 @@ pub struct PropertySet {
 impl Model {
     /// The sets of object `object` (an index into [`Model::objects`]): its own, then its type's. `bytes` are the
     /// bytes the model was read from.
-    pub fn property_sets(&self, bytes: &[u8], object: usize) -> Result<Vec<PropertySet>, ReadError> {
-        let Some(o) = self.objects.get(object) else { return Ok(Vec::new()) };
+    pub fn property_sets(
+        &self,
+        bytes: &[u8],
+        object: usize,
+    ) -> Result<Vec<PropertySet>, ReadError> {
+        let Some(o) = self.objects.get(object) else {
+            return Ok(Vec::new());
+        };
         let schema = header::version(self.summary.family);
         guarded(|| {
             let mut decoder = EntityDecoder::with_arc_index(bytes, self.index.clone());
             let mut out = Vec::new();
             for &r in self.relations_of(o.step) {
                 let rel = &self.relations[r];
-                if !schema.is_subtype_of(&rel.class, "IfcRelDefinesByProperties") || !rel.related.contains(&o.step) {
+                if !schema.is_subtype_of(&rel.class, "IfcRelDefinesByProperties")
+                    || !rel.related.contains(&o.step)
+                {
                     continue;
                 }
-                let Ok(e) = decoder.decode_by_id(rel.step) else { continue };
+                let Ok(e) = decoder.decode_by_id(rel.step) else {
+                    continue;
+                };
                 for set in refs(named(schema, &e, "RelatingPropertyDefinition")) {
                     out.extend(set_of(&mut decoder, schema, set, false));
                 }
@@ -99,17 +118,34 @@ impl Model {
 fn refs(v: Option<&AttributeValue>) -> Vec<u32> {
     match v {
         Some(v) if v.as_entity_ref().is_some() => v.as_entity_ref().into_iter().collect(),
-        Some(v) => v.as_list().unwrap_or(&[]).iter().filter_map(AttributeValue::as_entity_ref).collect(),
+        Some(v) => v
+            .as_list()
+            .unwrap_or(&[])
+            .iter()
+            .filter_map(AttributeValue::as_entity_ref)
+            .collect(),
         None => Vec::new(),
     }
 }
 
-fn set_of(decoder: &mut EntityDecoder, schema: SchemaVersion, step: u32, from_type: bool) -> Option<PropertySet> {
+fn set_of(
+    decoder: &mut EntityDecoder,
+    schema: SchemaVersion,
+    step: u32,
+    from_type: bool,
+) -> Option<PropertySet> {
     let e = decoder.decode_by_id(step).ok()?;
     let class = e.ifc_type.name().to_owned();
-    let text = |name: &str| named(schema, &e, name).and_then(AttributeValue::as_string).map(str::to_owned);
+    let text = |name: &str| {
+        named(schema, &e, name)
+            .and_then(AttributeValue::as_string)
+            .map(str::to_owned)
+    };
     let (kind, members) = if schema.is_subtype_of(&class, "IfcPropertySet") {
-        (SetKind::Properties, refs(named(schema, &e, "HasProperties")))
+        (
+            SetKind::Properties,
+            refs(named(schema, &e, "HasProperties")),
+        )
     } else if schema.is_subtype_of(&class, "IfcElementQuantity") {
         (SetKind::Quantities, refs(named(schema, &e, "Quantities")))
     } else {
@@ -138,7 +174,13 @@ fn value_of(decoder: &mut EntityDecoder, schema: SchemaVersion, p: &DecodedEntit
     let value = if let Some(v) = at("NominalValue") {
         kind(v)
     } else if let Some(v) = at("EnumerationValues") {
-        ValueKind::Enumeration(v.as_list().unwrap_or(&[]).iter().map(|x| text_of(&kind(x))).collect())
+        ValueKind::Enumeration(
+            v.as_list()
+                .unwrap_or(&[])
+                .iter()
+                .map(|x| text_of(&kind(x)))
+                .collect(),
+        )
     } else if let Some(v) = at("ListValues") {
         ValueKind::List(v.as_list().unwrap_or(&[]).iter().map(kind).collect())
     } else if at("UpperBoundValue").is_some() || at("LowerBoundValue").is_some() {
@@ -148,28 +190,50 @@ fn value_of(decoder: &mut EntityDecoder, schema: SchemaVersion, p: &DecodedEntit
         }
     } else if let Some(r) = at("PropertyReference").and_then(AttributeValue::as_entity_ref) {
         ValueKind::Reference(r)
-    } else if let Some((v, measure)) = ["LengthValue", "AreaValue", "VolumeValue", "CountValue", "WeightValue", "TimeValue", "NumberValue"]
-        .iter()
-        .find_map(|n| at(n).map(|v| (v, quantity_measure(n))))
+    } else if let Some((v, measure)) = [
+        "LengthValue",
+        "AreaValue",
+        "VolumeValue",
+        "CountValue",
+        "WeightValue",
+        "TimeValue",
+        "NumberValue",
+    ]
+    .iter()
+    .find_map(|n| at(n).map(|v| (v, quantity_measure(n))))
     {
         match kind(v) {
-            ValueKind::Number { value, .. } => ValueKind::Number { value, measure: Some(measure.to_owned()) },
-            ValueKind::Integer { value, .. } => ValueKind::Number { value: value as f64, measure: Some(measure.to_owned()) },
+            ValueKind::Number { value, .. } => ValueKind::Number {
+                value,
+                measure: Some(measure.to_owned()),
+            },
+            ValueKind::Integer { value, .. } => ValueKind::Number {
+                value: value as f64,
+                measure: Some(measure.to_owned()),
+            },
             other => other,
         }
     } else {
         ValueKind::Empty
     };
-    let unit = at("Unit").and_then(AttributeValue::as_entity_ref).and_then(|u| {
-        let u = decoder.decode_by_id(u).ok()?;
-        let name = named(schema, &u, "Name").and_then(|v| v.as_enum().or_else(|| v.as_string()))?;
-        let prefix = named(schema, &u, "Prefix").and_then(AttributeValue::as_enum).unwrap_or("");
-        Some(format!("{prefix}{name}"))
-    });
+    let unit = at("Unit")
+        .and_then(AttributeValue::as_entity_ref)
+        .and_then(|u| {
+            let u = decoder.decode_by_id(u).ok()?;
+            let name =
+                named(schema, &u, "Name").and_then(|v| v.as_enum().or_else(|| v.as_string()))?;
+            let prefix = named(schema, &u, "Prefix")
+                .and_then(AttributeValue::as_enum)
+                .unwrap_or("");
+            Some(format!("{prefix}{name}"))
+        });
     Value {
         step: p.id,
         class,
-        name: at("Name").and_then(AttributeValue::as_string).unwrap_or_default().to_owned(),
+        name: at("Name")
+            .and_then(AttributeValue::as_string)
+            .unwrap_or_default()
+            .to_owned(),
         value,
         unit,
     }
@@ -192,13 +256,25 @@ fn quantity_measure(attribute: &str) -> &'static str {
 fn kind(v: &AttributeValue) -> ValueKind {
     match v {
         AttributeValue::Typed { name, value } => match value.as_ref() {
-            AttributeValue::Float(f) => ValueKind::Number { value: *f, measure: Some(name.to_string()) },
-            AttributeValue::Integer(i) => ValueKind::Integer { value: *i, measure: Some(name.to_string()) },
+            AttributeValue::Float(f) => ValueKind::Number {
+                value: *f,
+                measure: Some(name.to_string()),
+            },
+            AttributeValue::Integer(i) => ValueKind::Integer {
+                value: *i,
+                measure: Some(name.to_string()),
+            },
             other => kind(other),
         },
         AttributeValue::String(s) | AttributeValue::Binary(s) => ValueKind::Text(s.clone()),
-        AttributeValue::Integer(i) => ValueKind::Integer { value: *i, measure: None },
-        AttributeValue::Float(f) => ValueKind::Number { value: *f, measure: None },
+        AttributeValue::Integer(i) => ValueKind::Integer {
+            value: *i,
+            measure: None,
+        },
+        AttributeValue::Float(f) => ValueKind::Number {
+            value: *f,
+            measure: None,
+        },
         AttributeValue::Enum(e) => match e.trim_matches('.') {
             "T" | "TRUE" => ValueKind::Logical(Some(true)),
             "F" | "FALSE" => ValueKind::Logical(Some(false)),

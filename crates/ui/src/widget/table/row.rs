@@ -316,9 +316,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for RowBox<'a, Me
             &tree.children[0],
             renderer,
             theme,
-            &renderer::Style {
-                text_color: t.text,
-            },
+            &renderer::Style { text_color: t.text },
             line,
             cursor,
             viewport,

@@ -82,10 +82,13 @@ pub(super) fn appearance(
                 "groups",
             ));
         }
-        let declared_values=match e {
-            Entity::Insert(i)=>doc.block(i.block).is_some_and(|definition|
-                b.attrs.keys().all(|key|definition.attributes.iter().any(|a|&a.tag==key))),
-            _=>false,
+        let declared_values = match e {
+            Entity::Insert(i) => doc.block(i.block).is_some_and(|definition| {
+                b.attrs
+                    .keys()
+                    .all(|key| definition.attributes.iter().any(|a| &a.tag == key))
+            }),
+            _ => false,
         };
         if (!b.attrs.is_empty() && !declared_values)
             || b.label.is_some()

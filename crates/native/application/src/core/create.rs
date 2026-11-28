@@ -89,7 +89,10 @@ pub fn execute(
 
 /// [`execute`]'s write, for a command that writes its objects as this one does inside its own recorded step
 /// (`cad.constructions.create`, docs/adr/0622 §9).
-pub(crate) fn write_in(cx: &mut ExecutionContext<'_>, input: EntitiesCreate) -> CommandResult<EntitiesCreated> {
+pub(crate) fn write_in(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesCreate,
+) -> CommandResult<EntitiesCreated> {
     write_execute(cx, input)
 }
 
@@ -265,7 +268,11 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
     // A project line type by its name (docs/adr/0313 §1, 2720).
     for (i, object) in input.objects.iter().enumerate() {
         if let Some(name) = &object.line_pattern
-            && !doc.settings().line_types.iter().any(|t| kentos_commands::same_line_type_name(&t.name, name))
+            && !doc
+                .settings()
+                .line_types
+                .iter()
+                .any(|t| kentos_commands::same_line_type_name(&t.name, name))
         {
             return Err(Stop::failed(error(
                 codes::LINE_TYPE_NOT_FOUND,
@@ -371,10 +378,7 @@ fn placed_points(
         {
             // A rule's points are its own (docs/adr/0320 §1): an angle's arms are not its edges' places, a radius's
             // point may lie past its arc's end; they are as given.
-            for (name, r) in refs
-                .each()
-                .filter(|(_, r)| r.live() && refs.rule.is_none())
-            {
+            for (name, r) in refs.each().filter(|(_, r)| r.live() && refs.rule.is_none()) {
                 let at = format!("objects[{i}].geometry.refs.{name}");
                 let uid = Uuid::from_bytes(r.uid.0);
                 let Some(e) = doc.slot_of(uid).and_then(|s| doc.get(s)) else {
@@ -489,7 +493,10 @@ fn entities(
         .map(|((object, attrs), placed)| {
             // A pattern given alone takes its nearest built-in as the object's type (docs/adr/0313 §1).
             let pattern = object.line_pattern.as_deref().and_then(|name| {
-                doc.settings().line_types.iter().find(|t| kentos_commands::same_line_type_name(&t.name, name))
+                doc.settings()
+                    .line_types
+                    .iter()
+                    .find(|t| kentos_commands::same_line_type_name(&t.name, name))
             });
             let mut entity = entity_of(
                 &object.geometry,

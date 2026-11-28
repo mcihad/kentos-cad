@@ -9,7 +9,8 @@ use crate::app::{App, Message};
 fn opened() -> (App, std::path::PathBuf) {
     crate::data_layers::register();
     let path = crate::data_layers_tests::parcels("stil-kaynak", 41);
-    let described = crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described");
+    let described =
+        crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described");
     let mut app = crate::files_testing::app_with_drawing();
     let added = app.add_data_layers(vec![described]).expect("added");
     let _ = app.update(Message::LayerStyle(Event::Open(Some(added[0].clone()))));
@@ -17,7 +18,12 @@ fn opened() -> (App, std::path::PathBuf) {
 }
 
 fn hand_back(app: &mut App, field: &str, then: Then) {
-    let data = app.styles.layer_style.as_ref().and_then(|w| w.data.clone()).expect("a data layer's window");
+    let data = app
+        .styles
+        .layer_style
+        .as_ref()
+        .and_then(|w| w.data.clone())
+        .expect("a data layer's window");
     let read = source_values::read(&data, field, then);
     let _ = app.update(Message::LayerStyle(Event::SourceValues(then, read)));
 }
@@ -35,7 +41,12 @@ fn a_data_layers_categories_and_classes_come_from_its_source() {
     assert!(w.reading && w.categorized.categories.is_empty());
     hand_back(&mut app, "kullanim", Then::Classify);
     let w = app.styles.layer_style.as_ref().expect("the window");
-    let values: Vec<&str> = w.categorized.categories.iter().map(|k| k.value.as_str()).collect();
+    let values: Vec<&str> = w
+        .categorized
+        .categories
+        .iter()
+        .map(|k| k.value.as_str())
+        .collect();
     assert_eq!(values, ["Konut", "Park"]);
     // The Nesne column: the rows each category takes, as the source counts them (41 rows: 21 Konut, 20 Park).
     assert_eq!(w.source_category_tally(), Some((vec![21, 20], 0)));
@@ -55,7 +66,10 @@ fn a_data_layers_categories_and_classes_come_from_its_source() {
     w.categorized.expr = "$alan".into();
     let _ = app.update(Message::LayerStyle(Event::Classify));
     let w = app.styles.layer_style.as_ref().expect("the window");
-    assert_eq!(w.said.as_ref().map(|(t, _)| t.as_str()), Some(source_values::FIELD_ONLY));
+    assert_eq!(
+        w.said.as_ref().map(|(t, _)| t.as_str()),
+        Some(source_values::FIELD_ONLY)
+    );
     let _ = std::fs::remove_file(path);
 }
 
@@ -68,13 +82,24 @@ fn listed_codes_are_named_by_their_labels_and_rows_without_a_value_have_a_catego
     let path = crate::data_layers_tests::municipal("stil-liste");
     let mut app = crate::files_testing::app_with_drawing();
     let id = app
-        .add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described")])
+        .add_data_layers(vec![
+            crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described"),
+        ])
         .expect("added")
         .remove(0);
     {
         let doc = app.document.as_mut().expect("open");
-        let mut fields = doc.model.layers().get(&id).expect("the layer").fields.clone();
-        let f = fields.iter_mut().find(|f| f.name == "mahalle").expect("mahalle");
+        let mut fields = doc
+            .model
+            .layers()
+            .get(&id)
+            .expect("the layer")
+            .fields
+            .clone();
+        let f = fields
+            .iter_mut()
+            .find(|f| f.name == "mahalle")
+            .expect("mahalle");
         f.values = Some(vec![
             kentos_commands::FieldChoice::new("M1", "Çınar"),
             kentos_commands::FieldChoice::new("M2", "İstasyon"),
@@ -83,11 +108,29 @@ fn listed_codes_are_named_by_their_labels_and_rows_without_a_value_have_a_catego
     }
     let _ = app.update(Message::LayerStyle(Event::Open(Some(id.clone()))));
     let _ = app.update(Message::LayerStyle(Event::Kind(Kind::Categorized)));
-    app.styles.layer_style.as_mut().expect("the window").categorized.expr = "mahalle".into();
+    app.styles
+        .layer_style
+        .as_mut()
+        .expect("the window")
+        .categorized
+        .expr = "mahalle".into();
     hand_back(&mut app, "mahalle", Then::Classify);
     let w = app.styles.layer_style.as_ref().expect("the window");
-    let got: Vec<(&str, &str)> = w.categorized.categories.iter().map(|k| (k.value.as_str(), k.label.as_str())).collect();
-    assert_eq!(got, [("M1", "Çınar"), ("M2", "İstasyon"), ("M9", "M9"), ("", super::NO_VALUE)]);
+    let got: Vec<(&str, &str)> = w
+        .categorized
+        .categories
+        .iter()
+        .map(|k| (k.value.as_str(), k.label.as_str()))
+        .collect();
+    assert_eq!(
+        got,
+        [
+            ("M1", "Çınar"),
+            ("M2", "İstasyon"),
+            ("M9", "M9"),
+            ("", super::NO_VALUE)
+        ]
+    );
     // Every row drawn: nothing left to Diğer değerler.
     assert_eq!(w.source_category_tally(), Some((vec![2, 2, 1, 1], 0)));
     // Its path, copied.
@@ -106,13 +149,25 @@ fn screens_9357() {
         let path = crate::data_layers_tests::municipal("stil-liste-resim");
         let mut app = crate::files_testing::app_with_drawing();
         let id = app
-            .add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "bakim").expect("described")])
+            .add_data_layers(vec![
+                crate::data_layers::describe(&path.display().to_string(), "bakim")
+                    .expect("described"),
+            ])
             .expect("added")
             .remove(0);
         {
             let doc = app.document.as_mut().expect("open");
-            let mut fields = doc.model.layers().get(&id).expect("the layer").fields.clone();
-            let f = fields.iter_mut().find(|f| f.name == "mahalle").expect("mahalle");
+            let mut fields = doc
+                .model
+                .layers()
+                .get(&id)
+                .expect("the layer")
+                .fields
+                .clone();
+            let f = fields
+                .iter_mut()
+                .find(|f| f.name == "mahalle")
+                .expect("mahalle");
             f.values = Some(vec![
                 kentos_commands::FieldChoice::new("M1", "Çınar"),
                 kentos_commands::FieldChoice::new("M2", "İstasyon"),
@@ -121,7 +176,12 @@ fn screens_9357() {
         }
         let _ = app.update(Message::LayerStyle(Event::Open(Some(id.clone()))));
         let _ = app.update(Message::LayerStyle(Event::Kind(Kind::Categorized)));
-        app.styles.layer_style.as_mut().expect("the window").categorized.expr = "mahalle".into();
+        app.styles
+            .layer_style
+            .as_mut()
+            .expect("the window")
+            .categorized
+            .expr = "mahalle".into();
         hand_back(&mut app, "mahalle", Then::Classify);
         app
     });

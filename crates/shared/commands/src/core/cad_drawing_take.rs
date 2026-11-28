@@ -7,9 +7,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+use crate::CompareAgainst;
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::CompareAgainst;
 
 pub const CAD_DRAWING_TAKE: &str = "cad.drawing.take";
 pub const CAD_DRAWING_TAKE_VERSION: u32 = 1;

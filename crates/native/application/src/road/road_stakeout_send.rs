@@ -7,8 +7,8 @@
 use std::path::{Path, PathBuf};
 
 use kentos_commands::{
-    CommandResult, CommandWarning, StakeRow, StakeoutDistances, StakeoutLeft, StakeoutQuery, StakeoutSend,
-    StakeoutSendFormat, StakeoutSent,
+    CommandResult, CommandWarning, StakeRow, StakeoutDistances, StakeoutLeft, StakeoutQuery,
+    StakeoutSend, StakeoutSendFormat, StakeoutSent,
 };
 use kentos_commands::{FieldPoint, FieldWriteFormat, FieldWriteOptions};
 use kentos_domain::Document;
@@ -30,7 +30,11 @@ fn bad(path: &str, words: String) -> Stop {
 }
 
 fn warning(code: &str, message: String) -> CommandWarning {
-    CommandWarning { code: code.into(), message, path: Some("format".into()) }
+    CommandWarning {
+        code: code.into(),
+        message,
+        path: Some("format".into()),
+    }
 }
 
 /// The instrument writer's format, none for LandXML.
@@ -100,10 +104,22 @@ pub fn strings(rows: &[StakeRow]) -> (Vec<WFeature>, u32) {
             }
             last = Some(*k);
         }
-        let long: Vec<Vec<[f64; 3]>> = runs.into_iter().filter(|r| r.len() >= 2 || { short += 1; false }).collect();
+        let long: Vec<Vec<[f64; 3]>> = runs
+            .into_iter()
+            .filter(|r| {
+                r.len() >= 2 || {
+                    short += 1;
+                    false
+                }
+            })
+            .collect();
         let many = long.len() > 1;
         for (i, points) in long.into_iter().enumerate() {
-            let name = if many { format!("{code} ({})", i + 1) } else { code.to_owned() };
+            let name = if many {
+                format!("{code} ({})", i + 1)
+            } else {
+                code.to_owned()
+            };
             out.push(WFeature { name, points });
         }
     }
@@ -137,32 +153,57 @@ fn check(doc: &Document, input: &StakeoutSend) -> Result<Planned, Stop> {
         ));
     }
     if !text.to_ascii_lowercase().ends_with(&format!(".{ext}")) {
-        return Err(fail(codes::INVALID_FILE_PATH, format!("“{text}” bir .{ext} dosyası değil ({format_name})."), "path"));
+        return Err(fail(
+            codes::INVALID_FILE_PATH,
+            format!("“{text}” bir .{ext} dosyası değil ({format_name})."),
+            "path",
+        ));
     }
     let path = PathBuf::from(text);
     let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
     if !folder.is_dir() {
         return Err(fail(
             codes::INVALID_FILE_PATH,
-            format!("“{}” klasörü yok; dosya var olan bir klasöre yazılır.", folder.display()),
+            format!(
+                "“{}” klasörü yok; dosya var olan bir klasöre yazılır.",
+                folder.display()
+            ),
             "path",
         ));
     }
     if path.exists() && !input.overwrite {
-        return Err(fail(codes::FILE_EXISTS, format!("{} var; üzerine yazmak için overwrite verin.", path.display()), "path"));
+        return Err(fail(
+            codes::FILE_EXISTS,
+            format!(
+                "{} var; üzerine yazmak için overwrite verin.",
+                path.display()
+            ),
+            "path",
+        ));
     }
     let first = input.first.unwrap_or(1);
     if !(1..=MOST_FIRST).contains(&first) {
-        return Err(bad("first", format!("İlk nokta numarası 1 ile {MOST_FIRST} arası olmalı.")));
+        return Err(bad(
+            "first",
+            format!("İlk nokta numarası 1 ile {MOST_FIRST} arası olmalı."),
+        ));
     }
     let (date, time) = match input.stamp.as_deref() {
         None => now(),
-        Some(s) => stamp_of(s).ok_or_else(|| bad("stamp", format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın.")))?,
+        Some(s) => stamp_of(s).ok_or_else(|| {
+            bad(
+                "stamp",
+                format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın."),
+            )
+        })?,
     };
     // Docs/adr/1031: the heights set out rest on the project's system, said.
     crate::road_field::heights_said(doc, "Aplikasyon dosyasının")?;
     if table.rows.is_empty() {
-        return Err(bad("", "Gönderilecek nokta yok: aralıkta ya da kodlarda kesit noktası çıkmadı.".into()));
+        return Err(bad(
+            "",
+            "Gönderilecek nokta yok: aralıkta ya da kodlarda kesit noktası çıkmadı.".into(),
+        ));
     }
     let mut out = StakeoutSent {
         path: path.display().to_string(),
@@ -181,10 +222,15 @@ fn check(doc: &Document, input: &StakeoutSend) -> Result<Planned, Stop> {
     };
     let text = match field_format(input.format) {
         None => {
-            let (_, def) = crate::road_corridors::find(doc.road_corridors(), &table.corridor, "corridor")?;
+            let (_, def) =
+                crate::road_corridors::find(doc.road_corridors(), &table.corridor, "corridor")?;
             let list = alignments::alignments(doc);
             let (_, adef) = alignments::find(list, &def.alignment, "corridor")?;
-            let profiles: Vec<_> = doc.road_profiles().iter().filter(|p| p.id == def.profile).collect();
+            let profiles: Vec<_> = doc
+                .road_profiles()
+                .iter()
+                .filter(|p| p.id == def.profile)
+                .collect();
             let mut lost = Vec::new();
             let (a, written) = alignment_written(adef, &built, &profiles, &mut lost);
             for w in lost {
@@ -198,7 +244,10 @@ fn check(doc: &Document, input: &StakeoutSend) -> Result<Planned, Stop> {
                 ));
             }
             if features.is_empty() {
-                return Err(bad("", "Gönderilecek dizi yok: hiçbir kodun iki ardışık km'de noktası yok.".into()));
+                return Err(bad(
+                    "",
+                    "Gönderilecek dizi yok: hiçbir kodun iki ardışık km'de noktası yok.".into(),
+                ));
             }
             out.points = features.iter().map(|f| f.points.len() as u32).sum();
             out.strings = features.len() as u32;
@@ -220,9 +269,17 @@ fn check(doc: &Document, input: &StakeoutSend) -> Result<Planned, Stop> {
         }
         Some(format) => {
             let stamp = format!("{date}T{time}");
-            let given = input.job.as_deref().map(str::trim).filter(|j| !j.is_empty());
+            let given = input
+                .job
+                .as_deref()
+                .map(str::trim)
+                .filter(|j| !j.is_empty());
             let job = given.unwrap_or(&table.name).to_owned();
-            let options = |job: &str| FieldWriteOptions { format, job: job.to_owned(), stamp: stamp.clone() };
+            let options = |job: &str| FieldWriteOptions {
+                format,
+                job: job.to_owned(),
+                stamp: stamp.clone(),
+            };
             // A code the format cannot carry is left off its points: a lone point with only that code tells.
             let mut fits: Vec<(&str, bool)> = Vec::new();
             let mut dropped: Vec<&str> = Vec::new();
@@ -238,7 +295,9 @@ fn check(doc: &Document, input: &StakeoutSend) -> Result<Planned, Stop> {
                             elevation: Some(0.0),
                             code: Some(r.code.clone()),
                         };
-                        let ok = kentos_formats::field::write::write(&[probe], &options("KentOS")).skipped.is_empty();
+                        let ok = kentos_formats::field::write::write(&[probe], &options("KentOS"))
+                            .skipped
+                            .is_empty();
                         fits.push((&r.code, ok));
                         if !ok {
                             dropped.push(&r.code);
@@ -274,15 +333,31 @@ fn check(doc: &Document, input: &StakeoutSend) -> Result<Planned, Stop> {
                     ),
                 ));
             }
-            out.left = written.skipped.iter().map(|s| StakeoutLeft { name: s.name.clone(), problem: s.problem.clone() }).collect();
+            out.left = written
+                .skipped
+                .iter()
+                .map(|s| StakeoutLeft {
+                    name: s.name.clone(),
+                    problem: s.problem.clone(),
+                })
+                .collect();
             if written.written == 0 {
-                let why = out.left.first().map_or(String::new(), |l| format!(" İlki: {}", l.problem));
-                return Err(bad("format", format!("{format_name} dosyasına yazılabilen nokta yok.{why}")));
+                let why = out
+                    .left
+                    .first()
+                    .map_or(String::new(), |l| format!(" İlki: {}", l.problem));
+                return Err(bad(
+                    "format",
+                    format!("{format_name} dosyasına yazılabilen nokta yok.{why}"),
+                ));
             }
             if !out.left.is_empty() {
                 warnings.push(warning(
                     codes::EXPORT_LOSSES,
-                    format!("{} nokta {format_name} dosyasında taşınamıyor; yazılmadı.", out.left.len()),
+                    format!(
+                        "{} nokta {format_name} dosyasında taşınamıyor; yazılmadı.",
+                        out.left.len()
+                    ),
                 ));
             }
             out.points = written.written;
@@ -290,14 +365,25 @@ fn check(doc: &Document, input: &StakeoutSend) -> Result<Planned, Stop> {
         }
     };
     out.bytes = text.len() as u64;
-    out.sha256 = Sha256::digest(text.as_bytes()).iter().map(|b| format!("{b:02x}")).collect();
-    Ok(Planned { path, out, text, warnings })
+    out.sha256 = Sha256::digest(text.as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
+    Ok(Planned {
+        path,
+        out,
+        text,
+        warnings,
+    })
 }
 
 /// Checks `input` against the document; writes nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &StakeoutSend) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: (), warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: (),
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -305,7 +391,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &StakeoutSend) -> CommandResul
 /// What the file would hold; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &StakeoutSend) -> CommandResult<StakeoutSent> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: p.out, warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: p.out,
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -324,10 +413,18 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: StakeoutSend) -> CommandRes
         ))
         .into();
     }
-    CommandResult::Completed { output: p.out, warnings: p.warnings }
+    CommandResult::Completed {
+        output: p.out,
+        warnings: p.warnings,
+    }
 }
 
 /// The file's text for a window or a test: the text, the answer and its warnings, or why there is none.
-pub fn text(doc: &Document, input: &StakeoutSend) -> Result<(String, StakeoutSent, Vec<CommandWarning>), String> {
-    check(doc, input).map(|p| (p.text, p.out, p.warnings)).map_err(crate::road_corridors::words)
+pub fn text(
+    doc: &Document,
+    input: &StakeoutSend,
+) -> Result<(String, StakeoutSent, Vec<CommandWarning>), String> {
+    check(doc, input)
+        .map(|p| (p.text, p.out, p.warnings))
+        .map_err(crate::road_corridors::words)
 }

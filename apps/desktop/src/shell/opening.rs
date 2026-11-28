@@ -233,7 +233,10 @@ fn read_source(
                     .chain(&opened.report.skipped)
                     .map(|n| format!("{}: {}", n.what, n.reason)),
             );
-            let file = path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned());
+            let file = path.file_name().map_or_else(
+                || path.display().to_string(),
+                |n| n.to_string_lossy().into_owned(),
+            );
             let report = crate::open_report_window::OpenReport::of(file, &opened.report);
             tell(Stage::Source(notes, Box::new(report)));
             Ok(Some(Document::of_model(opened.document)))
@@ -521,7 +524,8 @@ impl App {
             }
             // A file already open (on screen or in a tab) is shown, not opened twice: two copies saved over each other
             // lost the first one's work without a word.
-            Event::Picked(Some(path)) | Event::PickedTab(Some(path)) if self.show_open_file(&path) => {}
+            Event::Picked(Some(path)) | Event::PickedTab(Some(path))
+                if self.show_open_file(&path) => {}
             // Aç replaces the drawing on screen: asked about now that a file was chosen (docs/adr/9347); Vazgeç leaves
             // it as it was.
             Event::Picked(Some(path)) => {
@@ -926,7 +930,11 @@ mod tests {
         let task = app.start_opening(path.clone(), Purpose::File);
         drive(&mut app, task);
         let open = app.opening.as_ref().expect("held for its unit");
-        assert_eq!(open.selected_unit, Some(FileUnit::M), "the grid's metres offered");
+        assert_eq!(
+            open.selected_unit,
+            Some(FileUnit::M),
+            "the grid's metres offered"
+        );
         assert!(app.opening_view().is_some(), "Çizimin birimini doğrula");
         let task = app.opening_event(Event::ConfirmUnit);
         drive(&mut app, task);
@@ -936,9 +944,18 @@ mod tests {
         let line = doc
             .model
             .entities()
-            .find_map(|e| if let kentos_commands::Entity::Line(l) = e { Some(l.clone()) } else { None })
+            .find_map(|e| {
+                if let kentos_commands::Entity::Line(l) = e {
+                    Some(l.clone())
+                } else {
+                    None
+                }
+            })
             .expect("the line");
-        assert!((line.a.x - 422_000.0).abs() < 1e-6 && (line.b.x - line.a.x - 10.0).abs() < 1e-9, "{line:?}");
+        assert!(
+            (line.a.x - 422_000.0).abs() < 1e-6 && (line.b.x - line.a.x - 10.0).abs() < 1e-9,
+            "{line:?}"
+        );
         let _ = std::fs::remove_file(&path);
     }
 
@@ -947,19 +964,29 @@ mod tests {
     #[test]
     fn a_plan_whose_letters_are_under_a_millimetre_is_asked_with_metres_offered() {
         let texts: String = (0..4)
-            .map(|i| format!("0\nTEXT\n8\n0\n10\n{}\n20\n1\n40\n0.1\n1\nOda {i}\n", f64::from(i) * 3.0))
+            .map(|i| {
+                format!(
+                    "0\nTEXT\n8\n0\n10\n{}\n20\n1\n40\n0.1\n1\nOda {i}\n",
+                    f64::from(i) * 3.0
+                )
+            })
             .collect();
         let dxf = format!(
             "0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n4\n0\nENDSEC\n0\nSECTION\n2\n\
              ENTITIES\n0\nLINE\n8\n0\n10\n0\n20\n0\n11\n12.5\n21\n0\n{texts}0\nENDSEC\n0\nEOF\n"
         );
-        let path = std::env::temp_dir().join(format!("kentos-yazi-boyu-{}.dxf", std::process::id()));
+        let path =
+            std::env::temp_dir().join(format!("kentos-yazi-boyu-{}.dxf", std::process::id()));
         std::fs::write(&path, dxf).expect("writes");
         let mut app = app_with_drawing();
         let task = app.start_opening(path.clone(), Purpose::File);
         drive(&mut app, task);
         let open = app.opening.as_ref().expect("held for its unit");
-        assert_eq!(open.selected_unit, Some(FileUnit::M), "the letters' metres offered");
+        assert_eq!(
+            open.selected_unit,
+            Some(FileUnit::M),
+            "the letters' metres offered"
+        );
         assert!(app.opening_view().is_some(), "Çizimin birimini doğrula");
         let task = app.opening_event(Event::ConfirmUnit);
         drive(&mut app, task);
@@ -969,7 +996,13 @@ mod tests {
         let line = doc
             .model
             .entities()
-            .find_map(|e| if let kentos_commands::Entity::Line(l) = e { Some(l.clone()) } else { None })
+            .find_map(|e| {
+                if let kentos_commands::Entity::Line(l) = e {
+                    Some(l.clone())
+                } else {
+                    None
+                }
+            })
             .expect("the line");
         assert!((line.b.x - line.a.x - 12.5).abs() < 1e-9, "{line:?}");
         let _ = std::fs::remove_file(&path);

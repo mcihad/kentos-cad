@@ -364,8 +364,15 @@ fn the_drawings_tabs_show_over_a_sheet() {
     std::fs::copy(SAMPLE, &path).expect("copied");
     open(&mut app, &path);
     assert!(app.park_active());
-    let _ = app.update(Message::Opened(Some(Ok(Box::new(crate::files_testing::drawing(2))))));
-    let other = app.document.as_ref().expect("open").display_name().into_owned();
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(
+        crate::files_testing::drawing(2),
+    )))));
+    let other = app
+        .document
+        .as_ref()
+        .expect("open")
+        .display_name()
+        .into_owned();
     let _ = app.update(Message::DocTabs(crate::doc_tabs::Event::Show(0)));
     assert_eq!(names(&app), ["Büro paftası"]);
     let id = app.sheets.book().sheets[0].id.clone();
@@ -373,12 +380,24 @@ fn the_drawings_tabs_show_over_a_sheet() {
     sheet(&mut app, Sheet::Tab(1));
     assert!(app.sheets.is_active());
     let mut shot = crate::files_testing::offscreen(iced::Size::new(1440., 900.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
     crate::files_testing::evidence(&mut shot, &app, "ur2-058", "pafta-ustunde-sekmeler");
-    assert!(app.doc_tabs_view().is_some(), "the strip is drawn under the ribbon over the sheet");
+    assert!(
+        app.doc_tabs_view().is_some(),
+        "the strip is drawn under the ribbon over the sheet"
+    );
     let _ = app.update(Message::DocTabs(crate::doc_tabs::Event::Show(1)));
     assert_eq!(app.document.as_ref().expect("open").display_name(), other);
-    assert!(!names(&app).contains(&"Ada 101 paftası".to_owned()), "the other drawing's own book");
+    assert!(
+        !names(&app).contains(&"Ada 101 paftası".to_owned()),
+        "the other drawing's own book"
+    );
     let _ = app.update(Message::DocTabs(crate::doc_tabs::Event::Show(0)));
-    assert_eq!(names(&app), ["Ada 101 paftası"], "the edit stays with its drawing");
+    assert_eq!(
+        names(&app),
+        ["Ada 101 paftası"],
+        "the edit stays with its drawing"
+    );
 }

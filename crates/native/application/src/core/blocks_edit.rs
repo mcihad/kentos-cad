@@ -43,9 +43,14 @@ type DynamicDrawing<'a> = (
     &'a std::collections::BTreeMap<String, kentos_commands::ParamValue>,
 );
 fn dynamic_draws(b: &BlockDefinition) -> Option<DynamicDrawing<'_>> {
-    b.dynamic.as_ref().map(|d| (
-        d.parameters.as_slice(), d.actions.as_slice(), d.type_parameters.as_slice(), &d.type_values,
-    ))
+    b.dynamic.as_ref().map(|d| {
+        (
+            d.parameters.as_slice(),
+            d.actions.as_slice(),
+            d.type_parameters.as_slice(),
+            &d.type_values,
+        )
+    })
 }
 
 fn nested_input(input: &BlocksEdit) -> Result<(), Stop> {
@@ -94,8 +99,16 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<Bloc
             output: BlocksEditPlan {
                 added: Vec::new(),
                 removed: in_drawing_order(cx.doc, &checked.removed),
-                changed: checked.changed.into_iter()
-                    .chain(checked.definition_changes.into_iter().flat_map(|u| u.blocks)).collect(),
+                changed: checked
+                    .changed
+                    .into_iter()
+                    .chain(
+                        checked
+                            .definition_changes
+                            .into_iter()
+                            .flat_map(|u| u.blocks),
+                    )
+                    .collect(),
                 insert: checked.insert,
                 deleted: checked.deleted.into_iter().map(|(_, uid)| uid).collect(),
                 revision: cx.doc.revision().to_string(),
@@ -131,8 +144,16 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandRes
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
-    let changed: Vec<BlockId> = checked.changed.iter().map(|b| b.id)
-        .chain(checked.definition_changes.iter().flat_map(|u| u.blocks.iter().map(|b| b.id)))
+    let changed: Vec<BlockId> = checked
+        .changed
+        .iter()
+        .map(|b| b.id)
+        .chain(
+            checked
+                .definition_changes
+                .iter()
+                .flat_map(|u| u.blocks.iter().map(|b| b.id)),
+        )
         .collect();
     let removed = in_drawing_order(cx.doc, &checked.removed);
     let mut slot = None;
@@ -439,7 +460,11 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             unit_scale = units(doc, old, &mut next, input)?;
         }
         BlockEditOperation::Update => {
-            if input.entities.as_ref().is_some_and(|entities| entities.iter().any(|e| kentos_domain::space_follow::separator_path(e).is_some())) {
+            if input.entities.as_ref().is_some_and(|entities| {
+                entities
+                    .iter()
+                    .any(|e| kentos_domain::space_follow::separator_path(e).is_some())
+            }) {
                 return Err(Stop::failed(error(codes::BLOCK_REFUSED,
                     "Mahal ayırıcı blok içeriğine konamaz; ayırıcıyı çizimde bağımsız tutun veya önce rolünü kaldırın.".into(),
                     Some("entities".into()))));
@@ -472,7 +497,8 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                 doc, old, old, &renames, &remove, true, false,
             )?);
             if input.rename_nested == Some(true) {
-                let roots: &[(Slot, Entity)] = checked.sync.as_ref().map_or(&[], |s| s.changes.as_slice());
+                let roots: &[(Slot, Entity)] =
+                    checked.sync.as_ref().map_or(&[], |s| s.changes.as_slice());
                 let related = crate::blocks_sync::nested(doc, old, old, &renames, roots)?;
                 if !related.blocks.is_empty() {
                     checked.definition_changes = Some(related);
@@ -503,14 +529,22 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             let publication = if input.clear_publication == Some(true) {
                 None
             } else {
-                input.publication.clone().or_else(|| old.card.as_ref().and_then(|c| c.publication.clone()))
+                input
+                    .publication
+                    .clone()
+                    .or_else(|| old.card.as_ref().and_then(|c| c.publication.clone()))
             };
             let version = old.card.as_ref().map_or(1, |c| c.version);
-            let category = input.category.clone().or_else(|| old.card.as_ref().and_then(|c| c.category.clone()));
-            let tags = input
-                .tags
+            let category = input
+                .category
                 .clone()
-                .unwrap_or_else(|| old.card.as_ref().map(|c| c.tags.clone()).unwrap_or_default());
+                .or_else(|| old.card.as_ref().and_then(|c| c.category.clone()));
+            let tags = input.tags.clone().unwrap_or_else(|| {
+                old.card
+                    .as_ref()
+                    .map(|c| c.tags.clone())
+                    .unwrap_or_default()
+            });
             // Its building element (docs/adr/8070 §5): absent keeps it, null takes it away.
             let element = match &input.element {
                 Some(given) => given.clone(),
@@ -526,11 +560,26 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             if let Some(d) = &input.description {
                 next.description = (!checks::is_blank(d)).then(|| d.clone());
             }
-            if let Some(problem) = next.card.as_ref().and_then(kentos_commands::blocks::card_problem) {
+            if let Some(problem) = next
+                .card
+                .as_ref()
+                .and_then(kentos_commands::blocks::card_problem)
+            {
                 return Err(Stop::failed(error(
                     codes::INVALID_BLOCK_CARD,
                     format!("“{}” bloğunun kartı: {problem}", old.name),
-                    Some(if input.publication.is_some() { "publication" } else if input.element.is_some() { "element" } else if input.tags.is_some() { "tags" } else { "category" }.into()),
+                    Some(
+                        if input.publication.is_some() {
+                            "publication"
+                        } else if input.element.is_some() {
+                            "element"
+                        } else if input.tags.is_some() {
+                            "tags"
+                        } else {
+                            "category"
+                        }
+                        .into(),
+                    ),
                 )));
             }
         }
@@ -538,20 +587,42 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         BlockEditOperation::Dynamic => {
             next.dynamic = input.dynamic.clone();
             if let Some(d) = &mut next.dynamic {
-                crate::block_params::normalize_type_values(d).map_err(|(name, why)| Stop::failed(error(
-                    codes::INVALID_DYNAMIC_BLOCK, format!("“{name}” tip formülü: {why}"), Some("dynamic.typeValues".into()))))?;
+                crate::block_params::normalize_type_values(d).map_err(|(name, why)| {
+                    Stop::failed(error(
+                        codes::INVALID_DYNAMIC_BLOCK,
+                        format!("“{name}” tip formülü: {why}"),
+                        Some("dynamic.typeValues".into()),
+                    ))
+                })?;
             }
-            let formula_edit = (next.dynamic.is_some() || old.dynamic.as_ref().is_some_and(|d| !d.type_parameters.is_empty()))
-                && crate::block_params::formula_inputs_changed(old.dynamic.as_ref(), next.dynamic.as_ref());
+            let formula_edit = (next.dynamic.is_some()
+                || old
+                    .dynamic
+                    .as_ref()
+                    .is_some_and(|d| !d.type_parameters.is_empty()))
+                && crate::block_params::formula_inputs_changed(
+                    old.dynamic.as_ref(),
+                    next.dynamic.as_ref(),
+                );
             if !formula_edit {
                 rules_with(doc, &next)?;
-            } else if let Some((_, why)) = next.dynamic.as_ref().and_then(|d|
-                kentos_commands::block_dynamic::dynamic_problem(d, &kentos_commands::block_dynamic::local_ids(&next)))
-            {
-                return Err(Stop::failed(error(codes::INVALID_DYNAMIC_BLOCK,
-                    format!("“{}” bloğunun dinamik parametreleri: {why}.", old.name), Some("dynamic".into()))));
+            } else if let Some((_, why)) = next.dynamic.as_ref().and_then(|d| {
+                kentos_commands::block_dynamic::dynamic_problem(
+                    d,
+                    &kentos_commands::block_dynamic::local_ids(&next),
+                )
+            }) {
+                return Err(Stop::failed(error(
+                    codes::INVALID_DYNAMIC_BLOCK,
+                    format!("“{}” bloğunun dinamik parametreleri: {why}.", old.name),
+                    Some("dynamic".into()),
+                )));
             }
-            if let Some((path, words)) = next.dynamic.as_ref().and_then(crate::block_params::expressions_problem) {
+            if let Some((path, words)) = next
+                .dynamic
+                .as_ref()
+                .and_then(crate::block_params::expressions_problem)
+            {
                 return Err(Stop::failed(error(
                     codes::INVALID_DYNAMIC_BLOCK,
                     format!("“{}” bloğunun {words}.", old.name),
@@ -566,7 +637,8 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                         inserts: u32::try_from(changes.entities.len()).unwrap_or(u32::MAX),
                         ..Default::default()
                     },
-                    changes: Vec::new(), locked: 0,
+                    changes: Vec::new(),
+                    locked: 0,
                 });
                 checked.definition_changes = Some(changes);
             } else if dynamic_draws(&next) != dynamic_draws(old) {
@@ -590,12 +662,16 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         Option<kentos_commands::BlockUnits>,
         Option<DynamicDrawing<'_>>,
     ) {
-        (&b.entities, b.base, &b.attributes, b.units, dynamic_draws(b))
+        (
+            &b.entities,
+            b.base,
+            &b.attributes,
+            b.units,
+            dynamic_draws(b),
+        )
     }
     let redrawn = draws(&next) != draws(old);
-    if redrawn
-        && let Some(card) = next.card.as_mut()
-    {
+    if redrawn && let Some(card) = next.card.as_mut() {
         card.version = card.version.saturating_add(1);
     }
     // `attributes` and `update` sync the inserts unless asked not to (docs/adr/0317 §2).
@@ -607,7 +683,13 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
     {
         let renames = input.renames.clone().unwrap_or_default();
         checked.sync = Some(crate::blocks_sync::sync(
-            doc, old, &next, &renames, &[], true, false,
+            doc,
+            old,
+            &next,
+            &renames,
+            &[],
+            true,
+            false,
         )?);
     }
     if input.rename_nested == Some(true) {
@@ -638,7 +720,8 @@ fn place(doc: &Document, input: &BlocksEdit, uids: &[String]) -> Result<Checked,
         let Entity::Insert(insert) = e else {
             return Err(Stop::failed(error(
                 codes::NOT_INSERT,
-                "Verilen nesne bir blok yerleştirmesi değil. Bir bloğun yerleştirmesini verin.".into(),
+                "Verilen nesne bir blok yerleştirmesi değil. Bir bloğun yerleştirmesini verin."
+                    .into(),
                 Some(format!("uids[{i}]")),
             )));
         };
@@ -895,7 +978,8 @@ fn update_input(input: &BlocksEdit) -> Result<(), Stop> {
     if list.is_empty() {
         return Err(Stop::failed(error(
             codes::NO_ENTITIES,
-            "Bloğun nesneleri verilmedi. Tanımın bütün nesnelerini yerel kimlikleriyle verin.".into(),
+            "Bloğun nesneleri verilmedi. Tanımın bütün nesnelerini yerel kimlikleriyle verin."
+                .into(),
             Some("entities".into()),
         )));
     }

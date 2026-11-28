@@ -6,7 +6,11 @@ use kentos_road::cloud_ground::{self, Thinner, Thinning, ThinningError};
 use kentos_road::surface::{self, SpotPoint, SurfaceInput};
 
 fn rule(cell: f64) -> Thinning {
-    Thinning { cell, z_tolerance: None, near: None }
+    Thinning {
+        cell,
+        z_tolerance: None,
+        near: None,
+    }
 }
 
 /// A 10 × 10 lattice at 0.5 m on [0.25, 4.75]², z = 100 + 0.1 x.
@@ -53,7 +57,11 @@ fn the_kept_points_do_not_depend_on_the_order_but_ties_go_to_the_first() {
     back.reverse();
     let behind = thin(rule(1.0), &[], &back);
     let set = |t: &cloud_ground::Thinned| {
-        let mut v: Vec<[i64; 3]> = t.points.iter().map(|(_, p)| p.map(|c| (c * 1e6).round() as i64)).collect();
+        let mut v: Vec<[i64; 3]> = t
+            .points
+            .iter()
+            .map(|(_, p)| p.map(|c| (c * 1e6).round() as i64))
+            .collect();
         v.sort_unstable();
         v
     };
@@ -74,19 +82,45 @@ fn a_steep_cell_keeps_its_foot_and_top() {
             p[2] += 0.6;
         }
     }
-    let flat = thin(Thinning { z_tolerance: Some(0.5), ..rule(1.0) }, &[], &lattice());
+    let flat = thin(
+        Thinning {
+            z_tolerance: Some(0.5),
+            ..rule(1.0)
+        },
+        &[],
+        &lattice(),
+    );
     assert_eq!((flat.points.len(), flat.by_slope), (25, 0));
-    let stepped = thin(Thinning { z_tolerance: Some(0.5), ..rule(1.0) }, &[], &pts);
+    let stepped = thin(
+        Thinning {
+            z_tolerance: Some(0.5),
+            ..rule(1.0)
+        },
+        &[],
+        &pts,
+    );
     // The five cells of the column x ∈ [2, 3) keep their highest besides their nearest (their lowest, the first read).
     assert_eq!(stepped.by_slope, 5, "{stepped:?}");
     assert_eq!(stepped.points.len(), 30);
-    assert!(stepped.points.iter().any(|(_, p)| *p == [2.75, 0.25, 100.875]));
+    assert!(
+        stepped
+            .points
+            .iter()
+            .any(|(_, p)| *p == [2.75, 0.25, 100.875])
+    );
 }
 
 #[test]
 fn every_point_beside_a_breakline_is_kept() {
     let line = vec![vec![[0.0, 2.5], [5.0, 2.5]]];
-    let got = thin(Thinning { near: Some(0.3), ..rule(1.0) }, &line, &lattice());
+    let got = thin(
+        Thinning {
+            near: Some(0.3),
+            ..rule(1.0)
+        },
+        &line,
+        &lattice(),
+    );
     // The rows y = 2.25 and 2.75 are 0.25 m from the line: 20 points, 15 of them not a cell's own.
     assert_eq!(got.by_line, 15, "{got:?}");
     assert_eq!(got.points.len(), 40);
@@ -118,9 +152,26 @@ fn the_error_of_the_points_left_out() {
     let pts = lattice();
     let got = thin(rule(1.0), &[], &pts);
     let kept: std::collections::HashSet<u64> = got.points.iter().map(|x| x.0).collect();
-    let points = got.points.iter().map(|(_, p)| SpotPoint { x: p[0], y: p[1], z: p[2], source: None }).collect();
-    let s = surface::build(&SurfaceInput { points, ..SurfaceInput::default() }).expect("builds");
-    let left = pts.iter().enumerate().filter(|(i, _)| !kept.contains(&(*i as u64))).map(|(_, p)| *p);
+    let points = got
+        .points
+        .iter()
+        .map(|(_, p)| SpotPoint {
+            x: p[0],
+            y: p[1],
+            z: p[2],
+            source: None,
+        })
+        .collect();
+    let s = surface::build(&SurfaceInput {
+        points,
+        ..SurfaceInput::default()
+    })
+    .expect("builds");
+    let left = pts
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| !kept.contains(&(*i as u64)))
+        .map(|(_, p)| *p);
     let r = cloud_ground::residuals(&s, left);
     assert_eq!(r.count + r.outside, 75);
     assert!(r.outside > 0 && r.count > 0, "{r:?}");
@@ -130,13 +181,42 @@ fn the_error_of_the_points_left_out() {
     bumped[44][2] += 0.3;
     let r = cloud_ground::residuals(&s, [bumped[44]]);
     assert_eq!(r.count, 1);
-    assert!((r.max - 0.3).abs() < 1e-9 && (r.rms - 0.3).abs() < 1e-9, "{r:?}");
+    assert!(
+        (r.max - 0.3).abs() < 1e-9 && (r.rms - 0.3).abs() < 1e-9,
+        "{r:?}"
+    );
 }
 
 #[test]
 fn the_refusals() {
-    assert_eq!(Thinner::new(rule(0.0), &[]).err(), Some(ThinningError::Cell));
-    assert_eq!(Thinner::new(rule(f64::NAN), &[]).err(), Some(ThinningError::Cell));
-    assert_eq!(Thinner::new(Thinning { z_tolerance: Some(-1.0), ..rule(1.0) }, &[]).err(), Some(ThinningError::ZTolerance));
-    assert_eq!(Thinner::new(Thinning { near: Some(0.0), ..rule(1.0) }, &[]).err(), Some(ThinningError::Near));
+    assert_eq!(
+        Thinner::new(rule(0.0), &[]).err(),
+        Some(ThinningError::Cell)
+    );
+    assert_eq!(
+        Thinner::new(rule(f64::NAN), &[]).err(),
+        Some(ThinningError::Cell)
+    );
+    assert_eq!(
+        Thinner::new(
+            Thinning {
+                z_tolerance: Some(-1.0),
+                ..rule(1.0)
+            },
+            &[]
+        )
+        .err(),
+        Some(ThinningError::ZTolerance)
+    );
+    assert_eq!(
+        Thinner::new(
+            Thinning {
+                near: Some(0.0),
+                ..rule(1.0)
+            },
+            &[]
+        )
+        .err(),
+        Some(ThinningError::Near)
+    );
 }

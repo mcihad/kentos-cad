@@ -52,13 +52,15 @@ pub(super) fn check(
         .map_err(|e| refused(format!("Yayın tanımları okunamadı: {e}")))?;
     let needed = kentos_commands::block_library_version(&blocks);
     if file["version"].as_u64().unwrap_or_default() < u64::from(needed) {
-        return Err(refused(if needed == kentos_commands::BLOCKS_APPLIANCE_VERSION {
-            "Elektrikli cihaz kartı için yayın kaynağı en az sürüm 5 olmalı."
-        } else if needed == kentos_commands::BLOCKS_ELEMENT_VERSION {
-            "Yapı elemanı sınıfı taşıyan yayın kaynağı kentos.blocks sürüm 4 olmalı."
-        } else {
-            "Ortak tip değeri içeren yayın kaynağı kentos.blocks sürüm 3 olmalı."
-        }));
+        return Err(refused(
+            if needed == kentos_commands::BLOCKS_APPLIANCE_VERSION {
+                "Elektrikli cihaz kartı için yayın kaynağı en az sürüm 5 olmalı."
+            } else if needed == kentos_commands::BLOCKS_ELEMENT_VERSION {
+                "Yapı elemanı sınıfı taşıyan yayın kaynağı kentos.blocks sürüm 4 olmalı."
+            } else {
+                "Ortak tip değeri içeren yayın kaynağı kentos.blocks sürüm 3 olmalı."
+            },
+        ));
     }
     crate::blocks_define::block_rules(&blocks.iter().collect::<Vec<_>>())
         .map_err(|why| refused(why.into_error().message))?;

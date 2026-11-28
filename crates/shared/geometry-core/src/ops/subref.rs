@@ -35,11 +35,11 @@ use crate::geom::arc::{ArcGeom, arc_end, arc_start, norm_angle, point_on_circle,
 use crate::geom::arrangement::Ring;
 use crate::geom::bulge::{bulge_arc, bulge_at, segment_mid};
 use crate::geom::ellipse::{EllipseGeom, ellipse_length, ellipse_point, param_of_point};
+use crate::geom::intersect::closest_on_edge;
 use crate::jsmath::{TAU, atan2, js_hypot, js_max, js_min};
+use crate::ops::edges::entity_edges;
 use crate::store::snap::SnapKind;
 use crate::vec2::Vec2;
-use crate::geom::intersect::closest_on_edge;
-use crate::ops::edges::entity_edges;
 
 /// A place on an object.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -290,7 +290,11 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
         // A space's boundary vertices (docs/adr/0729 §2): ring 0 a part's outer ring, the next its holes.
         (Shape::Space { parts, .. }, Place::Vertex { part, ring, index }) => {
             let area = parts.get(part)?;
-            let r = if ring == 0 { &area.outer } else { area.holes.get(ring - 1)? };
+            let r = if ring == 0 {
+                &area.outer
+            } else {
+                area.holes.get(ring - 1)?
+            };
             r.pts.get(index).copied()
         }
         (Shape::Point { p, .. }, Place::Node { part: 0 }) => Some(*p),
@@ -356,18 +360,42 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
             let (lo, hi) = c.domain();
             Some(c.point(if place == Place::Start { lo } else { hi }))
         }
-        (Shape::Wall { .. }, Place::Vertex { part, ring: 0, index }) => {
-            wall_line(&e.shape, part)?.0.pts.get(index).copied()
-        }
-        (Shape::Wall { .. }, Place::Mid { part, ring: 0, index }) => {
+        (
+            Shape::Wall { .. },
+            Place::Vertex {
+                part,
+                ring: 0,
+                index,
+            },
+        ) => wall_line(&e.shape, part)?.0.pts.get(index).copied(),
+        (
+            Shape::Wall { .. },
+            Place::Mid {
+                part,
+                ring: 0,
+                index,
+            },
+        ) => {
             let (l, closed) = wall_line(&e.shape, part)?;
             let n = l.pts.len();
             if index >= n || (!closed && index + 1 >= n) {
                 return None;
             }
-            Some(segment_mid(l.pts[index], l.pts[(index + 1) % n], l.bulges[index]))
+            Some(segment_mid(
+                l.pts[index],
+                l.pts[(index + 1) % n],
+                l.bulges[index],
+            ))
         }
-        (Shape::Wall { .. }, Place::Along { part, ring: 0, index, t }) => {
+        (
+            Shape::Wall { .. },
+            Place::Along {
+                part,
+                ring: 0,
+                index,
+                t,
+            },
+        ) => {
             if !(0.0..=1.0).contains(&t) {
                 return None;
             }
@@ -382,11 +410,26 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
             let (a, b, k) = grid_line(&e.shape)?;
             edge_arc(a, b, k).map(|(c, ..)| c)
         }
-        (Shape::Grid { .. }, Place::Mid { part: 0, ring: 0, index: 0 }) => {
+        (
+            Shape::Grid { .. },
+            Place::Mid {
+                part: 0,
+                ring: 0,
+                index: 0,
+            },
+        ) => {
             let (a, b, k) = grid_line(&e.shape)?;
             Some(segment_mid(a, b, k))
         }
-        (Shape::Grid { .. }, Place::Along { part: 0, ring: 0, index: 0, t }) => {
+        (
+            Shape::Grid { .. },
+            Place::Along {
+                part: 0,
+                ring: 0,
+                index: 0,
+                t,
+            },
+        ) => {
             if !(0.0..=1.0).contains(&t) {
                 return None;
             }
@@ -395,15 +438,37 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
         }
         (Shape::Grid { .. }, _) => None,
         // A column's box's middle, and a rectangular or L one's corners and edges (docs/adr/0711 §1, 0725 §2).
-        (Shape::Column { at, column }, Place::Center) => Some(crate::geom::arch::column_center(*at, column)),
-        (Shape::Column { .. }, Place::Vertex { part: 0, ring: 0, index }) => {
-            column_corners(&e.shape)?.get(index).copied()
+        (Shape::Column { at, column }, Place::Center) => {
+            Some(crate::geom::arch::column_center(*at, column))
         }
-        (Shape::Column { .. }, Place::Mid { part: 0, ring: 0, index }) => {
+        (
+            Shape::Column { .. },
+            Place::Vertex {
+                part: 0,
+                ring: 0,
+                index,
+            },
+        ) => column_corners(&e.shape)?.get(index).copied(),
+        (
+            Shape::Column { .. },
+            Place::Mid {
+                part: 0,
+                ring: 0,
+                index,
+            },
+        ) => {
             let (a, b) = column_edge(&e.shape, index)?;
             Some(lerp(a, b, 0.5))
         }
-        (Shape::Column { .. }, Place::Along { part: 0, ring: 0, index, t }) => {
+        (
+            Shape::Column { .. },
+            Place::Along {
+                part: 0,
+                ring: 0,
+                index,
+                t,
+            },
+        ) => {
             if !(0.0..=1.0).contains(&t) {
                 return None;
             }
@@ -442,7 +507,15 @@ pub fn point(e: &Entity, place: Place) -> Option<Vec2> {
 /// many vertices, closed alike) a place on its first or last line goes to the new first or last. None for any other
 /// place, shape or path: those follow by their vertices.
 fn wall_face(before: &Shape, after: &Shape, place: Place) -> Option<Place> {
-    let (Shape::Wall { pts: p0, wall: w0, .. }, Shape::Wall { pts: p1, wall: w1, .. }) = (before, after) else {
+    let (
+        Shape::Wall {
+            pts: p0, wall: w0, ..
+        },
+        Shape::Wall {
+            pts: p1, wall: w1, ..
+        },
+    ) = (before, after)
+    else {
         return None;
     };
     if p0.len() != p1.len() || w0.closed != w1.closed {
@@ -458,12 +531,20 @@ fn wall_face(before: &Shape, after: &Shape, place: Place) -> Option<Place> {
         _ => None,
     };
     match place {
-        Place::Vertex { part, ring: 0, index } => Some(Place::Vertex {
+        Place::Vertex {
+            part,
+            ring: 0,
+            index,
+        } => Some(Place::Vertex {
             part: face(part)?,
             ring: 0,
             index,
         }),
-        Place::Mid { part, ring: 0, index } => Some(Place::Mid {
+        Place::Mid {
+            part,
+            ring: 0,
+            index,
+        } => Some(Place::Mid {
             part: face(part)?,
             ring: 0,
             index,
@@ -489,7 +570,15 @@ fn same_structure(before: &Shape, after: &Shape, place: Place) -> bool {
     // Only a path's rings and a multi-point's points have a structure; a line's middle has none.
     let path = matches!(before, Shape::Polyline { .. } | Shape::Polygon { .. });
     // A wall's: as many path vertices, closed alike, as many lines (docs/adr/0340 §5).
-    if let (Shape::Wall { pts: p0, wall: w0, .. }, Shape::Wall { pts: p1, wall: w1, .. }) = (before, after) {
+    if let (
+        Shape::Wall {
+            pts: p0, wall: w0, ..
+        },
+        Shape::Wall {
+            pts: p1, wall: w1, ..
+        },
+    ) = (before, after)
+    {
         return p0.len() == p1.len()
             && w0.closed == w1.closed
             && crate::geom::wall::boundaries(w0).len() == crate::geom::wall::boundaries(w1).len();
@@ -565,14 +654,32 @@ fn vertex_places(shape: &Shape) -> Vec<(Place, Vec2)> {
                 .enumerate()
             {
                 for (index, p) in l.pts.into_iter().enumerate() {
-                    out.push((Place::Vertex { part, ring: 0, index }, p));
+                    out.push((
+                        Place::Vertex {
+                            part,
+                            ring: 0,
+                            index,
+                        },
+                        p,
+                    ));
                 }
             }
             return out;
         }
         Shape::Column { .. } => {
-            for (index, p) in column_corners(shape).unwrap_or_default().into_iter().enumerate() {
-                out.push((Place::Vertex { part: 0, ring: 0, index }, p));
+            for (index, p) in column_corners(shape)
+                .unwrap_or_default()
+                .into_iter()
+                .enumerate()
+            {
+                out.push((
+                    Place::Vertex {
+                        part: 0,
+                        ring: 0,
+                        index,
+                    },
+                    p,
+                ));
             }
             return out;
         }
@@ -629,8 +736,16 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
             // A ring's first vertex and its closing repeat (an area made a polyline repeats its first corner at its
             // end, UR2-045) are one corner: the first is taken.
             [
-                a @ Place::Vertex { part: pa, ring: ra, index: 0 },
-                Place::Vertex { part: pb, ring: rb, index: last },
+                a @ Place::Vertex {
+                    part: pa,
+                    ring: ra,
+                    index: 0,
+                },
+                Place::Vertex {
+                    part: pb,
+                    ring: rb,
+                    index: last,
+                },
             ] if pa == pb && ra == rb && *last + 1 == ring_len(&after.shape, *pa, *ra) => Ok(*a),
             _ => Err(Reason::Ambiguous),
         }
@@ -651,7 +766,10 @@ pub fn follow(place: Place, before: &Entity, after: Option<&Entity>) -> Followed
                     let n = r.pts.len();
                     (r.pts[index], r.pts[(index + 1) % n])
                 }
-                None => match (wall_edge(&before.shape, part, index), column_edge(&before.shape, index)) {
+                None => match (
+                    wall_edge(&before.shape, part, index),
+                    column_edge(&before.shape, index),
+                ) {
                     (Some((a, b, _)), _) if ring == 0 => (a, b),
                     (_, Some((a, b))) if (part, ring) == (0, 0) => (a, b),
                     _ => return Followed::Broken(Reason::NoSuchPlace),
@@ -773,20 +891,35 @@ fn lerp(a: Vec2, b: Vec2, t: f64) -> Vec2 {
 }
 
 /// The analytic arc of one addressed path edge; none for a straight or missing edge.
-pub fn arc_edge_of(shape: &Shape, part: usize, ring: usize, index: usize) -> Option<crate::geom::bulge::BulgeArc> {
+pub fn arc_edge_of(
+    shape: &Shape,
+    part: usize,
+    ring: usize,
+    index: usize,
+) -> Option<crate::geom::bulge::BulgeArc> {
     let (a, b, bulge) = edge_of(shape, part, ring, index)?;
     bulge_arc(a, b, bulge)
 }
 
 /// The actual vertices of an existing path edge, including a closing edge's wrap to zero.
-pub fn edge_vertex_indices(shape: &Shape, part: usize, ring: usize, index: usize) -> Option<(usize, usize)> {
+pub fn edge_vertex_indices(
+    shape: &Shape,
+    part: usize,
+    ring: usize,
+    index: usize,
+) -> Option<(usize, usize)> {
     let r = ring_of(shape, part, ring)?;
     let n = r.pts.len();
     (index < n && (r.closed || index + 1 < n)).then(|| (index, (index + 1) % n))
 }
 
 /// A path's edge from vertex `index`: its ends and bulge; none when the ring has no such edge.
-pub(crate) fn edge_of(shape: &Shape, part: usize, ring: usize, index: usize) -> Option<(Vec2, Vec2, f64)> {
+pub(crate) fn edge_of(
+    shape: &Shape,
+    part: usize,
+    ring: usize,
+    index: usize,
+) -> Option<(Vec2, Vec2, f64)> {
     let r = ring_of(shape, part, ring)?;
     let n = r.pts.len();
     if index >= n || (!r.closed && index + 1 >= n) {
@@ -938,7 +1071,12 @@ fn along_at(e: &Entity, at: Vec2) -> Option<Place> {
                         Some((c, r, a0, sw)) => t_on_arc(c, r, a0, sw, at),
                         None => t_on_segment(a, b, at),
                     }?;
-                    Some(Place::Along { part, ring: 0, index, t })
+                    Some(Place::Along {
+                        part,
+                        ring: 0,
+                        index,
+                        t,
+                    })
                 })
             })
         }
@@ -946,7 +1084,12 @@ fn along_at(e: &Entity, at: Vec2) -> Option<Place> {
             let c = column_corners(&e.shape)?;
             (0..c.len()).find_map(|index| {
                 let t = t_on_segment(c[index], c[(index + 1) % c.len()], at)?;
-                Some(Place::Along { part: 0, ring: 0, index, t })
+                Some(Place::Along {
+                    part: 0,
+                    ring: 0,
+                    index,
+                    t,
+                })
             })
         }
         Shape::Grid { .. } => {
@@ -1047,7 +1190,9 @@ pub fn edge_place_near(e: &Entity, kind: EdgeKind, near: Vec2) -> Option<Place> 
         (Shape::Grid { .. }, _) => {
             let (a, b, k) = grid_line(&e.shape)?;
             return match (edge_arc(a, b, k), kind) {
-                (None, EdgeKind::Straight) if a != b => Some(whole(t_nearest_on_segment(a, b, near))),
+                (None, EdgeKind::Straight) if a != b => {
+                    Some(whole(t_nearest_on_segment(a, b, near)))
+                }
                 (Some((c, _, a0, sw)), EdgeKind::Arc | EdgeKind::Round) => {
                     Some(whole(t_nearest_on_arc(c, a0, sw, near)))
                 }
@@ -1071,7 +1216,12 @@ pub fn edge_place_near(e: &Entity, kind: EdgeKind, near: Vec2) -> Option<Place> 
                 t_nearest_on_segment(a, b, near),
             ),
             (Some((c, r, a0, sw)), EdgeKind::Arc | EdgeKind::Round) => (
-                crate::geom::intersect::Edge::Arc { c, r, a0, sweep: sw },
+                crate::geom::intersect::Edge::Arc {
+                    c,
+                    r,
+                    a0,
+                    sweep: sw,
+                },
                 t_nearest_on_arc(c, a0, sw, near),
             ),
             _ => continue,
@@ -1126,11 +1276,15 @@ pub fn curve_centre(e: &Entity, place: Place) -> Option<Vec2> {
 /// `along` place or an edge's middle); none on a curve (docs/adr/0320 §1).
 pub fn edge_line(e: &Entity, place: Place) -> Option<(Vec2, Vec2)> {
     match (&e.shape, place) {
-        (Shape::Line { a, b }, Place::Along { .. } | Place::Mid { .. } | Place::Start | Place::End) => {
-            Some((*a, *b))
-        }
+        (
+            Shape::Line { a, b },
+            Place::Along { .. } | Place::Mid { .. } | Place::Start | Place::End,
+        ) => Some((*a, *b)),
         // A straight grid's line (docs/adr/0725 §7).
-        (Shape::Grid { .. }, Place::Along { .. } | Place::Mid { .. } | Place::Start | Place::End) => {
+        (
+            Shape::Grid { .. },
+            Place::Along { .. } | Place::Mid { .. } | Place::Start | Place::End,
+        ) => {
             let (a, b, k) = grid_line(&e.shape)?;
             edge_arc(a, b, k).is_none().then_some((a, b))
         }
@@ -1438,7 +1592,9 @@ pub fn place_near_in(
     at: Vec2,
     tol: f64,
 ) -> Option<(Vec<u32>, Place, f64)> {
-    let own = near_on(insert, at, tol).point.filter(|(p, _)| *p == Place::Node { part: 0 });
+    let own = near_on(insert, at, tol)
+        .point
+        .filter(|(p, _)| *p == Place::Node { part: 0 });
     let mut point_best: Option<(Vec<u32>, Place, f64)> = own.map(|(p, d)| (Vec::new(), p, d));
     let mut edge_best: Option<(Vec<u32>, Entity, Vec2, f64)> = None;
     for path in blocks.piece_paths(&insert.shape) {

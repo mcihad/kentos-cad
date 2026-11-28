@@ -615,7 +615,10 @@ mod tests {
         let Glyph::Other('≤', g) = glyph(barlow, '≤') else {
             panic!("{:?}", glyph(barlow, '≤'));
         };
-        assert_eq!((g.font.as_str(), g.weight, g.italic), ("times-new-roman", 400, false));
+        assert_eq!(
+            (g.font.as_str(), g.weight, g.italic),
+            ("times-new-roman", 400, false)
+        );
         assert!(matches!(glyph(barlow, '⟨'), Glyph::Missing('⟨')));
         let mut bold = TextStyle::new(2_500, 600);
         bold.font = "courier-prime".into();

@@ -333,7 +333,11 @@ fn perf() {
         );
         let full = ms(t);
         let batches: usize = styled.layers.iter().map(|l| l.batches().len()).sum();
-        let floats: usize = styled.layers.iter().map(|l| l.numbers().as_ref().map_or(0, |n| n.data.len())).sum();
+        let floats: usize = styled
+            .layers
+            .iter()
+            .map(|l| l.numbers().as_ref().map_or(0, |n| n.data.len()))
+            .sum();
 
         // One object moved: its layer alone is built again.
         let mut doc2 = doc.clone();
@@ -430,10 +434,7 @@ fn perf() {
             demo.model.len(),
             s.layers.len(),
             ms(t),
-            s.layers
-                .iter()
-                .map(|l| l.batches().len())
-                .sum::<usize>()
+            s.layers.iter().map(|l| l.batches().len()).sum::<usize>()
         );
     }
 }

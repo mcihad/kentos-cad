@@ -72,7 +72,15 @@ impl App {
         };
         let fields = window.fields(model);
         let top = row![
-            kind_picker(window.kind, window.kinds(), window.kinds().into_iter().filter(|k| !window.fits(*k)).collect()),
+            kind_picker(
+                window.kind,
+                window.kinds(),
+                window
+                    .kinds()
+                    .into_iter()
+                    .filter(|k| !window.fits(*k))
+                    .collect()
+            ),
             label::caption(objects_text(model.count(&window.layer), window))
                 .style(style::text::muted),
         ]
@@ -104,7 +112,16 @@ impl App {
                 .rsplit(['/', '\\'])
                 .next()
                 .filter(|_| d.driver == "gpkg")
-                .map_or_else(|| d.address.split('@').next_back().unwrap_or(&d.address).to_owned(), str::to_owned);
+                .map_or_else(
+                    || {
+                        d.address
+                            .split('@')
+                            .next_back()
+                            .unwrap_or(&d.address)
+                            .to_owned()
+                    },
+                    str::to_owned,
+                );
             format!("{place} › {}", d.table)
         });
         let whom = row![
@@ -116,10 +133,12 @@ impl App {
             .wrapping(iced::widget::text::Wrapping::WordOrGlyph)
             .width(Fill),
             kentos_ui::widget::tip(
-                iced::widget::button(kentos_ui::icon::icon(crate::icons::from_web(Some("copy"))).size(14.0))
-                    .padding(kentos_ui::theme::metrics::icon_small(14.0))
-                    .style(style::button::ghost)
-                    .on_press(Message::LayerStyle(Event::CopyPath)),
+                iced::widget::button(
+                    kentos_ui::icon::icon(crate::icons::from_web(Some("copy"))).size(14.0)
+                )
+                .padding(kentos_ui::theme::metrics::icon_small(14.0))
+                .style(style::button::ghost)
+                .on_press(Message::LayerStyle(Event::CopyPath)),
                 kentos_ui::widget::Tip::new("Katmanın yolunu kopyala"),
                 iced::widget::tooltip::Position::Top,
             ),
@@ -208,7 +227,10 @@ fn kind_picker<'a>(kind: Kind, kinds: Vec<Kind>, misfits: Vec<Kind>) -> Element<
                     m = m.header(g);
                 }
             }
-            m = m.radio(k.to_string(), k == kind, ev(Event::Kind(k))).icon(crate::icons::from_web(Some(k.icon()))).detail(k.detail());
+            m = m
+                .radio(k.to_string(), k == kind, ev(Event::Kind(k)))
+                .icon(crate::icons::from_web(Some(k.icon())))
+                .detail(k.detail());
         }
         m
     };

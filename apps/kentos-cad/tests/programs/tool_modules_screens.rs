@@ -37,11 +37,15 @@ fn processing(app: &mut App, e: crate::processing::Event) {
 fn screens() {
     let found = crate::drawing_fonts::load_font_folders();
     println!("the system's own faces: {found:?}");
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9310");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-9310");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let save = |snapshot: &mut Snapshot, app: &App, name: &str| {
         let file = out.join(format!("{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     };
     // The area settles at its size before the drawing opens, as the tools' pictures do, so the drawing is fitted to it.
@@ -51,7 +55,9 @@ fn screens() {
         snapshot.settle(&mut app, App::view, &mut |app: &mut App, m| {
             let _ = app.update(m);
         });
-        let _ = app.update(Message::Opened(Some(Ok(Box::new(parcels(workspace, work))))));
+        let _ = app.update(Message::Opened(Some(Ok(Box::new(parcels(
+            workspace, work,
+        ))))));
         let _ = app.update(Message::Run("view.zoomExtents"));
         (app, snapshot)
     };

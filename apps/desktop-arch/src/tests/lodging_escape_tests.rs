@@ -12,9 +12,9 @@
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib lodging_escape_tests::screens -- --ignored --nocapture
 //! ```
 
+use crate::arch::ArchState;
 use kentos_commands::ArchAuditOutcome as O;
 use serde_json::json;
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::use_class_tests::{building, checked, p, rect, run, spaces};
@@ -27,7 +27,14 @@ fn wall(a: (f64, f64), b: (f64, f64)) -> serde_json::Value {
 /// The hotel's 1. kat; its east wall's persistent id (a second stair is opened through it).
 fn hotel() -> (App, String) {
     let mut app = building(2, "Otel");
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     let walls = run(
         &mut app,
         "cad.walls.create",
@@ -63,7 +70,14 @@ fn hotel() -> (App, String) {
 
 /// The east stair: its room beyond the east wall, a door through it.
 fn east_stair(app: &mut App, east: &str) {
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     run(
         app,
         "cad.walls.create",
@@ -76,12 +90,27 @@ fn east_stair(app: &mut App, east: &str) {
         "cad.openings.create",
         json!({"layerId": layer, "openings": [{"host": east, "at": 1.0, "form": "door", "width": 0.9, "head": 2.1}]}),
     );
-    spaces(app, vec![json!({"parts": rect(20.1, 0.1, 23.9, 7.9), "name": "Merdiven evi 2", "arch": {"level": "k01"}})]);
+    spaces(
+        app,
+        vec![
+            json!({"parts": rect(20.1, 0.1, 23.9, 7.9), "name": "Merdiven evi 2", "arch": {"level": "k01"}}),
+        ],
+    );
 }
 
 fn row(app: &App) -> O {
-    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
-    set.rules.iter().find(|r| r.rule == "BYKHY 50/4").unwrap_or_else(|| panic!("50/4: {:#?}", set.rules)).state
+    let set = app
+        .modules
+        .arch()
+        .arch_audit
+        .rule_set
+        .as_ref()
+        .expect("the rule set");
+    set.rules
+        .iter()
+        .find(|r| r.rule == "BYKHY 50/4")
+        .unwrap_or_else(|| panic!("50/4: {:#?}", set.rules))
+        .state
 }
 
 /// A room's walk from its door as the facts carry it.
@@ -97,8 +126,18 @@ fn door_exit(app: &App, name: &str) -> kentos_extensions::audit_facts::building:
 }
 
 fn findings(app: &App) -> Vec<(String, String)> {
-    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-    audited.findings.iter().map(|f| (f.code.clone(), f.message.clone())).collect()
+    let audited = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
+    audited
+        .findings
+        .iter()
+        .map(|f| (f.code.clone(), f.message.clone()))
+        .collect()
 }
 
 #[test]
@@ -110,7 +149,10 @@ fn a_hotel_bedroom_is_measured_from_its_door() {
     assert!((a.length - 8.241).abs() < 0.01, "{a:?}");
     assert!((b.length - 19.217).abs() < 0.01, "{b:?}");
     assert_eq!((a.exits, b.exits), (1, 1));
-    assert!((a.one_way - a.length).abs() < 1e-9, "one exit: all of it is one way: {a:?}");
+    assert!(
+        (a.one_way - a.length).abs() < 1e-9,
+        "one exit: all of it is one way: {a:?}"
+    );
     let doc = &app.document.as_ref().expect("a drawing").model;
     let corridor = kentos_processing::audit_facts::building::measure(doc)
         .spaces
@@ -123,17 +165,25 @@ fn a_hotel_bedroom_is_measured_from_its_door() {
     // The fire rules leave the bedrooms to the package: no 32/4 finding from their farthest points (Oda 101's ~17.8 m).
     let said = findings(&app);
     assert!(
-        !said.iter().any(|(code, message)| code == "bykhy_escape_distance_over" && message.contains("Oda 10")),
+        !said
+            .iter()
+            .any(|(code, message)| code == "bykhy_escape_distance_over"
+                && message.contains("Oda 10")),
         "{said:#?}"
     );
     // 50/4: Oda 102's door 19.22 m > 15 m one way; Oda 101's 8.24 m keeps it.
     assert_eq!(row(&app), O::Failed);
-    let over: Vec<&String> =
-        said.iter().filter(|(code, _)| code == "bykhy_bedroom_escape_distance").map(|(_, m)| m).collect();
+    let over: Vec<&String> = said
+        .iter()
+        .filter(|(code, _)| code == "bykhy_bedroom_escape_distance")
+        .map(|(_, m)| m)
+        .collect();
     assert_eq!(over.len(), 1, "{said:#?}");
     let message = over[0];
     assert!(
-        message.contains("Oda 102") && message.contains("> 15,00 m (otel, tek yön)") && message.contains("BYKHY 50/4"),
+        message.contains("Oda 102")
+            && message.contains("> 15,00 m (otel, tek yön)")
+            && message.contains("BYKHY 50/4"),
         "{message}"
     );
     // The plan's walks: each bedroom's from its door, against Oteller's one way.
@@ -142,11 +192,18 @@ fn a_hotel_bedroom_is_measured_from_its_door() {
     let from = |x: f64| {
         walks
             .iter()
-            .find(|w| w.path.first().is_some_and(|s| (s.x - x).abs() < 1e-6 && (s.y - 1.8).abs() < 1e-6))
+            .find(|w| {
+                w.path
+                    .first()
+                    .is_some_and(|s| (s.x - x).abs() < 1e-6 && (s.y - 1.8).abs() < 1e-6)
+            })
             .unwrap_or_else(|| panic!("the walk from the door at x {x}: {walks:#?}"))
     };
     let (w1, w2) = (from(8.0), from(19.0));
-    assert_eq!((w1.limit, w1.words, w1.over), (Some(15.0), "tek yön", false));
+    assert_eq!(
+        (w1.limit, w1.words, w1.over),
+        (Some(15.0), "tek yön", false)
+    );
     assert_eq!((w2.limit, w2.words, w2.over), (Some(15.0), "tek yön", true));
     // A second stair at the east end: two ways, the nearest 1.53 m; 50/4 passes.
     east_stair(&mut app, &east);
@@ -165,29 +222,46 @@ fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out =
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yatak-odasi-kacis-8156");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yatak-odasi-kacis-8156");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    let sizes = [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1280.0, 800.0), "koyu"),
+    ];
     for (theme, size, name) in sizes {
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
         };
         let (mut app, _) = hotel();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         let _ = app.update(Message::Run("tool.escapeRoutes"));
         checked(&mut app);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_bedroom_escape_distance");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "bykhy_bedroom_escape_distance");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-yatak-odasi-kacis-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

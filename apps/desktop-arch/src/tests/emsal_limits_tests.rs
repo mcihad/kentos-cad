@@ -12,10 +12,10 @@
 //! - 22/1-j (docs/adr/8147): the common area's gym and meeting room in the basement under the ground, 60 m²; katlar
 //!   alanı before them the two flats' 60 m², 5 % of it 3 m² (under 1000 m²): 3 m² out, 57 m² in.
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use kentos_launch::Module;
 use serde_json::{Value, json};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -40,42 +40,88 @@ pub(crate) fn command(app: &mut App, name: &str, input: Value) {
 /// storey's flat 1, stair hall and flat 2; the parcel's zoning (400 m², emsal 1.50, TAKS 0.40).
 pub(crate) fn building(basement: [(&str, &str); 3], floor: f64) -> App {
     kentos_postgis::connections::keep_in_memory();
-    let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
-    app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+    let (mut app, _) = App::start_in(
+        Some(Module::Architecture),
+        None,
+        Settings::memory(),
+        Recovery::off(),
+    );
+    app.db_store = Box::leak(Box::new(
+        kentos_postgis::connections::ConnectionStore::open(None),
+    ));
     app.hand_over = |m, _| Ok(m.program().to_owned());
     let task = app.update(Message::Run("file.new"));
     drive(&mut app, task);
-    let mut arch = app.document.as_ref().expect("a drawing").model.settings().arch.clone().expect("arch");
+    let mut arch = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .arch
+        .clone()
+        .expect("arch");
     let level = |id: &str, name: &str, z: f64| kentos_commands::ArchLevel {
         id: id.into(),
         name: name.into(),
         elevation: z,
         height: Some(3.0),
     };
-    arch.levels = vec![level("b01", "Bodrum kat", floor), level("k00", "Zemin kat", floor + 3.0)];
-    arch.zoning = Some(kentos_commands::Zoning { parcel_area: 400.0, far: Some(1.5), coverage: Some(0.4), ..Default::default() });
-    let mut settings = app.document.as_ref().expect("a drawing").model.settings().clone();
+    arch.levels = vec![
+        level("b01", "Bodrum kat", floor),
+        level("k00", "Zemin kat", floor + 3.0),
+    ];
+    arch.zoning = Some(kentos_commands::Zoning {
+        parcel_area: 400.0,
+        far: Some(1.5),
+        coverage: Some(0.4),
+        ..Default::default()
+    });
+    let mut settings = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .clone();
     settings.arch = Some(arch);
-    app.document.as_mut().expect("a drawing").model.set_settings(settings);
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    app.document
+        .as_mut()
+        .expect("a drawing")
+        .model
+        .set_settings(settings);
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     let p = |x: f64, y: f64| json!({"x": x, "y": y});
     for level in ["b01", "k00"] {
-        let wall = |a: (f64, f64), b: (f64, f64), w: f64| {
-            json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": w, "arch": {"level": level}})
-        };
-        command(&mut app, "cad.walls.create", json!({"layerId": layer, "walls": [
-            wall((0.125, 0.125), (14.875, 0.125), 0.25), wall((14.875, 0.125), (14.875, 5.875), 0.25),
-            wall((14.875, 5.875), (0.125, 5.875), 0.25), wall((0.125, 5.875), (0.125, 0.125), 0.25),
-            wall((5.0, 0.125), (5.0, 5.875), 0.15), wall((10.0, 0.125), (10.0, 5.875), 0.15)
-        ]}));
+        let wall = |a: (f64, f64), b: (f64, f64), w: f64| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": w, "arch": {"level": level}});
+        command(
+            &mut app,
+            "cad.walls.create",
+            json!({"layerId": layer, "walls": [
+                wall((0.125, 0.125), (14.875, 0.125), 0.25), wall((14.875, 0.125), (14.875, 5.875), 0.25),
+                wall((14.875, 5.875), (0.125, 5.875), 0.25), wall((0.125, 5.875), (0.125, 0.125), 0.25),
+                wall((5.0, 0.125), (5.0, 5.875), 0.15), wall((10.0, 0.125), (10.0, 5.875), 0.15)
+            ]}),
+        );
     }
-    command(&mut app, "cad.program.edit", json!({"program": {"units": [
-        {"id": "d1", "number": "1", "nature": "Daire"},
-        {"id": "d2", "number": "2", "nature": "Daire"},
-        {"id": "e1", "number": "E1", "kind": "annex", "annexOf": "d1", "nature": "Depo"},
-        {"id": "o", "number": "O", "name": "Ortak alan", "kind": "common"},
-        {"id": "k", "number": "K", "name": "Kapıcı dairesi", "kind": "common"}
-    ]}}));
+    command(
+        &mut app,
+        "cad.program.edit",
+        json!({"program": {"units": [
+            {"id": "d1", "number": "1", "nature": "Daire"},
+            {"id": "d2", "number": "2", "nature": "Daire"},
+            {"id": "e1", "number": "E1", "kind": "annex", "annexOf": "d1", "nature": "Depo"},
+            {"id": "o", "number": "O", "name": "Ortak alan", "kind": "common"},
+            {"id": "k", "number": "K", "name": "Kapıcı dairesi", "kind": "common"}
+        ]}}),
+    );
     // An empty group: the room in none.
     let room = |x: f64, level: &str, unit: &str, name: Option<&str>| {
         let mut r = json!({"seed": p(x, 3.0), "arch": {"level": level}});
@@ -87,36 +133,69 @@ pub(crate) fn building(basement: [(&str, &str); 3], floor: f64) -> App {
         }
         r
     };
-    let mut spaces = vec![room(2.5, "k00", "d1", None), room(7.5, "k00", "o", Some("Merdiven")), room(12.5, "k00", "d2", None)];
+    let mut spaces = vec![
+        room(2.5, "k00", "d1", None),
+        room(7.5, "k00", "o", Some("Merdiven")),
+        room(12.5, "k00", "d2", None),
+    ];
     for (x, (name, unit)) in [2.5, 7.5, 12.5].into_iter().zip(basement) {
         spaces.push(room(x, "b01", unit, Some(name)));
     }
-    command(&mut app, "cad.spaces.create", json!({"layerId": layer, "spaces": spaces}));
+    command(
+        &mut app,
+        "cad.spaces.create",
+        json!({"layerId": layer, "spaces": spaces}),
+    );
     app
 }
 
 /// Flat 1's storage annex, the basement's stair and the common boiler room.
 fn storage(floor: f64) -> App {
-    building([("Depo", "e1"), ("Merdiven", "o"), ("Kazan dairesi", "o")], floor)
+    building(
+        [("Depo", "e1"), ("Merdiven", "o"), ("Kazan dairesi", "o")],
+        floor,
+    )
 }
 
 /// The caretaker flat's three rooms in the basement, by their own names.
 fn caretaker() -> App {
-    building([("Salon", "k"), ("Yatak odası", "k"), ("Mutfak", "k")], -3.0)
+    building(
+        [("Salon", "k"), ("Yatak odası", "k"), ("Mutfak", "k")],
+        -3.0,
+    )
 }
 
 /// Two library rooms of the common area and the boiler room.
 fn library() -> App {
-    building([("Kütüphane", "o"), ("Kütüphane", "o"), ("Kazan dairesi", "o")], -3.0)
+    building(
+        [
+            ("Kütüphane", "o"),
+            ("Kütüphane", "o"),
+            ("Kazan dairesi", "o"),
+        ],
+        -3.0,
+    )
 }
 
 /// The common area's gym and meeting room and the boiler room (22/1-j).
 fn amenity(floor: f64) -> App {
-    building([("Spor salonu", "o"), ("Toplantı odası", "o"), ("Kazan dairesi", "o")], floor)
+    building(
+        [
+            ("Spor salonu", "o"),
+            ("Toplantı odası", "o"),
+            ("Kazan dairesi", "o"),
+        ],
+        floor,
+    )
 }
 
 pub(crate) fn report(app: &App) -> kentos_domain::zoning::ZoningReport {
-    app.document.as_ref().expect("a drawing").model.zoning_report().expect("a zoning")
+    app.document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .zoning_report()
+        .expect("a zoning")
 }
 
 pub(crate) fn near(a: f64, b: f64) -> bool {
@@ -125,12 +204,21 @@ pub(crate) fn near(a: f64, b: f64) -> bool {
 
 /// Emsal ve TAKS tablosu's row starting with `words`: its drawing's value.
 pub(crate) fn row(app: &App, words: &str) -> Option<String> {
-    let t = app.document.as_ref().expect("a drawing").model.zoning_table();
-    t.rows.iter().find(|r| r[0].starts_with(words)).map(|r| r[2].clone())
+    let t = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .zoning_table();
+    t.rows
+        .iter()
+        .find(|r| r[0].starts_with(words))
+        .map(|r| r[2].clone())
 }
 
 #[test]
-fn a_flat_s_storage_annex_under_the_ground_is_out_up_to_half_its_net_area_and_the_stair_hall_is_out() {
+fn a_flat_s_storage_annex_under_the_ground_is_out_up_to_half_its_net_area_and_the_stair_hall_is_out()
+ {
     let app = storage(-3.0);
     let r = report(&app);
     assert!(near(r.storage_over, 30.0 - 0.5 * 25.7125), "{r:?}");
@@ -141,23 +229,46 @@ fn a_flat_s_storage_annex_under_the_ground_is_out_up_to_half_its_net_area_and_th
     assert!(near(r.exempt, 12.85625 + 30.0), "{r:?}");
     assert!(near(r.outside, 60.0), "{r:?}");
     assert!(near(r.floors, 77.14375), "{r:?}");
-    assert_eq!(row(&app, "Depo eklentilerinin %50'yi aşan kısmı").as_deref(), Some("17.14"));
-    let limits: Vec<_> = r.limits.iter().map(|l| (l.limit, l.unit.as_deref(), l.rooms.len())).collect();
-    assert_eq!(limits, [(kentos_domain::zoning::ZoningLimit::Storage, Some("d1"), 1)]);
+    assert_eq!(
+        row(&app, "Depo eklentilerinin %50'yi aşan kısmı").as_deref(),
+        Some("17.14")
+    );
+    let limits: Vec<_> = r
+        .limits
+        .iter()
+        .map(|l| (l.limit, l.unit.as_deref(), l.rooms.len()))
+        .collect();
+    assert_eq!(
+        limits,
+        [(kentos_domain::zoning::ZoningLimit::Storage, Some("d1"), 1)]
+    );
     // The basement's top a metre over ±0.00 (the ground storey raised on it): not under the ground, the store counts
     // in whole.
     let raised = storage(-2.0);
     let r = report(&raised);
     assert!(near(r.storage_over, 0.0) && r.limits.is_empty(), "{r:?}");
     assert!(near(r.included, 90.0), "the store in: {r:?}");
-    assert!(near(r.exempt, 90.0), "two stair halls and the boiler: {r:?}");
+    assert!(
+        near(r.exempt, 90.0),
+        "two stair halls and the boiler: {r:?}"
+    );
     assert_eq!(row(&raised, "Depo eklentilerinin"), None);
     // A coal room in flat 1's storage annex is a coal room (22/1-i, its own name), not a store under the 50 %; an
     // annex's, no common area's: within the 30 %.
-    let coal = building([("Kömürlük", "e1"), ("Merdiven", "o"), ("Kazan dairesi", "o")], -3.0);
+    let coal = building(
+        [
+            ("Kömürlük", "e1"),
+            ("Merdiven", "o"),
+            ("Kazan dairesi", "o"),
+        ],
+        -3.0,
+    );
     let r = report(&coal);
     assert!(r.limits.is_empty() && near(r.storage_over, 0.0), "{r:?}");
-    assert!(near(r.included, 60.0) && near(r.exempt, 60.0) && near(r.outside, 60.0), "{r:?}");
+    assert!(
+        near(r.included, 60.0) && near(r.exempt, 60.0) && near(r.outside, 60.0),
+        "{r:?}"
+    );
 }
 
 #[test]
@@ -169,9 +280,17 @@ fn the_caretaker_flat_s_rooms_are_out_up_to_70_m2_together() {
     // The flat's 70 m², a common area's under the ground, apart from the 30 % (5/8-d, docs/adr/8148); the stair hall
     // within.
     assert!(near(r.exempt, 30.0) && near(r.outside, 70.0), "{r:?}");
-    assert_eq!(row(&app, "Kapıcı dairelerinin 70 m²'yi aşan kısmı").as_deref(), Some("20.00"));
+    assert_eq!(
+        row(&app, "Kapıcı dairelerinin 70 m²'yi aşan kısmı").as_deref(),
+        Some("20.00")
+    );
     // The excess shared by the rooms' areas: a third each, not all on the last room.
-    let moved: Vec<f64> = r.rooms.iter().filter(|x| x.moved > 0.0).map(|x| x.moved).collect();
+    let moved: Vec<f64> = r
+        .rooms
+        .iter()
+        .filter(|x| x.moved > 0.0)
+        .map(|x| x.moved)
+        .collect();
     assert_eq!(moved.len(), 3, "{:?}", r.rooms);
     assert!(moved.iter().all(|m| near(*m, 20.0 / 3.0)), "{moved:?}");
 }
@@ -182,7 +301,10 @@ fn the_library_rooms_are_out_up_to_50_m2_together() {
     let r = report(&app);
     assert!(near(r.library_over, 10.0), "{r:?}");
     assert!(near(r.included, 60.0 + 10.0), "{r:?}");
-    assert_eq!(row(&app, "Kütüphanenin 50 m²'yi aşan kısmı").as_deref(), Some("10.00"));
+    assert_eq!(
+        row(&app, "Kütüphanenin 50 m²'yi aşan kısmı").as_deref(),
+        Some("10.00")
+    );
 }
 
 #[test]
@@ -195,13 +317,35 @@ fn the_residents_common_rooms_under_the_ground_are_out_up_to_5_percent_of_katlar
     assert!(near(r.included, 60.0 + 57.0), "{r:?}");
     assert!(near(r.exempt, 30.0) && near(r.outside, 33.0), "{r:?}");
     assert!(near(r.floors, 117.0), "{r:?}");
-    assert_eq!(row(&app, "Bodrumdaki ortak mekânların sınırı aşan kısmı").as_deref(), Some("57.00"));
-    let limits: Vec<_> = r.limits.iter().map(|l| (l.limit, l.rooms.len(), l.common)).collect();
-    assert_eq!(limits, [(kentos_domain::zoning::ZoningLimit::Amenity, 2, true)]);
-    assert!(near(r.limits[0].area, 60.0) && near(r.limits[0].allowed, 3.0) && near(r.limits[0].over, 57.0));
+    assert_eq!(
+        row(&app, "Bodrumdaki ortak mekânların sınırı aşan kısmı").as_deref(),
+        Some("57.00")
+    );
+    let limits: Vec<_> = r
+        .limits
+        .iter()
+        .map(|l| (l.limit, l.rooms.len(), l.common))
+        .collect();
+    assert_eq!(
+        limits,
+        [(kentos_domain::zoning::ZoningLimit::Amenity, 2, true)]
+    );
+    assert!(
+        near(r.limits[0].area, 60.0)
+            && near(r.limits[0].allowed, 3.0)
+            && near(r.limits[0].over, 57.0)
+    );
     // The excess shared by the rooms' areas: half each.
-    let moved: Vec<f64> = r.rooms.iter().filter(|x| x.moved > 0.0).map(|x| x.moved).collect();
-    assert!(moved.len() == 2 && moved.iter().all(|m| near(*m, 28.5)), "{moved:?}");
+    let moved: Vec<f64> = r
+        .rooms
+        .iter()
+        .filter(|x| x.moved > 0.0)
+        .map(|x| x.moved)
+        .collect();
+    assert!(
+        moved.len() == 2 && moved.iter().all(|m| near(*m, 28.5)),
+        "{moved:?}"
+    );
     // The facts carry the limit for the standards package.
     let doc = &app.document.as_ref().expect("a drawing").model;
     let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
@@ -212,12 +356,21 @@ fn the_residents_common_rooms_under_the_ground_are_out_up_to_5_percent_of_katlar
         .map(|l| (l.rooms.len(), l.area, l.allowed, l.over, l.common))
         .collect();
     assert_eq!(amenity.len(), 1, "{:?}", facts.limits);
-    assert!(amenity[0].0 == 2 && near(amenity[0].1, 60.0) && near(amenity[0].2, 3.0) && near(amenity[0].3, 57.0));
+    assert!(
+        amenity[0].0 == 2
+            && near(amenity[0].1, 60.0)
+            && near(amenity[0].2, 3.0)
+            && near(amenity[0].3, 57.0)
+    );
     assert!(amenity[0].4, "of the common area");
     // The basement holds no room counted in: its counted-out zone names the 57 m² as counted in.
     let (b, _, _) = kentos_native_application::arch_ifc::model(doc);
-    let named: Vec<&str> =
-        b.zones.iter().filter_map(|z| z.description.as_deref()).filter(|d| d.contains("22/1-j")).collect();
+    let named: Vec<&str> = b
+        .zones
+        .iter()
+        .filter_map(|z| z.description.as_deref())
+        .filter(|d| d.contains("22/1-j"))
+        .collect();
     assert_eq!(named.len(), 1, "{:?}", b.zones);
     let words = "22/1-j: bodrumdaki ortak mekânların sınırını aşan 57.00 m² emsale dahil";
     assert!(named[0].contains(words), "{}", named[0]);
@@ -232,17 +385,41 @@ fn common_rooms_above_the_ground_or_of_a_flat_count_in() {
     assert!(near(r.included, 120.0) && near(r.exempt, 60.0), "{r:?}");
     assert_eq!(row(&raised, "Bodrumdaki ortak mekânların"), None);
     // Flat 1's own gym and meeting room (22/1-j: "tek başına bağımsız bölüm oluşturmayan"): in.
-    let own = building([("Spor salonu", "d1"), ("Toplantı odası", "d1"), ("Kazan dairesi", "o")], -3.0);
+    let own = building(
+        [
+            ("Spor salonu", "d1"),
+            ("Toplantı odası", "d1"),
+            ("Kazan dairesi", "o"),
+        ],
+        -3.0,
+    );
     let r = report(&own);
     assert!(r.limits.is_empty(), "{r:?}");
     // The boiler room apart from the 30 % (5/8-d, docs/adr/8148).
-    assert!(near(r.included, 120.0) && near(r.exempt, 30.0) && near(r.outside, 30.0), "{r:?}");
+    assert!(
+        near(r.included, 120.0) && near(r.exempt, 30.0) && near(r.outside, 30.0),
+        "{r:?}"
+    );
     // A meeting room in flat 1's store annex ("bir bağımsız bölümün eklentisi olmayan"): never 22/1-j's; its group's
     // nature makes it a store under 22/1-k's 50 % of the flat's net area (the flat's own gym in it).
-    let annex = building([("Spor salonu", "d1"), ("Toplantı odası", "e1"), ("Kazan dairesi", "o")], -3.0);
+    let annex = building(
+        [
+            ("Spor salonu", "d1"),
+            ("Toplantı odası", "e1"),
+            ("Kazan dairesi", "o"),
+        ],
+        -3.0,
+    );
     let r = report(&annex);
-    let limits: Vec<_> = r.limits.iter().map(|l| (l.limit, l.unit.as_deref())).collect();
-    assert_eq!(limits, [(kentos_domain::zoning::ZoningLimit::Storage, Some("d1"))]);
+    let limits: Vec<_> = r
+        .limits
+        .iter()
+        .map(|l| (l.limit, l.unit.as_deref()))
+        .collect();
+    assert_eq!(
+        limits,
+        [(kentos_domain::zoning::ZoningLimit::Storage, Some("d1"))]
+    );
     assert!(near(r.amenity_over, 0.0), "{r:?}");
 }
 
@@ -254,23 +431,76 @@ fn denetim_asks_an_expert_of_the_common_rooms_trade_and_users() {
     let mut app = amenity(-3.0);
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     checked(&mut app);
-    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-    let found: Vec<_> = audited.findings.iter().filter(|f| f.code == "paiy_amenity_not_exempt").collect();
+    let audited = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
+    let found: Vec<_> = audited
+        .findings
+        .iter()
+        .filter(|f| f.code == "paiy_amenity_not_exempt")
+        .collect();
     assert_eq!(found.len(), 1, "{:#?}", audited.findings);
-    assert_eq!(found[0].state, Some(kentos_commands::ArchAuditState::ExpertReview));
-    assert!(found[0].message.contains("60.00 m², sınır 3.00 m²"), "{}", found[0].message);
-    assert!(found[0].message.contains("57.00 m²'si sınırı aştığı için emsale eklendi"), "{}", found[0].message);
+    assert_eq!(
+        found[0].state,
+        Some(kentos_commands::ArchAuditState::ExpertReview)
+    );
+    assert!(
+        found[0].message.contains("60.00 m², sınır 3.00 m²"),
+        "{}",
+        found[0].message
+    );
+    assert!(
+        found[0]
+            .message
+            .contains("57.00 m²'si sınırı aştığı için emsale eklendi"),
+        "{}",
+        found[0].message
+    );
     assert_eq!(found[0].uids.len(), 2);
-    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
-    let row = set.rules.iter().find(|r| r.rule == "PAİY 22/1-j").expect("the row");
-    assert_eq!((row.state, row.version.as_deref()), (O::ExpertReview, Some("25.7.2019")));
+    let set = app
+        .modules
+        .arch()
+        .arch_audit
+        .rule_set
+        .as_ref()
+        .expect("the rule set");
+    let row = set
+        .rules
+        .iter()
+        .find(|r| r.rule == "PAİY 22/1-j")
+        .expect("the row");
+    assert_eq!(
+        (row.state, row.version.as_deref()),
+        (O::ExpertReview, Some("25.7.2019"))
+    );
     // The two rooms in no group: counted out by their words, but no group says they are a common area's.
-    let mut app = building([("Spor salonu", ""), ("Toplantı odası", ""), ("Kazan dairesi", "o")], -3.0);
+    let mut app = building(
+        [
+            ("Spor salonu", ""),
+            ("Toplantı odası", ""),
+            ("Kazan dairesi", "o"),
+        ],
+        -3.0,
+    );
     assert!(near(report(&app).amenity_over, 57.0));
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     checked(&mut app);
-    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-    let f = audited.findings.iter().find(|f| f.code == "paiy_amenity_not_exempt").expect("the finding");
+    let audited = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
+    let f = audited
+        .findings
+        .iter()
+        .find(|f| f.code == "paiy_amenity_not_exempt")
+        .expect("the finding");
     assert_eq!(f.state, None, "failed: {f:?}");
     assert!(f.message.contains("ortak alan değil"), "{}", f.message);
 }
@@ -279,7 +509,10 @@ fn denetim_asks_an_expert_of_the_common_rooms_trade_and_users() {
 fn area(rings: &[Vec<[f64; 2]>]) -> f64 {
     let signed = |r: &[[f64; 2]]| {
         let n = r.len();
-        (0..n).map(|i| r[i][0] * r[(i + 1) % n][1] - r[(i + 1) % n][0] * r[i][1]).sum::<f64>() / 2.0
+        (0..n)
+            .map(|i| r[i][0] * r[(i + 1) % n][1] - r[(i + 1) % n][0] * r[i][1])
+            .sum::<f64>()
+            / 2.0
     };
     rings.iter().map(|r| signed(r)).sum::<f64>().abs()
 }
@@ -295,14 +528,26 @@ fn a_storey_with_no_room_counted_in_names_the_part_past_the_limit_in_its_zone_co
     let doc = &app.document.as_ref().expect("a drawing").model;
     let (b, _, _) = kentos_native_application::arch_ifc::model(doc);
     let state = |z: &kentos_ifc::building::Zone| {
-        z.psets.iter().flat_map(|p| p.props.iter()).find_map(|(k, v)| match (k.as_str(), v) {
-            ("EmsalDurumu", kentos_ifc::building::Value::Label(s)) => Some(s.clone()),
-            _ => None,
-        })
+        z.psets
+            .iter()
+            .flat_map(|p| p.props.iter())
+            .find_map(|(k, v)| match (k.as_str(), v) {
+                ("EmsalDurumu", kentos_ifc::building::Value::Label(s)) => Some(s.clone()),
+                _ => None,
+            })
     };
-    let dahil: Vec<_> = b.zones.iter().filter(|z| state(z).as_deref() == Some("DAHIL")).collect();
+    let dahil: Vec<_> = b
+        .zones
+        .iter()
+        .filter(|z| state(z).as_deref() == Some("DAHIL"))
+        .collect();
     assert_eq!(dahil.len(), 1, "the ground storey's: {:?}", b.zones);
-    assert!(near(area(&dahil[0].rings), 60.0), "the two flats: {} {:?}", area(&dahil[0].rings), dahil[0].rings);
+    assert!(
+        near(area(&dahil[0].rings), 60.0),
+        "the two flats: {} {:?}",
+        area(&dahil[0].rings),
+        dahil[0].rings
+    );
     let named: Vec<&str> = b
         .zones
         .iter()
@@ -311,7 +556,11 @@ fn a_storey_with_no_room_counted_in_names_the_part_past_the_limit_in_its_zone_co
         .filter(|d| d.contains("22/1-k"))
         .collect();
     assert_eq!(named.len(), 1, "{:?}", b.zones);
-    assert!(named[0].contains("17.14 m² depo eklentisi emsale dahil"), "{}", named[0]);
+    assert!(
+        named[0].contains("17.14 m² depo eklentisi emsale dahil"),
+        "{}",
+        named[0]
+    );
     assert!(near(area(&dahil[0].rings) + 17.14375, report(&app).floors));
 }
 
@@ -319,7 +568,11 @@ fn a_storey_with_no_room_counted_in_names_the_part_past_the_limit_in_its_zone_co
 pub(crate) fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(
+        app.modules.arch().arch_audit.regulation_failed,
+        None,
+        "the national regulation's rule answers"
+    );
 }
 
 /// Two flats with a caretaker flat counted out: PAİY 44/1 makes none obligatory under 40 dwellings and 60 units, so
@@ -329,14 +582,38 @@ fn a_caretaker_flat_no_rule_makes_obligatory_is_a_finding_of_the_standards_packa
     let mut app = caretaker();
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
     checked(&mut app);
-    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-    let f = audited.findings.iter().find(|f| f.code == "paiy_caretaker_not_required").expect("the finding");
+    let audited = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
+    let f = audited
+        .findings
+        .iter()
+        .find(|f| f.code == "paiy_caretaker_not_required")
+        .expect("the finding");
     assert_eq!(f.state, None, "failed: {f:?}");
-    assert!(f.message.contains("zorunlu değil") && f.message.contains("2 konut bölümü"), "{}", f.message);
+    assert!(
+        f.message.contains("zorunlu değil") && f.message.contains("2 konut bölümü"),
+        "{}",
+        f.message
+    );
     assert_eq!(f.uids.len(), 3, "the flat's three rooms: {f:?}");
-    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
-    let rows: Vec<(&str, kentos_commands::ArchAuditOutcome)> =
-        set.rules.iter().filter(|r| r.rule.contains(" 22/1-")).map(|r| (r.rule.as_str(), r.state)).collect();
+    let set = app
+        .modules
+        .arch()
+        .arch_audit
+        .rule_set
+        .as_ref()
+        .expect("the rule set");
+    let rows: Vec<(&str, kentos_commands::ArchAuditOutcome)> = set
+        .rules
+        .iter()
+        .filter(|r| r.rule.contains(" 22/1-"))
+        .map(|r| (r.rule.as_str(), r.state))
+        .collect();
     use kentos_commands::ArchAuditOutcome as O;
     assert_eq!(
         rows,
@@ -354,7 +631,9 @@ fn a_caretaker_flat_no_rule_makes_obligatory_is_a_finding_of_the_standards_packa
 /// The basement the active storey, drawn alone (Yalnız etkin kat): the pictures show the bays the test names.
 pub(crate) fn basement_alone(app: &mut App) {
     let _ = app.update(Message::ActiveLevel(Some("b01".into())));
-    let _ = app.update(Message::LevelView(kentos_interaction::level_view::LevelView::Active));
+    let _ = app.update(Message::LevelView(
+        kentos_interaction::level_view::LevelView::Active,
+    ));
 }
 
 /// Emsal ve TAKS tablosu beside the two-storey plan with flat 1's storage annex in the basement (the part past the 50 %
@@ -369,15 +648,21 @@ fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/emsal-22-8079");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/emsal-22-8079");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1280.0, 800.0), "koyu"),
+    ] {
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
         };
         let mut app = storage(-3.0);
         basement_alone(&mut app);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("arch.zoningTable"));
@@ -388,24 +673,41 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-depo-eklentisi-ve-emsal-tablosu-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
 
         let mut app = caretaker();
         basement_alone(&mut app);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
         checked(&mut app);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_caretaker_not_required");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "paiy_caretaker_not_required");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-kapici-dairesi-denetim-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -422,15 +724,21 @@ fn amenity_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/bodrum-ortak-8147");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/bodrum-ortak-8147");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1280.0, 800.0), "koyu"),
+    ] {
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
         };
         let mut app = amenity(-3.0);
         basement_alone(&mut app);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("arch.zoningTable"));
@@ -441,18 +749,33 @@ fn amenity_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-emsal-tablosu-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
 
         crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
         checked(&mut app);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_amenity_not_exempt");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "paiy_amenity_not_exempt");
         snapshot.settle(&mut app, App::view, &mut update);
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-denetim-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

@@ -153,7 +153,10 @@ enum Listing {
     Points(Vec<Point>),
     /// A circle's, an arc's or an ellipse's named points (its centre, its ends, its axes' ends) and its own measures:
     /// a curve has no vertices and no straight edges to list (UR-036).
-    Named { points: Vec<Point>, footer: String },
+    Named {
+        points: Vec<Point>,
+        footer: String,
+    },
     /// The first object that is not a point or a text: its vertices, in
     /// rings (a polygon's outer ring, then each hole), each edge within its ring.
     Vertices {
@@ -407,7 +410,11 @@ impl App {
             return Listing::Empty;
         }
         let key_field = |e: &Entity| {
-            model.layers().get(&e.base().layer_id).and_then(|n| n.data.as_ref()).map_or("anahtar".to_owned(), |d| d.key.clone())
+            model
+                .layers()
+                .get(&e.base().layer_id)
+                .and_then(|n| n.data.as_ref())
+                .map_or("anahtar".to_owned(), |d| d.key.clone())
         };
         let layer_name = |id: &str| {
             model
@@ -427,15 +434,22 @@ impl App {
                     })
                     .flat_map(|p| {
                         let name = if source {
-                            format!("{} {} (kaynakta)", key_field(&Entity::Point(p.clone())), p.base.id)
+                            format!(
+                                "{} {} (kaynakta)",
+                                key_field(&Entity::Point(p.clone())),
+                                p.base.id
+                            )
                         } else {
-                            crate::points::edit::point_name(p, map).cloned().unwrap_or_else(|| format!("#{}", p.base.id))
+                            crate::points::edit::point_name(p, map)
+                                .cloned()
+                                .unwrap_or_else(|| format!("#{}", p.base.id))
                         };
                         let layer = layer_name(&p.base.layer_id);
                         let others = p.parts.iter().flatten().map(|q| (q.p, q.z));
                         std::iter::once((p.p, p.z)).chain(others).enumerate().map(
                             move |(k, (at, z))| Point {
-                                editable_slot: (k == 0 && !source).then_some(kentos_domain::Slot(p.base.id)),
+                                editable_slot: (k == 0 && !source)
+                                    .then_some(kentos_domain::Slot(p.base.id)),
                                 code: p.base.attrs.get("Kod").cloned().unwrap_or_default(),
                                 name: if k == 0 {
                                     name.clone()
@@ -546,7 +560,10 @@ impl App {
     #[cfg(test)]
     pub(crate) fn coordinate_points_for_test(&self) -> Vec<(String, bool)> {
         match self.listing() {
-            Listing::Points(points) => points.iter().map(|p| (p.name.clone(), p.editable_slot.is_some())).collect(),
+            Listing::Points(points) => points
+                .iter()
+                .map(|p| (p.name.clone(), p.editable_slot.is_some()))
+                .collect(),
             _ => Vec::new(),
         }
     }
@@ -636,9 +653,16 @@ impl App {
                     }
                     cells.push(label::mono(format.coord(p.x)).into());
                     cells.push(label::mono(format.coord(p.y)).into());
-                    let z = p.z.map_or_else(|| "—".to_owned(), |z| format.length_bare(z));
+                    let z =
+                        p.z.map_or_else(|| "—".to_owned(), |z| format.length_bare(z));
                     cells.push(if map {
-                        self.coordinate_point_cell(p.editable_slot, EditColumn::Z, z, 4, column_count)
+                        self.coordinate_point_cell(
+                            p.editable_slot,
+                            EditColumn::Z,
+                            z,
+                            4,
+                            column_count,
+                        )
                     } else {
                         label::mono(z).into()
                     });
@@ -646,7 +670,9 @@ impl App {
                     TableRow::new(cells)
                 });
                 let footer = if map {
-                    format!("{count} nokta  ·  Düzenlemek için ad, kod veya kot hücresine tıklayın.")
+                    format!(
+                        "{count} nokta  ·  Düzenlemek için ad, kod veya kot hücresine tıklayın."
+                    )
                 } else {
                     format!("{count} nokta")
                 };
@@ -697,7 +723,6 @@ impl App {
     }
 }
 
-
 /// A circle's, an arc's or an ellipse's points by their names (UR-036): the centre; an arc's start and end; an
 /// ellipse's major and minor axes' ends (and an elliptical arc's ends). None for any other kind.
 fn named_points(e: &Entity, layer: &str) -> Option<Vec<Point>> {
@@ -714,7 +739,11 @@ fn named_points(e: &Entity, layer: &str) -> Option<Vec<Point>> {
         Entity::Circle(c) => vec![point("Merkez", c.c.x, c.c.y)],
         Entity::Arc(a) => vec![
             point("Merkez", a.c.x, a.c.y),
-            point("Başlangıç", a.c.x + a.r * a.a0.cos(), a.c.y + a.r * a.a0.sin()),
+            point(
+                "Başlangıç",
+                a.c.x + a.r * a.a0.cos(),
+                a.c.y + a.r * a.a0.sin(),
+            ),
             point("Bitiş", a.c.x + a.r * a.a1.cos(), a.c.y + a.r * a.a1.sin()),
         ],
         Entity::Ellipse(el) => {
@@ -919,7 +948,8 @@ mod tests {
             let _ = app.update(Message::BottomTab(BottomTab::Points));
             let _ = app.update(Message::CommandHistoryToggled);
             let _ = app.update(Message::CommandHistoryShown);
-            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0))
+                .expect("a renderer");
             let mut update = |app: &mut crate::app::App, message| {
                 let _ = app.update(message);
             };
@@ -975,16 +1005,25 @@ mod tests {
         app.selection.set(vec![kentos_domain::Slot(circle)]);
         match app.listing() {
             super::Listing::Named { points, footer } => {
-                assert_eq!(points.iter().map(|p| p.name.as_str()).collect::<Vec<_>>(), ["Merkez"]);
+                assert_eq!(
+                    points.iter().map(|p| p.name.as_str()).collect::<Vec<_>>(),
+                    ["Merkez"]
+                );
                 assert!((points[0].x - E).abs() < 1e-9 && (points[0].y - N).abs() < 1e-9);
-                assert!(footer.contains("Yarıçap 5.000 m") && footer.contains("Çevre 31.416 m"), "{footer}");
+                assert!(
+                    footer.contains("Yarıçap 5.000 m") && footer.contains("Çevre 31.416 m"),
+                    "{footer}"
+                );
             }
             _ => panic!("the circle's named points"),
         }
         app.selection.set(vec![kentos_domain::Slot(arc)]);
         match app.listing() {
             super::Listing::Named { points, footer } => {
-                assert_eq!(points.iter().map(|p| p.name.as_str()).collect::<Vec<_>>(), ["Merkez", "Başlangıç", "Bitiş"]);
+                assert_eq!(
+                    points.iter().map(|p| p.name.as_str()).collect::<Vec<_>>(),
+                    ["Merkez", "Başlangıç", "Bitiş"]
+                );
                 assert!(footer.contains("Yay uzunluğu 15.708 m"), "{footer}");
             }
             _ => panic!("the arc's named points"),
@@ -1056,6 +1095,4 @@ fn screens() {
             }
         }
     }
-
-
 }

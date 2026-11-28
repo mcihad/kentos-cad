@@ -226,11 +226,34 @@ fn decode(b: &Bytes<'_>, kind: u64, count: u64, raw: &[u8]) -> Values {
     match kind {
         1 | 6 => Values::Ints(raw.iter().take(n).map(|&x| u64::from(x)).collect()),
         2 | 7 => Values::Bytes(raw.iter().take(n).copied().collect()),
-        3 | 8 => Values::Ints(raw.as_chunks::<2>().0.iter().take(n).map(|c| b.u16(c)).collect()),
-        4 | 9 | 13 => Values::Ints(raw.as_chunks::<4>().0.iter().take(n).map(|c| b.u32(c)).collect()),
-        16..=18 => Values::Ints(raw.as_chunks::<8>().0.iter().take(n).map(|c| b.u64(c)).collect()),
+        3 | 8 => Values::Ints(
+            raw.as_chunks::<2>()
+                .0
+                .iter()
+                .take(n)
+                .map(|c| b.u16(c))
+                .collect(),
+        ),
+        4 | 9 | 13 => Values::Ints(
+            raw.as_chunks::<4>()
+                .0
+                .iter()
+                .take(n)
+                .map(|c| b.u32(c))
+                .collect(),
+        ),
+        16..=18 => Values::Ints(
+            raw.as_chunks::<8>()
+                .0
+                .iter()
+                .take(n)
+                .map(|c| b.u64(c))
+                .collect(),
+        ),
         5 | 10 => Values::Floats(
-            raw.as_chunks::<8>().0.iter()
+            raw.as_chunks::<8>()
+                .0
+                .iter()
                 .take(n)
                 .map(|c| {
                     let (num, den) = (b.u32(&c[..4]), b.u32(&c[4..]));
@@ -243,13 +266,17 @@ fn decode(b: &Bytes<'_>, kind: u64, count: u64, raw: &[u8]) -> Values {
                 .collect(),
         ),
         11 => Values::Floats(
-            raw.as_chunks::<4>().0.iter()
+            raw.as_chunks::<4>()
+                .0
+                .iter()
                 .take(n)
                 .map(|c| f64::from(f32::from_bits(b.u32(c) as u32)))
                 .collect(),
         ),
         12 => Values::Floats(
-            raw.as_chunks::<8>().0.iter()
+            raw.as_chunks::<8>()
+                .0
+                .iter()
                 .take(n)
                 .map(|c| f64::from_bits(b.u64(c)))
                 .collect(),

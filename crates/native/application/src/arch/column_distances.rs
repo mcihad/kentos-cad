@@ -207,7 +207,10 @@ pub mod distances {
         plan_in(cx.doc, input)
     }
     /// The answer without a context, for a tool's overlay.
-    pub fn plan_in(doc: &Document, input: &ColumnsDistancesInput) -> CommandResult<ColumnsDistances> {
+    pub fn plan_in(
+        doc: &Document,
+        input: &ColumnsDistancesInput,
+    ) -> CommandResult<ColumnsDistances> {
         match read(doc, input) {
             Ok(output) => CommandResult::Completed {
                 output,

@@ -107,7 +107,10 @@ impl App {
     }
 
     /// The mobile behaviours `node` may take here (docs/adr/9198 §2.2): to edit only a CBS project's data layer.
-    pub(crate) fn mobile_choices(&self, node: &kentos_commands::LayerNode) -> &'static [kentos_launch::Mobile] {
+    pub(crate) fn mobile_choices(
+        &self,
+        node: &kentos_commands::LayerNode,
+    ) -> &'static [kentos_launch::Mobile] {
         match self.document.as_ref() {
             Some(d) => kentos_native_application::layer_kind::mobile_choices(&d.model, node),
             None => &[],

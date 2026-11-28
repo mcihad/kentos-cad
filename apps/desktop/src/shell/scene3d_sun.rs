@@ -38,17 +38,25 @@ fn first(kept: &Kept) -> SunAt {
         2 => 15.0,
         _ => 12.0,
     };
-    SunAt { day: kept.day.min(DAYS.len() - 1), hour }
+    SunAt {
+        day: kept.day.min(DAYS.len() - 1),
+        hour,
+    }
 }
 
 impl App {
     /// The sun at `at` over the drawing's building: towards it in the model's space, and what it is in words; or why
     /// none (no place known, no drawing).
     fn sun_towards(&self, at: SunAt) -> Result<(sun::Sun, [f64; 3], String), String> {
-        let doc = &self.document.as_ref().ok_or_else(|| "Açık çizim yok.".to_owned())?.model;
+        let doc = &self
+            .document
+            .as_ref()
+            .ok_or_else(|| "Açık çizim yok.".to_owned())?
+            .model;
         let k = self.memory.sun_shadow;
-        let place = shadows::place(doc, k.lat.zip(k.lon), k.zone)
-            .map_err(|why| format!("{why} Konumu Gölge (GL) aracında enlem (E) ve boylamla (B) verin."))?;
+        let place = shadows::place(doc, k.lat.zip(k.lon), k.zone).map_err(|why| {
+            format!("{why} Konumu Gölge (GL) aracında enlem (E) ve boylamla (B) verin.")
+        })?;
         let (_, name, d, m) = DAYS[at.day];
         let (s, towards) = shadows::sun_at(&place, sun::day_of_year(d, m).unwrap_or(1), at.hour);
         let said = format!(
@@ -63,7 +71,14 @@ impl App {
 
     /// Güneş turned on or off, its day or its hour changed: the viewer lit by the sun, or why not.
     pub(crate) fn building3d_sun(&mut self, change: SunChange) {
-        let Some(now) = self.scene3d_window.as_ref().and_then(|w| w.building.as_ref()).map(|b| b.sun) else { return };
+        let Some(now) = self
+            .scene3d_window
+            .as_ref()
+            .and_then(|w| w.building.as_ref())
+            .map(|b| b.sun)
+        else {
+            return;
+        };
         let mut want = match (change, now) {
             (SunChange::Toggle, Some(_)) => {
                 self.set_building3d_sun(None, None);
@@ -71,18 +86,30 @@ impl App {
             }
             (SunChange::Toggle, None) => first(&self.memory.sun_shadow),
             (_, None) => return,
-            (SunChange::Day(day), Some(at)) => SunAt { day: day.min(DAYS.len() - 1), ..at },
-            (SunChange::Hour(step), Some(at)) => SunAt { hour: at.hour + f64::from(step), ..at },
+            (SunChange::Day(day), Some(at)) => SunAt {
+                day: day.min(DAYS.len() - 1),
+                ..at
+            },
+            (SunChange::Hour(step), Some(at)) => SunAt {
+                hour: at.hour + f64::from(step),
+                ..at
+            },
         };
         let mut made = self.sun_towards(want);
         // Another day's sun not up at this hour (21 Aralık at 08:00): that day's noon.
-        if matches!(change, SunChange::Day(_)) && made.as_ref().is_ok_and(|(s, ..)| s.elevation <= UP) {
+        if matches!(change, SunChange::Day(_))
+            && made.as_ref().is_ok_and(|(s, ..)| s.elevation <= UP)
+        {
             want.hour = 12.0;
             made = self.sun_towards(want);
         }
         match made {
             Ok((s, ..)) if s.elevation <= UP => {
-                self.warn(format!("{} {}: güneş ufkun altında.", DAYS[want.day].1, shadows::clock(want.hour)));
+                self.warn(format!(
+                    "{} {}: güneş ufkun altında.",
+                    DAYS[want.day].1,
+                    shadows::clock(want.hour)
+                ));
             }
             Ok((_, towards, said)) => {
                 self.set_building3d_sun(Some(want), Some(towards));
@@ -93,7 +120,11 @@ impl App {
     }
 
     fn set_building3d_sun(&mut self, at: Option<SunAt>, towards: Option<[f64; 3]>) {
-        if let Some(b) = self.scene3d_window.as_mut().and_then(|w| w.building.as_mut()) {
+        if let Some(b) = self
+            .scene3d_window
+            .as_mut()
+            .and_then(|w| w.building.as_mut())
+        {
             b.sun = at;
             b.viewer.sun = towards;
         }

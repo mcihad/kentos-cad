@@ -4,8 +4,8 @@
 //! objects (a number, a name, a finish …) always as written. Another table's cells as they stand.
 
 use kentos_commands::{
-    CellKind, Entity, ExportTable, ScheduleField, TableExported, TableNumbers, TableSource, WorkbookColumn,
-    WorkbookFormat, WorkbookSheet, WorkbookWriteInput,
+    CellKind, Entity, ExportTable, ScheduleField, TableExported, TableNumbers, TableSource,
+    WorkbookColumn, WorkbookFormat, WorkbookSheet, WorkbookWriteInput,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -66,15 +66,30 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
     if !crate::checks::is_uid_text(&input.uid) {
         return Err(refuse(
             codes::INVALID_UID,
-            format!("“{}” geçerli bir nesne kimliği değil; küçük harfli, tireli bir UUID verin.", input.uid),
+            format!(
+                "“{}” geçerli bir nesne kimliği değil; küçük harfli, tireli bir UUID verin.",
+                input.uid
+            ),
             "uid",
         ));
     }
-    let Some(e) = Uuid::parse_str(&input.uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)) else {
-        return Err(refuse(codes::ENTITY_NOT_FOUND, format!("“{}” kimlikli nesne çizimde yok.", input.uid), "uid"));
+    let Some(e) = Uuid::parse_str(&input.uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s))
+    else {
+        return Err(refuse(
+            codes::ENTITY_NOT_FOUND,
+            format!("“{}” kimlikli nesne çizimde yok.", input.uid),
+            "uid",
+        ));
     };
     let Entity::Table(t) = e else {
-        return Err(refuse(codes::NOT_A_TABLE, "Nesne bir tablo değil; bir tablonun kimliğini verin.", "uid"));
+        return Err(refuse(
+            codes::NOT_A_TABLE,
+            "Nesne bir tablo değil; bir tablonun kimliğini verin.",
+            "uid",
+        ));
     };
     let groups = input.groups.unwrap_or(true);
     let mut notes: Vec<String> = Vec::new();
@@ -82,14 +97,26 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
         Some(TableSource::Blocks { names, by, columns }) => {
             let written = doc.blocks_schedule(names, by.as_deref(), columns);
             let Some((head, rest)) = written.split_first() else {
-                return Err(refuse(codes::NOT_A_TABLE, "Tablonun başlık satırı yok; tabloyu yeniden üretin.", "uid"));
+                return Err(refuse(
+                    codes::NOT_A_TABLE,
+                    "Tablonun başlık satırı yok; tabloyu yeniden üretin.",
+                    "uid",
+                ));
             };
             let last = head.len().saturating_sub(1);
-            let columns = head.iter().enumerate().map(|(j, name)| WorkbookColumn {
-                name: name.clone(),
-                kind: if j == last { CellKind::Number } else { CellKind::Text },
-                decimals: None,
-            }).collect();
+            let columns = head
+                .iter()
+                .enumerate()
+                .map(|(j, name)| WorkbookColumn {
+                    name: name.clone(),
+                    kind: if j == last {
+                        CellKind::Number
+                    } else {
+                        CellKind::Text
+                    },
+                    decimals: None,
+                })
+                .collect();
             notes.push("Blok adetleri çizimden yeniden sayıldı; kaynak çizim değişmedi.".into());
             ("Blok çizelgesi".to_owned(), columns, rest.to_vec())
         }
@@ -125,9 +152,22 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
                     .enumerate()
                     .map(|(j, text)| {
                         let worked_out = !crate::schedules::editable(*of, columns[j].field);
-                        match (input.numbers, worked_out, written.numbers.get(i).and_then(|r| r.get(j)).copied().flatten()) {
+                        match (
+                            input.numbers,
+                            worked_out,
+                            written
+                                .numbers
+                                .get(i)
+                                .and_then(|r| r.get(j))
+                                .copied()
+                                .flatten(),
+                        ) {
                             // A subtotal's or the total's label stays words.
-                            (TableNumbers::Exact, true, Some(x)) if data || is_total || !text.ends_with("toplamı") => fifteen(x),
+                            (TableNumbers::Exact, true, Some(x))
+                                if data || is_total || !text.ends_with("toplamı") =>
+                            {
+                                fifteen(x)
+                            }
                             _ => text.clone(),
                         }
                     })
@@ -146,7 +186,11 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
                     let numeric = kentos_domain::schedules::numeric(c.field);
                     WorkbookColumn {
                         name: name.clone(),
-                        kind: if numeric { CellKind::Number } else { CellKind::Text },
+                        kind: if numeric {
+                            CellKind::Number
+                        } else {
+                            CellKind::Text
+                        },
                         decimals: match input.numbers {
                             TableNumbers::Shown if numeric => decimals(doc, c.field),
                             _ => None,
@@ -165,7 +209,11 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
                 _ => doc.zoning_table(),
             };
             let Some((head, rest)) = written.rows.split_first() else {
-                return Err(refuse(codes::NOT_A_TABLE, "Tablonun başlık satırı yok; tabloyu yeniden üretin.", "uid"));
+                return Err(refuse(
+                    codes::NOT_A_TABLE,
+                    "Tablonun başlık satırı yok; tabloyu yeniden üretin.",
+                    "uid",
+                ));
             };
             let heads = head
                 .iter()
@@ -191,7 +239,10 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
             let (heads, rest): (Vec<String>, &[Vec<String>]) = if t.header && !t.cells.is_empty() {
                 (t.cells[0].clone(), &t.cells[1..])
             } else {
-                ((1..=width).map(|i| format!("Sütun {i}")).collect(), &t.cells[..])
+                (
+                    (1..=width).map(|i| format!("Sütun {i}")).collect(),
+                    &t.cells[..],
+                )
             };
             let heads = (0..width)
                 .map(|j| WorkbookColumn {
@@ -213,7 +264,11 @@ pub fn export(doc: &Document, input: &ExportTable) -> Result<Made, Refusal> {
         .collect();
     let (bytes, report) = kentos_formats::workbook::write(&WorkbookWriteInput {
         format,
-        sheets: vec![WorkbookSheet { name, columns, rows: rows.clone() }],
+        sheets: vec![WorkbookSheet {
+            name,
+            columns,
+            rows: rows.clone(),
+        }],
     })
     .map_err(|why| refuse(codes::FILE_UNWRITABLE, why, "path"))?;
     notes.extend(report.notes.iter().map(|n| n.what.clone()));
@@ -240,7 +295,8 @@ mod tests {
     fn block_export_recounts_inserts_instead_of_trusting_cached_cells() {
         let snapshot: DocumentSnapshotV2 = serde_json::from_str(include_str!(
             "../../../../../fixtures/kcad/v2/dynamic-blocks.json"
-        )).unwrap();
+        ))
+        .unwrap();
         let mut doc = Document::from_snapshot_v2(snapshot).unwrap();
         let table: Entity = serde_json::from_value(json!({
             "kind":"table","id":0,"layerId":"","attrs":{},
@@ -248,13 +304,21 @@ mod tests {
             "rows":[0.3,0.3,0.3],"columns":[1.0,1.0],
             "cells":[["Blok","Adet"],["Yanlış","999"],["Toplam","999"]],
             "header":true,"source":{"kind":"blocks","names":[],"columns":[]}
-        })).unwrap();
+        }))
+        .unwrap();
         let slot = doc.add(table).unwrap();
         let uid = doc.uid(slot).unwrap().to_string();
-        let made = export(&doc, &ExportTable {
-            path: "/tmp/kentos-block-recount.csv".into(), uid,
-            groups: None, numbers: TableNumbers::Exact, overwrite: true,
-        }).unwrap();
+        let made = export(
+            &doc,
+            &ExportTable {
+                path: "/tmp/kentos-block-recount.csv".into(),
+                uid,
+                groups: None,
+                numbers: TableNumbers::Exact,
+                overwrite: true,
+            },
+        )
+        .unwrap();
         let csv = String::from_utf8(made.bytes).unwrap();
         assert!(csv.contains("Adet"), "{csv}");
         assert!(csv.contains("Toplam;3"), "{csv}");

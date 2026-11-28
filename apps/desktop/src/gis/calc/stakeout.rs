@@ -105,7 +105,9 @@ impl Form {
                 Some(kentos_commands::Entity::Point(p)) => p.z,
                 _ => None,
             },
-            &|input| kentos_native_application::survey_heights::stakeout_undulations(settings, input),
+            &|input| {
+                kentos_native_application::survey_heights::stakeout_undulations(settings, input)
+            },
         )
     }
 
@@ -214,8 +216,12 @@ impl Form {
                 {
                     // Each line at its own height, or why at the mean (docs/adr/3300).
                     match &read.heights {
-                        Some(Ok(geoid)) => lines.push((Line::Info, own_height_note(h, geoid.as_deref()))),
-                        Some(Err(why)) => lines.push((Line::Info, format!("{} {why}", stake_note(h)))),
+                        Some(Ok(geoid)) => {
+                            lines.push((Line::Info, own_height_note(h, geoid.as_deref())))
+                        }
+                        Some(Err(why)) => {
+                            lines.push((Line::Info, format!("{} {why}", stake_note(h))))
+                        }
                         None => lines.push((Line::Info, stake_note(h))),
                     }
                 }

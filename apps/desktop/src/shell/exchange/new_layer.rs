@@ -16,7 +16,12 @@ pub(super) fn help(from: &str) -> String {
 
 /// A new layer named `name` with `style`, or why there is none: no name, or a name a layer of the drawing has, said
 /// with the list that layer is picked in (`from`, in the ablative).
-pub(super) fn target(doc: &Document, name: &str, style: LayerStyle, from: &str) -> Result<LayerTarget, String> {
+pub(super) fn target(
+    doc: &Document,
+    name: &str,
+    style: LayerStyle,
+    from: &str,
+) -> Result<LayerTarget, String> {
     let name = name.trim();
     if name.is_empty() {
         return Err("Yeni katmanın adını yazın.".to_owned());
@@ -41,6 +46,13 @@ pub(super) fn target(doc: &Document, name: &str, style: LayerStyle, from: &str) 
 /// A file's format as a layer's origin names it: its extension, a word of small letters (`gpx`, `nmea`, `ncn`); none
 /// for a file without one.
 pub(super) fn format_word(file: &str) -> Option<String> {
-    let ext = std::path::Path::new(file).extension()?.to_str()?.to_lowercase();
-    (!ext.is_empty() && ext.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())).then_some(ext)
+    let ext = std::path::Path::new(file)
+        .extension()?
+        .to_str()?
+        .to_lowercase();
+    (!ext.is_empty()
+        && ext
+            .chars()
+            .all(|c| c.is_ascii_lowercase() || c.is_ascii_digit()))
+    .then_some(ext)
 }

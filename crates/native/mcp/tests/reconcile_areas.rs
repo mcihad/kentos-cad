@@ -13,11 +13,26 @@ const PLAN: &str = "Alanlar (plan): bina izi iki kaynakta örtüşür (yinelenen
 
 #[test]
 fn the_footprints_plan_over_mcp_is_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.features.reconcile.json")).unwrap();
-    let find = |name: &str| cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap().clone();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.features.reconcile.json"
+    ))
+    .unwrap();
+    let find = |name: &str| {
+        cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"] == name)
+            .unwrap()
+            .clone()
+    };
     let case = find(PLAN);
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-reconcile-areas-{}.kcad", std::process::id()));
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-reconcile-areas-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -29,11 +44,20 @@ fn the_footprints_plan_over_mcp_is_the_case_s() {
     args["op"] = json!("plan");
     let r = call(&mut server, "map.features.reconcile", args);
     assert_eq!(r["isError"], false, "{r}");
-    let got = r["structuredContent"]["output"]["groups"].as_array().unwrap().clone();
-    let want = step["result"]["output"]["groups"].as_array().unwrap().clone();
+    let got = r["structuredContent"]["output"]["groups"]
+        .as_array()
+        .unwrap()
+        .clone();
+    let want = step["result"]["output"]["groups"]
+        .as_array()
+        .unwrap()
+        .clone();
     assert_eq!(got.len(), want.len());
     for (g, w) in got.iter().zip(&want) {
-        assert_eq!((&g["status"], &g["candidates"]), (&w["status"], &w["candidates"]));
+        assert_eq!(
+            (&g["status"], &g["candidates"]),
+            (&w["status"], &w["candidates"])
+        );
         for key in ["x", "y", "spread", "overlap"] {
             match (g[key].as_f64(), w[key].as_f64()) {
                 (Some(a), Some(b)) => assert!((a - b).abs() < 1e-9, "{key}: {a} != {b}"),

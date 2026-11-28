@@ -3,9 +3,9 @@
 //! filters the table, Dışındakileri seç selects the one outside, CSV kaydet writes the table, nothing is written to
 //! the drawing; a selection checks only its areas. Harita and GIS offer it, Yol and Mimari do not. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -14,9 +14,12 @@ use crate::app::{App, Message};
 use crate::parcels_check_window::{Event as C, Show};
 
 fn opened(program: Option<Module>) -> App {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.parcels.check.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.parcels.check.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -34,7 +37,8 @@ fn the_parcel_layer_is_checked_and_the_ones_outside_selected() {
         Some(crate::map::dialog(map::MapDialogKind::ParcelsCheck))
     );
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .parcels_check
         .answer
         .clone()
@@ -75,7 +79,8 @@ fn a_selection_checks_its_areas_only() {
     app.selection.set([Slot(1), Slot(8)]);
     let _ = app.update(Message::Run("parcels.check"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .parcels_check
         .answer
         .clone()
@@ -96,15 +101,31 @@ fn csv_kaydet_writes_the_table() {
     let text = std::fs::read_to_string(&file).expect("written");
     let lines: Vec<&str> = text.lines().collect();
     assert_eq!(lines.len(), 8, "a head and seven parcels");
-    assert!(lines[1].contains(";Ankara;Çankaya;Merkez;101;1;") && lines[1].contains(";301,2;"), "{}", lines[1]);
-    assert!(lines[1].ends_with(";İçinde;") && lines[2].ends_with(";Dışında;evet"), "{text}");
+    assert!(
+        lines[1].contains(";Ankara;Çankaya;Merkez;101;1;") && lines[1].contains(";301,2;"),
+        "{}",
+        lines[1]
+    );
+    assert!(
+        lines[1].ends_with(";İçinde;") && lines[2].ends_with(";Dışında;evet"),
+        "{text}"
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
 
 #[test]
 fn harita_and_gis_offer_it_yol_and_mimari_do_not() {
-    for (module, yes) in [(Module::Map, true), (Module::Gis, true), (Module::Road, false), (Module::Architecture, false)] {
-        assert_eq!(opened(Some(module)).offers("parcels.check"), yes, "{module:?}");
+    for (module, yes) in [
+        (Module::Map, true),
+        (Module::Gis, true),
+        (Module::Road, false),
+        (Module::Architecture, false),
+    ] {
+        assert_eq!(
+            opened(Some(module)).offers("parcels.check"),
+            yes,
+            "{module:?}"
+        );
     }
 }
 
@@ -118,11 +139,17 @@ fn harita_and_gis_offer_it_yol_and_mimari_do_not() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/parsel-alan-1400");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/parsel-alan-1400");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 700.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -133,7 +160,10 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("denetim-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

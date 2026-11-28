@@ -40,7 +40,11 @@ pub(crate) fn check(g: &EntityGeometry, at: &dyn Fn(&str) -> Option<String>) -> 
     // A Kot's level (docs/adr/0721 §2): an elevation mark's only, a level's id and a finite offset.
     if let Some(l) = level {
         if *style != Some(DimensionStyle::Elevation) {
-            return refuse("Katı yalnız kot ölçüsü anar. level'i kaldırın ya da ölçünün biçimini kot yapın.".into(), ".level");
+            return refuse(
+                "Katı yalnız kot ölçüsü anar. level'i kaldırın ya da ölçünün biçimini kot yapın."
+                    .into(),
+                ".level",
+            );
         }
         if let Some(words) = l.problem() {
             return refuse(words, ".level");

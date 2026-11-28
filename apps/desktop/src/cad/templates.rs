@@ -499,7 +499,11 @@ impl App {
     pub(crate) fn prompt(&self) -> Prompt {
         let mut prompt = self.session.prompt();
         if !self.session.nested() {
-            prompt.template = self.template_work.template.as_ref().map(|run| run.name.clone());
+            prompt.template = self
+                .template_work
+                .template
+                .as_ref()
+                .map(|run| run.name.clone());
         }
         prompt
     }

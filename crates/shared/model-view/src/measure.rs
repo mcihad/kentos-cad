@@ -57,7 +57,9 @@ pub fn edges(vertices: &[V3], triangles: &[[u32; 3]], crease_degrees: f64) -> Ve
         let Some(n) = normal(a, b, c) else { continue };
         let mut corner = |k: u32| {
             let next = corners.len() as u32;
-            *corners.entry(vertices[k as usize].map(f64::to_bits)).or_insert(next)
+            *corners
+                .entry(vertices[k as usize].map(f64::to_bits))
+                .or_insert(next)
         };
         let ids = [corner(t[0]), corner(t[1]), corner(t[2])];
         for (i, j) in [(0, 1), (1, 2), (2, 0)] {
@@ -101,7 +103,11 @@ pub fn nearest_on_segment(origin: V3, dir: V3, a: V3, b: V3) -> (V3, f64) {
     let w = math::sub(a, origin);
     let (b_, d, e) = (math::dot(ab, dir), math::dot(ab, w), math::dot(dir, w));
     let denom = len2 - b_ * b_;
-    let s = if denom.abs() < 1e-18 { 0.0 } else { (b_ * e - d) / denom };
+    let s = if denom.abs() < 1e-18 {
+        0.0
+    } else {
+        (b_ * e - d) / denom
+    };
     let s = s.clamp(0.0, 1.0);
     let p = math::add(a, math::scale(ab, s));
     (p, distance_to_ray(origin, dir, p))
@@ -176,7 +182,11 @@ pub struct Distance {
 impl Distance {
     pub fn between(a: V3, b: V3) -> Distance {
         let delta = math::sub(b, a);
-        Distance { length: math::length(delta), horizontal: delta[0].hypot(delta[1]), delta }
+        Distance {
+            length: math::length(delta),
+            horizontal: delta[0].hypot(delta[1]),
+            delta,
+        }
     }
 }
 
@@ -188,7 +198,11 @@ pub fn angle(a: V3, vertex: V3, b: V3) -> Option<f64> {
         return None;
     }
     // atan2 of the cross's length and the dot: exact near 0° and 180°, where acos is not.
-    Some(math::length(math::cross(u, v)).atan2(math::dot(u, v)).to_degrees())
+    Some(
+        math::length(math::cross(u, v))
+            .atan2(math::dot(u, v))
+            .to_degrees(),
+    )
 }
 
 /// A body's face: its area (m²), its outline's segments and its unit normal.
@@ -211,7 +225,9 @@ pub fn face(vertices: &[V3], triangles: &[[u32; 3]], triangle: usize) -> Option<
     let in_plane = |t: &[u32; 3]| {
         corners(t).is_some_and(|[p, q, r]| {
             normal(p, q, r).is_some_and(|m| math::dot(m, n).abs() >= flat)
-                && [p, q, r].iter().all(|v| (math::dot(n, *v) - offset).abs() <= 1e-3)
+                && [p, q, r]
+                    .iter()
+                    .all(|v| (math::dot(n, *v) - offset).abs() <= 1e-3)
         })
     };
     // The triangles by their edges (corners joined by exact coordinates).
@@ -223,7 +239,10 @@ pub fn face(vertices: &[V3], triangles: &[[u32; 3]], triangle: usize) -> Option<
         }
         for (p, q) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {
             let (kp, kq) = (key(p), key(q));
-            by_edge.entry(if kp <= kq { (kp, kq) } else { (kq, kp) }).or_default().push(i);
+            by_edge
+                .entry(if kp <= kq { (kp, kq) } else { (kq, kp) })
+                .or_default()
+                .push(i);
         }
     }
     let mut seen = vec![false; triangles.len()];
@@ -237,7 +256,11 @@ pub fn face(vertices: &[V3], triangles: &[[u32; 3]], triangle: usize) -> Option<
         members.push(i);
         for (u, v) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {
             let (ku, kv) = (key(u), key(v));
-            for &j in by_edge.get(&if ku <= kv { (ku, kv) } else { (kv, ku) }).into_iter().flatten() {
+            for &j in by_edge
+                .get(&if ku <= kv { (ku, kv) } else { (kv, ku) })
+                .into_iter()
+                .flatten()
+            {
                 if !seen[j] {
                     seen[j] = true;
                     todo.push(j);
@@ -253,13 +276,23 @@ pub fn face(vertices: &[V3], triangles: &[[u32; 3]], triangle: usize) -> Option<
         let t = triangles[i];
         for (u, v) in [(t[0], t[1]), (t[1], t[2]), (t[2], t[0])] {
             let (ku, kv) = (key(u), key(v));
-            let e = count.entry(if ku <= kv { (ku, kv) } else { (kv, ku) }).or_insert((0, vertices[u as usize], vertices[v as usize]));
+            let e = count
+                .entry(if ku <= kv { (ku, kv) } else { (kv, ku) })
+                .or_insert((0, vertices[u as usize], vertices[v as usize]));
             e.0 += 1;
         }
     }
-    let mut outline: Vec<[V3; 2]> = count.into_values().filter(|e| e.0 == 1).map(|e| [e.1, e.2]).collect();
+    let mut outline: Vec<[V3; 2]> = count
+        .into_values()
+        .filter(|e| e.0 == 1)
+        .map(|e| [e.1, e.2])
+        .collect();
     outline.sort_by(|x, y| x[0].partial_cmp(&y[0]).unwrap_or(std::cmp::Ordering::Equal));
-    Some(Face { area, outline, normal: n })
+    Some(Face {
+        area,
+        outline,
+        normal: n,
+    })
 }
 
 #[cfg(test)]
@@ -268,8 +301,21 @@ mod tests {
 
     /// A 3 × 2 m wall face on x = 0 (two triangles), its box closed by the other faces 0.25 m thick.
     fn slab() -> (Vec<V3>, Vec<[u32; 3]>) {
-        let c = |i: usize| [if i & 1 == 0 { 0.0 } else { 0.25 }, if i & 2 == 0 { 0.0 } else { 3.0 }, if i & 4 == 0 { 0.0 } else { 2.0 }];
-        let faces = [[0, 4, 6, 2], [1, 3, 7, 5], [0, 1, 5, 4], [2, 6, 7, 3], [0, 2, 3, 1], [4, 5, 7, 6]];
+        let c = |i: usize| {
+            [
+                if i & 1 == 0 { 0.0 } else { 0.25 },
+                if i & 2 == 0 { 0.0 } else { 3.0 },
+                if i & 4 == 0 { 0.0 } else { 2.0 },
+            ]
+        };
+        let faces = [
+            [0, 4, 6, 2],
+            [1, 3, 7, 5],
+            [0, 1, 5, 4],
+            [2, 6, 7, 3],
+            [0, 2, 3, 1],
+            [4, 5, 7, 6],
+        ];
         let (mut v, mut t) = (Vec::new(), Vec::new());
         for f in faces {
             let k = v.len() as u32;
@@ -303,11 +349,22 @@ mod tests {
         let d = Distance::between([1.0, 2.0, 3.0], [4.0, 6.0, 15.0]);
         assert_eq!(d.delta, [3.0, 4.0, 12.0]);
         assert_eq!((d.horizontal, d.length), (5.0, 13.0));
-        assert!((angle([1.0, 0.0, 0.0], [0.0; 3], [0.0, 1.0, 0.0]).expect("an angle") - 90.0).abs() < 1e-12);
-        assert!((angle([1.0, 0.0, 0.0], [0.0; 3], [-1.0, 1e-9, 0.0]).expect("an angle") - 180.0).abs() < 1e-6);
+        assert!(
+            (angle([1.0, 0.0, 0.0], [0.0; 3], [0.0, 1.0, 0.0]).expect("an angle") - 90.0).abs()
+                < 1e-12
+        );
+        assert!(
+            (angle([1.0, 0.0, 0.0], [0.0; 3], [-1.0, 1e-9, 0.0]).expect("an angle") - 180.0).abs()
+                < 1e-6
+        );
         assert_eq!(angle([0.0; 3], [0.0; 3], [1.0, 0.0, 0.0]), None);
         // A ray down the z axis at x = 1, y = 0.5 passes nearest the segment along y at x = 1, z = 0 at y = 0.5.
-        let (p, d) = nearest_on_segment([1.0, 0.5, 10.0], [0.0, 0.0, -1.0], [1.0, 0.0, 0.0], [1.0, 2.0, 0.0]);
+        let (p, d) = nearest_on_segment(
+            [1.0, 0.5, 10.0],
+            [0.0, 0.0, -1.0],
+            [1.0, 0.0, 0.0],
+            [1.0, 2.0, 0.0],
+        );
         assert!((p[1] - 0.5).abs() < 1e-12 && d < 1e-12, "{p:?} {d}");
     }
 

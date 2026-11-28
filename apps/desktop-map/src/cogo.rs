@@ -6,8 +6,8 @@
 //! çizimden yaz (`cogo.update`), which writes the selected objects' measured
 //! values in one undo step “Kayıtlı ölçüleri yaz”.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use std::collections::BTreeMap;
 use std::path::PathBuf;
 
@@ -27,8 +27,8 @@ use kentos_ui::widget::{Dialog as Frame, Segmented};
 use kentos_ui::{label, style};
 
 use crate::app::{App, Message};
-use crate::exchange::words::{self, Kind};
 use crate::document::{in_step, refusal};
+use crate::exchange::words::{self, Kind};
 use crate::traces::Control;
 
 /// The window's title, which a trace names it by.
@@ -614,19 +614,35 @@ mod csv_tests {
     /// digits kept; a recorded value that does not read as a number stays as the field gave it.
     #[test]
     fn the_csv_writes_both_figures_with_one_decimal_mark() {
-        let item = |field, recorded: &str, measured| Item { field, recorded: recorded.to_owned(), measured, difference: Some(0.1), over: true };
+        let item = |field, recorded: &str, measured| Item {
+            field,
+            recorded: recorded.to_owned(),
+            measured,
+            difference: Some(0.1),
+            over: true,
+        };
         let row = CogoRow {
             slot: Slot(1),
             layer: "Çizim".into(),
             kind: "çizgi",
             finding: Finding {
                 status: Status::Differs,
-                items: vec![item(Field::Length, "19114.736", 19464.25), item(Field::Semt, "100.0000", 112.0826), item(Field::Length, "abc", 1.0)],
+                items: vec![
+                    item(Field::Length, "19114.736", 19464.25),
+                    item(Field::Semt, "100.0000", 112.0826),
+                    item(Field::Length, "abc", 1.0),
+                ],
             },
         };
         let words = |i| item_words(&row, i, true);
-        assert_eq!(words(0)[4..6], ["19114,736".to_owned(), "19464,250".to_owned()]);
-        assert_eq!(words(1)[4..6], ["100,0000".to_owned(), "112,0826".to_owned()]);
+        assert_eq!(
+            words(0)[4..6],
+            ["19114,736".to_owned(), "19464,250".to_owned()]
+        );
+        assert_eq!(
+            words(1)[4..6],
+            ["100,0000".to_owned(), "112,0826".to_owned()]
+        );
         assert_eq!(words(2)[4], "abc");
         // The window's own list keeps the point.
         assert_eq!(item_words(&row, 0, false)[4], "19114.736");

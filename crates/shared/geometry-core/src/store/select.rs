@@ -185,7 +185,8 @@ impl Store {
     pub fn extent_outliers_of(&self, ids: Option<&[f64]>) -> Vec<f64> {
         match ids {
             Some(ids) => {
-                let among: std::collections::HashSet<u64> = ids.iter().map(|id| id.to_bits()).collect();
+                let among: std::collections::HashSet<u64> =
+                    ids.iter().map(|id| id.to_bits()).collect();
                 self.far_from_rest(|it| among.contains(&it.id.to_bits()))
             }
             None => self.far_from_rest(|_| true),
@@ -221,8 +222,14 @@ impl Store {
             .into_iter()
             .filter(|it| {
                 let b = &it.bounds;
-                let finite = [b.min_x, b.min_y, b.max_x, b.max_y].iter().all(|v| v.is_finite());
-                !finite || b.min_x < x0 - reach || b.max_x > x1 + reach || b.min_y < y0 - reach || b.max_y > y1 + reach
+                let finite = [b.min_x, b.min_y, b.max_x, b.max_y]
+                    .iter()
+                    .all(|v| v.is_finite());
+                !finite
+                    || b.min_x < x0 - reach
+                    || b.max_x > x1 + reach
+                    || b.min_y < y0 - reach
+                    || b.max_y > y1 + reach
             })
             .map(|it| it.id)
             .collect()

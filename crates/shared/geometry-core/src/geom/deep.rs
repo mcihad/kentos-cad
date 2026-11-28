@@ -199,7 +199,8 @@ fn in_box(k: &Conic, t0: f64, sweep: f64, b: &Bounds, fine: f64, coarse: f64) ->
     crossings(k, t0, turn, span, &near, &mut cuts);
     cuts.sort_by(f64::total_cmp);
     cuts.dedup();
-    let close = |p: Vec2| p.x >= near.min_x && p.x <= near.max_x && p.y >= near.min_y && p.y <= near.max_y;
+    let close =
+        |p: Vec2| p.x >= near.min_x && p.x <= near.max_x && p.y >= near.min_y && p.y <= near.max_y;
     // Each piece between two cuts lies wholly near the box or wholly away from it: its steps and whether it is near.
     let plan: Vec<(f64, f64, f64, bool)> = cuts
         .windows(2)
@@ -216,7 +217,11 @@ fn in_box(k: &Conic, t0: f64, sweep: f64, b: &Bounds, fine: f64, coarse: f64) ->
     let mut out = Vec::with_capacity((away + near_steps / thin) as usize + plan.len() + 1);
     out.push(at(0.0));
     for (u, v, n, near) in plan {
-        let n = if near { js_max((n / thin).ceil(), 1.0) } else { n };
+        let n = if near {
+            js_max((n / thin).ceil(), 1.0)
+        } else {
+            n
+        };
         for i in 1..=(n as usize) {
             out.push(at(u + (v - u) * i as f64 / n));
         }
@@ -243,18 +248,39 @@ pub fn arc_in_box(c: Vec2, r: f64, a0: f64, sweep: f64, b: &Bounds, tol: f64) ->
 /// Points of an ellipse's arc `c + major·cos t + minor·sin t` (`geom::ellipse`'s form) from parameter `t0` over
 /// signed `sweep`, both ends included, as [`arc_in_box`] takes an arc's: its chords within `tol` of it in and near
 /// `b`, 72 steps a turn away from it.
-pub fn ellipse_in_box(c: Vec2, major: Vec2, minor: Vec2, t0: f64, sweep: f64, b: &Bounds, tol: f64) -> Vec<Vec2> {
+pub fn ellipse_in_box(
+    c: Vec2,
+    major: Vec2,
+    minor: Vec2,
+    t0: f64,
+    sweep: f64,
+    b: &Bounds,
+    tol: f64,
+) -> Vec<Vec2> {
     let k = Conic {
         c,
         u: major,
         v: minor,
     };
-    in_box(&k, t0, sweep, b, step_for(k.reach(), tol, COARSE_STEP), COARSE_STEP)
+    in_box(
+        &k,
+        t0,
+        sweep,
+        b,
+        step_for(k.reach(), tol, COARSE_STEP),
+        COARSE_STEP,
+    )
 }
 
 /// A bulged path's points (`tessellate::bulge_path`'s form: its vertices as they are, a closed one a ring whose first
 /// point is not repeated), each arc's inner points those of [`arc_in_box`].
-pub fn bulge_path_in_box(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool, b: &Bounds, tol: f64) -> Vec<Vec2> {
+pub fn bulge_path_in_box(
+    pts: &[Vec2],
+    bulges: Option<&[f64]>,
+    closed: bool,
+    b: &Bounds,
+    tol: f64,
+) -> Vec<Vec2> {
     let n = pts.len();
     if n == 0 {
         return Vec::new();
@@ -296,19 +322,29 @@ mod tests {
     #[test]
     fn a_segment_through_the_box_gets_its_entry_and_its_exit() {
         let cut = split_at_box(&[v(-100.0, 0.5), v(100.0, 0.5)], false, &BOX).expect("cut");
-        assert_eq!(cut, [v(-100.0, 0.5), v(-1.0, 0.5), v(1.0, 0.5), v(100.0, 0.5)]);
+        assert_eq!(
+            cut,
+            [v(-100.0, 0.5), v(-1.0, 0.5), v(1.0, 0.5), v(100.0, 0.5)]
+        );
     }
 
     #[test]
     fn a_segment_from_inside_gets_its_exit_only() {
-        let cut = split_at_box(&[v(0.0, 0.0), v(0.0, 50.0), v(30.0, 50.0)], false, &BOX).expect("cut");
+        let cut =
+            split_at_box(&[v(0.0, 0.0), v(0.0, 50.0), v(30.0, 50.0)], false, &BOX).expect("cut");
         assert_eq!(cut, [v(0.0, 0.0), v(0.0, 1.0), v(0.0, 50.0), v(30.0, 50.0)]);
     }
 
     #[test]
     fn a_path_inside_or_beside_the_box_is_left_as_it_is() {
-        assert_eq!(split_at_box(&[v(-0.5, 0.0), v(0.5, 0.2)], false, &BOX), None);
-        assert_eq!(split_at_box(&[v(-100.0, 5.0), v(100.0, 5.0)], false, &BOX), None);
+        assert_eq!(
+            split_at_box(&[v(-0.5, 0.0), v(0.5, 0.2)], false, &BOX),
+            None
+        );
+        assert_eq!(
+            split_at_box(&[v(-100.0, 5.0), v(100.0, 5.0)], false, &BOX),
+            None
+        );
         assert_eq!(split_at_box(&[v(2.0, 0.0)], false, &BOX), None);
     }
 
@@ -323,7 +359,10 @@ mod tests {
         let mut shut = ring.to_vec();
         shut.push(ring[0]);
         let cut = split_at_box(&shut, true, &BOX).expect("cut");
-        assert_eq!(cut, [&ring[..], &[v(1.0, 0.0), v(-1.0, 0.0), ring[0]]].concat());
+        assert_eq!(
+            cut,
+            [&ring[..], &[v(1.0, 0.0), v(-1.0, 0.0), ring[0]]].concat()
+        );
     }
 
     #[test]
@@ -335,8 +374,15 @@ mod tests {
         for c in &cut[1..3] {
             let cross = (q.x - p.x) * (c.y - p.y) - (q.y - p.y) * (c.x - p.x);
             let length = js_hypot(q.x - p.x, q.y - p.y);
-            assert!((cross / length).abs() < 1e-9, "{c:?} is off the segment by {}", cross / length);
-            assert!(c.x.abs() <= 1.0 + 1e-9 && c.y.abs() <= 1.0 + 1e-9, "{c:?} on the box's edge");
+            assert!(
+                (cross / length).abs() < 1e-9,
+                "{c:?} is off the segment by {}",
+                cross / length
+            );
+            assert!(
+                c.x.abs() <= 1.0 + 1e-9 && c.y.abs() <= 1.0 + 1e-9,
+                "{c:?} on the box's edge"
+            );
         }
     }
 
@@ -372,13 +418,19 @@ mod tests {
             let d = js_hypot(p.x - c.x, p.y - c.y);
             assert!((d - r).abs() < 1e-9, "{p:?} lies on the circle");
         }
-        assert!(sagitta(c, r, &pts, Some(&b)) <= tol * 1.000_001, "round in the box");
+        assert!(
+            sagitta(c, r, &pts, Some(&b)) <= tol * 1.000_001,
+            "round in the box"
+        );
         // Round it, as coarse as the 72 chords of a full turn; a handful of points in and near the box.
         let coarse = r * (1.0 - cos(COARSE_STEP / 2.0));
         assert!(sagitta(c, r, &pts, None) <= coarse * 1.000_001);
         assert!(pts.len() < 72 + 80, "{} points", pts.len());
         // The two crossings of the box's edge are points of it, on the edge.
-        let on_edge = pts.iter().filter(|p| (p.y.abs() - 1.0).abs() < 1e-9 && p.x.abs() <= 1.0).count();
+        let on_edge = pts
+            .iter()
+            .filter(|p| (p.y.abs() - 1.0).abs() < 1e-9 && p.x.abs() <= 1.0)
+            .count();
         assert_eq!(on_edge, 2);
         // A full turn: its last point is its first.
         let (first, last) = (pts[0], pts[pts.len() - 1]);
@@ -392,16 +444,42 @@ mod tests {
         // circle is not. Near the box it is drawn finely; no chord touches the box.
         let (c, r) = (v(0.0, -50.5), 51.52);
         let pts = arc_in_box(c, r, 0.0, TAU, &BOX, 1e-4);
-        assert!(pts.iter().all(|p| !(p.x.abs() <= 1.0 && p.y.abs() <= 1.0)), "the circle misses the box");
-        let across = pts.windows(2).filter(|w| crossing(w[0], w[1], &BOX).is_some()).count();
+        assert!(
+            pts.iter().all(|p| !(p.x.abs() <= 1.0 && p.y.abs() <= 1.0)),
+            "the circle misses the box"
+        );
+        let across = pts
+            .windows(2)
+            .filter(|w| crossing(w[0], w[1], &BOX).is_some())
+            .count();
         assert_eq!(across, 0, "chords across the box");
         // The 72 chords of a full turn, the coarse ones that would cross it among them.
-        let coarse: Vec<Vec2> = (0..=72).map(|i| v(c.x + r * cos(i as f64 * COARSE_STEP), c.y + r * sin(i as f64 * COARSE_STEP))).collect();
-        assert!(coarse.windows(2).any(|w| crossing(w[0], w[1], &BOX).is_some()));
+        let coarse: Vec<Vec2> = (0..=72)
+            .map(|i| {
+                v(
+                    c.x + r * cos(i as f64 * COARSE_STEP),
+                    c.y + r * sin(i as f64 * COARSE_STEP),
+                )
+            })
+            .collect();
+        assert!(
+            coarse
+                .windows(2)
+                .any(|w| crossing(w[0], w[1], &BOX).is_some())
+        );
         // An ellipse the same: its top 1.5 cm over the box, 5 mm over its corners.
         let pts = ellipse_in_box(c, v(r, 0.0), v(0.0, r * 0.9999), 0.0, TAU, &BOX, 1e-4);
-        assert!(pts.iter().all(|p| !(p.x.abs() <= 1.0 && p.y.abs() <= 1.0)), "the ellipse misses the box");
-        assert_eq!(pts.windows(2).filter(|w| crossing(w[0], w[1], &BOX).is_some()).count(), 0, "chords across the box");
+        assert!(
+            pts.iter().all(|p| !(p.x.abs() <= 1.0 && p.y.abs() <= 1.0)),
+            "the ellipse misses the box"
+        );
+        assert_eq!(
+            pts.windows(2)
+                .filter(|w| crossing(w[0], w[1], &BOX).is_some())
+                .count(),
+            0,
+            "chords across the box"
+        );
     }
 
     #[test]
@@ -443,11 +521,17 @@ mod tests {
         let det = major.x * minor.y - major.y * minor.x;
         let unit = |p: Vec2| {
             let (dx, dy) = (p.x - c.x, p.y - c.y);
-            v((minor.y * dx - minor.x * dy) / det, (-major.y * dx + major.x * dy) / det)
+            v(
+                (minor.y * dx - minor.x * dy) / det,
+                (-major.y * dx + major.x * dy) / det,
+            )
         };
         for p in &pts {
             let q = unit(*p);
-            assert!((js_hypot(q.x, q.y) - 1.0).abs() < 1e-12, "{p:?} on the ellipse");
+            assert!(
+                (js_hypot(q.x, q.y) - 1.0).abs() < 1e-12,
+                "{p:?} on the ellipse"
+            );
         }
         // In the box its chords stray at most `tol`: the distance of a chord's middle from the curve, measured along
         // the curve's normal there, is below the sagitta of its circle of reach.
@@ -455,9 +539,15 @@ mod tests {
         for w in pts.windows(2) {
             let m = v((w[0].x + w[1].x) / 2.0, (w[0].y + w[1].y) / 2.0);
             if m.x.abs() <= 1.0 && m.y.abs() <= 1.0 {
-                let (t0, t1) = (atan2(unit(w[0]).y, unit(w[0]).x), atan2(unit(w[1]).y, unit(w[1]).x));
+                let (t0, t1) = (
+                    atan2(unit(w[0]).y, unit(w[0]).x),
+                    atan2(unit(w[1]).y, unit(w[1]).x),
+                );
                 let tm = t0 + norm_angle(t1 - t0) / 2.0;
-                let on = v(c.x + major.x * cos(tm) + minor.x * sin(tm), c.y + major.y * cos(tm) + minor.y * sin(tm));
+                let on = v(
+                    c.x + major.x * cos(tm) + minor.x * sin(tm),
+                    c.y + major.y * cos(tm) + minor.y * sin(tm),
+                );
                 worst = js_max(worst, js_hypot(on.x - m.x, on.y - m.y));
             }
         }
@@ -474,9 +564,16 @@ mod tests {
         let ring = bulge_path_in_box(&pts, Some(&bulges), true, &BOX, 1e-4);
         assert_eq!(ring[0], pts[0]);
         assert!(ring.contains(&pts[1]));
-        assert_ne!(ring[ring.len() - 1], ring[0], "a ring: its first point not repeated");
+        assert_ne!(
+            ring[ring.len() - 1],
+            ring[0],
+            "a ring: its first point not repeated"
+        );
         // Every inner point on the arc: centre (−19.5, 0), radius 20.
-        let between = &ring[1..ring.iter().position(|p| *p == pts[1]).expect("second vertex")];
+        let between = &ring[1..ring
+            .iter()
+            .position(|p| *p == pts[1])
+            .expect("second vertex")];
         assert!(between.len() > 36, "{}", between.len());
         for p in between {
             assert!((js_hypot(p.x + 19.5, p.y) - 20.0).abs() < 1e-9, "{p:?}");

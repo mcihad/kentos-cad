@@ -127,10 +127,7 @@ impl Store {
         for r in shown.records.as_chunks::<LABEL_SHOWN_STRIDE>().0.iter() {
             records.extend_from_slice(&r[..LABEL_STRIDE]);
         }
-        Shown {
-            records,
-            ..shown
-        }
+        Shown { records, ..shown }
     }
 
     /// Paper text and feature labels. Source text has no screen LOD; only the supplied layers occupy room.
@@ -154,10 +151,7 @@ impl Store {
         for r in labels.records.as_chunks::<LABEL_SHOWN_STRIDE>().0.iter() {
             records.extend_from_slice(&r[..LABEL_STRIDE]);
         }
-        Shown {
-            records,
-            ..labels
-        }
+        Shown { records, ..labels }
     }
 
     /// The drawing's own text at true size: texts, dimension values, leaders' notes, tables' cells.
@@ -512,8 +506,20 @@ pub fn paragraph_records(
     if t.is_unicode() {
         // One cached glyph plan, including its mask and all actual lines.
         // Native readers resolve the shape once; no scalar line re-shaping.
-        let (kind,c)=piece.map_or((LABEL_LINE,t.width_factor.unwrap_or(1.)),|p|(LABEL_PIECE_LINE,p));
-        out.extend([id,kind,t.p.x,t.p.y,t.rotation,t.height,c,0.,t.text.chars().count() as f64]);
+        let (kind, c) = piece.map_or((LABEL_LINE, t.width_factor.unwrap_or(1.)), |p| {
+            (LABEL_PIECE_LINE, p)
+        });
+        out.extend([
+            id,
+            kind,
+            t.p.x,
+            t.p.y,
+            t.rotation,
+            t.height,
+            c,
+            0.,
+            t.text.chars().count() as f64,
+        ]);
         return;
     }
     if let Some(a) = t.along(font) {
@@ -630,7 +636,9 @@ mod tests {
         // The corner: the line's left middle 8 px right of and 14 px under the box's top left.
         let corner = shown
             .records
-            .as_chunks::<LABEL_STRIDE>().0.iter()
+            .as_chunks::<LABEL_STRIDE>()
+            .0
+            .iter()
             .find(|r| r[0] == 1.0 && r[1] == LABEL_PLACED)
             .unwrap();
         let w = corner[5];
@@ -639,7 +647,9 @@ mod tests {
         // The street lies along its line: level, on it.
         let street = shown
             .records
-            .as_chunks::<LABEL_STRIDE>().0.iter()
+            .as_chunks::<LABEL_STRIDE>()
+            .0
+            .iter()
             .find(|r| r[0] == 2.0 && r[1] == LABEL_PLACED)
             .unwrap();
         assert_eq!((street[3], street[4]), (20.0, 0.0));
@@ -714,7 +724,9 @@ mod tests {
         let shown = s.labels(&view, 3.0, None, PlaceOptions::default());
         let frame = shown
             .records
-            .as_chunks::<LABEL_STRIDE>().0.iter()
+            .as_chunks::<LABEL_STRIDE>()
+            .0
+            .iter()
             .find(|r| r[1] == LABEL_PLACED)
             .unwrap();
         // On the long part's middle, level.

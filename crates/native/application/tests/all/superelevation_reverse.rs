@@ -27,10 +27,18 @@ fn along(points: &[[f64; 2]], s: f64, normal: f64) -> f64 {
 
 #[test]
 fn a_reversed_alignment_keeps_every_edge_s_slope() {
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.alignments.edit.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Ters çevrilir: dever çizelgeleri de döner").expect("the case");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("setup");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/road.alignments.edit.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "Ters çevrilir: dever çizelgeleri de döner")
+        .expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).expect("setup");
     let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
     let before = road_superelevations::made_superelevations(&doc);
     let length = kentos_native_application::road_alignments::made_alignments(&doc)
@@ -52,7 +60,10 @@ fn a_reversed_alignment_keeps_every_edge_s_slope() {
         expected_revision: None,
     };
     let mut cx = ExecutionContext::new(&mut doc);
-    let CommandResult::Completed { output, .. } = road_alignments_edit::execute(&mut cx, input) else { panic!("reversed") };
+    let CommandResult::Completed { output, .. } = road_alignments_edit::execute(&mut cx, input)
+    else {
+        panic!("reversed")
+    };
     assert_eq!(output.superelevations, ["d-1", "d-2"]);
     let after = road_superelevations::made_superelevations(&doc);
     for ((d0, r0), (d1, r1)) in before.iter().zip(&after) {
@@ -61,15 +72,32 @@ fn a_reversed_alignment_keeps_every_edge_s_slope() {
             continue;
         }
         assert!(!r1.stale, "{} is bound to the new revision", d1.id);
-        assert!(r0.problem.is_none() && r1.problem.is_none(), "{:?} {:?}", r0.problem, r1.problem);
+        assert!(
+            r0.problem.is_none() && r1.problem.is_none(),
+            "{:?} {:?}",
+            r0.problem,
+            r1.problem
+        );
         let mut worst: f64 = 0.0;
         for k in 0..=1000 {
             let s = length * f64::from(k) / 1000.0;
             let pairs = [
-                (along(&r0.left, s, r0.normal_left), along(&r1.right, length - s, r1.normal_right)),
-                (along(&r0.right, s, r0.normal_right), along(&r1.left, length - s, r1.normal_left)),
-                (along(&r0.left_widening, s, 0.0), along(&r1.right_widening, length - s, 0.0)),
-                (along(&r0.right_widening, s, 0.0), along(&r1.left_widening, length - s, 0.0)),
+                (
+                    along(&r0.left, s, r0.normal_left),
+                    along(&r1.right, length - s, r1.normal_right),
+                ),
+                (
+                    along(&r0.right, s, r0.normal_right),
+                    along(&r1.left, length - s, r1.normal_left),
+                ),
+                (
+                    along(&r0.left_widening, s, 0.0),
+                    along(&r1.right_widening, length - s, 0.0),
+                ),
+                (
+                    along(&r0.right_widening, s, 0.0),
+                    along(&r1.left_widening, length - s, 0.0),
+                ),
             ];
             for (a, b) in pairs {
                 worst = worst.max((a - b).abs());
@@ -83,14 +111,28 @@ fn a_reversed_alignment_keeps_every_edge_s_slope() {
 /// a symmetric and an asymmetric parabola and a circle among its curves; the crossing moves with it.
 #[test]
 fn a_reversed_alignment_keeps_the_grade_line() {
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.alignments.edit.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Ters çevrilir: boykesit de döner").expect("the case");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("setup");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/road.alignments.edit.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "Ters çevrilir: boykesit de döner")
+        .expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).expect("setup");
     let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
     let line = |doc: &kentos_domain::Document| {
         let d = doc.road_profiles()[0].clone();
-        (kentos_road::profile::vertical::build(&kentos_native_application::road_profiles::pvis_of(&d)).expect("builds"), d)
+        (
+            kentos_road::profile::vertical::build(
+                &kentos_native_application::road_profiles::pvis_of(&d),
+            )
+            .expect("builds"),
+            d,
+        )
     };
     let (was, d0) = line(&doc);
     let length = kentos_native_application::road_alignments::made_alignments(&doc)
@@ -111,7 +153,9 @@ fn a_reversed_alignment_keeps_the_grade_line() {
         end_place: None,
         expected_revision: None,
     };
-    let CommandResult::Completed { output, .. } = road_alignments_edit::execute(&mut ExecutionContext::new(&mut doc), input) else {
+    let CommandResult::Completed { output, .. } =
+        road_alignments_edit::execute(&mut ExecutionContext::new(&mut doc), input)
+    else {
         panic!("reversed")
     };
     assert_eq!(output.profiles, ["b-1"]);
@@ -122,11 +166,17 @@ fn a_reversed_alignment_keeps_the_grade_line() {
         // The ends written as L − s land within rounding of the line's span: read there clamped into it.
         let (a, b) = (
             was.at(s.clamp(was.start, was.end)).expect("on the line").0,
-            now.at((length - s).clamp(now.start, now.end)).expect("on the line").0,
+            now.at((length - s).clamp(now.start, now.end))
+                .expect("on the line")
+                .0,
         );
         worst = worst.max((a - b).abs());
     }
     assert!(worst < 1e-9, "the grade line moved by {worst}");
     assert!((d1.crossings[0].station - (length - d0.crossings[0].station)).abs() < 1e-12);
-    assert_eq!(d1.alignment_revision, doc.road_alignments()[0].revision, "bound to the new revision");
+    assert_eq!(
+        d1.alignment_revision,
+        doc.road_alignments()[0].revision,
+        "bound to the new revision"
+    );
 }

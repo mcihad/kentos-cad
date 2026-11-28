@@ -3,11 +3,11 @@
 //! its three rows. A condition naming a field the layer lacks says so instead of “no row”, on a data layer and on a
 //! layer of the drawing's own.
 
-use crate::features::Event;
-use crate::features::data::DataEvent;
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
 use crate::data_layers_tests::{answer_pages, municipal, node};
+use crate::features::Event;
+use crate::features::data::DataEvent;
 use crate::files_testing::app_with_drawing;
 use crate::gis;
 
@@ -19,7 +19,9 @@ fn ev(app: &mut App, e: Event) {
 /// The keys of the rows the table read, in its order.
 fn keys(app: &App) -> Vec<i64> {
     let data = &app.gis.features.data;
-    (0..data.total_rows().unwrap_or(0) as usize).filter_map(|i| data.row(i).map(|r| r.key)).collect()
+    (0..data.total_rows().unwrap_or(0) as usize)
+        .filter_map(|i| data.row(i).map(|r| r.key))
+        .collect()
 }
 
 fn values(app: &App, field: &str) -> Vec<String> {
@@ -55,7 +57,10 @@ fn each_data_layer_keeps_its_own_condition_and_a_field_it_lacks_is_said() {
     assert_eq!(keys(&app), [2, 3, 6]);
     // Mahalleler: the condition stays with bakim; its three rows.
     ev(&mut app, Event::Layer(mahalleler.clone()));
-    assert_eq!(app.gis.features.filter, "", "bakim's condition is not mahalleler's");
+    assert_eq!(
+        app.gis.features.filter, "",
+        "bakim's condition is not mahalleler's"
+    );
     answer_pages(&mut app);
     assert_eq!(app.gis.features.data.error(), None);
     assert_eq!(values(&app, "ad"), ["Çınar", "İstasyon", "Kale"]);
@@ -70,9 +75,16 @@ fn each_data_layer_keeps_its_own_condition_and_a_field_it_lacks_is_said() {
     ev(&mut app, Event::Data(DataEvent::Apply));
     answer_pages(&mut app);
     let why = app.gis.features.data.error().expect("refused").to_owned();
-    assert!(why.contains("“bedel” alanı “mahalleler” katmanında yok"), "{why}");
+    assert!(
+        why.contains("“bedel” alanı “mahalleler” katmanında yok"),
+        "{why}"
+    );
     assert!(why.contains("Katmanın alanları: mahalle, ad."), "{why}");
-    assert_eq!(app.gis.features.data.total_rows(), None, "no count of rows a refused question has not got");
+    assert_eq!(
+        app.gis.features.data.total_rows(),
+        None,
+        "no count of rows a refused question has not got"
+    );
     // Each keeps its own still: bakim's three rows come back with it.
     ev(&mut app, Event::Layer(bakim));
     answer_pages(&mut app);

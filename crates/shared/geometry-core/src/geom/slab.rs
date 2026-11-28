@@ -125,7 +125,9 @@ fn rings_meet(a: &[Vec2], b: &[Vec2]) -> bool {
     let (n, m) = (a.len(), b.len());
     for i in 0..n {
         for j in 0..m {
-            if crate::geom::intersect::seg_seg(a[i], a[(i + 1) % n], b[j], b[(j + 1) % m], 1e-12).is_some() {
+            if crate::geom::intersect::seg_seg(a[i], a[(i + 1) % n], b[j], b[(j + 1) % m], 1e-12)
+                .is_some()
+            {
                 return true;
             }
         }
@@ -151,12 +153,16 @@ fn ring_failure(before: &Ring, after: &Ring, hole: bool) -> Option<&'static str>
             let (q0, q1) = (after.pts[i], after.pts[(i + 1) % n]);
             let dot = (p1.x - p0.x) * (q1.x - q0.x) + (p1.y - p0.y) * (q1.y - q0.y);
             if !(dot > 0.0) {
-                return Some("Kenar ötelemesi bir kenarı yok ediyor ya da ters çeviriyor; daha küçük bir uzaklık verin.");
+                return Some(
+                    "Kenar ötelemesi bir kenarı yok ediyor ya da ters çeviriyor; daha küçük bir uzaklık verin.",
+                );
             }
         }
     }
     if self_crossing(&a) {
-        return Some("Kenar ötelemesi halkanın kenarlarını kesiştiriyor; daha küçük bir uzaklık verin.");
+        return Some(
+            "Kenar ötelemesi halkanın kenarlarını kesiştiriyor; daha küçük bir uzaklık verin.",
+        );
     }
     None
 }
@@ -171,7 +177,11 @@ pub fn offset(parts: &[Area], d: f64) -> Result<Vec<Area>, OffsetFailure> {
         let outer = orient_ring(&part.outer, true);
         let moved_outer = space::moved_ring(&outer, &vec![d; outer.pts.len()]);
         if let Some(words) = ring_failure(&outer, &moved_outer, false) {
-            return Err(OffsetFailure { part: k, hole: None, words: words.into() });
+            return Err(OffsetFailure {
+                part: k,
+                hole: None,
+                words: words.into(),
+            });
         }
         let outer_chords = chords(&moved_outer);
         let mut holes: Vec<Ring> = Vec::with_capacity(part.holes.len());
@@ -180,7 +190,11 @@ pub fn offset(parts: &[Area], d: f64) -> Result<Vec<Area>, OffsetFailure> {
             let hole = orient_ring(hole, false);
             let moved = space::moved_ring(&hole, &vec![d; hole.pts.len()]);
             if let Some(words) = ring_failure(&hole, &moved, true) {
-                return Err(OffsetFailure { part: k, hole: Some(h), words: words.into() });
+                return Err(OffsetFailure {
+                    part: k,
+                    hole: Some(h),
+                    words: words.into(),
+                });
             }
             let c = chords(&moved);
             let fails = rings_meet(&c, &outer_chords)
@@ -190,13 +204,17 @@ pub fn offset(parts: &[Area], d: f64) -> Result<Vec<Area>, OffsetFailure> {
                 return Err(OffsetFailure {
                     part: k,
                     hole: Some(h),
-                    words: "Kenar ötelemesi deliği dış kenara ya da başka bir deliğe taşıyor.".into(),
+                    words: "Kenar ötelemesi deliği dış kenara ya da başka bir deliğe taşıyor."
+                        .into(),
                 });
             }
             hole_chords.push(c);
             holes.push(moved);
         }
-        out.push(Area { outer: moved_outer, holes });
+        out.push(Area {
+            outer: moved_outer,
+            holes,
+        });
     }
     Ok(out)
 }
@@ -263,7 +281,10 @@ pub fn free_runs(parts: &[Area], faces: &[(Shape, f64)]) -> Vec<Run> {
 
 /// A run without bulges when every edge of it is straight.
 fn tidy(mut r: Run) -> Run {
-    if r.bulges.as_ref().is_some_and(|b| b.iter().all(|x| *x == 0.0)) {
+    if r.bulges
+        .as_ref()
+        .is_some_and(|b| b.iter().all(|x| *x == 0.0))
+    {
         r.bulges = None;
     }
     r
@@ -283,12 +304,22 @@ fn polyline(pts: Vec<Vec2>, bulges: Option<Vec<f64>>, closed: bool) -> Shape {
 /// The line `width` to the left of a run (into the slab): its points and bulges.
 fn inner(run: &Run, width: f64) -> Option<(Vec<Vec2>, Option<Vec<f64>>)> {
     let closed = run.closed();
-    let pts: Vec<Vec2> = if closed { run.pts[..run.pts.len() - 1].to_vec() } else { run.pts.clone() };
+    let pts: Vec<Vec2> = if closed {
+        run.pts[..run.pts.len() - 1].to_vec()
+    } else {
+        run.pts.clone()
+    };
     match &run.bulges {
         Some(b) if b.iter().any(|x| *x != 0.0) => {
-            let bs: Vec<f64> = if closed { b.clone() } else { b.iter().copied().chain(std::iter::once(0.0)).collect() };
+            let bs: Vec<f64> = if closed {
+                b.clone()
+            } else {
+                b.iter().copied().chain(std::iter::once(0.0)).collect()
+            };
             match crate::geom::offset::offset_bulge_path(&pts, &bs, width, closed) {
-                crate::geom::offset::OffsetResult::Path { pts, bulges } => Some((pts, Some(bulges))),
+                crate::geom::offset::OffsetResult::Path { pts, bulges } => {
+                    Some((pts, Some(bulges)))
+                }
                 crate::geom::offset::OffsetResult::Error { .. } => None,
             }
         }
@@ -316,7 +347,9 @@ fn edge_pieces_with(edge: &Edge, inner_too: bool) -> Vec<Shape> {
         } else {
             (
                 run.pts.clone(),
-                run.bulges.as_ref().map(|b| b.iter().copied().chain(std::iter::once(0.0)).collect()),
+                run.bulges
+                    .as_ref()
+                    .map(|b| b.iter().copied().chain(std::iter::once(0.0)).collect()),
             )
         };
         out.push(polyline(pts.clone(), bulges, closed));
@@ -327,7 +360,9 @@ fn edge_pieces_with(edge: &Edge, inner_too: bool) -> Vec<Shape> {
             continue;
         };
         if edge.parapet && !closed {
-            let (Some(a0), Some(a1), Some(b0), Some(b1)) = (pts.first(), pts.last(), ipts.first(), ipts.last()) else {
+            let (Some(a0), Some(a1), Some(b0), Some(b1)) =
+                (pts.first(), pts.last(), ipts.first(), ipts.last())
+            else {
                 continue;
             };
             out.push(Shape::Line { a: *a0, b: *b0 });

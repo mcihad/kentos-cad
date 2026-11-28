@@ -16,7 +16,12 @@ fn uid_bytes(doc: &kentos_contracts::DocumentSnapshotV2, k: usize) -> [u8; 16] {
 fn at(data: &[u8], uid: &[u8; 16]) -> usize {
     let mut needle = vec![0x50u8];
     needle.extend_from_slice(uid);
-    let hits: Vec<usize> = data.windows(17).enumerate().filter(|(_, w)| *w == needle.as_slice()).map(|(i, _)| i).collect();
+    let hits: Vec<usize> = data
+        .windows(17)
+        .enumerate()
+        .filter(|(_, w)| *w == needle.as_slice())
+        .map(|(i, _)| i)
+        .collect();
     assert_eq!(hits.len(), 1, "the id is once in the file");
     hits[0]
 }
@@ -37,7 +42,11 @@ fn a_wrong_checksum_keeps_every_object_and_says_so() {
     assert!(kentos_kcad::decode(&data).is_err(), "the reader refuses it");
     let got = salvage(&data).expect("recovers");
     assert!(!got.whole);
-    assert!(got.container.iter().any(|c| c.contains("özeti tutmuyor")), "{:?}", got.container);
+    assert!(
+        got.container.iter().any(|c| c.contains("özeti tutmuyor")),
+        "{:?}",
+        got.container
+    );
     assert!(got.lost.is_empty(), "{:?}", got.lost);
     assert_eq!(got.document.entities, original.entities);
     assert_eq!(got.document.uids, original.uids);
@@ -58,7 +67,11 @@ fn an_object_whose_id_is_taken_twice_is_the_only_one_left_out() {
     assert_eq!(got.objects_kept, n - 1);
     assert_eq!(got.lost.len(), 1, "{:?}", got.lost);
     assert_eq!(got.lost[0].part, format!("entities[{k}]"));
-    assert!(got.lost[0].reason.starts_with("duplicate_uid"), "{}", got.lost[0].reason);
+    assert!(
+        got.lost[0].reason.starts_with("duplicate_uid"),
+        "{}",
+        got.lost[0].reason
+    );
     let mut want = original.uids.clone();
     want.remove(k);
     assert_eq!(got.document.uids, want);
@@ -75,15 +88,26 @@ fn a_cut_inside_an_object_keeps_those_before_it_and_says_what_was_put_in_place()
     let place = at(FILE, &uid_bytes(&original, k));
     let data = &FILE[..place + 5];
     let got = salvage(data).expect("recovers");
-    assert!(got.container.iter().any(|c| c.contains("kesik")), "{:?}", got.container);
+    assert!(
+        got.container.iter().any(|c| c.contains("kesik")),
+        "{:?}",
+        got.container
+    );
     assert_eq!(got.document.uids, original.uids[..k].to_vec());
     assert_eq!(got.document.entities, original.entities[..k].to_vec());
     let parts: Vec<&str> = got.lost.iter().map(|l| l.part.as_str()).collect();
     assert!(parts.contains(&"document.settings"), "{parts:?}");
     assert!(parts.contains(&"document.activeLayer"), "{parts:?}");
     assert_eq!(got.document.settings.srid, 0, "the empty drawing's");
-    assert_eq!(Some(&got.document.active_layer), original.layers.first().map(|l| &l.id), "the first layer");
-    assert_eq!(got.document.layers, original.layers, "the layers came before the cut");
+    assert_eq!(
+        Some(&got.document.active_layer),
+        original.layers.first().map(|l| &l.id),
+        "the first layer"
+    );
+    assert_eq!(
+        got.document.layers, original.layers,
+        "the layers came before the cut"
+    );
 }
 
 #[test]
@@ -103,7 +127,10 @@ fn a_definition_whose_id_is_taken_twice_goes_with_its_inserts_alone() {
     let mut needle = vec![0x50u8];
     needle.extend_from_slice(&second.0);
     // The definitions come before the objects (key order): the first time the id is there is the definition's own.
-    let at = file.windows(17).position(|w| w == needle.as_slice()).expect("the definition's id");
+    let at = file
+        .windows(17)
+        .position(|w| w == needle.as_slice())
+        .expect("the definition's id");
     let mut data = file.to_vec();
     data[at + 1..at + 17].copy_from_slice(&first.0);
     let got = salvage(&data).expect("recovers");
@@ -118,6 +145,17 @@ fn a_definition_whose_id_is_taken_twice_goes_with_its_inserts_alone() {
         .filter(|e| matches!(e, kentos_contracts::Entity::Insert(i) if i.block == second))
         .count();
     assert!(of_second > 0);
-    assert_eq!(got.objects_kept, original.entities.len() - of_second, "{:?}", got.lost);
-    assert_eq!(got.lost.iter().filter(|l| l.part.starts_with("entities[")).count(), of_second);
+    assert_eq!(
+        got.objects_kept,
+        original.entities.len() - of_second,
+        "{:?}",
+        got.lost
+    );
+    assert_eq!(
+        got.lost
+            .iter()
+            .filter(|l| l.part.starts_with("entities["))
+            .count(),
+        of_second
+    );
 }

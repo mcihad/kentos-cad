@@ -5,7 +5,8 @@
 //! `fixtures/commands/v1/road.culverts.closure.json`.
 
 use kentos_commands::{
-    ClosureCriterion, ClosureFlood, ClosureSpan, CommandResult, CommandWarning, CulvertClosureRead, CulvertsClosure,
+    ClosureCriterion, ClosureFlood, ClosureSpan, CommandResult, CommandWarning, CulvertClosureRead,
+    CulvertsClosure,
 };
 use kentos_domain::Document;
 use kentos_road::culvert_closure::{Span, VEHICLES, flood};
@@ -26,11 +27,18 @@ fn criterion(code: &str, words: &str, s: &Span) -> ClosureCriterion {
         words: words.into(),
         flow: s.flow,
         hours: s.hours,
-        spans: s.spans.iter().map(|&(from, to)| ClosureSpan { from, to }).collect(),
+        spans: s
+            .spans
+            .iter()
+            .map(|&(from, to)| ClosureSpan { from, to })
+            .collect(),
     }
 }
 
-fn answer(doc: &Document, input: &CulvertsClosure) -> Result<(CulvertClosureRead, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &Document,
+    input: &CulvertsClosure,
+) -> Result<(CulvertClosureRead, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_culverts(), &input.culvert, "culvert")?;
     let asked = Asked {
@@ -45,21 +53,36 @@ fn answer(doc: &Document, input: &CulvertsClosure) -> Result<(CulvertClosureRead
     if !(2..=1000).contains(&h.len()) {
         return Err(bad("hydrograph", "hidrograf 2 ile 1000 nokta olur"));
     }
-    if let Some(k) = h.iter().position(|p| !within(p.time, 0.0, 8760.0) || !within(p.flow, 0.0, 10_000.0)) {
-        return Err(bad(&format!("hydrograph.{k}"), "hidrografın saati 0 ile 8760, debisi 0 ile 10000 m³/s arası olur"));
+    if let Some(k) = h
+        .iter()
+        .position(|p| !within(p.time, 0.0, 8760.0) || !within(p.flow, 0.0, 10_000.0))
+    {
+        return Err(bad(
+            &format!("hydrograph.{k}"),
+            "hidrografın saati 0 ile 8760, debisi 0 ile 10000 m³/s arası olur",
+        ));
     }
     if let Some(k) = h.windows(2).position(|w| w[1].time <= w[0].time) {
-        return Err(bad(&format!("hydrograph.{}", k + 1), "hidrografın saatleri artarak gider"));
+        return Err(bad(
+            &format!("hydrograph.{}", k + 1),
+            "hidrografın saatleri artarak gider",
+        ));
     }
     if h.iter().all(|p| p.flow <= 0.0) {
         return Err(bad("hydrograph", "hidrografta debi yok"));
     }
     if let Some(r) = &input.range {
         if !(r.flow_low > 0.0 && within(r.flow_low, 0.0, 1.0) && within(r.flow_high, 1.0, 10.0)) {
-            return Err(bad("range", "debi çarpanının alt sınırı 0 ile 1, üst sınırı 1 ile 10 arası olur"));
+            return Err(bad(
+                "range",
+                "debi çarpanının alt sınırı 0 ile 1, üst sınırı 1 ile 10 arası olur",
+            ));
         }
         if !(r.cd_low > 0.0 && r.cd_low <= input.weir.cd && within(r.cd_high, input.weir.cd, 3.0)) {
-            return Err(bad("range", "Cd'nin alt sınırı 0 ile savağın Cd'si, üst sınırı savağın Cd'si ile 3 arası olur"));
+            return Err(bad(
+                "range",
+                "Cd'nin alt sınırı 0 ile savağın Cd'si, üst sınırı savağın Cd'si ile 3 arası olur",
+            ));
         }
     }
     let m = model(doc, def, &asked, n)?;
@@ -97,14 +120,21 @@ fn answer(doc: &Document, input: &CulvertsClosure) -> Result<(CulvertClosureRead
     let asked_flood = &floods[0];
     let range = |k: usize| {
         if floods.len() == 3 {
-            format!(" (aralıkta {:.2}–{:.2} saat)", hours(&floods[1], k), hours(&floods[2], k))
+            format!(
+                " (aralıkta {:.2}–{:.2} saat)",
+                hours(&floods[1], k),
+                hours(&floods[2], k)
+            )
         } else {
             String::new()
         }
     };
     let sub = &asked_flood.criteria[0];
     if sub.hours > 0.0 {
-        let (a, b) = (sub.spans.first().map_or(0.0, |s| s.from), sub.spans.last().map_or(0.0, |s| s.to));
+        let (a, b) = (
+            sub.spans.first().map_or(0.0, |s| s.from),
+            sub.spans.last().map_or(0.0, |s| s.to),
+        );
         warnings.push(CommandWarning {
             code: codes::CULVERT_OVERTOPPED.into(),
             message: format!(
@@ -143,13 +173,19 @@ fn answer(doc: &Document, input: &CulvertsClosure) -> Result<(CulvertClosureRead
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &CulvertsClosure) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &CulvertsClosure) -> CommandResult<CulvertClosureRead> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &CulvertsClosure,
+) -> CommandResult<CulvertClosureRead> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -157,11 +193,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CulvertsClosure) -> CommandResult
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: CulvertsClosure) -> CommandResult<CulvertClosureRead> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CulvertsClosure,
+) -> CommandResult<CulvertClosureRead> {
     plan(cx, &input)
 }
 
 /// The closure for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &CulvertsClosure) -> Result<(CulvertClosureRead, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &CulvertsClosure,
+) -> Result<(CulvertClosureRead, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

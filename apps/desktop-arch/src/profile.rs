@@ -198,6 +198,9 @@ impl ModuleProfile for Architecture {
     }
 
     fn project_tree(&self) -> (&'static str, &'static str) {
-        ("Yol projesi", "Projede yol kaynağı yok: Arazi sekmesinden yüzey, Güzergâh'tan aks oluşturun.")
+        (
+            "Yol projesi",
+            "Projede yol kaynağı yok: Arazi sekmesinden yüzey, Güzergâh'tan aks oluşturun.",
+        )
     }
 }

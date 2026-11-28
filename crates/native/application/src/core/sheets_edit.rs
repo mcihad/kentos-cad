@@ -76,7 +76,11 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
     let mut inverse: Vec<Op> = Vec::new();
     let mut labels = Vec::new();
     // A map's level (docs/adr/0716) is one of the project's.
-    let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+    let levels = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.levels.as_slice());
     for (i, op) in parsed.iter().enumerate() {
         if let Op::SetViewport(v) = op
             && let Some(kentos_sheet::viewport::MapLevelChoice::Level { id, .. }) = &v.level
@@ -93,8 +97,16 @@ fn check(doc: &Document, input: &SheetsEdit) -> Result<Next, Stop> {
         }
     }
     for (i, original) in parsed.iter().enumerate() {
-        let prepared=match original {Op::SetViewport(input)=>Some(Op::SetViewport(kentos_sheet::viewport::prepare_source(&book,input,&doc.settings().drawn_views()).map_err(|e|Stop::failed(error(&e.code,e.message,Some(format!("ops[{i}]")))))?)),_=>None};
-        let op=prepared.as_ref().unwrap_or(original);
+        let prepared = match original {
+            Op::SetViewport(input) => Some(Op::SetViewport(
+                kentos_sheet::viewport::prepare_source(&book, input, &doc.settings().drawn_views())
+                    .map_err(|e| {
+                        Stop::failed(error(&e.code, e.message, Some(format!("ops[{i}]"))))
+                    })?,
+            )),
+            _ => None,
+        };
+        let op = prepared.as_ref().unwrap_or(original);
         let applied = ops::apply(&book, op).map_err(|e| {
             let at = match &e.path {
                 Some(p) => format!("ops[{i}].{p}"),
@@ -155,7 +167,9 @@ fn put_picture(pictures: &mut Pictures, sha: String, bytes: Vec<u8>) {
 }
 
 /// The book's sheets as the answer lists them: page size in millimetres, map frames with their scales.
-pub fn sheets_of(book:&SheetBook)->Vec<SheetInfo> {sheets_of_with_views(book,&[])}
+pub fn sheets_of(book: &SheetBook) -> Vec<SheetInfo> {
+    sheets_of_with_views(book, &[])
+}
 pub fn sheets_of_with_views(
     book: &SheetBook,
     views: &[kentos_sheet::viewport::NamedModelView],
@@ -201,7 +215,7 @@ pub fn sheets_in(doc: &Document) -> Option<Vec<SheetInfo>> {
         None => Some(Vec::new()),
         Some(kept) => read_project_sheets(kept)
             .ok()
-            .map(|(book, _)| sheets_of_with_views(&book,&doc.settings().drawn_views())),
+            .map(|(book, _)| sheets_of_with_views(&book, &doc.settings().drawn_views())),
     }
 }
 
@@ -234,7 +248,7 @@ fn write(doc: &mut Document, next: Next) -> Result<SheetsEdited, Stop> {
             .filter_map(|op| serde_json::to_value(op).ok())
             .collect(),
         inverse_pictures,
-        sheets: sheets_of_with_views(&next.book,&doc.settings().drawn_views()),
+        sheets: sheets_of_with_views(&next.book, &doc.settings().drawn_views()),
         revision: doc.revision().to_string(),
     })
 }
@@ -299,7 +313,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SheetsEdit) -> CommandResul
 
 /// [`execute`]'s write; `call::recorded` runs it as one step of the
 /// document, all or nothing, and journals it (docs/adr/0253 §1, §3).
-pub(crate) fn write_execute(cx: &mut ExecutionContext<'_>, input: SheetsEdit) -> CommandResult<SheetsEdited> {
+pub(crate) fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SheetsEdit,
+) -> CommandResult<SheetsEdited> {
     let next = match check(cx.doc, &input) {
         Ok(next) => next,
         Err(stop) => return stop.into(),

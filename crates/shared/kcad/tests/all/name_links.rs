@@ -19,7 +19,11 @@ fn content(name: &str) -> DocumentSnapshotV2 {
 fn schema(file: &[u8]) -> u32 {
     let payload = &file[36..file.len() - 32];
     let key = b"\x67version";
-    let at = payload.windows(key.len()).position(|w| w == key).expect("a version key") + key.len();
+    let at = payload
+        .windows(key.len())
+        .position(|w| w == key)
+        .expect("a version key")
+        + key.len();
     match payload[at] {
         0x18 => u32::from(payload[at + 1]),
         0x19 => u32::from(u16::from_be_bytes([payload[at + 1], payload[at + 2]])),
@@ -58,7 +62,9 @@ fn the_typed_columns_carry_a_point_s_name() {
 
 #[test]
 fn schema_256_refuses_a_point_s_name() {
-    let e = kentos_kcad::decode(&read("broken/name-links-in-schema-256.kcad")).err().expect("refused");
+    let e = kentos_kcad::decode(&read("broken/name-links-in-schema-256.kcad"))
+        .err()
+        .expect("refused");
     assert_eq!(e.code, Code::BadValue, "{e}");
     // The drawing without one keeps its schema: the linked texts' sample is still schema 18's.
     let linked = kentos_kcad::encode(&content("linked-texts.json")).expect("writes");

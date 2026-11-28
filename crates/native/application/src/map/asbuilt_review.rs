@@ -13,9 +13,10 @@ use std::collections::HashSet;
 
 use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{
-    AsbuiltCheck, AsbuiltChecked, AsbuiltKind, AsbuiltLevel, AsbuiltReview, AsbuiltReviewRow, AsbuiltReviewed, AsbuiltState,
-    CommandResult, MAX_MONITORING_LABEL, MonitoringReview, ReviewedEpoch, ReviewedJob, ReviewedLevel, ReviewedMark,
-    ReviewedState, ReviewedThresholds, monitoring_reviews_problem, review_label_ok, reviewer_problem, text_ok,
+    AsbuiltCheck, AsbuiltChecked, AsbuiltKind, AsbuiltLevel, AsbuiltReview, AsbuiltReviewRow,
+    AsbuiltReviewed, AsbuiltState, CommandResult, MAX_MONITORING_LABEL, MonitoringReview,
+    ReviewedEpoch, ReviewedJob, ReviewedLevel, ReviewedMark, ReviewedState, ReviewedThresholds,
+    monitoring_reviews_problem, review_label_ok, reviewer_problem, text_ok,
 };
 use kentos_domain::Document;
 
@@ -28,13 +29,21 @@ use crate::codes;
 pub const STEP: &str = "İzleme incelemesi";
 
 fn bad(message: &str, path: &str) -> Stop {
-    Stop::failed(error(codes::INVALID_INPUT, message.to_owned(), Some(path.to_owned())))
+    Stop::failed(error(
+        codes::INVALID_INPUT,
+        message.to_owned(),
+        Some(path.to_owned()),
+    ))
 }
 
 /// The digest of the points a kept job reads now (the module's rule).
 pub fn digest_of(doc: &Document, job: &ReviewedJob) -> String {
     let field = job.field.as_deref().map(str::trim).unwrap_or(NAME_FIELD);
-    let layers = job.epochs.iter().map(|e| e.layer.as_str()).chain([job.design.as_str(), job.measured.as_str()]);
+    let layers = job
+        .epochs
+        .iter()
+        .map(|e| e.layer.as_str())
+        .chain([job.design.as_str(), job.measured.as_str()]);
     let mut text = String::new();
     for layer in layers {
         text.push_str(&format!("k\t{layer}\n"));
@@ -50,7 +59,8 @@ pub fn digest_of(doc: &Document, job: &ReviewedJob) -> String {
 pub fn rows(doc: &Document, list: &[MonitoringReview]) -> Vec<AsbuiltReviewRow> {
     list.iter()
         .map(|r| {
-            let count = |s: ReviewedState| r.marks.iter().filter(|m| m.state == Some(s)).count() as u32;
+            let count =
+                |s: ReviewedState| r.marks.iter().filter(|m| m.state == Some(s)).count() as u32;
             AsbuiltReviewRow {
                 name: r.name.clone(),
                 reviewer: r.reviewer.name.clone(),
@@ -65,7 +75,12 @@ pub fn rows(doc: &Document, list: &[MonitoringReview]) -> Vec<AsbuiltReviewRow> 
 }
 
 fn level(l: &AsbuiltLevel) -> ReviewedLevel {
-    ReviewedLevel { horizontal: l.horizontal, vertical: l.vertical, horizontal_rate: l.horizontal_rate, vertical_rate: l.vertical_rate }
+    ReviewedLevel {
+        horizontal: l.horizontal,
+        vertical: l.vertical,
+        horizontal_rate: l.horizontal_rate,
+        vertical_rate: l.vertical_rate,
+    }
 }
 
 /// The job as asked, with the thresholds' source.
@@ -73,7 +88,14 @@ fn job_of(check: &AsbuiltCheck, source: Option<&str>) -> ReviewedJob {
     ReviewedJob {
         measured: check.measured.clone(),
         design: check.design.clone().unwrap_or_default(),
-        epochs: check.epochs.iter().map(|e| ReviewedEpoch { layer: e.layer.clone(), date: e.date.clone() }).collect(),
+        epochs: check
+            .epochs
+            .iter()
+            .map(|e| ReviewedEpoch {
+                layer: e.layer.clone(),
+                date: e.date.clone(),
+            })
+            .collect(),
         date: check.date.clone(),
         field: check.field.clone(),
         control: check.control.clone(),
@@ -131,11 +153,16 @@ fn marks_of(checked: &AsbuiltChecked) -> Vec<ReviewedMark> {
 }
 
 /// What the review writes: the project's reviews after it and the answer (its revision the drawing's now).
-fn review(doc: &Document, input: &AsbuiltReview) -> Result<(Vec<MonitoringReview>, AsbuiltReviewed), Stop> {
+fn review(
+    doc: &Document,
+    input: &AsbuiltReview,
+) -> Result<(Vec<MonitoringReview>, AsbuiltReviewed), Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     if !review_label_ok(&input.name, MAX_MONITORING_LABEL) {
         return Err(bad(
-            &format!("İncelemenin adı boş, {MAX_MONITORING_LABEL} karakterden uzun ya da kenarında boşluk var."),
+            &format!(
+                "İncelemenin adı boş, {MAX_MONITORING_LABEL} karakterden uzun ya da kenarında boşluk var."
+            ),
             "name",
         ));
     }
@@ -151,12 +178,18 @@ fn review(doc: &Document, input: &AsbuiltReview) -> Result<(Vec<MonitoringReview
     };
     if input.remove {
         if input.check.is_some() || input.reviewer.is_some() || input.thresholds_source.is_some() {
-            return Err(bad("Kaldırırken yalnız incelemenin adını verin; denetim, inceleyen ve kaynak yazılmaz.", "remove"));
+            return Err(bad(
+                "Kaldırırken yalnız incelemenin adını verin; denetim, inceleyen ve kaynak yazılmaz.",
+                "remove",
+            ));
         }
         let Some(at) = at else {
             return Err(Stop::failed(error(
                 codes::UNKNOWN_MONITORING_REVIEW,
-                format!("Projede “{}” adıyla saklanan izleme incelemesi yok.", input.name),
+                format!(
+                    "Projede “{}” adıyla saklanan izleme incelemesi yok.",
+                    input.name
+                ),
                 Some("name".into()),
             )));
         };
@@ -164,13 +197,22 @@ fn review(doc: &Document, input: &AsbuiltReview) -> Result<(Vec<MonitoringReview
         out.removed = true;
     } else {
         let Some(check) = input.check.as_ref() else {
-            return Err(bad("İncelenecek izleme işinin denetimini (check) verin.", "check"));
+            return Err(bad(
+                "İncelenecek izleme işinin denetimini (check) verin.",
+                "check",
+            ));
         };
         let Some(reviewer) = input.reviewer.as_ref() else {
-            return Err(bad("İnceleyenin rolünü, unvanını, adını, gününü, ibaresini ve imza türünü (reviewer) verin.", "reviewer"));
+            return Err(bad(
+                "İnceleyenin rolünü, unvanını, adını, gününü, ibaresini ve imza türünü (reviewer) verin.",
+                "reviewer",
+            ));
         };
         if check.kind != Some(AsbuiltKind::Monitoring) {
-            return Err(bad("İnceleme kaydı izleme işinindir (check.kind: monitoring).", "check.kind"));
+            return Err(bad(
+                "İnceleme kaydı izleme işinindir (check.kind: monitoring).",
+                "check.kind",
+            ));
         }
         match (&check.thresholds, input.thresholds_source.as_deref()) {
             (Some(_), None) => {
@@ -179,9 +221,14 @@ fn review(doc: &Document, input: &AsbuiltReview) -> Result<(Vec<MonitoringReview
                     "thresholdsSource",
                 ));
             }
-            (None, Some(_)) => return Err(bad("Eşik verilmedi; kaynağı yazılmaz.", "thresholdsSource")),
+            (None, Some(_)) => {
+                return Err(bad("Eşik verilmedi; kaynağı yazılmaz.", "thresholdsSource"));
+            }
             (Some(_), Some(s)) if !text_ok(s) => {
-                return Err(bad("Eşiklerin kaynağı boş, 500 karakterden uzun ya da kenarında boşluk var.", "thresholdsSource"));
+                return Err(bad(
+                    "Eşiklerin kaynağı boş, 500 karakterden uzun ya da kenarında boşluk var.",
+                    "thresholdsSource",
+                ));
             }
             _ => {}
         }
@@ -207,7 +254,12 @@ fn review(doc: &Document, input: &AsbuiltReview) -> Result<(Vec<MonitoringReview
         out.kept = Some(kept);
     }
     if let Some(problem) = monitoring_reviews_problem(&list) {
-        return Err(bad(&format!("{problem}; katmanların ve noktaların adları kısa, kenarında boşluksuz olmalı."), "check"));
+        return Err(bad(
+            &format!(
+                "{problem}; katmanların ve noktaların adları kısa, kenarında boşluksuz olmalı."
+            ),
+            "check",
+        ));
     }
     out.reviews = rows(doc, &list);
     Ok((list, out))
@@ -216,7 +268,10 @@ fn review(doc: &Document, input: &AsbuiltReview) -> Result<(Vec<MonitoringReview
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &AsbuiltReview) -> CommandResult<()> {
     match review(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -224,7 +279,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &AsbuiltReview) -> CommandResu
 /// What execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &AsbuiltReview) -> CommandResult<AsbuiltReviewed> {
     match review(cx.doc, input) {
-        Ok((_, out)) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok((_, out)) => CommandResult::Completed {
+            output: out,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -236,9 +294,21 @@ fn write(cx: &mut ExecutionContext<'_>, input: AsbuiltReview) -> CommandResult<A
     };
     cx.doc.set_monitoring_reviews(list, STEP);
     out.revision = cx.doc.revision().to_string();
-    CommandResult::Completed { output: out, warnings: Vec::new() }
+    CommandResult::Completed {
+        output: out,
+        warnings: Vec::new(),
+    }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: AsbuiltReview) -> CommandResult<AsbuiltReviewed> {
-    crate::call::recorded(cx, kentos_commands::CAD_ASBUILT_REVIEW, kentos_commands::CAD_ASBUILT_REVIEW_VERSION, input, write)
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AsbuiltReview,
+) -> CommandResult<AsbuiltReviewed> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_ASBUILT_REVIEW,
+        kentos_commands::CAD_ASBUILT_REVIEW_VERSION,
+        input,
+        write,
+    )
 }

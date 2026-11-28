@@ -16,7 +16,10 @@ fn the_chi_square_quantiles_are_scipys() {
     for c in doc["chi2"].as_array().expect("quantiles") {
         let (p, k, x) = (n(&c["p"]), n(&c["k"]), n(&c["x"]));
         let got = chi2_quantile(p, k);
-        assert!((got - x).abs() <= 1e-10 * x.max(1.0), "χ²({p}, {k}) = {got} vs {x}");
+        assert!(
+            (got - x).abs() <= 1e-10 * x.max(1.0),
+            "χ²({p}, {k}) = {got} vs {x}"
+        );
     }
 }
 
@@ -44,9 +47,17 @@ fn the_accuracies_are_the_references() {
             ("kurtosis", got.kurtosis),
         ] {
             let b = n(&e[key]);
-            assert!((a - b).abs() <= 1e-9 * b.abs().max(1.0), "{name}: {key} {a} vs {b}");
+            assert!(
+                (a - b).abs() <= 1e-9 * b.abs().max(1.0),
+                "{name}: {key} {a} vs {b}"
+            );
         }
-        let far: Vec<usize> = e["far"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as usize).collect();
+        let far: Vec<usize> = e["far"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_u64().unwrap() as usize)
+            .collect();
         assert_eq!(got.far, far, "{name}: far points");
         match (got.combined, e.get("combined").and_then(Value::as_f64)) {
             (Some(a), Some(b)) => assert!((a - b).abs() <= 1e-12, "{name}: combined"),

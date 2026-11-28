@@ -19,8 +19,22 @@ fn node(id: &str, mobile: Option<&str>, children: Vec<serde_json::Value>) -> ser
 #[test]
 fn a_hidden_group_hides_what_it_holds_on_the_phone() {
     let tree: Vec<LayerNode> = serde_json::from_value(json!([
-        node("saha", None, vec![node("parsel", Some("edit"), vec![]), node("bina", None, vec![])]),
-        node("altlik", Some("hide"), vec![node("ortofoto", None, vec![]), node("yol", Some("edit"), vec![])]),
+        node(
+            "saha",
+            None,
+            vec![
+                node("parsel", Some("edit"), vec![]),
+                node("bina", None, vec![])
+            ]
+        ),
+        node(
+            "altlik",
+            Some("hide"),
+            vec![
+                node("ortofoto", None, vec![]),
+                node("yol", Some("edit"), vec![])
+            ]
+        ),
         node("not", Some("hide"), vec![]),
     ]))
     .expect("a layer tree");
@@ -30,7 +44,11 @@ fn a_hidden_group_hides_what_it_holds_on_the_phone() {
     assert_eq!(on("bina"), Some(LayerMobile::Show));
     assert_eq!(on("altlik"), Some(LayerMobile::Hide));
     assert_eq!(on("ortofoto"), Some(LayerMobile::Hide));
-    assert_eq!(on("yol"), Some(LayerMobile::Hide), "a hidden group's edit layer is not on the phone");
+    assert_eq!(
+        on("yol"),
+        Some(LayerMobile::Hide),
+        "a hidden group's edit layer is not on the phone"
+    );
     assert_eq!(on("not"), Some(LayerMobile::Hide));
     assert_eq!(on("yok"), None);
 }

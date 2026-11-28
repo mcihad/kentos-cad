@@ -82,27 +82,49 @@ impl Session {
     pub fn open_geopackage(path: &Path, project: Option<&str>) -> Result<Self, HeadlessError> {
         use kentos_native_application::gpkg_open::{self, Opened};
         let address = gpkg_open::address_of(path);
-        let file = path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned());
-        match gpkg_open::open(path, project).map_err(|e| HeadlessError::new("source_unreadable", e))? {
+        let file = path.file_name().map_or_else(
+            || path.display().to_string(),
+            |n| n.to_string_lossy().into_owned(),
+        );
+        match gpkg_open::open(path, project)
+            .map_err(|e| HeadlessError::new("source_unreadable", e))?
+        {
             Opened::Kept { name, .. } => {
                 let mut session = Self::open_from_source(&address, None, &name)?;
-                session.opened_gpkg = Some(json!({"geoPackage": address, "project": name, "made": false, "kept": true}));
+                session.opened_gpkg = Some(
+                    json!({"geoPackage": address, "project": name, "made": false, "kept": true}),
+                );
                 Ok(session)
             }
             Opened::Several(kept) => Err(HeadlessError::new(
                 "several_projects",
                 format!(
                     "“{file}” içinde birden çok proje var: {}. Açılacak projenin adını verin.",
-                    kept.iter().map(|p| format!("“{}”", p.name)).collect::<Vec<_>>().join(", ")
+                    kept.iter()
+                        .map(|p| format!("“{}”", p.name))
+                        .collect::<Vec<_>>()
+                        .join(", ")
                 ),
             )),
             Opened::Built(built) => {
-                let gpkg_open::Built { document, name, notes } = *built;
+                let gpkg_open::Built {
+                    document,
+                    name,
+                    notes,
+                } = *built;
                 let mut session = Self::of(document, None, false);
-                let notes: Vec<Value> = notes.iter().map(|n| json!({"code": n.code, "text": n.text})).collect();
-                session.opened_gpkg =
-                    Some(json!({"geoPackage": address, "project": name, "made": true, "kept": false, "notes": notes}));
-                session.offered = Some(Stored { address, schema: None, name });
+                let notes: Vec<Value> = notes
+                    .iter()
+                    .map(|n| json!({"code": n.code, "text": n.text}))
+                    .collect();
+                session.opened_gpkg = Some(
+                    json!({"geoPackage": address, "project": name, "made": true, "kept": false, "notes": notes}),
+                );
+                session.offered = Some(Stored {
+                    address,
+                    schema: None,
+                    name,
+                });
                 Ok(session)
             }
         }
@@ -113,13 +135,19 @@ impl Session {
     pub fn open_geopackage(path: &Path, _project: Option<&str>) -> Result<Self, HeadlessError> {
         Err(HeadlessError::new(
             "module_not_built",
-            format!("{}: GeoPackage'ı proje olarak açmak KentOS CBS modülüyle gelir; bu yapıda yok.", path.display()),
+            format!(
+                "{}: GeoPackage'ı proje olarak açmak KentOS CBS modülüyle gelir; bu yapıda yok.",
+                path.display()
+            ),
         ))
     }
 
     /// Open with an explicit source unit. Unitless external sources require a decision,
     /// as in the desktop's opening preview; native KCAD already has physical model lengths.
-    pub fn open_in(path: &Path, file_unit: Option<kentos_commands::FileUnit>) -> Result<Self, HeadlessError> {
+    pub fn open_in(
+        path: &Path,
+        file_unit: Option<kentos_commands::FileUnit>,
+    ) -> Result<Self, HeadlessError> {
         if file_unit.is_none() && kentos_native_application::project_store::is_geopackage(path) {
             return Self::open_geopackage(path, None);
         }
@@ -127,15 +155,32 @@ impl Session {
             use std::io::Read;
             let mut prefix = [0u8; 64];
             let count = std::fs::File::open(path).ok()?.read(&mut prefix).ok()?;
-            Some(matches!(kentos_kcad::sniff(&prefix[..count]), kentos_kcad::Sniff::Kcad | kentos_kcad::Sniff::KcadDamaged | kentos_kcad::Sniff::Json))
-        })().unwrap_or(false);
-        if let Some(format) = kentos_native_application::cad_open::Format::of(path).filter(|_| !native_content) {
+            Some(matches!(
+                kentos_kcad::sniff(&prefix[..count]),
+                kentos_kcad::Sniff::Kcad
+                    | kentos_kcad::Sniff::KcadDamaged
+                    | kentos_kcad::Sniff::Json
+            ))
+        })()
+        .unwrap_or(false);
+        if let Some(format) =
+            kentos_native_application::cad_open::Format::of(path).filter(|_| !native_content)
+        {
             let bytes = kentos_native_application::file_import::read_cad_bytes(path)
                 .map_err(|e| HeadlessError::new("file_unreadable", e.message))?;
-            let opened = kentos_native_application::cad_open::read_in(path, &bytes, format, file_unit, &mut kentos_formats::watch::Quiet)
-                .map_err(|e| HeadlessError::new(e.code, e.message))?;
+            let opened = kentos_native_application::cad_open::read_in(
+                path,
+                &bytes,
+                format,
+                file_unit,
+                &mut kentos_formats::watch::Quiet,
+            )
+            .map_err(|e| HeadlessError::new(e.code, e.message))?;
             if opened.unit.as_ref().is_some_and(|u| u.assumed) {
-                return Err(HeadlessError::new("source_unit_required", "Dosya güvenilir bir birim bildirmiyor. file_unit ile kaynak birimini açıkça seçin veya bilinen bir ölçüyle içe aktarın."));
+                return Err(HeadlessError::new(
+                    "source_unit_required",
+                    "Dosya güvenilir bir birim bildirmiyor. file_unit ile kaynak birimini açıkça seçin veya bilinen bir ölçüyle içe aktarın.",
+                ));
             }
             let source = json!({"path":path.display().to_string(), "unit":opened.unit, "report":opened.report});
             let mut session = Self::of(opened.document, None, false);
@@ -143,7 +188,10 @@ impl Session {
             return Ok(session);
         }
         if file_unit.is_some() {
-            return Err(HeadlessError::new("invalid_input", "KCAD dosyasının kaynak birimi değiştirilemez; kayıtlı model uzunlukları metredir. cad.units.change kullanın."));
+            return Err(HeadlessError::new(
+                "invalid_input",
+                "KCAD dosyasının kaynak birimi değiştirilemez; kayıtlı model uzunlukları metredir. cad.units.change kullanın.",
+            ));
         }
         let (mut doc, legacy) = files::read(path)?;
         // Bound GeoPackages moved with the project are found again (docs/adr/0506).
@@ -196,7 +244,11 @@ impl Session {
 
     /// The session's persistent ids, omitting objects removed since they were selected.
     pub fn selection(&self) -> Vec<String> {
-        self.selection.iter().filter(|u| self.doc.slot_of(**u).is_some()).map(|u| u.to_string()).collect()
+        self.selection
+            .iter()
+            .filter(|u| self.doc.slot_of(**u).is_some())
+            .map(|u| u.to_string())
+            .collect()
     }
 
     /// The document itself, for Rust hosts.
@@ -223,7 +275,12 @@ impl Session {
     /// Saves the drawing as a project kept in a data source (docs/adr/9107): a GeoPackage file's or a PostgreSQL
     /// schema's `kentos_projects` table, written and read back; a GeoPackage's file is where its relative paths start
     /// from. The answer: where, the bytes, the revision.
-    pub fn save_to_source(&mut self, address: &str, schema: Option<&str>, name: &str) -> Result<Value, HeadlessError> {
+    pub fn save_to_source(
+        &mut self,
+        address: &str,
+        schema: Option<&str>,
+        name: &str,
+    ) -> Result<Value, HeadlessError> {
         if self.group.is_some() {
             return Err(HeadlessError::new(
                 "busy",
@@ -234,12 +291,20 @@ impl Session {
         let revision = self.doc.revision();
         let mut snapshot = self.doc.to_snapshot_v2();
         kentos_native_application::project_store::with_relative(&mut snapshot, address);
-        let bytes = kentos_kcad::encode_verified(&snapshot)
-            .map_err(|e| HeadlessError::new("file_unwritable", format!("çizim KCAD v2'ye yazılamadı: {e}")))?;
+        let bytes = kentos_kcad::encode_verified(&snapshot).map_err(|e| {
+            HeadlessError::new(
+                "file_unwritable",
+                format!("çizim KCAD v2'ye yazılamadı: {e}"),
+            )
+        })?;
         kentos_native_application::project_store::write(address, schema, name, &bytes)
             .map_err(|e| HeadlessError::new("source_unwritable", e))?;
         self.doc.mark_saved(revision);
-        self.stored = Some(Stored { address: address.to_owned(), schema: schema.map(str::to_owned), name: name.trim().to_owned() });
+        self.stored = Some(Stored {
+            address: address.to_owned(),
+            schema: schema.map(str::to_owned),
+            name: name.trim().to_owned(),
+        });
         self.offered = None;
         self.path = None;
         let mut saved = json!({
@@ -267,13 +332,20 @@ impl Session {
 
     /// A project kept in a data source (docs/adr/9107), opened: a GeoPackage's data layers and bound files found from
     /// that file when they are not at their addresses.
-    pub fn open_from_source(address: &str, schema: Option<&str>, name: &str) -> Result<Self, HeadlessError> {
+    pub fn open_from_source(
+        address: &str,
+        schema: Option<&str>,
+        name: &str,
+    ) -> Result<Self, HeadlessError> {
         let bytes = kentos_native_application::project_store::read(address, schema, name)
             .map_err(|e| HeadlessError::new("source_unreadable", e))?;
         // A GeoPackage's linked rasters and pictures written relative to it come back absolute (docs/adr/9117 §3).
-        let snapshot = kentos_native_application::project_store::decode(address, &bytes)
-            .map_err(|e| HeadlessError::new("file_unreadable", format!("KCAD v2 dosyası okunamadı: {e}")))?;
-        let mut doc = Document::from_snapshot_v2(snapshot).map_err(|e| HeadlessError::new("file_unreadable", e))?;
+        let snapshot =
+            kentos_native_application::project_store::decode(address, &bytes).map_err(|e| {
+                HeadlessError::new("file_unreadable", format!("KCAD v2 dosyası okunamadı: {e}"))
+            })?;
+        let mut doc = Document::from_snapshot_v2(snapshot)
+            .map_err(|e| HeadlessError::new("file_unreadable", e))?;
         let legacy = false;
         let located = match kentos_native_application::project_store::place_of(address) {
             Some(place) => kentos_native_application::source_places::relocate(&mut doc, &place),
@@ -281,7 +353,11 @@ impl Session {
         };
         let mut session = Self::of(doc, None, legacy);
         session.located = located;
-        session.stored = Some(Stored { address: address.to_owned(), schema: schema.map(str::to_owned), name: name.trim().to_owned() });
+        session.stored = Some(Stored {
+            address: address.to_owned(),
+            schema: schema.map(str::to_owned),
+            name: name.trim().to_owned(),
+        });
         Ok(session)
     }
 
@@ -304,7 +380,10 @@ impl Session {
             ));
         }
         if path.is_some_and(|p| kentos_native_application::cad_open::Format::of(p).is_some()) {
-            return Err(HeadlessError::new("invalid_file_path", "Kaydet yalnız KentOS (.kcad) biçimindedir. DWG/DXF/NCZ kaynağı üzerine yazılmaz; yeni bir .kcad yolu verin."));
+            return Err(HeadlessError::new(
+                "invalid_file_path",
+                "Kaydet yalnız KentOS (.kcad) biçimindedir. DWG/DXF/NCZ kaynağı üzerine yazılmaz; yeni bir .kcad yolu verin.",
+            ));
         }
         // A data source project is written there again (docs/adr/9107, 9116); one made of a GeoPackage's tables is kept
         // in that file now, by this save (docs/adr/9122).
@@ -511,7 +590,9 @@ impl Session {
                 fields.insert("path".into(), json!(path.display().to_string()));
             }
             fields.insert("legacy".into(), json!(self.legacy));
-            if let Some(source) = &self.opened_cad { fields.insert("openedCad".into(), source.clone()); }
+            if let Some(source) = &self.opened_cad {
+                fields.insert("openedCad".into(), source.clone());
+            }
             if let Some(at) = &self.stored {
                 fields.insert("project".into(), json!({"address": at.address, "schema": at.schema, "name": at.name, "kept": true}));
             } else if let Some(at) = &self.offered {
@@ -705,4 +786,3 @@ impl crate::agent_tools::Host for Session {
         )
     }
 }
-

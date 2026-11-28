@@ -60,7 +60,9 @@ impl Question {
             | CommandResult::NeedsInput { error } => q.refused = Some(error.message),
             CommandResult::Queued { .. } | CommandResult::Cancelled => {}
         }
-        if q.refused.is_none() && (doc.settings().ucs.is_some() || !doc.settings().named_ucs.is_empty()) {
+        if q.refused.is_none()
+            && (doc.settings().ucs.is_some() || !doc.settings().named_ucs.is_empty())
+        {
             q.notes.push("Yerel ve kayıtlı koordinat başlangıçları da çizimle birlikte ölçeklenir; eksenlerin yönü değişmez.".into());
         }
         q
@@ -240,7 +242,13 @@ mod tests {
         room(&mut app, true);
         let doc = &mut app.document.as_mut().unwrap().model;
         let mut settings = doc.settings().clone();
-        settings.ucs = Some(Ucs::new(Vec2 { x: 100_000., y: 20. }, 0.));
+        settings.ucs = Some(Ucs::new(
+            Vec2 {
+                x: 100_000.,
+                y: 20.,
+            },
+            0.,
+        ));
         doc.set_settings(settings);
         let q = super::Question::of(doc, DrawingUnit::Mm, DrawingUnit::M);
         assert_eq!((q.objects, q.blocks, q.factor), (1, 0, 1000.));
@@ -259,7 +267,11 @@ mod tests {
         doc.set_settings(settings);
         let q = super::Question::of(doc, DrawingUnit::Mm, DrawingUnit::M);
         assert!(q.refused.is_none());
-        assert!(q.notes.iter().any(|n| n.contains("koordinat başlangıçları")));
+        assert!(
+            q.notes
+                .iter()
+                .any(|n| n.contains("koordinat başlangıçları"))
+        );
     }
 
     #[test]
@@ -272,13 +284,21 @@ mod tests {
         let mut settings = doc.settings().clone();
         settings.ucs = Some(frame);
         settings.named_ucs = vec![NamedUcs {
-            name: "Oda aksı".into(), origin: frame.origin, angle: frame.angle,
+            name: "Oda aksı".into(),
+            origin: frame.origin,
+            angle: frame.angle,
         }];
         doc.set_settings(settings);
         open_and_change(&mut app, DrawingUnit::M);
-        send(&mut app, SettingsEvent::UnitAnswer(Some(kentos_commands::UnitGeometry::Scale)));
+        send(
+            &mut app,
+            SettingsEvent::UnitAnswer(Some(kentos_commands::UnitGeometry::Scale)),
+        );
         let doc = &app.document.as_ref().unwrap().model;
-        let at = Vec2 { x: 10000., y: 20000. };
+        let at = Vec2 {
+            x: 10000.,
+            y: 20000.,
+        };
         assert_eq!(doc.settings().ucs.unwrap().origin, at);
         assert_eq!(doc.settings().named_ucs[0].origin, at);
         let _ = app.update(Message::Run("edit.undo"));

@@ -71,7 +71,13 @@ pub struct Stall {
 /// The truck of mass `mass` (kg) driven from rest along `path` (`[horizontal distance from the start, height]`,
 /// increasing distances) to a stop at its end on a road of rolling resistance `rolling` (per one); `sample` (m) the
 /// spacing of the speeds kept (none: none kept).
-pub fn run(path: &[[f64; 2]], mass: f64, truck: &Truck, rolling: f64, sample: Option<f64>) -> Result<Run, Stall> {
+pub fn run(
+    path: &[[f64; 2]],
+    mass: f64,
+    truck: &Truck,
+    rolling: f64,
+    sample: Option<f64>,
+) -> Result<Run, Stall> {
     let pieces: Vec<(f64, f64, f64, f64)> = path
         .windows(2)
         .filter(|p| p[1][0] > p[0][0])
@@ -82,7 +88,10 @@ pub fn run(path: &[[f64; 2]], mass: f64, truck: &Truck, rolling: f64, sample: Op
         })
         .collect();
     let total: f64 = pieces.iter().map(|p| p.1).sum();
-    let mut out = Run { length: total, ..Run::default() };
+    let mut out = Run {
+        length: total,
+        ..Run::default()
+    };
     let keep = |out: &mut Run, x: f64, v: f64| out.speeds.push([x, v]);
     if sample.is_some() {
         keep(&mut out, path.first().map_or(0.0, |p| p[0]), 0.0);
@@ -94,7 +103,11 @@ pub fn run(path: &[[f64; 2]], mass: f64, truck: &Truck, rolling: f64, sample: Op
         let grip = truck.traction * truck.drive * mass * G * cos;
         let pull = |w: f64| {
             let v = w.max(0.0).sqrt();
-            if v > 0.0 { (truck.efficiency * truck.power / v).min(grip) } else { grip }
+            if v > 0.0 {
+                (truck.efficiency * truck.power / v).min(grip)
+            } else {
+                grip
+            }
         };
         // d(v²)/du = 2·(F − R)/m.
         let slope = |w: f64| 2.0 * (pull(w) - resist) / mass;
@@ -116,11 +129,20 @@ pub fn run(path: &[[f64; 2]], mass: f64, truck: &Truck, rolling: f64, sample: Op
             let free = w + 0.5 * h * (k1 + k2);
             let u1 = u + h;
             if free < 0.0 && total - u1 > 1e-9 {
-                return Err(Stall { at: x0 + (along + 0.5 * h) * cos });
+                return Err(Stall {
+                    at: x0 + (along + 0.5 * h) * cos,
+                });
             }
-            let w1 = free.min(cap * cap).min(2.0 * truck.brake * (total - u1).max(0.0)).max(0.0);
+            let w1 = free
+                .min(cap * cap)
+                .min(2.0 * truck.brake * (total - u1).max(0.0))
+                .max(0.0);
             let (v0, v1) = (w.sqrt(), w1.sqrt());
-            let dt = if v0 + v1 > 0.0 { 2.0 * h / (v0 + v1) } else { 0.0 };
+            let dt = if v0 + v1 > 0.0 {
+                2.0 * h / (v0 + v1)
+            } else {
+                0.0
+            };
             let force = mass * (w1 - w) / (2.0 * h) + resist;
             if force > 1e-9 * mass {
                 out.work += force * h;
@@ -140,7 +162,10 @@ pub fn run(path: &[[f64; 2]], mass: f64, truck: &Truck, rolling: f64, sample: Op
         }
     }
     if let (Some(_), Some(last)) = (sample, path.last())
-        && out.speeds.last().is_none_or(|s| (s[0] - last[0]).abs() > 1e-9)
+        && out
+            .speeds
+            .last()
+            .is_none_or(|s| (s[0] - last[0]).abs() > 1e-9)
     {
         keep(&mut out, last[0], w.sqrt());
     }
@@ -173,26 +198,54 @@ pub fn hauls(segments: &[(f64, f64, f64)]) -> Vec<Haul> {
     for forward in [true, false] {
         // The places in the sweep's order and the flow into and out of each along it.
         let n = segments.len();
-        let flow = |i: usize| if forward { segments[i].2.max(0.0) } else { (-segments[i].2).max(0.0) };
+        let flow = |i: usize| {
+            if forward {
+                segments[i].2.max(0.0)
+            } else {
+                (-segments[i].2).max(0.0)
+            }
+        };
         let mut queue: std::collections::VecDeque<(f64, f64)> = std::collections::VecDeque::new();
         for step in 0..=n {
             // Place `step` along the sweep: forward the segments' starts then the last end; backward the reverse.
             let (station, inflow, outflow) = if forward {
-                let station = if step < n { segments[step].0 } else { segments[n - 1].1 };
-                (station, if step > 0 { flow(step - 1) } else { 0.0 }, if step < n { flow(step) } else { 0.0 })
+                let station = if step < n {
+                    segments[step].0
+                } else {
+                    segments[n - 1].1
+                };
+                (
+                    station,
+                    if step > 0 { flow(step - 1) } else { 0.0 },
+                    if step < n { flow(step) } else { 0.0 },
+                )
             } else {
                 let i = n - step; // the place's index from the left
-                let station = if i < n { segments[i].0 } else { segments[n - 1].1 };
-                (station, if i < n { flow(i) } else { 0.0 }, if i > 0 { flow(i - 1) } else { 0.0 })
+                let station = if i < n {
+                    segments[i].0
+                } else {
+                    segments[n - 1].1
+                };
+                (
+                    station,
+                    if i < n { flow(i) } else { 0.0 },
+                    if i > 0 { flow(i - 1) } else { 0.0 },
+                )
             };
             if outflow > inflow + TINY {
                 queue.push_back((station, outflow - inflow));
             } else if inflow > outflow + TINY {
                 let mut need = inflow - outflow;
                 while need > TINY {
-                    let Some(front) = queue.front_mut() else { break };
+                    let Some(front) = queue.front_mut() else {
+                        break;
+                    };
                     let take = front.1.min(need);
-                    out.push(Haul { from: front.0, to: station, volume: take });
+                    out.push(Haul {
+                        from: front.0,
+                        to: station,
+                        volume: take,
+                    });
                     front.1 -= take;
                     need -= take;
                     if front.1 <= TINY {
@@ -233,6 +286,10 @@ pub fn loader(trucks: u32, away: f64, service: f64) -> Loader {
         steady: (n / (away + service)).min(1.0 / service),
         queued,
         busy,
-        wait: if queued > 0.0 { (n / queued - away - service).max(0.0) } else { 0.0 },
+        wait: if queued > 0.0 {
+            (n / queued - away - service).max(0.0)
+        } else {
+            0.0
+        },
     }
 }

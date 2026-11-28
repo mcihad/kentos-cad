@@ -527,10 +527,17 @@ fn renamed(ours: &DocumentSnapshotV2, clip: &Clip) -> Result<(Clip, Vec<PasteRen
         }
         let to = free_name(&b.name, &taken, key_of);
         taken.insert(block_key(&to));
-        out.push(PasteRenamed { kind: "block".into(), from: b.name.clone(), to: to.clone() });
+        out.push(PasteRenamed {
+            kind: "block".into(),
+            from: b.name.clone(),
+            to: to.clone(),
+        });
         b.name = to;
         let id = BlockId(*Uuid::now_v7().as_bytes());
-        ids.push((Uuid::from_bytes(b.id.0).to_string(), Uuid::from_bytes(id.0).to_string()));
+        ids.push((
+            Uuid::from_bytes(b.id.0).to_string(),
+            Uuid::from_bytes(id.0).to_string(),
+        ));
         b.id = id;
     }
     if !ids.is_empty() {
@@ -553,23 +560,45 @@ fn renamed(ours: &DocumentSnapshotV2, clip: &Clip) -> Result<(Clip, Vec<PasteRen
     for (kind, ours_names, theirs) in [
         (
             "textStyle",
-            ours.settings.text_styles.iter().map(|s| fold(&s.name)).collect::<HashSet<_>>(),
-            clip.text_styles.iter_mut().map(|s| &mut s.name).collect::<Vec<_>>(),
+            ours.settings
+                .text_styles
+                .iter()
+                .map(|s| fold(&s.name))
+                .collect::<HashSet<_>>(),
+            clip.text_styles
+                .iter_mut()
+                .map(|s| &mut s.name)
+                .collect::<Vec<_>>(),
         ),
         (
             "dimensionStyle",
-            ours.settings.dimension_styles.iter().map(|s| fold(&s.name)).collect::<HashSet<_>>(),
-            clip.dimension_styles.iter_mut().map(|s| &mut s.name).collect::<Vec<_>>(),
+            ours.settings
+                .dimension_styles
+                .iter()
+                .map(|s| fold(&s.name))
+                .collect::<HashSet<_>>(),
+            clip.dimension_styles
+                .iter_mut()
+                .map(|s| &mut s.name)
+                .collect::<Vec<_>>(),
         ),
     ] {
-        let mut taken: HashSet<String> = ours_names.iter().cloned().chain(theirs.iter().map(|n| fold(n))).collect();
+        let mut taken: HashSet<String> = ours_names
+            .iter()
+            .cloned()
+            .chain(theirs.iter().map(|n| fold(n)))
+            .collect();
         for name in theirs {
             if !ours_names.contains(&fold(name)) {
                 continue;
             }
             let to = free_name(name, &taken, fold_of);
             taken.insert(fold(&to));
-            out.push(PasteRenamed { kind: kind.into(), from: name.clone(), to: to.clone() });
+            out.push(PasteRenamed {
+                kind: kind.into(),
+                from: name.clone(),
+                to: to.clone(),
+            });
             *name = to;
         }
     }
@@ -600,9 +629,17 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
         None => None,
     };
     checks::revision(doc, input.expected_revision.as_deref())?;
-    if name.is_some() && clip.objects.iter().any(|e| kentos_domain::space_follow::separator_path(e).is_some()) {
-        return Err(refuse(codes::INVALID_CLIP,
-            "Mahal ayırıcı blok olarak yapıştırılamaz; bağımsız yapıştırın veya önce ayırıcı rolünü kaldırın.", "asBlock"));
+    if name.is_some()
+        && clip
+            .objects
+            .iter()
+            .any(|e| kentos_domain::space_follow::separator_path(e).is_some())
+    {
+        return Err(refuse(
+            codes::INVALID_CLIP,
+            "Mahal ayırıcı blok olarak yapıştırılamaz; bağımsız yapıştırın veya önce ayırıcı rolünü kaldırın.",
+            "asBlock",
+        ));
     }
     // The exchange's rules read none of our objects (docs/adr/0309 §6).
     let ours = doc.to_snapshot_v2_of(|_| false);
@@ -719,15 +756,25 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
     let layer_tree = doc.layers();
     let mut warnings = Vec::new();
     let mut detached = kentos_domain::space_follow::prepare_source_copies(&mut objects, &clip.uids);
-    if clip.objects.iter().chain(clip.blocks.iter().flat_map(|b| &b.entities))
+    if clip
+        .objects
+        .iter()
+        .chain(clip.blocks.iter().flat_map(|b| &b.entities))
         .any(|e| matches!(e, Entity::Space(s) if s.space.sources.is_some()))
     {
         let old_ids: HashSet<_> = ours.blocks.iter().map(|b| b.id).collect();
-        for definition in drawing.blocks.iter_mut().filter(|b| !old_ids.contains(&b.id)) {
-            detached += kentos_domain::space_follow::prepare_source_copies(&mut definition.entities, &[]);
+        for definition in drawing
+            .blocks
+            .iter_mut()
+            .filter(|b| !old_ids.contains(&b.id))
+        {
+            detached +=
+                kentos_domain::space_follow::prepare_source_copies(&mut definition.entities, &[]);
         }
     }
-    if detached > 0 { warnings.push(crate::spaces::uncopied_sources(detached)); }
+    if detached > 0 {
+        warnings.push(crate::spaces::uncopied_sources(detached));
+    }
     let mut hidden: Vec<String> = Vec::new();
     for e in &objects {
         let id = &e.base().layer_id;
@@ -762,7 +809,11 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
             code: codes::NAMES_RENAMED.into(),
             message: format!(
                 "Bu çizimde aynı adlı olduklarından yeni adla geldi: {}.",
-                renames.iter().map(|r| format!("{} → {}", r.from, r.to)).collect::<Vec<_>>().join(", ")
+                renames
+                    .iter()
+                    .map(|r| format!("{} → {}", r.from, r.to))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ),
             path: Some("conflicts".into()),
         });

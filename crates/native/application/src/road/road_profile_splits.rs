@@ -62,12 +62,27 @@ impl Lines<'_> {
                 }
             }
         }
-        zs.extend(self.vertical.curves.iter().filter_map(|c| c.extreme).filter(|e| e[0] > a - 1e-9 && e[0] < b + 1e-9).map(|e| e[1]));
+        zs.extend(
+            self.vertical
+                .curves
+                .iter()
+                .filter_map(|c| c.extreme)
+                .filter(|e| e[0] > a - 1e-9 && e[0] < b + 1e-9)
+                .map(|e| e[1]),
+        );
         zs.extend([a, b].into_iter().filter_map(|s| self.design(s)));
         let i = self.terrain.partition_point(|p| p.0 < a - 1e-9);
-        zs.extend(self.terrain[i..].iter().take_while(|p| p.0 < b + 1e-9).map(|p| p.1));
+        zs.extend(
+            self.terrain[i..]
+                .iter()
+                .take_while(|p| p.0 < b + 1e-9)
+                .map(|p| p.1),
+        );
         zs.extend([a, b].into_iter().filter_map(|s| self.terrain_at(s)));
-        zs.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| (lo.min(*z), hi.max(*z)))
+        zs.iter()
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| {
+                (lo.min(*z), hi.max(*z))
+            })
     }
 }
 
@@ -78,7 +93,12 @@ pub fn datum_of(lo: f64, grid: f64) -> f64 {
 
 /// The parts of the view `s0`–`s1` in a frame `span` metres of elevation high; `Err` the stations between which the
 /// lines rise more than the span holds.
-pub(crate) fn split(lines: &Lines<'_>, s0: f64, s1: f64, span: f64) -> Result<Vec<Part>, (f64, f64)> {
+pub(crate) fn split(
+    lines: &Lines<'_>,
+    s0: f64,
+    s1: f64,
+    span: f64,
+) -> Result<Vec<Part>, (f64, f64)> {
     let grid = crate::road_profiles_draw::grid_step(0.0, span);
     let fits = |a: f64, b: f64| {
         let (lo, hi) = lines.bounds(a, b);
@@ -89,7 +109,11 @@ pub(crate) fn split(lines: &Lines<'_>, s0: f64, s1: f64, span: f64) -> Result<Ve
     let mut a = s0;
     loop {
         if let Some(datum) = fits(a, s1) {
-            parts.push(Part { from: a, to: s1, datum });
+            parts.push(Part {
+                from: a,
+                to: s1,
+                datum,
+            });
             return Ok(parts);
         }
         // The whole metres after `a` and before `s1`: the farthest one that fits.
@@ -101,10 +125,18 @@ pub(crate) fn split(lines: &Lines<'_>, s0: f64, s1: f64, span: f64) -> Result<Ve
         let (mut lo, mut hi) = (first, last);
         while hi - lo > 0.5 {
             let mid = ((lo + hi) * 0.5).ceil();
-            if fits(a, mid).is_some() { lo = mid } else { hi = mid - 1.0 }
+            if fits(a, mid).is_some() {
+                lo = mid
+            } else {
+                hi = mid - 1.0
+            }
         }
         let datum = fits(a, lo).unwrap_or_default();
-        parts.push(Part { from: a, to: lo, datum });
+        parts.push(Part {
+            from: a,
+            to: lo,
+            datum,
+        });
         a = lo;
     }
 }
@@ -140,8 +172,14 @@ mod tests {
     fn cuts_keep_a_line_whole_inside() {
         let pts = [[0.0, 1.0], [10.0, 3.0], [20.0, 1.0]];
         assert_eq!(cut(&pts, 0.0, 20.0).unwrap(), pts.to_vec());
-        assert_eq!(cut(&pts, 5.0, 15.0).unwrap(), vec![[5.0, 2.0], [10.0, 3.0], [15.0, 2.0]]);
-        assert_eq!(cut(&pts, 10.0, 30.0).unwrap(), vec![[10.0, 3.0], [20.0, 1.0]]);
+        assert_eq!(
+            cut(&pts, 5.0, 15.0).unwrap(),
+            vec![[5.0, 2.0], [10.0, 3.0], [15.0, 2.0]]
+        );
+        assert_eq!(
+            cut(&pts, 10.0, 30.0).unwrap(),
+            vec![[10.0, 3.0], [20.0, 1.0]]
+        );
         assert!(cut(&pts, 20.0, 30.0).is_none());
     }
 

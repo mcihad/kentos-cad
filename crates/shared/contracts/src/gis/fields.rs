@@ -1235,8 +1235,9 @@ fn json(s: &str) -> Result<String, JsonFault> {
                     return Err(JsonFault::Syntax);
                 }
             }
-            self.out
-                .push_str(std::str::from_utf8(&self.b[start..self.at]).map_err(|_| JsonFault::Syntax)?);
+            self.out.push_str(
+                std::str::from_utf8(&self.b[start..self.at]).map_err(|_| JsonFault::Syntax)?,
+            );
             Ok(())
         }
         fn string(&mut self) -> Result<(), JsonFault> {
@@ -1255,9 +1256,14 @@ fn json(s: &str) -> Result<String, JsonFault> {
                     Some(b'\\') => {
                         self.at += 1;
                         match self.b.get(self.at) {
-                            Some(b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't') => self.at += 1,
+                            Some(b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't') => {
+                                self.at += 1
+                            }
                             Some(b'u') => {
-                                let hex = self.b.get(self.at + 1..self.at + 5).ok_or(JsonFault::Syntax)?;
+                                let hex = self
+                                    .b
+                                    .get(self.at + 1..self.at + 5)
+                                    .ok_or(JsonFault::Syntax)?;
                                 if !hex.iter().all(u8::is_ascii_hexdigit) {
                                     return Err(JsonFault::Syntax);
                                 }
@@ -1270,8 +1276,9 @@ fn json(s: &str) -> Result<String, JsonFault> {
                     Some(_) => self.at += 1,
                 }
             }
-            self.out
-                .push_str(std::str::from_utf8(&self.b[start..self.at]).map_err(|_| JsonFault::Syntax)?);
+            self.out.push_str(
+                std::str::from_utf8(&self.b[start..self.at]).map_err(|_| JsonFault::Syntax)?,
+            );
             Ok(())
         }
     }

@@ -284,8 +284,10 @@ impl Store {
         self.tags.iter().copied()
     }
 
-    pub fn has_space_separators(&self) -> bool { !self.space_separators.is_empty() }
-    pub fn space_separator_slots(&self) -> impl Iterator<Item=Slot> + '_ {
+    pub fn has_space_separators(&self) -> bool {
+        !self.space_separators.is_empty()
+    }
+    pub fn space_separator_slots(&self) -> impl Iterator<Item = Slot> + '_ {
         self.space_separators.iter().copied()
     }
 

@@ -25,7 +25,10 @@ fn drawing(entities: Vec<Value>) -> Document {
         e["layerId"] = json!("0");
         e["attrs"] = json!({});
         snapshot["entities"].as_array_mut().unwrap().push(e);
-        snapshot["uids"].as_array_mut().unwrap().push(json!(uid(i + 1)));
+        snapshot["uids"]
+            .as_array_mut()
+            .unwrap()
+            .push(json!(uid(i + 1)));
     }
     Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap()
 }
@@ -44,13 +47,23 @@ fn mass(parts: Value, level: &str, height: f64, offset: f64) -> Value {
 }
 
 fn square(x0: f64, y0: f64, side: f64) -> Value {
-    ring(&[(x0, y0), (x0 + side, y0), (x0 + side, y0 + side), (x0, y0 + side)])
+    ring(&[
+        (x0, y0),
+        (x0 + side, y0),
+        (x0 + side, y0 + side),
+        (x0, y0 + side),
+    ])
 }
 
 #[test]
 fn a_mass_is_a_prism_from_its_bottom_to_its_top_its_courtyard_a_hole_light_on_its_layer() {
     // 1. kat's floor at 3 m, its bottom 1.5 m under it, 9 m high; a 4 × 4 m courtyard.
-    let doc = drawing(vec![mass(json!([{"outer": square(0.0, 0.0, 10.0), "holes": [square(3.0, 3.0, 4.0)]}]), "k1", 9.0, -1.5)]);
+    let doc = drawing(vec![mass(
+        json!([{"outer": square(0.0, 0.0, 10.0), "holes": [square(3.0, 3.0, 4.0)]}]),
+        "k1",
+        9.0,
+        -1.5,
+    )]);
     let m = sections::model(&doc);
     assert_eq!(m.solids.len(), 1, "one prism");
     let s = &m.solids[0];
@@ -61,7 +74,15 @@ fn a_mass_is_a_prism_from_its_bottom_to_its_top_its_courtyard_a_hole_light_on_it
     );
     assert_eq!(s.rings.len(), 2, "its outer ring and its courtyard");
     let look = &m.looks[0];
-    assert_eq!((look.layer.as_str(), look.key.as_str(), look.heavy, look.fill.is_none()), ("MM-XXXX-KUTLE", "KUTLE", false, true));
+    assert_eq!(
+        (
+            look.layer.as_str(),
+            look.key.as_str(),
+            look.heavy,
+            look.fill.is_none()
+        ),
+        ("MM-XXXX-KUTLE", "KUTLE", false, true)
+    );
     assert_eq!(m.owners[0], Some(uid(1)));
 }
 
@@ -69,10 +90,14 @@ fn a_mass_is_a_prism_from_its_bottom_to_its_top_its_courtyard_a_hole_light_on_it
 fn a_round_mass_is_round_and_a_mass_without_its_storey_stands_on_zero() {
     // Two half circles of radius 3: the prism's ring follows the arc.
     let circle = json!([{"outer": {"pts": [{"x": 3.0, "y": 0.0}, {"x": -3.0, "y": 0.0}], "bulges": [1.0, 1.0]}}]);
-    let doc = drawing(vec![json!({"kind": "mass", "parts": circle, "height": 6.0})]);
+    let doc = drawing(vec![
+        json!({"kind": "mass", "parts": circle, "height": 6.0}),
+    ]);
     let m = sections::model(&doc);
     let s = &m.solids[0];
-    assert!(matches!(s.height, Height::Prism { bottom, top } if bottom.abs() < 1e-9 && (top - 6.0).abs() < 1e-9));
+    assert!(
+        matches!(s.height, Height::Prism { bottom, top } if bottom.abs() < 1e-9 && (top - 6.0).abs() < 1e-9)
+    );
     let r = &s.rings[0];
     assert!(r.len() > 16, "the arc in many points: {}", r.len());
     for p in r {
@@ -82,10 +107,18 @@ fn a_round_mass_is_round_and_a_mass_without_its_storey_stands_on_zero() {
 
 #[test]
 fn a_mass_casts_its_shadow_as_far_as_it_is_high_under_a_sun_at_45_degrees() {
-    let doc = drawing(vec![mass(json!([{"outer": square(-0.5, -0.5, 1.0)}]), "zemin", 3.0, 0.0)]);
+    let doc = drawing(vec![mass(
+        json!([{"outer": square(-0.5, -0.5, 1.0)}]),
+        "zemin",
+        3.0,
+        0.0,
+    )]);
     let s = 0.5_f64.sqrt();
     let area = area_of(&shadows::shadow(&doc, [0.0, -s, s]));
-    assert!((area - 3.0).abs() < 1e-6, "1 × 3 m north of it, as a column's: {area}");
+    assert!(
+        (area - 3.0).abs() < 1e-6,
+        "1 × 3 m north of it, as a column's: {area}"
+    );
 }
 
 #[test]
@@ -94,16 +127,35 @@ fn the_ifc_writes_no_mass_and_the_frame_does_not_join_the_elements_inside_it() {
         "arch": {"level": "zemin"}});
     let column = json!({"kind": "column", "at": {"x": 4.0, "y": 4.0}, "width": 0.4, "depth": 0.4, "arch": {"level": "zemin"}});
     let alone = drawing(vec![wall.clone(), column.clone()]);
-    let massed = drawing(vec![wall, column, mass(json!([{"outer": square(0.0, 0.0, 10.0)}]), "zemin", 6.0, 0.0)]);
+    let massed = drawing(vec![
+        wall,
+        column,
+        mass(
+            json!([{"outer": square(0.0, 0.0, 10.0)}]),
+            "zemin",
+            6.0,
+            0.0,
+        ),
+    ]);
     let (b0, ..) = arch_ifc::model(&alone);
     let (b1, ..) = arch_ifc::model(&massed);
-    let classes = |b: &kentos_ifc::building::Building| b.elements.iter().map(|e| format!("{:?}", e.class)).collect::<Vec<_>>();
+    let classes = |b: &kentos_ifc::building::Building| {
+        b.elements
+            .iter()
+            .map(|e| format!("{:?}", e.class))
+            .collect::<Vec<_>>()
+    };
     assert_eq!(classes(&b1), classes(&b0), "the mass is no element");
     // The wall's and the column's solids as they were: nothing of them is cut by the mass round them.
     let (m0, m1) = (sections::model(&alone), sections::model(&massed));
     for owner in [uid(1), uid(2)] {
         let of = |m: &sections::Model| {
-            m.solids.iter().zip(&m.owners).filter(|(_, o)| o.as_deref() == Some(owner.as_str())).map(|(s, _)| format!("{:?}", (&s.rings, &s.height))).collect::<Vec<_>>()
+            m.solids
+                .iter()
+                .zip(&m.owners)
+                .filter(|(_, o)| o.as_deref() == Some(owner.as_str()))
+                .map(|(s, _)| format!("{:?}", (&s.rings, &s.height)))
+                .collect::<Vec<_>>()
         };
         assert_eq!(of(&m1), of(&m0), "{owner}");
     }

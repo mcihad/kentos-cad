@@ -77,13 +77,28 @@ impl Affine {
     /// k = 1 − c the rows [k·x·x + c, k·x·y − s·z, k·x·z + s·y], [k·x·y + s·z, k·y·y + c, k·y·z − s·x],
     /// [k·x·z − s·y, k·y·z + s·x, k·z·z + c]; the translation's row c_i + t_i − (R_i0·c0 + R_i1·c1 + R_i2·c2). Refused
     /// for a number not finite or an axis of no length.
-    pub fn axis_angle(axis: [f64; 3], degrees: f64, center: [f64; 3], translation: [f64; 3]) -> Result<Affine> {
-        if axis.iter().chain(&center).chain(&translation).chain(std::iter::once(&degrees)).any(|v| !v.is_finite()) {
-            return Err(PcError::new("Eksenin, açının, merkezin ve ötelemenin bütün sayıları sonlu olmalı."));
+    pub fn axis_angle(
+        axis: [f64; 3],
+        degrees: f64,
+        center: [f64; 3],
+        translation: [f64; 3],
+    ) -> Result<Affine> {
+        if axis
+            .iter()
+            .chain(&center)
+            .chain(&translation)
+            .chain(std::iter::once(&degrees))
+            .any(|v| !v.is_finite())
+        {
+            return Err(PcError::new(
+                "Eksenin, açının, merkezin ve ötelemenin bütün sayıları sonlu olmalı.",
+            ));
         }
         let n = (axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]).sqrt();
         if !(n > 0.0) {
-            return Err(PcError::new("Dönme ekseninin uzunluğu sıfır olamaz; ekseni üç sayıyla yazın (Z için 0 0 1)."));
+            return Err(PcError::new(
+                "Dönme ekseninin uzunluğu sıfır olamaz; ekseni üç sayıyla yazın (Z için 0 0 1).",
+            ));
         }
         let (x, y, z) = (axis[0] / n, axis[1] / n, axis[2] / n);
         let r = degrees.to_radians();
@@ -97,7 +112,12 @@ impl Affine {
         let mut m = [0.0; 16];
         for (i, row) in rot.iter().enumerate() {
             let rc = row[0] * center[0] + row[1] * center[1] + row[2] * center[2];
-            m[4 * i..4 * i + 4].copy_from_slice(&[row[0], row[1], row[2], center[i] + translation[i] - rc]);
+            m[4 * i..4 * i + 4].copy_from_slice(&[
+                row[0],
+                row[1],
+                row[2],
+                center[i] + translation[i] - rc,
+            ]);
         }
         m[15] = 1.0;
         Affine::new(m)
@@ -111,9 +131,22 @@ impl Affine {
     /// π/180) the rows [c2·c1, s3·s2·c1 − c3·s1, c3·s2·c1 + s3·s1], [c2·s1, s3·s2·s1 + c3·c1, c3·s2·s1 − s3·c1],
     /// [−s2, s3·c2, c3·c2], each product left to right; the translation's row as the axis's. Refused for a number not
     /// finite.
-    pub fn euler(yaw: f64, pitch: f64, roll: f64, center: [f64; 3], translation: [f64; 3]) -> Result<Affine> {
-        if [yaw, pitch, roll].iter().chain(&center).chain(&translation).any(|v| !v.is_finite()) {
-            return Err(PcError::new("Açıların, merkezin ve ötelemenin bütün sayıları sonlu olmalı."));
+    pub fn euler(
+        yaw: f64,
+        pitch: f64,
+        roll: f64,
+        center: [f64; 3],
+        translation: [f64; 3],
+    ) -> Result<Affine> {
+        if [yaw, pitch, roll]
+            .iter()
+            .chain(&center)
+            .chain(&translation)
+            .any(|v| !v.is_finite())
+        {
+            return Err(PcError::new(
+                "Açıların, merkezin ve ötelemenin bütün sayıları sonlu olmalı.",
+            ));
         }
         let (a, b, c) = (yaw.to_radians(), pitch.to_radians(), roll.to_radians());
         let (s1, c1) = (a.sin(), a.cos());
@@ -133,7 +166,12 @@ impl Affine {
         let mut m = [0.0; 16];
         for (i, row) in rot.iter().enumerate() {
             let rc = row[0] * center[0] + row[1] * center[1] + row[2] * center[2];
-            m[4 * i..4 * i + 4].copy_from_slice(&[row[0], row[1], row[2], center[i] + translation[i] - rc]);
+            m[4 * i..4 * i + 4].copy_from_slice(&[
+                row[0],
+                row[1],
+                row[2],
+                center[i] + translation[i] - rc,
+            ]);
         }
         m[15] = 1.0;
         Affine::new(m)
@@ -147,8 +185,10 @@ impl Affine {
         let mut m = [0.0; 16];
         for i in 0..3 {
             for j in 0..4 {
-                m[4 * i + j] =
-                    a[4 * i] * b[j] + a[4 * i + 1] * b[4 + j] + a[4 * i + 2] * b[8 + j] + a[4 * i + 3] * b[12 + j];
+                m[4 * i + j] = a[4 * i] * b[j]
+                    + a[4 * i + 1] * b[4 + j]
+                    + a[4 * i + 2] * b[8 + j]
+                    + a[4 * i + 3] * b[12 + j];
             }
         }
         m[15] = 1.0;
@@ -158,15 +198,22 @@ impl Affine {
     /// Three numbers from text (an axis, a centre, a move), apart by spaces or commas, a point for the decimal; `what`
     /// names them in the refusal.
     pub fn triple(text: &str, what: &str) -> Result<[f64; 3]> {
-        let words: Vec<&str> =
-            text.split(|c: char| c.is_whitespace() || matches!(c, ',' | ';')).filter(|w| !w.is_empty()).collect();
+        let words: Vec<&str> = text
+            .split(|c: char| c.is_whitespace() || matches!(c, ',' | ';'))
+            .filter(|w| !w.is_empty())
+            .collect();
         if words.len() != 3 {
-            return Err(PcError::new(format!("{what} 3 sayıdır (X Y Z, boşlukla ayrılmış); {} sayı verildi.", words.len())));
+            return Err(PcError::new(format!(
+                "{what} 3 sayıdır (X Y Z, boşlukla ayrılmış); {} sayı verildi.",
+                words.len()
+            )));
         }
         let mut out = [0.0; 3];
         for (slot, word) in out.iter_mut().zip(&words) {
             *slot = word.parse().map_err(|_| {
-                PcError::new(format!("{what}: “{word}” bir sayı değil; ondalık için nokta kullanın."))
+                PcError::new(format!(
+                    "{what}: “{word}” bir sayı değil; ondalık için nokta kullanın."
+                ))
             })?;
         }
         Ok(out)
@@ -198,10 +245,22 @@ impl Affine {
         let t = |r: usize| -(i[3 * r] * m[3] + i[3 * r + 1] * m[7] + i[3 * r + 2] * m[11]);
         Affine {
             m: [
-                i[0], i[1], i[2], t(0), //
-                i[3], i[4], i[5], t(1), //
-                i[6], i[7], i[8], t(2), //
-                0.0, 0.0, 0.0, 1.0,
+                i[0],
+                i[1],
+                i[2],
+                t(0), //
+                i[3],
+                i[4],
+                i[5],
+                t(1), //
+                i[6],
+                i[7],
+                i[8],
+                t(2), //
+                0.0,
+                0.0,
+                0.0,
+                1.0,
             ],
         }
     }
@@ -209,7 +268,11 @@ impl Affine {
     /// The 16 numbers as text, row-major, each as Rust writes an f64 (the shortest that reads back the same, no
     /// exponent; a negative zero as 0), apart by spaces: the object's transform history keeps it (docs/adr/3500).
     pub fn text(&self) -> String {
-        self.m.iter().map(|v| format!("{}", v + 0.0)).collect::<Vec<_>>().join(" ")
+        self.m
+            .iter()
+            .map(|v| format!("{}", v + 0.0))
+            .collect::<Vec<_>>()
+            .join(" ")
     }
 
     /// A point moved: each coordinate its row's three products and the translation, added in that order.
@@ -264,7 +327,13 @@ impl Affine {
 
     /// Whether every point of the box `min`–`max`, moved, stays on the grid `scale`, `offset` (32-bit whole
     /// numbers); refused with the axis otherwise.
-    pub fn fits(&self, min: [f64; 3], max: [f64; 3], scale: [f64; 3], offset: [f64; 3]) -> Result<()> {
+    pub fn fits(
+        &self,
+        min: [f64; 3],
+        max: [f64; 3],
+        scale: [f64; 3],
+        offset: [f64; 3],
+    ) -> Result<()> {
         for k in 0..8 {
             let pick = |bit: usize, a: usize| if k & bit == 0 { min[a] } else { max[a] };
             let q = self.apply([pick(1, 0), pick(2, 1), pick(4, 2)]);
@@ -291,7 +360,9 @@ impl Affine {
         offset: [f64; 3],
     ) -> Result<()> {
         if layout.len < 12 {
-            return Err(PcError::new("Nokta kaydı koordinatlarını taşıyamayacak kadar kısa."));
+            return Err(PcError::new(
+                "Nokta kaydı koordinatlarını taşıyamayacak kadar kısa.",
+            ));
         }
         for r in records.chunks_exact_mut(layout.len) {
             let p = [
@@ -329,9 +400,13 @@ mod tests {
     /// read for its direction only; a zero axis and two numbers are refused.
     #[test]
     fn an_axis_and_an_angle_make_the_map() {
-        let a = Affine::axis_angle([0.0, 0.0, 2.0], 90.0, [10.0, 0.0, 0.0], [0.0, 0.0, 5.0]).unwrap();
+        let a =
+            Affine::axis_angle([0.0, 0.0, 2.0], 90.0, [10.0, 0.0, 0.0], [0.0, 0.0, 5.0]).unwrap();
         let p = a.apply([11.0, 0.0, 0.0]);
-        assert!((p[0] - 10.0).abs() < 1e-12 && (p[1] - 1.0).abs() < 1e-12 && (p[2] - 5.0).abs() < 1e-12, "{p:?}");
+        assert!(
+            (p[0] - 10.0).abs() < 1e-12 && (p[1] - 1.0).abs() < 1e-12 && (p[2] - 5.0).abs() < 1e-12,
+            "{p:?}"
+        );
         assert!(Affine::axis_angle([0.0; 3], 10.0, [0.0; 3], [0.0; 3]).is_err());
         assert!(Affine::triple("1 2", "Eksen").is_err());
         assert_eq!(Affine::triple("0, 0, 1", "Eksen").unwrap(), [0.0, 0.0, 1.0]);
@@ -344,9 +419,24 @@ mod tests {
     fn euler_angles_make_the_map() {
         let near = |p: [f64; 3], q: [f64; 3]| p.iter().zip(&q).all(|(a, b)| (a - b).abs() < 1e-12);
         let o = [0.0; 3];
-        assert!(near(Affine::euler(90.0, 0.0, 0.0, o, o).unwrap().apply([1.0, 0.0, 0.0]), [0.0, 1.0, 0.0]));
-        assert!(near(Affine::euler(0.0, 90.0, 0.0, o, o).unwrap().apply([0.0, 0.0, 1.0]), [1.0, 0.0, 0.0]));
-        assert!(near(Affine::euler(0.0, 0.0, 90.0, o, o).unwrap().apply([0.0, 1.0, 0.0]), [0.0, 0.0, 1.0]));
+        assert!(near(
+            Affine::euler(90.0, 0.0, 0.0, o, o)
+                .unwrap()
+                .apply([1.0, 0.0, 0.0]),
+            [0.0, 1.0, 0.0]
+        ));
+        assert!(near(
+            Affine::euler(0.0, 90.0, 0.0, o, o)
+                .unwrap()
+                .apply([0.0, 0.0, 1.0]),
+            [1.0, 0.0, 0.0]
+        ));
+        assert!(near(
+            Affine::euler(0.0, 0.0, 90.0, o, o)
+                .unwrap()
+                .apply([0.0, 1.0, 0.0]),
+            [0.0, 0.0, 1.0]
+        ));
         // Z then Y′ then X″: the same as the roll first, then the pitch, then the yaw about the fixed axes.
         let all = Affine::euler(30.0, -20.0, 10.0, [5.0, 6.0, 7.0], [1.0, 2.0, 3.0]).unwrap();
         let fixed = Affine::euler(0.0, 0.0, 10.0, [5.0, 6.0, 7.0], o)
@@ -354,7 +444,12 @@ mod tests {
             .then(&Affine::euler(0.0, -20.0, 0.0, [5.0, 6.0, 7.0], o).unwrap())
             .then(&Affine::euler(30.0, 0.0, 0.0, [5.0, 6.0, 7.0], [1.0, 2.0, 3.0]).unwrap());
         let p = [8.0, -3.0, 2.5];
-        assert!(near(all.apply(p), fixed.apply(p)), "{:?} {:?}", all.apply(p), fixed.apply(p));
+        assert!(
+            near(all.apply(p), fixed.apply(p)),
+            "{:?} {:?}",
+            all.apply(p),
+            fixed.apply(p)
+        );
         assert!(all.rigid());
         assert!(Affine::euler(f64::NAN, 0.0, 0.0, o, o).is_err());
     }
@@ -373,18 +468,39 @@ mod tests {
         let p = [487123.25, 4420456.5, 852.125];
         let back = a.inverse().apply(a.apply(p));
         assert!((0..3).all(|k| (back[k] - p[k]).abs() < 1e-6), "{back:?}");
-        let moved = Affine::new([1.0, 0.0, 0.0, 12.5, 0.0, 1.0, 0.0, -3.25, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]).expect("a map");
-        assert_eq!(moved.inverse().matrix(), [1.0, 0.0, 0.0, -12.5, 0.0, 1.0, 0.0, 3.25, 0.0, 0.0, 1.0, -0.0, 0.0, 0.0, 0.0, 1.0]);
-        assert_eq!(moved.inverse().text(), "1 0 0 -12.5 0 1 0 3.25 0 0 1 0 0 0 0 1");
+        let moved = Affine::new([
+            1.0, 0.0, 0.0, 12.5, 0.0, 1.0, 0.0, -3.25, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+        ])
+        .expect("a map");
+        assert_eq!(
+            moved.inverse().matrix(),
+            [
+                1.0, 0.0, 0.0, -12.5, 0.0, 1.0, 0.0, 3.25, 0.0, 0.0, 1.0, -0.0, 0.0, 0.0, 0.0, 1.0
+            ]
+        );
+        assert_eq!(
+            moved.inverse().text(),
+            "1 0 0 -12.5 0 1 0 3.25 0 0 1 0 0 0 0 1"
+        );
         let twice = a.inverse().inverse().matrix();
-        assert!(twice.iter().zip(a.matrix()).all(|(x, y)| (x - y).abs() < 1e-9));
+        assert!(
+            twice
+                .iter()
+                .zip(a.matrix())
+                .all(|(x, y)| (x - y).abs() < 1e-9)
+        );
     }
 
-    const ID: [f64; 16] = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+    const ID: [f64; 16] = [
+        1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+    ];
 
     fn turn_z(t: f64, by: [f64; 3]) -> Affine {
         let (s, c) = t.sin_cos();
-        Affine::new([c, -s, 0.0, by[0], s, c, 0.0, by[1], 0.0, 0.0, 1.0, by[2], 0.0, 0.0, 0.0, 1.0]).expect("affine")
+        Affine::new([
+            c, -s, 0.0, by[0], s, c, 0.0, by[1], 0.0, 0.0, 1.0, by[2], 0.0, 0.0, 0.0, 1.0,
+        ])
+        .expect("affine")
     }
 
     #[test]
@@ -412,7 +528,11 @@ mod tests {
     fn a_rotation_is_rigid_and_says_its_angle() {
         let a = turn_z(0.002, [0.35, -0.2, 0.05]);
         assert!(a.rigid());
-        assert!((a.angle() - 0.002_f64.to_degrees()).abs() < 1e-12, "{}", a.angle());
+        assert!(
+            (a.angle() - 0.002_f64.to_degrees()).abs() < 1e-12,
+            "{}",
+            a.angle()
+        );
         assert!(Affine::new(ID).expect("id").rigid());
         assert_eq!(Affine::new(ID).expect("id").angle(), 0.0);
         let mut scaled = ID;
@@ -420,7 +540,10 @@ mod tests {
         assert!(!Affine::new(scaled).expect("affine").rigid());
         let mut mirror = ID;
         mirror[0] = -1.0;
-        assert!(!Affine::new(mirror).expect("affine").rigid(), "a mirror keeps lengths but is not a rotation");
+        assert!(
+            !Affine::new(mirror).expect("affine").rigid(),
+            "a mirror keeps lengths but is not a rotation"
+        );
     }
 
     #[test]
@@ -432,9 +555,16 @@ mod tests {
     #[test]
     fn a_box_leaving_the_grid_is_refused_with_its_axis() {
         let far = turn_z(0.0, [0.0, 3.0e6, 0.0]);
-        let why = far.fits([0.0; 3], [10.0; 3], [0.001; 3], [0.0; 3]).expect_err("too far").0;
+        let why = far
+            .fits([0.0; 3], [10.0; 3], [0.001; 3], [0.0; 3])
+            .expect_err("too far")
+            .0;
         assert!(why.contains("Y ekseninde"), "{why}");
-        assert!(turn_z(0.001, [5.0, 5.0, 0.0]).fits([0.0; 3], [10.0; 3], [0.001; 3], [0.0; 3]).is_ok());
+        assert!(
+            turn_z(0.001, [5.0, 5.0, 0.0])
+                .fits([0.0; 3], [10.0; 3], [0.001; 3], [0.0; 3])
+                .is_ok()
+        );
     }
 
     #[test]
@@ -446,15 +576,28 @@ mod tests {
         rec[12] = 77; // intensity stays
         let (scale, offset) = ([0.01; 3], [100.0, 200.0, 0.0]);
         let a = turn_z(0.0, [0.006, -0.004, 0.0]);
-        a.move_records(&layout, &mut rec, scale, offset).expect("moves");
+        a.move_records(&layout, &mut rec, scale, offset)
+            .expect("moves");
         // (1000.6 → 1001, 2000 − 0.4 → 2000), (−1000 + 0.6 → −999, 5 − 0.4 → 5).
-        assert_eq!((layout.x(&rec[..20]), layout.y(&rec[..20]), layout.z(&rec[..20])), (1001, 2000, 300));
+        assert_eq!(
+            (
+                layout.x(&rec[..20]),
+                layout.y(&rec[..20]),
+                layout.z(&rec[..20])
+            ),
+            (1001, 2000, 300)
+        );
         assert_eq!((layout.x(&rec[20..]), layout.y(&rec[20..])), (-999, 5));
         assert_eq!(rec[12], 77);
         // A quarter turn about the origin: (x, y) → (−y, x).
         let mut one = vec![0u8; 20];
         layout.set_xyz(&mut one, 300, 400, 7);
-        turn_z(std::f64::consts::FRAC_PI_2, [0.0; 3]).move_records(&layout, &mut one, [1.0; 3], [0.0; 3]).expect("moves");
-        assert_eq!((layout.x(&one), layout.y(&one), layout.z(&one)), (-400, 300, 7));
+        turn_z(std::f64::consts::FRAC_PI_2, [0.0; 3])
+            .move_records(&layout, &mut one, [1.0; 3], [0.0; 3])
+            .expect("moves");
+        assert_eq!(
+            (layout.x(&one), layout.y(&one), layout.z(&one)),
+            (-400, 300, 7)
+        );
     }
 }

@@ -50,14 +50,20 @@ async fn all_rows(
 ) -> Result<Vec<sqlx::postgres::PgRow>, DataError> {
     if !read_only {
         let mut conn = pool.acquire().await.map_err(error_of)?;
-        return bound(sql, args).fetch_all(&mut *conn).await.map_err(error_of);
+        return bound(sql, args)
+            .fetch_all(&mut *conn)
+            .await
+            .map_err(error_of);
     }
     let mut tx = pool.begin().await.map_err(error_of)?;
     sqlx::query("SET TRANSACTION READ ONLY")
         .execute(&mut *tx)
         .await
         .map_err(error_of)?;
-    let rows = bound(sql, args).fetch_all(&mut *tx).await.map_err(error_of)?;
+    let rows = bound(sql, args)
+        .fetch_all(&mut *tx)
+        .await
+        .map_err(error_of)?;
     tx.commit().await.map_err(error_of)?;
     Ok(rows)
 }
@@ -122,7 +128,11 @@ impl Source for PgSource {
         if s.query {
             return Ok(Vec::new());
         }
-        let relation = format!("{}.{}", crate::catalog::quote(&s.namespace), crate::catalog::quote(&s.relation));
+        let relation = format!(
+            "{}.{}",
+            crate::catalog::quote(&s.namespace),
+            crate::catalog::quote(&s.relation)
+        );
         runtime()?.block_on(async {
             let mut conn = self.pool.acquire().await.map_err(error_of)?;
             let rows = sqlx::query(
@@ -144,7 +154,11 @@ impl Source for PgSource {
 
     fn capabilities(&self, table: &str) -> Result<Capabilities, DataError> {
         let s = self.shape(table)?;
-        Ok(capabilities_of(s.writable, s.rights, s.schema.geometry.is_some()))
+        Ok(capabilities_of(
+            s.writable,
+            s.rights,
+            s.schema.geometry.is_some(),
+        ))
     }
 
     fn extent(&self, table: &str, estimate: bool) -> Result<Option<[f64; 4]>, DataError> {
@@ -429,7 +443,10 @@ impl Source for PgSource {
             rows.iter()
                 .map(|r| {
                     let n: i64 = r.try_get(1).map_err(error_of)?;
-                    Ok((value_of(r.try_get(0).map_err(error_of)?, &kind), u64::try_from(n).unwrap_or(0)))
+                    Ok((
+                        value_of(r.try_get(0).map_err(error_of)?, &kind),
+                        u64::try_from(n).unwrap_or(0),
+                    ))
                 })
                 .collect()
         })
@@ -465,7 +482,11 @@ impl Source for PgSource {
 
 /// A table's capabilities from what its shape says: each right on its own (docs/adr/9162), an account may update rows
 /// and not add any; none where rows cannot be written at all (a view, a table without a single key).
-pub(crate) fn capabilities_of(writable: bool, rights: crate::catalog::Rights, geometry: bool) -> Capabilities {
+pub(crate) fn capabilities_of(
+    writable: bool,
+    rights: crate::catalog::Rights,
+    geometry: bool,
+) -> Capabilities {
     Capabilities {
         read: true,
         insert: writable && rights.insert,
@@ -492,12 +513,47 @@ mod tests {
     /// written at all gives no right, whatever was granted.
     #[test]
     fn each_right_on_rows_is_its_own() {
-        let update_only = capabilities_of(true, Rights { insert: false, update: true, delete: false, alter: false }, true);
-        assert!(!update_only.insert && update_only.update_values && update_only.update_geometry && !update_only.delete);
+        let update_only = capabilities_of(
+            true,
+            Rights {
+                insert: false,
+                update: true,
+                delete: false,
+                alter: false,
+            },
+            true,
+        );
+        assert!(
+            !update_only.insert
+                && update_only.update_values
+                && update_only.update_geometry
+                && !update_only.delete
+        );
         assert!(update_only.writable());
-        let all = capabilities_of(true, Rights { insert: true, update: true, delete: true, alter: true }, false);
-        assert!(all.insert && all.update_values && !all.update_geometry && all.delete, "no geometry to update");
-        let view = capabilities_of(false, Rights { insert: true, update: true, delete: true, alter: true }, true);
+        let all = capabilities_of(
+            true,
+            Rights {
+                insert: true,
+                update: true,
+                delete: true,
+                alter: true,
+            },
+            false,
+        );
+        assert!(
+            all.insert && all.update_values && !all.update_geometry && all.delete,
+            "no geometry to update"
+        );
+        let view = capabilities_of(
+            false,
+            Rights {
+                insert: true,
+                update: true,
+                delete: true,
+                alter: true,
+            },
+            true,
+        );
         assert!(!view.writable(), "nothing where rows cannot be written");
         // docs/adr/9318: columns are added by the table's owner alone, never to a view.
         assert!(all.add_columns && !update_only.add_columns && !view.add_columns);

@@ -11,13 +11,13 @@ use kentos_geometry_core::entity::{PointPart, Shape};
 use kentos_geometry_core::jsmath::{PI, cos, js_max, js_min, sin};
 use kentos_geometry_core::store::Store;
 
+use super::batch::Batches;
 use super::build::{
     LayerObjects, MODE_DIMENSION, MODE_RENDERER, MODE_SET, Program, build_layer, compile_one,
     styled_parts,
 };
 use super::compile::{Env, Geom, to_drawn, to_world};
 use super::model::Unit;
-use super::batch::Batches;
 use super::place::{
     MAX_MARKERS_PER_PATH, MAX_WAVES_PER_PATH, PlaceGroup, WaveSpec, interior_point, place_along,
     place_along_counted, wave_paths, wave_paths_counted,
@@ -98,7 +98,12 @@ fn a_data_layers_line_widths_on_the_model_screen_are_drawn_in_px() {
         }
     }
     let line = |unit: Unit, width: f64| SimpleLine {
-        base: Base { enabled: None, opacity: None, unit, effects: None },
+        base: Base {
+            enabled: None,
+            opacity: None,
+            unit,
+            effects: None,
+        },
         color: Some(Dd::Fixed("#C0392B".into())),
         width: Some(Dd::Fixed(width)),
         dash: Some(vec![2.0, 1.0]),
@@ -114,12 +119,27 @@ fn a_data_layers_line_widths_on_the_model_screen_are_drawn_in_px() {
         shift: None,
     };
     let aspects = HashMap::new();
-    let env = |screen_widths| Env { plot_scale: 1000.0, aspects: &aspects, screen: false, screen_widths, cad_phase: false, moment: None };
+    let env = |screen_widths| Env {
+        plot_scale: 1000.0,
+        aspects: &aspects,
+        screen: false,
+        screen_widths,
+        cad_phase: false,
+        moment: None,
+    };
     // 0.7 mm: 2.65 px whatever the scale; its dashes too.
     let st = stroke_style(&line(Unit::Mm, 0.7), 0.0, &Nothing, &env(true)).expect("a stroke");
-    assert!(close(st.width, 0.7 / super::compile::MM_PER_PX) && st.unit == PrimUnit::Px, "{} {:?}", st.width, st.unit);
+    assert!(
+        close(st.width, 0.7 / super::compile::MM_PER_PX) && st.unit == PrimUnit::Px,
+        "{} {:?}",
+        st.width,
+        st.unit
+    );
     let dash = st.dash.expect("dashes");
-    assert!(close(dash[0], 2.0 / super::compile::MM_PER_PX) && close(dash[1], 1.0 / super::compile::MM_PER_PX));
+    assert!(
+        close(dash[0], 2.0 / super::compile::MM_PER_PX)
+            && close(dash[1], 1.0 / super::compile::MM_PER_PX)
+    );
     // A width on the ground stays in metres.
     let st = stroke_style(&line(Unit::M, 0.7), 0.0, &Nothing, &env(true)).expect("a stroke");
     assert!(close(st.width, 0.7) && st.unit == PrimUnit::World);
@@ -275,13 +295,27 @@ fn keeps_codes_clear_of_sharp_corners_only() {
 #[test]
 fn a_long_line_keeps_every_marker_and_counts_those_past_the_limit() {
     // A 60 km line of 1 m ticks: 60 001 places. The old limit drew 50 000 and lost the last 10 km.
-    let (placed, left) =
-        place_along_counted(&[v(0.0, 0.0), v(60_000.0, 0.0)], false, "interval", 1.0, 0.0, None, 0.0);
+    let (placed, left) = place_along_counted(
+        &[v(0.0, 0.0), v(60_000.0, 0.0)],
+        false,
+        "interval",
+        1.0,
+        0.0,
+        None,
+        0.0,
+    );
     assert_eq!((placed.len(), left), (60_001, 0));
     assert!(close(placed[60_000].at.x, 60_000.0));
     // Past the limit: the first places drawn, the rest counted.
-    let (placed, left) =
-        place_along_counted(&[v(0.0, 0.0), v(1_500_000.0, 0.0)], false, "interval", 1.0, 0.0, None, 0.0);
+    let (placed, left) = place_along_counted(
+        &[v(0.0, 0.0), v(1_500_000.0, 0.0)],
+        false,
+        "interval",
+        1.0,
+        0.0,
+        None,
+        0.0,
+    );
     assert_eq!(placed.len(), MAX_MARKERS_PER_PATH);
     assert_eq!(placed.len() as u64 + left, 1_500_001);
     assert!(close(placed[MAX_MARKERS_PER_PATH - 1].at.x, 999_999.0));
@@ -290,7 +324,8 @@ fn a_long_line_keeps_every_marker_and_counts_those_past_the_limit() {
         count: 3.0,
         spacing: 0.1,
     });
-    let (placed, left) = place_along_counted(&square(100_000.0), true, "interval", 1.0, 0.0, group, 0.0);
+    let (placed, left) =
+        place_along_counted(&square(100_000.0), true, "interval", 1.0, 0.0, group, 0.0);
     assert_eq!((placed.len(), left), (MAX_MARKERS_PER_PATH, 200_000));
 }
 
@@ -300,7 +335,11 @@ fn waves_past_their_limit_are_counted() {
     let path = [v(0.0, 0.0), v(600_000.0, 0.0)];
     let (pieces, left) = wave_paths_counted(&path, false, &wave("sine", 5.0, 5.0, false, None));
     assert_eq!((pieces.len(), left), (MAX_WAVES_PER_PATH, 70_000));
-    let (_, left) = wave_paths_counted(&[v(0.0, 0.0), v(20.0, 0.0)], false, &wave("sine", 5.0, 5.0, true, None));
+    let (_, left) = wave_paths_counted(
+        &[v(0.0, 0.0), v(20.0, 0.0)],
+        false,
+        &wave("sine", 5.0, 5.0, true, None),
+    );
     assert_eq!(left, 0);
 }
 
@@ -784,7 +823,10 @@ fn a_pattern_runs_on_along_a_path_past_its_vertices() {
     assert_eq!(d, [0.0, 5.0, 11.0]);
     // Closed, every vertex is a join, the closing one too; a join's code is the same in both its segments.
     let meta: Vec<u32> = data.chunks(6).map(|s| s[5] as u32).collect();
-    let codes: Vec<[u32; 2]> = meta.iter().map(|m| [(m >> 2) & 2047, (m >> 13) & 2047]).collect();
+    let codes: Vec<[u32; 2]> = meta
+        .iter()
+        .map(|m| [(m >> 2) & 2047, (m >> 13) & 2047])
+        .collect();
     assert!(meta.iter().all(|m| m & 3 == 0), "no caps: {meta:?}");
     for k in 0..3 {
         assert_ne!(codes[k][1], 0);
@@ -953,21 +995,40 @@ fn a_fill_symbol_on_a_point_draws_its_centroid_marks_there() {
         let input = format!(
             r#"{{"symbol":{symbol},"entity":{entity},"layerName":"","kindLabel":"","vertices":null,"plotScale":1000,"assets":{{}}}}"#
         );
-        Json::parse(&compile_one(&Json::parse(&input).expect("input")).expect("compile")).expect("output")
+        Json::parse(&compile_one(&Json::parse(&input).expect("input")).expect("compile"))
+            .expect("output")
     };
     let point = call(r#"{"id":1,"layerId":"a","attrs":{},"kind":"point","p":{"x":12.5,"y":-4}}"#);
     let count = |out: &Json, key: &str| match out.get(key) {
         Json::Arr(items) => items.len(),
         _ => 0,
     };
-    assert_eq!((count(&point, "fills"), count(&point, "strokes"), count(&point, "markers")), (0, 0, 1), "the mark alone");
-    let Json::Arr(marks) = point.get("markers") else { panic!("markers") };
+    assert_eq!(
+        (
+            count(&point, "fills"),
+            count(&point, "strokes"),
+            count(&point, "markers")
+        ),
+        (0, 0, 1),
+        "the mark alone"
+    );
+    let Json::Arr(marks) = point.get("markers") else {
+        panic!("markers")
+    };
     let at = marks[0].get("at");
-    assert_eq!((number(at.get("x")), number(at.get("y"))), (Some(12.5), Some(-4.0)), "at the point itself");
+    assert_eq!(
+        (number(at.get("x")), number(at.get("y"))),
+        (Some(12.5), Some(-4.0)),
+        "at the point itself"
+    );
     let area = call(
         r#"{"id":1,"layerId":"a","attrs":{},"kind":"polygon","pts":[{"x":0,"y":0},{"x":10,"y":0},{"x":10,"y":10},{"x":0,"y":10}]}"#,
     );
-    assert_eq!((count(&area, "fills"), count(&area, "markers")), (1, 1), "an area is filled and marked");
+    assert_eq!(
+        (count(&area, "fills"), count(&area, "markers")),
+        (1, 1),
+        "an area is filled and marked"
+    );
 }
 
 /// A leader (docs/adr/0146 §5) through its set: its line and landing

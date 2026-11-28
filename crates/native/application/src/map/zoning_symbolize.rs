@@ -13,8 +13,9 @@
 use std::collections::HashMap;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, DataProfile, Entity, ZONING_PROFILE, ZoningPlanData, ZoningSymbolPick, ZoningSymbolRow,
-    ZoningSymbolize, ZoningSymbolized, builtin_profile, builtin_zoning_symbols,
+    CommandResult, CommandWarning, DataProfile, Entity, ZONING_PROFILE, ZoningPlanData,
+    ZoningSymbolPick, ZoningSymbolRow, ZoningSymbolize, ZoningSymbolized, builtin_profile,
+    builtin_zoning_symbols,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -39,7 +40,11 @@ fn listed(p: &DataProfile, domain: &str, code: &str) -> bool {
 }
 
 fn attr(e: &Entity, key: &str) -> String {
-    e.base().attrs.get(key).map(|v| v.trim().to_owned()).unwrap_or_default()
+    e.base()
+        .attrs
+        .get(key)
+        .map(|v| v.trim().to_owned())
+        .unwrap_or_default()
 }
 
 /// What a run gives: the objects whose symbol changes, the answer and its warnings.
@@ -51,7 +56,11 @@ type Run = (Vec<(Slot, Entity)>, ZoningSymbolized, Vec<CommandWarning>);
 fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<Run, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     let (Some(p), Some(table)) = (builtin_profile(ZONING_PROFILE), builtin_zoning_symbols()) else {
-        return Err(fail(codes::INVALID_INPUT, "İmar planı profili ya da sembol tablosu okunamadı.".into(), None));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "İmar planı profili ya da sembol tablosu okunamadı.".into(),
+            None,
+        ));
     };
     // The user's picks, before KentOS's table.
     let mut picks: HashMap<(String, String), String> = HashMap::new();
@@ -85,7 +94,10 @@ fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<Run, Sto
         if !lv.choices.iter().any(|c| c.id == symbol) {
             return Err(fail(
                 codes::UNKNOWN_PLAN_SYMBOL,
-                format!("“{symbol}”, {} alan sembolleri arasında yok; kademenin sembollerinden birini seçin.", lv.library),
+                format!(
+                    "“{symbol}”, {} alan sembolleri arasında yok; kademenin sembollerinden birini seçin.",
+                    lv.library
+                ),
                 Some(&format!("{at}.symbol")),
             ));
         }
@@ -95,8 +107,16 @@ fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<Run, Sto
     let mut warnings = Vec::new();
     let mut kept: HashMap<(String, String), String> = HashMap::new();
     if !input.keep {
-        for (i, k) in doc.zoning_plan().map(|z| z.symbols.as_slice()).unwrap_or_default().iter().enumerate() {
-            let good = table.level(&k.level).is_some_and(|lv| lv.choices.iter().any(|c| c.id == k.symbol))
+        for (i, k) in doc
+            .zoning_plan()
+            .map(|z| z.symbols.as_slice())
+            .unwrap_or_default()
+            .iter()
+            .enumerate()
+        {
+            let good = table
+                .level(&k.level)
+                .is_some_and(|lv| lv.choices.iter().any(|c| c.id == k.symbol))
                 && listed(&p, "plan-kullanim", &k.usage);
             if good {
                 kept.insert((k.level.clone(), k.usage.clone()), k.symbol.clone());
@@ -113,20 +133,35 @@ fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<Run, Sto
         }
     }
     let layer_of = |class: &str| {
-        p.classes.iter().find(|c| c.id == class).map(|c| (find(doc.layers().nodes(), &c.layer), path_words(&c.layer)))
+        p.classes
+            .iter()
+            .find(|c| c.id == class)
+            .map(|c| (find(doc.layers().nodes(), &c.layer), path_words(&c.layer)))
     };
     let decision_layer = match layer_of("karar-alani") {
         Some((Place::Layer(id), _)) => id,
         Some((_, words)) => {
             return Err(fail(
                 codes::LAYER_NOT_FOUND,
-                format!("“{words}” katmanı yok; {ZONING_PROFILE} profilini uygulayın (cad.profiles.apply)."),
+                format!(
+                    "“{words}” katmanı yok; {ZONING_PROFILE} profilini uygulayın (cad.profiles.apply)."
+                ),
                 None,
             ));
         }
-        None => return Err(fail(codes::INVALID_INPUT, "İmar planı profilinde karar alanı sınıfı yok.".into(), None)),
+        None => {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                "İmar planı profilinde karar alanı sınıfı yok.".into(),
+                None,
+            ));
+        }
     };
-    let order: HashMap<u32, usize> = doc.entities().enumerate().map(|(at, e)| (e.base().id, at)).collect();
+    let order: HashMap<u32, usize> = doc
+        .entities()
+        .enumerate()
+        .map(|(at, e)| (e.base().id, at))
+        .collect();
     // The plans: their id and level, in the drawing's order.
     let plans: Vec<(String, String)> = match layer_of("plan-siniri") {
         Some((Place::Layer(id), _)) => doc
@@ -136,7 +171,8 @@ fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<Run, Sto
             .collect(),
         _ => Vec::new(),
     };
-    let on_layer = |e: &Entity| e.base().layer_id == decision_layer && matches!(e, Entity::Polygon(_));
+    let on_layer =
+        |e: &Entity| e.base().layer_id == decision_layer && matches!(e, Entity::Polygon(_));
     // The decision areas, each with where a refusal about it points.
     let mut areas: Vec<(Slot, &Entity, String, Option<String>)> = Vec::new();
     match &input.uids {
@@ -144,30 +180,45 @@ fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<Run, Sto
             for (i, uid) in uids.iter().enumerate() {
                 let at = format!("uids[{i}]");
                 if uids[..i].contains(uid) {
-                    return Err(fail(codes::INVALID_INPUT, format!("“{uid}” alanı iki kez verildi."), Some(&at)));
+                    return Err(fail(
+                        codes::INVALID_INPUT,
+                        format!("“{uid}” alanı iki kez verildi."),
+                        Some(&at),
+                    ));
                 }
                 if !checks::is_uid_text(uid) {
                     return Err(fail(
                         codes::INVALID_UID,
-                        format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+                        format!(
+                            "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+                        ),
                         Some(&at),
                     ));
                 }
-                let Some((slot, e)) =
-                    Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s).map(|e| (s, e)))
+                let Some((slot, e)) = Uuid::parse_str(uid)
+                    .ok()
+                    .and_then(|u| doc.slot_of(u))
+                    .and_then(|s| doc.get(s).map(|e| (s, e)))
                 else {
-                    return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), Some(&at)));
+                    return Err(fail(
+                        codes::ENTITY_NOT_FOUND,
+                        format!("“{uid}” kimlikli nesne çizimde yok."),
+                        Some(&at),
+                    ));
                 };
                 if !on_layer(e) {
                     return Err(fail(
                         codes::NOT_A_DECISION,
-                        format!("“{uid}” imar planının karar katmanında bir alan değil; sembol karar alanlarına verilir."),
+                        format!(
+                            "“{uid}” imar planının karar katmanında bir alan değil; sembol karar alanlarına verilir."
+                        ),
                         Some(&at),
                     ));
                 }
                 areas.push((slot, e, uid.clone(), Some(at)));
             }
-            areas.sort_by_key(|(_, e, _, _)| order.get(&e.base().id).copied().unwrap_or(usize::MAX));
+            areas
+                .sort_by_key(|(_, e, _, _)| order.get(&e.base().id).copied().unwrap_or(usize::MAX));
         }
         None => {
             for e in doc.entities().filter(|e| on_layer(e)) {
@@ -245,7 +296,11 @@ fn run(doc: &Document, input: &ZoningSymbolize, writes: bool) -> Result<Run, Sto
         .to_owned();
         rows.push(row);
     }
-    let count = |state: &[&str]| rows.iter().filter(|r| state.contains(&r.state.as_str())).count() as u32;
+    let count = |state: &[&str]| {
+        rows.iter()
+            .filter(|r| state.contains(&r.state.as_str()))
+            .count() as u32
+    };
     let out = ZoningSymbolized {
         set: count(&["set"]),
         same: count(&["same"]),
@@ -274,7 +329,10 @@ fn kept_after(input: &ZoningSymbolize) -> Vec<ZoningSymbolPick> {
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ZoningSymbolize) -> CommandResult<()> {
     match run(cx.doc, input, false) {
-        Ok((_, _, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, _, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -282,7 +340,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ZoningSymbolize) -> CommandRe
 /// What execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ZoningSymbolize) -> CommandResult<ZoningSymbolized> {
     match run(cx.doc, input, false) {
-        Ok((_, out, warnings)) => CommandResult::Completed { output: out, warnings },
+        Ok((_, out, warnings)) => CommandResult::Completed {
+            output: out,
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -303,10 +364,16 @@ fn write(cx: &mut ExecutionContext<'_>, input: ZoningSymbolize) -> CommandResult
         Ok(())
     });
     out.revision = cx.doc.revision().to_string();
-    CommandResult::Completed { output: out, warnings }
+    CommandResult::Completed {
+        output: out,
+        warnings,
+    }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ZoningSymbolize) -> CommandResult<ZoningSymbolized> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ZoningSymbolize,
+) -> CommandResult<ZoningSymbolized> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_ZONING_SYMBOLIZE,
@@ -319,17 +386,27 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ZoningSymbolize) -> Command
 /// The decision areas as `cad.zoning.symbolize` reads them without the user's picks, writing nothing (docs/adr/4640, the
 /// zoning check's symbol rule): none when the table or the decision layer is not there.
 pub(crate) fn rows(doc: &Document) -> Option<Vec<kentos_commands::ZoningSymbolRow>> {
-    run(doc, &ZoningSymbolize::default(), false).ok().map(|(_, out, _)| out.areas)
+    run(doc, &ZoningSymbolize::default(), false)
+        .ok()
+        .map(|(_, out, _)| out.areas)
 }
 
 /// The project's kept choices (docs/adr/5040), for a window that starts from them.
 pub fn kept(doc: &Document) -> Vec<ZoningSymbolPick> {
-    doc.zoning_plan().map(|z: &ZoningPlanData| z.symbols.clone()).unwrap_or_default()
+    doc.zoning_plan()
+        .map(|z: &ZoningPlanData| z.symbols.clone())
+        .unwrap_or_default()
 }
 
 /// A library symbol's name as KentOS's table lists it among a level's choices; the id itself when it is not there.
 pub(crate) fn symbol_name(id: &str) -> String {
     builtin_zoning_symbols()
-        .and_then(|t| t.levels.iter().flat_map(|l| &l.choices).find(|c| c.id == id).map(|c| c.name.clone()))
+        .and_then(|t| {
+            t.levels
+                .iter()
+                .flat_map(|l| &l.choices)
+                .find(|c| c.id == id)
+                .map(|c| c.name.clone())
+        })
         .unwrap_or_else(|| id.to_owned())
 }

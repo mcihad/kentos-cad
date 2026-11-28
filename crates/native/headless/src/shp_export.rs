@@ -300,7 +300,9 @@ pub fn make(doc: &Document, input: &ExportShp) -> Result<Made, Refused> {
         blank_text: written.blank_text,
         report: written.report,
     };
-    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
+    warnings.extend(kentos_native_application::time_export::left_out_warning(
+        left,
+    ));
     Ok(Made {
         into,
         files,

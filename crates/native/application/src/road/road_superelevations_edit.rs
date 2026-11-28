@@ -2,7 +2,10 @@
 //! fields replacing its), rebound to its alignment's present revision, or removed; one undo step “Dever”. The shared
 //! cases are `fixtures/commands/v1/road.superelevations.edit.json`.
 
-use kentos_commands::{CommandResult, RoadEditOperation, SuperelevationDef, SuperelevationsEdit, SuperelevationsWritten};
+use kentos_commands::{
+    CommandResult, RoadEditOperation, SuperelevationDef, SuperelevationsEdit,
+    SuperelevationsWritten,
+};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -23,15 +26,24 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
     common::road_project(doc)?;
     let own = doc.road_superelevations();
     let mut list = own.to_vec();
-    let found = input.superelevation.as_deref().and_then(|t| common::find(own, t, "superelevation").ok());
+    let found = input
+        .superelevation
+        .as_deref()
+        .and_then(|t| common::find(own, t, "superelevation").ok());
     let alignment = match input.alignment.as_deref() {
-        Some(a) => Some(alignments::find(doc.road_alignments(), a, "alignment")?.1.clone()),
+        Some(a) => Some(
+            alignments::find(doc.road_alignments(), a, "alignment")?
+                .1
+                .clone(),
+        ),
         None => None,
     };
     let target = match (input.operation, found) {
         (RoadEditOperation::Remove | RoadEditOperation::Rebind, None) => {
             let name = input.superelevation.clone().unwrap_or_default();
-            return Err(common::find(own, &name, "superelevation").err().unwrap_or(Stop::Cancelled));
+            return Err(common::find(own, &name, "superelevation")
+                .err()
+                .unwrap_or(Stop::Cancelled));
         }
         (RoadEditOperation::Remove, Some((at, d))) => {
             let users: Vec<&str> = doc
@@ -43,7 +55,11 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
             if !users.is_empty() {
                 return Err(fail(
                     codes::SUPERELEVATION_IN_USE,
-                    format!("“{}” dever çizelgesini şu kesit takımları kullanıyor: {}. Önce takımlardan kaldırın.", d.name, users.join(", ")),
+                    format!(
+                        "“{}” dever çizelgesini şu kesit takımları kullanıyor: {}. Önce takımlardan kaldırın.",
+                        d.name,
+                        users.join(", ")
+                    ),
                     "superelevation",
                 ));
             }
@@ -56,7 +72,11 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
             if !corridors.is_empty() {
                 return Err(fail(
                     codes::SUPERELEVATION_IN_USE,
-                    format!("“{}” dever çizelgesini şu koridorlar kullanıyor: {}. Önce koridorlardan kaldırın.", d.name, corridors.join(", ")),
+                    format!(
+                        "“{}” dever çizelgesini şu koridorlar kullanıyor: {}. Önce koridorlardan kaldırın.",
+                        d.name,
+                        corridors.join(", ")
+                    ),
                     "superelevation",
                 ));
             }
@@ -64,7 +84,11 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
             None
         }
         (RoadEditOperation::Rebind, Some((at, old))) => {
-            let now = doc.road_alignments().iter().find(|a| a.id == old.alignment).map_or(0, |a| a.revision);
+            let now = doc
+                .road_alignments()
+                .iter()
+                .find(|a| a.id == old.alignment)
+                .map_or(0, |a| a.revision);
             let mut d = old.clone();
             if d.alignment_revision != now {
                 d.alignment_revision = now;
@@ -123,9 +147,14 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
             ]
             .into_iter()
             .find(|(_, m)| *m);
-            let (Some(name), Some(a), Some(nl), Some(nr), Some(method), None) =
-                (&input.name, alignment, input.normal_left, input.normal_right, &input.method, missing)
-            else {
+            let (Some(name), Some(a), Some(nl), Some(nr), Some(method), None) = (
+                &input.name,
+                alignment,
+                input.normal_left,
+                input.normal_right,
+                &input.method,
+                missing,
+            ) else {
                 return Err(fail(
                     codes::INVALID_SUPERELEVATION,
                     "Yeni dever çizelgesi için name, alignment, normalLeft, normalRight ve method verilmeli.".into(),
@@ -133,7 +162,10 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
                 ));
             };
             let id = input.superelevation.clone().unwrap_or_else(|| {
-                (1..).map(|n| format!("d-{n}")).find(|id| own.iter().all(|s| &s.id != id)).unwrap_or_default()
+                (1..)
+                    .map(|n| format!("d-{n}"))
+                    .find(|id| own.iter().all(|s| &s.id != id))
+                    .unwrap_or_default()
             });
             list.push(SuperelevationDef {
                 id: id.clone(),
@@ -152,7 +184,10 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
     let mut road = doc.settings().road.clone().unwrap_or_default();
     road.superelevations = list.clone();
     judged(&road, codes::INVALID_SUPERELEVATION, "Dever çizelgesi")?;
-    if let Some(d) = target.as_ref().and_then(|id| list.iter().find(|s| &s.id == id)) {
+    if let Some(d) = target
+        .as_ref()
+        .and_then(|id| list.iter().find(|s| &s.id == id))
+    {
         let built = common::alignment_of(doc, d)?;
         common::schedule(d, &built)?;
     }
@@ -163,12 +198,21 @@ fn check(doc: &kentos_domain::Document, input: &SuperelevationsEdit) -> Result<C
 fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<SuperelevationsWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_superelevations(c.list.clone(), STEP) {
-        return fail(codes::INVALID_SUPERELEVATION, format!("Dever çizelgesi kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_SUPERELEVATION,
+            format!("Dever çizelgesi kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
     let all: Vec<_> = c.list.iter().map(|d| common::report(doc, d)).collect();
     CommandResult::Completed {
         output: SuperelevationsWritten {
-            superelevation: c.target.as_ref().and_then(|id| all.iter().find(|s| &s.id == id)).cloned(),
+            superelevation: c
+                .target
+                .as_ref()
+                .and_then(|id| all.iter().find(|s| &s.id == id))
+                .cloned(),
             superelevations: all,
             revision: doc.revision().to_string(),
         },
@@ -179,13 +223,19 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<Superelevat
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &SuperelevationsEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: vec![] },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What execute would write now; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &SuperelevationsEdit) -> CommandResult<SuperelevationsWritten> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &SuperelevationsEdit,
+) -> CommandResult<SuperelevationsWritten> {
     let c = match check(cx.doc, input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -199,7 +249,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SuperelevationsEdit) -> CommandRe
 }
 
 /// Writes the schedule: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: SuperelevationsEdit) -> CommandResult<SuperelevationsWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SuperelevationsEdit,
+) -> CommandResult<SuperelevationsWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_SUPERELEVATIONS_EDIT,
@@ -213,6 +266,8 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SuperelevationsEdit) -> Com
 }
 
 /// The axis of rotation as kept: the centreline is no field (a file without an edge stays as it was, schema 162).
-fn pivot_kept(p: kentos_commands::SuperelevationPivot) -> Option<kentos_commands::SuperelevationPivot> {
+fn pivot_kept(
+    p: kentos_commands::SuperelevationPivot,
+) -> Option<kentos_commands::SuperelevationPivot> {
     (p != kentos_commands::SuperelevationPivot::Centerline).then_some(p)
 }

@@ -7,10 +7,10 @@
 //! JSON carries no NaN or ±∞: a step's `nonFinite` puts them into the typed
 //! input after it is read, at the paths the errors name.
 
-mod inputs_core;
 mod inputs_arch;
-mod inputs_map;
+mod inputs_core;
 mod inputs_gis;
+mod inputs_map;
 mod inputs_road;
 mod run_core;
 use run_core::core_cases;
@@ -23,9 +23,9 @@ use run_gis::gis_cases;
 mod run_road;
 use run_road::road_cases;
 
+use kentos_native_application::entities_select::isolation;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use kentos_native_application::entities_select::isolation;
 
 use kentos_commands::ChangesetApply;
 use kentos_commands::{
@@ -60,29 +60,20 @@ use kentos_commands::{
 };
 use kentos_domain::{Document, Slot, Uuid};
 #[cfg(feature = "mod-arch")]
-use kentos_native_application::spaces_discover;
-use kentos_native_application::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
-#[cfg(feature = "mod-arch")]
 use kentos_native_application::arch_exceptions;
 #[cfg(feature = "mod-arch")]
-use kentos_native_application::arch_walk;
-#[cfg(feature = "mod-arch")]
 use kentos_native_application::arch_recognize;
-use kentos_native_application::dimensions_interior;
 #[cfg(feature = "mod-arch")]
-use kentos_native_application::spaces_separators;
-#[cfg(feature = "mod-arch")]
-use kentos_native_application::spaces_number;
-#[cfg(feature = "mod-arch")]
-use kentos_native_application::{program_check, program_edit};
-use kentos_native_application::donut_create;
-use kentos_native_application::drawing_compare;
-use kentos_native_application::{drawing_take, review_notes};
-use kentos_native_application::drawing_inspect;
-use kentos_native_application::blocks_find;
-use kentos_native_application::blocks_convert;
+use kentos_native_application::arch_walk;
 use kentos_native_application::arrays_adopt;
 use kentos_native_application::arrays_find;
+use kentos_native_application::blocks_convert;
+use kentos_native_application::blocks_find;
+use kentos_native_application::datasets_edit;
+use kentos_native_application::dimensions_interior;
+use kentos_native_application::donut_create;
+use kentos_native_application::drawing_compare;
+use kentos_native_application::drawing_inspect;
 use kentos_native_application::fields_write;
 use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
 #[cfg(feature = "mod-gis")]
@@ -106,21 +97,26 @@ use kentos_native_application::profile_files::{
 use kentos_native_application::profiles::{apply as profiles_apply, check as profiles_check};
 #[cfg(feature = "mod-gis")]
 use kentos_native_application::records_page;
+use kentos_native_application::relations_edit;
 use kentos_native_application::sources::{
     describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile,
     relate as sources_relate, sync as sources_sync,
 };
 #[cfg(feature = "mod-gis")]
 use kentos_native_application::sources_query;
-use kentos_native_application::standards_palettes;
+#[cfg(feature = "mod-arch")]
+use kentos_native_application::spaces_discover;
+#[cfg(feature = "mod-arch")]
+use kentos_native_application::spaces_number;
+#[cfg(feature = "mod-arch")]
+use kentos_native_application::spaces_separators;
 use kentos_native_application::standards::{
     apply as standards_apply, check as standards_check, conflicts as standards_conflicts,
     resolve as standards_resolve,
 };
+use kentos_native_application::standards_palettes;
 #[cfg(feature = "mod-gis")]
 use kentos_native_application::time_query;
-#[cfg(feature = "mod-gis")]
-use kentos_native_application::{sensors_ingest, sensors_latest};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, adjoin_cmd, annotations_scales,
     annotations_write, arc, areas, array, blocks_define, blocks_edit, circle, constructions,
@@ -137,20 +133,39 @@ use kentos_native_application::{
     styles_edit, tables_edit, texts_check, texts_edit, transform, ucs_set, units_change,
     zoning_check, zoning_draft, zoning_symbolize,
 };
+#[cfg(feature = "mod-gis")]
+use kentos_native_application::{
+    addresses_check, addresses_compare, addresses_normalize, images_clip, layer_classes,
+    layer_export, layers_columns, layers_compose, layers_contingents, layers_create, layers_data,
+    layers_edit, layers_filter, layers_find, layers_info, layers_migrate, layers_rows,
+    layers_rules, layers_service, layers_session, layers_set, layers_states, layers_subtypes,
+    layers_table, layers_time, linearref_define, network_define, scenarios_edit, scenarios_impact,
+    scenarios_record, time_version, topology_clean,
+};
 #[cfg(feature = "mod-arch")]
 use kentos_native_application::{
-    arch_audit, arch_form_answers, arch_ifc, arch_performance, casework_edit, casework_query, casework_run,
-    delivery_edit,
-    underlay_edit,
-    underlay_check,
-    columns_distances,
-    zoning_parcel,
-    elevations_edit, elevations_query, legends, levels_assign, materials_edit, modules_edit,
-    modules_query, north, opening_types_edit, element_types_edit, openings_create, openings_distances, openings_edit,
-    openings_query, options_edit, options_query, revisions, sections_edit, sections_query,
-    slabs_create, slabs_edit, spaces_create, spaces_edit, spaces_quantities, views_edit,
-    walls_create, walls_distances, walls_edit, walls_from_lines, walls_joins, walls_partition,
-    walls_rectangle,
+    arch_audit, arch_form_answers, arch_ifc, arch_performance, casework_edit, casework_query,
+    casework_run, columns_distances, delivery_edit, element_types_edit, elevations_edit,
+    elevations_query, legends, levels_assign, materials_edit, modules_edit, modules_query, north,
+    opening_types_edit, openings_create, openings_distances, openings_edit, openings_query,
+    options_edit, options_query, revisions, sections_edit, sections_query, slabs_create,
+    slabs_edit, spaces_create, spaces_edit, spaces_quantities, underlay_check, underlay_edit,
+    views_edit, walls_create, walls_distances, walls_edit, walls_from_lines, walls_joins,
+    walls_partition, walls_rectangle, zoning_parcel,
+};
+#[cfg(feature = "mod-arch")]
+use kentos_native_application::{
+    arch_edit, beams_create, columns_create, grids_create, masses_create, railings_create,
+    ramps_create, roofs_create, stairs_create,
+};
+use kentos_native_application::{
+    arrays_edit, changeset, constraints_edit, constraints_query, create, curves_edit,
+    dimensions_create, divide, drawing_audit, entities_boundary, entities_break, entities_cleanup,
+    entities_copy, entities_explode, entities_hatch, entities_join, entities_lengthen,
+    entities_match, entities_paste, entities_reverse, file_import, file_import_csv,
+    file_import_dwg, file_import_fgb, file_import_geojson, file_import_gml, file_import_gpkg,
+    file_import_kml, file_import_parquet, file_import_pdf, file_import_shp, parameters_edit, qml,
+    sld, stretch,
 };
 #[cfg(feature = "mod-map")]
 use kentos_native_application::{
@@ -160,14 +175,35 @@ use kentos_native_application::{
     pointcloud_network, pointcloud_overlap, pointcloud_place, pointcloud_register, readjustment,
     readjustment_scope, readjustment_sheets, survey_adjust, survey_baselines, survey_points,
 };
+use kentos_native_application::{
+    assets_check, inserts_clip, navigator, rasters_georef, sheets_set, xrefs_edit, xrefs_list,
+};
 #[cfg(feature = "mod-gis")]
 use kentos_native_application::{
-    addresses_check, addresses_compare, addresses_normalize, images_clip, layers_compose,
-    layers_contingents, layers_edit, layers_filter, layers_find, layers_info, layers_rules,
-    layer_classes, layer_export, layers_columns, layers_create, layers_data, layers_migrate, layers_rows, layers_session, layers_service, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
-    linearref_define, network_define, scenarios_edit, scenarios_impact, scenarios_record,
-    time_version, topology_clean,
+    attachments_inspect, domains_edit, domains_export, fields_migrate, forms_audit, forms_compare,
+    forms_edit, forms_export, forms_fill, forms_import, forms_recompute, forms_sources,
+    forms_submit, forms_test, forms_transition, forms_validate, records, records_duplicate,
+    schema_describe,
 };
+use kentos_native_application::{
+    block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
+    file_import_block, hatch_patterns_edit, library_edit, line_types_edit, styles_impact,
+};
+#[cfg(feature = "mod-gis")]
+use kentos_native_application::{datasets_describe, joins_edit, joins_query};
+use kentos_native_application::{dimension_sets_create, dimension_sets_edit, dimension_sets_query};
+use kentos_native_application::{drawing_take, review_notes};
+#[cfg(feature = "terrain")]
+use kentos_native_application::{entities_drape, file_import_landxml};
+use kentos_native_application::{extract_run, extract_table};
+#[cfg(feature = "mod-gis")]
+use kentos_native_application::{gis_derivation, gis_detach, gis_takeback, maplibre};
+#[cfg(feature = "mod-gis")]
+use kentos_native_application::{images_edit, rasters_mosaic, rasters_reproject};
+#[cfg(feature = "mod-gis")]
+use kentos_native_application::{processing_batch, processing_run, processing_tools};
+#[cfg(feature = "mod-arch")]
+use kentos_native_application::{program_check, program_edit};
 #[cfg(feature = "mod-road")]
 use kentos_native_application::{
     road_alignments_check, road_alignments_create, road_alignments_edit, road_alignments_fit,
@@ -198,57 +234,18 @@ use kentos_native_application::{
     road_volumes_query, road_volumes_states, road_volumes_uncertainty, road_walls_draw,
     road_walls_edit, road_walls_query, roads_edit,
 };
-#[cfg(feature = "terrain")]
-use kentos_native_application::{entities_drape, file_import_landxml};
-#[cfg(feature = "mod-arch")]
-use kentos_native_application::{
-    arch_edit, beams_create, columns_create, grids_create, masses_create, railings_create, ramps_create,
-    roofs_create, stairs_create,
-};
-use kentos_native_application::{
-    arrays_edit, changeset, constraints_edit, constraints_query, create, curves_edit,
-    dimensions_create, divide, drawing_audit, entities_boundary, entities_break, entities_cleanup,
-    entities_copy, entities_explode, entities_hatch, entities_join, entities_lengthen,
-    entities_match, entities_paste, entities_reverse, file_import, file_import_csv,
-    file_import_dwg, file_import_fgb, file_import_geojson, file_import_gml, file_import_gpkg,
-    file_import_kml, file_import_parquet, file_import_pdf, file_import_shp, parameters_edit, qml,
-    sld, stretch,
-};
+use kentos_native_application::{schedules_create, schedules_edit, schedules_query};
 #[cfg(feature = "mod-gis")]
-use kentos_native_application::{gis_derivation, gis_detach, gis_takeback, maplibre};
-use kentos_native_application::{
-    assets_check, inserts_clip, navigator, rasters_georef, sheets_set, xrefs_edit, xrefs_list,
-};
+use kentos_native_application::{sensors_ingest, sensors_latest};
 #[cfg(feature = "mod-arch")]
 use kentos_native_application::{
     spaces_finish, templates_apply, viewmarks_create, viewmarks_edit, viewmarks_references,
 };
 #[cfg(feature = "mod-gis")]
-use kentos_native_application::{images_edit, rasters_mosaic, rasters_reproject};
-use kentos_native_application::relations_edit;
-#[cfg(feature = "mod-gis")]
-use kentos_native_application::{
-    attachments_inspect, domains_edit, domains_export, fields_migrate, forms_audit, forms_compare,
-    forms_edit, forms_export, forms_fill, forms_import, forms_recompute, forms_sources,
-    forms_submit, forms_test, forms_transition, forms_validate, records, records_duplicate,
-    schema_describe,
-};
-use kentos_native_application::{
-    block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
-    file_import_block, hatch_patterns_edit, library_edit, line_types_edit, styles_impact,
-};
-use kentos_native_application::datasets_edit;
-#[cfg(feature = "mod-gis")]
-use kentos_native_application::{datasets_describe, joins_edit, joins_query};
+use kentos_native_application::{stac_host, stac_prepare, stac_search};
 use kentos_native_application::{subnetworks, subnetworks_update};
-#[cfg(feature = "mod-gis")]
-use kentos_native_application::{processing_batch, processing_run, processing_tools};
-use kentos_native_application::{schedules_create, schedules_edit, schedules_query};
 #[cfg(feature = "mod-arch")]
 use kentos_native_application::{tags_check, tags_create, tags_edit};
-use kentos_native_application::{extract_run, extract_table};
-#[cfg(feature = "mod-gis")]
-use kentos_native_application::{stac_host, stac_prepare, stac_search};
 #[cfg(feature = "mod-gis")]
 use kentos_native_application::{topology_check, topology_exceptions, topology_repair};
 use serde_json::{Value, json};
@@ -324,11 +321,21 @@ fn close_by(a: &Value, b: &Value, within: f64, relative: bool) -> bool {
     match (a, b) {
         (_, Value::String(w)) if w == "$any" => true,
         (Value::Number(x), Value::Number(y)) => match (x.as_f64(), y.as_f64()) {
-            (Some(x), Some(y)) => (x - y).abs() <= if relative { within * y.abs().max(1.0) } else { within },
+            (Some(x), Some(y)) => {
+                (x - y).abs()
+                    <= if relative {
+                        within * y.abs().max(1.0)
+                    } else {
+                        within
+                    }
+            }
             _ => false,
         },
         (Value::Array(x), Value::Array(y)) => {
-            x.len() == y.len() && x.iter().zip(y).all(|(p, q)| close_by(p, q, within, relative))
+            x.len() == y.len()
+                && x.iter()
+                    .zip(y)
+                    .all(|(p, q)| close_by(p, q, within, relative))
         }
         (Value::Object(x), Value::Object(y)) => {
             x.len() == y.len()
@@ -397,7 +404,10 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
             let mut rest = text.as_str();
             while let Some(start) = rest.find("$uidOf:") {
                 out.push_str(&rest[..start]);
-                let digits: String = rest[start + "$uidOf:".len()..].chars().take_while(char::is_ascii_digit).collect();
+                let digits: String = rest[start + "$uidOf:".len()..]
+                    .chars()
+                    .take_while(char::is_ascii_digit)
+                    .collect();
                 let slot = digits
                     .parse::<u32>()
                     .map_err(|_| format!("{at}: {text}: yuva bir sayı olmalı"))?;
@@ -631,42 +641,9 @@ trait Input {
 
 // The constraint commands' numbers are in expressions, not the input's numbers (docs/adr/0335).
 
-
 // The topology commands take no number (docs/adr/0589).
 
-
-
 // The forms' inputs have no number a case makes NaN (docs/adr/0401 §9).
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /// `list[i]` of a list of numbers.
 fn list_number<'a>(list: &'a mut [f64], name: &str, rest: &str) -> Option<&'a mut f64> {
@@ -687,24 +664,6 @@ fn named_point<'a>(
     point_number(pts, &format!("pts{after}"))
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /// A roof's part's `parts[k].at.x` and `.y`, `.width`, `.depth`, `.rotation`, `.rise` (docs/adr/8044 §6).
 fn roof_part_number<'a>(
     parts: Option<&'a mut Vec<kentos_commands::RoofPart>>,
@@ -723,92 +682,13 @@ fn roof_part_number<'a>(
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // `at.x`, `north.angle`, `size` (docs/adr/0721 §3).
 
 // `at.x`, `size`, `arc`, the frame's points (docs/adr/0721 §4).
 
 // `at.x`, `height` (docs/adr/0721 §5).
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // No number of these is a NaN or ±∞ case (docs/adr/0210 §11).
-
-
-
-
-
-
-
 
 /// `min.x` … `max.y` of a rectangle given as `TrimBoundaries::Area`.
 fn area_number<'a>(
@@ -827,7 +707,6 @@ fn area_number<'a>(
     }
 }
 
-
 /// A coordinate of a point by its axis name.
 fn axis<'a>(p: &'a mut kentos_commands::Vec2, a: &str) -> Option<&'a mut f64> {
     match a {
@@ -837,29 +716,9 @@ fn axis<'a>(p: &'a mut kentos_commands::Vec2, a: &str) -> Option<&'a mut f64> {
     }
 }
 
-
-
-
-
-
-
-
-
-
-
 // Yeni sürüm oluştur takes no number: its date is text (docs/adr/0622 §9).
 
-
-
-
-
-
-
-
-
 // Ids and a pattern: no number a case makes NaN (docs/adr/0501).
-
-
 
 /// A coordinate of a point given by its coordinates.
 fn measured_number<'a>(
@@ -873,206 +732,18 @@ fn measured_number<'a>(
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // No style's number is a NaN or ±∞ case: the table's rule refuses them as
 // any other value out of its bounds (docs/adr/0248 §4).
-
-
-
-
-
-
-
-
 
 // No number: a path and rows (docs/adr/0634 §1).
 
 // No number: a path and table names (docs/adr/0634 §2).
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // KentOS Yol's alignments (plan/road.md Y3): no number is put at an error's path.
-
-
-
 
 // KentOS Yol's profiles (plan/road.md Y4): no number is put at an error's path.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // KentOS Yol's terrain surfaces (plan/road.md Y2.3): no number is put at an error's path.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /// A coordinate of a named point: `c.x`, `p.y`.
 fn coordinate<'a>(p: &'a mut kentos_commands::Vec2, name: &str, path: &str) -> Option<&'a mut f64> {
@@ -1082,10 +753,6 @@ fn coordinate<'a>(p: &'a mut kentos_commands::Vec2, name: &str, path: &str) -> O
         _ => None,
     }
 }
-
-
-
-
 
 /// `name[i]` of a fixed list of numbers.
 fn indexed<'a>(values: &'a mut [f64], name: &str, path: &str) -> Option<&'a mut f64> {
@@ -1097,9 +764,6 @@ fn indexed<'a>(values: &'a mut [f64], name: &str, path: &str) -> Option<&'a mut 
         .ok()?;
     values.get_mut(i)
 }
-
-
-
 
 /// An elevation `zs[i]` written with a geometry (docs/adr/0142): only one
 /// given as a number can be made non-finite.
@@ -1697,7 +1361,10 @@ fn run_command(
     }
     let want = fill(&want, doc, state, at)?;
     if let Some(within) = step.get("within").and_then(Value::as_f64) {
-        let relative = step.get("relative").and_then(Value::as_bool).unwrap_or(false);
+        let relative = step
+            .get("relative")
+            .and_then(Value::as_bool)
+            .unwrap_or(false);
         return if close_by(&got, &want, within, relative) {
             Ok(())
         } else {
@@ -1918,7 +1585,9 @@ fn run_step(
                 .casework()
                 .get(index)
                 .ok_or(format!("{at}: {index}. mutfak dizisi yok"))?;
-            state.uids.insert(name.to_owned(), Uuid::from_bytes(run.id.0));
+            state
+                .uids
+                .insert(name.to_owned(), Uuid::from_bytes(run.id.0));
         }
         // A file changed by someone else between two steps (another program's edit of a bound table, docs/adr/0538): a
         // fixture's bytes over a `$tmp:` file.
@@ -1958,17 +1627,24 @@ fn run_step(
             let path = with_fixtures(from);
             let bytes = std::fs::read(&path).map_err(|e| format!("{at}: {path}: {e}"))?;
             let got = match step["as"].as_str().unwrap_or("text") {
-                "json" => serde_json::from_slice::<Value>(&bytes).map_err(|e| format!("{at}: JSON değil: {e}"))?,
+                "json" => serde_json::from_slice::<Value>(&bytes)
+                    .map_err(|e| format!("{at}: JSON değil: {e}"))?,
                 "windows1254" => Value::String(kentos_formats::text::decode(
                     &bytes,
                     kentos_formats::text::Encoding::Windows1254,
                 )),
-                "kmlStyles" => kml_styles(&String::from_utf8(bytes).map_err(|e| format!("{at}: UTF-8 değil: {e}"))?),
-                _ => Value::String(String::from_utf8(bytes).map_err(|e| format!("{at}: UTF-8 değil: {e}"))?),
+                "kmlStyles" => kml_styles(
+                    &String::from_utf8(bytes).map_err(|e| format!("{at}: UTF-8 değil: {e}"))?,
+                ),
+                _ => Value::String(
+                    String::from_utf8(bytes).map_err(|e| format!("{at}: UTF-8 değil: {e}"))?,
+                ),
             };
             let want = &step["returns"];
             if !same(&got, want) {
-                return Err(format!("{at}: dosya beklenenle aynı değil:\n  okunan   {got}\n  beklenen {want}"));
+                return Err(format!(
+                    "{at}: dosya beklenenle aynı değil:\n  okunan   {got}\n  beklenen {want}"
+                ));
             }
         }
         other => return Err(format!("{at}: bilinmeyen işlem “{other}”")),
@@ -2021,7 +1697,8 @@ fn kml_styles(text: &str) -> Value {
         .skip(1)
         .map(|p| {
             let p = &p[..p.find("</Placemark>").unwrap_or(p.len())];
-            between(p, "<styleUrl>", "</styleUrl>").map_or(Value::Null, |u| Value::String(u.to_owned()))
+            between(p, "<styleUrl>", "</styleUrl>")
+                .map_or(Value::Null, |u| Value::String(u.to_owned()))
         })
         .collect();
     json!({ "styles": styles, "placemarks": placemarks })
@@ -2256,7 +1933,9 @@ fn check(
                 match within {
                     // A recipe turned with its objects (docs/adr/0730 §4): its places within the step's `within`.
                     Some(w) if !close(&got, &wanted, w) => {
-                        return Err(format!("{at}: duvar ölçü grupları (±{w}): beklenen {wanted}, bulunan {got}"));
+                        return Err(format!(
+                            "{at}: duvar ölçü grupları (±{w}): beklenen {wanted}, bulunan {got}"
+                        ));
                     }
                     Some(_) => {}
                     None => expect_same(&got, &wanted, "duvar ölçü grupları", at)?,
@@ -2295,7 +1974,9 @@ fn check(
                 let wanted = fill(want, doc, state, at)?;
                 match within {
                     Some(w) if !close(&got, &wanted, w) => {
-                        return Err(format!("{at}: mutfak dizileri (±{w}): beklenen {wanted}, bulunan {got}"));
+                        return Err(format!(
+                            "{at}: mutfak dizileri (±{w}): beklenen {wanted}, bulunan {got}"
+                        ));
                     }
                     Some(_) => {}
                     None => expect_same(&got, &wanted, "mutfak dizileri", at)?,
@@ -2377,7 +2058,9 @@ fn check(
                         let what = format!("“{name}” bloğunun {k} alanı");
                         match within {
                             Some(w) if !close(&have, v, w) => {
-                                return Err(format!("{at}: {what} (±{w}): beklenen {v}, bulunan {have}"));
+                                return Err(format!(
+                                    "{at}: {what} (±{w}): beklenen {v}, bulunan {have}"
+                                ));
                             }
                             Some(_) => {}
                             None => expect_same(&have, v, &what, at)?,
@@ -2421,9 +2104,11 @@ fn check(
             // The book's plot profiles, and the profile each sheet's plot settings name (docs/adr/1130).
             "plotProfiles" | "sheetProfiles" => {
                 let book = match doc.sheets() {
-                    Some(s) => kentos_sheet::project::read_project_sheets(s)
-                        .map_err(|e| format!("{at}: kitap okunamadı: {}", e.message))?
-                        .0,
+                    Some(s) => {
+                        kentos_sheet::project::read_project_sheets(s)
+                            .map_err(|e| format!("{at}: kitap okunamadı: {}", e.message))?
+                            .0
+                    }
                     None => Default::default(),
                 };
                 let got = if key == "plotProfiles" {
@@ -2500,8 +2185,8 @@ fn check(
             }
             // A road project's terrain surfaces' definitions (plan/road.md Y2.3); null: none.
             "road" => {
-                let mut got = serde_json::to_value(&doc.settings().road)
-                    .map_err(|e| format!("{at}: {e}"))?;
+                let mut got =
+                    serde_json::to_value(&doc.settings().road).map_err(|e| format!("{at}: {e}"))?;
                 let wanted = fill(want, doc, state, at)?;
                 // What the road commands drew (docs/adr/0911 §1) is compared only where a case names it.
                 for key in ["drawings", "autoRebuild", "rebuildWhole"] {
@@ -2517,7 +2202,9 @@ fn check(
                 match within {
                     // An alignment fitted to a line (docs/adr/0908 §12): its PIs within the step's `within`.
                     Some(w) if !close(&got, &wanted, w) => {
-                        return Err(format!("{at}: yol ayarları (±{w}): beklenen {wanted}, bulunan {got}"));
+                        return Err(format!(
+                            "{at}: yol ayarları (±{w}): beklenen {wanted}, bulunan {got}"
+                        ));
                     }
                     Some(_) => {}
                     None => expect_same(&got, &wanted, "yol ayarları", at)?,

@@ -5,9 +5,9 @@
 //! name already used is refused before anything is written. Docs/adr/5020: the ifraz kept as a draft and approved from
 //! Belgeler, a document's approval, a draft withdrawn, the stated lengths against the boundaries. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -25,12 +25,19 @@ fn cases(file: &str) -> Value {
 }
 
 fn case(file: &str, name: &str) -> Value {
-    cases(file)["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case").clone()
+    cases(file)["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case")
+        .clone()
 }
 
 /// The drawing of a case (none: the file's own), open in Harita.
 fn opened(setup: Value) -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -46,7 +53,15 @@ fn register(app: &mut App, slots: &[u32]) {
 }
 
 fn saved_register(app: &App) -> Value {
-    serde_json::to_value(&app.document.as_ref().expect("a drawing").model.settings().parcel_register).expect("json")
+    serde_json::to_value(
+        &app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .settings()
+            .parcel_register,
+    )
+    .expect("json")
 }
 
 const FIRST: &str =
@@ -82,7 +97,8 @@ fn the_first_document_writes_the_shared_case_s_register() {
         let _ = app.update(Message::from(map::Event::ParcelRegister(event)));
     }
     let plan = app
-        .modules.map()
+        .modules
+        .map()
         .parcel_register
         .plan
         .clone()
@@ -108,7 +124,13 @@ fn the_first_document_writes_the_shared_case_s_register() {
     let log: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
     assert!(log.iter().any(|l| l.contains(&said)), "{said}\n{log:?}");
     // The window stays and shows the register: the three parcels as recorded, 101/7 the others' neighbour.
-    let r = app.modules.map().parcel_register.answer.clone().expect("read");
+    let r = app
+        .modules
+        .map()
+        .parcel_register
+        .answer
+        .clone()
+        .expect("read");
     let f = app.format();
     let shown = rows(&r, Show::Parcels, false, &[], &f);
     assert_eq!(
@@ -142,16 +164,29 @@ fn a_parcel_pressed_in_the_table_is_closed_by_the_document() {
     let _ = app.update(Message::from(map::Event::ParcelRegister(R::Note(
         "Ölçü krokisi 2026/145.".into(),
     ))));
-    let r = app.modules.map().parcel_register.answer.clone().expect("read");
+    let r = app
+        .modules
+        .map()
+        .parcel_register
+        .answer
+        .clone()
+        .expect("read");
     let f = app.format();
     assert_eq!(
-        rows(&r, Show::Parcels, false, &app.modules.map().parcel_register.close, &f)[0][9],
+        rows(
+            &r,
+            Show::Parcels,
+            false,
+            &app.modules.map().parcel_register.close,
+            &f
+        )[0][9],
         "✓"
     );
     let words = crate::parcel_register_window::plan_words(
         Some(&r),
         &["101/13".into(), "101/14".into()],
-        &app.modules.map()
+        &app.modules
+            .map()
             .parcel_register
             .plan
             .clone()
@@ -182,7 +217,13 @@ fn a_moved_corner_is_said_and_the_register_stays() {
     let mut app = opened(want["setup"].clone());
     let before = saved_register(&app);
     register(&mut app, &[]);
-    let r = app.modules.map().parcel_register.answer.clone().expect("read");
+    let r = app
+        .modules
+        .map()
+        .parcel_register
+        .answer
+        .clone()
+        .expect("read");
     let out = &want["steps"][0]["result"]["output"];
     assert_eq!(
         (u64::from(r.changed), u64::from(r.moved)),
@@ -219,7 +260,8 @@ fn a_document_name_already_used_is_refused() {
         "Kadastro 1985".into(),
     ))));
     let why = app
-        .modules.map()
+        .modules
+        .map()
         .parcel_register
         .plan
         .clone()
@@ -241,7 +283,8 @@ fn a_document_name_already_used_is_refused() {
 const DRAFT: &str = "Taslak, kenar ölçüsüz: pencereden yazılan";
 const APPROVED: &str = "Kenar ölçüsüz taslak onaylanır: pencereden";
 const DOCUMENT_APPROVED: &str = "Kayıtlı belgenin onayı yazılır; belge değişmez";
-const LENGTHS: &str = "Belgenin kenar ölçüleri: kayıttaki boyla farkı ve cephe sınırı; güney kenarı sınırı aşar";
+const LENGTHS: &str =
+    "Belgenin kenar ölçüleri: kayıttaki boyla farkı ve cephe sınırı; güney kenarı sınırı aşar";
 
 /// The ifraz as a draft (Taslak olarak yaz): the plan says nothing current changes, Belgeyi kaydet writes the shared
 /// case's draft; chosen in Belgeler with the approval's number, Onayı yaz writes it as the shared approval case does.
@@ -251,7 +294,8 @@ fn a_draft_is_written_then_approved_from_belgeler() {
     let mut app = opened(want["setup"].clone());
     draft_step(&mut app);
     let plan = app
-        .modules.map()
+        .modules
+        .map()
         .parcel_register
         .plan
         .clone()
@@ -280,10 +324,18 @@ fn a_draft_is_written_then_approved_from_belgeler() {
         approve["setup"]["settings"]["parcelRegister"]
     );
     approve_step(&mut app);
-    assert_eq!(app.modules.map().parcel_register.chosen, Some(Chosen::Draft(1)));
+    assert_eq!(
+        app.modules.map().parcel_register.chosen,
+        Some(Chosen::Draft(1))
+    );
     let words = match &app.modules.map().parcel_register.approve_plan {
         Some(Ok(out)) => crate::parcel_register_window::approve_words(
-            app.modules.map().parcel_register.answer.as_ref().expect("read"),
+            app.modules
+                .map()
+                .parcel_register
+                .answer
+                .as_ref()
+                .expect("read"),
             Chosen::Draft(1),
             out,
             "2026/145-K",
@@ -305,7 +357,10 @@ fn a_draft_is_written_then_approved_from_belgeler() {
         "{log:?}"
     );
     let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(saved_register(&app), approve["setup"]["settings"]["parcelRegister"]);
+    assert_eq!(
+        saved_register(&app),
+        approve["setup"]["settings"]["parcelRegister"]
+    );
 }
 
 /// A recorded document chosen in Belgeler gets its approval; once written, the form says so and asks for none.
@@ -326,7 +381,13 @@ fn a_document_s_approval_is_written_once() {
         saved_register(&app),
         want["steps"][0]["expect"]["settings"]["parcelRegister"]
     );
-    let r = app.modules.map().parcel_register.answer.clone().expect("read");
+    let r = app
+        .modules
+        .map()
+        .parcel_register
+        .answer
+        .clone()
+        .expect("read");
     let f = app.format();
     assert_eq!(
         rows(&r, Show::Documents, false, &[], &f)[0][4],
@@ -348,7 +409,13 @@ fn a_draft_is_withdrawn() {
     let _ = app.update(Message::from(map::Event::ParcelRegister(R::Show(
         Show::Documents,
     ))));
-    let r = app.modules.map().parcel_register.answer.clone().expect("read");
+    let r = app
+        .modules
+        .map()
+        .parcel_register
+        .answer
+        .clone()
+        .expect("read");
     let f = app.format();
     assert_eq!(
         rows(&r, Show::Documents, false, &[], &f)[1][..5],
@@ -368,13 +435,25 @@ fn stated_lengths_are_checked_against_the_boundaries() {
     let want = case("records", LENGTHS);
     let mut app = opened(want["setup"].clone());
     register(&mut app, &[]);
-    let r = app.modules.map().parcel_register.answer.clone().expect("read");
+    let r = app
+        .modules
+        .map()
+        .parcel_register
+        .answer
+        .clone()
+        .expect("read");
     assert_eq!(r.over_limit, 1);
     let f = app.format();
     let shown = rows(&r, Show::Boundaries, false, &[], &f);
-    let south = shown.iter().find(|row| row[7] == "20,08").expect("the south boundary");
+    let south = shown
+        .iter()
+        .find(|row| row[7] == "20,08")
+        .expect("the south boundary");
     assert!(south[8].ends_with("aşıyor"), "{south:?}");
-    let east = shown.iter().find(|row| row[7] == "10,01").expect("the east boundary");
+    let east = shown
+        .iter()
+        .find(|row| row[7] == "10,01")
+        .expect("the east boundary");
     assert!(!east[8].contains("aşıyor"), "{east:?}");
 }
 
@@ -389,23 +468,39 @@ fn stated_lengths_are_checked_against_the_boundaries() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/parsel-kayitlari-4220");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/parsel-kayitlari-4220");
     std::fs::create_dir_all(&out).expect("a folder");
     type Step = fn(&mut App);
-    let (check, first, ifraz, history, lines, moved): (Step, Step, Step, Step, Step, Step) =
-        (check_step, first_step, ifraz_step, history_step, lines_step, moved_step);
+    let (check, first, ifraz, history, lines, moved): (Step, Step, Step, Step, Step, Step) = (
+        check_step,
+        first_step,
+        ifraz_step,
+        history_step,
+        lines_step,
+        moved_step,
+    );
     let record = cases("record");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (setup, step, file) in [
             (record["setup"].clone(), check, "0-parsel-alan-denetimi"),
             (record["setup"].clone(), first, "1-ilk-belge"),
             (case("record", IFRAZ)["setup"].clone(), ifraz, "2-ifraz"),
             (case("record", IFRAZ)["setup"].clone(), history, "3-gecmis"),
             (case("record", IFRAZ)["setup"].clone(), lines, "4-sinirlar"),
-            (case("records", MOVED)["setup"].clone(), moved, "5-cizim-ayriliyor"),
+            (
+                case("records", MOVED)["setup"].clone(),
+                moved,
+                "5-cizim-ayriliyor",
+            ),
         ] {
             let mut app = opened(setup);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -416,7 +511,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }
@@ -524,19 +622,38 @@ fn lengths_step(app: &mut App) {
 fn draft_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/belge-taslagi-onay-5020");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/belge-taslagi-onay-5020");
     std::fs::create_dir_all(&out).expect("a folder");
     type Step = fn(&mut App);
-    let (draft, drafted, approved, lengths): (Step, Step, Step, Step) = (draft_step, drafted_step, approved_step, lengths_step);
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    let (draft, drafted, approved, lengths): (Step, Step, Step, Step) =
+        (draft_step, drafted_step, approved_step, lengths_step);
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (setup, step, file) in [
             (case("record", DRAFT)["setup"].clone(), draft, "1-taslak"),
-            (case("record", DRAFT)["setup"].clone(), drafted, "2-taslagi-onayla"),
-            (case("record", DRAFT)["setup"].clone(), approved, "3-onaylanan-belge"),
-            (case("records", LENGTHS)["setup"].clone(), lengths, "4-kenar-olculeri"),
+            (
+                case("record", DRAFT)["setup"].clone(),
+                drafted,
+                "2-taslagi-onayla",
+            ),
+            (
+                case("record", DRAFT)["setup"].clone(),
+                approved,
+                "3-onaylanan-belge",
+            ),
+            (
+                case("records", LENGTHS)["setup"].clone(),
+                lengths,
+                "4-kenar-olculeri",
+            ),
         ] {
             let mut app = opened(setup);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -547,7 +664,10 @@ fn draft_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }
@@ -564,14 +684,20 @@ fn draft_screens() {
 fn split_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/komsu-sinir-bolunmesi-4620");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/komsu-sinir-bolunmesi-4620");
     std::fs::create_dir_all(&out).expect("a folder");
     type Step = fn(&mut App);
     let (ifraz, lines): (Step, Step) = (ifraz_step, lines_step);
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (step, file) in [(ifraz, "1-ifraz-plani"), (lines, "2-sinirlar")] {
             let mut app = opened(case("record", IFRAZ)["setup"].clone());
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -582,7 +708,10 @@ fn split_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }

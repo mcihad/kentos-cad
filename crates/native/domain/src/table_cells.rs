@@ -5,18 +5,18 @@
 
 use std::sync::Arc;
 
-use kentos_contracts::{
-    DrawingFont, Entity, FieldBroken, FieldSource, TableEntity, TableSource, TextField,
-    BROKEN_FIELD,
-};
-use kentos_geometry_core::api::json::{FromJson, Json};
-use kentos_geometry_core::entity::Entity as CoreEntity;
-use kentos_geometry_core::text::Font;
 use crate::document::Document;
 use crate::history::ArchOp;
 use crate::history::Op;
 use crate::identity::Uuid;
 use crate::store::Stored;
+use kentos_contracts::{
+    BROKEN_FIELD, DrawingFont, Entity, FieldBroken, FieldSource, TableEntity, TableSource,
+    TextField,
+};
+use kentos_geometry_core::api::json::{FromJson, Json};
+use kentos_geometry_core::entity::Entity as CoreEntity;
+use kentos_geometry_core::text::Font;
 
 /// The words of a block schedule's last row's first cell.
 pub const TOTAL: &str = "Toplam";
@@ -163,9 +163,17 @@ impl Document {
     /// each of its values (in code point order; an insert without it counts under the empty value), then the total.
     /// A further column (docs/adr/0721 §4) holds its row's inserts' distinct values that are not empty, in the
     /// drawing's order, joined with “; ”; with them a schedule of one block named leaves out its Blok column.
-    pub fn blocks_schedule(&self, names: &[String], by: Option<&str>, columns: &[String]) -> Vec<Vec<String>> {
+    pub fn blocks_schedule(
+        &self,
+        names: &[String],
+        by: Option<&str>,
+        columns: &[String],
+    ) -> Vec<Vec<String>> {
         let defs: Vec<(Option<kentos_contracts::BlockId>, String)> = if names.is_empty() {
-            self.blocks().iter().map(|b| (Some(b.id), b.name.clone())).collect()
+            self.blocks()
+                .iter()
+                .map(|b| (Some(b.id), b.name.clone()))
+                .collect()
         } else {
             let mut seen = std::collections::HashSet::new();
             names
@@ -232,8 +240,10 @@ impl Document {
                     rows.push(row(name, definition, None, &inserts));
                 }
                 Some(tag) => {
-                    let mut values: std::collections::BTreeMap<String, Vec<&kentos_contracts::InsertEntity>> =
-                        Default::default();
+                    let mut values: std::collections::BTreeMap<
+                        String,
+                        Vec<&kentos_contracts::InsertEntity>,
+                    > = Default::default();
                     for i in &inserts {
                         let v = schedule_value(definition, i, tag).to_owned();
                         values.entry(v).or_default().push(i);
@@ -478,10 +488,13 @@ impl Document {
             if !reads_drawing && !touched.contains(&current.uid) {
                 continue;
             }
-            let schedule = matches!(t.source, Some(TableSource::Schedule { .. })) && t.fields.is_empty();
+            let schedule =
+                matches!(t.source, Some(TableSource::Schedule { .. })) && t.fields.is_empty();
             let seen = schedule
                 .then(|| {
-                    alike.iter().find(|(e, _)| matches!(&**e, Entity::Table(a) if alike_but_placed(a, t)))
+                    alike
+                        .iter()
+                        .find(|(e, _)| matches!(&**e, Entity::Table(a) if alike_but_placed(a, t)))
                 })
                 .flatten();
             let next = match seen {

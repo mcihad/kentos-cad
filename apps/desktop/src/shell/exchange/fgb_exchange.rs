@@ -72,7 +72,9 @@ impl App {
         // The data layers' rows too (docs/adr/9344): the export's model is the drawing with them.
         let copy = self.source_copy();
         let model = copy.as_ref().map_or(&doc.model, |c| &c.doc);
-        fgb_table::export(model, &input).map(|m| m.output).map_err(|(_, message, _)| self.while_read(message))
+        fgb_table::export(model, &input)
+            .map(|m| m.output)
+            .map_err(|(_, message, _)| self.while_read(message))
     }
 
     pub(super) fn fgb_export_open(&mut self) -> Task<Message> {
@@ -204,7 +206,9 @@ impl App {
                     time,
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
-                let model = source.as_ref().map_or_else(|| doc.model.clone(), |c| c.doc.clone());
+                let model = source
+                    .as_ref()
+                    .map_or_else(|| doc.model.clone(), |c| c.doc.clone());
                 return off_thread(
                     move || {
                         kentos_headless::file_commands::export_fgb(&model, &input)

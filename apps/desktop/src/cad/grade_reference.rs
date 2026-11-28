@@ -41,7 +41,11 @@ impl fmt::Display for By {
 
 /// A difference with its sign, the minus a real one (U+2212), as Kot ver says it; the length writes its unit.
 fn signed(by: f64, f: &kentos_interaction::Format) -> String {
-    if by < 0.0 { format!("−{}", f.length(-by)) } else { format!("+{}", f.length(by)) }
+    if by < 0.0 {
+        format!("−{}", f.length(-by))
+    } else {
+        format!("+{}", f.length(by))
+    }
 }
 
 impl App {
@@ -52,7 +56,11 @@ impl App {
             at: (s.at.max(1.0) as u32) - 1,
             part: s.ring.0,
             ring: s.ring.1,
-            reference: RaiseReference { x: s.east, y: s.north, z: s.height },
+            reference: RaiseReference {
+                x: s.east,
+                y: s.north,
+                z: s.height,
+            },
             grade: (s.by == By::Grade).then_some(s.percent / 100.0),
             difference: (s.by == By::Difference).then_some(s.difference),
             expected_revision: None,
@@ -84,7 +92,9 @@ impl App {
     pub(crate) fn raise_apply(&mut self) {
         let input = self.raise_input();
         let at = input.at + 1;
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         match entities_raise::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => {
                 let f = self.format();
@@ -109,7 +119,9 @@ impl App {
                 };
                 self.dialog = None;
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.warn(format!("{TITLE}: {}", error.message));
             }
             _ => {}
@@ -117,11 +129,17 @@ impl App {
     }
 
     /// The point or vertex with an elevation nearest `p` within `reach`, among the visible objects there.
-    fn elevated_near(&self, p: kentos_interaction::Vec2, reach: f64) -> Option<(kentos_commands::Vec2, f64)> {
+    fn elevated_near(
+        &self,
+        p: kentos_interaction::Vec2,
+        reach: f64,
+    ) -> Option<(kentos_commands::Vec2, f64)> {
         let doc = self.document.as_ref()?;
         let mut best: Option<(f64, kentos_commands::Vec2, f64)> = None;
         for slot in self.spatial.hits(p, reach) {
-            let Some(e) = doc.model.get(slot) else { continue };
+            let Some(e) = doc.model.get(slot) else {
+                continue;
+            };
             let mut seen = |x: f64, y: f64, z: Option<f64>| {
                 let Some(z) = z else { return };
                 let d = (x - p.x).hypot(y - p.y);
@@ -170,12 +188,17 @@ impl App {
 
     /// The reference and the vertex on the drawing: both ringed, the line between them; while the reference is being
     /// picked, nothing; while the vertex is, the reference alone.
-    pub(crate) fn reference_marks(&self) -> (Vec<kentos_commands::Vec2>, Vec<kentos_commands::Vec2>) {
+    pub(crate) fn reference_marks(
+        &self,
+    ) -> (Vec<kentos_commands::Vec2>, Vec<kentos_commands::Vec2>) {
         let s = &self.terrain_work.grade;
         if !s.referenced || s.picking == Some(Pick::Reference) {
             return (Vec::new(), Vec::new());
         }
-        let r = kentos_commands::Vec2 { x: s.east, y: s.north };
+        let r = kentos_commands::Vec2 {
+            x: s.east,
+            y: s.north,
+        };
         if s.picking == Some(Pick::Vertex) {
             return (Vec::new(), vec![r]);
         }
@@ -194,18 +217,28 @@ impl App {
         let s = &self.terrain_work.grade;
         let f = self.format();
         let number = |v: f64, on: fn(f64) -> Event, step: f64| {
-            NumberInput::new(v, move |x| msg(on(x))).step(step).decimals(3).point().width(width)
+            NumberInput::new(v, move |x| msg(on(x)))
+                .step(step)
+                .decimals(3)
+                .point()
+                .width(width)
         };
         let vertex = self
             .grade_vertices()
             .get((s.at.max(1.0) as usize) - 1)
-            .map_or(String::new(), |v| format!(" (Y {}, X {})", f.coord(v.x), f.coord(v.y)));
+            .map_or(String::new(), |v| {
+                format!(" (Y {}, X {})", f.coord(v.x), f.coord(v.y))
+            });
         let form = form
             .field(
                 "Referans Y, X",
-                row![number(s.east, Event::East, 1.0), number(s.north, Event::North, 1.0), words::secondary(PICK, Some(msg(Event::Pick)))]
-                    .spacing(8)
-                    .align_y(iced::Center),
+                row![
+                    number(s.east, Event::East, 1.0),
+                    number(s.north, Event::North, 1.0),
+                    words::secondary(PICK, Some(msg(Event::Pick)))
+                ]
+                .spacing(8)
+                .align_y(iced::Center),
             )
             .field("Referans kotu (m)", number(s.height, Event::Height, 0.1));
         // Docs/adr/4980: the vertex's ring, when the object has more than one.
@@ -230,7 +263,10 @@ impl App {
         );
         let at = s.at.max(1.0) as u32;
         let line = match &s.raised {
-            _ if !s.referenced => words::text_line(Kind::Info, "Referansı Sahneden seç ile alın ya da Y, X ve kotunu yazın."),
+            _ if !s.referenced => words::text_line(
+                Kind::Info,
+                "Referansı Sahneden seç ile alın ya da Y, X ve kotunu yazın.",
+            ),
             Some(Ok(r)) => words::text_line(
                 Kind::Ok,
                 format!(
@@ -238,10 +274,15 @@ impl App {
                     f.length(r.distance),
                     f.length(r.before),
                     f.length(r.after),
-                    r.grade.map_or(String::new(), |g| format!(" (%{:.3})", g * 100.0)),
+                    r.grade
+                        .map_or(String::new(), |g| format!(" (%{:.3})", g * 100.0)),
                     r.moved,
                     signed(r.by, &f),
-                    if r.unset > 0 { format!(", {} kotsuz köşe kotsuz kalır", r.unset) } else { String::new() }
+                    if r.unset > 0 {
+                        format!(", {} kotsuz köşe kotsuz kalır", r.unset)
+                    } else {
+                        String::new()
+                    }
                 ),
             ),
             Some(Err(why)) => words::text_line(Kind::Error, why.clone()),

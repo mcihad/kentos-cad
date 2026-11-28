@@ -169,7 +169,10 @@ pub struct RoadDrawingRecipe {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub version: u32,
     #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
-    #[cfg_attr(feature = "schema", schemars(with = "std::collections::BTreeMap<String, serde_json::Value>"))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "std::collections::BTreeMap<String, serde_json::Value>")
+    )]
     pub input: BTreeMap<String, serde_json::Value>,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub written: u32,

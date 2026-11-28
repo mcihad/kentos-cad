@@ -67,21 +67,17 @@ impl Choice {
     pub fn label(&self) -> String {
         match &self.selected {
             None => "Belirtilmedi".into(),
-            Some(id) => self
-                .levels
-                .iter()
-                .find(|l| l.id == *id)
-                .map_or_else(
-                    || format!("Bulunamadı: {id}"),
-                    // Followed, not chosen: said so (docs/adr/0713).
-                    |l| {
-                        if self.chosen {
-                            l.name.clone()
-                        } else {
-                            format!("{} (etkin kat)", l.name)
-                        }
-                    },
-                ),
+            Some(id) => self.levels.iter().find(|l| l.id == *id).map_or_else(
+                || format!("Bulunamadı: {id}"),
+                // Followed, not chosen: said so (docs/adr/0713).
+                |l| {
+                    if self.chosen {
+                        l.name.clone()
+                    } else {
+                        format!("{} (etkin kat)", l.name)
+                    }
+                },
+            ),
         }
     }
     pub fn setting(&self) -> Setting {

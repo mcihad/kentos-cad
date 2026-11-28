@@ -16,7 +16,8 @@ fn bench() -> Bench {
     s.srid = 0;
     s.workspace = Some(Workspace::Cad);
     s.cad_work = Some(CadWork::Architecture);
-    let levels = json!({"levels": [{"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0}]});
+    let levels =
+        json!({"levels": [{"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.0}]});
     s.arch = Some(serde_json::from_value(levels).unwrap());
     b.doc.set_settings(s);
     let wall: Entity = serde_json::from_value(json!({"kind": "wall", "id": 0, "layerId": "cizim", "attrs": {},
@@ -37,24 +38,47 @@ fn in_sivas(b: &mut Bench) {
 }
 
 fn shadow_objects(b: &Bench) -> Vec<&Entity> {
-    b.doc.entities().filter(|e| e.base().attrs.contains_key("Gölge")).collect()
+    b.doc
+        .entities()
+        .filter(|e| e.base().attrs.contains_key("Gölge"))
+        .collect()
 }
 
 #[test]
 fn without_the_project_s_place_it_asks_for_the_latitude_and_longitude() {
     let mut b = bench();
     assert_eq!(b.session.tool_id(), "sunShadow");
-    assert!(b.session.preview(&Format::default()).is_none_or(|p| p.strokes.is_empty()));
+    assert!(
+        b.session
+            .preview(&Format::default())
+            .is_none_or(|p| p.strokes.is_empty())
+    );
     // A letter reaches the tool only as the prompt's option: Enlem and Boylam are offered.
     let options = b.options();
-    assert!(["T", "S", "E", "B"].iter().all(|k| options.contains(k)), "{options:?}");
-    assert!(b.session.prompt().text().contains("binanın enlemini (E) ve boylamını (B) verin"), "{:?}", b.session.prompt());
+    assert!(
+        ["T", "S", "E", "B"].iter().all(|k| options.contains(k)),
+        "{options:?}"
+    );
+    assert!(
+        b.session
+            .prompt()
+            .text()
+            .contains("binanın enlemini (E) ve boylamını (B) verin"),
+        "{:?}",
+        b.session.prompt()
+    );
     b.confirm();
     assert_eq!(b.last_level(), Some(Level::Warn));
-    assert_eq!(b.last_text(), Some("Projenin koordinat sistemi yok: binanın enlemini (E) ve boylamını (B) verin."));
+    assert_eq!(
+        b.last_text(),
+        Some("Projenin koordinat sistemi yok: binanın enlemini (E) ve boylamını (B) verin.")
+    );
     assert_eq!(b.session.tool_id(), "sunShadow", "it stays for the place");
     assert!(b.type_text("E"));
-    assert!(!b.type_text("kuzey") || b.last_level() == Some(Level::Warn), "a word is no latitude");
+    assert!(
+        !b.type_text("kuzey") || b.last_level() == Some(Level::Warn),
+        "a word is no latitude"
+    );
 }
 
 #[test]
@@ -62,12 +86,21 @@ fn enter_draws_the_hour_s_shadow_filled_on_its_layer_in_one_step() {
     let mut b = bench();
     in_sivas(&mut b);
     let preview = b.session.preview(&Format::default()).expect("a preview");
-    assert!(!preview.strokes.is_empty(), "the shadow's outline previewed");
+    assert!(
+        !preview.strokes.is_empty(),
+        "the shadow's outline previewed"
+    );
     b.confirm();
     assert_eq!(b.last_level(), Some(Level::Success));
     let said = b.last_text().unwrap();
-    assert!(said.starts_with("Gölge çizildi: 21 Aralık 12:00, güneş yüksekliği 26,"), "{said}");
-    assert!(said.ends_with("azimut 172° (kuzey oku yok, plan kuzeyi coğrafi kuzey sayıldı)."), "{said}");
+    assert!(
+        said.starts_with("Gölge çizildi: 21 Aralık 12:00, güneş yüksekliği 26,"),
+        "{said}"
+    );
+    assert!(
+        said.ends_with("azimut 172° (kuzey oku yok, plan kuzeyi coğrafi kuzey sayıldı)."),
+        "{said}"
+    );
     let mut kinds: Vec<&str> = shadow_objects(&b)
         .iter()
         .map(|e| match e {
@@ -80,10 +113,18 @@ fn enter_draws_the_hour_s_shadow_filled_on_its_layer_in_one_step() {
     kinds.sort_unstable();
     assert_eq!(kinds, ["hatch", "outline", "time"]);
     for e in shadow_objects(&b) {
-        let name = b.doc.layers().get(&e.base().layer_id).map(|l| l.name.clone());
+        let name = b
+            .doc
+            .layers()
+            .get(&e.base().layer_id)
+            .map(|l| l.name.clone());
         assert_eq!(name.as_deref(), Some("MM-XXXX-GOLGE"));
     }
-    assert_ne!(b.session.tool_id(), "sunShadow", "the tool leaves once it is drawn");
+    assert_ne!(
+        b.session.tool_id(),
+        "sunShadow",
+        "the tool leaves once it is drawn"
+    );
     assert_eq!(b.doc.undo().as_deref(), Some("Gölge"));
     assert!(shadow_objects(&b).is_empty(), "one undo step");
 }
@@ -97,7 +138,9 @@ fn the_day_s_hours_are_outlined_each_with_its_time_and_drawn_again_they_replace(
     b.confirm();
     assert_eq!(
         b.last_text(),
-        Some("Gölge çizildi: 21 Aralık 09:00–15:00 saatlik, 7 saat (kuzey oku yok, plan kuzeyi coğrafi kuzey sayıldı).")
+        Some(
+            "Gölge çizildi: 21 Aralık 09:00–15:00 saatlik, 7 saat (kuzey oku yok, plan kuzeyi coğrafi kuzey sayıldı)."
+        )
     );
     let mut times: Vec<String> = shadow_objects(&b)
         .iter()
@@ -107,17 +150,39 @@ fn the_day_s_hours_are_outlined_each_with_its_time_and_drawn_again_they_replace(
         })
         .collect();
     times.sort();
-    assert_eq!(times, ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"]);
-    assert!(!shadow_objects(&b).iter().any(|e| matches!(e, Entity::Hatch(_))), "several hours are not filled");
+    assert_eq!(
+        times,
+        [
+            "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"
+        ]
+    );
+    assert!(
+        !shadow_objects(&b)
+            .iter()
+            .any(|e| matches!(e, Entity::Hatch(_))),
+        "several hours are not filled"
+    );
     // Drawn again for 21 Haziran at 12:00, half an hour before the sun's noon in Sivas: the old shadows go. The place
     // and the hours typed and chosen are kept from the last run.
     b.start("sunShadow");
     let kept = b.session.prompt();
-    assert!(format!("{kept:?}").contains("09:00–15:00 saatlik"), "{kept:?}");
+    assert!(
+        format!("{kept:?}").contains("09:00–15:00 saatlik"),
+        "{kept:?}"
+    );
     assert!(b.run(|s, cx| s.configure("T", "haziran", cx)));
     assert!(b.run(|s, cx| s.configure("S", "12", cx)));
     b.confirm();
     let said = b.last_text().unwrap();
-    assert!(said.starts_with("Gölge çizildi: 21 Haziran 12:00, güneş yüksekliği 72,3°, azimut 154°"), "{said}");
-    assert_eq!(shadow_objects(&b).iter().filter(|e| matches!(e, Entity::Text(_))).count(), 1);
+    assert!(
+        said.starts_with("Gölge çizildi: 21 Haziran 12:00, güneş yüksekliği 72,3°, azimut 154°"),
+        "{said}"
+    );
+    assert_eq!(
+        shadow_objects(&b)
+            .iter()
+            .filter(|e| matches!(e, Entity::Text(_)))
+            .count(),
+        1
+    );
 }

@@ -476,7 +476,13 @@ impl Store {
             Shape::Text { p, .. } => (
                 *p,
                 TextPlace::of(shape)
-                    .map(|t| if t.is_unicode() && piece.is_none() {corners(&item.bounds)} else {t.outline(self.font)})
+                    .map(|t| {
+                        if t.is_unicode() && piece.is_none() {
+                            corners(&item.bounds)
+                        } else {
+                            t.outline(self.font)
+                        }
+                    })
                     .unwrap_or_default(),
             ),
             Shape::Leader { .. } => {
@@ -592,7 +598,13 @@ pub const BLOCK_ROWS: usize = 64;
 /// itself for any other object's.
 fn blocks(p: Part) -> Vec<Part> {
     let block = |r: &[f64]| (r[1] == LABEL_CELL).then(|| r[5] as usize / BLOCK_ROWS);
-    let records: Vec<&[f64]> = p.records.as_chunks::<LABEL_SHOWN_STRIDE>().0.iter().map(|r| r.as_slice()).collect();
+    let records: Vec<&[f64]> = p
+        .records
+        .as_chunks::<LABEL_SHOWN_STRIDE>()
+        .0
+        .iter()
+        .map(|r| r.as_slice())
+        .collect();
     let first = records.first().map(|r| block(r));
     if records.iter().all(|r| block(r) == first.flatten()) {
         return vec![p];
@@ -656,8 +668,10 @@ fn keep_apart(groups: &[Group], view: &Bounds, scale: f64) -> Vec<bool> {
     // The world cells the view touches: columns east from the origin, rows south (as the screen's y runs).
     let col0 = (view.min_x * scale / CELL).floor();
     let row0 = (-view.max_y * scale / CELL).floor();
-    let cols = (js_max((view.max_x * scale / CELL).floor() - col0 + 1.0, 1.0) as usize).min(1 << 14);
-    let rows = (js_max((-view.min_y * scale / CELL).floor() - row0 + 1.0, 1.0) as usize).min(1 << 14);
+    let cols =
+        (js_max((view.max_x * scale / CELL).floor() - col0 + 1.0, 1.0) as usize).min(1 << 14);
+    let rows =
+        (js_max((-view.min_y * scale / CELL).floor() - row0 + 1.0, 1.0) as usize).min(1 << 14);
     let mut taken = vec![false; cols * rows];
     // A group's cells: its outline grown about its anchor, on the view's cells.
     let cells = |g: &Group| -> Option<(usize, usize, usize, usize)> {
@@ -741,7 +755,9 @@ mod tests {
     fn shown(s: &Store, scale: f64, size: LabelSize) -> Vec<(f64, f64, f64, f64, f64)> {
         s.labels_shown(&view(), scale, None, size, PlaceOptions::default())
             .records
-            .as_chunks::<LABEL_SHOWN_STRIDE>().0.iter()
+            .as_chunks::<LABEL_SHOWN_STRIDE>()
+            .0
+            .iter()
             .map(|r| (r[0], r[1], r[9], r[10], r[11]))
             .collect()
     }
@@ -926,10 +942,22 @@ mod tests {
     /// The setting's values (docs/adr/0626 §6): Türe göre is Gerçek boy in a CAD project, Kaybolmasın in a CBS one.
     #[test]
     fn the_settings_values_are_their_rules() {
-        assert_eq!(LabelSize::for_project("type", 1000.0, true), LabelSize::Print);
-        assert_eq!(LabelSize::for_project("type", 1000.0, false), LabelSize::Legible);
-        assert_eq!(LabelSize::for_project("true", 1000.0, false), LabelSize::Print);
-        assert_eq!(LabelSize::for_project("legible", 1000.0, true), LabelSize::Legible);
+        assert_eq!(
+            LabelSize::for_project("type", 1000.0, true),
+            LabelSize::Print
+        );
+        assert_eq!(
+            LabelSize::for_project("type", 1000.0, false),
+            LabelSize::Legible
+        );
+        assert_eq!(
+            LabelSize::for_project("true", 1000.0, false),
+            LabelSize::Print
+        );
+        assert_eq!(
+            LabelSize::for_project("legible", 1000.0, true),
+            LabelSize::Legible
+        );
         assert_eq!(
             LabelSize::for_project("screen", 500.0, true),
             LabelSize::Screen { plot_scale: 500.0 }
@@ -1029,9 +1057,17 @@ mod tests {
                 max_y: 250.0 + oy,
             };
             let mut ids: Vec<u64> = s
-                .labels_shown(&view, scale, None, LabelSize::Legible, PlaceOptions::default())
+                .labels_shown(
+                    &view,
+                    scale,
+                    None,
+                    LabelSize::Legible,
+                    PlaceOptions::default(),
+                )
                 .records
-                .as_chunks::<LABEL_SHOWN_STRIDE>().0.iter()
+                .as_chunks::<LABEL_SHOWN_STRIDE>()
+                .0
+                .iter()
                 .map(|r| r[0] as u64)
                 .collect();
             ids.sort_unstable();

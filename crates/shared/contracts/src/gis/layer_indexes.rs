@@ -102,10 +102,7 @@ pub fn layer_indexes_problem(
             if f.kind == LayerFieldKind::Binary {
                 return Some((
                     format!("{at}/fields/{j}"),
-                    format!(
-                        "“{}” alanı bayt tutar; dizine girmez.",
-                        f.label()
-                    ),
+                    format!("“{}” alanı bayt tutar; dizine girmez.", f.label()),
                 ));
             }
         }

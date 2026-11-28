@@ -44,12 +44,17 @@ impl App {
         let layer = self.chart_layer()?;
         doc.model.layers().get(&layer)?.data.as_ref()?;
         let shape = shape_columns(self, doc, &layer);
-        let counts: Vec<Counts> =
-            shape.iter().map(|(_, f)| self.data_counts_of(&layer, &f.name).unwrap_or(Counts::Rows)).collect();
+        let counts: Vec<Counts> = shape
+            .iter()
+            .map(|(_, f)| self.data_counts_of(&layer, &f.name).unwrap_or(Counts::Rows))
+            .collect();
         if counts.iter().any(|c| matches!(c, Counts::Rows)) {
             return None;
         }
-        let key = (crate::charts::now::layer_key(doc, &layer), doc.model.data_written());
+        let key = (
+            crate::charts::now::layer_key(doc, &layer),
+            doc.model.data_written(),
+        );
         Some((layer, key, shape, counts))
     }
 
@@ -91,11 +96,15 @@ impl App {
                 now.seqs[i] = None;
             }
         }
-        let chosen = p.field.clone().and_then(|f| now.keys.iter().position(|k| *k == f).map(|i| (f, i)));
+        let chosen = p
+            .field
+            .clone()
+            .and_then(|f| now.keys.iter().position(|k| *k == f).map(|i| (f, i)));
         match chosen {
             Some((field, i)) => match &counts[i] {
                 Counts::Ready(_, n) if now.grouped_for.as_ref() != Some(&(field.clone(), *n)) => {
-                    if let FieldNow::Ready(g, n) = self.field_now(&layer, &shape[i].0, &shape[i].1) {
+                    if let FieldNow::Ready(g, n) = self.field_now(&layer, &shape[i].0, &shape[i].1)
+                    {
                         now.detail = Some(detail(&g.column, &Read::of(&g.column), &g.rows));
                         now.grouped = Some(g.picker);
                         now.grouped_for = Some((field, n));
@@ -126,7 +135,9 @@ impl App {
         let start = Instant::now();
         let mut now = self.gis.charts.stats.borrow_mut();
         for (i, ((column, field), c)) in shape.iter().zip(&counts).enumerate() {
-            if now.summaries.get(i).is_none_or(Option::is_some) || now.keys.get(i) != Some(&column.key) {
+            if now.summaries.get(i).is_none_or(Option::is_some)
+                || now.keys.get(i) != Some(&column.key)
+            {
                 continue;
             }
             if !matches!(c, Counts::Ready(..)) {
@@ -151,7 +162,11 @@ impl App {
         let stats = self.gis.charts.stats.borrow();
         Some(
             stats.counted_key.as_ref() != Some(&key)
-                || stats.summaries.iter().zip(&counts).any(|(s, c)| s.is_none() && matches!(c, Counts::Ready(..))),
+                || stats
+                    .summaries
+                    .iter()
+                    .zip(&counts)
+                    .any(|(s, c)| s.is_none() && matches!(c, Counts::Ready(..))),
         )
     }
 }

@@ -20,7 +20,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use kentos_contracts::{Entity, LayerNode, PathEntity, SurfaceEdit, TerrainSurfaceDef};
 use serde::Serialize;
 
-use crate::surface::{Breakline, EdgeMethod, ForcedEdge, RemovedAt, Ring, SpotPoint, SurfaceInput, ALGORITHM};
+use crate::surface::{
+    ALGORITHM, Breakline, EdgeMethod, ForcedEdge, RemovedAt, Ring, SpotPoint, SurfaceInput,
+};
 
 /// One object of the drawing as a source sees it.
 #[derive(Clone, Copy, Debug)]
@@ -82,11 +84,18 @@ impl Gathered {
 }
 
 /// The layers (and the layers of the groups) named, and the names that are no node of the tree.
-pub fn layer_set<'a>(tree: &'a [LayerNode], named: &'a [String]) -> (BTreeSet<&'a str>, Vec<&'a str>) {
+pub fn layer_set<'a>(
+    tree: &'a [LayerNode],
+    named: &'a [String],
+) -> (BTreeSet<&'a str>, Vec<&'a str>) {
     fn find<'t>(nodes: &'t [LayerNode], id: &str) -> Option<&'t LayerNode> {
-        nodes
-            .iter()
-            .find_map(|n| if n.id == id { Some(n) } else { find(&n.children, id) })
+        nodes.iter().find_map(|n| {
+            if n.id == id {
+                Some(n)
+            } else {
+                find(&n.children, id)
+            }
+        })
     }
     fn under<'t>(node: &'t LayerNode, out: &mut BTreeSet<&'t str>) {
         out.insert(&node.id);
@@ -195,11 +204,13 @@ pub(crate) fn gather_in<'a>(
                 }
             } else {
                 match lines_of(o.entity) {
-                    Some(Ok(lines)) => breaklines.extend(lines.into_iter().map(|(pts, closed)| Breakline {
-                        points: pts,
-                        closed,
-                        source: source.clone(),
-                    })),
+                    Some(Ok(lines)) => {
+                        breaklines.extend(lines.into_iter().map(|(pts, closed)| Breakline {
+                            points: pts,
+                            closed,
+                            source: source.clone(),
+                        }))
+                    }
                     Some(Err(why)) => leave(&mut left, o.uid, role, why),
                     None if by_name => leave(&mut left, o.uid, role, "wrong_kind"),
                     None => {}
@@ -222,12 +233,20 @@ pub(crate) fn gather_in<'a>(
             SurfaceEdit::AddPoint { x, y, z } => {
                 let here = at(x, y);
                 let taken = points.iter().any(|p| at(p.x, p.y) == here)
-                    || breaklines.iter().flat_map(|b| &b.points).any(|p| at(p[0], p[1]) == here)
+                    || breaklines
+                        .iter()
+                        .flat_map(|b| &b.points)
+                        .any(|p| at(p[0], p[1]) == here)
                     || out.contains(&here);
                 if taken {
                     leave(&mut left, &id, "edits", "occupied");
                 } else {
-                    points.push(SpotPoint { x, y, z, source: Some(id) });
+                    points.push(SpotPoint {
+                        x,
+                        y,
+                        z,
+                        source: Some(id),
+                    });
                 }
             }
             SurfaceEdit::SetHeight { x, y, z } => {
@@ -237,7 +256,11 @@ pub(crate) fn gather_in<'a>(
                     p.z = z;
                     n += 1;
                 }
-                for p in breaklines.iter_mut().flat_map(|b| b.points.iter_mut()).filter(|p| at(p[0], p[1]) == here) {
+                for p in breaklines
+                    .iter_mut()
+                    .flat_map(|b| b.points.iter_mut())
+                    .filter(|p| at(p[0], p[1]) == here)
+                {
                     p[2] = z;
                     n += 1;
                 }
@@ -245,21 +268,35 @@ pub(crate) fn gather_in<'a>(
                     leave(&mut left, &id, "edits", "no_point");
                 }
             }
-            SurfaceEdit::AddEdge { ax, ay, bx, by } => edges.push(ForcedEdge { from: [ax, ay], to: [bx, by], edit }),
+            SurfaceEdit::AddEdge { ax, ay, bx, by } => edges.push(ForcedEdge {
+                from: [ax, ay],
+                to: [bx, by],
+                edit,
+            }),
             SurfaceEdit::RemoveTriangle { x, y } => removed.push(RemovedAt { at: [x, y], edit }),
-            SurfaceEdit::Paste { ref terrain } => match crate::paste::pasted(&def.id, terrain, others, tree, objects) {
-                Err(why) => leave(&mut left, &id, "edits", why),
-                Ok(cover) => {
-                    points.retain(|p| !cover.covers(p.x, p.y));
-                    breaklines = std::mem::take(&mut breaklines).into_iter().flat_map(|b| cover.runs(b)).collect();
-                    points.extend(cover.corners().into_iter().map(|[x, y, z]| SpotPoint { x, y, z, source: Some(id.clone()) }));
-                    breaklines.extend(cover.edges().into_iter().map(|[p, q]| Breakline {
-                        points: vec![p, q],
-                        closed: false,
-                        source: Some(id.clone()),
-                    }));
+            SurfaceEdit::Paste { ref terrain } => {
+                match crate::paste::pasted(&def.id, terrain, others, tree, objects) {
+                    Err(why) => leave(&mut left, &id, "edits", why),
+                    Ok(cover) => {
+                        points.retain(|p| !cover.covers(p.x, p.y));
+                        breaklines = std::mem::take(&mut breaklines)
+                            .into_iter()
+                            .flat_map(|b| cover.runs(b))
+                            .collect();
+                        points.extend(cover.corners().into_iter().map(|[x, y, z]| SpotPoint {
+                            x,
+                            y,
+                            z,
+                            source: Some(id.clone()),
+                        }));
+                        breaklines.extend(cover.edges().into_iter().map(|[p, q]| Breakline {
+                            points: vec![p, q],
+                            closed: false,
+                            source: Some(id.clone()),
+                        }));
+                    }
                 }
-            },
+            }
         }
     }
 
@@ -296,7 +333,12 @@ pub(crate) fn gather_in<'a>(
         removed,
     };
     let digest = digest_of(&input);
-    let unmatched = def.excluded.iter().filter(|e| !hit.contains(&place(e.x, e.y))).map(|e| [e.x, e.y]).collect();
+    let unmatched = def
+        .excluded
+        .iter()
+        .filter(|e| !hit.contains(&place(e.x, e.y)))
+        .map(|e| [e.x, e.y])
+        .collect();
     Gathered {
         input,
         left,
@@ -324,15 +366,23 @@ type Lines = Vec<(Vec<[f64; 3]>, bool)>;
 
 /// A breakline object's paths with their vertices' elevations (and whether each is closed); none for another kind.
 fn lines_of(e: &Entity) -> Option<Result<Lines, &'static str>> {
-    let path = |pts: &[kentos_contracts::Vec2], zs: &Option<Vec<Option<f64>>>, bulges: &Option<Vec<f64>>| {
+    let path = |pts: &[kentos_contracts::Vec2],
+                zs: &Option<Vec<Option<f64>>>,
+                bulges: &Option<Vec<f64>>| {
         if bulges.iter().flatten().any(|b| *b != 0.0) {
             return Err("arc_edge");
         }
-        let Some(zs) = zs else { return Err("no_height") };
+        let Some(zs) = zs else {
+            return Err("no_height");
+        };
         if zs.len() != pts.len() || zs.iter().any(Option::is_none) {
             return Err("no_height");
         }
-        Ok(pts.iter().zip(zs).map(|(p, z)| [p.x, p.y, z.unwrap_or_default()]).collect::<Vec<_>>())
+        Ok(pts
+            .iter()
+            .zip(zs)
+            .map(|(p, z)| [p.x, p.y, z.unwrap_or_default()])
+            .collect::<Vec<_>>())
     };
     Some(match e {
         Entity::Line(l) => match (l.za, l.zb) {
@@ -369,13 +419,20 @@ type AreaRef<'a> = (
 
 /// An area's parts: the first is its own fields'.
 fn areas(p: &PathEntity) -> Vec<AreaRef<'_>> {
-    let mut out = vec![(&p.pts[..], &p.zs, &p.bulges, p.holes.as_deref().unwrap_or_default())];
-    out.extend(
-        p.parts
-            .iter()
-            .flatten()
-            .map(|q| (&q.pts[..], &q.zs, &q.bulges, q.holes.as_deref().unwrap_or_default())),
-    );
+    let mut out = vec![(
+        &p.pts[..],
+        &p.zs,
+        &p.bulges,
+        p.holes.as_deref().unwrap_or_default(),
+    )];
+    out.extend(p.parts.iter().flatten().map(|q| {
+        (
+            &q.pts[..],
+            &q.zs,
+            &q.bulges,
+            q.holes.as_deref().unwrap_or_default(),
+        )
+    }));
     out
 }
 

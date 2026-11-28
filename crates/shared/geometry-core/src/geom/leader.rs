@@ -134,7 +134,14 @@ pub fn layout_of(s: &Shape) -> Option<LeaderLayout> {
     };
     // A leader with content blocks has a landing as a noted one (docs/adr/0326 §2).
     let content = text.is_some() || blocks.as_ref().is_some_and(|b| !b.is_empty());
-    layout(pts, *height, *rotation, arrow.as_deref(), *arrow_size, content)
+    layout(
+        pts,
+        *height,
+        *rotation,
+        arrow.as_deref(),
+        *arrow_size,
+        content,
+    )
 }
 
 /// Its other arms as drawn (docs/adr/0326 §1): each arm's line (from where it leaves its arrowhead, through its bends
@@ -159,7 +166,14 @@ pub fn arm_layouts(s: &Shape) -> Vec<(Vec<Vec2>, Arrowhead)> {
         .filter_map(|a| {
             let mut all = a.pts.clone();
             all.push(last);
-            let l = layout(&all, *height, *rotation, arrow.as_deref(), *arrow_size, false)?;
+            let l = layout(
+                &all,
+                *height,
+                *rotation,
+                arrow.as_deref(),
+                *arrow_size,
+                false,
+            )?;
             Some((drawn_path(&all, &l), l.head))
         })
         .collect()

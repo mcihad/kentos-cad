@@ -7,13 +7,14 @@
 
 use std::collections::HashSet;
 
+use kentos_commands::canonical::stamp_of;
 use kentos_commands::{
-    BlockId, CommandResult, Entity, MAX_REVIEW_ANCHORS, MAX_REVIEW_AUTHOR, MAX_REVIEW_LABEL, MAX_REVIEW_NOTES,
-    MAX_REVIEW_REPLIES, REVIEW_NOTE_STEP, ReviewAnchor, ReviewAnchorCheck, ReviewAnchorState, ReviewNote, ReviewNoteOp,
-    ReviewNoteState, ReviewNotesEdit, ReviewNotesEdited, ReviewNotesList, ReviewNotesListed, ReviewReply, ReviewStatus,
+    BlockId, CommandResult, Entity, MAX_REVIEW_ANCHORS, MAX_REVIEW_AUTHOR, MAX_REVIEW_LABEL,
+    MAX_REVIEW_NOTES, MAX_REVIEW_REPLIES, REVIEW_NOTE_STEP, ReviewAnchor, ReviewAnchorCheck,
+    ReviewAnchorState, ReviewNote, ReviewNoteOp, ReviewNoteState, ReviewNotesEdit,
+    ReviewNotesEdited, ReviewNotesList, ReviewNotesListed, ReviewReply, ReviewStatus,
     review_label_ok, review_text_ok,
 };
-use kentos_commands::canonical::stamp_of;
 use kentos_domain::{Document, Uuid};
 use serde_json::{Value, json};
 
@@ -59,7 +60,11 @@ pub(crate) fn anchor_now(doc: &Document, uid: &str) -> Option<ReviewAnchor> {
         Entity::Insert(i) => block_chain_stamp(doc, i.block),
         _ => None,
     };
-    Some(ReviewAnchor { uid: uid.to_owned(), stamp, block_stamp })
+    Some(ReviewAnchor {
+        uid: uid.to_owned(),
+        stamp,
+        block_stamp,
+    })
 }
 
 /// How `anchor` stands against the drawing now.
@@ -75,7 +80,10 @@ pub fn anchor_state(doc: &Document, anchor: &ReviewAnchor) -> ReviewAnchorState 
 fn sheet_known(doc: &Document, id: &str) -> bool {
     doc.sheets()
         .and_then(|s| s.book.get("sheets").and_then(Value::as_array))
-        .is_some_and(|list| list.iter().any(|s| s.get("id").and_then(Value::as_str) == Some(id)))
+        .is_some_and(|list| {
+            list.iter()
+                .any(|s| s.get("id").and_then(Value::as_str) == Some(id))
+        })
 }
 
 fn view_known(doc: &Document, id: &str) -> bool {
@@ -100,7 +108,9 @@ fn label(t: &Option<String>, most: usize, what: &str, path: &str) -> Result<(), 
     match t {
         Some(t) if !review_label_ok(t, most) => Err(fail(
             codes::INVALID_REVIEW_NOTE,
-            format!("Notun {what} boş olmamalı, kenarında boşluk ve denetim karakteri bulunmamalı, en çok {most} karakter olmalı."),
+            format!(
+                "Notun {what} boş olmamalı, kenarında boşluk ve denetim karakteri bulunmamalı, en çok {most} karakter olmalı."
+            ),
             path,
         )),
         _ => Ok(()),
@@ -113,7 +123,9 @@ fn id_text(id: &str, path: &str) -> Result<(), Stop> {
     }
     Err(fail(
         codes::INVALID_UID,
-        format!("“{id}” geçerli bir not kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği notlar listesinden alın."),
+        format!(
+            "“{id}” geçerli bir not kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği notlar listesinden alın."
+        ),
         path,
     ))
 }
@@ -134,7 +146,10 @@ fn anchors(doc: &Document, uids: &[String]) -> Result<Vec<ReviewAnchor>, Stop> {
     if uids.len() > MAX_REVIEW_ANCHORS {
         return Err(fail(
             codes::INVALID_REVIEW_ANCHORS,
-            format!("Bir not en çok {MAX_REVIEW_ANCHORS} nesneye bağlanabilir; {} verildi.", uids.len()),
+            format!(
+                "Bir not en çok {MAX_REVIEW_ANCHORS} nesneye bağlanabilir; {} verildi.",
+                uids.len()
+            ),
             "change.anchors",
         ));
     }
@@ -154,14 +169,18 @@ fn anchors(doc: &Document, uids: &[String]) -> Result<Vec<ReviewAnchor>, Stop> {
         if !checks::is_uid_text(uid) {
             return Err(fail(
                 codes::INVALID_UID,
-                format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+                format!(
+                    "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+                ),
                 &path,
             ));
         }
         let Some(a) = anchor_now(doc, uid) else {
             return Err(fail(
                 codes::ENTITY_NOT_FOUND,
-                format!("“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesneyi seçin."),
+                format!(
+                    "“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesneyi seçin."
+                ),
                 &path,
             ));
         };
@@ -174,7 +193,10 @@ fn replies_room(note: &ReviewNote) -> Result<(), Stop> {
     if note.replies.len() >= MAX_REVIEW_REPLIES {
         return Err(fail(
             codes::TOO_MANY_REVIEW_REPLIES,
-            format!("{}. not {MAX_REVIEW_REPLIES} yanıtı doldurdu; yeni bir not açın.", note.number),
+            format!(
+                "{}. not {MAX_REVIEW_REPLIES} yanıtı doldurdu; yeni bir not açın.",
+                note.number
+            ),
             "change",
         ));
     }
@@ -185,14 +207,27 @@ fn replies_room(note: &ReviewNote) -> Result<(), Stop> {
 fn apply(doc: &Document, input: &ReviewNotesEdit) -> Result<(Vec<ReviewNote>, String, u32), Stop> {
     let mut notes = doc.settings().review_notes.clone();
     let done = match &input.change {
-        ReviewNoteOp::Add { id, text: t, anchors: uids, at, sheet, view, revision, origin, author, created_at } => {
+        ReviewNoteOp::Add {
+            id,
+            text: t,
+            anchors: uids,
+            at,
+            sheet,
+            view,
+            revision,
+            origin,
+            author,
+            created_at,
+        } => {
             text(t, "change.text")?;
             if let Some(id) = id {
                 id_text(id, "change.id")?;
                 if notes.iter().any(|n| &n.id == id) {
                     return Err(fail(
                         codes::DUPLICATE_REVIEW_NOTE,
-                        format!("“{id}” kimlikli bir inceleme notu çizimde zaten var; başka bir kimlik verin ya da kimliği boş bırakın."),
+                        format!(
+                            "“{id}” kimlikli bir inceleme notu çizimde zaten var; başka bir kimlik verin ya da kimliği boş bırakın."
+                        ),
                         "change.id",
                     ));
                 }
@@ -209,17 +244,29 @@ fn apply(doc: &Document, input: &ReviewNotesEdit) -> Result<(Vec<ReviewNote>, St
             if let Some(s) = sheet
                 && !sheet_known(doc, s)
             {
-                return Err(fail(codes::UNKNOWN_SHEET, format!("“{s}” kimlikli pafta çizimde yok. Var olan bir paftayı seçin."), "change.sheet"));
+                return Err(fail(
+                    codes::UNKNOWN_SHEET,
+                    format!("“{s}” kimlikli pafta çizimde yok. Var olan bir paftayı seçin."),
+                    "change.sheet",
+                ));
             }
             if let Some(v) = view
                 && !view_known(doc, v)
             {
-                return Err(fail(codes::UNKNOWN_VIEW, format!("“{v}” kimlikli adlı görünüş çizimde yok. Var olan bir görünüşü seçin."), "change.view"));
+                return Err(fail(
+                    codes::UNKNOWN_VIEW,
+                    format!(
+                        "“{v}” kimlikli adlı görünüş çizimde yok. Var olan bir görünüşü seçin."
+                    ),
+                    "change.view",
+                ));
             }
             if notes.len() >= MAX_REVIEW_NOTES {
                 return Err(fail(
                     codes::TOO_MANY_REVIEW_NOTES,
-                    format!("Çizim {MAX_REVIEW_NOTES} inceleme notunu doldurdu; çözülmüş notları silin."),
+                    format!(
+                        "Çizim {MAX_REVIEW_NOTES} inceleme notunu doldurdu; çözülmüş notları silin."
+                    ),
                     "change",
                 ));
             }
@@ -243,7 +290,12 @@ fn apply(doc: &Document, input: &ReviewNotesEdit) -> Result<(Vec<ReviewNote>, St
             });
             (id, number)
         }
-        ReviewNoteOp::Update { id, text: t, status, revision } => {
+        ReviewNoteOp::Update {
+            id,
+            text: t,
+            status,
+            revision,
+        } => {
             if let Some(t) = t {
                 text(t, "change.text")?;
             }
@@ -269,7 +321,13 @@ fn apply(doc: &Document, input: &ReviewNotesEdit) -> Result<(Vec<ReviewNote>, St
             }
             (n.id.clone(), n.number)
         }
-        ReviewNoteOp::Reply { id, text: t, author, created_at, status } => {
+        ReviewNoteOp::Reply {
+            id,
+            text: t,
+            author,
+            created_at,
+            status,
+        } => {
             text(t, "change.text")?;
             id_text(id, "change.id")?;
             let at = place(&notes, id, "change.id")?;
@@ -277,7 +335,11 @@ fn apply(doc: &Document, input: &ReviewNotesEdit) -> Result<(Vec<ReviewNote>, St
             label(created_at, MAX_REVIEW_LABEL, "tarihi", "change.createdAt")?;
             replies_room(&notes[at])?;
             let n = &mut notes[at];
-            n.replies.push(ReviewReply { text: t.clone(), author: author.clone(), created_at: created_at.clone() });
+            n.replies.push(ReviewReply {
+                text: t.clone(),
+                author: author.clone(),
+                created_at: created_at.clone(),
+            });
             if let Some(s) = status {
                 n.status = *s;
             }
@@ -309,13 +371,19 @@ fn apply(doc: &Document, input: &ReviewNotesEdit) -> Result<(Vec<ReviewNote>, St
 /// Checks the change, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ReviewNotesEdit) -> CommandResult<()> {
     match apply(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What execute would answer now, writing nothing; a new note without an id is told with the id the plan made.
-pub fn plan(cx: &ExecutionContext<'_>, input: &ReviewNotesEdit) -> CommandResult<ReviewNotesEdited> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &ReviewNotesEdit,
+) -> CommandResult<ReviewNotesEdited> {
     match apply(cx.doc, input) {
         Ok((notes, id, number)) => CommandResult::Completed {
             output: ReviewNotesEdited {
@@ -331,7 +399,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ReviewNotesEdit) -> CommandResult
 }
 
 /// Writes the change as one undo step “İnceleme notu”.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ReviewNotesEdit) -> CommandResult<ReviewNotesEdited> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ReviewNotesEdit,
+) -> CommandResult<ReviewNotesEdited> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_REVIEW_NOTES_EDIT,
@@ -341,7 +412,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ReviewNotesEdit) -> Command
     )
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: ReviewNotesEdit) -> CommandResult<ReviewNotesEdited> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: ReviewNotesEdit,
+) -> CommandResult<ReviewNotesEdited> {
     let (notes, id, number) = match apply(cx.doc, &input) {
         Ok(done) => done,
         Err(stop) => return stop.into(),
@@ -350,7 +424,12 @@ fn write(cx: &mut ExecutionContext<'_>, input: ReviewNotesEdit) -> CommandResult
     let count = notes.len() as u32;
     cx.doc.set_review_notes(notes, REVIEW_NOTE_STEP);
     CommandResult::Completed {
-        output: ReviewNotesEdited { id, number, notes: count, revision: cx.doc.revision().to_string() },
+        output: ReviewNotesEdited {
+            id,
+            number,
+            notes: count,
+            revision: cx.doc.revision().to_string(),
+        },
         warnings: Vec::new(),
     }
 }
@@ -365,14 +444,25 @@ pub fn states(doc: &Document) -> Vec<ReviewNoteState> {
             let anchor_states: Vec<ReviewAnchorCheck> = n
                 .anchors
                 .iter()
-                .map(|a| ReviewAnchorCheck { uid: a.uid.clone(), state: anchor_state(doc, a) })
+                .map(|a| ReviewAnchorCheck {
+                    uid: a.uid.clone(),
+                    state: anchor_state(doc, a),
+                })
                 .collect();
             let sheet_missing = n.sheet.as_deref().is_some_and(|s| !sheet_known(doc, s));
             let view_missing = n.view.as_deref().is_some_and(|v| !view_known(doc, v));
             let stale = sheet_missing
                 || view_missing
-                || anchor_states.iter().any(|a| a.state != ReviewAnchorState::Current);
-            ReviewNoteState { note: n.clone(), stale, anchor_states, sheet_missing, view_missing }
+                || anchor_states
+                    .iter()
+                    .any(|a| a.state != ReviewAnchorState::Current);
+            ReviewNoteState {
+                note: n.clone(),
+                stale,
+                anchor_states,
+                sheet_missing,
+                view_missing,
+            }
         })
         .collect();
     out.sort_by_key(|s| s.note.number);
@@ -393,7 +483,12 @@ pub fn list(doc: &Document, input: &ReviewNotesList) -> ReviewNotesListed {
     };
     listed.notes = all
         .into_iter()
-        .filter(|n| input.status.as_ref().is_none_or(|s| s.contains(&n.note.status)))
+        .filter(|n| {
+            input
+                .status
+                .as_ref()
+                .is_none_or(|s| s.contains(&n.note.status))
+        })
         .filter(|n| !input.stale_only || n.stale)
         .collect();
     listed
@@ -404,14 +499,29 @@ pub mod list_cmd {
     use super::*;
 
     pub fn validate(_cx: &ExecutionContext<'_>, _input: &ReviewNotesList) -> CommandResult<()> {
-        CommandResult::Completed { output: (), warnings: Vec::new() }
+        CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        }
     }
 
-    pub fn plan(cx: &ExecutionContext<'_>, input: &ReviewNotesList) -> CommandResult<ReviewNotesListed> {
-        CommandResult::Completed { output: list(cx.doc, input), warnings: Vec::new() }
+    pub fn plan(
+        cx: &ExecutionContext<'_>,
+        input: &ReviewNotesList,
+    ) -> CommandResult<ReviewNotesListed> {
+        CommandResult::Completed {
+            output: list(cx.doc, input),
+            warnings: Vec::new(),
+        }
     }
 
-    pub fn execute(cx: &mut ExecutionContext<'_>, input: ReviewNotesList) -> CommandResult<ReviewNotesListed> {
-        CommandResult::Completed { output: list(cx.doc, &input), warnings: Vec::new() }
+    pub fn execute(
+        cx: &mut ExecutionContext<'_>,
+        input: ReviewNotesList,
+    ) -> CommandResult<ReviewNotesListed> {
+        CommandResult::Completed {
+            output: list(cx.doc, &input),
+            warnings: Vec::new(),
+        }
     }
 }

@@ -348,7 +348,8 @@ impl App {
         .on_press(Message::BottomTab(crate::bottom::BottomTab::History));
         kentos_ui::widget::tip(
             cell,
-            kentos_ui::widget::Tip::new(flash.text.clone()).body("Komut geçmişinde tutulur; açmak için tıklayın."),
+            kentos_ui::widget::Tip::new(flash.text.clone())
+                .body("Komut geçmişinde tutulur; açmak için tıklayın."),
             iced::widget::tooltip::Position::Top,
         )
     }

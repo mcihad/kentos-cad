@@ -142,7 +142,8 @@ impl App {
         }
         for r in refused {
             refused_seen = r.seq;
-            self.history.push(after, at, session, Call::Refused(Box::new(r)));
+            self.history
+                .push(after, at, session, Call::Refused(Box::new(r)));
         }
         self.history.seen = Some((session, row_seen, refused_seen));
     }

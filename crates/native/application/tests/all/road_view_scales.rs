@@ -9,7 +9,10 @@ use kentos_native_application::{ExecutionContext, road_profiles_draw, road_secti
 
 fn doc_of(file: &str) -> Document {
     let cases: serde_json::Value = serde_json::from_str(file).expect("cases");
-    Document::from_snapshot_v2(serde_json::from_value::<DocumentSnapshotV2>(cases["setup"].clone()).expect("setup")).expect("opens")
+    Document::from_snapshot_v2(
+        serde_json::from_value::<DocumentSnapshotV2>(cases["setup"].clone()).expect("setup"),
+    )
+    .expect("opens")
 }
 
 /// The texts on `layer` the call wrote, sorted: what they say, not where.
@@ -48,10 +51,19 @@ fn section_views_say_the_same_at_every_scale() {
     assert_eq!(a.views.len(), b.views.len());
     for (x, y) in a.views.iter().zip(&b.views) {
         assert_eq!((x.station, x.km, &x.km_text), (y.station, y.km, &y.km_text));
-        assert_eq!((x.datum, x.top, x.cut, x.fill), (y.datum, y.top, y.cut, y.fill), "km {}", x.km_text);
+        assert_eq!(
+            (x.datum, x.top, x.cut, x.fill),
+            (y.datum, y.top, y.cut, y.fill),
+            "km {}",
+            x.km_text
+        );
         assert_ne!(x.frame, y.frame, "the frame is the drawing's");
     }
-    assert_eq!((a.grid, a.offsets), (b.grid, b.offsets), "the grids are the metres', not the paper's");
+    assert_eq!(
+        (a.grid, a.offsets),
+        (b.grid, b.offsets),
+        "the grids are the metres', not the paper's"
+    );
     assert!(!ta.is_empty());
     assert_eq!(ta, tb, "every text says the same");
     println!("enkesit: {} görünüş, {} yazı", a.views.len(), ta.len());
@@ -75,8 +87,15 @@ fn profile_views_say_the_same_at_every_scale() {
     let (b, tb) = run(serde_json::json!({
         "profile": "b-1", "layerId": "0", "at": [1000.0, -3000.0], "exaggeration": 20.0, "height": 3.5
     }));
-    assert_eq!(a.columns, b.columns, "the bands' stations, elevations and grades");
-    assert_eq!((a.datum, a.top, a.grid), (b.datum, b.top, b.grid), "the elevations the frame spans");
+    assert_eq!(
+        a.columns, b.columns,
+        "the bands' stations, elevations and grades"
+    );
+    assert_eq!(
+        (a.datum, a.top, a.grid),
+        (b.datum, b.top, b.grid),
+        "the elevations the frame spans"
+    );
     assert_ne!(a.frame, b.frame, "the frame is the drawing's");
     assert!(!ta.is_empty());
     assert_eq!(ta, tb, "every text says the same");
@@ -97,23 +116,41 @@ fn section_sheets_say_the_same_at_every_scale() {
     let run = |input: serde_json::Value| {
         let mut doc = doc_of(file);
         let before = doc.entities().count();
-        let input: kentos_commands::RoadSheetsSections = serde_json::from_value(input).expect("input");
-        match kentos_native_application::road_sheets_sections::execute(&mut ExecutionContext::new(&mut doc), input) {
+        let input: kentos_commands::RoadSheetsSections =
+            serde_json::from_value(input).expect("input");
+        match kentos_native_application::road_sheets_sections::execute(
+            &mut ExecutionContext::new(&mut doc),
+            input,
+        ) {
             CommandResult::Completed { .. } => {}
             other => panic!("lays: {other:?}"),
         }
         texts(&doc, "0", before)
     };
     let a = run(serde_json::json!({"set": "k-1", "layerId": "0", "at": [0.0, -500.0]}));
-    let b = run(serde_json::json!({"set": "k-1", "layerId": "0", "at": [0.0, -500.0], "scale": 1000}));
+    let b =
+        run(serde_json::json!({"set": "k-1", "layerId": "0", "at": [0.0, -500.0], "scale": 1000}));
     let (words, labels) = words_and_labels(&a);
     let (words_b, mut labels_b) = words_and_labels(&b);
-    assert!(words.iter().any(|w| w.starts_with("Yarma")) && words.iter().any(|w| w.starts_with("Eksen kotu")));
+    assert!(
+        words.iter().any(|w| w.starts_with("Yarma"))
+            && words.iter().any(|w| w.starts_with("Eksen kotu"))
+    );
     assert_eq!(words, words_b, "km, axis elevations and areas");
     for l in &labels {
-        let at = labels_b.iter().position(|m| m == l).unwrap_or_else(|| panic!("{l} at 1:500 only"));
+        let at = labels_b
+            .iter()
+            .position(|m| m == l)
+            .unwrap_or_else(|| panic!("{l} at 1:500 only"));
         labels_b.remove(at);
     }
-    assert!(labels_b.iter().all(|l| l.contains('.')), "the extra labels are elevations of taller frames: {labels_b:?}");
-    println!("enkesit paftaları: {} hesap yazısı aynı, 1:1000'de {} kot etiketi fazla", words.len(), labels_b.len());
+    assert!(
+        labels_b.iter().all(|l| l.contains('.')),
+        "the extra labels are elevations of taller frames: {labels_b:?}"
+    );
+    println!(
+        "enkesit paftaları: {} hesap yazısı aynı, 1:1000'de {} kot etiketi fazla",
+        words.len(),
+        labels_b.len()
+    );
 }

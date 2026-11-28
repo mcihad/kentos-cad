@@ -21,8 +21,12 @@ const COUNTING: &str = "Kaynak sayıyor…";
 /// Çizgi) has none.
 fn one_field(spec: &Spec) -> Option<String> {
     let field = match spec.kind {
-        ChartKind::Bar if matches!(spec.aggregate, Aggregate::Count | Aggregate::None) => spec.category.clone(),
-        ChartKind::Pie if matches!(spec.aggregate, Aggregate::Count | Aggregate::None) => spec.category.clone(),
+        ChartKind::Bar if matches!(spec.aggregate, Aggregate::Count | Aggregate::None) => {
+            spec.category.clone()
+        }
+        ChartKind::Pie if matches!(spec.aggregate, Aggregate::Count | Aggregate::None) => {
+            spec.category.clone()
+        }
         ChartKind::Histogram => spec.value.clone(),
         ChartKind::Box if spec.group.is_none() => spec.value.clone(),
         _ => None,
@@ -36,7 +40,10 @@ impl App {
         let doc = self.document.as_ref()?;
         let layer = self.chart_layer()?;
         doc.model.layers().get(&layer)?.data.as_ref()?;
-        let columns = shape_columns(self, doc, &layer).into_iter().map(|(c, _)| c).collect();
+        let columns = shape_columns(self, doc, &layer)
+            .into_iter()
+            .map(|(c, _)| c)
+            .collect();
         Some(DataSet { rows: 0, columns })
     }
 
@@ -48,10 +55,19 @@ impl App {
         if self.charting_table() || p.show != Show::All {
             return false;
         }
-        let (Some(doc), Some(layer), Some(spec)) = (self.document.as_ref(), self.chart_layer(), self.whole_spec()) else {
+        let (Some(doc), Some(layer), Some(spec)) = (
+            self.document.as_ref(),
+            self.chart_layer(),
+            self.whole_spec(),
+        ) else {
             return false;
         };
-        if doc.model.layers().get(&layer).is_none_or(|n| n.data.is_none()) {
+        if doc
+            .model
+            .layers()
+            .get(&layer)
+            .is_none_or(|n| n.data.is_none())
+        {
             return false;
         }
         let Some(field) = one_field(&spec) else {
@@ -70,7 +86,12 @@ impl App {
             _ => None,
         };
         let key = (
-            DataKey::Counted(layer_key(doc, &layer), doc.model.data_written(), field.clone(), seq),
+            DataKey::Counted(
+                layer_key(doc, &layer),
+                doc.model.data_written(),
+                field.clone(),
+                seq,
+            ),
             (Show::All, 0, [0; 4]),
             spec.clone(),
         );
@@ -78,7 +99,12 @@ impl App {
         if now.key.as_ref() != Some(&key) {
             let columns: Vec<ColumnInfo> = shape
                 .iter()
-                .map(|(c, _)| ColumnInfo { key: c.key.clone(), label: c.label.clone(), kind: c.kind, labelled: c.labelled })
+                .map(|(c, _)| ColumnInfo {
+                    key: c.key.clone(),
+                    label: c.label.clone(),
+                    kind: c.kind,
+                    labelled: c.labelled,
+                })
                 .collect();
             let stamp = now.stamp + 1;
             let waiting = |error: String| ChartNow {
@@ -93,11 +119,18 @@ impl App {
             *now = match self.field_now(&layer, column, f) {
                 FieldNow::Failed(why) => waiting(format!("Kaynak sayamadı: {why}")),
                 FieldNow::Ready(g, _) => {
-                    let data = DataSet { rows: g.column.cells.len(), columns: vec![g.column] };
+                    let data = DataSet {
+                        rows: g.column.cells.len(),
+                        columns: vec![g.column],
+                    };
                     let mut work = Work::counted(data, g.rows.clone());
                     let worked = worked_out(&mut work, &spec, &g.rows);
-                    *p.counted.borrow_mut() =
-                        Some(CountedChart { layer: layer.clone(), field: field.clone(), picker: g.picker, work });
+                    *p.counted.borrow_mut() = Some(CountedChart {
+                        layer: layer.clone(),
+                        field: field.clone(),
+                        picker: g.picker,
+                        work,
+                    });
                     ChartNow {
                         key: Some(key.clone()),
                         spec: Some(spec.clone()),

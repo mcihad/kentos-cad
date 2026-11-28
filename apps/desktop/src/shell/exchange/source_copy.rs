@@ -50,8 +50,14 @@ impl App {
     /// The drawing with every data layer's rows as objects of their layers, links taken off; none without a data layer.
     pub fn source_copy(&self) -> Option<Rc<SourceCopy>> {
         let doc = self.document.as_ref()?;
-        let nodes: Vec<kentos_commands::LayerNode> =
-            doc.model.layers().leaves().into_iter().filter(|l| l.data.is_some()).cloned().collect();
+        let nodes: Vec<kentos_commands::LayerNode> = doc
+            .model
+            .layers()
+            .leaves()
+            .into_iter()
+            .filter(|l| l.data.is_some())
+            .cloned()
+            .collect();
         if nodes.is_empty() {
             return None;
         }
@@ -65,12 +71,21 @@ impl App {
                 .iter()
                 .zip(&read)
                 .map(|(n, r)| {
-                    let address = n.data.as_ref().map(|d| format!("{}\u{0}{}", d.address, d.table)).unwrap_or_default();
+                    let address = n
+                        .data
+                        .as_ref()
+                        .map(|d| format!("{}\u{0}{}", d.address, d.table))
+                        .unwrap_or_default();
                     (n.id.clone(), address, matches!(r, Some(Ok(_))))
                 })
                 .collect(),
         );
-        if let Some(kept) = KEPT.with(|k| k.borrow().as_ref().filter(|(at, _)| *at == stamp).map(|(_, c)| Rc::clone(c))) {
+        if let Some(kept) = KEPT.with(|k| {
+            k.borrow()
+                .as_ref()
+                .filter(|(at, _)| *at == stamp)
+                .map(|(_, c)| Rc::clone(c))
+        }) {
             return Some(kept);
         }
         // The links taken off first: the copy's layers are its own, as an exported file's are.
@@ -83,22 +98,32 @@ impl App {
             match r {
                 Some(Ok(all)) => {
                     let held = doc.model.data_hidden(&node.id);
-                    let (keys, objects): (Vec<i64>, Vec<Entity>) =
-                        all.iter().filter(|(k, _)| !held.contains(k)).map(|(k, e)| (*k, e.clone())).unzip();
+                    let (keys, objects): (Vec<i64>, Vec<Entity>) = all
+                        .iter()
+                        .filter(|(k, _)| !held.contains(k))
+                        .map(|(k, e)| (*k, e.clone()))
+                        .unzip();
                     match copy.add_many(objects, "Dışa aktar") {
                         Ok(slots) => {
                             for (slot, key) in slots.into_iter().zip(keys) {
                                 rows.insert(slot.0, (node.id.clone(), key));
                             }
                         }
-                        Err(_) => failed.push((node.name.clone(), "çizimde yer kalmadı".to_owned())),
+                        Err(_) => {
+                            failed.push((node.name.clone(), "çizimde yer kalmadı".to_owned()))
+                        }
                     }
                 }
                 Some(Err(why)) => failed.push((node.name.clone(), why)),
                 None => reading.push(node.name.clone()),
             }
         }
-        let made = Rc::new(SourceCopy { doc: copy, rows, reading, failed });
+        let made = Rc::new(SourceCopy {
+            doc: copy,
+            rows,
+            reading,
+            failed,
+        });
         KEPT.with(|k| *k.borrow_mut() = Some((stamp, Rc::clone(&made))));
         Some(made)
     }
@@ -107,7 +132,10 @@ impl App {
     pub(crate) fn while_read(&self, why: String) -> String {
         match self.source_copy() {
             Some(c) if !c.reading.is_empty() => {
-                format!("Kaynaktan okunuyor: {}. Satırları okununca sayılır.", c.reading.join(", "))
+                format!(
+                    "Kaynaktan okunuyor: {}. Satırları okununca sayılır.",
+                    c.reading.join(", ")
+                )
             }
             _ => why,
         }
@@ -120,10 +148,21 @@ impl App {
         };
         let mut out = Vec::new();
         if !c.reading.is_empty() {
-            out.push((false, format!("Kaynaktan okunuyor: {}. Satırları okununca sayılır.", c.reading.join(", "))));
+            out.push((
+                false,
+                format!(
+                    "Kaynaktan okunuyor: {}. Satırları okununca sayılır.",
+                    c.reading.join(", ")
+                ),
+            ));
         }
         for (name, why) in &c.failed {
-            out.push((true, format!("“{name}” katmanının kaynağı okunamadı: {why}. Bu katmanın satırları yazılmaz.")));
+            out.push((
+                true,
+                format!(
+                    "“{name}” katmanının kaynağı okunamadı: {why}. Bu katmanın satırları yazılmaz."
+                ),
+            ));
         }
         out
     }

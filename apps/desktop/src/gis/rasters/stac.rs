@@ -136,16 +136,27 @@ fn msg(e: Event) -> Message {
 /// A search that found nothing, said with what it asked (GIS-045): the collections, the box, the time and the cloud
 /// limit, and what to widen.
 pub(crate) fn nothing_found(r: &StacSearchRecord) -> String {
-    let collections = if r.collections.is_empty() { "bütün koleksiyonlarda".to_owned() } else { format!("“{}” koleksiyonunda", r.collections.join(", ")) };
+    let collections = if r.collections.is_empty() {
+        "bütün koleksiyonlarda".to_owned()
+    } else {
+        format!("“{}” koleksiyonunda", r.collections.join(", "))
+    };
     let bbox = r.bbox.map_or_else(
         || "bütün katalogda".to_owned(),
-        |b| format!("{:.4}°–{:.4}° D, {:.4}°–{:.4}° K kutusunda", b[0], b[2], b[1], b[3]),
+        |b| {
+            format!(
+                "{:.4}°–{:.4}° D, {:.4}°–{:.4}° K kutusunda",
+                b[0], b[2], b[1], b[3]
+            )
+        },
     );
     let time = r.datetime.as_deref().map_or_else(
         || "her zaman".to_owned(),
         |d| format!("{} arasında", d.replace("..", "…").replace('/', " – ")),
     );
-    let cloud = r.max_cloud_cover.map_or_else(String::new, |c| format!(", bulut en çok %{c}"));
+    let cloud = r
+        .max_cloud_cover
+        .map_or_else(String::new, |c| format!(", bulut en çok %{c}"));
     format!(
         "Arama yanıtlandı ama {collections}, {bbox}, {time}{cloud} öğe yok. Kutuyu kaldırın, tarihleri ya da bulut sınırını genişletin."
     )
@@ -645,7 +656,9 @@ impl App {
         };
         let model = &mut doc.model;
         // Where the group goes (GIS-059): over the base map at the top of the tree, said with the result.
-        let over = stac_prepare::base_index(model).and_then(|i| model.layers().nodes().get(i)).map(|n| n.name.clone());
+        let over = stac_prepare::base_index(model)
+            .and_then(|i| model.layers().nodes().get(i))
+            .map(|n| n.name.clone());
         match stac_prepare::execute(&mut ExecutionContext::new(model), input) {
             CommandResult::Completed { output, warnings } => {
                 let first = output
@@ -860,7 +873,9 @@ impl App {
         // An answer with no item: what was asked, and how to ask wider.
         if !searching && s.answered == Some(true) && s.items.is_empty() {
             let asked = s.searched.as_ref().map(nothing_found).unwrap_or_default();
-            let mut wider = row![container(words::text_line(Line::Warn, asked)).width(Fill)].spacing(6).align_y(iced::Center);
+            let mut wider = row![container(words::text_line(Line::Warn, asked)).width(Fill)]
+                .spacing(6)
+                .align_y(iced::Center);
             if s.bbox.is_some() {
                 wider = wider.push(small("Kutuyu kaldır", Some(msg(Event::NoBox))));
             }
@@ -1207,7 +1222,11 @@ mod tests {
     fn an_answer_with_no_item_says_what_was_asked() {
         let mut app = app();
         app.raster_stac_with(searching());
-        assert_eq!(app.gis.rasters.stac.as_ref().map(|s| s.answered), Some(None), "no search yet");
+        assert_eq!(
+            app.gis.rasters.stac.as_ref().map(|s| s.answered),
+            Some(None),
+            "no search yet"
+        );
         // The recorded search's answer, its items taken out: a catalog that has nothing there.
         let s = app.gis.rasters.stac.as_mut().expect("the window");
         let input = search_of(s).expect("the input");
@@ -1223,12 +1242,25 @@ mod tests {
         let s = app.gis.rasters.stac.as_ref().expect("the window");
         assert_eq!(s.answered, Some(true));
         let said = nothing_found(s.searched.as_ref().expect("asked"));
-        assert!(said.starts_with("Arama yanıtlandı ama “sentinel-2-l2a” koleksiyonunda, 36.9000°–37.1000° D"), "{said}");
-        assert!(said.contains("2024-07-01 – 2024-07-20 arasında, bulut en çok %20 öğe yok."), "{said}");
+        assert!(
+            said.starts_with(
+                "Arama yanıtlandı ama “sentinel-2-l2a” koleksiyonunda, 36.9000°–37.1000° D"
+            ),
+            "{said}"
+        );
+        assert!(
+            said.contains("2024-07-01 – 2024-07-20 arasında, bulut en çok %20 öğe yok."),
+            "{said}"
+        );
         let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 1000.));
-        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+            drop(app.update(m))
+        });
         assert!(crate::files_testing::find_text(&mut shot, &app, "Eşleşen öğe yok.").is_some());
-        assert!(crate::files_testing::find_text(&mut shot, &app, &said).is_some(), "{said}");
+        assert!(
+            crate::files_testing::find_text(&mut shot, &app, &said).is_some(),
+            "{said}"
+        );
         assert!(crate::files_testing::find_text(&mut shot, &app, "Tarihleri kaldır").is_some());
         assert!(
             crate::files_testing::find_text(
@@ -1249,10 +1281,15 @@ mod tests {
         s.ticket += 1;
         let ticket = s.ticket;
         s.waiting = Some(ticket);
-        send(&mut app, Event::Found(ticket, Box::new(Err("Katalog yanıt vermedi.".into()))));
-        assert_eq!(app.gis.rasters.stac.as_ref().map(|s| s.answered), Some(Some(false)));
+        send(
+            &mut app,
+            Event::Found(ticket, Box::new(Err("Katalog yanıt vermedi.".into()))),
+        );
+        assert_eq!(
+            app.gis.rasters.stac.as_ref().map(|s| s.answered),
+            Some(Some(false))
+        );
     }
-
 
     /// GIS-059 (docs/adr/1118): a drawing with an opaque base map at the top of its tree: the prepared rasters' group
     /// goes just above it, so the map service does not cover them; the base map stays under.
@@ -1262,25 +1299,56 @@ mod tests {
         let doc = app.document.as_mut().expect("a drawing");
         let base = doc
             .model
-            .add_layer_at(kentos_domain::NewLayer::layer("Altlık".to_owned()), None, Some(0), None, false)
+            .add_layer_at(
+                kentos_domain::NewLayer::layer("Altlık".to_owned()),
+                None,
+                Some(0),
+                None,
+                false,
+            )
             .expect("a layer");
         let service: kentos_commands::ServiceLayer = serde_json::from_value(serde_json::json!({
             "kind": "xyz", "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png", "maxZoom": 19
         }))
         .expect("a service");
-        let _ = doc.model.set_layer_service(&base, kentos_domain::ServedBy { service: Some(service), ..Default::default() }, None, "Altlık");
+        let _ = doc.model.set_layer_service(
+            &base,
+            kentos_domain::ServedBy {
+                service: Some(service),
+                ..Default::default()
+            },
+            None,
+            "Altlık",
+        );
         app.raster_stac_with(searching());
         send(&mut app, Event::Search);
         send(&mut app, Event::Choose(0));
         send(&mut app, Event::Prepare);
-        let layers = app.document.as_ref().expect("a drawing").model.layers().nodes().to_vec();
+        let layers = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .layers()
+            .nodes()
+            .to_vec();
         let at = |id: &str| layers.iter().position(|n| n.id == id).expect("on top");
-        let group = layers.iter().position(|n| n.kind == kentos_commands::LayerNodeType::Group && n.name.starts_with("STAC")).expect("the group");
-        assert!(group < at(&base), "the rasters drawn over the base map: {group} vs {}", at(&base));
+        let group = layers
+            .iter()
+            .position(|n| {
+                n.kind == kentos_commands::LayerNodeType::Group && n.name.starts_with("STAC")
+            })
+            .expect("the group");
         assert!(
-            app.log.lines().any(|l| l.text.contains("grubu “Altlık” altlığının üstünde çizilir")),
+            group < at(&base),
+            "the rasters drawn over the base map: {group} vs {}",
+            at(&base)
+        );
+        assert!(
+            app.log
+                .lines()
+                .any(|l| l.text.contains("grubu “Altlık” altlığının üstünde çizilir")),
             "the place said"
         );
     }
-
 }

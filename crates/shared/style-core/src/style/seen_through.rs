@@ -16,7 +16,11 @@ pub const MOST: f64 = 0.9;
 /// A layer that draws a marker (along a line, at an area's centroid, in a pattern) passes it on to the marker's own
 /// layers: the compiler draws a marker at its own layers' opacities, not its carrier's.
 pub fn seen_through(symbol: &Json, transparency: f64) -> Json {
-    let t = if transparency.is_nan() { 0.0 } else { transparency.clamp(0.0, MOST) };
+    let t = if transparency.is_nan() {
+        0.0
+    } else {
+        transparency.clamp(0.0, MOST)
+    };
     let mut out = symbol.clone();
     fade(&mut out, 1.0 - t);
     out
@@ -25,12 +29,19 @@ pub fn seen_through(symbol: &Json, transparency: f64) -> Json {
 /// Each layer of `symbol` (a symbol, or a layer's marker) drawn `by` as opaque as it was.
 fn fade(symbol: &mut Json, by: f64) {
     let Json::Obj(fields) = symbol else { return };
-    let Some(Json::Arr(layers)) = fields.iter_mut().find(|(k, _)| k == "layers").map(|(_, v)| v) else {
+    let Some(Json::Arr(layers)) = fields
+        .iter_mut()
+        .find(|(k, _)| k == "layers")
+        .map(|(_, v)| v)
+    else {
         return;
     };
     for layer in layers {
         let Json::Obj(layer) = layer else { continue };
-        if let Some((_, marker)) = layer.iter_mut().find(|(k, v)| k == "marker" && matches!(v, Json::Obj(_))) {
+        if let Some((_, marker)) = layer
+            .iter_mut()
+            .find(|(k, v)| k == "marker" && matches!(v, Json::Obj(_)))
+        {
             fade(marker, by);
             continue;
         }
@@ -51,7 +62,9 @@ mod tests {
     use super::*;
 
     fn opacities(symbol: &Json) -> Vec<f64> {
-        let Json::Arr(layers) = symbol.get("layers") else { return Vec::new() };
+        let Json::Arr(layers) = symbol.get("layers") else {
+            return Vec::new();
+        };
         layers
             .iter()
             .flat_map(|l| match l.get("marker") {
@@ -79,10 +92,15 @@ mod tests {
     #[test]
     fn every_layer_and_every_marks_layer_is_seen_through() {
         let band = Json::parse(BAND).unwrap();
-        assert!(close(&opacities(&seen_through(&band, 0.6)), &[0.4, 0.2, 0.4, 0.4, 0.32]));
+        assert!(close(
+            &opacities(&seen_through(&band, 0.6)),
+            &[0.4, 0.2, 0.4, 0.4, 0.32]
+        ));
         // The carrier of a marker keeps its own: the compiler does not read it.
         let seen = seen_through(&band, 0.6);
-        let Json::Arr(layers) = seen.get("layers") else { panic!() };
+        let Json::Arr(layers) = seen.get("layers") else {
+            panic!()
+        };
         assert_eq!(layers[2].get("opacity"), &Json::Null);
         assert_eq!(seen.get("type"), &Json::Str("fill".into()));
     }
@@ -99,7 +117,12 @@ mod tests {
 
     #[test]
     fn what_is_not_a_symbol_comes_back_as_it_was() {
-        for text in ["null", "\"mpyy.uip.x\"", "{\"type\":\"fill\"}", "{\"layers\":[1,\"a\"]}"] {
+        for text in [
+            "null",
+            "\"mpyy.uip.x\"",
+            "{\"type\":\"fill\"}",
+            "{\"layers\":[1,\"a\"]}",
+        ] {
             let v = Json::parse(text).unwrap();
             assert_eq!(seen_through(&v, 0.6), v);
         }

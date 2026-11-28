@@ -47,12 +47,36 @@ pub const KINDS: &[(&str, Kind, &str)] = &[
     ("tif", Kind::Tiff, "image/tiff"),
     ("tiff", Kind::Tiff, "image/tiff"),
     ("pdf", Kind::Pdf, "application/pdf"),
-    ("docx", Kind::Office, "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
-    ("xlsx", Kind::Office, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
-    ("pptx", Kind::Office, "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
-    ("odt", Kind::Office, "application/vnd.oasis.opendocument.text"),
-    ("ods", Kind::Office, "application/vnd.oasis.opendocument.spreadsheet"),
-    ("odp", Kind::Office, "application/vnd.oasis.opendocument.presentation"),
+    (
+        "docx",
+        Kind::Office,
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ),
+    (
+        "xlsx",
+        Kind::Office,
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ),
+    (
+        "pptx",
+        Kind::Office,
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    ),
+    (
+        "odt",
+        Kind::Office,
+        "application/vnd.oasis.opendocument.text",
+    ),
+    (
+        "ods",
+        Kind::Office,
+        "application/vnd.oasis.opendocument.spreadsheet",
+    ),
+    (
+        "odp",
+        Kind::Office,
+        "application/vnd.oasis.opendocument.presentation",
+    ),
     ("doc", Kind::Compound, "application/octet-stream"),
     ("xls", Kind::Compound, "application/octet-stream"),
     ("ppt", Kind::Compound, "application/octet-stream"),
@@ -107,9 +131,10 @@ pub enum Kind {
 
 /// Names inside an archive that are refused: programs, scripts and shortcuts.
 const PROGRAM_EXTENSIONS: &[&str] = &[
-    "exe", "dll", "com", "scr", "msi", "msp", "bat", "cmd", "ps1", "psm1", "vbs", "vbe", "js", "jse", "wsf", "wsh",
-    "hta", "jar", "sh", "bash", "app", "lnk", "cpl", "apk", "dmg", "pkg", "deb", "rpm", "appimage", "reg", "pif", "html",
-    "htm", "xhtml", "mjs", "py", "pyw", "pl", "rb", "php", "docm", "xlsm", "pptm",
+    "exe", "dll", "com", "scr", "msi", "msp", "bat", "cmd", "ps1", "psm1", "vbs", "vbe", "js",
+    "jse", "wsf", "wsh", "hta", "jar", "sh", "bash", "app", "lnk", "cpl", "apk", "dmg", "pkg",
+    "deb", "rpm", "appimage", "reg", "pif", "html", "htm", "xhtml", "mjs", "py", "pyw", "pl", "rb",
+    "php", "docm", "xlsm", "pptm",
 ];
 
 /// What the scan found of a file that may be kept.
@@ -137,7 +162,9 @@ impl Refusal {
         match self {
             Refusal::Blocked(why) => format!("“{name}” alınmadı: {why}"),
             Refusal::Infected(what) => {
-                format!("“{name}” alınmadı: dosyada zararlı yazılım bulundu ({what}). Dosya saklanmadı.")
+                format!(
+                    "“{name}” alınmadı: dosyada zararlı yazılım bulundu ({what}). Dosya saklanmadı."
+                )
             }
         }
     }
@@ -194,12 +221,19 @@ impl Scanner {
 
     /// As [`Self::from_env`], with the settings `get` gives (the server's env file and environment).
     pub fn configured(get: impl Fn(&str) -> Option<String>) -> Result<Self, String> {
-        let get = |k: &str| get(k).map(|v| v.trim().to_owned()).filter(|v| !v.is_empty());
+        let get = |k: &str| {
+            get(k)
+                .map(|v| v.trim().to_owned())
+                .filter(|v| !v.is_empty())
+        };
         let mut s = Self::rules_only();
         if let Some(address) = get("KENTOS_AV_ADDRESS") {
             s.daemon = Some(Self::daemon_of(&address)?);
         }
-        s.required = matches!(get("KENTOS_AV_REQUIRED").as_deref(), Some("1" | "true" | "yes"));
+        s.required = matches!(
+            get("KENTOS_AV_REQUIRED").as_deref(),
+            Some("1" | "true" | "yes")
+        );
         if s.required && s.daemon.is_none() {
             return Err("KENTOS_AV_REQUIRED açık ama KENTOS_AV_ADDRESS yok: dosyaları tarayacak bir adres verin.".into());
         }
@@ -230,10 +264,15 @@ impl Scanner {
             return Ok(Daemon::Unix(PathBuf::from(address)));
         }
         let hostport = address.strip_prefix("tcp://").unwrap_or(address);
-        if hostport.rsplit_once(':').is_some_and(|(h, p)| !h.is_empty() && p.parse::<u16>().is_ok()) {
+        if hostport
+            .rsplit_once(':')
+            .is_some_and(|(h, p)| !h.is_empty() && p.parse::<u16>().is_ok())
+        {
             Ok(Daemon::Tcp(hostport.to_owned()))
         } else {
-            Err(format!("antivirüs adresi anlaşılmadı: {address} (tcp://ana-makine:port ya da unix:///yol)"))
+            Err(format!(
+                "antivirüs adresi anlaşılmadı: {address} (tcp://ana-makine:port ya da unix:///yol)"
+            ))
         }
     }
 
@@ -243,7 +282,12 @@ impl Scanner {
     }
 
     /// Scans the object `key` sent as `name`. `Ok(Err(…))` is a refusal; `Err` the scanner's own trouble.
-    pub async fn check(&self, blobs: &Blobs, key: &str, name: &str) -> AppResult<Result<Scanned, Refusal>> {
+    pub async fn check(
+        &self,
+        blobs: &Blobs,
+        key: &str,
+        name: &str,
+    ) -> AppResult<Result<Scanned, Refusal>> {
         let size = blobs.len(key).await?;
         let head = {
             let mut file = blobs.open(key).await?;
@@ -253,23 +297,32 @@ impl Scanner {
         };
         let Some(ext) = extension(name) else {
             return Ok(Err(Refusal::Blocked(
-                "dosyanın adında türünü gösteren bir uzantı yok (örneğin .pdf, .jpg, .kcad).".into(),
+                "dosyanın adında türünü gösteren bir uzantı yok (örneğin .pdf, .jpg, .kcad)."
+                    .into(),
             )));
         };
         let Some(&(_, kind, media)) = KINDS.iter().find(|(e, _, _)| *e == ext) else {
             return Ok(Err(Refusal::Blocked(format!(
                 ".{ext} dosyaları alınmıyor. Alınan türler: {}.",
-                KINDS.iter().map(|(e, _, _)| *e).collect::<Vec<_>>().join(", ")
+                KINDS
+                    .iter()
+                    .map(|(e, _, _)| *e)
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ))));
         };
         if let Some(why) = program(&head) {
             return Ok(Err(Refusal::Blocked(why.into())));
         }
         if contains(&head[..head.len().min(4096)], &test_signature()) {
-            return Ok(Err(Refusal::Infected("EICAR antivirüs deneme dosyası".into())));
+            return Ok(Err(Refusal::Infected(
+                "EICAR antivirüs deneme dosyası".into(),
+            )));
         }
         if let Some(why) = mismatch(kind, &head) {
-            return Ok(Err(Refusal::Blocked(format!("içeriği .{ext} dosyası değil ({why})."))));
+            return Ok(Err(Refusal::Blocked(format!(
+                "içeriği .{ext} dosyası değil ({why})."
+            ))));
         }
         match kind {
             Kind::Zip | Kind::Office => {
@@ -285,13 +338,19 @@ impl Scanner {
             }
             Kind::Svg => {
                 if size > SVG_MAX {
-                    return Ok(Err(Refusal::Blocked("çizim (SVG) 16 MiB'tan büyük.".into())));
+                    return Ok(Err(Refusal::Blocked(
+                        "çizim (SVG) 16 MiB'tan büyük.".into(),
+                    )));
                 }
                 let text = String::from_utf8_lossy(&blobs.read(key).await?).to_lowercase();
-                if ["<script", "javascript:", "<foreignobject", "<iframe"].iter().any(|t| text.contains(t))
+                if ["<script", "javascript:", "<foreignobject", "<iframe"]
+                    .iter()
+                    .any(|t| text.contains(t))
                     || has_event_attribute(&text)
                 {
-                    return Ok(Err(Refusal::Blocked("SVG çiziminin içinde betik var.".into())));
+                    return Ok(Err(Refusal::Blocked(
+                        "SVG çiziminin içinde betik var.".into(),
+                    )));
                 }
             }
             _ => {}
@@ -304,9 +363,14 @@ impl Scanner {
                     self.daemon_max / (1024 * 1024)
                 );
                 if self.required {
-                    return Ok(Err(Refusal::Blocked(format!("{why}; bu sunucuda taranmayan dosya alınmıyor."))));
+                    return Ok(Err(Refusal::Blocked(format!(
+                        "{why}; bu sunucuda taranmayan dosya alınmıyor."
+                    ))));
                 }
-                (ScanState::Unscanned, Some(format!("{why}; yalnız tür kurallarıyla denetlendi.")))
+                (
+                    ScanState::Unscanned,
+                    Some(format!("{why}; yalnız tür kurallarıyla denetlendi.")),
+                )
             }
             Some(daemon) => match self.ask(daemon, blobs, key).await {
                 Ok(Answer::Clean) => (ScanState::Clean, None),
@@ -375,12 +439,18 @@ fn answer_of(reply: &str) -> Result<Answer, String> {
     } else if let Some(what) = body.strip_suffix("FOUND") {
         Ok(Answer::Found(what.trim().chars().take(120).collect()))
     } else {
-        Err(format!("antivirüs yanıtı: {}", text.chars().take(200).collect::<String>()))
+        Err(format!(
+            "antivirüs yanıtı: {}",
+            text.chars().take(200).collect::<String>()
+        ))
     }
 }
 
 /// The INSTREAM exchange: the command, the file in length-prefixed chunks, an empty chunk, then the reply.
-async fn instream<S: AsyncRead + AsyncWrite + Unpin>(mut stream: S, mut file: tokio::fs::File) -> std::io::Result<String> {
+async fn instream<S: AsyncRead + AsyncWrite + Unpin>(
+    mut stream: S,
+    mut file: tokio::fs::File,
+) -> std::io::Result<String> {
     stream.write_all(b"zINSTREAM\0").await?;
     let mut buffer = vec![0; 64 * 1024];
     loop {
@@ -388,7 +458,9 @@ async fn instream<S: AsyncRead + AsyncWrite + Unpin>(mut stream: S, mut file: to
         if n == 0 {
             break;
         }
-        stream.write_all(&u32::try_from(n).unwrap_or(u32::MAX).to_be_bytes()).await?;
+        stream
+            .write_all(&u32::try_from(n).unwrap_or(u32::MAX).to_be_bytes())
+            .await?;
         stream.write_all(&buffer[..n]).await?;
     }
     stream.write_all(&[0, 0, 0, 0]).await?;
@@ -444,7 +516,9 @@ fn mismatch(kind: Kind, head: &[u8]) -> Option<&'static str> {
         Kind::Gif => starts(b"GIF87a") || starts(b"GIF89a"),
         Kind::Webp => starts(b"RIFF") && head.get(8..12) == Some(b"WEBP"),
         Kind::Heif => {
-            const BRANDS: [&[u8]; 7] = [b"heic", b"heix", b"hevc", b"heim", b"heis", b"mif1", b"msf1"];
+            const BRANDS: [&[u8]; 7] = [
+                b"heic", b"heix", b"hevc", b"heim", b"heis", b"mif1", b"msf1",
+            ];
             head.get(4..8) == Some(b"ftyp") && head.get(8..12).is_some_and(|b| BRANDS.contains(&b))
         }
         Kind::Movie => head.get(4..8) == Some(b"ftyp"),
@@ -455,9 +529,13 @@ fn mismatch(kind: Kind, head: &[u8]) -> Option<&'static str> {
         Kind::Rtf => starts(b"{\\rtf"),
         Kind::Dwg => starts(b"AC1"),
         Kind::Shape => starts(&[0x00, 0x00, 0x27, 0x0a]),
-        Kind::Dbase => head
-            .first()
-            .is_some_and(|b| [0x02, 0x03, 0x04, 0x05, 0x30, 0x31, 0x32, 0x43, 0x63, 0x83, 0x8b, 0x8e, 0xcb, 0xf5, 0xfb].contains(b)),
+        Kind::Dbase => head.first().is_some_and(|b| {
+            [
+                0x02, 0x03, 0x04, 0x05, 0x30, 0x31, 0x32, 0x43, 0x63, 0x83, 0x8b, 0x8e, 0xcb, 0xf5,
+                0xfb,
+            ]
+            .contains(b)
+        }),
         Kind::Sqlite => starts(b"SQLite format 3\0"),
         Kind::Las => starts(b"LASF"),
         Kind::Svg => {
@@ -470,8 +548,10 @@ fn mismatch(kind: Kind, head: &[u8]) -> Option<&'static str> {
             }
             let text = String::from_utf8_lossy(&head[..head.len().min(4096)]).to_lowercase();
             let start = text.trim_start_matches('\u{feff}').trim_start();
-            return (start.starts_with("<!doctype html") || start.starts_with("<html") || text.contains("<script"))
-                .then_some("bir web sayfası ya da betik");
+            return (start.starts_with("<!doctype html")
+                || start.starts_with("<html")
+                || text.contains("<script"))
+            .then_some("bir web sayfası ya da betik");
         }
         Kind::Any => true,
     };
@@ -492,18 +572,28 @@ fn archive_problem(bytes: &[u8], office: bool) -> Option<String> {
     if listed.iter().any(|e| e.is_encrypted()) {
         return Some("arşiv parolayla kilitli; içi denetlenemiyor.".into());
     }
-    if let Some(e) = listed
-        .iter()
-        .find(|e| extension(e.file_name()).is_some_and(|x| PROGRAM_EXTENSIONS.contains(&x.as_str())))
-    {
-        return Some(format!("arşivin içinde bir program ya da betik var ({}).", e.file_name()));
+    if let Some(e) = listed.iter().find(|e| {
+        extension(e.file_name()).is_some_and(|x| PROGRAM_EXTENSIONS.contains(&x.as_str()))
+    }) {
+        return Some(format!(
+            "arşivin içinde bir program ya da betik var ({}).",
+            e.file_name()
+        ));
     }
     if office {
-        let names: Vec<String> = listed.iter().map(|e| e.file_name().to_lowercase()).collect();
-        if !names.iter().any(|n| n == "[content_types].xml" || n == "mimetype") {
+        let names: Vec<String> = listed
+            .iter()
+            .map(|e| e.file_name().to_lowercase())
+            .collect();
+        if !names
+            .iter()
+            .any(|n| n == "[content_types].xml" || n == "mimetype")
+        {
             return Some("bir ofis belgesi değil.".into());
         }
-        if names.iter().any(|n| n.ends_with("vbaproject.bin") || n.starts_with("basic/") || n.contains("/macros/")) {
+        if names.iter().any(|n| {
+            n.ends_with("vbaproject.bin") || n.starts_with("basic/") || n.contains("/macros/")
+        }) {
             return Some("belgede makro var; makrosuz kaydedip gönderin.".into());
         }
     }
@@ -543,7 +633,11 @@ fn contains(hay: &[u8], needle: &[u8]) -> bool {
 /// The industry's antivirus test signature, put together here so that no copy of this source is itself taken for
 /// malware.
 pub fn test_signature() -> Vec<u8> {
-    [&b"X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-"[..], &b"ANTIVIRUS-TEST-FILE!$H+H*"[..]].concat()
+    [
+        &b"X5O!P%@AP[4\\PZX54(P^)7CC)7}$EICAR-STANDARD-"[..],
+        &b"ANTIVIRUS-TEST-FILE!$H+H*"[..],
+    ]
+    .concat()
 }
 
 #[cfg(test)]
@@ -577,36 +671,77 @@ mod tests {
     #[tokio::test]
     async fn a_file_is_taken_as_its_kind_and_kept_with_that_kinds_type() {
         let rules = Scanner::rules_only();
-        let pdf = verdict(&rules, "Rapor.PDF", b"%PDF-1.7\n1 0 obj\n").await.unwrap();
-        assert_eq!((pdf.state, pdf.media_type.as_str(), pdf.note), (ScanState::Unscanned, "application/pdf", None));
-        let png = verdict(&rules, "foto.png", b"\x89PNG\r\n\x1a\n....").await.unwrap();
+        let pdf = verdict(&rules, "Rapor.PDF", b"%PDF-1.7\n1 0 obj\n")
+            .await
+            .unwrap();
+        assert_eq!(
+            (pdf.state, pdf.media_type.as_str(), pdf.note),
+            (ScanState::Unscanned, "application/pdf", None)
+        );
+        let png = verdict(&rules, "foto.png", b"\x89PNG\r\n\x1a\n....")
+            .await
+            .unwrap();
         assert_eq!(png.media_type, "image/png");
-        let csv = verdict(&rules, "liste.csv", "ada;parsel\n101;5\nŞişli;7\n".as_bytes()).await.unwrap();
+        let csv = verdict(
+            &rules,
+            "liste.csv",
+            "ada;parsel\n101;5\nŞişli;7\n".as_bytes(),
+        )
+        .await
+        .unwrap();
         assert_eq!(csv.media_type, "text/csv");
         let archive = zip(&[("plan.dxf", "0\nSECTION\n"), ("okuyun.txt", "metin")]);
         assert!(verdict(&rules, "paket.zip", &archive).await.is_ok());
-        let docx = zip(&[("[Content_Types].xml", "<Types/>"), ("word/document.xml", "<w/>")]);
+        let docx = zip(&[
+            ("[Content_Types].xml", "<Types/>"),
+            ("word/document.xml", "<w/>"),
+        ]);
         assert!(verdict(&rules, "dilekce.docx", &docx).await.is_ok());
     }
 
     #[tokio::test]
     async fn programs_scripts_and_disguises_are_refused_under_any_name() {
         let rules = Scanner::rules_only();
-        assert!(blocked(verdict(&rules, "kurulum.exe", b"MZ\x90\0").await).contains(".exe dosyaları alınmıyor"));
+        assert!(
+            blocked(verdict(&rules, "kurulum.exe", b"MZ\x90\0").await)
+                .contains(".exe dosyaları alınmıyor")
+        );
         assert!(blocked(verdict(&rules, "rapor.pdf", b"MZ\x90\0").await).contains("program"));
-        assert!(blocked(verdict(&rules, "notlar.txt", b"#!/bin/sh\nrm -rf /\n").await).contains("betik"));
-        assert!(blocked(verdict(&rules, "plan.pdf", b"\x89PNG\r\n\x1a\n").await).contains("içeriği .pdf"));
-        assert!(blocked(verdict(&rules, "sayfa.txt", b"<!DOCTYPE html><html>").await).contains("web sayfası"));
+        assert!(
+            blocked(verdict(&rules, "notlar.txt", b"#!/bin/sh\nrm -rf /\n").await)
+                .contains("betik")
+        );
+        assert!(
+            blocked(verdict(&rules, "plan.pdf", b"\x89PNG\r\n\x1a\n").await)
+                .contains("içeriği .pdf")
+        );
+        assert!(
+            blocked(verdict(&rules, "sayfa.txt", b"<!DOCTYPE html><html>").await)
+                .contains("web sayfası")
+        );
         assert!(blocked(verdict(&rules, "rapor.pdf.exe", b"%PDF-1.7").await).contains(".exe"));
         assert!(blocked(verdict(&rules, "uzantisiz", b"%PDF-1.7").await).contains("uzantı yok"));
         let svg = b"<svg xmlns=\"http://www.w3.org/2000/svg\" onload=\"alert(1)\"></svg>";
         assert!(blocked(verdict(&rules, "logo.svg", svg).await).contains("betik"));
-        assert!(verdict(&rules, "logo.svg", b"<svg xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M0 0\"/></svg>").await.is_ok());
+        assert!(
+            verdict(
+                &rules,
+                "logo.svg",
+                b"<svg xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M0 0\"/></svg>"
+            )
+            .await
+            .is_ok()
+        );
         let archive = zip(&[("plan.dxf", "0\nSECTION\n"), ("oku/beni.exe", "MZ")]);
         assert!(blocked(verdict(&rules, "paket.zip", &archive).await).contains("beni.exe"));
-        let macro_doc = zip(&[("[Content_Types].xml", "<Types/>"), ("word/vbaProject.bin", "..")]);
+        let macro_doc = zip(&[
+            ("[Content_Types].xml", "<Types/>"),
+            ("word/vbaProject.bin", ".."),
+        ]);
         assert!(blocked(verdict(&rules, "dilekce.docx", &macro_doc).await).contains("makro"));
-        assert!(blocked(verdict(&rules, "bozuk.zip", b"PK\x03\x04bozuk").await).contains("okunamadı"));
+        assert!(
+            blocked(verdict(&rules, "bozuk.zip", b"PK\x03\x04bozuk").await).contains("okunamadı")
+        );
     }
 
     #[tokio::test]
@@ -618,7 +753,9 @@ mod tests {
     }
 
     /// A daemon on a local port answering every scan with `reply`; how many files it was sent.
-    async fn daemon(reply: &'static str) -> (String, std::sync::Arc<std::sync::atomic::AtomicUsize>) {
+    async fn daemon(
+        reply: &'static str,
+    ) -> (String, std::sync::Arc<std::sync::atomic::AtomicUsize>) {
         let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
         let address = listener.local_addr().unwrap().to_string();
         let seen = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
@@ -677,7 +814,9 @@ mod tests {
         w.finish().await.unwrap();
         let required = Scanner::with_daemon("127.0.0.1:9", true).unwrap();
         assert!(matches!(
-            required.check(&blobs, "uploads/accounts/x", "rapor.pdf").await,
+            required
+                .check(&blobs, "uploads/accounts/x", "rapor.pdf")
+                .await,
             Err(AppError::Limited { .. })
         ));
         let _ = std::fs::remove_dir_all(dir);
@@ -687,12 +826,17 @@ mod tests {
     #[test]
     fn the_daemons_replies_and_names_are_read() {
         assert_eq!(answer_of("stream: OK\0"), Ok(Answer::Clean));
-        assert_eq!(answer_of("stream: Eicar-Test-Signature FOUND\0"), Ok(Answer::Found("Eicar-Test-Signature".into())));
+        assert_eq!(
+            answer_of("stream: Eicar-Test-Signature FOUND\0"),
+            Ok(Answer::Found("Eicar-Test-Signature".into()))
+        );
         assert!(answer_of("INSTREAM size limit exceeded. ERROR\0").is_err());
         assert_eq!(extension("a/b/Rapor.Final.PDF").as_deref(), Some("pdf"));
         assert_eq!(extension(".gizli"), None);
         assert_eq!(media_type_of("pafta.kcad"), "application/vnd.kentos.kcad");
-        assert!(has_event_attribute("<svg onload=\"x\">") && has_event_attribute("<g\nonclick = 'x'>"));
+        assert!(
+            has_event_attribute("<svg onload=\"x\">") && has_event_attribute("<g\nonclick = 'x'>")
+        );
         assert!(!has_event_attribute("<text>bonus=on</text><g id=\"one\">"));
     }
 }

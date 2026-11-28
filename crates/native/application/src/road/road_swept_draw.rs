@@ -4,8 +4,8 @@
 //! “Araç izi çiz”. The shared cases are `fixtures/commands/v1/road.swept.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, SweptDraw, SweptDrawn, TextAlign,
-    TextFace, Vec2,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject,
+    SweptDraw, SweptDrawn, TextAlign, TextFace, Vec2,
 };
 use kentos_domain::Document;
 
@@ -58,7 +58,11 @@ struct Checked {
 fn check(doc: &Document, input: &SweptDraw) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     if input.every == Some(0) {
-        return Err(fail(codes::INVALID_SWEPT, "Gövdeler her kaç örnekte bir çizilecek (every) sıfırdan büyük olmalı.".into(), "every"));
+        return Err(fail(
+            codes::INVALID_SWEPT,
+            "Gövdeler her kaç örnekte bir çizilecek (every) sıfırdan büyük olmalı.".into(),
+            "every",
+        ));
     }
     let (q, mut warnings) = crate::road_swept::answer(doc, &input.query)?;
     warnings.extend(checks::layer(doc, &input.layer_id)?);
@@ -87,7 +91,10 @@ fn check(doc: &Document, input: &SweptDraw) -> Result<Checked, Stop> {
         objects.push(object(EntityGeometry::Text {
             layout: None,
             annotative: None,
-            p: Vec2 { x: end[0], y: end[1] },
+            p: Vec2 {
+                x: end[0],
+                y: end[1],
+            },
             text: words,
             height: TEXT_MM * doc.settings().plot_scale / 1000.0,
             rotation: 0.0,
@@ -104,7 +111,11 @@ fn check(doc: &Document, input: &SweptDraw) -> Result<Checked, Stop> {
     Ok(Checked { objects, warnings })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &SweptDraw, c: Checked) -> CommandResult<SweptDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &SweptDraw,
+    c: Checked,
+) -> CommandResult<SweptDrawn> {
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects: c.objects,
@@ -116,7 +127,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &SweptDraw, c: Checked) -> Comman
         other => return crate::trim::relay(other),
     };
     CommandResult::Completed {
-        output: SweptDrawn { uids: created.created, revision: cx.doc.revision().to_string() },
+        output: SweptDrawn {
+            uids: created.created,
+            revision: cx.doc.revision().to_string(),
+        },
         warnings: c.warnings,
     }
 }
@@ -124,7 +138,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &SweptDraw, c: Checked) -> Comman
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &SweptDraw) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -145,10 +162,14 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SweptDraw) -> CommandResult<Swept
 
 /// Draws the tracks and the bodies: one undo step.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: SweptDraw) -> CommandResult<SweptDrawn> {
-    crate::call::recorded(cx, kentos_commands::ROAD_SWEPT_DRAW, kentos_commands::ROAD_SWEPT_DRAW_VERSION, input, |cx, input| {
-        match check(cx.doc, &input) {
+    crate::call::recorded(
+        cx,
+        kentos_commands::ROAD_SWEPT_DRAW,
+        kentos_commands::ROAD_SWEPT_DRAW_VERSION,
+        input,
+        |cx, input| match check(cx.doc, &input) {
             Ok(c) => write(cx, &input, c),
             Err(stop) => stop.into(),
-        }
-    })
+        },
+    )
 }

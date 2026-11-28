@@ -70,7 +70,11 @@ pub fn input(title: &str, model: &Model, bodies: &Bodies) -> Input {
         })
         .collect();
     // An opening hangs under the body it cuts (`IfcRelVoidsElement`), not at the tree's root.
-    for r in model.relations.iter().filter(|r| schema.is_subtype_of(&r.class, "IfcRelVoidsElement")) {
+    for r in model
+        .relations
+        .iter()
+        .filter(|r| schema.is_subtype_of(&r.class, "IfcRelVoidsElement"))
+    {
         let host = r.relating.and_then(|h| model.index_of(h));
         for o in r.related.iter().filter_map(|&o| model.index_of(o)) {
             if objects[o].parent.is_none() && host != Some(o) {
@@ -81,10 +85,19 @@ pub fn input(title: &str, model: &Model, bodies: &Bodies) -> Input {
     // What a structure references without containing it (`IfcRelReferencedInSpatialStructure`: a storey's far zone,
     // docs/adr/8069) hangs under the first one when nothing else holds it (docs/adr/8119): the tree shows it there and
     // hiding the storey hides it. A structure under the object itself is passed over.
-    for r in model.relations.iter().filter(|r| schema.is_subtype_of(&r.class, "IfcRelReferencedInSpatialStructure")) {
-        let Some(structure) = r.relating.and_then(|h| model.index_of(h)) else { continue };
+    for r in model
+        .relations
+        .iter()
+        .filter(|r| schema.is_subtype_of(&r.class, "IfcRelReferencedInSpatialStructure"))
+    {
+        let Some(structure) = r.relating.and_then(|h| model.index_of(h)) else {
+            continue;
+        };
         for o in r.related.iter().filter_map(|&o| model.index_of(o)) {
-            if objects[o].parent.is_none() && objects[o].category != Category::Project && !reaches(&objects, structure, o) {
+            if objects[o].parent.is_none()
+                && objects[o].category != Category::Project
+                && !reaches(&objects, structure, o)
+            {
                 objects[o].parent = Some(structure);
             }
         }
@@ -93,7 +106,9 @@ pub fn input(title: &str, model: &Model, bodies: &Bodies) -> Input {
     for i in 0..n {
         let mut at = objects[i].parent;
         for _ in 0..n {
-            let Some(p) = at.filter(|&p| p < n) else { break };
+            let Some(p) = at.filter(|&p| p < n) else {
+                break;
+            };
             if objects[p].category == Category::Storey {
                 objects[i].storey = Some(p);
                 break;
@@ -107,9 +122,17 @@ pub fn input(title: &str, model: &Model, bodies: &Bodies) -> Input {
         bodies: bodies
             .bodies
             .iter()
-            .map(|b| BodyIn { object: b.object, positions: Arc::new(b.positions.clone()), triangles: b.triangles.clone() })
+            .map(|b| BodyIn {
+                object: b.object,
+                positions: Arc::new(b.positions.clone()),
+                triangles: b.triangles.clone(),
+            })
             .collect(),
-        not_shown: bodies.not_shown.iter().map(|n| (n.object, n.reason.clone())).collect(),
+        not_shown: bodies
+            .not_shown
+            .iter()
+            .map(|n| (n.object, n.reason.clone()))
+            .collect(),
         apart: None,
     }
 }
@@ -129,7 +152,15 @@ fn reaches(objects: &[ObjectIn], from: usize, to: usize) -> bool {
 
 /// The blocks that are building elements beside the furniture (a sanitary fixture, a lift): furnishings' colour.
 fn furnishing(schema: ifc_lite_core::SchemaVersion, class: &str) -> Category {
-    if ["IfcElectricAppliance", "IfcSanitaryTerminal", "IfcTransportElement", "IfcFurniture"].iter().any(|of| schema.is_subtype_of(class, of)) {
+    if [
+        "IfcElectricAppliance",
+        "IfcSanitaryTerminal",
+        "IfcTransportElement",
+        "IfcFurniture",
+    ]
+    .iter()
+    .any(|of| schema.is_subtype_of(class, of))
+    {
         Category::Furnishing
     } else {
         Category::Other
@@ -139,7 +170,10 @@ fn furnishing(schema: ifc_lite_core::SchemaVersion, class: &str) -> Category {
 /// What the tree says of an object: its name, a storey's and a space's long name beside it, else its class.
 fn label(o: &super::Object) -> String {
     let name = o.name.as_deref().filter(|s| !s.trim().is_empty());
-    let long = o.long_name.as_deref().filter(|s| !s.trim().is_empty() && Some(*s) != name);
+    let long = o
+        .long_name
+        .as_deref()
+        .filter(|s| !s.trim().is_empty() && Some(*s) != name);
     match (name, long) {
         (Some(n), Some(l)) => format!("{n} — {l}"),
         (Some(n), None) => n.to_owned(),
@@ -163,23 +197,50 @@ mod tests {
         // 58 elements, 10 spaces and the 4 far zones (each storey's included and excluded area, docs/adr/8069; two
         // before the fixture was written again, docs/adr/8117).
         assert_eq!(input.bodies.len(), 72, "every body the file holds");
-        let storeys: Vec<&str> =
-            input.objects.iter().filter(|o| o.category == Category::Storey).map(|o| o.label.as_str()).collect();
+        let storeys: Vec<&str> = input
+            .objects
+            .iter()
+            .filter(|o| o.category == Category::Storey)
+            .map(|o| o.label.as_str())
+            .collect();
         assert_eq!(storeys.len(), 2, "{storeys:?}");
         let view = kentos_model_view::View::new(input.clone());
-        let roots: Vec<Category> = view.roots().iter().map(|&r| input.objects[r].category).collect();
+        let roots: Vec<Category> = view
+            .roots()
+            .iter()
+            .map(|&r| input.objects[r].category)
+            .collect();
         assert!(roots.contains(&Category::Project), "{roots:?}");
         // Every wall is on a storey and has the wall's category.
-        let walls: Vec<&ObjectIn> = input.objects.iter().filter(|o| o.class == "IfcWall").collect();
-        assert!(!walls.is_empty() && walls.iter().all(|w| w.category == Category::Wall && w.storey.is_some()));
+        let walls: Vec<&ObjectIn> = input
+            .objects
+            .iter()
+            .filter(|o| o.class == "IfcWall")
+            .collect();
+        assert!(
+            !walls.is_empty()
+                && walls
+                    .iter()
+                    .all(|w| w.category == Category::Wall && w.storey.is_some())
+        );
         // The far zones each storey references (docs/adr/8069) hang under that storey, not at the root: two a storey.
-        let zones: Vec<&ObjectIn> = input.objects.iter().filter(|o| o.class == "IfcSpatialZone").collect();
+        let zones: Vec<&ObjectIn> = input
+            .objects
+            .iter()
+            .filter(|o| o.class == "IfcSpatialZone")
+            .collect();
         assert_eq!(zones.len(), 4);
         for z in &zones {
             let storey = z.parent.map(|p| &input.objects[p]);
-            assert!(storey.is_some_and(|s| s.category == Category::Storey) && z.storey == z.parent, "{z:?}");
+            assert!(
+                storey.is_some_and(|s| s.category == Category::Storey) && z.storey == z.parent,
+                "{z:?}"
+            );
         }
-        assert!(!roots.contains(&Category::Space), "no zone at the root: {roots:?}");
+        assert!(
+            !roots.contains(&Category::Space),
+            "no zone at the root: {roots:?}"
+        );
     }
 
     #[test]
@@ -194,8 +255,23 @@ mod tests {
         let m = read_ok(bytes);
         let b = m.bodies(bytes, &never).expect("the bodies");
         let input = input("radye.ifc", &m, &b);
-        let of = |name: &str| input.objects.iter().find(|o| o.label.contains(name)).map(|o| o.category);
+        let of = |name: &str| {
+            input
+                .objects
+                .iter()
+                .find(|o| o.label.contains(name))
+                .map(|o| o.category)
+        };
         assert_eq!(of("Radye"), Some(Category::Footing), "{:?}", input.objects);
-        assert_eq!(input.objects.iter().filter(|o| o.category == Category::Slab).count(), 1, "{:?}", input.objects);
+        assert_eq!(
+            input
+                .objects
+                .iter()
+                .filter(|o| o.category == Category::Slab)
+                .count(),
+            1,
+            "{:?}",
+            input.objects
+        );
     }
 }

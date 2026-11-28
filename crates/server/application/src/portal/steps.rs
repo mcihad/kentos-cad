@@ -313,10 +313,12 @@ pub async fn act(
         .fetch_all(&mut *tx)
         .await?;
         // A transfer worked on in the live project delivers the project itself (docs/adr/9000 §24): no file needed.
-        let live: bool = sqlx::query_scalar("select live_project_id is not null from kentos.dossier where id = $1")
-            .bind(id)
-            .fetch_one(&mut *tx)
-            .await?;
+        let live: bool = sqlx::query_scalar(
+            "select live_project_id is not null from kentos.dossier where id = $1",
+        )
+        .bind(id)
+        .fetch_one(&mut *tx)
+        .await?;
         if step.needs_files && pending.is_empty() && !live {
             return Err(AppError::invalid(
                 "Gönderilecek dosya yok: önce pakete dosya ekleyin (bir KentOS projesi ya da belgeler).",
@@ -372,7 +374,9 @@ pub async fn act(
     .await?;
     // A transfer's live project (docs/adr/9000 §24): the job taken on gives its professional the editor's grant, the
     // job closed takes the dossier's grant back.
-    if direction == DossierDirection::Transfer && (step.to == DossierStatus::Accepted || flow::closed(step.to)) {
+    if direction == DossierDirection::Transfer
+        && (step.to == DossierStatus::Accepted || flow::closed(step.to))
+    {
         let code: Option<String> = sqlx::query_scalar("select kentos.dossier_live_access($1, $2)")
             .bind(id)
             .bind(step.to == DossierStatus::Accepted)

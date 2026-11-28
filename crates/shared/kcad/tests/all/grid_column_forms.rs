@@ -38,8 +38,13 @@ fn gapped_grids_anchored_and_l_columns_opt_into_schema_126() {
         ]
     );
     assert!(BYTES.windows(10).any(|w| w == b"\x67version\x18\x7e"));
-    let old = include_bytes!("../../../../../fixtures/kcad/v2/broken/grid-column-forms-in-schema-125.kcad");
-    assert_eq!(kentos_kcad::decode(old).expect_err("refused").code, kentos_kcad::Code::BadValue);
+    let old = include_bytes!(
+        "../../../../../fixtures/kcad/v2/broken/grid-column-forms-in-schema-125.kcad"
+    );
+    assert_eq!(
+        kentos_kcad::decode(old).expect_err("refused").code,
+        kentos_kcad::Code::BadValue
+    );
     // The same drawing without them stays in the schema before.
     let mut plain = model;
     for e in &mut plain.entities {
@@ -54,17 +59,32 @@ fn gapped_grids_anchored_and_l_columns_opt_into_schema_126() {
         }
     }
     let bytes = kentos_kcad::encode_verified(&plain).unwrap();
-    assert!(!bytes.windows(10).any(|w| w == b"\x67version\x18\x7e"), "none, no schema 126");
+    assert!(
+        !bytes.windows(10).any(|w| w == b"\x67version\x18\x7e"),
+        "none, no schema 126"
+    );
 }
 
 #[test]
 fn gapped_grids_and_column_forms_keep_their_rules() {
-    for name in ["ends-zero", "ends-far", "legs-not-l", "l-without-legs", "legs-thick", "anchor-default", "anchor-unknown"] {
+    for name in [
+        "ends-zero",
+        "ends-far",
+        "legs-not-l",
+        "l-without-legs",
+        "legs-thick",
+        "anchor-default",
+        "anchor-unknown",
+    ] {
         let bytes = std::fs::read(format!(
             "{}/../../../fixtures/kcad/v2/broken/grid-column-form-{name}.kcad",
             env!("CARGO_MANIFEST_DIR")
         ))
         .unwrap();
-        assert_eq!(kentos_kcad::decode(&bytes).expect_err(name).code, kentos_kcad::Code::BadValue, "{name}");
+        assert_eq!(
+            kentos_kcad::decode(&bytes).expect_err(name).code,
+            kentos_kcad::Code::BadValue,
+            "{name}"
+        );
     }
 }

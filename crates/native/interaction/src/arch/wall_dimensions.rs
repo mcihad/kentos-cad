@@ -248,11 +248,9 @@ fn space_at(p: Vec2, cx: &Context<'_>) -> Option<Uuid> {
             if !cx.doc.layers().is_visible(&s.base.layer_id) {
                 return None;
             }
-            let part = s
-                .space
-                .parts
-                .iter()
-                .find(|part| inside(&part.outer.pts) && !part.holes.iter().any(|h| inside(&h.pts)))?;
+            let part = s.space.parts.iter().find(|part| {
+                inside(&part.outer.pts) && !part.holes.iter().any(|h| inside(&h.pts))
+            })?;
             let ring = &part.outer.pts;
             let area = (0..ring.len())
                 .map(|i| {
@@ -335,7 +333,11 @@ impl WallDimensions {
         for uid in ids {
             match doc.slot_of(uid).and_then(|slot| doc.get(slot)) {
                 Some(e @ Entity::Wall(_)) => {
-                    if let kentos_geometry_core::entity::Shape::Wall { pts: path, bulges, wall } = shape(e)
+                    if let kentos_geometry_core::entity::Shape::Wall {
+                        pts: path,
+                        bulges,
+                        wall,
+                    } = shape(e)
                         && let Ok(lines) =
                             kentos_geometry_core::geom::wall::lines(&path, bulges.as_deref(), &wall)
                     {
@@ -375,8 +377,15 @@ impl WallDimensions {
                 return false;
             };
             let o = f.across(at);
-            let target = if o >= (f.lo + f.hi) * 0.5 { f.hi + distance } else { f.lo - distance };
-            self.at = Some(Vec2::new(at.x + f.n.x * (target - o), at.y + f.n.y * (target - o)));
+            let target = if o >= (f.lo + f.hi) * 0.5 {
+                f.hi + distance
+            } else {
+                f.lo - distance
+            };
+            self.at = Some(Vec2::new(
+                at.x + f.n.x * (target - o),
+                at.y + f.n.y * (target - o),
+            ));
             return true;
         }
         let (Some(uid), Some(at)) = (self.wall, self.at) else {
@@ -505,9 +514,17 @@ impl WallDimensions {
                 doc.layers().active().to_owned()
             },
             at: kentos_commands::Vec2 { x: at.x, y: at.y },
-            edge: if self.mode == Mode::Wall { self.edge } else { None },
+            edge: if self.mode == Mode::Wall {
+                self.edge
+            } else {
+                None
+            },
             around: self.around,
-            face: if self.mode == Mode::Wall { self.face() } else { DimensionSetFace::Left },
+            face: if self.mode == Mode::Wall {
+                self.face()
+            } else {
+                DimensionSetFace::Left
+            },
             rows,
             openings: if self.centers {
                 DimensionSetOpenings::Centers
@@ -621,9 +638,14 @@ impl WallDimensions {
             && let (Some(at), Some(f)) = (self.at, self.span_frame(cx.doc))
         {
             let o = f.across(at);
-            self.distance = cx
-                .format()
-                .length(if o >= (f.lo + f.hi) * 0.5 { o - f.hi } else { f.lo - o }.abs());
+            self.distance = cx.format().length(
+                if o >= (f.lo + f.hi) * 0.5 {
+                    o - f.hi
+                } else {
+                    f.lo - o
+                }
+                .abs(),
+            );
         }
         if let Some(uid) = self.wall.filter(|_| self.mode == Mode::Wall) {
             if let Some(entity) = cx.doc.slot_of(uid).and_then(|s| cx.doc.get(s)) {
@@ -674,13 +696,19 @@ impl WallDimensions {
                     self.dimension_ghost(entity, tight, cx);
                 }
                 for note in &output.scales {
-                    let stay = note.tight.iter().filter(|i| !note.placed.contains(i)).count();
+                    let stay = note
+                        .tight
+                        .iter()
+                        .filter(|i| !note.placed.contains(i))
+                        .count();
                     let scale = crate::annotative::ratio(note.scale);
                     self.sheet_notes.push(match (note.placed.len(), stay) {
                         (0, 0) => format!("{scale}: yazılar sığıyor"),
                         (moved, 0) => format!("{scale}: {moved} yazı yana alındı"),
                         (0, stay) => format!("{scale}: {stay} yazı sığmıyor"),
-                        (moved, stay) => format!("{scale}: {moved} yazı yana alındı, {stay} yazı sığmıyor"),
+                        (moved, stay) => {
+                            format!("{scale}: {moved} yazı yana alındı, {stay} yazı sığmıyor")
+                        }
                     });
                 }
                 let name = |r: DimensionSetRow| match r {
@@ -710,7 +738,11 @@ impl WallDimensions {
                     .as_ref()
                     .filter(|e| self.around && many(e))
                     .map_or(1, |e| e.straight.len());
-                let sides = if self.mode != Mode::Wall && self.around { 4 } else { 1 };
+                let sides = if self.mode != Mode::Wall && self.around {
+                    4
+                } else {
+                    1
+                };
                 let mut lines = vec![if edges > 1 {
                     format!("{} ölçü · {edges} kenar · tek adım", self.count)
                 } else if sides > 1 {
@@ -730,7 +762,10 @@ impl WallDimensions {
                 lines.extend(self.sheet_notes.iter().cloned());
                 lines.extend(self.rounding.iter().map(|r| format!("Yuvarlama · {r}")));
                 if self.skipped > 0 {
-                    lines.push(format!("{} duvar eğik ya da yaylı: ölçülmedi", self.skipped));
+                    lines.push(format!(
+                        "{} duvar eğik ya da yaylı: ölçülmedi",
+                        self.skipped
+                    ));
                 }
                 lines.push(
                     if self.fixed_distance.is_some() {
@@ -1273,7 +1308,9 @@ impl Tool for WallDimensions {
             LABEL,
             if self.has_source() && self.fixed_distance.is_some() {
                 "girilen uzaklık sabit; tıklayın veya Enter ile yerleştirin"
-            } else if self.mode == Mode::Wall && self.edges.as_ref().is_some_and(|e| many(e) && !self.around) {
+            } else if self.mode == Mode::Wall
+                && self.edges.as_ref().is_some_and(|e| many(e) && !self.around)
+            {
                 "ölçülecek kenarı ve sıraların yerini imleçle seçin veya uzaklık yazın"
             } else if self.has_source() {
                 "ölçü sıralarının yerini seçin veya uzaklık yazın"
@@ -1285,7 +1322,14 @@ impl Tool for WallDimensions {
                 "ölçülendirilecek duvara tıklayın"
             },
         )
-        .option(if self.mode == Mode::Space { "Başka mahal" } else { "Başka duvar" }, "K")
+        .option(
+            if self.mode == Mode::Space {
+                "Başka mahal"
+            } else {
+                "Başka duvar"
+            },
+            "K",
+        )
         .option("Yerleştir", "Enter")
     }
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -1390,10 +1434,16 @@ impl Tool for WallDimensions {
         };
         // A closed wall's faces by where they are: the outer one on the right of a counter-clockwise path.
         let faces = match &self.edges {
-            Some(e) if e.closed && e.counter_clockwise => {
-                [("auto", "İmleç tarafı"), ("right", "Dış yüz"), ("left", "İç yüz")]
-            }
-            Some(e) if e.closed => [("auto", "İmleç tarafı"), ("left", "Dış yüz"), ("right", "İç yüz")],
+            Some(e) if e.closed && e.counter_clockwise => [
+                ("auto", "İmleç tarafı"),
+                ("right", "Dış yüz"),
+                ("left", "İç yüz"),
+            ],
+            Some(e) if e.closed => [
+                ("auto", "İmleç tarafı"),
+                ("left", "Dış yüz"),
+                ("right", "İç yüz"),
+            ],
             _ => [
                 ("auto", "İmleç tarafı"),
                 ("left", "Duvarın sol yüzü"),
@@ -1480,11 +1530,23 @@ impl Tool for WallDimensions {
         ));
         rows.push(Setting::text(
             "D",
-            if spanned { "Gövdeye uzaklık" } else { "Duvara uzaklık" },
+            if spanned {
+                "Gövdeye uzaklık"
+            } else {
+                "Duvara uzaklık"
+            },
             self.distance.clone(),
         ));
-        rows.push(Setting::text("R", "Sıra aralığı (kağıtta)", format!("{} mm", self.gap_mm)));
-        rows.push(Setting::text("Ö", "Pafta ölçekleri", scales_text(&self.scales)));
+        rows.push(Setting::text(
+            "R",
+            "Sıra aralığı (kağıtta)",
+            format!("{} mm", self.gap_mm),
+        ));
+        rows.push(Setting::text(
+            "Ö",
+            "Pafta ölçekleri",
+            scales_text(&self.scales),
+        ));
         rows.push(Setting::choice(
             "I",
             "Sığmayan yazı",
@@ -1497,19 +1559,19 @@ impl Tool for WallDimensions {
             rows.push(Setting::text("Q", "Sıralar", self.notes.join(" · ")).read_only());
         }
         let hint = match self.mode {
-                _ if self.fixed_distance.is_some() => {
-                    "Girilen uzaklık korunur. Tıklama veya Enter ile yerleştirin. Yeniden fareyle yer seçmek için Yerleşim → İmleçle seçin."
-                }
-                Mode::Wall => {
-                    "Duvarın imlece en yakın düz kenarındaki açıklıkları ve toplam boyu birlikte ölçülendirir; Kenarlar → Bütün kenarlar kapalı duvarın her kenarına dış yüzden zincir koyar. İmleçle yer seçin veya Duvara uzaklık girin; girilen uzaklık sabitlenir. Ölçü stili ve mevcut çizim ölçeği kullanılır."
-                }
-                Mode::Facade => {
-                    "Seçili duvarları (ya da tıklanan duvarı köşe duvarlarıyla) bir cephe olarak ölçer: Açıklıklar sırası cepheden görünen köşeleri ve açıklıkları, Duvarlar sırası kalınlıkları ve saplanan bölmeleri, Akslar sırası dik aksları, Toplam en dıştaki iki noktayı. Sıralar imlecin yanında; Dört yan dört yanına birden koyar. Sonradan kapı, bölme ya da aks eklenince ölçüler güncellenir."
-                }
-                Mode::Space => {
-                    "Mahalin sınırını doğrultu boyunca ölçer: Açıklıklar sırası sınırın köşelerini ve imleç yanındaki kenarın kapı ve pencerelerini, Duvarlar sırası içindeki kolon ve boşlukları da, Toplam mahalin net boyunu. Mahal değişince ölçüler güncellenir."
-                }
-            };
+            _ if self.fixed_distance.is_some() => {
+                "Girilen uzaklık korunur. Tıklama veya Enter ile yerleştirin. Yeniden fareyle yer seçmek için Yerleşim → İmleçle seçin."
+            }
+            Mode::Wall => {
+                "Duvarın imlece en yakın düz kenarındaki açıklıkları ve toplam boyu birlikte ölçülendirir; Kenarlar → Bütün kenarlar kapalı duvarın her kenarına dış yüzden zincir koyar. İmleçle yer seçin veya Duvara uzaklık girin; girilen uzaklık sabitlenir. Ölçü stili ve mevcut çizim ölçeği kullanılır."
+            }
+            Mode::Facade => {
+                "Seçili duvarları (ya da tıklanan duvarı köşe duvarlarıyla) bir cephe olarak ölçer: Açıklıklar sırası cepheden görünen köşeleri ve açıklıkları, Duvarlar sırası kalınlıkları ve saplanan bölmeleri, Akslar sırası dik aksları, Toplam en dıştaki iki noktayı. Sıralar imlecin yanında; Dört yan dört yanına birden koyar. Sonradan kapı, bölme ya da aks eklenince ölçüler güncellenir."
+            }
+            Mode::Space => {
+                "Mahalin sınırını doğrultu boyunca ölçer: Açıklıklar sırası sınırın köşelerini ve imleç yanındaki kenarın kapı ve pencerelerini, Duvarlar sırası içindeki kolon ve boşlukları da, Toplam mahalin net boyunu. Mahal değişince ölçüler güncellenir."
+            }
+        };
         rows.push(Setting::hint(
             "H",
             "Duvar ölçüleri",
@@ -1522,12 +1584,7 @@ impl Tool for WallDimensions {
             },
         ));
         // Kenarlar: shown while it can matter, before a wall or on one with more than one straight edge.
-        if self.mode == Mode::Wall
-            && self
-                .edges
-                .as_ref()
-                .is_none_or(|e| e.straight.len() > 1)
-        {
+        if self.mode == Mode::Wall && self.edges.as_ref().is_none_or(|e| e.straight.len() > 1) {
             let at = rows.iter().position(|r| r.key == "A").unwrap_or(rows.len());
             rows.insert(
                 at,
@@ -1678,8 +1735,14 @@ impl Tool for WallDimensions {
                         && let (Some(at), Some(f)) = (self.at, self.span_frame(cx.doc))
                     {
                         let o = f.across(at);
-                        self.fixed_distance =
-                            Some(if o >= (f.lo + f.hi) * 0.5 { o - f.hi } else { f.lo - o }.abs());
+                        self.fixed_distance = Some(
+                            if o >= (f.lo + f.hi) * 0.5 {
+                                o - f.hi
+                            } else {
+                                f.lo - o
+                            }
+                            .abs(),
+                        );
                         true
                     } else if let (Some(uid), Some(at)) = (self.wall, self.at)
                         && let Some((a, n, _)) = self.face_basis(cx.doc, uid)
@@ -1716,7 +1779,12 @@ impl Tool for WallDimensions {
             cx.memory.wall_dimensions_core = self.core;
             cx.memory.wall_dimensions_keep_tight = self.keep_tight;
             cx.memory.wall_dimensions_scales = [0.0; 8];
-            for (slot, s) in cx.memory.wall_dimensions_scales.iter_mut().zip(&self.scales) {
+            for (slot, s) in cx
+                .memory
+                .wall_dimensions_scales
+                .iter_mut()
+                .zip(&self.scales)
+            {
                 *slot = *s;
             }
             if self.mode == Mode::Wall

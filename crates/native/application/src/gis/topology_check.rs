@@ -130,7 +130,8 @@ impl Gathered {
     /// Whether the object is a data layer's row the drawing does not hold: read from its source for the check
     /// (docs/adr/9124); a fix changing it waits until the row is taken into the drawing.
     pub fn in_source(&self, k: usize) -> bool {
-        self.slots.get(k).is_some_and(Option::is_none) && self.rows.get(k).is_some_and(Option::is_some)
+        self.slots.get(k).is_some_and(Option::is_none)
+            && self.rows.get(k).is_some_and(Option::is_some)
     }
 
     /// How many objects the rules looked at: the drawing's and the data layers' rows, not the rows round bound parts.
@@ -263,7 +264,8 @@ pub fn gather(doc: &Document, only: Option<&[String]>) -> Gathered {
             g.layers.push(layer.to_owned());
             g.uids.push(uid.to_string());
             g.slots.push(Some(Slot(e.base().id)));
-            g.rows.push(doc.taken_key(layer, uid).map(|k| (layer.to_owned(), k)));
+            g.rows
+                .push(doc.taken_key(layer, uid).map(|k| (layer.to_owned(), k)));
         }
     }
     g.drawn = g.shapes.len();
@@ -392,7 +394,12 @@ pub fn data_fingerprint(data: &kentos_commands::DataLayer) -> Option<String> {
     }
     let of = |path: &str| {
         let m = std::fs::metadata(path).ok()?;
-        let at = m.modified().ok()?.duration_since(std::time::UNIX_EPOCH).ok()?.as_nanos();
+        let at = m
+            .modified()
+            .ok()?
+            .duration_since(std::time::UNIX_EPOCH)
+            .ok()?
+            .as_nanos();
         Some(format!("{}:{at}", m.len()))
     };
     let file = of(&data.address)?;
@@ -409,7 +416,12 @@ fn source_rows(doc: &Document, node: &kentos_commands::LayerNode, g: &mut Gather
         return;
     };
     let held = doc.data_hidden(&node.id);
-    let drawn = g.layers.iter().take(g.drawn).filter(|l| **l == node.id).count();
+    let drawn = g
+        .layers
+        .iter()
+        .take(g.drawn)
+        .filter(|l| **l == node.id)
+        .count();
     // The source as it is before it is read: a write after the read makes the findings old (docs/adr/9171); a
     // database's counters asked of its server, the check being off the interface's thread (docs/adr/9182).
     let fingerprint = data_fingerprint(data).or_else(|| database_mark(data));
@@ -419,7 +431,9 @@ fn source_rows(doc: &Document, node: &kentos_commands::LayerNode, g: &mut Gather
             for (key, e) in read.rows {
                 g.shapes.push(shape(&e));
                 g.layers.push(node.id.clone());
-                g.uids.push(crate::geopackage::data_row_uid(&data.address, &data.table, key).to_string());
+                g.uids.push(
+                    crate::geopackage::data_row_uid(&data.address, &data.table, key).to_string(),
+                );
                 g.slots.push(None);
                 g.rows.push(Some((node.id.clone(), key)));
             }
@@ -550,7 +564,9 @@ pub fn source_row_words(doc: &Document, g: &Gathered, k: usize) -> String {
     match g.rows.get(k).cloned().flatten() {
         Some((layer, key)) => format!(
             "“{}” katmanının {key} anahtarlı satırını",
-            doc.layers().get(&layer).map_or(layer.as_str(), |n| n.name.as_str())
+            doc.layers()
+                .get(&layer)
+                .map_or(layer.as_str(), |n| n.name.as_str())
         ),
         None => "bir satırı".to_owned(),
     }
@@ -613,7 +629,11 @@ pub fn preview(
                 .to_owned(),
         );
     }
-    if let Some(words) = changes.iter().find(|c| g.in_source(c.object)).map(|c| source_row_words(doc, g, c.object)) {
+    if let Some(words) = changes
+        .iter()
+        .find(|c| g.in_source(c.object))
+        .map(|c| source_row_words(doc, g, c.object))
+    {
         return Err(format!(
             "Bu düzeltme {words} değiştirir; satır çizimde değil. Katmanı düzenlemeye açıp satırı alın (Düzenlemeyi başlat, \
              sonra satırı seçin), sonra düzeltin."
@@ -687,7 +707,10 @@ fn objects_asked(doc: &Document, uids: Option<&[String]>) -> Result<Option<Vec<U
                 Some(format!("uids[{i}]")),
             )));
         }
-        match Uuid::parse_str(id).ok().filter(|u| doc.slot_of(*u).is_some()) {
+        match Uuid::parse_str(id)
+            .ok()
+            .filter(|u| doc.slot_of(*u).is_some())
+        {
             Some(u) => of.push(u),
             None => {
                 return Err(Stop::failed(error(

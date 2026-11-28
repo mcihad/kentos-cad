@@ -32,7 +32,13 @@ fn bound(name: &str, rows: usize) -> (App, String, String) {
 fn columns(address: &str) -> Vec<String> {
     kentos_data::registry().forget(address);
     let source = kentos_data_gpkg::Gpkg.open(address).expect("open");
-    source.schema("parseller").expect("schema").fields.into_iter().map(|f| f.name).collect()
+    source
+        .schema("parseller")
+        .expect("schema")
+        .fields
+        .into_iter()
+        .map(|f| f.name)
+        .collect()
 }
 
 fn said(app: &App) -> Vec<String> {
@@ -51,28 +57,78 @@ fn yeni_alan_on_a_data_layer_asks_then_adds_the_column_and_every_row_stays_read(
     ev(&mut app, Event::NewFieldName("saha_notu".into()));
     ev(&mut app, Event::CreateField);
     // Asked first: the table, the column, its kind, the rows; nothing written yet.
-    let ask = app.gis.forms_window.as_ref().and_then(|w| w.column_ask.clone()).expect("asked");
-    assert_eq!((ask.table.as_str(), ask.field.name.as_str(), ask.rows), ("parseller", "saha_notu", Some(3)));
-    assert!(!columns(&address).contains(&"saha_notu".to_owned()), "nothing added before the answer");
+    let ask = app
+        .gis
+        .forms_window
+        .as_ref()
+        .and_then(|w| w.column_ask.clone())
+        .expect("asked");
+    assert_eq!(
+        (ask.table.as_str(), ask.field.name.as_str(), ask.rows),
+        ("parseller", "saha_notu", Some(3))
+    );
+    assert!(
+        !columns(&address).contains(&"saha_notu".to_owned()),
+        "nothing added before the answer"
+    );
     // Vazgeç leaves it all as it was.
     ev(&mut app, Event::CancelColumn);
-    assert!(app.gis.forms_window.as_ref().is_some_and(|w| w.column_ask.is_none()));
+    assert!(
+        app.gis
+            .forms_window
+            .as_ref()
+            .is_some_and(|w| w.column_ask.is_none())
+    );
     ev(&mut app, Event::CreateField);
     ev(&mut app, Event::ConfirmColumn);
-    assert!(columns(&address).contains(&"saha_notu".to_owned()), "the table has the column");
-    assert!(node(&app, "parseller").is_some_and(|n| n.fields.iter().any(|f| f.name == "saha_notu")));
-    let w = app.gis.forms_window.as_ref().expect("the designer stays open");
+    assert!(
+        columns(&address).contains(&"saha_notu".to_owned()),
+        "the table has the column"
+    );
+    assert!(
+        node(&app, "parseller").is_some_and(|n| n.fields.iter().any(|f| f.name == "saha_notu"))
+    );
+    let w = app
+        .gis
+        .forms_window
+        .as_ref()
+        .expect("the designer stays open");
     let body = w.body.as_ref().expect("the draft");
-    assert!(body.walk().iter().any(|(_, i)| matches!(i, kentos_commands::FormItem::Field(f) if f.field == "saha_notu")));
-    assert!(said(&app).iter().any(|t| t.contains("“saha_notu” sütunu “parseller” tablosuna eklendi")), "{:#?}", said(&app));
+    assert!(
+        body.walk().iter().any(
+            |(_, i)| matches!(i, kentos_commands::FormItem::Field(f) if f.field == "saha_notu")
+        )
+    );
+    assert!(
+        said(&app)
+            .iter()
+            .any(|t| t.contains("“saha_notu” sütunu “parseller” tablosuna eklendi")),
+        "{:#?}",
+        said(&app)
+    );
     // Every row read, the new field empty in each; nothing named missing.
     let node = node(&app, "parseller").expect("the layer").clone();
-    let settings = app.document.as_ref().expect("open").model.settings().clone();
-    let input = kentos_commands::LayersRows { layer: layer.clone(), ..kentos_commands::LayersRows::default() };
-    let answer = kentos_native_application::layers_rows::read(&node, &settings, &input, &|| false).expect("read");
+    let settings = app
+        .document
+        .as_ref()
+        .expect("open")
+        .model
+        .settings()
+        .clone();
+    let input = kentos_commands::LayersRows {
+        layer: layer.clone(),
+        ..kentos_commands::LayersRows::default()
+    };
+    let answer = kentos_native_application::layers_rows::read(&node, &settings, &input, &|| false)
+        .expect("read");
     assert_eq!(answer.rows.len(), 3);
     assert!(answer.missing.is_empty(), "{:?}", answer.missing);
-    assert!(answer.rows.iter().all(|r| !r.attrs.contains_key("saha_notu")));
+    assert!(
+        answer
+            .rows
+            .iter()
+            .all(|r| !r.attrs.contains_key("saha_notu"))
+    );
 }
 
 #[test]
@@ -84,24 +140,49 @@ fn alanlar_adds_a_new_field_to_the_table_refuses_a_rename_and_reads_the_table_ag
         drive(app, task);
     };
     // A rename of a column is refused, the table and the layer as they were.
-    ev(&mut app, crate::layer_fields::Event::Type(0, crate::layer_fields::Cell::Name, "ada_no".into()));
+    ev(
+        &mut app,
+        crate::layer_fields::Event::Type(0, crate::layer_fields::Cell::Name, "ada_no".into()),
+    );
     ev(&mut app, crate::layer_fields::Event::Save);
     assert!(app.gis.layer_fields.is_some(), "the window stays");
-    assert!(columns(&address).contains(&"ada".to_owned()) && !columns(&address).contains(&"ada_no".to_owned()));
-    ev(&mut app, crate::layer_fields::Event::Type(0, crate::layer_fields::Cell::Name, "ada".into()));
+    assert!(
+        columns(&address).contains(&"ada".to_owned())
+            && !columns(&address).contains(&"ada_no".to_owned())
+    );
+    ev(
+        &mut app,
+        crate::layer_fields::Event::Type(0, crate::layer_fields::Cell::Name, "ada".into()),
+    );
     // A new field: a column of the table.
     ev(&mut app, crate::layer_fields::Event::Add);
-    let last = app.gis.layer_fields.as_ref().map_or(0, |w| w.row_count() - 1);
-    ev(&mut app, crate::layer_fields::Event::Type(last, crate::layer_fields::Cell::Name, "denetci".into()));
+    let last = app
+        .gis
+        .layer_fields
+        .as_ref()
+        .map_or(0, |w| w.row_count() - 1);
+    ev(
+        &mut app,
+        crate::layer_fields::Event::Type(last, crate::layer_fields::Cell::Name, "denetci".into()),
+    );
     ev(&mut app, crate::layer_fields::Event::Save);
-    assert!(columns(&address).contains(&"denetci".to_owned()), "the table has the column");
+    assert!(
+        columns(&address).contains(&"denetci".to_owned()),
+        "the table has the column"
+    );
     assert!(node(&app, "parseller").is_some_and(|n| n.fields.iter().any(|f| f.name == "denetci")));
     // A column made elsewhere: Kaynak şemasını yenile takes it in.
     {
         let source = kentos_data_gpkg::Gpkg.open(&address).expect("open");
         let mut tx = source.begin().expect("begin");
-        tx.add_columns("parseller", &[kentos_data::Field::new("baska", kentos_data::FieldKind::Text { max: None })])
-            .expect("added elsewhere");
+        tx.add_columns(
+            "parseller",
+            &[kentos_data::Field::new(
+                "baska",
+                kentos_data::FieldKind::Text { max: None },
+            )],
+        )
+        .expect("added elsewhere");
         tx.commit().expect("commit");
     }
     kentos_data::registry().forget(&address);
@@ -109,7 +190,11 @@ fn alanlar_adds_a_new_field_to_the_table_refuses_a_rename_and_reads_the_table_ag
     ev(&mut app, crate::layer_fields::Event::Refresh);
     assert!(node(&app, "parseller").is_some_and(|n| n.fields.iter().any(|f| f.name == "baska")));
     assert_eq!(
-        app.gis.layer_fields.as_ref().and_then(|w| w.said_text()).as_deref(),
+        app.gis
+            .layer_fields
+            .as_ref()
+            .and_then(|w| w.said_text())
+            .as_deref(),
         Some("Tablodan alındı: “baska”.")
     );
 }
@@ -120,14 +205,35 @@ fn a_field_the_table_lacks_leaves_the_rest_read_is_named_and_keeps_the_form_back
     // The layer given a field its table does not have (an older project, a column dropped elsewhere).
     {
         let doc = app.document.as_mut().expect("open");
-        let mut fields = doc.model.layers().get(&layer).expect("the layer").fields.clone();
-        fields.push(kentos_commands::LayerField::new("kayip", kentos_commands::LayerFieldKind::Text));
-        doc.model.set_layer_fields(&layer, fields, &[]).expect("set");
+        let mut fields = doc
+            .model
+            .layers()
+            .get(&layer)
+            .expect("the layer")
+            .fields
+            .clone();
+        fields.push(kentos_commands::LayerField::new(
+            "kayip",
+            kentos_commands::LayerFieldKind::Text,
+        ));
+        doc.model
+            .set_layer_fields(&layer, fields, &[])
+            .expect("set");
     }
     let node = node(&app, "parseller").expect("the layer").clone();
-    let settings = app.document.as_ref().expect("open").model.settings().clone();
-    let input = kentos_commands::LayersRows { layer: layer.clone(), ..kentos_commands::LayersRows::default() };
-    let answer = kentos_native_application::layers_rows::read(&node, &settings, &input, &|| false).expect("read");
+    let settings = app
+        .document
+        .as_ref()
+        .expect("open")
+        .model
+        .settings()
+        .clone();
+    let input = kentos_commands::LayersRows {
+        layer: layer.clone(),
+        ..kentos_commands::LayersRows::default()
+    };
+    let answer = kentos_native_application::layers_rows::read(&node, &settings, &input, &|| false)
+        .expect("read");
     assert_eq!(answer.rows.len(), 2, "the other columns still read");
     assert_eq!(answer.missing, ["kayip"]);
     // A form on it: the field keeps it back from being published, said with the way out.
@@ -141,7 +247,11 @@ fn a_field_the_table_lacks_leaves_the_rest_read_is_named_and_keeps_the_form_back
     let issues = app.source_issues(&layer, &body);
     assert_eq!(issues.len(), 1);
     assert_eq!(issues[0].code, kentos_forms::codes::FIELD_NOT_IN_SOURCE);
-    assert!(issues[0].message.contains("Kaynak şemasını yenile"), "{}", issues[0].message);
+    assert!(
+        issues[0].message.contains("Kaynak şemasını yenile"),
+        "{}",
+        issues[0].message
+    );
     assert!(!kentos_forms::publish_blockers(&issues).is_empty());
 }
 
@@ -154,33 +264,69 @@ fn kurallari_kaynaga_yaz_puts_the_list_into_the_table_and_names_the_old_codes() 
     let path = crate::data_layers_tests::municipal("kural-kaynak");
     let address = path.display().to_string();
     let mut app = app_with_drawing();
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "bakim").expect("described")]).expect("added");
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "bakim").expect("described"),
+    ])
+    .expect("added");
     let layer = node(&app, "bakim").expect("bakim").id.clone();
     {
         let doc = app.document.as_mut().expect("open");
-        let mut fields = doc.model.layers().get(&layer).expect("the layer").fields.clone();
-        let mahalle = fields.iter_mut().find(|f| f.name == "mahalle").expect("mahalle");
+        let mut fields = doc
+            .model
+            .layers()
+            .get(&layer)
+            .expect("the layer")
+            .fields
+            .clone();
+        let mahalle = fields
+            .iter_mut()
+            .find(|f| f.name == "mahalle")
+            .expect("mahalle");
         mahalle.values = Some(vec![
             kentos_commands::FieldChoice::new("M1", "Çınar"),
             kentos_commands::FieldChoice::new("M2", "İstasyon"),
             kentos_commands::FieldChoice::new("M3", "Kale"),
         ]);
-        doc.model.set_layer_fields(&layer, fields, &[]).expect("set");
+        doc.model
+            .set_layer_fields(&layer, fields, &[])
+            .expect("set");
     }
     let _ = app.open_layer_fields(&layer);
-    let ruled = |app: &App| app.gis.layer_fields.as_ref().and_then(|w| w.source_rules_for_test());
+    let ruled = |app: &App| {
+        app.gis
+            .layer_fields
+            .as_ref()
+            .and_then(|w| w.source_rules_for_test())
+    };
     assert_eq!(ruled(&app), Some(Vec::new()), "the project's rule alone");
-    let task = app.update(Message::Gis(gis::Event::LayerFields(crate::layer_fields::Event::Rules)));
+    let task = app.update(Message::Gis(gis::Event::LayerFields(
+        crate::layer_fields::Event::Rules,
+    )));
     drive(&mut app, task);
-    let said = app.gis.layer_fields.as_ref().and_then(|w| w.said_text()).unwrap_or_default();
-    assert!(said.contains("Kaynağa kural olarak yazıldı: “mahalle”"), "{said}");
-    assert!(said.contains("mahalle M9 (1 satır)"), "the old code named: {said}");
+    let said = app
+        .gis
+        .layer_fields
+        .as_ref()
+        .and_then(|w| w.said_text())
+        .unwrap_or_default();
+    assert!(
+        said.contains("Kaynağa kural olarak yazıldı: “mahalle”"),
+        "{said}"
+    );
+    assert!(
+        said.contains("mahalle M9 (1 satır)"),
+        "the old code named: {said}"
+    );
     assert_eq!(ruled(&app), Some(vec!["mahalle".to_owned()]));
     // Opened again: the table's rule read from the GeoPackage.
     kentos_data::registry().forget(&address);
     let _ = app.open_layer_fields(&layer);
     assert_eq!(ruled(&app), Some(vec!["mahalle".to_owned()]));
-    let rules = kentos_data_gpkg::Gpkg.open(&address).expect("open").rules("bakim").expect("rules");
+    let rules = kentos_data_gpkg::Gpkg
+        .open(&address)
+        .expect("open")
+        .rules("bakim")
+        .expect("rules");
     assert_eq!(rules.len(), 1);
     let _ = std::fs::remove_file(&path);
 }
@@ -194,9 +340,17 @@ fn feed_table(app: &mut App, layer: &str) {
     let _ = app.data_table_event(DataEvent::Range(0, 12));
     let _ = app.data_table_tasks();
     let node = node(app, "parseller").expect("the layer").clone();
-    let settings = app.document.as_ref().expect("open").model.settings().clone();
+    let settings = app
+        .document
+        .as_ref()
+        .expect("open")
+        .model
+        .settings()
+        .clone();
     for (generation, page, input) in app.gis.features.data.pending() {
-        let answer = kentos_native_application::layers_rows::read(&node, &settings, &input, &|| false).map_err(|e| e.message);
+        let answer =
+            kentos_native_application::layers_rows::read(&node, &settings, &input, &|| false)
+                .map_err(|e| e.message);
         let _ = app.data_table_event(DataEvent::Answered(generation, page, answer.map(Box::new)));
     }
 }
@@ -222,9 +376,20 @@ fn screens() {
     crate::files_testing::usage_shots("9318", "02-kaynakta-olmayan-alan", || {
         let (mut app, _, layer) = bound("resim-eksik", 3);
         let doc = app.document.as_mut().expect("open");
-        let mut fields = doc.model.layers().get(&layer).expect("the layer").fields.clone();
-        fields.push(kentos_commands::LayerField::new("kayip", kentos_commands::LayerFieldKind::Text));
-        doc.model.set_layer_fields(&layer, fields, &[]).expect("set");
+        let mut fields = doc
+            .model
+            .layers()
+            .get(&layer)
+            .expect("the layer")
+            .fields
+            .clone();
+        fields.push(kentos_commands::LayerField::new(
+            "kayip",
+            kentos_commands::LayerFieldKind::Text,
+        ));
+        doc.model
+            .set_layer_fields(&layer, fields, &[])
+            .expect("set");
         feed_table(&mut app, &layer);
         app
     });
@@ -232,12 +397,20 @@ fn screens() {
         let (mut app, address, layer) = bound("resim-yenile", 3);
         let source = kentos_data_gpkg::Gpkg.open(&address).expect("open");
         let mut tx = source.begin().expect("begin");
-        tx.add_columns("parseller", &[kentos_data::Field::new("baska", kentos_data::FieldKind::Text { max: None })])
-            .expect("added elsewhere");
+        tx.add_columns(
+            "parseller",
+            &[kentos_data::Field::new(
+                "baska",
+                kentos_data::FieldKind::Text { max: None },
+            )],
+        )
+        .expect("added elsewhere");
         tx.commit().expect("commit");
         kentos_data::registry().forget(&address);
         let _ = app.open_layer_fields(&layer);
-        let task = app.update(Message::Gis(gis::Event::LayerFields(crate::layer_fields::Event::Refresh)));
+        let task = app.update(Message::Gis(gis::Event::LayerFields(
+            crate::layer_fields::Event::Refresh,
+        )));
         drive(&mut app, task);
         app
     });
@@ -254,26 +427,48 @@ fn rules_screens() {
         let path = crate::data_layers_tests::municipal(tag);
         let address = path.display().to_string();
         let mut app = app_with_drawing();
-        app.add_data_layers(vec![crate::data_layers::describe(&address, "bakim").expect("described")]).expect("added");
+        app.add_data_layers(vec![
+            crate::data_layers::describe(&address, "bakim").expect("described"),
+        ])
+        .expect("added");
         let layer = node(&app, "bakim").expect("bakim").id.clone();
         let doc = app.document.as_mut().expect("open");
-        let mut fields = doc.model.layers().get(&layer).expect("the layer").fields.clone();
-        let at = fields.iter().position(|f| f.name == "mahalle").expect("mahalle");
+        let mut fields = doc
+            .model
+            .layers()
+            .get(&layer)
+            .expect("the layer")
+            .fields
+            .clone();
+        let at = fields
+            .iter()
+            .position(|f| f.name == "mahalle")
+            .expect("mahalle");
         fields[at].values = Some(vec![
             kentos_commands::FieldChoice::new("M1", "Çınar"),
             kentos_commands::FieldChoice::new("M2", "İstasyon"),
             kentos_commands::FieldChoice::new("M3", "Kale"),
         ]);
-        doc.model.set_layer_fields(&layer, fields, &[]).expect("set");
+        doc.model
+            .set_layer_fields(&layer, fields, &[])
+            .expect("set");
         let _ = app.open_layer_fields(&layer);
-        let task = app.update(Message::Gis(gis::Event::LayerFields(crate::layer_fields::Event::Choose(at))));
+        let task = app.update(Message::Gis(gis::Event::LayerFields(
+            crate::layer_fields::Event::Choose(at),
+        )));
         drive(&mut app, task);
         if write {
-            let task = app.update(Message::Gis(gis::Event::LayerFields(crate::layer_fields::Event::Rules)));
+            let task = app.update(Message::Gis(gis::Event::LayerFields(
+                crate::layer_fields::Event::Rules,
+            )));
             drive(&mut app, task);
         }
         app
     };
-    crate::files_testing::usage_shots("9324", "01-yalniz-proje-kurali", || opened("resim-kural-proje", false));
-    crate::files_testing::usage_shots("9324", "02-kurallar-kaynakta", || opened("resim-kural-kaynak", true));
+    crate::files_testing::usage_shots("9324", "01-yalniz-proje-kurali", || {
+        opened("resim-kural-proje", false)
+    });
+    crate::files_testing::usage_shots("9324", "02-kurallar-kaynakta", || {
+        opened("resim-kural-kaynak", true)
+    });
 }

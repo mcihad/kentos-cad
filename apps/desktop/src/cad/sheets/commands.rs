@@ -8,7 +8,9 @@ use iced::Task;
 use iced::keyboard::{Key, Modifiers, key::Named};
 use kentos_sheet::kinds::ItemKind;
 use kentos_sheet::model::Axis;
-use kentos_sheet::ops::{AlignEdge, AlignTo, DistributeMode, Op, ReorderTo, SetFlag, SizeDimension};
+use kentos_sheet::ops::{
+    AlignEdge, AlignTo, DistributeMode, Op, ReorderTo, SetFlag, SizeDimension,
+};
 use kentos_sheet::profile::ToolState;
 use kentos_sheet_ui::save_template::SaveMessage;
 use kentos_sheet_ui::variables::VariablesMessage;
@@ -94,7 +96,8 @@ const ONE: &str = "Önce paftada bir öğe seçin.";
 const TWO: &str = "En az iki öğe seçin.";
 const THREE: &str = "En az üç öğe seçin.";
 /// What Kaydır says: the designer's arrow keys move the chosen items, a command has no direction.
-const NUDGE: &str = "Paftada seçili öğeleri ok tuşları kaydırır: 1 mm, Shift ile 10 mm, Alt ile 0.1 mm.";
+const NUDGE: &str =
+    "Paftada seçili öğeleri ok tuşları kaydırır: 1 mm, Shift ile 10 mm, Alt ile 0.1 mm.";
 
 impl App {
     /// A sheet command of the catalog run by the designer; none for any other command. One that cannot run now says
@@ -180,8 +183,12 @@ impl App {
             "sheet.duplicateItems" => Sheet::Duplicate,
             "sheet.deleteItems" => Sheet::Delete,
             // Ctrl+A and Esc as the designer takes them.
-            "sheet.selectAll" => self.sheets.key(&Key::Character("a".into()), Modifiers::COMMAND)?,
-            "sheet.escape" => self.sheets.key(&Key::Named(Named::Escape), Modifiers::empty())?,
+            "sheet.selectAll" => self
+                .sheets
+                .key(&Key::Character("a".into()), Modifiers::COMMAND)?,
+            "sheet.escape" => self
+                .sheets
+                .key(&Key::Named(Named::Escape), Modifiers::empty())?,
             "sheet.zoomPage" => Sheet::ZoomPage,
             "sheet.zoomReal" => Sheet::ZoomReal,
             "sheet.zoomSelection" => Sheet::ZoomSelection,
@@ -209,7 +216,9 @@ impl App {
             .iter()
             .filter_map(|id| book.item(id))
             .collect();
-        let all = chosen.iter().all(|i| if lock { i.locked } else { i.hidden });
+        let all = chosen
+            .iter()
+            .all(|i| if lock { i.locked } else { i.hidden });
         let flag = SetFlag {
             ids: chosen.iter().map(|i| i.id.clone()).collect(),
             value: !all,
@@ -218,7 +227,11 @@ impl App {
         // The step named as the core names the tree's eye and lock (“Gizle: Harita”, “Kilidi aç: 3 öğe”).
         let label = kentos_sheet::ops::describe(book, &op);
         if !self.sheets.apply(vec![op], &label) {
-            let why = self.sheets.error().unwrap_or("Pafta çekirdeği işlemi yapmadı.").to_owned();
+            let why = self
+                .sheets
+                .error()
+                .unwrap_or("Pafta çekirdeği işlemi yapmadı.")
+                .to_owned();
             self.warn(why);
         }
     }
@@ -242,10 +255,12 @@ impl App {
         match id {
             "sheet.importKpafta" => return None,
             "sheet.undo" => {
-                return (!self.sheets.can_undo()).then(|| "Geri alınacak pafta işlemi yok.".to_owned());
+                return (!self.sheets.can_undo())
+                    .then(|| "Geri alınacak pafta işlemi yok.".to_owned());
             }
             "sheet.redo" => {
-                return (!self.sheets.can_redo()).then(|| "Yinelenecek pafta işlemi yok.".to_owned());
+                return (!self.sheets.can_redo())
+                    .then(|| "Yinelenecek pafta işlemi yok.".to_owned());
             }
             "sheet.open" => return (sheets == 0).then(|| NO_SHEETS.to_owned()),
             _ => {}
@@ -261,23 +276,34 @@ impl App {
         }
         let book = self.sheets.book();
         let at = book.sheet_index(&open.id);
-        let chosen: Vec<_> = self.sheets.selection().iter().filter_map(|i| book.item(i)).collect();
+        let chosen: Vec<_> = self
+            .sheets
+            .selection()
+            .iter()
+            .filter_map(|i| book.item(i))
+            .collect();
         let least = |n: usize, why: &str| (chosen.len() < n).then(|| why.to_owned());
         match id {
             "sheet.moveLeft" if at == Some(0) => Some("Pafta zaten en solda.".to_owned()),
             "sheet.moveRight" if at.is_some_and(|i| i + 1 == sheets) => {
                 Some("Pafta zaten en sağda.".to_owned())
             }
-            "sheet.alignTo.selection" | "sheet.matchSize.width" | "sheet.matchSize.height" | "sheet.group" => {
-                least(2, TWO)
-            }
+            "sheet.alignTo.selection"
+            | "sheet.matchSize.width"
+            | "sheet.matchSize.height"
+            | "sheet.group" => least(2, TWO),
             id if id.starts_with("sheet.distribute.") => least(3, THREE),
-            id if id.starts_with("sheet.align.") || id.starts_with("sheet.alignTo.") || id.starts_with("sheet.order.") => {
+            id if id.starts_with("sheet.align.")
+                || id.starts_with("sheet.alignTo.")
+                || id.starts_with("sheet.order.") =>
+            {
                 least(1, ONE)
             }
-            "sheet.duplicateItems" | "sheet.hideItems" | "sheet.lockItems" | "sheet.nudge" | "sheet.zoomSelection" => {
-                least(1, ONE)
-            }
+            "sheet.duplicateItems"
+            | "sheet.hideItems"
+            | "sheet.lockItems"
+            | "sheet.nudge"
+            | "sheet.zoomSelection" => least(1, ONE),
             "sheet.deleteItems" => least(1, ONE).or_else(|| {
                 chosen
                     .iter()

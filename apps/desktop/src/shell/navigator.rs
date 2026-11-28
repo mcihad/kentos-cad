@@ -64,7 +64,9 @@ pub struct PanelState {
 
 impl std::fmt::Debug for PanelState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PanelState").field("folded", &self.folded).finish()
+        f.debug_struct("PanelState")
+            .field("folded", &self.folded)
+            .finish()
     }
 }
 
@@ -75,7 +77,9 @@ impl App {
             self.toggle_right_panel();
         }
         self.docks
-            .update(kentos_ui::widget::docking::Event::Selected(crate::app::Panel::Navigator));
+            .update(kentos_ui::widget::docking::Event::Selected(
+                crate::app::Panel::Navigator,
+            ));
         Task::none()
     }
 
@@ -119,7 +123,9 @@ impl App {
             }
             Event::Level(level) => self.choose_level(level),
             Event::View(name) => self.show_named_view(&name),
-            Event::Sheet(k) => return self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(k + 1))),
+            Event::Sheet(k) => {
+                return self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(k + 1)));
+            }
             Event::Objects(uids) => {
                 let Some(doc) = self.document.as_ref() else {
                     return Task::none();
@@ -141,7 +147,9 @@ impl App {
 
     pub(crate) fn navigator_view(&self) -> Element<'_, Message> {
         let Some(nav) = self.navigator_read() else {
-            return container(label::caption("Açık çizim yok.")).padding([8, 12]).into();
+            return container(label::caption("Açık çizim yok."))
+                .padding([8, 12])
+                .into();
         };
         let f = self.format();
         let level_name = |id: &str| {
@@ -164,7 +172,9 @@ impl App {
         out = out.push(self.navigator_head(Section::Object, usize::from(nav.object.is_some())));
         if !self.navigator.folded.contains(&Section::Object) {
             match &nav.object {
-                None => out = out.push(note("Bir nesne seçin: hangi katta, görünümde, paftada ve çizelgede olduğu burada.")),
+                None => out = out.push(note(
+                    "Bir nesne seçin: hangi katta, görünümde, paftada ve çizelgede olduğu burada.",
+                )),
                 Some(o) => {
                     let level = o.level.as_deref().map_or("Katsız".to_owned(), level_name);
                     out = out.push(entry(
@@ -179,17 +189,45 @@ impl App {
                     }
                     for v in &o.views {
                         let name = view_name(v).unwrap_or_else(|| v.clone());
-                        out = out.push(entry(&name, "görünüm".to_owned(), false, 1, Some(msg(Event::View(name.clone())))));
+                        out = out.push(entry(
+                            &name,
+                            "görünüm".to_owned(),
+                            false,
+                            1,
+                            Some(msg(Event::View(name.clone()))),
+                        ));
                     }
                     for m in &o.maps {
-                        let Some(k) = sheet_at(&m.sheet) else { continue };
+                        let Some(k) = sheet_at(&m.sheet) else {
+                            continue;
+                        };
                         let sheet = &nav.sheets[k];
-                        let map = sheet.maps.iter().find(|x| x.item == m.item).map_or(m.item.as_str(), |x| x.name.as_str());
-                        out = out.push(entry(&sheet.name, format!("harita: {map}"), false, 1, Some(msg(Event::Sheet(k)))));
+                        let map = sheet
+                            .maps
+                            .iter()
+                            .find(|x| x.item == m.item)
+                            .map_or(m.item.as_str(), |x| x.name.as_str());
+                        out = out.push(entry(
+                            &sheet.name,
+                            format!("harita: {map}"),
+                            false,
+                            1,
+                            Some(msg(Event::Sheet(k))),
+                        ));
                     }
                     for s in &o.schedules {
-                        let of = nav.schedules.iter().find(|x| x.uid == *s).map_or("Çizelge", |x| x.of.label());
-                        out = out.push(entry(of, "listeliyor".to_owned(), false, 1, Some(msg(Event::Objects(vec![s.clone()])))));
+                        let of = nav
+                            .schedules
+                            .iter()
+                            .find(|x| x.uid == *s)
+                            .map_or("Çizelge", |x| x.of.label());
+                        out = out.push(entry(
+                            of,
+                            "listeliyor".to_owned(),
+                            false,
+                            1,
+                            Some(msg(Event::Objects(vec![s.clone()]))),
+                        ));
                     }
                     if !o.tags.is_empty() {
                         out = out.push(entry(
@@ -207,7 +245,9 @@ impl App {
         out = out.push(self.navigator_head(Section::Levels, nav.levels.len()));
         if !self.navigator.folded.contains(&Section::Levels) {
             if nav.levels.is_empty() {
-                out = out.push(note("Projede kat yok: Proje ayarları › Mimari'de kat ekleyin."));
+                out = out.push(note(
+                    "Projede kat yok: Proje ayarları › Mimari'de kat ekleyin.",
+                ));
             }
             for l in &nav.levels {
                 let about = format!(
@@ -218,7 +258,13 @@ impl App {
                     l.maps.len()
                 );
                 let on = active.as_deref() == Some(l.id.as_str());
-                out = out.push(entry(&l.name, about, on, 0, Some(msg(Event::Level(Some(l.id.clone()))))));
+                out = out.push(entry(
+                    &l.name,
+                    about,
+                    on,
+                    0,
+                    Some(msg(Event::Level(Some(l.id.clone())))),
+                ));
             }
             out = out.push(entry(
                 "Katsız",
@@ -236,7 +282,11 @@ impl App {
                 out = out.push(note("Adlı görünüm yok: Görünüm › Görünümler'den kaydedin."));
             }
             for v in &nav.views {
-                let mut parts = vec![v.level.as_deref().map_or("Bütün katlar".to_owned(), level_name)];
+                let mut parts = vec![
+                    v.level
+                        .as_deref()
+                        .map_or("Bütün katlar".to_owned(), level_name),
+                ];
                 if let Some(s) = v.scale {
                     parts.push(format!("1:{s}"));
                 }
@@ -245,7 +295,13 @@ impl App {
                     None => "tarifsiz".to_owned(),
                 });
                 parts.push(format!("{} harita", v.maps.len()));
-                out = out.push(entry(&v.name, parts.join(" · "), false, 0, Some(msg(Event::View(v.name.clone())))));
+                out = out.push(entry(
+                    &v.name,
+                    parts.join(" · "),
+                    false,
+                    0,
+                    Some(msg(Event::View(v.name.clone()))),
+                ));
             }
         }
 
@@ -253,7 +309,9 @@ impl App {
         out = out.push(self.navigator_head(Section::Sheets, nav.sheets.len()));
         if !self.navigator.folded.contains(&Section::Sheets) {
             if nav.sheets.is_empty() {
-                out = out.push(note("Pafta yok: Mimari › Proje › Kat planları ile her kata pafta açın."));
+                out = out.push(note(
+                    "Pafta yok: Mimari › Proje › Kat planları ile her kata pafta açın.",
+                ));
             }
             for (k, s) in nav.sheets.iter().enumerate() {
                 out = out.push(entry(
@@ -268,13 +326,26 @@ impl App {
                     if let Some(scale) = m.scale {
                         parts.push(format!("1:{}", scale.round()));
                     }
-                    parts.push(m.level.as_deref().map_or("bütün katlar".to_owned(), level_name));
+                    parts.push(
+                        m.level
+                            .as_deref()
+                            .map_or("bütün katlar".to_owned(), level_name),
+                    );
                     match (&m.view, m.missing) {
                         (Some(_), true) => parts.push("görünümü silinmiş".to_owned()),
-                        (Some(v), false) => parts.push(format!("görünüm: {}", view_name(v).unwrap_or_else(|| v.clone()))),
+                        (Some(v), false) => parts.push(format!(
+                            "görünüm: {}",
+                            view_name(v).unwrap_or_else(|| v.clone())
+                        )),
                         (None, _) => {}
                     }
-                    out = out.push(entry(&m.name, parts.join(" · "), false, 1, Some(msg(Event::Sheet(k)))));
+                    out = out.push(entry(
+                        &m.name,
+                        parts.join(" · "),
+                        false,
+                        1,
+                        Some(msg(Event::Sheet(k))),
+                    ));
                 }
             }
         }
@@ -304,7 +375,9 @@ impl App {
         let mark = if folded { "▸" } else { "▾" };
         let face = row![
             label::caption(mark),
-            text(section.title()).font(typography::ui_strong()).size(typography::body()),
+            text(section.title())
+                .font(typography::ui_strong())
+                .size(typography::body()),
             container(label::caption(count.to_string())).align_right(Fill),
         ]
         .spacing(6)
@@ -320,13 +393,28 @@ impl App {
 }
 
 /// A row: its name over its line of facts, `depth` steps in; strong when it is the current one.
-fn entry<'a>(name: &str, about: String, current: bool, depth: u16, on: Option<Message>) -> Element<'a, Message> {
-    let font = if current { typography::ui_strong() } else { typography::ui() };
+fn entry<'a>(
+    name: &str,
+    about: String,
+    current: bool,
+    depth: u16,
+    on: Option<Message>,
+) -> Element<'a, Message> {
+    let font = if current {
+        typography::ui_strong()
+    } else {
+        typography::ui()
+    };
     let words = column![
-        text(name.to_owned()).font(font).size(typography::body()).wrapping(text::Wrapping::None),
+        text(name.to_owned())
+            .font(font)
+            .size(typography::body())
+            .wrapping(text::Wrapping::None),
         label::caption(about)
             .wrapping(text::Wrapping::None)
-            .style(|t: &Theme| text::Style { color: Some(Tokens::of(t).faint) }),
+            .style(|t: &Theme| text::Style {
+                color: Some(Tokens::of(t).faint)
+            }),
     ]
     .spacing(1);
     let face = container(words).padding(iced::Padding {
@@ -335,7 +423,10 @@ fn entry<'a>(name: &str, about: String, current: bool, depth: u16, on: Option<Me
         bottom: 3.0,
         left: 20.0 + 14.0 * f32::from(depth),
     });
-    let mut b = button(face).padding(0).width(Fill).style(style::button::row(current));
+    let mut b = button(face)
+        .padding(0)
+        .width(Fill)
+        .style(style::button::row(current));
     if let Some(m) = on {
         b = b.on_press(m);
     }
@@ -343,5 +434,8 @@ fn entry<'a>(name: &str, about: String, current: bool, depth: u16, on: Option<Me
 }
 
 fn note<'a>(words: &'static str) -> Element<'a, Message> {
-    container(label::caption(words)).padding([4, 20]).width(Fill).into()
+    container(label::caption(words))
+        .padding([4, 20])
+        .width(Fill)
+        .into()
 }

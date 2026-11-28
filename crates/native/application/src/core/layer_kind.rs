@@ -50,7 +50,8 @@ pub fn mobile_choices(doc: &Document, node: &LayerNode) -> &'static [Mobile] {
 pub fn alone(doc: &Document, layer: &str) -> Option<&'static str> {
     let mut objects = doc.by_layer(layer);
     let first = objects.next()?.kind();
-    (matches!(first, "raster" | "pointcloud") && objects.all(|e| e.kind() == first)).then_some(first)
+    (matches!(first, "raster" | "pointcloud") && objects.all(|e| e.kind() == first))
+        .then_some(first)
 }
 
 /// A layer whose objects a CBS project's file would hold: its id and name.
@@ -71,8 +72,13 @@ pub fn held_in_file(doc: &Document) -> Vec<Held> {
     doc.layers()
         .leaves()
         .into_iter()
-        .filter(|n| matches!(of(doc, n), LayerKind::Drawing | LayerKind::Bound) && doc.count(&n.id) > 0)
-        .map(|n| Held { id: n.id.clone(), name: n.name.clone() })
+        .filter(|n| {
+            matches!(of(doc, n), LayerKind::Drawing | LayerKind::Bound) && doc.count(&n.id) > 0
+        })
+        .map(|n| Held {
+            id: n.id.clone(),
+            name: n.name.clone(),
+        })
         .collect()
 }
 
@@ -106,9 +112,7 @@ mod tests {
     }
 
     fn doc(workspace: &str) -> Document {
-        let line = |id: u32, layer: &str| {
-            json!({ "kind": "line", "id": id, "layerId": layer, "attrs": {}, "a": {"x": 0.0, "y": 0.0}, "b": {"x": 1.0, "y": 1.0} })
-        };
+        let line = |id: u32, layer: &str| json!({ "kind": "line", "id": id, "layerId": layer, "attrs": {}, "a": {"x": 0.0, "y": 0.0}, "b": {"x": 1.0, "y": 1.0} });
         let snapshot: DocumentSnapshotV2 = serde_json::from_value(json!({
             "format": "kentos.document", "version": 2, "name": "Katman türleri",
             "settings": {
@@ -157,11 +161,18 @@ mod tests {
     #[test]
     fn the_phone_shows_or_leaves_out_what_it_does_not_write() {
         let (gis, cad) = (doc("gis"), doc("cad"));
-        assert_eq!((storage(&gis), storage(&cad)), (Storage::Database, Storage::File));
+        assert_eq!(
+            (storage(&gis), storage(&cad)),
+            (Storage::Database, Storage::File)
+        );
         for id in ["taslak", "yazi", "bagli"] {
             for d in [&gis, &cad] {
                 let node = d.layers().get(id).cloned().expect("a layer");
-                assert_eq!(mobile_choices(d, &node), [Mobile::Show, Mobile::Hide], "{id}");
+                assert_eq!(
+                    mobile_choices(d, &node),
+                    [Mobile::Show, Mobile::Hide],
+                    "{id}"
+                );
             }
         }
     }

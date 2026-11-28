@@ -20,21 +20,34 @@ fn placed(v: &Value, work: &Path) -> Value {
             Some(rest) => Value::String(work.join(rest).display().to_string()),
             None => v.clone(),
         },
-        Value::Object(map) => Value::Object(map.iter().map(|(k, x)| (k.clone(), placed(x, work))).collect()),
+        Value::Object(map) => Value::Object(
+            map.iter()
+                .map(|(k, x)| (k.clone(), placed(x, work)))
+                .collect(),
+        ),
         other => other.clone(),
     }
 }
 
 fn hyphenated(id: &kentos_commands::EntityId) -> String {
     let h: String = id.0.iter().map(|b| format!("{b:02x}")).collect();
-    format!("{}-{}-{}-{}-{}", &h[0..8], &h[8..12], &h[12..16], &h[16..20], &h[20..32])
+    format!(
+        "{}-{}-{}-{}-{}",
+        &h[0..8],
+        &h[8..12],
+        &h[12..16],
+        &h[16..20],
+        &h[20..32]
+    )
 }
 
 #[test]
 fn every_recovery_case_answers_as_the_reference_says() {
-    let fixture: Value =
-        serde_json::from_str(&std::fs::read_to_string(fixtures().join("commands/v1/file.recover.json")).expect("the cases"))
-            .expect("json");
+    let fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string(fixtures().join("commands/v1/file.recover.json"))
+            .expect("the cases"),
+    )
+    .expect("json");
     let cases = fixture["cases"].as_array().expect("cases");
     assert!(cases.len() >= 20);
     let mut s: Session = new_drawing();
@@ -42,7 +55,13 @@ fn every_recovery_case_answers_as_the_reference_says() {
         let name = c["name"].as_str().unwrap_or("");
         let work = super::scratch(&format!("kurtar-{n}"));
         let source = work.join("cizim.kcad");
-        std::fs::copy(fixtures().join("kcad/recover/v1").join(c["file"].as_str().unwrap()), &source).expect("copied");
+        std::fs::copy(
+            fixtures()
+                .join("kcad/recover/v1")
+                .join(c["file"].as_str().unwrap()),
+            &source,
+        )
+        .expect("copied");
         let before = std::fs::read(&source).expect("the source");
         for made in c["make"].as_array().into_iter().flatten() {
             std::fs::write(work.join(made.as_str().unwrap()), b"var olan").expect("made");
@@ -51,14 +70,30 @@ fn every_recovery_case_answers_as_the_reference_says() {
         for (k, v) in c["input"].as_object().into_iter().flatten() {
             input[k] = placed(v, &work);
         }
-        let answer = s.call(json!({ "command": "file.recover", "op": c["op"], "input": input })).expect("answers");
-        let result = if answer.get("status").is_some() { answer.clone() } else { answer["result"].clone() };
+        let answer = s
+            .call(json!({ "command": "file.recover", "op": c["op"], "input": input }))
+            .expect("answers");
+        let result = if answer.get("status").is_some() {
+            answer.clone()
+        } else {
+            answer["result"].clone()
+        };
         let want = &c["expect"];
-        assert_eq!(std::fs::read(&source).expect("the source"), before, "{name}: the source is untouched");
+        assert_eq!(
+            std::fs::read(&source).expect("the source"),
+            before,
+            "{name}: the source is untouched"
+        );
         if want["status"] == "failed" {
             assert_eq!(result["status"], "failed", "{name}: {result}");
-            assert_eq!(result["error"]["code"], want["error"]["code"], "{name}: {result}");
-            assert_eq!(result["error"]["path"], want["error"]["path"], "{name}: {result}");
+            assert_eq!(
+                result["error"]["code"], want["error"]["code"],
+                "{name}: {result}"
+            );
+            assert_eq!(
+                result["error"]["path"], want["error"]["path"],
+                "{name}: {result}"
+            );
             continue;
         }
         assert_eq!(result["status"], "completed", "{name}: {result}");
@@ -75,7 +110,11 @@ fn every_recovery_case_answers_as_the_reference_says() {
         for part in want["containerHas"].as_array().into_iter().flatten() {
             let words = part.as_str().unwrap();
             assert!(
-                out["container"].as_array().into_iter().flatten().any(|c| c.as_str().unwrap_or("").contains(words)),
+                out["container"]
+                    .as_array()
+                    .into_iter()
+                    .flatten()
+                    .any(|c| c.as_str().unwrap_or("").contains(words)),
                 "{name}: the container says “{words}”: {}",
                 out["container"]
             );
@@ -89,12 +128,20 @@ fn every_recovery_case_answers_as_the_reference_says() {
                 assert_eq!(&got["uid"], uid, "{name}");
             }
             if let Some(code) = w["code"].as_str() {
-                assert!(got["reason"].as_str().unwrap_or("").starts_with(&format!("{code}:")), "{name}: {}", got["reason"]);
+                assert!(
+                    got["reason"]
+                        .as_str()
+                        .unwrap_or("")
+                        .starts_with(&format!("{code}:")),
+                    "{name}: {}",
+                    got["reason"]
+                );
             }
         }
         let path = PathBuf::from(target.as_str().unwrap());
         if want["written"] == true {
-            let copy = kentos_kcad::decode(&std::fs::read(&path).expect("the copy")).expect("the copy opens");
+            let copy = kentos_kcad::decode(&std::fs::read(&path).expect("the copy"))
+                .expect("the copy opens");
             let ids: Vec<String> = copy.uids.iter().map(hyphenated).collect();
             assert_eq!(json!(ids), want["uids"], "{name}");
         } else if c["make"].as_array().is_none_or(|m| m.is_empty()) {

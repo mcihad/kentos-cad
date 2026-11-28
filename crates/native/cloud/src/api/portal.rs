@@ -15,8 +15,8 @@ use std::future::Future;
 
 use kentos_contracts::{
     DossierActionRequest, DossierDetail, DossierDirection, DossierFileImport, DossierFileImported,
-    DossierFileView, DossierList, DossierMessageView, DossierStatus, FeeAssessment, FromProject, MessagePost,
-    PortalCatalog, PortalMe,
+    DossierFileView, DossierList, DossierMessageView, DossierStatus, FeeAssessment, FromProject,
+    MessagePost, PortalCatalog, PortalMe,
 };
 use reqwest::{Method, Url};
 use uuid::Uuid;

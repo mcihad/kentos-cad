@@ -181,15 +181,15 @@ fn run(doc: &Document, input: &RecordsPage) -> Result<RecordsPaged, Stop> {
             RelationSide::Children => {
                 let code = key.code_of(of, object);
                 list = match code {
-                    Some(code) => doc
-                        .by_layer_with_uids(&r.child)
-                        .filter(|(_, e)| {
-                            e.base()
-                                .attrs
-                                .get(&name)
-                                .is_some_and(|v| ids(v, many).iter().any(|h| *h == code.as_str()))
-                        })
-                        .collect(),
+                    Some(code) => {
+                        doc.by_layer_with_uids(&r.child)
+                            .filter(|(_, e)| {
+                                e.base().attrs.get(&name).is_some_and(|v| {
+                                    ids(v, many).iter().any(|h| *h == code.as_str())
+                                })
+                            })
+                            .collect()
+                    }
                     None => Vec::new(),
                 };
                 list.sort_by_key(|(u, _)| *u);

@@ -89,20 +89,36 @@ macro_rules! gis_cases {
             kentos_commands::CAD_LAYERS_FILTER => $then!(layers_filter, LayersFilter),
             kentos_commands::CAD_LAYERS_DATA => $then!(layers_data, kentos_commands::LayersData),
             kentos_commands::CAD_LAYERS_ROWS => $then!(layers_rows, kentos_commands::LayersRows),
-            kentos_commands::CAD_LAYERS_SESSION => $then!(layers_session, kentos_commands::LayersSession),
-            kentos_commands::CAD_LAYERS_CLASSES => $then!(layer_classes, kentos_commands::LayersClasses),
-            kentos_commands::CAD_LAYERS_EXPORT => $then!(layer_export, kentos_commands::LayersExport),
-            kentos_commands::CAD_LAYERS_CREATE => $then!(layers_create, kentos_commands::LayersCreate),
-            kentos_commands::CAD_LAYERS_COLUMNS => $then!(layers_columns, kentos_commands::LayersColumns),
-            kentos_commands::CAD_LAYERS_MIGRATE => $then!(layers_migrate, kentos_commands::LayersMigrate),
-            kentos_commands::CAD_LAYERS_CRS => $then!(layers_crs_assign, kentos_commands::LayersCrs),
+            kentos_commands::CAD_LAYERS_SESSION => {
+                $then!(layers_session, kentos_commands::LayersSession)
+            }
+            kentos_commands::CAD_LAYERS_CLASSES => {
+                $then!(layer_classes, kentos_commands::LayersClasses)
+            }
+            kentos_commands::CAD_LAYERS_EXPORT => {
+                $then!(layer_export, kentos_commands::LayersExport)
+            }
+            kentos_commands::CAD_LAYERS_CREATE => {
+                $then!(layers_create, kentos_commands::LayersCreate)
+            }
+            kentos_commands::CAD_LAYERS_COLUMNS => {
+                $then!(layers_columns, kentos_commands::LayersColumns)
+            }
+            kentos_commands::CAD_LAYERS_MIGRATE => {
+                $then!(layers_migrate, kentos_commands::LayersMigrate)
+            }
+            kentos_commands::CAD_LAYERS_CRS => {
+                $then!(layers_crs_assign, kentos_commands::LayersCrs)
+            }
             kentos_commands::CAD_LAYERS_REPROJECT => {
                 $then!(layers_reproject, kentos_commands::LayersReproject)
             }
             kentos_commands::CAD_LAYERS_INFO => $then!(layers_info, LayersInfo),
             kentos_commands::CAD_LAYERS_TABLE => $then!(layers_table, LayersTable),
             kentos_commands::CAD_LAYERS_SUBTYPES => $then!(layers_subtypes, LayersSubtypes),
-            kentos_commands::CAD_LAYERS_CONTINGENTS => $then!(layers_contingents, LayersContingents),
+            kentos_commands::CAD_LAYERS_CONTINGENTS => {
+                $then!(layers_contingents, LayersContingents)
+            }
             kentos_commands::CAD_LAYERS_RULES => $then!(layers_rules, LayersRules),
             kentos_commands::CAD_LAYERS_INDEXES => $then!(layers_indexes, LayersIndexes),
             kentos_commands::CAD_LAYERS_COMPOSE => $then!(layers_compose, LayersCompose),
@@ -126,7 +142,9 @@ macro_rules! gis_cases {
             kentos_commands::CAD_DOMAINS_EDIT => $then!(domains_edit, DomainsEdit),
             kentos_commands::CAD_DOMAINS_EXPORT => $then!(domains_export, DomainsExport),
             kentos_commands::CAD_FIELDS_MIGRATE => $then!(fields_migrate, FieldsMigrate),
-            kentos_commands::CAD_ATTACHMENTS_INSPECT => $then!(attachments_inspect, AttachmentsInspect),
+            kentos_commands::CAD_ATTACHMENTS_INSPECT => {
+                $then!(attachments_inspect, AttachmentsInspect)
+            }
             kentos_commands::CAD_SCHEMA_DESCRIBE => $then!(schema_describe, SchemaDescribe),
             kentos_commands::CAD_FORMS_EXPORT => $then!(forms_export, FormsExport),
             kentos_commands::CAD_FORMS_IMPORT => $then!(forms_import, FormsImport),
@@ -164,11 +182,17 @@ macro_rules! gis_cases {
             kentos_commands::CAD_SOURCES_RECONCILE => {
                 $then!(sources_reconcile, kentos_commands::SourcesReconcile)
             }
-            kentos_commands::CAD_SOURCES_RELATE => $then!(sources_relate, kentos_commands::SourcesRelate),
+            kentos_commands::CAD_SOURCES_RELATE => {
+                $then!(sources_relate, kentos_commands::SourcesRelate)
+            }
             kentos_commands::CAD_RECORDS_PAGE => $then!(records_page, kentos_commands::RecordsPage),
-            kentos_commands::CAD_SOURCES_QUERY => $then!(sources_query, kentos_commands::SourcesQuery),
+            kentos_commands::CAD_SOURCES_QUERY => {
+                $then!(sources_query, kentos_commands::SourcesQuery)
+            }
             kentos_commands::CAD_FIELDS_WRITE => $then!(fields_write, kentos_commands::FieldsWrite),
-            kentos_commands::CAD_TOPOLOGY_CHECK => $then!(topology_check, kentos_commands::TopologyCheck),
+            kentos_commands::CAD_TOPOLOGY_CHECK => {
+                $then!(topology_check, kentos_commands::TopologyCheck)
+            }
             kentos_commands::CAD_TOPOLOGY_EXCEPTIONS => {
                 $then!(topology_exceptions, kentos_commands::TopologyExceptions)
             }
@@ -178,7 +202,9 @@ macro_rules! gis_cases {
             kentos_commands::CAD_PROCESSING_TOOLS => {
                 $then!(processing_tools, kentos_commands::ProcessingTools)
             }
-            kentos_commands::CAD_PROCESSING_RUN => $then!(processing_run, kentos_commands::ProcessingRun),
+            kentos_commands::CAD_PROCESSING_RUN => {
+                $then!(processing_run, kentos_commands::ProcessingRun)
+            }
             kentos_commands::CAD_PROCESSING_BATCH => {
                 $then!(processing_batch, kentos_commands::ProcessingBatch)
             }

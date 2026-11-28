@@ -223,7 +223,9 @@ impl Document {
             let (a, b) = (corners[i], corners[(i + 1) % n]);
             let e = site.edge(i);
             let kind = match e.kind {
-                kentos_contracts::SiteEdgeKind::Party if detached => kentos_contracts::SiteEdgeKind::Side,
+                kentos_contracts::SiteEdgeKind::Party if detached => {
+                    kentos_contracts::SiteEdgeKind::Side
+                }
                 k => k,
             };
             let required = e.setback.unwrap_or_else(|| kind.setback(floors));

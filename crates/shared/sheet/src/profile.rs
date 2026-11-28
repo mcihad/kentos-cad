@@ -579,7 +579,8 @@ pub fn new_item(workspace: Option<Workspace>, caps: &Capabilities, req: &NewItem
         && tool == "map"
         && let MapView::Fixed(f) = &mut m.view
     {
-        f.scale = s; f.ratio=None;
+        f.scale = s;
+        f.ratio = None;
     }
     if let Some(l) = link {
         match &mut item.kind {

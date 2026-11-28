@@ -60,7 +60,12 @@ pub fn srid_of_prj(text: &str) -> Option<u32> {
     if org.trim().trim_matches('"') != "EPSG" {
         return None;
     }
-    code.split(']').next()?.trim().trim_matches('"').parse().ok()
+    code.split(']')
+        .next()?
+        .trim()
+        .trim_matches('"')
+        .parse()
+        .ok()
 }
 
 #[derive(serde::Deserialize)]
@@ -74,11 +79,13 @@ fn prj_file() -> &'static PrjFile {
     use std::sync::OnceLock;
     static FILE: OnceLock<PrjFile> = OnceLock::new();
     FILE.get_or_init(|| {
-        serde_json::from_str::<PrjFile>(include_str!("../../../../../fixtures/crs/v1/esri-prj.json"))
-            .unwrap_or(PrjFile {
-                prj: Default::default(),
-                wkt1: Default::default(),
-            })
+        serde_json::from_str::<PrjFile>(include_str!(
+            "../../../../../fixtures/crs/v1/esri-prj.json"
+        ))
+        .unwrap_or(PrjFile {
+            prj: Default::default(),
+            wkt1: Default::default(),
+        })
     })
 }
 

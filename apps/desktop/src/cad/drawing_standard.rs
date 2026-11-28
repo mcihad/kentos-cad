@@ -9,8 +9,8 @@ use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
     CommandResult, DrawingStandard, ProjectStandardDocument, SettingsSet, StandardIssue,
-    StandardIssueKind, StandardIssueState, StandardProvenance, StandardResources, StandardsApplied, StandardsApply,
-    StandardsCheck, StandardsConflicts, StandardsConflictsReport, StandardsReport,
+    StandardIssueKind, StandardIssueState, StandardProvenance, StandardResources, StandardsApplied,
+    StandardsApply, StandardsCheck, StandardsConflicts, StandardsConflictsReport, StandardsReport,
     StandardsResolve, built_in_standard, built_in_standards, parse_standard_document,
 };
 use kentos_interaction::Level;
@@ -145,7 +145,10 @@ fn selected_project(document: &ProjectStandardDocument) -> Result<SelectedStanda
         standard,
         resources: package.resources,
         document: Some(document.text.clone()),
-        origin: Some(kentos_commands::StandardOrigin { id: package.id.clone(), revision: package.revision.clone() }),
+        origin: Some(kentos_commands::StandardOrigin {
+            id: package.id.clone(),
+            revision: package.revision.clone(),
+        }),
         bound_id: Some(package.id),
         provenance: None,
     })
@@ -357,7 +360,10 @@ impl App {
                     .custom
                     .as_ref()
                     .and_then(|selected| selected.resources.clone()),
-                origin: w.custom.as_ref().and_then(|selected| selected.origin.clone()),
+                origin: w
+                    .custom
+                    .as_ref()
+                    .and_then(|selected| selected.origin.clone()),
             },
         ) {
             CommandResult::Completed { output, .. } => Ok(output),
@@ -634,8 +640,15 @@ impl App {
     /// Gerekçeyle kabul et / Kabulü geri al (docs/adr/1129): the chosen finding through `cad.standards.exceptions`,
     /// against the standard the window checks with (its package's id and revision); who is the computer's user, when now.
     fn standard_exception(&mut self, accept: bool) {
-        let Some(w) = &self.drawing_standard else { return };
-        let Some(issue) = w.chosen.and_then(|i| w.report.as_ref().ok()?.issues.get(i).cloned()) else { return };
+        let Some(w) = &self.drawing_standard else {
+            return;
+        };
+        let Some(issue) = w
+            .chosen
+            .and_then(|i| w.report.as_ref().ok()?.issues.get(i).cloned())
+        else {
+            return;
+        };
         let input = kentos_commands::StandardsExceptions {
             operation: if accept {
                 kentos_commands::StandardExceptionOperation::Accept
@@ -649,20 +662,39 @@ impl App {
             }],
             name: w.custom.is_none().then(|| w.standard.clone()),
             standard: w.custom.as_ref().map(|selected| selected.standard.clone()),
-            resources: w.custom.as_ref().and_then(|selected| selected.resources.clone()),
-            origin: w.custom.as_ref().and_then(|selected| selected.origin.clone()),
+            resources: w
+                .custom
+                .as_ref()
+                .and_then(|selected| selected.resources.clone()),
+            origin: w
+                .custom
+                .as_ref()
+                .and_then(|selected| selected.origin.clone()),
             reason: accept.then(|| w.reason.trim().to_owned()),
-            by: accept.then(|| std::env::var("USER").ok().filter(|u| !u.trim().is_empty())).flatten(),
+            by: accept
+                .then(|| std::env::var("USER").ok().filter(|u| !u.trim().is_empty()))
+                .flatten(),
             at: accept.then(|| crate::settings::rfc3339(std::time::SystemTime::now())),
             expected_revision: None,
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        match kentos_native_application::standards_exceptions::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        match kentos_native_application::standards_exceptions::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        ) {
             CommandResult::Completed { .. } => {
                 let said = if accept {
-                    format!("“{}” bulgusu gerekçesiyle kabul edildi; denetimde kabul edilmiş olarak kalır.", issue.subject)
+                    format!(
+                        "“{}” bulgusu gerekçesiyle kabul edildi; denetimde kabul edilmiş olarak kalır.",
+                        issue.subject
+                    )
                 } else {
-                    format!("“{}” bulgusunun kabulü geri alındı; bulgu yeniden açık.", issue.subject)
+                    format!(
+                        "“{}” bulgusunun kabulü geri alındı; bulgu yeniden açık.",
+                        issue.subject
+                    )
                 };
                 self.say(kentos_interaction::Level::Success, said);
                 if let Some(w) = self.drawing_standard.as_mut() {
@@ -670,7 +702,9 @@ impl App {
                 }
                 self.refresh_standard();
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.warn(error.message);
             }
             _ => {}
@@ -1071,9 +1105,15 @@ impl App {
             let (original, issue) = &issues[i];
             let mark: Element<'_, Message> = match issue.state {
                 // Accepted with a reason (docs/adr/1129): kept on purpose; lapsed: to be looked at again.
-                StandardIssueState::Accepted => icon(Icon::Info).size(12.0).tone(Tone::Muted).into(),
-                StandardIssueState::Lapsed => icon(Icon::Warning).size(12.0).tone(Tone::Warning).into(),
-                StandardIssueState::Open if issue.fixable => icon(Icon::Check).size(12.0).tone(Tone::Success).into(),
+                StandardIssueState::Accepted => {
+                    icon(Icon::Info).size(12.0).tone(Tone::Muted).into()
+                }
+                StandardIssueState::Lapsed => {
+                    icon(Icon::Warning).size(12.0).tone(Tone::Warning).into()
+                }
+                StandardIssueState::Open if issue.fixable => {
+                    icon(Icon::Check).size(12.0).tone(Tone::Success).into()
+                }
                 StandardIssueState::Open => icon(Icon::Warning).size(12.0).tone(Tone::Muted).into(),
             };
             let cell = |t: String| {
@@ -1089,7 +1129,8 @@ impl App {
                 container(label::caption(kind_words(issue.kind))).width(typography::scaled(120.0)),
                 cell(issue.subject.clone()),
                 cell(match issue.state {
-                    StandardIssueState::Accepted => format!("Kabul edildi · {}", change_words(issue)),
+                    StandardIssueState::Accepted =>
+                        format!("Kabul edildi · {}", change_words(issue)),
                     StandardIssueState::Lapsed => format!("Kabul düştü · {}", change_words(issue)),
                     StandardIssueState::Open => change_words(issue),
                 }),
@@ -1377,13 +1418,18 @@ impl App {
                 "Bu dosya seçimi pencere kapanınca unutulur; çizime kaydedilmez.",
             ));
         }
-        let bound = self.document.as_ref().is_some_and(|d| !d.model.settings().standard_docs.is_empty());
+        let bound = self
+            .document
+            .as_ref()
+            .is_some_and(|d| !d.model.settings().standard_docs.is_empty());
         Frame::new(STANDARD_TITLE)
             .scroll(body)
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .aside(words::secondary(
                 "Kaynakları kur…",
-                bound.then_some(Message::StandardInstall(crate::standard_install::Event::Open)),
+                bound.then_some(Message::StandardInstall(
+                    crate::standard_install::Event::Open,
+                )),
             ))
             .action(words::primary(
                 APPLY,

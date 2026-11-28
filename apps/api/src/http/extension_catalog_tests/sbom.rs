@@ -35,10 +35,12 @@ fn release_with(version: &str, python: bool) -> Vec<u8> {
 
 async fn a_published_release_gives_its_bill_of_materials(bench: Bench) {
     // The server's wheel folder holds numpy's wheel: its licence goes into the list (docs/adr/8057 §99).
-    let wheels = std::env::temp_dir().join(format!("kentos-katalog-tekerlek-{}", std::process::id()));
+    let wheels =
+        std::env::temp_dir().join(format!("kentos-katalog-tekerlek-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&wheels);
     std::fs::create_dir_all(&wheels).unwrap();
-    let metadata: &[u8] = b"Metadata-Version: 2.4\nName: numpy\nVersion: 2.5.4\nLicense-Expression: BSD-3-Clause\n\n";
+    let metadata: &[u8] =
+        b"Metadata-Version: 2.4\nName: numpy\nVersion: 2.5.4\nLicense-Expression: BSD-3-Clause\n\n";
     std::fs::write(
         wheels.join("numpy-2.5.4-cp312-cp312-win_amd64.whl"),
         kentos_zip::write(&[("numpy-2.5.4.dist-info/METADATA", metadata)]).unwrap(),

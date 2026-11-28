@@ -14,7 +14,10 @@ impl Document {
     /// when its wall is gone or no curtain wall, it is a niche or a flue, its wall has no height, or it fills no cell
     /// (its middle off the wall).
     pub fn fitted_to_cells(&self, o: &OpeningFields) -> Option<OpeningFields> {
-        if !matches!(o.form, OpeningForm::Door | OpeningForm::Window | OpeningForm::Opening) {
+        if !matches!(
+            o.form,
+            OpeningForm::Door | OpeningForm::Window | OpeningForm::Opening
+        ) {
             return None;
         }
         let uid = Uuid::parse_str(&o.host).ok()?;
@@ -35,7 +38,10 @@ impl Document {
             (grid.spacing, grid.rows, grid.frame()),
             height,
             crate::opening_follow::span(o),
-            (o.sill.unwrap_or(0.0) - lift, o.head.unwrap_or(height + lift) - lift),
+            (
+                o.sill.unwrap_or(0.0) - lift,
+                o.head.unwrap_or(height + lift) - lift,
+            ),
             on_floor,
         )?;
         let mut out = o.clone();

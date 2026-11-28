@@ -13,8 +13,8 @@
 use std::collections::HashSet;
 
 use kentos_commands::{
-    CloudFormat, CommandWarning, HeightKind, HeightReference, PointCloudEntity, SurfaceCloudDef, TerrainSurfaceDef, VERTICAL_SYSTEMS,
-    vertical_system,
+    CloudFormat, CommandWarning, HeightKind, HeightReference, PointCloudEntity, SurfaceCloudDef,
+    TerrainSurfaceDef, VERTICAL_SYSTEMS, vertical_system,
 };
 use kentos_domain::Document;
 
@@ -34,10 +34,16 @@ impl System {
     /// The system a file names: `EPSG:n`, or a WKT's name, matched to EPSG's by name where KentOS knows it.
     pub(crate) fn of_file(text: &str) -> System {
         let t = text.trim();
-        if let Some(n) = t.strip_prefix("EPSG:").and_then(|n| n.trim().parse::<u32>().ok()) {
+        if let Some(n) = t
+            .strip_prefix("EPSG:")
+            .and_then(|n| n.trim().parse::<u32>().ok())
+        {
             return System::Srid(n);
         }
-        match VERTICAL_SYSTEMS.iter().find(|v| v.name.eq_ignore_ascii_case(t)) {
+        match VERTICAL_SYSTEMS
+            .iter()
+            .find(|v| v.name.eq_ignore_ascii_case(t))
+        {
             Some(v) => System::Srid(v.srid),
             None => System::Named(t.to_owned()),
         }
@@ -69,7 +75,8 @@ impl System {
     pub(crate) fn words(&self) -> String {
         match self {
             System::Ellipsoidal => "elipsoit yüksekliği".into(),
-            System::Srid(s) => vertical_system(*s).map_or_else(|| format!("EPSG:{s}"), |v| format!("{} (EPSG:{s})", v.name)),
+            System::Srid(s) => vertical_system(*s)
+                .map_or_else(|| format!("EPSG:{s}"), |v| format!("{} (EPSG:{s})", v.name)),
             System::Named(n) => format!("“{n}”"),
         }
     }
@@ -79,16 +86,29 @@ impl System {
 /// system its points are in, when known.
 enum Source<'a> {
     Drawing,
-    Cloud { layer: &'a str, system: Option<System> },
+    Cloud {
+        layer: &'a str,
+        system: Option<System>,
+    },
 }
 
 fn sources(def: &TerrainSurfaceDef) -> Vec<Source<'_>> {
     let clouds: HashSet<&str> = def.clouds.iter().map(|c| c.layer.as_str()).collect();
     let mut out = Vec::new();
-    if def.points.layers.iter().any(|l| !clouds.contains(l.as_str())) || !def.points.uids.is_empty() || !def.breaklines.is_empty() {
+    if def
+        .points
+        .layers
+        .iter()
+        .any(|l| !clouds.contains(l.as_str()))
+        || !def.points.uids.is_empty()
+        || !def.breaklines.is_empty()
+    {
         out.push(Source::Drawing);
     }
-    out.extend(def.clouds.iter().map(|c| Source::Cloud { layer: &c.layer, system: System::of_record(c) }));
+    out.extend(def.clouds.iter().map(|c| Source::Cloud {
+        layer: &c.layer,
+        system: System::of_record(c),
+    }));
     out
 }
 
@@ -97,11 +117,20 @@ pub(crate) type Side<'a> = (&'a str, Option<&'a TerrainSurfaceDef>);
 
 /// Whether `sides` rest on one vertical system. When a source is not known and `assume`, a `heights_assumed` warning;
 /// otherwise `unproven_heights` (at `path`). Systems known to differ are refused whatever `assume`.
-pub(crate) fn proven(doc: &Document, sides: &[Side<'_>], assume: bool, path: &str, warnings: &mut Vec<CommandWarning>) -> Result<(), Stop> {
+pub(crate) fn proven(
+    doc: &Document,
+    sides: &[Side<'_>],
+    assume: bool,
+    path: &str,
+    warnings: &mut Vec<CommandWarning>,
+) -> Result<(), Stop> {
     let all: Vec<(&str, Source<'_>)> = sides
         .iter()
         .flat_map(|(name, def)| match def {
-            Some(d) => sources(d).into_iter().map(|s| (*name, s)).collect::<Vec<_>>(),
+            Some(d) => sources(d)
+                .into_iter()
+                .map(|s| (*name, s))
+                .collect::<Vec<_>>(),
             None => vec![(*name, Source::Drawing)],
         })
         .collect();
@@ -129,10 +158,19 @@ pub(crate) fn proven(doc: &Document, sides: &[Side<'_>], assume: bool, path: &st
         }
     }
     if !drawing.is_empty() {
-        let names = drawing.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ");
+        let names = drawing
+            .iter()
+            .map(|n| format!("“{n}”"))
+            .collect::<Vec<_>>()
+            .join(", ");
         match &project {
             Some(p) => known.insert(0, (format!("çizimin kendi kotları ({names})"), p.clone())),
-            None => unknown.insert(0, format!("çizimin kendi kotları ({names}; projenin kotlarının düşey sistemi söylenmemiş)")),
+            None => unknown.insert(
+                0,
+                format!(
+                    "çizimin kendi kotları ({names}; projenin kotlarının düşey sistemi söylenmemiş)"
+                ),
+            ),
         }
     }
     if let Some((first, sys)) = known.first()
@@ -192,11 +230,17 @@ pub(crate) fn of_clouds(
                 silent = true;
                 continue;
             }
-            let Ok(cloud) = crate::pointclouds::bytes_of(doc, drawing, s).and_then(|b| crate::pointclouds::open(&b)) else {
+            let Ok(cloud) = crate::pointclouds::bytes_of(doc, drawing, s)
+                .and_then(|b| crate::pointclouds::open(&b))
+            else {
                 continue;
             };
             match crate::pointclouds::vertical(&cloud) {
-                Some(v) => named.push((format!("{}. bulutun {}. kaynağı", k + 1, si + 1), v.clone(), System::of_file(&v))),
+                Some(v) => named.push((
+                    format!("{}. bulutun {}. kaynağı", k + 1, si + 1),
+                    v.clone(),
+                    System::of_file(&v),
+                )),
                 None => silent = true,
             }
         }
@@ -213,7 +257,9 @@ pub(crate) fn of_clouds(
             ));
         }
         if let Some(p) = System::of_project(doc)
-            && let Some((layer, v)) = others.iter().find_map(|(l, v)| v.clone().filter(|v| *v != p).map(|v| (l, v)))
+            && let Some((layer, v)) = others
+                .iter()
+                .find_map(|(l, v)| v.clone().filter(|v| *v != p).map(|v| (l, v)))
         {
             return differ(format!(
                 "Bulutun noktaları projenin kotlarına ({}) çevrilir; yüzeyin “{layer}” katmanındaki bulut noktaları {}: bir yüzeyin noktaları tek sistemde olmalı.",
@@ -221,9 +267,14 @@ pub(crate) fn of_clouds(
                 v.words()
             ));
         }
-        return Ok(named.first().filter(|_| !silent).map(|(_, text, _)| text.clone()));
+        return Ok(named
+            .first()
+            .filter(|_| !silent)
+            .map(|(_, text, _)| text.clone()));
     }
-    let Some((first, text, sys)) = named.first() else { return Ok(None) };
+    let Some((first, text, sys)) = named.first() else {
+        return Ok(None);
+    };
     if let Some((other, _, theirs)) = named.iter().find(|(_, _, s)| s != sys) {
         return differ(format!(
             "Bulutların kaynakları ayrı düşey sistemlerde: {first} {}, {other} {}. Bir yüzeyin noktaları tek sistemde olmalı; kaynakları önce aynı sisteme çevirin.",
@@ -240,7 +291,10 @@ pub(crate) fn of_clouds(
             p.words()
         ));
     }
-    if let Some((layer, v)) = others.iter().find_map(|(l, v)| v.clone().filter(|v| v != sys).map(|v| (l, v))) {
+    if let Some((layer, v)) = others
+        .iter()
+        .find_map(|(l, v)| v.clone().filter(|v| v != sys).map(|v| (l, v)))
+    {
         return differ(format!(
             "Bulutun kotları {}, yüzeyin “{layer}” katmanındaki bulut noktalarınınki {}: bir yüzeyin noktaları tek sistemde olmalı.",
             sys.words(),

@@ -271,7 +271,10 @@ fn a_roof_window_over_another_is_refused() {
     b.click(6.0, 1.5);
     assert_eq!(the_roof(&b).roof.parts.len(), 1, "nothing over the first");
     assert_eq!(b.last_level(), Some(Level::Warn));
-    assert_eq!(b.last_text(), Some("Çatı penceresi başka bir çatı penceresinin üstüne geliyor; yerini kaydırın."));
+    assert_eq!(
+        b.last_text(),
+        Some("Çatı penceresi başka bir çatı penceresinin üstüne geliyor; yerini kaydırın.")
+    );
     b.click(3.5, 1.5);
     assert_eq!(the_roof(&b).roof.parts.len(), 2, "one beside it");
 }

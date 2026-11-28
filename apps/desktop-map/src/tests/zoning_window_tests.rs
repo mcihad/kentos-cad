@@ -5,9 +5,9 @@
 //! a drawing without the profile's layers offered Profili uygula, after which the layers are there. Harita and GIS
 //! offer it, Yol and Mimari do not. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -16,11 +16,19 @@ use crate::app::{App, Message};
 use crate::zoning_window::{Event as Z, Group};
 
 fn opened(program: Option<Module>, case: &str) -> App {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.zoning.check.json")).expect("cases");
-    let setup = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == case).expect("the case")["setup"]
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.zoning.check.json"
+    ))
+    .expect("cases");
+    let setup = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == case)
+        .expect("the case")["setup"]
         .clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -36,9 +44,13 @@ const BARE: &str = "profil katmanları yoksa söylenir";
 fn the_messy_plan_is_found_out_and_its_areas_shown() {
     let mut app = opened(Some(Module::Map), MESSY);
     let _ = app.update(Message::Run("zoning.check"));
-    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Zoning)));
+    assert_eq!(
+        app.dialog,
+        Some(crate::map::dialog(map::MapDialogKind::Zoning))
+    );
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -60,8 +72,7 @@ fn the_messy_plan_is_found_out_and_its_areas_shown() {
     assert_eq!(app.selection.ids(), [Slot(5), Slot(9), Slot(6), Slot(1)]);
 }
 
-const SYMBOL: &str =
-    "sembol kararı göstermiyor: ticaret alanı park sembolüyle; eşleşen, eşi olmayan kullanım ve sembolsüz alan denetlenmez";
+const SYMBOL: &str = "sembol kararı göstermiyor: ticaret alanı park sembolüyle; eşleşen, eşi olmayan kullanım ve sembolsüz alan denetlenmez";
 
 /// docs/adr/4640: the trade area drawn with the park's symbol is a Sembol uyuşmazlığı in the Karar ve değer group, and
 /// Seç ve göster selects it alone (the park with its own symbol, the housing area and the area without one are not
@@ -71,7 +82,8 @@ fn a_symbol_that_does_not_show_its_decision_is_found() {
     let mut app = opened(Some(Module::Map), SYMBOL);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -86,7 +98,9 @@ fn a_symbol_that_does_not_show_its_decision_is_found() {
         "Sembol uyuşmazlığı"
     );
     assert!(Group::Decisions.holds("symbolMismatch"));
-    let _ = app.update(Message::from(map::Event::Zoning(Z::Group(Group::Decisions))));
+    let _ = app.update(Message::from(map::Event::Zoning(Z::Group(
+        Group::Decisions,
+    ))));
     let _ = app.update(Message::from(map::Event::Zoning(Z::Show)));
     assert_eq!(app.selection.ids(), [Slot(2)], "S1, the trade area");
 }
@@ -101,11 +115,17 @@ fn a_symbol_that_does_not_show_its_decision_is_found() {
 fn symbol_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/imar-sembol-4640");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/imar-sembol-4640");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map), SYMBOL);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -116,7 +136,10 @@ fn symbol_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-sembol-uyusmazligi-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -131,7 +154,8 @@ fn a_broken_road_and_a_plan_outside_its_upper_plan() {
     let mut app = opened(Some(Module::Map), ROAD_GAP);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -153,7 +177,8 @@ fn a_broken_road_and_a_plan_outside_its_upper_plan() {
     let mut app = opened(Some(Module::Map), OUTSIDE_UPPER);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -183,7 +208,8 @@ fn the_decisions_inside_a_road_s_width() {
     let mut app = opened(Some(Module::Map), ROAD_WIDTH);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -224,7 +250,8 @@ fn the_parcels_inside_a_road_s_width() {
     let mut app = opened(Some(Module::Map), ROAD_PARCEL);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -305,7 +332,8 @@ fn a_road_entering_a_decision_twice_carries_two_regions() {
     let mut app = opened(Some(Module::Map), U_ROAD);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -314,7 +342,11 @@ fn a_road_entering_a_decision_twice_carries_two_regions() {
     assert_eq!(r.findings.len(), 1);
     let f = &r.findings[0];
     assert_eq!((f.kind.as_str(), f.regions.len()), ("roadWidth", 2));
-    let lows: Vec<f64> = f.regions.iter().map(|g| g.outer.pts[0].y - 4_420_000.0).collect();
+    let lows: Vec<f64> = f
+        .regions
+        .iter()
+        .map(|g| g.outer.pts[0].y - 4_420_000.0)
+        .collect();
     assert_eq!(lows, [24.0, 64.0], "the lower first");
     let fmt = app.format();
     assert!(app.zoning_shown().iter().any(|x| x.regions.len() == 2));
@@ -345,11 +377,17 @@ fn a_road_entering_a_decision_twice_carries_two_regions() {
 fn region_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/bolgeler-3440");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/bolgeler-3440");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map), U_ROAD);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -371,7 +409,10 @@ fn region_screens() {
         app.selection.set(Vec::new());
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("cizimde-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -381,7 +422,8 @@ fn the_clean_plan_has_no_finding() {
     let mut app = opened(Some(Module::Map), GOOD);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -395,7 +437,8 @@ fn profili_uygula_adds_the_missing_layers() {
     let mut app = opened(Some(Module::Map), BARE);
     let _ = app.update(Message::Run("zoning.check"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -404,7 +447,8 @@ fn profili_uygula_adds_the_missing_layers() {
     assert_eq!(r.counts.get("missingLayer"), Some(&2));
     let _ = app.update(Message::from(map::Event::Zoning(Z::ApplyProfile)));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -414,7 +458,8 @@ fn profili_uygula_adds_the_missing_layers() {
     let _ = app.update(Message::Run("edit.undo"));
     let _ = app.update(Message::from(map::Event::Zoning(Z::Tolerance(0.01))));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .zoning
         .answer
         .clone()
@@ -425,8 +470,17 @@ fn profili_uygula_adds_the_missing_layers() {
 
 #[test]
 fn harita_and_gis_offer_it_yol_and_mimari_do_not() {
-    for (module, yes) in [(Module::Map, true), (Module::Gis, true), (Module::Road, false), (Module::Architecture, false)] {
-        assert_eq!(opened(Some(module), GOOD).offers("zoning.check"), yes, "{module:?}");
+    for (module, yes) in [
+        (Module::Map, true),
+        (Module::Gis, true),
+        (Module::Road, false),
+        (Module::Architecture, false),
+    ] {
+        assert_eq!(
+            opened(Some(module), GOOD).offers("zoning.check"),
+            yes,
+            "{module:?}"
+        );
     }
 }
 
@@ -441,13 +495,18 @@ fn harita_and_gis_offer_it_yol_and_mimari_do_not() {
 fn road_width_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out =
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/imar-yol-genisligi-2240");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/imar-yol-genisligi-2240");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 700.0), "koyu-dar"),
+    ] {
         for (show, file) in [(false, "1-pencere"), (true, "2-secilenler")] {
             let mut app = opened(Some(Module::Map), ROAD_WIDTH);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -462,7 +521,10 @@ fn road_width_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }
@@ -478,11 +540,17 @@ fn road_width_screens() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/imar-denetimi-1420");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/imar-denetimi-1420");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 700.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map), MESSY);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -493,18 +561,26 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("denetim-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
         // docs/adr/2020: the broken road in the Alan group.
         let mut app = opened(Some(Module::Map), ROAD_GAP);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("zoning.check"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("kopuk-yol-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -520,12 +596,18 @@ fn screens() {
 fn road_parcel_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/imar-yol-parsel-2640");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/imar-yol-parsel-2640");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 700.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 700.0), "koyu-dar"),
+    ] {
         for (show, file) in [(false, "1-pencere"), (true, "2-secilenler")] {
             let mut app = opened(Some(Module::Map), ROAD_PARCEL);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -540,12 +622,14 @@ fn road_parcel_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }
 }
-
 
 /// docs/adr/3040: the road widths' parts hatched over the drawing after Bulguları göster (a third road across 101/2),
 /// light wide and dark narrow, `.run/gui-evidence/yola-giren-3040/`:
@@ -558,11 +642,17 @@ fn road_parcel_screens() {
 fn hatch_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yola-giren-3040");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yola-giren-3040");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map), ROAD_PARCEL);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let doc = app.document.as_mut().expect("a drawing");
@@ -592,7 +682,10 @@ fn hatch_screens() {
         app.selection.set(Vec::new());
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("cizimde-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

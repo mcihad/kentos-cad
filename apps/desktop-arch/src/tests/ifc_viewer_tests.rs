@@ -5,9 +5,9 @@
 //! with its reason; a stopped read and one a newer read replaced write nothing; the window closes with its model; the
 //! export offers Görüntüle. Denetim's chosen finding paints its objects in the viewer (docs/adr/8074 §2).
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use std::path::PathBuf;
-use crate::arch::ArchState;
 
 use kentos_commands::Entity;
 use kentos_model_view::Category;
@@ -45,8 +45,22 @@ fn exported(app: &mut App, name: &str) -> PathBuf {
 /// body.
 fn shaped(path: &std::path::Path) -> (usize, usize) {
     const CLASSES: [&str; 17] = [
-        "IFCWALL", "IFCSLAB", "IFCCOLUMN", "IFCBEAM", "IFCROOF", "IFCRAILING", "IFCSTAIR", "IFCCOVERING", "IFCDOOR",
-        "IFCWINDOW", "IFCTRANSPORTELEMENT", "IFCFURNITURE", "IFCSANITARYTERMINAL", "IFCMEMBER", "IFCCHIMNEY", "IFCRAMP",
+        "IFCWALL",
+        "IFCSLAB",
+        "IFCCOLUMN",
+        "IFCBEAM",
+        "IFCROOF",
+        "IFCRAILING",
+        "IFCSTAIR",
+        "IFCCOVERING",
+        "IFCDOOR",
+        "IFCWINDOW",
+        "IFCTRANSPORTELEMENT",
+        "IFCFURNITURE",
+        "IFCSANITARYTERMINAL",
+        "IFCMEMBER",
+        "IFCCHIMNEY",
+        "IFCRAMP",
         "IFCSPACE",
     ];
     let text = std::fs::read_to_string(path).expect("reads the file");
@@ -55,7 +69,12 @@ fn shaped(path: &std::path::Path) -> (usize, usize) {
         .filter_map(|l| l.split_once('=').map(|(_, r)| r.trim()))
         .filter(|r| arguments(r).get(6).is_some_and(|a| a.trim() != "$"))
         .collect();
-    let of = |classes: &[&str]| with_body.iter().filter(|r| classes.iter().any(|c| r.starts_with(&format!("{c}(")))).count();
+    let of = |classes: &[&str]| {
+        with_body
+            .iter()
+            .filter(|r| classes.iter().any(|c| r.starts_with(&format!("{c}("))))
+            .count()
+    };
     (of(&CLASSES), of(&["IFCSPATIALZONE"]))
 }
 
@@ -72,18 +91,48 @@ fn click_a_wall(app: &mut App) -> usize {
 /// A click on the first triangle of the meshes in turn seen from the viewer's camera until an object of `category` is
 /// chosen; that object.
 fn click_one(app: &mut App, category: Category) -> usize {
-    let vp = Viewport { width: 1000.0, height: 700.0 };
+    let vp = Viewport {
+        width: 1000.0,
+        height: 700.0,
+    };
     for k in 0..400 {
         let w = app.ifc_viewer.as_ref().expect("the viewer");
         let cam = w.viewer.camera();
-        let Some(m) = w.viewer.scene().meshes().iter().filter(|m| m.part == 0).nth(k) else { break };
-        let Some(t) = m.triangles.first() else { continue };
+        let Some(m) = w
+            .viewer
+            .scene()
+            .meshes()
+            .iter()
+            .filter(|m| m.part == 0)
+            .nth(k)
+        else {
+            break;
+        };
+        let Some(t) = m.triangles.first() else {
+            continue;
+        };
         let [a, b, c] = t.map(|i| m.vertices[i as usize]);
-        let middle = [(a[0] + b[0] + c[0]) / 3.0, (a[1] + b[1] + c[1]) / 3.0, (a[2] + b[2] + c[2]) / 3.0];
-        let Some((x, y, _)) = cam.project(middle, &vp) else { continue };
-        send(app, Event::Viewer(V::Gesture(Gesture::Pick(x as f32, y as f32, 1000.0, 700.0))));
-        let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
-        if let Some(o) = v.selected().filter(|&o| v.input().objects[o].category == category) {
+        let middle = [
+            (a[0] + b[0] + c[0]) / 3.0,
+            (a[1] + b[1] + c[1]) / 3.0,
+            (a[2] + b[2] + c[2]) / 3.0,
+        ];
+        let Some((x, y, _)) = cam.project(middle, &vp) else {
+            continue;
+        };
+        send(
+            app,
+            Event::Viewer(V::Gesture(Gesture::Pick(x as f32, y as f32, 1000.0, 700.0))),
+        );
+        let v = app
+            .ifc_viewer
+            .as_ref()
+            .and_then(|w| w.viewer.view())
+            .expect("the model");
+        if let Some(o) = v
+            .selected()
+            .filter(|&o| v.input().objects[o].category == category)
+        {
             return o;
         }
     }
@@ -104,14 +153,17 @@ fn member_section_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dikme-kesiti-8170");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/dikme-kesiti-8170");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         let mut app = open(building());
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let doc = &mut app.document.as_mut().expect("the building").model;
         let mut run = |command: &str, input: serde_json::Value| -> Vec<String> {
@@ -123,39 +175,78 @@ fn member_section_screens() {
             )
             .expect("runs");
             assert_eq!(answer["status"], "completed", "{command}: {answer}");
-            answer["output"]["uids"].as_array().map_or_else(Vec::new, |l| {
-                l.iter().filter_map(|u| u.as_str().map(str::to_owned)).collect()
-            })
+            answer["output"]["uids"]
+                .as_array()
+                .map_or_else(Vec::new, |l| {
+                    l.iter()
+                        .filter_map(|u| u.as_str().map(str::to_owned))
+                        .collect()
+                })
         };
         let post = |x: f64| {
             serde_json::json!({"at": {"x": x, "y": 12.0}, "width": 0.1, "depth": 0.1, "height": 1.0,
                 "material": "Çelik", "member": {"predefined": "POST"}, "arch": {"level": "zemin"}})
         };
         let columns: Vec<serde_json::Value> = [0.0, 4.0, 8.0, 12.0].into_iter().map(post).collect();
-        let posts = run("cad.columns.create", serde_json::json!({"layerId": "0", "columns": columns}));
-        let rail = run("cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
+        let posts = run(
+            "cad.columns.create",
+            serde_json::json!({"layerId": "0", "columns": columns}),
+        );
+        let rail = run(
+            "cad.beams.create",
+            serde_json::json!({"layerId": "0", "beams": [{
             "pts": [{"x": 0.0, "y": 12.0}, {"x": 12.0, "y": 12.0}], "width": 0.05, "height": 0.1, "baseOffset": 0.9,
-            "material": "Çelik", "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}}]}));
+            "material": "Çelik", "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}}]}),
+        );
         let edit = |kind: serde_json::Value| serde_json::json!({ "operation": kind });
-        run("cad.elementtypes.edit", edit(serde_json::json!({"kind": "define", "name": "Dikme 1", "from": posts[0]})));
-        run("cad.elementtypes.edit", edit(serde_json::json!({"kind": "assign", "type": "Dikme 1", "uids": posts[1..]})));
-        run("cad.elementtypes.edit", edit(serde_json::json!({"kind": "define", "name": "Kayıt 1", "from": rail[0]})));
+        run(
+            "cad.elementtypes.edit",
+            edit(serde_json::json!({"kind": "define", "name": "Dikme 1", "from": posts[0]})),
+        );
+        run(
+            "cad.elementtypes.edit",
+            edit(serde_json::json!({"kind": "assign", "type": "Dikme 1", "uids": posts[1..]})),
+        );
+        run(
+            "cad.elementtypes.edit",
+            edit(serde_json::json!({"kind": "define", "name": "Kayıt 1", "from": rail[0]})),
+        );
         let path = exported(&mut app, &format!("dikme-{name}"));
         opened(&mut app, path.clone());
         let uid: kentos_domain::Uuid = posts[1].parse().expect("its id");
-        let slot = app.document.as_ref().expect("the drawing").model.slot_of(uid).expect("its slot");
+        let slot = app
+            .document
+            .as_ref()
+            .expect("the drawing")
+            .model
+            .slot_of(uid)
+            .expect("its slot");
         app.selection.set(vec![slot]);
         app.follow_ifc_viewer();
         let w = app.ifc_viewer.as_ref().expect("the viewer");
         let details = w.viewer.details().expect("its details");
-        let group = details.groups.iter().find(|g| g.title == "Kesit (tipten)").expect("its type's section");
-        let said: Vec<(&str, &str)> = group.lines.iter().map(|l| (l.name.as_str(), l.value.as_str())).collect();
-        assert!(said.contains(&("Ad", "10×10")) && said.contains(&("Malzeme", "Çelik")), "{said:?}");
+        let group = details
+            .groups
+            .iter()
+            .find(|g| g.title == "Kesit (tipten)")
+            .expect("its type's section");
+        let said: Vec<(&str, &str)> = group
+            .lines
+            .iter()
+            .map(|l| (l.name.as_str(), l.value.as_str()))
+            .collect();
+        assert!(
+            said.contains(&("Ad", "10×10")) && said.contains(&("Malzeme", "Çelik")),
+            "{said:?}"
+        );
         let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         let picture = out.join(format!("1-dikme-kesiti-{name}.png"));
-        apart.render(App::ifc_viewer_shown(&app), &app.theme()).save(&picture).expect("writes the picture");
+        apart
+            .render(App::ifc_viewer_shown(&app), &app.theme())
+            .save(&picture)
+            .expect("writes the picture");
         println!("{}", picture.display());
         let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
     }
@@ -175,14 +266,17 @@ fn radial_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/egrisel-aks-8169");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/egrisel-aks-8169");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         let mut app = open(building());
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let size = Size::new(1440.0, 900.0);
         let _ = app.update(Message::WindowResized(size));
@@ -203,11 +297,17 @@ fn radial_screens() {
         main.settle(&mut app, App::view, &mut update);
         main.settle(&mut app, App::view, &mut update);
         let plan = out.join(format!("1-plan-{name}.png"));
-        main.render(App::view(&app), &app.theme()).save(&plan).expect("writes the picture");
+        main.render(App::view(&app), &app.theme())
+            .save(&plan)
+            .expect("writes the picture");
         println!("{}", plan.display());
         let path = exported(&mut app, &format!("egrisel-{name}"));
         opened(&mut app, path.clone());
-        let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
+        let v = app
+            .ifc_viewer
+            .as_ref()
+            .and_then(|w| w.viewer.view())
+            .expect("the model");
         let grid = v
             .input()
             .objects
@@ -218,15 +318,27 @@ fn radial_screens() {
         let w = app.ifc_viewer.as_ref().expect("the viewer");
         let details = w.viewer.details().expect("its details");
         let line = |name: &str| -> Vec<&str> {
-            details.groups.iter().flat_map(|g| &g.lines).filter(|l| l.name == name).map(|l| l.value.as_str()).collect()
+            details
+                .groups
+                .iter()
+                .flat_map(|g| &g.lines)
+                .filter(|l| l.name == name)
+                .map(|l| l.value.as_str())
+                .collect()
         };
         assert_eq!(line("Ön tanımlı tür"), ["RADIAL"]);
-        assert_eq!((line("U aksları"), line("V aksları")), (vec!["4, 5, 6, 7"], vec!["E, F"]));
+        assert_eq!(
+            (line("U aksları"), line("V aksları")),
+            (vec!["4, 5, 6, 7"], vec!["E, F"])
+        );
         let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         let picture = out.join(format!("2-ifc-modeli-{name}.png"));
-        apart.render(App::ifc_viewer_shown(&app), &app.theme()).save(&picture).expect("writes the picture");
+        apart
+            .render(App::ifc_viewer_shown(&app), &app.theme())
+            .save(&picture)
+            .expect("writes the picture");
         println!("{}", picture.display());
         let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
     }
@@ -246,19 +358,26 @@ fn span_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/iki-kat-duvar-8168");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/iki-kat-duvar-8168");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         let mut app = open(building());
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
-        let dir = std::env::temp_dir().join(format!("kentos-iki-kat-duvar-{}-{name}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!(
+            "kentos-iki-kat-duvar-{}-{name}",
+            std::process::id()
+        ));
         std::fs::create_dir_all(&dir).expect("a folder");
         let path = dir.join("kalkan-duvari.ifc");
-        let file = include_bytes!("../../../../fixtures/arch/v1/ifc/kesit-binasi-kalkan-duvari.ifc");
+        let file =
+            include_bytes!("../../../../fixtures/arch/v1/ifc/kesit-binasi-kalkan-duvari.ifc");
         std::fs::write(&path, file).expect("writes");
         opened(&mut app, path);
         // The plan's east wall on the ground storey: the file's tall wall, its id kept.
@@ -277,17 +396,32 @@ fn span_screens() {
         let w = app.ifc_viewer.as_ref().expect("the viewer");
         let v = w.viewer.view().expect("the model");
         let key = kentos_ifc::step::guid(tall.as_u128());
-        assert_eq!(v.selected().map(|o| v.input().objects[o].key.as_str()), Some(key.as_str()));
+        assert_eq!(
+            v.selected().map(|o| v.input().objects[o].key.as_str()),
+            Some(key.as_str())
+        );
         let details = w.viewer.details().expect("its details");
         let line = |name: &str| -> Vec<&str> {
-            details.groups.iter().flat_map(|g| &g.lines).filter(|l| l.name == name).map(|l| l.value.as_str()).collect()
+            details
+                .groups
+                .iter()
+                .flat_map(|g| &g.lines)
+                .filter(|l| l.name == name)
+                .map(|l| l.value.as_str())
+                .collect()
         };
-        assert_eq!((line("Kat"), line("Uzandığı kat")), (vec!["MM-BNK-Zemin_kat"], vec!["MM-BNK-1._kat"]));
+        assert_eq!(
+            (line("Kat"), line("Uzandığı kat")),
+            (vec!["MM-BNK-Zemin_kat"], vec!["MM-BNK-1._kat"])
+        );
         let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         let picture = out.join(format!("1-iki-kat-duvar-{name}.png"));
-        apart.render(App::ifc_viewer_shown(&app), &app.theme()).save(&picture).expect("writes the picture");
+        apart
+            .render(App::ifc_viewer_shown(&app), &app.theme())
+            .save(&picture)
+            .expect("writes the picture");
         println!("{}", picture.display());
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -306,29 +440,41 @@ fn section_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kolon-kesiti-8167");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kolon-kesiti-8167");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         let mut app = open(building());
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
-        let dir = std::env::temp_dir().join(format!("kentos-kolon-kesiti-{}-{name}", std::process::id()));
+        let dir =
+            std::env::temp_dir().join(format!("kentos-kolon-kesiti-{}-{name}", std::process::id()));
         std::fs::create_dir_all(&dir).expect("a folder");
         let path = dir.join("tipli.ifc");
-        let typed = include_bytes!("../../../../fixtures/arch/v1/ifc/kesit-binasi-eleman-tipli.ifc");
+        let typed =
+            include_bytes!("../../../../fixtures/arch/v1/ifc/kesit-binasi-eleman-tipli.ifc");
         std::fs::write(&path, typed).expect("writes");
         opened(&mut app, path);
         let column = click_one(&mut app, Category::Column);
-        let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
+        let v = app
+            .ifc_viewer
+            .as_ref()
+            .and_then(|w| w.viewer.view())
+            .expect("the model");
         assert_eq!(v.selected(), Some(column));
         let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         let file = out.join(format!("1-kolon-kesiti-{name}.png"));
-        apart.render(App::ifc_viewer_shown(&app), &app.theme()).save(&file).expect("writes the picture");
+        apart
+            .render(App::ifc_viewer_shown(&app), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
         let _ = std::fs::remove_dir_all(&dir);
     }
@@ -347,26 +493,35 @@ fn layer_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out =
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/doseme-katmanlari-8166");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/doseme-katmanlari-8166");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         let mut app = open(building());
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let path = exported(&mut app, &format!("katman-{name}"));
         opened(&mut app, path.clone());
         let slab = click_one(&mut app, Category::Slab);
-        let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
+        let v = app
+            .ifc_viewer
+            .as_ref()
+            .and_then(|w| w.viewer.view())
+            .expect("the model");
         assert_eq!(v.selected(), Some(slab));
         let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         let file = out.join(format!("1-doseme-katmanlari-{name}.png"));
-        apart.render(App::ifc_viewer_shown(&app), &app.theme()).save(&file).expect("writes the picture");
+        apart
+            .render(App::ifc_viewer_shown(&app), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
         let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
     }
@@ -383,34 +538,85 @@ fn the_section_building_s_file_opens_whole_and_chooses_with_the_plan() {
     assert!(app.dialog.is_none(), "{:?}", app.dialog);
     let w = app.ifc_viewer.as_ref().expect("the viewer");
     let v = w.viewer.view().expect("the model read");
-    assert_eq!(v.counts(), (expected, expected), "every body the file holds, as many as it holds");
+    assert_eq!(
+        v.counts(),
+        (expected, expected),
+        "every body the file holds, as many as it holds"
+    );
     // Its spatial zones read too, an area's volume, not a body: hidden until Zonlar (docs/adr/8123).
-    let zone_bodies = v.input().bodies.iter().filter(|b| v.input().objects[b.object].category == Category::Zone).count();
+    let zone_bodies = v
+        .input()
+        .bodies
+        .iter()
+        .filter(|b| v.input().objects[b.object].category == Category::Zone)
+        .count();
     assert_eq!(zone_bodies, zones, "the file's zones");
     assert!(zones > 0 && !v.zones, "zones hidden until asked for");
-    assert!(v.input().not_shown.iter().all(|(o, _)| v.input().objects[*o].class == "IfcGrid"), "{:?}", v.input().not_shown);
-    let storeys: Vec<&str> =
-        w.viewer.rows().iter().filter(|r| r.object.is_some_and(|o| v.input().objects[o].category == Category::Storey)).map(|r| r.label.as_str()).collect();
-    assert_eq!(storeys.len(), 2, "the storeys open in the tree: {storeys:?}");
+    assert!(
+        v.input()
+            .not_shown
+            .iter()
+            .all(|(o, _)| v.input().objects[*o].class == "IfcGrid"),
+        "{:?}",
+        v.input().not_shown
+    );
+    let storeys: Vec<&str> = w
+        .viewer
+        .rows()
+        .iter()
+        .filter(|r| {
+            r.object
+                .is_some_and(|o| v.input().objects[o].category == Category::Storey)
+        })
+        .map(|r| r.label.as_str())
+        .collect();
+    assert_eq!(
+        storeys.len(),
+        2,
+        "the storeys open in the tree: {storeys:?}"
+    );
 
     // A click on a wall: its details are the drawing's wall, and the plan chooses it.
     let wall = click_a_wall(&mut app);
     let w = app.ifc_viewer.as_ref().expect("the viewer");
-    let key = w.viewer.view().expect("the model").input().objects[wall].key.clone();
+    let key = w.viewer.view().expect("the model").input().objects[wall]
+        .key
+        .clone();
     let doc = &app.document.as_ref().expect("the drawing").model;
-    let uid = kentos_ifc::step::unguid(&key).map(kentos_domain::Uuid::from_u128).expect("KentOS's GlobalId");
+    let uid = kentos_ifc::step::unguid(&key)
+        .map(kentos_domain::Uuid::from_u128)
+        .expect("KentOS's GlobalId");
     let slot = doc.slot_of(uid).expect("the drawing's wall");
     assert_eq!(app.selection.ids(), [slot], "chosen in the plan too");
-    let Some(Entity::Wall(drawn)) = doc.get(slot) else { panic!("a wall in the drawing") };
+    let Some(Entity::Wall(drawn)) = doc.get(slot) else {
+        panic!("a wall in the drawing")
+    };
     let details = w.viewer.details().expect("its details");
-    let line = |name: &str| details.groups.iter().flat_map(|g| &g.lines).find(|l| l.name == name).map(|l| l.value.clone());
+    let line = |name: &str| {
+        details
+            .groups
+            .iter()
+            .flat_map(|g| &g.lines)
+            .find(|l| l.name == name)
+            .map(|l| l.value.clone())
+    };
     assert_eq!(line("GlobalId").as_deref(), Some(key.as_str()));
     let width: f64 = line("Width").expect("its width").parse().expect("a number");
-    assert!((width - drawn.wall.width).abs() < 1e-9, "the file's width is the drawing's: {width} {}", drawn.wall.width);
+    assert!(
+        (width - drawn.wall.width).abs() < 1e-9,
+        "the file's width is the drawing's: {width} {}",
+        drawn.wall.width
+    );
     if drawn.wall.pts.len() == 2 && drawn.wall.bulges.is_none() {
         let (p, q) = (drawn.wall.pts[0], drawn.wall.pts[1]);
-        let length: f64 = line("Length").expect("its length").parse().expect("a number");
-        assert!((length - (q.x - p.x).hypot(q.y - p.y)).abs() < 1e-6, "{length}");
+        let length: f64 = line("Length")
+            .expect("its length")
+            .parse()
+            .expect("a number");
+        assert!(
+            (length - (q.x - p.x).hypot(q.y - p.y)).abs() < 1e-6,
+            "{length}"
+        );
     }
 
     // The plan chooses another wall: the viewer chooses it, its details read.
@@ -425,7 +631,10 @@ fn the_section_building_s_file_opens_whole_and_chooses_with_the_plan() {
     app.follow_ifc_viewer();
     let w = app.ifc_viewer.as_ref().expect("the viewer");
     let v = w.viewer.view().expect("the model");
-    assert_eq!(v.selected().map(|o| v.input().objects[o].key.as_str()), Some(other_key.as_str()));
+    assert_eq!(
+        v.selected().map(|o| v.input().objects[o].key.as_str()),
+        Some(other_key.as_str())
+    );
     assert!(w.viewer.details().is_some(), "its details read");
 
     // Kapat: the viewer and its model go.
@@ -444,23 +653,45 @@ fn a_chosen_finding_paints_its_objects_in_the_viewer() {
     opened(&mut app, path.clone());
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    let a = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+    let a = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
     let at = a
         .findings
         .iter()
-        .position(|f| f.code == "digital_required_field" && f.message.contains("Pset_WallCommon.FireRating"))
-        .unwrap_or_else(|| panic!("{:#?}", a.findings.iter().map(|f| (&f.code, &f.message)).collect::<Vec<_>>()));
+        .position(|f| {
+            f.code == "digital_required_field" && f.message.contains("Pset_WallCommon.FireRating")
+        })
+        .unwrap_or_else(|| {
+            panic!(
+                "{:#?}",
+                a.findings
+                    .iter()
+                    .map(|f| (&f.code, &f.message))
+                    .collect::<Vec<_>>()
+            )
+        });
     let walls: std::collections::BTreeSet<String> = a.findings[at].uids.iter().cloned().collect();
     assert!(!walls.is_empty(), "the finding names its walls");
     app.modules.arch_mut().arch_audit.chosen.clear();
     app.modules.arch_mut().arch_audit.selected = Some(at);
     app.follow_ifc_viewer();
-    let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
+    let v = app
+        .ifc_viewer
+        .as_ref()
+        .and_then(|w| w.viewer.view())
+        .expect("the model");
     let painted: std::collections::BTreeSet<String> = v
         .found()
         .iter()
         .map(|&o| v.input().objects[o].key.clone())
-        .filter_map(|k| kentos_ifc::step::unguid(&k).map(|n| kentos_domain::Uuid::from_u128(n).to_string()))
+        .filter_map(|k| {
+            kentos_ifc::step::unguid(&k).map(|n| kentos_domain::Uuid::from_u128(n).to_string())
+        })
         .collect();
     assert_eq!(painted, walls, "the finding's walls, nothing else");
     let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
@@ -475,13 +706,20 @@ fn a_broken_file_is_refused_and_a_stopped_or_replaced_read_writes_nothing() {
     std::fs::write(&broken, "Bu bir IFC dosyası değil.\n").expect("writes");
     opened(&mut app, broken.clone());
     match &app.ifc_viewer.as_ref().expect("the viewer").viewer.stage {
-        kentos_model_view_ui::Stage::Failed(why) => assert!(why.contains("ISO-10303-21") || why.contains("STEP"), "{why}"),
+        kentos_model_view_ui::Stage::Failed(why) => assert!(
+            why.contains("ISO-10303-21") || why.contains("STEP"),
+            "{why}"
+        ),
         other => panic!("refused, not {other:?}"),
     }
 
     // İptal stops the read: the window goes, and the read's late result finds nothing to write to.
     let good = dir.join("iyi.ifc");
-    std::fs::write(&good, include_bytes!("../../../../fixtures/arch/v1/ifc/kesit-binasi.ifc")).expect("writes");
+    std::fs::write(
+        &good,
+        include_bytes!("../../../../fixtures/arch/v1/ifc/kesit-binasi.ifc"),
+    )
+    .expect("writes");
     send(&mut app, Event::Open(good.clone()));
     let stopped = app.ifc_viewer_id().expect("reading");
     send(&mut app, Event::Viewer(V::Cancel));
@@ -495,9 +733,16 @@ fn a_broken_file_is_refused_and_a_stopped_or_replaced_read_writes_nothing() {
     send(&mut app, Event::Open(good.clone()));
     app.ifc_viewer_late(older, &broken);
     let w = app.ifc_viewer.as_ref().expect("the viewer");
-    assert!(matches!(w.viewer.stage, kentos_model_view_ui::Stage::Reading { .. }), "{:?}", w.viewer.stage);
+    assert!(
+        matches!(w.viewer.stage, kentos_model_view_ui::Stage::Reading { .. }),
+        "{:?}",
+        w.viewer.stage
+    );
     app.ifc_viewer_read_now();
-    assert_eq!(app.ifc_viewer.as_ref().expect("the viewer").viewer.stage, kentos_model_view_ui::Stage::Shown);
+    assert_eq!(
+        app.ifc_viewer.as_ref().expect("the viewer").viewer.stage,
+        kentos_model_view_ui::Stage::Shown
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -511,7 +756,11 @@ fn the_export_offers_to_view_its_file() {
     let offer = app
         .toasts
         .iter()
-        .find_map(|(_, t, _)| t.action_of().filter(|(words, _)| *words == "Görüntüle").map(|(_, m)| m.clone()))
+        .find_map(|(_, t, _)| {
+            t.action_of()
+                .filter(|(words, _)| *words == "Görüntüle")
+                .map(|(_, m)| m.clone())
+        })
         .expect("Görüntüle offered");
     let _ = app.update(offer);
     app.ifc_viewer_read_now();
@@ -534,34 +783,58 @@ fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ifc-modeli-8073");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ifc-modeli-8073");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1100.0, 700.0), "koyu")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1100.0, 700.0), "koyu"),
+    ] {
         let mut app = open(building());
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let path = exported(&mut app, &format!("resim-{name}"));
         let mut main = Snapshot::new(size).expect("a renderer");
         let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
-        let mut shot = |snapshot: &mut Snapshot, app: &mut App, view: fn(&App) -> iced::Element<'_, Message>, file: &str| {
+        let mut shot = |snapshot: &mut Snapshot,
+                        app: &mut App,
+                        view: fn(&App) -> iced::Element<'_, Message>,
+                        file: &str| {
             snapshot.settle(app, view, &mut update);
             snapshot.settle(app, view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(view(app), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(view(app), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("arch"));
         shot(&mut main, &mut app, App::view, "1-serit");
         opened(&mut app, path.clone());
         click_a_wall(&mut app);
-        shot(&mut apart, &mut app, App::ifc_viewer_shown, "2-ayri-pencere-duvar");
+        shot(
+            &mut apart,
+            &mut app,
+            App::ifc_viewer_shown,
+            "2-ayri-pencere-duvar",
+        );
         if name == "acik" {
-            send(&mut app, Event::Viewer(V::Cut(kentos_model_view::Cut::Level)));
-            let (lo, hi) = app.ifc_viewer.as_ref().and_then(|w| w.viewer.span(kentos_model_view::Cut::Level)).expect("a span");
+            send(
+                &mut app,
+                Event::Viewer(V::Cut(kentos_model_view::Cut::Level)),
+            );
+            let (lo, hi) = app
+                .ifc_viewer
+                .as_ref()
+                .and_then(|w| w.viewer.span(kentos_model_view::Cut::Level))
+                .expect("a span");
             send(&mut app, Event::Viewer(V::At(lo + (hi - lo) * 0.3)));
             send(&mut app, Event::Viewer(V::AtDone));
             shot(&mut apart, &mut app, App::ifc_viewer_shown, "3-yatay-kesit");
@@ -585,14 +858,17 @@ fn cap_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesit-kapagi-8131");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kesit-kapagi-8131");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         let mut app = open(building());
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(Size::new(1440.0, 900.0)));
         let path = exported(&mut app, &format!("kapak-{name}"));
@@ -601,25 +877,40 @@ fn cap_screens() {
             apart.settle(app, App::ifc_viewer_shown, &mut update);
             apart.settle(app, App::ifc_viewer_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            apart.render(App::ifc_viewer_shown(app), &app.theme()).save(&file).expect("writes the picture");
+            apart
+                .render(App::ifc_viewer_shown(app), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         opened(&mut app, path.clone());
         for (cut, share, file) in [
             (kentos_model_view::Cut::Level, 0.3, "1-yatay-kesit"),
-            (kentos_model_view::Cut::NorthSouth, 0.5, "2-kuzey-guney-kesiti"),
+            (
+                kentos_model_view::Cut::NorthSouth,
+                0.5,
+                "2-kuzey-guney-kesiti",
+            ),
         ] {
             send(&mut app, Event::Viewer(V::Cut(cut)));
-            let (lo, hi) = app.ifc_viewer.as_ref().and_then(|w| w.viewer.span(cut)).expect("a span");
+            let (lo, hi) = app
+                .ifc_viewer
+                .as_ref()
+                .and_then(|w| w.viewer.span(cut))
+                .expect("a span");
             send(&mut app, Event::Viewer(V::At(lo + (hi - lo) * share)));
             send(&mut app, Event::Viewer(V::AtDone));
             shot(&mut app, file);
         }
         // The fastest quality, one sample a pixel: the same caps, their edges unsmoothed.
-        let _ = app.settings.choose(&[("graphics.scene3dQuality", serde_json::Value::from("fast"))]);
+        let _ = app
+            .settings
+            .choose(&[("graphics.scene3dQuality", serde_json::Value::from("fast"))]);
         app.apply_settings();
         shot(&mut app, "2-kuzey-guney-kesiti-hizli");
-        let _ = app.settings.choose(&[("graphics.scene3dQuality", serde_json::Value::from("high"))]);
+        let _ = app
+            .settings
+            .choose(&[("graphics.scene3dQuality", serde_json::Value::from("high"))]);
         app.apply_settings();
         click_a_wall(&mut app);
         send(&mut app, Event::Viewer(V::Boxed));
@@ -644,13 +935,17 @@ fn handle_screens() {
     use kentos_model_view::{Cut, Section};
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kesit-tutamaklari-8132");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kesit-tutamaklari-8132");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let mut update = |app: &mut App, message| {
         let _ = app.update(message);
     };
     let curved = || -> kentos_commands::DocumentSnapshotV2 {
-        kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/curved-building.kcad")).expect("decodes")
+        kentos_kcad::decode(include_bytes!(
+            "../../../../fixtures/arch/v1/curved-building.kcad"
+        ))
+        .expect("decodes")
     };
     let gesture = |app: &mut App, g: Gesture| send(app, Event::Viewer(V::Gesture(g)));
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
@@ -659,12 +954,17 @@ fn handle_screens() {
             apart.settle(app, App::ifc_viewer_shown, &mut update);
             apart.settle(app, App::ifc_viewer_shown, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            apart.render(App::ifc_viewer_shown(app), &app.theme()).save(&file).expect("writes the picture");
+            apart
+                .render(App::ifc_viewer_shown(app), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let themed = |snapshot: kentos_commands::DocumentSnapshotV2| {
             let mut app = open(snapshot);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(Size::new(1440.0, 900.0)));
             app
@@ -673,7 +973,11 @@ fn handle_screens() {
         let path = exported(&mut app, &format!("tutamak-{name}"));
         opened(&mut app, path.clone());
         send(&mut app, Event::Viewer(V::Cut(Cut::Level)));
-        let (lo, hi) = app.ifc_viewer.as_ref().and_then(|w| w.viewer.span(Cut::Level)).expect("a span");
+        let (lo, hi) = app
+            .ifc_viewer
+            .as_ref()
+            .and_then(|w| w.viewer.span(Cut::Level))
+            .expect("a span");
         send(&mut app, Event::Viewer(V::At(lo + (hi - lo) * 0.55)));
         send(&mut app, Event::Viewer(V::AtDone));
         gesture(&mut app, Gesture::Handle(0, -0.6));
@@ -697,7 +1001,10 @@ fn handle_screens() {
         opened(&mut app, path.clone());
         send(&mut app, Event::Viewer(V::FromFace));
         // A wall face turned off the axes (between a sixth and a third of a right angle) that faces the camera.
-        let vp = Viewport { width: 1000.0, height: 700.0 };
+        let vp = Viewport {
+            width: 1000.0,
+            height: 700.0,
+        };
         let candidates: Vec<[f64; 3]> = {
             let w = app.ifc_viewer.as_ref().expect("the viewer");
             let eye = w.viewer.camera().eye;
@@ -706,10 +1013,18 @@ fn handle_screens() {
                 .meshes()
                 .iter()
                 .filter(|m| m.part == 0)
-                .flat_map(|m| m.triangles.iter().map(move |t| t.map(|i| m.vertices[i as usize])))
+                .flat_map(|m| {
+                    m.triangles
+                        .iter()
+                        .map(move |t| t.map(|i| m.vertices[i as usize]))
+                })
                 .filter_map(|[a, b, c]| {
                     let n = kentos_model_view::section::normal_of(a, b, c)?;
-                    let middle = [(a[0] + b[0] + c[0]) / 3.0, (a[1] + b[1] + c[1]) / 3.0, (a[2] + b[2] + c[2]) / 3.0];
+                    let middle = [
+                        (a[0] + b[0] + c[0]) / 3.0,
+                        (a[1] + b[1] + c[1]) / 3.0,
+                        (a[2] + b[2] + c[2]) / 3.0,
+                    ];
                     let towards = (0..3).map(|k| n[k] * (eye[k] - middle[k])).sum::<f64>();
                     let turned = n[2].abs() < 0.05 && n[0].abs() > 0.25 && n[1].abs() > 0.5;
                     (turned && towards > 0.0).then_some(middle)
@@ -721,17 +1036,25 @@ fn handle_screens() {
         for middle in candidates.iter().take(200) {
             let viewer = &app.ifc_viewer.as_ref().expect("the viewer").viewer;
             let (cam, facing) = (viewer.camera(), viewer.facing);
-            let Some((x, y, _)) = cam.project(*middle, &vp) else { continue };
+            let Some((x, y, _)) = cam.project(*middle, &vp) else {
+                continue;
+            };
             if !facing {
                 send(&mut app, Event::Viewer(V::FromFace));
             }
             gesture(&mut app, Gesture::Pick(x as f32, y as f32, 1000.0, 700.0));
-            if matches!(app.ifc_viewer.as_ref().expect("the viewer").viewer.section, Section::Face { .. }) {
+            if matches!(
+                app.ifc_viewer.as_ref().expect("the viewer").viewer.section,
+                Section::Face { .. }
+            ) {
                 break;
             }
         }
         let section = app.ifc_viewer.as_ref().expect("the viewer").viewer.section;
-        assert!(matches!(section, Section::Face { .. }), "a plane parallel to the arc wall: {section:?}");
+        assert!(
+            matches!(section, Section::Face { .. }),
+            "a plane parallel to the arc wall: {section:?}"
+        );
         gesture(&mut app, Gesture::Handle(0, -2.5));
         gesture(&mut app, Gesture::HandleDone(0));
         shot(&mut app, "5-yuze-paralel-kesit");
@@ -754,24 +1077,36 @@ fn ek9_screens() {
     use kentos_commands::ArchAuditCheck;
     use kentos_ui::snapshot::{Input, Snapshot};
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ek9-dosyadan-8074");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ek9-dosyadan-8074");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     fn update(app: &mut App, message: Message) {
         let _ = app.update(message);
     }
-    for (theme, size, name) in [("light", Size::new(1500.0, 1000.0), "acik"), ("dark", Size::new(1280.0, 900.0), "koyu")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1500.0, 1000.0), "acik"),
+        ("dark", Size::new(1280.0, 900.0), "koyu"),
+    ] {
         let mut app = open(building());
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::RibbonTab("arch"));
         let mut main = Snapshot::new(size).expect("a renderer");
         let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
-        let shot = |snapshot: &mut Snapshot, app: &mut App, view: fn(&App) -> iced::Element<'_, Message>, file: &str| {
+        let shot = |snapshot: &mut Snapshot,
+                    app: &mut App,
+                    view: fn(&App) -> iced::Element<'_, Message>,
+                    file: &str| {
             snapshot.settle(app, view, &mut update);
             snapshot.settle(app, view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(view(app), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(view(app), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         // Denetim: the form's findings from the file, in Mevzuat.
@@ -779,28 +1114,54 @@ fn ek9_screens() {
         app.arch_audit_standards_settle();
         app.modules.arch_mut().arch_audit.group = Some(ArchAuditCheck::Regulation);
         let position = |app: &App, code: &str, words: &str| {
-            app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings.iter().position(|f| f.code == code && f.message.contains(words))
+            app.modules
+                .arch()
+                .arch_audit
+                .audited
+                .as_ref()
+                .expect("checked")
+                .findings
+                .iter()
+                .position(|f| f.code == code && f.message.contains(words))
         };
-        app.modules.arch_mut().arch_audit.selected = position(&app, "digital_project_info_missing", "");
+        app.modules.arch_mut().arch_audit.selected =
+            position(&app, "digital_project_info_missing", "");
         shot(&mut main, &mut app, App::view, "1-denetim-proje-bilgileri");
         // IFC modeli: the drawing's file, the walls without a fire rating painted.
         let path = exported(&mut app, &format!("ek9-{name}"));
         let _ = app.update(Message::Run("ifc.view"));
         opened(&mut app, path.clone());
         app.modules.arch_mut().arch_audit.chosen.clear();
-        app.modules.arch_mut().arch_audit.selected = position(&app, "digital_required_field", "Pset_WallCommon.FireRating");
+        app.modules.arch_mut().arch_audit.selected =
+            position(&app, "digital_required_field", "Pset_WallCommon.FireRating");
         app.follow_ifc_viewer();
-        shot(&mut apart, &mut app, App::ifc_viewer_shown, "2-ifc-modeli-bulgu");
+        shot(
+            &mut apart,
+            &mut app,
+            App::ifc_viewer_shown,
+            "2-ifc-modeli-bulgu",
+        );
         send(&mut app, Event::Viewer(V::Close));
         let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
         // The form's table in the drawing beside the building, its answers the written file's.
-        let rows = crate::ifc_facts::form_rows(&app.document.as_ref().expect("the building").model).expect("the form");
+        let rows = crate::ifc_facts::form_rows(&app.document.as_ref().expect("the building").model)
+            .expect("the form");
         let doc = &mut app.document.as_mut().expect("the building").model;
-        let all = kentos_native_application::sheets_fit::extent_of(doc, doc.entities()).expect("the building's extent");
-        let look = kentos_interaction::table::Look { header: true, height: 0.25, ..Default::default() };
+        let all = kentos_native_application::sheets_fit::extent_of(doc, doc.entities())
+            .expect("the building's extent");
+        let look = kentos_interaction::table::Look {
+            header: true,
+            height: 0.25,
+            ..Default::default()
+        };
         let cells = kentos_geometry_core::ops::table::from_rows(rows, true);
-        let geometry =
-            kentos_interaction::table::new_table(doc, &cells, &look, kentos_interaction::Vec2::new(all[2] + 4.0, all[3]), None);
+        let geometry = kentos_interaction::table::new_table(
+            doc,
+            &cells,
+            &look,
+            kentos_interaction::Vec2::new(all[2] + 4.0, all[3]),
+            None,
+        );
         let layer_id = doc.layers().active().to_owned();
         let made = kentos_native_application::create::execute(
             &mut kentos_native_application::ExecutionContext::new(doc),
@@ -824,9 +1185,18 @@ fn ek9_screens() {
                 expected_revision: None,
             },
         );
-        assert!(matches!(made, kentos_commands::CommandResult::Completed { .. }), "{made:?}");
-        let table = doc.entities().filter(|e| matches!(e, Entity::Table(_))).last().expect("the table");
-        let [x0, y0, x1, y1] = kentos_native_application::sheets_fit::extent_of(doc, std::iter::once(table)).expect("its box");
+        assert!(
+            matches!(made, kentos_commands::CommandResult::Completed { .. }),
+            "{made:?}"
+        );
+        let table = doc
+            .entities()
+            .filter(|e| matches!(e, Entity::Table(_)))
+            .last()
+            .expect("the table");
+        let [x0, y0, x1, y1] =
+            kentos_native_application::sheets_fit::extent_of(doc, std::iter::once(table))
+                .expect("its box");
         // Read in two halves on a large canvas, the bottom panel closed: the questions with their answers, then the
         // answers with KentOS's notes.
         let large = Size::new(2400.0, 1500.0);
@@ -835,8 +1205,16 @@ fn ek9_screens() {
         let mut wide = Snapshot::new(large).expect("a renderer");
         // Laid out once at its size first: the camera fits the box in the canvas it now has.
         wide.settle(&mut app, App::view, &mut update);
-        for (from, to, file) in [(0.0, 0.5, "3-ek9-tablosu-sorular"), (0.45, 1.0, "4-ek9-tablosu-notlar")] {
-            let bounds = kentos_render_wgpu::Bounds { min_x: x0 + from * (x1 - x0), min_y: y0, max_x: x0 + to * (x1 - x0), max_y: y1 };
+        for (from, to, file) in [
+            (0.0, 0.5, "3-ek9-tablosu-sorular"),
+            (0.45, 1.0, "4-ek9-tablosu-notlar"),
+        ] {
+            let bounds = kentos_render_wgpu::Bounds {
+                min_x: x0 + from * (x1 - x0),
+                min_y: y0,
+                max_x: x0 + to * (x1 - x0),
+                max_y: y1,
+            };
             app.viewport.camera.fit(&bounds, 24.0);
             shot(&mut wide, &mut app, App::view, file);
         }
@@ -846,7 +1224,12 @@ fn ek9_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("arch.permitSet"));
         let middle = Point::new(size.width / 2.0, size.height / 2.0);
-        main.input(&mut app, App::view, &mut update, Input::Scroll(middle, -12.0));
+        main.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Scroll(middle, -12.0),
+        );
         shot(&mut main, &mut app, App::view, "5-ruhsat-proje-aciklamasi");
     }
 }
@@ -865,7 +1248,8 @@ fn lod_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/gelisim-seviyesi-8133");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/gelisim-seviyesi-8133");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     fn update(app: &mut App, message: Message) {
         let _ = app.update(message);
@@ -873,20 +1257,37 @@ fn lod_screens() {
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         for (snapshot, file) in [
             (building(), "1-kesit-binasi-gecti"),
-            (crate::scene3d_building_tests::with_the_missing_elements(), "2-kitaplik-bloklari-inceleme"),
+            (
+                crate::scene3d_building_tests::with_the_missing_elements(),
+                "2-kitaplik-bloklari-inceleme",
+            ),
         ] {
             let mut app = open(snapshot);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::RibbonTab("arch"));
             // The form's table beside the building, its answers the written file's.
-            let rows = crate::ifc_facts::form_rows(&app.document.as_ref().expect("the building").model).expect("the form");
+            let rows =
+                crate::ifc_facts::form_rows(&app.document.as_ref().expect("the building").model)
+                    .expect("the form");
             let doc = &mut app.document.as_mut().expect("the building").model;
-            let all = kentos_native_application::sheets_fit::extent_of(doc, doc.entities()).expect("the building's extent");
-            let look = kentos_interaction::table::Look { header: true, height: 0.25, ..Default::default() };
+            let all = kentos_native_application::sheets_fit::extent_of(doc, doc.entities())
+                .expect("the building's extent");
+            let look = kentos_interaction::table::Look {
+                header: true,
+                height: 0.25,
+                ..Default::default()
+            };
             let cells = kentos_geometry_core::ops::table::from_rows(rows, true);
-            let geometry =
-                kentos_interaction::table::new_table(doc, &cells, &look, kentos_interaction::Vec2::new(all[2] + 4.0, all[3]), None);
+            let geometry = kentos_interaction::table::new_table(
+                doc,
+                &cells,
+                &look,
+                kentos_interaction::Vec2::new(all[2] + 4.0, all[3]),
+                None,
+            );
             let layer_id = doc.layers().active().to_owned();
             let made = kentos_native_application::create::execute(
                 &mut kentos_native_application::ExecutionContext::new(doc),
@@ -910,9 +1311,18 @@ fn lod_screens() {
                     expected_revision: None,
                 },
             );
-            assert!(matches!(made, kentos_commands::CommandResult::Completed { .. }), "{made:?}");
-            let table = doc.entities().filter(|e| matches!(e, Entity::Table(_))).last().expect("the table");
-            let [x0, y0, x1, y1] = kentos_native_application::sheets_fit::extent_of(doc, std::iter::once(table)).expect("its box");
+            assert!(
+                matches!(made, kentos_commands::CommandResult::Completed { .. }),
+                "{made:?}"
+            );
+            let table = doc
+                .entities()
+                .filter(|e| matches!(e, Entity::Table(_)))
+                .last()
+                .expect("the table");
+            let [x0, y0, x1, y1] =
+                kentos_native_application::sheets_fit::extent_of(doc, std::iter::once(table))
+                    .expect("its box");
             // Its top half (the general rows and the model's structure, the 7th among them), the questions' titles
             // through KentOS's notes, the bottom panel closed.
             let large = Size::new(2400.0, 1500.0);
@@ -922,12 +1332,19 @@ fn lod_screens() {
             }
             let mut wide = Snapshot::new(large).expect("a renderer");
             wide.settle(&mut app, App::view, &mut update);
-            let bounds = kentos_render_wgpu::Bounds { min_x: x0 + 0.42 * (x1 - x0), min_y: y0 + 0.5 * (y1 - y0), max_x: x1, max_y: y1 };
+            let bounds = kentos_render_wgpu::Bounds {
+                min_x: x0 + 0.42 * (x1 - x0),
+                min_y: y0 + 0.5 * (y1 - y0),
+                max_x: x1,
+                max_y: y1,
+            };
             app.viewport.camera.fit(&bounds, 24.0);
             wide.settle(&mut app, App::view, &mut update);
             wide.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            wide.render(App::view(&app), &app.theme()).save(&path).expect("writes the picture");
+            wide.render(App::view(&app), &app.theme())
+                .save(&path)
+                .expect("writes the picture");
             println!("{}", path.display());
         }
     }

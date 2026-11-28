@@ -30,7 +30,12 @@ fn meets(a: &Box4, b: &Box4) -> bool {
 fn wall_box(e: &Entity) -> Option<Box4> {
     let Entity::Wall(w) = e else { return None };
     let r = w.wall.width + w.wall.offset.abs();
-    let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     for p in &w.wall.pts {
         b = [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)];
     }
@@ -39,7 +44,12 @@ fn wall_box(e: &Entity) -> Option<Box4> {
 
 /// A slab's box: its outer rings'.
 pub fn slab_box(s: &SlabFields) -> Box4 {
-    let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     for p in s.parts.iter().flat_map(|p| &p.outer.pts) {
         b = [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)];
     }
@@ -81,7 +91,8 @@ fn edge_asks(before: &SlabFields, after: &SlabFields) -> bool {
     after.edge.is_some()
         && (before.parts != after.parts
             || before.arch.level != after.arch.level
-            || before.edge.as_ref().map(|e| (e.kind, e.width)) != after.edge.as_ref().map(|e| (e.kind, e.width))
+            || before.edge.as_ref().map(|e| (e.kind, e.width))
+                != after.edge.as_ref().map(|e| (e.kind, e.width))
             || before.edge.as_ref().map(|e| &e.runs) != after.edge.as_ref().map(|e| &e.runs))
 }
 
@@ -99,7 +110,12 @@ impl Document {
     /// The outline a slab found from the walls round `seed` has (docs/adr/0722 §2), among the walls on `level` (every
     /// wall when it has none): with `room` the room round it to their inner faces (with its holes), else the outermost
     /// outline of their line work round it to their outer faces. None when they enclose nothing round it.
-    pub fn slab_from_walls(&self, seed: Vec2, level: Option<&str>, room: bool) -> Option<SpacePart> {
+    pub fn slab_from_walls(
+        &self,
+        seed: Vec2,
+        level: Option<&str>,
+        room: bool,
+    ) -> Option<SpacePart> {
         // Only the pieces of wall work round the seed (docs/adr/0782 §2): the same answer, to the bit.
         match crate::wall_pieces::walls_round(self, seed, level) {
             Some(walls) => Self::slab_among(&walls, seed, room),
@@ -108,7 +124,12 @@ impl Document {
     }
 
     /// [`Self::slab_from_walls`] read among every wall of the level (what the pieces must answer alike).
-    pub fn slab_from_every_wall(&self, seed: Vec2, level: Option<&str>, room: bool) -> Option<SpacePart> {
+    pub fn slab_from_every_wall(
+        &self,
+        seed: Vec2,
+        level: Option<&str>,
+        room: bool,
+    ) -> Option<SpacePart> {
         let walls: Vec<crate::space_follow::CoreWall> = self
             .entities()
             .filter(|e| crate::space_follow::takes_level(e, level))
@@ -117,7 +138,11 @@ impl Document {
         Self::slab_among(&walls, seed, room)
     }
 
-    fn slab_among(walls: &[crate::space_follow::CoreWall], seed: Vec2, room: bool) -> Option<SpacePart> {
+    fn slab_among(
+        walls: &[crate::space_follow::CoreWall],
+        seed: Vec2,
+        room: bool,
+    ) -> Option<SpacePart> {
         let ins: Vec<WallIn<'_>> = walls
             .iter()
             .map(|w| WallIn {
@@ -148,7 +173,10 @@ impl Document {
             })
             .collect();
         let faces = kentos_geometry_core::geom::space::wall_faces(&ins);
-        contract_runs(&kentos_geometry_core::geom::slab::free_runs(&core_parts(s), &faces))
+        contract_runs(&kentos_geometry_core::geom::slab::free_runs(
+            &core_parts(s),
+            &faces,
+        ))
     }
 
     /// `s` with its edge's runs written again; the same when it has no edge.
@@ -170,7 +198,9 @@ impl Document {
             match op {
                 Op::Add(s) | Op::Remove(s) => {
                     boxes.extend(wall_box(&s.entity));
-                    if matches!(&*s.entity, Entity::Slab(x) if x.slab.edge.is_some()) && matches!(op, Op::Add(_)) {
+                    if matches!(&*s.entity, Entity::Slab(x) if x.slab.edge.is_some())
+                        && matches!(op, Op::Add(_))
+                    {
                         own.push(s.slot());
                     }
                 }
@@ -194,7 +224,10 @@ impl Document {
             .iter()
             .filter(|s| match &*s.entity {
                 Entity::Slab(x) => {
-                    x.slab.edge.is_some() && boxes.iter().any(|b| meets(b, &grow(slab_box(&x.slab), 0.5)))
+                    x.slab.edge.is_some()
+                        && boxes
+                            .iter()
+                            .any(|b| meets(b, &grow(slab_box(&x.slab), 0.5)))
                 }
                 _ => false,
             })

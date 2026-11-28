@@ -85,17 +85,26 @@ pub(crate) fn with_summary(
         return menu;
     }
     // A submenu: the scale menu stays short (the owner wants no space-hungry stacks).
-    menu.separator().submenu("Ölçeklerin özeti", summary_menu(summary))
+    menu.separator()
+        .submenu("Ölçeklerin özeti", summary_menu(summary))
 }
 
 /// The summary's own menu: a row for each scale, what it does under it; a row pressed copies its value.
-pub(crate) fn summary_menu(summary: &[kentos_interaction::scale_summary::ScaleRow]) -> kentos_ui::widget::Menu<Message> {
-    summary.iter().fold(kentos_ui::widget::Menu::new().header("Ölçeklerin özeti"), |menu, r| {
-        // Pressed, the value goes to the clipboard (a factor to paste into a calculation); it changes nothing.
-        let number = r.value.split(" (").next().unwrap_or(&r.value).to_owned();
-        menu.item(format!("{}: {}", r.label, r.value), event(Event::CopyValue(r.label.to_owned(), number)))
+pub(crate) fn summary_menu(
+    summary: &[kentos_interaction::scale_summary::ScaleRow],
+) -> kentos_ui::widget::Menu<Message> {
+    summary.iter().fold(
+        kentos_ui::widget::Menu::new().header("Ölçeklerin özeti"),
+        |menu, r| {
+            // Pressed, the value goes to the clipboard (a factor to paste into a calculation); it changes nothing.
+            let number = r.value.split(" (").next().unwrap_or(&r.value).to_owned();
+            menu.item(
+                format!("{}: {}", r.label, r.value),
+                event(Event::CopyValue(r.label.to_owned(), number)),
+            )
             .detail(r.detail.clone())
-    })
+        },
+    )
 }
 
 impl App {

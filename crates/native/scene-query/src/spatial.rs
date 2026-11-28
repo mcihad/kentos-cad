@@ -257,7 +257,11 @@ impl Spatial {
         self.level_view
     }
 
-    pub fn set_ceiling_view(&mut self, doc: &Document, value: Option<(Option<String>, kentos_commands::CeilingRange)>) {
+    pub fn set_ceiling_view(
+        &mut self,
+        doc: &Document,
+        value: Option<(Option<String>, kentos_commands::CeilingRange)>,
+    ) {
         if self.ceiling != value {
             self.ceiling = value;
             self.sync_phases(doc);
@@ -277,13 +281,19 @@ impl Spatial {
     /// (docs/adr/0716), the stairs under the active level drawn from above (docs/adr/0724 §4) or the slabs over it
     /// dashed (docs/adr/8012, step 3). A sheet's map then wants a store of its own.
     pub fn draws_otherwise(&self) -> bool {
-        self.sheet_view.is_some() || self.ceiling.is_some() || !self.upper.is_empty() || !self.overhead.is_empty()
+        self.sheet_view.is_some()
+            || self.ceiling.is_some()
+            || !self.upper.is_empty()
+            || !self.overhead.is_empty()
     }
 
     /// Explicit command input for tools that query the same source through the public catalog.
-    pub fn sheet_model_scope(&self)->Option<kentos_commands::SheetModelScope> {
-        let view=self.sheet_view.as_ref()?;
-        Some(kentos_commands::SheetModelScope{sheet:view.sheet.clone()?,item:view.item.clone()})
+    pub fn sheet_model_scope(&self) -> Option<kentos_commands::SheetModelScope> {
+        let view = self.sheet_view.as_ref()?;
+        Some(kentos_commands::SheetModelScope {
+            sheet: view.sheet.clone()?,
+            item: view.item.clone(),
+        })
     }
 
     /// Change only the active derived geometry index. The source document and its uids are untouched.
@@ -327,7 +337,11 @@ impl Spatial {
     }
 
     /// [`Spatial::walls_differ_at`] with a view's own detail (docs/adr/0781 §1).
-    pub fn walls_differ_with(doc: &Document, scale: f64, detail: Option<kentos_commands::WallDetail>) -> bool {
+    pub fn walls_differ_with(
+        doc: &Document,
+        scale: f64,
+        detail: Option<kentos_commands::WallDetail>,
+    ) -> bool {
         doc.has_scale_dependent_geometry()
             && crate::walls::view_with(doc.settings(), scale, detail)
                 != crate::walls::view_of(doc.settings())
@@ -351,7 +365,7 @@ impl Spatial {
     /// document's journal no longer reaches back to the store's mark.
     pub fn reload(&mut self, doc: &Document) {
         self.reloads += 1;
-        *self.unicode_memo.get_mut()=UnicodeMemo::default();
+        *self.unicode_memo.get_mut() = UnicodeMemo::default();
         self.store.clear();
         if let Err(e) = self.store.set_label_defaults_json(&label_defaults_json()) {
             debug_assert!(false, "the kinds' label styles: {e}");
@@ -360,13 +374,18 @@ impl Spatial {
             .set_font(drawing_font(doc.settings().drawing_font));
         self.store.set_wall_view(self.wall_view_of(doc));
         self.blocks = doc.blocks().to_vec();
-        self.store.set_blocks(core_blocks_in(&self.blocks, drawing_font(doc.settings().drawing_font)));
+        self.store.set_blocks(core_blocks_in(
+            &self.blocks,
+            drawing_font(doc.settings().drawing_font),
+        ));
         // Before the objects: a tagged space is drawn without its label at once.
         self.tagged_spaces.clear();
         self.sync_spaces(doc);
-        let scale=self.sheet_view.as_ref().map(|v|v.annotation_scale);
+        let scale = self.sheet_view.as_ref().map(|v| v.annotation_scale);
         // The objects' records and their pieces on the machine's cores (docs/adr/1066 §4), put in their order.
-        let threads = std::thread::available_parallelism().map_or(1, |n| n.get()).clamp(1, 8);
+        let threads = std::thread::available_parallelism()
+            .map_or(1, |n| n.get())
+            .clamp(1, 8);
         let all: Vec<&Entity> = doc.entities().collect();
         let settings = doc.settings();
         let records: Vec<_> = if all.len() >= 4096 && threads > 1 {
@@ -527,12 +546,15 @@ impl Spatial {
             crate::level_view::looks(doc, view, active.as_deref())
         };
         let ceiling = match &self.sheet_view {
-            Some(v) => v.ceiling.map(|r| (v.level.as_ref().map(|l| l.id.as_str()), r)),
+            Some(v) => v
+                .ceiling
+                .map(|r| (v.level.as_ref().map(|l| l.id.as_str()), r)),
             None => self.ceiling.as_ref().map(|(id, r)| (id.as_deref(), *r)),
         };
         if let Some((level, range)) = ceiling {
             looks = crate::level_view::LevelLooks {
-                hidden: crate::ceiling_plan::hidden(doc, level, range), ..Default::default()
+                hidden: crate::ceiling_plan::hidden(doc, level, range),
+                ..Default::default()
             };
         }
         if !self.isolation_ignored && doc.objects_isolated() {
@@ -687,7 +709,8 @@ impl Spatial {
     pub fn sync(&mut self, doc: &Document) {
         // The definitions first, whatever else moved: another editor's change of
         // them moves neither the journal nor the revision (docs/adr/0144 §5).
-        self.store.set_font(drawing_font(doc.settings().drawing_font));
+        self.store
+            .set_font(drawing_font(doc.settings().drawing_font));
         let blocks = doc.blocks();
         if blocks.len() != self.blocks.len()
             || blocks
@@ -696,7 +719,10 @@ impl Spatial {
                 .any(|(a, b)| !Arc::ptr_eq(a, b))
         {
             self.blocks = blocks.to_vec();
-            self.store.set_blocks(core_blocks_in(&self.blocks, drawing_font(doc.settings().drawing_font)));
+            self.store.set_blocks(core_blocks_in(
+                &self.blocks,
+                drawing_font(doc.settings().drawing_font),
+            ));
         }
         let mark = doc.change_mark();
         if mark == self.mark && self.revision == Some(doc.revision()) {
@@ -762,7 +788,7 @@ impl Spatial {
                         prior.forget(*id);
                     }
                 }
-                let scale=self.sheet_view.as_ref().map(|v|v.annotation_scale);
+                let scale = self.sheet_view.as_ref().map(|v| v.annotation_scale);
                 for entity in &changed {
                     match crate::viewport_scope::record_at(entity, scale, doc.settings()) {
                         Some(record) => {
@@ -926,7 +952,8 @@ impl Spatial {
                 .map(|reader| reader.drawn(&list, &names, &shape_of));
             let shown = !matches!(t, crate::label_texts::LayerTexts::Off);
             for (i, (e, (texts, z))) in list.iter().zip(texts).enumerate() {
-                let off = drawn.as_ref().is_some_and(|d| !d[i]) && crate::style_classes::drawn_by_style(e);
+                let off = drawn.as_ref().is_some_and(|d| !d[i])
+                    && crate::style_classes::drawn_by_style(e);
                 let texts = if off { Vec::new() } else { texts };
                 let texts = point_texts(e, texts, shown, self.point_labels, self.point_codes);
                 self.store
@@ -1401,7 +1428,11 @@ impl Spatial {
     /// Sends the layer table when it differs from the one sent last.
     fn sync_layers(&mut self, tree: &LayerTree) {
         let mut rows = layer_rows(tree);
-        if let Some(visible)=&self.sheet_layers {for(id,flags)in &mut rows {flags.visible=visible.contains(id);}}
+        if let Some(visible) = &self.sheet_layers {
+            for (id, flags) in &mut rows {
+                flags.visible = visible.contains(id);
+            }
+        }
         if rows != self.layers {
             self.store
                 .set_layers(rows.iter().map(|(id, flags)| (id.as_str(), *flags)));
@@ -1473,13 +1504,21 @@ impl Spatial {
             return None;
         }
         let item = self.store.get(f64::from(e.base().id))?;
-        item.expanded.as_ref().map(|x| piece_entities_shown(e, x, |i| item.piece_shown(i)))
+        item.expanded
+            .as_ref()
+            .map(|x| piece_entities_shown(e, x, |i| item.piece_shown(i)))
     }
 
     /// What [`Self::pieces`] makes an insert's objects from: its pieces as the store placed them and which of them
     /// show; none as for `pieces`. A large selection's inserts are made into objects on several cores from these
     /// (docs/adr/1066 §3): the store stays on this thread.
-    pub fn pieces_source(&self, e: &Entity) -> Option<(std::sync::Arc<kentos_geometry_core::store::Expanded>, Vec<bool>)> {
+    pub fn pieces_source(
+        &self,
+        e: &Entity,
+    ) -> Option<(
+        std::sync::Arc<kentos_geometry_core::store::Expanded>,
+        Vec<bool>,
+    )> {
         if !matches!(e, Entity::Insert(_)) {
             return None;
         }
@@ -1697,11 +1736,15 @@ impl Spatial {
             out.push(GripSet::new(
                 slot,
                 records
-                    .as_chunks::<3>().0.iter()
+                    .as_chunks::<3>()
+                    .0
+                    .iter()
                     .map(|r| Vec2::new(r[0], r[1]))
                     .collect(),
                 records
-                    .as_chunks::<3>().0.iter()
+                    .as_chunks::<3>()
+                    .0
+                    .iter()
                     .map(|r| (r[2] >= 0.0).then_some(r[2] as usize))
                     .collect(),
                 vertices,
@@ -1773,7 +1816,9 @@ impl Spatial {
         let shown = self.store.labels(&view, scale, None, options);
         shown
             .records
-            .as_chunks::<LABEL_STRIDE>().0.iter()
+            .as_chunks::<LABEL_STRIDE>()
+            .0
+            .iter()
             .filter_map(|r| self.spot(r, &shown.texts))
             .collect()
     }
@@ -1796,7 +1841,9 @@ impl Spatial {
         let labels = self.store.labels_print(&view, scale, options, Some(shown));
         labels
             .records
-            .as_chunks::<LABEL_STRIDE>().0.iter()
+            .as_chunks::<LABEL_STRIDE>()
+            .0
+            .iter()
             .filter_map(|r| self.spot(r, &labels.texts))
             .collect()
     }
@@ -1895,7 +1942,9 @@ impl Spatial {
         }
         let typed = |records: &[f64], texts: &[String]| -> Vec<(LabelSpot, Grow)> {
             records
-                .as_chunks::<LABEL_SHOWN_STRIDE>().0.iter()
+                .as_chunks::<LABEL_SHOWN_STRIDE>()
+                .0
+                .iter()
                 .filter_map(|r| {
                     let grow = Grow {
                         k: r[LABEL_STRIDE],
@@ -1974,34 +2023,57 @@ impl Spatial {
         *self.label_typed.borrow_mut() = Typed::default();
     }
 
-    fn unicode(&self,id:f64,piece:Option<f64>,shape:&Shape)->Option<Rc<UnicodeText>> {
-        let place=kentos_geometry_core::entity::TextPlace::of(shape)?;
-        if !place.is_unicode() {return None;}
-        let item=self.store.get(id)?;
-        let key=(id.to_bits(),piece.map_or(usize::MAX,|p|p as usize));
-        let font=self.store.font();
-        let expanded=item.expanded.as_ref().map(Arc::downgrade);
-        let mut memo=self.unicode_memo.borrow_mut();
-        memo.round=memo.round.wrapping_add(1);
-        let round=memo.round;
-        if let Some(entry)=memo.entries.get_mut(&key) {
-            let same_expanded=match (&entry.expanded,&expanded) {
-                (None,None)=>true,(Some(a),Some(b))=>std::sync::Weak::ptr_eq(a,b),_=>false,
+    fn unicode(&self, id: f64, piece: Option<f64>, shape: &Shape) -> Option<Rc<UnicodeText>> {
+        let place = kentos_geometry_core::entity::TextPlace::of(shape)?;
+        if !place.is_unicode() {
+            return None;
+        }
+        let item = self.store.get(id)?;
+        let key = (id.to_bits(), piece.map_or(usize::MAX, |p| p as usize));
+        let font = self.store.font();
+        let expanded = item.expanded.as_ref().map(Arc::downgrade);
+        let mut memo = self.unicode_memo.borrow_mut();
+        memo.round = memo.round.wrapping_add(1);
+        let round = memo.round;
+        if let Some(entry) = memo.entries.get_mut(&key) {
+            let same_expanded = match (&entry.expanded, &expanded) {
+                (None, None) => true,
+                (Some(a), Some(b)) => std::sync::Weak::ptr_eq(a, b),
+                _ => false,
             };
-            if entry.stamp==item.stamp() && entry.font==font && same_expanded {
-                entry.round=round;return Some(entry.text.clone());
+            if entry.stamp == item.stamp() && entry.font == font && same_expanded {
+                entry.round = round;
+                return Some(entry.text.clone());
             }
         }
-        if let Some(old)=memo.entries.remove(&key) {memo.ops-=old.ops;}
-        let text=UnicodeText::of(shape,font)?;
-        let ops=text.contours.iter().map(Vec::len).sum::<usize>();
-        while memo.entries.len()>=128 || memo.ops+ops>1_000_000 {
-            let oldest=memo.entries.iter().min_by_key(|(_,e)|e.round).map(|(k,_)|*k);
-            let Some(old)=oldest.and_then(|k|memo.entries.remove(&k)) else {break;};
-            memo.ops-=old.ops;
+        if let Some(old) = memo.entries.remove(&key) {
+            memo.ops -= old.ops;
         }
-        memo.ops+=ops;
-        memo.entries.insert(key,UnicodeKept {stamp:item.stamp(),font,expanded,text:text.clone(),round,ops});
+        let text = UnicodeText::of(shape, font)?;
+        let ops = text.contours.iter().map(Vec::len).sum::<usize>();
+        while memo.entries.len() >= 128 || memo.ops + ops > 1_000_000 {
+            let oldest = memo
+                .entries
+                .iter()
+                .min_by_key(|(_, e)| e.round)
+                .map(|(k, _)| *k);
+            let Some(old) = oldest.and_then(|k| memo.entries.remove(&k)) else {
+                break;
+            };
+            memo.ops -= old.ops;
+        }
+        memo.ops += ops;
+        memo.entries.insert(
+            key,
+            UnicodeKept {
+                stamp: item.stamp(),
+                font,
+                expanded,
+                text: text.clone(),
+                round,
+                ops,
+            },
+        );
         Some(text)
     }
 
@@ -2330,24 +2402,27 @@ impl Grow {
 
 #[derive(Default)]
 struct UnicodeMemo {
-    entries:std::collections::HashMap<(u64,usize),UnicodeKept>,
-    round:u64,
-    ops:usize,
+    entries: std::collections::HashMap<(u64, usize), UnicodeKept>,
+    round: u64,
+    ops: usize,
 }
 struct UnicodeKept {
-    stamp:u64,
-    font:kentos_geometry_core::text::Font,
-    expanded:Option<std::sync::Weak<kentos_geometry_core::store::Expanded>>,
-    text:Rc<UnicodeText>,
-    round:u64,
-    ops:usize,
+    stamp: u64,
+    font: kentos_geometry_core::text::Font,
+    expanded: Option<std::sync::Weak<kentos_geometry_core::store::Expanded>>,
+    text: Rc<UnicodeText>,
+    round: u64,
+    ops: usize,
 }
 
 /// A text's glyph geometry is prepared when its spatial label part changes,
 /// never re-shaped while panning/zooming. Legacy line labels have no such plan.
-#[derive(Clone,Debug,PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct UnicodeText {
-    pub plan: Result<kentos_geometry_core::text::shaping::placed::Layout,kentos_geometry_core::text::shaping::Error>,
+    pub plan: Result<
+        kentos_geometry_core::text::shaping::placed::Layout,
+        kentos_geometry_core::text::shaping::Error,
+    >,
     pub contours: Vec<Vec<kentos_geometry_core::text::shaping::OutlineOp>>,
     pub height: f64,
     pub source: String,
@@ -2356,30 +2431,64 @@ pub struct UnicodeText {
     pub rotation: f64,
 }
 impl UnicodeText {
-    pub fn mask_outline(&self)->Option<[[f64;2];4]> {
-        if !self.masked {return None;}
-        let [a,b,c,d]=self.plan.as_ref().ok()?.frame?;
-        let m=self.height*0.1;
-        let (s,cost)=self.rotation.to_radians().sin_cos();
-        Some([[a-m,b-m],[c+m,b-m],[c+m,d+m],[a-m,d+m]]
-            .map(|[x,y]|[cost*x-s*y,s*x+cost*y]))
+    pub fn mask_outline(&self) -> Option<[[f64; 2]; 4]> {
+        if !self.masked {
+            return None;
+        }
+        let [a, b, c, d] = self.plan.as_ref().ok()?.frame?;
+        let m = self.height * 0.1;
+        let (s, cost) = self.rotation.to_radians().sin_cos();
+        Some(
+            [
+                [a - m, b - m],
+                [c + m, b - m],
+                [c + m, d + m],
+                [a - m, d + m],
+            ]
+            .map(|[x, y]| [cost * x - s * y, s * x + cost * y]),
+        )
     }
-    pub fn of(shape: &Shape,font:kentos_geometry_core::text::Font) -> Option<std::rc::Rc<Self>> {
-        let place=kentos_geometry_core::entity::TextPlace::of(shape)?;
-        Self::of_place(&place,font,matches!(shape,Shape::Text{mask:Some(true),..}))
+    pub fn of(shape: &Shape, font: kentos_geometry_core::text::Font) -> Option<std::rc::Rc<Self>> {
+        let place = kentos_geometry_core::entity::TextPlace::of(shape)?;
+        Self::of_place(
+            &place,
+            font,
+            matches!(
+                shape,
+                Shape::Text {
+                    mask: Some(true),
+                    ..
+                }
+            ),
+        )
     }
-    pub fn of_place(place:&kentos_geometry_core::entity::TextPlace<'_>,font:kentos_geometry_core::text::Font,masked:bool)->Option<std::rc::Rc<Self>> {
-        if !place.is_unicode() {return None;}
-        let mut plan=place.unicode_plan(font);
-        let contours=match &plan {
-            Ok(layout)=>match layout.contours() {
-                Ok(paths)=>paths,Err(error)=>{plan=Err(error);Vec::new()}
+    pub fn of_place(
+        place: &kentos_geometry_core::entity::TextPlace<'_>,
+        font: kentos_geometry_core::text::Font,
+        masked: bool,
+    ) -> Option<std::rc::Rc<Self>> {
+        if !place.is_unicode() {
+            return None;
+        }
+        let mut plan = place.unicode_plan(font);
+        let contours = match &plan {
+            Ok(layout) => match layout.contours() {
+                Ok(paths) => paths,
+                Err(error) => {
+                    plan = Err(error);
+                    Vec::new()
+                }
             },
-            Err(_)=>Vec::new(),
+            Err(_) => Vec::new(),
         };
         Some(std::rc::Rc::new(Self {
-            plan,contours,height:place.height,source:place.text.to_owned(),runs:place.runs.to_vec(),
-            masked,rotation:place.rotation,
+            plan,
+            contours,
+            height: place.height,
+            source: place.text.to_owned(),
+            runs: place.runs.to_vec(),
+            masked,
+            rotation: place.rotation,
         }))
     }
 }
@@ -2728,7 +2837,10 @@ pub fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
 /// when off; Uç nokta brings Çeyrek with it, as the settings do (the web's
 /// `layerSnapMask`), and Nokta brings Ekleme noktası (docs/adr/0269 §1: a layer's kinds keep their names).
 pub fn layer_snap_mask(snap: &LayerSnap) -> u32 {
-    kentos_geometry_core::store::snap::layer_mask(snap.off,snap.kinds.as_deref().unwrap_or_default())
+    kentos_geometry_core::store::snap::layer_mask(
+        snap.off,
+        snap.kinds.as_deref().unwrap_or_default(),
+    )
 }
 
 /// The kinds with a label style of their own, in the store's order (`set_label_defaults`).

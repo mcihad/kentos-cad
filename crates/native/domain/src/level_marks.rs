@@ -22,7 +22,10 @@ use crate::store::Stored;
 /// `d` with its value read from its level among `levels`; none when it already holds or its level is gone.
 pub fn settled(d: &DimensionEntity, levels: &[ArchLevel]) -> Option<DimensionEntity> {
     let z = d.level.as_ref()?.value(levels)?;
-    (d.za != Some(z)).then(|| DimensionEntity { za: Some(z), ..d.clone() })
+    (d.za != Some(z)).then(|| DimensionEntity {
+        za: Some(z),
+        ..d.clone()
+    })
 }
 
 /// `r` with its base read from its level among `levels` (docs/adr/0723 §2); none when it already holds, it is not
@@ -60,7 +63,11 @@ pub(crate) fn level_bound(e: &Entity) -> bool {
 impl Document {
     /// The updates that write `slots`' Kots and ramps again from their levels.
     fn level_mark_updates(&self, slots: impl IntoIterator<Item = Slot>) -> Vec<Op> {
-        let levels = self.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+        let levels = self
+            .settings()
+            .arch
+            .as_ref()
+            .map_or(&[][..], |a| a.levels.as_slice());
         let mut out = Vec::new();
         for slot in slots {
             let Some(current) = self.store.get(slot).cloned() else {

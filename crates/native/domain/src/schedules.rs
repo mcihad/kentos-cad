@@ -113,7 +113,6 @@ fn by_value(a: &Option<ArchValue>, at: &str, b: &Option<ArchValue>, bt: &str) ->
     }
 }
 
-
 /// The top categories of a block's card that are no fixture (UR-029): doors and windows (their own schedule), markers
 /// and a sheet's blocks. Any other category files a fixture (furniture, wet rooms, kitchens, lifts, parking places…).
 pub const NOT_FIXTURES: [&str; 3] = ["Mimari", "İşaretler", "Pafta"];
@@ -144,8 +143,13 @@ impl Document {
         // Its type (docs/adr/0733 §4): an opening's type, a wall's style, a column's kind, a space's usage, a fixture's
         // block name, as the schedule writes them.
         let kind_of = |e: &Entity| -> Option<String> {
-            let place = if matches!(e, Entity::Space(_)) { "usage" } else { "type" };
-            self.arch_value(e, place, None).map(|v| self.arch_value_text(&v, false))
+            let place = if matches!(e, Entity::Space(_)) {
+                "usage"
+            } else {
+                "type"
+            };
+            self.arch_value(e, place, None)
+                .map(|v| self.arch_value_text(&v, false))
         };
         f.layers
             .as_ref()
@@ -172,7 +176,9 @@ impl Document {
         match place {
             "form" => Some(ArchValue::Text(crate::arch_values::CURTAIN_WALL.to_owned())),
             "width" => self.arch_value(e, "length", None),
-            "type" | "height" | "area" | "level" | "phase" | "count" | "attr" => self.arch_value(e, place, attr),
+            "type" | "height" | "area" | "level" | "phase" | "count" | "attr" => {
+                self.arch_value(e, place, attr)
+            }
             _ => None,
         }
     }
@@ -183,14 +189,20 @@ impl Document {
             // A fixture is a block its card files under a category (usage review UR-029): a block with no card (a drawing
             // block, an array's definition, a legend or a list's block) is not counted by guess, nor a door's or a
             // window's symbol, a marker or a sheet's block; giving a block a category on its card counts it.
-            Entity::Insert(i) => self.blocks().iter().find(|b| b.id == i.block).is_some_and(|b| {
-                b.xref.is_none()
-                    && b.card
-                        .as_ref()
-                        .and_then(|c| c.category.as_deref())
-                        .and_then(|c| c.split('/').next())
-                        .is_some_and(|top| !top.trim().is_empty() && !NOT_FIXTURES.contains(&top.trim()))
-            }),
+            Entity::Insert(i) => self
+                .blocks()
+                .iter()
+                .find(|b| b.id == i.block)
+                .is_some_and(|b| {
+                    b.xref.is_none()
+                        && b.card
+                            .as_ref()
+                            .and_then(|c| c.category.as_deref())
+                            .and_then(|c| c.split('/').next())
+                            .is_some_and(|top| {
+                                !top.trim().is_empty() && !NOT_FIXTURES.contains(&top.trim())
+                            })
+                }),
             _ => true,
         }
     }
@@ -386,7 +398,12 @@ impl Document {
             .settings()
             .arch
             .as_ref()
-            .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.name.clone())).collect())
+            .map(|a| {
+                a.levels
+                    .iter()
+                    .map(|l| (l.id.clone(), l.name.clone()))
+                    .collect()
+            })
             .unwrap_or_default();
         // Each group's spaces in the drawing's order: their uids, levels and briefed rooms.
         struct Of {
@@ -403,7 +420,9 @@ impl Document {
         for e in self.entities() {
             let Entity::Space(s) = e else { continue };
             let x = &s.space;
-            let Some(unit) = x.unit.as_deref().filter(|u| program.unit(u).is_some()) else { continue };
+            let Some(unit) = x.unit.as_deref().filter(|u| program.unit(u).is_some()) else {
+                continue;
+            };
             let i = match of.iter().position(|(u, _)| u == unit) {
                 Some(i) => i,
                 None => {
@@ -424,7 +443,11 @@ impl Document {
                 }
             };
             let g = &mut of[i].1;
-            g.uids.push(self.uid(Slot(s.base.id)).map(|u| u.to_string()).unwrap_or_default());
+            g.uids.push(
+                self.uid(Slot(s.base.id))
+                    .map(|u| u.to_string())
+                    .unwrap_or_default(),
+            );
             if let Some(l) = x.arch.level.as_ref()
                 && !g.levels.contains(l)
             {
@@ -432,9 +455,13 @@ impl Document {
             }
             // Its briefed rooms (not voids, not outdoor, a brief that gives a range): their ranges summed.
             let brief = x.usage.as_deref().and_then(|u| program.brief(u));
-            if let Some(b) = brief.filter(|b| !x.void && !b.outdoor && (b.area_min.is_some() || b.area_max.is_some())) {
+            if let Some(b) = brief
+                .filter(|b| !x.void && !b.outdoor && (b.area_min.is_some() || b.area_max.is_some()))
+            {
                 g.briefs += 1;
-                g.briefed += kentos_geometry_core::geom::space::area(&crate::arch_values::core_areas(&x.parts));
+                g.briefed += kentos_geometry_core::geom::space::area(
+                    &crate::arch_values::core_areas(&x.parts),
+                );
                 match b.area_min {
                     Some(v) => g.lo = g.lo.map(|lo| lo + v),
                     None => g.open_lo = true,
@@ -486,7 +513,10 @@ impl Document {
                     continue;
                 }
             }
-            let part = shares.as_ref().and_then(|p| p.iter().find(|(id, _)| *id == u.id)).map(|(_, p)| p);
+            let part = shares
+                .as_ref()
+                .and_then(|p| p.iter().find(|(id, _)| *id == u.id))
+                .map(|(_, p)| p);
             let area_of = |t: &str| t.parse::<f64>().ok().map(ArchValue::Area);
             let building = u.building.as_deref().and_then(|b| program.building(b));
             let values: Vec<Option<ArchValue>> = columns
@@ -506,20 +536,38 @@ impl Document {
                             .iter()
                             .filter(|(id, _)| g.levels.contains(id))
                             .map(|(_, n)| n.clone())
-                            .chain(g.levels.iter().filter(|l| !levels.iter().any(|(id, _)| id == *l)).cloned())
+                            .chain(
+                                g.levels
+                                    .iter()
+                                    .filter(|l| !levels.iter().any(|(id, _)| id == *l))
+                                    .cloned(),
+                            )
                             .collect();
                         (!names.is_empty()).then(|| ArchValue::Text(names.join(", ")))
                     }),
                     ScheduleField::Area => mine.map(|_| {
-                        ArchValue::Area(rooms.iter().find(|(id, _)| *id == u.id).map_or(0.0, |(_, a)| *a))
+                        ArchValue::Area(
+                            rooms
+                                .iter()
+                                .find(|(id, _)| *id == u.id)
+                                .map_or(0.0, |(_, a)| *a),
+                        )
                     }),
                     ScheduleField::RecordedArea => u.recorded_area.map(ArchValue::Area),
                     ScheduleField::ShareWeight => u.share_weight.clone().map(ArchValue::Text),
-                    ScheduleField::Share if u.kind == UnitKind::Unit => part.and_then(|p| area_of(&p.share)),
-                    ScheduleField::Gross if u.kind == UnitKind::Unit => part.and_then(|p| area_of(&p.gross)),
-                    ScheduleField::Target => mine
-                        .filter(|g| g.briefs > 0)
-                        .and_then(|g| range_words(self, g.lo.filter(|_| !g.open_lo), g.hi.filter(|_| !g.open_hi))),
+                    ScheduleField::Share if u.kind == UnitKind::Unit => {
+                        part.and_then(|p| area_of(&p.share))
+                    }
+                    ScheduleField::Gross if u.kind == UnitKind::Unit => {
+                        part.and_then(|p| area_of(&p.gross))
+                    }
+                    ScheduleField::Target => mine.filter(|g| g.briefs > 0).and_then(|g| {
+                        range_words(
+                            self,
+                            g.lo.filter(|_| !g.open_lo),
+                            g.hi.filter(|_| !g.open_hi),
+                        )
+                    }),
                     ScheduleField::TargetDiff => mine.filter(|g| g.briefs > 0).and_then(|g| {
                         let brief = kentos_contracts::SpaceBrief {
                             area_min: g.lo.filter(|_| !g.open_lo),
@@ -584,7 +632,11 @@ impl Document {
                 .collect();
             let texts = values
                 .iter()
-                .map(|v| v.as_ref().map(|v| self.arch_value_text(v, false)).unwrap_or_default())
+                .map(|v| {
+                    v.as_ref()
+                        .map(|v| self.arch_value_text(v, false))
+                        .unwrap_or_default()
+                })
                 .collect();
             rows.push(Row {
                 values,
@@ -617,14 +669,19 @@ impl Document {
         by_level: bool,
     ) -> String {
         let program = self.program();
-        let rooms = self.entities().filter(|entity| {
-            matches!(entity, Entity::Space(room) if !room.space.void)
-                && self.schedule_takes(entity, filter)
-        }).count();
+        let rooms = self
+            .entities()
+            .filter(|entity| {
+                matches!(entity, Entity::Space(room) if !room.space.void)
+                    && self.schedule_takes(entity, filter)
+            })
+            .count();
         if program.units.is_empty() {
             format!("Hesaplanamadı · {rooms} mahal · Bina programında bölüm tanımlayın.")
         } else if by_level && rooms > 0 {
-            format!("Hesaplanamadı · {rooms} mahal · Mahalleri Bina programındaki bölümlere bağlayın.")
+            format!(
+                "Hesaplanamadı · {rooms} mahal · Mahalleri Bina programındaki bölümlere bağlayın."
+            )
         } else {
             "Kapsam dışı · Seçilen kat veya süzgeçte bölüm yok.".to_owned()
         }
@@ -666,7 +723,11 @@ impl Document {
             let Entity::Space(x) = e else { return None };
             let unit = x.space.unit.as_deref()?;
             let (_, part) = shares.as_ref()?.iter().find(|(u, _)| u == unit)?;
-            let t = if field == ScheduleField::Share { &part.share } else { &part.gross };
+            let t = if field == ScheduleField::Share {
+                &part.share
+            } else {
+                &part.gross
+            };
             t.parse::<f64>().ok().map(ArchValue::Area)
         };
         // The options a set does not show are not built (docs/adr/0788 §5): a schedule lists the primaries'.
@@ -684,7 +745,8 @@ impl Document {
                 break;
             }
             // A curtain wall is joinery too: a row of the doors and windows' schedule (docs/adr/8070 §9).
-            let curtain = of == ScheduleOf::Openings && matches!(e, Entity::Wall(w) if w.wall.curtain.is_some());
+            let curtain = of == ScheduleOf::Openings
+                && matches!(e, Entity::Wall(w) if w.wall.curtain.is_some());
             // A coverings' schedule lists the slabs that are one, not the building's floors (docs/adr/8070 §11).
             if (e.kind() != of.kind() && !curtain)
                 || (of == ScheduleOf::Coverings && !kentos_contracts::is_covering(e))
@@ -800,7 +862,10 @@ impl Document {
             rows = merged;
         }
         let width = columns.len();
-        let heading: Vec<String> = columns.iter().map(|c| self.schedule_heading_in(of, c)).collect();
+        let heading: Vec<String> = columns
+            .iter()
+            .map(|c| self.schedule_heading_in(of, c))
+            .collect();
         let units = of == ScheduleOf::Units;
         let mut out = ScheduleRows {
             rows: vec![heading],
@@ -831,17 +896,33 @@ impl Document {
             out.units.push(Vec::new());
             out.numbers.push(vec![None; width]);
             out.styles.push(CellStyle {
-                range: CellRange { row: 1, col: 0, rows: 1, cols: width as u32 },
-                align: Some(TableAlign::Left), bold: Some(true), color: Some("#a55019".into()),
-                fill: None, decimals: None,
+                range: CellRange {
+                    row: 1,
+                    col: 0,
+                    rows: 1,
+                    cols: width as u32,
+                },
+                align: Some(TableAlign::Left),
+                bold: Some(true),
+                color: Some("#a55019".into()),
+                fill: None,
+                decimals: None,
             });
             if width > 1 {
-                out.merges.push(CellRange { row: 1, col: 0, rows: 1, cols: width as u32 });
+                out.merges.push(CellRange {
+                    row: 1,
+                    col: 0,
+                    rows: 1,
+                    cols: width as u32,
+                });
             }
             return out;
         }
         let numbers = |values: &[Option<ArchValue>]| -> Vec<Option<f64>> {
-            values.iter().map(|v| v.as_ref().and_then(|v| self.arch_value_number(v))).collect()
+            values
+                .iter()
+                .map(|v| v.as_ref().and_then(|v| self.arch_value_number(v)))
+                .collect()
         };
         let bold = |row: usize| CellStyle {
             range: CellRange {
@@ -873,9 +954,17 @@ impl Document {
                 }
             }
             let k = marked[d].column as usize;
-            let label = if summed[k] { (0..width).find(|j| !summed[*j]) } else { Some(k) };
+            let label = if summed[k] {
+                (0..width).find(|j| !summed[*j])
+            } else {
+                Some(k)
+            };
             if let Some(j) = label {
-                let v = if value.is_empty() { SCHEDULE_EMPTY } else { value };
+                let v = if value.is_empty() {
+                    SCHEDULE_EMPTY
+                } else {
+                    value
+                };
                 cells[j] = format!("{v} toplamı");
             }
             cells

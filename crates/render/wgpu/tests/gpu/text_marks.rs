@@ -7,7 +7,9 @@ use kentos_geometry_core::Vec2 as GVec2;
 use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::text::Font;
 use kentos_geometry_core::text::shaping::{OutlineOp, placed};
-use kentos_native_style::batches::{AtlasImage, BatchKind, MarkerLook, StyledBatch, StyledLayer, Unit};
+use kentos_native_style::batches::{
+    AtlasImage, BatchKind, MarkerLook, StyledBatch, StyledLayer, Unit,
+};
 use kentos_native_style::picture::{Segment, TextOutline};
 use kentos_native_style::svg_marks::VECTORS_FROM_PX;
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
@@ -58,7 +60,11 @@ pub(super) fn letters(text: &str) -> Option<Arc<TextOutline>> {
                 .collect()
         })
         .collect();
-    Some(Arc::new(TextOutline { size: SIZE as f32, advance: layout.width as f32, glyphs }))
+    Some(Arc::new(TextOutline {
+        size: SIZE as f32,
+        advance: layout.width as f32,
+        glyphs,
+    }))
 }
 
 /// The outline's contours flattened (y down, the outline's px).
@@ -138,7 +144,10 @@ fn layer(text: &str) -> StyledLayer {
     };
     let kind = BatchKind::Marker {
         unit: Unit::World,
-        look: MarkerLook::Image { image, fit_height: true },
+        look: MarkerLook::Image {
+            image,
+            fit_height: true,
+        },
         offset: [0.0, 0.0],
         anchor: [0.0, 0.0],
         opacity: 1.0,
@@ -164,7 +173,11 @@ fn layer(text: &str) -> StyledLayer {
         lod: None,
         instances: None,
     };
-    let mut layer = StyledLayer { data, batches: vec![batch], ..Default::default() };
+    let mut layer = StyledLayer {
+        data,
+        batches: vec![batch],
+        ..Default::default()
+    };
     kentos_native_style::svg_marks::add(&mut layer, Some(&RedTiles));
     layer
 }
@@ -175,7 +188,11 @@ pub(super) fn a_magnified_text_marker_draws_its_outline(gpu: &mut Gpu) {
     let outline = letters(text).expect("the bundled face's letters");
     let contours = contours(&outline);
     let layer = layer(text);
-    assert_eq!(layer.batches.len(), 2, "the bitmap's batch and the letters' vectors");
+    assert_eq!(
+        layer.batches.len(),
+        2,
+        "the bitmap's batch and the letters' vectors"
+    );
     // The box (`svg_marks::text_svg`): 100 units high, the letters 80, the baseline at 78; as wide as the advance.
     let s = 80.0 / SIZE;
     let width = f64::from(outline.advance) * s;
@@ -197,21 +214,45 @@ pub(super) fn a_magnified_text_marker_draws_its_outline(gpu: &mut Gpu) {
     let mut settings = RenderSettings::new(Rgba8::rgb(255, 255, 255));
     for samples in [1, 4] {
         settings.samples = samples;
-        for (case, scale) in [at * 0.95, at * 1.05, at * 4.0, at * 20.0].into_iter().enumerate() {
-            let centre = if case < 2 { Vec2::new(0.0, 0.0) } else { Vec2::new(edge, 0.0) };
-            let camera = Camera { center: centre, width: f64::from(px), height: f64::from(px), scale, ..Default::default() };
+        for (case, scale) in [at * 0.95, at * 1.05, at * 4.0, at * 20.0]
+            .into_iter()
+            .enumerate()
+        {
+            let centre = if case < 2 {
+                Vec2::new(0.0, 0.0)
+            } else {
+                Vec2::new(edge, 0.0)
+            };
+            let camera = Camera {
+                center: centre,
+                width: f64::from(px),
+                height: f64::from(px),
+                scale,
+                ..Default::default()
+            };
             let id = 95_000 + case as u64 + u64::from(samples) * 10;
-            gpu.styled = Some(StyledScene { layers: vec![Arc::new(StyledLayerPart::new(id, layer.clone()))], ..Default::default() });
+            gpu.styled = Some(StyledScene {
+                layers: vec![Arc::new(StyledLayerPart::new(id, layer.clone()))],
+                ..Default::default()
+            });
             let pixels = gpu.draw(&[], &camera, &settings, px, px);
             let (mut wrong, mut inked) = (0, 0);
             let half = f64::from(px) / 2.0;
-            let read = |fx: f64, fy: f64| ground(centre.x + (fx - half) / scale, centre.y + (half - fy) / scale);
+            let read = |fx: f64, fy: f64| {
+                ground(
+                    centre.x + (fx - half) / scale,
+                    centre.y + (half - fy) / scale,
+                )
+            };
             for y in 0..px {
                 for x in 0..px {
                     let (fx, fy) = (f64::from(x), f64::from(y));
                     let middle = read(fx + 0.5, fy + 0.5);
                     // Away from the outline's edge only: a pixel the edge crosses is smoothed.
-                    if [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)].iter().any(|(dx, dy)| read(fx + dx, fy + dy) != middle) {
+                    if [(0.0, 0.0), (1.0, 0.0), (0.0, 1.0), (1.0, 1.0)]
+                        .iter()
+                        .any(|(dx, dy)| read(fx + dx, fy + dy) != middle)
+                    {
                         continue;
                     }
                     let i = ((y * px + x) * 4) as usize;
@@ -220,10 +261,18 @@ pub(super) fn a_magnified_text_marker_draws_its_outline(gpu: &mut Gpu) {
                     wrong += usize::from(ink != middle);
                 }
             }
-            eprintln!("text marker case {case} ({scale:.1} px/m), {samples} samples: {wrong} of {inked} px the other way");
-            assert!(inked > 200, "case {case}: the letter is in view ({inked} px)");
+            eprintln!(
+                "text marker case {case} ({scale:.1} px/m), {samples} samples: {wrong} of {inked} px the other way"
+            );
+            assert!(
+                inked > 200,
+                "case {case}: the letter is in view ({inked} px)"
+            );
             // A bitmap magnified 5 times smooths its edges past the pixel next to them: 110 of 11 940 px the other way.
-            assert!(wrong <= inked / 1000, "case {case} at {scale:.1} px/m, {samples} samples: {wrong} of {inked} px the other way");
+            assert!(
+                wrong <= inked / 1000,
+                "case {case} at {scale:.1} px/m, {samples} samples: {wrong} of {inked} px the other way"
+            );
         }
     }
     // `KENTOS_TEXT_MARKS_OUT=<folder>`: the close view drawn both ways, for the eye (PPM files).
@@ -235,9 +284,21 @@ pub(super) fn a_magnified_text_marker_draws_its_outline(gpu: &mut Gpu) {
         if let BatchKind::Marker { vectors, .. } = &mut bitmap_only.batches[0].kind {
             *vectors = false;
         }
-        let camera = Camera { center: Vec2::new(edge, 0.0), width: f64::from(px), height: f64::from(px), scale: at * 20.0, ..Default::default() };
-        for (name, l, id) in [("once-bitmap", bitmap_only, 96_001u64), ("sonra-vektor", layer.clone(), 96_002)] {
-            gpu.styled = Some(StyledScene { layers: vec![Arc::new(StyledLayerPart::new(id, l))], ..Default::default() });
+        let camera = Camera {
+            center: Vec2::new(edge, 0.0),
+            width: f64::from(px),
+            height: f64::from(px),
+            scale: at * 20.0,
+            ..Default::default()
+        };
+        for (name, l, id) in [
+            ("once-bitmap", bitmap_only, 96_001u64),
+            ("sonra-vektor", layer.clone(), 96_002),
+        ] {
+            gpu.styled = Some(StyledScene {
+                layers: vec![Arc::new(StyledLayerPart::new(id, l))],
+                ..Default::default()
+            });
             let pixels = gpu.draw(&[], &camera, &settings, px, px);
             let mut ppm = format!("P6 {px} {px} 255\n").into_bytes();
             ppm.extend(pixels.chunks(4).flat_map(|p| [p[0], p[1], p[2]]));

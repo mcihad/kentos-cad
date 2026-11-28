@@ -935,7 +935,10 @@ fn unicode_v1_font_bytes_and_runtime_ids_are_frozen_independently_of_ui_asset_up
         assert_eq!(face["family"], family);
         assert_eq!(face["weight"].as_u64().unwrap(), u64::from(weight));
         assert_eq!(face["italic"].as_bool().unwrap(), italic);
-        let hash: String = Sha256::digest(shaping::font_bytes(id).unwrap()).iter().map(|b| format!("{b:02x}")).collect();
+        let hash: String = Sha256::digest(shaping::font_bytes(id).unwrap())
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect();
         assert_eq!(face["sha256"].as_str().unwrap(), hash, "{}", face["file"]);
     }
 }
@@ -1335,8 +1338,9 @@ fn mixed_latin_greek_cyrillic_and_paired_brackets_match_explicit_external_script
 #[test]
 fn positioned_glyphs_match_external_flow_at_rotated_top_center_without_losing_large_coordinates() {
     use kentos_geometry_core::{
-        entity::TextPlace, Vec2,
+        Vec2,
         api::json::{FromJson, Json},
+        entity::TextPlace,
         geom::affine::apply,
         text::{Font, TextAlign, paragraph::Flow},
     };
@@ -1358,7 +1362,9 @@ fn positioned_glyphs_match_external_flow_at_rotated_top_center_without_losing_la
         let font = Font::from_id(c["family"].as_str().unwrap());
         // Noto Arabic is a fallback face, not a selectable DrawingFont: the core takes its name for a fonts folder's
         // family it has not got (docs/adr/9313). Its explicit-family paragraph is covered by the lower-level C oracle.
-        if font.id() != c["family"].as_str().unwrap() || font.missing() { continue; }
+        if font.id() != c["family"].as_str().unwrap() || font.missing() {
+            continue;
+        }
         // The external flow uses its own alignment within a fixed box. For
         // each actual center-aligned row measure the glyph positions with C
         // HarfBuzz again; the persisted oracle already provides exact advances.
@@ -1433,7 +1439,8 @@ fn positioned_glyphs_match_external_flow_at_rotated_top_center_without_losing_la
 #[test]
 fn curved_unicode_keeps_combining_clusters_and_fractions_on_one_analytic_tangent() {
     use kentos_geometry_core::{
-        entity::TextPlace, Vec2,
+        Vec2,
+        entity::TextPlace,
         text::{
             Font,
             along::Curve,
@@ -1442,7 +1449,9 @@ fn curved_unicode_keeps_combining_clusters_and_fractions_on_one_analytic_tangent
     };
     let curve = Curve {
         pts: vec![Vec2::new(10., 10.)],
-        bulges: Some(vec![kentos_geometry_core::jsmath::tan(std::f64::consts::PI / 8.)]),
+        bulges: Some(vec![kentos_geometry_core::jsmath::tan(
+            std::f64::consts::PI / 8.,
+        )]),
     };
     let runs = [Run {
         start: 3,
@@ -1494,8 +1503,21 @@ fn curved_unicode_keeps_combining_clusters_and_fractions_on_one_analytic_tangent
         let m = group[0].transform;
         assert!((m[0] - kentos_geometry_core::jsmath::cos(theta)).abs() < 1e-12);
         assert!((m[1] - kentos_geometry_core::jsmath::sin(theta)).abs() < 1e-12);
-        assert!((m[4] - (10. * kentos_geometry_core::jsmath::sin(theta) - middle * kentos_geometry_core::jsmath::cos(theta))).abs() < 1e-12);
-        assert!((m[5] - (10. - 10. * kentos_geometry_core::jsmath::cos(theta) - middle * kentos_geometry_core::jsmath::sin(theta))).abs() < 1e-12);
+        assert!(
+            (m[4]
+                - (10. * kentos_geometry_core::jsmath::sin(theta)
+                    - middle * kentos_geometry_core::jsmath::cos(theta)))
+            .abs()
+                < 1e-12
+        );
+        assert!(
+            (m[5]
+                - (10.
+                    - 10. * kentos_geometry_core::jsmath::cos(theta)
+                    - middle * kentos_geometry_core::jsmath::sin(theta)))
+            .abs()
+                < 1e-12
+        );
     }
     assert_eq!(
         plan.rules.len(),
@@ -1507,7 +1529,8 @@ fn curved_unicode_keeps_combining_clusters_and_fractions_on_one_analytic_tangent
 #[test]
 fn straight_curve_and_straight_text_share_contours_and_profile_geometry_rejects_overflow() {
     use kentos_geometry_core::{
-        entity::TextPlace, Vec2,
+        Vec2,
+        entity::TextPlace,
         text::{Font, along::Curve},
     };
     let curve = Curve {
@@ -1541,28 +1564,54 @@ fn straight_curve_and_straight_text_share_contours_and_profile_geometry_rejects_
 
 #[test]
 fn curved_profile_geometry_uses_atomic_groups_for_origin_direction_width_and_masks() {
-    use kentos_geometry_core::{entity::TextPlace,Vec2,text::{Font,along::Curve,paragraph::{Flow,Engine}}};
-    let flow=Flow {engine:Some(Engine::UnicodeV1),..Default::default()};
-    let curve=Curve {pts:vec![Vec2::new(100.,0.)],bulges:None};
-    let mut t=TextPlace::line(Vec2::new(5_000_000.,4_400_000.),"a\u{301}\u{323} AV",0.3,0.,None,Some(0.8));
-    t.flow=Some(&flow);t.path=Some(&curve);t.box_width=Some(0.01);
-    let font=Font::from_id("arimo");
-    let plan=t.unicode_plan(font).unwrap();
-    assert_eq!(plan.clusters.len(),4,"base/marks, space, A, V");
-    assert_eq!(t.origin(font),t.p);
-    assert_eq!(t.curved_baseline(font),Some((t.p,0.)));
-    assert!((t.width(font)-plan.width).abs()<1e-12,"curve text ignores paragraph wrapping");
-    let [a,b,c,d]=plan.frame.unwrap();
-    let margin=t.height*0.1;
-    let ring=t.mask(font);
-    assert!((ring[0].x-(t.p.x+a-margin)).abs()<1e-9);
-    assert!((ring[0].y-(t.p.y+b-margin)).abs()<1e-9);
-    assert!((ring[2].x-(t.p.x+c+margin)).abs()<1e-9);
-    assert!((ring[2].y-(t.p.y+d+margin)).abs()<1e-9);
-    t.rotation=180.;
-    let reversed=t.readable_curve(font).unwrap();
-    assert!((reversed.p.x-(t.p.x-100.)).abs()<1e-9);
-    assert_eq!(reversed.rotation,0.);
+    use kentos_geometry_core::{
+        Vec2,
+        entity::TextPlace,
+        text::{
+            Font,
+            along::Curve,
+            paragraph::{Engine, Flow},
+        },
+    };
+    let flow = Flow {
+        engine: Some(Engine::UnicodeV1),
+        ..Default::default()
+    };
+    let curve = Curve {
+        pts: vec![Vec2::new(100., 0.)],
+        bulges: None,
+    };
+    let mut t = TextPlace::line(
+        Vec2::new(5_000_000., 4_400_000.),
+        "a\u{301}\u{323} AV",
+        0.3,
+        0.,
+        None,
+        Some(0.8),
+    );
+    t.flow = Some(&flow);
+    t.path = Some(&curve);
+    t.box_width = Some(0.01);
+    let font = Font::from_id("arimo");
+    let plan = t.unicode_plan(font).unwrap();
+    assert_eq!(plan.clusters.len(), 4, "base/marks, space, A, V");
+    assert_eq!(t.origin(font), t.p);
+    assert_eq!(t.curved_baseline(font), Some((t.p, 0.)));
+    assert!(
+        (t.width(font) - plan.width).abs() < 1e-12,
+        "curve text ignores paragraph wrapping"
+    );
+    let [a, b, c, d] = plan.frame.unwrap();
+    let margin = t.height * 0.1;
+    let ring = t.mask(font);
+    assert!((ring[0].x - (t.p.x + a - margin)).abs() < 1e-9);
+    assert!((ring[0].y - (t.p.y + b - margin)).abs() < 1e-9);
+    assert!((ring[2].x - (t.p.x + c + margin)).abs() < 1e-9);
+    assert!((ring[2].y - (t.p.y + d + margin)).abs() < 1e-9);
+    t.rotation = 180.;
+    let reversed = t.readable_curve(font).unwrap();
+    assert!((reversed.p.x - (t.p.x - 100.)).abs() < 1e-9);
+    assert_eq!(reversed.rotation, 0.);
 }
 
 #[test]

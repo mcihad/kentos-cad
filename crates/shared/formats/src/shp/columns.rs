@@ -11,7 +11,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use kentos_contracts::{LayerField, LayerFieldKind};
 
 use super::write::{
-    AsText, Column, DbfEncoding, Kind, Renamed, Written, canonical, cut_name, fixed, shown, significant,
+    AsText, Column, DbfEncoding, Kind, Renamed, Written, canonical, cut_name, fixed, shown,
+    significant,
 };
 
 /// A walk over the rows' attributes: it hands each row's to the function it is given.
@@ -70,7 +71,12 @@ fn named<'f>(
                 column: shown_name.clone(),
             });
         }
-        named.push(Named { key, field, name, shown: shown_name });
+        named.push(Named {
+            key,
+            field,
+            name,
+            shown: shown_name,
+        });
     }
     named
 }
@@ -136,21 +142,28 @@ fn decide(field: Option<&LayerField>, g: &Gathered) -> Decided {
     if g.refused {
         return Decided::Kind(
             Kind::Text(g.raw.clamp(1, 254)),
-            Some("alanın kuralına uymayan değerleri var; değerler yazıldığı gibi metin sütununa yazıldı"),
+            Some(
+                "alanın kuralına uymayan değerleri var; değerler yazıldığı gibi metin sütununa yazıldı",
+            ),
         );
     }
     let Some(f) = field else {
         return Decided::Kind(g.text(), None);
     };
     match f.kind {
-        LayerFieldKind::Text => Decided::Kind(Kind::Text(g.bytes.max(f.length.unwrap_or(0) as usize).clamp(1, 254)), None),
+        LayerFieldKind::Text => Decided::Kind(
+            Kind::Text(g.bytes.max(f.length.unwrap_or(0) as usize).clamp(1, 254)),
+            None,
+        ),
         // A 64-bit whole number as a whole number too (docs/adr/0629 §4).
         LayerFieldKind::Integer | LayerFieldKind::BigInt => {
             let width = g.len.unwrap_or(1).max(1);
             if width > 18 {
                 Decided::Kind(
                     g.text(),
-                    Some("18 haneyi aşan tam sayılar dBASE okuyucularında kayan noktaya döner; tam basamaklarıyla metin sütununa yazıldı"),
+                    Some(
+                        "18 haneyi aşan tam sayılar dBASE okuyucularında kayan noktaya döner; tam basamaklarıyla metin sütununa yazıldı",
+                    ),
                 )
             } else {
                 Decided::Kind(Kind::Number(width, 0), None)
@@ -158,11 +171,17 @@ fn decide(field: Option<&LayerField>, g: &Gathered) -> Decided {
         }
         LayerFieldKind::Decimal => {
             // At least one fraction digit: a reader takes N without them for an integer.
-            let d = g.frac.unwrap_or(0).max(f.scale.unwrap_or(0) as usize).max(1);
+            let d = g
+                .frac
+                .unwrap_or(0)
+                .max(f.scale.unwrap_or(0) as usize)
+                .max(1);
             if d > 15 || g.significant.unwrap_or(0) > 15 {
                 Decided::Kind(
                     g.text(),
-                    Some("15 anlamlı basamağı aşan ondalık sayılar dBASE okuyucularında yuvarlanır; tam basamaklarıyla metin sütununa yazıldı"),
+                    Some(
+                        "15 anlamlı basamağı aşan ondalık sayılar dBASE okuyucularında yuvarlanır; tam basamaklarıyla metin sütununa yazıldı",
+                    ),
                 )
             } else {
                 Decided::Fixed(d)
@@ -170,18 +189,30 @@ fn decide(field: Option<&LayerField>, g: &Gathered) -> Decided {
         }
         LayerFieldKind::Date => Decided::Kind(Kind::Date, None),
         LayerFieldKind::Boolean => Decided::Kind(Kind::Logical, None),
-        LayerFieldKind::DateTime => {
-            Decided::Kind(g.text(), Some("dBASE'te tarih-saat türü yok; YYYY-AA-GGTSS:DD:SS metniyle yazıldı"))
-        }
-        LayerFieldKind::Time => Decided::Kind(g.text(), Some("dBASE'te saat türü yok; SS:DD:SS metniyle yazıldı")),
+        LayerFieldKind::DateTime => Decided::Kind(
+            g.text(),
+            Some("dBASE'te tarih-saat türü yok; YYYY-AA-GGTSS:DD:SS metniyle yazıldı"),
+        ),
+        LayerFieldKind::Time => Decided::Kind(
+            g.text(),
+            Some("dBASE'te saat türü yok; SS:DD:SS metniyle yazıldı"),
+        ),
         // docs/adr/0629 §4: what dBASE has no type for goes as text, said.
         LayerFieldKind::Instant => Decided::Kind(
             g.text(),
-            Some("dBASE'te saat dilimli zaman türü yok; YYYY-AA-GGTSS:DD:SS ve dilimiyle metin olarak yazıldı"),
+            Some(
+                "dBASE'te saat dilimli zaman türü yok; YYYY-AA-GGTSS:DD:SS ve dilimiyle metin olarak yazıldı",
+            ),
         ),
         LayerFieldKind::Uuid => Decided::Kind(g.text(), None),
-        LayerFieldKind::Json => Decided::Kind(g.text(), Some("dBASE'te JSON türü yok; metin olarak yazıldı")),
-        LayerFieldKind::Binary => Decided::Kind(g.text(), Some("dBASE'te ikili tür yok; base64 metni olarak yazıldı")),
+        LayerFieldKind::Json => Decided::Kind(
+            g.text(),
+            Some("dBASE'te JSON türü yok; metin olarak yazıldı"),
+        ),
+        LayerFieldKind::Binary => Decided::Kind(
+            g.text(),
+            Some("dBASE'te ikili tür yok; base64 metni olarak yazıldı"),
+        ),
     }
 }
 
@@ -203,7 +234,11 @@ pub(super) fn columns(
             g.take(n.field, attrs.get(&n.key), enc);
         }
     })?;
-    let decided: Vec<Decided> = named.iter().zip(&gathered).map(|(n, g)| decide(n.field, g)).collect();
+    let decided: Vec<Decided> = named
+        .iter()
+        .zip(&gathered)
+        .map(|(n, g)| decide(n.field, g))
+        .collect();
     if decided.iter().any(|d| matches!(d, Decided::Fixed(_))) {
         walk(&mut |attrs| {
             for ((n, g), d) in named.iter().zip(gathered.iter_mut()).zip(&decided) {
@@ -217,13 +252,25 @@ pub(super) fn columns(
     for ((n, g), d) in named.into_iter().zip(&gathered).zip(decided) {
         let (kind, reason) = match d {
             Decided::Kind(k, r) => (k, r),
-            Decided::Fixed(d) => (Kind::Number(g.fixed.unwrap_or(if d > 0 { d + 2 } else { 1 }).max(1), d), None),
+            Decided::Fixed(d) => (
+                Kind::Number(g.fixed.unwrap_or(if d > 0 { d + 2 } else { 1 }).max(1), d),
+                None,
+            ),
         };
         if let Some(reason) = reason {
-            out.as_text.push(AsText { set: set.to_owned(), column: n.shown.clone(), reason });
+            out.as_text.push(AsText {
+                set: set.to_owned(),
+                column: n.shown.clone(),
+                reason,
+            });
         }
         let typed = matches!(kind, Kind::Number(..) | Kind::Date | Kind::Logical);
-        cols.push(Column { name: n.name, kind, key: n.key, field: if typed { n.field.cloned() } else { None } });
+        cols.push(Column {
+            name: n.name,
+            kind,
+            key: n.key,
+            field: if typed { n.field.cloned() } else { None },
+        });
     }
     Ok(cols)
 }

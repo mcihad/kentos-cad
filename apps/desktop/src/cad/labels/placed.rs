@@ -36,9 +36,16 @@ impl Labels<'_> {
             .entry(t as *const _ as usize)
             .or_insert_with(|| {
                 let mut h = Fx::default();
-                format!("{:?}{:?}{:?}{:?}{:?}", t.face, t.base, t.styles, t.merges, t.aligns).hash(&mut h);
+                format!(
+                    "{:?}{:?}{:?}{:?}{:?}",
+                    t.face, t.base, t.styles, t.merges, t.aligns
+                )
+                .hash(&mut h);
                 // Its table style's cells too (docs/adr/1126 §3): a changed style draws it again.
-                let style = t.table_style.as_deref().and_then(|id| self.doc.settings().table_styles.iter().find(|s| s.id == id));
+                let style = t
+                    .table_style
+                    .as_deref()
+                    .and_then(|id| self.doc.settings().table_styles.iter().find(|s| s.id == id));
                 format!("{:?}{style:?}", t.table_style).hash(&mut h);
                 (t.height.to_bits(), t.header).hash(&mut h);
                 h.finish()
@@ -79,7 +86,14 @@ impl Labels<'_> {
                 .and_then(|l| l.style.label.clone())
                 .or_else(|| default_label(entity.kind()))?,
         };
-        Some(placed_look(&self.colors, self.font, &style, state, slot, self.pinned))
+        Some(placed_look(
+            &self.colors,
+            self.font,
+            &style,
+            state,
+            slot,
+            self.pinned,
+        ))
     }
 
     /// A placed label's backdrop: its background or a contour's mask, `w`
@@ -96,7 +110,16 @@ impl Labels<'_> {
         h: f32,
         letter: bool,
     ) {
-        backdrop_at(frame, c, self.screen(at), angle, w, h, letter, self.colors.accent());
+        backdrop_at(
+            frame,
+            c,
+            self.screen(at),
+            angle,
+            w,
+            h,
+            letter,
+            self.colors.accent(),
+        );
     }
 
     /// One line or letter of a placed label: its shadow, then itself in its halo.
@@ -129,8 +152,7 @@ pub(super) fn backdrop_at(
     let a = -(angle.to_radians() as f32);
     let quad = |dx: f32, dy: f32, hw: f32, hh: f32| {
         let (s, cs) = a.sin_cos();
-        let at =
-            |u: f32, v: f32| Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs);
+        let at = |u: f32, v: f32| Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs);
         [at(-hw, -hh), at(hw, -hh), at(hw, hh), at(-hw, hh)]
     };
     if let Some(b) = &c.background {
@@ -138,9 +160,8 @@ pub(super) fn backdrop_at(
         // A rectangle as a quadrilateral (a sheet's PDF takes it as a mask); a round one or an ellipse as a ring.
         let ring = |dx: f32, dy: f32| -> Vec<Point> {
             let (s, cs) = a.sin_cos();
-            let at = |u: f32, v: f32| {
-                Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs)
-            };
+            let at =
+                |u: f32, v: f32| Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs);
             match b.shape {
                 kentos_commands::LabelShape::Ellipse => (0..32)
                     .map(|i| {
@@ -201,7 +222,14 @@ pub(super) fn backdrop_at(
 }
 
 /// One line or letter of a placed label at `s` on the screen: its shadow, then itself in its halo.
-pub(super) fn text_at(frame: &mut impl Ink, c: &Placed, text: &str, s: Point, angle: f64, size: f32) {
+pub(super) fn text_at(
+    frame: &mut impl Ink,
+    c: &Placed,
+    text: &str,
+    s: Point,
+    angle: f64,
+    size: f32,
+) {
     let piece = |at: Point, color: Color| Piece {
         text,
         at,
@@ -276,10 +304,7 @@ pub(super) fn placed_look(
         Some(h) if h.width <= 0.0 => None,
         Some(h) => Some((
             h.width as f32,
-            h.color
-                .as_deref()
-                .and_then(named)
-                .unwrap_or(colors.halo),
+            h.color.as_deref().and_then(named).unwrap_or(colors.halo),
         )),
         None => Some((HALO, colors.halo)),
     };

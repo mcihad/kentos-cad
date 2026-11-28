@@ -177,12 +177,21 @@ fn refused(e: String) -> Stop {
 
 /// A known point's own height (docs/adr/4100): a drawing point's, when it has one; none for one given by its place.
 fn known_height(doc: &Document, k: &KnownPoint) -> Option<f64> {
-    let KnownPoint::Named { name } = k else { return None };
+    let KnownPoint::Named { name } = k else {
+        return None;
+    };
     let key = upper(name.trim());
     doc.entities().find_map(|e| match e {
         Entity::Point(pt) => {
-            let own = pt.base.label.as_deref().or_else(|| pt.base.attrs.get("Ad").map(String::as_str)).unwrap_or("");
-            (!key.is_empty() && upper(own) == key).then_some(pt.z).flatten()
+            let own = pt
+                .base
+                .label
+                .as_deref()
+                .or_else(|| pt.base.attrs.get("Ad").map(String::as_str))
+                .unwrap_or("");
+            (!key.is_empty() && upper(own) == key)
+                .then_some(pt.z)
+                .flatten()
         }
         _ => None,
     })
@@ -218,7 +227,11 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 None => None,
                 Some(h) => {
                     finite_all(&h.zeniths, "Başucu açısı", "work.heights.zeniths")?;
-                    finite_all(&h.instruments, "Alet yüksekliği", "work.heights.instruments")?;
+                    finite_all(
+                        &h.instruments,
+                        "Alet yüksekliği",
+                        "work.heights.instruments",
+                    )?;
                     finite_all(&h.targets, "İşaret yüksekliği", "work.heights.targets")?;
                     // Docs/adr/4500: each back sight's numbers.
                     for (i, b) in h.back.iter().enumerate() {
@@ -228,7 +241,12 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                             (b.instrument, "Geri nişandaki alet yüksekliği", "instrument"),
                             (b.target, "Geri nişandaki işaret yüksekliği", "target"),
                         ] {
-                            checks::finite(v, what, "Sonlu bir sayı verin.", &format!("work.heights.back[{i}].{field}"))?;
+                            checks::finite(
+                                v,
+                                what,
+                                "Sonlu bir sayı verin.",
+                                &format!("work.heights.back[{i}].{field}"),
+                            )?;
                         }
                     }
                     let Some(z0) = h.start.or_else(|| known_height(doc, start)) else {
@@ -238,11 +256,18 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                             "work.heights.start",
                         ));
                     };
-                    checks::finite(z0, "Başlangıç noktasının kotu", "Sonlu bir sayı verin.", "work.heights.start")?;
+                    checks::finite(
+                        z0,
+                        "Başlangıç noktasının kotu",
+                        "Sonlu bir sayı verin.",
+                        "work.heights.start",
+                    )?;
                     let z1 = match shape {
                         TraverseShape::Closed => Some(z0),
                         TraverseShape::Open => None,
-                        TraverseShape::Connected => h.end.or_else(|| end.as_ref().and_then(|e| known_height(doc, e))),
+                        TraverseShape::Connected => h
+                            .end
+                            .or_else(|| end.as_ref().and_then(|e| known_height(doc, e))),
                     };
                     Some((h, z0, z1))
                 }
@@ -277,26 +302,30 @@ fn lay(doc: &Document, input: &SurveyPoints) -> Result<Laid, Stop> {
                 angles: angles.clone(),
                 distances: distances.clone(),
                 grid: survey_grid(settings),
-                heights: wanted.map(|(h, z0, z1)| kentos_geometry_core::survey::traverse::TraverseHeights {
-                    start: z0,
-                    end: z1,
-                    zeniths: h.zeniths.clone(),
-                    instruments: h.instruments.clone(),
-                    targets: h.targets.clone(),
-                    refraction: Some(settings.refraction()),
-                    undulations: None,
-                    back: (!h.back.is_empty()).then(|| {
-                        h.back
-                            .iter()
-                            .map(|b| {
-                                b.as_ref().map(|b| kentos_geometry_core::survey::traverse::TraverseBackSight {
-                                    zenith: b.zenith,
-                                    instrument: b.instrument,
-                                    target: b.target,
+                heights: wanted.map(|(h, z0, z1)| {
+                    kentos_geometry_core::survey::traverse::TraverseHeights {
+                        start: z0,
+                        end: z1,
+                        zeniths: h.zeniths.clone(),
+                        instruments: h.instruments.clone(),
+                        targets: h.targets.clone(),
+                        refraction: Some(settings.refraction()),
+                        undulations: None,
+                        back: (!h.back.is_empty()).then(|| {
+                            h.back
+                                .iter()
+                                .map(|b| {
+                                    b.as_ref().map(|b| {
+                                        kentos_geometry_core::survey::traverse::TraverseBackSight {
+                                            zenith: b.zenith,
+                                            instrument: b.instrument,
+                                            target: b.target,
+                                        }
+                                    })
                                 })
-                            })
-                            .collect()
-                    }),
+                                .collect()
+                        }),
+                    }
                 }),
             };
             // Each leg at its own height, as Kutupsal alım reduces its lines (docs/adr/2900 §3, 4100).
@@ -511,7 +540,12 @@ fn write_execute(
                 linear_misclosure: laid.linear_misclosure,
                 height_misclosure: laid.height_misclosure,
                 refraction: kentos_commands::MeasuredRefraction::of(
-                    &laid.refractions.iter().flatten().copied().collect::<Vec<f64>>(),
+                    &laid
+                        .refractions
+                        .iter()
+                        .flatten()
+                        .copied()
+                        .collect::<Vec<f64>>(),
                 ),
                 refractions: laid.refractions,
                 revision: output.revision,

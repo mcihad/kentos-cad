@@ -11,15 +11,22 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 }
 
 fn opened(server: &mut Server, tag: &str) -> (Value, Vec<String>) {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.entities.vertex.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.entities.vertex.json"
+    ))
+    .unwrap();
     let mut setup = cases["setup"].clone();
     let count = setup["entities"].as_array().unwrap().len();
-    let uids: Vec<String> = (1..=count).map(|i| format!("0192f5c0-5000-7000-8000-{i:012x}")).collect();
+    let uids: Vec<String> = (1..=count)
+        .map(|i| format!("0192f5c0-5000-7000-8000-{i:012x}"))
+        .collect();
     setup["version"] = json!(2);
     setup["uids"] = json!(uids);
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-vertex-join-{tag}-{}.kcad", std::process::id()));
+    let path = std::env::temp_dir().join(format!(
+        "kentos-vertex-join-{tag}-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let open = call(server, "drawing.open", json!({"path": path}));
     let _ = std::fs::remove_file(&path);
@@ -28,7 +35,11 @@ fn opened(server: &mut Server, tag: &str) -> (Value, Vec<String>) {
 }
 
 fn bulges(server: &mut Server, drawing: &Value, uid: &str) -> Vec<f64> {
-    let e = call(server, "drawing.entity", json!({"drawing": drawing, "uid": uid}));
+    let e = call(
+        server,
+        "drawing.entity",
+        json!({"drawing": drawing, "uid": uid}),
+    );
     e["structuredContent"]["entity"]["bulges"]
         .as_array()
         .map(|b| b.iter().map(|v| v.as_f64().unwrap()).collect())
@@ -47,7 +58,11 @@ fn two_arcs_of_one_circle_become_one_over_mcp() {
         json!({"drawing": drawing, "uid": uids[18], "action": "remove", "place": place, "joinArcs": 0.001, "topology": {}}),
     );
     assert_eq!(r["isError"], false, "{r}");
-    assert_eq!(r["structuredContent"]["output"]["ids"], json!([19, 23]), "{r}");
+    assert_eq!(
+        r["structuredContent"]["output"]["ids"],
+        json!([19, 23]),
+        "{r}"
+    );
     let own = bulges(&mut server, &drawing, &uids[18]);
     assert!((own[0] - want).abs() < 1e-12, "{own:?} {want}");
     let theirs = bulges(&mut server, &drawing, &uids[22]);
@@ -61,5 +76,9 @@ fn two_arcs_of_one_circle_become_one_over_mcp() {
     );
     assert_eq!(r["isError"], false, "{r}");
     assert!(r.to_string().contains("arcs_not_joined"), "{r}");
-    assert!(bulges(&mut server, &drawing, &uids[19]).iter().all(|b| *b == 0.0));
+    assert!(
+        bulges(&mut server, &drawing, &uids[19])
+            .iter()
+            .all(|b| *b == 0.0)
+    );
 }

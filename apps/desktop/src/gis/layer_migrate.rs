@@ -99,7 +99,10 @@ impl MigrateWindow {
 
     /// A row's table name.
     pub(crate) fn table_for_test(&self, at: usize) -> String {
-        self.rows.get(at).map(|r| r.table.clone()).unwrap_or_default()
+        self.rows
+            .get(at)
+            .map(|r| r.table.clone())
+            .unwrap_or_default()
     }
 
     /// What the window does after the move.
@@ -118,7 +121,11 @@ impl MigrateWindow {
             address: (self.target == CreateTarget::Postgis).then(|| self.address.trim().to_owned()),
             schema: (self.target == CreateTarget::Postgis).then(|| {
                 let s = self.schema.trim();
-                if s.is_empty() { "public".to_owned() } else { s.to_owned() }
+                if s.is_empty() {
+                    "public".to_owned()
+                } else {
+                    s.to_owned()
+                }
             }),
             table: Some(row.table.trim().to_owned()).filter(|t| !t.is_empty()),
             existing: None,
@@ -160,12 +167,17 @@ impl App {
     pub(crate) fn cbs_data_place_words(&self) -> String {
         match self.cbs_data_place() {
             Some((CreateTarget::Gpkg, path, _)) => {
-                let name = std::path::Path::new(&path).file_name().map_or(path.clone(), |n| n.to_string_lossy().into_owned());
+                let name = std::path::Path::new(&path)
+                    .file_name()
+                    .map_or(path.clone(), |n| n.to_string_lossy().into_owned());
                 format!("projenin veri yerine, “{name}” dosyasına")
             }
             Some((_, address, schema)) => {
                 let db = address.rsplit('/').next().unwrap_or(&address).to_owned();
-                format!("projenin veri yerine, “{db}” veritabanının {} şemasına", schema.as_deref().unwrap_or("public"))
+                format!(
+                    "projenin veri yerine, “{db}” veritabanının {} şemasına",
+                    schema.as_deref().unwrap_or("public")
+                )
             }
             None => "projenin veri yerine (ilk Kaydet'te sorulan GeoPackage'a)".to_owned(),
         }
@@ -182,17 +194,32 @@ impl App {
                 None => (CreateTarget::Postgis, s.address.clone(), s.schema.clone()),
             });
         }
-        let first = doc.model.layers().leaves().iter().find_map(|n| n.data.clone());
+        let first = doc
+            .model
+            .layers()
+            .leaves()
+            .iter()
+            .find_map(|n| n.data.clone());
         if let Some(d) = first {
             return Some(match d.driver.as_str() {
                 "postgis" => {
                     let schema = d.table.rsplit_once('.').map(|(s, _)| s.to_owned());
                     (CreateTarget::Postgis, d.address, schema)
                 }
-                _ => (CreateTarget::Gpkg, d.address.trim_start_matches("gpkg:").to_owned(), None),
+                _ => (
+                    CreateTarget::Gpkg,
+                    d.address.trim_start_matches("gpkg:").to_owned(),
+                    None,
+                ),
             });
         }
-        doc.path.as_ref().map(|p| (CreateTarget::Gpkg, p.with_extension("gpkg").display().to_string(), None))
+        doc.path.as_ref().map(|p| {
+            (
+                CreateTarget::Gpkg,
+                p.with_extension("gpkg").display().to_string(),
+                None,
+            )
+        })
     }
 
     /// A CBS project's layers its data would keep in the project file, made its data place's tables at once
@@ -213,19 +240,29 @@ impl App {
         };
         let mut moved = Vec::new();
         for (id, name) in layers {
-            let Some(doc) = self.document.as_mut() else { return };
+            let Some(doc) = self.document.as_mut() else {
+                return;
+            };
             let input = LayersMigrate {
                 layer: id,
                 target,
                 path: (target == CreateTarget::Gpkg).then(|| place.clone()),
                 address: (target == CreateTarget::Postgis).then(|| place.clone()),
-                schema: (target == CreateTarget::Postgis).then(|| schema.clone().unwrap_or_else(|| "public".to_owned())),
+                schema: (target == CreateTarget::Postgis)
+                    .then(|| schema.clone().unwrap_or_else(|| "public".to_owned())),
                 table: None,
                 existing: None,
             };
-            match kentos_native_application::layers_migrate::execute(&mut ExecutionContext::new(&mut doc.model), input) {
-                CommandResult::Completed { output, .. } => moved.push(format!("“{name}” → “{}”", output.table)),
-                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            match kentos_native_application::layers_migrate::execute(
+                &mut ExecutionContext::new(&mut doc.model),
+                input,
+            ) {
+                CommandResult::Completed { output, .. } => {
+                    moved.push(format!("“{name}” → “{}”", output.table))
+                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => {
                     self.warn(format!(
                         "“{name}” tabloya taşınamadı: {} Kaydet, taşınmayan katmanları tek pencerede sorar.",
                         error.message
@@ -263,8 +300,15 @@ impl App {
 
     /// Kaydet of a CBS project whose file would hold layers' objects (docs/adr/9196 §2, 9321): the window on every one
     /// of them, the save going on once they are moved.
-    pub(crate) fn migrate_then_save(&mut self, held: &[(String, String)], target: crate::saving::Target) {
-        self.open_layer_migrate(held.iter().map(|(id, _)| id.clone()).collect(), After::Save(target));
+    pub(crate) fn migrate_then_save(
+        &mut self,
+        held: &[(String, String)],
+        target: crate::saving::Target,
+    ) {
+        self.open_layer_migrate(
+            held.iter().map(|(id, _)| id.clone()).collect(),
+            After::Save(target),
+        );
     }
 
     /// The window on `layers` (those a table can take), its place the project's data place, else the GeoPackage beside
@@ -298,26 +342,49 @@ impl App {
             return;
         }
         let beside = match &after {
-            After::Save(crate::saving::Target::File(path)) => Some(path.with_extension("gpkg").display().to_string()),
+            After::Save(crate::saving::Target::File(path)) => {
+                Some(path.with_extension("gpkg").display().to_string())
+            }
             _ => None,
         };
         let (target, path, address, schema) = match self.cbs_data_place() {
-            Some((CreateTarget::Postgis, address, schema)) => {
-                (CreateTarget::Postgis, String::new(), address, schema.unwrap_or_else(|| "public".into()))
-            }
+            Some((CreateTarget::Postgis, address, schema)) => (
+                CreateTarget::Postgis,
+                String::new(),
+                address,
+                schema.unwrap_or_else(|| "public".into()),
+            ),
             Some((_, path, _)) => (CreateTarget::Gpkg, path, String::new(), "public".into()),
-            None => (CreateTarget::Gpkg, beside.unwrap_or_else(|| self.likely_geopackage()), String::new(), "public".into()),
+            None => (
+                CreateTarget::Gpkg,
+                beside.unwrap_or_else(|| self.likely_geopackage()),
+                String::new(),
+                "public".into(),
+            ),
         };
-        self.gis.layer_migrate =
-            Some(MigrateWindow { rows, target, path, connection: None, address, schema, said: None, after });
-        self.dialog = Some(crate::app::Dialog::Gis(crate::gis::GisDialogKind::LayerMigrate));
+        self.gis.layer_migrate = Some(MigrateWindow {
+            rows,
+            target,
+            path,
+            connection: None,
+            address,
+            schema,
+            said: None,
+            after,
+        });
+        self.dialog = Some(crate::app::Dialog::Gis(
+            crate::gis::GisDialogKind::LayerMigrate,
+        ));
     }
 
     /// Why a CBS project is not written to its file (docs/adr/9196 §2): the layers named and the way said.
     pub(crate) fn data_held_words(held: &[(String, String)]) -> String {
         let held: Vec<kentos_native_application::layer_kind::Held> = held
             .iter()
-            .map(|(id, name)| kentos_native_application::layer_kind::Held { id: id.clone(), name: name.clone() })
+            .map(|(id, name)| kentos_native_application::layer_kind::Held {
+                id: id.clone(),
+                name: name.clone(),
+            })
             .collect();
         kentos_native_application::layer_kind::held_words(&held)
     }
@@ -332,7 +399,13 @@ impl App {
         };
         match event {
             Event::Open(_) => {}
-            Event::Target(i) => w.target = if i == 1 { CreateTarget::Postgis } else { CreateTarget::Gpkg },
+            Event::Target(i) => {
+                w.target = if i == 1 {
+                    CreateTarget::Postgis
+                } else {
+                    CreateTarget::Gpkg
+                }
+            }
             Event::Path(p) => w.path = p,
             Event::Browse => {
                 return Task::perform(
@@ -348,7 +421,11 @@ impl App {
                 );
             }
             Event::Browsed(Some(p)) => {
-                let p = if kentos_native_application::project_store::is_geopackage(&p) { p } else { p.with_extension("gpkg") };
+                let p = if kentos_native_application::project_store::is_geopackage(&p) {
+                    p
+                } else {
+                    p.with_extension("gpkg")
+                };
                 w.path = p.display().to_string();
             }
             Event::Browsed(None) => {}
@@ -388,7 +465,12 @@ impl App {
             return Task::none();
         };
         // A layer moved or removed meanwhile leaves the list.
-        w.rows.retain(|r| doc.model.layers().get(&r.layer).is_some_and(|n| n.data.is_none()));
+        w.rows.retain(|r| {
+            doc.model
+                .layers()
+                .get(&r.layer)
+                .is_some_and(|n| n.data.is_none())
+        });
         w.said = None;
         if !checked(&mut doc.model, &mut w) {
             w.said = Some("Satırlarda söylenenleri giderin ya da önerilen adları kabul edip yeniden Taşı'ya basın; hiçbir \
@@ -402,14 +484,25 @@ impl App {
         let mut place = String::new();
         while let Some(row) = w.rows.first().cloned() {
             let input = w.input(&row);
-            match kentos_native_application::layers_migrate::execute(&mut ExecutionContext::new(&mut doc.model), input) {
-                CommandResult::Completed { output, warnings: said } => {
+            match kentos_native_application::layers_migrate::execute(
+                &mut ExecutionContext::new(&mut doc.model),
+                input,
+            ) {
+                CommandResult::Completed {
+                    output,
+                    warnings: said,
+                } => {
                     place = output.address.clone();
-                    moved.push(format!("“{}” → “{}” ({} nesne)", row.title, output.table, output.written));
+                    moved.push(format!(
+                        "“{}” → “{}” ({} nesne)",
+                        row.title, output.table, output.written
+                    ));
                     warnings.extend(said.into_iter().map(|w| w.message));
                     w.rows.remove(0);
                 }
-                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => {
                     w.rows[0].said = Some(error.message);
                     w.said = Some(format!(
                         "{} katman taşındı; “{}” taşınamadı. Satırındaki nedeni giderip yeniden Taşı'ya basın: kalanlar \
@@ -454,14 +547,19 @@ impl App {
         let Some(w) = &self.gis.layer_migrate else {
             return column![].into();
         };
-        let text = |placeholder: &str, value: &str, on: fn(String) -> Event| -> Element<'_, Message> {
-            kentos_ui::widget::text_field(placeholder, value).on_input(move |t| message(on(t))).into()
-        };
+        let text =
+            |placeholder: &str, value: &str, on: fn(String) -> Event| -> Element<'_, Message> {
+                kentos_ui::widget::text_field(placeholder, value)
+                    .on_input(move |t| message(on(t)))
+                    .into()
+            };
         let mut form = Form::new().label_width(150.0).field(
             "Nerede",
             container(
                 Select::new(
-                    ["GeoPackage dosyası", "PostgreSQL veritabanı"].into_iter().map(Choice::new),
+                    ["GeoPackage dosyası", "PostgreSQL veritabanı"]
+                        .into_iter()
+                        .map(Choice::new),
                     Some(usize::from(w.target == CreateTarget::Postgis)),
                     |i| message(Event::Target(i)),
                 )
@@ -475,7 +573,12 @@ impl App {
                     .field(
                         "Dosya",
                         row![
-                            container(text("GeoPackage dosyasının yolu (.gpkg)", &w.path, Event::Path)).width(Length::Fill),
+                            container(text(
+                                "GeoPackage dosyasının yolu (.gpkg)",
+                                &w.path,
+                                Event::Path
+                            ))
+                            .width(Length::Fill),
                             words::secondary("Gözat…", Some(message(Event::Browse))),
                         ]
                         .spacing(8)
@@ -490,28 +593,44 @@ impl App {
                     form = form.field(
                         "Bağlantı",
                         container(
-                            Select::new(names.into_iter().map(Choice::new), w.connection, |i| message(Event::Connection(i)))
-                                .searchable(false),
+                            Select::new(names.into_iter().map(Choice::new), w.connection, |i| {
+                                message(Event::Connection(i))
+                            })
+                            .searchable(false),
                         )
                         .width(320),
                     );
                 }
                 form = form
-                    .field("Adres", text("postgresql://kullanıcı@sunucu:5432/veritabanı", &w.address, Event::Address))
+                    .field(
+                        "Adres",
+                        text(
+                            "postgresql://kullanıcı@sunucu:5432/veritabanı",
+                            &w.address,
+                            Event::Address,
+                        ),
+                    )
                     .field("Şema", text("public", &w.schema, Event::Schema));
             }
         }
-        let srid = self.document.as_ref().map_or(0, |d| d.model.settings().srid);
+        let srid = self
+            .document
+            .as_ref()
+            .map_or(0, |d| d.model.settings().srid);
         let system = match kentos_project::crs::system(srid) {
             Some(s) if srid > 0 => format!("{} (EPSG:{srid})", s.name),
             _ => "projenin sistemi".to_owned(),
         };
-        form = form.field("Koordinat sistemi", label::body(format!("{system}; tablolar projenin sisteminde yazılır.")));
+        form = form.field(
+            "Koordinat sistemi",
+            label::body(format!("{system}; tablolar projenin sisteminde yazılır.")),
+        );
         // The layers: each one's objects and kind, its table's name, what holds it back.
         let mut list = column![
             row![
                 container(label::caption("Katman").style(muted)).width(Length::FillPortion(2)),
-                container(label::caption("Tablonun adı").style(muted)).width(Length::FillPortion(3)),
+                container(label::caption("Tablonun adı").style(muted))
+                    .width(Length::FillPortion(3)),
             ]
             .spacing(10)
         ]
@@ -520,8 +639,11 @@ impl App {
             let n = crate::view::thousands(r.objects as f64);
             list = list.push(
                 row![
-                    container(column![label::strong(r.title.clone()), label::caption(format!("{n} nesne · {}", r.kind)).style(muted)])
-                        .width(Length::FillPortion(2)),
+                    container(column![
+                        label::strong(r.title.clone()),
+                        label::caption(format!("{n} nesne · {}", r.kind)).style(muted)
+                    ])
+                    .width(Length::FillPortion(2)),
                     container(
                         kentos_ui::widget::text_field("katmanın adından", &r.table)
                             .on_input(move |t| message(Event::Table(at, t))),
@@ -553,7 +675,10 @@ impl App {
                 "Taşı",
             ),
             After::Nothing => (
-                format!("Veri kaynağına taşı — {}", w.rows.first().map(|r| r.title.as_str()).unwrap_or_default()),
+                format!(
+                    "Veri kaynağına taşı — {}",
+                    w.rows.first().map(|r| r.title.as_str()).unwrap_or_default()
+                ),
                 None,
                 "Taşı",
             ),
@@ -620,7 +745,11 @@ fn migrate_words(w: &MigrateWindow) -> String {
 /// A row's table: its name as typed, else the layer's name made a table name.
 fn table_of(r: &MigrateRow) -> String {
     let t = r.table.trim();
-    if t.is_empty() { kentos_native_application::layer_export::table_name_of(&r.title) } else { t.to_owned() }
+    if t.is_empty() {
+        kentos_native_application::layer_export::table_name_of(&r.title)
+    } else {
+        t.to_owned()
+    }
 }
 
 /// What a layer's table holds, in words: its texts alone, else its kind.
@@ -647,8 +776,14 @@ fn checked(doc: &mut kentos_domain::Document, w: &mut MigrateWindow) -> bool {
     for at in 0..w.rows.len() {
         let table = table_of(&w.rows[at]);
         let shared = names.iter().any(|n| fold(n) == fold(&table));
-        let refused = if shared { None } else { refusal(doc, &w.input(&w.rows[at])) };
-        let there = refused.as_ref().is_some_and(|(code, _)| code == kentos_commands::codes::TARGET_EXISTS);
+        let refused = if shared {
+            None
+        } else {
+            refusal(doc, &w.input(&w.rows[at]))
+        };
+        let there = refused
+            .as_ref()
+            .is_some_and(|(code, _)| code == kentos_commands::codes::TARGET_EXISTS);
         if shared || there {
             let free = free_name(doc, w, at, &table, &names);
             w.rows[at].said = Some(if shared {
@@ -676,15 +811,23 @@ fn checked(doc: &mut kentos_domain::Document, w: &mut MigrateWindow) -> bool {
 /// Why `input` would not move: its code and words; none when it would.
 fn refusal(doc: &mut kentos_domain::Document, input: &LayersMigrate) -> Option<(String, String)> {
     match kentos_native_application::layers_migrate::plan(&ExecutionContext::new(doc), input) {
-        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-            Some((error.code, error.message))
-        }
-        CommandResult::Completed { .. } | CommandResult::Queued { .. } | CommandResult::Cancelled => None,
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => Some((error.code, error.message)),
+        CommandResult::Completed { .. }
+        | CommandResult::Queued { .. }
+        | CommandResult::Cancelled => None,
     }
 }
 
 /// `table` with the first number after it that neither the source nor the list's other rows have.
-fn free_name(doc: &mut kentos_domain::Document, w: &MigrateWindow, at: usize, table: &str, names: &[String]) -> String {
+fn free_name(
+    doc: &mut kentos_domain::Document,
+    w: &MigrateWindow,
+    at: usize,
+    table: &str,
+    names: &[String],
+) -> String {
     let fold = kentos_commands::fold;
     for n in 2..100 {
         let name = format!("{table}_{n}");
@@ -693,7 +836,8 @@ fn free_name(doc: &mut kentos_domain::Document, w: &MigrateWindow, at: usize, ta
         }
         let mut row = w.rows[at].clone();
         row.table = name.clone();
-        let there = refusal(doc, &w.input(&row)).is_some_and(|(code, _)| code == kentos_commands::codes::TARGET_EXISTS);
+        let there = refusal(doc, &w.input(&row))
+            .is_some_and(|(code, _)| code == kentos_commands::codes::TARGET_EXISTS);
         if !there {
             return name;
         }

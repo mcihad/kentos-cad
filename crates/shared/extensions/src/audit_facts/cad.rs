@@ -226,7 +226,9 @@ pub struct CadRoom {
 impl CadFacts {
     /// Whether it says anything: a layer holding objects, a room or a section drawn.
     pub fn is_empty(&self) -> bool {
-        self.rooms.is_empty() && self.derived.is_empty() && self.layers.iter().all(|l| l.objects == 0)
+        self.rooms.is_empty()
+            && self.derived.is_empty()
+            && self.layers.iter().all(|l| l.objects == 0)
     }
 
     /// These facts in the module's order, rounding and bounds, and whether a list was cut. Doing it again changes
@@ -249,13 +251,18 @@ impl CadFacts {
         for r in &mut self.rooms {
             r.at = place(r.at);
             // Elevations to the millimetre, as the other lengths.
-            for v in [&mut r.floor, &mut r.storey_from, &mut r.storey_to].into_iter().flatten() {
+            for v in [&mut r.floor, &mut r.storey_from, &mut r.storey_to]
+                .into_iter()
+                .flatten()
+            {
                 *v = round(*v, LENGTH);
             }
         }
         self.rooms.sort_by(|a, b| a.uid.cmp(&b.uid));
-        self.derived.sort_by(|a, b| a.name.cmp(&b.name).then_with(|| a.mark.cmp(&b.mark)));
-        self.broken.sort_by(|a, b| a.uid.cmp(&b.uid).then_with(|| a.kind.cmp(&b.kind)));
+        self.derived
+            .sort_by(|a, b| a.name.cmp(&b.name).then_with(|| a.mark.cmp(&b.mark)));
+        self.broken
+            .sort_by(|a, b| a.uid.cmp(&b.uid).then_with(|| a.kind.cmp(&b.kind)));
         for o in &mut self.room_overlaps {
             if o.b < o.a {
                 std::mem::swap(&mut o.a, &mut o.b);
@@ -264,7 +271,8 @@ impl CadFacts {
             o.at = place(o.at);
         }
         self.room_overlaps.retain(|o| o.area > 0.0);
-        self.room_overlaps.sort_by(|x, y| x.a.cmp(&y.a).then_with(|| x.b.cmp(&y.b)));
+        self.room_overlaps
+            .sort_by(|x, y| x.a.cmp(&y.a).then_with(|| x.b.cmp(&y.b)));
         for g in &mut self.model_gaps {
             g.missing.sort();
             g.missing.dedup();
@@ -307,10 +315,27 @@ mod tests {
         let facts = CadFacts {
             layers: vec![],
             blocks: vec![
-                CadBlock { name: "MM-TEFR-YATAK".into(), inserts: 2, layers: vec!["B".into(), "A".into(), "B".into()] },
-                CadBlock { name: "MM-KAPI-90".into(), inserts: 1, layers: vec!["A".into()] },
+                CadBlock {
+                    name: "MM-TEFR-YATAK".into(),
+                    inserts: 2,
+                    layers: vec!["B".into(), "A".into(), "B".into()],
+                },
+                CadBlock {
+                    name: "MM-KAPI-90".into(),
+                    inserts: 1,
+                    layers: vec!["A".into()],
+                },
             ],
-            dimension_fonts: vec![FontUse { font: "Barlow".into(), count: 3 }, FontUse { font: "Arimo".into(), count: 1 }],
+            dimension_fonts: vec![
+                FontUse {
+                    font: "Barlow".into(),
+                    count: 3,
+                },
+                FontUse {
+                    font: "Arimo".into(),
+                    count: 1,
+                },
+            ],
             grids: vec![],
             rooms: vec![CadRoom {
                 uid: "r".into(),
@@ -326,8 +351,18 @@ mod tests {
             derived: vec![],
             broken: vec![],
             room_overlaps: vec![
-                CadRoomOverlap { a: "r2".into(), b: "r1".into(), area: 0.360_04, at: [2.000_4, 1.0] },
-                CadRoomOverlap { a: "r3".into(), b: "r4".into(), area: 0.000_04, at: [0.0, 0.0] },
+                CadRoomOverlap {
+                    a: "r2".into(),
+                    b: "r1".into(),
+                    area: 0.360_04,
+                    at: [2.000_4, 1.0],
+                },
+                CadRoomOverlap {
+                    a: "r3".into(),
+                    b: "r4".into(),
+                    area: 0.000_04,
+                    at: [0.0, 0.0],
+                },
             ],
             model_gaps: vec![],
             exits: vec![],
@@ -335,7 +370,15 @@ mod tests {
         let (n, cut) = facts.normalized();
         assert!(!cut);
         // A pair by its ids in order, its area to 0.0001 m²; one under that is no overlap.
-        assert_eq!(n.room_overlaps, [CadRoomOverlap { a: "r1".into(), b: "r2".into(), area: 0.36, at: [2.0, 1.0] }]);
+        assert_eq!(
+            n.room_overlaps,
+            [CadRoomOverlap {
+                a: "r1".into(),
+                b: "r2".into(),
+                area: 0.36,
+                at: [2.0, 1.0]
+            }]
+        );
         assert_eq!(n.blocks[0].name, "MM-KAPI-90");
         assert_eq!(n.blocks[1].layers, ["A", "B"]);
         assert_eq!(n.dimension_fonts[0].font, "Arimo");

@@ -74,7 +74,14 @@ fn a_columns_four_gaps_go_to_the_walls_and_the_column_beside() {
         Target::Column { column: 1, side: 3 },
         "the other column's left side"
     );
-    assert!(matches!(g[0].unwrap().target, Target::Wall { wall: 0, edge: 0, left_face: true }));
+    assert!(matches!(
+        g[0].unwrap().target,
+        Target::Wall {
+            wall: 0,
+            edge: 0,
+            left_face: true
+        }
+    ));
     // 1.00 from the west wall: the column 0.7 west.
     let at = moved(&walls, &columns, 0, 3, 1.0).unwrap();
     assert!(close(at.x, 1.3) && close(at.y, 1.5), "{at:?}");
@@ -112,7 +119,11 @@ fn a_turned_column_measures_to_a_wall_turned_with_it_only() {
     let g = gaps(&walls, &columns, 0);
     let above = g[2].expect("the turned wall above");
     assert!(close(above.distance, 3.0 - 0.1 - 0.2), "{above:?}");
-    assert!(g[1].is_none(), "the east wall is not parallel to the turned side: {:?}", g[1]);
+    assert!(
+        g[1].is_none(),
+        "the east wall is not parallel to the turned side: {:?}",
+        g[1]
+    );
 }
 
 #[test]
@@ -133,7 +144,10 @@ fn a_round_column_is_measured_by_its_bounding_square_and_levels_part() {
         spec: &round,
         level: Some("zemin"),
     }];
-    let d: Vec<f64> = gaps(&walls, &on, 0).iter().map(|g| g.unwrap().distance).collect();
+    let d: Vec<f64> = gaps(&walls, &on, 0)
+        .iter()
+        .map(|g| g.unwrap().distance)
+        .collect();
     for (got, want) in d.iter().zip([1.65, 2.65, 1.65, 2.65]) {
         assert!(close(*got, want), "{d:?}");
     }
@@ -142,5 +156,8 @@ fn a_round_column_is_measured_by_its_bounding_square_and_levels_part() {
         spec: &round,
         level: Some("bodrum"),
     }];
-    assert!(gaps(&walls, &off, 0).iter().all(Option::is_none), "another level's walls are not its");
+    assert!(
+        gaps(&walls, &off, 0).iter().all(Option::is_none),
+        "another level's walls are not its"
+    );
 }

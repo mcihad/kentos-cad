@@ -39,7 +39,10 @@ fn buluta_dosya_olarak_kaydet_opens_the_upload_on_file_storage() {
         app.cloud.upload.as_ref().expect("the window").storage,
         ProjectStorage::File
     );
-    cloud(&mut app, Event::UploadType(kentos_commands::ProjectType::Gis));
+    cloud(
+        &mut app,
+        Event::UploadType(kentos_commands::ProjectType::Gis),
+    );
     cloud(&mut app, Event::UploadStorage(ProjectStorage::Database));
     assert_eq!(
         app.cloud.upload.as_ref().expect("the window").storage,

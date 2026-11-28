@@ -6,7 +6,8 @@ mod common;
 use common::{envelope, member, open};
 use kentos_application::{admin, changes, projects, snapshot};
 use kentos_contracts::{
-    DocumentSnapshotV2, FeatureChange, ProjectChanges, ProjectCreate, ProjectPatch, TenantRole, ProjectType,
+    DocumentSnapshotV2, FeatureChange, ProjectChanges, ProjectCreate, ProjectPatch, ProjectType,
+    TenantRole,
 };
 use kentos_postgres::testing::TestDb;
 use uuid::Uuid;
@@ -1306,7 +1307,10 @@ async fn a_facade_recipe_commits_only_with_the_shared_plan_of_its_sources() {
     command.version = 2;
     let refused = changes::commit(&db.app, &by, command).await.unwrap_err();
     assert_eq!(refused.path(), Some("project.dimensionSets[0].members"));
-    assert_eq!(projects::info(&db.app, &by).await.unwrap().data_revision, "0");
+    assert_eq!(
+        projects::info(&db.app, &by).await.unwrap().data_revision,
+        "0"
+    );
     // The whole plan: committed, and back from the snapshot as written.
     let mut command = envelope(
         &who,
@@ -1371,7 +1375,10 @@ async fn a_facade_recipe_commits_only_with_the_shared_plan_of_its_sources() {
         "{:?}",
         refused.path()
     );
-    assert_eq!(projects::info(&db.app, &by).await.unwrap().data_revision, "1");
+    assert_eq!(
+        projects::info(&db.app, &by).await.unwrap().data_revision,
+        "1"
+    );
     db.close().await;
 }
 
@@ -1437,8 +1444,14 @@ async fn a_recipes_sheet_scales_commit_only_as_the_recipe_draws_them() {
         let last = d.annotative.as_mut().unwrap().scales.last_mut().unwrap();
         last.offset = last.offset.map(|o| o + 0.5);
         let refused = commit(changes_of(&entities)).await.unwrap_err();
-        assert_eq!(refused.path(), Some(format!("features[{k}].entity.annotative").as_str()));
-        assert_eq!(projects::info(&db.app, &by).await.unwrap().data_revision, "0");
+        assert_eq!(
+            refused.path(),
+            Some(format!("features[{k}].entity.annotative").as_str())
+        );
+        assert_eq!(
+            projects::info(&db.app, &by).await.unwrap().data_revision,
+            "0"
+        );
     }
     // The recipes' own representations: committed, and back from the snapshot as written.
     let committed = commit(changes_of(&source.entities)).await.unwrap();
@@ -1457,7 +1470,11 @@ async fn a_recipes_sheet_scales_commit_only_as_the_recipe_draws_them() {
                 })
                 .unwrap()
         };
-        assert_eq!(dimension(&back), dimension(&source), "the sheets' representations kept");
+        assert_eq!(
+            dimension(&back),
+            dimension(&source),
+            "the sheets' representations kept"
+        );
     }
     db.close().await;
 }

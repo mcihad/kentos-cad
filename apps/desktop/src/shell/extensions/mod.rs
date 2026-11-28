@@ -40,8 +40,6 @@ mod panel_tabs;
 // A panel's worked-out values: defaults and calculations (docs/adr/8057 §35).
 mod panel_values;
 // Kapı 3's part that runs code: an agent's trial on a synthetic drawing (docs/adr/8057 §37).
-mod trial;
-mod tool_pins;
 mod bisect;
 pub(crate) mod bom;
 mod browse;
@@ -49,19 +47,21 @@ pub(crate) mod environment;
 mod examples;
 mod panel_view;
 mod panels;
-mod workshop;
 mod problems;
 mod report;
-mod wheel_folder;
 mod ribbon;
 pub(crate) mod runner;
 mod search;
 pub(crate) mod submit;
+mod tool_pins;
 pub(crate) mod tools;
+mod trial;
 mod view;
+mod wheel_folder;
+mod workshop;
 
-pub(crate) use tool_pins::PinnedTool;
 pub(crate) use search::ExtHit;
+pub(crate) use tool_pins::PinnedTool;
 
 use std::path::{Path, PathBuf};
 

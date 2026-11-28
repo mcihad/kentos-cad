@@ -36,9 +36,19 @@ fn a_click_puts_the_whole_system_in_one_step() {
     let mut b = bench();
     b.move_to(0., 0.);
     let before = b.doc.to_snapshot_v2();
-    let preview = b.session.preview(&Default::default()).expect("the plan drawn");
-    assert!(preview.strokes.len() >= 7, "the grids drawn: {}", preview.strokes.len());
-    assert!(preview.texts.iter().any(|t| t.text == "A"), "the labels in their bubbles");
+    let preview = b
+        .session
+        .preview(&Default::default())
+        .expect("the plan drawn");
+    assert!(
+        preview.strokes.len() >= 7,
+        "the grids drawn: {}",
+        preview.strokes.len()
+    );
+    assert!(
+        preview.texts.iter().any(|t| t.text == "A"),
+        "the labels in their bubbles"
+    );
     assert_eq!(b.doc.to_snapshot_v2(), before, "the preview writes nothing");
     b.click(0., 0.);
     assert_eq!(labels(&b), ["1", "2", "3", "4", "A", "B", "C"]);
@@ -51,13 +61,24 @@ fn a_click_puts_the_whole_system_in_one_step() {
         })
         .expect("grid 1");
     // Grid 1 runs up from 1.5 m below the first grid across y to 1.5 m past the last (10 m up).
-    assert!((first[0].x - E).abs() < 1e-9 && (first[0].y - (N - 1.5)).abs() < 1e-9, "{first:?}");
+    assert!(
+        (first[0].x - E).abs() < 1e-9 && (first[0].y - (N - 1.5)).abs() < 1e-9,
+        "{first:?}"
+    );
     assert!((first[1].y - (N + 11.5)).abs() < 1e-9, "{first:?}");
     let written = b.doc.entities().count();
     b.confirm();
-    assert_eq!(b.doc.entities().count(), written, "Enter after a click ends the tool, no second system");
+    assert_eq!(
+        b.doc.entities().count(),
+        written,
+        "Enter after a click ends the tool, no second system"
+    );
     assert_eq!(b.doc.undo().as_deref(), Some("Aks"));
-    assert_eq!(b.doc.entities().count(), 0, "one undo takes the system back");
+    assert_eq!(
+        b.doc.entities().count(),
+        0,
+        "one undo takes the system back"
+    );
 }
 
 #[test]
@@ -68,7 +89,10 @@ fn columns_stand_at_every_crossing_tied_to_their_grids() {
     assert!(b.run(|s, cx| s.configure("K", "yes", cx)));
     assert!(b.run(|s, cx| s.configure("E", "40 cm", cx)));
     assert!(b.run(|s, cx| s.configure("S", "S1", cx)));
-    assert!(!b.run(|s, cx| s.configure("X", "4 -2", cx)), "a gap below 0 is refused");
+    assert!(
+        !b.run(|s, cx| s.configure("X", "4 -2", cx)),
+        "a gap below 0 is refused"
+    );
     b.click(10., 10.);
     let columns: Vec<_> = b
         .doc
@@ -85,10 +109,17 @@ fn columns_stand_at_every_crossing_tied_to_their_grids() {
     assert!((columns[0].width - 0.4).abs() < 1e-12 && (columns[0].depth() - 0.5).abs() < 1e-12);
     let grids = columns[0].grids.clone().expect("tied to its grids");
     for uid in grids {
-        let slot = b.doc.slot_of(uid.parse().expect("a uid")).expect("the grid is in the drawing");
+        let slot = b
+            .doc
+            .slot_of(uid.parse().expect("a uid"))
+            .expect("the grid is in the drawing");
         assert!(matches!(b.doc.get(slot), Some(Entity::Grid(_))));
     }
-    assert_eq!(b.memory.grid_system_x.as_slice(), [4.0, 4.0], "the spacings stay for the next system");
+    assert_eq!(
+        b.memory.grid_system_x.as_slice(),
+        [4.0, 4.0],
+        "the spacings stay for the next system"
+    );
 }
 
 #[test]
@@ -108,7 +139,10 @@ fn two_points_turn_the_system_to_the_pointer() {
         .expect("grid A");
     let (dx, dy) = (across_y[1].x - across_y[0].x, across_y[1].y - across_y[0].y);
     // Far from the origin the stored points carry ~1e-9 m of rounding.
-    assert!((dy.atan2(dx).to_degrees() - 30.0).abs() < 1e-6, "turned 30°: {across_y:?}");
+    assert!(
+        (dy.atan2(dx).to_degrees() - 30.0).abs() < 1e-6,
+        "turned 30°: {across_y:?}"
+    );
 }
 
 /// Eğrisel (docs/adr/0725 §1): radial grids 1… and arcs A… round the click, a column at every crossing along its radial
@@ -117,12 +151,18 @@ fn two_points_turn_the_system_to_the_pointer() {
 fn the_curved_system_puts_radial_grids_arcs_and_columns() {
     let mut b = bench();
     assert!(b.run(|s, cx| s.configure("F", "radial", cx)));
-    assert!(b.run(|s, cx| s.configure("X", "90/3", cx)), "three turns of 30°");
+    assert!(
+        b.run(|s, cx| s.configure("X", "90/3", cx)),
+        "three turns of 30°"
+    );
     assert!(b.run(|s, cx| s.configure("Y", "4", cx)));
     assert!(b.run(|s, cx| s.configure("R", "6", cx)));
     assert!(b.run(|s, cx| s.configure("N", "cw", cx)));
     assert!(b.run(|s, cx| s.configure("K", "yes", cx)));
-    assert!(!b.run(|s, cx| s.configure("X", "4*100", cx)), "a whole turn or more is refused");
+    assert!(
+        !b.run(|s, cx| s.configure("X", "4*100", cx)),
+        "a whole turn or more is refused"
+    );
     b.click(0., 0.);
     assert_eq!(labels(&b), ["1", "2", "3", "4", "A", "B"]);
     let columns: Vec<_> = b
@@ -135,9 +175,17 @@ fn the_curved_system_puts_radial_grids_arcs_and_columns() {
         .collect();
     assert_eq!(columns.len(), 8, "4 radial × 2 arcs");
     // Clockwise: grid 2 at −30°, its column on arc A 6 m out, turned along it.
-    let a2 = columns.iter().find(|c| c.place.as_deref() == Some("A-2")).expect("A-2");
+    let a2 = columns
+        .iter()
+        .find(|c| c.place.as_deref() == Some("A-2"))
+        .expect("A-2");
     let t = (-30f64).to_radians();
-    assert!((a2.at.x - (E + 6.0 * t.cos())).abs() < 1e-6 && (a2.at.y - (N + 6.0 * t.sin())).abs() < 1e-6, "{:?}", a2.at);
+    assert!(
+        (a2.at.x - (E + 6.0 * t.cos())).abs() < 1e-6
+            && (a2.at.y - (N + 6.0 * t.sin())).abs() < 1e-6,
+        "{:?}",
+        a2.at
+    );
     assert!((a2.rotation - t).abs() < 1e-12);
     let arc = b
         .doc
@@ -158,7 +206,10 @@ fn equal_division_splits_the_second_click_and_gapped_grids_keep_their_ends() {
     assert!(b.run(|s, cx| s.configure("P", "two", cx)));
     assert!(b.run(|s, cx| s.configure("Q", "yes", cx)));
     assert!(b.run(|s, cx| s.configure("C", "12", cx)));
-    assert!(!b.run(|s, cx| s.configure("C", "1200", cx)), "more than 1000 mm is refused");
+    assert!(
+        !b.run(|s, cx| s.configure("C", "1200", cx)),
+        "more than 1000 mm is refused"
+    );
     b.click(0., 0.);
     b.move_to(20.0, 0.0);
     b.click(20.0, 0.0);
@@ -174,7 +225,11 @@ fn equal_division_splits_the_second_click_and_gapped_grids_keep_their_ends() {
     for (k, x) in xs.iter().enumerate() {
         assert!((x - 20.0 / 3.0 * k as f64).abs() < 1e-9, "{xs:?}");
     }
-    assert!(b.doc.entities().all(|e| !matches!(e, Entity::Grid(g) if g.grid.ends != Some(12.0))));
+    assert!(
+        b.doc
+            .entities()
+            .all(|e| !matches!(e, Entity::Grid(g) if g.grid.ends != Some(12.0)))
+    );
 }
 
 /// Kolon (docs/adr/0725 §2, §3): L with its legs, put by its lower left; the legs half its sides until typed.
@@ -185,7 +240,10 @@ fn the_column_tool_puts_an_l_by_its_lower_left() {
     assert!(b.run(|s, cx| s.configure("E", "0.6", cx)));
     assert!(b.run(|s, cx| s.configure("Y", "0.5", cx)));
     assert!(b.run(|s, cx| s.configure("H", "bottomLeft", cx)));
-    assert!(!b.run(|s, cx| s.configure("L", "0.2 -1", cx)), "a leg below 0 is refused");
+    assert!(
+        !b.run(|s, cx| s.configure("L", "0.2 -1", cx)),
+        "a leg below 0 is refused"
+    );
     b.click(1.0, 2.0);
     assert!(b.run(|s, cx| s.configure("L", "0.2 0.3", cx)));
     b.click(4.0, 2.0);
@@ -198,8 +256,16 @@ fn the_column_tool_puts_an_l_by_its_lower_left() {
         })
         .collect();
     assert_eq!(columns.len(), 2);
-    assert_eq!(columns[0].legs, Some([0.25, 0.3]), "half its depth and width");
+    assert_eq!(
+        columns[0].legs,
+        Some([0.25, 0.3]),
+        "half its depth and width"
+    );
     assert_eq!(columns[1].legs, Some([0.2, 0.3]));
-    assert!(columns.iter().all(|c| c.shape == kentos_commands::ColumnShape::LShape
-        && c.anchor == kentos_commands::ColumnAnchor::BottomLeft));
+    assert!(
+        columns
+            .iter()
+            .all(|c| c.shape == kentos_commands::ColumnShape::LShape
+                && c.anchor == kentos_commands::ColumnAnchor::BottomLeft)
+    );
 }

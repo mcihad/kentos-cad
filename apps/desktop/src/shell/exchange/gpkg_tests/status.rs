@@ -436,8 +436,15 @@ fn the_status_and_the_card_say_the_source() {
         .next()
         .map(|(_, e)| kentos_domain::Slot(e.base().id));
     if let Some(slot) = free {
-        let (line, waits) = app.slot_card(slot).expect("a card").source.expect("its layer's line");
-        assert!(line.starts_with("Çizim katmanı · kimlik …") && !waits, "{line}");
+        let (line, waits) = app
+            .slot_card(slot)
+            .expect("a card")
+            .source
+            .expect("its layer's line");
+        assert!(
+            line.starts_with("Çizim katmanı · kimlik …") && !waits,
+            "{line}"
+        );
     }
 }
 

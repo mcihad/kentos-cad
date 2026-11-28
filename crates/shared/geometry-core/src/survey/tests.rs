@@ -478,7 +478,12 @@ fn undulations_are_one_more_than_the_shots() {
         back_reading: 0.0,
         station_z: Some(100.0),
         instrument_height: None,
-        shots: vec![Shot { reading: 50.0, distance: 400.0, zenith: Some(98.0), target_height: None }],
+        shots: vec![Shot {
+            reading: 50.0,
+            distance: 400.0,
+            zenith: Some(98.0),
+            target_height: None,
+        }],
         refraction: None,
         grid: None,
         undulations: Some(u),
@@ -487,8 +492,14 @@ fn undulations_are_one_more_than_the_shots() {
     assert!(e.contains("2 ayrım beklenirken 1 verildi"), "{e}");
     assert!(polar_survey(&input(vec![36.0, f64::NAN])).is_err());
     // Without the grid the undulations change nothing.
-    let without = PolarInput { undulations: None, ..input(vec![36.0, 36.1]) };
-    assert_eq!(polar_survey(&input(vec![36.0, 36.1])), polar_survey(&without));
+    let without = PolarInput {
+        undulations: None,
+        ..input(vec![36.0, 36.1])
+    };
+    assert_eq!(
+        polar_survey(&input(vec![36.0, 36.1])),
+        polar_survey(&without)
+    );
 }
 
 /// Docs/adr/4100: a traverse's heights by trigonometric heighting. A square walked counter-clockwise from TM (as
@@ -533,7 +544,11 @@ fn the_traverse_carries_its_heights_by_trigonometric_heighting() {
     let r = traverse(&input).expect("computes");
     let f = r.height_misclosure.expect("closed");
     assert!((f - (-0.1)).abs() < 1e-9, "{f}");
-    let dh: Vec<f64> = r.legs.iter().map(|l| l.dh.expect("a height difference")).collect();
+    let dh: Vec<f64> = r
+        .legs
+        .iter()
+        .map(|l| l.dh.expect("a height difference"))
+        .collect();
     for (got, want) in dh.iter().zip([1.025, 2.025, -1.475, -1.575]) {
         assert!((got - want).abs() < 1e-9, "{dh:?}");
     }
@@ -545,28 +560,44 @@ fn the_traverse_carries_its_heights_by_trigonometric_heighting() {
     // The curvature and refraction with k = 0.13 and the field book's R = 6 371 000 m (docs/adr/0169 §3): each leg's
     // (1 − k)·S²/(2R) more.
     let curved = traverse(&TraverseInput {
-        heights: Some(TraverseHeights { refraction: Some(0.13), end: None, ..heights.clone() }),
+        heights: Some(TraverseHeights {
+            refraction: Some(0.13),
+            end: None,
+            ..heights.clone()
+        }),
         ..input.clone()
     })
     .expect("computes");
     let c = 0.87 * 100.0 * 100.0 / (2.0 * 6_371_000.0);
     assert!((curved.legs[0].dh.expect("dh") - (1.0 + c)).abs() < 1e-12);
-    assert!(curved.height_misclosure.is_none() && curved.legs[0].vh.is_none(), "an end without a height: no closure");
+    assert!(
+        curved.height_misclosure.is_none() && curved.legs[0].vh.is_none(),
+        "an end without a height: no closure"
+    );
     // The counts; the zenith inside (0, 180°).
     let e = traverse(&TraverseInput {
-        heights: Some(TraverseHeights { zeniths: vec![90.0; 3], ..heights.clone() }),
+        heights: Some(TraverseHeights {
+            zeniths: vec![90.0; 3],
+            ..heights.clone()
+        }),
         ..input.clone()
     })
     .expect_err("one short");
     assert!(e.contains("4 başucu açısı olmalı, 3 verildi"), "{e}");
     let e = traverse(&TraverseInput {
-        heights: Some(TraverseHeights { zeniths: vec![90.0, 0.0, 90.0, 90.0], ..heights.clone() }),
+        heights: Some(TraverseHeights {
+            zeniths: vec![90.0, 0.0, 90.0, 90.0],
+            ..heights.clone()
+        }),
         ..input.clone()
     })
     .expect_err("zenith 0");
     assert!(e.contains("2. başucu açısı 0 ile 180° arasında"), "{e}");
     let e = traverse(&TraverseInput {
-        heights: Some(TraverseHeights { undulations: Some(vec![36.0; 4]), ..heights }),
+        heights: Some(TraverseHeights {
+            undulations: Some(vec![36.0; 4]),
+            ..heights
+        }),
         ..input
     })
     .expect_err("undulations one short");
@@ -579,13 +610,20 @@ fn the_traverse_carries_its_heights_by_trigonometric_heighting() {
 fn each_leg_s_factor_is_taken_at_its_own_height() {
     use crate::crs::ground::{Grid, grid_factor};
     let unit = Unit::DEG;
-    let line = [TM, Vec2::new(TM.x + 400.0, TM.y + 300.0), Vec2::new(TM.x + 900.0, TM.y + 300.0)];
+    let line = [
+        TM,
+        Vec2::new(TM.x + 400.0, TM.y + 300.0),
+        Vec2::new(TM.x + 900.0, TM.y + 300.0),
+    ];
     let back = Vec2::new(TM.x - 50.0, TM.y);
     let (angles, distances) = measure(unit, &line, back, None);
     use crate::api::json::{FromJson, Json};
     let tm30 = r#"{"kind":"tm","datum":"TUREF","centralMeridian":30,"scaleFactor":1,"falseEasting":500000,"falseNorthing":0}"#;
     let system = crate::crs::System::from_json(&Json::parse(tm30).expect("JSON")).expect("TM30");
-    let grid = Grid { system: system.clone(), height: 850.0 };
+    let grid = Grid {
+        system: system.clone(),
+        height: 850.0,
+    };
     let r = traverse(&TraverseInput {
         unit: "deg".into(),
         start: TM,
@@ -608,13 +646,31 @@ fn each_leg_s_factor_is_taken_at_its_own_height() {
     })
     .expect("computes");
     // Heights 1200, 1100, 900: the legs' own ellipsoidal heights (1236 + 1136.5)/2 and (1136.5 + 937)/2.
-    let own: Vec<f64> = r.legs.iter().map(|l| l.height.expect("its own height")).collect();
-    assert!((own[0] - 1186.25).abs() < 1e-9 && (own[1] - 1036.75).abs() < 1e-9, "{own:?}");
+    let own: Vec<f64> = r
+        .legs
+        .iter()
+        .map(|l| l.height.expect("its own height"))
+        .collect();
+    assert!(
+        (own[0] - 1186.25).abs() < 1e-9 && (own[1] - 1036.75).abs() < 1e-9,
+        "{own:?}"
+    );
     let mut at = TM;
     for (leg, h) in r.legs.iter().zip(&own) {
         let next = Vec2::new(at.x + leg.dy, at.y + leg.dx);
-        let f = grid_factor(&Grid { system: system.clone(), height: *h }, at, next).expect("a factor");
-        assert!((leg.height_factor.expect("its factor") - f.height_factor).abs() < 1e-9, "{leg:?}");
+        let f = grid_factor(
+            &Grid {
+                system: system.clone(),
+                height: *h,
+            },
+            at,
+            next,
+        )
+        .expect("a factor");
+        assert!(
+            (leg.height_factor.expect("its factor") - f.height_factor).abs() < 1e-9,
+            "{leg:?}"
+        );
         at = next;
     }
 }
@@ -651,7 +707,14 @@ fn a_leg_sighted_back_takes_the_mean_of_its_two_differences_and_gives_its_refrac
                 // Sighted back between the same two points: the far end's instrument at the forward target's height,
                 // the station's target at the forward instrument's.
                 back: sighted_back.then(|| {
-                    vec![Some(TraverseBackSight { zenith: zenith(-10.0 - c), instrument: 1.6, target: 1.6 }), None]
+                    vec![
+                        Some(TraverseBackSight {
+                            zenith: zenith(-10.0 - c),
+                            instrument: 1.6,
+                            target: 1.6,
+                        }),
+                        None,
+                    ]
                 }),
             }),
         })
@@ -660,13 +723,20 @@ fn a_leg_sighted_back_takes_the_mean_of_its_two_differences_and_gives_its_refrac
     for k in [0.13, 0.2] {
         let got = run(k, true);
         let first = &got.legs[0];
-        assert!((first.dh.expect("a difference") - 10.0).abs() < 1e-9, "{first:?}");
+        assert!(
+            (first.dh.expect("a difference") - 10.0).abs() < 1e-9,
+            "{first:?}"
+        );
         let pair = first.refraction.expect("its pair's k");
         assert!((pair - 0.13).abs() < 1e-3, "{pair}");
         // The second, one way: S·cot z + i − t + (1 − k)·S²/2R.
         let second = &got.legs[1];
         let one_way = -3.0 + 1.5 - 1.7 + super::fieldbook::curvature(1000.0, k);
-        assert!((second.dh.expect("a difference") - one_way).abs() < 1e-9 && second.refraction.is_none(), "{second:?}");
+        assert!(
+            (second.dh.expect("a difference") - one_way).abs() < 1e-9
+                && second.refraction.is_none(),
+            "{second:?}"
+        );
     }
     // Sighted back to another target height at the station: still the mean, but no pair's k (not one chord).
     let mut other = TraverseInput {
@@ -686,17 +756,31 @@ fn a_leg_sighted_back_takes_the_mean_of_its_two_differences_and_gives_its_refrac
             targets: vec![1.6],
             refraction: Some(0.13),
             undulations: None,
-            back: Some(vec![Some(TraverseBackSight { zenith: zenith(-10.0 - c + 0.2), instrument: 1.6, target: 1.8 })]),
+            back: Some(vec![Some(TraverseBackSight {
+                zenith: zenith(-10.0 - c + 0.2),
+                instrument: 1.6,
+                target: 1.8,
+            })]),
         }),
     };
     let leg = traverse(&other).expect("computes").legs[0].clone();
-    assert!((leg.dh.expect("a difference") - 10.0).abs() < 1e-9 && leg.refraction.is_none(), "{leg:?}");
+    assert!(
+        (leg.dh.expect("a difference") - 10.0).abs() < 1e-9 && leg.refraction.is_none(),
+        "{leg:?}"
+    );
     other.heights.as_mut().expect("heights").back = None;
-    assert!(traverse(&other).expect("computes").legs[0].refraction.is_none());
+    assert!(
+        traverse(&other).expect("computes").legs[0]
+            .refraction
+            .is_none()
+    );
     // Not sighted back: the first leg one way, with the project's k.
     let alone = run(0.2, false);
     let one_way = 10.0 - c + super::fieldbook::curvature(1000.0, 0.2);
-    assert!((alone.legs[0].dh.expect("a difference") - one_way).abs() < 1e-9 && alone.legs[0].refraction.is_none());
+    assert!(
+        (alone.legs[0].dh.expect("a difference") - one_way).abs() < 1e-9
+            && alone.legs[0].refraction.is_none()
+    );
 }
 
 /// docs/adr/4500: the back sights' refusals: one a leg, a zenith angle between straight up and down, finite heights.
@@ -724,14 +808,26 @@ fn back_sights_are_refused_as_their_rules_say() {
             back: Some(sights),
         }),
     };
-    let sight = |zenith: f64, target: f64| Some(TraverseBackSight { zenith, instrument: 1.5, target });
+    let sight = |zenith: f64, target: f64| {
+        Some(TraverseBackSight {
+            zenith,
+            instrument: 1.5,
+            target,
+        })
+    };
     let said = |sights| traverse(&input(sights)).expect_err("refused");
-    assert_eq!(said(vec![sight(100.0, 1.5)]), "2 kenarlı bu poligonda geri nişanlar 2 kenar için olmalı, 1 verildi.");
+    assert_eq!(
+        said(vec![sight(100.0, 1.5)]),
+        "2 kenarlı bu poligonda geri nişanlar 2 kenar için olmalı, 1 verildi."
+    );
     assert_eq!(
         said(vec![None, sight(200.0, 1.5)]),
         "2. kenarın geri başucu açısı 0 ile 200 grad arasında olmalı (yatay nişan 100 grad)."
     );
-    assert!(said(vec![sight(100.0, f64::NAN), None]).starts_with("1. kenarın geri nişandaki işaret yüksekliği"));
+    assert!(
+        said(vec![sight(100.0, f64::NAN), None])
+            .starts_with("1. kenarın geri nişandaki işaret yüksekliği")
+    );
 }
 
 /// docs/adr/5300: a leap-frog setup with its two sights alike but for the zenith's side: the curvature falls out with
@@ -739,19 +835,52 @@ fn back_sights_are_refused_as_their_rules_say() {
 #[test]
 fn a_leapfrog_setup_s_difference_is_fore_less_back() {
     use super::fieldbook::{Sight, leapfrog};
-    let back = Sight { slope: 50.0, zenith: 98.0, target: 1.5 };
-    let fore = Sight { slope: 50.0, zenith: 102.0, target: 1.5 };
+    let back = Sight {
+        slope: 50.0,
+        zenith: 98.0,
+        target: 1.5,
+    };
+    let fore = Sight {
+        slope: 50.0,
+        zenith: 102.0,
+        target: 1.5,
+    };
     let (dh, length) = leapfrog(back, fore, Unit::GRAD, 0.13).expect("a setup");
     let a = 2.0 * std::f64::consts::PI / 400.0 * 2.0;
-    assert!((dh + 2.0 * 50.0 * crate::jsmath::sin(a)).abs() < 1e-12, "{dh}");
-    assert!((length - 100.0 * crate::jsmath::cos(a)).abs() < 1e-12, "{length}");
+    assert!(
+        (dh + 2.0 * 50.0 * crate::jsmath::sin(a)).abs() < 1e-12,
+        "{dh}"
+    );
+    assert!(
+        (length - 100.0 * crate::jsmath::cos(a)).abs() < 1e-12,
+        "{length}"
+    );
     let (dh0, _) = leapfrog(back, fore, Unit::GRAD, 0.0).expect("a setup");
     assert!((dh - dh0).abs() < 1e-12, "equal distances: k falls out");
     // Unequal: the curvature of the longer stays.
-    let far = Sight { slope: 300.0, ..fore };
+    let far = Sight {
+        slope: 300.0,
+        ..fore
+    };
     let (d1, _) = leapfrog(back, far, Unit::GRAD, 0.13).expect("a setup");
     let (d2, _) = leapfrog(back, far, Unit::GRAD, 0.0).expect("a setup");
     assert!(d2 > d1, "k lowers the curvature's term");
-    assert!(leapfrog(Sight { slope: 0.0, ..back }, fore, Unit::GRAD, 0.13).expect_err("no length").starts_with("Geri"));
-    assert!(leapfrog(back, Sight { zenith: 200.0, ..fore }, Unit::GRAD, 0.13).expect_err("down").starts_with("İleri"));
+    assert!(
+        leapfrog(Sight { slope: 0.0, ..back }, fore, Unit::GRAD, 0.13)
+            .expect_err("no length")
+            .starts_with("Geri")
+    );
+    assert!(
+        leapfrog(
+            back,
+            Sight {
+                zenith: 200.0,
+                ..fore
+            },
+            Unit::GRAD,
+            0.13
+        )
+        .expect_err("down")
+        .starts_with("İleri")
+    );
 }

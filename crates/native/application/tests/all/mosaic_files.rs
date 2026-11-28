@@ -24,7 +24,8 @@ fn doc() -> Document {
                      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }],
         "activeLayer": "altlik", "entities": [], "styles": { "items": [], "categories": [] }
     });
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     Document::from_snapshot(snapshot).expect("setup")
 }
 
@@ -40,14 +41,29 @@ fn mosaic_files() {
     };
     // Top first: the reverse of the files gdalbuildvrt was given (bottom first).
     let mosaics: [(&str, &[&str], MosaicResolution); 3] = [
-        ("dem-verilen", &["dem-a.tif", "dem-b.tif", "dem-c.tif"], MosaicResolution::Highest),
-        ("dem-kaba", &["dem-e.tif", "dem-c.tif", "dem-b.tif", "dem-a.tif"], MosaicResolution::Lowest),
-        ("orto", &["orto-2023.tif", "orto-2021.tif", "orto-2019.tif"], MosaicResolution::Highest),
+        (
+            "dem-verilen",
+            &["dem-a.tif", "dem-b.tif", "dem-c.tif"],
+            MosaicResolution::Highest,
+        ),
+        (
+            "dem-kaba",
+            &["dem-e.tif", "dem-c.tif", "dem-b.tif", "dem-a.tif"],
+            MosaicResolution::Lowest,
+        ),
+        (
+            "orto",
+            &["orto-2023.tif", "orto-2021.tif", "orto-2019.tif"],
+            MosaicResolution::Highest,
+        ),
     ];
     for (name, files, resolution) in mosaics {
         let path = out.join(format!("kentos-{name}.vrt"));
         let input = RastersMosaic {
-            sources: files.iter().map(|f| folder().join(f).display().to_string()).collect(),
+            sources: files
+                .iter()
+                .map(|f| folder().join(f).display().to_string())
+                .collect(),
             path: path.display().to_string(),
             order: MosaicOrder::Given,
             resolution,

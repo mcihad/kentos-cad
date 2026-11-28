@@ -25,9 +25,27 @@ fn zigzag(pts: &[[f64; 2]], joins: bool) -> Vec<f32> {
     for i in 0..n {
         let (a, b) = (pts[i], pts[i + 1]);
         let ends = if i == 0 { 1.0 } else { 0.0 } + if i + 1 == n { 2.0 } else { 0.0 };
-        let start = if joins && i > 0 { turn_code(pts[i - 1], a, b) } else { 0.0 };
-        let end = if joins && i + 1 < n { turn_code(a, b, pts[i + 2]) } else { 0.0 };
-        data.extend([a[0], a[1], b[0], b[1], along, ends + 4.0 * start + 8192.0 * end].map(|v| v as f32));
+        let start = if joins && i > 0 {
+            turn_code(pts[i - 1], a, b)
+        } else {
+            0.0
+        };
+        let end = if joins && i + 1 < n {
+            turn_code(a, b, pts[i + 2])
+        } else {
+            0.0
+        };
+        data.extend(
+            [
+                a[0],
+                a[1],
+                b[0],
+                b[1],
+                along,
+                ends + 4.0 * start + 8192.0 * end,
+            ]
+            .map(|v| v as f32),
+        );
         along += (b[0] - a[0]).hypot(b[1] - a[1]);
     }
     data
@@ -82,7 +100,8 @@ fn union_cover(pts: &[[f64; 2]], half: f64, p: [f64; 2]) -> f64 {
         .map(|w| {
             let (a, b) = (w[0], w[1]);
             let (dx, dy) = (b[0] - a[0], b[1] - a[1]);
-            let t = (((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
+            let t =
+                (((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / (dx * dx + dy * dy)).clamp(0.0, 1.0);
             (p[0] - a[0] - t * dx).hypot(p[1] - a[1] - t * dy)
         })
         .fold(f64::INFINITY, f64::min);
@@ -96,14 +115,29 @@ pub(super) fn seen_through_corners_are_drawn_once(gpu: &mut Gpu) {
     let size = 160u32;
     let settings = RenderSettings::new(kentos_render_wgpu::Rgba8::rgb(0, 0, 0));
     // A pixel a world unit, the zigzag's corners turning 126.9° and back, a sharper one (138.5°) at the end; 12 wide.
-    let camera = Camera { width: f64::from(size), height: f64::from(size), scale: 1., ..Default::default() };
-    let pts = [[-66., -30.], [-36., 30.], [-6., -30.], [24., 30.], [54., -30.], [70., 30.]];
+    let camera = Camera {
+        width: f64::from(size),
+        height: f64::from(size),
+        scale: 1.,
+        ..Default::default()
+    };
+    let pts = [
+        [-66., -30.],
+        [-36., 30.],
+        [-6., -30.],
+        [24., 30.],
+        [54., -30.],
+        [70., 30.],
+    ];
     let red = |pixels: &[u8]| -> Vec<u8> { pixels.chunks(4).map(|p| p[0]).collect() };
     // Each pixel's ink as the union of the segments' capsules gives it: the line drawn once everywhere.
     let half = size as f64 / 2.0;
     let want: Vec<f64> = (0..size * size)
         .map(|i| {
-            let (x, y) = (f64::from(i % size) + 0.5 - half, half - (f64::from(i / size) + 0.5));
+            let (x, y) = (
+                f64::from(i % size) + 0.5 - half,
+                half - (f64::from(i / size) + 0.5),
+            );
             union_cover(&pts, 6.0, [x, y])
         })
         .collect();

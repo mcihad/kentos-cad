@@ -17,15 +17,27 @@ struct Set {
 fn check(doc: &kentos_domain::Document, input: &RoadProjectEdit) -> Result<Set, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     crate::road_project::road_project(doc)?;
-    let auto = input.auto_rebuild.filter(|on| *on != doc.road_auto_rebuild());
+    let auto = input
+        .auto_rebuild
+        .filter(|on| *on != doc.road_auto_rebuild());
     let regional = input.regional.filter(|on| *on == doc.road_rebuild_whole());
     if auto.is_none() && regional.is_none() {
         let (words, path) = if input.auto_rebuild.is_some() || input.regional.is_none() {
-            ("Değişecek bir şey yok: kendiliğinden yeniden üretme zaten böyle.", "autoRebuild")
+            (
+                "Değişecek bir şey yok: kendiliğinden yeniden üretme zaten böyle.",
+                "autoRebuild",
+            )
         } else {
-            ("Değişecek bir şey yok: yeniden üretim zaten böyle yazıyor.", "regional")
+            (
+                "Değişecek bir şey yok: yeniden üretim zaten böyle yazıyor.",
+                "regional",
+            )
         };
-        return Err(Stop::failed(error(codes::NOTHING_TO_SET, words.into(), Some(path.into()))));
+        return Err(Stop::failed(error(
+            codes::NOTHING_TO_SET,
+            words.into(),
+            Some(path.into()),
+        )));
     }
     Ok(Set { auto, regional })
 }
@@ -38,7 +50,10 @@ fn edited(doc: &kentos_domain::Document, set: &Set) -> RoadProjectEdited {
     }
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: RoadProjectEdit) -> CommandResult<RoadProjectEdited> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: RoadProjectEdit,
+) -> CommandResult<RoadProjectEdited> {
     let set = match check(cx.doc, &input) {
         Ok(set) => set,
         Err(stop) => return stop.into(),
@@ -57,25 +72,46 @@ fn write(cx: &mut ExecutionContext<'_>, input: RoadProjectEdit) -> CommandResult
         cx.doc.set_road_rebuild_whole(!on, label);
     }
     cx.doc.end_group(step);
-    CommandResult::Completed { output: edited(cx.doc, &set), warnings: Vec::new() }
+    CommandResult::Completed {
+        output: edited(cx.doc, &set),
+        warnings: Vec::new(),
+    }
 }
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RoadProjectEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What execute would set; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &RoadProjectEdit) -> CommandResult<RoadProjectEdited> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &RoadProjectEdit,
+) -> CommandResult<RoadProjectEdited> {
     match check(cx.doc, input) {
-        Ok(set) => CommandResult::Completed { output: edited(cx.doc, &set), warnings: Vec::new() },
+        Ok(set) => CommandResult::Completed {
+            output: edited(cx.doc, &set),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RoadProjectEdit) -> CommandResult<RoadProjectEdited> {
-    crate::call::recorded(cx, kentos_commands::ROAD_PROJECT_EDIT, kentos_commands::ROAD_PROJECT_EDIT_VERSION, input, write)
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RoadProjectEdit,
+) -> CommandResult<RoadProjectEdited> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::ROAD_PROJECT_EDIT,
+        kentos_commands::ROAD_PROJECT_EDIT_VERSION,
+        input,
+        write,
+    )
 }

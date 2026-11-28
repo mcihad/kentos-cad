@@ -206,9 +206,17 @@ fn nearest_standard(scale: u32) -> Option<u32> {
 /// How much a view's area (`width` × `height` metres, in its own turn, which the linked map follows) is larger than a map
 /// frame's content (`rect`, paper micrometres) shows at 1:`denominator`, across and along; none when it fits within a
 /// millionth of its size.
-pub fn view_overrun(width: f64, height: f64, rect: &crate::units::RectUm, denominator: f64) -> Option<(f64, f64)> {
+pub fn view_overrun(
+    width: f64,
+    height: f64,
+    rect: &crate::units::RectUm,
+    denominator: f64,
+) -> Option<(f64, f64)> {
     let ground = |um: i64| um as f64 / 1e6 * denominator;
-    let (gw, gh) = (ground(i64::from(rect.width)), ground(i64::from(rect.height)));
+    let (gw, gh) = (
+        ground(i64::from(rect.width)),
+        ground(i64::from(rect.height)),
+    );
     let tol = 1e-6 * width.max(height).max(1e-3);
     let (over_w, over_h) = ((width - gw).max(0.0), (height - gh).max(0.0));
     (over_w > tol || over_h > tol).then_some((over_w, over_h))
@@ -337,14 +345,26 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
             );
         }
         if let ItemKind::Map(m) = &it.kind {
-            let effective=crate::viewport::effective_fixed_view(it,&inputs.named_views);
-            if m.source.is_link() && let Err(e)=&effective { out.add(Severity::Error,&e.code,Some(it),e.message.clone(),"Görünümü yeniden bağlayın veya kaynağı Bu çizim yapın.",Vec::new()); }
+            let effective = crate::viewport::effective_fixed_view(it, &inputs.named_views);
+            if m.source.is_link()
+                && let Err(e) = &effective
+            {
+                out.add(
+                    Severity::Error,
+                    &e.code,
+                    Some(it),
+                    e.message.clone(),
+                    "Görünümü yeniden bağlayın veya kaynağı Bu çizim yapın.",
+                    Vec::new(),
+                );
+            }
             // A linked view whose recipe fixes the scale (docs/adr/0794): its area must fit the frame at that scale, else
             // the frame cuts it (Revit's crop region larger than the viewport's room on the sheet).
             if let Ok(f) = &effective
                 && let Some(v) = crate::viewport::linked_view(m, &inputs.named_views)
                 && let Some(scale) = v.recipe.as_ref().and_then(|r| r.scale)
-                && let Some((over_w, over_h)) = view_overrun(v.width, v.height, &it.content_rect(), f.denominator())
+                && let Some((over_w, over_h)) =
+                    view_overrun(v.width, v.height, &it.content_rect(), f.denominator())
             {
                 out.add(
                     Severity::Warning,
@@ -385,9 +405,14 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
                 && !paper::standard_scales()
                     .iter()
                     .any(|s| f64::from(*s) == f.denominator())
-                && !crate::viewport::standard_ratios().iter().any(|r|r.denominator()==f.denominator())
+                && !crate::viewport::standard_ratios()
+                    .iter()
+                    .any(|r| r.denominator() == f.denominator())
             {
-                let fixes = if m.source.is_link() || m.view_locked || it.locked {Vec::new()} else {nearest_standard(f.denominator().round().clamp(1.,u32::MAX as f64) as u32)
+                let fixes = if m.source.is_link() || m.view_locked || it.locked {
+                    Vec::new()
+                } else {
+                    nearest_standard(f.denominator().round().clamp(1.,u32::MAX as f64) as u32)
                     .map(|s| {
                         vec![op_fix(
                             &format!("Ölçeği 1/{s} yap"),
@@ -400,7 +425,8 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
                             }),
                         )]
                     })
-                    .unwrap_or_default()};
+                    .unwrap_or_default()
+                };
                 out.add(
                     Severity::Warning,
                     "non_standard_scale",
@@ -681,13 +707,19 @@ pub fn preflight(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Res
     }
     // A layer the drawing's maps would draw that cannot be reached now (docs/adr/9187): a reprint while a map service is
     // offline or a data layer's source is gone prints the map without it.
-    if let Some(map) = maps.iter().find(|m| matches!(&m.kind, ItemKind::Map(k) if k.source.is_drawing())) {
+    if let Some(map) = maps
+        .iter()
+        .find(|m| matches!(&m.kind, ItemKind::Map(k) if k.source.is_drawing()))
+    {
         for u in &inputs.unreachable {
             out.add(
                 Severity::Warning,
                 "layer_unreachable",
                 Some(map),
-                format!("“{}” katmanı basılamıyor: {}. Haritada boş kalır.", u.name, u.why),
+                format!(
+                    "“{}” katmanı basılamıyor: {}. Haritada boş kalır.",
+                    u.name, u.why
+                ),
                 "Bağlantı gelince yeniden basın ya da katmanı gizleyip basın.",
                 Vec::new(),
             );
@@ -985,9 +1017,17 @@ fn note(out: &mut Out, n: &Note, it: Option<&Item>) {
 /// an error: a detail view leaves the rest out on purpose; the fix fits the whole drawing at the next standard scale.
 /// None for a map that holds it, an atlas map, a map of another source or a view without a centre.
 pub fn drawing_overrun(item: &Item, bounds: [f64; 4]) -> Option<Finding> {
-    let ItemKind::Map(m) = &item.kind else { return None };
-    let MapView::Fixed(view) = &m.view else { return None };
-    if !m.source.is_drawing() || bounds.iter().any(|v| !v.is_finite()) || bounds[2] < bounds[0] || bounds[3] < bounds[1] {
+    let ItemKind::Map(m) = &item.kind else {
+        return None;
+    };
+    let MapView::Fixed(view) = &m.view else {
+        return None;
+    };
+    if !m.source.is_drawing()
+        || bounds.iter().any(|v| !v.is_finite())
+        || bounds[2] < bounds[0]
+        || bounds[3] < bounds[1]
+    {
         return None;
     }
     let c = view.center?;
@@ -998,7 +1038,8 @@ pub fn drawing_overrun(item: &Item, bounds: [f64; 4]) -> Option<Finding> {
     if frame.width <= 0 || frame.height <= 0 {
         return None;
     }
-    let need = crate::projection::fitting_denominator(2.0 * half_w, 2.0 * half_h, &frame, view.rotation);
+    let need =
+        crate::projection::fitting_denominator(2.0 * half_w, 2.0 * half_h, &frame, view.rotation);
     let has = view.denominator();
     if need <= has * (1.0 + 1e-9) {
         return None;

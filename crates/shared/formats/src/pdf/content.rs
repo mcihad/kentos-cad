@@ -70,7 +70,11 @@ fn rgb(vals: &[f64]) -> [u8; 3] {
         3 => [c(vals[0]), c(vals[1]), c(vals[2])],
         4 => {
             let k = 1.0 - vals[3].clamp(0.0, 1.0);
-            [c((1.0 - vals[0]) * k), c((1.0 - vals[1]) * k), c((1.0 - vals[2]) * k)]
+            [
+                c((1.0 - vals[0]) * k),
+                c((1.0 - vals[1]) * k),
+                c((1.0 - vals[2]) * k),
+            ]
         }
         _ => [0, 0, 0],
     }
@@ -102,7 +106,14 @@ impl<'f, 'a> Run<'f, 'a> {
     pub fn new(file: &'f PdfFile<'a>, off: Vec<u32>) -> Self {
         Run {
             file,
-            out: Out { paths: Vec::new(), texts: Vec::new(), layers: Vec::new(), hidden: Vec::new(), left: PdfLeft::default(), points: 0 },
+            out: Out {
+                paths: Vec::new(),
+                texts: Vec::new(),
+                layers: Vec::new(),
+                hidden: Vec::new(),
+                left: PdfLeft::default(),
+                points: 0,
+            },
             off,
             fonts: HashMap::new(),
             operators: 0,
@@ -152,7 +163,14 @@ impl<'f, 'a> Run<'f, 'a> {
     }
 
     /// Runs a page's content stream with `resources`, from the initial graphics state with the matrix `ctm`.
-    pub fn content(&mut self, data: &[u8], resources: &Dict, ctm: M, depth: usize, forms: &mut Vec<u32>) {
+    pub fn content(
+        &mut self,
+        data: &[u8],
+        resources: &Dict,
+        ctm: M,
+        depth: usize,
+        forms: &mut Vec<u32>,
+    ) {
         let gs = Gs {
             ctm,
             stroke: [0; 3],
@@ -169,13 +187,25 @@ impl<'f, 'a> Run<'f, 'a> {
             leading: 0.0,
             rise: 0.0,
             render: 0,
-            clips: Rc::new(self.page_box.map(|[x0, y0, x1, y1]| super::clip::Clip::rect(x0, y0, x1, y1)).into_iter().collect()),
+            clips: Rc::new(
+                self.page_box
+                    .map(|[x0, y0, x1, y1]| super::clip::Clip::rect(x0, y0, x1, y1))
+                    .into_iter()
+                    .collect(),
+            ),
         };
         self.run(data, resources, gs, depth, forms);
     }
 
     /// Runs a content stream from the graphics state `gs` (a form's: the state where it is drawn, ISO 32000-1 §8.10).
-    fn run(&mut self, data: &[u8], resources: &Dict, mut gs: Gs, depth: usize, forms: &mut Vec<u32>) {
+    fn run(
+        &mut self,
+        data: &[u8],
+        resources: &Dict,
+        mut gs: Gs,
+        depth: usize,
+        forms: &mut Vec<u32>,
+    ) {
         let mut stack: Vec<Gs> = Vec::new();
         let mut layers: Vec<Option<usize>> = Vec::new();
         let mut operands: Vec<Obj> = Vec::new();
@@ -243,10 +273,18 @@ impl<'f, 'a> Run<'f, 'a> {
                     }
                 }
                 "cm" if nums.len() >= 6 => {
-                    gs.ctm = mul(&[nums[0], nums[1], nums[2], nums[3], nums[4], nums[5]], &gs.ctm);
+                    gs.ctm = mul(
+                        &[nums[0], nums[1], nums[2], nums[3], nums[4], nums[5]],
+                        &gs.ctm,
+                    );
                 }
                 "w" => gs.width = n(0),
-                "d" => gs.dashed = operands.first().and_then(Obj::array).is_some_and(|a| !a.is_empty()),
+                "d" => {
+                    gs.dashed = operands
+                        .first()
+                        .and_then(Obj::array)
+                        .is_some_and(|a| !a.is_empty())
+                }
                 "gs" => {
                     if let Some(name) = operands.first().and_then(Obj::name)
                         && let Obj::Dict(egs) = self.file.field(resources, "ExtGState")
@@ -256,7 +294,10 @@ impl<'f, 'a> Run<'f, 'a> {
                             gs.width = w;
                         }
                         if let Obj::Array(d) = self.file.field(&g, "D") {
-                            gs.dashed = d.first().and_then(Obj::array).is_some_and(|a| !a.is_empty());
+                            gs.dashed = d
+                                .first()
+                                .and_then(Obj::array)
+                                .is_some_and(|a| !a.is_empty());
                         }
                     }
                 }
@@ -286,7 +327,11 @@ impl<'f, 'a> Run<'f, 'a> {
                             apply(&gs.ctm, nums[2], nums[3]),
                             apply(&gs.ctm, nums[4], nums[5]),
                         ),
-                        "v" => (last, apply(&gs.ctm, nums[0], nums[1]), apply(&gs.ctm, nums[2], nums[3])),
+                        "v" => (
+                            last,
+                            apply(&gs.ctm, nums[0], nums[1]),
+                            apply(&gs.ctm, nums[2], nums[3]),
+                        ),
                         "y" => {
                             let e = apply(&gs.ctm, nums[2], nums[3]);
                             (apply(&gs.ctm, nums[0], nums[1]), e, e)
@@ -301,7 +346,11 @@ impl<'f, 'a> Run<'f, 'a> {
                     }
                     let at = cur.len() - 1;
                     flatten_cubic([last, c1, c2, e], FLATNESS, &mut cur);
-                    cur_curves.push(PdfCurve { at, n: cur.len() - 1 - at, c: [last, c1, c2, e] });
+                    cur_curves.push(PdfCurve {
+                        at,
+                        n: cur.len() - 1 - at,
+                        c: [last, c1, c2, e],
+                    });
                     last = e;
                 }
                 "h" => {
@@ -344,14 +393,19 @@ impl<'f, 'a> Run<'f, 'a> {
                     let painted_curves = std::mem::take(&mut curves);
                     // The clipping path this operator ends (GIS-053): its rings, closed, become a clip after it.
                     if let Some(mut c) = clip_next.take() {
-                        c.rings = painted.iter().map(|(pts, _)| pts.clone()).filter(|r| r.len() >= 3).collect();
+                        c.rings = painted
+                            .iter()
+                            .map(|(pts, _)| pts.clone())
+                            .filter(|r| r.len() >= 3)
+                            .collect();
                         if !c.rings.is_empty() {
                             Rc::make_mut(&mut gs.clips).push(c);
                         }
                         // A clip's path painted too is painted under the clips before it: cut below with the new one
                         // left out, so the frame's own line stays.
                         if op != "n" && !painted.is_empty() {
-                            let outer: Vec<super::clip::Clip> = gs.clips[..gs.clips.len().saturating_sub(1)].to_vec();
+                            let outer: Vec<super::clip::Clip> =
+                                gs.clips[..gs.clips.len().saturating_sub(1)].to_vec();
                             self.paint(&op, &gs, painted, painted_curves, layer, &outer);
                         }
                         operands.clear();
@@ -362,9 +416,17 @@ impl<'f, 'a> Run<'f, 'a> {
                         self.paint(&op, &gs, painted, painted_curves, layer, &clips);
                     }
                 }
-                "W" | "W*" => clip_next = Some(super::clip::Clip { rings: Vec::new(), even_odd: op == "W*" }),
+                "W" | "W*" => {
+                    clip_next = Some(super::clip::Clip {
+                        rings: Vec::new(),
+                        even_odd: op == "W*",
+                    })
+                }
                 "CS" | "cs" => {
-                    let comps = operands.first().and_then(Obj::name).map_or(1, |name| self.components(resources, name));
+                    let comps = operands
+                        .first()
+                        .and_then(Obj::name)
+                        .map_or(1, |name| self.components(resources, name));
                     if op == "CS" {
                         gs.stroke_n = comps;
                         gs.stroke = [0; 3];
@@ -401,7 +463,10 @@ impl<'f, 'a> Run<'f, 'a> {
                 "Tr" => gs.render = n(0) as i64,
                 "Tf" => {
                     gs.size = n(1);
-                    gs.font = operands.first().and_then(Obj::name).and_then(|name| self.font(resources, name));
+                    gs.font = operands
+                        .first()
+                        .and_then(Obj::name)
+                        .and_then(|name| self.font(resources, name));
                 }
                 "Td" => {
                     tlm = mul(&[1.0, 0.0, 0.0, 1.0, n(0), n(1)], &tlm);
@@ -447,7 +512,9 @@ impl<'f, 'a> Run<'f, 'a> {
                     let b = lx.src;
                     let mut i = lx.pos;
                     while i + 2 < b.len() {
-                        if super::object::is_white(b[i]) && b[i + 1] == b'E' && b[i + 2] == b'I'
+                        if super::object::is_white(b[i])
+                            && b[i + 1] == b'E'
+                            && b[i + 2] == b'I'
                             && b.get(i + 3).is_none_or(|c| super::object::is_white(*c))
                         {
                             break;
@@ -493,7 +560,9 @@ impl<'f, 'a> Run<'f, 'a> {
             "Pattern" => return 0,
             _ => {}
         }
-        let Obj::Dict(spaces) = self.file.field(resources, "ColorSpace") else { return 1 };
+        let Obj::Dict(spaces) = self.file.field(resources, "ColorSpace") else {
+            return 1;
+        };
         match self.file.field(&spaces, name) {
             Obj::Array(a) => match a.first().and_then(Obj::name) {
                 Some("ICCBased") => a
@@ -515,7 +584,9 @@ impl<'f, 'a> Run<'f, 'a> {
     }
 
     fn font(&mut self, resources: &Dict, name: &str) -> Option<Rc<Font>> {
-        let Obj::Dict(fonts) = self.file.field(resources, "Font") else { return None };
+        let Obj::Dict(fonts) = self.file.field(resources, "Font") else {
+            return None;
+        };
         let key = match fonts.get(name) {
             Some(Obj::Ref(n, _)) => format!("#{n}"),
             _ => format!("/{name}"),
@@ -523,7 +594,9 @@ impl<'f, 'a> Run<'f, 'a> {
         if let Some(f) = self.fonts.get(&key) {
             return Some(f.clone());
         }
-        let Obj::Dict(d) = self.file.field(&fonts, name) else { return None };
+        let Obj::Dict(d) = self.file.field(&fonts, name) else {
+            return None;
+        };
         let f = Rc::new(Font::of(self.file, &d));
         self.fonts.insert(key, f.clone());
         Some(f)
@@ -552,7 +625,11 @@ impl<'f, 'a> Run<'f, 'a> {
                             Some(l) => text.push_str(&l),
                             None => unreadable += 1,
                         }
-                        let space = if font.code_bytes == 1 && code == 32 { gs.word_space } else { 0.0 };
+                        let space = if font.code_bytes == 1 && code == 32 {
+                            gs.word_space
+                        } else {
+                            0.0
+                        };
                         let tx = (w * gs.size + gs.char_space + space) * gs.hscale;
                         *tm = mul(&[1.0, 0.0, 0.0, 1.0, tx, 0.0], tm);
                     }
@@ -568,7 +645,10 @@ impl<'f, 'a> Run<'f, 'a> {
         if text.trim().is_empty() {
             return;
         }
-        let trm = mul(&[gs.size * gs.hscale, 0.0, 0.0, gs.size, 0.0, gs.rise], &mul(&origin, &gs.ctm));
+        let trm = mul(
+            &[gs.size * gs.hscale, 0.0, 0.0, gs.size, 0.0, gs.rise],
+            &mul(&origin, &gs.ctm),
+        );
         let p = [trm[4], trm[5]];
         let height = (trm[2] * trm[2] + trm[3] * trm[3]).sqrt();
         let angle = crate::math::atan2(trm[1], trm[0]);
@@ -579,7 +659,14 @@ impl<'f, 'a> Run<'f, 'a> {
         if !super::clip::inside(&gs.clips, p) {
             return;
         }
-        self.out.texts.push(PdfText { p, height, angle, text, color: gs.fill, layer });
+        self.out.texts.push(PdfText {
+            p,
+            height,
+            angle,
+            text,
+            color: gs.fill,
+            layer,
+        });
     }
 
     /// A painted path cut by `clips` (GIS-053): its parts' pieces inside them; a cut part's curves are dropped (its points
@@ -617,7 +704,13 @@ impl<'f, 'a> Run<'f, 'a> {
             return;
         }
         self.out.points += parts.iter().map(|p| p.0.len()).sum::<usize>();
-        self.out.paths.push(PdfPath { parts, curves, stroke, fill, layer });
+        self.out.paths.push(PdfPath {
+            parts,
+            curves,
+            stroke,
+            fill,
+            layer,
+        });
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -631,7 +724,9 @@ impl<'f, 'a> Run<'f, 'a> {
         forms: &mut Vec<u32>,
         _layers: &mut [Option<usize>],
     ) {
-        let Obj::Dict(xs) = self.file.field(resources, "XObject") else { return };
+        let Obj::Dict(xs) = self.file.field(resources, "XObject") else {
+            return;
+        };
         let r = xs.get(name).cloned();
         let num = match r {
             Some(Obj::Ref(n, _)) => Some(n),
@@ -640,7 +735,12 @@ impl<'f, 'a> Run<'f, 'a> {
         let Some(r) = r else { return };
         let obj = self.file.resolve(&r);
         let Obj::Stream(d, _) = &obj else { return };
-        match d.get("Subtype").map(|s| self.file.resolve(s)).as_ref().and_then(Obj::name) {
+        match d
+            .get("Subtype")
+            .map(|s| self.file.resolve(s))
+            .as_ref()
+            .and_then(Obj::name)
+        {
             Some("Image") => self.out.left.images += 1,
             Some("Form") => {
                 if depth >= MAX_FORMS || num.is_some_and(|n| forms.contains(&n)) {
@@ -648,7 +748,10 @@ impl<'f, 'a> Run<'f, 'a> {
                 }
                 let m = match self.file.field(d, "Matrix") {
                     Obj::Array(a) if a.len() >= 6 => {
-                        let v: Vec<f64> = a.iter().map(|x| self.file.resolve(x).num().unwrap_or(0.0)).collect();
+                        let v: Vec<f64> = a
+                            .iter()
+                            .map(|x| self.file.resolve(x).num().unwrap_or(0.0))
+                            .collect();
                         [v[0], v[1], v[2], v[3], v[4], v[5]]
                     }
                     _ => IDENTITY,
@@ -657,7 +760,9 @@ impl<'f, 'a> Run<'f, 'a> {
                     Obj::Dict(r) => r,
                     _ => resources.clone(),
                 };
-                let Ok(Some(data)) = self.file.stream_data(&obj) else { return };
+                let Ok(Some(data)) = self.file.stream_data(&obj) else {
+                    return;
+                };
                 // A form with its own optional content group draws on its layer.
                 let oc = d.get("OC").cloned();
                 let form_layer = oc.and_then(|g| self.layer_for(&g)).or(layer);
@@ -720,7 +825,10 @@ pub fn flatten_cubic(c: [[f64; 2]; 4], tol: f64, out: &mut Vec<[f64; 2]>) {
 /// A PDF text string (a name of a layer): UTF-16 with its byte order mark, else PDFDocEncoding (Latin-1 near enough).
 pub fn decode_text_string(s: &[u8]) -> String {
     if s.starts_with(&[0xFE, 0xFF]) {
-        let units: Vec<u16> = s[2..].chunks(2).map(|c| u16::from(c[0]) << 8 | u16::from(*c.get(1).unwrap_or(&0))).collect();
+        let units: Vec<u16> = s[2..]
+            .chunks(2)
+            .map(|c| u16::from(c[0]) << 8 | u16::from(*c.get(1).unwrap_or(&0)))
+            .collect();
         return String::from_utf16_lossy(&units);
     }
     if s.starts_with(&[0xEF, 0xBB, 0xBF]) {

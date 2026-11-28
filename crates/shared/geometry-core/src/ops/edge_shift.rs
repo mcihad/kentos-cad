@@ -28,8 +28,7 @@ pub const NOT_PATH: &str =
 pub const CURVED: &str =
     "Kaydırılan kenar ya da komşusu yay; paralel kaydırma düz kenarlarla yapılır.";
 /// The tool's words for an edge it takes, an arc's too (docs/adr/1024).
-pub const NOT_PATH_ARCS: &str =
-    "Paralel kaydır alanın ya da çoklu çizginin kenarında çalışır (düz ya da yay); böyle bir kenara tıklayın.";
+pub const NOT_PATH_ARCS: &str = "Paralel kaydır alanın ya da çoklu çizginin kenarında çalışır (düz ya da yay); böyle bir kenara tıklayın.";
 pub const PARALLEL: &str = "Komşu kenar kaydırılan kenara paralel; köşe bulunamıyor.";
 pub const PASSED: &str = "Kenar bu uzaklıkta komşusunu aşıyor; daha kısa bir uzaklık yazın.";
 pub const NO_EDGE: &str = "Bu nesnede böyle bir kenar yok.";
@@ -250,7 +249,8 @@ fn arc_case(shape: &Shape, ring: usize, edge: usize) -> Option<Result<Rings, &'s
     if edge >= edges || n < 2 {
         return None;
     }
-    super::edge_shift_arcs::involves_arcs(n, r.bulges.as_deref(), rings.closed, edge).then_some(Ok(rings))
+    super::edge_shift_arcs::involves_arcs(n, r.bulges.as_deref(), rings.closed, edge)
+        .then_some(Ok(rings))
 }
 
 /// The edge's unit normal: away from an area's inside, to the right of a polyline's way; an arc's at its middle.
@@ -263,7 +263,11 @@ fn edge_normal(r: &Ring, ring: usize, closed: bool, edge: usize) -> Result<Vec2,
             let m = crate::geom::bulge::segment_mid(a, b, bulge);
             let (vx, vy) = (m.x - arc.c.x, m.y - arc.c.y);
             let l = js_hypot(vx, vy);
-            if arc.sweep > 0.0 { Vec2::new(-vy / l, vx / l) } else { Vec2::new(vy / l, -vx / l) }
+            if arc.sweep > 0.0 {
+                Vec2::new(-vy / l, vx / l)
+            } else {
+                Vec2::new(vy / l, -vx / l)
+            }
         }
         None => {
             let t = sub(b, a);
@@ -280,7 +284,11 @@ fn edge_normal(r: &Ring, ring: usize, closed: bool, edge: usize) -> Result<Vec2,
     }
     let ccw = bulge_ring_area(&r.pts, r.bulges.as_deref()) > 0.0;
     let inside_left = if ring == 0 { ccw } else { !ccw };
-    Ok(if inside_left { right } else { Vec2::new(-right.x, -right.y) })
+    Ok(if inside_left {
+        right
+    } else {
+        Vec2::new(-right.x, -right.y)
+    })
 }
 
 /// The unit normal [`shifted`] moves edge `edge` of ring `ring` along (its `d`): away from an area's inside, to the
@@ -300,8 +308,18 @@ pub fn normal(shape: &Shape, ring: usize, edge: usize) -> Result<Vec2, &'static 
 fn arc_shift(rings: &Rings, ring: usize, edge: usize, d: f64) -> Result<Ring, &'static str> {
     let r = &rings.rings[ring];
     let normal = edge_normal(r, ring, rings.closed, edge)?;
-    let m = super::edge_shift_arcs::shifted(&r.pts, r.bulges.as_deref(), rings.closed, edge, normal, d)?;
-    Ok(Ring { pts: m.pts, bulges: Some(m.bulges) })
+    let m = super::edge_shift_arcs::shifted(
+        &r.pts,
+        r.bulges.as_deref(),
+        rings.closed,
+        edge,
+        normal,
+        d,
+    )?;
+    Ok(Ring {
+        pts: m.pts,
+        bulges: Some(m.bulges),
+    })
 }
 
 /// An area's size from its rings: the outer ring's less its holes'
@@ -309,9 +327,16 @@ fn arc_shift(rings: &Rings, ring: usize, edge: usize, d: f64) -> Result<Ring, &'
 fn rings_area(rings: &[Ring]) -> f64 {
     // About the outer ring's first vertex (docs/adr/1024): map coordinates (E ≈ 5·10⁵, N ≈ 4.4·10⁶ m) lose the
     // shoelace's last digits; differences of nearby coordinates are exact.
-    let o = rings.first().and_then(|r| r.pts.first().copied()).unwrap_or(Vec2::new(0.0, 0.0));
+    let o = rings
+        .first()
+        .and_then(|r| r.pts.first().copied())
+        .unwrap_or(Vec2::new(0.0, 0.0));
     let size = |r: &Ring| {
-        let local: Vec<Vec2> = r.pts.iter().map(|p| Vec2::new(p.x - o.x, p.y - o.y)).collect();
+        let local: Vec<Vec2> = r
+            .pts
+            .iter()
+            .map(|p| Vec2::new(p.x - o.x, p.y - o.y))
+            .collect();
         bulge_ring_area(&local, r.bulges.as_deref()).abs()
     };
     rings.first().map_or(0.0, size) - rings.iter().skip(1).map(size).sum::<f64>()
@@ -460,7 +485,15 @@ pub fn pick(shape: &Shape, p: Vec2) -> Result<Picked, String> {
         let (a, b) = (r.pts[edge], r.pts[(edge + 1) % n]);
         let bulge = bulge_at(r.bulges.as_deref(), edge);
         let mid = crate::geom::bulge::segment_mid(a, b, bulge);
-        return Ok(Picked { ring, edge, a, b, normal, mid, bulge });
+        return Ok(Picked {
+            ring,
+            edge,
+            a,
+            b,
+            normal,
+            mid,
+            bulge,
+        });
     }
     let (_, m) = motion(shape, ring, edge).map_err(str::to_owned)?;
     Ok(Picked {

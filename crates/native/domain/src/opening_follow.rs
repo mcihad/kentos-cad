@@ -83,7 +83,8 @@ pub fn reach(o: &OpeningFields) -> (f64, f64) {
 
 /// Whether `o` is a pocket door (docs/adr/0777 §2).
 pub fn is_pocket(o: &OpeningFields) -> bool {
-    o.form == kentos_contracts::OpeningForm::Door && o.operation == kentos_contracts::OpeningOperation::Pocket
+    o.form == kentos_contracts::OpeningForm::Door
+        && o.operation == kentos_contracts::OpeningOperation::Pocket
 }
 
 fn contract(p: kentos_geometry_core::Vec2) -> Vec2 {
@@ -123,7 +124,10 @@ pub fn placed_on(o: &OpeningFields, wall: Option<&WallLine>, moved: bool) -> Ope
             if out.broken.is_none() && is_pocket(&out) {
                 let tol = 1e-9 * w.spec.width.abs().max(1.0);
                 let (r0, r1) = reach(&out);
-                if out.pocket_wall().is_some_and(|need| need > w.spec.width + tol) {
+                if out
+                    .pocket_wall()
+                    .is_some_and(|need| need > w.spec.width + tol)
+                {
                     out.broken = Some(OpeningBreak::TooDeep);
                 } else if opening::jambs(&w.path, &w.spec, r0, r1).is_none() {
                     out.broken = Some(OpeningBreak::OffWall);
@@ -313,8 +317,7 @@ impl Document {
                         && overlap(*a, *b)
                         && fa.clashes_with(fb, cut)
                         && crate::arch_options::options_meet(&groups, *slot, *other)
-                })
-                    && let Some((_, f)) = next.get_mut(slot)
+                }) && let Some((_, f)) = next.get_mut(slot)
                 {
                     f.broken = Some(OpeningBreak::Overlap);
                 }

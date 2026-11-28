@@ -4,7 +4,9 @@
 //! off the kontrol road is counted as taken by no category, drawn neither on the screen nor on paper, keeps its kontrol
 //! in the table and has no legend row; Diğer değerleri aç draws it on both and gives it its legend row.
 
-use kentos_data::{Coord, Curve, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value};
+use kentos_data::{
+    Coord, Curve, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value,
+};
 
 use crate::app::{App, Message};
 use crate::data_layers_tests::{answer_pages, node, read_with};
@@ -18,7 +20,9 @@ fn roads(tag: &str) -> (String, std::path::PathBuf) {
     let path = crate::files_testing::scratch(tag).join("Yollar.gpkg");
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
     let address = path.display().to_string();
-    let source = kentos_data::registry().source(&address).expect("the source");
+    let source = kentos_data::registry()
+        .source(&address)
+        .expect("the source");
     let mut tx = source.begin().expect("begin");
     let text = |n: &str| Field::new(n, FieldKind::Text { max: Some(16) });
     tx.create_table(
@@ -43,10 +47,20 @@ fn roads(tag: &str) -> (String, std::path::PathBuf) {
     .expect("the table");
     let road = |y: f64, ad: &str| NewFeature {
         fid: None,
-        geometry: Some(Geometry::Curve(Curve::Line(vec![Coord::xy(486_600.0, y), Coord::xy(486_900.0, y)]))),
-        values: vec![("ad".into(), Value::Text(ad.into())), ("durum".into(), Value::Text("planlı".into()))],
+        geometry: Some(Geometry::Curve(Curve::Line(vec![
+            Coord::xy(486_600.0, y),
+            Coord::xy(486_900.0, y),
+        ]))),
+        values: vec![
+            ("ad".into(), Value::Text(ad.into())),
+            ("durum".into(), Value::Text("planlı".into())),
+        ],
     };
-    tx.insert("yollar", &[road(4_420_200.0, "Y1"), road(4_420_250.0, "Y2")]).expect("the roads");
+    tx.insert(
+        "yollar",
+        &[road(4_420_200.0, "Y1"), road(4_420_250.0, "Y2")],
+    )
+    .expect("the roads");
     tx.commit().expect("written");
     (address, path)
 }
@@ -57,7 +71,12 @@ fn style(app: &mut App, event: Style) {
 
 /// The window's read of `field` from the source, run here and handed back as the window's thread would.
 fn hand_back(app: &mut App, field: &str, then: Then) {
-    let data = app.styles.layer_style.as_ref().and_then(|w| w.data.clone()).expect("a data layer's window");
+    let data = app
+        .styles
+        .layer_style
+        .as_ref()
+        .and_then(|w| w.data.clone())
+        .expect("a data layer's window");
     let read = source_values::read(&data, field, then);
     style(app, Style::SourceValues(then, read));
 }
@@ -66,7 +85,11 @@ fn hand_back(app: &mut App, field: &str, then: Then) {
 fn counted(app: &mut App, layer: &str) -> (Vec<usize>, usize) {
     style(app, Style::Open(Some(layer.to_owned())));
     hand_back(app, "durum", Then::Show);
-    app.styles.layer_style.as_ref().and_then(|w| w.source_category_tally()).expect("counted by the source")
+    app.styles
+        .layer_style
+        .as_ref()
+        .and_then(|w| w.source_category_tally())
+        .expect("counted by the source")
 }
 
 /// The roads drawn from a read of their own: how far apart in north the drawn lines lie (0: one road, 50: both) and
@@ -78,7 +101,10 @@ fn drawn(app: &App, layer: &str, hold: bool) -> (f64, usize) {
     let (mut low, mut high, mut symbols) = (f64::INFINITY, f64::NEG_INFINITY, 0);
     for part in view.parts(layer) {
         for b in part.batches() {
-            if matches!(b.kind, kentos_native_style::batches::BatchKind::Stroke { .. }) {
+            if matches!(
+                b.kind,
+                kentos_native_style::batches::BatchKind::Stroke { .. }
+            ) {
                 low = low.min(b.origin[1] + b.bounds[1]);
                 high = high.max(b.origin[1] + b.bounds[3]);
                 symbols += 1;
@@ -121,41 +147,78 @@ fn a_road_turned_kontrol_is_counted_drawn_listed_and_in_the_legend_by_one_rule()
     crate::data_layers::register();
     let (address, path) = roads("planli-kontrol");
     let mut app = app_with_drawing();
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "yollar").expect("described")]).expect("added");
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "yollar").expect("described"),
+    ])
+    .expect("added");
     let layer = node(&app, "yollar").expect("the roads").id.clone();
 
     // Kategorili by durum, classified from the source while both roads are planlı; Diğer değerler off.
     style(&mut app, Style::Open(Some(layer.clone())));
     style(&mut app, Style::Kind(Kind::Categorized));
-    style(&mut app, Style::Expr(StyleField::Categories, "durum".into()));
+    style(
+        &mut app,
+        Style::Expr(StyleField::Categories, "durum".into()),
+    );
     style(&mut app, Style::Classify);
     hand_back(&mut app, "durum", Then::Classify);
     let w = app.styles.layer_style.as_ref().expect("the window");
-    let values: Vec<&str> = w.categorized.categories.iter().map(|k| k.value.as_str()).collect();
+    let values: Vec<&str> = w
+        .categorized
+        .categories
+        .iter()
+        .map(|k| k.value.as_str())
+        .collect();
     assert_eq!(values, ["planlı"]);
     // A road layer's symbols are lines: its table's geometry says so, though the drawing holds none of its rows.
-    assert_eq!(w.classes, [kentos_native_style::renderer::GeometryClass::Line]);
+    assert_eq!(
+        w.classes,
+        [kentos_native_style::renderer::GeometryClass::Line]
+    );
     let planli = &w.categorized.categories[0].symbols;
-    assert!(planli.line.is_some() && planli.fill.is_none() && planli.marker.is_none(), "{planli:?}");
+    assert!(
+        planli.line.is_some() && planli.fill.is_none() && planli.marker.is_none(),
+        "{planli:?}"
+    );
     assert!(w.categorized.other.is_none(), "Diğer değerler off");
     style(&mut app, Style::Done);
     assert_eq!(drawn(&app, &layer, true).0, 50.0, "both planlı roads drawn");
-    assert_eq!(legend(&app), ["planlı"], "the data layer's legend row, though the drawing holds none of its rows");
+    assert_eq!(
+        legend(&app),
+        ["planlı"],
+        "the data layer's legend row, though the drawing holds none of its rows"
+    );
 
     // Another program turns Y2 kontrol in the file.
     let gp = kentos_geopackage::GeoPackage::open(&path, true).expect("the file");
-    gp.connection().execute("UPDATE yollar SET durum = 'kontrol' WHERE ad = 'Y2'", []).expect("turned");
+    gp.connection()
+        .execute("UPDATE yollar SET durum = 'kontrol' WHERE ad = 'Y2'", [])
+        .expect("turned");
     drop(gp);
     kentos_data::registry().forget(&address);
 
     // One rule, Diğer değerler off: counted as taken by no category, drawn neither on the screen nor on paper, listed
     // with its kontrol, no legend row.
-    assert_eq!(counted(&mut app, &layer), (vec![1], 1), "planlı 1, one road no category takes");
+    assert_eq!(
+        counted(&mut app, &layer),
+        (vec![1], 1),
+        "planlı 1, one road no category takes"
+    );
     style(&mut app, Style::Close);
-    assert_eq!(drawn(&app, &layer, true), (0.0, 1), "the screen draws Y1 alone");
+    assert_eq!(
+        drawn(&app, &layer, true),
+        (0.0, 1),
+        "the screen draws Y1 alone"
+    );
     assert_eq!(drawn(&app, &layer, false), (0.0, 1), "paper draws Y1 alone");
-    assert_eq!(table_durum(&mut app, &layer, "Y2").as_deref(), Some("kontrol"));
-    assert_eq!(table_durum(&mut app, &layer, "Y1").as_deref(), Some("planlı"));
+    assert_eq!(
+        table_durum(&mut app, &layer, "Y2").as_deref(),
+        Some("kontrol")
+    );
+    assert_eq!(
+        table_durum(&mut app, &layer, "Y1").as_deref(),
+        Some("planlı")
+    );
     assert_eq!(legend(&app), ["planlı"]);
 
     // Diğer değerleri aç: both drawn on the screen and on paper, each by its own symbol, and the legend says how.
@@ -164,9 +227,19 @@ fn a_road_turned_kontrol_is_counted_drawn_listed_and_in_the_legend_by_one_rule()
     style(&mut app, Style::Other(true));
     style(&mut app, Style::Done);
     assert_eq!(counted(&mut app, &layer), (vec![1], 1), "the same count");
-    assert!(app.styles.layer_style.as_ref().is_some_and(|w| w.categorized.other.is_some()), "now drawn by Diğer");
+    assert!(
+        app.styles
+            .layer_style
+            .as_ref()
+            .is_some_and(|w| w.categorized.other.is_some()),
+        "now drawn by Diğer"
+    );
     style(&mut app, Style::Close);
-    assert_eq!(drawn(&app, &layer, true), (50.0, 2), "the screen draws both, each by its symbol");
+    assert_eq!(
+        drawn(&app, &layer, true),
+        (50.0, 2),
+        "the screen draws both, each by its symbol"
+    );
     assert_eq!(drawn(&app, &layer, false), (50.0, 2), "paper draws both");
     assert_eq!(legend(&app), ["planlı", "Diğer değerler"]);
 }
@@ -176,16 +249,24 @@ fn turned(tag: &str) -> (App, String) {
     crate::data_layers::register();
     let (address, path) = roads(tag);
     let mut app = app_with_drawing();
-    app.add_data_layers(vec![crate::data_layers::describe(&address, "yollar").expect("described")]).expect("added");
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&address, "yollar").expect("described"),
+    ])
+    .expect("added");
     let layer = node(&app, "yollar").expect("the roads").id.clone();
     style(&mut app, Style::Open(Some(layer.clone())));
     style(&mut app, Style::Kind(Kind::Categorized));
-    style(&mut app, Style::Expr(StyleField::Categories, "durum".into()));
+    style(
+        &mut app,
+        Style::Expr(StyleField::Categories, "durum".into()),
+    );
     style(&mut app, Style::Classify);
     hand_back(&mut app, "durum", Then::Classify);
     style(&mut app, Style::Done);
     let gp = kentos_geopackage::GeoPackage::open(&path, true).expect("the file");
-    gp.connection().execute("UPDATE yollar SET durum = 'kontrol' WHERE ad = 'Y2'", []).expect("turned");
+    gp.connection()
+        .execute("UPDATE yollar SET durum = 'kontrol' WHERE ad = 'Y2'", [])
+        .expect("turned");
     drop(gp);
     kentos_data::registry().forget(&address);
     (app, layer)

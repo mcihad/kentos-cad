@@ -137,8 +137,8 @@ fn a_local_project_edits_its_points_in_its_unit() {
         .expect("the point written");
     assert_eq!((p.p.x, p.p.y, p.z), (0.1, 0.25, Some(0.0125)));
     // 0.1 m reads as 100, not 100.00000000000001.
-    let texts =
-        [EditColumn::East, EditColumn::North, EditColumn::Z].map(|c| cell_text(&p, c, 1000.0, false));
+    let texts = [EditColumn::East, EditColumn::North, EditColumn::Z]
+        .map(|c| cell_text(&p, c, 1000.0, false));
     assert_eq!(texts, ["100", "250", "12.5"]);
     let out = write_cell(&mut doc, slot, EditColumn::East, "1500", false);
     assert!(out.step.is_some(), "{:?}", out.said);
@@ -1133,7 +1133,11 @@ fn a_double_click_anywhere_in_a_cell_edits_it() {
     };
     // The middle of Z's column.
     double(&mut shot, &mut app, z.center().x);
-    assert_eq!(app.gis.points.editing, Some((Target::Point(shown[0]), super::EditColumn::Z)), "the elevation cell");
+    assert_eq!(
+        app.gis.points.editing,
+        Some((Target::Point(shown[0]), super::EditColumn::Z)),
+        "the elevation cell"
+    );
     // 0 is an elevation, not an unknown one.
     ev(&mut app, Event::Input("0".into()));
     ev(&mut app, Event::Finish(None));
@@ -1145,6 +1149,10 @@ fn a_double_click_anywhere_in_a_cell_edits_it() {
     // Right of a short code, inside Kod's column.
     std::thread::sleep(std::time::Duration::from_millis(400));
     double(&mut shot, &mut app, code.x + code.width + 40.0);
-    assert_eq!(app.gis.points.editing, Some((Target::Point(shown[0]), super::EditColumn::Code)), "the code cell");
+    assert_eq!(
+        app.gis.points.editing,
+        Some((Target::Point(shown[0]), super::EditColumn::Code)),
+        "the code cell"
+    );
     let _ = layer;
 }

@@ -12,8 +12,9 @@
 //! its chord. All three are counted and said.
 
 use acadrust::entities::acis::{
-    SabReader, SatCoedge, SatDocument, SatEdge, SatEllipseCurve, SatFace, SatIntCurve, SatLoop, SatLump, SatParser,
-    SatPoint, SatPointer, SatRecord, SatShell, SatStraightCurve, SatTransform, SatVertex, Sense,
+    SabReader, SatCoedge, SatDocument, SatEdge, SatEllipseCurve, SatFace, SatIntCurve, SatLoop,
+    SatLump, SatParser, SatPoint, SatPointer, SatRecord, SatShell, SatStraightCurve, SatTransform,
+    SatVertex, Sense,
 };
 use acadrust::entities::{EntityType, LwPolyline, LwVertex};
 use acadrust::xdata::{ExtendedDataRecord, XDataValue};
@@ -140,7 +141,11 @@ fn dot(a: (f64, f64, f64), b: (f64, f64, f64)) -> f64 {
 }
 
 fn cross(a: (f64, f64, f64), b: (f64, f64, f64)) -> (f64, f64, f64) {
-    (a.1 * b.2 - a.2 * b.1, a.2 * b.0 - a.0 * b.2, a.0 * b.1 - a.1 * b.0)
+    (
+        a.1 * b.2 - a.2 * b.1,
+        a.2 * b.0 - a.0 * b.2,
+        a.0 * b.1 - a.1 * b.0,
+    )
 }
 
 /// The angle in (0, 2π] from `from` to `to`, going up.
@@ -168,7 +173,9 @@ fn faces(doc: &SatDocument, out: &mut Regions) -> Result<Vec<Vec<Ring>>, &'stati
     let most = doc.records.len() + 1;
     let mut faces = Vec::new();
     for body in doc.bodies() {
-        let tf = at(body.transform()).filter(|r| SatTransform::from_record(r).is_some()).and_then(Tf::of);
+        let tf = at(body.transform())
+            .filter(|r| SatTransform::from_record(r).is_some())
+            .and_then(Tf::of);
         let (mut lump, mut n) = (body.lump(), 0);
         while let Some(l) = at(lump).and_then(SatLump::from_record) {
             let mut shell = l.shell();
@@ -203,22 +210,39 @@ fn faces(doc: &SatDocument, out: &mut Regions) -> Result<Vec<Vec<Ring>>, &'stati
             lump = l.next_lump();
         }
     }
-    if faces.is_empty() { Err("ACIS verisinde yüz yok") } else { Ok(faces) }
+    if faces.is_empty() {
+        Err("ACIS verisinde yüz yok")
+    } else {
+        Ok(faces)
+    }
 }
 
 /// One loop as a ring, its coedges in order from `first`; none when it has no area.
-fn ring(doc: &SatDocument, first: SatPointer, tf: Option<Tf>, out: &mut Regions) -> Result<Option<Ring>, &'static str> {
+fn ring(
+    doc: &SatDocument,
+    first: SatPointer,
+    tf: Option<Tf>,
+    out: &mut Regions,
+) -> Result<Option<Ring>, &'static str> {
     let at = |p: SatPointer| -> Option<&SatRecord> { p.index().and_then(|i| doc.record(i)) };
     let point = |v: SatPointer| -> Option<(f64, f64, f64)> {
         let v = at(v).and_then(SatVertex::from_record)?;
         let p = at(v.point()).and_then(SatPoint::from_record)?;
         Some(apply(tf, p.position()))
     };
-    let mut ring = Ring { pts: Vec::new(), bulges: Vec::new(), z: f64::NAN };
+    let mut ring = Ring {
+        pts: Vec::new(),
+        bulges: Vec::new(),
+        z: f64::NAN,
+    };
     let mut c = first;
     for _ in 0..=doc.records.len() {
-        let coedge = at(c).and_then(SatCoedge::from_record).ok_or("ACIS kenar bağı okunamadı")?;
-        let edge = at(coedge.edge()).and_then(SatEdge::from_record).ok_or("ACIS kenarı okunamadı")?;
+        let coedge = at(c)
+            .and_then(SatCoedge::from_record)
+            .ok_or("ACIS kenar bağı okunamadı")?;
+        let edge = at(coedge.edge())
+            .and_then(SatEdge::from_record)
+            .ok_or("ACIS kenarı okunamadı")?;
         let (a, b) = (point(edge.start_vertex()), point(edge.end_vertex()));
         let (Some(a), Some(b)) = (a, b) else {
             return Err("ACIS köşesi okunamadı");
@@ -292,7 +316,8 @@ fn ring(doc: &SatDocument, first: SatPointer, tf: Option<Tf>, out: &mut Regions)
             .and_then(|c| spline_points(doc, &c, &edge))
         {
             // A spline edge: points along it (its own span), from this coedge's start.
-            let mut points: Vec<(f64, f64, f64)> = points.into_iter().map(|p| apply(tf, p)).collect();
+            let mut points: Vec<(f64, f64, f64)> =
+                points.into_iter().map(|p| apply(tf, p)).collect();
             let gap = |p: (f64, f64, f64), q: (f64, f64, f64)| (p.0 - q.0).hypot(p.1 - q.1);
             if gap(points[0], from) > gap(points[points.len() - 1], from) {
                 points.reverse();
@@ -322,7 +347,11 @@ fn ring(doc: &SatDocument, first: SatPointer, tf: Option<Tf>, out: &mut Regions)
 /// A spline edge's points over its own span, evenly in its parameter: eight a control point, 32 to 1 024. The
 /// B-spline from the record or its shared definition (`bspline_in`); an intcurve saved `reversed` runs against its
 /// spline (curve parameter t is spline parameter −t). None when it cannot be read.
-fn spline_points(doc: &SatDocument, curve: &SatIntCurve<'_>, edge: &SatEdge<'_>) -> Option<Vec<(f64, f64, f64)>> {
+fn spline_points(
+    doc: &SatDocument,
+    curve: &SatIntCurve<'_>,
+    edge: &SatEdge<'_>,
+) -> Option<Vec<(f64, f64, f64)>> {
     let (degree, knots, ctrl) = curve.bspline_in(doc)?;
     if ctrl.len() < 2 || knots.len() != ctrl.len() + degree + 1 {
         return None;
@@ -346,7 +375,10 @@ fn spline_points(doc: &SatDocument, curve: &SatIntCurve<'_>, edge: &SatEdge<'_>)
             (p[0] / w, p[1] / w, p[2] / w)
         })
         .collect();
-    points.iter().all(|p| p.0.is_finite() && p.1.is_finite() && p.2.is_finite()).then_some(points)
+    points
+        .iter()
+        .all(|p| p.0.is_finite() && p.1.is_finite() && p.2.is_finite())
+        .then_some(points)
 }
 
 /// A B-spline of homogeneous control points (x·w, y·w, z·w, w) at `t` (de Boor).
@@ -361,7 +393,11 @@ fn de_boor(degree: usize, knots: &[f64], ctrl: &[[f64; 4]], t: f64) -> [f64; 4] 
         for j in (r..=degree).rev() {
             let i = j + k - degree;
             let span = knots[i + degree + 1 - r] - knots[i];
-            let a = if span.abs() < 1e-300 { 0.0 } else { (t - knots[i]) / span };
+            let a = if span.abs() < 1e-300 {
+                0.0
+            } else {
+                (t - knots[i]) / span
+            };
             for c in 0..4 {
                 d[j][c] = (1.0 - a) * d[j - 1][c] + a * d[j][c];
             }
@@ -387,7 +423,10 @@ fn at_least_three(ring: &mut Ring) {
         // The arc's middle: the chord's middle moved its sagitta to the right of the chord (a positive bulge turns
         // counter-clockwise, its arc lies to the right).
         let sagitta = bulge / 2.0;
-        let mid = ((a.0 + b.0) / 2.0 + dy * sagitta, (a.1 + b.1) / 2.0 - dx * sagitta);
+        let mid = (
+            (a.0 + b.0) / 2.0 + dy * sagitta,
+            (a.1 + b.1) / 2.0 - dx * sagitta,
+        );
         let half = (bulge.atan() / 2.0).tan();
         ring.bulges[k] = half;
         ring.pts.insert(k + 1, mid);
@@ -433,7 +472,8 @@ pub fn outlines(doc: &mut CadDocument) -> Regions {
     }
     // The new objects, in order: a further face's outer loop, then the holes of the face before them.
     let mut extra: Vec<(LwPolyline, Hole)> = Vec::new();
-    let mut by_handle: std::collections::HashMap<Handle, Vec<Vec<Ring>>> = plans.into_iter().collect();
+    let mut by_handle: std::collections::HashMap<Handle, Vec<Vec<Ring>>> =
+        plans.into_iter().collect();
     for e in doc.entities_mut() {
         let EntityType::Region(r) = e else {
             continue;
@@ -450,7 +490,11 @@ pub fn outlines(doc: &mut CadDocument) -> Regions {
                 .unwrap_or(0);
             let outer_ring = rings.remove(outer);
             let mut shape = polyline(&outer_ring, &common);
-            let of = if first.is_none() { Hole::Of(common.handle) } else { Hole::OfLastNew };
+            let of = if first.is_none() {
+                Hole::Of(common.handle)
+            } else {
+                Hole::OfLastNew
+            };
             let holes = rings.iter().map(|ring| {
                 let mut hole = polyline(ring, &common);
                 hole.common.handle = Handle::NULL;
@@ -528,10 +572,17 @@ mod tests {
         let mut records = vec![
             "body $-1 -1 $-1 $1 $-1 $2".to_string(),
             "lump $-1 -1 $-1 $-1 $3 $0".to_string(),
-            format!("transform $-1 -1 1 0 0 0 1 0 0 0 1 {} {} 0 1 no_rotate no_reflect no_shear", shift[0], shift[1]),
+            format!(
+                "transform $-1 -1 1 0 0 0 1 0 0 0 1 {} {} 0 1 no_rotate no_reflect no_shear",
+                shift[0], shift[1]
+            ),
             "shell $-1 -1 $-1 $-1 $-1 $4 $-1 $1".to_string(),
             "face $-1 -1 $-1 $-1 $5 $3 $-1 $6 forward single out".to_string(),
-            format!("loop $-1 -1 $-1 ${} ${} $4", if hole { second as i64 } else { -1 }, at(0, 0)),
+            format!(
+                "loop $-1 -1 $-1 ${} ${} $4",
+                if hole { second as i64 } else { -1 },
+                at(0, 0)
+            ),
             "plane-surface $-1 -1 $-1 0 0 0 0 0 1 1 0 0 forward_v I I I I".to_string(),
         ];
         for i in 0..n {
@@ -565,7 +616,10 @@ mod tests {
             // The hole: one coedge round a whole circle, reversed (a hole runs clockwise).
             let (l, c) = (second, second + 1);
             records.push(format!("loop $-1 -1 $-1 $-1 ${c} $4"));
-            records.push(format!("coedge $-1 -1 $-1 ${c} ${c} $-1 ${} reversed ${l} $-1", c + 1));
+            records.push(format!(
+                "coedge $-1 -1 $-1 ${c} ${c} $-1 ${} reversed ${l} $-1",
+                c + 1
+            ));
             records.push(format!(
                 "edge $-1 -1 $-1 ${} 0 ${} 6.283185307179586 ${c} ${} forward @7 unknown",
                 c + 2,
@@ -598,7 +652,15 @@ mod tests {
         assert_eq!(faces.len(), 1);
         let ring = &faces[0][0];
         // The transform's translation, read from its own slots (the codec's accessor starts a slot late).
-        assert_eq!(ring.pts, vec![(100.0, 200.0), (110.0, 200.0), (110.0, 210.0), (100.0, 210.0)]);
+        assert_eq!(
+            ring.pts,
+            vec![
+                (100.0, 200.0),
+                (110.0, 200.0),
+                (110.0, 210.0),
+                (100.0, 210.0)
+            ]
+        );
         assert!(ring.bulges.iter().all(|b| *b == 0.0));
         assert_eq!(ring.z, 0.0);
     }
@@ -611,9 +673,16 @@ mod tests {
         assert_eq!(hole.pts.len(), 4);
         // Reversed: clockwise, each quarter's bulge −tan(π/8).
         let q = (std::f64::consts::PI / 8.0).tan();
-        assert!(hole.bulges.iter().all(|b| (b + q).abs() < 1e-12), "{:?}", hole.bulges);
+        assert!(
+            hole.bulges.iter().all(|b| (b + q).abs() < 1e-12),
+            "{:?}",
+            hole.bulges
+        );
         for (x, y) in &hole.pts {
-            assert!(((x - 5.0).hypot(y - 5.0) - 2.0).abs() < 1e-9, "on the circle: ({x}, {y})");
+            assert!(
+                ((x - 5.0).hypot(y - 5.0) - 2.0).abs() < 1e-9,
+                "on the circle: ({x}, {y})"
+            );
         }
         assert!(hole.area2() < 0.0, "clockwise");
     }
@@ -621,12 +690,19 @@ mod tests {
     #[test]
     fn fewer_than_three_points_on_arcs_are_given_a_middle() {
         // Two half circles of radius 1 round the origin: their middles at (0, −1) and (0, 1) turning counter-clockwise.
-        let mut ring = Ring { pts: vec![(1.0, 0.0), (-1.0, 0.0)], bulges: vec![1.0, 1.0], z: 0.0 };
+        let mut ring = Ring {
+            pts: vec![(1.0, 0.0), (-1.0, 0.0)],
+            bulges: vec![1.0, 1.0],
+            z: 0.0,
+        };
         at_least_three(&mut ring);
         // The second half (equal bulges: the last) from (−1, 0) back to (1, 0) passes (0, −1): halved there.
         assert_eq!(ring.pts.len(), 3);
         let (x, y) = ring.pts[2];
-        assert!(x.abs() < 1e-12 && (y + 1.0).abs() < 1e-12, "the arc's middle: ({x}, {y})");
+        assert!(
+            x.abs() < 1e-12 && (y + 1.0).abs() < 1e-12,
+            "the arc's middle: ({x}, {y})"
+        );
         let q = (std::f64::consts::PI / 8.0).tan();
         assert_eq!(ring.bulges[0], 1.0, "the first half as it was");
         assert!((ring.bulges[1] - q).abs() < 1e-12 && (ring.bulges[2] - q).abs() < 1e-12);
@@ -650,16 +726,29 @@ mod tests {
             })
             .collect();
         assert_eq!(polylines.len(), 2);
-        assert!(!doc.entities().any(|e| matches!(e, EntityType::Region(_))), "the region is gone");
-        let outer = polylines.iter().find(|p| p.common.handle == handle).expect("the region's handle kept");
+        assert!(
+            !doc.entities().any(|e| matches!(e, EntityType::Region(_))),
+            "the region is gone"
+        );
+        let outer = polylines
+            .iter()
+            .find(|p| p.common.handle == handle)
+            .expect("the region's handle kept");
         assert!(outer.is_closed && outer.vertices.len() == 4 && outer.common.layer == "ALAN");
-        let hole = polylines.iter().find(|p| p.common.handle != handle).expect("the hole");
+        let hole = polylines
+            .iter()
+            .find(|p| p.common.handle != handle)
+            .expect("the hole");
         assert!(hole.is_closed && hole.vertices.len() == 4 && hole.common.layer == "ALAN");
         // KentOS's reader takes them as one area with its hole (the bridge's text, read as the import reads it).
-        let dxf =
-            acadrust::DxfWriter::new(&doc).with_version(acadrust::DxfVersion::AC1032).write_to_vec().expect("DXF");
-        let options =
-            kentos_contracts::DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
+        let dxf = acadrust::DxfWriter::new(&doc)
+            .with_version(acadrust::DxfVersion::AC1032)
+            .write_to_vec()
+            .expect("DXF");
+        let options = kentos_contracts::DxfReadOptions {
+            unit: Some(kentos_contracts::DrawingUnit::M),
+            ..Default::default()
+        };
         let got = kentos_formats::dxf::read(&dxf, &options).expect("read");
         let polygons: Vec<_> = got
             .entities
@@ -671,6 +760,12 @@ mod tests {
             .collect();
         assert_eq!(polygons.len(), 1, "{:?}", got.entities.len());
         assert_eq!(polygons[0].holes.as_ref().map(Vec::len), Some(1));
-        assert_eq!(polygons[0].holes.as_ref().unwrap()[0].bulges.as_ref().map(Vec::len), Some(4));
+        assert_eq!(
+            polygons[0].holes.as_ref().unwrap()[0]
+                .bulges
+                .as_ref()
+                .map(Vec::len),
+            Some(4)
+        );
     }
 }

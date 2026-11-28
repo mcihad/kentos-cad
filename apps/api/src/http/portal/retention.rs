@@ -12,7 +12,11 @@ use crate::http::auth::Caller;
 use crate::http::error::{Body, Failure};
 
 /// `GET /v1/platform/retention`.
-pub async fn page(State(state): State<AppState>, headers: HeaderMap, caller: Caller) -> Result<Json<RetentionPage>, Failure> {
+pub async fn page(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    caller: Caller,
+) -> Result<Json<RetentionPage>, Failure> {
     let run = async { retention::page(state.db()?, &caller.0).await };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }

@@ -573,10 +573,12 @@ impl Draft {
                 Some("Proje adı boş olamaz.".to_owned())
             }
             // A CBS project's place is on its one page (docs/adr/9184).
-            Step::Details if self.kind == Kind::Gis && system(self.srid()).is_none() => Some(format!(
-                "EPSG:{} bu sürümde tanımlı değil; listeden bir sistem seçin.",
-                self.srid()
-            )),
+            Step::Details if self.kind == Kind::Gis && system(self.srid()).is_none() => {
+                Some(format!(
+                    "EPSG:{} bu sürümde tanımlı değil; listeden bir sistem seçin.",
+                    self.srid()
+                ))
+            }
             Step::Coords if !self.is_local() && system(self.srid()).is_none() => Some(format!(
                 "EPSG:{} bu sürümde tanımlı değil; listeden bir sistem seçin.",
                 self.srid()
@@ -596,7 +598,10 @@ impl Draft {
             drawing_font: self.font,
             province: if local { None } else { self.province },
             drawing_unit: local.then_some(self.unit),
-            annotation: self.annotation.clone().and_then(AnnotationHeights::sanitized),
+            annotation: self
+                .annotation
+                .clone()
+                .and_then(AnnotationHeights::sanitized),
             cad_work: self.cad_work(),
             heights: self.heights(),
         }
@@ -679,7 +684,10 @@ mod tests {
             }
         }
         if write {
-            let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/project/v1/wizard.json");
+            let path = concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../../../fixtures/project/v1/wizard.json"
+            );
             let text = serde_json::to_string_pretty(&file).expect("the fixture writes") + "\n";
             std::fs::write(path, text).expect("the fixture is written");
         }
@@ -743,7 +751,13 @@ mod tests {
         assert_eq!(
             seen,
             [
-                ("Mimari proje", LOCAL_SRID, DrawingUnit::M, 100.0, Some(DrawingUnit::M)),
+                (
+                    "Mimari proje",
+                    LOCAL_SRID,
+                    DrawingUnit::M,
+                    100.0,
+                    Some(DrawingUnit::M)
+                ),
                 ("Harita / imar planı", 5256, DrawingUnit::M, 1000.0, None),
                 ("Yol projesi", 5256, DrawingUnit::M, 1000.0, None),
             ]
@@ -766,7 +780,10 @@ mod tests {
         assert_eq!(d.note(Step::Coords), "Mimari proje · m · 1:100");
         assert_eq!(
             d.summary().into_iter().take(2).collect::<Vec<_>>(),
-            [("Tür", "CAD, teknik çizim".to_owned()), ("Çizim", "Mimari proje".to_owned())]
+            [
+                ("Tür", "CAD, teknik çizim".to_owned()),
+                ("Çizim", "Mimari proje".to_owned())
+            ]
         );
         d.unit = DrawingUnit::Cm;
         assert_eq!(
@@ -790,8 +807,16 @@ mod tests {
         assert_eq!(Step::Details.name(Kind::Gis), "Proje");
         assert_eq!(d.notes_of_steps(), ["CBS · harita", "Yeni proje"]);
         let summary = d.summary();
-        let line = |k: &str| summary.iter().find(|(key, _)| *key == k).map(|(_, v)| v.as_str());
-        assert_eq!(line("Katmanlar"), Some("Yok: Veri ekle ya da Yeni katman ile eklenir"));
+        let line = |k: &str| {
+            summary
+                .iter()
+                .find(|(key, _)| *key == k)
+                .map(|(_, v)| v.as_str())
+        };
+        assert_eq!(
+            line("Katmanlar"),
+            Some("Yok: Veri ekle ya da Yeni katman ile eklenir")
+        );
         for gone in ["Amaç", "Veri", "Proje dosyası"] {
             assert_eq!(line(gone), None, "{gone}");
         }

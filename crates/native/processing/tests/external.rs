@@ -183,9 +183,15 @@ const ENVIRONMENT: &str = "Python 3.12.13 · linux-x86_64";
 fn setup() -> ExternalTool {
     static ONCE: OnceLock<()> = OnceLock::new();
     ONCE.get_or_init(|| {
-        let mut tool =
-            external::from_descriptor("tr.ornek.deneme", "Deneme", "1.0.0", "olc", &["cbs"], &descriptor())
-                .unwrap();
+        let mut tool = external::from_descriptor(
+            "tr.ornek.deneme",
+            "Deneme",
+            "1.0.0",
+            "olc",
+            &["cbs"],
+            &descriptor(),
+        )
+        .unwrap();
         // The host gives the package's digest (docs/adr/8057 §13) and where its code runs (§15).
         tool.digest = DIGEST.into();
         tool.environment = ENVIRONMENT.into();
@@ -196,8 +202,15 @@ fn setup() -> ExternalTool {
             .as_object_mut()
             .unwrap()
             .remove("writes");
-        let reads =
-            external::from_descriptor("tr.ornek.deneme", "Deneme", "1.0.0", "oku", &["cbs"], &reads).unwrap();
+        let reads = external::from_descriptor(
+            "tr.ornek.deneme",
+            "Deneme",
+            "1.0.0",
+            "oku",
+            &["cbs"],
+            &reads,
+        )
+        .unwrap();
         external::set_tools(vec![tool, reads]);
         external::register_provider(Arc::new(Stand));
         kentos_processing::command::register();
@@ -1080,24 +1093,47 @@ fn an_extensions_tool_changes_its_own_inputs_only_where_it_says_it_writes() {
 /// or one KentOS does not know, refuses the descriptor with the reason.
 #[test]
 fn the_sample_python_tool_reads_with_its_modules_and_category() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../paket/eklentiler/ornek-isleme");
-    let manifest: Value =
-        serde_json::from_str(&std::fs::read_to_string(root.join("manifest.json")).expect("the manifest")).expect("JSON");
-    let modules: Vec<&str> = manifest["modules"].as_array().expect("modules").iter().filter_map(Value::as_str).collect();
-    let descriptor: Value = serde_json::from_str(
-        &std::fs::read_to_string(root.join("tools/alan-dilimleri.tool.json")).expect("the descriptor"),
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../paket/eklentiler/ornek-isleme");
+    let manifest: Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("manifest.json")).expect("the manifest"),
     )
     .expect("JSON");
-    let read = external::from_descriptor("tr.kentos.ornek-isleme", "Örnek", "1.0.0", "alan-dilimleri", &modules, &descriptor)
-        .expect("reads");
+    let modules: Vec<&str> = manifest["modules"]
+        .as_array()
+        .expect("modules")
+        .iter()
+        .filter_map(Value::as_str)
+        .collect();
+    let descriptor: Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("tools/alan-dilimleri.tool.json"))
+            .expect("the descriptor"),
+    )
+    .expect("JSON");
+    let read = external::from_descriptor(
+        "tr.kentos.ornek-isleme",
+        "Örnek",
+        "1.0.0",
+        "alan-dilimleri",
+        &modules,
+        &descriptor,
+    )
+    .expect("reads");
     assert_eq!(read.tool.id, "ext.tr.kentos.ornek-isleme.alan-dilimleri");
     assert_eq!(read.tool.category, "analysis");
     assert_eq!(read.tool.modules.ids(), ["harita", "cbs"]);
     // Without its own modules, the manifest's.
     let mut bare = descriptor.clone();
     bare.as_object_mut().expect("an object").remove("modules");
-    let read = external::from_descriptor("tr.kentos.ornek-isleme", "Örnek", "1.0.0", "alan-dilimleri", &["yol"], &bare)
-        .expect("reads");
+    let read = external::from_descriptor(
+        "tr.kentos.ornek-isleme",
+        "Örnek",
+        "1.0.0",
+        "alan-dilimleri",
+        &["yol"],
+        &bare,
+    )
+    .expect("reads");
     assert_eq!(read.tool.modules.ids(), ["yol"]);
     // A module the manifest lacks, one KentOS does not know, a category İşlemler has not.
     let refused = |patch: Value| {
@@ -1105,17 +1141,40 @@ fn the_sample_python_tool_reads_with_its_modules_and_category() {
         for (k, v) in patch.as_object().expect("an object") {
             d[k] = v.clone();
         }
-        external::from_descriptor("tr.kentos.ornek-isleme", "Örnek", "1.0.0", "alan-dilimleri", &modules, &d)
-            .err()
-            .expect("refused")
+        external::from_descriptor(
+            "tr.kentos.ornek-isleme",
+            "Örnek",
+            "1.0.0",
+            "alan-dilimleri",
+            &modules,
+            &d,
+        )
+        .err()
+        .expect("refused")
     };
-    assert!(refused(json!({"modules": ["mimari"]})).contains("manifestinde yok"), "mimari");
-    assert!(refused(json!({"modules": ["uzay"]})).contains("bir KentOS modülü değil"), "uzay");
-    assert!(refused(json!({"modules": []})).contains("en az biri"), "empty");
+    assert!(
+        refused(json!({"modules": ["mimari"]})).contains("manifestinde yok"),
+        "mimari"
+    );
+    assert!(
+        refused(json!({"modules": ["uzay"]})).contains("bir KentOS modülü değil"),
+        "uzay"
+    );
+    assert!(
+        refused(json!({"modules": []})).contains("en az biri"),
+        "empty"
+    );
     // A category İşlemler has not (a name of the extension's own) keeps the tool in Eklentiler.
     let mut own = descriptor.clone();
     own["category"] = json!("Mezarlık BS");
-    let read = external::from_descriptor("tr.kentos.ornek-isleme", "Örnek", "1.0.0", "alan-dilimleri", &modules, &own)
-        .expect("reads");
+    let read = external::from_descriptor(
+        "tr.kentos.ornek-isleme",
+        "Örnek",
+        "1.0.0",
+        "alan-dilimleri",
+        &modules,
+        &own,
+    )
+    .expect("reads");
     assert_eq!(read.tool.category, external::CATEGORY);
 }

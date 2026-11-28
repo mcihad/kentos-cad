@@ -97,8 +97,10 @@ pub(crate) fn element(
     level: &Option<String>,
     m: Vec2,
 ) -> At {
-    if let Some((o, ..)) =
-        openings.iter().filter(|(_, l, place)| l == level && holds(place, m)).min_by(|a, b| a.0.cmp(&b.0))
+    if let Some((o, ..)) = openings
+        .iter()
+        .filter(|(_, l, place)| l == level && holds(place, m))
+        .min_by(|a, b| a.0.cmp(&b.0))
     {
         return At::Opening(o.clone());
     }
@@ -113,7 +115,11 @@ pub(crate) fn element(
 /// two readings that differ the change found by halving to a tenth of a millimetre (docs/adr/8087: a door's length is
 /// its width, not a count of steps; the facts round to a millimetre, the same however the outline begins); each reading
 /// with its length, in order.
-pub(crate) fn spans<K: Clone + PartialEq>(s0: f64, s1: f64, read: &mut dyn FnMut(f64) -> K) -> Vec<(K, f64)> {
+pub(crate) fn spans<K: Clone + PartialEq>(
+    s0: f64,
+    s1: f64,
+    read: &mut dyn FnMut(f64) -> K,
+) -> Vec<(K, f64)> {
     let span = s1 - s0;
     let k = (span / STEP).ceil().max(1.0) as usize;
     let piece = span / k as f64;
@@ -203,10 +209,13 @@ impl Document {
         let rooms = self.axis_rooms();
         let (walls, openings) = self.bodies();
         #[allow(clippy::type_complexity)]
-        let mut found: BTreeMap<(String, String), (Option<String>, BTreeMap<At, f64>)> = BTreeMap::new();
+        let mut found: BTreeMap<(String, String), (Option<String>, BTreeMap<At, f64>)> =
+            BTreeMap::new();
         for (uid, level, outline) in &rooms {
             for area in outline {
-                for ring in std::iter::once(&area.outer.pts).chain(area.holes.iter().map(|h| &h.pts)) {
+                for ring in
+                    std::iter::once(&area.outer.pts).chain(area.holes.iter().map(|h| &h.pts))
+                {
                     let n = ring.len();
                     for i in 0..n {
                         let (a, b) = (ring[i], ring[(i + 1) % n]);
@@ -230,7 +239,11 @@ impl Document {
                                     }
                                     rooms
                                         .iter()
-                                        .find(|(o, l, areas)| o != uid && l == level && areas.iter().any(|x| inside_area(x, q)))
+                                        .find(|(o, l, areas)| {
+                                            o != uid
+                                                && l == level
+                                                && areas.iter().any(|x| inside_area(x, q))
+                                        })
                                         .map(|(o, ..)| Some((o, t)))
                                 })
                                 .flatten()?;
@@ -274,7 +287,12 @@ impl Document {
     /// The walls' bodies and the openings' outlines (a niche or a flue is none: it does not pass through its wall), each
     /// with its persistent id and storey.
     #[allow(clippy::type_complexity)]
-    pub(crate) fn bodies(&self) -> (Vec<(String, Option<String>, Vec<Vec<Vec2>>)>, Vec<(String, Option<String>, Vec<Vec2>)>) {
+    pub(crate) fn bodies(
+        &self,
+    ) -> (
+        Vec<(String, Option<String>, Vec<Vec<Vec2>>)>,
+        Vec<(String, Option<String>, Vec<Vec2>)>,
+    ) {
         let mut walls: Vec<(String, Option<String>, Vec<Vec<Vec2>>)> = Vec::new();
         let mut openings: Vec<(String, Option<String>, Vec<Vec2>)> = Vec::new();
         for (uid, e) in self.entities_with_uids() {
@@ -285,7 +303,8 @@ impl Document {
                     else {
                         continue;
                     };
-                    let Ok((outer, holes)) = kentos_geometry_core::geom::wall::body(&pts, bulges.as_deref(), &wall)
+                    let Ok((outer, holes)) =
+                        kentos_geometry_core::geom::wall::body(&pts, bulges.as_deref(), &wall)
                     else {
                         continue;
                     };
@@ -296,10 +315,19 @@ impl Document {
                 // A niche or a flue does not pass through its wall: the wall still separates there.
                 Entity::Opening(o)
                     if o.opening.place.len() >= 3
-                        && !matches!(o.opening.form, kentos_contracts::OpeningForm::Niche | kentos_contracts::OpeningForm::Flue) =>
+                        && !matches!(
+                            o.opening.form,
+                            kentos_contracts::OpeningForm::Niche
+                                | kentos_contracts::OpeningForm::Flue
+                        ) =>
                 {
                     let level = self.wall_of(&o.opening.host).and_then(|w| w.arch.level);
-                    let mut place: Vec<Vec2> = o.opening.place.iter().map(|q| Vec2::new(q.x, q.y)).collect();
+                    let mut place: Vec<Vec2> = o
+                        .opening
+                        .place
+                        .iter()
+                        .map(|q| Vec2::new(q.x, q.y))
+                        .collect();
                     // Its jambs are written start-left, start-right, end-left, end-right: as a ring the end jamb's come
                     // back, else the ring crosses itself and holds only the jambs' corners near the faces.
                     if place.len() == 4 {
@@ -342,7 +370,9 @@ impl Document {
             for area in core_areas(&x.parts) {
                 let ring = &area.outer.pts;
                 let n = ring.len();
-                let twice: f64 = (0..n).map(|i| ring[i].x * ring[(i + 1) % n].y - ring[(i + 1) % n].x * ring[i].y).sum();
+                let twice: f64 = (0..n)
+                    .map(|i| ring[i].x * ring[(i + 1) % n].y - ring[(i + 1) % n].x * ring[i].y)
+                    .sum();
                 for i in 0..n {
                     let (a, b) = (ring[i], ring[(i + 1) % n]);
                     let len = (b.x - a.x).hypot(b.y - a.y);
@@ -352,7 +382,11 @@ impl Document {
                     }
                     let (dx, dy) = ((b.x - a.x) / len, (b.y - a.y) / len);
                     // Away from the shaft: right of a counter-clockwise outline, left of a clockwise one.
-                    let out_n = if twice > 0.0 { Vec2::new(dy, -dx) } else { Vec2::new(-dy, dx) };
+                    let out_n = if twice > 0.0 {
+                        Vec2::new(dy, -dx)
+                    } else {
+                        Vec2::new(-dy, dx)
+                    };
                     let mut read = |s: f64| -> At {
                         let p = Vec2::new(a.x + dx * s, a.y + dy * s);
                         let steps = (SHAFT_REACH / ACROSS).round() as usize;
@@ -360,7 +394,12 @@ impl Document {
                         (1..=steps)
                             .map(|i| {
                                 let t = ACROSS * i as f64;
-                                element(&walls, &openings, &level, Vec2::new(p.x + out_n.x * t, p.y + out_n.y * t))
+                                element(
+                                    &walls,
+                                    &openings,
+                                    &level,
+                                    Vec2::new(p.x + out_n.x * t, p.y + out_n.y * t),
+                                )
                             })
                             .find(|at| *at != At::Open)
                             .unwrap_or(At::Open)
@@ -374,8 +413,14 @@ impl Document {
             let area = kentos_geometry_core::geom::space::area(&areas);
             let middle = kentos_geometry_core::geom::space::label_at(&areas);
             shapes.push((areas, middle));
-            let mut enclosure =
-                Enclosure { uid: uid.to_string(), level, kind, area, stack: uid.to_string(), ..Enclosure::default() };
+            let mut enclosure = Enclosure {
+                uid: uid.to_string(),
+                level,
+                kind,
+                area,
+                stack: uid.to_string(),
+                ..Enclosure::default()
+            };
             for (at, length) in by {
                 match at {
                     At::Wall(w) => enclosure.walls.push((w, length)),
@@ -396,10 +441,18 @@ impl Document {
             .settings()
             .arch
             .as_ref()
-            .map(|a| a.levels.iter().map(|l| (l.id.clone(), l.elevation)).collect())
+            .map(|a| {
+                a.levels
+                    .iter()
+                    .map(|l| (l.id.clone(), l.elevation))
+                    .collect()
+            })
             .unwrap_or_default();
         levels.sort_by(|a, b| a.1.total_cmp(&b.1).then_with(|| a.0.cmp(&b.0)));
-        let index = |l: &Option<String>| l.as_deref().and_then(|id| levels.iter().position(|(x, _)| x == id));
+        let index = |l: &Option<String>| {
+            l.as_deref()
+                .and_then(|id| levels.iter().position(|(x, _)| x == id))
+        };
         let n = out.len();
         let mut root: Vec<usize> = (0..n).collect();
         fn find(root: &mut [usize], mut i: usize) -> usize {
@@ -410,10 +463,14 @@ impl Document {
             i
         }
         let holds = |i: usize, j: usize| {
-            shapes[j].1.is_some_and(|m| shapes[i].0.iter().any(|a| inside_area(a, m)))
+            shapes[j]
+                .1
+                .is_some_and(|m| shapes[i].0.iter().any(|a| inside_area(a, m)))
         };
         for i in 0..n {
-            let Some(at) = index(&out[i].level) else { continue };
+            let Some(at) = index(&out[i].level) else {
+                continue;
+            };
             for j in 0..n {
                 if out[j].kind != out[i].kind || index(&out[j].level) != Some(at + 1) {
                     continue;
@@ -431,7 +488,11 @@ impl Document {
             .map(|i| {
                 (0..n)
                     .filter(|&j| rep[j] == rep[i])
-                    .min_by(|&a, &b| index(&out[a].level).cmp(&index(&out[b].level)).then_with(|| out[a].uid.cmp(&out[b].uid)))
+                    .min_by(|&a, &b| {
+                        index(&out[a].level)
+                            .cmp(&index(&out[b].level))
+                            .then_with(|| out[a].uid.cmp(&out[b].uid))
+                    })
                     .map_or_else(|| out[i].uid.clone(), |j| out[j].uid.clone())
             })
             .collect();

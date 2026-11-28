@@ -43,7 +43,12 @@ impl AdjoinWork {
     /// `xy` its corners (x0, y0, x1, y1, …), `bulges` one per segment or
     /// empty for a straight path.
     pub fn fill(&self, xy: &[f64], bulges: &[f64]) -> String {
-        let pts: Vec<Vec2> = xy.as_chunks::<2>().0.iter().map(|c| Vec2::new(c[0], c[1])).collect();
+        let pts: Vec<Vec2> = xy
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|c| Vec2::new(c[0], c[1]))
+            .collect();
         let bulges = (!bulges.is_empty()).then_some(bulges);
         json::to_string(&self.inner.fill(&pts, bulges))
     }

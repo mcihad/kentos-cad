@@ -195,7 +195,10 @@ pub struct ProgramUnit {
     /// written as given (“120”, “1.5”), at most 12 digits before the point and 6 after; read exactly, never as a float.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(regex(pattern = r"^[0-9]{1,12}(\.[0-9]{1,6})?$")))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(regex(pattern = r"^[0-9]{1,12}(\.[0-9]{1,6})?$"))
+    )]
     pub share_weight: Option<String>,
     /// Niteliği (docs/adr/8031; `.kcad` schema 223; Kat Mülkiyeti Kanunu 12/a: "kat, daire, iş bürosu gibi nevi"):
     /// what the deed calls it (“Daire”, “Dükkân”, “İş bürosu”; an annex's “Depo”, “Garaj”).
@@ -210,7 +213,10 @@ pub struct ProgramUnit {
     /// location and size): a decimal as written (“1.15”), read exactly; 1 when absent.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
-    #[cfg_attr(feature = "schema", schemars(regex(pattern = r"^[0-9]{1,12}(\.[0-9]{1,6})?$")))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(regex(pattern = r"^[0-9]{1,12}(\.[0-9]{1,6})?$"))
+    )]
     pub land_factor: Option<String>,
 }
 
@@ -346,17 +352,26 @@ fn text_problem(v: &str, at: &str, what: &str) -> Option<(String, String)> {
         return Some((at.into(), format!("{what} boş olamaz; bir değer yazın.")));
     }
     if t != v {
-        return Some((at.into(), format!("“{v}” {what} başında ya da sonunda boşluk var; silin.")));
+        return Some((
+            at.into(),
+            format!("“{v}” {what} başında ya da sonunda boşluk var; silin."),
+        ));
     }
     if v.chars().count() > MAX_PROGRAM_TEXT {
-        return Some((at.into(), format!("{what} en çok {MAX_PROGRAM_TEXT} harftir.")));
+        return Some((
+            at.into(),
+            format!("{what} en çok {MAX_PROGRAM_TEXT} harftir."),
+        ));
     }
     None
 }
 
 fn levels_problem(levels: &[String], at: &str) -> Option<(String, String)> {
     if levels.len() > MAX_PROGRAM_ITEMS {
-        return Some((at.into(), format!("En çok {MAX_PROGRAM_ITEMS} kat verilir.")));
+        return Some((
+            at.into(),
+            format!("En çok {MAX_PROGRAM_ITEMS} kat verilir."),
+        ));
     }
     for (k, l) in levels.iter().enumerate() {
         if let Some(p) = text_problem(l, &format!("{at}[{k}]"), "Katın kimliği") {
@@ -371,8 +386,12 @@ fn levels_problem(levels: &[String], at: &str) -> Option<(String, String)> {
 
 fn positive(v: Option<f64>, at: &str, what: &str, unit: &str) -> Option<(String, String)> {
     let v = v?;
-    (!(v.is_finite() && v > 0.0 && v <= 1.0e6))
-        .then(|| (at.into(), format!("{what} {v} {unit}; sıfırdan büyük, sonlu olmalı.")))
+    (!(v.is_finite() && v > 0.0 && v <= 1.0e6)).then(|| {
+        (
+            at.into(),
+            format!("{what} {v} {unit}; sıfırdan büyük, sonlu olmalı."),
+        )
+    })
 }
 
 impl BuildingProgram {
@@ -389,7 +408,10 @@ impl BuildingProgram {
     /// level's building.
     pub fn has_building_places(&self) -> bool {
         !self.shared.is_empty()
-            || self.buildings.iter().any(|b| b.code.is_some() || b.usage.is_some() || b.zero.is_some())
+            || self
+                .buildings
+                .iter()
+                .any(|b| b.code.is_some() || b.usage.is_some() || b.zero.is_some())
     }
 
     /// Whether a building says its own Bölge (Mimari data 30, docs/adr/8144).
@@ -410,7 +432,10 @@ impl BuildingProgram {
     /// The building a level is a storey of (docs/adr/8072 §1): the one building that spans it, else the one its shared
     /// entry names; none when no building or several without a choice span it.
     pub fn building_of_level(&self, level: &str) -> Option<&ProgramBuilding> {
-        let mut spanning = self.buildings.iter().filter(|b| b.levels.iter().any(|l| l == level));
+        let mut spanning = self
+            .buildings
+            .iter()
+            .filter(|b| b.levels.iter().any(|l| l == level));
         let first = spanning.next()?;
         if spanning.next().is_none() {
             return Some(first);
@@ -443,7 +468,13 @@ impl BuildingProgram {
             .collect();
         mine.iter()
             .find(|l| is_ground_name(&l.name))
-            .or_else(|| mine.iter().min_by(|a, b| (a.elevation - zero).abs().total_cmp(&(b.elevation - zero).abs())))
+            .or_else(|| {
+                mine.iter().min_by(|a, b| {
+                    (a.elevation - zero)
+                        .abs()
+                        .total_cmp(&(b.elevation - zero).abs())
+                })
+            })
             .map(|l| l.id.clone())
     }
 
@@ -452,8 +483,14 @@ impl BuildingProgram {
         let mut out: Vec<&str> = Vec::new();
         for b in &self.buildings {
             for l in &b.levels {
-                let many = self.buildings.iter().filter(|x| x.levels.contains(l)).count() > 1;
-                if many && !out.contains(&l.as_str()) && !self.shared.iter().any(|s| &s.level == l) {
+                let many = self
+                    .buildings
+                    .iter()
+                    .filter(|x| x.levels.contains(l))
+                    .count()
+                    > 1;
+                if many && !out.contains(&l.as_str()) && !self.shared.iter().any(|s| &s.level == l)
+                {
                     out.push(l);
                 }
             }
@@ -486,7 +523,10 @@ impl BuildingProgram {
     pub fn has_shares(&self) -> bool {
         self.share_rule.is_some()
             || self.units.iter().any(|u| u.share_weight.is_some())
-            || self.buildings.iter().any(|b| !b.levels.is_empty() || b.wings.iter().any(|w| !w.levels.is_empty()))
+            || self
+                .buildings
+                .iter()
+                .any(|b| !b.levels.is_empty() || b.wings.iter().any(|w| !w.levels.is_empty()))
     }
 
     /// The building of the id given.
@@ -507,7 +547,10 @@ impl BuildingProgram {
         let Some(b) = unit.building.as_deref().and_then(|b| self.building(b)) else {
             return &[];
         };
-        if let Some(w) = unit.wing.as_deref().and_then(|w| b.wings.iter().find(|x| x.id == w))
+        if let Some(w) = unit
+            .wing
+            .as_deref()
+            .and_then(|w| b.wings.iter().find(|x| x.id == w))
             && !w.levels.is_empty()
         {
             return &w.levels;
@@ -547,7 +590,10 @@ impl BuildingProgram {
             ("clearances", self.clearances.len()),
         ] {
             if n > MAX_PROGRAM_ITEMS {
-                return Some((key.into(), format!("Programda en çok {MAX_PROGRAM_ITEMS} öğe olur; {n} verildi.")));
+                return Some((
+                    key.into(),
+                    format!("Programda en çok {MAX_PROGRAM_ITEMS} öğe olur; {n} verildi."),
+                ));
             }
         }
         if let Some(v) = &self.version
@@ -557,34 +603,53 @@ impl BuildingProgram {
         }
         let mut ids: Vec<&str> = Vec::new();
         for (i, b) in self.buildings.iter().enumerate() {
-            if let Some(p) = text_problem(&b.id, &format!("buildings[{i}].id"), "Binanın kimliği") {
+            if let Some(p) = text_problem(&b.id, &format!("buildings[{i}].id"), "Binanın kimliği")
+            {
                 return Some(p);
             }
-            if let Some(p) = text_problem(&b.name, &format!("buildings[{i}].name"), "Binanın adı") {
+            if let Some(p) = text_problem(&b.name, &format!("buildings[{i}].name"), "Binanın adı")
+            {
                 return Some(p);
             }
             if ids.contains(&b.id.as_str()) {
-                return Some((format!("buildings[{i}].id"), format!("“{}” kimliği iki kez var; her bina ve kanadın kimliği ayrı olmalı.", b.id)));
+                return Some((
+                    format!("buildings[{i}].id"),
+                    format!(
+                        "“{}” kimliği iki kez var; her bina ve kanadın kimliği ayrı olmalı.",
+                        b.id
+                    ),
+                ));
             }
             ids.push(&b.id);
             if let Some(p) = levels_problem(&b.levels, &format!("buildings[{i}].levels")) {
                 return Some(p);
             }
             // Its own structural system (docs/adr/8145): traditional elements only of cut stone masonry.
-            if let Some((path, why)) = b.structure.as_ref().and_then(crate::BuildingStructure::problem) {
+            if let Some((path, why)) = b
+                .structure
+                .as_ref()
+                .and_then(crate::BuildingStructure::problem)
+            {
                 return Some((format!("buildings[{i}].{path}"), why));
             }
             // Its own plan notes (docs/adr/8163): as the project's, each measure once.
             if let Some((path, why)) = crate::PlanNote::list_problem(&b.plan_notes) {
-                return Some((format!("buildings[{i}].{path}"), format!("“{}” binasının plan notları: {why}", b.name)));
+                return Some((
+                    format!("buildings[{i}].{path}"),
+                    format!("“{}” binasının plan notları: {why}", b.name),
+                ));
             }
             // Its code, use and ±0.00 (docs/adr/8072 §1; EK-2 §2.3).
             if let Some(c) = &b.code {
-                let well = c.chars().count() == 2 && c.chars().all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit());
+                let well = c.chars().count() == 2
+                    && c.chars()
+                        .all(|ch| ch.is_ascii_uppercase() || ch.is_ascii_digit());
                 if !well {
                     return Some((
                         format!("buildings[{i}].code"),
-                        format!("“{c}” bina kodu olamaz; bina kodu iki büyük harf ya da rakamdır (A1, B2, 01)."),
+                        format!(
+                            "“{c}” bina kodu olamaz; bina kodu iki büyük harf ya da rakamdır (A1, B2, 01)."
+                        ),
                     ));
                 }
                 if c == "00" && self.buildings.len() > 1 {
@@ -593,12 +658,19 @@ impl BuildingProgram {
                         "“00” tek binalı projenin kodudur; birden çok binada her binaya kendi kodunu verin.".into(),
                     ));
                 }
-                if self.buildings[..i].iter().any(|x| x.code.as_deref() == Some(c.as_str())) {
-                    return Some((format!("buildings[{i}].code"), format!("“{c}” bina kodu iki binada var; her binanın kodu ayrı olmalı.")));
+                if self.buildings[..i]
+                    .iter()
+                    .any(|x| x.code.as_deref() == Some(c.as_str()))
+                {
+                    return Some((
+                        format!("buildings[{i}].code"),
+                        format!("“{c}” bina kodu iki binada var; her binanın kodu ayrı olmalı."),
+                    ));
                 }
             }
             if let Some(u) = &b.usage
-                && let Some(p) = text_problem(u, &format!("buildings[{i}].usage"), "Binanın kullanım türü")
+                && let Some(p) =
+                    text_problem(u, &format!("buildings[{i}].usage"), "Binanın kullanım türü")
             {
                 return Some(p);
             }
@@ -607,7 +679,9 @@ impl BuildingProgram {
             {
                 return Some((
                     format!("buildings[{i}].zero"),
-                    format!("Binanın ±0.00'ı projenin ±0.00'ından en çok {MAX_BUILDING_ZERO} m uzakta olur; {z} verildi."),
+                    format!(
+                        "Binanın ±0.00'ı projenin ±0.00'ından en çok {MAX_BUILDING_ZERO} m uzakta olur; {z} verildi."
+                    ),
                 ));
             }
             for (k, w) in b.wings.iter().enumerate() {
@@ -619,18 +693,31 @@ impl BuildingProgram {
                     return Some(p);
                 }
                 if ids.contains(&w.id.as_str()) {
-                    return Some((format!("{at}.id"), format!("“{}” kimliği iki kez var; her bina ve kanadın kimliği ayrı olmalı.", w.id)));
+                    return Some((
+                        format!("{at}.id"),
+                        format!(
+                            "“{}” kimliği iki kez var; her bina ve kanadın kimliği ayrı olmalı.",
+                            w.id
+                        ),
+                    ));
                 }
                 ids.push(&w.id);
                 if let Some(p) = levels_problem(&w.levels, &format!("{at}.levels")) {
                     return Some(p);
                 }
                 if !b.levels.is_empty()
-                    && let Some((k, l)) = w.levels.iter().enumerate().find(|(_, l)| !b.levels.contains(l))
+                    && let Some((k, l)) = w
+                        .levels
+                        .iter()
+                        .enumerate()
+                        .find(|(_, l)| !b.levels.contains(l))
                 {
                     return Some((
                         format!("{at}.levels[{k}]"),
-                        format!("“{l}” katı “{}” binasının katlarında yok; kanadın katları binasının katlarından seçilir.", b.name),
+                        format!(
+                            "“{l}” katı “{}” binasının katlarında yok; kanadın katları binasının katlarından seçilir.",
+                            b.name
+                        ),
                     ));
                 }
             }
@@ -639,20 +726,32 @@ impl BuildingProgram {
         for (i, sh) in self.shared.iter().enumerate() {
             let at = format!("shared[{i}]");
             if self.shared[..i].iter().any(|x| x.level == sh.level) {
-                return Some((format!("{at}.level"), format!("“{}” katının sayıldığı bina iki kez verildi.", sh.level)));
+                return Some((
+                    format!("{at}.level"),
+                    format!("“{}” katının sayıldığı bina iki kez verildi.", sh.level),
+                ));
             }
-            let spanning: Vec<&ProgramBuilding> =
-                self.buildings.iter().filter(|b| b.levels.contains(&sh.level)).collect();
+            let spanning: Vec<&ProgramBuilding> = self
+                .buildings
+                .iter()
+                .filter(|b| b.levels.contains(&sh.level))
+                .collect();
             if spanning.len() < 2 {
                 return Some((
                     format!("{at}.level"),
-                    format!("“{}” katını birden çok bina kaplamıyor; ortak kat değil, sayıldığı bina seçilmez.", sh.level),
+                    format!(
+                        "“{}” katını birden çok bina kaplamıyor; ortak kat değil, sayıldığı bina seçilmez.",
+                        sh.level
+                    ),
                 ));
             }
             if !spanning.iter().any(|b| b.id == sh.building) {
                 return Some((
                     format!("{at}.building"),
-                    format!("“{}” katı “{}” binasının katı değil; onu kaplayan binalardan birini seçin.", sh.level, sh.building),
+                    format!(
+                        "“{}” katı “{}” binasının katı değil; onu kaplayan binalardan birini seçin.",
+                        sh.level, sh.building
+                    ),
                 ));
             }
         }
@@ -663,7 +762,8 @@ impl BuildingProgram {
             if let Some(p) = text_problem(&u.id, &format!("{at}.id"), "Bölümün kimliği") {
                 return Some(p);
             }
-            if let Some(p) = text_problem(&u.number, &format!("{at}.number"), "Bölümün numarası") {
+            if let Some(p) = text_problem(&u.number, &format!("{at}.number"), "Bölümün numarası")
+            {
                 return Some(p);
             }
             if let Some(n) = &u.name
@@ -672,10 +772,19 @@ impl BuildingProgram {
                 return Some(p);
             }
             if unit_ids.contains(&u.id.as_str()) {
-                return Some((format!("{at}.id"), format!("“{}” kimlikli bölüm iki kez var.", u.id)));
+                return Some((
+                    format!("{at}.id"),
+                    format!("“{}” kimlikli bölüm iki kez var.", u.id),
+                ));
             }
             if numbers.contains(&u.number.as_str()) {
-                return Some((format!("{at}.number"), format!("“{}” numarası iki bölümde var; her bölümün numarası ayrı olmalı.", u.number)));
+                return Some((
+                    format!("{at}.number"),
+                    format!(
+                        "“{}” numarası iki bölümde var; her bölümün numarası ayrı olmalı.",
+                        u.number
+                    ),
+                ));
             }
             unit_ids.push(&u.id);
             numbers.push(&u.number);
@@ -683,7 +792,10 @@ impl BuildingProgram {
                 Some(b) => match self.buildings.iter().find(|x| &x.id == b) {
                     Some(x) => Some(x),
                     None => {
-                        return Some((format!("{at}.building"), format!("“{b}” binası programda yok; önce binayı ekleyin.")));
+                        return Some((
+                            format!("{at}.building"),
+                            format!("“{b}” binası programda yok; önce binayı ekleyin."),
+                        ));
                     }
                 },
                 None => None,
@@ -692,14 +804,25 @@ impl BuildingProgram {
                 match building {
                     Some(b) if b.wings.iter().any(|x| &x.id == w) => {}
                     Some(b) => {
-                        return Some((format!("{at}.wing"), format!("“{w}” kanadı “{}” binasında yok.", b.name)));
+                        return Some((
+                            format!("{at}.wing"),
+                            format!("“{w}” kanadı “{}” binasında yok.", b.name),
+                        ));
                     }
                     None => {
-                        return Some((format!("{at}.wing"), "Kanat yalnız binası verilen bölümde seçilir.".into()));
+                        return Some((
+                            format!("{at}.wing"),
+                            "Kanat yalnız binası verilen bölümde seçilir.".into(),
+                        ));
                     }
                 }
             }
-            if let Some(p) = positive(u.recorded_area, &format!("{at}.recordedArea"), "Kayıtlı alan", "m²") {
+            if let Some(p) = positive(
+                u.recorded_area,
+                &format!("{at}.recordedArea"),
+                "Kayıtlı alan",
+                "m²",
+            ) {
                 return Some(p);
             }
             if let Some(w) = &u.share_weight
@@ -788,7 +911,10 @@ impl BuildingProgram {
                 return Some(p);
             }
             if usages.contains(&b.usage.as_str()) {
-                return Some((format!("{at}.usage"), format!("“{}” kullanımının hedefi iki kez var.", b.usage)));
+                return Some((
+                    format!("{at}.usage"),
+                    format!("“{}” kullanımının hedefi iki kez var.", b.usage),
+                ));
             }
             usages.push(&b.usage);
             for (key, v, what, unit) in [
@@ -804,18 +930,27 @@ impl BuildingProgram {
             if let (Some(lo), Some(hi)) = (b.area_min, b.area_max)
                 && lo > hi
             {
-                return Some((format!("{at}.areaMax"), format!("En çok alan ({hi} m²) en az alandan ({lo} m²) küçük.")));
+                return Some((
+                    format!("{at}.areaMax"),
+                    format!("En çok alan ({hi} m²) en az alandan ({lo} m²) küçük."),
+                ));
             }
             for (key, list) in [("adjacent", &b.adjacent), ("reach", &b.reach)] {
                 if list.len() > MAX_BRIEF_USAGES {
-                    return Some((format!("{at}.{key}"), format!("En çok {MAX_BRIEF_USAGES} kullanım verilir.")));
+                    return Some((
+                        format!("{at}.{key}"),
+                        format!("En çok {MAX_BRIEF_USAGES} kullanım verilir."),
+                    ));
                 }
                 for (k, u) in list.iter().enumerate() {
                     if let Some(p) = text_problem(u, &format!("{at}.{key}[{k}]"), "Kullanım") {
                         return Some(p);
                     }
                     if list[..k].contains(u) {
-                        return Some((format!("{at}.{key}[{k}]"), format!("“{u}” iki kez yazıldı.")));
+                        return Some((
+                            format!("{at}.{key}[{k}]"),
+                            format!("“{u}” iki kez yazıldı."),
+                        ));
                     }
                 }
             }
@@ -827,10 +962,16 @@ impl BuildingProgram {
                 return Some(p);
             }
             if blocks.contains(&c.block.as_str()) {
-                return Some((format!("{at}.block"), format!("“{}” bloğunun kullanım alanı iki kez var.", c.block)));
+                return Some((
+                    format!("{at}.block"),
+                    format!("“{}” bloğunun kullanım alanı iki kez var.", c.block),
+                ));
             }
             blocks.push(&c.block);
-            for (key, v, what) in [("width", c.width, "Kullanım alanının eni"), ("depth", c.depth, "Kullanım alanının derinliği")] {
+            for (key, v, what) in [
+                ("width", c.width, "Kullanım alanının eni"),
+                ("depth", c.depth, "Kullanım alanının derinliği"),
+            ] {
                 if let Some(p) = positive(Some(v), &format!("{at}.{key}"), what, "m") {
                     return Some(p);
                 }
@@ -846,7 +987,12 @@ mod tests {
 
     #[test]
     fn a_brief_says_how_far_an_area_is_out() {
-        let b = SpaceBrief { usage: "Yatak odası".into(), area_min: Some(12.0), area_max: Some(16.0), ..Default::default() };
+        let b = SpaceBrief {
+            usage: "Yatak odası".into(),
+            area_min: Some(12.0),
+            area_max: Some(16.0),
+            ..Default::default()
+        };
         assert_eq!(b.area_difference(10.5), Some(-1.5));
         assert_eq!(b.area_difference(14.0), Some(0.0));
         assert_eq!(b.area_difference(17.25), Some(1.25));
@@ -857,8 +1003,16 @@ mod tests {
     fn a_program_names_what_does_not_hold() {
         let mut p = BuildingProgram {
             units: vec![
-                ProgramUnit { id: "d1".into(), number: "1".into(), ..Default::default() },
-                ProgramUnit { id: "d2".into(), number: "1".into(), ..Default::default() },
+                ProgramUnit {
+                    id: "d1".into(),
+                    number: "1".into(),
+                    ..Default::default()
+                },
+                ProgramUnit {
+                    id: "d2".into(),
+                    number: "1".into(),
+                    ..Default::default()
+                },
             ],
             ..Default::default()
         };
@@ -883,17 +1037,29 @@ mod tests {
             ..Default::default()
         };
         let mut p = BuildingProgram {
-            buildings: vec![b("A", &["bodrum", "zemin-a"], "A1"), b("B", &["bodrum", "zemin-b"], "B1")],
+            buildings: vec![
+                b("A", &["bodrum", "zemin-a"], "A1"),
+                b("B", &["bodrum", "zemin-b"], "B1"),
+            ],
             ..Default::default()
         };
         assert_eq!(p.problem(), None);
         assert_eq!(p.unshared_levels(), vec!["bodrum"]);
         assert!(p.building_of_level("bodrum").is_none());
-        assert_eq!(p.building_of_level("zemin-b").map(|x| x.id.as_str()), Some("B"));
-        p.shared = vec![SharedLevel { level: "bodrum".into(), building: "B".into() }];
+        assert_eq!(
+            p.building_of_level("zemin-b").map(|x| x.id.as_str()),
+            Some("B")
+        );
+        p.shared = vec![SharedLevel {
+            level: "bodrum".into(),
+            building: "B".into(),
+        }];
         assert_eq!(p.problem(), None);
         assert!(p.unshared_levels().is_empty());
-        assert_eq!(p.building_of_level("bodrum").map(|x| x.id.as_str()), Some("B"));
+        assert_eq!(
+            p.building_of_level("bodrum").map(|x| x.id.as_str()),
+            Some("B")
+        );
         assert!(p.has_building_places());
         let refused = |q: &BuildingProgram| q.problem().map(|x| x.0);
         let mut q = p.clone();
@@ -904,14 +1070,23 @@ mod tests {
         q.buildings[1].code = Some("00".into());
         assert_eq!(refused(&q), Some("buildings[1].code".into()));
         let mut q = p.clone();
-        q.shared = vec![SharedLevel { level: "zemin-a".into(), building: "A".into() }];
+        q.shared = vec![SharedLevel {
+            level: "zemin-a".into(),
+            building: "A".into(),
+        }];
         assert_eq!(refused(&q), Some("shared[0].level".into()));
-        q.shared = vec![SharedLevel { level: "bodrum".into(), building: "C".into() }];
+        q.shared = vec![SharedLevel {
+            level: "bodrum".into(),
+            building: "C".into(),
+        }];
         assert_eq!(refused(&q), Some("shared[0].building".into()));
         let mut q = p.clone();
         q.buildings[0].zero = Some(f64::NAN);
         assert_eq!(refused(&q), Some("buildings[0].zero".into()));
-        let one = BuildingProgram { buildings: vec![b("A", &[], "00")], ..Default::default() };
+        let one = BuildingProgram {
+            buildings: vec![b("A", &[], "00")],
+            ..Default::default()
+        };
         assert_eq!(one.problem(), None, "a single building's 00");
     }
 
@@ -947,7 +1122,10 @@ mod tests {
                     ..Default::default()
                 },
             ],
-            shared: vec![SharedLevel { level: "bodrum".into(), building: "A".into() }],
+            shared: vec![SharedLevel {
+                level: "bodrum".into(),
+                building: "A".into(),
+            }],
             ..Default::default()
         };
         assert_eq!(p.counted_levels("A"), vec!["bodrum", "zemin-a"]);
@@ -956,6 +1134,8 @@ mod tests {
         // A's by its name (the dotted İ folded), B's by its ±0.00 at +1.20.
         assert_eq!(p.ground_of("A", &levels).as_deref(), Some("zemin-a"));
         assert_eq!(p.ground_of("B", &levels).as_deref(), Some("giris-b"));
-        assert!(is_ground_name("Zemin kat") && is_ground_name("ZEMİN") && !is_ground_name("Bodrum"));
+        assert!(
+            is_ground_name("Zemin kat") && is_ground_name("ZEMİN") && !is_ground_name("Bodrum")
+        );
     }
 }

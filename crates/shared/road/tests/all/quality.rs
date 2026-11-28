@@ -4,21 +4,36 @@
 use kentos_road::surface::{self, SpotPoint, SurfaceInput};
 
 fn spot(x: f64, y: f64, z: f64) -> SpotPoint {
-    SpotPoint { x, y, z, source: None }
+    SpotPoint {
+        x,
+        y,
+        z,
+        source: None,
+    }
 }
 
 fn lattice(xs: &[f64], ys: &[f64], z: impl Fn(f64, f64) -> f64) -> Vec<SpotPoint> {
-    ys.iter().flat_map(|y| xs.iter().map(move |x| (*x, *y))).map(|(x, y)| spot(x, y, z(x, y))).collect()
+    ys.iter()
+        .flat_map(|y| xs.iter().map(move |x| (*x, *y)))
+        .map(|(x, y)| spot(x, y, z(x, y)))
+        .collect()
 }
 
 #[test]
 fn a_shot_twice_near_one_place() {
     let mut points = lattice(&[0.0, 1.0, 2.0, 3.0], &[0.0, 1.0, 2.0, 3.0], |_, _| 10.0);
     points.push(spot(1.04, 1.03, 10.4));
-    let s = surface::build(&SurfaceInput { points, ..SurfaceInput::default() }).expect("builds");
+    let s = surface::build(&SurfaceInput {
+        points,
+        ..SurfaceInput::default()
+    })
+    .expect("builds");
     let pairs = s.near_pairs(0.1);
     assert_eq!(pairs.len(), 1);
-    assert_eq!((pairs[0].a, pairs[0].b), ([1.0, 1.0, 10.0], [1.04, 1.03, 10.4]));
+    assert_eq!(
+        (pairs[0].a, pairs[0].b),
+        ([1.0, 1.0, 10.0], [1.04, 1.03, 10.4])
+    );
     assert!((pairs[0].distance - 0.05).abs() < 1e-12 && (pairs[0].dz - 0.4).abs() < 1e-12);
     assert!(s.near_pairs(0.01).is_empty());
 }
@@ -26,7 +41,11 @@ fn a_shot_twice_near_one_place() {
 #[test]
 fn a_spike_stands_off_its_neighbours() {
     let s = surface::build(&SurfaceInput {
-        points: lattice(&[0.0, 1.0, 2.0, 3.0, 4.0], &[0.0, 1.0, 2.0, 3.0, 4.0], |x, y| if (x, y) == (2.0, 2.0) { 13.0 } else { 10.0 }),
+        points: lattice(
+            &[0.0, 1.0, 2.0, 3.0, 4.0],
+            &[0.0, 1.0, 2.0, 3.0, 4.0],
+            |x, y| if (x, y) == (2.0, 2.0) { 13.0 } else { 10.0 },
+        ),
         ..SurfaceInput::default()
     })
     .expect("builds");
@@ -50,5 +69,8 @@ fn long_triangles_are_gaps() {
     .expect("builds");
     let g = s.gaps(2.0);
     assert_eq!(g.triangles, 4);
-    assert!((g.area - 16.0).abs() < 1e-9 && (g.longest - 8.0_f64.hypot(1.0)).abs() < 1e-12, "{g:?}");
+    assert!(
+        (g.area - 16.0).abs() < 1e-9 && (g.longest - 8.0_f64.hypot(1.0)).abs() < 1e-12,
+        "{g:?}"
+    );
 }

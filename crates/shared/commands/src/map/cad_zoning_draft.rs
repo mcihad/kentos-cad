@@ -17,8 +17,10 @@ pub const CAD_ZONING_DRAFT_VERSION: u32 = 1;
 /// The uses that are social or technical infrastructure areas (Mekânsal Planlar Yapım Yönetmeliği m. 4: education,
 /// health, religious, cultural, social and administrative buildings, sports, parks, green areas and squares; technical
 /// infrastructure and car parks), roads left out as m. 26(3)(b) leaves them out.
-pub const INFRASTRUCTURE_USES: [&str; 12] =
-    ["egitim", "saglik", "dini", "sosyal", "kultur", "spor", "resmi", "teknik", "otopark", "park", "yesil", "meydan"];
+pub const INFRASTRUCTURE_USES: [&str; 12] = [
+    "egitim", "saglik", "dini", "sosyal", "kultur", "spor", "resmi", "teknik", "otopark", "park",
+    "yesil", "meydan",
+];
 
 /// A change the draft makes: a decision area, its field and the value it takes.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]

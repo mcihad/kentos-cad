@@ -76,7 +76,10 @@ fn reach(p: &Pvi) -> Result<(f64, f64), ProposeError> {
     match p.curve {
         VCurve::None => Ok((0.0, 0.0)),
         VCurve::Parabola { length } => Ok((0.5 * length, 0.5 * length)),
-        VCurve::Asymmetric { length_in, length_out } => Ok((length_in, length_out)),
+        VCurve::Asymmetric {
+            length_in,
+            length_out,
+        } => Ok((length_in, length_out)),
         VCurve::Circle { .. } => Err(ProposeError::Circle { pvi: p.id.clone() }),
     }
 }
@@ -105,7 +108,11 @@ fn design(stations: &[f64], r: &[(f64, f64)], z: &[f64], s: f64) -> f64 {
 }
 
 /// The stretches on the surface between the breakpoints: (a, b, ground at a, ground at b).
-fn stretches(stations: &[f64], r: &[(f64, f64)], ground: &[ProfilePoint]) -> Vec<(f64, f64, f64, f64)> {
+fn stretches(
+    stations: &[f64],
+    r: &[(f64, f64)],
+    ground: &[ProfilePoint],
+) -> Vec<(f64, f64, f64, f64)> {
     let (start, end) = (stations[0], stations[stations.len() - 1]);
     let mut breaks: Vec<f64> = stations.to_vec();
     for (k, s) in stations.iter().enumerate() {
@@ -117,7 +124,9 @@ fn stretches(stations: &[f64], r: &[(f64, f64)], ground: &[ProfilePoint]) -> Vec
     let mut out = Vec::new();
     for w in ground.windows(2) {
         let (p, q) = (w[0], w[1]);
-        let (Some(za), Some(zb)) = (p.z, q.z) else { continue };
+        let (Some(za), Some(zb)) = (p.z, q.z) else {
+            continue;
+        };
         if q.gap || q.station <= p.station {
             continue;
         }
@@ -126,7 +135,11 @@ fn stretches(stations: &[f64], r: &[(f64, f64)], ground: &[ProfilePoint]) -> Vec
             continue;
         }
         let line = |s: f64| za + (zb - za) * (s - p.station) / (q.station - p.station);
-        let mut cuts: Vec<f64> = breaks.iter().copied().filter(|x| *x > a && *x < b).collect();
+        let mut cuts: Vec<f64> = breaks
+            .iter()
+            .copied()
+            .filter(|x| *x > a && *x < b)
+            .collect();
         cuts.sort_by(f64::total_cmp);
         cuts.dedup();
         let mut from = a;
@@ -143,7 +156,11 @@ fn stretches(stations: &[f64], r: &[(f64, f64)], ground: &[ProfilePoint]) -> Vec
 /// Solves `m · x = rhs` by Gaussian elimination with partial pivoting; none where `m` is singular.
 fn solve(mut m: Vec<Vec<f64>>, mut rhs: Vec<f64>) -> Option<Vec<f64>> {
     let n = rhs.len();
-    let scale = m.iter().flatten().fold(0.0_f64, |a, v| a.max(v.abs())).max(1e-300);
+    let scale = m
+        .iter()
+        .flatten()
+        .fold(0.0_f64, |a, v| a.max(v.abs()))
+        .max(1e-300);
     for c in 0..n {
         let p = (c..n).max_by(|a, b| m[*a][c].abs().total_cmp(&m[*b][c].abs()))?;
         if m[p][c].abs() <= 1e-12 * scale {
@@ -174,7 +191,11 @@ fn solve(mut m: Vec<Vec<f64>>, mut rhs: Vec<f64>) -> Option<Vec<f64>> {
 }
 
 /// The proposal for `pvis` against `ground` under `rules`.
-pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<Proposal, ProposeError> {
+pub fn propose(
+    pvis: &[Pvi],
+    ground: &[ProfilePoint],
+    rules: &Rules,
+) -> Result<Proposal, ProposeError> {
     let n = pvis.len();
     let r = pvis.iter().map(reach).collect::<Result<Vec<_>, _>>()?;
     let stations: Vec<f64> = pvis.iter().map(|p| p.station).collect();
@@ -203,7 +224,10 @@ pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<P
         for (x, w) in gauss() {
             let s = s0 + half * (1.0 + x);
             let g = g0 + (g1 - g0) * (s - s0) / (s1 - s0);
-            let c: Vec<(usize, f64)> = near(s).map(|j| (j, unit(j, s))).filter(|(_, v)| *v != 0.0).collect();
+            let c: Vec<(usize, f64)> = near(s)
+                .map(|j| (j, unit(j, s)))
+                .filter(|(_, v)| *v != 0.0)
+                .collect();
             for &(i, ci) in &c {
                 b[i] += w * half * ci * g;
                 a[i] += w * half * ci;
@@ -255,7 +279,8 @@ pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<P
     let mut z = Vec::new();
     let mut done = false;
     for _ in 0..(20 * (n + ineq.len()) + 20) {
-        let rows: Vec<&(Vec<f64>, f64)> = eq.iter().chain(active.iter().map(|i| &ineq[*i])).collect();
+        let rows: Vec<&(Vec<f64>, f64)> =
+            eq.iter().chain(active.iter().map(|i| &ineq[*i])).collect();
         let m = n + rows.len();
         let mut kkt = vec![vec![0.0; m]; m];
         let mut rhs = vec![0.0; m];
@@ -273,7 +298,11 @@ pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<P
         // Singular: with no inequality taken, the ground and the equalities leave an elevation free (or the equalities
         // repeat); with one, the rules cannot hold together.
         let Some(x) = solve(kkt, rhs) else {
-            return Err(if active.is_empty() { ProposeError::Unfixed } else { ProposeError::Infeasible });
+            return Err(if active.is_empty() {
+                ProposeError::Unfixed
+            } else {
+                ProposeError::Infeasible
+            });
         };
         z = x[..n].to_vec();
         // An active inequality pulling the wrong way leaves (the most negative first).
@@ -305,7 +334,9 @@ pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<P
     if !done {
         return Err(ProposeError::Infeasible);
     }
-    let grades: Vec<f64> = (0..n - 1).map(|k| (z[k + 1] - z[k]) / (stations[k + 1] - stations[k])).collect();
+    let grades: Vec<f64> = (0..n - 1)
+        .map(|k| (z[k + 1] - z[k]) / (stations[k + 1] - stations[k]))
+        .collect();
     let limited: Vec<i8> = (0..n - 1)
         .map(|k| {
             let m = |i: usize| active.contains(&i);
@@ -354,7 +385,9 @@ pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<P
         let p0 = v0;
         let poly = |t: f64| p0 + p1 * t + p2 * t * t;
         let integral = |t0: f64, t1: f64| {
-            p0 * (t1 - t0) + p1 * (t1 * t1 - t0 * t0) / 2.0 + p2 * (t1 * t1 * t1 - t0 * t0 * t0) / 3.0
+            p0 * (t1 - t0)
+                + p1 * (t1 * t1 - t0 * t0) / 2.0
+                + p2 * (t1 * t1 * t1 - t0 * t0 * t0) / 3.0
         };
         let mut roots: Vec<f64> = Vec::new();
         if p2.abs() > 1e-14 * (p0.abs() + p1.abs() * length).max(1e-300) / (length * length) {
@@ -369,7 +402,10 @@ pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<P
         } else if p1 != 0.0 {
             roots.push(-p0 / p1);
         }
-        let mut cuts: Vec<f64> = roots.into_iter().filter(|t| *t > 0.0 && *t < length).collect();
+        let mut cuts: Vec<f64> = roots
+            .into_iter()
+            .filter(|t| *t > 0.0 && *t < length)
+            .collect();
         cuts.sort_by(f64::total_cmp);
         let mut from = 0.0;
         for t in cuts.into_iter().chain(std::iter::once(length)) {
@@ -384,5 +420,14 @@ pub fn propose(pvis: &[Pvi], ground: &[ProfilePoint], rules: &Rules) -> Result<P
             from = t;
         }
     }
-    Ok(Proposal { elevations: z, grades, limited, bound, squares, covered, cut, fill })
+    Ok(Proposal {
+        elevations: z,
+        grades,
+        limited,
+        bound,
+        squares,
+        covered,
+        cut,
+        fill,
+    })
 }

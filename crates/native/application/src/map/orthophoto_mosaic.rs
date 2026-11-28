@@ -35,15 +35,32 @@ pub(crate) fn rings(doc: &Document, uid: &str, path: &str) -> Result<Vec<Vec<[f6
         .ok()
         .and_then(|u| doc.slot_of(u))
         .and_then(|s| doc.get(s))
-        .ok_or_else(|| fail(format!("“{uid}” kimlikli mozaik elemanı çizimde yok."), path))?;
+        .ok_or_else(|| {
+            fail(
+                format!("“{uid}” kimlikli mozaik elemanı çizimde yok."),
+                path,
+            )
+        })?;
     let straight = |b: &Option<Vec<f64>>| b.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0));
-    let ring = |pts: &[kentos_commands::Vec2]| -> Vec<[f64; 2]> { pts.iter().map(|v| [v.x, v.y]).collect() };
-    let arcs = || fail(format!("“{uid}” mozaik elemanının yaylı kenarı var; kenarları düz olmalı."), path);
+    let ring = |pts: &[kentos_commands::Vec2]| -> Vec<[f64; 2]> {
+        pts.iter().map(|v| [v.x, v.y]).collect()
+    };
+    let arcs = || {
+        fail(
+            format!("“{uid}” mozaik elemanının yaylı kenarı var; kenarları düz olmalı."),
+            path,
+        )
+    };
     match e {
         Entity::Polygon(p) => {
             let mut out = Vec::new();
             let mut parts = vec![(&p.pts, &p.bulges, &p.holes)];
-            parts.extend(p.parts.iter().flatten().map(|q| (&q.pts, &q.bulges, &q.holes)));
+            parts.extend(
+                p.parts
+                    .iter()
+                    .flatten()
+                    .map(|q| (&q.pts, &q.bulges, &q.holes)),
+            );
             for (pts, bulges, holes) in parts {
                 if !straight(bulges) {
                     return Err(arcs());
@@ -64,7 +81,10 @@ pub(crate) fn rings(doc: &Document, uid: &str, path: &str) -> Result<Vec<Vec<[f6
             }
             Ok(vec![ring(&p.pts)])
         }
-        _ => Err(fail(format!("“{uid}” bir alan ya da kapalı çoklu çizgi değil; mozaik elemanı olamaz."), path)),
+        _ => Err(fail(
+            format!("“{uid}” bir alan ya da kapalı çoklu çizgi değil; mozaik elemanı olamaz."),
+            path,
+        )),
     }
 }
 
@@ -82,14 +102,20 @@ fn off(p: [f64; 2], q: [f64; 2], l: f64, v: [f64; 2]) -> f64 {
 }
 
 /// The stretches (from, to; distances along it) of edge `p`–`q` shared with the edges `theirs`, joined.
-fn stretches(p: [f64; 2], q: [f64; 2], theirs: &[([f64; 2], [f64; 2])], tol: f64) -> Vec<(f64, f64)> {
+fn stretches(
+    p: [f64; 2],
+    q: [f64; 2],
+    theirs: &[([f64; 2], [f64; 2])],
+    tol: f64,
+) -> Vec<(f64, f64)> {
     let l = (q[0] - p[0]).hypot(q[1] - p[1]);
     let (ux, uy) = ((q[0] - p[0]) / l, (q[1] - p[1]) / l);
     let along = |v: [f64; 2]| (v[0] - p[0]) * ux + (v[1] - p[1]) * uy;
     let mut found: Vec<(f64, f64)> = Vec::new();
     for &(r, s) in theirs {
         let m = (s[0] - r[0]).hypot(s[1] - r[1]);
-        let near = (off(p, q, l, r) <= tol && off(p, q, l, s) <= tol) || (off(r, s, m, p) <= tol && off(r, s, m, q) <= tol);
+        let near = (off(p, q, l, r) <= tol && off(p, q, l, s) <= tol)
+            || (off(r, s, m, p) <= tol && off(r, s, m, q) <= tol);
         if !near {
             continue;
         }
@@ -124,11 +150,17 @@ fn at(p: [f64; 2], q: [f64; 2], l: f64, t: f64) -> [f64; 2] {
 
 /// A run's length.
 pub(crate) fn run_length(run: &[[f64; 2]]) -> f64 {
-    run.windows(2).map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1])).sum()
+    run.windows(2)
+        .map(|w| (w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]))
+        .sum()
 }
 
 /// The runs of `first`'s rings lying on `second`'s within `tol` (the module's rules), in `first`'s ring order.
-pub(crate) fn shared(first: &[Vec<[f64; 2]>], second: &[Vec<[f64; 2]>], tol: f64) -> Vec<Vec<[f64; 2]>> {
+pub(crate) fn shared(
+    first: &[Vec<[f64; 2]>],
+    second: &[Vec<[f64; 2]>],
+    tol: f64,
+) -> Vec<Vec<[f64; 2]>> {
     let theirs: Vec<([f64; 2], [f64; 2])> = second.iter().flat_map(|r| edges(r)).collect();
     let mut out = Vec::new();
     for ring in first {
@@ -170,13 +202,20 @@ pub(crate) fn shared(first: &[Vec<[f64; 2]>], second: &[Vec<[f64; 2]>], tol: f64
                 last.extend(first_run.into_iter().skip_while(|v| *v == start));
             }
         }
-        out.extend(runs.into_iter().map(|(run, _)| run).filter(|run| run_length(run) > tol));
+        out.extend(
+            runs.into_iter()
+                .map(|(run, _)| run)
+                .filter(|run| run_length(run) > tol),
+        );
     }
     out
 }
 
 /// The two seamline polygons' shared boundary, refused at `seam.polygons` when they share none.
-pub(crate) fn shared_of(doc: &Document, polygons: &[String; 2]) -> Result<Vec<Vec<[f64; 2]>>, Stop> {
+pub(crate) fn shared_of(
+    doc: &Document,
+    polygons: &[String; 2],
+) -> Result<Vec<Vec<[f64; 2]>>, Stop> {
     let a = rings(doc, &polygons[0], "seam.polygons[0]")?;
     let b = rings(doc, &polygons[1], "seam.polygons[1]")?;
     let runs = shared(&a, &b, TOLERANCE);
@@ -199,7 +238,11 @@ mod tests {
 
     #[test]
     fn two_squares_side_by_side_share_their_common_side() {
-        let runs = shared(&[square(0.0, 0.0, 1.0, 1.0)], &[square(1.0, 0.0, 2.0, 1.0)], TOLERANCE);
+        let runs = shared(
+            &[square(0.0, 0.0, 1.0, 1.0)],
+            &[square(1.0, 0.0, 2.0, 1.0)],
+            TOLERANCE,
+        );
         assert_eq!(runs, vec![vec![[1.0, 0.0], [1.0, 1.0]]]);
     }
 
@@ -213,15 +256,37 @@ mod tests {
 
     #[test]
     fn corners_touching_share_nothing_and_a_near_side_is_within_the_tolerance() {
-        assert!(shared(&[square(0.0, 0.0, 1.0, 1.0)], &[square(1.0, 1.0, 2.0, 2.0)], TOLERANCE).is_empty());
-        let near = shared(&[square(0.0, 0.0, 1.0, 1.0)], &[square(1.0004, 0.0, 2.0, 1.0)], TOLERANCE);
+        assert!(
+            shared(
+                &[square(0.0, 0.0, 1.0, 1.0)],
+                &[square(1.0, 1.0, 2.0, 2.0)],
+                TOLERANCE
+            )
+            .is_empty()
+        );
+        let near = shared(
+            &[square(0.0, 0.0, 1.0, 1.0)],
+            &[square(1.0004, 0.0, 2.0, 1.0)],
+            TOLERANCE,
+        );
         assert_eq!(near.len(), 1);
-        assert!(shared(&[square(0.0, 0.0, 1.0, 1.0)], &[square(1.002, 0.0, 2.0, 1.0)], TOLERANCE).is_empty());
+        assert!(
+            shared(
+                &[square(0.0, 0.0, 1.0, 1.0)],
+                &[square(1.002, 0.0, 2.0, 1.0)],
+                TOLERANCE
+            )
+            .is_empty()
+        );
     }
 
     #[test]
     fn a_partial_side_is_its_stretch() {
-        let runs = shared(&[square(0.0, 0.0, 1.0, 1.0)], &[square(1.0, 0.25, 2.0, 0.75)], TOLERANCE);
+        let runs = shared(
+            &[square(0.0, 0.0, 1.0, 1.0)],
+            &[square(1.0, 0.25, 2.0, 0.75)],
+            TOLERANCE,
+        );
         assert_eq!(runs, vec![vec![[1.0, 0.25], [1.0, 0.75]]]);
     }
 }

@@ -145,7 +145,9 @@ pub fn from_wkt(text: &str) -> CloudCrs {
 /// id, location, count, value per key).
 pub fn from_geokeys(data: &[u8]) -> CloudCrs {
     let shorts: Vec<u16> = data
-        .as_chunks::<2>().0.iter()
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|c| u16::from_le_bytes([c[0], c[1]]))
         .collect();
     let key = |id: u16| -> Option<u16> {

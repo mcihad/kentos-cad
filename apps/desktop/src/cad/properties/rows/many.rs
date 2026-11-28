@@ -77,7 +77,10 @@ pub(super) fn many_sections(
         // its bits' (docs/adr/1066 §3: a million objects were each written out three times).
         let looks: Vec<_> = lined.iter().map(|e| &e.base().look).collect();
         let first = looks[0];
-        let line_type = looks.iter().all(|l| l.line_type == first.line_type).then_some(first.line_type);
+        let line_type = looks
+            .iter()
+            .all(|l| l.line_type == first.line_type)
+            .then_some(first.line_type);
         let scale = looks
             .iter()
             .all(|l| {
@@ -113,12 +116,31 @@ pub(super) fn many_sections(
     );
     // Kat of several architectural objects, of one kind or of several (docs/adr/0717 §2): their shared level, else
     // Çeşitli; a level chosen goes to them all in one step “Kat ver”.
-    let levels = doc.model.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
-    if !levels.is_empty() && objects.iter().all(|e| kentos_native_application::levels_assign::levelled(e)) {
+    let levels = doc
+        .model
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.clone())
+        .unwrap_or_default();
+    if !levels.is_empty()
+        && objects
+            .iter()
+            .all(|e| kentos_native_application::levels_assign::levelled(e))
+    {
         let first = objects[0].own_level();
         let shared = objects.iter().all(|e| e.own_level() == first);
-        let name = |id: &str| levels.iter().find(|l| l.id == id).map_or_else(|| id.to_owned(), |l| l.name.clone());
-        let shown = if shared { first.map_or_else(|| "Yok".to_owned(), name) } else { "Çeşitli".to_owned() };
+        let name = |id: &str| {
+            levels
+                .iter()
+                .find(|l| l.id == id)
+                .map_or_else(|| id.to_owned(), |l| l.name.clone())
+        };
+        let shown = if shared {
+            first.map_or_else(|| "Yok".to_owned(), name)
+        } else {
+            "Çeşitli".to_owned()
+        };
         let items = levels
             .iter()
             .map(|l| {
@@ -222,7 +244,9 @@ pub(super) fn many_sections(
             Row::figure("Yükseklik", f.length_bare(texts[0].height))
         } else {
             Row::text("Yükseklik", "Çeşitli")
-        }.unit(f.length_unit_label()).editor(edit(Editor::Number(Field::TextHeights(slots.clone()))));
+        }
+        .unit(f.length_unit_label())
+        .editor(edit(Editor::Number(Field::TextHeights(slots.clone()))));
         sections.push(Section {
             id: "texts".into(),
             title: if texts.len() == objects.len() {
@@ -277,7 +301,11 @@ pub(super) fn many_sections(
             } else {
                 format!("Kılavuzlar ({})", leaders.len()).into()
             },
-            rows: [leader_rows(&leaders, &slots, any_locked, &f), multileader_rows(&doc.model, &leaders, &slots, any_locked)].concat(),
+            rows: [
+                leader_rows(&leaders, &slots, any_locked, &f),
+                multileader_rows(&doc.model, &leaders, &slots, any_locked),
+            ]
+            .concat(),
         });
     }
     // The selection's dimensions: their Zemin, and an ordinate's axis, a slope's elevations, common or “Çeşitli” (docs/adr/0147 §7).
@@ -346,7 +374,11 @@ pub(super) fn many_sections(
                     &slots,
                     any_locked,
                     &f,
-                    doc.model.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice()),
+                    doc.model
+                        .settings()
+                        .arch
+                        .as_ref()
+                        .map_or(&[][..], |a| a.levels.as_slice()),
                 ),
             ]
             .concat(),

@@ -53,7 +53,14 @@ impl Default for InsertClip {
 
 impl InsertClip {
     pub fn new() -> Self {
-        Self { insert: None, pts: Vec::new(), hover: None, polygon: false, inverted: false, frame: ClipFrame::Hide }
+        Self {
+            insert: None,
+            pts: Vec::new(),
+            hover: None,
+            polygon: false,
+            inverted: false,
+            frame: ClipFrame::Hide,
+        }
     }
 
     fn clipped(&self, doc: &Document) -> bool {
@@ -64,11 +71,22 @@ impl InsertClip {
 
     fn run(&mut self, operation: InsertsClipOperation, cx: &mut Context<'_>) {
         let Some(slot) = self.insert else { return };
-        let input = InsertsClip { uids: vec![edge::uid(cx.doc, slot)], operation, expected_revision: None };
+        let input = InsertsClip {
+            uids: vec![edge::uid(cx.doc, slot)],
+            operation,
+            expected_revision: None,
+        };
         let removed = matches!(input.operation, InsertsClipOperation::Remove);
         let result = inserts_clip::execute(&mut ExecutionContext::new(cx.doc), input);
         if written(result, cx).is_some() {
-            cx.say(Level::Success, if removed { format!("{LABEL}: kırpma kaldırıldı.") } else { format!("{LABEL}: kırpıldı.") });
+            cx.say(
+                Level::Success,
+                if removed {
+                    format!("{LABEL}: kırpma kaldırıldı.")
+                } else {
+                    format!("{LABEL}: kırpıldı.")
+                },
+            );
             self.insert = None;
         }
         self.pts.clear();
@@ -76,15 +94,27 @@ impl InsertClip {
 
     fn boundary(&self, ring: Vec<Vec2>) -> ClipBoundary {
         if !self.polygon && ring.len() == 2 {
-            ClipBoundary::Rectangle { a: wire(ring[0]), b: wire(ring[1]) }
+            ClipBoundary::Rectangle {
+                a: wire(ring[0]),
+                b: wire(ring[1]),
+            }
         } else {
-            ClipBoundary::Polygon { points: ring.into_iter().map(wire).collect() }
+            ClipBoundary::Polygon {
+                points: ring.into_iter().map(wire).collect(),
+            }
         }
     }
 
     fn set(&mut self, ring: Vec<Vec2>, cx: &mut Context<'_>) {
         let boundary = self.boundary(ring);
-        self.run(InsertsClipOperation::Set { boundary, inverted: self.inverted, frame: self.frame }, cx);
+        self.run(
+            InsertsClipOperation::Set {
+                boundary,
+                inverted: self.inverted,
+                frame: self.frame,
+            },
+            cx,
+        );
     }
 
     fn rectangle(a: Vec2, b: Vec2) -> Vec<Vec2> {
@@ -140,7 +170,11 @@ impl Tool for InsertClip {
     }
 
     fn cursor(&self) -> Cursor {
-        if self.insert.is_some() { Cursor::Cross } else { Cursor::Pick }
+        if self.insert.is_some() {
+            Cursor::Cross
+        } else {
+            Cursor::Pick
+        }
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -154,7 +188,8 @@ impl Tool for InsertClip {
         if self.insert.is_none() {
             // The insert a plain click would select there (its block's drawn parts lead to it), as the selection finds
             // it (UR2-044: a click on the reference's line found nothing here and Blok #1 when selecting).
-            let selected = crate::selectable::pick(cx, p.raw).filter(|s| cx.doc.get(*s).is_some_and(|e| editable(e, cx.doc)));
+            let selected = crate::selectable::pick(cx, p.raw)
+                .filter(|s| cx.doc.get(*s).is_some_and(|e| editable(e, cx.doc)));
             match selected.or_else(|| edge::pick_said(p, cx, editable)) {
                 Some(slot) => {
                     self.insert = Some(slot);
@@ -237,7 +272,13 @@ impl Tool for InsertClip {
             }
         }
         if ring.len() >= 2 {
-            out.strokes.push(Stroke::dashed(ring, true, [6.0, 4.0]).tone(if self.inverted { Tone::Snap } else { Tone::Accent }));
+            out.strokes.push(
+                Stroke::dashed(ring, true, [6.0, 4.0]).tone(if self.inverted {
+                    Tone::Snap
+                } else {
+                    Tone::Accent
+                }),
+            );
         }
         out
     }

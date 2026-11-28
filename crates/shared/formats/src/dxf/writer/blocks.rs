@@ -215,10 +215,27 @@ pub(super) fn block(
     out.str(100, "AcDbBlockBegin");
     out.str(2, name);
     // 2: the block has attribute definitions.
-    out.int(70, if let Some(x) = &def.xref { 4 | if x.kind == kentos_contracts::XrefKind::Overlay { 8 } else { 0 } } else if def.attributes.is_empty() { 0 } else { 2 });
+    out.int(
+        70,
+        if let Some(x) = &def.xref {
+            4 | if x.kind == kentos_contracts::XrefKind::Overlay {
+                8
+            } else {
+                0
+            }
+        } else if def.attributes.is_empty() {
+            0
+        } else {
+            2
+        },
+    );
     out.xyz(10, def.base);
     out.str(3, name);
-    let path = def.xref.as_ref().map(|x| x.relative.as_deref().unwrap_or(&x.path)).unwrap_or("");
+    let path = def
+        .xref
+        .as_ref()
+        .map(|x| x.relative.as_deref().unwrap_or(&x.path))
+        .unwrap_or("");
     out.str(1, &one_line(path));
     if let Some(d) = def.description.as_deref().filter(|d| !d.is_empty()) {
         let line: String = d
@@ -299,7 +316,10 @@ pub(super) fn block(
 /// An attribute's options as DXF's group 70 holds them (docs/adr/0317 §1): invisible 1, constant 2, verify 4, preset
 /// 8. The lock position bit (16) is not written: a drawing opened elsewhere moves every attribute.
 pub(super) fn attribute_flags(o: &kentos_contracts::AttributeOptions) -> i64 {
-    i64::from(o.invisible) | i64::from(o.constant) << 1 | i64::from(o.verify) << 2 | i64::from(o.preset) << 3
+    i64::from(o.invisible)
+        | i64::from(o.constant) << 1
+        | i64::from(o.verify) << 2
+        | i64::from(o.preset) << 3
 }
 
 /// What an attribute's text lost on the way to DXF's one line (said).

@@ -49,13 +49,14 @@ pub(super) fn section(doc: &Document, slot: Slot) -> Option<Section> {
     if !row.edited.is_empty() {
         state.push_str(&format!(" · {} nesne elle değişmiş", row.edited.len()));
     }
-    let action = |label: &'static str, icon: &'static str, op: Option<ElevationsOperation>| Choice::Action {
-        label,
-        icon,
-        message: op
-            .filter(|_| !locked)
-            .map(|op| Message::Properties(Event::Elevation(op))),
-    };
+    let action =
+        |label: &'static str, icon: &'static str, op: Option<ElevationsOperation>| Choice::Action {
+            label,
+            icon,
+            message: op
+                .filter(|_| !locked)
+                .map(|op| Message::Properties(Event::Elevation(op))),
+        };
     let refresh = (row.state != ElevationState::Gone
         && (row.state == ElevationState::Stale || !row.edited.is_empty()))
     .then(|| ElevationsOperation::Refresh {
@@ -72,12 +73,14 @@ pub(super) fn section(doc: &Document, slot: Slot) -> Option<Section> {
             }),
         ),
     ];
-    rows.push(Row::text("Durum", state.clone()).editor(Some(Editor::Select {
-        text: state,
-        swatch: None,
-        icon: None,
-        items,
-    })));
+    rows.push(
+        Row::text("Durum", state.clone()).editor(Some(Editor::Select {
+            text: state,
+            swatch: None,
+            icon: None,
+            items,
+        })),
+    );
     rows.push(Row::text("Türetildiği sürüm", row.derived_at.clone()));
     Some(Section {
         id: "elevation".into(),

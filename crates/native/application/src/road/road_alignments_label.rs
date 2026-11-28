@@ -7,8 +7,8 @@
 //! The shared cases are `fixtures/commands/v1/road.alignments.label.json`.
 
 use kentos_commands::{
-    AlignmentLabelRow, AlignmentsLabel, AlignmentsLabelled, CommandResult, CommandWarning, CreateOperation,
-    EntitiesCreate, EntityGeometry, NewObject, TextAlign, TextFace, Vec2,
+    AlignmentLabelRow, AlignmentsLabel, AlignmentsLabelled, CommandResult, CommandWarning,
+    CreateOperation, EntitiesCreate, EntityGeometry, NewObject, TextAlign, TextFace, Vec2,
 };
 use kentos_road::alignment::km_text;
 
@@ -40,7 +40,11 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsLabel) -> Result<Check
     let height = input.height.unwrap_or(2.5);
     let positive = |v: f64| v.is_finite() && v > 0.0;
     if !positive(every) {
-        return Err(fail(codes::INVALID_LABEL, "İşaret aralığı (every) 0'dan büyük olmalı.".into(), "every"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            "İşaret aralığı (every) 0'dan büyük olmalı.".into(),
+            "every",
+        ));
     }
     let ratio = major / every;
     if !positive(major) || (ratio - ratio.round()).abs() > 1e-9 || ratio.round() < 1.0 {
@@ -51,7 +55,11 @@ fn check(doc: &kentos_domain::Document, input: &AlignmentsLabel) -> Result<Check
         ));
     }
     if !positive(height) {
-        return Err(fail(codes::INVALID_LABEL, "Yazı yüksekliği (height) 0'dan büyük olmalı.".into(), "height"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            "Yazı yüksekliği (height) 0'dan büyük olmalı.".into(),
+            "height",
+        ));
     }
     let built = common::build(own, def, "")?;
     if built.core.length / every > MOST as f64 {
@@ -179,15 +187,23 @@ fn objects(
         if told(k as u64, all) {
             return Err(Stop::Cancelled);
         }
-        let Some(at) = c.built.place(r.station) else { continue };
+        let Some(at) = c.built.place(r.station) else {
+            continue;
+        };
         let curve = !matches!(r.kind.as_str(), "tick" | "major" | "start" | "end");
         let half = if r.kind == "tick" { 1.5 * mm } else { 3.0 * mm };
         // Right of the direction; curve points are written on the left.
         let side = if curve { -1.0 } else { 1.0 };
         let (nx, ny) = (side * at.direction.sin(), -side * at.direction.cos());
         out.push(object(EntityGeometry::Line {
-            a: Vec2 { x: at.x - nx * half, y: at.y - ny * half },
-            b: Vec2 { x: at.x + nx * half, y: at.y + ny * half },
+            a: Vec2 {
+                x: at.x - nx * half,
+                y: at.y - ny * half,
+            },
+            b: Vec2 {
+                x: at.x + nx * half,
+                y: at.y + ny * half,
+            },
             zs: None,
             ms: None,
         }));
@@ -203,7 +219,10 @@ fn objects(
         out.push(object(EntityGeometry::Text {
             layout: None,
             annotative: None,
-            p: Vec2 { x: at.x + nx * gap, y: at.y + ny * gap },
+            p: Vec2 {
+                x: at.x + nx * gap,
+                y: at.y + ny * gap,
+            },
             text: words.clone(),
             height: c.height * mm,
             rotation: angle,
@@ -223,13 +242,22 @@ fn objects(
 /// The labels' rows and objects made, told (docs/adr/4860).
 type Made = (Vec<AlignmentLabelRow>, Vec<NewObject>);
 
-fn made(doc: &kentos_domain::Document, c: &Checked, told: &dyn Fn(u64, u64) -> bool) -> Result<Made, Stop> {
+fn made(
+    doc: &kentos_domain::Document,
+    c: &Checked,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Made, Stop> {
     let rows = labels(c);
     let objects = objects(doc, c, &rows, told)?;
     Ok((rows, objects))
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &AlignmentsLabel, c: Checked, (rows, objects): Made) -> CommandResult<AlignmentsLabelled> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &AlignmentsLabel,
+    c: Checked,
+    (rows, objects): Made,
+) -> CommandResult<AlignmentsLabelled> {
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects,
@@ -263,7 +291,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &AlignmentsLabel) -> CommandRe
 }
 
 /// What execute would write now, on a reading copy; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsLabel) -> CommandResult<AlignmentsLabelled> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &AlignmentsLabel,
+) -> CommandResult<AlignmentsLabelled> {
     let c = match check(cx.doc, input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -284,11 +315,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &AlignmentsLabel) -> CommandResult
 /// Writes the labels: one undo step.
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::AlignmentsLabel) -> CommandResult<kentos_commands::AlignmentsLabelled> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &kentos_commands::AlignmentsLabel,
+) -> CommandResult<kentos_commands::AlignmentsLabelled> {
     write_execute(cx, input.clone())
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsLabel) -> CommandResult<AlignmentsLabelled> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AlignmentsLabel,
+) -> CommandResult<AlignmentsLabelled> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_ALIGNMENTS_LABEL,
@@ -296,12 +333,22 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: AlignmentsLabel) -> Command
         input,
         |cx, input| {
             let r = write_execute(cx, input.clone());
-            crate::road_drawings::kept(cx, kentos_commands::ROAD_ALIGNMENTS_LABEL, &input, (kentos_commands::RoadSourceKind::Alignment, "alignment"), r, |o| &o.uids)
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_ALIGNMENTS_LABEL,
+                &input,
+                (kentos_commands::RoadSourceKind::Alignment, "alignment"),
+                r,
+                |o| &o.uids,
+            )
         },
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: AlignmentsLabel) -> CommandResult<AlignmentsLabelled> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AlignmentsLabel,
+) -> CommandResult<AlignmentsLabelled> {
     let c = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -318,17 +365,22 @@ mod stop_tests {
     //! Docs/adr/4860: the labels, one at a time told and a stop heard within (`crate::told_tests`), on the shared cases' project.
     use super::*;
 
-    const CASES: &str = include_str!("../../../../../fixtures/commands/v1/road.alignments.label.json");
+    const CASES: &str =
+        include_str!("../../../../../fixtures/commands/v1/road.alignments.label.json");
 
     #[test]
     fn its_reckoning_is_told_and_hears_a_stop() {
-        let (doc, input): (kentos_domain::Document, kentos_commands::AlignmentsLabel) = crate::told_tests::project(CASES);
-        crate::told_tests::told_and_stopped(|told| check(&doc, &input).and_then(|c| made(&doc, &c, told)));
+        let (doc, input): (kentos_domain::Document, kentos_commands::AlignmentsLabel) =
+            crate::told_tests::project(CASES);
+        crate::told_tests::told_and_stopped(|told| {
+            check(&doc, &input).and_then(|c| made(&doc, &c, told))
+        });
     }
 
     #[test]
     fn a_stopped_job_draws_nothing() {
-        let (mut doc, input): (kentos_domain::Document, kentos_commands::AlignmentsLabel) = crate::told_tests::project(CASES);
+        let (mut doc, input): (kentos_domain::Document, kentos_commands::AlignmentsLabel) =
+            crate::told_tests::project(CASES);
         crate::told_tests::stopped_job_draws_nothing(&mut doc, |cx| draw(cx, &input));
     }
 }

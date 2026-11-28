@@ -61,7 +61,11 @@ pub(super) fn template_fields(template: &str) -> Vec<String> {
         let after = &rest[open + 1..];
         let Some(close) = after.find('}') else { break };
         let name = after[..close].trim();
-        if !name.is_empty() && name != "label" && !name.starts_with('$') && !out.iter().any(|n| n == name) {
+        if !name.is_empty()
+            && name != "label"
+            && !name.starts_with('$')
+            && !out.iter().any(|n| n == name)
+        {
             out.push(name.to_owned());
         }
         rest = &after[close + 1..];
@@ -104,16 +108,30 @@ fn value_of<'e>(e: &'e Entity, name: &str) -> Option<&'e str> {
     let attrs = &e.base().attrs;
     attrs.get(name).map(String::as_str).or_else(|| {
         let folded = name.to_lowercase();
-        attrs.iter().find(|(k, _)| k.to_lowercase() == folded).map(|(_, v)| v.as_str())
+        attrs
+            .iter()
+            .find(|(k, _)| k.to_lowercase() == folded)
+            .map(|(_, v)| v.as_str())
     })
 }
 
 /// The label texts of `list` as `node` labels them (the engine's texts, from the same code).
-pub(super) fn texts_of(doc: &kentos_domain::Document, node: &LayerNode, list: &[&Entity]) -> Vec<Vec<(u16, String)>> {
+pub(super) fn texts_of(
+    doc: &kentos_domain::Document,
+    node: &LayerNode,
+    list: &[&Entity],
+) -> Vec<Vec<(u16, String)>> {
     let shapes: Vec<Shape> = list.iter().map(|e| shape(e)).collect();
     let t = layer_texts(Some(node), reading_unit(doc.settings()));
-    let names = |id: &str| doc.layers().get(id).map_or_else(|| id.to_owned(), |n| n.name.clone());
-    object_texts(list, &t, &names, &|i| shapes.get(i)).into_iter().map(|(texts, _)| texts).collect()
+    let names = |id: &str| {
+        doc.layers()
+            .get(id)
+            .map_or_else(|| id.to_owned(), |n| n.name.clone())
+    };
+    object_texts(list, &t, &names, &|i| shapes.get(i))
+        .into_iter()
+        .map(|(texts, _)| texts)
+        .collect()
 }
 
 /// A sample cut to its first [`SAMPLE_CHARS`] letters, on one line.
@@ -127,7 +145,12 @@ pub(super) fn cut(text: &str) -> String {
 }
 
 /// The candidates of `node` (the window's draft of the layer) in `window` at `scale` px a metre.
-pub(super) fn count(doc: &kentos_domain::Document, node: &LayerNode, window: [f64; 4], scale: f64) -> Candidates {
+pub(super) fn count(
+    doc: &kentos_domain::Document,
+    node: &LayerNode,
+    window: [f64; 4],
+    scale: f64,
+) -> Candidates {
     let mut c = Candidates {
         off: !node.style.labels_on(),
         hidden: !doc.layers().is_visible(&node.id),
@@ -140,7 +163,10 @@ pub(super) fn count(doc: &kentos_domain::Document, node: &LayerNode, window: [f6
         .iter()
         .filter_map(|e| {
             let b = entity_bounds(&shape(e));
-            let seen = b.max_x >= window[0] && b.min_x <= window[2] && b.max_y >= window[1] && b.min_y <= window[3];
+            let seen = b.max_x >= window[0]
+                && b.min_x <= window[2]
+                && b.max_y >= window[1]
+                && b.min_y <= window[3];
             seen.then_some((*e, [b.min_x, b.min_y, b.max_x, b.max_y]))
         })
         .collect();
@@ -157,7 +183,11 @@ pub(super) fn count(doc: &kentos_domain::Document, node: &LayerNode, window: [f6
     c.empty_fields = named
         .iter()
         .filter(|f| !c.unknown.contains(f))
-        .filter(|f| in_view.iter().all(|(e, _)| value_of(e, f).is_none_or(|v| v.trim().is_empty())))
+        .filter(|f| {
+            in_view
+                .iter()
+                .all(|(e, _)| value_of(e, f).is_none_or(|v| v.trim().is_empty()))
+        })
         .cloned()
         .collect();
     let list: Vec<&Entity> = in_view.iter().map(|(e, _)| *e).collect();
@@ -177,7 +207,11 @@ pub(super) fn count(doc: &kentos_domain::Document, node: &LayerNode, window: [f6
         let Some(style) = styles.get(class as usize) else {
             continue;
         };
-        if !visible_at(n, style.min_scale.map(denominator), style.max_scale.map(denominator)) {
+        if !visible_at(
+            n,
+            style.min_scale.map(denominator),
+            style.max_scale.map(denominator),
+        ) {
             if c.out_of_scale == 0 {
                 c.range = (style.min_scale, style.max_scale);
             }
@@ -225,7 +259,12 @@ pub(super) fn picker_fields(doc: &kentos_domain::Document, layer: &str) -> Vec<S
 /// A field list as the words name it: the first few, and how many more.
 fn field_list(fields: &[String]) -> String {
     const SHOWN: usize = 6;
-    let mut words = fields.iter().take(SHOWN).cloned().collect::<Vec<_>>().join(", ");
+    let mut words = fields
+        .iter()
+        .take(SHOWN)
+        .cloned()
+        .collect::<Vec<_>>()
+        .join(", ");
     if fields.len() > SHOWN {
         words.push_str(&format!(" ve {} alan daha", fields.len() - SHOWN));
     }
@@ -240,13 +279,20 @@ pub(super) fn unknown_words(unknown: &[String], fields: &[String]) -> String {
     } else {
         format!("Katmanın alanları: {}.", field_list(fields))
     };
-    format!("Şablondaki {} katmanın alanı değil: etikette yazıldığı gibi çıkar. {have}", named.join(", "))
+    format!(
+        "Şablondaki {} katmanın alanı değil: etikette yazıldığı gibi çıkar. {have}",
+        named.join(", ")
+    )
 }
 
 /// A range's end as the words say it: 1:N, or none.
 fn end(px: Option<f64>) -> String {
     let n = super::form::denominator_text(px);
-    if n.is_empty() { "sınırsız".to_owned() } else { format!("1:{n}") }
+    if n.is_empty() {
+        "sınırsız".to_owned()
+    } else {
+        format!("1:{n}")
+    }
 }
 
 /// Denetle's words for the candidates, after its counts: the candidates and a sample, then each reason apart. `none`:
@@ -254,15 +300,24 @@ fn end(px: Option<f64>) -> String {
 pub(super) fn lines(c: &Candidates, scale: f64, none: bool, unplaced: u32) -> Vec<(Kind, String)> {
     let mut out: Vec<(Kind, String)> = Vec::new();
     if c.off {
-        out.push((Kind::Info, "Etiketleme “Yok”: katman etiketlenmez.".to_owned()));
+        out.push((
+            Kind::Info,
+            "Etiketleme “Yok”: katman etiketlenmez.".to_owned(),
+        ));
         return out;
     }
     if c.objects == 0 {
-        out.push((Kind::Warn, "Etiket adayı yok: katmanın nesnesi yok.".to_owned()));
+        out.push((
+            Kind::Warn,
+            "Etiket adayı yok: katmanın nesnesi yok.".to_owned(),
+        ));
         return out;
     }
     if c.hidden {
-        out.push((Kind::Warn, "Katman gizli: gizli katmanın etiketi çizilmez; katmanı görünür yapın.".to_owned()));
+        out.push((
+            Kind::Warn,
+            "Katman gizli: gizli katmanın etiketi çizilmez; katmanı görünür yapın.".to_owned(),
+        ));
         return out;
     }
     if c.in_view == 0 {
@@ -276,7 +331,10 @@ pub(super) fn lines(c: &Candidates, scale: f64, none: bool, unplaced: u32) -> Ve
         return out;
     }
     let empty = c.in_view - c.with_text;
-    let mut candidates = format!("Adaylar: görünümde {} nesne, etiket metni olan {}", c.in_view, c.with_text);
+    let mut candidates = format!(
+        "Adaylar: görünümde {} nesne, etiket metni olan {}",
+        c.in_view, c.with_text
+    );
     if empty > 0 {
         candidates.push_str(&format!(", metni boş {empty}"));
     }
@@ -296,7 +354,11 @@ pub(super) fn lines(c: &Candidates, scale: f64, none: bool, unplaced: u32) -> Ve
             )
         } else {
             let named: Vec<String> = c.empty_fields.iter().map(|f| format!("{{{f}}}")).collect();
-            format!("Etiket adayı yok: şablondaki {} görünümdeki {} nesnenin hepsinde boş.", named.join(", "), c.in_view)
+            format!(
+                "Etiket adayı yok: şablondaki {} görünümdeki {} nesnenin hepsinde boş.",
+                named.join(", "),
+                c.in_view
+            )
         };
         out.push((Kind::Warn, why));
         return out;
@@ -334,7 +396,10 @@ pub(super) fn lines(c: &Candidates, scale: f64, none: bool, unplaced: u32) -> Ve
     if none && c.out_of_scale + c.small < c.with_text {
         out.push((
             Kind::Warn,
-            format!("Etiket adayı motora ulaşmadı: görünümde metni olan {} nesne var.", c.with_text - c.out_of_scale - c.small),
+            format!(
+                "Etiket adayı motora ulaşmadı: görünümde metni olan {} nesne var.",
+                c.with_text - c.out_of_scale - c.small
+            ),
         ));
     }
     out

@@ -8,10 +8,16 @@
 
 use std::time::Instant;
 
-use kentos_scene3d::{Aabb, Camera, ContentRef, Exaggeration, Hierarchy, Limits, Projection, Refine, Settings, SourceMesh, Tile, TileKey, Viewport, chunk, select};
+use kentos_scene3d::{
+    Aabb, Camera, ContentRef, Exaggeration, Hierarchy, Limits, Projection, Refine, Settings,
+    SourceMesh, Tile, TileKey, Viewport, chunk, select,
+};
 
 fn persp() -> Projection {
-    Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.5 }
+    Projection::Perspective {
+        fov_y: 40f64.to_radians(),
+        near: 0.5,
+    }
 }
 
 #[test]
@@ -36,9 +42,22 @@ fn timing() {
         }
     }
     let t = Instant::now();
-    let c = chunk(&[SourceMesh { part: 0, vertices: &vs, triangles: &ts, smooth: true }], Limits::default(), 1);
+    let c = chunk(
+        &[SourceMesh {
+            part: 0,
+            vertices: &vs,
+            triangles: &ts,
+            smooth: true,
+        }],
+        Limits::default(),
+        1,
+    );
     let cut = t.elapsed();
-    let error = c.contents.iter().map(|k| k.encoding_error).fold(0.0, f64::max);
+    let error = c
+        .contents
+        .iter()
+        .map(|k| k.encoding_error)
+        .fold(0.0, f64::max);
     let bytes: u64 = c.contents.iter().map(|k| k.bytes()).sum();
     println!(
         "bölme: {} üçgen → {} karo, {} içerik, {:.1} MB, en büyük float32 farkı {:.2e} m: {:.0} ms",
@@ -50,17 +69,55 @@ fn timing() {
         cut.as_secs_f64() * 1e3
     );
     assert!(error < 1e-4);
-    let vp = Viewport { width: 1920.0, height: 1080.0 };
+    let vp = Viewport {
+        width: 1920.0,
+        height: 1080.0,
+    };
     let views = [
-        ("yakın", Camera::orbit([x0 + 300.0, y0 + 300.0, 1210.0], 210.0, 25.0, 150.0, persp())),
-        ("uzak", Camera::orbit([x0 + 1000.0, y0 + 500.0, 1220.0], 45.0, 35.0, 3000.0, persp())),
-        ("üst", Camera { eye: [x0 + 1000.0, y0 + 500.0, 4000.0], target: [x0 + 1000.0, y0 + 500.0, 0.0], up: [0.0, 0.0, 1.0], projection: persp() }),
+        (
+            "yakın",
+            Camera::orbit(
+                [x0 + 300.0, y0 + 300.0, 1210.0],
+                210.0,
+                25.0,
+                150.0,
+                persp(),
+            ),
+        ),
+        (
+            "uzak",
+            Camera::orbit(
+                [x0 + 1000.0, y0 + 500.0, 1220.0],
+                45.0,
+                35.0,
+                3000.0,
+                persp(),
+            ),
+        ),
+        (
+            "üst",
+            Camera {
+                eye: [x0 + 1000.0, y0 + 500.0, 4000.0],
+                target: [x0 + 1000.0, y0 + 500.0, 0.0],
+                up: [0.0, 0.0, 1.0],
+                projection: persp(),
+            },
+        ),
     ];
     for (name, cam) in views {
         let t = Instant::now();
         let mut s = None;
         for _ in 0..100 {
-            s = Some(select(&c.hierarchy, &cam, &vp, &Exaggeration::NONE, Settings { max_screen_error: 16.0 }, |_| true));
+            s = Some(select(
+                &c.hierarchy,
+                &cam,
+                &vp,
+                &Exaggeration::NONE,
+                Settings {
+                    max_screen_error: 16.0,
+                },
+                |_| true,
+            ));
         }
         let s = s.unwrap();
         println!(
@@ -71,18 +128,35 @@ fn timing() {
             t.elapsed().as_secs_f64() * 1e3 / 100.0
         );
         // A click in the middle of the picture and at a quarter of it: the tiles drawn, then their source triangles.
-        let by_id: std::collections::HashMap<u64, &kentos_scene3d::Content> = c.contents.iter().map(|k| (k.id, k)).collect();
+        let by_id: std::collections::HashMap<u64, &kentos_scene3d::Content> =
+            c.contents.iter().map(|k| (k.id, k)).collect();
         let source = |_m: u32, i: u32| ts.get(i as usize).map(|t| t.map(|k| vs[k as usize]));
         let t = Instant::now();
         let mut hits = 0;
         for k in 0..20 {
-            let (x, y) = if k % 2 == 0 { (960.0, 540.0) } else { (480.0, 810.0) };
+            let (x, y) = if k % 2 == 0 {
+                (960.0, 540.0)
+            } else {
+                (480.0, 810.0)
+            };
             let (o, d) = cam.ray(x, y, &vp);
             hits += usize::from(
-                kentos_scene3d::pick(&c.hierarchy, &s.draw, |id| by_id.get(&id).copied(), source, o, d, &Exaggeration::NONE).is_some(),
+                kentos_scene3d::pick(
+                    &c.hierarchy,
+                    &s.draw,
+                    |id| by_id.get(&id).copied(),
+                    source,
+                    o,
+                    d,
+                    &Exaggeration::NONE,
+                )
+                .is_some(),
             );
         }
-        println!("seçme ({name}): {hits}/20 isabet: {:.2} ms", t.elapsed().as_secs_f64() * 1e3 / 20.0);
+        println!(
+            "seçme ({name}): {hits}/20 isabet: {:.2} ms",
+            t.elapsed().as_secs_f64() * 1e3 / 20.0
+        );
     }
     // A deep quadtree, every tile a content, the error halving: a flight over it.
     let mut tiles = Vec::new();
@@ -90,10 +164,16 @@ fn timing() {
         let at = tiles.len() as u32;
         tiles.push(Tile {
             key: TileKey(u64::from(at)),
-            bounds: Aabb { min: [x, y, 0.0], max: [x + s, y + s, 50.0] },
+            bounds: Aabb {
+                min: [x, y, 0.0],
+                max: [x + s, y + s, 50.0],
+            },
             geometric_error: if level < 7 { ge } else { 0.0 },
             refine: Refine::Replace,
-            content: Some(ContentRef { id: u64::from(at), bytes: 1 }),
+            content: Some(ContentRef {
+                id: u64::from(at),
+                bytes: 1,
+            }),
             children: Vec::new(),
         });
         if level < 7 {
@@ -109,14 +189,28 @@ fn timing() {
         at
     }
     make(&mut tiles, 0.0, 0.0, 20_000.0, 0, 512.0);
-    let h = Hierarchy { tiles, roots: vec![0] };
+    let h = Hierarchy {
+        tiles,
+        roots: vec![0],
+    };
     assert_eq!(h.problem(), None);
     let t = Instant::now();
     let mut drawn = 0;
     for k in 0..200 {
         let x = 1000.0 + 90.0 * f64::from(k);
         let cam = Camera::orbit([x, 10_000.0, 20.0], 270.0, 20.0, 400.0, persp());
-        drawn += select(&h, &cam, &vp, &Exaggeration::NONE, Settings { max_screen_error: 16.0 }, |_| true).draw.len();
+        drawn += select(
+            &h,
+            &cam,
+            &vp,
+            &Exaggeration::NONE,
+            Settings {
+                max_screen_error: 16.0,
+            },
+            |_| true,
+        )
+        .draw
+        .len();
     }
     println!(
         "uçuş: {} karo, kare başına ortalama {} karo çizilir: {:.3} ms",

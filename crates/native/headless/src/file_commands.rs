@@ -13,10 +13,10 @@ use kentos_commands::encoding::sha256_hex;
 use kentos_commands::{
     BlockFileExported, CallAnswer, CallEnvelope, CallOp, CallRecord, CommandError, CommandResult,
     CommandWarning, DxfExported, ExportBlock, ExportDxf, ExportGpkg, ExportPdf, ExportShp,
-    FILE_COMMANDS, FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_DXF,
+    FILE_COMMANDS, FILE_EXPORT_ATLAS, FILE_EXPORT_ATLAS_VERSION, FILE_EXPORT_BLOCK,
+    FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_CSV, FILE_EXPORT_CSV_VERSION, FILE_EXPORT_DXF,
     FILE_EXPORT_DXF_VERSION, FILE_EXPORT_GPKG, FILE_EXPORT_GPKG_VERSION, FILE_EXPORT_PDF,
-    FILE_EXPORT_ATLAS, FILE_EXPORT_ATLAS_VERSION, FILE_EXPORT_CSV, FILE_EXPORT_CSV_VERSION, FILE_EXPORT_PDF_VERSION, FILE_EXPORT_SHP, FILE_EXPORT_SHP_VERSION,
-    FILE_EXPORT_SLD,
+    FILE_EXPORT_PDF_VERSION, FILE_EXPORT_SHP, FILE_EXPORT_SHP_VERSION, FILE_EXPORT_SLD,
     FILE_EXPORT_SLD_VERSION, FILE_PACKAGE, FILE_PACKAGE_VERSION, FileEffect, GpkgExported,
     GpkgTableExported, LayerNodeType, PackageProject, PdfExported, ReplayOutcome, ReplayStep,
     codes,
@@ -85,7 +85,9 @@ pub(crate) fn target(path: &str, overwrite: bool) -> Result<(PathBuf, bool), Ref
     if exists && std::fs::metadata(p).is_ok_and(|m| m.permissions().readonly()) {
         return Err(refuse(
             codes::FILE_UNWRITABLE,
-            format!("{path} salt okunur; üzerine yazılmadı. Dosyanın yazma iznini açın ya da başka bir ad verin."),
+            format!(
+                "{path} salt okunur; üzerine yazılmadı. Dosyanın yazma iznini açın ya da başka bir ad verin."
+            ),
             "path",
         ));
     }
@@ -96,7 +98,9 @@ pub(crate) fn target(path: &str, overwrite: bool) -> Result<(PathBuf, bool), Ref
 /// a SECTION) whose APPID table does not register KENTOS, or a DWG (its AC10xx signature) the codec does not read
 /// back with KENTOS registered. Anything else (no file, another kind of file) is not.
 pub fn foreign_cad(path: &Path) -> bool {
-    let Ok(bytes) = std::fs::read(path) else { return false };
+    let Ok(bytes) = std::fs::read(path) else {
+        return false;
+    };
     if bytes.starts_with(b"AC10") || bytes.starts_with(b"AC1.") {
         // A DWG: KentOS's own when the codec reads it back with KENTOS registered; else (another author, or one
         // the codec cannot read) foreign.
@@ -104,7 +108,10 @@ pub fn foreign_cad(path: &Path) -> bool {
     }
     let head = &bytes[..bytes.len().min(4096)];
     let text = String::from_utf8_lossy(head);
-    let dxf = text.trim_start_matches('\u{feff}').trim_start().starts_with('0')
+    let dxf = text
+        .trim_start_matches('\u{feff}')
+        .trim_start()
+        .starts_with('0')
         && text.lines().take(4).any(|l| l.trim() == "SECTION");
     if !dxf {
         return false;
@@ -147,7 +154,9 @@ fn dxf(
 }
 
 fn dxf_selected(
-    doc: &Document, input: &ExportDxf, uids: Option<&[String]>,
+    doc: &Document,
+    input: &ExportDxf,
+    uids: Option<&[String]>,
 ) -> Result<(PathBuf, bool, Vec<u8>, DxfExported), Refused> {
     let (path, exists) = target(&input.path, input.overwrite)?;
     guard_source(&path, exists, input.replace_source)?;
@@ -185,10 +194,20 @@ fn dxf_selected(
     if let Some(uids) = uids {
         let mut chosen = std::collections::HashSet::new();
         for (i, text) in uids.iter().enumerate() {
-            let uid = kentos_domain::Uuid::parse_str(text).map_err(|_| refuse(
-                codes::INVALID_UID, "Nesne kimliği geçerli bir UUID değil.", &format!("uids[{i}]")))?;
-            let slot = doc.slot_of(uid).ok_or_else(|| refuse(
-                codes::ENTITY_NOT_FOUND, "Nesne çizimde yok.", &format!("uids[{i}]")))?;
+            let uid = kentos_domain::Uuid::parse_str(text).map_err(|_| {
+                refuse(
+                    codes::INVALID_UID,
+                    "Nesne kimliği geçerli bir UUID değil.",
+                    &format!("uids[{i}]"),
+                )
+            })?;
+            let slot = doc.slot_of(uid).ok_or_else(|| {
+                refuse(
+                    codes::ENTITY_NOT_FOUND,
+                    "Nesne çizimde yok.",
+                    &format!("uids[{i}]"),
+                )
+            })?;
             chosen.insert(slot.0);
         }
         objects.retain(|e| chosen.contains(&e.base().id));
@@ -197,7 +216,12 @@ fn dxf_selected(
     objects.retain(|e| seen.insert(e.base().id));
     let grouped = crate::export::by_layer(doc, objects);
     let mut dxf_input = crate::export::dxf_input(doc, &grouped);
-    let paper_only = input.layers.is_none() && uids.is_none() && dxf_input.layouts.iter().any(|p| !p.entities.is_empty() || !p.viewports.is_empty());
+    let paper_only = input.layers.is_none()
+        && uids.is_none()
+        && dxf_input
+            .layouts
+            .iter()
+            .any(|p| !p.entities.is_empty() || !p.viewports.is_empty());
     if grouped.is_empty() && !paper_only {
         return Err(refuse(
             codes::NOTHING_TO_EXPORT,
@@ -231,13 +255,19 @@ fn dxf_selected(
     Ok((path, exists, bytes, output))
 }
 
-
 /// The same CAD export in a selected DWG binary format, verified before the atomic write.
 fn dwg(
-    doc: &Document, input: &kentos_commands::ExportDwg,
+    doc: &Document,
+    input: &kentos_commands::ExportDwg,
 ) -> Result<(PathBuf, bool, Vec<u8>, kentos_commands::DwgExported), Refused> {
-    let dxf_input = ExportDxf { allow_polyline_loss: input.allow_polyline_loss, path: input.path.clone(), layers: input.layers.clone(),
-        overwrite: input.overwrite, replace_source: input.replace_source, annotations: input.annotations };
+    let dxf_input = ExportDxf {
+        allow_polyline_loss: input.allow_polyline_loss,
+        path: input.path.clone(),
+        layers: input.layers.clone(),
+        overwrite: input.overwrite,
+        replace_source: input.replace_source,
+        annotations: input.annotations,
+    };
     let (path, exists, dxf, mut output) = dxf_selected(doc, &dxf_input, input.uids.as_deref())?;
     let source_version = std::str::from_utf8(&dxf)
         .ok()
@@ -249,8 +279,9 @@ fn dwg(
     output.bytes = bytes.len() as u64;
     output.sha256 = sha256_hex(&bytes);
     if input.version == kentos_commands::DwgVersion::AC1014
-        && let Some(notes) = output.report["notes"].as_array_mut() {
-            notes.push(serde_json::json!({"what": "R14 biçimi", "count": 1,
+        && let Some(notes) = output.report["notes"].as_array_mut()
+    {
+        notes.push(serde_json::json!({"what": "R14 biçimi", "count": 1,
                 "reason": "INSUNITS birimi ve nesne çizgi kalınlığı bu sürümde taşınmaz. Koordinatlar metredir; alıcıda metre birimini seçin. Yeni DWG sürümü bu kaybı önler.", "lines": []}));
     }
     output.report["codec"] = serde_json::json!({
@@ -263,8 +294,10 @@ fn dwg(
 }
 
 /// The desktop and command use the same builder and atomic file writer.
-pub fn export_dwg(doc: &Document, input: &kentos_commands::ExportDwg)
-    -> Result<kentos_commands::DwgExported, Refused> {
+pub fn export_dwg(
+    doc: &Document,
+    input: &kentos_commands::ExportDwg,
+) -> Result<kentos_commands::DwgExported, Refused> {
     let (path, _, bytes, output) = dwg(doc, input)?;
     write_cad_bytes(doc, &path, &bytes, input.overwrite)?;
     Ok(output)
@@ -310,8 +343,14 @@ fn pdf(
     let user = std::env::var("USER")
         .or_else(|_| std::env::var("USERNAME"))
         .unwrap_or_default();
-    let made = kentos_plot::book::book_pdf_at(doc, &wanted, &user, &kentos_plot::book::today(), input.drawing.as_deref())
-        .map_err(|e| refuse(codes::PDF_UNWRITABLE, e.message, "path"))?;
+    let made = kentos_plot::book::book_pdf_at(
+        doc,
+        &wanted,
+        &user,
+        &kentos_plot::book::today(),
+        input.drawing.as_deref(),
+    )
+    .map_err(|e| refuse(codes::PDF_UNWRITABLE, e.message, "path"))?;
     let output = PdfExported {
         path: path.display().to_string(),
         bytes: made.bytes.len() as u64,
@@ -771,17 +810,21 @@ fn gpkg_flow(
             .profile
             .relations
             .into_iter()
-            .map(|(mapping, base, related, rows)| kentos_commands::GpkgRelationExported {
-                mapping,
-                base,
-                related,
-                rows,
-            })
+            .map(
+                |(mapping, base, related, rows)| kentos_commands::GpkgRelationExported {
+                    mapping,
+                    base,
+                    related,
+                    rows,
+                },
+            )
             .collect(),
         styles: written.profile.styles,
         kept: written.kept,
     };
-    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
+    warnings.extend(kentos_native_application::time_export::left_out_warning(
+        left,
+    ));
     Ok((path, exists, bytes, output, warnings))
 }
 
@@ -880,7 +923,10 @@ fn csv(doc: &Document, input: &kentos_commands::ExportCsv) -> Result<CsvMade, Re
     let (path, _) = target(&input.path, input.overwrite)?;
     let made = kentos_native_application::csv_table::export(doc, input)
         .map_err(|(code, message, at)| refuse(&code, message, &at))?;
-    let mut files = vec![(path.clone(), made.csv), (path.with_extension("csvt"), made.csvt)];
+    let mut files = vec![
+        (path.clone(), made.csv),
+        (path.with_extension("csvt"), made.csvt),
+    ];
     if let Some(prj) = made.prj {
         files.push((path.with_extension("prj"), prj));
     }
@@ -888,7 +934,10 @@ fn csv(doc: &Document, input: &kentos_commands::ExportCsv) -> Result<CsvMade, Re
         if p.exists() && !input.overwrite {
             return Err(refuse(
                 codes::FILE_EXISTS,
-                format!("{} var; üzerine yazmak için overwrite: true verin.", p.display()),
+                format!(
+                    "{} var; üzerine yazmak için overwrite: true verin.",
+                    p.display()
+                ),
                 "path",
             ));
         }
@@ -915,13 +964,25 @@ fn csv(doc: &Document, input: &kentos_commands::ExportCsv) -> Result<CsvMade, Re
             path: Some("layers".into()),
         }]
     };
-    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
+    warnings.extend(kentos_native_application::time_export::left_out_warning(
+        left,
+    ));
     Ok((files, output, warnings))
 }
 
 /// The FlatGeobuf of the layers: the file to write, its bytes, the answer and the warnings (docs/adr/0544).
-type FgbMade = (PathBuf, Vec<u8>, kentos_commands::FgbExported, Vec<CommandWarning>);
-type ParquetMade = (PathBuf, Vec<u8>, kentos_commands::ParquetExported, Vec<CommandWarning>);
+type FgbMade = (
+    PathBuf,
+    Vec<u8>,
+    kentos_commands::FgbExported,
+    Vec<CommandWarning>,
+);
+type ParquetMade = (
+    PathBuf,
+    Vec<u8>,
+    kentos_commands::ParquetExported,
+    Vec<CommandWarning>,
+);
 
 fn fgb(doc: &Document, input: &kentos_commands::ExportFgb) -> Result<FgbMade, Refused> {
     let (path, _) = target(&input.path, input.overwrite)?;
@@ -939,7 +1000,9 @@ fn fgb(doc: &Document, input: &kentos_commands::ExportFgb) -> Result<FgbMade, Re
             path: Some("layers".into()),
         }]
     };
-    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
+    warnings.extend(kentos_native_application::time_export::left_out_warning(
+        left,
+    ));
     Ok((path, made.bytes, output, warnings))
 }
 
@@ -970,7 +1033,9 @@ fn parquet(doc: &Document, input: &kentos_commands::ExportParquet) -> Result<Par
             path: Some("layers".into()),
         }]
     };
-    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
+    warnings.extend(kentos_native_application::time_export::left_out_warning(
+        left,
+    ));
     Ok((path, made.bytes, output, warnings))
 }
 
@@ -996,7 +1061,11 @@ pub fn export_parquet(
 
 /// The GML of the layers: the files to write (the schema first, the GML last), the answer and the warnings
 /// (docs/adr/0545).
-type GmlMade = (Vec<(PathBuf, Vec<u8>)>, kentos_commands::GmlExported, Vec<CommandWarning>);
+type GmlMade = (
+    Vec<(PathBuf, Vec<u8>)>,
+    kentos_commands::GmlExported,
+    Vec<CommandWarning>,
+);
 
 fn gml(doc: &Document, input: &kentos_commands::ExportGml) -> Result<GmlMade, Refused> {
     let (path, _) = target(&input.path, input.overwrite)?;
@@ -1025,7 +1094,10 @@ fn gml(doc: &Document, input: &kentos_commands::ExportGml) -> Result<GmlMade, Re
         if p.exists() && !input.overwrite {
             return Err(refuse(
                 codes::FILE_EXISTS,
-                format!("{} var; üzerine yazmak için overwrite: true verin.", p.display()),
+                format!(
+                    "{} var; üzerine yazmak için overwrite: true verin.",
+                    p.display()
+                ),
                 "path",
             ));
         }
@@ -1042,7 +1114,9 @@ fn gml(doc: &Document, input: &kentos_commands::ExportGml) -> Result<GmlMade, Re
             path: Some("layers".into()),
         }]
     };
-    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
+    warnings.extend(kentos_native_application::time_export::left_out_warning(
+        left,
+    ));
     Ok((files, output, warnings))
 }
 
@@ -1060,8 +1134,18 @@ pub fn export_gml(
 }
 
 /// The XYZ file of the layers: the file to write, its bytes, the answer and the warnings (docs/adr/0545).
-type XyzMade = (PathBuf, Vec<u8>, kentos_commands::XyzExported, Vec<CommandWarning>);
-type TableMade = (PathBuf, Vec<u8>, kentos_commands::TableExported, Vec<CommandWarning>);
+type XyzMade = (
+    PathBuf,
+    Vec<u8>,
+    kentos_commands::XyzExported,
+    Vec<CommandWarning>,
+);
+type TableMade = (
+    PathBuf,
+    Vec<u8>,
+    kentos_commands::TableExported,
+    Vec<CommandWarning>,
+);
 
 fn table(doc: &Document, input: &kentos_commands::ExportTable) -> Result<TableMade, Refused> {
     let (path, _) = target(&input.path, input.overwrite)?;
@@ -1099,7 +1183,9 @@ fn xyz(doc: &Document, input: &kentos_commands::ExportXyz) -> Result<XyzMade, Re
             path: Some("layers".into()),
         }]
     };
-    warnings.extend(kentos_native_application::time_export::left_out_warning(left));
+    warnings.extend(kentos_native_application::time_export::left_out_warning(
+        left,
+    ));
     Ok((path, made.bytes, output, warnings))
 }
 
@@ -1151,10 +1237,15 @@ pub fn export_atlas(
 /// The atlas's record beside its PDF (docs/adr/4000), as `output` says it: its pages, their sources, the objects'
 /// digests and the state, for a later run's changes.
 fn write_atlas_record(output: &kentos_commands::AtlasExported) -> Result<(), Refused> {
-    let Some(at) = &output.record else { return Ok(()) };
+    let Some(at) = &output.record else {
+        return Ok(());
+    };
     let record = kentos_commands::AtlasRecord {
         format: kentos_commands::ATLAS_RECORD_FORMAT.to_owned(),
-        pdf: Path::new(&output.path).file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
+        pdf: Path::new(&output.path)
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default(),
         sha256: output.sha256.clone(),
         sheet: output.sheet.clone(),
         date: kentos_plot::book::today(),
@@ -1236,13 +1327,27 @@ pub fn atlas_changes(
             .filter(|u| before.sources.contains(u) && previous.objects.get(*u) != objects.get(*u))
             .cloned()
             .collect();
-        let added: Vec<String> = p.sources.iter().filter(|u| !before.sources.contains(u)).cloned().collect();
-        let removed: Vec<String> = before.sources.iter().filter(|u| !p.sources.contains(u)).cloned().collect();
+        let added: Vec<String> = p
+            .sources
+            .iter()
+            .filter(|u| !before.sources.contains(u))
+            .cloned()
+            .collect();
+        let removed: Vec<String> = before
+            .sources
+            .iter()
+            .filter(|u| !p.sources.contains(u))
+            .cloned()
+            .collect();
         let same = changed.is_empty() && added.is_empty() && removed.is_empty() && parts.is_empty();
         out.push(AtlasPageChange {
             index: p.index,
             feature: p.feature.clone(),
-            state: if same { AtlasPageState::Same } else { AtlasPageState::Changed },
+            state: if same {
+                AtlasPageState::Same
+            } else {
+                AtlasPageState::Changed
+            },
             changed,
             added,
             removed,
@@ -1253,7 +1358,10 @@ pub fn atlas_changes(
         .pages
         .iter()
         .filter(|q| !pages.iter().any(|p| p.feature == q.feature))
-        .map(|q| AtlasGonePage { name: q.name.clone(), feature: q.feature.clone() })
+        .map(|q| AtlasGonePage {
+            name: q.name.clone(),
+            feature: q.feature.clone(),
+        })
         .collect();
     kentos_commands::AtlasChanges {
         pdf: previous.pdf.clone(),
@@ -1326,7 +1434,8 @@ pub(crate) fn write(path: &Path, bytes: &[u8]) -> Result<(), Refused> {
 }
 
 fn write_guarded(path: &Path, bytes: &[u8], overwrite: bool) -> Result<(), Refused> {
-    files::write_bytes_with_overwrite(bytes, path, overwrite).map(|_| ())
+    files::write_bytes_with_overwrite(bytes, path, overwrite)
+        .map(|_| ())
         .map_err(|e| refuse(e.code, e.message, "path"))
 }
 
@@ -1365,7 +1474,11 @@ fn atlas(
         ));
     }
     // Docs/adr/4000: the previous atlas's record, read before any page is made.
-    let previous = input.previous.as_deref().map(|p| previous_record(p, &input.sheet)).transpose()?;
+    let previous = input
+        .previous
+        .as_deref()
+        .map(|p| previous_record(p, &input.sheet))
+        .transpose()?;
     let user = std::env::var("USER")
         .or_else(|_| std::env::var("USERNAME"))
         .unwrap_or_default();
@@ -1387,24 +1500,47 @@ fn atlas(
     // Docs/adr/3600: each page's sources on its own ground, the listed objects' digests (ADR 1320 §2); before the PDF,
     // so an update (docs/adr/4400) makes only its pages.
     let mut pages = planned.pages.clone();
-    let reaches = if made_pages { planned.page_grounds(doc).map_err(at)? } else { Vec::new() };
+    let reaches = if made_pages {
+        planned.page_grounds(doc).map_err(at)?
+    } else {
+        Vec::new()
+    };
     if made_pages && reaches.len() == pages.len() {
         #[allow(clippy::type_complexity)]
-        let asked: Vec<(Vec<(String, [f64; 4])>, String)> = reaches.into_iter().zip(&pages).map(|(r, p)| (r, p.feature.clone())).collect();
-        if let Ok(listed) = kentos_native_application::sheets_sources::atlas_page_sources(doc, planned.sheet(), &asked) {
+        let asked: Vec<(Vec<(String, [f64; 4])>, String)> = reaches
+            .into_iter()
+            .zip(&pages)
+            .map(|(r, p)| (r, p.feature.clone()))
+            .collect();
+        if let Ok(listed) = kentos_native_application::sheets_sources::atlas_page_sources(
+            doc,
+            planned.sheet(),
+            &asked,
+        ) {
             for (page, sources) in pages.iter_mut().zip(listed) {
                 page.sources = sources.unwrap_or_default();
             }
         }
     }
-    let objects = kentos_native_application::sheets_sources::object_digests(doc, pages.iter().flat_map(|p| p.sources.iter()));
-    let changes = previous.as_ref().filter(|_| made_pages).map(|r| atlas_changes(r, &pages, &objects, &planned.pin));
+    let objects = kentos_native_application::sheets_sources::object_digests(
+        doc,
+        pages.iter().flat_map(|p| p.sources.iter()),
+    );
+    let changes = previous
+        .as_ref()
+        .filter(|_| made_pages)
+        .map(|r| atlas_changes(r, &pages, &objects, &planned.pin));
     // Docs/adr/4400: the update's pages, the changed and the new, by their index; none is no update.
     let written: Vec<u32> = match (&changes, input.changed_only) {
         (Some(c), true) => c
             .pages
             .iter()
-            .filter(|p| matches!(p.state, kentos_commands::AtlasPageState::Changed | kentos_commands::AtlasPageState::New))
+            .filter(|p| {
+                matches!(
+                    p.state,
+                    kentos_commands::AtlasPageState::Changed | kentos_commands::AtlasPageState::New
+                )
+            })
             .map(|p| p.index)
             .collect(),
         _ => Vec::new(),
@@ -1413,32 +1549,56 @@ fn atlas(
         if written.is_empty() {
             return Err(refuse(
                 codes::ATLAS_UNCHANGED,
-                "Önceki atlastan beri değişen ya da yeni sayfa yok; güncelleme PDF'i yazılmadı.".to_owned(),
+                "Önceki atlastan beri değişen ya da yeni sayfa yok; güncelleme PDF'i yazılmadı."
+                    .to_owned(),
                 "changedOnly",
             ));
         }
         planned.keep_pages(&written.iter().copied().collect());
     }
     let (bytes, findings, notes, read, looks) = if bytes {
-        let made = planned.pdf_at(doc,input.drawing.as_deref()).map_err(at)?;
+        let made = planned.pdf_at(doc, input.drawing.as_deref()).map_err(at)?;
         (made.bytes, made.findings, made.notes, made.read, made.looks)
     } else {
-        (Vec::new(), Vec::new(), planned.notes.clone(), planned.read.clone(), Vec::new())
+        (
+            Vec::new(),
+            Vec::new(),
+            planned.notes.clone(),
+            planned.read.clone(),
+            Vec::new(),
+        )
     };
     // Docs/adr/4820: each page's look, made now; a page an update did not make keeps the previous record's.
-    let made_look = |feature: &str| looks.iter().find(|(f, _)| f == feature).map(|(_, l)| l.clone());
+    let made_look = |feature: &str| {
+        looks
+            .iter()
+            .find(|(f, _)| f == feature)
+            .map(|(_, l)| l.clone())
+    };
     let then_look = |feature: &str| {
-        previous.as_ref().and_then(|r| r.pages.iter().find(|q| q.feature == feature)).and_then(|q| q.look.clone())
+        previous
+            .as_ref()
+            .and_then(|r| r.pages.iter().find(|q| q.feature == feature))
+            .and_then(|q| q.look.clone())
     };
     for p in pages.iter_mut() {
-        p.look = made_look(&p.feature).or_else(|| then_look(&p.feature).filter(|_| !written.is_empty()));
+        p.look =
+            made_look(&p.feature).or_else(|| then_look(&p.feature).filter(|_| !written.is_empty()));
     }
     // A changed page's look against the previous atlas's, when this run made it and the record knew it.
     let mut changes = changes;
     if let Some(c) = changes.as_mut() {
-        for ch in c.pages.iter_mut().filter(|ch| ch.state == kentos_commands::AtlasPageState::Changed) {
+        for ch in c
+            .pages
+            .iter_mut()
+            .filter(|ch| ch.state == kentos_commands::AtlasPageState::Changed)
+        {
             if let (Some(now), Some(then)) = (made_look(&ch.feature), then_look(&ch.feature)) {
-                ch.look = Some(if now == then { kentos_commands::AtlasLook::Same } else { kentos_commands::AtlasLook::Changed });
+                ch.look = Some(if now == then {
+                    kentos_commands::AtlasLook::Same
+                } else {
+                    kentos_commands::AtlasLook::Changed
+                });
             }
         }
     }
@@ -1494,7 +1654,8 @@ pub(crate) fn refused_result(error: CommandError) -> CommandResult<Value> {
 /// Runs `op` of the file command `command`; its answer, and the file it
 /// wrote (execute).
 fn typed_version_loss(command: &str, output: &Value) -> bool {
-    command == kentos_commands::FILE_EXPORT_DWG && output["report"]["codec"]["targetVersion"] == "AC1014"
+    command == kentos_commands::FILE_EXPORT_DWG
+        && output["report"]["codec"]["targetVersion"] == "AC1014"
 }
 
 fn run_typed(
@@ -1503,40 +1664,56 @@ fn run_typed(
     op: CallOp,
     input: Value,
 ) -> Result<(CommandResult<Value>, Option<FileEffect>), String> {
-    crate::package_data::typed_with_rows(doc,command,op,input,None)
+    crate::package_data::typed_with_rows(doc, command, op, input, None)
 }
-pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input:Value,progress:Option<&kentos_native_application::jobs::Progress>)->Result<(CommandResult<Value>,Option<FileEffect>),String>{
-    if command==kentos_commands::FILE_PREFLIGHT_SHEETS {
-        let typed:kentos_commands::PreflightSheets=serde_json::from_value(input).map_err(|e|e.to_string())?;
-        return Ok((crate::sheet_preflight::run(doc,&typed,op,progress)?,None));
+pub(crate) fn run_typed_with_progress(
+    doc: &Document,
+    command: &str,
+    op: CallOp,
+    input: Value,
+    progress: Option<&kentos_native_application::jobs::Progress>,
+) -> Result<(CommandResult<Value>, Option<FileEffect>), String> {
+    if command == kentos_commands::FILE_PREFLIGHT_SHEETS {
+        let typed: kentos_commands::PreflightSheets =
+            serde_json::from_value(input).map_err(|e| e.to_string())?;
+        return Ok((
+            crate::sheet_preflight::run(doc, &typed, op, progress)?,
+            None,
+        ));
     }
-    if command==kentos_commands::FILE_PUBLISH_SHEETS {
-        let typed:kentos_commands::PublishSheets=serde_json::from_value(input).map_err(|e|e.to_string())?;
-        return Ok(crate::publish::run(doc,&typed,op,progress));
+    if command == kentos_commands::FILE_PUBLISH_SHEETS {
+        let typed: kentos_commands::PublishSheets =
+            serde_json::from_value(input).map_err(|e| e.to_string())?;
+        return Ok(crate::publish::run(doc, &typed, op, progress));
     }
     if command == kentos_commands::FILE_EXCHANGE_CHECK {
         // Dışa aktarma kaybı denetimi (docs/adr/1660): a round trip through a temporary file; the open drawing is not changed.
-        let typed: kentos_commands::ExchangeCheck = serde_json::from_value(input).map_err(|e| e.to_string())?;
+        let typed: kentos_commands::ExchangeCheck =
+            serde_json::from_value(input).map_err(|e| e.to_string())?;
         return Ok((crate::exchange_check::run(doc, &typed, op), None));
     }
     if command == kentos_commands::FILE_EXCHANGE_MATRIX {
         // Destek matrisi (docs/adr/1880): the check's trip through each format, its answers read aspect by aspect.
-        let typed: kentos_commands::ExchangeMatrix = serde_json::from_value(input).map_err(|e| e.to_string())?;
+        let typed: kentos_commands::ExchangeMatrix =
+            serde_json::from_value(input).map_err(|e| e.to_string())?;
         return Ok((crate::exchange_matrix::run(doc, &typed, op), None));
     }
     if command == kentos_commands::FILE_RECOVER {
         // Kurtar (docs/adr/1013): from file to file; the open drawing is not read or written.
-        let typed: kentos_commands::RecoverKcad = serde_json::from_value(input).map_err(|e| e.to_string())?;
+        let typed: kentos_commands::RecoverKcad =
+            serde_json::from_value(input).map_err(|e| e.to_string())?;
         return Ok((crate::recover::run(&typed, op), None));
     }
-    if command==kentos_commands::FILE_PUBLISH_STATUS {
-        let typed:kentos_commands::PublishStatus=serde_json::from_value(input).map_err(|e|e.to_string())?;
-        return Ok((crate::publish_status::run(doc,&typed,op,progress),None));
+    if command == kentos_commands::FILE_PUBLISH_STATUS {
+        let typed: kentos_commands::PublishStatus =
+            serde_json::from_value(input).map_err(|e| e.to_string())?;
+        return Ok((crate::publish_status::run(doc, &typed, op, progress), None));
     }
     #[cfg(feature = "mod-arch")]
     if command == kentos_commands::FILE_REVIEW_PACKAGE {
         // Gelen paketi incele (docs/adr/8104): files read, the drawing neither read nor written.
-        let typed: kentos_commands::ReviewPackage = serde_json::from_value(input).map_err(|e| e.to_string())?;
+        let typed: kentos_commands::ReviewPackage =
+            serde_json::from_value(input).map_err(|e| e.to_string())?;
         return Ok((crate::package_review::run(&typed, op), None));
     }
     macro_rules! go {
@@ -1656,7 +1833,13 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                 },
                 None,
             ),
-            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings,
+                },
+                None,
+            ),
             CallOp::Execute => {
                 // Docs/adr/4000: the record first (nothing written when it cannot be), then the PDF.
                 if let Err(refused) = write_atlas_record(&output) {
@@ -1666,7 +1849,10 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                     return Ok((CommandResult::Failed { error: *refused }, None));
                 }
                 (
-                    CommandResult::Completed { output: value, warnings },
+                    CommandResult::Completed {
+                        output: value,
+                        warnings,
+                    },
                     Some(FileEffect {
                         path: output.path.clone(),
                         bytes: output.bytes,
@@ -1693,7 +1879,13 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                 },
                 None,
             ),
-            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings,
+                },
+                None,
+            ),
             CallOp::Execute => {
                 for (p, b) in files.iter().rev() {
                     if let Err(refused) = write(p, b) {
@@ -1702,7 +1894,10 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                 }
                 let csv = &output.files[0];
                 (
-                    CommandResult::Completed { output: value, warnings },
+                    CommandResult::Completed {
+                        output: value,
+                        warnings,
+                    },
                     Some(FileEffect {
                         path: output.path.clone(),
                         bytes: csv.bytes,
@@ -1750,13 +1945,22 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                 },
                 None,
             ),
-            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings,
+                },
+                None,
+            ),
             CallOp::Execute => {
                 if let Err(refused) = write(&path, &bytes) {
                     return Ok((CommandResult::Failed { error: *refused }, None));
                 }
                 (
-                    CommandResult::Completed { output: value, warnings },
+                    CommandResult::Completed {
+                        output: value,
+                        warnings,
+                    },
                     Some(FileEffect {
                         path: output.path.clone(),
                         bytes: output.bytes,
@@ -1783,13 +1987,22 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                 },
                 None,
             ),
-            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings,
+                },
+                None,
+            ),
             CallOp::Execute => {
                 if let Err(refused) = write(&path, &bytes) {
                     return Ok((CommandResult::Failed { error: *refused }, None));
                 }
                 (
-                    CommandResult::Completed { output: value, warnings },
+                    CommandResult::Completed {
+                        output: value,
+                        warnings,
+                    },
                     Some(FileEffect {
                         path: output.path.clone(),
                         bytes: output.bytes,
@@ -1816,13 +2029,22 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                 },
                 None,
             ),
-            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings,
+                },
+                None,
+            ),
             CallOp::Execute => {
                 if let Err(refused) = write(&path, &bytes) {
                     return Ok((CommandResult::Failed { error: *refused }, None));
                 }
                 (
-                    CommandResult::Completed { output: value, warnings },
+                    CommandResult::Completed {
+                        output: value,
+                        warnings,
+                    },
                     Some(FileEffect {
                         path: output.path.clone(),
                         bytes: output.bytes,
@@ -1849,7 +2071,13 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                 },
                 None,
             ),
-            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings,
+                },
+                None,
+            ),
             CallOp::Execute => {
                 for (p, b) in &files {
                     if let Err(refused) = write(p, b) {
@@ -1858,7 +2086,10 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                 }
                 let main = &output.files[0];
                 (
-                    CommandResult::Completed { output: value, warnings },
+                    CommandResult::Completed {
+                        output: value,
+                        warnings,
+                    },
                     Some(FileEffect {
                         path: output.path.clone(),
                         bytes: main.bytes,
@@ -1885,13 +2116,22 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                 },
                 None,
             ),
-            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings,
+                },
+                None,
+            ),
             CallOp::Execute => {
                 if let Err(refused) = write(&path, &bytes) {
                     return Ok((CommandResult::Failed { error: *refused }, None));
                 }
                 (
-                    CommandResult::Completed { output: value, warnings },
+                    CommandResult::Completed {
+                        output: value,
+                        warnings,
+                    },
                     Some(FileEffect {
                         path: output.path.clone(),
                         bytes: output.bytes,
@@ -1918,13 +2158,22 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
                 },
                 None,
             ),
-            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings,
+                },
+                None,
+            ),
             CallOp::Execute => {
                 if let Err(refused) = write(&path, &bytes) {
                     return Ok((CommandResult::Failed { error: *refused }, None));
                 }
                 (
-                    CommandResult::Completed { output: value, warnings },
+                    CommandResult::Completed {
+                        output: value,
+                        warnings,
+                    },
                     Some(FileEffect {
                         path: output.path.clone(),
                         bytes: output.bytes,
@@ -1977,9 +2226,10 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
         });
     }
     if command == kentos_commands::FILE_EXPORT_MAPLIBRE {
-        let typed: kentos_commands::ExportMaplibre = serde_json::from_value(input).map_err(|e| {
-            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
-        })?;
+        let typed: kentos_commands::ExportMaplibre =
+            serde_json::from_value(input).map_err(|e| {
+                format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+            })?;
         let made = match crate::maplibre_export::make(doc, &typed) {
             Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
             Ok(made) => made,
@@ -2157,9 +2407,9 @@ pub(crate) fn run_typed_with_progress(doc:&Document,command:&str,op:CallOp,input
 fn version_of(command: &str) -> u32 {
     match command {
         kentos_commands::FILE_EXPORT_DWG => kentos_commands::FILE_EXPORT_DWG_VERSION,
-        kentos_commands::FILE_PUBLISH_SHEETS=>kentos_commands::FILE_PUBLISH_SHEETS_VERSION,
-        kentos_commands::FILE_PREFLIGHT_SHEETS=>kentos_commands::FILE_PREFLIGHT_SHEETS_VERSION,
-        kentos_commands::FILE_PUBLISH_STATUS=>kentos_commands::FILE_PUBLISH_STATUS_VERSION,
+        kentos_commands::FILE_PUBLISH_SHEETS => kentos_commands::FILE_PUBLISH_SHEETS_VERSION,
+        kentos_commands::FILE_PREFLIGHT_SHEETS => kentos_commands::FILE_PREFLIGHT_SHEETS_VERSION,
+        kentos_commands::FILE_PUBLISH_STATUS => kentos_commands::FILE_PUBLISH_STATUS_VERSION,
         kentos_commands::FILE_REVIEW_PACKAGE => kentos_commands::FILE_REVIEW_PACKAGE_VERSION,
         FILE_EXPORT_PDF => FILE_EXPORT_PDF_VERSION,
         FILE_EXPORT_BLOCK => FILE_EXPORT_BLOCK_VERSION,
@@ -2190,9 +2440,11 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
     };
     match command {
-        kentos_commands::FILE_EXPORT_DWG => serde_json::from_value::<kentos_commands::ExportDwg>(input.clone())
-            .map_err(text)
-            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_EXPORT_DWG => {
+            serde_json::from_value::<kentos_commands::ExportDwg>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
         FILE_EXPORT_DXF => serde_json::from_value::<ExportDxf>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
@@ -2249,27 +2501,49 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
                 .map_err(text)
                 .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
         }
-        kentos_commands::FILE_EXPORT_QML => serde_json::from_value::<kentos_commands::ExportQml>(input.clone())
-            .map_err(text)
-            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
-        kentos_commands::FILE_PREFLIGHT_SHEETS=>serde_json::from_value::<kentos_commands::PreflightSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
-        kentos_commands::FILE_PUBLISH_SHEETS=>serde_json::from_value::<kentos_commands::PublishSheets>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
-        kentos_commands::FILE_PUBLISH_STATUS=>serde_json::from_value::<kentos_commands::PublishStatus>(input.clone()).map_err(text).and_then(|t|serde_json::to_value(t).map_err(|e|e.to_string())),
-        kentos_commands::FILE_REVIEW_PACKAGE => serde_json::from_value::<kentos_commands::ReviewPackage>(input.clone())
-            .map_err(text)
-            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_EXPORT_QML => {
+            serde_json::from_value::<kentos_commands::ExportQml>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
+        kentos_commands::FILE_PREFLIGHT_SHEETS => {
+            serde_json::from_value::<kentos_commands::PreflightSheets>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
+        kentos_commands::FILE_PUBLISH_SHEETS => {
+            serde_json::from_value::<kentos_commands::PublishSheets>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
+        kentos_commands::FILE_PUBLISH_STATUS => {
+            serde_json::from_value::<kentos_commands::PublishStatus>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
+        kentos_commands::FILE_REVIEW_PACKAGE => {
+            serde_json::from_value::<kentos_commands::ReviewPackage>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
         FILE_PACKAGE => serde_json::from_value::<PackageProject>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
-        kentos_commands::FILE_EXCHANGE_CHECK => serde_json::from_value::<kentos_commands::ExchangeCheck>(input.clone())
-            .map_err(text)
-            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
-        kentos_commands::FILE_EXCHANGE_MATRIX => serde_json::from_value::<kentos_commands::ExchangeMatrix>(input.clone())
-            .map_err(text)
-            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
-        kentos_commands::FILE_RECOVER => serde_json::from_value::<kentos_commands::RecoverKcad>(input.clone())
-            .map_err(text)
-            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_EXCHANGE_CHECK => {
+            serde_json::from_value::<kentos_commands::ExchangeCheck>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
+        kentos_commands::FILE_EXCHANGE_MATRIX => {
+            serde_json::from_value::<kentos_commands::ExchangeMatrix>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
+        kentos_commands::FILE_RECOVER => {
+            serde_json::from_value::<kentos_commands::RecoverKcad>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
         _ => serde_json::from_value::<ExportPdf>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
@@ -2303,7 +2577,7 @@ pub fn call_without(doc: &mut Document, envelope: CallEnvelope, hidden: &[String
     };
     let state = match call::preflight(doc, &envelope, version, &input) {
         Ok(state) => state,
-        Err(answer) => return crate::delivery_integrity::checked_replay(&command,*answer),
+        Err(answer) => return crate::delivery_integrity::checked_replay(&command, *answer),
     };
     let mut answer = run_answer(doc, &command, version, envelope.op, &input, &state, hidden);
     call::complete(&mut answer, &input);
@@ -2391,7 +2665,7 @@ pub fn job_work(
             Ok(state) => state,
             Err(answer) => {
                 return JobOutcome {
-                    answer: crate::delivery_integrity::checked_replay(&command,*answer),
+                    answer: crate::delivery_integrity::checked_replay(&command, *answer),
                     copy: None,
                     effect: None,
                 };
@@ -2400,7 +2674,13 @@ pub fn job_work(
         // An agent's file is made without the fields the drawing hides (docs/adr/0743 §2); the call is checked
         // against the drawing as it is.
         let made = if hidden.is_empty() {
-            crate::package_data::typed_with_rows(&copy, &command, envelope.op, input.clone(), Some(progress))
+            crate::package_data::typed_with_rows(
+                &copy,
+                &command,
+                envelope.op,
+                input.clone(),
+                Some(progress),
+            )
         } else {
             let without = copy.reading_copy_without(&hidden);
             crate::package_data::typed_with_rows(
@@ -2480,7 +2760,7 @@ pub fn run_without(
 pub fn replay_row(doc: &mut Document, row: &CallRecord) -> Option<ReplayStep> {
     let command = row.command.as_deref()?;
     let mut input = row.input.clone()?;
-    if command==kentos_commands::FILE_PUBLISH_SHEETS {
+    if command == kentos_commands::FILE_PUBLISH_SHEETS {
         return Some(crate::delivery_integrity::replay_row(row));
     }
     // A plan writes nothing: the file written then may be there.

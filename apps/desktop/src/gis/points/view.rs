@@ -313,7 +313,11 @@ impl App {
         count: usize,
     ) -> Element<'_, Message> {
         let numeric = col == EditColumn::Z;
-        let shown = if numeric { label::mono(value) } else { label::body(value) };
+        let shown = if numeric {
+            label::mono(value)
+        } else {
+            label::body(value)
+        };
         let Some(slot) = slot.filter(|s| self.editable_coordinate_point(*s)) else {
             return shown.into();
         };
@@ -333,7 +337,11 @@ impl App {
                 .width(Fill)
                 .height(kentos_ui::widget::table::row_height())
                 .align_y(Center)
-                .align_x(if numeric { iced::alignment::Horizontal::Right } else { iced::alignment::Horizontal::Left }),
+                .align_x(if numeric {
+                    iced::alignment::Horizontal::Right
+                } else {
+                    iced::alignment::Horizontal::Left
+                }),
         )
         .interaction(iced::mouse::Interaction::Text)
         .on_press(msg(Event::EditCoordinate(slot, col)))
@@ -401,7 +409,9 @@ impl App {
         let draft = panel.draft.clone();
         // The draft's layer, named in its Katman cell as above the table (docs/adr/9320).
         let draft_target = draft.as_ref().and_then(|_| self.draft_target());
-        let draft_layer = draft_target.as_ref().map_or_else(String::new, |c| c.name.clone());
+        let draft_layer = draft_target
+            .as_ref()
+            .map_or_else(String::new, |c| c.name.clone());
         let count = shown.len() + usize::from(draft.is_some());
         // The cell at row `i`, column `j`: the editor's field when it is edited, its value else.
         let cell =
@@ -441,7 +451,12 @@ impl App {
                 // file list (docs/adr/1540); any edited cell takes a double click.
                 let alone = matches!(target, Target::Point(s)
                     if selection.len() == 1 && selection.contains(s));
-                let survey_cell = map && !draft_row && matches!(col, Some(EditColumn::Name | EditColumn::Code | EditColumn::Z));
+                let survey_cell = map
+                    && !draft_row
+                    && matches!(
+                        col,
+                        Some(EditColumn::Name | EditColumn::Code | EditColumn::Z)
+                    );
                 // Every editable cell takes its click or double click over its whole row height and column width
                 // (GIS-062): an empty elevation's middle or the space beside a short code is the cell too.
                 let shown = if col.is_some() {
@@ -449,15 +464,22 @@ impl App {
                         .width(Fill)
                         .height(kentos_ui::widget::table::row_height())
                         .align_y(Center)
-                        .align_x(if numeric { iced::alignment::Horizontal::Right } else { iced::alignment::Horizontal::Left })
+                        .align_x(if numeric {
+                            iced::alignment::Horizontal::Right
+                        } else {
+                            iced::alignment::Horizontal::Left
+                        })
                         .into()
                 } else {
                     shown
                 };
                 match col {
-                    Some(col) if survey_cell || (alone && matches!(col, EditColumn::Name | EditColumn::Code)) => mouse_area(shown)
-                        .on_press(msg(Event::Edit(i, j)))
-                        .into(),
+                    Some(col)
+                        if survey_cell
+                            || (alone && matches!(col, EditColumn::Name | EditColumn::Code)) =>
+                    {
+                        mouse_area(shown).on_press(msg(Event::Edit(i, j))).into()
+                    }
                     Some(_) => mouse_area(shown)
                         .on_double_click(msg(Event::Edit(i, j)))
                         .into(),
@@ -552,24 +574,39 @@ impl App {
         chosen: Option<super::target::Choice>,
     ) -> Element<'_, Message> {
         let choices = super::target::choices(doc);
-        let mut line = row![label::muted(texts::DRAFT_LAYER)].spacing(10).align_y(Center);
+        let mut line = row![label::muted(texts::DRAFT_LAYER)]
+            .spacing(10)
+            .align_y(Center);
         if choices.is_empty() {
             line = line
                 .push(icon(Icon::Warning).size(14.0).tone(Tone::Warning))
                 .push(label::body(texts::NO_POINT_LAYER))
-                .push(one_line_button(texts::CREATE_LAYER, msg(Event::CreateLayer)));
+                .push(one_line_button(
+                    texts::CREATE_LAYER,
+                    msg(Event::CreateLayer),
+                ));
         } else {
-            let names: Vec<Choice> = choices.iter().map(|c| Choice::new(c.name.clone())).collect();
+            let names: Vec<Choice> = choices
+                .iter()
+                .map(|c| Choice::new(c.name.clone()))
+                .collect();
             let ids: Vec<String> = choices.iter().map(|c| c.id.clone()).collect();
-            let at = chosen.as_ref().and_then(|c| ids.iter().position(|id| *id == c.id));
-            let select = Select::new(names, at, move |i| msg(Event::DraftLayer(ids.get(i).cloned().unwrap_or_default())));
+            let at = chosen
+                .as_ref()
+                .and_then(|c| ids.iter().position(|id| *id == c.id));
+            let select = Select::new(names, at, move |i| {
+                msg(Event::DraftLayer(ids.get(i).cloned().unwrap_or_default()))
+            });
             line = line.push(container(select).width(Length::Fixed(200.0)));
             // The list names the layer; the words say what Enter does with it.
             line = match &chosen {
                 Some(c) if c.closed => line
                     .push(icon(Icon::Warning).size(14.0).tone(Tone::Warning))
                     .push(label::body(texts::DRAFT_CLOSED))
-                    .push(one_line_button(texts::START_EDITING, msg(Event::StartEditing))),
+                    .push(one_line_button(
+                        texts::START_EDITING,
+                        msg(Event::StartEditing),
+                    )),
                 Some(c) if c.data => line.push(label::muted(texts::DRAFT_TO_EDITS)),
                 Some(_) => line.push(label::muted(texts::DRAFT_TO_LAYER)),
                 None => line,

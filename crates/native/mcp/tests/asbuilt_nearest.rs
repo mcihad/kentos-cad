@@ -10,9 +10,16 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_nearest_distances_over_mcp_are_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.asbuilt.check.json")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-asbuilt-nearest-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.asbuilt.check.json"
+    ))
+    .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-asbuilt-nearest-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -22,14 +29,22 @@ fn the_nearest_distances_over_mcp_are_the_case_s() {
         .as_array()
         .unwrap()
         .iter()
-        .find(|c| c["name"].as_str().unwrap().starts_with("yüzeye en yakın uzaklık: aynı sınır"))
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .unwrap()
+                .starts_with("yüzeye en yakın uzaklık: aynı sınır")
+        })
         .unwrap()["steps"][0]
         .clone();
     let mut args = step["input"].clone();
     args["drawing"] = drawing;
     let r = call(&mut server, "cad.asbuilt.check", args);
     assert_eq!(r["isError"], false, "{r}");
-    let (got, want) = (&r["structuredContent"]["output"]["points"], &step["result"]["output"]["points"]);
+    let (got, want) = (
+        &r["structuredContent"]["output"]["points"],
+        &step["result"]["output"]["points"],
+    );
     for (g, w) in got.as_array().unwrap().iter().zip(want.as_array().unwrap()) {
         assert_eq!(g["name"], w["name"]);
         match (g["nearest"].as_f64(), w["nearest"].as_f64()) {
@@ -38,7 +53,11 @@ fn the_nearest_distances_over_mcp_are_the_case_s() {
         }
         if let (Some(a), Some(b)) = (g["nearestAt"].as_array(), w["nearestAt"].as_array()) {
             for (x, y) in a.iter().zip(b) {
-                assert!((x.as_f64().unwrap() - y.as_f64().unwrap()).abs() < 1e-6, "{}", g["name"]);
+                assert!(
+                    (x.as_f64().unwrap() - y.as_f64().unwrap()).abs() < 1e-6,
+                    "{}",
+                    g["name"]
+                );
             }
         }
         assert_eq!(g["flags"], w["flags"], "{}", g["name"]);

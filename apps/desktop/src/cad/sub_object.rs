@@ -28,7 +28,12 @@ impl App {
         let mut out = self.vertex_marks();
         out.extend(self.sub_object_point());
         // Eğimle kot ver's range: its start and end vertices (docs/adr/2980).
-        out.extend(self.grade_marks().1.into_iter().map(|p| Vec2::new(p.x, p.y)));
+        out.extend(
+            self.grade_marks()
+                .1
+                .into_iter()
+                .map(|p| Vec2::new(p.x, p.y)),
+        );
         out
     }
 

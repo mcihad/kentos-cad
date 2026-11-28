@@ -21,7 +21,9 @@ use axum::http::{HeaderMap, HeaderValue, header};
 use axum::response::{IntoResponse, Redirect, Response};
 use kentos_application::identity::{self, Actor};
 use kentos_application::{AppError, api_keys, tenancy};
-use kentos_contracts::{AuthConfig, LoginRequest, Me, OidcLoginInfo, SignInMethod, TokenScope, UserView};
+use kentos_contracts::{
+    AuthConfig, LoginRequest, Me, OidcLoginInfo, SignInMethod, TokenScope, UserView,
+};
 
 use super::AppState;
 use super::error::{Body, Failure, request_id};
@@ -105,7 +107,8 @@ impl FromRequestParts<AppState> for Caller {
                 };
             }
             if token.starts_with(api_keys::TOKEN_PREFIX) {
-                let Some((actor, scope)) = api_keys::token_actor(db, token).await.map_err(fail)? else {
+                let Some((actor, scope)) = api_keys::token_actor(db, token).await.map_err(fail)?
+                else {
                     return Err(fail(AppError::Unauthenticated(
                         "Erişim anahtarı geçersiz, süresi dolmuş ya da silinmiş.".into(),
                     )));

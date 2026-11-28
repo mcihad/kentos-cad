@@ -28,7 +28,15 @@ pub(super) const ENTRIES: &[Entry] = &[
         id: "cad.entities.raise",
         refusals: &[
             REVISION,
-            &["invalid_uid", "entity_not_found", "not_a_path", "wrong_place", "invalid_input", "elevation_missing", "layer_locked"],
+            &[
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_path",
+                "wrong_place",
+                "invalid_input",
+                "elevation_missing",
+                "layer_locked",
+            ],
         ],
         warnings: &[],
         targets: none,
@@ -57,7 +65,14 @@ pub(super) const ENTRIES: &[Entry] = &[
     // Tarama uyumu denetimi (plan/map-cad.md MAP-13, docs/adr/1500).
     Entry {
         id: "cad.pointclouds.overlap",
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_input", "layer_not_found", "too_many_cloud_points"]],
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_pointcloud",
+            "invalid_input",
+            "layer_not_found",
+            "too_many_cloud_points",
+        ]],
         warnings: &["cloud_source_unreadable"],
         targets: none,
     },
@@ -65,30 +80,64 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.pointclouds.place",
         refusals: &[
-            &["invalid_uid", "entity_not_found", "not_a_pointcloud", "layer_locked", "not_finite", "invalid_input"],
+            &[
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_pointcloud",
+                "layer_locked",
+                "not_finite",
+                "invalid_input",
+            ],
             REVISION,
         ],
         warnings: &[],
-        targets: || vec![target(None, &["pointcloud"], &[], Some("not_a_pointcloud"), None)],
+        targets: || {
+            vec![target(
+                None,
+                &["pointcloud"],
+                &[],
+                Some("not_a_pointcloud"),
+                None,
+            )]
+        },
     },
     // Tarama kaydı denetimi (plan/map-cad.md MAP-13, docs/adr/1800).
     // Tarama ağı dengelemesi (plan/map-cad.md MAP-13, docs/adr/4720); the registration's own refusals and warnings.
     Entry {
         id: "cad.pointclouds.network",
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_input"]],
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_pointcloud",
+            "invalid_input",
+        ]],
         warnings: &[],
         targets: none,
     },
     Entry {
         id: "cad.pointclouds.register",
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_input", "layer_not_found", "too_many_cloud_points"]],
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_pointcloud",
+            "invalid_input",
+            "layer_not_found",
+            "too_many_cloud_points",
+        ]],
         warnings: &["cloud_source_unreadable"],
         targets: none,
     },
     // Ortofoto doğruluk denetimi (plan/map-cad.md MAP-12, docs/adr/1480).
     Entry {
         id: "cad.orthophoto.check",
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "layer_not_found", "invalid_input"]],
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_raster",
+            "crs_mismatch",
+            "layer_not_found",
+            "invalid_input",
+        ]],
         warnings: &[],
         targets: none,
     },
@@ -96,7 +145,15 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.orthophoto.compare",
         // The seam's image file (docs/adr/2460): file_not_found.
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "layer_not_found", "invalid_input", "file_not_found"]],
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_raster",
+            "crs_mismatch",
+            "layer_not_found",
+            "invalid_input",
+            "file_not_found",
+        ]],
         warnings: &[],
         targets: none,
     },
@@ -104,28 +161,66 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.orthophoto.seamlines",
         // The radiometric seam's image files: invalid_file_path, file_not_found, import_unreadable.
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "invalid_input", "layer_not_found", "layer_locked", "invalid_revision", "revision_conflict", "file_not_found"]],
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_raster",
+            "crs_mismatch",
+            "invalid_input",
+            "layer_not_found",
+            "layer_locked",
+            "invalid_revision",
+            "revision_conflict",
+            "file_not_found",
+        ]],
         warnings: &[],
         targets: none,
     },
     // Birleşme çizgisi ağı ve ayak izi (plan/map-cad.md MAP-12, docs/adr/5260).
     Entry {
         id: "cad.orthophoto.network",
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "invalid_input", "layer_not_found", "layer_locked", "invalid_revision", "revision_conflict"]],
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_raster",
+            "crs_mismatch",
+            "invalid_input",
+            "layer_not_found",
+            "layer_locked",
+            "invalid_revision",
+            "revision_conflict",
+        ]],
         warnings: &[],
         targets: none,
     },
     Entry {
         id: "cad.orthophoto.footprint",
         // The image's file: invalid_file_path, file_not_found, import_unreadable.
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_raster", "crs_mismatch", "invalid_input", "layer_not_found", "layer_locked", "invalid_revision", "revision_conflict", "file_not_found"]],
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_raster",
+            "crs_mismatch",
+            "invalid_input",
+            "layer_not_found",
+            "layer_locked",
+            "invalid_revision",
+            "revision_conflict",
+            "file_not_found",
+        ]],
         warnings: &[],
         targets: none,
     },
     // Düzenleme dağıtım taslağı (plan/map-cad.md MAP-11, docs/adr/1460).
     Entry {
         id: "cad.readjustment.distribute",
-        refusals: &[&["invalid_input", "area_mismatch", "duplicate_holder", "shares_not_whole", "needs_rule"]],
+        refusals: &[&[
+            "invalid_input",
+            "area_mismatch",
+            "duplicate_holder",
+            "shares_not_whole",
+            "needs_rule",
+        ]],
         // docs/adr/5080: an answer by value is no rule of the regulation.
         warnings: &["value_basis_not_a_rule"],
         targets: none,
@@ -133,7 +228,13 @@ pub(super) const ENTRIES: &[Entry] = &[
     // Düzenleme kapsamı (plan/map-cad.md MAP-11, docs/adr/2060).
     Entry {
         id: "cad.readjustment.scope",
-        refusals: &[&["invalid_input", "invalid_uid", "entity_not_found", "not_an_area", "not_a_parcel"]],
+        refusals: &[&[
+            "invalid_input",
+            "invalid_uid",
+            "entity_not_found",
+            "not_an_area",
+            "not_a_parcel",
+        ]],
         warnings: &[],
         targets: none,
     },
@@ -143,9 +244,27 @@ pub(super) const ENTRIES: &[Entry] = &[
         refusals: &[
             SHEET_CORE,
             REVISION,
-            &["invalid_input", "invalid_uid", "entity_not_found", "not_an_area", "not_a_parcel"],
-            &["no_partial_parcels", "no_identity", "duplicate_parcel", "layer_not_found", "invalid_group_name"],
-            &["unknown_template", "unknown_variable", "invalid_options", "not_fixed_map", "separation_sheet_exists"],
+            &[
+                "invalid_input",
+                "invalid_uid",
+                "entity_not_found",
+                "not_an_area",
+                "not_a_parcel",
+            ],
+            &[
+                "no_partial_parcels",
+                "no_identity",
+                "duplicate_parcel",
+                "layer_not_found",
+                "invalid_group_name",
+            ],
+            &[
+                "unknown_template",
+                "unknown_variable",
+                "invalid_options",
+                "not_fixed_map",
+                "separation_sheet_exists",
+            ],
             &["book_unreadable", "bad_asset"],
         ],
         // docs/adr/5080: a number outside that touches something wherever it goes.
@@ -270,7 +389,15 @@ pub(super) const ENTRIES: &[Entry] = &[
     // İzleme incelemesi (plan/map-cad.md MAP-19, docs/adr/5220).
     Entry {
         id: "cad.asbuilt.review",
-        refusals: &[REVISION, &["invalid_input", "unknown_monitoring_review", "invalid_asbuilt_check", "layer_not_found"]],
+        refusals: &[
+            REVISION,
+            &[
+                "invalid_input",
+                "unknown_monitoring_review",
+                "invalid_asbuilt_check",
+                "layer_not_found",
+            ],
+        ],
         warnings: &[],
         targets: none,
     },
@@ -321,7 +448,12 @@ pub(super) const ENTRIES: &[Entry] = &[
     // Sınır grafiği (plan/map-cad.md MAP-08, docs/adr/2000).
     Entry {
         id: "cad.parcels.boundaries",
-        refusals: &[&["invalid_uid", "entity_not_found", "not_a_parcel", "invalid_input"]],
+        refusals: &[&[
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_parcel",
+            "invalid_input",
+        ]],
         warnings: &[],
         targets: none,
     },
@@ -381,7 +513,12 @@ pub(super) const ENTRIES: &[Entry] = &[
     // Parsel alan çizelgesi (docs/adr/9306): the areas it lists; another object is refused as no parcel.
     Entry {
         id: "cad.parcels.report",
-        refusals: &[&["invalid_input", "invalid_uid", "entity_not_found", "not_a_parcel"]],
+        refusals: &[&[
+            "invalid_input",
+            "invalid_uid",
+            "entity_not_found",
+            "not_a_parcel",
+        ]],
         warnings: &[],
         targets: || vec![target(None, &["polygon"], &[], Some("not_a_parcel"), None)],
     },
@@ -389,7 +526,13 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.parcels.table",
         refusals: &[
-            &["invalid_input", "invalid_uid", "entity_not_found", "not_a_parcel", "no_objects"],
+            &[
+                "invalid_input",
+                "invalid_uid",
+                "entity_not_found",
+                "not_a_parcel",
+                "no_objects",
+            ],
             &["not_finite", "invalid_table"],
             LAYER,
             REVISION,
@@ -402,7 +545,12 @@ pub(super) const ENTRIES: &[Entry] = &[
         id: "cad.topology.clean",
         refusals: &[
             REVISION,
-            &["invalid_input", "invalid_uid", "entity_not_found", "clean_beyond_acceptance"],
+            &[
+                "invalid_input",
+                "invalid_uid",
+                "entity_not_found",
+                "clean_beyond_acceptance",
+            ],
         ],
         warnings: &[],
         targets: none,
@@ -440,13 +588,26 @@ pub(super) const ENTRIES: &[Entry] = &[
                 "layer_locked",
             ],
         ],
-        warnings: &["unknown_code", "control_unknown", "string_too_short", "area_not_closed", "string_already_drawn"],
+        warnings: &[
+            "unknown_code",
+            "control_unknown",
+            "string_too_short",
+            "area_not_closed",
+            "string_already_drawn",
+        ],
         targets: none,
     },
     // The scales between the ground, the ellipsoid and the map (plan/map-cad.md MAP-02, docs/adr/1231).
     Entry {
         id: "cad.crs.factors",
-        refusals: &[&["invalid_input", "no_system", "no_point_scale", "heights_unknown", "geoid_required", "geoid_missing"]],
+        refusals: &[&[
+            "invalid_input",
+            "no_system",
+            "no_point_scale",
+            "heights_unknown",
+            "geoid_required",
+            "geoid_missing",
+        ]],
         warnings: &["point_beyond_system", "points_outside"],
         targets: none,
     },
@@ -562,13 +723,22 @@ pub(super) const ENTRIES: &[Entry] = &[
             "session_covariance_invalid",
             "no_velocity_grid",
         ]],
-        warnings: &["network_rules_failed", "network_unchecked", "session_correlations_unused"],
+        warnings: &[
+            "network_rules_failed",
+            "network_unchecked",
+            "session_correlations_unused",
+        ],
         targets: none,
     },
     // KentOS Harita's work structure (plan/map-cad.md MAP-01, docs/adr/1200).
     Entry {
         id: "map.work.query",
-        refusals: &[&["not_a_map_project", "invalid_file_path", "invalid_uid", "entity_not_found"]],
+        refusals: &[&[
+            "not_a_map_project",
+            "invalid_file_path",
+            "invalid_uid",
+            "entity_not_found",
+        ]],
         warnings: &[],
         targets: none,
     },
@@ -652,7 +822,13 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.alignments.import",
         refusals: &[
-            &["not_a_road_project", "file_not_found", "import_unreadable", "landxml_no_alignment", "invalid_alignment"],
+            &[
+                "not_a_road_project",
+                "file_not_found",
+                "import_unreadable",
+                "landxml_no_alignment",
+                "invalid_alignment",
+            ],
             REVISION,
         ],
         warnings: &["landxml_left"],
@@ -660,7 +836,13 @@ pub(super) const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "file.export.ifc",
-        refusals: &[&["not_a_road_project", "invalid_file_path", "file_exists", "unknown_alignment", "invalid_ifc"]],
+        refusals: &[&[
+            "not_a_road_project",
+            "invalid_file_path",
+            "file_exists",
+            "unknown_alignment",
+            "invalid_ifc",
+        ]],
         warnings: &["export_losses"],
         targets: none,
     },
@@ -674,7 +856,11 @@ pub(super) const ENTRIES: &[Entry] = &[
     // An IFC file read and described (plan/ifc-uyum.md IFC-12, docs/adr/8073 §6).
     Entry {
         id: "cad.ifc.inspect",
-        refusals: &[&["invalid_file_path", "ifc_unreadable", "ifc_object_not_found"]],
+        refusals: &[&[
+            "invalid_file_path",
+            "ifc_unreadable",
+            "ifc_object_not_found",
+        ]],
         warnings: &["ifc_read_findings"],
         targets: none,
     },
@@ -742,7 +928,12 @@ pub(super) const ENTRIES: &[Entry] = &[
     // KentOS Yol's stakeout table (plan/road.md Y10, docs/adr/0908).
     Entry {
         id: "road.stakeout.query",
-        refusals: &[&["not_a_road_project", "unknown_corridor", "invalid_stakeout", "stakeout_no_ground"]],
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_corridor",
+            "invalid_stakeout",
+            "stakeout_no_ground",
+        ]],
         warnings: &[
             "corridor_stale",
             "corridor_unsolved",
@@ -774,9 +965,23 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.sheets.plan",
         refusals: &[
-            &["not_a_road_project", "unknown_alignment", "unknown_road_profile", "invalid_road_sheets", "unknown_template"],
+            &[
+                "not_a_road_project",
+                "unknown_alignment",
+                "unknown_road_profile",
+                "invalid_road_sheets",
+                "unknown_template",
+            ],
             &["invalid_options", "not_fixed_map", "bad_drawing_info"],
-            &["unknown_corridor", "invalid_label", "invalid_road_corridor", "no_terrain", "unknown_haul", "invalid_haul", "unknown_volume"],
+            &[
+                "unknown_corridor",
+                "invalid_label",
+                "invalid_road_corridor",
+                "no_terrain",
+                "unknown_haul",
+                "invalid_haul",
+                "unknown_volume",
+            ],
             LAYER,
             REVISION,
         ],
@@ -786,24 +991,54 @@ pub(super) const ENTRIES: &[Entry] = &[
     Entry {
         id: "road.sheets.sections",
         refusals: &[
-            &["not_a_road_project", "unknown_section_set", "invalid_label", "invalid_places", "no_terrain"],
-            &["invalid_road_sheets", "unknown_template", "invalid_options", "not_fixed_map", "bad_drawing_info"],
+            &[
+                "not_a_road_project",
+                "unknown_section_set",
+                "invalid_label",
+                "invalid_places",
+                "no_terrain",
+            ],
+            &[
+                "invalid_road_sheets",
+                "unknown_template",
+                "invalid_options",
+                "not_fixed_map",
+                "bad_drawing_info",
+            ],
             LAYER,
             REVISION,
         ],
-        warnings: &["layer_hidden", "section_set_stale", "section_open", "section_ground_missing"],
+        warnings: &[
+            "layer_hidden",
+            "section_set_stale",
+            "section_open",
+            "section_ground_missing",
+        ],
         targets: none,
     },
     Entry {
         id: "road.alignments.fit",
-        refusals: &[&["not_a_road_project", "entity_not_found", "invalid_alignment_fit"], REVISION],
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "entity_not_found",
+                "invalid_alignment_fit",
+            ],
+            REVISION,
+        ],
         warnings: &["alignment_fit_deviation"],
         targets: none,
     },
     Entry {
         id: "road.profiles.fit",
         refusals: &[
-            &["not_a_road_project", "unknown_alignment", "unknown_terrain", "entity_not_found", "invalid_profile_fit"],
+            &[
+                "not_a_road_project",
+                "unknown_alignment",
+                "unknown_terrain",
+                "entity_not_found",
+                "invalid_profile_fit",
+            ],
             REVISION,
         ],
         warnings: &["profile_fit_deviation"],
@@ -817,31 +1052,68 @@ pub(super) const ENTRIES: &[Entry] = &[
     },
     Entry {
         id: "road.alignments.impact",
-        refusals: &[&["not_a_road_project", "unknown_alignment", "invalid_alignment", "invalid_alignment_impact"]],
-        warnings: &["alignment_impact_unresolved", "alignment_impact_approved", "alignment_reverse_stale"],
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_alignment",
+            "invalid_alignment",
+            "invalid_alignment_impact",
+        ]],
+        warnings: &[
+            "alignment_impact_unresolved",
+            "alignment_impact_approved",
+            "alignment_reverse_stale",
+        ],
         targets: none,
     },
     Entry {
         id: "road.profiles.impact",
-        refusals: &[&["not_a_road_project", "unknown_road_profile", "invalid_road_profile", "profile_curves_overlap", "invalid_profile_impact"]],
+        refusals: &[&[
+            "not_a_road_project",
+            "unknown_road_profile",
+            "invalid_road_profile",
+            "profile_curves_overlap",
+            "invalid_profile_impact",
+        ]],
         warnings: &["profile_impact_approved"],
         targets: none,
     },
     Entry {
         id: "road.volumes.states",
         refusals: &[&["not_a_road_project", "unknown_volume", "invalid_volume"]],
-        warnings: &["volume_factor_physics", "volume_unfactored", "corridor_stale", "volume_gap", "volume_uncovered"],
+        warnings: &[
+            "volume_factor_physics",
+            "volume_unfactored",
+            "corridor_stale",
+            "volume_gap",
+            "volume_uncovered",
+        ],
         targets: none,
     },
     Entry {
         id: "road.volumes.ledger",
-        refusals: &[&["invalid_volume_ledger", "not_a_road_project", "unknown_volume", "invalid_volume"]],
-        warnings: &["corridor_stale", "volume_gap", "volume_uncovered", "volume_unfactored", "volume_changed"],
+        refusals: &[&[
+            "invalid_volume_ledger",
+            "not_a_road_project",
+            "unknown_volume",
+            "invalid_volume",
+        ]],
+        warnings: &[
+            "corridor_stale",
+            "volume_gap",
+            "volume_uncovered",
+            "volume_unfactored",
+            "volume_changed",
+        ],
         targets: none,
     },
     Entry {
         id: "road.volumes.uncertainty",
-        refusals: &[&["invalid_volume_uncertainty", "not_a_road_project", "unknown_volume", "invalid_volume"]],
+        refusals: &[&[
+            "invalid_volume_uncertainty",
+            "not_a_road_project",
+            "unknown_volume",
+            "invalid_volume",
+        ]],
         warnings: &[
             "volume_uncertainty_near_zero",
             "volume_uncertainty_over",
@@ -861,18 +1133,34 @@ pub(super) const ENTRIES: &[Entry] = &[
             "unproven_heights",
             "invalid_volume",
         ]],
-        warnings: &["heights_assumed", "volume_progress_uncovered", "volume_progress_backward"],
+        warnings: &[
+            "heights_assumed",
+            "volume_progress_uncovered",
+            "volume_progress_backward",
+        ],
         targets: none,
     },
     Entry {
         id: "road.volumes.compare",
-        refusals: &[&["invalid_volume_compare", "not_a_road_project", "unknown_volume"]],
+        refusals: &[&[
+            "invalid_volume_compare",
+            "not_a_road_project",
+            "unknown_volume",
+        ]],
         warnings: &["volume_compare_broken"],
         targets: none,
     },
     Entry {
         id: "road.volumes.approve",
-        refusals: &[&["not_a_road_project", "unknown_volume", "volume_not_approved", "invalid_volume"], REVISION],
+        refusals: &[
+            &[
+                "not_a_road_project",
+                "unknown_volume",
+                "volume_not_approved",
+                "invalid_volume",
+            ],
+            REVISION,
+        ],
         warnings: &[],
         targets: none,
     },

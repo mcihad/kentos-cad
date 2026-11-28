@@ -232,8 +232,16 @@ fn turned(w: &WallFields) -> WallFields {
     out.joins = WallJoins {
         start: w.joins.end,
         end: w.joins.start,
-        start_pass: w.joins.end_pass.as_ref().map(|p| p.iter().rev().copied().collect()),
-        end_pass: w.joins.start_pass.as_ref().map(|p| p.iter().rev().copied().collect()),
+        start_pass: w
+            .joins
+            .end_pass
+            .as_ref()
+            .map(|p| p.iter().rev().copied().collect()),
+        end_pass: w
+            .joins
+            .start_pass
+            .as_ref()
+            .map(|p| p.iter().rev().copied().collect()),
     };
     out
 }
@@ -282,8 +290,10 @@ fn joined(found: &[(usize, Slot, &WallEntity)]) -> Result<WallFields, Stop> {
             "uids[0]",
         ));
     }
-    let mut left: Vec<(usize, &WallFields)> =
-        found[1..].iter().map(|(at, _, w)| (*at, &*w.wall)).collect();
+    let mut left: Vec<(usize, &WallFields)> = found[1..]
+        .iter()
+        .map(|(at, _, w)| (*at, &*w.wall))
+        .collect();
     while !left.is_empty() {
         let (start, end) = (chain.pts[0], chain.pts[chain.pts.len() - 1]);
         let mut took = None;
@@ -680,7 +690,10 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             }
             each(&mut work, &|at, w| {
                 if w.wall.closed
-                    && (start.is_some() || end.is_some() || start_pass.is_some() || end_pass.is_some())
+                    && (start.is_some()
+                        || end.is_some()
+                        || start_pass.is_some()
+                        || end_pass.is_some())
                 {
                     return Err(fail(
                         codes::WALL_CLOSED,
@@ -711,7 +724,13 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
             for (k, (slot, w)) in work.updates.iter().enumerate() {
                 for (start, given) in [(true, start_pass), (false, end_pass)] {
                     if matches!(given, Some(Some(_))) {
-                        crate::wall_reference::node_supported(doc, *slot, w, start, &format!("uids[{k}]"))?;
+                        crate::wall_reference::node_supported(
+                            doc,
+                            *slot,
+                            w,
+                            start,
+                            &format!("uids[{k}]"),
+                        )?;
                     }
                 }
             }

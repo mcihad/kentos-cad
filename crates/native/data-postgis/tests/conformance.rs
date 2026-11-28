@@ -55,7 +55,10 @@ fn the_rights_on_rows_are_read_each_on_its_own() {
             title: None,
             description: None,
             key: "fid".into(),
-            fields: vec![kentos_data::Field::new("ad", kentos_data::FieldKind::Text { max: Some(8) })],
+            fields: vec![kentos_data::Field::new(
+                "ad",
+                kentos_data::FieldKind::Text { max: Some(8) },
+            )],
             geometry: None,
             spatial_index: false,
             system: None,
@@ -64,8 +67,13 @@ fn the_rights_on_rows_are_read_each_on_its_own() {
     )
     .expect("table");
     tx.commit().expect("commit");
-    let caps = source.capabilities("public.kentos_yetki").expect("its capabilities");
-    assert!(caps.insert && caps.update_values && caps.delete && !caps.update_geometry, "{caps:?}");
+    let caps = source
+        .capabilities("public.kentos_yetki")
+        .expect("its capabilities");
+    assert!(
+        caps.insert && caps.update_values && caps.delete && !caps.update_geometry,
+        "{caps:?}"
+    );
     let mut tx = source.begin().expect("begin");
     tx.drop_table("public.kentos_yetki").expect("drop");
     tx.commit().expect("commit");
@@ -81,21 +89,42 @@ fn a_query_layer_is_run_read_only() {
     };
     let source = PostGis.open(&address).expect("open");
     let point = "SELECT 1::int4 AS fid, ST_SetSRID(ST_MakePoint(0, 0), 5256) AS geom";
-    let reading = QueryTable { sql: point.into(), key: "fid".into(), geometry: Some("geom".into()) };
+    let reading = QueryTable {
+        sql: point.into(),
+        key: "fid".into(),
+        geometry: Some("geom".into()),
+    };
     let schema = source.schema(&reading.text()).expect("a reading query");
     assert_eq!(schema.geometry.as_ref().and_then(|g| g.srid), Some(5256));
-    let writing = QueryTable { sql: format!("{point}, lo_create(0) AS nesne"), ..reading.clone() };
-    let refused = source.schema(&writing.text()).expect_err("a query that writes");
+    let writing = QueryTable {
+        sql: format!("{point}, lo_create(0) AS nesne"),
+        ..reading.clone()
+    };
+    let refused = source
+        .schema(&writing.text())
+        .expect_err("a query that writes");
     assert!(refused.to_string().contains("read-only"), "{refused}");
     // Without a geometry its shape does not run it: counting it, reading its values and its groups do, read-only too.
-    let table = QueryTable { geometry: None, ..writing }.text();
-    source.schema(&table).expect("its columns, without running it");
+    let table = QueryTable {
+        geometry: None,
+        ..writing
+    }
+    .text();
+    source
+        .schema(&table)
+        .expect("its columns, without running it");
     let all = kentos_data::Request::all();
-    let counted = source.count(&table, &all, false).expect_err("counted read-only");
+    let counted = source
+        .count(&table, &all, false)
+        .expect_err("counted read-only");
     assert!(counted.to_string().contains("read-only"), "{counted}");
-    let values = source.unique(&table, "fid", None, 10).expect_err("its values read read-only");
+    let values = source
+        .unique(&table, "fid", None, 10)
+        .expect_err("its values read read-only");
     assert!(values.to_string().contains("read-only"), "{values}");
-    let groups = source.groups(&table, "fid", None, 10).expect_err("its groups read read-only");
+    let groups = source
+        .groups(&table, "fid", None, 10)
+        .expect_err("its groups read read-only");
     assert!(groups.to_string().contains("read-only"), "{groups}");
 }
 
@@ -117,11 +146,20 @@ fn the_database_keeps_projects_in_a_schema() {
     let source = PostGis.open(&address).expect("open");
     let store = source.project_store().expect("a database keeps projects");
     let report = conformance::projects(store, Some("public")).expect("projects");
-    assert!(report.failures.is_empty(), "{} of {}:\n{}", report.failures.len(), report.checks, report.failures.join("\n"));
+    assert!(
+        report.failures.is_empty(),
+        "{} of {}:\n{}",
+        report.failures.len(),
+        report.checks,
+        report.failures.join("\n")
+    );
     assert!(report.checks >= 14, "{} checks", report.checks);
     // The projects table is not a layer of the catalog.
     let tables = source.tables().expect("tables");
-    assert!(tables.iter().all(|t| t.name != "public.kentos_projects"), "the projects table listed as a layer");
+    assert!(
+        tables.iter().all(|t| t.name != "public.kentos_projects"),
+        "the projects table listed as a layer"
+    );
 }
 
 /// Write receipts (docs/adr/9126): set up only when asked, a receipt goes in with the rows in one transaction and is
@@ -137,11 +175,19 @@ fn a_receipt_commits_with_its_rows_and_only_with_them() {
     source.set_up_receipts(scope).expect("set up");
     assert!(source.receipts(scope).expect("asked"));
     let id = format!("sinama-{}", std::process::id());
-    let receipt = kentos_data::Receipt { id: id.clone(), by: Some("sınama".into()), written: "{\"t\": {\"added\": []}}".into() };
+    let receipt = kentos_data::Receipt {
+        id: id.clone(),
+        by: Some("sınama".into()),
+        written: "{\"t\": {\"added\": []}}".into(),
+    };
     let mut tx = source.begin().expect("begin");
     tx.receipt(scope, &receipt).expect("written");
     tx.rollback().expect("rolled back");
-    assert_eq!(source.receipt(scope, &id).expect("read"), None, "rolled back with its transaction");
+    assert_eq!(
+        source.receipt(scope, &id).expect("read"),
+        None,
+        "rolled back with its transaction"
+    );
     let mut tx = source.begin().expect("begin");
     tx.receipt(scope, &receipt).expect("written");
     tx.commit().expect("committed");
@@ -159,12 +205,20 @@ fn as_account(address: &str, user: &str) -> String {
 /// SQL the test sets the accounts up with, as the main account (its password from `PGPASSWORD`).
 fn run_sql(address: &str, statements: &[String]) {
     use sqlx::Connection;
-    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build().expect("runtime");
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .expect("runtime");
     rt.block_on(async {
-        let mut c = sqlx::postgres::PgConnection::connect(address).await.expect("connect");
+        let mut c = sqlx::postgres::PgConnection::connect(address)
+            .await
+            .expect("connect");
         for s in statements {
             // The test's own statements, with the test environment's password.
-            sqlx::query(sqlx::AssertSqlSafe(s.clone())).execute(&mut c).await.expect(s);
+            sqlx::query(sqlx::AssertSqlSafe(s.clone()))
+                .execute(&mut c)
+                .await
+                .expect(s);
         }
     });
 }
@@ -181,10 +235,16 @@ fn a_column_is_added_by_the_tables_owner_alone() {
     let table = "public.kentos_sutun";
     let owner = PostGis.open(&address).expect("open");
     let mut tx = owner.begin().expect("begin");
-    tx.create_table(&conformance::table(table, 5256), true).expect("table");
+    tx.create_table(&conformance::table(table, 5256), true)
+        .expect("table");
     tx.commit().expect("commit");
-    assert!(owner.capabilities(table).expect("capabilities").add_columns, "the owner may add columns");
-    let password = std::env::var("PGPASSWORD").unwrap_or_default().replace('\'', "''");
+    assert!(
+        owner.capabilities(table).expect("capabilities").add_columns,
+        "the owner may add columns"
+    );
+    let password = std::env::var("PGPASSWORD")
+        .unwrap_or_default()
+        .replace('\'', "''");
     run_sql(
         &address,
         &[
@@ -197,27 +257,51 @@ fn a_column_is_added_by_the_tables_owner_alone() {
             "GRANT SELECT, UPDATE ON public.kentos_sutun TO kentos_sutun_yazan".into(),
         ],
     );
-    let writer = PostGis.open(&as_account(&address, "kentos_sutun_yazan")).expect("open as the writer");
+    let writer = PostGis
+        .open(&as_account(&address, "kentos_sutun_yazan"))
+        .expect("open as the writer");
     let caps = writer.capabilities(table).expect("capabilities");
-    assert!(caps.update_values && !caps.insert && !caps.add_columns && !caps.set_rules, "{caps:?}");
+    assert!(
+        caps.update_values && !caps.insert && !caps.add_columns && !caps.set_rules,
+        "{caps:?}"
+    );
     let mut tx = writer.begin().expect("begin");
     let refused = tx.add_columns(table, &[Field::new("not_1", FieldKind::Text { max: None })]);
     assert!(matches!(refused, Err(DataError::Denied(_))), "{refused:?}");
     let _ = tx.rollback();
-    assert!(owner.schema(table).expect("schema").field("not_1").is_none(), "the table as it was");
+    assert!(
+        owner
+            .schema(table)
+            .expect("schema")
+            .field("not_1")
+            .is_none(),
+        "the table as it was"
+    );
     // A column's rule (docs/adr/9324): the owner's alone as well.
     let rule = kentos_data::RuledColumn {
         column: "ada".into(),
-        rule: Some(kentos_data::ColumnRule::Values(vec![("1".into(), Some("Bir".into()))])),
+        rule: Some(kentos_data::ColumnRule::Values(vec![(
+            "1".into(),
+            Some("Bir".into()),
+        )])),
     };
     let mut tx = writer.begin().expect("begin");
     let refused = tx.set_rules(table, std::slice::from_ref(&rule));
     assert!(matches!(refused, Err(DataError::Denied(_))), "{refused:?}");
     let _ = tx.rollback();
-    assert!(owner.rules(table).expect("rules").is_empty(), "no rule written");
+    assert!(
+        owner.rules(table).expect("rules").is_empty(),
+        "no rule written"
+    );
     drop(writer);
     let mut tx = owner.begin().expect("begin");
     tx.drop_table(table).expect("drop");
     tx.commit().expect("commit");
-    run_sql(&address, &["DROP OWNED BY kentos_sutun_yazan".into(), "DROP ROLE kentos_sutun_yazan".into()]);
+    run_sql(
+        &address,
+        &[
+            "DROP OWNED BY kentos_sutun_yazan".into(),
+            "DROP ROLE kentos_sutun_yazan".into(),
+        ],
+    );
 }

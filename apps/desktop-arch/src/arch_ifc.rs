@@ -30,7 +30,7 @@ pub(crate) trait ArchIfcApp {
 
 impl ArchIfcApp for App {
     /// IFC dışa aktar (bina) from Dosya › Dışa aktar: where to write the file; `view` its bodies whole or cut.
-    fn export_ifc_building(&mut self, view: IfcView) -> Task<Message>{
+    fn export_ifc_building(&mut self, view: IfcView) -> Task<Message> {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -42,10 +42,12 @@ impl ArchIfcApp for App {
             None => arch_ifc::file_name(&doc.model),
         };
         let (title, then): (&str, fn(Option<PathBuf>) -> Message) = match view {
-            IfcView::DesignTransfer => ("IFC dışa aktar (bina)", |p| crate::arch::Event::IfcBuildingExport(p).into()),
-            IfcView::Reference => {
-                ("IFC dışa aktar (bina, kesilmiş gövde)", |p| crate::arch::Event::IfcBuildingExportCut(p).into())
-            }
+            IfcView::DesignTransfer => ("IFC dışa aktar (bina)", |p| {
+                crate::arch::Event::IfcBuildingExport(p).into()
+            }),
+            IfcView::Reference => ("IFC dışa aktar (bina, kesilmiş gövde)", |p| {
+                crate::arch::Event::IfcBuildingExportCut(p).into()
+            }),
         };
         Task::perform(
             async move {
@@ -63,7 +65,7 @@ impl ArchIfcApp for App {
 
     /// The file chosen: the building whole (`cad.arch.ifc`; the dialog asked before writing over), its bodies as `view`
     /// asks.
-    fn ifc_building_chosen(&mut self, path: Option<PathBuf>, view: IfcView) -> Task<Message>{
+    fn ifc_building_chosen(&mut self, path: Option<PathBuf>, view: IfcView) -> Task<Message> {
         let Some(mut path) = path else {
             return Task::none();
         };
@@ -87,7 +89,11 @@ impl ArchIfcApp for App {
                             .as_ref()
                             .and_then(|a| a.program.buildings.iter().find(|b| &b.id == id))
                             .map_or_else(|| id.clone(), |b| b.name.clone());
-                        let file = if k == 0 { path.clone() } else { folder.join(arch_ifc::file_name_of(&doc.model, id)) };
+                        let file = if k == 0 {
+                            path.clone()
+                        } else {
+                            folder.join(arch_ifc::file_name_of(&doc.model, id))
+                        };
                         (id.clone(), name, file)
                     })
                     .collect()
@@ -111,13 +117,28 @@ impl ArchIfcApp for App {
                 };
                 let result = arch_ifc::execute(&mut ExecutionContext::new(&mut doc.model), input);
                 match self.answered(result) {
-                    Some(out) => written.push(format!("{name}: {} kat, {} duvar ({})", out.storeys, out.walls, file.display())),
+                    Some(out) => written.push(format!(
+                        "{name}: {} kat, {} duvar ({})",
+                        out.storeys,
+                        out.walls,
+                        file.display()
+                    )),
                     None => return Task::none(),
                 }
             }
-            self.say(Level::Success, format!("IFC 4.3, {} bina ayrı dosyalara yazıldı: {}.", written.len(), written.join("; ")));
+            self.say(
+                Level::Success,
+                format!(
+                    "IFC 4.3, {} bina ayrı dosyalara yazıldı: {}.",
+                    written.len(),
+                    written.join("; ")
+                ),
+            );
             if let Some(first) = files.first() {
-                self.offer_ifc_view(first.clone(), format!("{} bina IFC 4.3 olarak yazıldı", written.len()));
+                self.offer_ifc_view(
+                    first.clone(),
+                    format!("{} bina IFC 4.3 olarak yazıldı", written.len()),
+                );
             }
             return Task::none();
         }
@@ -150,7 +171,11 @@ impl ArchIfcApp for App {
             .filter(|(n, _)| *n > 0)
             .map(|(n, what)| format!(", {n} {what}"))
             .collect();
-            let cut = if view == IfcView::Reference { " (gövdeler açıklıkları kesilmiş)" } else { "" };
+            let cut = if view == IfcView::Reference {
+                " (gövdeler açıklıkları kesilmiş)"
+            } else {
+                ""
+            };
             self.say(
                 Level::Success,
                 format!(
@@ -176,7 +201,7 @@ impl ArchIfcApp for App {
     /// The fire compartments as the national regulation's package finds them (catalog/standards/mimari-mevzuat,
     /// `kompartimanlar`; docs/adr/8088), for the file's zones. A package that does not answer, or a day its rules do not
     /// know, writes none and says why in the output.
-    fn fire_compartments(&mut self) -> Option<Vec<IfcCompartment>>{
+    fn fire_compartments(&mut self) -> Option<Vec<IfcCompartment>> {
         let facts = self.arch_audit_regulation_facts()?;
         match crate::standards::call(REGULATION, MODULE, "kompartimanlar", vec![facts]) {
             Ok(answer) => {
@@ -188,7 +213,10 @@ impl ArchIfcApp for App {
                 Some(
                     list.iter()
                         .map(|c| IfcCompartment {
-                            rooms: c.get("rooms").and_then(|r| serde_json::from_value(r.clone()).ok()).unwrap_or_default(),
+                            rooms: c
+                                .get("rooms")
+                                .and_then(|r| serde_json::from_value(r.clone()).ok())
+                                .unwrap_or_default(),
                         })
                         .collect(),
                 )
@@ -204,13 +232,21 @@ impl ArchIfcApp for App {
     }
 
     /// The file written, with Görüntüle: it opens in IFC modeli (ifc_viewer.rs, plan/ifc-uyum.md IFC-12).
-    fn offer_ifc_view(&mut self, path: PathBuf, title: String){
+    fn offer_ifc_view(&mut self, path: PathBuf, title: String) {
         let open = Message::IfcViewer(crate::ifc_viewer::Event::Open(path.clone()));
-        self.toast(kentos_ui::widget::Toast::success(title).body(path.display().to_string()).action("Görüntüle", open));
+        self.toast(
+            kentos_ui::widget::Toast::success(title)
+                .body(path.display().to_string())
+                .action("Görüntüle", open),
+        );
     }
 }
 
 /// The program's buildings by their ids, in its order: one file each when there are several (docs/adr/8072 §2).
 fn buildings(doc: &kentos_domain::Document) -> Vec<String> {
-    doc.settings().arch.as_ref().map(|a| a.program.buildings.iter().map(|b| b.id.clone()).collect()).unwrap_or_default()
+    doc.settings()
+        .arch
+        .as_ref()
+        .map(|a| a.program.buildings.iter().map(|b| b.id.clone()).collect())
+        .unwrap_or_default()
 }

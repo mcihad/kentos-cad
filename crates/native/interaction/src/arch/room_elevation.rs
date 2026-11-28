@@ -258,11 +258,15 @@ impl Tool for RoomElevationTool {
     fn prompt(&self) -> Prompt {
         match self.ask {
             Some(Ask::Sides) => {
-                return Prompt::new("Oda iç görünüşü", "yanların harflerini yazın (A,C; boş: hepsi)")
-                    .option("Geri", "G");
+                return Prompt::new(
+                    "Oda iç görünüşü",
+                    "yanların harflerini yazın (A,C; boş: hepsi)",
+                )
+                .option("Geri", "G");
             }
             Some(Ask::Gap) => {
-                return Prompt::new("Oda iç görünüşü", "yanların arasını yazın (1.0)").option("Geri", "G");
+                return Prompt::new("Oda iç görünüşü", "yanların arasını yazın (1.0)")
+                    .option("Geri", "G");
             }
             None => {}
         }
@@ -324,7 +328,10 @@ impl Tool for RoomElevationTool {
                 if key != "G" {
                     match cx.typed_length(js_trim(text)) {
                         Some(g) if g > 0.0 => self.gap = g,
-                        _ => cx.say(Level::Warn, "Aralık okunamadı: sıfırdan büyük bir uzunluk yazın."),
+                        _ => cx.say(
+                            Level::Warn,
+                            "Aralık okunamadı: sıfırdan büyük bir uzunluk yazın.",
+                        ),
                     }
                 }
                 self.see(cx);

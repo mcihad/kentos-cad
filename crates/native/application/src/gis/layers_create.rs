@@ -6,8 +6,8 @@
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, CreateGeometry, CreateTarget, DataGeometry, DataLayer, LayerDataOperation, LayerField, LayersCreate,
-    LayersCreated, LayersData,
+    CommandResult, CreateGeometry, CreateTarget, DataGeometry, DataLayer, LayerDataOperation,
+    LayerField, LayersCreate, LayersCreated, LayersData,
 };
 use kentos_data::{Field, GeometryField, NewTable};
 use kentos_domain::Document;
@@ -22,7 +22,11 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 fn unreachable(e: impl std::fmt::Display) -> Stop {
-    Stop::failed(error(codes::SOURCE_UNREACHABLE, format!("Okunamadı ya da yazılamadı: {e}"), None))
+    Stop::failed(error(
+        codes::SOURCE_UNREACHABLE,
+        format!("Okunamadı ya da yazılamadı: {e}"),
+        None,
+    ))
 }
 
 /// The longest name a source takes, in bytes (PostgreSQL's identifiers).
@@ -53,8 +57,14 @@ pub(crate) fn name_problem(name: &str) -> Option<String> {
         return Some(format!("“{name}” denetim karakteri taşıyor"));
     }
     let lower = name.to_ascii_lowercase();
-    if ["gpkg_", "rtree_", "sqlite_"].iter().any(|p| lower.starts_with(p)) || lower == "kentos_projects" {
-        return Some(format!("“{name}” kaynağın kendi tablolarına ayrılmış bir ad"));
+    if ["gpkg_", "rtree_", "sqlite_"]
+        .iter()
+        .any(|p| lower.starts_with(p))
+        || lower == "kentos_projects"
+    {
+        return Some(format!(
+            "“{name}” kaynağın kendi tablolarına ayrılmış bir ad"
+        ));
     }
     None
 }
@@ -75,20 +85,40 @@ fn type_name(geometry: CreateGeometry, multi: bool) -> Option<&'static str> {
 fn checked(doc: &Document, input: &LayersCreate) -> Result<Made, Stop> {
     let name = input.name.trim();
     if name.is_empty() {
-        return Err(fail(codes::EMPTY_NAME, "Katmanın adı boş olamaz.".into(), "name"));
+        return Err(fail(
+            codes::EMPTY_NAME,
+            "Katmanın adı boş olamaz.".into(),
+            "name",
+        ));
     }
     let (driver, address) = match input.target {
         CreateTarget::Gpkg => {
-            let path = input.path.as_deref().map(str::trim).filter(|p| !p.is_empty());
+            let path = input
+                .path
+                .as_deref()
+                .map(str::trim)
+                .filter(|p| !p.is_empty());
             let Some(path) = path else {
-                return Err(fail(codes::NO_TARGET, "Tablonun yapılacağı GeoPackage dosyası verilmedi (path).".into(), "path"));
+                return Err(fail(
+                    codes::NO_TARGET,
+                    "Tablonun yapılacağı GeoPackage dosyası verilmedi (path).".into(),
+                    "path",
+                ));
             };
             ("gpkg", path.to_owned())
         }
         CreateTarget::Postgis => {
-            let address = input.address.as_deref().map(str::trim).filter(|a| !a.is_empty());
+            let address = input
+                .address
+                .as_deref()
+                .map(str::trim)
+                .filter(|a| !a.is_empty());
             let Some(address) = address else {
-                return Err(fail(codes::NO_TARGET, "Tablonun yapılacağı veritabanı verilmedi (address).".into(), "address"));
+                return Err(fail(
+                    codes::NO_TARGET,
+                    "Tablonun yapılacağı veritabanı verilmedi (address).".into(),
+                    "address",
+                ));
             };
             ("postgis", address.to_owned())
         }
@@ -101,24 +131,53 @@ fn checked(doc: &Document, input: &LayersCreate) -> Result<Made, Stop> {
         .map(str::to_owned)
         .unwrap_or_else(|| crate::layer_export::table_name_of(name));
     if let Some(why) = name_problem(&bare) {
-        return Err(fail(codes::INVALID_NAME, format!("Tablonun adı alınamaz: {why}."), "table"));
+        return Err(fail(
+            codes::INVALID_NAME,
+            format!("Tablonun adı alınamaz: {why}."),
+            "table",
+        ));
     }
-    let key = input.key.as_deref().map(str::trim).filter(|k| !k.is_empty()).unwrap_or("fid").to_owned();
-    let column = input.geometry_column.as_deref().map(str::trim).filter(|c| !c.is_empty()).unwrap_or("geom").to_owned();
+    let key = input
+        .key
+        .as_deref()
+        .map(str::trim)
+        .filter(|k| !k.is_empty())
+        .unwrap_or("fid")
+        .to_owned();
+    let column = input
+        .geometry_column
+        .as_deref()
+        .map(str::trim)
+        .filter(|c| !c.is_empty())
+        .unwrap_or("geom")
+        .to_owned();
     for (what, n) in [("key", &key), ("geometryColumn", &column)] {
         if let Some(why) = name_problem(n) {
-            return Err(fail(codes::INVALID_NAME, format!("Sütunun adı alınamaz: {why}."), what));
+            return Err(fail(
+                codes::INVALID_NAME,
+                format!("Sütunun adı alınamaz: {why}."),
+                what,
+            ));
         }
     }
     let layer_fields = input.fields.clone().unwrap_or_default();
     for (i, f) in layer_fields.iter().enumerate() {
         if let Some(why) = name_problem(&f.name) {
-            return Err(fail(codes::INVALID_NAME, format!("Alanın adı alınamaz: {why}."), &format!("fields.{i}.name")));
-        }
-        if f.name.eq_ignore_ascii_case(&key) || (input.geometry != CreateGeometry::None && f.name.eq_ignore_ascii_case(&column)) {
             return Err(fail(
                 codes::INVALID_NAME,
-                format!("“{}” anahtar ya da geometri sütununun adı; alana başka bir ad verin.", f.name),
+                format!("Alanın adı alınamaz: {why}."),
+                &format!("fields.{i}.name"),
+            ));
+        }
+        if f.name.eq_ignore_ascii_case(&key)
+            || (input.geometry != CreateGeometry::None && f.name.eq_ignore_ascii_case(&column))
+        {
+            return Err(fail(
+                codes::INVALID_NAME,
+                format!(
+                    "“{}” anahtar ya da geometri sütununun adı; alana başka bir ad verin.",
+                    f.name
+                ),
                 &format!("fields.{i}.name"),
             ));
         }
@@ -134,7 +193,11 @@ fn checked(doc: &Document, input: &LayersCreate) -> Result<Made, Stop> {
             if let Some(s) = srid
                 && let Err(why) = TableSystem::of(settings, Some(s))
             {
-                return Err(fail(codes::UNKNOWN_SRID, format!("EPSG:{s} bu projede yazılamaz: {why}"), "srid"));
+                return Err(fail(
+                    codes::UNKNOWN_SRID,
+                    format!("EPSG:{s} bu projede yazılamaz: {why}"),
+                    "srid",
+                ));
             }
             Some(GeometryField {
                 name: column,
@@ -149,9 +212,18 @@ fn checked(doc: &Document, input: &LayersCreate) -> Result<Made, Stop> {
     let table = match input.target {
         CreateTarget::Gpkg => bare,
         CreateTarget::Postgis => {
-            let schema = input.schema.as_deref().map(str::trim).filter(|s| !s.is_empty()).unwrap_or("public");
+            let schema = input
+                .schema
+                .as_deref()
+                .map(str::trim)
+                .filter(|s| !s.is_empty())
+                .unwrap_or("public");
             if let Some(why) = name_problem(schema) {
-                return Err(fail(codes::INVALID_NAME, format!("Şemanın adı alınamaz: {why}."), "schema"));
+                return Err(fail(
+                    codes::INVALID_NAME,
+                    format!("Şemanın adı alınamaz: {why}."),
+                    "schema",
+                ));
             }
             format!("{schema}.{bare}")
         }
@@ -160,7 +232,15 @@ fn checked(doc: &Document, input: &LayersCreate) -> Result<Made, Stop> {
         .iter()
         .map(|f| Field::new(&f.name, crate::layer_export::field_kind(f.kind, f.length)))
         .collect();
-    Ok(Made { driver, address, table, key, fields, geometry, layer_fields })
+    Ok(Made {
+        driver,
+        address,
+        table,
+        key,
+        fields,
+        geometry,
+        layer_fields,
+    })
 }
 
 /// Whether the table is there: a GeoPackage file that is not there has none.
@@ -168,7 +248,9 @@ fn there(made: &Made) -> Result<bool, Stop> {
     if made.driver == "gpkg" && !Path::new(&made.address).exists() {
         return Ok(false);
     }
-    let source = kentos_data::registry().source(&made.address).map_err(unreachable)?;
+    let source = kentos_data::registry()
+        .source(&made.address)
+        .map_err(unreachable)?;
     let tables = source.tables().map_err(unreachable)?;
     Ok(tables.iter().any(|t| t.name == made.table))
 }
@@ -178,7 +260,10 @@ fn checked_free(doc: &Document, input: &LayersCreate) -> Result<Made, Stop> {
     if there(&made)? {
         return Err(fail(
             codes::TARGET_EXISTS,
-            format!("“{}” tablosu kaynakta var; başka bir ad verin ya da onu Kaynaklar'dan veri katmanı olarak ekleyin.", made.table),
+            format!(
+                "“{}” tablosu kaynakta var; başka bir ad verin ya da onu Kaynaklar'dan veri katmanı olarak ekleyin.",
+                made.table
+            ),
             "table",
         ));
     }
@@ -191,15 +276,28 @@ fn created(made: &Made, layer: String, revision: String) -> LayersCreated {
         layer,
         table: made.table.clone(),
         address: made.address.clone(),
-        geometry: made.geometry.as_ref().map(|g| if g.z { format!("{} Z", g.type_name) } else { g.type_name.clone() }),
-        srid: made.geometry.as_ref().and_then(|g| g.srid).and_then(|s| u32::try_from(s).ok()),
+        geometry: made.geometry.as_ref().map(|g| {
+            if g.z {
+                format!("{} Z", g.type_name)
+            } else {
+                g.type_name.clone()
+            }
+        }),
+        srid: made
+            .geometry
+            .as_ref()
+            .and_then(|g| g.srid)
+            .and_then(|s| u32::try_from(s).ok()),
         revision,
     }
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &LayersCreate) -> CommandResult<()> {
     match checked_free(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -238,11 +336,19 @@ fn make_table(made: &Made) -> Result<(), Stop> {
             kentos_data::registry().forget(&made.address);
         }
     }
-    let source = kentos_data::registry().source(&made.address).map_err(unreachable)?;
+    let source = kentos_data::registry()
+        .source(&made.address)
+        .map_err(unreachable)?;
     let mut tx = source.begin().map_err(unreachable)?;
     let table = NewTable {
         name: made.table.clone(),
-        title: Some(made.table.rsplit('.').next().unwrap_or(&made.table).to_owned()),
+        title: Some(
+            made.table
+                .rsplit('.')
+                .next()
+                .unwrap_or(&made.table)
+                .to_owned(),
+        ),
         description: None,
         key: made.key.clone(),
         fields: made.fields.clone(),
@@ -282,13 +388,19 @@ fn data_of(made: &Made) -> DataLayer {
 /// `cad.layers.create` makes one, and the data layer that reads it with its columns as the layer's fields, for the
 /// wizard to put on the layer's node before the project opens. Nothing is added to `doc`, which gives the system and
 /// the names taken; no undo step, since the project starts with its tables. Why not, in the command's words.
-pub fn new_project_table(doc: &Document, input: &LayersCreate) -> Result<(DataLayer, Vec<LayerField>), String> {
+pub fn new_project_table(
+    doc: &Document,
+    input: &LayersCreate,
+) -> Result<(DataLayer, Vec<LayerField>), String> {
     let made = checked_free(doc, input).map_err(crate::checks::words)?;
     make_table(&made).map_err(crate::checks::words)?;
     Ok((data_of(&made), made.layer_fields))
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersCreate) -> CommandResult<LayersCreated> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersCreate,
+) -> CommandResult<LayersCreated> {
     let made = match checked_free(cx.doc, &input) {
         Ok(m) => m,
         Err(stop) => return stop.into(),

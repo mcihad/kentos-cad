@@ -7,7 +7,10 @@ use super::*;
 use kentos_native_application::forms_source::{self, SourceRows};
 
 /// The rows read for a form: the ask they answer and each layer's rows or why not.
-pub type RowsRead = (u64, Vec<(String, Result<Vec<(i64, kentos_forms::Attrs)>, String>)>);
+pub type RowsRead = (
+    u64,
+    Vec<(String, Result<Vec<(i64, kentos_forms::Attrs)>, String>)>,
+);
 
 impl App {
     /// The open form's related rows asked of data layers' sources, when it has an item over one tied by a parent key.
@@ -39,7 +42,12 @@ impl App {
             move || {
                 nodes
                     .iter()
-                    .map(|(a, n)| (a.layer.clone(), forms_source::read_related(n, &settings, &a.field, &a.value)))
+                    .map(|(a, n)| {
+                        (
+                            a.layer.clone(),
+                            forms_source::read_related(n, &settings, &a.field, &a.value),
+                        )
+                    })
                     .collect::<Vec<_>>()
             },
             move |answers| Message::Gis(gis::Event::FormSourceRows(Box::new((asked, answers)))),

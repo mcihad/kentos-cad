@@ -15,7 +15,12 @@ pub fn crossings(a: &Alignment, b: &Alignment, step: f64) -> Vec<(f64, f64)> {
 
 /// [`crossings`] telling `tick` how far it has come (docs/adr/4860): `a`'s sampled segments one at a time, each against
 /// all of `b`'s (`done` of their count); `tick` answering true stops it there: none. The crossings are [`crossings`]'.
-pub fn crossings_told(a: &Alignment, b: &Alignment, step: f64, tick: &dyn Fn(u64, u64) -> bool) -> Option<Vec<(f64, f64)>> {
+pub fn crossings_told(
+    a: &Alignment,
+    b: &Alignment,
+    step: f64,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Option<Vec<(f64, f64)>> {
     let sample = |al: &Alignment| -> Vec<(f64, [f64; 2])> {
         let n = (al.length / step).ceil().max(1.0) as usize;
         (0..=n)
@@ -35,7 +40,10 @@ pub fn crossings_told(a: &Alignment, b: &Alignment, step: f64, tick: &dyn Fn(u64
         let (a0, a1) = (wa[0].1, wa[1].1);
         for wb in pb.windows(2) {
             let (b0, b1) = (wb[0].1, wb[1].1);
-            let (da, db) = ([a1[0] - a0[0], a1[1] - a0[1]], [b1[0] - b0[0], b1[1] - b0[1]]);
+            let (da, db) = (
+                [a1[0] - a0[0], a1[1] - a0[1]],
+                [b1[0] - b0[0], b1[1] - b0[1]],
+            );
             let den = da[0] * db[1] - da[1] * db[0];
             if den.abs() < 1e-15 {
                 continue;
@@ -46,14 +54,22 @@ pub fn crossings_told(a: &Alignment, b: &Alignment, step: f64, tick: &dyn Fn(u64
             if !(-1e-9..=1.0 + 1e-9).contains(&t) || !(-1e-9..=1.0 + 1e-9).contains(&u) {
                 continue;
             }
-            let (mut sa, mut sb) = (wa[0].0 + t * (wa[1].0 - wa[0].0), wb[0].0 + u * (wb[1].0 - wb[0].0));
+            let (mut sa, mut sb) = (
+                wa[0].0 + t * (wa[1].0 - wa[0].0),
+                wb[0].0 + u * (wb[1].0 - wb[0].0),
+            );
             for _ in 0..30 {
-                let (Some(p), Some(q)) = (a.at(sa), b.at(sb)) else { break };
+                let (Some(p), Some(q)) = (a.at(sa), b.at(sb)) else {
+                    break;
+                };
                 let f = [p.x - q.x, p.y - q.y];
                 if f[0].abs() + f[1].abs() < 1e-12 {
                     break;
                 }
-                let (ta, tb) = ([p.direction.cos(), p.direction.sin()], [q.direction.cos(), q.direction.sin()]);
+                let (ta, tb) = (
+                    [p.direction.cos(), p.direction.sin()],
+                    [q.direction.cos(), q.direction.sin()],
+                );
                 // F + [ta, -tb] · [dsa, dsb] = 0.
                 let d = -ta[0] * tb[1] + ta[1] * tb[0];
                 if d.abs() < 1e-15 {
@@ -64,7 +80,10 @@ pub fn crossings_told(a: &Alignment, b: &Alignment, step: f64, tick: &dyn Fn(u64
                 sa = (sa + dsa).clamp(0.0, a.length);
                 sb = (sb + dsb).clamp(0.0, b.length);
             }
-            if !out.iter().any(|c| (c.0 - sa).abs() < 1e-6 && (c.1 - sb).abs() < 1e-6) {
+            if !out
+                .iter()
+                .any(|c| (c.0 - sa).abs() < 1e-6 && (c.1 - sb).abs() < 1e-6)
+            {
                 out.push((sa, sb));
             }
         }
@@ -110,9 +129,18 @@ pub fn fillet(p: [f64; 2], a: Edge, b: Edge, r: f64) -> Option<Return> {
     let center = [p[0] + ka * na[0] + u * ta[0], p[1] + ka * na[1] + u * ta[1]];
     let on_a = [center[0] - sa * r * na[0], center[1] - sa * r * na[1]];
     let on_b = [center[0] - sb * r * nb[0], center[1] - sb * r * nb[1]];
-    let (va, vb) = ([on_a[0] - center[0], on_a[1] - center[1]], [on_b[0] - center[0], on_b[1] - center[1]]);
+    let (va, vb) = (
+        [on_a[0] - center[0], on_a[1] - center[1]],
+        [on_b[0] - center[0], on_b[1] - center[1]],
+    );
     let sweep = (va[0] * vb[1] - va[1] * vb[0]).atan2(va[0] * vb[0] + va[1] * vb[1]);
-    Some(Return { center, on_a, on_b, sweep, length: r * sweep.abs() })
+    Some(Return {
+        center,
+        on_a,
+        on_b,
+        sweep,
+        length: r * sweep.abs(),
+    })
 }
 
 /// A road's deck over or under a separated junction: its alignment and its edges, left and right of it (positive).
@@ -137,9 +165,18 @@ pub struct Overlap {
 
 /// How many lower stations and offsets the overlap is sampled at around `crossing`: `(stations, offsets)` lines,
 /// and the stations' range (docs/adr/0917 §2).
-pub fn overlap_grid(upper: Deck<'_>, lower: Deck<'_>, crossing: f64, sine: f64, step: f64) -> (usize, usize, f64, f64) {
+pub fn overlap_grid(
+    upper: Deck<'_>,
+    lower: Deck<'_>,
+    crossing: f64,
+    sine: f64,
+    step: f64,
+) -> (usize, usize, f64, f64) {
     let reach = (upper.left + upper.right + lower.left + lower.right) / sine.abs() + step;
-    let (s0, s1) = ((crossing - reach).max(0.0), (crossing + reach).min(lower.alignment.length));
+    let (s0, s1) = (
+        (crossing - reach).max(0.0),
+        (crossing + reach).min(lower.alignment.length),
+    );
     let n = ((s1 - s0) / step).ceil().max(1.0) as usize;
     let m = ((lower.left + lower.right) / step).ceil().max(1.0) as usize;
     (n + 1, m + 1, s0, s1)
@@ -151,11 +188,29 @@ pub fn overlap_grid(upper: Deck<'_>, lower: Deck<'_>, crossing: f64, sine: f64, 
 /// along and across, the upper road's edges found by bisection where the line crosses them. `sine` is the sine of
 /// the angle between the roads at the crossing.
 #[allow(clippy::needless_range_loop)] // the grid's columns, along each line
-pub fn overlap(upper: Deck<'_>, lower: Deck<'_>, crossing: f64, sine: f64, step: f64) -> Vec<Overlap> {
+pub fn overlap(
+    upper: Deck<'_>,
+    lower: Deck<'_>,
+    crossing: f64,
+    sine: f64,
+    step: f64,
+) -> Vec<Overlap> {
     let (n, m, s0, s1) = overlap_grid(upper, lower, crossing, sine, step);
-    let station = |i: usize| if i + 1 == n { s1 } else { s0 + (s1 - s0) * i as f64 / (n - 1) as f64 };
+    let station = |i: usize| {
+        if i + 1 == n {
+            s1
+        } else {
+            s0 + (s1 - s0) * i as f64 / (n - 1) as f64
+        }
+    };
     let width = lower.left + lower.right;
-    let offset = |j: usize| if j + 1 == m { lower.right } else { -lower.left + width * j as f64 / (m - 1) as f64 };
+    let offset = |j: usize| {
+        if j + 1 == m {
+            lower.right
+        } else {
+            -lower.left + width * j as f64 / (m - 1) as f64
+        }
+    };
     let on_upper = |s: f64, o: f64| -> Option<Overlap> {
         let q = crate::alignment::offset::place(lower.alignment, s, o)?;
         let foot = upper.alignment.locate(q).nearest?;
@@ -168,13 +223,24 @@ pub fn overlap(upper: Deck<'_>, lower: Deck<'_>, crossing: f64, sine: f64, step:
             lower_offset: o,
         })
     };
-    let inside = |p: &Overlap| p.upper_offset >= -upper.left - 1e-9 && p.upper_offset <= upper.right + 1e-9;
-    let grid: Vec<Vec<Option<Overlap>>> = (0..n).map(|i| (0..m).map(|j| on_upper(station(i), offset(j))).collect()).collect();
-    let mut out: Vec<Overlap> = grid.iter().flatten().flatten().filter(|p| inside(p)).copied().collect();
+    let inside =
+        |p: &Overlap| p.upper_offset >= -upper.left - 1e-9 && p.upper_offset <= upper.right + 1e-9;
+    let grid: Vec<Vec<Option<Overlap>>> = (0..n)
+        .map(|i| (0..m).map(|j| on_upper(station(i), offset(j))).collect())
+        .collect();
+    let mut out: Vec<Overlap> = grid
+        .iter()
+        .flatten()
+        .flatten()
+        .filter(|p| inside(p))
+        .copied()
+        .collect();
     let edges = [-upper.left, upper.right];
     // Where the upper offset passes an edge between two grid places: bisected along the line between them.
     let mut cross = |a: (f64, f64, &Option<Overlap>), b: (f64, f64, &Option<Overlap>)| {
-        let (Some(pa), Some(pb)) = (a.2, b.2) else { return };
+        let (Some(pa), Some(pb)) = (a.2, b.2) else {
+            return;
+        };
         for e in edges {
             if (pa.upper_offset - e) * (pb.upper_offset - e) >= 0.0 {
                 continue;
@@ -184,7 +250,9 @@ pub fn overlap(upper: Deck<'_>, lower: Deck<'_>, crossing: f64, sine: f64, step:
             let mut found = None;
             for _ in 0..200 {
                 let t = 0.5 * (lo + hi);
-                let Some(p) = on_upper(a.0 + t * (b.0 - a.0), a.1 + t * (b.1 - a.1)) else { break };
+                let Some(p) = on_upper(a.0 + t * (b.0 - a.0), a.1 + t * (b.1 - a.1)) else {
+                    break;
+                };
                 found = Some(p);
                 if (p.upper_offset < e) == below {
                     lo = t;
@@ -203,12 +271,18 @@ pub fn overlap(upper: Deck<'_>, lower: Deck<'_>, crossing: f64, sine: f64, step:
     };
     for j in 0..m {
         for i in 0..n - 1 {
-            cross((station(i), offset(j), &grid[i][j]), (station(i + 1), offset(j), &grid[i + 1][j]));
+            cross(
+                (station(i), offset(j), &grid[i][j]),
+                (station(i + 1), offset(j), &grid[i + 1][j]),
+            );
         }
     }
     for (i, row) in grid.iter().enumerate() {
         for j in 0..m - 1 {
-            cross((station(i), offset(j), &row[j]), (station(i), offset(j + 1), &row[j + 1]));
+            cross(
+                (station(i), offset(j), &row[j]),
+                (station(i), offset(j + 1), &row[j + 1]),
+            );
         }
     }
     out
@@ -220,12 +294,21 @@ pub fn overlap(upper: Deck<'_>, lower: Deck<'_>, crossing: f64, sine: f64, step:
 /// the primary road compared with the edge's, and the bracket nearest the crossing refined by bisection to 1e-12 m (a
 /// scanned place within 1e-9 m of the edge taken as it is).
 /// `[left, right]`; none where it does not cross.
-pub fn edge_stations(primary: Deck<'_>, secondary: &Alignment, around: f64, sine: f64) -> [Option<f64>; 2] {
+pub fn edge_stations(
+    primary: Deck<'_>,
+    secondary: &Alignment,
+    around: f64,
+    sine: f64,
+) -> [Option<f64>; 2] {
     const SCAN: f64 = 0.25;
     let reach = 2.0 * (primary.left + primary.right) / sine.abs().max(1e-6) + 1.0;
     let offset = |s: f64| -> Option<f64> {
         let p = secondary.at(s)?;
-        primary.alignment.locate([p.x, p.y]).nearest.map(|f| f.offset)
+        primary
+            .alignment
+            .locate([p.x, p.y])
+            .nearest
+            .map(|f| f.offset)
     };
     let k = (reach / SCAN).ceil() as i64;
     let samples: Vec<(f64, f64)> = (-k..=k)
@@ -300,18 +383,39 @@ impl<'a> Located<'a> {
         let size = ((max[0] - min[0]).max(max[1] - min[1]) / n).max(1e-6);
         let columns = (((max[0] - min[0]) / size).floor() as usize + 1).min(4096);
         let rows = (((max[1] - min[1]) / size).floor() as usize + 1).min(4096);
-        let mut buckets = vec![Vec::new(); if triangles.is_empty() { 0 } else { columns * rows }];
-        let cell = |v: f64, lo: f64, k: usize| (((v - lo) / size).floor().max(0.0) as usize).min(k - 1);
+        let mut buckets = vec![
+            Vec::new();
+            if triangles.is_empty() {
+                0
+            } else {
+                columns * rows
+            }
+        ];
+        let cell =
+            |v: f64, lo: f64, k: usize| (((v - lo) / size).floor().max(0.0) as usize).min(k - 1);
         for (i, t) in triangles.iter().enumerate() {
-            let (x0, x1) = (t[0][0].min(t[1][0]).min(t[2][0]), t[0][0].max(t[1][0]).max(t[2][0]));
-            let (y0, y1) = (t[0][1].min(t[1][1]).min(t[2][1]), t[0][1].max(t[1][1]).max(t[2][1]));
+            let (x0, x1) = (
+                t[0][0].min(t[1][0]).min(t[2][0]),
+                t[0][0].max(t[1][0]).max(t[2][0]),
+            );
+            let (y0, y1) = (
+                t[0][1].min(t[1][1]).min(t[2][1]),
+                t[0][1].max(t[1][1]).max(t[2][1]),
+            );
             for r in cell(y0, min[1], rows)..=cell(y1, min[1], rows) {
                 for c in cell(x0, min[0], columns)..=cell(x1, min[0], columns) {
                     buckets[r * columns + c].push(i as u32);
                 }
             }
         }
-        Located { triangles, min, size, columns, rows, buckets }
+        Located {
+            triangles,
+            min,
+            size,
+            columns,
+            rows,
+            buckets,
+        }
     }
 
     /// The plan box of the triangles, `[min, max]`; none without any.
@@ -319,7 +423,10 @@ impl<'a> Located<'a> {
         let mut out: Option<[[f64; 2]; 2]> = None;
         for p in self.triangles.iter().flatten() {
             let b = out.get_or_insert([[p[0], p[1]], [p[0], p[1]]]);
-            *b = [[b[0][0].min(p[0]), b[0][1].min(p[1])], [b[1][0].max(p[0]), b[1][1].max(p[1])]];
+            *b = [
+                [b[0][0].min(p[0]), b[0][1].min(p[1])],
+                [b[1][0].max(p[0]), b[1][1].max(p[1])],
+            ];
         }
         out
     }
@@ -329,7 +436,10 @@ impl<'a> Located<'a> {
         if self.buckets.is_empty() {
             return None;
         }
-        let (c, r) = ((p[0] - self.min[0]) / self.size, (p[1] - self.min[1]) / self.size);
+        let (c, r) = (
+            (p[0] - self.min[0]) / self.size,
+            (p[1] - self.min[1]) / self.size,
+        );
         if c < 0.0 || r < 0.0 || c >= self.columns as f64 || r >= self.rows as f64 {
             return None;
         }
@@ -371,24 +481,42 @@ pub fn shared_grid(a: &Located<'_>, b: &Located<'_>, cell: f64) -> Option<([i64;
     if lo[0] > hi[0] || lo[1] > hi[1] {
         return None;
     }
-    let first = [(lo[0] / cell - 0.5).ceil() as i64, (lo[1] / cell - 0.5).ceil() as i64];
-    let last = [(hi[0] / cell - 0.5).floor() as i64, (hi[1] / cell - 0.5).floor() as i64];
+    let first = [
+        (lo[0] / cell - 0.5).ceil() as i64,
+        (lo[1] / cell - 0.5).ceil() as i64,
+    ];
+    let last = [
+        (hi[0] / cell - 0.5).floor() as i64,
+        (hi[1] / cell - 0.5).floor() as i64,
+    ];
     if last[0] < first[0] || last[1] < first[1] {
         return None;
     }
-    Some((first, [(last[0] - first[0] + 1) as usize, (last[1] - first[1] + 1) as usize]))
+    Some((
+        first,
+        [
+            (last[0] - first[0] + 1) as usize,
+            (last[1] - first[1] + 1) as usize,
+        ],
+    ))
 }
 
 /// The cells both surfaces cover, in the grid's order (docs/adr/0919 §2).
 pub fn shared_cells(a: &Located<'_>, b: &Located<'_>, cell: f64) -> Vec<SharedCell> {
-    let Some((first, size)) = shared_grid(a, b, cell) else { return Vec::new() };
+    let Some((first, size)) = shared_grid(a, b, cell) else {
+        return Vec::new();
+    };
     let mut out = Vec::new();
     for r in 0..size[1] {
         let y = (first[1] + r as i64) as f64 * cell + 0.5 * cell;
         for c in 0..size[0] {
             let x = (first[0] + c as i64) as f64 * cell + 0.5 * cell;
             if let (Some(za), Some(zb)) = (a.z([x, y]), b.z([x, y])) {
-                out.push(SharedCell { at: [x, y], a: za, b: zb });
+                out.push(SharedCell {
+                    at: [x, y],
+                    a: za,
+                    b: zb,
+                });
             }
         }
     }
@@ -402,13 +530,34 @@ mod tests {
     #[test]
     fn a_right_angle_crossing_has_quarter_circle_returns() {
         // A east, B north, edges 3 m each side, radius 10: the north-east quadrant is left of A and right of B.
-        let e = |t: [f64; 2], offset: f64, side: f64| Edge { tangent: t, offset, side };
-        let f = fillet([0.0, 0.0], e([1.0, 0.0], -3.0, -1.0), e([0.0, 1.0], 3.0, 1.0), 10.0).expect("a return");
-        assert!((f.center[0] - 13.0).abs() < 1e-12 && (f.center[1] - 13.0).abs() < 1e-12, "{f:?}");
+        let e = |t: [f64; 2], offset: f64, side: f64| Edge {
+            tangent: t,
+            offset,
+            side,
+        };
+        let f = fillet(
+            [0.0, 0.0],
+            e([1.0, 0.0], -3.0, -1.0),
+            e([0.0, 1.0], 3.0, 1.0),
+            10.0,
+        )
+        .expect("a return");
+        assert!(
+            (f.center[0] - 13.0).abs() < 1e-12 && (f.center[1] - 13.0).abs() < 1e-12,
+            "{f:?}"
+        );
         assert!((f.on_a[1] - 3.0).abs() < 1e-12 && (f.on_a[0] - 13.0).abs() < 1e-12);
         assert!((f.on_b[0] - 3.0).abs() < 1e-12 && (f.on_b[1] - 13.0).abs() < 1e-12);
         assert!((f.length - 5.0 * std::f64::consts::PI).abs() < 1e-12);
-        assert!(fillet([0.0, 0.0], e([1.0, 0.0], 3.0, 1.0), e([1.0, 0.0], 3.0, 1.0), 10.0).is_none());
+        assert!(
+            fillet(
+                [0.0, 0.0],
+                e([1.0, 0.0], 3.0, 1.0),
+                e([1.0, 0.0], 3.0, 1.0),
+                10.0
+            )
+            .is_none()
+        );
     }
 
     /// Docs/adr/4860: the search told finds what the search finds, `a`'s segments told one at a time; a stop asked at
@@ -435,7 +584,10 @@ mod tests {
         .expect("not stopped");
         assert_eq!(told, crossings(&a, &b, 1.0));
         assert_eq!(told.len(), 1);
-        assert_eq!(seen.into_inner(), (0..100).map(|k| (k, 100)).collect::<Vec<_>>());
+        assert_eq!(
+            seen.into_inner(),
+            (0..100).map(|k| (k, 100)).collect::<Vec<_>>()
+        );
         let asked = Cell::new(0);
         let stopped = crossings_told(&a, &b, 1.0, &|_, _| {
             asked.set(asked.get() + 1);

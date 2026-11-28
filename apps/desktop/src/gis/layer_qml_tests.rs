@@ -4,7 +4,9 @@
 use crate::files_testing::app_with_drawing;
 
 fn qml(name: &str) -> std::path::PathBuf {
-    std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/qml/v1").join(name)
+    std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/qml/v1")
+        .join(name)
 }
 
 #[test]
@@ -12,8 +14,16 @@ fn a_lossy_qmls_parts_are_said_one_by_one() {
     let mut app = app_with_drawing();
     let before = app.log.lines().count();
     app.qml_import_from("parsel".into(), Some(qml("kayipli.qml")));
-    let said: Vec<String> = app.log.lines().skip(before).map(|l| l.text.clone()).collect();
-    let head = said.iter().position(|l| l.starts_with("QML'den alınamayan ")).unwrap_or_else(|| panic!("{said:#?}"));
+    let said: Vec<String> = app
+        .log
+        .lines()
+        .skip(before)
+        .map(|l| l.text.clone())
+        .collect();
+    let head = said
+        .iter()
+        .position(|l| l.starts_with("QML'den alınamayan "))
+        .unwrap_or_else(|| panic!("{said:#?}"));
     let n: usize = said[head]
         .trim_start_matches("QML'den alınamayan ")
         .split(' ')
@@ -24,16 +34,36 @@ fn a_lossy_qmls_parts_are_said_one_by_one() {
     for i in 1..=n {
         assert!(said[head + i].starts_with(&format!("{i}. ")), "{said:#?}");
     }
-    assert!(!said.iter().any(|l| l.contains("bazı parçaları alınamadı")), "not gathered again: {said:#?}");
+    assert!(
+        !said.iter().any(|l| l.contains("bazı parçaları alınamadı")),
+        "not gathered again: {said:#?}"
+    );
 }
 
 #[test]
 fn the_headline_names_the_file_and_the_way() {
     let mut app = app_with_drawing();
     let before = app.log.lines().count();
-    app.say_losses("SLD", true, &["dolgu deseni yazılmadı".into(), "saydamlık yaklaşık".into()], Vec::new());
-    let said: Vec<String> = app.log.lines().skip(before).map(|l| l.text.clone()).collect();
-    assert_eq!(said, ["SLD'nin söyleyemediği 2 özellik:", "1. dolgu deseni yazılmadı", "2. saydamlık yaklaşık"]);
+    app.say_losses(
+        "SLD",
+        true,
+        &["dolgu deseni yazılmadı".into(), "saydamlık yaklaşık".into()],
+        Vec::new(),
+    );
+    let said: Vec<String> = app
+        .log
+        .lines()
+        .skip(before)
+        .map(|l| l.text.clone())
+        .collect();
+    assert_eq!(
+        said,
+        [
+            "SLD'nin söyleyemediği 2 özellik:",
+            "1. dolgu deseni yazılmadı",
+            "2. saydamlık yaklaşık"
+        ]
+    );
 }
 
 /// The picture (`.run/gui-evidence/kullanim-9173/`): Komut geçmişi after the lossy QML, its losses a line each.

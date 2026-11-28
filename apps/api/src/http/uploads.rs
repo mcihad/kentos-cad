@@ -60,12 +60,10 @@ pub async fn receive(
 ) -> Result<Json<UploadView>, Failure> {
     let run = async {
         let id = upload_id(&id)?;
-        let offset: u64 = part
-            .offset
-            .as_deref()
-            .unwrap_or("0")
-            .parse()
-            .map_err(|_| AppError::invalid_at("offset", "offset bir bayt sırası (sayı) olmalı."))?;
+        let offset: u64 =
+            part.offset.as_deref().unwrap_or("0").parse().map_err(|_| {
+                AppError::invalid_at("offset", "offset bir bayt sırası (sayı) olmalı.")
+            })?;
         // A part is taken whole before anything is written: one cut short changes nothing.
         let max = usize::try_from(uploads::PART_MAX).unwrap_or(usize::MAX);
         let bytes = axum::body::to_bytes(body, max).await.map_err(|e| {
@@ -74,7 +72,16 @@ pub async fn receive(
                 uploads::PART_MAX / (1024 * 1024)
             ))
         })?;
-        uploads::receive(state.db()?, &state.blobs, &state.config.scanner, &caller.0, id, offset, &bytes).await
+        uploads::receive(
+            state.db()?,
+            &state.blobs,
+            &state.config.scanner,
+            &caller.0,
+            id,
+            offset,
+            &bytes,
+        )
+        .await
     };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
@@ -86,7 +93,8 @@ pub async fn cancel(
     caller: Caller,
     Path(id): Path<String>,
 ) -> Result<StatusCode, Failure> {
-    let run = async { uploads::cancel(state.db()?, &state.blobs, &caller.0, upload_id(&id)?).await };
+    let run =
+        async { uploads::cancel(state.db()?, &state.blobs, &caller.0, upload_id(&id)?).await };
     run.await
         .map(|()| StatusCode::NO_CONTENT)
         .map_err(|e| Failure::with(e, &headers))

@@ -24,19 +24,25 @@
 //! and `road.profiles.create` (the new ones), each one undo step, and closes. Aksa yeniden bağla rebinds a saved,
 //! stale profile (`road.profiles.edit rebind`).
 
-use crate::road_ext::*;
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
+use crate::road_ext::*;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::widget::{Column, column, container, row, scrollable, space};
-use iced::{Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Size, Task, Theme, mouse};
-use kentos_commands::{ProfileDef, ProfilePvi, ProfilesCreate, ProfilesEdit, ProfilesEditOperation};
+use iced::{
+    Center, Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Size, Task, Theme, mouse,
+};
+use kentos_commands::{
+    ProfileDef, ProfilePvi, ProfilesCreate, ProfilesEdit, ProfilesEditOperation,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{
     ExecutionContext, road_alignments, road_profiles_create, road_profiles_edit, road_terrains,
 };
 use kentos_road::alignment::km_text;
-use kentos_road::profile::{self as core, CurveReport, ProfilePoint, VCurve, Vertical, VerticalError};
+use kentos_road::profile::{
+    self as core, CurveReport, ProfilePoint, VCurve, Vertical, VerticalError,
+};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::{Dialog as Frame, Elided};
@@ -108,7 +114,9 @@ fn comma(v: f64, digits: usize) -> String {
 
 fn trimmed(v: f64) -> String {
     let s = format!("{v:.3}");
-    s.trim_end_matches('0').trim_end_matches('.').replace('.', ",")
+    s.trim_end_matches('0')
+        .trim_end_matches('.')
+        .replace('.', ",")
 }
 
 /// A number the user typed, with a comma or a point; empty: none.
@@ -117,7 +125,11 @@ fn number(text: &str) -> Result<Option<f64>, ()> {
     if text.is_empty() {
         return Ok(None);
     }
-    text.parse::<f64>().ok().filter(|v| v.is_finite()).map(Some).ok_or(())
+    text.parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .map(Some)
+        .ok_or(())
 }
 
 impl Row {
@@ -210,7 +222,11 @@ impl Row {
             crossings.push(kentos_commands::ProfileCrossingDef {
                 name: c.name.trim().to_owned(),
                 station: need(&c.station, "km")?,
-                side: if c.side == 1 { kentos_commands::CrossingSide::Below } else { kentos_commands::CrossingSide::Above },
+                side: if c.side == 1 {
+                    kentos_commands::CrossingSide::Below
+                } else {
+                    kentos_commands::CrossingSide::Above
+                },
                 elevation: need(&c.elevation, "kot")?,
                 clearance: need(&c.clearance, "açıklık ya da örtü")?,
             });
@@ -229,7 +245,8 @@ impl Row {
 
     fn vertical(&self) -> Result<Vertical, String> {
         let def = self.def()?;
-        core::vertical::build(&kentos_native_application::road_profiles::pvis_of(&def)).map_err(|e| vertical_words(&e))
+        core::vertical::build(&kentos_native_application::road_profiles::pvis_of(&def))
+            .map_err(|e| vertical_words(&e))
     }
 }
 
@@ -241,7 +258,10 @@ fn vertical_words(e: &VerticalError) -> String {
         E::NotFinite { pvi } => format!("{pvi} PVI'sinin sayıları sonlu değil"),
         E::NotIncreasing { pvi } => format!("{pvi} PVI'sinin km'si bir öncekinden büyük olmalı"),
         E::BadCurve { pvi } => format!("{pvi} PVI'sinde kurp olamaz"),
-        E::Overlap { a, b, excess } => format!("{a}–{b} arasına düşey kurplar sığmıyor, {} m taşıyor", comma(*excess, 3)),
+        E::Overlap { a, b, excess } => format!(
+            "{a}–{b} arasına düşey kurplar sığmıyor, {} m taşıyor",
+            comma(*excess, 3)
+        ),
     }
 }
 
@@ -269,7 +289,11 @@ impl Ground {
     fn at(&self, s: f64) -> Option<f64> {
         let i = self.points.partition_point(|p| p.station <= s);
         if i == 0 {
-            return self.points.first().filter(|p| p.station == s).and_then(|p| p.z);
+            return self
+                .points
+                .first()
+                .filter(|p| p.station == s)
+                .and_then(|p| p.z);
         }
         let a = &self.points[i - 1];
         if a.station == s || i == self.points.len() {
@@ -286,13 +310,19 @@ impl Ground {
 
 /// A round step for the km ticks: about a dozen along the length.
 fn tick_step(length: f64) -> f64 {
-    [10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0]
-        .into_iter()
-        .find(|s| length / s <= 14.0)
-        .unwrap_or(10_000.0)
+    [
+        10.0, 20.0, 50.0, 100.0, 200.0, 500.0, 1000.0, 2000.0, 5000.0,
+    ]
+    .into_iter()
+    .find(|s| length / s <= 14.0)
+    .unwrap_or(10_000.0)
 }
 
-pub(crate) fn ground_of(doc: &kentos_domain::Document, alignment: &str, surface: Option<&str>) -> Ground {
+pub(crate) fn ground_of(
+    doc: &kentos_domain::Document,
+    alignment: &str,
+    surface: Option<&str>,
+) -> Ground {
     let mut g = Ground {
         alignment: alignment.to_owned(),
         surface: surface.map(str::to_owned),
@@ -327,9 +357,14 @@ pub(crate) fn ground_of(doc: &kentos_domain::Document, alignment: &str, surface:
         g.why = Some("Yüzey seçilmedi: siyah kot yok.".into());
         return g;
     };
-    match road_terrains::made_surfaces(doc).into_iter().find(|(d, _, _)| d.id == id) {
+    match road_terrains::made_surfaces(doc)
+        .into_iter()
+        .find(|(d, _, _)| d.id == id)
+    {
         Some((_, _, Some(s))) => g.points = core::terrain(&s, &built.core),
-        Some((d, _, None)) => g.why = Some(format!("“{}” yüzeyi kurulamıyor: siyah kot yok.", d.name)),
+        Some((d, _, None)) => {
+            g.why = Some(format!("“{}” yüzeyi kurulamıyor: siyah kot yok.", d.name))
+        }
         None => g.why = Some("Yüzey projede yok: siyah kot yok.".into()),
     }
     g
@@ -365,7 +400,15 @@ pub struct Window {
     /// The values typed there, kept while the program runs when it is closed.
     pub(crate) lengths_kept: Option<([String; 11], bool)>,
     /// What the PVIs typed would make stale (docs/adr/0962): read while they differ from the saved ones.
-    pub(crate) impact: Option<Result<(kentos_commands::ProfileImpact, Vec<kentos_commands::CommandWarning>), String>>,
+    pub(crate) impact: Option<
+        Result<
+            (
+                kentos_commands::ProfileImpact,
+                Vec<kentos_commands::CommandWarning>,
+            ),
+            String,
+        >,
+    >,
 }
 
 impl Window {
@@ -382,11 +425,18 @@ impl Window {
     /// are rounded up at the millimetre, or down where cut to fit. The PVIs set, and those cut short of the
     /// suggestion.
     pub(crate) fn lengthen(&mut self, short: &[(String, f64, f64)]) -> (usize, Vec<String>) {
-        let Some(r) = self.chosen.and_then(|i| self.rows.get_mut(i)) else { return (0, Vec::new()) };
-        let Ok(def) = r.def() else { return (0, Vec::new()) };
+        let Some(r) = self.chosen.and_then(|i| self.rows.get_mut(i)) else {
+            return (0, Vec::new());
+        };
+        let Ok(def) = r.def() else {
+            return (0, Vec::new());
+        };
         let n = def.pvis.len();
         // Each PVI's arms now (in, out), and those wanted.
-        let grade = |a: usize, b: usize| (def.pvis[b].elevation - def.pvis[a].elevation) / (def.pvis[b].station - def.pvis[a].station);
+        let grade = |a: usize, b: usize| {
+            (def.pvis[b].elevation - def.pvis[a].elevation)
+                / (def.pvis[b].station - def.pvis[a].station)
+        };
         let arms_now: Vec<[f64; 2]> = (0..n)
             .map(|j| {
                 let p = &def.pvis[j];
@@ -405,9 +455,20 @@ impl Window {
         let mut wanted = arms_now.clone();
         let mut changed = vec![false; n];
         for (pvi, length, _) in short {
-            let Some(j) = r.pvis.iter().position(|p| p.id.trim() == pvi).filter(|j| (1..n - 1).contains(j)) else { continue };
+            let Some(j) = r
+                .pvis
+                .iter()
+                .position(|p| p.id.trim() == pvi)
+                .filter(|j| (1..n - 1).contains(j))
+            else {
+                continue;
+            };
             let [a, b] = arms_now[j];
-            let share = if r.pvis[j].curve == 2 && a + b > 0.0 { a / (a + b) } else { 0.5 };
+            let share = if r.pvis[j].curve == 2 && a + b > 0.0 {
+                a / (a + b)
+            } else {
+                0.5
+            };
             wanted[j] = [length * share, length * (1.0 - share)];
             changed[j] = true;
         }
@@ -417,7 +478,11 @@ impl Window {
             let gap = def.pvis[j + 1].station - def.pvis[j].station;
             let (mut fixed, mut grown) = (0.0, 0.0);
             for (k, arm) in [(j, wanted[j][1]), (j + 1, wanted[j + 1][0])] {
-                if changed[k] { grown += arm } else { fixed += arm }
+                if changed[k] {
+                    grown += arm
+                } else {
+                    fixed += arm
+                }
             }
             if grown > 0.0 && fixed + grown > gap {
                 let f = ((gap - fixed) / grown).max(0.0);
@@ -432,11 +497,22 @@ impl Window {
         let down = |v: f64| (v * 1000.0 + 1e-6).floor() / 1000.0;
         let (mut set, mut cut) = (0, Vec::new());
         for (pvi, length, a) in short {
-            let Some(j) = r.pvis.iter().position(|p| p.id.trim() == pvi).filter(|j| (1..n - 1).contains(j)) else { continue };
+            let Some(j) = r
+                .pvis
+                .iter()
+                .position(|p| p.id.trim() == pvi)
+                .filter(|j| (1..n - 1).contains(j))
+            else {
+                continue;
+            };
             let f = factor[j];
             let now = arms_now[j][0] + arms_now[j][1];
             let fits = f >= 1.0;
-            let total = if fits { up(*length) } else { down((length * f).max(now)) };
+            let total = if fits {
+                up(*length)
+            } else {
+                down((length * f).max(now))
+            };
             if !fits {
                 cut.push(pvi.clone());
             }
@@ -444,12 +520,22 @@ impl Window {
             match p.curve {
                 3 if a.abs() > 0.0 => {
                     let radius = 100.0 * total / a.abs();
-                    p.sizes = [trimmed(if fits { up(radius) } else { down(radius) }), String::new()];
+                    p.sizes = [
+                        trimmed(if fits { up(radius) } else { down(radius) }),
+                        String::new(),
+                    ];
                 }
                 2 => {
                     let share = wanted[j][0] / (wanted[j][0] + wanted[j][1]);
                     let first = down(total * share);
-                    p.sizes = [trimmed(first), trimmed(if fits { up(total - first) } else { down(total - first) })];
+                    p.sizes = [
+                        trimmed(first),
+                        trimmed(if fits {
+                            up(total - first)
+                        } else {
+                            down(total - first)
+                        }),
+                    ];
                 }
                 _ => {
                     p.curve = 1;
@@ -516,13 +602,25 @@ fn impact_words(imp: &kentos_commands::ProfileImpact) -> String {
         .iter()
         .map(|c| match c.kind {
             kentos_commands::ProfileChangeKind::Changed => {
-                format!("km {} – {} (en çok {} m)", c.from_text, c.to_text, comma(c.most.unwrap_or(0.0), 3))
+                format!(
+                    "km {} – {} (en çok {} m)",
+                    c.from_text,
+                    c.to_text,
+                    comma(c.most.unwrap_or(0.0), 3)
+                )
             }
-            kentos_commands::ProfileChangeKind::Added => format!("km {} – {} eklenir", c.from_text, c.to_text),
-            kentos_commands::ProfileChangeKind::Removed => format!("km {} – {} kalkar", c.from_text, c.to_text),
+            kentos_commands::ProfileChangeKind::Added => {
+                format!("km {} – {} eklenir", c.from_text, c.to_text)
+            }
+            kentos_commands::ProfileChangeKind::Removed => {
+                format!("km {} – {} kalkar", c.from_text, c.to_text)
+            }
         })
         .collect();
-    let mut said = format!("Kaydedilirse kırmızı kot değişir: {}.", stretches.join("; "));
+    let mut said = format!(
+        "Kaydedilirse kırmızı kot değişir: {}.",
+        stretches.join("; ")
+    );
     let mut stale: Vec<String> = Vec::new();
     for c in &imp.corridors {
         let mut regions: Vec<u32> = c.regions.iter().map(|r| r.region + 1).collect();
@@ -530,8 +628,18 @@ fn impact_words(imp: &kentos_commands::ProfileImpact) -> String {
         let regions: Vec<String> = regions.iter().map(|r| format!("{r}.")).collect();
         stale.push(format!("{} ({} bölge)", c.name, regions.join(", ")));
     }
-    stale.extend(imp.sections.iter().map(|s| format!("{} ({}/{} kesit)", s.name, s.stations, s.of)));
-    let with = |d: &kentos_commands::ImpactDerived| if d.approved { format!("{} (onaylı)", d.name) } else { d.name.clone() };
+    stale.extend(
+        imp.sections
+            .iter()
+            .map(|s| format!("{} ({}/{} kesit)", s.name, s.stations, s.of)),
+    );
+    let with = |d: &kentos_commands::ImpactDerived| {
+        if d.approved {
+            format!("{} (onaylı)", d.name)
+        } else {
+            d.name.clone()
+        }
+    };
     stale.extend(imp.volumes.iter().map(with));
     stale.extend(imp.hauls.iter().map(with));
     if !stale.is_empty() {
@@ -546,15 +654,27 @@ pub(crate) fn status(r: &Row, stale: bool, ground: &Ground) -> (String, bool) {
         Ok(v) => v,
         Err(e) => return (format!("Kurulamıyor: {e}"), true),
     };
-    if let (Some(first), Some(last)) = (r.def().ok().and_then(|d| d.pvis.first().map(|p| p.station)), r.def().ok().and_then(|d| d.pvis.last().map(|p| p.station)))
-        && ground.length > 0.0
+    if let (Some(first), Some(last)) = (
+        r.def().ok().and_then(|d| d.pvis.first().map(|p| p.station)),
+        r.def().ok().and_then(|d| d.pvis.last().map(|p| p.station)),
+    ) && ground.length > 0.0
         && (first < -1e-9 || last > ground.length + 1e-9)
     {
-        return (format!("PVI aksın dışında: aksın km'si 0 ile {} m arası.", comma(ground.length, 3)), true);
+        return (
+            format!(
+                "PVI aksın dışında: aksın km'si 0 ile {} m arası.",
+                comma(ground.length, 3)
+            ),
+            true,
+        );
     }
     let mut words = format!("{} PVI · {} kurp", r.pvis.len(), v.curves.len());
     // Its two lengths apart (docs/adr/0968): the km's horizontal one and the red line's in space.
-    words.push_str(&format!(" · yatay {} m · 3B {} m", comma(v.end - v.start, 3), comma(v.length(), 3)));
+    words.push_str(&format!(
+        " · yatay {} m · 3B {} m",
+        comma(v.end - v.start, 3),
+        comma(v.length(), 3)
+    ));
     // K in its unit and the radius H beside it (docs/adr/0961): a standard writes the one or the other.
     if let Some(k) = v.curves.iter().filter_map(|c| c.k).min_by(f64::total_cmp) {
         words.push_str(&format!(" · en küçük K {} m/%", comma(k, 1)));
@@ -586,7 +706,12 @@ pub(crate) trait ProfileWindowApp {
     ) -> bool;
     fn road_profile_view(&self) -> Element<'_, Message>;
     fn profile_draw_row<'a>(&'a self, w: &'a Window, saved: bool) -> Element<'a, Message>;
-    fn road_profile_editor<'a>(&'a self, w: &'a Window, r: &'a Row, stale: bool) -> Element<'a, Message>;
+    fn road_profile_editor<'a>(
+        &'a self,
+        w: &'a Window,
+        r: &'a Row,
+        stale: bool,
+    ) -> Element<'a, Message>;
     fn profile_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
@@ -636,7 +761,10 @@ impl ProfileWindowApp for App {
             w.ground = Ground::default();
             return;
         };
-        if w.ground.alignment == r.alignment && w.ground.surface == r.surface && w.ground.length > 0.0 {
+        if w.ground.alignment == r.alignment
+            && w.ground.surface == r.surface
+            && w.ground.length > 0.0
+        {
             return;
         }
         w.ground = ground_of(&doc.model, &r.alignment, r.surface.as_deref());
@@ -656,11 +784,12 @@ impl ProfileWindowApp for App {
 
     fn profile_surfaces(&self) -> Vec<(String, String)> {
         self.document.as_ref().map_or_else(Vec::new, |d| {
-            d.model
-                .settings()
-                .road
-                .as_ref()
-                .map_or_else(Vec::new, |r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect())
+            d.model.settings().road.as_ref().map_or_else(Vec::new, |r| {
+                r.surfaces
+                    .iter()
+                    .map(|s| (s.id.clone(), s.name.clone()))
+                    .collect()
+            })
         })
     }
 
@@ -679,7 +808,11 @@ impl ProfileWindowApp for App {
         let alignments = self.profile_alignments();
         let surfaces = self.profile_surfaces();
         let revisions: Vec<(String, u32)> = self.document.as_ref().map_or_else(Vec::new, |d| {
-            d.model.road_alignments().iter().map(|a| (a.id.clone(), a.revision)).collect()
+            d.model
+                .road_alignments()
+                .iter()
+                .map(|a| (a.id.clone(), a.revision))
+                .collect()
         });
         let Some(w) = self.modules.road_mut().profile_window.as_mut() else {
             return Task::none();
@@ -693,10 +826,17 @@ impl ProfileWindowApp for App {
                 regrounded = true;
             }
             Event::New => match alignments.first() {
-                None => warning = Some("Boykesit bir aksın üstünde kurulur: önce Güzergâh'ta bir aks oluşturun."),
+                None => {
+                    warning = Some(
+                        "Boykesit bir aksın üstünde kurulur: önce Güzergâh'ta bir aks oluşturun.",
+                    )
+                }
                 Some((alignment, _)) => {
                     let taken: Vec<String> = w.rows.iter().map(|r| r.id.clone()).collect();
-                    let id = (1..).map(|n| format!("b-{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
+                    let id = (1..)
+                        .map(|n| format!("b-{n}"))
+                        .find(|id| !taken.contains(id))
+                        .unwrap_or_default();
                     let n = w.rows.len() + 1;
                     let blank = |id: &str| PviRow {
                         id: id.to_owned(),
@@ -707,10 +847,17 @@ impl ProfileWindowApp for App {
                     };
                     w.rows.push(Row {
                         id,
-                        name: if n == 1 { "Proje kotu".to_owned() } else { format!("Boykesit {n}") },
+                        name: if n == 1 {
+                            "Proje kotu".to_owned()
+                        } else {
+                            format!("Boykesit {n}")
+                        },
                         revision: 0,
                         alignment: alignment.clone(),
-                        alignment_revision: revisions.iter().find(|(a, _)| a == alignment).map_or(0, |(_, r)| *r),
+                        alignment_revision: revisions
+                            .iter()
+                            .find(|(a, _)| a == alignment)
+                            .map_or(0, |(_, r)| *r),
                         surface: surfaces.first().map(|(id, _)| id.clone()),
                         pvis: vec![blank("a"), blank("b")],
                         crossings: Vec::new(),
@@ -723,7 +870,8 @@ impl ProfileWindowApp for App {
             Event::Remove => {
                 if let Some(i) = w.chosen.filter(|i| *i < w.rows.len()) {
                     w.rows.remove(i);
-                    w.chosen = (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
+                    w.chosen =
+                        (!w.rows.is_empty()).then_some(i.min(w.rows.len().saturating_sub(1)));
                     regrounded = true;
                 }
             }
@@ -737,9 +885,14 @@ impl ProfileWindowApp for App {
                 // Only a profile not yet saved moves to another alignment.
                 if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
                     if w.kept.iter().any(|k| k.id == r.id) {
-                        warning = Some("Kaydedilmiş boykesitin aksı değişmez; yeni bir boykesit oluşturun.");
+                        warning = Some(
+                            "Kaydedilmiş boykesitin aksı değişmez; yeni bir boykesit oluşturun.",
+                        );
                     } else {
-                        r.alignment_revision = revisions.iter().find(|(a, _)| *a == id).map_or(0, |(_, v)| *v);
+                        r.alignment_revision = revisions
+                            .iter()
+                            .find(|(a, _)| *a == id)
+                            .map_or(0, |(_, v)| *v);
                         r.alignment = id;
                         regrounded = true;
                     }
@@ -753,7 +906,11 @@ impl ProfileWindowApp for App {
             }
             Event::Exaggeration(t) => w.exaggeration = t,
             Event::Crossing(j, k, t) => {
-                if let Some(c) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.crossings.get_mut(j)) {
+                if let Some(c) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.crossings.get_mut(j))
+                {
                     match k {
                         0 => c.name = t,
                         1 => c.station = t,
@@ -764,7 +921,11 @@ impl ProfileWindowApp for App {
                 w.crossing = Some(j);
             }
             Event::CrossingSide(j, side) => {
-                if let Some(c) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.crossings.get_mut(j)) {
+                if let Some(c) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.crossings.get_mut(j))
+                {
                     c.side = side;
                 }
                 w.crossing = Some(j);
@@ -786,14 +947,21 @@ impl ProfileWindowApp for App {
             }
             Event::RemoveCrossing => {
                 if let Some(j) = w.crossing.take()
-                    && let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)).filter(|r| j < r.crossings.len())
+                    && let Some(r) = w
+                        .chosen
+                        .and_then(|i| w.rows.get_mut(i))
+                        .filter(|r| j < r.crossings.len())
                 {
                     r.crossings.remove(j);
                 }
             }
             Event::PviChoose(j) => w.pvi = Some(j),
             Event::Pvi(j, k, t) => {
-                if let Some(p) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.pvis.get_mut(j)) {
+                if let Some(p) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.pvis.get_mut(j))
+                {
                     match k {
                         0 => p.id = t,
                         1 => p.station = t,
@@ -805,7 +973,10 @@ impl ProfileWindowApp for App {
                 w.pvi = Some(j);
             }
             Event::Curve(j, c) => {
-                if let Some(p) = w.chosen.and_then(|i| w.rows.get_mut(i)).and_then(|r| r.pvis.get_mut(j))
+                if let Some(p) = w
+                    .chosen
+                    .and_then(|i| w.rows.get_mut(i))
+                    .and_then(|r| r.pvis.get_mut(j))
                     && p.curve != c
                 {
                     p.curve = c;
@@ -816,8 +987,16 @@ impl ProfileWindowApp for App {
             Event::Add => {
                 if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
                     let taken: Vec<String> = r.pvis.iter().map(|p| p.id.clone()).collect();
-                    let id = (1..).map(|n| format!("v{n}")).find(|id| !taken.contains(id)).unwrap_or_default();
-                    let at = w.pvi.map_or(r.pvis.len().saturating_sub(1), |j| (j + 1).min(r.pvis.len().saturating_sub(1))).max(1);
+                    let id = (1..)
+                        .map(|n| format!("v{n}"))
+                        .find(|id| !taken.contains(id))
+                        .unwrap_or_default();
+                    let at = w
+                        .pvi
+                        .map_or(r.pvis.len().saturating_sub(1), |j| {
+                            (j + 1).min(r.pvis.len().saturating_sub(1))
+                        })
+                        .max(1);
                     // Halfway along the grade it falls on.
                     let (a, b) = (&r.pvis[at - 1], &r.pvis[at.min(r.pvis.len() - 1)]);
                     let mid = |x: &str, y: &str| match (number(x), number(y)) {
@@ -936,7 +1115,9 @@ impl ProfileWindowApp for App {
             expected_revision: None,
         };
         if self.profile_write(|cx| road_profiles_edit::execute(cx, edit)) {
-            let Some(doc) = &self.document else { return Task::none() };
+            let Some(doc) = &self.document else {
+                return Task::none();
+            };
             let kept = doc.model.road_profiles().to_vec();
             if let Some(w) = self.modules.road_mut().profile_window.as_mut() {
                 w.rows = kept.iter().map(Row::of).collect();
@@ -963,8 +1144,12 @@ impl ProfileWindowApp for App {
         }
         // Docs/adr/0991: Yer left empty, the profile goes under the drawing.
         let auto = w.place.trim().is_empty();
-        let parts: Vec<Option<f64>> =
-            w.place.split([';', ' ']).filter(|s| !s.is_empty()).map(|s| number(s).ok().flatten()).collect();
+        let parts: Vec<Option<f64>> = w
+            .place
+            .split([';', ' '])
+            .filter(|s| !s.is_empty())
+            .map(|s| number(s).ok().flatten())
+            .collect();
         let (x, y) = match parts[..] {
             [Some(x), Some(y)] => (x, y),
             _ if auto => (0.0, 0.0),
@@ -998,13 +1183,23 @@ impl ProfileWindowApp for App {
             // rows over the frame too (Y88's picture had them on the plan's points).
             let up = match self.document.as_mut().map(|doc| {
                 let rows = if input.corridor.is_some() {
-                    kentos_native_application::road_profiles_draw::corridor_rows_height(&doc.model, 2.5)
+                    kentos_native_application::road_profiles_draw::corridor_rows_height(
+                        &doc.model, 2.5,
+                    )
                 } else {
                     0.0
                 };
-                (kentos_native_application::road_profiles_draw::plan(&ExecutionContext::new(&mut doc.model), &input), rows)
+                (
+                    kentos_native_application::road_profiles_draw::plan(
+                        &ExecutionContext::new(&mut doc.model),
+                        &input,
+                    ),
+                    rows,
+                )
             }) {
-                Some((kentos_commands::CommandResult::Completed { output, .. }, rows)) => output.frame[1][1] + rows,
+                Some((kentos_commands::CommandResult::Completed { output, .. }, rows)) => {
+                    output.frame[1][1] + rows
+                }
                 _ => 0.0,
             };
             input.at = self.under_drawing(up);
@@ -1012,12 +1207,18 @@ impl ProfileWindowApp for App {
         let Some(doc) = self.document.as_mut() else {
             return Task::none();
         };
-        let result =
-            kentos_native_application::road_profiles_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let result = kentos_native_application::road_profiles_draw::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
         if let Some(out) = self.answered(result) {
             self.say(
                 Level::Success,
-                format!("Boykesit çizildi: {} nesne, kıyas kotu {}.", out.uids.len(), comma(out.datum, 2)),
+                format!(
+                    "Boykesit çizildi: {} nesne, kıyas kotu {}.",
+                    out.uids.len(),
+                    comma(out.datum, 2)
+                ),
             );
         }
         Task::none()
@@ -1061,7 +1262,8 @@ impl ProfileWindowApp for App {
                         operation: ProfilesEditOperation::Set,
                         name: (k.name != d.name).then(|| d.name.clone()),
                         pvis: (k.pvis != d.pvis).then(|| d.pvis.clone()),
-                        surface: (k.surface != d.surface).then(|| d.surface.clone().unwrap_or_default()),
+                        surface: (k.surface != d.surface)
+                            .then(|| d.surface.clone().unwrap_or_default()),
                         crossings: (k.crossings != d.crossings).then(|| d.crossings.clone()),
                         expected_revision: None,
                     };
@@ -1110,21 +1312,40 @@ impl ProfileWindowApp for App {
         if let Some(x) = &w.lengths {
             return self.profile_lengths_view(x);
         }
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
         let alignments = self.profile_alignments();
         let revisions: Vec<(String, u32)> = self.document.as_ref().map_or_else(Vec::new, |d| {
-            d.model.road_alignments().iter().map(|a| (a.id.clone(), a.revision)).collect()
+            d.model
+                .road_alignments()
+                .iter()
+                .map(|a| (a.id.clone(), a.revision))
+                .collect()
         });
         let stale_of = |r: &Row| {
             w.kept.iter().any(|k| k.id == r.id)
-                && revisions.iter().find(|(a, _)| *a == r.alignment).is_some_and(|(_, v)| *v != r.alignment_revision)
+                && revisions
+                    .iter()
+                    .find(|(a, _)| *a == r.alignment)
+                    .is_some_and(|(_, v)| *v != r.alignment_revision)
         };
         let mut list = Column::new().spacing(1).padding(2);
         for (i, r) in w.rows.iter().enumerate() {
-            let on = alignments.iter().find(|(id, _)| *id == r.alignment).map_or(r.alignment.clone(), |(_, n)| n.clone());
-            let kind = if stale_of(r) { format!("{on} · eski") } else { on };
+            let on = alignments
+                .iter()
+                .find(|(id, _)| *id == r.alignment)
+                .map_or(r.alignment.clone(), |(_, n)| n.clone());
+            let kind = if stale_of(r) {
+                format!("{on} · eski")
+            } else {
+                on
+            };
             let face = column![
-                Elided::new(r.name.clone()).size(typography::body()).font(typography::ui()).width(Fill),
+                Elided::new(r.name.clone())
+                    .size(typography::body())
+                    .font(typography::ui())
+                    .width(Fill),
                 label::caption(kind).style(muted),
             ]
             .spacing(1);
@@ -1144,13 +1365,19 @@ impl ProfileWindowApp for App {
         }
         let left = column![
             label::strong("Boykesitler"),
-            container(scrollable(list).height(typography::scaled(330.0))).style(style::container::field_box).width(Fill),
+            container(scrollable(list).height(typography::scaled(330.0)))
+                .style(style::container::field_box)
+                .width(Fill),
             words::secondary(NEW, Some(msg(Event::New))),
         ]
         .spacing(8);
         let chosen = w.chosen.and_then(|i| w.rows.get(i));
         let right: Element<'_, Message> = match chosen {
-            None => container(label::caption("Bir boykesit seçin ya da yeni bir boykesit oluşturun.")).padding(12).into(),
+            None => container(label::caption(
+                "Bir boykesit seçin ya da yeni bir boykesit oluşturun.",
+            ))
+            .padding(12)
+            .into(),
             Some(r) => self.road_profile_editor(w, r, stale_of(r)),
         };
         let saved = chosen.is_some_and(|r| w.kept.iter().any(|k| r.def().ok().as_ref() == Some(k)));
@@ -1158,24 +1385,43 @@ impl ProfileWindowApp for App {
         let body = row![container(left).width(220), container(right).width(Fill)].spacing(16);
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
         let footer = row![
-                words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
-                words::secondary(REBIND, (saved && chosen.is_some_and(stale_of)).then(|| msg(Event::Rebind))),
-                words::ghost(LENGTHS, chosen.is_some_and(|r| r.def().is_ok()).then(|| msg(Event::OpenLengths))),
-                space::horizontal().width(Fill),
-                words::secondary(CANCEL, Some(msg(Event::Cancel))),
-                words::primary(SAVE, Some(msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(Center);
-        Frame::new(TITLE).scroll(body).push(self.profile_draw_row(w, saved)).footer(footer).width(1080.0).modal(msg(Event::Cancel))
+            words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
+            words::secondary(
+                REBIND,
+                (saved && chosen.is_some_and(stale_of)).then(|| msg(Event::Rebind))
+            ),
+            words::ghost(
+                LENGTHS,
+                chosen
+                    .is_some_and(|r| r.def().is_ok())
+                    .then(|| msg(Event::OpenLengths))
+            ),
+            space::horizontal().width(Fill),
+            words::secondary(CANCEL, Some(msg(Event::Cancel))),
+            words::primary(SAVE, Some(msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .push(self.profile_draw_row(w, saved))
+            .footer(footer)
+            .width(1080.0)
+            .modal(msg(Event::Cancel))
     }
 
     fn profile_draw_row<'a>(&'a self, w: &'a Window, saved: bool) -> Element<'a, Message> {
-        let ids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let ids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let names: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let layer = Select::new(
             names.iter().map(|n| Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| ids.iter().position(|id| id == l)),
+            w.layer
+                .as_ref()
+                .and_then(|l| ids.iter().position(|id| id == l)),
             move |i| msg(Event::DrawLayer(ids[i].clone())),
         )
         .placeholder("Katman");
@@ -1185,7 +1431,11 @@ impl ProfileWindowApp for App {
             Some(usize::from(w.kgm)),
             |i| msg(Event::Kgm(i == 1)),
         );
-        let alignment = w.chosen.and_then(|i| w.rows.get(i)).map(|r| r.alignment.clone()).unwrap_or_default();
+        let alignment = w
+            .chosen
+            .and_then(|i| w.rows.get(i))
+            .map(|r| r.alignment.clone())
+            .unwrap_or_default();
         let schedules: Vec<(String, String)> = self
             .document
             .as_ref()
@@ -1198,10 +1448,18 @@ impl ProfileWindowApp for App {
                     .collect()
             })
             .unwrap_or_default();
-        let chosen = w.dever.as_ref().and_then(|id| schedules.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
-        let ids: Vec<Option<String>> = std::iter::once(None).chain(schedules.iter().map(|(i, _)| Some(i.clone()))).collect();
+        let chosen = w
+            .dever
+            .as_ref()
+            .and_then(|id| schedules.iter().position(|(i, _)| i == id))
+            .map_or(0, |i| i + 1);
+        let ids: Vec<Option<String>> = std::iter::once(None)
+            .chain(schedules.iter().map(|(i, _)| Some(i.clone())))
+            .collect();
         let dever = Select::new(
-            std::iter::once("Çizelge yok".to_owned()).chain(schedules.iter().map(|(_, n)| n.clone())).map(Choice::new),
+            std::iter::once("Çizelge yok".to_owned())
+                .chain(schedules.iter().map(|(_, n)| n.clone()))
+                .map(Choice::new),
             Some(chosen),
             move |i| msg(Event::Dever(ids[i].clone())),
         );
@@ -1218,28 +1476,59 @@ impl ProfileWindowApp for App {
                     .collect()
             })
             .unwrap_or_default();
-        let picked = w.corridor.as_ref().and_then(|id| corridors.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
-        let cids: Vec<Option<String>> = std::iter::once(None).chain(corridors.iter().map(|(i, _)| Some(i.clone()))).collect();
+        let picked = w
+            .corridor
+            .as_ref()
+            .and_then(|id| corridors.iter().position(|(i, _)| i == id))
+            .map_or(0, |i| i + 1);
+        let cids: Vec<Option<String>> = std::iter::once(None)
+            .chain(corridors.iter().map(|(i, _)| Some(i.clone())))
+            .collect();
         let corridor = Select::new(
-            std::iter::once("Satır yok".to_owned()).chain(corridors.iter().map(|(_, n)| n.clone())).map(Choice::new),
+            std::iter::once("Satır yok".to_owned())
+                .chain(corridors.iter().map(|(_, n)| n.clone()))
+                .map(Choice::new),
             Some(picked),
             move |i| msg(Event::Corridor(cids[i].clone())),
         );
-        let hauls = crate::road_place::hauls_on(self.document.as_ref().map(|d| &d.model), Some(alignment.as_str()));
-        let hpicked = w.haul.as_ref().and_then(|id| hauls.iter().position(|(i, _)| i == id)).map_or(0, |i| i + 1);
-        let hids: Vec<Option<String>> = std::iter::once(None).chain(hauls.iter().map(|(i, _)| Some(i.clone()))).collect();
+        let hauls = crate::road_place::hauls_on(
+            self.document.as_ref().map(|d| &d.model),
+            Some(alignment.as_str()),
+        );
+        let hpicked = w
+            .haul
+            .as_ref()
+            .and_then(|id| hauls.iter().position(|(i, _)| i == id))
+            .map_or(0, |i| i + 1);
+        let hids: Vec<Option<String>> = std::iter::once(None)
+            .chain(hauls.iter().map(|(i, _)| Some(i.clone())))
+            .collect();
         let haul = Select::new(
-            std::iter::once("Satır yok".to_owned()).chain(hauls.iter().map(|(_, n)| n.clone())).map(Choice::new),
+            std::iter::once("Satır yok".to_owned())
+                .chain(hauls.iter().map(|(_, n)| n.clone()))
+                .map(Choice::new),
             Some(hpicked),
             move |i| msg(Event::Haul(hids[i].clone())),
         );
         let line = row![
             label::strong("Çizime"),
             words::field("Katman", layer, None),
-            words::field("Yer (Y; X)", kentos_ui::widget::text_field("Çizimin altı", &w.place).on_input(|t| msg(Event::Place(t))).width(200), None),
+            words::field(
+                "Yer (Y; X)",
+                kentos_ui::widget::text_field("Çizimin altı", &w.place)
+                    .on_input(|t| msg(Event::Place(t)))
+                    .width(200),
+                None
+            ),
             words::field("Bantlar", container(bands).width(130), None),
             // Docs/adr/0990: KGM's kot taşıma, the frame a fixed span of elevation high.
-            words::field("Kot aralığı (m)", kentos_ui::widget::text_field("Sığdır", &w.span).on_input(|t| msg(Event::Span(t))).width(80), None),
+            words::field(
+                "Kot aralığı (m)",
+                kentos_ui::widget::text_field("Sığdır", &w.span)
+                    .on_input(|t| msg(Event::Span(t)))
+                    .width(80),
+                None
+            ),
             space::horizontal().width(Fill),
             words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
         ]
@@ -1261,11 +1550,19 @@ impl ProfileWindowApp for App {
         column![line, kgm].spacing(8).into()
     }
 
-    fn road_profile_editor<'a>(&'a self, w: &'a Window, r: &'a Row, stale: bool) -> Element<'a, Message> {
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+    fn road_profile_editor<'a>(
+        &'a self,
+        w: &'a Window,
+        r: &'a Row,
+        stale: bool,
+    ) -> Element<'a, Message> {
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
         let alignments = self.profile_alignments();
         let surfaces = self.profile_surfaces();
-        let name = kentos_ui::widget::text_field("Boykesitin adı", &r.name).on_input(|t| msg(Event::Name(t)));
+        let name = kentos_ui::widget::text_field("Boykesitin adı", &r.name)
+            .on_input(|t| msg(Event::Name(t)));
         let ids: Vec<String> = alignments.iter().map(|(id, _)| id.clone()).collect();
         let on_alignment = Select::new(
             alignments.iter().map(|(_, n)| Choice::new(n.clone())),
@@ -1275,11 +1572,24 @@ impl ProfileWindowApp for App {
         .placeholder("Aks");
         let sids: Vec<String> = surfaces.iter().map(|(id, _)| id.clone()).collect();
         let on_surface = Select::new(
-            std::iter::once(Choice::new("Yok".to_owned())).chain(surfaces.iter().map(|(_, n)| Choice::new(n.clone()))),
-            Some(r.surface.as_ref().and_then(|s| sids.iter().position(|id| id == s)).map_or(0, |i| i + 1)),
-            move |i| msg(Event::Surface(if i == 0 { None } else { Some(sids[i - 1].clone()) })),
+            std::iter::once(Choice::new("Yok".to_owned()))
+                .chain(surfaces.iter().map(|(_, n)| Choice::new(n.clone()))),
+            Some(
+                r.surface
+                    .as_ref()
+                    .and_then(|s| sids.iter().position(|id| id == s))
+                    .map_or(0, |i| i + 1),
+            ),
+            move |i| {
+                msg(Event::Surface(if i == 0 {
+                    None
+                } else {
+                    Some(sids[i - 1].clone())
+                }))
+            },
         );
-        let ex = kentos_ui::widget::text_field("10", &w.exaggeration).on_input(|t| msg(Event::Exaggeration(t)));
+        let ex = kentos_ui::widget::text_field("10", &w.exaggeration)
+            .on_input(|t| msg(Event::Exaggeration(t)));
         // The chart takes what a resized or full screen window has over (docs/adr/0937 §2).
         let mut col = kentos_ui::widget::grow::Grows::new().spacing(10.0);
         col = col.push(
@@ -1292,8 +1602,14 @@ impl ProfileWindowApp for App {
             .spacing(12),
         );
         let vertical = r.vertical().ok();
-        let exaggeration = number(&w.exaggeration).ok().flatten().filter(|v| *v > 0.0).unwrap_or(10.0);
-        let pvis: Vec<(f64, f64)> = r.def().ok().map_or_else(Vec::new, |d| d.pvis.iter().map(|p| (p.station, p.elevation)).collect());
+        let exaggeration = number(&w.exaggeration)
+            .ok()
+            .flatten()
+            .filter(|v| *v > 0.0)
+            .unwrap_or(10.0);
+        let pvis: Vec<(f64, f64)> = r.def().ok().map_or_else(Vec::new, |d| {
+            d.pvis.iter().map(|p| (p.station, p.elevation)).collect()
+        });
         let chart = Chart {
             ground: &w.ground,
             vertical,
@@ -1311,13 +1627,20 @@ impl ProfileWindowApp for App {
             },
         };
         col = col.push_grow(
-            crate::picture::picture(canvas(chart).width(Fill).height(Fill), format!("Boykesit — {}", r.name)),
+            crate::picture::picture(
+                canvas(chart).width(Fill).height(Fill),
+                format!("Boykesit — {}", r.name),
+            ),
             typography::scaled(CHART_HEIGHT),
         );
         // What it builds to, under the chart where it is seen at once.
         let (said, bad) = status(r, stale, &w.ground);
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
         col = col.push(if bad {
             label::caption(said).style(danger)
         } else if stale {
@@ -1331,7 +1654,11 @@ impl ProfileWindowApp for App {
         // What saving the PVIs typed would make stale (docs/adr/0962).
         if let Some(Ok((imp, warnings))) = &w.impact {
             let said = impact_words(imp);
-            col = col.push(if !warnings.is_empty() { label::caption(said).style(warn) } else { label::caption(said).style(muted) });
+            col = col.push(if !warnings.is_empty() {
+                label::caption(said).style(warn)
+            } else {
+                label::caption(said).style(muted)
+            });
             for x in warnings {
                 col = col.push(label::caption(x.message.clone()).style(warn));
             }
@@ -1340,11 +1667,27 @@ impl ProfileWindowApp for App {
         let table = road_dialog::edit_table(
             vec![
                 road_dialog::col("PVI", 90.0),
-                road_dialog::Col { title: "Km (m)", width: None, number: true },
-                road_dialog::Col { title: "Kot (m)", width: None, number: true },
+                road_dialog::Col {
+                    title: "Km (m)",
+                    width: None,
+                    number: true,
+                },
+                road_dialog::Col {
+                    title: "Kot (m)",
+                    width: None,
+                    number: true,
+                },
                 road_dialog::col("Kurp", 140.0),
-                road_dialog::Col { title: "L / R (m)", width: None, number: true },
-                road_dialog::Col { title: "L çıkış (m)", width: None, number: true },
+                road_dialog::Col {
+                    title: "L / R (m)",
+                    width: None,
+                    number: true,
+                },
+                road_dialog::Col {
+                    title: "L çıkış (m)",
+                    width: None,
+                    number: true,
+                },
             ],
             pvis.len(),
             move |j, k| {
@@ -1361,7 +1704,9 @@ impl ProfileWindowApp for App {
                         let size = k - 4;
                         // L for a parabola and a circle's R, the asymmetric parabola's two lengths.
                         if !end && matches!((p.curve, size), (1 | 3, 0) | (2, _)) {
-                            road_dialog::edit(&p.sizes[size], true, move |t| msg(Event::Pvi(j, 3 + size, t)))
+                            road_dialog::edit(&p.sizes[size], true, move |t| {
+                                msg(Event::Pvi(j, 3 + size, t))
+                            })
                         } else {
                             blank()
                         }
@@ -1375,11 +1720,19 @@ impl ProfileWindowApp for App {
         col = col.push(words::field("PVI'ler", table, None)).push(
             row![
                 words::secondary(ADD, Some(msg(Event::Add))),
-                words::ghost(REMOVE_PVI, w.pvi.filter(|j| *j < r.pvis.len() && r.pvis.len() > 2).map(|_| msg(Event::RemovePvi))),
+                words::ghost(
+                    REMOVE_PVI,
+                    w.pvi
+                        .filter(|j| *j < r.pvis.len() && r.pvis.len() > 2)
+                        .map(|_| msg(Event::RemovePvi))
+                ),
                 words::secondary(FROM_GROUND, Some(msg(Event::FromGround))),
             ]
             .push(if r.crossings.is_empty() {
-                Element::from(words::secondary(ADD_CROSSING, Some(msg(Event::AddCrossing))))
+                Element::from(words::secondary(
+                    ADD_CROSSING,
+                    Some(msg(Event::AddCrossing)),
+                ))
             } else {
                 Element::from(space::horizontal().width(0))
             })
@@ -1388,7 +1741,9 @@ impl ProfileWindowApp for App {
         // What the road crosses (docs/adr/0946): each with its margin on the line as typed. With none, only the button
         // above: an empty table would take the picture's room for nothing.
         if r.crossings.is_empty() {
-            return container(col).padding(iced::Padding::default().right(14)).into();
+            return container(col)
+                .padding(iced::Padding::default().right(14))
+                .into();
         }
         let line = r.vertical().ok();
         let crossings = &r.crossings;
@@ -1403,7 +1758,11 @@ impl ProfileWindowApp for App {
         });
         let table = road_dialog::edit_table(
             vec![
-                road_dialog::Col { title: "Ad", width: None, number: false },
+                road_dialog::Col {
+                    title: "Ad",
+                    width: None,
+                    number: false,
+                },
                 road_dialog::col("Km (m)", 90.0),
                 road_dialog::col("Yer", 190.0),
                 road_dialog::col("Kot (m)", 90.0),
@@ -1415,14 +1774,27 @@ impl ProfileWindowApp for App {
                 let c = &crossings[j];
                 match k {
                     0 => road_dialog::edit(&c.name, false, move |t| msg(Event::Crossing(j, 0, t))),
-                    1 => road_dialog::edit(&c.station, true, move |t| msg(Event::Crossing(j, 1, t))),
-                    2 => road_dialog::pick(SIDES, Some(c.side), move |i| msg(Event::CrossingSide(j, i))),
-                    3 => road_dialog::edit(&c.elevation, true, move |t| msg(Event::Crossing(j, 3, t))),
-                    4 => road_dialog::edit(&c.clearance, true, move |t| msg(Event::Crossing(j, 4, t))),
-                    _ => kentos_ui::widget::table::text(margins.get(j).copied().flatten().map_or_else(
-                        || "—".to_owned(),
-                        |m| format!("{:+.3}", if m.abs() < 5e-4 { 0.0 } else { m }).replace('.', ","),
-                    ))
+                    1 => {
+                        road_dialog::edit(&c.station, true, move |t| msg(Event::Crossing(j, 1, t)))
+                    }
+                    2 => road_dialog::pick(SIDES, Some(c.side), move |i| {
+                        msg(Event::CrossingSide(j, i))
+                    }),
+                    3 => road_dialog::edit(&c.elevation, true, move |t| {
+                        msg(Event::Crossing(j, 3, t))
+                    }),
+                    4 => road_dialog::edit(&c.clearance, true, move |t| {
+                        msg(Event::Crossing(j, 4, t))
+                    }),
+                    _ => kentos_ui::widget::table::text(
+                        margins.get(j).copied().flatten().map_or_else(
+                            || "—".to_owned(),
+                            |m| {
+                                format!("{:+.3}", if m.abs() < 5e-4 { 0.0 } else { m })
+                                    .replace('.', ",")
+                            },
+                        ),
+                    )
                     .into(),
                 }
             },
@@ -1439,7 +1811,9 @@ impl ProfileWindowApp for App {
             .spacing(8)
             .align_y(iced::Alignment::Center),
         );
-        container(col).padding(iced::Padding::default().right(14)).into()
+        container(col)
+            .padding(iced::Padding::default().right(14))
+            .into()
     }
 
     fn profile_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -1447,7 +1821,9 @@ impl ProfileWindowApp for App {
             return Err(format!("{TITLE} penceresi açık değil"));
         };
         if w.lengths.is_some() {
-            use crate::profile_lengths_window::{APPLY, BACK, Event as X, FIELDS as LF, TITLE as LT};
+            use crate::profile_lengths_window::{
+                APPLY, BACK, Event as X, FIELDS as LF, TITLE as LT,
+            };
             let x = |e: X| msg(Event::Lengths(e));
             return Ok(match control {
                 Control::Press(APPLY) => Some(x(X::Apply)),
@@ -1477,7 +1853,9 @@ impl ProfileWindowApp for App {
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),
             },
             Control::Fill("Ad", text) => Some(msg(Event::Name(text.to_owned()))),
-            Control::Fill("Düşey abartma", text) => Some(msg(Event::Exaggeration(text.to_owned()))),
+            Control::Fill("Düşey abartma", text) => {
+                Some(msg(Event::Exaggeration(text.to_owned())))
+            }
             Control::Fill("Yer (Y; X)", text) => Some(msg(Event::Place(text.to_owned()))),
             Control::Fill("Kot aralığı (m)", text) => Some(msg(Event::Span(text.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
@@ -1531,8 +1909,12 @@ impl<'a> Chart<'a> {
         cursor: Option<f64>,
         on_station: fn(f64) -> Message,
     ) -> Self {
-        let pvis: Vec<(f64, f64)> = def.map_or_else(Vec::new, |d| d.pvis.iter().map(|p| (p.station, p.elevation)).collect());
-        let vertical = def.and_then(|d| core::vertical::build(&kentos_native_application::road_profiles::pvis_of(d)).ok());
+        let pvis: Vec<(f64, f64)> = def.map_or_else(Vec::new, |d| {
+            d.pvis.iter().map(|p| (p.station, p.elevation)).collect()
+        });
+        let vertical = def.and_then(|d| {
+            core::vertical::build(&kentos_native_application::road_profiles::pvis_of(d)).ok()
+        });
         Chart {
             ground,
             vertical,
@@ -1577,19 +1959,35 @@ impl<'a> Chart<'a> {
 
     /// The bands' top in a chart `height` high.
     fn bands_top(&self, height: f32) -> f32 {
-        if self.compact { height } else { height - BAND * BANDS.len() as f32 }
+        if self.compact {
+            height
+        } else {
+            height - BAND * BANDS.len() as f32
+        }
     }
 
     /// The plot and its scale in `bounds`, none when there is nothing to draw.
     fn plot(&self, bounds: Size) -> Option<Plot> {
         let bands_top = self.bands_top(bounds.height);
         // The plot starts a little right of the bands' names, so the first km's values stay clear of them.
-        let area = Rectangle { x: LEFT + 30.0, y: 10.0, width: bounds.width - LEFT - 60.0, height: bands_top - 22.0 };
-        let length = self.ground.length.max(self.pvis.last().map_or(0.0, |p| p.0));
+        let area = Rectangle {
+            x: LEFT + 30.0,
+            y: 10.0,
+            width: bounds.width - LEFT - 60.0,
+            height: bands_top - 22.0,
+        };
+        let length = self
+            .ground
+            .length
+            .max(self.pvis.last().map_or(0.0, |p| p.0));
         let (lo, hi) = self.range().filter(|_| length > 0.0)?;
         // One horizontal scale fits the length; the vertical is it times the exaggeration, unless the heights do not fit.
         let across = area.width as f64 / length;
-        let sx = if self.compact { across } else { across.min(area.height as f64 / ((hi - lo) * self.exaggeration)) };
+        let sx = if self.compact {
+            across
+        } else {
+            across.min(area.height as f64 / ((hi - lo) * self.exaggeration))
+        };
         Some(Plot { area, sx, length })
     }
 
@@ -1601,9 +1999,15 @@ impl<'a> Chart<'a> {
             .iter()
             .filter_map(|p| p.z)
             .chain(self.pvis.iter().map(|p| p.1))
-            .chain(self.vertical.iter().flat_map(|v| v.curves.iter().flat_map(|c| [c.start[1], c.end[1]])))
+            .chain(
+                self.vertical
+                    .iter()
+                    .flat_map(|v| v.curves.iter().flat_map(|c| [c.start[1], c.end[1]])),
+            )
             .chain(self.crossings.iter().flat_map(|c| [c.3, c.4]));
-        let (lo, hi) = zs.fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| (lo.min(z), hi.max(z)));
+        let (lo, hi) = zs.fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), z| {
+            (lo.min(z), hi.max(z))
+        });
         (lo.is_finite() && hi.is_finite()).then(|| {
             let pad = ((hi - lo) * 0.08).max(0.5);
             (lo - pad, hi + pad)
@@ -1646,11 +2050,26 @@ impl canvas::Program<Message> for Chart<'_> {
         }
     }
 
-    fn draw(&self, _: &bool, renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &bool,
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let t = Tokens::of(theme);
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let bands_top = self.bands_top(bounds.height);
-        let (Some(Plot { area: plot, sx, length }), Some((lo, hi))) = (self.plot(bounds.size()), self.range()) else {
+        let (
+            Some(Plot {
+                area: plot,
+                sx,
+                length,
+            }),
+            Some((lo, hi)),
+        ) = (self.plot(bounds.size()), self.range())
+        else {
             frame.fill_text(Text {
                 content: "PVI'leri ve yüzeyi verince boykesit burada çizilir.".into(),
                 position: Point::new(LEFT, 20.0),
@@ -1672,29 +2091,49 @@ impl canvas::Program<Message> for Chart<'_> {
         // The stretches the PVIs typed change, under everything (docs/adr/0962).
         for (a, b) in &self.changed {
             let (xa, xb) = (x(*a), x(*b).max(x(*a) + 1.0));
-            frame.fill_rectangle(Point::new(xa, plot.y), Size::new(xb - xa, plot.height), Color { a: 0.16, ..t.warning });
+            frame.fill_rectangle(
+                Point::new(xa, plot.y),
+                Size::new(xb - xa, plot.height),
+                Color {
+                    a: 0.16,
+                    ..t.warning
+                },
+            );
         }
-        let word = |frame: &mut canvas::Frame, s: String, at: Point, color: Color, centred: bool| {
-            frame.fill_text(Text {
-                content: s,
-                position: at,
-                color,
-                size: Pixels(typography::caption()),
-                font: typography::ui(),
-                align_x: if centred { iced::widget::text::Alignment::Center } else { iced::widget::text::Alignment::Default },
-                ..Text::default()
-            });
-        };
+        let word =
+            |frame: &mut canvas::Frame, s: String, at: Point, color: Color, centred: bool| {
+                frame.fill_text(Text {
+                    content: s,
+                    position: at,
+                    color,
+                    size: Pixels(typography::caption()),
+                    font: typography::ui(),
+                    align_x: if centred {
+                        iced::widget::text::Alignment::Center
+                    } else {
+                        iced::widget::text::Alignment::Default
+                    },
+                    ..Text::default()
+                });
+            };
         // Zoomed in a picture (docs/adr/0937 §3): the grid from the pixels (heights at least 40 px apart, kms 90 px),
         // finer as the chart is laid out larger; the elevations' labels and the bands stay on the part shown.
         let shown = crate::picture::Shown::of(bounds.size());
-        let rows = if self.compact { 0.0 } else { BANDS.len() as f32 };
+        let rows = if self.compact {
+            0.0
+        } else {
+            BANDS.len() as f32
+        };
         let bands_top = shown.bottom(bands_top, BAND * rows);
         let bands_moved = bands_top < self.bands_top(bounds.height) - 0.5;
         // A canvas writes all its words over all its fills: a backdrop cannot hide a word under it. So the words that
         // would fall on the moved bands, or under the moved band names, are not written (docs/adr/0937 §3).
         let names_x = shown.left(6.0);
-        let names_right = if names_x > 6.5 { names_x - 4.0 + LEFT - 8.0 } else { f32::NEG_INFINITY };
+        let names_right = if names_x > 6.5 {
+            names_x - 4.0 + LEFT - 8.0
+        } else {
+            f32::NEG_INFINITY
+        };
         let above_bands = |top: f32| !bands_moved || top + 15.0 < bands_top;
         let step = crate::picture::step(40.0 / sy);
         let places = crate::picture::decimals(step);
@@ -1703,14 +2142,23 @@ impl canvas::Program<Message> for Chart<'_> {
         let mut z = (lo / step).ceil() * step;
         while z <= hi {
             if shown.has_y(y(z)) {
-                frame.stroke(&Path::line(Point::new(plot.x, y(z)), Point::new(x(length), y(z))), thin(t.border));
+                frame.stroke(
+                    &Path::line(Point::new(plot.x, y(z)), Point::new(x(length), y(z))),
+                    thin(t.border),
+                );
                 heights.push(z);
             }
             z += step;
         }
         let ticks = self.ticks(sx, &shown, plot.x);
         for (s, _) in &ticks {
-            frame.stroke(&Path::line(Point::new(x(*s), plot.y), Point::new(x(*s), bands_top + BAND * rows)), thin(t.border));
+            frame.stroke(
+                &Path::line(
+                    Point::new(x(*s), plot.y),
+                    Point::new(x(*s), bands_top + BAND * rows),
+                ),
+                thin(t.border),
+            );
         }
         // The terrain, broken where it is off the surface.
         let terrain = Path::new(|b| {
@@ -1726,7 +2174,10 @@ impl canvas::Program<Message> for Chart<'_> {
                 }
             }
         });
-        frame.stroke(&terrain, Stroke::default().with_color(t.text).with_width(1.3));
+        frame.stroke(
+            &terrain,
+            Stroke::default().with_color(t.text).with_width(1.3),
+        );
         // The PVIs' tangent polygon, dashed, and the design line.
         if self.pvis.len() > 1 {
             let tangents = Path::new(|b| {
@@ -1737,7 +2188,13 @@ impl canvas::Program<Message> for Chart<'_> {
             });
             frame.stroke(
                 &tangents,
-                Stroke { line_dash: LineDash { segments: &[4.0, 3.0], offset: 0 }, ..thin(t.muted) },
+                Stroke {
+                    line_dash: LineDash {
+                        segments: &[4.0, 3.0],
+                        offset: 0,
+                    },
+                    ..thin(t.muted)
+                },
             );
         }
         let red = t.danger;
@@ -1745,7 +2202,13 @@ impl canvas::Program<Message> for Chart<'_> {
         // dashed between; green where the line keeps it, red where it does not.
         for (name, s, above, z, limit) in &self.crossings {
             let line_z = self.vertical.as_ref().and_then(|v| v.at(*s)).map(|q| q.0);
-            let kept = line_z.is_none_or(|lz| if *above { lz <= *limit + 1e-9 } else { lz >= *limit - 1e-9 });
+            let kept = line_z.is_none_or(|lz| {
+                if *above {
+                    lz <= *limit + 1e-9
+                } else {
+                    lz >= *limit - 1e-9
+                }
+            });
             let colour = if kept { t.success } else { t.danger };
             let (cx, half) = (x(*s), 14.0f32);
             if !shown.has_x(cx) {
@@ -1753,14 +2216,36 @@ impl canvas::Program<Message> for Chart<'_> {
             }
             if *above {
                 // The deck: its underside at z, a slab above.
-                frame.fill_rectangle(Point::new(cx - half, y(*z) - 6.0), Size::new(2.0 * half, 6.0), Color { a: 0.85, ..t.muted });
+                frame.fill_rectangle(
+                    Point::new(cx - half, y(*z) - 6.0),
+                    Size::new(2.0 * half, 6.0),
+                    Color { a: 0.85, ..t.muted },
+                );
             } else {
                 // The culvert: a box whose top is z.
-                frame.stroke(&Path::rectangle(Point::new(cx - 8.0, y(*z)), Size::new(16.0, 12.0)), Stroke::default().with_color(t.muted).with_width(1.5));
+                frame.stroke(
+                    &Path::rectangle(Point::new(cx - 8.0, y(*z)), Size::new(16.0, 12.0)),
+                    Stroke::default().with_color(t.muted).with_width(1.5),
+                );
             }
-            let dash = Stroke { line_dash: LineDash { segments: &[3.0, 2.0], offset: 0 }, ..Stroke::default().with_color(colour).with_width(1.5) };
-            frame.stroke(&Path::line(Point::new(cx - half - 6.0, y(*limit)), Point::new(cx + half + 6.0, y(*limit))), dash);
-            frame.stroke(&Path::line(Point::new(cx, y(*z)), Point::new(cx, y(*limit))), thin(colour));
+            let dash = Stroke {
+                line_dash: LineDash {
+                    segments: &[3.0, 2.0],
+                    offset: 0,
+                },
+                ..Stroke::default().with_color(colour).with_width(1.5)
+            };
+            frame.stroke(
+                &Path::line(
+                    Point::new(cx - half - 6.0, y(*limit)),
+                    Point::new(cx + half + 6.0, y(*limit)),
+                ),
+                dash,
+            );
+            frame.stroke(
+                &Path::line(Point::new(cx, y(*z)), Point::new(cx, y(*limit))),
+                thin(colour),
+            );
             let top = if *above { y(*z) - 22.0 } else { y(*z) + 16.0 };
             if above_bands(top) {
                 word(&mut frame, name.clone(), Point::new(cx, top), colour, true);
@@ -1781,11 +2266,17 @@ impl canvas::Program<Message> for Chart<'_> {
             for c in &v.curves {
                 curve_marks(&mut frame, c, &x, &y, red);
                 // Away from the PVI: under a crest's curve, over a sag's.
-                let (hi_z, lo_z) = [c.start[1], c.end[1]].into_iter().chain(c.extreme.map(|e| e[1])).fold(
-                    (f64::NEG_INFINITY, f64::INFINITY),
-                    |(h, l), z| (h.max(z), l.min(z)),
-                );
-                let place_y = if c.crest { y(lo_z) + 8.0 } else { y(hi_z) - 22.0 };
+                let (hi_z, lo_z) = [c.start[1], c.end[1]]
+                    .into_iter()
+                    .chain(c.extreme.map(|e| e[1]))
+                    .fold((f64::NEG_INFINITY, f64::INFINITY), |(h, l), z| {
+                        (h.max(z), l.min(z))
+                    });
+                let place_y = if c.crest {
+                    y(lo_z) + 8.0
+                } else {
+                    y(hi_z) - 22.0
+                };
                 let kind = match c.curve {
                     VCurve::Asymmetric { .. } => "asim.",
                     VCurve::Circle { .. } => "R",
@@ -1805,16 +2296,34 @@ impl canvas::Program<Message> for Chart<'_> {
         for (i, p) in self.pvis.iter().enumerate() {
             let on = self.chosen == Some(i);
             let mark = Path::circle(Point::new(x(p.0), y(p.1)), if on { 5.0 } else { 3.5 });
-            frame.stroke(&mark, Stroke::default().with_color(if on { t.accent } else { red }).with_width(1.5));
+            frame.stroke(
+                &mark,
+                Stroke::default()
+                    .with_color(if on { t.accent } else { red })
+                    .with_width(1.5),
+            );
             if let Some(name) = self.names.get(i).filter(|_| above_bands(y(p.1) - 16.0)) {
-                word(&mut frame, name.clone(), Point::new(x(p.0) + 6.0, y(p.1) - 16.0), t.muted, false);
+                word(
+                    &mut frame,
+                    name.clone(),
+                    Point::new(x(p.0) + 6.0, y(p.1) - 16.0),
+                    t.muted,
+                    false,
+                );
             }
         }
         // The elevations' labels over the drawing, above the bands.
         for z in heights {
             if y(z) < bands_top - 4.0 {
                 let moved = labels_x > plot.x - 33.5;
-                crate::picture::label(&mut frame, comma(z, places), Point::new(labels_x, y(z) - 7.0), t.muted, false, moved.then_some(t.field.scale_alpha(0.9)));
+                crate::picture::label(
+                    &mut frame,
+                    comma(z, places),
+                    Point::new(labels_x, y(z) - 7.0),
+                    t.muted,
+                    false,
+                    moved.then_some(t.field.scale_alpha(0.9)),
+                );
             }
         }
         // The bands: moved up over the drawing on its own ground when the view is above them.
@@ -1822,15 +2331,36 @@ impl canvas::Program<Message> for Chart<'_> {
         if bands_moved && !names.is_empty() {
             // Down to the part's bottom: the scrollbar's strip under the bands shows no drawing either.
             let down = (shown.part.y + shown.part.height - bands_top).max(BAND * rows);
-            frame.fill(&Path::rectangle(Point::new(shown.part.x, bands_top), Size::new(shown.part.width, down)), t.field);
+            frame.fill(
+                &Path::rectangle(
+                    Point::new(shown.part.x, bands_top),
+                    Size::new(shown.part.width, down),
+                ),
+                t.field,
+            );
         }
         if names_x > 6.5 && !names.is_empty() {
-            frame.fill(&Path::rectangle(Point::new(names_x - 4.0, bands_top), Size::new(LEFT - 8.0, BAND * rows)), t.field);
+            frame.fill(
+                &Path::rectangle(
+                    Point::new(names_x - 4.0, bands_top),
+                    Size::new(LEFT - 8.0, BAND * rows),
+                ),
+                t.field,
+            );
         }
         for (k, name) in names.iter().enumerate() {
             let top = bands_top + BAND * k as f32;
-            frame.stroke(&Path::line(Point::new(0.0, top), Point::new(bounds.width, top)), thin(t.border));
-            word(&mut frame, (*name).to_owned(), Point::new(names_x, top + 3.0), if k == 3 { red } else { t.muted }, false);
+            frame.stroke(
+                &Path::line(Point::new(0.0, top), Point::new(bounds.width, top)),
+                thin(t.border),
+            );
+            word(
+                &mut frame,
+                (*name).to_owned(),
+                Point::new(names_x, top + 3.0),
+                if k == 3 { red } else { t.muted },
+                false,
+            );
         }
         let mut before: Option<f64> = None;
         for (s, km) in ticks.iter().filter(|_| !self.compact) {
@@ -1842,12 +2372,24 @@ impl canvas::Program<Message> for Chart<'_> {
                 before.map(|b| comma(s - b, 0)),
                 black.map(|z| comma(z, 2)),
                 design.map(|z| comma(z, 2)),
-                design.zip(black).map(|(r, b)| format!("{}{}", if r >= b { "+" } else { "" }, comma(r - b, 2))),
+                design
+                    .zip(black)
+                    .map(|(r, b)| format!("{}{}", if r >= b { "+" } else { "" }, comma(r - b, 2))),
             ];
-            for (k, cell) in cells.into_iter().enumerate().filter(|_| cx - 34.0 > names_right) {
+            for (k, cell) in cells
+                .into_iter()
+                .enumerate()
+                .filter(|_| cx - 34.0 > names_right)
+            {
                 if let Some(text) = cell {
                     let color = if k == 3 { red } else { t.text };
-                    word(&mut frame, text, Point::new(cx, bands_top + BAND * k as f32 + 3.0), color, true);
+                    word(
+                        &mut frame,
+                        text,
+                        Point::new(cx, bands_top + BAND * k as f32 + 3.0),
+                        color,
+                        true,
+                    );
                 }
             }
             before = Some(*s);
@@ -1855,9 +2397,24 @@ impl canvas::Program<Message> for Chart<'_> {
         // The km of the split views: a line through the plot and the bands, its km and elevations at its foot.
         if let Some(c) = self.cursor.filter(|c| (0.0..=length).contains(c)) {
             let cx = x(c);
-            let line = Stroke { line_dash: LineDash { segments: &[5.0, 3.0], offset: 0 }, ..thin(t.accent) };
-            frame.stroke(&Path::line(Point::new(cx, plot.y), Point::new(cx, bands_top)), Stroke { width: 1.4, ..line });
-            for z in [self.ground.at(c), self.vertical.as_ref().and_then(|v| v.at(c)).map(|r| r.0)].into_iter().flatten() {
+            let line = Stroke {
+                line_dash: LineDash {
+                    segments: &[5.0, 3.0],
+                    offset: 0,
+                },
+                ..thin(t.accent)
+            };
+            frame.stroke(
+                &Path::line(Point::new(cx, plot.y), Point::new(cx, bands_top)),
+                Stroke { width: 1.4, ..line },
+            );
+            for z in [
+                self.ground.at(c),
+                self.vertical.as_ref().and_then(|v| v.at(c)).map(|r| r.0),
+            ]
+            .into_iter()
+            .flatten()
+            {
                 frame.fill(&Path::circle(Point::new(cx, y(z)), 3.0), t.accent);
             }
         }
@@ -1869,13 +2426,23 @@ impl canvas::Program<Message> for Chart<'_> {
                 continue;
             }
             let g = (z1 - z0) / (s1 - s0);
-            frame.stroke(&Path::line(Point::new(x(s1), grade_top), Point::new(x(s1), grade_top + BAND)), thin(t.muted));
+            frame.stroke(
+                &Path::line(
+                    Point::new(x(s1), grade_top),
+                    Point::new(x(s1), grade_top + BAND),
+                ),
+                thin(t.muted),
+            );
             if x(0.5 * (s0 + s1)) - 48.0 <= names_right {
                 continue;
             }
             word(
                 &mut frame,
-                format!("{} L={}", kentos_road::profile::grade_text(g).replace('.', ","), comma(s1 - s0, 1)),
+                format!(
+                    "{} L={}",
+                    kentos_road::profile::grade_text(g).replace('.', ","),
+                    comma(s1 - s0, 1)
+                ),
                 Point::new(x(0.5 * (s0 + s1)), grade_top + 3.0),
                 t.text,
                 true,
@@ -1886,10 +2453,19 @@ impl canvas::Program<Message> for Chart<'_> {
 }
 
 /// A curve's start and end, short ticks across the design line.
-fn curve_marks(frame: &mut canvas::Frame, c: &CurveReport, x: &dyn Fn(f64) -> f32, y: &dyn Fn(f64) -> f32, color: Color) {
+fn curve_marks(
+    frame: &mut canvas::Frame,
+    c: &CurveReport,
+    x: &dyn Fn(f64) -> f32,
+    y: &dyn Fn(f64) -> f32,
+    color: Color,
+) {
     for p in [c.start, c.end] {
         frame.stroke(
-            &Path::line(Point::new(x(p[0]), y(p[1]) - 6.0), Point::new(x(p[0]), y(p[1]) + 6.0)),
+            &Path::line(
+                Point::new(x(p[0]), y(p[1]) - 6.0),
+                Point::new(x(p[0]), y(p[1]) + 6.0),
+            ),
             Stroke::default().with_color(color).with_width(1.2),
         );
     }
@@ -1901,7 +2477,11 @@ fn chart_crossings(d: &ProfileDef) -> Vec<(String, f64, bool, f64, f64)> {
         .iter()
         .map(|c| {
             let above = c.side == kentos_commands::CrossingSide::Above;
-            let limit = if above { c.elevation - c.clearance } else { c.elevation + c.clearance };
+            let limit = if above {
+                c.elevation - c.clearance
+            } else {
+                c.elevation + c.clearance
+            };
             (c.name.clone(), c.station, above, c.elevation, limit)
         })
         .collect()

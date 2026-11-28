@@ -208,7 +208,9 @@ fn a_derivation_is_never_bound_back_and_is_told_what_it_is_when_taken_in() {
     let before = s.summary()["revision"].clone();
     // A CBS project binds no table (docs/adr/9196 §2); a map's project binds, but not the derivative's table.
     let mut map = {
-        let mut v: Value = serde_json::from_slice(&std::fs::read(drawing_path()).expect("the drawing")).expect("JSON");
+        let mut v: Value =
+            serde_json::from_slice(&std::fs::read(drawing_path()).expect("the drawing"))
+                .expect("JSON");
         v["settings"]["workspace"] = json!("cad");
         Session::from_bytes(v.to_string().as_bytes()).expect("a map's drawing")
     };

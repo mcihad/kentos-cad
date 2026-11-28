@@ -101,7 +101,11 @@ impl StoreWindow {
     fn schema(&self) -> Option<String> {
         (self.kind == Kind::Database).then(|| {
             let s = self.schema.trim();
-            if s.is_empty() { "public".to_owned() } else { s.to_owned() }
+            if s.is_empty() {
+                "public".to_owned()
+            } else {
+                s.to_owned()
+            }
         })
     }
 
@@ -133,12 +137,20 @@ impl StoreWindow {
     /// The projects' names listed, none before a read.
     #[cfg(test)]
     pub(crate) fn listed_for_test(&self) -> Option<Vec<String>> {
-        self.listed.as_ref().and_then(|l| l.as_ref().ok()).map(|l| l.iter().map(|p| p.name.clone()).collect())
+        self.listed
+            .as_ref()
+            .and_then(|l| l.as_ref().ok())
+            .map(|l| l.iter().map(|p| p.name.clone()).collect())
     }
 
     /// The place in words: the file's name, the database and schema.
     fn place_words(&self) -> String {
-        StoredSource { address: self.source(), schema: self.schema(), name: String::new() }.place()
+        StoredSource {
+            address: self.source(),
+            schema: self.schema(),
+            name: String::new(),
+        }
+        .place()
     }
 
     /// An opening that did not go: the window waits again and says why.
@@ -172,14 +184,21 @@ fn size_words(bytes: u64) -> String {
 /// “21.11.2026 15:41”; the text as it is when it cannot be read.
 fn when_words(at: &str) -> String {
     let local = crate::cloud::local_time::when(at, crate::cloud::local_time::Zone::system());
-    if local.is_empty() { at.to_owned() } else { local }
+    if local.is_empty() {
+        at.to_owned()
+    } else {
+        local
+    }
 }
 
 impl App {
     /// Opens the window (Dosya › Veri kaynağı's rows): Kaydet with the drawing's name (or the project it is), Aç
     /// empty.
     pub(crate) fn open_project_store(&mut self, save: bool) -> Task<Message> {
-        let stored = self.document.as_ref().and_then(|d| d.stored_source().cloned());
+        let stored = self
+            .document
+            .as_ref()
+            .and_then(|d| d.stored_source().cloned());
         let name = match (&stored, &self.document) {
             (Some(s), _) => s.name.clone(),
             (None, Some(d)) => d.name().trim_end_matches(".kcad").to_owned(),
@@ -216,8 +235,14 @@ impl App {
         }
         let list = !w.source().is_empty();
         self.gis.project_store = Some(w);
-        self.dialog = Some(crate::app::Dialog::Gis(crate::gis::GisDialogKind::ProjectStore));
-        if list { self.list_projects() } else { Task::none() }
+        self.dialog = Some(crate::app::Dialog::Gis(
+            crate::gis::GisDialogKind::ProjectStore,
+        ));
+        if list {
+            self.list_projects()
+        } else {
+            Task::none()
+        }
     }
 
     /// The first Kaydet of a project made of a GeoPackage's tables (docs/adr/9122): the window on that file, the name
@@ -226,7 +251,9 @@ impl App {
         let _ = self.open_project_store(true);
         if let Some(w) = self.gis.project_store.as_mut() {
             w.kind = Kind::File;
-            w.path = at.file().map_or_else(|| at.address.clone(), |f| f.display().to_string());
+            w.path = at
+                .file()
+                .map_or_else(|| at.address.clone(), |f| f.display().to_string());
             w.name = at.name.clone();
             w.listed = None;
             w.selected = None;
@@ -252,7 +279,10 @@ impl App {
     fn first_data_file(&self) -> Option<String> {
         let doc = self.document.as_ref()?;
         doc.model.layers().leaves().iter().find_map(|n| {
-            n.data.as_ref().filter(|d| d.driver == "gpkg").map(|d| d.address.trim_start_matches("gpkg:").to_owned())
+            n.data
+                .as_ref()
+                .filter(|d| d.driver == "gpkg")
+                .map(|d| d.address.trim_start_matches("gpkg:").to_owned())
         })
     }
 
@@ -298,16 +328,28 @@ impl App {
                 return Task::perform(
                     async move {
                         let dialog = rfd::AsyncFileDialog::new()
-                            .set_title(if save { "Projenin saklanacağı GeoPackage" } else { "Projenin saklandığı GeoPackage" })
+                            .set_title(if save {
+                                "Projenin saklanacağı GeoPackage"
+                            } else {
+                                "Projenin saklandığı GeoPackage"
+                            })
                             .add_filter("GeoPackage (.gpkg)", &["gpkg"]);
-                        let file = if save { dialog.save_file().await } else { dialog.pick_file().await };
+                        let file = if save {
+                            dialog.save_file().await
+                        } else {
+                            dialog.pick_file().await
+                        };
                         file.map(|f| f.path().to_path_buf())
                     },
                     |p| message(Event::Browsed(p)),
                 );
             }
             Event::Browsed(Some(p)) => {
-                let p = if kentos_native_application::project_store::is_geopackage(&p) { p } else { p.with_extension("gpkg") };
+                let p = if kentos_native_application::project_store::is_geopackage(&p) {
+                    p
+                } else {
+                    p.with_extension("gpkg")
+                };
                 w.path = p.display().to_string();
                 return self.list_projects();
             }
@@ -340,7 +382,9 @@ impl App {
                     w.listed = Some(answer);
                     w.selected = None;
                     if !w.save && w.empty_file() && w.name.trim().is_empty() {
-                        w.name = kentos_native_application::gpkg_open::project_name(std::path::Path::new(w.path.trim()));
+                        w.name = kentos_native_application::gpkg_open::project_name(
+                            std::path::Path::new(w.path.trim()),
+                        );
                     }
                 }
             }
@@ -368,7 +412,12 @@ impl App {
                 w.busy = true;
                 return crate::db_connections::off_thread(
                     move || {
-                        kentos_native_application::project_store::delete(&address, schema.as_deref(), &p.name).map(|()| p.name)
+                        kentos_native_application::project_store::delete(
+                            &address,
+                            schema.as_deref(),
+                            &p.name,
+                        )
+                        .map(|()| p.name)
                     },
                     |done| message(Event::Deleted(done)),
                 );
@@ -378,7 +427,10 @@ impl App {
                 match done {
                     Ok(name) => {
                         w.selected = None;
-                        self.say(kentos_interaction::Level::Success, format!("“{name}” projesi silindi."));
+                        self.say(
+                            kentos_interaction::Level::Success,
+                            format!("“{name}” projesi silindi."),
+                        );
                         return self.list_projects();
                     }
                     Err(why) => w.said = Some(why),
@@ -417,7 +469,11 @@ impl App {
             w.said = Some(e.to_string());
             return Task::none();
         }
-        let at = StoredSource { address: address.clone(), schema: w.schema(), name: name.clone() };
+        let at = StoredSource {
+            address: address.clone(),
+            schema: w.schema(),
+            name: name.clone(),
+        };
         if w.save {
             self.gis.project_store = None;
             self.dialog = None;
@@ -427,7 +483,11 @@ impl App {
         w.said = None;
         // A file's project, or a project of its tables when it keeps none (docs/adr/9116).
         if w.kind == Kind::File {
-            return self.open_geopackage(std::path::PathBuf::from(address), crate::opening::Purpose::File, Some(name));
+            return self.open_geopackage(
+                std::path::PathBuf::from(address),
+                crate::opening::Purpose::File,
+                Some(name),
+            );
         }
         self.open_stored_project(at)
     }
@@ -435,12 +495,20 @@ impl App {
     /// Opens a project kept in a source (the window's Aç, a Kaynaklar row): read and built off the interface's thread,
     /// opened in a tab of its own; why not, in the window or said.
     pub(crate) fn open_stored_project(&mut self, at: StoredSource) -> Task<Message> {
-        self.say(kentos_interaction::Level::Info, format!("“{}” projesi okunuyor ({})…", at.name, at.place()));
+        self.say(
+            kentos_interaction::Level::Info,
+            format!("“{}” projesi okunuyor ({})…", at.name, at.place()),
+        );
         crate::db_connections::off_thread(
             move || {
-                let bytes = kentos_native_application::project_store::read(&at.address, at.schema.as_deref(), &at.name)?;
-                let snapshot = kentos_native_application::project_store::decode(&at.address, &bytes)
-                    .map_err(|e| format!("“{}” projesi okunamadı: {e}", at.name))?;
+                let bytes = kentos_native_application::project_store::read(
+                    &at.address,
+                    at.schema.as_deref(),
+                    &at.name,
+                )?;
+                let snapshot =
+                    kentos_native_application::project_store::decode(&at.address, &bytes)
+                        .map_err(|e| format!("“{}” projesi okunamadı: {e}", at.name))?;
                 let mut doc = Document::from_v2(snapshot, None)?;
                 doc.source = Source::Stored(Box::new(at));
                 Ok(doc)
@@ -477,7 +545,9 @@ impl App {
         };
         let kind = container(
             Select::new(
-                ["GeoPackage dosyası", "PostgreSQL veritabanı"].into_iter().map(Choice::new),
+                ["GeoPackage dosyası", "PostgreSQL veritabanı"]
+                    .into_iter()
+                    .map(Choice::new),
                 Some(usize::from(w.kind == Kind::Database)),
                 |i| message(Event::Kind(i)),
             )
@@ -491,9 +561,12 @@ impl App {
                     "Dosya",
                     row![
                         container(
-                            kentos_ui::widget::text_field("GeoPackage dosyasının yolu (.gpkg)", &w.path)
-                                .on_input(|t| message(Event::Path(t)))
-                                .on_submit(message(Event::List))
+                            kentos_ui::widget::text_field(
+                                "GeoPackage dosyasının yolu (.gpkg)",
+                                &w.path
+                            )
+                            .on_input(|t| message(Event::Path(t)))
+                            .on_submit(message(Event::List))
                         )
                         .width(Length::Fill),
                         words::secondary("Gözat…", Some(message(Event::Browse))),
@@ -510,8 +583,10 @@ impl App {
                     form = form.field(
                         "Bağlantı",
                         container(
-                            Select::new(names.into_iter().map(Choice::new), w.connection, |i| message(Event::Connection(i)))
-                                .searchable(false),
+                            Select::new(names.into_iter().map(Choice::new), w.connection, |i| {
+                                message(Event::Connection(i))
+                            })
+                            .searchable(false),
                         )
                         .width(320),
                     );
@@ -590,7 +665,11 @@ impl App {
         if w.save && w.over() {
             form = form.help("Bu adla saklanan bir proje var; Kaydet onun üstüne yazar.");
         }
-        let title = if w.save { "Veri kaynağına kaydet" } else { "Veri kaynağından aç" };
+        let title = if w.save {
+            "Veri kaynağına kaydet"
+        } else {
+            "Veri kaynağından aç"
+        };
         let mut dialog = Dialog::new(title);
         // The first Kaydet of a project made of this file's tables (docs/adr/9122): what keeping it here does.
         if w.offered {
@@ -631,12 +710,18 @@ impl App {
         }
         let can = !w.busy && !w.source().is_empty() && !w.name.trim().is_empty();
         if chosen.is_some() {
-            dialog = dialog.aside(words::ghost("Projeyi sil…", (!w.busy).then(|| message(Event::Delete))));
+            dialog = dialog.aside(words::ghost(
+                "Projeyi sil…",
+                (!w.busy).then(|| message(Event::Delete)),
+            ));
         }
         overlay::blocking(
             dialog
                 .action(words::secondary("Vazgeç", Some(message(Event::Close))))
-                .action(words::primary(if w.save { "Kaydet" } else { "Aç" }, can.then(|| message(Event::Run))))
+                .action(words::primary(
+                    if w.save { "Kaydet" } else { "Aç" },
+                    can.then(|| message(Event::Run)),
+                ))
                 .width(640.0)
                 .max_height(720.0)
                 .on_close(Some(message(Event::Close))),

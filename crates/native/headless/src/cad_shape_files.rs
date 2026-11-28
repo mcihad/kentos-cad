@@ -72,8 +72,14 @@ pub(crate) fn plan(doc: &Document, target: &Path) -> Result<Vec<Source>, Refused
         .text_styles
         .iter()
         .flat_map(|s| {
-            let font = s.font_file.as_deref().filter(|_| kentos_native_application::shx_text::is_shx(s));
-            let big = s.big_font_file.as_deref().filter(|f| f.to_ascii_lowercase().ends_with(".shx"));
+            let font = s
+                .font_file
+                .as_deref()
+                .filter(|_| kentos_native_application::shx_text::is_shx(s));
+            let big = s
+                .big_font_file
+                .as_deref()
+                .filter(|f| f.to_ascii_lowercase().ends_with(".shx"));
             [font, big]
         })
         .flatten()
@@ -215,21 +221,42 @@ mod tests {
     #[test]
     fn a_text_styles_embedded_shx_fonts_are_written_beside_the_drawing() {
         let mut snap: kentos_commands::DocumentSnapshotV2 =
-            serde_json::from_str(include_str!("../../../../fixtures/kcad/v2/shx-fonts.json")).unwrap();
+            serde_json::from_str(include_str!("../../../../fixtures/kcad/v2/shx-fonts.json"))
+                .unwrap();
         snap.settings.text_styles.push(
-            serde_json::from_value(json!({"id":"rom","name":"Romans","font":"barlow","fontFile":"romans.shx"}))
-                .unwrap(),
+            serde_json::from_value(
+                json!({"id":"rom","name":"Romans","font":"barlow","fontFile":"romans.shx"}),
+            )
+            .unwrap(),
         );
         let doc = Document::from_snapshot_v2(snap).unwrap();
-        let root = std::env::temp_dir().join(format!("kentos-shx-fonts-{}", kentos_domain::Uuid::now_v7()));
+        let root = std::env::temp_dir().join(format!(
+            "kentos-shx-fonts-{}",
+            kentos_domain::Uuid::now_v7()
+        ));
         fs::create_dir(&root).unwrap();
         let target = root.join("out.dxf");
         let sources = plan(&doc, &target).unwrap();
         let report = report(&sources);
-        let files: Vec<_> = report.as_array().unwrap().iter().map(|s| s["file"].as_str().unwrap()).collect();
+        let files: Vec<_> = report
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|s| s["file"].as_str().unwrap())
+            .collect();
         assert_eq!(files, ["kentos-uni.shx", "kentos-big.shx"], "{report}");
-        assert!(report.as_array().unwrap().iter().all(|s| s["available"] == true && s["reused"] == false));
-        assert_eq!(fs::read_dir(&root).unwrap().count(), 0, "a plan writes nothing");
+        assert!(
+            report
+                .as_array()
+                .unwrap()
+                .iter()
+                .all(|s| s["available"] == true && s["reused"] == false)
+        );
+        assert_eq!(
+            fs::read_dir(&root).unwrap().count(),
+            0,
+            "a plan writes nothing"
+        );
         commit(&sources, || {
             files::write_bytes_with_overwrite(b"CAD", &target, false)
                 .map(|_| ())
@@ -238,7 +265,9 @@ mod tests {
         .unwrap();
         for name in ["kentos-uni.shx", "kentos-big.shx"] {
             let want = std::fs::read(
-                std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/shx/v1").join(name),
+                std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("../../../fixtures/shx/v1")
+                    .join(name),
             )
             .unwrap();
             assert_eq!(fs::read(root.join(name)).unwrap(), want, "{name}");

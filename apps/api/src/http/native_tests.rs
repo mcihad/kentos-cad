@@ -63,7 +63,6 @@ async fn signed_in(base: &str, login: &str) -> Cloud {
     cloud
 }
 
-
 /// A drawing's project kept in the database: a CBS project's, the type kept there (docs/adr/9196 §2).
 fn in_database(doc: &kentos_domain::Document, name: &str) -> kentos_contracts::ProjectCreate {
     let mut create = project_create(doc, name, ProjectStorage::Database);
@@ -159,11 +158,7 @@ async fn the_desktop_signs_in_with_its_own_header_and_forgets_the_session() {
     )
     .unwrap();
     let made = cloud
-        .create_project(
-            tenant,
-            in_database(&sample(), "Ada 1"),
-            Uuid::new_v4(),
-        )
+        .create_project(tenant, in_database(&sample(), "Ada 1"), Uuid::new_v4())
         .await
         .unwrap();
     assert_eq!(made.storage, ProjectStorage::Database);

@@ -56,7 +56,12 @@ pub async fn export(
             "xlsx" => WorkbookFormat::Xlsx,
             "ods" => WorkbookFormat::Ods,
             "csv" => WorkbookFormat::Csv,
-            _ => return Err(AppError::invalid_at("format", "format: xlsx, ods ya da csv.")),
+            _ => {
+                return Err(AppError::invalid_at(
+                    "format",
+                    "format: xlsx, ods ya da csv.",
+                ));
+            }
         };
         statistics::export(db, &access, from, to, format).await
     };

@@ -1,8 +1,8 @@
 use kentos_sheet::{
-    *,
-    plot_profile::{self, apply},
     display::{self, Prim, RenderInputs, RenderMode},
     ops::{self, Op},
+    plot_profile::{self, apply},
+    *,
 };
 #[test]
 fn twenty_ink_profiles_apply_to_paper_and_map_without_touching_the_source() {

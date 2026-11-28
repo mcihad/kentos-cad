@@ -118,9 +118,15 @@ pub(super) fn casework_value(
             }
         }
         ("filler", _) => {
-            let Some((leg, end)) = value.split_once('/') else { return Vec::new() };
-            let Ok(leg) = leg.parse::<usize>() else { return Vec::new() };
-            if leg >= recipe.path().len() - 1 { return Vec::new() }
+            let Some((leg, end)) = value.split_once('/') else {
+                return Vec::new();
+            };
+            let Ok(leg) = leg.parse::<usize>() else {
+                return Vec::new();
+            };
+            if leg >= recipe.path().len() - 1 {
+                return Vec::new();
+            }
             let mut next = recipe;
             let choice = match end {
                 "auto" => None,
@@ -128,9 +134,13 @@ pub(super) fn casework_value(
                 "end" => Some(kentos_commands::CaseworkEnd::End),
                 _ => return Vec::new(),
             };
-            if next.filler_ends.len() <= leg { next.filler_ends.resize(leg + 1, None); }
+            if next.filler_ends.len() <= leg {
+                next.filler_ends.resize(leg + 1, None);
+            }
             next.filler_ends[leg] = choice;
-            while next.filler_ends.last() == Some(&None) { next.filler_ends.pop(); }
+            while next.filler_ends.last() == Some(&None) {
+                next.filler_ends.pop();
+            }
             json!({"kind": "recipe", "recipe": next})
         }
         ("corner" | "fridge", _) => {
@@ -284,10 +294,15 @@ pub(super) fn commit_elevation(
 }
 
 /// The object's own fire resistance class (docs/adr/8068), not its type's; none without one.
-fn own_fire_rating(model: &kentos_domain::Document, slot: kentos_domain::Slot) -> Option<kentos_commands::Declared> {
+fn own_fire_rating(
+    model: &kentos_domain::Document,
+    slot: kentos_domain::Slot,
+) -> Option<kentos_commands::Declared> {
     use kentos_native_application::arch_performance::{Carried, fire_rating_of};
     let e = model.get(slot)?;
-    fire_rating_of(model.settings(), e).filter(|(_, c)| *c == Carried::Own).map(|(d, _)| d.clone())
+    fire_rating_of(model.settings(), e)
+        .filter(|(_, c)| *c == Carried::Own)
+        .map(|(d, _)| d.clone())
 }
 
 /// A cell's text into the drawing, as the web's editors take it; what they
@@ -317,13 +332,17 @@ pub(super) fn commit(
     };
     if cad && let Field::TextHeight(slot) = field {
         let Some(height) = length(text).filter(|h| h.is_finite() && *h > 0.0) else {
-            return vec!["Yazı yüksekliği sıfırdan büyük bir uzunluk olmalı (örnek: 2.5 mm).".into()];
+            return vec![
+                "Yazı yüksekliği sıfırdan büyük bir uzunluk olmalı (örnek: 2.5 mm).".into(),
+            ];
         };
         return properties::set_text_heights(model, &[*slot], height);
     }
     if let Field::TextHeights(slots) = field {
         let Some(height) = length(text).filter(|h| h.is_finite() && *h > 0.0) else {
-            return vec!["Yazı yüksekliği sıfırdan büyük bir uzunluk olmalı (örnek: 2.5 mm).".into()];
+            return vec![
+                "Yazı yüksekliği sıfırdan büyük bir uzunluk olmalı (örnek: 2.5 mm).".into(),
+            ];
         };
         return properties::set_text_heights(model, slots, height);
     }
@@ -405,15 +424,24 @@ pub(super) fn commit(
                 true
             }
             (Field::Geometry(_, Coord::StartEast | Coord::StartNorth), Entity::Line(l)) => {
-                set(&mut l.a, matches!(field, Field::Geometry(_, Coord::StartEast)));
+                set(
+                    &mut l.a,
+                    matches!(field, Field::Geometry(_, Coord::StartEast)),
+                );
                 true
             }
             (Field::Geometry(_, Coord::EndEast | Coord::EndNorth), Entity::Line(l)) => {
-                set(&mut l.b, matches!(field, Field::Geometry(_, Coord::EndEast)));
+                set(
+                    &mut l.b,
+                    matches!(field, Field::Geometry(_, Coord::EndEast)),
+                );
                 true
             }
             (Field::Geometry(_, Coord::CenterEast | Coord::CenterNorth), Entity::Circle(c)) => {
-                set(&mut c.c, matches!(field, Field::Geometry(_, Coord::CenterEast)));
+                set(
+                    &mut c.c,
+                    matches!(field, Field::Geometry(_, Coord::CenterEast)),
+                );
                 true
             }
             (Field::Geometry(_, Coord::Radius), Entity::Circle(c)) => {
@@ -431,7 +459,11 @@ pub(super) fn commit(
         {
             return vec!["Çizginin iki ucu aynı yere gelemez; başka bir değer yazın.".into()];
         }
-        return if taken { properties::set_geometry(model, *slot, &e) } else { Vec::new() };
+        return if taken {
+            properties::set_geometry(model, *slot, &e)
+        } else {
+            Vec::new()
+        };
     }
     match field {
         Field::Elevation(slot, spot) => return commit_elevation(model, &[*slot], *spot, text),
@@ -774,8 +806,12 @@ pub(super) fn commit(
         Field::Arch(slot, ArchField::FireRating) => {
             let t = kentos_interaction::js_trim(text);
             // The basis it had stays (docs/adr/8124): Dayanak belgesi changes it.
-            let basis = own_fire_rating(model, *slot).map_or(kentos_commands::DeclaredBasis::Author, |d| d.basis);
-            let fire = (!t.is_empty()).then(|| kentos_commands::Declared { value: t.to_owned(), basis });
+            let basis = own_fire_rating(model, *slot)
+                .map_or(kentos_commands::DeclaredBasis::Author, |d| d.basis);
+            let fire = (!t.is_empty()).then(|| kentos_commands::Declared {
+                value: t.to_owned(),
+                basis,
+            });
             return properties::edit_performance(model, *slot, Some(fire), None, None, None);
         }
         Field::Arch(slot, ArchField::FireBasis) => {
@@ -789,19 +825,27 @@ pub(super) fn commit(
             if basis == own.basis {
                 return Vec::new();
             }
-            let fire = Some(kentos_commands::Declared { value: own.value, basis });
+            let fire = Some(kentos_commands::Declared {
+                value: own.value,
+                basis,
+            });
             return properties::edit_performance(model, *slot, Some(fire), None, None, None);
         }
         Field::Arch(slot, ArchField::ShaftVent) => {
             // Its free area, m²; empty takes the vent away, a pressurised shaft staying pressurised (docs/adr/8135).
             let t = kentos_interaction::js_trim(text);
-            let own = model.get(*slot).and_then(kentos_native_application::arch_performance::shaft_vent_of).cloned();
+            let own = model
+                .get(*slot)
+                .and_then(kentos_native_application::arch_performance::shaft_vent_of)
+                .cloned();
             let area = if t.is_empty() {
                 None
             } else {
                 let n = web_number(text);
                 if !(n.is_finite() && n > 0.0) {
-                    return vec!["Bacanın alanını m² olarak yazın; örneğin 0.12. Boş: baca yok.".into()];
+                    return vec![
+                        "Bacanın alanını m² olarak yazın; örneğin 0.12. Boş: baca yok.".into(),
+                    ];
                 }
                 Some(n)
             };
@@ -810,8 +854,12 @@ pub(super) fn commit(
             }
             let pressurized = own.as_ref().is_some_and(|v| v.pressurized);
             let basis = own.map_or(kentos_commands::DeclaredBasis::Author, |v| v.basis);
-            let vent = (area.is_some() || pressurized)
-                .then_some(kentos_commands::DeclaredShaftVent { area, pressurized, basis });
+            let vent =
+                (area.is_some() || pressurized).then_some(kentos_commands::DeclaredShaftVent {
+                    area,
+                    pressurized,
+                    basis,
+                });
             return properties::edit_shaft_vent(model, *slot, vent);
         }
         Field::Arch(slot, which @ (ArchField::MarkNumber | ArchField::MarkSize)) => {
@@ -858,7 +906,9 @@ pub(super) fn commit(
         // it, empty or 0 takes it away; its material typed, empty none; the thickness typed while it has no layers.
         Field::Arch(
             slot,
-            which @ (ArchField::RoofThickness | ArchField::RoofLayer(_) | ArchField::RoofLayerMaterial(_)),
+            which @ (ArchField::RoofThickness
+            | ArchField::RoofLayer(_)
+            | ArchField::RoofLayerMaterial(_)),
         ) => {
             use kentos_commands::{ArchChange, ArchOperation, RoofLayer, RoofLayerKind};
             let Some(kentos_commands::Entity::Roof(r)) = model.get(*slot) else {
@@ -871,7 +921,9 @@ pub(super) fn commit(
                 }
                 match length(text) {
                     Some(n) if n.is_finite() => Ok(Some(n)),
-                    _ => Err(vec!["Kalınlık için bir uzunluk girin; örneğin 3 cm ya da 0.03 m.".into()]),
+                    _ => Err(vec![
+                        "Kalınlık için bir uzunluk girin; örneğin 3 cm ya da 0.03 m.".into(),
+                    ]),
                 }
             };
             let kind = |k: u8| RoofLayerKind::ALL.get(usize::from(k)).copied();
@@ -899,8 +951,18 @@ pub(super) fn commit(
                         }
                         // In its place top down, whatever the others are.
                         (None, Some(n)) => {
-                            let at = layers.iter().position(|l| l.kind > kind).unwrap_or(layers.len());
-                            layers.insert(at, RoofLayer { kind, thickness: n, material: None });
+                            let at = layers
+                                .iter()
+                                .position(|l| l.kind > kind)
+                                .unwrap_or(layers.len());
+                            layers.insert(
+                                at,
+                                RoofLayer {
+                                    kind,
+                                    thickness: n,
+                                    material: None,
+                                },
+                            );
                         }
                         (None, None) => return Vec::new(),
                     }
@@ -910,7 +972,9 @@ pub(super) fn commit(
                     }
                 }
                 ArchField::RoofLayerMaterial(k) => {
-                    let Some(l) = kind(*k).and_then(|kind| layers.iter_mut().find(|l| l.kind == kind)) else {
+                    let Some(l) =
+                        kind(*k).and_then(|kind| layers.iter_mut().find(|l| l.kind == kind))
+                    else {
                         return Vec::new();
                     };
                     l.material = (!t.is_empty()).then(|| t.to_owned());
@@ -994,7 +1058,10 @@ pub(super) fn commit(
                     return Vec::new();
                 };
                 if !(n.is_finite() && n > 0.0) {
-                    return vec!["Eğimi yüzde olarak yazın; örneğin 33. Düz çatı için çatıyı yeniden çizin.".into()];
+                    return vec![
+                        "Eğimi yüzde olarak yazın; örneğin 33. Düz çatı için çatıyı yeniden çizin."
+                            .into(),
+                    ];
                 }
                 let slopes = r.roof.slopes.iter().map(|s| s.map(|_| n)).collect();
                 return properties::edit_arch(
@@ -1084,10 +1151,7 @@ pub(super) fn commit(
                         return Vec::new();
                     };
                     ArchChange {
-                        member: Some(Some(kentos_commands::Member {
-                            name: words,
-                            ..m
-                        })),
+                        member: Some(Some(kentos_commands::Member { name: words, ..m })),
                         ..Default::default()
                     }
                 }
@@ -1221,19 +1285,31 @@ pub(super) fn commit(
         Field::SpaceEmsalBasis(slot) => {
             use kentos_commands::{SpaceChange, SpaceEmsal, SpacesOperation};
             let t = kentos_interaction::js_trim(text);
-            let Some(Entity::Space(s)) = model.get(*slot) else { return Vec::new() };
+            let Some(Entity::Space(s)) = model.get(*slot) else {
+                return Vec::new();
+            };
             // The state it counts as now, made its own with the basis; empty takes the basis away (an increase keeps
             // needing one: the command says so).
             let uid = model.uid(*slot).map(|u| u.to_string()).unwrap_or_default();
             let now = s.space.emsal.as_ref().map(|e| e.count).or_else(|| {
-                model.zoning_rooms().into_iter().find(|r| r.uid == uid).map(|r| r.count)
+                model
+                    .zoning_rooms()
+                    .into_iter()
+                    .find(|r| r.uid == uid)
+                    .map(|r| r.count)
             });
             let Some(count) = now else { return Vec::new() };
-            let emsal = SpaceEmsal { count, basis: (!t.is_empty()).then(|| t.to_owned()) };
+            let emsal = SpaceEmsal {
+                count,
+                basis: (!t.is_empty()).then(|| t.to_owned()),
+            };
             if s.space.emsal.as_ref() == Some(&emsal) {
                 return Vec::new();
             }
-            let change = SpaceChange { emsal: Some(Some(emsal)), ..Default::default() };
+            let change = SpaceChange {
+                emsal: Some(Some(emsal)),
+                ..Default::default()
+            };
             return properties::edit_space(model, *slot, SpacesOperation::Set(change));
         }
         Field::SpaceNumber(slot)
@@ -1375,7 +1451,10 @@ pub(super) fn commit(
             let Some(Entity::Slab(s)) = model.get(*slot) else {
                 return Vec::new();
             };
-            let t = kentos_interaction::js_trim(text).trim_start_matches('%').trim_end_matches('%').replace(',', ".");
+            let t = kentos_interaction::js_trim(text)
+                .trim_start_matches('%')
+                .trim_end_matches('%')
+                .replace(',', ".");
             let Ok(n) = t.trim().parse::<f64>() else {
                 return vec![match field {
                     Field::SlabSlope(_) => "Bir yüzde girin; örneğin 2 ya da %2 (0: yatay).".into(),
@@ -1399,7 +1478,10 @@ pub(super) fn commit(
                     None => return vec!["Döşemenin bu yönde boyu yok.".into()],
                 }
             };
-            let change = SlabChange { slope: Some(slope), ..Default::default() };
+            let change = SlabChange {
+                slope: Some(slope),
+                ..Default::default()
+            };
             return properties::edit_slab(model, *slot, SlabsOperation::Set(change));
         }
         Field::SlabThickness(slot)
@@ -1491,7 +1573,10 @@ pub(super) fn commit(
                 Field::CurtainFrames(_) => grid.frames = words,
                 _ => {
                     let Some(n) = length(text).filter(|n| n.is_finite()) else {
-                        return vec!["Giydirme cephenin ölçüsü için bir uzunluk girin; örneğin 1.50 m.".into()];
+                        return vec![
+                            "Giydirme cephenin ölçüsü için bir uzunluk girin; örneğin 1.50 m."
+                                .into(),
+                        ];
                     };
                     match field {
                         Field::CurtainSpacing(_) => grid.spacing = n,
@@ -1503,7 +1588,10 @@ pub(super) fn commit(
             return properties::edit_wall(
                 model,
                 *slot,
-                kentos_commands::WallChange { curtain: Some(Some(grid)), ..Default::default() },
+                kentos_commands::WallChange {
+                    curtain: Some(Some(grid)),
+                    ..Default::default()
+                },
             );
         }
         Field::WallWidth(slot) | Field::WallOffset(slot) | Field::WallHeight(slot) => {
@@ -1528,7 +1616,10 @@ pub(super) fn commit(
             }
             let change = match field {
                 Field::WallWidth(_) => {
-                    let change = kentos_commands::WallChange { width: Some(n), ..Default::default() };
+                    let change = kentos_commands::WallChange {
+                        width: Some(n),
+                        ..Default::default()
+                    };
                     return properties::edit_wall_kept(model, *slot, change, wall_parts::keep());
                 }
                 Field::WallOffset(_) => kentos_commands::WallChange {
@@ -1585,7 +1676,8 @@ pub(super) fn commit(
                         format!("{} biriminde bir açı", f.angle_unit_label())
                     }
                     kentos_commands::BlockParameter::Linear { .. } => format!(
-                        "{} biriminde bir uzunluk (ör. 900 mm)", f.length_unit_label()
+                        "{} biriminde bir uzunluk (ör. 900 mm)",
+                        f.length_unit_label()
                     ),
                     _ => format!(
                         "yerel X, Y olarak iki uzunluk ({}; ör. 900 mm, 250 mm)",

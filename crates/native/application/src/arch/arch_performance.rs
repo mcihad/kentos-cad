@@ -11,8 +11,8 @@
 //! - **Nothing is a default:** null takes a value away; it is missing again. An empty word is refused.
 
 use kentos_commands::{
-    ArchPerformance, ArchPerformanceDone, CommandResult, Declared, Entity, OpeningForm, PerformanceOperation,
-    ProjectSettings, reaction_problem, roof_class_problem, strength_problem,
+    ArchPerformance, ArchPerformanceDone, CommandResult, Declared, Entity, OpeningForm,
+    PerformanceOperation, ProjectSettings, reaction_problem, roof_class_problem, strength_problem,
 };
 use kentos_domain::{Document, Slot};
 
@@ -75,11 +75,17 @@ pub fn load_bearing_carried<'a>(
     e: &'a Entity,
 ) -> Option<(&'a kentos_commands::DeclaredBearing, Carried)> {
     match e {
-        Entity::Wall(w) => w.wall.arch.load_bearing.as_ref().map(|b| (b, Carried::Own)).or_else(|| {
-            let id = w.wall.style.as_deref()?;
-            let s = settings.wall_styles.iter().find(|s| s.id == id)?;
-            s.load_bearing.as_ref().map(|b| (b, Carried::Type))
-        }),
+        Entity::Wall(w) => w
+            .wall
+            .arch
+            .load_bearing
+            .as_ref()
+            .map(|b| (b, Carried::Own))
+            .or_else(|| {
+                let id = w.wall.style.as_deref()?;
+                let s = settings.wall_styles.iter().find(|s| s.id == id)?;
+                s.load_bearing.as_ref().map(|b| (b, Carried::Type))
+            }),
         _ => load_bearing_of(e).map(|b| (b, Carried::Own)),
     }
 }
@@ -141,7 +147,9 @@ pub fn protected_of(e: &Entity) -> Option<&kentos_commands::DeclaredProtected> {
 pub fn fire_stop_rated(e: &Entity) -> bool {
     match e {
         Entity::Wall(_) => true,
-        Entity::Slab(s) => s.slab.covering.is_none() && s.slab.role != kentos_commands::SlabRole::Balcony,
+        Entity::Slab(s) => {
+            s.slab.covering.is_none() && s.slab.role != kentos_commands::SlabRole::Balcony
+        }
         _ => false,
     }
 }
@@ -172,20 +180,38 @@ pub enum Carried {
 }
 
 /// The class an object carries: its own, else its wall style's (a wall) or its type's (an opening); none: missing.
-pub fn fire_rating_of<'a>(settings: &'a ProjectSettings, e: &'a Entity) -> Option<(&'a Declared, Carried)> {
+pub fn fire_rating_of<'a>(
+    settings: &'a ProjectSettings,
+    e: &'a Entity,
+) -> Option<(&'a Declared, Carried)> {
     match e {
-        Entity::Opening(o) => o.opening.fire_rating.as_ref().map(|d| (d, Carried::Own)).or_else(|| {
-            let id = o.opening.style.as_deref()?;
-            let types = settings.arch.as_ref()?;
-            let t = types.opening_types.iter().find(|t| t.id == id)?;
-            t.fire_rating.as_ref().map(|d| (d, Carried::Type))
-        }),
-        Entity::Wall(w) => w.wall.arch.fire_rating.as_ref().map(|d| (d, Carried::Own)).or_else(|| {
-            let id = w.wall.style.as_deref()?;
-            let s = settings.wall_styles.iter().find(|s| s.id == id)?;
-            s.fire_rating.as_ref().map(|d| (d, Carried::Type))
-        }),
-        other => other.arch_info()?.fire_rating.as_ref().map(|d| (d, Carried::Own)),
+        Entity::Opening(o) => o
+            .opening
+            .fire_rating
+            .as_ref()
+            .map(|d| (d, Carried::Own))
+            .or_else(|| {
+                let id = o.opening.style.as_deref()?;
+                let types = settings.arch.as_ref()?;
+                let t = types.opening_types.iter().find(|t| t.id == id)?;
+                t.fire_rating.as_ref().map(|d| (d, Carried::Type))
+            }),
+        Entity::Wall(w) => w
+            .wall
+            .arch
+            .fire_rating
+            .as_ref()
+            .map(|d| (d, Carried::Own))
+            .or_else(|| {
+                let id = w.wall.style.as_deref()?;
+                let s = settings.wall_styles.iter().find(|s| s.id == id)?;
+                s.fire_rating.as_ref().map(|d| (d, Carried::Type))
+            }),
+        other => other
+            .arch_info()?
+            .fire_rating
+            .as_ref()
+            .map(|d| (d, Carried::Own)),
     }
 }
 
@@ -212,9 +238,15 @@ enum Work {
 }
 
 /// The key `key` names in a list of (id, name): its id, else its name (case aside).
-fn find<'a>(ids: impl Iterator<Item = (usize, &'a str, &'a str)> + Clone, key: &str) -> Option<usize> {
+fn find<'a>(
+    ids: impl Iterator<Item = (usize, &'a str, &'a str)> + Clone,
+    key: &str,
+) -> Option<usize> {
     let folded = key.to_lowercase();
-    ids.clone().find(|(_, id, _)| *id == key).or_else(|| ids.clone().find(|(_, _, n)| n.to_lowercase() == folded)).map(|(i, _, _)| i)
+    ids.clone()
+        .find(|(_, id, _)| *id == key)
+        .or_else(|| ids.clone().find(|(_, _, n)| n.to_lowercase() == folded))
+        .map(|(i, _, _)| i)
 }
 
 fn declared(d: Option<&Declared>, what: &str, path: &str) -> Result<(), Stop> {
@@ -249,7 +281,11 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
             let found = checks::named(doc, uids)?;
             for (at, _, e, _) in &found {
                 if fire_rating.is_some() && !fire_rated(e) {
-                    return Err(fail(codes::FIELD_NOT_FOR_KIND, no_class(e), &format!("uids[{at}]")));
+                    return Err(fail(
+                        codes::FIELD_NOT_FOR_KIND,
+                        no_class(e),
+                        &format!("uids[{at}]"),
+                    ));
                 }
                 if exit.is_some() && !exit_rated(e) {
                     return Err(fail(
@@ -348,36 +384,61 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
             if let Some(Some(x)) = load_bearing
                 && let Some(why) = x.basis.problem()
             {
-                return Err(fail(codes::INVALID_DECLARED, why, "operation.loadBearing.basis"));
+                return Err(fail(
+                    codes::INVALID_DECLARED,
+                    why,
+                    "operation.loadBearing.basis",
+                ));
             }
             if let Some(Some(x)) = external
                 && let Some(why) = x.basis.problem()
             {
-                return Err(fail(codes::INVALID_DECLARED, why, "operation.external.basis"));
+                return Err(fail(
+                    codes::INVALID_DECLARED,
+                    why,
+                    "operation.external.basis",
+                ));
             }
             if let Some(Some(x)) = shaft_vent
                 && let Some((why, field)) = x.problem()
             {
-                return Err(fail(codes::INVALID_DECLARED, why, &format!("operation.shaftVent.{field}")));
+                return Err(fail(
+                    codes::INVALID_DECLARED,
+                    why,
+                    &format!("operation.shaftVent.{field}"),
+                ));
             }
             if let Some(Some(x)) = protected
                 && let Some(why) = x.basis.problem()
             {
-                return Err(fail(codes::INVALID_DECLARED, why, "operation.protected.basis"));
+                return Err(fail(
+                    codes::INVALID_DECLARED,
+                    why,
+                    "operation.protected.basis",
+                ));
             }
             if let Some(Some(x)) = fire_stop
                 && let Some(why) = x.basis.problem()
             {
-                return Err(fail(codes::INVALID_DECLARED, why, "operation.fireStop.basis"));
+                return Err(fail(
+                    codes::INVALID_DECLARED,
+                    why,
+                    "operation.fireStop.basis",
+                ));
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
             let layers = doc.layers();
-            if let Some((at, _, e, _)) = found.iter().find(|(_, _, e, _)| layers.is_locked(&e.base().layer_id)) {
+            if let Some((at, _, e, _)) = found
+                .iter()
+                .find(|(_, _, e, _)| layers.is_locked(&e.base().layer_id))
+            {
                 let id = &e.base().layer_id;
                 let name = layers.get(id).map_or(id.as_str(), |n| n.name.as_str());
                 return Err(fail(
                     codes::LAYER_LOCKED,
-                    format!("“{name}” katmanı kilitli; üzerindeki nesnenin yangın bilgisi değişmez. Kilidi Katmanlar panelinden açın."),
+                    format!(
+                        "“{name}” katmanı kilitli; üzerindeki nesnenin yangın bilgisi değişmez. Kilidi Katmanlar panelinden açın."
+                    ),
                     &format!("uids[{at}]"),
                 ));
             }
@@ -424,20 +485,42 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                 }
             }
             // The objects named, each once, in the drawing's order: each now holds what was given.
-            let mut named: Vec<(u64, String)> =
-                found.iter().map(|(_, slot, _, uid)| (doc.place(*slot).unwrap_or(u64::MAX), (*uid).clone())).collect();
+            let mut named: Vec<(u64, String)> = found
+                .iter()
+                .map(|(_, slot, _, uid)| (doc.place(*slot).unwrap_or(u64::MAX), (*uid).clone()))
+                .collect();
             named.sort();
-            (Work::Objects(changes), named.into_iter().map(|(_, u)| u).collect())
+            (
+                Work::Objects(changes),
+                named.into_iter().map(|(_, u)| u).collect(),
+            )
         }
-        PerformanceOperation::WallStyle { style, fire_rating, load_bearing } => {
+        PerformanceOperation::WallStyle {
+            style,
+            fire_rating,
+            load_bearing,
+        } => {
             // The project's style, else KentOS's (a project copy of the same id then keeps the class, as the Duvar
             // stilleri window keeps a changed KentOS style).
             let list = &settings.wall_styles;
             let builtin = kentos_commands::builtin_wall_styles();
-            let own = find(list.iter().enumerate().map(|(i, s)| (i, s.id.as_str(), s.name.as_str())), style);
+            let own = find(
+                list.iter()
+                    .enumerate()
+                    .map(|(i, s)| (i, s.id.as_str(), s.name.as_str())),
+                style,
+            );
             let kentos = own
                 .is_none()
-                .then(|| find(builtin.iter().enumerate().map(|(i, s)| (i, s.id.as_str(), s.name.as_str())), style))
+                .then(|| {
+                    find(
+                        builtin
+                            .iter()
+                            .enumerate()
+                            .map(|(i, s)| (i, s.id.as_str(), s.name.as_str())),
+                        style,
+                    )
+                })
                 .flatten();
             // The project's place of the style, or KentOS's to copy.
             let source: Result<usize, usize> = match (own, kentos) {
@@ -446,7 +529,9 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                 (None, None) => {
                     return Err(fail(
                         codes::STYLE_NOT_FOUND,
-                        format!("Projede “{style}” kimlikli ya da adlı duvar stili yok. Duvar stilleri penceresindeki bir stili verin."),
+                        format!(
+                            "Projede “{style}” kimlikli ya da adlı duvar stili yok. Duvar stilleri penceresindeki bir stili verin."
+                        ),
                         "operation.style",
                     ));
                 }
@@ -462,7 +547,11 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
             if let Some(Some(b)) = load_bearing
                 && let Some(why) = b.basis.problem()
             {
-                return Err(fail(codes::INVALID_DECLARED, why, "operation.loadBearing.basis"));
+                return Err(fail(
+                    codes::INVALID_DECLARED,
+                    why,
+                    "operation.loadBearing.basis",
+                ));
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
             let mut next = settings.clone();
@@ -489,8 +578,14 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
             });
             (Work::Settings(Box::new(next)), carried)
         }
-        PerformanceOperation::OpeningType { opening_type, fire_rating } => {
-            let types = settings.arch.as_ref().map_or(&[][..], |a| a.opening_types.as_slice());
+        PerformanceOperation::OpeningType {
+            opening_type,
+            fire_rating,
+        } => {
+            let types = settings
+                .arch
+                .as_ref()
+                .map_or(&[][..], |a| a.opening_types.as_slice());
             let at = find(types.iter().enumerate().map(|(i, t)| (i, t.id.as_str(), t.name.as_str())), opening_type)
                 .ok_or_else(|| {
                     fail(
@@ -499,19 +594,30 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                         "operation.type",
                     )
                 })?;
-            declared(fire_rating.as_ref(), "yangın dayanım sınıfı", "operation.fireRating")?;
+            declared(
+                fire_rating.as_ref(),
+                "yangın dayanım sınıfı",
+                "operation.fireRating",
+            )?;
             checks::revision(doc, input.expected_revision.as_deref())?;
             let mut next = settings.clone();
             let id = types[at].id.clone();
             if let Some(a) = next.arch.as_mut() {
                 a.opening_types[at].fire_rating.clone_from(fire_rating);
             }
-            let carried = carriers(doc, fire_rating.is_some(), |e| {
-                matches!(e, Entity::Opening(o) if o.opening.style.as_deref() == Some(id.as_str()) && o.opening.fire_rating.is_none())
-            });
+            let carried = carriers(
+                doc,
+                fire_rating.is_some(),
+                |e| matches!(e, Entity::Opening(o) if o.opening.style.as_deref() == Some(id.as_str()) && o.opening.fire_rating.is_none()),
+            );
             (Work::Settings(Box::new(next)), carried)
         }
-        PerformanceOperation::Material { material, strength, reaction, roof_class } => {
+        PerformanceOperation::Material {
+            material,
+            strength,
+            reaction,
+            roof_class,
+        } => {
             if strength.is_none() && reaction.is_none() && roof_class.is_none() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
@@ -519,7 +625,10 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                     "operation",
                 ));
             }
-            let list = settings.arch.as_ref().map_or(&[][..], |a| a.materials.as_slice());
+            let list = settings
+                .arch
+                .as_ref()
+                .map_or(&[][..], |a| a.materials.as_slice());
             let at = find(list.iter().enumerate().map(|(i, m)| (i, m.id.as_str(), m.name.as_str())), material)
                 .ok_or_else(|| {
                     fail(
@@ -531,16 +640,28 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
             if let Some(Some(d)) = reaction {
                 declared(Some(d), "yanıcılık sınıfı", "operation.reaction")?;
                 if let Some(why) = reaction_problem(&d.value) {
-                    return Err(fail(codes::INVALID_DECLARED, why, "operation.reaction.value"));
+                    return Err(fail(
+                        codes::INVALID_DECLARED,
+                        why,
+                        "operation.reaction.value",
+                    ));
                 }
             }
             if let Some(Some(d)) = roof_class {
                 declared(Some(d), "dış yangın sınıfı", "operation.roofClass")?;
                 if let Some(why) = roof_class_problem(&d.value) {
-                    return Err(fail(codes::INVALID_DECLARED, why, "operation.roofClass.value"));
+                    return Err(fail(
+                        codes::INVALID_DECLARED,
+                        why,
+                        "operation.roofClass.value",
+                    ));
                 }
             }
-            if let Some(why) = strength.as_ref().and_then(|s| s.as_deref()).and_then(strength_problem) {
+            if let Some(why) = strength
+                .as_ref()
+                .and_then(|s| s.as_deref())
+                .and_then(strength_problem)
+            {
                 return Err(fail(codes::INVALID_STRENGTH, why, "operation.strength"));
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
@@ -561,11 +682,16 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
         PerformanceOperation::Exits { yes, no } => {
             // Acil çıkışlar (docs/adr/8124): the suggestion the author confirmed, the author's statement each.
             let all: Vec<String> = yes.iter().chain(no).cloned().collect();
-            checks::uids(&all, "Acil çıkış rolü yazılacak kapı ya da merdiven verilmedi.")?;
+            checks::uids(
+                &all,
+                "Acil çıkış rolü yazılacak kapı ya da merdiven verilmedi.",
+            )?;
             if let Some((at, u)) = no.iter().enumerate().find(|(_, u)| yes.contains(u)) {
                 return Err(fail(
                     codes::UID_IN_BOTH_LISTS,
-                    format!("“{u}” hem evet hem hayır listesinde; her kapı ya da merdiven yalnız birinde olur."),
+                    format!(
+                        "“{u}” hem evet hem hayır listesinde; her kapı ya da merdiven yalnız birinde olur."
+                    ),
                     &format!("operation.no[{at}]"),
                 ));
             }
@@ -573,23 +699,39 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
             for (at, _, e, _) in &found {
                 let door_or_stair = exit_rated(e) && !matches!(e, Entity::Roof(_));
                 if !door_or_stair {
-                    let place = if *at < yes.len() { format!("operation.yes[{at}]") } else { format!("operation.no[{}]", at - yes.len()) };
+                    let place = if *at < yes.len() {
+                        format!("operation.yes[{at}]")
+                    } else {
+                        format!("operation.no[{}]", at - yes.len())
+                    };
                     return Err(fail(
                         codes::FIELD_NOT_FOR_KIND,
-                        format!("“{}” nesnesinin acil çıkış rolü olmaz: acil çıkış kapının ve merdivenin özelliğidir.", e.kind()),
+                        format!(
+                            "“{}” nesnesinin acil çıkış rolü olmaz: acil çıkış kapının ve merdivenin özelliğidir.",
+                            e.kind()
+                        ),
                         &place,
                     ));
                 }
             }
             checks::revision(doc, input.expected_revision.as_deref())?;
             let layers = doc.layers();
-            if let Some((at, _, e, _)) = found.iter().find(|(_, _, e, _)| layers.is_locked(&e.base().layer_id)) {
+            if let Some((at, _, e, _)) = found
+                .iter()
+                .find(|(_, _, e, _)| layers.is_locked(&e.base().layer_id))
+            {
                 let id = &e.base().layer_id;
                 let name = layers.get(id).map_or(id.as_str(), |n| n.name.as_str());
-                let place = if *at < yes.len() { format!("operation.yes[{at}]") } else { format!("operation.no[{}]", at - yes.len()) };
+                let place = if *at < yes.len() {
+                    format!("operation.yes[{at}]")
+                } else {
+                    format!("operation.no[{}]", at - yes.len())
+                };
                 return Err(fail(
                     codes::LAYER_LOCKED,
-                    format!("“{name}” katmanı kilitli; üzerindeki kapının ya da merdivenin acil çıkış rolü değişmez. Kilidi Katmanlar panelinden açın."),
+                    format!(
+                        "“{name}” katmanı kilitli; üzerindeki kapının ya da merdivenin acil çıkış rolü değişmez. Kilidi Katmanlar panelinden açın."
+                    ),
                     &place,
                 ));
             }
@@ -612,13 +754,24 @@ fn check(doc: &Document, input: &ArchPerformance) -> Result<(Work, Vec<String>),
                     changes.push((*slot, next));
                 }
             }
-            let mut named: Vec<(u64, String)> =
-                found.iter().map(|(_, slot, _, uid)| (doc.place(*slot).unwrap_or(u64::MAX), (*uid).clone())).collect();
+            let mut named: Vec<(u64, String)> = found
+                .iter()
+                .map(|(_, slot, _, uid)| (doc.place(*slot).unwrap_or(u64::MAX), (*uid).clone()))
+                .collect();
             named.sort();
-            (Work::Objects(changes), named.into_iter().map(|(_, u)| u).collect())
+            (
+                Work::Objects(changes),
+                named.into_iter().map(|(_, u)| u).collect(),
+            )
         }
-        PerformanceOperation::Building { fire_protection_class } => {
-            declared(fire_protection_class.as_ref(), "binanın yangın koruma sınıfı", "operation.fireProtectionClass")?;
+        PerformanceOperation::Building {
+            fire_protection_class,
+        } => {
+            declared(
+                fire_protection_class.as_ref(),
+                "binanın yangın koruma sınıfı",
+                "operation.fireProtectionClass",
+            )?;
             checks::revision(doc, input.expected_revision.as_deref())?;
             let mut next = settings.clone();
             let arch = next.arch.get_or_insert_with(Default::default);
@@ -637,18 +790,27 @@ fn carriers(doc: &Document, given: bool, of: impl Fn(&Entity) -> bool) -> Vec<St
     if !given {
         return Vec::new();
     }
-    doc.entities_with_uids().filter(|(_, e)| of(e)).map(|(u, _)| u.to_string()).collect()
+    doc.entities_with_uids()
+        .filter(|(_, e)| of(e))
+        .map(|(u, _)| u.to_string())
+        .collect()
 }
 
 pub fn validate(_cx: &ExecutionContext<'_>, input: &ArchPerformance) -> CommandResult<()> {
     match check(_cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What it would write, nothing written.
-pub fn plan(cx: &ExecutionContext<'_>, input: &ArchPerformance) -> CommandResult<ArchPerformanceDone> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &ArchPerformance,
+) -> CommandResult<ArchPerformanceDone> {
     plan_in(cx.doc, input)
 }
 
@@ -656,14 +818,20 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ArchPerformance) -> CommandResult
 pub fn plan_in(doc: &Document, input: &ArchPerformance) -> CommandResult<ArchPerformanceDone> {
     match check(doc, input) {
         Ok((_, uids)) => CommandResult::Completed {
-            output: ArchPerformanceDone { uids, revision: doc.revision().to_string() },
+            output: ArchPerformanceDone {
+                uids,
+                revision: doc.revision().to_string(),
+            },
             warnings: Vec::new(),
         },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ArchPerformance) -> CommandResult<ArchPerformanceDone> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ArchPerformance,
+) -> CommandResult<ArchPerformanceDone> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_ARCH_PERFORMANCE,
@@ -673,7 +841,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ArchPerformance) -> Command
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: ArchPerformance) -> CommandResult<ArchPerformanceDone> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ArchPerformance,
+) -> CommandResult<ArchPerformanceDone> {
     let (work, uids) = match check(cx.doc, &input) {
         Ok(prepared) => prepared,
         Err(stop) => return stop.into(),
@@ -705,10 +876,15 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ArchPerformance) -> Comma
         }
     };
     if let Err(e) = written {
-        return CommandResult::Failed { error: error(codes::INVALID_DECLARED, e.0, Some("operation".into())) };
+        return CommandResult::Failed {
+            error: error(codes::INVALID_DECLARED, e.0, Some("operation".into())),
+        };
     }
     CommandResult::Completed {
-        output: ArchPerformanceDone { uids, revision: doc.revision().to_string() },
+        output: ArchPerformanceDone {
+            uids,
+            revision: doc.revision().to_string(),
+        },
         warnings: Vec::new(),
     }
 }

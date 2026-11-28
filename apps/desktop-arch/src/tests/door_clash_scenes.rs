@@ -12,23 +12,25 @@
 //!
 //! Test code only.
 
-use crate::arch_ext::*;
 use crate::arch;
+use crate::arch::ArchState;
+use crate::arch_ext::*;
 use iced::Point;
 use kentos_render_wgpu::Vec2;
 use kentos_ui::widget::docking;
 use serde_json::Value;
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::arch_audit::Event;
-use crate::tool_settings::Commit;
 use crate::files_testing::make_cad;
+use crate::tool_settings::Commit;
 use crate::tools_scenes::run;
 use crate::tools_screens::Scene;
 
-const CLASHES: &str = include_str!("../../../../fixtures/commands/v1/cad.arch.audit.doors.special.json");
-const ARC: &str = include_str!("../../../../fixtures/commands/v1/cad.openings.create.arcpocket.json");
+const CLASHES: &str =
+    include_str!("../../../../fixtures/commands/v1/cad.arch.audit.doors.special.json");
+const ARC: &str =
+    include_str!("../../../../fixtures/commands/v1/cad.openings.create.arcpocket.json");
 
 fn open(app: &mut App, cases: &str, bounds: [f64; 4]) {
     let file: Value = serde_json::from_str(cases).expect("the cases");
@@ -75,7 +77,8 @@ fn fixed(app: &mut App) {
 fn row_of(app: &App, words: &str) -> usize {
     let shown = app.arch_audit_shown();
     let findings = &app
-        .modules.arch()
+        .modules
+        .arch()
         .arch_audit
         .audited
         .as_ref()
@@ -107,9 +110,9 @@ fn arc_tool(app: &mut App) {
     // A point beside the arc's middle part, inside it.
     let p = [4.85 * (0.7f64).cos(), 4.85 * (0.7f64).sin()];
     let [x, y] = app.viewport.camera.world_to_screen(Vec2::new(p[0], p[1]));
-    let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(Point::new(
-        x as f32, y as f32,
-    ))));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Moved(
+        Point::new(x as f32, y as f32),
+    )));
 }
 
 /// Metraj, Duvarlar: the arc wall's and the straight wall's pockets taken off their volume.
@@ -130,7 +133,12 @@ fn placed(app: &mut App) {
     app.draft.snap = false;
     app.command_expanded = true;
     app.viewport.camera.fit(
-        &kentos_render_wgpu::Bounds { min_x: E - 1.0, min_y: N - 2.5, max_x: E + 9.0, max_y: N + 2.5 },
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 1.0,
+            min_y: N - 2.5,
+            max_x: E + 9.0,
+            max_y: N + 2.5,
+        },
         24.0,
     );
     run(app, "tool.wall");

@@ -31,14 +31,19 @@ pub(crate) fn form_rows_of(
     planned: Option<Planned>,
     answers: Vec<kentos_commands::FormAnswer>,
 ) -> Result<Vec<Vec<String>>, String> {
-    let facts = planned.map(Planned::facts).transpose()?.unwrap_or(Value::Null);
+    let facts = planned
+        .map(Planned::facts)
+        .transpose()?
+        .unwrap_or(Value::Null);
     let answers = serde_json::to_value(answers).unwrap_or(Value::Null);
     let answer = crate::standards::call(PACKAGE, FORM, "tablo", vec![facts, answers])?;
-    let rows: Vec<Vec<String>> =
-        serde_json::from_value(answer).map_err(|e| format!("Formun satırları okunamadı ({FORM}.tablo): {e}."))?;
+    let rows: Vec<Vec<String>> = serde_json::from_value(answer)
+        .map_err(|e| format!("Formun satırları okunamadı ({FORM}.tablo): {e}."))?;
     // The package writes the header the drawing knows the form by (`kentos_ifc::quality::FORM_HEADER`).
     match rows.first() {
         Some(h) if kentos_ifc::quality::is_form(h) => Ok(rows),
-        _ => Err(format!("Formun başlığı ({FORM}.tablo) KentOS'un tanıdığı başlık değil: paketi güncelleyin.")),
+        _ => Err(format!(
+            "Formun başlığı ({FORM}.tablo) KentOS'un tanıdığı başlık değil: paketi güncelleyin."
+        )),
     }
 }

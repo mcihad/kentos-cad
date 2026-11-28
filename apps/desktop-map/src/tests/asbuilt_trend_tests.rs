@@ -4,8 +4,8 @@
 //! summary the count of each state; a warning not below its alarm and a confidence that is no number are said. And its
 //! pictures.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 
@@ -14,11 +14,20 @@ use crate::asbuilt_trend::Change as C;
 use crate::asbuilt_window::Event as A;
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.asbuilt.check.series.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.asbuilt.check.series.json"
+    ))
+    .expect("cases")
 }
 
 fn case(all: &Value, prefix: &str) -> Value {
-    all["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(prefix))).expect("the case").clone()
+    all["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(prefix)))
+        .expect("the case")
+        .clone()
 }
 
 /// Every number in `got` within the case's `within` of `want`'s, the rest the same (the reference moves the marks by
@@ -26,10 +35,17 @@ fn case(all: &Value, prefix: &str) -> Value {
 fn same(got: &Value, want: &Value, at: &str, within: f64) {
     match (got, want) {
         (Value::Number(a), Value::Number(b)) => {
-            assert!((a.as_f64().expect("a number") - b.as_f64().expect("a number")).abs() <= within, "{at}: {a} ≠ {b}")
+            assert!(
+                (a.as_f64().expect("a number") - b.as_f64().expect("a number")).abs() <= within,
+                "{at}: {a} ≠ {b}"
+            )
         }
         (Value::Object(a), Value::Object(b)) => {
-            assert_eq!(a.keys().collect::<Vec<_>>(), b.keys().collect::<Vec<_>>(), "{at}");
+            assert_eq!(
+                a.keys().collect::<Vec<_>>(),
+                b.keys().collect::<Vec<_>>(),
+                "{at}"
+            );
             for (k, v) in b {
                 same(&a[k], v, &format!("{at}.{k}"), within);
             }
@@ -48,13 +64,23 @@ fn same(got: &Value, want: &Value, at: &str, within: f64) {
 fn opened() -> App {
     let all = cases();
     let snapshot: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_value(case(&all, "doğru ve eşikler birlikte")["setup"].clone()).expect("reads");
+        serde_json::from_value(case(&all, "doğru ve eşikler birlikte")["setup"].clone())
+            .expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    for (layer, day) in [("donem1", "2026-01-15"), ("donem2", "2026-04-15"), ("donem3", "2026-07-15"), ("donem4", "2026-10-15")] {
-        crate::files_testing::command(&mut app, "cad.datasets.edit", json!({"layer": layer, "dataset": {"updated": day}}));
+    for (layer, day) in [
+        ("donem1", "2026-01-15"),
+        ("donem2", "2026-04-15"),
+        ("donem3", "2026-07-15"),
+        ("donem4", "2026-10-15"),
+    ] {
+        crate::files_testing::command(
+            &mut app,
+            "cad.datasets.edit",
+            json!({"layer": layer, "dataset": {"updated": day}}),
+        );
     }
     app
 }
@@ -72,7 +98,15 @@ fn typed(app: &mut App) {
         A::Trend(C::On(true)),
         A::Trend(C::Confidence("95".into())),
     ];
-    for (k, (warning, alarm)) in [("0,0075", "0,03"), ("0,012", "0,04"), ("0,015", "0,06"), ("0,05", "0,08")].into_iter().enumerate() {
+    for (k, (warning, alarm)) in [
+        ("0,0075", "0,03"),
+        ("0,012", "0,04"),
+        ("0,015", "0,06"),
+        ("0,05", "0,08"),
+    ]
+    .into_iter()
+    .enumerate()
+    {
         events.push(A::Trend(C::Warning(k, warning.into())));
         events.push(A::Trend(C::Alarm(k, alarm.into())));
     }
@@ -87,7 +121,8 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
     let _ = app.update(Message::Run("asbuilt.check"));
     typed(&mut app);
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -96,28 +131,48 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
     let all = cases();
     let step = &case(&all, "doğru ve eşikler birlikte")["steps"][0];
     let within = step["within"].as_f64().expect("the case's tolerance");
-    same(&serde_json::to_value(&r.tracks).expect("json"), &step["result"]["output"]["tracks"], "tracks", within);
+    same(
+        &serde_json::to_value(&r.tracks).expect("json"),
+        &step["result"]["output"]["tracks"],
+        "tracks",
+        within,
+    );
     assert_eq!(
         crate::asbuilt_trend::line(&r.tracks).as_deref(),
-        Some("Eşikler: 2 nokta alarmda, 2 uyarıda, 5 olağan. Eşikler sizindir; izleme için yönetmelik değeri yoktur.")
+        Some(
+            "Eşikler: 2 nokta alarmda, 2 uyarıda, 5 olağan. Eşikler sizindir; izleme için yönetmelik değeri yoktur."
+        )
     );
     // M2's row: four epochs, its velocities ± σ as the case's, both horizontal components moving, at the alarm.
     let m2 = r.tracks.iter().find(|t| t.name == "M2").expect("M2");
     let fit = m2.fit.as_ref().expect("a line");
     let cells = crate::asbuilt_trend::cells(m2);
     assert_eq!(cells[1], "4");
-    assert_eq!(cells[2], format!("{:+.4} ±{:.4}", fit.east, fit.sigma_east).replace('.', ","));
+    assert_eq!(
+        cells[2],
+        format!("{:+.4} ±{:.4}", fit.east, fit.sigma_east).replace('.', ",")
+    );
     // A velocity under half the last digit is shown unsigned (M3 does not move sideways, M4 barely east).
     let m3 = r.tracks.iter().find(|t| t.name == "M3").expect("M3");
-    assert!(crate::asbuilt_trend::cells(m3)[2].starts_with("0,0000 ±"), "{:?}", crate::asbuilt_trend::cells(m3));
-    assert_eq!((cells[6].as_str(), cells[7].as_str()), ("doğu, kuzey", "Alarm (yatay, yatay hız)"));
+    assert!(
+        crate::asbuilt_trend::cells(m3)[2].starts_with("0,0000 ±"),
+        "{:?}",
+        crate::asbuilt_trend::cells(m3)
+    );
+    assert_eq!(
+        (cells[6].as_str(), cells[7].as_str()),
+        ("doğu, kuzey", "Alarm (yatay, yatay hız)")
+    );
     let m4 = r.tracks.iter().find(|t| t.name == "M4").expect("M4");
     assert_eq!(
         crate::asbuilt_trend::cells(m4)[6..],
         ["yok".to_owned(), "Olağan".to_owned()]
     );
     // The movements' table is a choice away, and choosing it checks nothing again.
-    assert_eq!(app.modules.map().asbuilt.trend.view, crate::asbuilt_trend::View::Line);
+    assert_eq!(
+        app.modules.map().asbuilt.trend.view,
+        crate::asbuilt_trend::View::Line
+    );
     let _ = app.update(Message::from(map::Event::Asbuilt(A::Trend(C::View(
         crate::asbuilt_trend::View::Series,
     )))));
@@ -134,7 +189,8 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
         "0,06".into(),
     )))));
     let said = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -153,7 +209,8 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
         "yüzde".into(),
     )))));
     let said = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -176,7 +233,8 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
         )))));
     }
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -201,12 +259,18 @@ fn the_line_and_the_levels_are_the_shared_case_s() {
 fn screens() {
     use iced::{Point, Size};
     use kentos_ui::snapshot::{Input, Snapshot};
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dogru-esik-4840");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/dogru-esik-4840");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for step in ["form", "tablo"] {
             let mut app = opened();
-            let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("asbuilt.check"));
@@ -221,7 +285,10 @@ fn screens() {
                 snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -40.0));
             }
             let file = out.join(format!("dogru-esik-{step}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }

@@ -171,7 +171,11 @@ pub fn condition(
         // A typed column holds its own type: a text only in a text column (docs/adr/9109 §2).
         Condition::Text(f) => {
             let (col, kind, _) = column(shape, table, f)?;
-            if kind.is_text() { format!("({col} IS NOT NULL)") } else { "FALSE".into() }
+            if kind.is_text() {
+                format!("({col} IS NOT NULL)")
+            } else {
+                "FALSE".into()
+            }
         }
         Condition::Like {
             field,

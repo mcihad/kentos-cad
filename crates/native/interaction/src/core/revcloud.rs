@@ -89,12 +89,19 @@ impl RevCloud {
     }
 
     fn label_of(&self) -> &'static str {
-        if self.mark.is_some() { MARK_LABEL } else { LABEL }
+        if self.mark.is_some() {
+            MARK_LABEL
+        } else {
+            LABEL
+        }
     }
 
     /// The revision's number a mark writes.
     fn number(&self) -> String {
-        self.mark.clone().flatten().unwrap_or_else(|| "1".to_owned())
+        self.mark
+            .clone()
+            .flatten()
+            .unwrap_or_else(|| "1".to_owned())
     }
 
     fn see(&mut self, cx: &Context<'_>) {
@@ -135,8 +142,12 @@ impl RevCloud {
             return;
         }
         let input = self.mark_request(self.frame_of(&pts), cx);
-        if let CommandResult::Completed { output, .. } = revisions::plan_in(cx.doc, Some(cx.spatial.store()), &input) {
-            let Entity::Insert(i) = &output.tag else { return };
+        if let CommandResult::Completed { output, .. } =
+            revisions::plan_in(cx.doc, Some(cx.spatial.store()), &input)
+        {
+            let Entity::Insert(i) = &output.tag else {
+                return;
+            };
             if let Some(def) = output.block.or_else(|| cx.doc.block(i.block).cloned()) {
                 self.tag = crate::symbols::definition_ghost(&def, &output.tag);
             }
@@ -223,9 +234,15 @@ impl RevCloud {
     fn write_mark(&mut self, frame: RevcloudFrame, cx: &mut Context<'_>) {
         let input = self.mark_request(frame, cx);
         let number = input.number.clone();
-        let result = revisions::execute(&mut ExecutionContext::with_store(cx.doc, cx.spatial.store()), input);
+        let result = revisions::execute(
+            &mut ExecutionContext::with_store(cx.doc, cx.spatial.store()),
+            input,
+        );
         if points::written(result, cx).is_some() {
-            cx.say(Level::Success, format!("Revizyon {number} işaretlendi: bulut ve üçgen."));
+            cx.say(
+                Level::Success,
+                format!("Revizyon {number} işaretlendi: bulut ve üçgen."),
+            );
         }
         self.tag.clear();
     }
@@ -315,8 +332,18 @@ impl Tool for RevCloud {
     fn prompt(&self) -> Prompt {
         let label = self.label_of();
         match self.asking {
-            Some("R") => return Prompt::new(label, "revizyonun numarasını ya da harfini yazın (1, A, B2 gibi)"),
-            Some("T") => return Prompt::new(label, "revizyonun tarihini yazın (2026-10-27 gibi; boş: yok)"),
+            Some("R") => {
+                return Prompt::new(
+                    label,
+                    "revizyonun numarasını ya da harfini yazın (1, A, B2 gibi)",
+                );
+            }
+            Some("T") => {
+                return Prompt::new(
+                    label,
+                    "revizyonun tarihini yazın (2026-10-27 gibi; boş: yok)",
+                );
+            }
             Some(_) => return Prompt::new(label, "revizyonda neyin değiştiğini yazın (boş: yok)"),
             None => {}
         }
@@ -443,7 +470,11 @@ impl Tool for RevCloud {
             Some(_) => vec![
                 Setting::text("R", "Revizyon", self.number()),
                 Setting::text("T", "Tarih", self.date.clone().unwrap_or_default()),
-                Setting::text("A", "Açıklama", self.description.clone().unwrap_or_default()),
+                Setting::text(
+                    "A",
+                    "Açıklama",
+                    self.description.clone().unwrap_or_default(),
+                ),
             ],
             None => Vec::new(),
         }
@@ -474,7 +505,10 @@ impl Tool for RevCloud {
                     (kentos_commands::MAX_REVISION_DESCRIPTION, "açıklaması")
                 };
                 if text.chars().count() > most || text.chars().any(char::is_control) {
-                    cx.say(Level::Warn, format!("Revizyonun {what} en çok {most} karakter, tek satır olmalı."));
+                    cx.say(
+                        Level::Warn,
+                        format!("Revizyonun {what} en çok {most} karakter, tek satır olmalı."),
+                    );
                     return false;
                 }
                 let value = (!text.is_empty()).then(|| text.to_owned());

@@ -26,7 +26,8 @@ fn opened(cases: &str) -> App {
 
 const SECTIONS: &str = include_str!("../../../../fixtures/commands/v1/road.sections.query.json");
 const PROFILES: &str = include_str!("../../../../fixtures/commands/v1/road.profiles.query.json");
-const SUPERELEVATIONS: &str = include_str!("../../../../fixtures/commands/v1/road.superelevations.query.json");
+const SUPERELEVATIONS: &str =
+    include_str!("../../../../fixtures/commands/v1/road.superelevations.query.json");
 const VOLUMES: &str = include_str!("../../../../fixtures/commands/v1/road.volumes.query.json");
 const HAULS: &str = include_str!("../../../../fixtures/commands/v1/road.hauls.query.json");
 
@@ -57,13 +58,28 @@ fn pictures(snapshot: &mut Snapshot, app: &App) -> Vec<(View, Rectangle)> {
 static SIZES: Mutex<()> = Mutex::new(());
 
 fn turn() -> std::sync::MutexGuard<'static, ()> {
-    SIZES.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+    SIZES
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
 }
 
 /// The window `run` opens on `cases`, full screen or at its own size, after `then`; the snapshot settled.
-fn window(cases: &str, key: &str, run: &'static str, full: bool, then: impl FnOnce(&mut App)) -> (App, Snapshot) {
+fn window(
+    cases: &str,
+    key: &str,
+    run: &'static str,
+    full: bool,
+    then: impl FnOnce(&mut App),
+) -> (App, Snapshot) {
     if full {
-        sizes::set(key, sizes::Kept { width: 800.0, height: 600.0, maximized: true });
+        sizes::set(
+            key,
+            sizes::Kept {
+                width: 800.0,
+                height: 600.0,
+                maximized: true,
+            },
+        );
     } else {
         sizes::forget(key);
     }
@@ -89,18 +105,30 @@ fn a_full_screen_road_window_gives_its_picture_the_room() {
         (VOLUMES, "Kübaj", "volume.editor", 190.0),
     ] {
         let (app, mut snapshot) = window(cases, key, run, false, |_| {});
-        let own = pictures(&mut snapshot, &app).first().map(|p| p.1.height).expect(key);
+        let own = pictures(&mut snapshot, &app)
+            .first()
+            .map(|p| p.1.height)
+            .expect(key);
         // At least its least at the 12 px body text, grown with the text, less the box's 1 px frame; more where the
         // form is taller than the window and scrolls by itself (docs/adr/0938 §3): the picture takes what is over
         // (Kübaj with its Belirsizlik section: 455 against 206).
         let least = kentos_ui::theme::typography::scaled(least);
-        assert!(own > least - 4.0, "{key}: at its own size the picture is at least its least ({least}): {own}");
+        assert!(
+            own > least - 4.0,
+            "{key}: at its own size the picture is at least its least ({least}): {own}"
+        );
         let (app, mut snapshot) = window(cases, key, run, true, |_| {});
-        let full = pictures(&mut snapshot, &app).first().map(|p| p.1.height).expect(key);
+        let full = pictures(&mut snapshot, &app)
+            .first()
+            .map(|p| p.1.height)
+            .expect(key);
         sizes::forget(key);
         // Full screen it takes the room: Boykesit keeps its PVI table under the chart (542 against 356 at
         // 1920 × 1080), Kübaj shares it with its sheet.
-        assert!(full >= own - 1.0 && full > 1.4 * least && full > 440.0, "{key}: full screen {full} against {own}");
+        assert!(
+            full >= own - 1.0 && full > 1.4 * least && full > 440.0,
+            "{key}: full screen {full} against {own}"
+        );
     }
 }
 
@@ -119,38 +147,72 @@ fn a_section_zooms_pans_and_is_saved() {
         }
     };
     let (_, bounds) = pictures(&mut snapshot, &app)[0];
-    let at = Point::new(bounds.x + bounds.width * 0.4, bounds.y + bounds.height * 0.5);
+    let at = Point::new(
+        bounds.x + bounds.width * 0.4,
+        bounds.y + bounds.height * 0.5,
+    );
     snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 4.0));
     let (view, _) = pictures(&mut snapshot, &app)[0];
     assert!((view.zoom - 1.2f32.powi(4)).abs() < 1e-3, "{view:?}");
     // The content's point under the cursor stayed under it.
     let k = view.zoom;
     let under = Vector::new(at.x - bounds.x, at.y - bounds.y);
-    assert!((view.offset.x - under.x * (k - 1.0)).abs() < 1e-2 && (view.offset.y - under.y * (k - 1.0)).abs() < 1e-2);
+    assert!(
+        (view.offset.x - under.x * (k - 1.0)).abs() < 1e-2
+            && (view.offset.y - under.y * (k - 1.0)).abs() < 1e-2
+    );
     // Shift and the wheel down: to the right.
-    let shift = iced::Event::Keyboard(iced::keyboard::Event::ModifiersChanged(iced::keyboard::Modifiers::SHIFT));
+    let shift = iced::Event::Keyboard(iced::keyboard::Event::ModifiersChanged(
+        iced::keyboard::Modifiers::SHIFT,
+    ));
     let _ = snapshot.deliver(app.view(), &shift);
     snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, -2.0));
     let (moved, _) = pictures(&mut snapshot, &app)[0];
     assert_eq!(moved.zoom, view.zoom);
-    assert!((moved.offset.x - (view.offset.x + 96.0)).abs() < 1e-2, "{moved:?}");
-    let plain = iced::Event::Keyboard(iced::keyboard::Event::ModifiersChanged(iced::keyboard::Modifiers::default()));
+    assert!(
+        (moved.offset.x - (view.offset.x + 96.0)).abs() < 1e-2,
+        "{moved:?}"
+    );
+    let plain = iced::Event::Keyboard(iced::keyboard::Event::ModifiersChanged(
+        iced::keyboard::Modifiers::default(),
+    ));
     let _ = snapshot.deliver(app.view(), &plain);
     // Resim olarak kaydet: the view at twice the pixels, under the section's name.
-    snapshot.input(&mut app, App::view, &mut update, Input::Click(button_at(bounds, Button::Save)));
+    snapshot.input(
+        &mut app,
+        App::view,
+        &mut update,
+        Input::Click(button_at(bounds, Button::Save)),
+    );
     let saved = saved.borrow();
     assert_eq!(saved.len(), 1);
     let s = &saved[0];
     assert!(s.name.starts_with("Enkesit — km "), "{}", s.name);
-    assert_eq!((s.width, s.height), ((bounds.width * 2.0).round() as u32, (bounds.height * 2.0).round() as u32));
+    assert_eq!(
+        (s.width, s.height),
+        (
+            (bounds.width * 2.0).round() as u32,
+            (bounds.height * 2.0).round() as u32
+        )
+    );
     let file = std::env::temp_dir().join(format!("kentos-resim-{}.png", std::process::id()));
     crate::picture::write(s, &file).expect("written");
     assert_eq!(&std::fs::read(&file).expect("read")[1..4], b"PNG");
-    let _ = app.update(Message::PictureWritten(Some(Ok((file.clone(), s.width, s.height)))));
+    let _ = app.update(Message::PictureWritten(Some(Ok((
+        file.clone(),
+        s.width,
+        s.height,
+    )))));
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
-    assert!(said.iter().any(|l| l.starts_with("Resim kaydedildi")), "{said:?}");
+    assert!(
+        said.iter().any(|l| l.starts_with("Resim kaydedildi")),
+        "{said:?}"
+    );
     let _ = std::fs::remove_file(file);
-    assert_eq!(crate::picture::file_name("Enkesit — km 1+120.000"), "Enkesit — km 1+120.000.png");
+    assert_eq!(
+        crate::picture::file_name("Enkesit — km 1+120.000"),
+        "Enkesit — km 1+120.000.png"
+    );
     assert_eq!(crate::picture::file_name("a/b:c"), "a-b-c.png");
 }
 
@@ -163,32 +225,58 @@ fn a_section_zooms_pans_and_is_saved() {
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {
     let _turn = turn();
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/goruntuleyici");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/goruntuleyici");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     let shot = |snapshot: &mut Snapshot, app: &mut App, file: &str| {
         snapshot.settle(app, App::view, &mut |app: &mut App, m| {
             let _ = app.update(m);
         });
         let path = out.join(format!("{file}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&path)
+            .expect("writes the picture");
         println!("{}", path.display());
     };
     for (theme, name) in [("dark", "koyu"), ("light", "acik")] {
         let themed = |app: &mut App| {
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
         };
         // Enkesit at its own size and full screen.
         let (mut app, mut snapshot) = window(SECTIONS, "Enkesit", "section.editor", false, themed);
-        shot(&mut snapshot, &mut app, &format!("enkesit-kendi-boyunda-{name}"));
+        shot(
+            &mut snapshot,
+            &mut app,
+            &format!("enkesit-kendi-boyunda-{name}"),
+        );
         // The cursor on the section: its bar opens.
         let (_, own) = pictures(&mut snapshot, &app)[0];
-        snapshot.input(&mut app, App::view, &mut |app: &mut App, m| {
-            let _ = app.update(m);
-        }, Input::Move(Point::new(own.x + own.width * 0.3, own.y + own.height * 0.6)));
-        shot(&mut snapshot, &mut app, &format!("enkesit-kendi-boyunda-imlecle-{name}"));
+        snapshot.input(
+            &mut app,
+            App::view,
+            &mut |app: &mut App, m| {
+                let _ = app.update(m);
+            },
+            Input::Move(Point::new(
+                own.x + own.width * 0.3,
+                own.y + own.height * 0.6,
+            )),
+        );
+        shot(
+            &mut snapshot,
+            &mut app,
+            &format!("enkesit-kendi-boyunda-imlecle-{name}"),
+        );
         let (mut app, mut snapshot) = window(SECTIONS, "Enkesit", "section.editor", true, themed);
-        shot(&mut snapshot, &mut app, &format!("enkesit-tam-ekran-{name}"));
+        shot(
+            &mut snapshot,
+            &mut app,
+            &format!("enkesit-tam-ekran-{name}"),
+        );
         // Zoomed with the wheel on the left ditch, the zoom's tip shown.
         let mut update = |app: &mut App, m: Message| {
             if !matches!(m, Message::SavePicture(_)) {
@@ -196,16 +284,38 @@ fn screens() {
             }
         };
         let (_, bounds) = pictures(&mut snapshot, &app)[0];
-        let at = Point::new(bounds.x + bounds.width * 0.405, bounds.y + bounds.height * 0.8);
+        let at = Point::new(
+            bounds.x + bounds.width * 0.405,
+            bounds.y + bounds.height * 0.8,
+        );
         snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 8.0));
-        snapshot.input(&mut app, App::view, &mut update, Input::Move(button_at(bounds, Button::Zoom)));
+        snapshot.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Move(button_at(bounds, Button::Zoom)),
+        );
         shot(&mut snapshot, &mut app, &format!("enkesit-yakin-{name}"));
         // Moved sideways with the bar's thumb.
         let thumb_y = bounds.y + bounds.height - 6.0;
         let from = Point::new(bounds.x + bounds.width * 0.3, thumb_y);
-        snapshot.input(&mut app, App::view, &mut update, Input::Drag(from, Point::new(from.x + 260.0, thumb_y)));
-        snapshot.input(&mut app, App::view, &mut update, Input::Move(Point::new(bounds.x + bounds.width * 0.5, thumb_y)));
-        shot(&mut snapshot, &mut app, &format!("enkesit-kaydirilmis-{name}"));
+        snapshot.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Drag(from, Point::new(from.x + 260.0, thumb_y)),
+        );
+        snapshot.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Move(Point::new(bounds.x + bounds.width * 0.5, thumb_y)),
+        );
+        shot(
+            &mut snapshot,
+            &mut app,
+            &format!("enkesit-kaydirilmis-{name}"),
+        );
         if theme == "dark" {
             // What Resim olarak kaydet writes: the view, in the light theme, at twice the pixels.
             let saved: Rc<RefCell<Option<Saved>>> = Rc::default();
@@ -216,7 +326,12 @@ fn screens() {
                     let _ = app.update(other);
                 }
             };
-            snapshot.input(&mut app, App::view, &mut keep, Input::Click(button_at(bounds, Button::Save)));
+            snapshot.input(
+                &mut app,
+                App::view,
+                &mut keep,
+                Input::Click(button_at(bounds, Button::Save)),
+            );
             let s = saved.borrow().clone().expect("saved");
             let path = out.join("kaydedilen-enkesit.png");
             crate::picture::write(&s, &path).expect("written");
@@ -224,9 +339,16 @@ fn screens() {
         }
         // Boykesit full screen, zoomed on its first vertical curve.
         let (mut app, mut snapshot) = window(PROFILES, "Boykesit", "profile.editor", true, themed);
-        shot(&mut snapshot, &mut app, &format!("boykesit-tam-ekran-{name}"));
+        shot(
+            &mut snapshot,
+            &mut app,
+            &format!("boykesit-tam-ekran-{name}"),
+        );
         let (_, bounds) = pictures(&mut snapshot, &app)[0];
-        let at = Point::new(bounds.x + bounds.width * 0.3, bounds.y + bounds.height * 0.4);
+        let at = Point::new(
+            bounds.x + bounds.width * 0.3,
+            bounds.y + bounds.height * 0.4,
+        );
         snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 6.0));
         shot(&mut snapshot, &mut app, &format!("boykesit-yakin-{name}"));
         // The others full screen.
@@ -254,12 +376,19 @@ fn the_point_under_the_wheel_stays_in_a_full_screen_window() {
         let _ = app.update(m);
     };
     let (_, bounds) = pictures(&mut snapshot, &app)[0];
-    let at = Point::new(bounds.x + bounds.width * 0.405, bounds.y + bounds.height * 0.8);
+    let at = Point::new(
+        bounds.x + bounds.width * 0.405,
+        bounds.y + bounds.height * 0.8,
+    );
     snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 8.0));
     let (view, after) = pictures(&mut snapshot, &app)[0];
     sizes::forget("Enkesit");
     assert_eq!(after, bounds);
     let k = view.zoom;
     let under = Vector::new(at.x - bounds.x, at.y - bounds.y);
-    assert!((view.offset.x - under.x * (k - 1.0)).abs() < 0.5 && (view.offset.y - under.y * (k - 1.0)).abs() < 0.5, "{view:?}");
+    assert!(
+        (view.offset.x - under.x * (k - 1.0)).abs() < 0.5
+            && (view.offset.y - under.y * (k - 1.0)).abs() < 0.5,
+        "{view:?}"
+    );
 }

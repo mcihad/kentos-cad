@@ -13,10 +13,12 @@
 use std::collections::HashMap;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, ExportExisting, ExportFormat, ExportGeometry, LayerFieldKind, LayerFilter,
-    LayersExport, LayersExported,
+    CommandResult, CommandWarning, Entity, ExportExisting, ExportFormat, ExportGeometry,
+    LayerFieldKind, LayerFilter, LayersExport, LayersExported,
 };
-use kentos_data::{Cancel, Condition, Feature, Field, FieldKind, GeometryField, NewFeature, Request, Schema};
+use kentos_data::{
+    Cancel, Condition, Feature, Field, FieldKind, GeometryField, NewFeature, Request, Schema,
+};
 use kentos_domain::Document;
 
 use crate::ExecutionContext;
@@ -36,7 +38,11 @@ pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 pub(crate) fn unreachable(e: impl std::fmt::Display) -> Stop {
-    Stop::failed(error(codes::SOURCE_UNREACHABLE, format!("Okunamadı ya da yazılamadı: {e}"), None))
+    Stop::failed(error(
+        codes::SOURCE_UNREACHABLE,
+        format!("Okunamadı ya da yazılamadı: {e}"),
+        None,
+    ))
 }
 
 /// A field written: the layer's field, the name written, its kind, its listed values' labels.
@@ -86,13 +92,21 @@ pub fn table_name_of(name: &str) -> String {
         out.push(if c.is_ascii_alphanumeric() { c } else { '_' });
     }
     let out = out.trim_matches('_').to_owned();
-    if out.is_empty() || out.starts_with(|c: char| c.is_ascii_digit()) { format!("k_{out}") } else { out }
+    if out.is_empty() || out.starts_with(|c: char| c.is_ascii_digit()) {
+        format!("k_{out}")
+    } else {
+        out
+    }
 }
 
 /// The input's own checks: the layer named, where it goes, the format's own choices.
 fn checked(input: &LayersExport) -> Result<(), Stop> {
     if input.layer.trim().is_empty() {
-        return Err(fail(codes::NO_LAYER, "Dışa aktarılacak katmanı (layer) verin.".into(), "layer"));
+        return Err(fail(
+            codes::NO_LAYER,
+            "Dışa aktarılacak katmanı (layer) verin.".into(),
+            "layer",
+        ));
     }
     match input.format {
         ExportFormat::Postgis if input.address.as_deref().is_none_or(|a| a.trim().is_empty()) => {
@@ -104,14 +118,21 @@ fn checked(input: &LayersExport) -> Result<(), Stop> {
         }
         ExportFormat::Postgis => {}
         _ if input.path.as_deref().is_none_or(|p| p.trim().is_empty()) => {
-            return Err(fail(codes::NO_TARGET, "Yazılacak dosyanın yolunu verin (path).".into(), "path"));
+            return Err(fail(
+                codes::NO_TARGET,
+                "Yazılacak dosyanın yolunu verin (path).".into(),
+                "path",
+            ));
         }
         _ => {}
     }
     let option = |what: &str, path: &str| -> Result<(), Stop> {
         Err(fail(
             codes::INVALID_OPTION,
-            format!("{what} bu biçimde yoktur; {} için verilmez.", format_words(input.format)),
+            format!(
+                "{what} bu biçimde yoktur; {} için verilmez.",
+                format_words(input.format)
+            ),
             path,
         ))
     };
@@ -148,10 +169,16 @@ fn checked(input: &LayersExport) -> Result<(), Stop> {
         if let Some(s) = &o.separator
             && s.chars().count() != 1
         {
-            return Err(fail(codes::INVALID_OPTION, "Ayırıcı tek bir karakter olmalı.".into(), "options.separator"));
+            return Err(fail(
+                codes::INVALID_OPTION,
+                "Ayırıcı tek bir karakter olmalı.".into(),
+                "options.separator",
+            ));
         }
     }
-    if input.encoding.is_some() && !matches!(input.format, ExportFormat::Shapefile | ExportFormat::Csv) {
+    if input.encoding.is_some()
+        && !matches!(input.format, ExportFormat::Shapefile | ExportFormat::Csv)
+    {
         option("Kodlama", "encoding")?;
     }
     if input.schema.is_some() && input.format != ExportFormat::Postgis {
@@ -163,10 +190,16 @@ fn checked(input: &LayersExport) -> Result<(), Stop> {
     if input.add_to_map == Some(true) && !table {
         option("Haritaya eklemek", "addToMap")?;
     }
-    if matches!(input.existing, Some(ExportExisting::ReplaceLayer | ExportExisting::Append)) && !table {
+    if matches!(
+        input.existing,
+        Some(ExportExisting::ReplaceLayer | ExportExisting::Append)
+    ) && !table
+    {
         option("Katmanı değiştirmek ya da eklemek", "existing")?;
     }
-    if input.format == ExportFormat::Postgis && input.existing == Some(ExportExisting::OverwriteFile) {
+    if input.format == ExportFormat::Postgis
+        && input.existing == Some(ExportExisting::OverwriteFile)
+    {
         option("Dosyanın üstüne yazmak", "existing")?;
     }
     if input.format == ExportFormat::Kml && input.srid.is_some_and(|s| s != 4326) {
@@ -175,11 +208,19 @@ fn checked(input: &LayersExport) -> Result<(), Stop> {
     if let Some(name) = &input.name
         && (name.trim().is_empty() || name.chars().count() > 63)
     {
-        return Err(fail(codes::INVALID_NAME, "Tablonun adı boş ya da 63 karakterden uzun olamaz.".into(), "name"));
+        return Err(fail(
+            codes::INVALID_NAME,
+            "Tablonun adı boş ya da 63 karakterden uzun olamaz.".into(),
+            "name",
+        ));
     }
     for (i, f) in input.fields.iter().flatten().enumerate() {
         if let Some(to) = &f.to {
-            let most = if input.format == ExportFormat::Shapefile { 10 } else { 63 };
+            let most = if input.format == ExportFormat::Shapefile {
+                10
+            } else {
+                63
+            };
             if to.trim().is_empty() || to.chars().count() > most {
                 return Err(fail(
                     codes::INVALID_NAME,
@@ -227,14 +268,15 @@ fn geometry_type(input: &LayersExport, node: &kentos_commands::LayerNode) -> Opt
         ExportGeometry::Line => Some(G::Line),
         ExportGeometry::Area => Some(G::Area),
         ExportGeometry::Auto => node.geometry.or_else(|| {
-            node.data.as_ref().and_then(|d| d.geometry.as_ref()).and_then(|g| {
-                match kentos_data::schema::family_of(&g.type_name) {
+            node.data
+                .as_ref()
+                .and_then(|d| d.geometry.as_ref())
+                .and_then(|g| match kentos_data::schema::family_of(&g.type_name) {
                     kentos_data::Family::Point => Some(G::Point),
                     kentos_data::Family::Line => Some(G::Line),
                     kentos_data::Family::Area => Some(G::Area),
                     kentos_data::Family::Any => None,
-                }
-            })
+                })
         }),
     };
     let multi = input.multi == Some(true);
@@ -253,21 +295,30 @@ fn geometry_type(input: &LayersExport, node: &kentos_commands::LayerNode) -> Opt
 pub(crate) fn planned<'d>(doc: &'d Document, input: &'d LayersExport) -> Result<Plan<'d>, Stop> {
     checked(input)?;
     let id = input.layer.trim();
-    let node = doc
-        .layers()
-        .get(id)
-        .ok_or_else(|| fail(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), "layer"))?;
+    let node = doc.layers().get(id).ok_or_else(|| {
+        fail(
+            codes::LAYER_NOT_FOUND,
+            format!("“{id}” kimlikli katman çizimde yok."),
+            "layer",
+        )
+    })?;
     if node.kind == kentos_commands::LayerNodeType::Group {
         return Err(fail(
             codes::NOT_A_LAYER,
-            format!("“{}” bir katman grubu; dışa aktarılan bir katmandır. Grubun bir katmanını verin.", node.name),
+            format!(
+                "“{}” bir katman grubu; dışa aktarılan bir katmandır. Grubun bir katmanını verin.",
+                node.name
+            ),
             "layer",
         ));
     }
     if node.service.is_some() {
         return Err(fail(
             codes::SERVICE_LAYER,
-            format!("“{}” bir harita servisinden çizilir; nesnesi ya da satırı yoktur.", node.name),
+            format!(
+                "“{}” bir harita servisinden çizilir; nesnesi ya da satırı yoktur.",
+                node.name
+            ),
             "layer",
         ));
     }
@@ -300,7 +351,11 @@ pub(crate) fn planned<'d>(doc: &'d Document, input: &'d LayersExport) -> Result<
                 .collect::<HashMap<_, _>>()
         });
         // A label is text whatever the code's kind.
-        let kind = if labels.is_some() { LayerFieldKind::Text } else { f.kind };
+        let kind = if labels.is_some() {
+            LayerFieldKind::Text
+        } else {
+            f.kind
+        };
         fields.push(Out {
             field: f.clone(),
             from: f.name.clone(),
@@ -322,7 +377,13 @@ pub(crate) fn planned<'d>(doc: &'d Document, input: &'d LayersExport) -> Result<
                 },
                 unit,
             )
-            .map_err(|why| fail(codes::INVALID_EXPRESSION, format!("Süzgeç: {why}"), "filter"))?;
+            .map_err(|why| {
+                fail(
+                    codes::INVALID_EXPRESSION,
+                    format!("Süzgeç: {why}"),
+                    "filter",
+                )
+            })?;
             if f.expr().is_some_and(|e| !e.world.is_empty()) {
                 return Err(fail(
                     codes::INVALID_EXPRESSION,
@@ -337,16 +398,30 @@ pub(crate) fn planned<'d>(doc: &'d Document, input: &'d LayersExport) -> Result<
     // writers from the project's own; the others from the given one, a data table's own or the project's.
     let wgs84_writer = match input.format {
         ExportFormat::Kml => true,
-        ExportFormat::Geojson => input.options.as_ref().and_then(|o| o.project_coordinates) != Some(true),
+        ExportFormat::Geojson => {
+            input.options.as_ref().and_then(|o| o.project_coordinates) != Some(true)
+        }
         _ => false,
     };
-    let own = node.data.as_ref().and_then(|d| d.geometry.as_ref()).and_then(|g| g.srid);
+    let own = node
+        .data
+        .as_ref()
+        .and_then(|d| d.geometry.as_ref())
+        .and_then(|g| g.srid);
     let project = (settings.srid > 0).then_some(settings.srid);
-    let srid = if wgs84_writer { project } else { input.srid.or(own).or(project) };
+    let srid = if wgs84_writer {
+        project
+    } else {
+        input.srid.or(own).or(project)
+    };
     if let Some(s) = srid
         && let Err(why) = TableSystem::of(settings, Some(s))
     {
-        return Err(fail(codes::UNKNOWN_SRID, format!("EPSG:{s} bu projede yazılamaz: {why}"), "srid"));
+        return Err(fail(
+            codes::UNKNOWN_SRID,
+            format!("EPSG:{s} bu projede yazılamaz: {why}"),
+            "srid",
+        ));
     }
     let key = input
         .options
@@ -370,7 +445,10 @@ pub(crate) fn planned<'d>(doc: &'d Document, input: &'d LayersExport) -> Result<
     let schema = Schema {
         key: key.clone(),
         key_made: true,
-        fields: fields.iter().map(|o| Field::new(&o.to, field_kind(o.kind, o.length))).collect(),
+        fields: fields
+            .iter()
+            .map(|o| Field::new(&o.to, field_kind(o.kind, o.length)))
+            .collect(),
         geometry,
     };
     Ok(Plan {
@@ -452,14 +530,21 @@ pub(crate) struct Run {
 }
 
 /// Makes the rows of `objects` (in the project's system) and hands them to the sink.
-fn feed(plan: &Plan<'_>, rows: &Rows<'_>, objects: &[Entity], sink: &mut dyn Sink, run: &mut Run) -> Result<(), Stop> {
+fn feed(
+    plan: &Plan<'_>,
+    rows: &Rows<'_>,
+    objects: &[Entity],
+    sink: &mut dyn Sink,
+    run: &mut Run,
+) -> Result<(), Stop> {
     let mut made: Vec<NewFeature> = Vec::with_capacity(objects.len());
     let mut from: Vec<&Entity> = Vec::with_capacity(objects.len());
     for e in objects {
         // A text or a dimension has no geometry a table holds: left out of a table with geometry.
         if plan.schema.geometry.is_some() && matches!(geometry_of(e), Ok(None) | Err(_)) {
             run.skipped += 1;
-            run.first_skip.get_or_insert_with(|| "yazı ya da ölçü bir geometri sütununa yazılmaz".to_owned());
+            run.first_skip
+                .get_or_insert_with(|| "yazı ya da ölçü bir geometri sütununa yazılmaz".to_owned());
             continue;
         }
         match rows.new_row(&mapped(plan, e)) {
@@ -480,18 +565,31 @@ fn feed(plan: &Plan<'_>, rows: &Rows<'_>, objects: &[Entity], sink: &mut dyn Sin
 /// The objects of a drawing layer the export keeps.
 fn drawing_objects(doc: &Document, plan: &Plan<'_>) -> Result<Vec<Entity>, Stop> {
     let input = plan.input;
-    let hidden = plan.node.filter.as_ref().filter(|_| !plan.all_objects).map(|_| crate::layer_filter::left_out(doc));
-    let wanted: Option<std::collections::HashSet<&str>> =
-        input.uids.as_ref().map(|u| u.iter().map(String::as_str).collect());
+    let hidden = plan
+        .node
+        .filter
+        .as_ref()
+        .filter(|_| !plan.all_objects)
+        .map(|_| crate::layer_filter::left_out(doc));
+    let wanted: Option<std::collections::HashSet<&str>> = input
+        .uids
+        .as_ref()
+        .map(|u| u.iter().map(String::as_str).collect());
     let mut list: Vec<Entity> = Vec::new();
     for (uid, e) in doc.by_layer_with_uids(&plan.node.id) {
-        if hidden.as_ref().is_some_and(|h| h.contains(&kentos_domain::Slot(e.base().id))) {
+        if hidden
+            .as_ref()
+            .is_some_and(|h| h.contains(&kentos_domain::Slot(e.base().id)))
+        {
             continue;
         }
         if plan.texts_apart && matches!(e, Entity::Text(_)) {
             continue;
         }
-        if wanted.as_ref().is_some_and(|w| !w.contains(uid.to_string().as_str())) {
+        if wanted
+            .as_ref()
+            .is_some_and(|w| !w.contains(uid.to_string().as_str()))
+        {
             continue;
         }
         if let Some(b) = input.bbox {
@@ -513,9 +611,19 @@ fn drawing_objects(doc: &Document, plan: &Plan<'_>) -> Result<Vec<Entity>, Stop>
         } else {
             Vec::new()
         };
-        let names = |id: &str| doc.layers().get(id).map(|n| n.name.clone()).unwrap_or_default();
+        let names = |id: &str| {
+            doc.layers()
+                .get(id)
+                .map(|n| n.name.clone())
+                .unwrap_or_default()
+        };
         let held = f.condition(&refs, &names, |i| shapes.get(i));
-        list = list.into_iter().zip(held).filter(|(_, h)| *h).map(|(e, _)| e).collect();
+        list = list
+            .into_iter()
+            .zip(held)
+            .filter(|(_, h)| *h)
+            .map(|(e, _)| e)
+            .collect();
     }
     Ok(list)
 }
@@ -530,16 +638,21 @@ fn data_rows(
         return Ok(());
     };
     let input = plan.input;
-    let source = kentos_data::registry().source(&data.address).map_err(unreachable)?;
+    let source = kentos_data::registry()
+        .source(&data.address)
+        .map_err(unreachable)?;
     let srid = data.geometry.as_ref().and_then(|g| g.srid);
     let system = TableSystem::of(plan.settings, srid).map_err(unreachable)?;
     let bbox = match (input.bbox, &system, &data.geometry) {
         (None, ..) | (_, _, None) => None,
         (Some(b), None, Some(_)) => Some(b),
-        (Some(b), Some(s), Some(_)) => Some(
-            s.to_table(b)
-                .ok_or_else(|| fail(codes::INVALID_EXTENT, "Kutu tablonun sistemine çevrilemedi.".into(), "bbox"))?,
-        ),
+        (Some(b), Some(s), Some(_)) => Some(s.to_table(b).ok_or_else(|| {
+            fail(
+                codes::INVALID_EXTENT,
+                "Kutu tablonun sistemine çevrilemedi.".into(),
+                "bbox",
+            )
+        })?),
     };
     let known: Vec<String> = plan.node.fields.iter().map(|f| f.name.clone()).collect();
     let mut columns: Vec<String> = plan.fields.iter().map(|f| f.from.clone()).collect();
@@ -557,7 +670,11 @@ fn data_rows(
         }
     }
     // The keys and the filter's part the source answers itself (docs/adr/9109); the filter is still asked here.
-    let mut parts: Vec<Condition> = input.keys.iter().map(|k| Condition::Fids(k.clone())).collect();
+    let mut parts: Vec<Condition> = input
+        .keys
+        .iter()
+        .map(|k| Condition::Fids(k.clone()))
+        .collect();
     if let Some(e) = plan.filter.as_ref().and_then(|f| f.expr()) {
         let schema = source.schema(&data.table).map_err(unreachable)?;
         let typed = crate::data_condition::typed(source.driver());
@@ -585,7 +702,9 @@ fn data_rows(
                 let attrs: serde_json::Map<String, serde_json::Value> = columns
                     .iter()
                     .zip(&f.values)
-                    .filter_map(|(n, v)| attribute_text(v).map(|t| (n.clone(), serde_json::Value::String(t))))
+                    .filter_map(|(n, v)| {
+                        attribute_text(v).map(|t| (n.clone(), serde_json::Value::String(t)))
+                    })
                     .collect();
                 let g = match (f.shape(), &system) {
                     (Some(g), Some(s)) => s.moved(g),
@@ -608,7 +727,12 @@ fn data_rows(
                 };
                 let name = plan.node.name.clone();
                 let held = f.condition(&refs, &|_| name.clone(), |i| shapes.get(i));
-                objects = objects.into_iter().zip(held).filter(|(_, h)| *h).map(|(e, _)| e).collect();
+                objects = objects
+                    .into_iter()
+                    .zip(held)
+                    .filter(|(_, h)| *h)
+                    .map(|(e, _)| e)
+                    .collect();
             }
             if let Err(stop) = each(objects, Reading { read, total }) {
                 failure = Some(stop);
@@ -621,7 +745,11 @@ fn data_rows(
         return Err(stop);
     }
     if stopped() {
-        return Err(Stop::failed(error(codes::CANCELLED, "İş durduruldu; hiçbir şey yazılmadı.".into(), None)));
+        return Err(Stop::failed(error(
+            codes::CANCELLED,
+            "İş durduruldu; hiçbir şey yazılmadı.".into(),
+            None,
+        )));
     }
     Ok(())
 }
@@ -661,7 +789,11 @@ pub(crate) fn run(
             let mut read = 0u64;
             for part in objects.chunks(CHUNK) {
                 if stopped() {
-                    return Err(Stop::failed(error(codes::CANCELLED, "İş durduruldu; hiçbir şey yazılmadı.".into(), None)));
+                    return Err(Stop::failed(error(
+                        codes::CANCELLED,
+                        "İş durduruldu; hiçbir şey yazılmadı.".into(),
+                        None,
+                    )));
                 }
                 feed(plan, &rows, part, sink.as_mut(), &mut run)?;
                 read += part.len() as u64;
@@ -683,8 +815,12 @@ pub(crate) fn run(
         return Err(fail(
             codes::NOTHING_TO_EXPORT,
             match &run.first_skip {
-                Some(why) => format!("Yazılacak nesne kalmadı: {} nesne yazılamadı ({why}).", run.skipped),
-                None => "Yazılacak nesne kalmadı: seçim, kutu ve süzgeç hiçbir nesne bırakmadı.".to_owned(),
+                Some(why) => format!(
+                    "Yazılacak nesne kalmadı: {} nesne yazılamadı ({why}).",
+                    run.skipped
+                ),
+                None => "Yazılacak nesne kalmadı: seçim, kutu ve süzgeç hiçbir nesne bırakmadı."
+                    .to_owned(),
             },
             "layer",
         ));
@@ -694,7 +830,13 @@ pub(crate) fn run(
 }
 
 /// The output for what was written.
-fn exported(plan: &Plan<'_>, run: &Run, files: Vec<String>, layer: Option<String>, revision: String) -> LayersExported {
+fn exported(
+    plan: &Plan<'_>,
+    run: &Run,
+    files: Vec<String>,
+    layer: Option<String>,
+    revision: String,
+) -> LayersExported {
     let geometry = plan.schema.geometry.as_ref().map(|g| {
         let dims = match (g.z, g.m) {
             (true, true) => " ZM",
@@ -706,7 +848,14 @@ fn exported(plan: &Plan<'_>, run: &Run, files: Vec<String>, layer: Option<String
     });
     let srid = match plan.input.format {
         ExportFormat::Kml => Some(4326),
-        ExportFormat::Geojson if plan.input.options.as_ref().and_then(|o| o.project_coordinates) != Some(true) => {
+        ExportFormat::Geojson
+            if plan
+                .input
+                .options
+                .as_ref()
+                .and_then(|o| o.project_coordinates)
+                != Some(true) =>
+        {
             Some(4326)
         }
         ExportFormat::Csv => None,
@@ -748,9 +897,9 @@ fn warnings_of(run: &Run) -> Vec<CommandWarning> {
 /// Why a stop stopped, in words.
 fn message(stop: Stop) -> String {
     match CommandResult::<()>::from(stop) {
-        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-            error.message
-        }
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => error.message,
         _ => "Dışa aktarılamadı.".to_owned(),
     }
 }
@@ -762,7 +911,14 @@ pub fn written(
     input: &LayersExport,
     stopped: &dyn Fn() -> bool,
     progress: &dyn Fn(ExportProgress),
-) -> Result<(LayersExported, Vec<CommandWarning>, Option<kentos_commands::LayersData>), String> {
+) -> Result<
+    (
+        LayersExported,
+        Vec<CommandWarning>,
+        Option<kentos_commands::LayersData>,
+    ),
+    String,
+> {
     let plan = planned(doc, input).map_err(message)?;
     let (run, files) = run(doc, &plan, true, stopped, progress).map_err(message)?;
     let add = (input.add_to_map == Some(true))
@@ -781,7 +937,11 @@ pub fn written(
                 expected_revision: None,
             }
         });
-    Ok((exported(&plan, &run, files, None, doc.revision().to_string()), warnings_of(&run), add))
+    Ok((
+        exported(&plan, &run, files, None, doc.revision().to_string()),
+        warnings_of(&run),
+        add,
+    ))
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &LayersExport) -> CommandResult<()> {
@@ -810,7 +970,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersExport) -> CommandResult<La
 }
 
 /// Writes the export; with `addToMap` the written table is added as a data layer, the export's undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersExport) -> CommandResult<LayersExported> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersExport,
+) -> CommandResult<LayersExported> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_LAYERS_EXPORT,
@@ -821,7 +984,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersExport) -> CommandRes
 }
 
 /// [`execute`]'s write; `call::recorded` journals it as one step of the document.
-fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersExport) -> CommandResult<LayersExported> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersExport,
+) -> CommandResult<LayersExported> {
     let (run, files, add) = {
         let plan = match planned(cx.doc, &input) {
             Ok(p) => p,
@@ -833,7 +999,8 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersExport) -> CommandR
             Ok(r) => r,
             Err(stop) => return stop.into(),
         };
-        let add = (input.add_to_map == Some(true)).then(|| crate::layer_export_sinks::data_layer_of(&plan));
+        let add = (input.add_to_map == Some(true))
+            .then(|| crate::layer_export_sinks::data_layer_of(&plan));
         let out = exported(&plan, &run, files.clone(), None, String::new());
         (run, out, add)
     };
@@ -856,11 +1023,16 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersExport) -> CommandR
             },
         );
         match added {
-            CommandResult::Completed { output, warnings: w } => {
+            CommandResult::Completed {
+                output,
+                warnings: w,
+            } => {
                 out.layer = Some(output.layer);
                 warnings.extend(w);
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 warnings.push(CommandWarning {
                     code: error.code,
                     message: format!("Yazıldı ama haritaya eklenemedi: {}", error.message),
@@ -871,5 +1043,8 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: LayersExport) -> CommandR
         }
     }
     out.revision = cx.doc.revision().to_string();
-    CommandResult::Completed { output: out, warnings }
+    CommandResult::Completed {
+        output: out,
+        warnings,
+    }
 }

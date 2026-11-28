@@ -466,7 +466,8 @@ fn check(doc: &Document, input: &EntitiesOffset) -> Result<Checked, Stop> {
             removes.push(EntityEdit::Remove {
                 uid: (*uid).clone(),
             });
-        } else if input.delete_source && made > 0
+        } else if input.delete_source
+            && made > 0
             && let Some(e) = &my_error
         {
             warnings.push(CommandWarning {

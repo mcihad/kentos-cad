@@ -14,8 +14,6 @@ use kentos_geometry_core::geom::ellipse::is_full_ellipse;
 use kentos_geometry_core::vec2::Vec2 as P;
 use serde::{Deserialize, Serialize};
 
-
-
 /// The most objects one page gives; a program reads on with the cursor.
 pub const PAGE_MAX: usize = 10_000;
 
@@ -449,15 +447,30 @@ impl Way {
     }
 }
 
-fn measured_bounds(doc: &Document, e: &Entity, s: &kentos_geometry_core::entity::Shape, blocks: &std::cell::OnceCell<kentos_geometry_core::block::Blocks>) -> Bounds {
+fn measured_bounds(
+    doc: &Document,
+    e: &Entity,
+    s: &kentos_geometry_core::entity::Shape,
+    blocks: &std::cell::OnceCell<kentos_geometry_core::block::Blocks>,
+) -> Bounds {
     if matches!(e, Entity::Insert(_)) {
         let blocks = blocks.get_or_init(|| crate::blocks::core_blocks(doc.blocks()));
         if let Some([min_x, min_y, max_x, max_y]) = crate::blocks::placed_box_in(doc, blocks, e) {
-            return Bounds { min_x, min_y, max_x, max_y };
+            return Bounds {
+                min_x,
+                min_y,
+                max_x,
+                max_y,
+            };
         }
     }
     let b = entity_bounds(s);
-    Bounds { min_x: b.min_x, min_y: b.min_y, max_x: b.max_x, max_y: b.max_y }
+    Bounds {
+        min_x: b.min_x,
+        min_y: b.min_y,
+        max_x: b.max_x,
+        max_y: b.max_y,
+    }
 }
 
 fn item(

@@ -64,14 +64,25 @@ impl App {
             return Task::none();
         };
         let (moment, user) = self.form_moment();
-        let screen = match record_screen(&copy, &f.id, &uid, true, moment.as_deref(), user.as_deref()) {
-            Ok(s) => s,
-            Err(error) => {
-                self.say(Level::Warn, error.message);
-                return Task::none();
-            }
-        };
-        let mut entry = self.entry_of(&f, f.draft.clone(), true, uid, screen, moment, user, false, BTreeMap::new());
+        let screen =
+            match record_screen(&copy, &f.id, &uid, true, moment.as_deref(), user.as_deref()) {
+                Ok(s) => s,
+                Err(error) => {
+                    self.say(Level::Warn, error.message);
+                    return Task::none();
+                }
+            };
+        let mut entry = self.entry_of(
+            &f,
+            f.draft.clone(),
+            true,
+            uid,
+            screen,
+            moment,
+            user,
+            false,
+            BTreeMap::new(),
+        );
         entry.default_of = Some(layer.to_owned());
         entry.read_why = None;
         self.gis.form_entry = Some(entry);
@@ -113,7 +124,15 @@ impl App {
             None => (f.draft.clone(), true),
         };
         let (moment, user) = self.form_moment();
-        let screen = match row_screen(model, &f.id, e, key, moment.as_deref(), user.as_deref(), &Default::default()) {
+        let screen = match row_screen(
+            model,
+            &f.id,
+            e,
+            key,
+            moment.as_deref(),
+            user.as_deref(),
+            &Default::default(),
+        ) {
             Ok(s) => s,
             Err(error) => {
                 self.say(Level::Warn, error.message);
@@ -126,7 +145,17 @@ impl App {
             .and_then(|n| n.data.as_ref())
             .map(|d| d.key.clone())
             .unwrap_or_default();
-        let mut entry = self.entry_of(&f, body, draft, String::new(), screen, moment, user, false, BTreeMap::new());
+        let mut entry = self.entry_of(
+            &f,
+            body,
+            draft,
+            String::new(),
+            screen,
+            moment,
+            user,
+            false,
+            BTreeMap::new(),
+        );
         // The row as its source holds it: a new record's last values are not put on it.
         entry.read_only = true;
         entry.row = Some((field, key));
@@ -135,7 +164,9 @@ impl App {
         entry.recompute(model);
         for (key, content) in entry.notes.iter_mut() {
             if let Some(f) = entry.fields.iter().find(|f| f.key() == key) {
-                *content = text_editor::Content::with_text(entry.after.get(&f.name).map_or("", String::as_str));
+                *content = text_editor::Content::with_text(
+                    entry.after.get(&f.name).map_or("", String::as_str),
+                );
             }
         }
         self.gis.form_entry = Some(entry);

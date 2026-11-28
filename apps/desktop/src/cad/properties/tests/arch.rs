@@ -9,7 +9,13 @@ fn cad_element_lengths_keep_physical_units_and_nonlength_fields() {
     use super::super::ArchField as A;
     use kentos_commands::{DrawingUnit, Workspace};
     use serde_json::json;
-    for unit in [DrawingUnit::Mm, DrawingUnit::Cm, DrawingUnit::M, DrawingUnit::In, DrawingUnit::Ft] {
+    for unit in [
+        DrawingUnit::Mm,
+        DrawingUnit::Cm,
+        DrawingUnit::M,
+        DrawingUnit::In,
+        DrawingUnit::Ft,
+    ] {
         let mut app = objects();
         let doc = &mut app.document.as_mut().unwrap().model;
         let mut settings = doc.settings().clone();
@@ -17,95 +23,178 @@ fn cad_element_lengths_keep_physical_units_and_nonlength_fields() {
         settings.srid = 0;
         settings.drawing_unit = Some(unit);
         doc.set_settings(settings);
-        let column = add(&mut app, serde_json::from_value(json!({
-            "kind":"column", "id":0,"layerId":"parsel","attrs":{},
-            "at":{"x":0.,"y":0.},"width":0.5,"depth":0.6
-        })).unwrap());
-        let stair = add(&mut app, serde_json::from_value(json!({
-            "kind":"stair", "id":0,"layerId":"parsel","attrs":{},
-            "pts":[{"x":0.,"y":0.},{"x":6.,"y":0.}],
-            "width":1.,"risers":18,"riserHeight":0.17,"tread":0.28
-        })).unwrap());
-        let ramp = add(&mut app, serde_json::from_value(json!({
-            "kind":"ramp", "id":0,"layerId":"parsel","attrs":{},
-            "pts":[{"x":0.,"y":0.},{"x":10.,"y":0.}],"width":1.,"rise":0.5
-        })).unwrap());
-        let grid = add(&mut app, serde_json::from_value(json!({
-            "kind":"grid", "id":0,"layerId":"parsel","attrs":{},
-            "pts":[{"x":0.,"y":0.},{"x":10.,"y":0.}],"name":"A"
-        })).unwrap());
+        let column = add(
+            &mut app,
+            serde_json::from_value(json!({
+                "kind":"column", "id":0,"layerId":"parsel","attrs":{},
+                "at":{"x":0.,"y":0.},"width":0.5,"depth":0.6
+            }))
+            .unwrap(),
+        );
+        let stair = add(
+            &mut app,
+            serde_json::from_value(json!({
+                "kind":"stair", "id":0,"layerId":"parsel","attrs":{},
+                "pts":[{"x":0.,"y":0.},{"x":6.,"y":0.}],
+                "width":1.,"risers":18,"riserHeight":0.17,"tread":0.28
+            }))
+            .unwrap(),
+        );
+        let ramp = add(
+            &mut app,
+            serde_json::from_value(json!({
+                "kind":"ramp", "id":0,"layerId":"parsel","attrs":{},
+                "pts":[{"x":0.,"y":0.},{"x":10.,"y":0.}],"width":1.,"rise":0.5
+            }))
+            .unwrap(),
+        );
+        let grid = add(
+            &mut app,
+            serde_json::from_value(json!({
+                "kind":"grid", "id":0,"layerId":"parsel","attrs":{},
+                "pts":[{"x":0.,"y":0.},{"x":10.,"y":0.}],"name":"A"
+            }))
+            .unwrap(),
+        );
         let snapshot = |app: &App| app.document.as_ref().unwrap().model.to_snapshot_v2();
         for (slot, field, key, metric, expected, imperial, inch_value) in [
-            (column,A::Width,"width","40 cm",0.4,"16 in",0.4064),
-            (column,A::Depth,"depth","60,5 cm",0.605,"24 in",0.6096),
-            (stair,A::Width,"width","120 cm",1.2,"4 ft",1.2192),
-            (stair,A::RiserHeight,"riserHeight","18 cm",0.18,"7 in",0.1778),
-            (stair,A::Tread,"tread","30 cm",0.3,"12 in",0.3048),
-            (stair,A::Landing,"landing","150 cm",1.5,"5 ft",1.524),
-            (ramp,A::Width,"width","150 cm",1.5,"5 ft",1.524),
-            (ramp,A::Rise,"rise","80 cm",0.8,"3 ft",0.9144),
-            (ramp,A::Landing,"landing","150 cm",1.5,"5 ft",1.524),
-            (ramp,A::Base,"base","-50 cm",-0.5,"-2 ft",-0.6096),
+            (column, A::Width, "width", "40 cm", 0.4, "16 in", 0.4064),
+            (column, A::Depth, "depth", "60,5 cm", 0.605, "24 in", 0.6096),
+            (stair, A::Width, "width", "120 cm", 1.2, "4 ft", 1.2192),
+            (
+                stair,
+                A::RiserHeight,
+                "riserHeight",
+                "18 cm",
+                0.18,
+                "7 in",
+                0.1778,
+            ),
+            (stair, A::Tread, "tread", "30 cm", 0.3, "12 in", 0.3048),
+            (stair, A::Landing, "landing", "150 cm", 1.5, "5 ft", 1.524),
+            (ramp, A::Width, "width", "150 cm", 1.5, "5 ft", 1.524),
+            (ramp, A::Rise, "rise", "80 cm", 0.8, "3 ft", 0.9144),
+            (ramp, A::Landing, "landing", "150 cm", 1.5, "5 ft", 1.524),
+            (ramp, A::Base, "base", "-50 cm", -0.5, "-2 ft", -0.6096),
         ] {
             let before = snapshot(&app);
-            for (text, want) in [(metric,expected),(imperial,inch_value)] {
-                event(&mut app, Event::Commit(Field::Arch(Slot(slot),field),text.into()));
-                let got = serde_json::to_value(entity(&app,slot)).unwrap()[key].as_f64().unwrap();
-                assert!((got-want).abs()<1e-10,"{unit:?}/{key}/{text}: {got}; {:?}",warned(&app));
+            for (text, want) in [(metric, expected), (imperial, inch_value)] {
+                event(
+                    &mut app,
+                    Event::Commit(Field::Arch(Slot(slot), field), text.into()),
+                );
+                let got = serde_json::to_value(entity(&app, slot)).unwrap()[key]
+                    .as_f64()
+                    .unwrap();
+                assert!(
+                    (got - want).abs() < 1e-10,
+                    "{unit:?}/{key}/{text}: {got}; {:?}",
+                    warned(&app)
+                );
                 assert!(undo_label(&mut app).is_some());
-                assert_eq!(snapshot(&app),before,"undo: {key}/{text}");
+                assert_eq!(snapshot(&app), before, "undo: {key}/{text}");
             }
-            for text in ["40 cm junk","1,2,3","NaN","40 apples"] {
-                event(&mut app, Event::Commit(Field::Arch(Slot(slot),field),text.into()));
-                assert_eq!(snapshot(&app),before,"invalid: {key}/{text}");
+            for text in ["40 cm junk", "1,2,3", "NaN", "40 apples"] {
+                event(
+                    &mut app,
+                    Event::Commit(Field::Arch(Slot(slot), field), text.into()),
+                );
+                assert_eq!(snapshot(&app), before, "invalid: {key}/{text}");
                 assert!(warned(&app).is_some());
             }
-            if matches!(field,A::Depth|A::Landing|A::Base) {
-                event(&mut app,Event::Commit(Field::Arch(Slot(slot),field),metric.into()));
+            if matches!(field, A::Depth | A::Landing | A::Base) {
+                event(
+                    &mut app,
+                    Event::Commit(Field::Arch(Slot(slot), field), metric.into()),
+                );
                 let set = snapshot(&app);
-                event(&mut app,Event::Commit(Field::Arch(Slot(slot),field),String::new()));
-                assert!(serde_json::to_value(entity(&app,slot)).unwrap().get(key).is_none());
+                event(
+                    &mut app,
+                    Event::Commit(Field::Arch(Slot(slot), field), String::new()),
+                );
+                assert!(
+                    serde_json::to_value(entity(&app, slot))
+                        .unwrap()
+                        .get(key)
+                        .is_none()
+                );
                 assert!(undo_label(&mut app).is_some());
-                assert_eq!(snapshot(&app),set);
+                assert_eq!(snapshot(&app), set);
                 assert!(undo_label(&mut app).is_some());
-                assert_eq!(snapshot(&app),before);
+                assert_eq!(snapshot(&app), before);
             } else {
-                event(&mut app,Event::Commit(Field::Arch(Slot(slot),field),String::new()));
-                assert_eq!(snapshot(&app),before,"required empty: {key}");
+                event(
+                    &mut app,
+                    Event::Commit(Field::Arch(Slot(slot), field), String::new()),
+                );
+                assert_eq!(snapshot(&app), before, "required empty: {key}");
             }
         }
-        for (slot,field,key,text,want) in [
-            (column,A::Turn,"rotation","90",std::f64::consts::FRAC_PI_2),
-            (stair,A::Risers,"risers","17",17.),
-            (ramp,A::Slope,"slope","8",8.),
-            (grid,A::BubbleSize,"bubbleSize","10",10.),
+        for (slot, field, key, text, want) in [
+            (
+                column,
+                A::Turn,
+                "rotation",
+                "90",
+                std::f64::consts::FRAC_PI_2,
+            ),
+            (stair, A::Risers, "risers", "17", 17.),
+            (ramp, A::Slope, "slope", "8", 8.),
+            (grid, A::BubbleSize, "bubbleSize", "10", 10.),
         ] {
-            let before=snapshot(&app);
-            event(&mut app,Event::Commit(Field::Arch(Slot(slot),field),text.into()));
-            let got=serde_json::to_value(entity(&app,slot)).unwrap()[key].as_f64().unwrap();
-            assert!((got-want).abs()<1e-10,"nonlength {key}");
+            let before = snapshot(&app);
+            event(
+                &mut app,
+                Event::Commit(Field::Arch(Slot(slot), field), text.into()),
+            );
+            let got = serde_json::to_value(entity(&app, slot)).unwrap()[key]
+                .as_f64()
+                .unwrap();
+            assert!((got - want).abs() < 1e-10, "nonlength {key}");
             assert!(undo_label(&mut app).is_some());
-            assert_eq!(snapshot(&app),before);
+            assert_eq!(snapshot(&app), before);
         }
         // Negative base is legal; negative physical size remains an atomic domain refusal.
-        for (slot,field) in [(column,A::Width),(column,A::Depth),(stair,A::RiserHeight),(ramp,A::Landing)] {
-            let before=snapshot(&app);
-            event(&mut app,Event::Commit(Field::Arch(Slot(slot),field),"-1 m".into()));
-            assert_eq!(snapshot(&app),before);
+        for (slot, field) in [
+            (column, A::Width),
+            (column, A::Depth),
+            (stair, A::RiserHeight),
+            (ramp, A::Landing),
+        ] {
+            let before = snapshot(&app);
+            event(
+                &mut app,
+                Event::Commit(Field::Arch(Slot(slot), field), "-1 m".into()),
+            );
+            assert_eq!(snapshot(&app), before);
         }
-        let before=snapshot(&app);
-        let f=kentos_interaction::Format::of(app.document.as_ref().unwrap().model.settings());
-        event(&mut app,Event::Commit(Field::Arch(Slot(column),A::Width),"2".into()));
-        assert_eq!(serde_json::to_value(entity(&app,column)).unwrap()["width"].as_f64(),Some(f.to_metres(2.)));
+        let before = snapshot(&app);
+        let f = kentos_interaction::Format::of(app.document.as_ref().unwrap().model.settings());
+        event(
+            &mut app,
+            Event::Commit(Field::Arch(Slot(column), A::Width), "2".into()),
+        );
+        assert_eq!(
+            serde_json::to_value(entity(&app, column)).unwrap()["width"].as_f64(),
+            Some(f.to_metres(2.))
+        );
         assert!(undo_label(&mut app).is_some());
-        assert_eq!(snapshot(&app),before);
-        let doc=&mut app.document.as_mut().unwrap().model;
-        let mut settings=doc.settings().clone();settings.workspace=Some(Workspace::Gis);doc.set_settings(settings);
-        let before=snapshot(&app);
-        event(&mut app,Event::Commit(Field::Arch(Slot(column),A::Width),"2 cm".into()));
-        assert_eq!(serde_json::to_value(entity(&app,column)).unwrap()["width"].as_f64(),Some(f.to_metres(2.)));
+        assert_eq!(snapshot(&app), before);
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.workspace = Some(Workspace::Gis);
+        doc.set_settings(settings);
+        let before = snapshot(&app);
+        event(
+            &mut app,
+            Event::Commit(Field::Arch(Slot(column), A::Width), "2 cm".into()),
+        );
+        assert_eq!(
+            serde_json::to_value(entity(&app, column)).unwrap()["width"].as_f64(),
+            Some(f.to_metres(2.))
+        );
         assert!(undo_label(&mut app).is_some());
-        assert_eq!(snapshot(&app),before);
+        assert_eq!(snapshot(&app), before);
     }
 }
 
@@ -195,14 +284,20 @@ fn a_kots_rows_bind_it_to_a_level_and_set_its_offset() {
     assert_eq!(value(&app, "Geometri", "Kat"), "Yok (kendi kotu)");
     assert!(!has_row(&app, "Geometri", "Fark"));
     // Its own value typed in centimetres.
-    event(&mut app, Event::Commit(Field::DimensionZa(vec![Slot(kot)]), "250 cm".into()));
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionZa(vec![Slot(kot)]), "250 cm".into()),
+    );
     assert_eq!(dimension_of(&app, kot).za, Some(2.5));
     // Kat: 1. kat; the value is the level's, read only.
     event(
         &mut app,
         Event::DimensionEdit(
             vec![Slot(kot)],
-            DimensionOp::Level(Some(kentos_commands::DimensionLevel { id: "kat-1".into(), offset: None })),
+            DimensionOp::Level(Some(kentos_commands::DimensionLevel {
+                id: "kat-1".into(),
+                offset: None,
+            })),
         ),
     );
     assert_eq!(dimension_of(&app, kot).za, Some(3.25));
@@ -211,7 +306,10 @@ fn a_kots_rows_bind_it_to_a_level_and_set_its_offset() {
     assert!(!row_editable(&app, "Geometri", "Kot"), "the level gives it");
     assert_eq!(value(&app, "Geometri", "Fark"), "0.000 m");
     // Fark −2 cm: a wet room's floor.
-    event(&mut app, Event::Commit(Field::DimensionLevelOffset(vec![Slot(kot)]), "-2 cm".into()));
+    event(
+        &mut app,
+        Event::Commit(Field::DimensionLevelOffset(vec![Slot(kot)]), "-2 cm".into()),
+    );
     assert_eq!(dimension_of(&app, kot).za, Some(3.25 + -0.02));
     assert_eq!(value(&app, "Geometri", "Fark"), "-0.020 m");
     // The level raised in the project's settings: the Kot follows.
@@ -223,9 +321,18 @@ fn a_kots_rows_bind_it_to_a_level_and_set_its_offset() {
     }
     assert_eq!(value(&app, "Geometri", "Kot"), "6.480 m");
     assert_eq!(undo_label(&mut app).as_deref(), Some("Kotun katı"));
-    assert_eq!(dimension_of(&app, kot).level.as_deref().and_then(|l| l.offset), None);
+    assert_eq!(
+        dimension_of(&app, kot)
+            .level
+            .as_deref()
+            .and_then(|l| l.offset),
+        None
+    );
     // Yok: free again, its value kept as it is.
-    event(&mut app, Event::DimensionEdit(vec![Slot(kot)], DimensionOp::Level(None)));
+    event(
+        &mut app,
+        Event::DimensionEdit(vec![Slot(kot)], DimensionOp::Level(None)),
+    );
     let d = dimension_of(&app, kot);
     assert_eq!((d.za, d.level.is_none()), (Some(6.5), true));
     assert_eq!(value(&app, "Geometri", "Kat"), "Yok (kendi kotu)");
@@ -248,24 +355,48 @@ fn object_isolation_updates_drawing_picking_and_output_without_layer_or_history_
     assert_eq!(model.to_snapshot_v2(), before);
     assert_eq!(model.undo_labels(), undo);
     for slot in &all {
-        assert_eq!(app.spatial.store().view_shown(f64::from(slot.0)), *slot == Slot(1), "{slot:?}");
+        assert_eq!(
+            app.spatial.store().view_shown(f64::from(slot.0)),
+            *slot == Slot(1),
+            "{slot:?}"
+        );
     }
     let (_, looks) = app.spatial.level_looks();
-    assert_eq!(looks.hidden.len(), all.len()-1, "the styled scene uses the same hidden objects");
+    assert_eq!(
+        looks.hidden.len(),
+        all.len() - 1,
+        "the styled scene uses the same hidden objects"
+    );
     let q = kentos_native_application::registry::run(
-        &mut kentos_native_application::ExecutionContext::new(model), "cad.entities.select",
-        kentos_commands::CallOp::Execute, json!({"region":{"kind":"all"}})).unwrap();
+        &mut kentos_native_application::ExecutionContext::new(model),
+        "cad.entities.select",
+        kentos_commands::CallOp::Execute,
+        json!({"region":{"kind":"all"}}),
+    )
+    .unwrap();
     assert_eq!(q["output"]["uids"].as_array().unwrap().len(), 1);
     let mut output = kentos_interaction::Spatial::new();
     output.ignore_object_isolation();
     output.reload(model);
-    assert!(output.level_looks().1.hidden.is_empty(), "temporary editor state must not reach plotted labels or geometry");
-    assert!(all.iter().all(|s| output.store().view_shown(f64::from(s.0))));
+    assert!(
+        output.level_looks().1.hidden.is_empty(),
+        "temporary editor state must not reach plotted labels or geometry"
+    );
+    assert!(
+        all.iter()
+            .all(|s| output.store().view_shown(f64::from(s.0)))
+    );
     app.object_isolation(true);
     app.follow_document();
     assert!(app.spatial.level_looks().1.hidden.is_empty());
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
-    assert!(all.iter().all(|s| app.spatial.store().view_shown(f64::from(s.0))));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    assert!(
+        all.iter()
+            .all(|s| app.spatial.store().view_shown(f64::from(s.0)))
+    );
 }
 
 #[test]
@@ -274,15 +405,24 @@ fn single_cad_text_height_uses_the_same_physical_units_and_atomic_validation_as_
     crate::files_testing::make_cad(&mut app);
     let slot = scoped_text(&mut app, "cizim", 0.5);
     app.selection.set([slot]);
-    for (input, metres) in [("77 cm",0.77),("250 mm",0.25),("1 ft",0.3048)] {
-        event(&mut app, Event::Commit(Field::TextHeight(slot), input.into()));
-        let Entity::Text(t) = app.document.as_ref().unwrap().model.get(slot).unwrap() else { panic!("text"); };
-        assert!((t.height-metres).abs()<1e-12,"{input}");
+    for (input, metres) in [("77 cm", 0.77), ("250 mm", 0.25), ("1 ft", 0.3048)] {
+        event(
+            &mut app,
+            Event::Commit(Field::TextHeight(slot), input.into()),
+        );
+        let Entity::Text(t) = app.document.as_ref().unwrap().model.get(slot).unwrap() else {
+            panic!("text");
+        };
+        assert!((t.height - metres).abs() < 1e-12, "{input}");
     }
-    let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     for bad in ["", "0", "-1 cm", "77 garbage", "NaN"] {
         event(&mut app, Event::Commit(Field::TextHeight(slot), bad.into()));
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before,"{bad}");
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before,
+            "{bad}"
+        );
     }
 }
 
@@ -300,7 +440,12 @@ fn a_selection_past_the_limit_shows_its_size_and_no_editors() {
     let all: Vec<u32> = (1..=super::super::PROPERTIES_LIMIT as u32 + 1).collect();
     select(&mut app, &all);
     let sections = rows(&app);
-    assert_eq!(sections.len(), 1, "{:?}", sections.iter().map(|(t, _)| t).collect::<Vec<_>>());
+    assert_eq!(
+        sections.len(),
+        1,
+        "{:?}",
+        sections.iter().map(|(t, _)| t).collect::<Vec<_>>()
+    );
     assert_eq!(sections[0].0, "Büyük seçim");
     assert!(!editable(&app), "no editors past the limit");
     let doc = app.document.as_ref().expect("open");
@@ -328,11 +473,24 @@ fn a_walls_own_section_comes_first_with_its_main_rows_on_top() {
     let sections = rows(&app);
     let titles: Vec<&str> = sections.iter().map(|(t, _)| t.as_str()).collect();
     assert_eq!(titles[0], "Duvar", "{titles:?}");
-    assert!(titles.iter().position(|t| *t == "Genel").expect("Genel") > 0, "{titles:?}");
-    let labels: Vec<&str> = sections[0].1.iter().filter(|r| !r.note).map(|r| r.label.as_ref()).collect();
+    assert!(
+        titles.iter().position(|t| *t == "Genel").expect("Genel") > 0,
+        "{titles:?}"
+    );
+    let labels: Vec<&str> = sections[0]
+        .1
+        .iter()
+        .filter(|r| !r.note)
+        .map(|r| r.label.as_ref())
+        .collect();
     // Its kind first (Duvar or Giydirme cephe, docs/adr/8070 §7), then its Kalınlık.
     assert_eq!((labels[0], labels[1]), ("Tür", "Kalınlık"), "{labels:?}");
-    let at = |l: &str| labels.iter().position(|x| *x == l).unwrap_or_else(|| panic!("{l} in {labels:?}"));
+    let at = |l: &str| {
+        labels
+            .iter()
+            .position(|x| *x == l)
+            .unwrap_or_else(|| panic!("{l} in {labels:?}"))
+    };
     assert!(at("Stil") < at("Sabit kalan çizgi"), "{labels:?}");
     assert!(at("Hiza") < at("Öteleme"), "{labels:?}");
     // An object that is no building element keeps Genel first.
@@ -351,28 +509,52 @@ fn a_wall_turns_into_a_curtain_wall_and_its_grid_is_typed() {
         Some(kentos_commands::Entity::Wall(w)) => w.wall.curtain.clone(),
         _ => None,
     };
-    let _ = app.update(crate::app::Message::Properties(crate::properties::Event::Wall(
-        wall,
-        kentos_commands::WallChange {
-            curtain: Some(Some(kentos_interaction::wall::grid(&kentos_interaction::Memory::default()))),
-            ..Default::default()
-        },
-    )));
+    let _ = app.update(crate::app::Message::Properties(
+        crate::properties::Event::Wall(
+            wall,
+            kentos_commands::WallChange {
+                curtain: Some(Some(kentos_interaction::wall::grid(
+                    &kentos_interaction::Memory::default(),
+                ))),
+                ..Default::default()
+            },
+        ),
+    ));
     let g = grid(&app).expect("a curtain wall");
-    assert_eq!((g.spacing, g.rows, g.panel.as_deref(), g.frames.as_deref()), (1.5, 1.2, Some("Cam"), Some("Alüminyum")));
-    let labels: Vec<String> = rows(&app)[0].1.iter().map(|r| r.label.to_string()).collect();
-    for l in ["Panel eni", "Panel boyu", "Çerçeve", "Panel malzemesi", "Çerçeve malzemesi"] {
+    assert_eq!(
+        (g.spacing, g.rows, g.panel.as_deref(), g.frames.as_deref()),
+        (1.5, 1.2, Some("Cam"), Some("Alüminyum"))
+    );
+    let labels: Vec<String> = rows(&app)[0]
+        .1
+        .iter()
+        .map(|r| r.label.to_string())
+        .collect();
+    for l in [
+        "Panel eni",
+        "Panel boyu",
+        "Çerçeve",
+        "Panel malzemesi",
+        "Çerçeve malzemesi",
+    ] {
         assert!(labels.iter().any(|x| x == l), "{l} in {labels:?}");
     }
-    let _ = app.update(crate::app::Message::Properties(crate::properties::Event::Commit(
-        crate::properties::Field::CurtainSpacing(wall),
-        "1.25 m".into(),
-    )));
+    let _ = app.update(crate::app::Message::Properties(
+        crate::properties::Event::Commit(
+            crate::properties::Field::CurtainSpacing(wall),
+            "1.25 m".into(),
+        ),
+    ));
     assert_eq!(grid(&app).map(|g| g.spacing), Some(1.25));
-    let _ = app.update(crate::app::Message::Properties(crate::properties::Event::Wall(
-        wall,
-        kentos_commands::WallChange { curtain: Some(None), ..Default::default() },
-    )));
+    let _ = app.update(crate::app::Message::Properties(
+        crate::properties::Event::Wall(
+            wall,
+            kentos_commands::WallChange {
+                curtain: Some(None),
+                ..Default::default()
+            },
+        ),
+    ));
     assert_eq!(grid(&app), None);
 }
 
@@ -630,42 +812,91 @@ fn a_roofs_slope_eaves_and_parts_are_edited_in_its_properties() {
     settings.workspace = Some(kentos_commands::Workspace::Cad);
     settings.srid = 0;
     doc.set_settings(settings);
-    let roof = add(&mut app, serde_json::from_value(json!({
-        "kind":"roof","id":0,"layerId":"parsel","attrs":{},
-        "pts":[{"x":0.,"y":0.},{"x":12.,"y":0.},{"x":12.,"y":9.},{"x":0.,"y":9.}],
-        "slopes":[33.,null,33.,null],
-        "parts":[
-            {"kind":"chimney","at":{"x":6.,"y":3.},"width":0.4,"depth":0.4},
-            {"kind":"window","at":{"x":4.,"y":6.},"width":0.78,"depth":1.18}
-        ]
-    })).unwrap());
+    let roof = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"roof","id":0,"layerId":"parsel","attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":12.,"y":0.},{"x":12.,"y":9.},{"x":0.,"y":9.}],
+            "slopes":[33.,null,33.,null],
+            "parts":[
+                {"kind":"chimney","at":{"x":6.,"y":3.},"width":0.4,"depth":0.4},
+                {"kind":"window","at":{"x":4.,"y":6.},"width":0.78,"depth":1.18}
+            ]
+        }))
+        .unwrap(),
+    );
     select(&mut app, &[roof]);
     let geometry: Vec<(String, bool)> = rows(&app)
         .into_iter()
         .flat_map(|(_, rows)| rows)
         .map(|r| (r.label.to_string(), r.editor.is_some()))
         .collect();
-    for label in ["Eğim", "Saçak", "Kaplama", "Oluk", "Kar siperliği", "Parçayı sil"] {
-        assert!(geometry.iter().any(|(l, e)| l == label && *e), "{label} editable in {geometry:?}");
+    for label in [
+        "Eğim",
+        "Saçak",
+        "Kaplama",
+        "Oluk",
+        "Kar siperliği",
+        "Parçayı sil",
+    ] {
+        assert!(
+            geometry.iter().any(|(l, e)| l == label && *e),
+            "{label} editable in {geometry:?}"
+        );
     }
     let json = |app: &App| serde_json::to_value(entity(app, roof)).unwrap();
     let snapshot = |app: &App| app.document.as_ref().unwrap().model.to_snapshot_v2();
     let before = snapshot(&app);
     // The slope: the sloping edges take it, the gable ends stay.
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofSlope), "%40".into()));
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(roof), A::RoofSlope), "%40".into()),
+    );
     assert_eq!(json(&app)["slopes"], json!([40.0, null, 40.0, null]));
-    for (field, key, text, want) in [(A::Overhang, "overhang", "0,6", 0.6), (A::Gutter, "gutter", "0,15", 0.15), (A::SnowGuard, "snowGuard", "0,3", 0.3)] {
-        event(&mut app, Event::Commit(Field::Arch(Slot(roof), field), text.into()));
-        assert!((json(&app)[key].as_f64().unwrap() - want).abs() < 1e-9, "{key}");
+    for (field, key, text, want) in [
+        (A::Overhang, "overhang", "0,6", 0.6),
+        (A::Gutter, "gutter", "0,15", 0.15),
+        (A::SnowGuard, "snowGuard", "0,3", 0.3),
+    ] {
+        event(
+            &mut app,
+            Event::Commit(Field::Arch(Slot(roof), field), text.into()),
+        );
+        assert!(
+            (json(&app)[key].as_f64().unwrap() - want).abs() < 1e-9,
+            "{key}"
+        );
     }
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::Material), "Sac".into()));
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(roof), A::Material), "Sac".into()),
+    );
     assert_eq!(json(&app)["material"], json!("Sac"));
     // A part's size, its top's words after “·” left as they were.
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofPart(0)), "0,5 × 0,6 m · tepesi +6,89".into()));
-    assert_eq!((json(&app)["parts"][0]["width"].as_f64(), json(&app)["parts"][0]["depth"].as_f64()), (Some(0.5), Some(0.6)));
+    event(
+        &mut app,
+        Event::Commit(
+            Field::Arch(Slot(roof), A::RoofPart(0)),
+            "0,5 × 0,6 m · tepesi +6,89".into(),
+        ),
+    );
+    assert_eq!(
+        (
+            json(&app)["parts"][0]["width"].as_f64(),
+            json(&app)["parts"][0]["depth"].as_f64()
+        ),
+        (Some(0.5), Some(0.6))
+    );
     let kept = snapshot(&app);
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofPart(0)), "geniş".into()));
-    assert_eq!(snapshot(&app), kept, "words that are no size change nothing");
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(roof), A::RoofPart(0)), "geniş".into()),
+    );
+    assert_eq!(
+        snapshot(&app),
+        kept,
+        "words that are no size change nothing"
+    );
     assert!(warned(&app).is_some());
     // Parçayı sil: the window taken away, the chimney kept.
     let delete = rows(&app)
@@ -703,58 +934,124 @@ fn a_roofs_layers_are_edited_in_their_section() {
     settings.workspace = Some(kentos_commands::Workspace::Cad);
     settings.srid = 0;
     doc.set_settings(settings);
-    let roof = add(&mut app, serde_json::from_value(json!({
-        "kind":"roof","id":0,"layerId":"parsel","attrs":{},
-        "pts":[{"x":0.,"y":0.},{"x":12.,"y":0.},{"x":12.,"y":9.},{"x":0.,"y":9.}],
-        "slopes":[33.,null,33.,null],"thickness":0.3
-    })).unwrap());
+    let roof = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"roof","id":0,"layerId":"parsel","attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":12.,"y":0.},{"x":12.,"y":9.},{"x":0.,"y":9.}],
+            "slopes":[33.,null,33.,null],"thickness":0.3
+        }))
+        .unwrap(),
+    );
     select(&mut app, &[roof]);
     let editable = |app: &App, label: &str| {
-        rows(app).into_iter().flat_map(|(_, r)| r).find(|r| r.label == label).map(|r| r.editor.is_some())
+        rows(app)
+            .into_iter()
+            .flat_map(|(_, r)| r)
+            .find(|r| r.label == label)
+            .map(|r| r.editor.is_some())
     };
     let section = |app: &App| {
-        rows(app).into_iter().find(|(title, _)| title == "Çatı katmanları").map(|(_, r)| r).expect("its section")
+        rows(app)
+            .into_iter()
+            .find(|(title, _)| title == "Çatı katmanları")
+            .map(|(_, r)| r)
+            .expect("its section")
     };
     // A layer's Malzeme: the row right under its own, when it has the layer.
     let material = |app: &App, kind: &str| {
         let rows = section(app);
-        let k = rows.iter().position(|r| r.label == kind).expect("its kind's row");
-        rows.get(k + 1).filter(|r| r.label == "Malzeme").map(|r| (r.value.to_string(), r.editor.is_some()))
+        let k = rows
+            .iter()
+            .position(|r| r.label == kind)
+            .expect("its kind's row");
+        rows.get(k + 1)
+            .filter(|r| r.label == "Malzeme")
+            .map(|r| (r.value.to_string(), r.editor.is_some()))
     };
-    assert_eq!(editable(&app, "Kalınlık"), Some(true), "one build-up: its thickness typed");
+    assert_eq!(
+        editable(&app, "Kalınlık"),
+        Some(true),
+        "one build-up: its thickness typed"
+    );
     assert_eq!(noted(&app, "Kaplama tahtası").0, "Yok");
-    assert_eq!(section(&app).iter().filter(|r| !r.note).count(), 6, "every kind, none of them a layer yet");
+    assert_eq!(
+        section(&app).iter().filter(|r| !r.note).count(),
+        6,
+        "every kind, none of them a layer yet"
+    );
     let json = |app: &App| serde_json::to_value(entity(app, roof)).unwrap();
     let snapshot = |app: &App| app.document.as_ref().unwrap().model.to_snapshot_v2();
     let before = snapshot(&app);
     // The rafters first, then the covering above them: each in its place.
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(5)), "0,12".into()));
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(0)), "0,03".into()));
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(5)), "0,12".into()),
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(0)), "0,03".into()),
+    );
     assert_eq!(
         json(&app)["layers"],
         json!([{"kind":"covering","thickness":0.03},{"kind":"rafters","thickness":0.12}])
     );
-    assert!(json(&app).get("thickness").is_none(), "its own thickness given up");
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayerMaterial(0)), "Kiremit".into()));
+    assert!(
+        json(&app).get("thickness").is_none(),
+        "its own thickness given up"
+    );
+    event(
+        &mut app,
+        Event::Commit(
+            Field::Arch(Slot(roof), A::RoofLayerMaterial(0)),
+            "Kiremit".into(),
+        ),
+    );
     assert_eq!(json(&app)["layers"][0]["material"], json!("Kiremit"));
-    assert_eq!(editable(&app, "Kalınlık"), Some(false), "theirs together, not typed");
-    assert_eq!(noted(&app, "Kalınlık").1.as_deref(), Some("Katmanlarının toplamı, çatı yüzüne dik"));
+    assert_eq!(
+        editable(&app, "Kalınlık"),
+        Some(false),
+        "theirs together, not typed"
+    );
+    assert_eq!(
+        noted(&app, "Kalınlık").1.as_deref(),
+        Some("Katmanlarının toplamı, çatı yüzüne dik")
+    );
     assert_eq!(material(&app, "Kaplama"), Some(("Kiremit".into(), true)));
     assert_eq!(material(&app, "Mertek"), Some((String::new(), true)));
-    assert_eq!(material(&app, "Lata"), None, "no batten layer: no Malzeme of its");
+    assert_eq!(
+        material(&app, "Lata"),
+        None,
+        "no batten layer: no Malzeme of its"
+    );
     assert!(section(&app).iter().any(|r| r.label == "Toplam kalınlık"));
     // Words that are no length change nothing and say why.
     let kept = snapshot(&app);
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(2)), "kalın".into()));
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(2)), "kalın".into()),
+    );
     assert_eq!(snapshot(&app), kept);
     assert!(warned(&app).is_some());
     // 0 takes the covering away; empty, the rafters: one build-up again.
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(0)), "0".into()));
-    assert_eq!(json(&app)["layers"], json!([{"kind":"rafters","thickness":0.12}]));
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(5)), "".into()));
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(0)), "0".into()),
+    );
+    assert_eq!(
+        json(&app)["layers"],
+        json!([{"kind":"rafters","thickness":0.12}])
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(roof), A::RoofLayer(5)), "".into()),
+    );
     assert!(json(&app).get("layers").is_none());
     assert_eq!(editable(&app, "Kalınlık"), Some(true));
-    event(&mut app, Event::Commit(Field::Arch(Slot(roof), A::RoofThickness), "0,2".into()));
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(roof), A::RoofThickness), "0,2".into()),
+    );
     assert_eq!(json(&app)["thickness"], json!(0.2));
     for _ in 0..6 {
         assert!(undo_label(&mut app).is_some());
@@ -768,25 +1065,32 @@ fn roof_properties_screens() {
     use serde_json::json;
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
-    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-045");
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-UR-045");
     std::fs::create_dir_all(&out).unwrap();
     let mut app = objects();
-    let roof = add(&mut app, serde_json::from_value(json!({
-        "kind":"roof","id":0,"layerId":"parsel","attrs":{},
-        "pts":[{"x":0.,"y":0.},{"x":12.,"y":0.},{"x":12.,"y":9.},{"x":0.,"y":9.}],
-        "slopes":[33.,33.,33.,33.],"overhang":0.5,
-        "parts":[
-            {"kind":"chimney","at":{"x":6.,"y":3.},"width":0.4,"depth":0.4},
-            {"kind":"window","at":{"x":4.,"y":6.},"width":0.78,"depth":1.18}
-        ]
-    })).unwrap());
+    let roof = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"roof","id":0,"layerId":"parsel","attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":12.,"y":0.},{"x":12.,"y":9.},{"x":0.,"y":9.}],
+            "slopes":[33.,33.,33.,33.],"overhang":0.5,
+            "parts":[
+                {"kind":"chimney","at":{"x":6.,"y":3.},"width":0.4,"depth":0.4},
+                {"kind":"window","at":{"x":4.,"y":6.},"width":0.78,"depth":1.18}
+            ]
+        }))
+        .unwrap(),
+    );
     select(&mut app, &[roof]);
     let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 1500.)).unwrap();
     let mut update = |app: &mut App, m: Message| {
         let _ = app.update(m);
     };
     snap.settle(&mut app, App::view, &mut update);
-    snap.render(app.view(), &app.theme()).save(out.join("cati-ozellikleri.png")).unwrap();
+    snap.render(app.view(), &app.theme())
+        .save(out.join("cati-ozellikleri.png"))
+        .unwrap();
     // A layered roof (docs/adr/8071 §8): its Çatı katmanları section, its Kalınlık theirs together.
     let layered = add(&mut app, serde_json::from_value(json!({
         "kind":"roof","id":0,"layerId":"parsel","attrs":{},
@@ -803,7 +1107,9 @@ fn roof_properties_screens() {
     let _ = app.update(Message::Properties(Event::Toggle("general")));
     let _ = app.update(Message::Properties(Event::Toggle("geometry")));
     snap.settle(&mut app, App::view, &mut update);
-    snap.render(app.view(), &app.theme()).save(out.join("cati-katmanlari.png")).unwrap();
+    snap.render(app.view(), &app.theme())
+        .save(out.join("cati-katmanlari.png"))
+        .unwrap();
 }
 
 /// Dikme ve kayıt in Öznitelikler (docs/adr/8070 §8): a column's Tür Dikme makes it a post (POST), its Eleman tipi and
@@ -823,58 +1129,142 @@ fn a_column_becomes_a_post_and_a_beam_a_rail() {
     let column = add(&mut app, serde_json::from_value(json!({
         "kind":"column", "id":0, "layerId":"parsel", "attrs":{}, "at":{"x":0.,"y":0.}, "width":0.1, "depth":0.1
     })).unwrap());
-    let beam = add(&mut app, serde_json::from_value(json!({
-        "kind":"beam", "id":0, "layerId":"parsel", "attrs":{},
-        "pts":[{"x":0.,"y":0.},{"x":5.,"y":0.}], "width":0.05, "height":0.1, "baseOffset":1.0
-    })).unwrap());
+    let beam = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"beam", "id":0, "layerId":"parsel", "attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":5.,"y":0.}], "width":0.05, "height":0.1, "baseOffset":1.0
+        }))
+        .unwrap(),
+    );
     let labels = |app: &App| -> Vec<String> {
-        rows(app).into_iter().flat_map(|(_, r)| r).map(|r| r.label.to_string()).collect()
+        rows(app)
+            .into_iter()
+            .flat_map(|(_, r)| r)
+            .map(|r| r.label.to_string())
+            .collect()
     };
     let set = |app: &mut App, slot: u32, c: ArchChange| {
-        event(app, Event::Arch(Slot(slot), ArchOperation::Set(Box::new(c))));
+        event(
+            app,
+            Event::Arch(Slot(slot), ArchOperation::Set(Box::new(c))),
+        );
     };
     select(&mut app, &[column]);
     assert_eq!(noted(&app, "Tür").0, "Kolon");
     assert!(!labels(&app).iter().any(|l| l == "Eleman tipi"));
-    assert_eq!(noted(&app, "Yükseklik"), (String::new(), Some("Boş: katın yüksekliği".into())));
-    set(&mut app, column, ArchChange { member: Some(Some(Member::post())), ..Default::default() });
-    let Entity::Column(c) = entity(&app, column) else { panic!("a column") };
+    assert_eq!(
+        noted(&app, "Yükseklik"),
+        (String::new(), Some("Boş: katın yüksekliği".into()))
+    );
+    set(
+        &mut app,
+        column,
+        ArchChange {
+            member: Some(Some(Member::post())),
+            ..Default::default()
+        },
+    );
+    let Entity::Column(c) = entity(&app, column) else {
+        panic!("a column")
+    };
     assert_eq!(c.column.member, Some(Member::post()));
     assert_eq!(noted(&app, "Tür").0, "Dikme");
     assert_eq!(noted(&app, "Eleman tipi").0, "Dikme (POST)");
     assert_eq!(noted(&app, "Eleman adı").0, "Dikme");
-    event(&mut app, Event::Commit(Field::Arch(Slot(column), A::OwnHeight), "2.4".into()));
-    let Entity::Column(c) = entity(&app, column) else { panic!("a column") };
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(column), A::OwnHeight), "2.4".into()),
+    );
+    let Entity::Column(c) = entity(&app, column) else {
+        panic!("a column")
+    };
     assert_eq!(c.column.height, Some(2.4));
-    event(&mut app, Event::Commit(Field::Arch(Slot(column), A::MemberName), "Pergola dikmesi".into()));
-    let Entity::Column(c) = entity(&app, column) else { panic!("a column") };
+    event(
+        &mut app,
+        Event::Commit(
+            Field::Arch(Slot(column), A::MemberName),
+            "Pergola dikmesi".into(),
+        ),
+    );
+    let Entity::Column(c) = entity(&app, column) else {
+        panic!("a column")
+    };
     assert_eq!(
         c.column.member,
-        Some(Member { predefined: "POST".into(), name: Some("Pergola dikmesi".into()) })
+        Some(Member {
+            predefined: "POST".into(),
+            name: Some("Pergola dikmesi".into())
+        })
     );
-    event(&mut app, Event::Commit(Field::Arch(Slot(column), A::OwnHeight), "".into()));
-    let Entity::Column(c) = entity(&app, column) else { panic!("a column") };
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(column), A::OwnHeight), "".into()),
+    );
+    let Entity::Column(c) = entity(&app, column) else {
+        panic!("a column")
+    };
     assert_eq!(c.column.height, None, "its storey's height again");
-    assert_eq!(undo_label(&mut app).as_deref(), Some("Mimari nesneyi düzenle"));
+    assert_eq!(
+        undo_label(&mut app).as_deref(),
+        Some("Mimari nesneyi düzenle")
+    );
     select(&mut app, &[beam]);
     assert_eq!(noted(&app, "Tür").0, "Kiriş");
-    set(&mut app, beam, ArchChange { member: Some(Some(Member::rail())), ..Default::default() });
-    let Entity::Beam(b) = entity(&app, beam) else { panic!("a beam") };
+    set(
+        &mut app,
+        beam,
+        ArchChange {
+            member: Some(Some(Member::rail())),
+            ..Default::default()
+        },
+    );
+    let Entity::Beam(b) = entity(&app, beam) else {
+        panic!("a beam")
+    };
     assert_eq!(b.beam.member, Some(Member::rail()));
     assert_eq!(noted(&app, "Tür").0, "Kayıt");
-    assert_eq!(noted(&app, "Eleman tipi").0, "Kullanıcı tanımlı (USERDEFINED)");
+    assert_eq!(
+        noted(&app, "Eleman tipi").0,
+        "Kullanıcı tanımlı (USERDEFINED)"
+    );
     // A sloped member (docs/adr/8130): Yükselme typed, its slope said; empty levels it.
-    assert_eq!(noted(&app, "Yükselme"), (String::new(), Some("Boş: düz; eğimli eleman iki noktadır".into())));
-    event(&mut app, Event::Commit(Field::Arch(Slot(beam), A::MemberRise), "1.25".into()));
-    let Entity::Beam(b) = entity(&app, beam) else { panic!("a beam") };
+    assert_eq!(
+        noted(&app, "Yükselme"),
+        (
+            String::new(),
+            Some("Boş: düz; eğimli eleman iki noktadır".into())
+        )
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(beam), A::MemberRise), "1.25".into()),
+    );
+    let Entity::Beam(b) = entity(&app, beam) else {
+        panic!("a beam")
+    };
     assert_eq!(b.beam.rise, Some(1.25));
     // atan 1.25/5 in the project's angle unit (grads here) and per cent.
     assert_eq!(noted(&app, "Eğim").0, "15.5958 g (%25.00)");
-    event(&mut app, Event::Commit(Field::Arch(Slot(beam), A::MemberRise), "".into()));
-    let Entity::Beam(b) = entity(&app, beam) else { panic!("a beam") };
+    event(
+        &mut app,
+        Event::Commit(Field::Arch(Slot(beam), A::MemberRise), "".into()),
+    );
+    let Entity::Beam(b) = entity(&app, beam) else {
+        panic!("a beam")
+    };
     assert_eq!(b.beam.rise, None, "level again");
-    set(&mut app, beam, ArchChange { member: Some(None), ..Default::default() });
-    let Entity::Beam(b) = entity(&app, beam) else { panic!("a beam") };
+    set(
+        &mut app,
+        beam,
+        ArchChange {
+            member: Some(None),
+            ..Default::default()
+        },
+    );
+    let Entity::Beam(b) = entity(&app, beam) else {
+        panic!("a beam")
+    };
     assert_eq!(b.beam.member, None);
 }
 
@@ -898,28 +1288,62 @@ fn a_slab_becomes_a_covering_and_back() {
     })).unwrap());
     select(&mut app, &[slab]);
     let labels = |app: &App| -> Vec<String> {
-        rows(app).into_iter().flat_map(|(_, r)| r).map(|r| r.label.to_string()).collect()
+        rows(app)
+            .into_iter()
+            .flat_map(|(_, r)| r)
+            .map(|r| r.label.to_string())
+            .collect()
     };
     assert_eq!(noted(&app, "Tür").0, "Döşeme");
     assert!(labels(&app).iter().any(|l| l == "Döşeme türü"));
-    event(&mut app, Event::Slab(Slot(slab), SlabsOperation::Set(SlabChange {
-        covering: Some(Some(Covering::ceiling())),
-        ..Default::default()
-    })));
-    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    event(
+        &mut app,
+        Event::Slab(
+            Slot(slab),
+            SlabsOperation::Set(SlabChange {
+                covering: Some(Some(Covering::ceiling())),
+                ..Default::default()
+            }),
+        ),
+    );
+    let Entity::Slab(s) = entity(&app, slab) else {
+        panic!("a slab")
+    };
     assert_eq!(s.slab.covering, Some(Covering::ceiling()));
     assert_eq!(noted(&app, "Tür").0, "Kaplama");
     assert_eq!(noted(&app, "Kaplama tipi").0, "Asma tavan (CEILING)");
     assert_eq!(noted(&app, "Kaplama adı").0, "Asma tavan");
     assert!(!labels(&app).iter().any(|l| l == "Döşeme türü"));
-    event(&mut app, Event::Commit(Field::SlabCoveringName(Slot(slab)), "Metal asma tavan".into()));
-    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    event(
+        &mut app,
+        Event::Commit(
+            Field::SlabCoveringName(Slot(slab)),
+            "Metal asma tavan".into(),
+        ),
+    );
+    let Entity::Slab(s) = entity(&app, slab) else {
+        panic!("a slab")
+    };
     assert_eq!(
         s.slab.covering,
-        Some(Covering { predefined: "CEILING".into(), name: Some("Metal asma tavan".into()) })
+        Some(Covering {
+            predefined: "CEILING".into(),
+            name: Some("Metal asma tavan".into())
+        })
     );
-    event(&mut app, Event::Slab(Slot(slab), SlabsOperation::Set(SlabChange { covering: Some(None), ..Default::default() })));
-    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    event(
+        &mut app,
+        Event::Slab(
+            Slot(slab),
+            SlabsOperation::Set(SlabChange {
+                covering: Some(None),
+                ..Default::default()
+            }),
+        ),
+    );
+    let Entity::Slab(s) = entity(&app, slab) else {
+        panic!("a slab")
+    };
     assert_eq!(s.slab.covering, None);
 }
 
@@ -945,18 +1369,42 @@ fn a_slab_s_slope_is_typed_in_percent_and_turned_by_its_direction() {
     })).unwrap());
     select(&mut app, &[slab]);
     assert_eq!(noted(&app, "Eğim").0, "Yatay");
-    event(&mut app, Event::Commit(Field::SlabSlope(Slot(slab)), "%5".into()));
-    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    event(
+        &mut app,
+        Event::Commit(Field::SlabSlope(Slot(slab)), "%5".into()),
+    );
+    let Entity::Slab(s) = entity(&app, slab) else {
+        panic!("a slab")
+    };
     let sl = s.slab.slope.expect("sloped");
     let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
-    assert!(near(sl.from.x, 0.0) && near(sl.to.x, 4.0) && near(sl.to.y, sl.from.y) && near(sl.rise, 0.2), "{sl:?}");
+    assert!(
+        near(sl.from.x, 0.0)
+            && near(sl.to.x, 4.0)
+            && near(sl.to.y, sl.from.y)
+            && near(sl.rise, 0.2),
+        "{sl:?}"
+    );
     assert_eq!(noted(&app, "Eğim").0, "%5");
-    event(&mut app, Event::Commit(Field::SlabSlopeDirection(Slot(slab)), "90".into()));
-    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    event(
+        &mut app,
+        Event::Commit(Field::SlabSlopeDirection(Slot(slab)), "90".into()),
+    );
+    let Entity::Slab(s) = entity(&app, slab) else {
+        panic!("a slab")
+    };
     let sl = s.slab.slope.expect("sloped");
-    assert!(near(sl.from.y, 0.0) && near(sl.to.y, 3.0) && near(sl.rise, 0.15), "{sl:?}");
-    event(&mut app, Event::Commit(Field::SlabSlope(Slot(slab)), "0".into()));
-    let Entity::Slab(s) = entity(&app, slab) else { panic!("a slab") };
+    assert!(
+        near(sl.from.y, 0.0) && near(sl.to.y, 3.0) && near(sl.rise, 0.15),
+        "{sl:?}"
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::SlabSlope(Slot(slab)), "0".into()),
+    );
+    let Entity::Slab(s) = entity(&app, slab) else {
+        panic!("a slab")
+    };
     assert_eq!(s.slab.slope, None);
     assert_eq!(noted(&app, "Eğim").0, "Yatay");
 }

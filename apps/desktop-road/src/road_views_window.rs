@@ -20,8 +20,8 @@
 //! A press in the plan or the profile, or a drag along them, moves the km there; the arrows step between the sections'
 //! km's; the slider and the typed km (with the alignment's equations) move it anywhere, the section shown the nearest.
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::widget::{column, container, row, slider};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Size, Task, Theme, mouse};
@@ -128,15 +128,19 @@ fn typed_km(text: &str) -> Result<f64, String> {
 impl Window {
     /// The section shown: the nearest to the km (OpenRoads' closest section), and its place among them.
     pub(crate) fn shown(&self) -> Option<(usize, &SectionRow)> {
-        self.read
-            .rows
-            .iter()
-            .enumerate()
-            .min_by(|a, b| (a.1.station - self.station).abs().total_cmp(&(b.1.station - self.station).abs()))
+        self.read.rows.iter().enumerate().min_by(|a, b| {
+            (a.1.station - self.station)
+                .abs()
+                .total_cmp(&(b.1.station - self.station).abs())
+        })
     }
 
     fn km_of(&self, s: f64) -> f64 {
-        if self.read.regions.is_empty() { s } else { Stationing::km(&self.read.regions, s) }
+        if self.read.regions.is_empty() {
+            s
+        } else {
+            Stationing::km(&self.read.regions, s)
+        }
     }
 
     fn set_station(&mut self, s: f64) {
@@ -167,7 +171,10 @@ impl RoadViewsWindowApp for App {
             return;
         }
         let Some(first) = doc.model.road_alignments().first() else {
-            self.warn("Görünüşler bir aksın görünüşleridir: önce Güzergâh'ta bir aks oluşturun.".to_owned());
+            self.warn(
+                "Görünüşler bir aksın görünüşleridir: önce Güzergâh'ta bir aks oluşturun."
+                    .to_owned(),
+            );
             return;
         };
         let alignment = first.id.clone();
@@ -201,7 +208,11 @@ impl RoadViewsWindowApp for App {
         let built = w
             .alignment
             .as_ref()
-            .and_then(|id| road_alignments::made_alignments(model).into_iter().find(|(d, _)| &d.id == id))
+            .and_then(|id| {
+                road_alignments::made_alignments(model)
+                    .into_iter()
+                    .find(|(d, _)| &d.id == id)
+            })
             .map(|(_, b)| b);
         match built {
             Some(Ok(b)) => {
@@ -216,21 +227,37 @@ impl RoadViewsWindowApp for App {
             Some(Err(why)) => read.why.push(format!("Aks kurulamıyor: {why}")),
             None => read.why.push("Bir aks seçin.".into()),
         }
-        read.profile = w.profile.as_ref().and_then(|p| model.road_profiles().iter().find(|q| &q.id == p)).cloned();
+        read.profile = w
+            .profile
+            .as_ref()
+            .and_then(|p| model.road_profiles().iter().find(|q| &q.id == p))
+            .cloned();
         if let Some(a) = &w.alignment {
-            read.ground = profile_window::ground_of(model, a, read.profile.as_ref().and_then(|p| p.surface.as_deref()));
+            read.ground = profile_window::ground_of(
+                model,
+                a,
+                read.profile.as_ref().and_then(|p| p.surface.as_deref()),
+            );
         }
         match &w.source {
             Source::None => {}
             Source::Set(id) => match model.road_sections().iter().find(|s| &s.id == id) {
                 Some(def) => match road_sections::preview(model, def, None) {
                     Ok((rows, _)) => read.rows = rows,
-                    Err(why) => read.why.push(format!("“{}” kesit takımı kurulamıyor: {why}", def.name)),
+                    Err(why) => read
+                        .why
+                        .push(format!("“{}” kesit takımı kurulamıyor: {why}", def.name)),
                 },
                 None => read.why.push("Kesit takımı projede yok.".into()),
             },
             Source::Corridor(id) => match CorridorSections::of(model, id) {
-                Ok(c) => read.rows = c.stations().into_iter().filter_map(|s| c.row_at(s)).collect(),
+                Ok(c) => {
+                    read.rows = c
+                        .stations()
+                        .into_iter()
+                        .filter_map(|s| c.row_at(s))
+                        .collect()
+                }
                 Err(why) => read.why.push(why),
             },
         }
@@ -270,7 +297,9 @@ impl RoadViewsWindowApp for App {
                     if w.read.regions.is_empty() {
                         Some(k)
                     } else {
-                        Stationing::stations(&w.read.regions, k).first().map(|(_, s)| *s)
+                        Stationing::stations(&w.read.regions, k)
+                            .first()
+                            .map(|(_, s)| *s)
                     }
                 });
                 match found {
@@ -315,23 +344,37 @@ impl RoadViewsWindowApp for App {
         let Some(w) = &self.modules.road().road_views_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let model = self.document.as_ref().map(|d| &d.model);
         // The choices.
-        let alignments: Vec<(String, String)> =
-            model.map_or_else(Vec::new, |m| m.road_alignments().iter().map(|a| (a.id.clone(), a.name.clone())).collect());
+        let alignments: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
+            m.road_alignments()
+                .iter()
+                .map(|a| (a.id.clone(), a.name.clone()))
+                .collect()
+        });
         let ids: Vec<String> = alignments.iter().map(|a| a.0.clone()).collect();
         let on_alignment = Select::new(
             alignments.iter().map(|a| Choice::new(a.1.clone())),
-            w.alignment.as_ref().and_then(|c| ids.iter().position(|i| i == c)),
+            w.alignment
+                .as_ref()
+                .and_then(|c| ids.iter().position(|i| i == c)),
             move |i| msg(Event::Alignment(ids[i].clone())),
         )
         .placeholder("Aks");
         let on = |id: &String| Some(id) == w.alignment.as_ref();
         let profiles: Vec<(Option<String>, String)> = std::iter::once((None, "Yok".to_owned()))
             .chain(model.map_or_else(Vec::new, |m| {
-                m.road_profiles().iter().filter(|p| on(&p.alignment)).map(|p| (Some(p.id.clone()), p.name.clone())).collect()
+                m.road_profiles()
+                    .iter()
+                    .filter(|p| on(&p.alignment))
+                    .map(|p| (Some(p.id.clone()), p.name.clone()))
+                    .collect()
             }))
             .collect();
         let pids: Vec<Option<String>> = profiles.iter().map(|p| p.0.clone()).collect();
@@ -345,12 +388,22 @@ impl RoadViewsWindowApp for App {
                 m.road_corridors()
                     .iter()
                     .filter(|c| on(&c.alignment))
-                    .map(|c| (Source::Corridor(c.id.clone()), format!("{} (koridor)", c.name)))
+                    .map(|c| {
+                        (
+                            Source::Corridor(c.id.clone()),
+                            format!("{} (koridor)", c.name),
+                        )
+                    })
                     .chain(
                         m.road_sections()
                             .iter()
                             .filter(|s| on(&s.alignment))
-                            .map(|s| (Source::Set(s.id.clone()), format!("{} (kesit takımı)", s.name))),
+                            .map(|s| {
+                                (
+                                    Source::Set(s.id.clone()),
+                                    format!("{} (kesit takımı)", s.name),
+                                )
+                            }),
                     )
                     .collect()
             }))
@@ -372,7 +425,9 @@ impl RoadViewsWindowApp for App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top);
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(10.0)
+            .push(top);
         for why in &w.read.why {
             body = body.push(label::caption(why.clone()).style(danger));
         }
@@ -381,28 +436,49 @@ impl RoadViewsWindowApp for App {
         let room = (self.window_size.height - typography::scaled(330.0)).clamp(260.0, 620.0);
         let (upper, lower) = (room * 0.55, room * 0.45);
         let shown = w.shown();
-        let ex = w.exaggeration.trim().replace(',', ".").parse::<f64>().ok().filter(|v| *v > 0.0).unwrap_or(10.0);
+        let ex = w
+            .exaggeration
+            .trim()
+            .replace(',', ".")
+            .parse::<f64>()
+            .ok()
+            .filter(|v| *v > 0.0)
+            .unwrap_or(10.0);
         let km = km_text(w.km_of(w.station), 3);
         let plan = crate::picture::picture(
-            iced::widget::canvas(Plan { line: &w.read.line, station: w.station, km, row: shown.map(|s| s.1) }).width(Fill).height(Fill),
+            iced::widget::canvas(Plan {
+                line: &w.read.line,
+                station: w.station,
+                km,
+                row: shown.map(|s| s.1),
+            })
+            .width(Fill)
+            .height(Fill),
             "Görünüşler — plan",
         );
-        let profile = iced::widget::canvas(profile_window::Chart::of(
-            &w.read.ground,
-            w.read.profile.as_ref(),
-            ex,
-            Some(w.station),
-            at_station,
+        let profile = iced::widget::canvas(
+            profile_window::Chart::of(
+                &w.read.ground,
+                w.read.profile.as_ref(),
+                ex,
+                Some(w.station),
+                at_station,
+            )
+            .compact(upper < typography::scaled(300.0)),
         )
-        .compact(upper < typography::scaled(300.0)))
         .width(Fill)
         .height(Fill);
         let profile = crate::picture::picture(profile, "Görünüşler — boykesit");
         let section: Element<'_, Message> = match shown {
             Some((_, r)) => crate::picture::picture(
-                iced::widget::canvas(crate::section_window::Chart { row: Some(r), sample: None, exaggeration: None, layers: None })
-                    .width(Fill)
-                    .height(Fill),
+                iced::widget::canvas(crate::section_window::Chart {
+                    row: Some(r),
+                    sample: None,
+                    exaggeration: None,
+                    layers: None,
+                })
+                .width(Fill)
+                .height(Fill),
                 format!("Enkesit — km {}", r.km_text),
             ),
             None => container(label::caption("Enkesit seçilmedi ya da kesiti yok.").style(muted))
@@ -411,7 +487,14 @@ impl RoadViewsWindowApp for App {
                 .into(),
         };
         body = body.push_grow(
-            row![container(plan).width(typography::scaled(380.0)).height(Fill), profile].spacing(10).height(Fill),
+            row![
+                container(plan)
+                    .width(typography::scaled(380.0))
+                    .height(Fill),
+                profile
+            ]
+            .spacing(10)
+            .height(Fill),
             upper,
         );
         body = body.push_grow(section, lower);
@@ -419,7 +502,9 @@ impl RoadViewsWindowApp for App {
         let n = w.read.rows.len();
         let k = shown.map(|s| s.0);
         let length = w.read.length.max(1e-6);
-        let slide = slider(0.0..=length, w.station.clamp(0.0, length), at_station).step(0.01).width(Fill);
+        let slide = slider(0.0..=length, w.station.clamp(0.0, length), at_station)
+            .step(0.01)
+            .width(Fill);
         let km_field = kentos_ui::widget::text_field("1+150", &w.km)
             .on_input(|t| msg(Event::Km(t)))
             .on_submit(msg(Event::KmGo))
@@ -435,16 +520,27 @@ impl RoadViewsWindowApp for App {
         };
         // The red line at the km as road.profiles.query reads it (docs/adr/0966): elevation, grade and its curvature.
         let red = match (self.document.as_ref(), w.read.profile.as_ref()) {
-            (Some(doc), Some(def)) => kentos_native_application::road_profiles::point_at(&doc.model, def, w.station),
+            (Some(doc), Some(def)) => {
+                kentos_native_application::road_profiles::point_at(&doc.model, def, w.station)
+            }
             _ => None,
         };
-        let said = match red.as_ref().and_then(|p| p.red.zip(p.grade).map(|z| (z, p.radius))) {
+        let said = match red
+            .as_ref()
+            .and_then(|p| p.red.zip(p.grade).map(|z| (z, p.radius)))
+        {
             Some(((z, g), r)) => {
-                let bend = r.map_or_else(|| "düz eğim".to_owned(), |r| format!("R {} m", comma(r, 0)));
+                let bend =
+                    r.map_or_else(|| "düz eğim".to_owned(), |r| format!("R {} m", comma(r, 0)));
                 // Said with its own km: the section shown is the nearest one, the red line is read at the km itself.
                 let km = red.as_ref().map_or_else(String::new, |p| p.km_text.clone());
                 // The length in space from the first PVI (docs/adr/0968), apart from the km's horizontal one.
-                let along = red.as_ref().and_then(|p| p.along3d).map_or_else(String::new, |a| format!(" · ilk PVI'dan 3B {} m", comma(a, 3)));
+                let along = red
+                    .as_ref()
+                    .and_then(|p| p.along3d)
+                    .map_or_else(String::new, |a| {
+                        format!(" · ilk PVI'dan 3B {} m", comma(a, 3))
+                    });
                 format!(
                     "{said} · km {km}: kırmızı kot {} · eğim {} · {bend}{along}",
                     comma(z, 2),
@@ -459,9 +555,23 @@ impl RoadViewsWindowApp for App {
         body = body.push(
             row![
                 step(FIRST, -2, n > 0 && k != Some(0)),
-                step(PREVIOUS, -1, w.read.rows.first().is_some_and(|r| r.station < w.station - 1e-6)),
+                step(
+                    PREVIOUS,
+                    -1,
+                    w.read
+                        .rows
+                        .first()
+                        .is_some_and(|r| r.station < w.station - 1e-6)
+                ),
                 slide,
-                step(NEXT, 1, w.read.rows.last().is_some_and(|r| r.station > w.station + 1e-6)),
+                step(
+                    NEXT,
+                    1,
+                    w.read
+                        .rows
+                        .last()
+                        .is_some_and(|r| r.station > w.station + 1e-6)
+                ),
                 step(LAST, 2, n > 0 && k != Some(n - 1)),
                 words::field("Km", km_field, None),
             ]
@@ -502,13 +612,22 @@ impl RoadViewsWindowApp for App {
 
 /// An alignment's first profile and its first corridor, else its first sample line set.
 fn choices_on(doc: &kentos_domain::Document, alignment: &str) -> (Option<String>, Source) {
-    let profile = doc.road_profiles().iter().find(|p| p.alignment == alignment).map(|p| p.id.clone());
+    let profile = doc
+        .road_profiles()
+        .iter()
+        .find(|p| p.alignment == alignment)
+        .map(|p| p.id.clone());
     let source = doc
         .road_corridors()
         .iter()
         .find(|c| c.alignment == alignment)
         .map(|c| Source::Corridor(c.id.clone()))
-        .or_else(|| doc.road_sections().iter().find(|s| s.alignment == alignment).map(|s| Source::Set(s.id.clone())))
+        .or_else(|| {
+            doc.road_sections()
+                .iter()
+                .find(|s| s.alignment == alignment)
+                .map(|s| Source::Set(s.id.clone()))
+        })
         .unwrap_or(Source::None);
     (profile, source)
 }
@@ -536,7 +655,12 @@ impl Plan<'_> {
         if pts.len() < 2 {
             return None;
         }
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in &pts {
             x0 = x0.min(p[0]);
             x1 = x1.max(p[0]);
@@ -572,9 +696,19 @@ impl Plan<'_> {
     /// The axis's point at a station, linear between its samples.
     fn point(&self, s: f64) -> Option<[f64; 2]> {
         let i = self.line.partition_point(|p| p.0 <= s);
-        let (a, b) = (self.line.get(i.checked_sub(1)?)?, self.line.get(i).or(self.line.last())?);
-        let t = if b.0 > a.0 { (s - a.0) / (b.0 - a.0) } else { 0.0 };
-        Some([a.1[0] + (b.1[0] - a.1[0]) * t, a.1[1] + (b.1[1] - a.1[1]) * t])
+        let (a, b) = (
+            self.line.get(i.checked_sub(1)?)?,
+            self.line.get(i).or(self.line.last())?,
+        );
+        let t = if b.0 > a.0 {
+            (s - a.0) / (b.0 - a.0)
+        } else {
+            0.0
+        };
+        Some([
+            a.1[0] + (b.1[0] - a.1[0]) * t,
+            a.1[1] + (b.1[1] - a.1[1]) * t,
+        ])
     }
 }
 
@@ -597,7 +731,8 @@ impl canvas::Program<Message> for Plan<'_> {
             }
             iced::Event::Mouse(mouse::Event::CursorMoved { .. }) if *dragging => {
                 let p = cursor.position()?;
-                let s = self.station_at(bounds.size(), Point::new(p.x - bounds.x, p.y - bounds.y))?;
+                let s =
+                    self.station_at(bounds.size(), Point::new(p.x - bounds.x, p.y - bounds.y))?;
                 Some(canvas::Action::publish(at_station(s)).and_capture())
             }
             iced::Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)) if *dragging => {
@@ -608,7 +743,14 @@ impl canvas::Program<Message> for Plan<'_> {
         }
     }
 
-    fn draw(&self, _: &bool, renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &bool,
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let size = bounds.size();
@@ -618,24 +760,43 @@ impl canvas::Program<Message> for Plan<'_> {
         let at = |p: [f64; 2]| Self::at(size, scale, c, p);
         let axis = Path::new(|b| {
             for (i, (_, p)) in self.line.iter().enumerate() {
-                if i == 0 { b.move_to(at(*p)) } else { b.line_to(at(*p)) }
+                if i == 0 {
+                    b.move_to(at(*p))
+                } else {
+                    b.line_to(at(*p))
+                }
             }
         });
-        frame.stroke(&axis, Stroke::default().with_width(1.8).with_color(tk.danger));
+        frame.stroke(
+            &axis,
+            Stroke::default().with_width(1.8).with_color(tk.danger),
+        );
         // The shown section's sample line, faint and dashed when it is not at the km itself.
         if let Some(r) = self.row {
             let near = (r.station - self.station).abs() < 1e-3;
-            let line = Stroke { line_dash: LineDash { segments: if near { &[] } else { &[4.0, 3.0] }, offset: 0 }, ..Stroke::default() };
+            let line = Stroke {
+                line_dash: LineDash {
+                    segments: if near { &[] } else { &[4.0, 3.0] },
+                    offset: 0,
+                },
+                ..Stroke::default()
+            };
             frame.stroke(
                 &Path::line(at(r.ends[0]), at(r.ends[1])),
-                Stroke { width: 1.2, ..line }.with_color(iced::Color { a: if near { 0.9 } else { 0.5 }, ..tk.text }),
+                Stroke { width: 1.2, ..line }.with_color(iced::Color {
+                    a: if near { 0.9 } else { 0.5 },
+                    ..tk.text
+                }),
             );
         }
         // The km: a dot on the axis and its words.
         if let Some(p) = self.point(self.station) {
             let q = at(p);
             frame.fill(&Path::circle(q, 4.5), tk.accent);
-            frame.stroke(&Path::circle(q, 4.5), Stroke::default().with_width(1.5).with_color(tk.field));
+            frame.stroke(
+                &Path::circle(q, 4.5),
+                Stroke::default().with_width(1.5).with_color(tk.field),
+            );
             frame.fill_text(Text {
                 content: format!("km {}", self.km),
                 position: Point::new(q.x + 8.0, q.y - 16.0),

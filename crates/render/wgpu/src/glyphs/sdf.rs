@@ -58,7 +58,10 @@ impl OutlineBuilder for Segments {
         for k in 1..=CURVE_STEPS {
             let t = k as f32 / CURVE_STEPS as f32;
             let u = 1.0 - t;
-            self.to([u * u * a[0] + 2.0 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2.0 * u * t * c[1] + t * t * b[1]]);
+            self.to([
+                u * u * a[0] + 2.0 * u * t * c[0] + t * t * b[0],
+                u * u * a[1] + 2.0 * u * t * c[1] + t * t * b[1],
+            ]);
         }
     }
     fn curve_to(&mut self, x1: f32, y1: f32, x2: f32, y2: f32, x: f32, y: f32) {
@@ -145,7 +148,13 @@ pub fn field(face: &Face<'_>, glyph: GlyphId) -> Option<GlyphField> {
             data.push(((0.5 + d / (2.0 * SPREAD_PX)).clamp(0.0, 1.0) * 255.0).round() as u8);
         }
     }
-    Some(GlyphField { width, height, left, bottom, data })
+    Some(GlyphField {
+        width,
+        height,
+        left,
+        bottom,
+        data,
+    })
 }
 
 /// Squared distance from (x, y) to the segment.
@@ -153,7 +162,11 @@ fn distance2(g: &[f32; 4], x: f32, y: f32) -> f32 {
     let (dx, dy) = (g[2] - g[0], g[3] - g[1]);
     let (px, py) = (x - g[0], y - g[1]);
     let len2 = dx * dx + dy * dy;
-    let t = if len2 > 0.0 { ((px * dx + py * dy) / len2).clamp(0.0, 1.0) } else { 0.0 };
+    let t = if len2 > 0.0 {
+        ((px * dx + py * dy) / len2).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
     let (ex, ey) = (px - t * dx, py - t * dy);
     ex * ex + ey * ey
 }
@@ -224,7 +237,11 @@ mod tests {
             let y = top - row as f32 - 0.5;
             for col in 0..f.width {
                 let x = f.left + col as f32 + 0.5;
-                let nearest = s.segments.iter().map(|g| distance2(g, x, y)).fold(f32::MAX, f32::min);
+                let nearest = s
+                    .segments
+                    .iter()
+                    .map(|g| distance2(g, x, y))
+                    .fold(f32::MAX, f32::min);
                 let winding: i32 = s
                     .segments
                     .iter()
@@ -244,7 +261,11 @@ mod tests {
         let face = face();
         for c in ['H', 'o', 'g', 'ğ', 'Ş', '&', '@', '8', 'İ', 'ı'] {
             let g = face.glyph_index(c).expect("in the face");
-            assert_eq!(field(&face, g).expect("a field").data, whole(&face, g), "{c}");
+            assert_eq!(
+                field(&face, g).expect("a field").data,
+                whole(&face, g),
+                "{c}"
+            );
         }
     }
 
@@ -252,8 +273,14 @@ mod tests {
     fn a_counter_is_outside_and_a_space_has_no_field() {
         let face = face();
         let o = field(&face, face.glyph_index('o').expect("o")).expect("a field");
-        let (cx, cy) = (o.left + o.width as f32 / 2.0, o.bottom + o.height as f32 / 2.0);
+        let (cx, cy) = (
+            o.left + o.width as f32 / 2.0,
+            o.bottom + o.height as f32 / 2.0,
+        );
         assert!(value(&o, cx, cy) < 100, "the counter of an o is outside");
-        assert!(field(&face, face.glyph_index(' ').expect("space")).is_none(), "nothing to draw");
+        assert!(
+            field(&face, face.glyph_index(' ').expect("space")).is_none(),
+            "nothing to draw"
+        );
     }
 }

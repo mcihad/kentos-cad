@@ -32,11 +32,16 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
             "origin" if has.gis >= crate::GIS_WITH_LAYER_ORIGINS => {
                 let at = r.position();
                 let value = r.opaque()?;
-                let read: kentos_contracts::LayerOrigin = serde_json::from_value(value.clone()).map_err(|e| {
-                    let words = e.to_string();
-                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
-                    r.fail_at(code, at, &format!("katmanın kaynağı okunamadı: {words}"))
-                })?;
+                let read: kentos_contracts::LayerOrigin = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("katmanın kaynağı okunamadı: {words}"))
+                    })?;
                 if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
                     return Err(r.fail_at(
                         Code::BadValue,
@@ -275,7 +280,11 @@ pub(super) fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, Kcad
                         } else {
                             Code::BadValue
                         };
-                        r.fail_at(code, at, &format!("veri katmanının tablosu okunamadı: {words}"))
+                        r.fail_at(
+                            code,
+                            at,
+                            &format!("veri katmanının tablosu okunamadı: {words}"),
+                        )
                     })?;
                 if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
                     return Err(r.fail_at(

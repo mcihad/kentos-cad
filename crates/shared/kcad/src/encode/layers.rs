@@ -253,7 +253,11 @@ impl<'d> Encoder<'d> {
         // id (2), card data feed name plot snap time type (4), rules style (5), fields filter frozen locked mobile origin (6),
         // actions compose dataset indexes service visible (7), children expanded geometry replaces scenario
         // subtypes (8), sourceCrs (9), derivation (10), classCounts contingents tableStyles (11).
-        if usize::from(n.service.is_some()) + usize::from(n.feed.is_some()) + usize::from(n.data.is_some()) > 1 {
+        if usize::from(n.service.is_some())
+            + usize::from(n.feed.is_some())
+            + usize::from(n.data.is_some())
+            > 1
+        {
             return Err(self.fail(
                 Code::BadValue,
                 "katman tek bir yerden gelir: bir harita servisinden, bir servisin nesnelerinden ya da bir veri tablosundan",
@@ -385,12 +389,15 @@ impl<'d> Encoder<'d> {
             self.key("origin");
             self.at(Seg::Name("origin"), |e| {
                 if n.kind == LayerNodeType::Group {
-                    return Err(e.fail(Code::BadValue, "grubun kaynağı olmaz; yalnız katmanın olur"));
+                    return Err(
+                        e.fail(Code::BadValue, "grubun kaynağı olmaz; yalnız katmanın olur")
+                    );
                 }
                 if let Some(problem) = kentos_contracts::layer_origin_problem(o) {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
-                let value = serde_json::to_value(o).map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                let value = serde_json::to_value(o)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
         }

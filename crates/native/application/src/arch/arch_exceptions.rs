@@ -6,7 +6,8 @@
 //! one undo step. The shared cases are `fixtures/commands/v1/cad.arch.exceptions.json` (`scripts/fixtures/arch_audit_cases.py`).
 
 use kentos_commands::{
-    ArchAudit, ArchAuditException, ArchExceptionOperation, ArchExceptions, ArchExceptionsEdited, CommandResult,
+    ArchAudit, ArchAuditException, ArchExceptionOperation, ArchExceptions, ArchExceptionsEdited,
+    CommandResult,
 };
 use kentos_domain::Document;
 
@@ -47,11 +48,15 @@ fn under_audit(stop: Stop) -> Stop {
 }
 
 fn check(doc: &Document, input: &ArchExceptions) -> Result<Checked, Stop> {
-    let keyed = matches!(input.operation, ArchExceptionOperation::Mark | ArchExceptionOperation::Unmark);
+    let keyed = matches!(
+        input.operation,
+        ArchExceptionOperation::Mark | ArchExceptionOperation::Unmark
+    );
     if keyed && input.keys.is_empty() {
         return Err(Stop::failed(error(
             codes::INVALID_INPUT,
-            "Bulgu anahtarı verilmedi; cad.arch.audit'in verdiği anahtarlardan en az birini verin.".into(),
+            "Bulgu anahtarı verilmedi; cad.arch.audit'in verdiği anahtarlardan en az birini verin."
+                .into(),
             Some("keys".into()),
         )));
     }
@@ -65,7 +70,10 @@ fn check(doc: &Document, input: &ArchExceptions) -> Result<Checked, Stop> {
         }
     }
     for (i, f) in input.findings.iter().enumerate() {
-        if f.key.is_empty() || f.code.is_empty() || input.findings[..i].iter().any(|g| g.key == f.key) {
+        if f.key.is_empty()
+            || f.code.is_empty()
+            || input.findings[..i].iter().any(|g| g.key == f.key)
+        {
             return Err(Stop::failed(error(
                 codes::INVALID_INPUT,
                 "Verilen bulgunun anahtarı ya da kodu yok, ya da anahtarı iki kez verilmiş; cad.arch.audit'in verdiği \
@@ -80,7 +88,9 @@ fn check(doc: &Document, input: &ArchExceptions) -> Result<Checked, Stop> {
     {
         return Err(Stop::failed(error(
             codes::INVALID_INPUT,
-            format!("Not en çok {NOTE_MAX} karakterdir, satır sonu dışında denetim karakteri olmaz."),
+            format!(
+                "Not en çok {NOTE_MAX} karakterdir, satır sonu dışında denetim karakteri olmaz."
+            ),
             Some("note".into()),
         )));
     }
@@ -98,11 +108,16 @@ fn check(doc: &Document, input: &ArchExceptions) -> Result<Checked, Stop> {
             let mut chosen = Vec::with_capacity(input.keys.len());
             for (i, k) in input.keys.iter().enumerate() {
                 // The command's own finding, else one a standards package gave (docs/adr/8078).
-                let Some(f) = all.iter().find(|f| f.key == *k).or_else(|| input.findings.iter().find(|f| f.key == *k))
+                let Some(f) = all
+                    .iter()
+                    .find(|f| f.key == *k)
+                    .or_else(|| input.findings.iter().find(|f| f.key == *k))
                 else {
                     return Err(Stop::failed(error(
                         codes::FINDING_NOT_FOUND,
-                        format!("Çizimin bugünkü denetiminde “{k}” anahtarlı bulgu yok; önce cad.arch.audit ile denetleyin."),
+                        format!(
+                            "Çizimin bugünkü denetiminde “{k}” anahtarlı bulgu yok; önce cad.arch.audit ile denetleyin."
+                        ),
                         Some(format!("keys[{i}]")),
                     )));
                 };
@@ -160,7 +175,10 @@ fn check(doc: &Document, input: &ArchExceptions) -> Result<Checked, Stop> {
             });
         }
     }
-    Ok(Checked { exceptions, changed })
+    Ok(Checked {
+        exceptions,
+        changed,
+    })
 }
 
 fn edited(doc: &Document, checked: &Checked) -> ArchExceptionsEdited {
@@ -181,7 +199,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ArchExceptions) -> CommandRes
     }
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, input: &ArchExceptions) -> CommandResult<ArchExceptionsEdited> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &ArchExceptions,
+) -> CommandResult<ArchExceptionsEdited> {
     match check(cx.doc, input) {
         Ok(c) => CommandResult::Completed {
             output: edited(cx.doc, &c),
@@ -191,7 +212,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ArchExceptions) -> CommandResult<
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ArchExceptions) -> CommandResult<ArchExceptionsEdited> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ArchExceptions,
+) -> CommandResult<ArchExceptionsEdited> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_ARCH_EXCEPTIONS,
@@ -202,7 +226,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ArchExceptions) -> CommandR
 }
 
 /// [`execute`]'s write; `call::recorded` runs it as one step of the document (docs/adr/0253 §1, §3).
-fn write_execute(cx: &mut ExecutionContext<'_>, input: ArchExceptions) -> CommandResult<ArchExceptionsEdited> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ArchExceptions,
+) -> CommandResult<ArchExceptionsEdited> {
     let checked = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -213,7 +240,9 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ArchExceptions) -> Comman
         ArchExceptionOperation::Prune => "İstisnaları temizle",
     };
     if !checked.changed.is_empty()
-        && let Err(e) = cx.doc.set_audit_exceptions(checked.exceptions.clone(), label)
+        && let Err(e) = cx
+            .doc
+            .set_audit_exceptions(checked.exceptions.clone(), label)
     {
         return CommandResult::Failed {
             error: error(codes::INVALID_INPUT, e.0, Some("keys".into())),

@@ -20,7 +20,9 @@ pub enum Component {
 impl Component {
     fn parts(&self) -> (f64, f64) {
         match *self {
-            Component::Lane { width, slope } | Component::Shoulder { width, slope } => (width, slope),
+            Component::Lane { width, slope } | Component::Shoulder { width, slope } => {
+                (width, slope)
+            }
         }
     }
 }
@@ -98,7 +100,10 @@ pub struct Section {
 pub enum TemplateError {
     /// A width not above 0, a slope not finite, an end slope or a ditch's fore slope or depth not above 0, a ditch's
     /// bottom below 0: the side (`left`, `right`) and the component's index (none for the end condition).
-    Bad { right: bool, component: Option<usize> },
+    Bad {
+        right: bool,
+        component: Option<usize>,
+    },
 }
 
 /// What is wrong with a side.
@@ -106,18 +111,30 @@ fn judge(side: &Side, right: bool) -> Result<(), TemplateError> {
     for (i, c) in side.components.iter().enumerate() {
         let (w, s) = c.parts();
         if !(w.is_finite() && w > 0.0 && s.is_finite()) {
-            return Err(TemplateError::Bad { right, component: Some(i) });
+            return Err(TemplateError::Bad {
+                right,
+                component: Some(i),
+            });
         }
     }
     let positive = |v: f64| v.is_finite() && v > 0.0;
-    let ditch_ok =
-        side.ditch.is_none_or(|d| positive(d.fore) && positive(d.depth) && d.bottom.is_finite() && d.bottom >= 0.0);
+    let ditch_ok = side.ditch.is_none_or(|d| {
+        positive(d.fore) && positive(d.depth) && d.bottom.is_finite() && d.bottom >= 0.0
+    });
     let bench_ok = [side.bench, side.fill_bench]
         .into_iter()
         .flatten()
-        .all(|b| positive(b.height) && positive(b.width) && b.fall.is_finite() && (0.0..=50.0).contains(&b.fall));
+        .all(|b| {
+            positive(b.height)
+                && positive(b.width)
+                && b.fall.is_finite()
+                && (0.0..=50.0).contains(&b.fall)
+        });
     if !(positive(side.cut) && positive(side.fill) && ditch_ok && bench_ok) {
-        return Err(TemplateError::Bad { right, component: None });
+        return Err(TemplateError::Bad {
+            right,
+            component: None,
+        });
     }
     Ok(())
 }
@@ -161,7 +178,13 @@ fn meet(t: &[(f64, Option<f64>, bool)], u0: f64, z0: f64, m: f64) -> Option<[f64
 }
 
 /// Where the line from (u0, z0) rising `m` per metre outward first meets the terrain between u0 and u1.
-fn meet_within(t: &[(f64, Option<f64>, bool)], u0: f64, z0: f64, m: f64, u1: f64) -> Option<[f64; 2]> {
+fn meet_within(
+    t: &[(f64, Option<f64>, bool)],
+    u0: f64,
+    z0: f64,
+    m: f64,
+    u1: f64,
+) -> Option<[f64; 2]> {
     let line = |u: f64| z0 + m * (u - u0);
     for w in t.windows(2) {
         let ((ua, za, _), (ub0, zb0, gap)) = (w[0], w[1]);
@@ -171,9 +194,15 @@ fn meet_within(t: &[(f64, Option<f64>, bool)], u0: f64, z0: f64, m: f64, u1: f64
         if ua > u1 {
             break;
         }
-        let (Some(za), Some(zb0)) = (za, zb0) else { continue };
+        let (Some(za), Some(zb0)) = (za, zb0) else {
+            continue;
+        };
         // The stretch up to where the line ends.
-        let (ub, zb) = if ub0 > u1 { (u1, za + (zb0 - za) * (u1 - ua) / (ub0 - ua)) } else { (ub0, zb0) };
+        let (ub, zb) = if ub0 > u1 {
+            (u1, za + (zb0 - za) * (u1 - ua) / (ub0 - ua))
+        } else {
+            (ub0, zb0)
+        };
         // The stretch from where the slope starts.
         let a = ua.max(u0);
         let ga = za + (zb - za) * (a - ua) / (ub - ua);
@@ -233,7 +262,9 @@ fn side(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> SideSect
         },
     };
     if let Some(p) = daylight
-        && pts.last().is_none_or(|q| (q[0] - p[0]).abs() > 1e-12 || (q[1] - p[1]).abs() > 1e-12)
+        && pts
+            .last()
+            .is_none_or(|q| (q[0] - p[0]).abs() > 1e-12 || (q[1] - p[1]).abs() > 1e-12)
     {
         pts.push(p);
     }
@@ -248,7 +279,14 @@ fn side(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> SideSect
 
 /// The benched slope (docs/adr/0958) from `start` walked outward: face, bench, face …; its corners pushed onto `pts`
 /// up to where it meets the terrain, which is the daylight. Not met, nothing is pushed and the side is open.
-fn walk(t: &[(f64, Option<f64>, bool)], pts: &mut Vec<[f64; 2]>, start: [f64; 2], m: f64, b: SlopeBench, kind: Kind) -> (Kind, Option<[f64; 2]>) {
+fn walk(
+    t: &[(f64, Option<f64>, bool)],
+    pts: &mut Vec<[f64; 2]>,
+    start: [f64; 2],
+    m: f64,
+    b: SlopeBench,
+    kind: Kind,
+) -> (Kind, Option<[f64; 2]>) {
     let reach = t.last().map_or(start[0], |p| p.0);
     let corners = bench_path(start, m, b, reach);
     let before = pts.len();
@@ -296,7 +334,13 @@ pub enum Daylight {
     /// first is the daylight); the next crossing lies `next` m further out (none: no other); the daylight moves
     /// `sensitivity` m outward per metre the terrain there is higher or lower, 1/|m − g| for the slope's and the
     /// terrain's gradients there.
-    Hit { offset: f64, crossings: u32, next: Option<f64>, sensitivity: f64, cut: bool },
+    Hit {
+        offset: f64,
+        crossings: u32,
+        next: Option<f64>,
+        sensitivity: f64,
+        cut: bool,
+    },
     /// No terrain at the hinge.
     Hinge,
     /// The terrain stops at `at` (outward, m) before the slope meets it: a hole or the surface's edge on the swath.
@@ -309,7 +353,10 @@ pub enum Daylight {
 /// cut's ditch) run outward along the swath, its crossings with the terrain counted (a sign change between two
 /// places, or a place on the line), stopped where the terrain does.
 pub fn daylights(template: &Template, axis: f64, ground: &[GroundPoint]) -> [Daylight; 2] {
-    [diagnose(&template.left, axis, ground, false), diagnose(&template.right, axis, ground, true)]
+    [
+        diagnose(&template.left, axis, ground, false),
+        diagnose(&template.right, axis, ground, true),
+    ]
 }
 
 fn diagnose(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> Daylight {
@@ -320,7 +367,9 @@ fn diagnose(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> Dayl
         u += w;
         z += w * s;
     }
-    let Some(g) = height(&t, u) else { return Daylight::Hinge };
+    let Some(g) = height(&t, u) else {
+        return Daylight::Hinge;
+    };
     let cut = g > z;
     let (u0, z0, m) = if cut {
         let (mut bu, mut bz) = (u, z);
@@ -343,7 +392,9 @@ fn diagnose(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> Dayl
         if corners.len() < 2 {
             return z0 + m * (x - u0);
         }
-        let i = corners.partition_point(|c| c[0] < x).clamp(1, corners.len() - 1);
+        let i = corners
+            .partition_point(|c| c[0] < x)
+            .clamp(1, corners.len() - 1);
         let (a, b) = (corners[i - 1], corners[i]);
         a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0])
     };
@@ -378,7 +429,8 @@ fn diagnose(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> Dayl
         && let Some(end) = places.last().map(|p| p.0)
     {
         for c in &corners[1..] {
-            if c[0] > u0 && c[0] < end
+            if c[0] > u0
+                && c[0] < end
                 && let Some(g) = height(&t, c[0])
                 && !places.iter().any(|p| p.0 == c[0])
             {
@@ -391,11 +443,18 @@ fn diagnose(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> Dayl
     let mut hits: Vec<(f64, f64)> = Vec::new();
     for (i, &(x, f)) in places.iter().enumerate() {
         if f == 0.0 {
-            let grad = places.get(i + 1).or(i.checked_sub(1).and_then(|k| places.get(k))).map_or(0.0, |q| {
-                let (xa, fa, xb, fb) = if q.0 > x { (x, f, q.0, q.1) } else { (q.0, q.1, x, f) };
-                // f's slope is the line's less the terrain's.
-                (fb - fa) / (xb - xa)
-            });
+            let grad = places
+                .get(i + 1)
+                .or(i.checked_sub(1).and_then(|k| places.get(k)))
+                .map_or(0.0, |q| {
+                    let (xa, fa, xb, fb) = if q.0 > x {
+                        (x, f, q.0, q.1)
+                    } else {
+                        (q.0, q.1, x, f)
+                    };
+                    // f's slope is the line's less the terrain's.
+                    (fb - fa) / (xb - xa)
+                });
             hits.push((x, grad));
         }
         if let Some(&(xb, fb)) = places.get(i + 1)
@@ -417,12 +476,18 @@ fn diagnose(side: &Side, axis: f64, ground: &[GroundPoint], right: bool) -> Dayl
             crossings: hits.len() as u32,
             next: hits.get(1).map(|h| h.0 - at),
             // f′ = m − g: one metre of terrain height moves the zero by 1/|f′|.
-            sensitivity: if df != 0.0 { 1.0 / df.abs() } else { f64::INFINITY },
+            sensitivity: if df != 0.0 {
+                1.0 / df.abs()
+            } else {
+                f64::INFINITY
+            },
             cut,
         },
         None => match stop {
             Some(at) => Daylight::Gap { at },
-            None => Daylight::Swath { end: places.last().map_or(u0, |p| p.0) },
+            None => Daylight::Swath {
+                end: places.last().map_or(u0, |p| p.0),
+            },
         },
     }
 }
@@ -439,13 +504,24 @@ fn areas(design: &[[f64; 2]], ground: &[GroundPoint]) -> (f64, f64) {
 fn areas_moments(design: &[[f64; 2]], ground: &[GroundPoint]) -> (f64, f64, f64, f64) {
     let t: Vec<(f64, Option<f64>, bool)> = ground.iter().map(|g| (g.offset, g.z, g.gap)).collect();
     let (lo, hi) = (design[0][0], design[design.len() - 1][0]);
-    let mut stops: Vec<f64> = design.iter().map(|p| p[0]).chain(ground.iter().map(|g| g.offset)).filter(|o| *o >= lo && *o <= hi).collect();
+    let mut stops: Vec<f64> = design
+        .iter()
+        .map(|p| p[0])
+        .chain(ground.iter().map(|g| g.offset))
+        .filter(|o| *o >= lo && *o <= hi)
+        .collect();
     stops.sort_by(f64::total_cmp);
     stops.dedup();
     let line = |o: f64| {
-        let i = design.partition_point(|p| p[0] < o).clamp(1, design.len() - 1);
+        let i = design
+            .partition_point(|p| p[0] < o)
+            .clamp(1, design.len() - 1);
         let (a, b) = (design[i - 1], design[i]);
-        if b[0] == a[0] { b[1] } else { a[1] + (b[1] - a[1]) * (o - a[0]) / (b[0] - a[0]) }
+        if b[0] == a[0] {
+            b[1]
+        } else {
+            a[1] + (b[1] - a[1]) * (o - a[0]) / (b[0] - a[0])
+        }
     };
     let (mut cut, mut fill, mut qcut, mut qfill) = (0.0, 0.0, 0.0, 0.0);
     for w in stops.windows(2) {
@@ -454,7 +530,9 @@ fn areas_moments(design: &[[f64; 2]], ground: &[GroundPoint]) -> (f64, f64, f64,
         if height(&t, mid).is_none() {
             continue;
         }
-        let (Some(ga), Some(gb)) = (height(&t, a), height(&t, b)) else { continue };
+        let (Some(ga), Some(gb)) = (height(&t, a), height(&t, b)) else {
+            continue;
+        };
         let (fa, fb) = (line(a) - ga, line(b) - gb);
         // The integral of a linear f and of o·f, split where f changes sign.
         let mut add = |x0: f64, x1: f64, f0: f64, f1: f64| {
@@ -483,8 +561,21 @@ fn areas_moments(design: &[[f64; 2]], ground: &[GroundPoint]) -> (f64, f64, f64,
 /// section's earthwork against the ground lowered by `strip` (the same areas as [`earthwork`]'s cut and fill), for the
 /// correction of their volumes on a curve (docs/adr/0934 §1).
 pub fn moments(section: &Section, ground: &[GroundPoint], strip: f64) -> (f64, f64) {
-    let design: Vec<[f64; 2]> = section.left.points.iter().rev().chain(section.right.points.iter().skip(1)).copied().collect();
-    let lowered: Vec<GroundPoint> = ground.iter().map(|g| GroundPoint { z: g.z.map(|z| z - strip), ..*g }).collect();
+    let design: Vec<[f64; 2]> = section
+        .left
+        .points
+        .iter()
+        .rev()
+        .chain(section.right.points.iter().skip(1))
+        .copied()
+        .collect();
+    let lowered: Vec<GroundPoint> = ground
+        .iter()
+        .map(|g| GroundPoint {
+            z: g.z.map(|z| z - strip),
+            ..*g
+        })
+        .collect();
     let (_, _, qcut, qfill) = areas_moments(&design, &lowered);
     (qcut, qfill)
 }
@@ -494,19 +585,42 @@ pub fn moments(section: &Section, ground: &[GroundPoint], strip: f64) -> (f64, f
 /// is written; the components, the ditch and the benches are `to`'s.
 pub fn slopes_between(from: &Template, to: &Template, t: f64) -> Template {
     let t = t.clamp(0.0, 1.0);
-    let side = |a: &Side, b: &Side| Side { cut: a.cut + (b.cut - a.cut) * t, fill: a.fill + (b.fill - a.fill) * t, ..b.clone() };
-    Template { left: side(&from.left, &to.left), right: side(&from.right, &to.right) }
+    let side = |a: &Side, b: &Side| Side {
+        cut: a.cut + (b.cut - a.cut) * t,
+        fill: a.fill + (b.fill - a.fill) * t,
+        ..b.clone()
+    };
+    Template {
+        left: side(&from.left, &to.left),
+        right: side(&from.right, &to.right),
+    }
 }
 
 /// The section a template builds with its axis at `axis` on the terrain `ground` (offsets from left to right).
-pub fn build(template: &Template, axis: f64, ground: &[GroundPoint]) -> Result<Section, TemplateError> {
+pub fn build(
+    template: &Template,
+    axis: f64,
+    ground: &[GroundPoint],
+) -> Result<Section, TemplateError> {
     judge(&template.left, false)?;
     judge(&template.right, true)?;
     let left = side(&template.left, axis, ground, false);
     let right = side(&template.right, axis, ground, true);
-    let design: Vec<[f64; 2]> = left.points.iter().rev().chain(right.points.iter().skip(1)).copied().collect();
+    let design: Vec<[f64; 2]> = left
+        .points
+        .iter()
+        .rev()
+        .chain(right.points.iter().skip(1))
+        .copied()
+        .collect();
     let (cut, fill) = areas(&design, ground);
-    Ok(Section { axis, left, right, cut, fill })
+    Ok(Section {
+        axis,
+        left,
+        right,
+        cut,
+        fill,
+    })
 }
 
 /// The fill's foundation benched (diş kazısı, docs/adr/0906 §6): where the ground falls across steeper than `slope`
@@ -532,19 +646,48 @@ pub struct Earthwork {
 /// `strip` times the footprint's width; then, where the stripped ground under a fill falls steeper than the bench's
 /// slope, steps of its height whose sawtooth leaves half the height on average: the bench is that width times half the
 /// height. The bench is its own quantity: it is refilled with what it gave, neither cut nor fill.
-pub fn earthwork(section: &Section, ground: &[GroundPoint], strip: f64, bench: Option<Bench>) -> Earthwork {
-    let design: Vec<[f64; 2]> = section.left.points.iter().rev().chain(section.right.points.iter().skip(1)).copied().collect();
-    let lowered: Vec<GroundPoint> = ground.iter().map(|g| GroundPoint { z: g.z.map(|z| z - strip), ..*g }).collect();
+pub fn earthwork(
+    section: &Section,
+    ground: &[GroundPoint],
+    strip: f64,
+    bench: Option<Bench>,
+) -> Earthwork {
+    let design: Vec<[f64; 2]> = section
+        .left
+        .points
+        .iter()
+        .rev()
+        .chain(section.right.points.iter().skip(1))
+        .copied()
+        .collect();
+    let lowered: Vec<GroundPoint> = ground
+        .iter()
+        .map(|g| GroundPoint {
+            z: g.z.map(|z| z - strip),
+            ..*g
+        })
+        .collect();
     let (cut, fill) = areas(&design, &lowered);
     let t: Vec<(f64, Option<f64>, bool)> = lowered.iter().map(|g| (g.offset, g.z, g.gap)).collect();
     let (lo, hi) = (design[0][0], design[design.len() - 1][0]);
-    let mut stops: Vec<f64> = design.iter().map(|p| p[0]).chain(ground.iter().map(|g| g.offset)).filter(|o| *o >= lo && *o <= hi).collect();
+    let mut stops: Vec<f64> = design
+        .iter()
+        .map(|p| p[0])
+        .chain(ground.iter().map(|g| g.offset))
+        .filter(|o| *o >= lo && *o <= hi)
+        .collect();
     stops.sort_by(f64::total_cmp);
     stops.dedup();
     let line = |o: f64| {
-        let i = design.partition_point(|p| p[0] < o).clamp(1, design.len() - 1);
+        let i = design
+            .partition_point(|p| p[0] < o)
+            .clamp(1, design.len() - 1);
         let (a, b) = (design[i - 1], design[i]);
-        if b[0] == a[0] { b[1] } else { a[1] + (b[1] - a[1]) * (o - a[0]) / (b[0] - a[0]) }
+        if b[0] == a[0] {
+            b[1]
+        } else {
+            a[1] + (b[1] - a[1]) * (o - a[0]) / (b[0] - a[0])
+        }
     };
     let (mut covered, mut benched) = (0.0, 0.0);
     for w in stops.windows(2) {
@@ -552,7 +695,9 @@ pub fn earthwork(section: &Section, ground: &[GroundPoint], strip: f64, bench: O
         if height(&t, 0.5 * (a + b)).is_none() {
             continue;
         }
-        let (Some(ga), Some(gb)) = (height(&t, a), height(&t, b)) else { continue };
+        let (Some(ga), Some(gb)) = (height(&t, a), height(&t, b)) else {
+            continue;
+        };
         covered += b - a;
         let Some(bn) = bench else { continue };
         if ((gb - ga) / (b - a)).abs() < bn.slope {
@@ -566,5 +711,10 @@ pub fn earthwork(section: &Section, ground: &[GroundPoint], strip: f64, bench: O
             (false, true) => (b - a) * fb / (fb - fa),
         };
     }
-    Earthwork { cut, fill, strip: strip * covered, bench: bench.map_or(0.0, |bn| benched * bn.height / 2.0) }
+    Earthwork {
+        cut,
+        fill,
+        strip: strip * covered,
+        bench: bench.map_or(0.0, |bn| benched * bn.height / 2.0),
+    }
 }

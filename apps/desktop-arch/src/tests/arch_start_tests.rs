@@ -23,7 +23,8 @@ fn started(module: Option<Module>) -> App {
 /// The wall written last.
 fn newest_wall(app: &App) -> kentos_commands::WallFields {
     let doc = &app.document.as_ref().expect("a drawing").model;
-    *(doc.entities()
+    *(doc
+        .entities()
         .filter_map(|e| match e {
             kentos_commands::Entity::Wall(w) => Some(w),
             _ => None,

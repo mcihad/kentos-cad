@@ -14,9 +14,9 @@
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib roof_rules_tests::screens -- --ignored --nocapture
 //! ```
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use serde_json::json;
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 
@@ -35,8 +35,10 @@ const ROOF_CODES: [&str; 9] = [
 /// The facade building with the roof over its 1. kat, applied for on 2.7.2026.
 fn roofed() -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot =
-        kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/facade-building.kcad")).expect("decodes");
+    let snapshot = kentos_kcad::decode(include_bytes!(
+        "../../../../fixtures/arch/v1/facade-building.kcad"
+    ))
+    .expect("decodes");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
@@ -72,13 +74,28 @@ fn roofed() -> App {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(
+        app.modules.arch().arch_audit.regulation_failed,
+        None,
+        "the national regulation's rule answers"
+    );
 }
 
 /// The roof's findings' messages, in Denetim's order.
 fn said(app: &App) -> Vec<String> {
-    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-    audited.findings.iter().filter(|f| ROOF_CODES.contains(&f.code.as_str())).map(|f| f.message.clone()).collect()
+    let audited = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
+    audited
+        .findings
+        .iter()
+        .filter(|f| ROOF_CODES.contains(&f.code.as_str()))
+        .map(|f| f.message.clone())
+        .collect()
 }
 
 fn sivas(app: &mut App) {
@@ -91,13 +108,35 @@ fn sivas(app: &mut App) {
 /// Düzelt on the first finding of `code`.
 fn fix(app: &mut App, code: &str) {
     let at = {
-        let a = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        a.findings.iter().position(|f| f.code == code).unwrap_or_else(|| panic!("{code}"))
+        let a = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        a.findings
+            .iter()
+            .position(|f| f.code == code)
+            .unwrap_or_else(|| panic!("{code}"))
     };
-    let f = &app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings[at];
-    assert_eq!(f.fix.as_ref().map(|x| x.step.command.as_str()), Some("cad.arch.edit"), "{f:?}");
+    let f = &app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked")
+        .findings[at];
+    assert_eq!(
+        f.fix.as_ref().map(|x| x.step.command.as_str()),
+        Some("cad.arch.edit"),
+        "{f:?}"
+    );
     app.modules.arch_mut().arch_audit.selected = Some(at);
-    let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Fix)));
+    let _ = app.update(Message::from(crate::arch::Event::ArchAudit(
+        crate::arch_audit::Event::Fix,
+    )));
     app.arch_audit_standards_settle();
 }
 
@@ -129,14 +168,35 @@ fn the_roof_rules_come_from_the_standards_package_with_their_fixes() {
             "İki çatı penceresi arası 1.50 m < 2.00 m — Sivas 40/5-e-3",
         ]
     );
-    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-    let guard = audited.findings.iter().find(|f| f.code == "local_snow_guard_missing").expect("the snow guard");
-    assert_eq!(guard.rule.as_deref(), Some("Sivas İmar Yön. 42/5 · RG 10.11.2022/32009"));
+    let audited = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
+    let guard = audited
+        .findings
+        .iter()
+        .find(|f| f.code == "local_snow_guard_missing")
+        .expect("the snow guard");
+    assert_eq!(
+        guard.rule.as_deref(),
+        Some("Sivas İmar Yön. 42/5 · RG 10.11.2022/32009")
+    );
     // Düzelt: the snow guard given, the chimney raised; the other parts as drawn.
     fix(&mut app, "local_snow_guard_missing");
-    assert!(!said(&app).iter().any(|m| m.contains("kar siperliği")), "{:?}", said(&app));
+    assert!(
+        !said(&app).iter().any(|m| m.contains("kar siperliği")),
+        "{:?}",
+        said(&app)
+    );
     fix(&mut app, "bykhy_chimney_low");
-    assert!(!said(&app).iter().any(|m| m.contains("Duman bacası")), "{:?}", said(&app));
+    assert!(
+        !said(&app).iter().any(|m| m.contains("Duman bacası")),
+        "{:?}",
+        said(&app)
+    );
     let doc = &app.document.as_ref().expect("the building").model;
     let roof = doc
         .entities()
@@ -160,7 +220,11 @@ fn plan_notes(app: &mut App, notes: &[(kentos_commands::PlanNoteKey, &str)]) {
     let _ = app.update(settings_message(SettingsEvent::Section(Section::Arch)));
     for (i, (key, value)) in notes.iter().enumerate() {
         let _ = app.update(settings_message(SettingsEvent::AddPlanNote));
-        for e in [Edit::Key(*key), Edit::Value((*value).into()), Edit::Source("UİP 12.3.2019, plan notu 12".into())] {
+        for e in [
+            Edit::Key(*key),
+            Edit::Value((*value).into()),
+            Edit::Source("UİP 12.3.2019, plan notu 12".into()),
+        ] {
             let _ = app.update(settings_message(SettingsEvent::ArchPlanNote(i, e)));
         }
     }
@@ -173,15 +237,32 @@ fn the_plan_s_roof_notes_come_before_the_regulations() {
     use kentos_commands::PlanNoteKey;
     let mut app = roofed();
     // The plan lets the eaves be 1.20 m and asks the roof's slope at most 33 % (40 and 42 may be changed by a plan).
-    plan_notes(&mut app, &[(PlanNoteKey::EavesMost, "1,20"), (PlanNoteKey::RoofSlopeMost, "33")]);
+    plan_notes(
+        &mut app,
+        &[
+            (PlanNoteKey::EavesMost, "1,20"),
+            (PlanNoteKey::RoofSlopeMost, "33"),
+        ],
+    );
     checked(&mut app);
     let found = said(&app);
-    assert!(!found.iter().any(|m| m.starts_with("Saçak genişliği")), "{found:?}");
     assert!(
-        found.contains(&"Çatının eğimi %75 > %33 — Plan notu (UİP 12.3.2019, plan notu 12)".to_owned()),
+        !found.iter().any(|m| m.starts_with("Saçak genişliği")),
         "{found:?}"
     );
-    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
+    assert!(
+        found.contains(
+            &"Çatının eğimi %75 > %33 — Plan notu (UİP 12.3.2019, plan notu 12)".to_owned()
+        ),
+        "{found:?}"
+    );
+    let set = app
+        .modules
+        .arch()
+        .arch_audit
+        .rule_set
+        .as_ref()
+        .expect("the rule set");
     let row = |rule: &str| set.rules.iter().find(|r| r.rule == rule).map(|r| r.state);
     use kentos_commands::ArchAuditOutcome as O;
     assert_eq!(row("Plan notu: saçak genişliği"), Some(O::Passed));
@@ -189,7 +270,11 @@ fn the_plan_s_roof_notes_come_before_the_regulations() {
     assert_eq!(row("PAİY 42/1"), Some(O::OutOfScope));
     // Düzelt: every sloping edge down to the plan's 33 %.
     fix(&mut app, "paiy_roof_slope_steep");
-    assert!(!said(&app).iter().any(|m| m.starts_with("Çatının eğimi")), "{:?}", said(&app));
+    assert!(
+        !said(&app).iter().any(|m| m.starts_with("Çatının eğimi")),
+        "{:?}",
+        said(&app)
+    );
     let doc = &app.document.as_ref().expect("the building").model;
     let slopes = doc
         .entities()
@@ -209,7 +294,14 @@ fn the_eaves_stay_within_the_parcel() {
     for (west, outcome) in [(-4.0, O::Failed), (-2.0, O::Passed)] {
         let (mut app, _) = crate::projection_tests::scene(1.2);
         crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
-        let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+        let layer = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .layers()
+            .active()
+            .to_owned();
         let p = |x: f64, y: f64| json!({"x": x, "y": y});
         crate::use_class_tests::run(
             &mut app,
@@ -218,10 +310,26 @@ fn the_eaves_stay_within_the_parcel() {
                 "slopes": [33.0, 33.0, 33.0, 33.0], "arch": {"level": "k01"}}]}),
         );
         checked(&mut app);
-        let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
-        let row = set.rules.iter().find(|r| r.rule == "PAİY 42/2").map(|r| r.state);
+        let set = app
+            .modules
+            .arch()
+            .arch_audit
+            .rule_set
+            .as_ref()
+            .expect("the rule set");
+        let row = set
+            .rules
+            .iter()
+            .find(|r| r.rule == "PAİY 42/2")
+            .map(|r| r.state);
         assert_eq!(row, Some(outcome), "{:#?}", set.rules);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
         let over: Vec<&str> = audited
             .findings
             .iter()
@@ -229,7 +337,10 @@ fn the_eaves_stay_within_the_parcel() {
             .map(|f| f.message.as_str())
             .collect();
         match outcome {
-            O::Failed => assert_eq!(over, ["Saçak parsel sınırını 1.00 m aşıyor — PAİY 42/2 (1.10.2017)"]),
+            O::Failed => assert_eq!(
+                over,
+                ["Saçak parsel sınırını 1.00 m aşıyor — PAİY 42/2 (1.10.2017)"]
+            ),
             _ => assert!(over.is_empty(), "{over:?}"),
         }
     }
@@ -243,19 +354,34 @@ fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cati-olculeri-8159");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/cati-olculeri-8159");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    let sizes = [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1280.0, 800.0), "koyu"),
+    ];
     for (theme, size, name) in sizes {
         let mut app = roofed();
         sivas(&mut app);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::ActiveLevel(Some("k1".into())));
         checked(&mut app);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_chimney_low");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "bykhy_chimney_low");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
@@ -264,7 +390,10 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-cati-denetim-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -280,21 +409,34 @@ fn notes_screens() {
     use kentos_commands::PlanNoteKey;
     use kentos_ui::snapshot::{Input, Snapshot};
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cati-notlari-8160");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/cati-notlari-8160");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    let sizes = [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1280.0, 800.0), "koyu"),
+    ];
     for (theme, size, name) in sizes {
         let mut app = roofed();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("file.settings"));
         let _ = app.update(settings_message(SettingsEvent::Section(Section::Arch)));
-        let notes =
-            [(PlanNoteKey::RidgeMost, "3,50"), (PlanNoteKey::RoofSlopeMost, "33"), (PlanNoteKey::EavesMost, "1,20")];
+        let notes = [
+            (PlanNoteKey::RidgeMost, "3,50"),
+            (PlanNoteKey::RoofSlopeMost, "33"),
+            (PlanNoteKey::EavesMost, "1,20"),
+        ];
         for (i, (key, value)) in notes.into_iter().enumerate() {
             let _ = app.update(settings_message(SettingsEvent::AddPlanNote));
-            for e in [Edit::Key(key), Edit::Value(value.into()), Edit::Source("UİP 12.3.2019, plan notu 12".into())] {
+            for e in [
+                Edit::Key(key),
+                Edit::Value(value.into()),
+                Edit::Source("UİP 12.3.2019, plan notu 12".into()),
+            ] {
                 let _ = app.update(settings_message(SettingsEvent::ArchPlanNote(i, e)));
             }
         }
@@ -310,7 +452,10 @@ fn notes_screens() {
         snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 5.0));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-cati-notlari-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -323,13 +468,24 @@ fn parcel_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/sacak-parsel-8161");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/sacak-parsel-8161");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    let sizes = [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1280.0, 800.0), "koyu"),
+    ];
     for (theme, size, name) in sizes {
         let (mut app, _) = crate::projection_tests::scene(1.2);
         crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
-        let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+        let layer = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .layers()
+            .active()
+            .to_owned();
         let p = |x: f64, y: f64| json!({"x": x, "y": y});
         crate::use_class_tests::run(
             &mut app,
@@ -337,13 +493,24 @@ fn parcel_screens() {
             json!({"layerId": layer, "roofs": [{"pts": [p(-4.0, -1.0), p(11.0, -1.0), p(11.0, 9.0), p(-4.0, 9.0)],
                 "slopes": [33.0, 33.0, 33.0, 33.0], "arch": {"level": "k01"}}]}),
         );
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         checked(&mut app);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_eaves_over_parcel");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "paiy_eaves_over_parcel");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
@@ -352,7 +519,10 @@ fn parcel_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-sacak-parsel-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -362,7 +532,14 @@ fn parcel_screens() {
 fn over_the_balcony(south: f64) -> App {
     let (mut app, _) = crate::projection_tests::scene(1.2);
     crate::regulation_dates_tests::dated(&mut app, Some("02.07.2026"));
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     let p = |x: f64, y: f64| json!({"x": x, "y": y});
     crate::use_class_tests::run(
         &mut app,
@@ -383,15 +560,36 @@ fn the_eaves_stay_within_half_a_metre_of_a_projection() {
     for (south, outcome, past) in [(-2.0, O::Failed, 0.8), (-1.6, O::Passed, 0.4)] {
         let mut app = over_the_balcony(south);
         let doc = &app.document.as_ref().expect("a drawing").model;
-        let measured: Vec<Option<f64>> =
-            kentos_native_application::roof_audit::measures(doc).iter().map(|m| m.over_projection).collect();
+        let measured: Vec<Option<f64>> = kentos_native_application::roof_audit::measures(doc)
+            .iter()
+            .map(|m| m.over_projection)
+            .collect();
         assert_eq!(measured.len(), 1);
-        assert!(measured[0].is_some_and(|v| (v - past).abs() < 1e-6), "{measured:?}");
+        assert!(
+            measured[0].is_some_and(|v| (v - past).abs() < 1e-6),
+            "{measured:?}"
+        );
         checked(&mut app);
-        let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
-        let row = set.rules.iter().find(|r| r.rule == "PAİY 42/3").map(|r| r.state);
+        let set = app
+            .modules
+            .arch()
+            .arch_audit
+            .rule_set
+            .as_ref()
+            .expect("the rule set");
+        let row = set
+            .rules
+            .iter()
+            .find(|r| r.rule == "PAİY 42/3")
+            .map(|r| r.state);
         assert_eq!(row, Some(outcome), "{:#?}", set.rules);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
         let said: Vec<&str> = audited
             .findings
             .iter()
@@ -400,7 +598,10 @@ fn the_eaves_stay_within_half_a_metre_of_a_projection() {
             .collect();
         match outcome {
             O::Failed => {
-                assert_eq!(said, ["Saçağın çıkmadan genişliği 0.80 m > 0.50 m — PAİY 42/3 (1.10.2017)"]);
+                assert_eq!(
+                    said,
+                    ["Saçağın çıkmadan genişliği 0.80 m > 0.50 m — PAİY 42/3 (1.10.2017)"]
+                );
             }
             _ => assert!(said.is_empty(), "{said:?}"),
         }
@@ -415,18 +616,33 @@ fn projection_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cikma-sacak-8164");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/cikma-sacak-8164");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    let sizes = [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1280.0, 800.0), "koyu"),
+    ];
     for (theme, size, name) in sizes {
         let mut app = over_the_balcony(-2.0);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         checked(&mut app);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_eaves_past_projection");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "paiy_eaves_past_projection");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
@@ -435,7 +651,10 @@ fn projection_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-cikma-sacak-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -447,8 +666,18 @@ fn stair_housing(height: f64) -> App {
     use crate::use_class_tests::{building, p, rect, run, spaces};
     let mut app = building(2, "Konut");
     let room = rect(6.0, 5.0, 8.0, 6.5);
-    spaces(&mut app, vec![json!({"parts": room, "name": "Merdiven evi", "arch": {"level": "k01"}})]);
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    spaces(
+        &mut app,
+        vec![json!({"parts": room, "name": "Merdiven evi", "arch": {"level": "k01"}})],
+    );
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     run(
         &mut app,
         "cad.roofs.create",
@@ -472,11 +701,26 @@ fn stair_housing(height: f64) -> App {
 fn a_stair_housing_passes_the_roof_covering_by_at_most_0_60_m() {
     use kentos_commands::{ArchAuditOutcome as O, ArchAuditState};
     let row = |app: &App| {
-        let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
-        set.rules.iter().find(|r| r.rule == "PAİY 40/5").map(|r| r.state)
+        let set = app
+            .modules
+            .arch()
+            .arch_audit
+            .rule_set
+            .as_ref()
+            .expect("the rule set");
+        set.rules
+            .iter()
+            .find(|r| r.rule == "PAİY 40/5")
+            .map(|r| r.state)
     };
     let found = |app: &App| -> Vec<(String, Option<ArchAuditState>)> {
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
         audited
             .findings
             .iter()
@@ -513,7 +757,10 @@ fn a_stair_housing_passes_the_roof_covering_by_at_most_0_60_m() {
     assert_eq!(row(&app), Some(O::ExpertReview));
     let said = found(&app);
     assert_eq!(said.len(), 1, "{said:?}");
-    assert!(said[0].0.starts_with(message) && said[0].0.contains("asansörlü binada"), "{said:?}");
+    assert!(
+        said[0].0.starts_with(message) && said[0].0.contains("asansörlü binada"),
+        "{said:?}"
+    );
     assert_eq!(said[0].1, Some(ArchAuditState::ExpertReview));
 }
 
@@ -524,18 +771,33 @@ fn wall_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/cati-duvar-8165");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/cati-duvar-8165");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let sizes = [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")];
+    let sizes = [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1280.0, 800.0), "koyu"),
+    ];
     for (theme, size, name) in sizes {
         let mut app = stair_housing(5.0);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::ActiveLevel(Some("k01".into())));
         checked(&mut app);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "paiy_roof_wall_high");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "paiy_roof_wall_high");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
@@ -544,7 +806,10 @@ fn wall_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-cati-duvar-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

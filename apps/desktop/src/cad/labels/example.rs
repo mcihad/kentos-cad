@@ -35,7 +35,11 @@ impl canvas::Program<Message> for Example {
         _cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
         let mut frame = Frame::new(renderer, bounds.size());
-        frame.fill_rectangle(Point::ORIGIN, bounds.size(), color(self.colors.palette.background));
+        frame.fill_rectangle(
+            Point::ORIGIN,
+            bounds.size(),
+            color(self.colors.palette.background),
+        );
         let c = placed_look(&self.colors, self.font, &self.style, 0, Slot(0), false);
         let size = (self.style.size as f32).clamp(SMALLEST, LARGEST);
         let width = measure(&self.text, c.font).width * size / REFERENCE;
@@ -43,18 +47,34 @@ impl canvas::Program<Message> for Example {
         if let Some(symbol) = self.point {
             // On the symbol when the placement says so; else around it, top right, clear of its edge.
             let on = self.style.point == Some(kentos_commands::PointLabelMode::Center)
-                || (self.style.point.is_none() && self.style.placement == kentos_commands::LabelPlacement::Center);
+                || (self.style.point.is_none()
+                    && self.style.placement == kentos_commands::LabelPlacement::Center);
             let centre = if on {
                 at
             } else {
-                Point::new(bounds.width / 2.0 - width / 2.0 - SYMBOL, bounds.height / 2.0 + size * 0.35)
+                Point::new(
+                    bounds.width / 2.0 - width / 2.0 - SYMBOL,
+                    bounds.height / 2.0 + size * 0.35,
+                )
             };
             frame.fill(&canvas::Path::circle(centre, SYMBOL), symbol);
             if !on {
-                at = Point::new(centre.x + SYMBOL + 3.0 + width / 2.0, centre.y - SYMBOL - size * 0.35);
+                at = Point::new(
+                    centre.x + SYMBOL + 3.0 + width / 2.0,
+                    centre.y - SYMBOL - size * 0.35,
+                );
             }
         }
-        backdrop_at(&mut frame, &c, at, 0.0, width, size * 1.2, false, self.colors.accent());
+        backdrop_at(
+            &mut frame,
+            &c,
+            at,
+            0.0,
+            width,
+            size * 1.2,
+            false,
+            self.colors.accent(),
+        );
         text_at(&mut frame, &c, &self.text, at, 0.0, size);
         vec![frame.into_geometry()]
     }
@@ -69,8 +89,14 @@ pub fn example<'a>(
     font: DrawingFont,
     point: Option<iced::Color>,
 ) -> Element<'a, Message> {
-    canvas::Canvas::new(Example { text, style, colors, font, point })
-        .width(Fill)
-        .height(kentos_ui::theme::typography::from_default(HEIGHT))
-        .into()
+    canvas::Canvas::new(Example {
+        text,
+        style,
+        colors,
+        font,
+        point,
+    })
+    .width(Fill)
+    .height(kentos_ui::theme::typography::from_default(HEIGHT))
+    .into()
 }

@@ -58,7 +58,12 @@ pub fn decode(bytes: &[u8]) -> Result<Webp, RasterError> {
 
 /// A lossless WebP of 8-bit samples: `bands` 1 grey, 2 grey with alpha, 3 RGB, 4 RGBA, row by row. The same samples
 /// make the same file.
-pub fn encode_lossless(width: u32, height: u32, bands: u32, samples: &[u8]) -> Result<Vec<u8>, RasterError> {
+pub fn encode_lossless(
+    width: u32,
+    height: u32,
+    bands: u32,
+    samples: &[u8],
+) -> Result<Vec<u8>, RasterError> {
     let color = match bands {
         1 => ColorType::L8,
         2 => ColorType::La8,

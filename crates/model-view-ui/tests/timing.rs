@@ -15,10 +15,14 @@ use kentos_model_view_ui::{Message, Viewer};
 #[ignore = "a measurement on a model kept out of Git"]
 fn a_large_model_s_steps_are_timed() {
     let Ok(path) = std::env::var("KENTOS_IFC_LARGE") else {
-        eprintln!("SKIPPED: KENTOS_IFC_LARGE names no file (a skipped measurement is not a result)");
+        eprintln!(
+            "SKIPPED: KENTOS_IFC_LARGE names no file (a skipped measurement is not a result)"
+        );
         return;
     };
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../..").join(path);
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .join(path);
     let never = || false;
     let t = Instant::now();
     let bytes = std::fs::read(&path).expect("the file");
@@ -37,14 +41,21 @@ fn a_large_model_s_steps_are_timed() {
     let t = Instant::now();
     viewer.load(input, Vec::new());
     let loaded = t.elapsed();
-    let wall = viewer.view().and_then(|v| v.input().objects.iter().position(|o| o.class == "IfcWall")).expect("a wall");
+    let wall = viewer
+        .view()
+        .and_then(|v| v.input().objects.iter().position(|o| o.class == "IfcWall"))
+        .expect("a wall");
     let before: std::collections::HashSet<u64> = viewer.scene().content_ids().collect();
     let t = Instant::now();
     let _ = viewer.update(Message::Choose(Some(wall)));
     let chosen = t.elapsed();
     let (shown, all) = viewer.view().expect("loaded").counts();
     // What a choice uploads again (docs/adr/8171 §2.4): the tiles whose contents changed; the rest keep their ids.
-    let kept = viewer.scene().content_ids().filter(|id| before.contains(id)).count();
+    let kept = viewer
+        .scene()
+        .content_ids()
+        .filter(|id| before.contains(id))
+        .count();
     println!(
         "{} nesne, {all} gövde ({shown} gösterilen), {triangles} üçgen, {} karo içeriği\n\
          okuma {read:.2?}, gövdeler {made:.2?}, girdi {adapted:.2?}, ilk sahne {loaded:.2?}, seçimle yeniden sahne {chosen:.2?}\n\

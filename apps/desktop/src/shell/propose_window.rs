@@ -22,7 +22,9 @@
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Color, Element, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{GradeLimit, ProfileProposed, ProfilePvi, ProfilesCreate, ProfilesPropose};
-use kentos_native_application::{ExecutionContext, road_profiles, road_profiles_create, road_profiles_propose};
+use kentos_native_application::{
+    ExecutionContext, road_profiles, road_profiles_create, road_profiles_propose,
+};
 use kentos_road::profile::vertical;
 use kentos_ui::theme::Tokens;
 use kentos_ui::widget::select::{Choice, Select};
@@ -119,19 +121,35 @@ fn sampled(pvis: &[vertical::Pvi]) -> Vec<[f64; 2]> {
 
 impl Window {
     pub(crate) fn input(&self, pvis: &[ProfilePvi]) -> Result<ProfilesPropose, String> {
-        let Some(profile) = self.profile.clone() else { return Err("Bir boykesit seçin.".into()) };
+        let Some(profile) = self.profile.clone() else {
+            return Err("Bir boykesit seçin.".into());
+        };
         let t = self.most.trim();
         let most_grade = if t.is_empty() {
             None
         } else {
-            Some(t.replace(',', ".").parse::<f64>().map_err(|_| format!("{MOST} bir sayı olmalı: “{t}”."))? / 100.0)
+            Some(
+                t.replace(',', ".")
+                    .parse::<f64>()
+                    .map_err(|_| format!("{MOST} bir sayı olmalı: “{t}”."))?
+                    / 100.0,
+            )
         };
         let hold = if self.ends {
-            [pvis.first(), pvis.last()].into_iter().flatten().map(|p| p.id.clone()).collect()
+            [pvis.first(), pvis.last()]
+                .into_iter()
+                .flatten()
+                .map(|p| p.id.clone())
+                .collect()
         } else {
             Vec::new()
         };
-        Ok(ProfilesPropose { profile, hold, most_grade, balanced: self.balanced })
+        Ok(ProfilesPropose {
+            profile,
+            hold,
+            most_grade,
+            balanced: self.balanced,
+        })
     }
 }
 
@@ -147,17 +165,27 @@ impl App {
             return;
         }
         let list = doc.model.road_profiles();
-        let Some(first) = list.iter().find(|p| p.surface.is_some()).or(list.first()).map(|p| p.id.clone()) else {
+        let Some(first) = list
+            .iter()
+            .find(|p| p.surface.is_some())
+            .or(list.first())
+            .map(|p| p.id.clone())
+        else {
             self.warn("Kırmızı kot önerisi bir boykesitte kurulur: önce Boykesit'te bir boykesit oluşturun.".to_owned());
             return;
         };
-        self.propose_window = Some(Box::new(Window { profile: Some(first), ..Window::default() }));
+        self.propose_window = Some(Box::new(Window {
+            profile: Some(first),
+            ..Window::default()
+        }));
         self.dialog = Some(Dialog::Propose);
         let _ = self.propose_event(Event::Preview);
     }
 
     pub(crate) fn propose_event(&mut self, event: Event) -> Task<Message> {
-        let Some(w) = self.propose_window.as_mut() else { return Task::none() };
+        let Some(w) = self.propose_window.as_mut() else {
+            return Task::none();
+        };
         match event {
             Event::Profile(p) => w.profile = Some(p),
             Event::Most(t) => w.most = t,
@@ -168,18 +196,33 @@ impl App {
                 return Task::none();
             }
             Event::Preview => {
-                let Some(doc) = &self.document else { return Task::none() };
-                let def = w.profile.as_ref().and_then(|id| doc.model.road_profiles().iter().find(|p| &p.id == id)).cloned();
+                let Some(doc) = &self.document else {
+                    return Task::none();
+                };
+                let def = w
+                    .profile
+                    .as_ref()
+                    .and_then(|id| doc.model.road_profiles().iter().find(|p| &p.id == id))
+                    .cloned();
                 let read = match def {
                     None => Err("Bir boykesit seçin.".to_owned()),
                     Some(def) => w.input(&def.pvis).and_then(|q| {
-                        let (answer, warnings, ground) = road_profiles_propose::preview(&doc.model, &q)?;
+                        let (answer, warnings, ground) =
+                            road_profiles_propose::preview(&doc.model, &q)?;
                         let was_pvis = road_profiles::pvis_of(&def);
                         let mut new_pvis = was_pvis.clone();
                         for (p, n) in new_pvis.iter_mut().zip(&answer.pvis) {
                             p.elevation = n.elevation;
                         }
-                        Ok((Read { was: sampled(&was_pvis), proposed: sampled(&new_pvis), answer, ground }, warnings))
+                        Ok((
+                            Read {
+                                was: sampled(&was_pvis),
+                                proposed: sampled(&new_pvis),
+                                answer,
+                                ground,
+                            },
+                            warnings,
+                        ))
                     }),
                 };
                 match read {
@@ -195,12 +238,27 @@ impl App {
                 return Task::none();
             }
             Event::Write => {
-                let Some(Ok(r)) = &w.preview else { return Task::none() };
-                let Some(doc) = self.document.as_mut() else { return Task::none() };
-                let Some(def) = doc.model.road_profiles().iter().find(|p| p.id == r.answer.profile).cloned() else {
+                let Some(Ok(r)) = &w.preview else {
                     return Task::none();
                 };
-                let names: Vec<String> = doc.model.road_profiles().iter().map(|p| p.name.to_lowercase()).collect();
+                let Some(doc) = self.document.as_mut() else {
+                    return Task::none();
+                };
+                let Some(def) = doc
+                    .model
+                    .road_profiles()
+                    .iter()
+                    .find(|p| p.id == r.answer.profile)
+                    .cloned()
+                else {
+                    return Task::none();
+                };
+                let names: Vec<String> = doc
+                    .model
+                    .road_profiles()
+                    .iter()
+                    .map(|p| p.name.to_lowercase())
+                    .collect();
                 let mut name = format!("{} önerisi", def.name);
                 let mut k = 2;
                 while names.contains(&name.to_lowercase()) {
@@ -211,7 +269,10 @@ impl App {
                     .pvis
                     .iter()
                     .zip(&r.answer.pvis)
-                    .map(|(p, n)| ProfilePvi { elevation: n.elevation, ..p.clone() })
+                    .map(|(p, n)| ProfilePvi {
+                        elevation: n.elevation,
+                        ..p.clone()
+                    })
                     .collect();
                 let create = ProfilesCreate {
                     name: name.clone(),
@@ -221,9 +282,15 @@ impl App {
                     surface: def.surface.clone(),
                     expected_revision: None,
                 };
-                let result = road_profiles_create::execute(&mut ExecutionContext::new(&mut doc.model), create);
+                let result = road_profiles_create::execute(
+                    &mut ExecutionContext::new(&mut doc.model),
+                    create,
+                );
                 if self.answered(result).is_some() {
-                    self.say(kentos_interaction::Level::Success, format!("“{name}” boykesiti yazıldı."));
+                    self.say(
+                        kentos_interaction::Level::Success,
+                        format!("“{name}” boykesiti yazıldı."),
+                    );
                     self.propose_window = None;
                     self.dialog = None;
                 }
@@ -243,15 +310,28 @@ impl App {
         let Some(w) = &self.propose_window else {
             return iced::widget::text("").into();
         };
-        let list: Vec<(String, String)> = self
-            .document
-            .as_ref()
-            .map_or_else(Vec::new, |d| d.model.road_profiles().iter().map(|p| (p.id.clone(), p.name.clone())).collect());
+        let list: Vec<(String, String)> = self.document.as_ref().map_or_else(Vec::new, |d| {
+            d.model
+                .road_profiles()
+                .iter()
+                .map(|p| (p.id.clone(), p.name.clone()))
+                .collect()
+        });
         let ids: Vec<String> = list.iter().map(|c| c.0.clone()).collect();
-        let at = w.profile.as_ref().and_then(|c| ids.iter().position(|i| i == c));
-        let pick = Select::new(list.iter().map(|c| Choice::new(c.1.clone())), at, move |i| msg(Event::Profile(ids[i].clone())));
-        let most = kentos_ui::widget::text_field("sınırsız", &w.most).on_input(|t| msg(Event::Most(t)));
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let at = w
+            .profile
+            .as_ref()
+            .and_then(|c| ids.iter().position(|i| i == c));
+        let pick = Select::new(
+            list.iter().map(|c| Choice::new(c.1.clone())),
+            at,
+            move |i| msg(Event::Profile(ids[i].clone())),
+        );
+        let most =
+            kentos_ui::widget::text_field("sınırsız", &w.most).on_input(|t| msg(Event::Most(t)));
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
         let form = Form::new()
             .label_width(130.0)
             .section("Girdi")
@@ -260,8 +340,15 @@ impl App {
             .field(MOST, most)
             .help("Boş: eğim sınırı yok.")
             .row(words::check(w.ends, ENDS, Some(msg(Event::Ends(!w.ends)))))
-            .row(words::check(w.balanced, BALANCED, Some(msg(Event::Balanced(!w.balanced)))))
-            .row(kentos_ui::label::caption("Dengeli: kazı alanı dolgu alanına eşit olur.").style(muted));
+            .row(words::check(
+                w.balanced,
+                BALANCED,
+                Some(msg(Event::Balanced(!w.balanced))),
+            ))
+            .row(
+                kentos_ui::label::caption("Dengeli: kazı alanı dolgu alanına eşit olur.")
+                    .style(muted),
+            );
         let close = msg(Event::Close);
         let mut d = RoadDialog::new(TITLE, form, close).legend(
             "Siyah arazi · kesikli şimdiki kırmızı kot · kırmızı öneri · dolu kare kilitli PVI",
@@ -274,7 +361,12 @@ impl App {
             Some(Ok(r)) => {
                 let a = &r.answer;
                 d = d
-                    .picture(iced::widget::canvas(Draw { read: r }).width(iced::Fill).height(iced::Fill), 300.0)
+                    .picture(
+                        iced::widget::canvas(Draw { read: r })
+                            .width(iced::Fill)
+                            .height(iced::Fill),
+                        300.0,
+                    )
                     .figure("Karesel ortalama fark", format!("{:.3} m", a.rms))
                     .figure("Kazı alanı", format!("{:.1} m²", a.cut))
                     .figure("Dolgu alanı", format!("{:.1} m²", a.fill))
@@ -284,7 +376,13 @@ impl App {
                 }
                 let table = match w.detail {
                     Detail::Pvis => road_dialog::table(
-                        vec![road_dialog::col("PVI", 90.0), num("Km", 90.0), num("Önceki kot", 110.0), num("Önerilen kot", 110.0), road_dialog::col("", 80.0)],
+                        vec![
+                            road_dialog::col("PVI", 90.0),
+                            num("Km", 90.0),
+                            num("Önceki kot", 110.0),
+                            num("Önerilen kot", 110.0),
+                            road_dialog::col("", 80.0),
+                        ],
                         a.pvis
                             .iter()
                             .map(|p| {
@@ -293,7 +391,11 @@ impl App {
                                     format!("{:.1}", p.station),
                                     format!("{:.3}", p.was),
                                     format!("{:.3}", p.elevation),
-                                    if p.held { "kilitli".into() } else { String::new() },
+                                    if p.held {
+                                        "kilitli".into()
+                                    } else {
+                                        String::new()
+                                    },
                                 ]
                             })
                             .collect(),
@@ -315,26 +417,53 @@ impl App {
                                 vec![
                                     c.name.clone(),
                                     format!("{:.1}", c.station),
-                                    if c.side == kentos_commands::CrossingSide::Above { "üstte" } else { "altta" }.into(),
-                                    format!("{} {:.3}", if c.side == kentos_commands::CrossingSide::Above { "≤" } else { "≥" }, c.limit),
-                                    c.elevation.map_or_else(|| "—".into(), |z| format!("{z:.3}")),
+                                    if c.side == kentos_commands::CrossingSide::Above {
+                                        "üstte"
+                                    } else {
+                                        "altta"
+                                    }
+                                    .into(),
+                                    format!(
+                                        "{} {:.3}",
+                                        if c.side == kentos_commands::CrossingSide::Above {
+                                            "≤"
+                                        } else {
+                                            "≥"
+                                        },
+                                        c.limit
+                                    ),
+                                    c.elevation
+                                        .map_or_else(|| "—".into(), |z| format!("{z:.3}")),
                                     // A margin within half a millimetre is 0, not “−0.000”.
-                                    c.margin.map_or_else(|| "—".into(), |m| format!("{:+.3}", if m.abs() < 5e-4 { 0.0 } else { m })),
-                                    if c.holds { "tutuyor".into() } else { String::new() },
+                                    c.margin.map_or_else(
+                                        || "—".into(),
+                                        |m| format!("{:+.3}", if m.abs() < 5e-4 { 0.0 } else { m }),
+                                    ),
+                                    if c.holds {
+                                        "tutuyor".into()
+                                    } else {
+                                        String::new()
+                                    },
                                 ]
                             })
                             .collect(),
                         "Kesişme yok",
                     ),
                     Detail::Grades => road_dialog::table(
-                        vec![road_dialog::col("Aralık", 120.0), num("Eğim (%)", 100.0), road_dialog::col("Sınır", 140.0)],
+                        vec![
+                            road_dialog::col("Aralık", 120.0),
+                            num("Eğim (%)", 100.0),
+                            road_dialog::col("Sınır", 140.0),
+                        ],
                         a.grades
                             .iter()
                             .map(|g| {
                                 vec![
                                     format!("{} – {}", g.between[0], g.between[1]),
                                     // KGM 2019: signed, three decimals (docs/adr/0978); the column says %.
-                                    kentos_road::profile::grade_text(g.grade).replace('%', "").replace('.', ","),
+                                    kentos_road::profile::grade_text(g.grade)
+                                        .replace('%', "")
+                                        .replace('.', ","),
                                     match g.limit {
                                         Some(GradeLimit::Rise) => "en büyük çıkış".into(),
                                         Some(GradeLimit::Fall) => "en büyük iniş".into(),
@@ -349,7 +478,12 @@ impl App {
                 let mut options = vec![Detail::Pvis, Detail::Grades];
                 if !a.crossings.is_empty() {
                     options.push(Detail::Crossings);
-                    let held: Vec<&str> = a.crossings.iter().filter(|c| c.holds).map(|c| c.name.as_str()).collect();
+                    let held: Vec<&str> = a
+                        .crossings
+                        .iter()
+                        .filter(|c| c.holds)
+                        .map(|c| c.name.as_str())
+                        .collect();
                     if !held.is_empty() {
                         d = d.note(Banner::info(format!(
                             "Kesişmeler öneriyi tutuyor: {}. Araziye daha yakın bir kırmızı kot onların açıklığını ya da örtüsünü bozardı.",
@@ -357,11 +491,17 @@ impl App {
                         )));
                     }
                 }
-                d = d.detail(road_dialog::detail_choice(options, w.detail, |x| msg(Event::Detail(x)), table));
+                d = d.detail(road_dialog::detail_choice(
+                    options,
+                    w.detail,
+                    |x| msg(Event::Detail(x)),
+                    table,
+                ));
             }
         }
         let can_write = matches!(w.preview, Some(Ok(_)));
-        d.primary(WRITE, can_write.then(|| msg(Event::Write))).view()
+        d.primary(WRITE, can_write.then(|| msg(Event::Write)))
+            .view()
     }
 
     pub(crate) fn propose_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -387,7 +527,14 @@ struct Draw<'a> {
 impl canvas::Program<Message> for Draw<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let r = self.read;
@@ -398,7 +545,12 @@ impl canvas::Program<Message> for Draw<'_> {
             .copied()
             .chain(r.ground.iter().filter_map(|(s, z)| z.map(|z| [*s, z])))
             .chain(r.answer.crossings.iter().map(|c| [c.station, c.limit]));
-        let (mut x0, mut x1, mut y0, mut y1) = (f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut x1, mut y0, mut y1) = (
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in all {
             x0 = x0.min(p[0]);
             x1 = x1.max(p[0]);
@@ -437,18 +589,52 @@ impl canvas::Program<Message> for Draw<'_> {
         if run.len() > 1 {
             frame.stroke(&polyline(&run), ground);
         }
-        let dashed = Stroke { line_dash: LineDash { segments: &[6.0, 4.0], offset: 0 }, ..Stroke::default() };
-        frame.stroke(&polyline(&r.was), Stroke { width: 1.2, ..dashed.with_color(Color { a: 0.8, ..tk.muted }) });
-        frame.stroke(&polyline(&r.proposed), Stroke::default().with_width(2.2).with_color(tk.danger));
+        let dashed = Stroke {
+            line_dash: LineDash {
+                segments: &[6.0, 4.0],
+                offset: 0,
+            },
+            ..Stroke::default()
+        };
+        frame.stroke(
+            &polyline(&r.was),
+            Stroke {
+                width: 1.2,
+                ..dashed.with_color(Color { a: 0.8, ..tk.muted })
+            },
+        );
+        frame.stroke(
+            &polyline(&r.proposed),
+            Stroke::default().with_width(2.2).with_color(tk.danger),
+        );
         // What the road crosses (docs/adr/0946): the structure, its limit dashed; the ones holding the line in accent.
         for c in &r.answer.crossings {
             let above = c.side == kentos_commands::CrossingSide::Above;
             let cx = x(c.station);
             let colour = if c.holds { tk.accent } else { tk.success };
-            let dash = Stroke { line_dash: LineDash { segments: &[3.0, 2.0], offset: 0 }, ..Stroke::default().with_width(1.6).with_color(colour) };
-            frame.stroke(&Path::line(Point::new(cx - 18.0, y(c.limit)), Point::new(cx + 18.0, y(c.limit))), dash);
-            let tip = if above { y(c.limit) - 12.0 } else { y(c.limit) + 12.0 };
-            frame.stroke(&Path::line(Point::new(cx, y(c.limit)), Point::new(cx, tip)), Stroke::default().with_width(1.6).with_color(colour));
+            let dash = Stroke {
+                line_dash: LineDash {
+                    segments: &[3.0, 2.0],
+                    offset: 0,
+                },
+                ..Stroke::default().with_width(1.6).with_color(colour)
+            };
+            frame.stroke(
+                &Path::line(
+                    Point::new(cx - 18.0, y(c.limit)),
+                    Point::new(cx + 18.0, y(c.limit)),
+                ),
+                dash,
+            );
+            let tip = if above {
+                y(c.limit) - 12.0
+            } else {
+                y(c.limit) + 12.0
+            };
+            frame.stroke(
+                &Path::line(Point::new(cx, y(c.limit)), Point::new(cx, tip)),
+                Stroke::default().with_width(1.6).with_color(colour),
+            );
             frame.fill_text(Text {
                 content: c.name.clone(),
                 position: Point::new(cx + 4.0, if above { tip - 14.0 } else { tip + 2.0 }),
@@ -460,18 +646,49 @@ impl canvas::Program<Message> for Draw<'_> {
         for p in &r.answer.pvis {
             let at = Point::new(x(p.station), y(p.elevation));
             if p.held {
-                frame.fill(&Path::rectangle(Point::new(at.x - 4.0, at.y - 4.0), iced::Size::new(8.0, 8.0)), tk.danger);
+                frame.fill(
+                    &Path::rectangle(
+                        Point::new(at.x - 4.0, at.y - 4.0),
+                        iced::Size::new(8.0, 8.0),
+                    ),
+                    tk.danger,
+                );
             } else {
-                frame.stroke(&Path::circle(at, 4.0), Stroke::default().with_width(1.6).with_color(tk.danger));
+                frame.stroke(
+                    &Path::circle(at, 4.0),
+                    Stroke::default().with_width(1.6).with_color(tk.danger),
+                );
             }
         }
         let caption = |frame: &mut canvas::Frame, content: String, at: Point| {
-            frame.fill_text(Text { content, position: at, color: tk.muted, size: Pixels(11.0), ..Text::default() });
+            frame.fill_text(Text {
+                content,
+                position: at,
+                color: tk.muted,
+                size: Pixels(11.0),
+                ..Text::default()
+            });
         };
-        caption(&mut frame, format!("{y1:.1} m"), Point::new(4.0, y(y1) - 6.0));
-        caption(&mut frame, format!("{y0:.1} m"), Point::new(4.0, y(y0) - 6.0));
-        caption(&mut frame, format!("{x0:.0} m"), Point::new(x(x0) - 6.0, (h - bottom + 8.0) as f32));
-        caption(&mut frame, format!("{x1:.0} m"), Point::new(x(x1) - 30.0, (h - bottom + 8.0) as f32));
+        caption(
+            &mut frame,
+            format!("{y1:.1} m"),
+            Point::new(4.0, y(y1) - 6.0),
+        );
+        caption(
+            &mut frame,
+            format!("{y0:.1} m"),
+            Point::new(4.0, y(y0) - 6.0),
+        );
+        caption(
+            &mut frame,
+            format!("{x0:.0} m"),
+            Point::new(x(x0) - 6.0, (h - bottom + 8.0) as f32),
+        );
+        caption(
+            &mut frame,
+            format!("{x1:.0} m"),
+            Point::new(x(x1) - 30.0, (h - bottom + 8.0) as f32),
+        );
         vec![frame.into_geometry()]
     }
 }

@@ -33,7 +33,9 @@ pub struct Roles {
 
 /// The leaf layers of layer or group ids.
 fn leaves(doc: &Document, ids: &[String]) -> Vec<String> {
-    ids.iter().flat_map(|id| doc.layers().leaves_of(id).into_iter().map(|n| n.id.clone())).collect()
+    ids.iter()
+        .flat_map(|id| doc.layers().leaves_of(id).into_iter().map(|n| n.id.clone()))
+        .collect()
 }
 
 /// The roles of the objects selected (their layers and persistent ids).
@@ -52,7 +54,13 @@ fn roles_of(doc: &Document, picked: &[(String, String)]) -> Roles {
                 .map(|s| {
                     let mut layers = leaves(doc, &s.points.layers);
                     layers.extend(leaves(doc, &s.breaklines.layers));
-                    let uids: Vec<String> = s.points.uids.iter().chain(&s.breaklines.uids).cloned().collect();
+                    let uids: Vec<String> = s
+                        .points
+                        .uids
+                        .iter()
+                        .chain(&s.breaklines.uids)
+                        .cloned()
+                        .collect();
                     (s.id.clone(), layers, uids)
                 })
                 .collect()
@@ -60,7 +68,11 @@ fn roles_of(doc: &Document, picked: &[(String, String)]) -> Roles {
         .unwrap_or_default();
     let surface = surfaces
         .iter()
-        .find(|(_, layers, uids)| picked.iter().all(|(layer, uid)| layers.contains(layer) || uids.contains(uid)))
+        .find(|(_, layers, uids)| {
+            picked
+                .iter()
+                .all(|(layer, uid)| layers.contains(layer) || uids.contains(uid))
+        })
         .map(|(id, ..)| id.clone());
     // The utility network every selected object is a part of.
     let network = settings
@@ -68,9 +80,15 @@ fn roles_of(doc: &Document, picked: &[(String, String)]) -> Roles {
         .iter()
         .filter(|n| n.kind == NetworkKind::Utility)
         .find(|n| {
-            let layers: Vec<&str> =
-                n.edges.iter().map(|l| l.layer.as_str()).chain(n.junctions.iter().map(|l| l.layer.as_str())).collect();
-            picked.iter().all(|(layer, _)| layers.contains(&layer.as_str()))
+            let layers: Vec<&str> = n
+                .edges
+                .iter()
+                .map(|l| l.layer.as_str())
+                .chain(n.junctions.iter().map(|l| l.layer.as_str()))
+                .collect();
+            picked
+                .iter()
+                .all(|(layer, _)| layers.contains(&layer.as_str()))
         })
         .map(|n| n.id.clone());
     let plan = zoning_check::plan_layers(doc);
@@ -85,14 +103,24 @@ fn roles_of(doc: &Document, picked: &[(String, String)]) -> Roles {
     if zoning {
         roles.push("zoning");
     }
-    Roles { roles, surface, network }
+    Roles {
+        roles,
+        surface,
+        network,
+    }
 }
 
 impl App {
     /// The selection's roles (docs/adr/2480), worked out again only when the selection or the drawing changes.
     pub fn selection_roles(&self) -> Roles {
-        let Some(doc) = self.document.as_ref() else { return Roles::default() };
-        let key = (doc.session, self.selection.version(), doc.model.generation());
+        let Some(doc) = self.document.as_ref() else {
+            return Roles::default();
+        };
+        let key = (
+            doc.session,
+            self.selection.version(),
+            doc.model.generation(),
+        );
         if let Some((k, roles)) = self.selection_roles.0.borrow().as_ref()
             && *k == key
         {
@@ -104,7 +132,13 @@ impl App {
             .iter()
             .filter_map(|slot| {
                 let e = doc.model.get(*slot)?;
-                Some((e.base().layer_id.clone(), doc.model.uid(*slot).map(|u| u.to_string()).unwrap_or_default()))
+                Some((
+                    e.base().layer_id.clone(),
+                    doc.model
+                        .uid(*slot)
+                        .map(|u| u.to_string())
+                        .unwrap_or_default(),
+                ))
             })
             .collect();
         let roles = roles_of(&doc.model, &picked);

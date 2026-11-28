@@ -147,9 +147,21 @@ fn a_wipeout_is_a_mask_where_its_clip_says() {
         g(14, "0.5"),
         g(24, "0.5"),
     ]);
-    let objects = vec![g(0, "WIPEOUTVARIABLES"), g(5, "11D5D6"), g(100, "AcDbWipeoutVariables"), g(70, "0")];
-    let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
-    let r = dxf::read(&dxf_of(&[("ENTITIES", entities.clone()), ("OBJECTS", objects)]), &options).expect("read");
+    let objects = vec![
+        g(0, "WIPEOUTVARIABLES"),
+        g(5, "11D5D6"),
+        g(100, "AcDbWipeoutVariables"),
+        g(70, "0"),
+    ];
+    let options = DxfReadOptions {
+        unit: Some(kentos_contracts::DrawingUnit::M),
+        ..Default::default()
+    };
+    let r = dxf::read(
+        &dxf_of(&[("ENTITIES", entities.clone()), ("OBJECTS", objects)]),
+        &options,
+    )
+    .expect("read");
     let masks: Vec<_> = r
         .entities
         .iter()
@@ -160,23 +172,48 @@ fn a_wipeout_is_a_mask_where_its_clip_says() {
         .collect();
     assert_eq!(masks.len(), 2, "{:?}", r.report.skipped);
     for m in &masks {
-        assert_eq!(m.base.look.wipeout, Some(kentos_contracts::look::Wipeout { frame: false }), "frames off");
+        assert_eq!(
+            m.base.look.wipeout,
+            Some(kentos_contracts::look::Wipeout { frame: false }),
+            "frames off"
+        );
     }
     // The grid box: a rectangle from (0, 0) to (17 150.286, −5 002.273), its first point (0, −5 002.273).
     let grid = &masks[0].pts;
-    let want = [(0.0, -5002.273), (0.0, 0.0), (17150.286, 0.0), (17150.286, -5002.273)];
+    let want = [
+        (0.0, -5002.273),
+        (0.0, 0.0),
+        (17150.286, 0.0),
+        (17150.286, -5002.273),
+    ];
     assert_eq!(grid.len(), 4, "the closing point dropped");
     for (p, (x, y)) in grid.iter().zip(want) {
-        assert!((p.x - x).abs() < 1e-3 && (p.y - y).abs() < 1e-3, "{p:?} ≠ ({x}, {y})");
+        assert!(
+            (p.x - x).abs() < 1e-3 && (p.y - y).abs() < 1e-3,
+            "{p:?} ≠ ({x}, {y})"
+        );
     }
     // The rectangle: two corners of the unit square, U 4 and V 2 from (100, 200).
     let rect: Vec<(f64, f64)> = masks[1].pts.iter().map(|p| (p.x, p.y)).collect();
-    assert_eq!(rect, vec![(100.0, 202.0), (104.0, 202.0), (104.0, 200.0), (100.0, 200.0)]);
+    assert_eq!(
+        rect,
+        vec![
+            (100.0, 202.0),
+            (104.0, 202.0),
+            (104.0, 200.0),
+            (100.0, 200.0)
+        ]
+    );
     assert!(skipped(&r, "WIPEOUT").is_none());
     // No WIPEOUTVARIABLES: the format's default, the frame drawn.
     let r = dxf::read(&dxf_of(&[("ENTITIES", entities)]), &options).expect("read");
-    let Some(Entity::Polygon(p)) = r.entities.first() else { panic!("{:?}", r.entities) };
-    assert_eq!(p.base.look.wipeout, Some(kentos_contracts::look::Wipeout { frame: true }));
+    let Some(Entity::Polygon(p)) = r.entities.first() else {
+        panic!("{:?}", r.entities)
+    };
+    assert_eq!(
+        p.base.look.wipeout,
+        Some(kentos_contracts::look::Wipeout { frame: true })
+    );
 }
 
 /// An IMAGE's file is not in the drawing (docs/adr/9227): the SİVAS AVM DWG's logo, 2 409 × 3 435 pixels of 1.7118
@@ -211,26 +248,69 @@ fn an_image_is_its_frame_and_its_file_is_named() {
         g(14, "2408.5"),
         g(24, "3434.5"),
     ];
-    let objects = vec![g(0, "IMAGEDEF"), g(5, "146B6"), g(100, "AcDbRasterImageDef"), g(1, "DDS LOGO.jpg")];
-    let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
-    let r = dxf::read(&dxf_of(&[("ENTITIES", entities.clone()), ("OBJECTS", objects)]), &options).expect("read");
-    let [Entity::Polyline(frame)] = r.entities.as_slice() else { panic!("{:?}", r.entities) };
+    let objects = vec![
+        g(0, "IMAGEDEF"),
+        g(5, "146B6"),
+        g(100, "AcDbRasterImageDef"),
+        g(1, "DDS LOGO.jpg"),
+    ];
+    let options = DxfReadOptions {
+        unit: Some(kentos_contracts::DrawingUnit::M),
+        ..Default::default()
+    };
+    let r = dxf::read(
+        &dxf_of(&[("ENTITIES", entities.clone()), ("OBJECTS", objects)]),
+        &options,
+    )
+    .expect("read");
+    let [Entity::Polyline(frame)] = r.entities.as_slice() else {
+        panic!("{:?}", r.entities)
+    };
     assert!(frame.closed);
     let (w, h) = (2409.0 * 1.7117828025000665, 3435.0 * 1.7117828025000665);
-    let want = [(1000.0, 2000.0 + h), (1000.0 + w, 2000.0 + h), (1000.0 + w, 2000.0), (1000.0, 2000.0)];
+    let want = [
+        (1000.0, 2000.0 + h),
+        (1000.0 + w, 2000.0 + h),
+        (1000.0 + w, 2000.0),
+        (1000.0, 2000.0),
+    ];
     for (p, (x, y)) in frame.pts.iter().zip(want) {
-        assert!((p.x - x).abs() < 1e-6 && (p.y - y).abs() < 1e-6, "{p:?} ≠ ({x}, {y})");
+        assert!(
+            (p.x - x).abs() < 1e-6 && (p.y - y).abs() < 1e-6,
+            "{p:?} ≠ ({x}, {y})"
+        );
     }
-    let note = r.report.notes.iter().find(|n| n.what == "Görüntü (IMAGE)").expect("said");
+    let note = r
+        .report
+        .notes
+        .iter()
+        .find(|n| n.what == "Görüntü (IMAGE)")
+        .expect("said");
     assert!(note.reason.contains("“DDS LOGO.jpg”"), "{}", note.reason);
     assert!(skipped(&r, "IMAGE").is_none());
 
     // Its definition naming no file: the frame still shows where it was, and the report says the file is not named.
-    let objects = vec![g(0, "IMAGEDEF"), g(5, "146B6"), g(100, "AcDbRasterImageDef"), g(1, " ")];
-    let r = dxf::read(&dxf_of(&[("ENTITIES", entities), ("OBJECTS", objects)]), &options).expect("read");
-    let [Entity::Polyline(unnamed)] = r.entities.as_slice() else { panic!("{:?}", r.entities) };
+    let objects = vec![
+        g(0, "IMAGEDEF"),
+        g(5, "146B6"),
+        g(100, "AcDbRasterImageDef"),
+        g(1, " "),
+    ];
+    let r = dxf::read(
+        &dxf_of(&[("ENTITIES", entities), ("OBJECTS", objects)]),
+        &options,
+    )
+    .expect("read");
+    let [Entity::Polyline(unnamed)] = r.entities.as_slice() else {
+        panic!("{:?}", r.entities)
+    };
     assert_eq!(unnamed.pts, frame.pts);
-    let note = r.report.notes.iter().find(|n| n.what == "Görüntü (IMAGE)").expect("said");
+    let note = r
+        .report
+        .notes
+        .iter()
+        .find(|n| n.what == "Görüntü (IMAGE)")
+        .expect("said");
     assert!(note.reason.contains("adlandırılmamış"), "{}", note.reason);
     assert!(skipped(&r, "IMAGE").is_none());
 }
@@ -244,7 +324,14 @@ fn an_image_is_its_frame_and_its_file_is_named() {
 fn a_circle_seen_edge_on_is_the_segment_it_is_in_plan() {
     let g = |code: i32, value: &str| (code, value.to_string());
     let edge_on = |kind: &str, r: &str, angles: Option<(&str, &str)>| {
-        let mut e = vec![g(0, kind), g(8, "0"), g(10, "0"), g(20, "5"), g(30, "3"), g(40, r)];
+        let mut e = vec![
+            g(0, kind),
+            g(8, "0"),
+            g(10, "0"),
+            g(20, "5"),
+            g(30, "3"),
+            g(40, r),
+        ];
         if let Some((a0, a1)) = angles {
             e.extend([g(50, a0), g(51, a1)]);
         }
@@ -254,7 +341,10 @@ fn a_circle_seen_edge_on_is_the_segment_it_is_in_plan() {
     let mut entities = edge_on("CIRCLE", "2", None);
     entities.extend(edge_on("ARC", "2", Some(("0", "90"))));
     entities.extend(edge_on("CIRCLE", "0", None));
-    let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
+    let options = DxfReadOptions {
+        unit: Some(kentos_contracts::DrawingUnit::M),
+        ..Default::default()
+    };
     let r = dxf::read(&dxf_of(&[("ENTITIES", entities)]), &options).expect("read");
     let lines: Vec<[(f64, f64); 2]> = r
         .entities
@@ -264,14 +354,38 @@ fn a_circle_seen_edge_on_is_the_segment_it_is_in_plan() {
             _ => None,
         })
         .collect();
-    let close = |p: (f64, f64), q: (f64, f64)| (p.0 - q.0).abs() < 1e-12 && (p.1 - q.1).abs() < 1e-12;
+    let close =
+        |p: (f64, f64), q: (f64, f64)| (p.0 - q.0).abs() < 1e-12 && (p.1 - q.1).abs() < 1e-12;
     assert_eq!(lines.len(), 2, "{:?} {:?}", r.entities, r.report.skipped);
-    assert!(close(lines[0][0], (3.0, -2.0)) && close(lines[0][1], (3.0, 2.0)), "{lines:?}");
-    assert!(close(lines[1][0], (3.0, 0.0)) && close(lines[1][1], (3.0, 2.0)), "{lines:?}");
-    let said = r.report.notes.iter().find(|n| n.what == "CIRCLE").expect("said");
-    assert!(said.reason.contains("doğru parçası olarak alındı"), "{}", said.reason);
-    let point = r.report.skipped.iter().find(|s| s.what == "CIRCLE").expect("the point is left out");
-    assert_eq!((point.count, point.reason.as_str()), (1, "yarıçapı sıfır ya da negatif"));
+    assert!(
+        close(lines[0][0], (3.0, -2.0)) && close(lines[0][1], (3.0, 2.0)),
+        "{lines:?}"
+    );
+    assert!(
+        close(lines[1][0], (3.0, 0.0)) && close(lines[1][1], (3.0, 2.0)),
+        "{lines:?}"
+    );
+    let said = r
+        .report
+        .notes
+        .iter()
+        .find(|n| n.what == "CIRCLE")
+        .expect("said");
+    assert!(
+        said.reason.contains("doğru parçası olarak alındı"),
+        "{}",
+        said.reason
+    );
+    let point = r
+        .report
+        .skipped
+        .iter()
+        .find(|s| s.what == "CIRCLE")
+        .expect("the point is left out");
+    assert_eq!(
+        (point.count, point.reason.as_str()),
+        (1, "yarıçapı sıfır ya da negatif")
+    );
 }
 
 /// An embedded document is its frame, said (docs/adr/9231): OLE2FRAME's corners, upper left (10) and lower right
@@ -297,17 +411,37 @@ fn an_ole_frame_is_its_outline_and_an_empty_text_a_note() {
         (40, "2.5"),
         (1, ""),
     ]);
-    let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
+    let options = DxfReadOptions {
+        unit: Some(kentos_contracts::DrawingUnit::M),
+        ..Default::default()
+    };
     let r = dxf::read(&dxf_of(&[("ENTITIES", entities)]), &options).expect("read");
-    let Some(Entity::Polyline(p)) = r.entities.first() else { panic!("{:?} {:?}", r.entities, r.report.skipped) };
+    let Some(Entity::Polyline(p)) = r.entities.first() else {
+        panic!("{:?} {:?}", r.entities, r.report.skipped)
+    };
     assert!(p.closed);
     let outline: Vec<(f64, f64)> = p.pts.iter().map(|q| (q.x, q.y)).collect();
-    assert_eq!(outline, vec![(10.0, 8.0), (16.0, 8.0), (16.0, 4.0), (10.0, 4.0)]);
+    assert_eq!(
+        outline,
+        vec![(10.0, 8.0), (16.0, 8.0), (16.0, 4.0), (10.0, 4.0)]
+    );
     assert_eq!(r.entities.len(), 1);
     assert!(r.report.skipped.is_empty(), "{:?}", r.report.skipped);
-    let said = |what: &str| r.report.notes.iter().find(|n| n.what == what).map(|n| n.reason.clone());
-    assert!(said("OLE nesnesi (OLE2FRAME)").is_some_and(|w| w.contains("yerini gösteren çerçevesi alındı")));
-    assert_eq!(said("Yazı (TEXT)").as_deref(), Some("boş; çizilecek yazısı yok"));
+    let said = |what: &str| {
+        r.report
+            .notes
+            .iter()
+            .find(|n| n.what == what)
+            .map(|n| n.reason.clone())
+    };
+    assert!(
+        said("OLE nesnesi (OLE2FRAME)")
+            .is_some_and(|w| w.contains("yerini gösteren çerçevesi alındı"))
+    );
+    assert_eq!(
+        said("Yazı (TEXT)").as_deref(),
+        Some("boş; çizilecek yazısı yok")
+    );
 }
 
 /// A hatch whose boundary is pieces that close only together (docs/adr/9230): paths flagged not closed (92 bit 32),
@@ -333,7 +467,12 @@ fn a_boundary_of_pieces_is_joined_into_its_ring() {
         g(71, "0"),
         g(91, "4"),
     ];
-    let sides = [((0.0, 4.0), (5.0, 4.0)), ((5.0, 4.0), (5.0, 0.0)), ((0.0, 0.0), (5.0, 0.0)), ((0.0, 0.0), (0.0, 4.0))];
+    let sides = [
+        ((0.0, 4.0), (5.0, 4.0)),
+        ((5.0, 4.0), (5.0, 0.0)),
+        ((0.0, 0.0), (5.0, 0.0)),
+        ((0.0, 0.0), (0.0, 4.0)),
+    ];
     for (a, b) in sides {
         e.extend([g(92, "33"), g(93, "1"), g(72, "1")]);
         for (code, value) in [(10, a.0), (20, a.1), (11, b.0), (21, b.1)] {
@@ -341,17 +480,36 @@ fn a_boundary_of_pieces_is_joined_into_its_ring() {
         }
         e.push(g(97, "0"));
     }
-    e.extend([g(75, "1"), g(76, "1"), g(52, "0"), g(41, "1"), g(77, "0"), g(78, "0"), g(98, "0")]);
-    let options = DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() };
+    e.extend([
+        g(75, "1"),
+        g(76, "1"),
+        g(52, "0"),
+        g(41, "1"),
+        g(77, "0"),
+        g(78, "0"),
+        g(98, "0"),
+    ]);
+    let options = DxfReadOptions {
+        unit: Some(kentos_contracts::DrawingUnit::M),
+        ..Default::default()
+    };
     let r = dxf::read(&dxf_of(&[("ENTITIES", e)]), &options).expect("read");
-    let hatches: Vec<_> = r.entities.iter().filter_map(|x| match x {
-        Entity::Hatch(h) => Some(h),
-        _ => None,
-    }).collect();
+    let hatches: Vec<_> = r
+        .entities
+        .iter()
+        .filter_map(|x| match x {
+            Entity::Hatch(h) => Some(h),
+            _ => None,
+        })
+        .collect();
     assert_eq!(hatches.len(), 1, "{:?}", r.report.skipped);
     let mut ring: Vec<(f64, f64)> = hatches[0].ring.iter().map(|p| (p.x, p.y)).collect();
     ring.sort_by(|a, b| a.partial_cmp(b).unwrap());
     assert_eq!(ring, vec![(0.0, 0.0), (0.0, 4.0), (5.0, 0.0), (5.0, 4.0)]);
     assert!(hatches[0].holes.is_none());
-    assert!(r.report.skipped.iter().all(|s| !s.what.contains("HATCH")), "{:?}", r.report.skipped);
+    assert!(
+        r.report.skipped.iter().all(|s| !s.what.contains("HATCH")),
+        "{:?}",
+        r.report.skipped
+    );
 }

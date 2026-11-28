@@ -71,10 +71,19 @@ impl App {
         }
         // Modele dön (MODEL), as the web's: the sheet mode's own message (docs/adr/0164).
         if id == "sheet.drawingSet" {
-            if self.sheets.book().sheets.is_empty() { self.warn("Önce bir pafta oluşturun."); return Task::none(); }
-            let show = if self.sheets.is_active() { Task::none() } else { self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(1))) };
-            let open = self.update(Message::Sheet(kentos_sheet_ui::Message::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Open)));
-            return Task::batch([show,open]);
+            if self.sheets.book().sheets.is_empty() {
+                self.warn("Önce bir pafta oluşturun.");
+                return Task::none();
+            }
+            let show = if self.sheets.is_active() {
+                Task::none()
+            } else {
+                self.update(Message::Sheet(kentos_sheet_ui::Message::Tab(1)))
+            };
+            let open = self.update(Message::Sheet(kentos_sheet_ui::Message::DrawingSet(
+                kentos_sheet_ui::drawing_set::SetMessage::Open,
+            )));
+            return Task::batch([show, open]);
         }
         if id == "sheet.model" {
             if !self.sheets.is_active() {
@@ -90,7 +99,9 @@ impl App {
             }
             return self.update(Message::Sheet(if id == "sheet.fitDrawing" {
                 kentos_sheet_ui::Message::MapFitDrawing
-            } else { kentos_sheet_ui::Message::MapFitSelection }));
+            } else {
+                kentos_sheet_ui::Message::MapFitSelection
+            }));
         }
         // The sheet designer's work from Komut ara and the command line (sheets/commands.rs).
         if let Some(task) = self.sheet_command(id) {
@@ -301,7 +312,9 @@ impl App {
             "view.levels.down" => self.step_level(false),
             // Kat görünümü (docs/adr/0715).
             id if id.starts_with("view.levels.") => {
-                if let Some(view) = crate::active_level::level_view_named(&id["view.levels.".len()..]) {
+                if let Some(view) =
+                    crate::active_level::level_view_named(&id["view.levels.".len()..])
+                {
                     self.choose_level_view(view);
                 }
             }
@@ -813,7 +826,8 @@ impl App {
             // Üst kat and Alt kat move, they are not checked (docs/adr/0720 §5).
             "view.levels.up" | "view.levels.down" => return None,
             id if id.starts_with("view.levels.") => {
-                crate::active_level::level_view_named(&id["view.levels.".len()..]) == Some(self.level_view)
+                crate::active_level::level_view_named(&id["view.levels.".len()..])
+                    == Some(self.level_view)
             }
             "draft.lock.keep" => self.locks.keep,
             "draft.lock.construction" => self.session.construction(),
@@ -827,10 +841,16 @@ impl App {
             "view.colorMode.gray" => self.settings.text("graphics.colorMode") == "gray",
             // The rule the drawing is drawn by: Türe göre's too (docs/adr/0626 §6).
             "view.annotationSize.legible" => {
-                matches!(self.label_size(), kentos_interaction::spatial::LabelSize::Legible)
+                matches!(
+                    self.label_size(),
+                    kentos_interaction::spatial::LabelSize::Legible
+                )
             }
             "view.annotationSize.true" => {
-                matches!(self.label_size(), kentos_interaction::spatial::LabelSize::Print)
+                matches!(
+                    self.label_size(),
+                    kentos_interaction::spatial::LabelSize::Print
+                )
             }
             "view.annotationSize.screen" => matches!(
                 self.label_size(),
@@ -915,9 +935,16 @@ impl App {
             // Kaydırmalı karşılaştır takes two views (CBS review, docs/adr/9337): off with three or four; with one it
             // splits the area in two first.
             "view.swipe" => self.split.as_ref().is_none_or(|s| s.others.len() <= 1),
-            "view.isolateObjects" => doc.is_some() && !self.selection.is_empty() && !self.session.is_running(),
-            "view.endObjectIsolation" => doc.is_some_and(kentos_domain::Document::objects_isolated) && !self.session.is_running(),
-            "edit.deselect" => !self.selection.is_empty() || !self.gis.features.data.selected.is_empty(),
+            "view.isolateObjects" => {
+                doc.is_some() && !self.selection.is_empty() && !self.session.is_running()
+            }
+            "view.endObjectIsolation" => {
+                doc.is_some_and(kentos_domain::Document::objects_isolated)
+                    && !self.session.is_running()
+            }
+            "edit.deselect" => {
+                !self.selection.is_empty() || !self.gis.features.data.selected.is_empty()
+            }
             // A data layer's selected rows are framed too (docs/adr/9133).
             "view.zoomSelection" => !self.selection.is_empty() || self.data_rows_outlined(),
             "view.zoomLayer" => self.zoom_layer_target().is_some(),
@@ -959,7 +986,9 @@ impl App {
             "file.openReport" => self.open_report().is_some(),
             // Seçilenleri kaydet writes the selection: off without one, its tip saying why (docs/adr/9342).
             // A data layer's rows chosen in its table are a selection too (docs/adr/9344).
-            "file.saveSelection" => !self.selection.is_empty() || self.gis.features.data.selected_layer().is_some(),
+            "file.saveSelection" => {
+                !self.selection.is_empty() || self.gis.features.data.selected_layer().is_some()
+            }
             // A drawing tool that writes another kind than the typed active layer holds (docs/adr/0622 §5).
             id if self.layer_misfit(id).is_some() => false,
             // A selection tool that takes none of the selected kinds (UR-007).

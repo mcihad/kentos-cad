@@ -144,10 +144,11 @@ pub(crate) fn paragraph_value(
             && let Some(at) = words.iter().position(|c| matches!(c, '^' | '/' | '#'))
             && at > 0
             && at + 1 < words.len()
-            && !words
-                .iter()
-                .enumerate()
-                .any(|(k, c)| k != at && (matches!(c, '^' | '/' | '#' | ';' | '\\' | '{' | '}' | '%') || c.is_control()))
+            && !words.iter().enumerate().any(|(k, c)| {
+                k != at
+                    && (matches!(c, '^' | '/' | '#' | ';' | '\\' | '{' | '}' | '%')
+                        || c.is_control())
+            })
         {
             let upper: String = words[..at].iter().collect();
             let lower: String = words[at + 1..].iter().collect();
@@ -354,7 +355,7 @@ mod tests {
             },
         ];
         let layout = ParagraphLayout {
-            engine:None,
+            engine: None,
             indent: Some(-2.0),
             left_indent: Some(2.0),
             tabs: vec![2.0, 6.5],

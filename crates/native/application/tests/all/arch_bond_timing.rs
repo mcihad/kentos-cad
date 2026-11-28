@@ -16,7 +16,9 @@ use std::time::Instant;
 
 use kentos_commands::*;
 use kentos_domain::Document;
-use kentos_native_application::{ExecutionContext, constraints_edit, edit, walls_create, walls_edit};
+use kentos_native_application::{
+    ExecutionContext, constraints_edit, edit, walls_create, walls_edit,
+};
 use serde_json::{Value, json};
 
 const CASES: &str = include_str!("../../../../../fixtures/commands/v1/cad.walls.edit.bonds.json");
@@ -78,8 +80,10 @@ fn drawing_with(floors: usize, total: usize, fixed: bool, twice: bool) -> (Docum
         .collect();
     // The first partition from its room's west wall (the partitions come after the floors and their ends).
     let first_partition = &uids[floors + 2 * (floors - 1)];
-    bonds.push(json!({"rule": {"kind": "distance", "a": line(&uids[floors], "leftFace"),
-                               "b": line(first_partition, "rightFace"), "parameter": ""}}));
+    bonds.push(
+        json!({"rule": {"kind": "distance", "a": line(&uids[floors], "leftFace"),
+                               "b": line(first_partition, "rightFace"), "parameter": ""}}),
+    );
     if fixed {
         bonds.push(json!({"rule": {"kind": "fix", "a": line(&uids[floors - 1], "axis")}}));
     }
@@ -138,17 +142,34 @@ fn late(floors: usize, total: usize) {
     ));
     // The top room's two end walls onto the locked layer: the bonds hold the top wall, its shift drags their ends.
     let mut snapshot = serde_json::to_value(doc.to_snapshot_v2()).unwrap();
-    for end in [&uids[floors + 2 * (floors - 2)], &uids[floors + 2 * (floors - 2) + 1]] {
-        let at = snapshot["uids"].as_array().unwrap().iter().position(|u| u == end).unwrap();
+    for end in [
+        &uids[floors + 2 * (floors - 2)],
+        &uids[floors + 2 * (floors - 2) + 1],
+    ] {
+        let at = snapshot["uids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .position(|u| u == end)
+            .unwrap();
         snapshot["entities"][at]["layerId"] = json!("kilitli");
     }
     let mut doc = Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap();
-    let input: WallsEdit =
-        serde_json::from_value(json!({"uids": [uids[0]], "operation": {"kind": "shift", "by": -0.2}})).unwrap();
+    let input: WallsEdit = serde_json::from_value(
+        json!({"uids": [uids[0]], "operation": {"kind": "shift", "by": -0.2}}),
+    )
+    .unwrap();
     let bonds = match walls_edit::plan(&ExecutionContext::new(&mut doc), &input) {
         CommandResult::Failed { error } => {
             assert_eq!(error.code, "constraint_conflict", "{error:?}");
-            assert!(error.bonds.iter().all(|b| !b.frees && b.frees_with.is_empty()), "{:?}", error.bonds);
+            assert!(
+                error
+                    .bonds
+                    .iter()
+                    .all(|b| !b.frees && b.frees_with.is_empty()),
+                "{:?}",
+                error.bonds
+            );
             error.bonds.len()
         }
         other => panic!("{other:?}"),
@@ -157,12 +178,15 @@ fn late(floors: usize, total: usize) {
     let worst = median(5, || {
         std::hint::black_box(walls_edit::plan(&ExecutionContext::new(&mut doc), &input));
     });
-    println!("{total} duvar: geç çelişkide en kötü ret {worst:.2} ms ({bonds} bağ yolda, tek tek ve 48 küme denendi)");
+    println!(
+        "{total} duvar: geç çelişkide en kötü ret {worst:.2} ms ({bonds} bağ yolda, tek tek ve 48 küme denendi)"
+    );
 }
 
 fn measure(floors: usize, total: usize) {
     let shift = |uid: &str, by: f64| -> WallsEdit {
-        serde_json::from_value(json!({"uids": [uid], "operation": {"kind": "shift", "by": by}})).unwrap()
+        serde_json::from_value(json!({"uids": [uid], "operation": {"kind": "shift", "by": by}}))
+            .unwrap()
     };
     let (mut doc, uids) = drawing(floors, total, false);
     assert_eq!(doc.entities().count(), total);
@@ -193,7 +217,10 @@ fn measure(floors: usize, total: usize) {
         walls_edit::plan(&ExecutionContext::new(&mut doc), &partition)
     );
     let near = median(21, || {
-        std::hint::black_box(walls_edit::plan(&ExecutionContext::new(&mut doc), &partition));
+        std::hint::black_box(walls_edit::plan(
+            &ExecutionContext::new(&mut doc),
+            &partition,
+        ));
     });
     let (mut fixed, fixed_uids) = drawing(floors, total, true);
     let refused_input = shift(&fixed_uids[0], -0.2);
@@ -205,11 +232,15 @@ fn measure(floors: usize, total: usize) {
         other => panic!("{other:?}"),
     };
     let refused = median(11, || {
-        std::hint::black_box(walls_edit::plan(&ExecutionContext::new(&mut fixed), &refused_input));
+        std::hint::black_box(walls_edit::plan(
+            &ExecutionContext::new(&mut fixed),
+            &refused_input,
+        ));
     });
     // A grip's drag: the lowest wall's two ends moved together, as Esnet writes it (docs/adr/0790 §1).
     let grip = |doc: &Document, uid: &str| -> EntitiesEdit {
-        let Some(Entity::Wall(w)) = doc.slot_of(uid.parse().unwrap()).and_then(|s| doc.get(s)) else {
+        let Some(Entity::Wall(w)) = doc.slot_of(uid.parse().unwrap()).and_then(|s| doc.get(s))
+        else {
             panic!("no wall {uid}")
         };
         let mut fields = w.wall.clone();
@@ -226,28 +257,42 @@ fn measure(floors: usize, total: usize) {
         }
     };
     let dragged = grip(&doc, &uids[0]);
-    assert!(matches!(edit::plan_in(&doc, &dragged), CommandResult::Completed { .. }));
+    assert!(matches!(
+        edit::plan_in(&doc, &dragged),
+        CommandResult::Completed { .. }
+    ));
     let drag = median(21, || {
         std::hint::black_box(edit::plan_in(&doc, &dragged));
     });
     let dragged_fixed = grip(&fixed, &fixed_uids[0]);
-    assert!(matches!(edit::plan_in(&fixed, &dragged_fixed), CommandResult::Failed { .. }));
+    assert!(matches!(
+        edit::plan_in(&fixed, &dragged_fixed),
+        CommandResult::Failed { .. }
+    ));
     let drag_refused = median(21, || {
         std::hint::black_box(edit::plan_in(&fixed, &dragged_fixed));
     });
     // No bond alone frees it: the pairs are tried (docs/adr/0790 §2).
     let (twice, twice_uids) = drawing_with(floors, total, false, true);
     let twice_input = shift(&twice_uids[0], -0.2);
-    let together = match walls_edit::plan(&ExecutionContext::new(&mut twice.clone()), &twice_input) {
+    let together = match walls_edit::plan(&ExecutionContext::new(&mut twice.clone()), &twice_input)
+    {
         CommandResult::Failed { error } => {
             assert!(error.bonds.iter().all(|b| !b.frees));
-            error.bonds.iter().filter(|b| !b.frees_with.is_empty()).count()
+            error
+                .bonds
+                .iter()
+                .filter(|b| !b.frees_with.is_empty())
+                .count()
         }
         other => panic!("{other:?}"),
     };
     let mut twice = twice;
     let pairs = median(11, || {
-        std::hint::black_box(walls_edit::plan(&ExecutionContext::new(&mut twice), &twice_input));
+        std::hint::black_box(walls_edit::plan(
+            &ExecutionContext::new(&mut twice),
+            &twice_input,
+        ));
     });
     println!(
         "{total} duvar, {floors} bağ: kaydırmanın önizlemesi {plan:.2} ms ({followed} duvar bağla izler), yazma {write:.2} ms; \

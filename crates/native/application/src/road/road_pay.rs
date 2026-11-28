@@ -16,13 +16,24 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work == Some(kentos_commands::CadWork::Road) {
         Ok(())
     } else {
-        Err(fail(codes::NOT_A_ROAD_PROJECT, "Poz metrajı yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(), ""))
+        Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "Poz metrajı yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+                .into(),
+            "",
+        ))
     }
 }
 
 /// The project's book, or why there is none.
 pub(crate) fn book(doc: &Document) -> Result<&PayBookDef, Stop> {
-    doc.road_pay().ok_or_else(|| fail(codes::NO_PAY_BOOK, "Projede poz defteri yok; önce poz defterini yazın.".into(), ""))
+    doc.road_pay().ok_or_else(|| {
+        fail(
+            codes::NO_PAY_BOOK,
+            "Projede poz defteri yok; önce poz defterini yazın.".into(),
+            "",
+        )
+    })
 }
 
 /// A source as read: its kind, id, name, material, whether stale, and its measures (none when it does not read).
@@ -79,7 +90,11 @@ fn read_kind(doc: &Document, kind: &str) -> Vec<Source> {
                     stale: r.as_ref().is_some_and(|r| r.report.stale),
                     values: r.map(|r| {
                         let r = r.report;
-                        vec![(CulvertLength, r.length), (CulvertPipes, r.pipes), (CulvertConcrete, r.concrete)]
+                        vec![
+                            (CulvertLength, r.length),
+                            (CulvertPipes, r.pipes),
+                            (CulvertConcrete, r.concrete),
+                        ]
                     }),
                 }
             })
@@ -98,7 +113,11 @@ fn read_kind(doc: &Document, kind: &str) -> Vec<Source> {
                     stale: r.as_ref().is_some_and(|r| r.report.stale),
                     values: r.map(|r| {
                         let r = r.report;
-                        vec![(WallLength, r.length), (WallFace, r.face), (WallConcrete, r.concrete)]
+                        vec![
+                            (WallLength, r.length),
+                            (WallFace, r.face),
+                            (WallConcrete, r.concrete),
+                        ]
                     }),
                 }
             })
@@ -131,13 +150,20 @@ fn read_kind(doc: &Document, kind: &str) -> Vec<Source> {
 }
 
 /// The book's items now (or the one of `item`), and the warnings of the sources they read.
-pub(crate) fn answer(doc: &Document, item: Option<&str>) -> Result<(PayQueried, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    item: Option<&str>,
+) -> Result<(PayQueried, Vec<CommandWarning>), Stop> {
     road_project(doc)?;
     let b = book(doc)?;
     let items: Vec<_> = match item {
         None => b.items.iter().collect(),
         Some(code) => vec![b.items.iter().find(|i| i.code == code).ok_or_else(|| {
-            fail(codes::INVALID_PAY_BOOK, format!("“{code}” numaralı poz defterde yok."), "item")
+            fail(
+                codes::INVALID_PAY_BOOK,
+                format!("“{code}” numaralı poz defterde yok."),
+                "item",
+            )
         })?],
     };
     let mut kinds: BTreeMap<&'static str, Vec<Source>> = BTreeMap::new();
@@ -149,21 +175,38 @@ pub(crate) fn answer(doc: &Document, item: Option<&str>) -> Result<(PayQueried, 
         for rule in b.rules.iter().filter(|r| r.item == it.code) {
             let kind = kind_of(rule.measure);
             let sources = kinds.entry(kind).or_insert_with(|| read_kind(doc, kind));
-            for s in sources.iter().filter(|s| rule.material.is_none() || s.material == rule.material) {
+            for s in sources
+                .iter()
+                .filter(|s| rule.material.is_none() || s.material == rule.material)
+            {
                 if seen.insert((s.kind, s.id.clone())) {
                     let words = match (&s.values, s.stale) {
-                        (None, _) => Some((codes::PAY_SOURCE_UNREAD, format!("“{}” {} okunamıyor; metrajı yok.", s.name, s.word))),
+                        (None, _) => Some((
+                            codes::PAY_SOURCE_UNREAD,
+                            format!("“{}” {} okunamıyor; metrajı yok.", s.name, s.word),
+                        )),
                         (Some(_), true) => Some((
                             codes::PAY_SOURCE_STALE,
-                            format!("“{}” {} koridoru değişti; metrajı eskimiş olabilir.", s.name, s.word),
+                            format!(
+                                "“{}” {} koridoru değişti; metrajı eskimiş olabilir.",
+                                s.name, s.word
+                            ),
                         )),
                         _ => None,
                     };
                     if let Some((code, message)) = words {
-                        warnings.push(CommandWarning { code: code.into(), message, path: Some("rules".into()) });
+                        warnings.push(CommandWarning {
+                            code: code.into(),
+                            message,
+                            path: Some("rules".into()),
+                        });
                     }
                 }
-                let Some(value) = s.values.as_ref().and_then(|v| v.iter().find(|(m, _)| *m == rule.measure)).map(|x| x.1)
+                let Some(value) = s
+                    .values
+                    .as_ref()
+                    .and_then(|v| v.iter().find(|(m, _)| *m == rule.measure))
+                    .map(|x| x.1)
                 else {
                     continue;
                 };
@@ -191,7 +234,10 @@ pub(crate) fn answer(doc: &Document, item: Option<&str>) -> Result<(PayQueried, 
         });
     }
     let total = rows.iter().filter_map(|r| r.amount).sum();
-    let unpriced = rows.iter().filter(|r| r.price.is_none() && r.quantity > 0.0).count() as u32;
+    let unpriced = rows
+        .iter()
+        .filter(|r| r.price.is_none() && r.quantity > 0.0)
+        .count() as u32;
     Ok((
         PayQueried {
             source: b.source.clone(),

@@ -112,7 +112,9 @@ fn wall_with_door() -> (Bench, kentos_domain::Slot) {
 #[test]
 fn a_click_on_a_door_puts_a_lintel_over_it() {
     let (mut b, door) = wall_with_door();
-    let Some(Entity::Opening(o)) = b.doc.get(door).cloned() else { panic!("the door") };
+    let Some(Entity::Opening(o)) = b.doc.get(door).cloned() else {
+        panic!("the door")
+    };
     let Some(Entity::Wall(w)) = b.doc.entities().find(|e| e.kind() == "wall").cloned() else {
         panic!("the wall")
     };
@@ -125,17 +127,31 @@ fn a_click_on_a_door_puts_a_lintel_over_it() {
     assert_eq!(b.doc.len(), count, "no door there: nothing written");
     assert_eq!(b.last_text(), Some("Burada kapı ya da pencere yok."));
     b.click(5.0, 0.0);
-    let Entity::Beam(l) = b.newest().clone() else { panic!("a lintel") };
+    let Entity::Beam(l) = b.newest().clone() else {
+        panic!("a lintel")
+    };
     assert_eq!(l.beam.role, kentos_commands::BeamRole::Lintel);
     assert_eq!(l.beam.tag.as_deref(), Some("L101"));
-    assert!((l.beam.width - w.wall.width).abs() < 1e-9, "as wide as the wall");
+    assert!(
+        (l.beam.width - w.wall.width).abs() < 1e-9,
+        "as wide as the wall"
+    );
     assert!((l.beam.height - 0.2).abs() < 1e-9);
     assert_eq!(l.beam.base_offset, Some(o.opening.head.unwrap_or(2.1)));
     let xs: Vec<f64> = l.beam.pts.iter().map(|p| p.x - E).collect();
-    assert!((xs[0] - 4.3).abs() < 1e-6 && (xs[1] - 5.7).abs() < 1e-6, "{xs:?}");
-    assert!(l.beam.pts.iter().all(|p| (p.y - N).abs() < 1e-6), "on the wall's axis");
+    assert!(
+        (xs[0] - 4.3).abs() < 1e-6 && (xs[1] - 5.7).abs() < 1e-6,
+        "{xs:?}"
+    );
+    assert!(
+        l.beam.pts.iter().all(|p| (p.y - N).abs() < 1e-6),
+        "on the wall's axis"
+    );
     assert_eq!(
-        b.doc.layers().get(&l.base.layer_id).map(|x| x.name.as_str()),
+        b.doc
+            .layers()
+            .get(&l.base.layer_id)
+            .map(|x| x.name.as_str()),
         Some("MM-LENT-GENEL")
     );
     let said = format!("Lento kondu: L101 {}/20.", (w.wall.width * 100.0).round());
@@ -152,12 +168,20 @@ fn a_bond_beam_is_drawn_as_a_beam_at_its_height() {
     b.click(0.0, 0.0);
     b.click(4.0, 0.0);
     b.confirm();
-    let Entity::Beam(h) = b.newest().clone() else { panic!("a bond beam") };
+    let Entity::Beam(h) = b.newest().clone() else {
+        panic!("a bond beam")
+    };
     assert_eq!(h.beam.role, kentos_commands::BeamRole::BondBeam);
-    assert_eq!((h.beam.width, h.beam.height, h.beam.base_offset), (0.2, 0.2, Some(1.0)));
+    assert_eq!(
+        (h.beam.width, h.beam.height, h.beam.base_offset),
+        (0.2, 0.2, Some(1.0))
+    );
     assert_eq!(h.beam.offset, 0.0);
     assert_eq!(
-        b.doc.layers().get(&h.base.layer_id).map(|x| x.name.as_str()),
+        b.doc
+            .layers()
+            .get(&h.base.layer_id)
+            .map(|x| x.name.as_str()),
         Some("MM-HATL-GENEL")
     );
 }

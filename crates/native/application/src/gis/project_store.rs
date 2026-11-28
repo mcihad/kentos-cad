@@ -21,7 +21,10 @@ pub fn file_of(address: &str) -> Option<PathBuf> {
 
 /// The account the program runs as: who wrote a project last.
 pub fn user() -> Option<String> {
-    std::env::var("USER").or_else(|_| std::env::var("USERNAME")).ok().filter(|u| !u.trim().is_empty())
+    std::env::var("USER")
+        .or_else(|_| std::env::var("USERNAME"))
+        .ok()
+        .filter(|u| !u.trim().is_empty())
 }
 
 /// The snapshot as a project kept at `address` writes it: a GeoPackage's file is where the relative paths start from.
@@ -47,28 +50,41 @@ pub fn decode(address: &str, bytes: &[u8]) -> Result<DocumentSnapshotV2, String>
 fn store_of(address: &str) -> Result<std::sync::Arc<dyn kentos_data::Source>, String> {
     let address = address.trim();
     if address.is_empty() {
-        return Err("Kaynak verilmedi: bir GeoPackage dosyası ya da PostgreSQL bağlantısı seçin.".into());
+        return Err(
+            "Kaynak verilmedi: bir GeoPackage dosyası ya da PostgreSQL bağlantısı seçin.".into(),
+        );
     }
     // A new GeoPackage file is made: a project may be its first content.
     if let Some(file) = file_of(address)
         && !file.exists()
     {
-        if file.extension().is_none_or(|e| !e.eq_ignore_ascii_case("gpkg")) {
-            return Err(format!("“{}” bir GeoPackage dosyası değil (.gpkg).", file.display()));
+        if file
+            .extension()
+            .is_none_or(|e| !e.eq_ignore_ascii_case("gpkg"))
+        {
+            return Err(format!(
+                "“{}” bir GeoPackage dosyası değil (.gpkg).",
+                file.display()
+            ));
         }
         if let Some(folder) = file.parent().filter(|f| !f.as_os_str().is_empty()) {
-            std::fs::create_dir_all(folder).map_err(|e| format!("“{}” klasörü yapılamadı: {e}", folder.display()))?;
+            std::fs::create_dir_all(folder)
+                .map_err(|e| format!("“{}” klasörü yapılamadı: {e}", folder.display()))?;
         }
-        kentos_geopackage::GeoPackage::create(&file).map_err(|e| format!("“{}” yapılamadı: {}", file.display(), e.0))?;
+        kentos_geopackage::GeoPackage::create(&file)
+            .map_err(|e| format!("“{}” yapılamadı: {}", file.display(), e.0))?;
         kentos_data::registry().forget(address);
     }
-    kentos_data::registry().source(address).map_err(|e| e.to_string())
+    kentos_data::registry()
+        .source(address)
+        .map_err(|e| e.to_string())
 }
 
 fn kept_in(source: &dyn kentos_data::Source) -> Result<&dyn kentos_data::ProjectStore, String> {
-    source
-        .project_store()
-        .ok_or_else(|| "Bu kaynak proje saklayamaz; bir GeoPackage dosyası ya da PostgreSQL veritabanı seçin.".to_owned())
+    source.project_store().ok_or_else(|| {
+        "Bu kaynak proje saklayamaz; bir GeoPackage dosyası ya da PostgreSQL veritabanı seçin."
+            .to_owned()
+    })
 }
 
 /// The projects kept at a place, by name.
@@ -77,24 +93,35 @@ pub fn list(address: &str, schema: Option<&str>) -> Result<Vec<StoredProject>, S
         return Ok(Vec::new());
     }
     let source = store_of(address)?;
-    kept_in(source.as_ref())?.projects(schema).map_err(|e| e.to_string())
+    kept_in(source.as_ref())?
+        .projects(schema)
+        .map_err(|e| e.to_string())
 }
 
 /// A project's bytes.
 pub fn read(address: &str, schema: Option<&str>, name: &str) -> Result<Vec<u8>, String> {
     if let Some(f) = file_of(address).filter(|f| !f.exists()) {
-        return Err(format!("“{}” bulunamadı: dosya taşınmış ya da silinmiş olabilir.", f.display()));
+        return Err(format!(
+            "“{}” bulunamadı: dosya taşınmış ya da silinmiş olabilir.",
+            f.display()
+        ));
     }
     let source = store_of(address)?;
-    kept_in(source.as_ref())?.read_project(schema, name).map_err(|e| e.to_string())
+    kept_in(source.as_ref())?
+        .read_project(schema, name)
+        .map_err(|e| e.to_string())
 }
 
 /// Writes a project's bytes and reads them back: kept only when they come back the same.
 pub fn write(address: &str, schema: Option<&str>, name: &str, bytes: &[u8]) -> Result<(), String> {
     let source = store_of(address)?;
     let store = kept_in(source.as_ref())?;
-    store.write_project(schema, name, bytes, user().as_deref()).map_err(|e| e.to_string())?;
-    let back = store.read_project(schema, name).map_err(|e| e.to_string())?;
+    store
+        .write_project(schema, name, bytes, user().as_deref())
+        .map_err(|e| e.to_string())?;
+    let back = store
+        .read_project(schema, name)
+        .map_err(|e| e.to_string())?;
     if back != bytes {
         return Err(format!(
             "“{}” projesi yazıldı ama geri okunan {} bayt yazılan {} bayttan farklı; kaynağı denetleyin.",
@@ -109,7 +136,9 @@ pub fn write(address: &str, schema: Option<&str>, name: &str, bytes: &[u8]) -> R
 /// Removes a project.
 pub fn delete(address: &str, schema: Option<&str>, name: &str) -> Result<(), String> {
     let source = store_of(address)?;
-    kept_in(source.as_ref())?.delete_project(schema, name).map_err(|e| e.to_string())
+    kept_in(source.as_ref())?
+        .delete_project(schema, name)
+        .map_err(|e| e.to_string())
 }
 
 /// Where its relative paths start from when a project read from `address` is opened (a GeoPackage's file).
@@ -119,5 +148,6 @@ pub fn place_of(address: &str) -> Option<PathBuf> {
 
 /// Whether a path names a GeoPackage file.
 pub fn is_geopackage(path: &Path) -> bool {
-    path.extension().is_some_and(|e| e.eq_ignore_ascii_case("gpkg"))
+    path.extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("gpkg"))
 }

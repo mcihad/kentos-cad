@@ -75,7 +75,9 @@ fn reaches(others: &[TerrainSurfaceDef], from: &str, target: &str) -> bool {
     let mut todo = vec![from];
     let mut seen = vec![from];
     while let Some(id) = todo.pop() {
-        let Some(def) = others.iter().find(|d| d.id == id) else { continue };
+        let Some(def) = others.iter().find(|d| d.id == id) else {
+            continue;
+        };
         for e in &def.edits {
             if let SurfaceEdit::Paste { terrain } = e {
                 if terrain == target {
@@ -115,13 +117,21 @@ impl Cover {
             k += n;
         }
         let grid = grid_of(&xy, &triangles);
-        Self { xy, z, triangles, outline, grid }
+        Self {
+            xy,
+            z,
+            triangles,
+            outline,
+            grid,
+        }
     }
 
     /// Whether `(x, y)` is inside a kept triangle or on one's edge.
     pub(crate) fn covers(&self, x: f64, y: f64) -> bool {
         let p = Vec2::new(x, y);
-        let Some(cell) = self.grid.cell(x, y) else { return false };
+        let Some(cell) = self.grid.cell(x, y) else {
+            return false;
+        };
         self.grid.cells[cell].iter().any(|&t| {
             let [a, b, c] = self.triangles[t as usize].map(|i| self.xy[i as usize]);
             orient2d(a, b, p) >= 0.0 && orient2d(b, c, p) >= 0.0 && orient2d(c, a, p) >= 0.0
@@ -130,10 +140,17 @@ impl Cover {
 
     /// Whether the piece from `p` to `q` meets an edge of the outline (touching counts).
     fn crosses(&self, p: Vec2, q: Vec2) -> bool {
-        let (lo, hi) = (Vec2::new(p.x.min(q.x), p.y.min(q.y)), Vec2::new(p.x.max(q.x), p.y.max(q.y)));
+        let (lo, hi) = (
+            Vec2::new(p.x.min(q.x), p.y.min(q.y)),
+            Vec2::new(p.x.max(q.x), p.y.max(q.y)),
+        );
         self.outline.iter().any(|&[i, j]| {
             let (c, d) = (self.xy[i as usize], self.xy[j as usize]);
-            if c.x.max(d.x) < lo.x || c.x.min(d.x) > hi.x || c.y.max(d.y) < lo.y || c.y.min(d.y) > hi.y {
+            if c.x.max(d.x) < lo.x
+                || c.x.min(d.x) > hi.x
+                || c.y.max(d.y) < lo.y
+                || c.y.min(d.y) > hi.y
+            {
                 return false;
             }
             meets(p, q, c, d)
@@ -159,7 +176,11 @@ impl Cover {
         if keep.iter().all(|k| *k) {
             return vec![b];
         }
-        let start = if b.closed { keep.iter().position(|k| !k).map_or(0, |i| i + 1) } else { 0 };
+        let start = if b.closed {
+            keep.iter().position(|k| !k).map_or(0, |i| i + 1)
+        } else {
+            0
+        };
         let mut out = Vec::new();
         let mut run: Vec<[f64; 3]> = Vec::new();
         for j in 0..pieces {
@@ -170,11 +191,19 @@ impl Cover {
                 }
                 run.push(b.points[(k + 1) % n]);
             } else if !run.is_empty() {
-                out.push(Breakline { points: std::mem::take(&mut run), closed: false, source: b.source.clone() });
+                out.push(Breakline {
+                    points: std::mem::take(&mut run),
+                    closed: false,
+                    source: b.source.clone(),
+                });
             }
         }
         if !run.is_empty() {
-            out.push(Breakline { points: run, closed: false, source: b.source.clone() });
+            out.push(Breakline {
+                points: run,
+                closed: false,
+                source: b.source.clone(),
+            });
         }
         out
     }
@@ -184,7 +213,16 @@ impl Cover {
         let mut used: Vec<u32> = self.triangles.iter().flatten().copied().collect();
         used.sort_unstable();
         used.dedup();
-        let mut out: Vec<[f64; 3]> = used.iter().map(|&i| [self.xy[i as usize].x, self.xy[i as usize].y, self.z[i as usize]]).collect();
+        let mut out: Vec<[f64; 3]> = used
+            .iter()
+            .map(|&i| {
+                [
+                    self.xy[i as usize].x,
+                    self.xy[i as usize].y,
+                    self.z[i as usize],
+                ]
+            })
+            .collect();
         out.sort_by(|a, b| a[0].total_cmp(&b[0]).then(a[1].total_cmp(&b[1])));
         out
     }
@@ -199,13 +237,24 @@ impl Cover {
             .collect();
         pairs.sort_unstable();
         pairs.dedup();
-        let corner = |i: u32| [self.xy[i as usize].x, self.xy[i as usize].y, self.z[i as usize]];
-        let by_place = |a: &[f64; 3], b: &[f64; 3]| a[0].total_cmp(&b[0]).then(a[1].total_cmp(&b[1]));
+        let corner = |i: u32| {
+            [
+                self.xy[i as usize].x,
+                self.xy[i as usize].y,
+                self.z[i as usize],
+            ]
+        };
+        let by_place =
+            |a: &[f64; 3], b: &[f64; 3]| a[0].total_cmp(&b[0]).then(a[1].total_cmp(&b[1]));
         let mut out: Vec<[[f64; 3]; 2]> = pairs
             .into_iter()
             .map(|[a, b]| {
                 let (p, q) = (corner(a), corner(b));
-                if by_place(&p, &q).is_le() { [p, q] } else { [q, p] }
+                if by_place(&p, &q).is_le() {
+                    [p, q]
+                } else {
+                    [q, p]
+                }
             })
             .collect();
         out.sort_by(|e, f| by_place(&e[0], &f[0]).then(by_place(&e[1], &f[1])));
@@ -217,34 +266,59 @@ impl Cover {
 fn meets(p: Vec2, q: Vec2, c: Vec2, d: Vec2) -> bool {
     let (d1, d2) = (orient2d(c, d, p), orient2d(c, d, q));
     let (d3, d4) = (orient2d(p, q, c), orient2d(p, q, d));
-    if ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0)) && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0)) {
+    if ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0))
+        && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
+    {
         return true;
     }
-    let within = |u: Vec2, v: Vec2, w: Vec2| w.x >= u.x.min(v.x) && w.x <= u.x.max(v.x) && w.y >= u.y.min(v.y) && w.y <= u.y.max(v.y);
-    (d1 == 0.0 && within(c, d, p)) || (d2 == 0.0 && within(c, d, q)) || (d3 == 0.0 && within(p, q, c)) || (d4 == 0.0 && within(p, q, d))
+    let within = |u: Vec2, v: Vec2, w: Vec2| {
+        w.x >= u.x.min(v.x) && w.x <= u.x.max(v.x) && w.y >= u.y.min(v.y) && w.y <= u.y.max(v.y)
+    };
+    (d1 == 0.0 && within(c, d, p))
+        || (d2 == 0.0 && within(c, d, q))
+        || (d3 == 0.0 && within(p, q, c))
+        || (d4 == 0.0 && within(p, q, d))
 }
 
 /// A uniform grid over the triangles' box, about one triangle a cell; each triangle in every cell its box meets.
 fn grid_of(xy: &[Vec2], triangles: &[[u32; 3]]) -> Grid {
     let corners = || triangles.iter().flatten().map(|&i| xy[i as usize]);
-    let (mut lo, mut hi) = (Vec2::new(f64::INFINITY, f64::INFINITY), Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY));
+    let (mut lo, mut hi) = (
+        Vec2::new(f64::INFINITY, f64::INFINITY),
+        Vec2::new(f64::NEG_INFINITY, f64::NEG_INFINITY),
+    );
     for p in corners() {
         lo = Vec2::new(lo.x.min(p.x), lo.y.min(p.y));
         hi = Vec2::new(hi.x.max(p.x), hi.y.max(p.y));
     }
     if triangles.is_empty() || !lo.x.is_finite() {
-        return Grid { min: Vec2::new(0.0, 0.0), size: 1.0, columns: 0, rows: 0, cells: Vec::new() };
+        return Grid {
+            min: Vec2::new(0.0, 0.0),
+            size: 1.0,
+            columns: 0,
+            rows: 0,
+            cells: Vec::new(),
+        };
     }
     let (w, h) = ((hi.x - lo.x).max(1e-9), (hi.y - lo.y).max(1e-9));
-    let size = ((w * h) / triangles.len() as f64).sqrt().max(w.max(h) / 1024.0).max(1e-9);
+    let size = ((w * h) / triangles.len() as f64)
+        .sqrt()
+        .max(w.max(h) / 1024.0)
+        .max(1e-9);
     // At most 1025 a side: the size is at least the box's longer side over 1024.
     let columns = (w / size).floor() as usize + 1;
     let rows = (h / size).floor() as usize + 1;
     let mut cells = vec![Vec::new(); columns * rows];
     for (k, t) in triangles.iter().enumerate() {
         let ps = t.map(|i| xy[i as usize]);
-        let (x0, x1) = (ps.iter().map(|p| p.x).fold(f64::INFINITY, f64::min), ps.iter().map(|p| p.x).fold(f64::NEG_INFINITY, f64::max));
-        let (y0, y1) = (ps.iter().map(|p| p.y).fold(f64::INFINITY, f64::min), ps.iter().map(|p| p.y).fold(f64::NEG_INFINITY, f64::max));
+        let (x0, x1) = (
+            ps.iter().map(|p| p.x).fold(f64::INFINITY, f64::min),
+            ps.iter().map(|p| p.x).fold(f64::NEG_INFINITY, f64::max),
+        );
+        let (y0, y1) = (
+            ps.iter().map(|p| p.y).fold(f64::INFINITY, f64::min),
+            ps.iter().map(|p| p.y).fold(f64::NEG_INFINITY, f64::max),
+        );
         let c0 = (((x0 - lo.x) / size).floor() as usize).min(columns - 1);
         let c1 = (((x1 - lo.x) / size).floor() as usize).min(columns - 1);
         let r0 = (((y0 - lo.y) / size).floor() as usize).min(rows - 1);
@@ -255,7 +329,13 @@ fn grid_of(xy: &[Vec2], triangles: &[[u32; 3]]) -> Grid {
             }
         }
     }
-    Grid { min: lo, size, columns, rows, cells }
+    Grid {
+        min: lo,
+        size,
+        columns,
+        rows,
+        cells,
+    }
 }
 
 #[cfg(test)]
@@ -265,9 +345,20 @@ mod tests {
 
     /// A pad over the square (0, 0)–(10, 10), a corner raised in its middle.
     fn cover() -> Cover {
-        let p = |x: f64, y: f64, z: f64| SpotPoint { x, y, z, source: None };
+        let p = |x: f64, y: f64, z: f64| SpotPoint {
+            x,
+            y,
+            z,
+            source: None,
+        };
         let s = build(&SurfaceInput {
-            points: vec![p(0.0, 0.0, 1.0), p(10.0, 0.0, 1.0), p(10.0, 10.0, 1.0), p(0.0, 10.0, 1.0), p(4.0, 6.0, 2.0)],
+            points: vec![
+                p(0.0, 0.0, 1.0),
+                p(10.0, 0.0, 1.0),
+                p(10.0, 10.0, 1.0),
+                p(0.0, 10.0, 1.0),
+                p(4.0, 6.0, 2.0),
+            ],
             ..SurfaceInput::default()
         })
         .expect("a pad");
@@ -275,17 +366,25 @@ mod tests {
     }
 
     fn line(points: &[[f64; 2]], closed: bool) -> Breakline {
-        Breakline { points: points.iter().map(|p| [p[0], p[1], 0.0]).collect(), closed, source: Some("b".into()) }
+        Breakline {
+            points: points.iter().map(|p| [p[0], p[1], 0.0]).collect(),
+            closed,
+            source: Some("b".into()),
+        }
     }
 
     fn places(runs: &[Breakline]) -> Vec<(Vec<[f64; 2]>, bool)> {
-        runs.iter().map(|b| (b.points.iter().map(|p| [p[0], p[1]]).collect(), b.closed)).collect()
+        runs.iter()
+            .map(|b| (b.points.iter().map(|p| [p[0], p[1]]).collect(), b.closed))
+            .collect()
     }
 
     #[test]
     fn covered_is_inside_or_on_an_edge_and_the_outline_is_the_square() {
         let c = cover();
-        assert!(c.covers(5.0, 5.0) && c.covers(0.0, 5.0) && c.covers(10.0, 10.0) && c.covers(4.0, 6.0));
+        assert!(
+            c.covers(5.0, 5.0) && c.covers(0.0, 5.0) && c.covers(10.0, 10.0) && c.covers(4.0, 6.0)
+        );
         assert!(!c.covers(-0.000001, 5.0) && !c.covers(11.0, 5.0) && !c.covers(5.0, -1.0));
         assert_eq!(c.outline.len(), 4);
         assert_eq!(c.corners().len(), 5);
@@ -298,17 +397,36 @@ mod tests {
     fn a_breakline_loses_the_pieces_that_reach_the_pad_and_is_cut_into_runs() {
         let c = cover();
         // Open: two runs round the piece into the pad and the one out of it.
-        let open = line(&[[-10.0, -5.0], [-5.0, -5.0], [5.0, -5.0], [5.0, 5.0], [15.0, 5.0], [15.0, -5.0]], false);
+        let open = line(
+            &[
+                [-10.0, -5.0],
+                [-5.0, -5.0],
+                [5.0, -5.0],
+                [5.0, 5.0],
+                [15.0, 5.0],
+                [15.0, -5.0],
+            ],
+            false,
+        );
         assert_eq!(
             places(&c.runs(open)),
-            vec![(vec![[-10.0, -5.0], [-5.0, -5.0], [5.0, -5.0]], false), (vec![[15.0, 5.0], [15.0, -5.0]], false)]
+            vec![
+                (vec![[-10.0, -5.0], [-5.0, -5.0], [5.0, -5.0]], false),
+                (vec![[15.0, 5.0], [15.0, -5.0]], false)
+            ]
         );
         // A ring round the pad stays whole and closed.
-        let round = line(&[[-5.0, -5.0], [15.0, -5.0], [15.0, 15.0], [-5.0, 15.0]], true);
+        let round = line(
+            &[[-5.0, -5.0], [15.0, -5.0], [15.0, 15.0], [-5.0, 15.0]],
+            true,
+        );
         assert_eq!(places(&c.runs(round.clone())), places(&[round]));
         // A ring with a corner on the pad: one open run, starting after the first piece lost.
         let into = line(&[[-5.0, -5.0], [5.0, -5.0], [5.0, 5.0], [-5.0, 5.0]], true);
-        assert_eq!(places(&c.runs(into)), vec![(vec![[-5.0, 5.0], [-5.0, -5.0], [5.0, -5.0]], false)]);
+        assert_eq!(
+            places(&c.runs(into)),
+            vec![(vec![[-5.0, 5.0], [-5.0, -5.0], [5.0, -5.0]], false)]
+        );
         // A piece crossing the pad with both ends outside goes; one touching its corner goes too.
         assert!(c.runs(line(&[[-5.0, 5.0], [15.0, 5.0]], false)).is_empty());
         assert!(c.runs(line(&[[-5.0, -5.0], [0.0, 0.0]], false)).is_empty());

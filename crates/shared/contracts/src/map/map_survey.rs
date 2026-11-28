@@ -154,32 +154,59 @@ impl SurveyAntenna {
     /// Why it cannot be a session's: the field and the words.
     pub fn problem(&self) -> Option<(&'static str, String)> {
         for (field, t) in [("type", &self.kind), ("serial", &self.serial)] {
-            if t.as_deref().is_some_and(|t| !survey_text_ok(t, MOST_SURVEY_TEXT)) {
-                return Some((field, format!("boşlukla başlayıp bitmeyen 1–{MOST_SURVEY_TEXT} karakter olmalı")));
+            if t.as_deref()
+                .is_some_and(|t| !survey_text_ok(t, MOST_SURVEY_TEXT))
+            {
+                return Some((
+                    field,
+                    format!("boşlukla başlayıp bitmeyen 1–{MOST_SURVEY_TEXT} karakter olmalı"),
+                ));
             }
         }
         if !(self.height.is_finite() && (0.0..=MOST_ANTENNA_HEIGHT).contains(&self.height)) {
-            return Some(("height", format!("anten yüksekliği 0 ile {MOST_ANTENNA_HEIGHT} m arasında olmalı")));
+            return Some((
+                "height",
+                format!("anten yüksekliği 0 ile {MOST_ANTENNA_HEIGHT} m arasında olmalı"),
+            ));
         }
         match (self.reference, self.radius) {
             (AntennaReference::Slant, Some(r)) if r.is_finite() && r > 0.0 && r < self.height => {}
             (AntennaReference::Slant, _) => {
-                return Some(("radius", "eğik yükseklikte antenin yarıçapı 0'dan büyük, yükseklikten küçük olmalı".into()));
+                return Some((
+                    "radius",
+                    "eğik yükseklikte antenin yarıçapı 0'dan büyük, yükseklikten küçük olmalı"
+                        .into(),
+                ));
             }
             (AntennaReference::Arp, Some(_)) => {
-                return Some(("radius", "yarıçap yalnız eğik ölçülen yükseklikte verilir".into()));
+                return Some((
+                    "radius",
+                    "yarıçap yalnız eğik ölçülen yükseklikte verilir".into(),
+                ));
             }
             (AntennaReference::Arp, None) => {}
         }
         if self.reference == AntennaReference::Arp && self.offset.is_some() {
-            return Some(("offset", "ölçü noktasının yüksekliği yalnız eğik ölçülen yükseklikte verilir".into()));
+            return Some((
+                "offset",
+                "ölçü noktasının yüksekliği yalnız eğik ölçülen yükseklikte verilir".into(),
+            ));
         }
-        for (field, v) in [("offset", self.offset), ("east", self.east), ("north", self.north)] {
+        for (field, v) in [
+            ("offset", self.offset),
+            ("east", self.east),
+            ("north", self.north),
+        ] {
             if v.is_some_and(|v| !(v.is_finite() && v.abs() <= MOST_ANTENNA_HEIGHT)) {
-                return Some((field, format!("en çok {MOST_ANTENNA_HEIGHT} m olan sonlu bir sayı olmalı")));
+                return Some((
+                    field,
+                    format!("en çok {MOST_ANTENNA_HEIGHT} m olan sonlu bir sayı olmalı"),
+                ));
             }
         }
-        if self.reference == AntennaReference::Slant && (self.vertical().is_nan() || self.vertical() < 0.0) {
+        if self.reference == AntennaReference::Slant
+            && (self.vertical().is_nan() || self.vertical() < 0.0)
+        {
             return Some(("offset", "düşey anten yüksekliği eksi çıkıyor".into()));
         }
         None
@@ -820,7 +847,10 @@ impl SurveyTolerance {
     /// Why the limits cannot be kept: the field and the words.
     pub fn problem(&self) -> Option<(&'static str, &'static str)> {
         if self.horizontal.is_none() && self.vertical.is_none() {
-            return Some(("horizontal", "yatay ya da düşey sınırdan en az biri verilmeli"));
+            return Some((
+                "horizontal",
+                "yatay ya da düşey sınırdan en az biri verilmeli",
+            ));
         }
         for (field, v) in [("horizontal", self.horizontal), ("vertical", self.vertical)] {
             if v.is_some_and(|v| !(v.is_finite() && v > 0.0)) {
@@ -828,7 +858,10 @@ impl SurveyTolerance {
             }
         }
         if !survey_text_ok(&self.source, MOST_REASON_TEXT) {
-            return Some(("source", "kaynak boşlukla başlayıp bitmeyen 1–500 karakter olmalı"));
+            return Some((
+                "source",
+                "kaynak boşlukla başlayıp bitmeyen 1–500 karakter olmalı",
+            ));
         }
         None
     }
@@ -881,7 +914,10 @@ pub struct MapSurvey {
     pub adjustments: Vec<SurveyAdjustment>,
     /// Baseline sessions with their cross-correlations (docs/adr/4920).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyBaselineSession>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<SurveyBaselineSession>>")
+    )]
     pub baseline_sessions: Vec<SurveyBaselineSession>,
     /// The known points' place limits kept in the project (docs/adr/4920).
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -910,7 +946,9 @@ impl MapSurvey {
 
     /// The baseline session a baseline is in.
     pub fn session_of(&self, baseline: &str) -> Option<&SurveyBaselineSession> {
-        self.baseline_sessions.iter().find(|s| s.baselines.iter().any(|b| b == baseline))
+        self.baseline_sessions
+            .iter()
+            .find(|s| s.baselines.iter().any(|b| b == baseline))
     }
 
     /// Whether it holds what schema 248 brought (docs/adr/4920): baseline sessions, an adjustment made with them, the
@@ -919,10 +957,11 @@ impl MapSurvey {
         !self.baseline_sessions.is_empty()
             || self.tolerance.is_some()
             || self.adjustments.iter().any(|a| !a.sessions.is_empty())
-            || self
-                .points
-                .iter()
-                .any(|p| std::iter::once(&p.result).chain(&p.history).any(|r| r.velocity.is_some()))
+            || self.points.iter().any(|p| {
+                std::iter::once(&p.result)
+                    .chain(&p.history)
+                    .any(|r| r.velocity.is_some())
+            })
     }
 
     pub fn campaign(&self, id: &str) -> Option<&SurveyCampaign> {
@@ -948,7 +987,9 @@ impl MapSurvey {
 
     /// The accepted point whose result now uses `solution`.
     pub fn point_using(&self, solution: &str) -> Option<&SurveyPoint> {
-        self.points.iter().find(|p| p.result.solutions.iter().any(|s| s == solution))
+        self.points
+            .iter()
+            .find(|p| p.result.solutions.iter().any(|s| s == solution))
     }
 
     pub fn baseline(&self, id: &str) -> Option<&SurveyBaseline> {
@@ -983,7 +1024,9 @@ impl MapSurvey {
 
     /// The accepted point whose result now was made by the adjustment `adjustment`.
     pub fn point_by(&self, adjustment: &str) -> Option<&SurveyPoint> {
-        self.points.iter().find(|p| p.result.adjustment.as_deref() == Some(adjustment))
+        self.points
+            .iter()
+            .find(|p| p.result.adjustment.as_deref() == Some(adjustment))
     }
 
     /// What is wrong with it, by the field's path and in words; none when it is right.
@@ -995,7 +1038,10 @@ impl MapSurvey {
 /// `prefix-N` with N a positive number written without leading zeros.
 pub fn survey_numbered(id: &str, prefix: &str) -> bool {
     id.strip_prefix(prefix).is_some_and(|n| {
-        !n.is_empty() && !n.starts_with('0') && n.len() <= 9 && n.bytes().all(|b| b.is_ascii_digit())
+        !n.is_empty()
+            && !n.starts_with('0')
+            && n.len() <= 9
+            && n.bytes().all(|b| b.is_ascii_digit())
     })
 }
 
@@ -1008,26 +1054,62 @@ pub fn survey_text_ok(s: &str, most: usize) -> bool {
 /// A time `YYYY-MM-DDThh:mm:ss[.fraction]Z` as its parts: the date and the seconds of the day as text, sortable.
 pub fn survey_time(text: &str) -> Option<(u32, u32, u32, u32, u32, u32, String)> {
     let b = text.as_bytes();
-    if b.len() < 20 || b[4] != b'-' || b[7] != b'-' || b[10] != b'T' || b[13] != b':' || b[16] != b':' {
+    if b.len() < 20
+        || b[4] != b'-'
+        || b[7] != b'-'
+        || b[10] != b'T'
+        || b[13] != b':'
+        || b[16] != b':'
+    {
         return None;
     }
     let body = text.strip_suffix('Z')?;
-    let num = |s: &str| (s.bytes().all(|c| c.is_ascii_digit())).then(|| s.parse::<u32>().ok()).flatten();
+    let num = |s: &str| {
+        (s.bytes().all(|c| c.is_ascii_digit()))
+            .then(|| s.parse::<u32>().ok())
+            .flatten()
+    };
     let (y, mo, d) = (num(&body[0..4])?, num(&body[5..7])?, num(&body[8..10])?);
-    let (h, mi, s) = (num(&body[11..13])?, num(&body[14..16])?, num(&body[17..19])?);
+    let (h, mi, s) = (
+        num(&body[11..13])?,
+        num(&body[14..16])?,
+        num(&body[17..19])?,
+    );
     let fraction = match &body[19..] {
         "" => String::new(),
         f => {
             let digits = f.strip_prefix('.')?;
-            if digits.is_empty() || digits.len() > 9 || !digits.bytes().all(|c| c.is_ascii_digit()) {
+            if digits.is_empty() || digits.len() > 9 || !digits.bytes().all(|c| c.is_ascii_digit())
+            {
                 return None;
             }
             digits.trim_end_matches('0').to_owned()
         }
     };
     let leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
-    let days = [31, if leap { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    if !(1900..=2100).contains(&y) || mo == 0 || mo > 12 || d == 0 || d > days[mo as usize - 1] || h > 23 || mi > 59 || s > 60 {
+    let days = [
+        31,
+        if leap { 29 } else { 28 },
+        31,
+        30,
+        31,
+        30,
+        31,
+        31,
+        30,
+        31,
+        30,
+        31,
+    ];
+    if !(1900..=2100).contains(&y)
+        || mo == 0
+        || mo > 12
+        || d == 0
+        || d > days[mo as usize - 1]
+        || h > 23
+        || mi > 59
+        || s > 60
+    {
         return None;
     }
     Some((y, mo, d, h, mi, s, fraction))
@@ -1038,14 +1120,38 @@ pub fn survey_seconds(text: &str) -> Option<f64> {
     let (y, mo, d, h, mi, s, fraction) = survey_time(text)?;
     let mut days = 0i64;
     for year in 1900..y {
-        days += if (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 { 366 } else { 365 };
+        days += if (year % 4 == 0 && year % 100 != 0) || year % 400 == 0 {
+            366
+        } else {
+            365
+        };
     }
     let leap = (y % 4 == 0 && y % 100 != 0) || y % 400 == 0;
-    let months = [31, if leap { 29 } else { 28 }, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-    days += months[..mo as usize - 1].iter().map(|&m| i64::from(m)).sum::<i64>();
+    let months = [
+        31,
+        if leap { 29 } else { 28 },
+        31,
+        30,
+        31,
+        30,
+        31,
+        31,
+        30,
+        31,
+        30,
+        31,
+    ];
+    days += months[..mo as usize - 1]
+        .iter()
+        .map(|&m| i64::from(m))
+        .sum::<i64>();
     days += i64::from(d) - 1;
     let whole = days * 86_400 + i64::from(h) * 3600 + i64::from(mi) * 60 + i64::from(s);
-    let frac = if fraction.is_empty() { 0.0 } else { format!("0.{fraction}").parse::<f64>().ok()? };
+    let frac = if fraction.is_empty() {
+        0.0
+    } else {
+        format!("0.{fraction}").parse::<f64>().ok()?
+    };
     Some(whole as f64 + frac)
 }
 
@@ -1087,7 +1193,10 @@ pub fn solution_numbers_problem(s: &SurveySolution) -> Option<(&'static str, Str
         return Some(("lon", "boylam −180 ile 180 derece arasında olmalı".into()));
     }
     if !(s.height.is_finite() && s.height.abs() <= 100_000.0) {
-        return Some(("height", "elipsoit yüksekliği en çok 100 km olan sonlu bir sayı olmalı".into()));
+        return Some((
+            "height",
+            "elipsoit yüksekliği en çok 100 km olan sonlu bir sayı olmalı".into(),
+        ));
     }
     if s.srid == 0 {
         return Some(("srid", "çözümün çerçevesi bir EPSG kodu olmalı".into()));
@@ -1095,20 +1204,36 @@ pub fn solution_numbers_problem(s: &SurveySolution) -> Option<(&'static str, Str
     if let Some(why) = s.epoch.and_then(crate::epoch_problem) {
         return Some(("epoch", why));
     }
-    if !(s.antenna_applied.is_finite() && (0.0..=MOST_ANTENNA_HEIGHT).contains(&s.antenna_applied)) {
-        return Some(("antennaApplied", format!("uygulanmış anten yüksekliği 0 ile {MOST_ANTENNA_HEIGHT} m arasında olmalı")));
+    if !(s.antenna_applied.is_finite() && (0.0..=MOST_ANTENNA_HEIGHT).contains(&s.antenna_applied))
+    {
+        return Some((
+            "antennaApplied",
+            format!("uygulanmış anten yüksekliği 0 ile {MOST_ANTENNA_HEIGHT} m arasında olmalı"),
+        ));
     }
     if s.hdop.is_some_and(|h| !(h.is_finite() && h >= 0.0)) {
         return Some(("hdop", "HDOP eksi olmayan sonlu bir sayı olmalı".into()));
     }
-    if s.sigma.is_some_and(|g| !g.iter().all(|v| v.is_finite() && *v > 0.0)) {
-        return Some(("sigma", "σ değerleri 0'dan büyük sonlu sayılar olmalı (m)".into()));
+    if s.sigma
+        .is_some_and(|g| !g.iter().all(|v| v.is_finite() && *v > 0.0))
+    {
+        return Some((
+            "sigma",
+            "σ değerleri 0'dan büyük sonlu sayılar olmalı (m)".into(),
+        ));
     }
     if s.covariance.is_some_and(|c| !covariance_ok(&c)) {
-        return Some(("covariance", "kovaryans pozitif tanımlı olmalı (köşegen, 2×2 ve 3×3 öncü küçükler 0'dan büyük)".into()));
+        return Some((
+            "covariance",
+            "kovaryans pozitif tanımlı olmalı (köşegen, 2×2 ve 3×3 öncü küçükler 0'dan büyük)"
+                .into(),
+        ));
     }
     if s.age.is_some_and(|a| !(a.is_finite() && a >= 0.0)) {
-        return Some(("age", "düzeltme yaşı eksi olmayan sonlu bir sayı olmalı (s)".into()));
+        return Some((
+            "age",
+            "düzeltme yaşı eksi olmayan sonlu bir sayı olmalı (s)".into(),
+        ));
     }
     None
 }
@@ -1123,8 +1248,16 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
         ("uses", survey.uses.len(), MAX_SURVEY_USES),
         ("baselines", survey.baselines.len(), MAX_SURVEY_BASELINES),
         ("known", survey.known.len(), MAX_SURVEY_KNOWN),
-        ("adjustments", survey.adjustments.len(), MAX_SURVEY_ADJUSTMENTS),
-        ("baselineSessions", survey.baseline_sessions.len(), MAX_BASELINE_SESSIONS),
+        (
+            "adjustments",
+            survey.adjustments.len(),
+            MAX_SURVEY_ADJUSTMENTS,
+        ),
+        (
+            "baselineSessions",
+            survey.baseline_sessions.len(),
+            MAX_BASELINE_SESSIONS,
+        ),
     ];
     for (field, n, most) in limits {
         if n > most {
@@ -1135,12 +1268,21 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
     for (i, c) in survey.campaigns.iter().enumerate() {
         let at = |f: &str| format!("campaigns[{i}].{f}");
         if !survey_numbered(&c.id, "kp-") || !ids.insert(c.id.as_str()) {
-            return fail(at("id"), "arazi ölçümünün kimliği kp-1, kp-2 … biçiminde ve tek olmalı");
+            return fail(
+                at("id"),
+                "arazi ölçümünün kimliği kp-1, kp-2 … biçiminde ve tek olmalı",
+            );
         }
         if !survey_text_ok(&c.name, MOST_SURVEY_TEXT) || !opt_text(&c.operator, MOST_SURVEY_TEXT) {
-            return fail(at("name"), "ad ve operatör boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+            return fail(
+                at("name"),
+                "ad ve operatör boşlukla başlayıp bitmeyen 1–200 karakter olmalı",
+            );
         }
-        if c.work.as_deref().is_some_and(|w| !survey_numbered(w, "is-")) {
+        if c.work
+            .as_deref()
+            .is_some_and(|w| !survey_numbered(w, "is-"))
+        {
             return fail(at("work"), "bağlı harita işi öğesi is-N kimliğiyle verilir");
         }
         if let Some(why) = c.epoch.and_then(crate::epoch_problem) {
@@ -1149,24 +1291,36 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
         if let Some(g) = &c.velocity
             && (!survey_text_ok(&g.name, MOST_SURVEY_TEXT) || !is_sha256_text(&g.sha256))
         {
-            return fail(at("velocity"), "hız ızgarasının adı boş olmamalı, SHA-256'sı 64 küçük onaltılık hane olmalı");
+            return fail(
+                at("velocity"),
+                "hız ızgarasının adı boş olmamalı, SHA-256'sı 64 küçük onaltılık hane olmalı",
+            );
         }
     }
     for (i, s) in survey.sessions.iter().enumerate() {
         let at = |f: &str| format!("sessions[{i}].{f}");
         if !survey_numbered(&s.id, "os-") || !ids.insert(s.id.as_str()) {
-            return fail(at("id"), "oturumun kimliği os-1, os-2 … biçiminde ve tek olmalı");
+            return fail(
+                at("id"),
+                "oturumun kimliği os-1, os-2 … biçiminde ve tek olmalı",
+            );
         }
         if survey.campaign(&s.campaign).is_none() {
             return fail(at("campaign"), "oturumun arazi ölçümü arşivde olmalı");
         }
         if !survey_text_ok(&s.mark, MOST_SURVEY_TEXT) || !opt_text(&s.operator, MOST_SURVEY_TEXT) {
-            return fail(at("mark"), "işaret ve operatör boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+            return fail(
+                at("mark"),
+                "işaret ve operatör boşlukla başlayıp bitmeyen 1–200 karakter olmalı",
+            );
         }
         let start = s.start.as_deref().map(survey_time);
         let end = s.end.as_deref().map(survey_time);
         if matches!(start, Some(None)) || matches!(end, Some(None)) {
-            return fail(at("start"), "zaman YYYY-AA-GGTss:dd:sn[.kesir]Z biçiminde geçerli bir an olmalı");
+            return fail(
+                at("start"),
+                "zaman YYYY-AA-GGTss:dd:sn[.kesir]Z biçiminde geçerli bir an olmalı",
+            );
         }
         if let (Some(Some(a)), Some(Some(b))) = (&start, &end)
             && b < a
@@ -1174,9 +1328,14 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
             return fail(at("end"), "bitiş başlangıçtan önce olamaz");
         }
         if let Some(r) = &s.receiver
-            && (!survey_text_ok(&r.kind, MOST_SURVEY_TEXT) || !opt_text(&r.serial, MOST_SURVEY_TEXT) || !opt_text(&r.firmware, MOST_SURVEY_TEXT))
+            && (!survey_text_ok(&r.kind, MOST_SURVEY_TEXT)
+                || !opt_text(&r.serial, MOST_SURVEY_TEXT)
+                || !opt_text(&r.firmware, MOST_SURVEY_TEXT))
         {
-            return fail(at("receiver"), "alıcının türü, seri no'su ve sürümü boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+            return fail(
+                at("receiver"),
+                "alıcının türü, seri no'su ve sürümü boşlukla başlayıp bitmeyen 1–200 karakter olmalı",
+            );
         }
         if let Some((field, why)) = s.antenna.as_ref().and_then(SurveyAntenna::problem) {
             return fail(at(&format!("antenna.{field}")), &why);
@@ -1185,24 +1344,50 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
             if let Some(why) = file_problem(f) {
                 return fail(at("file"), why);
             }
-            if !matches!(f.format, SurveyFileFormat::Rinex | SurveyFileFormat::Nmea | SurveyFileFormat::Gpx) {
-                return fail(at("file.format"), "oturumun dosyası RINEX, NMEA ya da GPX olur");
+            if !matches!(
+                f.format,
+                SurveyFileFormat::Rinex | SurveyFileFormat::Nmea | SurveyFileFormat::Gpx
+            ) {
+                return fail(
+                    at("file.format"),
+                    "oturumun dosyası RINEX, NMEA ya da GPX olur",
+                );
             }
         }
         if s.observations.len() > MAX_SESSION_OBSERVATIONS {
-            return fail(at("observations"), &format!("bir oturumda en çok {MAX_SESSION_OBSERVATIONS} konum olur"));
+            return fail(
+                at("observations"),
+                &format!("bir oturumda en çok {MAX_SESSION_OBSERVATIONS} konum olur"),
+            );
         }
-        if !s.observations.is_empty() && !s.file.as_ref().is_some_and(|f| f.format != SurveyFileFormat::Rinex) {
-            return fail(at("observations"), "ham ölçümler yalnız NMEA ya da GPX dosyasından okunur");
+        if !s.observations.is_empty()
+            && !s
+                .file
+                .as_ref()
+                .is_some_and(|f| f.format != SurveyFileFormat::Rinex)
+        {
+            return fail(
+                at("observations"),
+                "ham ölçümler yalnız NMEA ya da GPX dosyasından okunur",
+            );
         }
-        if s.observations.iter().any(|o| !(o.lat.is_finite() && o.lon.is_finite())) {
-            return fail(at("observations"), "ham ölçümün enlemi ve boylamı sonlu olmalı");
+        if s.observations
+            .iter()
+            .any(|o| !(o.lat.is_finite() && o.lon.is_finite()))
+        {
+            return fail(
+                at("observations"),
+                "ham ölçümün enlemi ve boylamı sonlu olmalı",
+            );
         }
     }
     for (i, s) in survey.solutions.iter().enumerate() {
         let at = |f: &str| format!("solutions[{i}].{f}");
         if !survey_numbered(&s.id, "cz-") || !ids.insert(s.id.as_str()) {
-            return fail(at("id"), "çözümün kimliği cz-1, cz-2 … biçiminde ve tek olmalı");
+            return fail(
+                at("id"),
+                "çözümün kimliği cz-1, cz-2 … biçiminde ve tek olmalı",
+            );
         }
         let Some(session) = survey.session(&s.session) else {
             return fail(at("session"), "çözümün oturumu arşivde olmalı");
@@ -1211,24 +1396,41 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
             return fail(at(field), &why);
         }
         if !opt_text(&s.fix, MOST_SURVEY_TEXT) || !opt_text(&s.correction, MOST_SURVEY_TEXT) {
-            return fail(at("fix"), "fix ve düzeltme kaynağı boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+            return fail(
+                at("fix"),
+                "fix ve düzeltme kaynağı boşlukla başlayıp bitmeyen 1–200 karakter olmalı",
+            );
         }
         if !opt_text(&s.recipe, MOST_RECIPE_TEXT) {
-            return fail(at("recipe"), "yeniden işleme tarifi boşlukla başlayıp bitmeyen 1–2000 karakter olmalı");
+            return fail(
+                at("recipe"),
+                "yeniden işleme tarifi boşlukla başlayıp bitmeyen 1–2000 karakter olmalı",
+            );
         }
         if !opt_text(&s.excluded, MOST_REASON_TEXT) {
-            return fail(at("excluded"), "dışlama nedeni boşlukla başlayıp bitmeyen 1–500 karakter olmalı");
+            return fail(
+                at("excluded"),
+                "dışlama nedeni boşlukla başlayıp bitmeyen 1–500 karakter olmalı",
+            );
         }
         if let Some(r) = &s.report
             && (file_problem(r).is_some() || r.format != SurveyFileFormat::Report)
         {
-            return fail(at("report"), "işleme raporu mutlak yolu ve SHA-256'sıyla verilir");
+            return fail(
+                at("report"),
+                "işleme raporu mutlak yolu ve SHA-256'sıyla verilir",
+            );
         }
         let n = session.observations.len() as u64;
         match (s.from, s.to) {
             (None, None) => {}
             (Some(a), Some(b)) if a <= b && u64::from(b) < n => {}
-            _ => return fail(at("from"), "ham ölçüm aralığı oturumun konumları içinde olmalı"),
+            _ => {
+                return fail(
+                    at("from"),
+                    "ham ölçüm aralığı oturumun konumları içinde olmalı",
+                );
+            }
         }
     }
     if let Some(found) = network_problem(survey, &mut ids) {
@@ -1239,36 +1441,69 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
     for (i, p) in survey.points.iter().enumerate() {
         let at = |f: &str| format!("points[{i}].{f}");
         if !survey_numbered(&p.id, "kn-") || !ids.insert(p.id.as_str()) {
-            return fail(at("id"), "kabul edilen noktanın kimliği kn-1, kn-2 … biçiminde ve tek olmalı");
+            return fail(
+                at("id"),
+                "kabul edilen noktanın kimliği kn-1, kn-2 … biçiminde ve tek olmalı",
+            );
         }
         if !survey_text_ok(&p.mark, MOST_SURVEY_TEXT) || !marks.insert(p.mark.as_str()) {
             return fail(at("mark"), "bir işaretin tek kabul edilen noktası olur");
         }
         if p.uid.is_nil() || !uids.insert(p.uid) {
-            return fail(at("uid"), "noktanın nesnesi boş olamaz ve iki noktanın olamaz");
+            return fail(
+                at("uid"),
+                "noktanın nesnesi boş olamaz ve iki noktanın olamaz",
+            );
         }
         if p.history.len() > MAX_POINT_HISTORY {
-            return fail(at("history"), &format!("en çok {MAX_POINT_HISTORY} eski sonuç tutulur"));
+            return fail(
+                at("history"),
+                &format!("en çok {MAX_POINT_HISTORY} eski sonuç tutulur"),
+            );
         }
         if p.result.revision as usize != p.history.len() + 1
-            || p.history.iter().enumerate().any(|(k, r)| r.revision as usize != k + 1)
+            || p.history
+                .iter()
+                .enumerate()
+                .any(|(k, r)| r.revision as usize != k + 1)
         {
-            return fail(at("result.revision"), "revizyonlar 1'den başlayıp sırayla artar; bugünkü sonuç sonuncudur");
+            return fail(
+                at("result.revision"),
+                "revizyonlar 1'den başlayıp sırayla artar; bugünkü sonuç sonuncudur",
+            );
         }
         if p.result.method == AcceptMethod::Network {
-            if !p.result.solutions.is_empty() || p.result.adjustment.as_deref().and_then(|a| survey.adjustment(a)).is_none() {
-                return fail(at("result.adjustment"), "ağ dengelemesiyle kabul edilen noktanın çözümü olmaz, arşivdeki dengelemesi olur");
+            if !p.result.solutions.is_empty()
+                || p.result
+                    .adjustment
+                    .as_deref()
+                    .and_then(|a| survey.adjustment(a))
+                    .is_none()
+            {
+                return fail(
+                    at("result.adjustment"),
+                    "ağ dengelemesiyle kabul edilen noktanın çözümü olmaz, arşivdeki dengelemesi olur",
+                );
             }
         } else if p.result.adjustment.is_some() {
-            return fail(at("result.adjustment"), "yalnız ağ dengelemesiyle kabul edilen noktanın dengelemesi olur");
+            return fail(
+                at("result.adjustment"),
+                "yalnız ağ dengelemesiyle kabul edilen noktanın dengelemesi olur",
+            );
         } else if p.result.solutions.is_empty() {
-            return fail(at("result.solutions"), "kabul edilen noktanın en az bir çözümü olur");
+            return fail(
+                at("result.solutions"),
+                "kabul edilen noktanın en az bir çözümü olur",
+            );
         }
         for s in &p.result.solutions {
             match survey.solution(s) {
                 None => return fail(at("result.solutions"), "noktanın çözümleri arşivde olmalı"),
                 Some(sol) if survey.mark_of(sol) != Some(p.mark.as_str()) => {
-                    return fail(at("result.solutions"), "noktanın çözümleri noktanın işaretinin olmalı");
+                    return fail(
+                        at("result.solutions"),
+                        "noktanın çözümleri noktanın işaretinin olmalı",
+                    );
                 }
                 Some(_) => {}
             }
@@ -1279,7 +1514,10 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
                 return fail(at("result"), "sonucun sayıları sonlu olmalı");
             }
             if r.chain != "complete" && r.chain != "limited" {
-                return fail(at("result.chain"), "zincirin kararı complete ya da limited olur");
+                return fail(
+                    at("result.chain"),
+                    "zincirin kararı complete ya da limited olur",
+                );
             }
         }
     }
@@ -1287,21 +1525,41 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
     for (i, u) in survey.uses.iter().enumerate() {
         let at = |f: &str| format!("uses[{i}].{f}");
         if !survey_numbered(&u.id, "kb-") || !ids.insert(u.id.as_str()) {
-            return fail(at("id"), "dayananın kimliği kb-1, kb-2 … biçiminde ve tek olmalı");
+            return fail(
+                at("id"),
+                "dayananın kimliği kb-1, kb-2 … biçiminde ve tek olmalı",
+            );
         }
         if !survey_text_ok(&u.operation, MOST_SURVEY_TEXT) {
-            return fail(at("operation"), "işlem boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+            return fail(
+                at("operation"),
+                "işlem boşlukla başlayıp bitmeyen 1–200 karakter olmalı",
+            );
         }
-        if u.uids.is_empty() || u.uids.len() > MAX_USE_OBJECTS || u.uids.iter().any(|x| x.is_nil() || !objects.insert(*x)) {
-            return fail(at("uids"), "dayananın nesneleri boş olmayan, tek ve başka dayananda olmayan kimliklerdir");
+        if u.uids.is_empty()
+            || u.uids.len() > MAX_USE_OBJECTS
+            || u.uids.iter().any(|x| x.is_nil() || !objects.insert(*x))
+        {
+            return fail(
+                at("uids"),
+                "dayananın nesneleri boş olmayan, tek ve başka dayananda olmayan kimliklerdir",
+            );
         }
         if u.points.is_empty() {
-            return fail(at("points"), "dayanan en az bir kabul edilen noktaya dayanır");
+            return fail(
+                at("points"),
+                "dayanan en az bir kabul edilen noktaya dayanır",
+            );
         }
         for pr in &u.points {
             match survey.point(&pr.point) {
                 Some(p) if pr.revision >= 1 && pr.revision <= p.result.revision => {}
-                _ => return fail(at("points"), "dayananın noktaları arşivde ve revizyonları geçerli olmalı"),
+                _ => {
+                    return fail(
+                        at("points"),
+                        "dayananın noktaları arşivde ve revizyonları geçerli olmalı",
+                    );
+                }
             }
         }
     }
@@ -1310,8 +1568,15 @@ pub fn map_survey_problem(survey: &MapSurvey) -> Option<(String, String)> {
 
 /// Why a baseline's numbers cannot be kept: the field and the words.
 pub fn baseline_numbers_problem(b: &SurveyBaseline) -> Option<(&'static str, String)> {
-    if !b.d.iter().all(|v| v.is_finite() && v.abs() <= MOST_BASELINE_COMPONENT) {
-        return Some(("d", "bazın bileşenleri en çok 20 000 km olan sonlu sayılar olmalı (m)".into()));
+    if !b
+        .d
+        .iter()
+        .all(|v| v.is_finite() && v.abs() <= MOST_BASELINE_COMPONENT)
+    {
+        return Some((
+            "d",
+            "bazın bileşenleri en çok 20 000 km olan sonlu sayılar olmalı (m)".into(),
+        ));
     }
     if b.d.iter().all(|v| *v == 0.0) {
         return Some(("d", "bazın uzunluğu sıfır olamaz".into()));
@@ -1331,27 +1596,44 @@ pub fn known_numbers_problem(k: &SurveyKnown) -> Option<(&'static str, String)> 
         return Some(("lon", "boylam −180 ile 180 derece arasında olmalı".into()));
     }
     if !(k.height.is_finite() && k.height.abs() <= 100_000.0) {
-        return Some(("height", "elipsoit yüksekliği en çok 100 km olan sonlu bir sayı olmalı".into()));
+        return Some((
+            "height",
+            "elipsoit yüksekliği en çok 100 km olan sonlu bir sayı olmalı".into(),
+        ));
     }
     if k.srid == 0 {
-        return Some(("srid", "bilinen noktanın çerçevesi bir EPSG kodu olmalı".into()));
+        return Some((
+            "srid",
+            "bilinen noktanın çerçevesi bir EPSG kodu olmalı".into(),
+        ));
     }
     if let Some(why) = k.epoch.and_then(crate::epoch_problem) {
         return Some(("epoch", why));
     }
-    if k.sigma.is_some_and(|g| !g.iter().all(|v| v.is_finite() && *v > 0.0)) {
-        return Some(("sigma", "σ değerleri 0'dan büyük sonlu sayılar olmalı (m)".into()));
+    if k.sigma
+        .is_some_and(|g| !g.iter().all(|v| v.is_finite() && *v > 0.0))
+    {
+        return Some((
+            "sigma",
+            "σ değerleri 0'dan büyük sonlu sayılar olmalı (m)".into(),
+        ));
     }
     // docs/adr/2520 §1: a velocity carries the point from its epoch; stations move centimetres a year, so a component
     // above a metre a year is a unit's mistake (mm/yr written as m/yr), not a velocity.
-    if k.velocity.is_some_and(|v| !v.iter().all(|c| c.is_finite() && c.abs() <= MAX_KNOWN_VELOCITY)) {
+    if k.velocity.is_some_and(|v| {
+        !v.iter()
+            .all(|c| c.is_finite() && c.abs() <= MAX_KNOWN_VELOCITY)
+    }) {
         return Some((
             "velocity",
             "hız yer merkezli VX, VY, VZ olarak yılda metredir; her bileşen en çok 1 m/yıl olan sonlu bir sayı olmalı".into(),
         ));
     }
     if k.velocity.is_some() && k.epoch.is_none() {
-        return Some(("velocity", "hızı olan noktanın epoku verilmeli: hız noktayı o epoktan taşır".into()));
+        return Some((
+            "velocity",
+            "hızı olan noktanın epoku verilmeli: hız noktayı o epoktan taşır".into(),
+        ));
     }
     None
 }
@@ -1360,17 +1642,29 @@ pub fn known_numbers_problem(k: &SurveyKnown) -> Option<(&'static str, String)> 
 pub const MAX_KNOWN_VELOCITY: f64 = 1.0;
 
 /// The baselines', known points' and network adjustments' rules (docs/adr/1740); `ids` are the archive's ids so far.
-fn network_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> Option<(String, String)> {
+fn network_problem<'a>(
+    survey: &'a MapSurvey,
+    ids: &mut BTreeSet<&'a str>,
+) -> Option<(String, String)> {
     for (i, b) in survey.baselines.iter().enumerate() {
         let at = |f: &str| format!("baselines[{i}].{f}");
         if !survey_numbered(&b.id, "bz-") || !ids.insert(b.id.as_str()) {
-            return fail(at("id"), "bazın kimliği bz-1, bz-2 … biçiminde ve tek olmalı");
+            return fail(
+                at("id"),
+                "bazın kimliği bz-1, bz-2 … biçiminde ve tek olmalı",
+            );
         }
         if survey.campaign(&b.campaign).is_none() {
             return fail(at("campaign"), "bazın arazi ölçümü arşivde olmalı");
         }
-        if !survey_text_ok(&b.from, MOST_SURVEY_TEXT) || !survey_text_ok(&b.to, MOST_SURVEY_TEXT) || b.from == b.to {
-            return fail(at("to"), "bazın iki ucu boşlukla başlayıp bitmeyen 1–200 karakterlik iki ayrı işarettir");
+        if !survey_text_ok(&b.from, MOST_SURVEY_TEXT)
+            || !survey_text_ok(&b.to, MOST_SURVEY_TEXT)
+            || b.from == b.to
+        {
+            return fail(
+                at("to"),
+                "bazın iki ucu boşlukla başlayıp bitmeyen 1–200 karakterlik iki ayrı işarettir",
+            );
         }
         if let Some((field, why)) = baseline_numbers_problem(b) {
             return fail(at(field), &why);
@@ -1378,7 +1672,10 @@ fn network_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> Op
         let start = b.start.as_deref().map(survey_time);
         let end = b.end.as_deref().map(survey_time);
         if matches!(start, Some(None)) || matches!(end, Some(None)) {
-            return fail(at("start"), "zaman YYYY-AA-GGTss:dd:sn[.kesir]Z biçiminde geçerli bir an olmalı");
+            return fail(
+                at("start"),
+                "zaman YYYY-AA-GGTss:dd:sn[.kesir]Z biçiminde geçerli bir an olmalı",
+            );
         }
         if let (Some(Some(a)), Some(Some(z))) = (&start, &end)
             && z < a
@@ -1386,67 +1683,131 @@ fn network_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> Op
             return fail(at("end"), "bitiş başlangıçtan önce olamaz");
         }
         if !opt_text(&b.software, MOST_SURVEY_TEXT) || !opt_text(&b.source, MOST_SURVEY_TEXT) {
-            return fail(at("software"), "yazılım ve dosyadaki kimlik boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+            return fail(
+                at("software"),
+                "yazılım ve dosyadaki kimlik boşlukla başlayıp bitmeyen 1–200 karakter olmalı",
+            );
         }
         if !opt_text(&b.recipe, MOST_RECIPE_TEXT) {
-            return fail(at("recipe"), "yeniden işleme tarifi boşlukla başlayıp bitmeyen 1–2000 karakter olmalı");
+            return fail(
+                at("recipe"),
+                "yeniden işleme tarifi boşlukla başlayıp bitmeyen 1–2000 karakter olmalı",
+            );
         }
         if !opt_text(&b.excluded, MOST_REASON_TEXT) {
-            return fail(at("excluded"), "dışlama nedeni boşlukla başlayıp bitmeyen 1–500 karakter olmalı");
+            return fail(
+                at("excluded"),
+                "dışlama nedeni boşlukla başlayıp bitmeyen 1–500 karakter olmalı",
+            );
         }
         if let Some(f) = &b.file
-            && (file_problem(f).is_some() || !matches!(f.format, SurveyFileFormat::Gvx | SurveyFileFormat::Text))
+            && (file_problem(f).is_some()
+                || !matches!(f.format, SurveyFileFormat::Gvx | SurveyFileFormat::Text))
         {
-            return fail(at("file"), "bazın dosyası mutlak yolu ve SHA-256'sıyla verilen bir GVX ya da baz metnidir");
+            return fail(
+                at("file"),
+                "bazın dosyası mutlak yolu ve SHA-256'sıyla verilen bir GVX ya da baz metnidir",
+            );
         }
     }
     let mut held = BTreeSet::new();
     for (i, k) in survey.known.iter().enumerate() {
         let at = |f: &str| format!("known[{i}].{f}");
         if !survey_numbered(&k.id, "bn-") || !ids.insert(k.id.as_str()) {
-            return fail(at("id"), "bilinen noktanın kimliği bn-1, bn-2 … biçiminde ve tek olmalı");
+            return fail(
+                at("id"),
+                "bilinen noktanın kimliği bn-1, bn-2 … biçiminde ve tek olmalı",
+            );
         }
         if !survey_text_ok(&k.mark, MOST_SURVEY_TEXT) {
-            return fail(at("mark"), "işaret boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+            return fail(
+                at("mark"),
+                "işaret boşlukla başlayıp bitmeyen 1–200 karakter olmalı",
+            );
         }
         if k.excluded.is_none() && !held.insert(k.mark.as_str()) {
-            return fail(at("mark"), "bir işaretin dışlanmamış tek bilinen noktası olur");
+            return fail(
+                at("mark"),
+                "bir işaretin dışlanmamış tek bilinen noktası olur",
+            );
         }
         if let Some((field, why)) = known_numbers_problem(k) {
             return fail(at(field), &why);
         }
         if !opt_text(&k.source, MOST_REASON_TEXT) {
-            return fail(at("source"), "kaynak boşlukla başlayıp bitmeyen 1–500 karakter olmalı");
+            return fail(
+                at("source"),
+                "kaynak boşlukla başlayıp bitmeyen 1–500 karakter olmalı",
+            );
         }
         if !opt_text(&k.excluded, MOST_REASON_TEXT) {
-            return fail(at("excluded"), "dışlama nedeni boşlukla başlayıp bitmeyen 1–500 karakter olmalı");
+            return fail(
+                at("excluded"),
+                "dışlama nedeni boşlukla başlayıp bitmeyen 1–500 karakter olmalı",
+            );
         }
     }
     for (i, a) in survey.adjustments.iter().enumerate() {
         let at = |f: &str| format!("adjustments[{i}].{f}");
         if !survey_numbered(&a.id, "da-") || !ids.insert(a.id.as_str()) {
-            return fail(at("id"), "dengelemenin kimliği da-1, da-2 … biçiminde ve tek olmalı");
+            return fail(
+                at("id"),
+                "dengelemenin kimliği da-1, da-2 … biçiminde ve tek olmalı",
+            );
         }
         let mut seen = BTreeSet::new();
-        if a.baselines.is_empty() || a.baselines.iter().any(|b| survey.baseline(b).is_none() || !seen.insert(b.as_str())) {
-            return fail(at("baselines"), "dengelemenin bazları arşivde, tek tek ve en az bir tane olmalı");
+        if a.baselines.is_empty()
+            || a.baselines
+                .iter()
+                .any(|b| survey.baseline(b).is_none() || !seen.insert(b.as_str()))
+        {
+            return fail(
+                at("baselines"),
+                "dengelemenin bazları arşivde, tek tek ve en az bir tane olmalı",
+            );
         }
-        if a.known.is_empty() || a.known.iter().any(|k| survey.known_point(k).is_none() || !seen.insert(k.as_str())) {
-            return fail(at("known"), "dengelemenin bilinen noktaları arşivde, tek tek ve en az bir tane olmalı");
+        if a.known.is_empty()
+            || a.known
+                .iter()
+                .any(|k| survey.known_point(k).is_none() || !seen.insert(k.as_str()))
+        {
+            return fail(
+                at("known"),
+                "dengelemenin bilinen noktaları arşivde, tek tek ve en az bir tane olmalı",
+            );
         }
         if !a.known.contains(&a.hold) {
-            return fail(at("hold"), "serbest dengelemede tutulan nokta dengelemenin bilinen noktalarından olmalı");
+            return fail(
+                at("hold"),
+                "serbest dengelemede tutulan nokta dengelemenin bilinen noktalarından olmalı",
+            );
         }
         if !(a.scale.is_finite() && a.scale > 0.0) {
-            return fail(at("scale"), "varyans çarpanı 0'dan büyük sonlu bir sayı olmalı");
+            return fail(
+                at("scale"),
+                "varyans çarpanı 0'dan büyük sonlu bir sayı olmalı",
+            );
         }
-        if !opt_text(&a.class, MOST_SURVEY_TEXT) || !opt_text(&a.rules, MOST_SURVEY_TEXT) || a.class.is_some() != a.rules.is_some() {
-            return fail(at("class"), "sınıf ve kural paketi birlikte, boşlukla başlayıp bitmeyen 1–200 karakter olur");
+        if !opt_text(&a.class, MOST_SURVEY_TEXT)
+            || !opt_text(&a.rules, MOST_SURVEY_TEXT)
+            || a.class.is_some() != a.rules.is_some()
+        {
+            return fail(
+                at("class"),
+                "sınıf ve kural paketi birlikte, boşlukla başlayıp bitmeyen 1–200 karakter olur",
+            );
         }
         if a.rules_passed.is_some() != a.class.is_some() {
-            return fail(at("rulesPassed"), "kuralların sonucu yalnız sınıf denetlendiyse yazılır");
+            return fail(
+                at("rulesPassed"),
+                "kuralların sonucu yalnız sınıf denetlendiyse yazılır",
+            );
         }
-        if [a.free_m0, a.m0].iter().flatten().any(|m| !(m.is_finite() && *m >= 0.0)) {
+        if [a.free_m0, a.m0]
+            .iter()
+            .flatten()
+            .any(|m| !(m.is_finite() && *m >= 0.0))
+        {
             return fail(at("m0"), "m0 eksi olmayan sonlu bir sayı olmalı");
         }
         if a.srid == 0 {
@@ -1460,23 +1821,35 @@ fn network_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> Op
 }
 
 /// docs/adr/4920: the baseline sessions, the kept place limits, the adjustments' sessions, the points' velocities.
-fn sessions_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> Option<(String, String)> {
+fn sessions_problem<'a>(
+    survey: &'a MapSurvey,
+    ids: &mut BTreeSet<&'a str>,
+) -> Option<(String, String)> {
     let mut taken = BTreeSet::new();
     for (i, s) in survey.baseline_sessions.iter().enumerate() {
         let at = |f: &str| format!("baselineSessions[{i}].{f}");
         if !survey_numbered(&s.id, "bo-") || !ids.insert(s.id.as_str()) {
-            return fail(at("id"), "baz oturumunun kimliği bo-1, bo-2 … biçiminde ve tek olmalı");
+            return fail(
+                at("id"),
+                "baz oturumunun kimliği bo-1, bo-2 … biçiminde ve tek olmalı",
+            );
         }
         if survey.campaign(&s.campaign).is_none() {
             return fail(at("campaign"), "baz oturumunun arazi ölçümü arşivde olmalı");
         }
         if !survey_text_ok(&s.name, MOST_SURVEY_TEXT) {
-            return fail(at("name"), "oturumun dosyadaki kimliği boşlukla başlayıp bitmeyen 1–200 karakter olmalı");
+            return fail(
+                at("name"),
+                "oturumun dosyadaki kimliği boşlukla başlayıp bitmeyen 1–200 karakter olmalı",
+            );
         }
         let start = s.start.as_deref().map(survey_time);
         let end = s.end.as_deref().map(survey_time);
         if matches!(start, Some(None)) || matches!(end, Some(None)) {
-            return fail(at("start"), "zaman YYYY-AA-GGTss:dd:sn[.kesir]Z biçiminde geçerli bir an olmalı");
+            return fail(
+                at("start"),
+                "zaman YYYY-AA-GGTss:dd:sn[.kesir]Z biçiminde geçerli bir an olmalı",
+            );
         }
         if let (Some(Some(a)), Some(Some(z))) = (&start, &end)
             && z < a
@@ -1484,11 +1857,17 @@ fn sessions_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> O
             return fail(at("end"), "bitiş başlangıçtan önce olamaz");
         }
         if s.baselines.len() < 2 || s.baselines.len() > MAX_SESSION_BASELINES {
-            return fail(at("baselines"), &format!("bir baz oturumunda 2 ile {MAX_SESSION_BASELINES} arasında baz olur"));
+            return fail(
+                at("baselines"),
+                &format!("bir baz oturumunda 2 ile {MAX_SESSION_BASELINES} arasında baz olur"),
+            );
         }
         for b in &s.baselines {
             if survey.baseline(b).is_none_or(|x| x.campaign != s.campaign) {
-                return fail(at("baselines"), "oturumun bazları arşivde ve oturumun arazi ölçümünde olmalı");
+                return fail(
+                    at("baselines"),
+                    "oturumun bazları arşivde ve oturumun arazi ölçümünde olmalı",
+                );
             }
             if !taken.insert(b.as_str()) {
                 return fail(at("baselines"), "bir baz en çok bir oturumda olur");
@@ -1496,7 +1875,10 @@ fn sessions_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> O
         }
         let n = s.baselines.len();
         if s.blocks.len() > n * (n - 1) / 2 {
-            return fail(at("blocks"), "n bazlı oturumda en çok n(n − 1)/2 korelasyon bloğu olur");
+            return fail(
+                at("blocks"),
+                "n bazlı oturumda en çok n(n − 1)/2 korelasyon bloğu olur",
+            );
         }
         let mut pairs = BTreeSet::new();
         for (j, b) in s.blocks.iter().enumerate() {
@@ -1504,23 +1886,40 @@ fn sessions_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> O
             if b.row == b.col || !s.baselines.contains(&b.row) || !s.baselines.contains(&b.col) {
                 return fail(at("col"), "bloğun iki bazı oturumun iki ayrı bazı olmalı");
             }
-            let pair = if b.row < b.col { (b.row.as_str(), b.col.as_str()) } else { (b.col.as_str(), b.row.as_str()) };
+            let pair = if b.row < b.col {
+                (b.row.as_str(), b.col.as_str())
+            } else {
+                (b.col.as_str(), b.row.as_str())
+            };
             if !pairs.insert(pair) {
                 return fail(at("col"), "iki baz arasında tek korelasyon bloğu olur");
             }
-            if !b.r.iter().all(|r| r.is_finite() && (-1.0..=1.0).contains(r)) {
+            if !b
+                .r
+                .iter()
+                .all(|r| r.is_finite() && (-1.0..=1.0).contains(r))
+            {
                 return fail(at("r"), "korelasyonlar −1 ile 1 arasında olmalı");
             }
         }
         if let Some(f) = &s.file
             && (file_problem(f).is_some() || f.format != SurveyFileFormat::Gvx)
         {
-            return fail(at("file"), "oturumun dosyası mutlak yolu ve SHA-256'sıyla verilen bir GVX dosyasıdır");
+            return fail(
+                at("file"),
+                "oturumun dosyası mutlak yolu ve SHA-256'sıyla verilen bir GVX dosyasıdır",
+            );
         }
     }
     for (i, a) in survey.adjustments.iter().enumerate() {
-        if a.sessions.iter().any(|s| survey.baseline_session(s).is_none()) {
-            return fail(format!("adjustments[{i}].sessions"), "dengelemenin baz oturumları arşivde olmalı");
+        if a.sessions
+            .iter()
+            .any(|s| survey.baseline_session(s).is_none())
+        {
+            return fail(
+                format!("adjustments[{i}].sessions"),
+                "dengelemenin baz oturumları arşivde olmalı",
+            );
         }
     }
     if let Some((field, why)) = survey.tolerance.as_ref().and_then(SurveyTolerance::problem) {
@@ -1529,7 +1928,10 @@ fn sessions_problem<'a>(survey: &'a MapSurvey, ids: &mut BTreeSet<&'a str>) -> O
     for (i, p) in survey.points.iter().enumerate() {
         for r in std::iter::once(&p.result).chain(&p.history) {
             if let Some(v) = &r.velocity
-                && (!v.enu.iter().all(|x| x.is_finite() && x.abs() <= MOST_POINT_VELOCITY)
+                && (!v
+                    .enu
+                    .iter()
+                    .all(|x| x.is_finite() && x.abs() <= MOST_POINT_VELOCITY)
                     || !survey_text_ok(&v.grid.name, MOST_SURVEY_TEXT)
                     || !is_sha256_text(&v.grid.sha256))
             {
@@ -1588,7 +1990,10 @@ mod tests {
     #[test]
     fn times_are_read_and_ordered() {
         assert!(survey_time("2026-10-04T09:31:10.00Z").is_some());
-        assert_eq!(survey_time("2026-10-04T09:31:10.00Z"), survey_time("2026-10-04T09:31:10Z"));
+        assert_eq!(
+            survey_time("2026-10-04T09:31:10.00Z"),
+            survey_time("2026-10-04T09:31:10Z")
+        );
         assert!(survey_time("2026-02-30T00:00:00Z").is_none());
         assert!(survey_time("2026-10-04 09:31:10Z").is_none());
         assert_eq!(survey_seconds("1900-01-02T00:00:01.5Z"), Some(86_401.5));
@@ -1628,7 +2033,10 @@ mod tests {
             }],
             ..MapSurvey::default()
         };
-        assert_eq!(survey.problem().map(|p| p.0), Some("sessions[0].end".into()));
+        assert_eq!(
+            survey.problem().map(|p| p.0),
+            Some("sessions[0].end".into())
+        );
         let mut ok = survey.clone();
         ok.sessions[0].end = Some("2026-11-03T10:00:00Z".into());
         assert_eq!(ok.problem(), None);

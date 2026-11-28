@@ -114,7 +114,14 @@ pub const GROUPS: [(&str, &[&str]); 5] = [
     ),
     (
         "Dijital teslim (EK-1, EK-2, EK-6, EK-7)",
-        &["proje_kodu", "bina_kodu", "revizyon_no", "proje_no", "proje_aciklama", "posta_kutusu"],
+        &[
+            "proje_kodu",
+            "bina_kodu",
+            "revizyon_no",
+            "proje_no",
+            "proje_aciklama",
+            "posta_kutusu",
+        ],
     ),
     ("Denetim", &["denetciler", "yapi_denetim"]),
 ];
@@ -141,7 +148,8 @@ impl App {
                     "proje_adi" => doc.model.name().to_owned(),
                     // The declared structural system (docs/adr/8146): the user may write otherwise.
                     "tasiyici_sistem" => {
-                        kentos_native_application::permit_set::structure_words(&doc.model).unwrap_or_default()
+                        kentos_native_application::permit_set::structure_words(&doc.model)
+                            .unwrap_or_default()
                     }
                     _ => default.unwrap_or_default().to_owned(),
                 });
@@ -200,7 +208,10 @@ impl App {
         }
         if matches!(
             e,
-            Event::ScopeField(..) | Event::ScopeChoice(..) | Event::ScopeChoose(_) | Event::ScopeGiven(..)
+            Event::ScopeField(..)
+                | Event::ScopeChoice(..)
+                | Event::ScopeChoose(_)
+                | Event::ScopeGiven(..)
         ) {
             return self.permit_scope_event(e);
         }
@@ -228,7 +239,10 @@ impl App {
                     tables: Vec::new(),
                     lists: Vec::new(),
                     renovation: s.renovation,
-                    building: s.building.and_then(|k| s.buildings.get(k)).map(|(id, _)| id.clone()),
+                    building: s
+                        .building
+                        .and_then(|k| s.buildings.get(k))
+                        .map(|(id, _)| id.clone()),
                 };
                 // A building's set goes to its own folder, by its code (EK-2 §2.3).
                 let code_of_set = input.building.as_deref().and_then(|id| {
@@ -243,10 +257,15 @@ impl App {
                 let group = doc.model.begin_group("Ruhsat takımı");
                 // The künye first: the model control form's answers read it (EK-9, docs/adr/8047 §10).
                 let mut settings = doc.model.settings().clone();
-                settings.variables =
-                    kentos_native_application::permit_set::with_particulars_of(&doc.model, &input.values);
+                settings.variables = kentos_native_application::permit_set::with_particulars_of(
+                    &doc.model,
+                    &input.values,
+                );
                 doc.model.set_settings(settings);
-                let tables = kentos_interaction::calc_tables::ensure(&mut doc.model, &crate::ifc_facts::form_rows);
+                let tables = kentos_interaction::calc_tables::ensure(
+                    &mut doc.model,
+                    &crate::ifc_facts::form_rows,
+                );
                 if let Ok(t) = &tables {
                     // The room list a sheet of its own (docs/adr/8038), the rest the calculation sheet's.
                     let plot = doc.model.settings().plot_scale.round().max(1.0) as u32;

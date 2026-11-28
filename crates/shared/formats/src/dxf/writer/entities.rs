@@ -50,12 +50,12 @@ mod curved;
 mod kinds;
 mod leader;
 mod paragraph;
-use kinds::{finite, kind_label};
 use crate::geom::{has_arcs, v};
 use crate::gis::Zs;
 use crate::math::{PI, TAU, atan, atan2, cos, deg, hypot, norm_angle, rad, sin, sin_cos_deg};
 use crate::num::dxf_real;
 use crate::report::Report;
+use kinds::{finite, kind_label};
 
 /// A text's mask in DXF, said in the report (docs/adr/0145 §7).
 const MASK: &str = "DXF yazısının zemini yoktur: zemin KentOS verisi olarak yazıldı; başka programlar göstermez, KentOS geri okur";
@@ -79,7 +79,6 @@ fn elevation_meta(m: &mut Meta, zs: &[Option<f64>]) {
     m.z = zs.iter().flatten().all(|&z| z == 0.0);
 }
 
-
 fn core(p: Vec2) -> CoreVec2 {
     CoreVec2::new(p.x, p.y)
 }
@@ -89,15 +88,28 @@ fn core(p: Vec2) -> CoreVec2 {
 fn hatched_seed(h: &HatchEntity, seed: Vec2) -> Vec2 {
     use kentos_geometry_core::geom::arrangement::Ring;
     let ring = |r: &[Vec2]| r.iter().map(|p| core(*p)).collect::<Vec<_>>();
-    let holes: Vec<Vec<CoreVec2>> = h.holes.iter().flatten().filter(|r| r.len() >= 3).map(|r| ring(r)).collect();
-    let rings: Vec<Vec<CoreVec2>> = std::iter::once(ring(&h.ring)).chain(holes.iter().cloned()).collect();
+    let holes: Vec<Vec<CoreVec2>> = h
+        .holes
+        .iter()
+        .flatten()
+        .filter(|r| r.len() >= 3)
+        .map(|r| ring(r))
+        .collect();
+    let rings: Vec<Vec<CoreVec2>> = std::iter::once(ring(&h.ring))
+        .chain(holes.iter().cloned())
+        .collect();
     if kentos_geometry_core::labels::geom::inside_rings(core(seed), &rings) {
         return seed;
     }
     let shape = kentos_geometry_core::entity::Shape::Polygon {
         pts: ring(&h.ring),
         bulges: None,
-        holes: (!holes.is_empty()).then(|| holes.into_iter().map(|pts| Ring { pts, bulges: None }).collect()),
+        holes: (!holes.is_empty()).then(|| {
+            holes
+                .into_iter()
+                .map(|pts| Ring { pts, bulges: None })
+                .collect()
+        }),
         parts: None,
     };
     kentos_geometry_core::ops::convert::points::interior_point(&shape)
@@ -239,17 +251,26 @@ pub(super) fn form_words(what: &str, block: bool, metadata: bool) -> String {
         _ => "kılavuz",
     };
     let back = match (block || what == "Tablo", metadata) {
-        (_, true) if what == "Ölçü" => "KentOS verisiyle: KentOS ölçü olarak stili ve görünüş seçenekleriyle geri okur".to_owned(),
+        (_, true) if what == "Ölçü" => {
+            "KentOS verisiyle: KentOS ölçü olarak stili ve görünüş seçenekleriyle geri okur"
+                .to_owned()
+        }
         (_, true) => format!("KentOS verisiyle: KentOS {kind} olarak bütün alanlarıyla geri okur"),
         (true, false) => "KentOS verisi olmadan: KentOS da blok olarak geri okur".to_owned(),
-        (false, false) => format!("KentOS verisi olmadan: KentOS {kind} olarak DXF'in söylediği kadarıyla geri okur"),
+        (false, false) => format!(
+            "KentOS verisi olmadan: KentOS {kind} olarak DXF'in söylediği kadarıyla geri okur"
+        ),
     };
     let edit = if block || what == "Tablo" {
         format!("; başka programlar gösterir ama {kind} olarak düzenleyemez")
     } else {
         String::new()
     };
-    let table = if what == "Tablo" { " (DXF'in ACAD_TABLE'ı yazılmaz)" } else { "" };
+    let table = if what == "Tablo" {
+        " (DXF'in ACAD_TABLE'ı yazılmaz)"
+    } else {
+        ""
+    };
     format!("{form}{table} yazıldı, {back}{edit}")
 }
 
@@ -331,7 +352,11 @@ impl Writer<'_> {
                     .get(&base.id)
                     .copied()
                     .unwrap_or_else(|| self.handles.take()),
-                self.ties.reactors.get(&base.id).cloned().unwrap_or_default(),
+                self.ties
+                    .reactors
+                    .get(&base.id)
+                    .cloned()
+                    .unwrap_or_default(),
             )
         };
         self.head(kind, base, h, &reactors);
@@ -371,7 +396,10 @@ impl Writer<'_> {
             }
         };
         self.out.str(8, layer);
-        if let Some(name) = self.paper.filter(|_| !self.defining) { self.out.int(67, 1); self.out.str(410, &super::blocks::one_line(name)); }
+        if let Some(name) = self.paper.filter(|_| !self.defining) {
+            self.out.int(67, 1);
+            self.out.str(410, &super::blocks::one_line(name));
+        }
         let follows =
             |p: kentos_contracts::LookPart| self.defining && base.look.by_layer.contains(&p);
         // Its own line type (docs/adr/0260 §2), its LTYPE record written with the table; a definition's object
@@ -495,7 +523,11 @@ impl Writer<'_> {
             );
         }
         let written = match e {
-            Entity::Polyline(p) if p.space_separator.is_some() && self.wholes.contains_key(&p.base.id) => self.arch_whole(e),
+            Entity::Polyline(p)
+                if p.space_separator.is_some() && self.wholes.contains_key(&p.base.id) =>
+            {
+                self.arch_whole(e)
+            }
             Entity::Point(p) => {
                 // A multi-point object's every point a POINT with the object's data (docs/adr/0174).
                 let points = std::iter::once((p.p, p.z))
@@ -634,17 +666,23 @@ impl Writer<'_> {
             }
             // A wall reaches here as its pieces (`writer::plain_walls`, docs/adr/0339 §4).
             Entity::Wall(_) => {
-                self.report.skip("Duvar", "duvar çizgilerine açılmadan yazılamaz", 0);
+                self.report
+                    .skip("Duvar", "duvar çizgilerine açılmadan yazılamaz", 0);
                 false
             }
             // A space: its rings as closed polylines (`writer::plain_walls`, docs/adr/0342).
             Entity::Space(_) => {
-                self.report.skip("Mahal", "mahal halkalarına açılmadan yazılamaz", 0);
+                self.report
+                    .skip("Mahal", "mahal halkalarına açılmadan yazılamaz", 0);
                 false
             }
             // A slab: its rings and edge as lines (`writer::plain_walls`, docs/adr/0722).
             Entity::Slab(_) => {
-                self.report.skip("Döşeme", "döşeme halkalarına ve kenarına açılmadan yazılamaz", 0);
+                self.report.skip(
+                    "Döşeme",
+                    "döşeme halkalarına ve kenarına açılmadan yazılamaz",
+                    0,
+                );
                 false
             }
             // Nor a grid, column, stair or ramp: its pieces (`writer::plain_walls`, docs/adr/0343 §5).
@@ -663,7 +701,11 @@ impl Writer<'_> {
             }
             // Nor an opening: its symbol's pieces (docs/adr/0341 §2).
             Entity::Opening(_) => {
-                self.report.skip("Açıklık", "açıklık simgesinin çizgilerine açılmadan yazılamaz", 0);
+                self.report.skip(
+                    "Açıklık",
+                    "açıklık simgesinin çizgilerine açılmadan yazılamaz",
+                    0,
+                );
                 false
             }
             // Nor a record without a geometry (docs/adr/0410 §4).
@@ -800,8 +842,13 @@ impl Writer<'_> {
     /// reference: a tag “cannot contain spaces”), and a tag the insert already has but for case gets "_2", "_3" …
     /// (docs/adr/4380): the name is then kept in KentOS's data under the tag, and said. A value on more lines stays in
     /// KentOS's data alone, and that is said. Answers each one's name, tag and value.
-    fn extra_attributes(&mut self, i: &InsertEntity, tags: &[(String, String)]) -> Vec<(String, String, String)> {
-        let mut taken: std::collections::BTreeSet<String> = tags.iter().map(|(_, dxf)| dxf.to_uppercase()).collect();
+    fn extra_attributes(
+        &mut self,
+        i: &InsertEntity,
+        tags: &[(String, String)],
+    ) -> Vec<(String, String, String)> {
+        let mut taken: std::collections::BTreeSet<String> =
+            tags.iter().map(|(_, dxf)| dxf.to_uppercase()).collect();
         let mut out = Vec::new();
         for (name, value) in &i.base.attrs {
             if tags.iter().any(|(own, _)| own == name) {
@@ -815,7 +862,16 @@ impl Writer<'_> {
                 );
                 continue;
             }
-            let base: String = name.chars().map(|c| if c.is_whitespace() || c.is_control() { '_' } else { c }).collect();
+            let base: String = name
+                .chars()
+                .map(|c| {
+                    if c.is_whitespace() || c.is_control() {
+                        '_'
+                    } else {
+                        c
+                    }
+                })
+                .collect();
             let mut tag = base.clone();
             let mut k = 2;
             while !taken.insert(tag.to_uppercase()) {
@@ -839,7 +895,13 @@ impl Writer<'_> {
     /// An insert's ATTRIBs and their SEQEND, owned by the insert `owner` (§7); after its definitions' ones, its
     /// other attributes' (`extra`, docs/adr/3980): invisible (70 = 1), at the insert's point, 2.5 mm high at true size
     /// (ISO 3098's lettering height; shown only if a program shows invisible attributes).
-    fn attributes(&mut self, i: &InsertEntity, owner: u64, tags: &[(String, String)], extra: &[(String, String, String)]) {
+    fn attributes(
+        &mut self,
+        i: &InsertEntity,
+        owner: u64,
+        tags: &[(String, String)],
+        extra: &[(String, String, String)],
+    ) {
         let layers = self.layers;
         let layer = layers.name_of(&i.base.layer_id).unwrap_or("0").to_owned();
         let placing = self.placing;
@@ -1054,9 +1116,16 @@ impl Writer<'_> {
     }
 
     fn path_source(&self, base: &EntityBase) -> String {
-        if let Some(paper) = self.paper { return format!("paper:{paper}/object:{}", base.id); }
-        if self.defining { return format!("block-record:{:X}/object:{}", self.owner, base.id); }
-        self.uids.get(&base.id).map(|id| id.to_text()).unwrap_or_else(|| format!("object:{}",base.id))
+        if let Some(paper) = self.paper {
+            return format!("paper:{paper}/object:{}", base.id);
+        }
+        if self.defining {
+            return format!("block-record:{:X}/object:{}", self.owner, base.id);
+        }
+        self.uids
+            .get(&base.id)
+            .map(|id| id.to_text())
+            .unwrap_or_else(|| format!("object:{}", base.id))
     }
 
     /// A polyline or polygon (or a hole of one, `outline` false) with elevations. DXF holds
@@ -1075,7 +1144,11 @@ impl Writer<'_> {
     ) -> u64 {
         // Planar paths with widths use LWPOLYLINE even without arcs: a 3D
         // POLYLINE cannot carry their widths. The single elevation is standard DXF.
-        let level = zs.first().copied().flatten().filter(|z| zs.iter().all(|w| *w == Some(*z)));
+        let level = zs
+            .first()
+            .copied()
+            .flatten()
+            .filter(|z| zs.iter().all(|w| *w == Some(*z)));
         if let Some(z) = level.filter(|_| widths.is_some()) {
             meta.z = z == 0.0;
             return self.lwpolyline(base, pts, bulges, closed, Some(z), widths, meta);
@@ -1487,7 +1560,11 @@ impl Writer<'_> {
         let laid = t.breaks.is_some() || t.cells.iter().flatten().any(|w| w.contains('\n'));
         if laid {
             for c in g.layout(kentos_geometry_core::text::Font::DEFAULT).cells {
-                let words = t.cells.get(c.row).and_then(|r| r.get(c.col)).map_or("", String::as_str);
+                let words = t
+                    .cells
+                    .get(c.row)
+                    .and_then(|r| r.get(c.col))
+                    .map_or("", String::as_str);
                 let line = kentos_geometry_core::geom::table::cell_line(words, c.line);
                 if line.trim().is_empty() {
                     continue;
@@ -1593,7 +1670,10 @@ impl Writer<'_> {
         let mut meta = Self::base_meta(&t.base);
         meta.table = Some(table_json(t));
         // The TABLESTYLE object its style is (docs/adr/1128 §3): a handle other programs keep with the INSERT.
-        meta.table_style_ref = t.table_style.as_ref().and_then(|id| self.styles.table_handle(id));
+        meta.table_style_ref = t
+            .table_style
+            .as_ref()
+            .and_then(|id| self.styles.table_handle(id));
         // What `end` would keep at most: the table and the data that is not the label, attributes or symbol.
         let bare = Meta {
             label: None,
@@ -1611,7 +1691,11 @@ impl Writer<'_> {
         }
         let words = form_words("Tablo", true, self.forms.metadata);
         self.report.note("Tablo", &words, 0);
-        self.end(if self.forms.metadata { meta } else { Meta::default() });
+        self.end(if self.forms.metadata {
+            meta
+        } else {
+            Meta::default()
+        });
         true
     }
 
@@ -1760,7 +1844,12 @@ impl Writer<'_> {
             });
         }
         if block_form {
-            self.insert_whole(&d.base, &name, &Entity::Dimension(Box::new(d.clone())), "Ölçü");
+            self.insert_whole(
+                &d.base,
+                &name,
+                &Entity::Dimension(Box::new(d.clone())),
+                "Ölçü",
+            );
             return true;
         }
 
@@ -1848,7 +1937,11 @@ impl Writer<'_> {
         }
         let words = form_words("Ölçü", false, self.forms.metadata);
         self.report.note("Ölçü", &words, 0);
-        self.end(if self.forms.metadata { m } else { Meta::default() });
+        self.end(if self.forms.metadata {
+            m
+        } else {
+            Meta::default()
+        });
         true
     }
 
@@ -2301,7 +2394,9 @@ impl Writer<'_> {
         };
         // Only a tie the file cannot carry is said lost: its objects not written with it (left out of the
         // selection, on a layer not written), or the hatch inside a block. A hatch written with its objects keeps it.
-        let partial = sources.as_ref().is_some_and(|paths| paths.iter().any(Vec::is_empty));
+        let partial = sources
+            .as_ref()
+            .is_some_and(|paths| paths.iter().any(Vec::is_empty));
         if h.assoc.is_some() && (sources.is_none() || partial) {
             self.report.note(
                 "Tarama",
@@ -2310,7 +2405,13 @@ impl Writer<'_> {
             );
         }
         self.out.int(71, i64::from(sources.is_some()));
-        let of = |k: usize| sources.as_ref().and_then(|s| s.get(k)).cloned().unwrap_or_default();
+        let of = |k: usize| {
+            sources
+                .as_ref()
+                .and_then(|s| s.get(k))
+                .cloned()
+                .unwrap_or_default()
+        };
         // The exact boundary when it has one (docs/adr/0328 §1): lines and arcs a polyline path with bulges, ellipses'
         // arcs and curves an edge path; else the drawn ring and holes.
         match h.boundary.as_deref().filter(|b| !b.is_empty()) {

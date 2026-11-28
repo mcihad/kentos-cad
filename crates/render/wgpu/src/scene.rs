@@ -41,7 +41,9 @@ use kentos_geometry_core::entity::{
 use kentos_geometry_core::geom::arc::sweep;
 use kentos_geometry_core::geom::arrangement::Ring;
 use kentos_geometry_core::geom::bulge::has_bulges;
-use kentos_geometry_core::geom::deep::{Deep, arc_in_box, bulge_path_in_box, ellipse_in_box, split_at_box};
+use kentos_geometry_core::geom::deep::{
+    Deep, arc_in_box, bulge_path_in_box, ellipse_in_box, split_at_box,
+};
 use kentos_geometry_core::geom::dimension::layout_dimension;
 use kentos_geometry_core::geom::hatch::hatch_lines;
 use kentos_geometry_core::geom::hatch_pattern::pattern_pieces;
@@ -385,9 +387,11 @@ pub fn build_grid_framed(
     }
     let (minor, major) = spacing;
     let mut b = Builder::new(origin);
-    let finite = [area.min_x, area.min_y, area.max_x, area.max_y, at.x, at.y, angle]
-        .iter()
-        .all(|v| v.is_finite());
+    let finite = [
+        area.min_x, area.min_y, area.max_x, area.max_y, at.x, at.y, angle,
+    ]
+    .iter()
+    .all(|v| v.is_finite());
     if !(minor > 0.0 && minor.is_finite()) || !finite {
         return b.into_part(0.0, BTreeMap::new());
     }
@@ -416,7 +420,9 @@ pub fn build_grid_framed(
         v1 = v1.max(v);
     }
     let is_major = |v: f64| (v / major - (v / major).round()).abs() < 1e-6;
-    let (Some((first_u, nu)), Some((first_v, nv))) = (grid_steps(u0, u1, minor), grid_steps(v0, v1, minor)) else {
+    let (Some((first_u, nu)), Some((first_v, nv))) =
+        (grid_steps(u0, u1, minor), grid_steps(v0, v1, minor))
+    else {
         return b.into_part(0.0, BTreeMap::new());
     };
     if f64::from(nu) + f64::from(nv) > MOST_GRID_LINES {
@@ -740,10 +746,18 @@ fn highlight_one(
         }
         Entity::Line(l) => b.segment(v(&l.a), v(&l.b), color),
         Entity::Polyline(p) => {
-            b.path(&bent(&points(&p.pts), p.bulges.as_deref(), false), false, color);
+            b.path(
+                &bent(&points(&p.pts), p.bulges.as_deref(), false),
+                false,
+                color,
+            );
             // Every part of a multi-part polyline (docs/adr/0174).
             for q in p.parts.iter().flatten() {
-                b.path(&bent(&points(&q.pts), q.bulges.as_deref(), false), false, color);
+                b.path(
+                    &bent(&points(&q.pts), q.bulges.as_deref(), false),
+                    false,
+                    color,
+                );
             }
         }
         Entity::Polygon(p) => {
@@ -1095,7 +1109,10 @@ impl Builder {
             Some(points) => {
                 let last = points.len().saturating_sub(2);
                 for (k, w) in points.windows(2).enumerate() {
-                    let codes = [if k == 0 { start } else { STRAIGHT_ON }, if k == last { end } else { STRAIGHT_ON }];
+                    let codes = [
+                        if k == 0 { start } else { STRAIGHT_ON },
+                        if k == last { end } else { STRAIGHT_ON },
+                    ];
                     self.cut(w[0], w[1], color, codes);
                 }
             }
@@ -1122,7 +1139,10 @@ impl Builder {
                 let t = i as f64 / pieces as f64;
                 Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
             };
-            let codes = joins(if i == 1 { start } else { STRAIGHT_ON }, if i == pieces { end } else { STRAIGHT_ON });
+            let codes = joins(
+                if i == 1 { start } else { STRAIGHT_ON },
+                if i == pieces { end } else { STRAIGHT_ON },
+            );
             self.piece(from, to, color, codes);
             from = to;
         }
@@ -1172,9 +1192,19 @@ impl Builder {
                 0 => None,
                 _ => Some(drawn[k - 1]),
             };
-            let after = if k + 1 < n { Some(drawn[k + 1]) } else if n > 1 { Some(drawn[0]) } else { None };
-            let start = before.filter(|s| s.1 == a).map_or(0, |s| join_code(way(s), way((a, b))));
-            let end = after.filter(|s| s.0 == b).map_or(0, |s| join_code(way((a, b)), way(s)));
+            let after = if k + 1 < n {
+                Some(drawn[k + 1])
+            } else if n > 1 {
+                Some(drawn[0])
+            } else {
+                None
+            };
+            let start = before
+                .filter(|s| s.1 == a)
+                .map_or(0, |s| join_code(way(s), way((a, b))));
+            let end = after
+                .filter(|s| s.0 == b)
+                .map_or(0, |s| join_code(way((a, b)), way(s)));
             self.joined(a, b, color, [start, end]);
         }
     }
@@ -1417,7 +1447,11 @@ fn text_flow(
     use kentos_geometry_core::text::paragraph::{Columns, Flow};
     l.map(|l| {
         Box::new(Flow {
-            engine:l.engine.map(|e|match e {kentos_contracts::TextLayoutEngine::UnicodeV1=>kentos_geometry_core::text::paragraph::Engine::UnicodeV1}),
+            engine: l.engine.map(|e| match e {
+                kentos_contracts::TextLayoutEngine::UnicodeV1 => {
+                    kentos_geometry_core::text::paragraph::Engine::UnicodeV1
+                }
+            }),
             first: l.indent.unwrap_or(0.0),
             left: l.left_indent.unwrap_or(0.0),
             tabs: l.tabs.clone(),
@@ -1525,22 +1559,34 @@ fn shape(entity: &Entity) -> Shape {
                 file: r.raster.file.clone(),
                 url: r.raster.url.clone(),
                 srid: f64::from(r.raster.srid),
-                style: Box::new(kentos_geometry_core::api::json::Json::parse(&r.raster.style.to_json_text())
-                    .unwrap_or(kentos_geometry_core::api::json::Json::Null)),
+                style: Box::new(
+                    kentos_geometry_core::api::json::Json::parse(&r.raster.style.to_json_text())
+                        .unwrap_or(kentos_geometry_core::api::json::Json::Null),
+                ),
                 opacity: r.raster.opacity,
-                dataset: r.raster.dataset.as_ref().and_then(|d| {
-                    kentos_geometry_core::api::json::Json::parse(&d.to_json_text()).ok()
-                }).map(Box::new),
+                dataset: r
+                    .raster
+                    .dataset
+                    .as_ref()
+                    .and_then(|d| {
+                        kentos_geometry_core::api::json::Json::parse(&d.to_json_text()).ok()
+                    })
+                    .map(Box::new),
                 // A GeoPackage tile table it shows (docs/adr/0627 §3): its table, zoom and window's first pixel.
-                tiles: r.raster.tiles.as_ref().map(|t| {
-                    use kentos_geometry_core::api::json::Json;
-                    Json::Obj(vec![
-                        ("table".to_owned(), Json::Str(t.table.clone())),
-                        ("zoom".to_owned(), Json::Num(f64::from(t.zoom))),
-                        ("x".to_owned(), Json::Num(t.x as f64)),
-                        ("y".to_owned(), Json::Num(t.y as f64)),
-                    ])
-                }).map(Box::new),
+                tiles: r
+                    .raster
+                    .tiles
+                    .as_ref()
+                    .map(|t| {
+                        use kentos_geometry_core::api::json::Json;
+                        Json::Obj(vec![
+                            ("table".to_owned(), Json::Str(t.table.clone())),
+                            ("zoom".to_owned(), Json::Num(f64::from(t.zoom))),
+                            ("x".to_owned(), Json::Num(t.x as f64)),
+                            ("y".to_owned(), Json::Num(t.y as f64)),
+                        ])
+                    })
+                    .map(Box::new),
             }
         }
         // A record is not drawn (docs/adr/0410).
@@ -1553,9 +1599,15 @@ fn shape(entity: &Entity) -> Shape {
         Entity::Space(_) => kentos_native_style::entity_shape(entity),
         // A slab (docs/adr/0722): its rings and its edge, likewise.
         Entity::Slab(_) | Entity::Mass(_) => kentos_native_style::entity_shape(entity),
-        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Beam(_) | Entity::Roof(_) | Entity::Railing(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
-            kentos_native_style::entity_shape(entity)
-        }
+        Entity::Grid(_)
+        | Entity::Column(_)
+        | Entity::Stair(_)
+        | Entity::Ramp(_)
+        | Entity::Beam(_)
+        | Entity::Roof(_)
+        | Entity::Railing(_)
+        | Entity::Tag(_)
+        | Entity::ViewMark(_) => kentos_native_style::entity_shape(entity),
         // A point cloud (docs/adr/0207): its plan, the points pass's paint.
         Entity::PointCloud(c) => Shape::PointCloud {
             bounds: c.cloud.bounds,
@@ -1597,18 +1649,26 @@ fn shape(entity: &Entity) -> Shape {
             frame: t.frame,
             source: None,
             // Its parts (docs/adr/1030 §7): the lines are drawn part by part.
-            breaks: t.breaks.map(|b| kentos_geometry_core::entity::TableBreaks {
-                height: b.height,
-                gap: Some(b.gap),
-                once: b.once.then_some(true),
-            }).map(Box::new),
+            breaks: t
+                .breaks
+                .map(|b| kentos_geometry_core::entity::TableBreaks {
+                    height: b.height,
+                    gap: Some(b.gap),
+                    once: b.once.then_some(true),
+                })
+                .map(Box::new),
             face: Box::new(text_face(&t.face)),
         },
         Entity::Leader(l) => Shape::Leader {
             // Its content blocks are drawn as the inserts they are; only whether it has some counts here.
             blocks: (!l.blocks.is_empty()).then(|| vec![String::new(); l.blocks.len()]),
             arms: (!l.arms.is_empty()).then(|| {
-                l.arms.iter().map(|a| kentos_geometry_core::geom::leader::Arm { pts: points(&a.pts) }).collect()
+                l.arms
+                    .iter()
+                    .map(|a| kentos_geometry_core::geom::leader::Arm {
+                        pts: points(&a.pts),
+                    })
+                    .collect()
             }),
             pts: points(&l.pts),
             text: l.text.clone(),

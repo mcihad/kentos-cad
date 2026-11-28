@@ -25,18 +25,45 @@ impl BoxGrid {
     /// The grid of `boxes` (finite; a point is a box of no size).
     pub fn new(boxes: Vec<Bx>) -> Self {
         let n = boxes.len().max(1) as f64;
-        let mut ext = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        let mut ext = [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ];
         let mut size = 0.0;
         for b in &boxes {
-            ext = [ext[0].min(b[0]), ext[1].min(b[1]), ext[2].max(b[2]), ext[3].max(b[3])];
+            ext = [
+                ext[0].min(b[0]),
+                ext[1].min(b[1]),
+                ext[2].max(b[2]),
+                ext[3].max(b[3]),
+            ];
             size += (b[2] - b[0]).max(b[3] - b[1]);
         }
-        let (w, h) = if boxes.is_empty() { (0.0, 0.0) } else { (ext[2] - ext[0], ext[3] - ext[1]) };
+        let (w, h) = if boxes.is_empty() {
+            (0.0, 0.0)
+        } else {
+            (ext[2] - ext[0], ext[3] - ext[1])
+        };
         let spread = (w.max(0.0) * h.max(0.0) / n).sqrt().max(w.max(h) / n);
         let cell = spread.max(size / n);
-        let cell = if cell.is_finite() && cell > 0.0 { cell } else { 1.0 };
-        let origin = if boxes.is_empty() { (0.0, 0.0) } else { (ext[0], ext[1]) };
-        let mut grid = BoxGrid { boxes, origin, cell, cells: HashMap::new() };
+        let cell = if cell.is_finite() && cell > 0.0 {
+            cell
+        } else {
+            1.0
+        };
+        let origin = if boxes.is_empty() {
+            (0.0, 0.0)
+        } else {
+            (ext[0], ext[1])
+        };
+        let mut grid = BoxGrid {
+            boxes,
+            origin,
+            cell,
+            cells: HashMap::new(),
+        };
         for i in 0..grid.boxes.len() {
             let b = grid.boxes[i];
             let (c0, r0) = grid.cell_of(b[0], b[1]);
@@ -51,7 +78,10 @@ impl BoxGrid {
     }
 
     fn cell_of(&self, x: f64, y: f64) -> (i64, i64) {
-        (((x - self.origin.0) / self.cell).floor() as i64, ((y - self.origin.1) / self.cell).floor() as i64)
+        (
+            ((x - self.origin.0) / self.cell).floor() as i64,
+            ((y - self.origin.1) / self.cell).floor() as i64,
+        )
     }
 
     /// Every pair (i < j) whose boxes meet, once, in order.
@@ -111,7 +141,11 @@ mod tests {
         (0..n)
             .map(|k| {
                 let (x, y) = (500_000.0 + next() * 2000.0, 4_400_000.0 + next() * 2000.0);
-                let (w, h) = if long && k % 17 == 0 { (next() * 1500.0, next() * 30.0) } else { (next() * 8.0, next() * 8.0) };
+                let (w, h) = if long && k % 17 == 0 {
+                    (next() * 1500.0, next() * 30.0)
+                } else {
+                    (next() * 8.0, next() * 8.0)
+                };
                 [x, y, x + w, y + h]
             })
             .collect()
@@ -149,7 +183,10 @@ mod tests {
     fn meeting_is_the_boxes_a_query_meets() {
         let b = boxes(1500, 7, true);
         let grid = BoxGrid::new(b.clone());
-        for q in [[500_400.0, 4_400_400.0, 500_450.0, 4_400_460.0], [499_000.0, 4_399_000.0, 503_000.0, 4_403_000.0]] {
+        for q in [
+            [500_400.0, 4_400_400.0, 500_450.0, 4_400_460.0],
+            [499_000.0, 4_399_000.0, 503_000.0, 4_403_000.0],
+        ] {
             let want: Vec<usize> = (0..b.len()).filter(|&i| meet(&b[i], &q)).collect();
             assert_eq!(grid.meeting(&q), want);
         }

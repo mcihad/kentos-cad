@@ -61,7 +61,12 @@ pub struct Transform {
 }
 
 impl Transform {
-    pub const IDENTITY: Transform = Transform { m: [[1.0, 0.0], [0.0, 1.0]], t: [0.0, 0.0], z_scale: 1.0, z_shift: 0.0 };
+    pub const IDENTITY: Transform = Transform {
+        m: [[1.0, 0.0], [0.0, 1.0]],
+        t: [0.0, 0.0],
+        z_scale: 1.0,
+        z_shift: 0.0,
+    };
 
     pub fn apply(&self, [x, y, z]: [f64; 3]) -> [f64; 3] {
         [
@@ -87,7 +92,12 @@ fn axis([e, n]: [f64; 2]) -> Option<[f64; 2]> {
 /// `unit` the metres of the file's length unit (its bodies are read in metres), `project` the project's system as its
 /// IFC files say it (or why it has none), `asked` how the user asked it placed. Refused with the reason, in the
 /// interface's words, when the conversion cannot place it.
-pub fn place(file: Option<&MapFrame>, unit: f64, project: Result<&MapFrame, &str>, asked: Placement) -> Result<Transform, String> {
+pub fn place(
+    file: Option<&MapFrame>,
+    unit: f64,
+    project: Result<&MapFrame, &str>,
+    asked: Placement,
+) -> Result<Transform, String> {
     if asked == Placement::Origin {
         return Ok(Transform::IDENTITY);
     }
@@ -121,11 +131,19 @@ pub fn place(file: Option<&MapFrame>, unit: f64, project: Result<&MapFrame, &str
         ));
     }
     if !(unit > 0.0 && unit.is_finite()) {
-        return Err("Dosyanın uzunluk birimi okunamadı: ölçeği bilinmiyor, yerleştirilmedi.".to_owned());
+        return Err(
+            "Dosyanın uzunluk birimi okunamadı: ölçeği bilinmiyor, yerleştirilmedi.".to_owned(),
+        );
     }
     // The file's metres in the system's: its conversion's factors over its unit.
-    let k = [f.factors[0] / unit, f.factors[1] / unit, f.factors[2] / unit];
-    if k.iter().any(|s| !s.is_finite() || (s - 1.0).abs() > SCALE_TOLERANCE) {
+    let k = [
+        f.factors[0] / unit,
+        f.factors[1] / unit,
+        f.factors[2] / unit,
+    ];
+    if k.iter()
+        .any(|s| !s.is_finite() || (s - 1.0).abs() > SCALE_TOLERANCE)
+    {
         return Err(format!(
             "Harita dönüşümünün ölçeği ({:.6}) dosyanın uzunluk biriminin ({unit} m) karşılığı değil: dönüşüm yanlış \
              yazılmış olabilir, yerleştirilmedi. Başlangıç noktasına yerleştirmeyi seçin ya da dosyayı yeniden dışa \
@@ -134,7 +152,10 @@ pub fn place(file: Option<&MapFrame>, unit: f64, project: Result<&MapFrame, &str
         ));
     }
     let (Some([fc, fs]), Some([pc, ps])) = (axis(f.x_axis), axis(p.x_axis)) else {
-        return Err("Harita dönüşümünün x ekseni uzunluksuz: dönüş açısı okunamadı, yerleştirilmedi.".to_owned());
+        return Err(
+            "Harita dönüşümünün x ekseni uzunluksuz: dönüş açısı okunamadı, yerleştirilmedi."
+                .to_owned(),
+        );
     };
     let (px, py) = (p.factors[0], p.factors[1]);
     if !(px > 0.0 && py > 0.0) {
@@ -145,15 +166,29 @@ pub fn place(file: Option<&MapFrame>, unit: f64, project: Result<&MapFrame, &str
     let rp_inv = [[pc, ps], [-ps, pc]];
     let mul = |a: [[f64; 2]; 2], b: [[f64; 2]; 2]| {
         [
-            [a[0][0] * b[0][0] + a[0][1] * b[1][0], a[0][0] * b[0][1] + a[0][1] * b[1][1]],
-            [a[1][0] * b[0][0] + a[1][1] * b[1][0], a[1][0] * b[0][1] + a[1][1] * b[1][1]],
+            [
+                a[0][0] * b[0][0] + a[0][1] * b[1][0],
+                a[0][0] * b[0][1] + a[0][1] * b[1][1],
+            ],
+            [
+                a[1][0] * b[0][0] + a[1][1] * b[1][0],
+                a[1][0] * b[0][1] + a[1][1] * b[1][1],
+            ],
         ]
     };
     let back = mul([[1.0 / px, 0.0], [0.0, 1.0 / py]], rp_inv);
     let m = mul(mul(back, rf), [[k[0], 0.0], [0.0, k[1]]]);
     let d = [f.origin[0] - p.origin[0], f.origin[1] - p.origin[1]];
-    let t = [back[0][0] * d[0] + back[0][1] * d[1], back[1][0] * d[0] + back[1][1] * d[1]];
-    Ok(Transform { m, t, z_scale: k[2], z_shift: f.origin[2] - p.origin[2] })
+    let t = [
+        back[0][0] * d[0] + back[0][1] * d[1],
+        back[1][0] * d[0] + back[1][1] * d[1],
+    ];
+    Ok(Transform {
+        m,
+        t,
+        z_scale: k[2],
+        z_shift: f.origin[2] - p.origin[2],
+    })
 }
 
 /// One body to plan: its owner (the object's index in the file read), its corners in the drawing's metres, its
@@ -185,7 +220,11 @@ fn sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
 }
 
 fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
 }
 
 fn unit3(v: [f64; 3]) -> Option<[f64; 3]> {
@@ -231,7 +270,12 @@ pub fn plan(meshes: &[Mesh<'_>], cut: f64, bottom: f64) -> Vec<PlanLine> {
             if let [a, b] = ends[..]
                 && (a[0] - b[0]).abs() + (a[1] - b[1]).abs() > 0.0
             {
-                out.push(PlanLine { a, b, owner: mesh.owner, cut: true });
+                out.push(PlanLine {
+                    a,
+                    b,
+                    owner: mesh.owner,
+                    cut: true,
+                });
             }
         }
         // Under the cut: every edge with its triangles' normals, by its corners on the join grid.
@@ -251,12 +295,18 @@ pub fn plan(meshes: &[Mesh<'_>], cut: f64, bottom: f64) -> Vec<PlanLine> {
                 if ka == kb {
                     continue;
                 }
-                let (k, ends) = if ka < kb { ((ka, kb), (a, b)) } else { ((kb, ka), (b, a)) };
+                let (k, ends) = if ka < kb {
+                    ((ka, kb), (a, b))
+                } else {
+                    ((kb, ka), (b, a))
+                };
                 let e = edges.entry(k).or_insert((0, None, false, ends.0, ends.1));
                 e.0 += 1;
                 match e.1 {
                     None => e.1 = Some(n),
-                    Some(m) if (m[0] * n[0] + m[1] * n[1] + m[2] * n[2]).abs() < CREASE => e.2 = true,
+                    Some(m) if (m[0] * n[0] + m[1] * n[1] + m[2] * n[2]).abs() < CREASE => {
+                        e.2 = true
+                    }
                     // Two faces folded back on each other (a sliver) are a crease too.
                     Some(m) if m[0] * n[0] + m[1] * n[1] + m[2] * n[2] < 0.0 => e.2 = true,
                     Some(_) => {}
@@ -269,9 +319,11 @@ pub fn plan(meshes: &[Mesh<'_>], cut: f64, bottom: f64) -> Vec<PlanLine> {
             .map(|(_, _, _, a, b)| (a, b))
             .collect();
         // The same order whatever the hash map's.
-        shown.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap_or(std::cmp::Ordering::Equal).then(
-            x.1.partial_cmp(&y.1).unwrap_or(std::cmp::Ordering::Equal),
-        ));
+        shown.sort_by(|x, y| {
+            x.0.partial_cmp(&y.0)
+                .unwrap_or(std::cmp::Ordering::Equal)
+                .then(x.1.partial_cmp(&y.1).unwrap_or(std::cmp::Ordering::Equal))
+        });
         for (mut a, mut b) in shown {
             if a[2] > b[2] {
                 std::mem::swap(&mut a, &mut b);
@@ -280,13 +332,26 @@ pub fn plan(meshes: &[Mesh<'_>], cut: f64, bottom: f64) -> Vec<PlanLine> {
             if a[2] > cut || b[2] < bottom {
                 continue;
             }
-            let lo = if a[2] < bottom { at_height(a, b, bottom) } else { [a[0], a[1]] };
-            let hi = if b[2] > cut { at_height(a, b, cut) } else { [b[0], b[1]] };
+            let lo = if a[2] < bottom {
+                at_height(a, b, bottom)
+            } else {
+                [a[0], a[1]]
+            };
+            let hi = if b[2] > cut {
+                at_height(a, b, cut)
+            } else {
+                [b[0], b[1]]
+            };
             // An upright edge seen from above is a point.
             if (lo[0] - hi[0]).abs() + (lo[1] - hi[1]).abs() <= JOIN {
                 continue;
             }
-            out.push(PlanLine { a: lo, b: hi, owner: mesh.owner, cut: false });
+            out.push(PlanLine {
+                a: lo,
+                b: hi,
+                owner: mesh.owner,
+                cut: false,
+            });
         }
     }
     out
@@ -298,10 +363,16 @@ pub fn pair_levels(levels: &[f64], storeys: &[f64]) -> Vec<(Option<usize>, Optio
     let mut pairs: Vec<(f64, usize, usize)> = levels
         .iter()
         .enumerate()
-        .flat_map(|(i, l)| storeys.iter().enumerate().map(move |(j, s)| ((s - l).abs(), i, j)))
+        .flat_map(|(i, l)| {
+            storeys
+                .iter()
+                .enumerate()
+                .map(move |(j, s)| ((s - l).abs(), i, j))
+        })
         .collect();
     pairs.sort_by(|x, y| x.0.total_cmp(&y.0).then(x.1.cmp(&y.1)).then(x.2.cmp(&y.2)));
-    let (mut level_taken, mut storey_taken) = (vec![false; levels.len()], vec![false; storeys.len()]);
+    let (mut level_taken, mut storey_taken) =
+        (vec![false; levels.len()], vec![false; storeys.len()]);
     let mut out = Vec::new();
     for (_, i, j) in pairs {
         if !level_taken[i] && !storey_taken[j] {
@@ -311,8 +382,20 @@ pub fn pair_levels(levels: &[f64], storeys: &[f64]) -> Vec<(Option<usize>, Optio
         }
     }
     out.sort_by_key(|p| p.0);
-    out.extend(level_taken.iter().enumerate().filter(|(_, t)| !**t).map(|(i, _)| (Some(i), None)));
-    out.extend(storey_taken.iter().enumerate().filter(|(_, t)| !**t).map(|(j, _)| (None, Some(j))));
+    out.extend(
+        level_taken
+            .iter()
+            .enumerate()
+            .filter(|(_, t)| !**t)
+            .map(|(i, _)| (Some(i), None)),
+    );
+    out.extend(
+        storey_taken
+            .iter()
+            .enumerate()
+            .filter(|(_, t)| !**t)
+            .map(|(j, _)| (None, Some(j))),
+    );
     out
 }
 
@@ -328,7 +411,11 @@ pub fn axis_offset(a: [[f64; 2]; 2], b: [[f64; 2]; 2]) -> (f64, f64) {
     let mid = [(b[0][0] + b[1][0]) / 2.0, (b[0][1] + b[1][1]) / 2.0];
     let offset = ((mid[0] - a[0][0]) * da[1] - (mid[1] - a[0][1]) * da[0]).abs() / la;
     let sin = ((da[0] * db[1] - da[1] * db[0]) / (la * lb)).abs().min(1.0);
-    (offset, crate::math::atan(sin / (1.0 - sin * sin).max(0.0).sqrt().max(f64::MIN_POSITIVE)) * (180.0 / std::f64::consts::PI))
+    (
+        offset,
+        crate::math::atan(sin / (1.0 - sin * sin).max(0.0).sqrt().max(f64::MIN_POSITIVE))
+            * (180.0 / std::f64::consts::PI),
+    )
 }
 
 #[cfg(test)]
@@ -346,13 +433,25 @@ mod tests {
             ]
         };
         let positions = (0..8).map(p).collect();
-        let quads = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]];
-        let triangles = quads.iter().flat_map(|q| [[q[0], q[1], q[2]], [q[0], q[2], q[3]]]).collect();
+        let quads = [
+            [0, 1, 3, 2],
+            [4, 6, 7, 5],
+            [0, 4, 5, 1],
+            [2, 3, 7, 6],
+            [0, 2, 6, 4],
+            [1, 5, 7, 3],
+        ];
+        let triangles = quads
+            .iter()
+            .flat_map(|q| [[q[0], q[1], q[2]], [q[0], q[2], q[3]]])
+            .collect();
         (positions, triangles)
     }
 
     /// The same box with each face's own corners (flat shading): 24 corners.
-    fn flat((positions, triangles): (Vec<[f64; 3]>, Vec<[u32; 3]>)) -> (Vec<[f64; 3]>, Vec<[u32; 3]>) {
+    fn flat(
+        (positions, triangles): (Vec<[f64; 3]>, Vec<[u32; 3]>),
+    ) -> (Vec<[f64; 3]>, Vec<[u32; 3]>) {
         let mut out = (Vec::new(), Vec::new());
         for t in triangles {
             let base = out.0.len() as u32;
@@ -363,42 +462,115 @@ mod tests {
     }
 
     fn length(lines: &[PlanLine], cut: bool) -> f64 {
-        lines.iter().filter(|l| l.cut == cut).map(|l| hypot(l.b[0] - l.a[0], l.b[1] - l.a[1])).sum()
+        lines
+            .iter()
+            .filter(|l| l.cut == cut)
+            .map(|l| hypot(l.b[0] - l.a[0], l.b[1] - l.a[1]))
+            .sum()
     }
 
     fn on_square(p: [f64; 2], lo: f64, hi: f64) -> bool {
         let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
         let within = |v: f64| v > lo - 1e-9 && v < hi + 1e-9;
-        ((near(p[0], lo) || near(p[0], hi)) && within(p[1])) || ((near(p[1], lo) || near(p[1], hi)) && within(p[0]))
+        ((near(p[0], lo) || near(p[0], hi)) && within(p[1]))
+            || ((near(p[1], lo) || near(p[1], hi)) && within(p[0]))
     }
 
     #[test]
     fn a_box_is_cut_along_its_sides_and_its_floor_edges_seen_under_the_cut() {
-        for (positions, triangles) in [boxed([2.0, 2.0, 0.0], [5.0, 5.0, 3.0]), flat(boxed([2.0, 2.0, 0.0], [5.0, 5.0, 3.0]))] {
-            let mesh = Mesh { owner: 7, positions: &positions, triangles: &triangles };
+        for (positions, triangles) in [
+            boxed([2.0, 2.0, 0.0], [5.0, 5.0, 3.0]),
+            flat(boxed([2.0, 2.0, 0.0], [5.0, 5.0, 3.0])),
+        ] {
+            let mesh = Mesh {
+                owner: 7,
+                positions: &positions,
+                triangles: &triangles,
+            };
             let lines = plan(&[mesh], 1.2, 0.0);
-            assert!((length(&lines, true) - 12.0).abs() < 1e-9, "the cut goes round the 3 × 3 box");
-            assert!((length(&lines, false) - 12.0).abs() < 1e-9, "the floor's four edges, the uprights points");
-            assert!(lines.iter().all(|l| l.owner == 7 && on_square(l.a, 2.0, 5.0) && on_square(l.b, 2.0, 5.0)));
+            assert!(
+                (length(&lines, true) - 12.0).abs() < 1e-9,
+                "the cut goes round the 3 × 3 box"
+            );
+            assert!(
+                (length(&lines, false) - 12.0).abs() < 1e-9,
+                "the floor's four edges, the uprights points"
+            );
+            assert!(
+                lines
+                    .iter()
+                    .all(|l| l.owner == 7 && on_square(l.a, 2.0, 5.0) && on_square(l.b, 2.0, 5.0))
+            );
         }
         // Over the box, nothing is cut and its top edges are under the cut: seen whole.
         let (positions, triangles) = boxed([0.0, 0.0, 0.0], [1.0, 1.0, 1.0]);
-        let lines = plan(&[Mesh { owner: 0, positions: &positions, triangles: &triangles }], 1.2, 0.0);
+        let lines = plan(
+            &[Mesh {
+                owner: 0,
+                positions: &positions,
+                triangles: &triangles,
+            }],
+            1.2,
+            0.0,
+        );
         assert_eq!(length(&lines, true), 0.0);
-        assert!((length(&lines, false) - 8.0).abs() < 1e-9, "floor and top edges, both 4 m");
+        assert!(
+            (length(&lines, false) - 8.0).abs() < 1e-9,
+            "floor and top edges, both 4 m"
+        );
         // A box below the level's floor is not this level's.
         let (positions, triangles) = boxed([0.0, 0.0, -4.0], [1.0, 1.0, -3.0]);
-        assert!(plan(&[Mesh { owner: 0, positions: &positions, triangles: &triangles }], 1.2, 0.0).is_empty());
+        assert!(
+            plan(
+                &[Mesh {
+                    owner: 0,
+                    positions: &positions,
+                    triangles: &triangles
+                }],
+                1.2,
+                0.0
+            )
+            .is_empty()
+        );
     }
 
     #[test]
     fn a_slanted_edge_is_clipped_to_the_level_and_a_corner_on_the_cut_counts_under_it() {
         // A wedge: its sloping top from 0 m to 2 m over 4 m; the cut at 1 m takes the slope at x = 2.
-        let positions = [[0.0, 0.0, 0.0], [4.0, 0.0, 0.0], [4.0, 0.0, 2.0], [0.0, 1.0, 0.0], [4.0, 1.0, 0.0], [4.0, 1.0, 2.0]];
-        let triangles = [[0, 1, 2], [3, 5, 4], [0, 3, 4], [0, 4, 1], [1, 4, 5], [1, 5, 2], [0, 2, 5], [0, 5, 3]];
-        let lines = plan(&[Mesh { owner: 1, positions: &positions, triangles: &triangles }], 1.0, 0.0);
+        let positions = [
+            [0.0, 0.0, 0.0],
+            [4.0, 0.0, 0.0],
+            [4.0, 0.0, 2.0],
+            [0.0, 1.0, 0.0],
+            [4.0, 1.0, 0.0],
+            [4.0, 1.0, 2.0],
+        ];
+        let triangles = [
+            [0, 1, 2],
+            [3, 5, 4],
+            [0, 3, 4],
+            [0, 4, 1],
+            [1, 4, 5],
+            [1, 5, 2],
+            [0, 2, 5],
+            [0, 5, 3],
+        ];
+        let lines = plan(
+            &[Mesh {
+                owner: 1,
+                positions: &positions,
+                triangles: &triangles,
+            }],
+            1.0,
+            0.0,
+        );
         let cut: Vec<_> = lines.iter().filter(|l| l.cut).collect();
-        assert!(!cut.is_empty() && cut.iter().all(|l| (l.a[0] - 2.0).abs() < 1e-9 || (l.a[0] - 4.0).abs() < 1e-9));
+        assert!(
+            !cut.is_empty()
+                && cut
+                    .iter()
+                    .all(|l| (l.a[0] - 2.0).abs() < 1e-9 || (l.a[0] - 4.0).abs() < 1e-9)
+        );
         // The two sloping edges are seen from x = 0 to x = 2 only, where they reach the cut.
         let slopes = lines
             .iter()
@@ -410,7 +582,13 @@ mod tests {
 
     fn frame(crs: &str, origin: [f64; 3], turn: f64, scale: f64) -> MapFrame {
         let th = turn * (std::f64::consts::PI / 180.0);
-        MapFrame { crs: crs.into(), vertical: None, origin, x_axis: [cos(th), sin(th)], factors: [scale, scale, 1.0] }
+        MapFrame {
+            crs: crs.into(),
+            vertical: None,
+            origin,
+            x_axis: [cos(th), sin(th)],
+            factors: [scale, scale, 1.0],
+        }
     }
 
     fn near(a: [f64; 3], b: [f64; 3]) -> bool {
@@ -419,7 +597,12 @@ mod tests {
 
     #[test]
     fn a_file_on_the_project_s_own_conversion_lands_where_it_was_drawn() {
-        let p = frame("EPSG:5256", [587_312.345, 4_400_612.789, 1285.4], 23.5, 0.99989);
+        let p = frame(
+            "EPSG:5256",
+            [587_312.345, 4_400_612.789, 1285.4],
+            23.5,
+            0.99989,
+        );
         let t = place(Some(&p), 1.0, Ok(&p), Placement::Map).expect("placed");
         for q in [[0.0, 0.0, 0.0], [60.0, 5.0, 3.2], [-10.0, 45.0, -2.5]] {
             assert!(near(t.apply(q), q), "{q:?} → {:?}", t.apply(q));
@@ -431,7 +614,12 @@ mod tests {
         // The file's metres are the map's (no turn, no shift), its zero 1285.4 m high; the project's local plane is
         // turned 23.5°, scaled 0.99989 and its zero 1288.2 m high.
         let file = frame("EPSG:5256", [0.0, 0.0, 1285.4], 0.0, 1.0);
-        let project = frame("EPSG:5256", [587_312.345, 4_400_612.789, 1288.2], 23.5, 0.99989);
+        let project = frame(
+            "EPSG:5256",
+            [587_312.345, 4_400_612.789, 1288.2],
+            23.5,
+            0.99989,
+        );
         let t = place(Some(&file), 1.0, Ok(&project), Placement::Map).expect("placed");
         // A drawing point of the project on the map, by the project's conversion, comes back to itself.
         let th = 23.5 * (std::f64::consts::PI / 180.0);
@@ -446,8 +634,12 @@ mod tests {
         let mut mm = file.clone();
         mm.factors = [0.001, 0.001, 0.001];
         let m = place(Some(&mm), 0.001, Ok(&project), Placement::Map).expect("a millimetre file");
-        assert!(near(m.apply([587_312.345, 4_400_612.789, 0.0]), t.apply([587_312.345, 4_400_612.789, 0.0])));
-        let why = place(Some(&file), 0.001, Ok(&project), Placement::Map).expect_err("a scale its unit does not explain");
+        assert!(near(
+            m.apply([587_312.345, 4_400_612.789, 0.0]),
+            t.apply([587_312.345, 4_400_612.789, 0.0])
+        ));
+        let why = place(Some(&file), 0.001, Ok(&project), Placement::Map)
+            .expect_err("a scale its unit does not explain");
         assert!(why.contains("uzunluk biriminin"), "{why}");
     }
 
@@ -458,34 +650,66 @@ mod tests {
             pair_levels(&[0.0, 3.0], &[3.15, 0.0, 6.0]),
             vec![(Some(0), Some(1)), (Some(1), Some(0)), (None, Some(2))]
         );
-        assert_eq!(pair_levels(&[0.0, 3.0, 6.0], &[0.0]), vec![(Some(0), Some(0)), (Some(1), None), (Some(2), None)]);
+        assert_eq!(
+            pair_levels(&[0.0, 3.0, 6.0], &[0.0]),
+            vec![(Some(0), Some(0)), (Some(1), None), (Some(2), None)]
+        );
         // Axis A on x = 0; the file's on x = 0.02, turned 1° about its middle.
         let (off, turn) = axis_offset([[0.0, -2.0], [0.0, 11.0]], [[0.02, -2.0], [0.02, 11.0]]);
-        assert!((off - 0.02).abs() < 1e-12 && turn.abs() < 1e-9, "{off} {turn}");
+        assert!(
+            (off - 0.02).abs() < 1e-12 && turn.abs() < 1e-9,
+            "{off} {turn}"
+        );
         let th = 1.0 * (std::f64::consts::PI / 180.0);
         let (s, c) = (sin(th), cos(th));
-        let (off, turn) = axis_offset([[0.0, -2.0], [0.0, 11.0]], [[-6.5 * s, 4.5 - 6.5 * c], [6.5 * s, 4.5 + 6.5 * c]]);
-        assert!(off.abs() < 1e-12 && (turn - 1.0).abs() < 1e-9, "{off} {turn}");
+        let (off, turn) = axis_offset(
+            [[0.0, -2.0], [0.0, 11.0]],
+            [[-6.5 * s, 4.5 - 6.5 * c], [6.5 * s, 4.5 + 6.5 * c]],
+        );
+        assert!(
+            off.abs() < 1e-12 && (turn - 1.0).abs() < 1e-9,
+            "{off} {turn}"
+        );
     }
 
     #[test]
-    fn another_system_no_conversion_and_no_project_system_are_refused_unless_placed_at_the_origin() {
+    fn another_system_no_conversion_and_no_project_system_are_refused_unless_placed_at_the_origin()
+    {
         let file = frame("EPSG:5256", [0.0, 0.0, 0.0], 0.0, 1.0);
         let project = frame("EPSG:5254", [0.0, 0.0, 0.0], 0.0, 1.0);
-        let why = place(Some(&file), 1.0, Ok(&project), Placement::Map).expect_err("another system");
-        assert!(why.contains("EPSG:5256") && why.contains("EPSG:5254") && why.contains("yeniden yansıtma"), "{why}");
+        let why =
+            place(Some(&file), 1.0, Ok(&project), Placement::Map).expect_err("another system");
+        assert!(
+            why.contains("EPSG:5256")
+                && why.contains("EPSG:5254")
+                && why.contains("yeniden yansıtma"),
+            "{why}"
+        );
         let why = place(None, 1.0, Ok(&project), Placement::Map).expect_err("no conversion");
         assert!(why.contains("harita dönüşümü"), "{why}");
-        let why = place(Some(&file), 1.0, Err("projenin koordinat sistemi yok"), Placement::Map).expect_err("no system");
+        let why = place(
+            Some(&file),
+            1.0,
+            Err("projenin koordinat sistemi yok"),
+            Placement::Map,
+        )
+        .expect_err("no system");
         assert!(why.contains("projenin koordinat sistemi yok"), "{why}");
         let mut other = project.clone();
         other.crs = file.crs.clone();
         other.vertical = Some("Antalya height (EPSG:5775)".into());
         let mut low = file.clone();
         low.vertical = Some("ITRF96".into());
-        assert!(place(Some(&low), 1.0, Ok(&other), Placement::Map).expect_err("heights").contains("yükseklik datumu"));
+        assert!(
+            place(Some(&low), 1.0, Ok(&other), Placement::Map)
+                .expect_err("heights")
+                .contains("yükseklik datumu")
+        );
         for f in [Some(&file), None] {
-            assert_eq!(place(f, 1.0, Ok(&project), Placement::Origin), Ok(Transform::IDENTITY));
+            assert_eq!(
+                place(f, 1.0, Ok(&project), Placement::Origin),
+                Ok(Transform::IDENTITY)
+            );
         }
     }
 }

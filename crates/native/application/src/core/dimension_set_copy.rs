@@ -25,7 +25,11 @@ pub(crate) fn whole(doc: &Document, uids: &[String]) -> Result<Vec<DimensionSet>
         let Some(first) = set.members.iter().find(|m| chosen.contains(&m.uid)) else {
             continue;
         };
-        let members = set.members.iter().filter(|m| !chosen.contains(&m.uid)).count();
+        let members = set
+            .members
+            .iter()
+            .filter(|m| !chosen.contains(&m.uid))
+            .count();
         let sources = set.sources().iter().filter(|s| !chosen.contains(s)).count();
         if members + sources > 0 {
             let at = uids
@@ -64,7 +68,11 @@ fn turned(m: &Affine, d: Vec2) -> Vec2 {
 /// of an open path of `points` vertices is its edge `points − 2 − k`, of a closed one `(points − 2 − k) mod points`.
 pub(crate) fn mirrored_edge(k: u32, points: usize, closed: bool) -> u32 {
     let (k, n) = (i64::from(k), points as i64);
-    let j = if closed { (n - 2 - k).rem_euclid(n.max(1)) } else { n - 2 - k };
+    let j = if closed {
+        (n - 2 - k).rem_euclid(n.max(1))
+    } else {
+        n - 2 - k
+    };
     u32::try_from(j.max(0)).unwrap_or(0)
 }
 
@@ -149,14 +157,13 @@ pub(crate) fn add_copies(
         .collect();
     for set in sets {
         let copy = copied_recipe(doc, set, &map, m, layer);
-        doc.add_dimension_set_copy(copy)
-            .map_err(|why| {
-                Stop::failed(error(
-                    "dimension_set_owned",
-                    format!("Ölçü grubu kopyalanamadı: {why}"),
-                    Some("uids".into()),
-                ))
-            })?;
+        doc.add_dimension_set_copy(copy).map_err(|why| {
+            Stop::failed(error(
+                "dimension_set_owned",
+                format!("Ölçü grubu kopyalanamadı: {why}"),
+                Some("uids".into()),
+            ))
+        })?;
     }
     Ok(())
 }

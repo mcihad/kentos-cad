@@ -17,9 +17,9 @@ use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, LayerNodeType, RoadDrawingLeft, RoadDrawingProduced, RoadGraphKind as G,
-    RoadLayerMatch, RoadProducedLayer, RoadProducedSource, RoadProjectGraph, RoadProjectProduce, RoadProjectProduced,
-    RoadRecipeLayer, fold_name, same_line_type_name,
+    CommandResult, CommandWarning, LayerNodeType, RoadDrawingLeft, RoadDrawingProduced,
+    RoadGraphKind as G, RoadLayerMatch, RoadProducedLayer, RoadProducedSource, RoadProjectGraph,
+    RoadProjectProduce, RoadProjectProduced, RoadRecipeLayer, fold_name, same_line_type_name,
 };
 use kentos_domain::{Document, NewLayer, default_style};
 use serde_json::Value;
@@ -76,10 +76,17 @@ fn place(doc: &Document, w: &Wanted, given: &BTreeMap<String, String>) -> Option
     if let Some(to) = given.get(from) {
         return Some(Place::Here(to.clone(), RoadLayerMatch::Given));
     }
-    let Some(def) = &w.layer else { return Some(Place::Here(from.to_owned(), RoadLayerMatch::Id)) };
+    let Some(def) = &w.layer else {
+        return Some(Place::Here(from.to_owned(), RoadLayerMatch::Id));
+    };
     let want = fold_name(def.name.trim());
-    let hits: Vec<String> =
-        doc.layers().leaves().into_iter().filter(|n| fold_name(n.name.trim()) == want).map(|n| n.id.clone()).collect();
+    let hits: Vec<String> = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .filter(|n| fold_name(n.name.trim()) == want)
+        .map(|n| n.id.clone())
+        .collect();
     Some(match hits.len() {
         0 => Place::Create(def.clone()),
         1 => Place::Here(hits[0].clone(), RoadLayerMatch::Name),
@@ -118,26 +125,44 @@ fn by_name(value: Value, names: &HashMap<&str, &str>) -> Value {
     match value {
         Value::String(s) => Value::String(names.get(s.as_str()).map_or(s, |n| (*n).to_owned())),
         Value::Array(a) => Value::Array(a.into_iter().map(|v| by_name(v, names)).collect()),
-        Value::Object(o) => {
-            Value::Object(o.into_iter().map(|(k, v)| if k == LAYER { (k, v) } else { (k, by_name(v, names)) }).collect())
-        }
+        Value::Object(o) => Value::Object(
+            o.into_iter()
+                .map(|(k, v)| {
+                    if k == LAYER {
+                        (k, v)
+                    } else {
+                        (k, by_name(v, names))
+                    }
+                })
+                .collect(),
+        ),
         other => other,
     }
 }
 
 /// A file's name, as a refusal names it.
 fn file_name(text: &str) -> String {
-    Path::new(text).file_name().map_or_else(|| text.to_owned(), |n| n.to_string_lossy().into_owned())
+    Path::new(text)
+        .file_name()
+        .map_or_else(|| text.to_owned(), |n| n.to_string_lossy().into_owned())
 }
 
 /// The recipe at `text`: İş grafiği's graph, refused at `path` as the contract says.
 fn read(text: &str) -> Result<RoadProjectGraph, Stop> {
     let path = Path::new(text);
     if text.trim().is_empty() || !path.is_absolute() {
-        return Err(refuse(codes::INVALID_FILE_PATH, "Tarifin yolu boş ya da göreli; mutlak bir .json yolu verin.".into(), "path"));
+        return Err(refuse(
+            codes::INVALID_FILE_PATH,
+            "Tarifin yolu boş ya da göreli; mutlak bir .json yolu verin.".into(),
+            "path",
+        ));
     }
     if !text.to_ascii_lowercase().ends_with(".json") {
-        return Err(refuse(codes::INVALID_FILE_PATH, format!("“{text}” bir .json dosyası değil (İş grafiği'nin tarifi)."), "path"));
+        return Err(refuse(
+            codes::INVALID_FILE_PATH,
+            format!("“{text}” bir .json dosyası değil (İş grafiği'nin tarifi)."),
+            "path",
+        ));
     }
     let name = file_name(text);
     let bytes = match std::fs::read(path) {
@@ -145,11 +170,19 @@ fn read(text: &str) -> Result<RoadProjectGraph, Stop> {
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             return Err(refuse(
                 codes::FILE_NOT_FOUND,
-                format!("“{text}” tarifi yok; İş grafiği'nin Tarifi kaydet… ile yazdığı .json dosyasını seçin."),
+                format!(
+                    "“{text}” tarifi yok; İş grafiği'nin Tarifi kaydet… ile yazdığı .json dosyasını seçin."
+                ),
                 "path",
             ));
         }
-        Err(e) => return Err(refuse(codes::INVALID_PROJECT_RECIPE, format!("“{name}” okunamadı: {e}."), "path")),
+        Err(e) => {
+            return Err(refuse(
+                codes::INVALID_PROJECT_RECIPE,
+                format!("“{name}” okunamadı: {e}."),
+                "path",
+            ));
+        }
     };
     serde_json::from_slice(&bytes).map_err(|e| {
         refuse(codes::INVALID_PROJECT_RECIPE, format!("“{name}” İş grafiği'nin tarifi değil ({e}); Tarifi kaydet… ile yazılan dosyayı seçin."), "path")
@@ -170,8 +203,12 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
     crate::road_project::road_project(doc)?;
     let graph = read(&input.path)?;
     let name = file_name(&input.path);
-    let names: HashMap<&str, &str> =
-        graph.nodes.iter().filter(|n| source_kind(n.kind)).map(|n| (n.id.as_str(), n.name.as_str())).collect();
+    let names: HashMap<&str, &str> = graph
+        .nodes
+        .iter()
+        .filter(|n| source_kind(n.kind))
+        .map(|n| (n.id.as_str(), n.name.as_str()))
+        .collect();
     let recipes: Vec<(&str, &kentos_commands::RoadDrawingRecipe)> = graph
         .nodes
         .iter()
@@ -179,14 +216,25 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
         .filter_map(|n| n.recipe.as_ref().map(|r| (n.id.as_str(), r)))
         .collect();
     if recipes.is_empty() {
-        return Err(refuse(codes::INVALID_PROJECT_RECIPE, format!("“{name}” tarifinde üretilecek çizim yok."), "path"));
+        return Err(refuse(
+            codes::INVALID_PROJECT_RECIPE,
+            format!("“{name}” tarifinde üretilecek çizim yok."),
+            "path",
+        ));
     }
     let chosen: Vec<(&str, &kentos_commands::RoadDrawingRecipe)> = match &input.drawings {
         Some(ids) => {
             if let Some(id) = ids.iter().find(|id| !recipes.iter().any(|(i, _)| i == id)) {
-                return Err(refuse(codes::UNKNOWN_DRAWING, format!("Tarifte “{id}” kimlikli çizim yok."), "drawings"));
+                return Err(refuse(
+                    codes::UNKNOWN_DRAWING,
+                    format!("Tarifte “{id}” kimlikli çizim yok."),
+                    "drawings",
+                ));
             }
-            recipes.into_iter().filter(|(i, _)| ids.iter().any(|x| x == i)).collect()
+            recipes
+                .into_iter()
+                .filter(|(i, _)| ids.iter().any(|x| x == i))
+                .collect()
         }
         None => recipes,
     };
@@ -195,7 +243,10 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
         if road_drawings::main_of(&r.command).is_none() {
             return Err(refuse(
                 codes::INVALID_PROJECT_RECIPE,
-                format!("Tarifteki “{id}” çiziminin komutu ({}) çizen bir komut değil.", r.command),
+                format!(
+                    "Tarifteki “{id}” çiziminin komutu ({}) çizen bir komut değil.",
+                    r.command
+                ),
                 "path",
             ));
         }
@@ -203,16 +254,32 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
         if r.version != here {
             return Err(refuse(
                 codes::INVALID_PROJECT_RECIPE,
-                format!("Tarifteki “{id}” çizimi {} v{} ile; bu KentOS v{here} ile çizer.", r.command, r.version),
+                format!(
+                    "Tarifteki “{id}” çizimi {} v{} ile; bu KentOS v{here} ile çizer.",
+                    r.command, r.version
+                ),
                 "path",
             ));
         }
         let input = r
             .input
             .iter()
-            .map(|(k, v)| (k.clone(), if k == LAYER { v.clone() } else { by_name(v.clone(), &names) }))
+            .map(|(k, v)| {
+                (
+                    k.clone(),
+                    if k == LAYER {
+                        v.clone()
+                    } else {
+                        by_name(v.clone(), &names)
+                    },
+                )
+            })
             .collect();
-        let layer_from = r.input.get(LAYER).and_then(Value::as_str).map(str::to_owned);
+        let layer_from = r
+            .input
+            .get(LAYER)
+            .and_then(Value::as_str)
+            .map(str::to_owned);
         if let Some(def) = &r.layer
             && layer_from.as_deref() != Some(def.id.as_str())
         {
@@ -231,11 +298,20 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
         {
             return Err(refuse(
                 codes::INVALID_PROJECT_RECIPE,
-                format!("Tarifteki “{id}” çiziminin katman tanımı ({}) tutarsız: {why}", def.id),
+                format!(
+                    "Tarifteki “{id}” çiziminin katman tanımı ({}) tutarsız: {why}",
+                    def.id
+                ),
                 "path",
             ));
         }
-        wanted.push(Wanted { from: id.to_owned(), command: r.command.clone(), input, layer_from, layer: r.layer.clone() });
+        wanted.push(Wanted {
+            from: id.to_owned(),
+            command: r.command.clone(),
+            input,
+            layer_from,
+            layer: r.layer.clone(),
+        });
     }
     // The layers given (docs/adr/3640): each a layer of the recipe's drawings, each a layer here that takes objects.
     let theirs: Vec<&str> = graph
@@ -248,7 +324,9 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
         if !theirs.contains(&from.as_str()) {
             return Err(refuse(
                 codes::UNKNOWN_RECIPE_LAYER,
-                format!("Tarifte “{from}” kimlikli katmana çizilen çizim yok; layers'ın anahtarı tarifin bir katmanı olmalı."),
+                format!(
+                    "Tarifte “{from}” kimlikli katmana çizilen çizim yok; layers'ın anahtarı tarifin bir katmanı olmalı."
+                ),
                 "layers",
             ));
         }
@@ -270,7 +348,13 @@ fn asked(doc: &Document, input: &RoadProjectProduce) -> Result<Asked, Stop> {
             path: Some("path".into()),
         });
     }
-    Ok(Asked { wanted, named: input.drawings.is_some(), given: input.layers.clone(), add_fields: input.add_fields, warnings })
+    Ok(Asked {
+        wanted,
+        named: input.drawings.is_some(),
+        given: input.layers.clone(),
+        add_fields: input.add_fields,
+        warnings,
+    })
 }
 
 /// What does not hold in a recipe layer's definition (docs/adr/4040): a group without a name; a style whose colour,
@@ -282,9 +366,13 @@ fn definition_problem(def: &RoadRecipeLayer) -> Option<String> {
         return Some("grup adlarından biri boş.".to_owned());
     }
     if let Some(s) = &def.style
-        && (s.color != def.color || s.line_type != def.line_type || s.line_weight != def.line_weight)
+        && (s.color != def.color
+            || s.line_type != def.line_type
+            || s.line_weight != def.line_weight)
     {
-        return Some("stilin rengi, çizgi türü ya da kalınlığı tanımınkiyle aynı değil.".to_owned());
+        return Some(
+            "stilin rengi, çizgi türü ya da kalınlığı tanımınkiyle aynı değil.".to_owned(),
+        );
     }
     if let Some(c) = &def.compose {
         if c.mask.is_some() {
@@ -307,18 +395,29 @@ fn definition_problem(def: &RoadRecipeLayer) -> Option<String> {
     let d = def.line_type_def.as_ref()?;
     let named = def.style.as_ref().and_then(|s| s.line_pattern.as_deref());
     if !named.is_some_and(|n| same_line_type_name(n, &d.name)) {
-        return Some(format!("“{}” çizgi türünün tanımı var ama stil onu adlamıyor.", d.name));
+        return Some(format!(
+            "“{}” çizgi türünün tanımı var ama stil onu adlamıyor.",
+            d.name
+        ));
     }
     kentos_commands::line_types_problem(std::slice::from_ref(d)).map(|p| format!("{p}."))
 }
 
 /// Whether the project has the drawing: the same command from the same main source on the same layer (`input`'s, the
 /// layer found here).
-fn exists(doc: &Document, command: &str, input: &BTreeMap<String, Value>, field: &str, main: &str) -> bool {
+fn exists(
+    doc: &Document,
+    command: &str,
+    input: &BTreeMap<String, Value>,
+    field: &str,
+    main: &str,
+) -> bool {
     let layer = input.get(LAYER);
-    doc.road_drawings()
-        .iter()
-        .any(|d| d.command == command && d.input.get(field).and_then(Value::as_str) == Some(main) && d.input.get(LAYER) == layer)
+    doc.road_drawings().iter().any(|d| {
+        d.command == command
+            && d.input.get(field).and_then(Value::as_str) == Some(main)
+            && d.input.get(LAYER) == layer
+    })
 }
 
 /// A command's refusal with the recipe's drawing named in its words.
@@ -362,9 +461,16 @@ struct Added {
 /// “Tarifteki gibi saydamlığı %40, karışım kipi Çoğalt, türü Çizgi ve yazdırılmaz.”; none when it takes none of them.
 pub fn look_said(def: &RoadRecipeLayer) -> Option<String> {
     let mut parts = Vec::new();
-    if let Some(c) = def.compose.as_ref().and_then(kentos_commands::LayerCompose::normalized) {
+    if let Some(c) = def
+        .compose
+        .as_ref()
+        .and_then(kentos_commands::LayerCompose::normalized)
+    {
         if let Some(o) = c.opacity {
-            parts.push(format!("saydamlığı %{}", crate::road_superelevations::percent(1.0 - o)));
+            parts.push(format!(
+                "saydamlığı %{}",
+                crate::road_superelevations::percent(1.0 - o)
+            ));
         }
         if let Some(b) = c.blend {
             parts.push(format!("karışım kipi {}", b.label()));
@@ -377,7 +483,11 @@ pub fn look_said(def: &RoadRecipeLayer) -> Option<String> {
         parts.push("yazdırılmaz".to_owned());
     }
     let (last, rest) = parts.split_last()?;
-    let said = if rest.is_empty() { last.clone() } else { format!("{} ve {last}", rest.join(", ")) };
+    let said = if rest.is_empty() {
+        last.clone()
+    } else {
+        format!("{} ve {last}", rest.join(", "))
+    };
     Some(format!("Tarifteki gibi {said}."))
 }
 
@@ -405,7 +515,9 @@ fn misfit(doc: &Document, uids: &[String]) -> Option<String> {
 /// type and weight over the default), the project line type the style names taken from here by its name, else added
 /// from the recipe's definition, else left out (its nearest built-in type draws); last among its group's nodes.
 fn create(doc: &mut Document, def: &RoadRecipeLayer) -> Result<Added, Stop> {
-    let refused = |r: kentos_domain::Refusal| Stop::failed(error(codes::LAYER_REFUSED, r.0, Some("layers".into())));
+    let refused = |r: kentos_domain::Refusal| {
+        Stop::failed(error(codes::LAYER_REFUSED, r.0, Some("layers".into())))
+    };
     let mut parent: Option<String> = None;
     let (mut group, mut groups_added) = (Vec::new(), Vec::new());
     for name in &def.group {
@@ -415,11 +527,21 @@ fn create(doc: &mut Document, def: &RoadRecipeLayer) -> Result<Added, Stop> {
             None => layers.nodes(),
             Some(p) => layers.get(p).map_or(&[][..], |n| n.children.as_slice()),
         };
-        let found = siblings.iter().find(|n| n.kind == LayerNodeType::Group && fold_name(n.name.trim()) == want);
+        let found = siblings
+            .iter()
+            .find(|n| n.kind == LayerNodeType::Group && fold_name(n.name.trim()) == want);
         let (id, here) = match found {
             Some(n) => (n.id.clone(), n.name.clone()),
             None => {
-                let id = doc.add_layer_at(NewLayer::group(name.trim()), parent.as_deref(), None, Some(STEP), false).map_err(refused)?;
+                let id = doc
+                    .add_layer_at(
+                        NewLayer::group(name.trim()),
+                        parent.as_deref(),
+                        None,
+                        Some(STEP),
+                        false,
+                    )
+                    .map_err(refused)?;
                 groups_added.push((id.clone(), name.trim().to_owned()));
                 (id, name.trim().to_owned())
             }
@@ -439,7 +561,11 @@ fn create(doc: &mut Document, def: &RoadRecipeLayer) -> Result<Added, Stop> {
     let (mut line_type_added, mut dropped) = (None, None);
     if let Some(name) = style.line_pattern.clone() {
         let settings = doc.settings();
-        if let Some(t) = settings.line_types.iter().find(|t| same_line_type_name(&t.name, &name)) {
+        if let Some(t) = settings
+            .line_types
+            .iter()
+            .find(|t| same_line_type_name(&t.name, &name))
+        {
             style.line_pattern = Some(t.name.clone());
         } else if let Some(d) = def.line_type_def.as_ref() {
             let mut types = settings.line_types.clone();
@@ -456,10 +582,15 @@ fn create(doc: &mut Document, def: &RoadRecipeLayer) -> Result<Added, Stop> {
     let mut new = NewLayer::layer(def.name.trim());
     new.style = style;
     // Docs/adr/4440: its composition, type and Yazdır as the recipe keeps them.
-    new.compose = def.compose.as_ref().and_then(kentos_commands::LayerCompose::normalized);
+    new.compose = def
+        .compose
+        .as_ref()
+        .and_then(kentos_commands::LayerCompose::normalized);
     new.geometry = def.geometry;
     new.plot = def.plot.filter(|printed| !printed);
-    let id = doc.add_layer_at(new, parent.as_deref(), None, Some(STEP), false).map_err(refused)?;
+    let id = doc
+        .add_layer_at(new, parent.as_deref(), None, Some(STEP), false)
+        .map_err(refused)?;
     // Docs/adr/4860: its fields, the lists they link (found here or added) and its subtypes.
     let given = crate::road_recipe_fields::give(doc, &id, def, STEP)?;
     Ok(Added {
@@ -478,11 +609,22 @@ fn create(doc: &mut Document, def: &RoadRecipeLayer) -> Result<Added, Stop> {
 
 /// What adding `a` brought, said (docs/adr/3640, 4040): its look, its group, the groups and the line type added with it.
 fn created_words(a: &Added) -> String {
-    let look = if a.styled { "tarifteki stiliyle" } else { "tarifteki tanımıyla (renk, çizgi türü, kalınlık)" };
-    let mut out = if a.group.is_empty() {
-        format!("Tarifin “{}” katmanı bu projede yoktu; {look} eklendi.", a.name)
+    let look = if a.styled {
+        "tarifteki stiliyle"
     } else {
-        format!("Tarifin “{}” katmanı bu projede yoktu; {look} “{}” grubuna eklendi.", a.name, a.group.join(" › "))
+        "tarifteki tanımıyla (renk, çizgi türü, kalınlık)"
+    };
+    let mut out = if a.group.is_empty() {
+        format!(
+            "Tarifin “{}” katmanı bu projede yoktu; {look} eklendi.",
+            a.name
+        )
+    } else {
+        format!(
+            "Tarifin “{}” katmanı bu projede yoktu; {look} “{}” grubuna eklendi.",
+            a.name,
+            a.group.join(" › ")
+        )
     };
     match a.groups_added.as_slice() {
         [] => {}
@@ -493,7 +635,9 @@ fn created_words(a: &Added) -> String {
         }
     }
     if let Some(t) = &a.line_type_added {
-        out.push_str(&format!(" “{t}” çizgi türü de tarifteki tanımıyla eklendi."));
+        out.push_str(&format!(
+            " “{t}” çizgi türü de tarifteki tanımıyla eklendi."
+        ));
     }
     if let Some(t) = &a.dropped {
         out.push_str(&format!(" “{t}” çizgi türü bu projede de tarifte de tanımlı değil; katman yerleşik türüyle çizilir."));
@@ -523,7 +667,9 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
         if cx.stopped() {
             return CommandResult::Cancelled;
         }
-        let Some(main) = road_drawings::main_of(&w.command) else { continue };
+        let Some(main) = road_drawings::main_of(&w.command) else {
+            continue;
+        };
         let words = crate::road_project::drawing_words(&w.command);
         // The drawing's layer here: found, to be added, or asked (two of its name).
         let (input, found) = match place(cx.doc, w, &asked.given) {
@@ -551,18 +697,33 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
                 );
                 if asked.named {
                     return relay(naming(
-                        Stop::failed(error(codes::AMBIGUOUS_RECIPE_LAYER, message, Some("layers".into()))).into(),
+                        Stop::failed(error(
+                            codes::AMBIGUOUS_RECIPE_LAYER,
+                            message,
+                            Some("layers".into()),
+                        ))
+                        .into(),
                         &w.from,
                         words,
                     ));
                 }
-                left.push(RoadDrawingLeft { drawing: w.from.clone(), why: "refused".into(), message });
+                left.push(RoadDrawingLeft {
+                    drawing: w.from.clone(),
+                    why: "refused".into(),
+                    message,
+                });
                 continue;
             }
         };
-        let text = input.get(main.1).and_then(Value::as_str).unwrap_or_default();
+        let text = input
+            .get(main.1)
+            .and_then(Value::as_str)
+            .unwrap_or_default();
         let here = road_drawings::resolve(cx.doc, main.0, text);
-        if here.as_deref().is_some_and(|id| exists(cx.doc, &w.command, &input, main.1, id)) {
+        if here
+            .as_deref()
+            .is_some_and(|id| exists(cx.doc, &w.command, &input, main.1, id))
+        {
             left.push(RoadDrawingLeft {
                 drawing: w.from.clone(),
                 why: "exists".into(),
@@ -574,32 +735,40 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
             cx.doc.name_step(STEP);
             stepped = true;
         }
-        match in_share(cx, k as u64, total, |cx| run_drawing(cx, &w.from, &w.command, &input, &[])) {
+        match in_share(cx, k as u64, total, |cx| {
+            run_drawing(cx, &w.from, &w.command, &input, &[])
+        }) {
             Ok((uids, said)) => {
                 // Docs/adr/4440: an object its layer's type does not hold refuses them all here, the plan too (written:
                 // the step's integrity check would refuse it only when execute ends).
                 if let Some(why) = misfit(cx.doc, &uids) {
                     return relay(naming(
-                        Stop::failed(error(codes::LAYER_GEOMETRY_MISMATCH, why, Some("layers".into()))).into(),
+                        Stop::failed(error(
+                            codes::LAYER_GEOMETRY_MISMATCH,
+                            why,
+                            Some("layers".into()),
+                        ))
+                        .into(),
                         &w.from,
                         words,
                     ));
                 }
                 if let Some((id, how)) = found {
                     let made = added.iter_mut().find(|a| a.id == id);
-                    let (group, groups_added, line_type_added, mut domains_added, forms_added) = match made {
-                        Some(a) => {
-                            a.used = true;
-                            (
-                                a.group.clone(),
-                                a.groups_added.iter().map(|g| g.1.clone()).collect(),
-                                a.line_type_added.clone(),
-                                a.given.added(),
-                                a.given.forms.iter().map(|f| f.1.clone()).collect(),
-                            )
-                        }
-                        None => (Vec::new(), Vec::new(), None, Vec::new(), Vec::new()),
-                    };
+                    let (group, groups_added, line_type_added, mut domains_added, forms_added) =
+                        match made {
+                            Some(a) => {
+                                a.used = true;
+                                (
+                                    a.group.clone(),
+                                    a.groups_added.iter().map(|g| g.1.clone()).collect(),
+                                    a.line_type_added.clone(),
+                                    a.given.added(),
+                                    a.given.forms.iter().map(|f| f.1.clone()).collect(),
+                                )
+                            }
+                            None => (Vec::new(), Vec::new(), None, Vec::new(), Vec::new()),
+                        };
                     let from = w.layer_from.clone().unwrap_or_default();
                     let mut fields_added = Vec::new();
                     if !layers.iter().any(|l| l.from == from) {
@@ -610,18 +779,29 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
                         {
                             match crate::road_recipe_fields::add_missing(cx.doc, &id, def, STEP) {
                                 Ok((names, lists)) if !names.is_empty() => {
-                                    let to_name = cx.doc.layers().get(&id).map(|n| n.name.clone()).unwrap_or_default();
+                                    let to_name = cx
+                                        .doc
+                                        .layers()
+                                        .get(&id)
+                                        .map(|n| n.name.clone())
+                                        .unwrap_or_default();
                                     warnings.push(CommandWarning {
                                         code: codes::RECIPE_LAYER_FIELDS_ADDED.into(),
-                                        message: crate::road_recipe_fields::added_said(&to_name, &names, &lists),
+                                        message: crate::road_recipe_fields::added_said(
+                                            &to_name, &names, &lists,
+                                        ),
                                         path: Some("layers".into()),
                                     });
                                     domains_added = lists
                                         .iter()
                                         .filter_map(|l| match &l.went {
                                             crate::road_recipe_fields::Went::Linked => None,
-                                            crate::road_recipe_fields::Went::Added => Some(l.name.clone()),
-                                            crate::road_recipe_fields::Went::Renamed { here } => Some(here.clone()),
+                                            crate::road_recipe_fields::Went::Added => {
+                                                Some(l.name.clone())
+                                            }
+                                            crate::road_recipe_fields::Went::Renamed { here } => {
+                                                Some(here.clone())
+                                            }
                                         })
                                         .collect();
                                     fields_added = names;
@@ -633,7 +813,8 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
                         // Docs/adr/4860: a layer found here keeps its own fields; the recipe's it lacks are said.
                         if how != RoadLayerMatch::Created
                             && let Some(def) = &w.layer
-                            && let Some(said) = crate::road_recipe_fields::differences(cx.doc, &id, def)
+                            && let Some(said) =
+                                crate::road_recipe_fields::differences(cx.doc, &id, def)
                         {
                             warnings.push(CommandWarning {
                                 code: codes::RECIPE_LAYER_FIELDS.into(),
@@ -642,8 +823,16 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
                             });
                         }
                         // A recipe from before keeps no name: the layer's here.
-                        let to_name = cx.doc.layers().get(&id).map(|n| n.name.clone()).unwrap_or_default();
-                        let name = w.layer.as_ref().map_or_else(|| to_name.clone(), |d| d.name.clone());
+                        let to_name = cx
+                            .doc
+                            .layers()
+                            .get(&id)
+                            .map(|n| n.name.clone())
+                            .unwrap_or_default();
+                        let name = w
+                            .layer
+                            .as_ref()
+                            .map_or_else(|| to_name.clone(), |d| d.name.clone());
                         layers.push(RoadProducedLayer {
                             from,
                             name,
@@ -659,17 +848,22 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
                         });
                     }
                 }
-                let drawing = match road_drawings::keep(cx.doc, &w.command, &input, main, &uids, None) {
-                    Ok(d) => d,
-                    Err(stop) => return stop.into(),
-                };
+                let drawing =
+                    match road_drawings::keep(cx.doc, &w.command, &input, main, &uids, None) {
+                        Ok(d) => d,
+                        Err(stop) => return stop.into(),
+                    };
                 let id = here.unwrap_or_default();
                 let name = road_drawings::name_of(cx.doc, main.0, &id).unwrap_or_default();
                 produced.push(RoadDrawingProduced {
                     from: w.from.clone(),
                     drawing,
                     command: w.command.clone(),
-                    source: RoadProducedSource { kind: main.0, id, name },
+                    source: RoadProducedSource {
+                        kind: main.0,
+                        id,
+                        name,
+                    },
                     uids,
                 });
                 warnings.extend(said);
@@ -678,7 +872,11 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
             // written); a refusal after the check, or any of named drawings, refuses them all.
             Err((refused, written)) => match *refused {
                 CommandResult::Failed { error } if !asked.named && !written => {
-                    left.push(RoadDrawingLeft { drawing: w.from.clone(), why: "refused".into(), message: error.message });
+                    left.push(RoadDrawingLeft {
+                        drawing: w.from.clone(),
+                        why: "refused".into(),
+                        message: error.message,
+                    });
                 }
                 other => return relay(naming(other, &w.from, words)),
             },
@@ -700,16 +898,31 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
         let forms: Vec<String> = a.given.forms.iter().map(|f| f.0.clone()).collect();
         crate::road_recipe_fields::remove_forms(cx.doc, &forms);
         for (g, _) in a.groups_added.iter().rev() {
-            if cx.doc.layers().get(g).is_some_and(|n| n.children.is_empty()) {
+            if cx
+                .doc
+                .layers()
+                .get(g)
+                .is_some_and(|n| n.children.is_empty())
+            {
                 let _ = cx.doc.remove_layer(g);
             }
         }
     }
     for t in added.iter().filter_map(|a| a.line_type_added.as_deref()) {
-        let named = cx.doc.layers().leaves().iter().any(|l| l.style.line_pattern.as_deref().is_some_and(|p| same_line_type_name(p, t)));
+        let named = cx.doc.layers().leaves().iter().any(|l| {
+            l.style
+                .line_pattern
+                .as_deref()
+                .is_some_and(|p| same_line_type_name(p, t))
+        });
         if !named {
             let settings = cx.doc.settings();
-            let types = settings.line_types.iter().filter(|x| !same_line_type_name(&x.name, t)).cloned().collect();
+            let types = settings
+                .line_types
+                .iter()
+                .filter(|x| !same_line_type_name(&x.name, t))
+                .cloned()
+                .collect();
             let hatches = settings.hatch_patterns.clone();
             cx.doc.set_pattern_tables(types, hatches, STEP);
         }
@@ -717,12 +930,23 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
     // Docs/adr/4860: the value lists added for layers taken away again that no field links now.
     let lists: Vec<String> = added
         .iter()
-        .flat_map(|a| a.given.lists.iter().filter(|l| l.went != crate::road_recipe_fields::Went::Linked).map(|l| l.id.clone()))
+        .flat_map(|a| {
+            a.given
+                .lists
+                .iter()
+                .filter(|l| l.went != crate::road_recipe_fields::Went::Linked)
+                .map(|l| l.id.clone())
+        })
         .collect();
     crate::road_recipe_fields::remove_unused(cx.doc, &lists, STEP);
     cx.progress(total, total);
     CommandResult::Completed {
-        output: RoadProjectProduced { produced, left, layers, revision: cx.doc.revision().to_string() },
+        output: RoadProjectProduced {
+            produced,
+            left,
+            layers,
+            revision: cx.doc.revision().to_string(),
+        },
         warnings,
     }
 }
@@ -730,13 +954,19 @@ fn write(cx: &mut ExecutionContext<'_>, asked: Asked) -> CommandResult<RoadProje
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RoadProjectProduce) -> CommandResult<()> {
     match plan(cx, input) {
-        CommandResult::Completed { warnings, .. } => CommandResult::Completed { output: (), warnings },
+        CommandResult::Completed { warnings, .. } => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         other => relay(other),
     }
 }
 
 /// What execute would draw, on a reading copy; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &RoadProjectProduce) -> CommandResult<RoadProjectProduced> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &RoadProjectProduce,
+) -> CommandResult<RoadProjectProduced> {
     let asked = match asked(cx.doc, input) {
         Ok(a) => a,
         Err(stop) => return stop.into(),
@@ -751,7 +981,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &RoadProjectProduce) -> CommandRes
 }
 
 /// Draws the recipe's drawings: one undo step “Tariften üret”, all of them or none.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RoadProjectProduce) -> CommandResult<RoadProjectProduced> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RoadProjectProduce,
+) -> CommandResult<RoadProjectProduced> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_PROJECT_PRODUCE,
@@ -772,12 +1005,25 @@ mod tests {
 
     /// The shared cases' Yol project (road_terrain_zeroline_cases.py's) and the recipe of two zero lines.
     fn project() -> (Document, RoadProjectProduce) {
-        let cases: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.project.produce.json")).expect("cases");
-        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let cases: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/commands/v1/road.project.produce.json"
+        ))
+        .expect("cases");
+        let snapshot: DocumentSnapshotV2 =
+            serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
         let doc = Document::from_snapshot_v2(snapshot).expect("opens");
-        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/recipes/v1/sifir-hatlari.json");
-        (doc, RoadProjectProduce { path: path.display().to_string(), drawings: None, layers: Default::default(), add_fields: false, expected_revision: None })
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/recipes/v1/sifir-hatlari.json");
+        (
+            doc,
+            RoadProjectProduce {
+                path: path.display().to_string(),
+                drawings: None,
+                layers: Default::default(),
+                add_fields: false,
+                expected_revision: None,
+            },
+        )
     }
 
     /// docs/adr/2440: a stop asked before the first drawing is heard: cancelled, nothing written.
@@ -787,7 +1033,9 @@ mod tests {
         let before = doc.to_snapshot_v2();
         let job = Progress::default();
         job.stop();
-        let Ok(asked) = asked(&doc, &input) else { panic!("a recipe") };
+        let Ok(asked) = asked(&doc, &input) else {
+            panic!("a recipe")
+        };
         let mut cx = ExecutionContext::new(&mut doc);
         cx.job = Some(&job);
         assert!(matches!(write(&mut cx, asked), CommandResult::Cancelled));
@@ -799,11 +1047,22 @@ mod tests {
     fn the_progress_is_the_drawings() {
         let (mut doc, input) = project();
         let job = Progress::default();
-        let Ok(asked) = asked(&doc, &input) else { panic!("a recipe") };
+        let Ok(asked) = asked(&doc, &input) else {
+            panic!("a recipe")
+        };
         let mut cx = ExecutionContext::new(&mut doc);
         cx.job = Some(&job);
-        let CommandResult::Completed { output, .. } = write(&mut cx, asked) else { panic!("produced") };
-        assert_eq!(output.produced.iter().map(|p| p.drawing.as_str()).collect::<Vec<_>>(), ["cz-1", "cz-2"]);
+        let CommandResult::Completed { output, .. } = write(&mut cx, asked) else {
+            panic!("produced")
+        };
+        assert_eq!(
+            output
+                .produced
+                .iter()
+                .map(|p| p.drawing.as_str())
+                .collect::<Vec<_>>(),
+            ["cz-1", "cz-2"]
+        );
         assert_eq!(job.fraction(), Some(1.0));
     }
 
@@ -825,8 +1084,16 @@ mod tests {
         assert_eq!(tree.rebuildable, 0, "both drawings current");
         let graph = crate::road_project_graph::preview(&doc, false).expect("the graph");
         assert_eq!(graph.drawings, 2);
-        let commands: Vec<&str> = graph.nodes.iter().filter_map(|n| n.recipe.as_ref()).map(|r| r.command.as_str()).collect();
-        assert_eq!(commands, ["road.terrains.zeroline", "road.terrains.zeroline"]);
+        let commands: Vec<&str> = graph
+            .nodes
+            .iter()
+            .filter_map(|n| n.recipe.as_ref())
+            .map(|r| r.command.as_str())
+            .collect();
+        assert_eq!(
+            commands,
+            ["road.terrains.zeroline", "road.terrains.zeroline"]
+        );
         assert_eq!(doc.undo().as_deref(), Some("Tariften üret"));
         assert_eq!(doc.to_snapshot_v2(), before);
     }

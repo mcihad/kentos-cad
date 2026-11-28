@@ -194,10 +194,9 @@ pub fn contract_wall(shape: &Shape) -> Option<WallFields> {
             end_pass: wall.passes[1].clone(),
         },
         cleanup: wall.cleanup,
-        curtain: wall
-            .curtain
-            .as_ref()
-            .and_then(|c| serde_json::from_str(&kentos_geometry_core::api::json::to_string(c)).ok()),
+        curtain: wall.curtain.as_ref().and_then(|c| {
+            serde_json::from_str(&kentos_geometry_core::api::json::to_string(c)).ok()
+        }),
     })
 }
 
@@ -279,16 +278,24 @@ pub fn plain_joined(
         })
         .collect();
     let level = |s: &Shape| match s {
-        Shape::Wall { wall, .. } => kentos_geometry_core::geom::wall_join::level(wall).map(str::to_owned),
+        Shape::Wall { wall, .. } => {
+            kentos_geometry_core::geom::wall_join::level(wall).map(str::to_owned)
+        }
         _ => None,
     };
     let wholes: Vec<Option<wall::Drawn>> = solved.drawn;
     for ((i, shape), drawn) in walls.iter().zip(&wholes) {
-        let (Some(d), Shape::Wall { pts, wall, .. }, Entity::Wall(w)) = (drawn, shape, &entities[*i]) else {
+        let (Some(d), Shape::Wall { pts, wall, .. }, Entity::Wall(w)) =
+            (drawn, shape, &entities[*i])
+        else {
             continue;
         };
         let lv = level(shape);
-        let feet: Vec<&Foot> = columns.iter().filter(|c| c.2.level == lv).map(|c| &c.2).collect();
+        let feet: Vec<&Foot> = columns
+            .iter()
+            .filter(|c| c.2.level == lv)
+            .map(|c| &c.2)
+            .collect();
         let d = cut(d, &feet).unwrap_or_else(|| d.clone());
         out[*i] = Some(plain_of(&w.base, wall::pieces_of(&d, pts, wall, view)));
     }
@@ -308,7 +315,8 @@ pub fn plain_joined(
             })
             .collect();
         if let (Some(look), Shape::Column { at: p, column }) = (joined(foot, &at), shape) {
-            let pieces = kentos_geometry_core::geom::arch::column_pieces_joined(*p, column, view, &look);
+            let pieces =
+                kentos_geometry_core::geom::arch::column_pieces_joined(*p, column, view, &look);
             out[*i] = crate::arch_elements::plain_of_pieces(&entities[*i], pieces);
         }
     }
@@ -373,10 +381,10 @@ fn plain_of(base: &EntityBase, pieces: Vec<kentos_geometry_core::block::Piece>) 
                 base: b,
                 ring: back(&ring),
                 holes: holes.map(|hs| hs.iter().map(|h| back(h)).collect()),
-                pattern: Box::new(serde_json::from_str(&kentos_geometry_core::api::json::to_string(
-                    &pattern,
-                ))
-                .unwrap_or_else(|_| HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0))),
+                pattern: Box::new(
+                    serde_json::from_str(&kentos_geometry_core::api::json::to_string(&pattern))
+                        .unwrap_or_else(|_| HatchPattern::user(HatchPatternType::Solid, 0.0, 1.0)),
+                ),
                 assoc: None,
                 boundary: None,
                 annotative: None,
@@ -429,7 +437,13 @@ mod tests {
                 ..WallJoins::default()
             },
             cleanup: false,
-            curtain: Some(kentos_contracts::CurtainGrid { spacing: 1.5, rows: 1.2, frame: Some(0.06), panel: Some("Cam".into()), frames: None }),
+            curtain: Some(kentos_contracts::CurtainGrid {
+                spacing: 1.5,
+                rows: 1.2,
+                frame: Some(0.06),
+                panel: Some("Cam".into()),
+                frames: None,
+            }),
         };
         assert_eq!(contract_wall(&core_wall(&w)), Some(w));
     }
@@ -439,7 +453,8 @@ mod tests {
     #[test]
     fn niches_flues_and_service_holes_go_out_plain() {
         use kentos_contracts::{
-            EntityBase, LineType, OpeningEntity, OpeningFields, OpeningForm, OpeningSide, WallEntity,
+            EntityBase, LineType, OpeningEntity, OpeningFields, OpeningForm, OpeningSide,
+            WallEntity,
         };
         let wall = WallFields {
             pts: vec![Vec2 { x: 0.0, y: 0.0 }, Vec2 { x: 6.0, y: 0.0 }],
@@ -471,7 +486,12 @@ mod tests {
             attachments: Vec::new(),
         };
         let uid = "0192f5a1-2590-7000-8000-000000000071".to_owned();
-        let opening = |id: u32, at: f64, width: f64, form: OpeningForm, depth: Option<f64>, sill: Option<f64>| {
+        let opening = |id: u32,
+                       at: f64,
+                       width: f64,
+                       form: OpeningForm,
+                       depth: Option<f64>,
+                       sill: Option<f64>| {
             let mut f = OpeningFields {
                 host: uid.clone(),
                 at,
@@ -505,10 +525,15 @@ mod tests {
                 .into_iter()
                 .map(|(x, y)| Vec2 { x, y })
                 .collect();
-            Entity::Opening(OpeningEntity { base: base(id), opening: Box::new(f) })
+            Entity::Opening(OpeningEntity {
+                base: base(id),
+                opening: Box::new(f),
+            })
         };
         // Plain alone: its faces and its two end caps.
-        let alone = plain_pieces(&base(1), &wall, View::default()).unwrap().len();
+        let alone = plain_pieces(&base(1), &wall, View::default())
+            .unwrap()
+            .len();
         let entities = vec![
             Entity::Wall(WallEntity {
                 base: base(1),
@@ -523,13 +548,19 @@ mod tests {
         let pieces = |i: usize| plain[i].as_ref().expect("drawn");
         // The niche cuts the right face (one piece more), adds its back and two jambs; the flue adds its two sides
         // and four jambs; the service hole above the cut leaves the wall whole.
-        assert_eq!(pieces(0).len(), alone + 1 + 1 + 2 + 2 + 2, "{:?}", pieces(0));
+        assert_eq!(
+            pieces(0).len(),
+            alone + 1 + 1 + 2 + 2 + 2,
+            "{:?}",
+            pieces(0)
+        );
         assert!(pieces(1).is_empty(), "a cut niche is its wall's");
         assert_eq!(pieces(2).len(), 2, "the flue's cross");
         let hole = pieces(3);
         assert_eq!(hole.len(), 4, "jambs and a cross");
         assert!(
-            hole.iter().all(|e| e.base().look.line_type == Some(LineType::Dashed)),
+            hole.iter()
+                .all(|e| e.base().look.line_type == Some(LineType::Dashed)),
             "above the cut: dashed"
         );
     }
@@ -684,7 +715,12 @@ mod tests {
                     Entity::Polyline(l) => Some(
                         l.pts
                             .windows(2)
-                            .map(|w| kentos_geometry_core::jsmath::js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+                            .map(|w| {
+                                kentos_geometry_core::jsmath::js_hypot(
+                                    w[1].x - w[0].x,
+                                    w[1].y - w[0].y,
+                                )
+                            })
                             .sum::<f64>(),
                     ),
                     _ => None,
@@ -701,12 +737,17 @@ mod tests {
                 _ => None,
             })
             .fold(0.0, f64::max);
-        assert!((far - 3.8).abs() < 1e-9, "the wall stops at the column's face: {far}");
-        let column = plain[1].as_ref().expect("one section with the wall's concrete");
         assert!(
-            column
-                .iter()
-                .any(|p| matches!(p, Entity::Hatch(h) if h.base.color.as_deref() == Some("#A6A6A6"))),
+            (far - 3.8).abs() < 1e-9,
+            "the wall stops at the column's face: {far}"
+        );
+        let column = plain[1]
+            .as_ref()
+            .expect("one section with the wall's concrete");
+        assert!(
+            column.iter().any(
+                |p| matches!(p, Entity::Hatch(h) if h.base.color.as_deref() == Some("#A6A6A6"))
+            ),
             "{column:?}"
         );
         assert!((length(column) - 1.35).abs() < 1e-9, "{}", length(column));

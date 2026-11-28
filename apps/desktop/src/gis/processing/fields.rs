@@ -206,7 +206,9 @@ fn features<'a>(
     // Tümü and Görünen read alike: what each takes is said (docs/adr/9341).
     let meaning = match chosen {
         ScopeKind::All => Some("Görünen katmanların bütün nesneleri; ekranın dışında kalanlar da."),
-        ScopeKind::Visible => Some("Yalnız ekranda görünen alandaki nesneler; gizli katmanlarınki alınmaz."),
+        ScopeKind::Visible => {
+            Some("Yalnız ekranda görünen alandaki nesneler; gizli katmanlarınki alınmaz.")
+        }
         _ => None,
     };
     if let Some(meaning) = meaning {
@@ -377,26 +379,44 @@ fn text<'a>(
 
 /// Shared colour picker plus named drawing swatches: colour codes are optional inside the picker.
 /// Values stay ordinary strings, so tool runs and saved model steps use the same API.
-fn color_field<'a>(def: &'a ParamDef, inheritance: bool, env: &Env<'a, '_>) -> Element<'a, Message> {
+fn color_field<'a>(
+    def: &'a ParamDef,
+    inheritance: bool,
+    env: &Env<'a, '_>,
+) -> Element<'a, Message> {
     let ev = env.send;
     let name = def.name.clone();
-    color_choice(env.value(&def.name).as_str().unwrap_or_default(), inheritance, env.color,
-        move |value| ev(Event::Value(name.clone(),json!(value))))
+    color_choice(
+        env.value(&def.name).as_str().unwrap_or_default(),
+        inheritance,
+        env.color,
+        move |value| ev(Event::Value(name.clone(), json!(value))),
+    )
 }
 
-pub(super) fn color_choice<'a>(value: &str, inheritance: bool, color: &dyn Fn(&str) -> iced::Color,
-    set: impl Fn(Option<String>) -> Message + Clone + 'a) -> Element<'a, Message> {
+pub(super) fn color_choice<'a>(
+    value: &str,
+    inheritance: bool,
+    color: &dyn Fn(&str) -> iced::Color,
+    set: impl Fn(Option<String>) -> Message + Clone + 'a,
+) -> Element<'a, Message> {
     use kentos_ui::widget::color::{ColorPicker, to_hex};
     let mut values = vec![String::new()];
     let mut choices = vec![Choice::new("Renk koşulu yok")];
     if inheritance {
         values.extend(["byLayer".into(), "byBlock".into()]);
-        choices.extend([Choice::new("Katmana göre"), Choice::new("Bloğa göre").detail("Blok parçasında")]);
+        choices.extend([
+            Choice::new("Katmana göre"),
+            Choice::new("Bloğa göre").detail("Blok parçasında"),
+        ]);
     }
     // A colour predicate needs literal black; the ribbon's adaptive `ink`
     // token can resolve to white on the drawing canvas.
-    let swatches = || crate::ribbon_panels::DRAW_COLORS.into_iter().map(|(label, value)|
-        (label, if value == "ink" { "#000000" } else { value }));
+    let swatches = || {
+        crate::ribbon_panels::DRAW_COLORS
+            .into_iter()
+            .map(|(label, value)| (label, if value == "ink" { "#000000" } else { value }))
+    };
     for (label, value) in swatches() {
         values.push(value.into());
         choices.push(Choice::new(label).color(color(value)));
@@ -413,19 +433,33 @@ pub(super) fn color_choice<'a>(value: &str, inheritance: bool, color: &dyn Fn(&s
     });
     let shown = if value.is_empty() || matches!(value, "byLayer" | "byBlock") {
         color("#E5484D")
-    } else { color(value) };
-    let anchor = container(row![icon(Icon::Drop).size(14.0), label::caption("Özel renk…")].spacing(6).align_y(Center))
-        .padding([7,8]).style(style::container::field_box);
+    } else {
+        color(value)
+    };
+    let anchor = container(
+        row![icon(Icon::Drop).size(14.0), label::caption("Özel renk…")]
+            .spacing(6)
+            .align_y(Center),
+    )
+    .padding([7, 8])
+    .style(style::container::field_box);
     let picker = ColorPicker::new(shown, move |c| set(Some(to_hex(c))))
         .palette(swatches().map(|(_, value)| color(value)))
         .anchor(anchor);
-    row![container(chooser).width(Fill), picker].spacing(8).align_y(Center).into()
+    row![container(chooser).width(Fill), picker]
+        .spacing(8)
+        .align_y(Center)
+        .into()
 }
 
 /// A choice: up to three short options as buttons, else a list with each one's hint.
 /// The one option left of a choice acting on objects its input does not hold (docs/adr/9333): the one the others
 /// get; none while the choice reaches something or the input is not read.
-pub(super) fn only_choice(def: &ParamDef, options: &[EnumOption], window: &ToolDialog) -> Option<usize> {
+pub(super) fn only_choice(
+    def: &ParamDef,
+    options: &[EnumOption],
+    window: &ToolDialog,
+) -> Option<usize> {
     window
         .acting(def)
         .filter(|(n, _)| *n == 0)
@@ -1172,7 +1206,12 @@ fn expression<'a>(
     .align_y(Alignment::Start);
     let mut out = column![line, bar].spacing(8).width(Fill);
     // The last run's expression, offered, not written in (docs/adr/9341).
-    if let Some(last) = env.window.recalled.get(&def.name).filter(|l| l.as_str() != value) {
+    if let Some(last) = env
+        .window
+        .recalled
+        .get(&def.name)
+        .filter(|l| l.as_str() != value)
+    {
         let name = def.name.clone();
         let text = last.clone();
         out = out.push(

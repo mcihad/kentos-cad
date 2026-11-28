@@ -98,12 +98,22 @@ fn follow(r: [f64; 2], f: [f64; 2], g: [f64; 2], l: f64) -> [f64; 2] {
     let u = [d[0] / s, d[1] / s];
     let n = [-u[1], u[0]];
     let b = sub(f, r);
-    let (c, sn) = ((b[0] * u[0] + b[1] * u[1]) / l, (b[0] * n[0] + b[1] * n[1]) / l);
+    let (c, sn) = (
+        (b[0] * u[0] + b[1] * u[1]) / l,
+        (b[0] * n[0] + b[1] * n[1]) / l,
+    );
     let phi = sn.atan2(c);
     // tan(φ/2) e^(−s/L); φ = ±π (the bar pointing back) stays.
     let half = (phi / 2.0).tan() * (-s / l).exp();
-    let phi2 = if half.is_finite() { 2.0 * half.atan() } else { phi };
-    [g[0] - l * (phi2.cos() * u[0] + phi2.sin() * n[0]), g[1] - l * (phi2.cos() * u[1] + phi2.sin() * n[1])]
+    let phi2 = if half.is_finite() {
+        2.0 * half.atan()
+    } else {
+        phi
+    };
+    [
+        g[0] - l * (phi2.cos() * u[0] + phi2.sin() * n[0]),
+        g[1] - l * (phi2.cos() * u[1] + phi2.sin() * n[1]),
+    ]
 }
 
 /// A body rectangle from `back` to `ahead` along the unit's heading, `width` wide.
@@ -120,7 +130,13 @@ fn body(back: [f64; 2], ahead: [f64; 2], width: f64) -> [[f64; 2]; 4] {
 
 /// An arc's places: from `start` (radians) through `sweep` (radians, counter-clockwise positive) round `centre` at
 /// `radius`, in n = ⌈|sweep|·radius / step⌉ equal pieces (at least one), both ends included.
-pub fn arc_places(centre: [f64; 2], radius: f64, start: f64, sweep: f64, step: f64) -> Vec<[f64; 2]> {
+pub fn arc_places(
+    centre: [f64; 2],
+    radius: f64,
+    start: f64,
+    sweep: f64,
+    step: f64,
+) -> Vec<[f64; 2]> {
     let n = ((sweep.abs() * radius / step).ceil() as usize).max(1);
     (0..=n)
         .map(|k| {
@@ -143,7 +159,10 @@ pub fn bulge_places(a: [f64; 2], b: [f64; 2], bulge: f64, step: f64) -> Vec<[f64
     }
     // The centre off the chord's middle, to the left of the chord by (c/2)(1 − b²)/(2b).
     let h = c / 2.0 * (1.0 - bulge * bulge) / (2.0 * bulge);
-    let centre = [(a[0] + b[0]) / 2.0 - dy / c * h, (a[1] + b[1]) / 2.0 + dx / c * h];
+    let centre = [
+        (a[0] + b[0]) / 2.0 - dy / c * h,
+        (a[1] + b[1]) / 2.0 + dx / c * h,
+    ];
     let radius = (a[0] - centre[0]).hypot(a[1] - centre[1]);
     let start = (a[1] - centre[1]).atan2(a[0] - centre[0]);
     let mut out = arc_places(centre, radius, start, 4.0 * bulge.atan(), step);
@@ -165,7 +184,13 @@ pub fn resample(path: &[[f64; 2]], step: f64) -> Vec<(f64, [f64; 2])> {
         let n = (len / step).ceil().max(1.0) as usize;
         for k in 1..=n {
             let t = k as f64 / n as f64;
-            out.push((at + t * len, [w[0][0] + t * (w[1][0] - w[0][0]), w[0][1] + t * (w[1][1] - w[0][1])]));
+            out.push((
+                at + t * len,
+                [
+                    w[0][0] + t * (w[1][0] - w[0][0]),
+                    w[0][1] + t * (w[1][1] - w[0][1]),
+                ],
+            ));
         }
         at += len;
     }
@@ -188,7 +213,11 @@ fn distance_near(path: &[[f64; 2]], along: &[f64], from: f64, to: f64, p: [f64; 
 fn segment_point(a: [f64; 2], b: [f64; 2], p: [f64; 2]) -> f64 {
     let (d, w) = (sub(b, a), sub(p, a));
     let l2 = d[0] * d[0] + d[1] * d[1];
-    let t = if l2 > 0.0 { ((w[0] * d[0] + w[1] * d[1]) / l2).clamp(0.0, 1.0) } else { 0.0 };
+    let t = if l2 > 0.0 {
+        ((w[0] * d[0] + w[1] * d[1]) / l2).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
     (p[0] - a[0] - t * d[0]).hypot(p[1] - a[1] - t * d[1])
 }
 
@@ -203,14 +232,25 @@ pub fn drive(vehicle: &Vehicle, path: &[[f64; 2]], step: f64) -> Result<Swept, S
         && ok(vehicle.rear)
         && vehicle.rear >= 0.0);
     if let Some(t) = vehicle.trailer {
-        bad |= !(ok(t.kingpin) && ok(t.wheelbase) && t.wheelbase > 0.0 && ok(t.width) && t.width > 0.0 && ok(t.front) && t.front >= 0.0 && ok(t.rear) && t.rear >= 0.0);
+        bad |= !(ok(t.kingpin)
+            && ok(t.wheelbase)
+            && t.wheelbase > 0.0
+            && ok(t.width)
+            && t.width > 0.0
+            && ok(t.front)
+            && t.front >= 0.0
+            && ok(t.rear)
+            && t.rear >= 0.0);
     }
     if bad {
         return Err(SweptError::Vehicle);
     }
     let mut places: Vec<[f64; 2]> = path.to_vec();
     places.dedup();
-    if places.len() < 2 || !(step.is_finite() && step > 0.0) || places.iter().any(|p| !(ok(p[0]) && ok(p[1]))) {
+    if places.len() < 2
+        || !(step.is_finite() && step > 0.0)
+        || places.iter().any(|p| !(ok(p[0]) && ok(p[1])))
+    {
         return Err(SweptError::Path);
     }
     let l = vehicle.wheelbase;
@@ -241,7 +281,13 @@ pub fn drive(vehicle: &Vehicle, path: &[[f64; 2]], step: f64) -> Result<Swept, S
                 t.width,
             ));
         }
-        Sample { distance: d, front: f, rear: r, trailer, bodies }
+        Sample {
+            distance: d,
+            front: f,
+            rear: r,
+            trailer,
+            bodies,
+        }
     };
     let mut samples = vec![sample(0.0, f, r, trailer)];
     for (d, g) in resample(&places, step).into_iter().skip(1) {
@@ -256,8 +302,13 @@ pub fn drive(vehicle: &Vehicle, path: &[[f64; 2]], step: f64) -> Result<Swept, S
     }
     // The off-tracking against the path with its lead-in (the line the vehicle stood on at the start), each axle
     // against the stretch within the vehicle's length behind the front.
-    let reach = l + vehicle.trailer.map_or(0.0, |t| t.kingpin.abs() + t.wheelbase);
-    let lead = [places[0][0] - reach * first[0], places[0][1] - reach * first[1]];
+    let reach = l + vehicle
+        .trailer
+        .map_or(0.0, |t| t.kingpin.abs() + t.wheelbase);
+    let lead = [
+        places[0][0] - reach * first[0],
+        places[0][1] - reach * first[1],
+    ];
     let mut line = vec![lead];
     line.extend(&places);
     let mut along = vec![-reach, 0.0];
@@ -265,32 +316,56 @@ pub fn drive(vehicle: &Vehicle, path: &[[f64; 2]], step: f64) -> Result<Swept, S
         let last = along.last().copied().unwrap_or(0.0);
         along.push(last + norm(sub(w[1], w[0])));
     }
-    let off = |p: [f64; 2], d: f64| distance_near(&line, &along, d - 2.0 * reach - step, d + step, p);
-    let offtracking = samples.iter().map(|s| off(s.rear, s.distance)).fold(0.0, f64::max);
-    let trailer_offtracking =
-        vehicle.trailer.map(|_| samples.iter().filter_map(|s| s.trailer.map(|t| off(t, s.distance))).fold(0.0, f64::max));
-    Ok(Swept { samples, offtracking, trailer_offtracking, step })
+    let off =
+        |p: [f64; 2], d: f64| distance_near(&line, &along, d - 2.0 * reach - step, d + step, p);
+    let offtracking = samples
+        .iter()
+        .map(|s| off(s.rear, s.distance))
+        .fold(0.0, f64::max);
+    let trailer_offtracking = vehicle.trailer.map(|_| {
+        samples
+            .iter()
+            .filter_map(|s| s.trailer.map(|t| off(t, s.distance)))
+            .fold(0.0, f64::max)
+    });
+    Ok(Swept {
+        samples,
+        offtracking,
+        trailer_offtracking,
+        step,
+    })
 }
 
 /// Whether two segments cross or touch (collinear ones only where they overlap).
 fn segments_meet(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> bool {
-    let o = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
+    let o = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| {
+        (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+    };
     // `r` on the segment from `p` to `q`, given it is on its line.
     let on = |p: [f64; 2], q: [f64; 2], r: [f64; 2]| {
-        r[0] >= p[0].min(q[0]) && r[0] <= p[0].max(q[0]) && r[1] >= p[1].min(q[1]) && r[1] <= p[1].max(q[1])
+        r[0] >= p[0].min(q[0])
+            && r[0] <= p[0].max(q[0])
+            && r[1] >= p[1].min(q[1])
+            && r[1] <= p[1].max(q[1])
     };
     let (d1, d2, d3, d4) = (o(c, d, a), o(c, d, b), o(a, b, c), o(a, b, d));
     if d1 != 0.0 && d2 != 0.0 && d3 != 0.0 && d4 != 0.0 {
         return (d1 > 0.0) != (d2 > 0.0) && (d3 > 0.0) != (d4 > 0.0);
     }
-    (d1 == 0.0 && on(c, d, a)) || (d2 == 0.0 && on(c, d, b)) || (d3 == 0.0 && on(a, b, c)) || (d4 == 0.0 && on(a, b, d))
+    (d1 == 0.0 && on(c, d, a))
+        || (d2 == 0.0 && on(c, d, b))
+        || (d3 == 0.0 && on(a, b, c))
+        || (d4 == 0.0 && on(a, b, d))
 }
 
 fn segments_distance(a: [f64; 2], b: [f64; 2], c: [f64; 2], d: [f64; 2]) -> f64 {
     if segments_meet(a, b, c, d) {
         return 0.0;
     }
-    segment_point(a, b, c).min(segment_point(a, b, d)).min(segment_point(c, d, a)).min(segment_point(c, d, b))
+    segment_point(a, b, c)
+        .min(segment_point(a, b, d))
+        .min(segment_point(c, d, a))
+        .min(segment_point(c, d, b))
 }
 
 /// The least clearance found: its distance, the sample, the body (0 the tractor, 1 the trailer) and the obstacle.
@@ -319,7 +394,12 @@ pub fn clearance(swept: &Swept, obstacles: &[Vec<[f64; 2]>]) -> Option<Clearance
                     d = 0.0;
                 }
                 if d.is_finite() && best.is_none_or(|c| d < c.distance) {
-                    best = Some(Clearance { distance: d, sample: k, body: j, obstacle: o });
+                    best = Some(Clearance {
+                        distance: d,
+                        sample: k,
+                        body: j,
+                        obstacle: o,
+                    });
                 }
             }
         }

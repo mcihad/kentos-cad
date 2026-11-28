@@ -33,7 +33,9 @@ const REFERENCES: [&str; 21] = [
     include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc4x3-infra-rail.json"),
     include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc4-wall-with-opening-and-window.json"),
     include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc4-basin-tessellation.json"),
-    include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc4-column-straight-rectangle-tessellation.json"),
+    include_str!(
+        "../../../../../fixtures/ifc/v1/okuma/bsi-ifc4-column-straight-rectangle-tessellation.json"
+    ),
     include_str!("../../../../../fixtures/ifc/v1/okuma/bsi-ifc2x3-building-architecture.json"),
 ];
 
@@ -47,7 +49,9 @@ fn text(v: &Json) -> Option<String> {
 
 fn same<T: PartialEq + Debug>(out: &mut Vec<String>, what: &str, ours: T, theirs: T) {
     if ours != theirs {
-        out.push(format!("{what}: ours {ours:?}, the other reader's {theirs:?}"));
+        out.push(format!(
+            "{what}: ours {ours:?}, the other reader's {theirs:?}"
+        ));
     }
 }
 
@@ -55,21 +59,81 @@ fn same<T: PartialEq + Debug>(out: &mut Vec<String>, what: &str, ours: T, theirs
 pub(super) fn graph_differences(m: &Model, r: &Json) -> Vec<String> {
     let mut out = Vec::new();
     let s = &m.summary;
-    same(&mut out, "schema", Some(s.schema.clone()), text(&r["schema"]));
-    same(&mut out, "name", s.header.name.clone(), text(&r["header"]["name"]));
-    same(&mut out, "time stamp", s.header.time_stamp.clone(), text(&r["header"]["timeStamp"]));
-    same(&mut out, "preprocessor", s.header.preprocessor.clone(), text(&r["header"]["preprocessor"]));
-    same(&mut out, "originating system", s.header.originating_system.clone(), text(&r["header"]["originatingSystem"]));
-    same(&mut out, "records", Some(s.records as u64), r["records"].as_u64());
-    same(&mut out, "length unit", s.units.length.as_ref().map(|u| u.to_si), r["lengthToSi"].as_f64());
+    same(
+        &mut out,
+        "schema",
+        Some(s.schema.clone()),
+        text(&r["schema"]),
+    );
+    same(
+        &mut out,
+        "name",
+        s.header.name.clone(),
+        text(&r["header"]["name"]),
+    );
+    same(
+        &mut out,
+        "time stamp",
+        s.header.time_stamp.clone(),
+        text(&r["header"]["timeStamp"]),
+    );
+    same(
+        &mut out,
+        "preprocessor",
+        s.header.preprocessor.clone(),
+        text(&r["header"]["preprocessor"]),
+    );
+    same(
+        &mut out,
+        "originating system",
+        s.header.originating_system.clone(),
+        text(&r["header"]["originatingSystem"]),
+    );
+    same(
+        &mut out,
+        "records",
+        Some(s.records as u64),
+        r["records"].as_u64(),
+    );
+    same(
+        &mut out,
+        "length unit",
+        s.units.length.as_ref().map(|u| u.to_si),
+        r["lengthToSi"].as_f64(),
+    );
     match (&s.location, r["location"].as_object()) {
         (None, None) => {}
         (Some(l), Some(o)) => {
-            same(&mut out, "eastings", Some(l.eastings), o["eastings"].as_f64());
-            same(&mut out, "northings", Some(l.northings), o["northings"].as_f64());
-            same(&mut out, "orthogonal height", Some(l.orthogonal_height), o["orthogonalHeight"].as_f64());
-            same(&mut out, "x axis abscissa", l.x_axis_abscissa, o["xAxisAbscissa"].as_f64());
-            same(&mut out, "x axis ordinate", l.x_axis_ordinate, o["xAxisOrdinate"].as_f64());
+            same(
+                &mut out,
+                "eastings",
+                Some(l.eastings),
+                o["eastings"].as_f64(),
+            );
+            same(
+                &mut out,
+                "northings",
+                Some(l.northings),
+                o["northings"].as_f64(),
+            );
+            same(
+                &mut out,
+                "orthogonal height",
+                Some(l.orthogonal_height),
+                o["orthogonalHeight"].as_f64(),
+            );
+            same(
+                &mut out,
+                "x axis abscissa",
+                l.x_axis_abscissa,
+                o["xAxisAbscissa"].as_f64(),
+            );
+            same(
+                &mut out,
+                "x axis ordinate",
+                l.x_axis_ordinate,
+                o["xAxisOrdinate"].as_f64(),
+            );
             same(&mut out, "scale", l.scale, o["scale"].as_f64());
             same(&mut out, "system", l.crs.clone(), text(&o["crs"]));
             let factors = o.get("factors").and_then(Json::as_array).map(|f| {
@@ -78,7 +142,9 @@ pub(super) fn graph_differences(m: &Model, r: &Json) -> Vec<String> {
             });
             same(&mut out, "factors", l.factors, factors);
         }
-        (ours, theirs) => out.push(format!("map conversion: ours {ours:?}, the other reader's {theirs:?}")),
+        (ours, theirs) => out.push(format!(
+            "map conversion: ours {ours:?}, the other reader's {theirs:?}"
+        )),
     }
     let Some(theirs) = r["objects"].as_object() else {
         out.push("the other reader lists no objects".to_owned());
@@ -88,22 +154,85 @@ pub(super) fn graph_differences(m: &Model, r: &Json) -> Vec<String> {
     let gid = |at: Option<usize>| at.map(|k| m.objects[k].global_id.clone());
     for o in &m.objects {
         let Some(t) = theirs.get(&o.global_id) else {
-            out.push(format!("{} #{} {}: not in the other reading", o.class, o.step, o.global_id));
+            out.push(format!(
+                "{} #{} {}: not in the other reading",
+                o.class, o.step, o.global_id
+            ));
             continue;
         };
         let what = format!("{} #{}", o.class, o.step);
-        same(&mut out, &format!("{what} step"), Some(u64::from(o.step)), t["step"].as_u64());
-        same(&mut out, &format!("{what} class"), Some(o.class.clone()), text(&t["class"]));
-        same(&mut out, &format!("{what} name"), o.name.clone(), text(&t["name"]));
-        same(&mut out, &format!("{what} description"), o.description.clone(), text(&t["description"]));
-        same(&mut out, &format!("{what} object type"), o.object_type.clone(), text(&t["objectType"]));
-        same(&mut out, &format!("{what} long name"), o.long_name.clone(), text(&t["longName"]));
-        same(&mut out, &format!("{what} tag"), o.tag.clone(), text(&t["tag"]));
-        same(&mut out, &format!("{what} predefined"), o.predefined.clone(), text(&t["predefined"]));
-        same(&mut out, &format!("{what} shape"), Some(o.has_shape), t["hasShape"].as_bool());
-        same(&mut out, &format!("{what} parent"), gid(o.parent), text(&t["parent"]));
-        same(&mut out, &format!("{what} container"), gid(o.container), text(&t["container"]));
-        same(&mut out, &format!("{what} type"), gid(o.type_object), text(&t["type"]));
+        same(
+            &mut out,
+            &format!("{what} step"),
+            Some(u64::from(o.step)),
+            t["step"].as_u64(),
+        );
+        same(
+            &mut out,
+            &format!("{what} class"),
+            Some(o.class.clone()),
+            text(&t["class"]),
+        );
+        same(
+            &mut out,
+            &format!("{what} name"),
+            o.name.clone(),
+            text(&t["name"]),
+        );
+        same(
+            &mut out,
+            &format!("{what} description"),
+            o.description.clone(),
+            text(&t["description"]),
+        );
+        same(
+            &mut out,
+            &format!("{what} object type"),
+            o.object_type.clone(),
+            text(&t["objectType"]),
+        );
+        same(
+            &mut out,
+            &format!("{what} long name"),
+            o.long_name.clone(),
+            text(&t["longName"]),
+        );
+        same(
+            &mut out,
+            &format!("{what} tag"),
+            o.tag.clone(),
+            text(&t["tag"]),
+        );
+        same(
+            &mut out,
+            &format!("{what} predefined"),
+            o.predefined.clone(),
+            text(&t["predefined"]),
+        );
+        same(
+            &mut out,
+            &format!("{what} shape"),
+            Some(o.has_shape),
+            t["hasShape"].as_bool(),
+        );
+        same(
+            &mut out,
+            &format!("{what} parent"),
+            gid(o.parent),
+            text(&t["parent"]),
+        );
+        same(
+            &mut out,
+            &format!("{what} container"),
+            gid(o.container),
+            text(&t["container"]),
+        );
+        same(
+            &mut out,
+            &format!("{what} type"),
+            gid(o.type_object),
+            text(&t["type"]),
+        );
     }
     out
 }
@@ -136,8 +265,11 @@ pub(super) fn set_differences(m: &Model, bytes: &[u8], r: &Json) -> (usize, Vec<
                 .into_iter()
                 .filter(|s| !s.from_type && s.kind != SetKind::Other)
                 .map(|s| {
-                    let values: serde_json::Map<String, Json> =
-                        s.values.iter().map(|v| (v.name.clone(), as_json(&v.value))).collect();
+                    let values: serde_json::Map<String, Json> = s
+                        .values
+                        .iter()
+                        .map(|v| (v.name.clone(), as_json(&v.value)))
+                        .collect();
                     (s.name, Json::Object(values))
                 })
                 .collect(),
@@ -148,7 +280,10 @@ pub(super) fn set_differences(m: &Model, bytes: &[u8], r: &Json) -> (usize, Vec<
         };
         compared += 1;
         if &Json::Object(ours.clone()) != sets {
-            out.push(format!("{} {global_id}: sets {ours:?}, the other reader's {sets:?}", m.objects[at].class));
+            out.push(format!(
+                "{} {global_id}: sets {ours:?}, the other reader's {sets:?}",
+                m.objects[at].class
+            ));
         }
     }
     (compared, out)
@@ -159,9 +294,18 @@ fn every_sample_reads_as_the_other_reader_reads_it() {
     let mut differences = Vec::new();
     for (i, (name, bytes)) in samples().enumerate() {
         let m = read_ok(bytes);
-        differences.extend(graph_differences(&m, &reference(i)).into_iter().map(|d| format!("{name}: {d}")));
+        differences.extend(
+            graph_differences(&m, &reference(i))
+                .into_iter()
+                .map(|d| format!("{name}: {d}")),
+        );
     }
-    assert!(differences.is_empty(), "{} differences:\n{}", differences.len(), differences.join("\n"));
+    assert!(
+        differences.is_empty(),
+        "{} differences:\n{}",
+        differences.len(),
+        differences.join("\n")
+    );
 }
 
 #[test]
@@ -193,16 +337,29 @@ fn the_engine_s_schema_table_is_the_published_ifc_4_3_for_every_class_kentos_use
         };
         let parent = def.supertypes.first().map(String::as_str);
         if info.parent.map(str::to_ascii_uppercase) != parent.map(str::to_ascii_uppercase) {
-            differences.push(format!("{class}: parent {:?}, the schema's {parent:?}", info.parent));
+            differences.push(format!(
+                "{class}: parent {:?}, the schema's {parent:?}",
+                info.parent
+            ));
         }
         if info.is_abstract != def.is_abstract {
-            differences.push(format!("{class}: abstract {}, the schema's {}", info.is_abstract, def.is_abstract));
+            differences.push(format!(
+                "{class}: abstract {}, the schema's {}",
+                info.is_abstract, def.is_abstract
+            ));
         }
         let ours: Vec<&str> = schema.attribute_names(class).unwrap_or(&[]).to_vec();
         let theirs: Vec<&str> = def.attributes.iter().map(|a| a.0.as_str()).collect();
         if ours != theirs {
-            differences.push(format!("{class}: attributes {ours:?}, the schema's {theirs:?}"));
+            differences.push(format!(
+                "{class}: attributes {ours:?}, the schema's {theirs:?}"
+            ));
         }
     }
-    assert!(differences.is_empty(), "{} differences:\n{}", differences.len(), differences.join("\n"));
+    assert!(
+        differences.is_empty(),
+        "{} differences:\n{}",
+        differences.len(),
+        differences.join("\n")
+    );
 }

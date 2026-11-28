@@ -220,7 +220,10 @@ pub async fn from_upload(
     if taken.size > MAX_FILE_BYTES {
         return Err(AppError::invalid_at(
             "uploadId",
-            format!("Dosyaya eklenen bir belge en çok {} MB olabilir.", MAX_FILE_BYTES / (1024 * 1024)),
+            format!(
+                "Dosyaya eklenen bir belge en çok {} MB olabilir.",
+                MAX_FILE_BYTES / (1024 * 1024)
+            ),
         ));
     }
     blobs.promote(&taken.key, &prepared.key).await?;

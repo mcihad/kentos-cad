@@ -9,10 +9,10 @@ use std::path::{Path, PathBuf};
 
 use kentos_commands::{
     ADDRESS_COMPARE_LIMIT, ADDRESS_COMPARE_MAX_LIMIT, ADDRESS_COMPARE_MAX_TOLERANCE,
-    ADDRESS_COMPARE_TOLERANCE,
-    AddressDifference, AddressDistance, AddressPart, AddressPartDifference, AddressRegister,
-    AddressRegisterRepeat, AddressUndrawn, AddressUnregistered, AddressesCompare,
-    AddressesCompared, CommandResult, CommandWarning, Entity,
+    ADDRESS_COMPARE_TOLERANCE, AddressDifference, AddressDistance, AddressPart,
+    AddressPartDifference, AddressRegister, AddressRegisterRepeat, AddressUndrawn,
+    AddressUnregistered, AddressesCompare, AddressesCompared, CommandResult, CommandWarning,
+    Entity,
 };
 use kentos_domain::{Document, Slot};
 use kentos_formats::table_file::{Limits, read_with};
@@ -299,7 +299,8 @@ pub(crate) fn compare_in(
     if reg.layer.is_some() && reg.sheet.is_some() {
         return Err(fail(
             codes::INVALID_INPUT,
-            "Sayfa (sheet) yalnız tablo dosyasıyla verilir; katmandan okunan kayıtta sayfa yoktur.".into(),
+            "Sayfa (sheet) yalnız tablo dosyasıyla verilir; katmandan okunan kayıtta sayfa yoktur."
+                .into(),
             "register.sheet",
         ));
     }
@@ -340,17 +341,16 @@ pub(crate) fn compare_in(
         ));
     };
     let table = match (&reg.path, &reg.layer) {
-        (Some(path), None) => {
-            file_table(&register_path(path, input.drawing.as_deref())?, reg.sheet.as_deref())?
-        }
+        (Some(path), None) => file_table(
+            &register_path(path, input.drawing.as_deref())?,
+            reg.sheet.as_deref(),
+        )?,
         (None, Some(layer)) => layer_table(doc, layer)?,
         _ => return Err(missing()),
     };
     let code = column(&table, &reg.code, "register.code")?;
     let named = |name: &Option<String>, path: &str| -> Result<Option<usize>, Stop> {
-        name.as_deref()
-            .map(|n| column(&table, n, path))
-            .transpose()
+        name.as_deref().map(|n| column(&table, n, path)).transpose()
     };
     let street = named(&reg.street, "register.street")?;
     let door = named(&reg.door, "register.door")?;
@@ -521,7 +521,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &AddressesCompare) -> CommandR
     }
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, input: &AddressesCompare) -> CommandResult<AddressesCompared> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &AddressesCompare,
+) -> CommandResult<AddressesCompared> {
     plan_in(cx.doc, input)
 }
 
@@ -543,7 +546,9 @@ mod tests {
         assert_eq!(number("500010,25"), Some(500_010.25));
         assert_eq!(number("-1e3"), Some(-1000.0));
         assert_eq!(number(".5"), Some(0.5));
-        for bad in ["", "1.000,5", "1_000", "inf", "NaN", "12a", "1e", "+", "1,2,3"] {
+        for bad in [
+            "", "1.000,5", "1_000", "inf", "NaN", "12a", "1e", "+", "1,2,3",
+        ] {
             assert_eq!(number(bad), None, "{bad}");
         }
     }

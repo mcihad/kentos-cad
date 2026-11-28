@@ -12,13 +12,21 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 }
 
 fn fixture(rel: &str) -> String {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures").join(rel).display().to_string()
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures")
+        .join(rel)
+        .display()
+        .to_string()
 }
 
 #[test]
 fn the_package_s_surface_over_mcp() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.asbuilt.check.json")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.asbuilt.check.json"
+    ))
+    .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
     let dir = std::env::temp_dir().join(format!("kentos-asbuilt-surface-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
@@ -39,7 +47,14 @@ fn the_package_s_surface_over_mcp() {
     );
     assert_eq!(written["isError"], false, "{written}");
     let surface = &written["structuredContent"]["output"]["surface"];
-    assert_eq!((surface["file"].as_str(), surface["vertices"].as_u64(), surface["triangles"].as_u64()), (Some("yuzey.xml"), Some(121), Some(200)));
+    assert_eq!(
+        (
+            surface["file"].as_str(),
+            surface["vertices"].as_u64(),
+            surface["triangles"].as_u64()
+        ),
+        (Some("yuzey.xml"), Some(121), Some(200))
+    );
     let base = json!({"drawing": drawing, "measured": "olcum", "surface": "Tasarım", "search": 0.5,
                       "qualityField": "Hassasiyet", "packageDesign": true});
     let mut args = base.clone();
@@ -48,10 +63,18 @@ fn the_package_s_surface_over_mcp() {
     assert_eq!(r["isError"], false, "{r}");
     let out = &r["structuredContent"]["output"];
     assert_eq!(out["package"]["surface"], true, "{out}");
-    assert!(out.get("surfaceChanged").is_none(), "the drawing's own surface: {out}");
+    assert!(
+        out.get("surfaceChanged").is_none(),
+        "the drawing's own surface: {out}"
+    );
 
     // The fixture package's surface: the shared case's differences.
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == "paketin yüzeyi: çizimdeki yüzey paketinkinden sonra değişmiş").unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "paketin yüzeyi: çizimdeki yüzey paketinkinden sonra değişmiş")
+        .unwrap();
     let want = &case["steps"][0]["result"]["output"];
     let mut args = case["steps"][0]["input"].clone();
     args["drawing"] = drawing.clone();
@@ -63,7 +86,12 @@ fn the_package_s_surface_over_mcp() {
     for key in ["within", "outside", "unmatched", "ambiguous"] {
         assert_eq!(got[key], want[key], "{key}");
     }
-    for (g, w) in got["points"].as_array().unwrap().iter().zip(want["points"].as_array().unwrap()) {
+    for (g, w) in got["points"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .zip(want["points"].as_array().unwrap())
+    {
         assert_eq!(g["flags"], w["flags"], "{}", w["name"]);
         match (g["surface"].as_f64(), w["surface"].as_f64()) {
             (Some(a), Some(b)) => assert!((a - b).abs() < 1e-6, "{}: {a} {b}", w["name"]),
@@ -76,6 +104,9 @@ fn the_package_s_surface_over_mcp() {
     args["package"] = json!(fixture("asbuilt/v1/files/bozuk-yuzey-paketi.zip"));
     let r = call(&mut server, "cad.asbuilt.check", args);
     assert_eq!(r["isError"], true, "{r}");
-    assert!(r.to_string().contains("yuzey.xml") && r.to_string().contains("özetiyle tutmuyor"), "{r}");
+    assert!(
+        r.to_string().contains("yuzey.xml") && r.to_string().contains("özetiyle tutmuyor"),
+        "{r}"
+    );
     let _ = std::fs::remove_dir_all(dir);
 }

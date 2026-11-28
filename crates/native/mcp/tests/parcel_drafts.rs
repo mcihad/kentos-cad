@@ -11,10 +11,25 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn a_draft_is_approved_and_another_withdrawn_over_mcp() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.parcels.record.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().starts_with("Taslak, kenar ölçüsüz")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-parcel-drafts-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.parcels.record.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .unwrap()
+                .starts_with("Taslak, kenar ölçüsüz")
+        })
+        .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
+    let path =
+        std::env::temp_dir().join(format!("kentos-parcel-drafts-{}.kcad", std::process::id()));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let open = call(&mut server, "drawing.open", json!({"path": path}));
@@ -26,28 +41,58 @@ fn a_draft_is_approved_and_another_withdrawn_over_mcp() {
     let r = call(&mut server, "cad.parcels.record", input);
     assert_eq!(r["isError"], false, "{r}");
     let out = &r["structuredContent"]["output"];
-    assert_eq!((out["draft"].clone(), out["document"].clone()), (json!(true), json!(1)), "{out}");
-    let listed = call(&mut server, "cad.parcels.records", json!({"drawing": drawing}));
+    assert_eq!(
+        (out["draft"].clone(), out["document"].clone()),
+        (json!(true), json!(1)),
+        "{out}"
+    );
+    let listed = call(
+        &mut server,
+        "cad.parcels.records",
+        json!({"drawing": drawing}),
+    );
     let o = &listed["structuredContent"]["output"];
-    assert_eq!((o["current"].clone(), o["drafts"][0]["name"].clone()), (json!(3), json!("2026/145 ifraz")), "{o}");
+    assert_eq!(
+        (o["current"].clone(), o["drafts"][0]["name"].clone()),
+        (json!(3), json!("2026/145 ifraz")),
+        "{o}"
+    );
     let approved = call(
         &mut server,
         "cad.parcels.approve",
         json!({"drawing": drawing, "draft": 1, "approval": {"reference": "2026/145-K", "date": "2026-03-20"}}),
     );
     assert_eq!(approved["isError"], false, "{approved}");
-    assert_eq!(approved["structuredContent"]["output"]["document"], 2, "{approved}");
+    assert_eq!(
+        approved["structuredContent"]["output"]["document"], 2,
+        "{approved}"
+    );
     let terkin = call(
         &mut server,
         "cad.parcels.record",
         json!({"drawing": drawing, "document": {"name": "2026/9 terkin"}, "close": [2], "draft": true}),
     );
     assert_eq!(terkin["isError"], false, "{terkin}");
-    let withdrawn = call(&mut server, "cad.parcels.withdraw", json!({"drawing": drawing, "draft": 1}));
-    assert_eq!(withdrawn["structuredContent"]["output"]["name"], "2026/9 terkin", "{withdrawn}");
-    let listed = call(&mut server, "cad.parcels.records", json!({"drawing": drawing}));
+    let withdrawn = call(
+        &mut server,
+        "cad.parcels.withdraw",
+        json!({"drawing": drawing, "draft": 1}),
+    );
+    assert_eq!(
+        withdrawn["structuredContent"]["output"]["name"], "2026/9 terkin",
+        "{withdrawn}"
+    );
+    let listed = call(
+        &mut server,
+        "cad.parcels.records",
+        json!({"drawing": drawing}),
+    );
     let o = &listed["structuredContent"]["output"];
     assert!(o.get("drafts").is_none(), "{o}");
     let docs = o["documents"].as_array().unwrap();
-    assert_eq!(docs[1]["approval"], json!({"reference": "2026/145-K", "date": "2026-03-20"}), "{o}");
+    assert_eq!(
+        docs[1]["approval"],
+        json!({"reference": "2026/145-K", "date": "2026-03-20"}),
+        "{o}"
+    );
 }

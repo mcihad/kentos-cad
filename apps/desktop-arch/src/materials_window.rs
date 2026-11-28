@@ -9,19 +9,20 @@
 //! libraries outside the drawing: KentOS's and the office's folders; Seçilenleri al takes a library's materials in,
 //! Kitaplığa yaz… writes the project's to a `.kmalzeme` file.
 
-use crate::arch_ext::*;
 use crate::arch;
+use crate::arch::ArchState;
+use crate::arch_ext::*;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    ArchMaterial, CommandResult, ComponentEdge, ComponentHatch, Entity, MaterialCategory, MaterialChange,
-    MaterialQuantity, MaterialReport, MaterialTarget, MaterialsEdit, MaterialsEdited, MaterialsOperation,
+    ArchMaterial, CommandResult, ComponentEdge, ComponentHatch, Entity, MaterialCategory,
+    MaterialChange, MaterialQuantity, MaterialReport, MaterialTarget, MaterialsEdit,
+    MaterialsEdited, MaterialsOperation,
 };
 use kentos_interaction::Level;
 use kentos_ui::icon::icon;
 use kentos_ui::widget::{Choice, Dialog as Frame, Select};
 use kentos_ui::{label, style};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -169,23 +170,39 @@ pub(crate) fn report_words(r: &MaterialReport) -> String {
         lead.push(format!("{} malzemede projeninki korunur", r.kept.len()));
     }
     // An import that touches nothing bound says only what it takes.
-    let mut parts = if lead.is_empty() || !(r.styles.is_empty() && r.walls.is_empty() && r.slabs.is_empty()) {
-        vec![format!("{} stil, {} duvar, {} döşeme izler", r.styles.len(), r.walls.len(), r.slabs.len())]
-    } else {
-        Vec::new()
-    };
+    let mut parts =
+        if lead.is_empty() || !(r.styles.is_empty() && r.walls.is_empty() && r.slabs.is_empty()) {
+            vec![format!(
+                "{} stil, {} duvar, {} döşeme izler",
+                r.styles.len(),
+                r.walls.len(),
+                r.slabs.len()
+            )]
+        } else {
+            Vec::new()
+        };
     if !r.locked.is_empty() {
-        parts.push(format!("{} kilitli katmanda eski değerleriyle kalır", r.locked.len()));
+        parts.push(format!(
+            "{} kilitli katmanda eski değerleriyle kalır",
+            r.locked.len()
+        ));
     }
     if !r.left.is_empty() {
-        parts.push(format!("{} metin farklı görünüşlü bileşenleri yüzünden bağlanmadı", r.left.len()));
+        parts.push(format!(
+            "{} metin farklı görünüşlü bileşenleri yüzünden bağlanmadı",
+            r.left.len()
+        ));
     }
     lead.extend(parts);
     lead.join(" · ")
 }
 
 fn number(v: f64) -> String {
-    if v.fract() == 0.0 { format!("{v:.0}") } else { format!("{v}") }
+    if v.fract() == 0.0 {
+        format!("{v:.0}")
+    } else {
+        format!("{v}")
+    }
 }
 
 /// The window's fields filled from the material `m`.
@@ -199,11 +216,21 @@ fn fill(w: &mut Window, m: &ArchMaterial) {
     w.angle = h.map_or_else(String::new, |h| number(h.angle));
     w.hatch_color = h.and_then(|h| h.color.clone()).unwrap_or_default();
     let c = m.cut.as_ref();
-    w.pen = c.and_then(|c| c.line_weight).map_or_else(String::new, number);
+    w.pen = c
+        .and_then(|c| c.line_weight)
+        .map_or_else(String::new, number);
     w.pen_color = c.and_then(|c| c.color.clone()).unwrap_or_default();
     w.strength = m.strength.clone().unwrap_or_default();
-    w.reaction = m.reaction.as_ref().map(|d| d.value.clone()).unwrap_or_default();
-    w.roof_class = m.roof_class.as_ref().map(|d| d.value.clone()).unwrap_or_default();
+    w.reaction = m
+        .reaction
+        .as_ref()
+        .map(|d| d.value.clone())
+        .unwrap_or_default();
+    w.roof_class = m
+        .roof_class
+        .as_ref()
+        .map(|d| d.value.clone())
+        .unwrap_or_default();
     w.preview = None;
     w.declared = None;
 }
@@ -221,11 +248,13 @@ fn declared_of(w: &Window, m: &ArchMaterial) -> Option<kentos_commands::Performa
     let roof_class = w.roof_class.trim();
     let roof_class = (roof_class != m.roof_class.as_ref().map_or("", |d| d.value.as_str()))
         .then(|| (!roof_class.is_empty()).then(|| kentos_commands::Declared::author(roof_class)));
-    (strength.is_some() || reaction.is_some() || roof_class.is_some()).then(|| kentos_commands::PerformanceOperation::Material {
-        material: m.id.clone(),
-        strength,
-        reaction,
-        roof_class,
+    (strength.is_some() || reaction.is_some() || roof_class.is_some()).then(|| {
+        kentos_commands::PerformanceOperation::Material {
+            material: m.id.clone(),
+            strength,
+            reaction,
+            roof_class,
+        }
     })
 }
 
@@ -307,13 +336,18 @@ pub(crate) trait MaterialsWindowApp {
     fn materials_unapplied(&self) -> bool;
     fn materials_event(&mut self, event: Event) -> Task<Message>;
     fn materials_view(&self) -> Element<'_, Message>;
-    fn material_form<'a>(&'a self, w: &'a Window, m: &'a ArchMaterial, u: &'a Use) -> Element<'a, Message>;
+    fn material_form<'a>(
+        &'a self,
+        w: &'a Window,
+        m: &'a ArchMaterial,
+        u: &'a Use,
+    ) -> Element<'a, Message>;
     fn materials_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
 impl MaterialsWindowApp for App {
     /// The project's materials, each with what is bound to it.
-    fn material_uses(&self) -> Vec<(ArchMaterial, Use)>{
+    fn material_uses(&self) -> Vec<(ArchMaterial, Use)> {
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
@@ -324,16 +358,26 @@ impl MaterialsWindowApp for App {
             .map(|m| {
                 let mut u = Use::default();
                 for s in &model.settings().wall_styles {
-                    if s.components.iter().any(|c| c.material_id.as_deref() == Some(m.id.as_str())) {
+                    if s.components
+                        .iter()
+                        .any(|c| c.material_id.as_deref() == Some(m.id.as_str()))
+                    {
                         u.styles.push(s.name.clone());
                     }
                 }
                 for e in model.entities() {
                     match e {
-                        Entity::Wall(w) if w.wall.components.iter().any(|c| c.material_id.as_deref() == Some(m.id.as_str())) => {
+                        Entity::Wall(w)
+                            if w.wall
+                                .components
+                                .iter()
+                                .any(|c| c.material_id.as_deref() == Some(m.id.as_str())) =>
+                        {
                             u.walls += 1;
                         }
-                        Entity::Slab(s) if s.slab.material_id.as_deref() == Some(m.id.as_str()) => u.slabs += 1,
+                        Entity::Slab(s) if s.slab.material_id.as_deref() == Some(m.id.as_str()) => {
+                            u.slabs += 1
+                        }
                         _ => {}
                     }
                 }
@@ -343,7 +387,7 @@ impl MaterialsWindowApp for App {
     }
 
     /// The wall style components Stile bağla offers.
-    fn material_targets(&self) -> Vec<(String, u32, String)>{
+    fn material_targets(&self) -> Vec<(String, u32, String)> {
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
@@ -365,16 +409,19 @@ impl MaterialsWindowApp for App {
     }
 
     /// The window read again, the material `keep` (an id) chosen if it is still there.
-    fn materials_read(&mut self, keep: Option<String>){
+    fn materials_read(&mut self, keep: Option<String>) {
         let list = self.material_uses();
         let chosen = keep
             .and_then(|id| list.iter().position(|(m, _)| m.id == id))
             .unwrap_or(0);
         let (tab, entry, conflict) = self
-            .modules.arch()
+            .modules
+            .arch()
             .materials
             .as_ref()
-            .map_or((Tab::Project, 0, Conflict::Keep), |w| (w.tab, w.entry, w.conflict));
+            .map_or((Tab::Project, 0, Conflict::Keep), |w| {
+                (w.tab, w.entry, w.conflict)
+            });
         let mut w = Window {
             list,
             chosen,
@@ -392,7 +439,7 @@ impl MaterialsWindowApp for App {
     }
 
     /// Malzemeler (`arch.materials`): the window.
-    fn open_materials(&mut self){
+    fn open_materials(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -401,14 +448,17 @@ impl MaterialsWindowApp for App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Materials));
     }
 
-    fn materials_chosen(&self) -> Option<ArchMaterial>{
+    fn materials_chosen(&self) -> Option<ArchMaterial> {
         let w = self.modules.arch().materials.as_ref()?;
         w.list.get(w.chosen).map(|(m, _)| m.clone())
     }
 
     /// The plan of the change typed: what it would do, nothing written.
-    fn materials_preview(&mut self){
-        let (Some(w), Some(m)) = (self.modules.arch().materials.as_ref(), self.materials_chosen()) else {
+    fn materials_preview(&mut self) {
+        let (Some(w), Some(m)) = (
+            self.modules.arch().materials.as_ref(),
+            self.materials_chosen(),
+        ) else {
             return;
         };
         let preview = match change_of(w, &m) {
@@ -416,7 +466,10 @@ impl MaterialsWindowApp for App {
             Some(Err(why)) => Some(Err(why)),
             Some(Ok(change)) => self.document.as_ref().map(|doc| {
                 let input = MaterialsEdit {
-                    operation: MaterialsOperation::Update { material: m.id.clone(), change },
+                    operation: MaterialsOperation::Update {
+                        material: m.id.clone(),
+                        change,
+                    },
                     expected_revision: None,
                 };
                 match kentos_native_application::materials_edit::plan_in(&doc.model, &input) {
@@ -431,11 +484,14 @@ impl MaterialsWindowApp for App {
         // The declarations' refusal, said before Uygula (an unreadable class, a strength with a space).
         let declared = declared_of(w, &m).and_then(|operation| {
             let doc = self.document.as_ref()?;
-            let input = kentos_commands::ArchPerformance { operation, expected_revision: None };
+            let input = kentos_commands::ArchPerformance {
+                operation,
+                expected_revision: None,
+            };
             match kentos_native_application::arch_performance::plan_in(&doc.model, &input) {
-                CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                    Some(error.message)
-                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Some(error.message),
                 _ => None,
             }
         });
@@ -447,15 +503,22 @@ impl MaterialsWindowApp for App {
 
     /// `cad.arch.performance` over the drawing (docs/adr/8091): the material's strength and reaction class, one step
     /// “Yangın ve performans”; whether it was written, the refusal said.
-    fn materials_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool{
-        let Some(doc) = self.document.as_mut() else { return false };
-        let input = kentos_commands::ArchPerformance { operation, expected_revision: None };
+    fn materials_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool {
+        let Some(doc) = self.document.as_mut() else {
+            return false;
+        };
+        let input = kentos_commands::ArchPerformance {
+            operation,
+            expected_revision: None,
+        };
         match kentos_native_application::arch_performance::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
             input,
         ) {
             CommandResult::Completed { .. } => true,
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.warn(error.message);
                 false
             }
@@ -464,14 +527,19 @@ impl MaterialsWindowApp for App {
     }
 
     /// `cad.materials.edit` over the drawing; its answer, or none with the refusal said.
-    fn materials_command(&mut self, operation: MaterialsOperation) -> Option<MaterialsEdited>{
+    fn materials_command(&mut self, operation: MaterialsOperation) -> Option<MaterialsEdited> {
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::materials_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            MaterialsEdit { operation, expected_revision: None },
+            MaterialsEdit {
+                operation,
+                expected_revision: None,
+            },
         );
         match result {
-            CommandResult::Completed { output, warnings, .. } => {
+            CommandResult::Completed {
+                output, warnings, ..
+            } => {
                 for w in warnings {
                     self.warn(w.message);
                 }
@@ -488,7 +556,7 @@ impl MaterialsWindowApp for App {
     }
 
     /// Whether the chosen material has a change Uygula has not written (docs/adr/8006).
-    fn materials_unapplied(&self) -> bool{
+    fn materials_unapplied(&self) -> bool {
         self.modules.arch().materials.as_ref().is_some_and(|w| {
             w.list
                 .get(w.chosen)
@@ -496,7 +564,7 @@ impl MaterialsWindowApp for App {
         })
     }
 
-    fn materials_event(&mut self, event: Event) -> Task<Message>{
+    fn materials_event(&mut self, event: Event) -> Task<Message> {
         let edit = |app: &mut App, f: &dyn Fn(&mut Window)| {
             if let Some(w) = app.modules.arch_mut().materials.as_mut() {
                 f(w);
@@ -513,8 +581,12 @@ impl MaterialsWindowApp for App {
                 }
             }
             Event::Name(t) => edit(self, &|w| w.name = t.clone()),
-            Event::Category(i) => edit(self, &|w| w.category = MaterialCategory::ALL.get(i).copied().unwrap_or_default()),
-            Event::Quantity(i) => edit(self, &|w| w.quantity = MaterialQuantity::ALL.get(i).copied().unwrap_or_default()),
+            Event::Category(i) => edit(self, &|w| {
+                w.category = MaterialCategory::ALL.get(i).copied().unwrap_or_default()
+            }),
+            Event::Quantity(i) => edit(self, &|w| {
+                w.quantity = MaterialQuantity::ALL.get(i).copied().unwrap_or_default()
+            }),
             Event::Pattern(t) => edit(self, &|w| w.pattern = t.clone()),
             Event::Scale(t) => edit(self, &|w| w.scale = t.clone()),
             Event::Angle(t) => edit(self, &|w| w.angle = t.clone()),
@@ -532,7 +604,8 @@ impl MaterialsWindowApp for App {
             Event::Bind => {
                 let (Some(m), Some((style, component, words))) = (
                     self.materials_chosen(),
-                    self.modules.arch()
+                    self.modules
+                        .arch()
                         .materials
                         .as_ref()
                         .and_then(|w| w.target.and_then(|i| w.targets.get(i).cloned())),
@@ -544,7 +617,10 @@ impl MaterialsWindowApp for App {
                     targets: vec![MaterialTarget::WallStyle { style, component }],
                 };
                 if let Some(done) = self.materials_command(op) {
-                    self.say(Level::Success, format!("{words} → {}: {}.", m.name, report_words(&done.report)));
+                    self.say(
+                        Level::Success,
+                        format!("{words} → {}: {}.", m.name, report_words(&done.report)),
+                    );
                 }
                 self.materials_read(Some(m.id));
             }
@@ -552,13 +628,22 @@ impl MaterialsWindowApp for App {
                 let Some(m) = self.materials_chosen() else {
                     return Task::none();
                 };
-                let change = self.modules.arch().materials.as_ref().and_then(|w| change_of(w, &m));
+                let change = self
+                    .modules
+                    .arch()
+                    .materials
+                    .as_ref()
+                    .and_then(|w| change_of(w, &m));
                 match change {
                     Some(Ok(change)) => {
-                        if let Some(done) =
-                            self.materials_command(MaterialsOperation::Update { material: m.id.clone(), change })
-                        {
-                            self.say(Level::Success, format!("{} değişti: {}.", m.name, report_words(&done.report)));
+                        if let Some(done) = self.materials_command(MaterialsOperation::Update {
+                            material: m.id.clone(),
+                            change,
+                        }) {
+                            self.say(
+                                Level::Success,
+                                format!("{} değişti: {}.", m.name, report_words(&done.report)),
+                            );
                         }
                     }
                     Some(Err(why)) => {
@@ -568,17 +653,26 @@ impl MaterialsWindowApp for App {
                     None => {}
                 }
                 // The strength and the reaction class (docs/adr/8091): their own step, “Yangın ve performans”.
-                let declared = self.modules.arch().materials.as_ref().and_then(|w| declared_of(w, &m));
+                let declared = self
+                    .modules
+                    .arch()
+                    .materials
+                    .as_ref()
+                    .and_then(|w| declared_of(w, &m));
                 if let Some(op) = declared
                     && self.materials_declare(op)
                 {
-                    self.say(Level::Success, format!("{}: dayanım ve sınıflar yazıldı.", m.name));
+                    self.say(
+                        Level::Success,
+                        format!("{}: dayanım ve sınıflar yazıldı.", m.name),
+                    );
                 }
                 self.materials_read(Some(m.id));
             }
             Event::New => {
                 let names: Vec<String> = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .materials
                     .as_ref()
                     .map(|w| w.list.iter().map(|(m, _)| m.name.to_lowercase()).collect())
@@ -602,7 +696,12 @@ impl MaterialsWindowApp for App {
                 let Some(m) = self.materials_chosen() else {
                     return Task::none();
                 };
-                if self.materials_command(MaterialsOperation::Remove { material: m.id.clone() }).is_some() {
+                if self
+                    .materials_command(MaterialsOperation::Remove {
+                        material: m.id.clone(),
+                    })
+                    .is_some()
+                {
                     self.say(Level::Success, format!("{} silindi.", m.name));
                 }
                 self.materials_read(None);
@@ -612,7 +711,11 @@ impl MaterialsWindowApp for App {
                 if let Some(done) = self.materials_command(MaterialsOperation::Adopt {}) {
                     self.say(
                         Level::Success,
-                        format!("Metin malzemeler alındı: {} malzeme · {}.", done.materials.len(), report_words(&done.report)),
+                        format!(
+                            "Metin malzemeler alındı: {} malzeme · {}.",
+                            done.materials.len(),
+                            report_words(&done.report)
+                        ),
                     );
                 }
                 self.materials_read(keep);
@@ -665,7 +768,7 @@ impl MaterialsWindowApp for App {
         Task::none()
     }
 
-    fn materials_view(&self) -> Element<'_, Message>{
+    fn materials_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().materials else {
             return iced::widget::text("").into();
         };
@@ -676,12 +779,23 @@ impl MaterialsWindowApp for App {
             if bound == 0 {
                 facts.push_str(" · bağlı yok");
             } else {
-                facts.push_str(&format!(" · {} stil, {} duvar, {} döşeme", u.styles.len(), u.walls, u.slabs));
+                facts.push_str(&format!(
+                    " · {} stil, {} duvar, {} döşeme",
+                    u.styles.len(),
+                    u.walls,
+                    u.slabs
+                ));
             }
-            let text = Column::new().spacing(2).push(label::body(m.name.clone())).push(label::caption(facts));
-            let entry = row![icon(crate::icons::from_web(Some("materials"))).size(18.0), container(text).width(Fill)]
-                .spacing(8)
-                .align_y(Center);
+            let text = Column::new()
+                .spacing(2)
+                .push(label::body(m.name.clone()))
+                .push(label::caption(facts));
+            let entry = row![
+                icon(crate::icons::from_web(Some("materials"))).size(18.0),
+                container(text).width(Fill)
+            ]
+            .spacing(8)
+            .align_y(Center);
             list = list.push(
                 button(entry)
                     .on_press(msg(Event::Choose(i)))
@@ -695,7 +809,9 @@ impl MaterialsWindowApp for App {
                 "Projede malzeme yok. Yeni malzeme bir tane açar; Metinlerden al duvar stillerinin, duvarların ve döşemelerin metin malzemelerinden açar.",
             ));
         }
-        let tabs = kentos_ui::widget::Segmented::new([Tab::Project, Tab::Library], w.tab, |t| msg(Event::Tab(t)));
+        let tabs = kentos_ui::widget::Segmented::new([Tab::Project, Tab::Library], w.tab, |t| {
+            msg(Event::Tab(t))
+        });
         if w.tab == Tab::Library {
             return self.material_library_view(w, tabs.into());
         }
@@ -704,10 +820,14 @@ impl MaterialsWindowApp for App {
             None => label::caption("").into(),
             Some((m, u)) => self.material_form(w, m, u),
         };
-        let body = row![left, container(right).width(Fill)].spacing(16).height(440.0);
+        let body = row![left, container(right).width(Fill)]
+            .spacing(16)
+            .height(440.0);
         let chosen = !w.list.is_empty();
-        let changed =
-            w.list.get(w.chosen).is_some_and(|(m, _)| change_of(w, m).is_some() || declared_of(w, m).is_some());
+        let changed = w
+            .list
+            .get(w.chosen)
+            .is_some_and(|(m, _)| change_of(w, m).is_some() || declared_of(w, m).is_some());
         let window = Frame::new(TITLE)
             .push(tabs)
             .push(body)
@@ -715,7 +835,10 @@ impl MaterialsWindowApp for App {
             .action(words::secondary(REMOVE, chosen.then(|| msg(Event::Remove))))
             .action(words::secondary(ADOPT, Some(msg(Event::Adopt))))
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-            .action(words::primary(APPLY, (chosen && changed).then(|| msg(Event::Apply))))
+            .action(words::primary(
+                APPLY,
+                (chosen && changed).then(|| msg(Event::Apply)),
+            ))
             .width(920.0)
             .modal(msg(Event::Close));
         if !w.closing {
@@ -731,7 +854,12 @@ impl MaterialsWindowApp for App {
         iced::widget::stack![window, question].into()
     }
 
-    fn material_form<'a>(&'a self, w: &'a Window, m: &'a ArchMaterial, u: &'a Use) -> Element<'a, Message>{
+    fn material_form<'a>(
+        &'a self,
+        w: &'a Window,
+        m: &'a ArchMaterial,
+        u: &'a Use,
+    ) -> Element<'a, Message> {
         let text = |placeholder: &str, value: &'a str, on: fn(String) -> Event| {
             kentos_ui::widget::text_field(placeholder, value).on_input(move |t| msg(on(t)))
         };
@@ -748,16 +876,40 @@ impl MaterialsWindowApp for App {
         )
         .searchable(false);
         let cells: Vec<Element<'a, Message>> = vec![
-            words::field("Ad", text("Malzemenin adı", &w.name, Event::Name), Some(format!("Kimlik: {}", m.id))),
+            words::field(
+                "Ad",
+                text("Malzemenin adı", &w.name, Event::Name),
+                Some(format!("Kimlik: {}", m.id)),
+            ),
             words::field("Kategori", category, None),
             words::field("Metraj", quantity, None),
-            words::field("Tarama deseni", text("Yok", &w.pattern, Event::Pattern), Some("ANSI31, ANSI37, SOLID…".into())),
+            words::field(
+                "Tarama deseni",
+                text("Yok", &w.pattern, Event::Pattern),
+                Some("ANSI31, ANSI37, SOLID…".into()),
+            ),
             words::field("Tarama ölçeği", text("1", &w.scale, Event::Scale), None),
             words::field("Tarama açısı (°)", text("0", &w.angle, Event::Angle), None),
-            words::field("Tarama rengi", text("Duvarınki", &w.hatch_color, Event::HatchColor), Some("#RRGGBB".into())),
-            words::field("Kesit kalemi (mm)", text("Duvarınki", &w.pen, Event::Pen), None),
-            words::field("Kalem rengi", text("Duvarınki", &w.pen_color, Event::PenColor), Some("#RRGGBB".into())),
-            words::field("Dayanım", text("Yok", &w.strength, Event::Strength), Some("C25, S355…".into())),
+            words::field(
+                "Tarama rengi",
+                text("Duvarınki", &w.hatch_color, Event::HatchColor),
+                Some("#RRGGBB".into()),
+            ),
+            words::field(
+                "Kesit kalemi (mm)",
+                text("Duvarınki", &w.pen, Event::Pen),
+                None,
+            ),
+            words::field(
+                "Kalem rengi",
+                text("Duvarınki", &w.pen_color, Event::PenColor),
+                Some("#RRGGBB".into()),
+            ),
+            words::field(
+                "Dayanım",
+                text("Yok", &w.strength, Event::Strength),
+                Some("C25, S355…".into()),
+            ),
             words::field(
                 "Yanıcılık sınıfı",
                 text("Yok", &w.reaction, Event::Reaction),
@@ -786,14 +938,27 @@ impl MaterialsWindowApp for App {
             }
             grid = grid.push(r);
         }
-        let styles = if u.styles.is_empty() { "—".to_owned() } else { u.styles.join(", ") };
+        let styles = if u.styles.is_empty() {
+            "—".to_owned()
+        } else {
+            u.styles.join(", ")
+        };
         let mut summary = vec![words::text_line(
             Kind::Ok,
-            format!("Bağlı: {} stil ({styles}), {} duvar, {} döşeme.", u.styles.len(), u.walls, u.slabs),
+            format!(
+                "Bağlı: {} stil ({styles}), {} duvar, {} döşeme.",
+                u.styles.len(),
+                u.walls,
+                u.slabs
+            ),
         )];
         match &w.preview {
             Some(Ok(done)) => summary.push(words::text_line(
-                if done.report.locked.is_empty() { Kind::Ok } else { Kind::Warn },
+                if done.report.locked.is_empty() {
+                    Kind::Ok
+                } else {
+                    Kind::Warn
+                },
                 format!("Uygula: {}.", report_words(&done.report)),
             )),
             Some(Err(why)) => summary.push(words::text_line(Kind::Warn, why.clone())),
@@ -821,15 +986,18 @@ impl MaterialsWindowApp for App {
             .spacing(12)
             .push(words::summary(summary))
             .push(
-                iced::widget::scrollable(container(grid).padding(iced::Padding { right: 16.0, ..iced::Padding::ZERO }))
-                    .height(Fill),
+                iced::widget::scrollable(container(grid).padding(iced::Padding {
+                    right: 16.0,
+                    ..iced::Padding::ZERO
+                }))
+                .height(Fill),
             )
             .push(words::field("Bileşeni bu malzemeye bağla", bind, None))
             .into()
     }
 
     /// The window's buttons by their words (a trace's `dialog` step).
-    fn materials_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
+    fn materials_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().materials.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

@@ -10,7 +10,8 @@
 //! revision; 5. the layer; 6. the attributes.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, EntityBase, SlabEntity, SlabFields, SlabsCreate, SlabsCreated, SlabsPlan,
+    CommandResult, CommandWarning, Entity, EntityBase, SlabEntity, SlabFields, SlabsCreate,
+    SlabsCreated, SlabsPlan,
 };
 use kentos_domain::Document;
 
@@ -25,7 +26,10 @@ pub const STEP: &str = "Döşeme";
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &SlabsCreate) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok((warnings, _)) => CommandResult::Completed { output: (), warnings },
+        Ok((warnings, _)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -58,13 +62,19 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SlabsCreate) -> CommandResu
     )
 }
 
-pub(crate) fn write_execute(cx: &mut ExecutionContext<'_>, input: SlabsCreate) -> CommandResult<SlabsCreated> {
+pub(crate) fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SlabsCreate,
+) -> CommandResult<SlabsCreated> {
     let (warnings, made) = match check(cx.doc, &input) {
         Ok(checked) => checked,
         Err(stop) => return stop.into(),
     };
     let doc = &mut *cx.doc;
-    let entities: Vec<Entity> = made.into_iter().map(|(s, a)| entity(&input, s, a)).collect();
+    let entities: Vec<Entity> = made
+        .into_iter()
+        .map(|(s, a)| entity(&input, s, a))
+        .collect();
     let slots = match doc.add_many(entities, STEP) {
         Ok(slots) => slots,
         Err(full) => {
@@ -73,7 +83,11 @@ pub(crate) fn write_execute(cx: &mut ExecutionContext<'_>, input: SlabsCreate) -
     };
     CommandResult::Completed {
         output: SlabsCreated {
-            uids: slots.iter().filter_map(|s| doc.uid(*s)).map(|u| u.to_string()).collect(),
+            uids: slots
+                .iter()
+                .filter_map(|s| doc.uid(*s))
+                .map(|u| u.to_string())
+                .collect(),
             ids: slots.iter().map(|s| s.0).collect(),
             revision: doc.revision().to_string(),
         },
@@ -146,11 +160,27 @@ fn check(doc: &Document, input: &SlabsCreate) -> Result<Checked, Stop> {
         }
         let parts = match &n.space {
             Some(uid) => slabs::space_parts(doc, uid, &format!("{at}.space"))?,
-            None => slabs::outline(doc, n.parts.as_ref(), n.seed, n.boundary, arch.level.as_deref(), &at)?,
+            None => slabs::outline(
+                doc,
+                n.parts.as_ref(),
+                n.seed,
+                n.boundary,
+                arch.level.as_deref(),
+                &at,
+            )?,
         };
-        let parts = slabs::moved(&parts, n.edge_offset.unwrap_or(0.0), &format!("{at}.edgeOffset"))?;
+        let parts = slabs::moved(
+            &parts,
+            n.edge_offset.unwrap_or(0.0),
+            &format!("{at}.edgeOffset"),
+        )?;
         let bound = (n.space.is_some() || (n.bound == Some(true) && n.seed.is_some())).then(|| {
-            slabs::bound_of(n.seed, n.boundary, n.space.as_ref(), n.edge_offset.unwrap_or(0.0))
+            slabs::bound_of(
+                n.seed,
+                n.boundary,
+                n.space.as_ref(),
+                n.edge_offset.unwrap_or(0.0),
+            )
         });
         let s = SlabFields {
             parts,
@@ -177,7 +207,12 @@ fn check(doc: &Document, input: &SlabsCreate) -> Result<Checked, Stop> {
     let warnings = checks::layer(doc, &input.layer_id)?;
     let mut out = Vec::with_capacity(made.len());
     for (i, (s, n)) in made.into_iter().zip(&input.slabs).enumerate() {
-        let attrs = checks::object_attrs(doc, &input.layer_id, n.attrs.as_ref(), &format!("slabs[{i}].attrs"))?;
+        let attrs = checks::object_attrs(
+            doc,
+            &input.layer_id,
+            n.attrs.as_ref(),
+            &format!("slabs[{i}].attrs"),
+        )?;
         out.push((s, attrs));
     }
     Ok((warnings, out))

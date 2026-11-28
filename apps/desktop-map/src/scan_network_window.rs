@@ -22,11 +22,13 @@
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use iced::widget::{button, container, row, space};
 use iced::{Center, Element, Fill, Task};
-use kentos_commands::{CommandResult, Entity, PointCloudsNetwork, PointCloudsNetworked, RegisterReject, RegisterRobust};
+use kentos_commands::{
+    CommandResult, Entity, PointCloudsNetwork, PointCloudsNetworked, RegisterReject, RegisterRobust,
+};
 use kentos_native_application::{ExecutionContext, pointcloud_network, pointcloud_register};
 use kentos_ui::label;
 use kentos_ui::widget::grow::Grows;
@@ -131,13 +133,29 @@ fn msg(e: Event) -> Message {
 
 /// The scans' names told apart (GIS-037): scans sharing a name take their layers' names when those differ, else
 /// their numbers.
-fn told_apart(doc: &kentos_domain::Document, scans: Vec<(String, String)>) -> Vec<(String, String)> {
-    let entity = |u: &str| kentos_domain::Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
-    let layer = |u: &str| entity(u).and_then(|e| doc.layers().get(&e.base().layer_id)).map(|l| l.name.clone());
+fn told_apart(
+    doc: &kentos_domain::Document,
+    scans: Vec<(String, String)>,
+) -> Vec<(String, String)> {
+    let entity = |u: &str| {
+        kentos_domain::Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+    };
+    let layer = |u: &str| {
+        entity(u)
+            .and_then(|e| doc.layers().get(&e.base().layer_id))
+            .map(|l| l.name.clone())
+    };
     scans
         .iter()
         .map(|(u, n)| {
-            let same: Vec<&String> = scans.iter().filter(|(_, m)| m == n).map(|(v, _)| v).collect();
+            let same: Vec<&String> = scans
+                .iter()
+                .filter(|(_, m)| m == n)
+                .map(|(v, _)| v)
+                .collect();
             if same.len() < 2 {
                 return (u.clone(), n.clone());
             }
@@ -156,11 +174,19 @@ fn told_apart(doc: &kentos_domain::Document, scans: Vec<(String, String)>) -> Ve
 
 /// A cloud's name: its first file's, else its number.
 fn cloud_name(e: &Entity) -> Option<String> {
-    let Entity::PointCloud(c) = e else { return None };
-    Some(c.cloud.sources.first().and_then(|s| s.file.as_deref()).map_or_else(
-        || format!("Bulut #{}", e.base().id),
-        |f| f.rsplit(['/', '\\']).next().unwrap_or(f).to_owned(),
-    ))
+    let Entity::PointCloud(c) = e else {
+        return None;
+    };
+    Some(
+        c.cloud
+            .sources
+            .first()
+            .and_then(|s| s.file.as_deref())
+            .map_or_else(
+                || format!("Bulut #{}", e.base().id),
+                |f| f.rsplit(['/', '\\']).next().unwrap_or(f).to_owned(),
+            ),
+    )
 }
 
 /// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
@@ -179,7 +205,9 @@ pub(crate) trait ScanNetworkWindowApp {
 impl ScanNetworkWindowApp for App {
     /// The point clouds selected, in the selection's order; none selected: every cloud of the drawing.
     fn scan_network_clouds(&self) -> Vec<(String, String)> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
         let selected: Vec<(String, String)> = self
             .selection
             .ids()
@@ -193,7 +221,11 @@ impl ScanNetworkWindowApp for App {
         if !selected.is_empty() {
             return told_apart(&doc.model, selected);
         }
-        let all = doc.model.entities_with_uids().filter_map(|(u, e)| cloud_name(e).map(|n| (u.to_string(), n))).collect();
+        let all = doc
+            .model
+            .entities_with_uids()
+            .filter_map(|(u, e)| cloud_name(e).map(|n| (u.to_string(), n)))
+            .collect();
         told_apart(&doc.model, all)
     }
 
@@ -205,10 +237,20 @@ impl ScanNetworkWindowApp for App {
             spacing: Some(s.spacing),
             reach: Some(s.reach),
             iterations: Some(s.iterations.max(1.0) as u32),
-            robust: (s.weights == Weights::Huber)
-                .then(|| RegisterRobust { kind: "huber".into(), k: Some(pointcloud_register::HUBER_K), ratio: None }),
-            reject: s.edges.then_some(RegisterReject { edges: true, angle: None }),
-            drawing: self.document.as_ref().and_then(|d| d.path.as_ref()).map(|p| p.display().to_string()),
+            robust: (s.weights == Weights::Huber).then(|| RegisterRobust {
+                kind: "huber".into(),
+                k: Some(pointcloud_register::HUBER_K),
+                ratio: None,
+            }),
+            reject: s.edges.then_some(RegisterReject {
+                edges: true,
+                angle: None,
+            }),
+            drawing: self
+                .document
+                .as_ref()
+                .and_then(|d| d.path.as_ref())
+                .map(|p| p.display().to_string()),
             rounds: (s.rounds > 1.0).then(|| s.rounds.min(10.0) as u32),
             ..Default::default()
         };
@@ -270,11 +312,17 @@ impl ScanNetworkWindowApp for App {
             return;
         };
         if scan.fixed {
-            self.warn(format!("{TITLE}: sabit tarama yerinde kalır; başka bir tarama seçin."));
+            self.warn(format!(
+                "{TITLE}: sabit tarama yerinde kalır; başka bir tarama seçin."
+            ));
             return;
         }
         let matrix = matrix_text(&scan.matrix);
-        let slot = self.document.as_ref().and_then(|d| kentos_domain::Uuid::parse_str(&scan.uid).ok().and_then(|u| d.model.slot_of(u)));
+        let slot = self.document.as_ref().and_then(|d| {
+            kentos_domain::Uuid::parse_str(&scan.uid)
+                .ok()
+                .and_then(|u| d.model.slot_of(u))
+        });
         let Some(slot) = slot else {
             self.warn(format!("{TITLE}: tarama çizimde bulunamadı."));
             return;
@@ -305,11 +353,14 @@ impl ScanNetworkWindowApp for App {
             return;
         };
         if scan.fixed {
-            self.warn(format!("{TITLE}: sabit tarama yerinde kalır; başka bir tarama seçin."));
+            self.warn(format!(
+                "{TITLE}: sabit tarama yerinde kalır; başka bir tarama seçin."
+            ));
             return;
         }
         let name = self
-            .modules.map()
+            .modules
+            .map()
             .scan_network
             .scans
             .iter()
@@ -318,18 +369,27 @@ impl ScanNetworkWindowApp for App {
             .unwrap_or_default();
         let input = kentos_commands::PointCloudsPlace {
             uid: scan.uid.clone(),
-            place: kentos_commands::CloudPlaceBy::Matrix { matrix: scan.matrix.to_vec() },
+            place: kentos_commands::CloudPlaceBy::Matrix {
+                matrix: scan.matrix.to_vec(),
+            },
             expected_revision: None,
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        match kentos_native_application::pointcloud_place::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        match kentos_native_application::pointcloud_place::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        ) {
             CommandResult::Completed { .. } => {
                 self.say(
                     kentos_interaction::Level::Success,
                     format!("{TITLE}: “{name}” taramasının konumu nesnede tutuldu; dosyası değişmedi. Tek adımda geri alınır."),
                 );
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.warn(format!("{TITLE}: {}", error.message));
             }
             _ => {}
@@ -343,7 +403,10 @@ impl ScanNetworkWindowApp for App {
             Event::Take => {
                 let scans = self.scan_network_clouds();
                 if scans.len() < 3 {
-                    self.warn(format!("{TITLE}: en az üç nokta bulutu seçin; seçimde {} var.", scans.len()));
+                    self.warn(format!(
+                        "{TITLE}: en az üç nokta bulutu seçin; seçimde {} var.",
+                        scans.len()
+                    ));
                     return Task::none();
                 }
                 let s = &mut self.modules.map_mut().scan_network;
@@ -371,7 +434,11 @@ impl ScanNetworkWindowApp for App {
                 return Task::none();
             }
             Event::Mark(uids) => {
-                s.show = if uids.len() == 2 { Show::Links } else { Show::Scans };
+                s.show = if uids.len() == 2 {
+                    Show::Links
+                } else {
+                    Show::Scans
+                };
                 s.marked = uids;
                 return Task::none();
             }
@@ -413,9 +480,23 @@ impl ScanNetworkWindowApp for App {
         };
         // The command names scans by their ids; the window by their names, a note naming scans clickable (GIS-037).
         for (k, n) in r.notes.iter().enumerate() {
-            let named: Vec<String> = s.scans.iter().filter(|(u, _)| n.contains(u.as_str())).map(|(u, _)| u.clone()).collect();
-            let text = s.scans.iter().fold(n.clone(), |t, (u, name)| t.replace(u.as_str(), name));
-            let kind = if k == 0 { Kind::Ok } else if named.is_empty() { Kind::Info } else { Kind::Warn };
+            let named: Vec<String> = s
+                .scans
+                .iter()
+                .filter(|(u, _)| n.contains(u.as_str()))
+                .map(|(u, _)| u.clone())
+                .collect();
+            let text = s
+                .scans
+                .iter()
+                .fold(n.clone(), |t, (u, name)| t.replace(u.as_str(), name));
+            let kind = if k == 0 {
+                Kind::Ok
+            } else if named.is_empty() {
+                Kind::Info
+            } else {
+                Kind::Warn
+            };
             let line = words::text_line(kind, text);
             lines.push(if named.is_empty() {
                 line
@@ -437,11 +518,19 @@ impl ScanNetworkWindowApp for App {
                 format!("{:.1} cc", rad * 200.0 / std::f64::consts::PI * 10_000.0)
             }
         };
-        let name = |u: &str| s.scans.iter().find(|(id, _)| id == u).map_or_else(|| u.to_owned(), |(_, n)| n.clone());
+        let name = |u: &str| {
+            s.scans
+                .iter()
+                .find(|(id, _)| id == u)
+                .map_or_else(|| u.to_owned(), |(_, n)| n.clone())
+        };
         let mm = |m: f64| format!("{:.1}", m * 1000.0);
         // A clicked note's scan or link, marked at the start of its row.
         let mark = |uids: &[&String], text: String| {
-            if !s.marked.is_empty() && s.marked.len() == uids.len() && s.marked.iter().all(|m| uids.contains(&m)) {
+            if !s.marked.is_empty()
+                && s.marked.len() == uids.len()
+                && s.marked.iter().all(|m| uids.contains(&m))
+            {
                 format!("▸ {text}")
             } else {
                 text
@@ -452,11 +541,20 @@ impl ScanNetworkWindowApp for App {
                 for sc in &r.scans {
                     rows.push(vec![
                         mark(&[&sc.uid], name(&sc.uid)),
-                        if sc.fixed { "Sabit".to_owned() } else { String::new() },
+                        if sc.fixed {
+                            "Sabit".to_owned()
+                        } else {
+                            String::new()
+                        },
                         angle(sc.rotation[0]),
                         angle(sc.rotation[1]),
                         angle(sc.rotation[2]),
-                        format!("{} / {} / {}", mm(sc.translation[0]), mm(sc.translation[1]), mm(sc.translation[2])),
+                        format!(
+                            "{} / {} / {}",
+                            mm(sc.translation[0]),
+                            mm(sc.translation[1]),
+                            mm(sc.translation[2])
+                        ),
                         sc.horizontal.map(|h| format!("{h:.2}")).unwrap_or_default(),
                     ]);
                 }
@@ -464,7 +562,10 @@ impl ScanNetworkWindowApp for App {
             Show::Links => {
                 for l in &r.links {
                     rows.push(vec![
-                        mark(&[&l.scans[0], &l.scans[1]], format!("{} – {}", name(&l.scans[0]), name(&l.scans[1]))),
+                        mark(
+                            &[&l.scans[0], &l.scans[1]],
+                            format!("{} – {}", name(&l.scans[0]), name(&l.scans[1])),
+                        ),
                         l.pairs.to_string(),
                         format!("{:.0}", l.overlap * 100.0),
                         mm(l.rms_after),
@@ -476,7 +577,11 @@ impl ScanNetworkWindowApp for App {
             Show::Loops => {
                 for lp in &r.loops {
                     rows.push(vec![
-                        lp.scans.iter().map(|u| name(u)).collect::<Vec<_>>().join(" → "),
+                        lp.scans
+                            .iter()
+                            .map(|u| name(u))
+                            .collect::<Vec<_>>()
+                            .join(" → "),
                         angle(lp.rotation),
                         mm(lp.translation),
                     ]);
@@ -489,7 +594,12 @@ impl ScanNetworkWindowApp for App {
     fn scan_network_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().scan_network;
         let names: Vec<String> = s.scans.iter().map(|(_, n)| n.clone()).collect();
-        let free: Vec<(String, String)> = s.scans.iter().filter(|(u, _)| *u != s.fixed).cloned().collect();
+        let free: Vec<(String, String)> = s
+            .scans
+            .iter()
+            .filter(|(u, _)| *u != s.fixed)
+            .cloned()
+            .collect();
         let form = Form::new()
             .label_width(130.0)
             .field(
@@ -533,23 +643,50 @@ impl ScanNetworkWindowApp for App {
         let (lines, rows) = self.scan_network_lines();
         let table = match s.show {
             Show::Scans => sheet(
-                vec![col("Tarama", 140.0), col("", 60.0), num("ω", 100.0), num("φ", 100.0), num("κ", 100.0), num("Öteleme D / K / Kot (mm)", 210.0), num("Yatay güç", 90.0)],
+                vec![
+                    col("Tarama", 140.0),
+                    col("", 60.0),
+                    num("ω", 100.0),
+                    num("φ", 100.0),
+                    num("κ", 100.0),
+                    num("Öteleme D / K / Kot (mm)", 210.0),
+                    num("Yatay güç", 90.0),
+                ],
                 rows,
                 "Tarama yok.",
                 220.0,
             ),
             Show::Links => sheet(
-                vec![col("Bağ", 220.0), num("Eşleşme", 80.0), num("Örtüşme %", 90.0), num("Kayıt RMS (mm)", 120.0), num("Güç", 70.0), num("Ağdaki kayma (mm)", 140.0)],
+                vec![
+                    col("Bağ", 220.0),
+                    num("Eşleşme", 80.0),
+                    num("Örtüşme %", 90.0),
+                    num("Kayıt RMS (mm)", 120.0),
+                    num("Güç", 70.0),
+                    num("Ağdaki kayma (mm)", 140.0),
+                ],
                 rows,
                 "Bağ yok.",
                 220.0,
             ),
-            Show::Loops => sheet(vec![col("Döngü", 330.0), num("Dönme kapanması", 170.0), num("Öteleme kapanması (mm)", 170.0)], rows, "Döngü yok: bağlar ağaç gibi.", 220.0),
+            Show::Loops => sheet(
+                vec![
+                    col("Döngü", 330.0),
+                    num("Dönme kapanması", 170.0),
+                    num("Öteleme kapanması (mm)", 170.0),
+                ],
+                rows,
+                "Döngü yok: bağlar ağaç gibi.",
+                220.0,
+            ),
         };
         let ready = matches!(&s.answer, Some(Ok(_))) && s.chosen != s.fixed;
         let apply = row![
             label::caption("Uygulanacak tarama"),
-            container(fields::select_owned(free, &s.chosen, |v| msg(Event::Chosen(v)))).width(240),
+            container(fields::select_owned(free, &s.chosen, |v| msg(
+                Event::Chosen(v)
+            )))
+            .width(240),
             space::horizontal().width(Fill),
             words::secondary(KEEP, ready.then(|| msg(Event::Keep))),
             words::primary(APPLY, ready.then(|| msg(Event::Apply))),
@@ -561,9 +698,17 @@ impl ScanNetworkWindowApp for App {
             .push(form)
             .push(words::summary(lines))
             .push(apply)
-            .push(Segmented::new([Show::Scans, Show::Links, Show::Loops], s.show, |v| msg(Event::Show(v))))
+            .push(Segmented::new(
+                [Show::Scans, Show::Links, Show::Loops],
+                s.show,
+                |v| msg(Event::Show(v)),
+            ))
             .push_grow(table, 220.0);
-        Frame::new(TITLE).scroll(body).action(words::secondary(CLOSE, Some(msg(Event::Close)))).width(960.0).modal(msg(Event::Close))
+        Frame::new(TITLE)
+            .scroll(body)
+            .action(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .width(960.0)
+            .modal(msg(Event::Close))
     }
 
     fn scan_network_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {

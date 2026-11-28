@@ -21,7 +21,13 @@ pub(crate) const SAME: f64 = 1e-9;
 /// Keep a manual boundary editable when Enter arrives before its third corner.
 pub(crate) fn incomplete_boundary(count: usize, cx: &mut Context<'_>) -> bool {
     if (1..3).contains(&count) {
-        cx.say(Level::Warn, format!("{} köşe daha girin. Kapalı sınır için en az 3 köşe gerekir.", 3 - count));
+        cx.say(
+            Level::Warn,
+            format!(
+                "{} köşe daha girin. Kapalı sınır için en az 3 köşe gerekir.",
+                3 - count
+            ),
+        );
         return true;
     }
     false
@@ -430,7 +436,11 @@ pub(crate) fn chain_preview(d: &Taken, format: &crate::format::Format) -> crate:
             at: hover,
             lines: vec![
                 format.length(dist(last, hover)),
-                format!("{} {}", format.direction_name(), format.direction(bearing_grad(last, hover))),
+                format!(
+                    "{} {}",
+                    format.direction_name(),
+                    format.direction(bearing_grad(last, hover))
+                ),
             ],
         }),
         _ => None,

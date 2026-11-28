@@ -23,7 +23,13 @@ impl App {
         let Some(doc) = &self.document else {
             return Ok(Some(Vec::new()));
         };
-        let value = |e: &kentos_commands::Entity| e.base().attrs.get(field).map(|v| v.trim().to_owned()).unwrap_or_default();
+        let value = |e: &kentos_commands::Entity| {
+            e.base()
+                .attrs
+                .get(field)
+                .map(|v| v.trim().to_owned())
+                .unwrap_or_default()
+        };
         match self.data_layer_rows(layer) {
             None => Ok(Some(doc.model.by_layer(layer).map(value).collect())),
             Some(Ok(None)) => Ok(None),
@@ -40,7 +46,10 @@ impl App {
         let fields = |layer: &str| self.layer_fields_of(layer);
         let (parents, children) = (fields(&r.parent), fields(&r.child));
         let Some(pk) = parents.iter().find(|f| f.key() == key) else {
-            return vec![(Kind::Warn, format!("“{key}” alanı üst katmanda yok; ilişki hiçbir kaydı bağlamaz."))];
+            return vec![(
+                Kind::Warn,
+                format!("“{key}” alanı üst katmanda yok; ilişki hiçbir kaydı bağlamaz."),
+            )];
         };
         let Some(cf) = children.iter().find(|f| f.key() == r.field) else {
             return Vec::new();
@@ -56,13 +65,22 @@ impl App {
                 ),
             ));
         }
-        let (codes, held) = match (self.relation_values(&r.parent, &pk.name), self.relation_values(&r.child, &cf.name)) {
+        let (codes, held) = match (
+            self.relation_values(&r.parent, &pk.name),
+            self.relation_values(&r.child, &cf.name),
+        ) {
             (Err(why), _) | (_, Err(why)) => {
-                out.push((Kind::Warn, format!("Kayıtlar okunamadı, denetlenemedi: {why}")));
+                out.push((
+                    Kind::Warn,
+                    format!("Kayıtlar okunamadı, denetlenemedi: {why}"),
+                ));
                 return out;
             }
             (Ok(None), _) | (_, Ok(None)) => {
-                out.push((Kind::Info, "Veri katmanının satırları kaynaktan okunuyor; denetim birazdan.".to_owned()));
+                out.push((
+                    Kind::Info,
+                    "Veri katmanının satırları kaynaktan okunuyor; denetim birazdan.".to_owned(),
+                ));
                 return out;
             }
             (Ok(Some(c)), Ok(Some(h))) => (c, h),
@@ -77,12 +95,20 @@ impl App {
                 *counted.entry(c.as_str()).or_default() += 1;
             }
         }
-        let twice: Vec<String> =
-            counted.iter().filter(|(_, n)| **n > 1).map(|(c, n)| format!("“{c}” {n} kayıtta")).collect();
+        let twice: Vec<String> = counted
+            .iter()
+            .filter(|(_, n)| **n > 1)
+            .map(|(c, n)| format!("“{c}” {n} kayıtta"))
+            .collect();
         if twice.is_empty() && empty_parents == 0 {
             out.push((
                 Kind::Ok,
-                format!("Üst anahtar “{}” benzersiz: {} kaydın {} ayrı değeri var.", pk.label(), codes.len(), counted.len()),
+                format!(
+                    "Üst anahtar “{}” benzersiz: {} kaydın {} ayrı değeri var.",
+                    pk.label(),
+                    codes.len(),
+                    counted.len()
+                ),
             ));
         }
         if !twice.is_empty() {
@@ -96,14 +122,20 @@ impl App {
             ));
         }
         if empty_parents > 0 {
-            out.push((Kind::Warn, format!("{empty_parents} üst kaydın anahtarı boş; bunlara alt kayıt bağlanamaz.")));
+            out.push((
+                Kind::Warn,
+                format!("{empty_parents} üst kaydın anahtarı boş; bunlara alt kayıt bağlanamaz."),
+            ));
         }
         // The children: a parent's code, a code no parent has, or none.
         let (mut linked, mut empty) = (0, 0);
         let mut strays: BTreeMap<String, usize> = BTreeMap::new();
         for value in &held {
-            let parts: BTreeSet<&str> =
-                value.split(';').map(str::trim).filter(|p| !p.is_empty()).collect();
+            let parts: BTreeSet<&str> = value
+                .split(';')
+                .map(str::trim)
+                .filter(|p| !p.is_empty())
+                .collect();
             if parts.is_empty() {
                 empty += 1;
             } else if parts.iter().all(|p| counted.contains_key(p)) {
@@ -114,21 +146,38 @@ impl App {
                 }
             }
         }
-        out.push((Kind::Info, format!("Alt kayıtlar: {}; {linked} tanesi bir üst kayda bağlı.", held.len())));
+        out.push((
+            Kind::Info,
+            format!(
+                "Alt kayıtlar: {}; {linked} tanesi bir üst kayda bağlı.",
+                held.len()
+            ),
+        ));
         if !strays.is_empty() {
             let n: usize = strays.values().sum();
-            let named: Vec<String> = strays.keys().take(NAMED).map(|s| format!("“{s}”")).collect();
+            let named: Vec<String> = strays
+                .keys()
+                .take(NAMED)
+                .map(|s| format!("“{s}”"))
+                .collect();
             out.push((
                 Kind::Warn,
                 format!(
                     "{n} alt kayıt hiçbir üst kayıtta olmayan değeri tutuyor: {}{}.",
                     named.join(", "),
-                    if strays.len() > NAMED { format!(" ve {} değer daha", strays.len() - NAMED) } else { String::new() }
+                    if strays.len() > NAMED {
+                        format!(" ve {} değer daha", strays.len() - NAMED)
+                    } else {
+                        String::new()
+                    }
                 ),
             ));
         }
         if empty > 0 {
-            out.push((Kind::Info, format!("{empty} alt kaydın alanı boş (NULL): üst kaydı yok.")));
+            out.push((
+                Kind::Info,
+                format!("{empty} alt kaydın alanı boş (NULL): üst kaydı yok."),
+            ));
         }
         out
     }

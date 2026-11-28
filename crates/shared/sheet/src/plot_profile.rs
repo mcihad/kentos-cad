@@ -1,14 +1,13 @@
 //! Native, versioned plot tables: indexed colours and named styles are different key spaces.
 pub mod acad;
 pub mod apply;
-use serde::{Serialize, Deserialize};
+use crate::{
+    Result, SheetBook, SheetError,
+    style::{LineCap, LineJoin},
+};
+use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
-use crate::{
-    Result, SheetError,
-    style::{LineCap, LineJoin},
-    SheetBook,
-};
 pub const SCHEMA: &str = "kentos.plot/1";
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -216,9 +215,11 @@ pub fn validate(p: &PlotProfile) -> Result<()> {
         if s.screening > 100
             || s.opacity.is_some_and(|v| v > 100)
             || s.line_weight.is_some_and(|v| !(0..=100000).contains(&v))
-            || s.dash
-                .as_ref()
-                .is_some_and(|v| v.len() > 64 || v.iter().any(|d| *d < 0 || *d > 1000000) || (!v.is_empty() && v.iter().all(|d|*d==0)))
+            || s.dash.as_ref().is_some_and(|v| {
+                v.len() > 64
+                    || v.iter().any(|d| *d < 0 || *d > 1000000)
+                    || (!v.is_empty() && v.iter().all(|d| *d == 0))
+            })
         {
             return Err(bad(
                 "bad_plot_style",
@@ -248,7 +249,10 @@ pub fn validate(p: &PlotProfile) -> Result<()> {
     }
     if let Some(src) = &p.source
         && (src.sha256.len() != 64
-            || !src.sha256.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+            || !src
+                .sha256
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
             || !name(&src.file))
     {
         return Err(bad(

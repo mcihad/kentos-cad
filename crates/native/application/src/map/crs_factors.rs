@@ -7,12 +7,14 @@
 //! `fixtures/commands/v1/cad.crs.factors.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CrsFactors, CrsFactorsRead, LineFactors, MOST_FACTOR_LINES, MOST_FACTOR_POINTS,
-    PointFactors, SurveySettings,
+    CommandResult, CommandWarning, CrsFactors, CrsFactorsRead, LineFactors, MOST_FACTOR_LINES,
+    MOST_FACTOR_POINTS, PointFactors, SurveySettings,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::Vec2;
-use kentos_geometry_core::crs::ground::{Grid, grid_factor, has_point_scale, line_factors, point_scale};
+use kentos_geometry_core::crs::ground::{
+    Grid, grid_factor, has_point_scale, line_factors, point_scale,
+};
 
 use crate::ExecutionContext;
 use crate::checks::{Stop, error};
@@ -33,17 +35,34 @@ fn check(input: &CrsFactors) -> Result<(), Stop> {
             "points",
         ));
     }
-    if let Some(i) = input.points.iter().position(|p| !(p[0].is_finite() && p[1].is_finite())) {
-        return Err(fail(codes::INVALID_INPUT, "Noktanın koordinatı sonlu bir sayı değil.".into(), &format!("points[{i}]")));
-    }
-    if let Some(h) = input.height.filter(|h| !SurveySettings::ground_height_holds(*h)) {
+    if let Some(i) = input
+        .points
+        .iter()
+        .position(|p| !(p[0].is_finite() && p[1].is_finite()))
+    {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Yükseklik {h} m olamaz; −500 ile 9000 m arasında bir ortalama elipsoit yüksekliği verin."),
+            "Noktanın koordinatı sonlu bir sayı değil.".into(),
+            &format!("points[{i}]"),
+        ));
+    }
+    if let Some(h) = input
+        .height
+        .filter(|h| !SurveySettings::ground_height_holds(*h))
+    {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!(
+                "Yükseklik {h} m olamaz; −500 ile 9000 m arasında bir ortalama elipsoit yüksekliği verin."
+            ),
             "height",
         ));
     }
-    let ways = [input.height.is_some(), input.heights.is_some(), input.elevations.is_some()];
+    let ways = [
+        input.height.is_some(),
+        input.heights.is_some(),
+        input.elevations.is_some(),
+    ];
     if ways.iter().filter(|w| **w).count() > 1 {
         return Err(fail(
             codes::INVALID_INPUT,
@@ -55,14 +74,23 @@ fn check(input: &CrsFactors) -> Result<(), Stop> {
         if hs.len() != n {
             return Err(fail(
                 codes::INVALID_INPUT,
-                format!("Her nokta için bir yükseklik verin: {n} nokta, {} yükseklik.", hs.len()),
+                format!(
+                    "Her nokta için bir yükseklik verin: {n} nokta, {} yükseklik.",
+                    hs.len()
+                ),
                 "heights",
             ));
         }
-        if let Some(i) = hs.iter().position(|h| !SurveySettings::ground_height_holds(*h)) {
+        if let Some(i) = hs
+            .iter()
+            .position(|h| !SurveySettings::ground_height_holds(*h))
+        {
             return Err(fail(
                 codes::INVALID_INPUT,
-                format!("Yükseklik {} m olamaz; −500 ile 9000 m arasında bir elipsoit yüksekliği verin.", hs[i]),
+                format!(
+                    "Yükseklik {} m olamaz; −500 ile 9000 m arasında bir elipsoit yüksekliği verin.",
+                    hs[i]
+                ),
                 &format!("heights[{i}]"),
             ));
         }
@@ -76,14 +104,21 @@ fn check(input: &CrsFactors) -> Result<(), Stop> {
             ));
         }
         if let Some(i) = zs.iter().position(|z| !z.is_finite()) {
-            return Err(fail(codes::INVALID_INPUT, "Kot sonlu bir sayı değil.".into(), &format!("elevations[{i}]")));
+            return Err(fail(
+                codes::INVALID_INPUT,
+                "Kot sonlu bir sayı değil.".into(),
+                &format!("elevations[{i}]"),
+            ));
         }
     }
     if let Some(ls) = &input.lines {
         if ls.len() > MOST_FACTOR_LINES {
             return Err(fail(
                 codes::INVALID_INPUT,
-                format!("En çok {MOST_FACTOR_LINES} çizgi verin; {} verildi.", ls.len()),
+                format!(
+                    "En çok {MOST_FACTOR_LINES} çizgi verin; {} verildi.",
+                    ls.len()
+                ),
                 "lines",
             ));
         }
@@ -91,12 +126,19 @@ fn check(input: &CrsFactors) -> Result<(), Stop> {
             if let Some(e) = ends.iter().find(|e| **e as usize >= n) {
                 return Err(fail(
                     codes::INVALID_INPUT,
-                    format!("Çizginin ucu {e} bir nokta değil: {n} nokta verildi, sıraları 0'dan {}'e.", n - 1),
+                    format!(
+                        "Çizginin ucu {e} bir nokta değil: {n} nokta verildi, sıraları 0'dan {}'e.",
+                        n - 1
+                    ),
                     &format!("lines[{k}]"),
                 ));
             }
             if input.points[ends[0] as usize] == input.points[ends[1] as usize] {
-                return Err(fail(codes::INVALID_INPUT, "Çizginin iki ucu aynı yerde; uzunluğu yok.".into(), &format!("lines[{k}]")));
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    "Çizginin iki ucu aynı yerde; uzunluğu yok.".into(),
+                    &format!("lines[{k}]"),
+                ));
             }
         }
     }
@@ -159,7 +201,9 @@ fn read(doc: &Document, input: &CrsFactors) -> Result<(CrsFactorsRead, Vec<Comma
                 if !SurveySettings::ground_height_holds(h) {
                     return Err(fail(
                         codes::INVALID_INPUT,
-                        format!("Kotun elipsoit yüksekliği {h} m çıkıyor; −500 ile 9000 m arasında olmalı."),
+                        format!(
+                            "Kotun elipsoit yüksekliği {h} m çıkıyor; −500 ile 9000 m arasında olmalı."
+                        ),
                         &format!("elevations[{i}]"),
                     ));
                 }
@@ -186,12 +230,25 @@ fn read(doc: &Document, input: &CrsFactors) -> Result<(CrsFactorsRead, Vec<Comma
         let scale = point_scale(&system, p);
         let h = height_of(i);
         // Along the east: Euler's radius at azimuth 90° is the prime vertical's.
-        let factors =
-            h.and_then(|h| grid_factor(&Grid { system: system.clone(), height: h }, p, Vec2::new(p.x + 1.0, p.y)).ok());
+        let factors = h.and_then(|h| {
+            grid_factor(
+                &Grid {
+                    system: system.clone(),
+                    height: h,
+                },
+                p,
+                Vec2::new(p.x + 1.0, p.y),
+            )
+            .ok()
+        });
         if scale.is_none() {
             warnings.push(CommandWarning {
                 code: codes::POINT_BEYOND_SYSTEM.into(),
-                message: format!("{}. nokta {} sisteminin ulaştığı yerin dışında; çarpanları verilmedi.", i + 1, named.title),
+                message: format!(
+                    "{}. nokta {} sisteminin ulaştığı yerin dışında; çarpanları verilmedi.",
+                    i + 1,
+                    named.title
+                ),
                 path: Some(format!("points[{i}]")),
             });
         }
@@ -225,7 +282,12 @@ fn read(doc: &Document, input: &CrsFactors) -> Result<(CrsFactorsRead, Vec<Comma
                         height: height_factor.and(h),
                     }
                 }
-                Err(_) => LineFactors { scale: None, height_factor: None, combined: None, height: None },
+                Err(_) => LineFactors {
+                    scale: None,
+                    height_factor: None,
+                    combined: None,
+                    height: None,
+                },
             }
         })
         .collect();
@@ -243,7 +305,10 @@ fn read(doc: &Document, input: &CrsFactors) -> Result<(CrsFactorsRead, Vec<Comma
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &CrsFactors) -> CommandResult<()> {
     match read(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }

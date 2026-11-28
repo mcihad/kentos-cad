@@ -1185,7 +1185,7 @@ pub struct App {
     pub(crate) sheet_session: Option<u64>,
     pub(crate) sheet_generation: Option<(u64, u64)>,
     pub(crate) sheet_attributes: std::cell::Cell<bool>,
-    pub(crate) sheet_extent: std::cell::Cell<Option<[f64;4]>>,
+    pub(crate) sheet_extent: std::cell::Cell<Option<[f64; 4]>>,
     /// The box of the objects on the project's levels, the ground of Kat planı paftaları (docs/adr/0718).
     pub(crate) sheet_level_extent: std::cell::Cell<Option<[f64; 4]>>,
     /// The drawing's variables and what it says of itself for a title block (docs/adr/8037), with the drawing's
@@ -1219,7 +1219,6 @@ pub struct App {
 }
 
 impl App {
-
     pub fn title(&self) -> String {
         // A module's program says its own name first (docs/adr/0801): “KentOS Mimari — Konut.kcad”.
         if let Some(program) = self.program {
@@ -1301,13 +1300,20 @@ impl App {
                         &["kcad", "dwg", "dxf", "ncz", "gpkg"],
                     )
                 } else {
-                    dialog.add_filter("CAD çizimleri (.kcad, .dwg, .dxf, .ncz)", &["kcad", "dwg", "dxf", "ncz"])
+                    dialog.add_filter(
+                        "CAD çizimleri (.kcad, .dwg, .dxf, .ncz)",
+                        &["kcad", "dwg", "dxf", "ncz"],
+                    )
                 };
                 let dialog = dialog
                     .add_filter("KentOS çizimi (.kcad)", &["kcad"])
                     .add_filter("DWG ve DXF çizimleri (.dwg, .dxf)", &["dwg", "dxf"])
                     .add_filter("NCZ çizimi (.ncz)", &["ncz"]);
-                let dialog = if gpkg { dialog.add_filter("GeoPackage (.gpkg)", &["gpkg"]) } else { dialog };
+                let dialog = if gpkg {
+                    dialog.add_filter("GeoPackage (.gpkg)", &["gpkg"])
+                } else {
+                    dialog
+                };
                 let file = dialog.pick_file().await?;
                 Some(file.path().to_path_buf())
             },
@@ -1334,7 +1340,10 @@ impl App {
         }
         // Made of a GeoPackage's tables and kept nowhere (docs/adr/9122): the first Kaydet shows the file and the name it
         // would keep the project under there, and writes only when the owner says so; Farklı kaydet asks for a file.
-        if !choose && doc.path.is_none() && let Some(at) = doc.offered_source().cloned() {
+        if !choose
+            && doc.path.is_none()
+            && let Some(at) = doc.offered_source().cloned()
+        {
             return self.offer_project_store(at);
         }
         let title = if doc.legacy && !choose {
@@ -1353,7 +1362,9 @@ impl App {
         if let Some(path) = known {
             let path = if kentos_native_application::cad_open::Format::of(&path).is_some() {
                 path.with_extension("kcad")
-            } else { path };
+            } else {
+                path
+            };
             return self.start_saving(path);
         }
         let suggested = doc.name().trim_end_matches(".kcad").to_owned();

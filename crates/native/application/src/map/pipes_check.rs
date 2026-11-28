@@ -30,9 +30,9 @@
 use std::collections::HashMap;
 
 use kentos_commands::{
-    CommandResult, Entity, NetworkDef, NetworkKind, PIPE_CATALOG_LIMIT, PIPE_FINDING_LIMIT, PIPE_FINDINGS, PIPE_LIMIT,
-    PipeCheck, PipeCount, PipeDiameter, PipeFinding, PipeGround, PipeInverts, PipeRuleSystem, PipeUnit, PipesCheck,
-    PipesChecked, network_caseless,
+    CommandResult, Entity, NetworkDef, NetworkKind, PIPE_CATALOG_LIMIT, PIPE_FINDING_LIMIT,
+    PIPE_FINDINGS, PIPE_LIMIT, PipeCheck, PipeCount, PipeDiameter, PipeFinding, PipeGround,
+    PipeInverts, PipeRuleSystem, PipeUnit, PipesCheck, PipesChecked, network_caseless,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::network::{Dir, Graph};
@@ -60,7 +60,10 @@ pub fn plain_number(text: &str) -> Option<f64> {
         Some((whole, fraction)) => digits(whole) && digits(fraction),
         None => digits(body),
     };
-    plain.then(|| t.replace(',', ".").parse::<f64>().ok()).flatten().filter(|v| v.is_finite())
+    plain
+        .then(|| t.replace(',', ".").parse::<f64>().ok())
+        .flatten()
+        .filter(|v| v.is_finite())
 }
 
 pub(crate) fn attr(e: &Entity, field: &str) -> Option<f64> {
@@ -69,7 +72,11 @@ pub(crate) fn attr(e: &Entity, field: &str) -> Option<f64> {
 
 /// The question's own rules, before the drawing is read, and the rule package's system when one is asked.
 fn asked(input: &PipesCheck) -> Result<Option<PipeRuleSystem>, Stop> {
-    asked_values(&input.inverts, input.diameter.as_ref(), input.ground.as_ref())?;
+    asked_values(
+        &input.inverts,
+        input.diameter.as_ref(),
+        input.ground.as_ref(),
+    )?;
     limits_of(input)?;
     let system = rules::asked(input)?;
     if let Some(c) = &input.clearance {
@@ -89,35 +96,62 @@ pub(crate) fn asked_values(
     let named = |v: &str| !v.trim().is_empty();
     if let PipeInverts::Fields { start, end } = inverts {
         if !named(start) {
-            return bad("Baş akar kotunun özniteliği boş; özniteliğin adını yazın.".into(), "inverts.start");
+            return bad(
+                "Baş akar kotunun özniteliği boş; özniteliğin adını yazın.".into(),
+                "inverts.start",
+            );
         }
         if !named(end) {
-            return bad("Son akar kotunun özniteliği boş; özniteliğin adını yazın.".into(), "inverts.end");
+            return bad(
+                "Son akar kotunun özniteliği boş; özniteliğin adını yazın.".into(),
+                "inverts.end",
+            );
         }
     }
     if let Some(d) = diameter {
         if !named(&d.field) {
-            return bad("Çapın özniteliği boş; özniteliğin adını yazın.".into(), "diameter.field");
+            return bad(
+                "Çapın özniteliği boş; özniteliğin adını yazın.".into(),
+                "diameter.field",
+            );
         }
         if d.catalog.len() > PIPE_CATALOG_LIMIT {
-            return bad(format!("Çap kataloğunda en çok {PIPE_CATALOG_LIMIT} çap olur."), "diameter.catalog");
+            return bad(
+                format!("Çap kataloğunda en çok {PIPE_CATALOG_LIMIT} çap olur."),
+                "diameter.catalog",
+            );
         }
         if let Some(i) = d.catalog.iter().position(|c| !(c.is_finite() && *c > 0.0)) {
-            return bad("Katalogdaki çaplar 0'dan büyük olmalı.".into(), &format!("diameter.catalog[{i}]"));
+            return bad(
+                "Katalogdaki çaplar 0'dan büyük olmalı.".into(),
+                &format!("diameter.catalog[{i}]"),
+            );
         }
         if d.wall.as_deref().is_some_and(|w| !named(w)) {
-            return bad("Et kalınlığının özniteliği boş; özniteliğin adını yazın.".into(), "diameter.wall");
+            return bad(
+                "Et kalınlığının özniteliği boş; özniteliğin adını yazın.".into(),
+                "diameter.wall",
+            );
         }
         if d.outer.as_deref().is_some_and(|w| !named(w)) {
-            return bad("Dış çapın özniteliği boş; özniteliğin adını yazın.".into(), "diameter.outer");
+            return bad(
+                "Dış çapın özniteliği boş; özniteliğin adını yazın.".into(),
+                "diameter.outer",
+            );
         }
     }
     match ground {
         Some(PipeGround::Surface { surface }) if !named(surface) => {
-            return bad("Zemin yüzeyi boş; yüzeyin adını ya da kimliğini yazın.".into(), "ground.surface");
+            return bad(
+                "Zemin yüzeyi boş; yüzeyin adını ya da kimliğini yazın.".into(),
+                "ground.surface",
+            );
         }
         Some(PipeGround::Structures { field }) if !named(field) => {
-            return bad("Kapak kotunun özniteliği boş; özniteliğin adını yazın.".into(), "ground.field");
+            return bad(
+                "Kapak kotunun özniteliği boş; özniteliğin adını yazın.".into(),
+                "ground.field",
+            );
         }
         _ => {}
     }
@@ -136,7 +170,10 @@ fn limits_of(input: &PipesCheck) -> Result<(), Stop> {
         if let Some(v) = v
             && !(v.is_finite() && v > 0.0)
         {
-            return bad(format!("{words} 0'dan büyük bir sayı olmalı; denetlenmeyecekse boş bırakın."), path);
+            return bad(
+                format!("{words} 0'dan büyük bir sayı olmalı; denetlenmeyecekse boş bırakın."),
+                path,
+            );
         }
     }
     if let (Some(a), Some(b)) = (input.min_cover, input.max_cover)
@@ -178,14 +215,24 @@ pub(crate) fn path_of(e: Option<&Entity>, a: [f64; 2], b: [f64; 2]) -> Path {
         ),
         Some(Entity::Polyline(p)) if p.pts.len() >= 2 => {
             let n = p.pts.len();
-            let bulges: Vec<f64> =
-                (0..n - 1).map(|i| p.bulges.as_ref().and_then(|b| b.get(i).copied()).unwrap_or(0.0)).collect();
-            let heights = p
-                .zs
-                .as_ref()
-                .filter(|zs| zs.len() == n)
-                .and_then(|zs| zs.iter().copied().collect::<Option<Vec<f64>>>());
-            (p.pts.iter().map(|v| [v.x, v.y]).collect(), bulges, heights, false)
+            let bulges: Vec<f64> = (0..n - 1)
+                .map(|i| {
+                    p.bulges
+                        .as_ref()
+                        .and_then(|b| b.get(i).copied())
+                        .unwrap_or(0.0)
+                })
+                .collect();
+            let heights =
+                p.zs.as_ref()
+                    .filter(|zs| zs.len() == n)
+                    .and_then(|zs| zs.iter().copied().collect::<Option<Vec<f64>>>());
+            (
+                p.pts.iter().map(|v| [v.x, v.y]).collect(),
+                bulges,
+                heights,
+                false,
+            )
         }
         _ => (vec![a, b], vec![0.0], None, true),
     };
@@ -195,7 +242,12 @@ pub(crate) fn path_of(e: Option<&Entity>, a: [f64; 2], b: [f64; 2]) -> Path {
         stations.push(stations[i] + arc_length(chord, bulges[i]));
     }
     let curved = other || bulges.iter().any(|b| *b != 0.0);
-    Path { pts, stations, heights, curved }
+    Path {
+        pts,
+        stations,
+        heights,
+        curved,
+    }
 }
 
 impl Path {
@@ -210,9 +262,17 @@ impl Path {
             return Some(if l > 0.0 { i0 + (i1 - i0) * s / l } else { i0 });
         }
         let h = self.heights.as_ref()?;
-        let k = self.stations.windows(2).position(|w| s <= w[1]).unwrap_or(self.stations.len().saturating_sub(2));
+        let k = self
+            .stations
+            .windows(2)
+            .position(|w| s <= w[1])
+            .unwrap_or(self.stations.len().saturating_sub(2));
         let (s0, s1) = (self.stations[k], self.stations[k + 1]);
-        Some(if s1 > s0 { h[k] + (h[k + 1] - h[k]) * (s - s0) / (s1 - s0) } else { h[k] })
+        Some(if s1 > s0 {
+            h[k] + (h[k + 1] - h[k]) * (s - s0) / (s1 - s0)
+        } else {
+            h[k]
+        })
     }
 }
 
@@ -224,7 +284,9 @@ struct Sample {
 }
 
 pub(crate) fn diameter_of(e: Option<&Entity>, d: &PipeDiameter) -> Result<f64, ()> {
-    e.and_then(|e| attr(e, &d.field)).filter(|v| *v > 0.0).ok_or(())
+    e.and_then(|e| attr(e, &d.field))
+        .filter(|v| *v > 0.0)
+        .ok_or(())
 }
 
 /// Why a pipe's wall asked is not known (docs/adr/3960, 4780).
@@ -269,7 +331,9 @@ pub(crate) fn wall_of(e: Option<&Entity>, d: &PipeDiameter) -> Option<Result<f64
 }
 
 fn in_catalog(v: f64, catalog: &[f64]) -> bool {
-    catalog.iter().any(|c| (v - c).abs() <= 1e-9 * c.abs().max(1.0))
+    catalog
+        .iter()
+        .any(|c| (v - c).abs() <= 1e-9 * c.abs().max(1.0))
 }
 
 struct Ask<'a> {
@@ -287,10 +351,19 @@ struct Found {
 
 impl Found {
     fn add(&mut self, kind: &str, uid: &str, at: [f64; 2], value: Option<f64>, unit: Option<&str>) {
-        let order = PIPE_FINDINGS.iter().position(|k| *k == kind).unwrap_or(PIPE_FINDINGS.len());
+        let order = PIPE_FINDINGS
+            .iter()
+            .position(|k| *k == kind)
+            .unwrap_or(PIPE_FINDINGS.len());
         self.findings.push((
             order,
-            PipeFinding { kind: kind.into(), uid: uid.into(), at, value, unit: unit.map(str::to_owned) },
+            PipeFinding {
+                kind: kind.into(),
+                uid: uid.into(),
+                at,
+                value,
+                unit: unit.map(str::to_owned),
+            },
         ));
     }
 }
@@ -315,7 +388,10 @@ pub(crate) fn network_def(doc: &Document, network: &str) -> Result<NetworkDef, S
     if def.kind == NetworkKind::Road {
         return Err(refuse(
             codes::NOT_A_PIPE_NETWORK,
-            format!("“{}” bir yol ağı; boru hattı denetimi altyapı ağlarını denetler.", def.name),
+            format!(
+                "“{}” bir yol ağı; boru hattı denetimi altyapı ağlarını denetler.",
+                def.name
+            ),
             "network",
         ));
     }
@@ -328,22 +404,34 @@ pub(crate) fn load(
     doc: &Document,
     network: &str,
     ground: Option<&PipeGround>,
-) -> Result<(NetworkDef, Option<terrains::Made>, kentos_geometry_core::ops::network::NetworkSession), Stop> {
+) -> Result<
+    (
+        NetworkDef,
+        Option<terrains::Made>,
+        kentos_geometry_core::ops::network::NetworkSession,
+    ),
+    Stop,
+> {
     let def = network_def(doc, network)?;
     let made = match ground {
         Some(PipeGround::Surface { surface }) => {
             terrains::terrain_project(doc)?;
             let id = crate::road_profiles::surface_id(doc, surface, "ground.surface")?;
-            let s = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+            let s = terrains::surfaces(doc)
+                .iter()
+                .find(|s| s.id == id)
+                .cloned()
+                .ok_or(Stop::Cancelled)?;
             let made = terrains::make(doc, &s);
             made.built()?;
             Some(made)
         }
         _ => None,
     };
-    let (_, session) = host()
-        .map_err(|e| Stop::failed(*e))
-        .and_then(|h| h.network(doc, &def.id).map_err(|why| refuse(codes::INVALID_NETWORK, why, "network")))?;
+    let (_, session) = host().map_err(|e| Stop::failed(*e)).and_then(|h| {
+        h.network(doc, &def.id)
+            .map_err(|why| refuse(codes::INVALID_NETWORK, why, "network"))
+    })?;
     Ok((def, made, session))
 }
 
@@ -358,7 +446,10 @@ fn run(doc: &Document, input: &PipesCheck) -> Result<PipesChecked, Stop> {
     if g.edges.len() > PIPE_LIMIT {
         return Err(refuse(
             codes::INVALID_PIPE_CHECK,
-            format!("Ağda {} boru var; en çok {PIPE_LIMIT} boru denetlenir. Ağı süzgeçle bölün.", g.edges.len()),
+            format!(
+                "Ağda {} boru var; en çok {PIPE_LIMIT} boru denetlenir. Ağı süzgeçle bölün.",
+                g.edges.len()
+            ),
             "network",
         ));
     }
@@ -370,7 +461,17 @@ fn run(doc: &Document, input: &PipesCheck) -> Result<PipesChecked, Stop> {
         (Some(c), Some((_, session))) => Some(clearance::Other::new(doc, c, session)),
         _ => None,
     };
-    Ok(check(doc, g, &Ask { input, def: &def, surface, other: ready.as_ref(), rules: system.as_ref() }))
+    Ok(check(
+        doc,
+        g,
+        &Ask {
+            input,
+            def: &def,
+            surface,
+            other: ready.as_ref(),
+            rules: system.as_ref(),
+        },
+    ))
 }
 
 fn root(parent: &mut [u32], mut x: u32) -> u32 {
@@ -400,9 +501,19 @@ fn parts(g: &Graph) -> (Vec<Option<(u32, f64)>>, Option<u32>, usize) {
         e.0 += p.len;
         of_edge[p.edge as usize].get_or_insert(r);
     }
-    let longest = length.iter().max_by(|a, b| a.1.0.total_cmp(&b.1.0).then(b.1.1.cmp(&a.1.1))).map(|(r, _)| *r);
+    let longest = length
+        .iter()
+        .max_by(|a, b| a.1.0.total_cmp(&b.1.0).then(b.1.1.cmp(&a.1.1)))
+        .map(|(r, _)| *r);
     let count = length.len();
-    (of_edge.into_iter().map(|r| r.map(|r| (r, length[&r].0))).collect(), longest, count)
+    (
+        of_edge
+            .into_iter()
+            .map(|r| r.map(|r| (r, length[&r].0)))
+            .collect(),
+        longest,
+        count,
+    )
 }
 
 fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
@@ -418,9 +529,14 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
         }
     }
     let cover_level = |node: Option<u32>, field: &str| -> Option<f64> {
-        at_node.get(&node?)?.iter().find_map(|&k| doc.get(slot(g.junctions[k].id)).and_then(|e| attr(e, field)))
+        at_node.get(&node?)?.iter().find_map(|&k| {
+            doc.get(slot(g.junctions[k].id))
+                .and_then(|e| attr(e, field))
+        })
     };
-    let mut found = Found { findings: Vec::new() };
+    let mut found = Found {
+        findings: Vec::new(),
+    };
     let mut pipes: Vec<PipeCheck> = Vec::new();
     // Each node's inlets and outlets: (pipe, invert there).
     let mut inlets: HashMap<u32, Vec<(usize, f64)>> = HashMap::new();
@@ -428,7 +544,10 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
     let mut total = 0.0;
     for (k, edge) in g.edges.iter().enumerate() {
         let e = doc.get(slot(edge.id));
-        let uid = doc.uid(slot(edge.id)).map(|u| u.to_string()).unwrap_or_default();
+        let uid = doc
+            .uid(slot(edge.id))
+            .map(|u| u.to_string())
+            .unwrap_or_default();
         let layer = e.map(|e| e.base().layer_id.clone()).unwrap_or_default();
         let a = [edge.a.x, edge.a.y];
         let b = [edge.b.x, edge.b.y];
@@ -486,7 +605,10 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
             Some((d, Ok(v))) => Some((v, v * (d.unit.metres() * 1000.0))),
             _ => None,
         };
-        let class = ask.rules.zip(read_mm).and_then(|(r, (_, mm))| rules::slope_class(r, mm));
+        let class = ask
+            .rules
+            .zip(read_mm)
+            .and_then(|(r, (_, mm))| rules::slope_class(r, mm));
         if let (Some(_), Some((v, _)), None) = (ask.rules, read_mm, class) {
             mark("noRule", start, Some(v), None);
         }
@@ -499,7 +621,9 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
         let min_cover_limit = input.min_cover.or(ask.rules.and_then(|r| r.min_cover));
         if let (Some(r), Some((_, mm)), true) = (ask.rules, read_mm, structures) {
             let (na, nb) = edge.nodes.unzip();
-            let between = [na, nb].iter().all(|n| n.is_some_and(|n| at_node.contains_key(&n)));
+            let between = [na, nb]
+                .iter()
+                .all(|n| n.is_some_and(|n| at_node.contains_key(&n)));
             if let (true, Some(span)) = (between, rules::span_class(r, mm))
                 && l > span.greatest
             {
@@ -521,32 +645,53 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
                 end_ground = [h(start), h(end)];
                 if path.curved {
                     for (p, st) in path.pts.iter().zip(&path.stations) {
-                        samples.push(Sample { station: *st, at: *p, ground: h(*p) });
+                        samples.push(Sample {
+                            station: *st,
+                            at: *p,
+                            ground: h(*p),
+                        });
                     }
                 } else {
                     for q in s.section(&path.pts) {
-                        samples.push(Sample { station: q.station, at: [q.x, q.y], ground: q.z });
+                        samples.push(Sample {
+                            station: q.station,
+                            at: [q.x, q.y],
+                            ground: q.z,
+                        });
                     }
                 }
             }
             (Some(PipeGround::Structures { field }), _) => {
                 let (na, nb) = edge.nodes.unzip();
                 end_ground = [cover_level(na, field), cover_level(nb, field)];
-                samples.push(Sample { station: 0.0, at: start, ground: end_ground[0] });
-                samples.push(Sample { station: l, at: end, ground: end_ground[1] });
+                samples.push(Sample {
+                    station: 0.0,
+                    at: start,
+                    ground: end_ground[0],
+                });
+                samples.push(Sample {
+                    station: l,
+                    at: end,
+                    ground: end_ground[1],
+                });
             }
             _ => {}
         }
         // A likely unit mistake in an invert: read as written it misses the cover limits, read in cm or mm (or as a
         // depth) it fits them.
-        if let (Some((i0, i1)), Some(lo), Some(hi), Some(c)) = (ends, min_cover_limit, input.max_cover, crown) {
+        if let (Some((i0, i1)), Some(lo), Some(hi), Some(c)) =
+            (ends, min_cover_limit, input.max_cover, crown)
+        {
             let fits = |cover: f64| (lo..=hi).contains(&cover);
             for (v, g0, place) in [(i0, end_ground[0], start), (i1, end_ground[1], end)] {
                 let Some(g0) = g0 else { continue };
                 if fits(g0 - (v + c)) {
                     continue;
                 }
-                if let Some(unit) = [(100.0, "cm"), (1000.0, "mm")].iter().find(|(k, _)| fits(g0 - (v / k + c))) {
+                if let Some(unit) = [(100.0, "cm"), (1000.0, "mm")]
+                    .iter()
+                    .find(|(k, _)| fits(g0 - (v / k + c)))
+                {
                     mark("invertUnit", place, Some(v), Some(unit.1));
                 } else if fits(v - c) {
                     mark("invertIsDepth", place, Some(v), None);
@@ -573,7 +718,11 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
             }
         }
         if let (Some((na, nb)), Some(u), Some(d)) = (edge.nodes, up, down) {
-            let (from, to, from_at) = if reversed { (nb, na, end) } else { (na, nb, start) };
+            let (from, to, from_at) = if reversed {
+                (nb, na, end)
+            } else {
+                (na, nb, start)
+            };
             outlets.entry(from).or_default().push((k, u, from_at));
             inlets.entry(to).or_default().push((k, d));
         }
@@ -602,12 +751,18 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
             if on.is_empty() {
                 mark("noGround", start, None, None);
             } else if let Some(off) = samples.iter().find(|s| s.ground.is_none()) {
-                let what = if matches!(input.ground, Some(PipeGround::Structures { .. })) { "noGround" } else { "offSurface" };
+                let what = if matches!(input.ground, Some(PipeGround::Structures { .. })) {
+                    "noGround"
+                } else {
+                    "offSurface"
+                };
                 mark(what, off.at, None, None);
             }
             if let Some(c) = crown {
                 for s in &on {
-                    let Some(inv) = path.invert(ends, s.station) else { continue };
+                    let Some(inv) = path.invert(ends, s.station) else {
+                        continue;
+                    };
                     let cover = s.ground.unwrap_or(f64::NAN) - (inv + c);
                     if min_cover.is_none_or(|m| cover < m.0) {
                         min_cover = Some((cover, s.at));
@@ -654,7 +809,12 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
     let mut nodes: Vec<&u32> = outlets.keys().collect();
     nodes.sort();
     for n in nodes {
-        let Some(low) = inlets.get(n).and_then(|list| list.iter().map(|x| x.1).reduce(f64::min)) else { continue };
+        let Some(low) = inlets
+            .get(n)
+            .and_then(|list| list.iter().map(|x| x.1).reduce(f64::min))
+        else {
+            continue;
+        };
         for &(k, o, at) in &outlets[n] {
             if o > low {
                 let uid = pipes[k].uid.clone();
@@ -663,7 +823,9 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
         }
     }
     // The clearances to the other network's pipes (docs/adr/2360).
-    let measured = ask.other.map(|o| clearance::measure(doc, g, &input.inverts, input.diameter.as_ref(), o));
+    let measured = ask
+        .other
+        .map(|o| clearance::measure(doc, g, &input.inverts, input.diameter.as_ref(), o));
     if let Some(m) = &measured {
         for mark in &m.marks {
             found.add(mark.kind, &mark.uid, mark.at, mark.value, None);
@@ -671,14 +833,21 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
     }
     let (crossings, near) = measured.map(|m| (m.crossings, m.near)).unwrap_or_default();
     // Pipe by pipe, each pipe's in the kinds' order (a kind twice: in the order found).
-    let index: HashMap<String, usize> = pipes.iter().enumerate().map(|(k, p)| (p.uid.clone(), k)).collect();
+    let index: HashMap<String, usize> = pipes
+        .iter()
+        .enumerate()
+        .map(|(k, p)| (p.uid.clone(), k))
+        .collect();
     let mut list = found.findings;
     list.sort_by_key(|(order, f)| (index.get(&f.uid).copied().unwrap_or(usize::MAX), *order));
     let mut counts: Vec<PipeCount> = Vec::new();
     for kind in PIPE_FINDINGS {
         let n = list.iter().filter(|(_, f)| f.kind == kind).count();
         if n > 0 {
-            counts.push(PipeCount { kind: kind.into(), count: n.min(u32::MAX as usize) as u32 });
+            counts.push(PipeCount {
+                kind: kind.into(),
+                count: n.min(u32::MAX as usize) as u32,
+            });
         }
     }
     for (_, f) in &list {
@@ -697,7 +866,11 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
         }
         .into(),
         pipes,
-        findings: list.into_iter().map(|(_, f)| f).take(PIPE_FINDING_LIMIT).collect(),
+        findings: list
+            .into_iter()
+            .map(|(_, f)| f)
+            .take(PIPE_FINDING_LIMIT)
+            .collect(),
         counts,
         parts: part_count.min(u32::MAX as usize) as u32,
         length: total,
@@ -709,7 +882,10 @@ fn check(doc: &Document, g: &Graph, ask: &Ask<'_>) -> PipesChecked {
 /// Checks the question and the network, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &PipesCheck) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -717,7 +893,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &PipesCheck) -> CommandResult<
 /// The check; the same as execute.
 pub fn plan(cx: &ExecutionContext<'_>, input: &PipesCheck) -> CommandResult<PipesChecked> {
     match run(cx.doc, input) {
-        Ok(out) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok(out) => CommandResult::Completed {
+            output: out,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }

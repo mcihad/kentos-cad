@@ -123,12 +123,33 @@ fn in_cad(module: Module) -> App {
 
 /// Everything a module shows, as a comparable list of words.
 fn surfaces_of(app: &App) -> Vec<String> {
-    let mut out = vec![format!("{:?}", app.bottom_tabs()), format!("{:?}", app.project_sections())];
-    out.extend(Panel::ALL.into_iter().map(|p| format!("{p:?} {}", app.shows_panel(p))));
-    for cell in [Cell::MapCrs, Cell::SecondCrs, Cell::Topology, Cell::Overlap, Cell::Scenario, Cell::Level, Cell::LineWeights] {
+    let mut out = vec![
+        format!("{:?}", app.bottom_tabs()),
+        format!("{:?}", app.project_sections()),
+    ];
+    out.extend(
+        Panel::ALL
+            .into_iter()
+            .map(|p| format!("{p:?} {}", app.shows_panel(p))),
+    );
+    for cell in [
+        Cell::MapCrs,
+        Cell::SecondCrs,
+        Cell::Topology,
+        Cell::Overlap,
+        Cell::Scenario,
+        Cell::Level,
+        Cell::LineWeights,
+    ] {
         out.push(format!("{cell:?} {}", app.shows_cell(cell)));
     }
-    for row in [AppSetting::Geographic, AppSetting::FormOnCreate, AppSetting::NewProjects, AppSetting::NewProjectType, AppSetting::NewProjectUnit] {
+    for row in [
+        AppSetting::Geographic,
+        AppSetting::FormOnCreate,
+        AppSetting::NewProjects,
+        AppSetting::NewProjectType,
+        AppSetting::NewProjectUnit,
+    ] {
         out.push(format!("{row:?} {}", app.shows_setting(row)));
     }
     for entry in crate::layer_entries::LayerEntry::ALL {
@@ -148,7 +169,12 @@ fn surfaces_of(app: &App) -> Vec<String> {
     ] {
         out.push(format!("{rows:?} {}", app.shows_property_rows(rows)));
     }
-    for id in ["file.import.gpkg", "file.export.gpkg", "file.import.dwg", "file.export.pdf"] {
+    for id in [
+        "file.import.gpkg",
+        "file.export.gpkg",
+        "file.import.dwg",
+        "file.export.pdf",
+    ] {
         out.push(format!("{id} {}", app.shows_format(id)));
     }
     out.push(format!(
@@ -166,7 +192,11 @@ fn surfaces_of(app: &App) -> Vec<String> {
 
 /// Whether `app` offers each of the catalog's commands, in the catalog's order.
 fn offered(app: &App) -> Vec<bool> {
-    crate::catalog::catalog().commands().iter().map(|c| app.offers(c.id)).collect()
+    crate::catalog::catalog()
+        .commands()
+        .iter()
+        .map(|c| app.offers(c.id))
+        .collect()
 }
 
 /// `module`'s project in kentos-cad: what it shows and offers (an app in a frame of its own, see `with`).
@@ -193,7 +223,9 @@ fn kentos_cad_shows_the_open_projects_module_as_its_program_does() {
         let own = own_view(module);
         assert_eq!(cad.0, own.0, "{module:?}");
         for (i, c) in crate::catalog::catalog().commands().iter().enumerate() {
-            let kentos_cads = Module::ALL.into_iter().all(|m| !crate::catalog::catalog().module_has(m, c.id));
+            let kentos_cads = Module::ALL
+                .into_iter()
+                .all(|m| !crate::catalog::catalog().module_has(m, c.id));
             assert_eq!(cad.1[i], own.1[i] || kentos_cads, "{module:?} {}", c.id);
         }
     }
@@ -203,7 +235,10 @@ fn kentos_cad_shows_the_open_projects_module_as_its_program_does() {
 /// closed come back where they were and the kept tab in front with them; the user's own closing is kept.
 #[test]
 fn kentos_cad_switches_its_surfaces_with_the_project_on_screen() {
-    let dir = kept("sekme", json!({ "bottomExpanded": true, "bottomTab": "table", "dockTab": "sources" }));
+    let dir = kept(
+        "sekme",
+        json!({ "bottomExpanded": true, "bottomTab": "table", "dockTab": "sources" }),
+    );
     let mut app = opened_with(None, &dir);
     // Nothing open: the common surfaces alone, the kept ones waiting.
     assert_eq!(app.active_module(), None);
@@ -233,7 +268,9 @@ fn kentos_cad_switches_its_surfaces_with_the_project_on_screen() {
     assert_eq!(app.active_module(), Some(Module::Architecture));
     assert!(app.docks.contains(Panel::Blocks) && app.docks.contains(Panel::Navigator));
     assert!(!app.docks.contains(Panel::Sources));
-    assert!(app.shows_bottom_tab(BottomTab::CadInspection) && !app.shows_bottom_tab(BottomTab::Table));
+    assert!(
+        app.shows_bottom_tab(BottomTab::CadInspection) && !app.shows_bottom_tab(BottomTab::Table)
+    );
     assert_eq!(app.bottom_tab, BottomTab::History);
     // Back to CBS: Kaynaklar back in front, İşlemler still closed as the user left it.
     let doc = app.document.as_mut().expect("a drawing");
@@ -243,7 +280,10 @@ fn kentos_cad_switches_its_surfaces_with_the_project_on_screen() {
     doc.model.set_settings(s);
     let _ = app.update(Message::Swallowed);
     assert!(app.docks.contains(Panel::Sources) && !app.docks.contains(Panel::Blocks));
-    assert!(!app.docks.contains(Panel::Processing), "the user's closing is kept");
+    assert!(
+        !app.docks.contains(Panel::Processing),
+        "the user's closing is kept"
+    );
     assert_eq!(in_front(&app), Some(Panel::Sources));
     assert_eq!(app.bottom_tab, BottomTab::Table);
 }
@@ -252,11 +292,23 @@ fn kentos_cad_switches_its_surfaces_with_the_project_on_screen() {
 fn each_program_has_its_own_bottom_tabs() {
     use BottomTab::*;
     // kentos-cad with nothing open: the common tabs alone (docs/adr/9195 §2).
-    assert_eq!(started(None).bottom_tabs(), [History, Works, Messages, Python]);
+    assert_eq!(
+        started(None).bottom_tabs(),
+        [History, Works, Messages, Python]
+    );
     // Eklenti denetimi shows only while an extension offers the module an audit rule (docs/adr/9195 §5): none here.
     assert_eq!(
         started(MIMARI).bottom_tabs(),
-        [History, Coords, Search, Audit, CadInspection, Works, Messages, Python]
+        [
+            History,
+            Coords,
+            Search,
+            Audit,
+            CadInspection,
+            Works,
+            Messages,
+            Python
+        ]
     );
     assert_eq!(
         started(HARITA).bottom_tabs(),
@@ -279,7 +331,17 @@ fn each_program_has_its_own_bottom_tabs() {
     // CAD denetimi (the hatch boundary diagnosis, 183defaa6) is the CAD programs', KentOS Yol's too, not a GIS's.
     assert_eq!(
         started(Some(Module::Road)).bottom_tabs(),
-        [History, Coords, Points, Table, Search, CadInspection, Works, Messages, Python]
+        [
+            History,
+            Coords,
+            Points,
+            Table,
+            Search,
+            CadInspection,
+            Works,
+            Messages,
+            Python
+        ]
     );
     let gis = started(GIS).bottom_tabs();
     assert_eq!(gis.len(), BottomTab::ALL.len() - 3);
@@ -511,7 +573,15 @@ fn each_program_has_its_own_status_cells() {
     ];
     for (program, cells) in expected {
         let app = started(program);
-        for cell in [MapCrs, SecondCrs, Topology, Overlap, Scenario, Level, LineWeights] {
+        for cell in [
+            MapCrs,
+            SecondCrs,
+            Topology,
+            Overlap,
+            Scenario,
+            Level,
+            LineWeights,
+        ] {
             assert_eq!(
                 app.shows_cell(cell),
                 cells.contains(&cell),
@@ -596,7 +666,11 @@ fn each_program_has_its_own_settings_sections() {
     ];
     let shortcuts = &rows[5..];
     let harita = [&rows[..3], shortcuts].concat();
-    let yol = [AppSetting::Geographic, AppSetting::NewProjects, AppSetting::Shortcuts];
+    let yol = [
+        AppSetting::Geographic,
+        AppSetting::NewProjects,
+        AppSetting::Shortcuts,
+    ];
     for (program, shown) in [
         (None, &rows[..]),
         (MIMARI, shortcuts),
@@ -1096,7 +1170,15 @@ fn the_status_bar_shows_the_lamps_at_1440() {
         );
         let first = in_bar(&mut shot, &app, "Kenet");
         // A CBS project's last lamp is Oto. seçim: it has no Kalınlık (docs/adr/9185).
-        let last = in_bar(&mut shot, &app, if kind == Workspace::Gis { "Oto. seçim" } else { "Kalınlık" });
+        let last = in_bar(
+            &mut shot,
+            &app,
+            if kind == Workspace::Gis {
+                "Oto. seçim"
+            } else {
+                "Kalınlık"
+            },
+        );
         // From the first lamp's left (its padding, lamp and gap before the name) to the last's padding and the
         // row's spacing (kentos-ui's `Toggle`).
         let compact = fit >= 7;
@@ -1516,8 +1598,8 @@ fn shoot_after(
 #[ignore = "pictures for the owner, run by hand"]
 fn pictures_of_the_options() {
     use crate::app_menu::{Event as MenuEvent, Pane};
-    use crate::scenes::{at, click, run};
     use crate::scenes::press_caption;
+    use crate::scenes::{at, click, run};
     for (theme, suffix) in [("dark", ""), ("light", "-acik")] {
         // The window as it opens: the status bar's lamps, KentOS Harita's too.
         for (program, word) in [(MIMARI, "mimari"), (HARITA, "harita"), (GIS, "gis")] {

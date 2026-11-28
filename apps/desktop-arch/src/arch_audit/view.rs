@@ -2,6 +2,7 @@
 //! ver ▾, İstisna yap…, Düzelt), the note when the check is old, İstisna yap's question and the table with each row's
 //! menu (docs/adr/0703, 0717, 0732 §5).
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use iced::widget::{Column, button, container, row, space};
 use iced::{Background, Center, Element, Fill, Length};
@@ -13,13 +14,12 @@ use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, Table};
 use kentos_ui::widget::{Elided, Tip, horizontal_divider, tip};
-use crate::arch::ArchState;
 
 use super::{
-    ALL, AREAS, AuditScope, CLEARS, BUTTONS, CHECK, CHECK_HINT, CLEAN, COLUMNS, EXCEPT, EXCEPT_HINT, Event,
-    FIX, GAPS, Ink, LENGTHS, LEVELS, Line, NONE_SHOWN, NOT_CHECKED, NOTE_FIELD, RAMP_PROFILES,
-    SCOPES, STAIR_PROFILES, STALE, START, TEXT_ADVANCE, UNEXCEPT, VIEWS, WIDTHS, bar_button, cell,
-    group_icon, msg,
+    ALL, AREAS, AuditScope, BUTTONS, CHECK, CHECK_HINT, CLEAN, CLEARS, COLUMNS, EXCEPT,
+    EXCEPT_HINT, Event, FIX, GAPS, Ink, LENGTHS, LEVELS, Line, NONE_SHOWN, NOT_CHECKED, NOTE_FIELD,
+    RAMP_PROFILES, SCOPES, STAIR_PROFILES, STALE, START, TEXT_ADVANCE, UNEXCEPT, VIEWS, WIDTHS,
+    bar_button, cell, group_icon, msg,
 };
 use crate::app::{App, Message};
 use crate::icons::from_web;
@@ -40,7 +40,7 @@ pub(crate) trait ArchAuditViewApp {
 
 impl ArchAuditViewApp for App {
     /// The Denetim tab: its bar, a note when the check is old, the table.
-    fn arch_audit_tab(&self) -> Element<'_, Message>{
+    fn arch_audit_tab(&self) -> Element<'_, Message> {
         let bar = iced::widget::responsive(move |room| self.arch_audit_bar(room.width))
             .height(Length::Shrink);
         let stale = self.arch_audit_stale();
@@ -98,7 +98,10 @@ impl ArchAuditViewApp for App {
                             kentos_commands::ArchAuditState::MissingData => Ink::Warning,
                             kentos_commands::ArchAuditState::ExpertReview => Ink::Plain,
                         };
-                        (format!("{} · {}", state.label(), f.message), if stale { Ink::Quiet } else { ink })
+                        (
+                            format!("{} · {}", state.label(), f.message),
+                            if stale { Ink::Quiet } else { ink },
+                        )
                     } else {
                         (
                             f.message.clone(),
@@ -213,7 +216,14 @@ impl ArchAuditViewApp for App {
             );
         }
         // The rule set by the application date (docs/adr/8078): which version of each article was read and its outcome.
-        if let Some(set) = self.modules.arch().arch_audit.rule_set.as_ref().filter(|s| !s.rules.is_empty()) {
+        if let Some(set) = self
+            .modules
+            .arch()
+            .arch_audit
+            .rule_set
+            .as_ref()
+            .filter(|s| !s.rules.is_empty())
+        {
             out = out.push(
                 container(
                     row![
@@ -230,9 +240,19 @@ impl ArchAuditViewApp for App {
         // The last delivered model (docs/adr/8116): which model the EK-9 form read, how the drawing differs from the
         // delivered one, and the other model a press away.
         if let Some(line) = &self.modules.arch().arch_audit.delivered {
-            let tone = if line.error.is_some() { Tone::Warning } else { Tone::Muted };
+            let tone = if line.error.is_some() {
+                Tone::Warning
+            } else {
+                Tone::Muted
+            };
             let mut r = row![
-                icon(from_web(Some(if line.error.is_some() { "warning" } else { "ifcView" }))).size(14.0).tone(tone),
+                icon(from_web(Some(if line.error.is_some() {
+                    "warning"
+                } else {
+                    "ifcView"
+                })))
+                .size(14.0)
+                .tone(tone),
                 // Wrapped, not elided: the end says why three questions are left to review.
                 container(label::body(line.words())).width(Fill),
             ]
@@ -246,7 +266,12 @@ impl ArchAuditViewApp for App {
                 } else {
                     "EK-9 formunu çizimin şimdiki hâlinden, bellekte yazılıp geri okunan modelden okur."
                 };
-                r = r.push(bar_button("ifcView", words, hint, Some(msg(Event::DeliveredModel(on)))));
+                r = r.push(bar_button(
+                    "ifcView",
+                    words,
+                    hint,
+                    Some(msg(Event::DeliveredModel(on))),
+                ));
             }
             out = out.push(container(r).padding([4, 10]).width(Fill));
         }
@@ -254,7 +279,9 @@ impl ArchAuditViewApp for App {
             out = out.push(
                 container(
                     row![
-                        icon(from_web(Some("warning"))).size(14.0).tone(Tone::Warning),
+                        icon(from_web(Some("warning")))
+                            .size(14.0)
+                            .tone(Tone::Warning),
                         label::body(format!("Mevzuat kuralları denetlenemedi: {why}")),
                     ]
                     .spacing(8)
@@ -269,7 +296,9 @@ impl ArchAuditViewApp for App {
             out = out.push(
                 container(
                     row![
-                        icon(from_web(Some("warning"))).size(14.0).tone(Tone::Warning),
+                        icon(from_web(Some("warning")))
+                            .size(14.0)
+                            .tone(Tone::Warning),
                         label::body(format!("EK-3 ve EK-4 denetlenemedi: {why}")),
                     ]
                     .spacing(8)
@@ -290,7 +319,7 @@ impl ArchAuditViewApp for App {
     }
 
     /// İstisna yap's question: the note (optional), Tamam and Vazgeç; Enter gives it, Esc leaves it.
-    fn arch_audit_note_row<'a>(&'a self, note: &'a str) -> Element<'a, Message>{
+    fn arch_audit_note_row<'a>(&'a self, note: &'a str) -> Element<'a, Message> {
         let n = self
             .arch_audit_chosen()
             .iter()
@@ -333,7 +362,7 @@ impl ArchAuditViewApp for App {
 
     /// The bar at `width`: Denetle, the group, Kapsam, İstisnalar ▾ and Eşikler ▾; the count, Kata ver ▾, İstisna yap…
     /// and Düzelt at its end. Narrow: the count and the buttons on a second line.
-    fn arch_audit_bar(&self, width: f32) -> Element<'_, Message>{
+    fn arch_audit_bar(&self, width: f32) -> Element<'_, Message> {
         let audited = self.modules.arch().arch_audit.audited.as_ref();
         let count_of = |g: Option<ArchAuditCheck>| {
             audited.map(|a| {
@@ -355,7 +384,8 @@ impl ArchAuditViewApp for App {
             }
         }));
         let picked = self
-            .modules.arch()
+            .modules
+            .arch()
             .arch_audit
             .group
             .and_then(|g| ArchAuditCheck::ALL.iter().position(|x| *x == g))
@@ -511,7 +541,7 @@ impl ArchAuditViewApp for App {
 
     /// İstisnalar ▾ (docs/adr/0732 §3): how the exceptions are listed, and Eski istisnaları temizle; how many there are
     /// on its face.
-    fn arch_audit_exceptions_button(&self) -> Element<'_, Message>{
+    fn arch_audit_exceptions_button(&self) -> Element<'_, Message> {
         let audited = self.modules.arch().arch_audit.audited.as_ref();
         let excepted = audited.map_or(0, |a| a.excepted);
         let stale = audited.map_or(0, |a| a.stale.len());
@@ -557,12 +587,18 @@ impl ArchAuditViewApp for App {
 
     /// Eşikler ▾ (docs/adr/0703 §1, 0723 §4, 0724 §2, 0732 §4): each threshold and profile a submenu, its value beside
     /// it; the values in its tip.
-    fn arch_audit_limits(&self) -> Element<'_, Message>{
+    fn arch_audit_limits(&self) -> Element<'_, Message> {
         let format = self.format();
         let a = &self.modules.arch().arch_audit;
         let length = |v: f64| format.length(v);
         let area = |v: f64| format!("{v:.2} m²");
-        let clear = |v: f64| if v > 0.0 { format.length(v) } else { "Yok".to_owned() };
+        let clear = |v: f64| {
+            if v > 0.0 {
+                format.length(v)
+            } else {
+                "Yok".to_owned()
+            }
+        };
         let values =
             |list: &[f64], now: f64, show: &dyn Fn(f64) -> String, pick: fn(usize) -> Event| {
                 list.iter()
@@ -624,10 +660,19 @@ impl ArchAuditViewApp for App {
             ),
             (
                 "Kapı yaklaşımı",
-                if a.door_approach { "Önden yaklaşım" } else { "Yok" }.to_owned(),
+                if a.door_approach {
+                    "Önden yaklaşım"
+                } else {
+                    "Yok"
+                }
+                .to_owned(),
                 vec![
                     ("Yok".into(), !a.door_approach, msg(Event::DoorApproach(0))),
-                    ("Önden yaklaşım".into(), a.door_approach, msg(Event::DoorApproach(1))),
+                    (
+                        "Önden yaklaşım".into(),
+                        a.door_approach,
+                        msg(Event::DoorApproach(1)),
+                    ),
                 ],
             ),
         ];
@@ -692,7 +737,7 @@ impl ArchAuditViewApp for App {
 
     /// Kata ver ▾ while the check found objects without a level (docs/adr/0717 §2): Seç ve göster, then the project's
     /// levels, Etkin kat marked; none otherwise.
-    fn arch_audit_levels_button(&self) -> Option<Element<'_, Message>>{
+    fn arch_audit_levels_button(&self) -> Option<Element<'_, Message>> {
         let count = self.arch_audit_levelless().len();
         if count == 0 {
             return None;

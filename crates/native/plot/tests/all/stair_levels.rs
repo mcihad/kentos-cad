@@ -11,7 +11,13 @@ use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
 
 fn run(doc: &mut Document, name: &str, input: Value) -> Value {
-    let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).expect("runs");
+    let answer = registry::run(
+        &mut ExecutionContext::new(doc),
+        name,
+        CallOp::Execute,
+        input,
+    )
+    .expect("runs");
     assert_eq!(answer["status"], "completed", "{name}: {answer}");
     answer
 }
@@ -37,9 +43,13 @@ fn drawing(ground: f64) -> Document {
 fn building(cut: bool) -> Document {
     let mut doc = drawing(3.06);
     for level in ["zemin", "kat-1"] {
-        run(&mut doc, "cad.walls.create", json!({"layerId": "mimari", "walls": [{
+        run(
+            &mut doc,
+            "cad.walls.create",
+            json!({"layerId": "mimari", "walls": [{
             "pts": [{"x": 0.0, "y": 0.0}, {"x": 7.0, "y": 0.0}, {"x": 7.0, "y": 5.4}, {"x": 0.0, "y": 5.4}],
-            "closed": true, "width": 0.25, "justify": "right", "arch": {"level": level}}]}));
+            "closed": true, "width": 0.25, "justify": "right", "arch": {"level": level}}]}),
+        );
     }
     let mut stair = json!({
         "pts": [{"x": 1.5, "y": 1.2}, {"x": 4.5, "y": 1.2}, {"x": 4.5, "y": 2.5}, {"x": 1.0, "y": 2.5}],
@@ -48,7 +58,11 @@ fn building(cut: bool) -> Document {
     if cut {
         stair["cutHeight"] = json!(1.1);
     }
-    run(&mut doc, "cad.stairs.create", json!({"layerId": "mimari", "stairs": [stair]}));
+    run(
+        &mut doc,
+        "cad.stairs.create",
+        json!({"layerId": "mimari", "stairs": [stair]}),
+    );
     run(&mut doc, "cad.sheets.levels", json!({}));
     doc
 }
@@ -56,7 +70,9 @@ fn building(cut: bool) -> Document {
 fn out_dir() -> std::path::PathBuf {
     let dir = std::env::var_os("KENTOS_PLOT_OUT")
         .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| std::env::temp_dir().join(format!("kentos-stair-{}", std::process::id())));
+        .unwrap_or_else(|| {
+            std::env::temp_dir().join(format!("kentos-stair-{}", std::process::id()))
+        });
     std::fs::create_dir_all(&dir).unwrap();
     dir
 }
@@ -67,7 +83,11 @@ fn read(pdf: &[u8], name: &str) -> Option<(String, usize)> {
     let dir = out_dir();
     let path = dir.join(format!("{name}.pdf"));
     std::fs::write(&path, pdf).unwrap();
-    let words = std::process::Command::new("pdftotext").arg(&path).arg("-").output().ok()?;
+    let words = std::process::Command::new("pdftotext")
+        .arg(&path)
+        .arg("-")
+        .output()
+        .ok()?;
     let prefix = dir.join(name);
     let drawn = std::process::Command::new("pdftoppm")
         .args(["-r", "50", "-gray", "-f", "2", "-l", "2"])
@@ -81,11 +101,16 @@ fn read(pdf: &[u8], name: &str) -> Option<(String, usize)> {
         .filter_map(Result::ok)
         .map(|e| e.path())
         .find(|p| {
-            p.file_name().and_then(|n| n.to_str()).is_some_and(|n| n.starts_with(name) && n.ends_with(".pgm"))
+            p.file_name()
+                .and_then(|n| n.to_str())
+                .is_some_and(|n| n.starts_with(name) && n.ends_with(".pgm"))
         })
         .expect("the page drawn");
     let bytes = std::fs::read(&page).unwrap();
-    Some((String::from_utf8_lossy(&words.stdout).into_owned(), dark(&bytes)))
+    Some((
+        String::from_utf8_lossy(&words.stdout).into_owned(),
+        dark(&bytes),
+    ))
 }
 
 /// A binary PGM's pixels darker than mid grey.
@@ -121,12 +146,19 @@ fn the_level_above_s_sheet_draws_the_stair_past_its_cut() {
     let (_, bare) = read(&pdf.bytes, "merdiven-pafta-kesmesiz").expect("poppler");
     // The stair from above draws its sides, risers, landing, railings and arrow on 1. kat's page: a few hundred dark
     // pixels at 50 dpi more than the walls alone.
-    assert!(above > bare + 200, "1. kat'ta merdiven görünmüyor: {above} ≤ {bare} + 200");
+    assert!(
+        above > bare + 200,
+        "1. kat'ta merdiven görünmüyor: {above} ≤ {bare} + 200"
+    );
     // Zemin kat raised: the stair's risers follow; its plan from above is the same.
     let mut raised = building(true);
-    run(&mut raised, "cad.settings.set", json!({"arch": {"levels": [
+    run(
+        &mut raised,
+        "cad.settings.set",
+        json!({"arch": {"levels": [
         {"id": "zemin", "name": "Zemin kat", "elevation": 0.0, "height": 3.4},
-        {"id": "kat-1", "name": "1. kat", "elevation": 3.4, "height": 3.06}]}}));
+        {"id": "kat-1", "name": "1. kat", "elevation": 3.4, "height": 3.06}]}}),
+    );
     let stair = raised
         .entities()
         .find_map(|e| match e {
@@ -134,8 +166,14 @@ fn the_level_above_s_sheet_draws_the_stair_past_its_cut() {
             _ => None,
         })
         .expect("the stair");
-    assert!((f64::from(stair.risers) * stair.riser_height - 3.4).abs() < 1e-9, "{stair:?}");
+    assert!(
+        (f64::from(stair.risers) * stair.riser_height - 3.4).abs() < 1e-9,
+        "{stair:?}"
+    );
     let pdf = kentos_plot::book::book_pdf(&raised, &[], "Merdiven", "2026-10-28").unwrap();
     let (_, again) = read(&pdf.bytes, "merdiven-pafta-yukseldi").expect("poppler");
-    assert!(again > bare + 200, "kat yükselince 1. kat'ta merdiven görünmüyor: {again}");
+    assert!(
+        again > bare + 200,
+        "kat yükselince 1. kat'ta merdiven görünmüyor: {again}"
+    );
 }

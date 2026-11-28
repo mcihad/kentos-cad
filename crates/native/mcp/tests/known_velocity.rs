@@ -13,22 +13,45 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_schema_207_sample_moves_its_known_point_by_its_velocity_over_mcp() {
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2");
-    let sample: Value = serde_json::from_str(&std::fs::read_to_string(root.join("map-survey-velocity.json")).unwrap()).unwrap();
+    let root =
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2");
+    let sample: Value = serde_json::from_str(
+        &std::fs::read_to_string(root.join("map-survey-velocity.json")).unwrap(),
+    )
+    .unwrap();
     let k = &sample["settings"]["mapSurvey"]["known"][0];
-    let (lat, lon) = (k["lat"].as_f64().unwrap().to_radians(), k["lon"].as_f64().unwrap().to_radians());
-    let v: Vec<f64> = k["velocity"].as_array().unwrap().iter().map(|c| c.as_f64().unwrap()).collect();
+    let (lat, lon) = (
+        k["lat"].as_f64().unwrap().to_radians(),
+        k["lon"].as_f64().unwrap().to_radians(),
+    );
+    let v: Vec<f64> = k["velocity"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|c| c.as_f64().unwrap())
+        .collect();
     let mut server = Server::new();
-    let opened = call(&mut server, "drawing.open", json!({"path": root.join("map-survey-velocity.kcad")}));
+    let opened = call(
+        &mut server,
+        "drawing.open",
+        json!({"path": root.join("map-survey-velocity.kcad")}),
+    );
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
 
-    let r = call(&mut server, "map.survey.network", json!({"drawing": drawing, "epoch": 2026.84}));
+    let r = call(
+        &mut server,
+        "map.survey.network",
+        json!({"drawing": drawing, "epoch": 2026.84}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     let moved = &r["structuredContent"]["output"]["moved"];
     assert_eq!(moved.as_array().map(Vec::len), Some(1), "{r}");
     let m = &moved[0];
-    assert_eq!((m["id"].as_str(), m["by"].as_str()), (Some("bn-1"), Some("velocity")));
+    assert_eq!(
+        (m["id"].as_str(), m["by"].as_str()),
+        (Some("bn-1"), Some("velocity"))
+    );
     let years = 2026.84 - 2005.0;
     assert!((m["years"].as_f64().unwrap() - years).abs() < 1e-12);
     // V·Δt in the point's east, north, up.
@@ -45,9 +68,16 @@ fn the_schema_207_sample_moves_its_known_point_by_its_velocity_over_mcp() {
     }
 
     // Without a measurement epoch the baselines' times decide; one baseline has none, so nothing moves.
-    let r = call(&mut server, "map.survey.network", json!({"drawing": drawing}));
+    let r = call(
+        &mut server,
+        "map.survey.network",
+        json!({"drawing": drawing}),
+    );
     assert_eq!(r["isError"], false, "{r}");
-    assert!(r["structuredContent"]["output"].get("moved").is_none(), "{r}");
+    assert!(
+        r["structuredContent"]["output"].get("moved").is_none(),
+        "{r}"
+    );
 
     // A velocity without an epoch is refused.
     let r = call(
@@ -57,5 +87,9 @@ fn the_schema_207_sample_moves_its_known_point_by_its_velocity_over_mcp() {
                "srid": 5252, "velocity": [-0.0105, 0.0098, 0.0112]}}),
     );
     let error = &r["structuredContent"]["error"];
-    assert_eq!((error["code"].as_str(), error["path"].as_str()), (Some("invalid_survey_value"), Some("operation.velocity")), "{r}");
+    assert_eq!(
+        (error["code"].as_str(), error["path"].as_str()),
+        (Some("invalid_survey_value"), Some("operation.velocity")),
+        "{r}"
+    );
 }

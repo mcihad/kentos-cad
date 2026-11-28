@@ -11,7 +11,11 @@ pub(crate) fn circle(a: [f64; 2], m: [f64; 2], b: [f64; 2]) -> Option<([f64; 2],
     }
     let (pp, qq) = (p[0] * p[0] + p[1] * p[1], q[0] * q[0] + q[1] * q[1]);
     let c = [(q[1] * pp - p[1] * qq) / d, (p[0] * qq - q[0] * pp) / d];
-    Some(([a[0] + c[0], a[1] + c[1]], crate::math::hypot(c[0], c[1]), d > 0.0))
+    Some((
+        [a[0] + c[0], a[1] + c[1]],
+        crate::math::hypot(c[0], c[1]),
+        d > 0.0,
+    ))
 }
 
 /// Which of `rings` are outer rings and which holes (even-odd: a ring inside an odd number of others is a hole), each

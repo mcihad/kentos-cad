@@ -288,5 +288,7 @@ pub(super) fn locked_words(names: &[String]) -> String {
         [one] => format!("{one} katmanı"),
         many => format!("{} katmanları", many.join(", ")),
     };
-    format!("{which} kilitli; kilitli katmanın nesnesi taşınmaz. Kilidini açın ya da kapsamdan çıkarın.")
+    format!(
+        "{which} kilitli; kilitli katmanın nesnesi taşınmaz. Kilidini açın ya da kapsamdan çıkarın."
+    )
 }

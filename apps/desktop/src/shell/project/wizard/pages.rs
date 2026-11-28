@@ -420,10 +420,7 @@ fn heights<'a>(ellipsoidal: bool) -> Element<'a, Message> {
     } else {
         "Kotlar Antalya datumlu ortometrik yüksekliklerdir (EPSG:5775); GNSS yükseklikleri HGM'nin TG-20 geoidiyle çevrilir."
     };
-    section(
-        "Kotlar",
-        column![ways, label::caption(note)].spacing(6),
-    )
+    section("Kotlar", column![ways, label::caption(note)].spacing(6))
 }
 
 /// A card to choose one of (the web's `.wiz__choice`): a mark in its box,
@@ -699,7 +696,10 @@ pub(super) fn decision(s: &State, current: Option<Note>) -> Element<'_, Message>
         .on_submit(event(Event::Next))
         .width(typography::from_default(420.0));
     // What comes after, under the name: in a low window the zone strip is what scrolls out of sight, not this.
-    let mut parts = vec![section("Proje adı", name), Banner::info(CBS_START_NOTE).into()];
+    let mut parts = vec![
+        section("Proje adı", name),
+        Banner::info(CBS_START_NOTE).into(),
+    ];
     parts.extend(place_in(s, typography::from_default(220.0)));
     if let Some(note) = current {
         parts.push(if note.warn {

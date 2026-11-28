@@ -2,15 +2,15 @@ use kentos_contracts::DocumentSnapshotV1;
 use kentos_domain::Document;
 use kentos_geometry_core::Vec2;
 use kentos_plot::{
-    maps::{MapSource, vector_content},
     book::library_of,
+    maps::{MapSource, vector_content},
 };
 use kentos_scene_query::Spatial;
 use kentos_sheet::{
-    *,
     display::{self, Prim, RenderInputs},
     ops::{self, Op},
     pdf::MapContent,
+    *,
 };
 #[test]
 fn twenty_native_plot_cases_combine_representations_freeze_and_cad_overrides_without_mutating_model()
@@ -161,11 +161,13 @@ fn a_viewport_theme_can_show_globally_hidden_text_and_its_layer_list_can_hide_it
 
 #[test]
 fn preflight_reports_true_override_partial_dimension_and_a_broken_secondary_leader_arm() {
-    use kentos_commands::{Entity, EntityId, SubPlace, SubRef, DimensionRefs};
+    use kentos_commands::{DimensionRefs, Entity, EntityId, SubPlace, SubRef};
     use kentos_domain::{Slot, Uuid};
     use serde_json::json;
     let fixture: serde_json::Value = serde_json::from_str(include_str!(
-        "../../../../../fixtures/sheet/v1/viewport-annotations.json")).unwrap();
+        "../../../../../fixtures/sheet/v1/viewport-annotations.json"
+    ))
+    .unwrap();
     let case = &fixture["cases"][0];
     let mut raw = case["model"].clone();
     raw["settings"]["drawingUnit"] = json!("mm");
@@ -177,20 +179,50 @@ fn preflight_reports_true_override_partial_dimension_and_a_broken_secondary_lead
     ]);
     let mut doc = Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
     let mut dimension = doc.get(Slot(2)).unwrap().clone();
-    let Entity::Dimension(d) = &mut dimension else { unreachable!() };
-    d.refs = Some(Box::new(DimensionRefs { a:Some(SubRef { uid:EntityId(*doc.uid(Slot(1)).unwrap().as_bytes()),place:SubPlace::Start,path:vec![],broken:None }), ..Default::default() }));
-    doc.update(Slot(2),dimension);
+    let Entity::Dimension(d) = &mut dimension else {
+        unreachable!()
+    };
+    d.refs = Some(Box::new(DimensionRefs {
+        a: Some(SubRef {
+            uid: EntityId(*doc.uid(Slot(1)).unwrap().as_bytes()),
+            place: SubPlace::Start,
+            path: vec![],
+            broken: None,
+        }),
+        ..Default::default()
+    }));
+    doc.update(Slot(2), dimension);
     let mut sheet = case["sheet"].clone();
-    sheet["items"][0]["kind"]["view"] = json!({"type":"fixed","center":{"x":1.25,"y":0.},"rotation":0,"scale":50});
+    sheet["items"][0]["kind"]["view"] =
+        json!({"type":"fixed","center":{"x":1.25,"y":0.},"rotation":0,"scale":50});
     let mut book = SheetBook::default();
     book.sheets.push(serde_json::from_value(sheet).unwrap());
     let before = doc.to_snapshot_v2();
-    let found = kentos_plot::preflight::inspect(&doc,&book,"page",&RenderInputs::default(),None).unwrap();
-    let changed = found.iter().find(|f| f.code=="dimension_override").expect("true and shown values");
-    assert!(changed.message.contains("2500") && changed.message.contains("2400"), "{changed:?}");
-    assert!(found.iter().any(|f| f.code=="dimension_partial"), "{found:?}");
-    assert!(found.iter().any(|f| f.code=="broken_annotation" && f.message.starts_with("3 ")), "{found:?}");
-    assert_eq!(doc.to_snapshot_v2(),before);
+    let found =
+        kentos_plot::preflight::inspect(&doc, &book, "page", &RenderInputs::default(), None)
+            .unwrap();
+    let changed = found
+        .iter()
+        .find(|f| f.code == "dimension_override")
+        .expect("true and shown values");
+    assert!(
+        changed.message.contains("2500") && changed.message.contains("2400"),
+        "{changed:?}"
+    );
+    assert!(
+        found.iter().any(|f| f.code == "dimension_partial"),
+        "{found:?}"
+    );
+    assert!(
+        found
+            .iter()
+            .any(|f| f.code == "broken_annotation" && f.message.starts_with("3 ")),
+        "{found:?}"
+    );
+    assert_eq!(doc.to_snapshot_v2(), before);
     // Merely reading source identity must not synthesize a replacement object for the missing arm.
-    assert!(doc.slot_of(Uuid::parse_str("01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4999").unwrap()).is_none());
+    assert!(
+        doc.slot_of(Uuid::parse_str("01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4999").unwrap())
+            .is_none()
+    );
 }

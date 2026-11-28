@@ -223,7 +223,9 @@ impl App {
             to,
             focus: true,
         });
-        self.dialog = Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor));
+        self.dialog = Some(Dialog::TemplateWork(
+            crate::template_work::TemplateDialogKind::TemplateEditor,
+        ));
         Task::none()
     }
 
@@ -390,13 +392,19 @@ impl App {
             editor.form.symbol = id;
         }
         if self.template_work.template_editor.is_some() {
-            self.dialog = Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor));
+            self.dialog = Some(Dialog::TemplateWork(
+                crate::template_work::TemplateDialogKind::TemplateEditor,
+            ));
         }
     }
 
     pub(crate) fn close_template_editor(&mut self) {
         self.template_work.template_editor = None;
-        if self.dialog == Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor)) {
+        if self.dialog
+            == Some(Dialog::TemplateWork(
+                crate::template_work::TemplateDialogKind::TemplateEditor,
+            ))
+        {
             self.dialog = None;
         }
     }
@@ -1004,7 +1012,9 @@ mod tests {
     use crate::files_testing::app_with_drawing;
 
     fn send(app: &mut App, event: Event) {
-        let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplateEditor(event)));
+        let _ = app.update(Message::TemplateWork(
+            crate::template_work::Event::TemplateEditor(event),
+        ));
     }
 
     /// The sample drawing with a project template, Parsel sınırı.
@@ -1094,9 +1104,16 @@ mod tests {
         let _ = app.update(Message::Run("template.new"));
         assert_eq!(
             app.dialog,
-            Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor))
+            Some(Dialog::TemplateWork(
+                crate::template_work::TemplateDialogKind::TemplateEditor
+            ))
         );
-        let form = &app.template_work.template_editor.as_ref().expect("open").form;
+        let form = &app
+            .template_work
+            .template_editor
+            .as_ref()
+            .expect("open")
+            .form;
         assert_eq!(
             (form.name.as_str(), form.tool.as_str()),
             ("Yeni şablon", "polygon")
@@ -1131,7 +1148,9 @@ mod tests {
         send(&mut app, Event::Save);
         assert_eq!(
             app.dialog,
-            Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor)),
+            Some(Dialog::TemplateWork(
+                crate::template_work::TemplateDialogKind::TemplateEditor
+            )),
             "not saved"
         );
         // Esc closes it, nothing kept.
@@ -1142,9 +1161,11 @@ mod tests {
     #[test]
     fn a_project_template_is_edited_in_place() {
         let mut app = app();
-        let _ = app.update(Message::TemplateWork(crate::template_work::Event::TemplatesPanel(
-            crate::templates_panel::Event::Edit("p-parsel".into()),
-        )));
+        let _ = app.update(Message::TemplateWork(
+            crate::template_work::Event::TemplatesPanel(crate::templates_panel::Event::Edit(
+                "p-parsel".into(),
+            )),
+        ));
         assert_eq!(
             app.template_work
                 .template_editor
@@ -1180,9 +1201,16 @@ mod tests {
         let _ = app.update(Message::Run("template.fromSelection"));
         assert_eq!(
             app.dialog,
-            Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor))
+            Some(Dialog::TemplateWork(
+                crate::template_work::TemplateDialogKind::TemplateEditor
+            ))
         );
-        let form = &app.template_work.template_editor.as_ref().expect("open").form;
+        let form = &app
+            .template_work
+            .template_editor
+            .as_ref()
+            .expect("open")
+            .form;
         assert!(!form.layer_name.is_empty());
         assert!(!form.name.is_empty());
     }
@@ -1196,7 +1224,9 @@ mod tests {
         app.template_symbol_picked(Some("temel.alan.kenar-ici".into()));
         assert_eq!(
             app.dialog,
-            Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor))
+            Some(Dialog::TemplateWork(
+                crate::template_work::TemplateDialogKind::TemplateEditor
+            ))
         );
         assert_eq!(
             app.template_work

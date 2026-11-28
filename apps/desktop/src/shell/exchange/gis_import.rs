@@ -332,7 +332,10 @@ impl State {
 /// path), or their .prj files name different systems (one system answer would place some of them wrongly, CLAUDE.md
 /// §5). Otherwise every layer comes in together (GIS-042).
 fn one_at_a_time(layers: &[String], systems: &[(String, String)]) -> bool {
-    let mut names: Vec<String> = layers.iter().map(|l| shp::zip_layer_name(l).to_lowercase()).collect();
+    let mut names: Vec<String> = layers
+        .iter()
+        .map(|l| shp::zip_layer_name(l).to_lowercase())
+        .collect();
     names.sort_unstable();
     let clash = names.windows(2).any(|w| w[0] == w[1]);
     let mut said: Vec<&str> = systems.iter().map(|(_, s)| s.as_str()).collect();
@@ -347,11 +350,17 @@ fn zip_systems(bytes: &[u8], layers: &[String]) -> Vec<(String, String)> {
         .iter()
         .map(|path| {
             let name = shp::zip_layer_name(path).to_owned();
-            let opts = ShapefileReadOptions { layer: name.clone(), max_entities: 1 };
+            let opts = ShapefileReadOptions {
+                layer: name.clone(),
+                max_entities: 1,
+            };
             let system = shp::read_zip(bytes, path, &opts)
                 .ok()
                 .and_then(|r| r.declared_crs)
-                .map_or_else(|| "—".to_owned(), |d| d.srid.map_or(d.text.clone(), |srid| format!("EPSG:{srid}")));
+                .map_or_else(
+                    || "—".to_owned(),
+                    |d| d.srid.map_or(d.text.clone(), |srid| format!("EPSG:{srid}")),
+                );
             (name, system)
         })
         .collect()
@@ -416,10 +425,17 @@ fn read_source(source: &Source) -> (Result<ImportResult, String>, Option<Vec<Str
                     }
                 }
                 if read.is_empty() {
-                    let why = broken.first().map_or_else(|| "Arşivde Shapefile katmanı yok.".to_owned(), |(p, w)| format!("“{p}” okunamadı: {w}"));
+                    let why = broken.first().map_or_else(
+                        || "Arşivde Shapefile katmanı yok.".to_owned(),
+                        |(p, w)| format!("“{p}” okunamadı: {w}"),
+                    );
                     return (Err(why), Some(layers));
                 }
-                let mut one = if read.len() == 1 { read.remove(0) } else { kentos_native_application::file_import_gis::merge(read) };
+                let mut one = if read.len() == 1 {
+                    read.remove(0)
+                } else {
+                    kentos_native_application::file_import_gis::merge(read)
+                };
                 for (path, why) in broken {
                     one.report.notes.push(kentos_commands::ReportItem {
                         severity: None,
@@ -522,7 +538,9 @@ impl App {
                     .and_then(|r| apply::unusable(&r.entities))
                     .map(|(place, kind)| apply::unusable_text(place, kind));
                 let systems = match (&source, &layers) {
-                    (Source::Zip { file, .. }, Some(l)) if l.len() > 1 => zip_systems(&file.bytes, l),
+                    (Source::Zip { file, .. }, Some(l)) if l.len() > 1 => {
+                        zip_systems(&file.bytes, l)
+                    }
                     _ => Vec::new(),
                 };
                 (result, unusable, layers, systems)
@@ -570,7 +588,15 @@ impl App {
                     return Task::none();
                 }
                 s.reading = false;
-                if let (Source::Zip { layers: known, systems: said, .. }, Some(layers)) = (&mut s.source, layers) {
+                if let (
+                    Source::Zip {
+                        layers: known,
+                        systems: said,
+                        ..
+                    },
+                    Some(layers),
+                ) = (&mut s.source, layers)
+                {
                     *known = layers;
                     *said = systems;
                 }
@@ -784,7 +810,12 @@ impl App {
                 layers,
                 layer,
                 systems,
-            } => (file.path.clone(), one_at_a_time(layers, systems).then(|| layers.get(*layer).cloned()).flatten()),
+            } => (
+                file.path.clone(),
+                one_at_a_time(layers, systems)
+                    .then(|| layers.get(*layer).cloned())
+                    .flatten(),
+            ),
         };
         GisInput {
             path: path.map_or_else(|| s.name(), |p| p.display().to_string()),
@@ -927,7 +958,12 @@ impl App {
         let mut body = Column::new()
             .spacing(12)
             .push(words::file_line(&s.name(), meta));
-        if let Source::Zip { layers, layer, systems, .. } = &s.source
+        if let Source::Zip {
+            layers,
+            layer,
+            systems,
+            ..
+        } = &s.source
             && layers.len() > 1
             && one_at_a_time(layers, systems)
         {
@@ -1003,12 +1039,15 @@ impl App {
             Source::Zip { systems, .. } => systems.clone(),
             _ => Vec::new(),
         };
-        let whole = r
-            .declared_crs
-            .as_ref()
-            .map_or_else(|| "—".to_owned(), |d| d.srid.map_or(d.text.clone(), |srid| format!("EPSG:{srid}")));
+        let whole = r.declared_crs.as_ref().map_or_else(
+            || "—".to_owned(),
+            |d| d.srid.map_or(d.text.clone(), |srid| format!("EPSG:{srid}")),
+        );
         let system_of = move |name: &str| {
-            systems.iter().find(|(n, _)| n == name).map_or_else(|| whole.clone(), |(_, s)| s.clone())
+            systems
+                .iter()
+                .find(|(n, _)| n == name)
+                .map_or_else(|| whole.clone(), |(_, s)| s.clone())
         };
         let rows = r.layers.iter().map(|l| {
             let (existing, locked) = self.gis_target(s, l);

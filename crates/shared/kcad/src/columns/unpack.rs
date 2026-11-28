@@ -494,15 +494,25 @@ pub(super) fn geometry(
                 if flat.len() % 2 != 0 {
                     return Err(broken("genişlik listesinin sayısı tek"));
                 }
-                Some(flat.as_chunks::<2>().0.iter().map(|w| [w[0], w[1]]).collect())
+                Some(
+                    flat.as_chunks::<2>()
+                        .0
+                        .iter()
+                        .map(|w| [w[0], w[1]])
+                        .collect(),
+                )
             } else {
                 None
             };
             let path = PathEntity {
                 space_separator: if has(7) {
-                    Some(serde_json::from_str(&c.text(|| place("spaceSeparator"))?)
-                        .map_err(|_|broken("mahal ayırıcı rolü okunamadı"))?)
-                } else {None},
+                    Some(
+                        serde_json::from_str(&c.text(|| place("spaceSeparator"))?)
+                            .map_err(|_| broken("mahal ayırıcı rolü okunamadı"))?,
+                    )
+                } else {
+                    None
+                },
                 base,
                 pts,
                 bulges,
@@ -677,7 +687,8 @@ pub(super) fn geometry(
                     box_width,
                     line_spacing,
                     runs,
-                }.into(),
+                }
+                .into(),
                 face: TextFace {
                     overrides,
                     text_style,
@@ -685,7 +696,8 @@ pub(super) fn geometry(
                     bold: has(9),
                     italic: has(10),
                     oblique,
-                }.into(),
+                }
+                .into(),
                 path: path.map(Box::new),
             })
         }
@@ -920,7 +932,9 @@ pub(super) fn geometry(
                 None => Vec::new(),
             };
             let annotative: Option<Box<kentos_contracts::Annotative>> = match part("annotative") {
-                Some(v) => Some(serde_json::from_value(v).map_err(|_| broken("ölçünün ölçekleri"))?),
+                Some(v) => {
+                    Some(serde_json::from_value(v).map_err(|_| broken("ölçünün ölçekleri"))?)
+                }
                 None => None,
             };
             let level: Option<Box<kentos_contracts::DimensionLevel>> = match part("level") {
@@ -1569,7 +1583,10 @@ pub(super) fn geometry(
             if let Some((_, problem)) = wall.problem() {
                 return Err(broken(&problem));
             }
-            Entity::Wall(kentos_contracts::WallEntity { base, wall: Box::new(wall) })
+            Entity::Wall(kentos_contracts::WallEntity {
+                base,
+                wall: Box::new(wall),
+            })
         }
         24..=27 => {
             let what = match kind {
@@ -1582,11 +1599,15 @@ pub(super) fn geometry(
             let parsed = |s: &str| -> Result<Entity, KcadError> {
                 Ok(match kind {
                     24 => {
-                        let grid: kentos_contracts::GridFields = serde_json::from_str(s).map_err(|_| broken(what))?;
+                        let grid: kentos_contracts::GridFields =
+                            serde_json::from_str(s).map_err(|_| broken(what))?;
                         if let Some((_, problem)) = grid.problem() {
                             return Err(broken(&problem));
                         }
-                        Entity::Grid(kentos_contracts::GridEntity { base: base.clone(), grid: Box::new(grid) })
+                        Entity::Grid(kentos_contracts::GridEntity {
+                            base: base.clone(),
+                            grid: Box::new(grid),
+                        })
                     }
                     25 => {
                         let column: kentos_contracts::ColumnFields =
@@ -1594,21 +1615,32 @@ pub(super) fn geometry(
                         if let Some((_, problem)) = column.problem() {
                             return Err(broken(&problem));
                         }
-                        Entity::Column(kentos_contracts::ColumnEntity { base: base.clone(), column: Box::new(column) })
+                        Entity::Column(kentos_contracts::ColumnEntity {
+                            base: base.clone(),
+                            column: Box::new(column),
+                        })
                     }
                     26 => {
-                        let stair: kentos_contracts::StairFields = serde_json::from_str(s).map_err(|_| broken(what))?;
+                        let stair: kentos_contracts::StairFields =
+                            serde_json::from_str(s).map_err(|_| broken(what))?;
                         if let Some((_, problem)) = stair.problem() {
                             return Err(broken(&problem));
                         }
-                        Entity::Stair(kentos_contracts::StairEntity { base: base.clone(), stair: Box::new(stair) })
+                        Entity::Stair(kentos_contracts::StairEntity {
+                            base: base.clone(),
+                            stair: Box::new(stair),
+                        })
                     }
                     _ => {
-                        let ramp: kentos_contracts::RampFields = serde_json::from_str(s).map_err(|_| broken(what))?;
+                        let ramp: kentos_contracts::RampFields =
+                            serde_json::from_str(s).map_err(|_| broken(what))?;
                         if let Some((_, problem)) = ramp.problem() {
                             return Err(broken(&problem));
                         }
-                        Entity::Ramp(kentos_contracts::RampEntity { base: base.clone(), ramp: Box::new(ramp) })
+                        Entity::Ramp(kentos_contracts::RampEntity {
+                            base: base.clone(),
+                            ramp: Box::new(ramp),
+                        })
                     }
                 })
             };
@@ -1630,7 +1662,10 @@ pub(super) fn geometry(
             if let Some((_, problem)) = mark.problem() {
                 return Err(broken(&problem));
             }
-            Entity::ViewMark(kentos_contracts::ViewMarkEntity { base, mark: Box::new(mark) })
+            Entity::ViewMark(kentos_contracts::ViewMarkEntity {
+                base,
+                mark: Box::new(mark),
+            })
         }
         30 => {
             let text = c.text(|| "döşemenin alanları".into())?;
@@ -1639,7 +1674,10 @@ pub(super) fn geometry(
             if let Some((_, problem)) = slab.problem() {
                 return Err(broken(&problem));
             }
-            Entity::Slab(kentos_contracts::SlabEntity { base, slab: Box::new(slab) })
+            Entity::Slab(kentos_contracts::SlabEntity {
+                base,
+                slab: Box::new(slab),
+            })
         }
         31 => {
             let text = c.text(|| "kirişin alanları".into())?;
@@ -1648,7 +1686,10 @@ pub(super) fn geometry(
             if let Some((_, problem)) = beam.problem() {
                 return Err(broken(&problem));
             }
-            Entity::Beam(kentos_contracts::BeamEntity { base, beam: Box::new(beam) })
+            Entity::Beam(kentos_contracts::BeamEntity {
+                base,
+                beam: Box::new(beam),
+            })
         }
         32 => {
             let text = c.text(|| "çatının alanları".into())?;
@@ -1657,7 +1698,10 @@ pub(super) fn geometry(
             if let Some((_, problem)) = roof.problem() {
                 return Err(broken(&problem));
             }
-            Entity::Roof(kentos_contracts::RoofEntity { base, roof: Box::new(roof) })
+            Entity::Roof(kentos_contracts::RoofEntity {
+                base,
+                roof: Box::new(roof),
+            })
         }
         34 => {
             let text = c.text(|| "kütlenin alanları".into())?;
@@ -1666,7 +1710,10 @@ pub(super) fn geometry(
             if let Some((_, problem)) = mass.problem() {
                 return Err(broken(&problem));
             }
-            Entity::Mass(kentos_contracts::MassEntity { base, mass: Box::new(mass) })
+            Entity::Mass(kentos_contracts::MassEntity {
+                base,
+                mass: Box::new(mass),
+            })
         }
         33 => {
             let text = c.text(|| "korkuluğun alanları".into())?;
@@ -1675,7 +1722,10 @@ pub(super) fn geometry(
             if let Some((_, problem)) = railing.problem() {
                 return Err(broken(&problem));
             }
-            Entity::Railing(kentos_contracts::RailingEntity { base, railing: Box::new(railing) })
+            Entity::Railing(kentos_contracts::RailingEntity {
+                base,
+                railing: Box::new(railing),
+            })
         }
         23 => {
             let text = c.text(|| "mahalin alanları".into())?;
@@ -1684,7 +1734,10 @@ pub(super) fn geometry(
             if let Some((_, problem)) = space.problem() {
                 return Err(broken(&problem));
             }
-            Entity::Space(kentos_contracts::SpaceEntity { base, space: Box::new(space) })
+            Entity::Space(kentos_contracts::SpaceEntity {
+                base,
+                space: Box::new(space),
+            })
         }
         22 => {
             let place = c.points()?;
@@ -1692,14 +1745,20 @@ pub(super) fn geometry(
             let mut v: serde_json::Value =
                 serde_json::from_str(&text).map_err(|_| broken("açıklığın alanları"))?;
             if let Some(o) = v.as_object_mut() {
-                o.insert("place".into(), serde_json::to_value(&place).unwrap_or_default());
+                o.insert(
+                    "place".into(),
+                    serde_json::to_value(&place).unwrap_or_default(),
+                );
             }
             let opening: kentos_contracts::OpeningFields =
                 serde_json::from_value(v).map_err(|_| broken("açıklığın alanları"))?;
             if let Some((_, problem)) = opening.problem() {
                 return Err(broken(&problem));
             }
-            Entity::Opening(kentos_contracts::OpeningEntity { base, opening: Box::new(opening) })
+            Entity::Opening(kentos_contracts::OpeningEntity {
+                base,
+                opening: Box::new(opening),
+            })
         }
         18 => {
             let srid = c.int()?;
@@ -1770,7 +1829,9 @@ pub(super) fn geometry(
                 None
             };
             let mut sources = Vec::with_capacity(n);
-            for (i, ((format, source), (count, b, pose))) in kinds.into_iter().zip(numbers).enumerate() {
+            for (i, ((format, source), (count, b, pose))) in
+                kinds.into_iter().zip(numbers).enumerate()
+            {
                 let t = c.text(|| place(&format!("sources[{i}]")))?;
                 let (asset, file, url) = match source & !SOURCE_POSE {
                     SOURCE_ASSET => (Some(t), None, None),

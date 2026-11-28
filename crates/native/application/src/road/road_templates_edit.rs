@@ -2,7 +2,9 @@
 //! replacing its) or removed; one undo step “Tip kesit”. The shared cases are
 //! `fixtures/commands/v1/road.templates.edit.json`.
 
-use kentos_commands::{CommandResult, RoadEditOperation, TemplateDef, TemplatesEdit, TemplatesWritten};
+use kentos_commands::{
+    CommandResult, RoadEditOperation, TemplateDef, TemplatesEdit, TemplatesWritten,
+};
 
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
@@ -22,17 +24,23 @@ fn check(doc: &kentos_domain::Document, input: &TemplatesEdit) -> Result<Checked
     if input.pavement.is_some() && input.remove_pavement {
         return Err(fail(
             codes::INVALID_ROAD_TEMPLATE,
-            "pavement ile removePavement birlikte verilmez: üstyapı ya yazılır ya kaldırılır.".into(),
+            "pavement ile removePavement birlikte verilmez: üstyapı ya yazılır ya kaldırılır."
+                .into(),
             "removePavement",
         ));
     }
     let own = doc.road_templates();
     let mut list = own.to_vec();
-    let found = input.template.as_deref().and_then(|t| common::find_template(own, t, "template").ok());
+    let found = input
+        .template
+        .as_deref()
+        .and_then(|t| common::find_template(own, t, "template").ok());
     let target = match (input.operation, found) {
         (RoadEditOperation::Remove | RoadEditOperation::Rebind, None) => {
             let name = input.template.clone().unwrap_or_default();
-            return Err(common::find_template(own, &name, "template").err().unwrap_or(Stop::Cancelled));
+            return Err(common::find_template(own, &name, "template")
+                .err()
+                .unwrap_or(Stop::Cancelled));
         }
         (RoadEditOperation::Rebind, Some(_)) => {
             return Err(fail(
@@ -42,12 +50,20 @@ fn check(doc: &kentos_domain::Document, input: &TemplatesEdit) -> Result<Checked
             ));
         }
         (RoadEditOperation::Remove, Some((at, t))) => {
-            let users: Vec<&str> =
-                doc.road_sections().iter().filter(|s| s.template.as_deref() == Some(&t.id)).map(|s| s.name.as_str()).collect();
+            let users: Vec<&str> = doc
+                .road_sections()
+                .iter()
+                .filter(|s| s.template.as_deref() == Some(&t.id))
+                .map(|s| s.name.as_str())
+                .collect();
             if !users.is_empty() {
                 return Err(fail(
                     codes::ROAD_TEMPLATE_IN_USE,
-                    format!("“{}” tip kesitini şu kesit takımları kullanıyor: {}. Önce takımlardan kaldırın.", t.name, users.join(", ")),
+                    format!(
+                        "“{}” tip kesitini şu kesit takımları kullanıyor: {}. Önce takımlardan kaldırın.",
+                        t.name,
+                        users.join(", ")
+                    ),
                     "template",
                 ));
             }
@@ -60,7 +76,11 @@ fn check(doc: &kentos_domain::Document, input: &TemplatesEdit) -> Result<Checked
             if !corridors.is_empty() {
                 return Err(fail(
                     codes::ROAD_TEMPLATE_IN_USE,
-                    format!("“{}” tip kesitini şu koridorlar kullanıyor: {}. Önce koridorlardan kaldırın.", t.name, corridors.join(", ")),
+                    format!(
+                        "“{}” tip kesitini şu koridorlar kullanıyor: {}. Önce koridorlardan kaldırın.",
+                        t.name,
+                        corridors.join(", ")
+                    ),
                     "template",
                 ));
             }
@@ -116,21 +136,36 @@ fn check(doc: &kentos_domain::Document, input: &TemplatesEdit) -> Result<Checked
                     ));
                 };
                 let id = input.template.clone().unwrap_or_else(|| {
-                    (1..).map(|n| format!("tk-{n}")).find(|id| own.iter().all(|t| &t.id != id)).unwrap_or_default()
+                    (1..)
+                        .map(|n| format!("tk-{n}"))
+                        .find(|id| own.iter().all(|t| &t.id != id))
+                        .unwrap_or_default()
                 });
                 list.push(TemplateDef {
                     id: id.clone(),
                     name: name.clone(),
                     revision: 1,
                     left: left.clone(),
-                    right: if input.mirror { None } else { input.right.clone() },
-                    pavement: if input.remove_pavement { None } else { input.pavement.clone() },
+                    right: if input.mirror {
+                        None
+                    } else {
+                        input.right.clone()
+                    },
+                    pavement: if input.remove_pavement {
+                        None
+                    } else {
+                        input.pavement.clone()
+                    },
                 });
                 Some(id)
             }
         },
     };
-    common::judged(&common::road_with(doc, Some(&list), None), codes::INVALID_ROAD_TEMPLATE, "Tip kesit")?;
+    common::judged(
+        &common::road_with(doc, Some(&list), None),
+        codes::INVALID_ROAD_TEMPLATE,
+        "Tip kesit",
+    )?;
     checks::revision(doc, input.expected_revision.as_deref())?;
     Ok(Checked { list, target })
 }
@@ -138,11 +173,20 @@ fn check(doc: &kentos_domain::Document, input: &TemplatesEdit) -> Result<Checked
 fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<TemplatesWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_templates(c.list.clone(), STEP) {
-        return fail(codes::INVALID_ROAD_TEMPLATE, format!("Tip kesit kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_ROAD_TEMPLATE,
+            format!("Tip kesit kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
     CommandResult::Completed {
         output: TemplatesWritten {
-            template: c.target.as_ref().and_then(|id| c.list.iter().find(|t| &t.id == id)).cloned(),
+            template: c
+                .target
+                .as_ref()
+                .and_then(|id| c.list.iter().find(|t| &t.id == id))
+                .cloned(),
             templates: common::listed_templates(doc, &c.list),
             revision: doc.revision().to_string(),
         },
@@ -153,7 +197,10 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<TemplatesWr
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TemplatesEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: vec![] },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -173,7 +220,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TemplatesEdit) -> CommandResult<T
 }
 
 /// Writes the template: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TemplatesEdit) -> CommandResult<TemplatesWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TemplatesEdit,
+) -> CommandResult<TemplatesWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_TEMPLATES_EDIT,

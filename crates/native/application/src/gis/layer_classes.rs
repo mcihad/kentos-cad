@@ -29,30 +29,50 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 fn unreachable(e: impl std::fmt::Display) -> Stop {
-    Stop::failed(error(codes::SOURCE_UNREACHABLE, format!("Kaynak okunamadı: {e}"), None))
+    Stop::failed(error(
+        codes::SOURCE_UNREACHABLE,
+        format!("Kaynak okunamadı: {e}"),
+        None,
+    ))
 }
 
 /// The layer the input names, checked.
-fn found<'d>(doc: &'d Document, input: &LayersClasses) -> Result<&'d kentos_commands::LayerNode, Stop> {
+fn found<'d>(
+    doc: &'d Document,
+    input: &LayersClasses,
+) -> Result<&'d kentos_commands::LayerNode, Stop> {
     let layer = input.layer.trim();
     if layer.is_empty() {
-        return Err(fail(codes::NO_LAYER, "Sınıfları okunacak katmanı (layer) verin.".into(), "layer"));
+        return Err(fail(
+            codes::NO_LAYER,
+            "Sınıfları okunacak katmanı (layer) verin.".into(),
+            "layer",
+        ));
     }
-    let node = doc
-        .layers()
-        .get(layer)
-        .ok_or_else(|| fail(codes::LAYER_NOT_FOUND, format!("“{layer}” kimlikli katman çizimde yok."), "layer"))?;
+    let node = doc.layers().get(layer).ok_or_else(|| {
+        fail(
+            codes::LAYER_NOT_FOUND,
+            format!("“{layer}” kimlikli katman çizimde yok."),
+            "layer",
+        )
+    })?;
     if node.kind == kentos_commands::LayerNodeType::Group {
         return Err(fail(
             codes::NOT_A_LAYER,
-            format!("“{}” bir katman grubu; sınıflar katmanın stilinindir. Grubun bir katmanını verin.", node.name),
+            format!(
+                "“{}” bir katman grubu; sınıflar katmanın stilinindir. Grubun bir katmanını verin.",
+                node.name
+            ),
             "layer",
         ));
     }
     if node.service.is_some() {
         return Err(fail(
             codes::SERVICE_LAYER,
-            format!("“{}” bir harita servisinden çizilir; sınıfları yoktur.", node.name),
+            format!(
+                "“{}” bir harita servisinden çizilir; sınıfları yoktur.",
+                node.name
+            ),
             "layer",
         ));
     }
@@ -72,9 +92,9 @@ pub fn data_counts(
 /// Why a stop stopped, in words.
 fn message(stop: Stop) -> String {
     match CommandResult::<()>::from(stop) {
-        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-            error.message
-        }
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => error.message,
         _ => "Kaynak okunamadı.".to_owned(),
     }
 }
@@ -133,19 +153,36 @@ fn source_counts(
     let Some(data) = &node.data else {
         return Ok(None);
     };
-    let source = kentos_data::registry().source(&data.address).map_err(unreachable)?;
+    let source = kentos_data::registry()
+        .source(&data.address)
+        .map_err(unreachable)?;
     let schema = source.schema(&data.table).map_err(unreachable)?;
     let classes = style_classes(renderer);
-    let expr = renderer.get("expr").and_then(serde_json::Value::as_str).unwrap_or_default().trim();
+    let expr = renderer
+        .get("expr")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or_default()
+        .trim();
     if classes_kind(renderer) == Some("categorized") && schema.field(expr).is_some() {
-        let groups = source.groups(&data.table, expr, None, GROUPS_MOST).map_err(unreachable)?;
+        let groups = source
+            .groups(&data.table, expr, None, GROUPS_MOST)
+            .map_err(unreachable)?;
         if groups.len() >= GROUPS_MOST {
             return Ok(None);
         }
-        let categories = renderer.get("categories").and_then(serde_json::Value::as_array).cloned().unwrap_or_default();
+        let categories = renderer
+            .get("categories")
+            .and_then(serde_json::Value::as_array)
+            .cloned()
+            .unwrap_or_default();
         let values: Vec<String> = categories
             .iter()
-            .map(|k| k.get("value").and_then(serde_json::Value::as_str).unwrap_or_default().to_owned())
+            .map(|k| {
+                k.get("value")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or_default()
+                    .to_owned()
+            })
             .collect();
         let mut counts = vec![0u64; values.len()];
         let (mut rest, mut total) = (0u64, 0u64);
@@ -187,22 +224,39 @@ fn source_counts(
     }
     let count = |condition: Option<kentos_data::Condition>| {
         source
-            .count(&data.table, &Request { condition, ..Request::default() }, false)
+            .count(
+                &data.table,
+                &Request {
+                    condition,
+                    ..Request::default()
+                },
+                false,
+            )
             .map_err(unreachable)
     };
-    let counts = conditions.into_iter().map(|c| count(c).map(Ok)).collect::<Result<Vec<_>, Stop>>()?;
+    let counts = conditions
+        .into_iter()
+        .map(|c| count(c).map(Ok))
+        .collect::<Result<Vec<_>, Stop>>()?;
     Ok(Some((counts, count(None)?)))
 }
 
 /// Whether a graduated style's classes overlap (a number goes to the first that takes it: counted by reading then).
 fn overlapping(renderer: &serde_json::Value) -> bool {
-    let Some(classes) = renderer.get("classes").and_then(serde_json::Value::as_array) else {
+    let Some(classes) = renderer
+        .get("classes")
+        .and_then(serde_json::Value::as_array)
+    else {
         return false;
     };
     let bounds: Vec<(f64, f64)> = classes
         .iter()
         .map(|k| {
-            let b = |key: &str| k.get(key).and_then(serde_json::Value::as_f64).unwrap_or(f64::NAN);
+            let b = |key: &str| {
+                k.get(key)
+                    .and_then(serde_json::Value::as_f64)
+                    .unwrap_or(f64::NAN)
+            };
             (b("min"), b("max"))
         })
         .collect();
@@ -242,27 +296,37 @@ fn class_keys(
     // Past `most` the scan stops: the rows after are not read.
     let more = std::cell::Cell::new(false);
     let mut failure = None;
-    scan(node, settings, &reader, &|| stopped() || more.get(), &mut |objects| {
-        let refs: Vec<&kentos_commands::Entity> = objects.iter().map(|(_, e)| e).collect();
-        let shapes = shapes_of(&reader, &refs);
-        match reader.members(&refs, &|_| node.name.clone(), &|i| shapes.get(i), at) {
-            Ok(m) => {
-                for ((key, _), taken) in objects.iter().zip(m) {
-                    if taken {
-                        if keys.len() == most {
-                            more.set(true);
-                            break;
+    scan(
+        node,
+        settings,
+        &reader,
+        &|| stopped() || more.get(),
+        &mut |objects| {
+            let refs: Vec<&kentos_commands::Entity> = objects.iter().map(|(_, e)| e).collect();
+            let shapes = shapes_of(&reader, &refs);
+            match reader.members(&refs, &|_| node.name.clone(), &|i| shapes.get(i), at) {
+                Ok(m) => {
+                    for ((key, _), taken) in objects.iter().zip(m) {
+                        if taken {
+                            if keys.len() == most {
+                                more.set(true);
+                                break;
+                            }
+                            keys.push(*key);
                         }
-                        keys.push(*key);
                     }
                 }
+                Err(e) => failure = Some(e),
             }
-            Err(e) => failure = Some(e),
-        }
-    })
+        },
+    )
     .or_else(|stop| if more.get() { Ok(()) } else { Err(stop) })?;
     if let Some(e) = failure {
-        return Err(fail(codes::INVALID_EXPRESSION, format!("Sınıfın koşulu okunamadı: {e}"), "layer"));
+        return Err(fail(
+            codes::INVALID_EXPRESSION,
+            format!("Sınıfın koşulu okunamadı: {e}"),
+            "layer",
+        ));
     }
     Ok((keys, more.get()))
 }
@@ -272,12 +336,19 @@ fn rows_counted(node: &kentos_commands::LayerNode) -> Result<u64, Stop> {
     let Some(data) = &node.data else {
         return Ok(0);
     };
-    let source = kentos_data::registry().source(&data.address).map_err(unreachable)?;
-    source.count(&data.table, &Request::default(), false).map_err(unreachable)
+    let source = kentos_data::registry()
+        .source(&data.address)
+        .map_err(unreachable)?;
+    source
+        .count(&data.table, &Request::default(), false)
+        .map_err(unreachable)
 }
 
 /// The shapes of the objects when a class reads geometry (none otherwise).
-fn shapes_of(reader: &ClassReader, refs: &[&kentos_commands::Entity]) -> Vec<kentos_geometry_core::entity::Shape> {
+fn shapes_of(
+    reader: &ClassReader,
+    refs: &[&kentos_commands::Entity],
+) -> Vec<kentos_geometry_core::entity::Shape> {
     if reader.reads_geometry() {
         refs.iter().map(|e| crate::geometry::shape(e)).collect()
     } else {
@@ -297,11 +368,18 @@ fn scan(
     let Some(data) = &node.data else {
         return Ok(());
     };
-    let source = kentos_data::registry().source(&data.address).map_err(unreachable)?;
+    let source = kentos_data::registry()
+        .source(&data.address)
+        .map_err(unreachable)?;
     let srid = data.geometry.as_ref().and_then(|g| g.srid);
     let system = TableSystem::of(settings, srid).map_err(unreachable)?;
     let known: Vec<String> = node.fields.iter().map(|f| f.name.clone()).collect();
-    let fields: Vec<String> = reader.fields().iter().filter(|f| known.contains(f)).cloned().collect();
+    let fields: Vec<String> = reader
+        .fields()
+        .iter()
+        .filter(|f| known.contains(f))
+        .cloned()
+        .collect();
     let measured = reader.reads_geometry();
     let request = Request {
         columns: Some(fields.clone()),
@@ -318,7 +396,9 @@ fn scan(
                     let attrs: serde_json::Map<String, serde_json::Value> = fields
                         .iter()
                         .zip(&f.values)
-                        .filter_map(|(n, v)| attribute_text(v).map(|t| (n.clone(), serde_json::Value::String(t))))
+                        .filter_map(|(n, v)| {
+                            attribute_text(v).map(|t| (n.clone(), serde_json::Value::String(t)))
+                        })
                         .collect();
                     let g = match (measured, f.shape()) {
                         (true, Some(g)) => match &system {
@@ -336,34 +416,59 @@ fn scan(
         })
         .map_err(unreachable)?;
     if stopped() {
-        return Err(Stop::failed(error(codes::CANCELLED, "İş durduruldu.".into(), None)));
+        return Err(Stop::failed(error(
+            codes::CANCELLED,
+            "İş durduruldu.".into(),
+            None,
+        )));
     }
     Ok(())
 }
 
 /// How many of a drawing layer's shown objects each class takes, and how many it shows (those the style engine draws).
-pub fn drawing_counts(doc: &Document, node: &kentos_commands::LayerNode) -> (Vec<Result<u64, String>>, u64) {
-    let hidden = node.filter.as_ref().map(|_| kentos_scene_query::layer_filter::left_out(doc));
+pub fn drawing_counts(
+    doc: &Document,
+    node: &kentos_commands::LayerNode,
+) -> (Vec<Result<u64, String>>, u64) {
+    let hidden = node
+        .filter
+        .as_ref()
+        .map(|_| kentos_scene_query::layer_filter::left_out(doc));
     let refs: Vec<&kentos_commands::Entity> = doc
         .by_layer(&node.id)
-        .filter(|e| hidden.as_ref().is_none_or(|h| !h.contains(&kentos_domain::Slot(e.base().id))))
+        .filter(|e| {
+            hidden
+                .as_ref()
+                .is_none_or(|h| !h.contains(&kentos_domain::Slot(e.base().id)))
+        })
         .collect();
-    let total = refs.iter().filter(|e| kentos_scene_query::style_classes::drawn_by_style(e)).count() as u64;
-    let Some(reader) = node
-        .style
-        .renderer
-        .as_ref()
-        .and_then(|r| ClassReader::new(r, crate::expression_unit::reading_unit(doc.settings())))
+    let total = refs
+        .iter()
+        .filter(|e| kentos_scene_query::style_classes::drawn_by_style(e))
+        .count() as u64;
+    let Some(reader) =
+        node.style.renderer.as_ref().and_then(|r| {
+            ClassReader::new(r, crate::expression_unit::reading_unit(doc.settings()))
+        })
     else {
         return (Vec::new(), total);
     };
     let shapes = shapes_of(&reader, &refs);
-    let names = |id: &str| doc.layers().get(id).map(|n| n.name.clone()).unwrap_or_default();
+    let names = |id: &str| {
+        doc.layers()
+            .get(id)
+            .map(|n| n.name.clone())
+            .unwrap_or_default()
+    };
     (reader.counts(&refs, &names, &|i| shapes.get(i)), total)
 }
 
 /// The answer for the layer the input names.
-fn read(doc: &Document, input: &LayersClasses, stopped: &dyn Fn() -> bool) -> Result<LayerClassesAnswer, Stop> {
+fn read(
+    doc: &Document,
+    input: &LayersClasses,
+    stopped: &dyn Fn() -> bool,
+) -> Result<LayerClassesAnswer, Stop> {
     let node = found(doc, input)?;
     let renderer = node.style.renderer.as_ref();
     let classes = renderer.map(style_classes).unwrap_or_default();
@@ -426,6 +531,9 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersClasses) -> CommandResult<L
     answer(cx, input)
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersClasses) -> CommandResult<LayerClassesAnswer> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersClasses,
+) -> CommandResult<LayerClassesAnswer> {
     answer(cx, &input)
 }

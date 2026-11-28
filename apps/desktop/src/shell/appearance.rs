@@ -179,7 +179,6 @@ pub(crate) mod tests {
     use crate::files_testing::app_with_drawing;
     use crate::viewport::Canvas;
 
-
     /// A look's preference chosen as Uygulama ayarları chooses it.
     fn choose(app: &mut App, key: &str, value: Value) {
         assert!(app.settings.choose(&[(key, value)]).is_empty(), "{key}");
@@ -198,7 +197,11 @@ pub(crate) mod tests {
         assert_eq!(app.mode, Mode::Night);
         assert_eq!(setting(&app, "appearance.theme"), "night");
         assert_eq!(app.canvas(), Canvas::Night, "the drawing follows the theme");
-        choose(&mut app, "appearance.drawingBackground", Value::from("black"));
+        choose(
+            &mut app,
+            "appearance.drawingBackground",
+            Value::from("black"),
+        );
         assert_eq!(app.canvas(), Canvas::Black, "whatever the theme");
         // The web's keys and ids (docs/adr/0126).
         choose(&mut app, "appearance.accent", Value::from("violet"));
@@ -207,7 +210,11 @@ pub(crate) mod tests {
         assert_eq!(app.typography.family, Family::Inter);
         choose(&mut app, "appearance.textSize", Value::from(14));
         assert_eq!(app.typography.size, 14.0);
-        choose(&mut app, "appearance.textSize", Value::from(Typography::DEFAULT.size as i64));
+        choose(
+            &mut app,
+            "appearance.textSize",
+            Value::from(Typography::DEFAULT.size as i64),
+        );
         choose(&mut app, "appearance.uiFont", Value::from("jakarta"));
         assert_eq!(typography::current(), Typography::DEFAULT);
     }
@@ -229,7 +236,11 @@ pub(crate) mod tests {
         app.set_theme(Mode::Night);
         assert_eq!(app.canvas(), Canvas::Night, "and a dark theme's own");
         app.set_theme(Mode::Light);
-        choose(&mut app, "appearance.drawingBackground", Value::from("theme"));
+        choose(
+            &mut app,
+            "appearance.drawingBackground",
+            Value::from("theme"),
+        );
         assert_eq!(
             app.canvas(),
             Canvas::Paper,

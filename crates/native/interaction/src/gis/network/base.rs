@@ -40,7 +40,11 @@ pub fn time_text(t: Option<u32>) -> String {
 
 /// Araç profili as the prompt says it.
 pub fn profile_text(p: &str) -> String {
-    if p.is_empty() { "yok".to_owned() } else { p.to_owned() }
+    if p.is_empty() {
+        "yok".to_owned()
+    } else {
+        p.to_owned()
+    }
 }
 
 /// A day as `YYYY-MM-DD` (days since 1970-01-01).
@@ -119,7 +123,10 @@ impl Base {
             .filter(|l| !layers.is_locked(&l.id))
             .filter(|l| {
                 cx.doc.by_layer(&l.id).any(|e| {
-                    matches!(e, kentos_commands::Entity::Line(_) | kentos_commands::Entity::Polyline(_))
+                    matches!(
+                        e,
+                        kentos_commands::Entity::Line(_) | kentos_commands::Entity::Polyline(_)
+                    )
                 })
             })
             .map(|l| (l.id.clone(), l.name.clone()))
@@ -132,7 +139,11 @@ impl Base {
 
     /// A road network made of `layer` as Ağlar's Yeni ağ makes one (docs/adr/9332): both ways, its ends joined within
     /// the default tolerance, Süre at 50 km/sa; written by `cad.network.define`. Its definition, or why not.
-    pub fn make_of(layer: &str, layer_name: &str, cx: &mut Context<'_>) -> Result<NetworkDef, String> {
+    pub fn make_of(
+        layer: &str,
+        layer_name: &str,
+        cx: &mut Context<'_>,
+    ) -> Result<NetworkDef, String> {
         use kentos_commands::{CommandResult, NetworkDefine, NetworkDefineOperation};
         let id = kentos_commands::next_network_id(Self::list(cx));
         let name = format!("{layer_name} ağı");
@@ -149,15 +160,20 @@ impl Base {
             input,
         ) {
             CommandResult::Completed { .. } => Ok(def),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => Err(error.message),
+            CommandResult::Queued { .. } | CommandResult::Cancelled => {
+                Err("ağ yazılamadı".to_owned())
             }
-            CommandResult::Queued { .. } | CommandResult::Cancelled => Err("ağ yazılamadı".to_owned()),
         }
     }
 
     /// The prompt without a network: Ağlar, and the layer a network can be made of (docs/adr/9332).
-    pub fn no_network_prompt(label: &'static str, offer: Option<&(String, String)>) -> crate::prompt::Prompt {
+    pub fn no_network_prompt(
+        label: &'static str,
+        offer: Option<&(String, String)>,
+    ) -> crate::prompt::Prompt {
         match offer {
             Some((_, name)) => crate::prompt::Prompt::new(
                 label,
@@ -171,14 +187,21 @@ impl Base {
 
     /// What the network is, for the tool's settings from the start (docs/adr/9332): its name, the cost with
     /// its unit, how and within what its lines are joined; without one, how to make one.
-    pub fn settings(n: Option<&NetworkDef>, cost: usize, offer: Option<&(String, String)>, f: &Format) -> Vec<crate::tool_settings::Setting> {
+    pub fn settings(
+        n: Option<&NetworkDef>,
+        cost: usize,
+        offer: Option<&(String, String)>,
+        f: &Format,
+    ) -> Vec<crate::tool_settings::Setting> {
         use crate::tool_settings::Setting;
         let Some(n) = n else {
             let words = match offer {
                 Some((_, name)) => format!(
                     "Projede ağ yok. Ağlar (G) ile tanımlayın ya da “{name}” katmanından ağ oluşturun (O): iki yönlü, uçlarda bağlanır."
                 ),
-                None => "Projede ağ yok. Ağlar (G) ile yol ya da şebeke ağını tanımlayın.".to_owned(),
+                None => {
+                    "Projede ağ yok. Ağlar (G) ile yol ya da şebeke ağını tanımlayın.".to_owned()
+                }
             };
             let mut note = Setting::text("network", "Ağ", words).read_only();
             note.note = true;
@@ -196,7 +219,10 @@ impl Base {
             Setting::text(
                 "networkCost",
                 "Maliyet",
-                format!("{}, {unit}", names.get(cost).map_or("Uzunluk", String::as_str)),
+                format!(
+                    "{}, {unit}",
+                    names.get(cost).map_or("Uzunluk", String::as_str)
+                ),
             )
             .read_only(),
             Setting::text("networkTolerance", "Tolerans", f.length(n.tolerance)).read_only(),
@@ -294,7 +320,8 @@ impl Base {
                 def: None,
                 question,
                 at: cx.memory.network_time.map(f64::from),
-                profile: Some(cx.memory.network_profile.as_str().to_owned()).filter(|p| !p.is_empty()),
+                profile: Some(cx.memory.network_profile.as_str().to_owned())
+                    .filter(|p| !p.is_empty()),
                 day: cx.memory.network_day.map(day_text),
             })));
         ticket
@@ -424,7 +451,10 @@ impl Base {
                         Some(Changed::Network)
                     }
                     Err(why) => {
-                        cx.say(Level::Warn, format!("“{name}” katmanından ağ oluşturulamadı: {why}"));
+                        cx.say(
+                            Level::Warn,
+                            format!("“{name}” katmanından ağ oluşturulamadı: {why}"),
+                        );
                         Some(Changed::Show)
                     }
                 }
@@ -439,7 +469,8 @@ impl Base {
                 }
                 let now = cx.memory.network_profile.as_str();
                 let at = names.iter().position(|p| *p == now).unwrap_or(0);
-                cx.memory.network_profile = Name::new(names[(at + 1) % names.len()]).unwrap_or(Name::EMPTY);
+                cx.memory.network_profile =
+                    Name::new(names[(at + 1) % names.len()]).unwrap_or(Name::EMPTY);
                 Some(Changed::Ask)
             }
             "T" if costs => {

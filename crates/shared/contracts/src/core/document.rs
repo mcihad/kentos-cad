@@ -433,17 +433,26 @@ pub struct ProjectSettings {
     /// mapping of the same name; each its JSON document as text. The `profiller` folder beside the drawing's file holds
     /// others; of a name both have, the drawing's is the one read.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectProfileFile>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::ProjectProfileFile>>", optional)
+    )]
     pub profile_files: Vec<crate::ProjectProfileFile>,
     /// Ordered portable drawing standards retained with the project. Earlier
     /// entries take precedence; choosing a standard does not apply it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ProjectStandardDocument>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::ProjectStandardDocument>>", optional)
+    )]
     pub standard_docs: Vec<crate::ProjectStandardDocument>,
     /// The sheet template revisions the bound office standards approved, as `cad.standards.install` recorded them
     /// (docs/adr/1100 §3): which revision new sheets are made from; existing sheets keep their own origin.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::ApprovedSheetTemplate>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::ApprovedSheetTemplate>>", optional)
+    )]
     pub approved_sheet_templates: Vec<crate::ApprovedSheetTemplate>,
     /// The project's named table styles (docs/adr/1126 §2; `.kcad` schema 185), in the order they were made.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -452,7 +461,10 @@ pub struct ProjectSettings {
     /// The standards findings the project accepts, each with its reason (docs/adr/1129; `.kcad` schema 190): bound to
     /// the finding, the standard's source and revision and what the drawing had; a change of either lapses it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::StandardException>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::StandardException>>", optional)
+    )]
     pub standard_exceptions: Vec<crate::StandardException>,
     /// Review notes bound to objects, a sheet or a view, kept apart from the design (docs/adr/1000 §2): never drawn,
     /// plotted or measured. Numbered; their stamps say which state of an object each was written for.
@@ -495,7 +507,10 @@ pub struct ProjectSettings {
     pub parcel_register: Option<crate::ParcelRegister>,
     /// The adjustments the project keeps (plan/map-cad.md MAP-18, docs/adr/5200); absent: none (`.kcad` schema 252).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::KeptAdjustment>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::KeptAdjustment>>")
+    )]
     pub survey_adjustments: Vec<crate::KeptAdjustment>,
     /// The layer each annotation tool draws on (usage review UR-003); absent: the active layer (`.kcad` schema 255).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -504,7 +519,10 @@ pub struct ProjectSettings {
     /// The reviews the project keeps of its monitoring jobs (plan/map-cad.md MAP-19, docs/adr/5220); absent: none
     /// (`.kcad` schema 253).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::MonitoringReview>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<crate::MonitoringReview>>")
+    )]
     pub monitoring_reviews: Vec<crate::MonitoringReview>,
     /// A zoning plan's kept symbol choices and plan change drafts (plan/map-cad.md MAP-09, docs/adr/5040); absent: none
     /// (`.kcad` schema 250).
@@ -1001,11 +1019,14 @@ impl ProjectSettings {
         }
         self.named_ucs = crate::sanitized_named_ucs(std::mem::take(&mut self.named_ucs));
         self.named_views = crate::sanitized_named_views(std::mem::take(&mut self.named_views));
-        self.view_templates = crate::sanitized_view_templates(std::mem::take(&mut self.view_templates));
+        self.view_templates =
+            crate::sanitized_view_templates(std::mem::take(&mut self.view_templates));
         // A view following a template the project does not keep draws on its own (docs/adr/0783 §2).
         for v in &mut self.named_views {
             if let Some(r) = v.recipe.as_mut()
-                && r.template.as_ref().is_some_and(|id| !self.view_templates.iter().any(|t| &t.id == id))
+                && r.template
+                    .as_ref()
+                    .is_some_and(|id| !self.view_templates.iter().any(|t| &t.id == id))
             {
                 r.template = None;
                 if r.is_empty() {

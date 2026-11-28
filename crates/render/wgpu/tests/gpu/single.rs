@@ -5,7 +5,9 @@
 //! samples' 8-bit picture rounds every blend, so where strokes overlap the two land a step apart.
 use std::sync::Arc;
 
-use kentos_native_style::batches::{BatchKind, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, Unit};
+use kentos_native_style::batches::{
+    BatchKind, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, Unit,
+};
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
 use kentos_render_wgpu::{Camera, RenderSettings, Rgba8, Vec2};
 
@@ -14,7 +16,9 @@ use super::Gpu;
 const SIDE: f64 = 600.0;
 
 fn scatter(seed: &mut u64) -> f64 {
-    *seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+    *seed = seed
+        .wrapping_mul(6_364_136_223_846_793_005)
+        .wrapping_add(1_442_695_040_888_963_407);
     (*seed >> 11) as f64 / (1u64 << 53) as f64
 }
 
@@ -50,13 +54,25 @@ fn layer() -> StyledLayer {
         for _ in 0..n {
             let (x, y) = (scatter(seed) * SIDE, scatter(seed) * SIDE);
             for _ in 0..3 {
-                data.extend([(x + scatter(seed) * 80.0) as f32, (y + scatter(seed) * 80.0) as f32]);
+                data.extend([
+                    (x + scatter(seed) * 80.0) as f32,
+                    (y + scatter(seed) * 80.0) as f32,
+                ]);
             }
         }
         start..data.len()
     };
     let r = fill(&mut data, &mut seed, 300);
-    batches.push(batch(BatchKind::Fill { paint: FillPaintBatch::Solid { color: [0.9, 0.8, 0.3, 0.5] } }, r, 1, 0.0));
+    batches.push(batch(
+        BatchKind::Fill {
+            paint: FillPaintBatch::Solid {
+                color: [0.9, 0.8, 0.3, 0.5],
+            },
+        },
+        r,
+        1,
+        0.0,
+    ));
     let stroke = |dash: Option<Vec<f64>>, color: [f64; 4]| BatchKind::Stroke {
         color,
         width: 0.4,
@@ -70,18 +86,39 @@ fn layer() -> StyledLayer {
         let start = data.len();
         for i in 0..n {
             let (x, y) = (scatter(seed) * SIDE, scatter(seed) * SIDE);
-            let (a, l) = (scatter(seed) * std::f64::consts::TAU, 2.0 + scatter(seed) * 12.0);
-            data.extend([x as f32, y as f32, (x + a.cos() * l) as f32, (y + a.sin() * l) as f32, (i % 9) as f32, 3.0]);
+            let (a, l) = (
+                scatter(seed) * std::f64::consts::TAU,
+                2.0 + scatter(seed) * 12.0,
+            );
+            data.extend([
+                x as f32,
+                y as f32,
+                (x + a.cos() * l) as f32,
+                (y + a.sin() * l) as f32,
+                (i % 9) as f32,
+                3.0,
+            ]);
         }
         start..data.len()
     };
     let r = strokes(&mut data, &mut seed, 90_000);
     batches.push(batch(stroke(None, [0.1, 0.2, 0.6, 0.55]), r, 2, 1.4));
     let r = strokes(&mut data, &mut seed, 60_000);
-    batches.push(batch(stroke(Some(vec![1.5, 0.8]), [0.6, 0.1, 0.1, 0.7]), r, 3, 1.4));
+    batches.push(batch(
+        stroke(Some(vec![1.5, 0.8]), [0.6, 0.1, 0.1, 0.7]),
+        r,
+        3,
+        1.4,
+    ));
     let start = data.len();
     for _ in 0..20_000 {
-        data.extend([(scatter(&mut seed) * SIDE) as f32, (scatter(&mut seed) * SIDE) as f32, 0.0, 3.0, 3.0]);
+        data.extend([
+            (scatter(&mut seed) * SIDE) as f32,
+            (scatter(&mut seed) * SIDE) as f32,
+            0.0,
+            3.0,
+            3.0,
+        ]);
     }
     let marker = BatchKind::Marker {
         unit: Unit::World,
@@ -100,10 +137,23 @@ fn layer() -> StyledLayer {
     };
     batches.push(batch(marker, start..data.len(), 4, 6.5));
     let r = fill(&mut data, &mut seed, 40);
-    batches.push(batch(BatchKind::Fill { paint: FillPaintBatch::Solid { color: [0.3, 0.6, 0.9, 0.45] } }, r, 5, 0.0));
+    batches.push(batch(
+        BatchKind::Fill {
+            paint: FillPaintBatch::Solid {
+                color: [0.3, 0.6, 0.9, 0.45],
+            },
+        },
+        r,
+        5,
+        0.0,
+    ));
     let r = strokes(&mut data, &mut seed, 3_000);
     batches.push(batch(stroke(None, [0.0, 0.0, 0.0, 0.8]), r, 6, 1.4));
-    StyledLayer { data, batches, ..Default::default() }
+    StyledLayer {
+        data,
+        batches,
+        ..Default::default()
+    }
 }
 
 pub(super) fn a_long_stretch_drawn_one_sample_a_pixel_is_the_same_picture(gpu: &mut Gpu) {
@@ -112,7 +162,10 @@ pub(super) fn a_long_stretch_drawn_one_sample_a_pixel_is_the_same_picture(gpu: &
     let px = 384u32;
     let mut settings = RenderSettings::new(Rgba8::rgb(255, 255, 255));
     settings.samples = 4;
-    for (case, (centre, scale)) in [((300.0, 300.0), 0.62), ((180.0, 420.0), 2.5)].into_iter().enumerate() {
+    for (case, (centre, scale)) in [((300.0, 300.0), 0.62), ((180.0, 420.0), 2.5)]
+        .into_iter()
+        .enumerate()
+    {
         let camera = Camera {
             center: Vec2::new(centre.0, centre.1),
             width: f64::from(px),
@@ -124,37 +177,75 @@ pub(super) fn a_long_stretch_drawn_one_sample_a_pixel_is_the_same_picture(gpu: &
         for (k, single) in [false, true].into_iter().enumerate() {
             settings.single_runs = single;
             let id = 97_000 + case as u64 * 10 + k as u64;
-            gpu.styled = Some(StyledScene { layers: vec![Arc::new(StyledLayerPart::new(id, layer.clone()))], ..Default::default() });
+            gpu.styled = Some(StyledScene {
+                layers: vec![Arc::new(StyledLayerPart::new(id, layer.clone()))],
+                ..Default::default()
+            });
             let pixels = gpu.draw(&[], &camera, &settings, px, px);
             let runs = gpu.renderer.stats(1).expect("the view").single_runs;
-            assert_eq!(runs, u32::from(single), "case {case}: one-sample stretches drawn with the setting {single}");
+            assert_eq!(
+                runs,
+                u32::from(single),
+                "case {case}: one-sample stretches drawn with the setting {single}"
+            );
             pictures.push(pixels);
         }
         let (a, b) = (&pictures[0], &pictures[1]);
-        let most = a.iter().zip(b).map(|(p, q)| p.abs_diff(*q)).max().unwrap_or(0);
+        let most = a
+            .iter()
+            .zip(b)
+            .map(|(p, q)| p.abs_diff(*q))
+            .max()
+            .unwrap_or(0);
         let differ = a.chunks(4).zip(b.chunks(4)).filter(|(p, q)| p != q).count();
         let total = a.len() / 4;
         let mut by_step = [0usize; 6];
         for (p, q) in a.chunks(4).zip(b.chunks(4)) {
-            let d = p.iter().zip(q).map(|(x, y)| x.abs_diff(*y)).max().unwrap_or(0);
+            let d = p
+                .iter()
+                .zip(q)
+                .map(|(x, y)| x.abs_diff(*y))
+                .max()
+                .unwrap_or(0);
             by_step[usize::from(d.min(5))] += 1;
         }
-        eprintln!("single case {case}: {differ} of {total} px differ, most {most}; by step {by_step:?}");
+        eprintln!(
+            "single case {case}: {differ} of {total} px differ, most {most}; by step {by_step:?}"
+        );
         // Where strokes overlap, the samples' 8-bit picture rounds each blend and the half-float one only once, as
         // it is laid over: mostly a step apart (the samples' own rounding), rarely three. A hard edge in a stroke's
         // cover lets a hair of float noise put a pixel on either side: the butt ends' half step, before docs/adr/9249,
         // set a pixel four and one five steps apart once the quads' corners moved (docs/adr/9247); a quad narrowed on
         // one sample a pixel only set 55 pixels five to 45 steps apart.
-        assert!(most <= 3, "case {case}: {differ} px differ, most {most} steps");
-        assert!(by_step[2] * 10 < total && by_step[3] * 1000 < total, "case {case}: by step {by_step:?}");
+        assert!(
+            most <= 3,
+            "case {case}: {differ} px differ, most {most} steps"
+        );
+        assert!(
+            by_step[2] * 10 < total && by_step[3] * 1000 < total,
+            "case {case}: by step {by_step:?}"
+        );
     }
     // A view with its own one-sample targets (HiDPI off on a 2× screen) has nothing to save: no stretch is laid over.
     settings.samples = 1;
     settings.hi_dpi = false;
     settings.single_runs = true;
-    let camera = Camera { center: Vec2::new(300.0, 300.0), width: f64::from(px), height: f64::from(px), scale: 0.62, ..Default::default() };
-    gpu.styled = Some(StyledScene { layers: vec![Arc::new(StyledLayerPart::new(97_100, layer.clone()))], ..Default::default() });
+    let camera = Camera {
+        center: Vec2::new(300.0, 300.0),
+        width: f64::from(px),
+        height: f64::from(px),
+        scale: 0.62,
+        ..Default::default()
+    };
+    gpu.styled = Some(StyledScene {
+        layers: vec![Arc::new(StyledLayerPart::new(97_100, layer.clone()))],
+        ..Default::default()
+    });
     let _ = gpu.draw_scaled(&[], &camera, &settings, px, px, 2.0);
-    assert_eq!(gpu.renderer.stats(1).expect("the view").single_runs, 0, "one sample a pixel: no stretch laid over");
+    assert_eq!(
+        gpu.renderer.stats(1).expect("the view").single_runs,
+        0,
+        "one sample a pixel: no stretch laid over"
+    );
     gpu.styled = previous;
 }

@@ -6,8 +6,9 @@
 //! `fixtures/commands/v1/cad.views.edit.json` and `cad.views.edit.area.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, MOST_NAMED_VIEWS, MOST_VIEW_SIZE, MOST_VIEW_TEMPLATES, NamedView, ProjectSettings,
-    VIEW_REACH, ViewRecipe, ViewTemplate, ViewsEdit, ViewsEdited, ViewsOp, normal_angle, view_name_ok,
+    CommandResult, CommandWarning, MOST_NAMED_VIEWS, MOST_VIEW_SIZE, MOST_VIEW_TEMPLATES,
+    NamedView, ProjectSettings, VIEW_REACH, ViewRecipe, ViewTemplate, ViewsEdit, ViewsEdited,
+    ViewsOp, normal_angle, view_name_ok,
 };
 use kentos_domain::Document;
 
@@ -75,18 +76,32 @@ fn check_input(input: &ViewsEdit) -> Result<(), Stop> {
     } = &input.edit
     {
         // The version is the command's to write: the input's is ignored.
-        let r = ViewRecipe { version: 1, ..r.clone() };
+        let r = ViewRecipe {
+            version: 1,
+            ..r.clone()
+        };
         if let Some(why) = kentos_commands::recipe_problem(&r) {
-            return Err(fail(codes::INVALID_RECIPE, format!("{why} Tarifi düzeltip yeniden verin."), "edit.recipe"));
+            return Err(fail(
+                codes::INVALID_RECIPE,
+                format!("{why} Tarifi düzeltip yeniden verin."),
+                "edit.recipe",
+            ));
         }
     }
     if let ViewsOp::Template {
         recipe: Some(r), ..
     } = &input.edit
     {
-        let r = ViewRecipe { version: 1, ..r.clone() };
+        let r = ViewRecipe {
+            version: 1,
+            ..r.clone()
+        };
         if let Some(why) = kentos_commands::template_problem(&r) {
-            return Err(fail(codes::INVALID_RECIPE, format!("{why} Şablonu düzeltip yeniden verin."), "edit.recipe"));
+            return Err(fail(
+                codes::INVALID_RECIPE,
+                format!("{why} Şablonu düzeltip yeniden verin."),
+                "edit.recipe",
+            ));
         }
     }
     let names: Vec<(&str, &str)> = match &input.edit {
@@ -134,7 +149,12 @@ fn unknown_template(key: &str, path: &str) -> Stop {
 }
 
 /// The settings afterwards, the view saved or renamed, the template kept and the warnings.
-type Next = (ProjectSettings, Option<NamedView>, Option<ViewTemplate>, Vec<CommandWarning>);
+type Next = (
+    ProjectSettings,
+    Option<NamedView>,
+    Option<ViewTemplate>,
+    Vec<CommandWarning>,
+);
 
 fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
     let mut s = doc.settings().clone();
@@ -159,7 +179,11 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
             // A new view whose name gives an id another view keeps (renamed from that name) takes the next free one.
             let id = if id.is_empty() && !s.named_views.iter().any(|v| v.name == name) {
                 let own = kentos_commands::view_id_of_name(name);
-                let taken = |k: &str| s.named_views.iter().any(|v| kentos_commands::view_key(v) == k);
+                let taken = |k: &str| {
+                    s.named_views
+                        .iter()
+                        .any(|v| kentos_commands::view_key(v) == k)
+                };
                 if taken(&own) {
                     (2..)
                         .map(|k| format!("{own}-{k}"))
@@ -282,10 +306,21 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
                 }
             }
             let was = s.named_views[at].recipe.as_ref().map_or(0, |r| r.version);
-            let next = recipe.map(|r| ViewRecipe { version: was + 1, ..r });
+            let next = recipe.map(|r| ViewRecipe {
+                version: was + 1,
+                ..r
+            });
             // The same recipe again is no change: its version stays.
             let same = match (&s.named_views[at].recipe, &next) {
-                (Some(a), Some(b)) => ViewRecipe { version: 0, ..a.clone() } == ViewRecipe { version: 0, ..b.clone() },
+                (Some(a), Some(b)) => {
+                    ViewRecipe {
+                        version: 0,
+                        ..a.clone()
+                    } == ViewRecipe {
+                        version: 0,
+                        ..b.clone()
+                    }
+                }
                 (None, None) => true,
                 _ => false,
             };
@@ -349,22 +384,37 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
                             let own = kentos_commands::template_id_of_name(name);
                             let taken = |k: &str| s.view_templates.iter().any(|t| t.id == k);
                             let id = if taken(&own) {
-                                (2..).map(|k| format!("{own}-{k}")).find(|k| !taken(k)).unwrap_or(own)
+                                (2..)
+                                    .map(|k| format!("{own}-{k}"))
+                                    .find(|k| !taken(k))
+                                    .unwrap_or(own)
                             } else {
                                 own
                             };
                             let t = ViewTemplate {
                                 id,
                                 name: name.to_owned(),
-                                recipe: ViewRecipe { version: 1, ..r.clone() },
+                                recipe: ViewRecipe {
+                                    version: 1,
+                                    ..r.clone()
+                                },
                             };
                             s.view_templates.push(t.clone());
                             template = Some(t);
                         }
                         Some(at) => {
                             let was = &s.view_templates[at].recipe;
-                            let next = ViewRecipe { version: was.version + 1, ..r.clone() };
-                            if (ViewRecipe { version: 0, ..was.clone() }) != (ViewRecipe { version: 0, ..next.clone() }) {
+                            let next = ViewRecipe {
+                                version: was.version + 1,
+                                ..r.clone()
+                            };
+                            if (ViewRecipe {
+                                version: 0,
+                                ..was.clone()
+                            }) != (ViewRecipe {
+                                version: 0,
+                                ..next.clone()
+                            }) {
                                 s.view_templates[at].recipe = next;
                             }
                             template = Some(s.view_templates[at].clone());
@@ -382,7 +432,9 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
             if to != name && s.view_templates.iter().any(|t| t.name == to) {
                 return Err(fail(
                     codes::TEMPLATE_EXISTS,
-                    format!("“{to}” adlı başka bir görünüş şablonu var. Başka bir ad yazın ya da önce onu kaldırın."),
+                    format!(
+                        "“{to}” adlı başka bir görünüş şablonu var. Başka bir ad yazın ya da önce onu kaldırın."
+                    ),
                     "edit.to",
                 ));
             }
@@ -415,35 +467,51 @@ fn recipe_known(s: &ProjectSettings, r: &ViewRecipe) -> Result<(), Stop> {
         let Some(set) = sets.iter().find(|x| x.id == c.set) else {
             return Err(fail(
                 codes::OPTION_SET_NOT_FOUND,
-                format!("Projede “{}” kimlikli tasarım seçeneği kümesi yok. Tasarım seçenekleri'ndeki kümelerden birini verin.", c.set),
+                format!(
+                    "Projede “{}” kimlikli tasarım seçeneği kümesi yok. Tasarım seçenekleri'ndeki kümelerden birini verin.",
+                    c.set
+                ),
                 &format!("edit.recipe.options[{i}].set"),
             ));
         };
         if !set.options.iter().any(|o| o.id == c.option) {
             return Err(fail(
                 codes::OPTION_NOT_FOUND,
-                format!("“{}” kümesinde “{}” kimlikli seçenek yok. Kümenin seçeneklerinden birini verin.", set.name, c.option),
+                format!(
+                    "“{}” kümesinde “{}” kimlikli seçenek yok. Kümenin seçeneklerinden birini verin.",
+                    set.name, c.option
+                ),
                 &format!("edit.recipe.options[{i}].option"),
             ));
         }
     }
     // A recipe's combination is the project's (docs/adr/0808 §3).
     if let Some(id) = &r.combo {
-        let combos = s.arch.as_ref().map_or(&[][..], |a| a.option_combos.as_slice());
+        let combos = s
+            .arch
+            .as_ref()
+            .map_or(&[][..], |a| a.option_combos.as_slice());
         if !combos.iter().any(|c| &c.id == id) {
             return Err(fail(
                 codes::OPTION_COMBO_NOT_FOUND,
-                format!("Projede “{id}” kimlikli seçenek bileşimi yok. Tasarım seçenekleri › Bileşimler'den birinin kimliğini verin."),
+                format!(
+                    "Projede “{id}” kimlikli seçenek bileşimi yok. Tasarım seçenekleri › Bileşimler'den birinin kimliğini verin."
+                ),
                 "edit.recipe.combo",
             ));
         }
     }
     if let Some(name) = &r.layer_state
-        && !s.layer_states.iter().any(|st| st.name.trim() == name.trim())
+        && !s
+            .layer_states
+            .iter()
+            .any(|st| st.name.trim() == name.trim())
     {
         return Err(fail(
             codes::STATE_NOT_FOUND,
-            format!("Projede “{name}” adlı katman durumu yok. Katmanlar › Katman durumları'ndan birinin adını verin."),
+            format!(
+                "Projede “{name}” adlı katman durumu yok. Katmanlar › Katman durumları'ndan birinin adını verin."
+            ),
             "edit.recipe.layerState",
         ));
     }
@@ -490,7 +558,13 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ViewsEdit) -> CommandResult<Views
         Ok((next, view, template, warnings)) => {
             let changed = next != *cx.doc.settings();
             CommandResult::Completed {
-                output: answer(&next, view, template, changed, cx.doc.revision().to_string()),
+                output: answer(
+                    &next,
+                    view,
+                    template,
+                    changed,
+                    cx.doc.revision().to_string(),
+                ),
                 warnings,
             }
         }
@@ -522,7 +596,12 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: ViewsEdit) -> CommandResu
                 let key = kentos_commands::view_key(v);
                 let area = kentos_domain::ViewArea::of(v);
                 if let Err(why) = cx.doc.set_view_area(&key, area, AREA_STEP) {
-                    return Stop::failed(error(codes::INVALID_VIEW_SIZE, why.0, Some("edit".into()))).into();
+                    return Stop::failed(error(
+                        codes::INVALID_VIEW_SIZE,
+                        why.0,
+                        Some("edit".into()),
+                    ))
+                    .into();
                 }
             }
             _ => cx.doc.set_settings(next),

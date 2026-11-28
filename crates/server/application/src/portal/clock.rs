@@ -113,10 +113,19 @@ mod tests {
         .unwrap();
         // Its fifteenth day is 19 May, a holiday of 2429 sayılı Kanun: the decision is due the next working day.
         assert_eq!(
-            (c.label.as_str(), c.due_on.as_str(), c.extended_from.as_deref()),
+            (
+                c.label.as_str(),
+                c.due_on.as_str(),
+                c.extended_from.as_deref()
+            ),
             ("Karar", "2026-05-20", Some("2026-05-19"))
         );
-        assert!(c.basis.contains("Son gün 19 Mayıs 2026 Salı (Atatürk'ü Anma, Gençlik ve Spor Bayramı)"), "{}", c.basis);
+        assert!(
+            c.basis
+                .contains("Son gün 19 Mayıs 2026 Salı (Atatürk'ü Anma, Gençlik ve Spor Bayramı)"),
+            "{}",
+            c.basis
+        );
         // Nothing runs while it waits for the professional, or once it is decided.
         assert!(at(DossierStatus::ChangesRequested, 1, date(2026, 3, 10)).is_none());
         assert!(at(DossierStatus::Approved, 1, date(2026, 3, 10)).is_none());

@@ -517,15 +517,28 @@ impl LevelForm {
             for (i, r) in self.leapfrog.filled() {
                 let (from, to) = (cell(r, 0), cell(r, 1));
                 if from.is_empty() || to.is_empty() {
-                    problems.push(format!("{}. atlamalı kurulumda geri ya da ileri nokta yok.", i + 1));
+                    problems.push(format!(
+                        "{}. atlamalı kurulumda geri ya da ileri nokta yok.",
+                        i + 1
+                    ));
                     continue;
                 }
-                let n: Vec<Option<f64>> = (2..8).map(|c| number(cell(r, c)).filter(|v| v.is_finite())).collect();
+                let n: Vec<Option<f64>> = (2..8)
+                    .map(|c| number(cell(r, c)).filter(|v| v.is_finite()))
+                    .collect();
                 let [Some(bs), Some(bz), Some(bt), Some(fs), Some(fz), Some(ft)] = n[..] else {
-                    problems.push(format!("{}. atlamalı kurulumda bir uzunluk, açı ya da işaret yüksekliği yok.", i + 1));
+                    problems.push(format!(
+                        "{}. atlamalı kurulumda bir uzunluk, açı ya da işaret yüksekliği yok.",
+                        i + 1
+                    ));
                     continue;
                 };
-                let sight = |slope, zenith, target| kentos_geometry_core::survey::fieldbook::Sight { slope, zenith, target };
+                let sight =
+                    |slope, zenith, target| kentos_geometry_core::survey::fieldbook::Sight {
+                        slope,
+                        zenith,
+                        target,
+                    };
                 match kentos_geometry_core::survey::fieldbook::leapfrog(
                     sight(bs, bz, bt),
                     sight(fs, fz, ft),
@@ -766,7 +779,9 @@ impl crate::app::App {
     /// ↑ or ↓ in a field of the windows: the table the field is in.
     pub(crate) fn network_arrow(&mut self, up: bool, from: &iced::widget::Id) -> Task<Message> {
         let sheets: &[Sheet] = match self.gis.calc.open {
-            Some(super::Window::Level) => &[Sheet::LevelKnown, Sheet::LevelRows, Sheet::LevelLeapfrog],
+            Some(super::Window::Level) => {
+                &[Sheet::LevelKnown, Sheet::LevelRows, Sheet::LevelLeapfrog]
+            }
             _ => &[Sheet::NetworkKnown, Sheet::NetworkRows],
         };
         for &sheet in sheets {

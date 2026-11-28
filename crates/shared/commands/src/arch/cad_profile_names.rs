@@ -82,7 +82,8 @@ pub fn name_words(name: &str) -> Vec<String> {
         if !word.is_empty() && c.is_uppercase() {
             let before = chars[i - 1];
             let small_next = chars.get(i + 1).is_some_and(|n| n.is_lowercase());
-            if before.is_lowercase() || before.is_numeric() || (before.is_uppercase() && small_next) {
+            if before.is_lowercase() || before.is_numeric() || (before.is_uppercase() && small_next)
+            {
                 out.push(std::mem::take(&mut word));
             }
         }
@@ -171,7 +172,10 @@ pub fn styled_name(name: &str, names: &MappingNames) -> Result<String, String> {
                     w.clone()
                 } else {
                     let mut cs = w.chars();
-                    let first = cs.next().map(|c| upper(&c.to_string(), turkish)).unwrap_or_default();
+                    let first = cs
+                        .next()
+                        .map(|c| upper(&c.to_string(), turkish))
+                        .unwrap_or_default();
                     first + &lower(cs.as_str(), turkish)
                 }
             })
@@ -446,8 +450,14 @@ mod tests {
         let snake = n(NameCase::UpperSnakeCase, NameLetters::Ascii);
         // The standard's theme documents: tucbsNo, araziKullanimiDurumu5000.
         assert_eq!(styled_name("TUCBS No", &camel).unwrap(), "tucbsNo");
-        assert_eq!(styled_name("Arazi Kullanımı Durumu 5000", &camel).unwrap(), "araziKullanimiDurumu5000");
-        assert_eq!(styled_name("Yasal bağlayıcılık durumu", &camel).unwrap(), "yasalBaglayicilikDurumu");
+        assert_eq!(
+            styled_name("Arazi Kullanımı Durumu 5000", &camel).unwrap(),
+            "araziKullanimiDurumu5000"
+        );
+        assert_eq!(
+            styled_name("Yasal bağlayıcılık durumu", &camel).unwrap(),
+            "yasalBaglayicilikDurumu"
+        );
         assert_eq!(styled_name("sYLKK", &camel).unwrap(), "sYLKK");
         // The regulation's Ek-1 codes: OLCU_YONTEMI, ADRES_1_IL, NITELIK_01.
         assert_eq!(styled_name("Ölçü yöntemi", &snake).unwrap(), "OLCU_YONTEMI");
@@ -458,11 +468,18 @@ mod tests {
         let keep = n(NameCase::UpperSnakeCase, NameLetters::Keep);
         assert_eq!(styled_name("KapiNo", &keep).unwrap(), "KAPİ_NO");
         assert_eq!(
-            styled_name("Işık şiddeti", &n(NameCase::LowerCamelCase, NameLetters::Keep)).unwrap(),
+            styled_name(
+                "Işık şiddeti",
+                &n(NameCase::LowerCamelCase, NameLetters::Keep)
+            )
+            .unwrap(),
             "ışıkŞiddeti"
         );
         assert!(styled_name("--", &camel).is_err());
         assert!(styled_name("Café", &camel).is_err());
-        assert_eq!(styled_name("Café", &n(NameCase::LowerCamelCase, NameLetters::Keep)).unwrap(), "café");
+        assert_eq!(
+            styled_name("Café", &n(NameCase::LowerCamelCase, NameLetters::Keep)).unwrap(),
+            "café"
+        );
     }
 }

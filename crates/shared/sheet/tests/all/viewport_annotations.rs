@@ -1,8 +1,8 @@
 use kentos_sheet::{
-    *,
-    ops::{self, Op},
     display::{self, Prim, RenderInputs},
-    viewport::{SetViewport, AnnotationScale},
+    ops::{self, Op},
+    viewport::{AnnotationScale, SetViewport},
+    *,
 };
 #[test]
 fn twenty_annotation_and_layer_cases_are_one_locked_camera_safe_change() {

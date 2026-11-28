@@ -161,12 +161,25 @@ pub struct CeilingRange {
 }
 
 impl Default for CeilingRange {
-    fn default() -> Self { Self { low: 2.0, high: 5.0 } }
+    fn default() -> Self {
+        Self {
+            low: 2.0,
+            high: 5.0,
+        }
+    }
 }
 
 impl CeilingRange {
-    pub fn contains(self, at: f64) -> bool { at >= self.low - 1e-8 && at <= self.high + 1e-8 }
-    pub fn valid(self) -> bool { self.low.is_finite() && self.low >= 0.0 && self.high.is_finite() && self.high > self.low && self.high <= 100.0 }
+    pub fn contains(self, at: f64) -> bool {
+        at >= self.low - 1e-8 && at <= self.high + 1e-8
+    }
+    pub fn valid(self) -> bool {
+        self.low.is_finite()
+            && self.low >= 0.0
+            && self.high.is_finite()
+            && self.high > self.low
+            && self.high <= 100.0
+    }
 }
 
 pub const CEILING_DEVICE_ATTR: &str = "Tavan cihazı";
@@ -251,7 +264,8 @@ fn is_zero(v: &u32) -> bool {
 impl ViewRecipe {
     /// Whether it changes nothing a map draws (its version aside).
     pub fn is_empty(&self) -> bool {
-        self.ceiling.is_none() && self.level.is_none()
+        self.ceiling.is_none()
+            && self.level.is_none()
             && self.phase.is_none()
             && self.layer_state.is_none()
             && self.hidden.is_empty()
@@ -420,10 +434,15 @@ pub fn template_problem(r: &ViewRecipe) -> Option<String> {
         return Some(why);
     }
     if r.level.is_some() || r.crop || r.template.is_some() {
-        return Some("Görünüş şablonu kat, kırpma ya da başka şablon taşımaz: bunlar görünümündür.".into());
+        return Some(
+            "Görünüş şablonu kat, kırpma ya da başka şablon taşımaz: bunlar görünümündür.".into(),
+        );
     }
     if !r.options.is_empty() || r.combo.is_some() {
-        return Some("Görünüş şablonu tasarım seçeneği taşımaz: hangi seçeneğin gösterileceği görünümündür.".into());
+        return Some(
+            "Görünüş şablonu tasarım seçeneği taşımaz: hangi seçeneğin gösterileceği görünümündür."
+                .into(),
+        );
     }
     None
 }
@@ -432,7 +451,10 @@ pub fn template_problem(r: &ViewRecipe) -> Option<String> {
 /// are unique, recipes that hold, and every view's template one of them.
 pub fn templates_problem(templates: &[ViewTemplate], views: &[NamedView]) -> Option<String> {
     if templates.len() > MOST_VIEW_TEMPLATES {
-        return Some(format!("En çok {MOST_VIEW_TEMPLATES} görünüş şablonu olur, {} var.", templates.len()));
+        return Some(format!(
+            "En çok {MOST_VIEW_TEMPLATES} görünüş şablonu olur, {} var.",
+            templates.len()
+        ));
     }
     for (i, t) in templates.iter().enumerate() {
         if !view_name_ok(&t.name) || t.name.trim() != t.name {
@@ -441,7 +463,10 @@ pub fn templates_problem(templates: &[ViewTemplate], views: &[NamedView]) -> Opt
         if !view_name_ok(&t.id) || t.id.trim() != t.id {
             return Some(format!("“{}” şablonunun kimliği tutmuyor.", t.name));
         }
-        if templates[..i].iter().any(|w| w.name == t.name || w.id == t.id) {
+        if templates[..i]
+            .iter()
+            .any(|w| w.name == t.name || w.id == t.id)
+        {
             return Some(format!("“{}” adlı ya da kimlikli iki şablon var.", t.name));
         }
         if let Some(why) = if t.recipe.version == 0 {
@@ -456,7 +481,10 @@ pub fn templates_problem(templates: &[ViewTemplate], views: &[NamedView]) -> Opt
         if let Some(id) = v.recipe.as_ref().and_then(|r| r.template.as_ref())
             && !templates.iter().any(|t| &t.id == id)
         {
-            return Some(format!("“{}” görünümünün şablonu “{id}” projede yok.", v.name));
+            return Some(format!(
+                "“{}” görünümünün şablonu “{id}” projede yok.",
+                v.name
+            ));
         }
     }
     None
@@ -486,7 +514,10 @@ pub fn resolved_recipe(r: &ViewRecipe, templates: &[ViewTemplate]) -> ViewRecipe
         return r.clone();
     };
     let Some(t) = templates.iter().find(|t| &t.id == id) else {
-        return ViewRecipe { template: None, ..r.clone() };
+        return ViewRecipe {
+            template: None,
+            ..r.clone()
+        };
     };
     ViewRecipe {
         version: r.version,
@@ -531,12 +562,16 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
         return Some("Görünüş tarifinin bileşimi bir bileşimin kimliğiyle verilir.".into());
     }
     if let Some(l) = &r.level
-        && (l.id.trim().is_empty() || l.id.chars().count() > MOST_VIEW_NAME || l.id.chars().any(char::is_control))
+        && (l.id.trim().is_empty()
+            || l.id.chars().count() > MOST_VIEW_NAME
+            || l.id.chars().any(char::is_control))
     {
         return Some("Görünüş tarifinin katı bir kat kimliği olmalı.".into());
     }
     if let Some(s) = &r.layer_state
-        && (s.trim().is_empty() || s.chars().count() > MOST_RECIPE_STATE || s.chars().any(char::is_control))
+        && (s.trim().is_empty()
+            || s.chars().count() > MOST_RECIPE_STATE
+            || s.chars().any(char::is_control))
     {
         return Some("Görünüş tarifinin katman durumu bir durumun adı olmalı.".into());
     }
@@ -555,7 +590,10 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
             return Some(format!("“{}” kalemlerde iki kez var.", p.of.label()));
         }
         if p.weight.is_none() && p.color.is_none() {
-            return Some(format!("“{}” kaleminin kalınlığı ya da rengi olmalı.", p.of.label()));
+            return Some(format!(
+                "“{}” kaleminin kalınlığı ya da rengi olmalı.",
+                p.of.label()
+            ));
         }
         if let Some(w) = p.weight
             && !(0.0..=MOST_PEN_WEIGHT).contains(&w)
@@ -569,7 +607,10 @@ pub fn recipe_problem(r: &ViewRecipe) -> Option<String> {
         }
     }
     if let Some(t) = &r.template {
-        if t.trim().is_empty() || t.chars().count() > MOST_VIEW_NAME || t.chars().any(char::is_control) {
+        if t.trim().is_empty()
+            || t.chars().count() > MOST_VIEW_NAME
+            || t.chars().any(char::is_control)
+        {
             return Some("Görünüş tarifinin şablonu bir şablonun kimliği ya da adı olmalı.".into());
         }
         if r.phase.is_some()
@@ -650,7 +691,10 @@ pub fn views_problem(views: &[NamedView]) -> Option<String> {
             return Some(format!("“{}” görünümünün kimliği tutmuyor.", v.name));
         }
         if views[..i].iter().any(|w| view_key(w) == view_key(v)) {
-            return Some(format!("“{}” görünümünün kimliği başka bir görünümünkiyle aynı.", v.name));
+            return Some(format!(
+                "“{}” görünümünün kimliği başka bir görünümünkiyle aynı.",
+                v.name
+            ));
         }
         if let Some(r) = &v.recipe
             && let Some(why) = recipe_problem(r)

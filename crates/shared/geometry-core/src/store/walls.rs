@@ -348,7 +348,10 @@ fn a_beam_is_drawn_dashed_by_the_view_and_snapped_to() {
     for (view, said) in [
         (View::new(Detail::Schematic, 200.0), vec![]),
         (View::new(Detail::Schematic, 100.0), vec!["K101".to_owned()]),
-        (View::new(Detail::Standard, 50.0), vec!["K101 25/50".to_owned()]),
+        (
+            View::new(Detail::Standard, 50.0),
+            vec!["K101 25/50".to_owned()],
+        ),
     ] {
         s.set_wall_view(view);
         assert_eq!(dashed(&s), [Some("dashed".to_owned())], "{view:?}");
@@ -357,7 +360,8 @@ fn a_beam_is_drawn_dashed_by_the_view_and_snapped_to() {
     // Its band's corner, 0.125 off its axis.
     let all = SnapKind::ALL.iter().fold(0, |k, s| k | s.bit());
     assert_eq!(
-        s.snap(Vec2::new(4.01, 0.13), 0.03, all, None).map(|h| (h.point, h.kind)),
+        s.snap(Vec2::new(4.01, 0.13), 0.03, all, None)
+            .map(|h| (h.point, h.kind)),
         Some((Vec2::new(4.0, 0.125), SnapKind::Endpoint))
     );
     // Picked on its edge.
@@ -381,7 +385,9 @@ fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
     let mut s = Store::new();
     s.set_wall_view(View::new(Detail::Standard, 50.0));
     let column = |x: f64, y: f64| {
-        format!(r#"[{{"id":3,"layerId":"a","kind":"column","at":{{"x":{x},"y":{y}}},"width":0.4,"depth":0.4}}]"#)
+        format!(
+            r#"[{{"id":3,"layerId":"a","kind":"column","at":{{"x":{x},"y":{y}}},"width":0.4,"depth":0.4}}]"#
+        )
     };
     s.put_json(
         r##"[{"id":1,"layerId":"a","kind":"wall","pts":[{"x":0,"y":0},{"x":4,"y":0}],"width":0.25,"justify":"center",
@@ -431,7 +437,8 @@ fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
     let (fills, drawn) = look(&s);
     assert_eq!(fills, [Some("#A6A6A6".to_owned())], "the shear wall's grey");
     assert!((drawn - 1.35).abs() < 1e-9, "{drawn}");
-    let strictly_in = |p: &Vec2| p.x > 3.8 + 1e-9 && p.x < 4.2 - 1e-9 && p.y > -0.2 + 1e-9 && p.y < 0.2 - 1e-9;
+    let strictly_in =
+        |p: &Vec2| p.x > 3.8 + 1e-9 && p.x < 4.2 - 1e-9 && p.y > -0.2 + 1e-9 && p.y < 0.2 - 1e-9;
     for id in [1.0, 2.0] {
         let x = s.get(id).unwrap().expanded.clone().unwrap();
         for sh in &x.shapes {
@@ -441,7 +448,10 @@ fn a_shear_wall_a_column_and_a_brick_wall_meet_as_one_section() {
                 Shape::Hatch { ring, .. } => ring.clone(),
                 _ => Vec::new(),
             };
-            assert!(!pts.iter().any(strictly_in), "wall {id} draws inside the column: {sh:?}");
+            assert!(
+                !pts.iter().any(strictly_in),
+                "wall {id} draws inside the column: {sh:?}"
+            );
         }
     }
     // The brick wall's two faces stop at the column's top face.
@@ -500,18 +510,30 @@ fn a_wall_its_openings_or_another_wall_change_is_named_as_drawn_anew() {
     .unwrap();
     s.set_hosts([(2.0, Some(1.0))]);
     assert_ne!(s.get(1.0).unwrap().expanded, whole, "the wall is cut");
-    assert!(s.redrawn_since(mark).expect("the list reaches back").contains(&1.0));
+    assert!(
+        s.redrawn_since(mark)
+            .expect("the list reaches back")
+            .contains(&1.0)
+    );
     // Taken off: the wall closes, named again.
     let mark = s.redraw_mark();
     s.remove(&[2.0]);
     assert_eq!(s.get(1.0).unwrap().expanded, whole, "the wall whole again");
-    assert!(s.redrawn_since(mark).expect("the list reaches back").contains(&1.0));
+    assert!(
+        s.redrawn_since(mark)
+            .expect("the list reaches back")
+            .contains(&1.0)
+    );
     // A wall joined at its end: the first wall's corner changes, and it is named.
     let mark = s.redraw_mark();
     s.put_json(r##"[{"id":3,"layerId":"duvar","kind":"wall","pts":[{"x":6,"y":0},{"x":6,"y":4}],"width":0.25,"justify":"center"}]"##)
         .unwrap();
     assert_ne!(s.get(1.0).unwrap().expanded, whole, "joined at its end");
-    assert!(s.redrawn_since(mark).expect("the list reaches back").contains(&1.0));
+    assert!(
+        s.redrawn_since(mark)
+            .expect("the list reaches back")
+            .contains(&1.0)
+    );
     // Nothing since now; a mark from another store's future: none.
     assert_eq!(s.redrawn_since(s.redraw_mark()), Some(&[][..]));
     assert_eq!(s.redrawn_since(s.redraw_mark() + 5), None);
@@ -520,7 +542,11 @@ fn a_wall_its_openings_or_another_wall_change_is_named_as_drawn_anew() {
         .unwrap();
     let mark = s.redraw_mark();
     s.set_font(crate::text::Font::from_id("arimo"));
-    assert!(s.redrawn_since(mark).expect("the list reaches back").contains(&4.0));
+    assert!(
+        s.redrawn_since(mark)
+            .expect("the list reaches back")
+            .contains(&4.0)
+    );
 }
 
 /// docs/adr/9224: another detail of the walls (a zoom across 1:30 or 1:75, docs/adr/0339 §4) draws a door and a
@@ -539,14 +565,23 @@ fn another_detail_names_every_object_drawn_for_it_as_drawn_anew() {
     let window = s.get(2.0).unwrap().expanded.clone();
     let mark = s.redraw_mark();
     s.set_wall_view(View::new(Detail::Detailed, 20.0));
-    assert_ne!(s.get(2.0).unwrap().expanded, window, "the window is drawn otherwise in detail");
+    assert_ne!(
+        s.get(2.0).unwrap().expanded,
+        window,
+        "the window is drawn otherwise in detail"
+    );
     let named = s.redrawn_since(mark).expect("the list reaches back");
-    assert!(named.contains(&1.0) && named.contains(&2.0), "the wall and its window: {named:?}");
-    assert!(!named.contains(&3.0), "a line does not follow the walls' view");
+    assert!(
+        named.contains(&1.0) && named.contains(&2.0),
+        "the wall and its window: {named:?}"
+    );
+    assert!(
+        !named.contains(&3.0),
+        "a line does not follow the walls' view"
+    );
     assert_eq!(s.following_view().collect::<Vec<_>>(), vec![1.0, 2.0]);
     // The same view again: nothing.
     let mark = s.redraw_mark();
     s.set_wall_view(View::new(Detail::Detailed, 20.0));
     assert_eq!(s.redrawn_since(mark), Some(&[][..]));
 }
-

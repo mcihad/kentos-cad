@@ -1,9 +1,9 @@
 //! An export's immutable document, context and image versions; later edits are excluded explicitly.
-use std::sync::Arc;
+use crate::{book::PlotError, source_images::SourceImages};
 use kentos_contracts::{SheetPublishPin, encoding::sha256_hex};
 use kentos_domain::Document;
 use serde_json::json;
-use crate::{book::PlotError, source_images::SourceImages};
+use std::sync::Arc;
 
 pub fn document_pin(doc: &Document) -> Result<SheetPublishPin, PlotError> {
     let mut snapshot = doc.to_snapshot_v2();

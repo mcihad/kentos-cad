@@ -63,7 +63,11 @@ impl Alignment {
     /// The place at a station; none off the alignment.
     pub fn at(&self, station: f64) -> Option<Located> {
         let i = self.element_at(station)?;
-        Some(located(&self.elements[i], i, station - self.elements[i].station))
+        Some(located(
+            &self.elements[i],
+            i,
+            station - self.elements[i].station,
+        ))
     }
 
     /// A point's station and offset.
@@ -81,7 +85,8 @@ impl Alignment {
                 if fl > 0.0 && fr < 0.0 {
                     let mut c = foot(next, i + 1, 0.0, p, true);
                     // The side by the mean direction.
-                    let mean = e.theta(e.length) + super::chain::wrap(next.theta0 - e.theta(e.length)) / 2.0;
+                    let mean = e.theta(e.length)
+                        + super::chain::wrap(next.theta0 - e.theta(e.length)) / 2.0;
                     c.offset = side(mean, end, p) * (p[0] - end[0]).hypot(p[1] - end[1]);
                     feet.push(c);
                 }
@@ -96,7 +101,9 @@ impl Alignment {
             }
         });
         // Feet found twice (a root at a join) once.
-        feet.dedup_by(|b, a| (a.at.station - b.at.station).abs() <= TIE && (a.offset - b.offset).abs() <= TIE);
+        feet.dedup_by(|b, a| {
+            (a.at.station - b.at.station).abs() <= TIE && (a.offset - b.offset).abs() <= TIE
+        });
         let beyond = if feet.is_empty() && !self.elements.is_empty() {
             let first = &self.elements[0];
             let last = self.elements.len() - 1;
@@ -105,7 +112,11 @@ impl Alignment {
             let b = foot(e, last, e.length, p, false);
             let da = (p[0] - a.at.x).hypot(p[1] - a.at.y);
             let db = (p[0] - b.at.x).hypot(p[1] - b.at.y);
-            Some(if da <= db { (End::Start, a) } else { (End::End, b) })
+            Some(if da <= db {
+                (End::Start, a)
+            } else {
+                (End::End, b)
+            })
         } else {
             None
         };
@@ -154,7 +165,11 @@ fn feet_on(e: &Element, p: [f64; 2]) -> Vec<f64> {
     match e.kind {
         Kind::Tangent => {
             let s = (p[0] - e.start[0]) * e.theta0.cos() + (p[1] - e.start[1]) * e.theta0.sin();
-            if (0.0..=l).contains(&s) { vec![s] } else { vec![] }
+            if (0.0..=l).contains(&s) {
+                vec![s]
+            } else {
+                vec![]
+            }
         }
         Kind::Arc => {
             let k = e.k0;
@@ -218,9 +233,14 @@ fn refine(e: &Element, p: [f64; 2], mut a: f64, mut b: f64, mut fa: f64) -> f64 
         }
         // f' = −1 + κ (p − P)·N.
         let th = e.theta(s);
-        let fp = -1.0 + e.curvature(s) * (-(p[0] - place[0]) * th.sin() + (p[1] - place[1]) * th.cos());
+        let fp =
+            -1.0 + e.curvature(s) * (-(p[0] - place[0]) * th.sin() + (p[1] - place[1]) * th.cos());
         let next = if fp != 0.0 { s - fv / fp } else { f64::NAN };
-        s = if next.is_finite() && next > a && next < b { next } else { 0.5 * (a + b) };
+        s = if next.is_finite() && next > a && next < b {
+            next
+        } else {
+            0.5 * (a + b)
+        };
     }
     s
 }

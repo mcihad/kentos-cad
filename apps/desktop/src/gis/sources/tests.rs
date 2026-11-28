@@ -136,7 +136,9 @@ fn rows(app: &App) -> Vec<String> {
             Line::Table {
                 relation, depth, ..
             } => format!("{}{}", "  ".repeat(depth), relation.name),
-            Line::Stored { at, meta, depth, .. } => format!("{}[proje {} · {meta}]", "  ".repeat(depth), at.name),
+            Line::Stored {
+                at, meta, depth, ..
+            } => format!("{}[proje {} · {meta}]", "  ".repeat(depth), at.name),
         })
         .collect()
 }
@@ -249,9 +251,10 @@ fn without_an_account_kentos_asks_to_sign_in() {
 
 /// The exchange cases' source drawing, as a project downloaded.
 fn downloaded() -> Arc<ProjectDrawing> {
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/exchange/v1/cases.json"))
-            .expect("the cases");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/exchange/v1/cases.json"
+    ))
+    .expect("the cases");
     let drawing: DocumentSnapshotV2 =
         serde_json::from_value(cases["drawings"]["theirs"].clone()).expect("a drawing");
     let mut counts = std::collections::HashMap::new();
@@ -435,15 +438,29 @@ fn a_table_is_taken_from_the_browser_as_a_copy_or_a_data_layer_and_gone_to() {
     app.exchange = None;
     // Veri katmanı olarak aç (docs/adr/9101 §2): no window; the table, read off the thread, becomes a data layer whose
     // rows stay in the file.
-    let task = app.update(Message::Gis(gis::Event::Sources(Event::OpenTable(origin.clone(), "parsel".into(), true))));
+    let task = app.update(Message::Gis(gis::Event::Sources(Event::OpenTable(
+        origin.clone(),
+        "parsel".into(),
+        true,
+    ))));
     assert!(window_kind(&app).is_none(), "no binding window");
     crate::files_testing::drive(&mut app, task);
     let layer = app
         .document
         .as_ref()
-        .and_then(|d| d.model.layers().leaves().into_iter().find(|n| n.data.as_ref().is_some_and(|t| t.table == "parsel")).cloned())
+        .and_then(|d| {
+            d.model
+                .layers()
+                .leaves()
+                .into_iter()
+                .find(|n| n.data.as_ref().is_some_and(|t| t.table == "parsel"))
+                .cloned()
+        })
         .unwrap_or_else(|| panic!("the data layer: {}", last_said(&app)));
-    assert_eq!(layer.data.as_ref().map(|d| d.address.clone()), Some(origin.path()));
+    assert_eq!(
+        layer.data.as_ref().map(|d| d.address.clone()),
+        Some(origin.path())
+    );
     // Katmana git: the layer chosen in Katmanlar.
     send(&mut app, Event::GoToLayer(layer.id.clone()));
     assert_eq!(app.selected_layer.as_deref(), Some(layer.id.as_str()));
@@ -506,7 +523,8 @@ fn the_search_keeps_the_rows_that_match_and_their_ancestors() {
     assert_eq!(
         all,
         [
-            "(1 satır eşleşti. Klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz.)".to_owned(),
+            "(1 satır eşleşti. Klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz.)"
+                .to_owned(),
             "▾ Klasörler".to_owned(),
             format!("  ▾ {name}"),
             "    kadastro.gpkg · GeoPackage".to_owned(),
@@ -518,7 +536,9 @@ fn the_search_keeps_the_rows_that_match_and_their_ancestors() {
     send(&mut app, Event::Search("böyle bir şey yok".into()));
     assert_eq!(
         rows(&app),
-        ["(Eşleşen satır yok. Hazır altlıklar ve kayıtlı bağlantılar kapalı dallarda da aranır; klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz.)"]
+        [
+            "(Eşleşen satır yok. Hazır altlıklar ve kayıtlı bağlantılar kapalı dallarda da aranır; klasörlerin ve sunucuların henüz açılmamış içeriği aranmaz.)"
+        ]
     );
     send(&mut app, Event::Search(String::new()));
     assert!(rows(&app).len() > 5);
@@ -531,13 +551,22 @@ fn the_search_keeps_the_rows_that_match_and_their_ancestors() {
 fn a_ready_base_map_is_found_in_closed_branches() {
     let mut app = app_with_drawing();
     let preset = kentos_services::presets::catalog().presets[0].name.clone();
-    assert!(!rows(&app).iter().any(|r| r.trim() == preset), "closed: not listed");
+    assert!(
+        !rows(&app).iter().any(|r| r.trim() == preset),
+        "closed: not listed"
+    );
     send(&mut app, Event::Search(preset.clone()));
     let all = rows(&app);
     assert!(all.iter().any(|r| r.trim() == preset), "{all:?}");
-    assert!(all.iter().any(|r| r.contains("Hazır altlıklar")), "its branch's path: {all:?}");
+    assert!(
+        all.iter().any(|r| r.contains("Hazır altlıklar")),
+        "its branch's path: {all:?}"
+    );
     send(&mut app, Event::Search(String::new()));
-    assert!(!rows(&app).iter().any(|r| r.trim() == preset), "closed again");
+    assert!(
+        !rows(&app).iter().any(|r| r.trim() == preset),
+        "closed again"
+    );
 }
 
 #[test]
@@ -872,25 +901,44 @@ fn a_project_kept_in_a_geopackage_is_listed_beside_its_tables_and_opens() {
         let doc = app.document.as_ref().expect("a drawing");
         kentos_kcad::encode_verified(&doc.model.to_snapshot_v2()).expect("encoded")
     };
-    kentos_native_application::project_store::write(&address, None, "Kadastro projesi", &bytes).expect("kept");
+    kentos_native_application::project_store::write(&address, None, "Kadastro projesi", &bytes)
+        .expect("kept");
     let origin = open_tables(&mut app, &dir);
     // Listed with the tables, as the off-thread read lists it.
     let list = kentos_native_application::project_store::list(&address, None).expect("listed");
-    send(&mut app, Event::StoredListed(super::stored_key(&address, None), list));
+    send(
+        &mut app,
+        Event::StoredListed(super::stored_key(&address, None), list),
+    );
     let all = rows(&app);
     let row = all
         .iter()
         .find(|r| r.contains("[proje Kadastro projesi · "))
         .unwrap_or_else(|| panic!("the project's row: {all:?}"));
-    assert!(row.starts_with("      "), "under the file, beside its tables: {row}");
+    assert!(
+        row.starts_with("      "),
+        "under the file, beside its tables: {row}"
+    );
     // The projects table is not listed as a table.
-    assert!(all.iter().all(|r| !r.contains("kentos_projects")), "{all:?}");
+    assert!(
+        all.iter().all(|r| !r.contains("kentos_projects")),
+        "{all:?}"
+    );
     let _ = origin;
     // A click opens it in a tab of its own.
-    let at = crate::document::StoredSource { address: address.clone(), schema: None, name: "Kadastro projesi".into() };
-    let task = app.update(Message::Gis(gis::Event::Sources(Event::OpenStored(Box::new(at)))));
+    let at = crate::document::StoredSource {
+        address: address.clone(),
+        schema: None,
+        name: "Kadastro projesi".into(),
+    };
+    let task = app.update(Message::Gis(gis::Event::Sources(Event::OpenStored(
+        Box::new(at),
+    ))));
     crate::files_testing::drive(&mut app, task);
     let doc = app.document.as_ref().expect("opened");
-    assert_eq!(doc.stored_source().map(|s| s.name.as_str()), Some("Kadastro projesi"));
+    assert_eq!(
+        doc.stored_source().map(|s| s.name.as_str()),
+        Some("Kadastro projesi")
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }

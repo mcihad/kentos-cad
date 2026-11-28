@@ -18,7 +18,9 @@ const GREY: [u8; 4] = [200, 200, 200, 255];
 
 /// Straight-alpha RGBA made premultiplied.
 fn premultiplied(rgba: &[u8]) -> Vec<u8> {
-    rgba.as_chunks::<4>().0.iter()
+    rgba.as_chunks::<4>()
+        .0
+        .iter()
         .flat_map(|p| {
             let a = u32::from(p[3]);
             let m = |c: u8| ((u32::from(c) * a + 127) / 255) as u8;
@@ -168,7 +170,8 @@ impl PictureTextures {
         match now {
             Some(bitmap) if bitmap.width > 0 && bitmap.height > 0 => {
                 let view = Arc::new(texture(device, queue, &bitmap));
-                self.views.insert(key.to_owned(), (view.clone(), Some(bitmap)));
+                self.views
+                    .insert(key.to_owned(), (view.clone(), Some(bitmap)));
                 view
             }
             _ => {

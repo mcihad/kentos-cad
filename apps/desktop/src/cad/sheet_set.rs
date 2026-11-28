@@ -5,11 +5,14 @@
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    AffectReason, BuildingSectionState, BuildingSectionsEdit, BuildingSectionsOperation, CommandResult,
-    ElevationState, ElevationsEdit, ElevationsOperation, OpeningTypesEdit, OpeningTypesOperation,
-    SheetDependencyState as Fresh, SheetsSet, SheetsSetResult,
+    AffectReason, BuildingSectionState, BuildingSectionsEdit, BuildingSectionsOperation,
+    CommandResult, ElevationState, ElevationsEdit, ElevationsOperation, OpeningTypesEdit,
+    OpeningTypesOperation, SheetDependencyState as Fresh, SheetsSet, SheetsSetResult,
 };
-use kentos_native_application::{ExecutionContext, elevations_edit, elevations_query, opening_types_edit, sections_edit, sections_query};
+use kentos_native_application::{
+    ExecutionContext, elevations_edit, elevations_query, opening_types_edit, sections_edit,
+    sections_query,
+};
 use kentos_ui::icon::icon;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
@@ -53,7 +56,8 @@ fn reason_words(r: AffectReason) -> &'static str {
 fn refreshed<T>(result: CommandResult<T>) -> Result<(), String> {
     match result {
         CommandResult::Completed { .. } => Ok(()),
-        CommandResult::Failed { error } | CommandResult::NeedsInput { error }
+        CommandResult::Failed { error }
+        | CommandResult::NeedsInput { error }
         | CommandResult::Conflict { error } => Err(error.message),
         _ => Err("Yenileme tamamlanamadı.".into()),
     }
@@ -121,28 +125,56 @@ impl App {
             Err(error) => failures.push(format!("{name} · {error}")),
         };
         for section in sections_query::rows(&doc.model) {
-            let Some(mark) = section.mark.filter(|_| section.state == BuildingSectionState::Stale) else {
+            let Some(mark) = section
+                .mark
+                .filter(|_| section.state == BuildingSectionState::Stale)
+            else {
                 continue;
             };
-            let result = sections_edit::execute(&mut ExecutionContext::new(&mut doc.model), BuildingSectionsEdit {
-                operation: BuildingSectionsOperation::Refresh { mark }, expected_revision: None,
-            });
+            let result = sections_edit::execute(
+                &mut ExecutionContext::new(&mut doc.model),
+                BuildingSectionsEdit {
+                    operation: BuildingSectionsOperation::Refresh { mark },
+                    expected_revision: None,
+                },
+            );
             record(&section.name, refreshed(result));
         }
-        if let CommandResult::Completed { output, .. } = elevations_query::execute_in(&doc.model, &Default::default()) {
+        if let CommandResult::Completed { output, .. } =
+            elevations_query::execute_in(&doc.model, &Default::default())
+        {
             for current in output.elevations {
-                if current.state != ElevationState::Stale || !current.edited.is_empty()
-                    || !elevations_query::supports_batch_refresh(&doc.model, &current.layer) { continue }
-                let result = elevations_edit::execute(&mut ExecutionContext::new(&mut doc.model), ElevationsEdit {
-                    operation: ElevationsOperation::Refresh { layer: current.layer }, expected_revision: None,
-                });
+                if current.state != ElevationState::Stale
+                    || !current.edited.is_empty()
+                    || !elevations_query::supports_batch_refresh(&doc.model, &current.layer)
+                {
+                    continue;
+                }
+                let result = elevations_edit::execute(
+                    &mut ExecutionContext::new(&mut doc.model),
+                    ElevationsEdit {
+                        operation: ElevationsOperation::Refresh {
+                            layer: current.layer,
+                        },
+                        expected_revision: None,
+                    },
+                );
                 record(&current.name, refreshed(result));
             }
         }
-        if doc.model.block(JOINERY_LIST_ID).is_some_and(|kept| *kept != doc.model.joinery_list_block()) {
-            let result = opening_types_edit::execute(&mut ExecutionContext::new(&mut doc.model), OpeningTypesEdit {
-                operation: OpeningTypesOperation::RefreshList {}, on_refused: Default::default(), expected_revision: None,
-            });
+        if doc
+            .model
+            .block(JOINERY_LIST_ID)
+            .is_some_and(|kept| *kept != doc.model.joinery_list_block())
+        {
+            let result = opening_types_edit::execute(
+                &mut ExecutionContext::new(&mut doc.model),
+                OpeningTypesEdit {
+                    operation: OpeningTypesOperation::RefreshList {},
+                    on_refused: Default::default(),
+                    expected_revision: None,
+                },
+            );
             record("Doğrama listesi", refreshed(result));
         }
         doc.model.end_group(group);
@@ -150,7 +182,10 @@ impl App {
         for error in failures {
             self.warn(error);
         }
-        self.say(kentos_interaction::Level::Info, format!("{changed} çizim çıktısı yenilendi."));
+        self.say(
+            kentos_interaction::Level::Info,
+            format!("{changed} çizim çıktısı yenilendi."),
+        );
     }
 
     pub(crate) fn sheet_set_view(&self) -> Element<'_, Message> {
@@ -208,14 +243,24 @@ impl App {
                     Fresh::Edited => "Elle düzenlendi · toplu yenilemede atlanır",
                     Fresh::Legacy => "Eski üretim kaydı · tek tek yenileyin",
                 };
-                let code = |s: &Option<String>| s.as_ref().map_or_else(|| "—".into(), |s| s.chars().take(8).collect::<String>());
+                let code = |s: &Option<String>| {
+                    s.as_ref()
+                        .map_or_else(|| "—".into(), |s| s.chars().take(8).collect::<String>())
+                };
                 let source = kentos_domain::Uuid::parse_str(&drawing.source).map_or_else(
                     |_| drawing.source.clone(),
                     |id| format!("{:.8}…{}", drawing.source, &id.to_string()[28..]),
                 );
-                list = list.push(Column::new().spacing(2)
-                    .push(label::body(format!("{} · {standing}", drawing.name)))
-                    .push(label::caption(format!("Kaynak {source} · Üretim {} · Model {}", code(&drawing.generated), code(&drawing.model)))));
+                list = list.push(
+                    Column::new()
+                        .spacing(2)
+                        .push(label::body(format!("{} · {standing}", drawing.name)))
+                        .push(label::caption(format!(
+                            "Kaynak {source} · Üretim {} · Model {}",
+                            code(&drawing.generated),
+                            code(&drawing.model)
+                        ))),
+                );
             }
         }
         for series in &w.set.series {
@@ -256,8 +301,13 @@ impl App {
                     .push(label::caption(frames));
                 for output in dependencies.iter().filter(|d| d.sheets.contains(&s.id)) {
                     text = text.push(match output.state {
-                        Fresh::Current => label::caption(format!("Güncel · {}", output.name)).into(),
-                        Fresh::Stale => words::text_line(Kind::Warn, format!("Yenileme bekliyor · {}", output.name)),
+                        Fresh::Current => {
+                            label::caption(format!("Güncel · {}", output.name)).into()
+                        }
+                        Fresh::Stale => words::text_line(
+                            Kind::Warn,
+                            format!("Yenileme bekliyor · {}", output.name),
+                        ),
                         _ => words::text_line(Kind::Warn, format!("İnceleyin · {}", output.name)),
                     });
                 }
@@ -311,7 +361,10 @@ impl App {
         let rebuild = dependencies.iter().any(|d| d.state == Fresh::Stale);
         Frame::new(TITLE)
             .push(body)
-            .action(words::secondary("Eski çıktıları yenile", rebuild.then(|| msg(Event::RefreshDrawings))))
+            .action(words::secondary(
+                "Eski çıktıları yenile",
+                rebuild.then(|| msg(Event::RefreshDrawings)),
+            ))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(760.0)
             .modal(msg(Event::Close))

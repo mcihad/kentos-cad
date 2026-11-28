@@ -60,21 +60,27 @@ fn push<'a>(out: &mut Vec<Coord>, pts: impl Iterator<Item = &'a Coord>) {
 }
 
 /// A geometry's positions for `vertices`, or the word of what it is when a position file has no line for it.
-fn positions(g: &Geometry, vertices: XyzVertices, middles: &mut u32) -> Result<Vec<Coord>, &'static str> {
+fn positions(
+    g: &Geometry,
+    vertices: XyzVertices,
+    middles: &mut u32,
+) -> Result<Vec<Coord>, &'static str> {
     let mut out = Vec::new();
     match (vertices, g) {
         (_, Geometry::Point(p)) => out.extend(p.iter().copied()),
         (_, Geometry::MultiPoint(p)) => out.extend(p.iter().copied()),
         (XyzVertices::Points, Geometry::Curve(_) | Geometry::MultiCurve(_)) => return Err("çizgi"),
-        (XyzVertices::Points, Geometry::Polygon(_) | Geometry::MultiPolygon(_)) => return Err("alan"),
+        (XyzVertices::Points, Geometry::Polygon(_) | Geometry::MultiPolygon(_)) => {
+            return Err("alan");
+        }
         (XyzVertices::Points, Geometry::Collection(_)) => return Err("başka nesne"),
         (XyzVertices::All, Geometry::Curve(c)) => curve_vertices(c, &mut out, middles),
         (XyzVertices::All, Geometry::MultiCurve(cs)) => {
             cs.iter().for_each(|c| curve_vertices(c, &mut out, middles))
         }
-        (XyzVertices::All, Geometry::Polygon(rings)) => {
-            rings.iter().for_each(|c| curve_vertices(c, &mut out, middles))
-        }
+        (XyzVertices::All, Geometry::Polygon(rings)) => rings
+            .iter()
+            .for_each(|c| curve_vertices(c, &mut out, middles)),
         (XyzVertices::All, Geometry::MultiPolygon(polys)) => polys
             .iter()
             .flatten()
@@ -226,7 +232,9 @@ fn export_all(doc: &Document, input: &ExportXyz) -> Result<Made, (String, String
         lost.insert(format!("{skipped_z} kotsuz konum yazılmadı"));
     }
     if middles > 0 {
-        lost.insert(format!("{middles} yayın orta noktası köşe olmadığından yazılmadı"));
+        lost.insert(format!(
+            "{middles} yayın orta noktası köşe olmadığından yazılmadı"
+        ));
     }
     if chords > 0 {
         lost.insert(format!(
@@ -246,5 +254,9 @@ fn export_all(doc: &Document, input: &ExportXyz) -> Result<Made, (String, String
         left,
         lost: lost.into_iter().collect(),
     };
-    Ok(Made { bytes, output, time_left_out: 0 })
+    Ok(Made {
+        bytes,
+        output,
+        time_left_out: 0,
+    })
 }

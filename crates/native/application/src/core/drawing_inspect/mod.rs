@@ -33,7 +33,10 @@ impl Budget {
             return Err(Stop::Cancelled);
         }
         // The clock is read once every 1024 steps: a step is a comparison, far shorter than a reading's cost.
-        let late = self.work.is_multiple_of(1024) && self.deadline.is_some_and(|d| std::time::Instant::now() >= d);
+        let late = self.work.is_multiple_of(1024)
+            && self
+                .deadline
+                .is_some_and(|d| std::time::Instant::now() >= d);
         if self.work >= WORK_MAX || late || (self.cut && self.deadline.is_some()) {
             self.cut = true;
             return Ok(false);
@@ -148,17 +151,13 @@ fn hatch(
     stopped: &mut impl FnMut() -> bool,
 ) -> Result<(), Stop> {
     let mut sources = BTreeSet::new();
-    for source in h
-        .assoc
-        .iter()
-        .flat_map(|a| {
-            a.outer
-                .iter()
-                .chain(a.bounds.iter())
-                .chain(a.islands.iter())
-                .chain(a.cutouts.iter())
-        })
-    {
+    for source in h.assoc.iter().flat_map(|a| {
+        a.outer
+            .iter()
+            .chain(a.bounds.iter())
+            .chain(a.islands.iter())
+            .chain(a.cutouts.iter())
+    }) {
         if !budget.tick(stopped)? {
             return Ok(());
         }
@@ -172,7 +171,9 @@ fn hatch(
     let state = if h.assoc.is_none() {
         HatchLinkState::Unassociated
     } else if missing.is_empty()
-        && h.assoc.as_ref().is_some_and(|a| a.outer.is_some() || !a.bounds.is_empty())
+        && h.assoc
+            .as_ref()
+            .is_some_and(|a| a.outer.is_some() || !a.bounds.is_empty())
         && !h.assoc.as_ref().is_some_and(|a| {
             a.outer.is_some_and(|id| {
                 doc.slot_of(Uuid::from_bytes(id.0))
@@ -190,16 +191,21 @@ fn hatch(
         push(out, InspectionFinding {group:InspectionGroup::Hatches,severity:InspectionSeverity::Warning,code:"hatch_missing_source".into(),uids:vec![uid.to_string()],points:vec![at],message:if missing.is_empty() {"Kaynak sınır eksik veya açık; taramanın kayıtlı geometrisi korunuyor.".into()} else {format!("{} sınır/ada/yazı kaynağı çizimde yok; taramanın kayıtlı geometrisi korunuyor.",missing.len())},repair:"Taramayı düzenle → Sınırı yeniden seç veya Sınırı yeniden oluştur; uygulanmadan önce sonucu inceleyin.".into(),distance:None},limit);
     }
     if state == HatchLinkState::Unassociated {
-        push(out, InspectionFinding {
-            group: InspectionGroup::Hatches,
-            severity: InspectionSeverity::Info,
-            code: "hatch_unassociated".into(),
-            uids: vec![uid.to_string()],
-            points: vec![at],
-            message: "Taramanın sınır bağı yok; mevcut geometri sabit kalır.".into(),
-            repair: "İstenirse Taramayı düzenle ile sınırı yeniden seçin veya oluşturun.".into(),
-            distance: None,
-        }, limit);
+        push(
+            out,
+            InspectionFinding {
+                group: InspectionGroup::Hatches,
+                severity: InspectionSeverity::Info,
+                code: "hatch_unassociated".into(),
+                uids: vec![uid.to_string()],
+                points: vec![at],
+                message: "Taramanın sınır bağı yok; mevcut geometri sabit kalır.".into(),
+                repair: "İstenirse Taramayı düzenle ile sınırı yeniden seçin veya oluşturun."
+                    .into(),
+                distance: None,
+            },
+            limit,
+        );
     }
     out.hatches.push(HatchInspection {
         uid: uid.to_string(),
@@ -258,14 +264,26 @@ fn run(
             hatch(doc, uid, h, &mut out, limit, &mut budget, &mut stopped)?;
         }
         if check_group(input, InspectionGroup::Annotations) {
-            if !annotations.visit(doc,uid,e,input.include_hidden, |finding| {
-                if !budget.tick(&mut stopped)? {return Ok(false);}
-                if let Some(finding) = finding {push(&mut out,finding,limit);}
+            if !annotations.visit(doc, uid, e, input.include_hidden, |finding| {
+                if !budget.tick(&mut stopped)? {
+                    return Ok(false);
+                }
+                if let Some(finding) = finding {
+                    push(&mut out, finding, limit);
+                }
                 Ok(true)
-            })? {break;}
+            })? {
+                break;
+            }
             if let Entity::Dimension(d) = e {
-                let read = crate::dimensions_query::read(&kentos_project::format::Format::of(doc.settings()), uid, d);
-                if read.measured.is_finite() { out.dimensions.push(read); }
+                let read = crate::dimensions_query::read(
+                    &kentos_project::format::Format::of(doc.settings()),
+                    uid,
+                    d,
+                );
+                if read.measured.is_finite() {
+                    out.dimensions.push(read);
+                }
             }
         }
         if check_group(input, InspectionGroup::Boundaries) {

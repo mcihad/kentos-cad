@@ -285,7 +285,11 @@ mod tests {
             { "id": "0", "type": "shape", "shape": "triangle", "size": 5.0, "fill": "ink", "anchor": "bottom" },
         ] });
         let p = preview(&pin, None, (64.0, 36.0), None, &palette(), &library).expect("builds");
-        assert!((p.px_per_mm - 36.0 * 0.4 / 5.0).abs() < 1e-9, "{}", p.px_per_mm);
+        assert!(
+            (p.px_per_mm - 36.0 * 0.4 / 5.0).abs() < 1e-9,
+            "{}",
+            p.px_per_mm
+        );
     }
 
     #[test]

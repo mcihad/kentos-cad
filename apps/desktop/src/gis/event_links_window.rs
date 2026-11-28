@@ -414,21 +414,21 @@ impl App {
                 .height(typography::scaled(330.0))
                 .into(),
         };
-        let body = column![
-            row![container(left).width(240), container(right).width(Fill)].spacing(16),
-        ]
-        .spacing(14);
+        let body =
+            column![row![container(left).width(240), container(right).width(Fill)].spacing(16),]
+                .spacing(14);
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
         let footer = row![
-                words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
-                space::horizontal().width(Fill),
-                words::secondary(CANCEL, Some(msg(Event::Cancel))),
-                words::primary(SAVE, Some(msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(Center);
+            words::ghost(REMOVE, w.chosen.map(|_| msg(Event::Remove))),
+            space::horizontal().width(Fill),
+            words::secondary(CANCEL, Some(msg(Event::Cancel))),
+            words::primary(SAVE, Some(msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(Center);
         Frame::new(TITLE)
-            .scroll(body).footer(footer)
+            .scroll(body)
+            .footer(footer)
             .width(720.0)
             .modal(msg(Event::Cancel))
     }

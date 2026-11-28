@@ -10,7 +10,10 @@ use crate::codes;
 use crate::road_corridors as common;
 use crate::road_terrains::fail;
 
-fn answer(doc: &kentos_domain::Document, input: &CorridorsQuery) -> Result<(CorridorsQueried, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &kentos_domain::Document,
+    input: &CorridorsQuery,
+) -> Result<(CorridorsQueried, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let own = doc.road_corridors();
     let Some(name) = input.corridor.as_deref() else {
@@ -32,18 +35,37 @@ fn answer(doc: &kentos_domain::Document, input: &CorridorsQuery) -> Result<(Corr
                 Err(stop) => corridors.push(common::broken(doc, c, common::words(stop))),
             }
         }
-        return Ok((CorridorsQueried { corridors, triangles: vec![] }, warnings));
+        return Ok((
+            CorridorsQueried {
+                corridors,
+                triangles: vec![],
+            },
+            warnings,
+        ));
     };
     let (_, def) = common::find(own, name, "corridor")?;
     let m = common::make(doc, def, input.points)?;
-    let triangles = if input.triangles { m.built.triangles } else { Vec::new() };
-    Ok((CorridorsQueried { corridors: vec![m.report], triangles }, m.warnings))
+    let triangles = if input.triangles {
+        m.built.triangles
+    } else {
+        Vec::new()
+    };
+    Ok((
+        CorridorsQueried {
+            corridors: vec![m.report],
+            triangles,
+        },
+        m.warnings,
+    ))
 }
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &CorridorsQuery) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -57,6 +79,9 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CorridorsQuery) -> CommandResult<
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: CorridorsQuery) -> CommandResult<CorridorsQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CorridorsQuery,
+) -> CommandResult<CorridorsQueried> {
     plan(cx, &input)
 }

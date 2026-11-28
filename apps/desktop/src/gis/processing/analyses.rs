@@ -52,7 +52,9 @@ impl App {
         let values: std::collections::BTreeMap<String, serde_json::Value> =
             values.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
         if self.with_tool(|s, cx| s.reopen(&values, cx)) != Some(true) {
-            self.warn(format!("“{tool_id}” bu kaydı yeniden açamıyor; aracı kendiniz başlatın."));
+            self.warn(format!(
+                "“{tool_id}” bu kaydı yeniden açamıyor; aracı kendiniz başlatın."
+            ));
         }
         task
     }

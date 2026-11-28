@@ -189,7 +189,10 @@ fn with_continue_the_stopped_row_is_shown_with_its_reason_and_the_others_are_wri
     );
     event(&mut app, Event::Value("field".into(), json!("Ağaç sayısı")));
     batch_event(&mut app, batch::Event::Open);
-    assert_eq!(state(&app).table.on_error, kentos_commands::BatchOnError::Stop);
+    assert_eq!(
+        state(&app).table.on_error,
+        kentos_commands::BatchOnError::Stop
+    );
     batch_event(&mut app, batch::Event::RemoveColumn(0));
     batch_event(&mut app, batch::Event::AddColumn("value".into()));
     batch_event(&mut app, batch::Event::AddRow);
@@ -332,10 +335,7 @@ fn screens() {
                         if name == "devam" {
                             batch_event(&mut app, batch::Event::AddRow);
                             type_cell(&mut app, 3, 0, "9");
-                            batch_event(
-                                &mut app,
-                                batch::Event::OnError(batch::OnError::Continue),
-                            );
+                            batch_event(&mut app, batch::Event::OnError(batch::OnError::Continue));
                         }
                         batch_event(&mut app, batch::Event::Run);
                         finish(&mut app);
@@ -378,8 +378,13 @@ fn a_cell_that_cannot_be_read_is_said_as_it_is_typed() {
     assert_eq!(problems[0].row, 1);
     let line = format!("Satır 2: {}", problems[0].message);
     let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-    shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
-    assert!(crate::files_testing::find_text(&mut shot, &app, &line).is_some(), "{line}");
+    shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+        drop(app.update(m))
+    });
+    assert!(
+        crate::files_testing::find_text(&mut shot, &app, &line).is_some(),
+        "{line}"
+    );
     crate::files_testing::evidence(&mut shot, &app, "cbs-kullanim", "gis-061-toplu-hucre");
     type_cell(&mut app, 1, 0, "5");
     let doc = &app.document.as_ref().expect("open").model;

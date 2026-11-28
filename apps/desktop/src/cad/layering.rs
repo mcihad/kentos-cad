@@ -192,12 +192,14 @@ impl App {
         // programs do; a CAD drawing keeps the double click, its layers being chosen far more often than drawn on.
         let gis_layer = self.document.as_ref().is_some_and(|d| {
             d.settings().project_type() == Some(kentos_commands::Workspace::Gis)
-                && d.model
-                    .layers()
-                    .get(&id)
-                    .is_some_and(|n| n.kind == kentos_commands::LayerNodeType::Layer && n.service.is_none())
+                && d.model.layers().get(&id).is_some_and(|n| {
+                    n.kind == kentos_commands::LayerNodeType::Layer && n.service.is_none()
+                })
         });
-        let active = self.document.as_ref().is_some_and(|d| d.model.layers().active() == id);
+        let active = self
+            .document
+            .as_ref()
+            .is_some_and(|d| d.model.layers().active() == id);
         if double || (gis_layer && !active) {
             self.activate_row(&id);
         }
@@ -485,14 +487,21 @@ impl App {
     /// the view history like any navigation (docs/adr/0141). A layer with no
     /// objects has nothing to show: the menu offers it dimmed.
     pub(crate) fn zoom_to_layer(&mut self, id: &str) {
-        let Some(node) = self.document.as_ref().and_then(|d| d.model.layers().get(id).cloned()) else {
+        let Some(node) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(id).cloned())
+        else {
             return;
         };
         // A data layer, or a group of them, frames its tables' boxes as their sources say them now (docs/adr/9101 §5,
         // 9327): rows written since the layer was added are in them.
         let boxes = self.data_boxes_below(&node);
         // No box yet (T16): a box being read is waited for, a table without rows or geometry said.
-        if boxes.is_empty() && !self.data_layers_below(&node).is_empty() && self.objects_below(&node) == 0 {
+        if boxes.is_empty()
+            && !self.data_layers_below(&node).is_empty()
+            && self.objects_below(&node) == 0
+        {
             self.zoom_without_box(&node);
             return;
         }
@@ -706,7 +715,11 @@ impl App {
     pub(crate) fn zoom_layer_target(&self) -> Option<String> {
         let doc = self.document.as_ref()?;
         let layers = doc.model.layers();
-        let id = self.selected_layer.as_deref().filter(|id| layers.get(id).is_some()).unwrap_or(layers.active());
+        let id = self
+            .selected_layer
+            .as_deref()
+            .filter(|id| layers.get(id).is_some())
+            .unwrap_or(layers.active());
         let node = layers.get(id)?;
         (self.objects_below(node) > 0 || self.data_box_below(node)).then(|| id.to_owned())
     }
@@ -834,8 +847,11 @@ impl App {
                         .iter()
                         .fold(Menu::new().header("Yeni katman"), |m, (id, g)| {
                             let window = *g != kentos_commands::LayerGeometry::Annotation;
-                            m.item(format!("{} katmanı{}", g.label(), if window { "…" } else { "" }), Message::Run(id))
-                                .icon(crate::layer_types::glyph(Some(*g)))
+                            m.item(
+                                format!("{} katmanı{}", g.label(), if window { "…" } else { "" }),
+                                Message::Run(id),
+                            )
+                            .icon(crate::layer_types::glyph(Some(*g)))
                         })
                         .separator()
                         .item("Karışık katman", Message::Run("layer.new"))
@@ -991,7 +1007,12 @@ pub(crate) fn union(boxes: &[[f64; 4]]) -> Option<[f64; 4]> {
     let mut it = boxes.iter();
     let first = *it.next()?;
     Some(it.fold(first, |a, b| {
-        [a[0].min(b[0]), a[1].min(b[1]), a[2].max(b[2]), a[3].max(b[3])]
+        [
+            a[0].min(b[0]),
+            a[1].min(b[1]),
+            a[2].max(b[2]),
+            a[3].max(b[3]),
+        ]
     }))
 }
 

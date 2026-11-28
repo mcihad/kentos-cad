@@ -195,9 +195,10 @@ mod tests {
     use serde_json::{Value, json};
 
     fn drawing(prefix: u16, xs: &[f64], keys: &[&str]) -> Document {
-        let mut value: Value =
-            serde_json::from_str(include_str!("../../../../../../fixtures/kcad/v2/sheets.json"))
-                .unwrap();
+        let mut value: Value = serde_json::from_str(include_str!(
+            "../../../../../../fixtures/kcad/v2/sheets.json"
+        ))
+        .unwrap();
         value["sheets"] = Value::Null;
         value["entities"] = json!(xs.iter().enumerate().map(|(i, x)| json!({
             "kind":"line", "id":i+1, "layerId":"0", "attrs":{"handle":keys.get(i).unwrap_or(&"")},

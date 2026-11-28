@@ -51,7 +51,17 @@ fn covering_thickness_shows_the_same_editable_dimension_in_panel_and_prompt() {
         let f = b.run(|_, cx| cx.format());
         let rows = b.session.settings(&f);
         let field = &rows.iter().find(|r| r.key == "E").unwrap().value;
-        assert_eq!(b.session.prompt().options.iter().find(|o| o.key == "E").unwrap().value.as_ref(), Some(field));
+        assert_eq!(
+            b.session
+                .prompt()
+                .options
+                .iter()
+                .find(|o| o.key == "E")
+                .unwrap()
+                .value
+                .as_ref(),
+            Some(field)
+        );
         assert_eq!(b.run(|_, cx| cx.typed_length(field)), Some(0.0125));
         assert!(b.run(|s, cx| s.configure("E", field, cx)));
     }
@@ -61,7 +71,13 @@ fn covering_thickness_shows_the_same_editable_dimension_in_panel_and_prompt() {
 fn the_covering_tool_draws_a_ceiling_and_a_floor_covering() {
     let mut b = bench();
     assert_eq!(b.session.tool_id(), "covering");
-    let chips: Vec<String> = b.session.prompt().options.iter().map(|o| o.label.to_string()).collect();
+    let chips: Vec<String> = b
+        .session
+        .prompt()
+        .options
+        .iter()
+        .map(|o| o.label.to_string())
+        .collect();
     for c in ["Sınır", "Tip", "Kalınlık", "Kot farkı", "Malzeme"] {
         assert!(chips.iter().any(|x| x == c), "{c} in {chips:?}");
     }
@@ -79,9 +95,20 @@ fn the_covering_tool_draws_a_ceiling_and_a_floor_covering() {
     assert_eq!(s.slab.covering, Some(kentos_commands::Covering::ceiling()));
     assert_eq!((s.slab.thickness, s.slab.offset), (0.0125, 2.6));
     assert_eq!(s.slab.material.as_deref(), Some("Alçıpan"));
-    let pts: Vec<(f64, f64)> = s.slab.parts[0].outer.pts.iter().map(|p| (p.x - E, p.y - N)).collect();
+    let pts: Vec<(f64, f64)> = s.slab.parts[0]
+        .outer
+        .pts
+        .iter()
+        .map(|p| (p.x - E, p.y - N))
+        .collect();
     assert_eq!(pts, [(0.0, 0.0), (4.0, 0.0), (4.0, 3.0)]);
-    assert_eq!(b.doc.layers().get(&s.base.layer_id).map(|l| l.name.as_str()), Some("MM-ASTV-GENEL"));
+    assert_eq!(
+        b.doc
+            .layers()
+            .get(&s.base.layer_id)
+            .map(|l| l.name.as_str()),
+        Some("MM-ASTV-GENEL")
+    );
     // A floor covering: 2 cm until changed, on EK-2's Zemin Kaplama; a nought thickness refused.
     assert!(b.run(|s, cx| s.configure("P", "FLOORING", cx)));
     assert!(!b.run(|s, cx| s.configure("E", "0", cx)));
@@ -93,8 +120,21 @@ fn the_covering_tool_draws_a_ceiling_and_a_floor_covering() {
     let Entity::Slab(s) = b.newest().clone() else {
         panic!("a slab")
     };
-    assert_eq!(s.slab.covering.as_ref().map(|c| c.predefined.as_str()), Some("FLOORING"));
-    assert_eq!((s.slab.thickness, s.slab.offset), (0.02, 0.02), "on its floor, its top its thickness over it");
-    assert_eq!(b.doc.layers().get(&s.base.layer_id).map(|l| l.name.as_str()), Some("MM-ZMNK-GENEL"));
+    assert_eq!(
+        s.slab.covering.as_ref().map(|c| c.predefined.as_str()),
+        Some("FLOORING")
+    );
+    assert_eq!(
+        (s.slab.thickness, s.slab.offset),
+        (0.02, 0.02),
+        "on its floor, its top its thickness over it"
+    );
+    assert_eq!(
+        b.doc
+            .layers()
+            .get(&s.base.layer_id)
+            .map(|l| l.name.as_str()),
+        Some("MM-ZMNK-GENEL")
+    );
     assert_eq!(b.session.tool_id(), "covering");
 }

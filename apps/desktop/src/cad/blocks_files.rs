@@ -247,7 +247,10 @@ impl App {
             ));
         }
         words.push_str("; geri almak için ⌘Z/Ctrl+Z.");
-        self.say(Level::Info, crate::keys::shown(&words.replace("⌘Z/Ctrl+Z", "Ctrl+Z")));
+        self.say(
+            Level::Info,
+            crate::keys::shown(&words.replace("⌘Z/Ctrl+Z", "Ctrl+Z")),
+        );
     }
 
     /// Sabit bloğa çevir (docs/adr/0319 §4): the selected dynamic blocks' inserts made inserts of plain blocks drawing

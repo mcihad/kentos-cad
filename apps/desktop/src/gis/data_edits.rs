@@ -11,10 +11,10 @@ use std::collections::{BTreeMap, HashSet};
 
 use iced::{Element, Task};
 use kentos_commands::{CommandResult, Entity, LayersSession, LayersSessionDone, SessionAction};
-use serde::{Deserialize, Serialize};
 use kentos_native_application::ExecutionContext;
 use kentos_native_application::data_write::{self, LayerWrites, WriteFailure};
 use kentos_native_application::layers_session;
+use serde::{Deserialize, Serialize};
 
 use crate::app::{App, Dialog, Message, Then};
 
@@ -90,12 +90,26 @@ impl Uncertain {
             .map(|w| Sent {
                 layer: w.layer.clone(),
                 table: w.data.table.clone(),
-                added: w.changes.added.iter().map(|(u, e)| (u.to_string(), (**e).clone())).collect(),
-                changed: w.changes.changed.iter().map(|c| (c.uid.to_string(), (*c.now).clone())).collect(),
+                added: w
+                    .changes
+                    .added
+                    .iter()
+                    .map(|(u, e)| (u.to_string(), (**e).clone()))
+                    .collect(),
+                changed: w
+                    .changes
+                    .changed
+                    .iter()
+                    .map(|c| (c.uid.to_string(), (*c.now).clone()))
+                    .collect(),
                 deleted: w.changes.deleted.clone(),
             })
             .collect();
-        Self { receipt, words, sent }
+        Self {
+            receipt,
+            words,
+            sent,
+        }
     }
 
     pub(crate) fn layers(&self) -> Vec<String> {
@@ -118,8 +132,19 @@ impl Uncertain {
                         Some((u, std::sync::Arc::new(e.clone()), key))
                     })
                     .collect();
-                let changed = s.changed.iter().filter_map(|(u, e)| Some((uid(u)?, std::sync::Arc::new(e.clone())))).collect();
-                (s.layer.clone(), kentos_domain::DataWritten { added, changed, deleted: s.deleted.clone() })
+                let changed = s
+                    .changed
+                    .iter()
+                    .filter_map(|(u, e)| Some((uid(u)?, std::sync::Arc::new(e.clone()))))
+                    .collect();
+                (
+                    s.layer.clone(),
+                    kentos_domain::DataWritten {
+                        added,
+                        changed,
+                        deleted: s.deleted.clone(),
+                    },
+                )
             })
             .collect()
     }
@@ -185,7 +210,11 @@ pub enum Event {
     Unsure(Vec<String>, Box<Uncertain>),
     /// The source asked by an uncertain write's receipt: its new rows' keys when it committed, none when it did not, or
     /// why it could not be asked.
-    Asked(Vec<String>, Box<Uncertain>, Box<Result<Option<data_write::ReceiptKeys>, String>>),
+    Asked(
+        Vec<String>,
+        Box<Uncertain>,
+        Box<Result<Option<data_write::ReceiptKeys>, String>>,
+    ),
     /// Yeniden gönder: an uncertain write without a receipt sent again, the owner having looked at the source.
     Resend(Vec<String>),
     /// The conflict's question closed without writing.
@@ -210,7 +239,8 @@ pub(crate) fn event(e: Event) -> Message {
 /// Projeyi kaydet writes the project file; Kaynağa yaz writes the rows to their source.
 pub(crate) const PREPARE: &str = "Uygula";
 /// Beside a data layer's form's Uygula: where the change goes, and how it reaches the source.
-pub(crate) const PREPARE_NOTE: &str = "Değişiklik katmanda bekler. Veri kaynağına yazmak için Kaynağa yaz'ı kullanın.";
+pub(crate) const PREPARE_NOTE: &str =
+    "Değişiklik katmanda bekler. Veri kaynağına yazmak için Kaynağa yaz'ı kullanın.";
 pub(crate) const WRITE: &str = "Kaynağa yaz";
 
 /// “1 yeni, 2 değişen, 1 silinen satır”: what a layer writes, its zero counts left out.
@@ -229,7 +259,11 @@ pub(crate) fn counts_words(added: usize, changed: usize, deleted: usize) -> Stri
 
 impl App {
     /// `cad.layers.session` on the open drawing; its refusal's sentence.
-    pub(crate) fn data_session(&mut self, action: SessionAction, layers: Vec<String>) -> Result<LayersSessionDone, String> {
+    pub(crate) fn data_session(
+        &mut self,
+        action: SessionAction,
+        layers: Vec<String>,
+    ) -> Result<LayersSessionDone, String> {
         let Some(doc) = self.document.as_mut() else {
             return Err("Açık çizim yok.".into());
         };
@@ -242,9 +276,9 @@ impl App {
         };
         match layers_session::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => Err(error.message),
             _ => Err("Düzenleme oturumu değişmedi.".into()),
         }
     }
@@ -331,10 +365,17 @@ impl App {
             Event::Stop(id) => {
                 // The layers that stop with it (docs/adr/9104 §2), their changes asked about together.
                 let group = self.document.as_ref().map_or_else(Vec::new, |d| {
-                    data_write::grouped(&d.model, std::slice::from_ref(&id), d.model.settings().edit_grouping(), true)
+                    data_write::grouped(
+                        &d.model,
+                        std::slice::from_ref(&id),
+                        d.model.settings().edit_grouping(),
+                        true,
+                    )
                 });
                 if group.iter().any(|l| self.gis.data_edits.saving.contains(l)) {
-                    self.warn("Katmanın değişiklikleri tabloya yazılıyor; yazma bitince yeniden deneyin.");
+                    self.warn(
+                        "Katmanın değişiklikleri tabloya yazılıyor; yazma bitince yeniden deneyin.",
+                    );
                 } else {
                     let modified = self.data_modified_layers(&group);
                     if modified.is_empty() {
@@ -348,14 +389,20 @@ impl App {
             Event::Save(layers) => self.save_data_layers(&layers, false),
             Event::SaveOver(layers) => {
                 self.gis.data_edits.conflict = None;
-                if matches!(self.dialog, Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict))) {
+                if matches!(
+                    self.dialog,
+                    Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict))
+                ) {
                     self.dialog = None;
                 }
                 self.save_data_layers(&layers, true)
             }
             Event::KeepConflict => {
                 self.gis.data_edits.conflict = None;
-                if matches!(self.dialog, Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict))) {
+                if matches!(
+                    self.dialog,
+                    Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict))
+                ) {
                     self.dialog = None;
                 }
                 Task::none()
@@ -368,7 +415,10 @@ impl App {
                 let Some(layers) = self.data_conflict_settle() else {
                     return Task::none();
                 };
-                if matches!(self.dialog, Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict))) {
+                if matches!(
+                    self.dialog,
+                    Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict))
+                ) {
                     self.dialog = None;
                 }
                 self.save_data_layers(&layers, false)
@@ -382,7 +432,11 @@ impl App {
                 let names: Vec<String> = modified
                     .iter()
                     .map(|l| {
-                        let c = self.document.as_ref().map(|d| d.model.data_changes(l)).unwrap_or_default();
+                        let c = self
+                            .document
+                            .as_ref()
+                            .map(|d| d.model.data_changes(l))
+                            .unwrap_or_default();
                         format!(
                             "{}: {}",
                             self.data_layer_name(l),
@@ -443,7 +497,10 @@ impl App {
         let Some(ask) = self.gis.data_edits.asking.take() else {
             return Task::none();
         };
-        if matches!(self.dialog, Some(Dialog::Gis(crate::gis::GisDialogKind::DataEdits))) {
+        if matches!(
+            self.dialog,
+            Some(Dialog::Gis(crate::gis::GisDialogKind::DataEdits))
+        ) {
             self.dialog = None;
         }
         match answer {
@@ -471,7 +528,8 @@ impl App {
                 task
             }
             Answer::Discard => {
-                let names: Vec<String> = ask.layers.iter().map(|l| self.data_layer_name(l)).collect();
+                let names: Vec<String> =
+                    ask.layers.iter().map(|l| self.data_layer_name(l)).collect();
                 let action = match ask.after {
                     After::Stop => SessionAction::Cancel,
                     After::Leave(_) | After::Rollback => SessionAction::Rollback,
@@ -484,7 +542,10 @@ impl App {
                     self.gis.data_edits.failed.remove(l);
                     self.gis.data_edits.uncertain.remove(l);
                 }
-                self.output(format!("Katman değişiklikleri geri alındı ({}): kaynak olduğu gibi kaldı.", names.join(", ")));
+                self.output(format!(
+                    "Katman değişiklikleri geri alındı ({}): kaynak olduğu gibi kaldı.",
+                    names.join(", ")
+                ));
                 match ask.after {
                     After::Stop | After::Rollback => Task::none(),
                     After::Leave(then) => self.leave(then),
@@ -537,9 +598,14 @@ impl App {
             }
             // A write of these layers whose answer was lost (docs/adr/9126): the source is asked by its receipt first;
             // one without a receipt is not sent again until the owner says so.
-            if let Some(u) = ids.iter().find_map(|l| self.gis.data_edits.uncertain.get(l)).cloned() {
+            if let Some(u) = ids
+                .iter()
+                .find_map(|l| self.gis.data_edits.uncertain.get(l))
+                .cloned()
+            {
                 let Some(receipt) = u.receipt.clone() else {
-                    let names: Vec<String> = u.layers().iter().map(|l| self.data_layer_name(l)).collect();
+                    let names: Vec<String> =
+                        u.layers().iter().map(|l| self.data_layer_name(l)).collect();
                     self.warn(format!(
                         "{} için önceki yazımın sonucu bilinmiyor ve bu kaynak işlem kaydı tutmuyor: kayıt kendiliğinden \
                          yeniden gönderilmedi, yeni satırlar ikinci kez eklenebilirdi. Kaynakta satırları denetleyin, sonra \
@@ -568,9 +634,16 @@ impl App {
                 by: kentos_native_application::project_store::user(),
             };
             tasks.push(crate::db_connections::off_thread(
-                move || match data_write::write_group_receipted(&group, &settings, force, Some(&receipting)) {
+                move || match data_write::write_group_receipted(
+                    &group,
+                    &settings,
+                    force,
+                    Some(&receipting),
+                ) {
                     Ok(keys) => Ok(Ok((group, keys))),
-                    Err(WriteFailure::Uncertain(words, receipt)) => Err(Uncertain::of(&group, words, receipt)),
+                    Err(WriteFailure::Uncertain(words, receipt)) => {
+                        Err(Uncertain::of(&group, words, receipt))
+                    }
                     Err(failure) => Ok(Err(failure)),
                 },
                 move |done: Result<GroupSaved, Uncertain>| match done {
@@ -587,7 +660,10 @@ impl App {
     fn data_unsure(&mut self, ids: Vec<String>, u: Uncertain) -> Task<Message> {
         for id in &ids {
             self.gis.data_edits.saving.remove(id);
-            self.gis.data_edits.failed.insert(id.clone(), u.words.clone());
+            self.gis
+                .data_edits
+                .failed
+                .insert(id.clone(), u.words.clone());
             self.gis.data_edits.uncertain.insert(id.clone(), u.clone());
         }
         self.gis.data_edits.after = None;
@@ -657,11 +733,7 @@ impl App {
     }
 
     /// A group's save: what was written taken out of the drawing, or why nothing was; a conflict asks to write over it.
-    fn data_saved(
-        &mut self,
-        ids: Vec<String>,
-        outcome: GroupSaved,
-    ) -> Task<Message> {
+    fn data_saved(&mut self, ids: Vec<String>, outcome: GroupSaved) -> Task<Message> {
         for id in &ids {
             self.gis.data_edits.saving.remove(id);
         }
@@ -670,7 +742,11 @@ impl App {
                 let mut said = Vec::new();
                 for (w, keys) in group.iter().zip(keys) {
                     let written = data_write::written(w, &keys);
-                    let words = counts_words(written.added.len(), written.changed.len(), written.deleted.len());
+                    let words = counts_words(
+                        written.added.len(),
+                        written.changed.len(),
+                        written.deleted.len(),
+                    );
                     let taken = self
                         .document
                         .as_mut()
@@ -681,22 +757,37 @@ impl App {
                             self.gis.data_edits.failed.remove(&w.layer);
                             self.gis.data_edits.gone.remove(&w.layer);
                             // The source answered: checked now (docs/adr/9163).
-                            self.gis.data_edits.verified.insert(w.layer.clone(), now_ms());
+                            self.gis
+                                .data_edits
+                                .verified
+                                .insert(w.layer.clone(), now_ms());
                             let place = self
                                 .document
                                 .as_ref()
-                                .and_then(|d| d.model.layers().get(&w.layer).and_then(|n| n.data.clone()))
-                                .map_or("kaynağa", |d| if d.driver == "gpkg" { "GeoPackage'a" } else { "veritabanına" });
+                                .and_then(|d| {
+                                    d.model.layers().get(&w.layer).and_then(|n| n.data.clone())
+                                })
+                                .map_or("kaynağa", |d| {
+                                    if d.driver == "gpkg" {
+                                        "GeoPackage'a"
+                                    } else {
+                                        "veritabanına"
+                                    }
+                                });
                             said.push(format!("“{}”: {words} {place} yazıldı", w.name));
                         }
                         Err(why) => self.warn(why),
                     }
                 }
                 if !said.is_empty() {
-                    let names: Vec<String> = group.iter().map(|w| format!("“{}”", w.name)).collect();
+                    let names: Vec<String> =
+                        group.iter().map(|w| format!("“{}”", w.name)).collect();
                     let title = format!("{} kaynağa yazıldı", names.join(", "));
                     let body = format!("{}.", said.join("; "));
-                    self.say(kentos_interaction::Level::Success, format!("{title}: {body}"));
+                    self.say(
+                        kentos_interaction::Level::Success,
+                        format!("{title}: {body}"),
+                    );
                     self.toast_saved(title, body);
                 }
             }
@@ -704,16 +795,27 @@ impl App {
                 self.gis.data_edits.after = None;
                 // The changes wait as they were; the status bar and Katman değişiklikleri say why (docs/adr/9123).
                 for id in &ids {
-                    self.gis.data_edits.failed.insert(id.clone(), failure.message().to_owned());
+                    self.gis
+                        .data_edits
+                        .failed
+                        .insert(id.clone(), failure.message().to_owned());
                 }
                 match &failure {
                     WriteFailure::Conflict(_, uids, rows) => {
                         self.select_data_objects(uids);
                         // The rows the source no longer has stay listed in the table (docs/adr/9152).
                         for r in rows.iter().filter(|r| r.gone() && r.mine.is_some()) {
-                            self.gis.data_edits.gone.entry(r.layer.clone()).or_default().insert(r.key);
+                            self.gis
+                                .data_edits
+                                .gone
+                                .entry(r.layer.clone())
+                                .or_default()
+                                .insert(r.key);
                         }
-                        self.gis.data_edits.conflict = Some(crate::data_conflict::Conflict::of(ids.clone(), rows.clone()));
+                        self.gis.data_edits.conflict = Some(crate::data_conflict::Conflict::of(
+                            ids.clone(),
+                            rows.clone(),
+                        ));
                         self.dialog = Some(Dialog::Gis(crate::gis::GisDialogKind::DataConflict));
                     }
                     WriteFailure::Refused(_, Some(uid)) => {
@@ -735,7 +837,8 @@ impl App {
         let Some(doc) = &self.document else {
             return;
         };
-        let slots: Vec<kentos_domain::Slot> = uids.iter().filter_map(|u| doc.model.slot_of(*u)).collect();
+        let slots: Vec<kentos_domain::Slot> =
+            uids.iter().filter_map(|u| doc.model.slot_of(*u)).collect();
         if !slots.is_empty() {
             self.selection.set(slots);
         }
@@ -749,16 +852,27 @@ impl App {
         };
         let model = &doc.model;
         let generation = model.generation();
-        if self.gis.data_edits.pending.as_ref().is_some_and(|(g, _)| *g == generation) {
+        if self
+            .gis
+            .data_edits
+            .pending
+            .as_ref()
+            .is_some_and(|(g, _)| *g == generation)
+        {
             return;
         }
         let mut objects = Vec::new();
-        for layer in model.edited_layers().iter().filter(|l| model.layers().is_visible(l)) {
+        for layer in model
+            .edited_layers()
+            .iter()
+            .filter(|l| model.layers().is_visible(l))
+        {
             let c = model.data_changes(layer);
             objects.extend(c.added.iter().map(|(_, e)| (**e).clone()));
             objects.extend(c.changed.iter().map(|d| (*d.now).clone()));
         }
-        self.gis.data_edits.pending = Some((generation, crate::approved_layer::Approved::of(&objects, 0)));
+        self.gis.data_edits.pending =
+            Some((generation, crate::approved_layer::Approved::of(&objects, 0)));
     }
 
     /// The edited layers' rows not saved yet, dashed in the warning colour over the drawing: a new row whose style draws
@@ -768,7 +882,13 @@ impl App {
             self.gpu_layers.edits.clear();
             return None;
         };
-        crate::approved_layer::layer(Some(outlines), 0, &self.viewport.camera, color, &self.gpu_layers.edits)
+        crate::approved_layer::layer(
+            Some(outlines),
+            0,
+            &self.viewport.camera,
+            color,
+            &self.gpu_layers.edits,
+        )
     }
 
     /// The question: Kaydet, Kaydetme, Vazgeç.
@@ -777,7 +897,11 @@ impl App {
             layers: Vec::new(),
             after: After::Stop,
         });
-        let names: Vec<String> = ask.layers.iter().map(|l| format!("“{}”", self.data_layer_name(l))).collect();
+        let names: Vec<String> = ask
+            .layers
+            .iter()
+            .map(|l| format!("“{}”", self.data_layer_name(l)))
+            .collect();
         let whose = match names.as_slice() {
             [one] => format!("{one} katmanındaki"),
             [a, b] => format!("{a} ve {b} katmanlarındaki"),
@@ -810,7 +934,10 @@ impl App {
         };
         let mut detail = detail;
         if !still.is_empty() {
-            detail.push(format!("Düzenlenen öbür katmanlar açık kalır: {}.", still.join(", ")));
+            detail.push(format!(
+                "Düzenlenen öbür katmanlar açık kalır: {}.",
+                still.join(", ")
+            ));
         }
         let title = match ask.after {
             After::Stop => "Düzenlemeyi bitir",
@@ -831,12 +958,18 @@ impl App {
             ))
             .confirm("Değişiklikleri geri al")
             .destructive();
-            return kentos_ui::widget::overlay::modal(question, message(Event::Answer(Answer::Cancel)));
+            return kentos_ui::widget::overlay::modal(
+                question,
+                message(Event::Answer(Answer::Cancel)),
+            );
         }
         // Leaving a project kept on this computer, the changes may wait with it (docs/adr/9111 §3); each answer says
         // what it does to the source and to this device (docs/adr/9123).
         let can_keep = matches!(ask.after, After::Leave(_))
-            && self.document.as_ref().is_some_and(|d| d.cloud_source().is_none());
+            && self
+                .document
+                .as_ref()
+                .is_some_and(|d| d.cloud_source().is_none());
         let keeps = if can_keep {
             " Taslak olarak tut kaynağa yazmaz: proje kaydedilince değişiklikler bu bilgisayarda saklanır, proje burada \
              açılınca geri gelir; proje dosyasını başka bir bilgisayara kopyalamak onları taşımaz."
@@ -854,8 +987,11 @@ impl App {
                 .confirm("Değişiklikleri geri al")
                 .destructive()
                 .keep("Kaynağa yaz", message(Event::Answer(Answer::Save)));
-        let question =
-            if can_keep { question.also("Taslak olarak tut", message(Event::Answer(Answer::Keep))) } else { question };
+        let question = if can_keep {
+            question.also("Taslak olarak tut", message(Event::Answer(Answer::Keep)))
+        } else {
+            question
+        };
         kentos_ui::widget::overlay::modal(question, message(Event::Answer(Answer::Cancel)))
     }
 }

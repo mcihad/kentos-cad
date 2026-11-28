@@ -125,10 +125,7 @@ fn every_kind_with_layers_colours_and_the_turkish_code_page() {
         .iter()
         .map(|f| (f.label.as_str(), f.value.as_str()))
         .collect();
-    assert!(
-        facts.contains(&("Sürüm", "DXF 2000 (AC1015)")),
-        "{facts:?}"
-    );
+    assert!(facts.contains(&("Sürüm", "DXF 2000 (AC1015)")), "{facts:?}");
     assert!(facts.contains(&("Karakter kodlaması", "Windows-1254 (Türkçe)")));
     assert!(facts.contains(&("Birim ($INSUNITS)", "metre")));
 
@@ -448,7 +445,10 @@ fn blocks_are_kept_as_definitions_and_inserts_place_them() {
         Entity::Point(p) => Some((p.p, p.z, p.base.layer_id.clone())),
         _ => None,
     });
-    assert_eq!(point, Some((v(996.0, 2003.0), Some(101.5), "KAPILAR".to_string())));
+    assert_eq!(
+        point,
+        Some((v(996.0, 2003.0), Some(101.5), "KAPILAR".to_string()))
+    );
     // DAIRE's unequal scales stay its insert's own y factor (docs/adr/0315 §3).
     let daire = r
         .entities
@@ -1143,10 +1143,23 @@ fn a_large_file_reads_in_one_pass() {
     let limited = dxf::read(text.as_bytes(), &limit).expect("read");
     assert_eq!(limited.entities.len(), 1000);
     // How many were left out, counted and said (docs/adr/9211).
-    let left = limited.report.skipped.iter().find(|i| i.what == "Nesne sınırı").expect("said");
+    let left = limited
+        .report
+        .skipped
+        .iter()
+        .find(|i| i.what == "Nesne sınırı")
+        .expect("said");
     assert_eq!(left.count, 59_000);
-    assert!(left.reason.contains("ilk 1 000 nesne alındı, kalan 59 000 nesne alınmadı"), "{}", left.reason);
-    assert!(skipped(&limited, "Blok (INSERT)").is_none(), "no nested block is blamed");
+    assert!(
+        left.reason
+            .contains("ilk 1 000 nesne alındı, kalan 59 000 nesne alınmadı"),
+        "{}",
+        left.reason
+    );
+    assert!(
+        skipped(&limited, "Blok (INSERT)").is_none(),
+        "no nested block is blamed"
+    );
 }
 
 #[test]
@@ -1385,20 +1398,33 @@ fn a_closed_polyline_preserves_a_vertical_closing_segment() {
     let bytes = dxf_of(&[("ENTITIES", entities)]);
     let r = dxf::read(
         &bytes,
-        &DxfReadOptions { closed_polylines: kentos_contracts::ClosedPolylines::Line, ..Default::default() },
+        &DxfReadOptions {
+            closed_polylines: kentos_contracts::ClosedPolylines::Line,
+            ..Default::default()
+        },
     )
     .expect("read");
     assert_eq!(r.entities.len(), 1, "{:?}", r.report);
     assert_eq!(
         heights(&r.entities[0]),
-        Some(vec![Some(10.0), Some(11.0), Some(12.0), Some(13.0), Some(99.0)])
+        Some(vec![
+            Some(10.0),
+            Some(11.0),
+            Some(12.0),
+            Some(13.0),
+            Some(99.0)
+        ])
     );
     let said = r
         .report
         .notes
         .iter()
         .find(|n| n.what == "Halka kapanışının Z'si");
-    assert!(said.is_none(), "vertical segment must survive: {:?}", r.report.notes);
+    assert!(
+        said.is_none(),
+        "vertical segment must survive: {:?}",
+        r.report.notes
+    );
 }
 
 #[test]
@@ -2276,7 +2302,9 @@ fn an_mtext_is_one_text_with_its_lines_and_formats() {
     // An empty text loses nothing: said, not counted lost (docs/adr/9231).
     assert!(skipped(&r, "Çok satırlı yazı (MTEXT)").is_none());
     assert!(
-        r.report.notes.iter().any(|n| n.what == "Çok satırlı yazı (MTEXT)" && n.reason == "boş; çizilecek yazısı yok"),
+        r.report.notes.iter().any(
+            |n| n.what == "Çok satırlı yazı (MTEXT)" && n.reason == "boş; çizilecek yazısı yok"
+        ),
         "{:?}",
         r.report.notes
     );
@@ -2610,7 +2638,8 @@ fn a_definitions_by_layer_line_type_is_its_layers_and_by_block_the_inserts() {
             let look = &e.base().look;
             (
                 look.line_type,
-                look.by_layer.contains(&kentos_contracts::LookPart::LineType),
+                look.by_layer
+                    .contains(&kentos_contracts::LookPart::LineType),
             )
         })
         .collect();
@@ -2843,16 +2872,35 @@ fn an_exploded_inserts_objects_take_only_their_by_block_parts_from_it() {
 #[test]
 fn an_associative_hatch_is_tied_to_its_objects() {
     let r = read("dxf-hatch/in/assoc-polyline.dxf");
-    let place = |e: &Entity| r.entities.iter().position(|x| std::ptr::eq(x, e)).map(|i| i as u32);
-    let ring = r.entities.iter().find(|e| matches!(e, Entity::Polyline(_) | Entity::Polygon(_)));
+    let place = |e: &Entity| {
+        r.entities
+            .iter()
+            .position(|x| std::ptr::eq(x, e))
+            .map(|i| i as u32)
+    };
+    let ring = r
+        .entities
+        .iter()
+        .find(|e| matches!(e, Entity::Polyline(_) | Entity::Polygon(_)));
     let circle = r.entities.iter().find(|e| matches!(e, Entity::Circle(_)));
     let Some(Entity::Hatch(h)) = r.entities.iter().find(|e| matches!(e, Entity::Hatch(_))) else {
         panic!("a hatch: {:?}", r.report);
     };
-    let a = h.assoc.as_ref().unwrap_or_else(|| panic!("tied: {:?}", r.report));
-    assert_eq!(a.outer.as_ref().and_then(kentos_contracts::import_placeholder_index), ring.and_then(place));
+    let a = h
+        .assoc
+        .as_ref()
+        .unwrap_or_else(|| panic!("tied: {:?}", r.report));
     assert_eq!(
-        a.islands.iter().map(kentos_contracts::import_placeholder_index).collect::<Vec<_>>(),
+        a.outer
+            .as_ref()
+            .and_then(kentos_contracts::import_placeholder_index),
+        ring.and_then(place)
+    );
+    assert_eq!(
+        a.islands
+            .iter()
+            .map(kentos_contracts::import_placeholder_index)
+            .collect::<Vec<_>>(),
         vec![circle.and_then(place)]
     );
     assert!(near(a.seed, Vec2 { x: 1.0, y: 1.0 }));
@@ -2861,7 +2909,10 @@ fn an_associative_hatch_is_tied_to_its_objects() {
     let Some(Entity::Hatch(h)) = r.entities.iter().find(|e| matches!(e, Entity::Hatch(_))) else {
         panic!("a hatch");
     };
-    let a = h.assoc.as_ref().unwrap_or_else(|| panic!("tied: {:?}", r.report));
+    let a = h
+        .assoc
+        .as_ref()
+        .unwrap_or_else(|| panic!("tied: {:?}", r.report));
     assert_eq!((a.outer, a.bounds.len()), (None, 4));
 }
 
@@ -2894,7 +2945,10 @@ fn constraint_groups_are_said_not_read() {
 
 /// An LTYPE record of `n` alternating dashes and gaps, hand-written tags.
 fn long_ltype(name: &str, n: usize) -> String {
-    let mut out = format!("0\nLTYPE\n2\n{name}\n70\n0\n3\n{n} öğe\n72\n65\n73\n{n}\n40\n{}\n", n as f64);
+    let mut out = format!(
+        "0\nLTYPE\n2\n{name}\n70\n0\n3\n{n} öğe\n72\n65\n73\n{n}\n40\n{}\n",
+        n as f64
+    );
     for i in 0..n {
         let len = if i % 2 == 0 { 1.5 } else { -0.5 };
         out.push_str(&format!("49\n{len}\n74\n0\n"));
@@ -2913,12 +2967,23 @@ fn long_ltype_patterns_are_kept_whole_or_cut_with_a_note() {
     );
     let r = dxf::read(
         text.as_bytes(),
-        &DxfReadOptions { unit: Some(kentos_contracts::DrawingUnit::M), ..Default::default() },
+        &DxfReadOptions {
+            unit: Some(kentos_contracts::DrawingUnit::M),
+            ..Default::default()
+        },
     )
     .unwrap();
-    let elements = |name: &str| r.line_types.iter().find(|p| p.name == name).map(|p| p.elements.len());
+    let elements = |name: &str| {
+        r.line_types
+            .iter()
+            .find(|p| p.name == name)
+            .map(|p| p.elements.len())
+    };
     assert_eq!(elements("UZUN16"), Some(16));
-    assert_eq!(elements("UZUN300"), Some(kentos_contracts::MAX_STORED_PATTERN_ELEMENTS));
+    assert_eq!(
+        elements("UZUN300"),
+        Some(kentos_contracts::MAX_STORED_PATTERN_ELEMENTS)
+    );
     assert_eq!(kentos_contracts::line_types_problem(&r.line_types), None);
     let note = r
         .report
@@ -3039,13 +3104,45 @@ fn a_truetype_text_s_height_is_its_capitals_height() {
 fn an_mtext_s_height_spacing_and_indents_are_its_capitals() {
     let arial = 1466.0 / 2048.0;
     let tables = groups(&[
-        (0, "TABLE"), (2, "STYLE"),
-        (0, "STYLE"), (2, "ARIAL"), (70, "0"), (40, "0"), (41, "1"), (50, "0"), (71, "0"), (42, "2.5"), (3, "arial.ttf"), (4, ""),
-        (0, "STYLE"), (2, "SHX"), (70, "0"), (40, "0"), (41, "1"), (50, "0"), (71, "0"), (42, "2.5"), (3, "romans.shx"), (4, ""),
+        (0, "TABLE"),
+        (2, "STYLE"),
+        (0, "STYLE"),
+        (2, "ARIAL"),
+        (70, "0"),
+        (40, "0"),
+        (41, "1"),
+        (50, "0"),
+        (71, "0"),
+        (42, "2.5"),
+        (3, "arial.ttf"),
+        (4, ""),
+        (0, "STYLE"),
+        (2, "SHX"),
+        (70, "0"),
+        (40, "0"),
+        (41, "1"),
+        (50, "0"),
+        (71, "0"),
+        (42, "2.5"),
+        (3, "romans.shx"),
+        (4, ""),
         (0, "ENDTAB"),
     ]);
-    let mtext = |style: &'static str, y: &'static str, spacing: Option<&'static str>, words: &'static str| {
-        let mut g = vec![(0, "MTEXT"), (8, "0"), (10, "0"), (20, y), (40, "2.5"), (41, "0"), (71, "1"), (1, words), (7, style)];
+    let mtext = |style: &'static str,
+                 y: &'static str,
+                 spacing: Option<&'static str>,
+                 words: &'static str| {
+        let mut g = vec![
+            (0, "MTEXT"),
+            (8, "0"),
+            (10, "0"),
+            (20, y),
+            (40, "2.5"),
+            (41, "0"),
+            (71, "1"),
+            (1, words),
+            (7, style),
+        ];
         if let Some(s) = spacing {
             g.extend([(73, "1"), (44, s)]);
         }
@@ -3056,8 +3153,11 @@ fn an_mtext_s_height_spacing_and_indents_are_its_capitals() {
     entities.extend(mtext("ARIAL", "10", Some("2"), "Bir\\Piki"));
     entities.extend(mtext("ARIAL", "20", None, "\\pxi2;Girintili"));
     entities.extend(mtext("SHX", "30", Some("2"), "Bir\\Piki"));
-    let r = dxf::read(&dxf_of(&[("TABLES", tables), ("ENTITIES", groups(&entities))]), &DxfReadOptions::default())
-        .expect("read");
+    let r = dxf::read(
+        &dxf_of(&[("TABLES", tables), ("ENTITIES", groups(&entities))]),
+        &DxfReadOptions::default(),
+    )
+    .expect("read");
     let texts: Vec<&kentos_contracts::TextEntity> = r
         .entities
         .iter()
@@ -3069,12 +3169,28 @@ fn an_mtext_s_height_spacing_and_indents_are_its_capitals() {
     assert_eq!(texts.len(), 4);
     let near = |a: f64, b: f64| (a - b).abs() <= 1e-12;
     assert!(near(texts[0].height, 2.5 / arial), "{}", texts[0].height);
-    assert!(texts[0].paragraph.line_spacing.is_some_and(|s| near(s, arial)), "{:?}", texts[0].paragraph.line_spacing);
-    assert!(texts[1].paragraph.line_spacing.is_some_and(|s| near(s, 2.0 * arial)), "{:?}", texts[1].paragraph.line_spacing);
+    assert!(
+        texts[0]
+            .paragraph
+            .line_spacing
+            .is_some_and(|s| near(s, arial)),
+        "{:?}",
+        texts[0].paragraph.line_spacing
+    );
+    assert!(
+        texts[1]
+            .paragraph
+            .line_spacing
+            .is_some_and(|s| near(s, 2.0 * arial)),
+        "{:?}",
+        texts[1].paragraph.line_spacing
+    );
     let indent = texts[2].paragraph.layout.as_ref().and_then(|l| l.indent);
     assert!(indent.is_some_and(|i| near(i, 2.0 * arial)), "{indent:?}");
     // The same lines in KentOS's ems: 5/3 × em × spacing = 5/3 × 40 × 44.
-    let pitch = |t: &kentos_contracts::TextEntity| 5.0 / 3.0 * t.height * t.paragraph.line_spacing.unwrap_or(1.0);
+    let pitch = |t: &kentos_contracts::TextEntity| {
+        5.0 / 3.0 * t.height * t.paragraph.line_spacing.unwrap_or(1.0)
+    };
     assert!(near(pitch(texts[0]), 5.0 / 3.0 * 2.5) && near(pitch(texts[1]), 5.0 / 3.0 * 2.5 * 2.0));
     assert_eq!(
         (texts[3].height, texts[3].paragraph.line_spacing),

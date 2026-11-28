@@ -9,8 +9,8 @@
 //! heights; 4 heights between views. The shared cases are `fixtures/commands/v1/road.sections.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, SectionRow,
-    SectionView, SectionsDraw, SectionsDrawn, TextAlign, TextFace, Vec2,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject,
+    SectionRow, SectionView, SectionsDraw, SectionsDrawn, TextAlign, TextFace, Vec2,
 };
 
 use crate::ExecutionContext;
@@ -48,14 +48,25 @@ pub fn offset_step(width: f64) -> f64 {
 /// A row's design line, from its left end to its right; empty without a platform.
 pub fn design_line(row: &SectionRow) -> Vec<[f64; 2]> {
     match (&row.left, &row.right) {
-        (Some(l), Some(r)) => l.points.iter().rev().chain(r.points.iter().skip(1)).copied().collect(),
+        (Some(l), Some(r)) => l
+            .points
+            .iter()
+            .rev()
+            .chain(r.points.iter().skip(1))
+            .copied()
+            .collect(),
         _ => Vec::new(),
     }
 }
 
 /// A row's elevations: its terrain's, its design line's and its axis'.
 fn elevations(row: &SectionRow) -> Vec<f64> {
-    row.ground.iter().filter_map(|g| g.z).chain(design_line(row).into_iter().map(|p| p[1])).chain(row.axis).collect()
+    row.ground
+        .iter()
+        .filter_map(|g| g.z)
+        .chain(design_line(row).into_iter().map(|p| p[1]))
+        .chain(row.axis)
+        .collect()
 }
 
 /// The terrain's runs: a stretch is drawn where both ends have a height and it lies on the surface.
@@ -80,7 +91,11 @@ pub fn ground_runs(row: &SectionRow) -> Vec<Vec<[f64; 2]>> {
 }
 
 /// Checks `input`, `told` the set's sections and answering whether to stop (docs/adr/4040).
-fn check(doc: &kentos_domain::Document, input: &SectionsDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
+fn check(
+    doc: &kentos_domain::Document,
+    input: &SectionsDraw,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Checked, Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find_set(doc.road_sections(), &input.set, "set")?;
     let columns = input.columns.unwrap_or(5);
@@ -88,10 +103,18 @@ fn check(doc: &kentos_domain::Document, input: &SectionsDraw, told: &dyn Fn(u64,
     let exaggeration = input.exaggeration.unwrap_or(1.0);
     let positive = |v: f64| v.is_finite() && v > 0.0;
     if !(1..=100).contains(&columns) {
-        return Err(fail(codes::INVALID_LABEL, "Bir satırda 1 ile 100 arası görünüş (columns) olur.".into(), "columns"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            "Bir satırda 1 ile 100 arası görünüş (columns) olur.".into(),
+            "columns",
+        ));
     }
     if !positive(height) {
-        return Err(fail(codes::INVALID_LABEL, "Yazı yüksekliği (height) 0'dan büyük olmalı.".into(), "height"));
+        return Err(fail(
+            codes::INVALID_LABEL,
+            "Yazı yüksekliği (height) 0'dan büyük olmalı.".into(),
+            "height",
+        ));
     }
     if !positive(exaggeration) {
         return Err(fail(
@@ -109,7 +132,10 @@ fn check(doc: &kentos_domain::Document, input: &SectionsDraw, told: &dyn Fn(u64,
             None => {
                 return Err(fail(
                     codes::INVALID_PLACES,
-                    format!("{s} m “{}” kesit takımının km'lerinden biri değil.", def.name),
+                    format!(
+                        "{s} m “{}” kesit takımının km'lerinden biri değil.",
+                        def.name
+                    ),
                     &format!("stations[{i}]"),
                 ));
             }
@@ -122,20 +148,27 @@ fn check(doc: &kentos_domain::Document, input: &SectionsDraw, told: &dyn Fn(u64,
         None => {
             return Err(fail(
                 codes::NO_TERRAIN,
-                format!("“{}” kesit takımının yüzeyi yok: enkesit çizmek için önce bir yüzey verin.", def.name),
+                format!(
+                    "“{}” kesit takımının yüzeyi yok: enkesit çizmek için önce bir yüzey verin.",
+                    def.name
+                ),
                 "set",
             ));
         }
         Some(Err(_)) => {
             return Err(fail(
                 codes::NO_TERRAIN,
-                format!("“{}” kesit takımının yüzeyi projede yok ya da kurulamıyor: önce yüzeyi düzeltin.", def.name),
+                format!(
+                    "“{}” kesit takımının yüzeyi projede yok ya da kurulamıyor: önce yüzeyi düzeltin.",
+                    def.name
+                ),
                 "set",
             ));
         }
         Some(Ok(_)) => {}
     }
-    let (rows, more) = common::sections_told(doc, def, &built, &stations, told).ok_or(Stop::Cancelled)?;
+    let (rows, more) =
+        common::sections_told(doc, def, &built, &stations, told).ok_or(Stop::Cancelled)?;
     let ranges: Vec<Option<(f64, f64)>> = rows
         .iter()
         .map(|r| {
@@ -148,11 +181,18 @@ fn check(doc: &kentos_domain::Document, input: &SectionsDraw, told: &dyn Fn(u64,
     let Some(lowest) = ranges.iter().flatten().map(|r| r.0).reduce(f64::min) else {
         return Err(fail(
             codes::NO_TERRAIN,
-            format!("“{}” kesit takımının kesit hatlarında arazi yok: hatlar yüzeyin dışında.", def.name),
+            format!(
+                "“{}” kesit takımının kesit hatlarında arazi yok: hatlar yüzeyin dışında.",
+                def.name
+            ),
             "set",
         ));
     };
-    let span = ranges.iter().flatten().map(|r| r.1 - r.0).fold(0.0, f64::max);
+    let span = ranges
+        .iter()
+        .flatten()
+        .map(|r| r.1 - r.0)
+        .fold(0.0, f64::max);
     let datums = ranges.iter().map(|r| r.map_or(lowest, |r| r.0)).collect();
     let mut warnings = checks::layer(doc, &input.layer_id)?;
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -191,7 +231,12 @@ fn object(geometry: EntityGeometry, color: Option<&str>, weight: Option<f64>) ->
 
 fn line(a: [f64; 2], b: [f64; 2], color: Option<&str>, weight: Option<f64>) -> NewObject {
     object(
-        EntityGeometry::Line { a: Vec2 { x: a[0], y: a[1] }, b: Vec2 { x: b[0], y: b[1] }, zs: None, ms: None },
+        EntityGeometry::Line {
+            a: Vec2 { x: a[0], y: a[1] },
+            b: Vec2 { x: b[0], y: b[1] },
+            zs: None,
+            ms: None,
+        },
         color,
         weight,
     )
@@ -213,7 +258,13 @@ fn path(pts: &[[f64; 2]], closed: bool, color: Option<&str>, weight: Option<f64>
     )
 }
 
-fn text(at: [f64; 2], words: String, height: f64, align: TextAlign, color: Option<&str>) -> NewObject {
+fn text(
+    at: [f64; 2],
+    words: String,
+    height: f64,
+    align: TextAlign,
+    color: Option<&str>,
+) -> NewObject {
     object(
         EntityGeometry::Text {
             layout: None,
@@ -263,14 +314,25 @@ fn objects(c: &Checked, frames: &[[[f64; 2]; 2]], h: f64) -> Vec<NewObject> {
         let top = datum + c.span;
         let x = |o: f64| x0 + (o + c.left);
         let y = |z: f64| y0 + (z - datum) * c.exaggeration;
-        out.push(path(&[[x0, y0], [x1, y0], [x1, y1], [x0, y1]], true, None, Some(0.35)));
+        out.push(path(
+            &[[x0, y0], [x1, y0], [x1, y1], [x0, y1]],
+            true,
+            None,
+            Some(0.35),
+        ));
         let mut k = (datum / grid).ceil();
         while k * grid <= top + 1e-9 {
             let v = k * grid;
             if v > datum + 1e-9 && v < top - 1e-9 {
                 out.push(line([x0, y(v)], [x1, y(v)], None, Some(0.13)));
             }
-            out.push(text([x0 - h, y(v)], format!("{v:.2}"), h, TextAlign::MiddleRight, None));
+            out.push(text(
+                [x0 - h, y(v)],
+                format!("{v:.2}"),
+                h,
+                TextAlign::MiddleRight,
+                None,
+            ));
             k += 1.0;
         }
         let mut k = (-c.left / step).ceil();
@@ -279,7 +341,13 @@ fn objects(c: &Checked, frames: &[[[f64; 2]; 2]], h: f64) -> Vec<NewObject> {
             if o > -c.left + 1e-9 && o < c.right - 1e-9 {
                 out.push(line([x(o), y0], [x(o), y1], None, Some(0.13)));
             }
-            out.push(text([x(o), y0 - 0.5 * row], format!("{o}"), h, TextAlign::MiddleCenter, None));
+            out.push(text(
+                [x(o), y0 - 0.5 * row],
+                format!("{o}"),
+                h,
+                TextAlign::MiddleCenter,
+                None,
+            ));
             k += 1.0;
         }
         out.push(line([x(0.0), y0], [x(0.0), y1], Some(AXIS), Some(0.18)));
@@ -293,9 +361,21 @@ fn objects(c: &Checked, frames: &[[[f64; 2]; 2]], h: f64) -> Vec<NewObject> {
             out.push(path(&pts, false, Some(RED), Some(0.5)));
         }
         let mid = 0.5 * (x0 + x1);
-        out.push(text([mid, y1 + 0.5 * row], format!("km {}", r.km_text), h, TextAlign::MiddleCenter, None));
+        out.push(text(
+            [mid, y1 + 0.5 * row],
+            format!("km {}", r.km_text),
+            h,
+            TextAlign::MiddleCenter,
+            None,
+        ));
         if let Some(a) = r.axis {
-            out.push(text([mid, y0 - 1.5 * row], format!("Eksen kotu {a:.2}"), h, TextAlign::MiddleCenter, Some(RED)));
+            out.push(text(
+                [mid, y0 - 1.5 * row],
+                format!("Eksen kotu {a:.2}"),
+                h,
+                TextAlign::MiddleCenter,
+                Some(RED),
+            ));
         }
         if let (Some(cut), Some(fill)) = (r.cut, r.fill) {
             out.push(text(
@@ -310,7 +390,11 @@ fn objects(c: &Checked, frames: &[[[f64; 2]; 2]], h: f64) -> Vec<NewObject> {
     out
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &SectionsDraw, c: Checked) -> CommandResult<SectionsDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &SectionsDraw,
+    c: Checked,
+) -> CommandResult<SectionsDrawn> {
     let h = c.height * cx.doc.settings().plot_scale / 1000.0;
     let frames = frames(&c, input.at, h);
     let objects = objects(&c, &frames, h);
@@ -366,7 +450,11 @@ pub(crate) fn pitch(doc: &kentos_domain::Document, input: &SectionsDraw) -> Resu
     let row = 2.4 * h;
     let across = 8.0 * h + c.left + c.right + 4.0 * h;
     let down = row + c.span * c.exaggeration + 3.0 * row + 4.0 * h;
-    Ok((c.rows.iter().map(|r| r.station).collect(), [across, down], c.warnings))
+    Ok((
+        c.rows.iter().map(|r| r.station).collect(),
+        [across, down],
+        c.warnings,
+    ))
 }
 
 /// The views of `input` as a section sheet draws them: their objects, what `road.sections.draw` would answer (no
@@ -410,7 +498,10 @@ pub(crate) fn view(
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &SectionsDraw) -> CommandResult<()> {
     match check(cx.doc, input, &cx.stop_only()) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -433,7 +524,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SectionsDraw) -> CommandResult<Se
 /// Writes the drawing: one undo step.
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::SectionsDraw) -> CommandResult<kentos_commands::SectionsDrawn> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &kentos_commands::SectionsDraw,
+) -> CommandResult<kentos_commands::SectionsDrawn> {
     let checked = check(cx.doc, input, &cx.told());
     match checked {
         Ok(c) => write(cx, input, c),
@@ -453,7 +547,14 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SectionsDraw) -> CommandRes
                 Ok(c) => write(cx, &input, c),
                 Err(stop) => stop.into(),
             };
-            crate::road_drawings::kept(cx, kentos_commands::ROAD_SECTIONS_DRAW, &input, (kentos_commands::RoadSourceKind::Sections, "set"), r, |o| &o.uids)
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_SECTIONS_DRAW,
+                &input,
+                (kentos_commands::RoadSourceKind::Sections, "set"),
+                r,
+                |o| &o.uids,
+            )
         },
     )
 }
@@ -469,11 +570,15 @@ mod tests {
 
     /// The shared cases' project and their first case's input.
     fn project() -> (kentos_domain::Document, kentos_commands::SectionsDraw) {
-        let cases: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.sections.draw.json")).expect("cases");
-        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let cases: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/commands/v1/road.sections.draw.json"
+        ))
+        .expect("cases");
+        let snapshot: DocumentSnapshotV2 =
+            serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
         let doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
-        let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+        let input = serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone())
+            .expect("an input");
         (doc, input)
     }
 
@@ -489,8 +594,17 @@ mod tests {
         assert!(whole.is_ok());
         let seen = seen.into_inner();
         assert!(seen.len() > 4, "{} ticks", seen.len());
-        assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1), "{seen:?}");
-        assert_eq!(seen, (0..seen.len() as u64).map(|k| (k, seen.len() as u64)).collect::<Vec<_>>());
+        assert!(
+            seen.windows(2)
+                .all(|w| w[0].0 <= w[1].0 && w[0].1 == w[1].1 && w[1].0 < w[1].1),
+            "{seen:?}"
+        );
+        assert_eq!(
+            seen,
+            (0..seen.len() as u64)
+                .map(|k| (k, seen.len() as u64))
+                .collect::<Vec<_>>()
+        );
         let asked = Cell::new(0);
         let stopped = check(&doc, &input, &|_, _| {
             asked.set(asked.get() + 1);

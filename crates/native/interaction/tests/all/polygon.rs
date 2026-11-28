@@ -390,7 +390,10 @@ fn a_bow_tie_is_written_and_its_crossing_said_not_a_zero_area_success() {
     assert_eq!(b.doc.len(), 1);
     assert_eq!(b.last_level(), Some(Level::Warn));
     let said = b.log.last().map(|l| l.text.clone()).unwrap_or_default();
-    assert!(said.starts_with("Kapalı alan eklendi, ama kenarları kendini 1 yerde kesiyor"), "{said}");
+    assert!(
+        said.starts_with("Kapalı alan eklendi, ama kenarları kendini 1 yerde kesiyor"),
+        "{said}"
+    );
     assert!(said.contains("hesaplanamaz"), "{said}");
     assert_eq!(b.doc.undo().as_deref(), Some("Ekle"));
 }

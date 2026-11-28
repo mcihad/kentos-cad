@@ -426,7 +426,10 @@ mod tests {
             "a method has its own row"
         );
         let jog = method_lines();
-        let (_, jog) = jog.iter().find(|(_, l)| l.name == "JOG").expect("JOG's row");
+        let (_, jog) = jog
+            .iter()
+            .find(|(_, l)| l.name == "JOG")
+            .expect("JOG's row");
         assert_eq!(jog.title, "Ölçülendirme › Kırıklı yarıçap");
         assert_eq!(jog.description, "Komut adı: DIMJOGGED");
     }

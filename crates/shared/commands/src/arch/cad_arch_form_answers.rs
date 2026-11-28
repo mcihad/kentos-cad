@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+use crate::FormAnswer;
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::FormAnswer;
 
 /// The command's name.
 pub const CAD_FORM_ANSWER: &str = "cad.form.answer";

@@ -193,18 +193,21 @@ fn a_template_embeds_its_picture_bytes_and_reopens_with_the_same_output() {
     let b = kentos_plot::book::book_pdf(&reopened, &[], "test", "2026-10-22").unwrap();
     // Reopening resets the runtime revision. Source provenance must report each real
     // revision even though model, text and embedded image content stay identical.
-    let ca=kentos_plot::provenance::Capture::new(&doc,"test","2026-10-22",None).unwrap();
-    let cb=kentos_plot::provenance::Capture::new(&reopened,"test","2026-10-22",None).unwrap();
-    assert_eq!(ca.pin().sha256,cb.pin().sha256);
-    assert_eq!(ca.pin().revision,doc.revision().to_string());
-    assert_eq!(cb.pin().revision,reopened.revision().to_string());
-    assert_eq!(super::files::pdf_streams(&a.bytes),super::files::pdf_streams(&b.bytes));
-    let (printed,_) = kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
+    let ca = kentos_plot::provenance::Capture::new(&doc, "test", "2026-10-22", None).unwrap();
+    let cb = kentos_plot::provenance::Capture::new(&reopened, "test", "2026-10-22", None).unwrap();
+    assert_eq!(ca.pin().sha256, cb.pin().sha256);
+    assert_eq!(ca.pin().revision, doc.revision().to_string());
+    assert_eq!(cb.pin().revision, reopened.revision().to_string());
+    assert_eq!(
+        super::files::pdf_streams(&a.bytes),
+        super::files::pdf_streams(&b.bytes)
+    );
+    let (printed, _) = kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
     for sheet in &printed.sheets {
-        let pa=kentos_plot::preview::page_captured(&ca,&sheet.id,96).unwrap();
-        let pb=kentos_plot::preview::page_captured(&cb,&sheet.id,96).unwrap();
-        assert_eq!((pa.width,pa.height),(pb.width,pb.height));
-        assert_eq!(pa.rgba,pb.rgba);
+        let pa = kentos_plot::preview::page_captured(&ca, &sheet.id, 96).unwrap();
+        let pb = kentos_plot::preview::page_captured(&cb, &sheet.id, 96).unwrap();
+        assert_eq!((pa.width, pa.height), (pb.width, pb.height));
+        assert_eq!(pa.rgba, pb.rgba);
     }
     assert!(String::from_utf8_lossy(&a.bytes).contains("/Subtype /Image"));
     assert!(String::from_utf8_lossy(&b.bytes).contains("/Subtype /Image"));
@@ -255,21 +258,34 @@ fn svg_assets_render_with_no_window_or_system_fonts() {
     assert!(!pdf.findings.iter().any(|f| f.code == "svg_not_in_pdf"));
 }
 
-
 #[test]
 fn temporary_editor_isolation_does_not_change_the_exported_pdf() {
-    let data: Value = serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/headless-output.json")).unwrap();
-    let case = data["cases"].as_array().unwrap().iter().find(|c| c["expected"]["visible"] == true).unwrap();
-    let mut doc = Document::from_snapshot(serde_json::from_value(case["setup"].clone()).unwrap()).unwrap();
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/headless-output.json"
+    ))
+    .unwrap();
+    let case = data["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["expected"]["visible"] == true)
+        .unwrap();
+    let mut doc =
+        Document::from_snapshot(serde_json::from_value(case["setup"].clone()).unwrap()).unwrap();
     let mut book = SheetBook::default();
-    book.sheets.push(serde_json::from_value(case["sheet"].clone()).unwrap());
-    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap()).unwrap();
+    book.sheets
+        .push(serde_json::from_value(case["sheet"].clone()).unwrap());
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
     let baseline = kentos_plot::book::book_pdf(&doc, &[], "QA", "2026-11-01").unwrap();
     // A valid session can have no remaining visible targets after its isolated object is deleted.
     doc.isolate_objects(&[]);
     let interactive = Spatial::of(&doc);
     assert!(!interactive.level_looks().1.hidden.is_empty());
     let isolated = kentos_plot::book::book_pdf(&doc, &[], "QA", "2026-11-01").unwrap();
-    assert_eq!(baseline.bytes, isolated.bytes, "output geometry and labels must ignore the editor's mask");
+    assert_eq!(
+        baseline.bytes, isolated.bytes,
+        "output geometry and labels must ignore the editor's mask"
+    );
     assert_eq!(baseline.findings, isolated.findings);
 }

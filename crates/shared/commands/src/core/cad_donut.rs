@@ -1,6 +1,6 @@
 //! Halka's semantic input: centre and diameters in world metres, never precomputed rings.
-use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 

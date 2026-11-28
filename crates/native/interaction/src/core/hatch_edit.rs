@@ -26,7 +26,7 @@ use crate::hatch_options as options;
 use crate::log::Level;
 use crate::points::{self, wire};
 use crate::prompt::{Prompt, upper_tr};
-use crate::tool::{Context, Cursor, Flow, Pointer, Preview, Stroke, Tone, Tool, Memory};
+use crate::tool::{Context, Cursor, Flow, Memory, Pointer, Preview, Stroke, Tone, Tool};
 
 /// The tool's id: its command is `tool.hatchEdit`.
 pub const ID: &str = "hatchEdit";
@@ -137,7 +137,9 @@ impl HatchEditor {
     }
 
     fn uid(&self, cx: &Context<'_>) -> Option<String> {
-        self.picked.and_then(|s| cx.doc.uid(s)).map(|u| u.to_string())
+        self.picked
+            .and_then(|s| cx.doc.uid(s))
+            .map(|u| u.to_string())
     }
 
     /// The picked hatch outlined.
@@ -157,7 +159,12 @@ impl HatchEditor {
                 }
             }
             Some(e) => {
-                let o = Outline::of(&kentos_native_application::geometry::shape(e), None, 2.5, Tone::Snap);
+                let o = Outline::of(
+                    &kentos_native_application::geometry::shape(e),
+                    None,
+                    2.5,
+                    Tone::Snap,
+                );
                 Preview {
                     strokes: o.strokes,
                     marks: o.marks,
@@ -229,27 +236,32 @@ impl HatchEditor {
         let Some(Entity::Hatch(h)) = self.picked.and_then(|s| cx.doc.get(s)) else {
             return None;
         };
-        h.holes.iter().flatten().position(|ring| {
-            let pts: Vec<Vec2> = ring.iter().map(|q| Vec2::new(q.x, q.y)).collect();
-            kentos_geometry_core::geometry::point_in_polygon(p, &pts)
-        })
-        .map(|k| k as u32)
+        h.holes
+            .iter()
+            .flatten()
+            .position(|ring| {
+                let pts: Vec<Vec2> = ring.iter().map(|q| Vec2::new(q.x, q.y)).collect();
+                kentos_geometry_core::geometry::point_in_polygon(p, &pts)
+            })
+            .map(|k| k as u32)
     }
 
     /// A click with a hatch picked, as the mode says.
     fn act(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         let Some(uid) = self.uid(cx) else { return };
         match mode(cx) {
-            Mode::AddIslands => match crate::selectable::pick(cx, p.raw).and_then(|s| cx.doc.uid(s)) {
-                Some(u) => self.apply(
-                    Edit::AddIslands {
-                        uid,
-                        uids: vec![u.to_string()],
-                    },
-                    cx,
-                ),
-                None => cx.say(Level::Warn, "Ada olacak kapalı bir nesneye tıklayın."),
-            },
+            Mode::AddIslands => {
+                match crate::selectable::pick(cx, p.raw).and_then(|s| cx.doc.uid(s)) {
+                    Some(u) => self.apply(
+                        Edit::AddIslands {
+                            uid,
+                            uids: vec![u.to_string()],
+                        },
+                        cx,
+                    ),
+                    None => cx.say(Level::Warn, "Ada olacak kapalı bir nesneye tıklayın."),
+                }
+            }
             Mode::RemoveIslands => {
                 let tied = matches!(self.picked.and_then(|s| cx.doc.get(s)), Some(Entity::Hatch(h)) if h.assoc.is_some());
                 let edit = if tied {
@@ -283,7 +295,13 @@ impl HatchEditor {
                 let region = Self::region_at(p.world, cx);
                 self.apply(Edit::Reselect { uid, region }, cx);
             }
-            Mode::Origin => self.apply(Edit::Origin { uids: vec![uid], origin: kentos_commands::HatchOrigin::Point { at: wire(p.world) } }, cx),
+            Mode::Origin => self.apply(
+                Edit::Origin {
+                    uids: vec![uid],
+                    origin: kentos_commands::HatchOrigin::Point { at: wire(p.world) },
+                },
+                cx,
+            ),
             Mode::Align => {
                 let other = crate::selectable::candidates(cx, p.raw)
                     .into_iter()
@@ -366,13 +384,33 @@ impl Tool for HatchEditor {
             prompt = prompt.option(m.label(), m.key());
         }
         if self.mode == Mode::Recreate {
-            prompt = prompt.option_with("Biçim", "B", if self.polyline { "çoklu çizgi" } else { "alan" });
+            prompt = prompt.option_with(
+                "Biçim",
+                "B",
+                if self.polyline {
+                    "çoklu çizgi"
+                } else {
+                    "alan"
+                },
+            );
         }
         if self.mode == Mode::Reselect {
-            prompt = prompt.option_with("Sınır", "B", if self.memory.hatch_by_lines { "çizgiler" } else { "kapalı nesne" });
+            prompt = prompt.option_with(
+                "Sınır",
+                "B",
+                if self.memory.hatch_by_lines {
+                    "çizgiler"
+                } else {
+                    "kapalı nesne"
+                },
+            );
             prompt = options::with_region_options(prompt, &self.memory, true);
             if self.memory.hatch_by_lines {
-                prompt = prompt.option_with("Boşluk (m)", "G", crate::format::js_number(self.memory.hatch_gap));
+                prompt = prompt.option_with(
+                    "Boşluk (m)",
+                    "G",
+                    crate::format::js_number(self.memory.hatch_gap),
+                );
             }
         }
         prompt
@@ -387,7 +425,11 @@ impl Tool for HatchEditor {
         self.see(cx);
         if self.mode == Mode::Origin && self.picked.is_some() {
             self.outline(cx);
-            self.drawn.markers.push(crate::Marker { at: p.world, shape: crate::MarkerShape::Plus(8.), tone: Tone::Snap });
+            self.drawn.markers.push(crate::Marker {
+                at: p.world,
+                shape: crate::MarkerShape::Plus(8.),
+                tone: Tone::Snap,
+            });
             return;
         }
         let hit = crate::selectable::hover(cx, p.raw);
@@ -432,22 +474,38 @@ impl Tool for HatchEditor {
             match key.as_str() {
                 "B" => cx.memory.hatch_by_lines = !cx.memory.hatch_by_lines,
                 "G" if cx.memory.hatch_by_lines => self.asking = Some(options::Asking::Gap),
-                "A" | "İ" | "Y" => { options::option(&key, true, &mut self.asking, cx); }
+                "A" | "İ" | "Y" => {
+                    options::option(&key, true, &mut self.asking, cx);
+                }
                 _ => return self.choose_mode(&key, cx),
             }
             self.see(cx);
             return true;
         }
-        if self.choose_mode(&key, cx) { return true; }
+        if self.choose_mode(&key, cx) {
+            return true;
+        }
         if mode(cx) == Mode::Origin && self.picked.is_some() {
             if let Some(point) = cx.typed_point(text, None, None) {
                 let Some(uid) = self.uid(cx) else {
-                    cx.say(Level::Warn, "Seçili tarama artık bulunamıyor. Taramayı yeniden seçin.");
+                    cx.say(
+                        Level::Warn,
+                        "Seçili tarama artık bulunamıyor. Taramayı yeniden seçin.",
+                    );
                     return true;
                 };
-                self.apply(Edit::Origin { uids: vec![uid], origin: kentos_commands::HatchOrigin::Point { at: wire(point) } }, cx);
+                self.apply(
+                    Edit::Origin {
+                        uids: vec![uid],
+                        origin: kentos_commands::HatchOrigin::Point { at: wire(point) },
+                    },
+                    cx,
+                );
             } else {
-                cx.say(Level::Warn, "Desen başlangıcı için bir nokta seçin veya koordinat girin.");
+                cx.say(
+                    Level::Warn,
+                    "Desen başlangıcı için bir nokta seçin veya koordinat girin.",
+                );
             }
             return true;
         }
@@ -477,8 +535,12 @@ impl Tool for HatchEditor {
         false
     }
 
-    fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool { false }
-    fn preview(&self, _format: &Format) -> Preview { self.drawn.clone() }
+    fn undo_step(&mut self, _cx: &mut Context<'_>) -> bool {
+        false
+    }
+    fn preview(&self, _format: &Format) -> Preview {
+        self.drawn.clone()
+    }
 }
 
 impl HatchEditor {
@@ -498,5 +560,4 @@ impl HatchEditor {
         }
         true
     }
-
 }

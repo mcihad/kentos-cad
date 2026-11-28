@@ -35,8 +35,17 @@ fn named_and_coded(app: &App) -> (Slot, String, String) {
         .find_map(|e| match e {
             Entity::Point(p) => {
                 let name = p.base.label.clone().filter(|n| !n.trim().is_empty())?;
-                let code = p.base.attrs.get("Kod").cloned().filter(|c| !c.trim().is_empty())?;
-                Some((Slot(p.base.id), name.trim().to_owned(), code.trim().to_owned()))
+                let code = p
+                    .base
+                    .attrs
+                    .get("Kod")
+                    .cloned()
+                    .filter(|c| !c.trim().is_empty())?;
+                Some((
+                    Slot(p.base.id),
+                    name.trim().to_owned(),
+                    code.trim().to_owned(),
+                ))
             }
             _ => None,
         })
@@ -153,7 +162,11 @@ fn a_click_on_ad_or_kod_of_the_one_selected_row_edits_it() {
     for (text, column) in [(name, EditColumn::Name), (code, EditColumn::Code)] {
         let at = crate::files_testing::find_texts(&mut snapshot, &app, &text)
             .into_iter()
-            .min_by(|a, b| (a.center().y - row_y).abs().total_cmp(&(b.center().y - row_y).abs()))
+            .min_by(|a, b| {
+                (a.center().y - row_y)
+                    .abs()
+                    .total_cmp(&(b.center().y - row_y).abs())
+            })
             .unwrap_or_else(|| panic!("{text} is in the table"))
             .center();
         snapshot.input(&mut app, App::view, &mut update, Input::Click(at));
@@ -201,7 +214,9 @@ fn the_points_left_over_go_to_their_own_layer_instead_of_being_deleted() {
     let undone = app.document.as_mut().and_then(|d| d.model.undo());
     assert_eq!(undone.as_deref(), Some("Çift noktaları ayıkla"));
     let doc = app.document.as_ref().expect("a drawing");
-    assert!(kentos_native_application::import_apply::layer_named(&doc.model, ASIDE_LAYER).is_none());
+    assert!(
+        kentos_native_application::import_apply::layer_named(&doc.model, ASIDE_LAYER).is_none()
+    );
     // The choice is kept for the next window.
     ev(&mut app, Event::Batch(Kind::Dedupe));
     assert!(app.gis.points.batch.as_ref().is_some_and(|w| w.aside_on()));
@@ -238,11 +253,7 @@ fn map_points_app() -> App {
 }
 
 /// The task's widget operations run in the picture, as iced's runtime runs them.
-fn operate(
-    snapshot: &mut kentos_ui::snapshot::Snapshot,
-    app: &App,
-    task: iced::Task<Message>,
-) {
+fn operate(snapshot: &mut kentos_ui::snapshot::Snapshot, app: &App, task: iced::Task<Message>) {
     use iced::futures::StreamExt as _;
     if let Some(mut stream) = iced_runtime::task::into_stream(task) {
         while let Some(action) = iced::futures::executor::block_on(stream.next()) {
@@ -570,18 +581,28 @@ fn a_points_elevation_shows_rounded_and_edits_from_its_stored_figure() {
     let shown = app.format().length_bare(STORED);
     assert!(shown.len() < 10, "rounded: {shown}");
     crate::files_testing::evidence(&mut snap, &app, "ur2-015", "kot");
-    assert!(!crate::files_testing::find_texts(&mut snap, &app, &shown).is_empty(), "{shown} at rest");
+    assert!(
+        !crate::files_testing::find_texts(&mut snap, &app, &shown).is_empty(),
+        "{shown} at rest"
+    );
     assert!(crate::files_testing::find_texts(&mut snap, &app, "103.82731135400061").is_empty());
     let revision = app.document.as_ref().unwrap().model.revision().to_string();
     let label = crate::files_testing::find_texts(&mut snap, &app, "Kot (Z)")
         .into_iter()
         .max_by(|a, b| a.x.total_cmp(&b.x))
         .expect("the row");
-    snap.input(&mut app, App::view, &mut update, Input::Click(Point::new(label.x + 214., label.center().y)));
+    snap.input(
+        &mut app,
+        App::view,
+        &mut update,
+        Input::Click(Point::new(label.x + 214., label.center().y)),
+    );
     snap.input(&mut app, App::view, &mut update, Input::Key(Named::Enter));
     let doc = &app.document.as_ref().unwrap().model;
     assert_eq!(doc.revision().to_string(), revision, "nothing written");
-    let Some(Entity::Point(p)) = doc.get(Slot(2)) else { unreachable!() };
+    let Some(Entity::Point(p)) = doc.get(Slot(2)) else {
+        unreachable!()
+    };
     assert_eq!(p.z, Some(STORED), "the stored figure kept");
 }
 
@@ -601,14 +622,21 @@ fn a_point_named_later_in_a_map_gets_its_name_text() {
             None => kentos_commands::Workspace::Gis,
         });
         snapshot.settings.cad_work = cad_work;
-        let mut doc = crate::document::Document::new(snapshot, None).expect("opens").model;
+        let mut doc = crate::document::Document::new(snapshot, None)
+            .expect("opens")
+            .model;
         let layer = doc.layers().active().to_owned();
         let draft = Draft {
             east: "487100".to_owned(),
             north: "4420100".to_owned(),
             ..Draft::default()
         };
-        assert!(write_draft(&mut doc, &draft, &layer, None).outcome.step.is_some());
+        assert!(
+            write_draft(&mut doc, &draft, &layer, None)
+                .outcome
+                .step
+                .is_some()
+        );
         let slot = doc
             .entities()
             .filter(|e| matches!(e, Entity::Point(_)))
@@ -622,11 +650,19 @@ fn a_point_named_later_in_a_map_gets_its_name_text() {
     };
     let (mut doc, slot) = named_in(Some(kentos_commands::CadWork::Map));
     let texts = doc.linked_texts(slot);
-    let [text] = texts[..] else { panic!("one name text: {texts:?}") };
-    let Some(Entity::Text(t)) = doc.get(text) else { panic!("a text") };
+    let [text] = texts[..] else {
+        panic!("one name text: {texts:?}")
+    };
+    let Some(Entity::Text(t)) = doc.get(text) else {
+        panic!("a text")
+    };
     assert_eq!((t.text.as_str(), t.label_scale), ("N7", None));
     // Renamed: the same text takes the new name.
-    assert!(write_cell(&mut doc, slot, EditColumn::Name, "N8", false).step.is_some());
+    assert!(
+        write_cell(&mut doc, slot, EditColumn::Name, "N8", false)
+            .step
+            .is_some()
+    );
     assert_eq!(doc.linked_texts(slot), [text]);
     assert!(matches!(doc.get(text), Some(Entity::Text(t)) if t.text == "N8"));
     // One undo step takes the name and its text back together.

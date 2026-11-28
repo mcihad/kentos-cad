@@ -94,7 +94,10 @@ struct Shape {
 
 /// Twice a ring's signed area: positive counter-clockwise.
 fn signed(p: &[[f64; 2]]) -> f64 {
-    let points: Vec<_> = p.iter().map(|q| kentos_geometry_core::Vec2::new(q[0], q[1])).collect();
+    let points: Vec<_> = p
+        .iter()
+        .map(|q| kentos_geometry_core::Vec2::new(q[0], q[1]))
+        .collect();
     2.0 * kentos_geometry_core::geometry::signed_area(&points)
 }
 
@@ -229,7 +232,7 @@ fn stroke_paths(layer: &StyledLayer, b: &StyledBatch, o: &VectorScale) -> Option
                 .filter(|d| !d.is_empty())
                 .map(|d| d.iter().map(|x| paper_mm(*x, *unit, o.scale)).collect())
                 .unwrap_or_default(),
-            dash_offset: (*dash_offset != 0.0 && dash.as_ref().is_some_and(|d|!d.is_empty()))
+            dash_offset: (*dash_offset != 0.0 && dash.as_ref().is_some_and(|d| !d.is_empty()))
                 .then(|| paper_mm(*dash_offset, *unit, o.scale)),
             cap: cap(*line_cap),
             join: LineJoin::Round,
@@ -269,8 +272,7 @@ fn triangle_rings(t: &[f64], dx: f64, dy: f64) -> Vec<Part> {
         let a = (tri[0], tri[1]);
         let mut b = (tri[2], tri[3]);
         let mut c = (tri[4], tri[5]);
-        let cross = (b.0 - a.0) * (c.1 - a.1)
-            - (b.1 - a.1) * (c.0 - a.0);
+        let cross = (b.0 - a.0) * (c.1 - a.1) - (b.1 - a.1) * (c.0 - a.0);
         if cross == 0.0 {
             continue;
         }
@@ -318,10 +320,7 @@ fn line_in_triangles(t: &[f64], n: [f64; 2], d: [f64; 2], c: f64) -> Vec<[f64; 2
         let mut pts: Vec<f64> = Vec::new();
         for k in 0..3 {
             let (ax, ay) = (tri[2 * k], tri[2 * k + 1]);
-            let (bx, by) = (
-                tri[(2 * k + 2) % 6],
-                tri[(2 * k + 3) % 6],
-            );
+            let (bx, by) = (tri[(2 * k + 2) % 6], tri[(2 * k + 3) % 6]);
             let sa = n[0] * ax + n[1] * ay - c;
             let sb = n[0] * bx + n[1] * by - c;
             if (sa < 0.0 && sb < 0.0) || (sa > 0.0 && sb > 0.0) || sa == sb {
@@ -960,36 +959,80 @@ mod tests {
         let lines: usize = shapes.iter().map(|s| s.parts.len()).sum();
         // The lines at 0, 0.05 … 100 m: 2001, each across the square.
         assert_eq!(lines, 2001);
-        assert!(shapes[0].parts.iter().all(|p| (p.points[1][0] - p.points[0][0] - 100.0).abs() < 1e-9));
+        assert!(
+            shapes[0]
+                .parts
+                .iter()
+                .all(|p| (p.points[1][0] - p.points[0][0] - 100.0).abs() < 1e-9)
+        );
     }
 
     #[test]
     fn a_pdf_fill_keeps_low_parts_through_its_triangle_edge_keys() {
-        let values = [16960., 16960., 16960.0006, 16960., 16960.0006, 16960.0005,
-            16960., 16960., 16960.0006, 16960.0005, 16960., 16960.0005];
+        let values = [
+            16960., 16960., 16960.0006, 16960., 16960.0006, 16960.0005, 16960., 16960., 16960.0006,
+            16960.0005, 16960., 16960.0005,
+        ];
         let data: Vec<f32> = values.iter().map(|&v| v as f32).collect();
-        let low = values.iter().zip(&data).map(|(&v, &hi)| (v - f64::from(hi)) as f32).collect();
-        let paint = FillPaintBatch::Solid { color: [0., 0., 0., 1.] };
+        let low = values
+            .iter()
+            .zip(&data)
+            .map(|(&v, &hi)| (v - f64::from(hi)) as f32)
+            .collect();
+        let paint = FillPaintBatch::Solid {
+            color: [0., 0., 0., 1.],
+        };
         let batch = StyledBatch {
-            range: 0..data.len(), kind: BatchKind::Fill { paint: paint.clone() },
-            level: 0., key: 0, bounds: [16960.,16960.,16960.0006,16960.0005],
-            origin: [0.,0.], reach: 0., reach_unit: Unit::World,
-            min_scale: None, max_scale: None, group: 0, effect: None, weight_cap: 0.,
+            range: 0..data.len(),
+            kind: BatchKind::Fill {
+                paint: paint.clone(),
+            },
+            level: 0.,
+            key: 0,
+            bounds: [16960., 16960., 16960.0006, 16960.0005],
+            origin: [0., 0.],
+            reach: 0.,
+            reach_unit: Unit::World,
+            min_scale: None,
+            max_scale: None,
+            group: 0,
+            effect: None,
+            weight_cap: 0.,
             line_type_loss: None,
             lod: None,
             instances: None,
         };
-        let layer = StyledLayer { data, low, ..Default::default() };
-        let shapes = fill_paths(&layer, &batch, &paint, &VectorScale { scale: 50., origin: [4_000_000_000.,1_000_000.] }).unwrap();
+        let layer = StyledLayer {
+            data,
+            low,
+            ..Default::default()
+        };
+        let shapes = fill_paths(
+            &layer,
+            &batch,
+            &paint,
+            &VectorScale {
+                scale: 50.,
+                origin: [4_000_000_000., 1_000_000.],
+            },
+        )
+        .unwrap();
         assert_eq!(shapes.len(), 1);
         assert_eq!(shapes[0].parts.len(), 1);
         let points = &shapes[0].parts[0].points;
         assert_eq!(points.len(), 4);
         let lo = points.iter().map(|p| p[1]).fold(f64::INFINITY, f64::min);
-        let hi = points.iter().map(|p| p[1]).fold(f64::NEG_INFINITY, f64::max);
+        let hi = points
+            .iter()
+            .map(|p| p[1])
+            .fold(f64::NEG_INFINITY, f64::max);
         assert!((hi - lo - 0.0005).abs() < 1e-9, "height {}", hi - lo);
         let paths: Vec<_> = shapes.into_iter().flat_map(core_paths).collect();
-        assert_eq!(paths.len(), 1, "the far ring must reach the PDF, not disappear during winding classification");
+        assert_eq!(
+            paths.len(),
+            1,
+            "the far ring must reach the PDF, not disappear during winding classification"
+        );
     }
 
     #[test]

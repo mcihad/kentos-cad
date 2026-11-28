@@ -32,9 +32,7 @@ impl Method {
     pub fn hint(self) -> &'static str {
         match self {
             Method::Points => "Ortak noktalardan en küçük kareler ile; artıklar ve m0 görünür.",
-            Method::Parameters => {
-                "Taban noktasına göre Y ve X ölçeği, dönüklük ve öteleme."
-            }
+            Method::Parameters => "Taban noktasına göre Y ve X ölçeği, dönüklük ve öteleme.",
         }
     }
 }

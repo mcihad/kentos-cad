@@ -268,7 +268,9 @@ fn a_fixed_chord_refusal_explains_the_actual_project_units_and_preserves_the_exa
         let query = done(constraints_query::read(&d, &ConstraintsQuery::default()));
         assert!(query.constraints.iter().all(|c| c.holds));
         assert!((query.constraints[2].measured.unwrap() - 2.0).abs() < 1e-9);
-        let Entity::Polyline(original) = &snap.entities[0] else { panic!("path") };
+        let Entity::Polyline(original) = &snap.entities[0] else {
+            panic!("path")
+        };
         assert_eq!(e.pts, original.pts);
         d.undo();
         assert_eq!(d.to_snapshot_v2(), snap);

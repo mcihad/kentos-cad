@@ -76,7 +76,13 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: PointCreate) -> CommandRe
         Err(stop) => return stop.into(),
     };
     // Its name as a text linked to it, in the same step (docs/adr/9314).
-    let mut output = PointCreated { uid, id, revision, text_uid: None, text_id: None };
+    let mut output = PointCreated {
+        uid,
+        id,
+        revision,
+        text_uid: None,
+        text_id: None,
+    };
     if let Some(text) = name_text(cx.doc, &named, EntityId::parse(&output.uid)) {
         match checks::add(cx.doc, text) {
             Ok((text_id, text_uid, revision)) => {
@@ -107,7 +113,14 @@ fn name_text(doc: &Document, input: &PointCreate, of: Option<EntityId>) -> Optio
         return None;
     }
     let name = input.label.as_deref().filter(|l| !l.trim().is_empty())?;
-    Some(name_text_at(doc, &input.layer_id, input.color.as_ref(), input.p, name, of))
+    Some(name_text_at(
+        doc,
+        &input.layer_id,
+        input.color.as_ref(),
+        input.p,
+        name,
+        of,
+    ))
 }
 
 /// A point's name `name` as a text (docs/adr/9314), linked to the point `of` (none in a plan) without a scale: up and
@@ -125,7 +138,10 @@ pub(crate) fn name_text_at(
     let settings = doc.settings();
     let height = settings.annotation_height(AnnotationKind::Measure);
     let font = kentos_geometry_core::text::Font::from_id(DrawingFont::id_of(settings.drawing_font));
-    let out = kentos_geometry_core::vec2::Vec2::new(std::f64::consts::FRAC_1_SQRT_2, std::f64::consts::FRAC_1_SQRT_2);
+    let out = kentos_geometry_core::vec2::Vec2::new(
+        std::f64::consts::FRAC_1_SQRT_2,
+        std::f64::consts::FRAC_1_SQRT_2,
+    );
     let at = kentos_geometry_core::processing::numbering::corner_text_at(
         kentos_geometry_core::vec2::Vec2::new(p.x, p.y),
         out,
@@ -215,21 +231,28 @@ mod tests {
     /// nothing.
     #[test]
     fn a_name_is_written_up_and_right_of_its_point_and_linked_to_it() {
-        let cases: serde_json::Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.point.create.json"))
-                .expect("cases");
-        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&cases["setup"].to_string()).expect("a drawing");
+        let cases: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/commands/v1/cad.point.create.json"
+        ))
+        .expect("cases");
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&cases["setup"].to_string())
+            .expect("a drawing");
         let mut doc = Document::from_snapshot(snapshot).expect("opens");
         let mut input: PointCreate =
-            serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone()).expect("an input");
+            serde_json::from_value(cases["cases"][0]["steps"][0]["input"].clone())
+                .expect("an input");
         input.label = Some("P1".to_owned());
         input.name_text = true;
-        let CommandResult::Completed { output: plan, .. } = super::plan(&ExecutionContext::new(&mut doc), &input)
+        let CommandResult::Completed { output: plan, .. } =
+            super::plan(&ExecutionContext::new(&mut doc), &input)
         else {
             panic!("a plan")
         };
-        assert!(matches!(&plan.text, Some(Entity::Text(t)) if t.text == "P1" && t.label_of.is_none()));
-        let CommandResult::Completed { output, .. } = execute(&mut ExecutionContext::new(&mut doc), input.clone())
+        assert!(
+            matches!(&plan.text, Some(Entity::Text(t)) if t.text == "P1" && t.label_of.is_none())
+        );
+        let CommandResult::Completed { output, .. } =
+            execute(&mut ExecutionContext::new(&mut doc), input.clone())
         else {
             panic!("written")
         };
@@ -237,11 +260,21 @@ mod tests {
         let Some(Entity::Text(t)) = doc.get(Slot(text_id)) else {
             panic!("the text")
         };
-        assert!(t.p.x > input.p.x && t.p.y > input.p.y, "up and right: {:?}", t.p);
-        assert_eq!((t.text.as_str(), t.height, t.label_scale), ("P1", 2.0, None));
+        assert!(
+            t.p.x > input.p.x && t.p.y > input.p.y,
+            "up and right: {:?}",
+            t.p
+        );
+        assert_eq!(
+            (t.text.as_str(), t.height, t.label_scale),
+            ("P1", 2.0, None)
+        );
         let point = doc.uid(Slot(output.id)).map(|u| *u.as_bytes());
         assert_eq!(t.label_of.map(|of| of.0), point);
-        assert_eq!(output.text_uid, doc.uid(Slot(text_id)).map(|u| u.to_string()));
+        assert_eq!(
+            output.text_uid,
+            doc.uid(Slot(text_id)).map(|u| u.to_string())
+        );
         assert_eq!(doc.undo().as_deref(), Some("Ekle"), "one step");
         assert!(doc.get(Slot(output.id)).is_none() && doc.get(Slot(text_id)).is_none());
     }

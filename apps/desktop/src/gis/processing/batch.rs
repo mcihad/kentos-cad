@@ -904,7 +904,10 @@ fn cell_problems<'a>(problems: &[batch_table::Refusal]) -> Element<'a, Message> 
     .style(style::text::danger)]
     .spacing(4);
     for p in problems.iter().take(20) {
-        list = list.push(label::caption(format!("Satır {}: {}", p.row + 1, p.message)).style(style::text::danger));
+        list = list.push(
+            label::caption(format!("Satır {}: {}", p.row + 1, p.message))
+                .style(style::text::danger),
+        );
     }
     list.into()
 }

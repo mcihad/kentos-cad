@@ -5,16 +5,16 @@
 //! area. The write is one undo step “Ayırma çapı” through `cad.entities.create`. Çapın paftaları makes a separation sheet
 //! for each parcel through `cad.readjustment.sheets` (docs/adr/2680).
 
-use crate::map_ext::*;
 use crate::map::MapState;
+use crate::map_ext::*;
 use std::collections::BTreeMap;
 
 use iced::Task;
-use kentos_commands::{
-    CommandResult, EntitiesCreate, EntityGeometry, NewObject, ReadjustmentScoped, ReadjustmentSheets, RingGeometry,
-    ScopePart, ScopeRing,
-};
 use kentos_commands::Vec2;
+use kentos_commands::{
+    CommandResult, EntitiesCreate, EntityGeometry, NewObject, ReadjustmentScoped,
+    ReadjustmentSheets, RingGeometry, ScopePart, ScopeRing,
+};
 use kentos_domain::NewLayer;
 use kentos_interaction::{Format, Level};
 use kentos_native_application::{ExecutionContext, create, readjustment_sheets};
@@ -47,11 +47,19 @@ pub fn rows(scope: &ReadjustmentScoped, f: &Format) -> Vec<Vec<String>> {
                 for (i, c) in ring.pts.iter().enumerate() {
                     out.push(vec![
                         p.parcel.clone(),
-                        if r == 0 { name.clone() } else { format!("{name} (delik)") },
+                        if r == 0 {
+                            name.clone()
+                        } else {
+                            format!("{name} (delik)")
+                        },
                         ring.numbers.get(i).map_or_else(String::new, u32::to_string),
                         f.coord(c[0]),
                         f.coord(c[1]),
-                        if first { f.area_bare(part.area) } else { String::new() },
+                        if first {
+                            f.area_bare(part.area)
+                        } else {
+                            String::new()
+                        },
                     ]);
                     first = false;
                 }
@@ -75,7 +83,11 @@ fn new_object(parcel: &str, name: String, part: &ScopePart, f: &Format) -> Optio
     let outer = part.rings.first()?;
     let holes: Vec<RingGeometry> = part.rings[1..]
         .iter()
-        .map(|h| RingGeometry { pts: ring_pts(h), bulges: h.bulges.clone(), zs: None })
+        .map(|h| RingGeometry {
+            pts: ring_pts(h),
+            bulges: h.bulges.clone(),
+            zs: None,
+        })
         .collect();
     let attrs = BTreeMap::from([
         ("Parsel".to_owned(), parcel.to_owned()),
@@ -106,23 +118,40 @@ fn new_object(parcel: &str, name: String, part: &ScopePart, f: &Format) -> Optio
 
 /// The parcel numbers typed for the parts outside (docs/adr/3080): `Ada/Parsel: n, n; …`, by the partial parcels'
 /// persistent ids; none when nothing is typed, the reason when a part does not read.
-pub fn typed_numbers(text: &str, scope: &ReadjustmentScoped) -> Result<Option<std::collections::BTreeMap<String, Vec<String>>>, String> {
+pub fn typed_numbers(
+    text: &str,
+    scope: &ReadjustmentScoped,
+) -> Result<Option<std::collections::BTreeMap<String, Vec<String>>>, String> {
     let mut out = std::collections::BTreeMap::new();
     for part in text.split(';').map(str::trim).filter(|t| !t.is_empty()) {
         let Some((parcel, list)) = part.split_once(':') else {
-            return Err(format!("Dış parça no: “{part}” okunmadı; “Ada/Parsel: numara, numara” yazın."));
+            return Err(format!(
+                "Dış parça no: “{part}” okunmadı; “Ada/Parsel: numara, numara” yazın."
+            ));
         };
         let parcel = parcel.trim();
-        let Some(p) = scope.parcels.iter().find(|p| p.parcel == parcel && p.kind == "partial") else {
+        let Some(p) = scope
+            .parcels
+            .iter()
+            .find(|p| p.parcel == parcel && p.kind == "partial")
+        else {
             // Why it takes no number, as the command says it (docs/adr/3880).
-            let why = match scope.parcels.iter().find(|p| p.parcel == parcel).map(|p| p.kind.as_str()) {
+            let why = match scope
+                .parcels
+                .iter()
+                .find(|p| p.parcel == parcel)
+                .map(|p| p.kind.as_str())
+            {
                 Some("whole") => "düzenleme sınırının tamamen içinde, dışarıda parçası yok",
                 Some("outside") => "düzenleme sınırının tamamen dışında, düzenlemeye girmiyor",
                 _ => "kapsamda kısmen giren bir parsel değil",
             };
             return Err(format!("Dış parça no: “{parcel}” parseli {why}."));
         };
-        out.insert(p.uid.clone(), list.split(',').map(|n| n.trim().to_owned()).collect());
+        out.insert(
+            p.uid.clone(),
+            list.split(',').map(|n| n.trim().to_owned()).collect(),
+        );
     }
     Ok((!out.is_empty()).then_some(out))
 }
@@ -137,7 +166,9 @@ impl ReadjustmentSheetApp for App {
     /// Çapın paftaları (docs/adr/2680): `cad.readjustment.sheets` over the window's boundary, places, rounding and piece
     /// tolerance with KentOS's separation sheet; one undo step. The window closes and the sheets are shown.
     fn readjustment_sheets_make(&mut self) -> Task<Message> {
-        let Some(scope) = self.readjustment_scope_input() else { return Task::none() };
+        let Some(scope) = self.readjustment_scope_input() else {
+            return Task::none();
+        };
         // The parts outside's parcel numbers as typed (docs/adr/3080).
         let numbers = match &self.modules.map().readjustment.scope {
             Some(Ok(k)) => match typed_numbers(&self.modules.map().readjustment.numbers, k) {
@@ -150,7 +181,13 @@ impl ReadjustmentSheetApp for App {
             _ => None,
         };
         // docs/adr/4280: the numbers' height on paper as typed; empty: labelled points.
-        let typed = self.modules.map().readjustment.number_height.trim().replace(',', ".");
+        let typed = self
+            .modules
+            .map()
+            .readjustment
+            .number_height
+            .trim()
+            .replace(',', ".");
         let number_height = if typed.is_empty() {
             None
         } else {
@@ -171,9 +208,14 @@ impl ReadjustmentSheetApp for App {
             number_leader: self.modules.map().readjustment.number_leader,
             expected_revision: None,
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let result = readjustment_sheets::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        let Some(out) = self.answered(result) else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result =
+            readjustment_sheets::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(out) = self.answered(result) else {
+            return Task::none();
+        };
         let names: Vec<&str> = out.sheets.iter().map(|s| s.name.as_str()).collect();
         self.say(
             Level::Success,
@@ -201,15 +243,22 @@ impl ReadjustmentSheetApp for App {
             .iter()
             .flat_map(|p| {
                 let f = &f;
-                p.parts.iter().enumerate().filter_map(move |(k, part)| new_object(&p.parcel, part_name(&p.parts, k), part, f))
+                p.parts.iter().enumerate().filter_map(move |(k, part)| {
+                    new_object(&p.parcel, part_name(&p.parts, k), part, f)
+                })
             })
             .collect();
         if objects.is_empty() {
-            self.say(Level::Info, format!("{LAYER}: kısmen giren parsel yok; yazılacak parça yok."));
+            self.say(
+                Level::Info,
+                format!("{LAYER}: kısmen giren parsel yok; yazılacak parça yok."),
+            );
             return;
         }
         let n = objects.len();
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         let model = &mut doc.model;
         let step = model.begin_group(LAYER);
         let existing = model
@@ -229,18 +278,28 @@ impl ReadjustmentSheetApp for App {
                 }
             },
         };
-        let input = EntitiesCreate { layer_id: layer, objects, operation: None, expected_revision: None };
+        let input = EntitiesCreate {
+            layer_id: layer,
+            objects,
+            operation: None,
+            expected_revision: None,
+        };
         match create::execute(&mut ExecutionContext::new(model), input) {
             CommandResult::Completed { .. } => {
                 model.end_group(step);
-                self.say(Level::Success, format!("{LAYER}: {n} parça “{LAYER}” katmanına yazıldı (tek geri alma adımı)."));
+                self.say(
+                    Level::Success,
+                    format!(
+                        "{LAYER}: {n} parça “{LAYER}” katmanına yazıldı (tek geri alma adımı)."
+                    ),
+                );
             }
             other => {
                 model.cancel_group(step);
                 let why = match other {
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                        error.message
-                    }
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => error.message,
                     _ => "Ayırma çapı yazılamadı.".to_owned(),
                 };
                 self.warn(why);

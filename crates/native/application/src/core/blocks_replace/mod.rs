@@ -78,7 +78,12 @@ fn write(doc: &mut Document, input: &BlocksReplace) -> CommandResult<BlocksRepla
     if !c.added.is_empty()
         && let Err(why) = doc.merge_blocks(&c.added)
     {
-        return Stop::failed(error(codes::INVALID_LIBRARY, why.to_string(), Some("library".into()))).into();
+        return Stop::failed(error(
+            codes::INVALID_LIBRARY,
+            why.to_string(),
+            Some("library".into()),
+        ))
+        .into();
     }
     if !c.changes.is_empty() {
         doc.update_many(c.changes, STEP);
@@ -271,7 +276,11 @@ fn parameters(
         for (name, value) in &d.type_values {
             // Same-scope type-to-type replacement adopts the selected target type.
             // Demotion to an instance preserves the original common literal input.
-            if !new.dynamic.as_ref().is_some_and(|n| n.is_type_parameter(name)) {
+            if !new
+                .dynamic
+                .as_ref()
+                .is_some_and(|n| n.is_type_parameter(name))
+            {
                 literal.insert(name.clone(), value.clone());
             }
         }
@@ -312,9 +321,19 @@ fn parameters(
                 format!("“{name}” için birimsiz ve fiziksel tanım sayıları doğrudan eşlenemez."),
             ));
         }
-        if let Some(d) = &new.dynamic && d.is_type_parameter(name) {
-            if d.type_values.get(name).is_none_or(|v| !kentos_commands::block_dynamic::same_param_value(v, value)) {
-                return Err((name.clone(), format!("“{name}” örneğe özel değeri hedefin ortak tip değeriyle farklı; önce değerleri eşitleyin veya ayrı tip seçin.")));
+        if let Some(d) = &new.dynamic
+            && d.is_type_parameter(name)
+        {
+            if d.type_values
+                .get(name)
+                .is_none_or(|v| !kentos_commands::block_dynamic::same_param_value(v, value))
+            {
+                return Err((
+                    name.clone(),
+                    format!(
+                        "“{name}” örneğe özel değeri hedefin ortak tip değeriyle farklı; önce değerleri eşitleyin veya ayrı tip seçin."
+                    ),
+                ));
             }
             continue;
         }
@@ -371,11 +390,11 @@ mod tests {
         let dimension = doc
             .add(
                 serde_json::from_value(json!({
-                    "kind":"dimension","id":0,"layerId":"duvar","attrs":{},
-                    "a":{"x":0.,"y":0.},"b":{"x":0.,"y":1.05},"offset":0.2,"height":0.1,
-            "refs":{"a":{"uid":uid,"path":[0],"place":{"kind":"start"}},
-                    "b":{"uid":uid,"path":[0],"place":{"kind":"end"}}}
-                }))
+                        "kind":"dimension","id":0,"layerId":"duvar","attrs":{},
+                        "a":{"x":0.,"y":0.},"b":{"x":0.,"y":1.05},"offset":0.2,"height":0.1,
+                "refs":{"a":{"uid":uid,"path":[0],"place":{"kind":"start"}},
+                        "b":{"uid":uid,"path":[0],"place":{"kind":"end"}}}
+                    }))
                 .unwrap(),
             )
             .unwrap();

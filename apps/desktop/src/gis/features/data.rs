@@ -148,7 +148,13 @@ pub enum DataEvent {
     /// Esc, or a press elsewhere: the edit given up.
     Cancel,
     /// The row of an edit read to be taken: the edit's number, the key, the field, the value, the row read or why not.
-    Taken(u64, i64, String, Option<String>, Result<Vec<(i64, kentos_commands::Entity)>, String>),
+    Taken(
+        u64,
+        i64,
+        String,
+        Option<String>,
+        Result<Vec<(i64, kentos_commands::Entity)>, String>,
+    ),
 }
 
 /// An edited cell's row read off the thread to be taken (data_write.rs).
@@ -163,7 +169,9 @@ fn data_write_task(
     app.gis.features.data.edit_asked += 1;
     let asked = app.gis.features.data.edit_asked;
     crate::db_connections::off_thread(
-        move || kentos_native_application::data_write::rows_to_take(&node, &settings, &[key], &|| false),
+        move || {
+            kentos_native_application::data_write::rows_to_take(&node, &settings, &[key], &|| false)
+        },
         move |rows| msg(DataEvent::Taken(asked, key, field, value, rows)),
     )
 }
@@ -182,7 +190,9 @@ impl DataTable {
     /// The row at a place of the order, when its page is read.
     #[cfg(test)]
     pub(crate) fn row(&self, at: usize) -> Option<&LayerRow> {
-        self.pages.get(&(at as u64 / PAGE))?.get((at as u64 % PAGE) as usize)
+        self.pages
+            .get(&(at as u64 / PAGE))?
+            .get((at as u64 % PAGE) as usize)
     }
 
     /// The reads under way and their inputs (a test answers them itself).
@@ -250,7 +260,9 @@ impl DataTable {
     /// The cell being edited: its row's key, its field and the text typed.
     #[cfg(test)]
     pub(crate) fn cell_editing(&self) -> Option<(i64, String, String)> {
-        self.editing.clone().map(|(k, f)| (k, f, self.edit_text.clone()))
+        self.editing
+            .clone()
+            .map(|(k, f)| (k, f, self.edit_text.clone()))
     }
 
     /// Why the open cell's value was refused.
@@ -261,12 +273,18 @@ impl DataTable {
 
     /// The rows pressed if they are of this layer (Seçilenleri farklı kaydet, docs/adr/9106): none of another's.
     pub(crate) fn selected_of(&self, layer: &str) -> Vec<i64> {
-        if self.any_selected_of(layer) { self.selected.iter().copied().collect() } else { Vec::new() }
+        if self.any_selected_of(layer) {
+            self.selected.iter().copied().collect()
+        } else {
+            Vec::new()
+        }
     }
 
     /// The layer the table's pressed rows are of, when rows are pressed.
     pub(crate) fn selected_layer(&self) -> Option<&str> {
-        self.selected_of.as_deref().filter(|_| !self.selected.is_empty())
+        self.selected_of
+            .as_deref()
+            .filter(|_| !self.selected.is_empty())
     }
 
     /// Whether rows of this layer are pressed.
@@ -331,7 +349,9 @@ impl App {
             let b = self.viewport.camera.visible_bounds();
             [b.min_x, b.min_y, b.max_x, b.max_y].map(|v| v.round() as i64)
         });
-        let selected = if panel.show == Show::Selected && data.selected_of.as_deref() == Some(node.id.as_str()) {
+        let selected = if panel.show == Show::Selected
+            && data.selected_of.as_deref() == Some(node.id.as_str())
+        {
             data.selected.iter().copied().collect()
         } else {
             Vec::new()
@@ -357,7 +377,10 @@ impl App {
         if self.gis.features.data.source_all {
             return None;
         }
-        node.filter.as_ref().and_then(|f| f.expression.clone()).filter(|t| !t.trim().is_empty())
+        node.filter
+            .as_ref()
+            .and_then(|f| f.expression.clone())
+            .filter(|t| !t.trim().is_empty())
     }
 
     /// After every message while the table shows a data layer: a new question starts again from its first page, and
@@ -399,7 +422,8 @@ impl App {
             return Task::none();
         }
         let (first, last) = data.range;
-        let mut wanted: Vec<u64> = (first as u64 / PAGE..=(last.max(first + 1) as u64 - 1) / PAGE).collect();
+        let mut wanted: Vec<u64> =
+            (first as u64 / PAGE..=(last.max(first + 1) as u64 - 1) / PAGE).collect();
         if (data.total.is_none() || data.recount) && !wanted.contains(&0) {
             wanted.insert(0, 0);
         }
@@ -410,7 +434,9 @@ impl App {
         let data = &mut self.gis.features.data;
         let mut tasks = Vec::new();
         for page in wanted {
-            if (data.pages.contains_key(&page) && !data.stale.contains(&page)) || data.reading.contains(&page) {
+            if (data.pages.contains_key(&page) && !data.stale.contains(&page))
+                || data.reading.contains(&page)
+            {
                 continue;
             }
             let filtered = !asked.filter.is_empty();
@@ -429,7 +455,8 @@ impl App {
             let input = LayersRows {
                 layer: asked.layer.clone(),
                 bbox: asked.view.map(|v| v.map(|x| x as f64)),
-                keys: keys.or_else(|| (asked.show == Show::Selected).then(|| asked.selected.clone())),
+                keys: keys
+                    .or_else(|| (asked.show == Show::Selected).then(|| asked.selected.clone())),
                 search: (!asked.search.is_empty() && !by_keys).then(|| asked.search.clone()),
                 filter: (filtered && !by_keys).then(|| asked.filter.clone()),
                 order: (!asked.order.is_empty()).then(|| {
@@ -494,11 +521,11 @@ impl App {
         if matches!(
             event,
             DataEvent::Edit(..)
-            | DataEvent::Input(_)
-            | DataEvent::Enter
-            | DataEvent::Choose(_)
-            | DataEvent::Cancel
-            | DataEvent::Taken(..)
+                | DataEvent::Input(_)
+                | DataEvent::Enter
+                | DataEvent::Choose(_)
+                | DataEvent::Cancel
+                | DataEvent::Taken(..)
         ) {
             return self.data_cell_event(event);
         }
@@ -528,7 +555,10 @@ impl App {
                         data.error = None;
                         // The source answered: the layer checked now (docs/adr/9163).
                         if let Some(asked) = &data.asked {
-                            self.gis.data_edits.verified.insert(asked.layer.clone(), crate::data_edits::now_ms());
+                            self.gis
+                                .data_edits
+                                .verified
+                                .insert(asked.layer.clone(), crate::data_edits::now_ms());
                         }
                         if data.fields.is_empty() || page == 0 {
                             data.fields = a.fields.clone();
@@ -602,7 +632,10 @@ impl App {
         };
         match event {
             DataEvent::Edit(key, field) => {
-                let editing = self.document.as_ref().is_some_and(|d| d.model.editing(&node.id));
+                let editing = self
+                    .document
+                    .as_ref()
+                    .is_some_and(|d| d.model.editing(&node.id));
                 if !editing {
                     // Why, and the way to open it one press away, in a notice that is read whole (docs/adr/9142), as
                     // a drawing tool says it (docs/adr/9128).
@@ -615,7 +648,12 @@ impl App {
                     self.toast(
                         kentos_ui::widget::Toast::info("Katman düzenlemeye kapalı")
                             .body(why)
-                            .action("Düzenlemeyi başlat", crate::data_edits::event(crate::data_edits::Event::Start(node.id.clone()))),
+                            .action(
+                                "Düzenlemeyi başlat",
+                                crate::data_edits::event(crate::data_edits::Event::Start(
+                                    node.id.clone(),
+                                )),
+                            ),
                     );
                     return Task::none();
                 }
@@ -692,7 +730,13 @@ impl App {
 
     /// The value written to a taken row's object, as Öznitelik tablosu writes a drawing's (blank takes it away). A
     /// refused value keeps the cell open with what was typed and its reason beside it (docs/adr/9323).
-    fn write_data_cell(&mut self, uid: kentos_domain::Uuid, key: i64, field: String, value: Option<String>) {
+    fn write_data_cell(
+        &mut self,
+        uid: kentos_domain::Uuid,
+        key: i64,
+        field: String,
+        value: Option<String>,
+    ) {
         let input = kentos_commands::EntitiesSetProperties {
             line_pattern: None,
             line_type: None,
@@ -745,7 +789,11 @@ impl App {
         let data = &self.gis.features.data;
         let n = data.total?;
         let loaded: usize = data.pages.values().map(Vec::len).sum();
-        let read = if (loaded as u64) < n { format!(" ({} yüklendi)", crate::view::thousands(loaded as f64)) } else { String::new() };
+        let read = if (loaded as u64) < n {
+            format!(" ({} yüklendi)", crate::view::thousands(loaded as f64))
+        } else {
+            String::new()
+        };
         Some(format!(
             "{}{read} · {}",
             words::count(n),
@@ -774,7 +822,10 @@ impl App {
         } else {
             data.fields.clone()
         };
-        fields.into_iter().filter(|f| !hidden.contains(f) && !withheld.contains(f)).collect()
+        fields
+            .into_iter()
+            .filter(|f| !hidden.contains(f) && !withheld.contains(f))
+            .collect()
     }
 
     /// The table's rows: a page's cells when it is read, else a row waiting for it.
@@ -782,9 +833,18 @@ impl App {
         let data = &self.gis.features.data;
         let fields = self.data_shown_fields(node);
         // Wide enough for a key with its mark (“22 kaynakta silinmiş”) when the source lost a taken row (docs/adr/9152).
-        let marked = self.gis.data_edits.gone.get(&node.id).is_some_and(|k| !k.is_empty());
+        let marked = self
+            .gis
+            .data_edits
+            .gone
+            .get(&node.id)
+            .is_some_and(|k| !k.is_empty());
         let key_width = if marked { 160.0 } else { 80.0 };
-        let mut columns = vec![TableColumn::new("Anahtar").width(Length::Fixed(key_width)).align_right()];
+        let mut columns = vec![
+            TableColumn::new("Anahtar")
+                .width(Length::Fixed(key_width))
+                .align_right(),
+        ];
         for f in &fields {
             let order = data.order.first().filter(|(o, _)| o == f).map(|(_, d)| {
                 if *d {
@@ -794,7 +854,11 @@ impl App {
                 }
             });
             // The field's alias in the head (docs/adr/9348); sorting, conditions and writes go by its name.
-            let head = node.fields.iter().find(|d| &d.name == f).map_or_else(|| f.clone(), |d| d.label().to_owned());
+            let head = node
+                .fields
+                .iter()
+                .find(|d| &d.name == f)
+                .map_or_else(|| f.clone(), |d| d.label().to_owned());
             columns.push(
                 TableColumn::new(head)
                     .width(Length::Fixed(140.0))
@@ -805,23 +869,42 @@ impl App {
         let selected = &data.selected;
         let shown = fields.clone();
         // The fields' rules, by name: a code shows its label (docs/adr/9188).
-        let rules: HashMap<String, kentos_commands::LayerField> =
-            node.fields.iter().map(|f| (f.name.clone(), f.clone())).collect();
+        let rules: HashMap<String, kentos_commands::LayerField> = node
+            .fields
+            .iter()
+            .map(|f| (f.name.clone(), f.clone()))
+            .collect();
         // An edit session's rows (docs/adr/9103 §5): a taken one shows its object's values, a deleted one fades.
         let model = self.document.as_ref().map(|d| &d.model);
         let editing_layer = model.is_some_and(|m| m.editing(&node.id));
         let taken: HashMap<i64, std::sync::Arc<kentos_commands::Entity>> = if editing_layer {
-            model.map(|m| m.taken_objects(&node.id).into_iter().collect()).unwrap_or_default()
+            model
+                .map(|m| m.taken_objects(&node.id).into_iter().collect())
+                .unwrap_or_default()
         } else {
             HashMap::new()
         };
-        let changes = model.filter(|_| editing_layer).map(|m| m.data_changes(&node.id));
-        let deleted: HashSet<i64> = changes.as_ref().map(|c| c.deleted.iter().copied().collect()).unwrap_or_default();
+        let changes = model
+            .filter(|_| editing_layer)
+            .map(|m| m.data_changes(&node.id));
+        let deleted: HashSet<i64> = changes
+            .as_ref()
+            .map(|c| c.deleted.iter().copied().collect())
+            .unwrap_or_default();
         // Its new rows, not saved yet, come first and marked “yeni” (docs/adr/9111 §1): the source's rows follow them, their
         // pages read for the places below the new ones.
-        let added = changes.as_ref().map(|c| c.added.clone()).unwrap_or_default();
+        let added = changes
+            .as_ref()
+            .map(|c| c.added.clone())
+            .unwrap_or_default();
         let chosen: HashSet<kentos_domain::Uuid> = model
-            .map(|m| self.selection.ids().iter().filter_map(|s| m.uid(*s)).collect())
+            .map(|m| {
+                self.selection
+                    .ids()
+                    .iter()
+                    .filter_map(|s| m.uid(*s))
+                    .collect()
+            })
             .unwrap_or_default();
         let new_rows = added.len();
         // The source unread (offline, the file gone): the session's changed and deleted rows are listed after the new
@@ -840,7 +923,11 @@ impl App {
                 .data_edits
                 .gone
                 .get(&node.id)
-                .map(|keys| keys.iter().filter_map(|k| taken.get(k).map(|e| (*k, e.clone()))).collect())
+                .map(|keys| {
+                    keys.iter()
+                        .filter_map(|k| taken.get(k).map(|e| (*k, e.clone())))
+                        .collect()
+                })
                 .unwrap_or_default()
         };
         let before = new_rows + gone_rows.len();
@@ -851,18 +938,31 @@ impl App {
         };
         // A taken row's fields not changed here show the source's value now, not the one it was taken with
         // (docs/adr/9152): only what is changed here is the draft's.
-        let changed_by_key: HashMap<i64, (std::sync::Arc<kentos_commands::Entity>, std::sync::Arc<kentos_commands::Entity>)> =
-            changes
-                .as_ref()
-                .map(|c| c.changed.iter().map(|d| (d.key, (d.now.clone(), d.row.clone()))).collect())
-                .unwrap_or_default();
+        let changed_by_key: HashMap<
+            i64,
+            (
+                std::sync::Arc<kentos_commands::Entity>,
+                std::sync::Arc<kentos_commands::Entity>,
+            ),
+        > = changes
+            .as_ref()
+            .map(|c| {
+                c.changed
+                    .iter()
+                    .map(|d| (d.key, (d.now.clone(), d.row.clone())))
+                    .collect()
+            })
+            .unwrap_or_default();
         let editing = data.editing.clone();
         let edit_text = data.edit_text.clone();
         let edit_error = data.edit_error.clone();
         // A listed field's cell edits through the drawing's table's list editor (docs/adr/9323): its fields, the
         // layer's subtypes and contingent values narrow what is offered.
-        let defs: HashMap<String, kentos_commands::LayerField> =
-            node.fields.iter().map(|f| (f.name.clone(), f.clone())).collect();
+        let defs: HashMap<String, kentos_commands::LayerField> = node
+            .fields
+            .iter()
+            .map(|f| (f.name.clone(), f.clone()))
+            .collect();
         let all_fields = node.fields.clone();
         let subtypes = node.subtypes.clone();
         let contingents = node.contingents.clone();
@@ -886,13 +986,20 @@ impl App {
                         iced::widget::tooltip::Position::Bottom,
                     );
                     let mut cells: Vec<Element<'_, Message>> = vec![
-                        row![kentos_ui::widget::table::text(words::NEW).style(kentos_ui::style::text::warning), enter]
-                            .spacing(6)
-                            .align_y(Center)
-                            .into(),
+                        row![
+                            kentos_ui::widget::table::text(words::NEW)
+                                .style(kentos_ui::style::text::warning),
+                            enter
+                        ]
+                        .spacing(6)
+                        .align_y(Center)
+                        .into(),
                     ];
                     cells.extend(shown_new.iter().map(|f| {
-                        kentos_ui::widget::table::text(e.base().attrs.get(f).cloned().unwrap_or_default()).into()
+                        kentos_ui::widget::table::text(
+                            e.base().attrs.get(f).cloned().unwrap_or_default(),
+                        )
+                        .into()
                     }));
                     return TableLine::new(cells)
                         .selected(chosen.contains(uid))
@@ -906,16 +1013,26 @@ impl App {
                             .into(),
                     ];
                     cells.extend(shown.iter().map(|f| {
-                        kentos_ui::widget::table::text(e.base().attrs.get(f).cloned().unwrap_or_default()).into()
+                        kentos_ui::widget::table::text(
+                            e.base().attrs.get(f).cloned().unwrap_or_default(),
+                        )
+                        .into()
                     }));
                     return TableLine::new(cells);
                 }
                 let i = if offline { i - new_rows } else { i - before };
                 if offline {
                     let Some(p) = pending.get(i) else {
-                        return TableLine::new(std::iter::once(text("").into()).chain(shown.iter().map(|_| text("").into())));
+                        return TableLine::new(
+                            std::iter::once(text("").into())
+                                .chain(shown.iter().map(|_| text("").into())),
+                        );
                     };
-                    let mark = if p.deleted { words::DELETED } else { words::CHANGED };
+                    let mark = if p.deleted {
+                        words::DELETED
+                    } else {
+                        words::CHANGED
+                    };
                     let mut cells: Vec<Element<'_, Message>> = vec![
                         kentos_ui::widget::table::text(format!("{} {mark}", p.key))
                             .style(kentos_ui::style::text::warning)
@@ -923,7 +1040,11 @@ impl App {
                     ];
                     cells.extend(p.cells.iter().map(|c| {
                         let face = kentos_ui::widget::table::text(c.clone());
-                        if p.deleted { face.style(kentos_ui::style::text::muted).into() } else { face.into() }
+                        if p.deleted {
+                            face.style(kentos_ui::style::text::muted).into()
+                        } else {
+                            face.into()
+                        }
                     }));
                     return TableLine::new(cells);
                 }
@@ -933,7 +1054,8 @@ impl App {
                     Some(r) => {
                         let key = r.key;
                         let gone = deleted.contains(&key);
-                        let mut cells: Vec<Element<'_, Message>> = vec![kentos_ui::widget::table::number(r.key.to_string()).into()];
+                        let mut cells: Vec<Element<'_, Message>> =
+                            vec![kentos_ui::widget::table::number(r.key.to_string()).into()];
                         for (j, f) in shown.iter().enumerate() {
                             if editing.as_ref().is_some_and(|(k, e)| *k == key && e == f) {
                                 let def = defs.get(f).filter(|d| {
@@ -943,7 +1065,9 @@ impl App {
                                 let cell: Element<'_, Message> = match def {
                                     Some(d) => {
                                         let raw = super::pending_rows::cell_raw(
-                                            changed_by_key.get(&key).map(|(now, row)| (&**now, &**row)),
+                                            changed_by_key
+                                                .get(&key)
+                                                .map(|(now, row)| (&**now, &**row)),
                                             &r.attrs,
                                             f,
                                         )
@@ -955,11 +1079,14 @@ impl App {
                                             d,
                                             |n| r.attrs.get(n).cloned(),
                                         );
-                                        let (choices, codes, at) = super::view::choices_of(d, &raw, offered);
+                                        let (choices, codes, at) =
+                                            super::view::choices_of(d, &raw, offered);
                                         kentos_ui::widget::Cell::new(
-                                            kentos_ui::widget::select::Select::new(choices, at, move |k| {
-                                                msg(DataEvent::Choose(codes[k].clone()))
-                                            })
+                                            kentos_ui::widget::select::Select::new(
+                                                choices,
+                                                at,
+                                                move |k| msg(DataEvent::Choose(codes[k].clone())),
+                                            )
                                             .cell(),
                                         )
                                         .into()
@@ -982,7 +1109,8 @@ impl App {
                                             kentos_ui::icon::icon(kentos_ui::icon::Icon::Warning)
                                                 .size(13.0)
                                                 .tone(kentos_ui::icon::Tone::Warning),
-                                            kentos_ui::widget::Tip::new("Değer yazılmadı").body(why.clone()),
+                                            kentos_ui::widget::Tip::new("Değer yazılmadı")
+                                                .body(why.clone()),
                                             iced::widget::tooltip::Position::Top,
                                         ),
                                     ]
@@ -1027,11 +1155,17 @@ impl App {
                             .on_press(msg(DataEvent::Press(key, false)))
                     }
                     None => TableLine::new(
-                        std::iter::once(label::muted("…").into()).chain(shown.iter().map(|_| text("").into())),
+                        std::iter::once(label::muted("…").into())
+                            .chain(shown.iter().map(|_| text("").into())),
                     ),
                 }
             })
-            .on_range(move |a, b| msg(DataEvent::Range(a.saturating_sub(before), b.saturating_sub(before))))
+            .on_range(move |a, b| {
+                msg(DataEvent::Range(
+                    a.saturating_sub(before),
+                    b.saturating_sub(before),
+                ))
+            })
             // A refused question says why where the rows would be, not that it reads: a field the layer lacks is no
             // empty answer (docs/adr/9132).
             .empty(match (&data.error, data.total) {
@@ -1048,11 +1182,18 @@ impl App {
             .map(|c| {
                 // When the source last answered for the layer (docs/adr/9163).
                 let verified = self.gis.data_edits.verified.get(&node.id).copied();
-                super::pending_rows::pending_words(c.added.len(), c.changed.len(), c.deleted.len(), verified)
+                super::pending_rows::pending_words(
+                    c.added.len(),
+                    c.changed.len(),
+                    c.deleted.len(),
+                    verified,
+                )
             });
         let status = match (&data.error, data.total) {
             // Said where the rows would be when none is shown: the line only says none was read.
-            (Some(_), _) if count == 0 => label::caption(words::UNREAD).style(kentos_ui::style::text::muted),
+            (Some(_), _) if count == 0 => {
+                label::caption(words::UNREAD).style(kentos_ui::style::text::muted)
+            }
             (Some(why), _) => label::caption(match &waiting {
                 Some(w) => format!("{why} · {w}"),
                 None => why.clone(),
@@ -1076,9 +1217,13 @@ impl App {
                     _ => words::SOURCE,
                 },
                 // Which rows these are (docs/adr/9348): the filtered layer's, or the whole source's.
-                match (self.table_layer_filter(node), node.filter.as_ref().and_then(|f| f.expression.as_ref())) {
+                match (
+                    self.table_layer_filter(node),
+                    node.filter.as_ref().and_then(|f| f.expression.as_ref())
+                ) {
                     (Some(f), _) => format!(" · katman süzgeci: {f}"),
-                    (None, Some(e)) if !e.trim().is_empty() => " · kaynağın tümü (katman süzgeci uygulanmadı)".to_owned(),
+                    (None, Some(e)) if !e.trim().is_empty() =>
+                        " · kaynağın tümü (katman süzgeci uygulanmadı)".to_owned(),
                     _ => String::new(),
                 },
                 if selected.is_empty() {
@@ -1099,10 +1244,14 @@ impl App {
                 container(
                     row![
                         label::caption(format!("İfade süzgeci: {}", data.filter)),
-                        iced::widget::button(kentos_ui::icon::icon(crate::icons::from_web(Some("close"))).size(12.0))
-                            .padding(kentos_ui::theme::metrics::icon_small(12.0))
-                            .style(kentos_ui::style::button::ghost)
-                            .on_press(Message::Gis(crate::gis::Event::Features(super::Event::Data(DataEvent::ClearFilter)))),
+                        iced::widget::button(
+                            kentos_ui::icon::icon(crate::icons::from_web(Some("close"))).size(12.0)
+                        )
+                        .padding(kentos_ui::theme::metrics::icon_small(12.0))
+                        .style(kentos_ui::style::button::ghost)
+                        .on_press(Message::Gis(
+                            crate::gis::Event::Features(super::Event::Data(DataEvent::ClearFilter))
+                        )),
                     ]
                     .spacing(4)
                     .align_y(Center),
@@ -1114,21 +1263,30 @@ impl App {
         // The rows the source does not have yet, and the way to write them (the same Kaynağa yaz as everywhere).
         if let Some(c) = changes.as_ref().filter(|c| !c.is_empty() && !offline) {
             foot = foot.push(
-                label::caption(unwritten_words(c.added.len(), c.changed.len(), c.deleted.len()))
-                    .style(kentos_ui::style::text::warning),
+                label::caption(unwritten_words(
+                    c.added.len(),
+                    c.changed.len(),
+                    c.deleted.len(),
+                ))
+                .style(kentos_ui::style::text::warning),
             );
             foot = foot.push(
                 iced::widget::button(label::caption(crate::data_edits::WRITE))
                     .padding(kentos_ui::theme::metrics::action_small())
                     .style(kentos_ui::style::button::secondary)
-                    .on_press(Message::Gis(crate::gis::Event::DataPending(crate::data_pending::Event::Save(vec![
-                        node.id.clone(),
-                    ])))),
+                    .on_press(Message::Gis(crate::gis::Event::DataPending(
+                        crate::data_pending::Event::Save(vec![node.id.clone()]),
+                    ))),
             );
         }
         // The layer's fields its table does not have (docs/adr/9318): the others are read, these shown empty.
         if !data.missing.is_empty() {
-            let names = data.missing.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ");
+            let names = data
+                .missing
+                .iter()
+                .map(|n| format!("“{n}”"))
+                .collect::<Vec<_>>()
+                .join(", ");
             foot = foot.push(
                 label::caption(format!(
                     "Kaynak tablosunda olmayan alan: {names}; boş gösterilir. Alanlar › Kaynak şemasını yenile ya da sütunu ekleyin."
@@ -1138,10 +1296,14 @@ impl App {
         }
         if !withheld.is_empty() {
             foot = foot.push(
-                label::caption(super::role_fields::withheld_words(&withheld)).style(kentos_ui::style::text::muted),
+                label::caption(super::role_fields::withheld_words(&withheld))
+                    .style(kentos_ui::style::text::muted),
             );
         }
-        column![container(table).width(Fill).height(Fill), foot].width(Fill).height(Fill).into()
+        column![container(table).width(Fill).height(Fill), foot]
+            .width(Fill)
+            .height(Fill)
+            .into()
     }
 }
 

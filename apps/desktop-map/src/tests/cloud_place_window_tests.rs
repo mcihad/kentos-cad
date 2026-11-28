@@ -3,9 +3,9 @@
 //! Konumla writes it (the cloud's file places, one undo step); Konumu kaldır takes a kept place away; a matrix that
 //! scales is said, nothing written; the service hands the renderer the files' places. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -14,7 +14,10 @@ use crate::app::{App, Message};
 use crate::cloud_place_window::{By, Event as P};
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pointclouds.place.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.pointclouds.place.json"
+    ))
+    .expect("cases")
 }
 
 pub(crate) fn opened() -> App {
@@ -31,8 +34,12 @@ pub(crate) fn opened() -> App {
 
 /// The first step's output of the shared case whose name starts so.
 fn case_output(start: &str) -> Value {
-    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(start))).expect(start)["steps"][0]
-        ["result"]["output"]
+    cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(start)))
+        .expect(start)["steps"][0]["result"]["output"]
         .clone()
 }
 
@@ -54,7 +61,13 @@ fn near(got: &Value, want: &Value, at: &str) {
 
 /// The cloud of the slot.
 fn cloud(app: &App, slot: u32) -> kentos_commands::PointCloudFields {
-    match app.document.as_ref().expect("a drawing").model.get(Slot(slot)) {
+    match app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .get(Slot(slot))
+    {
         Some(kentos_commands::Entity::PointCloud(c)) => *c.cloud.clone(),
         other => panic!("not a cloud: {other:?}"),
     }
@@ -82,7 +95,8 @@ fn a_quarter_turn_by_euler_angles_is_the_shared_case_and_konumla_writes_it() {
     ))));
     let want = case_output("Euler: Z çevresinde çeyrek");
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .cloud_place
             .preview
             .clone()
@@ -116,7 +130,11 @@ fn a_quarter_turn_by_euler_angles_is_the_shared_case_and_konumla_writes_it() {
         "bounds",
     );
     // The renderer is told the file's place.
-    let files = crate::pointclouds::files_of(&cloud(&app, 1), &app.document.as_ref().expect("a drawing").model, None);
+    let files = crate::pointclouds::files_of(
+        &cloud(&app, 1),
+        &app.document.as_ref().expect("a drawing").model,
+        None,
+    );
     assert!(files[0].4.is_some(), "the member's place");
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(cloud(&app, 1).sources[0].pose, None, "one undo step");
@@ -144,7 +162,8 @@ fn a_matrix_that_scales_is_said_and_nothing_is_written() {
         "1.001 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 1".into(),
     ))));
     let why = app
-        .modules.map()
+        .modules
+        .map()
         .cloud_place
         .preview
         .clone()
@@ -165,11 +184,13 @@ fn a_matrix_that_scales_is_said_and_nothing_is_written() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/map-13-10");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/map-13-10");
     std::fs::create_dir_all(&out).expect("a folder");
     let shoot = |app: &mut App, size: Size, file: &str| {
         let until = std::time::Instant::now() + std::time::Duration::from_secs(60);
-        while !crate::pointclouds::index::progress().is_empty() && std::time::Instant::now() < until {
+        while !crate::pointclouds::index::progress().is_empty() && std::time::Instant::now() < until
+        {
             std::thread::sleep(std::time::Duration::from_millis(100));
         }
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -178,11 +199,16 @@ fn screens() {
         };
         snapshot.settle(app, App::view, &mut update);
         let file = out.join(file);
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     };
     let set = |app: &mut App, theme: &str, size: Size| {
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -243,19 +269,28 @@ fn screens() {
     shoot(&mut app, narrow, "6-tarama-agi-dis-dongu-koyu-dar.png");
 }
 
-
 /// GIS-063 (docs/adr/1134): a move of 3 4 0 m pressed once: the table says the kept place 5 m and that pressing again
 /// would move it 5 m more to 10 m, apart, as the summary says “Şimdi: … 5 m”; Konumu kaldır brings the kept place back
 /// to the file's.
 #[test]
 fn the_table_tells_the_kept_place_from_the_next_step() {
     let mut app = open_on(1);
-    let _ = app.update(Message::from(map::Event::CloudPlace(P::Translation("3 4 0".into()))));
+    let _ = app.update(Message::from(map::Event::CloudPlace(P::Translation(
+        "3 4 0".into(),
+    ))));
     let (_, rows) = app.cloud_place_lines();
-    assert_eq!(rows[0][1..4], ["0,000".to_owned(), "5,000".to_owned(), "5,000".to_owned()], "before: kept 0, step 5, total 5");
+    assert_eq!(
+        rows[0][1..4],
+        ["0,000".to_owned(), "5,000".to_owned(), "5,000".to_owned()],
+        "before: kept 0, step 5, total 5"
+    );
     let _ = app.update(Message::from(map::Event::CloudPlace(P::Place)));
     let (_, rows) = app.cloud_place_lines();
-    assert_eq!(rows[0][1..4], ["5,000".to_owned(), "5,000".to_owned(), "10,000".to_owned()], "after: kept 5, step 5, total 10");
+    assert_eq!(
+        rows[0][1..4],
+        ["5,000".to_owned(), "5,000".to_owned(), "10,000".to_owned()],
+        "after: kept 5, step 5, total 10"
+    );
     let _ = app.update(Message::from(map::Event::CloudPlace(P::Remove)));
     let (_, rows) = app.cloud_place_lines();
     assert_eq!(rows[0][1], "0,000", "the file's own place again");

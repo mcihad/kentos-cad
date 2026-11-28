@@ -308,7 +308,10 @@ pub struct RecordedParcel {
 impl RecordedParcel {
     /// The identity's key, `İl/İlçe/Mahalle/Ada/Parsel` (docs/adr/1400: never the parcel number alone).
     pub fn key(&self) -> String {
-        format!("{}/{}/{}/{}/{}", self.il, self.ilce, self.mahalle, self.ada, self.parsel)
+        format!(
+            "{}/{}/{}/{}/{}",
+            self.il, self.ilce, self.mahalle, self.ada, self.parsel
+        )
     }
 
     /// `Ada/Parsel`, the short name.
@@ -322,12 +325,17 @@ pub type RingPath = (Vec<Vec2>, Vec<f64>);
 
 impl ParcelRegister {
     pub fn is_empty(&self) -> bool {
-        self.documents.is_empty() && self.boundaries.is_empty() && self.parcels.is_empty() && self.drafts.is_empty()
+        self.documents.is_empty()
+            && self.boundaries.is_empty()
+            && self.parcels.is_empty()
+            && self.drafts.is_empty()
     }
 
     /// Whether the register holds what schema 249 brought (docs/adr/5020): stated lengths, drafts or an approval.
     pub fn has_drafts(&self) -> bool {
-        !self.lengths.is_empty() || !self.drafts.is_empty() || self.documents.iter().any(|d| d.approval.is_some())
+        !self.lengths.is_empty()
+            || !self.drafts.is_empty()
+            || self.documents.iter().any(|d| d.approval.is_some())
     }
 
     pub fn draft(&self, number: u32) -> Option<&ParcelDraft> {
@@ -348,7 +356,8 @@ impl ParcelRegister {
 
     /// The vertices and bulges of a ring as it runs its boundaries; none when a boundary is missing.
     pub fn ring_path(&self, ring: &RecordedRing) -> Option<RingPath> {
-        let by: HashMap<u32, &RecordedBoundary> = self.boundaries.iter().map(|b| (b.number, b)).collect();
+        let by: HashMap<u32, &RecordedBoundary> =
+            self.boundaries.iter().map(|b| (b.number, b)).collect();
         ring_path_with(&by, ring)
     }
 }
@@ -406,14 +415,21 @@ pub fn parcel_register_problem(r: &ParcelRegister) -> Option<String> {
     let mut names = HashSet::new();
     for d in &r.documents {
         if d.number == 0 || !documents.insert(d.number) {
-            return Some(format!("{}. parsel belgesinin numarası sıfır ya da yinelenmiş", d.number));
+            return Some(format!(
+                "{}. parsel belgesinin numarası sıfır ya da yinelenmiş",
+                d.number
+            ));
         }
         if !review_label_ok(&d.name, MAX_PARCEL_NAME)
             || !optional_label(&d.kind, MAX_PARCEL_NAME)
             || !optional_label(&d.date, MAX_PARCEL_LABEL)
-            || !(d.note.is_empty() || review_text_ok(&d.note) && d.note.chars().count() <= MAX_PARCEL_NOTE)
+            || !(d.note.is_empty()
+                || review_text_ok(&d.note) && d.note.chars().count() <= MAX_PARCEL_NOTE)
         {
-            return Some(format!("{}. parsel belgesinin adı, türü, tarihi ya da notu geçersiz", d.number));
+            return Some(format!(
+                "{}. parsel belgesinin adı, türü, tarihi ya da notu geçersiz",
+                d.number
+            ));
         }
         if !names.insert(d.name.as_str()) {
             return Some(format!("“{}” adlı parsel belgesi iki kez yazılmış", d.name));
@@ -421,7 +437,10 @@ pub fn parcel_register_problem(r: &ParcelRegister) -> Option<String> {
         if let Some(a) = &d.approval
             && let Some(problem) = approval_problem(a)
         {
-            return Some(format!("{}. parsel belgesinin onayı geçersiz: {problem}", d.number));
+            return Some(format!(
+                "{}. parsel belgesinin onayı geçersiz: {problem}",
+                d.number
+            ));
         }
     }
     let known = |n: u32| documents.contains(&n);
@@ -431,16 +450,25 @@ pub fn parcel_register_problem(r: &ParcelRegister) -> Option<String> {
     let mut boundaries: HashMap<u32, &RecordedBoundary> = HashMap::new();
     for b in &r.boundaries {
         if b.number == 0 || boundaries.insert(b.number, b).is_some() {
-            return Some(format!("{}. sınırın numarası sıfır ya da yinelenmiş", b.number));
+            return Some(format!(
+                "{}. sınırın numarası sıfır ya da yinelenmiş",
+                b.number
+            ));
         }
         if !finite(b.from) || !finite(b.to) || b.from == b.to || !b.bulge.is_finite() {
             return Some(format!("{}. sınırın uçları ya da yayı geçersiz", b.number));
         }
         if (b.from.x, b.from.y) > (b.to.x, b.to.y) {
-            return Some(format!("{}. sınırın başı doğu, sonra kuzey sırasıyla küçük uç değil", b.number));
+            return Some(format!(
+                "{}. sınırın başı doğu, sonra kuzey sırasıyla küçük uç değil",
+                b.number
+            ));
         }
         if !lifespan(b.created_by, b.closed_by) {
-            return Some(format!("{}. sınırın belgeleri yok ya da kapatan belge önce gelmiş", b.number));
+            return Some(format!(
+                "{}. sınırın belgeleri yok ya da kapatan belge önce gelmiş",
+                b.number
+            ));
         }
     }
     let mut numbers = HashSet::new();
@@ -451,19 +479,31 @@ pub fn parcel_register_problem(r: &ParcelRegister) -> Option<String> {
     for p in &r.parcels {
         let n = p.number;
         if n == 0 || !numbers.insert(n) {
-            return Some(format!("{n}. parsel kaydının numarası sıfır ya da yinelenmiş"));
+            return Some(format!(
+                "{n}. parsel kaydının numarası sıfır ya da yinelenmiş"
+            ));
         }
         if !review_label_ok(&p.ada, MAX_PARCEL_NAME)
             || !review_label_ok(&p.parsel, MAX_PARCEL_NAME)
-            || ![&p.il, &p.ilce, &p.mahalle].iter().all(|t| optional_label(t, MAX_PARCEL_NAME))
+            || ![&p.il, &p.ilce, &p.mahalle]
+                .iter()
+                .all(|t| optional_label(t, MAX_PARCEL_NAME))
         {
-            return Some(format!("{n}. parsel kaydının kimliği geçersiz: Ada ve Parsel boş olmaz"));
+            return Some(format!(
+                "{n}. parsel kaydının kimliği geçersiz: Ada ve Parsel boş olmaz"
+            ));
         }
         if !lifespan(p.created_by, p.closed_by) {
-            return Some(format!("{n}. parsel kaydının belgeleri yok ya da kapatan belge önce gelmiş"));
+            return Some(format!(
+                "{n}. parsel kaydının belgeleri yok ya da kapatan belge önce gelmiş"
+            ));
         }
-        if !(p.stated_area.is_empty() || p.stated_area.len() <= MAX_PARCEL_LABEL && plain_decimal(&p.stated_area)) {
-            return Some(format!("{n}. parsel kaydının belgedeki alanı düz bir ondalık sayı değil"));
+        if !(p.stated_area.is_empty()
+            || p.stated_area.len() <= MAX_PARCEL_LABEL && plain_decimal(&p.stated_area))
+        {
+            return Some(format!(
+                "{n}. parsel kaydının belgedeki alanı düz bir ondalık sayı değil"
+            ));
         }
         let current = p.closed_by.is_none();
         match (&p.uid, current) {
@@ -473,7 +513,11 @@ pub fn parcel_register_problem(r: &ParcelRegister) -> Option<String> {
                 }
             }
             (None, false) => {}
-            _ => return Some(format!("{n}. parsel kaydının alanı yok, geçersiz ya da kapanmışken duruyor")),
+            _ => {
+                return Some(format!(
+                    "{n}. parsel kaydının alanı yok, geçersiz ya da kapanmışken duruyor"
+                ));
+            }
         }
         if current && !keys.insert(p.key()) {
             return Some(format!("{} kimlikli iki güncel parsel kaydı var", p.key()));
@@ -486,7 +530,9 @@ pub fn parcel_register_problem(r: &ParcelRegister) -> Option<String> {
             used.insert(b);
             if current {
                 if boundaries.get(&b).is_some_and(|b| b.closed_by.is_some()) {
-                    return Some(format!("{n}. güncel parsel kaydı kapanmış {b}. sınırı kullanıyor"));
+                    return Some(format!(
+                        "{n}. güncel parsel kaydı kapanmış {b}. sınırı kullanıyor"
+                    ));
                 }
                 used_now.insert(b);
             }
@@ -494,44 +540,73 @@ pub fn parcel_register_problem(r: &ParcelRegister) -> Option<String> {
     }
     for b in &r.boundaries {
         if !used.contains(&b.number) || b.closed_by.is_none() && !used_now.contains(&b.number) {
-            return Some(format!("{}. sınırı hiçbir parsel ya da güncelken hiçbir güncel parsel kullanmıyor", b.number));
+            return Some(format!(
+                "{}. sınırı hiçbir parsel ya da güncelken hiçbir güncel parsel kullanmıyor",
+                b.number
+            ));
         }
     }
     if r.lengths.len() > MAX_RECORDED_BOUNDARIES {
-        return Some(format!("Parsel kayıtları en çok {MAX_RECORDED_BOUNDARIES} kenar ölçüsü taşır"));
+        return Some(format!(
+            "Parsel kayıtları en çok {MAX_RECORDED_BOUNDARIES} kenar ölçüsü taşır"
+        ));
     }
     let mut stated = HashSet::new();
     for l in &r.lengths {
         let Some(b) = boundaries.get(&l.boundary) else {
-            return Some(format!("{}. sınırın ölçüsü olmayan bir sınırın", l.boundary));
+            return Some(format!(
+                "{}. sınırın ölçüsü olmayan bir sınırın",
+                l.boundary
+            ));
         };
         if !known(l.document) || l.document < b.created_by {
-            return Some(format!("{}. sınırın ölçüsünün belgesi yok ya da sınırdan önce gelmiş", l.boundary));
+            return Some(format!(
+                "{}. sınırın ölçüsünün belgesi yok ya da sınırdan önce gelmiş",
+                l.boundary
+            ));
         }
         if !positive_decimal(&l.length) {
-            return Some(format!("{}. sınırın belgedeki ölçüsü sıfırdan büyük düz bir ondalık sayı değil", l.boundary));
+            return Some(format!(
+                "{}. sınırın belgedeki ölçüsü sıfırdan büyük düz bir ondalık sayı değil",
+                l.boundary
+            ));
         }
         if !stated.insert((l.boundary, l.document)) {
-            return Some(format!("{}. sınırın {}. belgedeki ölçüsü iki kez yazılmış", l.boundary, l.document));
+            return Some(format!(
+                "{}. sınırın {}. belgedeki ölçüsü iki kez yazılmış",
+                l.boundary, l.document
+            ));
         }
     }
     if r.documents.len() + r.drafts.len() > MAX_PARCEL_DOCUMENTS {
-        return Some(format!("Parsel kayıtları taslaklarıyla en çok {MAX_PARCEL_DOCUMENTS} belge taşır"));
+        return Some(format!(
+            "Parsel kayıtları taslaklarıyla en çok {MAX_PARCEL_DOCUMENTS} belge taşır"
+        ));
     }
     let mut drafts = HashSet::new();
     for d in &r.drafts {
         if d.number == 0 || !drafts.insert(d.number) {
-            return Some(format!("{}. belge taslağının numarası sıfır ya da yinelenmiş", d.number));
+            return Some(format!(
+                "{}. belge taslağının numarası sıfır ya da yinelenmiş",
+                d.number
+            ));
         }
         if !review_label_ok(&d.name, MAX_PARCEL_NAME)
             || !optional_label(&d.kind, MAX_PARCEL_NAME)
             || !optional_label(&d.date, MAX_PARCEL_LABEL)
-            || !(d.note.is_empty() || review_text_ok(&d.note) && d.note.chars().count() <= MAX_PARCEL_NOTE)
+            || !(d.note.is_empty()
+                || review_text_ok(&d.note) && d.note.chars().count() <= MAX_PARCEL_NOTE)
         {
-            return Some(format!("{}. belge taslağının adı, türü, tarihi ya da notu geçersiz", d.number));
+            return Some(format!(
+                "{}. belge taslağının adı, türü, tarihi ya da notu geçersiz",
+                d.number
+            ));
         }
         if !names.insert(d.name.as_str()) {
-            return Some(format!("“{}” adlı belge ya da taslak iki kez yazılmış", d.name));
+            return Some(format!(
+                "“{}” adlı belge ya da taslak iki kez yazılmış",
+                d.name
+            ));
         }
         if let Some(problem) = draft_problem(d, &numbers) {
             return Some(format!("{}. belge taslağı geçersiz: {problem}", d.number));
@@ -542,7 +617,9 @@ pub fn parcel_register_problem(r: &ParcelRegister) -> Option<String> {
 
 /// Whether `text` is a plain decimal above zero (a stated length).
 pub fn positive_decimal(text: &str) -> bool {
-    text.len() <= MAX_PARCEL_LABEL && plain_decimal(text) && text.bytes().any(|b| (b'1'..=b'9').contains(&b))
+    text.len() <= MAX_PARCEL_LABEL
+        && plain_decimal(text)
+        && text.bytes().any(|b| (b'1'..=b'9').contains(&b))
 }
 
 /// What is wrong with an approval: its number empty or too long, its date or approver too long.
@@ -565,7 +642,10 @@ fn draft_problem(d: &ParcelDraft, parcels: &HashSet<u32>) -> Option<&'static str
         return Some("ne parsel oluşturuyor ne kapatıyor");
     }
     let mut closing = HashSet::new();
-    if d.close.iter().any(|n| !parcels.contains(n) || !closing.insert(*n)) {
+    if d.close
+        .iter()
+        .any(|n| !parcels.contains(n) || !closing.insert(*n))
+    {
         return Some("kapatacağı parsel kayıtlarda yok ya da iki kez");
     }
     let mut uids = HashSet::new();
@@ -575,11 +655,15 @@ fn draft_problem(d: &ParcelDraft, parcels: &HashSet<u32>) -> Option<&'static str
         }
         if !review_label_ok(&p.ada, MAX_PARCEL_NAME)
             || !review_label_ok(&p.parsel, MAX_PARCEL_NAME)
-            || ![&p.il, &p.ilce, &p.mahalle].iter().all(|t| optional_label(t, MAX_PARCEL_NAME))
+            || ![&p.il, &p.ilce, &p.mahalle]
+                .iter()
+                .all(|t| optional_label(t, MAX_PARCEL_NAME))
         {
             return Some("parselin kimliği geçersiz");
         }
-        if !(p.stated_area.is_empty() || p.stated_area.len() <= MAX_PARCEL_LABEL && plain_decimal(&p.stated_area)) {
+        if !(p.stated_area.is_empty()
+            || p.stated_area.len() <= MAX_PARCEL_LABEL && plain_decimal(&p.stated_area))
+        {
             return Some("belgedeki alan düz bir ondalık sayı değil");
         }
         if p.rings.is_empty() {
@@ -587,7 +671,11 @@ fn draft_problem(d: &ParcelDraft, parcels: &HashSet<u32>) -> Option<&'static str
         }
         let mut part = 0;
         for (i, ring) in p.rings.iter().enumerate() {
-            let opens = if i == 0 { ring.part == 0 } else { ring.part == part + 1 };
+            let opens = if i == 0 {
+                ring.part == 0
+            } else {
+                ring.part == part + 1
+            };
             if !(opens && !ring.hole || i > 0 && ring.part == part && ring.hole) {
                 return Some("parselin parçaları sırasız");
             }
@@ -599,13 +687,17 @@ fn draft_problem(d: &ParcelDraft, parcels: &HashSet<u32>) -> Option<&'static str
                 || ring.bulges.iter().any(|b| !b.is_finite())
                 || (0..n).any(|k| ring.pts[k] == ring.pts[(k + 1) % n])
             {
-                return Some("bir halkası üç köşeden az, sonlu değil ya da aynı yerde iki ardışık köşe taşıyor");
+                return Some(
+                    "bir halkası üç köşeden az, sonlu değil ya da aynı yerde iki ardışık köşe taşıyor",
+                );
             }
         }
         let mut edges = HashSet::new();
         for l in &p.lengths {
             let ring = p.rings.get(l.ring as usize);
-            if ring.is_none_or(|r| l.edge as usize >= r.pts.len()) || !edges.insert((l.ring, l.edge)) {
+            if ring.is_none_or(|r| l.edge as usize >= r.pts.len())
+                || !edges.insert((l.ring, l.edge))
+            {
                 return Some("bir kenar ölçüsü olmayan bir kenarın ya da iki kez");
             }
             if !positive_decimal(&l.length) {
@@ -619,30 +711,49 @@ fn draft_problem(d: &ParcelDraft, parcels: &HashSet<u32>) -> Option<&'static str
 /// What is wrong with a parcel's rings: none, a ring of fewer than three boundaries or one that names a missing
 /// boundary, a ring whose boundaries do not meet end to end, parts out of order or a part that does not open with its
 /// outline.
-fn rings_problem(n: u32, rings: &[RecordedRing], by: &HashMap<u32, &RecordedBoundary>) -> Option<String> {
+fn rings_problem(
+    n: u32,
+    rings: &[RecordedRing],
+    by: &HashMap<u32, &RecordedBoundary>,
+) -> Option<String> {
     if rings.is_empty() {
         return Some(format!("{n}. parsel kaydının halkası yok"));
     }
     let mut part = 0;
     for (i, ring) in rings.iter().enumerate() {
-        let opens = if i == 0 { ring.part == 0 } else { ring.part == part + 1 };
+        let opens = if i == 0 {
+            ring.part == 0
+        } else {
+            ring.part == part + 1
+        };
         let continues = i > 0 && ring.part == part;
         if !(opens && !ring.hole || continues && ring.hole) {
-            return Some(format!("{n}. parsel kaydının parçaları sırasız ya da bir parça dış halkasıyla açılmıyor"));
+            return Some(format!(
+                "{n}. parsel kaydının parçaları sırasız ya da bir parça dış halkasıyla açılmıyor"
+            ));
         }
         part = ring.part;
         if ring.edges.len() < 3 || ring.edges.contains(&0) {
-            return Some(format!("{n}. parsel kaydının bir halkası üç sınırdan az ya da sıfır numaralı sınır taşıyor"));
+            return Some(format!(
+                "{n}. parsel kaydının bir halkası üç sınırdan az ya da sıfır numaralı sınır taşıyor"
+            ));
         }
         let Some((pts, _)) = ring_path_with(by, ring) else {
-            return Some(format!("{n}. parsel kaydının bir halkası olmayan bir sınırı kullanıyor"));
+            return Some(format!(
+                "{n}. parsel kaydının bir halkası olmayan bir sınırı kullanıyor"
+            ));
         };
         let ends = ring.edges.iter().map(|&e| {
             let b = by[&e.unsigned_abs()];
             if e > 0 { b.to } else { b.from }
         });
-        if ends.zip(pts.iter().cycle().skip(1)).any(|(end, next)| end != *next) {
-            return Some(format!("{n}. parsel kaydının bir halkasının sınırları uç uca değmiyor"));
+        if ends
+            .zip(pts.iter().cycle().skip(1))
+            .any(|(end, next)| end != *next)
+        {
+            return Some(format!(
+                "{n}. parsel kaydının bir halkasının sınırları uç uca değmiyor"
+            ));
         }
     }
     None
@@ -659,13 +770,24 @@ mod tests {
     }
 
     fn boundary(number: u32, from: Vec2, to: Vec2) -> RecordedBoundary {
-        RecordedBoundary { number, from, to, bulge: 0.0, created_by: 1, closed_by: None }
+        RecordedBoundary {
+            number,
+            from,
+            to,
+            bulge: 0.0,
+            created_by: 1,
+            closed_by: None,
+        }
     }
 
     /// A 10 m square: boundaries 1 south, 2 east, 3 north (run west), 4 west (run south).
     fn square() -> ParcelRegister {
         ParcelRegister {
-            documents: vec![ParcelDocument { number: 1, name: "Kadastro 1985".into(), ..Default::default() }],
+            documents: vec![ParcelDocument {
+                number: 1,
+                name: "Kadastro 1985".into(),
+                ..Default::default()
+            }],
             boundaries: vec![
                 boundary(1, v(0.0, 0.0), v(10.0, 0.0)),
                 boundary(2, v(10.0, 0.0), v(10.0, 10.0)),
@@ -679,7 +801,11 @@ mod tests {
                 created_by: 1,
                 stated_area: "100".into(),
                 uid: Some(UID.into()),
-                rings: vec![RecordedRing { part: 0, hole: false, edges: vec![1, 2, -3, -4] }],
+                rings: vec![RecordedRing {
+                    part: 0,
+                    hole: false,
+                    edges: vec![1, 2, -3, -4],
+                }],
                 ..Default::default()
             }],
             ..Default::default()
@@ -691,7 +817,10 @@ mod tests {
         let r = square();
         assert_eq!(parcel_register_problem(&r), None);
         let (pts, bulges) = r.ring_path(&r.parcels[0].rings[0]).unwrap();
-        assert_eq!(pts, vec![v(0.0, 0.0), v(10.0, 0.0), v(10.0, 10.0), v(0.0, 10.0)]);
+        assert_eq!(
+            pts,
+            vec![v(0.0, 0.0), v(10.0, 0.0), v(10.0, 10.0), v(0.0, 10.0)]
+        );
         assert_eq!(bulges, vec![0.0; 4]);
     }
 
@@ -704,35 +833,59 @@ mod tests {
         };
         // A ring that does not close, a boundary the wrong way round, a missing identity, a float-like stated area.
         assert!(broken(&|r| r.parcels[0].rings[0].edges = vec![1, 2, 3, -4]).is_some());
-        assert!(broken(&|r| {
-            let b = &mut r.boundaries[0];
-            (b.from, b.to) = (b.to, b.from);
-        })
-        .is_some());
+        assert!(
+            broken(&|r| {
+                let b = &mut r.boundaries[0];
+                (b.from, b.to) = (b.to, b.from);
+            })
+            .is_some()
+        );
         assert!(broken(&|r| r.parcels[0].ada.clear()).is_some());
         assert!(broken(&|r| r.parcels[0].stated_area = "1.250,50".into()).is_some());
         // Closed without a later document, closed but still drawn, a current parcel on a closed boundary.
         assert!(broken(&|r| r.parcels[0].closed_by = Some(1)).is_some());
-        assert!(broken(&|r| {
-            r.documents.push(ParcelDocument { number: 2, name: "Yenileme".into(), ..Default::default() });
-            r.parcels[0].closed_by = Some(2);
-        })
-        .is_some());
-        assert!(broken(&|r| {
-            r.documents.push(ParcelDocument { number: 2, name: "Yenileme".into(), ..Default::default() });
-            r.boundaries[0].closed_by = Some(2);
-        })
-        .is_some());
+        assert!(
+            broken(&|r| {
+                r.documents.push(ParcelDocument {
+                    number: 2,
+                    name: "Yenileme".into(),
+                    ..Default::default()
+                });
+                r.parcels[0].closed_by = Some(2);
+            })
+            .is_some()
+        );
+        assert!(
+            broken(&|r| {
+                r.documents.push(ParcelDocument {
+                    number: 2,
+                    name: "Yenileme".into(),
+                    ..Default::default()
+                });
+                r.boundaries[0].closed_by = Some(2);
+            })
+            .is_some()
+        );
         // A boundary nobody uses; two documents of one name.
         assert!(broken(&|r| r.boundaries.push(boundary(5, v(0.0, 0.0), v(5.0, 5.0)))).is_some());
-        assert!(broken(&|r| {
-            r.documents.push(ParcelDocument { number: 2, name: "Kadastro 1985".into(), ..Default::default() })
-        })
-        .is_some());
+        assert!(
+            broken(&|r| {
+                r.documents.push(ParcelDocument {
+                    number: 2,
+                    name: "Kadastro 1985".into(),
+                    ..Default::default()
+                })
+            })
+            .is_some()
+        );
         // Closed properly: the later document closes the parcel and its boundaries, the area goes.
         assert_eq!(
             broken(&|r| {
-                r.documents.push(ParcelDocument { number: 2, name: "Yenileme".into(), ..Default::default() });
+                r.documents.push(ParcelDocument {
+                    number: 2,
+                    name: "Yenileme".into(),
+                    ..Default::default()
+                });
                 r.parcels[0].closed_by = Some(2);
                 r.parcels[0].uid = None;
                 for b in &mut r.boundaries {
@@ -746,8 +899,15 @@ mod tests {
     #[test]
     fn lengths_drafts_and_approvals_read_and_what_they_may_not_hold() {
         let mut r = square();
-        r.lengths.push(RecordedLength { boundary: 1, document: 1, length: "10,00".into() });
-        r.documents[0].approval = Some(ParcelApproval { reference: "2026/145".into(), ..Default::default() });
+        r.lengths.push(RecordedLength {
+            boundary: 1,
+            document: 1,
+            length: "10,00".into(),
+        });
+        r.documents[0].approval = Some(ParcelApproval {
+            reference: "2026/145".into(),
+            ..Default::default()
+        });
         r.drafts.push(ParcelDraft {
             number: 1,
             name: "2026/146 ifraz".into(),
@@ -756,8 +916,15 @@ mod tests {
                 uid: UID.into(),
                 ada: "101".into(),
                 parsel: "8".into(),
-                rings: vec![DraftRing { pts: vec![v(0.0, 0.0), v(10.0, 0.0), v(0.0, 10.0)], ..Default::default() }],
-                lengths: vec![StatedLength { ring: 0, edge: 0, length: "10".into() }],
+                rings: vec![DraftRing {
+                    pts: vec![v(0.0, 0.0), v(10.0, 0.0), v(0.0, 10.0)],
+                    ..Default::default()
+                }],
+                lengths: vec![StatedLength {
+                    ring: 0,
+                    edge: 0,
+                    length: "10".into(),
+                }],
                 ..Default::default()
             }],
             ..Default::default()

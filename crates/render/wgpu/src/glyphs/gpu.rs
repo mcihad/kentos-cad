@@ -151,10 +151,18 @@ fn programs_buffer(device: &wgpu::Device, numbers: usize) -> wgpu::Buffer {
     })
 }
 
-fn pages_texture(device: &wgpu::Device, side: u32, layers: u32) -> (wgpu::Texture, wgpu::TextureView) {
+fn pages_texture(
+    device: &wgpu::Device,
+    side: u32,
+    layers: u32,
+) -> (wgpu::Texture, wgpu::TextureView) {
     let texture = device.create_texture(&wgpu::TextureDescriptor {
         label: Some("kentos.glyphs.pages"),
-        size: wgpu::Extent3d { width: side, height: side, depth_or_array_layers: layers },
+        size: wgpu::Extent3d {
+            width: side,
+            height: side,
+            depth_or_array_layers: layers,
+        },
         mip_level_count: 1,
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
@@ -171,7 +179,16 @@ fn pages_texture(device: &wgpu::Device, side: u32, layers: u32) -> (wgpu::Textur
 }
 
 #[allow(clippy::too_many_arguments)]
-fn write(queue: &wgpu::Queue, texture: &wgpu::Texture, page: u32, x: u32, y: u32, width: u32, height: u32, data: &[u8]) {
+fn write(
+    queue: &wgpu::Queue,
+    texture: &wgpu::Texture,
+    page: u32,
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+    data: &[u8],
+) {
     queue.write_texture(
         wgpu::TexelCopyTextureInfo {
             texture,
@@ -180,19 +197,35 @@ fn write(queue: &wgpu::Queue, texture: &wgpu::Texture, page: u32, x: u32, y: u32
             aspect: wgpu::TextureAspect::All,
         },
         data,
-        wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(width), rows_per_image: Some(height) },
-        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        wgpu::TexelCopyBufferLayout {
+            offset: 0,
+            bytes_per_row: Some(width),
+            rows_per_image: Some(height),
+        },
+        wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
     );
 }
 
 fn shown(srgb_target: bool, c: Rgba8) -> [u8; 4] {
     let [r, g, b, a] = c.0;
-    if srgb_target { [srgb_to_linear(r), srgb_to_linear(g), srgb_to_linear(b), a] } else { [r, g, b, a] }
+    if srgb_target {
+        [srgb_to_linear(r), srgb_to_linear(g), srgb_to_linear(b), a]
+    } else {
+        [r, g, b, a]
+    }
 }
 
 fn srgb_to_linear(c: u8) -> u8 {
     let c = f32::from(c) / 255.0;
-    let l = if c <= 0.04045 { c / 12.92 } else { ((c + 0.055) / 1.055).powf(2.4) };
+    let l = if c <= 0.04045 {
+        c / 12.92
+    } else {
+        ((c + 0.055) / 1.055).powf(2.4)
+    };
     (l * 255.0).round() as u8
 }
 
@@ -202,7 +235,11 @@ impl GlyphGpu {
     }
 
     /// With an atlas of its own (tests take one of small pages to fill several).
-    pub fn with_atlas(device: &wgpu::Device, format: wgpu::TextureFormat, atlas: GlyphAtlas) -> GlyphGpu {
+    pub fn with_atlas(
+        device: &wgpu::Device,
+        format: wgpu::TextureFormat,
+        atlas: GlyphAtlas,
+    ) -> GlyphGpu {
         let module = device.create_shader_module(wgpu::ShaderModuleDescriptor {
             label: Some("kentos.glyphs"),
             source: wgpu::ShaderSource::Wgsl(source().into()),
@@ -216,7 +253,9 @@ impl GlyphGpu {
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
-                        min_binding_size: wgpu::BufferSize::new(std::mem::size_of::<FrameUniform>() as u64),
+                        min_binding_size: wgpu::BufferSize::new(
+                            std::mem::size_of::<FrameUniform>() as u64,
+                        ),
                     },
                     count: None,
                 },
@@ -310,7 +349,10 @@ impl GlyphGpu {
                 ..wgpu::PrimitiveState::default()
             },
             depth_stencil: None,
-            multisample: wgpu::MultisampleState { count: samples, ..wgpu::MultisampleState::default() },
+            multisample: wgpu::MultisampleState {
+                count: samples,
+                ..wgpu::MultisampleState::default()
+            },
             fragment: Some(wgpu::FragmentState {
                 module: &self.module,
                 entry_point: Some("glyphFs"),
@@ -337,10 +379,22 @@ impl GlyphGpu {
             label: Some("kentos.glyphs"),
             layout: &self.bind_layout,
             entries: &[
-                wgpu::BindGroupEntry { binding: 0, resource: frame.as_entire_binding() },
-                wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::TextureView(&self.view) },
-                wgpu::BindGroupEntry { binding: 2, resource: wgpu::BindingResource::Sampler(&self.sampler) },
-                wgpu::BindGroupEntry { binding: 3, resource: self.programs.as_entire_binding() },
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: frame.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: wgpu::BindingResource::TextureView(&self.view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 2,
+                    resource: wgpu::BindingResource::Sampler(&self.sampler),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: self.programs.as_entire_binding(),
+                },
             ],
         })
     }
@@ -354,7 +408,10 @@ impl GlyphGpu {
         deadline: Option<Instant>,
     ) -> GlyphLayer {
         let origin = texts.first().map_or([0.0; 2], |t| {
-            [(t.at[0] / ORIGIN_GRID).round() * ORIGIN_GRID, (t.at[1] / ORIGIN_GRID).round() * ORIGIN_GRID]
+            [
+                (t.at[0] / ORIGIN_GRID).round() * ORIGIN_GRID,
+                (t.at[1] / ORIGIN_GRID).round() * ORIGIN_GRID,
+            ]
         });
         let mut instances = Vec::new();
         let srgb = self.srgb_target;
@@ -372,7 +429,12 @@ impl GlyphGpu {
                 }
                 let rel = [anchor[0] - origin[0], anchor[1] - origin[1]];
                 let hi = [rel[0] as f32, rel[1] as f32];
-                [hi[0], hi[1], (rel[0] - f64::from(hi[0])) as f32, (rel[1] - f64::from(hi[1])) as f32]
+                [
+                    hi[0],
+                    hi[1],
+                    (rel[0] - f64::from(hi[0])) as f32,
+                    (rel[1] - f64::from(hi[1])) as f32,
+                ]
             };
             let quad = |q: &GlyphQuad| {
                 let [a, b, c, d, e, f] = q.transform;
@@ -459,7 +521,11 @@ impl GlyphGpu {
         }
         if programs.len() > self.programs_written {
             let new = &programs[self.programs_written..];
-            queue.write_buffer(&self.programs, (self.programs_written * 4) as u64, bytemuck::cast_slice(new));
+            queue.write_buffer(
+                &self.programs,
+                (self.programs_written * 4) as u64,
+                bytemuck::cast_slice(new),
+            );
             self.programs_written = programs.len();
         }
         let pages = self.atlas.page_count();
@@ -475,7 +541,16 @@ impl GlyphGpu {
             return;
         }
         for u in uploads {
-            write(queue, &self.texture, u.page, u.x, u.y, u.width, u.height, &u.data);
+            write(
+                queue,
+                &self.texture,
+                u.page,
+                u.x,
+                u.y,
+                u.width,
+                u.height,
+                &u.data,
+            );
         }
     }
 
@@ -497,10 +572,18 @@ impl GlyphGpu {
             frame.center[0] + frame.origin[0] - layer.origin[0],
             frame.center[1] + frame.origin[1] - layer.origin[1],
         ];
-        let styled: StyledFrameUniform = crate::styled::gpu::frame_uniform(&StyledFrame { center, ..*frame });
+        let styled: StyledFrameUniform =
+            crate::styled::gpu::frame_uniform(&StyledFrame { center, ..*frame });
         let uniform = FrameUniform {
             offset: styled.offset,
-            grow: [if grow.is_finite() && grow > 0.0 { grow } else { 1.0 }, 0.0],
+            grow: [
+                if grow.is_finite() && grow > 0.0 {
+                    grow
+                } else {
+                    1.0
+                },
+                0.0,
+            ],
             px_per_m: styled.px_per_m,
             dpr: styled.dpr,
             viewport: styled.viewport,
@@ -512,7 +595,8 @@ impl GlyphGpu {
 
     /// Draws the layer; its sample count's pipeline must be made ([`GlyphGpu::ensure`]).
     pub fn draw(&self, pass: &mut wgpu::RenderPass<'_>, layer: &GlyphLayer, samples: u32) {
-        let (Some(instances), Some(pipeline)) = (&layer.instances, self.pipelines.get(&samples)) else {
+        let (Some(instances), Some(pipeline)) = (&layer.instances, self.pipelines.get(&samples))
+        else {
             return;
         };
         pass.set_pipeline(pipeline);
@@ -528,7 +612,10 @@ mod tests {
 
     #[test]
     fn the_instance_is_as_the_shader_reads_it() {
-        assert_eq!(std::mem::size_of::<FrameUniform>(), std::mem::size_of::<StyledFrameUniform>());
+        assert_eq!(
+            std::mem::size_of::<FrameUniform>(),
+            std::mem::size_of::<StyledFrameUniform>()
+        );
         // 88 bytes, then the outline's program (docs/adr/9240).
         assert_eq!(std::mem::size_of::<Instance>(), 92);
         let last = ATTRIBUTES.last().expect("attributes");
@@ -539,8 +626,11 @@ mod tests {
     #[test]
     fn the_shader_validates() {
         let module = naga::front::wgsl::parse_str(&source()).expect("parses");
-        naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::empty())
-            .validate(&module)
-            .expect("validates");
+        naga::valid::Validator::new(
+            naga::valid::ValidationFlags::all(),
+            naga::valid::Capabilities::empty(),
+        )
+        .validate(&module)
+        .expect("validates");
     }
 }

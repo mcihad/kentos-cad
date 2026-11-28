@@ -47,7 +47,14 @@ pub fn library_refs(doc: &Document) -> BTreeSet<String> {
 
 /// The library ids a layer draws with: its renderer's and its objects' own.
 pub fn layer_refs(doc: &Document, layer: &LayerNode) -> BTreeSet<String> {
-    let mut out: BTreeSet<String> = layer.style.renderer.as_ref().map(refs_in).unwrap_or_default().into_iter().collect();
+    let mut out: BTreeSet<String> = layer
+        .style
+        .renderer
+        .as_ref()
+        .map(refs_in)
+        .unwrap_or_default()
+        .into_iter()
+        .collect();
     for e in doc.by_layer(&layer.id) {
         if let Some(id) = e.base().symbol.as_deref().filter(|id| !id.is_empty()) {
             out.insert(id.to_owned());
@@ -65,8 +72,10 @@ mod tests {
     /// library's items' needs are what a drawing refers to.
     #[test]
     fn a_drawing_refers_to_its_layers_objects_and_library_items() {
-        let fx: Value = serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/native-preflight.json"))
-            .expect("the fixture");
+        let fx: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/sheet/v1/native-preflight.json"
+        ))
+        .expect("the fixture");
         let mut raw = fx["model"].clone();
         let style = |renderer: Value| json!({ "color": "fg", "lineType": "continuous", "lineWeight": 0.25, "renderer": renderer });
         raw["layers"] = json!([{ "id": "a", "name": "A", "type": "layer", "visible": true, "locked": false, "expanded": true,
@@ -82,9 +91,15 @@ mod tests {
             { "kind": "template", "id": "p-t", "name": "Şablon", "path": [], "template": { "kind": "point", "symbol": "u-sablon" } },
             { "kind": "symbol", "id": "p-s", "name": "S", "path": [], "symbol": { "type": "marker", "layers": [
                 { "id": "v", "type": "svg", "asset": "u-cizim", "size": 4 }] } }], "categories": [] });
-        let doc = Document::from_snapshot(serde_json::from_value(raw).expect("a snapshot")).expect("opens");
+        let doc = Document::from_snapshot(serde_json::from_value(raw).expect("a snapshot"))
+            .expect("opens");
         let refs: Vec<String> = library_refs(&doc).into_iter().collect();
-        assert_eq!(refs, ["u-blok", "u-cizim", "u-durum", "u-nesne", "u-sablon", "u-sinif"]);
+        assert_eq!(
+            refs,
+            [
+                "u-blok", "u-cizim", "u-durum", "u-nesne", "u-sablon", "u-sinif"
+            ]
+        );
         let layer = doc.layers().nodes()[0].clone();
         let mine: Vec<String> = layer_refs(&doc, &layer).into_iter().collect();
         assert_eq!(mine, ["u-nesne", "u-sinif"]);

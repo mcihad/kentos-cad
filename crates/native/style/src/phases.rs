@@ -6,7 +6,9 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
-use kentos_contracts::{Entity, LineType, PHASE_FADED, PenCategory, PhaseLook, PhaseView, RecipePen};
+use kentos_contracts::{
+    Entity, LineType, PHASE_FADED, PenCategory, PhaseLook, PhaseView, RecipePen,
+};
 
 /// The looks of a drawing's objects in a phase view, by their numbers; an object not listed is drawn as it is. A map's
 /// recipe adds its pens and black and white (docs/adr/0783 §1), by the objects' kinds.
@@ -32,7 +34,10 @@ impl Phasing {
     ) -> Self {
         let mut looks = HashMap::new();
         if view == PhaseView::All {
-            return Self { looks, ..Self::default() };
+            return Self {
+                looks,
+                ..Self::default()
+            };
         }
         for e in entities {
             // Tadilat projesi (docs/adr/8039 §5): a door or window closed up in a wall that stays is drawn by the store
@@ -48,7 +53,10 @@ impl Phasing {
                 looks.insert(e.base().id, look);
             }
         }
-        Self { looks, ..Self::default() }
+        Self {
+            looks,
+            ..Self::default()
+        }
     }
 
     /// Whether nothing changes.
@@ -74,7 +82,11 @@ impl Phasing {
         if !self.has_pens() {
             return Some(drawn);
         }
-        Some(Cow::Owned(penned(drawn.into_owned(), &self.pens, self.mono)))
+        Some(Cow::Owned(penned(
+            drawn.into_owned(),
+            &self.pens,
+            self.mono,
+        )))
     }
 
     /// An object's look.

@@ -4,6 +4,7 @@
 //! `cad.viewmarks.edit` and `cad.views.edit`. Göster brings a mark into view, Git shows a named view.
 
 use crate::arch;
+use crate::arch::ArchState;
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
@@ -12,7 +13,6 @@ use kentos_commands::{
 use kentos_ui::icon::icon;
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::{label, style};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -69,14 +69,11 @@ pub(crate) trait ViewmarkRefsApp {
     fn view_refs_event(&mut self, event: Event) -> Task<Message>;
     fn view_refs_make_view(&mut self);
     fn view_refs_view(&self) -> Element<'_, Message>;
-    fn view_refs_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>;
+    fn view_refs_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
 impl ViewmarkRefsApp for App {
-    fn view_refs_read(&self) -> Option<ViewMarksReferenced>{
+    fn view_refs_read(&self) -> Option<ViewMarksReferenced> {
         let doc = self.document.as_ref()?;
         Some(kentos_native_application::viewmarks::references_of(
             &doc.model,
@@ -84,7 +81,7 @@ impl ViewmarkRefsApp for App {
     }
 
     /// Başvurular (`arch.viewRefs`): the window, the selected mark chosen.
-    fn open_view_refs(&mut self){
+    fn open_view_refs(&mut self) {
         let Some(refs) = self.view_refs_read() else {
             self.output("Açık çizim yok.");
             return;
@@ -106,15 +103,16 @@ impl ViewmarkRefsApp for App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::ViewRefs));
     }
 
-    fn view_refs_slot(&self, uid: &str) -> Option<kentos_domain::Slot>{
+    fn view_refs_slot(&self, uid: &str) -> Option<kentos_domain::Slot> {
         let doc = self.document.as_ref()?;
         doc.model.slot_of(kentos_domain::Uuid::parse_str(uid).ok()?)
     }
 
     /// `cad.viewmarks.edit` on the chosen mark, and the list again.
-    fn view_refs_edit(&mut self, op: ViewMarksOperation){
+    fn view_refs_edit(&mut self, op: ViewMarksOperation) {
         let Some(uid) = self
-            .modules.arch()
+            .modules
+            .arch()
             .view_refs
             .as_ref()
             .and_then(|w| w.chosen.and_then(|k| w.refs.marks.get(k)))
@@ -135,14 +133,14 @@ impl ViewmarkRefsApp for App {
         self.view_refs_again();
     }
 
-    fn view_refs_again(&mut self){
+    fn view_refs_again(&mut self) {
         let refs = self.view_refs_read();
         if let (Some(w), Some(refs)) = (self.modules.arch_mut().view_refs.as_mut(), refs) {
             w.refs = refs;
         }
     }
 
-    fn view_refs_event(&mut self, event: Event) -> Task<Message>{
+    fn view_refs_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Choose(k) => {
                 if let Some(w) = self.modules.arch_mut().view_refs.as_mut() {
@@ -151,7 +149,8 @@ impl ViewmarkRefsApp for App {
             }
             Event::Show(k) => {
                 let uid = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .view_refs
                     .as_ref()
                     .and_then(|w| w.refs.marks.get(k))
@@ -165,7 +164,8 @@ impl ViewmarkRefsApp for App {
             }
             Event::Bind(t) => {
                 let target = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .view_refs
                     .as_ref()
                     .and_then(|w| w.refs.targets.get(t))
@@ -178,7 +178,8 @@ impl ViewmarkRefsApp for App {
             Event::MakeView => self.view_refs_make_view(),
             Event::Go(t) => {
                 let name = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .view_refs
                     .as_ref()
                     .and_then(|w| w.refs.targets.get(t))
@@ -197,9 +198,10 @@ impl ViewmarkRefsApp for App {
     }
 
     /// Görünüm oluştur: the chosen detail's circle kept as a named view (“Detay 1”, its number), the detail pointed at it.
-    fn view_refs_make_view(&mut self){
+    fn view_refs_make_view(&mut self) {
         let Some(mark) = self
-            .modules.arch()
+            .modules
+            .arch()
             .view_refs
             .as_ref()
             .and_then(|w| w.chosen.and_then(|k| w.refs.marks.get(k)))
@@ -252,7 +254,7 @@ impl ViewmarkRefsApp for App {
         );
     }
 
-    fn view_refs_view(&self) -> Element<'_, Message>{
+    fn view_refs_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().view_refs else {
             return iced::widget::text("").into();
         };
@@ -281,18 +283,27 @@ impl ViewmarkRefsApp for App {
         };
         let mut marks = Column::new().spacing(6).push(label::strong("İşaretler"));
         if w.refs.marks.is_empty() {
-            let path = crate::catalog::catalog().tabs_for(kentos_commands::Workspace::Cad, Some(kentos_commands::CadWork::Architecture))
+            let path = crate::catalog::catalog()
+                .tabs_for(
+                    kentos_commands::Workspace::Cad,
+                    Some(kentos_commands::CadWork::Architecture),
+                )
                 .find(|tab| tab.id == "arch")
-                .and_then(|tab| tab.panels.iter().find_map(|panel| {
-                    panel.items.iter().find_map(|item| match item {
-                        crate::catalog::Item::Split { entries, .. }
-                            if entries.iter().any(|entry| entry.id == "tool.viewSection") =>
-                        {
-                            Some(format!("{} › {} › {}", tab.label, panel.label, entries[0].title))
-                        }
-                        _ => None,
+                .and_then(|tab| {
+                    tab.panels.iter().find_map(|panel| {
+                        panel.items.iter().find_map(|item| match item {
+                            crate::catalog::Item::Split { entries, .. }
+                                if entries.iter().any(|entry| entry.id == "tool.viewSection") =>
+                            {
+                                Some(format!(
+                                    "{} › {} › {}",
+                                    tab.label, panel.label, entries[0].title
+                                ))
+                            }
+                            _ => None,
+                        })
                     })
-                }))
+                })
                 .unwrap_or_else(|| "Komut ara".to_owned());
             marks = marks.push(label::caption(format!(
                 "Çizimde görünüm işareti yok. {path} üzerinden Kesit, Görünüş ya da Detay çizin."
@@ -416,10 +427,7 @@ impl ViewmarkRefsApp for App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step): the first mark's and target's.
-    fn view_refs_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>{
+    fn view_refs_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().view_refs.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

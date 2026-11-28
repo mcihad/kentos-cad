@@ -9,7 +9,8 @@
 //! - `amount` is the area or the volume, by the material's way of counting (a text material: by volume).
 
 use kentos_commands::{
-    ArchMaterial, MaterialCategory, MaterialQuantity, MaterialRow, SlabFields, WallFields, component_thicknesses,
+    ArchMaterial, MaterialCategory, MaterialQuantity, MaterialRow, SlabFields, WallFields,
+    component_thicknesses,
 };
 
 /// A wall as Metraj measured it: its fields and its net face area (none without a height).
@@ -21,7 +22,11 @@ struct Acc {
     row: MaterialRow,
 }
 
-fn key_of<'a>(table: &'a [ArchMaterial], id: Option<&str>, text: Option<&str>) -> Option<(Option<&'a ArchMaterial>, String)> {
+fn key_of<'a>(
+    table: &'a [ArchMaterial],
+    id: Option<&str>,
+    text: Option<&str>,
+) -> Option<(Option<&'a ArchMaterial>, String)> {
     if let Some(m) = id.and_then(|id| table.iter().find(|m| m.id == id)) {
         return Some((Some(m), m.name.clone()));
     }
@@ -57,7 +62,11 @@ fn row<'a>(rows: &'a mut Vec<Acc>, m: Option<&ArchMaterial>, name: &str) -> &'a 
 }
 
 /// The materials' rows; none when the project keeps no materials.
-pub(crate) fn rows(table: &[ArchMaterial], walls: &[WallPart<'_>], slabs: &[SlabPart<'_>]) -> Vec<MaterialRow> {
+pub(crate) fn rows(
+    table: &[ArchMaterial],
+    walls: &[WallPart<'_>],
+    slabs: &[SlabPart<'_>],
+) -> Vec<MaterialRow> {
     if table.is_empty() {
         return Vec::new();
     }
@@ -71,8 +80,14 @@ pub(crate) fn rows(table: &[ArchMaterial], walls: &[WallPart<'_>], slabs: &[Slab
         };
         let mut counted: Vec<(Option<String>, String)> = Vec::new();
         for (c, t) in w.components.iter().zip(t) {
-            let Some((m, name)) = key_of(table, c.material_id.as_deref(), c.material.as_deref().filter(|t| !t.trim().is_empty()).or(Some(c.name.as_str())))
-            else {
+            let Some((m, name)) = key_of(
+                table,
+                c.material_id.as_deref(),
+                c.material
+                    .as_deref()
+                    .filter(|t| !t.trim().is_empty())
+                    .or(Some(c.name.as_str())),
+            ) else {
                 continue;
             };
             let r = row(&mut rows, m, &name);

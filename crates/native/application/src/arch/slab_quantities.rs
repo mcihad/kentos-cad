@@ -32,7 +32,9 @@ pub(crate) fn transitions(rooms: &[Room<'_>], all: &[Passage]) -> Vec<Transition
             if !reads(level.as_deref(), p.level.as_deref()) {
                 continue;
             }
-            let Some((over, side)) = along(parts, p) else { continue };
+            let Some((over, side)) = along(parts, p) else {
+                continue;
+            };
             let k = if side > 0.0 { 0 } else { 1 };
             if sides[k].is_none_or(|(o, ..)| over > o) {
                 sides[k] = Some((over, uid, floor));
@@ -57,11 +59,22 @@ pub(crate) fn transitions(rooms: &[Room<'_>], all: &[Passage]) -> Vec<Transition
 /// The elevation of `arch`'s level; none without one.
 fn level_elevation(doc: &Document, arch: &ArchInfo) -> Option<f64> {
     let id = arch.level.as_deref()?;
-    doc.settings().arch.as_ref()?.levels.iter().find(|l| l.id == id).map(|l| l.elevation)
+    doc.settings()
+        .arch
+        .as_ref()?
+        .levels
+        .iter()
+        .find(|l| l.id == id)
+        .map(|l| l.elevation)
 }
 
 /// A slab measured; `voids` the drawing's voids by level.
-pub(crate) fn slab_row(doc: &Document, uid: String, s: &SlabFields, voids: &[(Option<String>, Vec<SpacePart>)]) -> SlabRow {
+pub(crate) fn slab_row(
+    doc: &Document,
+    uid: String,
+    s: &SlabFields,
+    voids: &[(Option<String>, Vec<SpacePart>)],
+) -> SlabRow {
     let area = spaces::area_of(&s.parts);
     let mine = spaces::areas(&s.parts);
     let theirs: Vec<_> = voids
@@ -72,7 +85,10 @@ pub(crate) fn slab_row(doc: &Document, uid: String, s: &SlabFields, voids: &[(Op
     let void_area = if theirs.is_empty() {
         0.0
     } else {
-        intersect_area_sets(&[mine, union_areas(&theirs)]).iter().map(net_area).sum::<f64>()
+        intersect_area_sets(&[mine, union_areas(&theirs)])
+            .iter()
+            .map(net_area)
+            .sum::<f64>()
     };
     // A sloped slab's areas lie along its slope (docs/adr/8071 §6): its plan's by √(1 + grade²).
     let k = s.upright();
@@ -83,7 +99,11 @@ pub(crate) fn slab_row(doc: &Document, uid: String, s: &SlabFields, voids: &[(Op
             .iter()
             .map(|r| {
                 let pts: Vec<CoreVec2> = r.pts.iter().map(|p| CoreVec2::new(p.x, p.y)).collect();
-                kentos_geometry_core::geom::bulge::bulge_path_length(&pts, r.bulges.as_deref(), false)
+                kentos_geometry_core::geom::bulge::bulge_path_length(
+                    &pts,
+                    r.bulges.as_deref(),
+                    false,
+                )
             })
             .sum()
     });

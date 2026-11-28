@@ -75,10 +75,22 @@ pub(crate) fn plan_layers(
         let Ok(mut data) = serde_json::from_value::<DataLayer>(data) else {
             continue;
         };
-        let id = node.get("id").and_then(Value::as_str).unwrap_or_default().to_owned();
-        let name = node.get("name").and_then(Value::as_str).unwrap_or_default().to_owned();
+        let id = node
+            .get("id")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_owned();
+        let name = node
+            .get("name")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_owned();
         let database = data.driver != "gpkg";
-        let way = if database { ways.databases } else { ways.geopackages };
+        let way = if database {
+            ways.databases
+        } else {
+            ways.geopackages
+        };
         let kept = |why: LeftWhy| PackageLeft {
             kind: PackagedKind::Source,
             path: data.address.clone(),
@@ -89,14 +101,26 @@ pub(crate) fn plan_layers(
         match (database, way) {
             (false, PackageWay::Keep) => out.left.push(kept(LeftWhy::Kept)),
             (false, _) => {
-                let found = find_in(file_of(&data.address), data.relative.as_deref(), ways.from, &[]).at;
+                let found = find_in(
+                    file_of(&data.address),
+                    data.relative.as_deref(),
+                    ways.from,
+                    &[],
+                )
+                .at;
                 let Some(at) = found else {
                     out.left.push(kept(LeftWhy::Missing));
                     continue;
                 };
                 let rel = out.copies.take(&at, PackagedKind::Source);
-                let abs = rel.split('/').fold(ways.target.to_path_buf(), |p, part| p.join(part));
-                let prefix = if data.address.starts_with("gpkg:") { "gpkg:" } else { "" };
+                let abs = rel
+                    .split('/')
+                    .fold(ways.target.to_path_buf(), |p, part| p.join(part));
+                let prefix = if data.address.starts_with("gpkg:") {
+                    "gpkg:"
+                } else {
+                    ""
+                };
                 data.address = format!("{prefix}{}", abs.display());
                 data.relative = Some(rel);
                 node["data"] = serde_json::to_value(&data).unwrap_or(Value::Null);
@@ -108,11 +132,20 @@ pub(crate) fn plan_layers(
                 if out.scratch.is_none() {
                     *out.scratch = Some(Scratch::new()?);
                 }
-                let dir = out.scratch.as_ref().map(|d| d.0.clone()).unwrap_or_default();
+                let dir = out
+                    .scratch
+                    .as_ref()
+                    .map(|d| d.0.clone())
+                    .unwrap_or_default();
                 let (file, copied, rows) = copy_table(doc, &id, &name, &data, &dir)?;
                 let rel = out.copies.take(&file, PackagedKind::Source);
-                out.copies.databases.insert(rel.clone(), (data.address.clone(), data.table.clone(), rows));
-                let abs = rel.split('/').fold(ways.target.to_path_buf(), |p, part| p.join(part));
+                out.copies.databases.insert(
+                    rel.clone(),
+                    (data.address.clone(), data.table.clone(), rows),
+                );
+                let abs = rel
+                    .split('/')
+                    .fold(ways.target.to_path_buf(), |p, part| p.join(part));
                 let mut copied = copied;
                 copied.address = abs.display().to_string();
                 copied.relative = Some(rel);
@@ -135,10 +168,21 @@ fn copy_table(
     data: &DataLayer,
     dir: &Path,
 ) -> Result<(PathBuf, DataLayer, u64), Refused> {
-    let short = data.table.rsplit('.').next().unwrap_or(&data.table).to_owned();
+    let short = data
+        .table
+        .rsplit('.')
+        .next()
+        .unwrap_or(&data.table)
+        .to_owned();
     let stem: String = short
         .chars()
-        .map(|c| if matches!(c, '/' | '\\' | ':' | '\0') || c.is_control() { '-' } else { c })
+        .map(|c| {
+            if matches!(c, '/' | '\\' | ':' | '\0') || c.is_control() {
+                '-'
+            } else {
+                c
+            }
+        })
         .collect();
     let file = dir.join(format!("{stem}.gpkg"));
     let mut copy = doc.clone();
@@ -154,13 +198,18 @@ fn copy_table(
     let fail = |why: String| {
         refuse(
             codes::SOURCE_UNREACHABLE,
-            format!("“{name}” veri katmanının tablosu ({}) GeoPackage'a kopyalanamadı: {why} Paket yapılmadı, hiçbir dosya yazılmadı; veritabanına ulaşın ya da Veritabanı kaynakları'nı Bağlı bırak yapın.", data.table),
+            format!(
+                "“{name}” veri katmanının tablosu ({}) GeoPackage'a kopyalanamadı: {why} Paket yapılmadı, hiçbir dosya yazılmadı; veritabanına ulaşın ya da Veritabanı kaynakları'nı Bağlı bırak yapın.",
+                data.table
+            ),
             "databases",
         )
     };
     let answer = answer.map_err(|e| fail(format!("{e:?}")))?;
     if answer["status"] != "completed" {
-        return Err(fail(answer["error"]["message"].as_str().unwrap_or("").to_owned()));
+        return Err(fail(
+            answer["error"]["message"].as_str().unwrap_or("").to_owned(),
+        ));
     }
     let added = answer["output"]["layer"].as_str().unwrap_or_default();
     let read = copy
@@ -192,12 +241,31 @@ pub(crate) fn typed_with_rows(
     op: CallOp,
     input: Value,
     progress: Option<&kentos_native_application::jobs::Progress>,
-) -> Result<(kentos_commands::CommandResult<Value>, Option<kentos_commands::FileEffect>), String> {
+) -> Result<
+    (
+        kentos_commands::CommandResult<Value>,
+        Option<kentos_commands::FileEffect>,
+    ),
+    String,
+> {
     if WRITES_LAYERS.contains(&command) && doc.layers().leaves().iter().any(|l| l.data.is_some()) {
-        match rows_said(doc, "layers", "Dışa aktarma yapılmadı, hiçbir dosya yazılmadı. Kaynağa ulaşın ya da katmanı dışarıda bırakın.") {
-            Ok(Some(open)) => return crate::file_commands::run_typed_with_progress(&open, command, op, input, progress),
+        match rows_said(
+            doc,
+            "layers",
+            "Dışa aktarma yapılmadı, hiçbir dosya yazılmadı. Kaynağa ulaşın ya da katmanı dışarıda bırakın.",
+        ) {
+            Ok(Some(open)) => {
+                return crate::file_commands::run_typed_with_progress(
+                    &open, command, op, input, progress,
+                );
+            }
             Ok(None) => {}
-            Err(refused) => return Ok((kentos_commands::CommandResult::Failed { error: *refused }, None)),
+            Err(refused) => {
+                return Ok((
+                    kentos_commands::CommandResult::Failed { error: *refused },
+                    None,
+                ));
+            }
         }
     }
     crate::file_commands::run_typed_with_progress(doc, command, op, input, progress)
@@ -215,24 +283,45 @@ pub(crate) fn with_rows(doc: &Document) -> Result<Option<Document>, Refused> {
 
 /// [`with_rows`], a refusal at `path` saying `then` after why the source could not be read.
 fn rows_said(doc: &Document, path: &str, then: &str) -> Result<Option<Document>, Refused> {
-    let nodes: Vec<kentos_commands::LayerNode> =
-        doc.layers().leaves().into_iter().filter(|l| l.data.is_some()).cloned().collect();
+    let nodes: Vec<kentos_commands::LayerNode> = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .filter(|l| l.data.is_some())
+        .cloned()
+        .collect();
     if nodes.is_empty() {
         return Ok(None);
     }
     let mut rows = Vec::new();
     for node in &nodes {
         let held = doc.data_hidden(&node.id);
-        let read = kentos_native_application::data_write::all_rows(node, doc.settings(), &held, &|| false).map_err(|why| {
-            refuse(codes::SOURCE_UNREACHABLE, format!("“{}” veri katmanının kaynağı okunamadı: {why}. {then}", node.name), path)
-        })?;
+        let read =
+            kentos_native_application::data_write::all_rows(node, doc.settings(), &held, &|| false)
+                .map_err(|why| {
+                    refuse(
+                        codes::SOURCE_UNREACHABLE,
+                        format!(
+                            "“{}” veri katmanının kaynağı okunamadı: {why}. {then}",
+                            node.name
+                        ),
+                        path,
+                    )
+                })?;
         rows.extend(read.rows.into_iter().map(|(_, e)| e));
     }
     let mut snapshot = doc.to_snapshot_v2();
     unlink(&mut snapshot.layers);
-    let fail = |why: String| refuse(codes::FILE_UNWRITABLE, format!("satırlarıyla çizim kurulamadı: {why}"), path);
+    let fail = |why: String| {
+        refuse(
+            codes::FILE_UNWRITABLE,
+            format!("satırlarıyla çizim kurulamadı: {why}"),
+            path,
+        )
+    };
     let mut open = Document::from_snapshot_v2(snapshot).map_err(fail)?;
-    open.add_many(rows, "Paketle").map_err(|_| fail("çizimde yer kalmadı".into()))?;
+    open.add_many(rows, "Paketle")
+        .map_err(|_| fail("çizimde yer kalmadı".into()))?;
     Ok(Some(open))
 }
 

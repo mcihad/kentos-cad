@@ -165,7 +165,10 @@ fn a_text_found_and_left_as_it_is_is_listed() {
     let same = matches(&b.doc, None, &query("Ada 102", "Ada 102", CASELESS));
     let changed = matches(&b.doc, None, &query("Ada 102", "A 102", CASELESS));
     assert_eq!(same.len(), changed.len(), "the same texts found");
-    assert!(!same.is_empty() && same.iter().all(|m| m.blocked == Some(Blocked::Same)), "{same:?}");
+    assert!(
+        !same.is_empty() && same.iter().all(|m| m.blocked == Some(Blocked::Same)),
+        "{same:?}"
+    );
     let revision = b.doc.revision();
     let (n, _) = write(&mut b.doc, &same);
     assert_eq!(n, 0);

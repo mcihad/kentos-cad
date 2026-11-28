@@ -1,8 +1,8 @@
 //! features › conditions › conditions_tests's tests that need the CBS module's surfaces (its project's bottom tabs and panels; docs/adr/9199
 //! §4.14): moved from the core's gis/features/conditions_tests.rs with the module's package; the work they test is the core's.
 
-use crate::features::Event;
 use crate::app::{App, Message};
+use crate::features::Event;
 use crate::gis;
 
 fn ev(app: &mut App, e: Event) {
@@ -36,7 +36,13 @@ fn each_drawing_layer_keeps_its_own_condition_and_order_and_a_field_it_lacks_is_
     let parcels = rows.clone();
     // Yapı: none of Parsel's condition or order.
     ev(&mut app, Event::Layer("yapi".into()));
-    assert_eq!((app.gis.features.filter.as_str(), app.gis.features.sort.as_deref()), ("", None));
+    assert_eq!(
+        (
+            app.gis.features.filter.as_str(),
+            app.gis.features.sort.as_deref()
+        ),
+        ("", None)
+    );
     let (count, _, _) = app.features_seen().expect("the tab is open");
     assert_eq!(count, "2 / 2");
     // A condition naming a field Yapı's objects lack is said.

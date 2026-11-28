@@ -55,27 +55,44 @@ impl Names {
 
     /// A command's names, in the file's order.
     pub fn of_command<'a>(&'a self, id: &'a str) -> impl Iterator<Item = &'static str> + 'a {
-        self.names.iter().filter(move |n| n.command == id).map(|n| n.name)
+        self.names
+            .iter()
+            .filter(move |n| n.command == id)
+            .map(|n| n.name)
     }
 
     /// The shared names this module takes, as (the command that has them elsewhere, the name).
     pub fn taken(&self) -> impl Iterator<Item = (&'static str, &'static str)> + '_ {
-        self.names.iter().filter_map(|n| Some((n.overrides?, n.name)))
+        self.names
+            .iter()
+            .filter_map(|n| Some((n.overrides?, n.name)))
     }
 
     /// A command's names as this module's program reads them: its own, a name the module takes for another
     /// command left out, the module's names for it added. `None` when they are the catalog's.
     pub fn aliases_of(&self, id: &str, own: &[&'static str]) -> Option<Vec<&'static str>> {
         let added: Vec<&'static str> = self.of_command(id).collect();
-        let taken: Vec<&'static str> = self.taken().filter(|(from, _)| *from == id).map(|(_, n)| n).collect();
+        let taken: Vec<&'static str> = self
+            .taken()
+            .filter(|(from, _)| *from == id)
+            .map(|(_, n)| n)
+            .collect();
         if added.is_empty() && taken.is_empty() {
             return None;
         }
         // A name the module takes from another command leads (the list names the row by it: PENCERE, not PENCEREKOY).
-        let leading: Vec<&'static str> =
-            self.names.iter().filter(|n| n.command == id && n.overrides.is_some()).map(|n| n.name).collect();
+        let leading: Vec<&'static str> = self
+            .names
+            .iter()
+            .filter(|n| n.command == id && n.overrides.is_some())
+            .map(|n| n.name)
+            .collect();
         let mut names = leading;
-        for a in own.iter().copied().filter(|a| !taken.iter().any(|t| fold(t) == fold(a))) {
+        for a in own
+            .iter()
+            .copied()
+            .filter(|a| !taken.iter().any(|t| fold(t) == fold(a)))
+        {
             if !names.iter().any(|n| fold(n) == fold(a)) {
                 names.push(a);
             }
@@ -98,13 +115,29 @@ impl Names {
         let Some(names) = self.aliases_of(id, &own) else {
             return line;
         };
-        let key = (id, line.name.as_ptr() as usize, line.aliases.as_ptr() as usize);
-        let mut made = MADE.get_or_init(Default::default).lock().unwrap_or_else(|e| e.into_inner());
-        let (name, aliases) = *made.entry(key).or_insert_with(|| match names.split_first() {
-            Some((first, rest)) => (*first, Box::leak(rest.to_vec().into_boxed_slice()) as &'static [&'static str]),
-            None => (line.name, &[]),
-        });
-        LineCommand { name, aliases, ..line }
+        let key = (
+            id,
+            line.name.as_ptr() as usize,
+            line.aliases.as_ptr() as usize,
+        );
+        let mut made = MADE
+            .get_or_init(Default::default)
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
+        let (name, aliases) = *made
+            .entry(key)
+            .or_insert_with(|| match names.split_first() {
+                Some((first, rest)) => (
+                    *first,
+                    Box::leak(rest.to_vec().into_boxed_slice()) as &'static [&'static str],
+                ),
+                None => (line.name, &[]),
+            });
+        LineCommand {
+            name,
+            aliases,
+            ..line
+        }
     }
 }
 
@@ -154,7 +187,8 @@ fn load(text: &str) -> Result<Names, String> {
     if raw.format != "kentos.moduleNames/1" {
         return Err(format!("unknown format {}", raw.format));
     }
-    let module = Module::from_id(&raw.module).ok_or_else(|| format!("unknown module {}", raw.module))?;
+    let module =
+        Module::from_id(&raw.module).ok_or_else(|| format!("unknown module {}", raw.module))?;
     Ok(Names {
         module,
         title: leak(raw.title),

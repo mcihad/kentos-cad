@@ -611,7 +611,14 @@ pub fn histogram_values(h: &Histogram) -> Vec<serde_json::Value> {
         .map(|(k, &c)| {
             so_far += c;
             let (a, b) = histogram_bounds(h, k, n);
-            json!([k as u64 + 1, a, b, c, 100.0 * c as f64 / total, 100.0 * so_far as f64 / total])
+            json!([
+                k as u64 + 1,
+                a,
+                b,
+                c,
+                100.0 * c as f64 / total,
+                100.0 * so_far as f64 / total
+            ])
         })
         .collect()
 }
@@ -621,7 +628,11 @@ fn histogram_bounds(h: &Histogram, k: usize, n: f64) -> (f64, f64) {
     if h.hi > h.lo {
         (
             h.lo + (h.hi - h.lo) * k as f64 / n,
-            if k + 1 == h.counts.len() { h.hi } else { h.lo + (h.hi - h.lo) * (k + 1) as f64 / n },
+            if k + 1 == h.counts.len() {
+                h.hi
+            } else {
+                h.lo + (h.hi - h.lo) * (k + 1) as f64 / n
+            },
         )
     } else {
         (h.lo, h.hi)

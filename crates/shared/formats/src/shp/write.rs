@@ -357,7 +357,10 @@ pub(super) fn significant(v: &str) -> usize {
 }
 
 /// The values a column's attribute takes over the rows, canonical by its field's rule (none: no value).
-pub(super) fn canonical(field: Option<&LayerField>, raw: Option<&String>) -> Result<Option<String>, ()> {
+pub(super) fn canonical(
+    field: Option<&LayerField>,
+    raw: Option<&String>,
+) -> Result<Option<String>, ()> {
     let Some(raw) = raw else {
         return Ok(None);
     };
@@ -408,7 +411,10 @@ fn columns(
     enc: DbfEncoding,
     out: &mut Written,
 ) -> Result<Vec<Column>, String> {
-    let keys: BTreeSet<String> = rows.iter().flat_map(|r| r.of.base().attrs.keys().cloned()).collect();
+    let keys: BTreeSet<String> = rows
+        .iter()
+        .flat_map(|r| r.of.base().attrs.keys().cloned())
+        .collect();
     super::columns::columns(set, fields, &keys, enc, out, &mut |each| {
         for r in rows {
             each(&r.of.base().attrs);

@@ -40,40 +40,40 @@
 
 /// The agents' tools, one surface for the MCP server and the desktop's chat (docs/adr/8056 §2).
 pub mod agent_tools;
+mod cad_shape_files;
+mod delivery_integrity;
 mod dispatch;
 mod error;
-pub mod export;
 pub mod exchange_check;
 pub mod exchange_matrix;
 mod exchange_parts;
-mod cad_shape_files;
+pub mod export;
 pub mod file_commands;
 pub mod files;
 pub mod gis_export;
 pub mod package;
+mod package_data;
+/// The delivery package's open files and their losses (docs/adr/2780).
+pub mod package_exchange;
+mod package_resources;
+#[cfg(feature = "mod-arch")]
+mod package_review;
+mod package_sources;
 pub mod publish;
 #[cfg(all(feature = "mod-arch", feature = "mod-gis"))]
 mod publish_bim;
 mod publish_status;
-#[cfg(feature = "mod-arch")]
-mod package_review;
 mod publish_update;
 pub mod recover;
 #[cfg(feature = "mod-gis")]
 pub mod regulation;
-mod sheet_resources;
 pub mod sheet_preflight;
-mod delivery_integrity;
-/// The delivery package's open files and their losses (docs/adr/2780).
-pub mod package_exchange;
-mod package_data;
-mod package_resources;
-mod package_sources;
+mod sheet_resources;
 use kentos_scene_query::query;
-pub mod rpc;
-mod session;
-pub mod selection;
 pub mod maplibre_export;
+pub mod rpc;
+pub mod selection;
+mod session;
 pub mod shp_export;
 pub mod sprite;
 pub mod veil;

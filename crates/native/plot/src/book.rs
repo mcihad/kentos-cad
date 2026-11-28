@@ -228,18 +228,23 @@ impl<'a> MapDrawer<'a> {
             errors: Vec::new(),
             drawing: None,
             raster_only: false,
-            sources:None,
+            sources: None,
             map: None,
             line_type_check: None,
         }
     }
 
     pub(crate) fn inspect_line_types(
-        &mut self, book: &SheetBook, m: &kentos_sheet::display::MapPrim, sheet: &str,
+        &mut self,
+        book: &SheetBook,
+        m: &kentos_sheet::display::MapPrim,
+        sheet: &str,
     ) -> Result<Vec<String>, String> {
         self.line_type_check = Some(Ok(Vec::new()));
         let _ = self.draw(book, m, sheet);
-        self.line_type_check.take().unwrap_or_else(|| Ok(Vec::new()))
+        self.line_type_check
+            .take()
+            .unwrap_or_else(|| Ok(Vec::new()))
     }
 
     /// One map's content, or none for a map with no ground (an unplaced one).
@@ -280,7 +285,14 @@ impl<'a> MapDrawer<'a> {
             m.options.to_vec(),
             // A road project's alignments, drawn for the map's paper turn (docs/adr/0982).
             m.view.rotation,
-            self.axes.then(|| (center.x.to_bits(), center.y.to_bits(), m.clip.width, m.clip.height)),
+            self.axes.then(|| {
+                (
+                    center.x.to_bits(),
+                    center.y.to_bits(),
+                    m.clip.width,
+                    m.clip.height,
+                )
+            }),
             phased.map(kentos_contracts::PhaseView::name),
         );
         // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
@@ -328,7 +340,12 @@ impl<'a> MapDrawer<'a> {
                 }
                 spatial.set_time_window(window);
                 // The bands' rows hold room in the copy too (docs/adr/0636 §2).
-                for link in copy.settings().sources.iter().filter(|l| l.extent.is_some()) {
+                for link in copy
+                    .settings()
+                    .sources
+                    .iter()
+                    .filter(|l| l.extent.is_some())
+                {
                     spatial.set_ghosts(&link.layer, main.ghosts_of(&link.layer));
                 }
                 (copy, spatial)
@@ -501,15 +518,21 @@ pub fn book_pdf_controlled(
     progress: Option<&kentos_native_application::jobs::Progress>,
 ) -> Result<BookPdf, PlotError> {
     check_stop(progress)?;
-    let captured=crate::provenance::Capture::new(doc,user,date,drawing)?;
+    let captured = crate::provenance::Capture::new(doc, user, date, drawing)?;
     check_stop(progress)?;
-    book_pdf_captured(&captured,sheets,options,progress)
+    book_pdf_captured(&captured, sheets, options, progress)
 }
 /// Reuse one immutable source/context/resource set over a whole publication batch.
-pub fn book_pdf_captured(captured:&crate::provenance::Capture,sheets:&[String],options:Option<kentos_sheet::pdf::PdfOptions>,progress:Option<&kentos_native_application::jobs::Progress>)->Result<BookPdf,PlotError>{
-    let doc=&captured.doc;let drawing=captured.drawing.as_deref();
-    let (book, mut inputs, defaults, notes)=prepare_captured(captured,sheets,false,progress)?;
-    inputs.keywords=Some(captured.keywords()?);
+pub fn book_pdf_captured(
+    captured: &crate::provenance::Capture,
+    sheets: &[String],
+    options: Option<kentos_sheet::pdf::PdfOptions>,
+    progress: Option<&kentos_native_application::jobs::Progress>,
+) -> Result<BookPdf, PlotError> {
+    let doc = &captured.doc;
+    let drawing = captured.drawing.as_deref();
+    let (book, mut inputs, defaults, notes) = prepare_captured(captured, sheets, false, progress)?;
+    inputs.keywords = Some(captured.keywords()?);
     let options = options.unwrap_or(defaults);
     crate::images::svg_assets(
         &book,
@@ -536,8 +559,14 @@ pub fn book_pdf_captured(captured:&crate::provenance::Capture,sheets:&[String],o
         };
         let mut own = kentos_sheet::pdf::findings(&book, &inputs, &page)
             .map_err(|e| PlotError::new(&e.code, e.message))?;
-        for finding in crate::preflight::inspect_captured(doc, &book, id, &inputs.render, drawing,Some(captured.images.clone()))?
-        {
+        for finding in crate::preflight::inspect_captured(
+            doc,
+            &book,
+            id,
+            &inputs.render,
+            drawing,
+            Some(captured.images.clone()),
+        )? {
             if finding.code != "svg_not_in_pdf"
                 && !own.iter().any(|f| {
                     f.code == finding.code
@@ -548,7 +577,7 @@ pub fn book_pdf_captured(captured:&crate::provenance::Capture,sheets:&[String],o
                 own.push(finding);
             }
         }
-        own.extend(crate::preflight::raster_resolution(&book,&inputs,id)?);
+        own.extend(crate::preflight::raster_resolution(&book, &inputs, id)?);
         for finding in own {
             if !findings.iter().any(|f| {
                 f.code == finding.code && f.item == finding.item && f.severity == finding.severity
@@ -569,9 +598,16 @@ pub fn book_pdf_captured(captured:&crate::provenance::Capture,sheets:&[String],o
 }
 
 pub(crate) fn prepare_captured(
-    captured:&crate::provenance::Capture,sheets:&[String],raster_only:bool,progress:Option<&kentos_native_application::jobs::Progress>,
-)->Result<(SheetBook,PdfInputs,PdfOptions,Vec<String>),PlotError>{
-    let doc=&captured.doc;let drawing=captured.drawing.as_deref();let user=&captured.user;let date=&captured.date;let sources=Some(captured.images.clone());
+    captured: &crate::provenance::Capture,
+    sheets: &[String],
+    raster_only: bool,
+    progress: Option<&kentos_native_application::jobs::Progress>,
+) -> Result<(SheetBook, PdfInputs, PdfOptions, Vec<String>), PlotError> {
+    let doc = &captured.doc;
+    let drawing = captured.drawing.as_deref();
+    let user = &captured.user;
+    let date = &captured.date;
+    let sources = Some(captured.images.clone());
     check_stop(progress)?;
     let Some(kept) = doc.sheets() else {
         return Err(PlotError::new(
@@ -594,7 +630,8 @@ pub(crate) fn prepare_captured(
     let mut render = base_inputs(doc, user, date);
     for id in &chosen {
         check_stop(progress)?;
-        let findings = crate::preflight::inspect_captured(doc, &book, id, &render, drawing,sources.clone())?;
+        let findings =
+            crate::preflight::inspect_captured(doc, &book, id, &render, drawing, sources.clone())?;
         if let Some(f) = findings.iter().find(|f| {
             matches!(
                 f.code.as_str(),
@@ -632,7 +669,7 @@ pub(crate) fn prepare_captured(
     drawer.notes.extend(band_notes);
     drawer.raster_only = raster_only;
     drawer.drawing = drawing.map(str::to_owned);
-    drawer.sources=sources.clone();
+    drawer.sources = sources.clone();
     let mut maps: Vec<PdfMap> = Vec::new();
     for (page, id) in chosen.iter().enumerate() {
         check_stop(progress)?;

@@ -418,11 +418,15 @@ fn check_input(input: &DimensionsCreate) -> Result<(), Stop> {
         ));
     }
     // A Kot reads its level or its z, not both; the level's id and offset hold (docs/adr/0721 §2).
-    if let DimensionMeasure::Elevation { z, level: Some(l), .. } = &input.measure {
+    if let DimensionMeasure::Elevation {
+        z, level: Some(l), ..
+    } = &input.measure
+    {
         if z.is_some() {
             return Err(refuse(
                 codes::INVALID_DIMENSION,
-                "Kot ya kotunu (z) ya katını (level) alır, ikisini birden değil: birini kaldırın.".into(),
+                "Kot ya kotunu (z) ya katını (level) alır, ikisini birden değil: birini kaldırın."
+                    .into(),
                 "measure.level",
             ));
         }
@@ -603,11 +607,18 @@ fn check(doc: &Document, input: &DimensionsCreate) -> Result<Measured, Stop> {
         ),
         // A Kot bound to a level: the level's elevation plus its offset (docs/adr/0721 §2).
         DimensionMeasure::Elevation { level: Some(l), .. } => {
-            let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+            let levels = doc
+                .settings()
+                .arch
+                .as_ref()
+                .map_or(&[][..], |a| a.levels.as_slice());
             let z = l.value(levels).ok_or_else(|| {
                 refuse(
                     codes::LEVEL_NOT_FOUND,
-                    format!("Projede “{}” kimlikli kat yok. Var olan bir katın kimliğini verin.", l.id),
+                    format!(
+                        "Projede “{}” kimlikli kat yok. Var olan bir katın kimliğini verin.",
+                        l.id
+                    ),
                     "measure.level.id",
                 )
             })?;
@@ -1046,9 +1057,7 @@ fn objects(input: &DimensionsCreate, m: &Measured) -> kentos_commands::EntitiesC
     };
     // Zincir ölçü and Baz ölçü keep their tools' step names (docs/adr/0140).
     let operation = match input.measure {
-        DimensionMeasure::Continue { .. } => {
-            Some(kentos_commands::CreateOperation::DimensionChain)
-        }
+        DimensionMeasure::Continue { .. } => Some(kentos_commands::CreateOperation::DimensionChain),
         DimensionMeasure::Baseline { .. } => {
             Some(kentos_commands::CreateOperation::DimensionBaseline)
         }
@@ -1088,9 +1097,18 @@ fn paper_warning(doc: &Document, m: &Measured) -> Option<kentos_commands::Comman
 }
 
 /// `result` with the underlay's warning added, when it was written or planned.
-fn said<T>(result: CommandResult<T>, warning: Option<kentos_commands::CommandWarning>) -> CommandResult<T> {
+fn said<T>(
+    result: CommandResult<T>,
+    warning: Option<kentos_commands::CommandWarning>,
+) -> CommandResult<T> {
     match (result, warning) {
-        (CommandResult::Completed { output, mut warnings }, Some(w)) => {
+        (
+            CommandResult::Completed {
+                output,
+                mut warnings,
+            },
+            Some(w),
+        ) => {
             warnings.push(w);
             CommandResult::Completed { output, warnings }
         }
@@ -1104,7 +1122,10 @@ pub mod dimensions_create {
 
     pub fn validate(cx: &ExecutionContext<'_>, input: &DimensionsCreate) -> CommandResult<()> {
         match check(cx.doc, input) {
-            Ok(m) => said(creating::validate(cx, &objects(input, &m)), paper_warning(cx.doc, &m)),
+            Ok(m) => said(
+                creating::validate(cx, &objects(input, &m)),
+                paper_warning(cx.doc, &m),
+            ),
             Err(stop) => stop.into(),
         }
     }
@@ -1119,7 +1140,10 @@ pub mod dimensions_create {
     /// [`plan`] over the document.
     pub fn plan_in(doc: &Document, input: &DimensionsCreate) -> CommandResult<EntitiesCreatePlan> {
         match check(doc, input) {
-            Ok(m) => said(creating::plan(doc, &objects(input, &m)), paper_warning(doc, &m)),
+            Ok(m) => said(
+                creating::plan(doc, &objects(input, &m)),
+                paper_warning(doc, &m),
+            ),
             Err(stop) => stop.into(),
         }
     }

@@ -686,8 +686,14 @@ mod tests {
         use crate::viewport::Event;
         use iced::{Point, Vector};
         for moved in [
-            Event::Zoomed { factor: 1.15, at: Point::new(300.0, 200.0) },
-            Event::Panned { by: Vector::new(40.0, 0.0), at: Point::new(340.0, 200.0) },
+            Event::Zoomed {
+                factor: 1.15,
+                at: Point::new(300.0, 200.0),
+            },
+            Event::Panned {
+                by: Vector::new(40.0, 0.0),
+                at: Point::new(340.0, 200.0),
+            },
             Event::Extents,
         ] {
             let mut app = app_with_drawing();
@@ -698,7 +704,11 @@ mod tests {
             // The object the card names was under the pointer before the view moved (docs/adr/9204).
             let _ = app.update(Message::Viewport(moved.clone()));
             let _ = app.follow_hover();
-            assert_eq!(app.selection.hover(), None, "{moved:?}: nothing is hovered until the pointer moves");
+            assert_eq!(
+                app.selection.hover(),
+                None,
+                "{moved:?}: nothing is hovered until the pointer moves"
+            );
             assert_eq!(app.hover_card, None, "{moved:?}: the card goes");
             assert!(app.hover_card_view().is_none());
         }

@@ -87,11 +87,28 @@ pub struct Tin {
 /// taken and the edge said (`undecided`).
 pub fn base_tin(corners: &[[f64; 2]], heights: &[f64]) -> Result<Tin, BaseError> {
     let n = corners.len().min(heights.len());
-    let ring: Vec<[f64; 3]> = (0..n).map(|k| [corners[k][0], corners[k][1], heights[k]]).collect();
+    let ring: Vec<[f64; 3]> = (0..n)
+        .map(|k| [corners[k][0], corners[k][1], heights[k]])
+        .collect();
     let input = SurfaceInput {
-        points: ring.iter().map(|c| SpotPoint { x: c[0], y: c[1], z: c[2], source: None }).collect(),
-        breaklines: vec![Breakline { points: ring.clone(), closed: true, source: None }],
-        boundary: Some(Ring { points: corners[..n].to_vec(), source: None }),
+        points: ring
+            .iter()
+            .map(|c| SpotPoint {
+                x: c[0],
+                y: c[1],
+                z: c[2],
+                source: None,
+            })
+            .collect(),
+        breaklines: vec![Breakline {
+            points: ring.clone(),
+            closed: true,
+            source: None,
+        }],
+        boundary: Some(Ring {
+            points: corners[..n].to_vec(),
+            source: None,
+        }),
         ..SurfaceInput::default()
     };
     let s = crate::surface::build(&input).map_err(|e| BaseError::Untriangulated(e.code))?;
@@ -106,10 +123,15 @@ pub fn base_tin(corners: &[[f64; 2]], heights: &[f64]) -> Result<Tin, BaseError>
             [c[first], c[(first + 1) % 3], c[(first + 2) % 3]]
         })
         .collect();
-    triangles.sort_by(|a, b| by_place(&a[0], &b[0]).then(by_place(&a[1], &b[1])).then(by_place(&a[2], &b[2])));
+    triangles.sort_by(|a, b| {
+        by_place(&a[0], &b[0])
+            .then(by_place(&a[1], &b[1]))
+            .then(by_place(&a[2], &b[2]))
+    });
     // The edges two kept triangles share that are no piece of the ring: four corners on one circle leave them open.
     let v2 = |i: u32| Vec2::new(at(i)[0], at(i)[1]);
-    let mut sides: std::collections::BTreeMap<[u32; 2], Vec<u32>> = std::collections::BTreeMap::new();
+    let mut sides: std::collections::BTreeMap<[u32; 2], Vec<u32>> =
+        std::collections::BTreeMap::new();
     for t in &s.triangles {
         for k in 0..3 {
             let (a, b, far) = (t[k], t[(k + 1) % 3], t[(k + 2) % 3]);
@@ -123,12 +145,23 @@ pub fn base_tin(corners: &[[f64; 2]], heights: &[f64]) -> Result<Tin, BaseError>
             && incircle(v2(e[0]), v2(e[1]), v2(c), v2(d)) == 0.0
         {
             let (p, q) = (at(e[0]), at(e[1]));
-            let (p, q) = if by_place(&p, &q).is_le() { (p, q) } else { (q, p) };
+            let (p, q) = if by_place(&p, &q).is_le() {
+                (p, q)
+            } else {
+                (q, p)
+            };
             undecided.push([[p[0], p[1]], [q[0], q[1]]]);
         }
     }
-    undecided.sort_by(|a, b| a[0][0].total_cmp(&b[0][0]).then(a[0][1].total_cmp(&b[0][1])));
-    Ok(Tin { triangles, undecided })
+    undecided.sort_by(|a, b| {
+        a[0][0]
+            .total_cmp(&b[0][0])
+            .then(a[0][1].total_cmp(&b[0][1]))
+    });
+    Ok(Tin {
+        triangles,
+        undecided,
+    })
 }
 
 /// The plane fitted to the corners: centred on their mean, `a` and `b` from the 2 × 2 normal equations, `c` through
@@ -149,7 +182,11 @@ fn fit(corners: &[[f64; 2]], heights: &[f64]) -> Result<Plane, BaseError> {
     let (mu, mv, mz) = (su / nf, sv / nf, sz / nf);
     let (mut suu, mut svv, mut suv, mut suz, mut svz) = (0.0, 0.0, 0.0, 0.0, 0.0);
     for k in 0..n {
-        let (u, v, z) = (corners[k][0] - o[0] - mu, corners[k][1] - o[1] - mv, heights[k] - mz);
+        let (u, v, z) = (
+            corners[k][0] - o[0] - mu,
+            corners[k][1] - o[1] - mv,
+            heights[k] - mz,
+        );
         suu += u * u;
         svv += v * v;
         suv += u * v;
@@ -184,7 +221,10 @@ type P = [f64; 2];
 
 pub(crate) fn signed_area(ring: &[P]) -> f64 {
     let n = ring.len();
-    (0..n).map(|i| ring[i][0] * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * ring[i][1]).sum::<f64>() / 2.0
+    (0..n)
+        .map(|i| ring[i][0] * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * ring[i][1])
+        .sum::<f64>()
+        / 2.0
 }
 
 /// A ring turned counterclockwise (`ccw`) or clockwise.
@@ -240,24 +280,43 @@ pub fn measure_tin(surface: &Surface, region: &Region, tin: &Tin) -> Measured {
 /// The plane `[a, b, c]` through a triangle's corners, in coordinates shifted by `o`, and the shifted corners.
 fn plane_of(t: &[[f64; 3]; 3], o: P) -> ([P; 3], [f64; 3]) {
     let v = t.map(|c| ([c[0] - o[0], c[1] - o[1]], c[2]));
-    let (e1, e2) = ([v[1].0[0] - v[0].0[0], v[1].0[1] - v[0].0[1]], [v[2].0[0] - v[0].0[0], v[2].0[1] - v[0].0[1]]);
+    let (e1, e2) = (
+        [v[1].0[0] - v[0].0[0], v[1].0[1] - v[0].0[1]],
+        [v[2].0[0] - v[0].0[0], v[2].0[1] - v[0].0[1]],
+    );
     let det = e1[0] * e2[1] - e1[1] * e2[0];
     let (dz1, dz2) = (v[1].1 - v[0].1, v[2].1 - v[0].1);
     let a = (dz1 * e2[1] - dz2 * e1[1]) / det;
     let b = (e1[0] * dz2 - e2[0] * dz1) / det;
-    (v.map(|c| c.0), [a, b, v[0].1 - a * v[0].0[0] - b * v[0].0[1]])
+    (
+        v.map(|c| c.0),
+        [a, b, v[0].1 - a * v[0].0[0] - b * v[0].0[1]],
+    )
 }
 
 /// [`measure`] and [`measure_tin`]: against `plane` when `tin` is empty, else against each of its triangles' planes
 /// inside it (counterclockwise triangles).
-fn measure_over(surface: &Surface, region: &Region, tin: &[[[f64; 3]; 3]], plane: Plane) -> Measured {
+fn measure_over(
+    surface: &Surface,
+    region: &Region,
+    tin: &[[[f64; 3]; 3]],
+    plane: Plane,
+) -> Measured {
     let Some(&o) = region.outer.first() else {
         return Measured::default();
     };
     let shift = |p: &P| [p[0] - o[0], p[1] - o[1]];
     let mut rings = vec![oriented(region.outer.iter().map(shift).collect(), true)];
-    rings.extend(region.holes.iter().map(|h| oriented(h.iter().map(shift).collect(), false)));
-    let mut m = Measured { area: rings.iter().map(|r| signed_area(r)).sum(), ..Measured::default() };
+    rings.extend(
+        region
+            .holes
+            .iter()
+            .map(|h| oriented(h.iter().map(shift).collect(), false)),
+    );
+    let mut m = Measured {
+        area: rings.iter().map(|r| signed_area(r)).sum(),
+        ..Measured::default()
+    };
     let (mut lo, mut hi) = ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]);
     for p in &rings[0] {
         for k in 0..2 {
@@ -267,22 +326,35 @@ fn measure_over(surface: &Surface, region: &Region, tin: &[[[f64; 3]; 3]], plane
     }
     // The base in the shifted coordinates: the plane (no window), or each triangle its window and plane.
     let bases: Vec<(Option<[P; 3]>, [f64; 3])> = if tin.is_empty() {
-        vec![(None, [plane[0], plane[1], plane[0] * o[0] + plane[1] * o[1] + plane[2]])]
+        vec![(
+            None,
+            [
+                plane[0],
+                plane[1],
+                plane[0] * o[0] + plane[1] * o[1] + plane[2],
+            ],
+        )]
     } else {
-        tin.iter().map(|t| plane_of(t, o)).map(|(w, p)| (Some(w), p)).collect()
+        tin.iter()
+            .map(|t| plane_of(t, o))
+            .map(|(w, p)| (Some(w), p))
+            .collect()
     };
     for t in &surface.triangles {
         let mut v = t.map(|i| {
             let c = surface.vertices[i as usize];
             ([c[0] - o[0], c[1] - o[1]], c[2])
         });
-        if v.iter().all(|(p, _)| p[0] < lo[0]) || v.iter().all(|(p, _)| p[0] > hi[0])
-            || v.iter().all(|(p, _)| p[1] < lo[1]) || v.iter().all(|(p, _)| p[1] > hi[1])
+        if v.iter().all(|(p, _)| p[0] < lo[0])
+            || v.iter().all(|(p, _)| p[0] > hi[0])
+            || v.iter().all(|(p, _)| p[1] < lo[1])
+            || v.iter().all(|(p, _)| p[1] > hi[1])
         {
             continue;
         }
         let turn = |v: &[(P, f64); 3]| {
-            (v[1].0[0] - v[0].0[0]) * (v[2].0[1] - v[0].0[1]) - (v[1].0[1] - v[0].0[1]) * (v[2].0[0] - v[0].0[0])
+            (v[1].0[0] - v[0].0[0]) * (v[2].0[1] - v[0].0[1])
+                - (v[1].0[1] - v[0].0[1]) * (v[2].0[0] - v[0].0[0])
         };
         if turn(&v) < 0.0 {
             v.swap(1, 2);
@@ -292,7 +364,10 @@ fn measure_over(surface: &Surface, region: &Region, tin: &[[[f64; 3]; 3]], plane
             continue;
         }
         // The surface's plane over the triangle, then the difference d = surface − base.
-        let (e1, e2) = ([v[1].0[0] - v[0].0[0], v[1].0[1] - v[0].0[1]], [v[2].0[0] - v[0].0[0], v[2].0[1] - v[0].0[1]]);
+        let (e1, e2) = (
+            [v[1].0[0] - v[0].0[0], v[1].0[1] - v[0].0[1]],
+            [v[2].0[0] - v[0].0[0], v[2].0[1] - v[0].0[1]],
+        );
         let (dz1, dz2) = (v[1].1 - v[0].1, v[2].1 - v[0].1);
         let sa = (dz1 * e2[1] - dz2 * e1[1]) / det;
         let sb = (e1[0] * dz2 - e2[0] * dz1) / det;
@@ -363,31 +438,62 @@ mod tests {
 
     #[test]
     fn a_fitted_plane_goes_through_points_on_a_plane() {
-        let corners = [[1000.0, 2000.0], [1010.0, 2000.0], [1010.0, 2010.0], [1000.0, 2012.0]];
+        let corners = [
+            [1000.0, 2000.0],
+            [1010.0, 2000.0],
+            [1010.0, 2010.0],
+            [1000.0, 2012.0],
+        ];
         let z = |p: &[f64; 2]| 0.02 * p[0] - 0.01 * p[1] + 7.0;
         let heights: Vec<f64> = corners.iter().map(z).collect();
         let p = base_plane(Base::Fit, &corners, &heights).expect("fits");
-        assert!((p[0] - 0.02).abs() < 1e-12 && (p[1] + 0.01).abs() < 1e-12, "{p:?}");
+        assert!(
+            (p[0] - 0.02).abs() < 1e-12 && (p[1] + 0.01).abs() < 1e-12,
+            "{p:?}"
+        );
         for c in &corners {
             assert!((p[0] * c[0] + p[1] * c[1] + p[2] - z(c)).abs() < 1e-9);
         }
         let line = [[0.0, 0.0], [1.0, 1.0], [2.0, 2.0]];
-        assert_eq!(base_plane(Base::Fit, &line, &[1.0, 2.0, 3.0]), Err(BaseError::Collinear));
-        assert_eq!(base_plane(Base::Lowest, &corners, &[3.0, 1.0, 2.0, 5.0]), Ok([0.0, 0.0, 1.0]));
-        assert_eq!(base_plane(Base::Highest, &corners, &[3.0, 1.0, 2.0, 5.0]), Ok([0.0, 0.0, 5.0]));
-        assert_eq!(base_plane(Base::Average, &corners, &[3.0, 1.0, 2.0, 6.0]), Ok([0.0, 0.0, 3.0]));
+        assert_eq!(
+            base_plane(Base::Fit, &line, &[1.0, 2.0, 3.0]),
+            Err(BaseError::Collinear)
+        );
+        assert_eq!(
+            base_plane(Base::Lowest, &corners, &[3.0, 1.0, 2.0, 5.0]),
+            Ok([0.0, 0.0, 1.0])
+        );
+        assert_eq!(
+            base_plane(Base::Highest, &corners, &[3.0, 1.0, 2.0, 5.0]),
+            Ok([0.0, 0.0, 5.0])
+        );
+        assert_eq!(
+            base_plane(Base::Average, &corners, &[3.0, 1.0, 2.0, 6.0]),
+            Ok([0.0, 0.0, 3.0])
+        );
     }
 
     #[test]
     fn a_concave_ring_s_doubled_edges_add_nothing() {
         // An L clipped by a triangle that covers its notch: Sutherland–Hodgman keeps a bridge, the area is right.
-        let l = vec![[0.0, 0.0], [4.0, 0.0], [4.0, 1.0], [1.0, 1.0], [1.0, 4.0], [0.0, 4.0]];
+        let l = vec![
+            [0.0, 0.0],
+            [4.0, 0.0],
+            [4.0, 1.0],
+            [1.0, 1.0],
+            [1.0, 4.0],
+            [0.0, 4.0],
+        ];
         let all = keep(&l, &|_p: P| 1.0);
         assert!((moments(&all).0 - 7.0).abs() < 1e-12);
         // Keep x + y ≤ 3: the L's part under the line.
         let under = keep(&l, &|p: P| 3.0 - p[0] - p[1]);
         // Inside the L and under x + y = 3: the triangle 0..3 less the notch square's part (1..2 × 1..2 under the line).
-        assert!((moments(&under).0 - (4.5 - 0.5)).abs() < 1e-12, "{}", moments(&under).0);
+        assert!(
+            (moments(&under).0 - (4.5 - 0.5)).abs() < 1e-12,
+            "{}",
+            moments(&under).0
+        );
     }
 
     /// A pyramid 6 m high on a 20 × 20 m square at height 100 (five points, four triangles), over the level base at 100
@@ -397,27 +503,54 @@ mod tests {
     fn a_pyramid_s_volume_is_a_third_of_base_times_height() {
         use crate::surface::{SpotPoint, SurfaceInput, build};
         let o = (487_600.0, 4_420_300.0);
-        let pt = |x: f64, y: f64, z: f64| SpotPoint { x: o.0 + x, y: o.1 + y, z, source: None };
+        let pt = |x: f64, y: f64, z: f64| SpotPoint {
+            x: o.0 + x,
+            y: o.1 + y,
+            z,
+            source: None,
+        };
         let input = SurfaceInput {
-            points: vec![pt(0.0, 0.0, 100.0), pt(20.0, 0.0, 100.0), pt(20.0, 20.0, 100.0), pt(0.0, 20.0, 100.0), pt(10.0, 10.0, 106.0)],
+            points: vec![
+                pt(0.0, 0.0, 100.0),
+                pt(20.0, 0.0, 100.0),
+                pt(20.0, 20.0, 100.0),
+                pt(0.0, 20.0, 100.0),
+                pt(10.0, 10.0, 106.0),
+            ],
             ..SurfaceInput::default()
         };
         let surface = build(&input).expect("builds");
         let square = Region {
-            outer: vec![[o.0, o.1], [o.0 + 20.0, o.1], [o.0 + 20.0, o.1 + 20.0], [o.0, o.1 + 20.0]],
+            outer: vec![
+                [o.0, o.1],
+                [o.0 + 20.0, o.1],
+                [o.0 + 20.0, o.1 + 20.0],
+                [o.0, o.1 + 20.0],
+            ],
             holes: Vec::new(),
         };
         let m = measure(&surface, &square, [0.0, 0.0, 100.0]);
-        assert!((m.area - 400.0).abs() < 1e-9 && (m.covered - 400.0).abs() < 1e-9, "{m:?}");
+        assert!(
+            (m.area - 400.0).abs() < 1e-9 && (m.covered - 400.0).abs() < 1e-9,
+            "{m:?}"
+        );
         assert!((m.cut - 800.0).abs() < 1e-9 && m.fill.abs() < 1e-9, "{m:?}");
         let m = measure(&surface, &square, [0.0, 0.0, 103.0]);
         assert!((m.cut - 100.0).abs() < 1e-9, "{m:?}");
         // Under 103: the box 400 × 3 less what the pyramid fills of it (800 − 100).
         assert!((m.fill - (1200.0 - 700.0)).abs() < 1e-9, "{m:?}");
-        assert!((m.cut_area - 100.0).abs() < 1e-9 && (m.fill_area - 300.0).abs() < 1e-9, "{m:?}");
+        assert!(
+            (m.cut_area - 100.0).abs() < 1e-9 && (m.fill_area - 300.0).abs() < 1e-9,
+            "{m:?}"
+        );
         // A hole at the top (the middle 10 × 10, clockwise or not) takes its share away.
         let holed = Region {
-            holes: vec![vec![[o.0 + 5.0, o.1 + 5.0], [o.0 + 15.0, o.1 + 5.0], [o.0 + 15.0, o.1 + 15.0], [o.0 + 5.0, o.1 + 15.0]]],
+            holes: vec![vec![
+                [o.0 + 5.0, o.1 + 5.0],
+                [o.0 + 15.0, o.1 + 5.0],
+                [o.0 + 15.0, o.1 + 15.0],
+                [o.0 + 5.0, o.1 + 15.0],
+            ]],
             ..square.clone()
         };
         let m = measure(&surface, &holed, [0.0, 0.0, 103.0]);
@@ -427,7 +560,10 @@ mod tests {
         assert_eq!(tin.triangles.len(), 2);
         assert_eq!(tin.undecided.len(), 1, "four corners on one circle");
         let m = measure_tin(&surface, &square, &tin);
-        assert!((m.cut - 800.0).abs() < 1e-9 && m.fill.abs() < 1e-9 && (m.covered - 400.0).abs() < 1e-9, "{m:?}");
+        assert!(
+            (m.cut - 800.0).abs() < 1e-9 && m.fill.abs() < 1e-9 && (m.covered - 400.0).abs() < 1e-9,
+            "{m:?}"
+        );
     }
 
     /// Corners on a tilted plane: the triangulated base is that plane, the volume the fitted plane's. A concave L's
@@ -440,36 +576,78 @@ mod tests {
         let mut points = Vec::new();
         for j in 0..=6 {
             for i in 0..=6 {
-                let (x, y) = (f64::from(i) * 10.0 + if j % 2 == 1 { 3.0 } else { 0.0 }, f64::from(j) * 10.0);
+                let (x, y) = (
+                    f64::from(i) * 10.0 + if j % 2 == 1 { 3.0 } else { 0.0 },
+                    f64::from(j) * 10.0,
+                );
                 let bump = if (i, j) == (3, 3) { 4.0 } else { 0.0 };
-                points.push(SpotPoint { x: o.0 + x, y: o.1 + y, z: ground(x, y) + bump, source: None });
+                points.push(SpotPoint {
+                    x: o.0 + x,
+                    y: o.1 + y,
+                    z: ground(x, y) + bump,
+                    source: None,
+                });
             }
         }
-        let surface = build(&SurfaceInput { points, ..SurfaceInput::default() }).expect("builds");
-        let pentagon: Vec<[f64; 2]> =
-            [(14.0, 16.0), (46.0, 14.0), (50.0, 34.0), (31.0, 49.0), (12.0, 36.0)].map(|(x, y)| [o.0 + x, o.1 + y]).to_vec();
-        let region = Region { outer: pentagon.clone(), holes: Vec::new() };
+        let surface = build(&SurfaceInput {
+            points,
+            ..SurfaceInput::default()
+        })
+        .expect("builds");
+        let pentagon: Vec<[f64; 2]> = [
+            (14.0, 16.0),
+            (46.0, 14.0),
+            (50.0, 34.0),
+            (31.0, 49.0),
+            (12.0, 36.0),
+        ]
+        .map(|(x, y)| [o.0 + x, o.1 + y])
+        .to_vec();
+        let region = Region {
+            outer: pentagon.clone(),
+            holes: Vec::new(),
+        };
         let heights = corner_heights(&surface, &region).expect("on the surface");
         let tin = base_tin(&pentagon, &heights).expect("triangulates");
         assert_eq!((tin.triangles.len(), tin.undecided.len()), (3, 0));
         let plane = base_plane(Base::Fit, &pentagon, &heights).expect("fits");
-        let (a, b) = (measure_tin(&surface, &region, &tin), measure(&surface, &region, plane));
-        assert!((a.cut - b.cut).abs() < 1e-6 && (a.fill - b.fill).abs() < 1e-6, "{a:?} {b:?}");
+        let (a, b) = (
+            measure_tin(&surface, &region, &tin),
+            measure(&surface, &region, plane),
+        );
+        assert!(
+            (a.cut - b.cut).abs() < 1e-6 && (a.fill - b.fill).abs() < 1e-6,
+            "{a:?} {b:?}"
+        );
         assert!(a.cut > 0.0, "the bump is cut");
         // The L: four triangles, their area the L's, none in its notch.
-        let ell: Vec<[f64; 2]> = [(12.0, 12.0), (48.0, 12.0), (48.0, 26.0), (26.0, 26.0), (26.0, 48.0), (12.0, 48.0)]
-            .map(|(x, y)| [o.0 + x, o.1 + y])
-            .to_vec();
+        let ell: Vec<[f64; 2]> = [
+            (12.0, 12.0),
+            (48.0, 12.0),
+            (48.0, 26.0),
+            (26.0, 26.0),
+            (26.0, 48.0),
+            (12.0, 48.0),
+        ]
+        .map(|(x, y)| [o.0 + x, o.1 + y])
+        .to_vec();
         let tin = base_tin(&ell, &[100.0; 6]).expect("triangulates");
         let area: f64 = tin
             .triangles
             .iter()
-            .map(|t| ((t[1][0] - t[0][0]) * (t[2][1] - t[0][1]) - (t[2][0] - t[0][0]) * (t[1][1] - t[0][1])) / 2.0)
+            .map(|t| {
+                ((t[1][0] - t[0][0]) * (t[2][1] - t[0][1])
+                    - (t[2][0] - t[0][0]) * (t[1][1] - t[0][1]))
+                    / 2.0
+            })
             .sum();
         assert_eq!(tin.triangles.len(), 4);
         assert!((area - (36.0 * 14.0 + 14.0 * 22.0)).abs() < 1e-6, "{area}");
         // A ring crossing itself is not triangulated.
         let bow = [[0.0, 0.0], [10.0, 10.0], [10.0, 0.0], [0.0, 10.0]];
-        assert_eq!(base_tin(&bow, &[1.0; 4]), Err(BaseError::Untriangulated("constraints_cross")));
+        assert_eq!(
+            base_tin(&bow, &[1.0; 4]),
+            Err(BaseError::Untriangulated("constraints_cross"))
+        );
     }
 }

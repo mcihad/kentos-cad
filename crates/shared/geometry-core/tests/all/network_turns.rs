@@ -117,7 +117,12 @@ fn build(scene: &Value) -> (Graph, kentos_geometry_core::ops::network::BuildRepo
         .iter()
         .map(|t| TurnIn {
             id: num(&t["id"]),
-            pts: t["pts"].as_array().expect("points").iter().map(point).collect(),
+            pts: t["pts"]
+                .as_array()
+                .expect("points")
+                .iter()
+                .map(point)
+                .collect(),
             field: t["field"].as_bool().unwrap_or(false),
             value: text(&t["value"]),
         })
@@ -175,7 +180,11 @@ fn turns_levels_and_times_give_what_the_independent_reference_gives() {
                 p["piece"].as_u64().expect("a piece"),
                 "{name}: place {key}"
             );
-            near(loc.offset, num(&p["offset"]), &format!("{name}: place {key}"));
+            near(
+                loc.offset,
+                num(&p["offset"]),
+                &format!("{name}: place {key}"),
+            );
             places.insert(key.clone(), loc);
         }
         let pick = |list: &Value| -> Vec<Location> {
@@ -269,7 +278,11 @@ fn turns_levels_and_times_give_what_the_independent_reference_gives() {
                     let expected = want["lines"].as_array().expect("lines");
                     assert_eq!(lines.len(), expected.len(), "{title}: lines {lines:?}");
                     for (l, w) in lines.iter().zip(expected) {
-                        assert_eq!(l.band as u64, w["band"].as_u64().expect("a band"), "{title}");
+                        assert_eq!(
+                            l.band as u64,
+                            w["band"].as_u64().expect("a band"),
+                            "{title}"
+                        );
                         assert_eq!(
                             l.span.piece as u64,
                             w["piece"].as_u64().expect("a piece"),
@@ -310,11 +323,8 @@ fn turns_levels_and_times_give_what_the_independent_reference_gives() {
                             if paths {
                                 let path = path.as_ref().expect("a way");
                                 spans_eq(&path.spans, &wf["spans"], &title);
-                                for (c, t) in wf["totals"]
-                                    .as_array()
-                                    .expect("totals")
-                                    .iter()
-                                    .enumerate()
+                                for (c, t) in
+                                    wf["totals"].as_array().expect("totals").iter().enumerate()
                                 {
                                     near(
                                         way_cost(&g, &path.spans, c, at, reverse),
@@ -328,8 +338,16 @@ fn turns_levels_and_times_give_what_the_independent_reference_gives() {
                 }
                 "check" => {
                     let c = check(&g, &report);
-                    assert_eq!(c.nodes as u64, want["nodes"].as_u64().expect("nodes"), "{title}");
-                    assert_eq!(c.pieces as u64, want["pieces"].as_u64().expect("pieces"), "{title}");
+                    assert_eq!(
+                        c.nodes as u64,
+                        want["nodes"].as_u64().expect("nodes"),
+                        "{title}"
+                    );
+                    assert_eq!(
+                        c.pieces as u64,
+                        want["pieces"].as_u64().expect("pieces"),
+                        "{title}"
+                    );
                     near(c.length, num(&want["length"]), &title);
                     // The problems this ADR adds or changes: crossings at one level, values and turns not read,
                     // turns not placed.
@@ -370,7 +388,6 @@ fn turns_levels_and_times_give_what_the_independent_reference_gives() {
     }
     assert!(asked >= 20, "{asked} questions");
 }
-
 
 /// ADR 0209 §12's budgets with turns and a time profile (docs/adr/0521 §7): the same synthetic grid city (225 × 225
 /// crossings 50 m apart, 100 800 pieces, a tenth one way, speeds 30, 50 or 70 km/h, a street in a hundred closed), with
@@ -503,12 +520,22 @@ fn timing() {
     {
         use kentos_geometry_core::ops::network::search::{POPS, PUSHES};
         use std::sync::atomic::Ordering::Relaxed;
-        PUSHES.store(0, Relaxed); POPS.store(0, Relaxed);
+        PUSHES.store(0, Relaxed);
+        POPS.store(0, Relaxed);
         assert!(net.tree_at(middle, 30.0, 1, &[]));
-        println!("pushes {} pops {}", PUSHES.load(Relaxed), POPS.load(Relaxed));
-        PUSHES.store(0, Relaxed); POPS.store(0, Relaxed);
+        println!(
+            "pushes {} pops {}",
+            PUSHES.load(Relaxed),
+            POPS.load(Relaxed)
+        );
+        PUSHES.store(0, Relaxed);
+        POPS.store(0, Relaxed);
         assert!(plain.tree_at(middle, 30.0, 1, &[]));
-        println!("plain pushes {} pops {}", PUSHES.load(Relaxed), POPS.load(Relaxed));
+        println!(
+            "plain pushes {} pops {}",
+            PUSHES.load(Relaxed),
+            POPS.load(Relaxed)
+        );
     }
     let ms = least(&mut || assert!(net.tree_at(middle, 30.0, 0, &[])));
     row("bütün ağda Dijkstra, dönüşlerle (Uzunluk)", ms, 30.0);

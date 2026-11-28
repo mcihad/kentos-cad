@@ -77,21 +77,42 @@ impl DataText {
     /// The columns it reads, in its order.
     pub fn columns(&self) -> Vec<&str> {
         let mut out = vec![self.text.as_str()];
-        out.extend([&self.height, &self.angle, &self.align, &self.width].into_iter().flatten().map(String::as_str));
+        out.extend(
+            [&self.height, &self.angle, &self.align, &self.width]
+                .into_iter()
+                .flatten()
+                .map(String::as_str),
+        );
         out
     }
 
     /// A row as a text: `cell` reads a column's value as its text (none: empty). None for a row without words.
-    pub fn read(&self, cell: impl Fn(&str) -> Option<String>, default_height: f64) -> Option<TextParts> {
+    pub fn read(
+        &self,
+        cell: impl Fn(&str) -> Option<String>,
+        default_height: f64,
+    ) -> Option<TextParts> {
         let text = cell(&self.text).filter(|t| !t.trim().is_empty())?;
-        let number = |column: &Option<String>| column.as_deref().and_then(&cell).and_then(|v| number_of(&v));
+        let number = |column: &Option<String>| {
+            column
+                .as_deref()
+                .and_then(&cell)
+                .and_then(|v| number_of(&v))
+        };
         Some(TextParts {
             text,
-            height: number(&self.height).filter(|h| *h > 0.0).unwrap_or(default_height),
+            height: number(&self.height)
+                .filter(|h| *h > 0.0)
+                .unwrap_or(default_height),
             rotation: number(&self.angle).unwrap_or(0.0),
-            align: self.align.as_deref().and_then(&cell).and_then(|v| align_of(&v)),
+            align: self
+                .align
+                .as_deref()
+                .and_then(&cell)
+                .and_then(|v| align_of(&v)),
             // 1 is none, as a text writes it (docs/adr/0145: producers do not write 1).
-            width_factor: number(&self.width).filter(|w| *w > 0.0 && *w <= crate::MAX_WIDTH_FACTOR && *w != 1.0),
+            width_factor: number(&self.width)
+                .filter(|w| *w > 0.0 && *w <= crate::MAX_WIDTH_FACTOR && *w != 1.0),
         })
     }
 
@@ -105,18 +126,31 @@ impl DataText {
         };
         put(&self.height, TextCell::Number(parts.height));
         put(&self.angle, TextCell::Number(parts.rotation));
-        put(&self.align, TextCell::Text(align_words(parts.align).to_owned()));
-        put(&self.width, TextCell::Number(parts.width_factor.unwrap_or(1.0)));
+        put(
+            &self.align,
+            TextCell::Text(align_words(parts.align).to_owned()),
+        );
+        put(
+            &self.width,
+            TextCell::Number(parts.width_factor.unwrap_or(1.0)),
+        );
         out
     }
 
     /// What is wrong with it, in Turkish.
     pub fn problem(&self) -> Option<String> {
         let columns = self.columns();
-        if columns.iter().any(|c| c.trim().is_empty() || c.len() > crate::MAX_DATA_TEXT) {
+        if columns
+            .iter()
+            .any(|c| c.trim().is_empty() || c.len() > crate::MAX_DATA_TEXT)
+        {
             return Some("yazı sütunlarının adı boş ya da çok uzun".into());
         }
-        if let Some(c) = columns.iter().enumerate().find_map(|(i, c)| columns[..i].contains(c).then_some(*c)) {
+        if let Some(c) = columns
+            .iter()
+            .enumerate()
+            .find_map(|(i, c)| columns[..i].contains(c).then_some(*c))
+        {
             return Some(format!("“{c}” sütunu yazının iki parçası olamaz"));
         }
         None
@@ -126,7 +160,11 @@ impl DataText {
 /// A number as a cell writes it: a point or a comma before its fraction.
 fn number_of(v: &str) -> Option<f64> {
     let t = v.trim();
-    let t = if t.contains('.') { t.to_owned() } else { t.replace(',', ".") };
+    let t = if t.contains('.') {
+        t.to_owned()
+    } else {
+        t.replace(',', ".")
+    };
     t.parse::<f64>().ok().filter(|n| n.is_finite())
 }
 
@@ -149,7 +187,10 @@ const ALIGN_WORDS: [(Option<TextAlign>, &str); 12] = [
 
 /// An alignment's name as a text table keeps it: “sol taban”, “orta”, “sağ üst”.
 pub fn align_words(a: Option<TextAlign>) -> &'static str {
-    ALIGN_WORDS.iter().find(|(b, _)| *b == a).map_or("sol taban", |(_, w)| w)
+    ALIGN_WORDS
+        .iter()
+        .find(|(b, _)| *b == a)
+        .map_or("sol taban", |(_, w)| w)
 }
 
 /// The alignment a cell names: Yazı's names, written together or apart, with or without the Turkish marks (“sağ üst”,
@@ -163,7 +204,10 @@ pub fn align_of(cell: &str) -> Option<TextAlign> {
     if folded == "ortaorta" {
         return Some(TextAlign::MiddleCenter);
     }
-    ALIGN_WORDS.iter().find(|(_, w)| fold(w) == folded).and_then(|(a, _)| *a)
+    ALIGN_WORDS
+        .iter()
+        .find(|(_, w)| fold(w) == folded)
+        .and_then(|(a, _)| *a)
 }
 
 /// A name folded as Yazı folds it: lower case, Turkish letters without their marks, nothing but letters.
@@ -192,35 +236,90 @@ mod tests {
     use super::*;
 
     fn row<'a>(cells: &'a [(&'a str, &'a str)]) -> impl Fn(&str) -> Option<String> + 'a {
-        move |c| cells.iter().find(|(n, _)| *n == c).map(|(_, v)| (*v).to_owned())
+        move |c| {
+            cells
+                .iter()
+                .find(|(n, _)| *n == c)
+                .map(|(_, v)| (*v).to_owned())
+        }
     }
 
     #[test]
     fn a_row_reads_as_a_text_and_writes_back() {
         let t = DataText::written();
         let parts = t
-            .read(row(&[("metin", "Ada 101"), ("yukseklik", "2.5"), ("aci", "33.3"), ("hiza", "sağ üst"), ("genislik", "0,8")]), 2.0)
+            .read(
+                row(&[
+                    ("metin", "Ada 101"),
+                    ("yukseklik", "2.5"),
+                    ("aci", "33.3"),
+                    ("hiza", "sağ üst"),
+                    ("genislik", "0,8"),
+                ]),
+                2.0,
+            )
             .expect("words");
         assert_eq!(
             parts,
-            TextParts { text: "Ada 101".into(), height: 2.5, rotation: 33.3, align: Some(TextAlign::TopRight), width_factor: Some(0.8) }
+            TextParts {
+                text: "Ada 101".into(),
+                height: 2.5,
+                rotation: 33.3,
+                align: Some(TextAlign::TopRight),
+                width_factor: Some(0.8)
+            }
         );
         let cells = t.cells(&parts);
-        assert_eq!(cells[0], ("metin".to_owned(), TextCell::Text("Ada 101".into())));
-        assert_eq!(cells[3], ("hiza".to_owned(), TextCell::Text("sağ üst".into())));
-        assert_eq!(t.read(|c| cells.iter().find(|(n, _)| n == c).map(|(_, v)| match v {
-            TextCell::Text(s) => s.clone(),
-            TextCell::Number(n) => n.to_string(),
-        }), 2.0), Some(parts));
+        assert_eq!(
+            cells[0],
+            ("metin".to_owned(), TextCell::Text("Ada 101".into()))
+        );
+        assert_eq!(
+            cells[3],
+            ("hiza".to_owned(), TextCell::Text("sağ üst".into()))
+        );
+        assert_eq!(
+            t.read(
+                |c| cells.iter().find(|(n, _)| n == c).map(|(_, v)| match v {
+                    TextCell::Text(s) => s.clone(),
+                    TextCell::Number(n) => n.to_string(),
+                }),
+                2.0
+            ),
+            Some(parts)
+        );
     }
 
     #[test]
     fn empty_and_strange_cells_take_the_defaults() {
         let t = DataText::written();
-        assert!(t.read(row(&[("metin", "  ")]), 2.0).is_none(), "no words, no text");
-        let p = t.read(row(&[("metin", "Not"), ("yukseklik", "-1"), ("aci", "yok"), ("hiza", "çapraz"), ("genislik", "0")]), 2.0).expect("words");
-        assert_eq!((p.height, p.rotation, p.align, p.width_factor), (2.0, 0.0, None, None));
-        let only = DataText { text: "ad".into(), height: None, angle: None, align: None, width: None };
+        assert!(
+            t.read(row(&[("metin", "  ")]), 2.0).is_none(),
+            "no words, no text"
+        );
+        let p = t
+            .read(
+                row(&[
+                    ("metin", "Not"),
+                    ("yukseklik", "-1"),
+                    ("aci", "yok"),
+                    ("hiza", "çapraz"),
+                    ("genislik", "0"),
+                ]),
+                2.0,
+            )
+            .expect("words");
+        assert_eq!(
+            (p.height, p.rotation, p.align, p.width_factor),
+            (2.0, 0.0, None, None)
+        );
+        let only = DataText {
+            text: "ad".into(),
+            height: None,
+            angle: None,
+            align: None,
+            width: None,
+        };
         assert_eq!(only.columns(), ["ad"]);
         assert_eq!(only.cells(&p).len(), 1);
     }
@@ -243,9 +342,18 @@ mod tests {
     #[test]
     fn a_mapping_names_each_column_once() {
         assert!(DataText::written().problem().is_none());
-        let twice = DataText { angle: Some("metin".into()), ..DataText::written() };
-        assert_eq!(twice.problem().as_deref(), Some("“metin” sütunu yazının iki parçası olamaz"));
-        let blank = DataText { text: " ".into(), ..DataText::written() };
+        let twice = DataText {
+            angle: Some("metin".into()),
+            ..DataText::written()
+        };
+        assert_eq!(
+            twice.problem().as_deref(),
+            Some("“metin” sütunu yazının iki parçası olamaz")
+        );
+        let blank = DataText {
+            text: " ".into(),
+            ..DataText::written()
+        };
         assert!(blank.problem().is_some());
     }
 }

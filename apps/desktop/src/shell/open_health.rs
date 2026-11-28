@@ -33,7 +33,12 @@ pub struct Key {
 
 fn key(path: &Path, revision: String) -> Option<Key> {
     let meta = std::fs::metadata(path).ok()?;
-    Some(Key { path: path.to_owned(), len: meta.len(), modified: meta.modified().ok(), revision })
+    Some(Key {
+        path: path.to_owned(),
+        len: meta.len(),
+        modified: meta.modified().ok(),
+        revision,
+    })
 }
 
 #[derive(Debug)]
@@ -45,7 +50,11 @@ pub(crate) struct Opening {
 
 impl Default for Opening {
     fn default() -> Self {
-        Self { token: 0, cancel: Arc::new(AtomicBool::new(false)), kept: HashMap::new() }
+        Self {
+            token: 0,
+            cancel: Arc::new(AtomicBool::new(false)),
+            kept: HashMap::new(),
+        }
     }
 }
 
@@ -72,7 +81,10 @@ fn input(revision: String) -> DrawingInspect {
 pub(crate) fn words(found: &DrawingInspected, again: bool) -> String {
     let n = found.findings.len();
     let mut line = if n == 0 {
-        format!("Açılış sağlık denetimi: aday bulunmadı ({} nesne incelendi); çizim değiştirilmedi.", found.examined)
+        format!(
+            "Açılış sağlık denetimi: aday bulunmadı ({} nesne incelendi); çizim değiştirilmedi.",
+            found.examined
+        )
     } else {
         format!(
             "Açılış sağlık denetimi: {n} aday ({} nesne incelendi); çizim değiştirilmedi. Ayrıntı CAD denetimi sekmesinde.",
@@ -103,7 +115,11 @@ impl App {
         let revision = doc.model.revision().to_string();
         let (session, generation) = (doc.session, doc.model.generation());
         let key = doc.path.as_deref().and_then(|p| key(p, revision.clone()));
-        if let Some(found) = key.as_ref().and_then(|k| self.cad_inspection.opening.kept.get(k)).cloned() {
+        if let Some(found) = key
+            .as_ref()
+            .and_then(|k| self.cad_inspection.opening.kept.get(k))
+            .cloned()
+        {
             self.output(words(&found, true));
             self.cad_inspection.adopt(session, generation, found);
             return Task::none();
@@ -123,7 +139,15 @@ impl App {
                     Some(deadline),
                 )
             },
-            move |answer| Message::CadInspection(Event::Opened(token, session, generation, key, Box::new(answer))),
+            move |answer| {
+                Message::CadInspection(Event::Opened(
+                    token,
+                    session,
+                    generation,
+                    key,
+                    Box::new(answer),
+                ))
+            },
         )
     }
 
@@ -156,7 +180,10 @@ impl App {
                 self.cad_inspection.adopt(session, generation, output);
             }
             CommandResult::Failed { error } | CommandResult::Conflict { error } => {
-                self.output(format!("Açılış sağlık denetimi yapılamadı: {}", error.message));
+                self.output(format!(
+                    "Açılış sağlık denetimi yapılamadı: {}",
+                    error.message
+                ));
             }
             _ => {}
         }
@@ -181,7 +208,10 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
         |snapshot, app| {
             struct End;
             impl iced::advanced::widget::Operation for End {
-                fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn iced::advanced::widget::Operation)) {
+                fn traverse(
+                    &mut self,
+                    operate: &mut dyn FnMut(&mut dyn iced::advanced::widget::Operation),
+                ) {
                     operate(self);
                 }
                 fn scrollable(
@@ -207,7 +237,11 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
 fn opened_scene(app: &mut App) {
     use crate::tools_scenes::{E, N, Objects};
     use serde_json::{Value, json};
-    assert!(app.settings.choose(&[("appearance.openHealthCheck", Value::Bool(true))]).is_empty());
+    assert!(
+        app.settings
+            .choose(&[("appearance.openHealthCheck", Value::Bool(true))])
+            .is_empty()
+    );
     // A frame of four walls' lines, two inner lines stopping short of it and one passing over, a slightly turned edge.
     let mut o = Objects::new();
     o.line("cizim", [0.0, 0.0], [20.0, 0.0]);
@@ -218,8 +252,10 @@ fn opened_scene(app: &mut App) {
     o.line("cizim", [8.0, 6.0], [20.008, 6.0]);
     o.line("cizim", [0.004, 9.0], [8.0, 9.0]);
     o.line("cizim", [2.0, 2.0], [6.0, 2.03]);
-    let mut d: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/interaction/v1/empty.kcad")).expect("reads");
+    let mut d: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/empty.kcad"
+    ))
+    .expect("reads");
     d["layers"] = json!([crate::tools_scenes::layer("cizim", "Çizim", "fg", 0.35)]);
     d["activeLayer"] = json!("cizim");
     d["entities"] = Value::Array(o.0);
@@ -233,10 +269,18 @@ fn opened_scene(app: &mut App) {
     crate::files_testing::drive(app, task);
     app.show_bottom(crate::bottom::BottomTab::CadInspection);
     let bar = f64::from(kentos_ui::widget::tabs::height());
-    app.bottom_dragged(Some((crate::search::PANEL_HEIGHT - bar) as f32), std::time::Instant::now());
+    app.bottom_dragged(
+        Some((crate::search::PANEL_HEIGHT - bar) as f32),
+        std::time::Instant::now(),
+    );
     let _ = app.cad_inspection_event(Event::Show(0));
     app.viewport.camera.fit(
-        &kentos_render_wgpu::Bounds { min_x: E - 2.0, min_y: N - 2.0, max_x: E + 22.0, max_y: N + 14.0 },
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 2.0,
+            min_y: N - 2.0,
+            max_x: E + 22.0,
+            max_y: N + 14.0,
+        },
         24.0,
     );
 }
@@ -273,18 +317,27 @@ mod tests {
         if write {
             std::fs::write(path, d.to_string()).expect("the file");
         }
-        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&d.to_string()).expect("reads");
+        let snapshot =
+            kentos_commands::DocumentSnapshotV1::from_json(&d.to_string()).expect("reads");
         crate::document::Document::new(snapshot, Some(path.to_owned())).expect("opens")
     }
 
     fn app(on: bool) -> App {
         let (mut app, _) = App::boot(None);
-        assert!(app.settings.choose(&[("appearance.openHealthCheck", Value::Bool(on))]).is_empty());
+        assert!(
+            app.settings
+                .choose(&[("appearance.openHealthCheck", Value::Bool(on))])
+                .is_empty()
+        );
         app
     }
 
     fn said(app: &App) -> Vec<String> {
-        app.log.lines().map(|l| l.text.clone()).filter(|t| t.starts_with("Açılış sağlık")).collect()
+        app.log
+            .lines()
+            .map(|l| l.text.clone())
+            .filter(|t| t.starts_with("Açılış sağlık"))
+            .collect()
     }
 
     #[test]
@@ -293,37 +346,71 @@ mod tests {
         let path = dir.join("t.kcad");
         let mut app = app(true);
         let task = app.update(Message::Opened(Some(Ok(Box::new(drawing(&path, true))))));
-        let before = app.document.as_ref().expect("a drawing").model.revision().to_string();
+        let before = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .revision()
+            .to_string();
         drive(&mut app, task);
-        let found = app.cad_inspection.result().expect("the panel has the answer");
+        let found = app
+            .cad_inspection
+            .result()
+            .expect("the panel has the answer");
         assert_eq!(found.findings.len(), 1, "{:?}", found.findings);
         assert_eq!(found.findings[0].code, "t_junction_short");
         assert!(!found.truncated);
-        assert_eq!(said(&app), ["Açılış sağlık denetimi: 1 aday (2 nesne incelendi); çizim değiştirilmedi. Ayrıntı CAD denetimi sekmesinde."]);
+        assert_eq!(
+            said(&app),
+            [
+                "Açılış sağlık denetimi: 1 aday (2 nesne incelendi); çizim değiştirilmedi. Ayrıntı CAD denetimi sekmesinde."
+            ]
+        );
         let doc = app.document.as_ref().expect("a drawing");
         assert_eq!(doc.model.revision().to_string(), before, "read only");
         assert!(!doc.model.can_undo(), "nothing to undo");
         // The same file again, untouched: the kept answer, no check.
-        let task = app.update(Message::Opened(Some(Ok(Box::new(drawing_written(&path, true, false))))));
+        let task = app.update(Message::Opened(Some(Ok(Box::new(drawing_written(
+            &path, true, false,
+        ))))));
         drive(&mut app, task);
         // One line only, the kept answer's: a check that ran would have said a third.
         assert_eq!(said(&app).len(), 2, "{:?}", said(&app));
-        assert_eq!(app.cad_inspection.result().map(|r| r.findings.len()), Some(1));
-        assert!(said(&app)[1].ends_with("Dosya ve revizyon değişmediği için önceki sonuç kullanıldı."), "{:?}", said(&app));
+        assert_eq!(
+            app.cad_inspection.result().map(|r| r.findings.len()),
+            Some(1)
+        );
+        assert!(
+            said(&app)[1].ends_with("Dosya ve revizyon değişmediği için önceki sonuç kullanıldı."),
+            "{:?}",
+            said(&app)
+        );
         // The file changed on disk: checked again.
         std::thread::sleep(Duration::from_millis(20));
         let changed = drawing(&path, false);
         let task = app.update(Message::Opened(Some(Ok(Box::new(changed)))));
         drive(&mut app, task);
-        assert_eq!(said(&app)[2], "Açılış sağlık denetimi: aday bulunmadı (2 nesne incelendi); çizim değiştirilmedi.");
+        assert_eq!(
+            said(&app)[2],
+            "Açılış sağlık denetimi: aday bulunmadı (2 nesne incelendi); çizim değiştirilmedi."
+        );
     }
 
     #[test]
     fn off_by_default_and_when_off_nothing_runs() {
-        assert!(!App::boot(None).0.settings.bool("appearance.openHealthCheck"));
+        assert!(
+            !App::boot(None)
+                .0
+                .settings
+                .bool("appearance.openHealthCheck")
+        );
         let dir = scratch("acilis-saglik-kapali");
         let mut app = app(false);
-        let task = app.update(Message::Opened(Some(Ok(Box::new(drawing(&dir.join("t.kcad"), true))))));
+        let task = app.update(Message::Opened(Some(Ok(Box::new(drawing(
+            &dir.join("t.kcad"),
+            true,
+        ))))));
         drive(&mut app, task);
         assert!(said(&app).is_empty());
         assert!(app.cad_inspection.result().is_none());
@@ -333,10 +420,20 @@ mod tests {
     fn a_check_of_a_drawing_no_longer_open_is_dropped() {
         let dir = scratch("acilis-saglik-gec");
         let mut app = app(true);
-        let first = app.update(Message::Opened(Some(Ok(Box::new(drawing(&dir.join("a.kcad"), true))))));
-        let second = app.update(Message::Opened(Some(Ok(Box::new(drawing(&dir.join("b.kcad"), false))))));
+        let first = app.update(Message::Opened(Some(Ok(Box::new(drawing(
+            &dir.join("a.kcad"),
+            true,
+        ))))));
+        let second = app.update(Message::Opened(Some(Ok(Box::new(drawing(
+            &dir.join("b.kcad"),
+            false,
+        ))))));
         drive(&mut app, first);
-        assert!(said(&app).is_empty(), "the first drawing's late answer: {:?}", said(&app));
+        assert!(
+            said(&app).is_empty(),
+            "the first drawing's late answer: {:?}",
+            said(&app)
+        );
         drive(&mut app, second);
         assert_eq!(said(&app).len(), 1);
         assert!(said(&app)[0].contains("aday bulunmadı"));
@@ -352,7 +449,9 @@ mod tests {
             || false,
             Some(Instant::now()),
         );
-        let CommandResult::Completed { output, warnings } = answer else { panic!("completes") };
+        let CommandResult::Completed { output, warnings } = answer else {
+            panic!("completes")
+        };
         assert!(output.truncated);
         assert_eq!(output.examined, 0);
         assert_eq!(warnings[0].code, "inspection_truncated");

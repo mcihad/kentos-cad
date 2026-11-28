@@ -79,12 +79,23 @@ impl CellPart {
     /// `reach`, in their order, those next to one another joined; at most [`MOST_RANGES`], the nearest joined over the
     /// gap between them. A part that keeps its order gives the runs of the items those cells hold.
     pub fn ranges_in(&self, view: [f64; 4], reach: f64) -> Vec<Range<u32>> {
-        let [x0, y0, x1, y1] = [view[0] - reach, view[1] - reach, view[2] + reach, view[3] + reach];
+        let [x0, y0, x1, y1] = [
+            view[0] - reach,
+            view[1] - reach,
+            view[2] + reach,
+            view[3] + reach,
+        ];
         let col = |x: f64, count: usize, at: f64, size: f64| -> i64 {
             (((x - at) / size).floor() as i64).clamp(-1, count as i64)
         };
-        let (c0, c1) = (col(x0, self.nx, self.corner[0], self.cell[0]), col(x1, self.nx, self.corner[0], self.cell[0]));
-        let (r0, r1) = (col(y0, self.ny, self.corner[1], self.cell[1]), col(y1, self.ny, self.corner[1], self.cell[1]));
+        let (c0, c1) = (
+            col(x0, self.nx, self.corner[0], self.cell[0]),
+            col(x1, self.nx, self.corner[0], self.cell[0]),
+        );
+        let (r0, r1) = (
+            col(y0, self.ny, self.corner[1], self.cell[1]),
+            col(y1, self.ny, self.corner[1], self.cell[1]),
+        );
         // Cells whose items may reach the view though the cell lies outside it.
         let c0 = (c0 - self.spill[0] as i64).max(0) as usize;
         let r0 = (r0 - self.spill[1] as i64).max(0) as usize;
@@ -103,7 +114,11 @@ impl CellPart {
                     continue;
                 }
                 let b = self.boxes[k];
-                if f64::from(b[2]) < x0 || f64::from(b[0]) > x1 || f64::from(b[3]) < y0 || f64::from(b[1]) > y1 {
+                if f64::from(b[2]) < x0
+                    || f64::from(b[0]) > x1
+                    || f64::from(b[3]) < y0
+                    || f64::from(b[1]) > y1
+                {
                     continue;
                 }
                 match out.last_mut() {
@@ -224,9 +239,11 @@ fn item_box(kind: &BatchKind, v: &[f32]) -> [f64; 4] {
         BatchKind::Marker { .. } => [p(0), p(0), p(0)],
         _ => [p(0), p(2), p(4)],
     };
-    points.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, &(x, y)| {
-        [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]
-    })
+    points
+        .iter()
+        .fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, &(x, y)| {
+            [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]
+        })
 }
 
 /// Sorts the large batches' parts by cell and keeps their cells (`StyledLayer::cells`). `KENTOS_DIAG_NO_CELLS` (a
@@ -265,7 +282,10 @@ pub fn add(layer: &mut StyledLayer) {
                 continue;
             }
             let at = b.range.start + r.start;
-            let (data, low) = (&mut layer.data[at..at + r.len()], has_low.then(|| &mut layer.low[at..at + r.len()]));
+            let (data, low) = (
+                &mut layer.data[at..at + r.len()],
+                has_low.then(|| &mut layer.low[at..at + r.len()]),
+            );
             if let Some(part) = sort(&b.kind, data, low, floats, keep, b.origin, r) {
                 out.push(part);
             }
@@ -296,18 +316,33 @@ fn placements(b: &StyledBatch, data: &[f32]) -> Option<CellPart> {
         return None;
     }
     let numbers = data.get(b.range.clone())?;
-    let (definition, placed) = (numbers.get(..inst.definition())?, numbers.get(inst.mesh..inst.mesh + count * per)?);
+    let (definition, placed) = (
+        numbers.get(..inst.definition())?,
+        numbers.get(inst.mesh..inst.mesh + count * per)?,
+    );
     let points: Vec<(f32, f32)> = match &b.kind {
-        BatchKind::Stroke { .. } => definition.as_chunks::<6>().0.iter().flat_map(|v| [(v[0], v[1]), (v[2], v[3])]).collect(),
-        BatchKind::Fill { paint: FillPaintBatch::Solid { .. } } => {
-            definition.as_chunks::<2>().0.iter().map(|v| (v[0], v[1])).collect()
-        }
+        BatchKind::Stroke { .. } => definition
+            .as_chunks::<6>()
+            .0
+            .iter()
+            .flat_map(|v| [(v[0], v[1]), (v[2], v[3])])
+            .collect(),
+        BatchKind::Fill {
+            paint: FillPaintBatch::Solid { .. },
+        } => definition
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .map(|v| (v[0], v[1]))
+            .collect(),
         _ => return None,
     };
-    let d = points.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, &(x, y)| {
-        let (x, y) = (f64::from(x), f64::from(y));
-        [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]
-    });
+    let d = points
+        .iter()
+        .fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, &(x, y)| {
+            let (x, y) = (f64::from(x), f64::from(y));
+            [b[0].min(x), b[1].min(y), b[2].max(x), b[3].max(y)]
+        });
     if !d.iter().all(|v| v.is_finite()) {
         return None;
     }
@@ -316,17 +351,22 @@ fn placements(b: &StyledBatch, data: &[f32]) -> Option<CellPart> {
         .chunks_exact(per)
         .map(|x| {
             let x: [f64; 6] = std::array::from_fn(|i| f64::from(x[i]));
-            [(d[0], d[1]), (d[2], d[1]), (d[0], d[3]), (d[2], d[3])].iter().fold(
-                [f64::MAX, f64::MAX, f64::MIN, f64::MIN],
-                |b, &(px, py)| {
+            [(d[0], d[1]), (d[2], d[1]), (d[0], d[3]), (d[2], d[3])]
+                .iter()
+                .fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, &(px, py)| {
                     let (qx, qy) = (x[0] * px + x[2] * py + x[4], x[1] * px + x[3] * py + x[5]);
                     [b[0].min(qx), b[1].min(qy), b[2].max(qx), b[3].max(qy)]
-                },
-            )
+                })
         })
         .collect();
     let per_cell = (ITEMS_A_CELL / items).max(1);
-    let (mut part, order) = grid(&boxes, b.origin, inst.mesh..inst.mesh + count * per, per, per_cell)?;
+    let (mut part, order) = grid(
+        &boxes,
+        b.origin,
+        inst.mesh..inst.mesh + count * per,
+        per,
+        per_cell,
+    )?;
     part.order = Some(order.iter().map(|&i| i as u32).collect());
     Some(part)
 }
@@ -349,7 +389,8 @@ fn sort(
         let permute = |values: &mut [f32]| {
             let old = values.to_vec();
             for (to, &from) in order.iter().enumerate() {
-                values[to * floats..(to + 1) * floats].copy_from_slice(&old[from * floats..(from + 1) * floats]);
+                values[to * floats..(to + 1) * floats]
+                    .copy_from_slice(&old[from * floats..(from + 1) * floats]);
             }
         };
         permute(data);
@@ -370,9 +411,16 @@ fn grid(
     per_cell: usize,
 ) -> Option<(CellPart, Vec<usize>)> {
     let n = boxes.len();
-    let all = boxes.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, i| {
-        [b[0].min(i[0]), b[1].min(i[1]), b[2].max(i[2]), b[3].max(i[3])]
-    });
+    let all = boxes
+        .iter()
+        .fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, i| {
+            [
+                b[0].min(i[0]),
+                b[1].min(i[1]),
+                b[2].max(i[2]),
+                b[3].max(i[3]),
+            ]
+        });
     if !all.iter().all(|v| v.is_finite()) {
         return None;
     }
@@ -411,21 +459,39 @@ fn grid(
     for (item, b) in boxes.iter().enumerate() {
         let k = keys[item];
         let c = &mut cell_boxes[k];
-        let o = [b[0] + origin[0], b[1] + origin[1], b[2] + origin[0], b[3] + origin[1]];
-        *c = [c[0].min(o[0] as f32), c[1].min(o[1] as f32), c[2].max(o[2] as f32), c[3].max(o[3] as f32)];
+        let o = [
+            b[0] + origin[0],
+            b[1] + origin[1],
+            b[2] + origin[0],
+            b[3] + origin[1],
+        ];
+        *c = [
+            c[0].min(o[0] as f32),
+            c[1].min(o[1] as f32),
+            c[2].max(o[2] as f32),
+            c[3].max(o[3] as f32),
+        ];
         let (x, y) = (k % nx, k / nx);
         let x0 = all[0] + x as f64 * size[0];
         let y0 = all[1] + y as f64 * size[1];
         let over = |lo: f64, hi: f64, from: f64, cell: f64| {
             (((from - lo).max(hi - (from + cell)).max(0.0)) / cell).ceil() as usize
         };
-        spill = [spill[0].max(over(b[0], b[2], x0, size[0])), spill[1].max(over(b[1], b[3], y0, size[1]))];
+        spill = [
+            spill[0].max(over(b[0], b[2], x0, size[0])),
+            spill[1].max(over(b[1], b[3], y0, size[1])),
+        ];
     }
     // The cells' boxes a float32 step wide of their items: none is missed for rounding.
     for c in &mut cell_boxes {
         if c[0] <= c[2] {
             let pad = |v: f32| v.abs().max(1.0) * f32::EPSILON * 4.0;
-            *c = [c[0] - pad(c[0]), c[1] - pad(c[1]), c[2] + pad(c[2]), c[3] + pad(c[3])];
+            *c = [
+                c[0] - pad(c[0]),
+                c[1] - pad(c[1]),
+                c[2] + pad(c[2]),
+                c[3] + pad(c[3]),
+            ];
         }
     }
     let part = CellPart {
@@ -454,13 +520,22 @@ mod tests {
         let mut out = Vec::with_capacity((n + 4) * 6);
         let mut seed = 12_345u64;
         let mut next = || {
-            seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+            seed = seed
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
             (seed >> 11) as f64 / (1u64 << 53) as f64
         };
         for i in 0..n {
             let (x, y) = (next() * side, next() * side);
             let (dx, dy) = (next() * 20.0 - 10.0, next() * 20.0 - 10.0);
-            out.extend([x as f32, y as f32, (x + dx) as f32, (y + dy) as f32, i as f32, 3.0]);
+            out.extend([
+                x as f32,
+                y as f32,
+                (x + dx) as f32,
+                (y + dy) as f32,
+                i as f32,
+                3.0,
+            ]);
         }
         for k in 0..4 {
             let y = side * (k as f64 + 0.5) / 4.0;
@@ -496,11 +571,18 @@ mod tests {
             lod,
             instances: None,
         };
-        StyledLayer { data, batches: vec![batch], ..Default::default() }
+        StyledLayer {
+            data,
+            batches: vec![batch],
+            ..Default::default()
+        }
     }
 
     fn items(data: &[f32]) -> Vec<[u32; 6]> {
-        let mut v: Vec<[u32; 6]> = data.chunks(6).map(|c| std::array::from_fn(|i| c[i].to_bits())).collect();
+        let mut v: Vec<[u32; 6]> = data
+            .chunks(6)
+            .map(|c| std::array::from_fn(|i| c[i].to_bits()))
+            .collect();
         v.sort_unstable();
         v
     }
@@ -510,11 +592,20 @@ mod tests {
         let data = segments(20_000, 10_000.0);
         let mut layer = stroke(data.clone(), None);
         layer.low = data.iter().map(|v| v * 1e-7).collect();
-        let low_before: Vec<(u32, u32)> = data.iter().zip(&layer.low).map(|(a, b)| (a.to_bits(), b.to_bits())).collect();
+        let low_before: Vec<(u32, u32)> = data
+            .iter()
+            .zip(&layer.low)
+            .map(|(a, b)| (a.to_bits(), b.to_bits()))
+            .collect();
         add(&mut layer);
         assert_eq!(items(&layer.data), items(&data), "every item, once");
         // The low stream followed its numbers.
-        let mut after: Vec<(u32, u32)> = layer.data.iter().zip(&layer.low).map(|(a, b)| (a.to_bits(), b.to_bits())).collect();
+        let mut after: Vec<(u32, u32)> = layer
+            .data
+            .iter()
+            .zip(&layer.low)
+            .map(|(a, b)| (a.to_bits(), b.to_bits()))
+            .collect();
         let mut before = low_before;
         after.sort_unstable();
         before.sort_unstable();
@@ -531,7 +622,12 @@ mod tests {
                 let v = &layer.data[item * 6..item * 6 + 6];
                 let b = part.boxes[k];
                 let o = [100.0f32, 200.0];
-                assert!(v[0] + o[0] >= b[0] && v[0] + o[0] <= b[2] && v[1] + o[1] >= b[1] && v[1] + o[1] <= b[3]);
+                assert!(
+                    v[0] + o[0] >= b[0]
+                        && v[0] + o[0] <= b[2]
+                        && v[1] + o[1] >= b[1]
+                        && v[1] + o[1] <= b[3]
+                );
                 if v[4] > 0.0 {
                     assert!(v[4] > last, "cell {k}: items in their order");
                     last = v[4];
@@ -546,7 +642,11 @@ mod tests {
         let mut layer = stroke(data, None);
         add(&mut layer);
         let part = &layer.cells[0].as_ref().expect("cells").parts[0];
-        for view in [[2_000.0, 3_000.0, 2_400.0, 3_300.0], [-50.0, -50.0, 150.0, 150.0], [9_000.0, 9_500.0, 11_000.0, 12_000.0]] {
+        for view in [
+            [2_000.0, 3_000.0, 2_400.0, 3_300.0],
+            [-50.0, -50.0, 150.0, 150.0],
+            [9_000.0, 9_500.0, 11_000.0, 12_000.0],
+        ] {
             let ranges = part.ranges_in(view, 0.125);
             assert!(ranges.len() <= MOST_RANGES);
             let drawn: usize = ranges.iter().map(|r| r.len()).sum();
@@ -556,16 +656,28 @@ mod tests {
                 let v = &layer.data[item * 6..item * 6 + 6];
                 let (x0, x1) = (v[0].min(v[2]) as f64 + 100.0, v[0].max(v[2]) as f64 + 100.0);
                 let (y0, y1) = (v[1].min(v[3]) as f64 + 200.0, v[1].max(v[3]) as f64 + 200.0);
-                let meets = x1 >= view[0] - 0.125 && x0 <= view[2] + 0.125 && y1 >= view[1] - 0.125 && y0 <= view[3] + 0.125;
+                let meets = x1 >= view[0] - 0.125
+                    && x0 <= view[2] + 0.125
+                    && y1 >= view[1] - 0.125
+                    && y0 <= view[3] + 0.125;
                 if meets {
                     met += 1;
-                    assert!(ranges.iter().any(|r| r.contains(&(item as u32))), "{view:?}: item {item} meets it");
+                    assert!(
+                        ranges.iter().any(|r| r.contains(&(item as u32))),
+                        "{view:?}: item {item} meets it"
+                    );
                 }
             }
-            assert!(drawn < n / 4, "{view:?}: {drawn} of {n} drawn for {met} met");
+            assert!(
+                drawn < n / 4,
+                "{view:?}: {drawn} of {n} drawn for {met} met"
+            );
         }
         // A view over everything draws everything as one range.
-        assert_eq!(part.ranges_in([-1e6, -1e6, 1e6, 1e6], 0.0), vec![0..(layer.data.len() / 6) as u32]);
+        assert_eq!(
+            part.ranges_in([-1e6, -1e6, 1e6, 1e6], 0.0),
+            vec![0..(layer.data.len() / 6) as u32]
+        );
     }
 
     #[test]
@@ -574,13 +686,29 @@ mod tests {
         let level = segments(6_000, 10_000.0);
         let mut data = main.clone();
         data.extend(&level);
-        let lod = Lod { main: main.len(), levels: vec![level.len()], ceilings: vec![], alone: 1 };
+        let lod = Lod {
+            main: main.len(),
+            levels: vec![level.len()],
+            ceilings: vec![],
+            alone: 1,
+        };
         let mut layer = stroke(data, Some(lod));
         add(&mut layer);
-        assert_eq!(items(&layer.data[..main.len()]), items(&main), "the main part keeps its items");
-        assert_eq!(items(&layer.data[main.len()..]), items(&level), "the level keeps its items");
+        assert_eq!(
+            items(&layer.data[..main.len()]),
+            items(&main),
+            "the main part keeps its items"
+        );
+        assert_eq!(
+            items(&layer.data[main.len()..]),
+            items(&level),
+            "the level keeps its items"
+        );
         let parts = &layer.cells[0].as_ref().expect("cells").parts;
-        assert_eq!(parts.iter().map(|p| p.range.clone()).collect::<Vec<_>>(), vec![0..main.len(), main.len()..main.len() + level.len()]);
+        assert_eq!(
+            parts.iter().map(|p| p.range.clone()).collect::<Vec<_>>(),
+            vec![0..main.len(), main.len()..main.len() + level.len()]
+        );
     }
 
     #[test]
@@ -597,7 +725,9 @@ mod tests {
     fn markers(n: usize, side: f64, blocks: bool) -> StyledLayer {
         let mut seed = 99u64;
         let mut next = || {
-            seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+            seed = seed
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
             (seed >> 11) as f64 / (1u64 << 53) as f64
         };
         let mut places: Vec<(f64, f64)> = (0..n).map(|_| (next() * side, next() * side)).collect();
@@ -640,61 +770,115 @@ mod tests {
         let mut layer = markers(20_000, 10_000.0, blocks);
         let before = layer.data.clone();
         add(&mut layer);
-        assert_eq!(layer.data, before, "a marker batch keeps its numbers where they were");
+        assert_eq!(
+            layer.data, before,
+            "a marker batch keeps its numbers where they were"
+        );
         let part = &layer.cells[0].as_ref().expect("cells").parts[0];
-        let order = part.order.as_ref().expect("the cells hold the items in their order");
+        let order = part
+            .order
+            .as_ref()
+            .expect("the cells hold the items in their order");
         let n = before.len() / 5;
         let mut seen: Vec<u32> = order.clone();
         seen.sort_unstable();
-        assert_eq!(seen, (0..n as u32).collect::<Vec<_>>(), "every item in one cell");
+        assert_eq!(
+            seen,
+            (0..n as u32).collect::<Vec<_>>(),
+            "every item in one cell"
+        );
         for k in 0..part.nx * part.ny {
             let held = &order[part.starts[k] as usize..part.starts[k + 1] as usize];
-            assert!(held.windows(2).all(|w| w[0] < w[1]), "cell {k}: its items in their order");
+            assert!(
+                held.windows(2).all(|w| w[0] < w[1]),
+                "cell {k}: its items in their order"
+            );
         }
         let reach = 2.0;
-        for view in [[2_000.0, 3_000.0, 2_400.0, 3_300.0], [-50.0, -50.0, 150.0, 150.0], [9_000.0, 9_500.0, 11_000.0, 12_000.0]] {
+        for view in [
+            [2_000.0, 3_000.0, 2_400.0, 3_300.0],
+            [-50.0, -50.0, 150.0, 150.0],
+            [9_000.0, 9_500.0, 11_000.0, 12_000.0],
+        ] {
             let ranges = part.ranges_in(view, reach);
             assert!(ranges.len() <= MOST_RUNS);
-            assert!(ranges.windows(2).all(|w| w[0].end < w[1].start), "{view:?}: runs apart, in order");
+            assert!(
+                ranges.windows(2).all(|w| w[0].end < w[1].start),
+                "{view:?}: runs apart, in order"
+            );
             let drawn: usize = ranges.iter().map(|r| r.len()).sum();
             let mut met = 0;
             for item in 0..n {
                 let v = &before[item * 5..item * 5 + 5];
                 let (x, y) = (f64::from(v[0]) + 100.0, f64::from(v[1]) + 200.0);
-                if x >= view[0] - reach && x <= view[2] + reach && y >= view[1] - reach && y <= view[3] + reach {
+                if x >= view[0] - reach
+                    && x <= view[2] + reach
+                    && y >= view[1] - reach
+                    && y <= view[3] + reach
+                {
                     met += 1;
-                    assert!(ranges.iter().any(|r| r.contains(&(item as u32))), "{view:?}: item {item} meets it");
+                    assert!(
+                        ranges.iter().any(|r| r.contains(&(item as u32))),
+                        "{view:?}: item {item} meets it"
+                    );
                 }
             }
-            eprintln!("markers {}: {view:?} met {met}, drawn {drawn} in {} runs", if blocks { "in blocks" } else { "scattered" }, ranges.len());
+            eprintln!(
+                "markers {}: {view:?} met {met}, drawn {drawn} in {} runs",
+                if blocks { "in blocks" } else { "scattered" },
+                ranges.len()
+            );
             if blocks {
-                assert!(drawn < n / 20, "{view:?}: {drawn} of {n} drawn for {met} met");
+                assert!(
+                    drawn < n / 20,
+                    "{view:?}: {drawn} of {n} drawn for {met} met"
+                );
             }
             assert!(drawn <= n);
         }
         // A view over most of it draws it whole, in one range.
-        assert_eq!(part.ranges_in([-1e6, -1e6, 1e6, 1e6], 0.0), vec![0..n as u32]);
+        assert_eq!(
+            part.ranges_in([-1e6, -1e6, 1e6, 1e6], 0.0),
+            vec![0..n as u32]
+        );
     }
 
     /// A block's 5 000 inserts of a 4 m square (rotated, in blocks of 500 m as a drawing lays them) over 10 km.
     fn inserts() -> StyledLayer {
-        let square = [[0.0, 0.0, 4.0, 0.0], [4.0, 0.0, 4.0, 4.0], [4.0, 4.0, 0.0, 4.0], [0.0, 4.0, 0.0, 0.0]];
-        let mut data: Vec<f32> = square.iter().flat_map(|s| [s[0], s[1], s[2], s[3], 0.0, 3.0]).collect();
+        let square = [
+            [0.0, 0.0, 4.0, 0.0],
+            [4.0, 0.0, 4.0, 4.0],
+            [4.0, 4.0, 0.0, 4.0],
+            [0.0, 4.0, 0.0, 0.0],
+        ];
+        let mut data: Vec<f32> = square
+            .iter()
+            .flat_map(|s| [s[0], s[1], s[2], s[3], 0.0, 3.0])
+            .collect();
         let mesh = data.len();
         let mut seed = 5u64;
         let mut next = || {
-            seed = seed.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+            seed = seed
+                .wrapping_mul(6_364_136_223_846_793_005)
+                .wrapping_add(1_442_695_040_888_963_407);
             (seed >> 11) as f64 / (1u64 << 53) as f64
         };
-        let mut places: Vec<(f64, f64, f64)> = (0..5_000).map(|_| (next() * 10_000.0, next() * 10_000.0, next() * 6.0)).collect();
+        let mut places: Vec<(f64, f64, f64)> = (0..5_000)
+            .map(|_| (next() * 10_000.0, next() * 10_000.0, next() * 6.0))
+            .collect();
         places.sort_by_key(|&(x, y, _)| ((y / 500.0) as u32, (x / 500.0) as u32));
         for (x, y, turn) in places {
             let (s, c) = turn.sin_cos();
             data.extend([c, s, -s, c, x, y, 1.0, 0.0].map(|v| v as f32));
         }
         let mut layer = stroke(data, None);
-        layer.batches[0].instances =
-            Some(crate::batches::Instances { mesh, count: 5_000, scale: 1.0, proxy: None, mark: None });
+        layer.batches[0].instances = Some(crate::batches::Instances {
+            mesh,
+            count: 5_000,
+            scale: 1.0,
+            proxy: None,
+            mark: None,
+        });
         layer
     }
 
@@ -706,25 +890,50 @@ mod tests {
         assert_eq!(layer.data, before, "the placements where they were");
         let part = &layer.cells[0].as_ref().expect("cells").parts[0];
         let mesh = 24;
-        assert_eq!((part.range.clone(), part.floats), (mesh..mesh + 5_000 * 8, 8));
+        assert_eq!(
+            (part.range.clone(), part.floats),
+            (mesh..mesh + 5_000 * 8, 8)
+        );
         assert!(part.order.is_some(), "in their order");
         let reach = 1.0;
-        for view in [[2_000.0, 3_000.0, 2_400.0, 3_300.0], [9_000.0, 9_500.0, 11_000.0, 12_000.0]] {
+        for view in [
+            [2_000.0, 3_000.0, 2_400.0, 3_300.0],
+            [9_000.0, 9_500.0, 11_000.0, 12_000.0],
+        ] {
             let ranges = part.ranges_in(view, reach);
             let drawn: usize = ranges.iter().map(|r| r.len()).sum();
             let mut met = 0;
             for (n, x) in before[mesh..].chunks(8).enumerate() {
                 // The placed square's corners, from the layers' origin.
-                let corners = [(0.0f32, 0.0f32), (4.0, 0.0), (0.0, 4.0), (4.0, 4.0)]
-                    .map(|(px, py)| (f64::from(x[0] * px + x[2] * py + x[4]) + 100.0, f64::from(x[1] * px + x[3] * py + x[5]) + 200.0));
-                let (x0, x1) = corners.iter().fold((f64::MAX, f64::MIN), |b, c| (b.0.min(c.0), b.1.max(c.0)));
-                let (y0, y1) = corners.iter().fold((f64::MAX, f64::MIN), |b, c| (b.0.min(c.1), b.1.max(c.1)));
-                if x1 >= view[0] - reach && x0 <= view[2] + reach && y1 >= view[1] - reach && y0 <= view[3] + reach {
+                let corners =
+                    [(0.0f32, 0.0f32), (4.0, 0.0), (0.0, 4.0), (4.0, 4.0)].map(|(px, py)| {
+                        (
+                            f64::from(x[0] * px + x[2] * py + x[4]) + 100.0,
+                            f64::from(x[1] * px + x[3] * py + x[5]) + 200.0,
+                        )
+                    });
+                let (x0, x1) = corners
+                    .iter()
+                    .fold((f64::MAX, f64::MIN), |b, c| (b.0.min(c.0), b.1.max(c.0)));
+                let (y0, y1) = corners
+                    .iter()
+                    .fold((f64::MAX, f64::MIN), |b, c| (b.0.min(c.1), b.1.max(c.1)));
+                if x1 >= view[0] - reach
+                    && x0 <= view[2] + reach
+                    && y1 >= view[1] - reach
+                    && y0 <= view[3] + reach
+                {
                     met += 1;
-                    assert!(ranges.iter().any(|r| r.contains(&(n as u32))), "{view:?}: insert {n} meets it");
+                    assert!(
+                        ranges.iter().any(|r| r.contains(&(n as u32))),
+                        "{view:?}: insert {n} meets it"
+                    );
                 }
             }
-            assert!(met > 0 && drawn < 5_000 / 10, "{view:?}: {drawn} of 5 000 drawn for {met} met");
+            assert!(
+                met > 0 && drawn < 5_000 / 10,
+                "{view:?}: {drawn} of 5 000 drawn for {met} met"
+            );
         }
     }
 
@@ -734,8 +943,19 @@ mod tests {
     fn a_heavy_definitions_few_placements_have_cells() {
         let ring: Vec<f32> = (0..200)
             .flat_map(|k| {
-                let (a, b) = (k as f64 / 200.0 * std::f64::consts::TAU, (k + 1) as f64 / 200.0 * std::f64::consts::TAU);
-                [3.0 * a.cos(), 3.0 * a.sin(), 3.0 * b.cos(), 3.0 * b.sin(), 0.0, 3.0].map(|v| v as f32)
+                let (a, b) = (
+                    k as f64 / 200.0 * std::f64::consts::TAU,
+                    (k + 1) as f64 / 200.0 * std::f64::consts::TAU,
+                );
+                [
+                    3.0 * a.cos(),
+                    3.0 * a.sin(),
+                    3.0 * b.cos(),
+                    3.0 * b.sin(),
+                    0.0,
+                    3.0,
+                ]
+                .map(|v| v as f32)
             })
             .collect();
         let place = |count: usize| {
@@ -745,18 +965,25 @@ mod tests {
                 data.extend([1.0, 0.0, 0.0, 1.0, x, y, 1.0, 0.0]);
             }
             let mut layer = stroke(data, None);
-            layer.batches[0].instances =
-                Some(crate::batches::Instances { mesh: ring.len(), count: count as u32, scale: 1.0, proxy: None, mark: None });
+            layer.batches[0].instances = Some(crate::batches::Instances {
+                mesh: ring.len(),
+                count: count as u32,
+                scale: 1.0,
+                proxy: None,
+                mark: None,
+            });
             add(&mut layer);
             layer
         };
         let layer = place(120);
-        let part = &layer.cells[0].as_ref().expect("cells for 120 placements of 200 segments").parts[0];
+        let part = &layer.cells[0]
+            .as_ref()
+            .expect("cells for 120 placements of 200 segments")
+            .parts[0];
         assert!(part.nx * part.ny >= 64, "{} × {} cells", part.nx, part.ny);
         // Round the fourth placement of the second row (2 400, 800 from the batch's tile; its origin is 100, 200).
         let ranges = part.ranges_in([2_490.0, 990.0, 2_510.0, 1_010.0], 1.0);
         assert_eq!(ranges, vec![15..16], "the one placement the view meets");
         assert!(place(4).cells.is_empty(), "four placements are drawn whole");
     }
-
 }

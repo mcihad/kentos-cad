@@ -8,7 +8,11 @@ use kentos_geometry_core::ops::grid_ref::{self, GridIn};
 /// The drawing's straight grids in its order, with their slots; an arc grid is none.
 pub(crate) struct Grids {
     slots: Vec<Slot>,
-    lines: Vec<(kentos_geometry_core::Vec2, kentos_geometry_core::Vec2, Option<String>)>,
+    lines: Vec<(
+        kentos_geometry_core::Vec2,
+        kentos_geometry_core::Vec2,
+        Option<String>,
+    )>,
 }
 
 impl Grids {
@@ -20,7 +24,11 @@ impl Grids {
         for e in doc.entities() {
             let Entity::Grid(g) = e else { continue };
             let pts = &g.grid.pts;
-            let straight = g.grid.bulges.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0));
+            let straight = g
+                .grid
+                .bulges
+                .as_ref()
+                .is_none_or(|b| b.iter().all(|x| *x == 0.0));
             if pts.len() != 2 || !straight {
                 continue;
             }
@@ -59,7 +67,10 @@ impl Grids {
                 x: g.from.x,
                 y: g.from.y,
             },
-            to: Vec2 { x: g.to.x, y: g.to.y },
+            to: Vec2 {
+                x: g.to.x,
+                y: g.to.y,
+            },
         })
     }
 }

@@ -86,7 +86,11 @@ fn plan_in(
                     step.key
                 )
             };
-            return Err(fail(codes::FINDING_NOT_FOUND, message, format!("steps[{i}].key")));
+            return Err(fail(
+                codes::FINDING_NOT_FOUND,
+                message,
+                format!("steps[{i}].key"),
+            ));
         };
         if f.exception {
             return Err(fail(
@@ -140,7 +144,9 @@ fn plan_in(
             .find(|c| g.layers.get(c.object).is_some_and(|l| layers.is_locked(l)))
         {
             let layer = &g.layers[c.object];
-            let name = layers.get(layer).map_or(layer.as_str(), |n| n.name.as_str());
+            let name = layers
+                .get(layer)
+                .map_or(layer.as_str(), |n| n.name.as_str());
             return Err(fail(
                 codes::LAYER_LOCKED,
                 format!(
@@ -189,12 +195,7 @@ fn plan_in(
     }
     let last = run_watched(&g, watch).ok_or(Stop::Cancelled)?;
     let open_after = last.findings.iter().filter(|f| !f.exception).count();
-    let now: HashMap<&str, &Shape> = g
-        .uids
-        .iter()
-        .map(String::as_str)
-        .zip(&g.shapes)
-        .collect();
+    let now: HashMap<&str, &Shape> = g.uids.iter().map(String::as_str).zip(&g.shapes).collect();
     let precision = settings.profile.as_ref().map(|p| p.precision);
     let mut changes = Vec::new();
     let mut edits = Vec::new();

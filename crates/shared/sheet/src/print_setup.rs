@@ -1,12 +1,12 @@
 //! Named page setups and an explicit paper-to-output transform. Model and viewport scales stay untouched.
+use crate::{
+    Page, Result, SheetBook, SheetError,
+    units::{PointUm, RectUm},
+    viewport::ScaleRatio,
+};
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
-use crate::{
-    Page, SheetBook, SheetError, Result,
-    units::{RectUm, PointUm},
-    viewport::ScaleRatio,
-};
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]

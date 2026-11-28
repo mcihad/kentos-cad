@@ -100,7 +100,12 @@ pub fn with_relative_layers(layers: &mut [LayerNode], project_file: &Path) {
     for node in layers {
         if let Some(d) = node.data.as_mut() {
             d.relative = (d.driver == "gpkg")
-                .then(|| relative_path(folder, Path::new(d.address.strip_prefix("gpkg:").unwrap_or(&d.address))))
+                .then(|| {
+                    relative_path(
+                        folder,
+                        Path::new(d.address.strip_prefix("gpkg:").unwrap_or(&d.address)),
+                    )
+                })
                 .flatten();
         }
         with_relative_layers(&mut node.children, project_file);
@@ -144,7 +149,9 @@ pub fn with_absolute_files(entities: &mut [Entity], project_file: &Path) {
             && !file.trim().is_empty()
             && Path::new(file.as_str()).is_relative()
         {
-            *file = resolve(folder, &file.replace('\\', "/")).display().to_string();
+            *file = resolve(folder, &file.replace('\\', "/"))
+                .display()
+                .to_string();
         }
     }
 }
@@ -226,17 +233,30 @@ pub fn relocate(doc: &mut Document, project_file: &Path) -> Located {
             let Some(f) = item.file.as_mut().filter(|f| !Path::new(&f.path).is_file()) else {
                 continue;
             };
-            let at = f.relative.as_deref().map(|rel| resolve(folder, rel)).filter(|p| p.is_file());
+            let at = f
+                .relative
+                .as_deref()
+                .map(|rel| resolve(folder, rel))
+                .filter(|p| p.is_file());
             let Some(at) = at else {
-                found.work_missing.push((item.id.clone(), item.name.clone(), f.path.clone()));
+                found
+                    .work_missing
+                    .push((item.id.clone(), item.name.clone(), f.path.clone()));
                 continue;
             };
             let to = at.display().to_string();
             // Streamed: an orthophoto may be large.
             if crate::file_digest::sha256(&at).is_ok_and(|(_, sha)| sha == f.revision) {
-                found.work_moved.push((item.id.clone(), item.name.clone(), std::mem::replace(&mut f.path, to.clone()), to));
+                found.work_moved.push((
+                    item.id.clone(),
+                    item.name.clone(),
+                    std::mem::replace(&mut f.path, to.clone()),
+                    to,
+                ));
             } else {
-                found.work_differs.push((item.id.clone(), item.name.clone(), to));
+                found
+                    .work_differs
+                    .push((item.id.clone(), item.name.clone(), to));
             }
         }
     }
@@ -258,9 +278,23 @@ fn relocate_layers(doc: &mut Document, folder: &Path, found: &mut Located) {
         if Path::new(path).is_file() {
             continue;
         }
-        match d.relative.as_deref().map(|rel| resolve(folder, rel)).filter(|p| p.is_file()) {
-            Some(at) => moves.push((node.id.clone(), node.name.clone(), d.address.clone(), at.display().to_string())),
-            None => found.layers_missing.push((node.id.clone(), node.name.clone(), d.address.clone())),
+        match d
+            .relative
+            .as_deref()
+            .map(|rel| resolve(folder, rel))
+            .filter(|p| p.is_file())
+        {
+            Some(at) => moves.push((
+                node.id.clone(),
+                node.name.clone(),
+                d.address.clone(),
+                at.display().to_string(),
+            )),
+            None => {
+                found
+                    .layers_missing
+                    .push((node.id.clone(), node.name.clone(), d.address.clone()))
+            }
         }
     }
     for (id, name, from, to) in moves {

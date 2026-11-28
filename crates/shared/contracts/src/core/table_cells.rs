@@ -161,7 +161,9 @@ impl TableEntity {
     /// Its merged ranges, styles, formulas and fields kept to `n` rows and `m` columns: those past them dropped, a
     /// style cut to them (a range a schedule or a file no longer reaches).
     pub fn clip_to(&mut self, n: usize, m: usize) {
-        let fits = |r: &CellRange| r.row as usize + r.rows as usize <= n && r.col as usize + r.cols as usize <= m;
+        let fits = |r: &CellRange| {
+            r.row as usize + r.rows as usize <= n && r.col as usize + r.cols as usize <= m
+        };
         self.merges.retain(fits);
         self.styles.retain_mut(|s| {
             let r = &mut s.range;
@@ -187,7 +189,14 @@ pub fn is_colour(c: &str) -> bool {
 /// What is wrong with a table's styles, formulas and fields for its rows and columns and its merged ranges: the
 /// field and the refusal's words.
 pub fn cells_problem(t: &TableEntity) -> Option<(&'static str, String)> {
-    cells_problem_of(t.rows.len(), t.columns.len(), &t.merges, &t.styles, &t.formulas, &t.fields)
+    cells_problem_of(
+        t.rows.len(),
+        t.columns.len(),
+        &t.merges,
+        &t.styles,
+        &t.formulas,
+        &t.fields,
+    )
 }
 
 /// [`cells_problem`] of `n` rows and `m` columns, their merged ranges, styles, formulas and fields.
@@ -209,7 +218,10 @@ pub fn cells_problem_of(
     if styles.len() > MAX_CELL_STYLES {
         return Some((
             "styles",
-            format!("Bir tabloda en çok {MAX_CELL_STYLES} biçim olur; {} verildi.", styles.len()),
+            format!(
+                "Bir tabloda en çok {MAX_CELL_STYLES} biçim olur; {} verildi.",
+                styles.len()
+            ),
         ));
     }
     for (k, s) in styles.iter().enumerate() {
@@ -247,7 +259,12 @@ pub fn cells_problem_of(
                 format!("{}. biçimin basamağı en çok {MAX_DECIMALS} olur.", k + 1),
             ));
         }
-        if s.align.is_none() && s.bold.is_none() && s.color.is_none() && s.fill.is_none() && s.decimals.is_none() {
+        if s.align.is_none()
+            && s.bold.is_none()
+            && s.color.is_none()
+            && s.fill.is_none()
+            && s.decimals.is_none()
+        {
             return Some((
                 "styles",
                 format!("{}. biçim hiçbir şey vermiyor; boş biçim yazılmaz.", k + 1),
@@ -257,19 +274,27 @@ pub fn cells_problem_of(
     if formulas.len() > MAX_FORMULAS {
         return Some((
             "formulas",
-            format!("Bir tabloda en çok {MAX_FORMULAS} formül olur; {} verildi.", formulas.len()),
+            format!(
+                "Bir tabloda en çok {MAX_FORMULAS} formül olur; {} verildi.",
+                formulas.len()
+            ),
         ));
     }
     let mut seen = std::collections::HashSet::new();
     for f in formulas {
         let at = format!("{}. satırın {}. hücresi", f.row + 1, f.col + 1);
         if !inside(f.row, f.col) {
-            return Some(("formulas", format!("Formülün hücresi ({at}) tablonun içinde olmalı.")));
+            return Some((
+                "formulas",
+                format!("Formülün hücresi ({at}) tablonun içinde olmalı."),
+            ));
         }
         if hidden(f.row, f.col) {
             return Some((
                 "formulas",
-                format!("Formülün hücresi ({at}) birleşik bir alanın içinde; formül alanın sol üst hücresine yazılır."),
+                format!(
+                    "Formülün hücresi ({at}) birleşik bir alanın içinde; formül alanın sol üst hücresine yazılır."
+                ),
             ));
         }
         if !is_formula(&f.formula)
@@ -278,7 +303,9 @@ pub fn cells_problem_of(
         {
             return Some((
                 "formulas",
-                format!("{at}: formül “=” ile başlayan, tek satırlık ve en çok {MAX_FORMULA_LETTERS} harflik bir yazıdır."),
+                format!(
+                    "{at}: formül “=” ile başlayan, tek satırlık ve en çok {MAX_FORMULA_LETTERS} harflik bir yazıdır."
+                ),
             ));
         }
         if !seen.insert((f.row, f.col)) {
@@ -288,7 +315,10 @@ pub fn cells_problem_of(
     if fields.len() > MAX_CELL_FIELDS {
         return Some((
             "fields",
-            format!("Bir tabloda en çok {MAX_CELL_FIELDS} alan olur; {} verildi.", fields.len()),
+            format!(
+                "Bir tabloda en çok {MAX_CELL_FIELDS} alan olur; {} verildi.",
+                fields.len()
+            ),
         ));
     }
     let mut fielded = std::collections::HashSet::new();
@@ -297,7 +327,9 @@ pub fn cells_problem_of(
         if !inside(f.row, f.col) || hidden(f.row, f.col) {
             return Some((
                 "fields",
-                format!("Alanın hücresi ({at}) tablonun içinde ve birleşik alanın sol üst hücresi olmalı."),
+                format!(
+                    "Alanın hücresi ({at}) tablonun içinde ve birleşik alanın sol üst hücresi olmalı."
+                ),
             ));
         }
         if seen.contains(&(f.row, f.col)) {

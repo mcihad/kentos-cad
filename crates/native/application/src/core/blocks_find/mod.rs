@@ -58,8 +58,17 @@ fn recognizable(e: &Entity) -> bool {
         Entity::Line(_) | Entity::Circle(_) | Entity::Arc(_) => {
             repeats::supported(&crate::geometry::shape(e))
         }
-        Entity::Text(t) if t.label_of.is_none() && t.label_scale.is_none() && t.annotative.is_none() && t.paragraph.fields.is_empty() => repeats::supported(&crate::geometry::shape(e)),
-        Entity::Insert(i) if i.arch==Default::default() => repeats::supported(&crate::geometry::shape(e)),
+        Entity::Text(t)
+            if t.label_of.is_none()
+                && t.label_scale.is_none()
+                && t.annotative.is_none()
+                && t.paragraph.fields.is_empty() =>
+        {
+            repeats::supported(&crate::geometry::shape(e))
+        }
+        Entity::Insert(i) if i.arch == Default::default() => {
+            repeats::supported(&crate::geometry::shape(e))
+        }
         Entity::Polyline(p)
             if p.pts.len() <= repeats::PATH_VERTEX_LIMIT
                 && p.zs.as_ref().is_none_or(|v| v.iter().all(Option::is_none))
@@ -76,8 +85,12 @@ fn recognizable(e: &Entity) -> bool {
 
 fn unsupported_reason(e: &Entity) -> &'static str {
     match e {
-        Entity::Text(_) => "Yazı tek satırlı ve en çok 4096 bayt olmalı; etiket, alan, ölçek veya eğri bağı sessizce atlanmaz. Bağsız düz bir yazı seçin.",
-        Entity::Insert(_) => "Blok kaynağı farklı Y ölçeği, parametre, kırpma veya mimari kayıt taşıyor. Bu kapsamda bu davranışlar yok sayılmaz.",
+        Entity::Text(_) => {
+            "Yazı tek satırlı ve en çok 4096 bayt olmalı; etiket, alan, ölçek veya eğri bağı sessizce atlanmaz. Bağsız düz bir yazı seçin."
+        }
+        Entity::Insert(_) => {
+            "Blok kaynağı farklı Y ölçeği, parametre, kırpma veya mimari kayıt taşıyor. Bu kapsamda bu davranışlar yok sayılmaz."
+        }
         Entity::Polyline(p) if p.zs.as_ref().is_some_and(|v| v.iter().any(Option::is_some)) => {
             "Kaynak çoklu çizgi yükseklik (Z) verisi içeriyor. Bu arama 2B çizgiler içindir; Z verisi atlanmadı. Yalnız 2B nesneleri kaynak seçin."
         }
@@ -232,9 +245,12 @@ fn find_in(
         p.id = 0;
         if input.attribute_variants.unwrap_or(false)
             && let Entity::Insert(i) = e
-            && let Some(block) = doc.block(i.block) {
-                for a in &block.attributes {p.attrs.remove(&a.tag);}
+            && let Some(block) = doc.block(i.block)
+        {
+            for a in &block.attributes {
+                p.attrs.remove(&a.tag);
             }
+        }
         properties.push(p);
     }
     let by_uid: HashMap<_, _> = records
@@ -267,22 +283,41 @@ fn find_in(
             "source",
         ),
     })?;
-    let roots: HashSet<_> = found.matches.iter().flat_map(|m| m.members.iter().copied()).chain(source.iter().copied()).collect();
-    let blocks = definitions::checked(doc, roots.iter().filter_map(|i| match records[*i].1 {
-        Entity::Insert(e) => Some(e.block), _ => None,
-    }), &mut stopped)?;
+    let roots: HashSet<_> = found
+        .matches
+        .iter()
+        .flat_map(|m| m.members.iter().copied())
+        .chain(source.iter().copied())
+        .collect();
+    let blocks = definitions::checked(
+        doc,
+        roots.iter().filter_map(|i| match records[*i].1 {
+            Entity::Insert(e) => Some(e.block),
+            _ => None,
+        }),
+        &mut stopped,
+    )?;
     let font = crate::geometry::drawing_font(doc.settings().drawing_font);
     let mut boxes = HashMap::new();
     for i in roots {
-        if stopped() { return Err(Stop::Cancelled); }
-        let mut b = entity_bounds_in(&scene[i],font);
-        if matches!(scene[i],Shape::Insert {..}) {
-            b = kentos_geometry_core::block::pieces_bounds(b,&blocks.expand(&scene[i]),font);
+        if stopped() {
+            return Err(Stop::Cancelled);
         }
-        if ![b.min_x,b.min_y,b.max_x,b.max_y].iter().all(|v|v.is_finite()) {
-            return Err(refuse(codes::RECOGNITION_UNSUPPORTED,"Adayın çizim sınırı sonlu değil; kaynak değiştirilmedi.","source"));
+        let mut b = entity_bounds_in(&scene[i], font);
+        if matches!(scene[i], Shape::Insert { .. }) {
+            b = kentos_geometry_core::block::pieces_bounds(b, &blocks.expand(&scene[i]), font);
         }
-        boxes.insert(i,b);
+        if ![b.min_x, b.min_y, b.max_x, b.max_y]
+            .iter()
+            .all(|v| v.is_finite())
+        {
+            return Err(refuse(
+                codes::RECOGNITION_UNSUPPORTED,
+                "Adayın çizim sınırı sonlu değil; kaynak değiştirilmedi.",
+                "source",
+            ));
+        }
+        boxes.insert(i, b);
     }
     let mut used = HashMap::new();
     for group in &found.matches {
@@ -365,10 +400,26 @@ pub fn inspect(
             if input.geometry_only == Some(true) {
                 warnings.push(CommandWarning { code:codes::RECOGNITION_GEOMETRY_ONLY.into(),message:"Yalnız geometri karşılaştırıldı; katman, görünüş ve öznitelik farkları eşleşmeye engel sayılmadı.".into(),path:Some("geometryOnly".into()) });
             }
-            for (on,path,message) in [
-                (input.text_variants,"textVariants","Yazı değerleri farklı olabilir; konum, yön, yükseklik ve yazı biçimi doğrulandı. Değerler silinmedi; dönüştürme ayrı incelemedir."),
-                (input.attribute_variants,"attributeVariants","Yalnız blokta tanımlı öznitelik etiketlerinin değer farkları göz ardı edildi. Diğer nesne verileri ve blok tanımı aynı kalmalıdır.")
-            ] { if on==Some(true) {warnings.push(CommandWarning {code:codes::RECOGNITION_GEOMETRY_ONLY.into(),message:message.into(),path:Some(path.into())});} }
+            for (on, path, message) in [
+                (
+                    input.text_variants,
+                    "textVariants",
+                    "Yazı değerleri farklı olabilir; konum, yön, yükseklik ve yazı biçimi doğrulandı. Değerler silinmedi; dönüştürme ayrı incelemedir.",
+                ),
+                (
+                    input.attribute_variants,
+                    "attributeVariants",
+                    "Yalnız blokta tanımlı öznitelik etiketlerinin değer farkları göz ardı edildi. Diğer nesne verileri ve blok tanımı aynı kalmalıdır.",
+                ),
+            ] {
+                if on == Some(true) {
+                    warnings.push(CommandWarning {
+                        code: codes::RECOGNITION_GEOMETRY_ONLY.into(),
+                        message: message.into(),
+                        path: Some(path.into()),
+                    });
+                }
+            }
             CommandResult::Completed { output, warnings }
         }
         Err(stop) => stop.into(),

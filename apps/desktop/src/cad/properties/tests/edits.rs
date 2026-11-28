@@ -235,40 +235,100 @@ fn cad_room_height_respects_explicit_units_and_invalid_suffixes_are_atomic() {
         settings.srid = 0;
         settings.drawing_unit = Some(unit);
         doc.set_settings(settings);
-        let id = add(&mut app, Entity::Space(SpaceEntity {
-            base: base("parsel"),
-            space: Box::new(SpaceFields { parts: vec![SpacePart {
-                outer: SpaceRing {pts:vec![Wire{x:0.,y:0.},Wire{x:4.,y:0.},Wire{x:4.,y:3.},Wire{x:0.,y:3.}],..Default::default()},
-                ..Default::default()
-            }], ..Default::default() }),
-        }));
+        let id = add(
+            &mut app,
+            Entity::Space(SpaceEntity {
+                base: base("parsel"),
+                space: Box::new(SpaceFields {
+                    parts: vec![SpacePart {
+                        outer: SpaceRing {
+                            pts: vec![
+                                Wire { x: 0., y: 0. },
+                                Wire { x: 4., y: 0. },
+                                Wire { x: 4., y: 3. },
+                                Wire { x: 0., y: 3. },
+                            ],
+                            ..Default::default()
+                        },
+                        ..Default::default()
+                    }],
+                    ..Default::default()
+                }),
+            }),
+        );
         (app, id)
     };
-    for unit in [DrawingUnit::Mm, DrawingUnit::Cm, DrawingUnit::M, DrawingUnit::In, DrawingUnit::Ft] {
-        for (text, expected) in [("3 m",3.),("300 cm",3.),("3000 mm",3.),("3,5 m",3.5),("12 in",0.3048),("1 ft",0.3048),("5'6\"",1.6764)] {
+    for unit in [
+        DrawingUnit::Mm,
+        DrawingUnit::Cm,
+        DrawingUnit::M,
+        DrawingUnit::In,
+        DrawingUnit::Ft,
+    ] {
+        for (text, expected) in [
+            ("3 m", 3.),
+            ("300 cm", 3.),
+            ("3000 mm", 3.),
+            ("3,5 m", 3.5),
+            ("12 in", 0.3048),
+            ("1 ft", 0.3048),
+            ("5'6\"", 1.6764),
+        ] {
             let (mut app, id) = setup(unit);
             let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
-            event(&mut app, Event::Commit(Field::SpaceHeight(Slot(id)), text.into()));
-            let Entity::Space(s) = entity(&app,id) else {panic!()};
-            assert!((s.space.height.unwrap()-expected).abs()<1e-10,"{unit:?}/{text}: {:?}",s.space.height);
-            assert_eq!(undo_label(&mut app).as_deref(),Some("Mahali düzenle"));
-            assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+            event(
+                &mut app,
+                Event::Commit(Field::SpaceHeight(Slot(id)), text.into()),
+            );
+            let Entity::Space(s) = entity(&app, id) else {
+                panic!()
+            };
+            assert!(
+                (s.space.height.unwrap() - expected).abs() < 1e-10,
+                "{unit:?}/{text}: {:?}",
+                s.space.height
+            );
+            assert_eq!(undo_label(&mut app).as_deref(), Some("Mahali düzenle"));
+            assert_eq!(
+                app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                before
+            );
         }
     }
-    let (mut app,id)=setup(DrawingUnit::Mm);
-    event(&mut app,Event::Commit(Field::SpaceHeight(Slot(id)),"3000".into()));
-    let Entity::Space(s)=entity(&app,id)else{panic!()};
-    assert_eq!(s.space.height,Some(3.));
-    let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
-    for text in ["3 m junk","3 apples","1,2,3","Infinity","-1 m","0 m"] {
-        event(&mut app,Event::Commit(Field::SpaceHeight(Slot(id)),text.into()));
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before,"{text} changed height");
+    let (mut app, id) = setup(DrawingUnit::Mm);
+    event(
+        &mut app,
+        Event::Commit(Field::SpaceHeight(Slot(id)), "3000".into()),
+    );
+    let Entity::Space(s) = entity(&app, id) else {
+        panic!()
+    };
+    assert_eq!(s.space.height, Some(3.));
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    for text in ["3 m junk", "3 apples", "1,2,3", "Infinity", "-1 m", "0 m"] {
+        event(
+            &mut app,
+            Event::Commit(Field::SpaceHeight(Slot(id)), text.into()),
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before,
+            "{text} changed height"
+        );
     }
-    event(&mut app,Event::Commit(Field::SpaceHeight(Slot(id)),String::new()));
-    let Entity::Space(s)=entity(&app,id)else{panic!()};
-    assert_eq!(s.space.height,None);
+    event(
+        &mut app,
+        Event::Commit(Field::SpaceHeight(Slot(id)), String::new()),
+    );
+    let Entity::Space(s) = entity(&app, id) else {
+        panic!()
+    };
+    assert_eq!(s.space.height, None);
     app.document.as_mut().unwrap().model.undo().unwrap();
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 }
 
 // ── docs/adr/0142: the elevation rows ───────────────────────────────────────
@@ -277,7 +337,13 @@ fn cad_room_height_respects_explicit_units_and_invalid_suffixes_are_atomic() {
 fn cad_wall_and_opening_lengths_use_explicit_units_and_one_undo() {
     use kentos_commands::{DrawingUnit, Workspace};
     use serde_json::json;
-    for unit in [DrawingUnit::Mm, DrawingUnit::Cm, DrawingUnit::M, DrawingUnit::In, DrawingUnit::Ft] {
+    for unit in [
+        DrawingUnit::Mm,
+        DrawingUnit::Cm,
+        DrawingUnit::M,
+        DrawingUnit::In,
+        DrawingUnit::Ft,
+    ] {
         let mut app = objects();
         let doc = &mut app.document.as_mut().unwrap().model;
         let mut settings = doc.settings().clone();
@@ -285,93 +351,206 @@ fn cad_wall_and_opening_lengths_use_explicit_units_and_one_undo() {
         settings.srid = 0;
         settings.drawing_unit = Some(unit);
         doc.set_settings(settings);
-        let wall = add(&mut app, serde_json::from_value(json!({
-            "kind":"wall", "id":0, "layerId":"parsel", "attrs":{},
-            "pts":[{"x":0.,"y":0.},{"x":20.,"y":0.}], "width":0.2
-        })).unwrap());
-        let host = app.document.as_ref().unwrap().model.uid(Slot(wall)).unwrap().to_string();
-        let opening = add(&mut app, serde_json::from_value(json!({
-            "kind":"opening", "id":0, "layerId":"parsel", "attrs":{},
-            "host":host, "at":5., "width":0.8, "place":[]
-        })).unwrap());
-        let w=Slot(wall); let o=Slot(opening);
+        let wall = add(
+            &mut app,
+            serde_json::from_value(json!({
+                "kind":"wall", "id":0, "layerId":"parsel", "attrs":{},
+                "pts":[{"x":0.,"y":0.},{"x":20.,"y":0.}], "width":0.2
+            }))
+            .unwrap(),
+        );
+        let host = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .uid(Slot(wall))
+            .unwrap()
+            .to_string();
+        let opening = add(
+            &mut app,
+            serde_json::from_value(json!({
+                "kind":"opening", "id":0, "layerId":"parsel", "attrs":{},
+                "host":host, "at":5., "width":0.8, "place":[]
+            }))
+            .unwrap(),
+        );
+        let w = Slot(wall);
+        let o = Slot(opening);
         for (field, slot, key, cases) in [
-            (Field::WallWidth(w),wall,"width",vec![("25 cm",0.25),("0,25 m",0.25),("10 in",0.254)]),
-            (Field::WallOffset(w),wall,"offset",vec![("-5 cm",-0.05),("1 cm",0.01),("2 in",0.0508)]),
-            (Field::WallHeight(w),wall,"height",vec![("3 m",3.),("300 cm",3.),("10 ft",3.048)]),
-            (Field::OpeningWidth(o),opening,"width",vec![("90 cm",0.9),("0,9 m",0.9),("3 ft",0.9144)]),
-            (Field::OpeningAt(o),opening,"at",vec![("2 m",2.),("200 cm",2.),("6 ft",1.8288)]),
-            (Field::OpeningFrame(o),opening,"frame",vec![("5 cm",0.05),("0,05 m",0.05),("2 in",0.0508)]),
-            (Field::OpeningSill(o),opening,"sill",vec![("90 cm",0.9),("0,9 m",0.9),("3 ft",0.9144)]),
-            (Field::OpeningHead(o),opening,"head",vec![("210 cm",2.1),("2,1 m",2.1),("7 ft",2.1336)]),
+            (
+                Field::WallWidth(w),
+                wall,
+                "width",
+                vec![("25 cm", 0.25), ("0,25 m", 0.25), ("10 in", 0.254)],
+            ),
+            (
+                Field::WallOffset(w),
+                wall,
+                "offset",
+                vec![("-5 cm", -0.05), ("1 cm", 0.01), ("2 in", 0.0508)],
+            ),
+            (
+                Field::WallHeight(w),
+                wall,
+                "height",
+                vec![("3 m", 3.), ("300 cm", 3.), ("10 ft", 3.048)],
+            ),
+            (
+                Field::OpeningWidth(o),
+                opening,
+                "width",
+                vec![("90 cm", 0.9), ("0,9 m", 0.9), ("3 ft", 0.9144)],
+            ),
+            (
+                Field::OpeningAt(o),
+                opening,
+                "at",
+                vec![("2 m", 2.), ("200 cm", 2.), ("6 ft", 1.8288)],
+            ),
+            (
+                Field::OpeningFrame(o),
+                opening,
+                "frame",
+                vec![("5 cm", 0.05), ("0,05 m", 0.05), ("2 in", 0.0508)],
+            ),
+            (
+                Field::OpeningSill(o),
+                opening,
+                "sill",
+                vec![("90 cm", 0.9), ("0,9 m", 0.9), ("3 ft", 0.9144)],
+            ),
+            (
+                Field::OpeningHead(o),
+                opening,
+                "head",
+                vec![("210 cm", 2.1), ("2,1 m", 2.1), ("7 ft", 2.1336)],
+            ),
         ] {
-            for (text,expected) in cases {
-                let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
-                event(&mut app,Event::Commit(field.clone(),text.into()));
-                let e=serde_json::to_value(entity(&app,slot)).unwrap();
-                let got=e[key].as_f64().unwrap_or(f64::NAN);
-                assert!((got-expected).abs()<1e-10,"{unit:?}/{key}/{text}: {got}; {:?}",warned(&app));
-                assert!(undo_label(&mut app).is_some(),"missing undo: {key}/{text}");
-                assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before,"undo: {key}/{text}");
+            for (text, expected) in cases {
+                let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+                event(&mut app, Event::Commit(field.clone(), text.into()));
+                let e = serde_json::to_value(entity(&app, slot)).unwrap();
+                let got = e[key].as_f64().unwrap_or(f64::NAN);
+                assert!(
+                    (got - expected).abs() < 1e-10,
+                    "{unit:?}/{key}/{text}: {got}; {:?}",
+                    warned(&app)
+                );
+                assert!(undo_label(&mut app).is_some(), "missing undo: {key}/{text}");
+                assert_eq!(
+                    app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                    before,
+                    "undo: {key}/{text}"
+                );
             }
-            for text in ["3 apples","3 m junk","1,2,3","Infinity"] {
-                let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
-                event(&mut app,Event::Commit(field.clone(),text.into()));
-                assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before,"invalid {key}/{text}");
-                assert!(warned(&app).is_some(),"missing invalid-unit explanation");
+            for text in ["3 apples", "3 m junk", "1,2,3", "Infinity"] {
+                let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+                event(&mut app, Event::Commit(field.clone(), text.into()));
+                assert_eq!(
+                    app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                    before,
+                    "invalid {key}/{text}"
+                );
+                assert!(warned(&app).is_some(), "missing invalid-unit explanation");
             }
         }
         // Bare values still use the drawing's selected unit. A zero offset is
         // valid, and optional heights/frame/sill/head can still be cleared.
-        let f=kentos_interaction::Format::of(app.document.as_ref().unwrap().model.settings());
-        let bare=match unit {DrawingUnit::Mm=>"250",DrawingUnit::Cm=>"25",DrawingUnit::M=>"0.25",DrawingUnit::In=>"10",DrawingUnit::Ft=>"1"};
-        let expected=f.to_metres(bare.parse().unwrap());
-        let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
-        event(&mut app,Event::Commit(Field::WallWidth(w),bare.into()));
-        let Entity::Wall(e)=entity(&app,wall)else{panic!()};
-        assert!((e.wall.width-expected).abs()<1e-10);
+        let f = kentos_interaction::Format::of(app.document.as_ref().unwrap().model.settings());
+        let bare = match unit {
+            DrawingUnit::Mm => "250",
+            DrawingUnit::Cm => "25",
+            DrawingUnit::M => "0.25",
+            DrawingUnit::In => "10",
+            DrawingUnit::Ft => "1",
+        };
+        let expected = f.to_metres(bare.parse().unwrap());
+        let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+        event(&mut app, Event::Commit(Field::WallWidth(w), bare.into()));
+        let Entity::Wall(e) = entity(&app, wall) else {
+            panic!()
+        };
+        assert!((e.wall.width - expected).abs() < 1e-10);
         assert!(undo_label(&mut app).is_some());
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
-        for (field,slot,key,text) in [
-            (Field::WallHeight(w),wall,"height","3 m"),
-            (Field::OpeningFrame(o),opening,"frame","5 cm"),
-            (Field::OpeningSill(o),opening,"sill","90 cm"),
-            (Field::OpeningHead(o),opening,"head","210 cm"),
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        for (field, slot, key, text) in [
+            (Field::WallHeight(w), wall, "height", "3 m"),
+            (Field::OpeningFrame(o), opening, "frame", "5 cm"),
+            (Field::OpeningSill(o), opening, "sill", "90 cm"),
+            (Field::OpeningHead(o), opening, "head", "210 cm"),
         ] {
-            event(&mut app,Event::Commit(field.clone(),text.into()));
-            let set=app.document.as_ref().unwrap().model.to_snapshot_v2();
-            event(&mut app,Event::Commit(field,String::new()));
-            assert!(serde_json::to_value(entity(&app,slot)).unwrap().get(key).is_none());
+            event(&mut app, Event::Commit(field.clone(), text.into()));
+            let set = app.document.as_ref().unwrap().model.to_snapshot_v2();
+            event(&mut app, Event::Commit(field, String::new()));
+            assert!(
+                serde_json::to_value(entity(&app, slot))
+                    .unwrap()
+                    .get(key)
+                    .is_none()
+            );
             assert!(undo_label(&mut app).is_some());
-            assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),set);
+            assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), set);
             assert!(undo_label(&mut app).is_some());
-            assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+            assert_eq!(
+                app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                before
+            );
         }
-        event(&mut app,Event::Commit(Field::WallOffset(w),"-5 cm".into()));
-        event(&mut app,Event::Commit(Field::WallOffset(w),"0 m".into()));
-        let Entity::Wall(e)=entity(&app,wall)else{panic!()};
-        assert_eq!(e.wall.offset,0.);
+        event(
+            &mut app,
+            Event::Commit(Field::WallOffset(w), "-5 cm".into()),
+        );
+        event(&mut app, Event::Commit(Field::WallOffset(w), "0 m".into()));
+        let Entity::Wall(e) = entity(&app, wall) else {
+            panic!()
+        };
+        assert_eq!(e.wall.offset, 0.);
         assert!(undo_label(&mut app).is_some());
         assert!(undo_label(&mut app).is_some());
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
-        for (field,text) in [(Field::WallWidth(w),"-1 m"),(Field::WallHeight(w),"-1 m"),
-            (Field::OpeningWidth(o),"-1 m"),(Field::OpeningAt(o),"100 m"),(Field::OpeningFrame(o),"-1 m")] {
-            event(&mut app,Event::Commit(field,text.into()));
-            assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before,"range: {text}");
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
+        for (field, text) in [
+            (Field::WallWidth(w), "-1 m"),
+            (Field::WallHeight(w), "-1 m"),
+            (Field::OpeningWidth(o), "-1 m"),
+            (Field::OpeningAt(o), "100 m"),
+            (Field::OpeningFrame(o), "-1 m"),
+        ] {
+            event(&mut app, Event::Commit(field, text.into()));
+            assert_eq!(
+                app.document.as_ref().unwrap().model.to_snapshot_v2(),
+                before,
+                "range: {text}"
+            );
         }
         // Angles retain their old degree grammar even in a millimetre drawing.
-        event(&mut app,Event::Commit(Field::OpeningSwing(o),"45".into()));
-        let Entity::Opening(e)=entity(&app,opening)else{panic!()};
-        assert_eq!(e.opening.swing,Some(45.));
+        event(&mut app, Event::Commit(Field::OpeningSwing(o), "45".into()));
+        let Entity::Opening(e) = entity(&app, opening) else {
+            panic!()
+        };
+        assert_eq!(e.opening.swing, Some(45.));
         assert!(undo_label(&mut app).is_some());
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before
+        );
         // GIS keeps its legacy number-prefix interpretation and unit selection.
-        let doc=&mut app.document.as_mut().unwrap().model;
-        let mut settings=doc.settings().clone();settings.workspace=Some(Workspace::Gis);doc.set_settings(settings);
-        let f=kentos_interaction::Format::of(app.document.as_ref().unwrap().model.settings());
-        event(&mut app,Event::Commit(Field::WallWidth(w),"25 cm".into()));
-        let Entity::Wall(e)=entity(&app,wall)else{panic!()};
-        assert_eq!(e.wall.width,f.to_metres(25.));
+        let doc = &mut app.document.as_mut().unwrap().model;
+        let mut settings = doc.settings().clone();
+        settings.workspace = Some(Workspace::Gis);
+        doc.set_settings(settings);
+        let f = kentos_interaction::Format::of(app.document.as_ref().unwrap().model.settings());
+        event(&mut app, Event::Commit(Field::WallWidth(w), "25 cm".into()));
+        let Entity::Wall(e) = entity(&app, wall) else {
+            panic!()
+        };
+        assert_eq!(e.wall.width, f.to_metres(25.));
     }
 }
 
@@ -388,39 +567,86 @@ fn a_niches_depth_and_a_flues_inset_are_written_from_the_rows_one_step_each() {
     settings.workspace = Some(Workspace::Cad);
     settings.srid = 0;
     doc.set_settings(settings);
-    let wall = add(&mut app, serde_json::from_value(json!({
-        "kind":"wall", "id":0, "layerId":"parsel", "attrs":{},
-        "pts":[{"x":0.,"y":0.},{"x":20.,"y":0.}], "width":0.3
-    })).unwrap());
-    let host = app.document.as_ref().unwrap().model.uid(Slot(wall)).unwrap().to_string();
-    let niche = add(&mut app, serde_json::from_value(json!({
-        "kind":"opening", "id":0, "layerId":"parsel", "attrs":{},
-        "host":host, "at":5., "width":0.6, "form":"niche", "depth":0.1, "place":[]
-    })).unwrap());
-    let flue = add(&mut app, serde_json::from_value(json!({
-        "kind":"opening", "id":0, "layerId":"parsel", "attrs":{},
-        "host":host, "at":9., "width":0.2, "form":"flue", "depth":0.2, "place":[]
-    })).unwrap());
+    let wall = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"wall", "id":0, "layerId":"parsel", "attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":20.,"y":0.}], "width":0.3
+        }))
+        .unwrap(),
+    );
+    let host = app
+        .document
+        .as_ref()
+        .unwrap()
+        .model
+        .uid(Slot(wall))
+        .unwrap()
+        .to_string();
+    let niche = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"opening", "id":0, "layerId":"parsel", "attrs":{},
+            "host":host, "at":5., "width":0.6, "form":"niche", "depth":0.1, "place":[]
+        }))
+        .unwrap(),
+    );
+    let flue = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"opening", "id":0, "layerId":"parsel", "attrs":{},
+            "host":host, "at":9., "width":0.2, "form":"flue", "depth":0.2, "place":[]
+        }))
+        .unwrap(),
+    );
     let fields = |app: &App, slot: u32| match entity(app, slot) {
         Entity::Opening(o) => o.opening,
         _ => panic!("an opening"),
     };
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
-    event(&mut app, Event::Commit(Field::OpeningDepth(Slot(niche)), "15 cm".into()));
-    assert_eq!(fields(&app, niche).depth, Some(0.15), "{:?} {:?}", warned(&app), fields(&app, niche));
+    event(
+        &mut app,
+        Event::Commit(Field::OpeningDepth(Slot(niche)), "15 cm".into()),
+    );
+    assert_eq!(
+        fields(&app, niche).depth,
+        Some(0.15),
+        "{:?} {:?}",
+        warned(&app),
+        fields(&app, niche)
+    );
     assert!(undo_label(&mut app).is_some());
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
     // Too deep for the wall: refused, said, nothing written.
-    event(&mut app, Event::Commit(Field::OpeningDepth(Slot(niche)), "30 cm".into()));
+    event(
+        &mut app,
+        Event::Commit(Field::OpeningDepth(Slot(niche)), "30 cm".into()),
+    );
     assert_eq!(fields(&app, niche).depth, Some(0.1));
-    assert!(warned(&app).is_some_and(|w| w.contains("Nişin derinliği")), "{:?}", warned(&app));
-    event(&mut app, Event::Commit(Field::OpeningInset(Slot(flue)), "3 cm".into()));
+    assert!(
+        warned(&app).is_some_and(|w| w.contains("Nişin derinliği")),
+        "{:?}",
+        warned(&app)
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::OpeningInset(Slot(flue)), "3 cm".into()),
+    );
     assert_eq!(fields(&app, flue).inset, Some(0.03));
-    event(&mut app, Event::Commit(Field::OpeningInset(Slot(flue)), String::new()));
+    event(
+        &mut app,
+        Event::Commit(Field::OpeningInset(Slot(flue)), String::new()),
+    );
     assert_eq!(fields(&app, flue).inset, None, "empty: centred");
     assert!(undo_label(&mut app).is_some());
     assert!(undo_label(&mut app).is_some());
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 }
 
 // ── docs/adr/0777: a special door's rows ─────────────────────────────
@@ -435,11 +661,22 @@ fn a_revolving_doors_drum_and_a_pocket_doors_lip_are_written_from_the_rows() {
     settings.workspace = Some(Workspace::Cad);
     settings.srid = 0;
     doc.set_settings(settings);
-    let wall = add(&mut app, serde_json::from_value(json!({
-        "kind":"wall", "id":0, "layerId":"parsel", "attrs":{},
-        "pts":[{"x":0.,"y":0.},{"x":20.,"y":0.}], "width":0.3
-    })).unwrap());
-    let host = app.document.as_ref().unwrap().model.uid(Slot(wall)).unwrap().to_string();
+    let wall = add(
+        &mut app,
+        serde_json::from_value(json!({
+            "kind":"wall", "id":0, "layerId":"parsel", "attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":20.,"y":0.}], "width":0.3
+        }))
+        .unwrap(),
+    );
+    let host = app
+        .document
+        .as_ref()
+        .unwrap()
+        .model
+        .uid(Slot(wall))
+        .unwrap()
+        .to_string();
     let door = add(&mut app, serde_json::from_value(json!({
         "kind":"opening", "id":0, "layerId":"parsel", "attrs":{},
         "host":host, "at":5., "width":2.4, "form":"door", "leaves":4, "operation":"revolving", "place":[]
@@ -449,17 +686,47 @@ fn a_revolving_doors_drum_and_a_pocket_doors_lip_are_written_from_the_rows() {
         _ => panic!("an opening"),
     };
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
-    event(&mut app, Event::Commit(Field::OpeningBuild(Slot(door), OpeningTypeField::Drum), "180 cm".into()));
-    assert_eq!(fields(&app).build.and_then(|b| b.drum), Some(1.8), "{:?}", warned(&app));
+    event(
+        &mut app,
+        Event::Commit(
+            Field::OpeningBuild(Slot(door), OpeningTypeField::Drum),
+            "180 cm".into(),
+        ),
+    );
+    assert_eq!(
+        fields(&app).build.and_then(|b| b.drum),
+        Some(1.8),
+        "{:?}",
+        warned(&app)
+    );
     // Wider than its light: refused, said, nothing written.
-    event(&mut app, Event::Commit(Field::OpeningBuild(Slot(door), OpeningTypeField::Drum), "3 m".into()));
+    event(
+        &mut app,
+        Event::Commit(
+            Field::OpeningBuild(Slot(door), OpeningTypeField::Drum),
+            "3 m".into(),
+        ),
+    );
     assert_eq!(fields(&app).build.and_then(|b| b.drum), Some(1.8));
-    assert!(warned(&app).is_some_and(|w| w.contains("tamburu")), "{:?}", warned(&app));
-    event(&mut app, Event::Commit(Field::OpeningBuild(Slot(door), OpeningTypeField::Drum), String::new()));
+    assert!(
+        warned(&app).is_some_and(|w| w.contains("tamburu")),
+        "{:?}",
+        warned(&app)
+    );
+    event(
+        &mut app,
+        Event::Commit(
+            Field::OpeningBuild(Slot(door), OpeningTypeField::Drum),
+            String::new(),
+        ),
+    );
     assert_eq!(fields(&app).build, None, "empty: the light");
     assert!(undo_label(&mut app).is_some());
     assert!(undo_label(&mut app).is_some());
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
     // A pocket door now: its lip.
     let set = kentos_commands::OpeningChange {
         operation: Some(OpeningOperation::Pocket),
@@ -467,10 +734,29 @@ fn a_revolving_doors_drum_and_a_pocket_doors_lip_are_written_from_the_rows() {
         width: Some(0.9),
         ..Default::default()
     };
-    event(&mut app, Event::Opening(Slot(door), kentos_commands::OpeningsOperation::Set(set)));
-    assert_eq!(fields(&app).operation, OpeningOperation::Pocket, "{:?}", warned(&app));
-    event(&mut app, Event::Commit(Field::OpeningBuild(Slot(door), OpeningTypeField::Lip), "3 cm".into()));
-    assert_eq!(fields(&app).build.and_then(|b| b.lip), Some(0.03), "{:?}", warned(&app));
+    event(
+        &mut app,
+        Event::Opening(Slot(door), kentos_commands::OpeningsOperation::Set(set)),
+    );
+    assert_eq!(
+        fields(&app).operation,
+        OpeningOperation::Pocket,
+        "{:?}",
+        warned(&app)
+    );
+    event(
+        &mut app,
+        Event::Commit(
+            Field::OpeningBuild(Slot(door), OpeningTypeField::Lip),
+            "3 cm".into(),
+        ),
+    );
+    assert_eq!(
+        fields(&app).build.and_then(|b| b.lip),
+        Some(0.03),
+        "{:?}",
+        warned(&app)
+    );
 }
 
 // ── docs/adr/8039: an opening's own phase ─────────────────────────────

@@ -248,7 +248,11 @@ impl Out {
     /// after it.
     fn table(&mut self, mut fields: Vec<(u16, Item)>) -> usize {
         fields.sort_by_key(|(slot, item)| (std::cmp::Reverse(item.size()), *slot));
-        let slots = fields.iter().map(|(s, _)| *s as usize + 1).max().unwrap_or(0);
+        let slots = fields
+            .iter()
+            .map(|(s, _)| *s as usize + 1)
+            .max()
+            .unwrap_or(0);
         let vtable = 4 + 2 * slots;
         // The inline layout: the vtable offset, then the fields, each at a multiple of its size.
         let mut at = 4usize;
@@ -394,14 +398,19 @@ fn polygon_node(rings: &[Curve], has: (bool, bool)) -> Node {
             (6, Item::U8(gt::CURVE_POLYGON)),
             (
                 7,
-                Item::Ref(Node::Tables(rings.iter().map(|r| curve_node(r, has)).collect())),
+                Item::Ref(Node::Tables(
+                    rings.iter().map(|r| curve_node(r, has)).collect(),
+                )),
             ),
         ]),
     }
 }
 
 fn parts(kind: u8, parts: Vec<Node>) -> Node {
-    Node::Table(vec![(6, Item::U8(kind)), (7, Item::Ref(Node::Tables(parts)))])
+    Node::Table(vec![
+        (6, Item::U8(kind)),
+        (7, Item::Ref(Node::Tables(parts))),
+    ])
 }
 
 fn geometry_node(g: &Geometry, has: (bool, bool)) -> Node {
@@ -413,7 +422,10 @@ fn geometry_node(g: &Geometry, has: (bool, bool)) -> Node {
         Geometry::Polygon(rings) => polygon_node(rings, has),
         Geometry::MultiCurve(cs) => match cs.iter().map(linear).collect::<Option<Vec<_>>>() {
             Some(lines) => run(&lines, gt::MULTI_LINE_STRING, has),
-            None => parts(gt::MULTI_CURVE, cs.iter().map(|c| curve_node(c, has)).collect()),
+            None => parts(
+                gt::MULTI_CURVE,
+                cs.iter().map(|c| curve_node(c, has)).collect(),
+            ),
         },
         Geometry::MultiPolygon(polys) => {
             let kind = if polys.iter().flatten().all(|r| linear(r).is_some()) {
@@ -630,7 +642,12 @@ pub fn hilbert(x: u32, y: u32) -> u32 {
     b = dd ^ (dd >> 1);
     let mut i0 = x ^ y;
     let mut i1 = b | (0xFFFF ^ (i0 | a));
-    for (shift, mask) in [(8, 0x00FF_00FF), (4, 0x0F0F_0F0F), (2, 0x3333_3333), (1, 0x5555_5555)] {
+    for (shift, mask) in [
+        (8, 0x00FF_00FF),
+        (4, 0x0F0F_0F0F),
+        (2, 0x3333_3333),
+        (1, 0x5555_5555),
+    ] {
         i0 = (i0 | (i0 << shift)) & mask;
         i1 = (i1 | (i1 << shift)) & mask;
     }
@@ -661,8 +678,10 @@ pub fn write(layer: &Layer<'_>) -> Vec<u8> {
             m
         })
     });
-    let types: std::collections::BTreeSet<u8> =
-        feats.iter().filter_map(|(g, _)| g.as_ref().map(top_type)).collect();
+    let types: std::collections::BTreeSet<u8> = feats
+        .iter()
+        .filter_map(|(g, _)| g.as_ref().map(top_type))
+        .collect();
     let header_type = match (types.len(), types.first()) {
         (1, Some(t)) => *t,
         _ => gt::UNKNOWN,
@@ -670,7 +689,12 @@ pub fn write(layer: &Layer<'_>) -> Vec<u8> {
     let envelope = boxes.iter().flatten().fold(None::<[f64; 4]>, |acc, b| {
         Some(match acc {
             None => *b,
-            Some(a) => [a[0].min(b[0]), a[1].min(b[1]), a[2].max(b[2]), a[3].max(b[3])],
+            Some(a) => [
+                a[0].min(b[0]),
+                a[1].min(b[1]),
+                a[2].max(b[2]),
+                a[3].max(b[3]),
+            ],
         })
     });
     let indexed = !feats.is_empty() && boxes.iter().all(Option::is_some);
@@ -761,7 +785,18 @@ pub fn write(layer: &Layer<'_>) -> Vec<u8> {
         let node_size = NODE_SIZE as usize;
         let levels = level_bounds(feats.len(), node_size);
         let total = levels.first().map_or(0, |r| r.end);
-        let mut nodes = vec![([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], 0u64); total];
+        let mut nodes = vec![
+            (
+                [
+                    f64::INFINITY,
+                    f64::INFINITY,
+                    f64::NEG_INFINITY,
+                    f64::NEG_INFINITY
+                ],
+                0u64
+            );
+            total
+        ];
         for (k, &i) in order.iter().enumerate() {
             let b = boxes[i].unwrap_or([0.0; 4]);
             nodes[levels[0].start + k] = (b, offsets[k]);
@@ -771,7 +806,12 @@ pub fn write(layer: &Layer<'_>) -> Vec<u8> {
             let mut parent = levels[l + 1].start;
             while pos < end {
                 let mut node = (
-                    [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY],
+                    [
+                        f64::INFINITY,
+                        f64::INFINITY,
+                        f64::NEG_INFINITY,
+                        f64::NEG_INFINITY,
+                    ],
                     pos as u64,
                 );
                 for _ in 0..node_size {
@@ -960,7 +1000,10 @@ impl<'a> Table<'a> {
         };
         let at = self.buf.follow(p)?;
         let (n, first) = self.buf.vector(at, 4)?;
-        (0..n).map(|i| self.buf.u32(first + 4 * i)).collect::<R<_>>().map(Some)
+        (0..n)
+            .map(|i| self.buf.u32(first + 4 * i))
+            .collect::<R<_>>()
+            .map(Some)
     }
 
     fn table(&self, slot: usize) -> R<Option<Table<'a>>> {
@@ -1018,7 +1061,11 @@ fn coords(t: &Table<'_>, has: (bool, bool)) -> R<Vec<Coord>> {
 fn split(t: &Table<'_>, has: (bool, bool)) -> R<Vec<Vec<Coord>>> {
     let all = coords(t, has)?;
     let Some(ends) = t.u32s(0)? else {
-        return Ok(if all.is_empty() { Vec::new() } else { vec![all] });
+        return Ok(if all.is_empty() {
+            Vec::new()
+        } else {
+            vec![all]
+        });
     };
     let mut out = Vec::with_capacity(ends.len());
     let mut from = 0usize;
@@ -1103,7 +1150,11 @@ fn geometry_of(t: &Table<'_>, kind: u8, has: (bool, bool), depth: usize) -> R<Ge
                 .collect::<R<_>>()?,
         ),
         gt::UNKNOWN => return Err("geometrinin türü yok".into()),
-        k => return Err(format!("FlatGeobuf geometri türü {k} okunmuyor (çokyüzlü yüzey, TIN, üçgen)")),
+        k => {
+            return Err(format!(
+                "FlatGeobuf geometri türü {k} okunmuyor (çokyüzlü yüzey, TIN, üçgen)"
+            ));
+        }
     })
 }
 
@@ -1112,30 +1163,44 @@ fn geometry_of(t: &Table<'_>, kind: u8, has: (bool, bool), depth: usize) -> R<Ge
 fn properties(bytes: &[u8], columns: &[FgbColumn]) -> R<Vec<Value>> {
     let mut values = vec![Value::Null; columns.len()];
     let mut at = 0usize;
-    let get = |at: usize, n: usize| bytes.get(at..at + n).ok_or_else(|| bad("özelliklerin sonu"));
+    let get = |at: usize, n: usize| {
+        bytes
+            .get(at..at + n)
+            .ok_or_else(|| bad("özelliklerin sonu"))
+    };
     while at < bytes.len() {
         let i = u16::from_le_bytes(get(at, 2)?.try_into().map_err(|_| bad("özellik"))?) as usize;
         at += 2;
-        let c = columns.get(i).ok_or_else(|| bad("olmayan sütunun değeri"))?;
+        let c = columns
+            .get(i)
+            .ok_or_else(|| bad("olmayan sütunun değeri"))?;
         let fixed = |n: usize| -> R<&[u8]> { get(at, n) };
         let (v, n) = match c.kind {
             ColumnType::Bool => (Value::Integer(i64::from(fixed(1)?[0] != 0)), 1),
             ColumnType::Byte => (Value::Integer(i64::from(fixed(1)?[0] as i8)), 1),
             ColumnType::UByte => (Value::Integer(i64::from(fixed(1)?[0])), 1),
             ColumnType::Short => (
-                Value::Integer(i64::from(i16::from_le_bytes(fixed(2)?.try_into().unwrap_or_default()))),
+                Value::Integer(i64::from(i16::from_le_bytes(
+                    fixed(2)?.try_into().unwrap_or_default(),
+                ))),
                 2,
             ),
             ColumnType::UShort => (
-                Value::Integer(i64::from(u16::from_le_bytes(fixed(2)?.try_into().unwrap_or_default()))),
+                Value::Integer(i64::from(u16::from_le_bytes(
+                    fixed(2)?.try_into().unwrap_or_default(),
+                ))),
                 2,
             ),
             ColumnType::Int => (
-                Value::Integer(i64::from(i32::from_le_bytes(fixed(4)?.try_into().unwrap_or_default()))),
+                Value::Integer(i64::from(i32::from_le_bytes(
+                    fixed(4)?.try_into().unwrap_or_default(),
+                ))),
                 4,
             ),
             ColumnType::UInt => (
-                Value::Integer(i64::from(u32::from_le_bytes(fixed(4)?.try_into().unwrap_or_default()))),
+                Value::Integer(i64::from(u32::from_le_bytes(
+                    fixed(4)?.try_into().unwrap_or_default(),
+                ))),
                 4,
             ),
             ColumnType::Long => (
@@ -1150,7 +1215,9 @@ fn properties(bytes: &[u8], columns: &[FgbColumn]) -> R<Vec<Value>> {
                 )
             }
             ColumnType::Float => (
-                Value::Real(f64::from(f32::from_le_bytes(fixed(4)?.try_into().unwrap_or_default()))),
+                Value::Real(f64::from(f32::from_le_bytes(
+                    fixed(4)?.try_into().unwrap_or_default(),
+                ))),
                 4,
             ),
             ColumnType::Double => (
@@ -1176,7 +1243,12 @@ fn properties(bytes: &[u8], columns: &[FgbColumn]) -> R<Vec<Value>> {
 
 fn date_only(t: &str) -> bool {
     let b = t.as_bytes();
-    b.len() == 10 && b[4] == b'-' && b[7] == b'-' && b.iter().enumerate().all(|(i, c)| i == 4 || i == 7 || c.is_ascii_digit())
+    b.len() == 10
+        && b[4] == b'-'
+        && b[7] == b'-'
+        && b.iter()
+            .enumerate()
+            .all(|(i, c)| i == 4 || i == 7 || c.is_ascii_digit())
 }
 
 /// A table of a FlatGeobuf column as the import reads it: a date-time column holding only days is a date.
@@ -1329,11 +1401,23 @@ mod tests {
         let arc = Curve::Arc(vec![c(0.0, 0.0), c(1.0, 1.0), c(2.0, 0.0)]);
         let features = vec![
             (
-                Some(Geometry::Polygon(vec![Curve::Line(ring.clone()), Curve::Line(hole)])),
-                vec![Value::Text("Çağlayan".into()), Value::Integer(5), Value::Null],
+                Some(Geometry::Polygon(vec![
+                    Curve::Line(ring.clone()),
+                    Curve::Line(hole),
+                ])),
+                vec![
+                    Value::Text("Çağlayan".into()),
+                    Value::Integer(5),
+                    Value::Null,
+                ],
             ),
             (
-                Some(Geometry::Point(Some(Coord { x: 5.0, y: 6.0, z: Some(7.5), m: None }))),
+                Some(Geometry::Point(Some(Coord {
+                    x: 5.0,
+                    y: 6.0,
+                    z: Some(7.5),
+                    m: None,
+                }))),
                 vec![Value::Null, Value::Integer(-3), Value::Real(1.25)],
             ),
             (
@@ -1349,11 +1433,28 @@ mod tests {
             ),
         ];
         let columns = vec![
-            FgbColumn { name: "ad".into(), kind: ColumnType::String, width: Some(40) },
-            FgbColumn { name: "no".into(), kind: ColumnType::Long, width: None },
-            FgbColumn { name: "alan".into(), kind: ColumnType::Double, width: None },
+            FgbColumn {
+                name: "ad".into(),
+                kind: ColumnType::String,
+                width: Some(40),
+            },
+            FgbColumn {
+                name: "no".into(),
+                kind: ColumnType::Long,
+                width: None,
+            },
+            FgbColumn {
+                name: "alan".into(),
+                kind: ColumnType::Double,
+                width: None,
+            },
         ];
-        let bytes = write(&Layer { name: "parsel", srid: Some(5256), columns: &columns, features: &features });
+        let bytes = write(&Layer {
+            name: "parsel",
+            srid: Some(5256),
+            columns: &columns,
+            features: &features,
+        });
         let back = read(&bytes).expect("reads");
         assert_eq!(back.name, "parsel");
         assert_eq!(back.srid, Some(5256));
@@ -1363,7 +1464,12 @@ mod tests {
         // Every feature comes back, in the file's (Hilbert) order.
         for (g, v) in &features {
             assert!(
-                back.features.iter().any(|(bg, bv)| bg.as_ref().map(|r| r.as_ref().ok()) == Some(g.as_ref()) && bv == v),
+                back.features
+                    .iter()
+                    .any(
+                        |(bg, bv)| bg.as_ref().map(|r| r.as_ref().ok()) == Some(g.as_ref())
+                            && bv == v
+                    ),
                 "{g:?} {v:?}"
             );
         }
@@ -1372,8 +1478,17 @@ mod tests {
     #[test]
     fn a_feature_without_a_position_leaves_the_index_out() {
         let features = vec![(None, vec![Value::Integer(1)])];
-        let columns = vec![FgbColumn { name: "n".into(), kind: ColumnType::Long, width: None }];
-        let bytes = write(&Layer { name: "kayit", srid: None, columns: &columns, features: &features });
+        let columns = vec![FgbColumn {
+            name: "n".into(),
+            kind: ColumnType::Long,
+            width: None,
+        }];
+        let bytes = write(&Layer {
+            name: "kayit",
+            srid: None,
+            columns: &columns,
+            features: &features,
+        });
         let back = read(&bytes).expect("reads");
         assert!(!back.indexed);
         assert_eq!(back.features, vec![(None, vec![Value::Integer(1)])]);
@@ -1383,7 +1498,12 @@ mod tests {
     fn a_broken_file_is_refused() {
         assert!(read(b"not a file at all").is_err());
         let features = vec![(Some(Geometry::Point(Some(c(1.0, 2.0)))), vec![])];
-        let bytes = write(&Layer { name: "n", srid: None, columns: &[], features: &features });
+        let bytes = write(&Layer {
+            name: "n",
+            srid: None,
+            columns: &[],
+            features: &features,
+        });
         for cut in [9, 20, bytes.len() - 3] {
             assert!(read(&bytes[..cut]).is_err(), "cut at {cut}");
         }

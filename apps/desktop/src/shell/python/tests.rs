@@ -1383,20 +1383,34 @@ fn an_agent_stays_on_its_drawing_when_another_comes_in_front() {
     .expect("the link");
     app.python.link = Some(open);
     let (answerer, answers) = super::link::Answerer::testing();
-    let _ = app.update(Message::Python(Event::Agent(super::link::Heard::Connected(7, answerer))));
+    let _ = app.update(Message::Python(Event::Agent(
+        super::link::Heard::Connected(7, answerer),
+    )));
     let hello = ask_agent(&mut app, &answers, "hello", json!({}));
     let mine = hello["result"]["document"].clone();
     assert!(mine.is_u64(), "{hello}");
-    let layer = app.document.as_ref().map(|d| d.model.layers().active().to_owned()).expect("a layer");
+    let layer = app
+        .document
+        .as_ref()
+        .map(|d| d.model.layers().active().to_owned())
+        .expect("a layer");
     let before = objects(&app);
 
     // Another drawing in front, the agent's in its tab.
     assert!(app.park_active());
-    let _ = app.update(Message::Opened(Some(Ok(Box::new(crate::files_testing::drawing(3))))));
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(
+        crate::files_testing::drawing(3),
+    )))));
     let front = objects(&app);
     let listed = ask_agent(&mut app, &answers, "hello", json!({}));
-    assert_eq!(listed["result"]["documents"].as_array().map(Vec::len), Some(2), "{listed}");
-    let input: Value = serde_json::from_str(&format!(r#"{{"layerId": "{layer}", "pts": {SQUARE}}}"#)).expect("input");
+    assert_eq!(
+        listed["result"]["documents"].as_array().map(Vec::len),
+        Some(2),
+        "{listed}"
+    );
+    let input: Value =
+        serde_json::from_str(&format!(r#"{{"layerId": "{layer}", "pts": {SQUARE}}}"#))
+            .expect("input");
     let written = ask_agent(
         &mut app,
         &answers,
@@ -1409,12 +1423,25 @@ fn an_agent_stays_on_its_drawing_when_another_comes_in_front() {
 
     // Selection belongs to that drawing too, including while it is parked.
     let uid = written["result"]["output"]["uid"].clone();
-    let selected = ask_agent(&mut app, &answers, "select", json!({"document":mine,"uids":[uid,uid]}));
+    let selected = ask_agent(
+        &mut app,
+        &answers,
+        "select",
+        json!({"document":mine,"uids":[uid,uid]}),
+    );
     assert_eq!(selected["result"], 1, "{selected}");
-    assert!(app.selection.is_empty(), "the foreground drawing's selection is untouched");
+    assert!(
+        app.selection.is_empty(),
+        "the foreground drawing's selection is untouched"
+    );
     let selected = ask_agent(&mut app, &answers, "selection", json!({"document":mine}));
     assert_eq!(selected["result"], json!([uid]));
-    let bad = ask_agent(&mut app, &answers, "select", json!({"document":mine,"uids":[uid,17]}));
+    let bad = ask_agent(
+        &mut app,
+        &answers,
+        "select",
+        json!({"document":mine,"uids":[uid,17]}),
+    );
     assert_eq!(bad["code"], "invalid_input", "{bad}");
     let selected = ask_agent(&mut app, &answers, "selection", json!({"document":mine}));
     assert_eq!(selected["result"], json!([uid]));
@@ -1765,18 +1792,33 @@ fn a_real_agents_extension_tool_runs_as_a_job_through_mcp() {
 #[test]
 fn the_console_is_ready_only_once_its_python_says_so() {
     let mut app = app_with_drawing();
-    assert!(app.python.greeting().starts_with("Python henüz başlatılmadı"), "{}", app.python.greeting());
+    assert!(
+        app.python
+            .greeting()
+            .starts_with("Python henüz başlatılmadı"),
+        "{}",
+        app.python.greeting()
+    );
     let id = running(&mut app);
     let generation = app.python.generation;
     let _ = app.update(Message::Python(Event::Host(generation, Said::Closed)));
     let said: Vec<(EntryKind, String)> = entries(&app);
     let last = said.last().expect("a line").1.clone();
-    assert!(last.contains("Python başlatılamadı") && last.contains("Python ve eklentiler"), "{last}");
-    assert!(!last.contains("pnpm") && !last.contains("beklenmedik"), "{last}");
+    assert!(
+        last.contains("Python başlatılamadı") && last.contains("Python ve eklentiler"),
+        "{last}"
+    );
+    assert!(
+        !last.contains("pnpm") && !last.contains("beklenmedik"),
+        "{last}"
+    );
     assert!(app.python.running.is_none(), "the run {id} ended");
     // Said ready, it is ready.
     app.python.ready = Some("Python 3.14 · kentos 0.1.0".into());
-    assert_eq!(app.python.greeting(), "Python oturumunuz hazır (Python 3.14 · kentos 0.1.0).");
+    assert_eq!(
+        app.python.greeting(),
+        "Python oturumunuz hazır (Python 3.14 · kentos 0.1.0)."
+    );
 }
 
 /// GIS-021 (docs/adr/1083): a CBS project's console offers an example that reads its layers and changes nothing; a CAD
@@ -1790,11 +1832,16 @@ fn the_consoles_first_example_fits_the_project() {
     let mut settings = doc.settings().clone();
     settings.workspace = Some(kentos_commands::Workspace::Gis);
     doc.model.set_settings(settings);
-    assert_eq!(app.python_example(), "print([k.name for k in doc.layers()])");
+    assert_eq!(
+        app.python_example(),
+        "print([k.name for k in doc.layers()])"
+    );
     if std::env::var_os("KENTOS_SHOTS").is_some() {
         let _ = app.update(Message::Run(crate::catalog::PYTHON_CONSOLE));
         let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+            drop(app.update(m))
+        });
         crate::files_testing::evidence(&mut shot, &app, "gis-018-021", "cbs-python-konsolu");
     }
 }

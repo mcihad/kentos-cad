@@ -53,8 +53,7 @@ type Row = (
     Option<String>,
 );
 
-const SELECT: &str =
-    "select id, name, media_type, size, sha256, blob_key, created_at, received_at, scan, scan_note from kentos.upload";
+const SELECT: &str = "select id, name, media_type, size, sha256, blob_key, created_at, received_at, scan, scan_note from kentos.upload";
 
 fn view_of(row: &Row, arrived: u64) -> UploadView {
     let (id, name, media_type, size, sha256, _, created, received, scan, scan_note) = row;
@@ -89,7 +88,10 @@ fn sha256_of(text: &str) -> AppResult<String> {
     if t.len() == 64 && t.bytes().all(|b| b.is_ascii_hexdigit()) {
         Ok(t)
     } else {
-        Err(AppError::invalid_at("sha256", "SHA-256 64 onaltılık rakam olmalı."))
+        Err(AppError::invalid_at(
+            "sha256",
+            "SHA-256 64 onaltılık rakam olmalı.",
+        ))
     }
 }
 
@@ -99,7 +101,10 @@ pub async fn begin(db: &Db, actor: &Actor, input: UploadBegin) -> AppResult<Uplo
     if input.size == 0 || input.size > UPLOAD_MAX {
         return Err(AppError::invalid_at(
             "size",
-            format!("Dosya 1 bayt ile {} MiB arasında olmalı.", UPLOAD_MAX / (1024 * 1024)),
+            format!(
+                "Dosya 1 bayt ile {} MiB arasında olmalı.",
+                UPLOAD_MAX / (1024 * 1024)
+            ),
         ));
     }
     let sha256 = sha256_of(&input.sha256)?;
@@ -135,7 +140,12 @@ pub async fn begin(db: &Db, actor: &Actor, input: UploadBegin) -> AppResult<Uplo
     Ok(view_of(&row, 0))
 }
 
-async fn own(tx: &mut Transaction<'static, Postgres>, actor: &Actor, id: Uuid, lock: bool) -> AppResult<Row> {
+async fn own(
+    tx: &mut Transaction<'static, Postgres>,
+    actor: &Actor,
+    id: Uuid,
+    lock: bool,
+) -> AppResult<Row> {
     sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "{SELECT} where id = $1 and user_id = $2{}",
         if lock { " for update" } else { "" }
@@ -159,12 +169,13 @@ pub async fn view(db: &Db, blobs: &Blobs, actor: &Actor, id: Uuid) -> AppResult<
 /// `DELETE /v1/uploads/{id}`.
 pub async fn cancel(db: &Db, blobs: &Blobs, actor: &Actor, id: Uuid) -> AppResult<()> {
     let mut tx = db.scoped(user_scope(actor)).await?;
-    let key: Option<String> =
-        sqlx::query_scalar("delete from kentos.upload where id = $1 and user_id = $2 returning blob_key")
-            .bind(id)
-            .bind(actor.user_id)
-            .fetch_optional(&mut *tx)
-            .await?;
+    let key: Option<String> = sqlx::query_scalar(
+        "delete from kentos.upload where id = $1 and user_id = $2 returning blob_key",
+    )
+    .bind(id)
+    .bind(actor.user_id)
+    .fetch_optional(&mut *tx)
+    .await?;
     tx.commit().await?;
     let key = key.ok_or_else(gone)?;
     let _ = blobs.remove(&key).await;
@@ -203,7 +214,9 @@ pub async fn receive(
     if offset != arrived {
         return Err(AppError::invalid_at(
             "offset",
-            format!("Yüklemenin {arrived} baytı geldi; sonraki parça {arrived}. bayttan başlamalı ({offset} değil)."),
+            format!(
+                "Yüklemenin {arrived} baytı geldi; sonraki parça {arrived}. bayttan başlamalı ({offset} değil)."
+            ),
         ));
     }
     if arrived + bytes.len() as u64 > size {
@@ -298,7 +311,11 @@ pub struct Taken {
 }
 
 /// Takes the caller's received upload `id` in `tx`; its object is still at `key` until the destination moves it.
-pub async fn take(tx: &mut Transaction<'static, Postgres>, actor: &Actor, id: &str) -> AppResult<Taken> {
+pub async fn take(
+    tx: &mut Transaction<'static, Postgres>,
+    actor: &Actor,
+    id: &str,
+) -> AppResult<Taken> {
     let id = Uuid::parse_str(id.trim()).map_err(|_| gone().at("uploadId"))?;
     let row: Row = sqlx::query_as(sqlx::AssertSqlSafe(format!(
         "with taken as (delete from kentos.upload where id = $1 and user_id = $2 returning *) {}",
@@ -330,14 +347,22 @@ pub async fn take(tx: &mut Transaction<'static, Postgres>, actor: &Actor, id: &s
 }
 
 /// A refusal written to the platform's event log as the sender's; what the sender is told.
-pub async fn refused(db: &Db, actor: &Actor, name: &str, refusal: &Refusal, place: &str) -> AppError {
+pub async fn refused(
+    db: &Db,
+    actor: &Actor,
+    name: &str,
+    refusal: &Refusal,
+    place: &str,
+) -> AppError {
     let reason = match refusal {
         Refusal::Blocked(why) | Refusal::Infected(why) => why.clone(),
     };
     if let Ok(mut tx) = db.scoped(user_scope(actor)).await {
         let logged = sqlx::query("select kentos.log_refused_file($1, $2)")
             .bind(name)
-            .bind(serde_json::json!({ "verdict": refusal.code(), "reason": reason, "place": place }))
+            .bind(
+                serde_json::json!({ "verdict": refusal.code(), "reason": reason, "place": place }),
+            )
             .execute(&mut *tx)
             .await;
         if logged.is_ok() {

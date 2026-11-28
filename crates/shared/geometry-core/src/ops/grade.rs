@@ -45,7 +45,14 @@ fn edge_length(pts: &[Vec2], bulges: Option<&[f64]>, i: usize) -> f64 {
 
 /// The range's elevations, or why not: `from` < `to` within the path's vertices, a range of positive length, finite
 /// numbers.
-pub fn grade(pts: &[Vec2], bulges: Option<&[f64]>, from: usize, to: usize, start: f64, target: Target) -> Result<Graded, &'static str> {
+pub fn grade(
+    pts: &[Vec2],
+    bulges: Option<&[f64]>,
+    from: usize,
+    to: usize,
+    start: f64,
+    target: Target,
+) -> Result<Graded, &'static str> {
     if !(from < to && to < pts.len()) {
         return Err("range");
     }
@@ -79,7 +86,12 @@ pub fn grade(pts: &[Vec2], bulges: Option<&[f64]>, from: usize, to: usize, start
     if let Some(last) = zs.last_mut() {
         *last = end;
     }
-    Ok(Graded { zs, length: s, end, grade: g })
+    Ok(Graded {
+        zs,
+        length: s,
+        end,
+        grade: g,
+    })
 }
 
 /// Where the high or low point falls (docs/adr/3380).
@@ -190,10 +202,27 @@ pub fn peak(
             Some(arc) => {
                 let angle = arc.a0 + arc.sweep * t;
                 let p = Vec2::new(arc.c.x + arc.r * cos(angle), arc.c.y + arc.r * sin(angle));
-                let halves = [bulge_of_sweep(arc.sweep * t), bulge_of_sweep(arc.sweep * (1.0 - t))];
-                (PeakAt::Edge { edge: i, bulges: halves }, s, p)
+                let halves = [
+                    bulge_of_sweep(arc.sweep * t),
+                    bulge_of_sweep(arc.sweep * (1.0 - t)),
+                ];
+                (
+                    PeakAt::Edge {
+                        edge: i,
+                        bulges: halves,
+                    },
+                    s,
+                    p,
+                )
             }
-            None => (PeakAt::Edge { edge: i, bulges: [0.0, 0.0] }, s, Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)),
+            None => (
+                PeakAt::Edge {
+                    edge: i,
+                    bulges: [0.0, 0.0],
+                },
+                s,
+                Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t),
+            ),
         }
     };
     let z = start + ahead * along_at;
@@ -216,7 +245,15 @@ pub fn peak(
     } else {
         PeakKind::Break
     };
-    Ok(Peaked { zs, length, at, along: along_at, p, z, kind })
+    Ok(Peaked {
+        zs,
+        length,
+        at,
+        along: along_at,
+        p,
+        z,
+        kind,
+    })
 }
 
 #[cfg(test)]
@@ -232,12 +269,23 @@ mod tests {
         // 0 → 30 → 70 along; start 850, end 850.625; 1/16 ahead, 1/32 back meet at 30, the middle vertex.
         let pts = [v(0.0, 0.0), v(30.0, 0.0), v(30.0, 40.0)];
         let at = peak(&pts, None, 0, 2, 850.0, 850.625, 0.0625, 0.03125).expect("a point");
-        assert_eq!((at.at, at.along, at.z, at.kind), (PeakAt::Vertex(1), 30.0, 851.875, PeakKind::High));
+        assert_eq!(
+            (at.at, at.along, at.z, at.kind),
+            (PeakAt::Vertex(1), 30.0, 851.875, PeakKind::High)
+        );
         assert_eq!(at.zs, vec![850.0, 851.875, 850.625]);
         // A low point inside the second edge: (850.625 − 850 − 0.03125·70)/(−0.0625 − 0.03125) = 16.666…
         let low = peak(&pts, None, 0, 2, 850.0, 850.625, -0.0625, -0.03125).expect("a point");
         let s = (0.625 - 0.03125 * 70.0) / -0.09375;
-        assert!(matches!(low.at, PeakAt::Edge { edge: 0, bulges: [0.0, 0.0] }) && low.kind == PeakKind::Low);
+        assert!(
+            matches!(
+                low.at,
+                PeakAt::Edge {
+                    edge: 0,
+                    bulges: [0.0, 0.0]
+                }
+            ) && low.kind == PeakKind::Low
+        );
         assert!((low.along - s).abs() < 1e-12 && (low.p.x - s).abs() < 1e-12 && low.p.y == 0.0);
         assert_eq!(low.zs.len(), 3);
     }
@@ -252,22 +300,52 @@ mod tests {
         let s = length / 4.0;
         let end = start + ahead * s - back * (length - s);
         let at = peak(&pts, Some(&[1.0, 0.0]), 0, 1, start, end, ahead, back).expect("a point");
-        let PeakAt::Edge { edge: 0, bulges: [b1, b2] } = at.at else { panic!("{:?}", at.at) };
+        let PeakAt::Edge {
+            edge: 0,
+            bulges: [b1, b2],
+        } = at.at
+        else {
+            panic!("{:?}", at.at)
+        };
         assert!((at.along - s).abs() < 1e-9);
-        assert!((js_hypot(at.p.x - 10.0, at.p.y) - 10.0).abs() < 1e-9, "on the circle");
+        assert!(
+            (js_hypot(at.p.x - 10.0, at.p.y) - 10.0).abs() < 1e-9,
+            "on the circle"
+        );
         // Bulge 1 sweeps π: a quarter is π/4, its bulge tan(π/16); the rest tan(3π/16).
         let pi = crate::jsmath::PI;
-        assert!((b1 - crate::jsmath::tan(pi / 16.0)).abs() < 1e-12 && (b2 - crate::jsmath::tan(3.0 * pi / 16.0)).abs() < 1e-12, "{b1} {b2}");
+        assert!(
+            (b1 - crate::jsmath::tan(pi / 16.0)).abs() < 1e-12
+                && (b2 - crate::jsmath::tan(3.0 * pi / 16.0)).abs() < 1e-12,
+            "{b1} {b2}"
+        );
     }
 
     #[test]
     fn no_point_where_the_grades_do_not_meet_inside() {
         let pts = [v(0.0, 0.0), v(30.0, 0.0), v(30.0, 40.0)];
-        assert_eq!(peak(&pts, None, 0, 2, 850.0, 851.0, 0.02, -0.02), Err(NoPeak::Parallel));
+        assert_eq!(
+            peak(&pts, None, 0, 2, 850.0, 851.0, 0.02, -0.02),
+            Err(NoPeak::Parallel)
+        );
         // At the end: end = start + ahead·L.
-        assert_eq!(peak(&pts, None, 0, 2, 850.0, 854.375, 0.0625, 0.03125), Err(NoPeak::Outside { along: 70.0, length: 70.0 }));
-        assert!(matches!(peak(&pts, None, 0, 2, 850.0, 851.0, 0.05, -0.03), Err(NoPeak::Outside { along, .. }) if (along + 55.0).abs() < 1e-9));
-        assert_eq!(peak(&pts, None, 2, 1, 850.0, 851.0, 0.01, 0.01), Err(NoPeak::Range));
-        assert_eq!(peak(&pts, None, 0, 2, f64::NAN, 851.0, 0.01, 0.01), Err(NoPeak::Number));
+        assert_eq!(
+            peak(&pts, None, 0, 2, 850.0, 854.375, 0.0625, 0.03125),
+            Err(NoPeak::Outside {
+                along: 70.0,
+                length: 70.0
+            })
+        );
+        assert!(
+            matches!(peak(&pts, None, 0, 2, 850.0, 851.0, 0.05, -0.03), Err(NoPeak::Outside { along, .. }) if (along + 55.0).abs() < 1e-9)
+        );
+        assert_eq!(
+            peak(&pts, None, 2, 1, 850.0, 851.0, 0.01, 0.01),
+            Err(NoPeak::Range)
+        );
+        assert_eq!(
+            peak(&pts, None, 0, 2, f64::NAN, 851.0, 0.01, 0.01),
+            Err(NoPeak::Number)
+        );
     }
 }

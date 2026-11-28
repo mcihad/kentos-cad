@@ -38,7 +38,9 @@ pub(super) fn read(
     let mut entities = Vec::new();
     let mut next_id = 1u32;
     source
-        .features(&data.table, &request, &Cancel::new(), &mut |part: Vec<Feature>| {
+        .features(&data.table, &request, &Cancel::new(), &mut |part: Vec<
+            Feature,
+        >| {
             for f in part {
                 let attrs: serde_json::Map<String, serde_json::Value> = columns
                     .iter()
@@ -54,7 +56,9 @@ pub(super) fn read(
                     },
                     None => g.clone(),
                 };
-                if let Some(e) = kentos_native_application::geopackage::object_of(&g, &node.id, next_id, attrs) {
+                if let Some(e) =
+                    kentos_native_application::geopackage::object_of(&g, &node.id, next_id, attrs)
+                {
                     next_id = next_id.wrapping_add(1);
                     entities.push(e);
                 }

@@ -2,11 +2,11 @@
 //! surfaces alone, and so does the screen while Yeni proje is open again over it; a CBS project made next shows its
 //! own. It spans two modules, so it runs with every module registered (docs/adr/9199 §4.2).
 
+use crate::app::{App, Dialog, Message};
+use crate::project::wizard::Event;
+use crate::project::{Event as ProjectEvent, Window};
 use kentos_commands::Workspace;
 use kentos_project::wizard::Step;
-use crate::project::wizard::Event;
-use crate::app::{App, Dialog, Message};
-use crate::project::{Event as ProjectEvent, Window};
 
 const PLAN: usize = 1;
 
@@ -39,7 +39,15 @@ fn a_new_project_shows_its_modules_surfaces_alone_and_so_does_the_next() {
     use kentos_launch::Module;
     let (mut app, _) = App::boot(None);
     assert_eq!(app.active_module(), None);
-    assert_eq!(app.bottom_tabs(), [BottomTab::History, BottomTab::Works, BottomTab::Messages, BottomTab::Python]);
+    assert_eq!(
+        app.bottom_tabs(),
+        [
+            BottomTab::History,
+            BottomTab::Works,
+            BottomTab::Messages,
+            BottomTab::Python
+        ]
+    );
     // A map's project on real coordinates.
     open(&mut app);
     send(&mut app, Event::Type(Workspace::Cad));
@@ -51,12 +59,18 @@ fn a_new_project_shows_its_modules_surfaces_alone_and_so_does_the_next() {
     send(&mut app, Event::Next);
     assert_eq!(app.active_module(), Some(Module::Map));
     let map_tabs = app.bottom_tabs();
-    assert!(map_tabs.contains(&BottomTab::CadInspection) && !map_tabs.contains(&BottomTab::Chart), "{map_tabs:?}");
+    assert!(
+        map_tabs.contains(&BottomTab::CadInspection) && !map_tabs.contains(&BottomTab::Chart),
+        "{map_tabs:?}"
+    );
     assert!(app.docks.contains(Panel::Sources) && !app.docks.contains(Panel::Navigator));
     // Yeni proje again: the screen behind it is still the map's.
     open(&mut app);
     assert_eq!(app.bottom_tabs(), map_tabs);
-    assert!(!app.offers("tool.wall"), "no building's command over a map's project");
+    assert!(
+        !app.offers("tool.wall"),
+        "no building's command over a map's project"
+    );
     // A CBS project made: its module's surfaces alone.
     send(&mut app, Event::Type(Workspace::Gis));
     send(&mut app, Event::Next);
@@ -65,7 +79,10 @@ fn a_new_project_shows_its_modules_surfaces_alone_and_so_does_the_next() {
     let _ = app.update(Message::Swallowed);
     assert_eq!(app.active_module(), Some(Module::Gis));
     let gis_tabs = app.bottom_tabs();
-    assert!(!gis_tabs.contains(&BottomTab::CadInspection) && !gis_tabs.contains(&BottomTab::Audit), "{gis_tabs:?}");
+    assert!(
+        !gis_tabs.contains(&BottomTab::CadInspection) && !gis_tabs.contains(&BottomTab::Audit),
+        "{gis_tabs:?}"
+    );
     assert!(gis_tabs.contains(&BottomTab::Chart));
     assert!(!app.docks.contains(Panel::Blocks) && app.docks.contains(Panel::Processing));
     assert!(!app.shows_aid("view.lineWeights"));

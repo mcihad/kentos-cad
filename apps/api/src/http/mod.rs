@@ -3,33 +3,33 @@
 
 // Programs signing in with bearer tokens; an account's sessions and tokens (docs/adr/9000 §12).
 pub mod access;
-pub mod attachments;
-pub mod download;
-pub mod openapi;
-pub mod uploads;
 #[cfg(test)]
 mod access_tests;
 #[cfg(test)]
-mod cloud_files_tests;
-#[cfg(test)]
-mod delivery_tests;
-#[cfg(test)]
 mod addresses_tests;
+pub mod attachments;
 pub mod auth;
 #[cfg(test)]
 mod catalog_tests;
 pub mod checkpoints;
+#[cfg(test)]
+mod checkpoints_tests;
+#[cfg(test)]
+mod cloud_files_tests;
+#[cfg(test)]
+mod compose_tests;
+#[cfg(test)]
+mod delivery_tests;
+pub mod download;
+pub mod error;
 pub mod job_inputs;
 pub mod jobs;
 #[cfg(test)]
 mod jobs_audit_tests;
 #[cfg(test)]
 mod jobs_tests;
-#[cfg(test)]
-mod checkpoints_tests;
-#[cfg(test)]
-mod compose_tests;
-pub mod error;
+pub mod openapi;
+pub mod uploads;
 // The extension catalog's release flow (docs/adr/8059 §10).
 pub mod extension_catalog;
 #[cfg(test)]
@@ -43,13 +43,13 @@ pub mod invitations;
 #[cfg(test)]
 mod invitations_tests;
 pub mod limit;
-pub mod signup_guard;
 #[cfg(test)]
 mod native_tests;
 #[cfg(test)]
 mod networks_tests;
 #[cfg(test)]
 mod people_tests;
+pub mod signup_guard;
 // The cloud portal (docs/adr/9000).
 pub mod portal;
 pub mod projects;
@@ -167,7 +167,10 @@ pub fn router(state: AppState) -> Router {
         .route("/v1/auth/token", post(access::token))
         .route("/v1/me/sessions", get(access::sessions))
         .route("/v1/me/sessions/{id}", delete(access::end_session))
-        .route("/v1/me/tokens", get(access::tokens).post(access::create_token))
+        .route(
+            "/v1/me/tokens",
+            get(access::tokens).post(access::create_token),
+        )
         .route("/v1/me/tokens/{id}", delete(access::revoke_token))
         .route("/v1/auth/oidc/start", get(auth::oidc_start))
         .route("/v1/auth/oidc/callback", get(auth::oidc_callback))
@@ -408,7 +411,9 @@ pub fn router(state: AppState) -> Router {
     let parts = Router::new()
         .route(
             "/v1/uploads/{id}",
-            put(uploads::receive).get(uploads::view).delete(uploads::cancel),
+            put(uploads::receive)
+                .get(uploads::view)
+                .delete(uploads::cancel),
         )
         .layer(part_layers);
     api.merge(uploads)

@@ -14,16 +14,16 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{container, row};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use std::path::PathBuf;
 
 use kentos_commands::{
-    CommandWarning, StakeSide, StakeoutDistances, StakeoutQueried, StakeoutQuery, StakeoutSend, StakeoutSendFormat,
-    WorkbookFormat,
+    CommandWarning, StakeSide, StakeoutDistances, StakeoutQueried, StakeoutQuery, StakeoutSend,
+    StakeoutSendFormat, WorkbookFormat,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_stakeout, road_stakeout_send};
@@ -102,7 +102,9 @@ fn number(text: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().map(Some).map_err(|_| format!("“{t}” bir sayı değil (ondalık ayırıcı nokta)."))
+    t.parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("“{t}” bir sayı değil (ondalık ayırıcı nokta)."))
 }
 
 fn grouped(v: f64, digits: usize) -> String {
@@ -115,16 +117,28 @@ fn grouped(v: f64, digits: usize) -> String {
         }
         out.push(c);
     }
-    let sign = if v < 0.0 && text.chars().any(|c| c.is_ascii_digit() && c != '0') { "−" } else { "" };
-    if fraction.is_empty() { format!("{sign}{out}") } else { format!("{sign}{out},{fraction}") }
+    let sign = if v < 0.0 && text.chars().any(|c| c.is_ascii_digit() && c != '0') {
+        "−"
+    } else {
+        ""
+    };
+    if fraction.is_empty() {
+        format!("{sign}{out}")
+    } else {
+        format!("{sign}{out},{fraction}")
+    }
 }
 
 impl Window {
     /// The query as typed, or why it is not one.
     fn query(&self) -> Result<StakeoutQuery, String> {
         let corridor = self.corridor.clone().ok_or("Bir koridor seçin.")?;
-        let codes: Vec<String> =
-            self.fields[3].split([',', ' ', ';']).map(str::trim).filter(|c| !c.is_empty()).map(str::to_owned).collect();
+        let codes: Vec<String> = self.fields[3]
+            .split([',', ' ', ';'])
+            .map(str::trim)
+            .filter(|c| !c.is_empty())
+            .map(str::to_owned)
+            .collect();
         Ok(StakeoutQuery {
             corridor,
             from: number(&self.fields[0])?,
@@ -140,7 +154,10 @@ impl Window {
         let q = self.query()?;
         let first = match self.send_fields[0].trim() {
             "" => None,
-            t => Some(t.parse::<u32>().map_err(|_| format!("“{t}” bir nokta numarası değil."))?),
+            t => Some(
+                t.parse::<u32>()
+                    .map_err(|_| format!("“{t}” bir nokta numarası değil."))?,
+            ),
         };
         let job = self.send_fields[1].trim();
         Ok(StakeoutSend {
@@ -232,17 +249,29 @@ impl StakeoutWindowApp for App {
             }
             Event::Write => {
                 let Some(table) = &w.preview.table else {
-                    let why = w.preview.why.clone().unwrap_or_else(|| "Bir koridor seçin.".into());
+                    let why = w
+                        .preview
+                        .why
+                        .clone()
+                        .unwrap_or_else(|| "Bir koridor seçin.".into());
                     self.warn(format!("Cetvel yazılamaz: {why}"));
                     return Task::none();
                 };
                 let name = format!("{} aplikasyon cetveli", table.name);
                 // Docs/adr/1038: the sources it was computed from and when it was written, as a sheet beside it.
-                let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs());
-                let written = crate::cloud::local_time::iso_local(i64::try_from(now).unwrap_or(0), crate::cloud::local_time::Zone::system())
-                    .replace('T', " ");
+                let now = std::time::SystemTime::now()
+                    .duration_since(std::time::UNIX_EPOCH)
+                    .map_or(0, |d| d.as_secs());
+                let written = crate::cloud::local_time::iso_local(
+                    i64::try_from(now).unwrap_or(0),
+                    crate::cloud::local_time::Zone::system(),
+                )
+                .replace('T', " ");
                 return crate::table_write::save(
-                    vec![road_stakeout::sheet(table), road_stakeout::sources_sheet(table, &written)],
+                    vec![
+                        road_stakeout::sheet(table),
+                        road_stakeout::sources_sheet(table, &written),
+                    ],
                     w.format,
                     name,
                 );
@@ -261,7 +290,13 @@ impl StakeoutWindowApp for App {
                     return Task::none();
                 }
                 let (ext, name) = road_stakeout_send::extension(w.send);
-                let file = format!("{} aplikasyon.{ext}", w.preview.table.as_ref().map_or("Koridor", |t| t.name.as_str()));
+                let file = format!(
+                    "{} aplikasyon.{ext}",
+                    w.preview
+                        .table
+                        .as_ref()
+                        .map_or("Koridor", |t| t.name.as_str())
+                );
                 let filter = format!("{name} (.{ext})");
                 return Task::perform(
                     async move {
@@ -307,12 +342,29 @@ impl StakeoutWindowApp for App {
                 return;
             }
         };
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         let result = road_stakeout_send::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            let strings = if out.strings > 0 { format!(", {} dizi", out.strings) } else { String::new() };
-            let left = if out.left.is_empty() { String::new() } else { format!(", {} nokta taşınamadı", out.left.len()) };
-            self.say(Level::Success, format!("{name} yazıldı: {} nokta{strings}{left} ({}).", out.points, path.display()));
+            let strings = if out.strings > 0 {
+                format!(", {} dizi", out.strings)
+            } else {
+                String::new()
+            };
+            let left = if out.left.is_empty() {
+                String::new()
+            } else {
+                format!(", {} nokta taşınamadı", out.left.len())
+            };
+            self.say(
+                Level::Success,
+                format!(
+                    "{name} yazıldı: {} nokta{strings}{left} ({}).",
+                    out.points,
+                    path.display()
+                ),
+            );
         }
     }
 
@@ -320,28 +372,44 @@ impl StakeoutWindowApp for App {
         let Some(w) = &self.modules.road().stakeout_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
-        let corridors: Vec<(String, String)> = self
-            .document
-            .as_ref()
-            .map_or_else(Vec::new, |d| d.model.road_corridors().iter().map(|c| (c.id.clone(), c.name.clone())).collect());
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
+        let corridors: Vec<(String, String)> = self.document.as_ref().map_or_else(Vec::new, |d| {
+            d.model
+                .road_corridors()
+                .iter()
+                .map(|c| (c.id.clone(), c.name.clone()))
+                .collect()
+        });
         let ids: Vec<String> = corridors.iter().map(|c| c.0.clone()).collect();
         let on_corridor = Select::new(
             corridors.iter().map(|c| Choice::new(c.1.clone())),
-            w.corridor.as_ref().and_then(|c| ids.iter().position(|i| i == c)),
+            w.corridor
+                .as_ref()
+                .and_then(|c| ids.iter().position(|i| i == c)),
             move |i| msg(Event::Corridor(ids[i].clone())),
         )
         .placeholder("Koridor");
-        let kinds = [(StakeoutDistances::Grid, "Plan boyu"), (StakeoutDistances::Ground, "Plan ve zemin boyu")];
+        let kinds = [
+            (StakeoutDistances::Grid, "Plan boyu"),
+            (StakeoutDistances::Ground, "Plan ve zemin boyu"),
+        ];
         let on_kind = Select::new(
             kinds.iter().map(|k| Choice::new(k.1.to_owned())),
             kinds.iter().position(|k| k.0 == w.distances),
             move |i| msg(Event::Distances(kinds[i].0)),
         );
         let field = |hint: &'static str, k: usize, width: f32| {
-            kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width)
+            kentos_ui::widget::text_field(hint, &w.fields[k])
+                .on_input(move |t| msg(Event::Field(k, t)))
+                .width(width)
         };
         let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0);
         body = body.push(
@@ -350,7 +418,11 @@ impl StakeoutWindowApp for App {
                 words::field("Başlangıç km (m)", field("baştan", 0, 110.0), None),
                 words::field("Bitiş km (m)", field("sona", 1, 110.0), None),
                 words::field("Aralık (m)", field("koridorun km'leri", 2, 140.0), None),
-                words::field("Kodlar", field("hepsi (axis, hinge, daylight …)", 3, 260.0), None),
+                words::field(
+                    "Kodlar",
+                    field("hepsi (axis, hinge, daylight …)", 3, 260.0),
+                    None
+                ),
                 words::field("Öteleme", container(on_kind).width(170), None),
             ]
             .spacing(10)
@@ -381,23 +453,43 @@ impl StakeoutWindowApp for App {
                     src.surface.as_ref(),
                 );
                 for v in &src.volumes {
-                    said.push_str(&format!(", kübaj {} ({}{})", v.id, v.revision, if v.approved { ", onaylı" } else { "" }));
+                    said.push_str(&format!(
+                        ", kübaj {} ({}{})",
+                        v.id,
+                        v.revision,
+                        if v.approved { ", onaylı" } else { "" }
+                    ));
                 }
                 body = body.push(label::caption(said).style(muted));
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
-                let plan = crate::picture::picture(iced::widget::canvas(Plan { table: t }).width(Fill).height(Fill), TITLE);
+                let plan = crate::picture::picture(
+                    iced::widget::canvas(Plan { table: t })
+                        .width(Fill)
+                        .height(Fill),
+                    TITLE,
+                );
                 body = body.push_grow(
-                    row![container(plan).width(iced::Length::FillPortion(1)), container(rows_table(t)).width(iced::Length::FillPortion(2))].spacing(12).height(Fill),
+                    row![
+                        container(plan).width(iced::Length::FillPortion(1)),
+                        container(rows_table(t)).width(iced::Length::FillPortion(2))
+                    ]
+                    .spacing(12)
+                    .height(Fill),
                     typography::scaled(300.0),
                 );
             }
             _ => {}
         }
-        let formats: Vec<WorkbookFormat> = crate::table_write::FORMATS.iter().map(|c| c.format).collect();
+        let formats: Vec<WorkbookFormat> = crate::table_write::FORMATS
+            .iter()
+            .map(|c| c.format)
+            .collect();
         let format = Select::new(
-            crate::table_write::FORMATS.iter().map(|c| Choice::new(c.label.to_owned())),
+            crate::table_write::FORMATS
+                .iter()
+                .map(|c| Choice::new(c.label.to_owned())),
             formats.iter().position(|f| *f == w.format),
             move |i| msg(Event::Format(formats[i])),
         );
@@ -413,7 +505,9 @@ impl StakeoutWindowApp for App {
             "Noktalar sırayla numaralı; taşınamayan kod düşer."
         };
         let send_field = |hint: &'static str, k: usize, width: f32| {
-            kentos_ui::widget::text_field(hint, &w.send_fields[k]).on_input(move |t| msg(Event::SendField(k, t))).width(width)
+            kentos_ui::widget::text_field(hint, &w.send_fields[k])
+                .on_input(move |t| msg(Event::SendField(k, t)))
+                .width(width)
         };
         let mut line = row![
             words::field("Biçim", container(format).width(210), None),
@@ -424,7 +518,11 @@ impl StakeoutWindowApp for App {
         .spacing(8);
         if !landxml {
             line = line.push(words::field("İlk no", send_field("1", 0, 80.0), None));
-            line = line.push(words::field("İş adı", send_field("koridorun adı", 1, 140.0), None));
+            line = line.push(words::field(
+                "İş adı",
+                send_field("koridorun adı", 1, 140.0),
+                None,
+            ));
         }
         // Docs/adr/1031: what the heights sent are; a project that does not say it sends none.
         let heights = self
@@ -442,12 +540,24 @@ impl StakeoutWindowApp for App {
             None => label::caption("Projenin kotlarının düşey sistemi söylenmemiş: gönderilmez (Proje ayarları › Kotlar).").style(warn),
         };
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            line.push(words::primary(SEND, w.preview.table.as_ref().map(|_| msg(Event::Send))))
-                .push(container(iced::widget::column![label::caption(what).style(muted), said].spacing(2)).width(Fill))
-                .push(words::secondary(CLOSE, Some(msg(Event::Close))))
-                .align_y(iced::alignment::Vertical::Bottom);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
+        let footer = line
+            .push(words::primary(
+                SEND,
+                w.preview.table.as_ref().map(|_| msg(Event::Send)),
+            ))
+            .push(
+                container(
+                    iced::widget::column![label::caption(what).style(muted), said].spacing(2),
+                )
+                .width(Fill),
+            )
+            .push(words::secondary(CLOSE, Some(msg(Event::Close))))
+            .align_y(iced::alignment::Vertical::Bottom);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1180.0)
+            .modal(msg(Event::Close))
     }
 
     fn stakeout_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -471,7 +581,13 @@ impl StakeoutWindowApp for App {
 fn rows_table(t: &StakeoutQueried) -> Element<'_, Message> {
     use crate::road_dialog::{col, num};
     let ground = t.distances == StakeoutDistances::Ground;
-    let mut cols = vec![col("Km", 88.0), num("Bölge", 56.0), col("Kod", 110.0), col("Yan", 56.0), num("Öteleme (m)", 92.0)];
+    let mut cols = vec![
+        col("Km", 88.0),
+        num("Bölge", 56.0),
+        col("Kod", 110.0),
+        col("Yan", 56.0),
+        num("Öteleme (m)", 92.0),
+    ];
     if ground {
         cols.push(num("Zemin (m)", 84.0));
     }
@@ -486,9 +602,18 @@ fn rows_table(t: &StakeoutQueried) -> Element<'_, Message> {
                 StakeSide::Axis => "eksen",
                 StakeSide::Right => "sağ",
             };
-            let mut cells = vec![r.km_text.clone(), (r.region + 1).to_string(), r.code.clone(), side.to_owned(), grouped(r.offset, 3)];
+            let mut cells = vec![
+                r.km_text.clone(),
+                (r.region + 1).to_string(),
+                r.code.clone(),
+                side.to_owned(),
+                grouped(r.offset, 3),
+            ];
             if ground {
-                cells.push(r.ground_offset.map_or_else(|| "—".into(), |g| grouped(g, 3)));
+                cells.push(
+                    r.ground_offset
+                        .map_or_else(|| "—".into(), |g| grouped(g, 3)),
+                );
             }
             cells.extend([grouped(r.x, 3), grouped(r.y, 3), grouped(r.z, 3)]);
             cells
@@ -505,14 +630,26 @@ struct Plan<'a> {
 impl canvas::Program<Message> for Plan<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let rows = &self.table.rows;
         if rows.is_empty() {
             return vec![frame.into_geometry()];
         }
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for r in rows {
             x0 = x0.min(r.x);
             x1 = x1.max(r.x);
@@ -533,7 +670,10 @@ impl canvas::Program<Message> for Plan<'_> {
         let mut start = 0;
         while start < rows.len() {
             let key = (rows[start].station, rows[start].region);
-            let end = rows[start..].iter().position(|r| (r.station, r.region) != key).map_or(rows.len(), |n| start + n);
+            let end = rows[start..]
+                .iter()
+                .position(|r| (r.station, r.region) != key)
+                .map_or(rows.len(), |n| start + n);
             if end - start > 1 {
                 let line = Path::new(|b| {
                     b.move_to(at(rows[start].x, rows[start].y));
@@ -541,7 +681,12 @@ impl canvas::Program<Message> for Plan<'_> {
                         b.line_to(at(r.x, r.y));
                     }
                 });
-                frame.stroke(&line, Stroke::default().with_width(0.8).with_color(tk.border_strong()));
+                frame.stroke(
+                    &line,
+                    Stroke::default()
+                        .with_width(0.8)
+                        .with_color(tk.border_strong()),
+                );
             }
             start = end;
         }
@@ -551,7 +696,13 @@ impl canvas::Program<Message> for Plan<'_> {
                 StakeSide::Axis => tk.text,
                 StakeSide::Right => tk.warning,
             };
-            frame.fill(&Path::circle(at(r.x, r.y), if r.side == StakeSide::Axis { 2.6 } else { 2.0 }), color);
+            frame.fill(
+                &Path::circle(
+                    at(r.x, r.y),
+                    if r.side == StakeSide::Axis { 2.6 } else { 2.0 },
+                ),
+                color,
+            );
         }
         vec![frame.into_geometry()]
     }

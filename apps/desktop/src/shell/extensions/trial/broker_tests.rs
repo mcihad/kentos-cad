@@ -351,24 +351,44 @@ fn an_extension_reads_the_parcel_table_and_writes_it_only_as_granted() {
                         "input": { "uids": uids, "at": { "x": 100.0, "y": 0.0 } } });
     let mut panels = BTreeMap::new();
     let reader = rights(&[Capability::DocumentRead]);
-    let report = step(&mut made, &reader, &mut panels, &spec(Vec::new()), &mut |_, answer| {
-        let listed = answer("run", &json!({ "command": "cad.parcels.report", "op": "plan", "input": { "uids": uids } }))
+    let report = step(
+        &mut made,
+        &reader,
+        &mut panels,
+        &spec(Vec::new()),
+        &mut |_, answer| {
+            let listed = answer("run", &json!({ "command": "cad.parcels.report", "op": "plan", "input": { "uids": uids } }))
             .expect("it reads");
-        assert_eq!(listed["status"], "completed", "{listed}");
-        assert_eq!(listed["output"]["parcels"].as_array().map(Vec::len), Some(2), "{listed}");
-        let write = answer("run", &table).unwrap_err();
-        assert_eq!(write.0, "capability");
-        json!({ "type": "done", "ok": true, "result": { "kind": "message", "message": "Okundu." } })
-    });
+            assert_eq!(listed["status"], "completed", "{listed}");
+            assert_eq!(
+                listed["output"]["parcels"].as_array().map(Vec::len),
+                Some(2),
+                "{listed}"
+            );
+            let write = answer("run", &table).unwrap_err();
+            assert_eq!(write.0, "capability");
+            json!({ "type": "done", "ok": true, "result": { "kind": "message", "message": "Okundu." } })
+        },
+    );
     assert_eq!(report["status"], "done", "{report}");
     assert!(report.get("changed").is_none(), "nothing written: {report}");
     let writer = rights(&[Capability::DocumentWrite]);
-    let report = step(&mut made, &writer, &mut panels, &spec(Vec::new()), &mut |_, answer| {
-        let written = answer("run", &table).expect("it writes");
-        assert_eq!(written["status"], "completed", "{written}");
-        assert_eq!(written["output"]["parcels"], 2, "{written}");
-        json!({ "type": "done", "ok": true, "result": { "kind": "message", "message": "Yazıldı." } })
-    });
+    let report = step(
+        &mut made,
+        &writer,
+        &mut panels,
+        &spec(Vec::new()),
+        &mut |_, answer| {
+            let written = answer("run", &table).expect("it writes");
+            assert_eq!(written["status"], "completed", "{written}");
+            assert_eq!(written["output"]["parcels"], 2, "{written}");
+            json!({ "type": "done", "ok": true, "result": { "kind": "message", "message": "Yazıldı." } })
+        },
+    );
     assert_eq!(report["status"], "done", "{report}");
-    assert_eq!(made.doc.undo_labels().first().map(String::as_str), Some("Yapıları numarala"), "one step");
+    assert_eq!(
+        made.doc.undo_labels().first().map(String::as_str),
+        Some("Yapıları numarala"),
+        "one step"
+    );
 }

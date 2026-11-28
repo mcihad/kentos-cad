@@ -38,7 +38,12 @@ pub struct Selection {
 }
 
 /// A tile's error on the screen, in pixels.
-pub fn screen_error(geometric_error: f64, distance: f64, camera: &Camera, viewport: &Viewport) -> f64 {
+pub fn screen_error(
+    geometric_error: f64,
+    distance: f64,
+    camera: &Camera,
+    viewport: &Viewport,
+) -> f64 {
     if geometric_error <= 0.0 {
         return 0.0;
     }
@@ -46,7 +51,9 @@ pub fn screen_error(geometric_error: f64, distance: f64, camera: &Camera, viewpo
         Projection::Perspective { fov_y, .. } => {
             geometric_error * viewport.height / (distance.max(1e-7) * 2.0 * (fov_y / 2.0).tan())
         }
-        Projection::Orthographic { height, .. } => geometric_error / (height / viewport.height.max(1.0)),
+        Projection::Orthographic { height, .. } => {
+            geometric_error / (height / viewport.height.max(1.0))
+        }
     }
 }
 
@@ -74,7 +81,12 @@ impl<F: Fn(&ContentRef) -> bool> Walk<'_, F> {
     fn error(&self, i: u32) -> f64 {
         let t = &self.h.tiles[i as usize];
         let d = self.camera.distance_to(&self.shown_box(i));
-        screen_error(t.geometric_error * self.ex.error_scale(), d, self.camera, self.viewport)
+        screen_error(
+            t.geometric_error * self.ex.error_scale(),
+            d,
+            self.camera,
+            self.viewport,
+        )
     }
 
     fn ask(&mut self, i: u32, error: f64) {
@@ -86,7 +98,10 @@ impl<F: Fn(&ContentRef) -> bool> Walk<'_, F> {
         let t = &self.h.tiles[i as usize];
         match &t.content {
             Some(c) => (self.ready)(c),
-            None => t.children.iter().all(|&c| !self.in_view(c) || self.can_cover(c)),
+            None => t
+                .children
+                .iter()
+                .all(|&c| !self.in_view(c) || self.can_cover(c)),
         }
     }
 
@@ -123,7 +138,8 @@ impl<F: Fn(&ContentRef) -> bool> Walk<'_, F> {
         let children = &t.children;
         let content = t.content;
         // A tile without content of its own has nothing to stand in for its children: it always goes down.
-        let refine = !children.is_empty() && (error > self.settings.max_screen_error || content.is_none());
+        let refine =
+            !children.is_empty() && (error > self.settings.max_screen_error || content.is_none());
         let draw_own = |w: &mut Self| match content {
             Some(c) if (w.ready)(&c) => {
                 w.out.draw.push(i);
@@ -147,7 +163,9 @@ impl<F: Fn(&ContentRef) -> bool> Walk<'_, F> {
                 }
             }
             Refine::Replace => {
-                let all = children.iter().all(|&c| !self.in_view(c) || self.can_cover(c));
+                let all = children
+                    .iter()
+                    .all(|&c| !self.in_view(c) || self.can_cover(c));
                 if all || content.is_none() {
                     for &c in children {
                         self.visit(c);
@@ -189,7 +207,8 @@ pub fn select<F: Fn(&ContentRef) -> bool>(
     for r in h.roots.clone() {
         w.visit(r);
     }
-    w.asks.sort_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
+    w.asks
+        .sort_by(|a, b| b.0.total_cmp(&a.0).then(a.1.cmp(&b.1)));
     w.asks.dedup_by_key(|a| a.2);
     w.out.wanted = w.asks.iter().map(|a| a.2).collect();
     w.out

@@ -208,7 +208,11 @@ pub fn points_said(total: usize, written: usize, skipped: &[u32], what: &str) ->
             count_words(total as u64)
         );
     }
-    let mut places: Vec<String> = skipped.iter().take(5).map(|i| format!("{}.", i + 1)).collect();
+    let mut places: Vec<String> = skipped
+        .iter()
+        .take(5)
+        .map(|i| format!("{}.", i + 1))
+        .collect();
     if skipped.len() > 5 {
         places.push("…".into());
     }

@@ -11,7 +11,10 @@ fn n(v: &Value) -> f64 {
 }
 
 fn close(a: f64, b: f64, what: &str) {
-    assert!((a - b).abs() <= 1e-12 * b.abs().max(1.0), "{what}: {a} vs {b}");
+    assert!(
+        (a - b).abs() <= 1e-12 * b.abs().max(1.0),
+        "{what}: {a} vs {b}"
+    );
 }
 
 #[test]
@@ -26,21 +29,45 @@ fn the_ledgers_are_the_references() {
             .map(|s| Stretch {
                 from: n(&s["from"]),
                 to: n(&s["to"]),
-                values: s["values"].as_array().unwrap().iter().map(Value::as_f64).collect(),
+                values: s["values"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(Value::as_f64)
+                    .collect(),
             })
             .collect();
         let ranges: Vec<(f64, f64)> = match c["step"].as_f64() {
             Some(step) => steps(stretches[0].from, stretches.last().unwrap().to, step),
-            None => c["ranges"].as_array().unwrap().iter().map(|r| (n(&r[0]), n(&r[1]))).collect(),
+            None => c["ranges"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|r| (n(&r[0]), n(&r[1])))
+                .collect(),
         };
-        let want: Vec<(f64, f64)> = c["ranges"].as_array().unwrap().iter().map(|r| (n(&r[0]), n(&r[1]))).collect();
+        let want: Vec<(f64, f64)> = c["ranges"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|r| (n(&r[0]), n(&r[1])))
+            .collect();
         assert_eq!(ranges, want, "{name}: ranges");
         let groups = group(&stretches, &ranges);
         let wg = c["groups"].as_array().unwrap();
         assert_eq!(groups.len(), wg.len(), "{name}: groups");
         for (g, w) in groups.iter().zip(wg) {
-            assert_eq!((g.from, g.to), (n(&w["from"]), n(&w["to"])), "{name}: group range");
-            let members: Vec<usize> = w["members"].as_array().unwrap().iter().map(|m| m.as_u64().unwrap() as usize).collect();
+            assert_eq!(
+                (g.from, g.to),
+                (n(&w["from"]), n(&w["to"])),
+                "{name}: group range"
+            );
+            let members: Vec<usize> = w["members"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|m| m.as_u64().unwrap() as usize)
+                .collect();
             assert_eq!(g.members, members, "{name}: members");
             for (a, b) in g.values.iter().zip(w["values"].as_array().unwrap()) {
                 close(*a, n(b), &format!("{name}: group value"));
@@ -50,12 +77,19 @@ fn the_ledgers_are_the_references() {
         let columns = stretches[0].values.len();
         for k in 0..columns {
             let total = sum(stretches.iter().filter_map(|s| s.values[k]));
-            close(sum(groups.iter().map(|g| g.values[k])), total, &format!("{name}: reconciles"));
+            close(
+                sum(groups.iter().map(|g| g.values[k])),
+                total,
+                &format!("{name}: reconciles"),
+            );
         }
         let lengths: Vec<f64> = stretches.iter().map(|s| s.to - s.from).collect();
         let decimals = c["decimals"].as_u64().unwrap() as u32;
         for k in 0..columns {
-            let vols: Vec<f64> = stretches.iter().map(|s| s.values[k].unwrap_or(0.0)).collect();
+            let vols: Vec<f64> = stretches
+                .iter()
+                .map(|s| s.values[k].unwrap_or(0.0))
+                .collect();
             let wc = &c["concentration"][k];
             match (concentration(&lengths, &vols), wc.is_null()) {
                 (None, true) => {}

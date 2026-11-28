@@ -4,8 +4,8 @@
 //! `fixtures/commands/v1/cad.survey.baselines.json`.
 
 use kentos_commands::{
-    AdjustedGnssStation, BaselineDatum, BaselineResult, BaselineStation, BaselineVector, CommandResult, RobustMethod,
-    RobustRounds, SurveyBaselines, SurveyBaselinesAdjusted,
+    AdjustedGnssStation, BaselineDatum, BaselineResult, BaselineStation, BaselineVector,
+    CommandResult, RobustMethod, RobustRounds, SurveyBaselines, SurveyBaselinesAdjusted,
 };
 use kentos_geometry_core::survey::adjust::gnss::{self, Baseline, Datum, GnssInput, GnssStation};
 use kentos_geometry_core::survey::adjust::name_key;
@@ -21,9 +21,20 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 
 /// A value of a text line: a number with a point before its decimals.
 fn number(s: &str, line: usize) -> Result<f64, Stop> {
-    s.trim().parse::<f64>().ok().filter(|v| v.is_finite()).ok_or_else(|| {
-        fail(codes::INVALID_INPUT, format!("{line}. satırda “{}” bir sayı değil (ondalıktan önce nokta).", s.trim()), "text")
-    })
+    s.trim()
+        .parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .ok_or_else(|| {
+            fail(
+                codes::INVALID_INPUT,
+                format!(
+                    "{line}. satırda “{}” bir sayı değil (ondalıktan önce nokta).",
+                    s.trim()
+                ),
+                "text",
+            )
+        })
 }
 
 /// The stations and baselines of a text (docs/adr/1380 §2): `K;ad;X;Y;Z[;sX;sY;sZ]`, `N;ad[;X;Y;Z]`,
@@ -45,24 +56,52 @@ fn read_lines(text: &str) -> Result<(Vec<BaselineStation>, Vec<BaselineVector>, 
             continue;
         }
         let parts: Vec<&str> = t.split([';', ',', '\t']).map(str::trim).collect();
-        let bad = || fail(codes::INVALID_INPUT, format!("{line}. satır okunamadı: K, N ya da B ile başlayıp değerleri tam olmalı."), "text");
+        let bad = || {
+            fail(
+                codes::INVALID_INPUT,
+                format!("{line}. satır okunamadı: K, N ya da B ile başlayıp değerleri tam olmalı."),
+                "text",
+            )
+        };
         match parts[0].to_uppercase().as_str() {
             "K" if parts.len() == 5 || parts.len() == 8 => {
-                let xyz = [number(parts[2], line)?, number(parts[3], line)?, number(parts[4], line)?];
+                let xyz = [
+                    number(parts[2], line)?,
+                    number(parts[3], line)?,
+                    number(parts[4], line)?,
+                ];
                 let sigma = if parts.len() == 8 {
-                    Some([number(parts[5], line)?, number(parts[6], line)?, number(parts[7], line)?])
+                    Some([
+                        number(parts[5], line)?,
+                        number(parts[6], line)?,
+                        number(parts[7], line)?,
+                    ])
                 } else {
                     None
                 };
-                stations.push(BaselineStation { name: parts[1].to_owned(), xyz: Some(xyz), fixed: sigma.is_none(), sigma });
+                stations.push(BaselineStation {
+                    name: parts[1].to_owned(),
+                    xyz: Some(xyz),
+                    fixed: sigma.is_none(),
+                    sigma,
+                });
             }
             "N" if parts.len() == 2 || parts.len() == 5 => {
                 let xyz = if parts.len() == 5 {
-                    Some([number(parts[2], line)?, number(parts[3], line)?, number(parts[4], line)?])
+                    Some([
+                        number(parts[2], line)?,
+                        number(parts[3], line)?,
+                        number(parts[4], line)?,
+                    ])
                 } else {
                     None
                 };
-                stations.push(BaselineStation { name: parts[1].to_owned(), xyz, fixed: false, sigma: None });
+                stations.push(BaselineStation {
+                    name: parts[1].to_owned(),
+                    xyz,
+                    fixed: false,
+                    sigma: None,
+                });
             }
             "B" if parts.len() == 12 => {
                 let mut v = [0.0; 9];
@@ -85,8 +124,13 @@ fn read_lines(text: &str) -> Result<(Vec<BaselineStation>, Vec<BaselineVector>, 
 
 /// A text's baseline whose end the text gives no K or N line for, said with its line and the line to add
 /// (docs/adr/9331): the core says the station alone, and the user looked for it in a file of hundreds of lines.
-fn missing_station(stations: &[BaselineStation], baselines: &[BaselineVector], lines: &[usize]) -> Option<Stop> {
-    let known: std::collections::HashSet<String> = stations.iter().map(|s| name_key(&s.name)).collect();
+fn missing_station(
+    stations: &[BaselineStation],
+    baselines: &[BaselineVector],
+    lines: &[usize],
+) -> Option<Stop> {
+    let known: std::collections::HashSet<String> =
+        stations.iter().map(|s| name_key(&s.name)).collect();
     for (b, line) in baselines.iter().zip(lines) {
         for (end, name) in [("başlangıcı", &b.from), ("bitişi", &b.to)] {
             if known.contains(&name_key(name)) {
@@ -127,11 +171,22 @@ fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
     let core = GnssInput {
         stations: stations
             .iter()
-            .map(|s| GnssStation { name: s.name.clone(), xyz: s.xyz, fixed: s.fixed, sigma: s.sigma, cov: None })
+            .map(|s| GnssStation {
+                name: s.name.clone(),
+                xyz: s.xyz,
+                fixed: s.fixed,
+                sigma: s.sigma,
+                cov: None,
+            })
             .collect(),
         baselines: baselines
             .iter()
-            .map(|b| Baseline { from: b.from.clone(), to: b.to.clone(), d: b.d, cov: b.cov })
+            .map(|b| Baseline {
+                from: b.from.clone(),
+                to: b.to.clone(),
+                d: b.d,
+                cov: b.cov,
+            })
             .collect(),
         scale: input.scale.unwrap_or(1.0),
         datum: match input.datum {
@@ -145,18 +200,30 @@ fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
                 RobustMethod::Huber => Method::Huber,
                 RobustMethod::Danish => Method::Danish,
             };
-            Robust { method, c: r.c.unwrap_or(method.default_c()) }
+            Robust {
+                method,
+                c: r.c.unwrap_or(method.default_c()),
+            }
         }),
     };
     let r = gnss::adjust(&core).map_err(|e| fail(e.code, e.message, &e.path))?;
     let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
     // The worst flagged observation's baseline (a weighted station's is not a baseline).
-    let worst = r.stats.worst.and_then(|i| (i < 3 * baselines.len()).then(|| count(i / 3)));
+    let worst = r
+        .stats
+        .worst
+        .and_then(|i| (i < 3 * baselines.len()).then(|| count(i / 3)));
     Ok(SurveyBaselinesAdjusted {
         stations: r
             .stations
             .into_iter()
-            .map(|s| AdjustedGnssStation { name: s.name, xyz: s.xyz, sxyz: s.sxyz, senu: s.senu, held: s.held })
+            .map(|s| AdjustedGnssStation {
+                name: s.name,
+                xyz: s.xyz,
+                sxyz: s.sxyz,
+                senu: s.senu,
+                held: s.held,
+            })
             .collect(),
         baselines: r
             .baselines
@@ -182,7 +249,10 @@ fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
         passed: r.stats.passed,
         worst,
         robust: r.rounds.map(|x| RobustRounds {
-            method: input.robust.as_ref().map_or(RobustMethod::Huber, |r| r.method),
+            method: input
+                .robust
+                .as_ref()
+                .map_or(RobustMethod::Huber, |r| r.method),
             c: x.robust.c,
             rounds: count(x.rounds),
             converged: x.converged,
@@ -194,23 +264,35 @@ fn run(input: &SurveyBaselines) -> Result<SurveyBaselinesAdjusted, Stop> {
 
 pub fn validate(_cx: &ExecutionContext<'_>, input: &SurveyBaselines) -> CommandResult<()> {
     match run(input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &SurveyBaselines) -> CommandResult<SurveyBaselinesAdjusted> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &SurveyBaselines,
+) -> CommandResult<SurveyBaselinesAdjusted> {
     match run(input) {
         Ok(mut output) => {
             output.revision = cx.doc.revision().to_string();
-            CommandResult::Completed { output, warnings: Vec::new() }
+            CommandResult::Completed {
+                output,
+                warnings: Vec::new(),
+            }
         }
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: SurveyBaselines) -> CommandResult<SurveyBaselinesAdjusted> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SurveyBaselines,
+) -> CommandResult<SurveyBaselinesAdjusted> {
     plan(cx, &input)
 }

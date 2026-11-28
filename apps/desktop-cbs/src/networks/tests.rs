@@ -4,10 +4,10 @@
 //! changed one, En yakın tesis writes its ways in one step; and the pictures
 //! for the owner (the web's `shots.mjs networks`).
 
+use crate::cbs::CbsState;
 use crate::gis;
 use kentos_commands::DocumentSnapshotV1;
 use serde_json::json;
-use crate::cbs::CbsState;
 
 use super::Event as Networks;
 use super::window::Event;
@@ -35,7 +35,10 @@ fn send(app: &mut App, message: Message) {
 }
 
 fn window(app: &mut App, e: Event) {
-    send(app, Message::from(crate::cbs::Event::Networks(Networks::Window(e))));
+    send(
+        app,
+        Message::from(crate::cbs::Event::Networks(Networks::Window(e))),
+    );
 }
 
 fn processing(app: &mut App, e: Processing) {
@@ -53,7 +56,8 @@ fn layer(id: &str) -> serde_json::Value {
 /// Denetle's counts for the chosen network, as the window keeps them.
 fn checked(app: &App) -> (usize, usize, f64) {
     let c = app
-        .modules.cbs()
+        .modules
+        .cbs()
         .networks
         .window
         .as_ref()
@@ -67,7 +71,8 @@ fn the_window_lists_the_networks_and_checks_the_chosen_one_off_the_thread() {
     let mut app = app();
     send(&mut app, Message::Run("network.manage"));
     let names: Vec<String> = app
-        .modules.cbs()
+        .modules
+        .cbs()
         .networks
         .window
         .as_ref()
@@ -307,8 +312,14 @@ fn screens() {
                         send(&mut app, Message::Run("network.manage"));
                         window(&mut app, Event::ProfileAdd);
                         window(&mut app, Event::ProfileText(0, 0, "Kamyon".into()));
-                        window(&mut app, Event::ProfileText(0, 1, "agirlik 18; yukseklik 4".into()));
-                        window(&mut app, Event::ProfileText(0, 2, "Ad = Atatürk Caddesi".into()));
+                        window(
+                            &mut app,
+                            Event::ProfileText(0, 1, "agirlik 18; yukseklik 4".into()),
+                        );
+                        window(
+                            &mut app,
+                            Event::ProfileText(0, 2, "Ad = Atatürk Caddesi".into()),
+                        );
                         window(&mut app, Event::ProfileText(0, 3, "40".into()));
                         window(&mut app, Event::ProfileAdd);
                         window(&mut app, Event::ProfileText(1, 0, "Yaya".into()));
@@ -399,7 +410,13 @@ fn screens() {
                     snapshot.settle(&mut app, App::view, &mut update);
                 } else if matches!(
                     name,
-                    "matris" | "yollar" | "sebeke" | "donusler" | "terminaller" | "yapilandirma" | "profiller"
+                    "matris"
+                        | "yollar"
+                        | "sebeke"
+                        | "donusler"
+                        | "terminaller"
+                        | "yapilandirma"
+                        | "profiller"
                 ) {
                     // The form scrolled to its end: the table, or Denetle's answer under the definition.
                     let x = if name == "matris" {

@@ -4,7 +4,9 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use kentos_contracts::{ExportReport, ImportDecision, ImportDecisionTopic, ImportReport, ReportItem, SourceFact};
+use kentos_contracts::{
+    ExportReport, ImportDecision, ImportDecisionTopic, ImportReport, ReportItem, SourceFact,
+};
 
 /// Source lines kept per report line.
 const LINES_KEPT: usize = 5;
@@ -28,11 +30,17 @@ impl Items {
             lines.next().unwrap_or(0),
             item.count,
         );
-        for line in lines { self.add(&item.what, &item.reason, line, 0); }
+        for line in lines {
+            self.add(&item.what, &item.reason, line, 0);
+        }
         if let Some(&i) = self.index.get(&key) {
             let target = &mut self.list[i];
             target.severity = target.severity.or(severity);
-            for detail in details { if target.details.len() < LINES_KEPT && !target.details.contains(&detail) { target.details.push(detail); } }
+            for detail in details {
+                if target.details.len() < LINES_KEPT && !target.details.contains(&detail) {
+                    target.details.push(detail);
+                }
+            }
         }
     }
 
@@ -103,7 +111,14 @@ impl Report {
 
     /// A decision on the drawing as a whole (docs/adr/1010) at `line` (0: the file's): in `decisions` under its
     /// topic and code, and in the notes in the same words.
-    pub fn decide(&mut self, topic: ImportDecisionTopic, code: &str, subject: &str, decision: &str, line: u32) {
+    pub fn decide(
+        &mut self,
+        topic: ImportDecisionTopic,
+        code: &str,
+        subject: &str,
+        decision: &str,
+        line: u32,
+    ) {
         if line == 0 {
             self.about(subject, decision);
         } else {
@@ -114,15 +129,29 @@ impl Report {
 
     /// A decision only in `decisions` (docs/adr/1010): one the notes never said (a layer with nothing on it, a
     /// unit used as declared), so a reader of the notes alone sees what it always saw.
-    pub fn decide_quiet(&mut self, topic: ImportDecisionTopic, code: &str, subject: &str, decision: &str, line: u32) {
+    pub fn decide_quiet(
+        &mut self,
+        topic: ImportDecisionTopic,
+        code: &str,
+        subject: &str,
+        decision: &str,
+        line: u32,
+    ) {
         self.record(topic, code, subject, decision, line, 1);
     }
 
-    fn record(&mut self, topic: ImportDecisionTopic, code: &str, subject: &str, decision: &str, line: u32, n: u32) {
-        let at = self
-            .decisions
-            .iter()
-            .position(|d| d.topic == topic && d.code == code && d.subject == subject && d.decision == decision);
+    fn record(
+        &mut self,
+        topic: ImportDecisionTopic,
+        code: &str,
+        subject: &str,
+        decision: &str,
+        line: u32,
+        n: u32,
+    ) {
+        let at = self.decisions.iter().position(|d| {
+            d.topic == topic && d.code == code && d.subject == subject && d.decision == decision
+        });
         let i = match at {
             Some(i) => i,
             None => {
@@ -155,22 +184,34 @@ impl Report {
         self.polyline_loss_from(code, what, reason, line, what, None);
     }
 
-    pub fn polyline_loss_from(&mut self, code: &str, what: &str, reason: &str, line: u32, entity_type: &str, source_id: Option<String>) {
+    pub fn polyline_loss_from(
+        &mut self,
+        code: &str,
+        what: &str,
+        reason: &str,
+        line: u32,
+        entity_type: &str,
+        source_id: Option<String>,
+    ) {
         self.notes.add(what, reason, line, 1);
         if let Some(&i) = self.notes.index.get(&(what.into(), reason.into())) {
             let item = &mut self.notes.list[i];
             item.severity = Some(kentos_contracts::ReportSeverity::Warning);
             if item.details.len() < LINES_KEPT {
                 item.details.push(kentos_contracts::ReportDetail {
-                    entity_type: entity_type.into(), property: format!("polyline.loss.{code}"),
-                    source_id, source_line: (line > 0).then_some(line),
+                    entity_type: entity_type.into(),
+                    property: format!("polyline.loss.{code}"),
+                    source_id,
+                    source_line: (line > 0).then_some(line),
                 });
             }
         }
     }
 
     /// Keep stable property/identity metadata when a host contributes a diagnostic.
-    pub fn note_item(&mut self, item: ReportItem) { self.notes.absorb(item); }
+    pub fn note_item(&mut self, item: ReportItem) {
+        self.notes.absorb(item);
+    }
 
     /// `n` of the same thing at once.
     pub fn note_n(&mut self, what: &str, reason: &str, line: u32, n: u32) {
@@ -210,8 +251,12 @@ impl Report {
 
     /// Paper-space diagnostics join the file report without changing model counts.
     pub fn absorb_losses(&mut self, report: ImportReport) {
-        for item in report.notes { self.notes.absorb(item); }
-        for item in report.skipped { self.skipped.absorb(item); }
+        for item in report.notes {
+            self.notes.absorb(item);
+        }
+        for item in report.skipped {
+            self.skipped.absorb(item);
+        }
         for d in report.decisions {
             let first = d.lines.first().copied().unwrap_or(0);
             self.record(d.topic, &d.code, &d.subject, &d.decision, first, d.count);

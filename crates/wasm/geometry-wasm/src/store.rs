@@ -62,7 +62,9 @@ pub fn pack_edges(edges: &[Edge]) -> Vec<f64> {
 
 /// Affines as the page sends them: six numbers each.
 fn affines_of(flat: &[f64]) -> Vec<[f64; 6]> {
-    flat.as_chunks::<6>().0.iter()
+    flat.as_chunks::<6>()
+        .0
+        .iter()
         .map(|m| [m[0], m[1], m[2], m[3], m[4], m[5]])
         .collect()
 }
@@ -687,7 +689,9 @@ impl GeometryStore {
             layers: None,
             extensions: read_extensions(extensions),
             parallels: parallels
-                .as_chunks::<2>().0.iter()
+                .as_chunks::<2>()
+                .0
+                .iter()
                 .map(|u| Vec2::new(u[0], u[1]))
                 .collect(),
             draft: draft_path(draft_xy, draft_bulges),
@@ -810,7 +814,9 @@ impl GeometryStore {
     #[wasm_bindgen(js_name = inFence)]
     pub fn in_fence(&self, fence: &[f64], tol: f64) -> Vec<f64> {
         let pts: Vec<Vec2> = fence
-            .as_chunks::<2>().0.iter()
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|c| Vec2::new(c[0], c[1]))
             .collect();
         self.inner.in_fence(&pts, tol)
@@ -829,7 +835,9 @@ impl GeometryStore {
     #[wasm_bindgen(js_name = inPolygon)]
     pub fn in_polygon(&self, ring: &[f64], mode: u8) -> Vec<f64> {
         let pts: Vec<Vec2> = ring
-            .as_chunks::<2>().0.iter()
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|c| Vec2::new(c[0], c[1]))
             .collect();
         self.inner.in_polygon(
@@ -1284,7 +1292,7 @@ impl GeometryStore {
             screen,
             View {
                 position_low: false,
-                plot_precision:false,
+                plot_precision: false,
                 fills,
                 area_edges,
                 map: None,
@@ -1344,7 +1352,9 @@ impl GeometryStore {
             shared,
         };
         let existing: Vec<Vec2> = existing
-            .as_chunks::<2>().0.iter()
+            .as_chunks::<2>()
+            .0
+            .iter()
             .map(|c| Vec2::new(c[0], c[1]))
             .collect();
         self.inner.number_corners(ids, &walk, &existing)
@@ -1462,7 +1472,12 @@ fn read_extensions(f: &[f64]) -> Vec<Extension> {
 
 /// The object being drawn as an open path (none without a point).
 fn draft_path(xy: &[f64], bulges: &[f64]) -> Vec<Shape> {
-    let pts: Vec<Vec2> = xy.as_chunks::<2>().0.iter().map(|p| Vec2::new(p[0], p[1])).collect();
+    let pts: Vec<Vec2> = xy
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|p| Vec2::new(p[0], p[1]))
+        .collect();
     if pts.is_empty() {
         return Vec::new();
     }

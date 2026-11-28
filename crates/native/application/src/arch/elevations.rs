@@ -22,8 +22,9 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandWarning, ELEVATION_TOOL, ElevationLeft, ElevationLeftOut, ElevationRecord, ElevationSide,
-    ElevationState, Entity, LayerDerivation, OpeningForm, OpeningSide, SpaceMethod, Vec2, WallJustify,
+    CommandWarning, ELEVATION_TOOL, ElevationLeft, ElevationLeftOut, ElevationRecord,
+    ElevationSide, ElevationState, Entity, LayerDerivation, OpeningForm, OpeningSide, SpaceMethod,
+    Vec2, WallJustify,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use serde_json::{Value, json};
@@ -139,7 +140,9 @@ pub(crate) fn draw(
     if !crate::checks::is_uid_text(uid) {
         return Err(fail(
             codes::INVALID_UID,
-            format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+            format!(
+                "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+            ),
             space_path,
         ));
     }
@@ -150,7 +153,9 @@ pub(crate) fn draw(
     else {
         return Err(fail(
             codes::ENTITY_NOT_FOUND,
-            format!("“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir."),
+            format!(
+                "“{uid}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir."
+            ),
             space_path,
         ));
     };
@@ -239,7 +244,12 @@ pub(crate) fn draw(
         ));
     }
     if let Some(g) = gap {
-        crate::checks::finite(g, "Yanların arası", "Sonlu bir sayı verin.", "operation.gap")?;
+        crate::checks::finite(
+            g,
+            "Yanların arası",
+            "Sonlu bir sayı verin.",
+            "operation.gap",
+        )?;
         if !(g > 0.0 && g <= 100.0) {
             return Err(fail(
                 codes::INVALID_INPUT,
@@ -253,14 +263,20 @@ pub(crate) fn draw(
     }
     let gap = gap.unwrap_or(GAP);
     let at = at.unwrap_or_else(|| {
-        let mut lo = Vec2 { x: f64::INFINITY, y: f64::INFINITY };
+        let mut lo = Vec2 {
+            x: f64::INFINITY,
+            y: f64::INFINITY,
+        };
         let mut hi = f64::NEG_INFINITY;
         for p in s.space.parts.iter().flat_map(|p| &p.outer.pts) {
             hi = hi.max(p.x);
             lo.x = lo.x.min(p.x);
             lo.y = lo.y.min(p.y);
         }
-        Vec2 { x: hi + BESIDE, y: lo.y }
+        Vec2 {
+            x: hi + BESIDE,
+            y: lo.y,
+        }
     });
     let label = label_of(s);
     let walls: Vec<(String, &kentos_commands::WallEntity)> = doc
@@ -334,7 +350,11 @@ pub(crate) fn draw(
                 };
             let rf = lf - f.width;
             for j in 0..count {
-                let bulge = f.bulges.as_ref().and_then(|b| b.get(j).copied()).unwrap_or(0.0);
+                let bulge = f
+                    .bulges
+                    .as_ref()
+                    .and_then(|b| b.get(j).copied())
+                    .unwrap_or(0.0);
                 if bulge != 0.0 {
                     continue;
                 }
@@ -431,7 +451,10 @@ pub(crate) fn draw(
                 {
                     items.push((
                         role(&format!("top/{}/{}", f.wall, f.segment)),
-                        entity(layer, json!({"kind": "line", "a": w(f.lo, fh), "b": w(f.hi, fh)})),
+                        entity(
+                            layer,
+                            json!({"kind": "line", "a": w(f.lo, fh), "b": w(f.hi, fh)}),
+                        ),
                     ));
                 }
             }
@@ -579,7 +602,8 @@ pub(crate) fn draw(
             openings: seen.iter().map(|o| o.uid.clone()).collect(),
             open: gaps,
         });
-        out.items.extend(items.into_iter().filter_map(|(r, e)| e.map(|e| (r, e))));
+        out.items
+            .extend(items.into_iter().filter_map(|(r, e)| e.map(|e| (r, e))));
         ox = ox + len + gap;
     }
     // What stands in the room and has no height in the model.
@@ -592,11 +616,24 @@ pub(crate) fn draw(
             });
         }
     }
-    let rings: Vec<&[Vec2]> = s.space.parts.iter().map(|p| p.outer.pts.as_slice()).collect();
+    let rings: Vec<&[Vec2]> = s
+        .space
+        .parts
+        .iter()
+        .map(|p| p.outer.pts.as_slice())
+        .collect();
     for e in doc.entities() {
         let (why, lvl, points): (ElevationLeft, &Option<String>, Vec<Vec2>) = match e {
-            Entity::Column(c) => (ElevationLeft::Column, &c.column.arch.level, vec![c.column.at]),
-            Entity::Stair(x) => (ElevationLeft::Stair, &x.stair.arch.level, x.stair.pts.clone()),
+            Entity::Column(c) => (
+                ElevationLeft::Column,
+                &c.column.arch.level,
+                vec![c.column.at],
+            ),
+            Entity::Stair(x) => (
+                ElevationLeft::Stair,
+                &x.stair.arch.level,
+                x.stair.pts.clone(),
+            ),
             Entity::Ramp(x) => (ElevationLeft::Ramp, &x.ramp.arch.level, x.ramp.pts.clone()),
             Entity::Insert(i) => (ElevationLeft::Fixture, &i.arch.level, vec![i.p]),
             _ => continue,
@@ -636,13 +673,20 @@ pub(crate) fn draw(
     if headless > 0 {
         out.warnings.push(warn(
             codes::ELEVATION_HEAD_UNKNOWN,
-            format!("{headless} açıklığın üst kotu yok; pervazları kesikli çizildi, üstleri çizilmedi."),
+            format!(
+                "{headless} açıklığın üst kotu yok; pervazları kesikli çizildi, üstleri çizilmedi."
+            ),
         ));
     }
     let left = out
         .left_out
         .iter()
-        .filter(|l| !matches!(l.why, ElevationLeft::CurvedSide | ElevationLeft::HeadUnknown))
+        .filter(|l| {
+            !matches!(
+                l.why,
+                ElevationLeft::CurvedSide | ElevationLeft::HeadUnknown
+            )
+        })
         .count();
     if left > 0 {
         out.warnings.push(warn(
@@ -662,7 +706,10 @@ pub fn digest(items: &[(String, Entity)]) -> String {
 }
 
 pub(crate) fn member_hashes(items: &[(String, Entity)]) -> BTreeMap<String, String> {
-    items.iter().map(|item| (item.0.clone(), digest(std::slice::from_ref(item)))).collect()
+    items
+        .iter()
+        .map(|item| (item.0.clone(), digest(std::slice::from_ref(item))))
+        .collect()
 }
 
 /// The elevation record of a layer: its derivation names the elevation tool and its parameters read.
@@ -730,7 +777,9 @@ pub fn standing(doc: &Document, layer: &str, r: &ElevationRecord) -> Standing {
     let mut edited = Vec::new();
     if same {
         for (role, want) in &drawn.items {
-            let Some(u) = r.members.get(role) else { continue };
+            let Some(u) = r.members.get(role) else {
+                continue;
+            };
             let Some(now) = Uuid::parse_str(u)
                 .ok()
                 .and_then(|x| doc.slot_of(x))
@@ -744,8 +793,16 @@ pub fn standing(doc: &Document, layer: &str, r: &ElevationRecord) -> Standing {
         }
     } else {
         for (role, uid) in &r.members {
-            let Some(before) = r.member_hashes.get(role) else { continue };
-            let Some(entity) = Uuid::parse_str(uid).ok().and_then(|id| doc.slot_of(id)).and_then(|s| doc.get(s)) else { continue };
+            let Some(before) = r.member_hashes.get(role) else {
+                continue;
+            };
+            let Some(entity) = Uuid::parse_str(uid)
+                .ok()
+                .and_then(|id| doc.slot_of(id))
+                .and_then(|s| doc.get(s))
+            else {
+                continue;
+            };
             if digest(&[(role.clone(), bare(entity))]) != *before {
                 edited.push(uid.clone());
             }

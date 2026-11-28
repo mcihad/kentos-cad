@@ -87,7 +87,9 @@ pub(crate) fn layout(device: &wgpu::Device) -> wgpu::BindGroupLayout {
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
                     has_dynamic_offset: false,
-                    min_binding_size: wgpu::BufferSize::new(std::mem::size_of::<ZoomUniform>() as u64),
+                    min_binding_size: wgpu::BufferSize::new(
+                        std::mem::size_of::<ZoomUniform>() as u64
+                    ),
                 },
                 count: None,
             },
@@ -124,12 +126,19 @@ pub(crate) fn pipeline(
         },
         primitive: wgpu::PrimitiveState::default(),
         depth_stencil: None,
-        multisample: wgpu::MultisampleState { count: samples, ..wgpu::MultisampleState::default() },
+        multisample: wgpu::MultisampleState {
+            count: samples,
+            ..wgpu::MultisampleState::default()
+        },
         fragment: Some(wgpu::FragmentState {
             module: &module,
             entry_point: Some("fs"),
             compilation_options: wgpu::PipelineCompilationOptions::default(),
-            targets: &[Some(wgpu::ColorTargetState { format, blend: None, write_mask: wgpu::ColorWrites::ALL })],
+            targets: &[Some(wgpu::ColorTargetState {
+                format,
+                blend: None,
+                write_mask: wgpu::ColorWrites::ALL,
+            })],
         }),
         multiview: None,
         cache: None,
@@ -201,7 +210,12 @@ pub fn plan(source: &Place, now: &Place) -> Option<Plan> {
     if y1 < h {
         strips.push([x0, y1, x1, h]);
     }
-    Some(Plan { uniform, inner, strips, wide: None })
+    Some(Plan {
+        uniform,
+        inner,
+        strips,
+        wide: None,
+    })
 }
 
 /// Where a picture drawn at `source` is sampled for the picture at `now`, and the pixels its samples cover; none when
@@ -243,13 +257,23 @@ mod tests {
     use super::*;
 
     fn at(x: f64, y: f64, k: f64) -> Place {
-        Place { center: [x, y], origin: [486_000.0, 4_420_000.0], px_per_unit: k, size: [100, 80], twist: 0.0, dpr: 2.0 }
+        Place {
+            center: [x, y],
+            origin: [486_000.0, 4_420_000.0],
+            px_per_unit: k,
+            size: [100, 80],
+            twist: 0.0,
+            dpr: 2.0,
+        }
     }
 
     /// A pixel's centre lands on the source where the same world point was drawn.
     fn lands(p: &Plan, fx: f64, fy: f64) -> (f64, f64) {
         let u = p.uniform;
-        (fx * f64::from(u.scale[0]) + f64::from(u.offset[0]), fy * f64::from(u.scale[1]) + f64::from(u.offset[1]))
+        (
+            fx * f64::from(u.scale[0]) + f64::from(u.offset[0]),
+            fy * f64::from(u.scale[1]) + f64::from(u.offset[1]),
+        )
     }
 
     /// Twice in about the centre: the middle half of the source fills the picture, no strip.
@@ -272,7 +296,10 @@ mod tests {
         let p = plan(&source, &at(13.0, 4.0, 1.0)).unwrap();
         let (sx, sy) = lands(&p, 50.0, 40.0);
         // On the source, (13, 4) was 3 m * 2 px right and 1 m * 2 px down of its centre.
-        assert!((sx - 56.0).abs() < 1e-9 && (sy - 42.0).abs() < 1e-9, "{sx} {sy}");
+        assert!(
+            (sx - 56.0).abs() < 1e-9 && (sy - 42.0).abs() < 1e-9,
+            "{sx} {sy}"
+        );
         let [x0, y0, x1, y1] = p.inner;
         assert!(x0 > 0 && y0 > 0 && x1 < 100 && y1 < 80, "{:?}", p.inner);
         // The strips and the inner rectangle tile the picture, once each.
@@ -288,15 +315,54 @@ mod tests {
     #[test]
     fn only_a_zoom_within_two_octaves_of_the_same_frame_is_scaled() {
         let s = at(10.0, 5.0, 2.0);
-        assert!(plan(&s, &at(12.0, 5.0, 2.0)).is_none(), "a pan is not a zoom");
+        assert!(
+            plan(&s, &at(12.0, 5.0, 2.0)).is_none(),
+            "a pan is not a zoom"
+        );
         assert!(plan(&s, &at(10.0, 5.0, 8.0)).is_some());
         assert!(plan(&s, &at(10.0, 5.0, 8.01)).is_none());
         assert!(plan(&s, &at(10.0, 5.0, 0.5)).is_some());
         assert!(plan(&s, &at(10.0, 5.0, 0.499)).is_none());
-        assert!(plan(&s, &Place { size: [101, 80], ..at(10.0, 5.0, 3.0) }).is_none());
-        assert!(plan(&s, &Place { origin: [0.0, 0.0], ..at(10.0, 5.0, 3.0) }).is_none());
-        assert!(plan(&s, &Place { dpr: 1.0, ..at(10.0, 5.0, 3.0) }).is_none());
-        assert!(plan(&s, &Place { twist: 0.1, ..at(10.0, 5.0, 3.0) }).is_none());
+        assert!(
+            plan(
+                &s,
+                &Place {
+                    size: [101, 80],
+                    ..at(10.0, 5.0, 3.0)
+                }
+            )
+            .is_none()
+        );
+        assert!(
+            plan(
+                &s,
+                &Place {
+                    origin: [0.0, 0.0],
+                    ..at(10.0, 5.0, 3.0)
+                }
+            )
+            .is_none()
+        );
+        assert!(
+            plan(
+                &s,
+                &Place {
+                    dpr: 1.0,
+                    ..at(10.0, 5.0, 3.0)
+                }
+            )
+            .is_none()
+        );
+        assert!(
+            plan(
+                &s,
+                &Place {
+                    twist: 0.1,
+                    ..at(10.0, 5.0, 3.0)
+                }
+            )
+            .is_none()
+        );
     }
 
     /// Zooming out of a picture drawn nearer: the wide picture drawn farther covers the ring, and is used instead of
@@ -320,6 +386,8 @@ mod tests {
         }
         assert!(keeps_wide(&wide, &near) && !keeps_wide(&near, &wide));
         // The source a zoom in left behind, drawn just past four times farther, still covers.
-        assert!(keeps_wide(&at(10.0, 5.0, 0.95), &near) && !keeps_wide(&at(10.0, 5.0, 0.49), &near));
+        assert!(
+            keeps_wide(&at(10.0, 5.0, 0.95), &near) && !keeps_wide(&at(10.0, 5.0, 0.49), &near)
+        );
     }
 }

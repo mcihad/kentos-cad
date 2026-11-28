@@ -694,7 +694,11 @@ fn a_railing_stands_on_its_floor_its_balusters_seen_and_its_cut_light() {
     let (b, _, _) = kentos_native_application::arch_ifc::model(&doc);
     let body = |uid: &str| {
         let id = Uuid::parse_str(uid).unwrap().as_u128();
-        b.elements.iter().find(|e| e.id == Some(id)).map(|e| e.shapes.clone()).expect("written")
+        b.elements
+            .iter()
+            .find(|e| e.id == Some(id))
+            .map(|e| e.shapes.clone())
+            .expect("written")
     };
     let barred = body(&uids[0]);
     assert_eq!(barred.len(), 21);
@@ -731,8 +735,8 @@ fn a_railing_stands_on_its_floor_its_balusters_seen_and_its_cut_light() {
 /// whose top is 63/136 + 1.25 × 3/34 = 39/68. In the IFC model it is one IfcRamp, a quarter turn ramp of concrete.
 #[test]
 fn a_ramp_s_runs_slope_its_landing_stands_flat_and_the_model_writes_it() {
-    use kentos_geometry_core::geom::section::{self as sec, Frame, Height};
     use kentos_geometry_core::Vec2 as P;
+    use kentos_geometry_core::geom::section::{self as sec, Frame, Height};
     let mut doc = building();
     let p = |x: f64, y: f64| serde_json::json!({"x": 30.0 + x, "y": y});
     let answer = kentos_native_application::registry::run(
@@ -752,7 +756,9 @@ fn a_ramp_s_runs_slope_its_landing_stands_flat_and_the_model_writes_it() {
         .to_string();
     let m = sections::model(&doc);
     assert!(
-        !m.left.iter().any(|(_, o)| o.as_deref() == Some(uid.as_str())),
+        !m.left
+            .iter()
+            .any(|(_, o)| o.as_deref() == Some(uid.as_str())),
         "the ramp is drawn: {:?}",
         m.left
     );
@@ -784,7 +790,10 @@ fn a_ramp_s_runs_slope_its_landing_stands_flat_and_the_model_writes_it() {
     assert!(near(second.z(P::new(36.0, 4.0)), 0.75), "{second:?}");
     // The landing: the band's corner square, flat at its height, a slab thick.
     let (k, bottom, top) = flats[0];
-    assert!(near(top, landing) && near(bottom, landing - 0.15), "{bottom} {top}");
+    assert!(
+        near(top, landing) && near(bottom, landing - 0.15),
+        "{bottom} {top}"
+    );
     let ring = &m.solids[k].rings[0];
     for (x, y) in [(35.25, -0.75), (36.75, -0.75), (36.75, 0.75), (35.25, 0.75)] {
         assert!(
@@ -807,10 +816,17 @@ fn a_ramp_s_runs_slope_its_landing_stands_flat_and_the_model_writes_it() {
     };
     let ((u0, u1), (z0, z1)) = (span(&xs), span(&zs));
     assert!(near(u0, 1.25) && near(u1, 2.75), "{xs:?}");
-    assert!(near(z1, 39.0 / 68.0) && near(z0, 39.0 / 68.0 - upright), "{zs:?}");
+    assert!(
+        near(z1, 39.0 / 68.0) && near(z0, 39.0 / 68.0 - upright),
+        "{zs:?}"
+    );
     // The IFC model: one IfcRamp of its three bodies, a quarter turn ramp of concrete, not left out.
     let (b, written, _) = kentos_native_application::arch_ifc::model(&doc);
-    assert!(!written.left.iter().any(|l| l.id == uid), "{:?}", written.left);
+    assert!(
+        !written.left.iter().any(|l| l.id == uid),
+        "{:?}",
+        written.left
+    );
     let ramps: Vec<&kentos_ifc::building::Element> = b
         .elements
         .iter()
@@ -874,12 +890,15 @@ fn a_ramp_s_railings_stand_over_its_surface_and_are_its_parts() {
     );
     let m = sections::model(&doc);
     let mine = |i: usize| m.owners[i].as_deref() == Some(uid.as_str());
-    let body = (0..m.solids.len()).filter(|&i| mine(i) && m.parts[i].is_none()).count();
+    let body = (0..m.solids.len())
+        .filter(|&i| mine(i) && m.parts[i].is_none())
+        .count();
     assert_eq!(body, 3, "its runs and its landing");
     let rails: Vec<usize> = (0..m.solids.len())
         .filter(|&i| mine(i) && matches!(m.parts[i], Some(Part::Rail(_))))
         .collect();
-    let (tops, lines): (Vec<usize>, Vec<usize>) = rails.iter().partition(|&&i| !m.solids[i].rings.is_empty());
+    let (tops, lines): (Vec<usize>, Vec<usize>) =
+        rails.iter().partition(|&&i| !m.solids[i].rings.is_empty());
     let (grade, landing) = (3.0 / 34.0, 63.0 / 136.0);
     let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
     // The ramp's surface across from a plan point: its second run north of the landing, its first west of it.
@@ -896,28 +915,46 @@ fn a_ramp_s_railings_stand_over_its_surface_and_are_its_parts() {
     let mut flats = 0;
     for &i in &tops {
         let ring = &m.solids[i].rings[0];
-        let c = P::new(ring.iter().map(|q| q.x).sum::<f64>() / 4.0, ring.iter().map(|q| q.y).sum::<f64>() / 4.0);
+        let c = P::new(
+            ring.iter().map(|q| q.x).sum::<f64>() / 4.0,
+            ring.iter().map(|q| q.y).sum::<f64>() / 4.0,
+        );
         // Its line 0.70 m off the centre line: y = ±0.70 along the first leg, x = 36 ± 0.70 along the second.
-        assert!(near(c.y.abs(), 0.70) || near((c.x - 36.0).abs(), 0.70), "{c:?}");
+        assert!(
+            near(c.y.abs(), 0.70) || near((c.x - 36.0).abs(), 0.70),
+            "{c:?}"
+        );
         match &m.solids[i].height {
             Height::Sloped(s) => {
-                assert!(near(s.z(c), surface(c) + 1.10) && near(s.thickness, 0.05), "{c:?} {s:?}");
+                assert!(
+                    near(s.z(c), surface(c) + 1.10) && near(s.thickness, 0.05),
+                    "{c:?} {s:?}"
+                );
             }
             Height::Prism { bottom, top } => {
                 flats += 1;
-                assert!(near(*top, landing + 1.10) && near(*bottom, landing + 1.05), "{c:?} {top}");
+                assert!(
+                    near(*top, landing + 1.10) && near(*bottom, landing + 1.05),
+                    "{c:?} {top}"
+                );
             }
             other => panic!("{other:?}"),
         }
     }
     assert_eq!(flats, 4);
-    let left = rails.iter().filter(|&&i| m.parts[i] == Some(Part::Rail(0)) && !m.solids[i].rings.is_empty()).count();
+    let left = rails
+        .iter()
+        .filter(|&&i| m.parts[i] == Some(Part::Rail(0)) && !m.solids[i].rings.is_empty())
+        .count();
     assert_eq!(left, 4);
     // Its balusters: each from the surface under it up to the top rail's underside.
     let mut count = 0;
     for &i in &lines {
         for [(q, foot), (q2, head)] in &m.solids[i].marks {
-            assert!(q == q2 && near(*foot, surface(*q)) && near(*head, surface(*q) + 1.05), "{q:?} {foot} {head}");
+            assert!(
+                q == q2 && near(*foot, surface(*q)) && near(*head, surface(*q) + 1.05),
+                "{q:?} {foot} {head}"
+            );
             count += 1;
         }
     }
@@ -955,8 +992,11 @@ fn a_ramp_s_railings_stand_over_its_surface_and_are_its_parts() {
         .position(|e| e.class == kentos_ifc::building::Class::Ramp)
         .expect("the ramp");
     assert_eq!(b.elements[ramp].shapes.len(), 3);
-    let railings: Vec<&kentos_ifc::building::Element> =
-        b.elements.iter().filter(|e| e.part_of == Some(ramp)).collect();
+    let railings: Vec<&kentos_ifc::building::Element> = b
+        .elements
+        .iter()
+        .filter(|e| e.part_of == Some(ramp))
+        .collect();
     assert_eq!(railings.len(), 2, "{railings:?}");
     for (r, bars) in railings.iter().zip([72, 95]) {
         assert_eq!(r.class, kentos_ifc::building::Class::Railing);
@@ -964,9 +1004,12 @@ fn a_ramp_s_railings_stand_over_its_surface_and_are_its_parts() {
         assert_eq!(r.shapes.len(), 4 + bars);
         // Each bar 2 cm square, from the surface to the top rail's underside (the ramp's storey's floor is ±0.00).
         let square = |sh: &&kentos_ifc::building::Shape| match sh {
-            kentos_ifc::building::Shape::Prism { rings, bottom, top, .. } => {
+            kentos_ifc::building::Shape::Prism {
+                rings, bottom, top, ..
+            } => {
                 let xs: Vec<f64> = rings[0].iter().map(|q| q[0]).collect();
-                let w = xs.iter().copied().fold(f64::NEG_INFINITY, f64::max) - xs.iter().copied().fold(f64::INFINITY, f64::min);
+                let w = xs.iter().copied().fold(f64::NEG_INFINITY, f64::max)
+                    - xs.iter().copied().fold(f64::INFINITY, f64::min);
                 near(w, 0.02) && near(top - bottom, 1.05)
             }
             _ => false,
@@ -1002,18 +1045,31 @@ fn a_stair_s_railings_follow_its_nosings_and_are_its_parts() {
     let m = sections::model(&doc);
     let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
     let rails: Vec<usize> = (0..m.solids.len())
-        .filter(|&i| m.owners[i].as_deref() == Some(uid.as_str()) && matches!(m.parts[i], Some(Part::Rail(_))))
+        .filter(|&i| {
+            m.owners[i].as_deref() == Some(uid.as_str())
+                && matches!(m.parts[i], Some(Part::Rail(_)))
+        })
         .collect();
-    let (tops, lines): (Vec<usize>, Vec<usize>) = rails.iter().partition(|&&i| !m.solids[i].rings.is_empty());
+    let (tops, lines): (Vec<usize>, Vec<usize>) =
+        rails.iter().partition(|&&i| !m.solids[i].rings.is_empty());
     assert_eq!((tops.len(), lines.len()), (2, 2), "{rails:?}");
     for (&i, y) in tops.iter().zip([6.55, 5.45]) {
         let Height::Sloped(s) = &m.solids[i].height else {
             panic!("{:?}", m.solids[i].height)
         };
-        assert!(m.solids[i].rings[0].iter().all(|q| (q.y - y).abs() <= 0.025 + 1e-9), "{:?}", m.solids[i].rings);
+        assert!(
+            m.solids[i].rings[0]
+                .iter()
+                .all(|q| (q.y - y).abs() <= 0.025 + 1e-9),
+            "{:?}",
+            m.solids[i].rings
+        );
         for k in 0..18 {
             let q = P::new(30.0 + 0.28 * k as f64, y);
-            assert!(near(s.z(q), 0.17 * (k + 1) as f64 + 1.10), "riser {k}: {s:?}");
+            assert!(
+                near(s.z(q), 0.17 * (k + 1) as f64 + 1.10),
+                "riser {k}: {s:?}"
+            );
         }
         assert!(near(s.z(P::new(30.0, y)), 1.27) && near(s.z(P::new(34.76, y)), 4.16));
     }
@@ -1021,19 +1077,32 @@ fn a_stair_s_railings_follow_its_nosings_and_are_its_parts() {
         let marks = &m.solids[i].marks;
         assert_eq!(marks.len(), 40);
         let ([(a, foot), (_, head)], [(z, last), _]) = (marks[0], marks[39]);
-        assert!(near(a.x, 30.06) && near(foot, 0.17) && near(head, 0.17 + 0.06 * 0.17 / 0.28 + 1.05), "{:?}", marks[0]);
+        assert!(
+            near(a.x, 30.06) && near(foot, 0.17) && near(head, 0.17 + 0.06 * 0.17 / 0.28 + 1.05),
+            "{:?}",
+            marks[0]
+        );
         assert!(near(z.x, 34.74) && near(last, 2.89), "{:?}", marks[39]);
     }
     let (b, _, _) = kentos_native_application::arch_ifc::model(&doc);
     let stair = b
         .elements
         .iter()
-        .position(|e| e.class == kentos_ifc::building::Class::Stair && e.tag.as_deref() == Some(uid.as_str()))
+        .position(|e| {
+            e.class == kentos_ifc::building::Class::Stair && e.tag.as_deref() == Some(uid.as_str())
+        })
         .expect("the stair");
-    let railings: Vec<&kentos_ifc::building::Element> =
-        b.elements.iter().filter(|e| e.part_of == Some(stair)).collect();
+    let railings: Vec<&kentos_ifc::building::Element> = b
+        .elements
+        .iter()
+        .filter(|e| e.part_of == Some(stair))
+        .collect();
     assert_eq!(railings.len(), 2, "{railings:?}");
-    assert!(railings.iter().all(|r| r.class == kentos_ifc::building::Class::Railing && r.shapes.len() == 1 + 40));
+    assert!(
+        railings
+            .iter()
+            .all(|r| r.class == kentos_ifc::building::Class::Railing && r.shapes.len() == 1 + 40)
+    );
 }
 
 /// Giydirme cephe (docs/adr/8070 §7): a 6 m curtain wall east of the building, 0.15 m deep, 3 m high, at most 1.50 m
@@ -1061,9 +1130,12 @@ fn a_curtain_wall_is_its_mullions_transoms_and_panels() {
     assert_eq!(answer["status"], "completed", "{answer}");
     let uid = answer["output"]["uids"][0].as_str().unwrap().to_owned();
     let m = sections::model(&doc);
-    let mine: Vec<usize> = (0..m.solids.len()).filter(|&i| m.owners[i].as_deref() == Some(uid.as_str())).collect();
+    let mine: Vec<usize> = (0..m.solids.len())
+        .filter(|&i| m.owners[i].as_deref() == Some(uid.as_str()))
+        .collect();
     use kentos_native_application::sections::Part;
-    let count = |f: &dyn Fn(Part) -> bool| mine.iter().filter(|&&i| m.parts[i].is_some_and(f)).count();
+    let count =
+        |f: &dyn Fn(Part) -> bool| mine.iter().filter(|&&i| m.parts[i].is_some_and(f)).count();
     assert_eq!(count(&|p| matches!(p, Part::Mullion(_))), 5);
     assert_eq!(count(&|p| matches!(p, Part::Transom(_))), 16);
     assert_eq!(count(&|p| p == Part::Panel), 12);
@@ -1085,11 +1157,24 @@ fn a_curtain_wall_is_its_mullions_transoms_and_panels() {
         .filter(|&&i| matches!(m.parts[i], Some(Part::Mullion(_))))
         .map(|&i| span(i).0)
         .collect();
-    let want = [(20.0, 20.05), (21.475, 21.525), (22.975, 23.025), (24.475, 24.525), (25.95, 26.0)];
+    let want = [
+        (20.0, 20.05),
+        (21.475, 21.525),
+        (22.975, 23.025),
+        (24.475, 24.525),
+        (25.95, 26.0),
+    ];
     for (got, want) in mullions.iter().zip(want) {
-        assert!(near(got.0, want.0) && near(got.1, want.1), "{got:?} {want:?}");
+        assert!(
+            near(got.0, want.0) && near(got.1, want.1),
+            "{got:?} {want:?}"
+        );
     }
-    let first_panel = mine.iter().find(|&&i| m.parts[i] == Some(Part::Panel)).copied().unwrap();
+    let first_panel = mine
+        .iter()
+        .find(|&&i| m.parts[i] == Some(Part::Panel))
+        .copied()
+        .unwrap();
     let ((x0, x1), (y0, y1), (z0, z1)) = span(first_panel);
     assert!(near(x0, 20.05) && near(x1, 21.475), "{x0} {x1}");
     assert!(near(y0, -0.012) && near(y1, 0.012), "{y0} {y1}");
@@ -1097,10 +1182,17 @@ fn a_curtain_wall_is_its_mullions_transoms_and_panels() {
     // A cut across its first bay, looking east.
     let frame = Frame::new(P::new(20.75, -1.0), P::new(20.75, 1.0), true, None).unwrap();
     let cut = sec::section(&frame, &m.solids);
-    assert_eq!(cut.cut.iter().filter(|c| mine.contains(&c.solid)).count(), 7);
+    assert_eq!(
+        cut.cut.iter().filter(|c| mine.contains(&c.solid)).count(),
+        7
+    );
     // The IFC model.
     let (b, written, _) = kentos_native_application::arch_ifc::model(&doc);
-    assert!(!written.left.iter().any(|l| l.id == uid), "{:?}", written.left);
+    assert!(
+        !written.left.iter().any(|l| l.id == uid),
+        "{:?}",
+        written.left
+    );
     let id = kentos_domain::Uuid::parse_str(&uid).unwrap().as_u128();
     let (k, wall) = b
         .elements
@@ -1109,20 +1201,38 @@ fn a_curtain_wall_is_its_mullions_transoms_and_panels() {
         .find(|(_, e)| e.id == Some(id))
         .expect("the curtain wall");
     assert_eq!(wall.class, kentos_ifc::building::Class::CurtainWall);
-    assert_eq!((wall.predefined, wall.object_type.as_deref()), ("USERDEFINED", Some("Giydirme cephe")));
+    assert_eq!(
+        (wall.predefined, wall.object_type.as_deref()),
+        ("USERDEFINED", Some("Giydirme cephe"))
+    );
     assert_eq!(wall.shapes.len(), 12);
     assert_eq!(wall.material.as_deref(), Some("Cam"));
-    let parts: Vec<&kentos_ifc::building::Element> = b.elements.iter().filter(|e| e.part_of == Some(k)).collect();
+    let parts: Vec<&kentos_ifc::building::Element> =
+        b.elements.iter().filter(|e| e.part_of == Some(k)).collect();
     assert_eq!(parts.len(), 21);
-    assert!(parts.iter().all(|e| e.class == kentos_ifc::building::Class::Member
-        && e.predefined == "MULLION"
-        && e.material.as_deref() == Some("Alüminyum")
-        && e.object == Some(id)));
+    assert!(
+        parts
+            .iter()
+            .all(|e| e.class == kentos_ifc::building::Class::Member
+                && e.predefined == "MULLION"
+                && e.material.as_deref() == Some("Alüminyum")
+                && e.object == Some(id))
+    );
     let external = |e: &kentos_ifc::building::Element, set: &str| {
-        e.psets.iter().find(|p| p.name == set).and_then(|p| p.props.iter().find(|(k, _)| k == "IsExternal")).map(|(_, v)| v.clone())
+        e.psets
+            .iter()
+            .find(|p| p.name == set)
+            .and_then(|p| p.props.iter().find(|(k, _)| k == "IsExternal"))
+            .map(|(_, v)| v.clone())
     };
-    assert_eq!(external(wall, "Pset_CurtainWallCommon"), Some(kentos_ifc::building::Value::Bool(true)));
-    assert_eq!(external(parts[0], "Pset_MemberCommon"), Some(kentos_ifc::building::Value::Bool(true)));
+    assert_eq!(
+        external(wall, "Pset_CurtainWallCommon"),
+        Some(kentos_ifc::building::Value::Bool(true))
+    );
+    assert_eq!(
+        external(parts[0], "Pset_MemberCommon"),
+        Some(kentos_ifc::building::Value::Bool(true))
+    );
     assert_eq!((written.curtain_walls, written.members), (1, 21));
     let text = kentos_ifc::building::write(&b);
     assert_eq!(text.matches("IFCCURTAINWALL(").count(), 1);
@@ -1148,8 +1258,13 @@ fn a_curtain_wall_s_door_and_window_fill_its_cells() {
     use kentos_native_application::sections::Part;
     let mut doc = building();
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| {
-        kentos_native_application::registry::run(&mut ExecutionContext::new(doc), name, kentos_commands::CallOp::Execute, input)
-            .unwrap()
+        kentos_native_application::registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            kentos_commands::CallOp::Execute,
+            input,
+        )
+        .unwrap()
     };
     let answer = run(
         &mut doc,
@@ -1174,21 +1289,39 @@ fn a_curtain_wall_s_door_and_window_fill_its_cells() {
     let fields = |doc: &Document, k: usize| {
         let u = answer["output"]["uids"][k].as_str().unwrap();
         let slot = doc.slot_of(Uuid::parse_str(u).unwrap()).unwrap();
-        let Some(Entity::Opening(o)) = doc.get(slot) else { panic!("an opening") };
+        let Some(Entity::Opening(o)) = doc.get(slot) else {
+            panic!("an opening")
+        };
         (u.to_owned(), o.opening.clone())
     };
     let (door_uid, door) = fields(&doc, 0);
     let (window_uid, window) = fields(&doc, 1);
     assert!(near(door.at, 2.25) && near(door.width, 1.45), "{door:?}");
-    assert!(door.sill.unwrap_or(0.0) == 0.0 && near(door.head.unwrap(), 2.95), "{door:?}");
-    assert!(near(window.at, 4.4875) && near(window.width, 2.925), "{window:?}");
-    assert!(near(window.sill.unwrap(), 1.025) && near(window.head.unwrap(), 1.975), "{window:?}");
+    assert!(
+        door.sill.unwrap_or(0.0) == 0.0 && near(door.head.unwrap(), 2.95),
+        "{door:?}"
+    );
+    assert!(
+        near(window.at, 4.4875) && near(window.width, 2.925),
+        "{window:?}"
+    );
+    assert!(
+        near(window.sill.unwrap(), 1.025) && near(window.head.unwrap(), 1.975),
+        "{window:?}"
+    );
     assert!(door.broken.is_none() && window.broken.is_none());
     // Its jambs at the mullions' faces.
-    assert!(near(door.place[0].x, 21.525) && near(door.place[2].x, 22.975), "{:?}", door.place);
+    assert!(
+        near(door.place[0].x, 21.525) && near(door.place[2].x, 22.975),
+        "{:?}",
+        door.place
+    );
     let m = sections::model(&doc);
-    let mine: Vec<usize> = (0..m.solids.len()).filter(|&i| m.owners[i].as_deref() == Some(uid.as_str())).collect();
-    let count = |f: &dyn Fn(Part) -> bool| mine.iter().filter(|&&i| m.parts[i].is_some_and(f)).count();
+    let mine: Vec<usize> = (0..m.solids.len())
+        .filter(|&i| m.owners[i].as_deref() == Some(uid.as_str()))
+        .collect();
+    let count =
+        |f: &dyn Fn(Part) -> bool| mine.iter().filter(|&&i| m.parts[i].is_some_and(f)).count();
     assert_eq!(count(&|p| p == Part::Panel), 7);
     assert_eq!(count(&|p| matches!(p, Part::Transom(_))), 13);
     assert_eq!(count(&|p| matches!(p, Part::Mullion(_))), 6);
@@ -1204,8 +1337,15 @@ fn a_curtain_wall_s_door_and_window_fill_its_cells() {
         .collect();
     assert_eq!(at_450, vec![(0.0, 1.025), (1.975, 3.0)]);
     // The door's lines on the faces, on its layer; its gap and the window's.
-    assert!((0..m.solids.len()).any(|i| m.owners[i].as_deref() == Some(door_uid.as_str()) && m.looks[i].layer == "MM-KAPI-GENEL"));
-    let gaps: Vec<&sections::Gap> = m.gaps.iter().filter(|g| [&door_uid, &window_uid].contains(&g.owner.as_ref().unwrap())).collect();
+    assert!(
+        (0..m.solids.len()).any(|i| m.owners[i].as_deref() == Some(door_uid.as_str())
+            && m.looks[i].layer == "MM-KAPI-GENEL")
+    );
+    let gaps: Vec<&sections::Gap> = m
+        .gaps
+        .iter()
+        .filter(|g| [&door_uid, &window_uid].contains(&g.owner.as_ref().unwrap()))
+        .collect();
     assert_eq!(gaps.len(), 2);
     // A niche goes into none.
     let refused = run(
@@ -1217,15 +1357,39 @@ fn a_curtain_wall_s_door_and_window_fill_its_cells() {
     // The IFC model: its door and window are its parts, no opening goes through it.
     let (b, written, _) = kentos_native_application::arch_ifc::model(&doc);
     let id = Uuid::parse_str(&uid).unwrap().as_u128();
-    let k = b.elements.iter().position(|e| e.id == Some(id)).expect("the curtain wall");
-    let parts: Vec<&kentos_ifc::building::Element> = b.elements.iter().filter(|e| e.part_of == Some(k)).collect();
+    let k = b
+        .elements
+        .iter()
+        .position(|e| e.id == Some(id))
+        .expect("the curtain wall");
+    let parts: Vec<&kentos_ifc::building::Element> =
+        b.elements.iter().filter(|e| e.part_of == Some(k)).collect();
     use kentos_ifc::building::Class;
-    assert_eq!(parts.iter().filter(|e| e.class == Class::Member).count(), 19);
-    let door_el = parts.iter().find(|e| e.class == Class::Door).expect("its door");
-    let window_el = parts.iter().find(|e| e.class == Class::Window).expect("its window");
-    assert_eq!(door_el.overall.map(|(h, w)| (near(h, 2.95), near(w, 1.45))), Some((true, true)));
-    assert!(window_el.overall.is_some_and(|(h, w)| near(h, 0.95) && near(w, 2.925)));
-    assert!(!b.openings.iter().any(|o| o.host == k), "no opening through a curtain wall");
+    assert_eq!(
+        parts.iter().filter(|e| e.class == Class::Member).count(),
+        19
+    );
+    let door_el = parts
+        .iter()
+        .find(|e| e.class == Class::Door)
+        .expect("its door");
+    let window_el = parts
+        .iter()
+        .find(|e| e.class == Class::Window)
+        .expect("its window");
+    assert_eq!(
+        door_el.overall.map(|(h, w)| (near(h, 2.95), near(w, 1.45))),
+        Some((true, true))
+    );
+    assert!(
+        window_el
+            .overall
+            .is_some_and(|(h, w)| near(h, 0.95) && near(w, 2.925))
+    );
+    assert!(
+        !b.openings.iter().any(|o| o.host == k),
+        "no opening through a curtain wall"
+    );
     assert_eq!(b.elements[k].shapes.len(), 7);
     assert!(written.doors >= 1 && written.windows >= 1);
     // Its grid at 1.00 m (six bays: cells 0.05–0.975, 1.025–1.975, 2.025–2.975 …): the door's cells again, those whose
@@ -1238,6 +1402,12 @@ fn a_curtain_wall_s_door_and_window_fill_its_cells() {
     assert_eq!(edited["status"], "completed", "{edited}");
     let (_, door) = fields(&doc, 0);
     let (_, window) = fields(&doc, 1);
-    assert!(near(door.at, 2.5) && near(door.width, 0.95) && near(door.head.unwrap(), 2.95), "{door:?}");
-    assert!(near(window.at, 4.4875) && near(window.width, 2.925), "{window:?}");
+    assert!(
+        near(door.at, 2.5) && near(door.width, 0.95) && near(door.head.unwrap(), 2.95),
+        "{door:?}"
+    );
+    assert!(
+        near(window.at, 4.4875) && near(window.width, 2.925),
+        "{window:?}"
+    );
 }

@@ -90,12 +90,24 @@ pub(super) fn read(
                     "piksel/özel plot birimli pafta 2B kâğıt ölçüsüne çevrilemedi",
                     p.line,
                 );
-                report.decide_quiet(Paper, "paper_units_unsupported", &name, "piksel/özel plot birimli pafta 2B kâğıt ölçüsüne çevrilemedi; alınmadı", p.line);
+                report.decide_quiet(
+                    Paper,
+                    "paper_units_unsupported",
+                    &name,
+                    "piksel/özel plot birimli pafta 2B kâğıt ölçüsüne çevrilemedi; alınmadı",
+                    p.line,
+                );
                 continue;
             }
             let per = if paper_units == 0. { 25.4 } else { 1. };
             if paper_units == 0. {
-                report.decide_quiet(Paper, "paper_inches_to_mm", &name, "pafta inç biriminde; ölçüleri 25,4 ile milimetreye çevrildi", p.line);
+                report.decide_quiet(
+                    Paper,
+                    "paper_inches_to_mm",
+                    &name,
+                    "pafta inç biriminde; ölçüleri 25,4 ile milimetreye çevrildi",
+                    p.line,
+                );
             }
             let owner = layout_groups
                 .iter()
@@ -373,9 +385,17 @@ pub(super) fn read(
     // Many writers emit an empty default Layout1 even for model-only drawings.
     // It is not a user sheet until it has paper content or an actual model view.
     result.retain(|l| {
-        let kept = !l.name.eq_ignore_ascii_case("Layout1") || !l.entities.is_empty() || !l.viewports.is_empty();
+        let kept = !l.name.eq_ignore_ascii_case("Layout1")
+            || !l.entities.is_empty()
+            || !l.viewports.is_empty();
         if !kept {
-            report.decide_quiet(Paper, "paper_empty_layout_left_out", &l.name, "boş varsayılan pafta (nesnesi ve görünümü yok) alınmadı", 0);
+            report.decide_quiet(
+                Paper,
+                "paper_empty_layout_left_out",
+                &l.name,
+                "boş varsayılan pafta (nesnesi ve görünümü yok) alınmadı",
+                0,
+            );
         }
         kept
     });

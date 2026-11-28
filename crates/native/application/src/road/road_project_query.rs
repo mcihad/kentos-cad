@@ -8,7 +8,10 @@ use crate::ExecutionContext;
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RoadProjectQuery) -> CommandResult<()> {
     match crate::road_project::tree(cx.doc, input.deep) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -16,13 +19,19 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &RoadProjectQuery) -> CommandR
 /// The answer; reads only.
 pub fn plan(cx: &ExecutionContext<'_>, input: &RoadProjectQuery) -> CommandResult<RoadProjectTree> {
     match crate::road_project::tree(cx.doc, input.deep) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RoadProjectQuery) -> CommandResult<RoadProjectTree> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RoadProjectQuery,
+) -> CommandResult<RoadProjectTree> {
     plan(cx, &input)
 }
 

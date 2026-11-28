@@ -1,6 +1,6 @@
-use kentos_native_application::{ExecutionContext, registry};
 use kentos_commands::{CallOp, DocumentSnapshotV1};
 use kentos_domain::{Document, Slot};
+use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
 fn command(doc: &mut Document, name: &str, input: Value) -> Value {
     let r = registry::run(
@@ -127,9 +127,25 @@ fn invalid_or_conflicting_explicit_viewport_scopes_fail_before_touching_the_mode
 
 #[test]
 fn a_layers_own_snap_switch_is_respected_by_viewport_and_model_queries() {
-    let data:Value=serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/viewport-identities.json")).unwrap();let mut c=data["cases"][12].clone();c["model"]["layers"][0]["snap"]=json!({"off":true});
-    let mut doc=Document::from_snapshot(serde_json::from_value(c["model"].clone()).unwrap()).unwrap();command(&mut doc,"cad.sheets.edit",json!({"ops":[{"op":"addSheet","sheet":c["sheet"]},c["operation"]]}));
-    for scope in [Value::Null,json!({"sheet":"page","item":"viewport"})] {
-        let result=command(&mut doc,"cad.snap.find",json!({"modelScope":scope,"at":c["snap"]["at"],"aperture":c["snap"]["aperture"],"kinds":["node"]}));assert!(result["snaps"].as_array().unwrap().is_empty());
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/viewport-identities.json"
+    ))
+    .unwrap();
+    let mut c = data["cases"][12].clone();
+    c["model"]["layers"][0]["snap"] = json!({"off":true});
+    let mut doc =
+        Document::from_snapshot(serde_json::from_value(c["model"].clone()).unwrap()).unwrap();
+    command(
+        &mut doc,
+        "cad.sheets.edit",
+        json!({"ops":[{"op":"addSheet","sheet":c["sheet"]},c["operation"]]}),
+    );
+    for scope in [Value::Null, json!({"sheet":"page","item":"viewport"})] {
+        let result = command(
+            &mut doc,
+            "cad.snap.find",
+            json!({"modelScope":scope,"at":c["snap"]["at"],"aperture":c["snap"]["aperture"],"kinds":["node"]}),
+        );
+        assert!(result["snaps"].as_array().unwrap().is_empty());
     }
 }

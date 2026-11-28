@@ -31,7 +31,6 @@ impl Way {
             Way::Copy => "Alınmış kopya",
         }
     }
-
 }
 
 /// A layer under its source: its id and name, the way, its table; a copy's time taken and the file's SHA-256 then.
@@ -77,30 +76,45 @@ impl App {
             return Vec::new();
         };
         let model = &doc.model;
-        let links: BTreeMap<&str, &kentos_commands::SourceLink> =
-            model.settings().sources.iter().map(|l| (l.layer.as_str(), l)).collect();
+        let links: BTreeMap<&str, &kentos_commands::SourceLink> = model
+            .settings()
+            .sources
+            .iter()
+            .map(|l| (l.layer.as_str(), l))
+            .collect();
         let mut out: Vec<Source> = Vec::new();
-        let mut put = |address: &str, entry: Entry| {
-            match out.iter_mut().find(|s| s.address == address) {
+        let mut put =
+            |address: &str, entry: Entry| match out.iter_mut().find(|s| s.address == address) {
                 Some(s) => s.entries.push(entry),
                 None => out.push(Source {
                     address: address.to_owned(),
                     file: !is_database(address),
                     entries: vec![entry],
                 }),
-            }
-        };
+            };
         for n in model.layers().leaves() {
             if let Some(d) = &n.data {
                 put(
                     &d.address,
-                    Entry { layer: n.id.clone(), name: n.name.clone(), way: Way::Data, table: Some(d.table.clone()), taken: None },
+                    Entry {
+                        layer: n.id.clone(),
+                        name: n.name.clone(),
+                        way: Way::Data,
+                        table: Some(d.table.clone()),
+                        taken: None,
+                    },
                 );
             }
             if let Some(l) = links.get(n.id.as_str()) {
                 put(
                     &l.path,
-                    Entry { layer: n.id.clone(), name: n.name.clone(), way: Way::Bound, table: Some(l.table.clone()), taken: None },
+                    Entry {
+                        layer: n.id.clone(),
+                        name: n.name.clone(),
+                        way: Way::Bound,
+                        table: Some(l.table.clone()),
+                        taken: None,
+                    },
                 );
             }
             if let Some(o) = &n.origin {
@@ -155,7 +169,9 @@ impl App {
         match (digests.get(&source.address), then) {
             (None, _) => (Kind::Info, format!("{taken}; dosya okunuyor…")),
             (Some(Err(why)), _) => (Kind::Warn, format!("{taken}; dosya okunamadı: {why}")),
-            (Some(Ok(now)), Some(then)) if now == then => (Kind::Ok, format!("{taken}; dosya değişmedi")),
+            (Some(Ok(now)), Some(then)) if now == then => {
+                (Kind::Ok, format!("{taken}; dosya değişmedi"))
+            }
             (Some(Ok(_)), Some(_)) => (Kind::Warn, format!("{taken}; dosya sonra değişti")),
             (Some(Ok(_)), None) => (Kind::Info, taken),
         }
@@ -167,12 +183,20 @@ impl App {
         if sources.is_empty() {
             return None;
         }
-        let cell = |t: String| Elided::new(t).size(typography::caption()).font(typography::ui()).width(Fill);
+        let cell = |t: String| {
+            Elided::new(t)
+                .size(typography::caption())
+                .font(typography::ui())
+                .width(Fill)
+        };
         let head = kentos_ui::widget::table::band(
             row![
-                container(kentos_ui::widget::table::title("Katman")).width(typography::scaled(150.0)),
-                container(kentos_ui::widget::table::title("Nasıl")).width(typography::scaled(120.0)),
-                container(kentos_ui::widget::table::title("Tablo")).width(typography::scaled(120.0)),
+                container(kentos_ui::widget::table::title("Katman"))
+                    .width(typography::scaled(150.0)),
+                container(kentos_ui::widget::table::title("Nasıl"))
+                    .width(typography::scaled(120.0)),
+                container(kentos_ui::widget::table::title("Tablo"))
+                    .width(typography::scaled(120.0)),
                 container(kentos_ui::widget::table::title("Durum")).width(Fill),
             ]
             .spacing(8)
@@ -183,8 +207,13 @@ impl App {
             // The source itself: its file (name and folder) or database, and whether it is where the layers say.
             let place = if s.file {
                 let p = Path::new(&s.address);
-                let name = p.file_name().map_or_else(|| s.address.clone(), |n| n.to_string_lossy().into_owned());
-                let folder = p.parent().map(|f| f.display().to_string()).unwrap_or_default();
+                let name = p
+                    .file_name()
+                    .map_or_else(|| s.address.clone(), |n| n.to_string_lossy().into_owned());
+                let folder = p
+                    .parent()
+                    .map(|f| f.display().to_string())
+                    .unwrap_or_default();
                 if p.exists() {
                     format!("{name} — {folder}")
                 } else {
@@ -195,7 +224,11 @@ impl App {
             };
             lines = lines.push(
                 container(words::text_line(
-                    if s.file && !Path::new(&s.address).exists() { Kind::Warn } else { Kind::Info },
+                    if s.file && !Path::new(&s.address).exists() {
+                        Kind::Warn
+                    } else {
+                        Kind::Info
+                    },
                     place,
                 ))
                 .padding([4, 8]),
@@ -203,13 +236,20 @@ impl App {
             for e in &s.entries {
                 let (_, state) = match e.way {
                     Way::Copy => Self::copy_state(s, e, digests),
-                    Way::Data => (Kind::Info, "satırları kaynakta; sayısı aşağıda, Veri katmanları'nda".to_owned()),
-                    Way::Bound => (Kind::Info, "kaynağa yazılır; durumu aşağıda, Bağlı katmanlar'da".to_owned()),
+                    Way::Data => (
+                        Kind::Info,
+                        "satırları kaynakta; sayısı aşağıda, Veri katmanları'nda".to_owned(),
+                    ),
+                    Way::Bound => (
+                        Kind::Info,
+                        "kaynağa yazılır; durumu aşağıda, Bağlı katmanlar'da".to_owned(),
+                    ),
                 };
                 let face = row![
                     container(cell(e.name.clone())).width(typography::scaled(150.0)),
                     container(cell(e.way.words().to_owned())).width(typography::scaled(120.0)),
-                    container(cell(e.table.clone().unwrap_or_else(|| "—".to_owned()))).width(typography::scaled(120.0)),
+                    container(cell(e.table.clone().unwrap_or_else(|| "—".to_owned())))
+                        .width(typography::scaled(120.0)),
                     cell(state),
                 ]
                 .spacing(8)
@@ -221,7 +261,9 @@ impl App {
                         .on_press(super::msg(super::Event::PickLayer(e.layer.clone())))
                         .padding(0)
                         .width(Fill)
-                        .style(kentos_ui::style::button::row(self.selected_layer.as_deref() == Some(e.layer.as_str()))),
+                        .style(kentos_ui::style::button::row(
+                            self.selected_layer.as_deref() == Some(e.layer.as_str()),
+                        )),
                 );
             }
         }

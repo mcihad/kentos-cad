@@ -20,7 +20,9 @@ pub fn has_system(doc: &Document) -> bool {
 
 /// Why a geographic system is no IFC system.
 fn geographic(name: &str) -> String {
-    format!("projenin sistemi {name} coğrafi (enlem, boylam); IFC'nin harita dönüşümü düzlem bir sisteme yazılır")
+    format!(
+        "projenin sistemi {name} coğrafi (enlem, boylam); IFC'nin harita dönüşümü düzlem bir sisteme yazılır"
+    )
 }
 
 /// The base a local system stands on, as the file names it: its EPSG code or the project's name for it, and its title;
@@ -29,13 +31,22 @@ fn base_of(base: &CrsBase) -> Result<(String, String), String> {
     match (base.srid, base.definition.as_deref()) {
         (Some(srid), None) => match system(srid) {
             Some(s) if s.kind == "projected" => Ok((code(s), title(s))),
-            Some(s) => Err(format!("tabanı {} düzlem (projeksiyonlu) bir sistem değil", title(s))),
+            Some(s) => Err(format!(
+                "tabanı {} düzlem (projeksiyonlu) bir sistem değil",
+                title(s)
+            )),
             None => Err(format!("tabanı EPSG:{srid} sistem listesinde yok")),
         },
         (None, Some(d)) => match &d.system {
             CrsSystem::Tm(_) => Ok((d.name.clone(), definition_title(d))),
-            CrsSystem::Geographic(_) => Err(format!("tabanı {} coğrafi (enlem, boylam)", definition_title(d))),
-            CrsSystem::Local(_) => Err(format!("tabanı {} de yerel bir sistem", definition_title(d))),
+            CrsSystem::Geographic(_) => Err(format!(
+                "tabanı {} coğrafi (enlem, boylam)",
+                definition_title(d)
+            )),
+            CrsSystem::Local(_) => Err(format!(
+                "tabanı {} de yerel bir sistem",
+                definition_title(d)
+            )),
         },
         _ => Err("tabanı belli değil".into()),
     }
@@ -46,7 +57,9 @@ fn base_of(base: &CrsBase) -> Result<(String, String), String> {
 pub fn of(doc: &Document, height: Option<f64>) -> Result<Crs, String> {
     let settings = doc.settings();
     let (name, words, plane) = match (settings.srid, &settings.custom_crs) {
-        (LOCAL_SRID, None) => return Err("projenin koordinat sistemi yok: çizim yerel koordinatlarda".into()),
+        (LOCAL_SRID, None) => {
+            return Err("projenin koordinat sistemi yok: çizim yerel koordinatlarda".into());
+        }
         (LOCAL_SRID, Some(d)) => match &d.system {
             CrsSystem::Tm(_) => (d.name.clone(), definition_title(d), None),
             CrsSystem::Geographic(_) => return Err(geographic(&definition_title(d))),
@@ -64,7 +77,11 @@ pub fn of(doc: &Document, height: Option<f64>) -> Result<Crs, String> {
         (srid, _) => match system(srid) {
             Some(s) if s.kind == "projected" => (code(s), title(s), None),
             Some(s) => return Err(geographic(&title(s))),
-            None => return Err(format!("projenin sistemi EPSG:{srid} sistem listesinde yok")),
+            None => {
+                return Err(format!(
+                    "projenin sistemi EPSG:{srid} sistem listesinde yok"
+                ));
+            }
         },
     };
     let Some(height) = height else {
@@ -75,7 +92,9 @@ pub fn of(doc: &Document, height: Option<f64>) -> Result<Crs, String> {
         );
     };
     let vertical = settings.heights.as_ref().and_then(|h| match h.kind {
-        HeightKind::Orthometric => h.vertical().map(|v| format!("{} (EPSG:{})", v.name, v.srid)),
+        HeightKind::Orthometric => h
+            .vertical()
+            .map(|v| format!("{} (EPSG:{})", v.name, v.srid)),
         HeightKind::Ellipsoidal => Some("ITRF96".to_owned()),
         HeightKind::Unknown => None,
     });

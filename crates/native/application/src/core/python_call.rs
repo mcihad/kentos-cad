@@ -253,7 +253,10 @@ mod tests {
         // A wide input breaks inside the relaxed block, its lines four deeper.
         let wide = json!({"points": [{"x": 500000.125, "y": 4400000.25}, {"x": 500010.5, "y": 4400000.25}, {"x": 500010.5, "y": 4400010.0}]});
         let echo = python_echo("cad.polyline.create", None, &wide, true);
-        assert!(echo.starts_with("with doc.relaxed():\n    cad.polyline.create.execute_input("), "{echo}");
+        assert!(
+            echo.starts_with("with doc.relaxed():\n    cad.polyline.create.execute_input("),
+            "{echo}"
+        );
         assert!(echo.contains("\n        \"points\": ["), "{echo}");
         assert!(echo.ends_with("    }))\n"), "{echo}");
     }
@@ -306,7 +309,10 @@ pub fn redacted(input: &Value, names: &[String]) -> Value {
 
 /// The calls as one Python script, in their order, each as [`python_call`] writes it, the hidden values
 /// written as [`HIDDEN`] (docs/adr/0443 §2).
-pub fn python_script(calls: &[(String, u32, Option<String>, Value, bool)], names: &[String]) -> String {
+pub fn python_script(
+    calls: &[(String, u32, Option<String>, Value, bool)],
+    names: &[String],
+) -> String {
     let mut out = String::from(
         "# KentOS komut geçmişi: çağrılar sırasıyla. Python konsolunda doc açık çizimdir.\n",
     );

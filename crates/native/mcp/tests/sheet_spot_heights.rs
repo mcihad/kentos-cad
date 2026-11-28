@@ -23,29 +23,51 @@ const CASES: [&str; 7] = [
 
 #[test]
 fn the_spot_heights_over_mcp_are_the_cases() {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.terrains.sheetcontours.json")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-sheet-spot-heights-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.terrains.sheetcontours.json"
+    ))
+    .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-sheet-spot-heights-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
     for name in CASES {
-        let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap().clone();
+        let case = cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"] == name)
+            .unwrap()
+            .clone();
         let step = &case["steps"][0];
         let mut args = step["input"].clone();
         args["drawing"] = drawing.clone();
         args["op"] = json!("plan");
         let r = call(&mut server, "road.terrains.sheetcontours", args);
         assert_eq!(r["isError"], false, "{name}: {r}");
-        let (got, want) = (&r["structuredContent"]["output"]["spots"], &step["result"]["output"]["spots"]);
-        assert_eq!(got.as_array().map(Vec::len), want.as_array().map(Vec::len), "{name}");
+        let (got, want) = (
+            &r["structuredContent"]["output"]["spots"],
+            &step["result"]["output"]["spots"],
+        );
+        assert_eq!(
+            got.as_array().map(Vec::len),
+            want.as_array().map(Vec::len),
+            "{name}"
+        );
         for (g, w) in got.as_array().unwrap().iter().zip(want.as_array().unwrap()) {
             assert_eq!((&g["kind"], &g["text"]), (&w["kind"], &w["text"]), "{name}");
             for key in ["x", "y", "z"] {
-                assert!((g[key].as_f64().unwrap() - w[key].as_f64().unwrap()).abs() < 1e-9, "{name} {key}");
+                assert!(
+                    (g[key].as_f64().unwrap() - w[key].as_f64().unwrap()).abs() < 1e-9,
+                    "{name} {key}"
+                );
             }
             // A measured chosen point carries the surface's height too; the others none.
             match (g["surface"].as_f64(), w["surface"].as_f64()) {

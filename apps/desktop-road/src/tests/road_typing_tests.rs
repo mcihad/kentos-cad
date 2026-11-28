@@ -1,15 +1,14 @@
 //! Typing in Yol's Hakediş grid draws each key at once (the core's typing_tests.rs keeps the rest): it needs the module
 //! registered (docs/adr/9199 §4.6).
 
+use crate::app::{App, Message};
+use crate::files_testing::offscreen;
 use crate::road::RoadState;
-use std::sync::{Arc, Mutex};
 use iced::advanced::widget::operation::{Scrollable, TextInput};
 use iced::advanced::widget::{Id, Operation};
 use iced::{Event, Point, Rectangle, Size, Vector, keyboard};
 use kentos_ui::snapshot::{Input, Snapshot};
-use crate::app::{App, Message};
-use crate::files_testing::offscreen;
-
+use std::sync::{Arc, Mutex};
 
 struct Find {
     caption: String,
@@ -21,7 +20,11 @@ struct Find {
 
 impl Find {
     fn shown(&self, bounds: Rectangle) -> Rectangle {
-        Rectangle { x: bounds.x - self.offset.x, y: bounds.y - self.offset.y, ..bounds }
+        Rectangle {
+            x: bounds.x - self.offset.x,
+            y: bounds.y - self.offset.y,
+            ..bounds
+        }
     }
 }
 
@@ -131,8 +134,10 @@ fn keys(app: &mut App, snapshot: &mut Snapshot, at: Point, typed: &str) -> Vec<b
 #[test]
 fn the_pay_grid_draws_each_key_at_once() {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.pay.query.json")).expect("cases");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.pay.query.json"
+    ))
+    .expect("cases");
     let snapshot_v2: kentos_commands::DocumentSnapshotV2 =
         serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot_v2, None).expect("opens");
@@ -140,14 +145,23 @@ fn the_pay_grid_draws_each_key_at_once() {
     let _ = app.update(Message::Run("payItems.editor"));
     let mut snapshot = offscreen(Size::new(1440.0, 900.0));
     snapshot.settle(&mut app, App::view, &mut update);
-    let items = app.modules.road().pay_window.as_ref().map_or(0, |w| w.items.len());
+    let items = app
+        .modules
+        .road()
+        .pay_window
+        .as_ref()
+        .map_or(0, |w| w.items.len());
     let add = *find(&mut snapshot, &app, "Poz ekle")
         .1
         .first()
         .expect("Poz ekle is shown");
     snapshot.input(&mut app, App::view, &mut update, Input::Click(add.center()));
     assert_eq!(
-        app.modules.road().pay_window.as_ref().map_or(0, |w| w.items.len()),
+        app.modules
+            .road()
+            .pay_window
+            .as_ref()
+            .map_or(0, |w| w.items.len()),
         items + 1,
         "Poz ekle added a row"
     );
@@ -168,7 +182,8 @@ fn the_pay_grid_draws_each_key_at_once() {
         [true, true]
     );
     assert_eq!(
-        app.modules.road()
+        app.modules
+            .road()
             .pay_window
             .as_ref()
             .map(|w| w.items[items][0].clone()),

@@ -41,7 +41,10 @@ fn source_of(data: &DataLayer) -> Result<std::sync::Arc<dyn kentos_data::Source>
 
 /// `data`'s table's box now: the source's own, measured when it keeps none; none for a table without geometry or rows.
 /// The message of why it could not be read or put in the project's system.
-pub fn data_extent(settings: &ProjectSettings, data: &DataLayer) -> Result<Option<TableBox>, String> {
+pub fn data_extent(
+    settings: &ProjectSettings,
+    data: &DataLayer,
+) -> Result<Option<TableBox>, String> {
     let Some(geometry) = &data.geometry else {
         return Ok(None);
     };
@@ -102,7 +105,8 @@ pub fn data_outline(
                     },
                     None => g.clone(),
                 };
-                let Some(e) = crate::geopackage::object_of(&g, layer, next, serde_json::Map::new()) else {
+                let Some(e) = crate::geopackage::object_of(&g, layer, next, serde_json::Map::new())
+                else {
                     continue;
                 };
                 store.put(f64::from(next), layer, false, crate::geometry::shape(&e));

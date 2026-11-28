@@ -10,8 +10,8 @@
 //! (`arch.openingSameType`) and the selection's Tipten ayır, Tipe uygula and Tipe döndür live here too.
 
 use crate::arch;
-use std::path::PathBuf;
 use crate::arch::ArchState;
+use std::path::PathBuf;
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
@@ -91,9 +91,12 @@ fn shown(form: OpeningForm, op: OpeningOperation, field: OpeningTypeField) -> bo
         Lip => door && op == OpeningOperation::Pocket,
         BothSides => {
             (door && op == OpeningOperation::Folding)
-                || (matches!(form, OpeningForm::Door | OpeningForm::Window) && op == OpeningOperation::Slide)
+                || (matches!(form, OpeningForm::Door | OpeningForm::Window)
+                    && op == OpeningOperation::Slide)
         }
-        Track | Overlap | Tracks => matches!(form, OpeningForm::Door | OpeningForm::Window) && op == OpeningOperation::Slide,
+        Track | Overlap | Tracks => {
+            matches!(form, OpeningForm::Door | OpeningForm::Window) && op == OpeningOperation::Slide
+        }
         Sill | SillBoard | Mullions | Transoms => form == OpeningForm::Window,
         Threshold | LeafThickness | UseZone => form == OpeningForm::Door,
         Depth => false,
@@ -248,21 +251,18 @@ pub(crate) trait OpeningTypesWindowApp {
         t: &'a OpeningType,
         f: &Format,
     ) -> Element<'a, Message>;
-    fn opening_types_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>;
+    fn opening_types_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
 impl OpeningTypesWindowApp for App {
-    fn opening_types_format(&self) -> Option<Format>{
+    fn opening_types_format(&self) -> Option<Format> {
         self.document
             .as_ref()
             .map(|d| Format::of(d.model.settings()))
     }
 
     /// The project's types with their openings counted.
-    fn opening_type_uses(&self) -> Vec<OpeningTypeUse>{
+    fn opening_type_uses(&self) -> Vec<OpeningTypeUse> {
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
@@ -276,7 +276,7 @@ impl OpeningTypesWindowApp for App {
     }
 
     /// The window read again, the type `keep` (an id) chosen if it is still there.
-    fn opening_types_read(&mut self, keep: Option<String>){
+    fn opening_types_read(&mut self, keep: Option<String>) {
         let uses = self.opening_type_uses();
         let chosen = keep
             .and_then(|id| uses.iter().position(|u| u.kind.id == id))
@@ -296,7 +296,7 @@ impl OpeningTypesWindowApp for App {
     }
 
     /// Kapı ve pencere tipleri (`arch.openingTypes`): the window.
-    fn open_opening_types(&mut self){
+    fn open_opening_types(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -307,11 +307,13 @@ impl OpeningTypesWindowApp for App {
             .into_iter()
             .find_map(|(_, style)| style);
         self.opening_types_read(keep);
-        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::OpeningTypes));
+        self.dialog = Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::OpeningTypes,
+        ));
     }
 
     /// The selected openings: their ids and the type each follows or was made with.
-    fn selected_openings(&self) -> Vec<(String, Option<String>)>{
+    fn selected_openings(&self) -> Vec<(String, Option<String>)> {
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
@@ -329,7 +331,7 @@ impl OpeningTypesWindowApp for App {
 
     /// Aynı tiptekileri seç (`arch.openingSameType`): every opening of the selected one's type, on the active level
     /// when one is set (independent units are docs/adr/0772's boundary), selected.
-    fn select_same_opening_type(&mut self){
+    fn select_same_opening_type(&mut self) {
         let Some(kind) = self.selected_openings().into_iter().find_map(|(_, s)| s) else {
             self.warn("Önce bir tipi izleyen açıklık seçin: aynı tiptekiler onun tipiyle seçilir.");
             return;
@@ -378,20 +380,35 @@ impl OpeningTypesWindowApp for App {
     }
 
     /// Tipten ayır, Tipe uygula, Tipe döndür on the selected openings through `cad.openings.edit`, one undo step.
-    fn opening_type_action(&mut self, operation: OpeningsOperation){
-        let Some(doc) = self.document.as_ref() else { return };
-        let uids: Vec<String> = self.selection.ids().iter().filter_map(|&slot| {
-            let Entity::Opening(opening) = doc.model.get(slot)? else { return None };
-            let fields = &opening.opening;
-            if !fields.follows_type() || !fields.style.as_deref().is_some_and(|id| {
-                doc.model.opening_types().iter().any(|kind| kind.id == id)
-            }) {
-                return None;
-            }
-            doc.model.uid(slot).map(|uid| uid.to_string())
-        }).collect();
+    fn opening_type_action(&mut self, operation: OpeningsOperation) {
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let uids: Vec<String> = self
+            .selection
+            .ids()
+            .iter()
+            .filter_map(|&slot| {
+                let Entity::Opening(opening) = doc.model.get(slot)? else {
+                    return None;
+                };
+                let fields = &opening.opening;
+                if !fields.follows_type()
+                    || !fields.style.as_deref().is_some_and(|id| {
+                        doc.model.opening_types().iter().any(|kind| kind.id == id)
+                    })
+                {
+                    return None;
+                }
+                doc.model.uid(slot).map(|uid| uid.to_string())
+            })
+            .collect();
         if uids.is_empty() {
-            let mut openings = self.selection.ids().iter().copied()
+            let mut openings = self
+                .selection
+                .ids()
+                .iter()
+                .copied()
                 .filter(|&slot| matches!(doc.model.get(slot), Some(Entity::Opening(_))));
             if let Some(slot) = openings.next().filter(|_| openings.next().is_none()) {
                 self.assign_opening_type(slot);
@@ -404,7 +421,11 @@ impl OpeningTypesWindowApp for App {
             self.warn("Tipe uygula tek açıklıkla çalışır: değerleri tipin olacak açıklığı seçin.");
             return;
         }
-        let input = OpeningsEdit { uids, operation, expected_revision: None };
+        let input = OpeningsEdit {
+            uids,
+            operation,
+            expected_revision: None,
+        };
         if matches!(input.operation, OpeningsOperation::Push { .. }) {
             self.preview_opening_push(input);
         } else {
@@ -412,42 +433,82 @@ impl OpeningTypesWindowApp for App {
         }
     }
 
-    fn show_opening_context(&mut self, action: ContextAction){
-        let Some(doc) = self.document.as_ref() else { return };
+    fn show_opening_context(&mut self, action: ContextAction) {
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         self.modules.arch_mut().opening_types = Some(Window {
-            context: Some(ContextEdit { document: doc.session, revision: doc.model.revision(), action }),
+            context: Some(ContextEdit {
+                document: doc.session,
+                revision: doc.model.revision(),
+                action,
+            }),
             ..Window::default()
         });
-        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::OpeningTypes));
+        self.dialog = Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::OpeningTypes,
+        ));
     }
 
-    fn assign_opening_type(&mut self, slot: Slot){
-        let Some(doc) = self.document.as_ref() else { return };
-        let Some(Entity::Opening(opening)) = doc.model.get(slot) else { return };
-        if opening.opening.form.is_recess() || doc.model.layers().is_locked(&opening.base.layer_id) {
+    fn assign_opening_type(&mut self, slot: Slot) {
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let Some(Entity::Opening(opening)) = doc.model.get(slot) else {
+            return;
+        };
+        if opening.opening.form.is_recess() || doc.model.layers().is_locked(&opening.base.layer_id)
+        {
             self.warn("Bu açıklığa proje tipi atanamıyor. Açıklığın türünü ve katman kilidini kontrol edin.");
             return;
         }
         let form = opening.opening.form;
         let types = doc.model.opening_types();
-        let choices: Vec<_> = types.iter().filter(|t| t.form == form)
+        let choices: Vec<_> = types
+            .iter()
+            .filter(|t| t.form == form)
             .map(|t| (t.id.clone(), t.name.clone(), false))
-            .chain(kentos_commands::builtin_opening_types().iter()
-                .filter(|t| t.form == form && !types.iter().any(|own| own.id == t.id))
-                .map(|t| (t.id.clone(), format!("{} · Projeye al ve bağla", t.name), true)))
+            .chain(
+                kentos_commands::builtin_opening_types()
+                    .iter()
+                    .filter(|t| t.form == form && !types.iter().any(|own| own.id == t.id))
+                    .map(|t| {
+                        (
+                            t.id.clone(),
+                            format!("{} · Projeye al ve bağla", t.name),
+                            true,
+                        )
+                    }),
+            )
             .collect();
-        let choice = choices.iter().position(|(id, _, _)| opening.opening.style.as_ref() == Some(id));
-        self.show_opening_context(ContextAction::Assign { slot, choices, choice });
+        let choice = choices
+            .iter()
+            .position(|(id, _, _)| opening.opening.style.as_ref() == Some(id));
+        self.show_opening_context(ContextAction::Assign {
+            slot,
+            choices,
+            choice,
+        });
     }
 
-    fn preview_opening_push_at(&mut self, slot: Slot, operation: OpeningsOperation){
-        let Some(uid) = self.document.as_ref().and_then(|doc| doc.model.uid(slot)) else { return };
-        self.preview_opening_push(OpeningsEdit { uids: vec![uid.to_string()], operation, expected_revision: None });
+    fn preview_opening_push_at(&mut self, slot: Slot, operation: OpeningsOperation) {
+        let Some(uid) = self.document.as_ref().and_then(|doc| doc.model.uid(slot)) else {
+            return;
+        };
+        self.preview_opening_push(OpeningsEdit {
+            uids: vec![uid.to_string()],
+            operation,
+            expected_revision: None,
+        });
     }
 
-    fn preview_opening_push(&mut self, mut input: OpeningsEdit){
-        let Some(doc) = self.document.as_ref() else { return };
-        let name = input.uids.first()
+    fn preview_opening_push(&mut self, mut input: OpeningsEdit) {
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let name = input
+            .uids
+            .first()
             .and_then(|id| Uuid::parse_str(id).ok())
             .and_then(|id| doc.model.slot_of(id))
             .and_then(|slot| match doc.model.get(slot) {
@@ -460,7 +521,11 @@ impl OpeningTypesWindowApp for App {
         match kentos_native_application::openings_edit::plan_in(&doc.model, &input) {
             CommandResult::Completed { output, .. } => {
                 if let Some(report) = output.report {
-                    self.show_opening_context(ContextAction::Push { input, name, report });
+                    self.show_opening_context(ContextAction::Push {
+                        input,
+                        name,
+                        report,
+                    });
                 }
             }
             CommandResult::Failed { error }
@@ -470,7 +535,7 @@ impl OpeningTypesWindowApp for App {
         }
     }
 
-    fn execute_opening_type_action(&mut self, input: OpeningsEdit){
+    fn execute_opening_type_action(&mut self, input: OpeningsEdit) {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
@@ -501,7 +566,7 @@ impl OpeningTypesWindowApp for App {
     }
 
     /// The change typed against the chosen type: none when nothing changed, else the change or why it cannot be read.
-    fn opening_type_change(&self) -> Option<Result<(String, OpeningTypeChange), String>>{
+    fn opening_type_change(&self) -> Option<Result<(String, OpeningTypeChange), String>> {
         let w = self.modules.arch().opening_types.as_ref()?;
         let f = self.opening_types_format()?;
         let t = &w.uses.get(w.chosen)?.kind;
@@ -677,7 +742,7 @@ impl OpeningTypesWindowApp for App {
     }
 
     /// The plan of the change typed: what it would do, nothing written.
-    fn opening_types_preview(&mut self){
+    fn opening_types_preview(&mut self) {
         let preview = match self.opening_type_change() {
             None => None,
             Some(Err(why)) => Some(Err(why)),
@@ -702,7 +767,10 @@ impl OpeningTypesWindowApp for App {
             match declared_of(w, &t)? {
                 Err(why) => Some(why),
                 Ok(operation) => {
-                    let input = kentos_commands::ArchPerformance { operation, expected_revision: None };
+                    let input = kentos_commands::ArchPerformance {
+                        operation,
+                        expected_revision: None,
+                    };
                     match kentos_native_application::arch_performance::plan_in(&doc.model, &input) {
                         CommandResult::Failed { error }
                         | CommandResult::Conflict { error }
@@ -720,15 +788,22 @@ impl OpeningTypesWindowApp for App {
 
     /// `cad.arch.performance` over the drawing (docs/adr/8124): the type's fire resistance class, one step “Yangın ve
     /// performans”; whether it was written, the refusal said.
-    fn opening_types_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool{
-        let Some(doc) = self.document.as_mut() else { return false };
-        let input = kentos_commands::ArchPerformance { operation, expected_revision: None };
+    fn opening_types_declare(&mut self, operation: kentos_commands::PerformanceOperation) -> bool {
+        let Some(doc) = self.document.as_mut() else {
+            return false;
+        };
+        let input = kentos_commands::ArchPerformance {
+            operation,
+            expected_revision: None,
+        };
         match kentos_native_application::arch_performance::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
             input,
         ) {
             CommandResult::Completed { .. } => true,
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.warn(error.message);
                 false
             }
@@ -740,7 +815,7 @@ impl OpeningTypesWindowApp for App {
     fn opening_types_command(
         &mut self,
         operation: OpeningTypesOperation,
-    ) -> Option<OpeningTypesEdited>{
+    ) -> Option<OpeningTypesEdited> {
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::opening_types_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -769,17 +844,27 @@ impl OpeningTypesWindowApp for App {
         }
     }
 
-    fn opening_types_chosen(&self) -> Option<OpeningType>{
+    fn opening_types_chosen(&self) -> Option<OpeningType> {
         let w = self.modules.arch().opening_types.as_ref()?;
         w.uses.get(w.chosen).map(|u| u.kind.clone())
     }
 
-    fn opening_types_event(&mut self, event: Event) -> Task<Message>{
+    fn opening_types_event(&mut self, event: Event) -> Task<Message> {
         let format = self.opening_types_format();
         match event {
             Event::ContextChoice(i) => {
-                if let Some(ContextEdit { action: ContextAction::Assign { choices, choice, .. }, .. }) =
-                    self.modules.arch_mut().opening_types.as_mut().and_then(|w| w.context.as_mut())
+                if let Some(ContextEdit {
+                    action:
+                        ContextAction::Assign {
+                            choices, choice, ..
+                        },
+                    ..
+                }) = self
+                    .modules
+                    .arch_mut()
+                    .opening_types
+                    .as_mut()
+                    .and_then(|w| w.context.as_mut())
                     && i < choices.len()
                 {
                     *choice = Some(i);
@@ -788,12 +873,15 @@ impl OpeningTypesWindowApp for App {
             Event::ContextApply => self.apply_opening_context(),
             Event::Choose(i) => {
                 let t = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .opening_types
                     .as_ref()
                     .and_then(|w| w.uses.get(i))
                     .map(|u| u.kind.clone());
-                if let (Some(w), Some(t), Some(f)) = (self.modules.arch_mut().opening_types.as_mut(), t, format) {
+                if let (Some(w), Some(t), Some(f)) =
+                    (self.modules.arch_mut().opening_types.as_mut(), t, format)
+                {
                     w.chosen = i;
                     fill(w, &t, &f);
                 }
@@ -864,7 +952,8 @@ impl OpeningTypesWindowApp for App {
                     return Task::none();
                 };
                 let name = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .opening_types
                     .as_ref()
                     .map(|w| w.name.trim().to_owned())
@@ -902,11 +991,19 @@ impl OpeningTypesWindowApp for App {
                     None => {}
                 }
                 // Its fire resistance class (docs/adr/8124): its own step, “Yangın ve performans”.
-                let declared = self.modules.arch().opening_types.as_ref().and_then(|w| declared_of(w, &t));
+                let declared = self
+                    .modules
+                    .arch()
+                    .opening_types
+                    .as_ref()
+                    .and_then(|w| declared_of(w, &t));
                 match declared {
                     Some(Ok(operation)) => {
                         if self.opening_types_declare(operation) {
-                            self.say(Level::Success, format!("{}: yangın dayanım sınıfı yazıldı.", t.name));
+                            self.say(
+                                Level::Success,
+                                format!("{}: yangın dayanım sınıfı yazıldı.", t.name),
+                            );
                         }
                     }
                     Some(Err(why)) => self.warn(why),
@@ -919,7 +1016,8 @@ impl OpeningTypesWindowApp for App {
                 let chosen = self.opening_types_chosen().filter(|_| form.is_none());
                 let base = new_name(form, chosen.as_ref());
                 let names: Vec<String> = self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .opening_types
                     .as_ref()
                     .map(|w| w.uses.iter().map(|u| u.kind.name.to_lowercase()).collect())
@@ -1044,8 +1142,16 @@ impl OpeningTypesWindowApp for App {
         Task::none()
     }
 
-    fn apply_opening_context(&mut self){
-        let Some(context) = self.modules.arch().opening_types.as_ref().and_then(|w| w.context.clone()) else { return };
+    fn apply_opening_context(&mut self) {
+        let Some(context) = self
+            .modules
+            .arch()
+            .opening_types
+            .as_ref()
+            .and_then(|w| w.context.clone())
+        else {
+            return;
+        };
         if self.document.as_ref().is_none_or(|doc| {
             doc.session != context.document || doc.model.revision() != context.revision
         }) {
@@ -1055,8 +1161,14 @@ impl OpeningTypesWindowApp for App {
             return;
         }
         match context.action {
-            ContextAction::Assign { slot, choices, choice } => {
-                let Some((id, _, preset)) = choice.and_then(|i| choices.get(i)) else { return };
+            ContextAction::Assign {
+                slot,
+                choices,
+                choice,
+            } => {
+                let Some((id, _, preset)) = choice.and_then(|i| choices.get(i)) else {
+                    return;
+                };
                 self.modules.arch_mut().opening_types = None;
                 self.dialog = None;
                 self.properties_event(if *preset {
@@ -1064,7 +1176,11 @@ impl OpeningTypesWindowApp for App {
                 } else {
                     crate::properties::Event::Opening(
                         slot,
-                        OpeningsOperation::ReplaceType { from: None, to: id.clone(), level: None },
+                        OpeningsOperation::ReplaceType {
+                            from: None,
+                            to: id.clone(),
+                            level: None,
+                        },
                     )
                 });
             }
@@ -1077,17 +1193,18 @@ impl OpeningTypesWindowApp for App {
     }
 
     /// Whether the chosen type has a change or a new name Uygula has not written (docs/adr/8006).
-    fn opening_types_unapplied(&self) -> bool{
+    fn opening_types_unapplied(&self) -> bool {
         self.modules.arch().opening_types.as_ref().is_some_and(|w| {
             self.opening_type_change().is_some()
                 || w.uses.get(w.chosen).is_some_and(|u| {
-                    (!w.name.trim().is_empty() && w.name.trim() != u.kind.name) || declared_of(w, &u.kind).is_some()
+                    (!w.name.trim().is_empty() && w.name.trim() != u.kind.name)
+                        || declared_of(w, &u.kind).is_some()
                 })
         })
     }
 
     /// Kitaplıktan al…: an office library's types, a name the project has taken under a new one.
-    fn import_opening_types(&mut self, path: &std::path::Path){
+    fn import_opening_types(&mut self, path: &std::path::Path) {
         let library = match std::fs::read_to_string(path)
             .map_err(|e| e.to_string())
             .and_then(|t| {
@@ -1117,7 +1234,7 @@ impl OpeningTypesWindowApp for App {
     }
 
     /// Kitaplığa yaz…: the project's types as a `kentos.opening-types` file.
-    fn export_opening_types(&mut self, path: &std::path::Path){
+    fn export_opening_types(&mut self, path: &std::path::Path) {
         let library = path
             .file_stem()
             .map_or_else(|| "Ofis".to_owned(), |s| s.to_string_lossy().into_owned());
@@ -1142,8 +1259,11 @@ impl OpeningTypesWindowApp for App {
         }
     }
 
-    fn opening_types_view(&self) -> Element<'_, Message>{
-        let (Some(w), Some(f)) = (&self.modules.arch().opening_types, self.opening_types_format()) else {
+    fn opening_types_view(&self) -> Element<'_, Message> {
+        let (Some(w), Some(f)) = (
+            &self.modules.arch().opening_types,
+            self.opening_types_format(),
+        ) else {
             return iced::widget::text("").into();
         };
         if let Some(context) = &w.context {
@@ -1240,7 +1360,7 @@ impl OpeningTypesWindowApp for App {
         w: &'a Window,
         t: &'a OpeningType,
         f: &Format,
-    ) -> Element<'a, Message>{
+    ) -> Element<'a, Message> {
         let unit = f.length_unit_label();
         let name =
             kentos_ui::widget::text_field("Tipin adı", &w.name).on_input(|t| msg(Event::Name(t)));
@@ -1306,9 +1426,18 @@ impl OpeningTypesWindowApp for App {
         }
         // Its fire resistance class (docs/adr/8124): the openings without their own carry it; its basis one line.
         let fire = kentos_ui::widget::text_field("Yok", &w.fire).on_input(|t| msg(Event::Fire(t)));
-        cells.push(words::field("Yangın dayanım sınıfı", fire, Some("TS EN 13501-2: EI 60, EI2 60-S200C5".into())));
-        let basis = kentos_ui::widget::text_field("Müellif beyanı", &w.fire_basis).on_input(|t| msg(Event::FireBasis(t)));
-        cells.push(words::field("Dayanak belgesi", basis, Some("Belgenin adı (2026-02-28); boş: müellif beyanı".into())));
+        cells.push(words::field(
+            "Yangın dayanım sınıfı",
+            fire,
+            Some("TS EN 13501-2: EI 60, EI2 60-S200C5".into()),
+        ));
+        let basis = kentos_ui::widget::text_field("Müellif beyanı", &w.fire_basis)
+            .on_input(|t| msg(Event::FireBasis(t)));
+        cells.push(words::field(
+            "Dayanak belgesi",
+            basis,
+            Some("Belgenin adı (2026-02-28); boş: müellif beyanı".into()),
+        ));
         for (field, text) in &w.typed {
             let field = *field;
             let input = kentos_ui::widget::text_field("Yok", text)
@@ -1393,20 +1522,32 @@ impl OpeningTypesWindowApp for App {
     }
 
     /// The window's buttons by their words (a trace's `dialog` step).
-    fn opening_types_control(
-        &self,
-        control: Control<'_>,
-    ) -> Result<Option<Message>, String>{
+    fn opening_types_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().opening_types.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
-        if let Some(context) = self.modules.arch().opening_types.as_ref().and_then(|w| w.context.as_ref()) {
+        if let Some(context) = self
+            .modules
+            .arch()
+            .opening_types
+            .as_ref()
+            .and_then(|w| w.context.as_ref())
+        {
             return Ok(match (&context.action, control) {
                 (_, Control::Press(CLOSE)) => Some(msg(Event::Close)),
-                (ContextAction::Assign { choice: Some(_), .. }, Control::Press("Tipi ata"))
-                | (ContextAction::Push { .. }, Control::Press(APPLY)) => Some(msg(Event::ContextApply)),
+                (
+                    ContextAction::Assign {
+                        choice: Some(_), ..
+                    },
+                    Control::Press("Tipi ata"),
+                )
+                | (ContextAction::Push { .. }, Control::Press(APPLY)) => {
+                    Some(msg(Event::ContextApply))
+                }
                 (ContextAction::Assign { choices, .. }, Control::Pick("Proje tipi", item)) => {
-                    choices.iter().position(|(_, label, _)| label == item)
+                    choices
+                        .iter()
+                        .position(|(_, label, _)| label == item)
                         .map(|i| msg(Event::ContextChoice(i)))
                 }
                 _ => return Err(format!("Bu tip eyleminde {control} yok")),
@@ -1418,7 +1559,8 @@ impl OpeningTypesWindowApp for App {
             // Yeni tip ▾'s items by their words: a form, or the chosen type's copy.
             Control::Pick(NEW, COPY)
                 if !self
-                    .modules.arch()
+                    .modules
+                    .arch()
                     .opening_types
                     .as_ref()
                     .is_some_and(|w| w.uses.is_empty()) =>
@@ -1437,25 +1579,46 @@ impl OpeningTypesWindowApp for App {
 
 fn opening_context_view(action: &ContextAction) -> Element<'_, Message> {
     let (title, text, apply, ready) = match action {
-        ContextAction::Assign { choice, .. } =>
-            ("Proje tipi ata", "Seçili açıklığı aynı biçimdeki bir proje tipine bağlayın.".to_owned(),
-             "Tipi ata", choice.is_some()),
-        ContextAction::Push { name, report, .. } =>
-            ("Tipe uygula · Önizleme", format!("{name} · Tüm çizim  |  {}", report_words(report)), APPLY, true),
+        ContextAction::Assign { choice, .. } => (
+            "Proje tipi ata",
+            "Seçili açıklığı aynı biçimdeki bir proje tipine bağlayın.".to_owned(),
+            "Tipi ata",
+            choice.is_some(),
+        ),
+        ContextAction::Push { name, report, .. } => (
+            "Tipe uygula · Önizleme",
+            format!("{name} · Tüm çizim  |  {}", report_words(report)),
+            APPLY,
+            true,
+        ),
     };
     let frame = Frame::new(title).push(label::body(text));
     let frame = match action {
-        ContextAction::Assign { choices, choice, .. } => frame.push(
-            Select::new(choices.iter().map(|(_, text, _)| Choice::new(text)), *choice,
-                |i| msg(Event::ContextChoice(i))).placeholder("Proje tipi seçin"),
+        ContextAction::Assign {
+            choices, choice, ..
+        } => frame.push(
+            Select::new(
+                choices.iter().map(|(_, text, _)| Choice::new(text)),
+                *choice,
+                |i| msg(Event::ContextChoice(i)),
+            )
+            .placeholder("Proje tipi seçin"),
         ),
         ContextAction::Push { report, .. } => frame.push(label::caption(
-            report.fields.iter().map(|field| field.label()).collect::<Vec<_>>().join(" · "),
+            report
+                .fields
+                .iter()
+                .map(|field| field.label())
+                .collect::<Vec<_>>()
+                .join(" · "),
         )),
     };
     frame
         .action(words::secondary(CLOSE, Some(msg(Event::Close))))
-        .action(words::primary(apply, ready.then(|| msg(Event::ContextApply))))
+        .action(words::primary(
+            apply,
+            ready.then(|| msg(Event::ContextApply)),
+        ))
         .width(540.0)
         .modal(msg(Event::Close))
 }
@@ -1534,8 +1697,16 @@ fn fill(w: &mut Window, t: &OpeningType, f: &Format) {
             .trim_end_matches('.')
             .replace('.', ",")
     });
-    w.fire = t.fire_rating.as_ref().map(|d| d.value.clone()).unwrap_or_default();
-    w.fire_basis = t.fire_rating.as_ref().map(|d| d.basis.field()).unwrap_or_default();
+    w.fire = t
+        .fire_rating
+        .as_ref()
+        .map(|d| d.value.clone())
+        .unwrap_or_default();
+    w.fire_basis = t
+        .fire_rating
+        .as_ref()
+        .map(|d| d.basis.field())
+        .unwrap_or_default();
     w.declared = None;
     w.typed.clear();
     refit(w, t, f);
@@ -1544,15 +1715,24 @@ fn fill(w: &mut Window, t: &OpeningType, f: &Format) {
 
 /// The type's fire resistance class as typed against its own (docs/adr/8124): the operation that writes it, none when
 /// it is as it was; the words when the basis does not read.
-fn declared_of(w: &Window, t: &OpeningType) -> Option<Result<kentos_commands::PerformanceOperation, String>> {
+fn declared_of(
+    w: &Window,
+    t: &OpeningType,
+) -> Option<Result<kentos_commands::PerformanceOperation, String>> {
     let value = w.fire.trim();
     let basis = match kentos_commands::DeclaredBasis::read(&w.fire_basis) {
         Ok(b) => b,
         Err(why) => return Some(Err(why)),
     };
-    let now = (!value.is_empty()).then(|| kentos_commands::Declared { value: value.to_owned(), basis });
+    let now = (!value.is_empty()).then(|| kentos_commands::Declared {
+        value: value.to_owned(),
+        basis,
+    });
     (now != t.fire_rating).then(|| {
-        Ok(kentos_commands::PerformanceOperation::OpeningType { opening_type: t.id.clone(), fire_rating: now })
+        Ok(kentos_commands::PerformanceOperation::OpeningType {
+            opening_type: t.id.clone(),
+            fire_rating: now,
+        })
     })
 }
 
@@ -1575,7 +1755,11 @@ fn refit(w: &mut Window, t: &OpeningType, f: &Format) {
             let text = if LENGTHS.contains(&x) {
                 length_text(f, &v)
             } else if SWITCHES.contains(&x) {
-                if v == Value::Bool(true) { "Evet".to_owned() } else { String::new() }
+                if v == Value::Bool(true) {
+                    "Evet".to_owned()
+                } else {
+                    String::new()
+                }
             } else {
                 v.as_f64().map_or_else(String::new, |n| {
                     if n.fract() == 0.0 {

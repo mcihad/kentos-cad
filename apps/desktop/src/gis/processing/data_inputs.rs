@@ -16,7 +16,9 @@
 use kentos_domain::Slot;
 use kentos_expression::Variable;
 use kentos_interaction::Selection;
-use kentos_processing::{Bounds, FeaturesValue, Host, LogLine, ParamKind, Prepared, Scene, Scope, Store};
+use kentos_processing::{
+    Bounds, FeaturesValue, Host, LogLine, ParamKind, Prepared, Scene, Scope, Store,
+};
 
 use super::dialog::RunStatus;
 use crate::app::{App, Message};
@@ -71,19 +73,27 @@ impl Host for RowsStage<'_> {
     fn select(&mut self, ids: &[Slot]) {
         // What the run made, in the drawing; a row of the copy is no object of it.
         let doc = &*self.doc;
-        self.selection.set(ids.iter().copied().filter(|s| doc.get(*s).is_some()));
+        self.selection
+            .set(ids.iter().copied().filter(|s| doc.get(*s).is_some()));
     }
 }
 
 impl App {
     /// Whether the open tool takes a data layer's rows into an input it changes in place.
     fn rows_into_writes(&self) -> bool {
-        let (Some(window), Some(doc)) = (self.gis.processing.dialog.as_ref(), self.document.as_ref()) else {
+        let (Some(window), Some(doc)) =
+            (self.gis.processing.dialog.as_ref(), self.document.as_ref())
+        else {
             return false;
         };
         let tree = doc.model.layers();
-        let data: Vec<&kentos_commands::LayerNode> = tree.leaves().into_iter().filter(|l| l.data.is_some()).collect();
-        let chosen = self.gis.features.data.selected_layer().is_some() && !self.gis.features.data.selected.is_empty();
+        let data: Vec<&kentos_commands::LayerNode> = tree
+            .leaves()
+            .into_iter()
+            .filter(|l| l.data.is_some())
+            .collect();
+        let chosen = self.gis.features.data.selected_layer().is_some()
+            && !self.gis.features.data.selected.is_empty();
         window.tool.parameters.iter().any(|p| {
             let ParamKind::Features { writes: true, .. } = p.kind else {
                 return false;
@@ -106,14 +116,19 @@ impl App {
     pub(super) fn processing_rows_run(&mut self) -> Option<iced::Task<Message>> {
         let window = self.gis.processing.dialog.as_ref()?;
         let id = window.tool.id.as_str();
-        if matches!(id, super::data_location::TOOL | super::data_location::EXPRESSION)
-            || id.starts_with(kentos_processing::model_runner::MODEL_PREFIX)
+        if matches!(
+            id,
+            super::data_location::TOOL | super::data_location::EXPRESSION
+        ) || id.starts_with(kentos_processing::model_runner::MODEL_PREFIX)
         {
             return None;
         }
         let located = self.data_location()?;
         if !located.reading.is_empty() {
-            let why = format!("Kaynaktan okunuyor: {}. Satırlar okununca çalıştırın.", located.reading.join(", "));
+            let why = format!(
+                "Kaynaktan okunuyor: {}. Satırlar okununca çalıştırın.",
+                located.reading.join(", ")
+            );
             if let Some(window) = &mut self.gis.processing.dialog {
                 window.status = RunStatus::Invalid(why);
             }

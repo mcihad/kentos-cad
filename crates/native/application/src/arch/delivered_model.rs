@@ -55,7 +55,10 @@ pub enum Last {
     None,
     Found(Box<Delivered>),
     /// A delivery's package could not be read as it went: the delivery's number and why, with what to do.
-    Unreadable { number: u32, why: String },
+    Unreadable {
+        number: u32,
+        why: String,
+    },
 }
 
 /// How the drawing now differs from the delivered model, objects by GlobalId.
@@ -123,7 +126,12 @@ pub fn last(doc: &Document) -> Last {
         match model_of(d, Path::new(path)) {
             Ok(Some(found)) => return Last::Found(Box::new(found)),
             Ok(None) => {}
-            Err(why) => return Last::Unreadable { number: d.number, why },
+            Err(why) => {
+                return Last::Unreadable {
+                    number: d.number,
+                    why,
+                };
+            }
         }
     }
     Last::None
@@ -142,37 +150,70 @@ impl Delivered {
         let older = self.opened()?;
         let now = planned_for(doc, &self.model);
         let counted = self.count(&older, now.as_ref())?;
-        if let Some(p) = self.source.as_ref().and_then(|s| planned_for(s, &self.model)) {
-            return Ok(Read { facts: p.facts_of(&self.bytes, false)?, counted, expected: Expected::Carried });
+        if let Some(p) = self
+            .source
+            .as_ref()
+            .and_then(|s| planned_for(s, &self.model))
+        {
+            return Ok(Read {
+                facts: p.facts_of(&self.bytes, false)?,
+                counted,
+                expected: Expected::Carried,
+            });
         }
         if let Some(p) = now.as_ref().filter(|_| counted.same()) {
-            return Ok(Read { facts: p.facts_of(&self.bytes, false)?, counted, expected: Expected::Now });
+            return Ok(Read {
+                facts: p.facts_of(&self.bytes, false)?,
+                counted,
+                expected: Expected::Now,
+            });
         }
         // Neither: the file's own facts alone. No expectations and no export record, so the form leaves EK-9/8, /17
         // and /21 to review rather than passing them on an empty list.
         let limits = kentos_ifc::read::Limits::default();
         let mut facts = kentos_ifc::read::file_facts(&self.bytes, &self.model, &limits, &|| false)
-            .map_err(|e| format!("{}. teslimin modeli (“{}”) okunamadı: {e}.", self.number, self.model))?;
+            .map_err(|e| {
+                format!(
+                    "{}. teslimin modeli (“{}”) okunamadı: {e}.",
+                    self.number, self.model
+                )
+            })?;
         if let Some(p) = &now {
             facts["at"] = json!(p.at());
         }
-        Ok(Read { facts, counted, expected: Expected::Missing })
+        Ok(Read {
+            facts,
+            counted,
+            expected: Expected::Missing,
+        })
     }
 
     /// The delivered file read.
     fn opened(&self) -> Result<kentos_ifc::read::Model, String> {
         kentos_ifc::read::read(&self.bytes, &kentos_ifc::read::Limits::default(), &|| false)
-            .map_err(|e| format!("{}. teslimin modeli (“{}”) okunamadı: {e}.", self.number, self.model))
+            .map_err(|e| {
+                format!(
+                    "{}. teslimin modeli (“{}”) okunamadı: {e}.",
+                    self.number, self.model
+                )
+            })
     }
 
     /// The drawing's model (`now`; none: no walls) against the delivered one (`older`).
-    fn count(&self, older: &kentos_ifc::read::Model, now: Option<&Planned>) -> Result<Counted, String> {
+    fn count(
+        &self,
+        older: &kentos_ifc::read::Model,
+        now: Option<&Planned>,
+    ) -> Result<Counted, String> {
         let Some(now) = now else {
             return Ok(Counted::NoModel);
         };
         // A storey's GlobalId is a derived one since docs/adr/8117: a file whose storeys have none was numbered.
-        let storeys: Vec<&kentos_ifc::read::Object> =
-            older.objects.iter().filter(|o| o.class.eq_ignore_ascii_case("IfcBuildingStorey")).collect();
+        let storeys: Vec<&kentos_ifc::read::Object> = older
+            .objects
+            .iter()
+            .filter(|o| o.class.eq_ignore_ascii_case("IfcBuildingStorey"))
+            .collect();
         let derived = |o: &&kentos_ifc::read::Object| {
             kentos_ifc::step::unguid(&o.global_id).is_some_and(kentos_ifc::step::is_derived)
         };
@@ -199,16 +240,21 @@ fn model_of(d: &Delivery, folder: &Path) -> Result<Option<Delivered>, String> {
             folder.display()
         ));
     }
-    let list: Value = serde_json::from_slice(&list_bytes)
-        .map_err(|_| format!("{n}. teslimin {MANIFEST} dosyası bir KentOS yayınının listesi olarak okunamadı."))?;
+    let list: Value = serde_json::from_slice(&list_bytes).map_err(|_| {
+        format!("{n}. teslimin {MANIFEST} dosyası bir KentOS yayınının listesi olarak okunamadı.")
+    })?;
     let Some(model) = list["bim"]["model"].as_str() else {
         return Ok(None);
     };
-    let model_sha = listed(&list["files"], "name", model)
-        .ok_or_else(|| format!("{n}. teslimin listesi modeli (“{model}”) özetiyle saymıyor: paket eksik yazılmış."))?;
+    let model_sha = listed(&list["files"], "name", model).ok_or_else(|| {
+        format!("{n}. teslimin listesi modeli (“{model}”) özetiyle saymıyor: paket eksik yazılmış.")
+    })?;
     let bytes = checked(folder, model, &model_sha, n)?;
     // The form's record: the answers that went with the model.
-    let answers = match (list["bim"]["form"]["name"].as_str(), list["bim"]["form"]["sha256"].as_str()) {
+    let answers = match (
+        list["bim"]["form"]["name"].as_str(),
+        list["bim"]["form"]["sha256"].as_str(),
+    ) {
         (Some(name), Some(sha)) => {
             let record: Value = serde_json::from_slice(&checked(folder, name, sha, n)?)
                 .map_err(|_| format!("{n}. teslimin form kaydı (“{name}”) okunamadı."))?;
@@ -220,7 +266,9 @@ fn model_of(d: &Delivery, folder: &Path) -> Result<Option<Delivered>, String> {
     let source = match listed(&list["resources"]["files"], "path", DRAWING) {
         Some(sha) => {
             let b = checked(folder, DRAWING, &sha, n)?;
-            crate::file_import_block::read_drawing(&b).ok().and_then(|s| Document::from_snapshot_v2(s).ok())
+            crate::file_import_block::read_drawing(&b)
+                .ok()
+                .and_then(|s| Document::from_snapshot_v2(s).ok())
         }
         None => None,
     };
@@ -252,12 +300,17 @@ fn checked(folder: &Path, name: &str, sha: &str, n: u32) -> Result<Vec<u8>, Stri
         && !name.starts_with(['/', '\\'])
         && !name.contains('\\')
         && !name.contains(':')
-        && name.split('/').all(|part| !part.is_empty() && part != "." && part != "..");
+        && name
+            .split('/')
+            .all(|part| !part.is_empty() && part != "." && part != "..");
     if !inside {
-        return Err(format!("{n}. teslimin listesindeki “{name}” klasörün bir dosyası değil: paket bozuk."));
+        return Err(format!(
+            "{n}. teslimin listesindeki “{name}” klasörün bir dosyası değil: paket bozuk."
+        ));
     }
-    let bytes = std::fs::read(folder.join(name))
-        .map_err(|_| format!("{n}. teslimin “{name}” dosyası klasörde yok: teslim edilen dosyayı yerine koyun."))?;
+    let bytes = std::fs::read(folder.join(name)).map_err(|_| {
+        format!("{n}. teslimin “{name}” dosyası klasörde yok: teslim edilen dosyayı yerine koyun.")
+    })?;
     if !sha256_hex(&bytes).eq_ignore_ascii_case(sha) {
         return Err(format!(
             "{n}. teslimin “{name}” dosyası teslimden sonra değişmiş (SHA-256 listedekinden farklı): teslim edilen \
@@ -291,13 +344,34 @@ fn planned_for(doc: &Document, name: &str) -> Option<Planned> {
 }
 
 /// The drawing's model against the delivered file (`older`, read from `delivered`).
-fn compared(older: &kentos_ifc::read::Model, delivered: &[u8], now: &Planned) -> Result<Drift, String> {
+fn compared(
+    older: &kentos_ifc::read::Model,
+    delivered: &[u8],
+    now: &Planned,
+) -> Result<Drift, String> {
     let text = now.text();
-    let newer = kentos_ifc::read::read(text.as_bytes(), &kentos_ifc::read::Limits::default(), &|| false)
-        .map_err(|e| format!("Çizimin modeli geri okunamadı: {e}. Bu KentOS'un hatasıdır; çizimi bildirin."))?;
-    let c = kentos_ifc::compare::compare(older, delivered, &newer, text.as_bytes(), IFC_COMPARE_TOLERANCE, &|| false)
-        .map_err(|e| format!("Teslim edilen model çizimle karşılaştırılamadı: {e}."))?;
-    Ok(Drift { added: c.added.len(), removed: c.removed.len(), changed: c.changed.len() })
+    let newer = kentos_ifc::read::read(
+        text.as_bytes(),
+        &kentos_ifc::read::Limits::default(),
+        &|| false,
+    )
+    .map_err(|e| {
+        format!("Çizimin modeli geri okunamadı: {e}. Bu KentOS'un hatasıdır; çizimi bildirin.")
+    })?;
+    let c = kentos_ifc::compare::compare(
+        older,
+        delivered,
+        &newer,
+        text.as_bytes(),
+        IFC_COMPARE_TOLERANCE,
+        &|| false,
+    )
+    .map_err(|e| format!("Teslim edilen model çizimle karşılaştırılamadı: {e}."))?;
+    Ok(Drift {
+        added: c.added.len(),
+        removed: c.removed.len(),
+        changed: c.changed.len(),
+    })
 }
 
 #[cfg(test)]
@@ -311,11 +385,17 @@ mod tests {
             "layers":[{"id":"a","name":"Çizim","type":"layer","visible":true,"locked":false,"expanded":true,
             "style":{"color":"fg","lineType":"continuous","lineWeight":0.18},"children":[]}],
             "activeLayer":"a","entities":[],"styles":{"items":[],"categories":[]}}"#;
-        Document::from_snapshot(kentos_commands::DocumentSnapshotV1::from_json(text).expect("reads")).expect("opens")
+        Document::from_snapshot(
+            kentos_commands::DocumentSnapshotV1::from_json(text).expect("reads"),
+        )
+        .expect("opens")
     }
 
     fn temp(name: &str) -> std::path::PathBuf {
-        let dir = std::env::temp_dir().join(format!("kentos-teslim-modeli-{}-{name}", std::process::id()));
+        let dir = std::env::temp_dir().join(format!(
+            "kentos-teslim-modeli-{}-{name}",
+            std::process::id()
+        ));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("a folder");
         dir
@@ -324,7 +404,9 @@ mod tests {
     /// A drawing whose record has one delivery of `folder`'s list as it is now.
     fn delivered(folder: &Path) -> Document {
         let mut doc = empty();
-        let manifest = std::fs::read(folder.join(MANIFEST)).map(|b| sha256_hex(&b)).unwrap_or_else(|_| "0".repeat(64));
+        let manifest = std::fs::read(folder.join(MANIFEST))
+            .map(|b| sha256_hex(&b))
+            .unwrap_or_else(|_| "0".repeat(64));
         let input = json!({"change": {"kind": "add", "revision": "000", "package": {"manifest": manifest, "files": 1,
             "path": folder.display().to_string()}, "to": "Örnek Belediyesi", "at": "2026-11-18"}});
         let answer = crate::registry::run(
@@ -339,7 +421,11 @@ mod tests {
     }
 
     fn write_list(folder: &Path, list: &Value) {
-        std::fs::write(folder.join(MANIFEST), serde_json::to_vec(list).expect("json")).expect("writes");
+        std::fs::write(
+            folder.join(MANIFEST),
+            serde_json::to_vec(list).expect("json"),
+        )
+        .expect("writes");
     }
 
     fn unreadable(doc: &Document) -> String {
@@ -353,7 +439,10 @@ mod tests {
     #[test]
     fn a_package_of_sheets_alone_carries_no_model() {
         let dir = temp("paftalar");
-        write_list(&dir, &json!({"format": "kentos.publish/1", "files": [{"name": "001.pdf", "sha256": "ab"}]}));
+        write_list(
+            &dir,
+            &json!({"format": "kentos.publish/1", "files": [{"name": "001.pdf", "sha256": "ab"}]}),
+        );
         assert!(matches!(last(&delivered(&dir)), Last::None));
         assert!(matches!(last(&empty()), Last::None), "no delivery");
     }
@@ -368,14 +457,23 @@ mod tests {
         write_list(&dir, &list);
         let doc = delivered(&dir);
         // The list rewritten after the delivery.
-        write_list(&dir, &json!({"format": "kentos.publish/1", "files": [], "bim": {"model": "model.ifc"}}));
+        write_list(
+            &dir,
+            &json!({"format": "kentos.publish/1", "files": [], "bim": {"model": "model.ifc"}}),
+        );
         let why = unreadable(&doc);
-        assert!(why.starts_with("1: ") && why.contains("teslimden sonra değişmiş"), "{why}");
+        assert!(
+            why.starts_with("1: ") && why.contains("teslimden sonra değişmiş"),
+            "{why}"
+        );
         // The model's bytes changed under the same list.
         write_list(&dir, &list);
         std::fs::write(dir.join("model.ifc"), b"ISO-10303-21; degisti").expect("writes");
         let why = unreadable(&doc);
-        assert!(why.contains("“model.ifc” dosyası teslimden sonra değişmiş"), "{why}");
+        assert!(
+            why.contains("“model.ifc” dosyası teslimden sonra değişmiş"),
+            "{why}"
+        );
         // The model gone.
         std::fs::remove_file(dir.join("model.ifc")).expect("removes");
         assert!(unreadable(&doc).contains("klasörde yok"));

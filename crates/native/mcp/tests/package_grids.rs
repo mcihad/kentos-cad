@@ -28,12 +28,11 @@ fn the_package_carries_the_grids_the_project_names_over_mcp() {
     std::fs::write(library.join(format!("{ntv2}.gsb")), &ntv2_bytes).unwrap();
     // This binary's one test: the library is read where every host reads it, KENTOS_GRID_DIR.
     unsafe { std::env::set_var("KENTOS_GRID_DIR", &library) };
-    let mut drawing: Value = serde_json::from_str(include_str!("../../../../fixtures/exchange/v1/devir.json")).unwrap();
+    let mut drawing: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/exchange/v1/devir.json")).unwrap();
     drawing["settings"]["heights"] = json!({ "kind": "orthometric", "verticalSrid": 5775, "geoid": { "name": "TG-20", "sha256": geoid } });
-    drawing["settings"]["datumTransforms"] =
-        json!([{ "from": "ED50", "to": "TUREF", "name": "Bölge 7", "grid": { "id": ntv2, "file": "tr.gsb", "size": ntv2_bytes.len() } }]);
-    drawing["settings"]["mapSurvey"] =
-        json!({ "campaigns": [{ "id": "kp-1", "name": "Bir", "velocity": { "name": "Hız ızgarası", "sha256": "a".repeat(64) } }] });
+    drawing["settings"]["datumTransforms"] = json!([{ "from": "ED50", "to": "TUREF", "name": "Bölge 7", "grid": { "id": ntv2, "file": "tr.gsb", "size": ntv2_bytes.len() } }]);
+    drawing["settings"]["mapSurvey"] = json!({ "campaigns": [{ "id": "kp-1", "name": "Bir", "velocity": { "name": "Hız ızgarası", "sha256": "a".repeat(64) } }] });
     let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(drawing).unwrap();
     let path = dir.join("ada.kcad");
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
@@ -41,21 +40,55 @@ fn the_package_carries_the_grids_the_project_names_over_mcp() {
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
     let out = dir.join("teslim");
-    let r = call(&mut server, "file.package", json!({"drawing": opened["structuredContent"]["drawing"], "path": out, "name": "ada"}));
+    let r = call(
+        &mut server,
+        "file.package",
+        json!({"drawing": opened["structuredContent"]["drawing"], "path": out, "name": "ada"}),
+    );
     assert_eq!(r["isError"], false, "{r}");
-    let files = r["structuredContent"]["output"]["files"].as_array().unwrap().clone();
+    let files = r["structuredContent"]["output"]["files"]
+        .as_array()
+        .unwrap()
+        .clone();
     let grids: Vec<(String, String)> = files
         .iter()
         .filter(|f| f["kind"] == "grid")
-        .map(|f| (f["path"].as_str().unwrap().to_owned(), f["sha256"].as_str().unwrap().to_owned()))
+        .map(|f| {
+            (
+                f["path"].as_str().unwrap().to_owned(),
+                f["sha256"].as_str().unwrap().to_owned(),
+            )
+        })
         .collect();
-    assert_eq!(grids, [(format!("izgaralar/{ntv2}.gsb"), ntv2.clone()), (format!("izgaralar/{geoid}.gtx"), geoid.clone())]);
+    assert_eq!(
+        grids,
+        [
+            (format!("izgaralar/{ntv2}.gsb"), ntv2.clone()),
+            (format!("izgaralar/{geoid}.gtx"), geoid.clone())
+        ]
+    );
     for (file, digest) in &grids {
-        assert_eq!(&hex(&std::fs::read(out.join(file)).unwrap()), digest, "{file}");
+        assert_eq!(
+            &hex(&std::fs::read(out.join(file)).unwrap()),
+            digest,
+            "{file}"
+        );
     }
     let left = &r["structuredContent"]["output"]["left"];
-    assert!(left.to_string().contains("mapSurvey.campaigns[0].velocity"), "{left}");
-    let manifest: Value = serde_json::from_slice(&std::fs::read(out.join("paket.json")).unwrap()).unwrap();
-    assert_eq!(manifest["files"].as_array().unwrap().iter().filter(|f| f["kind"] == "grid").count(), 2);
+    assert!(
+        left.to_string().contains("mapSurvey.campaigns[0].velocity"),
+        "{left}"
+    );
+    let manifest: Value =
+        serde_json::from_slice(&std::fs::read(out.join("paket.json")).unwrap()).unwrap();
+    assert_eq!(
+        manifest["files"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|f| f["kind"] == "grid")
+            .count(),
+        2
+    );
     let _ = std::fs::remove_dir_all(dir);
 }

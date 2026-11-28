@@ -122,7 +122,11 @@ pub(crate) fn props_of(kind: &str) -> Vec<Prop> {
     match kind {
         "map" => vec![
             prop(&["kind", "view", "scale"], "Ölçek (1:…)", Conv::Scale),
-            prop(&["kind","annotationScale"],"Özel açıklama ölçeği (1:…)",Conv::ExactReal),
+            prop(
+                &["kind", "annotationScale"],
+                "Özel açıklama ölçeği (1:…)",
+                Conv::ExactReal,
+            ),
             prop(
                 &["kind", "view", "ratio", "paper"],
                 "Oran: kâğıt",
@@ -429,8 +433,7 @@ pub(crate) fn refresh_fields(d: &mut Designer) {
         .iter()
         .filter_map(|i| {
             let mut item = (**i).clone();
-            if let Ok(view) =
-                kentos_sheet::viewport::effective_fixed_view(i, &d.ctx.named_views)
+            if let Ok(view) = kentos_sheet::viewport::effective_fixed_view(i, &d.ctx.named_views)
                 && let kentos_sheet::ItemKind::Map(m) = &mut item.kind
             {
                 m.view = kentos_sheet::MapView::Fixed(view);

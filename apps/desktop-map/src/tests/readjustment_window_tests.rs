@@ -8,18 +8,21 @@
 //! own layer in one undo step. Çapın paftaları (docs/adr/2680) makes a separation sheet for each parcel partly inside,
 //! its points on the parcel's own layer, in one undo step. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_launch::Module;
 
 use crate::app::{App, Message};
 use crate::readjustment_window::{Event as R, View, records};
 
 fn opened(program: Option<Module>) -> App {
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.readjustment.distribute.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.readjustment.distribute.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -61,16 +64,24 @@ fn filled_with(app: &mut App, csv: &str) {
 fn a_headerless_files_first_line_is_data() {
     let bad = records("101/1;QA01;yanlış;1/1\n101/2;QA02;603.50;1/1\n").expect("reads");
     assert_eq!(bad.len(), 2, "the faulty line is not dropped");
-    assert_eq!((bad[0].holder.as_str(), bad[0].area.as_str()), ("QA01", "yanlış"));
+    assert_eq!(
+        (bad[0].holder.as_str(), bad[0].area.as_str()),
+        ("QA01", "yanlış")
+    );
     let plain = records("101/1;QA01;600.00;1/1\n101/2;QA02;603.50;1/1\n").expect("reads");
-    let headed = records("Parsel;Hak sahibi;Tapu alanı;Pay\n101/1;QA01;600.00;1/1\n101/2;QA02;603.50;1/1\n").expect("reads");
+    let headed =
+        records("Parsel;Hak sahibi;Tapu alanı;Pay\n101/1;QA01;600.00;1/1\n101/2;QA02;603.50;1/1\n")
+            .expect("reads");
     assert_eq!(plain, headed);
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("readjustment.distribute"));
     filled_with(&mut app, "101/1;QA01;yanlış;1/1\n101/2;QA02;603.50;1/1\n");
     let said = crate::files_testing::last_said(&app);
     let answer = app.modules.map().readjustment.answer.clone();
-    assert!(!matches!(answer, Some(Ok(_))), "nothing kept as complete: {said}");
+    assert!(
+        !matches!(answer, Some(Ok(_))),
+        "nothing kept as complete: {said}"
+    );
 }
 
 #[test]
@@ -86,22 +97,30 @@ fn the_records_are_read_and_the_totals_kept() {
     let revision = app.document.as_ref().map(|d| d.model.revision());
     filled(&mut app);
     let a = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .answer
         .clone()
         .expect("an answer")
         .expect("distributed");
     assert!(a.draft && a.conserved);
-    assert_eq!((a.registered.as_str(), a.deduction.as_str(), a.net.as_str()), ("1600.51", "640.20", "960.31"));
+    assert_eq!(
+        (a.registered.as_str(), a.deduction.as_str(), a.net.as_str()),
+        ("1600.51", "640.20", "960.31")
+    );
     let p = a.parcels.iter().find(|p| p.parcel == "P").expect("P");
-    assert_eq!((p.remainder.as_str(), p.remainder_to.as_slice()), ("0.01", &["K1".to_owned()][..]));
+    assert_eq!(
+        (p.remainder.as_str(), p.remainder_to.as_slice()),
+        ("0.01", &["K1".to_owned()][..])
+    );
     // A rule that refuses a remainder says so, with its place.
     let _ = app.update(Message::from(map::Event::Readjustment(R::Remainder(
         "reject".into(),
     ))));
     let why = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .answer
         .clone()
@@ -121,7 +140,10 @@ fn the_records_are_read_and_the_totals_kept() {
 const BOUNDARY: &str = "0192f800-2060-7000-8000-000000000001";
 
 fn scope_cases() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.readjustment.scope.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.readjustment.scope.json"
+    ))
+    .expect("cases")
 }
 
 /// The scope cases' drawing in Harita, its boundary selected or nothing.
@@ -141,14 +163,19 @@ fn named() -> App {
 }
 
 fn bounded_on(setup: serde_json::Value, select: bool) -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     if select {
         let uid = kentos_domain::Uuid::parse_str(BOUNDARY).expect("a uid");
-        let slot = app.document.as_ref().and_then(|d| d.model.slot_of(uid)).expect("the boundary");
+        let slot = app
+            .document
+            .as_ref()
+            .and_then(|d| d.model.slot_of(uid))
+            .expect("the boundary");
         app.selection.set([slot]);
     }
     app
@@ -166,7 +193,8 @@ fn the_selected_boundary_gives_the_case_s_scope_and_its_bases_go_into_the_record
         Some(crate::map::dialog(map::MapDialogKind::Readjustment))
     );
     let k = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .scope
         .clone()
@@ -176,16 +204,30 @@ fn the_selected_boundary_gives_the_case_s_scope_and_its_bases_go_into_the_record
     assert_eq!(serde_json::Value::from(k.basis.as_str()), want["basis"]);
     assert_eq!(
         [k.whole, k.partial, k.ready, k.review].map(serde_json::Value::from),
-        [&want["whole"], &want["partial"], &want["ready"], &want["review"]].map(Clone::clone)
+        [
+            &want["whole"],
+            &want["partial"],
+            &want["ready"],
+            &want["review"]
+        ]
+        .map(Clone::clone)
     );
     let statuses: Vec<&str> = k.parcels.iter().map(|p| p.status.as_str()).collect();
-    let wanted: Vec<&str> = want["parcels"].as_array().expect("parcels").iter().filter_map(|p| p["status"].as_str()).collect();
+    let wanted: Vec<&str> = want["parcels"]
+        .as_array()
+        .expect("parcels")
+        .iter()
+        .filter_map(|p| p["status"].as_str())
+        .collect();
     assert_eq!(statuses, wanted);
-    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Scope))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+        View::Scope,
+    ))));
     filled_with(&mut app, SCOPE_CSV);
     let _ = app.update(Message::from(map::Event::Readjustment(R::Apply)));
     let areas: Vec<&str> = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .entries
         .iter()
@@ -197,7 +239,8 @@ fn the_selected_boundary_gives_the_case_s_scope_and_its_bases_go_into_the_record
         "101/3 takes the part inside; 101/4 has no basis"
     );
     let lines: Vec<&str> = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .applied
         .iter()
@@ -223,7 +266,8 @@ fn the_selected_boundary_gives_the_case_s_scope_and_its_bases_go_into_the_record
         "{lines:?}"
     );
     let a = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .answer
         .clone()
@@ -237,7 +281,11 @@ fn the_selected_boundary_gives_the_case_s_scope_and_its_bases_go_into_the_record
         Some("333.33")
     );
     assert!(a.draft && a.conserved);
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
 }
 
 #[test]
@@ -246,7 +294,8 @@ fn the_policy_and_the_tolerance_run_the_scope_again() {
     let _ = app.update(Message::Run("readjustment.distribute"));
     let status = |app: &App, name: &str| {
         let k = app
-            .modules.map()
+            .modules
+            .map()
             .readjustment
             .scope
             .clone()
@@ -261,10 +310,17 @@ fn the_policy_and_the_tolerance_run_the_scope_again() {
     assert_eq!(status(&app, "101/9"), ("sliver".to_owned(), None));
     let _ = app.update(Message::from(map::Event::Readjustment(R::Scale(0.0))));
     assert_eq!(status(&app, "101/1"), ("finerThanPolicy".to_owned(), None));
-    assert_eq!(status(&app, "101/3"), ("computed".to_owned(), Some("333".to_owned())));
+    assert_eq!(
+        status(&app, "101/3"),
+        ("computed".to_owned(), Some("333".to_owned()))
+    );
     let _ = app.update(Message::from(map::Event::Readjustment(R::Scale(2.0))));
     let _ = app.update(Message::from(map::Event::Readjustment(R::Tolerance(0.003))));
-    assert_eq!(status(&app, "101/9"), ("computed".to_owned(), Some("30.00".to_owned())), "the 4 mm piece counts");
+    assert_eq!(
+        status(&app, "101/9"),
+        ("computed".to_owned(), Some("30.00".to_owned())),
+        "the 4 mm piece counts"
+    );
 }
 
 /// docs/adr/2280: Ayırma çapı's rows are the case's parts' corners; Çapı çizime yaz writes each part as an area on
@@ -273,9 +329,12 @@ fn the_policy_and_the_tolerance_run_the_scope_again() {
 fn the_separation_sheet_lists_the_parts_and_writes_them() {
     let mut app = bounded(true);
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+        View::Sheet,
+    ))));
     let k = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .scope
         .clone()
@@ -294,22 +353,59 @@ fn the_separation_sheet_lists_the_parts_and_writes_them() {
     let rows = crate::readjustment_sheet::rows(&k, &app.format());
     assert_eq!(rows.len(), corners);
     assert_eq!(parts.len(), 9, "101/3, 101/6, 11 two each, 101/10 three");
-    assert_eq!((rows[0][0].as_str(), rows[0][1].as_str(), rows[0][2].as_str()), ("101/3", "Giren", "1"));
+    assert_eq!(
+        (
+            rows[0][0].as_str(),
+            rows[0][1].as_str(),
+            rows[0][2].as_str()
+        ),
+        ("101/3", "Giren", "1")
+    );
     // A part's first row carries its area; the corners are the sheet's point numbers (docs/adr/2680).
-    let ten: Vec<&str> = rows.iter().filter(|r| r[0] == "101/10" && !r[5].is_empty()).map(|r| r[1].as_str()).collect();
+    let ten: Vec<&str> = rows
+        .iter()
+        .filter(|r| r[0] == "101/10" && !r[5].is_empty())
+        .map(|r| r[1].as_str())
+        .collect();
     assert_eq!(ten, ["Giren", "Girmeyen 1", "Girmeyen 2"]);
-    let girmeyen: Vec<&str> =
-        rows.iter().filter(|r| r[0] == "101/3" && r[1] == "Girmeyen").map(|r| r[2].as_str()).collect();
-    assert_eq!(girmeyen, ["3", "2", "5", "6"], "the corners shared with Giren keep its numbers");
+    let girmeyen: Vec<&str> = rows
+        .iter()
+        .filter(|r| r[0] == "101/3" && r[1] == "Girmeyen")
+        .map(|r| r[2].as_str())
+        .collect();
+    assert_eq!(
+        girmeyen,
+        ["3", "2", "5", "6"],
+        "the corners shared with Giren keep its numbers"
+    );
     let _ = app.update(Message::from(map::Event::Readjustment(R::WriteSheet)));
     let doc = &mut app.document.as_mut().expect("open").model;
-    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Ayırma çapı").map(|l| l.id.clone()).expect("the layer");
-    let written: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
+    let layer = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "Ayırma çapı")
+        .map(|l| l.id.clone())
+        .expect("the layer");
+    let written: Vec<_> = doc
+        .entities()
+        .filter(|e| e.base().layer_id == layer)
+        .cloned()
+        .collect();
     assert_eq!(written.len(), 9);
     let attrs = &written[0].base().attrs;
-    assert_eq!((attrs["Parsel"].as_str(), attrs["Kısım"].as_str()), ("101/3", "Giren"));
+    assert_eq!(
+        (attrs["Parsel"].as_str(), attrs["Kısım"].as_str()),
+        ("101/3", "Giren")
+    );
     assert_eq!(doc.undo().as_deref(), Some("Ayırma çapı"));
-    assert!(doc.layers().leaves().iter().all(|l| l.name != "Ayırma çapı"), "one step");
+    assert!(
+        doc.layers()
+            .leaves()
+            .iter()
+            .all(|l| l.name != "Ayırma çapı"),
+        "one step"
+    );
 }
 
 /// docs/adr/3080: the parcel numbers of 101/10's two parts outside typed in Dış parça no: read by the parcel's name
@@ -319,9 +415,12 @@ fn the_separation_sheet_lists_the_parts_and_writes_them() {
 fn the_parts_outside_take_the_typed_parcel_numbers() {
     let mut app = named();
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+        View::Sheet,
+    ))));
     let k = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .scope
         .clone()
@@ -342,15 +441,34 @@ fn the_parts_outside_take_the_typed_parcel_numbers() {
         Some(&["101/24".to_owned(), "101/25".to_owned()][..])
     );
     // Why a parcel takes no number (docs/adr/3880): wholly inside, wholly outside, not of the scope.
-    let why = |text: &str| crate::readjustment_sheet::typed_numbers(text, &k).expect_err("not partial");
-    let kind = |name: &str| k.parcels.iter().find(|p| p.parcel == name).map(|p| p.kind.clone());
+    let why =
+        |text: &str| crate::readjustment_sheet::typed_numbers(text, &k).expect_err("not partial");
+    let kind = |name: &str| {
+        k.parcels
+            .iter()
+            .find(|p| p.parcel == name)
+            .map(|p| p.kind.clone())
+    };
     assert_eq!(kind("101/1").as_deref(), Some("whole"));
-    assert_eq!(why("101/1: 5"), "Dış parça no: “101/1” parseli düzenleme sınırının tamamen içinde, dışarıda parçası yok.");
+    assert_eq!(
+        why("101/1: 5"),
+        "Dış parça no: “101/1” parseli düzenleme sınırının tamamen içinde, dışarıda parçası yok."
+    );
     if kind("101/8").as_deref() == Some("outside") {
-        assert_eq!(why("101/8: 5"), "Dış parça no: “101/8” parseli düzenleme sınırının tamamen dışında, düzenlemeye girmiyor.");
+        assert_eq!(
+            why("101/8: 5"),
+            "Dış parça no: “101/8” parseli düzenleme sınırının tamamen dışında, düzenlemeye girmiyor."
+        );
     }
-    assert_eq!(why("999/9: 5"), "Dış parça no: “999/9” parseli kapsamda kısmen giren bir parsel değil.");
-    assert!(crate::readjustment_sheet::typed_numbers("101/10 101/24", &k).expect_err("no colon").contains("okunmadı"));
+    assert_eq!(
+        why("999/9: 5"),
+        "Dış parça no: “999/9” parseli kapsamda kısmen giren bir parsel değil."
+    );
+    assert!(
+        crate::readjustment_sheet::typed_numbers("101/10 101/24", &k)
+            .expect_err("no colon")
+            .contains("okunmadı")
+    );
     assert_eq!(crate::readjustment_sheet::typed_numbers("  ", &k), Ok(None));
     // One number short: the command refuses, nothing written, the window stays.
     let revision = app.document.as_ref().map(|d| d.model.revision());
@@ -358,7 +476,13 @@ fn the_parts_outside_take_the_typed_parcel_numbers() {
         "101/10: 101/24".into(),
     ))));
     let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
-    assert!(app.log.last().expect("said").text.contains("2 parçası var; 1 parsel numarası verildi"));
+    assert!(
+        app.log
+            .last()
+            .expect("said")
+            .text
+            .contains("2 parçası var; 1 parsel numarası verildi")
+    );
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision);
     // Both: the sheets are made.
     let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
@@ -369,27 +493,63 @@ fn the_parts_outside_take_the_typed_parcel_numbers() {
     // docs/adr/3480: on 101/10's layer of numbered pieces each part as an area with its number, and a point inside it
     // labelled with the number; the points' layer keeps the corners only (the coordinate list reads it).
     let doc = &app.document.as_ref().expect("open").model;
-    let named_layer = |name: &str| doc.layers().leaves().into_iter().find(|l| l.name == name).map(|l| l.id.clone());
+    let named_layer = |name: &str| {
+        doc.layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == name)
+            .map(|l| l.id.clone())
+    };
     let corners = named_layer("101/10").expect("101/10's points");
-    assert!(doc.entities().filter(|e| e.base().layer_id == corners).all(|e| matches!(e, kentos_commands::Entity::Point(_)) && e.base().attrs.contains_key("Nokta")));
+    assert!(
+        doc.entities()
+            .filter(|e| e.base().layer_id == corners)
+            .all(|e| matches!(e, kentos_commands::Entity::Point(_))
+                && e.base().attrs.contains_key("Nokta"))
+    );
     let layer = named_layer("101/10 dış parçalar").expect("101/10's pieces");
-    let on: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
-    let parts: Vec<_> = on.iter().filter(|e| matches!(e, kentos_commands::Entity::Polygon(_))).collect();
-    let numbers: Vec<&str> = parts.iter().map(|e| e.base().attrs["ParselNo"].as_str()).collect();
+    let on: Vec<_> = doc
+        .entities()
+        .filter(|e| e.base().layer_id == layer)
+        .cloned()
+        .collect();
+    let parts: Vec<_> = on
+        .iter()
+        .filter(|e| matches!(e, kentos_commands::Entity::Polygon(_)))
+        .collect();
+    let numbers: Vec<&str> = parts
+        .iter()
+        .map(|e| e.base().attrs["ParselNo"].as_str())
+        .collect();
     assert_eq!(numbers, ["101/24", "101/25"]);
     for part in &parts {
-        let kentos_commands::Entity::Polygon(area) = part else { unreachable!() };
+        let kentos_commands::Entity::Polygon(area) = part else {
+            unreachable!()
+        };
         let number = &part.base().attrs["ParselNo"];
         let point = on
             .iter()
             .find_map(|e| match e {
-                kentos_commands::Entity::Point(q) if e.base().label.as_deref() == Some(number.as_str()) => Some(q.p),
+                kentos_commands::Entity::Point(q)
+                    if e.base().label.as_deref() == Some(number.as_str()) =>
+                {
+                    Some(q.p)
+                }
                 _ => None,
             })
             .expect("its label");
-        let (x0, x1) = area.pts.iter().fold((f64::MAX, f64::MIN), |(a, b), q| (a.min(q.x), b.max(q.x)));
-        let (y0, y1) = area.pts.iter().fold((f64::MAX, f64::MIN), |(a, b), q| (a.min(q.y), b.max(q.y)));
-        assert!(point.x > x0 && point.x < x1 && point.y > y0 && point.y < y1, "{number} inside its part");
+        let (x0, x1) = area
+            .pts
+            .iter()
+            .fold((f64::MAX, f64::MIN), |(a, b), q| (a.min(q.x), b.max(q.x)));
+        let (y0, y1) = area
+            .pts
+            .iter()
+            .fold((f64::MAX, f64::MIN), |(a, b), q| (a.min(q.y), b.max(q.y)));
+        assert!(
+            point.x > x0 && point.x < x1 && point.y > y0 && point.y < y1,
+            "{number} inside its part"
+        );
     }
 }
 
@@ -402,7 +562,9 @@ fn a_separation_sheet_is_made_for_each_partial_parcel() {
     use kentos_sheet::{CoordSource, ItemKind};
     let mut app = bounded(true);
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+        View::Sheet,
+    ))));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     let said = app.log.last().expect("said");
@@ -425,41 +587,97 @@ fn a_separation_sheet_is_made_for_each_partial_parcel() {
 
     let mut app = named();
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+        View::Sheet,
+    ))));
     let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert_eq!(app.dialog, None, "the window closes on the sheets");
     let doc = &app.document.as_ref().expect("open").model;
-    let book = kentos_sheet::project::read_project_sheets(doc.sheets().expect("a book")).expect("reads").0;
+    let book = kentos_sheet::project::read_project_sheets(doc.sheets().expect("a book"))
+        .expect("reads")
+        .0;
     let names: Vec<&str> = book.sheets.iter().map(|s| s.name.as_str()).collect();
-    assert_eq!(names, ["Ayırma çapı 101/3", "Ayırma çapı 101/6", "Ayırma çapı 101/10", "Ayırma çapı 101/11"]);
-    let group = doc.layers().nodes().iter().find(|n| n.name == "Ayırma çapı noktaları").expect("the group");
-    let layers: Vec<(String, String)> = group.children.iter().map(|c| (c.name.clone(), c.id.clone())).collect();
-    assert_eq!(layers.iter().map(|l| l.0.as_str()).collect::<Vec<_>>(), ["101/3", "101/6", "101/10", "101/11"]);
+    assert_eq!(
+        names,
+        [
+            "Ayırma çapı 101/3",
+            "Ayırma çapı 101/6",
+            "Ayırma çapı 101/10",
+            "Ayırma çapı 101/11"
+        ]
+    );
+    let group = doc
+        .layers()
+        .nodes()
+        .iter()
+        .find(|n| n.name == "Ayırma çapı noktaları")
+        .expect("the group");
+    let layers: Vec<(String, String)> = group
+        .children
+        .iter()
+        .map(|c| (c.name.clone(), c.id.clone()))
+        .collect();
+    assert_eq!(
+        layers.iter().map(|l| l.0.as_str()).collect::<Vec<_>>(),
+        ["101/3", "101/6", "101/10", "101/11"]
+    );
     let labels = |layer: &str| -> Vec<String> {
-        doc.by_layer(layer).map(|e| e.base().label.clone().unwrap_or_default()).collect()
+        doc.by_layer(layer)
+            .map(|e| e.base().label.clone().unwrap_or_default())
+            .collect()
     };
     assert_eq!(labels(&layers[0].1), ["1", "2", "3", "4", "5", "6"]);
-    assert_eq!(labels(&layers[2].1).len(), 8, "101/10: two pieces outside, eight points");
+    assert_eq!(
+        labels(&layers[2].1).len(),
+        8,
+        "101/10: two pieces outside, eight points"
+    );
     let first = &book.sheets[0];
     let map = first.items.iter().find_map(|i| match &i.kind {
         ItemKind::Map(m) => Some(m),
         _ => None,
     });
-    let frozen: Vec<&str> =
-        map.expect("a map").layer_overrides.iter().filter(|o| o.frozen).map(|o| o.layer.as_str()).collect();
-    assert_eq!(frozen, [layers[1].1.as_str(), layers[2].1.as_str(), layers[3].1.as_str()]);
+    let frozen: Vec<&str> = map
+        .expect("a map")
+        .layer_overrides
+        .iter()
+        .filter(|o| o.frozen)
+        .map(|o| o.layer.as_str())
+        .collect();
+    assert_eq!(
+        frozen,
+        [
+            layers[1].1.as_str(),
+            layers[2].1.as_str(),
+            layers[3].1.as_str()
+        ]
+    );
     let list = first.items.iter().find_map(|i| match &i.kind {
         ItemKind::CoordinateList(c) => Some(c),
         _ => None,
     });
-    assert!(matches!(&list.expect("a list").source, CoordSource::Layer(l) if l.layer == layers[0].1));
+    assert!(
+        matches!(&list.expect("a list").source, CoordSource::Layer(l) if l.layer == layers[0].1)
+    );
     let pdf = kentos_plot::book::book_pdf(doc, &[], "test", "2026-11-08");
     assert!(pdf.is_ok(), "{:?}", pdf.err());
     let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Model));
     let _ = app.update(Message::Run("edit.undo"));
     let doc = &app.document.as_ref().expect("open").model;
-    assert!(doc.layers().nodes().iter().all(|n| n.name != "Ayırma çapı noktaları"), "one step: the layers");
-    let left = doc.sheets().map(|s| kentos_sheet::project::read_project_sheets(s).expect("reads").0.sheets.len());
+    assert!(
+        doc.layers()
+            .nodes()
+            .iter()
+            .all(|n| n.name != "Ayırma çapı noktaları"),
+        "one step: the layers"
+    );
+    let left = doc.sheets().map(|s| {
+        kentos_sheet::project::read_project_sheets(s)
+            .expect("reads")
+            .0
+            .sheets
+            .len()
+    });
     assert_eq!(left.unwrap_or(0), 0, "one step: the sheets");
 }
 
@@ -474,16 +692,24 @@ fn a_separation_sheet_is_made_for_each_partial_parcel() {
 fn sheets_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ayirma-capi-paftasi-2680");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ayirma-capi-paftasi-2680");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = named();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("readjustment.distribute"));
-        let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+        let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+            View::Sheet,
+        ))));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -491,13 +717,18 @@ fn sheets_screens() {
         let mut shot = |app: &mut App, stem: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         };
         shot(&mut app, "1-pencere");
         let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
         shot(&mut app, "2-pafta-101-3");
-        let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::InspectorTab(kentos_sheet_ui::InspectorTab::Preflight)));
+        let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::InspectorTab(
+            kentos_sheet_ui::InspectorTab::Preflight,
+        )));
         shot(&mut app, "3-on-denetim");
         let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(3)));
         shot(&mut app, "4-pafta-101-10");
@@ -507,7 +738,10 @@ fn sheets_screens() {
             let pdf = kentos_plot::book::book_pdf(doc, &[], "KentOS", "2026-11-08").expect("a PDF");
             std::fs::write(out.join("paftalar.pdf"), &pdf.bytes).expect("writes");
             for (sheet, f) in &pdf.sheet_findings {
-                println!("ön denetim {sheet}: {:?} {} {}", f.severity, f.code, f.message);
+                println!(
+                    "ön denetim {sheet}: {:?} {} {}",
+                    f.severity, f.code, f.message
+                );
             }
         }
     }
@@ -524,16 +758,24 @@ fn sheets_screens() {
 fn numbers_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dis-parca-3080");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/dis-parca-3080");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = named();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("readjustment.distribute"));
-        let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+        let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+            View::Sheet,
+        ))));
         let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
             "101/10: 101/24, 101/25".into(),
         ))));
@@ -544,7 +786,10 @@ fn numbers_screens() {
         let mut shot = |app: &mut App, stem: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         };
         shot(&mut app, "1-pencere");
@@ -570,14 +815,17 @@ fn numbers_screens() {
 fn refusal_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dis-parca-ret-3880");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/dis-parca-ret-3880");
     std::fs::create_dir_all(&out).expect("a folder");
     let size = Size::new(1440.0, 900.0);
     let mut app = named();
     let _ = app.update(Message::WindowResized(size));
     let _ = app.update(Message::Run("view.zoomExtents"));
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+        View::Sheet,
+    ))));
     let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
         "101/1: 5".into(),
     ))));
@@ -589,7 +837,10 @@ fn refusal_screens() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("pencere-acik-genis.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
 }
 
@@ -604,16 +855,24 @@ fn refusal_screens() {
 fn label_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dis-parca-no-3480");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/dis-parca-no-3480");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = named();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("readjustment.distribute"));
-        let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+        let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+            View::Sheet,
+        ))));
         let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
             "101/10: 101/24, 101/25".into(),
         ))));
@@ -625,7 +884,10 @@ fn label_screens() {
         let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(3)));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("pafta-101-10-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -644,8 +906,17 @@ fn without_a_selected_area_there_is_no_scope() {
 
 #[test]
 fn harita_and_gis_offer_it_yol_and_mimari_do_not() {
-    for (module, yes) in [(Module::Map, true), (Module::Gis, true), (Module::Road, false), (Module::Architecture, false)] {
-        assert_eq!(opened(Some(module)).offers("readjustment.distribute"), yes, "{module:?}");
+    for (module, yes) in [
+        (Module::Map, true),
+        (Module::Gis, true),
+        (Module::Road, false),
+        (Module::Architecture, false),
+    ] {
+        assert_eq!(
+            opened(Some(module)).offers("readjustment.distribute"),
+            yes,
+            "{module:?}"
+        );
     }
 }
 
@@ -659,24 +930,37 @@ fn harita_and_gis_offer_it_yol_and_mimari_do_not() {
 fn sheet_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ayirma-capi-2280");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ayirma-capi-2280");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (write, stem) in [(false, "1-capin-koseleri"), (true, "2-cizimde")] {
             let mut app = bounded(true);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("readjustment.distribute"));
-            let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+                View::Sheet,
+            ))));
             if write {
                 let _ = app.update(Message::from(map::Event::Readjustment(R::WriteSheet)));
                 let _ = app.update(Message::from(map::Event::Readjustment(R::Close)));
                 // The other layers hidden: the sheet's parts alone.
                 let doc = &mut app.document.as_mut().expect("open").model;
-                let others: Vec<String> =
-                    doc.layers().leaves().into_iter().filter(|l| l.name != "Ayırma çapı").map(|l| l.id.clone()).collect();
+                let others: Vec<String> = doc
+                    .layers()
+                    .leaves()
+                    .into_iter()
+                    .filter(|l| l.name != "Ayırma çapı")
+                    .map(|l| l.id.clone())
+                    .collect();
                 for id in others {
                     doc.set_layer_visible(&id, false);
                 }
@@ -688,7 +972,10 @@ fn sheet_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -704,14 +991,21 @@ fn sheet_screens() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/duzenleme-taslagi-1460");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/duzenleme-taslagi-1460");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (view, stem) in [(View::Holders, "1-hak-sahipleri"), (View::Parcels, "2-parseller")] {
-        for (theme, size, name) in
-            [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")]
-        {
+    for (view, stem) in [
+        (View::Holders, "1-hak-sahipleri"),
+        (View::Parcels, "2-parseller"),
+    ] {
+        for (theme, size, name) in [
+            ("light", Size::new(1440.0, 900.0), "acik-genis"),
+            ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+        ] {
             let mut app = opened(Some(Module::Map));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("readjustment.distribute"));
@@ -723,17 +1017,26 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
     // The scope (docs/adr/2060): Kapsam, then the parcels after the bases went into the records.
-    for (view, stem) in [(View::Scope, "3-kapsam"), (View::Parcels, "4-esas-alanla-parseller")] {
-        for (theme, size, name) in
-            [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")]
-        {
+    for (view, stem) in [
+        (View::Scope, "3-kapsam"),
+        (View::Parcels, "4-esas-alanla-parseller"),
+    ] {
+        for (theme, size, name) in [
+            ("light", Size::new(1440.0, 900.0), "acik-genis"),
+            ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+        ] {
             let mut app = bounded(true);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -747,7 +1050,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -760,7 +1066,9 @@ fn screens() {
 fn the_numbers_typed_with_a_height_are_texts_fitted_in_their_parts() {
     let mut app = named();
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+        View::Sheet,
+    ))));
     let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
         "101/10: 101/24, 101/25".into(),
     ))));
@@ -769,7 +1077,13 @@ fn the_numbers_typed_with_a_height_are_texts_fitted_in_their_parts() {
         "iki".into(),
     ))));
     let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
-    assert!(app.log.last().expect("said").text.contains("Numara yazısı: “iki” bir sayı değil"));
+    assert!(
+        app.log
+            .last()
+            .expect("said")
+            .text
+            .contains("Numara yazısı: “iki” bir sayı değil")
+    );
     assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision);
     let _ = app.update(Message::from(map::Event::Readjustment(R::NumberHeight(
         "2".into(),
@@ -777,9 +1091,23 @@ fn the_numbers_typed_with_a_height_are_texts_fitted_in_their_parts() {
     let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert_eq!(app.dialog, None, "the sheets are made");
     let doc = &app.document.as_ref().expect("open").model;
-    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "101/10 dış parçalar").map(|l| l.id.clone()).expect("101/10's pieces");
-    let on: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
-    assert!(!on.iter().any(|e| matches!(e, kentos_commands::Entity::Point(_))), "no labelled point");
+    let layer = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "101/10 dış parçalar")
+        .map(|l| l.id.clone())
+        .expect("101/10's pieces");
+    let on: Vec<_> = doc
+        .entities()
+        .filter(|e| e.base().layer_id == layer)
+        .cloned()
+        .collect();
+    assert!(
+        !on.iter()
+            .any(|e| matches!(e, kentos_commands::Entity::Point(_))),
+        "no labelled point"
+    );
     let texts: Vec<_> = on
         .iter()
         .filter_map(|e| match e {
@@ -787,12 +1115,25 @@ fn the_numbers_typed_with_a_height_are_texts_fitted_in_their_parts() {
             _ => None,
         })
         .collect();
-    assert_eq!(texts.iter().map(|t| t.text.as_str()).collect::<Vec<_>>(), ["101/24", "101/25"]);
+    assert_eq!(
+        texts.iter().map(|t| t.text.as_str()).collect::<Vec<_>>(),
+        ["101/24", "101/25"]
+    );
     // 101/10's sheet is at 1:1000 (the shared case's): 2 mm on paper is 2 m.
     let scale = 1000.0;
     for t in &texts {
-        assert!((t.height - 2.0 * scale / 1000.0).abs() < 1e-9, "{}: {}", t.text, t.height);
-        assert!((t.rotation.abs() - 90.0).abs() < 1e-9, "{}: {}", t.text, t.rotation);
+        assert!(
+            (t.height - 2.0 * scale / 1000.0).abs() < 1e-9,
+            "{}: {}",
+            t.text,
+            t.height
+        );
+        assert!(
+            (t.rotation.abs() - 90.0).abs() < 1e-9,
+            "{}: {}",
+            t.text,
+            t.rotation
+        );
         assert_eq!(t.base.attrs["ParselNo"], t.text);
     }
 }
@@ -804,7 +1145,9 @@ fn the_numbers_typed_with_a_height_are_texts_fitted_in_their_parts() {
 fn the_numbers_too_big_go_outside_on_leaders() {
     let mut app = named();
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+        View::Sheet,
+    ))));
     let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
         "101/10: 101/24, 101/25".into(),
     ))));
@@ -817,9 +1160,23 @@ fn the_numbers_too_big_go_outside_on_leaders() {
     let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert_eq!(app.dialog, None, "the sheets are made");
     let doc = &app.document.as_ref().expect("open").model;
-    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "101/10 dış parçalar").map(|l| l.id.clone()).expect("101/10's pieces");
-    let on: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
-    assert!(!on.iter().any(|e| matches!(e, kentos_commands::Entity::Text(_))), "no text stepped down");
+    let layer = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "101/10 dış parçalar")
+        .map(|l| l.id.clone())
+        .expect("101/10's pieces");
+    let on: Vec<_> = doc
+        .entities()
+        .filter(|e| e.base().layer_id == layer)
+        .cloned()
+        .collect();
+    assert!(
+        !on.iter()
+            .any(|e| matches!(e, kentos_commands::Entity::Text(_))),
+        "no text stepped down"
+    );
     let leaders: Vec<_> = on
         .iter()
         .filter_map(|e| match e {
@@ -827,15 +1184,27 @@ fn the_numbers_too_big_go_outside_on_leaders() {
             _ => None,
         })
         .collect();
-    assert_eq!(leaders.iter().map(|l| l.text.clone().unwrap_or_default()).collect::<Vec<_>>(), ["101/24", "101/25"]);
+    assert_eq!(
+        leaders
+            .iter()
+            .map(|l| l.text.clone().unwrap_or_default())
+            .collect::<Vec<_>>(),
+        ["101/24", "101/25"]
+    );
     for (l, east) in leaders.iter().zip([true, false]) {
         assert!((l.height - 6.0).abs() < 1e-9, "{:?}", l.height);
         assert_eq!(l.rotation, 0.0);
         let (tip, start) = (l.pts[0], l.pts[l.pts.len() - 1]);
-        assert!((start.x > tip.x) == east && (start.y - tip.y).abs() < 1e-9, "{tip:?} → {start:?}");
+        assert!(
+            (start.x > tip.x) == east && (start.y - tip.y).abs() < 1e-9,
+            "{tip:?} → {start:?}"
+        );
         assert_eq!(l.base.attrs["ParselNo"], l.text.clone().unwrap_or_default());
     }
-    assert!(!app.log.lines().any(|l| l.text.contains("konamadı")), "both are clear");
+    assert!(
+        !app.log.lines().any(|l| l.text.contains("konamadı")),
+        "both are clear"
+    );
 }
 
 /// docs/adr/5080: a road's edge drawn all round 101/10, 1 m off: every place of its numbers crosses it, so each goes where
@@ -856,10 +1225,15 @@ fn a_number_that_touches_something_everywhere_is_said() {
     setup["entities"].as_array_mut().expect("entities").push(
         serde_json::json!({"kind": "polygon", "id": n, "layerId": "yol", "attrs": {"Ad": "Yol"}, "pts": ring}),
     );
-    setup["uids"].as_array_mut().expect("uids").push(format!("0192f800-2060-7000-8000-{n:012x}").into());
+    setup["uids"]
+        .as_array_mut()
+        .expect("uids")
+        .push(format!("0192f800-2060-7000-8000-{n:012x}").into());
     let mut app = bounded_on(setup, true);
     let _ = app.update(Message::Run("readjustment.distribute"));
-    let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+    let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+        View::Sheet,
+    ))));
     let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
         "101/10: 101/24, 101/25".into(),
     ))));
@@ -871,9 +1245,17 @@ fn a_number_that_touches_something_everywhere_is_said() {
     ))));
     let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
     assert_eq!(app.dialog, None, "the sheets are made");
-    let said: Vec<String> = app.log.lines().filter(|l| l.text.contains("konamadı")).map(|l| l.text.clone()).collect();
+    let said: Vec<String> = app
+        .log
+        .lines()
+        .filter(|l| l.text.contains("konamadı"))
+        .map(|l| l.text.clone())
+        .collect();
     assert_eq!(said.len(), 2, "{said:?}");
-    assert!(said[0].contains("“101/10” parselinin Girmeyen 1") && said[1].contains("(101/25)"), "{said:?}");
+    assert!(
+        said[0].contains("“101/10” parselinin Girmeyen 1") && said[1].contains("(101/25)"),
+        "{said:?}"
+    );
 }
 
 const VALUE_CSV: &str = "parsel;hak sahibi;tapu alanı;pay;değer\n101/1;H1;1000;1/3;2000000\n101/1;H2;1000;2/3;2000000\n101/2;H2;500.50;1/2;1500000\n101/2;H3;500.50;1/2;1500000\n";
@@ -883,7 +1265,10 @@ const VALUE_CSV: &str = "parsel;hak sahibi;tapu alanı;pay;değer\n101/1;H1;1000
 /// it is refused at its place; Alan again gives the area basis.
 #[test]
 fn by_value_the_mass_goes_by_the_values_and_says_it_is_no_rule() {
-    assert_eq!(records(VALUE_CSV).expect("reads")[0].value.as_deref(), Some("2000000"));
+    assert_eq!(
+        records(VALUE_CSV).expect("reads")[0].value.as_deref(),
+        Some("2000000")
+    );
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("readjustment.distribute"));
     let _ = app.update(Message::from(map::Event::Readjustment(R::Basis(
@@ -891,7 +1276,8 @@ fn by_value_the_mass_goes_by_the_values_and_says_it_is_no_rule() {
     ))));
     filled_with(&mut app, VALUE_CSV);
     let why = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .answer
         .clone()
@@ -902,7 +1288,8 @@ fn by_value_the_mass_goes_by_the_values_and_says_it_is_no_rule() {
         "Sentetik deneme değerleri".into(),
     ))));
     let a = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .answer
         .clone()
@@ -910,9 +1297,21 @@ fn by_value_the_mass_goes_by_the_values_and_says_it_is_no_rule() {
         .expect("distributed");
     assert_eq!(a.basis.as_deref(), Some("value"));
     assert!(a.draft && a.conserved);
-    let nets: Vec<(&str, &str, &str)> =
-        a.parcels.iter().map(|p| (p.net.as_str(), p.value_share.as_deref().unwrap_or_default(), p.deduction.as_str())).collect();
-    assert_eq!(nets, [("514.46", "4/7", "485.54"), ("385.84", "3/7", "114.66")]);
+    let nets: Vec<(&str, &str, &str)> = a
+        .parcels
+        .iter()
+        .map(|p| {
+            (
+                p.net.as_str(),
+                p.value_share.as_deref().unwrap_or_default(),
+                p.deduction.as_str(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        nets,
+        [("514.46", "4/7", "485.54"), ("385.84", "3/7", "114.66")]
+    );
     let saved = crate::readjustment_window::csv(&a);
     assert!(
         saved.contains("Dağıtım esası;değer") && saved.contains("101/1;2000000;4/7;485.54;514.46"),
@@ -922,7 +1321,8 @@ fn by_value_the_mass_goes_by_the_values_and_says_it_is_no_rule() {
         "area".into(),
     ))));
     let why = app
-        .modules.map()
+        .modules
+        .map()
         .readjustment
         .answer
         .clone()
@@ -943,11 +1343,17 @@ fn by_value_the_mass_goes_by_the_values_and_says_it_is_no_rule() {
 fn clear_and_value_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/map-11-10");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/map-11-10");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("readjustment.distribute"));
@@ -967,16 +1373,23 @@ fn clear_and_value_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let path = out.join(format!("1-deger-esasli-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&path)
+            .expect("writes");
         println!("{}", path.display());
         for made in [false, true] {
             let mut app = named();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("readjustment.distribute"));
-            let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+                View::Sheet,
+            ))));
             let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
                 "101/10: 101/24, 101/25".into(),
             ))));
@@ -990,7 +1403,12 @@ fn clear_and_value_screens() {
                 let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
                 let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(0)));
                 // 101/10's pieces with 101/1 and 101/8 beside them: the south number east, the north one west.
-                let b = kentos_commands::Bounds { min_x: 486955.0, min_y: 4419970.0, max_x: 487040.0, max_y: 4420072.0 };
+                let b = kentos_commands::Bounds {
+                    min_x: 486955.0,
+                    min_y: 4419970.0,
+                    max_x: 487040.0,
+                    max_y: 4420072.0,
+                };
                 app.zoom_to_bounds(&b);
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -998,8 +1416,18 @@ fn clear_and_value_screens() {
                 let _ = app.update(m);
             };
             snapshot.settle(&mut app, App::view, &mut update);
-            let path = out.join(format!("{}-{name}.png", if made { "3-model-cakismasiz" } else { "2-pencere" }));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            let path = out.join(format!(
+                "{}-{name}.png",
+                if made {
+                    "3-model-cakismasiz"
+                } else {
+                    "2-pencere"
+                }
+            ));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }
@@ -1016,17 +1444,25 @@ fn clear_and_value_screens() {
 fn leader_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/numara-kilavuz-4680");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/numara-kilavuz-4680");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (made, file) in [(false, "1-pencere"), (true, "2-model-kilavuzlar")] {
             let mut app = named();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("readjustment.distribute"));
-            let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+                View::Sheet,
+            ))));
             let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
                 "101/10: 101/24, 101/25".into(),
             ))));
@@ -1040,7 +1476,12 @@ fn leader_screens() {
                 let _ = app.update(Message::from(map::Event::Readjustment(R::MakeSheets)));
                 let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(0)));
                 // 101/10's two 4 m pieces outside and their leaders running east.
-                let b = kentos_commands::Bounds { min_x: 486980.0, min_y: 4419970.0, max_x: 487045.0, max_y: 4420070.0 };
+                let b = kentos_commands::Bounds {
+                    min_x: 486980.0,
+                    min_y: 4419970.0,
+                    max_x: 487045.0,
+                    max_y: 4420070.0,
+                };
                 app.zoom_to_bounds(&b);
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -1049,7 +1490,10 @@ fn leader_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }
@@ -1066,17 +1510,29 @@ fn leader_screens() {
 fn fit_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/numara-sigdir-4280");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/numara-sigdir-4280");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
-        for (made, file) in [(0, "1-pencere"), (1, "2-pafta-101-10"), (2, "3-model-dar-parca")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
+        for (made, file) in [
+            (0, "1-pencere"),
+            (1, "2-pafta-101-10"),
+            (2, "3-model-dar-parca"),
+        ] {
             let mut app = named();
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
             let _ = app.update(Message::Run("readjustment.distribute"));
-            let _ = app.update(Message::from(map::Event::Readjustment(R::View(View::Sheet))));
+            let _ = app.update(Message::from(map::Event::Readjustment(R::View(
+                View::Sheet,
+            ))));
             let _ = app.update(Message::from(map::Event::Readjustment(R::Numbers(
                 "101/10: 101/24, 101/25".into(),
             ))));
@@ -1090,7 +1546,12 @@ fn fit_screens() {
             if made == 2 {
                 // The model on 101/10's upper piece outside, 4 m wide: its number turned along it.
                 let _ = app.update(Message::Sheet(kentos_sheet_ui::Message::Tab(0)));
-                let b = kentos_commands::Bounds { min_x: 486984.0, min_y: 4420046.0, max_x: 487000.0, max_y: 4420064.0 };
+                let b = kentos_commands::Bounds {
+                    min_x: 486984.0,
+                    min_y: 4420046.0,
+                    max_x: 487000.0,
+                    max_y: 4420064.0,
+                };
                 app.zoom_to_bounds(&b);
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -1099,7 +1560,10 @@ fn fit_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let path = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&path).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes");
             println!("{}", path.display());
         }
     }

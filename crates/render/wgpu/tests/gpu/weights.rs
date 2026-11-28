@@ -4,7 +4,9 @@
 //! before.
 use std::sync::Arc;
 
-use kentos_native_style::batches::{BatchKind, Cap, FillPaintBatch, StyledBatch, StyledLayer, Unit};
+use kentos_native_style::batches::{
+    BatchKind, Cap, FillPaintBatch, StyledBatch, StyledLayer, Unit,
+};
 use kentos_render_wgpu::styled::{StyledLayerPart, StyledScene};
 use kentos_render_wgpu::{Camera, RenderSettings};
 
@@ -84,7 +86,9 @@ fn hatch(id: u64, width: f64, cap: f64) -> StyledScene {
 /// The inked height of the view's middle column, in device pixels (coverage summed).
 fn inked(rgba: &[u8], size: usize) -> f64 {
     let x = size / 2;
-    (0..size).map(|y| f64::from(rgba[(y * size + x) * 4]) / 255.).sum()
+    (0..size)
+        .map(|y| f64::from(rgba[(y * size + x) * 4]) / 255.)
+        .sum()
 }
 
 pub(super) fn paper_widths_are_held(gpu: &mut Gpu) {
@@ -121,7 +125,10 @@ pub(super) fn paper_widths_are_held(gpu: &mut Gpu) {
                 ..Default::default()
             };
             let n = 90_000 + case as u64 * 10 + u64::from(samples) * 100;
-            for (what, scene) in [("stroke", stroke(n, width, held)), ("hatch", hatch(n + 5, width, held))] {
+            for (what, scene) in [
+                ("stroke", stroke(n, width, held)),
+                ("hatch", hatch(n + 5, width, held)),
+            ] {
                 gpu.styled = Some(scene);
                 let pixels = gpu.draw(&[], &camera, &settings, size as u32, size as u32);
                 let got = inked(&pixels, size);

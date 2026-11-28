@@ -10,7 +10,8 @@
 use std::collections::HashSet;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, DRAWING_TAKE_STEP, DrawingTake, DrawingTaken, Entity, MAX_TAKE_UIDS,
+    CommandResult, CommandWarning, DRAWING_TAKE_STEP, DrawingTake, DrawingTaken, Entity,
+    MAX_TAKE_UIDS,
 };
 use kentos_domain::etag::entity_value;
 use kentos_domain::{Document, Slot, Uuid};
@@ -53,7 +54,9 @@ fn same(a: Option<&Entity>, b: Option<&Entity>) -> bool {
 }
 
 fn layer_name(doc: &Document, id: &str) -> String {
-    doc.layers().get(id).map_or_else(|| id.to_owned(), |n| n.name.clone())
+    doc.layers()
+        .get(id)
+        .map_or_else(|| id.to_owned(), |n| n.name.clone())
 }
 
 /// The states the input names: the other state and the base. Read before the write opens its step, since the
@@ -69,11 +72,18 @@ fn states(doc: &Document, input: &DrawingTake) -> States {
     Ok((other, base))
 }
 
-fn check(doc: &Document, input: &DrawingTake, read: impl FnOnce() -> States) -> Result<Checked, Stop> {
+fn check(
+    doc: &Document,
+    input: &DrawingTake,
+    read: impl FnOnce() -> States,
+) -> Result<Checked, Stop> {
     if input.uids.is_empty() || input.uids.len() > MAX_TAKE_UIDS {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Alınacak nesne sayısı 1 ile {MAX_TAKE_UIDS} arasında olmalı; {} verildi.", input.uids.len()),
+            format!(
+                "Alınacak nesne sayısı 1 ile {MAX_TAKE_UIDS} arasında olmalı; {} verildi.",
+                input.uids.len()
+            ),
             "uids".into(),
         ));
     }
@@ -82,7 +92,9 @@ fn check(doc: &Document, input: &DrawingTake, read: impl FnOnce() -> States) -> 
         if !checks::is_uid_text(uid) {
             return Err(fail(
                 codes::INVALID_UID,
-                format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği karşılaştırmanın çıktısından alın."),
+                format!(
+                    "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir. Kimliği karşılaştırmanın çıktısından alın."
+                ),
                 format!("uids[{i}]"),
             ));
         }
@@ -124,7 +136,9 @@ fn check(doc: &Document, input: &DrawingTake, read: impl FnOnce() -> States) -> 
         if then.is_none() && now.is_none() {
             return Err(fail(
                 codes::ENTITY_NOT_FOUND,
-                format!("“{text}” kimlikli nesne ne açık çizimde ne de karşılaştırılan sürümde var; karşılaştırmayı yenileyin."),
+                format!(
+                    "“{text}” kimlikli nesne ne açık çizimde ne de karşılaştırılan sürümde var; karşılaştırmayı yenileyin."
+                ),
                 path,
             ));
         }
@@ -146,10 +160,14 @@ fn check(doc: &Document, input: &DrawingTake, read: impl FnOnce() -> States) -> 
             }
             if let Entity::Insert(ins) = e {
                 if doc.block(ins.block).is_none() {
-                    let name = other.block(ins.block).map_or_else(|| "?".to_owned(), |b| b.name.clone());
+                    let name = other
+                        .block(ins.block)
+                        .map_or_else(|| "?".to_owned(), |b| b.name.clone());
                     return Err(fail(
                         codes::UNKNOWN_BLOCK,
-                        format!("“{name}” bloğunun tanımı açık çizimde yok; yerleştirme alınamaz. Önce tanımı blok kitaplığından ekleyin."),
+                        format!(
+                            "“{name}” bloğunun tanımı açık çizimde yok; yerleştirme alınamaz. Önce tanımı blok kitaplığından ekleyin."
+                        ),
                         path,
                     ));
                 }
@@ -176,7 +194,9 @@ fn check(doc: &Document, input: &DrawingTake, read: impl FnOnce() -> States) -> 
             if moved_here && moved_there {
                 return Err(fail(
                     codes::TAKE_CONFLICT,
-                    format!("“{text}” nesnesi ortak tabandan sonra iki tarafta da farklı değişti; hiçbir fark alınmadı. Üzerine yazmayı açıkça seçin ya da nesneyi karşılaştırmadan çıkarın."),
+                    format!(
+                        "“{text}” nesnesi ortak tabandan sonra iki tarafta da farklı değişti; hiçbir fark alınmadı. Üzerine yazmayı açıkça seçin ya da nesneyi karşılaştırmadan çıkarın."
+                    ),
                     path,
                 ));
             }
@@ -211,7 +231,10 @@ fn check(doc: &Document, input: &DrawingTake, read: impl FnOnce() -> States) -> 
 }
 
 fn listed(c: &Checked, revision: String) -> DrawingTaken {
-    let mut out = DrawingTaken { revision, ..DrawingTaken::default() };
+    let mut out = DrawingTaken {
+        revision,
+        ..DrawingTaken::default()
+    };
     for (uid, step) in &c.steps {
         match step {
             Step::Add(..) => out.added.push(uid.clone()),
@@ -226,7 +249,10 @@ fn listed(c: &Checked, revision: String) -> DrawingTaken {
 /// Checks the take, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &DrawingTake) -> CommandResult<()> {
     match check(cx.doc, input, || states(cx.doc, input)) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -236,7 +262,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &DrawingTake) -> CommandResult<Dra
     match check(cx.doc, input, || states(cx.doc, input)) {
         Ok(c) => {
             let output = listed(&c, cx.doc.revision().to_string());
-            CommandResult::Completed { output, warnings: c.warnings }
+            CommandResult::Completed {
+                output,
+                warnings: c.warnings,
+            }
         }
         Err(stop) => stop.into(),
     }
@@ -254,7 +283,11 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: DrawingTake) -> CommandResu
     )
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: DrawingTake, read: States) -> CommandResult<DrawingTaken> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: DrawingTake,
+    read: States,
+) -> CommandResult<DrawingTaken> {
     let c = match check(cx.doc, &input, move || read) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -262,7 +295,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: DrawingTake, read: States) -> Com
     let done = listed(&c, String::new());
     if done.added.is_empty() && done.replaced.is_empty() && done.removed.is_empty() {
         let revision = cx.doc.revision().to_string();
-        return CommandResult::Completed { output: DrawingTaken { revision, ..done }, warnings: c.warnings };
+        return CommandResult::Completed {
+            output: DrawingTaken { revision, ..done },
+            warnings: c.warnings,
+        };
     }
     cx.doc.name_step(DRAWING_TAKE_STEP);
     let mut adds = Vec::new();
@@ -288,7 +324,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: DrawingTake, read: States) -> Com
         return Stop::failed(error(codes::SLOTS_EXHAUSTED, refused.to_string(), None)).into();
     }
     CommandResult::Completed {
-        output: DrawingTaken { revision: cx.doc.revision().to_string(), ..done },
+        output: DrawingTaken {
+            revision: cx.doc.revision().to_string(),
+            ..done
+        },
         warnings: c.warnings,
     }
 }

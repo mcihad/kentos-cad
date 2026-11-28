@@ -16,8 +16,8 @@
 //! (`no_legend`); with `at`, the layer, as every create command's.
 
 use kentos_commands::{
-    BlockDefinition, BlockId, CommandResult, CommandWarning, Entity, LEGEND_BLOCK, LegendMade, LegendMaterial,
-    LegendPlan, LegendsMaterials,
+    BlockDefinition, BlockId, CommandResult, CommandWarning, Entity, LEGEND_BLOCK, LegendMade,
+    LegendMaterial, LegendPlan, LegendsMaterials,
 };
 use kentos_domain::{Document, Uuid};
 use serde_json::json;
@@ -52,19 +52,25 @@ fn rows(doc: &Document) -> Vec<Row> {
         let mut seen: Vec<usize> = Vec::new();
         for c in &w.wall.components {
             // A bound component is its project material's row, by its id (docs/adr/0785 §4).
-            let bound = c.material_id.as_deref().and_then(|id| doc.materials().iter().find(|m| m.id == id));
+            let bound = c
+                .material_id
+                .as_deref()
+                .and_then(|id| doc.materials().iter().find(|m| m.id == id));
             let (key, name, hatch) = match bound {
                 Some(m) => (Some(m.id.clone()), m.name.clone(), m.hatch.clone()),
                 None => (
                     None,
-                    c.material.as_deref().filter(|m| !m.trim().is_empty()).unwrap_or(&c.name).to_owned(),
+                    c.material
+                        .as_deref()
+                        .filter(|m| !m.trim().is_empty())
+                        .unwrap_or(&c.name)
+                        .to_owned(),
                     c.hatch.clone(),
                 ),
             };
-            let at = match out
-                .iter()
-                .position(|r| r.material == key && (key.is_some() || (r.name == name && r.hatch == hatch)))
-            {
+            let at = match out.iter().position(|r| {
+                r.material == key && (key.is_some() || (r.name == name && r.hatch == hatch))
+            }) {
                 Some(at) => at,
                 None => {
                     out.push(Row {
@@ -94,8 +100,13 @@ fn entities(doc: &Document, rows: &[Row], h: f64) -> Result<Vec<Entity>, Stop> {
         v["id"] = json!(out.len() + 1);
         v["layerId"] = json!("");
         v["attrs"] = json!({});
-        let e = serde_json::from_value(v)
-            .map_err(|e| Stop::failed(error(codes::BLOCK_REFUSED, format!("Lejandın nesnesi yazılamadı: {e}"), None)))?;
+        let e = serde_json::from_value(v).map_err(|e| {
+            Stop::failed(error(
+                codes::BLOCK_REFUSED,
+                format!("Lejandın nesnesi yazılamadı: {e}"),
+                None,
+            ))
+        })?;
         out.push(e);
         Ok(())
     };
@@ -107,8 +118,16 @@ fn entities(doc: &Document, rows: &[Row], h: f64) -> Result<Vec<Entity>, Stop> {
     for (i, r) in rows.iter().enumerate() {
         let top = -(2.0 * big + 4.0 * big * i as f64);
         let bottom = top - 3.0 * big;
-        let ring = json!([p(0.0, bottom), p(6.0 * big, bottom), p(6.0 * big, top), p(0.0, top)]);
-        push(json!({ "kind": "polyline", "pts": ring, "closed": true }), &mut out)?;
+        let ring = json!([
+            p(0.0, bottom),
+            p(6.0 * big, bottom),
+            p(6.0 * big, top),
+            p(0.0, top)
+        ]);
+        push(
+            json!({ "kind": "polyline", "pts": ring, "closed": true }),
+            &mut out,
+        )?;
         let pattern = r.hatch.as_ref().and_then(|c| {
             kentos_geometry_core::geom::wall::component_hatch(&c.pattern, c.scale, c.angle, plot)
                 .and_then(crate::geometry::contract_pattern)
@@ -139,16 +158,27 @@ struct Checked {
     warnings: Vec<CommandWarning>,
 }
 
-fn check(doc: &Document, input: &LegendsMaterials, fresh: impl FnOnce() -> BlockId) -> Result<Checked, Stop> {
+fn check(
+    doc: &Document,
+    input: &LegendsMaterials,
+    fresh: impl FnOnce() -> BlockId,
+) -> Result<Checked, Stop> {
     if let Some(at) = input.at {
         checks::point(at, "Lejandın yerinin", "at")?;
     }
     let h = input.height.unwrap_or(HEIGHT);
-    checks::finite(h, "Lejandın yazı yüksekliği", "Yüksekliği kâğıt milimetresi olarak sonlu bir sayıyla verin.", "height")?;
+    checks::finite(
+        h,
+        "Lejandın yazı yüksekliği",
+        "Yüksekliği kâğıt milimetresi olarak sonlu bir sayıyla verin.",
+        "height",
+    )?;
     if !(h > 0.0 && h <= MAX_HEIGHT) {
         return Err(Stop::failed(error(
             codes::INVALID_HEIGHT,
-            format!("Lejandın yazı yüksekliği sıfırdan büyük, en çok {MAX_HEIGHT} mm olmalı; {h} verildi."),
+            format!(
+                "Lejandın yazı yüksekliği sıfırdan büyük, en çok {MAX_HEIGHT} mm olmalı; {h} verildi."
+            ),
             Some("height".into()),
         )));
     }
@@ -179,7 +209,9 @@ fn check(doc: &Document, input: &LegendsMaterials, fresh: impl FnOnce() -> Block
         base: kentos_commands::Vec2 { x: 0.0, y: 0.0 },
         entities: entities(doc, &rows, h)?,
         attributes: Vec::new(),
-        description: Some("Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721).".into()),
+        description: Some(
+            "Duvarların malzemeleri: her birinin taraması ve adı (docs/adr/0721).".into(),
+        ),
         units: None,
         card: None,
         dynamic: None,
@@ -246,7 +278,10 @@ pub fn plan_in(doc: &Document, input: &LegendsMaterials) -> CommandResult<Legend
 }
 
 /// Checks `input` again and writes the legend's block (made again or added) and the new insert as one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: LegendsMaterials) -> CommandResult<LegendMade> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LegendsMaterials,
+) -> CommandResult<LegendMade> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_LEGENDS_MATERIALS,
@@ -256,7 +291,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: LegendsMaterials) -> Comman
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: LegendsMaterials) -> CommandResult<LegendMade> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LegendsMaterials,
+) -> CommandResult<LegendMade> {
     let c = match check(cx.doc, &input, || BlockId(*Uuid::now_v7().as_bytes())) {
         Ok(c) => c,
         Err(stop) => return stop.into(),

@@ -285,7 +285,9 @@ pub fn scales_problem(scales: &[f64]) -> Option<&'static str> {
         .iter()
         .any(|s| !s.is_finite() || *s < 1.0 || *s > crate::MAX_ANNOTATIVE_SCALE)
     {
-        return Some("Ölçü dizisinin pafta ölçeği 1 ile 1000000 arasında bir sayı olmalı (1:n'nin n'si).");
+        return Some(
+            "Ölçü dizisinin pafta ölçeği 1 ile 1000000 arasında bir sayı olmalı (1:n'nin n'si).",
+        );
     }
     if scales
         .windows(2)
@@ -312,7 +314,10 @@ pub fn dimension_sets_problem(sets: &[DimensionSet]) -> Option<(usize, String)> 
         if set.wall.is_nil() {
             return fail("Ölçü dizisinin kaynak duvar kimliği boş.");
         }
-        if set.edge.is_some_and(|edge| edge as usize >= DIMENSION_SET_EDGES_MAX) {
+        if set
+            .edge
+            .is_some_and(|edge| edge as usize >= DIMENSION_SET_EDGES_MAX)
+        {
             return fail("Ölçü dizisinin kenar numarası duvarın kenar sınırını aşıyor.");
         }
         if set.layer_id.is_empty() {
@@ -343,7 +348,10 @@ pub fn dimension_sets_problem(sets: &[DimensionSet]) -> Option<(usize, String)> 
         }
         if let Some(span) = &set.span {
             let d = span.direction;
-            if !d.x.is_finite() || !d.y.is_finite() || ((d.x * d.x + d.y * d.y).sqrt() - 1.0).abs() > 1e-9 {
+            if !d.x.is_finite()
+                || !d.y.is_finite()
+                || ((d.x * d.x + d.y * d.y).sqrt() - 1.0).abs() > 1e-9
+            {
                 return fail("Ölçü dizisinin doğrultusu birim vektör olmalı.");
             }
             if set.edge.is_some() {
@@ -367,7 +375,10 @@ pub fn dimension_sets_problem(sets: &[DimensionSet]) -> Option<(usize, String)> 
         if let Some(why) = scales_problem(&set.scales) {
             return fail(why);
         }
-        if set.members.iter().any(|m| m.shift.is_some_and(|t| !t.along.is_finite() || !t.across.is_finite())) {
+        if set.members.iter().any(|m| {
+            m.shift
+                .is_some_and(|t| !t.along.is_finite() || !t.across.is_finite())
+        }) {
             return fail("Ölçü dizisi üyesinin yazı yeri sonlu olmalı.");
         }
         let mut placed = BTreeSet::new();

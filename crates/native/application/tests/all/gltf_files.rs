@@ -10,9 +10,12 @@ use kentos_native_application::{ExecutionContext, road_scene};
 
 #[test]
 fn a_road_project_goes_out_as_gltf() {
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/file.export.gltf.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("setup");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/file.export.gltf.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("setup");
     let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
     let folder = if std::env::var_os("KENTOS_WRITE_GLTF").is_some() {
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/road/v1/gltf/out")
@@ -22,7 +25,12 @@ fn a_road_project_goes_out_as_gltf() {
         d
     };
     let path = folder.join("yol.glb");
-    let input = ExportGltf { path: path.display().to_string(), surfaces: None, corridors: None, overwrite: true };
+    let input = ExportGltf {
+        path: path.display().to_string(),
+        surfaces: None,
+        corridors: None,
+        overwrite: true,
+    };
     let out = match road_scene::execute(&mut ExecutionContext::new(&mut doc), input) {
         CommandResult::Completed { output, .. } => output,
         other => panic!("writes: {other:?}"),
@@ -37,7 +45,11 @@ fn a_road_project_goes_out_as_gltf() {
         assert_eq!(m.triangles, p.triangles);
         for (f, v) in m.positions.iter().zip(&p.vertices) {
             for a in 0..3 {
-                assert!((f64::from(f[a]) + origin[a] - v[a]).abs() <= out.error + 1e-9, "{} {v:?}", m.name);
+                assert!(
+                    (f64::from(f[a]) + origin[a] - v[a]).abs() <= out.error + 1e-9,
+                    "{} {v:?}",
+                    m.name
+                );
             }
         }
     }
@@ -50,7 +62,11 @@ fn far_coordinates_keep_their_millimetres() {
         kind: kentos_commands::SceneMeshKind::Terrain,
         id: "t".into(),
         name: "Zemin".into(),
-        vertices: vec![[512_345.678, 4_401_234.567, 1_234.5], [522_345.679, 4_401_234.568, 1_250.25], [512_345.678, 4_411_234.566, 1_240.0]],
+        vertices: vec![
+            [512_345.678, 4_401_234.567, 1_234.5],
+            [522_345.679, 4_401_234.568, 1_250.25],
+            [512_345.678, 4_411_234.566, 1_240.0],
+        ],
         triangles: vec![[0, 1, 2]],
         roles: Vec::new(),
     }];

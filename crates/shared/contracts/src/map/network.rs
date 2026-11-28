@@ -215,9 +215,14 @@ pub struct NetworkClosures {
 impl NetworkClosures {
     /// The edge fields it reads, in its order: the first and last day, then the weekdays and the hours it names.
     pub fn fields(&self) -> impl Iterator<Item = &str> {
-        [Some(self.from.as_str()), Some(self.to.as_str()), self.days.as_deref(), self.hours.as_deref()]
-            .into_iter()
-            .flatten()
+        [
+            Some(self.from.as_str()),
+            Some(self.to.as_str()),
+            self.days.as_deref(),
+            self.hours.as_deref(),
+        ]
+        .into_iter()
+        .flatten()
     }
 }
 
@@ -828,20 +833,34 @@ impl NetworkDef {
         }
         if let Some(c) = &self.closures {
             if field_bad(&c.from) || field_bad(&c.to) {
-                return Some(at("tarihli kapanmasının gün alanı boş, kırpılmamış ya da çok uzun"));
+                return Some(at(
+                    "tarihli kapanmasının gün alanı boş, kırpılmamış ya da çok uzun",
+                ));
             }
             if c.from == c.to {
-                return Some(at("tarihli kapanmasının ilk ve son gün alanı aynı; iki ayrı alan olmalı"));
+                return Some(at(
+                    "tarihli kapanmasının ilk ve son gün alanı aynı; iki ayrı alan olmalı",
+                ));
             }
             if c.days.as_deref().is_some_and(field_bad) {
-                return Some(at("kapanmasının haftanın günleri alanı boş, kırpılmamış ya da çok uzun"));
+                return Some(at(
+                    "kapanmasının haftanın günleri alanı boş, kırpılmamış ya da çok uzun",
+                ));
             }
             if c.hours.as_deref().is_some_and(field_bad) {
-                return Some(at("kapanmasının saat alanı boş, kırpılmamış ya da çok uzun"));
+                return Some(at(
+                    "kapanmasının saat alanı boş, kırpılmamış ya da çok uzun",
+                ));
             }
             let fields: Vec<&str> = c.fields().collect();
-            if fields.iter().enumerate().any(|(i, f)| fields[..i].contains(f)) {
-                return Some(at("kapanmasının iki alanı aynı; her biri ayrı bir alan olmalı"));
+            if fields
+                .iter()
+                .enumerate()
+                .any(|(i, f)| fields[..i].contains(f))
+            {
+                return Some(at(
+                    "kapanmasının iki alanı aynı; her biri ayrı bir alan olmalı",
+                ));
             }
         }
         if let Some(s) = &self.subnetworks
@@ -915,8 +934,7 @@ impl NetworkDef {
                     ));
                 }
             }
-            if p
-                .top_speed
+            if p.top_speed
                 .is_some_and(|v| !(v.is_finite() && v > 0.0 && v <= NETWORK_TOP_SPEED_LIMIT))
             {
                 return Some(format!(
@@ -1024,7 +1042,11 @@ impl NetworkDef {
 
     /// What is wrong with the subnetworks (docs/adr/0557 §2), in words that continue “ağının …”.
     fn subnetworks_problem(&self, s: &NetworkSubnetworks) -> Option<String> {
-        if !self.junctions.iter().any(|j| j.role == JunctionRole::Source) {
+        if !self
+            .junctions
+            .iter()
+            .any(|j| j.role == JunctionRole::Source)
+        {
             return Some(
                 "alt ağlarının denetleyicisi yok; en az bir Kaynak düğüm katmanı olmalı".into(),
             );
@@ -1039,7 +1061,11 @@ impl NetworkDef {
             .name
             .iter()
             .map(String::as_str)
-            .chain(self.terminals.iter().flat_map(|t| [t.start.as_str(), t.end.as_str()]))
+            .chain(
+                self.terminals
+                    .iter()
+                    .flat_map(|t| [t.start.as_str(), t.end.as_str()]),
+            )
             .chain(
                 self.terminals
                     .iter()
@@ -1055,13 +1081,11 @@ impl NetworkDef {
                     .map(|l| l.field.as_str())
                     .chain(p.forbidden.iter().map(|f| f.field.as_str()))
             }))
-            .chain(
-                self.closures.iter().flat_map(NetworkClosures::fields),
-            )
+            .chain(self.closures.iter().flat_map(NetworkClosures::fields))
             .collect();
-        reads
-            .contains(&s.attribute.as_str())
-            .then(|| "alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin".into())
+        reads.contains(&s.attribute.as_str()).then(|| {
+            "alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin".into()
+        })
     }
 
     /// Whether a question about the network may give a time: one of its speed costs has a time profile, or its
@@ -1093,8 +1117,14 @@ impl NetworkDef {
 
     /// A result's column for cost `c` (docs/adr/9355): its name with its unit, “Uzunluk (m)”, “Süre (sn)”.
     pub fn cost_column(&self, c: usize) -> String {
-        let name = self.cost_names().get(c).copied().unwrap_or_default().to_owned();
-        self.column_unit(c).map_or_else(|| name.clone(), |u| format!("{name} ({u})"))
+        let name = self
+            .cost_names()
+            .get(c)
+            .copied()
+            .unwrap_or_default()
+            .to_owned();
+        self.column_unit(c)
+            .map_or_else(|| name.clone(), |u| format!("{name} ({u})"))
     }
 
     /// A value of cost `c` in its column's unit (docs/adr/9355): a speed's minutes as seconds, the others as they are.
@@ -1148,7 +1178,9 @@ fn terminal_set_problem(
     paths: &[Vec<String>],
 ) -> Option<String> {
     if terminals.len() < 2 || terminals.len() > NETWORK_TERMINAL_LIMIT {
-        return Some(format!("{who} terminalleri 2–{NETWORK_TERMINAL_LIMIT} olmalı"));
+        return Some(format!(
+            "{who} terminalleri 2–{NETWORK_TERMINAL_LIMIT} olmalı"
+        ));
     }
     let mut keys: Vec<String> = Vec::new();
     for tm in terminals {
@@ -1529,9 +1561,17 @@ mod tests {
         assert!(bad(&|m| dev(m).paths[0] = vec!["yg".into()]).contains("en az iki"));
         assert!(bad(&|m| dev(m).paths[0][1] = "x".into()).contains("terminali değil"));
         assert!(bad(&|m| dev(m).paths[0][1] = "yg".into()).contains("iki kez"));
-        assert!(bad(&|m| m.subnetworks.as_mut().unwrap().attribute = "uc_bas".into()).contains("üstüne"));
-        assert!(bad(&|m| m.subnetworks.as_mut().unwrap().attribute = " x".into()).contains("özniteliği"));
-        assert!(bad(&|m| m.junctions.retain(|j| j.role != JunctionRole::Source)).contains("Kaynak"));
+        assert!(
+            bad(&|m| m.subnetworks.as_mut().unwrap().attribute = "uc_bas".into())
+                .contains("üstüne")
+        );
+        assert!(
+            bad(&|m| m.subnetworks.as_mut().unwrap().attribute = " x".into())
+                .contains("özniteliği")
+        );
+        assert!(
+            bad(&|m| m.junctions.retain(|j| j.role != JunctionRole::Source)).contains("Kaynak")
+        );
         // A name the id folds to is the same terminal's own: allowed.
         let mut same = n.clone();
         same.terminals.as_mut().unwrap().devices[0].terminals[0].name = "YG".into();
@@ -1576,8 +1616,13 @@ mod tests {
         assert!(bad(&|d| d.configs[0].value = "IŞIK".into()).contains("iki kez"));
         assert!(bad(&|d| d.configs[0].value.clear()).contains("yapılandırma değeri"));
         assert!(bad(&|d| d.configs[0].terminals.truncate(1)).contains("“trafo” yapılandırmasının"));
-        assert!(bad(&|d| d.configs[1].paths[0][1] = "z".into()).contains("“ışık” yapılandırmasının"));
-        assert!(bad(&|d| d.configs = (0..17).map(|i| config(&format!("v{i}"))).collect()).contains("en çok 16"));
+        assert!(
+            bad(&|d| d.configs[1].paths[0][1] = "z".into()).contains("“ışık” yapılandırmasının")
+        );
+        assert!(
+            bad(&|d| d.configs = (0..17).map(|i| config(&format!("v{i}"))).collect())
+                .contains("en çok 16")
+        );
         // The attribute that chooses a configuration is read, so the subnetworks may not write it.
         let mut over = n.clone();
         over.subnetworks.as_mut().unwrap().attribute = "tip".into();
@@ -1615,12 +1660,22 @@ mod tests {
             name: "KAMYON".into(),
             ..kamyon()
         };
-        assert!(with(vec![kamyon(), twice], None).problem().unwrap().contains("iki kez"));
+        assert!(
+            with(vec![kamyon(), twice], None)
+                .problem()
+                .unwrap()
+                .contains("iki kez")
+        );
         let slow = NetworkProfile {
             top_speed: Some(0.0),
             ..kamyon()
         };
-        assert!(with(vec![slow], None).problem().unwrap().contains("en yüksek hızı"));
+        assert!(
+            with(vec![slow], None)
+                .problem()
+                .unwrap()
+                .contains("en yüksek hızı")
+        );
         let blank = NetworkProfile {
             forbidden: vec![ProfileForbid {
                 field: "tur".into(),
@@ -1628,14 +1683,24 @@ mod tests {
             }],
             ..kamyon()
         };
-        assert!(with(vec![blank], None).problem().unwrap().contains("kırpılmamış"));
+        assert!(
+            with(vec![blank], None)
+                .problem()
+                .unwrap()
+                .contains("kırpılmamış")
+        );
         let same = NetworkClosures {
             from: "k".into(),
             to: "k".into(),
             days: None,
             hours: None,
         };
-        assert!(with(Vec::new(), Some(same)).problem().unwrap().contains("aynı"));
+        assert!(
+            with(Vec::new(), Some(same))
+                .problem()
+                .unwrap()
+                .contains("aynı")
+        );
         let weekly = NetworkClosures {
             from: "a".into(),
             to: "b".into(),
@@ -1647,15 +1712,27 @@ mod tests {
             hours: Some("a".into()),
             ..weekly.clone()
         };
-        assert!(with(Vec::new(), Some(twice)).problem().unwrap().contains("iki alanı aynı"));
+        assert!(
+            with(Vec::new(), Some(twice))
+                .problem()
+                .unwrap()
+                .contains("iki alanı aynı")
+        );
         let blank = NetworkClosures {
             days: Some(" gunler".into()),
             ..weekly
         };
-        assert!(with(Vec::new(), Some(blank)).problem().unwrap().contains("haftanın günleri"));
+        assert!(
+            with(Vec::new(), Some(blank))
+                .problem()
+                .unwrap()
+                .contains("haftanın günleri")
+        );
         let def = with(vec![kamyon()], None);
-        assert_eq!(def.profile("kamyon").map(|p| p.name.as_str()), Some("Kamyon"));
+        assert_eq!(
+            def.profile("kamyon").map(|p| p.name.as_str()),
+            Some("Kamyon")
+        );
         assert!(def.profile("Yaya").is_none());
     }
-
 }

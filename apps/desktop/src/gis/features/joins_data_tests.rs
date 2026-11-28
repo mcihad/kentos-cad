@@ -34,8 +34,19 @@ fn view(app: &mut App, name: &str, matched: bool) -> String {
         window(app, W::Matched);
     }
     window(app, W::Save);
-    let views = &app.document.as_ref().expect("open").model.settings().join_views;
-    views.iter().find(|v| v.name == name).expect("saved").id.clone()
+    let views = &app
+        .document
+        .as_ref()
+        .expect("open")
+        .model
+        .settings()
+        .join_views;
+    views
+        .iter()
+        .find(|v| v.name == name)
+        .expect("saved")
+        .id
+        .clone()
 }
 
 /// The view read until its sources' rows are in: each reading asks for them, read as a frame of the program would.
@@ -56,11 +67,21 @@ fn read(app: &App) -> std::rc::Rc<kentos_native_application::joins_query::JoinRe
 /// Each row's neighbourhood name and its maintenance code (empty without a match).
 fn pairs(app: &App) -> Vec<(String, String)> {
     let r = read(app);
-    let at = |name: &str| r.columns.iter().position(|c| c.name == name).unwrap_or_else(|| panic!("no {name}"));
+    let at = |name: &str| {
+        r.columns
+            .iter()
+            .position(|c| c.name == name)
+            .unwrap_or_else(|| panic!("no {name}"))
+    };
     let (ad, kod) = (at("ad"), at("kod"));
     r.rows
         .iter()
-        .map(|row| (row.cells[ad].clone().unwrap_or_default(), row.cells[kod].clone().unwrap_or_default()))
+        .map(|row| {
+            (
+                row.cells[ad].clone().unwrap_or_default(),
+                row.cells[kod].clone().unwrap_or_default(),
+            )
+        })
         .collect()
 }
 
@@ -86,7 +107,13 @@ fn a_view_of_two_data_layers_reads_their_sources_rows() {
     // Chosen: its rows asked of the sources, the view waiting for them (the message's tasks not run yet).
     let task = app.update(Message::Gis(gis::Event::Features(Event::View(all))));
     let r = read(&app);
-    assert!(r.waiting.as_deref().is_some_and(|w| w.ends_with("kaynaktan okunuyor…")), "{:?}", r.waiting);
+    assert!(
+        r.waiting
+            .as_deref()
+            .is_some_and(|w| w.ends_with("kaynaktan okunuyor…")),
+        "{:?}",
+        r.waiting
+    );
     drive(&mut app, task);
     let task = app.data_rows_tasks();
     drive(&mut app, task);
@@ -95,19 +122,41 @@ fn a_view_of_two_data_layers_reads_their_sources_rows() {
     let pair = |a: &str, b: &str| (a.to_owned(), b.to_owned());
     assert_eq!(
         pairs(&app),
-        [pair("Çınar", "B01"), pair("Çınar", "B02"), pair("İstasyon", "B03"), pair("İstasyon", "B04"), pair("Kale", "")]
+        [
+            pair("Çınar", "B01"),
+            pair("Çınar", "B02"),
+            pair("İstasyon", "B03"),
+            pair("İstasyon", "B04"),
+            pair("Kale", "")
+        ]
     );
     let report = read(&app).report.clone();
-    assert_eq!((report.records, report.matched, report.unmatched), (3, 2, 1));
+    assert_eq!(
+        (report.records, report.matched, report.unmatched),
+        (3, 2, 1)
+    );
     assert_eq!((report.with_records, report.with_used), (6, 4));
     // The line says the records that matched several and the joined ones nothing met (docs/adr/9153).
     let line = App::join_report(&read(&app), "bakim");
-    assert!(line.contains("3 kayıt: 2 eşleşen (2 birden çok kayıtla), 1 eşleşmeyen"), "{line}");
-    assert!(line.contains("bakim: 6 kayıttan 4'i eşleşti, 2 kayda hiçbir kayıt bağlanmadı"), "{line}");
+    assert!(
+        line.contains("3 kayıt: 2 eşleşen (2 birden çok kayıtla), 1 eşleşmeyen"),
+        "{line}"
+    );
+    assert!(
+        line.contains("bakim: 6 kayıttan 4'i eşleşti, 2 kayda hiçbir kayıt bağlanmadı"),
+        "{line}"
+    );
     // A data layer's cells are read only from the view, said why.
     let r = read(&app);
     let kod = r.columns.iter().find(|c| c.name == "kod").expect("kod");
-    assert!(!kod.editable && kod.reason.as_deref().is_some_and(|w| w.contains("veri katmanının satırı")), "{kod:?}");
+    assert!(
+        !kod.editable
+            && kod
+                .reason
+                .as_deref()
+                .is_some_and(|w| w.contains("veri katmanının satırı")),
+        "{kod:?}"
+    );
     // Only the matched: four.
     let matched = view(&mut app, "Eşleşen bakımlar", true);
     let task = app.update(Message::Gis(gis::Event::Features(Event::View(matched))));
@@ -130,7 +179,10 @@ fn a_source_that_cannot_be_read_and_no_match_are_said_apart() {
     let mut v = app.join_view(doc).expect("the view");
     v.with_key = "kod".into();
     let r = kentos_native_application::joins_query::read(&doc.model, &v);
-    assert_eq!((r.report.records, r.report.matched, r.rows.len()), (3, 0, 0));
+    assert_eq!(
+        (r.report.records, r.report.matched, r.rows.len()),
+        (3, 0, 0)
+    );
     let said = App::join_empty(&r, &v, doc, "bakim");
     assert!(said.starts_with("Hiçbir kayıt eşleşmedi"), "{said}");
     // A layer without a record says that instead.
@@ -139,12 +191,18 @@ fn a_source_that_cannot_be_read_and_no_match_are_said_apart() {
     let r = read_with(&doc.model, &v, &none);
     assert_eq!(r.report.records, 0);
     let said = App::join_empty(&r, &v, doc, "bakim");
-    assert_eq!(said, "“mahalleler” katmanında kayıt yok; görünümde satır yok.");
+    assert_eq!(
+        said,
+        "“mahalleler” katmanında kayıt yok; görünümde satır yok."
+    );
     // A source that cannot be read breaks the view, said why, with no former reading.
     let lost = |_: &kentos_commands::LayerNode| SourceRows::Failed("bağlantı kesildi".into());
     let r = read_with(&doc.model, &v, &lost);
     let why = r.broken.clone().expect("broken");
-    assert!(why.contains("veri katmanının kaynağı okunamadı: bağlantı kesildi"), "{why}");
+    assert!(
+        why.contains("veri katmanının kaynağı okunamadı: bağlantı kesildi"),
+        "{why}"
+    );
     assert!(r.rows.is_empty());
     let _ = std::fs::remove_file(&path);
 }
@@ -157,7 +215,15 @@ fn screens() {
     let prepare = |matched: bool| {
         move || {
             let (mut app, _) = opened(&format!("birlesim-resim-{matched}"));
-            let id = view(&mut app, if matched { "Eşleşen bakımlar" } else { "Mahalle bakımları" }, matched);
+            let id = view(
+                &mut app,
+                if matched {
+                    "Eşleşen bakımlar"
+                } else {
+                    "Mahalle bakımları"
+                },
+                matched,
+            );
             let task = app.update(Message::Gis(gis::Event::Features(Event::View(id))));
             drive(&mut app, task);
             settle(&mut app);

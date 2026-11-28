@@ -4,7 +4,9 @@
 
 use std::sync::Arc;
 
-use kentos_contracts::{ElementType, ElementTypeKind, Entity, element_types_problem, exceptions_after};
+use kentos_contracts::{
+    ElementType, ElementTypeKind, Entity, element_types_problem, exceptions_after,
+};
 
 use crate::Refusal;
 use crate::document::Document;
@@ -14,7 +16,10 @@ use crate::history::Op;
 impl Document {
     /// The project's element types, in the order they were made.
     pub fn element_types(&self) -> &[ElementType] {
-        self.settings.arch.as_ref().map_or(&[], |a| a.element_types.as_slice())
+        self.settings
+            .arch
+            .as_ref()
+            .map_or(&[], |a| a.element_types.as_slice())
     }
 
     /// The project's element type of id `id`.
@@ -24,7 +29,11 @@ impl Document {
 
     /// Gives the project the types `next` as one change named `label` (into the open transaction, else an undo step of
     /// its own). Refused with nothing changed: types with a problem. Whether anything changed.
-    pub fn set_element_types(&mut self, next: Vec<ElementType>, label: &str) -> Result<bool, Refusal> {
+    pub fn set_element_types(
+        &mut self,
+        next: Vec<ElementType>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
         if let Some((_, problem)) = element_types_problem(&next) {
             return Err(Refusal(problem));
         }
@@ -33,7 +42,13 @@ impl Document {
         }
         let before = Arc::new(self.element_types().to_vec());
         self.transact(label, |doc| {
-            doc.record(vec![Op::Arch(ArchOp::ElementTypes { before, after: Arc::new(next) })], label);
+            doc.record(
+                vec![Op::Arch(ArchOp::ElementTypes {
+                    before,
+                    after: Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }

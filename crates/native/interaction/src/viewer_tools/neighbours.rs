@@ -66,8 +66,9 @@ pub(crate) fn shifted_neighbours(
         return Ok(None);
     }
     let (store, points) = (cx.spatial.store(), cx.draft.topology_points);
-    let (extra, _) = topology_follow::along_edge(cx.doc, store, points, slot, before, after, ring, edge)
-        .map_err(|(why, _)| why)?;
+    let (extra, _) =
+        topology_follow::along_edge(cx.doc, store, points, slot, before, after, ring, edge)
+            .map_err(|(why, _)| why)?;
     Ok(topology_follow::neighbours_with(
         cx.doc,
         store,
@@ -112,7 +113,10 @@ pub fn lines(n: &Neighbours) -> Vec<(Level, String)> {
     if !n.changes.is_empty() {
         // The places inside the changed edges that went with them (docs/adr/3400).
         let carried = if n.carried > 0 {
-            format!("; kenarın ortasındaki {} ortak köşe de kenarla gitti", n.carried)
+            format!(
+                "; kenarın ortasındaki {} ortak köşe de kenarla gitti",
+                n.carried
+            )
         } else {
             String::new()
         };

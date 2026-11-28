@@ -431,7 +431,8 @@ impl ColumnFields {
         if self.shape != ColumnShape::LShape {
             return Some((
                 "legs".into(),
-                "Kol kalınlıkları yalnız L kolonda olur; biçimi L yapın ya da kolları kaldırın.".into(),
+                "Kol kalınlıkları yalnız L kolonda olur; biçimi L yapın ya da kolları kaldırın."
+                    .into(),
             ));
         }
         for (k, (t, side, whose)) in [(a, self.depth(), "boyundan"), (b, self.width, "eninden")]
@@ -613,12 +614,8 @@ pub struct RampEntity {
 type Problem = Option<(String, String)>;
 
 fn point_problem(p: &Vec2, at: &str, whose: &str) -> Problem {
-    (!(p.x.is_finite() && p.y.is_finite())).then(|| {
-        (
-            at.into(),
-            format!("{whose} koordinatları sonlu olmalı."),
-        )
-    })
+    (!(p.x.is_finite() && p.y.is_finite()))
+        .then(|| (at.into(), format!("{whose} koordinatları sonlu olmalı.")))
 }
 
 fn positive(v: f64, field: &str, whose: &str, max: f64) -> Problem {
@@ -649,11 +646,15 @@ fn flight_problem(pts: &[Vec2], what: &str) -> Problem {
         ));
     }
     for (i, p) in pts.iter().enumerate() {
-        if let Some(found) = point_problem(p, &format!("pts[{i}]"), &format!("{}. noktanın", i + 1)) {
+        if let Some(found) = point_problem(p, &format!("pts[{i}]"), &format!("{}. noktanın", i + 1))
+        {
             return Some(found);
         }
     }
-    if let Some(i) = pts.windows(2).position(|w| w[0].x == w[1].x && w[0].y == w[1].y) {
+    if let Some(i) = pts
+        .windows(2)
+        .position(|w| w[0].x == w[1].x && w[0].y == w[1].y)
+    {
         return Some((
             format!("pts[{}]", i + 1),
             format!("{what} yolunun {}. ve {}. noktası aynı.", i + 1, i + 2),
@@ -668,11 +669,16 @@ impl GridFields {
         if self.pts.len() != 2 {
             return Some((
                 "pts".into(),
-                format!("Aks iki noktadır (başı ve sonu); {} verildi.", self.pts.len()),
+                format!(
+                    "Aks iki noktadır (başı ve sonu); {} verildi.",
+                    self.pts.len()
+                ),
             ));
         }
         for (i, p) in self.pts.iter().enumerate() {
-            if let Some(found) = point_problem(p, &format!("pts[{i}]"), &format!("{}. noktanın", i + 1)) {
+            if let Some(found) =
+                point_problem(p, &format!("pts[{i}]"), &format!("{}. noktanın", i + 1))
+            {
                 return Some(found);
             }
         }
@@ -768,7 +774,10 @@ impl StairFields {
         if !(1..=MAX_RISERS).contains(&self.risers) {
             return Some((
                 "risers".into(),
-                format!("Rıht sayısı {}; 1 ile {MAX_RISERS} arasında olmalı.", self.risers),
+                format!(
+                    "Rıht sayısı {}; 1 ile {MAX_RISERS} arasında olmalı.",
+                    self.risers
+                ),
             ));
         }
         if let Some(l) = self.landing
@@ -781,7 +790,10 @@ impl StairFields {
         {
             return Some((
                 "cut".into(),
-                format!("Kesme çizgisi {c}. rıhtta; 1 ile {} arasında olmalı.", self.risers),
+                format!(
+                    "Kesme çizgisi {c}. rıhtta; 1 ile {} arasında olmalı.",
+                    self.risers
+                ),
             ));
         }
         if let Some(found) = self.post_problem() {
@@ -853,7 +865,9 @@ impl StairFields {
             return bad("Merkez direği yalnız döner merdivende olur.".into());
         };
         if !(d.is_finite() && d > 0.0) {
-            return bad(format!("Merkez direğinin çapı {d}; sıfırdan büyük, sonlu olmalı."));
+            return bad(format!(
+                "Merkez direğinin çapı {d}; sıfırdan büyük, sonlu olmalı."
+            ));
         }
         let inner = r - self.width / 2.0;
         if d / 2.0 >= inner - 1e-9 {
@@ -867,7 +881,10 @@ impl StairFields {
 
     /// Its arc's bulge (docs/adr/0709): the first of `bulges`; 0 for a straight stair.
     pub fn bulge(&self) -> f64 {
-        self.bulges.as_ref().and_then(|b| b.first().copied()).unwrap_or(0.0)
+        self.bulges
+            .as_ref()
+            .and_then(|b| b.first().copied())
+            .unwrap_or(0.0)
     }
 
     /// What is wrong with a curved stair's arc: two bulges on a two-point line, the first finite and not 0, the second
@@ -878,10 +895,14 @@ impl StairFields {
         };
         let bad = |words: &str| Some(("bulges".to_owned(), words.to_owned()));
         if self.pts.len() != 2 {
-            return bad("Döner merdivenin yürüme çizgisi iki noktadır (başı ve sonu) ve bir yaydır.");
+            return bad(
+                "Döner merdivenin yürüme çizgisi iki noktadır (başı ve sonu) ve bir yaydır.",
+            );
         }
         if b.len() != 2 || !b.iter().all(|x| x.is_finite()) || b[1] != 0.0 || b[0] == 0.0 {
-            return bad("Döner merdivenin iki bükümü olur: ilki yayınki (sıfır değil, sonlu), ikincisi 0.");
+            return bad(
+                "Döner merdivenin iki bükümü olur: ilki yayınki (sıfır değil, sonlu), ikincisi 0.",
+            );
         }
         let (dx, dy) = (self.pts[1].x - self.pts[0].x, self.pts[1].y - self.pts[0].y);
         let chord = (dx * dx + dy * dy).sqrt();
@@ -908,7 +929,10 @@ impl RampFields {
         if !(self.rise.is_finite() && self.rise.abs() <= 1000.0) {
             return Some((
                 "rise".into(),
-                format!("Rampanın yüksekliği {}; sonlu ve en çok 1000 m olmalı.", self.rise),
+                format!(
+                    "Rampanın yüksekliği {}; sonlu ve en çok 1000 m olmalı.",
+                    self.rise
+                ),
             ));
         }
         if let Some(s) = self.slope
@@ -919,7 +943,10 @@ impl RampFields {
         if let Some(b) = self.base
             && !b.is_finite()
         {
-            return Some(("base".into(), "Rampanın başlangıç kotu sonlu olmalı.".into()));
+            return Some((
+                "base".into(),
+                "Rampanın başlangıç kotu sonlu olmalı.".into(),
+            ));
         }
         if let Some(o) = self.base_offset {
             if !(o.is_finite() && o.abs() <= crate::MAX_LEVEL_OFFSET) {
@@ -958,7 +985,10 @@ impl RampFields {
     pub fn bound_base(&self, levels: &[crate::ArchLevel]) -> Option<f64> {
         let offset = self.base_offset?;
         let id = self.arch.level.as_deref()?;
-        levels.iter().find(|l| l.id == id).map(|l| l.elevation + offset)
+        levels
+            .iter()
+            .find(|l| l.id == id)
+            .map(|l| l.elevation + offset)
     }
 }
 
@@ -995,7 +1025,13 @@ fn letters_after(t: &str) -> String {
             GRID_LETTERS
                 .iter()
                 .position(|&l| l == b)
-                .unwrap_or_else(|| GRID_LETTERS.iter().filter(|&&l| l < b).count().saturating_sub(1))
+                .unwrap_or_else(|| {
+                    GRID_LETTERS
+                        .iter()
+                        .filter(|&&l| l < b)
+                        .count()
+                        .saturating_sub(1)
+                })
         })
         .collect();
     let mut i = digits.len();
@@ -1027,7 +1063,9 @@ mod tests {
     fn a_grid_keeps_its_label_through_json() {
         let text = r#"{"kind":"grid","id":3,"layerId":"aks","attrs":{},"pts":[{"x":0,"y":0},{"x":5,"y":0}],"name":"B"}"#;
         let e: crate::Entity = serde_json::from_str(text).expect("reads");
-        let crate::Entity::Grid(g) = &e else { panic!("a grid") };
+        let crate::Entity::Grid(g) = &e else {
+            panic!("a grid")
+        };
         assert_eq!(g.grid.label, "B");
         assert_eq!(g.base.label, None, "the grid's label is its own field");
         let back = serde_json::to_value(&e).expect("writes");
@@ -1039,13 +1077,23 @@ mod tests {
     #[test]
     fn a_column_says_its_material_and_size() {
         let text = r#"{"kind":"column","id":1,"layerId":"kolon","attrs":{},"at":{"x":0,"y":0},"width":0.3,"depth":0.5}"#;
-        let crate::Entity::Column(mut c) = serde_json::from_str(text).expect("reads") else { panic!("a column") };
+        let crate::Entity::Column(mut c) = serde_json::from_str(text).expect("reads") else {
+            panic!("a column")
+        };
         assert_eq!(c.column.material_name(), "Betonarme");
         assert_eq!(c.column.size_text(), "30/50");
-        assert!(serde_json::to_value(&c.column).unwrap().get("material").is_none());
+        assert!(
+            serde_json::to_value(&c.column)
+                .unwrap()
+                .get("material")
+                .is_none()
+        );
         c.column.material = Some("Çelik".into());
         assert_eq!(c.column.material_name(), "Çelik");
-        assert_eq!(serde_json::to_value(&c.column).unwrap()["material"], "Çelik");
+        assert_eq!(
+            serde_json::to_value(&c.column).unwrap()["material"],
+            "Çelik"
+        );
         c.column.material = Some(" ".into());
         assert_eq!(c.column.problem().map(|p| p.0), Some("material".to_owned()));
         c.column.shape = crate::ColumnShape::Round;

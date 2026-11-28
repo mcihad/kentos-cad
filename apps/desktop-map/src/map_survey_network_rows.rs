@@ -6,7 +6,8 @@
 //! Ağ dengelemesi; it is out of date when one of its baselines or known points has been left out since.
 
 use kentos_commands::{
-    KnownMovedBy, MapSurveyTree, SurveyAdjustment, SurveyBaselineRow, SurveyFileState as F, SurveyKnown, SurveyKnownPlace,
+    KnownMovedBy, MapSurveyTree, SurveyAdjustment, SurveyBaselineRow, SurveyFileState as F,
+    SurveyKnown, SurveyKnownPlace,
 };
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::widget::{Status, StatusItem};
@@ -16,7 +17,11 @@ use crate::map_survey_panel::{Event, glyph, msg};
 
 /// The accepted points' objects of the marks, by their lasting ids.
 pub(crate) fn objects_of(tree: &MapSurveyTree, marks: &[&str]) -> Vec<String> {
-    tree.points.iter().filter(|p| marks.contains(&p.mark.as_str())).map(|p| p.uid.clone()).collect()
+    tree.points
+        .iter()
+        .filter(|p| marks.contains(&p.mark.as_str()))
+        .map(|p| p.uid.clone())
+        .collect()
 }
 
 /// The three groups, those with rows: Bazlar, Bilinen noktalar, Dengelemeler.
@@ -27,7 +32,11 @@ pub(crate) fn groups<'a>(tree: &MapSurveyTree) -> Vec<StatusItem<'a, Message>> {
         let mut group = StatusItem::new("baselines", "Bazlar")
             .icon(icon(Icon::Line).size(14.0))
             .meta(format!("{}", tree.baselines.len()))
-            .action(icon(Icon::Line).size(13.0), "Ağı göster: bütün bazlar haritada, dışlananlar kırmızı noktalı", msg(Event::ShowNetwork));
+            .action(
+                icon(Icon::Line).size(13.0),
+                "Ağı göster: bütün bazlar haritada, dışlananlar kırmızı noktalı",
+                msg(Event::ShowNetwork),
+            );
         for b in &tree.baselines {
             group = group.push(baseline_item(b));
         }
@@ -56,13 +65,26 @@ pub(crate) fn groups<'a>(tree: &MapSurveyTree) -> Vec<StatusItem<'a, Message>> {
 
 /// Three standard deviations in millimetres.
 fn mm(s: [f64; 3]) -> String {
-    format!("{:.1} / {:.1} / {:.1} mm", s[0] * 1000.0, s[1] * 1000.0, s[2] * 1000.0)
+    format!(
+        "{:.1} / {:.1} / {:.1} mm",
+        s[0] * 1000.0,
+        s[1] * 1000.0,
+        s[2] * 1000.0
+    )
 }
 
 /// The button that leaves a record out with the toolbar's reason, or takes it back.
-fn out_or_back<'a>(item: StatusItem<'a, Message>, id: &str, excluded: bool) -> StatusItem<'a, Message> {
+fn out_or_back<'a>(
+    item: StatusItem<'a, Message>,
+    id: &str,
+    excluded: bool,
+) -> StatusItem<'a, Message> {
     if excluded {
-        item.action(icon(Icon::Undo).size(13.0), "Geri al: yeniden dengelemeye girebilir", msg(Event::Include(id.to_owned())))
+        item.action(
+            icon(Icon::Undo).size(13.0),
+            "Geri al: yeniden dengelemeye girebilir",
+            msg(Event::Include(id.to_owned())),
+        )
     } else {
         item.action(
             icon(Icon::Close).size(13.0),
@@ -83,7 +105,13 @@ fn baseline_item<'a>(b: &SurveyBaselineRow) -> StatusItem<'a, Message> {
         (None, _) if b.adjust => (Status::Info, "Dengelemede"),
         (None, _) => (Status::Neutral, "Arşivde"),
     };
-    let mut detail = vec![format!("{} → {}, {:.3} m; σ X/Y/Z {}.", b.from, b.to, b.length, mm(b.sigma))];
+    let mut detail = vec![format!(
+        "{} → {}, {:.3} m; σ X/Y/Z {}.",
+        b.from,
+        b.to,
+        b.length,
+        mm(b.sigma)
+    )];
     if let Some(why) = &b.excluded {
         detail.push(format!("Dışlama nedeni: {why}."));
     }
@@ -96,11 +124,14 @@ fn baseline_item<'a>(b: &SurveyBaselineRow) -> StatusItem<'a, Message> {
     if !b.adjustments.is_empty() {
         detail.push(format!("Dengelemeler: {}.", b.adjustments.join(", ")));
     }
-    let item = StatusItem::new(format!("bz:{}", b.id), format!("{} → {} · {}", b.from, b.to, b.id))
-        .meta(format!("{:.3} m", b.length))
-        .status(tone, words)
-        .detail(detail.join(" "))
-        .on_press(msg(Event::Baseline(b.id.clone())));
+    let item = StatusItem::new(
+        format!("bz:{}", b.id),
+        format!("{} → {} · {}", b.from, b.to, b.id),
+    )
+    .meta(format!("{:.3} m", b.length))
+    .status(tone, words)
+    .detail(detail.join(" "))
+    .on_press(msg(Event::Baseline(b.id.clone())));
     out_or_back(item, &b.id, b.excluded.is_some())
 }
 
@@ -109,7 +140,10 @@ fn baseline_item<'a>(b: &SurveyBaselineRow) -> StatusItem<'a, Message> {
 /// far its mark's accepted point lies, or why it has no place.
 fn known_item<'a>(tree: &MapSurveyTree, k: &SurveyKnown) -> StatusItem<'a, Message> {
     // Docs/adr/4520: beyond the user's tolerance of its place against its mark's accepted point.
-    let beyond = tree.known_places.iter().any(|p| p.id == k.id && p.beyond == Some(true));
+    let beyond = tree
+        .known_places
+        .iter()
+        .any(|p| p.id == k.id && p.beyond == Some(true));
     let (tone, words) = match (&k.excluded, k.sigma) {
         (Some(_), _) => (Status::Neutral, "Dışlandı"),
         _ if beyond => (Status::Warning, "Sınırı aşıyor"),
@@ -124,7 +158,12 @@ fn known_item<'a>(tree: &MapSurveyTree, k: &SurveyKnown) -> StatusItem<'a, Messa
         detail.push(format!("σ kuzey/doğu/yukarı {}.", mm(s)));
     }
     if let Some(v) = k.velocity {
-        detail.push(format!("Hız VX/VY/VZ {:.1} / {:.1} / {:.1} mm/yıl.", v[0] * 1000.0, v[1] * 1000.0, v[2] * 1000.0));
+        detail.push(format!(
+            "Hız VX/VY/VZ {:.1} / {:.1} / {:.1} mm/yıl.",
+            v[0] * 1000.0,
+            v[1] * 1000.0,
+            v[2] * 1000.0
+        ));
     }
     if let Some(s) = &k.source {
         detail.push(format!("Kaynak: {s}."));
@@ -135,7 +174,9 @@ fn known_item<'a>(tree: &MapSurveyTree, k: &SurveyKnown) -> StatusItem<'a, Messa
     if let Some(p) = tree.known_places.iter().find(|p| p.id == k.id) {
         detail.extend(place_words(p));
     }
-    let meta = k.epoch.map_or_else(|| "epoksuz".to_owned(), |e| format!("{e:.4}"));
+    let meta = k
+        .epoch
+        .map_or_else(|| "epoksuz".to_owned(), |e| format!("{e:.4}"));
     let item = StatusItem::new(format!("bn:{}", k.id), format!("{} · {}", k.mark, k.id))
         .meta(meta)
         .status(tone, words)
@@ -160,9 +201,17 @@ pub(crate) fn place_words(p: &SurveyKnownPlace) -> Vec<String> {
         return out;
     };
     let height = p.z.map_or_else(String::new, |z| format!(", H {z:.3}"));
-    let at = p.epoch.map_or_else(String::new, |e| format!("{} epokunda, ", epoch_words(e)));
-    let chain = if p.chain.as_deref() == Some("complete") { "zincir tam" } else { "zincir sınırlı" };
-    out.push(format!("Projede kendi yeri Y {x:.3}, X {y:.3}{height} ({at}{chain})."));
+    let at = p
+        .epoch
+        .map_or_else(String::new, |e| format!("{} epokunda, ", epoch_words(e)));
+    let chain = if p.chain.as_deref() == Some("complete") {
+        "zincir tam"
+    } else {
+        "zincir sınırlı"
+    };
+    out.push(format!(
+        "Projede kendi yeri Y {x:.3}, X {y:.3}{height} ({at}{chain})."
+    ));
     if let Some(m) = &p.moved {
         let by = match m.by {
             KnownMovedBy::Velocity => "kendi hızıyla",
@@ -178,8 +227,13 @@ pub(crate) fn place_words(p: &SurveyKnownPlace) -> Vec<String> {
         ));
     }
     if let (Some(point), Some(dx), Some(dy)) = (&p.point, p.dx, p.dy) {
-        let dz = p.dz.map_or_else(String::new, |dz| format!(", kot farkı {:+.1} mm", dz * 1000.0));
-        out.push(format!("{point} kabul noktası bu yerden {:.1} mm uzakta{dz}.", dx.hypot(dy) * 1000.0));
+        let dz = p.dz.map_or_else(String::new, |dz| {
+            format!(", kot farkı {:+.1} mm", dz * 1000.0)
+        });
+        out.push(format!(
+            "{point} kabul noktası bu yerden {:.1} mm uzakta{dz}.",
+            dx.hypot(dy) * 1000.0
+        ));
         // Docs/adr/4520: against the user's tolerance.
         match p.beyond {
             Some(true) => out.push("Kabul farkı sınırını aşıyor.".to_owned()),
@@ -192,12 +246,23 @@ pub(crate) fn place_words(p: &SurveyKnownPlace) -> Vec<String> {
 
 /// How an accepted adjustment stands: out of date when a baseline or a known point it used is left out since (those
 /// named), the rules failing, else accepted.
-pub(crate) fn adjustment_state<'t>(tree: &'t MapSurveyTree, a: &'t SurveyAdjustment) -> (Status, &'static str, Vec<&'t str>) {
+pub(crate) fn adjustment_state<'t>(
+    tree: &'t MapSurveyTree,
+    a: &'t SurveyAdjustment,
+) -> (Status, &'static str, Vec<&'t str>) {
     let out_since: Vec<&str> = a
         .baselines
         .iter()
-        .filter(|id| tree.baselines.iter().any(|b| &b.id == *id && b.excluded.is_some()))
-        .chain(a.known.iter().filter(|id| tree.known.iter().any(|k| &k.id == *id && k.excluded.is_some())))
+        .filter(|id| {
+            tree.baselines
+                .iter()
+                .any(|b| &b.id == *id && b.excluded.is_some())
+        })
+        .chain(a.known.iter().filter(|id| {
+            tree.known
+                .iter()
+                .any(|k| &k.id == *id && k.excluded.is_some())
+        }))
         .map(String::as_str)
         .collect();
     let (tone, words) = match (out_since.is_empty(), a.rules_passed) {
@@ -210,7 +275,11 @@ pub(crate) fn adjustment_state<'t>(tree: &'t MapSurveyTree, a: &'t SurveyAdjustm
 
 /// The objects of the points an adjustment made, by their lasting ids.
 pub(crate) fn made_by(tree: &MapSurveyTree, a: &SurveyAdjustment) -> Vec<String> {
-    tree.points.iter().filter(|p| p.result.adjustment.as_deref() == Some(a.id.as_str())).map(|p| p.uid.clone()).collect()
+    tree.points
+        .iter()
+        .filter(|p| p.result.adjustment.as_deref() == Some(a.id.as_str()))
+        .map(|p| p.uid.clone())
+        .collect()
 }
 
 /// An accepted adjustment's row: its id and class, how many baselines faint; out of date when a baseline or a known
@@ -234,10 +303,19 @@ fn adjustment_item<'a>(tree: &MapSurveyTree, a: &SurveyAdjustment) -> StatusItem
         None => format!("Çerçeve EPSG:{}.", a.srid),
     });
     if let Some(c) = &a.class {
-        detail.push(format!("Sınıf {c}{}.", a.rules.as_ref().map(|r| format!(" ({r})")).unwrap_or_default()));
+        detail.push(format!(
+            "Sınıf {c}{}.",
+            a.rules
+                .as_ref()
+                .map(|r| format!(" ({r})"))
+                .unwrap_or_default()
+        ));
     }
     if !out_since.is_empty() {
-        detail.push(format!("Sonra dışlananlar: {}; noktaları güncel değil, ağı yeniden dengeleyin.", out_since.join(", ")));
+        detail.push(format!(
+            "Sonra dışlananlar: {}; noktaları güncel değil, ağı yeniden dengeleyin.",
+            out_since.join(", ")
+        ));
     }
     let made = made_by(tree, a);
     let title = match &a.class {
@@ -249,5 +327,9 @@ fn adjustment_item<'a>(tree: &MapSurveyTree, a: &SurveyAdjustment) -> StatusItem
         .status(tone, words)
         .detail(detail.join(" "))
         .on_press(msg(Event::Objects(made)))
-        .action(icon(glyph("surveyNetwork")).size(13.0), "Ağ dengelemesi…", msg(Event::Network))
+        .action(
+            icon(glyph("surveyNetwork")).size(13.0),
+            "Ağ dengelemesi…",
+            msg(Event::Network),
+        )
 }

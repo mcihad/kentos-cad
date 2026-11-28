@@ -12,9 +12,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
 use kentos_commands::{
-    CommandWarning, DocumentSnapshotV2, Entity, FontMatch, FontsReport, HatchPatternType, LayerNode,
-    LayerNodeType, PackageResource, PackageResourceHow as How, PackageResourceKind as Kind, codes,
-    shape_resource,
+    CommandWarning, DocumentSnapshotV2, Entity, FontMatch, FontsReport, HatchPatternType,
+    LayerNode, LayerNodeType, PackageResource, PackageResourceHow as How,
+    PackageResourceKind as Kind, codes, shape_resource,
 };
 use kentos_domain::Document;
 
@@ -32,13 +32,15 @@ struct Rows(BTreeMap<(Kind, String), Row>);
 
 impl Rows {
     fn row(&mut self, kind: Kind, name: &str, how: How) -> &mut Row {
-        self.0.entry((kind, name.to_owned())).or_insert_with(|| Row {
-            how,
-            file: None,
-            users: BTreeSet::new(),
-            objects: 0,
-            note: None,
-        })
+        self.0
+            .entry((kind, name.to_owned()))
+            .or_insert_with(|| Row {
+                how,
+                file: None,
+                users: BTreeSet::new(),
+                objects: 0,
+                note: None,
+            })
     }
 
     fn into_list(self) -> Vec<PackageResource> {
@@ -92,8 +94,18 @@ struct Defined {
 
 fn defined(name: &str, d: &DocumentSnapshotV2) -> Defined {
     let mut out = Defined {
-        line_types: d.settings.line_types.iter().map(|t| fold(&t.name)).collect(),
-        patterns: d.settings.hatch_patterns.iter().map(|p| fold(&p.name)).collect(),
+        line_types: d
+            .settings
+            .line_types
+            .iter()
+            .map(|t| fold(&t.name))
+            .collect(),
+        patterns: d
+            .settings
+            .hatch_patterns
+            .iter()
+            .map(|p| fold(&p.name))
+            .collect(),
         used_styles: Vec::new(),
     };
     let blocks = d.blocks.iter().flat_map(|b| b.entities.iter());
@@ -101,7 +113,10 @@ fn defined(name: &str, d: &DocumentSnapshotV2) -> Defined {
         if let Entity::Text(t) = e
             && let Some(id) = &t.face.text_style
             && let Some(style) = d.settings.text_styles.iter().find(|s| &s.id == id)
-            && !out.used_styles.iter().any(|(_, s)| fold(s) == fold(&style.name))
+            && !out
+                .used_styles
+                .iter()
+                .any(|(_, s)| fold(s) == fold(&style.name))
         {
             out.used_styles.push((name.to_owned(), style.name.clone()));
         }
@@ -114,7 +129,9 @@ fn line_type_name(
     pattern: Option<&String>,
     kind: Option<kentos_commands::LineType>,
 ) -> Option<String> {
-    pattern.cloned().or_else(|| kind.map(|k| k.name().to_owned()))
+    pattern
+        .cloned()
+        .or_else(|| kind.map(|k| k.name().to_owned()))
 }
 
 /// The report, and its warning when something is missing or only carried. `sources`: each reference the package
@@ -128,7 +145,8 @@ pub(crate) fn report(
     let theirs: Vec<(String, Defined)> = sources
         .iter()
         .filter_map(|(name, path)| {
-            kentos_native_application::xrefs::source_drawing(path).map(|d| (name.clone(), defined(name, &d)))
+            kentos_native_application::xrefs::source_drawing(path)
+                .map(|d| (name.clone(), defined(name, &d)))
         })
         .collect();
     // Typefaces: each text style's, as the font report resolves it (docs/adr/0324 §5).
@@ -173,8 +191,11 @@ pub(crate) fn report(
     }
     // Line types: the project's own, and every one a layer or an object (the drawing's, its blocks', its references'
     // pieces) names.
-    let project: BTreeMap<String, &kentos_commands::LineTypeDef> =
-        settings.line_types.iter().map(|t| (fold(&t.name), t)).collect();
+    let project: BTreeMap<String, &kentos_commands::LineTypeDef> = settings
+        .line_types
+        .iter()
+        .map(|t| (fold(&t.name), t))
+        .collect();
     for t in &settings.line_types {
         rows.row(Kind::LineType, &t.name, How::Embedded);
     }
@@ -183,7 +204,10 @@ pub(crate) fn report(
             How::Embedded
         } else if kentos_commands::LineType::from_name(&name).is_some() {
             How::BuiltIn
-        } else if theirs.iter().any(|(_, d)| d.line_types.contains(&fold(&name))) {
+        } else if theirs
+            .iter()
+            .any(|(_, d)| d.line_types.contains(&fold(&name)))
+        {
             How::Carried
         } else {
             How::Missing
@@ -226,11 +250,10 @@ pub(crate) fn report(
         for shape in t.elements.iter().filter_map(|e| e.shape.as_ref()) {
             let file = shape_resource::source_name(&shape.file);
             let id = shape_resource::id(file);
-            let have = doc
-                .styles()
-                .items
-                .iter()
-                .any(|i| shape_resource::is_resource(i) && i["id"].as_str() == Some(id.as_str()));
+            let have =
+                doc.styles().items.iter().any(|i| {
+                    shape_resource::is_resource(i) && i["id"].as_str() == Some(id.as_str())
+                });
             let r = rows.row(
                 Kind::ShapeFile,
                 &file.to_lowercase(),
@@ -239,22 +262,28 @@ pub(crate) fn report(
             r.file = Some(file.to_owned());
             r.users.insert(format!("çizgi tipi:{}", t.name));
             if !have {
-                r.note = Some("projenin kitaplığında yok; çizgi tipinin şekilleri çizilemez".into());
+                r.note =
+                    Some("projenin kitaplığında yok; çizgi tipinin şekilleri çizilemez".into());
             }
         }
     }
     // The SHX fonts and Big Fonts the text styles embed (ADR 1125 §5): in the project file, as a line type's shapes.
     for style in &settings.text_styles {
-        let font = style.font_file.as_deref().filter(|_| kentos_native_application::shx_text::is_shx(style));
-        let big = style.big_font_file.as_deref().filter(|f| f.to_ascii_lowercase().ends_with(".shx"));
+        let font = style
+            .font_file
+            .as_deref()
+            .filter(|_| kentos_native_application::shx_text::is_shx(style));
+        let big = style
+            .big_font_file
+            .as_deref()
+            .filter(|f| f.to_ascii_lowercase().ends_with(".shx"));
         for named in [font, big].into_iter().flatten() {
             let file = shape_resource::source_name(named);
             let id = shape_resource::id(file);
-            let have = doc
-                .styles()
-                .items
-                .iter()
-                .any(|i| shape_resource::is_resource(i) && i["id"].as_str() == Some(id.as_str()));
+            let have =
+                doc.styles().items.iter().any(|i| {
+                    shape_resource::is_resource(i) && i["id"].as_str() == Some(id.as_str())
+                });
             if !have {
                 continue;
             }
@@ -264,7 +293,11 @@ pub(crate) fn report(
         }
     }
     // Hatch patterns: the project's own, and each hatch's.
-    let patterns: BTreeSet<String> = settings.hatch_patterns.iter().map(|p| fold(&p.name)).collect();
+    let patterns: BTreeSet<String> = settings
+        .hatch_patterns
+        .iter()
+        .map(|p| fold(&p.name))
+        .collect();
     for p in &settings.hatch_patterns {
         rows.row(Kind::HatchPattern, &p.name, How::Embedded);
     }
@@ -283,15 +316,26 @@ pub(crate) fn report(
                 if patterns.contains(&fold(&name)) {
                     (name, How::Embedded, None)
                 } else if p.lines.as_ref().is_some_and(|l| !l.is_empty()) {
-                    (name, How::Embedded, Some("desenin çizgileri taramanın kendisinde".to_owned()))
-                } else if theirs.iter().any(|(_, d)| d.patterns.contains(&fold(&name))) {
+                    (
+                        name,
+                        How::Embedded,
+                        Some("desenin çizgileri taramanın kendisinde".to_owned()),
+                    )
+                } else if theirs
+                    .iter()
+                    .any(|(_, d)| d.patterns.contains(&fold(&name)))
+                {
                     (
                         name,
                         How::Carried,
                         Some("dış başvurunun kaynağında tanımlı; taramada çizgisi yok".to_owned()),
                     )
                 } else {
-                    (name, How::Missing, Some("tanımı yok; tarama deseni çizilemez".to_owned()))
+                    (
+                        name,
+                        How::Missing,
+                        Some("tanımı yok; tarama deseni çizilemez".to_owned()),
+                    )
                 }
             }
         };
@@ -312,14 +356,21 @@ pub(crate) fn report(
     let book = doc.sheets().map(kentos_sheet::project::read_project_sheets);
     if let Some(Err(e)) = &book {
         let r = rows.row(Kind::PlotStyle, "pafta kitabı", How::Missing);
-        r.note = Some(format!("pafta kitabı okunamadı ({}); baskı profilleri raporlanamadı", e.message));
+        r.note = Some(format!(
+            "pafta kitabı okunamadı ({}); baskı profilleri raporlanamadı",
+            e.message
+        ));
     }
     if let Some(Ok((book, _))) = book {
         for p in &book.plot_profiles {
             rows.row(Kind::PlotStyle, &p.name, How::Embedded);
         }
         for sheet in &book.sheets {
-            let Some(id) = sheet.plot.as_ref().and_then(|p| p.settings.profile.as_ref()) else {
+            let Some(id) = sheet
+                .plot
+                .as_ref()
+                .and_then(|p| p.settings.profile.as_ref())
+            else {
                 continue;
             };
             let profile = sheet

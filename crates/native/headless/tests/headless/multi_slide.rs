@@ -29,7 +29,9 @@ fn session() -> Session {
 }
 
 fn call(session: &mut Session, command: &str, input: Value) -> Value {
-    let done = session.call(json!({"command": command, "input": input})).unwrap();
+    let done = session
+        .call(json!({"command": command, "input": input}))
+        .unwrap();
     assert_eq!(done["status"], "completed", "{command}: {done}");
     done
 }
@@ -45,30 +47,52 @@ fn multi_leaf_sliding_doors_go_to_dxf_and_come_back() {
     let folder = super::scratch("multi-slide-dxf");
     let path = folder.join("cok-kanatli.dxf");
     call(&mut session, "file.export.dxf", json!({"path": path}));
-    let back = kentos_formats::dxf::read(&std::fs::read(&path).unwrap(), &DxfReadOptions::default())
-        .unwrap()
-        .entities;
+    let back =
+        kentos_formats::dxf::read(&std::fs::read(&path).unwrap(), &DxfReadOptions::default())
+            .unwrap()
+            .entities;
     let slides: Vec<_> = back
         .iter()
         .filter_map(|e| match e {
-            Entity::Opening(o) if o.opening.operation == OpeningOperation::Slide => Some(o.opening.clone()),
+            Entity::Opening(o) if o.opening.operation == OpeningOperation::Slide => {
+                Some(o.opening.clone())
+            }
             _ => None,
         })
         .collect();
     assert_eq!(slides.len(), 3, "the three sliding openings come back");
-    let s4 = slides.iter().find(|o| o.number.as_deref() == Some("S4")).expect("S4");
+    let s4 = slides
+        .iter()
+        .find(|o| o.number.as_deref() == Some("S4"))
+        .expect("S4");
     assert_eq!(s4.leaves, 4);
     assert_eq!(s4.build.as_ref().and_then(|b| b.both_sides), Some(true));
-    let s3 = slides.iter().find(|o| o.number.as_deref() == Some("S3")).expect("S3");
+    let s3 = slides
+        .iter()
+        .find(|o| o.number.as_deref() == Some("S3"))
+        .expect("S3");
     assert_eq!(s3.build.as_ref().and_then(|b| b.tracks), Some(3));
     assert_eq!(s3.sizes().panels.as_deref(), Some("OXX"));
     // The blocks other programs see: each leaf a closed polyline (its band), each sliding leaf's arrow three LINEs, each
     // rail one. S3: 3 leaves, 2 arrows; S4: 4 leaves, 2 arrows, 2 rails; P3: its two face lines, 3 leaves, 1 arrow.
     let text = std::fs::read_to_string(&path).unwrap();
     let lines = text.lines().map(str::trim).collect::<Vec<_>>();
-    let count = |kind: &str| lines.windows(2).filter(|w| w[0] == "0" && w[1] == kind).count();
-    assert!(count("LINE") >= 6 + (6 + 2) + (2 + 3), "{} LINE", count("LINE"));
-    assert!(count("LWPOLYLINE") >= 3 + 4 + 3, "{} LWPOLYLINE", count("LWPOLYLINE"));
+    let count = |kind: &str| {
+        lines
+            .windows(2)
+            .filter(|w| w[0] == "0" && w[1] == kind)
+            .count()
+    };
+    assert!(
+        count("LINE") >= 6 + (6 + 2) + (2 + 3),
+        "{} LINE",
+        count("LINE")
+    );
+    assert!(
+        count("LWPOLYLINE") >= 3 + 4 + 3,
+        "{} LWPOLYLINE",
+        count("LWPOLYLINE")
+    );
     let _ = std::fs::remove_dir_all(folder);
 }
 
@@ -106,7 +130,10 @@ fn words(pdf: &std::path::Path) -> Option<Vec<Word>> {
                 let (tag, rest) = chunk.split_once('>').unwrap();
                 let word = rest.split("</word>").next().unwrap();
                 Word {
-                    text: word.replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">"),
+                    text: word
+                        .replace("&amp;", "&")
+                        .replace("&lt;", "<")
+                        .replace("&gt;", ">"),
                     x0: attr(tag, "xMin"),
                     y0: attr(tag, "yMin"),
                     x1: attr(tag, "xMax"),
@@ -131,7 +158,11 @@ fn sheet(schedule: [f64; 2], crop: Option<f64>, scale: u32) -> std::path::PathBu
         .iter()
         .map(|(uid, _, x)| json!({"of": uid, "at": {"x": x, "y": -TAG_Y}}))
         .collect();
-    call(&mut session, "cad.tags.create", json!({"layerId": "kapi", "tags": tags}));
+    call(
+        &mut session,
+        "cad.tags.create",
+        json!({"layerId": "kapi", "tags": tags}),
+    );
     let columns = json!([{"field": "number"}, {"field": "roughWidth"}, {"field": "clearWidth"}, {"field": "leaves"},
         {"field": "tracks"}, {"field": "panels"}]);
     call(
@@ -183,7 +214,11 @@ fn a_1_50_sheet_reads_back_each_number_once_in_its_tag_and_its_row() {
     for ((_, number, x), (row_number, cells)) in OPENINGS.iter().zip(rows) {
         assert_eq!(*number, row_number);
         let found: Vec<&Word> = words.iter().filter(|w| w.text == *number).collect();
-        assert_eq!(found.len(), 2, "{number}: once in its tag, once in the schedule: {found:?}");
+        assert_eq!(
+            found.len(),
+            2,
+            "{number}: once in its tag, once in the schedule: {found:?}"
+        );
         // Its tag on paper about the tag's point, 2.5 mm high.
         let at = on_page(*x, -TAG_Y);
         let tag: Vec<_> = found
@@ -194,7 +229,10 @@ fn a_1_50_sheet_reads_back_each_number_once_in_its_tag_and_its_row() {
         assert_eq!(tag.len(), 1, "{number}'s tag at {at:?}: {found:?}");
         assert!(paper_high(tag[0]), "{number}'s tag {:?}", tag[0]);
         // Its schedule row inside the table, its sizes on the row's line.
-        let row: Vec<_> = found.iter().filter(|w| w.x0 >= table[0] && w.y0 >= table[1]).collect();
+        let row: Vec<_> = found
+            .iter()
+            .filter(|w| w.x0 >= table[0] && w.y0 >= table[1])
+            .collect();
         assert_eq!(row.len(), 1, "{number}'s row: {found:?}");
         let line: Vec<&str> = words
             .iter()
@@ -202,7 +240,13 @@ fn a_1_50_sheet_reads_back_each_number_once_in_its_tag_and_its_row() {
             .map(|w| w.text.as_str())
             .collect();
         assert_eq!(line, cells, "{number}'s row");
-        assert!(words.iter().filter(|w| (w.y0 - row[0].y0).abs() < 0.3).all(paper_high), "{number}'s row height");
+        assert!(
+            words
+                .iter()
+                .filter(|w| (w.y0 - row[0].y0).abs() < 0.3)
+                .all(paper_high),
+            "{number}'s row height"
+        );
     }
     let _ = std::fs::remove_dir_all(path.parent().unwrap());
 }
@@ -223,7 +267,9 @@ fn a_cut_map_writes_no_tag_outside_its_cut() {
     assert_eq!(count("P3"), 1, "P3 only in its row");
     let cut = [on_page(2.5, 0.0)[0], on_page(9.5, 0.0)[0]];
     assert!(
-        words.iter().all(|w| w.x0 >= cut[0] - 0.5 && w.x1 <= cut[1] + 0.5),
+        words
+            .iter()
+            .all(|w| w.x0 >= cut[0] - 0.5 && w.x1 <= cut[1] + 0.5),
         "every word inside the cut {cut:?}: {words:?}"
     );
     let _ = std::fs::remove_dir_all(path.parent().unwrap());
@@ -239,10 +285,17 @@ fn at_1_100_a_tag_keeps_its_paper_height_and_the_schedule_halves() {
         return;
     };
     for (_, number, x) in OPENINGS {
-        let at = [PAGE[0] + (x - AT[0]) * 10.0, PAGE[1] - (-TAG_Y - AT[1]) * 10.0];
+        let at = [
+            PAGE[0] + (x - AT[0]) * 10.0,
+            PAGE[1] - (-TAG_Y - AT[1]) * 10.0,
+        ];
         let tag = words
             .iter()
-            .find(|w| w.text == number && ((w.x0 + w.x1) / 2.0 - at[0]).abs() < 3.0 && ((w.y0 + w.y1) / 2.0 - at[1]).abs() < 3.0)
+            .find(|w| {
+                w.text == number
+                    && ((w.x0 + w.x1) / 2.0 - at[0]).abs() < 3.0
+                    && ((w.y0 + w.y1) / 2.0 - at[1]).abs() < 3.0
+            })
             .unwrap_or_else(|| panic!("{number}'s tag at {at:?}: {words:?}"));
         assert!(paper_high(tag), "{number}'s tag {tag:?}");
     }

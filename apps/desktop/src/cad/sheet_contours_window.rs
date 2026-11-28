@@ -11,7 +11,10 @@
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
-use kentos_commands::{CommandResult, SheetBuiltUp, SheetSlopes, TerrainsSheetContoured, TerrainsSheetContours, contour_rules_default};
+use kentos_commands::{
+    CommandResult, SheetBuiltUp, SheetSlopes, TerrainsSheetContoured, TerrainsSheetContours,
+    contour_rules_default,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_terrains_sheet};
 use kentos_ui::label;
@@ -101,7 +104,11 @@ impl State {
     fn input(&self) -> Result<TerrainsSheetContours, String> {
         let interval = match self.interval.trim() {
             "" => None,
-            t => Some(t.replace(',', ".").parse::<f64>().map_err(|_| format!("Aralık “{t}” bir sayı değil."))?),
+            t => Some(
+                t.replace(',', ".")
+                    .parse::<f64>()
+                    .map_err(|_| format!("Aralık “{t}” bir sayı değil."))?,
+            ),
         };
         Ok(TerrainsSheetContours {
             surface: self.surface.clone(),
@@ -114,28 +121,58 @@ impl State {
             labels: Some(self.labels),
             spots: Some(self.spots),
             slopes: self.slopes.then(|| SheetSlopes {
-                top: [&self.slope_top].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
-                bottom: [&self.slope_bottom].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
+                top: [&self.slope_top]
+                    .into_iter()
+                    .filter(|l| !l.is_empty())
+                    .cloned()
+                    .collect(),
+                bottom: [&self.slope_bottom]
+                    .into_iter()
+                    .filter(|l| !l.is_empty())
+                    .cloned()
+                    .collect(),
             }),
-            points: if self.chosen && !self.chosen_layer.is_empty() { vec![self.chosen_layer.clone()] } else { Vec::new() },
+            points: if self.chosen && !self.chosen_layer.is_empty() {
+                vec![self.chosen_layer.clone()]
+            } else {
+                Vec::new()
+            },
             built_up: if self.built {
                 let number = |t: &str, what: &str| -> Result<Option<f64>, String> {
                     match t.trim() {
                         "" => Ok(None),
-                        t => t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("Izgaranın {what} “{t}” bir sayı değil.")),
+                        t => t
+                            .replace(',', ".")
+                            .parse::<f64>()
+                            .map(Some)
+                            .map_err(|_| format!("Izgaranın {what} “{t}” bir sayı değil.")),
                     }
                 };
                 // Docs/adr/5120: Y is east, X north; one of them alone counts the other as nought.
-                let origin = match (number(&self.grid_y, "başlangıcının Y'si")?, number(&self.grid_x, "başlangıcının X'i")?) {
+                let origin = match (
+                    number(&self.grid_y, "başlangıcının Y'si")?,
+                    number(&self.grid_x, "başlangıcının X'i")?,
+                ) {
                     (None, None) => None,
                     (y, x) => Some([y.unwrap_or(0.0), x.unwrap_or(0.0)]),
                 };
                 if !self.grid_angle.trim().is_empty() && self.grid_turn.is_none() {
-                    return Err(format!("Izgaranın açısı “{}” bir sayı değil.", self.grid_angle.trim()));
+                    return Err(format!(
+                        "Izgaranın açısı “{}” bir sayı değil.",
+                        self.grid_angle.trim()
+                    ));
                 }
                 Some(SheetBuiltUp {
-                    areas: [&self.built_area].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
-                    roads: [&self.built_road].into_iter().filter(|l| !l.is_empty()).cloned().collect(),
+                    areas: [&self.built_area]
+                        .into_iter()
+                        .filter(|l| !l.is_empty())
+                        .cloned()
+                        .collect(),
+                    roads: [&self.built_road]
+                        .into_iter()
+                        .filter(|l| !l.is_empty())
+                        .cloned()
+                        .collect(),
                     every: None,
                     origin,
                     rotation: self.grid_turn,
@@ -184,16 +221,29 @@ impl App {
             .settings()
             .road
             .as_ref()
-            .map(|r| r.surfaces.iter().map(|s| (s.id.clone(), s.name.clone())).collect())
+            .map(|r| {
+                r.surfaces
+                    .iter()
+                    .map(|s| (s.id.clone(), s.name.clone()))
+                    .collect()
+            })
             .unwrap_or_default();
         // The selection's own surface when every selected object is its source (docs/adr/2480), else the first.
-        let picked = self.selection_roles().surface.filter(|id| surfaces.iter().any(|(s, _)| s == id));
+        let picked = self
+            .selection_roles()
+            .surface
+            .filter(|id| surfaces.iter().any(|(s, _)| s == id));
         let Some(first) = picked.or_else(|| surfaces.first().map(|s| s.0.clone())) else {
             self.no_surface("Pafta eğrileri");
             return Task::none();
         };
-        let layers: Vec<(String, String)> =
-            doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+        let layers: Vec<(String, String)> = doc
+            .model
+            .layers()
+            .leaves()
+            .iter()
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect();
         let named = |words: &[&str]| -> Vec<String> {
             layers
                 .iter()
@@ -215,14 +265,45 @@ impl App {
                 .map(|(id, _)| id.clone())
                 .unwrap_or_default()
         };
-        let (slope_top, slope_bottom) = (slope(&["üst", "ust"]), slope(&["dip", "dib", "alt", "taban"]));
-        let chosen_layer = named(&["seçilen", "secilen", "karakteristik", "kot noktası", "kot noktasi"]).into_iter().next().unwrap_or_default();
+        let (slope_top, slope_bottom) = (
+            slope(&["üst", "ust"]),
+            slope(&["dip", "dib", "alt", "taban"]),
+        );
+        let chosen_layer = named(&[
+            "seçilen",
+            "secilen",
+            "karakteristik",
+            "kot noktası",
+            "kot noktasi",
+        ])
+        .into_iter()
+        .next()
+        .unwrap_or_default();
         // Docs/adr/4740 (m. 63(2)): the built-up areas' and the roads' centre lines' layers.
-        let built_area = named(&["yerleşik", "yerlesik", "yerleşim", "yerlesim", "iskân", "iskan"]).into_iter().next().unwrap_or_default();
-        let built_road = named(&["yol ekseni", "yol-ekseni", "eksen", "aks"]).into_iter().next().unwrap_or_default();
+        let built_area = named(&[
+            "yerleşik",
+            "yerlesik",
+            "yerleşim",
+            "yerlesim",
+            "iskân",
+            "iskan",
+        ])
+        .into_iter()
+        .next()
+        .unwrap_or_default();
+        let built_road = named(&["yol ekseni", "yol-ekseni", "eksen", "aks"])
+            .into_iter()
+            .next()
+            .unwrap_or_default();
         let details: Vec<String> = named(&["bina", "yol", "dere", "kanal", "ark", "şev", "sev"])
             .into_iter()
-            .filter(|d| *d != slope_top && *d != slope_bottom && *d != chosen_layer && *d != built_area && *d != built_road)
+            .filter(|d| {
+                *d != slope_top
+                    && *d != slope_bottom
+                    && *d != chosen_layer
+                    && *d != built_area
+                    && *d != built_road
+            })
             .collect();
         self.terrain_work.sheet_contours = State {
             surfaces,
@@ -248,7 +329,9 @@ impl App {
             ..State::default()
         };
         self.sheet_contours_run();
-        self.dialog = Some(Dialog::TerrainWork(crate::terrain_work::TerrainDialogKind::SheetContours));
+        self.dialog = Some(Dialog::TerrainWork(
+            crate::terrain_work::TerrainDialogKind::SheetContours,
+        ));
         Task::none()
     }
 
@@ -258,8 +341,11 @@ impl App {
             Ok(i) => i,
             Err(why) => return self.warn(why),
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        let result = road_terrains_sheet::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let result =
+            road_terrains_sheet::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             self.say(
                 Level::Success,
@@ -326,8 +412,15 @@ impl App {
     pub(crate) fn sheet_contours_view(&self) -> Element<'_, Message> {
         let s = &self.terrain_work.sheet_contours;
         let package = contour_rules_default()
-            .and_then(|r| r.intervals.iter().find(|i| f64::from(i.scale) == s.scale).map(|i| i.interval))
-            .map_or("ölçek için aralık yok".to_owned(), |i| format!("{i} (m. 78(1)(c))"));
+            .and_then(|r| {
+                r.intervals
+                    .iter()
+                    .find(|i| f64::from(i.scale) == s.scale)
+                    .map(|i| i.interval)
+            })
+            .map_or("ölçek için aralık yok".to_owned(), |i| {
+                format!("{i} (m. 78(1)(c))")
+            });
         let mut ticks = row![].spacing(14).align_y(Center);
         for (id, name) in &s.layers {
             if *id == s.layer
@@ -346,9 +439,15 @@ impl App {
             .field(
                 "Yüzey",
                 row![
-                    container(fields::select_owned(s.surfaces.clone(), &s.surface, |v| msg(Event::Surface(v)))).width(230),
+                    container(fields::select_owned(s.surfaces.clone(), &s.surface, |v| {
+                        msg(Event::Surface(v))
+                    }))
+                    .width(230),
                     label::caption("Katman"),
-                    container(fields::select_owned(s.layers.clone(), &s.layer, |v| msg(Event::Layer(v)))).width(230)
+                    container(fields::select_owned(s.layers.clone(), &s.layer, |v| msg(
+                        Event::Layer(v)
+                    )))
+                    .width(230)
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -356,9 +455,18 @@ impl App {
             .field(
                 "Ölçek 1/",
                 row![
-                    container(NumberInput::new(s.scale, |v| msg(Event::Scale(v))).step(500.0).decimals(0)).width(230),
+                    container(
+                        NumberInput::new(s.scale, |v| msg(Event::Scale(v)))
+                            .step(500.0)
+                            .decimals(0)
+                    )
+                    .width(230),
                     label::caption("Aralık (m)"),
-                    container(fields::input(None, &package, &s.interval, false, false).on_input(|v| msg(Event::Interval(v)))).width(230)
+                    container(
+                        fields::input(None, &package, &s.interval, false, false)
+                            .on_input(|v| msg(Event::Interval(v)))
+                    )
+                    .width(230)
                 ]
                 .spacing(10)
                 .align_y(Center),
@@ -366,10 +474,26 @@ impl App {
             .field(
                 "Kurallar",
                 row![
-                    words::check(s.steep, "Dik yerde yalnız kalın (e)", Some(msg(Event::Steep(!s.steep)))),
-                    words::check(s.auxiliary, "Yardımcı eğri (e)", Some(msg(Event::Auxiliary(!s.auxiliary)))),
-                    words::check(s.labels, "Kot yazısı (f)", Some(msg(Event::Labels(!s.labels)))),
-                    words::check(s.spots, "Tepe ve çukur kotları (ğ)", Some(msg(Event::Spots(!s.spots))))
+                    words::check(
+                        s.steep,
+                        "Dik yerde yalnız kalın (e)",
+                        Some(msg(Event::Steep(!s.steep)))
+                    ),
+                    words::check(
+                        s.auxiliary,
+                        "Yardımcı eğri (e)",
+                        Some(msg(Event::Auxiliary(!s.auxiliary)))
+                    ),
+                    words::check(
+                        s.labels,
+                        "Kot yazısı (f)",
+                        Some(msg(Event::Labels(!s.labels)))
+                    ),
+                    words::check(
+                        s.spots,
+                        "Tepe ve çukur kotları (ğ)",
+                        Some(msg(Event::Spots(!s.spots)))
+                    )
                 ]
                 .spacing(14)
                 .align_y(Center),
@@ -382,9 +506,17 @@ impl App {
                 row![
                     words::check(s.slopes, "Şev kotları", Some(msg(Event::Slopes(!s.slopes)))),
                     label::caption("Üstü"),
-                    container(fields::select_owned(choices.clone(), &s.slope_top, |v| msg(Event::SlopeTop(v)))).width(190),
+                    container(fields::select_owned(
+                        choices.clone(),
+                        &s.slope_top,
+                        |v| msg(Event::SlopeTop(v))
+                    ))
+                    .width(190),
                     label::caption("Dibi"),
-                    container(fields::select_owned(choices, &s.slope_bottom, |v| msg(Event::SlopeBottom(v)))).width(190)
+                    container(fields::select_owned(choices, &s.slope_bottom, |v| msg(
+                        Event::SlopeBottom(v)
+                    )))
+                    .width(190)
                 ]
                 .spacing(10)
                 .align_y(Center)
@@ -394,9 +526,16 @@ impl App {
                 let mut choices = vec![(NONE.to_owned(), "Yok".to_owned())];
                 choices.extend(s.layers.iter().filter(|(id, _)| *id != s.layer).cloned());
                 row![
-                    words::check(s.chosen, "Nokta kotları", Some(msg(Event::Chosen(!s.chosen)))),
+                    words::check(
+                        s.chosen,
+                        "Nokta kotları",
+                        Some(msg(Event::Chosen(!s.chosen)))
+                    ),
                     label::caption("Katman"),
-                    container(fields::select_owned(choices, &s.chosen_layer, |v| msg(Event::ChosenLayer(v)))).width(190),
+                    container(fields::select_owned(choices, &s.chosen_layer, |v| msg(
+                        Event::ChosenLayer(v)
+                    )))
+                    .width(190),
                     label::caption("Kendi kotu varsa o, yoksa yüzeyden")
                 ]
                 .spacing(10)
@@ -407,11 +546,21 @@ impl App {
                 let mut choices = vec![(NONE.to_owned(), "Yok".to_owned())];
                 choices.extend(s.layers.iter().filter(|(id, _)| *id != s.layer).cloned());
                 row![
-                    words::check(s.built, "2 cm'de bir kot", Some(msg(Event::Built(!s.built)))),
+                    words::check(
+                        s.built,
+                        "2 cm'de bir kot",
+                        Some(msg(Event::Built(!s.built)))
+                    ),
                     label::caption("Alan"),
-                    container(fields::select_owned(choices.clone(), &s.built_area, |v| msg(Event::BuiltArea(v)))).width(190),
+                    container(fields::select_owned(choices.clone(), &s.built_area, |v| {
+                        msg(Event::BuiltArea(v))
+                    }))
+                    .width(190),
                     label::caption("Yol"),
-                    container(fields::select_owned(choices, &s.built_road, |v| msg(Event::BuiltRoad(v)))).width(190)
+                    container(fields::select_owned(choices, &s.built_road, |v| msg(
+                        Event::BuiltRoad(v)
+                    )))
+                    .width(190)
                 ]
                 .spacing(10)
                 .align_y(Center)
@@ -419,7 +568,11 @@ impl App {
             // Docs/adr/5120: the grid's origin and turn, the surveyor's (m. 63(2) gives neither).
             .field("Izgara (63/2)", {
                 let input = |value: &str, hint: &'static str, on: fn(String) -> Event| {
-                    container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(130)
+                    container(
+                        fields::input(None, hint, value, false, false)
+                            .on_input(move |v| msg(on(v))),
+                    )
+                    .width(130)
                 };
                 row![
                     label::caption("Başlangıç Y"),
@@ -449,12 +602,20 @@ impl App {
                         r.interval
                     ),
                 ));
-                for sp in r.spots.iter().filter(|sp| sp.kind == "summit" || sp.kind == "pit") {
+                for sp in r
+                    .spots
+                    .iter()
+                    .filter(|sp| sp.kind == "summit" || sp.kind == "pit")
+                {
                     lines.push(words::text_line(
                         Kind::Ok,
                         format!(
                             "{} kotu {} (Y {}, X {}).",
-                            if sp.kind == "summit" { "Tepe" } else { "Çukur" },
+                            if sp.kind == "summit" {
+                                "Tepe"
+                            } else {
+                                "Çukur"
+                            },
                             sp.text,
                             self.format().coord(sp.x),
                             self.format().coord(sp.y)
@@ -478,7 +639,11 @@ impl App {
                 if built("road") + built("builtUp") > 0 {
                     lines.push(words::text_line(
                         Kind::Ok,
-                        format!("m. 63(2): yolda {}, yerleşik alanda {} kot.", built("road"), built("builtUp")),
+                        format!(
+                            "m. 63(2): yolda {}, yerleşik alanda {} kot.",
+                            built("road"),
+                            built("builtUp")
+                        ),
                     ));
                 }
                 for n in r.notes.iter().skip(1) {
@@ -488,15 +653,20 @@ impl App {
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             None => {}
         }
-        let body = Column::new().spacing(12).push(form).push(words::summary(lines));
+        let body = Column::new()
+            .spacing(12)
+            .push(form)
+            .push(words::summary(lines));
         let ready = matches!(s.answer, Some(Ok(_)));
         Frame::new(TITLE)
             .push(body)
             .aside(words::secondary(
                 crate::section_check_window::OPEN,
-                Some(Message::TerrainWork(crate::terrain_work::Event::SectionCheck(
-                    crate::section_check_window::Event::Open,
-                ))),
+                Some(Message::TerrainWork(
+                    crate::terrain_work::Event::SectionCheck(
+                        crate::section_check_window::Event::Open,
+                    ),
+                )),
             ))
             .action(words::secondary(CLOSE, Some(msg(Event::Close))))
             .action(words::primary(DRAW, ready.then(|| msg(Event::Draw))))
@@ -504,7 +674,10 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn sheet_contours_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn sheet_contours_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(DRAW) => Some(msg(Event::Draw)),

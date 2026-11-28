@@ -216,7 +216,10 @@ fn paints(fill: Option<&str>, stroke: Option<&Stroke>) -> Vec<String> {
     if let Some((d, offset)) = &split.dashes {
         first.push_str(&stroke_attrs_as(s, d, *offset, s.cap));
     }
-    let dots = format!(r#" fill="none"{}"#, stroke_attrs_as(s, &split.dots.0, split.dots.1, LineCap::Round));
+    let dots = format!(
+        r#" fill="none"{}"#,
+        stroke_attrs_as(s, &split.dots.0, split.dots.1, LineCap::Round)
+    );
     vec![first, dots]
 }
 
@@ -595,16 +598,40 @@ mod tests {
     /// line's own ends, then the dots alone with round ends; a line without a dot keeps one attribute list.
     #[test]
     fn a_paper_lines_dot_is_drawn_round() {
-        let dotted = Stroke { dash: vec![1000, 1000, 0, 1000], ..Stroke::solid("#000000", 500) };
+        let dotted = Stroke {
+            dash: vec![1000, 1000, 0, 1000],
+            ..Stroke::solid("#000000", 500)
+        };
         let got = paints(None, Some(&dotted));
         assert_eq!(got.len(), 2, "{got:?}");
-        assert!(got[0].contains(r#"stroke-dasharray="1000 2000""#) && !got[0].contains("stroke-linecap"), "{got:?}");
-        assert!(got[1].contains(r#"stroke-dasharray="0 3000" stroke-dashoffset="1000""#)
-            && got[1].contains(r#"stroke-linecap="round""#) && got[1].contains(r#"fill="none""#), "{got:?}");
-        let plain = Stroke { dash: vec![1000, 1000], ..Stroke::solid("#000000", 500) };
-        assert_eq!(paints(Some("#ffffff"), Some(&plain)), vec![fill_stroke(Some("#ffffff"), Some(&plain))]);
-        let round = Stroke { cap: LineCap::Round, ..dotted };
-        assert_eq!(paints(None, Some(&round)).len(), 1, "round ends draw the dot already");
+        assert!(
+            got[0].contains(r#"stroke-dasharray="1000 2000""#)
+                && !got[0].contains("stroke-linecap"),
+            "{got:?}"
+        );
+        assert!(
+            got[1].contains(r#"stroke-dasharray="0 3000" stroke-dashoffset="1000""#)
+                && got[1].contains(r#"stroke-linecap="round""#)
+                && got[1].contains(r#"fill="none""#),
+            "{got:?}"
+        );
+        let plain = Stroke {
+            dash: vec![1000, 1000],
+            ..Stroke::solid("#000000", 500)
+        };
+        assert_eq!(
+            paints(Some("#ffffff"), Some(&plain)),
+            vec![fill_stroke(Some("#ffffff"), Some(&plain))]
+        );
+        let round = Stroke {
+            cap: LineCap::Round,
+            ..dotted
+        };
+        assert_eq!(
+            paints(None, Some(&round)).len(),
+            1,
+            "round ends draw the dot already"
+        );
     }
 
     #[test]

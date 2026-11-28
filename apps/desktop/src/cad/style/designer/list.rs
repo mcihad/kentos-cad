@@ -134,7 +134,11 @@ pub(super) fn layer_list(d: &Designer) -> Element<'_, Message> {
             "Aşağı taşı: Sonra çizilir (Ctrl+↓)",
             can_move(symbol, at, 1).then(|| ev(Event::Down))
         ),
-        tool("copy", "Çoğalt: Katmanın kopyası altına eklenir (Ctrl+D)", exists.then(|| ev(Event::Duplicate))),
+        tool(
+            "copy",
+            "Çoğalt: Katmanın kopyası altına eklenir (Ctrl+D)",
+            exists.then(|| ev(Event::Duplicate))
+        ),
         tool(
             "trash",
             if can_remove(symbol, at) || !exists {

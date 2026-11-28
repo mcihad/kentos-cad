@@ -2,12 +2,12 @@
 //! exceptions through `cad.arch.exceptions`, Kata ver through `cad.levels.assign`; each one undo step, the drawing
 //! checked again after it (docs/adr/0703, 0717, 0732).
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use kentos_commands::CallOp;
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, registry};
-use crate::arch::ArchState;
 
 use super::STALE;
 use crate::app::App;
@@ -27,12 +27,19 @@ pub(crate) trait ArchAuditWriteApp {
 impl ArchAuditWriteApp for App {
     /// The chosen findings' fixes as one command call: the one fix's own, or a change set of them in the findings'
     /// order (one undo step, “Denetim düzeltmeleri”; docs/adr/0732 §5).
-    fn arch_audit_fix_call(&self) -> Option<(String, serde_json::Value, String)>{
-        let fixes: Vec<&kentos_commands::ArchAuditFix> =
-            self.arch_audit_chosen().into_iter().filter_map(|f| f.fix.as_ref()).collect();
+    fn arch_audit_fix_call(&self) -> Option<(String, serde_json::Value, String)> {
+        let fixes: Vec<&kentos_commands::ArchAuditFix> = self
+            .arch_audit_chosen()
+            .into_iter()
+            .filter_map(|f| f.fix.as_ref())
+            .collect();
         match fixes.as_slice() {
             [] => None,
-            [one] => Some((one.step.command.clone(), one.step.input.clone(), one.label.clone())),
+            [one] => Some((
+                one.step.command.clone(),
+                one.step.input.clone(),
+                one.label.clone(),
+            )),
             many => {
                 let steps: Vec<serde_json::Value> = many
                     .iter()
@@ -48,7 +55,7 @@ impl ArchAuditWriteApp for App {
     }
 
     /// Düzelt: the chosen findings' fixes, as one undo step; the drawing checked again.
-    fn arch_audit_fix(&mut self){
+    fn arch_audit_fix(&mut self) {
         if self.arch_audit_stale() {
             self.warn(STALE);
             return;
@@ -87,7 +94,9 @@ impl ArchAuditWriteApp for App {
                 }
             }
             Ok(v) => {
-                let why = v["error"]["message"].as_str().unwrap_or("Düzeltme yazılamadı.");
+                let why = v["error"]["message"]
+                    .as_str()
+                    .unwrap_or("Düzeltme yazılamadı.");
                 self.warn(why.to_owned());
                 return;
             }
@@ -101,7 +110,7 @@ impl ArchAuditWriteApp for App {
 
     /// İstisna yap's note given: the chosen findings that are no exceptions yet marked through `cad.arch.exceptions`,
     /// with the note when one is written; one undo step; the drawing checked again (docs/adr/0732 §3).
-    fn arch_audit_except(&mut self){
+    fn arch_audit_except(&mut self) {
         let Some(note) = self.modules.arch_mut().arch_audit.note.take() else {
             return;
         };
@@ -119,8 +128,14 @@ impl ArchAuditWriteApp for App {
             return;
         }
         // A standards package's finding is given as the package answered (docs/adr/8078).
-        let given: Vec<&kentos_commands::ArchAuditFinding> =
-            self.modules.arch().arch_audit.standards.iter().filter(|f| keys.contains(&f.key)).collect();
+        let given: Vec<&kentos_commands::ArchAuditFinding> = self
+            .modules
+            .arch()
+            .arch_audit
+            .standards
+            .iter()
+            .filter(|f| keys.contains(&f.key))
+            .collect();
         let mut input = serde_json::json!({
             "operation": "mark",
             "keys": keys,
@@ -140,7 +155,7 @@ impl ArchAuditWriteApp for App {
     }
 
     /// İstisnayı kaldır: the chosen findings' exceptions, lapsed or not, taken away; one undo step.
-    fn arch_audit_unexcept(&mut self){
+    fn arch_audit_unexcept(&mut self) {
         let keys: Vec<String> = self
             .arch_audit_chosen()
             .into_iter()
@@ -150,14 +165,16 @@ impl ArchAuditWriteApp for App {
         if keys.is_empty() {
             return;
         }
-        self.arch_audit_exceptions(serde_json::json!({ "operation": "unmark", "keys": keys }), |n| {
-            format!("{n} istisna kaldırıldı; bulgular yeniden açık. Geri al ile dönülür.")
-        });
+        self.arch_audit_exceptions(
+            serde_json::json!({ "operation": "unmark", "keys": keys }),
+            |n| format!("{n} istisna kaldırıldı; bulgular yeniden açık. Geri al ile dönülür."),
+        );
     }
 
     /// Eski istisnaları temizle: the exceptions whose finding the bar's check no longer finds dropped; one undo step.
-    fn arch_audit_prune(&mut self){
-        let input = serde_json::json!({ "operation": "prune", "audit": self.arch_audit_finding_input() });
+    fn arch_audit_prune(&mut self) {
+        let input =
+            serde_json::json!({ "operation": "prune", "audit": self.arch_audit_finding_input() });
         self.arch_audit_exceptions(input, |n| match n {
             0 => "Temizlenecek eski istisna yok.".to_owned(),
             n => format!("Bulgusu kalmamış {n} istisna silindi. Geri al ile dönülür."),
@@ -166,7 +183,7 @@ impl ArchAuditWriteApp for App {
 
     /// `cad.arch.exceptions` with `input`, its answer said by `said` from how many exceptions it changed; the drawing
     /// checked again.
-    fn arch_audit_exceptions(&mut self, input: serde_json::Value, said: impl Fn(usize) -> String){
+    fn arch_audit_exceptions(&mut self, input: serde_json::Value, said: impl Fn(usize) -> String) {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
@@ -182,7 +199,9 @@ impl ArchAuditWriteApp for App {
                 self.say(Level::Success, said(n));
             }
             Ok(v) => {
-                let why = v["error"]["message"].as_str().unwrap_or("İstisna yazılamadı.");
+                let why = v["error"]["message"]
+                    .as_str()
+                    .unwrap_or("İstisna yazılamadı.");
                 self.warn(why.to_owned());
                 return;
             }
@@ -197,7 +216,7 @@ impl ArchAuditWriteApp for App {
 
     /// Kata ver ▾'s Seç ve göster: the objects without a level selected and the view on them, before any level is
     /// given (docs/adr/0717 §2).
-    fn arch_audit_show_levelless(&mut self){
+    fn arch_audit_show_levelless(&mut self) {
         let uids = self.arch_audit_levelless();
         let Some(doc) = self.document.as_ref() else {
             return;
@@ -216,7 +235,7 @@ impl ArchAuditWriteApp for App {
 
     /// Kata ver ▾'s level: every object without a level given it through `cad.levels.assign`, one undo step; the
     /// objects stay selected so the step shows; the drawing checked again.
-    fn arch_audit_assign_level(&mut self, level: &str){
+    fn arch_audit_assign_level(&mut self, level: &str) {
         if self.arch_audit_stale() {
             self.warn(STALE);
             return;

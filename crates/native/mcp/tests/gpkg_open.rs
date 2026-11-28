@@ -9,10 +9,12 @@ use serde_json::{Value, json};
 
 fn call(server: &mut Server, name: &str, args: Value) -> Value {
     server
-        .handle(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
+        .handle(
+            &json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
             "name":name,"arguments":args,"_meta":{"io.modelcontextprotocol/protocolVersion":MODERN,
             "io.modelcontextprotocol/clientInfo":{"name":"gpkg-open-test","version":"1"},
-            "io.modelcontextprotocol/clientCapabilities":{}}}}))
+            "io.modelcontextprotocol/clientCapabilities":{}}}}),
+        )
         .unwrap()["result"]
         .clone()
 }
@@ -23,7 +25,10 @@ fn copy(file: &str, tag: &str) -> std::path::PathBuf {
     std::fs::create_dir_all(&dir).unwrap();
     let to = dir.join(file);
     std::fs::copy(
-        format!("{}/../../../fixtures/data/v1/gpkg-open/{file}", env!("CARGO_MANIFEST_DIR")),
+        format!(
+            "{}/../../../fixtures/data/v1/gpkg-open/{file}",
+            env!("CARGO_MANIFEST_DIR")
+        ),
         &to,
     )
     .expect("the copy");
@@ -42,7 +47,10 @@ fn an_agent_opens_a_geopackage_of_no_project_and_saves_into_it() {
     assert_eq!(said["made"], true, "{opened}");
     assert_eq!(said["kept"], false, "{opened}");
     assert_eq!(out["summary"]["project"]["kept"], false, "{opened}");
-    assert!(std::fs::read(&path).expect("the file") == before, "opening wrote nothing into the file");
+    assert!(
+        std::fs::read(&path).expect("the file") == before,
+        "opening wrote nothing into the file"
+    );
     assert_eq!(said["project"], "katmanlar");
     assert_eq!(out["summary"]["project"]["name"], "katmanlar", "{opened}");
     assert_eq!(out["summary"]["settings"]["srid"], 5256);
@@ -56,7 +64,10 @@ fn an_agent_opens_a_geopackage_of_no_project_and_saves_into_it() {
     // Opened again: the project the file keeps now.
     let again = call(&mut server, "drawing.open", json!({"path": path}));
     assert_eq!(again["isError"], false, "{again}");
-    assert_eq!(again["structuredContent"]["summary"]["openedGeoPackage"]["made"], false, "{again}");
+    assert_eq!(
+        again["structuredContent"]["summary"]["openedGeoPackage"]["made"], false,
+        "{again}"
+    );
 }
 
 #[test]
@@ -66,10 +77,20 @@ fn a_file_of_several_projects_is_named_and_one_is_opened_by_project() {
     let refused = call(&mut server, "drawing.open", json!({"path": path}));
     assert_eq!(refused["isError"], true, "{refused}");
     let words = refused.to_string();
-    assert!(words.contains("several_projects") && words.contains("“Çamlık”, “Zeytinlik”"), "{refused}");
-    let opened = call(&mut server, "drawing.open", json!({"path": path, "project": "Çamlık"}));
+    assert!(
+        words.contains("several_projects") && words.contains("“Çamlık”, “Zeytinlik”"),
+        "{refused}"
+    );
+    let opened = call(
+        &mut server,
+        "drawing.open",
+        json!({"path": path, "project": "Çamlık"}),
+    );
     assert_eq!(opened["isError"], false, "{opened}");
-    assert_eq!(opened["structuredContent"]["summary"]["project"]["name"], "Çamlık", "{opened}");
+    assert_eq!(
+        opened["structuredContent"]["summary"]["project"]["name"], "Çamlık",
+        "{opened}"
+    );
 }
 
 /// The drawing's layers by their names, in the tree's order.
@@ -79,7 +100,12 @@ fn layers(server: &mut Server, drawing: &Value) -> Vec<(String, String)> {
         .as_array()
         .expect("the layers")
         .iter()
-        .map(|n| (n["name"].as_str().unwrap_or("").to_owned(), n["id"].as_str().unwrap_or("").to_owned()))
+        .map(|n| {
+            (
+                n["name"].as_str().unwrap_or("").to_owned(),
+                n["id"].as_str().unwrap_or("").to_owned(),
+            )
+        })
         .collect()
 }
 
@@ -90,21 +116,40 @@ fn an_agent_sees_the_tiles_as_a_raster_and_its_save_writes_a_changed_look_once()
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
-    let names: Vec<String> = layers(&mut server, &drawing).into_iter().map(|(n, _)| n).collect();
+    let names: Vec<String> = layers(&mut server, &drawing)
+        .into_iter()
+        .map(|(n, _)| n)
+        .collect();
     assert_eq!(names, ["Taslak", "parseller", "ortofoto"]);
 
     let path = copy("katmanlar.gpkg", "looks");
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
     let drawing = opened["structuredContent"]["drawing"].clone();
-    let binalar = layers(&mut server, &drawing).into_iter().find(|(n, _)| n == "binalar").map(|(_, id)| id).expect("binalar");
+    let binalar = layers(&mut server, &drawing)
+        .into_iter()
+        .find(|(n, _)| n == "binalar")
+        .map(|(_, id)| id)
+        .expect("binalar");
     let renderer = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
         { "id": "f", "type": "simpleFill", "color": "#2a6fdb" },
         { "id": "o", "type": "simpleLine", "color": "#123456", "width": 0.5 }
     ] } } });
-    let done = call(&mut server, "cad.layers.renderer", json!({"drawing": drawing, "layer": binalar, "renderer": renderer}));
+    let done = call(
+        &mut server,
+        "cad.layers.renderer",
+        json!({"drawing": drawing, "layer": binalar, "renderer": renderer}),
+    );
     assert_eq!(done["isError"], false, "{done}");
     let saved = call(&mut server, "drawing.save", json!({"drawing": drawing}));
-    assert_eq!(saved["structuredContent"]["looks"], json!(["binalar"]), "{saved}");
+    assert_eq!(
+        saved["structuredContent"]["looks"],
+        json!(["binalar"]),
+        "{saved}"
+    );
     let again = call(&mut server, "drawing.save", json!({"drawing": drawing}));
-    assert_eq!(again["structuredContent"]["looks"], json!([]), "unchanged: {again}");
+    assert_eq!(
+        again["structuredContent"]["looks"],
+        json!([]),
+        "unchanged: {again}"
+    );
 }

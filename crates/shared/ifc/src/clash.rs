@@ -34,7 +34,9 @@ pub fn bounds(b: &Body<'_>) -> Option<[f64; 6]> {
     let mut out: Option<[f64; 6]> = None;
     for t in b.triangles {
         for &i in t {
-            let Some(p) = b.positions.get(i as usize) else { continue };
+            let Some(p) = b.positions.get(i as usize) else {
+                continue;
+            };
             let k = out.get_or_insert([p[0], p[1], p[2], p[0], p[1], p[2]]);
             for j in 0..3 {
                 k[j] = k[j].min(p[j]);
@@ -47,7 +49,14 @@ pub fn bounds(b: &Body<'_>) -> Option<[f64; 6]> {
 
 /// The overlap of two boxes, when it is more than `tolerance` on every axis.
 fn overlap(a: &[f64; 6], b: &[f64; 6], tolerance: f64) -> Option<[f64; 6]> {
-    let o = [a[0].max(b[0]), a[1].max(b[1]), a[2].max(b[2]), a[3].min(b[3]), a[4].min(b[4]), a[5].min(b[5])];
+    let o = [
+        a[0].max(b[0]),
+        a[1].max(b[1]),
+        a[2].max(b[2]),
+        a[3].min(b[3]),
+        a[4].min(b[4]),
+        a[5].min(b[5]),
+    ];
     (0..3).all(|i| o[i + 3] - o[i] > tolerance).then_some(o)
 }
 
@@ -56,7 +65,11 @@ fn sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
 }
 
 fn cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
 }
 
 fn dot(a: [f64; 3], b: [f64; 3]) -> f64 {
@@ -82,7 +95,11 @@ fn crossing(t: &[[f64; 3]; 3], q: [f64; 3], n: [f64; 3]) -> Option<Vec<[f64; 3]>
             out.push(t[i]);
         } else if (d[i] > EPS && d[j] < -EPS) || (d[i] < -EPS && d[j] > EPS) {
             let s = d[i] / (d[i] - d[j]);
-            out.push([t[i][0] + s * (t[j][0] - t[i][0]), t[i][1] + s * (t[j][1] - t[i][1]), t[i][2] + s * (t[j][2] - t[i][2])]);
+            out.push([
+                t[i][0] + s * (t[j][0] - t[i][0]),
+                t[i][1] + s * (t[j][1] - t[i][1]),
+                t[i][2] + s * (t[j][2] - t[i][2]),
+            ]);
         }
     }
     Some(out)
@@ -91,8 +108,10 @@ fn crossing(t: &[[f64; 3]; 3], q: [f64; 3], n: [f64; 3]) -> Option<Vec<[f64; 3]>
 /// Whether two triangles cross: each passes through the other's plane, and the two crossings share a stretch of the
 /// planes' common line longer than the arithmetic's own.
 pub fn triangles_cross(t1: &[[f64; 3]; 3], t2: &[[f64; 3]; 3]) -> bool {
-    let (Some(n1), Some(n2)) = (unit(cross(sub(t1[1], t1[0]), sub(t1[2], t1[0]))), unit(cross(sub(t2[1], t2[0]), sub(t2[2], t2[0]))))
-    else {
+    let (Some(n1), Some(n2)) = (
+        unit(cross(sub(t1[1], t1[0]), sub(t1[2], t1[0]))),
+        unit(cross(sub(t2[1], t2[0]), sub(t2[2], t2[0]))),
+    ) else {
         return false;
     };
     let (Some(c1), Some(c2)) = (crossing(t1, t2[0], n2), crossing(t2, t1[0], n1)) else {
@@ -103,7 +122,10 @@ pub fn triangles_cross(t1: &[[f64; 3]; 3], t2: &[[f64; 3]; 3]) -> bool {
     };
     let span = |pts: &[[f64; 3]]| {
         let s: Vec<f64> = pts.iter().map(|p| dot(line, *p)).collect();
-        (s.iter().copied().fold(f64::MAX, f64::min), s.iter().copied().fold(f64::MIN, f64::max))
+        (
+            s.iter().copied().fold(f64::MAX, f64::min),
+            s.iter().copied().fold(f64::MIN, f64::max),
+        )
     };
     let (a0, a1) = span(&c1);
     let (b0, b1) = span(&c2);
@@ -118,9 +140,11 @@ fn inside(b: &Body<'_>, p: [f64; 3]) -> bool {
     let dir = [0.577_215_664_9, 0.594_534_891_6, 0.559_729_867_8];
     let mut hits = 0usize;
     for t in b.triangles {
-        let (Some(&v0), Some(&v1), Some(&v2)) =
-            (b.positions.get(t[0] as usize), b.positions.get(t[1] as usize), b.positions.get(t[2] as usize))
-        else {
+        let (Some(&v0), Some(&v1), Some(&v2)) = (
+            b.positions.get(t[0] as usize),
+            b.positions.get(t[1] as usize),
+            b.positions.get(t[2] as usize),
+        ) else {
             continue;
         };
         // Möller–Trumbore.
@@ -165,8 +189,18 @@ fn surfaces_cross(a: &Body<'_>, b: &Body<'_>, o: &[f64; 6]) -> bool {
             hi >= local[k] - EPS && lo <= local[k + 3] + EPS
         })
     };
-    let ta: Vec<[[f64; 3]; 3]> = a.triangles.iter().filter_map(|t| corners(a, t, at)).filter(near).collect();
-    let tb: Vec<[[f64; 3]; 3]> = b.triangles.iter().filter_map(|t| corners(b, t, at)).filter(near).collect();
+    let ta: Vec<[[f64; 3]; 3]> = a
+        .triangles
+        .iter()
+        .filter_map(|t| corners(a, t, at))
+        .filter(near)
+        .collect();
+    let tb: Vec<[[f64; 3]; 3]> = b
+        .triangles
+        .iter()
+        .filter_map(|t| corners(b, t, at))
+        .filter(near)
+        .collect();
     ta.iter().any(|x| tb.iter().any(|y| triangles_cross(x, y)))
 }
 
@@ -178,7 +212,11 @@ fn witnesses(o: &[f64; 6]) -> impl Iterator<Item = [f64; 3]> + '_ {
     AT.into_iter().flat_map(move |x| {
         AT.into_iter().flat_map(move |y| {
             AT.into_iter().map(move |z| {
-                [o[0] + x * (o[3] - o[0]), o[1] + y * (o[4] - o[1]), o[2] + z * (o[5] - o[2])]
+                [
+                    o[0] + x * (o[3] - o[0]),
+                    o[1] + y * (o[4] - o[1]),
+                    o[2] + z * (o[5] - o[2]),
+                ]
             })
         })
     })
@@ -194,12 +232,21 @@ pub fn clashes(a: &[Body<'_>], b: &[Body<'_>], tolerance: f64) -> Vec<Clash> {
         let Some(box_b) = bounds(bb) else { continue };
         for (i, ab) in a.iter().enumerate() {
             let Some(box_a) = &boxes_a[i] else { continue };
-            let Some(o) = overlap(box_a, &box_b, tolerance) else { continue };
-            let within = |x: &[f64; 6], y: &[f64; 6]| (0..3).all(|k| x[k] >= y[k] - EPS && x[k + 3] <= y[k + 3] + EPS);
+            let Some(o) = overlap(box_a, &box_b, tolerance) else {
+                continue;
+            };
+            let within = |x: &[f64; 6], y: &[f64; 6]| {
+                (0..3).all(|k| x[k] >= y[k] - EPS && x[k + 3] <= y[k + 3] + EPS)
+            };
             let crossed = surfaces_cross(ab, bb, &o);
             if crossed || witnesses(&o).any(|p| inside(ab, p) && inside(bb, p)) {
                 let held = !crossed && (within(&box_b, box_a) || within(box_a, &box_b));
-                out.push(Clash { a: ab.owner, b: bb.owner, overlap: o, inside: held });
+                out.push(Clash {
+                    a: ab.owner,
+                    b: bb.owner,
+                    overlap: o,
+                    inside: held,
+                });
             }
         }
     }
@@ -218,13 +265,38 @@ mod tests {
                 if i & 4 == 0 { lo[2] } else { hi[2] },
             ]
         };
-        let quads = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]];
-        ((0..8).map(p).collect(), quads.iter().flat_map(|q| [[q[0], q[1], q[2]], [q[0], q[2], q[3]]]).collect())
+        let quads = [
+            [0, 1, 3, 2],
+            [4, 6, 7, 5],
+            [0, 4, 5, 1],
+            [2, 3, 7, 6],
+            [0, 2, 6, 4],
+            [1, 5, 7, 3],
+        ];
+        (
+            (0..8).map(p).collect(),
+            quads
+                .iter()
+                .flat_map(|q| [[q[0], q[1], q[2]], [q[0], q[2], q[3]]])
+                .collect(),
+        )
     }
 
-    fn found(a: &(Vec<[f64; 3]>, Vec<[u32; 3]>), b: &(Vec<[f64; 3]>, Vec<[u32; 3]>), tolerance: f64) -> Vec<Clash> {
-        let x = Body { owner: 1, positions: &a.0, triangles: &a.1 };
-        let y = Body { owner: 2, positions: &b.0, triangles: &b.1 };
+    fn found(
+        a: &(Vec<[f64; 3]>, Vec<[u32; 3]>),
+        b: &(Vec<[f64; 3]>, Vec<[u32; 3]>),
+        tolerance: f64,
+    ) -> Vec<Clash> {
+        let x = Body {
+            owner: 1,
+            positions: &a.0,
+            triangles: &a.1,
+        };
+        let y = Body {
+            owner: 2,
+            positions: &b.0,
+            triangles: &b.1,
+        };
         clashes(&[x], &[y], tolerance)
     }
 
@@ -274,7 +346,12 @@ mod tests {
     #[test]
     fn crossing_triangles_on_large_coordinates_are_found_as_near_the_origin() {
         let shift = |b: (Vec<[f64; 3]>, Vec<[u32; 3]>)| {
-            (b.0.iter().map(|p| [p[0] + 587_312.345, p[1] + 4_400_612.789, p[2] + 1285.4]).collect::<Vec<_>>(), b.1)
+            (
+                b.0.iter()
+                    .map(|p| [p[0] + 587_312.345, p[1] + 4_400_612.789, p[2] + 1285.4])
+                    .collect::<Vec<_>>(),
+                b.1,
+            )
         };
         let wall = shift(boxed([0.0, -0.125, 0.0], [6.0, 0.125, 3.0]));
         let into = shift(boxed([0.25, -0.15, 0.0], [0.55, 0.15, 2.5]));

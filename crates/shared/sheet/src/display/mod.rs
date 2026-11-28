@@ -146,9 +146,9 @@ pub struct ImagePrim {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
 pub struct MapViewPrim {
-    #[serde(default,skip_serializing_if="Option::is_none")]
-    #[cfg_attr(feature="ts",ts(optional))]
-    pub annotation_scale:Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub annotation_scale: Option<f64>,
     /// None: the map has no place yet (a template's).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -160,7 +160,9 @@ pub struct MapViewPrim {
 }
 
 impl MapViewPrim {
-    pub fn annotation_denominator(&self)->f64 {self.annotation_scale.unwrap_or(self.scale)}
+    pub fn annotation_denominator(&self) -> f64 {
+        self.annotation_scale.unwrap_or(self.scale)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -193,7 +195,10 @@ pub struct MapPrim {
     pub phase: Option<kentos_contracts::PhaseView>,
     /// The categories it leaves out (docs/adr/0774 §3: its linked view's recipe).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<kentos_contracts::ViewCategory>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<kentos_contracts::ViewCategory>>", optional)
+    )]
     pub hidden: Vec<kentos_contracts::ViewCategory>,
     /// The detail it draws the walls at whatever its scale (docs/adr/0781 §1: its linked view's recipe); none: the
     /// scale's.
@@ -202,7 +207,10 @@ pub struct MapPrim {
     pub wall_detail: Option<kentos_contracts::WallDetail>,
     /// The pens it draws its categories with (docs/adr/0783 §1: its linked view's recipe, its template resolved).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<kentos_contracts::RecipePen>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<kentos_contracts::RecipePen>>", optional)
+    )]
     pub pens: Vec<kentos_contracts::RecipePen>,
     /// Every line black, hatches grey (docs/adr/0783 §1).
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -211,7 +219,10 @@ pub struct MapPrim {
     /// The design options it shows (docs/adr/0788 §3: its linked view's recipe); empty: each set's primary. A boxed
     /// slice: the primitives' enum stays small.
     #[serde(default, skip_serializing_if = "<[_]>::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<kentos_contracts::OptionChoice>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<kentos_contracts::OptionChoice>>", optional)
+    )]
     pub options: Box<[kentos_contracts::OptionChoice]>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -232,7 +243,15 @@ impl MapPrim {
     /// which accepted points a map shows with them (docs/adr/2800).
     pub fn ground_corners(&self) -> Option<[[f64; 2]; 4]> {
         let center = self.view.center?;
-        Some(crate::projection::Transform::paper(&self.clip, center, self.view.scale, self.view.rotation).ground_corners(&self.clip))
+        Some(
+            crate::projection::Transform::paper(
+                &self.clip,
+                center,
+                self.view.scale,
+                self.view.rotation,
+            )
+            .ground_corners(&self.clip),
+        )
     }
 }
 
@@ -539,9 +558,20 @@ impl Ctx<'_> {
     /// (`@yakinsama`, `@manyetik_sapma`, `@grid_manyetik`, docs/adr/1900).
     pub fn scope_for(&self, item: &Item) -> Scope {
         let mut s = self.scope.clone();
-        if let Some((id, m)) = item.kind.map_link().and_then(|id| self.maps.get(id).map(|m| (id, m))) {
+        if let Some((id, m)) = item
+            .kind
+            .map_link()
+            .and_then(|id| self.maps.get(id).map(|m| (id, m)))
+        {
             s.builtins.retain(|(n, _)| {
-                !["OLCEK", "OLCEK_PAYDA", "YAKINSAMA", "MANYETIK_SAPMA", "GRID_MANYETIK"].contains(&n.as_str())
+                ![
+                    "OLCEK",
+                    "OLCEK_PAYDA",
+                    "YAKINSAMA",
+                    "MANYETIK_SAPMA",
+                    "GRID_MANYETIK",
+                ]
+                .contains(&n.as_str())
             });
             s.builtin("olcek", VarValue::Text(format!("1/{}", m.scale)));
             s.builtin("olcek_payda", VarValue::Number(m.scale));
@@ -565,7 +595,12 @@ impl Ctx<'_> {
 }
 
 /// The survey quality's built-in names (docs/adr/2400), folded.
-const SURVEY_NAMES: [&str; 4] = ["KONUM_DOGRULUGU", "YUKSEKLIK_DOGRULUGU", "AG_DENGELEMESI", "OLCME_KALITESI"];
+const SURVEY_NAMES: [&str; 4] = [
+    "KONUM_DOGRULUGU",
+    "YUKSEKLIK_DOGRULUGU",
+    "AG_DENGELEMESI",
+    "OLCME_KALITESI",
+];
 
 /// A map's own survey quality into a scope (docs/adr/2800), in place of the project's; a map the host gave none keeps
 /// the project's. An empty value is none, as the project's.
@@ -573,8 +608,15 @@ fn survey_builtins(s: &mut Scope, inputs: &RenderInputs, id: &str) {
     let Some(m) = inputs.map_surveys.iter().find(|m| m.item == id) else {
         return;
     };
-    s.builtins.retain(|(n, _)| !SURVEY_NAMES.contains(&n.as_str()));
-    let text = |t: &str| if t.trim().is_empty() { VarValue::Null } else { VarValue::Text(t.to_owned()) };
+    s.builtins
+        .retain(|(n, _)| !SURVEY_NAMES.contains(&n.as_str()));
+    let text = |t: &str| {
+        if t.trim().is_empty() {
+            VarValue::Null
+        } else {
+            VarValue::Text(t.to_owned())
+        }
+    };
     s.builtin("konum_dogrulugu", text(&m.position));
     s.builtin("yukseklik_dogrulugu", text(&m.height));
     s.builtin("ag_dengelemesi", text(&m.network));
@@ -584,7 +626,11 @@ fn survey_builtins(s: &mut Scope, inputs: &RenderInputs, id: &str) {
 /// The maps a sheet's texts read their survey quality from (docs/adr/2800): the sheet's first map (a text tied to no
 /// map reads it, as its scale and north) and every map drawn with a frame (a text tied to one reads that one). The
 /// preflight asks with it which words a text will print.
-pub fn survey_maps(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> Result<(Option<ItemId>, Vec<ItemId>)> {
+pub fn survey_maps(
+    book: &SheetBook,
+    sheet_id: &str,
+    inputs: &RenderInputs,
+) -> Result<(Option<ItemId>, Vec<ItemId>)> {
     let scene = Scene::new(book, sheet_id)?;
     let mut notes = Vec::new();
     let (_, drawn, maps) = sheet_scope(book, &scene, inputs, &mut notes);
@@ -594,7 +640,9 @@ pub fn survey_maps(book: &SheetBook, sheet_id: &str, inputs: &RenderInputs) -> R
 /// The sheet's first map: the first drawn that shows a map of its own (not an overview) with a frame.
 fn primary_of(drawn: &[(Item, bool)], maps: &BTreeMap<ItemId, map::MapFrame>) -> Option<ItemId> {
     drawn.iter().find_map(|(it, _)| match &it.kind {
-        ItemKind::Map(m) if m.overview_of.is_none() && maps.contains_key(&it.id) => Some(it.id.clone()),
+        ItemKind::Map(m) if m.overview_of.is_none() && maps.contains_key(&it.id) => {
+            Some(it.id.clone())
+        }
         _ => None,
     })
 }
@@ -660,7 +708,10 @@ fn builtins(book: &SheetBook, sheet: &Sheet, inputs: &RenderInputs, scope: &mut 
     scope.builtin("kot_sistemi", text(&project.heights));
     scope.builtin("ikinci_sistem", text(&project.second_crs));
     scope.builtin("epsg_kodu", text(&project.epsg));
-    scope.builtin("epok", project.epoch.map_or(VarValue::Null, VarValue::Number));
+    scope.builtin(
+        "epok",
+        project.epoch.map_or(VarValue::Null, VarValue::Number),
+    );
     // The survey quality (docs/adr/2400): the archive's, never typed on the sheet.
     scope.builtin("konum_dogrulugu", text(&project.position_accuracy));
     scope.builtin("yukseklik_dogrulugu", text(&project.height_accuracy));
@@ -701,7 +752,11 @@ fn builtins(book: &SheetBook, sheet: &Sheet, inputs: &RenderInputs, scope: &mut 
     scope.builtin("pafta_no", text(&info.number));
     scope.builtin(
         "pafta_basligi",
-        text(if info.title.is_empty() { &sheet.name } else { &info.title }),
+        text(if info.title.is_empty() {
+            &sheet.name
+        } else {
+            &info.title
+        }),
     );
     scope.builtin("revizyon", text(&info.revision));
 }
@@ -935,9 +990,21 @@ fn sheet_scope(
     };
     builtins(book, sheet, inputs, &mut scope);
     if let Some(info) = &sheet.drawing_info {
-        let title = if info.title.is_empty() { &sheet.name } else { &info.title };
-        for (name, value) in [("pafta_no", info.number.clone()), ("pafta_basligi", title.clone()), ("revizyon", info.revision.clone()), ("pafta_durumu", info.status.clone()), ("alt_kume", info.subset.join(" / "))] {
-            scope.extra.push((crate::expr::fold(name), VarValue::Text(value)));
+        let title = if info.title.is_empty() {
+            &sheet.name
+        } else {
+            &info.title
+        };
+        for (name, value) in [
+            ("pafta_no", info.number.clone()),
+            ("pafta_basligi", title.clone()),
+            ("revizyon", info.revision.clone()),
+            ("pafta_durumu", info.status.clone()),
+            ("alt_kume", info.subset.join(" / ")),
+        ] {
+            scope
+                .extra
+                .push((crate::expr::fold(name), VarValue::Text(value)));
         }
     }
     // Maps first: their bound views decide `@olcek` and what scale bars and north arrows read.
@@ -1025,8 +1092,7 @@ fn build_with(
     }
     let mut prims = Vec::new();
     let export = inputs.mode == RenderMode::Export;
-    let list_of =
-        |master: bool| -> &[Item] { if master { &scene.master } else { &sheet.items } };
+    let list_of = |master: bool| -> &[Item] { if master { &scene.master } else { &sheet.items } };
     for (it, master) in &drawn {
         if it.is_group()
             || !shown(list_of(*master), it, &drawn, *master)

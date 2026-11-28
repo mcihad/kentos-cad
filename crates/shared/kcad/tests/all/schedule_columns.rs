@@ -22,10 +22,18 @@ fn a_block_schedule_with_columns_opts_into_schema_122() {
             _ => None,
         })
         .collect();
-    assert_eq!(columns, [vec!["Tarih".to_owned(), "Açıklama".to_owned()], vec![]]);
+    assert_eq!(
+        columns,
+        [vec!["Tarih".to_owned(), "Açıklama".to_owned()], vec![]]
+    );
     assert!(BYTES.windows(10).any(|w| w == b"\x67version\x18\x7a"));
-    let old = include_bytes!("../../../../../fixtures/kcad/v2/broken/table-schedule-columns-in-schema-121.kcad");
-    assert_eq!(kentos_kcad::decode(old).expect_err("refused").code, kentos_kcad::Code::UnknownField);
+    let old = include_bytes!(
+        "../../../../../fixtures/kcad/v2/broken/table-schedule-columns-in-schema-121.kcad"
+    );
+    assert_eq!(
+        kentos_kcad::decode(old).expect_err("refused").code,
+        kentos_kcad::Code::UnknownField
+    );
     let mut plain = model;
     for e in &mut plain.entities {
         if let Entity::Table(t) = e
@@ -35,7 +43,10 @@ fn a_block_schedule_with_columns_opts_into_schema_122() {
         }
     }
     let bytes = kentos_kcad::encode_verified(&plain).unwrap();
-    assert!(!bytes.windows(10).any(|w| w == b"\x67version\x18\x7a"), "no columns, no schema 122");
+    assert!(
+        !bytes.windows(10).any(|w| w == b"\x67version\x18\x7a"),
+        "no columns, no schema 122"
+    );
 }
 
 #[test]
@@ -46,6 +57,10 @@ fn a_block_schedules_columns_keep_their_rules() {
             env!("CARGO_MANIFEST_DIR")
         ))
         .unwrap();
-        assert_eq!(kentos_kcad::decode(&bytes).expect_err(name).code, kentos_kcad::Code::BadValue, "{name}");
+        assert_eq!(
+            kentos_kcad::decode(&bytes).expect_err(name).code,
+            kentos_kcad::Code::BadValue,
+            "{name}"
+        );
     }
 }

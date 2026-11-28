@@ -73,11 +73,13 @@ fn walls_join_as_the_reference_says() {
                                 );
                                 // ADR 0785 §5: a frame across the wall, its depth, offset and side.
                                 match x.get(2) {
-                                    Some(f) if f.is_object() => h.framed(kentos_geometry_core::geom::opening::HoleFrame {
-                                        depth: f["depth"].as_f64().unwrap(),
-                                        offset: f["offset"].as_f64(),
-                                        right: f["right"].as_bool().unwrap_or(false),
-                                    }),
+                                    Some(f) if f.is_object() => {
+                                        h.framed(kentos_geometry_core::geom::opening::HoleFrame {
+                                            depth: f["depth"].as_f64().unwrap(),
+                                            offset: f["offset"].as_f64(),
+                                            right: f["right"].as_bool().unwrap_or(false),
+                                        })
+                                    }
                                     _ => h,
                                 }
                             })
@@ -94,7 +96,12 @@ fn walls_join_as_the_reference_says() {
                 .iter()
                 .filter_map(|j| {
                     j.node.as_ref().map(|n| {
-                        (js_round(j.at.x * 1e6) as i64, js_round(j.at.y * 1e6) as i64, n.depth.clone(), n.user)
+                        (
+                            js_round(j.at.x * 1e6) as i64,
+                            js_round(j.at.y * 1e6) as i64,
+                            n.depth.clone(),
+                            n.user,
+                        )
                     })
                 })
                 .collect();
@@ -104,7 +111,12 @@ fn walls_join_as_the_reference_says() {
                     (
                         js_round(n["at"][0].as_f64().unwrap() * 1e6) as i64,
                         js_round(n["at"][1].as_f64().unwrap() * 1e6) as i64,
-                        n["depth"].as_array().unwrap().iter().map(|x| x.as_u64().unwrap() as usize).collect(),
+                        n["depth"]
+                            .as_array()
+                            .unwrap()
+                            .iter()
+                            .map(|x| x.as_u64().unwrap() as usize)
+                            .collect(),
                         n["user"].as_bool().unwrap(),
                     )
                 })
@@ -231,17 +243,33 @@ fn walls_join_as_the_reference_says() {
                 );
             }
             if let Some(closures) = w["closures"].as_array() {
-                assert_eq!(d.closures.len(), closures.len(), "{name}: {k}. duvarın kapama çizgileri");
+                assert_eq!(
+                    d.closures.len(),
+                    closures.len(),
+                    "{name}: {k}. duvarın kapama çizgileri"
+                );
                 for ((comp, line), want) in d.closures.iter().zip(closures) {
-                    assert_eq!(*comp as u64, want[0].as_u64().unwrap(), "{name}: kapamanın bileşeni");
+                    assert_eq!(
+                        *comp as u64,
+                        want[0].as_u64().unwrap(),
+                        "{name}: kapamanın bileşeni"
+                    );
                     let wp: Vec<Vec2> = want[1].as_array().unwrap().iter().map(pt).collect();
-                    assert_eq!(line.pts.len(), wp.len(), "{name}: kapama {:?}, başvuru {wp:?}", line.pts);
+                    assert_eq!(
+                        line.pts.len(),
+                        wp.len(),
+                        "{name}: kapama {:?}, başvuru {wp:?}",
+                        line.pts
+                    );
                     for (a, b) in line.pts.iter().zip(&wp) {
                         assert!(close(*a, *b), "{name}: kapama köşesi {a:?}, başvuru {b:?}");
                     }
                 }
             } else {
-                assert!(d.closures.is_empty(), "{name}: beklenmeyen kapama çizgileri");
+                assert!(
+                    d.closures.is_empty(),
+                    "{name}: beklenmeyen kapama çizgileri"
+                );
             }
             let bands = w["bands"].as_array().unwrap();
             assert_eq!(d.bands.len(), bands.len(), "{name}: {k}. duvarın bantları");
@@ -345,23 +373,54 @@ fn level_identity_isolates_every_reference_join_without_changing_same_level_resu
 #[test]
 fn cross_level_curved_wall_keeps_analytic_openings_and_requested_indices() {
     use kentos_geometry_core::geom::wall_join::solve_with;
-    let pts = vec![Vec2::new(-3.,0.), Vec2::new(3.,0.)];
-    let arc = vec![1.,0.];
-    let mut first = Spec::read_flat(&Json::parse(r#"{"width":0.2,"justify":"center","arch":{"level":"zemin"}}"#).unwrap()).unwrap();
+    let pts = vec![Vec2::new(-3., 0.), Vec2::new(3., 0.)];
+    let arc = vec![1., 0.];
+    let mut first = Spec::read_flat(
+        &Json::parse(r#"{"width":0.2,"justify":"center","arch":{"level":"zemin"}}"#).unwrap(),
+    )
+    .unwrap();
     let second = first.clone();
-    let same_level = [WallIn {pts:&pts,bulges:Some(&arc),spec:&first},WallIn {pts:&pts,bulges:Some(&arc),spec:&second}];
+    let same_level = [
+        WallIn {
+            pts: &pts,
+            bulges: Some(&arc),
+            spec: &first,
+        },
+        WallIn {
+            pts: &pts,
+            bulges: Some(&arc),
+            spec: &second,
+        },
+    ];
     use kentos_geometry_core::geom::opening::Hole;
-    let intervals=vec![vec![Hole::through(1.,2.)],vec![Hole::through(4.,5.)]];
+    let intervals = vec![vec![Hole::through(1., 2.)], vec![Hole::through(4., 5.)]];
     // Each output has its own opening interval; floor separation must not
     // remap those indices when only the second wall's drawing is requested.
-    let solo = solve_with(&same_level[1..],&intervals[1..],None).drawn[0].clone();
-    first.arch=Some(Json::parse(r#"{"level":"kat-1"}"#).unwrap());
-    let different = [WallIn {pts:&pts,bulges:Some(&arc),spec:&first},WallIn {pts:&pts,bulges:Some(&arc),spec:&second}];
-    let got=solve_with(&different,&intervals,Some(&[1]));
+    let solo = solve_with(&same_level[1..], &intervals[1..], None).drawn[0].clone();
+    first.arch = Some(Json::parse(r#"{"level":"kat-1"}"#).unwrap());
+    let different = [
+        WallIn {
+            pts: &pts,
+            bulges: Some(&arc),
+            spec: &first,
+        },
+        WallIn {
+            pts: &pts,
+            bulges: Some(&arc),
+            spec: &second,
+        },
+    ];
+    let got = solve_with(&different, &intervals, Some(&[1]));
     assert!(got.joints.is_empty() && got.issues.is_empty());
     assert!(got.drawn[0].is_none());
-    assert_eq!(got.drawn[1],solo);
-    let drawn=got.drawn[1].as_ref().unwrap();
-    assert!(drawn.lines.iter().flatten().any(|stroke|stroke.line.bulges.iter().any(|b|*b!=0.)));
-    assert_eq!(drawn.caps.len(),4); // two path caps and two opening jambs
+    assert_eq!(got.drawn[1], solo);
+    let drawn = got.drawn[1].as_ref().unwrap();
+    assert!(
+        drawn
+            .lines
+            .iter()
+            .flatten()
+            .any(|stroke| stroke.line.bulges.iter().any(|b| *b != 0.))
+    );
+    assert_eq!(drawn.caps.len(), 4); // two path caps and two opening jambs
 }

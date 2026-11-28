@@ -50,7 +50,11 @@ fn drawn(def: &kentos_commands::AlignmentDef, b: &Built) -> Drawn {
     };
     for e in &b.core.elements {
         let turn = e.k0.abs().max(e.k1.abs()) * e.length;
-        let n = if e.kind == Kind::Tangent { 1 } else { ((turn / 0.01).ceil() as usize).clamp(4, 2000) };
+        let n = if e.kind == Kind::Tangent {
+            1
+        } else {
+            ((turn / 0.01).ceil() as usize).clamp(4, 2000)
+        };
         let pts: Vec<[f64; 2]> = (0..=n)
             .filter_map(|i| place(e.station + e.length * i as f64 / n as f64).map(|(p, _)| p))
             .collect();
@@ -81,7 +85,10 @@ fn drawn(def: &kentos_commands::AlignmentDef, b: &Built) -> Drawn {
             };
             for (i, s) in c.stations.iter().enumerate() {
                 if let Some((p, _)) = place(*s)
-                    && out.marks.iter().all(|(_, q)| (q[0] - p[0]).hypot(q[1] - p[1]) > 1e-6)
+                    && out
+                        .marks
+                        .iter()
+                        .all(|(_, q)| (q[0] - p[0]).hypot(q[1] - p[1]) > 1e-6)
                 {
                     out.marks.push((names[i], p));
                 }
@@ -116,7 +123,9 @@ pub(crate) fn layer<'a>(
     colors: Colors,
     slot: &crate::labels::GlyphSlot,
 ) -> Option<Element<'a, Message>> {
-    if doc.road_alignments().is_empty() || doc.settings().cad_work != Some(kentos_commands::CadWork::Road) {
+    if doc.road_alignments().is_empty()
+        || doc.settings().cad_work != Some(kentos_commands::CadWork::Road)
+    {
         slot.clear();
         return None;
     }
@@ -136,145 +145,170 @@ pub(crate) fn layer<'a>(
 impl Layer<'_> {
     /// Its picture, on a canvas frame or for the area's renderer (plan/render.md RM-14).
     fn paint(&self, frame: &mut impl crate::gpu_frame::Paint, all: &[Drawn], c: Colors) {
-            let screen = |p: [f64; 2]| {
-                let [x, y] = self.camera.world_to_screen(Vec2::new(p[0], p[1]));
-                Point::new(x as f32, y as f32)
-            };
-            let line = |pts: &[[f64; 2]]| {
-                Path::new(|b| {
-                    for (i, p) in pts.iter().enumerate() {
-                        if i == 0 {
-                            b.move_to(screen(*p));
-                        } else {
-                            b.line_to(screen(*p));
-                        }
+        let screen = |p: [f64; 2]| {
+            let [x, y] = self.camera.world_to_screen(Vec2::new(p[0], p[1]));
+            Point::new(x as f32, y as f32)
+        };
+        let line = |pts: &[[f64; 2]]| {
+            Path::new(|b| {
+                for (i, p) in pts.iter().enumerate() {
+                    if i == 0 {
+                        b.move_to(screen(*p));
+                    } else {
+                        b.line_to(screen(*p));
                     }
-                })
-            };
-            // Metres per pixel, near enough for leaving out what is too close.
-            let o = self.camera.world_to_screen(Vec2::new(0.0, 0.0));
-            let one = self.camera.world_to_screen(Vec2::new(1.0, 0.0));
-            let px = (one[0] - o[0]).hypot(one[1] - o[1]).max(1e-12);
-            for d in all {
-                if d.pis.len() > 1 {
-                    frame.stroke(
-                        &line(&d.pis),
-                        Stroke {
-                            line_dash: LineDash {
-                                segments: &[6.0, 4.0],
-                                offset: 0,
-                            },
-                            ..Stroke::default().with_width(0.8).with_color(Color { a: 0.5, ..c.ink })
+                }
+            })
+        };
+        // Metres per pixel, near enough for leaving out what is too close.
+        let o = self.camera.world_to_screen(Vec2::new(0.0, 0.0));
+        let one = self.camera.world_to_screen(Vec2::new(1.0, 0.0));
+        let px = (one[0] - o[0]).hypot(one[1] - o[1]).max(1e-12);
+        for d in all {
+            if d.pis.len() > 1 {
+                frame.stroke(
+                    &line(&d.pis),
+                    Stroke {
+                        line_dash: LineDash {
+                            segments: &[6.0, 4.0],
+                            offset: 0,
                         },
-                    );
-                    for p in &d.pis {
-                        frame.stroke(
-                            &Path::circle(screen(*p), 3.0),
-                            Stroke::default().with_width(1.0).with_color(Color { a: 0.7, ..c.ink }),
-                        );
-                    }
-                }
-                let width = if d.parallel { 1.2 } else { 2.6 };
-                for (kind, pts) in &d.pieces {
-                    let color = match kind {
-                        Kind::Tangent => c.ink,
-                        Kind::Spiral => c.warning,
-                        Kind::Arc => c.accent,
-                    };
-                    let color = if d.parallel { Color { a: 0.75, ..color } } else { color };
-                    frame.stroke(&line(pts), Stroke::default().with_width(width).with_color(color));
-                }
-                let tick_gap = 20.0 * px;
-                let word_gap = 100.0 * px;
-                for (_, p, n, km) in &d.ticks {
-                    let major = (km / 100.0).round() * 100.0 == *km;
-                    if !major && tick_gap < 6.0 {
-                        continue;
-                    }
-                    if major && word_gap < 6.0 {
-                        continue;
-                    }
-                    let len = if major { 9.0 } else { 5.0 };
-                    let at = screen(*p);
-                    // The normal on screen: y grows down.
-                    let (nx, ny) = (n[0] as f32, -(n[1] as f32));
+                        ..Stroke::default()
+                            .with_width(0.8)
+                            .with_color(Color { a: 0.5, ..c.ink })
+                    },
+                );
+                for p in &d.pis {
                     frame.stroke(
-                        &Path::line(
-                            Point::new(at.x - nx * len, at.y - ny * len),
-                            Point::new(at.x + nx * len, at.y + ny * len),
-                        ),
-                        Stroke::default().with_width(if major { 1.4 } else { 1.0 }).with_color(c.ink),
+                        &Path::circle(screen(*p), 3.0),
+                        Stroke::default()
+                            .with_width(1.0)
+                            .with_color(Color { a: 0.7, ..c.ink }),
                     );
-                    if major && word_gap >= 60.0 {
-                        let words = km_text(*km, 0);
-                        frame.with_save(|f| {
-                            f.translate(iced::Vector::new(at.x + nx * 13.0, at.y + ny * 13.0));
-                            // Along the normal, read left to right.
-                            let mut angle = ny.atan2(nx);
-                            if !(-std::f32::consts::FRAC_PI_2..=std::f32::consts::FRAC_PI_2).contains(&angle) {
-                                angle += std::f32::consts::PI;
-                                f.rotate(angle);
-                                f.fill_text(canvas::Text {
-                                    content: words.clone(),
-                                    position: Point::new(0.0, 0.0),
-                                    color: c.ink,
-                                    size: Pixels(11.0),
-                                    align_x: iced::widget::text::Alignment::Right,
-                                    align_y: iced::alignment::Vertical::Center,
-                                    ..canvas::Text::default()
-                                });
-                            } else {
-                                f.rotate(angle);
-                                f.fill_text(canvas::Text {
-                                    content: words.clone(),
-                                    position: Point::new(0.0, 0.0),
-                                    color: c.ink,
-                                    size: Pixels(11.0),
-                                    align_y: iced::alignment::Vertical::Center,
-                                    ..canvas::Text::default()
-                                });
-                            }
-                        });
-                    }
                 }
-                if word_gap >= 30.0 {
-                    for (name, p) in &d.marks {
-                        let at = screen(*p);
-                        frame.fill(&Path::circle(at, 3.2), c.accent);
-                        frame.fill_text(canvas::Text {
-                            content: (*name).to_owned(),
-                            position: Point::new(at.x + 5.0, at.y - 12.0),
-                            color: c.accent,
-                            size: Pixels(10.0),
-                            ..canvas::Text::default()
-                        });
-                    }
+            }
+            let width = if d.parallel { 1.2 } else { 2.6 };
+            for (kind, pts) in &d.pieces {
+                let color = match kind {
+                    Kind::Tangent => c.ink,
+                    Kind::Spiral => c.warning,
+                    Kind::Arc => c.accent,
+                };
+                let color = if d.parallel {
+                    Color { a: 0.75, ..color }
+                } else {
+                    color
+                };
+                frame.stroke(
+                    &line(pts),
+                    Stroke::default().with_width(width).with_color(color),
+                );
+            }
+            let tick_gap = 20.0 * px;
+            let word_gap = 100.0 * px;
+            for (_, p, n, km) in &d.ticks {
+                let major = (km / 100.0).round() * 100.0 == *km;
+                if !major && tick_gap < 6.0 {
+                    continue;
                 }
-                if let Some((p, dir)) = d.start {
-                    // Left of the start, away from the km words on the right.
-                    let at = screen(p);
-                    let (lx, ly) = (-(dir.sin() as f32), -(dir.cos() as f32));
+                if major && word_gap < 6.0 {
+                    continue;
+                }
+                let len = if major { 9.0 } else { 5.0 };
+                let at = screen(*p);
+                // The normal on screen: y grows down.
+                let (nx, ny) = (n[0] as f32, -(n[1] as f32));
+                frame.stroke(
+                    &Path::line(
+                        Point::new(at.x - nx * len, at.y - ny * len),
+                        Point::new(at.x + nx * len, at.y + ny * len),
+                    ),
+                    Stroke::default()
+                        .with_width(if major { 1.4 } else { 1.0 })
+                        .with_color(c.ink),
+                );
+                if major && word_gap >= 60.0 {
+                    let words = km_text(*km, 0);
+                    frame.with_save(|f| {
+                        f.translate(iced::Vector::new(at.x + nx * 13.0, at.y + ny * 13.0));
+                        // Along the normal, read left to right.
+                        let mut angle = ny.atan2(nx);
+                        if !(-std::f32::consts::FRAC_PI_2..=std::f32::consts::FRAC_PI_2)
+                            .contains(&angle)
+                        {
+                            angle += std::f32::consts::PI;
+                            f.rotate(angle);
+                            f.fill_text(canvas::Text {
+                                content: words.clone(),
+                                position: Point::new(0.0, 0.0),
+                                color: c.ink,
+                                size: Pixels(11.0),
+                                align_x: iced::widget::text::Alignment::Right,
+                                align_y: iced::alignment::Vertical::Center,
+                                ..canvas::Text::default()
+                            });
+                        } else {
+                            f.rotate(angle);
+                            f.fill_text(canvas::Text {
+                                content: words.clone(),
+                                position: Point::new(0.0, 0.0),
+                                color: c.ink,
+                                size: Pixels(11.0),
+                                align_y: iced::alignment::Vertical::Center,
+                                ..canvas::Text::default()
+                            });
+                        }
+                    });
+                }
+            }
+            if word_gap >= 30.0 {
+                for (name, p) in &d.marks {
+                    let at = screen(*p);
+                    frame.fill(&Path::circle(at, 3.2), c.accent);
                     frame.fill_text(canvas::Text {
-                        content: d.name.clone(),
-                        position: Point::new(at.x + lx * 16.0, at.y + ly * 16.0 - 6.0),
-                        color: c.ink,
-                        size: Pixels(12.0),
+                        content: (*name).to_owned(),
+                        position: Point::new(at.x + 5.0, at.y - 12.0),
+                        color: c.accent,
+                        size: Pixels(10.0),
                         ..canvas::Text::default()
                     });
                 }
             }
+            if let Some((p, dir)) = d.start {
+                // Left of the start, away from the km words on the right.
+                let at = screen(p);
+                let (lx, ly) = (-(dir.sin() as f32), -(dir.cos() as f32));
+                frame.fill_text(canvas::Text {
+                    content: d.name.clone(),
+                    position: Point::new(at.x + lx * 16.0, at.y + ly * 16.0 - 6.0),
+                    color: c.ink,
+                    size: Pixels(12.0),
+                    ..canvas::Text::default()
+                });
+            }
+        }
     }
 
     fn key(&self, bounds: Rectangle) -> u64 {
         use std::hash::{Hash, Hasher};
         let mut h = std::collections::hash_map::DefaultHasher::new();
         self.doc.revision().hash(&mut h);
-        for p in [Vec2::new(0.0, 0.0), Vec2::new(1.0, 0.0), Vec2::new(0.0, 1.0)] {
+        for p in [
+            Vec2::new(0.0, 0.0),
+            Vec2::new(1.0, 0.0),
+            Vec2::new(0.0, 1.0),
+        ] {
             for c in self.camera.world_to_screen(p) {
                 c.to_bits().hash(&mut h);
             }
         }
-        for c in [bounds.width, bounds.height, self.colors.ink.r, self.colors.accent.g, self.colors.warning.b] {
+        for c in [
+            bounds.width,
+            bounds.height,
+            self.colors.ink.r,
+            self.colors.accent.g,
+            self.colors.warning.b,
+        ] {
             c.to_bits().hash(&mut h);
         }
         h.finish()
@@ -293,7 +327,12 @@ impl canvas::Program<Message> for Layer<'_> {
         _cursor: mouse::Cursor,
     ) -> Vec<canvas::Geometry> {
         let revision = self.doc.revision();
-        if state.built.borrow().as_ref().is_none_or(|(r, _)| *r != revision) {
+        if state
+            .built
+            .borrow()
+            .as_ref()
+            .is_none_or(|(r, _)| *r != revision)
+        {
             let all = made_alignments(self.doc)
                 .into_iter()
                 .filter_map(|(d, b)| b.ok().map(|b| drawn(&d, &b)))
@@ -307,13 +346,19 @@ impl canvas::Program<Message> for Layer<'_> {
         };
         let c = self.colors;
         if let Some(slot) = &self.gpu {
-            crate::gpu_frame::publish(slot, key, self.camera, bounds.size(), |f| self.paint(f, all, c));
+            crate::gpu_frame::publish(slot, key, self.camera, bounds.size(), |f| {
+                self.paint(f, all, c)
+            });
             return Vec::new();
         }
         if state.key.get() != key {
             state.cache.clear();
             state.key.set(key);
         }
-        vec![state.cache.draw(renderer, bounds.size(), |frame| self.paint(frame, all, c))]
+        vec![
+            state
+                .cache
+                .draw(renderer, bounds.size(), |frame| self.paint(frame, all, c)),
+        ]
     }
 }

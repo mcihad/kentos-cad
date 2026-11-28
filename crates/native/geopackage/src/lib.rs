@@ -9,9 +9,9 @@
 //! are not touched. SQLite is compiled in (rusqlite's `bundled`).
 
 pub mod constraints;
-pub mod indexes;
 pub mod fgb;
 pub mod foreign;
+pub mod indexes;
 pub mod made;
 pub mod relations;
 pub mod schema;
@@ -291,10 +291,18 @@ pub struct ScanOrder {
 
 /// The condition that keeps the rows after `(value, key)` in an order by `column` (NULLs last, keys rising), and its
 /// values: the keyset of the next part.
-pub fn keyset(column: &str, key: &str, descending: bool, after: &Option<(Value, i64)>) -> (String, Vec<Value>) {
+pub fn keyset(
+    column: &str,
+    key: &str,
+    descending: bool,
+    after: &Option<(Value, i64)>,
+) -> (String, Vec<Value>) {
     match after {
         None => (String::new(), Vec::new()),
-        Some((Value::Null, k)) => (format!("({column} IS NULL AND {key} > ?)"), vec![Value::Integer(*k)]),
+        Some((Value::Null, k)) => (
+            format!("({column} IS NULL AND {key} > ?)"),
+            vec![Value::Integer(*k)],
+        ),
         Some((v, k)) => {
             let past = if descending { "<" } else { ">" };
             (
@@ -708,10 +716,9 @@ impl GeoPackage {
         let ordered = match &s.order {
             None => None,
             Some(o) => {
-                let at = columns
-                    .iter()
-                    .position(|&i| i == o.column)
-                    .ok_or_else(|| Error(format!("{}. sütun sıralanıyor ama okunmuyor", o.column)))?;
+                let at = columns.iter().position(|&i| i == o.column).ok_or_else(|| {
+                    Error(format!("{}. sütun sıralanıyor ama okunmuyor", o.column))
+                })?;
                 Some((at, quote(&layer.columns[o.column].name), o.descending))
             }
         };
@@ -846,11 +853,7 @@ impl GeoPackage {
 
     /// Every row's fid and its lasting id (none when it has none), in fid order, handed one at a time: a table's ids
     /// walked without holding them all (docs/adr/0597).
-    pub fn each_uid(
-        &self,
-        layer: &Layer,
-        mut f: impl FnMut(i64, Option<&str>),
-    ) -> Result<()> {
+    pub fn each_uid(&self, layer: &Layer, mut f: impl FnMut(i64, Option<&str>)) -> Result<()> {
         let (fid, table) = (quote(&layer.fid), quote(&layer.name));
         let ids = self.has_uids()?;
         let mut st = self.conn.prepare(&if ids {
@@ -962,7 +965,14 @@ impl GeoPackage {
                 )?;
                 tx.execute("DELETE FROM gpkg_metadata WHERE id = ?1", [id])?;
             }
-            add_metadata_in(&tx, table, note_standard, "application/json", note, timestamp)?;
+            add_metadata_in(
+                &tx,
+                table,
+                note_standard,
+                "application/json",
+                note,
+                timestamp,
+            )?;
             if has_uids > 0 {
                 left += tx.execute("DELETE FROM kentos_uids WHERE table_name = ?1", [table])?;
             }
@@ -1023,7 +1033,6 @@ impl GeoPackage {
             tx: self.conn.transaction()?,
         })
     }
-
 
     /// Edits a table of the file in place, in one transaction (docs/adr/0503): its missing columns added (as
     /// declared), rows updated by fid (their geometry, when the table has a column for it, and every value in the
@@ -1101,219 +1110,218 @@ pub fn left_to_default(columns: &[Column], values: &[Value]) -> Vec<usize> {
 }
 
 fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Result<Written> {
-        let t = quote(&layer.name);
-        for c in &edits.add_columns {
-            let decl = if c.decl.trim().is_empty() {
-                c.kind.decl()
-            } else {
-                c.decl.clone()
-            };
-            tx.execute_batch(&format!(
-                "ALTER TABLE {t} ADD COLUMN {} {decl};",
-                quote(&c.name)
-            ))?;
-        }
-        let mut cols: Vec<String> = layer.columns.iter().map(|c| quote(&c.name)).collect();
-        cols.extend(edits.add_columns.iter().map(|c| quote(&c.name)));
-        let geom = layer.geometry.as_ref().map(|g| quote(&g.name));
-        let srs = layer.srs_id.unwrap_or(-1);
-        let width = cols.len();
-        let values = |row: &NewRow| -> Result<Vec<Value>> {
-            if row.values.len() != width {
-                return Err(Error(format!(
-                    "“{}” tablosunun satırında {} değer var, {width} sütun bekleniyor",
-                    layer.name,
-                    row.values.len()
-                )));
-            }
-            let mut v = Vec::with_capacity(width + 2);
-            if geom.is_some() {
-                v.push(
-                    row.geometry
-                        .as_ref()
-                        .map_or(Value::Null, |g| Value::Blob(write_blob(srs, g))),
-                );
-            }
-            v.extend(row.values.iter().cloned());
-            Ok(v)
+    let t = quote(&layer.name);
+    for c in &edits.add_columns {
+        let decl = if c.decl.trim().is_empty() {
+            c.kind.decl()
+        } else {
+            c.decl.clone()
         };
-        let mut names: Vec<String> = Vec::new();
-        if let Some(g) = &geom {
-            names.push(g.clone());
+        tx.execute_batch(&format!(
+            "ALTER TABLE {t} ADD COLUMN {} {decl};",
+            quote(&c.name)
+        ))?;
+    }
+    let mut cols: Vec<String> = layer.columns.iter().map(|c| quote(&c.name)).collect();
+    cols.extend(edits.add_columns.iter().map(|c| quote(&c.name)));
+    let geom = layer.geometry.as_ref().map(|g| quote(&g.name));
+    let srs = layer.srs_id.unwrap_or(-1);
+    let width = cols.len();
+    let values = |row: &NewRow| -> Result<Vec<Value>> {
+        if row.values.len() != width {
+            return Err(Error(format!(
+                "“{}” tablosunun satırında {} değer var, {width} sütun bekleniyor",
+                layer.name,
+                row.values.len()
+            )));
         }
-        names.extend(cols.iter().cloned());
-        // A column the table makes itself is not set (SQLite refuses a generated column's value); one worked out from
-        // the row is read again after the update, so the object gets what the table made (docs/adr/0754).
-        let mut writes: Vec<bool> = vec![true; names.len()];
-        let first = usize::from(geom.is_some());
-        for (i, c) in layer.columns.iter().enumerate() {
-            writes[first + i] = Making::of(c).written();
+        let mut v = Vec::with_capacity(width + 2);
+        if geom.is_some() {
+            v.push(
+                row.geometry
+                    .as_ref()
+                    .map_or(Value::Null, |g| Value::Blob(write_blob(srs, g))),
+            );
         }
-        let back: Vec<usize> = layer
-            .columns
+        v.extend(row.values.iter().cloned());
+        Ok(v)
+    };
+    let mut names: Vec<String> = Vec::new();
+    if let Some(g) = &geom {
+        names.push(g.clone());
+    }
+    names.extend(cols.iter().cloned());
+    // A column the table makes itself is not set (SQLite refuses a generated column's value); one worked out from
+    // the row is read again after the update, so the object gets what the table made (docs/adr/0754).
+    let mut writes: Vec<bool> = vec![true; names.len()];
+    let first = usize::from(geom.is_some());
+    for (i, c) in layer.columns.iter().enumerate() {
+        writes[first + i] = Making::of(c).written();
+    }
+    let back: Vec<usize> = layer
+        .columns
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| Making::of(c).read_back())
+        .map(|(i, _)| i)
+        .collect();
+    let mut refreshed = Vec::new();
+    if !edits.update.is_empty() {
+        let sets = names
             .iter()
-            .enumerate()
-            .filter(|(_, c)| Making::of(c).read_back())
-            .map(|(i, _)| i)
-            .collect();
-        let mut refreshed = Vec::new();
-        if !edits.update.is_empty() {
-            let sets = names
+            .zip(&writes)
+            .filter(|(_, w)| **w)
+            .map(|(n, _)| format!("{n} = ?"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let mut st = if sets.is_empty() {
+            None
+        } else {
+            Some(tx.prepare(&format!(
+                "UPDATE {t} SET {sets} WHERE {} = ?",
+                quote(&layer.fid)
+            ))?)
+        };
+        // Without a column to set an update only asks that its row is there; the statements are made once.
+        let mut there = if st.is_none() {
+            Some(tx.prepare(&format!(
+                "SELECT count(*) FROM {t} WHERE {} = ?1",
+                quote(&layer.fid)
+            ))?)
+        } else {
+            None
+        };
+        let mut read = if back.is_empty() {
+            None
+        } else {
+            let list: Vec<String> = back
                 .iter()
+                .map(|i| quote(&layer.columns[*i].name))
+                .collect();
+            Some(tx.prepare(&format!(
+                "SELECT {} FROM {t} WHERE {} = ?1",
+                list.join(", "),
+                quote(&layer.fid)
+            ))?)
+        };
+        for (fid, row) in &edits.update {
+            let mut v: Vec<Value> = values(row)?
+                .into_iter()
                 .zip(&writes)
                 .filter(|(_, w)| **w)
-                .map(|(n, _)| format!("{n} = ?"))
-                .collect::<Vec<_>>()
-                .join(", ");
-            let mut st = if sets.is_empty() {
-                None
-            } else {
-                Some(tx.prepare(&format!(
-                    "UPDATE {t} SET {sets} WHERE {} = ?",
-                    quote(&layer.fid)
-                ))?)
+                .map(|(x, _)| x)
+                .collect();
+            v.push(Value::Integer(*fid));
+            let found = match (st.as_mut(), there.as_mut()) {
+                (Some(st), _) => st.execute(rusqlite::params_from_iter(v.iter()))? == 1,
+                (None, Some(there)) => there.query_row([fid], |r| r.get::<_, i64>(0))? == 1,
+                (None, None) => false,
             };
-            // Without a column to set an update only asks that its row is there; the statements are made once.
-            let mut there = if st.is_none() {
-                Some(tx.prepare(&format!(
-                    "SELECT count(*) FROM {t} WHERE {} = ?1",
-                    quote(&layer.fid)
-                ))?)
-            } else {
-                None
-            };
-            let mut read = if back.is_empty() {
-                None
-            } else {
-                let list: Vec<String> = back
-                    .iter()
-                    .map(|i| quote(&layer.columns[*i].name))
-                    .collect();
-                Some(tx.prepare(&format!(
-                    "SELECT {} FROM {t} WHERE {} = ?1",
-                    list.join(", "),
-                    quote(&layer.fid)
-                ))?)
-            };
-            for (fid, row) in &edits.update {
-                let mut v: Vec<Value> = values(row)?
-                    .into_iter()
-                    .zip(&writes)
-                    .filter(|(_, w)| **w)
-                    .map(|(x, _)| x)
-                    .collect();
-                v.push(Value::Integer(*fid));
-                let found = match (st.as_mut(), there.as_mut()) {
-                    (Some(st), _) => st.execute(rusqlite::params_from_iter(v.iter()))? == 1,
-                    (None, Some(there)) => there.query_row([fid], |r| r.get::<_, i64>(0))? == 1,
-                    (None, None) => false,
-                };
-                if !found {
-                    return Err(Error(format!(
-                        "“{}” tablosunda {fid} numaralı satır yok",
-                        layer.name
-                    )));
-                }
-                if let Some(read) = read.as_mut() {
-                    let mut got = Vec::with_capacity(back.len());
-                    read.query_row([fid], |r| {
-                        for (k, i) in back.iter().enumerate() {
-                            got.push((*i, Value::of(r.get_ref(k)?)));
-                        }
-                        Ok(())
-                    })?;
-                    refreshed.push((*fid, got));
-                }
+            if !found {
+                return Err(Error(format!(
+                    "“{}” tablosunda {fid} numaralı satır yok",
+                    layer.name
+                )));
             }
-        }
-        let mut inserted = Vec::with_capacity(edits.insert.len());
-        // A column left to its default is not named: SQLite takes the default for a column an insert leaves out. Its
-        // value is read back, so the object gets what the table gave (docs/adr/0750); a generated column is never
-        // named (docs/adr/0754).
-        for (_, row) in &edits.insert {
-            let mut v = values(row)?;
-            let left = left_to_default(&layer.columns, &row.values);
-            let named: Vec<(usize, &String)> = names
-                .iter()
-                .enumerate()
-                .filter(|(i, _)| *i < first || !left.contains(&(i - first)))
-                .collect();
-            let sql = if named.is_empty() {
-                format!("INSERT INTO {t} DEFAULT VALUES")
-            } else {
-                let marks = vec!["?"; named.len()].join(", ");
-                let list: Vec<&str> = named.iter().map(|(_, n)| n.as_str()).collect();
-                format!("INSERT INTO {t} ({}) VALUES ({marks})", list.join(", "))
-            };
-            let kept: Vec<usize> = named.iter().map(|(i, _)| *i).collect();
-            v = v
-                .into_iter()
-                .enumerate()
-                .filter(|(i, _)| kept.contains(i))
-                .map(|(_, x)| x)
-                .collect();
-            tx.prepare_cached(&sql)?
-                .execute(rusqlite::params_from_iter(v.iter()))?;
-            let fid = tx.last_insert_rowid();
-            let mut filled = Vec::with_capacity(left.len());
-            if !left.is_empty() {
-                let list: Vec<String> = left
-                    .iter()
-                    .map(|i| quote(&layer.columns[*i].name))
-                    .collect();
-                let read = format!(
-                    "SELECT {} FROM {t} WHERE {} = ?1",
-                    list.join(", "),
-                    quote(&layer.fid)
-                );
-                tx.query_row(&read, [fid], |r| {
-                    for (k, i) in left.iter().enumerate() {
-                        filled.push((*i, Value::of(r.get_ref(k)?)));
+            if let Some(read) = read.as_mut() {
+                let mut got = Vec::with_capacity(back.len());
+                read.query_row([fid], |r| {
+                    for (k, i) in back.iter().enumerate() {
+                        got.push((*i, Value::of(r.get_ref(k)?)));
                     }
                     Ok(())
                 })?;
-            }
-            inserted.push(Inserted { fid, filled });
-        }
-        if !edits.delete.is_empty() {
-            let mut st = tx.prepare(&format!("DELETE FROM {t} WHERE {} = ?", quote(&layer.fid)))?;
-            for fid in &edits.delete {
-                st.execute([fid])?;
+                refreshed.push((*fid, got));
             }
         }
-        if !edits.insert.is_empty() || !edits.delete.is_empty() {
-            tx.execute_batch(
+    }
+    let mut inserted = Vec::with_capacity(edits.insert.len());
+    // A column left to its default is not named: SQLite takes the default for a column an insert leaves out. Its
+    // value is read back, so the object gets what the table gave (docs/adr/0750); a generated column is never
+    // named (docs/adr/0754).
+    for (_, row) in &edits.insert {
+        let mut v = values(row)?;
+        let left = left_to_default(&layer.columns, &row.values);
+        let named: Vec<(usize, &String)> = names
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| *i < first || !left.contains(&(i - first)))
+            .collect();
+        let sql = if named.is_empty() {
+            format!("INSERT INTO {t} DEFAULT VALUES")
+        } else {
+            let marks = vec!["?"; named.len()].join(", ");
+            let list: Vec<&str> = named.iter().map(|(_, n)| n.as_str()).collect();
+            format!("INSERT INTO {t} ({}) VALUES ({marks})", list.join(", "))
+        };
+        let kept: Vec<usize> = named.iter().map(|(i, _)| *i).collect();
+        v = v
+            .into_iter()
+            .enumerate()
+            .filter(|(i, _)| kept.contains(i))
+            .map(|(_, x)| x)
+            .collect();
+        tx.prepare_cached(&sql)?
+            .execute(rusqlite::params_from_iter(v.iter()))?;
+        let fid = tx.last_insert_rowid();
+        let mut filled = Vec::with_capacity(left.len());
+        if !left.is_empty() {
+            let list: Vec<String> = left
+                .iter()
+                .map(|i| quote(&layer.columns[*i].name))
+                .collect();
+            let read = format!(
+                "SELECT {} FROM {t} WHERE {} = ?1",
+                list.join(", "),
+                quote(&layer.fid)
+            );
+            tx.query_row(&read, [fid], |r| {
+                for (k, i) in left.iter().enumerate() {
+                    filled.push((*i, Value::of(r.get_ref(k)?)));
+                }
+                Ok(())
+            })?;
+        }
+        inserted.push(Inserted { fid, filled });
+    }
+    if !edits.delete.is_empty() {
+        let mut st = tx.prepare(&format!("DELETE FROM {t} WHERE {} = ?", quote(&layer.fid)))?;
+        for fid in &edits.delete {
+            st.execute([fid])?;
+        }
+    }
+    if !edits.insert.is_empty() || !edits.delete.is_empty() {
+        tx.execute_batch(
                 "CREATE TABLE IF NOT EXISTS kentos_uids (table_name TEXT NOT NULL, fid INTEGER NOT NULL, uid TEXT NOT NULL,
                  PRIMARY KEY (table_name, fid));",
             )?;
-            ensure_extensions(tx)?;
-            register_uids(tx)?;
-            let mut put = tx.prepare("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
-            for (row, (uid, _)) in inserted.iter().zip(&edits.insert) {
-                put.execute(params![layer.name, row.fid, uid])?;
-            }
-            let mut gone =
-                tx.prepare("DELETE FROM kentos_uids WHERE table_name = ?1 AND fid = ?2")?;
-            for fid in &edits.delete {
-                gone.execute(params![layer.name, fid])?;
-            }
+        ensure_extensions(tx)?;
+        register_uids(tx)?;
+        let mut put = tx.prepare("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
+        for (row, (uid, _)) in inserted.iter().zip(&edits.insert) {
+            put.execute(params![layer.name, row.fid, uid])?;
         }
-        write_lineage(tx, &layer.name, &edits.lineage)?;
-        // The contents' time: what changed is said where other programs look (a table left as it is keeps its time).
-        let changed = !edits.add_columns.is_empty()
-            || !edits.update.is_empty()
-            || !edits.insert.is_empty()
-            || !edits.delete.is_empty();
-        if changed {
-            tx.execute(
+        let mut gone = tx.prepare("DELETE FROM kentos_uids WHERE table_name = ?1 AND fid = ?2")?;
+        for fid in &edits.delete {
+            gone.execute(params![layer.name, fid])?;
+        }
+    }
+    write_lineage(tx, &layer.name, &edits.lineage)?;
+    // The contents' time: what changed is said where other programs look (a table left as it is keeps its time).
+    let changed = !edits.add_columns.is_empty()
+        || !edits.update.is_empty()
+        || !edits.insert.is_empty()
+        || !edits.delete.is_empty();
+    if changed {
+        tx.execute(
                 "UPDATE gpkg_contents SET last_change = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE table_name = ?1",
                 [&layer.name],
             )?;
-        }
-        Ok(Written {
-            inserted,
-            refreshed,
-        })
+    }
+    Ok(Written {
+        inserted,
+        refreshed,
+    })
 }
 
 /// The written rows' parents (docs/adr/0598 §3): each row's `kentos_lineage` rows replaced by the drawing's, the table
@@ -1346,8 +1354,10 @@ fn write_lineage(
             [LINEAGE_EXTENSION],
         )?;
     }
-    let mut gone = tx.prepare_cached("DELETE FROM kentos_lineage WHERE table_name = ?1 AND child = ?2")?;
-    let mut put = tx.prepare_cached("INSERT OR IGNORE INTO kentos_lineage VALUES (?1, ?2, ?3, ?4, ?5)")?;
+    let mut gone =
+        tx.prepare_cached("DELETE FROM kentos_lineage WHERE table_name = ?1 AND child = ?2")?;
+    let mut put =
+        tx.prepare_cached("INSERT OR IGNORE INTO kentos_lineage VALUES (?1, ?2, ?3, ?4, ?5)")?;
     for (child, parents) in rows {
         gone.execute(params![table, child])?;
         for p in parents {
@@ -1373,7 +1383,9 @@ impl GeoPackage {
             "SELECT child, parent, operation, step FROM kentos_lineage WHERE table_name = ?1 ORDER BY 1, 2, 3, 4",
         )?;
         let rows = st
-            .query_map([table], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))?
+            .query_map([table], |r| {
+                Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?))
+            })?
             .collect::<std::result::Result<Vec<_>, _>>()?;
         Ok(rows)
     }
@@ -1786,9 +1798,8 @@ pub fn drop_table_in(conn: &Connection, name: &str) -> Result<()> {
     }
     if has("gpkg_metadata_reference")? && has("gpkg_metadata")? {
         let docs: Vec<i64> = {
-            let mut st = conn.prepare(
-                "SELECT md_file_id FROM gpkg_metadata_reference WHERE table_name = ?1",
-            )?;
+            let mut st = conn
+                .prepare("SELECT md_file_id FROM gpkg_metadata_reference WHERE table_name = ?1")?;
             st.query_map([&exact], |r| r.get(0))?
                 .collect::<rusqlite::Result<_>>()?
         };
@@ -1821,15 +1832,15 @@ pub fn drop_table_in(conn: &Connection, name: &str) -> Result<()> {
             [&exact],
         )?;
     }
-    conn.execute("DELETE FROM gpkg_extensions WHERE table_name = ?1", [&exact])?;
+    conn.execute(
+        "DELETE FROM gpkg_extensions WHERE table_name = ?1",
+        [&exact],
+    )?;
     conn.execute(
         "DELETE FROM gpkg_geometry_columns WHERE table_name = ?1",
         [&exact],
     )?;
-    conn.execute(
-        "DELETE FROM gpkg_contents WHERE table_name = ?1",
-        [&exact],
-    )?;
+    conn.execute("DELETE FROM gpkg_contents WHERE table_name = ?1", [&exact])?;
     conn.execute_batch(&format!("DROP TABLE {};", quote(&exact)))?;
     Ok(())
 }
@@ -1862,7 +1873,10 @@ pub fn refresh_extent_in(conn: &Connection, table: &str, column: &str) -> Result
         |x| x.get(0),
     )?;
     let sql = if indexed > 0 {
-        format!("SELECT min(minx), min(miny), max(maxx), max(maxy) FROM {}", quote(&r))
+        format!(
+            "SELECT min(minx), min(miny), max(maxx), max(maxy) FROM {}",
+            quote(&r)
+        )
     } else {
         let c = quote(column);
         format!(
@@ -1870,7 +1884,9 @@ pub fn refresh_extent_in(conn: &Connection, table: &str, column: &str) -> Result
             quote(table)
         )
     };
-    let b: [Option<f64>; 4] = conn.query_row(&sql, [], |x| Ok([x.get(0)?, x.get(1)?, x.get(2)?, x.get(3)?]))?;
+    let b: [Option<f64>; 4] = conn.query_row(&sql, [], |x| {
+        Ok([x.get(0)?, x.get(1)?, x.get(2)?, x.get(3)?])
+    })?;
     conn.execute(
         "UPDATE gpkg_contents SET min_x = ?2, min_y = ?3, max_x = ?4, max_y = ?5,
            last_change = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE table_name = ?1",
@@ -2018,7 +2034,8 @@ fn append_in(
         )?;
         ensure_extensions(conn)?;
         register_uids(conn)?;
-        let mut st = conn.prepare_cached("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
+        let mut st =
+            conn.prepare_cached("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
         for (fid, uid) in fids.iter().zip(uids) {
             st.execute(params![def.name, fid, uid])?;
         }

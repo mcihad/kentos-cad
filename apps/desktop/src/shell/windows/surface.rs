@@ -80,7 +80,11 @@ pub(crate) trait OwnWindow: Sync {
         None
     }
     /// The message a trace's control sends in it while it is apart; none when it has no such control.
-    fn trace_control(&self, _app: &App, _control: Control<'_>) -> Option<Result<Option<Message>, String>> {
+    fn trace_control(
+        &self,
+        _app: &App,
+        _control: Control<'_>,
+    ) -> Option<Result<Option<Message>, String>> {
         None
     }
 }
@@ -91,7 +95,11 @@ fn apart_message(surface: Surface, apart: bool) -> Message {
 
 /// A surface's dialog with the header button that moves it (DESIGN.md §7.9): “Ana pencereye al” in its own window,
 /// “Ayrı pencerede aç” over the drawing.
-pub(crate) fn apart_button<'a>(frame: Frame<'a, Message>, surface: Surface, apart: bool) -> Frame<'a, Message> {
+pub(crate) fn apart_button<'a>(
+    frame: Frame<'a, Message>,
+    surface: Surface,
+    apart: bool,
+) -> Frame<'a, Message> {
     let spec = surface.spec();
     if apart {
         frame.header_button(
@@ -110,9 +118,18 @@ pub(crate) fn apart_button<'a>(frame: Frame<'a, Message>, surface: Surface, apar
 
 /// A surface's dialog where it is: the whole of its own window, or over the drawing, a click beside it sending
 /// `dismiss`; the button that moves it in its header either way.
-pub(crate) fn placed<'a>(frame: Frame<'a, Message>, surface: Surface, apart: bool, dismiss: Message) -> Element<'a, Message> {
+pub(crate) fn placed<'a>(
+    frame: Frame<'a, Message>,
+    surface: Surface,
+    apart: bool,
+    dismiss: Message,
+) -> Element<'a, Message> {
     let frame = apart_button(frame, surface, apart);
-    if apart { frame.window() } else { frame.modal(dismiss) }
+    if apart {
+        frame.window()
+    } else {
+        frame.modal(dismiss)
+    }
 }
 
 impl App {
@@ -171,12 +188,21 @@ impl App {
 
     /// The open surface apart that answers a trace, and its title (traces/answers.rs).
     pub(crate) fn apart_trace_title(&self) -> Option<String> {
-        Surface::ALL.into_iter().filter(|&s| self.surface_wanted(s)).find_map(|s| s.spec().trace_title(self))
+        Surface::ALL
+            .into_iter()
+            .filter(|&s| self.surface_wanted(s))
+            .find_map(|s| s.spec().trace_title(self))
     }
 
     /// A trace's control in the open surface apart that answers it.
-    pub(crate) fn apart_trace_control(&self, control: Control<'_>) -> Option<Result<Option<Message>, String>> {
-        Surface::ALL.into_iter().filter(|&s| self.surface_wanted(s)).find_map(|s| s.spec().trace_control(self, control))
+    pub(crate) fn apart_trace_control(
+        &self,
+        control: Control<'_>,
+    ) -> Option<Result<Option<Message>, String>> {
+        Surface::ALL
+            .into_iter()
+            .filter(|&s| self.surface_wanted(s))
+            .find_map(|s| s.spec().trace_control(self, control))
     }
 
     /// A trace's press of the button that moves a window: “Ayrı pencerede aç” in a surface's dialog over the drawing,

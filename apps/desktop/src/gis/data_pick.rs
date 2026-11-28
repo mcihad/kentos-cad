@@ -58,7 +58,10 @@ pub(crate) fn keys_in(
     let DataRegion::Box { a, b, crossing } = region else {
         return Ok(Vec::new());
     };
-    let (Some(data), true) = (node.data.as_ref(), node.data.as_ref().is_some_and(|d| d.geometry.is_some())) else {
+    let (Some(data), true) = (
+        node.data.as_ref(),
+        node.data.as_ref().is_some_and(|d| d.geometry.is_some()),
+    ) else {
         return Ok(Vec::new());
     };
     let srid = data.geometry.as_ref().and_then(|g| g.srid);
@@ -68,7 +71,9 @@ pub(crate) fn keys_in(
     let system = TableSystem::of(settings, srid)?;
     let around = [a.x.min(b.x), a.y.min(b.y), a.x.max(b.x), a.y.max(b.y)];
     let bbox = match &system {
-        Some(s) => s.to_table(around).ok_or("çerçeve tablonun sistemine çevrilemedi")?,
+        Some(s) => s
+            .to_table(around)
+            .ok_or("çerçeve tablonun sistemine çevrilemedi")?,
         None => around,
     };
     let request = Request {
@@ -86,14 +91,18 @@ pub(crate) fn keys_in(
             for f in part {
                 // A window keeps a row wholly inside it: its geometry's box in the project's system.
                 let inside = crossing
-                    || f
-                        .shape()
+                    || f.shape()
                         .and_then(|g| match &system {
                             Some(s) => s.moved(g),
                             None => Some(g.clone()),
                         })
                         .and_then(|g| g.bounds())
-                        .is_some_and(|r| r[0] >= around[0] && r[1] >= around[1] && r[2] <= around[2] && r[3] <= around[3]);
+                        .is_some_and(|r| {
+                            r[0] >= around[0]
+                                && r[1] >= around[1]
+                                && r[2] <= around[2]
+                                && r[3] <= around[3]
+                        });
                 if inside {
                     keys.push(f.fid);
                 }
@@ -126,7 +135,11 @@ impl App {
             .filter(|n| n.data.is_some())
             .collect();
         // The layers being edited give their rows; else the active layer, a data layer, selects in its table.
-        let edited: Vec<LayerNode> = shown.iter().filter(|n| model.editing(&n.id)).map(|n| (*n).clone()).collect();
+        let edited: Vec<LayerNode> = shown
+            .iter()
+            .filter(|n| model.editing(&n.id))
+            .map(|n| (*n).clone())
+            .collect();
         let active = model.layers().active().to_owned();
         let table: Option<LayerNode> = shown
             .iter()
@@ -144,22 +157,27 @@ impl App {
                 let mut failed = Vec::new();
                 for region in wanted {
                     for node in &edited {
-                        let rows = keys_in(node, &settings, region, LAYER_SESSION_KEYS_MOST).and_then(|keys| {
-                            if keys.is_empty() {
-                                Ok(Vec::new())
-                            } else {
-                                data_write::rows_to_take(node, &settings, &keys, &|| false)
-                            }
-                        });
+                        let rows = keys_in(node, &settings, region, LAYER_SESSION_KEYS_MOST)
+                            .and_then(|keys| {
+                                if keys.is_empty() {
+                                    Ok(Vec::new())
+                                } else {
+                                    data_write::rows_to_take(node, &settings, &keys, &|| false)
+                                }
+                            });
                         match rows {
-                            Ok(rows) if !rows.is_empty() => got.push(Got::Rows(node.id.clone(), rows)),
+                            Ok(rows) if !rows.is_empty() => {
+                                got.push(Got::Rows(node.id.clone(), rows))
+                            }
                             Ok(_) => {}
                             Err(why) => failed.push(why),
                         }
                     }
                     if let Some(node) = &table {
                         match keys_in(node, &settings, region, LAYER_SESSION_KEYS_MOST) {
-                            Ok(keys) if !keys.is_empty() => got.push(Got::Keys(node.id.clone(), keys)),
+                            Ok(keys) if !keys.is_empty() => {
+                                got.push(Got::Keys(node.id.clone(), keys))
+                            }
                             Ok(_) => {}
                             Err(why) => failed.push(why),
                         }
@@ -187,8 +205,11 @@ impl App {
                     };
                     match doc.model.take_data_rows(&layer, rows) {
                         Ok(uids) => {
-                            let slots: Vec<kentos_domain::Slot> =
-                                uids.into_iter().flatten().filter_map(|u| doc.model.slot_of(u)).collect();
+                            let slots: Vec<kentos_domain::Slot> = uids
+                                .into_iter()
+                                .flatten()
+                                .filter_map(|u| doc.model.slot_of(u))
+                                .collect();
                             self.selection.add(slots);
                         }
                         Err(refusal) => self.warn(refusal.0),

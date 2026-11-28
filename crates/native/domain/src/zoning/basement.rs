@@ -84,7 +84,11 @@ pub(super) fn basement_levels(arch: &ArchSettings) -> Vec<String> {
     let project = levels
         .iter()
         .find(|l| kentos_contracts::is_ground_name(&l.name))
-        .or_else(|| levels.iter().min_by(|a, b| a.elevation.abs().total_cmp(&b.elevation.abs())));
+        .or_else(|| {
+            levels
+                .iter()
+                .min_by(|a, b| a.elevation.abs().total_cmp(&b.elevation.abs()))
+        });
     levels
         .iter()
         .filter(|l| {
@@ -123,9 +127,14 @@ pub(super) fn apply(
     let mut apart = vec![0.0; n];
     let mut bent_of: Vec<Option<BasementBent>> = vec![None; n];
     let mut out = Vec::new();
-    let on = |i: usize, levels: &[String]| rooms[i].level.as_ref().is_some_and(|l| levels.contains(l));
+    let on =
+        |i: usize, levels: &[String]| rooms[i].level.as_ref().is_some_and(|l| levels.contains(l));
     let common = |i: usize| {
-        rooms[i].unit.as_deref().and_then(|u| program.unit(u)).is_some_and(|g| g.kind == UnitKind::Common)
+        rooms[i]
+            .unit
+            .as_deref()
+            .and_then(|u| program.unit(u))
+            .is_some_and(|g| g.kind == UnitKind::Common)
     };
     let open = |i: usize| !rooms[i].void && rooms[i].count == EmsalCount::Exempt && within[i] > 0.0;
     let reads = |bent: BasementBent, i: usize| match bent {
@@ -135,11 +144,15 @@ pub(super) fn apply(
         Children => on(i, basement) && rooms[i].children && common(i),
         Parking => on(i, basement) && rooms[i].parking,
     };
-    let asks = [Masjid, Parking].into_iter().any(|b| (0..n).any(|i| open(i) && !reads(Buried, i) && reads(b, i)));
+    let asks = [Masjid, Parking]
+        .into_iter()
+        .any(|b| (0..n).any(|i| open(i) && !reads(Buried, i) && reads(b, i)));
     let needs = if asks { needs() } else { Needs::default() };
     let mut buried_parking = 0.0;
     for bent in [Buried, Shelter, Masjid, Children, Parking] {
-        let members: Vec<usize> = (0..n).filter(|&i| bent_of[i].is_none() && open(i) && reads(bent, i)).collect();
+        let members: Vec<usize> = (0..n)
+            .filter(|&i| bent_of[i].is_none() && open(i) && reads(bent, i))
+            .collect();
         if members.is_empty() {
             continue;
         }
@@ -159,7 +172,11 @@ pub(super) fn apply(
             apart[i] = within[i] * moved / area;
         }
         if bent == Buried {
-            buried_parking = members.iter().filter(|&&i| rooms[i].parking).map(|&i| within[i]).sum();
+            buried_parking = members
+                .iter()
+                .filter(|&&i| rooms[i].parking)
+                .map(|&i| within[i])
+                .sum();
         }
         out.push(BasementApart {
             bent,

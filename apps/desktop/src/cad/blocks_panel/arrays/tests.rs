@@ -549,13 +549,28 @@ fn actual_grid_search_review_row_column_keep_and_apply_reuses_the_native_job() {
     assert_eq!(model.to_snapshot_v2(), after);
 }
 
-
 fn app_with_polar_source() -> App {
-    let raw: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../fixtures/commands/v1/cad.arrays.find.json"))).unwrap();
-    let case=raw["cases"].as_array().unwrap().iter().find(|c|c["name"].as_str().unwrap().starts_with("kutupsal: iki eksik")).unwrap();
-    let model=Model::from_snapshot(DocumentSnapshotV1::from_json(&case["setup"].to_string()).unwrap()).unwrap();
-    let mut app=crate::files_testing::app_with_drawing();
-    app.document=Some(crate::document::Document::from_v2(model.to_snapshot_v2(),None).unwrap());
+    let raw: Value = serde_json::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/commands/v1/cad.arrays.find.json"
+    )))
+    .unwrap();
+    let case = raw["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .unwrap()
+                .starts_with("kutupsal: iki eksik")
+        })
+        .unwrap();
+    let model =
+        Model::from_snapshot(DocumentSnapshotV1::from_json(&case["setup"].to_string()).unwrap())
+            .unwrap();
+    let mut app = crate::files_testing::app_with_drawing();
+    app.document = Some(crate::document::Document::from_v2(model.to_snapshot_v2(), None).unwrap());
     crate::files_testing::make_cad(&mut app);
     app.selection.set([Slot(1)]);
     app
@@ -563,102 +578,241 @@ fn app_with_polar_source() -> App {
 
 #[test]
 fn a_polar_candidate_reviews_the_circle_and_explicit_keep_then_commits_one_undo() {
-    let mut app=app_with_polar_source();
-    let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let mut app = app_with_polar_source();
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     app.open_array_find();
-    let message=app.array_find_control(Control::Pick("Düzen türü","Kutupsal (tam çember)")).unwrap().unwrap();
-    let _=app.update(message);
+    let message = app
+        .array_find_control(Control::Pick("Düzen türü", "Kutupsal (tam çember)"))
+        .unwrap()
+        .unwrap();
+    let _ = app.update(message);
     complete_search(&mut app);
-    let output=app.blocks_panel.arrays.as_ref().unwrap().output.as_ref().unwrap();
-    assert_eq!(output.matches.len(),1);
-    assert_eq!((output.matches[0].present,output.matches[0].missing),(6,2));
-    let _=app.array_find_event(Event::Review(0));complete_review(&mut app);
-    let w=app.blocks_panel.arrays.as_ref().unwrap();let r=w.review.as_ref().unwrap();
-    assert!(matches!(r.input.layout,ArrayLayout::Polar {count:8,fill:360.,rotate:false,..}));
-    assert_eq!(r.place,3.);
-    assert_eq!(r.choices.len(),1);
-    assert!(layout_text(&r.input.layout,&app.format()).contains("Merkez"));
-    assert!(place_schema(&r.input.layout,&r.input.items).contains("saat yönünün tersine"));
-    let _=app.array_find_event(Event::KeepOptions);
-    let _=app.array_find_event(Event::Assign);complete_review(&mut app);
-    let plan=app.blocks_panel.arrays.as_ref().unwrap().review.as_ref().unwrap().plan.as_ref().unwrap();
-    assert_eq!((plan.missing,plan.kept),(1,1));
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
-    let _=app.array_find_event(Event::Apply);
-    let deadline=std::time::Instant::now()+std::time::Duration::from_secs(5);
-    while std::time::Instant::now()<deadline {
-        let _=app.array_find_event(Event::Tick);if app.blocks_panel.arrays.is_none(){break;}
+    let output = app
+        .blocks_panel
+        .arrays
+        .as_ref()
+        .unwrap()
+        .output
+        .as_ref()
+        .unwrap();
+    assert_eq!(output.matches.len(), 1);
+    assert_eq!(
+        (output.matches[0].present, output.matches[0].missing),
+        (6, 2)
+    );
+    let _ = app.array_find_event(Event::Review(0));
+    complete_review(&mut app);
+    let w = app.blocks_panel.arrays.as_ref().unwrap();
+    let r = w.review.as_ref().unwrap();
+    assert!(matches!(
+        r.input.layout,
+        ArrayLayout::Polar {
+            count: 8,
+            fill: 360.,
+            rotate: false,
+            ..
+        }
+    ));
+    assert_eq!(r.place, 3.);
+    assert_eq!(r.choices.len(), 1);
+    assert!(layout_text(&r.input.layout, &app.format()).contains("Merkez"));
+    assert!(place_schema(&r.input.layout, &r.input.items).contains("saat yönünün tersine"));
+    let _ = app.array_find_event(Event::KeepOptions);
+    let _ = app.array_find_event(Event::Assign);
+    complete_review(&mut app);
+    let plan = app
+        .blocks_panel
+        .arrays
+        .as_ref()
+        .unwrap()
+        .review
+        .as_ref()
+        .unwrap()
+        .plan
+        .as_ref()
+        .unwrap();
+    assert_eq!((plan.missing, plan.kept), (1, 1));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
+    let _ = app.array_find_event(Event::Apply);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while std::time::Instant::now() < deadline {
+        let _ = app.array_find_event(Event::Tick);
+        if app.blocks_panel.arrays.is_none() {
+            break;
+        }
         std::thread::sleep(std::time::Duration::from_millis(1));
     }
     assert!(app.blocks_panel.arrays.is_none());
-    let model=&mut app.document.as_mut().unwrap().model;let after=model.to_snapshot_v2();
-    assert_eq!(after.entities,before.entities);assert_eq!(after.uids,before.uids);
-    assert_eq!(after.arrays.len(),1);assert!(after.arrays[0].items[2].kept);
-    model.undo();assert_eq!(model.to_snapshot_v2(),before);
-    model.redo();assert_eq!(model.to_snapshot_v2(),after);
+    let model = &mut app.document.as_mut().unwrap().model;
+    let after = model.to_snapshot_v2();
+    assert_eq!(after.entities, before.entities);
+    assert_eq!(after.uids, before.uids);
+    assert_eq!(after.arrays.len(), 1);
+    assert!(after.arrays[0].items[2].kept);
+    model.undo();
+    assert_eq!(model.to_snapshot_v2(), before);
+    model.redo();
+    assert_eq!(model.to_snapshot_v2(), after);
 }
 
 #[test]
 fn polar_settings_cancel_restores_the_previous_family_without_changing_the_model() {
-    let mut app=app_with_array_source();app.open_array_find();complete_search(&mut app);
-    let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
-    let _=app.array_find_event(Event::Settings);
-    let _=app.array_find_event(Event::PatternKind(ArrayFindKind::Polar));
-    assert_eq!(app.blocks_panel.arrays.as_ref().unwrap().input(&app.document.as_ref().unwrap().model).unwrap().kind,Some(ArrayFindKind::Polar));
+    let mut app = app_with_array_source();
+    app.open_array_find();
+    complete_search(&mut app);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let _ = app.array_find_event(Event::Settings);
+    let _ = app.array_find_event(Event::PatternKind(ArrayFindKind::Polar));
+    assert_eq!(
+        app.blocks_panel
+            .arrays
+            .as_ref()
+            .unwrap()
+            .input(&app.document.as_ref().unwrap().model)
+            .unwrap()
+            .kind,
+        Some(ArrayFindKind::Polar)
+    );
     app.array_find_close_dialog();
-    assert_eq!(app.blocks_panel.arrays.as_ref().unwrap().kind,ArrayFindKind::Line);
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    assert_eq!(
+        app.blocks_panel.arrays.as_ref().unwrap().kind,
+        ArrayFindKind::Line
+    );
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 }
-
 
 #[test]
 fn a_selected_source_and_guide_open_path_search_and_review_the_native_proposal() {
-    let raw:Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../fixtures/commands/v1/cad.arrays.find.json"))).unwrap();
-    let case=raw["cases"].as_array().unwrap().iter().find(|c|c["name"]=="yol: köşede teğet hizalama ve iki boş yer").unwrap();
-    let model=Model::from_snapshot(DocumentSnapshotV1::from_json(&case["setup"].to_string()).unwrap()).unwrap();
-    let mut app=crate::files_testing::app_with_drawing();
-    app.document=Some(crate::document::Document::from_v2(model.to_snapshot_v2(),None).unwrap());crate::files_testing::make_cad(&mut app);
-    app.selection.set([Slot(1),Slot(8)]);let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
-    app.open_array_find();let w=app.blocks_panel.arrays.as_ref().unwrap();
-    assert_eq!(w.kind,ArrayFindKind::Path);assert!(w.path.is_some());
-    complete_search(&mut app);let output=app.blocks_panel.arrays.as_ref().unwrap().output.as_ref().unwrap();
-    assert_eq!(output.matches.len(),1,"{output:?}");
-    let _=app.array_find_event(Event::Review(0));complete_review(&mut app);
-    let r=app.blocks_panel.arrays.as_ref().unwrap().review.as_ref().unwrap();
-    assert!(layout_text(&r.input.layout,&app.format()).contains("teğeti izler"));
-    assert!(matches!(r.input.layout,ArrayLayout::Path {count:8,align:true,..}));
-    let _=app.array_find_event(Event::Assign);complete_review(&mut app);
-    let _=app.array_find_event(Event::Apply);
-    let deadline=std::time::Instant::now()+std::time::Duration::from_secs(5);
-    while std::time::Instant::now()<deadline {
-        let _=app.array_find_event(Event::Tick);if app.blocks_panel.arrays.is_none(){break;}
+    let raw: Value = serde_json::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/commands/v1/cad.arrays.find.json"
+    )))
+    .unwrap();
+    let case = raw["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "yol: köşede teğet hizalama ve iki boş yer")
+        .unwrap();
+    let model =
+        Model::from_snapshot(DocumentSnapshotV1::from_json(&case["setup"].to_string()).unwrap())
+            .unwrap();
+    let mut app = crate::files_testing::app_with_drawing();
+    app.document = Some(crate::document::Document::from_v2(model.to_snapshot_v2(), None).unwrap());
+    crate::files_testing::make_cad(&mut app);
+    app.selection.set([Slot(1), Slot(8)]);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    app.open_array_find();
+    let w = app.blocks_panel.arrays.as_ref().unwrap();
+    assert_eq!(w.kind, ArrayFindKind::Path);
+    assert!(w.path.is_some());
+    complete_search(&mut app);
+    let output = app
+        .blocks_panel
+        .arrays
+        .as_ref()
+        .unwrap()
+        .output
+        .as_ref()
+        .unwrap();
+    assert_eq!(output.matches.len(), 1, "{output:?}");
+    let _ = app.array_find_event(Event::Review(0));
+    complete_review(&mut app);
+    let r = app
+        .blocks_panel
+        .arrays
+        .as_ref()
+        .unwrap()
+        .review
+        .as_ref()
+        .unwrap();
+    assert!(layout_text(&r.input.layout, &app.format()).contains("teğeti izler"));
+    assert!(matches!(
+        r.input.layout,
+        ArrayLayout::Path {
+            count: 8,
+            align: true,
+            ..
+        }
+    ));
+    let _ = app.array_find_event(Event::Assign);
+    complete_review(&mut app);
+    let _ = app.array_find_event(Event::Apply);
+    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(5);
+    while std::time::Instant::now() < deadline {
+        let _ = app.array_find_event(Event::Tick);
+        if app.blocks_panel.arrays.is_none() {
+            break;
+        }
         std::thread::sleep(std::time::Duration::from_millis(1));
     }
-    assert!(app.blocks_panel.arrays.is_none());let model=&mut app.document.as_mut().unwrap().model;
-    let after=model.to_snapshot_v2();assert_eq!(after.entities,before.entities);assert_eq!(after.uids,before.uids);
-    assert!(after.arrays[0].items[2].kept);model.undo();assert_eq!(model.to_snapshot_v2(),before);model.redo();assert_eq!(model.to_snapshot_v2(),after);
+    assert!(app.blocks_panel.arrays.is_none());
+    let model = &mut app.document.as_mut().unwrap().model;
+    let after = model.to_snapshot_v2();
+    assert_eq!(after.entities, before.entities);
+    assert_eq!(after.uids, before.uids);
+    assert!(after.arrays[0].items[2].kept);
+    model.undo();
+    assert_eq!(model.to_snapshot_v2(), before);
+    model.redo();
+    assert_eq!(model.to_snapshot_v2(), after);
 }
-
 
 #[test]
 fn lattice_settings_find_and_review_preserve_roots_and_expose_independent_directions() {
-    let mut app=app_with_array_source();
-    let fixture:Value=serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"),"/../../fixtures/commands/v1/cad.arrays.adopt.json"))).unwrap();
-    let mut raw=fixture["setup"].clone();let mut entities=Vec::new();
-    for r in 0..3 {for c in 0..4 {
-        if [(0,2),(2,0)].contains(&(r,c)) {continue;}
-        let (a,b)=(23_f64.to_radians(),81_f64.to_radians());
-        entities.push(json!({"kind":"insert","id":entities.len()+1,"layerId":"a","attrs":{},"block":raw["blocks"][0]["id"],
+    let mut app = app_with_array_source();
+    let fixture: Value = serde_json::from_str(include_str!(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../fixtures/commands/v1/cad.arrays.adopt.json"
+    )))
+    .unwrap();
+    let mut raw = fixture["setup"].clone();
+    let mut entities = Vec::new();
+    for r in 0..3 {
+        for c in 0..4 {
+            if [(0, 2), (2, 0)].contains(&(r, c)) {
+                continue;
+            }
+            let (a, b) = (23_f64.to_radians(), 81_f64.to_radians());
+            entities.push(json!({"kind":"insert","id":entities.len()+1,"layerId":"a","attrs":{},"block":raw["blocks"][0]["id"],
             "p":{"x":c as f64*2.*a.cos()+r as f64*3.*b.cos(),"y":c as f64*2.*a.sin()+r as f64*3.*b.sin()},"scale":1.,"rotation":0.}));
-    }}
-    raw["entities"]=json!(entities);
-    let model=Model::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
-    app.document=Some(crate::document::Document::from_v2(model.to_snapshot_v2(),None).unwrap());
-    app.selection.set([Slot(6)]);let before=app.document.as_ref().unwrap().model.to_snapshot_v2();
-    app.open_array_find();let _=app.array_find_event(Event::PatternKind(ArrayFindKind::Lattice));complete_search(&mut app);
-    let index=app.blocks_panel.arrays.as_ref().unwrap().output.as_ref().unwrap().matches.iter().position(|p|p.present==10&&p.missing==2).unwrap();
-    let _=app.array_find_event(Event::Review(index));complete_review(&mut app);
-    let w=app.blocks_panel.arrays.as_ref().unwrap();let r=w.review.as_ref().unwrap();
-    assert!(matches!(r.input.layout,ArrayLayout::Lattice {..}));assert!(r.plan.is_some());
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+        }
+    }
+    raw["entities"] = json!(entities);
+    let model =
+        Model::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    app.document = Some(crate::document::Document::from_v2(model.to_snapshot_v2(), None).unwrap());
+    app.selection.set([Slot(6)]);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    app.open_array_find();
+    let _ = app.array_find_event(Event::PatternKind(ArrayFindKind::Lattice));
+    complete_search(&mut app);
+    let index = app
+        .blocks_panel
+        .arrays
+        .as_ref()
+        .unwrap()
+        .output
+        .as_ref()
+        .unwrap()
+        .matches
+        .iter()
+        .position(|p| p.present == 10 && p.missing == 2)
+        .unwrap();
+    let _ = app.array_find_event(Event::Review(index));
+    complete_review(&mut app);
+    let w = app.blocks_panel.arrays.as_ref().unwrap();
+    let r = w.review.as_ref().unwrap();
+    assert!(matches!(r.input.layout, ArrayLayout::Lattice { .. }));
+    assert!(r.plan.is_some());
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 }

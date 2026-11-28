@@ -1,8 +1,8 @@
 //! Güzergâh (alignment_window.rs, plan/road.md Y3): the window writes through `road.alignments`, each write one undo
 //! step; and its pictures.
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use kentos_domain::Slot;
 
 use crate::alignment_window::Event as W;
@@ -12,20 +12,31 @@ use crate::app::{App, Message};
 /// `alignments` as the project's.
 fn app(alignments: serde_json::Value) -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.alignments.query.json")).expect("cases");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.alignments.query.json"
+    ))
+    .expect("cases");
     let mut setup = cases["setup"].clone();
     if alignments.as_array().is_some_and(|a| a.is_empty()) {
-        setup["settings"].as_object_mut().expect("settings").remove("road");
+        setup["settings"]
+            .as_object_mut()
+            .expect("settings")
+            .remove("road");
     } else {
         setup["settings"]["road"] = serde_json::json!({ "alignments": alignments });
     }
     let main = &cases["setup"]["settings"]["road"]["alignments"][0]["pis"];
-    let pts: Vec<serde_json::Value> =
-        main.as_array().expect("pis").iter().map(|p| serde_json::json!({"x": p["x"], "y": p["y"]})).collect();
-    setup["entities"] = serde_json::json!([{"kind": "polyline", "id": 1, "layerId": "0", "attrs": {}, "pts": pts}]);
+    let pts: Vec<serde_json::Value> = main
+        .as_array()
+        .expect("pis")
+        .iter()
+        .map(|p| serde_json::json!({"x": p["x"], "y": p["y"]}))
+        .collect();
+    setup["entities"] =
+        serde_json::json!([{"kind": "polyline", "id": 1, "layerId": "0", "attrs": {}, "pts": pts}]);
     setup["uids"] = serde_json::json!(["0192f5a0-7c3e-7d4a-9b1e-000000000001"]);
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("the drawing reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -36,7 +47,12 @@ fn send(app: &mut App, e: W) {
 }
 
 fn alignments(app: &App) -> Vec<kentos_commands::AlignmentDef> {
-    app.document.as_ref().expect("a drawing").model.road_alignments().to_vec()
+    app.document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .road_alignments()
+        .to_vec()
 }
 
 /// Yeni aks with the PI line selected: its vertices are the PIs; the middle one gets its curve.
@@ -65,9 +81,15 @@ fn the_window_makes_an_alignment_and_its_parallel_each_one_undo_step() {
     let list = alignments(&app);
     assert_eq!(list.len(), 1);
     let a = &list[0];
-    assert_eq!((a.id.as_str(), a.name.as_str(), a.revision), ("g-1", "Ana aks", 1));
+    assert_eq!(
+        (a.id.as_str(), a.name.as_str(), a.revision),
+        ("g-1", "Ana aks", 1)
+    );
     assert_eq!(a.pis.len(), 3);
-    assert_eq!((a.pis[1].id.as_str(), a.pis[1].radius, a.pis[1].spiral_in), ("p1", 400.0, 80.0));
+    assert_eq!(
+        (a.pis[1].id.as_str(), a.pis[1].radius, a.pis[1].spiral_in),
+        ("p1", 400.0, 80.0)
+    );
     assert_eq!(a.stationing.as_ref().map(|s| s.start), Some(2000.0));
     // A parallel axis of the chosen alignment, 7,5 m right unless told.
     let _ = app.update(Message::Run("alignment.editor"));
@@ -81,7 +103,8 @@ fn the_window_makes_an_alignment_and_its_parallel_each_one_undo_step() {
     let _ = app.update(Message::Run("alignment.editor"));
     send(&mut app, W::Point("485520; 4420030".into()));
     let answer = app
-        .modules.road()
+        .modules
+        .road()
         .alignment_window
         .as_ref()
         .expect("open")
@@ -97,13 +120,20 @@ fn the_window_makes_an_alignment_and_its_parallel_each_one_undo_step() {
     send(&mut app, W::LabelLayer("0".into()));
     send(&mut app, W::Label);
     let doc = &mut app.document.as_mut().expect("doc").model;
-    assert!(doc.entities().count() > before + 20, "the ticks and words are drawn");
+    assert!(
+        doc.entities().count() > before + 20,
+        "the ticks and words are drawn"
+    );
     assert_eq!(doc.undo().as_deref(), Some("Aks km yazısı"));
     // Removing the source while the parallel follows it is refused in the window.
     send(&mut app, W::Choose(0));
     send(&mut app, W::Remove);
     assert_eq!(
-        app.modules.road().alignment_window.as_ref().map(|w| w.rows.len()),
+        app.modules
+            .road()
+            .alignment_window
+            .as_ref()
+            .map(|w| w.rows.len()),
         Some(2)
     );
     // Ters çevir: one step; the parallel changes sides.
@@ -150,7 +180,9 @@ fn screens() {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app(serde_json::json!([]));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -172,14 +204,20 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y3-aks-cizimde-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
         let _ = app.update(Message::Run("alignment.editor"));
         send(&mut app, W::Choose(0));
         send(&mut app, W::Point("485520; 4420030".into()));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y3-guzergah-penceresi-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
         // The km written on the drawing, then the window closed over it.
         send(&mut app, W::Point(String::new()));
@@ -189,7 +227,10 @@ fn screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y3-km-yazisi-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
         let _ = app.update(Message::Run("alignment.editor"));
         send(&mut app, W::Choose(0));
@@ -197,7 +238,10 @@ fn screens() {
         send(&mut app, W::Pi(1, 2, "4000".into()));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y3-guzergah-binme-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -206,9 +250,12 @@ fn screens() {
 /// main volume and haul plan approved (docs/adr/0963).
 fn impact_app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.alignments.impact.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.alignments.impact.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -222,7 +269,8 @@ fn typing_a_radius_tells_what_moves_on_the_stations() {
     let _ = app.update(Message::Run("alignment.editor"));
     send(&mut app, W::Choose(0));
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .alignment_window
             .as_ref()
             .expect("open")
@@ -231,13 +279,20 @@ fn typing_a_radius_tells_what_moves_on_the_stations() {
         "nothing typed yet"
     );
     send(&mut app, W::Pi(1, 2, "180".into()));
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.alignments.impact.json")).expect("cases");
-    let want = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Yarıçap 150'den 180'e").expect("the case")["steps"][0]
-        ["result"]["output"]
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.alignments.impact.json"
+    ))
+    .expect("cases");
+    let want = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "Yarıçap 150'den 180'e")
+        .expect("the case")["steps"][0]["result"]["output"]
         .clone();
     let Some(Ok((imp, warnings))) = app
-        .modules.road()
+        .modules
+        .road()
         .alignment_window
         .as_ref()
         .expect("open")
@@ -254,10 +309,15 @@ fn typing_a_radius_tells_what_moves_on_the_stations() {
         (imp.removed[0].from - want["removed"][0]["from"].as_f64().expect("from")).abs() < 1e-6
     );
     assert_eq!(imp.refs.len(), want["refs"].as_array().expect("refs").len());
-    assert!(warnings.iter().any(|w| w.code == "alignment_impact_approved"));
+    assert!(
+        warnings
+            .iter()
+            .any(|w| w.code == "alignment_impact_approved")
+    );
     send(&mut app, W::Pi(1, 2, "150".into()));
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .alignment_window
             .as_ref()
             .expect("open")
@@ -277,11 +337,17 @@ fn screens_impact() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y57");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y57");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = impact_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -290,7 +356,10 @@ fn screens_impact() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y57-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -308,10 +377,18 @@ fn screens_impact() {
 /// `road.alignments.edit`'s drawing with superelevation schedules on the main alignment (docs/adr/0964).
 fn reverse_app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.alignments.edit.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Ters çevrilir: dever çizelgeleri de döner").expect("the case");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.alignments.edit.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "Ters çevrilir: dever çizelgeleri de döner")
+        .expect("the case");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -326,15 +403,36 @@ fn reversing_carries_the_superelevation_schedules() {
     send(&mut app, W::Choose(0));
     send(&mut app, W::Reverse);
     let doc = &app.document.as_ref().expect("a drawing").model;
-    let d1 = doc.road_superelevations().iter().find(|d| d.id == "d-1").expect("d-1");
+    let d1 = doc
+        .road_superelevations()
+        .iter()
+        .find(|d| d.id == "d-1")
+        .expect("d-1");
     assert_eq!((d1.normal_left, d1.normal_right), (-0.03, -0.025));
-    assert_eq!(d1.pivot, Some(kentos_commands::SuperelevationPivot::RightEdge));
-    let kentos_commands::SuperelevationMethod::Stations { rows } = &d1.method else { panic!("rows") };
+    assert_eq!(
+        d1.pivot,
+        Some(kentos_commands::SuperelevationPivot::RightEdge)
+    );
+    let kentos_commands::SuperelevationMethod::Stations { rows } = &d1.method else {
+        panic!("rows")
+    };
     assert_eq!((rows[0].left, rows[0].right), (-0.06, 0.06));
     let doc = &mut app.document.as_mut().expect("a drawing").model;
-    assert_eq!(doc.undo().as_deref(), Some("Aksı düzenle"), "one step undoes both");
-    let d1 = doc.road_superelevations().iter().find(|d| d.id == "d-1").expect("d-1");
-    assert_eq!((d1.normal_left, d1.normal_right), (-0.025, -0.03), "undone together");
+    assert_eq!(
+        doc.undo().as_deref(),
+        Some("Aksı düzenle"),
+        "one step undoes both"
+    );
+    let d1 = doc
+        .road_superelevations()
+        .iter()
+        .find(|d| d.id == "d-1")
+        .expect("d-1");
+    assert_eq!(
+        (d1.normal_left, d1.normal_right),
+        (-0.025, -0.03),
+        "undone together"
+    );
 }
 
 /// The schedule's diagram before and after the alignment is turned round, wide and narrow, light and dark;
@@ -349,11 +447,17 @@ fn screens_reverse() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y58");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y58");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = reverse_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -362,7 +466,10 @@ fn screens_reverse() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y58-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -401,8 +508,16 @@ fn screens_reverse() {
 #[test]
 fn reversing_turns_the_profiles_and_tells_what_goes_stale() {
     let mut app = impact_app();
-    let before: Vec<kentos_commands::ProfileDef> =
-        app.document.as_ref().expect("a drawing").model.road_profiles().iter().filter(|p| p.alignment == "g-1").cloned().collect();
+    let before: Vec<kentos_commands::ProfileDef> = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .road_profiles()
+        .iter()
+        .filter(|p| p.alignment == "g-1")
+        .cloned()
+        .collect();
     let _ = app.update(Message::Run("alignment.editor"));
     send(&mut app, W::Choose(0));
     send(&mut app, W::Reverse);
@@ -414,13 +529,35 @@ fn reversing_turns_the_profiles_and_tells_what_goes_stale() {
         .map(|b| b.core.length)
         .expect("builds");
     for p0 in &before {
-        let p1 = doc.road_profiles().iter().find(|p| p.id == p0.id).expect("kept");
+        let p1 = doc
+            .road_profiles()
+            .iter()
+            .find(|p| p.id == p0.id)
+            .expect("kept");
         let (first, last) = (&p0.pvis[0], &p1.pvis[p1.pvis.len() - 1]);
-        assert!((last.station - (length - first.station)).abs() < 1e-9 && last.elevation == first.elevation, "{}", p0.id);
+        assert!(
+            (last.station - (length - first.station)).abs() < 1e-9
+                && last.elevation == first.elevation,
+            "{}",
+            p0.id
+        );
     }
-    let said: String = app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>().join("\n");
-    assert!(said.contains("boykesiti") && said.contains("dever çizelgesi"), "{said}");
-    assert!(said.contains("Ana koridor") && said.contains("Km 1+380 menfezi") && said.contains("Sağ istinat"), "{said}");
+    let said: String = app
+        .log
+        .lines()
+        .map(|l| l.text.clone())
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        said.contains("boykesiti") && said.contains("dever çizelgesi"),
+        "{said}"
+    );
+    assert!(
+        said.contains("Ana koridor")
+            && said.contains("Km 1+380 menfezi")
+            && said.contains("Sağ istinat"),
+        "{said}"
+    );
 }
 
 /// The reversal told, and the profile read from its new start, wide and narrow, light and dark;
@@ -435,11 +572,17 @@ fn screens_reverse_profile() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y59");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y59");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = impact_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -448,7 +591,10 @@ fn screens_reverse_profile() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y59-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -477,7 +623,8 @@ fn the_window_says_the_chain_s_continuity() {
     let _ = app.update(Message::Run("alignment.editor"));
     send(&mut app, W::Choose(0));
     let said = |app: &App| -> String {
-        app.modules.road()
+        app.modules
+            .road()
             .alignment_window
             .as_ref()
             .map(crate::alignment_window::status_of)
@@ -490,7 +637,11 @@ fn the_window_says_the_chain_s_continuity() {
     );
     send(&mut app, W::Pi(1, 3, "0".into()));
     send(&mut app, W::Pi(1, 4, "0".into()));
-    assert!(said(&app).contains("2 yerde eğrilik sıçrar"), "{}", said(&app));
+    assert!(
+        said(&app).contains("2 yerde eğrilik sıçrar"),
+        "{}",
+        said(&app)
+    );
 }
 
 /// The continuity said in the window, with and without clothoids, wide and narrow; `.run/gui-evidence/yol-y61/`:
@@ -504,11 +655,17 @@ fn screens_continuity() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y61");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y61");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = impact_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -517,7 +674,10 @@ fn screens_continuity() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y61-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -529,7 +689,9 @@ fn screens_continuity() {
         shot(&mut app, "klotoidsiz");
         // The link of the edit's drawing: a PI without a curve, a kink.
         let mut app = reverse_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::Run("alignment.editor"));
         send(&mut app, W::Choose(2));
@@ -553,7 +715,8 @@ fn the_window_says_the_parallel_axis_fix() {
     let mut app = impact_app();
     let _ = app.update(Message::Run("alignment.editor"));
     let said = |app: &App| -> String {
-        app.modules.road()
+        app.modules
+            .road()
             .alignment_window
             .as_ref()
             .map(crate::alignment_window::status_of)
@@ -562,7 +725,8 @@ fn the_window_says_the_parallel_axis_fix() {
     offset_inside(&mut app, "3");
     assert!(said(&app).contains("p1 kurbunun yarıçapını 5.000 m'nin üstüne çıkarın ya da ötelemeyi 3.000 m'nin altına indirin."), "{}", said(&app));
     let red = |app: &App| {
-        app.modules.road()
+        app.modules
+            .road()
             .alignment_window
             .as_ref()
             .is_some_and(crate::alignment_window::refused)
@@ -570,7 +734,12 @@ fn the_window_says_the_parallel_axis_fix() {
     assert!(red(&app), "the refusal is said in red");
     offset_inside(&mut app, "0");
     assert!(red(&app));
-    assert!(said(&app).contains("p1 kurpsuz bir kırık") && said(&app).contains("yarıçapı 5.000 m'nin üstünde bir kurp koyun"), "{}", said(&app));
+    assert!(
+        said(&app).contains("p1 kurpsuz bir kırık")
+            && said(&app).contains("yarıçapı 5.000 m'nin üstünde bir kurp koyun"),
+        "{}",
+        said(&app)
+    );
 }
 
 /// The parallel axis's refusal in the window, wide and narrow; `.run/gui-evidence/yol-y64/`:
@@ -584,11 +753,17 @@ fn screens_offset_fix() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y64");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y64");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = impact_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -597,7 +772,10 @@ fn screens_offset_fix() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("y64-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("alignment"));
@@ -612,27 +790,55 @@ fn screens_offset_fix() {
 /// The ove (docs/adr/0979): the alignment of `road.alignments.create`'s ove case, R 500 into R 200 on the PIs the
 /// reference built from A = 250.
 fn ove_app() -> App {
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.alignments.create.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Ove: R 500'den R 200'e").expect("the case");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.alignments.create.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "Ove: R 500'den R 200'e")
+        .expect("the case");
     let pis = case["steps"][0]["input"]["pis"].clone();
     app(serde_json::json!([{"id": "g-1", "name": "Oveli aks", "revision": 1, "pis": pis}]))
 }
 
 /// Where the ove case's PIs are, with room round them (the drawing's own line is the other alignment's).
 fn ove_bounds() -> kentos_render_wgpu::Bounds {
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.alignments.create.json")).expect("cases");
-    let case = cases["cases"].as_array().expect("cases").iter().find(|c| c["name"] == "Ove: R 500'den R 200'e").expect("the case");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.alignments.create.json"
+    ))
+    .expect("cases");
+    let case = cases["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == "Ove: R 500'den R 200'e")
+        .expect("the case");
     let pts: Vec<[f64; 2]> = case["steps"][0]["input"]["pis"]
         .as_array()
         .expect("pis")
         .iter()
-        .map(|p| [p["x"].as_f64().unwrap_or(0.0), p["y"].as_f64().unwrap_or(0.0)])
+        .map(|p| {
+            [
+                p["x"].as_f64().unwrap_or(0.0),
+                p["y"].as_f64().unwrap_or(0.0),
+            ]
+        })
         .collect();
-    let (x0, x1) = pts.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p[0]), b.max(p[0])));
-    let (y0, y1) = pts.iter().fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p[1]), b.max(p[1])));
-    kentos_render_wgpu::Bounds { min_x: x0 - 50.0, min_y: y0 - 150.0, max_x: x1 + 50.0, max_y: y1 + 50.0 }
+    let (x0, x1) = pts
+        .iter()
+        .fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p[0]), b.max(p[0])));
+    let (y0, y1) = pts
+        .iter()
+        .fold((f64::MAX, f64::MIN), |(a, b), p| (a.min(p[1]), b.max(p[1])));
+    kentos_render_wgpu::Bounds {
+        min_x: x0 - 50.0,
+        min_y: y0 - 150.0,
+        max_x: x1 + 50.0,
+        max_y: y1 + 50.0,
+    }
 }
 
 /// The Ove column: ticked, the status says the A the PIs solve (250, as built) and its length; unticked, the two
@@ -643,7 +849,8 @@ fn an_ove_is_ticked_solved_and_saved() {
     let _ = app.update(Message::Run("alignment.editor"));
     send(&mut app, W::Choose(0));
     let said = |app: &App| -> String {
-        app.modules.road()
+        app.modules
+            .road()
             .alignment_window
             .as_ref()
             .map(crate::alignment_window::status_of)
@@ -656,7 +863,8 @@ fn an_ove_is_ticked_solved_and_saved() {
         said(&app)
     );
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .alignment_window
             .as_ref()
             .is_some_and(|w| w.impact.is_none()),
@@ -668,7 +876,10 @@ fn an_ove_is_ticked_solved_and_saved() {
     assert!(!alignments(&app)[0].pis[1].ove, "saved without the ove");
     let doc = &mut app.document.as_mut().expect("a drawing").model;
     assert_eq!(doc.undo().as_deref(), Some("Aksı düzenle"));
-    assert!(alignments(&app)[0].pis[1].ove, "one undo step brings it back");
+    assert!(
+        alignments(&app)[0].pis[1].ove,
+        "one undo step brings it back"
+    );
 }
 
 /// The ove in the window and on the plan, wide and narrow, light and dark; `.run/gui-evidence/yol-y72/`:
@@ -682,14 +893,17 @@ fn screens_ove() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y72");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y72");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = ove_app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -700,12 +914,18 @@ fn screens_ove() {
         send(&mut app, W::Choose(0));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y72-ove-pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
         send(&mut app, W::PiOve(1));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y72-ovesiz-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
         // The ove's km on the plan (`road.alignments.label`): the line through both curves and the ove between.
         send(&mut app, W::PiOve(1));
@@ -715,11 +935,13 @@ fn screens_ove() {
         app.viewport.camera.fit(&ove_bounds(), 24.0);
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y72-ove-planda-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
-
 
 /// The design speed (docs/adr/0985): Proje hızı and a curve's own V are typed and saved; neither is the geometry, so the
 /// alignment's revision stays and nothing on it goes stale. An empty field clears it.
@@ -734,13 +956,20 @@ fn the_design_speed_is_typed_saved_and_cleared_without_a_new_revision() {
     send(&mut app, W::Pi(1, 5, "50".into()));
     send(&mut app, W::Save);
     let a = &alignments(&app)[0];
-    assert_eq!((a.design_speed, a.pis[1].speed, a.revision), (Some(80.0), Some(50.0), before));
+    assert_eq!(
+        (a.design_speed, a.pis[1].speed, a.revision),
+        (Some(80.0), Some(50.0), before)
+    );
     let _ = app.update(Message::Run("alignment.editor"));
     send(&mut app, W::Choose(0));
     send(&mut app, W::Speed(String::new()));
     send(&mut app, W::Save);
     assert_eq!(alignments(&app)[0].design_speed, None);
-    assert_eq!(alignments(&app)[0].pis[1].speed, Some(50.0), "the curve's own speed stays");
+    assert_eq!(
+        alignments(&app)[0].pis[1].speed,
+        Some(50.0),
+        "the curve's own speed stays"
+    );
 }
 
 /// Güzergâh with Proje hızı and the PIs' V column (docs/adr/0985), light and dark; `.run/gui-evidence/yol-y79/`:
@@ -754,7 +983,8 @@ fn screens_speed() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y79");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y79");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
@@ -762,7 +992,9 @@ fn screens_speed() {
     ] {
         let mut app = app(serde_json::json!([]));
         made(&mut app);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -776,7 +1008,10 @@ fn screens_speed() {
         send(&mut app, W::PiChoose(1));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y79-hiz-pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -793,9 +1028,11 @@ fn screens_landxml_speeds() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y82");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y82");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/road/v1/landxml/aks-hiz.xml");
+    let file = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/road/v1/landxml/aks-hiz.xml");
     for (theme, size, name) in [
         ("light", Size::new(1440.0, 900.0), "acik-genis"),
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
@@ -812,10 +1049,15 @@ fn screens_landxml_speeds() {
             &mut kentos_native_application::ExecutionContext::new(doc),
             input,
         );
-        assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+        assert!(
+            matches!(done, kentos_commands::CommandResult::Completed { .. }),
+            "{done:?}"
+        );
         let a = &alignments(&app)[0];
         assert_eq!((a.design_speed, a.pis[1].speed), (Some(80.0), Some(50.0)));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -827,7 +1069,10 @@ fn screens_landxml_speeds() {
         send(&mut app, W::PiChoose(1));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("y82-landxml-hiz-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

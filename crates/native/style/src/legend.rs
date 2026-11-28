@@ -90,7 +90,9 @@ pub fn legend_of(layers: &[LegendLayer<'_>], src: &impl LegendSources) -> Vec<Le
     let mut out = Vec::new();
     for layer in layers {
         let entities = src.entities(layer.id);
-        let present = src.declared(layer.id).unwrap_or_else(|| classes_present(&entities));
+        let present = src
+            .declared(layer.id)
+            .unwrap_or_else(|| classes_present(&entities));
         let classes: Vec<GeometryClass> =
             ORDER.into_iter().filter(|c| present.of(*c) > 0).collect();
         if classes.is_empty() {

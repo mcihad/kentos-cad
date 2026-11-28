@@ -26,7 +26,9 @@ use kentos_geometry_core::geom::dimension::{DimensionGeom, layout_dimension};
 use kentos_geometry_core::store::snap::SnapHit;
 use kentos_geometry_core::tools::construct::{baseline_dimension, continue_dimension};
 use kentos_native_application::ExecutionContext;
-use kentos_native_application::dimension_create::{LEVEL_TEXT_HEIGHTS, dimensions_create, straight};
+use kentos_native_application::dimension_create::{
+    LEVEL_TEXT_HEIGHTS, dimensions_create, straight,
+};
 use kentos_native_application::geometry::contract_look;
 
 use crate::Vec2;
@@ -156,12 +158,26 @@ impl DimensionChain {
         }
     }
 
-    fn value_ghost(&self, g: &DimensionGeom, l: &kentos_geometry_core::geom::dimension::DimensionLayout, format: &Format) -> crate::tool::TextGhost {
+    fn value_ghost(
+        &self,
+        g: &DimensionGeom,
+        l: &kentos_geometry_core::geom::dimension::DimensionLayout,
+        format: &Format,
+    ) -> crate::tool::TextGhost {
         let look = contract_look(g.look.clone());
-        crate::tool::TextGhost { p:l.text_at,
-            text:format.dimension_in(l.prefix,l.unit,l.value,&look), height:g.height, rotation:l.rotation,
-            align:Some(kentos_geometry_core::text::TextAlign::MiddleCenter), mask:false,
-            face:kentos_commands::TextFace { font:look.font.or(self.font), ..Default::default() }, width_factor:1. }
+        crate::tool::TextGhost {
+            p: l.text_at,
+            text: format.dimension_in(l.prefix, l.unit, l.value, &look),
+            height: g.height,
+            rotation: l.rotation,
+            align: Some(kentos_geometry_core::text::TextAlign::MiddleCenter),
+            mask: false,
+            face: kentos_commands::TextFace {
+                font: look.font.or(self.font),
+                ..Default::default()
+            },
+            width_factor: 1.,
+        }
     }
 
     /// Where the cursor's point is measured from: the ordinary anchor of ortho and polar.
@@ -175,7 +191,12 @@ impl DimensionChain {
 
     /// The command's input for the next dimension to `p`: the place it snapped to, if any, on the active layer
     /// (the base's style and look).
-    fn request(&self, p: Vec2, snap: Option<SnapHit>, cx: &Context<'_>) -> Option<DimensionsCreate> {
+    fn request(
+        &self,
+        p: Vec2,
+        snap: Option<SnapHit>,
+        cx: &Context<'_>,
+    ) -> Option<DimensionsCreate> {
         let (uid, _) = self.state.base.as_ref()?;
         let to = match crate::dimension::snapped_place(snap, p, cx) {
             Some(r) => MeasuredPoint::Place {
@@ -195,7 +216,10 @@ impl DimensionChain {
             at: wire(p),
             offset: None,
             // UR-003: the project's dimension layer when it names one.
-            layer_id: crate::tool_layer::layer_for(cx.doc, kentos_commands::AnnotationTool::Dimension),
+            layer_id: crate::tool_layer::layer_for(
+                cx.doc,
+                kentos_commands::AnnotationTool::Dimension,
+            ),
             dimension_style: None,
             height: None,
             mask: None,
@@ -233,7 +257,10 @@ impl DimensionChain {
         let Some(uid) = out.created.first().and_then(|u| Uuid::parse_str(u).ok()) else {
             return;
         };
-        let look = match cx.doc.get(cx.doc.slot_of(uid).unwrap_or(kentos_domain::Slot(u32::MAX))) {
+        let look = match cx
+            .doc
+            .get(cx.doc.slot_of(uid).unwrap_or(kentos_domain::Slot(u32::MAX)))
+        {
             Some(Entity::Dimension(d)) => d.look.clone(),
             _ => Default::default(),
         };
@@ -366,8 +393,12 @@ impl Tool for DimensionChain {
         let (point, tracking) = constrain(self.anchor(), p, cx);
         self.hover = Some(point);
         self.tracking = tracking;
-        self.overlap = self.next(point).and_then(|g| layout_dimension(&g).map(|l| (g,l)))
-            .and_then(|(g,l)| crate::dimension_preview::overlap(cx, &self.value_ghost(&g,&l,&cx.format())));
+        self.overlap = self
+            .next(point)
+            .and_then(|g| layout_dimension(&g).map(|l| (g, l)))
+            .and_then(|(g, l)| {
+                crate::dimension_preview::overlap(cx, &self.value_ghost(&g, &l, &cx.format()))
+            });
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {

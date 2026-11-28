@@ -46,13 +46,13 @@ mod python_rules;
 pub mod release;
 pub mod resemblance;
 pub mod revocations;
+pub mod sbom;
 #[cfg(all(test, feature = "schema"))]
 mod schema_check;
-pub mod sbom;
 pub mod sdk_pack;
-pub mod secrets;
 pub mod sdk_surface;
 pub mod sdk_text;
+pub mod secrets;
 mod text;
 pub mod ui_panel;
 pub mod verify;

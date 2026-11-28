@@ -374,21 +374,30 @@ fn kot_rows(
     };
     // A level chosen keeps the offset the Kots share.
     let kept = offset.flatten();
-    let pick = |label: String, chosen: bool, level: Option<kentos_commands::DimensionLevel>| Choice::Pick {
-        label,
-        swatch: None,
-        icon: None,
-        wide: false,
-        chosen,
-        enabled: true,
-        message: Message::Properties(Event::DimensionEdit(slots.to_vec(), DimensionOp::Level(level))),
+    let pick = |label: String, chosen: bool, level: Option<kentos_commands::DimensionLevel>| {
+        Choice::Pick {
+            label,
+            swatch: None,
+            icon: None,
+            wide: false,
+            chosen,
+            enabled: true,
+            message: Message::Properties(Event::DimensionEdit(
+                slots.to_vec(),
+                DimensionOp::Level(level),
+            )),
+        }
     };
     let mut items = vec![pick(OWN.to_owned(), id == Some(None), None)];
     items.extend(levels.iter().map(|l| {
         pick(
             l.name.clone(),
-            id.as_ref().is_some_and(|i| i.as_deref() == Some(l.id.as_str())),
-            Some(kentos_commands::DimensionLevel { id: l.id.clone(), offset: kept }),
+            id.as_ref()
+                .is_some_and(|i| i.as_deref() == Some(l.id.as_str())),
+            Some(kentos_commands::DimensionLevel {
+                id: l.id.clone(),
+                offset: kept,
+            }),
         )
     }));
     out.push(Row::text("Kat", &text).editor(edit(Editor::Select {
@@ -399,10 +408,14 @@ fn kot_rows(
     })));
     if let Some(Some(_)) = id {
         let row = match offset {
-            Some(o) => Row::figure("Fark", f.length_bare(o.unwrap_or(0.0))).unit(f.length_unit_label()),
+            Some(o) => {
+                Row::figure("Fark", f.length_bare(o.unwrap_or(0.0))).unit(f.length_unit_label())
+            }
             None => Row::text("Fark", MIXED),
         };
-        out.push(row.editor(edit(Editor::Number(Field::DimensionLevelOffset(slots.to_vec())))));
+        out.push(row.editor(edit(Editor::Number(Field::DimensionLevelOffset(
+            slots.to_vec(),
+        )))));
     }
     out
 }
@@ -467,7 +480,10 @@ fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Form
             return rows;
         }
         rows.push(Row::text("Gerçek ölçü", measured));
-        if d.text.as_deref().is_some_and(|t| !t.is_empty() && !t.contains("<>")) {
+        if d.text
+            .as_deref()
+            .is_some_and(|t| !t.is_empty() && !t.contains("<>"))
+        {
             rows.push(Row::text("Yazı durumu", "Elle değiştirilmiş"));
         }
     }

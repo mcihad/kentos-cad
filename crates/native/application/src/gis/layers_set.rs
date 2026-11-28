@@ -90,7 +90,9 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
         .filter(|_| !matches!(op, Op::Isolate | Op::ShowAll | Op::ThawAll | Op::Unisolate))
     {
         let n = known(id, "layer")?;
-        if matches!(op, Op::ClassVisible | Op::ClassInvert | Op::ClassCounts) && n.kind == LayerNodeType::Group {
+        if matches!(op, Op::ClassVisible | Op::ClassInvert | Op::ClassCounts)
+            && n.kind == LayerNodeType::Group
+        {
             return Err(fail(
                 codes::NOT_A_LAYER,
                 format!(
@@ -139,12 +141,19 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
         if op == Op::Mobile && input.mobile == Some(kentos_commands::LayerMobile::Edit) {
             if !crate::layer_kind::mobile_choices(doc, n).contains(&kentos_launch::Mobile::Edit) {
                 let why = match crate::layer_kind::storage(doc) {
-                    kentos_launch::Storage::File => "mobil uygulama CAD projesini yazmaz, yalnız görüntüler",
-                    kentos_launch::Storage::Database => "mobil uygulama yalnız veri tablosunun satırlarını yazar",
+                    kentos_launch::Storage::File => {
+                        "mobil uygulama CAD projesini yazmaz, yalnız görüntüler"
+                    }
+                    kentos_launch::Storage::Database => {
+                        "mobil uygulama yalnız veri tablosunun satırlarını yazar"
+                    }
                 };
                 return Err(fail(
                     codes::MOBILE_NOT_OFFERED,
-                    format!("“{}” mobilde düzenlenemez: {why}. Göster ya da gösterme seçin.", n.name),
+                    format!(
+                        "“{}” mobilde düzenlenemez: {why}. Göster ya da gösterme seçin.",
+                        n.name
+                    ),
                     "mobile",
                 ));
             }
@@ -176,7 +185,10 @@ fn check(doc: &Document, input: &LayersSet) -> Result<(), Stop> {
 }
 
 /// The layer's renderer with the classes of `input` switched (docs/adr/9105 §3), or why it cannot be.
-fn switched(node: &kentos_commands::LayerNode, input: &LayersSet) -> Result<(serde_json::Value, bool), Stop> {
+fn switched(
+    node: &kentos_commands::LayerNode,
+    input: &LayersSet,
+) -> Result<(serde_json::Value, bool), Stop> {
     use kentos_scene_query::style_classes::{Switch, SwitchRefused, set_enabled};
     let switch = match (input.operation, input.value) {
         (LayerSetOperation::ClassInvert, _) => Switch::Invert,
@@ -203,7 +215,12 @@ fn switched(node: &kentos_commands::LayerNode, input: &LayersSet) -> Result<(ser
             format!(
                 "“{}” katmanının stilinde “{}” kimlikli sınıf yok. Sınıfları cad.layers.classes verir.",
                 node.name,
-                input.classes.as_ref().and_then(|c| c.get(i)).map(String::as_str).unwrap_or_default()
+                input
+                    .classes
+                    .as_ref()
+                    .and_then(|c| c.get(i))
+                    .map(String::as_str)
+                    .unwrap_or_default()
             ),
             &format!("classes[{i}]"),
         )),
@@ -275,7 +292,10 @@ fn write(doc: &mut Document, input: &LayersSet) -> LayersChanged {
         }
         Op::Locked => doc.set_layer_locked(id, value),
         Op::Plot => doc.set_layer_plot(id, value),
-        Op::Mobile => doc.set_layer_mobile(id, input.mobile.unwrap_or(kentos_commands::LayerMobile::Show)),
+        Op::Mobile => doc.set_layer_mobile(
+            id,
+            input.mobile.unwrap_or(kentos_commands::LayerMobile::Show),
+        ),
         Op::Frozen => doc.set_layer_frozen(id, value),
         Op::ThawAll => doc.thaw_all_layers(),
         Op::Unisolate => doc.unisolate_layers(),

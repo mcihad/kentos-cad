@@ -79,7 +79,11 @@ pub struct FootingTool {
 /// Metres in centimetres as a construction plan writes them: 150, 22.5.
 fn cm(m: f64) -> String {
     let c = (m * 1000.0).round() / 10.0;
-    if c.fract() == 0.0 { format!("{c:.0}") } else { format!("{c:.1}") }
+    if c.fract() == 0.0 {
+        format!("{c:.0}")
+    } else {
+        format!("{c:.1}")
+    }
 }
 
 fn justify_key(j: WallJustify) -> &'static str {
@@ -159,7 +163,10 @@ impl FootingTool {
 
     /// The middle of the column `slot` and its turn.
     fn column_middle(slot: Slot, cx: &Context<'_>) -> Option<(Vec2, f64)> {
-        let e = cx.doc.get(slot).filter(|e| matches!(e, Entity::Column(_)))?;
+        let e = cx
+            .doc
+            .get(slot)
+            .filter(|e| matches!(e, Entity::Column(_)))?;
         let Shape::Column { at, column } = shape(e) else {
             return None;
         };
@@ -172,7 +179,8 @@ impl FootingTool {
             pts: points::wire_all(pts),
             width: self.width,
             height: self.height,
-            justify: (!self.is_pad() && self.justify != WallJustify::Center).then_some(self.justify),
+            justify: (!self.is_pad() && self.justify != WallJustify::Center)
+                .then_some(self.justify),
             role: Some(self.role),
             base_offset: Some(self.base),
             tag: self.tag.clone(),
@@ -188,7 +196,10 @@ impl FootingTool {
             .column
             .and_then(|s| Self::column_middle(s, cx))
             .unwrap_or((at, self.turn));
-        let (dx, dy) = (turn.cos() * self.length / 2.0, turn.sin() * self.length / 2.0);
+        let (dx, dy) = (
+            turn.cos() * self.length / 2.0,
+            turn.sin() * self.length / 2.0,
+        );
         let ends = [
             Vec2::new(middle.x - dx, middle.y - dy),
             Vec2::new(middle.x + dx, middle.y + dy),
@@ -242,14 +253,16 @@ impl FootingTool {
         match beams_create::plan_in(cx.doc, &input) {
             kentos_commands::CommandResult::Completed { output, .. } => {
                 for e in &output.beams {
-                    self.drawn.strokes.extend(
-                        Outline::of(&shape(e), None, 2.0, Tone::Accent).strokes,
-                    );
+                    self.drawn
+                        .strokes
+                        .extend(Outline::of(&shape(e), None, 2.0, Tone::Accent).strokes);
                 }
             }
             kentos_commands::CommandResult::Failed { error }
             | kentos_commands::CommandResult::Conflict { error }
-            | kentos_commands::CommandResult::NeedsInput { error } => self.why = Some(error.message),
+            | kentos_commands::CommandResult::NeedsInput { error } => {
+                self.why = Some(error.message)
+            }
             _ => {}
         }
     }
@@ -266,7 +279,11 @@ impl FootingTool {
         if !written {
             return;
         }
-        let what = if self.is_pad() { "Tekil temel kondu" } else { "Sürekli temel çizildi" };
+        let what = if self.is_pad() {
+            "Tekil temel kondu"
+        } else {
+            "Sürekli temel çizildi"
+        };
         match self.tag.take() {
             // The next one the next number (T101 → T102), as the beam tool's.
             Some(t) => {
@@ -309,7 +326,9 @@ impl FootingTool {
                 .filter(|v| v.is_finite())
                 .map(|v| self.base = v)
                 .is_some(),
-            "D" if self.is_pad() => match parse_number(js_trim(value).trim_end_matches('°')).filter(|v| v.is_finite()) {
+            "D" if self.is_pad() => match parse_number(js_trim(value).trim_end_matches('°'))
+                .filter(|v| v.is_finite())
+            {
                 Some(d) => {
                     self.turn = d.to_radians();
                     true
@@ -386,7 +405,9 @@ impl Tool for FootingTool {
                 Ask::Width => "genişliğini yazın",
                 Ask::Length => "eksenince kenarını yazın",
                 Ask::Height => "yüksekliğini (kalınlığını) yazın",
-                Ask::Base => "tabanının katın döşemesinden yüksekliğini yazın (altında: eksi; −0.80 gibi)",
+                Ask::Base => {
+                    "tabanının katın döşemesinden yüksekliğini yazın (altında: eksi; −0.80 gibi)"
+                }
                 Ask::Turn => "dönüşünü derece olarak yazın (kolonun altındaki temel kolonla döner)",
                 Ask::Tag => "numarasını yazın (T101 gibi; boş: yok)",
             };
@@ -492,7 +513,11 @@ impl Tool for FootingTool {
         let pad = self.is_pad();
         self.ask = match key.as_str() {
             "T" => {
-                self.set_role(if pad { BeamRole::StripFooting } else { BeamRole::PadFooting });
+                self.set_role(if pad {
+                    BeamRole::StripFooting
+                } else {
+                    BeamRole::PadFooting
+                });
                 self.see(cx);
                 return true;
             }
@@ -526,8 +551,15 @@ impl Tool for FootingTool {
             "T",
             "Tür",
             crate::tool_settings::choices(
-                &[("padFooting", "Tekil temel"), ("stripFooting", "Sürekli temel")],
-                if self.is_pad() { "padFooting" } else { "stripFooting" },
+                &[
+                    ("padFooting", "Tekil temel"),
+                    ("stripFooting", "Sürekli temel"),
+                ],
+                if self.is_pad() {
+                    "padFooting"
+                } else {
+                    "stripFooting"
+                },
             ),
         )];
         out.push(Setting::text("E", "Genişlik", f.length(self.width)));

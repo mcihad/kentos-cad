@@ -7,7 +7,7 @@ pub(super) trait Ink {
     /// The picture's size (a frame's own; a fenced map's is the camera's).
     fn size(&self) -> Size;
     fn piece(&mut self, piece: &Piece<'_>, halo: Color, of: Option<Slot>);
-    fn shaped(&mut self,piece:&unicode::Piece<'_>);
+    fn shaped(&mut self, piece: &unicode::Piece<'_>);
     /// A quadrilateral of the screen filled (a multi-line text's mask, docs/adr/0182 §3).
     fn fill_quad(&mut self, quad: [Point; 4], color: Color, of: Option<Slot>);
     /// Segments stroked `width` wide in one colour (the texts too small to read, docs/adr/0626 §6).
@@ -34,7 +34,9 @@ pub(super) trait Ink {
 }
 
 impl Ink for Frame {
-    fn shaped(&mut self,piece:&unicode::Piece<'_>) {unicode::paint(self,piece);}
+    fn shaped(&mut self, piece: &unicode::Piece<'_>) {
+        unicode::paint(self, piece);
+    }
     fn size(&self) -> Size {
         Frame::size(self)
     }
@@ -130,8 +132,8 @@ impl Collect<'_> {
         Some((
             ground,
             MapLabel {
-            shx: None,
-                unicode:None,
+                shx: None,
+                unicode: None,
                 layer,
                 text: String::new(),
                 at,
@@ -156,7 +158,9 @@ impl Collect<'_> {
 
 #[cfg(test)]
 impl Ink for Collect<'_> {
-    fn shaped(&mut self,piece:&unicode::Piece<'_>) {unicode::collect(self,piece);}
+    fn shaped(&mut self, piece: &unicode::Piece<'_>) {
+        unicode::collect(self, piece);
+    }
     fn size(&self) -> Size {
         Size::ZERO
     }
@@ -197,7 +201,7 @@ impl Ink for Collect<'_> {
         });
         self.labels.push(MapLabel {
             shx: None,
-            unicode:None,
+            unicode: None,
             layer,
             text: piece.text.to_owned(),
             at,
@@ -254,7 +258,7 @@ impl Ink for Collect<'_> {
     fn fill_ring(&mut self, ring: &[Point], color: Color, of: Option<Slot>) {
         if let Some(label) = self.shape(ring, color, of) {
             self.labels.push(MapLabel {
-            shx: None,
+                shx: None,
                 fill: Some(label.0),
                 ..label.1
             });
@@ -264,7 +268,7 @@ impl Ink for Collect<'_> {
     fn stroke_line(&mut self, pts: &[Point], closed: bool, color: Color, of: Option<Slot>) {
         if let Some(label) = self.shape(pts, color, of) {
             self.labels.push(MapLabel {
-            shx: None,
+                shx: None,
                 stroke: Some((label.0, closed)),
                 ..label.1
             });
@@ -290,7 +294,7 @@ impl Ink for Collect<'_> {
         // A mask without words: the PDF fills it in the paper's colour, under the layer's texts.
         self.labels.push(MapLabel {
             shx: None,
-            unicode:None,
+            unicode: None,
             layer,
             text: String::new(),
             at,

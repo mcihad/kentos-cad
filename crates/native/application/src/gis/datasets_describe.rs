@@ -362,7 +362,11 @@ fn answer(doc: &Document, input: &DatasetsDescribe) -> Result<DatasetsDescribed,
             .map(|s| format!("{} › {}", s.path, s.table));
         let inputs = inputs_now(doc, node, &mut digests);
         // An interior elevation (docs/adr/0799) reads objects, not layers: it is stale when drawing it again differs.
-        let stale = match node.derivation.as_ref().and_then(|d| crate::elevations::is_stale(doc, &node.id, d)) {
+        let stale = match node
+            .derivation
+            .as_ref()
+            .and_then(|d| crate::elevations::is_stale(doc, &node.id, d))
+        {
             Some(s) => s,
             None => node.derivation.is_some() && stale(doc, &node.id, &mut digests, &mut seen),
         };

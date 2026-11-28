@@ -11,9 +11,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
+use crate::ProfilePvi;
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
-use crate::ProfilePvi;
 
 pub const ROAD_PROFILES_CREATE: &str = "road.profiles.create";
 pub const ROAD_PROFILES_CREATE_VERSION: u32 = 1;

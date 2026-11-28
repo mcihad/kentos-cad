@@ -340,7 +340,9 @@ pub(crate) fn follow(
                 Ok(p) => p,
                 Err(stop) => {
                     let e = stop.into_error();
-                    let why = if e.code == codes::RECESS_TOO_DEEP || e.code == codes::OPENING_POCKET_THIN {
+                    let why = if e.code == codes::RECESS_TOO_DEEP
+                        || e.code == codes::OPENING_POCKET_THIN
+                    {
                         OpeningLeftWhy::Invalid
                     } else {
                         OpeningLeftWhy::OffWall

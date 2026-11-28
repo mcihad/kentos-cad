@@ -495,7 +495,10 @@ fn entity(layer: String, wall: WallFields, source: Option<&EntityBase>) -> Entit
     base.layer_id = layer;
     base.label_pins.clear();
     base.attachments.clear();
-    Entity::Wall(WallEntity { base, wall: Box::new(wall) })
+    Entity::Wall(WallEntity {
+        base,
+        wall: Box::new(wall),
+    })
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &WallsFromLines) -> CommandResult<()> {

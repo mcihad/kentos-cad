@@ -9,16 +9,32 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
     s.handle(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":name,"arguments":args,"_meta":{"io.modelcontextprotocol/protocolVersion":MODERN,"io.modelcontextprotocol/clientInfo":{"name":"parcel-arc-corners-test","version":"1"},"io.modelcontextprotocol/clientCapabilities":{}}}})).unwrap()["result"].clone()
 }
 
-const ON_ARC: &str = "yaylı sınırda eksik köşe: üstteki iki parselin köşesi alttakinin yayının tepesinde";
+const ON_ARC: &str =
+    "yaylı sınırda eksik köşe: üstteki iki parselin köşesi alttakinin yayının tepesinde";
 const ACROSS: &str = "yayın çemberinde ama kirişin öbür yanındaki köşe yayın üstünde değildir";
 
 #[test]
 fn the_arc_s_missing_corner_over_mcp_is_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.parcels.boundaries.json")).unwrap();
-    let find = |name: &str| cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap().clone();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.parcels.boundaries.json"
+    ))
+    .unwrap();
+    let find = |name: &str| {
+        cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"] == name)
+            .unwrap()
+            .clone()
+    };
     let case = find(ON_ARC);
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-parcel-arc-corners-{}.kcad", std::process::id()));
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-parcel-arc-corners-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -30,11 +46,21 @@ fn the_arc_s_missing_corner_over_mcp_is_the_case_s() {
         args["drawing"] = drawing.clone();
         let r = call(&mut server, "cad.parcels.boundaries", args);
         assert_eq!(r["isError"], false, "{r}");
-        let got = r["structuredContent"]["output"]["problems"].as_array().cloned().unwrap_or_default();
-        let want = step["result"]["output"]["problems"].as_array().cloned().unwrap_or_default();
+        let got = r["structuredContent"]["output"]["problems"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
+        let want = step["result"]["output"]["problems"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
         assert_eq!(got.len(), want.len(), "{name}: {got:?}");
         for (g, w) in got.iter().zip(&want) {
-            assert_eq!((&g["kind"], &g["parcels"]), (&w["kind"], &w["parcels"]), "{name}");
+            assert_eq!(
+                (&g["kind"], &g["parcels"]),
+                (&w["kind"], &w["parcels"]),
+                "{name}"
+            );
             for i in 0..2 {
                 let (a, b) = (g["at"][i].as_f64().unwrap(), w["at"][i].as_f64().unwrap());
                 assert!((a - b).abs() < 1e-9, "{name}: {a} != {b}");

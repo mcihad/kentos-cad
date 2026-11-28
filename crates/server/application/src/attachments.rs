@@ -46,7 +46,8 @@ type Row = (
     OffsetDateTime,
 );
 
-const SELECT: &str = "select id, name, media_type, size, sha256, blob_key, scan, scan_note, note, revision,
+const SELECT: &str =
+    "select id, name, media_type, size, sha256, blob_key, scan, scan_note, note, revision,
         created_by_name, created_at
    from kentos.project_attachment where tenant_id = $1 and project_id = $2";
 
@@ -85,26 +86,42 @@ pub async fn list(db: &Db, access: &ProjectAccess) -> AppResult<Vec<AttachmentVi
     access.live()?;
     access.require(ProjectPermission::Read)?;
     let mut tx = db.scoped(access.scope()).await?;
-    let rows: Vec<Row> = sqlx::query_as(sqlx::AssertSqlSafe(format!("{SELECT} order by created_at desc, id desc")))
-        .bind(access.tenant)
-        .bind(access.project)
-        .fetch_all(&mut *tx)
-        .await?;
+    let rows: Vec<Row> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "{SELECT} order by created_at desc, id desc"
+    )))
+    .bind(access.tenant)
+    .bind(access.project)
+    .fetch_all(&mut *tx)
+    .await?;
     tx.commit().await?;
     Ok(rows.iter().map(view_of).collect())
 }
 
 /// `POST …/attachments`: a received upload becomes the project's attachment.
-pub async fn add(db: &Db, blobs: &Blobs, access: &ProjectAccess, input: AttachmentCreate) -> AppResult<AttachmentView> {
+pub async fn add(
+    db: &Db,
+    blobs: &Blobs,
+    access: &ProjectAccess,
+    input: AttachmentCreate,
+) -> AppResult<AttachmentView> {
     access.writable()?;
     access.require(ProjectPermission::FeatureWrite)?;
-    let note = input.note.as_deref().map(str::trim).filter(|n| !n.is_empty());
+    let note = input
+        .note
+        .as_deref()
+        .map(str::trim)
+        .filter(|n| !n.is_empty());
     if note.is_some_and(|n| n.chars().count() > 2000) {
-        return Err(AppError::invalid_at("note", "Not en çok 2000 karakter olabilir."));
+        return Err(AppError::invalid_at(
+            "note",
+            "Not en çok 2000 karakter olabilir.",
+        ));
     }
     let mut tx = db.scoped(access.scope()).await?;
     if let Some(r) = input.revision
-        && crate::files::revision(&mut tx, access.tenant, access.project, r).await?.is_none()
+        && crate::files::revision(&mut tx, access.tenant, access.project, r)
+            .await?
+            .is_none()
     {
         return Err(AppError::invalid_at(
             "revision",

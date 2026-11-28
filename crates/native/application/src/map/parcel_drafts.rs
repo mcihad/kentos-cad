@@ -7,9 +7,10 @@
 //! `cad.parcels.withdraw.json`.
 
 use kentos_commands::{
-    CommandResult, DraftParcel, DraftRing, MAX_APPROVAL_REFERENCE, MAX_PARCEL_LABEL, MAX_PARCEL_NAME, ParcelApproval,
-    ParcelApprovalInput, ParcelDocument, ParcelDraft, ParcelRegister, ParcelsApprove, ParcelsApproved, ParcelsWithdraw,
-    ParcelsWithdrawn, RecordedParcel, StatedLength, review_label_ok,
+    CommandResult, DraftParcel, DraftRing, MAX_APPROVAL_REFERENCE, MAX_PARCEL_LABEL,
+    MAX_PARCEL_NAME, ParcelApproval, ParcelApprovalInput, ParcelDocument, ParcelDraft,
+    ParcelRegister, ParcelsApprove, ParcelsApproved, ParcelsWithdraw, ParcelsWithdrawn,
+    RecordedParcel, StatedLength, review_label_ok,
 };
 use kentos_domain::Document;
 
@@ -23,7 +24,12 @@ pub const APPROVE_STEP: &str = "Belge onayı";
 pub const WITHDRAW_STEP: &str = "Taslağı geri çek";
 
 /// The draft `cad.parcels.record` keeps for a document: numbered after the drafts, its parcels as read now.
-pub(crate) fn draft_of(reg: &ParcelRegister, document: &ParcelDocument, made: &[Made], closing: &[u32]) -> ParcelDraft {
+pub(crate) fn draft_of(
+    reg: &ParcelRegister,
+    document: &ParcelDocument,
+    made: &[Made],
+    closing: &[u32],
+) -> ParcelDraft {
     ParcelDraft {
         number: reg.drafts.iter().map(|d| d.number).max().unwrap_or(0) + 1,
         name: document.name.clone(),
@@ -47,13 +53,21 @@ pub(crate) fn draft_of(reg: &ParcelRegister, document: &ParcelDocument, made: &[
                         part: *part,
                         hole: *hole,
                         pts: pts.clone(),
-                        bulges: if bulges.iter().all(|b| *b == 0.0) { Vec::new() } else { bulges.clone() },
+                        bulges: if bulges.iter().all(|b| *b == 0.0) {
+                            Vec::new()
+                        } else {
+                            bulges.clone()
+                        },
                     })
                     .collect(),
                 lengths: m
                     .lengths
                     .iter()
-                    .map(|(ring, edge, length, _)| StatedLength { ring: *ring as u32, edge: *edge as u32, length: length.clone() })
+                    .map(|(ring, edge, length, _)| StatedLength {
+                        ring: *ring as u32,
+                        edge: *edge as u32,
+                        length: length.clone(),
+                    })
                     .collect(),
             })
             .collect(),
@@ -67,7 +81,11 @@ fn made_of_draft(p: &DraftParcel) -> Made {
         .rings
         .iter()
         .map(|r| {
-            let bulges = if r.bulges.is_empty() { vec![0.0; r.pts.len()] } else { r.bulges.clone() };
+            let bulges = if r.bulges.is_empty() {
+                vec![0.0; r.pts.len()]
+            } else {
+                r.bulges.clone()
+            };
             (r.part, r.hole, r.pts.clone(), bulges)
         })
         .collect();
@@ -89,7 +107,14 @@ fn made_of_draft(p: &DraftParcel) -> Made {
         lengths: p
             .lengths
             .iter()
-            .map(|l| (l.ring as usize, l.edge as usize, l.length.clone(), "draft".to_owned()))
+            .map(|l| {
+                (
+                    l.ring as usize,
+                    l.edge as usize,
+                    l.length.clone(),
+                    "draft".to_owned(),
+                )
+            })
             .collect(),
     }
 }
@@ -112,7 +137,9 @@ fn approval_of(a: &ParcelApprovalInput) -> Result<ParcelApproval, Stop> {
     if !date.is_empty() && !review_label_ok(&date, MAX_PARCEL_LABEL) {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Onay tarihi en çok {MAX_PARCEL_LABEL} karakterdir, denetim karakteri taşımaz."),
+            format!(
+                "Onay tarihi en çok {MAX_PARCEL_LABEL} karakterdir, denetim karakteri taşımaz."
+            ),
             "approval.date",
         ));
     }
@@ -123,11 +150,18 @@ fn approval_of(a: &ParcelApprovalInput) -> Result<ParcelApproval, Stop> {
             "approval.by",
         ));
     }
-    Ok(ParcelApproval { reference, date, by })
+    Ok(ParcelApproval {
+        reference,
+        date,
+        by,
+    })
 }
 
 /// The register after the approval and the answer, or why not.
-fn approve(doc: &Document, input: &ParcelsApprove) -> Result<(ParcelRegister, ParcelsApproved), Stop> {
+fn approve(
+    doc: &Document,
+    input: &ParcelsApprove,
+) -> Result<(ParcelRegister, ParcelsApproved), Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     if input.draft.is_some() == input.document.is_some() {
         return Err(fail(
@@ -140,7 +174,11 @@ fn approve(doc: &Document, input: &ParcelsApprove) -> Result<(ParcelRegister, Pa
     let mut reg = doc.parcel_register().cloned().unwrap_or_default();
     if let Some(n) = input.document {
         let Some(d) = reg.documents.iter_mut().find(|d| d.number == n) else {
-            return Err(fail(codes::UNKNOWN_PARCEL_DOCUMENT, format!("Parsel kayıtlarında {n} numaralı belge yok."), "document"));
+            return Err(fail(
+                codes::UNKNOWN_PARCEL_DOCUMENT,
+                format!("Parsel kayıtlarında {n} numaralı belge yok."),
+                "document",
+            ));
         };
         if let Some(a) = &d.approval {
             return Err(fail(
@@ -153,11 +191,22 @@ fn approve(doc: &Document, input: &ParcelsApprove) -> Result<(ParcelRegister, Pa
             ));
         }
         d.approval = Some(approval);
-        return Ok((reg, ParcelsApproved { document: n, recorded: None, revision: doc.revision().to_string() }));
+        return Ok((
+            reg,
+            ParcelsApproved {
+                document: n,
+                recorded: None,
+                revision: doc.revision().to_string(),
+            },
+        ));
     }
     let n = input.draft.unwrap_or_default();
     let Some(at) = reg.drafts.iter().position(|d| d.number == n) else {
-        return Err(fail(codes::UNKNOWN_PARCEL_DRAFT, format!("Parsel kayıtlarında {n} numaralı belge taslağı yok."), "draft"));
+        return Err(fail(
+            codes::UNKNOWN_PARCEL_DRAFT,
+            format!("Parsel kayıtlarında {n} numaralı belge taslağı yok."),
+            "draft",
+        ));
     };
     let draft = reg.drafts.remove(at);
     // What the draft closes must still be current: a document recorded since may have closed it.
@@ -193,13 +242,23 @@ fn approve(doc: &Document, input: &ParcelsApprove) -> Result<(ParcelRegister, Pa
     };
     let mut out = apply(&mut reg, document, made, draft.close, "draft")?;
     out.revision = doc.revision().to_string();
-    Ok((reg, ParcelsApproved { document: out.document, recorded: Some(out), revision: doc.revision().to_string() }))
+    Ok((
+        reg,
+        ParcelsApproved {
+            document: out.document,
+            recorded: Some(out),
+            revision: doc.revision().to_string(),
+        },
+    ))
 }
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ParcelsApprove) -> CommandResult<()> {
     match approve(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -207,7 +266,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ParcelsApprove) -> CommandRes
 /// What execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ParcelsApprove) -> CommandResult<ParcelsApproved> {
     match approve(cx.doc, input) {
-        Ok((_, out)) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok((_, out)) => CommandResult::Completed {
+            output: out,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -222,54 +284,98 @@ fn write(cx: &mut ExecutionContext<'_>, input: ParcelsApprove) -> CommandResult<
     if let Some(r) = out.recorded.as_mut() {
         r.revision = out.revision.clone();
     }
-    CommandResult::Completed { output: out, warnings: Vec::new() }
+    CommandResult::Completed {
+        output: out,
+        warnings: Vec::new(),
+    }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ParcelsApprove) -> CommandResult<ParcelsApproved> {
-    crate::call::recorded(cx, kentos_commands::CAD_PARCELS_APPROVE, kentos_commands::CAD_PARCELS_APPROVE_VERSION, input, write)
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ParcelsApprove,
+) -> CommandResult<ParcelsApproved> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_PARCELS_APPROVE,
+        kentos_commands::CAD_PARCELS_APPROVE_VERSION,
+        input,
+        write,
+    )
 }
 
 pub mod withdraw {
     //! `cad.parcels.withdraw` v1's handlers: the draft removed, nothing else.
     use super::*;
 
-    fn run(doc: &Document, input: &ParcelsWithdraw) -> Result<(ParcelRegister, ParcelsWithdrawn), Stop> {
+    fn run(
+        doc: &Document,
+        input: &ParcelsWithdraw,
+    ) -> Result<(ParcelRegister, ParcelsWithdrawn), Stop> {
         checks::revision(doc, input.expected_revision.as_deref())?;
         let n = input.draft;
         let mut reg = doc.parcel_register().cloned().unwrap_or_default();
         let Some(at) = reg.drafts.iter().position(|d| d.number == n) else {
-            return Err(fail(codes::UNKNOWN_PARCEL_DRAFT, format!("Parsel kayıtlarında {n} numaralı belge taslağı yok."), "draft"));
+            return Err(fail(
+                codes::UNKNOWN_PARCEL_DRAFT,
+                format!("Parsel kayıtlarında {n} numaralı belge taslağı yok."),
+                "draft",
+            ));
         };
         let name = reg.drafts.remove(at).name;
-        Ok((reg, ParcelsWithdrawn { name, revision: doc.revision().to_string() }))
+        Ok((
+            reg,
+            ParcelsWithdrawn {
+                name,
+                revision: doc.revision().to_string(),
+            },
+        ))
     }
 
     pub fn validate(cx: &ExecutionContext<'_>, input: &ParcelsWithdraw) -> CommandResult<()> {
         match run(cx.doc, input) {
-            Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+            Ok(_) => CommandResult::Completed {
+                output: (),
+                warnings: Vec::new(),
+            },
             Err(stop) => stop.into(),
         }
     }
 
-    pub fn plan(cx: &ExecutionContext<'_>, input: &ParcelsWithdraw) -> CommandResult<ParcelsWithdrawn> {
+    pub fn plan(
+        cx: &ExecutionContext<'_>,
+        input: &ParcelsWithdraw,
+    ) -> CommandResult<ParcelsWithdrawn> {
         match run(cx.doc, input) {
-            Ok((_, out)) => CommandResult::Completed { output: out, warnings: Vec::new() },
+            Ok((_, out)) => CommandResult::Completed {
+                output: out,
+                warnings: Vec::new(),
+            },
             Err(stop) => stop.into(),
         }
     }
 
-    fn write(cx: &mut ExecutionContext<'_>, input: ParcelsWithdraw) -> CommandResult<ParcelsWithdrawn> {
+    fn write(
+        cx: &mut ExecutionContext<'_>,
+        input: ParcelsWithdraw,
+    ) -> CommandResult<ParcelsWithdrawn> {
         let (reg, mut out) = match run(cx.doc, &input) {
             Ok(done) => done,
             Err(stop) => return stop.into(),
         };
         // A register left with nothing is none.
-        cx.doc.set_parcel_register((!reg.is_empty()).then_some(reg), WITHDRAW_STEP);
+        cx.doc
+            .set_parcel_register((!reg.is_empty()).then_some(reg), WITHDRAW_STEP);
         out.revision = cx.doc.revision().to_string();
-        CommandResult::Completed { output: out, warnings: Vec::new() }
+        CommandResult::Completed {
+            output: out,
+            warnings: Vec::new(),
+        }
     }
 
-    pub fn execute(cx: &mut ExecutionContext<'_>, input: ParcelsWithdraw) -> CommandResult<ParcelsWithdrawn> {
+    pub fn execute(
+        cx: &mut ExecutionContext<'_>,
+        input: ParcelsWithdraw,
+    ) -> CommandResult<ParcelsWithdrawn> {
         crate::call::recorded(
             cx,
             kentos_commands::CAD_PARCELS_WITHDRAW,

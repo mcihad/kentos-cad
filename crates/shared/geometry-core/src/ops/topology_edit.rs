@@ -354,7 +354,14 @@ pub fn inside_segment(neighbours: &[Neighbour], a: Vec2, b: Vec2, points: bool) 
 
 /// The same inside an arc edge (centre `c`, radius `r`, from angle `a0` sweeping `sweep`, signed, between its ends `a`
 /// and `b`): the places within [`SAME`] of the arc, farther than [`SAME`] from both ends along it.
-pub fn inside_arc(neighbours: &[Neighbour], c: Vec2, r: f64, a0: f64, sweep: f64, points: bool) -> Vec<Vec2> {
+pub fn inside_arc(
+    neighbours: &[Neighbour],
+    c: Vec2,
+    r: f64,
+    a0: f64,
+    sweep: f64,
+    points: bool,
+) -> Vec<Vec2> {
     use crate::geom::arc::norm_angle;
     let mut out: Vec<Vec2> = Vec::new();
     let span = sweep.abs();
@@ -364,8 +371,13 @@ pub fn inside_arc(neighbours: &[Neighbour], c: Vec2, r: f64, a0: f64, sweep: f64
                 continue;
             }
             let theta = crate::jsmath::atan2(v.y - c.y, v.x - c.x);
-            let d = if sweep > 0.0 { norm_angle(theta - a0) } else { norm_angle(a0 - theta) };
-            if d < span && d * r > SAME && (span - d) * r > SAME && !out.iter().any(|q| same(*q, v)) {
+            let d = if sweep > 0.0 {
+                norm_angle(theta - a0)
+            } else {
+                norm_angle(a0 - theta)
+            };
+            if d < span && d * r > SAME && (span - d) * r > SAME && !out.iter().any(|q| same(*q, v))
+            {
                 out.push(v);
             }
         }
@@ -504,7 +516,8 @@ pub fn apply(neighbours: &[Neighbour], changes: &[Change], points: bool) -> Answ
                             };
                             // Joined arcs (docs/adr/5000): the arc when this neighbour's two edges there are arcs,
                             // its sign by the way the neighbour runs; straight otherwise.
-                            let arcs = path.bulges[prev_edge].abs() > STRAIGHT && path.bulges[k].abs() > STRAIGHT;
+                            let arcs = path.bulges[prev_edge].abs() > STRAIGHT
+                                && path.bulges[k].abs() > STRAIGHT;
                             path.bulges[prev_edge] = if joined == 0.0 || !arcs {
                                 0.0
                             } else if same(before, prev) {
@@ -682,7 +695,11 @@ fn merged(b: &Path, a: &Path) -> Vec<(Span, Span)> {
         return Vec::new();
     }
     let j = (0..n - 1).find(|&k| b.pts[k] != a.pts[k]).unwrap_or(n - 1);
-    if (0..n).filter(|&k| k != j).zip(&a.pts).any(|(k, p)| b.pts[k] != *p) {
+    if (0..n)
+        .filter(|&k| k != j)
+        .zip(&a.pts)
+        .any(|(k, p)| b.pts[k] != *p)
+    {
         return Vec::new();
     }
     let m = n - 1;
@@ -698,7 +715,10 @@ fn merged(b: &Path, a: &Path) -> Vec<(Span, Span)> {
         return Vec::new();
     }
     let (p, v, q) = (b.pts[prev], b.pts[j], b.pts[next]);
-    let (l1, l2) = (crate::jsmath::js_hypot(v.x - p.x, v.y - p.y), crate::jsmath::js_hypot(q.x - v.x, q.y - v.y));
+    let (l1, l2) = (
+        crate::jsmath::js_hypot(v.x - p.x, v.y - p.y),
+        crate::jsmath::js_hypot(q.x - v.x, q.y - v.y),
+    );
     if !(l1 + l2 > 0.0) {
         return Vec::new();
     }
@@ -716,7 +736,11 @@ fn fraction(edge: Span, v: Vec2) -> f64 {
     {
         use crate::geom::arc::norm_angle;
         let theta = crate::jsmath::atan2(v.y - arc.c.y, v.x - arc.c.x);
-        let d = if arc.sweep > 0.0 { norm_angle(theta - arc.a0) } else { norm_angle(arc.a0 - theta) };
+        let d = if arc.sweep > 0.0 {
+            norm_angle(theta - arc.a0)
+        } else {
+            norm_angle(arc.a0 - theta)
+        };
         return d / arc.sweep.abs();
     }
     let (dx, dy) = (b.x - a.x, b.y - a.y);
@@ -736,7 +760,10 @@ fn at_fraction(edge: Span, t: f64) -> Vec2 {
         && let Some(arc) = crate::geom::bulge::bulge_arc(a, b, bulge)
     {
         let angle = arc.a0 + arc.sweep * t;
-        return Vec2::new(arc.c.x + arc.r * crate::jsmath::cos(angle), arc.c.y + arc.r * crate::jsmath::sin(angle));
+        return Vec2::new(
+            arc.c.x + arc.r * crate::jsmath::cos(angle),
+            arc.c.y + arc.r * crate::jsmath::sin(angle),
+        );
     }
     Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
 }
@@ -745,7 +772,9 @@ fn at_fraction(edge: Span, t: f64) -> Vec2 {
 fn part_bulge(edge: Span, t1: f64, t2: f64) -> f64 {
     let (a, b, bulge) = edge;
     match crate::geom::bulge::bulge_arc(a, b, bulge) {
-        Some(arc) if bulge.abs() > STRAIGHT => crate::geom::bulge::bulge_of_sweep(arc.sweep * (t2 - t1)),
+        Some(arc) if bulge.abs() > STRAIGHT => {
+            crate::geom::bulge::bulge_of_sweep(arc.sweep * (t2 - t1))
+        }
         _ => 0.0,
     }
 }
@@ -784,7 +813,8 @@ pub fn carried(neighbours: &[Neighbour], edges: &[(Span, Span)], points: bool) -
                 moves.push(Change::Move { at: v, to });
             }
         }
-        let bent = (new.2 - bulge).abs() > BULGE || ((new.2.abs() > STRAIGHT) != (bulge.abs() > STRAIGHT));
+        let bent =
+            (new.2 - bulge).abs() > BULGE || ((new.2.abs() > STRAIGHT) != (bulge.abs() > STRAIGHT));
         if !bent {
             continue;
         }
@@ -796,7 +826,10 @@ pub fn carried(neighbours: &[Neighbour], edges: &[(Span, Span)], points: bool) -
             if same(v, b) {
                 return Some((1.0, false));
             }
-            places.iter().find(|(q, _)| same(*q, v)).map(|&(_, t)| (t, true))
+            places
+                .iter()
+                .find(|(q, _)| same(*q, v))
+                .map(|&(_, t)| (t, true))
         };
         for n in neighbours {
             let Some((paths, _)) = paths_of(&n.shape) else {
@@ -804,7 +837,11 @@ pub fn carried(neighbours: &[Neighbour], edges: &[(Span, Span)], points: bool) -
             };
             for path in &paths {
                 let len = path.pts.len();
-                let count = if path.closed { len } else { len.saturating_sub(1) };
+                let count = if path.closed {
+                    len
+                } else {
+                    len.saturating_sub(1)
+                };
                 for e in 0..count {
                     let (u, w, be) = (path.pts[e], path.pts[(e + 1) % len], path.bulges[e]);
                     let (Some((tu, iu)), Some((tw, iw))) = (on(u), on(w)) else {
@@ -817,11 +854,18 @@ pub fn carried(neighbours: &[Neighbour], edges: &[(Span, Span)], points: bool) -
                     let (ua, wa) = (at_fraction(new, tu), at_fraction(new, tw));
                     let to = part_bulge(new, tu, tw);
                     let known = bends.iter().any(|c| match *c {
-                        Change::Bulge { a: x, b: y, .. } => (same(x, ua) && same(y, wa)) || (same(x, wa) && same(y, ua)),
+                        Change::Bulge { a: x, b: y, .. } => {
+                            (same(x, ua) && same(y, wa)) || (same(x, wa) && same(y, ua))
+                        }
                         _ => false,
                     });
                     if !known {
-                        bends.push(Change::Bulge { a: ua, b: wa, from: be, to });
+                        bends.push(Change::Bulge {
+                            a: ua,
+                            b: wa,
+                            from: be,
+                            to,
+                        });
                     }
                 }
             }
@@ -847,7 +891,13 @@ mod tests {
     use super::*;
 
     fn line(a: (f64, f64), b: (f64, f64)) -> Neighbour {
-        Neighbour { shape: Shape::Line { a: Vec2::new(a.0, a.1), b: Vec2::new(b.0, b.1) }, locked: false }
+        Neighbour {
+            shape: Shape::Line {
+                a: Vec2::new(a.0, a.1),
+                b: Vec2::new(b.0, b.1),
+            },
+            locked: false,
+        }
     }
 
     /// docs/adr/3400: an edge turned about its start carries a T junction's corner at the same fraction of it; an edge
@@ -855,7 +905,12 @@ mod tests {
     #[test]
     fn a_turned_edge_carries_the_corner_inside_it_at_its_fraction() {
         let before = Shape::Polygon {
-            pts: vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), Vec2::new(40.0, 30.0), Vec2::new(0.0, 30.0)],
+            pts: vec![
+                Vec2::new(0.0, 0.0),
+                Vec2::new(40.0, 0.0),
+                Vec2::new(40.0, 30.0),
+                Vec2::new(0.0, 30.0),
+            ],
             bulges: None,
             holes: None,
             parts: None,
@@ -869,7 +924,13 @@ mod tests {
         let arm = line((10.0, -20.0), (10.0, 0.0));
         let far = line((-10.0, 15.0), (0.0, 15.0));
         let got = carried(&[arm, far], &edges, false);
-        assert_eq!(got, vec![Change::Move { at: Vec2::new(10.0, 0.0), to: Vec2::new(10.0, 1.0) }]);
+        assert_eq!(
+            got,
+            vec![Change::Move {
+                at: Vec2::new(10.0, 0.0),
+                to: Vec2::new(10.0, 1.0)
+            }]
+        );
     }
 
     /// docs/adr/4200: Köşe sil joins the two edges about the lost corner: a T junction's end on the first goes to the
@@ -877,36 +938,88 @@ mod tests {
     /// arc beside the corner give nothing.
     #[test]
     fn a_lost_corner_s_edges_carry_their_vertices_to_the_joined_edge() {
-        let square = |pts: Vec<Vec2>| Shape::Polygon { pts, bulges: None, holes: None, parts: None };
-        let before = square(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), Vec2::new(40.0, 30.0), Vec2::new(0.0, 30.0)]);
-        let after = square(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, 30.0), Vec2::new(0.0, 30.0)]);
+        let square = |pts: Vec<Vec2>| Shape::Polygon {
+            pts,
+            bulges: None,
+            holes: None,
+            parts: None,
+        };
+        let before = square(vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(40.0, 0.0),
+            Vec2::new(40.0, 30.0),
+            Vec2::new(0.0, 30.0),
+        ]);
+        let after = square(vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(40.0, 30.0),
+            Vec2::new(0.0, 30.0),
+        ]);
         let edges = changed_edges(&before, &after);
         assert_eq!(edges.len(), 2, "{edges:?}");
         // On the south edge 10 of 70 along; on the east edge 40 + 15 = 55 of 70.
         let arm = line((10.0, -20.0), (10.0, 0.0));
         let stub = line((50.0, 15.0), (40.0, 15.0));
         let got = carried(&[arm, stub], &edges, false);
-        let want = [(Vec2::new(10.0, 0.0), 10.0 / 70.0), (Vec2::new(40.0, 15.0), 55.0 / 70.0)];
+        let want = [
+            (Vec2::new(10.0, 0.0), 10.0 / 70.0),
+            (Vec2::new(40.0, 15.0), 55.0 / 70.0),
+        ];
         assert_eq!(got.len(), 2, "{got:?}");
         for (c, (at0, f)) in got.iter().zip(want) {
-            let Change::Move { at, to } = c else { panic!("{c:?}") };
-            assert!(same(*at, at0) && same(*to, Vec2::new(40.0 * f, 30.0 * f)), "{c:?}");
+            let Change::Move { at, to } = c else {
+                panic!("{c:?}")
+            };
+            assert!(
+                same(*at, at0) && same(*to, Vec2::new(40.0 * f, 30.0 * f)),
+                "{c:?}"
+            );
         }
         // An open path's end: its edge goes, nothing is joined.
-        let road = |pts: Vec<Vec2>| Shape::Polyline { pts, bulges: None, holes: None, parts: None, closed: false, widths: None };
-        let r = road(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), Vec2::new(40.0, -20.0)]);
-        assert!(changed_edges(&r, &road(vec![Vec2::new(40.0, 0.0), Vec2::new(40.0, -20.0)])).is_empty());
-        assert_eq!(changed_edges(&r, &road(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, -20.0)])).len(), 2);
+        let road = |pts: Vec<Vec2>| Shape::Polyline {
+            pts,
+            bulges: None,
+            holes: None,
+            parts: None,
+            closed: false,
+            widths: None,
+        };
+        let r = road(vec![
+            Vec2::new(0.0, 0.0),
+            Vec2::new(40.0, 0.0),
+            Vec2::new(40.0, -20.0),
+        ]);
+        assert!(
+            changed_edges(
+                &r,
+                &road(vec![Vec2::new(40.0, 0.0), Vec2::new(40.0, -20.0)])
+            )
+            .is_empty()
+        );
+        assert_eq!(
+            changed_edges(&r, &road(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, -20.0)])).len(),
+            2
+        );
         // An arc beside the corner: not joined.
         let arced = Shape::Polyline {
-            pts: vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, 0.0), Vec2::new(40.0, -20.0)],
+            pts: vec![
+                Vec2::new(0.0, 0.0),
+                Vec2::new(40.0, 0.0),
+                Vec2::new(40.0, -20.0),
+            ],
             bulges: Some(vec![0.5, 0.0, 0.0]),
             holes: None,
             parts: None,
             closed: false,
             widths: None,
         };
-        assert!(changed_edges(&arced, &road(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, -20.0)])).is_empty());
+        assert!(
+            changed_edges(
+                &arced,
+                &road(vec![Vec2::new(0.0, 0.0), Vec2::new(40.0, -20.0)])
+            )
+            .is_empty()
+        );
     }
 
     /// The same round an arc whose end moved, its bulge kept: the vertex at the arc's middle goes to the new arc's
@@ -927,9 +1040,14 @@ mod tests {
             locked: false,
         };
         let got = carried(&[n], &[(old, new)], false);
-        let [Change::Move { at, to }] = got.as_slice() else { panic!("{got:?}") };
+        let [Change::Move { at, to }] = got.as_slice() else {
+            panic!("{got:?}")
+        };
         assert!(same(*at, Vec2::new(10.0, -10.0)));
-        assert!((to.x - 15.0).abs() < 1e-9 && (to.y + 15.0).abs() < 1e-9, "{to:?}");
+        assert!(
+            (to.x - 15.0).abs() < 1e-9 && (to.y + 15.0).abs() < 1e-9,
+            "{to:?}"
+        );
     }
 
     /// A straight edge made an arc (bulge 0.5: its middle 10 m off the chord of 40 m): the T junction at its middle goes to
@@ -943,11 +1061,29 @@ mod tests {
         let got = carried(&[b1], &[(old, new)], false);
         let sweep = 4.0 * crate::jsmath::atan(0.5);
         assert_eq!(got.len(), 2, "{got:?}");
-        let Change::Move { at, to } = got[0] else { panic!() };
-        assert!(same(at, Vec2::new(20.0, 0.0)) && (to.x - 20.0).abs() < 1e-9 && (to.y + 10.0).abs() < 1e-9, "{to:?}");
-        let Change::Bulge { a, b, from, to: bulge } = got[1] else { panic!() };
+        let Change::Move { at, to } = got[0] else {
+            panic!()
+        };
+        assert!(
+            same(at, Vec2::new(20.0, 0.0))
+                && (to.x - 20.0).abs() < 1e-9
+                && (to.y + 10.0).abs() < 1e-9,
+            "{to:?}"
+        );
+        let Change::Bulge {
+            a,
+            b,
+            from,
+            to: bulge,
+        } = got[1]
+        else {
+            panic!()
+        };
         assert!(same(a, Vec2::new(0.0, 0.0)) && same(b, to) && from == 0.0);
-        assert!((bulge - crate::jsmath::tan(sweep / 8.0)).abs() < 1e-12, "{bulge}");
+        assert!(
+            (bulge - crate::jsmath::tan(sweep / 8.0)).abs() < 1e-12,
+            "{bulge}"
+        );
     }
 
     fn area(pts: &[(f64, f64)]) -> Neighbour {
@@ -969,21 +1105,37 @@ mod tests {
         let b1 = area(&[(10.0, 0.0), (20.0, 0.0), (20.0, 10.0), (10.0, 10.0)]);
         let b2 = area(&[(10.0, 10.0), (20.0, 10.0), (20.0, 20.0), (10.0, 20.0)]);
         let beyond = Neighbour {
-            shape: Shape::Line { a: Vec2::new(10.0, 25.0), b: Vec2::new(15.0, 30.0) },
+            shape: Shape::Line {
+                a: Vec2::new(10.0, 25.0),
+                b: Vec2::new(15.0, 30.0),
+            },
             locked: false,
         };
         let off = Neighbour {
-            shape: Shape::Line { a: Vec2::new(10.001, 16.0), b: Vec2::new(20.0, 16.0) },
+            shape: Shape::Line {
+                a: Vec2::new(10.001, 16.0),
+                b: Vec2::new(20.0, 16.0),
+            },
             locked: false,
         };
         let stone = Neighbour {
-            shape: Shape::Point { p: Vec2::new(10.0, 5.0), z: None, parts: None },
+            shape: Shape::Point {
+                p: Vec2::new(10.0, 5.0),
+                z: None,
+                parts: None,
+            },
             locked: false,
         };
         let all = [b1, b2, beyond, off, stone];
         let (a, b) = (Vec2::new(10.0, 0.0), Vec2::new(10.0, 20.0));
-        assert_eq!(inside_segment(&all, a, b, false), vec![Vec2::new(10.0, 10.0)]);
-        assert_eq!(inside_segment(&all, a, b, true), vec![Vec2::new(10.0, 10.0), Vec2::new(10.0, 5.0)]);
+        assert_eq!(
+            inside_segment(&all, a, b, false),
+            vec![Vec2::new(10.0, 10.0)]
+        );
+        assert_eq!(
+            inside_segment(&all, a, b, true),
+            vec![Vec2::new(10.0, 10.0), Vec2::new(10.0, 5.0)]
+        );
     }
 
     /// An arc's middle vertex is inside it; its ends and the chord's middle are not.
@@ -992,9 +1144,24 @@ mod tests {
         let (a, b) = (Vec2::new(0.0, 0.0), Vec2::new(0.0, 20.0));
         let arc = crate::geom::bulge::bulge_arc(a, b, 0.25).expect("an arc");
         let mid = crate::geom::bulge::segment_mid(a, b, 0.25);
-        let on = Neighbour { shape: Shape::Line { a: mid, b: Vec2::new(9.0, 10.0) }, locked: false };
-        let chord = Neighbour { shape: Shape::Line { a: Vec2::new(0.0, 10.0), b: Vec2::new(-5.0, 10.0) }, locked: false };
-        let ends = Neighbour { shape: Shape::Line { a, b }, locked: false };
+        let on = Neighbour {
+            shape: Shape::Line {
+                a: mid,
+                b: Vec2::new(9.0, 10.0),
+            },
+            locked: false,
+        };
+        let chord = Neighbour {
+            shape: Shape::Line {
+                a: Vec2::new(0.0, 10.0),
+                b: Vec2::new(-5.0, 10.0),
+            },
+            locked: false,
+        };
+        let ends = Neighbour {
+            shape: Shape::Line { a, b },
+            locked: false,
+        };
         let got = inside_arc(&[on, chord, ends], arc.c, arc.r, arc.a0, arc.sweep, false);
         assert_eq!(got.len(), 1);
         assert!(dist(got[0], mid) < 1e-12);

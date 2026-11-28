@@ -42,7 +42,9 @@ pub struct Notices {
 
 impl Default for Notices {
     fn default() -> Self {
-        Self { tx: broadcast::channel(1024).0 }
+        Self {
+            tx: broadcast::channel(1024).0,
+        }
     }
 }
 
@@ -80,7 +82,9 @@ pub async fn listen(db: kentos_postgres::Db, notices: Notices) {
                     }
                 }
             }
-            Err(e) => tracing::warn!(error = ?e, "bildirim kanalına bağlanılamadı; yeniden denenecek"),
+            Err(e) => {
+                tracing::warn!(error = ?e, "bildirim kanalına bağlanılamadı; yeniden denenecek")
+            }
         }
         tokio::time::sleep(std::time::Duration::from_secs(5)).await;
     }

@@ -138,33 +138,49 @@ pub fn cut_fill_told(
     let mut kept: Vec<Vec<([f64; 2], f64)>> = Vec::new();
     let mut ground = Ground::new(base);
     let first = |done: u64, all: u64| tick((done * HALF).checked_div(all).unwrap_or(0), whole);
-    let Some((covered, uncovered)) = ground.overlay_told(comparison, |raw| {
-        let with: Vec<([f64; 2], f64)> = raw.iter().map(|(p, d)| (*p, if d.abs() <= ZERO { 0.0 } else { *d })).collect();
-        if with.iter().all(|(_, d)| *d == 0.0) {
-            out.coincident += integral(&with).0;
-            return;
-        }
-        let (fa, fv) = integral(&split(&with, true));
-        let (ca, cv) = integral(&split(&with, false));
-        out.fill += fv;
-        out.fill_area += fa;
-        out.cut -= cv;
-        out.cut_area += ca;
-        for (_, d) in &with {
-            out.least = Some(out.least.map_or(*d, |v| v.min(*d)));
-            out.largest = Some(out.largest.map_or(*d, |v| v.max(*d)));
-        }
-        kept.push(with);
-    }, &first) else {
+    let Some((covered, uncovered)) = ground.overlay_told(
+        comparison,
+        |raw| {
+            let with: Vec<([f64; 2], f64)> = raw
+                .iter()
+                .map(|(p, d)| (*p, if d.abs() <= ZERO { 0.0 } else { *d }))
+                .collect();
+            if with.iter().all(|(_, d)| *d == 0.0) {
+                out.coincident += integral(&with).0;
+                return;
+            }
+            let (fa, fv) = integral(&split(&with, true));
+            let (ca, cv) = integral(&split(&with, false));
+            out.fill += fv;
+            out.fill_area += fa;
+            out.cut -= cv;
+            out.cut_area += ca;
+            for (_, d) in &with {
+                out.least = Some(out.least.map_or(*d, |v| v.min(*d)));
+                out.largest = Some(out.largest.map_or(*d, |v| v.max(*d)));
+            }
+            kept.push(with);
+        },
+        &first,
+    ) else {
         return Ok(None);
     };
     out.covered = covered;
     out.uncovered = uncovered;
-    let (Some(least), Some(largest)) = (out.least, out.largest) else { return Ok(Some(out)) };
+    let (Some(least), Some(largest)) = (out.least, out.largest) else {
+        return Ok(Some(out));
+    };
     if let Some(i) = interval {
         let count = band_count(least, largest, i);
-        if matches!(count.partial_cmp(&(most_bands as f64)), Some(std::cmp::Ordering::Greater) | None) {
-            return Err(TooManyBands(if count.is_finite() { count as u64 } else { u64::MAX }));
+        if matches!(
+            count.partial_cmp(&(most_bands as f64)),
+            Some(std::cmp::Ordering::Greater) | None
+        ) {
+            return Err(TooManyBands(if count.is_finite() {
+                count as u64
+            } else {
+                u64::MAX
+            }));
         }
     }
     let mut bands: BTreeMap<i64, Vec<Piece>> = BTreeMap::new();
@@ -175,7 +191,11 @@ pub fn cut_fill_told(
                 push(&mut bands, 0, &split(with, true));
             }
             Some(i) => {
-                let (lo, hi) = with.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), (_, d)| (a.min(*d), b.max(*d)));
+                let (lo, hi) = with
+                    .iter()
+                    .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), (_, d)| {
+                        (a.min(*d), b.max(*d))
+                    });
                 for k in (lo / i).floor() as i64..=(hi / i).floor() as i64 {
                     let low = cut_at(with, k as f64 * i, true);
                     if low.len() >= 3 {
@@ -205,7 +225,10 @@ fn dissolve(band: i64, pieces: &[Piece]) -> Vec<Zone> {
     let areas: Vec<Area> = pieces
         .iter()
         .map(|p| Area {
-            outer: Ring { pts: p.pts.iter().map(|q| Vec2::new(q[0], q[1])).collect(), bulges: None },
+            outer: Ring {
+                pts: p.pts.iter().map(|q| Vec2::new(q[0], q[1])).collect(),
+                bulges: None,
+            },
             holes: Vec::new(),
         })
         .collect();
@@ -216,9 +239,15 @@ fn dissolve(band: i64, pieces: &[Piece]) -> Vec<Zone> {
     let boxes: Vec<[f64; 4]> = merged
         .iter()
         .map(|a| {
-            a.outer.pts.iter().fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| {
-                [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
-            })
+            a.outer.pts.iter().fold(
+                [
+                    f64::INFINITY,
+                    f64::INFINITY,
+                    f64::NEG_INFINITY,
+                    f64::NEG_INFINITY,
+                ],
+                |b, p| [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)],
+            )
         })
         .collect();
     let mut sums = vec![(0.0, 0.0); merged.len()];
@@ -226,9 +255,18 @@ fn dissolve(band: i64, pieces: &[Piece]) -> Vec<Zone> {
     for p in pieces {
         // A convex piece's corners' mean is inside it, so inside the zone it went to (unless it was a sliver).
         let n = p.pts.len() as f64;
-        let c = p.pts.iter().fold([0.0, 0.0], |s, q| [s[0] + q[0] / n, s[1] + q[1] / n]);
-        let holding: Vec<usize> =
-            (0..merged.len()).filter(|&k| boxes[k][0] <= c[0] && c[0] <= boxes[k][2] && boxes[k][1] <= c[1] && c[1] <= boxes[k][3]).collect();
+        let c = p
+            .pts
+            .iter()
+            .fold([0.0, 0.0], |s, q| [s[0] + q[0] / n, s[1] + q[1] / n]);
+        let holding: Vec<usize> = (0..merged.len())
+            .filter(|&k| {
+                boxes[k][0] <= c[0]
+                    && c[0] <= boxes[k][2]
+                    && boxes[k][1] <= c[1]
+                    && c[1] <= boxes[k][3]
+            })
+            .collect();
         let k = match holding.as_slice() {
             [one] => *one,
             _ => holding
@@ -250,10 +288,27 @@ fn dissolve(band: i64, pieces: &[Piece]) -> Vec<Zone> {
         .zip(sums)
         .zip(deepest)
         .map(|((a, (area, volume)), deep)| {
-            let mut holes: Vec<Vec<[f64; 2]>> = a.holes.iter().map(|h| ring(h, false)).filter(|h| h.len() >= 3).collect();
-            holes.sort_by(|p, q| (p[0][0], p[0][1]).partial_cmp(&(q[0][0], q[0][1])).unwrap_or(std::cmp::Ordering::Equal));
+            let mut holes: Vec<Vec<[f64; 2]>> = a
+                .holes
+                .iter()
+                .map(|h| ring(h, false))
+                .filter(|h| h.len() >= 3)
+                .collect();
+            holes.sort_by(|p, q| {
+                (p[0][0], p[0][1])
+                    .partial_cmp(&(q[0][0], q[0][1]))
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
             let (deepest, depth) = deep.unwrap_or(([0.0, 0.0], 0.0));
-            Zone { band, area, volume, outer: ring(&a.outer, true), holes, deepest, depth }
+            Zone {
+                band,
+                area,
+                volume,
+                outer: ring(&a.outer, true),
+                holes,
+                deepest,
+                depth,
+            }
         })
         .collect()
 }
@@ -267,13 +322,25 @@ fn nearest(areas: &[Area], c: [f64; 2]) -> usize {
                 let (a, b) = (r.pts[k], r.pts[(k + 1) % n]);
                 let (dx, dy) = (b.x - a.x, b.y - a.y);
                 let len = dx * dx + dy * dy;
-                let t = if len > 0.0 { (((c[0] - a.x) * dx + (c[1] - a.y) * dy) / len).clamp(0.0, 1.0) } else { 0.0 };
+                let t = if len > 0.0 {
+                    (((c[0] - a.x) * dx + (c[1] - a.y) * dy) / len).clamp(0.0, 1.0)
+                } else {
+                    0.0
+                };
                 (a.x + dx * t - c[0]).hypot(a.y + dy * t - c[1])
             })
             .fold(f64::INFINITY, f64::min)
     };
     (0..areas.len())
-        .map(|k| (k, std::iter::once(&areas[k].outer).chain(&areas[k].holes).map(away).fold(f64::INFINITY, f64::min)))
+        .map(|k| {
+            (
+                k,
+                std::iter::once(&areas[k].outer)
+                    .chain(&areas[k].holes)
+                    .map(away)
+                    .fold(f64::INFINITY, f64::min),
+            )
+        })
         .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
         .map_or(0, |(k, _)| k)
 }
@@ -322,11 +389,17 @@ fn ring(r: &Ring, ccw: bool) -> Vec<[f64; 2]> {
     }
     let mut pts = simplify(&raw);
     let n = pts.len();
-    let twice: f64 = (0..n).map(|k| pts[k][0] * pts[(k + 1) % n][1] - pts[(k + 1) % n][0] * pts[k][1]).sum();
+    let twice: f64 = (0..n)
+        .map(|k| pts[k][0] * pts[(k + 1) % n][1] - pts[(k + 1) % n][0] * pts[k][1])
+        .sum();
     if (twice > 0.0) != ccw {
         pts.reverse();
     }
-    if let Some(k) = (0..n).min_by(|&a, &b| (pts[a][0], pts[a][1]).partial_cmp(&(pts[b][0], pts[b][1])).unwrap_or(std::cmp::Ordering::Equal)) {
+    if let Some(k) = (0..n).min_by(|&a, &b| {
+        (pts[a][0], pts[a][1])
+            .partial_cmp(&(pts[b][0], pts[b][1]))
+            .unwrap_or(std::cmp::Ordering::Equal)
+    }) {
         pts.rotate_left(k);
     }
     pts
@@ -339,11 +412,20 @@ mod tests {
     /// A rectangle's two triangles with heights from `z`.
     fn rect(x0: f64, y0: f64, x1: f64, y1: f64, z: impl Fn(f64, f64) -> f64) -> Vec<Triangle> {
         let p = |x: f64, y: f64| [x, y, z(x, y)];
-        vec![[p(x0, y0), p(x1, y0), p(x1, y1)], [p(x0, y0), p(x1, y1), p(x0, y1)]]
+        vec![
+            [p(x0, y0), p(x1, y0), p(x1, y1)],
+            [p(x0, y0), p(x1, y1), p(x0, y1)],
+        ]
     }
 
     /// A lattice's triangles: corners every `step` from (x0, y0), `n` × `n` cells.
-    fn lattice(x0: f64, y0: f64, step: f64, n: usize, z: impl Fn(f64, f64) -> f64) -> Vec<Triangle> {
+    fn lattice(
+        x0: f64,
+        y0: f64,
+        step: f64,
+        n: usize,
+        z: impl Fn(f64, f64) -> f64,
+    ) -> Vec<Triangle> {
         let mut out = Vec::new();
         for j in 0..n {
             for i in 0..n {
@@ -370,8 +452,14 @@ mod tests {
         assert!(close(cut.area, 50.0) && close(fill.area, 50.0));
         assert!(close(cut.volume, -125.0) && close(fill.volume, 125.0));
         assert!(close(z.cut, 125.0) && close(z.fill, 125.0));
-        assert_eq!(cut.outer, vec![[0.0, 0.0], [5.0, 0.0], [5.0, 10.0], [0.0, 10.0]]);
-        assert_eq!(fill.outer, vec![[5.0, 0.0], [10.0, 0.0], [10.0, 10.0], [5.0, 10.0]]);
+        assert_eq!(
+            cut.outer,
+            vec![[0.0, 0.0], [5.0, 0.0], [5.0, 10.0], [0.0, 10.0]]
+        );
+        assert_eq!(
+            fill.outer,
+            vec![[5.0, 0.0], [10.0, 0.0], [10.0, 10.0], [5.0, 10.0]]
+        );
         // The same totals as the difference's.
         let d = crate::volume::difference(&comparison, &base, &[-10.0, 10.0]);
         assert_eq!((z.cut, z.fill), (d.volumes.cut, d.volumes.fill));
@@ -388,18 +476,34 @@ mod tests {
         assert_eq!(two.zones.len(), 2);
         assert!(close(two.zones[1].area, 32.0) && close(two.zones[1].volume, 32.0 * 0.4 / 3.0));
         assert!(close(two.zones[0].area, 68.0) && two.zones[0].holes.len() == 1);
-        assert_eq!(two.zones[1].outer, vec![[1.0, 5.0], [5.0, 1.0], [9.0, 5.0], [5.0, 9.0]]);
+        assert_eq!(
+            two.zones[1].outer,
+            vec![[1.0, 5.0], [5.0, 1.0], [9.0, 5.0], [5.0, 9.0]]
+        );
         assert!(close(two.zones[0].volume + two.zones[1].volume, -10.0));
         let banded = cut_fill(&comparison, &base, Some(0.2), 1000).expect("zones");
         let count = |k: i64| banded.zones.iter().filter(|z| z.band == k).count();
-        assert_eq!((count(-3), count(-2), count(-1), count(0), count(1)), (4, 4, 1, 1, 1));
-        assert_eq!(banded.zones.iter().find(|z| z.band == 0).map(|z| z.holes.len()), Some(1));
+        assert_eq!(
+            (count(-3), count(-2), count(-1), count(0), count(1)),
+            (4, 4, 1, 1, 1)
+        );
+        assert_eq!(
+            banded
+                .zones
+                .iter()
+                .find(|z| z.band == 0)
+                .map(|z| z.holes.len()),
+            Some(1)
+        );
         let sum: f64 = banded.zones.iter().map(|z| z.volume).sum();
         assert!(close(sum, -10.0), "{sum}");
         let areas: f64 = banded.zones.iter().map(|z| z.area).sum();
         assert!(close(areas, 100.0), "{areas}");
         // Too fine an interval is refused.
-        assert_eq!(cut_fill(&comparison, &base, Some(0.0001), 1000), Err(TooManyBands(10_001)));
+        assert_eq!(
+            cut_fill(&comparison, &base, Some(0.0001), 1000),
+            Err(TooManyBands(10_001))
+        );
     }
 
     #[test]
@@ -419,10 +523,24 @@ mod tests {
         let bank = |x: f64, y: f64| ground(x, y) + 0.1 * (2.0 - (x - 5.0).abs()).max(0.0);
         let design = lattice(0.0, 0.0, 1.0, 10, bank);
         let z = cut_fill(&design, &base, None, 1000).expect("zones");
-        assert_eq!(z.zones.len(), 1, "{:?}", z.zones.iter().map(|z| (z.band, z.area)).collect::<Vec<_>>());
-        assert!(close(z.zones[0].area, 40.0) && close(z.zones[0].volume, 0.1 * 2.0 * 10.0 * 2.0 / 2.0 * 2.0 / 2.0 * 2.0));
+        assert_eq!(
+            z.zones.len(),
+            1,
+            "{:?}",
+            z.zones.iter().map(|z| (z.band, z.area)).collect::<Vec<_>>()
+        );
+        assert!(
+            close(z.zones[0].area, 40.0)
+                && close(
+                    z.zones[0].volume,
+                    0.1 * 2.0 * 10.0 * 2.0 / 2.0 * 2.0 / 2.0 * 2.0
+                )
+        );
         assert!(close(z.coincident, 60.0) && z.cut == 0.0);
-        assert_eq!(z.zones[0].outer, vec![[3.0, 0.0], [7.0, 0.0], [7.0, 10.0], [3.0, 10.0]]);
+        assert_eq!(
+            z.zones[0].outer,
+            vec![[3.0, 0.0], [7.0, 0.0], [7.0, 10.0], [3.0, 10.0]]
+        );
     }
 
     #[test]
@@ -430,14 +548,24 @@ mod tests {
         // The mound at TM coordinates (x 512 000, y 4 512 000): the same diamond, its edges' corners left.
         let (x0, y0) = (512_000.0, 4_512_000.0);
         let base = lattice(x0, y0, 1.0, 10, |_, _| 1250.0);
-        let mound = move |x: f64, y: f64| 1250.4 - 0.1 * ((x - x0 - 5.0).abs() + (y - y0 - 5.0).abs());
+        let mound =
+            move |x: f64, y: f64| 1250.4 - 0.1 * ((x - x0 - 5.0).abs() + (y - y0 - 5.0).abs());
         let z = cut_fill(&lattice(x0, y0, 1.0, 10, mound), &base, None, 1000).expect("zones");
         assert_eq!(z.zones.len(), 2);
         assert_eq!(z.zones[1].outer.len(), 4, "{:?}", z.zones[1].outer);
-        for (p, q) in z.zones[1].outer.iter().zip([[1.0, 5.0], [5.0, 1.0], [9.0, 5.0], [5.0, 9.0]]) {
-            assert!((p[0] - x0 - q[0]).abs() < 1e-6 && (p[1] - y0 - q[1]).abs() < 1e-6, "{p:?}");
+        for (p, q) in z.zones[1]
+            .outer
+            .iter()
+            .zip([[1.0, 5.0], [5.0, 1.0], [9.0, 5.0], [5.0, 9.0]])
+        {
+            assert!(
+                (p[0] - x0 - q[0]).abs() < 1e-6 && (p[1] - y0 - q[1]).abs() < 1e-6,
+                "{p:?}"
+            );
         }
-        assert!(close(z.zones[1].area, 32.0) && (z.zones[1].volume - 32.0 * 0.4 / 3.0).abs() < 1e-6);
+        assert!(
+            close(z.zones[1].area, 32.0) && (z.zones[1].volume - 32.0 * 0.4 / 3.0).abs() < 1e-6
+        );
     }
 
     #[test]
@@ -463,13 +591,20 @@ mod tests {
         })
         .expect("zones")
         .expect("not stopped");
-        assert_eq!(told, cut_fill(&comparison, &base, Some(1.0), 1000).expect("zones"));
+        assert_eq!(
+            told,
+            cut_fill(&comparison, &base, Some(1.0), 1000).expect("zones")
+        );
         let seen = seen.into_inner();
         type Ticks = Vec<(u64, u64)>;
-    let (overlay, bands): (Ticks, Ticks) = seen.iter().partition(|(done, _)| *done < HALF);
+        let (overlay, bands): (Ticks, Ticks) = seen.iter().partition(|(done, _)| *done < HALF);
         assert_eq!(overlay.len(), comparison.len());
         assert_eq!(bands.len(), 10, "bands from −5 to 4: {seen:?}");
-        assert!(seen.windows(2).all(|w| w[0].0 <= w[1].0 && w[1].1 == 2 * HALF && w[1].0 < 2 * HALF), "{seen:?}");
+        assert!(
+            seen.windows(2)
+                .all(|w| w[0].0 <= w[1].0 && w[1].1 == 2 * HALF && w[1].0 < 2 * HALF),
+            "{seen:?}"
+        );
         let asked = std::cell::Cell::new(0);
         let stopped = cut_fill_told(&comparison, &base, Some(1.0), 1000, &|_, _| {
             asked.set(asked.get() + 1);

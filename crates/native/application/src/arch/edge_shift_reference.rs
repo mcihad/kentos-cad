@@ -90,7 +90,8 @@ pub(crate) fn by_reference(
         .and_then(|p| Some((p, edge_line(&core, p)?)));
     let Some((place, (ra, rb))) = found.filter(|(_, (a, b))| a != b) else {
         return Err(refused(
-            "Referans düz bir kenar olmalı: bir çizgi ya da bir yolun veya alanın düz kenarı.".into(),
+            "Referans düz bir kenar olmalı: bir çizgi ya da bir yolun veya alanın düz kenarı."
+                .into(),
             "work.reference.id",
         ));
     };
@@ -141,10 +142,15 @@ pub(crate) fn by_reference(
     }
     let layer = &e.base().layer_id;
     if distance.is_none() && doc.layers().is_locked(layer) {
-        let name = doc.layers().get(layer).map_or(layer.as_str(), |l| l.name.as_str());
+        let name = doc
+            .layers()
+            .get(layer)
+            .map_or(layer.as_str(), |l| l.name.as_str());
         return Err(refuse(
             codes::LAYER_LOCKED,
-            format!("“{name}” katmanı kilitli; kenara bağ kurulmaz. Kilidi Katmanlar panelinden açın."),
+            format!(
+                "“{name}” katmanı kilitli; kenara bağ kurulmaz. Kilidi Katmanlar panelinden açın."
+            ),
             "work.id",
         ));
     }
@@ -181,5 +187,11 @@ pub(crate) fn by_reference(
         left: false,
         parameter: String::new(),
     };
-    Ok((d, Some(Kept { rule, value: distance })))
+    Ok((
+        d,
+        Some(Kept {
+            rule,
+            value: distance,
+        }),
+    ))
 }

@@ -20,7 +20,10 @@ pub fn phone_of(text: &str) -> AppResult<Option<String>> {
     }
     let plus = t.starts_with('+');
     let digits: String = t.chars().filter(char::is_ascii_digit).collect();
-    let ok = t.chars().all(|c| c.is_ascii_digit() || " +-().".contains(c)) && (10..=15).contains(&digits.len());
+    let ok = t
+        .chars()
+        .all(|c| c.is_ascii_digit() || " +-().".contains(c))
+        && (10..=15).contains(&digits.len());
     if !ok {
         return Err(AppError::invalid_at(
             "phone",
@@ -33,21 +36,32 @@ pub fn phone_of(text: &str) -> AppResult<Option<String>> {
 /// `GET /v1/me/notification-settings`.
 pub async fn settings(db: &Db, actor: &Actor) -> AppResult<NotificationSettings> {
     let mut tx = db.scoped(user_scope(actor)).await?;
-    let (email_offered, sms_offered): (bool, bool) =
-        sqlx::query_as("select email_notifications, sms_notifications from kentos.platform_setting")
-            .fetch_one(&mut *tx)
-            .await?;
+    let (email_offered, sms_offered): (bool, bool) = sqlx::query_as(
+        "select email_notifications, sms_notifications from kentos.platform_setting",
+    )
+    .fetch_one(&mut *tx)
+    .await?;
     let (email_address, email_verified): (Option<String>, bool) =
         sqlx::query_as("select email, email_verified from kentos.app_user where id = $1")
             .bind(actor.user_id)
             .fetch_one(&mut *tx)
             .await?;
-    let pref: Option<(bool, bool, Option<String>)> =
-        sqlx::query_as("select email, sms, phone from kentos.notification_preference where user_id = $1")
-            .bind(actor.user_id)
-            .fetch_optional(&mut *tx)
-            .await?;
-    type Row = (String, String, String, String, i32, OffsetDateTime, Option<OffsetDateTime>, Option<String>);
+    let pref: Option<(bool, bool, Option<String>)> = sqlx::query_as(
+        "select email, sms, phone from kentos.notification_preference where user_id = $1",
+    )
+    .bind(actor.user_id)
+    .fetch_optional(&mut *tx)
+    .await?;
+    type Row = (
+        String,
+        String,
+        String,
+        String,
+        i32,
+        OffsetDateTime,
+        Option<OffsetDateTime>,
+        Option<String>,
+    );
     let recent: Vec<Row> = sqlx::query_as(
         "select d.channel, d.address, d.state, n.title, d.attempts, d.created_at, d.sent_at, d.last_error
            from kentos.notification_delivery d join kentos.notification n on n.id = d.notification_id
@@ -68,22 +82,28 @@ pub async fn settings(db: &Db, actor: &Actor) -> AppResult<NotificationSettings>
         sms_offered,
         recent: recent
             .into_iter()
-            .map(|(channel, address, state, title, attempts, created, sent, error)| DeliveryView {
-                channel,
-                address,
-                state,
-                title,
-                attempts: u32::try_from(attempts).unwrap_or(0),
-                created_at: rfc3339(created),
-                sent_at: sent.map(rfc3339),
-                last_error: error,
-            })
+            .map(
+                |(channel, address, state, title, attempts, created, sent, error)| DeliveryView {
+                    channel,
+                    address,
+                    state,
+                    title,
+                    attempts: u32::try_from(attempts).unwrap_or(0),
+                    created_at: rfc3339(created),
+                    sent_at: sent.map(rfc3339),
+                    last_error: error,
+                },
+            )
             .collect(),
     })
 }
 
 /// `PUT /v1/me/notification-settings`.
-pub async fn set_settings(db: &Db, actor: &Actor, input: &NotificationSettingsEdit) -> AppResult<NotificationSettings> {
+pub async fn set_settings(
+    db: &Db,
+    actor: &Actor,
+    input: &NotificationSettingsEdit,
+) -> AppResult<NotificationSettings> {
     if actor.method == kentos_contracts::SignInMethod::Token {
         return Err(AppError::forbidden(
             "Bildirim tercihleri erişim anahtarıyla değiştirilmez; hesabınızla oturum açın.",
@@ -94,7 +114,10 @@ pub async fn set_settings(db: &Db, actor: &Actor, input: &NotificationSettingsEd
         None => None,
     };
     if input.sms && phone.is_none() {
-        return Err(AppError::invalid_at("phone", "SMS için telefon numaranızı yazın."));
+        return Err(AppError::invalid_at(
+            "phone",
+            "SMS için telefon numaranızı yazın.",
+        ));
     }
     let mut tx = db.scoped(user_scope(actor)).await?;
     sqlx::query(
@@ -130,12 +153,14 @@ pub struct Due {
 /// At most `batch` due deliveries of `channels`, each leased for `lease_secs`.
 pub async fn take(db: &Db, channels: &[&str], batch: i32, lease_secs: i32) -> AppResult<Vec<Due>> {
     let channels: Vec<String> = channels.iter().map(|c| (*c).to_owned()).collect();
-    Ok(sqlx::query_as("select * from kentos.take_deliveries($1, $2, $3)")
-        .bind(&channels)
-        .bind(batch)
-        .bind(lease_secs)
-        .fetch_all(&db.pool)
-        .await?)
+    Ok(
+        sqlx::query_as("select * from kentos.take_deliveries($1, $2, $3)")
+            .bind(&channels)
+            .bind(batch)
+            .bind(lease_secs)
+            .fetch_all(&db.pool)
+            .await?,
+    )
 }
 
 /// The pause before the next try after `attempts` tries; none: given up.
@@ -181,11 +206,27 @@ mod tests {
 
     #[test]
     fn a_phone_is_kept_as_digits_and_tries_are_spaced_out_then_given_up() {
-        assert_eq!(phone_of(" +90 (532) 123-45-67 ").unwrap().as_deref(), Some("+905321234567"));
-        assert_eq!(phone_of("0532 123 45 67").unwrap().as_deref(), Some("05321234567"));
+        assert_eq!(
+            phone_of(" +90 (532) 123-45-67 ").unwrap().as_deref(),
+            Some("+905321234567")
+        );
+        assert_eq!(
+            phone_of("0532 123 45 67").unwrap().as_deref(),
+            Some("05321234567")
+        );
         assert_eq!(phone_of("").unwrap(), None);
         assert!(phone_of("12345").is_err() && phone_of("0532-ABC-4567").is_err());
         let pauses: Vec<_> = (1..=6).map(retry_after).collect();
-        assert_eq!(pauses, vec![Some(60), Some(300), Some(900), Some(3600), Some(14_400), None]);
+        assert_eq!(
+            pauses,
+            vec![
+                Some(60),
+                Some(300),
+                Some(900),
+                Some(3600),
+                Some(14_400),
+                None
+            ]
+        );
     }
 }

@@ -160,53 +160,64 @@ impl<'a, Message: Clone + 'a> AiPrompt<'a, Message> {
         let input = crate::widget::Responsive::new(move |bounds| {
             let room = (bounds.width - 28.0).max(40.0);
             let text = content.text();
-            let shown = if text.trim().is_empty() { placeholder } else { text.as_str() };
+            let shown = if text.trim().is_empty() {
+                placeholder
+            } else {
+                text.as_str()
+            };
             let lines: usize = shown
                 .split('\n')
-                .map(|line| ((typography::measured_width(line, size, false) / room).ceil() as usize).max(1))
+                .map(|line| {
+                    ((typography::measured_width(line, size, false) / room).ceil() as usize).max(1)
+                })
                 .sum();
             let events = events.clone();
             let keys = keys.clone();
-            Element::from(text_editor(content)
-            .on_action(move |action| events(AiEvent::Edit(action)))
-            .font(typography::ui())
-            .size(size)
-            .line_height(LineHeight::Relative(1.6))
-            .placeholder(placeholder)
-            .padding([12, 14])
-            .height((lines.clamp(2, 6) as f32 * size * 1.6 + 24.0).round())
-            .key_binding(move |kp| {
-                if !matches!(kp.status, Status::Focused { .. }) {
-                    return None;
-                }
-                match kp.key.as_ref() {
-                    Key::Named(Named::Enter)
-                        if !kp.modifiers.shift() && !kp.modifiers.alt() && !busy && ready =>
-                    {
-                        Some(Binding::Custom(keys(AiEvent::Submit)))
-                    }
-                    Key::Character(ch)
-                        if kp.modifiers.command() && ch.eq_ignore_ascii_case("z") =>
-                    {
-                        Some(Binding::Custom(keys(if kp.modifiers.shift() {
-                            AiEvent::Redo
-                        } else {
-                            AiEvent::Undo
-                        })))
-                    }
-                    _ => Binding::from_key_press(kp),
-                }
-            })
-            .style(|theme: &Theme, _| {
-                let t = Tokens::of(theme);
-                text_editor::Style {
-                    background: iced::Color::TRANSPARENT.into(),
-                    border: Border::default(),
-                    placeholder: t.muted,
-                    value: t.text,
-                    selection: t.selection(),
-                }
-            }))
+            Element::from(
+                text_editor(content)
+                    .on_action(move |action| events(AiEvent::Edit(action)))
+                    .font(typography::ui())
+                    .size(size)
+                    .line_height(LineHeight::Relative(1.6))
+                    .placeholder(placeholder)
+                    .padding([12, 14])
+                    .height((lines.clamp(2, 6) as f32 * size * 1.6 + 24.0).round())
+                    .key_binding(move |kp| {
+                        if !matches!(kp.status, Status::Focused { .. }) {
+                            return None;
+                        }
+                        match kp.key.as_ref() {
+                            Key::Named(Named::Enter)
+                                if !kp.modifiers.shift()
+                                    && !kp.modifiers.alt()
+                                    && !busy
+                                    && ready =>
+                            {
+                                Some(Binding::Custom(keys(AiEvent::Submit)))
+                            }
+                            Key::Character(ch)
+                                if kp.modifiers.command() && ch.eq_ignore_ascii_case("z") =>
+                            {
+                                Some(Binding::Custom(keys(if kp.modifiers.shift() {
+                                    AiEvent::Redo
+                                } else {
+                                    AiEvent::Undo
+                                })))
+                            }
+                            _ => Binding::from_key_press(kp),
+                        }
+                    })
+                    .style(|theme: &Theme, _| {
+                        let t = Tokens::of(theme);
+                        text_editor::Style {
+                            background: iced::Color::TRANSPARENT.into(),
+                            border: Border::default(),
+                            placeholder: t.muted,
+                            value: t.text,
+                            selection: t.selection(),
+                        }
+                    }),
+            )
         })
         .height(Length::Shrink);
         body = body.push(input);
@@ -240,7 +251,10 @@ impl<'a, Message: Clone + 'a> AiPrompt<'a, Message> {
             // panel too (CBS review, docs/adr/9337); Shift+Enter is said where there is room.
             if bounds.width < typography::scaled(530.0) {
                 // Gönder takes its own width first; the model's tag wraps in what is left.
-                row![model.width(Fill), send].spacing(8).align_y(iced::Center).into()
+                row![model.width(Fill), send]
+                    .spacing(8)
+                    .align_y(iced::Center)
+                    .into()
             } else {
                 model.push(space::horizontal()).push(hint).push(send).into()
             }

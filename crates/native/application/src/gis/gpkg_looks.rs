@@ -41,7 +41,11 @@ fn unchanged(doc: &Document, layer: &str, qml: &str) -> bool {
     let Ok(read) = kentos_qml::read(qml) else {
         return false;
     };
-    let input = LayersRenderer { layer: layer.to_owned(), renderer: Some(read.renderer), expected_revision: None };
+    let input = LayersRenderer {
+        layer: layer.to_owned(),
+        renderer: Some(read.renderer),
+        expected_revision: None,
+    };
     crate::layers_renderer::style_of(doc, &input).is_ok_and(|look| look == node.style)
 }
 
@@ -68,7 +72,11 @@ pub fn write(doc: &Document, file: &Path) -> Result<Looks, String> {
         }
         if gp.is_none() {
             let opened = GeoPackage::open(file, true).map_err(|e| e.0)?;
-            defaults = opened.default_styles().map_err(|e| e.0)?.into_iter().collect();
+            defaults = opened
+                .default_styles()
+                .map_err(|e| e.0)?
+                .into_iter()
+                .collect();
             gp = Some(opened);
         }
         let (name, qml) = match crate::qml::export(doc, &node.id) {
@@ -83,7 +91,10 @@ pub fn write(doc: &Document, file: &Path) -> Result<Looks, String> {
         };
         // The table's default is this look already: KentOS's own QML written before (the same text), or the style
         // another program wrote, which gives this very look read.
-        if defaults.get(&data.table).is_some_and(|kept| *kept == qml.xml || unchanged(doc, &node.id, kept)) {
+        if defaults
+            .get(&data.table)
+            .is_some_and(|kept| *kept == qml.xml || unchanged(doc, &node.id, kept))
+        {
             continue;
         }
         rows.push(NewStyle {

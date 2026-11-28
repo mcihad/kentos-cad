@@ -183,11 +183,23 @@ impl Transaction for GpkgTransaction {
             return Ok(Vec::new());
         }
         let target = self.target(table)?;
-        let (key, geometry, fields) = (target.key.clone(), target.geometry.clone(), target.fields.clone());
+        let (key, geometry, fields) = (
+            target.key.clone(),
+            target.geometry.clone(),
+            target.fields.clone(),
+        );
         let mut select = vec![quote(&key)];
-        select.push(geometry.as_ref().map_or_else(|| "NULL".to_owned(), |g| quote(&g.0)));
+        select.push(
+            geometry
+                .as_ref()
+                .map_or_else(|| "NULL".to_owned(), |g| quote(&g.0)),
+        );
         select.extend(fields.iter().map(|f| quote(&f.name)));
-        let keys = fids.iter().map(i64::to_string).collect::<Vec<_>>().join(", ");
+        let keys = fids
+            .iter()
+            .map(i64::to_string)
+            .collect::<Vec<_>>()
+            .join(", ");
         // The transaction holds the file (BEGIN IMMEDIATE): no other writer changes these rows before it ends.
         let sql = format!(
             "SELECT {} FROM {} WHERE {} IN ({keys}) ORDER BY {}",
@@ -212,9 +224,16 @@ impl Transaction for GpkgTransaction {
             };
             let mut values = Vec::with_capacity(fields.len());
             for (i, f) in fields.iter().enumerate() {
-                values.push(crate::convert::value_of(r.get_ref(i + 2).map_err(failed)?, &f.kind));
+                values.push(crate::convert::value_of(
+                    r.get_ref(i + 2).map_err(failed)?,
+                    &f.kind,
+                ));
             }
-            out.push(kentos_data::Feature { fid, geometry, values });
+            out.push(kentos_data::Feature {
+                fid,
+                geometry,
+                values,
+            });
         }
         Ok(out)
     }
@@ -433,7 +452,10 @@ impl Transaction for GpkgTransaction {
             } else {
                 DataType::Attributes
             },
-            identifier: Some(free_identifier(conn, t.title.as_deref().unwrap_or(&t.name), &t.name).map_err(failed)?),
+            identifier: Some(
+                free_identifier(conn, t.title.as_deref().unwrap_or(&t.name), &t.name)
+                    .map_err(failed)?,
+            ),
             description: t.description.clone(),
             srs_id: t.geometry.as_ref().map(|g| g.srid.unwrap_or(-1)),
             geometry: t
@@ -470,10 +492,22 @@ impl Transaction for GpkgTransaction {
             return Err(DataError::NoTable(table.to_owned()));
         }
         for f in fields {
-            let c = column_of(&kentos_data::Field { nullable: true, default: None, ..f.clone() });
-            let decl = if c.decl.trim().is_empty() { c.kind.decl() } else { c.decl.clone() };
-            conn.execute_batch(&format!("ALTER TABLE {} ADD COLUMN {} {decl};", quote(table), quote(&c.name)))
-                .map_err(failed)?;
+            let c = column_of(&kentos_data::Field {
+                nullable: true,
+                default: None,
+                ..f.clone()
+            });
+            let decl = if c.decl.trim().is_empty() {
+                c.kind.decl()
+            } else {
+                c.decl.clone()
+            };
+            conn.execute_batch(&format!(
+                "ALTER TABLE {} ADD COLUMN {} {decl};",
+                quote(table),
+                quote(&c.name)
+            ))
+            .map_err(failed)?;
         }
         self.targets.remove(table);
         Ok(())
@@ -481,25 +515,41 @@ impl Transaction for GpkgTransaction {
 
     /// The rules in the schema extension (docs/adr/9324), each column's under the name `<table>_<column>`, replacing what
     /// that name held: what other programs read as the column's domain, and KentOS reads back.
-    fn set_rules(&mut self, table: &str, columns: &[kentos_data::RuledColumn]) -> Result<(), DataError> {
+    fn set_rules(
+        &mut self,
+        table: &str,
+        columns: &[kentos_data::RuledColumn],
+    ) -> Result<(), DataError> {
         let conn = self.gp()?.connection();
         if registered_name_in(conn, table).map_err(failed)?.is_none() {
             return Err(DataError::NoTable(table.to_owned()));
         }
         for c in columns {
             let rule = c.rule.as_ref().map(|r| match r {
-                kentos_data::ColumnRule::Values(values) => kentos_geopackage::schema::Rule::Values(values.clone()),
-                kentos_data::ColumnRule::Range { min, min_included, max, max_included } => {
-                    kentos_geopackage::schema::Rule::Range {
-                        min: *min,
-                        min_included: *min_included,
-                        max: *max,
-                        max_included: *max_included,
-                    }
+                kentos_data::ColumnRule::Values(values) => {
+                    kentos_geopackage::schema::Rule::Values(values.clone())
                 }
+                kentos_data::ColumnRule::Range {
+                    min,
+                    min_included,
+                    max,
+                    max_included,
+                } => kentos_geopackage::schema::Rule::Range {
+                    min: *min,
+                    min_included: *min_included,
+                    max: *max,
+                    max_included: *max_included,
+                },
             });
             let name = format!("{table}_{}", c.column);
-            kentos_geopackage::schema::replace_rule_in(conn, table, &c.column, &name, rule.as_ref()).map_err(failed)?;
+            kentos_geopackage::schema::replace_rule_in(
+                conn,
+                table,
+                &c.column,
+                &name,
+                rule.as_ref(),
+            )
+            .map_err(failed)?;
         }
         Ok(())
     }
@@ -532,7 +582,11 @@ impl Drop for GpkgTransaction {
 /// The identifier a new table is listed under: its title, unless another table is listed under it
 /// (`gpkg_contents.identifier` is unique; the same layer written twice as two tables met it); then the title with the
 /// table's name, then with a number.
-fn free_identifier(conn: &rusqlite::Connection, title: &str, table: &str) -> rusqlite::Result<String> {
+fn free_identifier(
+    conn: &rusqlite::Connection,
+    title: &str,
+    table: &str,
+) -> rusqlite::Result<String> {
     let taken = |id: &str| -> rusqlite::Result<bool> {
         conn.query_row(
             "SELECT count(*) FROM gpkg_contents WHERE identifier = ?1 AND table_name <> ?2 COLLATE NOCASE",

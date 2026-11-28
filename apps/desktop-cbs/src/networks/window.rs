@@ -9,6 +9,7 @@
 //! Kaydet waits; Kaydet writes each changed network through
 //! `cad.network.define` (a project setting, not an undo step).
 
+use crate::cbs::CbsState;
 use crate::cbs_ext::*;
 use iced::widget::{Column, Space, button, column, container, row, scrollable};
 use iced::{Center, Element, Fill, Length, Task};
@@ -17,7 +18,6 @@ use kentos_commands::{
     NetworkDefineOperation, NetworkKind, NetworkUTurns, SubnetworkReach, networks_problem,
     next_network_id,
 };
-use crate::cbs::CbsState;
 use kentos_geometry_core::ops::network::{Checked, ProblemKind};
 use kentos_interaction::network::form::{
     CostRow, DIRECTION_DEFAULTS, DeviceRow, DirectionKind, EdgeRow, JunctionRow, NetworkForm,
@@ -250,10 +250,7 @@ fn msg(e: Event) -> Message {
 
 /// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
 pub(crate) trait NetworksWindowApp {
-    fn open_builder_for_network(
-        &mut self,
-        field: Field,
-    ) -> Task<Message>;
+    fn open_builder_for_network(&mut self, field: Field) -> Task<Message>;
     fn network_layers(&self) -> Vec<(String, String)>;
     fn open_networks(&mut self) -> Task<Message>;
     fn window_defs(&self, w: &Window) -> Result<Vec<NetworkDef>, String>;
@@ -275,10 +272,7 @@ impl NetworksWindowApp for App {
     /// Ağlar's ε: the builder on one of the form's expressions, the layer's keys and objects.
     /// A network's costs are the drawing's, read at each analysis: no `@` value but the
     /// layer's (docs/adr/0214 §1).
-    fn open_builder_for_network(
-        &mut self,
-        field: Field,
-    ) -> Task<Message>{
+    fn open_builder_for_network(&mut self, field: Field) -> Task<Message> {
         let Some(doc) = &self.document else {
             return Task::none();
         };
@@ -302,12 +296,19 @@ impl NetworksWindowApp for App {
         let value = self.network_field_text(field);
         let mut builder = crate::expression::Builder::new(
             crate::expression::Target::Back(crate::expression::Back::new(move |text| {
-                Message::from(crate::cbs::Event::Networks(super::Event::Window(Event::Text(field, text))))
+                Message::from(crate::cbs::Event::Networks(super::Event::Window(
+                    Event::Text(field, text),
+                )))
             })),
             TITLE.to_owned(),
             &value,
             // A network's costs are measured in metres (docs/adr/0165 §2).
-            crate::expression::attribute_fields(&counts, Vec::new(), false, kentos_expression::Unit::METRE),
+            crate::expression::attribute_fields(
+                &counts,
+                Vec::new(),
+                false,
+                kentos_expression::Unit::METRE,
+            ),
             crate::expression::Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
@@ -315,7 +316,7 @@ impl NetworksWindowApp for App {
     }
 
     /// The layers the window lists, by id with their paths.
-    fn network_layers(&self) -> Vec<(String, String)>{
+    fn network_layers(&self) -> Vec<(String, String)> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
@@ -328,7 +329,7 @@ impl NetworksWindowApp for App {
     }
 
     /// `network.manage`: the window.
-    fn open_networks(&mut self) -> Task<Message>{
+    fn open_networks(&mut self) -> Task<Message> {
         let Some(doc) = &self.document else {
             self.output("Açık çizim yok.");
             return Task::none();
@@ -352,7 +353,7 @@ impl NetworksWindowApp for App {
     }
 
     /// The networks the window writes, or the first thing wrong.
-    fn window_defs(&self, w: &Window) -> Result<Vec<NetworkDef>, String>{
+    fn window_defs(&self, w: &Window) -> Result<Vec<NetworkDef>, String> {
         let format = self.format();
         let mut out = Vec::new();
         for f in &w.forms {
@@ -382,18 +383,19 @@ impl NetworksWindowApp for App {
         }
     }
 
-    fn window_changed(&self, w: &Window) -> bool{
+    fn window_changed(&self, w: &Window) -> bool {
         match self.window_defs(w) {
             Ok(now) => now != w.saved,
             Err(_) => true,
         }
     }
 
-    fn networks_window_event(&mut self, e: Event) -> Task<Message>{
+    fn networks_window_event(&mut self, e: Event) -> Task<Message> {
         // A new network's edges: the active layer when it holds lines, else a line layer (GIS-013).
-        let proposed = self.document.as_ref().and_then(|d| {
-            super::edge_fit::proposed(&d.model, d.model.layers().active())
-        });
+        let proposed = self
+            .document
+            .as_ref()
+            .and_then(|d| super::edge_fit::proposed(&d.model, d.model.layers().active()));
         let layers = self.network_layers();
         let format = self.format();
         let Some(w) = self.modules.cbs_mut().networks.window.as_mut() else {
@@ -452,7 +454,7 @@ impl NetworksWindowApp for App {
     }
 
     /// Kaydet: each network taken away is removed and each new or changed one written, in the list's order.
-    fn save_networks(&mut self) -> Task<Message>{
+    fn save_networks(&mut self) -> Task<Message> {
         let Some(w) = self.modules.cbs().networks.window.clone() else {
             return Task::none();
         };
@@ -468,10 +470,14 @@ impl NetworksWindowApp for App {
         // Edges no layer can give are said before anything is written (GIS-013); an empty line layer is a template.
         if let Some(doc) = &self.document {
             let unfit = now.iter().find_map(|n| {
-                n.edges.iter().find_map(|e| match super::edge_fit::fit(&doc.model, &e.layer) {
-                    super::edge_fit::Fit::No(why) => Some(format!("“{}” ağı kaydedilmedi: {why}", n.name)),
-                    _ => None,
-                })
+                n.edges
+                    .iter()
+                    .find_map(|e| match super::edge_fit::fit(&doc.model, &e.layer) {
+                        super::edge_fit::Fit::No(why) => {
+                            Some(format!("“{}” ağı kaydedilmedi: {why}", n.name))
+                        }
+                        _ => None,
+                    })
             });
             if let Some(why) = unfit {
                 if let Some(w) = self.modules.cbs_mut().networks.window.as_mut() {
@@ -542,7 +548,7 @@ impl NetworksWindowApp for App {
     }
 
     /// Denetle: the chosen network built as the window says it, checked on the network thread.
-    fn check_network(&mut self) -> Task<Message>{
+    fn check_network(&mut self) -> Task<Message> {
         let format = self.format();
         let Some(w) = self.modules.cbs_mut().networks.window.as_mut() else {
             return Task::none();
@@ -580,9 +586,10 @@ impl NetworksWindowApp for App {
         })
     }
 
-    fn networks_window_answered(&mut self, reply: NetworkReply) -> Task<Message>{
+    fn networks_window_answered(&mut self, reply: NetworkReply) -> Task<Message> {
         let Some(c) = self
-            .modules.cbs_mut()
+            .modules
+            .cbs_mut()
             .networks
             .window
             .as_mut()
@@ -603,9 +610,10 @@ impl NetworksWindowApp for App {
     }
 
     /// A problem's objects selected, the problem marked and the view on it.
-    fn show_network_problem(&mut self, i: usize) -> Task<Message>{
+    fn show_network_problem(&mut self, i: usize) -> Task<Message> {
         let Some(p) = self
-            .modules.cbs()
+            .modules
+            .cbs()
             .networks
             .window
             .as_ref()
@@ -650,9 +658,10 @@ impl NetworksWindowApp for App {
     }
 
     /// The text of a field the builder edits.
-    fn network_field_text(&self, field: Field) -> String{
+    fn network_field_text(&self, field: Field) -> String {
         let Some(f) = self
-            .modules.cbs()
+            .modules
+            .cbs()
             .networks
             .window
             .as_ref()
@@ -671,9 +680,10 @@ impl NetworksWindowApp for App {
     }
 
     /// The layer a field's expression runs on (its row's; the first edge layer's for the closed edges).
-    fn network_field_layer(&self, field: Field) -> String{
+    fn network_field_layer(&self, field: Field) -> String {
         let Some(f) = self
-            .modules.cbs()
+            .modules
+            .cbs()
             .networks
             .window
             .as_ref()
@@ -692,7 +702,7 @@ impl NetworksWindowApp for App {
         .unwrap_or_default()
     }
 
-    fn networks_view(&self) -> Element<'_, Message>{
+    fn networks_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.cbs().networks.window else {
             return iced::widget::text("").into();
         };
@@ -824,7 +834,7 @@ impl NetworksWindowApp for App {
             .modal(msg(Event::Cancel))
     }
 
-    fn network_form<'a>(&'a self, w: &'a Window, f: &'a NetworkForm) -> Element<'a, Message>{
+    fn network_form<'a>(&'a self, w: &'a Window, f: &'a NetworkForm) -> Element<'a, Message> {
         let format = self.format();
         let layers = self.network_layers();
         let input = |hint: &'a str,
@@ -1461,7 +1471,7 @@ impl NetworksWindowApp for App {
     }
 
     /// Denetle's answer: its counts, its parts and its problems, each a row that shows it in the drawing.
-    fn check_view<'a>(&'a self, w: &'a Window, format: &Format) -> Element<'a, Message>{
+    fn check_view<'a>(&'a self, w: &'a Window, format: &Format) -> Element<'a, Message> {
         let Some(c) = &w.check else {
             return label::muted("Denetle ağı bu tanımla kurar: düğüm, parça ve uzunluğunu, kopuk parçaları ve sorunları gösterir.").into();
         };
@@ -1572,7 +1582,7 @@ impl NetworksWindowApp for App {
 
     /// The window's controls by their words (a trace's `dialog` step): the chosen network's name, tolerance and
     /// closed expression, a network by its number, the buttons.
-    fn networks_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
+    fn networks_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         let Some(w) = &self.modules.cbs().networks.window else {
             return Err(format!("{TITLE} penceresi açık değil"));
         };

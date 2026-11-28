@@ -50,10 +50,14 @@ pub fn checked_name(name: &str) -> Result<&str, DataError> {
         return Err(DataError::Invalid("Projenin adı boş olamaz.".into()));
     }
     if name.chars().count() > NAME_MOST {
-        return Err(DataError::Invalid(format!("Projenin adı en çok {NAME_MOST} karakter olabilir.")));
+        return Err(DataError::Invalid(format!(
+            "Projenin adı en çok {NAME_MOST} karakter olabilir."
+        )));
     }
     if name.chars().any(char::is_control) {
-        return Err(DataError::Invalid("Projenin adında satır sonu ya da denetim karakteri olamaz.".into()));
+        return Err(DataError::Invalid(
+            "Projenin adında satır sonu ya da denetim karakteri olamaz.".into(),
+        ));
     }
     Ok(name)
 }

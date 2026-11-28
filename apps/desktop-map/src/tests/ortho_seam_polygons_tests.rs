@@ -4,9 +4,9 @@
 //! taken; the two-run case numbers each distance by its part in the table; Çizgiyi kaldır goes back to the overlap's
 //! grid; nothing is written. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 
@@ -48,10 +48,14 @@ fn the_seam_is_measured_along_the_seamline_polygons_shared_boundary() {
     // The two, in the case's order.
     app.selection.set(vec![Slot(3), Slot(4)]);
     let _ = app.update(Message::from(map::Event::OrthoCompare(C::TakePolygons)));
-    assert_eq!(app.modules.map().ortho_compare.seam_line_name, "İki mozaik elemanı");
+    assert_eq!(
+        app.modules.map().ortho_compare.seam_line_name,
+        "İki mozaik elemanı"
+    );
     assert_eq!(app.modules.map().ortho_compare.show, Show::Seam);
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -74,7 +78,8 @@ fn the_seam_is_measured_along_the_seamline_polygons_shared_boundary() {
     let _ = app.update(Message::from(map::Event::OrthoCompare(C::DropLine)));
     assert!(app.modules.map().ortho_compare.seam_polygons.is_none());
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -102,7 +107,8 @@ fn two_runs_number_their_distances_by_part() {
     app.selection.set(vec![Slot(3), Slot(4)]);
     let _ = app.update(Message::from(map::Event::OrthoCompare(C::TakePolygons)));
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -117,7 +123,10 @@ fn two_runs_number_their_distances_by_part() {
     );
     let (_, rows) = app.ortho_compare_lines();
     let firsts: Vec<&str> = rows.iter().map(|r| r[0].as_str()).collect();
-    assert!(firsts.contains(&"1 · 4.000") && firsts.contains(&"2 · 0.000"), "{firsts:?}");
+    assert!(
+        firsts.contains(&"1 · 4.000") && firsts.contains(&"2 · 0.000"),
+        "{firsts:?}"
+    );
 }
 
 /// `.run/gui-evidence/dikis-cokgenleri-4460/`:
@@ -130,15 +139,28 @@ fn two_runs_number_their_distances_by_part() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dikis-cokgenleri-4460");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/dikis-cokgenleri-4460");
     std::fs::create_dir_all(&out).expect("a folder");
     for (theme, size, name, case_name) in [
-        ("light", Size::new(1440.0, 900.0), "acik-genis", "dikiş çokgenlerinden"),
-        ("dark", Size::new(1100.0, 760.0), "koyu-dar", "dikiş çokgenlerinin iki ortak parçası"),
+        (
+            "light",
+            Size::new(1440.0, 900.0),
+            "acik-genis",
+            "dikiş çokgenlerinden",
+        ),
+        (
+            "dark",
+            Size::new(1100.0, 760.0),
+            "koyu-dar",
+            "dikiş çokgenlerinin iki ortak parçası",
+        ),
     ] {
         let c = case(case_name);
         let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -152,7 +174,10 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-dikis-cokgenleri-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

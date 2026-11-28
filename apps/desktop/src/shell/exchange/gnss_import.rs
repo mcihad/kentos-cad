@@ -369,8 +369,16 @@ impl App {
                             .to_owned(),
                     ));
                 }
-                let style = kentos_commands::LayerStyle { color: "ink".into(), ..kentos_domain::default_style() };
-                Some(new_layer::target(&doc.model, &s.lines_name, style, "Çizgilerin katmanı'ndan"))
+                let style = kentos_commands::LayerStyle {
+                    color: "ink".into(),
+                    ..kentos_domain::default_style()
+                };
+                Some(new_layer::target(
+                    &doc.model,
+                    &s.lines_name,
+                    style,
+                    "Çizgilerin katmanı'ndan",
+                ))
             }
         }
     }
@@ -440,9 +448,11 @@ impl App {
         };
         let driver = new_layer::format_word(&file.name);
         let origin = match (&file.path, &driver) {
-            (Some(path), Some(driver)) => {
-                Some(apply::FileOrigin { driver, path, bytes: &file.bytes })
-            }
+            (Some(path), Some(driver)) => Some(apply::FileOrigin {
+                driver,
+                path,
+                bytes: &file.bytes,
+            }),
             _ => None,
         };
         let Some(doc) = &mut self.document else {
@@ -461,15 +471,22 @@ impl App {
                     (n, 0, _) => format!("{n} GNSS noktası “{layer_name}” katmanına"),
                     (0, l, Some(to)) => format!("{l} GNSS çizgisi “{to}” katmanına"),
                     (0, l, None) => format!("{l} GNSS çizgisi “{layer_name}” katmanına"),
-                    (n, l, Some(to)) => format!("{n} GNSS noktası “{layer_name}”, {l} çizgi “{to}” katmanına"),
-                    (n, l, None) => format!("{n} GNSS noktası ve {l} çizgi “{layer_name}” katmanına"),
+                    (n, l, Some(to)) => {
+                        format!("{n} GNSS noktası “{layer_name}”, {l} çizgi “{to}” katmanına")
+                    }
+                    (n, l, None) => {
+                        format!("{n} GNSS noktası ve {l} çizgi “{layer_name}” katmanına")
+                    }
                 };
                 let made = match applied.created.len() {
                     0 => String::new(),
                     1 => " (yeni katman)".to_owned(),
                     k => format!(" ({k} yeni katman)"),
                 };
-                self.say(Level::Success, format!("“{name}”: {what} alındı{made}. Tek adımda geri alınabilir."));
+                self.say(
+                    Level::Success,
+                    format!("“{name}”: {what} alındı{made}. Tek adımda geri alınabilir."),
+                );
                 // What the preview said stays in the log (docs/adr/9329): the transformation, the heights, the records
                 // not taken with why.
                 for (warn, line) in report {
@@ -646,7 +663,8 @@ impl App {
         &self,
         points: &[kentos_commands::GnssPoint],
     ) -> Option<Element<'a, Message>> {
-        self.gnss_zone_words(points).map(|(kind, words)| words::text_line(kind, words))
+        self.gnss_zone_words(points)
+            .map(|(kind, words)| words::text_line(kind, words))
     }
 
     /// [`Self::gnss_zone_line`]'s words and kind.
@@ -661,14 +679,18 @@ impl App {
                 "Projenin sisteminin kullanım alanı bilinmiyor; konumların dilime uygunluğu denetlenmedi.".to_owned(),
             ));
         };
-        let out: Vec<&kentos_commands::GnssPoint> =
-            points.iter().filter(|p| !area.holds_near(p.lon, p.lat)).collect();
+        let out: Vec<&kentos_commands::GnssPoint> = points
+            .iter()
+            .filter(|p| !area.holds_near(p.lon, p.lat))
+            .collect();
         if out.is_empty() {
             return None;
         }
         let (least, most) = out
             .iter()
-            .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| (a.min(p.lon), b.max(p.lon)));
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), p| {
+                (a.min(p.lon), b.max(p.lon))
+            });
         let deg = |v: f64| format!("{v:.3}°");
         // The registry's own words for the zone (“28.5°–31.5° D (3° dilim)”) before EPSG's English name.
         let zone = kentos_project::crs::system(srid)
@@ -695,7 +717,10 @@ impl App {
         let name = &s.file.name;
         let mut out = Vec::new();
         if let Some(way) = way_of(plan) {
-            out.push((way.ends_with("resmî dönüşüm değil"), format!("“{name}”: dönüşüm {way}.")));
+            out.push((
+                way.ends_with("resmî dönüşüm değil"),
+                format!("“{name}”: dönüşüm {way}."),
+            ));
         }
         if let Some(note) = heights_note(plan) {
             out.push((false, format!("“{name}”: {note}")));
@@ -703,14 +728,29 @@ impl App {
         if let Some((kind, words)) = self.gnss_zone_words(&read.points) {
             out.push((kind == Line::Warn, format!("“{name}”: {words}")));
         }
-        let left: Vec<&LineError> = read.problems.iter().chain(&plan.skipped).chain(&plan.lines_skipped).collect();
+        let left: Vec<&LineError> = read
+            .problems
+            .iter()
+            .chain(&plan.skipped)
+            .chain(&plan.lines_skipped)
+            .collect();
         if !left.is_empty() {
-            let mut reasons: Vec<String> =
-                left.iter().take(SHOWN_PROBLEMS).map(|e| e.message.trim_end_matches('.').to_owned()).collect();
+            let mut reasons: Vec<String> = left
+                .iter()
+                .take(SHOWN_PROBLEMS)
+                .map(|e| e.message.trim_end_matches('.').to_owned())
+                .collect();
             if left.len() > SHOWN_PROBLEMS {
                 reasons.push(format!("… ve {} kayıt daha", left.len() - SHOWN_PROBLEMS));
             }
-            out.push((true, format!("“{name}”: {} kayıt alınmadı: {}.", left.len(), reasons.join("; "))));
+            out.push((
+                true,
+                format!(
+                    "“{name}”: {} kayıt alınmadı: {}.",
+                    left.len(),
+                    reasons.join("; ")
+                ),
+            ));
         }
         out
     }
@@ -825,7 +865,9 @@ impl App {
         };
         let points_leaves = leaves.clone();
         let pick = Select::new(choices, selected, move |i| {
-            event(Event::Target(i.checked_sub(1).and_then(|k| points_leaves.get(k).cloned())))
+            event(Event::Target(
+                i.checked_sub(1).and_then(|k| points_leaves.get(k).cloned()),
+            ))
         });
         let hidden = s
             .target
@@ -841,9 +883,14 @@ impl App {
                 .on_input(|t| event(Event::Name(t)))
                 .on_submit(event(Event::Run));
             // A name a layer has is said with the way to it (docs/adr/9329).
-            let help = self.gnss_target(s).err().filter(|why| !why.is_empty()).unwrap_or_else(|| new_layer::help("Hedef katman'dan"));
+            let help = self
+                .gnss_target(s)
+                .err()
+                .filter(|why| !why.is_empty())
+                .unwrap_or_else(|| new_layer::help("Hedef katman'dan"));
             parts = parts.push(
-                container(words::field("Yeni katmanın adı", name, Some(help))).width(Length::FillPortion(2)),
+                container(words::field("Yeni katmanın adı", name, Some(help)))
+                    .width(Length::FillPortion(2)),
             );
         }
         let has_lines = s.plan.as_ref().is_some_and(|p| !p.lines.is_empty());
@@ -851,7 +898,10 @@ impl App {
             return parts.into();
         }
         // The routes and tracks: a layer of their own unless they go with the points (docs/adr/9329).
-        let mut choices = vec![Choice::new("Yeni katman"), Choice::new("Noktaların katmanı")];
+        let mut choices = vec![
+            Choice::new("Yeni katman"),
+            Choice::new("Noktaların katmanı"),
+        ];
         choices.extend(leaves.iter().map(named));
         let selected = match &s.lines_to {
             LinesTo::New => Some(0),
@@ -862,7 +912,10 @@ impl App {
             event(Event::LinesTo(match i {
                 0 => LinesTo::New,
                 1 => LinesTo::Points,
-                k => leaves.get(k - 2).cloned().map_or(LinesTo::New, LinesTo::Layer),
+                k => leaves
+                    .get(k - 2)
+                    .cloned()
+                    .map_or(LinesTo::New, LinesTo::Layer),
             }))
         });
         let mut lines = row![
@@ -875,16 +928,21 @@ impl App {
         ]
         .spacing(16);
         if s.lines_to == LinesTo::New {
-            let name = kentos_ui::widget::text_field("Çizgilerin yeni katmanının adı", &s.lines_name)
-                .on_input(|t| event(Event::LinesName(t)))
-                .on_submit(event(Event::Run));
+            let name =
+                kentos_ui::widget::text_field("Çizgilerin yeni katmanının adı", &s.lines_name)
+                    .on_input(|t| event(Event::LinesName(t)))
+                    .on_submit(event(Event::Run));
             let help = match self.gnss_lines_target(s) {
                 Some(Err(why)) if !why.is_empty() => why,
                 _ => new_layer::help("Çizgilerin katmanı'ndan"),
             };
             lines = lines.push(
-                container(words::field("Çizgilerin yeni katmanının adı", name, Some(help)))
-                    .width(Length::FillPortion(2)),
+                container(words::field(
+                    "Çizgilerin yeni katmanının adı",
+                    name,
+                    Some(help),
+                ))
+                .width(Length::FillPortion(2)),
             );
         }
         column![parts, lines].spacing(10).into()
@@ -913,7 +971,9 @@ fn heights_note(plan: &Plan) -> Option<String> {
     let bare = plan.placed.iter().filter(|p| p.z.is_none()).count();
     let heights = "Kot elipsoit yüksekliğidir (dosyadaki yükseklik ile geoit ayrımının toplamı); ortometrik yüksekliğe çevrilmez.";
     Some(if bare > 0 {
-        format!("{heights} {bare} noktanın elipsoit yüksekliği bilinmiyor: kotu boş, dosyadaki yüksekliği öznitelikte.")
+        format!(
+            "{heights} {bare} noktanın elipsoit yüksekliği bilinmiyor: kotu boş, dosyadaki yüksekliği öznitelikte."
+        )
     } else {
         heights.to_owned()
     })
@@ -960,6 +1020,8 @@ impl State {
     /// The file's positions as read (WGS 84).
     #[cfg(test)]
     pub(super) fn positions(&self) -> Vec<kentos_commands::GnssPoint> {
-        self.read.as_ref().map_or_else(Vec::new, |r| r.points.clone())
+        self.read
+            .as_ref()
+            .map_or_else(Vec::new, |r| r.points.clone())
     }
 }

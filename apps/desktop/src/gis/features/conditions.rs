@@ -39,8 +39,13 @@ impl FeaturesPanel {
     }
 
     fn put_conditions(&mut self, c: Conditions) {
-        (self.show, self.search, self.filter, self.sort, self.descending) =
-            (c.show, c.search, c.filter, c.sort, c.descending);
+        (
+            self.show,
+            self.search,
+            self.filter,
+            self.sort,
+            self.descending,
+        ) = (c.show, c.search, c.filter, c.sort, c.descending);
         self.data.put_conditions(c.data);
     }
 }

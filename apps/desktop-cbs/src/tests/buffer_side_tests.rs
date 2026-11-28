@@ -31,10 +31,9 @@ fn points() -> App {
         ]);
         d["activeLayer"] = json!("noktalar");
     });
-    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(iced::Rectangle::new(
-        iced::Point::ORIGIN,
-        iced::Size::new(1000.0, 700.0),
-    ))));
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
+        iced::Rectangle::new(iced::Point::ORIGIN, iced::Size::new(1000.0, 700.0)),
+    )));
     let task = app.update(Message::Run("view.zoomExtents"));
     drive(&mut app, task);
     app
@@ -49,9 +48,18 @@ fn event(app: &mut App, e: Event) {
 fn tampon(app: &mut App, layer: &str) {
     let task = app.update(Message::Run("processing.run.geometry.buffer"));
     drive(app, task);
-    event(app, Event::Value("input".into(), json!({ "scope": "layer", "layerId": layer })));
+    event(
+        app,
+        Event::Value(
+            "input".into(),
+            json!({ "scope": "layer", "layerId": layer }),
+        ),
+    );
     event(app, Event::Value("distance".into(), json!(10.0)));
-    event(app, Event::Value("layer".into(), json!({ "newName": "Tampon" })));
+    event(
+        app,
+        Event::Value("layer".into(), json!({ "newName": "Tampon" })),
+    );
     event(app, Event::Value("side".into(), json!("left")));
 }
 

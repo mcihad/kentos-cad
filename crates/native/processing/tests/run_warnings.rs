@@ -35,8 +35,10 @@ fn roads(measured: bool) -> Document {
     let mut entities = Vec::new();
     for i in 0..3 {
         let y = 4422000.0 + 10.0 * f64::from(i);
-        entities.push(json!({ "kind": "line", "id": i + 1, "layerId": "yol", "attrs": {},
-                              "a": { "x": 487000.0, "y": y }, "b": { "x": 487100.0, "y": y } }));
+        entities.push(
+            json!({ "kind": "line", "id": i + 1, "layerId": "yol", "attrs": {},
+                              "a": { "x": 487000.0, "y": y }, "b": { "x": 487100.0, "y": y } }),
+        );
     }
     for i in 0..2 {
         let y = 4422100.0 + 10.0 * f64::from(i);
@@ -64,9 +66,14 @@ fn roads(measured: bool) -> Document {
 
 fn extract(doc: Document) -> kentos_processing::types::RunResult {
     let mut host = Bare(doc);
-    let tool = Registry::current().get("linearRef.extractMeasures").unwrap();
+    let tool = Registry::current()
+        .get("linearRef.extractMeasures")
+        .unwrap();
     let mut values = default_values(&tool, &Defaults::of(&host.0));
-    values.insert("input".into(), json!({ "scope": "layer", "layerId": "yol" }));
+    values.insert(
+        "input".into(),
+        json!({ "scope": "layer", "layerId": "yol" }),
+    );
     let outcome = Runner::new().run(&mut host, &tool, &values, false, &mut Vec::new());
     let Outcome::Ok { result, .. } = outcome else {
         panic!("{outcome:?}");
@@ -79,12 +86,19 @@ fn routes_without_a_measure_are_a_warning_naming_the_way_to_measures() {
     let r = extract(roads(false));
     assert!(r.warning);
     let said = r.summary.unwrap_or_default();
-    assert!(said.contains("hiçbirinde M değeri yok") && said.contains("Rota oluştur"), "{said}");
+    assert!(
+        said.contains("hiçbirinde M değeri yok") && said.contains("Rota oluştur"),
+        "{said}"
+    );
 }
 
 #[test]
 fn measured_routes_are_a_success() {
     let r = extract(roads(true));
     assert!(!r.warning);
-    assert!(r.summary.unwrap_or_default().contains("rotanın ölçüleri yazıldı"));
+    assert!(
+        r.summary
+            .unwrap_or_default()
+            .contains("rotanın ölçüleri yazıldı")
+    );
 }

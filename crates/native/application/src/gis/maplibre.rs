@@ -343,13 +343,14 @@ fn read(doc: &Document, input: &ImportMaplibre) -> Result<(Vec<Taken>, Vec<Strin
             continue;
         }
         used.extend(matched.iter().map(|l| l.id.as_str()));
-        let read = maplibre::renderer_of_at(&matched, doc.settings().plot_scale).map_err(|why| {
-            refuse(
-                codes::INVALID_MAPLIBRE,
-                format!("“{}” katmanının stili okunamadı: {why}", node.name),
-                "path",
-            )
-        })?;
+        let read =
+            maplibre::renderer_of_at(&matched, doc.settings().plot_scale).map_err(|why| {
+                refuse(
+                    codes::INVALID_MAPLIBRE,
+                    format!("“{}” katmanının stili okunamadı: {why}", node.name),
+                    "path",
+                )
+            })?;
         if !read.renderer.is_null()
             && let Some(why) = crate::layers_renderer::renderer_problem(&read.renderer)
         {

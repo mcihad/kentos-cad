@@ -66,7 +66,8 @@ pub fn drawing(page: &PdfPage, name: &str) -> Result<(DocumentSnapshotV2, PdfLef
         }
         if let Some(stroke) = &path.stroke {
             // Its width on paper, millimetres; a hairline (0) is the thinnest.
-            let weight = (stroke.width > 0.0).then(|| (stroke.width * 25.4 / 72.0 * 100.0).round() / 100.0);
+            let weight =
+                (stroke.width > 0.0).then(|| (stroke.width * 25.4 / 72.0 * 100.0).round() / 100.0);
             for (pts, closed) in &path.parts {
                 let mut line: Vec<[f64; 2]> = pts.clone();
                 let mut closed = *closed;
@@ -88,7 +89,12 @@ pub fn drawing(page: &PdfPage, name: &str) -> Result<(DocumentSnapshotV2, PdfLef
                     }
                     e
                 };
-                entities.push(with_look(e, color(stroke.color), weight.filter(|w| *w > 0.0), stroke.dashed));
+                entities.push(with_look(
+                    e,
+                    color(stroke.color),
+                    weight.filter(|w| *w > 0.0),
+                    stroke.dashed,
+                ));
             }
         }
     }
@@ -103,9 +109,17 @@ pub fn drawing(page: &PdfPage, name: &str) -> Result<(DocumentSnapshotV2, PdfLef
         layers.push(layer("pdf", "PDF", true));
     }
     for (i, l) in page.layers.iter().enumerate() {
-        layers.push(layer(&layer_id(Some(i)), l, !page.hidden.get(i).copied().unwrap_or(false)));
+        layers.push(layer(
+            &layer_id(Some(i)),
+            l,
+            !page.hidden.get(i).copied().unwrap_or(false),
+        ));
     }
-    let active = layers.first().and_then(|l| l["id"].as_str()).unwrap_or("pdf").to_owned();
+    let active = layers
+        .first()
+        .and_then(|l| l["id"].as_str())
+        .unwrap_or("pdf")
+        .to_owned();
     let v1 = json!({
         "format": "kentos.document", "version": 1, "name": name,
         "settings": { "srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg",
@@ -114,7 +128,8 @@ pub fn drawing(page: &PdfPage, name: &str) -> Result<(DocumentSnapshotV2, PdfLef
         "entities": entities.into_iter().enumerate().map(|(k, mut e)| { e["id"] = json!(k + 1); e }).collect::<Vec<_>>(),
         "styles": { "items": [], "categories": [] }
     });
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&v1.to_string()).map_err(|e| e.to_string())?;
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&v1.to_string())
+        .map_err(|e| e.to_string())?;
     let doc = kentos_domain::Document::from_snapshot(snapshot)?;
     Ok((doc.to_snapshot_v2(), page.left.clone()))
 }

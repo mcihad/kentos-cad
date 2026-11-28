@@ -698,7 +698,11 @@ impl LayerTree {
 
     /// A layer's composition, as an undo or a redo puts it (docs/adr/0226 §3, §4).
     /// A layer's type, as an undo or a redo puts it (docs/adr/0622 §5).
-    pub(crate) fn replace_geometry(&mut self, id: &str, geometry: Option<kentos_contracts::LayerGeometry>) {
+    pub(crate) fn replace_geometry(
+        &mut self,
+        id: &str,
+        geometry: Option<kentos_contracts::LayerGeometry>,
+    ) {
         if let Some(node) = self.node_mut(id) {
             node.geometry = geometry;
         }

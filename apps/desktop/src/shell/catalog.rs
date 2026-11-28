@@ -51,7 +51,10 @@ const DESKTOP_SHORTS: &[(&str, &str)] = &[
     ("view.rightPanel", "Sağ panel"),
     ("view.bottomPanel", "Alt panel"),
     ("sheet.alignTo.page", "Sayfanın ortasına hizala"),
-    ("sheet.alignTo.margins", "Kenar boşluklarının ortasına hizala"),
+    (
+        "sheet.alignTo.margins",
+        "Kenar boşluklarının ortasına hizala",
+    ),
     ("sheet.alignTo.selection", "Seçimin ortasına hizala"),
 ];
 
@@ -614,12 +617,10 @@ impl Catalog {
             return None;
         }
         let fits = |tab: &&Tab| kinds.iter().all(|k| tab.kinds.contains(k));
-        self.contextual_for_work(mode, work)
-            .find(fits)
-            .or_else(|| {
-                self.contextual_for_work(mode, work)
-                    .find(|tab| tab.kinds.contains(&"*"))
-            })
+        self.contextual_for_work(mode, work).find(fits).or_else(|| {
+            self.contextual_for_work(mode, work)
+                .find(|tab| tab.kinds.contains(&"*"))
+        })
     }
 
     /// Quick access bar (Kaydet, Geri al, Yinele).
@@ -631,7 +632,6 @@ impl Catalog {
     pub fn modes(&self) -> &[Mode] {
         &self.modes
     }
-
 }
 
 /// The catalog, built on first use.

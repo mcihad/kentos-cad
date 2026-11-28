@@ -302,18 +302,8 @@ fn the_cloud_pane_lists_the_programs_own_recent_projects() {
             Some(ProjectType::Architecture),
             5,
         ),
-        (
-            Some(Module::Map),
-            &["İmar planı", "Genel"][..],
-            None,
-            20,
-        ),
-        (
-            Some(Module::Road),
-            &["Yol"][..],
-            Some(ProjectType::Road),
-            5,
-        ),
+        (Some(Module::Map), &["İmar planı", "Genel"][..], None, 20),
+        (Some(Module::Road), &["Yol"][..], Some(ProjectType::Road), 5),
         (
             Some(Module::Gis),
             &["Parseller"][..],

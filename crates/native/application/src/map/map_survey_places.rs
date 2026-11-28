@@ -12,11 +12,17 @@ use kentos_domain::Document;
 use kentos_geometry_core::survey::adjust::gnss;
 
 use crate::map_survey::{decision, place};
-use crate::map_survey_network::{RAD, by_velocity, ecef, ellipsoid_of, epoch_text, moved_to, velocity_of};
+use crate::map_survey_network::{
+    RAD, by_velocity, ecef, ellipsoid_of, epoch_text, moved_to, velocity_of,
+};
 
 /// Every known point's place, in the archive's order.
 pub(crate) fn known_places(doc: &Document, survey: &MapSurvey) -> Vec<SurveyKnownPlace> {
-    survey.known.iter().map(|k| place_of(doc, survey, k)).collect()
+    survey
+        .known
+        .iter()
+        .map(|k| place_of(doc, survey, k))
+        .collect()
 }
 
 /// One known point's place, or why it has none.
@@ -57,7 +63,10 @@ fn place_of(doc: &Document, survey: &MapSurvey, k: &SurveyKnown) -> SurveyKnownP
                 return row;
             };
             let (now, by) = match (k.velocity, velocity_of(campaign)) {
-                (Some(v), _) => (by_velocity(given, shape, v, to - from), KnownMovedBy::Velocity),
+                (Some(v), _) => (
+                    by_velocity(given, shape, v, to - from),
+                    KnownMovedBy::Velocity,
+                ),
                 (None, Some(grid)) => match moved_to(doc, &grid, given, k.srid, from, to) {
                     Ok(now) => (now, KnownMovedBy::Grid),
                     Err(stop) => {
@@ -79,7 +88,14 @@ fn place_of(doc: &Document, survey: &MapSurvey, k: &SurveyKnown) -> SurveyKnownP
             let r = gnss::enu_rows(given.0 / RAD, given.1 / RAD);
             let d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
             let shift = [0, 1, 2].map(|i| r[i][0] * d[0] + r[i][1] * d[1] + r[i][2] * d[2]);
-            row.moved = Some(KnownMoved { id: k.id.clone(), mark: k.mark.clone(), by, from, years: to - from, shift });
+            row.moved = Some(KnownMoved {
+                id: k.id.clone(),
+                mark: k.mark.clone(),
+                by,
+                from,
+                years: to - from,
+                shift,
+            });
             (now, Some(to))
         }
         _ => (given, k.epoch),
@@ -108,7 +124,10 @@ fn place_of(doc: &Document, survey: &MapSurvey, k: &SurveyKnown) -> SurveyKnownP
 /// Docs/adr/4520: each place against the user's `tolerance`: beyond when its horizontal distance from its mark's
 /// accepted point passes the horizontal limit or its height difference the vertical one; none when the tolerance has
 /// nothing of it to judge (no accepted point, no height, or only the other limit given).
-pub(crate) fn judged(places: &mut [SurveyKnownPlace], tolerance: &kentos_commands::SurveyPlaceTolerance) {
+pub(crate) fn judged(
+    places: &mut [SurveyKnownPlace],
+    tolerance: &kentos_commands::SurveyPlaceTolerance,
+) {
     for p in places {
         let horizontal = tolerance.horizontal.zip(p.horizontal).map(|(t, h)| h > t);
         let vertical = tolerance.vertical.zip(p.dz).map(|(t, dz)| dz.abs() > t);

@@ -17,7 +17,11 @@ fn n(v: &Value) -> f64 {
 }
 
 fn near(a: f64, b: f64, tol: f64, what: &str) {
-    assert!((a - b).abs() <= tol, "{what}: {a} against {b} ({:e})", (a - b).abs());
+    assert!(
+        (a - b).abs() <= tol,
+        "{what}: {a} against {b} ({:e})",
+        (a - b).abs()
+    );
 }
 
 pub fn pis(v: &Value) -> Vec<PiInput> {
@@ -66,10 +70,17 @@ fn every_case_is_what_the_reference_says() {
         let built = build(&pis(&c["pis"]));
         if let Some(want) = c.get("error") {
             let got = built.expect_err(name);
-            assert_eq!(error_kind(&got), want["kind"].as_str().expect("kind"), "{name}");
+            assert_eq!(
+                error_kind(&got),
+                want["kind"].as_str().expect("kind"),
+                "{name}"
+            );
             match &got {
                 ChainError::CurvesOverlap { a, b, excess } => {
-                    assert_eq!((a.as_str(), b.as_str()), (want["a"].as_str().unwrap(), want["b"].as_str().unwrap()));
+                    assert_eq!(
+                        (a.as_str(), b.as_str()),
+                        (want["a"].as_str().unwrap(), want["b"].as_str().unwrap())
+                    );
                     near(*excess, n(&want["excess"]), PLACE, name);
                 }
                 ChainError::SpiralsLong { pi, turn, delta } => {
@@ -82,11 +93,17 @@ fn every_case_is_what_the_reference_says() {
                     assert_eq!(format!("{why:?}"), want["why"].as_str().unwrap(), "{name}");
                 }
                 ChainError::OveTooLong { a, b, excess } => {
-                    assert_eq!((a.as_str(), b.as_str()), (want["a"].as_str().unwrap(), want["b"].as_str().unwrap()));
+                    assert_eq!(
+                        (a.as_str(), b.as_str()),
+                        (want["a"].as_str().unwrap(), want["b"].as_str().unwrap())
+                    );
                     near(*excess, n(&want["excess"]), PLACE, name);
                 }
                 ChainError::OveAmbiguous { a, b, parameters } => {
-                    assert_eq!((a.as_str(), b.as_str()), (want["a"].as_str().unwrap(), want["b"].as_str().unwrap()));
+                    assert_eq!(
+                        (a.as_str(), b.as_str()),
+                        (want["a"].as_str().unwrap(), want["b"].as_str().unwrap())
+                    );
                     let w = want["parameters"].as_array().unwrap();
                     assert_eq!(parameters.len(), w.len(), "{name}");
                     for (p, q) in parameters.iter().zip(w) {
@@ -96,14 +113,20 @@ fn every_case_is_what_the_reference_says() {
                 ChainError::TurnTooSharp { pi }
                 | ChainError::SamePlace { pi }
                 | ChainError::BadCurve { pi }
-                | ChainError::DuplicateId { pi } => assert_eq!(pi, want["pi"].as_str().unwrap(), "{name}"),
+                | ChainError::DuplicateId { pi } => {
+                    assert_eq!(pi, want["pi"].as_str().unwrap(), "{name}")
+                }
                 _ => {}
             }
             continue;
         }
         let al = built.unwrap_or_else(|e| panic!("{name}: {e:?}"));
         near(al.length, n(&c["length"]), PLACE, name);
-        assert!(al.residual.place < 1e-9 && al.residual.direction < 1e-12, "{name}: {:?}", al.residual);
+        assert!(
+            al.residual.place < 1e-9 && al.residual.direction < 1e-12,
+            "{name}: {:?}",
+            al.residual
+        );
         let want = c["elements"].as_array().expect("elements");
         assert_eq!(al.elements.len(), want.len(), "{name}: elements");
         for (e, w) in al.elements.iter().zip(want) {
@@ -123,7 +146,11 @@ fn every_case_is_what_the_reference_says() {
             near(e.start[1], n(&w["start"][1]), PLACE, &what);
             near(e.theta0, n(&w["theta0"]), ANGLE, &what);
         }
-        for (r, w) in al.curves.iter().zip(c["curves"].as_array().expect("curves")) {
+        for (r, w) in al
+            .curves
+            .iter()
+            .zip(c["curves"].as_array().expect("curves"))
+        {
             let what = format!("{name} {}", r.pi);
             assert_eq!(r.pi, w["pi"].as_str().unwrap());
             for (a, b) in [
@@ -143,8 +170,11 @@ fn every_case_is_what_the_reference_says() {
                 near(*a, n(b), PLACE, &what);
             }
         }
-        let joins: Vec<(String, String, bool)> =
-            al.joins.iter().map(|j| (j.between[0].clone(), j.between[1].clone(), j.reverse)).collect();
+        let joins: Vec<(String, String, bool)> = al
+            .joins
+            .iter()
+            .map(|j| (j.between[0].clone(), j.between[1].clone(), j.reverse))
+            .collect();
         let want: Vec<(String, String, bool)> = c["joins"]
             .as_array()
             .unwrap()
@@ -194,7 +224,11 @@ fn every_case_is_what_the_reference_says() {
             match (&got.beyond, w["beyond"].as_object()) {
                 (None, None) => {}
                 (Some((end, foot)), Some(b)) => {
-                    let want = if b["end"] == "start" { End::Start } else { End::End };
+                    let want = if b["end"] == "start" {
+                        End::Start
+                    } else {
+                        End::End
+                    };
                     assert_eq!(*end, want, "{what}");
                     near(foot.at.station, n(&b["station"]), PLACE, &what);
                 }
@@ -234,12 +268,23 @@ fn every_case_is_what_the_reference_says() {
             };
             let regions = stationing.regions(al.length);
             if let Some(i) = c.get("stationingError") {
-                assert_eq!(regions, Err(StationingError::Outside { equation: i.as_u64().unwrap() as usize }), "{name}");
+                assert_eq!(
+                    regions,
+                    Err(StationingError::Outside {
+                        equation: i.as_u64().unwrap() as usize
+                    }),
+                    "{name}"
+                );
                 continue;
             }
             let regions = regions.expect(name);
             for w in c["km"].as_array().unwrap() {
-                near(Stationing::km(&regions, n(&w["station"])), n(&w["km"]), PLACE, name);
+                near(
+                    Stationing::km(&regions, n(&w["station"])),
+                    n(&w["km"]),
+                    PLACE,
+                    name,
+                );
             }
             for w in c["kmStations"].as_array().unwrap() {
                 let got = Stationing::stations(&regions, n(&w["km"]));
@@ -283,7 +328,12 @@ fn element(name: &str, e: &Value, c: &Value) {
 fn picture() {
     use kentos_road::alignment::km_text;
     let all: Value = serde_json::from_str(CASES).expect("json");
-    let c = all["cases"].as_array().unwrap().iter().find(|c| c["name"] == "Büyük koordinatlarda beş PI").unwrap();
+    let c = all["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == "Büyük koordinatlarda beş PI")
+        .unwrap();
     let raw = pis(&c["pis"]);
     let al = build(&raw).expect("builds");
     let (x0, y0) = (raw[0].x - 100.0, raw[0].y - 700.0);
@@ -294,24 +344,38 @@ fn picture() {
         "<svg xmlns='http://www.w3.org/2000/svg' width='1700' height='1700' viewBox='0 0 1700 1700' style='background:#fff;font-family:Helvetica'>",
     );
     let path = |pts: &[[f64; 2]]| {
-        pts.iter().map(|p| format!("{:.2},{:.2} ", sx(p[0]), sy(p[1]))).collect::<String>()
+        pts.iter()
+            .map(|p| format!("{:.2},{:.2} ", sx(p[0]), sy(p[1])))
+            .collect::<String>()
     };
     let pi_line: Vec<[f64; 2]> = raw.iter().map(|p| [p.x, p.y]).collect();
-    svg += &format!("<polyline points='{}' fill='none' stroke='#bbb' stroke-dasharray='6 4'/>", path(&pi_line));
+    svg += &format!(
+        "<polyline points='{}' fill='none' stroke='#bbb' stroke-dasharray='6 4'/>",
+        path(&pi_line)
+    );
     for d in [-7.5, 7.5] {
-        let pts: Vec<[f64; 2]> =
-            (0..=(al.length as usize)).filter_map(|s| offset::place(&al, s as f64, d)).collect();
-        svg += &format!("<polyline points='{}' fill='none' stroke='#8a8' stroke-width='1'/>", path(&pts));
+        let pts: Vec<[f64; 2]> = (0..=(al.length as usize))
+            .filter_map(|s| offset::place(&al, s as f64, d))
+            .collect();
+        svg += &format!(
+            "<polyline points='{}' fill='none' stroke='#8a8' stroke-width='1'/>",
+            path(&pts)
+        );
     }
     for e in &al.elements {
         let n = (e.length / 2.0).ceil() as usize;
-        let pts: Vec<[f64; 2]> = (0..=n).map(|i| e.point(e.length * i as f64 / n as f64)).collect();
+        let pts: Vec<[f64; 2]> = (0..=n)
+            .map(|i| e.point(e.length * i as f64 / n as f64))
+            .collect();
         let color = match e.kind {
             Kind::Tangent => "#222",
             Kind::Arc => "#c33",
             Kind::Spiral => "#27c",
         };
-        svg += &format!("<polyline points='{}' fill='none' stroke='{color}' stroke-width='3'/>", path(&pts));
+        svg += &format!(
+            "<polyline points='{}' fill='none' stroke='{color}' stroke-width='3'/>",
+            path(&pts)
+        );
     }
     let mut s = 0.0;
     while s <= al.length {
@@ -337,14 +401,29 @@ fn picture() {
         s += 100.0;
     }
     for p in &raw {
-        svg += &format!("<circle cx='{:.1}' cy='{:.1}' r='4' fill='#fff' stroke='#555'/><text x='{:.1}' y='{:.1}' font-size='13' fill='#555'>{}</text>", sx(p.x), sy(p.y), sx(p.x) + 6.0, sy(p.y) - 6.0, p.id);
+        svg += &format!(
+            "<circle cx='{:.1}' cy='{:.1}' r='4' fill='#fff' stroke='#555'/><text x='{:.1}' y='{:.1}' font-size='13' fill='#555'>{}</text>",
+            sx(p.x),
+            sy(p.y),
+            sx(p.x) + 6.0,
+            sy(p.y) - 6.0,
+            p.id
+        );
     }
     let q = [raw[0].x + 1500.0, raw[0].y - 150.0];
     let f = al.locate(q).nearest.unwrap();
     svg += &format!(
         "<line x1='{:.1}' y1='{:.1}' x2='{:.1}' y2='{:.1}' stroke='#d80' stroke-dasharray='4 3'/><circle cx='{:.1}' cy='{:.1}' r='4' fill='#d80'/><text x='{:.1}' y='{:.1}' font-size='13' fill='#d80'>km {}  öteleme {:+.3} m</text>",
-        sx(q[0]), sy(q[1]), sx(f.at.x), sy(f.at.y), sx(q[0]), sy(q[1]), sx(q[0]) + 8.0, sy(q[1]) + 16.0,
-        km_text(12000.0 + f.at.station, 3), f.offset
+        sx(q[0]),
+        sy(q[1]),
+        sx(f.at.x),
+        sy(f.at.y),
+        sx(q[0]),
+        sy(q[1]),
+        sx(q[0]) + 8.0,
+        sy(q[1]) + 16.0,
+        km_text(12000.0 + f.at.station, 3),
+        f.offset
     );
     svg += "<text x='20' y='30' font-size='15'>kentos.alignment/1 — siyah aliyman, mavi klotoid, kırmızı kurp, yeşil ±7,5 m paralel aks</text></svg>";
     let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence");
@@ -356,8 +435,21 @@ fn picture() {
 /// (docs/adr/0970); its outer side holds. A cusp names its element and its tightest radius.
 #[test]
 fn a_kinks_inner_offset_crosses_at_the_textbook_stations() {
-    let p = |id: &str, x: f64, y: f64, radius: f64| PiInput { id: id.into(), x, y, radius, spiral_in: 0.0, spiral_out: 0.0, ove: false };
-    let kinked = build(&[p("a", 0.0, 0.0, 0.0), p("p1", 600.0, 0.0, 0.0), p("b", 1100.0, 500.0, 0.0)]).expect("builds");
+    let p = |id: &str, x: f64, y: f64, radius: f64| PiInput {
+        id: id.into(),
+        x,
+        y,
+        radius,
+        spiral_in: 0.0,
+        spiral_out: 0.0,
+        ove: false,
+    };
+    let kinked = build(&[
+        p("a", 0.0, 0.0, 0.0),
+        p("p1", 600.0, 0.0, 0.0),
+        p("b", 1100.0, 500.0, 0.0),
+    ])
+    .expect("builds");
     for d in [-0.3f64, -7.5, -40.0] {
         let reach = d.abs() * (std::f64::consts::PI / 8.0).tan();
         match offset::check(&kinked, d) {
@@ -370,9 +462,16 @@ fn a_kinks_inner_offset_crosses_at_the_textbook_stations() {
         }
         offset::check(&kinked, -d).unwrap_or_else(|e| panic!("the outer side {}: {e:?}", -d));
     }
-    let tight = build(&[p("a", 0.0, 0.0, 0.0), p("p1", 600.0, 0.0, 7.0), p("b", 1100.0, 500.0, 0.0)]).expect("builds");
+    let tight = build(&[
+        p("a", 0.0, 0.0, 0.0),
+        p("p1", 600.0, 0.0, 7.0),
+        p("b", 1100.0, 500.0, 0.0),
+    ])
+    .expect("builds");
     match offset::check(&tight, -7.5) {
-        Err(offset::OffsetError::Cusp { element, radius, .. }) => {
+        Err(offset::OffsetError::Cusp {
+            element, radius, ..
+        }) => {
             assert!(element.starts_with("p1/"), "{element}");
             near(radius, 7.0, 1e-12, "radius");
         }

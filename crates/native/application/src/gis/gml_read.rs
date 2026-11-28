@@ -49,9 +49,9 @@ pub enum Typed {
 }
 
 fn is_gml(n: Node<'_, '_>) -> bool {
-    n.tag_name()
-        .namespace()
-        .is_some_and(|ns| ns == "http://www.opengis.net/gml" || ns.starts_with("http://www.opengis.net/gml/"))
+    n.tag_name().namespace().is_some_and(|ns| {
+        ns == "http://www.opengis.net/gml" || ns.starts_with("http://www.opengis.net/gml/")
+    })
 }
 
 fn local<'a>(n: Node<'a, '_>) -> &'a str {
@@ -184,7 +184,10 @@ fn positions(n: Node<'_, '_>, r: Reading, sys: &mut Systems) -> Result<Vec<Coord
                 {
                     let nums = numbers(&tuple.replace(cs, " "))?;
                     if nums.len() < 2 || nums.len() > 3 {
-                        return Err(format!("coordinates'ta {} sayılı bir konum var", nums.len()));
+                        return Err(format!(
+                            "coordinates'ta {} sayılı bir konum var",
+                            nums.len()
+                        ));
                     }
                     out.push(coord(&nums, flat, nums.len()));
                 }
@@ -238,7 +241,9 @@ fn join(pieces: Vec<Curve>) -> Curve {
     for p in flat {
         let joined = match (out.last_mut(), &p) {
             (Some(Curve::Line(a)), Curve::Line(b)) | (Some(Curve::Arc(a)), Curve::Arc(b))
-                if a.last().zip(b.first()).is_some_and(|(l, f)| l.x == f.x && l.y == f.y) =>
+                if a.last()
+                    .zip(b.first())
+                    .is_some_and(|(l, f)| l.x == f.x && l.y == f.y) =>
             {
                 a.extend(b.iter().skip(1).copied());
                 true
@@ -312,7 +317,12 @@ fn curve(n: Node<'_, '_>, r: Reading, sys: &mut Systems, depth: usize) -> Result
 }
 
 /// A polygon's rings, the exterior first (GML 3's `exterior`/`interior`, GML 2's boundaries).
-fn rings(n: Node<'_, '_>, r: Reading, sys: &mut Systems, depth: usize) -> Result<Vec<Curve>, String> {
+fn rings(
+    n: Node<'_, '_>,
+    r: Reading,
+    sys: &mut Systems,
+    depth: usize,
+) -> Result<Vec<Curve>, String> {
     let r = reading_of(n, r, sys);
     let mut out: Vec<Curve> = Vec::new();
     let mut exterior: Option<Curve> = None;
@@ -391,7 +401,11 @@ fn members<'a, 'b: 'a>(
     elements(n).flat_map(move |m| {
         let one = singular.contains(&local(m));
         let many = plural.contains(&local(m));
-        let inner: Vec<Node<'a, 'b>> = if one || many { elements(m).collect() } else { Vec::new() };
+        let inner: Vec<Node<'a, 'b>> = if one || many {
+            elements(m).collect()
+        } else {
+            Vec::new()
+        };
         inner.into_iter()
     })
 }
@@ -429,22 +443,14 @@ fn geometry(
         }
         "MultiCurve" | "MultiLineString" => {
             let mut cs = Vec::new();
-            for c in members(
-                n,
-                &["curveMember", "lineStringMember"],
-                &["curveMembers"],
-            ) {
+            for c in members(n, &["curveMember", "lineStringMember"], &["curveMembers"]) {
                 cs.push(curve(c, r, sys, depth + 1)?);
             }
             Geometry::MultiCurve(cs)
         }
         "MultiSurface" | "MultiPolygon" => {
             let mut ps = Vec::new();
-            for s in members(
-                n,
-                &["surfaceMember", "polygonMember"],
-                &["surfaceMembers"],
-            ) {
+            for s in members(n, &["surfaceMember", "polygonMember"], &["surfaceMembers"]) {
                 ps.extend(surface(s, r, sys, depth + 1)?);
             }
             Geometry::MultiPolygon(ps)
@@ -503,9 +509,9 @@ struct Declared {
 fn xsd_kind(base: &str) -> Option<ColumnKind> {
     let b = base.rsplit(':').next().unwrap_or(base);
     Some(match b {
-        "integer" | "int" | "long" | "short" | "byte" | "nonNegativeInteger" | "positiveInteger"
-        | "negativeInteger" | "nonPositiveInteger" | "unsignedInt" | "unsignedLong"
-        | "unsignedShort" | "unsignedByte" => ColumnKind::Integer,
+        "integer" | "int" | "long" | "short" | "byte" | "nonNegativeInteger"
+        | "positiveInteger" | "negativeInteger" | "nonPositiveInteger" | "unsignedInt"
+        | "unsignedLong" | "unsignedShort" | "unsignedByte" => ColumnKind::Integer,
         "decimal" | "double" | "float" => ColumnKind::Real,
         "boolean" => ColumnKind::Boolean,
         "date" => ColumnKind::Date,
@@ -550,7 +556,10 @@ fn parse_schema(text: &str) -> Option<Declared> {
             continue;
         };
         let mut fields = Vec::new();
-        for e in ct.descendants().filter(|d| d.is_element() && local(*d) == "element") {
+        for e in ct
+            .descendants()
+            .filter(|d| d.is_element() && local(*d) == "element")
+        {
             let Some(pn) = attr(e, "name") else {
                 continue;
             };
@@ -607,7 +616,9 @@ fn parse_gfs(text: &str) -> Option<Declared> {
             if path.starts_with("boundedBy|") || pn == "gml_id" {
                 continue;
             }
-            let width = child(p, "Width").and_then(|w| w.parse::<u32>().ok()).filter(|w| *w > 0);
+            let width = child(p, "Width")
+                .and_then(|w| w.parse::<u32>().ok())
+                .filter(|w| *w > 0);
             let kind = match (child(p, "Subtype").as_deref(), t.as_str()) {
                 (Some("Boolean"), _) => ColumnKind::Boolean,
                 (Some("Date"), _) => ColumnKind::Date,
@@ -663,7 +674,9 @@ fn is_date(t: &str) -> bool {
     b.len() == 10
         && b[4] == b'-'
         && b[7] == b'-'
-        && b.iter().enumerate().all(|(i, c)| i == 4 || i == 7 || c.is_ascii_digit())
+        && b.iter()
+            .enumerate()
+            .all(|(i, c)| i == 4 || i == 7 || c.is_ascii_digit())
 }
 
 fn is_datetime(t: &str) -> bool {
@@ -680,15 +693,21 @@ fn is_datetime(t: &str) -> bool {
     if b.len() < 8 || b[2] != b':' || b[5] != b':' {
         return false;
     }
-    let clock_ok = [0usize, 1, 3, 4, 6, 7].iter().all(|&i| b[i].is_ascii_digit());
+    let clock_ok = [0usize, 1, 3, 4, 6, 7]
+        .iter()
+        .all(|&i| b[i].is_ascii_digit());
     let tail = &time[8..];
-    let frac = tail.strip_prefix('.').map_or(tail, |t| t.trim_start_matches(|c: char| c.is_ascii_digit()));
+    let frac = tail
+        .strip_prefix('.')
+        .map_or(tail, |t| t.trim_start_matches(|c: char| c.is_ascii_digit()));
     let zone_ok = frac.is_empty()
         || frac == "Z"
         || (frac.len() == 6
             && (frac.starts_with('+') || frac.starts_with('-'))
             && frac.as_bytes()[3] == b':'
-            && [1usize, 2, 4, 5].iter().all(|&i| frac.as_bytes()[i].is_ascii_digit()));
+            && [1usize, 2, 4, 5]
+                .iter()
+                .all(|&i| frac.as_bytes()[i].is_ascii_digit()));
     clock_ok && zone_ok
 }
 
@@ -736,8 +755,9 @@ fn value_of(kind: &ColumnKind, t: &str) -> Value {
         ColumnKind::Real => s.parse::<f64>().map_or(Value::Null, Value::Real),
         ColumnKind::Boolean => Value::Integer(i64::from(matches!(s, "true" | "1"))),
         ColumnKind::Date | ColumnKind::DateTime => Value::Text(s.to_owned()),
-        ColumnKind::Blob(_) => kentos_commands::binary_bytes(s)
-            .map_or_else(|| Value::Text(t.to_owned()), Value::Blob),
+        ColumnKind::Blob(_) => {
+            kentos_commands::binary_bytes(s).map_or_else(|| Value::Text(t.to_owned()), Value::Blob)
+        }
         _ => Value::Text(t.to_owned()),
     }
 }
@@ -786,7 +806,10 @@ pub fn parse(text: &str, schema: Option<&str>, gfs: Option<&str>) -> Result<Pars
     let mut parsed = Parsed::default();
     let mut sys = Systems::default();
     // The collection's own envelope names the system when no geometry does.
-    let mut fallback = Reading { dim: 2, swap: false };
+    let mut fallback = Reading {
+        dim: 2,
+        swap: false,
+    };
     if let Some(b) = elements(root).find(|c| local(*c) == "boundedBy")
         && let Some(name) = elements(b).filter_map(|e| attr(e, "srsName")).next()
     {
@@ -795,15 +818,23 @@ pub fn parse(text: &str, schema: Option<&str>, gfs: Option<&str>) -> Result<Pars
     let feats = features(root);
     // A collection with no member is a collection (nothing to take); a document that is neither is no GML.
     let has_members = elements(root).any(|c| {
-        matches!(local(c), "featureMember" | "member" | "featureMembers" | "members")
+        matches!(
+            local(c),
+            "featureMember" | "member" | "featureMembers" | "members"
+        )
     });
     if feats.is_empty() && !has_members && !local(root).ends_with("Collection") {
-        return Err("GML özellik topluluğu değil (featureMember, featureMembers ya da member yok)".into());
+        return Err(
+            "GML özellik topluluğu değil (featureMember, featureMembers ya da member yok)".into(),
+        );
     }
     let declared = schema
         .map(|s| (parse_schema(s), Typed::Schema))
         .filter(|(d, _)| d.is_some())
-        .or_else(|| gfs.map(|g| (parse_gfs(g), Typed::Gfs)).filter(|(d, _)| d.is_some()));
+        .or_else(|| {
+            gfs.map(|g| (parse_gfs(g), Typed::Gfs))
+                .filter(|(d, _)| d.is_some())
+        });
     if schema.is_some() && !matches!(declared, Some((_, Typed::Schema))) {
         parsed.losses.insert(
             ".xsd şeması okunamadı ya da özellik türü tanımlamıyor: türler .gfs'den ya da değerlerden çıkarıldı".into(),
@@ -826,7 +857,8 @@ pub fn parse(text: &str, schema: Option<&str>, gfs: Option<&str>) -> Result<Pars
                 continue;
             }
             let geom_child = elements(c).find(|e| is_geometry_element(*e));
-            let named_geometry = declared.geometries.contains(local(c)) || local(c) == "geometryProperty";
+            let named_geometry =
+                declared.geometries.contains(local(c)) || local(c) == "geometryProperty";
             if geom_child.is_some() || (named_geometry && elements(c).next().is_none()) {
                 if geometry.is_some() {
                     second += 1;
@@ -851,12 +883,15 @@ pub fn parse(text: &str, schema: Option<&str>, gfs: Option<&str>) -> Result<Pars
         if !by_name.contains_key(&name) {
             order.push(name.clone());
         }
-        by_name.entry(name).or_default().push(RawRow { geometry, props });
+        by_name
+            .entry(name)
+            .or_default()
+            .push(RawRow { geometry, props });
     }
     if second > 0 {
-        parsed
-            .losses
-            .insert(format!("{second} nesnenin ikinci geometri özelliği alınmadı"));
+        parsed.losses.insert(format!(
+            "{second} nesnenin ikinci geometri özelliği alınmadı"
+        ));
     }
     if repeated > 0 {
         parsed.losses.insert(format!(
@@ -865,7 +900,9 @@ pub fn parse(text: &str, schema: Option<&str>, gfs: Option<&str>) -> Result<Pars
     }
     for name in order {
         let raw = by_name.remove(&name).unwrap_or_default();
-        parsed.tables.push(table(name, raw, &declared, &mut parsed.losses));
+        parsed
+            .tables
+            .push(table(name, raw, &declared, &mut parsed.losses));
     }
     parsed.srid = sys.seen.first().copied();
     parsed.other_crs = sys.other;
@@ -935,7 +972,11 @@ fn table(
         let kind = match kinds.get(n) {
             Some(k) => {
                 let k = k.clone();
-                if values.iter().filter(|v| !v.trim().is_empty()).all(|v| fits(&k, v)) {
+                if values
+                    .iter()
+                    .filter(|v| !v.trim().is_empty())
+                    .all(|v| fits(&k, v))
+                {
                     k
                 } else {
                     losses.insert(format!(
@@ -963,7 +1004,9 @@ fn table(
             let values = columns
                 .iter()
                 .map(|c| match m.get(c.name.as_str()) {
-                    Some(Some(t)) if matches!(c.kind, ColumnKind::Text(_)) => Value::Text(t.clone()),
+                    Some(Some(t)) if matches!(c.kind, ColumnKind::Text(_)) => {
+                        Value::Text(t.clone())
+                    }
                     Some(Some(t)) if t.trim().is_empty() => Value::Null,
                     Some(Some(t)) => value_of(&c.kind, t),
                     _ => Value::Null,
@@ -976,5 +1019,9 @@ fn table(
             }
         })
         .collect();
-    Table { name, columns, rows }
+    Table {
+        name,
+        columns,
+        rows,
+    }
 }

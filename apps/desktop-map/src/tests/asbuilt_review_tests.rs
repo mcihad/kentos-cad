@@ -4,8 +4,8 @@
 //! earlier result once a mark is moved, and removed. Grafik draws the chosen mark's measurements against the epochs'
 //! days with the thresholds typed. And their pictures.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use kentos_launch::Module;
 use serde_json::{Value, json};
 
@@ -15,22 +15,40 @@ use crate::asbuilt_trend::Change as C;
 use crate::asbuilt_window::Event as A;
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.asbuilt.review.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.asbuilt.review.json"
+    ))
+    .expect("cases")
 }
 
 fn case(all: &Value, prefix: &str) -> Value {
-    all["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(prefix))).expect("the case").clone()
+    all["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(prefix)))
+        .expect("the case")
+        .clone()
 }
 
 /// The review cases' drawing, each epoch's layer given its day as its Veri kümesi bilgisi.
 fn opened() -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases()["setup"].clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases()["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-    for (layer, day) in [("donem1", "2026-01-15"), ("donem2", "2026-04-15"), ("donem3", "2026-07-15")] {
-        crate::files_testing::command(&mut app, "cad.datasets.edit", json!({"layer": layer, "dataset": {"updated": day}}));
+    for (layer, day) in [
+        ("donem1", "2026-01-15"),
+        ("donem2", "2026-04-15"),
+        ("donem3", "2026-07-15"),
+    ] {
+        crate::files_testing::command(
+            &mut app,
+            "cad.datasets.edit",
+            json!({"layer": layer, "dataset": {"updated": day}}),
+        );
     }
     app
 }
@@ -86,14 +104,27 @@ fn the_review_kept_from_the_window_is_the_case_s() {
         source.into(),
     )))));
     let _ = app.update(Message::from(map::Event::Asbuilt(A::Keep)));
-    let kept = app.document.as_ref().expect("a drawing").model.monitoring_reviews().to_vec();
+    let kept = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .monitoring_reviews()
+        .to_vec();
     assert_eq!(kept.len(), 1);
     let got = serde_json::to_value(&kept[0]).expect("json");
     // The layers are the drawing's ids, as the case's are; the job, digest and reviewer the case's.
     assert_eq!(got["digest"], want["digest"]);
     assert_eq!(got["job"], want["job"]);
     assert_eq!(got["reviewer"], want["reviewer"]);
-    let states = |v: &Value| v["marks"].as_array().expect("marks").iter().map(|m| (m["name"].clone(), m["state"].clone())).collect::<Vec<_>>();
+    let states = |v: &Value| {
+        v["marks"]
+            .as_array()
+            .expect("marks")
+            .iter()
+            .map(|m| (m["name"].clone(), m["state"].clone()))
+            .collect::<Vec<_>>()
+    };
     assert_eq!(states(&got), states(&want));
     assert_eq!(app.modules.map().asbuilt.reviews.len(), 1);
     assert!(app.modules.map().asbuilt.reviews[0].current);
@@ -103,8 +134,16 @@ fn the_review_kept_from_the_window_is_the_case_s() {
         let layer = "donem3";
         doc.model
             .entities()
-            .find(|e| e.base().layer_id == layer && e.base().attrs.get("Ad").map(String::as_str) == Some("M1"))
-            .map(|e| doc.model.uid(kentos_domain::Slot(e.base().id)).expect("a uid").to_string())
+            .find(|e| {
+                e.base().layer_id == layer
+                    && e.base().attrs.get("Ad").map(String::as_str) == Some("M1")
+            })
+            .map(|e| {
+                doc.model
+                    .uid(kentos_domain::Slot(e.base().id))
+                    .expect("a uid")
+                    .to_string()
+            })
             .expect("M1")
     };
     crate::files_testing::command(
@@ -121,11 +160,19 @@ fn the_review_kept_from_the_window_is_the_case_s() {
         app.modules.map().asbuilt.reviews
     );
     assert!(
-        crate::asbuilt_review_form::lead(&app.modules.map().asbuilt.reviews).contains("eski sonuca aittir")
+        crate::asbuilt_review_form::lead(&app.modules.map().asbuilt.reviews)
+            .contains("eski sonuca aittir")
     );
     // Removed by its name.
     let _ = app.update(Message::from(map::Event::Asbuilt(A::Remove)));
-    assert!(app.document.as_ref().expect("a drawing").model.monitoring_reviews().is_empty());
+    assert!(
+        app.document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .monitoring_reviews()
+            .is_empty()
+    );
     assert!(app.modules.map().asbuilt.reviews.is_empty());
 }
 
@@ -134,7 +181,8 @@ fn the_chart_draws_the_mark_against_the_days_with_the_thresholds() {
     let mut app = opened();
     typed(&mut app, "Şartname");
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .asbuilt
         .answer
         .clone()
@@ -198,12 +246,18 @@ fn the_chart_draws_the_mark_against_the_days_with_the_thresholds() {
 fn screens() {
     use iced::{Point, Size};
     use kentos_ui::snapshot::{Input, Snapshot};
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/izleme-inceleme-5220");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/izleme-inceleme-5220");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for step in ["inceleme", "grafik", "grafik-kot"] {
             let mut app = opened();
-            let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             typed(&mut app, "İdarenin izleme şartnamesi (2026/14), madde 7");
@@ -227,9 +281,17 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let at = Point::new(size.width * 0.5, size.height * 0.45);
-            snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, if step == "inceleme" { -7.0 } else { -60.0 }));
+            snapshot.input(
+                &mut app,
+                App::view,
+                &mut update,
+                Input::Scroll(at, if step == "inceleme" { -7.0 } else { -60.0 }),
+            );
             let file = out.join(format!("{step}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }

@@ -59,11 +59,23 @@ fn field_rules_come_back_from_a_geopackage() {
     let written = geopackage::write(&doc, &[], &path).expect("written");
     assert!(written.rule_notes.is_empty(), "{:?}", written.rule_notes);
     let read = geopackage::read(&path, None).expect("read");
-    let park = read.tables.iter().find(|t| t.name == "Park sınırları").expect("the parks");
-    let code = park.fields.iter().find(|f| f.name == "park_kodu").expect("the code");
+    let park = read
+        .tables
+        .iter()
+        .find(|t| t.name == "Park sınırları")
+        .expect("the parks");
+    let code = park
+        .fields
+        .iter()
+        .find(|f| f.name == "park_kodu")
+        .expect("the code");
     assert_eq!(code.alias.as_deref(), Some("Park kodu"));
     assert!(code.unique);
-    let benches = park.fields.iter().find(|f| f.name == "bank_sayisi").expect("the benches");
+    let benches = park
+        .fields
+        .iter()
+        .find(|f| f.name == "bank_sayisi")
+        .expect("the benches");
     assert_eq!(benches.alias.as_deref(), Some("Bank sayısı"));
     assert_eq!(benches.kind, LayerFieldKind::Integer);
     for ok in ["0", "20"] {
@@ -72,8 +84,17 @@ fn field_rules_come_back_from_a_geopackage() {
     for bad in ["21", "yirmi"] {
         assert!(check_value(benches, bad).is_err(), "{bad}");
     }
-    let route = read.tables.iter().find(|t| t.name == "Bakım rotaları").expect("the routes");
-    assert!(route.fields.iter().any(|f| f.name == "rota_kodu" && f.required));
+    let route = read
+        .tables
+        .iter()
+        .find(|t| t.name == "Bakım rotaları")
+        .expect("the routes");
+    assert!(
+        route
+            .fields
+            .iter()
+            .any(|f| f.name == "rota_kodu" && f.required)
+    );
 }
 
 #[test]
@@ -83,17 +104,34 @@ fn other_programs_read_the_schema_extension_and_the_columns_rules() {
     geopackage::write(&doc, &[], &path).expect("written");
     let gp = GeoPackage::open(&path, false).unwrap();
     let columns = gp.data_columns("Park sınırları").unwrap();
-    let benches = columns.iter().find(|(c, _)| c.column == "bank_sayisi").expect("the benches' row");
+    let benches = columns
+        .iter()
+        .find(|(c, _)| c.column == "bank_sayisi")
+        .expect("the benches' row");
     assert_eq!(benches.0.name.as_deref(), Some("Bank sayısı"));
     assert_eq!(
         benches.1,
-        Some(Rule::Range { min: Some(0.0), min_included: true, max: Some(20.0), max_included: true })
+        Some(Rule::Range {
+            min: Some(0.0),
+            min_included: true,
+            max: Some(20.0),
+            max_included: true
+        })
     );
     let rules = gp.constraints("Park sınırları").unwrap();
-    assert!(rules.uniques.iter().any(|u| u.columns == ["park_kodu"]), "{:?}", rules.uniques);
+    assert!(
+        rules.uniques.iter().any(|u| u.columns == ["park_kodu"]),
+        "{:?}",
+        rules.uniques
+    );
     let layers = gp.layers().unwrap();
     let route = layers.iter().find(|l| l.name == "Bakım rotaları").unwrap();
-    assert!(route.columns.iter().any(|c| c.name == "rota_kodu" && c.not_null));
+    assert!(
+        route
+            .columns
+            .iter()
+            .any(|c| c.name == "rota_kodu" && c.not_null)
+    );
 }
 
 /// A file GDAL 3.13 wrote (`fixtures/geopackage/v1/gdal-sema.gpkg`): a whole-number field with its alternative name, a
@@ -101,19 +139,45 @@ fn other_programs_read_the_schema_extension_and_the_columns_rules() {
 /// the unique index as the layer's.
 #[test]
 fn another_programs_schema_extension_reads_as_field_rules() {
-    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/geopackage/v1/gdal-sema.gpkg");
+    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/geopackage/v1/gdal-sema.gpkg");
     let read = geopackage::read(&path, None).expect("read");
-    let park = read.tables.iter().find(|t| t.name == "park").expect("the table");
-    let benches = park.fields.iter().find(|f| f.name == "bank_sayisi").expect("the benches");
+    let park = read
+        .tables
+        .iter()
+        .find(|t| t.name == "park")
+        .expect("the table");
+    let benches = park
+        .fields
+        .iter()
+        .find(|f| f.name == "bank_sayisi")
+        .expect("the benches");
     assert_eq!(benches.alias.as_deref(), Some("Bank sayısı"));
-    assert_eq!((benches.min.as_deref(), benches.max.as_deref()), (Some("0"), Some("20")));
+    assert_eq!(
+        (benches.min.as_deref(), benches.max.as_deref()),
+        (Some("0"), Some("20"))
+    );
     assert!(!benches.min_exclusive && !benches.max_exclusive);
     assert!(benches.required, "NOT NULL");
     // UNIQUE is the layer's unique index (docs/adr/0758 §5).
-    assert!(park.indexes.iter().any(|x| x.unique && x.fields == ["bank_sayisi"]), "{:?}", park.indexes);
-    let kind = park.fields.iter().find(|f| f.name == "tur").expect("the kind");
-    let values: Vec<(&str, &str)> =
-        kind.values.iter().flatten().map(|c| (c.code.as_str(), c.label.as_str())).collect();
+    assert!(
+        park.indexes
+            .iter()
+            .any(|x| x.unique && x.fields == ["bank_sayisi"]),
+        "{:?}",
+        park.indexes
+    );
+    let kind = park
+        .fields
+        .iter()
+        .find(|f| f.name == "tur")
+        .expect("the kind");
+    let values: Vec<(&str, &str)> = kind
+        .values
+        .iter()
+        .flatten()
+        .map(|c| (c.code.as_str(), c.label.as_str()))
+        .collect();
     assert_eq!(values, [("A", "Ağaç"), ("R", "Rögar")]);
 }
 
@@ -123,13 +187,32 @@ fn what_the_objects_break_of_the_rules_is_said() {
     let path = scratch("bozuk.gpkg");
     let written = geopackage::write(&doc, &[], &path).expect("a field copy is still written");
     let notes = written.rule_notes.join("\n");
-    assert!(notes.contains("zorunlu “Rota kodu” alanı 1 nesnede boş"), "{notes}");
-    assert!(notes.contains("“Bank sayısı” alanında 1 değer kuralına uymuyor"), "{notes}");
-    assert!(notes.contains("tekil “Park kodu” alanında 1 değer yineleniyor (ANK-01)"), "{notes}");
+    assert!(
+        notes.contains("zorunlu “Rota kodu” alanı 1 nesnede boş"),
+        "{notes}"
+    );
+    assert!(
+        notes.contains("“Bank sayısı” alanında 1 değer kuralına uymuyor"),
+        "{notes}"
+    );
+    assert!(
+        notes.contains("tekil “Park kodu” alanında 1 değer yineleniyor (ANK-01)"),
+        "{notes}"
+    );
     // The data breaks them, so the file does not claim them: the code column is nullable, the unique index plain.
     let gp = GeoPackage::open(&path, false).unwrap();
-    let route = gp.layers().unwrap().into_iter().find(|l| l.name == "Bakım rotaları").unwrap();
-    assert!(route.columns.iter().all(|c| !c.not_null || c.name != "rota_kodu"));
+    let route = gp
+        .layers()
+        .unwrap()
+        .into_iter()
+        .find(|l| l.name == "Bakım rotaları")
+        .unwrap();
+    assert!(
+        route
+            .columns
+            .iter()
+            .all(|c| !c.not_null || c.name != "rota_kodu")
+    );
     let rules = gp.constraints("Park sınırları").unwrap();
     assert!(rules.uniques.iter().all(|u| u.columns != ["park_kodu"]));
 }

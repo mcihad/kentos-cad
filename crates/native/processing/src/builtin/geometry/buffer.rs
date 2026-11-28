@@ -15,7 +15,8 @@ use kentos_native_application::geometry::shape;
 use serde_json::{Value, json};
 
 use super::{
-    GEO_KINDS, empty_note, features_param, geo_scopes, input_notes, invalid_note, layer_param, new_object, shapes,
+    GEO_KINDS, empty_note, features_param, geo_scopes, input_notes, invalid_note, layer_param,
+    new_object, shapes,
 };
 use crate::builtin::queries::attr;
 use crate::text::{js_number, js_trim};

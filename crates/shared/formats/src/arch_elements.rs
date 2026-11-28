@@ -2,8 +2,8 @@
 //! core's shapes, which draw them.
 
 use kentos_contracts::{
-    BeamFields, ColumnFields, ColumnShape, Entity, GridBubbles, GridFields, RampFields, RoofFields, StairFields,
-    TagFields, TagShape, Vec2, WallJustify,
+    BeamFields, ColumnFields, ColumnShape, Entity, GridBubbles, GridFields, RampFields, RoofFields,
+    StairFields, TagFields, TagShape, Vec2, WallJustify,
 };
 use kentos_geometry_core::Vec2 as CoreVec2;
 use kentos_geometry_core::entity::Shape;
@@ -254,7 +254,10 @@ pub fn plain_pieces_in(
 }
 
 /// Pieces of `e` as plain objects, each on its layer with its look (a piece's own line type over it).
-pub fn plain_of_pieces(e: &Entity, pieces: Vec<kentos_geometry_core::block::Piece>) -> Option<Vec<Entity>> {
+pub fn plain_of_pieces(
+    e: &Entity,
+    pieces: Vec<kentos_geometry_core::block::Piece>,
+) -> Option<Vec<Entity>> {
     plain_of(e, pieces)
 }
 
@@ -309,7 +312,9 @@ pub fn simple(e: &Entity) -> Option<Entity> {
         }
     };
     Some(match e {
-        Entity::Grid(g) => Entity::Polyline(path(&g.base, g.grid.pts.clone(), g.grid.bulges.clone())),
+        Entity::Grid(g) => {
+            Entity::Polyline(path(&g.base, g.grid.pts.clone(), g.grid.bulges.clone()))
+        }
         // Round its box's middle, whatever point its place is (docs/adr/0725 §2).
         Entity::Column(c) if c.column.shape == ColumnShape::Round => {
             let Shape::Column { at, column } = core_column(&c.column) else {
@@ -318,7 +323,10 @@ pub fn simple(e: &Entity) -> Option<Entity> {
             let centre = kentos_geometry_core::geom::arch::column_center(at, &column);
             Entity::Circle(kentos_contracts::CircleEntity {
                 base: c.base.clone(),
-                c: Vec2 { x: centre.x, y: centre.y },
+                c: Vec2 {
+                    x: centre.x,
+                    y: centre.y,
+                },
                 r: c.column.width / 2.0,
             })
         }
@@ -345,7 +353,11 @@ pub fn simple(e: &Entity) -> Option<Entity> {
             }
             Entity::Point(kentos_contracts::PointEntity {
                 base,
-                p: m.mark.points.first().copied().unwrap_or(kentos_contracts::Vec2 { x: 0.0, y: 0.0 }),
+                p: m.mark
+                    .points
+                    .first()
+                    .copied()
+                    .unwrap_or(kentos_contracts::Vec2 { x: 0.0, y: 0.0 }),
                 z: None,
                 parts: None,
             })
@@ -448,6 +460,9 @@ mod tests {
         };
         let ys: Vec<f64> = band.pts.iter().map(|p| p.y).collect();
         assert_eq!(band.pts.len(), 4, "{:?}", band.pts);
-        assert!(ys.iter().all(|y| *y == 0.0 || (*y + 0.25).abs() < 1e-12), "{ys:?}");
+        assert!(
+            ys.iter().all(|y| *y == 0.0 || (*y + 0.25).abs() < 1e-12),
+            "{ys:?}"
+        );
     }
 }

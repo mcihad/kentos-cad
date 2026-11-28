@@ -200,8 +200,11 @@ async fn act(
 /// The days left of a deadline `days` from today as the law counts it: a last day the offices do not work runs to
 /// the first working day after it (docs/adr/9000 §19), so the figure depends on the calendar.
 fn legal_days(days: i64) -> i32 {
-    let today = time::OffsetDateTime::now_utc().to_offset(time::UtcOffset::from_hms(3, 0, 0).unwrap()).date();
-    let (due, _) = kentos_application::portal::holidays::current().extended(today + time::Duration::days(days));
+    let today = time::OffsetDateTime::now_utc()
+        .to_offset(time::UtcOffset::from_hms(3, 0, 0).unwrap())
+        .date();
+    let (due, _) = kentos_application::portal::holidays::current()
+        .extended(today + time::Duration::days(days));
     i32::try_from((due - today).whole_days()).unwrap()
 }
 
@@ -240,7 +243,10 @@ async fn signing_up_waits_for_the_check_and_the_check_attests_the_email() {
     platform::set_settings(
         &db.app,
         &root,
-        &kentos_contracts::PlatformSettingsEdit { signup_open: Some(true), ..Default::default() },
+        &kentos_contracts::PlatformSettingsEdit {
+            signup_open: Some(true),
+            ..Default::default()
+        },
     )
     .await
     .unwrap();
@@ -312,7 +318,10 @@ async fn an_application_goes_round_by_round_under_the_law_s_deadline() {
     platform::set_settings(
         &db.app,
         &root,
-        &kentos_contracts::PlatformSettingsEdit { signup_open: Some(true), ..Default::default() },
+        &kentos_contracts::PlatformSettingsEdit {
+            signup_open: Some(true),
+            ..Default::default()
+        },
     )
     .await
     .unwrap();
@@ -846,9 +855,18 @@ async fn administration_is_its_administrators_and_an_organisation_keeps_an_owner
 }
 
 /// Sends `bytes` as `name` through the account's own upload, in one part; the upload's id.
-async fn uploaded(db: &TestDb, store: &Blobs, who: &Actor, name: &str, bytes: &[u8]) -> Result<String, AppError> {
+async fn uploaded(
+    db: &TestDb,
+    store: &Blobs,
+    who: &Actor,
+    name: &str,
+    bytes: &[u8],
+) -> Result<String, AppError> {
     use sha2::Digest as _;
-    let sha: String = sha2::Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect();
+    let sha: String = sha2::Sha256::digest(bytes)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
     let open = kentos_application::uploads::begin(
         &db.app,
         who,
@@ -861,7 +879,8 @@ async fn uploaded(db: &TestDb, store: &Blobs, who: &Actor, name: &str, bytes: &[
     .await?;
     let id = Uuid::parse_str(&open.id).unwrap();
     let scanner = kentos_application::scan::Scanner::rules_only();
-    let done = kentos_application::uploads::receive(&db.app, store, &scanner, who, id, 0, bytes).await?;
+    let done =
+        kentos_application::uploads::receive(&db.app, store, &scanner, who, id, 0, bytes).await?;
     assert!(done.received);
     Ok(done.id)
 }
@@ -891,30 +910,62 @@ async fn a_dossier_takes_a_scanned_upload_and_a_refusal_leaves_it_to_try_again()
     .await
     .unwrap();
     // A plan sent from a phone in parts becomes the package's file, kept with the type its bytes are.
-    let upload = uploaded(&db, &store, &ayse, "zemin-etudu.pdf", b"%PDF-1.7 zemin etudu").await.unwrap();
+    let upload = uploaded(
+        &db,
+        &store,
+        &ayse,
+        "zemin-etudu.pdf",
+        b"%PDF-1.7 zemin etudu",
+    )
+    .await
+    .unwrap();
     let take = |purpose: &str, upload: &str| kentos_contracts::DossierFileFromUpload {
         upload_id: upload.into(),
         purpose: purpose.into(),
         doc_type: Some("soil_report".into()),
     };
     // A wrong purpose is refused before anything moves: the upload is still there.
-    let e = files::from_upload(&db.app, &store, &ayse, id, &take("hepsi", &upload)).await.unwrap_err();
+    let e = files::from_upload(&db.app, &store, &ayse, id, &take("hepsi", &upload))
+        .await
+        .unwrap_err();
     assert!(matches!(e, AppError::Invalid { .. }), "{e:?}");
-    let file = files::from_upload(&db.app, &store, &ayse, id, &take("package", &upload)).await.unwrap();
+    let file = files::from_upload(&db.app, &store, &ayse, id, &take("package", &upload))
+        .await
+        .unwrap();
     assert_eq!(
         (file.media_type.as_str(), file.scan, file.name.as_str()),
-        ("application/pdf", kentos_contracts::ScanState::Unscanned, "zemin-etudu.pdf")
+        (
+            "application/pdf",
+            kentos_contracts::ScanState::Unscanned,
+            "zemin-etudu.pdf"
+        )
     );
-    let (_, mut opened) = files::download(&db.app, &store, &ayse, id, Uuid::parse_str(&file.id).unwrap()).await.unwrap();
+    let (_, mut opened) = files::download(
+        &db.app,
+        &store,
+        &ayse,
+        id,
+        Uuid::parse_str(&file.id).unwrap(),
+    )
+    .await
+    .unwrap();
     let mut back = Vec::new();
-    tokio::io::AsyncReadExt::read_to_end(&mut opened, &mut back).await.unwrap();
+    tokio::io::AsyncReadExt::read_to_end(&mut opened, &mut back)
+        .await
+        .unwrap();
     assert_eq!(back, b"%PDF-1.7 zemin etudu");
     // Taken once; another account's upload is no one's here.
-    let e = files::from_upload(&db.app, &store, &ayse, id, &take("package", &upload)).await.unwrap_err();
+    let e = files::from_upload(&db.app, &store, &ayse, id, &take("package", &upload))
+        .await
+        .unwrap_err();
     assert!(matches!(e, AppError::NotFound(_)), "{e:?}");
     let mehmet = signed_in(&db, "mehmet").await;
-    let his = uploaded(&db, &store, &mehmet, "kroki.png", b"\x89PNG\r\n\x1a\nkroki").await.unwrap();
-    let e = files::from_upload(&db.app, &store, &ayse, id, &take("package", &his)).await.unwrap_err();
+    let his = uploaded(&db, &store, &mehmet, "kroki.png", b"\x89PNG\r\n\x1a\nkroki")
+        .await
+        .unwrap();
+    let e = files::from_upload(&db.app, &store, &ayse, id, &take("package", &his))
+        .await
+        .unwrap_err();
     assert!(matches!(e, AppError::NotFound(_)), "{e:?}");
 }
 
@@ -964,50 +1015,112 @@ async fn an_office_works_on_its_professionals_dossier_by_role() {
         office_id: office.map(|o| o.to_string()),
     };
     // Only an office she is an editor of: not another's.
-    let e = dossiers::create_application(&db.app, &can, &apply(Some(office))).await.unwrap_err();
+    let e = dossiers::create_application(&db.app, &can, &apply(Some(office)))
+        .await
+        .unwrap_err();
     assert!(matches!(e, AppError::Invalid { .. }), "{e:?}");
-    let id = dossiers::create_application(&db.app, &ayse, &apply(Some(office))).await.unwrap();
-    // The editor prepares the package but does not send; the office's manager sends for her.
-    add_file(&db, &store, &selin, id, ("mimari.pdf", b"%PDF mimari", "architectural"), Purpose::Package)
+    let id = dossiers::create_application(&db.app, &ayse, &apply(Some(office)))
         .await
         .unwrap();
+    // The editor prepares the package but does not send; the office's manager sends for her.
+    add_file(
+        &db,
+        &store,
+        &selin,
+        id,
+        ("mimari.pdf", b"%PDF mimari", "architectural"),
+        Purpose::Package,
+    )
+    .await
+    .unwrap();
     let seen = detail::detail(&db.app, &selin, id).await.unwrap();
     assert_eq!(seen.summary.office_name.as_deref(), Some("Yılmaz Mimarlık"));
     assert!(seen.can_add_files && seen.actions.is_empty() && !seen.can_share_with_office);
-    let e = act(&db, &selin, id, DossierAction::Send, None).await.unwrap_err();
+    let e = act(&db, &selin, id, DossierAction::Send, None)
+        .await
+        .unwrap_err();
     assert!(matches!(e, AppError::Forbidden(_)), "{e:?}");
     let viewer = detail::detail(&db.app, &veli, id).await.unwrap();
     assert!(!viewer.can_add_files && viewer.actions.is_empty());
-    act(&db, &emre, id, DossierAction::Send, None).await.unwrap();
-    // The municipality asks for changes: the professional and the office's editors and above are told, the viewer not.
-    act(&db, &mehmet, id, DossierAction::RequestChanges, Some("Otopark hesabı eksik."))
+    act(&db, &emre, id, DossierAction::Send, None)
         .await
         .unwrap();
+    // The municipality asks for changes: the professional and the office's editors and above are told, the viewer not.
+    act(
+        &db,
+        &mehmet,
+        id,
+        DossierAction::RequestChanges,
+        Some("Otopark hesabı eksik."),
+    )
+    .await
+    .unwrap();
     for (who, told) in [(&ayse, true), (&selin, true), (&emre, true), (&veli, false)] {
         let kinds = notified(&db, who).await;
-        assert_eq!(kinds.iter().any(|k| k.contains("changes")), told, "{}: {kinds:?}", who.display_name);
+        assert_eq!(
+            kinds.iter().any(|k| k.contains("changes")),
+            told,
+            "{}: {kinds:?}",
+            who.display_name
+        );
     }
     // The office's list holds it; a stranger finds nothing.
-    let listed = dossiers::list_for_tenant(&db.app, &emre_in, &ListFilter { limit: 50, ..ListFilter::default() })
-        .await
-        .unwrap();
-    assert_eq!(listed.items.iter().map(|d| d.id.clone()).collect::<Vec<_>>(), vec![id.to_string()]);
-    assert!(listed.items[0].awaiting_me, "changes requested: the professional's side, the office's too");
-    assert!(matches!(detail::detail(&db.app, &can, id).await.unwrap_err(), AppError::NotFound(_)));
+    let listed = dossiers::list_for_tenant(
+        &db.app,
+        &emre_in,
+        &ListFilter {
+            limit: 50,
+            ..ListFilter::default()
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        listed
+            .items
+            .iter()
+            .map(|d| d.id.clone())
+            .collect::<Vec<_>>(),
+        vec![id.to_string()]
+    );
+    assert!(
+        listed.items[0].awaiting_me,
+        "changes requested: the professional's side, the office's too"
+    );
+    assert!(matches!(
+        detail::detail(&db.app, &can, id).await.unwrap_err(),
+        AppError::NotFound(_)
+    ));
     // Only she takes the sharing back; then her colleagues no longer see it.
     let off = kentos_contracts::DossierOfficeSet { office_id: None };
-    let e = dossiers::set_office(&db.app, &emre, id, &off).await.unwrap_err();
+    let e = dossiers::set_office(&db.app, &emre, id, &off)
+        .await
+        .unwrap_err();
     assert!(matches!(e, AppError::Forbidden(_)), "{e:?}");
-    dossiers::set_office(&db.app, &ayse, id, &off).await.unwrap();
-    assert!(matches!(detail::detail(&db.app, &selin, id).await.unwrap_err(), AppError::NotFound(_)));
+    dossiers::set_office(&db.app, &ayse, id, &off)
+        .await
+        .unwrap();
+    assert!(matches!(
+        detail::detail(&db.app, &selin, id).await.unwrap_err(),
+        AppError::NotFound(_)
+    ));
     let timeline = detail::detail(&db.app, &ayse, id).await.unwrap().events;
-    assert!(timeline.iter().any(|e| e.text.contains("Yılmaz Mimarlık ile paylaşımını kaldırdı")), "{timeline:?}");
+    assert!(
+        timeline
+            .iter()
+            .any(|e| e.text.contains("Yılmaz Mimarlık ile paylaşımını kaldırdı")),
+        "{timeline:?}"
+    );
 }
 
 /// A tariff of 2464's structure with example rates.
 fn priced_tariff() -> kentos_contracts::FeeDefinition {
     let mut d = kentos_application::portal::fees::template();
-    for (row, rate) in d.tables[0].rows.iter_mut().zip([12.0, 24.0, 36.0, 48.0, 60.0, 48.0, 72.0, 96.0, 120.0]) {
+    for (row, rate) in d.tables[0]
+        .rows
+        .iter_mut()
+        .zip([12.0, 24.0, 36.0, 48.0, 60.0, 48.0, 72.0, 96.0, 120.0])
+    {
         row.rate = rate;
     }
     for t in &mut d.tables[1..] {
@@ -1021,7 +1134,9 @@ fn priced_tariff() -> kentos_contracts::FeeDefinition {
 #[tokio::test]
 async fn fees_are_issued_by_the_tariff_and_paid_before_the_permit() {
     use kentos_application::portal::fees;
-    use kentos_contracts::{FeeAssess, FeeAssessmentState, FeeCancel, FeePaid, FeeScheduleCopy, FeeScheduleEdit};
+    use kentos_contracts::{
+        FeeAssess, FeeAssessmentState, FeeCancel, FeePaid, FeeScheduleCopy, FeeScheduleEdit,
+    };
 
     let Some(db) = TestDb::create().await else {
         return;
@@ -1049,10 +1164,19 @@ async fn fees_are_issued_by_the_tariff_and_paid_before_the_permit() {
     )
     .await
     .unwrap();
-    add_file(&db, &store, &ayse, id, ("mimari.pdf", b"%PDF-1.4 mimari", "architectural"), Purpose::Package)
+    add_file(
+        &db,
+        &store,
+        &ayse,
+        id,
+        ("mimari.pdf", b"%PDF-1.4 mimari", "architectural"),
+        Purpose::Package,
+    )
+    .await
+    .unwrap();
+    act(&db, &ayse, id, DossierAction::Send, None)
         .await
         .unwrap();
-    act(&db, &ayse, id, DossierAction::Send, None).await.unwrap();
 
     // The tariff is the admins'; an editor reads it but does not write it.
     let edit = FeeScheduleEdit {
@@ -1063,33 +1187,77 @@ async fn fees_are_issued_by_the_tariff_and_paid_before_the_permit() {
         decision: Some("Meclisin 2025/214 sayılı kararı".into()),
         definition: priced_tariff(),
     };
-    let refused = fees::create_schedule(&db.app, &zeynep_access, &edit).await.unwrap_err();
+    let refused = fees::create_schedule(&db.app, &zeynep_access, &edit)
+        .await
+        .unwrap_err();
     assert!(matches!(refused, AppError::Forbidden(_)), "{refused:?}");
     let draft = fees::create_schedule(&db.app, &owner, &edit).await.unwrap();
     // No tariff in force yet: nothing to issue, nothing holds the decision back.
-    let none = fees::preview(&db.app, &zeynep, id, &FeeAssess { inputs: Default::default(), due_on: None })
-        .await
-        .unwrap_err();
-    assert!(none.to_string().contains("yürürlükte bir ücret tarifesi yok"), "{none}");
+    let none = fees::preview(
+        &db.app,
+        &zeynep,
+        id,
+        &FeeAssess {
+            inputs: Default::default(),
+            due_on: None,
+        },
+    )
+    .await
+    .unwrap_err();
+    assert!(
+        none.to_string()
+            .contains("yürürlükte bir ücret tarifesi yok"),
+        "{none}"
+    );
     let draft_id = Uuid::parse_str(&draft.id).unwrap();
     let active = fees::activate(&db.app, &owner, draft_id).await.unwrap();
     assert_eq!(active.state, kentos_contracts::FeeScheduleState::Active);
-    assert_eq!(fees::schedules(&db.app, &zeynep_access).await.unwrap().len(), 1);
+    assert_eq!(
+        fees::schedules(&db.app, &zeynep_access)
+            .await
+            .unwrap()
+            .len(),
+        1
+    );
 
     // The permit waits for its fee: first to be issued, then to be paid (2464 Ek Madde 5).
-    let early = act(&db, &ali, id, DossierAction::Approve, None).await.unwrap_err();
-    assert!(early.to_string().contains("tahakkuk ettirilmeli"), "{early}");
-    // The professional reads fees but does not issue them.
-    let theirs = fees::preview(&db.app, &ayse, id, &FeeAssess { inputs: Default::default(), due_on: None })
+    let early = act(&db, &ali, id, DossierAction::Approve, None)
         .await
         .unwrap_err();
+    assert!(
+        early.to_string().contains("tahakkuk ettirilmeli"),
+        "{early}"
+    );
+    // The professional reads fees but does not issue them.
+    let theirs = fees::preview(
+        &db.app,
+        &ayse,
+        id,
+        &FeeAssess {
+            inputs: Default::default(),
+            due_on: None,
+        },
+    )
+    .await
+    .unwrap_err();
     assert!(matches!(theirs, AppError::Forbidden(_)), "{theirs:?}");
     // An empty preview asks what the kind needs.
-    let asked = fees::preview(&db.app, &zeynep, id, &FeeAssess { inputs: Default::default(), due_on: None })
-        .await
-        .unwrap();
+    let asked = fees::preview(
+        &db.app,
+        &zeynep,
+        id,
+        &FeeAssess {
+            inputs: Default::default(),
+            due_on: None,
+        },
+    )
+    .await
+    .unwrap();
     let keys: Vec<&str> = asked.parameters.iter().map(|p| p.key.as_str()).collect();
-    assert_eq!(keys, ["yapi_turu", "insaat_alani", "bolge", "kamu_istisnasi"]);
+    assert_eq!(
+        keys,
+        ["yapi_turu", "insaat_alani", "bolge", "kamu_istisnasi"]
+    );
     assert!(asked.missing.contains_key("insaat_alani") && asked.lines.is_empty());
     let inputs: kentos_contracts::FeeInputs = [
         ("yapi_turu".to_owned(), serde_json::json!("konut")),
@@ -1098,77 +1266,184 @@ async fn fees_are_issued_by_the_tariff_and_paid_before_the_permit() {
     ]
     .into_iter()
     .collect();
-    let fee = fees::issue(&db.app, &zeynep, id, &FeeAssess { inputs: inputs.clone(), due_on: None })
-        .await
-        .unwrap();
+    let fee = fees::issue(
+        &db.app,
+        &zeynep,
+        id,
+        &FeeAssess {
+            inputs: inputs.clone(),
+            due_on: None,
+        },
+    )
+    .await
+    .unwrap();
     // 152,5 m² × 48 TL (151–200 m²) + 152,5 m² × 1,25 TL (konut bölgesi) = 7.320 + 190,63.
     assert_eq!(fee.total, 732_000 + 19_063);
     assert_eq!(fee.lines[0].basis, "152,5 m² × 48 TL (Konut, 151–200 m²)");
     assert_eq!(fee.schedule_name, "2026 Ücret Tarifesi");
-    assert!(notified(&db, &ayse).await.contains(&"dossier.fee_issued".to_owned()));
+    assert!(
+        notified(&db, &ayse)
+            .await
+            .contains(&"dossier.fee_issued".to_owned())
+    );
     let seen = fees::dossier_fees(&db.app, &ayse, id).await.unwrap();
     assert_eq!((seen.len(), seen[0].state), (1, FeeAssessmentState::Issued));
-    assert!(seen[0].payment_note.as_deref().is_some_and(|n| n.contains("Vezneye")));
-    let unpaid = act(&db, &ali, id, DossierAction::Approve, None).await.unwrap_err();
+    assert!(
+        seen[0]
+            .payment_note
+            .as_deref()
+            .is_some_and(|n| n.contains("Vezneye"))
+    );
+    let unpaid = act(&db, &ali, id, DossierAction::Approve, None)
+        .await
+        .unwrap_err();
     assert!(unpaid.to_string().contains("ödenmedi"), "{unpaid}");
 
     let fee_id = Uuid::parse_str(&fee.id).unwrap();
-    let paid = fees::paid(&db.app, &zeynep, id, fee_id, &FeePaid { receipt_no: "MKB-2026-118".into(), paid_on: None })
+    let paid = fees::paid(
+        &db.app,
+        &zeynep,
+        id,
+        fee_id,
+        &FeePaid {
+            receipt_no: "MKB-2026-118".into(),
+            paid_on: None,
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(paid.state, FeeAssessmentState::Paid);
+    assert!(
+        notified(&db, &ayse)
+            .await
+            .contains(&"dossier.fee_paid".to_owned())
+    );
+    let twice = fees::paid(
+        &db.app,
+        &zeynep,
+        id,
+        fee_id,
+        &FeePaid {
+            receipt_no: "X".into(),
+            paid_on: None,
+        },
+    )
+    .await
+    .unwrap_err();
+    assert!(
+        twice.to_string().contains("ödenecek durumda değil"),
+        "{twice}"
+    );
+    let approved = act(&db, &ali, id, DossierAction::Approve, None)
         .await
         .unwrap();
-    assert_eq!(paid.state, FeeAssessmentState::Paid);
-    assert!(notified(&db, &ayse).await.contains(&"dossier.fee_paid".to_owned()));
-    let twice = fees::paid(&db.app, &zeynep, id, fee_id, &FeePaid { receipt_no: "X".into(), paid_on: None })
-        .await
-        .unwrap_err();
-    assert!(twice.to_string().contains("ödenecek durumda değil"), "{twice}");
-    let approved = act(&db, &ali, id, DossierAction::Approve, None).await.unwrap();
     assert_eq!(approved.summary.status, DossierStatus::Approved);
     let texts: Vec<String> = approved.events.iter().map(|e| e.text.clone()).collect();
-    assert!(texts.iter().any(|t| t.contains("harç ve ücret tahakkuk ettirdi: 7.510,63 TL")), "{texts:?}");
-    assert!(texts.iter().any(|t| t.contains("makbuz MKB-2026-118")), "{texts:?}");
+    assert!(
+        texts
+            .iter()
+            .any(|t| t.contains("harç ve ücret tahakkuk ettirdi: 7.510,63 TL")),
+        "{texts:?}"
+    );
+    assert!(
+        texts.iter().any(|t| t.contains("makbuz MKB-2026-118")),
+        "{texts:?}"
+    );
 
     // Cancelling is a manager's, with a reason; a paid one too.
-    let by_editor = fees::cancel(&db.app, &zeynep, id, fee_id, &FeeCancel { reason: "Yanlış alan".into() })
-        .await
-        .unwrap_err();
+    let by_editor = fees::cancel(
+        &db.app,
+        &zeynep,
+        id,
+        fee_id,
+        &FeeCancel {
+            reason: "Yanlış alan".into(),
+        },
+    )
+    .await
+    .unwrap_err();
     assert!(matches!(by_editor, AppError::Forbidden(_)), "{by_editor:?}");
-    let cancelled = fees::cancel(&db.app, &ali, id, fee_id, &FeeCancel { reason: "Alan yanlış girildi".into() })
-        .await
-        .unwrap();
-    assert_eq!((cancelled.state, cancelled.receipt_no), (FeeAssessmentState::Cancelled, None));
+    let cancelled = fees::cancel(
+        &db.app,
+        &ali,
+        id,
+        fee_id,
+        &FeeCancel {
+            reason: "Alan yanlış girildi".into(),
+        },
+    )
+    .await
+    .unwrap();
+    assert_eq!(
+        (cancelled.state, cancelled.receipt_no),
+        (FeeAssessmentState::Cancelled, None)
+    );
 
     // Next year's draft: every amount revalued; the issued assessment keeps its own lines.
     let next = fees::copy_schedule(
         &db.app,
         &owner,
         draft_id,
-        &FeeScheduleCopy { year: 2027, valid_from: "2027-01-01".into(), factor: 1.5 },
+        &FeeScheduleCopy {
+            year: 2027,
+            valid_from: "2027-01-01".into(),
+            factor: 1.5,
+        },
     )
     .await
     .unwrap();
     assert_eq!(next.definition.tables[0].rows[3].rate, 72.0);
     assert_eq!(next.state, kentos_contracts::FeeScheduleState::Draft);
-    let frozen = fees::update_schedule(&db.app, &owner, draft_id, &edit).await.unwrap_err();
+    let frozen = fees::update_schedule(&db.app, &owner, draft_id, &edit)
+        .await
+        .unwrap_err();
     assert!(frozen.to_string().contains("değişmez"), "{frozen}");
-    fees::delete_schedule(&db.app, &owner, Uuid::parse_str(&next.id).unwrap()).await.unwrap();
-    assert_eq!(fees::dossier_fees(&db.app, &ayse, id).await.unwrap()[0].lines[0].amount, 732_000);
+    fees::delete_schedule(&db.app, &owner, Uuid::parse_str(&next.id).unwrap())
+        .await
+        .unwrap();
+    assert_eq!(
+        fees::dossier_fees(&db.app, &ayse, id).await.unwrap()[0].lines[0].amount,
+        732_000
+    );
 }
 
 /// What the signing service does with a request: checks the server's envelope, opens it, signs with the (software)
 /// card and gives its result.
-fn signed_on_the_card(created: &kentos_contracts::SigningRequestCreated, trust: &kentos_contracts::SigningTrust) -> kentos_imza_domain::BatchResult {
+fn signed_on_the_card(
+    created: &kentos_contracts::SigningRequestCreated,
+    trust: &kentos_contracts::SigningTrust,
+) -> kentos_imza_domain::BatchResult {
     use kentos_imza_signature::mock_token::{MOCK_PIN, MockToken};
     use kentos_imza_signature::{Choice, RecordSink, sign_batch};
-    let guard = kentos_imza_security::TrustConfig::from_base64(&trust.public_key, trust.issuer.clone(), trust.audience.clone()).unwrap();
-    let now = time::OffsetDateTime::now_utc().format(&time::format_description::well_known::Rfc3339).unwrap();
+    let guard = kentos_imza_security::TrustConfig::from_base64(
+        &trust.public_key,
+        trust.issuer.clone(),
+        trust.audience.clone(),
+    )
+    .unwrap();
+    let now = time::OffsetDateTime::now_utc()
+        .format(&time::format_description::well_known::Rfc3339)
+        .unwrap();
     let payload = kentos_imza_security::verify(&created.signed_request, &guard, &now).unwrap();
     let mut record = kentos_imza_domain::BatchRecord::new(payload.to_batch().unwrap());
     record.open().unwrap();
     let batch = record.batch.clone();
     let mut ignore = |_: &str, _: &serde_json::Value| {};
-    let mut sink = RecordSink { record: &mut record, on_event: &mut ignore };
-    sign_batch(&batch, &MockToken::new(), &Choice { slot_id: 1, certificate_id: "01".into() }, MOCK_PIN, &mut sink).unwrap();
+    let mut sink = RecordSink {
+        record: &mut record,
+        on_event: &mut ignore,
+    };
+    sign_batch(
+        &batch,
+        &MockToken::new(),
+        &Choice {
+            slot_id: 1,
+            certificate_id: "01".into(),
+        },
+        MOCK_PIN,
+        &mut sink,
+    )
+    .unwrap();
     record.result()
 }
 
@@ -1202,72 +1477,143 @@ async fn a_dossier_s_files_are_signed_on_the_card_and_checked_against_the_server
     )
     .await
     .unwrap();
-    let a = add_file(&db, &store, &ayse, id, ("mimari.pdf", b"%PDF-1.4 mimari proje", "architectural"), Purpose::Package)
+    let a = add_file(
+        &db,
+        &store,
+        &ayse,
+        id,
+        ("mimari.pdf", b"%PDF-1.4 mimari proje", "architectural"),
+        Purpose::Package,
+    )
+    .await
+    .unwrap();
+    let b = add_file(
+        &db,
+        &store,
+        &ayse,
+        id,
+        ("statik.pdf", b"%PDF-1.4 statik proje", "structural"),
+        Purpose::Package,
+    )
+    .await
+    .unwrap();
+    act(&db, &ayse, id, DossierAction::Send, None)
         .await
         .unwrap();
-    let b = add_file(&db, &store, &ayse, id, ("statik.pdf", b"%PDF-1.4 statik proje", "structural"), Purpose::Package)
-        .await
-        .unwrap();
-    act(&db, &ayse, id, DossierAction::Send, None).await.unwrap();
-    let ask = SigningRequestCreate { client_type: SigningClientType::Desktop, file_ids: vec![a.id.clone(), b.id.clone()] };
+    let ask = SigningRequestCreate {
+        client_type: SigningClientType::Desktop,
+        file_ids: vec![a.id.clone(), b.id.clone()],
+    };
 
     // Without the server's key there is nothing to sign with.
-    let off = signing::request(&db.app, &store, None, &ayse, id, &ask).await.unwrap_err();
+    let off = signing::request(&db.app, &store, None, &ayse, id, &ask)
+        .await
+        .unwrap_err();
     assert!(off.to_string().contains("yapılandırılmamış"), "{off}");
     let signer = Signer::generated().unwrap();
     let trust = signer.trust();
     // A viewer reads; signing is an editor's.
-    let viewer = signing::request(&db.app, &store, Some(&signer), &selin, id, &ask).await.unwrap_err();
+    let viewer = signing::request(&db.app, &store, Some(&signer), &selin, id, &ask)
+        .await
+        .unwrap_err();
     assert!(matches!(viewer, AppError::Forbidden(_)), "{viewer:?}");
 
-    let created = signing::request(&db.app, &store, Some(&signer), &ayse, id, &ask).await.unwrap();
+    let created = signing::request(&db.app, &store, Some(&signer), &ayse, id, &ask)
+        .await
+        .unwrap();
     assert_eq!(created.files.len(), 2);
     assert_eq!(
         created.files[0].digest,
-        kentos_imza_security::digest::compute(kentos_imza_domain::DigestAlgorithm::Sha384, b"%PDF-1.4 mimari proje"),
+        kentos_imza_security::digest::compute(
+            kentos_imza_domain::DigestAlgorithm::Sha384,
+            b"%PDF-1.4 mimari proje"
+        ),
         "the digest is of the bytes the server keeps, as the signing service computes it"
     );
     let result = signed_on_the_card(&created, &trust);
     let tx = Uuid::parse_str(&created.transaction_id).unwrap();
     // Only the one who asked delivers.
-    let other = signing::deliver(&db.app, &store, &zeynep, tx, &result).await.unwrap_err();
+    let other = signing::deliver(&db.app, &store, &zeynep, tx, &result)
+        .await
+        .unwrap_err();
     assert!(matches!(other, AppError::NotFound(_)), "{other:?}");
-    let verdict = signing::deliver(&db.app, &store, &ayse, tx, &result).await.unwrap();
+    let verdict = signing::deliver(&db.app, &store, &ayse, tx, &result)
+        .await
+        .unwrap();
     assert!(verdict.accepted, "{:?}", verdict.reason);
-    assert_eq!((verdict.status, verdict.signed, verdict.required), (SigningOutcome::Completed, 2, 2));
-    assert!(verdict.signer.as_ref().is_some_and(|s| s.fingerprint_sha256.len() == 64));
+    assert_eq!(
+        (verdict.status, verdict.signed, verdict.required),
+        (SigningOutcome::Completed, 2, 2)
+    );
+    assert!(
+        verdict
+            .signer
+            .as_ref()
+            .is_some_and(|s| s.fingerprint_sha256.len() == 64)
+    );
     // The first verdict stays.
-    let again = signing::deliver(&db.app, &store, &ayse, tx, &result).await.unwrap_err();
+    let again = signing::deliver(&db.app, &store, &ayse, tx, &result)
+        .await
+        .unwrap_err();
     assert!(again.to_string().contains("ilk teslim geçerli"), "{again}");
 
     // Both sides read the signatures; the timeline says who signed.
     let seen = signing::signatures(&db.app, &zeynep, id).await.unwrap();
     assert_eq!(seen.len(), 2);
-    assert!(seen.iter().all(|s| s.still_matches && s.signer_name == "ayse kişi" && s.digest_algorithm == "SHA-384"));
+    assert!(seen.iter().all(|s| s.still_matches
+        && s.signer_name == "ayse kişi"
+        && s.digest_algorithm == "SHA-384"));
     assert_eq!(signing::signatures(&db.app, &ayse, id).await.unwrap(), seen);
     let page = detail::detail(&db.app, &zeynep, id).await.unwrap();
-    assert!(page.events.iter().any(|e| e.action == "signed" && e.text.contains("2 dosyayı e-imzaladı")), "{:?}", page.events);
+    assert!(
+        page.events
+            .iter()
+            .any(|e| e.action == "signed" && e.text.contains("2 dosyayı e-imzaladı")),
+        "{:?}",
+        page.events
+    );
 
     // A signature that does not match is refused, and nothing is kept for it.
-    let created = signing::request(&db.app, &store, Some(&signer), &zeynep, id, &ask).await.unwrap();
+    let created = signing::request(&db.app, &store, Some(&signer), &zeynep, id, &ask)
+        .await
+        .unwrap();
     let mut broken = signed_on_the_card(&created, &trust);
     let value = &mut broken.results[0].signature.signature_value;
     let flipped = if value.starts_with('A') { 'B' } else { 'A' };
     value.replace_range(0..1, &flipped.to_string());
     let tx = Uuid::parse_str(&created.transaction_id).unwrap();
-    let verdict = signing::deliver(&db.app, &store, &zeynep, tx, &broken).await.unwrap();
-    assert_eq!((verdict.status, verdict.signed), (SigningOutcome::Partially, 1));
-    assert!(verdict.files.iter().any(|f| !f.verified && f.error.is_some()));
-    assert_eq!(signing::signatures(&db.app, &ayse, id).await.unwrap().len(), 3);
+    let verdict = signing::deliver(&db.app, &store, &zeynep, tx, &broken)
+        .await
+        .unwrap();
+    assert_eq!(
+        (verdict.status, verdict.signed),
+        (SigningOutcome::Partially, 1)
+    );
+    assert!(
+        verdict
+            .files
+            .iter()
+            .any(|f| !f.verified && f.error.is_some())
+    );
+    assert_eq!(
+        signing::signatures(&db.app, &ayse, id).await.unwrap().len(),
+        3
+    );
 
     // A request given up is not delivered; another dossier's request is not this one's.
-    let created = signing::request(&db.app, &store, Some(&signer), &ayse, id, &ask).await.unwrap();
+    let created = signing::request(&db.app, &store, Some(&signer), &ayse, id, &ask)
+        .await
+        .unwrap();
     let tx = Uuid::parse_str(&created.transaction_id).unwrap();
     let result = signed_on_the_card(&created, &trust);
     signing::cancel(&db.app, &ayse, tx).await.unwrap();
-    let late = signing::deliver(&db.app, &store, &ayse, tx, &result).await.unwrap_err();
+    let late = signing::deliver(&db.app, &store, &ayse, tx, &result)
+        .await
+        .unwrap_err();
     assert!(late.to_string().contains("iptal edildi"), "{late}");
-    let wrong = signing::deliver(&db.app, &store, &ayse, Uuid::now_v7(), &result).await.unwrap_err();
+    let wrong = signing::deliver(&db.app, &store, &ayse, Uuid::now_v7(), &result)
+        .await
+        .unwrap_err();
     assert!(wrong.to_string().contains("ait değil"), "{wrong}");
 }
 
@@ -1283,26 +1629,59 @@ async fn the_platform_keeps_the_religious_holidays_the_deadlines_count_over() {
     let someone = account(&db, "biri").await;
     // The table comes with 2026's and 2027's bayrams; a year lists them with the law's fixed days.
     let year = holidays::list(&db.app, &someone, 2026).await.unwrap();
-    assert!(year.iter().any(|h| h.day == "2026-05-27" && h.name.starts_with("Kurban") && !h.fixed && !h.half_day));
-    assert!(year.iter().any(|h| h.day == "2026-05-26" && h.half_day), "the arife is half a day");
+    assert!(
+        year.iter().any(|h| h.day == "2026-05-27"
+            && h.name.starts_with("Kurban")
+            && !h.fixed
+            && !h.half_day)
+    );
+    assert!(
+        year.iter().any(|h| h.day == "2026-05-26" && h.half_day),
+        "the arife is half a day"
+    );
     assert!(year.iter().any(|h| h.day == "2026-10-29" && h.fixed));
     // Only the platform's administrators write it; a far year keeps the other tests' deadlines as they are.
-    let add = HolidayCreate { day: "2031-01-24".into(), name: "Ramazan Bayramı 1. gün".into(), half_day: false };
+    let add = HolidayCreate {
+        day: "2031-01-24".into(),
+        name: "Ramazan Bayramı 1. gün".into(),
+        half_day: false,
+    };
     let refused = holidays::add(&db.app, &someone, &add).await.unwrap_err();
     assert!(matches!(refused, AppError::Forbidden(_)), "{refused:?}");
     holidays::add(&db.app, &root, &add).await.unwrap();
     let day = time::Date::from_calendar_date(2031, time::Month::January, 24).unwrap();
-    assert_eq!(holidays::current().closed(day).as_deref(), Some("Ramazan Bayramı 1. gün"));
-    assert_eq!(holidays::current().extended(day).0, day + time::Duration::days(3), "Friday to Monday");
-    let fixed = HolidayCreate { day: "2031-10-29".into(), name: "Cumhuriyet".into(), half_day: false };
+    assert_eq!(
+        holidays::current().closed(day).as_deref(),
+        Some("Ramazan Bayramı 1. gün")
+    );
+    assert_eq!(
+        holidays::current().extended(day).0,
+        day + time::Duration::days(3),
+        "Friday to Monday"
+    );
+    let fixed = HolidayCreate {
+        day: "2031-10-29".into(),
+        name: "Cumhuriyet".into(),
+        half_day: false,
+    };
     let law = holidays::add(&db.app, &root, &fixed).await.unwrap_err();
     assert!(law.to_string().contains("zaten tatil"), "{law}");
-    holidays::remove(&db.app, &root, "2031-01-24").await.unwrap();
+    holidays::remove(&db.app, &root, "2031-01-24")
+        .await
+        .unwrap();
     assert_eq!(holidays::current().closed(day), None);
-    assert!(matches!(holidays::remove(&db.app, &root, "2031-01-24").await.unwrap_err(), AppError::NotFound(_)));
+    assert!(matches!(
+        holidays::remove(&db.app, &root, "2031-01-24")
+            .await
+            .unwrap_err(),
+        AppError::NotFound(_)
+    ));
     // The platform's record says who changed the calendar.
     let events = platform::events(&db.app, &root, 20).await.unwrap();
-    assert!(events.iter().any(|e| e.action == "holiday_set") && events.iter().any(|e| e.action == "holiday_removed"));
+    assert!(
+        events.iter().any(|e| e.action == "holiday_set")
+            && events.iter().any(|e| e.action == "holiday_removed")
+    );
 }
 
 #[tokio::test]
@@ -1329,20 +1708,47 @@ async fn personal_data_past_its_period_is_archived_or_destroyed_and_each_run_is_
         office_id: None,
     };
     // A decided application, a draft left for months with a file, a draft of this week.
-    let decided = dossiers::create_application(&db.app, &ayse, &open("Karara bağlanmış başvuru")).await.unwrap();
-    add_file(&db, &store, &ayse, decided, ("proje.pdf", b"%PDF-1.4 proje", "architectural"), Purpose::Package).await.unwrap();
-    act(&db, &ayse, decided, DossierAction::Send, None).await.unwrap();
-    act(&db, &mehmet, decided, DossierAction::Approve, None).await.unwrap();
-    let left = dossiers::create_application(&db.app, &ayse, &open("Unutulmuş taslak")).await.unwrap();
-    let file = add_file(&db, &store, &ayse, left, ("eski.pdf", b"%PDF-1.4 eski", "architectural"), Purpose::Package)
+    let decided = dossiers::create_application(&db.app, &ayse, &open("Karara bağlanmış başvuru"))
         .await
         .unwrap();
-    let key: String = sqlx::query_scalar("select blob_key from kentos.dossier_file where id = $1::uuid")
-        .bind(&file.id)
-        .fetch_one(&db.owner)
+    add_file(
+        &db,
+        &store,
+        &ayse,
+        decided,
+        ("proje.pdf", b"%PDF-1.4 proje", "architectural"),
+        Purpose::Package,
+    )
+    .await
+    .unwrap();
+    act(&db, &ayse, decided, DossierAction::Send, None)
         .await
         .unwrap();
-    let fresh = dossiers::create_application(&db.app, &ayse, &open("Bu haftanın taslağı")).await.unwrap();
+    act(&db, &mehmet, decided, DossierAction::Approve, None)
+        .await
+        .unwrap();
+    let left = dossiers::create_application(&db.app, &ayse, &open("Unutulmuş taslak"))
+        .await
+        .unwrap();
+    let file = add_file(
+        &db,
+        &store,
+        &ayse,
+        left,
+        ("eski.pdf", b"%PDF-1.4 eski", "architectural"),
+        Purpose::Package,
+    )
+    .await
+    .unwrap();
+    let key: String =
+        sqlx::query_scalar("select blob_key from kentos.dossier_file where id = $1::uuid")
+            .bind(&file.id)
+            .fetch_one(&db.owner)
+            .await
+            .unwrap();
+    let fresh = dossiers::create_application(&db.app, &ayse, &open("Bu haftanın taslağı"))
+        .await
+        .unwrap();
     let back = |table: &'static str, column: &'static str, days: i32| {
         let owner = db.owner.clone();
         async move {
@@ -1366,35 +1772,90 @@ async fn personal_data_past_its_period_is_archived_or_destroyed_and_each_run_is_
     }
 
     // Only the platform's administrators run it by hand and set its periods.
-    let refused = retention::run_now(&db.app, &store, &ayse).await.unwrap_err();
+    let refused = retention::run_now(&db.app, &store, &ayse)
+        .await
+        .unwrap_err();
     assert!(matches!(refused, AppError::Forbidden(_)), "{refused:?}");
-    let short = RetentionSettings { archive_after_days: 365, draft_keep_days: 5, notification_keep_days: 180, technical_keep_days: 90 };
+    let short = RetentionSettings {
+        archive_after_days: 365,
+        draft_keep_days: 5,
+        notification_keep_days: 180,
+        technical_keep_days: 90,
+    };
     let bad = retention::set(&db.app, &root, &short).await.unwrap_err();
     assert_eq!(bad.path(), Some("draftKeepDays"));
     let run = retention::run_now(&db.app, &store, &root).await.unwrap();
-    assert_eq!((run.trigger.as_str(), run.archived, run.drafts_deleted, run.files_deleted), ("manual", 1, 1, 1));
+    assert_eq!(
+        (
+            run.trigger.as_str(),
+            run.archived,
+            run.drafts_deleted,
+            run.files_deleted
+        ),
+        ("manual", 1, 1, 1)
+    );
     assert!(run.notifications_deleted >= 1, "{run:?}");
-    assert_eq!(run.actor_name.as_deref(), Some("sistem"), "who ran it by hand");
+    assert_eq!(
+        run.actor_name.as_deref(),
+        Some("sistem"),
+        "who ran it by hand"
+    );
     assert_eq!(run.settings.draft_keep_days, 180);
 
     // The draft and its bytes are gone; the decided one is in the archive, out of the working list; this week's stays.
-    assert!(matches!(detail::detail(&db.app, &ayse, left).await.unwrap_err(), AppError::NotFound(_)));
+    assert!(matches!(
+        detail::detail(&db.app, &ayse, left).await.unwrap_err(),
+        AppError::NotFound(_)
+    ));
     assert!(store.open(&key).await.is_err(), "the file left the store");
     detail::detail(&db.app, &ayse, fresh).await.unwrap();
-    let working = dossiers::list_for_tenant(&db.app, &mehmet_in, &ListFilter { limit: 50, ..ListFilter::default() }).await.unwrap();
+    let working = dossiers::list_for_tenant(
+        &db.app,
+        &mehmet_in,
+        &ListFilter {
+            limit: 50,
+            ..ListFilter::default()
+        },
+    )
+    .await
+    .unwrap();
     assert!(working.items.iter().all(|d| d.id != decided.to_string()));
-    let archive = dossiers::list_for_tenant(&db.app, &mehmet_in, &ListFilter { limit: 50, archived: true, ..ListFilter::default() })
-        .await
-        .unwrap();
+    let archive = dossiers::list_for_tenant(
+        &db.app,
+        &mehmet_in,
+        &ListFilter {
+            limit: 50,
+            archived: true,
+            ..ListFilter::default()
+        },
+    )
+    .await
+    .unwrap();
     assert_eq!(archive.items.len(), 1);
     assert!(archive.items[0].archived && archive.items[0].id == decided.to_string());
 
     // The server's daily run finds nothing more; both runs are on record, newest first.
     assert_eq!(retention::sweep(&db.app, &store).await.unwrap(), 0);
     let page = retention::page(&db.app, &root).await.unwrap();
-    assert_eq!(page.runs.iter().map(|r| r.trigger.as_str()).collect::<Vec<_>>(), ["schedule", "manual"]);
-    let longer = RetentionSettings { archive_after_days: 730, ..page.settings };
-    assert_eq!(retention::set(&db.app, &root, &longer).await.unwrap().settings.archive_after_days, 730);
+    assert_eq!(
+        page.runs
+            .iter()
+            .map(|r| r.trigger.as_str())
+            .collect::<Vec<_>>(),
+        ["schedule", "manual"]
+    );
+    let longer = RetentionSettings {
+        archive_after_days: 730,
+        ..page.settings
+    };
+    assert_eq!(
+        retention::set(&db.app, &root, &longer)
+            .await
+            .unwrap()
+            .settings
+            .archive_after_days,
+        730
+    );
 }
 
 #[tokio::test]
@@ -1413,7 +1874,11 @@ async fn a_municipality_s_figures_for_a_period_and_its_workbook() {
     let _ = zeynep;
     let ayse = professional(&db, &root, "ayse", Profession::Architect).await;
     let mut ids = Vec::new();
-    for (title, kind) in [("Onaylanacak", "architectural_project"), ("Reddedilecek", "architectural_project"), ("Bekleyen", "building_permit")] {
+    for (title, kind) in [
+        ("Onaylanacak", "architectural_project"),
+        ("Reddedilecek", "architectural_project"),
+        ("Bekleyen", "building_permit"),
+    ] {
         let id = dossiers::create_application(
             &db.app,
             &ayse,
@@ -1429,48 +1894,112 @@ async fn a_municipality_s_figures_for_a_period_and_its_workbook() {
         )
         .await
         .unwrap();
-        add_file(&db, &store, &ayse, id, ("p.pdf", b"%PDF-1.4 p", "architectural"), Purpose::Package).await.unwrap();
-        act(&db, &ayse, id, DossierAction::Send, None).await.unwrap();
+        add_file(
+            &db,
+            &store,
+            &ayse,
+            id,
+            ("p.pdf", b"%PDF-1.4 p", "architectural"),
+            Purpose::Package,
+        )
+        .await
+        .unwrap();
+        act(&db, &ayse, id, DossierAction::Send, None)
+            .await
+            .unwrap();
         ids.push(id);
     }
-    act(&db, &mehmet, ids[0], DossierAction::Approve, None).await.unwrap();
-    act(&db, &mehmet, ids[1], DossierAction::Reject, Some("Plana aykırı.")).await.unwrap();
+    act(&db, &mehmet, ids[0], DossierAction::Approve, None)
+        .await
+        .unwrap();
+    act(
+        &db,
+        &mehmet,
+        ids[1],
+        DossierAction::Reject,
+        Some("Plana aykırı."),
+    )
+    .await
+    .unwrap();
 
     // Any member reads them, a viewer too.
     let (from, to) = statistics::period(None, None).unwrap();
-    let s = statistics::statistics(&db.app, &zeynep_in, from, to).await.unwrap();
-    assert_eq!((s.received, s.decided, s.approved, s.rejected, s.open_now), (3, 2, 1, 1, 1));
+    let s = statistics::statistics(&db.app, &zeynep_in, from, to)
+        .await
+        .unwrap();
+    assert_eq!(
+        (s.received, s.decided, s.approved, s.rejected, s.open_now),
+        (3, 2, 1, 1, 1)
+    );
     assert_eq!(s.overdue_now, 0);
-    assert!(s.average_decision_days.is_some_and(|d| d < 1.0) && s.average_rounds == Some(1.0), "{s:?}");
-    let architectural = s.by_kind.iter().find(|k| k.kind == "architectural_project").unwrap();
-    assert_eq!((architectural.received, architectural.approved, architectural.rejected), (2, 1, 1));
+    assert!(
+        s.average_decision_days.is_some_and(|d| d < 1.0) && s.average_rounds == Some(1.0),
+        "{s:?}"
+    );
+    let architectural = s
+        .by_kind
+        .iter()
+        .find(|k| k.kind == "architectural_project")
+        .unwrap();
+    assert_eq!(
+        (
+            architectural.received,
+            architectural.approved,
+            architectural.rejected
+        ),
+        (2, 1, 1)
+    );
     let this_month = s.by_month.last().unwrap();
     assert_eq!((this_month.received, this_month.decided), (3, 2));
-    assert_eq!(s.by_month.first().unwrap().month, format!("{}-01", from.year()));
-    assert!(s.by_assignee.iter().any(|p| p.name == "Atanmamış" && p.open == 1));
+    assert_eq!(
+        s.by_month.first().unwrap().month,
+        format!("{}-01", from.year())
+    );
+    assert!(
+        s.by_assignee
+            .iter()
+            .any(|p| p.name == "Atanmamış" && p.open == 1)
+    );
 
     // The workbook: five sheets in an XLSX; the period's dossiers alone in the CSV.
-    let (xlsx, name, media) = statistics::export(&db.app, &zeynep_in, from, to, WorkbookFormat::Xlsx).await.unwrap();
+    let (xlsx, name, media) =
+        statistics::export(&db.app, &zeynep_in, from, to, WorkbookFormat::Xlsx)
+            .await
+            .unwrap();
     assert!(xlsx.starts_with(b"PK") && name.ends_with(".xlsx") && media.contains("spreadsheetml"));
-    let (csv, _, _) = statistics::export(&db.app, &zeynep_in, from, to, WorkbookFormat::Csv).await.unwrap();
+    let (csv, _, _) = statistics::export(&db.app, &zeynep_in, from, to, WorkbookFormat::Csv)
+        .await
+        .unwrap();
     let csv = String::from_utf8(csv).unwrap();
-    assert!(csv.trim_start_matches('\u{feff}').starts_with("Dosya no;Yön;Tür;Başlık"), "{csv}");
+    assert!(
+        csv.trim_start_matches('\u{feff}')
+            .starts_with("Dosya no;Yön;Tür;Başlık"),
+        "{csv}"
+    );
     assert_eq!(csv.lines().count(), 4, "a header and three dossiers: {csv}");
-    assert!(csv.contains("Reddedildi") && csv.contains("ayse kişi"), "{csv}");
+    assert!(
+        csv.contains("Reddedildi") && csv.contains("ayse kişi"),
+        "{csv}"
+    );
 }
 
 /// The professional's role on a project of the municipality, as the project's rules count it.
 async fn role_on(db: &TestDb, who: &Actor, tenant: Uuid, project: Uuid) -> Option<String> {
-    let owner: Option<Uuid> =
-        sqlx::query_scalar("select owner_user_id from kentos.project where tenant_id = $1 and id = $2")
-            .bind(tenant)
-            .bind(project)
-            .fetch_one(&db.owner)
-            .await
-            .unwrap();
+    let owner: Option<Uuid> = sqlx::query_scalar(
+        "select owner_user_id from kentos.project where tenant_id = $1 and id = $2",
+    )
+    .bind(tenant)
+    .bind(project)
+    .fetch_one(&db.owner)
+    .await
+    .unwrap();
     let mut tx = db
         .app
-        .scoped(kentos_postgres::Scope { tenant: None, user: Some(who.user_id), project: None })
+        .scoped(kentos_postgres::Scope {
+            tenant: None,
+            user: Some(who.user_id),
+            project: None,
+        })
         .await
         .unwrap();
     let role: Option<String> = sqlx::query_scalar("select kentos.project_role($1, $2, $3)")
@@ -1506,26 +2035,47 @@ async fn a_transfer_in_the_live_project_makes_its_professional_a_guest_editor_un
         site: site(),
         due_on: None,
     };
-    let id = dossiers::create_transfer(&db.app, &mehmet_in, &ask).await.unwrap();
-    let link = |p: Option<Uuid>| DossierLiveProjectSet { project_id: p.map(|p| p.to_string()) };
+    let id = dossiers::create_transfer(&db.app, &mehmet_in, &ask)
+        .await
+        .unwrap();
+    let link = |p: Option<Uuid>| DossierLiveProjectSet {
+        project_id: p.map(|p| p.to_string()),
+    };
     // Linking is a project manager's; a project of another organisation is not found.
-    let refused = dossiers::set_live_project(&db.app, &zeynep, id, &link(Some(project))).await.unwrap_err();
+    let refused = dossiers::set_live_project(&db.app, &zeynep, id, &link(Some(project)))
+        .await
+        .unwrap_err();
     assert!(matches!(refused, AppError::Forbidden(_)), "{refused:?}");
-    let missing = dossiers::set_live_project(&db.app, &mehmet, id, &link(Some(Uuid::now_v7()))).await.unwrap_err();
+    let missing = dossiers::set_live_project(&db.app, &mehmet, id, &link(Some(Uuid::now_v7())))
+        .await
+        .unwrap_err();
     assert!(matches!(missing, AppError::NotFound(_)), "{missing:?}");
-    dossiers::set_live_project(&db.app, &mehmet, id, &link(Some(project))).await.unwrap();
+    dossiers::set_live_project(&db.app, &mehmet, id, &link(Some(project)))
+        .await
+        .unwrap();
     let page = detail::detail(&db.app, &mehmet, id).await.unwrap();
     let live = page.live_project.clone().unwrap();
     assert!(page.can_link_live_project && live.name == "İmar uygulaması" && !live.granted);
 
     // Sent with no copy: nothing on the project yet; taken on: a guest editor (not a member of the municipality).
-    act(&db, &mehmet, id, DossierAction::Send, None).await.unwrap();
+    act(&db, &mehmet, id, DossierAction::Send, None)
+        .await
+        .unwrap();
     assert_eq!(role_on(&db, &can, tenant, project).await, None);
     let theirs = detail::detail(&db.app, &can, id).await.unwrap();
-    assert_eq!(theirs.live_project.as_ref().map(|l| l.name.as_str()), Some("İmar uygulaması"), "the professional reads its name");
+    assert_eq!(
+        theirs.live_project.as_ref().map(|l| l.name.as_str()),
+        Some("İmar uygulaması"),
+        "the professional reads its name"
+    );
     assert!(!theirs.can_link_live_project);
-    act(&db, &can, id, DossierAction::Accept, None).await.unwrap();
-    assert_eq!(role_on(&db, &can, tenant, project).await.as_deref(), Some("editor"));
+    act(&db, &can, id, DossierAction::Accept, None)
+        .await
+        .unwrap();
+    assert_eq!(
+        role_on(&db, &can, tenant, project).await.as_deref(),
+        Some("editor")
+    );
     let (guest, audits): (bool, i64) = sqlx::query_as(
         "select g.guest, (select count(*) from kentos.audit_event a where a.project_id = g.project_id
                             and a.action = 'dossier.live_project.grant')
@@ -1536,13 +2086,29 @@ async fn a_transfer_in_the_live_project_makes_its_professional_a_guest_editor_un
     .fetch_one(&db.owner)
     .await
     .unwrap();
-    assert!(guest && audits == 1, "a guest's grant, in the project's record");
-    assert!(detail::detail(&db.app, &can, id).await.unwrap().live_project.unwrap().granted);
+    assert!(
+        guest && audits == 1,
+        "a guest's grant, in the project's record"
+    );
+    assert!(
+        detail::detail(&db.app, &can, id)
+            .await
+            .unwrap()
+            .live_project
+            .unwrap()
+            .granted
+    );
 
     // Delivered and completed: the dossier's grant goes back.
-    act(&db, &can, id, DossierAction::Deliver, None).await.unwrap();
-    act(&db, &mehmet, id, DossierAction::Complete, None).await.unwrap();
+    act(&db, &can, id, DossierAction::Deliver, None)
+        .await
+        .unwrap();
+    act(&db, &mehmet, id, DossierAction::Complete, None)
+        .await
+        .unwrap();
     assert_eq!(role_on(&db, &can, tenant, project).await, None);
-    let closed = dossiers::set_live_project(&db.app, &mehmet, id, &link(None)).await.unwrap_err();
+    let closed = dossiers::set_live_project(&db.app, &mehmet, id, &link(None))
+        .await
+        .unwrap_err();
     assert!(closed.to_string().contains("Kapanmış"), "{closed}");
 }

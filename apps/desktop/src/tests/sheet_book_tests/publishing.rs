@@ -9,10 +9,9 @@ pub(super) fn multipage_set_app(theme: &str, text: u32) -> App {
     ))
     .unwrap();
     let c = &data["cases"][8];
-    let mut model = kentos_domain::Document::from_snapshot(
-        serde_json::from_value(c["model"].clone()).unwrap(),
-    )
-    .unwrap();
+    let mut model =
+        kentos_domain::Document::from_snapshot(serde_json::from_value(c["model"].clone()).unwrap())
+            .unwrap();
     let book: kentos_sheet::SheetBook = serde_json::from_value(c["book"].clone()).unwrap();
     model
         .set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
@@ -77,7 +76,7 @@ fn desktop_set_pdf_resolves_each_master_map_and_the_four_named_architectural_vie
 }
 
 #[test]
-#[ignore="GPU images and PDF, run alone"]
+#[ignore = "GPU images and PDF, run alone"]
 fn sheet17_multipage_set_screens() {
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
@@ -112,9 +111,9 @@ fn sheet17_multipage_set_screens() {
 }
 
 #[test]
-#[ignore="GPU page setup window, run alone"]
+#[ignore = "GPU page setup window, run alone"]
 fn sheet18_page_setup_screens() {
-    use kentos_sheet_ui::page_setup::{SetupMessage as P, Area};
+    use kentos_sheet_ui::page_setup::{Area, SetupMessage as P};
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
     let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
@@ -153,13 +152,13 @@ fn sheet18_page_setup_screens() {
 }
 
 #[test]
-#[ignore="GPU profile choice window, run alone"]
+#[ignore = "GPU profile choice window, run alone"]
 fn sheet19_plot_profile_screens() {
-    use kentos_sheet_ui::page_setup::SetupMessage as P;
     use kentos_sheet::{
         ops::Op,
-        plot_profile::{SavePlotProfiles, PlotProfile},
+        plot_profile::{PlotProfile, SavePlotProfiles},
     };
+    use kentos_sheet_ui::page_setup::SetupMessage as P;
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
     let data: serde_json::Value = serde_json::from_str(include_str!(
@@ -196,15 +195,45 @@ fn sheet19_plot_profile_screens() {
         snap.render(app.view(), &app.theme())
             .save(out.join(format!("sheet19-profiles-{theme}-{text}.png")))
             .unwrap();
-        if theme=="light" {
+        if theme == "light" {
             use kentos_ui::snapshot::Input;
-            snap.input(&mut app,App::view,&mut update,Input::Click(iced::Point::new(700.,566.)));
-            snap.render(app.view(),&app.theme()).save(out.join("sheet19-profiles-menu.png")).unwrap();
-            snap.input(&mut app,App::view,&mut update,Input::Key(iced::keyboard::key::Named::ArrowUp));
-            snap.input(&mut app,App::view,&mut update,Input::Key(iced::keyboard::key::Named::Enter));
+            snap.input(
+                &mut app,
+                App::view,
+                &mut update,
+                Input::Click(iced::Point::new(700., 566.)),
+            );
+            snap.render(app.view(), &app.theme())
+                .save(out.join("sheet19-profiles-menu.png"))
+                .unwrap();
+            snap.input(
+                &mut app,
+                App::view,
+                &mut update,
+                Input::Key(iced::keyboard::key::Named::ArrowUp),
+            );
+            snap.input(
+                &mut app,
+                App::view,
+                &mut update,
+                Input::Key(iced::keyboard::key::Named::Enter),
+            );
         }
         sheet(&mut app, Sheet::PageSetup(P::Save));
-        if theme=="light" {assert_eq!(app.sheets.open_sheet().unwrap().plot.as_ref().unwrap().settings.profile.as_deref(),Some("profile-0"));}
+        if theme == "light" {
+            assert_eq!(
+                app.sheets
+                    .open_sheet()
+                    .unwrap()
+                    .plot
+                    .as_ref()
+                    .unwrap()
+                    .settings
+                    .profile
+                    .as_deref(),
+                Some("profile-0")
+            );
+        }
         assert!(app.sheets.error().is_none());
         assert!(
             app.sheets
@@ -213,17 +242,18 @@ fn sheet19_plot_profile_screens() {
                 .plot
                 .as_ref()
                 .unwrap()
-                .settings.profile_snapshot
+                .settings
+                .profile_snapshot
                 .is_some()
         );
     }
 }
 
 #[test]
-#[ignore="GPU plot ink controls and real PDF, run alone"]
+#[ignore = "GPU plot ink controls and real PDF, run alone"]
 fn sheet20_plot_ink_screens() {
-    use kentos_sheet_ui::plot_profiles::{PlotMessage as P, ColorMode};
-    use kentos_sheet::{plot_profile::TableKind, LineCap, LineJoin};
+    use kentos_sheet::{LineCap, LineJoin, plot_profile::TableKind};
+    use kentos_sheet_ui::plot_profiles::{ColorMode, PlotMessage as P};
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
     let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
@@ -304,8 +334,7 @@ fn desktop_pdf_refuses_an_impossible_model_curve_without_a_gray_raster_fallback(
     let mut source = data["model"].clone();
     source["entities"][1]["r"] = serde_json::json!(1e10);
     let mut model =
-        kentos_domain::Document::from_snapshot(serde_json::from_value(source).unwrap())
-            .unwrap();
+        kentos_domain::Document::from_snapshot(serde_json::from_value(source).unwrap()).unwrap();
     let mut book = kentos_sheet::SheetBook::default();
     book.sheets
         .push(serde_json::from_value(data["cases"][0]["sheet"].clone()).unwrap());
@@ -344,8 +373,15 @@ fn the_screen_theme_changes_neither_the_drawing_nor_the_printed_pdf() {
     for mode in [Mode::Dark, Mode::Night, Mode::HighContrast, Mode::Light] {
         app.set_theme(mode);
         assert_eq!(app.mode, mode);
-        assert!(printed(&app) == light, "{mode:?}: the PDF is the light theme's");
-        assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before, "{mode:?}: the drawing is untouched");
+        assert!(
+            printed(&app) == light,
+            "{mode:?}: the PDF is the light theme's"
+        );
+        assert_eq!(
+            app.document.as_ref().unwrap().model.to_snapshot_v2(),
+            before,
+            "{mode:?}: the drawing is untouched"
+        );
     }
 }
 
@@ -356,9 +392,23 @@ fn sheet23_real_save_and_print_use_the_same_native_pdf() {
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let doc = app.sheet_output_snapshot().unwrap();
     let options = app.sheets.output_pdf_options();
-    let mut captured=kentos_plot::provenance::Capture::new(&doc,&kentos_plot::book::current_user(),&kentos_plot::book::today(),None).unwrap();
-    captured.dpi_override(Some(app.sheets.output_dpi())).unwrap();
-    let expected=kentos_plot::book::book_pdf_captured(&captured,&options.sheets.clone(),Some(options),None).unwrap();
+    let mut captured = kentos_plot::provenance::Capture::new(
+        &doc,
+        &kentos_plot::book::current_user(),
+        &kentos_plot::book::today(),
+        None,
+    )
+    .unwrap();
+    captured
+        .dpi_override(Some(app.sheets.output_dpi()))
+        .unwrap();
+    let expected = kentos_plot::book::book_pdf_captured(
+        &captured,
+        &options.sheets.clone(),
+        Some(options),
+        None,
+    )
+    .unwrap();
     let path = scratch("sheet23-real-save").join("native.pdf");
     app.sheet_export_to(kentos_sheet_ui::ExportKind::Pdf, Some(path.clone()));
     assert_eq!(std::fs::read(path).unwrap(), expected.bytes);
@@ -408,7 +458,9 @@ fn sheet23_print_preview_screens() {
         let shot = snap.render(app.view(), &app.theme());
         let white = shot
             .rgba
-            .as_chunks::<4>().0.iter()
+            .as_chunks::<4>()
+            .0
+            .iter()
             .filter(|p| p[0] > 248 && p[1] > 248 && p[2] > 248)
             .count();
         shot.save(out.join(format!("sheet23-preview-{theme}-{text}.png")))
@@ -430,14 +482,36 @@ fn the_print_preview_goes_through_every_chosen_sheet_at_a_readable_resolution() 
     assert!(all.len() > 1, "a set of sheets");
     sheet(&mut app, Sheet::Pdf(PdfMessage::Preview));
     assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
-    assert_eq!((app.sheets.print_preview_page(), app.sheets.print_preview_sheet()), (0, all.first().cloned()));
+    assert_eq!(
+        (
+            app.sheets.print_preview_page(),
+            app.sheets.print_preview_sheet()
+        ),
+        (0, all.first().cloned())
+    );
     sheet(&mut app, Sheet::Pdf(PdfMessage::PreviewPage(1)));
-    assert_eq!((app.sheets.print_preview_page(), app.sheets.print_preview_sheet()), (1, all.get(1).cloned()));
+    assert_eq!(
+        (
+            app.sheets.print_preview_page(),
+            app.sheets.print_preview_sheet()
+        ),
+        (1, all.get(1).cloned())
+    );
     sheet(&mut app, Sheet::Pdf(PdfMessage::PreviewPage(all.len())));
-    assert_eq!(app.sheets.print_preview_page(), 1, "past the last page stays where it was");
+    assert_eq!(
+        app.sheets.print_preview_page(),
+        1,
+        "past the last page stays where it was"
+    );
     // An A3 is read at 300 dpi, an A0 kept to about 5000 pixels on its longer side.
-    let a3 = kentos_sheet::units::SizeUm { width: 420_000, height: 297_000 };
-    let a0 = kentos_sheet::units::SizeUm { width: 1_189_000, height: 841_000 };
+    let a3 = kentos_sheet::units::SizeUm {
+        width: 420_000,
+        height: 297_000,
+    };
+    let a0 = kentos_sheet::units::SizeUm {
+        width: 1_189_000,
+        height: 841_000,
+    };
     assert_eq!(crate::sheet_pdf::preview_dpi(Some(a3)), 300);
     assert_eq!(crate::sheet_pdf::preview_dpi(Some(a0)), 106);
     assert_eq!(crate::sheet_pdf::preview_dpi(None), 96);
@@ -447,8 +521,10 @@ fn the_print_preview_goes_through_every_chosen_sheet_at_a_readable_resolution() 
 /// memory), opened in a light window.
 fn kitapligim_app() -> App {
     use serde_json::json;
-    let fx: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/native-preflight.json")).unwrap();
+    let fx: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/native-preflight.json"
+    ))
+    .unwrap();
     let (mut raw, mut page) = (fx["model"].clone(), fx["book"].clone());
     raw["layers"] = json!([{ "id": "benim", "name": "Kitaplığım", "type": "layer", "visible": true, "locked": false,
         "expanded": true, "style": { "color": "ink", "lineType": "continuous", "lineWeight": 0.25,
@@ -457,9 +533,12 @@ fn kitapligim_app() -> App {
     raw["entities"] = json!([{ "kind": "polygon", "id": 1, "layerId": "benim", "attrs": {},
         "pts": [{ "x": -2.0, "y": -2.0 }, { "x": 2.0, "y": -2.0 }, { "x": 2.0, "y": 2.0 }, { "x": -2.0, "y": 2.0 }] }]);
     page["sheets"][0]["items"][0]["kind"]["view"]["center"] = json!({ "x": 0.0, "y": 0.0 });
-    let mut model = kentos_domain::Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
+    let mut model =
+        kentos_domain::Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap();
     let book: kentos_sheet::SheetBook = serde_json::from_value(page).unwrap();
-    model.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap()).unwrap();
+    model
+        .set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).unwrap())
+        .unwrap();
     let (mut app, _store) = app_with_store("kitapligim-baski");
     app.settings.choose(&[("appearance.theme", json!("light"))]);
     app.apply_settings();
@@ -484,7 +563,8 @@ fn kitapligim_symbols_screens() {
     use kentos_sheet_ui::message::PdfMessage;
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
-    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9317");
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-9317");
     std::fs::create_dir_all(&out).unwrap();
     let mut app = kitapligim_app();
     let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 900.)).unwrap();
@@ -495,15 +575,21 @@ fn kitapligim_symbols_screens() {
         let _ = app.update(Message::Run("view.zoomExtents"));
         snap.settle(&mut app, App::view, &mut update);
     }
-    snap.render(app.view(), &app.theme()).save(out.join("1-cizim-alani.png")).unwrap();
+    snap.render(app.view(), &app.theme())
+        .save(out.join("1-cizim-alani.png"))
+        .unwrap();
     sheet(&mut app, Sheet::Tab(1));
     snap.settle(&mut app, App::view, &mut update);
-    snap.render(app.view(), &app.theme()).save(out.join("2-pafta.png")).unwrap();
+    snap.render(app.view(), &app.theme())
+        .save(out.join("2-pafta.png"))
+        .unwrap();
     sheet(&mut app, Sheet::Print);
     sheet(&mut app, Sheet::Pdf(PdfMessage::Preview));
     assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
     snap.settle(&mut app, App::view, &mut update);
-    snap.render(app.view(), &app.theme()).save(out.join("3-baski-onizlemesi.png")).unwrap();
+    snap.render(app.view(), &app.theme())
+        .save(out.join("3-baski-onizlemesi.png"))
+        .unwrap();
 }
 
 /// docs/adr/9317: a layer drawn with a symbol of Kitaplığım prints it as the screen draws it: the print preview takes the
@@ -517,13 +603,26 @@ fn the_print_preview_draws_the_symbols_of_kitapligim() {
     sheet(&mut app, Sheet::Pdf(PdfMessage::Preview));
     assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
     let held = app.document.as_ref().unwrap().model.styles().clone();
-    assert!(held.items.iter().any(|i| i["id"] == "u-deneme" && i["name"] == "Deneme"), "{held:?}");
-    assert_eq!(crate::files_testing::last_said(&app), "Kitaplığım'dan projeye alındı: “Deneme”.");
+    assert!(
+        held.items
+            .iter()
+            .any(|i| i["id"] == "u-deneme" && i["name"] == "Deneme"),
+        "{held:?}"
+    );
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "Kitaplığım'dan projeye alındı: “Deneme”."
+    );
     // The drawing the preview drew: its page has the fill.
     let printed = app.sheet_output_snapshot().unwrap();
     let id = app.sheets.print_preview_sheet().expect("a sheet");
-    let image = kentos_plot::preview::page(&printed, id.as_str(), "Test", "2026-11-26", None, 72).unwrap();
-    let magenta = image.rgba.chunks(4).filter(|p| p[0] > 200 && p[1] < 80 && p[2] > 200).count();
+    let image =
+        kentos_plot::preview::page(&printed, id.as_str(), "Test", "2026-11-26", None, 72).unwrap();
+    let magenta = image
+        .rgba
+        .chunks(4)
+        .filter(|p| p[0] > 200 && p[1] < 80 && p[2] > 200)
+        .count();
     assert!(magenta > 1000, "the fill prints: {magenta} pixels");
 }
 
@@ -533,7 +632,8 @@ fn print_preview_pages_screens() {
     use kentos_sheet_ui::message::PdfMessage;
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
-    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-043");
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-UR-043");
     std::fs::create_dir_all(&out).unwrap();
     let mut app = multipage_set_app("light", 13);
     sheet(&mut app, Sheet::Print);
@@ -544,13 +644,22 @@ fn print_preview_pages_screens() {
         let _ = app.update(m);
     };
     snap.settle(&mut app, App::view, &mut update);
-    snap.render(app.view(), &app.theme()).save(out.join("onizleme-sayfa-2.png")).unwrap();
+    snap.render(app.view(), &app.theme())
+        .save(out.join("onizleme-sayfa-2.png"))
+        .unwrap();
     // Over the page's small text: it stays under the pointer while it grows.
     for _ in 0..4 {
-        snap.input(&mut app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(iced::Point::new(728., 424.), 3.));
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(iced::Point::new(728., 424.), 3.),
+        );
     }
     snap.settle(&mut app, App::view, &mut update);
-    snap.render(app.view(), &app.theme()).save(out.join("onizleme-yakin.png")).unwrap();
+    snap.render(app.view(), &app.theme())
+        .save(out.join("onizleme-yakin.png"))
+        .unwrap();
 }
 
 #[test]
@@ -633,7 +742,10 @@ pub(super) fn wait_sheet_publication(app: &mut App) {
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
     while app.sheet_publish_running() {
         let _ = app.sheet_publish_event(crate::exchange::sheet_publish::Event::Tick);
-        assert!(std::time::Instant::now() < deadline, "publication did not finish");
+        assert!(
+            std::time::Instant::now() < deadline,
+            "publication did not finish"
+        );
         std::thread::sleep(std::time::Duration::from_millis(10));
     }
 }
@@ -645,28 +757,54 @@ fn sheet25_desktop_plans_then_publishes_the_selected_order_without_editing_the_s
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let path = scratch("sheet25-desktop").join("delivery");
     let _ = app.sheet_publish_open();
-    for e in [E::Path(path.display().to_string()), E::All(false), E::Selected(2,true), E::Selected(5,true), E::Move(5,-1), E::Move(4,-1), E::Move(3,-1), E::Separate(true), E::Plan] {
+    for e in [
+        E::Path(path.display().to_string()),
+        E::All(false),
+        E::Selected(2, true),
+        E::Selected(5, true),
+        E::Move(5, -1),
+        E::Move(4, -1),
+        E::Move(3, -1),
+        E::Separate(true),
+        E::Plan,
+    ] {
         let _ = app.sheet_publish_event(e);
     }
     wait_sheet_publication(&mut app);
-    let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("publisher closed") };
-    assert!(s.report.as_ref().is_some_and(|r| r.ready), "{} {:?}", s.status, s.report);
+    let Some(Window::SheetPublish(s)) = &app.exchange else {
+        panic!("publisher closed")
+    };
+    assert!(
+        s.report.as_ref().is_some_and(|r| r.ready),
+        "{} {:?}",
+        s.status,
+        s.report
+    );
     assert!(!path.exists(), "a plan must never write files");
     let report = s.report.clone().unwrap();
     let _ = app.sheet_publish_event(E::Publish);
     wait_sheet_publication(&mut app);
-    let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("publisher closed") };
+    let Some(Window::SheetPublish(s)) = &app.exchange else {
+        panic!("publisher closed")
+    };
     assert!(path.join("yayin.json").exists(), "{}", s.status);
     assert_eq!(s.report.as_ref().unwrap().sheets, report.sheets);
     assert_eq!(report.files.len(), 2);
     let expected_words = ["DETAIL", "PLAN"];
     for (f, word) in report.files.iter().zip(expected_words) {
-        let output = std::process::Command::new("pdftotext").arg(path.join(&f.name)).arg("-").output().unwrap();
+        let output = std::process::Command::new("pdftotext")
+            .arg(path.join(&f.name))
+            .arg("-")
+            .output()
+            .unwrap();
         assert!(output.status.success());
         let words = String::from_utf8(output.stdout).unwrap();
         assert!(words.contains(word), "{} {words}", f.name);
     }
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 }
 
 #[test]
@@ -676,137 +814,411 @@ fn sheet25_publish_screens() {
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
     let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
-    for (theme, text) in [("light",13),("dark",13),("dark",18)] {
+    for (theme, text) in [("light", 13), ("dark", 13), ("dark", 18)] {
         let mut app = multipage_set_app(theme, text);
         let path = scratch(&format!("sheet25-{theme}-{text}")).join("delivery");
         let _ = app.sheet_publish_open();
-        for e in [E::Path(path.display().to_string()), E::All(true), E::Separate(true)] { let _ = app.sheet_publish_event(e); }
-        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();
-        let mut update = |app: &mut App, m: Message| { let _ = app.update(m); };
+        for e in [
+            E::Path(path.display().to_string()),
+            E::All(true),
+            E::Separate(true),
+        ] {
+            let _ = app.sheet_publish_event(e);
+        }
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100., 720.)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
         snap.settle(&mut app, App::view, &mut update);
-        snap.render(app.view(), &app.theme()).save(out.join(format!("sheet25-options-{theme}-{text}.png"))).unwrap();
-        snap.input(&mut app, App::view, &mut update,
-            kentos_ui::snapshot::Input::Click(iced::Point::new(if text == 18 { 862. } else { 758. }, if text == 18 { 612. } else { 589. })));
-        assert!(app.sheet_publish_running(), "Denetle button must start the job");
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet25-options-{theme}-{text}.png")))
+            .unwrap();
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Click(iced::Point::new(
+                if text == 18 { 862. } else { 758. },
+                if text == 18 { 612. } else { 589. },
+            )),
+        );
+        assert!(
+            app.sheet_publish_running(),
+            "Denetle button must start the job"
+        );
         wait_sheet_publication(&mut app);
-        let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("publisher closed") };
+        let Some(Window::SheetPublish(s)) = &app.exchange else {
+            panic!("publisher closed")
+        };
         assert!(s.report.as_ref().is_some_and(|r| r.ready), "{}", s.status);
         assert!(!path.exists());
         snap.settle(&mut app, App::view, &mut update);
-        snap.render(app.view(), &app.theme()).save(out.join(format!("sheet25-ready-{theme}-{text}.png"))).unwrap();
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet25-ready-{theme}-{text}.png")))
+            .unwrap();
     }
 }
 
 #[test]
 fn sheet26_desktop_drawing_set_fields_and_live_index_have_one_paper_undo() {
-    use kentos_sheet_ui::drawing_set::{SetMessage as E,Field};
-    let mut app=multipage_set_app("light",13);let before=kept(&app).unwrap();
-    for event in [E::Open,E::Edit(Field::Number,"A-001".into()),E::Edit(Field::Title,"Merkez plan".into()),E::Edit(Field::Revision,"B".into()),E::Edit(Field::Status,"Kontrol".into()),E::Edit(Field::Subset,"Mimari / Planlar".into()),E::InsertIndex]{sheet(&mut app,Sheet::DrawingSet(event));}
-    let after=kept(&app).unwrap();let info=after.sheets[0].drawing_info.as_ref().unwrap();
-    assert_eq!(info.number,"A-001");assert_eq!(info.subset,["Mimari","Planlar"]);
+    use kentos_sheet_ui::drawing_set::{Field, SetMessage as E};
+    let mut app = multipage_set_app("light", 13);
+    let before = kept(&app).unwrap();
+    for event in [
+        E::Open,
+        E::Edit(Field::Number, "A-001".into()),
+        E::Edit(Field::Title, "Merkez plan".into()),
+        E::Edit(Field::Revision, "B".into()),
+        E::Edit(Field::Status, "Kontrol".into()),
+        E::Edit(Field::Subset, "Mimari / Planlar".into()),
+        E::InsertIndex,
+    ] {
+        sheet(&mut app, Sheet::DrawingSet(event));
+    }
+    let after = kept(&app).unwrap();
+    let info = after.sheets[0].drawing_info.as_ref().unwrap();
+    assert_eq!(info.number, "A-001");
+    assert_eq!(info.subset, ["Mimari", "Planlar"]);
     assert!(after.sheets[0].items.iter().any(|it|matches!(&it.kind,kentos_sheet::ItemKind::Table(t) if matches!(t.source,kentos_sheet::TableSource::DrawingSet(_)))));
-    history_key(&mut app,true);assert_eq!(kept(&app).unwrap(),before);
-    history_key(&mut app,false);assert_eq!(kept(&app).unwrap(),after);
+    history_key(&mut app, true);
+    assert_eq!(kept(&app).unwrap(), before);
+    history_key(&mut app, false);
+    assert_eq!(kept(&app).unwrap(), after);
 }
 
 #[test]
 #[ignore = "GPU drawing set editor and live output, run alone"]
 fn sheet26_drawing_set_screens() {
-    use kentos_sheet_ui::drawing_set::{SetMessage as E,Field};
-    crate::drawing_fonts::load();kentos_ui::theme::motion::set_reduced(true);
-    let out=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
-    for (theme,text) in [("light",13),("dark",13),("dark",18)] {
-        let mut app=multipage_set_app(theme,text);
-        let _=app.run("sheet.drawingSet");
-        for event in [E::Edit(Field::Number,"A-001".into()),E::Edit(Field::Title,"Zemin kat planı".into()),E::Edit(Field::Revision,"R02".into()),E::Edit(Field::Status,"Kontrol".into()),E::Edit(Field::Subset,"Mimari / Kat planları".into()),E::Select(2),E::Edit(Field::Number,"A-101".into()),E::Edit(Field::Title,"Kat planı".into()),E::Select(0)]{sheet(&mut app,Sheet::DrawingSet(event));}
-        let mut snap=kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();
-        let mut update=|app:&mut App,m:Message|{let _=app.update(m);};
-        snap.settle(&mut app,App::view,&mut update);
+    use kentos_sheet_ui::drawing_set::{Field, SetMessage as E};
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text) in [("light", 13), ("dark", 13), ("dark", 18)] {
+        let mut app = multipage_set_app(theme, text);
+        let _ = app.run("sheet.drawingSet");
+        for event in [
+            E::Edit(Field::Number, "A-001".into()),
+            E::Edit(Field::Title, "Zemin kat planı".into()),
+            E::Edit(Field::Revision, "R02".into()),
+            E::Edit(Field::Status, "Kontrol".into()),
+            E::Edit(Field::Subset, "Mimari / Kat planları".into()),
+            E::Select(2),
+            E::Edit(Field::Number, "A-101".into()),
+            E::Edit(Field::Title, "Kat planı".into()),
+            E::Select(0),
+        ] {
+            sheet(&mut app, Sheet::DrawingSet(event));
+        }
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100., 720.)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
         use kentos_ui::snapshot::Input;
-        snap.input(&mut app,App::view,&mut update,Input::Click(iced::Point::new(900.,if text==18{320.}else{309.})));
-        snap.input(&mut app,App::view,&mut update,Input::Key(iced::keyboard::key::Named::End));
-        snap.input(&mut app,App::view,&mut update,Input::Type("-K".into()));
-        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet26-set-{theme}-{text}.png"))).unwrap();
-        snap.input(&mut app,App::view,&mut update,Input::Click(iced::Point::new(if text==18{850.}else{800.},if text==18{614.}else{580.})));
-        assert_eq!(kept(&app).unwrap().sheets[0].drawing_info.as_ref().unwrap().revision,"R02-K","the real field and insert button must work");
-        assert!(app.sheets.error().is_none(),"{:?}",app.sheets.error());
-        snap.settle(&mut app,App::view,&mut update);
-        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet26-index-{theme}-{text}.png"))).unwrap();
-        if theme=="light" {app.sheet_export_to(kentos_sheet_ui::ExportKind::Pdf,Some(out.join("sheet26-index.pdf")));}
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Click(iced::Point::new(900., if text == 18 { 320. } else { 309. })),
+        );
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Key(iced::keyboard::key::Named::End),
+        );
+        snap.input(&mut app, App::view, &mut update, Input::Type("-K".into()));
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet26-set-{theme}-{text}.png")))
+            .unwrap();
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Click(iced::Point::new(
+                if text == 18 { 850. } else { 800. },
+                if text == 18 { 614. } else { 580. },
+            )),
+        );
+        assert_eq!(
+            kept(&app).unwrap().sheets[0]
+                .drawing_info
+                .as_ref()
+                .unwrap()
+                .revision,
+            "R02-K",
+            "the real field and insert button must work"
+        );
+        assert!(app.sheets.error().is_none(), "{:?}", app.sheets.error());
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet26-index-{theme}-{text}.png")))
+            .unwrap();
+        if theme == "light" {
+            app.sheet_export_to(
+                kentos_sheet_ui::ExportKind::Pdf,
+                Some(out.join("sheet26-index.pdf")),
+            );
+        }
     }
 }
 
 #[test]
 fn sheet26_drawing_set_command_opens_from_model_without_a_hidden_dialog() {
-    let mut app=multipage_set_app("light",13);sheet(&mut app,Sheet::Model);assert!(!app.sheets.is_active());
-    let task=app.run("sheet.drawingSet");drive(&mut app,task);assert!(app.sheets.is_active());
-    sheet(&mut app,Sheet::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Edit(kentos_sheet_ui::drawing_set::Field::Number,"A-001".into())));
-    sheet(&mut app,Sheet::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Save));
-    assert_eq!(kept(&app).unwrap().sheets[0].drawing_info.as_ref().unwrap().number,"A-001");
+    let mut app = multipage_set_app("light", 13);
+    sheet(&mut app, Sheet::Model);
+    assert!(!app.sheets.is_active());
+    let task = app.run("sheet.drawingSet");
+    drive(&mut app, task);
+    assert!(app.sheets.is_active());
+    sheet(
+        &mut app,
+        Sheet::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Edit(
+            kentos_sheet_ui::drawing_set::Field::Number,
+            "A-001".into(),
+        )),
+    );
+    sheet(
+        &mut app,
+        Sheet::DrawingSet(kentos_sheet_ui::drawing_set::SetMessage::Save),
+    );
+    assert_eq!(
+        kept(&app).unwrap().sheets[0]
+            .drawing_info
+            .as_ref()
+            .unwrap()
+            .number,
+        "A-001"
+    );
 }
 
 #[test]
-fn sheet_package_desktop_publishes_the_complete_source_without_editing_model_or_paper(){
-    use crate::exchange::{Window,sheet_publish::Event as E};
-    let mut app=multipage_set_app("light",13);let before=app.document.as_ref().unwrap().model.to_snapshot_v2();let path=scratch("sheet-package").join("delivery");let _=app.sheet_publish_open();
-    for event in [E::Path(path.display().to_string()),E::All(true),E::Resources(true),E::Plan]{let _=app.sheet_publish_event(event);}
-    wait_sheet_publication(&mut app);let Some(Window::SheetPublish(s))=&app.exchange else{panic!("window")};let plan=s.report.as_ref().unwrap();assert!(plan.ready,"{:?}",plan.issues);assert_eq!(plan.resources.as_ref().unwrap().files.iter().filter(|f|matches!(f.kind,kentos_commands::SheetResourceKind::Font)).count(),22);assert!(!path.exists());
-    let _=app.sheet_publish_event(E::Publish);wait_sheet_publication(&mut app);assert!(path.join("kaynaklar/cizim.kcad").is_file());let after=app.document.as_ref().unwrap().model.to_snapshot_v2();assert_eq!(after.entities,before.entities);assert_eq!(after.layers,before.layers);assert_eq!(after.settings,before.settings);assert_eq!(after.sheets,before.sheets);
+fn sheet_package_desktop_publishes_the_complete_source_without_editing_model_or_paper() {
+    use crate::exchange::{Window, sheet_publish::Event as E};
+    let mut app = multipage_set_app("light", 13);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let path = scratch("sheet-package").join("delivery");
+    let _ = app.sheet_publish_open();
+    for event in [
+        E::Path(path.display().to_string()),
+        E::All(true),
+        E::Resources(true),
+        E::Plan,
+    ] {
+        let _ = app.sheet_publish_event(event);
+    }
+    wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s)) = &app.exchange else {
+        panic!("window")
+    };
+    let plan = s.report.as_ref().unwrap();
+    assert!(plan.ready, "{:?}", plan.issues);
+    assert_eq!(
+        plan.resources
+            .as_ref()
+            .unwrap()
+            .files
+            .iter()
+            .filter(|f| matches!(f.kind, kentos_commands::SheetResourceKind::Font))
+            .count(),
+        22
+    );
+    assert!(!path.exists());
+    let _ = app.sheet_publish_event(E::Publish);
+    wait_sheet_publication(&mut app);
+    assert!(path.join("kaynaklar/cizim.kcad").is_file());
+    let after = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    assert_eq!(after.entities, before.entities);
+    assert_eq!(after.layers, before.layers);
+    assert_eq!(after.settings, before.settings);
+    assert_eq!(after.sheets, before.sheets);
 }
 
 #[test]
-#[ignore="GPU complete delivery publication controls, run alone"]
-fn sheet_package_publish_screens(){
-    use crate::exchange::{Window,sheet_publish::Event as E};
-    crate::drawing_fonts::load();kentos_ui::theme::motion::set_reduced(true);let out=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
-    for (theme,text) in [("light",13),("dark",13),("dark",18)]{
-        let mut app=multipage_set_app(theme,text);let path=scratch(&format!("sheet-package-{theme}-{text}")).join("delivery");let _=app.sheet_publish_open();
-        for event in [E::Path(path.display().to_string()),E::All(true),E::Separate(true)]{let _=app.sheet_publish_event(event);}
-        let mut snap=kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();let mut update=|app:&mut App,m:Message|{let _=app.update(m);};snap.settle(&mut app,App::view,&mut update);
-        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet27-before-{theme}-{text}.png"))).unwrap();
-        snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Click(iced::Point::new(if text==18{104.}else{238.},421.)));
-        assert!(matches!(&app.exchange,Some(Window::SheetPublish(s)) if s.input.resources),"real resource switch must enable the source package");
-        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet27-package-options-{theme}-{text}.png"))).unwrap();
-        snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Click(iced::Point::new(if text==18{862.}else{758.},if text==18{612.}else{589.})));assert!(app.sheet_publish_running(),"real Denetle button must start the job");wait_sheet_publication(&mut app);let Some(Window::SheetPublish(s))=&app.exchange else{panic!("window")};assert!(s.report.as_ref().unwrap().ready,"{}",s.status);assert!(s.report.as_ref().unwrap().resources.is_some());snap.settle(&mut app,App::view,&mut update);snap.render(app.view(),&app.theme()).save(out.join(format!("sheet27-package-ready-{theme}-{text}.png"))).unwrap();
+#[ignore = "GPU complete delivery publication controls, run alone"]
+fn sheet_package_publish_screens() {
+    use crate::exchange::{Window, sheet_publish::Event as E};
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text) in [("light", 13), ("dark", 13), ("dark", 18)] {
+        let mut app = multipage_set_app(theme, text);
+        let path = scratch(&format!("sheet-package-{theme}-{text}")).join("delivery");
+        let _ = app.sheet_publish_open();
+        for event in [
+            E::Path(path.display().to_string()),
+            E::All(true),
+            E::Separate(true),
+        ] {
+            let _ = app.sheet_publish_event(event);
+        }
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100., 720.)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet27-before-{theme}-{text}.png")))
+            .unwrap();
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Click(iced::Point::new(
+                if text == 18 { 104. } else { 238. },
+                421.,
+            )),
+        );
+        assert!(
+            matches!(&app.exchange,Some(Window::SheetPublish(s)) if s.input.resources),
+            "real resource switch must enable the source package"
+        );
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet27-package-options-{theme}-{text}.png")))
+            .unwrap();
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Click(iced::Point::new(
+                if text == 18 { 862. } else { 758. },
+                if text == 18 { 612. } else { 589. },
+            )),
+        );
+        assert!(
+            app.sheet_publish_running(),
+            "real Denetle button must start the job"
+        );
+        wait_sheet_publication(&mut app);
+        let Some(Window::SheetPublish(s)) = &app.exchange else {
+            panic!("window")
+        };
+        assert!(s.report.as_ref().unwrap().ready, "{}", s.status);
+        assert!(s.report.as_ref().unwrap().resources.is_some());
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet27-package-ready-{theme}-{text}.png")))
+            .unwrap();
     }
 }
 
 pub(super) fn sheet_preflight_app(theme: &str, text: u32) -> App {
     let mut app = multipage_set_app(theme, text);
     let image:kentos_commands::Entity=serde_json::from_value(serde_json::json!({"kind":"image","id":20,"layerId":"cizim","attrs":{},"file":"/missing-preflight/source.png","p":{"x":0,"y":0},"width":1,"height":1,"rotation":0})).unwrap();
-    app.document.as_mut().unwrap().model.add(image).unwrap();app
+    app.document.as_mut().unwrap().model.add(image).unwrap();
+    app
 }
 
 #[test]
-fn sheet_preflight_desktop_uses_the_native_query_and_cannot_publish_its_report(){
-    use crate::exchange::{Window,sheet_publish::Event as E};
-    let mut app=sheet_preflight_app("light",13);let before=app.document.as_ref().unwrap().model.to_snapshot_v2();let task=app.update(Message::Sheet(kentos_sheet_ui::Message::NativePreflight));drive(&mut app,task);wait_sheet_publication(&mut app);
-    let Some(Window::SheetPublish(s))=&app.exchange else{panic!("preflight window")};assert!(s.check_only);let report=s.report.as_ref().unwrap();assert!(!report.ready);assert!(report.issues.iter().any(|i|i.code=="missing_reference"&&i.error));assert!(report.files.is_empty());assert_eq!(before.entities,app.document.as_ref().unwrap().model.to_snapshot_v2().entities);
-    let _=app.sheet_publish_event(E::Publish);assert!(!app.sheet_publish_running());
+fn sheet_preflight_desktop_uses_the_native_query_and_cannot_publish_its_report() {
+    use crate::exchange::{Window, sheet_publish::Event as E};
+    let mut app = sheet_preflight_app("light", 13);
+    let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
+    let task = app.update(Message::Sheet(kentos_sheet_ui::Message::NativePreflight));
+    drive(&mut app, task);
+    wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s)) = &app.exchange else {
+        panic!("preflight window")
+    };
+    assert!(s.check_only);
+    let report = s.report.as_ref().unwrap();
+    assert!(!report.ready);
+    assert!(
+        report
+            .issues
+            .iter()
+            .any(|i| i.code == "missing_reference" && i.error)
+    );
+    assert!(report.files.is_empty());
+    assert_eq!(
+        before.entities,
+        app.document
+            .as_ref()
+            .unwrap()
+            .model
+            .to_snapshot_v2()
+            .entities
+    );
+    let _ = app.sheet_publish_event(E::Publish);
+    assert!(!app.sheet_publish_running());
 }
 
 #[test]
-fn a_preflight_finding_opens_its_sheet_and_that_sheets_own_check(){
-    use crate::exchange::{Window,sheet_publish::Event as E};
-    let mut app=sheet_preflight_app("light",13);let task=app.run("file.preflight.sheets");drive(&mut app,task);wait_sheet_publication(&mut app);
-    let Some(Window::SheetPublish(s))=&app.exchange else{panic!("preflight")};
-    let issue=s.report.as_ref().unwrap().issues.iter().find(|i|i.error&&s.rows.iter().any(|r|r.id==i.sheet)).expect("a sheet's own finding").sheet.clone();
-    let _=app.sheet_publish_event(E::Go(issue.clone()));
-    assert!(app.exchange.is_none(),"the window gives way to the sheet");
-    assert_eq!(app.sheets.open_sheet().map(|s|s.id.as_str().to_owned()),Some(issue));
-    assert_eq!(app.sheets.inspector_tab(),kentos_sheet_ui::InspectorTab::Preflight);
+fn a_preflight_finding_opens_its_sheet_and_that_sheets_own_check() {
+    use crate::exchange::{Window, sheet_publish::Event as E};
+    let mut app = sheet_preflight_app("light", 13);
+    let task = app.run("file.preflight.sheets");
+    drive(&mut app, task);
+    wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s)) = &app.exchange else {
+        panic!("preflight")
+    };
+    let issue = s
+        .report
+        .as_ref()
+        .unwrap()
+        .issues
+        .iter()
+        .find(|i| i.error && s.rows.iter().any(|r| r.id == i.sheet))
+        .expect("a sheet's own finding")
+        .sheet
+        .clone();
+    let _ = app.sheet_publish_event(E::Go(issue.clone()));
+    assert!(app.exchange.is_none(), "the window gives way to the sheet");
+    assert_eq!(
+        app.sheets.open_sheet().map(|s| s.id.as_str().to_owned()),
+        Some(issue)
+    );
+    assert_eq!(
+        app.sheets.inspector_tab(),
+        kentos_sheet_ui::InspectorTab::Preflight
+    );
 }
 
 #[test]
-#[ignore="GPU native preflight report, run alone"]
-fn sheet_preflight_native_screens(){
+#[ignore = "GPU native preflight report, run alone"]
+fn sheet_preflight_native_screens() {
     use crate::exchange::Window;
-    crate::drawing_fonts::load();kentos_ui::theme::motion::set_reduced(true);let out=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
-    for(theme,text)in[("light",13),("dark",13),("dark",18)]{
-        let mut app=sheet_preflight_app(theme,text);let task=app.run("file.preflight.sheets");drive(&mut app,task);wait_sheet_publication(&mut app);let Some(Window::SheetPublish(s))=&app.exchange else{panic!("preflight")};assert!(s.check_only);assert!(s.report.as_ref().is_some_and(|r|r.issues.iter().any(|i|i.code=="missing_reference")));
-        let mut snap=kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();let mut update=|app:&mut App,m:Message|{let _=app.update(m);};snap.settle(&mut app,App::view,&mut update);
-        snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Click(iced::Point::new(if text==18{960.}else{840.},if text==18{685.}else{675.})));assert!(app.sheet_publish_running(),"real Denetle button starts the read-only native check");wait_sheet_publication(&mut app);snap.settle(&mut app,App::view,&mut update);
-        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet28-preflight-{theme}-{text}.png"))).unwrap();
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text) in [("light", 13), ("dark", 13), ("dark", 18)] {
+        let mut app = sheet_preflight_app(theme, text);
+        let task = app.run("file.preflight.sheets");
+        drive(&mut app, task);
+        wait_sheet_publication(&mut app);
+        let Some(Window::SheetPublish(s)) = &app.exchange else {
+            panic!("preflight")
+        };
+        assert!(s.check_only);
+        assert!(
+            s.report
+                .as_ref()
+                .is_some_and(|r| r.issues.iter().any(|i| i.code == "missing_reference"))
+        );
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100., 720.)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Click(iced::Point::new(
+                if text == 18 { 960. } else { 840. },
+                if text == 18 { 685. } else { 675. },
+            )),
+        );
+        assert!(
+            app.sheet_publish_running(),
+            "real Denetle button starts the read-only native check"
+        );
+        wait_sheet_publication(&mut app);
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet28-preflight-{theme}-{text}.png")))
+            .unwrap();
     }
 }
 
@@ -819,32 +1231,56 @@ pub(super) fn sheet_snapshot_changed_while_planning(theme: &str, text: u32) -> A
         let _ = app.sheet_publish_event(event);
     }
     assert!(app.sheet_publish_running());
-    let doc=&mut app.document.as_mut().unwrap().model;
-    let(mut book,pictures)=kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
-    book.sheets[0].name="Sonraki düzenleme".into();
-    doc.set_sheets(kentos_sheet::project::project_sheets(&book,|h|pictures.iter().find(|(sha,_)|sha==h).map(|(_,b)|b.clone())).unwrap()).unwrap();
-    let after=doc.to_snapshot_v2();wait_sheet_publication(&mut app);
-    let Some(Window::SheetPublish(s))=&app.exchange else{panic!("publisher")};
-    assert!(s.status.contains("Çizim bu sırada değişti"),"{}",s.status);
-    assert!(s.report.as_ref().unwrap().ready);assert!(!path.exists());
-    let _=app.sheet_publish_event(E::Publish);assert!(!app.sheet_publish_running());assert!(!path.exists());
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),after);app
+    let doc = &mut app.document.as_mut().unwrap().model;
+    let (mut book, pictures) =
+        kentos_sheet::project::read_project_sheets(doc.sheets().unwrap()).unwrap();
+    book.sheets[0].name = "Sonraki düzenleme".into();
+    doc.set_sheets(
+        kentos_sheet::project::project_sheets(&book, |h| {
+            pictures
+                .iter()
+                .find(|(sha, _)| sha == h)
+                .map(|(_, b)| b.clone())
+        })
+        .unwrap(),
+    )
+    .unwrap();
+    let after = doc.to_snapshot_v2();
+    wait_sheet_publication(&mut app);
+    let Some(Window::SheetPublish(s)) = &app.exchange else {
+        panic!("publisher")
+    };
+    assert!(s.status.contains("Çizim bu sırada değişti"), "{}", s.status);
+    assert!(s.report.as_ref().unwrap().ready);
+    assert!(!path.exists());
+    let _ = app.sheet_publish_event(E::Publish);
+    assert!(!app.sheet_publish_running());
+    assert!(!path.exists());
+    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), after);
+    app
 }
 
 #[test]
-fn sheet_snapshot_desktop_marks_old_results_and_disables_stale_publication(){let _=sheet_snapshot_changed_while_planning("light",13);}
+fn sheet_snapshot_desktop_marks_old_results_and_disables_stale_publication() {
+    let _ = sheet_snapshot_changed_while_planning("light", 13);
+}
 
 #[test]
-#[ignore="GPU source revision report, run alone"]
-fn sheet_snapshot_source_report_screens(){
-    crate::drawing_fonts::load();kentos_ui::theme::motion::set_reduced(true);
-    let out=std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
-    for(theme,text)in[("light",13),("dark",13),("dark",18)]{
-        let mut app=sheet_snapshot_changed_while_planning(theme,text);
-        let mut snap=kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100.,720.)).unwrap();
-        let mut update=|app:&mut App,m:Message|{let _=app.update(m);};
-        snap.settle(&mut app,App::view,&mut update);
-        snap.render(app.view(),&app.theme()).save(out.join(format!("sheet29-source-{theme}-{text}.png"))).unwrap();
+#[ignore = "GPU source revision report, run alone"]
+fn sheet_snapshot_source_report_screens() {
+    crate::drawing_fonts::load();
+    kentos_ui::theme::motion::set_reduced(true);
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    for (theme, text) in [("light", 13), ("dark", 13), ("dark", 18)] {
+        let mut app = sheet_snapshot_changed_while_planning(theme, text);
+        let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100., 720.)).unwrap();
+        let mut update = |app: &mut App, m: Message| {
+            let _ = app.update(m);
+        };
+        snap.settle(&mut app, App::view, &mut update);
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("sheet29-source-{theme}-{text}.png")))
+            .unwrap();
     }
 }
 
@@ -861,10 +1297,17 @@ fn a_host_pdf_refusal_reopens_output_options_and_never_creates_the_chosen_file()
     assert!(!path.exists());
     app.sheet_export_to(ExportKind::Pdf, Some(path.clone()));
     assert!(!path.exists());
-    assert!(app.sheets.error().is_some_and(|e| e.starts_with("Dışa aktarılamadı:")));
+    assert!(
+        app.sheets
+            .error()
+            .is_some_and(|e| e.starts_with("Dışa aktarılamadı:"))
+    );
     assert!(app.sheets.window(lend(&DemoMaps)).is_some());
     assert_eq!(app.sheets.output_pdf_options(), options);
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 }
 
 /// CAD-ADV-16 (docs/adr/1090): the general 2D detail set from `cad.sheets.details`, opened in the desktop.
@@ -893,8 +1336,21 @@ pub(super) fn detail_set_app(theme: &str, text: u32) -> App {
             {"name": "Poz listesi 2", "table": {"table": table, "part": 1}, "ratio": r(20.)}
         ]),
     ] {
-        let answer = kentos_native_application::call::call(&mut model, None, envelope(kentos_commands::CAD_SHEETS_DETAILS, serde_json::json!({ "options": {"values": [{"name": "kurum", "value": "KentOS"}, {"name": "birim", "value": "Proje"}, {"name": "referans", "value": "ADR 1090"}, {"name": "onaylayan", "value": "Denetçi"}, {"name": "cizim_no", "value": "D-1"}]}, "details": details })));
-        assert!(matches!(answer.result, kentos_commands::CommandResult::Completed { .. }), "{answer:?}");
+        let answer = kentos_native_application::call::call(
+            &mut model,
+            None,
+            envelope(
+                kentos_commands::CAD_SHEETS_DETAILS,
+                serde_json::json!({ "options": {"values": [{"name": "kurum", "value": "KentOS"}, {"name": "birim", "value": "Proje"}, {"name": "referans", "value": "ADR 1090"}, {"name": "onaylayan", "value": "Denetçi"}, {"name": "cizim_no", "value": "D-1"}]}, "details": details }),
+            ),
+        );
+        assert!(
+            matches!(
+                answer.result,
+                kentos_commands::CommandResult::Completed { .. }
+            ),
+            "{answer:?}"
+        );
     }
     let (mut app, _store) = app_with_store("adv16-details");
     app.settings.choose(&[
@@ -926,11 +1382,18 @@ fn a_detail_set_is_published_and_its_delivery_read_back_as_current_from_the_wind
     let mut app = detail_set_app("light", 13);
     let path = scratch("adv16-publish").join("teslim");
     let _ = app.sheet_publish_open();
-    for e in [E::Path(path.display().to_string()), E::All(true), E::Separate(true), E::Plan] {
+    for e in [
+        E::Path(path.display().to_string()),
+        E::All(true),
+        E::Separate(true),
+        E::Plan,
+    ] {
         let _ = app.sheet_publish_event(e);
     }
     wait_sheet_publication(&mut app);
-    let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("window") };
+    let Some(Window::SheetPublish(s)) = &app.exchange else {
+        panic!("window")
+    };
     let plan = s.report.as_ref().unwrap();
     assert!(plan.ready, "{:?}", plan.issues);
     // Four detail sheets, then the twin 1:5 sheet and the table's two parts, which run on to further sheets.
@@ -941,8 +1404,16 @@ fn a_detail_set_is_published_and_its_delivery_read_back_as_current_from_the_wind
     assert!(path.join("yayin.json").is_file());
     let _ = app.sheet_publish_event(E::Status);
     wait_sheet_publication(&mut app);
-    let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("window") };
-    assert!(s.folder.as_ref().is_some_and(|f| f.stale.is_empty() && !f.sheets.is_empty()), "{}", s.status);
+    let Some(Window::SheetPublish(s)) = &app.exchange else {
+        panic!("window")
+    };
+    assert!(
+        s.folder
+            .as_ref()
+            .is_some_and(|f| f.stale.is_empty() && !f.sheets.is_empty()),
+        "{}",
+        s.status
+    );
 }
 
 #[test]
@@ -961,22 +1432,37 @@ fn adv16_detail_set_screens() {
         // The 1:5 sheet and the sheet of the two representations with the table's parts.
         for (tab, name) in [(2, "scale-5"), (5, "pair"), (6, "table-part")] {
             sheet(&mut app, Sheet::Tab(tab));
-            let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 900.)).unwrap();
+            let mut snap =
+                kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 900.)).unwrap();
             snap.settle(&mut app, App::view, &mut update);
-            snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-sheet-{name}-{theme}-{text}.png"))).unwrap();
+            snap.render(app.view(), &app.theme())
+                .save(out.join(format!("adv16-sheet-{name}-{theme}-{text}.png")))
+                .unwrap();
         }
         // Publication: the scope and page audit, then the delivery's state after a change, then a stopped run.
         let path = scratch(&format!("adv16-shots-{theme}-{text}")).join("teslim");
         let _ = app.sheet_publish_open();
-        for e in [E::Path(path.display().to_string()), E::All(true), E::Separate(true), E::Plan] {
+        for e in [
+            E::Path(path.display().to_string()),
+            E::All(true),
+            E::Separate(true),
+            E::Plan,
+        ] {
             let _ = app.sheet_publish_event(e);
         }
         wait_sheet_publication(&mut app);
         let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1100., 720.)).unwrap();
         snap.settle(&mut app, App::view, &mut update);
-        snap.input(&mut app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(iced::Point::new(550., 420.), -40.));
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(iced::Point::new(550., 420.), -40.),
+        );
         snap.settle(&mut app, App::view, &mut update);
-        snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-publish-scope-{theme}-{text}.png"))).unwrap();
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("adv16-publish-scope-{theme}-{text}.png")))
+            .unwrap();
         let _ = app.sheet_publish_event(E::Publish);
         wait_sheet_publication(&mut app);
         {
@@ -985,21 +1471,46 @@ fn adv16_detail_set_screens() {
             let answer = kentos_native_application::call::call(
                 model,
                 None,
-                envelope("cad.entities.transform", serde_json::json!({"uids": [line], "transform": {"kind": "move", "dx": 0.01, "dy": 0.0}})),
+                envelope(
+                    "cad.entities.transform",
+                    serde_json::json!({"uids": [line], "transform": {"kind": "move", "dx": 0.01, "dy": 0.0}}),
+                ),
             );
-            assert!(matches!(answer.result, kentos_commands::CommandResult::Completed { .. }), "{answer:?}");
+            assert!(
+                matches!(
+                    answer.result,
+                    kentos_commands::CommandResult::Completed { .. }
+                ),
+                "{answer:?}"
+            );
         }
         let _ = app.sheet_publish_event(E::Status);
         wait_sheet_publication(&mut app);
-        let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("window") };
-        assert!(s.folder.as_ref().is_some_and(|f| !f.stale.is_empty()), "{}", s.status);
+        let Some(Window::SheetPublish(s)) = &app.exchange else {
+            panic!("window")
+        };
+        assert!(
+            s.folder.as_ref().is_some_and(|f| !f.stale.is_empty()),
+            "{}",
+            s.status
+        );
         snap.settle(&mut app, App::view, &mut update);
-        snap.input(&mut app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(iced::Point::new(550., 420.), -40.));
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(iced::Point::new(550., 420.), -40.),
+        );
         snap.settle(&mut app, App::view, &mut update);
-        snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-publish-stale-{theme}-{text}.png"))).unwrap();
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("adv16-publish-stale-{theme}-{text}.png")))
+            .unwrap();
         // A stopped run: stopped once its journal holds a finished page.
         let other = scratch(&format!("adv16-stop-{theme}-{text}")).join("teslim");
-        let journal = other.parent().unwrap().join(".teslim.kentos-devam/devam.json");
+        let journal = other
+            .parent()
+            .unwrap()
+            .join(".teslim.kentos-devam/devam.json");
         let _ = app.sheet_publish_event(E::Path(other.display().to_string()));
         let _ = app.sheet_publish_event(E::Plan);
         wait_sheet_publication(&mut app);
@@ -1015,16 +1526,31 @@ fn adv16_detail_set_screens() {
         }
         let _ = app.sheet_publish_event(E::Status);
         wait_sheet_publication(&mut app);
-        let Some(Window::SheetPublish(s)) = &app.exchange else { panic!("window") };
-        assert!(s.folder.as_ref().and_then(|f| f.stopped.as_ref()).is_some(), "{}", s.status);
+        let Some(Window::SheetPublish(s)) = &app.exchange else {
+            panic!("window")
+        };
+        assert!(
+            s.folder.as_ref().and_then(|f| f.stopped.as_ref()).is_some(),
+            "{}",
+            s.status
+        );
         snap.settle(&mut app, App::view, &mut update);
-        snap.input(&mut app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(iced::Point::new(550., 420.), -40.));
+        snap.input(
+            &mut app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(iced::Point::new(550., 420.), -40.),
+        );
         snap.settle(&mut app, App::view, &mut update);
-        snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-publish-stopped-{theme}-{text}.png"))).unwrap();
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("adv16-publish-stopped-{theme}-{text}.png")))
+            .unwrap();
         let _ = app.sheet_publish_event(E::Resume);
         wait_sheet_publication(&mut app);
         assert!(other.join("yayin.json").is_file());
         snap.settle(&mut app, App::view, &mut update);
-        snap.render(app.view(), &app.theme()).save(out.join(format!("adv16-publish-resumed-{theme}-{text}.png"))).unwrap();
+        snap.render(app.view(), &app.theme())
+            .save(out.join(format!("adv16-publish-resumed-{theme}-{text}.png")))
+            .unwrap();
     }
 }

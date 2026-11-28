@@ -18,11 +18,20 @@ use crate::systems;
 pub const FACT_VARIABLES: [(&str, &str); 7] = [
     ("datum", "Koordinat sisteminin datumu (kayıtlı sistemlerde)"),
     ("elipsoit", "Datumun elipsoidi (kayıtlı sistemlerde)"),
-    ("projeksiyon", "Projeksiyon, dilim orta meridyeni ve ölçek katsayısı (kayıtlı sistemlerde)"),
-    ("kot_sistemi", "Kotların türü, düşey sistemi ve geoit modeli"),
+    (
+        "projeksiyon",
+        "Projeksiyon, dilim orta meridyeni ve ölçek katsayısı (kayıtlı sistemlerde)",
+    ),
+    (
+        "kot_sistemi",
+        "Kotların türü, düşey sistemi ve geoit modeli",
+    ),
     ("epok", "Koordinatların epoku (ondalık yıl)"),
     ("ikinci_sistem", "Projenin ikinci koordinat sisteminin adı"),
-    ("epsg_kodu", "Koordinat sisteminin EPSG kodu yazıyla (EPSG:5256)"),
+    (
+        "epsg_kodu",
+        "Koordinat sisteminin EPSG kodu yazıyla (EPSG:5256)",
+    ),
 ];
 
 /// The facts; an empty text or none where the project does not say it.
@@ -48,7 +57,10 @@ fn plain(v: f64) -> String {
 /// The project's coordinate facts.
 pub fn coordinate_facts(settings: &ProjectSettings) -> CoordinateFacts {
     let mut out = CoordinateFacts::default();
-    if let Some(s) = (settings.srid != LOCAL_SRID).then(|| system(settings.srid)).flatten() {
+    if let Some(s) = (settings.srid != LOCAL_SRID)
+        .then(|| system(settings.srid))
+        .flatten()
+    {
         out.datum = datum_label(&s.datum).to_owned();
         out.ellipsoid = s.ellipsoid.clone().unwrap_or_default();
         out.epsg = format!("EPSG:{}", s.srid);
@@ -77,11 +89,17 @@ pub fn coordinate_facts(settings: &ProjectSettings) -> CoordinateFacts {
             if let Some(g) = &h.geoid {
                 more.push(format!("geoit {}", g.name));
             }
-            out.heights = if more.is_empty() { kind.to_owned() } else { format!("{kind} ({})", more.join("; ")) };
+            out.heights = if more.is_empty() {
+                kind.to_owned()
+            } else {
+                format!("{kind} ({})", more.join("; "))
+            };
         }
     }
     out.epoch = settings.coordinate_epoch.filter(|_| settings.has_system());
-    out.second = systems::second(settings).map(|n| n.name).unwrap_or_default();
+    out.second = systems::second(settings)
+        .map(|n| n.name)
+        .unwrap_or_default();
     out
 }
 
@@ -106,9 +124,15 @@ mod tests {
         assert_eq!(f.datum, "TUREF (ITRF96)");
         // EPSG's ellipsoid 7019, “GRS 1980”, as the registry names it.
         assert_eq!(f.ellipsoid, "GRS80");
-        assert_eq!(f.projection, "Transverse Mercator, DOM 36°, ölçek katsayısı 1");
+        assert_eq!(
+            f.projection,
+            "Transverse Mercator, DOM 36°, ölçek katsayısı 1"
+        );
         assert_eq!(f.epsg, "EPSG:5256");
-        assert_eq!((f.heights.as_str(), f.epoch, f.second.as_str()), ("", None, ""));
+        assert_eq!(
+            (f.heights.as_str(), f.epoch, f.second.as_str()),
+            ("", None, "")
+        );
     }
 
     /// ED50 / UTM zone 36N (EPSG:23036): central meridian 33° E, scale factor 0.9996, International 1924.
@@ -116,8 +140,16 @@ mod tests {
     fn ed50_utm_36_by_its_epsg_record() {
         let f = coordinate_facts(&settings(23036));
         assert_eq!(f.datum, "ED50");
-        assert!(f.ellipsoid.contains("1924") || f.ellipsoid.contains("International"), "{}", f.ellipsoid);
-        assert!(f.projection.ends_with("DOM 33°, ölçek katsayısı 0,9996"), "{}", f.projection);
+        assert!(
+            f.ellipsoid.contains("1924") || f.ellipsoid.contains("International"),
+            "{}",
+            f.ellipsoid
+        );
+        assert!(
+            f.projection.ends_with("DOM 33°, ölçek katsayısı 0,9996"),
+            "{}",
+            f.projection
+        );
     }
 
     #[test]
@@ -126,7 +158,10 @@ mod tests {
         s.heights = Some(HeightReference {
             kind: HeightKind::Orthometric,
             vertical_srid: None,
-            geoid: Some(GeoidModel { name: "TG-20".into(), sha256: None }),
+            geoid: Some(GeoidModel {
+                name: "TG-20".into(),
+                sha256: None,
+            }),
         });
         s.coordinate_epoch = Some(2005.0);
         s.second_srid = Some(23036);
@@ -138,6 +173,9 @@ mod tests {
 
     #[test]
     fn a_local_project_says_none() {
-        assert_eq!(coordinate_facts(&settings(LOCAL_SRID)), CoordinateFacts::default());
+        assert_eq!(
+            coordinate_facts(&settings(LOCAL_SRID)),
+            CoordinateFacts::default()
+        );
     }
 }

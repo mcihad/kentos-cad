@@ -210,7 +210,11 @@ impl<'a, Message: Clone + 'a> From<StatCard<'a, Message>> for Element<'a, Messag
         } = card;
 
         let heading: Element<'a, Message> = if elide {
-            crate::widget::Elided::new(title).size(typography::body()).style(style::text::muted).width(Fill).into()
+            crate::widget::Elided::new(title)
+                .size(typography::body())
+                .style(style::text::muted)
+                .width(Fill)
+                .into()
         } else {
             label::muted(title).into()
         };
@@ -229,8 +233,8 @@ impl<'a, Message: Clone + 'a> From<StatCard<'a, Message>> for Element<'a, Messag
                 .wrapping(iced::widget::text::Wrapping::None)
                 .style(style::text::default)
         ]
-            .spacing(6)
-            .align_y(iced::Bottom);
+        .spacing(6)
+        .align_y(iced::Bottom);
 
         if let Some(unit) = unit {
             figure = figure.push(container(label::caption(unit)).padding(iced::Padding {
@@ -307,7 +311,10 @@ impl<'a, Message: Clone + 'a> From<StatCard<'a, Message>> for Element<'a, Messag
             content = content.push(label::caption(text));
         }
 
-        let body = container(content).padding([12, 14]).width(Fill).height(height);
+        let body = container(content)
+            .padding([12, 14])
+            .width(Fill)
+            .height(height);
 
         let card: Element<'a, Message> = match on_press {
             Some(message) => button(body)
@@ -527,7 +534,12 @@ impl StatRow {
     }
 
     /// Bir kart: başlık, değer ve birim.
-    pub fn push(mut self, label: impl Into<String>, value: impl Into<String>, unit: Option<String>) -> Self {
+    pub fn push(
+        mut self,
+        label: impl Into<String>,
+        value: impl Into<String>,
+        unit: Option<String>,
+    ) -> Self {
         self.cards.push((label.into(), value.into(), unit));
         self
     }
@@ -549,15 +561,25 @@ impl StatRow {
         self.cards
             .iter()
             .map(|(_, value, unit)| {
-                let unit_w = unit.as_ref().map_or(0.0, |u| 6.0 + span(u, typography::caption(), false));
-                STEPS.iter().map(|k| k()).find(|s| span(value, *s, true) + unit_w <= room).unwrap_or_else(typography::body)
+                let unit_w = unit
+                    .as_ref()
+                    .map_or(0.0, |u| 6.0 + span(u, typography::caption(), false));
+                STEPS
+                    .iter()
+                    .map(|k| k())
+                    .find(|s| span(value, *s, true) + unit_w <= room)
+                    .unwrap_or_else(typography::body)
             })
             .collect()
     }
 
     /// Sıranın yüksekliği: kartın iç boşluğu, başlığın satırları ve figür boyunda bir satır.
     fn height(lines: usize) -> f32 {
-        2.0 * CARD_PAD_Y + 2.0 + lines as f32 * LINE * typography::body() + 4.0 + LINE * typography::figure()
+        2.0 * CARD_PAD_Y
+            + 2.0
+            + lines as f32 * LINE * typography::body()
+            + 4.0
+            + LINE * typography::figure()
     }
 }
 
@@ -573,7 +595,11 @@ impl<'a, Message: Clone + 'a> From<StatRow> for Element<'a, Message> {
             let sizes = row_of.fit(size.width);
             let mut cards = iced::widget::Row::new().spacing(ROW_SPACING).height(Fill);
             for ((label, value, unit), value_size) in row_of.cards.iter().cloned().zip(sizes) {
-                let mut card = StatCard::new(label, value).value_size(value_size).width(Fill).height(Fill).elide_label(true);
+                let mut card = StatCard::new(label, value)
+                    .value_size(value_size)
+                    .width(Fill)
+                    .height(Fill)
+                    .elide_label(true);
                 if let Some(u) = unit {
                     card = card.unit(u);
                 }
@@ -581,6 +607,9 @@ impl<'a, Message: Clone + 'a> From<StatRow> for Element<'a, Message> {
             }
             cards.into()
         });
-        container(content).width(Fill).height(Length::Fixed(height)).into()
+        container(content)
+            .width(Fill)
+            .height(Length::Fixed(height))
+            .into()
     }
 }

@@ -4,8 +4,8 @@
 //! lists `lists.rs` (re-exported here).
 
 use kentos_contracts::{
-    ApplicationCreate, DossierDirection, DossierEdit, DossierOfficeSet, DossierSide, DossierSite, DossierStatus,
-    TenantRole, TransferCreate,
+    ApplicationCreate, DossierDirection, DossierEdit, DossierOfficeSet, DossierSide, DossierSite,
+    DossierStatus, TenantRole, TransferCreate,
 };
 use kentos_postgres::{Db, Scope, rescope};
 use sqlx::types::Json;
@@ -54,7 +54,8 @@ impl Held {
     /// Whether the caller takes steps at all: a member always (their role decides which), the professional once
     /// verified.
     pub fn may_act(&self) -> bool {
-        matches!(self.party, Party::Member(_)) || self.professional_status.as_deref() == Some("verified")
+        matches!(self.party, Party::Member(_))
+            || self.professional_status.as_deref() == Some("verified")
     }
 }
 
@@ -79,8 +80,17 @@ pub(crate) async fn hold(
                 d.professional_id = kentos.current_user_id(), kentos.office_role(d.office_id)
            from kentos.dossier d where d.id = $1"
     };
-    type Found = (Option<String>, Option<String>, Uuid, Option<bool>, Option<String>);
-    let found: Option<Found> = sqlx::query_as(sql).bind(id).fetch_optional(&mut **tx).await?;
+    type Found = (
+        Option<String>,
+        Option<String>,
+        Uuid,
+        Option<bool>,
+        Option<String>,
+    );
+    let found: Option<Found> = sqlx::query_as(sql)
+        .bind(id)
+        .fetch_optional(&mut **tx)
+        .await?;
     let (side, role, tenant, own, office_role) = found.ok_or_else(missing)?;
     let party = match (side.as_deref(), role.as_deref().and_then(role_from_db)) {
         // The responsible professional before a colleague: a professional of their own office is both.
@@ -246,7 +256,12 @@ pub async fn create_application(
             ),
         ));
     }
-    let office = match input.office_id.as_deref().map(str::trim).filter(|o| !o.is_empty()) {
+    let office = match input
+        .office_id
+        .as_deref()
+        .map(str::trim)
+        .filter(|o| !o.is_empty())
+    {
         Some(o) => Some(office_for(&mut tx, id_at("officeId", o)?).await?),
         None => None,
     };
@@ -301,7 +316,9 @@ async fn office_for(tx: &mut Transaction<'static, Postgres>, office: Uuid) -> Ap
 pub(crate) fn live_refused(code: Option<String>) -> AppResult<()> {
     match code.as_deref() {
         None => Ok(()),
-        Some("forbidden") => Err(AppError::forbidden("Aktarıma canlı projeyi belediyenin proje yöneticisi bağlar.")),
+        Some("forbidden") => Err(AppError::forbidden(
+            "Aktarıma canlı projeyi belediyenin proje yöneticisi bağlar.",
+        )),
         Some("not_found") => Err(AppError::not_found("Proje bulunamadı ya da kurumun değil.")),
         Some("invalid") => Err(AppError::invalid("Kapanmış aktarıma proje bağlanmaz.")),
         Some("guests_off") => Err(AppError::invalid(
@@ -310,14 +327,26 @@ pub(crate) fn live_refused(code: Option<String>) -> AppResult<()> {
         Some("inactive") => Err(AppError::invalid(
             "Meslek mensubunun bu kurumdaki üyeliği ya da koltuğu etkin değil; canlı proje paylaşılamaz.",
         )),
-        Some(other) => Err(AppError::invalid(format!("Canlı proje bağlanamadı ({other})."))),
+        Some(other) => Err(AppError::invalid(format!(
+            "Canlı proje bağlanamadı ({other})."
+        ))),
     }
 }
 
 /// `PUT /v1/dossiers/{id}/live-project`: links one of the municipality's cloud projects to its transfer (none
 /// unlinks); a job already taken on gets its grant at once. The municipality's project managers, while it is open.
-pub async fn set_live_project(db: &Db, actor: &Actor, id: Uuid, input: &kentos_contracts::DossierLiveProjectSet) -> AppResult<()> {
-    let project = match input.project_id.as_deref().map(str::trim).filter(|p| !p.is_empty()) {
+pub async fn set_live_project(
+    db: &Db,
+    actor: &Actor,
+    id: Uuid,
+    input: &kentos_contracts::DossierLiveProjectSet,
+) -> AppResult<()> {
+    let project = match input
+        .project_id
+        .as_deref()
+        .map(str::trim)
+        .filter(|p| !p.is_empty())
+    {
         Some(p) => Some(id_at("projectId", p)?),
         None => None,
     };
@@ -334,7 +363,11 @@ pub async fn set_live_project(db: &Db, actor: &Actor, id: Uuid, input: &kentos_c
         id,
         actor,
         held.party.side(),
-        if project.is_some() { "live_project_linked" } else { "live_project_unlinked" },
+        if project.is_some() {
+            "live_project_linked"
+        } else {
+            "live_project_unlinked"
+        },
         held.row.round(),
         serde_json::json!({}),
     )
@@ -344,7 +377,12 @@ pub async fn set_live_project(db: &Db, actor: &Actor, id: Uuid, input: &kentos_c
 }
 
 /// back; the timeline says so.
-pub async fn set_office(db: &Db, actor: &Actor, id: Uuid, input: &DossierOfficeSet) -> AppResult<()> {
+pub async fn set_office(
+    db: &Db,
+    actor: &Actor,
+    id: Uuid,
+    input: &DossierOfficeSet,
+) -> AppResult<()> {
     let mut tx = db.scoped(user_scope(actor)).await?;
     let held = hold(&mut tx, actor, id, true).await?;
     if held.party != Party::Professional {
@@ -355,7 +393,12 @@ pub async fn set_office(db: &Db, actor: &Actor, id: Uuid, input: &DossierOfficeS
     if flow::closed(held.status()) {
         return Err(AppError::invalid("Kapanmış dosyanın paylaşımı değişmez."));
     }
-    let office = match input.office_id.as_deref().map(str::trim).filter(|o| !o.is_empty()) {
+    let office = match input
+        .office_id
+        .as_deref()
+        .map(str::trim)
+        .filter(|o| !o.is_empty())
+    {
         Some(o) => Some(office_for(&mut tx, id_at("officeId", o)?).await?),
         None => None,
     };
@@ -369,10 +412,12 @@ pub async fn set_office(db: &Db, actor: &Actor, id: Uuid, input: &DossierOfficeS
         .execute(&mut *tx)
         .await?;
     let name: Option<String> = match office {
-        Some(o) => sqlx::query_scalar("select name from kentos.tenant where id = $1")
-            .bind(o)
-            .fetch_optional(&mut *tx)
-            .await?,
+        Some(o) => {
+            sqlx::query_scalar("select name from kentos.tenant where id = $1")
+                .bind(o)
+                .fetch_optional(&mut *tx)
+                .await?
+        }
         None => None,
     };
     record(
@@ -380,7 +425,11 @@ pub async fn set_office(db: &Db, actor: &Actor, id: Uuid, input: &DossierOfficeS
         id,
         actor,
         DossierSide::Professional,
-        if office.is_some() { "office_shared" } else { "office_unshared" },
+        if office.is_some() {
+            "office_shared"
+        } else {
+            "office_unshared"
+        },
         held.row.round(),
         serde_json::json!({ "office": name.or(held.row.office_name.clone()) }),
     )

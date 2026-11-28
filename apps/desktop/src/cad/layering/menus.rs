@@ -101,14 +101,21 @@ impl App {
         // Mobilde ▸ (docs/adr/9198): shown read only, edited by the mobile app (a CBS data layer's alone) or left out.
         if has(LayerEntry::Mobile) {
             let current = node.mobile.unwrap_or(kentos_commands::LayerMobile::Show);
-            let mobile = self.mobile_choices(node).iter().fold(Menu::new(), |menu, m| {
-                let choice = match m {
-                    kentos_launch::Mobile::Show => kentos_commands::LayerMobile::Show,
-                    kentos_launch::Mobile::Edit => kentos_commands::LayerMobile::Edit,
-                    kentos_launch::Mobile::Hide => kentos_commands::LayerMobile::Hide,
-                };
-                menu.radio(m.title(), choice == current, event(Event::Mobile(id.clone(), choice)))
-            });
+            let mobile = self
+                .mobile_choices(node)
+                .iter()
+                .fold(Menu::new(), |menu, m| {
+                    let choice = match m {
+                        kentos_launch::Mobile::Show => kentos_commands::LayerMobile::Show,
+                        kentos_launch::Mobile::Edit => kentos_commands::LayerMobile::Edit,
+                        kentos_launch::Mobile::Hide => kentos_commands::LayerMobile::Hide,
+                    };
+                    menu.radio(
+                        m.title(),
+                        choice == current,
+                        event(Event::Mobile(id.clone(), choice)),
+                    )
+                });
             visibility = visibility.submenu("Mobilde", mobile);
         }
         // Sıra ▸ (layer_order.rs): the node among its siblings, or out of its group.
@@ -150,15 +157,19 @@ impl App {
                     },
                     // A data layer frames its table's box (docs/adr/9101 §5): it holds no objects. Offered while the box
                     // is read too (T16): the click waits for it, or says why there is none.
-                    (self.objects_below(node) > 0 || self.data_box_below(node) || self.data_layer_below(node))
-                        .then(|| event(Event::ZoomTo(id.clone()))),
+                    (self.objects_below(node) > 0
+                        || self.data_box_below(node)
+                        || self.data_layer_below(node))
+                    .then(|| event(Event::ZoomTo(id.clone()))),
                 )
                 .icon(icon("zoomSelection"));
         }
         // Dışa aktar ▸ (docs/adr/9106): the layer written to a table or a file.
         if has(LayerEntry::Export) {
             let export = |selected: bool| {
-                Message::Gis(crate::gis::Event::LayerExport(crate::layer_export::Event::Open(id.clone(), selected)))
+                Message::Gis(crate::gis::Event::LayerExport(
+                    crate::layer_export::Event::Open(id.clone(), selected),
+                ))
             };
             menu = menu
                 .submenu(
@@ -179,7 +190,9 @@ impl App {
             menu = menu
                 .item(
                     "Veri kaynağına taşı…",
-                    Message::Gis(crate::gis::Event::LayerMigrate(crate::layer_migrate::Event::Open(id.clone()))),
+                    Message::Gis(crate::gis::Event::LayerMigrate(
+                        crate::layer_migrate::Event::Open(id.clone()),
+                    )),
                 )
                 .icon(icon("import"));
         }
@@ -188,7 +201,9 @@ impl App {
             menu = menu.check(
                 "Nesne sayısını göster",
                 node.class_counts == Some(true),
-                Message::Gis(crate::gis::Event::LayerClasses(crate::layer_classes::Event::Counts(id.clone()))),
+                Message::Gis(crate::gis::Event::LayerClasses(
+                    crate::layer_classes::Event::Counts(id.clone()),
+                )),
             );
         }
         // A layer whose objects came from a service: taken again (docs/adr/0208 §10).
@@ -383,7 +398,10 @@ impl App {
         if has(LayerEntry::Properties) && is_layer {
             menu = menu
                 .separator()
-                .item("Katman özellikleri…", crate::layer_properties::open(node.id.clone()))
+                .item(
+                    "Katman özellikleri…",
+                    crate::layer_properties::open(node.id.clone()),
+                )
                 .icon(icon("info"));
         }
         menu

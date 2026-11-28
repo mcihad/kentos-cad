@@ -410,9 +410,8 @@ fn a_piece_shows_only_while_its_own_layer_does() {
         visible: false,
         ..shown
     };
-    let hits = |s: &Store| {
-        [100.0, 102.0, 105.0].map(|y| s.hit(Vec2::new(102.0, y), 0.1) == Some(1.0))
-    };
+    let hits =
+        |s: &Store| [100.0, 102.0, 105.0].map(|y| s.hit(Vec2::new(102.0, y), 0.1) == Some(1.0));
     assert_eq!(hits(&s), [true, true, true]);
     // KAPI hidden: its line is not there; the block's own line and the nested insert's stay.
     s.set_layers([("plan", shown), ("kapi", hidden), ("mobilya", shown)]);
@@ -462,10 +461,19 @@ fn many_objects_put_on_several_cores_make_the_same_store() {
     let Ok(Json::Arr(list)) = Json::parse(&text) else {
         panic!("json");
     };
-    let items: Vec<_> = list.iter().map(|v| super::read_item(v).expect("an item")).collect();
+    let items: Vec<_> = list
+        .iter()
+        .map(|v| super::read_item(v).expect("an item"))
+        .collect();
     let mut many = Store::new();
     many.set_blocks_json(ROGAR).unwrap();
-    let n = many.put_many_parallel(items.iter().map(|(id, l, label, s)| (*id, l.as_str(), *label, s.clone())).collect(), 8);
+    let n = many.put_many_parallel(
+        items
+            .iter()
+            .map(|(id, l, label, s)| (*id, l.as_str(), *label, s.clone()))
+            .collect(),
+        8,
+    );
     assert_eq!(n, 6000);
     assert_eq!(one.ids(), many.ids());
     for id in one.ids() {
@@ -476,7 +484,11 @@ fn many_objects_put_on_several_cores_make_the_same_store() {
         assert_eq!(a.expanded, b.expanded, "{id}");
         assert_eq!(a.veiled, b.veiled, "{id}");
     }
-    for at in [Vec2::new(101.0, 0.5), Vec2::new(350.0, 120.0), Vec2::new(14.5, 5.5)] {
+    for at in [
+        Vec2::new(101.0, 0.5),
+        Vec2::new(350.0, 120.0),
+        Vec2::new(14.5, 5.5),
+    ] {
         assert_eq!(one.hits(at, 0.5), many.hits(at, 0.5), "{at:?}");
     }
 }

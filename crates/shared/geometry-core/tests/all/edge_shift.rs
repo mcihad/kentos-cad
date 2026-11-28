@@ -60,16 +60,29 @@ fn an_edge_moves_parallel_and_its_neighbours_follow() {
         // Bulges: kept as they were on a straight shift; an arc's new sweep's (docs/adr/1024) to the reference's
         // 50 digits within 1e-12.
         let bulges = |got: &Value, want: Option<&Value>, what: &str| match want {
-            Some(w) if w.as_array().is_some_and(|w| w.iter().any(|b| b.as_f64().is_some_and(|b| b.fract() != 0.0))) => {
+            Some(w)
+                if w.as_array().is_some_and(|w| {
+                    w.iter()
+                        .any(|b| b.as_f64().is_some_and(|b| b.fract() != 0.0))
+                }) =>
+            {
                 let (g, w) = (got.as_array().expect(what), w.as_array().expect(what));
                 assert_eq!(g.len(), w.len(), "{name}: {what}");
                 for (g, w) in g.iter().zip(w) {
                     near(g, w, 1e-12, what);
                 }
             }
-            Some(w) if got.as_array().is_some_and(|g| g.iter().all(|b| b.as_f64() == Some(0.0)))
-                && w.as_array().is_some_and(|w| w.iter().all(|b| b.as_f64() == Some(0.0))) => {}
-            other => assert_eq!(got, &other.cloned().unwrap_or(Value::Null), "{name}: {what} kept"),
+            Some(w)
+                if got
+                    .as_array()
+                    .is_some_and(|g| g.iter().all(|b| b.as_f64() == Some(0.0)))
+                    && w.as_array()
+                        .is_some_and(|w| w.iter().all(|b| b.as_f64() == Some(0.0))) => {}
+            other => assert_eq!(
+                got,
+                &other.cloned().unwrap_or(Value::Null),
+                "{name}: {what} kept"
+            ),
         };
         bulges(&e["bulges"], want.get("bulges"), "bulges");
         if let Some(hole) = want.get("holeBulges") {

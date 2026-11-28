@@ -392,21 +392,27 @@ pub fn multiply_exact(a: &str, b: &str) -> Result<String, NumericError> {
         return Err(NumericError::ScaleOutOfRange);
     }
     let p = Ratio::of_decimal(x)?.mul(Ratio::of_decimal(y)?)?;
-    Ok(format_decimal(p.round(scale, RoundingMode::HalfEven)?.normalize()))
+    Ok(format_decimal(
+        p.round(scale, RoundingMode::HalfEven)?.normalize(),
+    ))
 }
 
 /// The exact sum of decimals as decimal text.
 pub fn sum_exact(values: &[&str]) -> Result<String, NumericError> {
     let mut s = Decimal::ZERO;
     for v in values {
-        s = s.checked_add(parse_decimal(v)?).ok_or(NumericError::Overflow)?;
+        s = s
+            .checked_add(parse_decimal(v)?)
+            .ok_or(NumericError::Overflow)?;
     }
     Ok(format_decimal(s.normalize()))
 }
 
 /// The exact difference `a − b` as decimal text.
 pub fn subtract_exact(a: &str, b: &str) -> Result<String, NumericError> {
-    let d = parse_decimal(a)?.checked_sub(parse_decimal(b)?).ok_or(NumericError::Overflow)?;
+    let d = parse_decimal(a)?
+        .checked_sub(parse_decimal(b)?)
+        .ok_or(NumericError::Overflow)?;
     Ok(format_decimal(d.normalize()))
 }
 

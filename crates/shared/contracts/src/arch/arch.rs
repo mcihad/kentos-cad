@@ -359,7 +359,12 @@ impl WallReference {
 /// The strongest component of a wall's components (the smallest priority, the first of equals): its core; none for a
 /// wall without components.
 pub fn core_component(components: &[WallComponent]) -> Option<usize> {
-    (0..components.len()).min_by_key(|&k| (components[k].priority.unwrap_or(DEFAULT_COMPONENT_PRIORITY), k))
+    (0..components.len()).min_by_key(|&k| {
+        (
+            components[k].priority.unwrap_or(DEFAULT_COMPONENT_PRIORITY),
+            k,
+        )
+    })
 }
 
 impl WallFields {
@@ -375,11 +380,19 @@ impl WallFields {
             WallReference::RightFace => right,
             WallReference::CoreLeft | WallReference::CoreRight => {
                 let Some(core) = core_component(&self.components) else {
-                    return Some(if r == WallReference::CoreLeft { left } else { right });
+                    return Some(if r == WallReference::CoreLeft {
+                        left
+                    } else {
+                        right
+                    });
                 };
                 let t = self.thicknesses()?;
                 let before: f64 = t[..core].iter().sum();
-                if r == WallReference::CoreLeft { left - before } else { left - before - t[core] }
+                if r == WallReference::CoreLeft {
+                    left - before
+                } else {
+                    left - before - t[core]
+                }
             }
         })
     }
@@ -793,11 +806,18 @@ impl CurtainGrid {
 
     /// What is wrong with it: the field and the words; none: it is a grid.
     pub fn problem(&self) -> Option<(String, String)> {
-        for (field, v, what) in [("spacing", self.spacing, "dikme aralığı"), ("rows", self.rows, "kayıt aralığı")] {
+        for (field, v, what) in [
+            ("spacing", self.spacing, "dikme aralığı"),
+            ("rows", self.rows, "kayıt aralığı"),
+        ] {
             if !(v.is_finite() && (Self::LEAST..=Self::MOST).contains(&v)) {
                 return Some((
                     format!("curtain.{field}"),
-                    format!("Giydirme cephenin {what} {v} m; {} ile {} m arasında olmalı.", Self::LEAST, Self::MOST),
+                    format!(
+                        "Giydirme cephenin {what} {v} m; {} ile {} m arasında olmalı.",
+                        Self::LEAST,
+                        Self::MOST
+                    ),
                 ));
             }
         }
@@ -1057,7 +1077,10 @@ impl WallJoins {
             if let Some(i) = p.iter().position(|&x| x > MAX_NODE_PASS) {
                 return Some((
                     format!("joins.{name}[{i}]"),
-                    format!("Bir bileşen konağın en çok {MAX_NODE_PASS} bileşeninden geçer; {} verildi.", p[i]),
+                    format!(
+                        "Bir bileşen konağın en çok {MAX_NODE_PASS} bileşeninden geçer; {} verildi.",
+                        p[i]
+                    ),
                 ));
             }
         }
@@ -1118,7 +1141,11 @@ impl WallFields {
             if let Some(problem) = grid.problem() {
                 return Some(problem);
             }
-            if self.bulges.as_ref().is_some_and(|b| b.iter().any(|x| *x != 0.0)) {
+            if self
+                .bulges
+                .as_ref()
+                .is_some_and(|b| b.iter().any(|x| *x != 0.0))
+            {
                 return Some((
                     "curtain".into(),
                     "Giydirme cephe düz parçalardan olur; yaylı kenarı olan duvar giydirme cephe olamaz.".into(),
@@ -1127,7 +1154,8 @@ impl WallFields {
             if !self.components.is_empty() {
                 return Some((
                     "curtain".into(),
-                    "Giydirme cephenin bileşeni olmaz: çerçeveleri ve panelleri ızgarasından.".into(),
+                    "Giydirme cephenin bileşeni olmaz: çerçeveleri ve panelleri ızgarasından."
+                        .into(),
                 ));
             }
         }
@@ -1268,11 +1296,21 @@ impl WallStyleDef {
         if let Some((field, words)) = components_problem(&self.components, None) {
             return Some((field, format!("“{name}” duvar stili: {words}")));
         }
-        if let Some(words) = self.fire_rating.as_ref().and_then(|d| d.problem("yangın dayanım sınıfı")) {
-            return Some(("fireRating".into(), format!("“{name}” duvar stili: {words}")));
+        if let Some(words) = self
+            .fire_rating
+            .as_ref()
+            .and_then(|d| d.problem("yangın dayanım sınıfı"))
+        {
+            return Some((
+                "fireRating".into(),
+                format!("“{name}” duvar stili: {words}"),
+            ));
         }
         if let Some(words) = self.load_bearing.as_ref().and_then(|b| b.basis.problem()) {
-            return Some(("loadBearing".into(), format!("“{name}” duvar stilinin taşıyıcılık beyanı: {words}")));
+            return Some((
+                "loadBearing".into(),
+                format!("“{name}” duvar stilinin taşıyıcılık beyanı: {words}"),
+            ));
         }
         if !colour_holds(&self.fill) {
             return Some((
@@ -1428,16 +1466,37 @@ pub fn audit_exceptions_problem(list: &[ArchAuditException]) -> Option<(String, 
     for (i, x) in list.iter().enumerate() {
         let path = |field: &str| format!("auditExceptions[{i}].{field}");
         if x.key.is_empty() || x.key.chars().count() > 4096 || !keys.insert(x.key.as_str()) {
-            return Some((path("key"), "İstisnanın anahtarı boş, çok uzun ya da iki kez verilmiş.".into()));
+            return Some((
+                path("key"),
+                "İstisnanın anahtarı boş, çok uzun ya da iki kez verilmiş.".into(),
+            ));
         }
         if x.code.is_empty() || !x.code.chars().all(|c| c.is_ascii_lowercase() || c == '_') {
-            return Some((path("code"), "İstisnanın kodu küçük harf ve alt çizgiden oluşmalı.".into()));
+            return Some((
+                path("code"),
+                "İstisnanın kodu küçük harf ve alt çizgiden oluşmalı.".into(),
+            ));
         }
-        if x.uids.is_empty() || x.uids.iter().any(|u| crate::identity::uuid_from_text(u).is_none()) {
-            return Some((path("uids"), "İstisnanın nesneleri kalıcı kimlikleriyle verilmeli.".into()));
+        if x.uids.is_empty()
+            || x.uids
+                .iter()
+                .any(|u| crate::identity::uuid_from_text(u).is_none())
+        {
+            return Some((
+                path("uids"),
+                "İstisnanın nesneleri kalıcı kimlikleriyle verilmeli.".into(),
+            ));
         }
-        if x.digest.len() != 16 || !x.digest.chars().all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c)) {
-            return Some((path("digest"), "İstisnanın özeti on altı küçük onaltılık rakamdır.".into()));
+        if x.digest.len() != 16
+            || !x
+                .digest
+                .chars()
+                .all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c))
+        {
+            return Some((
+                path("digest"),
+                "İstisnanın özeti on altı küçük onaltılık rakamdır.".into(),
+            ));
         }
         if let Some(note) = &x.note
             && (note.chars().count() > 1000 || note.chars().any(|c| c.is_control() && c != '\n'))
@@ -1733,7 +1792,13 @@ pub enum Zone {
 }
 
 impl Zone {
-    pub const ALL: [Zone; 5] = [Zone::Residential, Zone::ResidentialShops, Zone::Mixed, Zone::Commercial, Zone::Other];
+    pub const ALL: [Zone; 5] = [
+        Zone::Residential,
+        Zone::ResidentialShops,
+        Zone::Mixed,
+        Zone::Commercial,
+        Zone::Other,
+    ];
 
     /// As the form and a finding name it.
     pub fn label(self) -> &'static str {
@@ -1792,7 +1857,9 @@ impl Zone {
             ("meydan", "Meydan", Zone::Other),
             ("yol", "Yol", Zone::Other),
         ];
-        LIST.iter().find(|(code, label, _)| t == *code || t == fold(label)).map(|(.., z)| *z)
+        LIST.iter()
+            .find(|(code, label, _)| t == *code || t == fold(label))
+            .map(|(.., z)| *z)
     }
 
     /// As the audit facts and the rules write it.
@@ -1826,8 +1893,12 @@ pub enum BuildingLayout {
 }
 
 impl BuildingLayout {
-    pub const ALL: [BuildingLayout; 4] =
-        [BuildingLayout::Detached, BuildingLayout::Attached, BuildingLayout::Block, BuildingLayout::Twin];
+    pub const ALL: [BuildingLayout; 4] = [
+        BuildingLayout::Detached,
+        BuildingLayout::Attached,
+        BuildingLayout::Block,
+        BuildingLayout::Twin,
+    ];
 
     /// As the form and a finding name it.
     pub fn label(self) -> &'static str {
@@ -1917,7 +1988,6 @@ impl LocalRules {
     }
 }
 
-
 /// İmar durumu (docs/adr/8030; Planlı Alanlar İmar Yönetmeliği 4 tt, cccc): the parcel's area, m², and the plan's
 /// emsal (KAKS: the floors' area over the parcel's) and TAKS (the footprint over the parcel's), each when the plan
 /// gives it, with where each is read from when that is said (docs/adr/8140; `.kcad` architecture data 27).
@@ -1991,15 +2061,26 @@ impl Zoning {
     pub fn sources_problem(&self) -> Option<(String, String)> {
         for (source, value, path, name) in [
             (&self.far_source, self.far, "zoning.farSource", "Emsalin"),
-            (&self.coverage_source, self.coverage, "zoning.coverageSource", "TAKS'ın"),
+            (
+                &self.coverage_source,
+                self.coverage,
+                "zoning.coverageSource",
+                "TAKS'ın",
+            ),
         ] {
             let Some(source) = source else { continue };
             let why = if value.is_none() {
-                format!("{name} kaynağı yazılmış ama kendisi yok: değeri yazın ya da kaynağı kaldırın.")
+                format!(
+                    "{name} kaynağı yazılmış ama kendisi yok: değeri yazın ya da kaynağı kaldırın."
+                )
             } else if source.trim().is_empty() {
                 format!("{name} kaynağı boş olamaz: bilinmiyorsa yazmayın.")
-            } else if source.chars().count() > MAX_ZONING_SOURCE || source.chars().any(char::is_control) {
-                format!("{name} kaynağı en çok {MAX_ZONING_SOURCE} karakter olur ve satır sonu içermez.")
+            } else if source.chars().count() > MAX_ZONING_SOURCE
+                || source.chars().any(char::is_control)
+            {
+                format!(
+                    "{name} kaynağı en çok {MAX_ZONING_SOURCE} karakter olur ve satır sonu içermez."
+                )
             } else {
                 continue;
             };
@@ -2120,7 +2201,9 @@ fn folded_words(name: Option<&str>, usage: Option<&str>) -> Vec<String> {
 /// Whether a room is a car park by its name or use (docs/adr/8125; IFC 4.3 `IfcSpaceTypeEnum.PARKING`: "a parking spot
 /// for vehicles, including access, such as a parking aisle"): Otopark, Kapalı otopark, Garaj.
 pub fn is_parking(name: Option<&str>, usage: Option<&str>) -> bool {
-    folded_words(name, usage).iter().any(|t| t.contains("OTOPARK") || t.contains("GARAJ"))
+    folded_words(name, usage)
+        .iter()
+        .any(|t| t.contains("OTOPARK") || t.contains("GARAJ"))
 }
 
 /// How a room counts for the floor area ratio by its name and use when its brief does not say (docs/adr/8030): the
@@ -2265,7 +2348,9 @@ impl ArchSettings {
 
     /// Whether its site plan has an edge against the neighbour's building (Mimari data 29, docs/adr/8142).
     pub fn has_party_edges(&self) -> bool {
-        self.site.as_ref().is_some_and(|s| s.edges.iter().any(|e| e.kind == SiteEdgeKind::Party))
+        self.site
+            .as_ref()
+            .is_some_and(|s| s.edges.iter().any(|e| e.kind == SiteEdgeKind::Party))
     }
 
     /// Whether it names a municipality's regulation (KCAD 225, docs/adr/8034).
@@ -2315,28 +2400,43 @@ impl ArchSettings {
 
     /// The Bölge a level's storeys are read by (docs/adr/8144): its building's own, else the project's.
     pub fn zone_on(&self, level: &str) -> Option<Zone> {
-        self.program.building_of_level(level).and_then(|b| b.zone).or(self.zone)
+        self.program
+            .building_of_level(level)
+            .and_then(|b| b.zone)
+            .or(self.zone)
     }
 
     /// The plan notes a level's storeys are read by (docs/adr/8163): its building's own, and the project's on the
     /// measures its building does not note; its building's first, each in its order.
     pub fn plan_notes_on(&self, level: &str) -> Vec<&PlanNote> {
-        let own: &[PlanNote] = self.program.building_of_level(level).map_or(&[], |b| b.plan_notes.as_slice());
+        let own: &[PlanNote] = self
+            .program
+            .building_of_level(level)
+            .map_or(&[], |b| b.plan_notes.as_slice());
         own.iter()
-            .chain(self.plan_notes.iter().filter(|n| own.iter().all(|o| o.key != n.key)))
+            .chain(
+                self.plan_notes
+                    .iter()
+                    .filter(|n| own.iter().all(|o| o.key != n.key)),
+            )
             .collect()
     }
 
     /// The structural system a level's storeys are read by (docs/adr/8145): its building's own, else the project's.
     pub fn structure_on(&self, level: &str) -> Option<BuildingStructure> {
-        self.program.building_of_level(level).and_then(|b| b.structure).or(self.structure)
+        self.program
+            .building_of_level(level)
+            .and_then(|b| b.structure)
+            .or(self.structure)
     }
 
     /// Whether a level's storey is of a traditional cut stone masonry building (docs/adr/8094, 8145): its building's own
     /// declaration, else the project's; a room on no level, the project's.
     pub fn traditional_cut_stone_on(&self, level: Option<&str>) -> bool {
         match level {
-            Some(l) => self.structure_on(l).is_some_and(|s| s.traditional_cut_stone()),
+            Some(l) => self
+                .structure_on(l)
+                .is_some_and(|s| s.traditional_cut_stone()),
             None => self.traditional_cut_stone(),
         }
     }
@@ -2344,7 +2444,11 @@ impl ArchSettings {
     /// Whether any building is traditional cut stone masonry: the project, or a program building of its own.
     pub fn any_traditional_cut_stone(&self) -> bool {
         self.traditional_cut_stone()
-            || self.program.buildings.iter().any(|b| b.structure.is_some_and(|s| s.traditional_cut_stone()))
+            || self
+                .program
+                .buildings
+                .iter()
+                .any(|b| b.structure.is_some_and(|s| s.traditional_cut_stone()))
     }
 
     /// Whether it keeps a delivery record (Mimari data 17, docs/adr/8099).
@@ -2363,14 +2467,23 @@ impl ArchSettings {
     }
 
     /// The element type `key` names: by id, then by name (case aside) among `kind`'s when given.
-    pub fn element_type(&self, key: &str, kind: Option<crate::ElementTypeKind>) -> Option<&crate::ElementType> {
+    pub fn element_type(
+        &self,
+        key: &str,
+        kind: Option<crate::ElementTypeKind>,
+    ) -> Option<&crate::ElementType> {
         let folded = key.trim().to_lowercase();
         let of = |t: &&crate::ElementType| kind.is_none_or(|k| t.kind == k);
         self.element_types
             .iter()
             .filter(of)
             .find(|t| t.id == key)
-            .or_else(|| self.element_types.iter().filter(of).find(|t| t.name.to_lowercase() == folded))
+            .or_else(|| {
+                self.element_types
+                    .iter()
+                    .filter(of)
+                    .find(|t| t.name.to_lowercase() == folded)
+            })
     }
 
     /// Whether it says the building's structural system (Mimari data 15, docs/adr/8094).
@@ -2392,7 +2505,9 @@ impl ArchSettings {
     pub fn material(&self, key: &str) -> Option<&crate::ArchMaterial> {
         self.materials.iter().find(|m| m.id == key).or_else(|| {
             let folded = key.to_lowercase();
-            self.materials.iter().find(|m| m.name.to_lowercase() == folded)
+            self.materials
+                .iter()
+                .find(|m| m.name.to_lowercase() == folded)
         })
     }
 
@@ -2443,18 +2558,22 @@ impl ArchSettings {
     /// The project's module of this id, or else of this name (case aside).
     pub fn module(&self, key: &str) -> Option<&crate::ArchModule> {
         let folded = key.trim().to_lowercase();
-        self.modules
-            .iter()
-            .find(|m| m.id == key)
-            .or_else(|| self.modules.iter().find(|m| m.name.to_lowercase() == folded))
+        self.modules.iter().find(|m| m.id == key).or_else(|| {
+            self.modules
+                .iter()
+                .find(|m| m.name.to_lowercase() == folded)
+        })
     }
 
     /// Whether a type of the project is a revolving, pocket or folding door or has their construction (docs/adr/0777):
     /// only schema 144 knows it.
     pub fn has_special_doors(&self) -> bool {
-        self.opening_types
-            .iter()
-            .any(|t| t.operation.is_special() || t.build.as_ref().is_some_and(crate::OpeningBuild::is_special))
+        self.opening_types.iter().any(|t| {
+            t.operation.is_special()
+                || t.build
+                    .as_ref()
+                    .is_some_and(crate::OpeningBuild::is_special)
+        })
     }
 
     /// Whether a type of the project is a three- or four-leaf sliding door or window or has its tracks (docs/adr/0792):
@@ -2462,7 +2581,9 @@ impl ArchSettings {
     pub fn has_multi_slide(&self) -> bool {
         self.opening_types.iter().any(|t| {
             (t.operation == crate::OpeningOperation::Slide && t.leaves > 2)
-                || t.build.as_ref().is_some_and(crate::OpeningBuild::is_multi_slide)
+                || t.build
+                    .as_ref()
+                    .is_some_and(crate::OpeningBuild::is_multi_slide)
         })
     }
 
@@ -2489,10 +2610,11 @@ impl ArchSettings {
     /// The project's type of this id, or else of this name (case aside).
     pub fn opening_type(&self, key: &str) -> Option<&crate::OpeningType> {
         let folded = key.trim().to_lowercase();
-        self.opening_types
-            .iter()
-            .find(|t| t.id == key)
-            .or_else(|| self.opening_types.iter().find(|t| t.name.to_lowercase() == folded))
+        self.opening_types.iter().find(|t| t.id == key).or_else(|| {
+            self.opening_types
+                .iter()
+                .find(|t| t.name.to_lowercase() == folded)
+        })
     }
 
     /// The detail walls are drawn at in a drawing at 1:`scale`.
@@ -2659,7 +2781,11 @@ impl ArchSettings {
         }
         // Etkin kat and Kat görünümü the drawing opens with (docs/adr/0720 §1): a project's level, Katsız or none.
         if self.levels.is_empty() && self.has_level_state() {
-            let path = if self.active_level.is_some() { "activeLevel" } else { "levelView" };
+            let path = if self.active_level.is_some() {
+                "activeLevel"
+            } else {
+                "levelView"
+            };
             return Some((
                 path.into(),
                 "Katı olmayan projenin etkin katı ve kat görünümü olmaz; önce kat ekleyin.".into(),
@@ -2670,7 +2796,9 @@ impl ArchSettings {
         {
             return Some((
                 "activeLevel".into(),
-                format!("Etkin kat olarak verilen “{id}” kimlikli kat projede yok; var olan bir katın kimliğini verin ya da null (Katsız) yazın."),
+                format!(
+                    "Etkin kat olarak verilen “{id}” kimlikli kat projede yok; var olan bir katın kimliğini verin ya da null (Katsız) yazın."
+                ),
             ));
         }
         None
@@ -2915,23 +3043,46 @@ mod tests {
         let levels = serde_json::json!([{"id":"zemin","name":"Zemin kat","elevation":0.},{"id":"k1","name":"1. kat","elevation":3.}]);
         let read = |extra: serde_json::Value| {
             let mut v = serde_json::json!({ "levels": levels });
-            v.as_object_mut().unwrap().extend(extra.as_object().unwrap().clone());
+            v.as_object_mut()
+                .unwrap()
+                .extend(extra.as_object().unwrap().clone());
             serde_json::from_value::<ArchSettings>(v).unwrap()
         };
         let on = read(serde_json::json!({"activeLevel":"k1","levelView":"below"}));
-        assert_eq!((on.active_level.clone(), on.level_view), (Some(Some("k1".into())), Some(LevelView::Below)));
+        assert_eq!(
+            (on.active_level.clone(), on.level_view),
+            (Some(Some("k1".into())), Some(LevelView::Below))
+        );
         assert!(on.has_level_state() && on.problem().is_none());
         let katsiz = read(serde_json::json!({"activeLevel":null}));
         assert_eq!(katsiz.active_level, Some(None));
-        assert_eq!(serde_json::to_value(&katsiz).unwrap()["activeLevel"], serde_json::Value::Null);
+        assert_eq!(
+            serde_json::to_value(&katsiz).unwrap()["activeLevel"],
+            serde_json::Value::Null
+        );
         assert!(katsiz.problem().is_none());
         let plain = read(serde_json::json!({}));
         assert!(!plain.has_level_state());
-        assert!(serde_json::to_value(&plain).unwrap().get("activeLevel").is_none());
-        assert_eq!(read(serde_json::json!({"activeLevel":"yok"})).problem().unwrap().0, "activeLevel");
-        let bare: ArchSettings = serde_json::from_value(serde_json::json!({"levelView":"active"})).unwrap();
+        assert!(
+            serde_json::to_value(&plain)
+                .unwrap()
+                .get("activeLevel")
+                .is_none()
+        );
+        assert_eq!(
+            read(serde_json::json!({"activeLevel":"yok"}))
+                .problem()
+                .unwrap()
+                .0,
+            "activeLevel"
+        );
+        let bare: ArchSettings =
+            serde_json::from_value(serde_json::json!({"levelView":"active"})).unwrap();
         assert_eq!(bare.problem().unwrap().0, "levelView");
-        assert_eq!(LevelView::ALL.map(LevelView::name), ["all", "active", "below"]);
+        assert_eq!(
+            LevelView::ALL.map(LevelView::name),
+            ["all", "active", "below"]
+        );
     }
 
     #[test]
@@ -3049,10 +3200,18 @@ mod plan_cut_tests {
     /// `planNotes`, absent when there is none.
     #[test]
     fn plan_notes_are_checked_and_written_as_the_parcel_s() {
-        let note = |key, value, source: &str| PlanNote { key, value, source: source.into() };
+        let note = |key, value, source: &str| PlanNote {
+            key,
+            value,
+            source: source.into(),
+        };
         let mut a = ArchSettings {
             plan_notes: vec![
-                note(PlanNoteKey::GroundStoreyHeight, 4.5, "UİP 12.3.2019, plan notu 7"),
+                note(
+                    PlanNoteKey::GroundStoreyHeight,
+                    4.5,
+                    "UİP 12.3.2019, plan notu 7",
+                ),
                 note(PlanNoteKey::StoreyHeight, 3.2, "plan notu 8"),
             ],
             ..Default::default()
@@ -3074,17 +3233,29 @@ mod plan_cut_tests {
         assert_eq!(path(&a).as_deref(), Some("planNotes.1.source"));
         a.plan_notes[1] = note(PlanNoteKey::GroundStoreyHeight, 4.0, "plan notu 9");
         assert_eq!(path(&a).as_deref(), Some("planNotes.1.key"));
-        assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("planNotes"));
+        assert!(
+            !serde_json::to_string(&ArchSettings::default())
+                .unwrap()
+                .contains("planNotes")
+        );
     }
 
     /// A building's own plan notes (docs/adr/8163): a measure it notes takes the place of the project's, the others are
     /// the project's; a storey in no building reads the project's; checked as the project's, said with its name.
     #[test]
     fn a_building_s_own_plan_notes_come_before_the_project_s_on_its_storeys() {
-        let note = |key, value, source: &str| PlanNote { key, value, source: source.into() };
+        let note = |key, value, source: &str| PlanNote {
+            key,
+            value,
+            source: source.into(),
+        };
         let mut a = ArchSettings {
             plan_notes: vec![
-                note(PlanNoteKey::BuildingHeight, 9.5, "UİP 12.3.2019, plan notu 3"),
+                note(
+                    PlanNoteKey::BuildingHeight,
+                    9.5,
+                    "UİP 12.3.2019, plan notu 3",
+                ),
                 note(PlanNoteKey::Storeys, 3.0, "UİP 12.3.2019, plan notu 3"),
             ],
             ..Default::default()
@@ -3100,38 +3271,83 @@ mod plan_cut_tests {
                 ],
                 ..Default::default()
             },
-            crate::ProgramBuilding { id: "b".into(), name: "B Blok".into(), levels: vec!["b0".into()], ..Default::default() },
+            crate::ProgramBuilding {
+                id: "b".into(),
+                name: "B Blok".into(),
+                levels: vec!["b0".into()],
+                ..Default::default()
+            },
         ];
         assert_eq!(a.problem(), None);
         assert!(a.program.has_building_plan_notes());
         let on = |level: &str| -> Vec<(PlanNoteKey, f64)> {
-            a.plan_notes_on(level).into_iter().map(|n| (n.key, n.value)).collect()
+            a.plan_notes_on(level)
+                .into_iter()
+                .map(|n| (n.key, n.value))
+                .collect()
         };
         assert_eq!(
             on("a1"),
-            [(PlanNoteKey::PlinthMost, 2.0), (PlanNoteKey::BuildingHeight, 12.5), (PlanNoteKey::Storeys, 3.0)]
+            [
+                (PlanNoteKey::PlinthMost, 2.0),
+                (PlanNoteKey::BuildingHeight, 12.5),
+                (PlanNoteKey::Storeys, 3.0)
+            ]
         );
-        assert_eq!(on("b0"), [(PlanNoteKey::BuildingHeight, 9.5), (PlanNoteKey::Storeys, 3.0)]);
-        assert_eq!(on("yok"), on("b0"), "a storey in no building reads the project's");
+        assert_eq!(
+            on("b0"),
+            [
+                (PlanNoteKey::BuildingHeight, 9.5),
+                (PlanNoteKey::Storeys, 3.0)
+            ]
+        );
+        assert_eq!(
+            on("yok"),
+            on("b0"),
+            "a storey in no building reads the project's"
+        );
         let json = serde_json::to_value(&a.program.buildings[0]).unwrap();
-        assert_eq!(json["planNotes"][1], serde_json::json!({"key": "buildingHeight", "value": 12.5, "source": "kademe hattı A alanı"}));
-        assert!(serde_json::to_value(&a.program.buildings[1]).unwrap().get("planNotes").is_none());
+        assert_eq!(
+            json["planNotes"][1],
+            serde_json::json!({"key": "buildingHeight", "value": 12.5, "source": "kademe hattı A alanı"})
+        );
+        assert!(
+            serde_json::to_value(&a.program.buildings[1])
+                .unwrap()
+                .get("planNotes")
+                .is_none()
+        );
         let mut b = a.clone();
         b.program.buildings[0].plan_notes[0].key = PlanNoteKey::BuildingHeight;
         let (path, why) = b.problem().expect("one note a measure");
         assert_eq!(path, "program.buildings[0].planNotes.1.key");
-        assert!(why.starts_with("“A Blok” binasının plan notları: “Bina yüksekliği (en çok)” için iki plan notu var"), "{why}");
+        assert!(
+            why.starts_with(
+                "“A Blok” binasının plan notları: “Bina yüksekliği (en çok)” için iki plan notu var"
+            ),
+            "{why}"
+        );
         a.program.buildings[0].plan_notes[0].value = 11.0;
-        assert_eq!(a.problem().map(|(p, _)| p).as_deref(), Some("program.buildings[0].planNotes.0.value"));
+        assert_eq!(
+            a.problem().map(|(p, _)| p).as_deref(),
+            Some("program.buildings[0].planNotes.0.value")
+        );
     }
 
     /// The plan's building height and storey count (docs/adr/8098): a height up to 1000 m, a whole number of storeys from
     /// 1 to 200; written by their names.
     #[test]
     fn the_plan_s_building_height_and_storey_count_are_notes_of_their_own() {
-        let note = |key, value| PlanNote { key, value, source: "UİP 12.3.2019, plan notu 3".into() };
+        let note = |key, value| PlanNote {
+            key,
+            value,
+            source: "UİP 12.3.2019, plan notu 3".into(),
+        };
         let mut a = ArchSettings {
-            plan_notes: vec![note(PlanNoteKey::BuildingHeight, 9.5), note(PlanNoteKey::Storeys, 3.0)],
+            plan_notes: vec![
+                note(PlanNoteKey::BuildingHeight, 9.5),
+                note(PlanNoteKey::Storeys, 3.0),
+            ],
             ..Default::default()
         };
         assert_eq!(a.problem(), None);
@@ -3142,7 +3358,11 @@ mod plan_cut_tests {
         assert_eq!(serde_json::from_value::<ArchSettings>(json).unwrap(), a);
         let path = |a: &ArchSettings| a.problem().map(|(p, _)| p);
         a.plan_notes[1].value = 2.5;
-        assert_eq!(path(&a).as_deref(), Some("planNotes.1.value"), "a storey count is a whole number");
+        assert_eq!(
+            path(&a).as_deref(),
+            Some("planNotes.1.value"),
+            "a storey count is a whole number"
+        );
         a.plan_notes[1].value = 201.0;
         assert_eq!(path(&a).as_deref(), Some("planNotes.1.value"));
         a.plan_notes[1].value = 3.0;
@@ -3150,22 +3370,40 @@ mod plan_cut_tests {
         assert_eq!(path(&a), None, "a building is higher than a storey");
         a.plan_notes[0].value = 1001.0;
         assert_eq!(path(&a).as_deref(), Some("planNotes.0.value"));
-        assert!(!ArchSettings { plan_notes: vec![note(PlanNoteKey::StoreyHeight, 3.0)], ..Default::default() }
-            .has_plan_limits());
-        assert_eq!((PlanNoteKey::Storeys.unit(), PlanNoteKey::BuildingHeight.unit()), ("kat", "m"));
+        assert!(
+            !ArchSettings {
+                plan_notes: vec![note(PlanNoteKey::StoreyHeight, 3.0)],
+                ..Default::default()
+            }
+            .has_plan_limits()
+        );
+        assert_eq!(
+            (
+                PlanNoteKey::Storeys.unit(),
+                PlanNoteKey::BuildingHeight.unit()
+            ),
+            ("kat", "m")
+        );
     }
 
     /// Bölge (docs/adr/8085): written by its name, absent when not said; the facts' names are the same.
     #[test]
     fn the_zone_is_written_by_its_name() {
-        let a = ArchSettings { zone: Some(Zone::ResidentialShops), ..Default::default() };
+        let a = ArchSettings {
+            zone: Some(Zone::ResidentialShops),
+            ..Default::default()
+        };
         let json = serde_json::to_value(&a).unwrap();
         assert_eq!(json["zone"], "residentialShops");
         assert_eq!(serde_json::from_value::<ArchSettings>(json).unwrap(), a);
         for z in Zone::ALL {
             assert_eq!(serde_json::to_value(z).unwrap(), z.name());
         }
-        assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("zone"));
+        assert!(
+            !serde_json::to_string(&ArchSettings::default())
+                .unwrap()
+                .contains("zone")
+        );
     }
 
     /// Bölge from a plan decision's Kullanım (docs/adr/8143): the profile's codes and labels, nothing else.
@@ -3173,28 +3411,60 @@ mod plan_cut_tests {
     fn the_zone_is_read_from_the_plan_s_uses() {
         let read = |t: &str| Zone::from_plan(t);
         assert_eq!(
-            (read("konut"), read(" Ticaret "), read("ticaret-konut"), read("TİCARET + KONUT ALANI"), read("egitim")),
-            (Some(Zone::Residential), Some(Zone::Commercial), Some(Zone::Mixed), Some(Zone::Mixed), Some(Zone::Other))
+            (
+                read("konut"),
+                read(" Ticaret "),
+                read("ticaret-konut"),
+                read("TİCARET + KONUT ALANI"),
+                read("egitim")
+            ),
+            (
+                Some(Zone::Residential),
+                Some(Zone::Commercial),
+                Some(Zone::Mixed),
+                Some(Zone::Mixed),
+                Some(Zone::Other)
+            )
         );
-        assert_eq!((read("Konut alanı"), read("Park")), (Some(Zone::Residential), Some(Zone::Other)));
-        assert_eq!((read("konut+ticaret"), read("ticari"), read("")), (None, None, None));
+        assert_eq!(
+            (read("Konut alanı"), read("Park")),
+            (Some(Zone::Residential), Some(Zone::Other))
+        );
+        assert_eq!(
+            (read("konut+ticaret"), read("ticari"), read("")),
+            (None, None, None)
+        );
     }
 
     /// Yapı nizamı (docs/adr/8141): written by its name, absent when not said; read from a plan decision's code or label
     /// only.
     #[test]
     fn the_layout_is_written_by_its_name_and_read_from_the_plan_s_codes() {
-        let a = ArchSettings { layout: Some(BuildingLayout::Twin), ..Default::default() };
+        let a = ArchSettings {
+            layout: Some(BuildingLayout::Twin),
+            ..Default::default()
+        };
         let json = serde_json::to_value(&a).unwrap();
         assert_eq!(json["layout"], "twin");
         assert_eq!(serde_json::from_value::<ArchSettings>(json).unwrap(), a);
         for l in BuildingLayout::ALL {
             assert_eq!(serde_json::to_value(l).unwrap(), l.name());
         }
-        assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("layout"));
+        assert!(
+            !serde_json::to_string(&ArchSettings::default())
+                .unwrap()
+                .contains("layout")
+        );
         let read = |t: &str| BuildingLayout::from_plan(t);
         assert_eq!(
-            (read("A"), read(" bl "), read("I"), read("b"), read("BİTİŞİK"), read("İKİZ")),
+            (
+                read("A"),
+                read(" bl "),
+                read("I"),
+                read("b"),
+                read("BİTİŞİK"),
+                read("İKİZ")
+            ),
             (
                 Some(BuildingLayout::Detached),
                 Some(BuildingLayout::Block),
@@ -3204,31 +3474,71 @@ mod plan_cut_tests {
                 Some(BuildingLayout::Twin)
             )
         );
-        assert_eq!((read("AYRIK"), read("Blok")), (Some(BuildingLayout::Detached), Some(BuildingLayout::Block)));
-        assert_eq!((read("A-3"), read("ayrık nizam"), read("")), (None, None, None));
+        assert_eq!(
+            (read("AYRIK"), read("Blok")),
+            (Some(BuildingLayout::Detached), Some(BuildingLayout::Block))
+        );
+        assert_eq!(
+            (read("A-3"), read("ayrık nizam"), read("")),
+            (None, None, None)
+        );
     }
 
     /// Taşıyıcı sistem (docs/adr/8094): written by its name, traditional only when said and only of cut stone masonry.
     #[test]
     fn the_structure_is_written_by_its_names() {
-        let stone = BuildingStructure { system: StructuralSystem::CutStoneMasonry, traditional: true };
-        let a = ArchSettings { structure: Some(stone), ..Default::default() };
+        let stone = BuildingStructure {
+            system: StructuralSystem::CutStoneMasonry,
+            traditional: true,
+        };
+        let a = ArchSettings {
+            structure: Some(stone),
+            ..Default::default()
+        };
         let json = serde_json::to_value(&a).unwrap();
-        assert_eq!(json["structure"], serde_json::json!({"system": "cutStoneMasonry", "traditional": true}));
+        assert_eq!(
+            json["structure"],
+            serde_json::json!({"system": "cutStoneMasonry", "traditional": true})
+        );
         assert_eq!(serde_json::from_value::<ArchSettings>(json).unwrap(), a);
         assert!(a.traditional_cut_stone() && a.problem().is_none());
         for s in StructuralSystem::ALL {
             assert_eq!(serde_json::to_value(s).unwrap(), s.name());
         }
-        let plain = BuildingStructure { system: StructuralSystem::CutStoneMasonry, traditional: false };
-        assert_eq!(serde_json::to_value(plain).unwrap(), serde_json::json!({"system": "cutStoneMasonry"}));
-        assert!(!ArchSettings { structure: Some(plain), ..Default::default() }.traditional_cut_stone());
+        let plain = BuildingStructure {
+            system: StructuralSystem::CutStoneMasonry,
+            traditional: false,
+        };
+        assert_eq!(
+            serde_json::to_value(plain).unwrap(),
+            serde_json::json!({"system": "cutStoneMasonry"})
+        );
+        assert!(
+            !ArchSettings {
+                structure: Some(plain),
+                ..Default::default()
+            }
+            .traditional_cut_stone()
+        );
         let wrong = ArchSettings {
-            structure: Some(BuildingStructure { system: StructuralSystem::ReinforcedConcrete, traditional: true }),
+            structure: Some(BuildingStructure {
+                system: StructuralSystem::ReinforcedConcrete,
+                traditional: true,
+            }),
             ..Default::default()
         };
-        assert_eq!(wrong.problem().map(|p| p.0).as_deref(), Some("structure.traditional"));
-        assert!(serde_json::from_value::<BuildingStructure>(serde_json::json!({"system": "stone"})).is_err());
-        assert!(!serde_json::to_string(&ArchSettings::default()).unwrap().contains("structure"));
+        assert_eq!(
+            wrong.problem().map(|p| p.0).as_deref(),
+            Some("structure.traditional")
+        );
+        assert!(
+            serde_json::from_value::<BuildingStructure>(serde_json::json!({"system": "stone"}))
+                .is_err()
+        );
+        assert!(
+            !serde_json::to_string(&ArchSettings::default())
+                .unwrap()
+                .contains("structure")
+        );
     }
 }

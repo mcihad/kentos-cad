@@ -663,7 +663,9 @@ pub fn base_text(mut rows: Vec<BaseRow>) -> String {
 }
 
 fn hex64(s: &str) -> bool {
-    s.len() == 64 && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    s.len() == 64
+        && s.bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
 /// What is wrong with the project's bases, if anything: each of a link the project has, at most one a link, its
@@ -679,7 +681,9 @@ pub fn bases_problem(bases: &[SourceBase], sources: &[SourceLink]) -> Option<Str
             return Some(format!("{at}: “{}” bağının ikinci tabanı", b.source));
         }
         if !hex64(&b.revision) || !hex64(&b.digest) {
-            return Some(format!("{at}: sürümü ya da özeti 64 küçük onaltılı hane değil"));
+            return Some(format!(
+                "{at}: sürümü ya da özeti 64 küçük onaltılı hane değil"
+            ));
         }
         let Some(rows) = base_rows(&b.rows) else {
             return Some(format!(

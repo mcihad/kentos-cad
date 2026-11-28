@@ -114,14 +114,23 @@ fn colour_picker_metadata_survives_a_tool_parameter_becoming_a_shared_model_inpu
     let tool = registry.tool("selection.byExpression").unwrap();
     let mut model = edit::new_model("color-query".into());
     let step = edit::add_step(&mut model, &tool.id, &|id| registry.tool(id), None, None);
-    for (name, inheritance) in [("assignedColor",true),("displayedColor",false)] {
+    for (name, inheritance) in [("assignedColor", true), ("displayedColor", false)] {
         let p = tool.parameters.iter().find(|p| p.name == name).unwrap();
-        assert_eq!(p.color_picker,Some(inheritance));
-        let input = edit::input_from_param(&mut model,&step,p,&defaults(&fixture())).unwrap();
+        assert_eq!(p.color_picker, Some(inheritance));
+        let input = edit::input_from_param(&mut model, &step, p, &defaults(&fixture())).unwrap();
         let saved = Model::from_text(&serde_json::to_string(&model).unwrap()).unwrap();
-        let read = saved.inputs.iter().find(|p| p.name() == input).unwrap().def().unwrap();
-        assert_eq!(read.color_picker,Some(inheritance));
-        assert!(matches!(read.kind,kentos_processing::ParamKind::Text {..}));
+        let read = saved
+            .inputs
+            .iter()
+            .find(|p| p.name() == input)
+            .unwrap()
+            .def()
+            .unwrap();
+        assert_eq!(read.color_picker, Some(inheritance));
+        assert!(matches!(
+            read.kind,
+            kentos_processing::ParamKind::Text { .. }
+        ));
     }
 }
 

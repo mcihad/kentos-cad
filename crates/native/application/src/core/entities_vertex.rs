@@ -424,7 +424,11 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
         && t.stop_on_locked
         && n.locked > 0
     {
-        return Err(refuse(codes::SHARED_BOUNDARY_LOCKED, crate::stretch::shared_locked(n.locked), "topology"));
+        return Err(refuse(
+            codes::SHARED_BOUNDARY_LOCKED,
+            crate::stretch::shared_locked(n.locked),
+            "topology",
+        ));
     }
     let geometry = edit_geometry(edited).ok_or_else(no_place)?;
     let mut changes = vec![EntityEdit::Update {
@@ -468,11 +472,17 @@ fn check(doc: &Document, store: Option<&Store>, input: &EntitiesVertex) -> Resul
     // topological neighbour. Reuse the edit's role policy before advertising a valid edit.
     for change in &changes {
         if let EntityEdit::Update { uid, geometry } = change
-            && let Some(source) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s))
+            && let Some(source) = Uuid::parse_str(uid)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s))
             && kentos_domain::space_follow::separator_path(source).is_some()
         {
-            crate::geometry::carry_space_separator(source, crate::geometry::entity_of(geometry, source.base().clone()))
-                .map_err(|why| refuse(codes::INVALID_POLYLINE, why, "uid"))?;
+            crate::geometry::carry_space_separator(
+                source,
+                crate::geometry::entity_of(geometry, source.base().clone()),
+            )
+            .map_err(|why| refuse(codes::INVALID_POLYLINE, why, "uid"))?;
         }
     }
     Ok(Checked {

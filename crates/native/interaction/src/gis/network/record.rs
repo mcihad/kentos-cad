@@ -66,25 +66,45 @@ pub fn places(values: &BTreeMap<String, Value>, key: &str) -> Vec<Vec2> {
 
 /// What every network analysis keeps: the network, the cost (none for Şebeke izleme), the stops and barriers, and the
 /// time, vehicle and day it asked at.
-pub fn common_values(n: &NetworkDef, cost: Option<usize>, base: &Base, cx: &Context<'_>) -> BTreeMap<String, Value> {
+pub fn common_values(
+    n: &NetworkDef,
+    cost: Option<usize>,
+    base: &Base,
+    cx: &Context<'_>,
+) -> BTreeMap<String, Value> {
     let m = &cx.memory;
     let mut out = BTreeMap::from([
         ("network".to_owned(), json!(n.id)),
-        ("stops".to_owned(), Value::Array(base.stops().into_iter().map(place).collect())),
-        ("barriers".to_owned(), Value::Array(base.barriers().into_iter().map(place).collect())),
+        (
+            "stops".to_owned(),
+            Value::Array(base.stops().into_iter().map(place).collect()),
+        ),
+        (
+            "barriers".to_owned(),
+            Value::Array(base.barriers().into_iter().map(place).collect()),
+        ),
         ("time".to_owned(), json!(m.network_time)),
         ("profile".to_owned(), json!(m.network_profile.as_str())),
         ("day".to_owned(), json!(m.network_day)),
     ]);
     if let Some(c) = cost {
-        out.insert("cost".to_owned(), json!(n.cost_names().get(c).copied().unwrap_or("Uzunluk")));
+        out.insert(
+            "cost".to_owned(),
+            json!(n.cost_names().get(c).copied().unwrap_or("Uzunluk")),
+        );
     }
     out
 }
 
 /// The network, its cost with its unit (none for Şebeke izleme), the stops (as the tool calls them) and the barriers,
 /// in words.
-pub fn common_words(n: &NetworkDef, cost: Option<usize>, stops: &str, base: &Base, f: &Format) -> Vec<String> {
+pub fn common_words(
+    n: &NetworkDef,
+    cost: Option<usize>,
+    stops: &str,
+    base: &Base,
+    f: &Format,
+) -> Vec<String> {
     let mut out = vec![format!("Ağ: {} ({})", n.name, n.id)];
     if let Some(c) = cost {
         let names = Base::cost_names(n);
@@ -115,7 +135,12 @@ pub fn layer_words(what: &str, name: &str, opened: &[&str]) -> String {
 /// The network's line and junction layers, each once: what an analysis reads.
 fn read_layers(n: &NetworkDef) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
-    for id in n.edges.iter().map(|e| &e.layer).chain(n.junctions.iter().map(|j| &j.layer)) {
+    for id in n
+        .edges
+        .iter()
+        .map(|e| &e.layer)
+        .chain(n.junctions.iter().map(|j| &j.layer))
+    {
         if !out.contains(id) {
             out.push(id.clone());
         }
@@ -133,7 +158,14 @@ pub fn records_in(n: &NetworkDef, cx: &Context<'_>) -> u64 {
 
 /// The derivation a layer an analysis opens carries (docs/adr/0633 §2): the tool, its values, the network's layers
 /// with their content digests now (before it writes), the drawing's revision, the engine and when it ran.
-pub fn derivation(tool: &str, label: &str, values: &BTreeMap<String, Value>, n: &NetworkDef, started: u64, cx: &Context<'_>) -> LayerDerivation {
+pub fn derivation(
+    tool: &str,
+    label: &str,
+    values: &BTreeMap<String, Value>,
+    n: &NetworkDef,
+    started: u64,
+    cx: &Context<'_>,
+) -> LayerDerivation {
     let doc = &*cx.doc;
     let inputs = read_layers(n)
         .into_iter()
@@ -169,7 +201,10 @@ pub fn derivation(tool: &str, label: &str, values: &BTreeMap<String, Value>, n: 
 
 /// Yeniden aç's common part: the network, the cost, the time, vehicle and day put back in the tools' memory; the
 /// stops and barriers to place again, in their order (barriers first, so that the stops' answers see them).
-pub fn reopen_common(values: &BTreeMap<String, Value>, cx: &mut Context<'_>) -> Vec<(PointKind, Vec2)> {
+pub fn reopen_common(
+    values: &BTreeMap<String, Value>,
+    cx: &mut Context<'_>,
+) -> Vec<(PointKind, Vec2)> {
     let text = |key: &str| values.get(key).and_then(Value::as_str).and_then(Name::new);
     let m = &mut cx.memory;
     if let Some(n) = text("network") {
@@ -178,7 +213,10 @@ pub fn reopen_common(values: &BTreeMap<String, Value>, cx: &mut Context<'_>) -> 
     if let Some(c) = text("cost") {
         m.network_cost = c;
     }
-    m.network_time = values.get("time").and_then(Value::as_u64).and_then(|t| u32::try_from(t).ok());
+    m.network_time = values
+        .get("time")
+        .and_then(Value::as_u64)
+        .and_then(|t| u32::try_from(t).ok());
     if let Some(p) = text("profile") {
         m.network_profile = p;
     }
@@ -186,6 +224,10 @@ pub fn reopen_common(values: &BTreeMap<String, Value>, cx: &mut Context<'_>) -> 
     places(values, "barriers")
         .into_iter()
         .map(|p| (PointKind::Barrier, p))
-        .chain(places(values, "stops").into_iter().map(|p| (PointKind::Stop, p)))
+        .chain(
+            places(values, "stops")
+                .into_iter()
+                .map(|p| (PointKind::Stop, p)),
+        )
         .collect()
 }

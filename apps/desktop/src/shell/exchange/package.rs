@@ -12,7 +12,10 @@ use std::path::PathBuf;
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_commands::{CommandWarning, ExchangeFormat, ExchangeMatrix, PackageProject, PackageWay, ProjectPackaged, SourceKind};
+use kentos_commands::{
+    CommandWarning, ExchangeFormat, ExchangeMatrix, PackageProject, PackageWay, ProjectPackaged,
+    SourceKind,
+};
 use kentos_interaction::Level;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::{Dialog, overlay};
@@ -129,7 +132,8 @@ impl App {
 
     /// The plan's lists asked off the interface's thread: a folder that is not there stands for the package's.
     fn package_preview(&mut self) -> Task<Message> {
-        let place = std::env::temp_dir().join(format!("kentos-paket-onizleme-{}", std::process::id()));
+        let place =
+            std::env::temp_dir().join(format!("kentos-paket-onizleme-{}", std::process::id()));
         let (Some(doc), Some(mut input)) = (&self.document, self.package_input(&place)) else {
             return Task::none();
         };
@@ -138,7 +142,9 @@ impl App {
         let model = doc.model.clone();
         off_thread(
             move || {
-                kentos_headless::package::plan_reading(&model, &input, false).map(|p| preview_of(&p.output)).map_err(|e| e.message)
+                kentos_headless::package::plan_reading(&model, &input, false)
+                    .map(|p| preview_of(&p.output))
+                    .map_err(|e| e.message)
             },
             |r| Exchange::Package(Event::Previewed(r)),
         )
@@ -188,8 +194,14 @@ impl App {
                 .collect();
             // The open formats, in the matrix's order (docs/adr/2780).
             if !s.formats.is_empty() {
-                let formats = ExchangeFormat::ALL.into_iter().filter(|f| s.formats.contains(f)).collect();
-                input.exchange = Some(ExchangeMatrix { formats, ..Default::default() });
+                let formats = ExchangeFormat::ALL
+                    .into_iter()
+                    .filter(|f| s.formats.contains(f))
+                    .collect();
+                input.exchange = Some(ExchangeMatrix {
+                    formats,
+                    ..Default::default()
+                });
             }
         }
         Some(input)
@@ -328,7 +340,13 @@ impl App {
                 let missing: Vec<&kentos_commands::PackageLeft> = out
                     .left
                     .iter()
-                    .filter(|l| matches!(l.why, kentos_commands::LeftWhy::Missing | kentos_commands::LeftWhy::Unreadable))
+                    .filter(|l| {
+                        matches!(
+                            l.why,
+                            kentos_commands::LeftWhy::Missing
+                                | kentos_commands::LeftWhy::Unreadable
+                        )
+                    })
                     .collect();
                 let whole = if missing.is_empty() {
                     " Klasör başka bilgisayarda açılınca dış başvurular, bağlı dosyalar ve katmanlar kaynaklarını bulur.".to_owned()
@@ -347,7 +365,11 @@ impl App {
                     ),
                 );
                 for l in &missing {
-                    let why = if l.why == kentos_commands::LeftWhy::Missing { "bulunamadı" } else { "okunamadı" };
+                    let why = if l.why == kentos_commands::LeftWhy::Missing {
+                        "bulunamadı"
+                    } else {
+                        "okunamadı"
+                    };
                     let who = self.package_holder(&l.at);
                     self.say(
                         Level::Warn,
@@ -372,12 +394,27 @@ impl App {
     /// What keeps a link left out, as the user knows it (GIS-046): “ (“P-5” nesnesinde, Parsel katmanı)” for an object
     /// by its lasting id, the reference otherwise; empty when it is not found.
     fn package_holder(&self, at: &str) -> String {
-        let Some(doc) = &self.document else { return String::new() };
-        let object = kentos_domain::Uuid::parse_str(at).ok().and_then(|u| doc.model.slot_of(u)).and_then(|s| doc.model.get(s));
+        let Some(doc) = &self.document else {
+            return String::new();
+        };
+        let object = kentos_domain::Uuid::parse_str(at)
+            .ok()
+            .and_then(|u| doc.model.slot_of(u))
+            .and_then(|s| doc.model.get(s));
         match object {
             Some(e) => {
-                let label = e.base().label.as_deref().map(str::trim).filter(|l| !l.is_empty());
-                let layer = doc.model.layers().get(&e.base().layer_id).map(|l| l.name.clone()).unwrap_or_default();
+                let label = e
+                    .base()
+                    .label
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|l| !l.is_empty());
+                let layer = doc
+                    .model
+                    .layers()
+                    .get(&e.base().layer_id)
+                    .map(|l| l.name.clone())
+                    .unwrap_or_default();
                 match label {
                     Some(l) => format!(" (“{l}” nesnesinde, {layer} katmanı)"),
                     None => format!(" ({layer} katmanındaki bir nesnede)"),
@@ -454,8 +491,12 @@ impl App {
             let mut line = iced::widget::Row::new().spacing(16);
             for &f in three {
                 line = line.push(
-                    iced::widget::container(words::check(s.formats.contains(&f), f.title(), Some(event(Event::Format(f)))))
-                        .width(kentos_ui::theme::typography::scaled(120.0)),
+                    iced::widget::container(words::check(
+                        s.formats.contains(&f),
+                        f.title(),
+                        Some(event(Event::Format(f))),
+                    ))
+                    .width(kentos_ui::theme::typography::scaled(120.0)),
                 );
             }
             formats = formats.push(line);
@@ -490,8 +531,17 @@ impl App {
                 0 => "Devir dosyası yok: proje dosyası ve kullandığı dosyalar.".to_owned(),
                 n => format!(
                     "{n} biçimde devir dosyası: {}.{}",
-                    ExchangeFormat::ALL.into_iter().filter(|f| s.formats.contains(f)).map(|f| f.title()).collect::<Vec<_>>().join(", "),
-                    if s.links.is_empty() { "" } else { " Dışarıda bırakılan katmanın nesneleri bunlara da girmez." }
+                    ExchangeFormat::ALL
+                        .into_iter()
+                        .filter(|f| s.formats.contains(f))
+                        .map(|f| f.title())
+                        .collect::<Vec<_>>()
+                        .join(", "),
+                    if s.links.is_empty() {
+                        ""
+                    } else {
+                        " Dışarıda bırakılan katmanın nesneleri bunlara da girmez."
+                    }
                 ),
             },
         ));
@@ -545,8 +595,16 @@ fn preview_of(out: &ProjectPackaged) -> Preview {
         kentos_commands::LeftWhy::Excluded => "dışarıda bırakıldı",
     };
     Preview {
-        files: out.files.iter().map(|f| (f.path.clone(), format!("{} · {}", kind(f.kind), f.from))).collect(),
-        left: out.left.iter().map(|l| (l.path.clone(), why(l.why).to_owned())).collect(),
+        files: out
+            .files
+            .iter()
+            .map(|f| (f.path.clone(), format!("{} · {}", kind(f.kind), f.from)))
+            .collect(),
+        left: out
+            .left
+            .iter()
+            .map(|l| (l.path.clone(), why(l.why).to_owned()))
+            .collect(),
     }
 }
 
@@ -556,26 +614,48 @@ fn package_preview_view(s: &State) -> Option<Element<'_, Message>> {
     const SHOWN: usize = 10;
     let mut lines = Vec::new();
     match s.preview.as_ref()? {
-        Err(why) => lines.push(words::text_line(Line::Warn, format!("Önizleme yapılamadı: {why}"))),
+        Err(why) => lines.push(words::text_line(
+            Line::Warn,
+            format!("Önizleme yapılamadı: {why}"),
+        )),
         Ok(p) => {
             if p.files.is_empty() && p.left.is_empty() {
-                lines.push(words::text_line(Line::Info, "Pakette yalnız proje dosyası olur: bağlı dosyası yok."));
+                lines.push(words::text_line(
+                    Line::Info,
+                    "Pakette yalnız proje dosyası olur: bağlı dosyası yok.",
+                ));
             }
             for (path, from) in p.files.iter().take(SHOWN) {
                 lines.push(words::text_line(Line::Ok, format!("{path} ← {from}")));
             }
             if p.files.len() > SHOWN {
-                lines.push(words::text_line(Line::Info, format!("… {} dosya daha kopyalanır.", p.files.len() - SHOWN)));
+                lines.push(words::text_line(
+                    Line::Info,
+                    format!("… {} dosya daha kopyalanır.", p.files.len() - SHOWN),
+                ));
             }
             for (path, why) in p.left.iter().take(SHOWN) {
-                lines.push(words::text_line(Line::Warn, format!("{path}: {why}, pakete kopyalanmaz.")));
+                lines.push(words::text_line(
+                    Line::Warn,
+                    format!("{path}: {why}, pakete kopyalanmaz."),
+                ));
             }
             if p.left.len() > SHOWN {
-                lines.push(words::text_line(Line::Info, format!("… {} bağ daha olduğu gibi kalır.", p.left.len() - SHOWN)));
+                lines.push(words::text_line(
+                    Line::Info,
+                    format!("… {} bağ daha olduğu gibi kalır.", p.left.len() - SHOWN),
+                ));
             }
         }
     }
-    Some(words::field("Pakete girecekler", words::summary(lines), Some("Veritabanı tabloları ve devir dosyaları paketlenirken yazılır; burada sayılmaz.".to_owned())))
+    Some(words::field(
+        "Pakete girecekler",
+        words::summary(lines),
+        Some(
+            "Veritabanı tabloları ve devir dosyaları paketlenirken yazılır; burada sayılmaz."
+                .to_owned(),
+        ),
+    ))
 }
 
 /// A data layer of the drawing as Paketle lists it.
@@ -604,10 +684,17 @@ impl App {
                     d.table.clone()
                 } else {
                     let file = d.address.strip_prefix("gpkg:").unwrap_or(&d.address);
-                    let name = std::path::Path::new(file).file_name().map_or_else(|| file.to_owned(), |n| n.to_string_lossy().into_owned());
+                    let name = std::path::Path::new(file)
+                        .file_name()
+                        .map_or_else(|| file.to_owned(), |n| n.to_string_lossy().into_owned());
                     format!("{name}, {}", d.table)
                 };
-                Some(DataLayerRow { id: l.id.clone(), name: l.name.clone(), place, database })
+                Some(DataLayerRow {
+                    id: l.id.clone(),
+                    name: l.name.clone(),
+                    place,
+                    database,
+                })
             })
             .collect()
     }
@@ -618,28 +705,50 @@ impl App {
         let Some(Window::Package(s)) = &self.exchange else {
             return Vec::new();
         };
-        self.package_data_layers().iter().map(|d| self.package_rows(s, &d.id).ok().flatten()).collect()
+        self.package_data_layers()
+            .iter()
+            .map(|d| self.package_rows(s, &d.id).ok().flatten())
+            .collect()
     }
 
     /// The service layers' names.
     fn package_services(&self) -> Vec<String> {
         self.document.as_ref().map_or_else(Vec::new, |doc| {
-            doc.model.layers().leaves().into_iter().filter(|l| l.service.is_some()).map(|l| l.name.clone()).collect()
+            doc.model
+                .layers()
+                .leaves()
+                .into_iter()
+                .filter(|l| l.service.is_some())
+                .map(|l| l.name.clone())
+                .collect()
         })
     }
 
     /// A data layer's rows: those read from the source the drawing does not hold, and its own; none while read, why
     /// when they cannot be.
     fn package_rows(&self, s: &State, id: &str) -> Result<Option<usize>, String> {
-        let held = self.document.as_ref().map_or(0, |d| d.model.by_layer(id).count());
-        match s.sources.layers.iter().find(|l| l.id == id).map(|l| &l.rows) {
+        let held = self
+            .document
+            .as_ref()
+            .map_or(0, |d| d.model.by_layer(id).count());
+        match s
+            .sources
+            .layers
+            .iter()
+            .find(|l| l.id == id)
+            .map(|l| &l.rows)
+        {
             Some(Rows::Ready { rows, .. }) => Ok(Some(rows.len() + held)),
             Some(Rows::Failed(why)) => Err(why.clone()),
             _ => Ok(None),
         }
     }
 
-    fn package_data_list<'a>(&'a self, s: &'a State, data: &[DataLayerRow]) -> Element<'a, Message> {
+    fn package_data_list<'a>(
+        &'a self,
+        s: &'a State,
+        data: &[DataLayerRow],
+    ) -> Element<'a, Message> {
         let mut list = Column::new().spacing(4);
         for d in data {
             let rows = match self.package_rows(s, &d.id) {
@@ -647,15 +756,32 @@ impl App {
                 Ok(None) => "satırlar sayılıyor…".to_owned(),
                 Err(_) => "kaynak okunamadı".to_owned(),
             };
-            let way = match (d.database, if d.database { s.databases } else { s.geopackages }) {
+            let way = match (
+                d.database,
+                if d.database {
+                    s.databases
+                } else {
+                    s.geopackages
+                },
+            ) {
                 (false, PackageWay::Keep) => "bağlı kalır, dosya kopyalanmaz".to_owned(),
                 (false, _) => "dosyası veri/ altına kopyalanır".to_owned(),
-                (true, PackageWay::Copy) => "tablosu GeoPackage olarak veri/ altına kopyalanır".to_owned(),
+                (true, PackageWay::Copy) => {
+                    "tablosu GeoPackage olarak veri/ altına kopyalanır".to_owned()
+                }
                 (true, _) => "veritabanına bağlı kalır, parola girmez".to_owned(),
             };
-            let kind = if d.database { "veritabanı" } else { "GeoPackage" };
+            let kind = if d.database {
+                "veritabanı"
+            } else {
+                "GeoPackage"
+            };
             list = list.push(words::text_line(
-                if rows == "kaynak okunamadı" { Line::Error } else { Line::Info },
+                if rows == "kaynak okunamadı" {
+                    Line::Error
+                } else {
+                    Line::Info
+                },
                 format!("{}: {} ({kind}) · {rows} · {way}", d.name, d.place),
             ));
         }
@@ -680,7 +806,10 @@ impl App {
         let mut lines = Vec::new();
         if !counted.is_empty() {
             let total: usize = counted.iter().map(|(_, n)| n).sum();
-            let each: Vec<String> = counted.iter().map(|(name, n)| format!("{name} {n}")).collect();
+            let each: Vec<String> = counted
+                .iter()
+                .map(|(name, n)| format!("{name} {n}"))
+                .collect();
             lines.push(words::text_line(
                 Line::Ok,
                 format!("Devir dosyaları kaynak tablolardan {total} satırı kapsar: {}. Satırlar paketlenirken kaynaktan okunur; katmanlar devir dosyalarında bağsız, kendi satırlarıyla durur.", each.join(", ")),
@@ -689,7 +818,10 @@ impl App {
         if !reading.is_empty() {
             lines.push(words::text_line(
                 Line::Info,
-                format!("Kaynaktan sayılıyor: {}. Klasör seç sayım bitince açılır.", reading.join(", ")),
+                format!(
+                    "Kaynaktan sayılıyor: {}. Klasör seç sayım bitince açılır.",
+                    reading.join(", ")
+                ),
             ));
         }
         for (name, why) in failed {
@@ -703,7 +835,10 @@ impl App {
 
     /// Whether Klasör seç is offered: with open files asked, every data layer's rows counted and readable.
     fn package_ready(&self, s: &State, data: &[DataLayerRow]) -> bool {
-        s.formats.is_empty() || data.iter().all(|d| matches!(self.package_rows(s, &d.id), Ok(Some(_))))
+        s.formats.is_empty()
+            || data
+                .iter()
+                .all(|d| matches!(self.package_rows(s, &d.id), Ok(Some(_))))
     }
 }
 

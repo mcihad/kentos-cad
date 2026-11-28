@@ -173,12 +173,20 @@ impl OpeningTool {
                 if (3..=4).contains(&n) {
                     rows.push(Setting::choice(
                         "İ",
-                        if n == 3 { "Ortası sabit (XOX)" } else { "İki yana açılır" },
+                        if n == 3 {
+                            "Ortası sabit (XOX)"
+                        } else {
+                            "İki yana açılır"
+                        },
                         choices(&on_off, if self.moves.both_sides { "on" } else { "off" }),
                     ));
                 }
                 if n == 2 {
-                    rows.push(Setting::text("Ş", "Birinci kanadın payı", split_text(self.moves.split)));
+                    rows.push(Setting::text(
+                        "Ş",
+                        "Birinci kanadın payı",
+                        split_text(self.moves.split),
+                    ));
                 }
                 if n >= 2 {
                     rows.push(Setting::text(
@@ -383,10 +391,18 @@ impl OpeningTool {
             OpeningOperation::Slide => {
                 let n = self.leaves_now();
                 if n >= 3 {
-                    p = p.option_with("Ray sayısı", "V", self.moves.tracks.unwrap_or(2).to_string());
+                    p = p.option_with(
+                        "Ray sayısı",
+                        "V",
+                        self.moves.tracks.unwrap_or(2).to_string(),
+                    );
                 }
                 if (3..=4).contains(&n) {
-                    p = p.toggle(if n == 3 { "XOX" } else { "İki yana" }, "İ", self.moves.both_sides);
+                    p = p.toggle(
+                        if n == 3 { "XOX" } else { "İki yana" },
+                        "İ",
+                        self.moves.both_sides,
+                    );
                 }
                 if n == 2 {
                     p = p.option_with("Pay", "Ş", split_text(self.moves.split));
@@ -409,7 +425,10 @@ impl OpeningTool {
 
 /// A two-leaf slide's share as the settings show it: “Eşit” or “%60”.
 fn split_text(split: Option<f64>) -> String {
-    split.map_or_else(|| "Eşit".to_owned(), |v| format!("%{}", (v * 1000.0).round() / 10.0))
+    split.map_or_else(
+        || "Eşit".to_owned(),
+        |v| format!("%{}", (v * 1000.0).round() / 10.0),
+    )
 }
 
 /// A share typed: empty or “eşit” halves, “%60” or “60” a percentage, “0.6” a fraction; `None` when it is not

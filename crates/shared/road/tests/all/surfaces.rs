@@ -48,7 +48,9 @@ fn run(cases: &str) {
         let name = case["name"].as_str().expect("a name");
         let expect = &case["expect"];
         let input: Result<SurfaceInput, _> = serde_json::from_value(case["input"].clone());
-        let built = input.map_err(|e| e.to_string()).and_then(|i| build(&i).map_err(|e| e.code.to_owned()));
+        let built = input
+            .map_err(|e| e.to_string())
+            .and_then(|i| build(&i).map_err(|e| e.code.to_owned()));
         if let Some(code) = expect["error"].as_str() {
             // A number that is no number fails when read (serde) or when checked; both are `invalid_input`.
             let got = match &built {
@@ -56,7 +58,11 @@ fn run(cases: &str) {
                 Err(_) if code == "invalid_input" => true,
                 _ => false,
             };
-            assert!(got, "{name}: expected {code}, got {:?}", built.as_ref().map(|s| s.triangles.len()));
+            assert!(
+                got,
+                "{name}: expected {code}, got {:?}",
+                built.as_ref().map(|s| s.triangles.len())
+            );
             continue;
         }
         let s = match built {
@@ -97,7 +103,10 @@ fn run(cases: &str) {
             assert_eq!(s.report.trimmed as u64, n, "{name}: trimmed");
         }
         for h in expect["heights"].as_array().into_iter().flatten() {
-            let at = [h["at"][0].as_f64().expect("x"), h["at"][1].as_f64().expect("y")];
+            let at = [
+                h["at"][0].as_f64().expect("x"),
+                h["at"][1].as_f64().expect("y"),
+            ];
             let got = s.height(at[0], at[1]);
             match h["z"].as_f64() {
                 Some(z) => {
@@ -143,7 +152,12 @@ fn timing() {
     let mut input = SurfaceInput::default();
     for _ in 0..100_000 {
         let (x, y) = (next() * 1000.0, next() * 1000.0);
-        input.points.push(SpotPoint { x, y, z: ground(x, y), source: None });
+        input.points.push(SpotPoint {
+            x,
+            y,
+            z: ground(x, y),
+            source: None,
+        });
     }
     for k in 0..200 {
         let y = 2.5 + 5.0 * k as f64;
@@ -196,5 +210,9 @@ fn pictures() {
             "report": s.report,
         }));
     }
-    std::fs::write(format!("{dir}/surfaces-out.json"), serde_json::to_string(&out).expect("json")).expect("written");
+    std::fs::write(
+        format!("{dir}/surfaces-out.json"),
+        serde_json::to_string(&out).expect("json"),
+    )
+    .expect("written");
 }

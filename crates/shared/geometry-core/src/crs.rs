@@ -145,7 +145,10 @@ impl System {
         if lat.abs() > 89.0 {
             return None;
         }
-        let (a, b) = (self.project(lat - STEP, lon)?, self.project(lat + STEP, lon)?);
+        let (a, b) = (
+            self.project(lat - STEP, lon)?,
+            self.project(lat + STEP, lon)?,
+        );
         let angle = libm::atan2(a.x - b.x, b.y - a.y);
         angle.is_finite().then_some(angle)
     }

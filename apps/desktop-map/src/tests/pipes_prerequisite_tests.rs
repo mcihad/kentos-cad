@@ -10,10 +10,16 @@ fn without_a_utility_network_the_check_offers_aglar() {
     let offered: Vec<(String, String)> = app
         .toasts
         .iter()
-        .filter_map(|(_, toast, _)| toast.action_of().map(|(label, m)| (label.to_owned(), format!("{m:?}"))))
+        .filter_map(|(_, toast, _)| {
+            toast
+                .action_of()
+                .map(|(label, m)| (label.to_owned(), format!("{m:?}")))
+        })
         .collect();
     assert!(
-        offered.iter().any(|(label, m)| label == "Ağlar…" && m.contains("network.manage")),
+        offered
+            .iter()
+            .any(|(label, m)| label == "Ağlar…" && m.contains("network.manage")),
         "{offered:?}"
     );
     assert!(crate::files_testing::last_said(&app).contains("altyapı ağı yok"));

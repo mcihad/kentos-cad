@@ -19,8 +19,9 @@
 use iced::widget::{container, row, space};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CatalogClassChangeKind, CatalogCodeChangeKind, CatalogDecisionChangeKind, CatalogFieldChangeKind,
-    CommandResult, ProfileFileKind, ProfilesCompare, ProfilesCompared, ProfilesList,
+    CatalogClassChangeKind, CatalogCodeChangeKind, CatalogDecisionChangeKind,
+    CatalogFieldChangeKind, CommandResult, ProfileFileKind, ProfilesCompare, ProfilesCompared,
+    ProfilesList,
 };
 use kentos_native_application::{ExecutionContext, profile_files, profiles_compare};
 use kentos_ui::widget::grow::Grows;
@@ -127,24 +128,36 @@ fn decision_word(k: CatalogDecisionChangeKind) -> &'static str {
 }
 
 fn yes(b: bool) -> String {
-    if b { "Karar ister".to_owned() } else { String::new() }
+    if b {
+        "Karar ister".to_owned()
+    } else {
+        String::new()
+    }
 }
 
 impl App {
     fn catalog_report_drawing(&self) -> Option<String> {
-        self.document.as_ref().and_then(|d| d.path.as_ref()).map(|p| p.display().to_string())
+        self.document
+            .as_ref()
+            .and_then(|d| d.path.as_ref())
+            .map(|p| p.display().to_string())
     }
 
     /// KentOS's and the project's profiles that hold, by name and title.
     fn catalog_report_catalogs(&self) -> Vec<(String, String)> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
         let drawing = self.catalog_report_drawing();
-        profile_files::list::run(&doc.model.settings().profile_files, &ProfilesList { drawing })
-            .items
-            .into_iter()
-            .filter(|p| p.kind == ProfileFileKind::Profile && p.problem.is_none())
-            .map(|p| (p.name, p.title))
-            .collect()
+        profile_files::list::run(
+            &doc.model.settings().profile_files,
+            &ProfilesList { drawing },
+        )
+        .items
+        .into_iter()
+        .filter(|p| p.kind == ProfileFileKind::Profile && p.problem.is_none())
+        .map(|p| (p.name, p.title))
+        .collect()
     }
 
     fn catalog_report_run(&mut self) {
@@ -154,15 +167,18 @@ impl App {
             drawing: self.catalog_report_drawing(),
             ..ProfilesCompare::default()
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        self.catalog_report.answer =
-            Some(match profiles_compare::plan(&ExecutionContext::new(&mut doc.model), &input) {
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        self.catalog_report.answer = Some(
+            match profiles_compare::plan(&ExecutionContext::new(&mut doc.model), &input) {
                 CommandResult::Completed { output, .. } => Ok(output),
                 CommandResult::Failed { error }
                 | CommandResult::Conflict { error }
                 | CommandResult::NeedsInput { error } => Err(error.message),
                 _ => Err("Katalog geçiş raporu çıkarılamadı.".to_owned()),
-            });
+            },
+        );
     }
 
     /// Katalog geçiş raporu (`map.catalogReport`): Harita varlıkları to the first other catalog, at first.
@@ -183,7 +199,12 @@ impl App {
             .rev()
             .find(|(n, _)| *n != from)
             .map_or_else(|| from.clone(), |(n, _)| n.clone());
-        self.catalog_report = State { catalogs, from, to, ..Default::default() };
+        self.catalog_report = State {
+            catalogs,
+            from,
+            to,
+            ..Default::default()
+        };
         self.catalog_report_run();
         self.dialog = Some(Dialog::CatalogReport);
         Task::none()
@@ -201,11 +222,19 @@ impl App {
             field: None,
             expected_revision: None,
         };
-        let Some(doc) = self.document.as_mut() else { return };
-        let result = kentos_native_application::profiles_carry::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let result = kentos_native_application::profiles_carry::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
         match result {
             CommandResult::Completed { output, warnings } => {
-                let mut words = format!("{TITLE}: {} nesne yeni kataloğun katmanlarına taşındı", output.moved);
+                let mut words = format!(
+                    "{TITLE}: {} nesne yeni kataloğun katmanlarına taşındı",
+                    output.moved
+                );
                 if !output.layers.is_empty() {
                     words.push_str(&format!(", {} katman açıldı", output.layers.len()));
                 }
@@ -216,7 +245,9 @@ impl App {
                 }
                 self.output(words);
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.output(format!("{TITLE}: {}", error.message));
             }
             _ => {}
@@ -226,16 +257,38 @@ impl App {
 
     /// The persistent ids of the shown table's rows that need a decision.
     fn catalog_report_deciding(&self) -> Vec<String> {
-        let Some(Ok(r)) = &self.catalog_report.answer else { return Vec::new() };
+        let Some(Ok(r)) = &self.catalog_report.answer else {
+            return Vec::new();
+        };
         match self.catalog_report.show {
-            Show::Classes => r.classes.iter().filter(|c| c.decide).flat_map(|c| c.uids.clone()).collect(),
-            Show::Fields => r.fields.iter().filter(|c| c.decide).flat_map(|c| c.uids.clone()).collect(),
-            Show::Codes => r.codes.iter().filter(|c| c.decide).flat_map(|c| c.uids.clone()).collect(),
+            Show::Classes => r
+                .classes
+                .iter()
+                .filter(|c| c.decide)
+                .flat_map(|c| c.uids.clone())
+                .collect(),
+            Show::Fields => r
+                .fields
+                .iter()
+                .filter(|c| c.decide)
+                .flat_map(|c| c.uids.clone())
+                .collect(),
+            Show::Codes => r
+                .codes
+                .iter()
+                .filter(|c| c.decide)
+                .flat_map(|c| c.uids.clone())
+                .collect(),
             Show::Decisions => r
                 .decisions
                 .iter()
                 .filter(|d| d.decide)
-                .flat_map(|d| d.asset.clone().into_iter().chain(std::iter::once(d.candidate.clone())))
+                .flat_map(|d| {
+                    d.asset
+                        .clone()
+                        .into_iter()
+                        .chain(std::iter::once(d.candidate.clone()))
+                })
                 .collect(),
         }
     }
@@ -291,7 +344,11 @@ impl App {
             }
             Some(Ok(r)) => r,
         };
-        let moved = r.classes.iter().filter(|c| c.kind != CatalogClassChangeKind::Same).count();
+        let moved = r
+            .classes
+            .iter()
+            .filter(|c| c.kind != CatalogClassChangeKind::Same)
+            .count();
         lines.push(words::text_line(
             if r.decide > 0 { Kind::Warn } else { Kind::Ok },
             format!(
@@ -368,7 +425,11 @@ impl App {
 
     pub(crate) fn catalog_report_view(&self) -> Element<'_, Message> {
         let s = &self.catalog_report;
-        let choices: Vec<(String, String)> = s.catalogs.iter().map(|(n, t)| (n.clone(), t.clone())).collect();
+        let choices: Vec<(String, String)> = s
+            .catalogs
+            .iter()
+            .map(|(n, t)| (n.clone(), t.clone()))
+            .collect();
         let form = Form::new()
             .label_width(130.0)
             .field(
@@ -380,35 +441,75 @@ impl App {
         let (lines, rows) = self.catalog_report_lines();
         let table = match s.show {
             Show::Classes => sheet(
-                vec![col("Sınıf", 120.0), col("Durum", 140.0), col("Yeni sınıf", 170.0), col("Kodlar", 70.0), num("Nesne", 55.0), col("Karar", 85.0), col("Açıklama", 540.0)],
+                vec![
+                    col("Sınıf", 120.0),
+                    col("Durum", 140.0),
+                    col("Yeni sınıf", 170.0),
+                    col("Kodlar", 70.0),
+                    num("Nesne", 55.0),
+                    col("Karar", 85.0),
+                    col("Açıklama", 540.0),
+                ],
                 rows,
                 "Sınıf yok.",
                 300.0,
             ),
             Show::Fields => sheet(
-                vec![col("Sınıf › alan", 180.0), col("Durum", 120.0), col("Önceki", 140.0), col("Yeni", 140.0), num("Nesne", 55.0), col("Karar", 85.0), col("Açıklama", 460.0)],
+                vec![
+                    col("Sınıf › alan", 180.0),
+                    col("Durum", 120.0),
+                    col("Önceki", 140.0),
+                    col("Yeni", 140.0),
+                    num("Nesne", 55.0),
+                    col("Karar", 85.0),
+                    col("Açıklama", 460.0),
+                ],
                 rows,
                 "Alan değişikliği yok.",
                 300.0,
             ),
             Show::Codes => sheet(
-                vec![col("Liste › kod", 200.0), col("Durum", 140.0), col("Etiket", 170.0), num("Nesne", 55.0), col("Karar", 85.0), col("Açıklama", 530.0)],
+                vec![
+                    col("Liste › kod", 200.0),
+                    col("Durum", 140.0),
+                    col("Etiket", 170.0),
+                    num("Nesne", 55.0),
+                    col("Karar", 85.0),
+                    col("Açıklama", 530.0),
+                ],
                 rows,
                 "Kod değişikliği yok.",
                 300.0,
             ),
             Show::Decisions => sheet(
-                vec![num("Not", 50.0), col("Sınıf", 130.0), col("Durum", 130.0), col("Yeni sınıf", 260.0), col("Karar", 85.0), col("Açıklama", 525.0)],
+                vec![
+                    num("Not", 50.0),
+                    col("Sınıf", 130.0),
+                    col("Durum", 130.0),
+                    col("Yeni sınıf", 260.0),
+                    col("Karar", 85.0),
+                    col("Açıklama", 525.0),
+                ],
                 rows,
                 "Kayıtlı Detay eşleştirme kararı yok.",
                 300.0,
             ),
         };
         let tabs = row![
-            Segmented::new([Show::Classes, Show::Fields, Show::Codes, Show::Decisions], s.show, |v| msg(Event::Show(v))),
+            Segmented::new(
+                [Show::Classes, Show::Fields, Show::Codes, Show::Decisions],
+                s.show,
+                |v| msg(Event::Show(v))
+            ),
             space::horizontal().width(Fill),
-            words::secondary(SELECT, matches!(&s.answer, Some(Ok(r)) if r.decide > 0).then(|| msg(Event::Select))),
-            words::secondary(CARRY, matches!(&s.answer, Some(Ok(_))).then(|| msg(Event::Carry))),
+            words::secondary(
+                SELECT,
+                matches!(&s.answer, Some(Ok(r)) if r.decide > 0).then(|| msg(Event::Select))
+            ),
+            words::secondary(
+                CARRY,
+                matches!(&s.answer, Some(Ok(_))).then(|| msg(Event::Carry))
+            ),
         ]
         .spacing(10)
         .align_y(Center);
@@ -425,7 +526,10 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn catalog_report_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn catalog_report_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(SELECT) => Some(msg(Event::Select)),

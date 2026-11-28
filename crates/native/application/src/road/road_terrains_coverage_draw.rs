@@ -5,8 +5,8 @@
 //! `fixtures/commands/v1/road.terrains.lowconfidence.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, TerrainsCoverageDraw,
-    TerrainsCoverageDrawn, TextAlign, TextFace, Vec2,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject,
+    TerrainsCoverageDraw, TerrainsCoverageDrawn, TextAlign, TextFace, Vec2,
 };
 use kentos_domain::Document;
 use kentos_road::surface::ring_area;
@@ -54,7 +54,9 @@ fn inside(ring: &[[f64; 2]], p: [f64; 2]) -> bool {
     let mut hit = false;
     for i in 0..n {
         let (a, b) = (ring[i], ring[(i + 1) % n]);
-        if (a[1] > p[1]) != (b[1] > p[1]) && p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]) {
+        if (a[1] > p[1]) != (b[1] > p[1])
+            && p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1])
+        {
             hit = !hit;
         }
     }
@@ -77,7 +79,11 @@ fn centre(ring: &[[f64; 2]]) -> [f64; 2] {
 
 /// Outlines as closed polylines and, with `label`, each outer outline's area (less the holes it holds) at its centre:
 /// the objects, how many outer outlines and holes, and their area.
-pub(crate) fn outlined(loops: &[Vec<[f64; 2]>], plot_scale: f64, label: Option<&str>) -> (Vec<NewObject>, u32, u32, f64) {
+pub(crate) fn outlined(
+    loops: &[Vec<[f64; 2]>],
+    plot_scale: f64,
+    label: Option<&str>,
+) -> (Vec<NewObject>, u32, u32, f64) {
     let outers: Vec<&Vec<[f64; 2]>> = loops.iter().filter(|r| ring_area(r) > 0.0).collect();
     let holes: Vec<&Vec<[f64; 2]>> = loops.iter().filter(|r| ring_area(r) <= 0.0).collect();
     let mut objects: Vec<NewObject> = loops.iter().map(|r| ring(r)).collect();
@@ -89,7 +95,11 @@ pub(crate) fn outlined(loops: &[Vec<[f64; 2]>], plot_scale: f64, label: Option<&
             .iter()
             .filter(|h| {
                 inside(outer, h[0])
-                    && !outers.iter().any(|o| !std::ptr::eq(*o, *outer) && inside(o, h[0]) && ring_area(o) < ring_area(outer))
+                    && !outers.iter().any(|o| {
+                        !std::ptr::eq(*o, *outer)
+                            && inside(o, h[0])
+                            && ring_area(o) < ring_area(outer)
+                    })
             })
             .map(|h| -ring_area(h))
             .sum();
@@ -131,16 +141,28 @@ struct Checked {
 fn check(doc: &Document, input: &TerrainsCoverageDraw) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     if !(input.longest.is_finite() && input.longest > 0.0) {
-        return Err(fail(codes::INVALID_COVERAGE, "Tahmin sayılan kenar boyu (longest) sıfırdan büyük olmalı.".into(), "longest"));
+        return Err(fail(
+            codes::INVALID_COVERAGE,
+            "Tahmin sayılan kenar boyu (longest) sıfırdan büyük olmalı.".into(),
+            "longest",
+        ));
     }
     terrains::terrain_project(doc)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
-    let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+    let def = terrains::surfaces(doc)
+        .iter()
+        .find(|s| s.id == id)
+        .cloned()
+        .ok_or(Stop::Cancelled)?;
     let made = terrains::make(doc, &def);
     let surface = made.built()?;
     let warnings = checks::layer(doc, &input.layer_id)?;
     let loops = surface.outlines(|i| surface.longest_edge(i) > input.longest);
-    let (mut objects, areas, holes, area) = outlined(&loops, doc.settings().plot_scale, input.labels.then_some("Düşük güven"));
+    let (mut objects, areas, holes, area) = outlined(
+        &loops,
+        doc.settings().plot_scale,
+        input.labels.then_some("Düşük güven"),
+    );
     if input.outline {
         objects.extend(surface.outlines(|_| true).iter().map(|r| ring(r)));
     }
@@ -154,7 +176,11 @@ fn check(doc: &Document, input: &TerrainsCoverageDraw) -> Result<Checked, Stop> 
     })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &TerrainsCoverageDraw, c: Checked) -> CommandResult<TerrainsCoverageDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &TerrainsCoverageDraw,
+    c: Checked,
+) -> CommandResult<TerrainsCoverageDrawn> {
     let uids = if c.objects.is_empty() {
         Vec::new()
     } else {
@@ -185,13 +211,19 @@ fn write(cx: &mut ExecutionContext<'_>, input: &TerrainsCoverageDraw, c: Checked
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsCoverageDraw) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What execute would write now; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsCoverageDraw) -> CommandResult<TerrainsCoverageDrawn> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &TerrainsCoverageDraw,
+) -> CommandResult<TerrainsCoverageDrawn> {
     let c = match check(cx.doc, input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -205,7 +237,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsCoverageDraw) -> CommandR
 }
 
 /// Draws the estimated areas: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsCoverageDraw) -> CommandResult<TerrainsCoverageDrawn> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsCoverageDraw,
+) -> CommandResult<TerrainsCoverageDrawn> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_TERRAINS_LOW_CONFIDENCE_DRAW,

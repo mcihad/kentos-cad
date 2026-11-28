@@ -23,7 +23,9 @@ use std::fmt;
 
 use iced::widget::{Id, operation};
 use iced::{Element, Task};
-use kentos_commands::{DOCUMENT_VERSION_2, DocumentSnapshotV1, DocumentSnapshotV2, DrawingFont, Workspace};
+use kentos_commands::{
+    DOCUMENT_VERSION_2, DocumentSnapshotV1, DocumentSnapshotV2, DrawingFont, Workspace,
+};
 use kentos_interaction::Level;
 use kentos_project::wizard::{Draft, Kind, Step, WORKS};
 use kentos_ui::widget::{Wizard, overlay};
@@ -181,7 +183,11 @@ impl State {
 
     /// The step's place among the steps the type shows (docs/adr/9184: a CBS project has two).
     fn at(&self) -> usize {
-        self.draft.steps().iter().position(|s| *s == self.step).unwrap_or(0)
+        self.draft
+            .steps()
+            .iter()
+            .position(|s| *s == self.step)
+            .unwrap_or(0)
     }
 
     /// Whether the wizard may make a project of this type.
@@ -257,28 +263,28 @@ fn from_v1(v1: DocumentSnapshotV1) -> Result<Document, String> {
 
 /// A new project's v1 snapshot as a v2 one, without persistent ids yet.
 fn v2_of(v1: DocumentSnapshotV1) -> DocumentSnapshotV2 {
-        DocumentSnapshotV2 {
-            dimension_sets: Vec::new(),
-            casework: Vec::new(),
-            constraints: Default::default(),
-            format: v1.format,
-            version: DOCUMENT_VERSION_2,
-            name: v1.name,
-            settings: v1.settings,
-            origin: v1.origin,
-            home_view: v1.home_view,
-            layers: v1.layers,
-            active_layer: v1.active_layer,
-            entities: Vec::new(),
-            uids: Vec::new(),
-            styles: v1.styles,
-            blocks: v1.blocks,
-            project_id: None,
-            migrated_from: None,
-            sheets: None,
-            requests: Vec::new(),
-            arrays: Vec::new(),
-        }
+    DocumentSnapshotV2 {
+        dimension_sets: Vec::new(),
+        casework: Vec::new(),
+        constraints: Default::default(),
+        format: v1.format,
+        version: DOCUMENT_VERSION_2,
+        name: v1.name,
+        settings: v1.settings,
+        origin: v1.origin,
+        home_view: v1.home_view,
+        layers: v1.layers,
+        active_layer: v1.active_layer,
+        entities: Vec::new(),
+        uids: Vec::new(),
+        styles: v1.styles,
+        blocks: v1.blocks,
+        project_id: None,
+        migrated_from: None,
+        sheets: None,
+        requests: Vec::new(),
+        arrays: Vec::new(),
+    }
 }
 
 /// The text fields the wizard gives the keyboard to.
@@ -534,7 +540,9 @@ impl App {
             Step::Type => pages::kind(s, &self.theme()),
             Step::Coords => pages::coords(s),
             // A CBS project's one page (docs/adr/9184).
-            Step::Details if s.draft.kind == Kind::Gis => pages::decision(s, self.new_project_note()),
+            Step::Details if s.draft.kind == Kind::Gis => {
+                pages::decision(s, self.new_project_note())
+            }
             Step::Details => pages::details(s, self.new_project_note()),
         };
         // A module's program asks no type (docs/adr/0802): its own window, from what a CAD project is for or a CBS
@@ -559,7 +567,14 @@ impl App {
             .on_cancel(message(ProjectEvent::Close))
             // 1040 × 704 at the default text size (the web's); a lower window keeps a margin. A CBS project's one
             // page is taller (docs/adr/9184).
-            .size(960.0, if s.draft.kind == Kind::Gis && s.step == Step::Details { 720.0 } else { 650.0 });
+            .size(
+                960.0,
+                if s.draft.kind == Kind::Gis && s.step == Step::Details {
+                    720.0
+                } else {
+                    650.0
+                },
+            );
         if let Some(status) = &s.status {
             wizard = wizard.problem(status.clone());
         }

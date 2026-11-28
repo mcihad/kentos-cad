@@ -51,13 +51,24 @@ pub fn feature_edges(c: &Content, crease_degrees: f32) -> Vec<u32> {
     // An edge by its body and its two corners: one pair of its vertex indices and its faces' normals.
     let mut index: HashMap<(u32, u32, u32), usize> = HashMap::new();
     let mut edges: Vec<(u32, u32, Vec<[f32; 3]>)> = Vec::new();
-    let smooth = |i: u32| c.normals.get(i as usize).is_some_and(|n| n[0] != 0 || n[1] != 0 || n[2] != 0);
+    let smooth = |i: u32| {
+        c.normals
+            .get(i as usize)
+            .is_some_and(|n| n[0] != 0 || n[1] != 0 || n[2] != 0)
+    };
     for (t, tri) in c.indices.as_chunks::<3>().0.iter().enumerate() {
-        if tri.iter().any(|&i| i as usize >= c.positions.len() || smooth(i)) {
+        if tri
+            .iter()
+            .any(|&i| i as usize >= c.positions.len() || smooth(i))
+        {
             continue;
         }
         let body = c.sources.get(t).map_or(0, |s| s.0);
-        let Some(n) = normal(c.positions[tri[0] as usize], c.positions[tri[1] as usize], c.positions[tri[2] as usize]) else {
+        let Some(n) = normal(
+            c.positions[tri[0] as usize],
+            c.positions[tri[1] as usize],
+            c.positions[tri[2] as usize],
+        ) else {
             continue;
         };
         let ids = [
@@ -94,8 +105,15 @@ pub fn feature_edges(c: &Content, crease_degrees: f32) -> Vec<u32> {
 
 /// A triangle's unit normal; none for one without area.
 fn normal(a: [f32; 3], b: [f32; 3], c: [f32; 3]) -> Option<[f32; 3]> {
-    let (u, v) = ([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
-    let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    let (u, v) = (
+        [b[0] - a[0], b[1] - a[1], b[2] - a[2]],
+        [c[0] - a[0], c[1] - a[1], c[2] - a[2]],
+    );
+    let n = [
+        u[1] * v[2] - u[2] * v[1],
+        u[2] * v[0] - u[0] * v[2],
+        u[0] * v[1] - u[1] * v[0],
+    ];
     let l = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
     (l > 1e-12).then(|| n.map(|x| x / l))
 }
@@ -108,8 +126,21 @@ mod tests {
 
     /// A box's six faces, each two triangles with vertices of their own (as a flat body's are).
     fn cube(x: f64, size: f64) -> (Vec<[f64; 3]>, Vec<[u32; 3]>) {
-        let c = |i: usize| [x + if i & 1 == 0 { 0.0 } else { size }, if i & 2 == 0 { 0.0 } else { size }, if i & 4 == 0 { 0.0 } else { size }];
-        let faces = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]];
+        let c = |i: usize| {
+            [
+                x + if i & 1 == 0 { 0.0 } else { size },
+                if i & 2 == 0 { 0.0 } else { size },
+                if i & 4 == 0 { 0.0 } else { size },
+            ]
+        };
+        let faces = [
+            [0, 1, 3, 2],
+            [4, 6, 7, 5],
+            [0, 4, 5, 1],
+            [2, 3, 7, 6],
+            [0, 2, 6, 4],
+            [1, 5, 7, 3],
+        ];
         let (mut v, mut t) = (Vec::new(), Vec::new());
         for f in faces {
             let at = v.len() as u32;
@@ -123,10 +154,21 @@ mod tests {
     type Mesh = (Vec<[f64; 3]>, Vec<[u32; 3]>);
 
     fn edges_of(meshes: &[Mesh], smooth: bool) -> usize {
-        let src: Vec<SourceMesh> =
-            meshes.iter().map(|(v, t)| SourceMesh { part: 0, vertices: v, triangles: t, smooth }).collect();
+        let src: Vec<SourceMesh> = meshes
+            .iter()
+            .map(|(v, t)| SourceMesh {
+                part: 0,
+                vertices: v,
+                triangles: t,
+                smooth,
+            })
+            .collect();
         let chunked = chunk(&src, Limits::default(), 1);
-        chunked.contents.iter().map(|c| feature_edges(c, CREASE_DEGREES).len() / 2).sum()
+        chunked
+            .contents
+            .iter()
+            .map(|c| feature_edges(c, CREASE_DEGREES).len() / 2)
+            .sum()
     }
 
     #[test]
@@ -163,7 +205,15 @@ mod tests {
         // Two triangles sharing the edge along x, the second turned up by `deg` about it.
         let fold = |deg: f64| {
             let (s, c) = deg.to_radians().sin_cos();
-            (vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.5, -c, s]], vec![[0, 1, 2], [0, 3, 1]])
+            (
+                vec![
+                    [0.0, 0.0, 0.0],
+                    [1.0, 0.0, 0.0],
+                    [0.0, 1.0, 0.0],
+                    [0.5, -c, s],
+                ],
+                vec![[0, 1, 2], [0, 3, 1]],
+            )
         };
         // The rim: three edges of each triangle but the shared one, open; the fold drawn only past the crease.
         assert_eq!(edges_of(&[fold(10.0)], false), 4);

@@ -5,8 +5,8 @@
 //! The shared cases are `fixtures/commands/v1/cad.spaces.edit.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, SpaceChange, SpaceDecision, SpaceEntity, SpaceFields, SpaceFinishes,
-    SpaceKeptBy, SpacePieceDecision, SpacesEdit, SpacesEdited, SpacesOperation,
+    CommandResult, CommandWarning, Entity, SpaceChange, SpaceDecision, SpaceEntity, SpaceFields,
+    SpaceFinishes, SpaceKeptBy, SpacePieceDecision, SpacesEdit, SpacesEdited, SpacesOperation,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::Vec2 as CoreVec2;
@@ -31,7 +31,11 @@ struct Work {
 }
 
 /// The fixtures standing in the parts, on the level (docs/adr/0733 §2's rule: the middle of their block's drawing).
-fn fixtures_in(doc: &Document, parts: &[kentos_commands::SpacePart], level: Option<&str>) -> Vec<String> {
+fn fixtures_in(
+    doc: &Document,
+    parts: &[kentos_commands::SpacePart],
+    level: Option<&str>,
+) -> Vec<String> {
     let areas = spaces::areas(parts);
     doc.entities()
         .filter_map(|e| {
@@ -42,7 +46,9 @@ fn fixtures_in(doc: &Document, parts: &[kentos_commands::SpacePart], level: Opti
             let m = doc.fixture_middle(i);
             areas
                 .iter()
-                .any(|a| kentos_geometry_core::geom::region::inside_area(a, CoreVec2::new(m.x, m.y)))
+                .any(|a| {
+                    kentos_geometry_core::geom::region::inside_area(a, CoreVec2::new(m.x, m.y))
+                })
                 .then(|| doc.uid(Slot(i.base.id)).map(|u| u.to_string()))
                 .flatten()
         })
@@ -54,7 +60,9 @@ fn tags_of(doc: &Document, uid: &str) -> Vec<String> {
     doc.entities()
         .filter_map(|e| {
             let Entity::Tag(t) = e else { return None };
-            (t.tag.of == uid).then(|| doc.uid(Slot(t.base.id)).map(|u| u.to_string())).flatten()
+            (t.tag.of == uid)
+                .then(|| doc.uid(Slot(t.base.id)).map(|u| u.to_string()))
+                .flatten()
         })
         .collect()
 }
@@ -73,8 +81,15 @@ fn unit_known(doc: &Document, unit: Option<&str>, path: &str) -> Result<(), Stop
 
 fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     let mut f = s.clone();
-    if let Some(v) = &c.sources { f.sources = v.clone().map(|mut ids| { ids.sort(); ids }); }
-    if let Some(v) = c.scope { f.scope = v; }
+    if let Some(v) = &c.sources {
+        f.sources = v.clone().map(|mut ids| {
+            ids.sort();
+            ids
+        });
+    }
+    if let Some(v) = c.scope {
+        f.scope = v;
+    }
     if let Some(v) = &c.number {
         f.number.clone_from(v);
     }
@@ -87,7 +102,9 @@ fn changed(s: &SpaceFields, c: &SpaceChange) -> SpaceFields {
     if let Some(v) = &c.emsal {
         f.emsal.clone_from(v);
     }
-    if let Some(v) = c.columns { f.columns = v; }
+    if let Some(v) = c.columns {
+        f.columns = v;
+    }
     if let Some(v) = c.method {
         f.method = v;
     }
@@ -193,16 +210,26 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
             }
             for (at, slot, s) in &list {
                 let mut f = changed(&s.space, c);
-                spaces::scope_valid(&f,&format!("uids[{at}]"))?;
-                if (f.scope != s.space.scope || f.sources != s.space.sources) && !kentos_domain::space_follow::SpaceSearch::new(doc).seed_is_room(&f) {
+                spaces::scope_valid(&f, &format!("uids[{at}]"))?;
+                if (f.scope != s.space.scope || f.sources != s.space.sources)
+                    && !kentos_domain::space_follow::SpaceSearch::new(doc).seed_is_room(&f)
+                {
                     return Err(fail(codes::INVALID_SPACE,
                         "Mahalın iç noktası yeni kapsamda bir odanın içinde değil; duvarın üzerinde veya dışında kalıyor. Mahali yeniden sınırla aracıyla geçerli bir iç nokta seçin, sonra kapsamı değiştirin.".into(),
                         if c.sources.is_some() { "operation.sources" } else { "operation.scope" }));
                 }
-                if (c.method.is_some() || c.level.is_some() || c.columns.is_some() || c.scope.is_some() || c.sources.is_some()) && f.seed.is_some() {
+                if (c.method.is_some()
+                    || c.level.is_some()
+                    || c.columns.is_some()
+                    || c.scope.is_some()
+                    || c.sources.is_some())
+                    && f.seed.is_some()
+                {
                     f = doc.space_found(&f);
                 }
-                if c.sources.is_some() && f.broken.is_some() { return Err(spaces::not_found(&f,"operation.sources")); }
+                if c.sources.is_some() && f.broken.is_some() {
+                    return Err(spaces::not_found(&f, "operation.sources"));
+                }
                 let path = format!("uids[{at}]");
                 spaces::valid(&f, &path)?;
                 spaces::level_known(doc, &f.arch, "operation.level")?;
@@ -307,7 +334,12 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 .map(|(_, (_, s, _))| *s)
                 .collect();
         }
-        SpacesOperation::Split { line, keep, numbers, finishes } => {
+        SpacesOperation::Split {
+            line,
+            keep,
+            numbers,
+            finishes,
+        } => {
             if line.len() < 2 {
                 return Err(fail(
                     codes::SPLIT_MISSED,
@@ -380,7 +412,11 @@ fn check(doc: &Document, input: &SpacesEdit) -> Result<Work, Stop> {
                 {
                     return Err(fail(
                         codes::INVALID_INPUT,
-                        format!("Bölme {} yeni parça yapıyor; {} numara verildi.", pieces.len() - 1, n.len()),
+                        format!(
+                            "Bölme {} yeni parça yapıyor; {} numara verildi.",
+                            pieces.len() - 1,
+                            n.len()
+                        ),
                         "operation.numbers",
                     ));
                 }

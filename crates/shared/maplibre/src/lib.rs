@@ -700,7 +700,16 @@ fn marker_sl(layer: &Value, sym: f64, lost: &mut Vec<String>, what: &str) -> Opt
     }
     let opacity = opacity_of(layer, sym, lost, what);
     if icon_shape && unit != "m" {
-        return Some(icon_sl(layer, shape, size, unit, stroke_width, opacity, lost, what));
+        return Some(icon_sl(
+            layer,
+            shape,
+            size,
+            unit,
+            stroke_width,
+            opacity,
+            lost,
+            what,
+        ));
     }
     let (circle_color, circle_opacity) = match fill {
         Some(c) => (c, opacity),
@@ -1389,19 +1398,29 @@ fn label_layers(emit: &mut Emit<'_>, lost: &mut Vec<String>) {
                 l.insert("filter".into(), f);
             }
             // The label's scale range (pixels per metre) as zoom levels, by its map scale denominator.
-            if let Some(ppm) = style.get("minScale").and_then(Value::as_f64).filter(|v| *v > 0.0) {
+            if let Some(ppm) = style
+                .get("minScale")
+                .and_then(Value::as_f64)
+                .filter(|v| *v > 0.0)
+            {
                 l.insert(
                     "minzoom".into(),
                     n(round4(
-                        zoom_of_scale(kentos_formats::style_labels::denominator(ppm)).clamp(0.0, TOP_ZOOM),
+                        zoom_of_scale(kentos_formats::style_labels::denominator(ppm))
+                            .clamp(0.0, TOP_ZOOM),
                     )),
                 );
             }
-            if let Some(ppm) = style.get("maxScale").and_then(Value::as_f64).filter(|v| *v > 0.0) {
+            if let Some(ppm) = style
+                .get("maxScale")
+                .and_then(Value::as_f64)
+                .filter(|v| *v > 0.0)
+            {
                 l.insert(
                     "maxzoom".into(),
                     n(round4(
-                        zoom_of_scale(kentos_formats::style_labels::denominator(ppm)).clamp(0.0, TOP_ZOOM),
+                        zoom_of_scale(kentos_formats::style_labels::denominator(ppm))
+                            .clamp(0.0, TOP_ZOOM),
                     )),
                 );
             }
@@ -2361,7 +2380,10 @@ enum Prop {
     /// A width in metres: the metres.
     Metres(f64),
     /// `["to-color", ["get", f], fallback]` or `["get", f]`: a colour of the field's value, the fallback (or null).
-    Data { field: String, fallback: Value },
+    Data {
+        field: String,
+        fallback: Value,
+    },
 }
 
 fn prop_of(v: &Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<Prop> {
@@ -2939,7 +2961,8 @@ fn draw(raw: &Raw<'_>, class: &Class, others_fill: bool, lost: &mut Vec<String>)
                         "{what}: çemberin kenar kalınlığının birimi boyununkinden başka; kalınlık alınmadı"
                     ));
                 } else {
-                    m["stroke"] = raw.colour_value("circle-stroke-color", &kentos_colour(&stroke, 1.0));
+                    m["stroke"] =
+                        raw.colour_value("circle-stroke-color", &kentos_colour(&stroke, 1.0));
                     m["strokeWidth"] = json!(w);
                 }
             }
@@ -4089,7 +4112,10 @@ mod tests {
             { "id": "f", "type": "simpleFill", "color": { "expr": "[renk]" } },
         ] } } });
         assert!(
-            write_one(&r, area()).lost.iter().any(|l| l.contains("yedek renk yok")),
+            write_one(&r, area())
+                .lost
+                .iter()
+                .any(|l| l.contains("yedek renk yok")),
             "{:?}",
             write_one(&r, area()).lost
         );
@@ -4112,7 +4138,11 @@ mod tests {
         };
         let w = write_one(&r, k);
         for words in ["Arial", "SVG işareti", "degrade dolgu", "fill-pattern"] {
-            assert!(w.lost.iter().any(|l| l.contains(words)), "{words}: {:?}", w.lost);
+            assert!(
+                w.lost.iter().any(|l| l.contains(words)),
+                "{words}: {:?}",
+                w.lost
+            );
         }
         let style: Value = serde_json::from_str(&w.json).expect("json");
         let sym = style["layers"]

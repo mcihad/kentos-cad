@@ -19,7 +19,11 @@ use crate::opening::Purpose;
 #[derive(Debug, Clone)]
 pub enum Event {
     /// The file read: what it opens to, or why not.
-    Read { path: PathBuf, purpose: Purpose, read: Box<Result<Read, String>> },
+    Read {
+        path: PathBuf,
+        purpose: Purpose,
+        read: Box<Result<Read, String>>,
+    },
 }
 
 /// What a GeoPackage opened to.
@@ -30,7 +34,11 @@ pub enum Read {
     /// More than one project: their names.
     Several(Vec<String>),
     /// A new project of its tables, kept nowhere yet; what the opening found.
-    Built { doc: Box<Document>, name: String, notes: Vec<gpkg_open::Note> },
+    Built {
+        doc: Box<Document>,
+        name: String,
+        notes: Vec<gpkg_open::Note>,
+    },
 }
 
 fn message(e: Event) -> Message {
@@ -39,7 +47,10 @@ fn message(e: Event) -> Message {
 
 /// The file's name for a sentence.
 fn file_name(path: &std::path::Path) -> String {
-    path.file_name().map_or_else(|| path.display().to_string(), |n| n.to_string_lossy().into_owned())
+    path.file_name().map_or_else(
+        || path.display().to_string(),
+        |n| n.to_string_lossy().into_owned(),
+    )
 }
 
 /// Opens the GeoPackage at `path` (the project `name`, when one is asked for) on a thread of its own.
@@ -50,15 +61,31 @@ fn read(path: &std::path::Path, name: Option<&str>) -> Result<Read, String> {
             let snapshot = kentos_native_application::project_store::decode(&address, &bytes)
                 .map_err(|e| format!("“{name}” projesi okunamadı: {e}"))?;
             let mut doc = Document::from_v2(snapshot, None)?;
-            doc.source = Source::Stored(Box::new(StoredSource { address, schema: None, name }));
+            doc.source = Source::Stored(Box::new(StoredSource {
+                address,
+                schema: None,
+                name,
+            }));
             Ok(Read::Kept(Box::new(doc)))
         }
         Opened::Several(kept) => Ok(Read::Several(kept.into_iter().map(|p| p.name).collect())),
         Opened::Built(built) => {
-            let gpkg_open::Built { document, name, notes } = *built;
+            let gpkg_open::Built {
+                document,
+                name,
+                notes,
+            } = *built;
             let mut doc = Document::of_model(document);
-            doc.source = Source::Offered(Box::new(StoredSource { address, schema: None, name: name.clone() }));
-            Ok(Read::Built { doc: Box::new(doc), name, notes })
+            doc.source = Source::Offered(Box::new(StoredSource {
+                address,
+                schema: None,
+                name: name.clone(),
+            }));
+            Ok(Read::Built {
+                doc: Box::new(doc),
+                name,
+                notes,
+            })
         }
     }
 }
@@ -67,7 +94,12 @@ impl App {
     /// Opens a GeoPackage as a project (its only project, a pick of several, or a new one of its tables); `name`
     /// asks for one project. Only a program with data layers opens one (CBS, Harita, and kentos-cad whatever project
     /// is on screen: it opens in a tab of its own; docs/adr/9195 §2).
-    pub(crate) fn open_geopackage(&mut self, path: PathBuf, purpose: Purpose, name: Option<String>) -> Task<Message> {
+    pub(crate) fn open_geopackage(
+        &mut self,
+        path: PathBuf,
+        purpose: Purpose,
+        name: Option<String>,
+    ) -> Task<Message> {
         if !crate::module_surfaces::shows_panel_in(self.program, crate::app::Panel::Sources) {
             self.warn(format!(
                 "“{}” bir GeoPackage: veri katmanı olan programlarda (KentOS CBS, KentOS Harita) proje olarak açılır.",
@@ -79,12 +111,22 @@ impl App {
         let at = path.clone();
         crate::db_connections::off_thread(
             move || read(&at, name.as_deref()),
-            move |read| message(Event::Read { path, purpose, read: Box::new(read) }),
+            move |read| {
+                message(Event::Read {
+                    path,
+                    purpose,
+                    read: Box::new(read),
+                })
+            },
         )
     }
 
     pub(crate) fn gpkg_open_event(&mut self, event: Event) -> Task<Message> {
-        let Event::Read { path, purpose, read } = event;
+        let Event::Read {
+            path,
+            purpose,
+            read,
+        } = event;
         let file = file_name(&path);
         match *read {
             Err(why) => {
@@ -97,20 +139,34 @@ impl App {
             Ok(Read::Several(names)) => {
                 self.say(
                     Level::Info,
-                    format!("“{file}” içinde {} proje var: {}. Açılacak olanı seçin.", names.len(), names.join(", ")),
+                    format!(
+                        "“{file}” içinde {} proje var: {}. Açılacak olanı seçin.",
+                        names.len(),
+                        names.join(", ")
+                    ),
                 );
                 self.open_project_store_at(path)
             }
             Ok(Read::Kept(doc)) => self.place_geopackage(path, purpose, doc, Vec::new()),
             Ok(Read::Built { doc, name, notes }) => {
-                let layers = doc.model.layers().leaves().iter().filter(|n| n.data.is_some()).count();
+                let layers = doc
+                    .model
+                    .layers()
+                    .leaves()
+                    .iter()
+                    .filter(|n| n.data.is_some())
+                    .count();
                 // The tile tables' rasters (docs/adr/9117 §1), said beside the data layers.
                 let rasters = doc
                     .model
                     .entities()
                     .filter(|e| matches!(e, kentos_commands::Entity::Raster(r) if r.raster.tiles.is_some()))
                     .count();
-                let rasters = if rasters > 0 { format!(", döşeme tablolarından {rasters} raster") } else { String::new() };
+                let rasters = if rasters > 0 {
+                    format!(", döşeme tablolarından {rasters} raster")
+                } else {
+                    String::new()
+                };
                 let mut said = vec![(
                     Level::Success,
                     format!(
@@ -148,7 +204,11 @@ impl App {
         let kept = doc.offered_source().is_none();
         let task = self.update(Message::Opened(Some(Ok(doc))));
         let module = self.document_module();
-        let what = if kept { "GeoPackage — proje dosyanın içinde" } else { "GeoPackage — tabloları harita olarak" };
+        let what = if kept {
+            "GeoPackage — proje dosyanın içinde"
+        } else {
+            "GeoPackage — tabloları harita olarak"
+        };
         self.recent.add_in(&path, what.into(), module);
         for (level, words) in said {
             self.say(level, words);

@@ -6,13 +6,22 @@ use crate::gis;
 
 impl App {
     pub(super) fn properties_key(&self, doc: &Document) -> PanelKey {
-        (doc.session, doc.model.generation(), self.selection.version(), self.properties_scope.epoch)
+        (
+            doc.session,
+            doc.model.generation(),
+            self.selection.version(),
+            self.properties_scope.epoch,
+        )
     }
 
     pub(super) fn properties_kind(&self, doc: &Document) -> Option<&str> {
-        self.properties_scope.kind.as_ref().and_then(|(session, selection, kind)| {
-            (*session == doc.session && *selection == self.selection.version()).then_some(kind.as_str())
-        })
+        self.properties_scope
+            .kind
+            .as_ref()
+            .and_then(|(session, selection, kind)| {
+                (*session == doc.session && *selection == self.selection.version())
+                    .then_some(kind.as_str())
+            })
     }
 
     /// The panel's content for the selection now.
@@ -44,18 +53,32 @@ impl App {
         let mut counts: Vec<(&'static str, usize)> = Vec::new();
         let mut last = 0usize;
         let only = self.properties_kind(doc);
-        let selected: Vec<Slot> = self.selection.ids().iter().copied().filter(|slot| {
-            let Some(e) = doc.model.get(*slot) else { return false; };
-            let kind = e.kind();
-            if !counts.get(last).is_some_and(|(k, _)| std::ptr::eq(*k, kind) || *k == kind) {
-                last = counts.iter().position(|(k, _)| *k == kind).unwrap_or_else(|| {
-                    counts.push((kind, 0));
-                    counts.len() - 1
-                });
-            }
-            counts[last].1 += 1;
-            only.is_none_or(|k| std::ptr::eq(k, kind) || kind == k)
-        }).collect();
+        let selected: Vec<Slot> = self
+            .selection
+            .ids()
+            .iter()
+            .copied()
+            .filter(|slot| {
+                let Some(e) = doc.model.get(*slot) else {
+                    return false;
+                };
+                let kind = e.kind();
+                if !counts
+                    .get(last)
+                    .is_some_and(|(k, _)| std::ptr::eq(*k, kind) || *k == kind)
+                {
+                    last = counts
+                        .iter()
+                        .position(|(k, _)| *k == kind)
+                        .unwrap_or_else(|| {
+                            counts.push((kind, 0));
+                            counts.len() - 1
+                        });
+                }
+                counts[last].1 += 1;
+                only.is_none_or(|k| std::ptr::eq(k, kind) || kind == k)
+            })
+            .collect();
         let mut types = BTreeMap::<&'static str, usize>::new();
         for (kind, n) in counts {
             *types.entry(kind).or_default() += n;
@@ -71,24 +94,32 @@ impl App {
                 .join(", ");
             // The objects on locked layers, each layer looked up once.
             let layers = doc.model.layers();
-            let mut locked_layers: std::collections::HashMap<&str, bool> = std::collections::HashMap::new();
+            let mut locked_layers: std::collections::HashMap<&str, bool> =
+                std::collections::HashMap::new();
             let locked = selected
                 .iter()
                 .filter_map(|s| doc.model.get(*s))
                 .filter(|e| {
                     let id = e.base().layer_id.as_str();
-                    *locked_layers.entry(id).or_insert_with(|| layers.is_locked(id))
+                    *locked_layers
+                        .entry(id)
+                        .or_insert_with(|| layers.is_locked(id))
                 })
                 .count();
             return rows::Panel {
-                summary: rows::Summary::Many { count: total, kinds },
+                summary: rows::Summary::Many {
+                    count: total,
+                    kinds,
+                },
                 meta: Some(format!("{total} nesne")),
                 sections: vec![rows::Section {
                     id: "large-selection".into(),
                     title: "Büyük seçim".into(),
                     rows: vec![
                         Row::note(&format!("{} nesne seçili.", selected.len())),
-                        Row::note(&format!("Değerler en çok {PROPERTIES_LIMIT} nesnede gösterilir.")),
+                        Row::note(&format!(
+                            "Değerler en çok {PROPERTIES_LIMIT} nesnede gösterilir."
+                        )),
                         Row::note("Seçimi ya da tür seçimini daraltın."),
                         Row::note("Ya da komut kullanın (Katmana taşı)."),
                     ],
@@ -117,9 +148,17 @@ impl App {
         );
         panel.types = types.into_iter().collect();
         panel.total = panel.types.iter().map(|(_, n)| n).sum();
-        if self.map_cad_project() && selected.iter().all(|s| matches!(doc.model.get(*s), Some(Entity::Point(_)))) {
-            let active = self.properties_scope.survey_point
-                .filter(|(session, selection, _)| *session == doc.session && *selection == self.selection.version())
+        if self.map_cad_project()
+            && selected
+                .iter()
+                .all(|s| matches!(doc.model.get(*s), Some(Entity::Point(_))))
+        {
+            let active = self
+                .properties_scope
+                .survey_point
+                .filter(|(session, selection, _)| {
+                    *session == doc.session && *selection == self.selection.version()
+                })
                 .map(|(_, _, slot)| slot);
             if let Some(section) = rows::survey_identity_section(doc, &selected, active) {
                 panel.sections.insert(0, section);
@@ -129,14 +168,33 @@ impl App {
             panel.meta = Some(format!("{} / {} nesne", selected.len(), panel.total));
         }
         if let Some((slot, sub)) = self.selection.sub().filter(|(_, sub)| !sub.path.is_empty()) {
-            let path = sub.path.iter().map(u32::to_string).collect::<Vec<_>>().join("/");
-            let mut info = vec![Row::text("Parça yolu", path), Row::text("Hedef", "Blok yerleştirmesi"),
-                Row::note("Tanım için: Bloğu düzenle.")];
-            if let Some((assigned, displayed)) = kentos_native_application::entities_select::block_piece_colors(&doc.model, slot, &sub.path) {
+            let path = sub
+                .path
+                .iter()
+                .map(u32::to_string)
+                .collect::<Vec<_>>()
+                .join("/");
+            let mut info = vec![
+                Row::text("Parça yolu", path),
+                Row::text("Hedef", "Blok yerleştirmesi"),
+                Row::note("Tanım için: Bloğu düzenle."),
+            ];
+            if let Some((assigned, displayed)) =
+                kentos_native_application::entities_select::block_piece_colors(
+                    &doc.model, slot, &sub.path,
+                )
+            {
                 info.push(Row::text("Atanan renk", assigned));
                 info.push(Row::text("Görünür renk", displayed));
             }
-            panel.sections.insert(0, rows::Section {id:"picked-piece".into(),title:"Seçilen blok parçası".into(),rows:info});
+            panel.sections.insert(
+                0,
+                rows::Section {
+                    id: "picked-piece".into(),
+                    title: "Seçilen blok parçası".into(),
+                    rows: info,
+                },
+            );
         }
         // One object of a map project's work: where it comes from (docs/adr/1200 §4); a map's programs'.
         if let [slot] = selected.as_slice()
@@ -163,7 +221,10 @@ impl App {
         {
             section.rows.insert(
                 at + 1,
-                rows::Row::figure("Görünüm ölçeği", crate::screen_scale::scale_words(self.view_scale())),
+                rows::Row::figure(
+                    "Görünüm ölçeği",
+                    crate::screen_scale::scale_words(self.view_scale()),
+                ),
             );
         }
         // Nothing selected, data layers in the project (docs/adr/9340): the drawing's own objects and the sources' rows
@@ -182,7 +243,11 @@ impl App {
             let counted = total.chars().next().is_some_and(|c| c.is_ascii_digit());
             rows.insert(
                 at,
-                if counted { rows::Row::figure("Kaynaktaki satır", total) } else { rows::Row::text("Kaynaktaki satır", total) },
+                if counted {
+                    rows::Row::figure("Kaynaktaki satır", total)
+                } else {
+                    rows::Row::text("Kaynaktaki satır", total)
+                },
             );
             rows.insert(at + 1, rows::Row::text("Veri katmanları", layers));
             for (i, (name, said)) in each.into_iter().enumerate() {
@@ -194,9 +259,19 @@ impl App {
         if selected.is_empty()
             && let Some((title, lines, note)) = self.source_row_lines()
         {
-            let mut rows: Vec<rows::Row> = lines.into_iter().map(|(label, value)| rows::Row::text(label, value)).collect();
+            let mut rows: Vec<rows::Row> = lines
+                .into_iter()
+                .map(|(label, value)| rows::Row::text(label, value))
+                .collect();
             rows.push(rows::Row::note(&note));
-            panel.sections.insert(0, rows::Section { id: "source-row".into(), title: title.into(), rows });
+            panel.sections.insert(
+                0,
+                rows::Section {
+                    id: "source-row".into(),
+                    title: title.into(),
+                    rows,
+                },
+            );
         }
         // Nothing selected: the layer chosen in the tree (else the active one), when a service draws or fed it; a
         // map's programs' (module_surfaces.rs).
@@ -226,7 +301,11 @@ impl App {
             && self.shows_property_rows(crate::module_surfaces::PropertyRows::Topology)
             && let Some(section) = self.topology_summary_section(ids)
         {
-            let at = panel.sections.iter().position(|s| s.id == "geometry").map_or(panel.sections.len(), |i| i + 1);
+            let at = panel
+                .sections
+                .iter()
+                .position(|s| s.id == "geometry")
+                .map_or(panel.sections.len(), |i| i + 1);
             panel.sections.insert(at, section);
         }
         if let [slot] = self.selection.ids() {
@@ -235,7 +314,11 @@ impl App {
             if self.shows_property_rows(crate::module_surfaces::PropertyRows::Topology)
                 && let Some(section) = self.topology_section(*slot)
             {
-                let at = panel.sections.iter().position(|s| s.id == "geometry").map_or(panel.sections.len(), |i| i + 1);
+                let at = panel
+                    .sections
+                    .iter()
+                    .position(|s| s.id == "geometry")
+                    .map_or(panel.sections.len(), |i| i + 1);
                 panel.sections.insert(at, section);
             }
             panel
@@ -252,7 +335,10 @@ impl App {
         use crate::topology::object::ObjectFindings;
         use kentos_commands::{TopologyExceptionOperation as Op, TopologyFindingState as State};
         let (rows, n) = match self.object_findings(slot)? {
-            ObjectFindings::NotChecked => (vec![Row::note("Denetlenmedi: Topoloji sekmesinde Denetle.")], 0),
+            ObjectFindings::NotChecked => (
+                vec![Row::note("Denetlenmedi: Topoloji sekmesinde Denetle.")],
+                0,
+            ),
             ObjectFindings::Checked { findings, old } => {
                 let n = findings.len();
                 let mut rows = Vec::new();
@@ -287,9 +373,18 @@ impl App {
                         pick("İstisna", State::Exception, Op::Mark),
                     ];
                     // The quiet lines: the mark's reason, then the measure and the rule.
-                    let note = if f.measure.is_empty() { format!("Kural: {}", f.rule) } else { format!("{} · kural: {}", f.measure, f.rule) };
+                    let note = if f.measure.is_empty() {
+                        format!("Kural: {}", f.rule)
+                    } else {
+                        format!("{} · kural: {}", f.measure, f.rule)
+                    };
                     rows.push(Row {
-                        editor: Some(Editor::Select { text: word.to_owned(), swatch: None, icon: None, items }),
+                        editor: Some(Editor::Select {
+                            text: word.to_owned(),
+                            swatch: None,
+                            icon: None,
+                            items,
+                        }),
                         thumb: Some(rows::Thumb {
                             key: None,
                             icon: "zoomSelection",
@@ -309,7 +404,9 @@ impl App {
                     rows.push(Row::note("Son denetimde bulgusu yok."));
                 }
                 if old {
-                    let mut stale = Row::note("Çizim denetimden sonra değişti; Topoloji sekmesinde Değişenleri denetle.");
+                    let mut stale = Row::note(
+                        "Çizim denetimden sonra değişti; Topoloji sekmesinde Değişenleri denetle.",
+                    );
                     stale.warn = true;
                     rows.push(stale);
                 }
@@ -318,7 +415,11 @@ impl App {
         };
         Some(rows::Section {
             id: "topology".into(),
-            title: if n > 0 { format!("Topoloji ({n})").into() } else { "Topoloji".into() },
+            title: if n > 0 {
+                format!("Topoloji ({n})").into()
+            } else {
+                "Topoloji".into()
+            },
             rows,
         })
     }
@@ -329,24 +430,41 @@ impl App {
         let rows = match self.selection_findings(slots)? {
             None => vec![Row::note("Denetlenmedi: Topoloji sekmesinde Denetle.")],
             Some(s) => {
-                let figure = |label: &'static str, n: usize| Row { numeric: true, ..Row::text(label, n.to_string()) };
+                let figure = |label: &'static str, n: usize| Row {
+                    numeric: true,
+                    ..Row::text(label, n.to_string())
+                };
                 let mut rows = vec![figure("Bulgular", s.total())];
                 // Each state with findings, a row of its own (a long line would be cut in the panel).
-                for (n, word) in [(s.open, "Değerlendirilmedi"), (s.errors, "Hata"), (s.exceptions, "İstisna"), (s.lapsed, "Yeniden değerlendir")] {
+                for (n, word) in [
+                    (s.open, "Değerlendirilmedi"),
+                    (s.errors, "Hata"),
+                    (s.exceptions, "İstisna"),
+                    (s.lapsed, "Yeniden değerlendir"),
+                ] {
                     if n > 0 {
                         rows.push(figure(word, n));
                     }
                 }
-                rows.push(Row::note(&format!("Denetlenen {} nesnenin; ortak bulgu bir kez sayılır.", s.objects)));
+                rows.push(Row::note(&format!(
+                    "Denetlenen {} nesnenin; ortak bulgu bir kez sayılır.",
+                    s.objects
+                )));
                 if s.old {
-                    let mut stale = Row::note("Çizim denetimden sonra değişti; Topoloji sekmesinde Değişenleri denetle.");
+                    let mut stale = Row::note(
+                        "Çizim denetimden sonra değişti; Topoloji sekmesinde Değişenleri denetle.",
+                    );
                     stale.warn = true;
                     rows.push(stale);
                 }
                 rows
             }
         };
-        Some(rows::Section { id: "topology".into(), title: "Topoloji".into(), rows })
+        Some(rows::Section {
+            id: "topology".into(),
+            title: "Topoloji".into(),
+            rows,
+        })
     }
 
     /// The header's meta: “#12”, “3 nesne”; none with nothing selected.
@@ -358,11 +476,30 @@ impl App {
     pub(crate) fn properties_view<'a>(&'a self, doc: &'a Document) -> Element<'a, Message> {
         let panel = self.properties_panel(doc);
         let total = panel.total;
-        let targets = self.properties_kind(doc).and_then(|kind| panel.types.iter().find(|(k, _)| *k == kind).map(|(_, n)| *n)).unwrap_or(total);
+        let targets = self
+            .properties_kind(doc)
+            .and_then(|kind| {
+                panel
+                    .types
+                    .iter()
+                    .find(|(k, _)| *k == kind)
+                    .map(|(_, n)| *n)
+            })
+            .unwrap_or(total);
         // Like a CAD property palette: type/count and compact tools share one row.
         use kentos_ui::widget::select::{Choice as SelectChoice, Select};
-        let kinds: Vec<_> = panel.types.iter().map(|(kind, _)| kind.to_string()).collect();
-        let selected = if panel.types.len() > 1 { self.properties_kind(doc).and_then(|kind| kinds.iter().position(|k| k == kind)).map_or(0, |i| i + 1) } else { 0 };
+        let kinds: Vec<_> = panel
+            .types
+            .iter()
+            .map(|(kind, _)| kind.to_string())
+            .collect();
+        let selected = if panel.types.len() > 1 {
+            self.properties_kind(doc)
+                .and_then(|kind| kinds.iter().position(|k| k == kind))
+                .map_or(0, |i| i + 1)
+        } else {
+            0
+        };
         let all = match panel.types.as_slice() {
             // Rows of a data layer selected in its table (docs/adr/9326): said as rows, not as nothing.
             [] => match self.selected_source_rows() {
@@ -374,18 +511,38 @@ impl App {
         };
         let mut choices = vec![SelectChoice::new(all)];
         if panel.types.len() > 1 {
-            choices.extend(panel.types.iter().map(|(kind, n)| SelectChoice::new(format!("{} ({n})", crate::selecting::kind_title(kind)))));
+            choices.extend(panel.types.iter().map(|(kind, n)| {
+                SelectChoice::new(format!("{} ({n})", crate::selecting::kind_title(kind)))
+            }));
         }
-        let scope = Select::new(choices, Some(selected), move |i| Message::Properties(Event::Kind(i.checked_sub(1).and_then(|i| kinds.get(i).cloned()))))
-            .searchable(false);
+        let scope = Select::new(choices, Some(selected), move |i| {
+            Message::Properties(Event::Kind(
+                i.checked_sub(1).and_then(|i| kinds.get(i).cloned()),
+            ))
+        })
+        .searchable(false);
         let summary = match &panel.summary {
-            Summary::Empty => "Çizimde bir nesneye tıklayın veya özellik koşullarıyla seçin.".to_owned(),
-            Summary::One { kind, label, layer } => format!("{kind}{}{}",
-                label.as_ref().map_or(String::new(), |label| format!(" · {label}")),
-                layer.as_ref().map_or(String::new(), |(_, path)| format!(" · {path}"))),
-            Summary::Many { count, kinds } => format!("{count} nesne · {kinds}. Tür seçimi yalnız özellik panelini daraltır; sahne seçimi korunur."),
+            Summary::Empty => {
+                "Çizimde bir nesneye tıklayın veya özellik koşullarıyla seçin.".to_owned()
+            }
+            Summary::One { kind, label, layer } => format!(
+                "{kind}{}{}",
+                label
+                    .as_ref()
+                    .map_or(String::new(), |label| format!(" · {label}")),
+                layer
+                    .as_ref()
+                    .map_or(String::new(), |(_, path)| format!(" · {path}"))
+            ),
+            Summary::Many { count, kinds } => format!(
+                "{count} nesne · {kinds}. Tür seçimi yalnız özellik panelini daraltır; sahne seçimi korunur."
+            ),
         };
-        let scope = kentos_ui::widget::tip(scope, kentos_ui::widget::Tip::new("Özellik kapsamı").body(summary), iced::widget::tooltip::Position::Bottom);
+        let scope = kentos_ui::widget::tip(
+            scope,
+            kentos_ui::widget::Tip::new("Özellik kapsamı").body(summary),
+            iced::widget::tooltip::Position::Bottom,
+        );
         let compact_tool = |glyph, title, message: Option<Message>, active| {
             kentos_ui::widget::tip(
                 iced::widget::button(icon(glyph).size(14.0))
@@ -397,38 +554,73 @@ impl App {
             )
         };
         let isolated = doc.model.objects_isolated();
-        let isolation_command = if isolated { "view.endObjectIsolation" } else { "view.isolateObjects" };
-        let query = compact_tool(Icon::Filter, "Özelliklerle seç…", Some(Message::Properties(Event::Query)), false);
+        let isolation_command = if isolated {
+            "view.endObjectIsolation"
+        } else {
+            "view.isolateObjects"
+        };
+        let query = compact_tool(
+            Icon::Filter,
+            "Özelliklerle seç…",
+            Some(Message::Properties(Event::Query)),
+            false,
+        );
         let isolation = compact_tool(
             crate::icons::from_web(Some("layerIsolate")),
-            if isolated { "Nesne yalıtımını bitir" } else { "Seçimi geçici yalıt" },
-            self.available(isolation_command).then_some(Message::Run(isolation_command)), isolated,
+            if isolated {
+                "Nesne yalıtımını bitir"
+            } else {
+                "Seçimi geçici yalıt"
+            },
+            self.available(isolation_command)
+                .then_some(Message::Run(isolation_command)),
+            isolated,
         );
-        let selection_bar = boxed(row![container(scope).width(Fill), query, isolation].spacing(4).align_y(Center), [6, 8]);
+        let selection_bar = boxed(
+            row![container(scope).width(Fill), query, isolation]
+                .spacing(4)
+                .align_y(Center),
+            [6, 8],
+        );
         let mut body = Column::new().push(selection_bar);
         if isolated {
-            body = body.push(boxed(label::caption("Geçici yalıtım açık").style(style::text::accent), [0, 12]));
+            body = body.push(boxed(
+                label::caption("Geçici yalıtım açık").style(style::text::accent),
+                [0, 12],
+            ));
         }
         if targets > panel.editable {
-            body = body.push(boxed(label::caption(format!("{} düzenlenebilir · {} kilitli", panel.editable, targets - panel.editable)), [3, 12]));
+            body = body.push(boxed(
+                label::caption(format!(
+                    "{} düzenlenebilir · {} kilitli",
+                    panel.editable,
+                    targets - panel.editable
+                )),
+                [3, 12],
+            ));
         }
         let mut sheet = PropertySheet::new();
         for section in panel.sections {
             let (open, toggle) = match &section.id {
-                std::borrow::Cow::Borrowed(id) => (!self.props_closed.contains(id), Event::Toggle(id)),
-                std::borrow::Cow::Owned(id) => (!self.props_groups_closed.contains(id), Event::ToggleGroup(id.clone())),
+                std::borrow::Cow::Borrowed(id) => {
+                    (!self.props_closed.contains(id), Event::Toggle(id))
+                }
+                std::borrow::Cow::Owned(id) => (
+                    !self.props_groups_closed.contains(id),
+                    Event::ToggleGroup(id.clone()),
+                ),
             };
-            sheet = sheet.section(
-                section.title,
-                open,
-                Message::Properties(toggle),
-            );
+            sheet = sheet.section(section.title, open, Message::Properties(toggle));
             if !open {
                 continue;
             }
             for mut row in section.rows {
                 // A note under a value of “Bu değer nereden geliyor?” runs the sheet's width (docs/adr/1100 §5).
-                if row.note && (row.warn || section.id.starts_with("blockParams") || section.id == "valueOrigin") {
+                if row.note
+                    && (row.warn
+                        || section.id.starts_with("blockParams")
+                        || section.id == "valueOrigin")
+                {
                     sheet = sheet.note(self.cell(row));
                     continue;
                 }
@@ -452,11 +644,13 @@ impl App {
                     Some(words) => kentos_ui::widget::Cell::flat(
                         iced::widget::row![
                             container(cell).width(Fill),
-                            container(kentos_ui::label::caption(words).style(if words == "Tipten" {
-                                kentos_ui::style::text::muted
-                            } else {
-                                kentos_ui::style::text::accent
-                            }))
+                            container(kentos_ui::label::caption(words).style(
+                                if words == "Tipten" {
+                                    kentos_ui::style::text::muted
+                                } else {
+                                    kentos_ui::style::text::accent
+                                }
+                            ))
                             .padding(iced::Padding {
                                 left: 4.0,
                                 right: kentos_ui::theme::metrics::cell_end(),
@@ -489,10 +683,16 @@ impl App {
         let body: Element<'a, Message> = body.push(sheet).width(Fill).into();
         let key = self.properties_key(doc);
         // A different target must get a fresh edit-cell tree, even if its shown value is identical.
-        iced::widget::keyed_column([(key, body.map(move |message| match message {
-            Message::Properties(event) => Message::Properties(Event::Guarded(key, Box::new(event))),
-            other => other,
-        }))]).into()
+        iced::widget::keyed_column([(
+            key,
+            body.map(move |message| match message {
+                Message::Properties(event) => {
+                    Message::Properties(Event::Guarded(key, Box::new(event)))
+                }
+                other => other,
+            }),
+        )])
+        .into()
     }
 
     /// An attachment's picture: its photo once decoded, else its kind's icon;
@@ -541,10 +741,17 @@ impl App {
                 use kentos_ui::widget::strip::icon_button;
                 let browse = |slot| Message::Properties(Event::SurveyPoint(slot));
                 row![
-                    icon_button(Icon::ChevronLeft, "Önceki seçili nokta", previous.map(browse)),
+                    icon_button(
+                        Icon::ChevronLeft,
+                        "Önceki seçili nokta",
+                        previous.map(browse)
+                    ),
                     label::caption(row.value),
                     icon_button(Icon::ChevronRight, "Sonraki seçili nokta", next.map(browse)),
-                ].spacing(5).align_y(Center).into()
+                ]
+                .spacing(5)
+                .align_y(Center)
+                .into()
             }
             Some(Editor::Text(field) | Editor::Number(field)) => {
                 let cell = EditCell::new(row.value, move |text| {
@@ -610,7 +817,11 @@ impl App {
     pub fn properties_event(&mut self, event: Event) {
         let event = match event {
             Event::Guarded(key, event) => {
-                if self.document.as_ref().is_none_or(|doc| self.properties_key(doc) != key) {
+                if self
+                    .document
+                    .as_ref()
+                    .is_none_or(|doc| self.properties_key(doc) != key)
+                {
                     self.warn("Özellik düzenlemesi uygulanmadı: çizim veya seçim değişti. Güncel hedefi yeniden seçin.");
                     return;
                 }
@@ -641,19 +852,40 @@ impl App {
             return;
         }
         if matches!(event, Event::Query) {
-            let scope = if self.selection.is_empty() { "all" } else { "selection" };
+            let scope = if self.selection.is_empty() {
+                "all"
+            } else {
+                "selection"
+            };
             let mut input = serde_json::json!({"scope":scope});
-            if let Some(kind) = self.document.as_ref().and_then(|doc| self.properties_kind(doc)) {
+            if let Some(kind) = self
+                .document
+                .as_ref()
+                .and_then(|doc| self.properties_kind(doc))
+            {
                 input["kinds"] = serde_json::json!([kind]);
             }
-            let path = self.selection.sub().map(|(_, sub)| sub.path.iter().map(u32::to_string).collect::<Vec<_>>().join("/")).unwrap_or_default();
+            let path = self
+                .selection
+                .sub()
+                .map(|(_, sub)| {
+                    sub.path
+                        .iter()
+                        .map(u32::to_string)
+                        .collect::<Vec<_>>()
+                        .join("/")
+                })
+                .unwrap_or_default();
             self.open_processing("selection.byExpression", Some(serde_json::from_value(serde_json::json!({
                 "input":input,"condition":"true","mode":"new","cadFilter":true,"blockPath":path
             })).expect("fixed query values")));
             return;
         }
         if let Event::Kind(kind) = event {
-            self.properties_scope.kind = self.document.as_ref().and_then(|doc| kind.map(|kind| (doc.session, self.selection.version(), kind)));
+            self.properties_scope.kind = self
+                .document
+                .as_ref()
+                .and_then(|doc| kind.map(|kind| (doc.session, self.selection.version(), kind)));
             self.properties_scope.epoch = self.properties_scope.epoch.wrapping_add(1);
             return;
         }
@@ -663,7 +895,8 @@ impl App {
                 && self.selection.contains(slot)
                 && matches!(doc.model.get(slot), Some(Entity::Point(_)))
             {
-                self.properties_scope.survey_point = Some((doc.session, self.selection.version(), slot));
+                self.properties_scope.survey_point =
+                    Some((doc.session, self.selection.version(), slot));
                 self.properties_scope.epoch = self.properties_scope.epoch.wrapping_add(1);
             }
             return;
@@ -769,7 +1002,16 @@ impl App {
         let drawing = doc.path.clone();
         let model = &mut doc.model;
         let said = match event {
-            Event::Toggle(_) | Event::ToggleGroup(_) | Event::SelectObject(_) | Event::Kind(_) | Event::SurveyPoint(_) | Event::Query | Event::Guarded(_, _) | Event::TextLayoutPreview(_, _) | Event::ElementType(_) | Event::Schedule(_) => Vec::new(),
+            Event::Toggle(_)
+            | Event::ToggleGroup(_)
+            | Event::SelectObject(_)
+            | Event::Kind(_)
+            | Event::SurveyPoint(_)
+            | Event::Query
+            | Event::Guarded(_, _)
+            | Event::TextLayoutPreview(_, _)
+            | Event::ElementType(_)
+            | Event::Schedule(_) => Vec::new(),
             Event::Unlink(ids) => {
                 let mut input = set_input(model, &ids, PropertiesOperation::Unlink);
                 input.unlink = true;
@@ -864,7 +1106,9 @@ impl App {
             Event::InsertBlock(slot, block) => properties::replace_block(model, slot, block),
             Event::EmbedImage(slot) => crate::pictures::embed(model, slot, drawing.as_deref()),
             Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
-            Event::Wall(slot, change) => properties::edit_wall_kept(model, slot, change, wall_parts::keep()),
+            Event::Wall(slot, change) => {
+                properties::edit_wall_kept(model, slot, change, wall_parts::keep())
+            }
             Event::WallKeep(r) => {
                 wall_parts::set_keep(r);
                 Vec::new()
@@ -893,7 +1137,10 @@ impl App {
                 model,
                 slot,
                 None,
-                Some(v.map(|exit| kentos_commands::DeclaredExit { exit, basis: kentos_commands::DeclaredBasis::Author })),
+                Some(v.map(|exit| kentos_commands::DeclaredExit {
+                    exit,
+                    basis: kentos_commands::DeclaredBasis::Author,
+                })),
                 None,
                 None,
             ),
@@ -921,11 +1168,17 @@ impl App {
             ),
             Event::ShaftPressurized(slot, on) => {
                 // The vent's area stays; neither left takes the declaration away (docs/adr/8135).
-                let own = model.get(slot).and_then(kentos_native_application::arch_performance::shaft_vent_of).cloned();
+                let own = model
+                    .get(slot)
+                    .and_then(kentos_native_application::arch_performance::shaft_vent_of)
+                    .cloned();
                 let area = own.as_ref().and_then(|v| v.area);
                 let basis = own.map_or(kentos_commands::DeclaredBasis::Author, |v| v.basis);
-                let vent = (area.is_some() || on)
-                    .then_some(kentos_commands::DeclaredShaftVent { area, pressurized: on, basis });
+                let vent = (area.is_some() || on).then_some(kentos_commands::DeclaredShaftVent {
+                    area,
+                    pressurized: on,
+                    basis,
+                });
                 properties::edit_shaft_vent(model, slot, vent)
             }
             Event::Protected(slot, v) => properties::edit_roles(model, slot, Some(v), None),
@@ -974,7 +1227,9 @@ impl App {
             Event::DimensionStyle(slots, id) => {
                 properties::apply_dimension_style(model, &slots, id.as_deref())
             }
-            Event::TableStyle(slots, id) => properties::apply_table_style(model, &slots, id.as_deref()),
+            Event::TableStyle(slots, id) => {
+                properties::apply_table_style(model, &slots, id.as_deref())
+            }
             Event::LeaderArrow(slots, arrow) => properties::change_leaders(model, &slots, |l| {
                 (l.arrow != arrow).then(|| LeaderEntity { arrow, ..l.clone() })
             }),

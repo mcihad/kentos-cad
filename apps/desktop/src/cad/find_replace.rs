@@ -135,8 +135,15 @@ impl App {
         let Some(w) = self.find_replace.as_mut() else {
             return Task::none();
         };
-        if matches!(&event, Event::Find(_) | Event::Replace(_) | Event::Wildcard(_)
-            | Event::MatchCase(_) | Event::WholeWord(_) | Event::SelectionOnly(_)) {
+        if matches!(
+            &event,
+            Event::Find(_)
+                | Event::Replace(_)
+                | Event::Wildcard(_)
+                | Event::MatchCase(_)
+                | Event::WholeWord(_)
+                | Event::SelectionOnly(_)
+        ) {
             w.notice = None;
         }
         match event {
@@ -185,8 +192,13 @@ impl App {
         w.notice = if !said.is_empty() {
             Some((kentos_ui::widget::Severity::Error, said.join("\n")))
         } else if n > 0 {
-            Some((kentos_ui::widget::Severity::Info, format!("{n} yazı değiştirildi. Tek adımda geri alabilirsiniz.")))
-        } else { None };
+            Some((
+                kentos_ui::widget::Severity::Info,
+                format!("{n} yazı değiştirildi. Tek adımda geri alabilirsiniz."),
+            ))
+        } else {
+            None
+        };
         w.unchecked.clear();
         for text in said {
             self.warn(text);
@@ -282,10 +294,17 @@ impl App {
             )
         } else {
             // Found and changed counted apart (UR2-036): a text the replacement leaves as it is is still found.
-            let same = w.matches.iter().filter(|m| m.blocked == Some(Blocked::Same)).count();
+            let same = w
+                .matches
+                .iter()
+                .filter(|m| m.blocked == Some(Blocked::Same))
+                .count();
             let changes = w.matches.len() - same;
             if same > 0 {
-                words::text_line(Kind::Info, format!("{} eşleşme, {changes} değişiklik.", w.matches.len()))
+                words::text_line(
+                    Kind::Info,
+                    format!("{} eşleşme, {changes} değişiklik.", w.matches.len()),
+                )
             } else {
                 words::text_line(Kind::Info, format!("{} eşleşme.", w.matches.len()))
             }
@@ -399,7 +418,10 @@ impl App {
             body = body.push(words::summary(lines));
         }
         if let Some((severity, message)) = &w.notice {
-            body = body.push(kentos_ui::widget::notice::Banner::new(*severity, message.clone()));
+            body = body.push(kentos_ui::widget::notice::Banner::new(
+                *severity,
+                message.clone(),
+            ));
         }
         let body = body.push(table);
         Frame::new(FIND_TITLE)

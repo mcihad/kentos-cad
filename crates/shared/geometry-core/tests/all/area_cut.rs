@@ -6,7 +6,10 @@ use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
 
 fn cases() -> Value {
-    let path = format!("{}/../../../fixtures/area-cut/v1/cases.json", env!("CARGO_MANIFEST_DIR"));
+    let path = format!(
+        "{}/../../../fixtures/area-cut/v1/cases.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
     serde_json::from_str(&std::fs::read_to_string(path).expect("the cases")).expect("JSON")
 }
 
@@ -46,11 +49,21 @@ fn the_cut_leaves_the_target_beside_the_edge() {
         near(cut.a.y, num(&want["a"][1]), &format!("{name}: a.y"));
         near(cut.b.x, num(&want["b"][0]), &format!("{name}: b.x"));
         near(cut.b.y, num(&want["b"][1]), &format!("{name}: b.y"));
-        near(cut.distance, num(&want["distance"]), &format!("{name}: distance"));
+        near(
+            cut.distance,
+            num(&want["distance"]),
+            &format!("{name}: distance"),
+        );
         // The pieces' areas as the shoelace gives them: to 1e-9 of the whole area.
         let scale = num(&want["near"]) + num(&want["far"]);
-        for (g, w, what) in [(cut.near, &want["near"], "near"), (cut.far, &want["far"], "far")] {
-            assert!((g - num(w)).abs() <= 1e-9 * kentos_geometry_core::jsmath::js_max(scale, 1.0), "{name}: {what} {g} ≠ {w}");
+        for (g, w, what) in [
+            (cut.near, &want["near"], "near"),
+            (cut.far, &want["far"], "far"),
+        ] {
+            assert!(
+                (g - num(w)).abs() <= 1e-9 * kentos_geometry_core::jsmath::js_max(scale, 1.0),
+                "{name}: {what} {g} ≠ {w}"
+            );
         }
     }
 }

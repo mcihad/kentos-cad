@@ -33,13 +33,15 @@ impl Party {
 
     /// Prepares the professional's side: the professional, or an editor of their office and above.
     pub fn works_for_professional(self) -> bool {
-        matches!(self, Party::Professional) || matches!(self, Party::Colleague(r) if r >= TenantRole::Editor)
+        matches!(self, Party::Professional)
+            || matches!(self, Party::Colleague(r) if r >= TenantRole::Editor)
     }
 
     /// Takes the professional's steps (sends, withdraws, takes on, delivers): the professional, or a project manager
     /// of their office and above, as the organisation's decisions are its managers'.
     pub fn decides_for_professional(self) -> bool {
-        matches!(self, Party::Professional) || matches!(self, Party::Colleague(r) if r >= TenantRole::ProjectManager)
+        matches!(self, Party::Professional)
+            || matches!(self, Party::Colleague(r) if r >= TenantRole::ProjectManager)
     }
 }
 
@@ -246,7 +248,10 @@ pub fn step_of(
                 ("Dosya kapandı; üzerinde adım atılmaz.", false)
             } else if colleague
                 && !pro
-                && matches!(action, A::Send | A::Withdraw | A::Accept | A::Decline | A::Deliver)
+                && matches!(
+                    action,
+                    A::Send | A::Withdraw | A::Accept | A::Decline | A::Deliver
+                )
             {
                 (
                     "Bu adımı dosyanın sorumlu meslek mensubu ya da büroda proje yöneticisi atar.",

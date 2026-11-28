@@ -85,11 +85,19 @@ fn the_day_known_leaves_out_the_versions_not_known_then() {
     .unwrap();
     s.set_recorded([(1.0, Some((10.0, 20.0))), (2.0, None)], []);
     let near = |s: &Store, x: f64| s.near(Vec2::new(x, 5.0), 0.5).len();
-    assert_eq!((near(&s, 0.0), near(&s, 5.0), near(&s, 10.0)), (1, 1, 1), "without a day all show");
+    assert_eq!(
+        (near(&s, 0.0), near(&s, 5.0), near(&s, 10.0)),
+        (1, 1, 1),
+        "without a day all show"
+    );
     s.set_known_at(Some(15.0));
     assert_eq!(s.time_mask(&[1.0, 2.0, 3.0]), [1, 0, 1]);
     s.set_known_at(Some(20.0));
-    assert_eq!(s.time_mask(&[1.0, 2.0, 3.0]), [0, 0, 1], "superseded on the day itself");
+    assert_eq!(
+        s.time_mask(&[1.0, 2.0, 3.0]),
+        [0, 0, 1],
+        "superseded on the day itself"
+    );
     s.set_known_at(Some(9.0));
     assert_eq!(s.time_mask(&[1.0]), [0], "not yet recorded");
     s.set_recorded([], [1.0, 2.0]);

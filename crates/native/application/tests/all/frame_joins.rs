@@ -216,26 +216,56 @@ fn footings_stand_under_the_floor_and_are_the_ifc_s_footings() {
     ]));
     let m = model(&doc);
     shares_none(&doc, &m);
-    let solid = |owner: &str| (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(owner)).expect("its solid");
+    let solid = |owner: &str| {
+        (0..m.solids.len())
+            .find(|&i| m.owners[i].as_deref() == Some(owner))
+            .expect("its solid")
+    };
     // Its base 0.80 under ±0.00, its top 0.30 under it.
     let (b, t) = heights(&m, solid(&uid[1]));
-    assert!((b + 0.8).abs() < 1e-12 && (t + 0.3).abs() < 1e-12, "{b}–{t}");
+    assert!(
+        (b + 0.8).abs() < 1e-12 && (t + 0.3).abs() < 1e-12,
+        "{b}–{t}"
+    );
     // Betonarme as the column and the slab: one section with them where a drawn section cuts (ISO 128-3, ADR 8041 §2).
     assert_eq!(m.looks[solid(&uid[1])].layer, "MM-TASI-BETONARME");
     // The pad 1.5 × 1.5 × 0.5 whole; the strip 5.25 × 0.6 × 0.5 less the pad's crossing (it was drawn after).
     assert!((volume(&m, &uid[1]) - 1.5 * 1.5 * 0.5).abs() < 1e-9);
-    assert!((volume(&m, &uid[2]) - 5.25 * 0.6 * 0.5).abs() < 1e-9, "{}", volume(&m, &uid[2]));
+    assert!(
+        (volume(&m, &uid[2]) - 5.25 * 0.6 * 0.5).abs() < 1e-9,
+        "{}",
+        volume(&m, &uid[2])
+    );
     // The column over the pad stands on its top (ADR 8172 §3.2), whole: from −0.30 to its storey's top, 0.09 × 3.30.
     let (b, t) = heights(&m, solid(&uid[0]));
-    assert!((b + 0.3).abs() < 1e-12 && (t - 3.0).abs() < 1e-12, "{b}–{t}");
-    assert!((volume(&m, &uid[0]) - 0.09 * 3.3).abs() < 1e-9, "{}", volume(&m, &uid[0]));
-    let (building, written) = kentos_native_application::arch_ifc::building(&doc, "", "KentOS Mimari");
+    assert!(
+        (b + 0.3).abs() < 1e-12 && (t - 3.0).abs() < 1e-12,
+        "{b}–{t}"
+    );
+    assert!(
+        (volume(&m, &uid[0]) - 0.09 * 3.3).abs() < 1e-9,
+        "{}",
+        volume(&m, &uid[0])
+    );
+    let (building, written) =
+        kentos_native_application::arch_ifc::building(&doc, "", "KentOS Mimari");
     assert_eq!(written.footings, 2);
     let text = kentos_ifc::building::write(&building);
-    let footings: Vec<&str> = text.lines().filter(|l| l.contains("=IFCFOOTING(")).collect();
+    let footings: Vec<&str> = text
+        .lines()
+        .filter(|l| l.contains("=IFCFOOTING("))
+        .collect();
     assert_eq!(footings.len(), 2, "{footings:?}");
-    assert!(footings.iter().any(|l| l.ends_with(".PAD_FOOTING.);") && l.contains("'MM-TML-")), "{footings:?}");
-    assert!(footings.iter().any(|l| l.ends_with(".STRIP_FOOTING.);")), "{footings:?}");
+    assert!(
+        footings
+            .iter()
+            .any(|l| l.ends_with(".PAD_FOOTING.);") && l.contains("'MM-TML-")),
+        "{footings:?}"
+    );
+    assert!(
+        footings.iter().any(|l| l.ends_with(".STRIP_FOOTING.);")),
+        "{footings:?}"
+    );
     assert_eq!(text.matches("Qto_FootingBaseQuantities").count(), 2);
 }
 
@@ -253,7 +283,11 @@ fn a_column_goes_down_to_its_own_storey_s_footing_only() {
     ]));
     let m = model(&doc);
     shares_none(&doc, &m);
-    let solid = |owner: &str| (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(owner)).expect("its solid");
+    let solid = |owner: &str| {
+        (0..m.solids.len())
+            .find(|&i| m.owners[i].as_deref() == Some(owner))
+            .expect("its solid")
+    };
     let bottom = |owner: &str| heights(&m, solid(owner)).0;
     assert!((bottom(&uid[0]) + 0.3).abs() < 1e-12, "{}", bottom(&uid[0]));
     assert!(bottom(&uid[1]).abs() < 1e-12, "{}", bottom(&uid[1]));
@@ -271,18 +305,33 @@ fn a_raft_is_the_ifc_s_base_slab_and_its_columns_stand_on_it() {
     ]));
     let m = model(&doc);
     shares_none(&doc, &m);
-    let solid = |owner: &str| (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(owner)).expect("its solid");
+    let solid = |owner: &str| {
+        (0..m.solids.len())
+            .find(|&i| m.owners[i].as_deref() == Some(owner))
+            .expect("its solid")
+    };
     // The raft 0.90 to 0.30 under ±0.00, the column from its top to its storey's.
     let (b, t) = heights(&m, solid(&uid[1]));
-    assert!((b + 0.9).abs() < 1e-12 && (t + 0.3).abs() < 1e-12, "{b}–{t}");
+    assert!(
+        (b + 0.9).abs() < 1e-12 && (t + 0.3).abs() < 1e-12,
+        "{b}–{t}"
+    );
     let (b, t) = heights(&m, solid(&uid[0]));
-    assert!((b + 0.3).abs() < 1e-12 && (t - 3.0).abs() < 1e-12, "{b}–{t}");
-    let (building, written) = kentos_native_application::arch_ifc::building(&doc, "", "KentOS Mimari");
+    assert!(
+        (b + 0.3).abs() < 1e-12 && (t - 3.0).abs() < 1e-12,
+        "{b}–{t}"
+    );
+    let (building, written) =
+        kentos_native_application::arch_ifc::building(&doc, "", "KentOS Mimari");
     assert_eq!((written.slabs, written.footings), (1, 0));
     let text = kentos_ifc::building::write(&building);
     let slabs: Vec<&str> = text.lines().filter(|l| l.contains("=IFCSLAB(")).collect();
     assert_eq!(slabs.len(), 1, "{slabs:?}");
-    assert!(slabs[0].ends_with(".BASESLAB.);") && slabs[0].contains("'MM-DSM-Radye"), "{}", slabs[0]);
+    assert!(
+        slabs[0].ends_with(".BASESLAB.);") && slabs[0].contains("'MM-DSM-Radye"),
+        "{}",
+        slabs[0]
+    );
 }
 
 #[test]
@@ -300,23 +349,58 @@ fn a_profile_covers_a_wall_unjoined_and_is_the_ifc_s_covering() {
          "material": "Prekast beton", "arch": {"level": "zemin"}}
     ]));
     let m = model(&doc);
-    let solid = |owner: &str| (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(owner)).expect("its solid");
+    let solid = |owner: &str| {
+        (0..m.solids.len())
+            .find(|&i| m.owners[i].as_deref() == Some(owner))
+            .expect("its solid")
+    };
     // On EK-2's Harpuşta and Cephe, by their material; the coping on the wall's top.
-    assert!(m.looks[solid(&uid[1])].layer.starts_with("MM-HARP-"), "{}", m.looks[solid(&uid[1])].layer);
-    assert!(m.looks[solid(&uid[3])].layer.starts_with("MM-CEPH-"), "{}", m.looks[solid(&uid[3])].layer);
+    assert!(
+        m.looks[solid(&uid[1])].layer.starts_with("MM-HARP-"),
+        "{}",
+        m.looks[solid(&uid[1])].layer
+    );
+    assert!(
+        m.looks[solid(&uid[3])].layer.starts_with("MM-CEPH-"),
+        "{}",
+        m.looks[solid(&uid[3])].layer
+    );
     let (b, t) = heights(&m, solid(&uid[1]));
-    assert!((b - 1.0).abs() < 1e-12 && (t - 1.05).abs() < 1e-12, "{b}–{t}");
+    assert!(
+        (b - 1.0).abs() < 1e-12 && (t - 1.05).abs() < 1e-12,
+        "{b}–{t}"
+    );
     // No structure: the column does not cut the moulding, the coping does not stop the wall.
-    assert!((volume(&m, &uid[3]) - 6.0 * 0.05 * 0.2).abs() < 1e-9, "{}", volume(&m, &uid[3]));
-    let Some(kentos_commands::Entity::Wall(w)) = doc.entities().find(|e| matches!(e, kentos_commands::Entity::Wall(_)))
+    assert!(
+        (volume(&m, &uid[3]) - 6.0 * 0.05 * 0.2).abs() < 1e-9,
+        "{}",
+        volume(&m, &uid[3])
+    );
+    let Some(kentos_commands::Entity::Wall(w)) = doc
+        .entities()
+        .find(|e| matches!(e, kentos_commands::Entity::Wall(_)))
     else {
         panic!("the wall")
     };
     assert_eq!(doc.wall_height(&w.wall), Some(1.0));
-    let (building, written) = kentos_native_application::arch_ifc::building(&doc, "", "KentOS Mimari");
+    let (building, written) =
+        kentos_native_application::arch_ifc::building(&doc, "", "KentOS Mimari");
     assert_eq!((written.coverings, written.beams), (2, 0));
     let text = kentos_ifc::building::write(&building);
-    let coverings: Vec<&str> = text.lines().filter(|l| l.contains("=IFCCOVERING(")).collect();
-    assert!(coverings.iter().any(|l| l.ends_with(".COPING.);") && l.contains("'MM-KPL-Harpu")), "{coverings:?}");
-    assert!(coverings.iter().any(|l| l.ends_with(".MOLDING.);") && l.contains("'MM-KPL-Cephe_silmesi")), "{coverings:?}");
+    let coverings: Vec<&str> = text
+        .lines()
+        .filter(|l| l.contains("=IFCCOVERING("))
+        .collect();
+    assert!(
+        coverings
+            .iter()
+            .any(|l| l.ends_with(".COPING.);") && l.contains("'MM-KPL-Harpu")),
+        "{coverings:?}"
+    );
+    assert!(
+        coverings
+            .iter()
+            .any(|l| l.ends_with(".MOLDING.);") && l.contains("'MM-KPL-Cephe_silmesi")),
+        "{coverings:?}"
+    );
 }

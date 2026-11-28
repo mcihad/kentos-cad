@@ -670,7 +670,11 @@ impl Input for kentos_commands::TerrainsContours {
 
 impl Input for kentos_commands::TerrainsSheetContours {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        if path == "interval" { self.interval.as_mut() } else { None }
+        if path == "interval" {
+            self.interval.as_mut()
+        } else {
+            None
+        }
     }
 }
 

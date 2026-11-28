@@ -24,9 +24,9 @@
 //! Test code only.
 
 use crate::arch;
+use crate::arch::ArchState;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::design_options_window::Event;
@@ -87,7 +87,13 @@ fn two(app: &mut App) -> Vec<String> {
     event(app, Event::Copy);
     event(app, Event::Close);
     app.selection.set(Vec::<Slot>::new());
-    let set = app.document.as_ref().expect("a drawing").model.arch_options()[0].clone();
+    let set = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .arch_options()[0]
+        .clone();
     let b = set.options[1].members.clone();
     for (uid, dx) in [(&b[0], 0.4), (&b[4], 0.3)] {
         command(
@@ -134,18 +140,36 @@ fn recipe(app: &mut App) {
         json!({"edit": {"kind": "recipe", "name": "Mutfak B", "recipe": {"level": {"id": "zemin"}, "options": [{"set": "mutfak", "option": "b"}]}}}),
     );
     let _ = app.update(Message::Run("view.namedViews"));
-    let _ = app.update(Message::Views(crate::views::Event::Choose("Mutfak B".into())));
+    let _ = app.update(Message::Views(crate::views::Event::Choose(
+        "Mutfak B".into(),
+    )));
 }
 
 /// The kitchen's set and a note's (the text at 1, 1 as A, its copy moved down as B), two proposals saved:
 /// Teklif 1 the primaries, Teklif 2 the kitchen's B and the note's B.
 fn proposals(app: &mut App) {
     two(app);
-    command(app, "cad.options.edit", json!({"operation": {"kind": "define", "name": "Not", "uids": ["0192f5a1-7880-7000-8000-00000000000d"]}}));
-    let copied = command(app, "cad.options.edit", json!({"operation": {"kind": "copy", "set": "not", "option": "a"}}));
+    command(
+        app,
+        "cad.options.edit",
+        json!({"operation": {"kind": "define", "name": "Not", "uids": ["0192f5a1-7880-7000-8000-00000000000d"]}}),
+    );
+    let copied = command(
+        app,
+        "cad.options.edit",
+        json!({"operation": {"kind": "copy", "set": "not", "option": "a"}}),
+    );
     let b = copied["output"]["created"][0].clone();
-    command(app, "cad.entities.transform", json!({"uids": [b], "transform": {"kind": "move", "dx": 0.0, "dy": -0.5}}));
-    command(app, "cad.options.edit", json!({"operation": {"kind": "saveCombo", "name": "Teklif 1"}}));
+    command(
+        app,
+        "cad.entities.transform",
+        json!({"uids": [b], "transform": {"kind": "move", "dx": 0.0, "dy": -0.5}}),
+    );
+    command(
+        app,
+        "cad.options.edit",
+        json!({"operation": {"kind": "saveCombo", "name": "Teklif 1"}}),
+    );
     command(
         app,
         "cad.options.edit",
@@ -189,7 +213,9 @@ fn combos_recipe(app: &mut App) {
         json!({"edit": {"kind": "recipe", "name": "Teklif 2", "recipe": {"level": {"id": "zemin"}, "combo": "teklif-2"}}}),
     );
     let _ = app.update(Message::Run("view.namedViews"));
-    let _ = app.update(Message::Views(crate::views::Event::Choose("Teklif 2".into())));
+    let _ = app.update(Message::Views(crate::views::Event::Choose(
+        "Teklif 2".into(),
+    )));
 }
 
 pub(crate) fn scenes() -> Vec<Scene> {
@@ -209,7 +235,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     use crate::files_testing::last_said;
 
     fn shown(app: &App, slot: u32) -> bool {
@@ -224,24 +250,44 @@ mod tests {
         define(&mut app);
         assert_eq!(
             app.dialog,
-            Some(crate::arch::dialog(crate::arch::ArchDialogKind::DesignOptions))
+            Some(crate::arch::dialog(
+                crate::arch::ArchDialogKind::DesignOptions
+            ))
         );
         event(&mut app, Event::Define);
         let doc = &app.document.as_ref().expect("a drawing").model;
         assert_eq!(doc.arch_options().len(), 1);
         assert_eq!(doc.arch_options()[0].options[0].members.len(), 5);
         event(&mut app, Event::Copy);
-        assert!(last_said(&app).contains("B seçeneği eklendi"), "{}", last_said(&app));
-        let b_wall = app.document.as_ref().expect("a drawing").model.entities().count() as u32;
-        app.spatial.sync(&app.document.as_ref().expect("a drawing").model);
+        assert!(
+            last_said(&app).contains("B seçeneği eklendi"),
+            "{}",
+            last_said(&app)
+        );
+        let b_wall = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .count() as u32;
+        app.spatial
+            .sync(&app.document.as_ref().expect("a drawing").model);
         assert!(shown(&app, 5), "A is drawn");
         assert!(!shown(&app, b_wall - 4), "B is not");
         event(&mut app, Event::Option(1));
         event(&mut app, Event::Primary);
-        app.spatial.sync(&app.document.as_ref().expect("a drawing").model);
+        app.spatial
+            .sync(&app.document.as_ref().expect("a drawing").model);
         assert!(!shown(&app, 5), "A is not drawn once B is primary");
         assert!(shown(&app, b_wall - 4), "B is");
-        let before = app.document.as_ref().expect("a drawing").model.entities().count();
+        let before = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .count();
         event(&mut app, Event::Accept);
         let doc = &app.document.as_ref().expect("a drawing").model;
         assert!(doc.arch_options().is_empty());
@@ -263,7 +309,12 @@ mod tests {
         run(&mut app, "arch.options");
         event(&mut app, Event::ComboName("Teklif 3".into()));
         event(&mut app, Event::ComboSave);
-        let w = app.modules.arch().design_options.as_ref().expect("the window");
+        let w = app
+            .modules
+            .arch()
+            .design_options
+            .as_ref()
+            .expect("the window");
         assert_eq!(
             w.combos.iter().map(|c| c.name.as_str()).collect::<Vec<_>>(),
             ["Teklif 1", "Teklif 2", "Teklif 3"]
@@ -273,9 +324,16 @@ mod tests {
         event(&mut app, Event::Combo(1));
         event(&mut app, Event::ComboApply);
         let doc = &app.document.as_ref().expect("a drawing").model;
-        assert_eq!(doc.arch_options().iter().map(|s| s.primary.as_str()).collect::<Vec<_>>(), ["b", "b"]);
+        assert_eq!(
+            doc.arch_options()
+                .iter()
+                .map(|s| s.primary.as_str())
+                .collect::<Vec<_>>(),
+            ["b", "b"]
+        );
         assert!(last_said(&app).contains("Teklif 2"), "{}", last_said(&app));
-        app.spatial.sync(&app.document.as_ref().expect("a drawing").model);
+        app.spatial
+            .sync(&app.document.as_ref().expect("a drawing").model);
         assert!(!shown(&app, 5), "the kitchen's A is not drawn");
         event(&mut app, Event::Combo(2));
         event(&mut app, Event::ComboDelete);
@@ -291,7 +349,10 @@ mod tests {
         let _ = app.update(Message::Views(crate::views::Event::Choose("Teklif".into())));
         let _ = app.update(Message::Views(crate::views::Event::RecipeCombo(Some(1))));
         let _ = app.update(Message::Views(crate::views::Event::RecipeApply));
-        assert_eq!(app.recipe_draft("Teklif").combo.as_deref(), Some("teklif-2"));
+        assert_eq!(
+            app.recipe_draft("Teklif").combo.as_deref(),
+            Some("teklif-2")
+        );
     }
 
     /// docs/adr/0809: Bileşimler compares the picked proposal with another, set by set; picking the other as the
@@ -301,7 +362,12 @@ mod tests {
         let mut app = crate::files_testing::app_with_drawing();
         proposals(&mut app);
         run(&mut app, "arch.options");
-        let w = app.modules.arch().design_options.as_ref().expect("the window");
+        let w = app
+            .modules
+            .arch()
+            .design_options
+            .as_ref()
+            .expect("the window");
         assert_eq!((w.combo, w.versus), (0, 1));
         let c = w
             .combos_compared
@@ -310,12 +376,20 @@ mod tests {
             .as_ref()
             .expect("no refusal");
         assert_eq!((c.a.as_str(), c.b.as_str()), ("teklif-1", "teklif-2"));
-        assert_eq!(c.sets.iter().map(|s| s.set.as_str()).collect::<Vec<_>>(), ["mutfak", "not"]);
+        assert_eq!(
+            c.sets.iter().map(|s| s.set.as_str()).collect::<Vec<_>>(),
+            ["mutfak", "not"]
+        );
         assert!(c.sets[0].changed.len() >= 2, "{:?}", c.sets[0]);
         let words = crate::design_options_window::combos_words(c, &w.rows);
         assert!(words.contains("Mutfak A → B"), "{words}");
         event(&mut app, Event::Combo(1));
-        let w = app.modules.arch().design_options.as_ref().expect("the window");
+        let w = app
+            .modules
+            .arch()
+            .design_options
+            .as_ref()
+            .expect("the window");
         assert_eq!((w.combo, w.versus), (1, 0));
         let c = w
             .combos_compared
@@ -337,8 +411,13 @@ mod tests {
             json!({"edit": {"kind": "save", "name": "Mutfak B", "center": {"x": 3.0, "y": 2.0}, "width": 8.0, "height": 6.0}}),
         );
         let _ = app.update(Message::Run("view.namedViews"));
-        let _ = app.update(Message::Views(crate::views::Event::Choose("Mutfak B".into())));
-        let _ = app.update(Message::Views(crate::views::Event::RecipeOption(0, Some(1))));
+        let _ = app.update(Message::Views(crate::views::Event::Choose(
+            "Mutfak B".into(),
+        )));
+        let _ = app.update(Message::Views(crate::views::Event::RecipeOption(
+            0,
+            Some(1),
+        )));
         let _ = app.update(Message::Views(crate::views::Event::RecipeApply));
         let r = app.recipe_draft("Mutfak B");
         assert_eq!(

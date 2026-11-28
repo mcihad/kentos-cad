@@ -65,7 +65,10 @@ struct Pipeline {
 }
 
 #[derive(Deserialize)]
-struct Precision { vertex: String, buffer: Buffer }
+struct Precision {
+    vertex: String,
+    buffer: Buffer,
+}
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -120,8 +123,19 @@ fn the_shared_and_native_modules_validate_without_changing_browser_bindings() {
         ("kentos.wgsl-layout", 10, "styled")
     );
     let native = validate(&shader::source());
-    assert_eq!(binding(&native, "dashPage"), Some(naga::ResourceBinding { group: 1, binding: 1 }));
-    assert!(native.global_variables.iter().all(|(_,g)|g.binding.as_ref().is_none_or(|b|b.group<2)));
+    assert_eq!(
+        binding(&native, "dashPage"),
+        Some(naga::ResourceBinding {
+            group: 1,
+            binding: 1
+        })
+    );
+    assert!(
+        native
+            .global_variables
+            .iter()
+            .all(|(_, g)| g.binding.as_ref().is_none_or(|b| b.group < 2))
+    );
     assert!(!shader::shared_source().contains("dashPage"));
     let module = validate(&shader::shared_source());
     for p in &c.pipelines {
@@ -267,13 +281,24 @@ fn the_pipelines_are_the_contract_s() {
                 assert_eq!(buffer.array_stride, want.buffer.array_stride);
                 assert_eq!(buffer.attributes.len(), want.buffer.attributes.len());
                 for (have, attr) in buffer.attributes.iter().zip(&want.buffer.attributes) {
-                    assert_eq!((have.shader_location, format_name(have.format), have.offset), (attr.location, attr.format.as_str(), attr.offset));
+                    assert_eq!(
+                        (have.shader_location, format_name(have.format), have.offset),
+                        (attr.location, attr.format.as_str(), attr.offset)
+                    );
                 }
-                assert_eq!(matches!(buffer.step_mode, wgpu::VertexStepMode::Instance), want.buffer.step_mode == "instance");
+                assert_eq!(
+                    matches!(buffer.step_mode, wgpu::VertexStepMode::Instance),
+                    want.buffer.step_mode == "instance"
+                );
                 let module = validate(&shader::source());
-                assert!(module.entry_points.iter().any(|e| e.name == vertex && e.stage == naga::ShaderStage::Vertex));
-            },
-            (None, None) => {},
+                assert!(
+                    module
+                        .entry_points
+                        .iter()
+                        .any(|e| e.name == vertex && e.stage == naga::ShaderStage::Vertex)
+                );
+            }
+            (None, None) => {}
             _ => panic!("{}: precision layout mismatch", p.name),
         }
         assert_eq!(spec.vertex_count, p.vertex_count, "{}: vertices", p.name);
@@ -435,14 +460,26 @@ fn the_composition_module_validates_and_is_the_contract_s() {
 /// version is the contract's; the composite's and the occlusion's modules validate and have their passes' entry points.
 #[test]
 fn the_scene3d_module_validates_and_is_the_contract_s() {
-    use kentos_render_wgpu::scene3d::{COMPOSITE_WGSL, OCCLUSION_WGSL, SCENE3D_LAYOUT_JSON, SCENE3D_WGSL};
+    use kentos_render_wgpu::scene3d::{
+        COMPOSITE_WGSL, OCCLUSION_WGSL, SCENE3D_LAYOUT_JSON, SCENE3D_WGSL,
+    };
     let module = validate(SCENE3D_WGSL);
-    let layout: serde_json::Value = serde_json::from_str(SCENE3D_LAYOUT_JSON).expect("scene3d.layout.json reads");
+    let layout: serde_json::Value =
+        serde_json::from_str(SCENE3D_LAYOUT_JSON).expect("scene3d.layout.json reads");
     assert_eq!(layout["module"], "scene3d");
     for p in layout["pipelines"].as_array().expect("pipelines") {
-        for (key, stage) in [("vertex", naga::ShaderStage::Vertex), ("fragment", naga::ShaderStage::Fragment)] {
+        for (key, stage) in [
+            ("vertex", naga::ShaderStage::Vertex),
+            ("fragment", naga::ShaderStage::Fragment),
+        ] {
             let name = p[key].as_str().expect("entry point");
-            assert!(module.entry_points.iter().any(|e| e.name == name && e.stage == stage), "{name} ({stage:?})");
+            assert!(
+                module
+                    .entry_points
+                    .iter()
+                    .any(|e| e.name == name && e.stage == stage),
+                "{name} ({stage:?})"
+            );
         }
     }
     for (name, size) in [("View", 288u64), ("Tile", 16)] {
@@ -453,14 +490,26 @@ fn the_scene3d_module_validates_and_is_the_contract_s() {
             .map(|(_, t)| t.inner.size(module.to_ctx()))
             .unwrap_or_else(|| panic!("{name}"));
         assert_eq!(u64::from(got), size, "{name}");
-        assert_eq!(layout["structs"][name]["size"].as_u64(), Some(size), "{name}");
+        assert_eq!(
+            layout["structs"][name]["size"].as_u64(),
+            Some(size),
+            "{name}"
+        );
     }
     for g in layout["bindGroups"].as_array().expect("groups") {
         for b in g["bindings"].as_array().expect("bindings") {
             let name = b["name"].as_str().expect("name");
             let at = binding(&module, name).unwrap_or_else(|| panic!("{name} is bound"));
-            assert_eq!(u64::from(at.group), g["group"].as_u64().expect("group"), "{name}");
-            assert_eq!(u64::from(at.binding), b["binding"].as_u64().expect("binding"), "{name}");
+            assert_eq!(
+                u64::from(at.group),
+                g["group"].as_u64().expect("group"),
+                "{name}"
+            );
+            assert_eq!(
+                u64::from(at.binding),
+                b["binding"].as_u64().expect("binding"),
+                "{name}"
+            );
         }
     }
     let version = module
@@ -469,7 +518,9 @@ fn the_scene3d_module_validates_and_is_the_contract_s() {
         .find(|(_, c)| c.name.as_deref() == Some("LAYOUT_VERSION"))
         .map(|(_, c)| &module.global_expressions[c.init])
         .expect("LAYOUT_VERSION");
-    assert!(matches!(version, naga::Expression::Literal(naga::Literal::U32(v)) if u64::from(*v) == layout["version"].as_u64().expect("version")));
+    assert!(
+        matches!(version, naga::Expression::Literal(naga::Literal::U32(v)) if u64::from(*v) == layout["version"].as_u64().expect("version"))
+    );
     for p in layout["passes"].as_array().expect("passes") {
         let source = match p["name"].as_str() {
             Some("composite") => COMPOSITE_WGSL,
@@ -477,14 +528,27 @@ fn the_scene3d_module_validates_and_is_the_contract_s() {
             other => panic!("a pass the renderer has not: {other:?}"),
         };
         let module = validate(source);
-        for (key, stage) in [("vertex", naga::ShaderStage::Vertex), ("fragment", naga::ShaderStage::Fragment)] {
+        for (key, stage) in [
+            ("vertex", naga::ShaderStage::Vertex),
+            ("fragment", naga::ShaderStage::Fragment),
+        ] {
             let name = p[key].as_str().expect("entry point");
-            assert!(module.entry_points.iter().any(|e| e.name == name && e.stage == stage), "{name} ({stage:?})");
+            assert!(
+                module
+                    .entry_points
+                    .iter()
+                    .any(|e| e.name == name && e.stage == stage),
+                "{name} ({stage:?})"
+            );
         }
         for b in p["bindings"].as_array().expect("bindings") {
             let name = b["name"].as_str().expect("name");
             let at = binding(&module, name).unwrap_or_else(|| panic!("{name} is bound"));
-            assert_eq!((u64::from(at.group), u64::from(at.binding)), (0, b["binding"].as_u64().expect("binding")), "{name}");
+            assert_eq!(
+                (u64::from(at.group), u64::from(at.binding)),
+                (0, b["binding"].as_u64().expect("binding")),
+                "{name}"
+            );
         }
     }
 }

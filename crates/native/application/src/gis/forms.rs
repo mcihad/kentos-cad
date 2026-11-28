@@ -181,10 +181,7 @@ pub(crate) fn indexes<'d>(doc: &'d Document, layer: &str) -> &'d [kentos_command
 }
 
 /// The layer's value groups (docs/adr/0423), which a form over it reads.
-pub(crate) fn contingents<'d>(
-    doc: &'d Document,
-    layer: &str,
-) -> &'d [kentos_commands::FieldGroup] {
+pub(crate) fn contingents<'d>(doc: &'d Document, layer: &str) -> &'d [kentos_commands::FieldGroup] {
     doc.layers()
         .get(layer)
         .map_or(&[][..], |n| n.contingents.as_slice())
@@ -495,7 +492,10 @@ pub fn row_screen(
         // Its related items over a data layer read the source's rows too (docs/adr/9165).
         let world = crate::forms_source::world_with(doc, body, rows);
         let prepared = prepared_over(doc, form, body, &variables, "form", &world)?;
-        let layer = doc.layers().get(&form.layer).map_or("", |n| n.name.as_str());
+        let layer = doc
+            .layers()
+            .get(&form.layer)
+            .map_or("", |n| n.name.as_str());
         let mut object = kentos_forms::object_of(e, layer, key as f64);
         object.attachments = Some(kentos_forms::Attached::of(&e.base().attachments));
         Ok(RecordScreen {

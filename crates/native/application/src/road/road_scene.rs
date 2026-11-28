@@ -6,7 +6,9 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use kentos_commands::{CommandResult, CommandWarning, ExportGltf, GltfExported, SceneMeshKind, SceneMeshWritten};
+use kentos_commands::{
+    CommandResult, CommandWarning, ExportGltf, GltfExported, SceneMeshKind, SceneMeshWritten,
+};
 use kentos_domain::Document;
 use kentos_formats::gltf::{Material, Mesh, Scene, write};
 use serde_json::json;
@@ -33,7 +35,11 @@ pub struct ScenePart {
 }
 
 fn losses(message: String, path: &str) -> CommandWarning {
-    CommandWarning { code: codes::EXPORT_LOSSES.into(), message, path: Some(path.into()) }
+    CommandWarning {
+        code: codes::EXPORT_LOSSES.into(),
+        message,
+        path: Some(path.into()),
+    }
 }
 
 fn bad(path: &str, words: String) -> Stop {
@@ -66,13 +72,18 @@ fn chosen<T>(
     key: impl Fn(&T) -> (&str, &str),
     unknown: impl Fn(usize, &str) -> Stop,
 ) -> Result<Vec<(usize, bool)>, Stop> {
-    let Some(names) = names else { return Ok((0..list.len()).map(|i| (i, false)).collect()) };
+    let Some(names) = names else {
+        return Ok((0..list.len()).map(|i| (i, false)).collect());
+    };
     let mut out: Vec<(usize, bool)> = Vec::new();
     for (i, n) in names.iter().enumerate() {
         let at = list
             .iter()
             .position(|x| key(x).0 == n)
-            .or_else(|| list.iter().position(|x| key(x).1.to_lowercase() == n.to_lowercase()))
+            .or_else(|| {
+                list.iter()
+                    .position(|x| key(x).1.to_lowercase() == n.to_lowercase())
+            })
             .ok_or_else(|| unknown(i, n))?;
         if !out.iter().any(|(j, _)| *j == at) {
             out.push((at, true));
@@ -89,13 +100,31 @@ pub(crate) fn parts(
     corridor_names: Option<&[String]>,
 ) -> Result<(Vec<ScenePart>, Vec<CommandWarning>), Stop> {
     let own = terrains::surfaces(doc);
-    let picked = chosen(own, surfaces, |s| (&s.id, &s.name), |i, n| {
-        fail(codes::UNKNOWN_TERRAIN, format!("“{n}” kimlikli ya da adlı yüzey projede yok."), &format!("surfaces[{i}]"))
-    })?;
+    let picked = chosen(
+        own,
+        surfaces,
+        |s| (&s.id, &s.name),
+        |i, n| {
+            fail(
+                codes::UNKNOWN_TERRAIN,
+                format!("“{n}” kimlikli ya da adlı yüzey projede yok."),
+                &format!("surfaces[{i}]"),
+            )
+        },
+    )?;
     let list = doc.road_corridors();
-    let picked_corridors = chosen(list, corridor_names, |c| (&c.id, &c.name), |i, n| {
-        fail(codes::UNKNOWN_CORRIDOR, format!("“{n}” kimlikli ya da adlı koridor projede yok."), &format!("corridors[{i}]"))
-    })?;
+    let picked_corridors = chosen(
+        list,
+        corridor_names,
+        |c| (&c.id, &c.name),
+        |i, n| {
+            fail(
+                codes::UNKNOWN_CORRIDOR,
+                format!("“{n}” kimlikli ya da adlı koridor projede yok."),
+                &format!("corridors[{i}]"),
+            )
+        },
+    )?;
     let (mut out, mut warnings) = (Vec::new(), Vec::new());
     for (i, asked) in picked {
         let def = &own[i];
@@ -110,9 +139,19 @@ pub(crate) fn parts(
                 roles: Vec::new(),
             }),
             Err(stop) if asked => {
-                return Err(bad("surfaces", format!("“{}” yüzeyi kurulamıyor: {}", def.name, corridors::words(stop))));
+                return Err(bad(
+                    "surfaces",
+                    format!(
+                        "“{}” yüzeyi kurulamıyor: {}",
+                        def.name,
+                        corridors::words(stop)
+                    ),
+                ));
             }
-            Err(_) => warnings.push(losses(format!("“{}” yüzeyi kurulamıyor; yazılmadı.", def.name), "surfaces")),
+            Err(_) => warnings.push(losses(
+                format!("“{}” yüzeyi kurulamıyor; yazılmadı.", def.name),
+                "surfaces",
+            )),
         }
     }
     for (i, asked) in picked_corridors {
@@ -136,7 +175,10 @@ pub(crate) fn parts(
         if asked {
             return Err(bad("corridors", format!("“{}” koridoru {why}", def.name)));
         }
-        warnings.push(losses(format!("“{}” koridoru {why}; yazılmadı.", def.name), "corridors"));
+        warnings.push(losses(
+            format!("“{}” koridoru {why}; yazılmadı.", def.name),
+            "corridors",
+        ));
     }
     Ok((out, warnings))
 }
@@ -147,10 +189,12 @@ pub fn with_terrain_cut(parts: &[ScenePart]) -> Vec<ScenePart> {
     let foot: Vec<[[f64; 3]; 3]> = parts
         .iter()
         .filter(|p| p.kind == SceneMeshKind::Corridor)
-        .flat_map(|p| p.triangles.iter().filter_map(|t| {
-            let c = t.map(|k| p.vertices.get(k as usize).copied());
-            Some([c[0]?, c[1]?, c[2]?])
-        }))
+        .flat_map(|p| {
+            p.triangles.iter().filter_map(|t| {
+                let c = t.map(|k| p.vertices.get(k as usize).copied());
+                Some([c[0]?, c[1]?, c[2]?])
+            })
+        })
         .collect();
     parts
         .iter()
@@ -159,7 +203,11 @@ pub fn with_terrain_cut(parts: &[ScenePart]) -> Vec<ScenePart> {
                 return p.clone();
             }
             let cut = kentos_road::cutout::cut_out(&p.vertices, &p.triangles, &foot);
-            ScenePart { vertices: cut.vertices, triangles: cut.triangles, ..p.clone() }
+            ScenePart {
+                vertices: cut.vertices,
+                triangles: cut.triangles,
+                ..p.clone()
+            }
         })
         .collect()
 }
@@ -199,35 +247,68 @@ struct Planned {
 
 fn check(doc: &Document, input: &ExportGltf) -> Result<Planned, Stop> {
     if doc.settings().cad_work != Some(kentos_commands::CadWork::Road) {
-        return Err(fail(codes::NOT_A_ROAD_PROJECT, "3B sahne yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(), ""));
+        return Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "3B sahne yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(),
+            "",
+        ));
     }
     let text = input.path.trim();
     if text.is_empty() || !Path::new(text).is_absolute() {
-        return Err(fail(codes::INVALID_FILE_PATH, "glTF'in yolu boş ya da göreli; mutlak bir .glb yolu verin.".into(), "path"));
+        return Err(fail(
+            codes::INVALID_FILE_PATH,
+            "glTF'in yolu boş ya da göreli; mutlak bir .glb yolu verin.".into(),
+            "path",
+        ));
     }
     if !text.to_ascii_lowercase().ends_with(".glb") {
-        return Err(fail(codes::INVALID_FILE_PATH, format!("“{text}” bir .glb dosyası değil."), "path"));
+        return Err(fail(
+            codes::INVALID_FILE_PATH,
+            format!("“{text}” bir .glb dosyası değil."),
+            "path",
+        ));
     }
     let path = PathBuf::from(text);
     let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
     if !folder.is_dir() {
         return Err(fail(
             codes::INVALID_FILE_PATH,
-            format!("“{}” klasörü yok; dosya var olan bir klasöre yazılır.", folder.display()),
+            format!(
+                "“{}” klasörü yok; dosya var olan bir klasöre yazılır.",
+                folder.display()
+            ),
             "path",
         ));
     }
     if path.exists() && !input.overwrite {
-        return Err(fail(codes::FILE_EXISTS, format!("{} var; üzerine yazmak için overwrite verin.", path.display()), "path"));
+        return Err(fail(
+            codes::FILE_EXISTS,
+            format!(
+                "{} var; üzerine yazmak için overwrite verin.",
+                path.display()
+            ),
+            "path",
+        ));
     }
     let (parts, mut warnings) = parts(doc, input.surfaces.as_deref(), input.corridors.as_deref())?;
     if parts.is_empty() {
-        return Err(bad("", "Yazılacak bir şey yok: seçilen yüzey ya da koridor yok.".into()));
+        return Err(bad(
+            "",
+            "Yazılacak bir şey yok: seçilen yüzey ya da koridor yok.".into(),
+        ));
     }
-    let crs = kentos_project::systems::own(doc.settings())
-        .map(|n| if n.code.starts_with("EPSG:") { n.code.clone() } else { n.name.clone() });
+    let crs = kentos_project::systems::own(doc.settings()).map(|n| {
+        if n.code.starts_with("EPSG:") {
+            n.code.clone()
+        } else {
+            n.name.clone()
+        }
+    });
     if crs.is_none() {
-        warnings.push(losses("Projenin koordinat sistemi yok; sahnenin koordinatları yerel.".into(), "path"));
+        warnings.push(losses(
+            "Projenin koordinat sistemi yok; sahnenin koordinatları yerel.".into(),
+            "path",
+        ));
     }
     let origin = origin_of(&parts);
     let mut error: f64 = 0.0;
@@ -274,13 +355,24 @@ fn check(doc: &Document, input: &ExportGltf) -> Result<Planned, Stop> {
         origin,
         extras: json!({"crs": crs, "origin": origin, "frame": "x doğu, y kuzey, z yukarı; glTF'te (x, z, -y)"}),
         materials: vec![
-            Material { name: "Arazi".into(), color: [0.42, 0.48, 0.30, 1.0], double_sided: true },
-            Material { name: "Koridor".into(), color: [0.55, 0.55, 0.57, 1.0], double_sided: true },
+            Material {
+                name: "Arazi".into(),
+                color: [0.42, 0.48, 0.30, 1.0],
+                double_sided: true,
+            },
+            Material {
+                name: "Koridor".into(),
+                color: [0.55, 0.55, 0.57, 1.0],
+                double_sided: true,
+            },
         ],
         meshes,
     };
     let bytes = write(&scene);
-    let sha256 = Sha256::digest(&bytes).iter().map(|b| format!("{b:02x}")).collect();
+    let sha256 = Sha256::digest(&bytes)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
     let out = GltfExported {
         path: path.display().to_string(),
         meshes: written,
@@ -290,7 +382,12 @@ fn check(doc: &Document, input: &ExportGltf) -> Result<Planned, Stop> {
         bytes: bytes.len() as u64,
         sha256,
     };
-    Ok(Planned { path, out, bytes, warnings })
+    Ok(Planned {
+        path,
+        out,
+        bytes,
+        warnings,
+    })
 }
 
 /// The bytes written at `path` whole or not at all: beside it, read back whole, then moved over it.
@@ -300,7 +397,8 @@ fn write_file(path: &Path, bytes: &[u8]) -> Result<(), String> {
     let tmp = PathBuf::from(tmp);
     let done = (|| -> Result<(), String> {
         std::fs::write(&tmp, bytes).map_err(|e| format!("{} yazılamadı: {e}", tmp.display()))?;
-        let back = std::fs::read(&tmp).map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
+        let back =
+            std::fs::read(&tmp).map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
         if back != bytes {
             return Err("yazılan dosya geri okununca aynı çıkmadı".into());
         }
@@ -315,7 +413,10 @@ fn write_file(path: &Path, bytes: &[u8]) -> Result<(), String> {
 /// Checks `input` against the document; writes nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ExportGltf) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: (), warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: (),
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -323,7 +424,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ExportGltf) -> CommandResult<
 /// What the file would hold; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ExportGltf) -> CommandResult<GltfExported> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: p.out, warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: p.out,
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -342,5 +446,8 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ExportGltf) -> CommandResul
         ))
         .into();
     }
-    CommandResult::Completed { output: p.out, warnings: p.warnings }
+    CommandResult::Completed {
+        output: p.out,
+        warnings: p.warnings,
+    }
 }

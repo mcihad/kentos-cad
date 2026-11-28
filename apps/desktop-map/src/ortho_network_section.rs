@@ -4,14 +4,14 @@
 //! footprint from its pixels that are not NoData (`cad.orthophoto.footprint`, its outline or its convex hull). Each
 //! plan runs on every change and is drawn; its button writes it in one undo step and selects what it wrote.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{column, container, row, space};
 use iced::{Center, Element, Fill, Pixels, Point, Rectangle, Renderer, Theme, mouse};
 use kentos_commands::{
-    CommandResult, OrthoNetworkPart, OrthophotoFootprint, OrthophotoFootprintBuilt, OrthophotoNetwork,
-    OrthophotoNetworkBuilt,
+    CommandResult, OrthoNetworkPart, OrthophotoFootprint, OrthophotoFootprintBuilt,
+    OrthophotoNetwork, OrthophotoNetworkBuilt,
 };
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
@@ -77,7 +77,9 @@ fn msg(e: NetEvent) -> Message {
 fn answer<T>(r: CommandResult<T>) -> Result<T, String> {
     match r {
         CommandResult::Completed { output, .. } => Ok(output),
-        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => Err(error.message),
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => Err(error.message),
         _ => Err("Kurulamadı.".to_owned()),
     }
 }
@@ -95,10 +97,26 @@ impl OrthoNetworkSectionApp for App {
     fn ortho_net_inputs(&self) -> (OrthophotoNetwork, OrthophotoFootprint) {
         let s = &self.modules.map().ortho_seamlines;
         let layer = (!s.layer.is_empty()).then(|| s.layer.clone());
-        let folder = self.document.as_ref().and_then(|d| d.path.as_ref()).and_then(|p| p.parent()).map(|p| p.display().to_string());
+        let folder = self
+            .document
+            .as_ref()
+            .and_then(|d| d.path.as_ref())
+            .and_then(|p| p.parent())
+            .map(|p| p.display().to_string());
         (
-            OrthophotoNetwork { images: s.net.ticked.clone(), footprints: Vec::new(), layer, expected_revision: None },
-            OrthophotoFootprint { raster: s.net.raster.clone(), hull: s.net.hull, layer: None, folder, expected_revision: None },
+            OrthophotoNetwork {
+                images: s.net.ticked.clone(),
+                footprints: Vec::new(),
+                layer,
+                expected_revision: None,
+            },
+            OrthophotoFootprint {
+                raster: s.net.raster.clone(),
+                hull: s.net.hull,
+                layer: None,
+                folder,
+                expected_revision: None,
+            },
         )
     }
 
@@ -106,7 +124,9 @@ impl OrthoNetworkSectionApp for App {
     fn ortho_net_run(&mut self) {
         let (net, foot) = self.ortho_net_inputs();
         let mode = self.modules.map().ortho_seamlines.net.mode;
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         match mode {
             Mode::Network => {
                 self.modules.map_mut().ortho_seamlines.net.network = Some(answer(network::plan(
@@ -158,28 +178,51 @@ impl OrthoNetworkSectionApp for App {
     fn ortho_net_write(&mut self) {
         let (net, foot) = self.ortho_net_inputs();
         let mode = self.modules.map().ortho_seamlines.net.mode;
-        let Some(doc) = self.document.as_mut() else { return };
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
         let title = crate::ortho_seamlines_window::TITLE;
         let (uids, said) = match mode {
-            Mode::Network => match answer(network::execute(&mut ExecutionContext::new(&mut doc.model), net)) {
+            Mode::Network => match answer(network::execute(
+                &mut ExecutionContext::new(&mut doc.model),
+                net,
+            )) {
                 Ok(out) => {
                     let n = out.elements.len();
                     let j = out.junctions.len();
-                    (out.elements.into_iter().flat_map(|e| e.uids).collect::<Vec<_>>(), format!("{n} mozaik elemanı yazıldı ve seçildi; {j} üçlü düğüm."))
+                    (
+                        out.elements
+                            .into_iter()
+                            .flat_map(|e| e.uids)
+                            .collect::<Vec<_>>(),
+                        format!("{n} mozaik elemanı yazıldı ve seçildi; {j} üçlü düğüm."),
+                    )
                 }
                 Err(why) => return self.warn(format!("{title}: {why}")),
             },
-            Mode::Footprint => match answer(outline::execute(&mut ExecutionContext::new(&mut doc.model), foot)) {
-                Ok(out) => (out.uid.into_iter().collect(), format!("ayak izi ({:.2} m²) yazıldı ve seçildi.", out.area)),
+            Mode::Footprint => match answer(outline::execute(
+                &mut ExecutionContext::new(&mut doc.model),
+                foot,
+            )) {
+                Ok(out) => (
+                    out.uid.into_iter().collect(),
+                    format!("ayak izi ({:.2} m²) yazıldı ve seçildi.", out.area),
+                ),
                 Err(why) => return self.warn(format!("{title}: {why}")),
             },
             Mode::Pair => return,
         };
         let slots: Vec<kentos_domain::Slot> = self.document.as_ref().map_or_else(Vec::new, |d| {
-            uids.iter().filter_map(|u| kentos_domain::Uuid::parse_str(u).ok()).filter_map(|u| d.model.slot_of(u)).collect()
+            uids.iter()
+                .filter_map(|u| kentos_domain::Uuid::parse_str(u).ok())
+                .filter_map(|u| d.model.slot_of(u))
+                .collect()
         });
         self.selection.set(slots);
-        self.say(Level::Success, format!("{title}: {said} Tek adımda geri alınır."));
+        self.say(
+            Level::Success,
+            format!("{title}: {said} Tek adımda geri alınır."),
+        );
         self.dialog = None;
     }
 
@@ -189,44 +232,71 @@ impl OrthoNetworkSectionApp for App {
         let mut lines = Vec::new();
         let mut form = Form::new().label_width(150.0);
         #[allow(clippy::type_complexity)]
-        let (ready, button, rows, parts, junctions): (bool, &str, Vec<Vec<String>>, Vec<Vec<OrthoNetworkPart>>, Vec<[f64; 2]>) =
-            match s.net.mode {
-                Mode::Network => {
-                    let ticks = s.rasters.iter().fold(column![].spacing(4), |c, (u, name)| {
-                        c.push(words::check(s.net.ticked.contains(u), name, Some(msg(NetEvent::Tick(u.clone())))))
-                    });
-                    form = form
+        let (ready, button, rows, parts, junctions): (
+            bool,
+            &str,
+            Vec<Vec<String>>,
+            Vec<Vec<OrthoNetworkPart>>,
+            Vec<[f64; 2]>,
+        ) = match s.net.mode {
+            Mode::Network => {
+                let ticks = s.rasters.iter().fold(column![].spacing(4), |c, (u, name)| {
+                    c.push(words::check(
+                        s.net.ticked.contains(u),
+                        name,
+                        Some(msg(NetEvent::Tick(u.clone()))),
+                    ))
+                });
+                form = form
                         .field("Ortofotolar", ticks)
                         .help("Her yer, onu kaplayan görüntülerden ayak izinin (raster sınırının) merkezi en yakın olanın; üç ya da daha çok elemanın buluştuğu yer üçlü düğümdür.");
-                    match &s.net.network {
-                        Some(Ok(r)) => {
-                            for (k, n) in r.notes.iter().enumerate() {
-                                lines.push(words::text_line(if k == 0 { Kind::Ok } else { Kind::Info }, n.clone()));
-                            }
-                            let name = |u: &str| s.rasters.iter().find(|(x, _)| x == u).map_or(u.to_owned(), |(_, n)| n.clone());
-                            let rows = r
-                                .elements
+                match &s.net.network {
+                    Some(Ok(r)) => {
+                        for (k, n) in r.notes.iter().enumerate() {
+                            lines.push(words::text_line(
+                                if k == 0 { Kind::Ok } else { Kind::Info },
+                                n.clone(),
+                            ));
+                        }
+                        let name = |u: &str| {
+                            s.rasters
                                 .iter()
-                                .map(|e| {
-                                    vec![
-                                        name(&e.image),
-                                        e.parts.len().to_string(),
-                                        e.parts.iter().map(|p| p.holes.len()).sum::<usize>().to_string(),
-                                        format!("{:.2}", e.area).replace('.', ","),
-                                    ]
-                                })
-                                .collect();
-                            (true, WRITE_NETWORK, rows, r.elements.iter().map(|e| e.parts.clone()).collect(), r.junctions.iter().map(|j| j.at).collect())
-                        }
-                        Some(Err(why)) => {
-                            lines.push(words::text_line(Kind::Error, why.clone()));
-                            (false, WRITE_NETWORK, Vec::new(), Vec::new(), Vec::new())
-                        }
-                        None => (false, WRITE_NETWORK, Vec::new(), Vec::new(), Vec::new()),
+                                .find(|(x, _)| x == u)
+                                .map_or(u.to_owned(), |(_, n)| n.clone())
+                        };
+                        let rows = r
+                            .elements
+                            .iter()
+                            .map(|e| {
+                                vec![
+                                    name(&e.image),
+                                    e.parts.len().to_string(),
+                                    e.parts
+                                        .iter()
+                                        .map(|p| p.holes.len())
+                                        .sum::<usize>()
+                                        .to_string(),
+                                    format!("{:.2}", e.area).replace('.', ","),
+                                ]
+                            })
+                            .collect();
+                        (
+                            true,
+                            WRITE_NETWORK,
+                            rows,
+                            r.elements.iter().map(|e| e.parts.clone()).collect(),
+                            r.junctions.iter().map(|j| j.at).collect(),
+                        )
                     }
+                    Some(Err(why)) => {
+                        lines.push(words::text_line(Kind::Error, why.clone()));
+                        (false, WRITE_NETWORK, Vec::new(), Vec::new(), Vec::new())
+                    }
+                    None => (false, WRITE_NETWORK, Vec::new(), Vec::new(), Vec::new()),
                 }
-                _ => {
-                    form = form
+            }
+            _ => {
+                form = form
                         .field(
                             "Raster",
                             row![
@@ -237,40 +307,82 @@ impl OrthoNetworkSectionApp for App {
                             .align_y(Center),
                         )
                         .help("NoData olmayan piksellerin sınırı, piksellerin kenarlarından; zarf birleşme çizgisinin ve ağın ayak izi olarak alınır.");
-                    match &s.net.footprint {
-                        Some(Ok(r)) => {
-                            for (k, n) in r.notes.iter().enumerate() {
-                                lines.push(words::text_line(if k == 0 { Kind::Ok } else { Kind::Info }, n.clone()));
-                            }
-                            let rows = r
-                                .parts
-                                .iter()
-                                .enumerate()
-                                .map(|(k, p)| vec![(k + 1).to_string(), p.ring.len().to_string(), p.holes.len().to_string()])
-                                .collect();
-                            (true, WRITE_FOOTPRINT, rows, vec![r.parts.clone()], Vec::new())
+                match &s.net.footprint {
+                    Some(Ok(r)) => {
+                        for (k, n) in r.notes.iter().enumerate() {
+                            lines.push(words::text_line(
+                                if k == 0 { Kind::Ok } else { Kind::Info },
+                                n.clone(),
+                            ));
                         }
-                        Some(Err(why)) => {
-                            lines.push(words::text_line(Kind::Error, why.clone()));
-                            (false, WRITE_FOOTPRINT, Vec::new(), Vec::new(), Vec::new())
-                        }
-                        None => (false, WRITE_FOOTPRINT, Vec::new(), Vec::new(), Vec::new()),
+                        let rows = r
+                            .parts
+                            .iter()
+                            .enumerate()
+                            .map(|(k, p)| {
+                                vec![
+                                    (k + 1).to_string(),
+                                    p.ring.len().to_string(),
+                                    p.holes.len().to_string(),
+                                ]
+                            })
+                            .collect();
+                        (
+                            true,
+                            WRITE_FOOTPRINT,
+                            rows,
+                            vec![r.parts.clone()],
+                            Vec::new(),
+                        )
                     }
+                    Some(Err(why)) => {
+                        lines.push(words::text_line(Kind::Error, why.clone()));
+                        (false, WRITE_FOOTPRINT, Vec::new(), Vec::new(), Vec::new())
+                    }
+                    None => (false, WRITE_FOOTPRINT, Vec::new(), Vec::new(), Vec::new()),
                 }
-            };
-        let table = if s.net.mode == Mode::Network {
-            sheet(vec![col("Görüntü", 260.0), num("Parça", 70.0), num("Delik", 70.0), num("Alan (m²)", 120.0)], rows, "Eleman yok.", 120.0)
-        } else {
-            sheet(vec![num("Parça", 70.0), num("Köşe", 70.0), num("Delik", 70.0)], rows, "Ayak izi yok.", 120.0)
+            }
         };
-        let write = row![space::horizontal().width(Fill), words::primary(button, ready.then(|| msg(NetEvent::Write)))].align_y(Center);
+        let table = if s.net.mode == Mode::Network {
+            sheet(
+                vec![
+                    col("Görüntü", 260.0),
+                    num("Parça", 70.0),
+                    num("Delik", 70.0),
+                    num("Alan (m²)", 120.0),
+                ],
+                rows,
+                "Eleman yok.",
+                120.0,
+            )
+        } else {
+            sheet(
+                vec![num("Parça", 70.0), num("Köşe", 70.0), num("Delik", 70.0)],
+                rows,
+                "Ayak izi yok.",
+                120.0,
+            )
+        };
+        let write = row![
+            space::horizontal().width(Fill),
+            words::primary(button, ready.then(|| msg(NetEvent::Write)))
+        ]
+        .align_y(Center);
         let plan = crate::picture::picture(
-            iced::widget::canvas(NetPlan { parts, junctions }).width(Fill).height(Fill),
+            iced::widget::canvas(NetPlan { parts, junctions })
+                .width(Fill)
+                .height(Fill),
             crate::ortho_seamlines_window::TITLE,
         );
-        column![form, words::summary(lines), write, table, container(plan).height(typography::scaled(240.0))]
-            .spacing(12)
-            .into()
+        column![
+            form,
+            words::summary(lines),
+            write,
+            table,
+            container(plan).height(typography::scaled(240.0))
+        ]
+        .spacing(12)
+        .into()
     }
 }
 
@@ -283,14 +395,31 @@ struct NetPlan {
 impl canvas::Program<Message> for NetPlan {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
-        let pts: Vec<[f64; 2]> = self.parts.iter().flatten().flat_map(|p| p.ring.iter().copied()).collect();
+        let pts: Vec<[f64; 2]> = self
+            .parts
+            .iter()
+            .flatten()
+            .flat_map(|p| p.ring.iter().copied())
+            .collect();
         if pts.is_empty() {
             return vec![frame.into_geometry()];
         }
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in &pts {
             x0 = x0.min(p[0]);
             y0 = y0.min(p[1]);
@@ -298,10 +427,21 @@ impl canvas::Program<Message> for NetPlan {
             y1 = y1.max(p[1]);
         }
         let pad = 20.0_f64;
-        let (w, h) = (f64::from(bounds.width) - 2.0 * pad, f64::from(bounds.height) - 2.0 * pad);
+        let (w, h) = (
+            f64::from(bounds.width) - 2.0 * pad,
+            f64::from(bounds.height) - 2.0 * pad,
+        );
         let scale = (w / (x1 - x0).max(1e-9)).min(h / (y1 - y0).max(1e-9));
-        let (ox, oy) = (pad + (w - (x1 - x0) * scale) / 2.0, pad + (h - (y1 - y0) * scale) / 2.0);
-        let at = |p: [f64; 2]| Point::new((ox + (p[0] - x0) * scale) as f32, (oy + (y1 - p[1]) * scale) as f32);
+        let (ox, oy) = (
+            pad + (w - (x1 - x0) * scale) / 2.0,
+            pad + (h - (y1 - y0) * scale) / 2.0,
+        );
+        let at = |p: [f64; 2]| {
+            Point::new(
+                (ox + (p[0] - x0) * scale) as f32,
+                (oy + (y1 - p[1]) * scale) as f32,
+            )
+        };
         let ring = |r: &[[f64; 2]]| {
             Path::new(|b| {
                 b.move_to(at(r[0]));
@@ -319,12 +459,18 @@ impl canvas::Program<Message> for NetPlan {
                 frame.fill(&shape, iced::Color { a: 0.22, ..color });
                 frame.stroke(&shape, Stroke::default().with_width(1.4).with_color(color));
                 for hole in p.holes.iter().filter(|h| h.len() >= 3) {
-                    frame.stroke(&ring(hole), Stroke::default().with_width(1.2).with_color(color));
+                    frame.stroke(
+                        &ring(hole),
+                        Stroke::default().with_width(1.2).with_color(color),
+                    );
                 }
             }
             if let Some(p) = parts.first().filter(|_| self.parts.len() > 1) {
                 let n = p.ring.len() as f64;
-                let c = p.ring.iter().fold([0.0, 0.0], |s, q| [s[0] + q[0] / n, s[1] + q[1] / n]);
+                let c = p
+                    .ring
+                    .iter()
+                    .fold([0.0, 0.0], |s, q| [s[0] + q[0] / n, s[1] + q[1] / n]);
                 frame.fill_text(Text {
                     content: (k + 1).to_string(),
                     position: at(c),

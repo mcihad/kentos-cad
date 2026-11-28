@@ -81,11 +81,7 @@ fn the_pointer_wakes_a_plate_and_leaves_it() {
     window.input(Input::Move(HARITA));
     assert_eq!(window.launcher.hot(), Some("kentos-harita"));
     window.input(Input::Move(UC_BOYUT));
-    assert_eq!(
-        window.launcher.hot(),
-        Some("kentos-3d"),
-        "a coming app too"
-    );
+    assert_eq!(window.launcher.hot(), Some("kentos-3d"), "a coming app too");
     window.input(Input::Move(TABLE));
     assert_eq!(window.launcher.hot(), None);
 }

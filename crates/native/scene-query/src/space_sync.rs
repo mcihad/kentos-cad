@@ -16,8 +16,11 @@ impl Spatial {
             self.store.set_tagged_spaces(&ids);
             self.tagged_spaces = now;
         }
-        let fills: Vec<(f64, String)> =
-            doc.space_fills().into_iter().map(|(id, color)| (f64::from(id), color.to_owned())).collect();
+        let fills: Vec<(f64, String)> = doc
+            .space_fills()
+            .into_iter()
+            .map(|(id, color)| (f64::from(id), color.to_owned()))
+            .collect();
         self.store.set_space_fills(&fills);
     }
 }

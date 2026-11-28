@@ -2,19 +2,22 @@
 //! findings, and a finding marked from there. Harita's profile shows the section, so these run with the module
 //! registered (docs/adr/9199 §4.2); the rest are the core's (gis/topology/object_tests.rs).
 
+use crate::app::{App, Message};
+use crate::bottom::BottomTab;
 use crate::gis;
+use crate::topology::Event as T;
+use crate::topology::object::ObjectFindings;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
-use crate::app::{App, Message};
-use crate::bottom::BottomTab;
-use crate::topology::Event as T;
-use crate::topology::object::ObjectFindings;
 
 fn opened(module: Module) -> App {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.topology.check.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.topology.check.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(module);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -28,7 +31,13 @@ fn section(app: &App) -> Option<(String, Vec<(String, String, bool)>)> {
     let doc = app.document.as_ref()?;
     let panel = app.properties_panel(doc);
     panel.sections.iter().find(|s| s.id == "topology").map(|s| {
-        (s.title.to_string(), s.rows.iter().map(|r| (r.label.to_string(), r.value.clone(), r.note)).collect())
+        (
+            s.title.to_string(),
+            s.rows
+                .iter()
+                .map(|r| (r.label.to_string(), r.value.clone(), r.note))
+                .collect(),
+        )
     })
 }
 
@@ -52,8 +61,18 @@ fn oznitelikler_says_the_selected_parcel_s_findings() {
     let f = &findings[0];
     // Gerekçe first (docs/adr/4600), then the finding: its state in the cell, its measure and rule in the quiet line.
     assert_eq!((rows[0].0.as_str(), rows[0].1.as_str()), ("Gerekçe", ""));
-    assert_eq!((rows[2].0.as_str(), rows[2].1.as_str()), (f.problem.as_str(), "Değerlendirilmedi"));
-    assert_eq!(rows[3], (String::new(), format!("{} · kural: {}", f.measure, f.rule), true));
+    assert_eq!(
+        (rows[2].0.as_str(), rows[2].1.as_str()),
+        (f.problem.as_str(), "Değerlendirilmedi")
+    );
+    assert_eq!(
+        rows[3],
+        (
+            String::new(),
+            format!("{} · kural: {}", f.measure, f.rule),
+            true
+        )
+    );
     assert_eq!(f.state, "Değerlendirilmedi");
     // The check's own key: Göster opens the tab on that finding, its objects chosen.
     let c = app.topology_checked().expect("a check");
@@ -77,9 +96,15 @@ fn oznitelikler_says_the_selected_parcel_s_findings() {
     );
     // A5: its short edge.
     app.selection.set([Slot(5)]);
-    let ObjectFindings::Checked { findings, .. } = app.object_findings(Slot(5)).expect("findings") else { panic!() };
+    let ObjectFindings::Checked { findings, .. } = app.object_findings(Slot(5)).expect("findings")
+    else {
+        panic!()
+    };
     assert_eq!(findings.len(), 1);
-    assert_eq!(section(&app).expect("a section").1[2].0, findings[0].problem);
+    assert_eq!(
+        section(&app).expect("a section").1[2].0,
+        findings[0].problem
+    );
     // A change since the check is said: A2 moved half a metre east.
     let doc = app.document.as_mut().expect("a drawing");
     let mut moved = doc.model.get(Slot(2)).expect("A2").clone();
@@ -91,7 +116,11 @@ fn oznitelikler_says_the_selected_parcel_s_findings() {
     doc.model.update_many(vec![(Slot(2), moved)], "Taşı");
     app.selection.set([Slot(1)]);
     let (_, rows) = section(&app).expect("a section");
-    assert!(rows.iter().any(|r| r.1.starts_with("Çizim denetimden sonra değişti")), "{rows:?}");
+    assert!(
+        rows.iter()
+            .any(|r| r.1.starts_with("Çizim denetimden sonra değişti")),
+        "{rows:?}"
+    );
 }
 
 /// Docs/adr/4600: A1's finding marked from Öznitelikler: its state's drop-down offers the three marks; with Gerekçe typed
@@ -115,16 +144,35 @@ fn a_finding_is_marked_from_oznitelikler() {
     {
         let doc = app.document.as_ref().expect("a drawing");
         let panel = app.properties_panel(doc);
-        let section = panel.sections.iter().find(|s| s.id == "topology").expect("the section");
-        let Some(crate::properties::Editor::Select { text, items, .. }) = &section.rows[2].editor else { panic!("a drop-down") };
+        let section = panel
+            .sections
+            .iter()
+            .find(|s| s.id == "topology")
+            .expect("the section");
+        let Some(crate::properties::Editor::Select { text, items, .. }) = &section.rows[2].editor
+        else {
+            panic!("a drop-down")
+        };
         let labels: Vec<String> = items
             .iter()
             .filter_map(|c| match c {
-                crate::properties::Choice::Pick { label, chosen, .. } => Some(format!("{label}{}", if *chosen { " ✓" } else { "" })),
+                crate::properties::Choice::Pick { label, chosen, .. } => {
+                    Some(format!("{label}{}", if *chosen { " ✓" } else { "" }))
+                }
                 _ => None,
             })
             .collect();
-        assert_eq!((text.as_str(), labels), ("Değerlendirilmedi", vec!["Değerlendirilmedi ✓".into(), "Hata".into(), "İstisna".into()]));
+        assert_eq!(
+            (text.as_str(), labels),
+            (
+                "Değerlendirilmedi",
+                vec![
+                    "Değerlendirilmedi ✓".into(),
+                    "Hata".into(),
+                    "İstisna".into()
+                ]
+            )
+        );
     }
     let _ = app.update(Message::Properties(crate::properties::Event::Commit(
         crate::properties::Field::TopologyReason,
@@ -163,13 +211,20 @@ fn a_finding_is_marked_from_oznitelikler() {
     assert_eq!(first(&app).status, State::Open);
     // Several objects: their findings counted by state.
     app.selection.set([Slot(1), Slot(2), Slot(5)]);
-    let summary = app.selection_findings(&[Slot(1), Slot(2), Slot(5)]).expect("named").expect("checked");
+    let summary = app
+        .selection_findings(&[Slot(1), Slot(2), Slot(5)])
+        .expect("named")
+        .expect("checked");
     assert_eq!((summary.objects, summary.total(), summary.open), (3, 2, 2));
     let (title, rows) = section(&app).expect("a section");
     let said: Vec<(&str, &str)> = rows.iter().map(|r| (r.0.as_str(), r.1.as_str())).collect();
     assert_eq!(title, "Topoloji");
     assert_eq!(
         said,
-        [("Bulgular", "2"), ("Değerlendirilmedi", "2"), ("", "Denetlenen 3 nesnenin; ortak bulgu bir kez sayılır.")]
+        [
+            ("Bulgular", "2"),
+            ("Değerlendirilmedi", "2"),
+            ("", "Denetlenen 3 nesnenin; ortak bulgu bir kez sayılır.")
+        ]
     );
 }

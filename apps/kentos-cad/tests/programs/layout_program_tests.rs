@@ -2,13 +2,13 @@
 //! nor in KentOS Mimari's, which starts from kentos-cad's. Moved from the core's layout_tests.rs: it spans the modules
 //! (docs/adr/9199 §4.11).
 
-use kentos_ui::theme::typography;
-use kentos_ui::widget::docking::Side;
-use serde_json::json;
 use crate::app::{App, Message};
 use crate::bottom::BottomTab;
 use crate::layout::{FILE_NAME, Keeper};
 use crate::layout_plan::read_layout;
+use kentos_ui::theme::typography;
+use kentos_ui::widget::docking::Side;
+use serde_json::json;
 
 fn scratch(name: &str) -> std::path::PathBuf {
     let dir = std::env::temp_dir().join(format!("kentos-yerlesim-{name}-{}", std::process::id()));

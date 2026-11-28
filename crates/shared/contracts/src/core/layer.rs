@@ -420,7 +420,11 @@ pub fn layer_on_mobile(nodes: &[LayerNode], id: &str) -> Option<LayerMobile> {
             return Some(own);
         }
         if let Some(below) = layer_on_mobile(&n.children, id) {
-            return Some(if own == LayerMobile::Hide { LayerMobile::Hide } else { below });
+            return Some(if own == LayerMobile::Hide {
+                LayerMobile::Hide
+            } else {
+                below
+            });
         }
     }
     None
@@ -464,7 +468,15 @@ impl LayerGeometry {
             LayerGeometry::Area => matches!(kind, "polygon" | "circle" | "ellipse"),
             LayerGeometry::Annotation => matches!(
                 kind,
-                "text" | "dimension" | "leader" | "table" | "tag" | "hatch" | "insert" | "image" | "viewmark"
+                "text"
+                    | "dimension"
+                    | "leader"
+                    | "table"
+                    | "tag"
+                    | "hatch"
+                    | "insert"
+                    | "image"
+                    | "viewmark"
             ),
         }
     }
@@ -680,7 +692,11 @@ pub struct LayerNode {
     pub derivation: Option<crate::dataset::LayerDerivation>,
     /// Nesne sayısını göster (docs/adr/9105 §4): the layer tree says how many objects the layer and each of its style's
     /// classes hold. Only a layer has it, never a group; only `true` is written.
-    #[serde(default, skip_serializing_if = "Option::is_none", rename = "classCounts")]
+    #[serde(
+        default,
+        skip_serializing_if = "Option::is_none",
+        rename = "classCounts"
+    )]
     #[cfg_attr(feature = "ts", ts(optional, rename = "classCounts"))]
     pub class_counts: Option<bool>,
     /// Where the layer's objects were copied from (docs/adr/9192): the file's or database's table an import read. The
@@ -717,26 +733,47 @@ pub struct LayerOrigin {
 
 /// What is wrong with a layer's origin (docs/adr/9192); none when it holds.
 pub fn layer_origin_problem(o: &LayerOrigin) -> Option<String> {
-    let word = |t: &str| !t.is_empty() && t.bytes().all(|b| b.is_ascii_lowercase() || b.is_ascii_digit());
+    let word = |t: &str| {
+        !t.is_empty()
+            && t.bytes()
+                .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit())
+    };
     if !word(&o.driver) {
-        return Some("Katmanın kaynağının biçimi küçük harflerle bir sözcük olur (gpkg, shp, postgis…).".into());
+        return Some(
+            "Katmanın kaynağının biçimi küçük harflerle bir sözcük olur (gpkg, shp, postgis…)."
+                .into(),
+        );
     }
     if o.address.trim().is_empty() || o.address.trim() != o.address {
         return Some("Katmanın kaynağının adresi boş ya da baş veya sonda boşluklu olamaz.".into());
     }
-    if o.address.contains("password=") || o.address.split_once("://").is_some_and(|(_, rest)| {
-        rest.split('/').next().is_some_and(|auth| auth.contains('@') && auth.split('@').next().is_some_and(|u| u.contains(':')))
-    }) {
+    if o.address.contains("password=")
+        || o.address.split_once("://").is_some_and(|(_, rest)| {
+            rest.split('/').next().is_some_and(|auth| {
+                auth.contains('@') && auth.split('@').next().is_some_and(|u| u.contains(':'))
+            })
+        })
+    {
         return Some("Katmanın kaynağının adresi parola taşımaz.".into());
     }
     if o.table.as_deref().is_some_and(|t| t.trim().is_empty()) {
-        return Some("Katmanın kaynağının tablosu boş olamaz; tek tablolu dosyada yazılmaz.".into());
+        return Some(
+            "Katmanın kaynağının tablosu boş olamaz; tek tablolu dosyada yazılmaz.".into(),
+        );
     }
-    if o.sha256.as_deref().is_some_and(|d| d.len() != 64 || !d.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))) {
-        return Some("Katmanın kaynağının özeti 64 küçük onaltılık rakamlı bir SHA-256 olur.".into());
+    if o.sha256.as_deref().is_some_and(|d| {
+        d.len() != 64
+            || !d
+                .bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    }) {
+        return Some(
+            "Katmanın kaynağının özeti 64 küçük onaltılık rakamlı bir SHA-256 olur.".into(),
+        );
     }
     let at = o.at.as_bytes();
-    let digits = |r: std::ops::Range<usize>| at.get(r).is_some_and(|s| s.iter().all(u8::is_ascii_digit));
+    let digits =
+        |r: std::ops::Range<usize>| at.get(r).is_some_and(|s| s.iter().all(u8::is_ascii_digit));
     if !(o.at.len() == 20
         && digits(0..4)
         && at[4] == b'-'
@@ -751,7 +788,10 @@ pub fn layer_origin_problem(o: &LayerOrigin) -> Option<String> {
         && digits(17..19)
         && at[19] == b'Z')
     {
-        return Some("Katmanın kaynağının okunduğu zaman UTC olarak 2026-11-23T09:30:00Z biçiminde yazılır.".into());
+        return Some(
+            "Katmanın kaynağının okunduğu zaman UTC olarak 2026-11-23T09:30:00Z biçiminde yazılır."
+                .into(),
+        );
     }
     None
 }

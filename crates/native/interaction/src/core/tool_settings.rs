@@ -184,7 +184,11 @@ pub fn wall_apply(key: &str, value: &str, cx: &mut Context<'_>) -> bool {
                 cx.say(Level::Warn, "Bir uzunluk yazın: 1.50m ya da 1500mm gibi.");
                 return false;
             };
-            let ask = if key == "P" { wall::Ask::Spacing } else { wall::Ask::Rows };
+            let ask = if key == "P" {
+                wall::Ask::Spacing
+            } else {
+                wall::Ask::Rows
+            };
             wall::typed(ask, v, cx);
             (kentos_commands::CurtainGrid::LEAST..=kentos_commands::CurtainGrid::MOST).contains(&v)
         }

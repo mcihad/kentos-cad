@@ -268,32 +268,36 @@ fn dd<'a>(env: &Env<'_>, i: usize, field: &str, fallback: f64) -> Element<'a, Me
         set("steps", next.get("steps").cloned().unwrap_or(Value::Null))
     };
     let v = v.as_ref();
-    let (control, fx): (Element<'a, Message>, Element<'a, Message>) = if let Some((text, fb)) = expr_of(v) {
-        let fallback_value = fb.cloned();
-        let back = fallback_value.clone().unwrap_or_else(|| js_value(fallback));
-        let with_line = with.clone();
-        let line_key = key.clone();
-        let block = expression_block(env, &key, text, move |t| {
-            let mut e = json!({ "expr": t });
-            if let (Some(o), Some(f)) = (e.as_object_mut(), &fallback_value) {
-                o.insert("fallback".into(), f.clone());
-            }
-            edit(at, &line_key, None, Some(with_line(e)))
-        });
-        (block, fields::fx_line(true, edit(at, &key, None, Some(with(back)))))
-    } else {
-        let current = v
-            .cloned()
-            .unwrap_or_else(|| js_value(numbers::shown(env.layer, &key)));
-        let fx = ev(Event::Edit(Edit {
-            at,
-            key: key.clone(),
-            text: None,
-            patch: Some(with(json!({ "expr": "", "fallback": current }))),
-            focus: Some(format!("{key}:expr")),
-        }));
-        (number_control(env, &key), fields::fx_line(false, fx))
-    };
+    let (control, fx): (Element<'a, Message>, Element<'a, Message>) =
+        if let Some((text, fb)) = expr_of(v) {
+            let fallback_value = fb.cloned();
+            let back = fallback_value.clone().unwrap_or_else(|| js_value(fallback));
+            let with_line = with.clone();
+            let line_key = key.clone();
+            let block = expression_block(env, &key, text, move |t| {
+                let mut e = json!({ "expr": t });
+                if let (Some(o), Some(f)) = (e.as_object_mut(), &fallback_value) {
+                    o.insert("fallback".into(), f.clone());
+                }
+                edit(at, &line_key, None, Some(with_line(e)))
+            });
+            (
+                block,
+                fields::fx_line(true, edit(at, &key, None, Some(with(back)))),
+            )
+        } else {
+            let current = v
+                .cloned()
+                .unwrap_or_else(|| js_value(numbers::shown(env.layer, &key)));
+            let fx = ev(Event::Edit(Edit {
+                at,
+                key: key.clone(),
+                text: None,
+                patch: Some(with(json!({ "expr": "", "fallback": current }))),
+                focus: Some(format!("{key}:expr")),
+            }));
+            (number_control(env, &key), fields::fx_line(false, fx))
+        };
     fields::labelled_with(label.to_owned(), control, None, Some(fx))
 }
 

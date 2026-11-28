@@ -5,14 +5,18 @@
 //! value; Enter moves the opening by `cad.openings.edit`'s `distance`, the reference fixed, in one undo step; Esc
 //! leaves it as it was.
 
-use kentos_commands::{DimensionSetFace, DistanceTo, Entity, OpeningsEdit, OpeningsOperation, TextAlign, WallEnd};
+use kentos_commands::{
+    DimensionSetFace, DistanceTo, Entity, OpeningsEdit, OpeningsOperation, TextAlign, WallEnd,
+};
 use kentos_domain::{Slot, Uuid};
 use kentos_native_application::opening_distances::{Measured, measured};
 use kentos_native_application::{ExecutionContext, openings_edit};
 
 use crate::prompt::Prompt;
 use crate::temporary_refs::{Choices, Switch, other, shown};
-use crate::tool::{Context, Flow, Pointer, Preview, Stroke, TextField, TextGhost, Tone, Tool, ViewChange};
+use crate::tool::{
+    Context, Flow, Pointer, Preview, Stroke, TextField, TextGhost, Tone, Tool, ViewChange,
+};
 use crate::{Format, Level, Vec2, dimension_layout};
 
 pub const ID: &str = "openingDistance";
@@ -67,7 +71,8 @@ pub(crate) fn nearest_number<'a, T>(
         .filter_map(|item| {
             let p = cx.view.to_screen(text_at(item));
             let (dx, dy) = ((p[0] - screen[0]).abs(), (p[1] - screen[1]).abs());
-            (dx <= REACH_PX[0] && dy <= REACH_PX[1]).then(|| ((dx / REACH_PX[0]).hypot(dy / REACH_PX[1]), item))
+            (dx <= REACH_PX[0] && dy <= REACH_PX[1])
+                .then(|| ((dx / REACH_PX[0]).hypot(dy / REACH_PX[1]), item))
         })
         .min_by(|a, b| a.0.total_cmp(&b.0))
         .map(|(_, item)| item)
@@ -213,12 +218,20 @@ impl Overlay {
             } else {
                 (m.end, m.end_grid)
             };
-            let Some(kind) = shown(face_ref.is_some(), grid_ref.is_some(), choices.to(uid, face_key, side)) else {
+            let Some(kind) = shown(
+                face_ref.is_some(),
+                grid_ref.is_some(),
+                choices.to(uid, face_key, side),
+            ) else {
                 continue;
             };
             // A face's from the jamb, a grid's from the opening's middle (docs/adr/0728 §1).
             let (value, jamb, r) = match kind {
-                DistanceTo::Face => (m.distance(start), v(m.jambs[usize::from(!start)].0), face_ref),
+                DistanceTo::Face => (
+                    m.distance(start),
+                    v(m.jambs[usize::from(!start)].0),
+                    face_ref,
+                ),
                 DistanceTo::Grid => (m.grid_distance(start), v(m.middle_at()), grid_ref),
             };
             let (Some(value), Some(r)) = (value, r) else {
@@ -264,9 +277,12 @@ impl Overlay {
                     }
                     self.preview.strokes.extend(drawn.strokes);
                     // The number over a mask of the view's ground: the line it stands on does not cross it.
-                    self.preview
-                        .texts
-                        .extend(drawn.texts.into_iter().map(|t| TextGhost { mask: true, ..t }));
+                    self.preview.texts.extend(
+                        drawn
+                            .texts
+                            .into_iter()
+                            .map(|t| TextGhost { mask: true, ..t }),
+                    );
                 }
                 // A jamb at its reference: the number alone.
                 None => self.preview.texts.push(TextGhost {
@@ -284,7 +300,10 @@ impl Overlay {
             let mut mark = Stroke::solid(
                 vec![
                     Vec2::new(to.x - out.0 * height * 0.6, to.y - out.1 * height * 0.6),
-                    Vec2::new(to.x + out.0 * (gap + height * 0.6), to.y + out.1 * (gap + height * 0.6)),
+                    Vec2::new(
+                        to.x + out.0 * (gap + height * 0.6),
+                        to.y + out.1 * (gap + height * 0.6),
+                    ),
                 ],
                 false,
             );
@@ -305,7 +324,11 @@ impl Overlay {
         let side = nearest_number(&self.sides, |s| s.text_at, screen, cx)?;
         Some(OpeningDistance {
             uid: self.uid?,
-            side: if side.start { WallEnd::Start } else { WallEnd::End },
+            side: if side.start {
+                WallEnd::Start
+            } else {
+                WallEnd::End
+            },
             face: self.face?,
             to: side.to,
             at: side.text_at,
@@ -413,7 +436,8 @@ impl Tool for OpeningDistance {
             self.field(text.to_owned(), cx);
             return;
         };
-        let result = openings_edit::execute(&mut ExecutionContext::new(cx.doc), self.request(distance));
+        let result =
+            openings_edit::execute(&mut ExecutionContext::new(cx.doc), self.request(distance));
         if crate::points::written(result, cx).is_some() {
             let side = if matches!(self.side, WallEnd::Start) {
                 "baştaki"
@@ -425,7 +449,10 @@ impl Tool for OpeningDistance {
                 DistanceTo::Face => "mesafesi",
                 DistanceTo::Grid => "aksa mesafesi",
             };
-            cx.say(Level::Success, format!("Açıklık taşındı: {side} {what} {shown}."));
+            cx.say(
+                Level::Success,
+                format!("Açıklık taşındı: {side} {what} {shown}."),
+            );
         }
         self.done = true;
     }
@@ -440,10 +467,13 @@ impl Tool for OpeningDistance {
     fn text_draft(&mut self, text: &str, cx: &mut Context<'_>) {
         // Under the field's hint, as Duvarın mesafesi's card.
         let below = Vec2::new(self.at.x, self.at.y - cx.view.world_length(40.0));
-        self.refused = cx.typed_length(text).filter(|d| d.is_finite()).and_then(|distance| {
-            let result = openings_edit::plan_in(cx.doc, &self.request(distance));
-            crate::bond_refusal::Refused::of_result(&result, cx).map(|r| (r, below))
-        });
+        self.refused = cx
+            .typed_length(text)
+            .filter(|d| d.is_finite())
+            .and_then(|distance| {
+                let result = openings_edit::plan_in(cx.doc, &self.request(distance));
+                crate::bond_refusal::Refused::of_result(&result, cx).map(|r| (r, below))
+            });
     }
     fn preview(&self, _: &Format) -> Preview {
         match &self.refused {

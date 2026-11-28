@@ -12,9 +12,11 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn the_update_pdf_over_mcp_holds_the_case_s_pages() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/atlas/v1/cases.json")).unwrap();
+    let cases: Value =
+        serde_json::from_str(include_str!("../../../../fixtures/atlas/v1/cases.json")).unwrap();
     let setup = &cases["setups"]["plain"];
-    let v1: kentos_commands::DocumentSnapshotV1 = serde_json::from_value(setup["drawing"].clone()).unwrap();
+    let v1: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(setup["drawing"].clone()).unwrap();
     let snapshot = kentos_commands::migrate_v1(v1).unwrap();
     let dir = std::env::temp_dir().join(format!("kentos-atlas-update-pdf-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
@@ -25,32 +27,78 @@ fn the_update_pdf_over_mcp_holds_the_case_s_pages() {
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
     for sheet in setup["book"]["sheets"].as_array().unwrap() {
-        let r = call(&mut server, "cad.sheets.edit", json!({"drawing": drawing, "ops": [{"op": "addSheet", "sheet": sheet}]}));
+        let r = call(
+            &mut server,
+            "cad.sheets.edit",
+            json!({"drawing": drawing, "ops": [{"op": "addSheet", "sheet": sheet}]}),
+        );
         assert_eq!(r["isError"], false, "{r}");
     }
-    let written = call(&mut server, "file.export.atlas", json!({"drawing": drawing, "path": dir.join("atlas.pdf"), "sheet": "atlas-paftasi"}));
+    let written = call(
+        &mut server,
+        "file.export.atlas",
+        json!({"drawing": drawing, "path": dir.join("atlas.pdf"), "sheet": "atlas-paftasi"}),
+    );
     assert_eq!(written["isError"], false, "{written}");
     let record = dir.join("atlas.kaynaklar.json");
     // Nothing changed since: no update.
-    let none = call(&mut server, "file.export.atlas", json!({"drawing": drawing, "path": dir.join("bos.pdf"), "sheet": "atlas-paftasi", "previous": record, "changedOnly": true}));
+    let none = call(
+        &mut server,
+        "file.export.atlas",
+        json!({"drawing": drawing, "path": dir.join("bos.pdf"), "sheet": "atlas-paftasi", "previous": record, "changedOnly": true}),
+    );
     assert_eq!(none["isError"], true, "{none}");
-    assert_eq!(none["structuredContent"]["error"]["code"], "atlas_unchanged", "{none}");
+    assert_eq!(
+        none["structuredContent"]["error"]["code"], "atlas_unchanged",
+        "{none}"
+    );
     assert!(!dir.join("bos.pdf").exists());
 
     // Parcel 2 by its persistent id; another attribute than the owner (hidden from agents) changes its digest.
     let items = call(&mut server, "drawing.entities", json!({"drawing": drawing}))["structuredContent"]["items"].clone();
-    let parcel = items.as_array().unwrap().iter().find(|r| r["entity"]["id"] == 2).expect("parcel 2")["uid"].clone();
-    let set = call(&mut server, "cad.entities.set", json!({"drawing": drawing, "uids": [parcel], "operation": "attributes", "attrs": {"Sır": "yeni-not"}}));
+    let parcel = items
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|r| r["entity"]["id"] == 2)
+        .expect("parcel 2")["uid"]
+        .clone();
+    let set = call(
+        &mut server,
+        "cad.entities.set",
+        json!({"drawing": drawing, "uids": [parcel], "operation": "attributes", "attrs": {"Sır": "yeni-not"}}),
+    );
     assert_eq!(set["isError"], false, "{set}");
     let update = dir.join("guncelleme.pdf");
-    let r = call(&mut server, "file.export.atlas", json!({"drawing": drawing, "path": update, "sheet": "atlas-paftasi", "previous": record, "changedOnly": true}));
+    let r = call(
+        &mut server,
+        "file.export.atlas",
+        json!({"drawing": drawing, "path": update, "sheet": "atlas-paftasi", "previous": record, "changedOnly": true}),
+    );
     assert_eq!(r["isError"], false, "{r}");
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().starts_with("Güncelleme PDF'i: yalnız")).unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .unwrap()
+                .starts_with("Güncelleme PDF'i: yalnız")
+        })
+        .unwrap();
     let want = &case["steps"][2]["result"]["output"]["written"];
     assert_eq!(&r["structuredContent"]["output"]["written"], want, "{r}");
     assert!(update.exists());
-    let again: Value = serde_json::from_str(&std::fs::read_to_string(dir.join("guncelleme.kaynaklar.json")).unwrap()).unwrap();
-    assert_eq!(again["pages"].as_array().map(Vec::len), Some(100), "the whole atlas's pages");
+    let again: Value = serde_json::from_str(
+        &std::fs::read_to_string(dir.join("guncelleme.kaynaklar.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(
+        again["pages"].as_array().map(Vec::len),
+        Some(100),
+        "the whole atlas's pages"
+    );
     assert_eq!(&again["written"], want);
     let _ = std::fs::remove_dir_all(dir);
 }

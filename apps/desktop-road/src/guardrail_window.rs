@@ -15,21 +15,21 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, GuardrailReport, GuardrailRuleDef, GuardrailWarrantDef, GuardrailsDraw, GuardrailsEdit,
-    RoadEditOperation,
+    CommandWarning, GuardrailReport, GuardrailRuleDef, GuardrailWarrantDef, GuardrailsDraw,
+    GuardrailsEdit, RoadEditOperation,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_guardrails_draw, road_guardrails_edit};
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::label;
 
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -44,7 +44,15 @@ const REMOVE: &str = "Sil";
 const ADD: &str = "Satır ekle";
 const REMOVE_ROW: &str = "Satırı sil";
 /// The typed fields, in order.
-const FIELDS: [&str; 7] = ["Ad", "Kaynak", "Okuma aralığı (m)", "Dışa (m)", "Yaklaşma (m)", "Ayrılma (m)", "En az aralık (m)"];
+const FIELDS: [&str; 7] = [
+    "Ad",
+    "Kaynak",
+    "Okuma aralığı (m)",
+    "Dışa (m)",
+    "Yaklaşma (m)",
+    "Ayrılma (m)",
+    "En az aralık (m)",
+];
 
 /// The runs as last read.
 #[derive(Debug, Clone, Default)]
@@ -99,7 +107,10 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.replace(',', ".")
+        .parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 impl Window {
@@ -112,7 +123,10 @@ impl Window {
         for (i, (h, s)) in self.warrants.iter().enumerate() {
             let height = number(h, &format!("{}. satırın dolgusu", i + 1))?
                 .ok_or_else(|| format!("{}. satırın en az dolgu yüksekliğini yazın.", i + 1))?;
-            warrants.push(GuardrailWarrantDef { height, slope: number(s, &format!("{}. satırın şevi", i + 1))? });
+            warrants.push(GuardrailWarrantDef {
+                height,
+                slope: number(s, &format!("{}. satırın şevi", i + 1))?,
+            });
         }
         Ok(GuardrailsEdit {
             operation: RoadEditOperation::Set,
@@ -166,7 +180,15 @@ impl GuardrailWindowApp for App {
         self.modules.road_mut().guardrail_window = Some(Box::new(Window {
             chosen: None,
             corridor: Some(corridor),
-            fields: ["Otokorkuluk".into(), String::new(), "10".into(), String::new(), String::new(), String::new(), String::new()],
+            fields: [
+                "Otokorkuluk".into(),
+                String::new(),
+                "10".into(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+            ],
             warrants: vec![(String::new(), String::new())],
             layer,
             preview: Preview::default(),
@@ -186,13 +208,31 @@ impl GuardrailWindowApp for App {
             .and_then(|c| doc.model.road_corridors().iter().find(|x| &x.id == c))
             .map_or([0.0, 0.0], |c| {
                 [
-                    c.regions.iter().map(|r| r.from).fold(f64::INFINITY, f64::min),
-                    c.regions.iter().map(|r| r.to).fold(f64::NEG_INFINITY, f64::max),
+                    c.regions
+                        .iter()
+                        .map(|r| r.from)
+                        .fold(f64::INFINITY, f64::min),
+                    c.regions
+                        .iter()
+                        .map(|r| r.to)
+                        .fold(f64::NEG_INFINITY, f64::max),
                 ]
             });
-        w.preview = match w.input().and_then(|q| road_guardrails_edit::preview(&doc.model, &q)) {
-            Err(why) => Preview { why: Some(why), range, ..Preview::default() },
-            Ok((report, warnings)) => Preview { report: Some(report), warnings, why: None, range },
+        w.preview = match w
+            .input()
+            .and_then(|q| road_guardrails_edit::preview(&doc.model, &q))
+        {
+            Err(why) => Preview {
+                why: Some(why),
+                range,
+                ..Preview::default()
+            },
+            Ok((report, warnings)) => Preview {
+                report: Some(report),
+                warnings,
+                why: None,
+                range,
+            },
         };
     }
 
@@ -214,18 +254,30 @@ impl GuardrailWindowApp for App {
                         g.name.clone(),
                         g.rule.source.clone(),
                         trimmed(g.step),
-                        if g.offset == 0.0 { String::new() } else { trimmed(g.offset) },
+                        if g.offset == 0.0 {
+                            String::new()
+                        } else {
+                            trimmed(g.offset)
+                        },
                         trimmed(g.rule.approach),
                         trimmed(g.rule.leaving),
                         trimmed(g.rule.gap),
                     ];
-                    w.warrants =
-                        g.rule.warrants.iter().map(|x| (trimmed(x.height), x.slope.map(trimmed).unwrap_or_default())).collect();
+                    w.warrants = g
+                        .rule
+                        .warrants
+                        .iter()
+                        .map(|x| (trimmed(x.height), x.slope.map(trimmed).unwrap_or_default()))
+                        .collect();
                 } else {
                     // A new one: the rule is the user's, nothing filled in but the step it is read at.
                     let n = kept.len() + 1;
                     w.fields = [
-                        if n == 1 { "Otokorkuluk".into() } else { format!("Otokorkuluk {n}") },
+                        if n == 1 {
+                            "Otokorkuluk".into()
+                        } else {
+                            format!("Otokorkuluk {n}")
+                        },
                         String::new(),
                         "10".into(),
                         String::new(),
@@ -275,13 +327,24 @@ impl GuardrailWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let result = road_guardrails_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        let Some(out) = self.answered(result) else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result =
+            road_guardrails_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(out) = self.answered(result) else {
+            return Task::none();
+        };
         if let Some(g) = &out.guardrail {
             self.say(
                 Level::Success,
-                format!("“{}”: solda {:.1} m, sağda {:.1} m otokorkuluk ({} korkuluk).", g.name, g.left, g.right, g.runs.len()),
+                format!(
+                    "“{}”: solda {:.1} m, sağda {:.1} m otokorkuluk ({} korkuluk).",
+                    g.name,
+                    g.left,
+                    g.right,
+                    g.runs.len()
+                ),
             );
             let id = g.id.clone();
             return self.guardrail_event(Event::Choose(Some(id)));
@@ -298,11 +361,22 @@ impl GuardrailWindowApp for App {
             self.warn("Çizmek için önce otokorkuluğu kaydedin ve bir katman seçin.".to_owned());
             return Task::none();
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let input = GuardrailsDraw { guardrail: id, layer_id: layer, labels: true, expected_revision: None };
-        let result = road_guardrails_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let input = GuardrailsDraw {
+            guardrail: id,
+            layer_id: layer,
+            labels: true,
+            expected_revision: None,
+        };
+        let result =
+            road_guardrails_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            self.say(Level::Success, format!("{} korkuluk planda, toplam {:.1} m.", out.runs, out.length));
+            self.say(
+                Level::Success,
+                format!("{} korkuluk planda, toplam {:.1} m.", out.runs, out.length),
+            );
             self.modules.road_mut().guardrail_window = None;
             self.dialog = None;
         }
@@ -311,7 +385,8 @@ impl GuardrailWindowApp for App {
 
     fn remove_guardrail(&mut self) -> Task<Message> {
         let Some(id) = self
-            .modules.road()
+            .modules
+            .road()
             .guardrail_window
             .as_ref()
             .and_then(|w| w.chosen.clone())
@@ -331,9 +406,13 @@ impl GuardrailWindowApp for App {
             offset: None,
             expected_revision: None,
         };
-        let result = road_guardrails_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let result =
+            road_guardrails_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
-            let next = self.document.as_ref().and_then(|d| d.model.road_guardrails().first().map(|g| g.id.clone()));
+            let next = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.road_guardrails().first().map(|g| g.id.clone()));
             return self.guardrail_event(Event::Choose(next));
         }
         Task::none()
@@ -343,13 +422,22 @@ impl GuardrailWindowApp for App {
         let Some(w) = &self.modules.road().guardrail_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let model = self.document.as_ref().map(|d| &d.model);
         let mut listed: Vec<(Option<String>, String)> = vec![(None, "Yeni otokorkuluk".into())];
         listed.extend(model.map_or_else(Vec::new, |m| {
-            m.road_guardrails().iter().map(|g| (Some(g.id.clone()), g.name.clone())).collect()
+            m.road_guardrails()
+                .iter()
+                .map(|g| (Some(g.id.clone()), g.name.clone()))
+                .collect()
         }));
         let ids: Vec<Option<String>> = listed.iter().map(|x| x.0.clone()).collect();
         let on_guardrail = Select::new(
@@ -357,19 +445,27 @@ impl GuardrailWindowApp for App {
             ids.iter().position(|i| *i == w.chosen),
             move |i| msg(Event::Choose(ids[i].clone())),
         );
-        let corridors: Vec<(String, String)> =
-            model.map_or_else(Vec::new, |m| m.road_corridors().iter().map(|c| (c.id.clone(), c.name.clone())).collect());
+        let corridors: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
+            m.road_corridors()
+                .iter()
+                .map(|c| (c.id.clone(), c.name.clone()))
+                .collect()
+        });
         let cids: Vec<String> = corridors.iter().map(|c| c.0.clone()).collect();
         let on_corridor = Select::new(
             corridors.iter().map(|c| Choice::new(c.1.clone())),
-            w.corridor.as_ref().and_then(|c| cids.iter().position(|i| i == c)),
+            w.corridor
+                .as_ref()
+                .and_then(|c| cids.iter().position(|i| i == c)),
             move |i| msg(Event::Corridor(cids[i].clone())),
         )
         .placeholder("Koridor");
         let field = |hint: &'static str, k: usize, width: f32| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(width),
                 None,
             )
         };
@@ -383,21 +479,45 @@ impl GuardrailWindowApp for App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut rule = row![label::caption("Kural:").style(muted)].spacing(8).align_y(iced::alignment::Vertical::Center);
+        let mut rule = row![label::caption("Kural:").style(muted)]
+            .spacing(8)
+            .align_y(iced::alignment::Vertical::Center);
         for (i, (h, s)) in w.warrants.iter().enumerate() {
             rule = rule
                 .push(label::caption(format!("{}. dolgu ≥", i + 1)).style(muted))
-                .push(kentos_ui::widget::text_field("m", h).on_input(move |t| msg(Event::Warrant(i, false, t))).width(56))
+                .push(
+                    kentos_ui::widget::text_field("m", h)
+                        .on_input(move |t| msg(Event::Warrant(i, false, t)))
+                        .width(56),
+                )
                 .push(label::caption("şev 1:").style(muted))
-                .push(kentos_ui::widget::text_field("her", s).on_input(move |t| msg(Event::Warrant(i, true, t))).width(56));
+                .push(
+                    kentos_ui::widget::text_field("her", s)
+                        .on_input(move |t| msg(Event::Warrant(i, true, t)))
+                        .width(56),
+                );
         }
         rule = rule
-            .push(words::secondary(ADD, (w.warrants.len() < 32).then(|| msg(Event::AddRow))))
-            .push(words::secondary(REMOVE_ROW, (w.warrants.len() > 1).then(|| msg(Event::RemoveRow))));
-        let lengths = row![field("m", 4, 100.0), field("m", 5, 100.0), field("m", 6, 110.0)]
-            .spacing(10)
-            .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top).push(rule).push(lengths);
+            .push(words::secondary(
+                ADD,
+                (w.warrants.len() < 32).then(|| msg(Event::AddRow)),
+            ))
+            .push(words::secondary(
+                REMOVE_ROW,
+                (w.warrants.len() > 1).then(|| msg(Event::RemoveRow)),
+            ));
+        let lengths = row![
+            field("m", 4, 100.0),
+            field("m", 5, 100.0),
+            field("m", 6, 110.0)
+        ]
+        .spacing(10)
+        .align_y(iced::alignment::Vertical::Bottom);
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(10.0)
+            .push(top)
+            .push(rule)
+            .push(lengths);
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(r)) => {
@@ -408,10 +528,25 @@ impl GuardrailWindowApp for App {
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
-                let picture = crate::picture::picture(iced::widget::canvas(Strip { report: r, range: w.preview.range }).width(Fill).height(Fill), TITLE);
+                let picture = crate::picture::picture(
+                    iced::widget::canvas(Strip {
+                        report: r,
+                        range: w.preview.range,
+                    })
+                    .width(Fill)
+                    .height(Fill),
+                    TITLE,
+                );
                 use crate::road_dialog::{col, grouped, num};
                 let list = crate::road_dialog::sheet_fill(
-                    vec![col("Yan", 52.0), col("Km", 190.0), num("Boy (m)", 80.0), col("Gerekli", 110.0), num("Dolgu (m)", 84.0), num("Şev 1:", 64.0)],
+                    vec![
+                        col("Yan", 52.0),
+                        col("Km", 190.0),
+                        num("Boy (m)", 80.0),
+                        col("Gerekli", 110.0),
+                        num("Dolgu (m)", 84.0),
+                        num("Şev 1:", 64.0),
+                    ],
                     r.runs
                         .iter()
                         .map(|run| {
@@ -428,38 +563,45 @@ impl GuardrailWindowApp for App {
                     "Kural bu koridorda hiçbir yerde tutmuyor: otokorkuluk yok.",
                 );
                 body = body.push_grow(
-                    row![picture, list]
-                        .spacing(12)
-                        .height(Fill),
+                    row![picture, list].spacing(12).height(Fill),
                     typography::scaled(200.0),
                 );
             }
             _ => {}
         }
-        let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let lids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let on_layer = Select::new(
             lnames.iter().map(|n| Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+            w.layer
+                .as_ref()
+                .and_then(|l| lids.iter().position(|id| id == l)),
             move |i| msg(Event::Layer(lids[i].clone())),
         )
         .placeholder("Katman");
         let saved = w.chosen.is_some();
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
-                space::horizontal().width(Fill),
-                label::caption("Katman").style(muted),
-                container(on_layer).width(150),
-                words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
-                space::horizontal().width(24),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-                words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1060.0).modal(msg(Event::Close))
+        let footer = row![
+            words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
+            space::horizontal().width(Fill),
+            label::caption("Katman").style(muted),
+            container(on_layer).width(150),
+            words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
+            space::horizontal().width(24),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+            words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1060.0)
+            .modal(msg(Event::Close))
     }
 
     fn guardrail_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -491,7 +633,14 @@ struct Strip<'a> {
 impl canvas::Program<Message> for Strip<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let [s0, s1] = self.range;
@@ -516,9 +665,24 @@ impl canvas::Program<Message> for Strip<'_> {
             });
         }
         for run in &self.report.runs {
-            let y = if run.side == "right" { lanes[1].1 } else { lanes[0].1 };
-            let bar = |a: f64, b: f64, h: f32| Path::rectangle(Point::new(x(a), y - h / 2.0), iced::Size::new((x(b) - x(a)).max(1.0), h));
-            frame.fill(&bar(run.from, run.to, 14.0), iced::Color { a: 0.25, ..tk.accent });
+            let y = if run.side == "right" {
+                lanes[1].1
+            } else {
+                lanes[0].1
+            };
+            let bar = |a: f64, b: f64, h: f32| {
+                Path::rectangle(
+                    Point::new(x(a), y - h / 2.0),
+                    iced::Size::new((x(b) - x(a)).max(1.0), h),
+                )
+            };
+            frame.fill(
+                &bar(run.from, run.to, 14.0),
+                iced::Color {
+                    a: 0.25,
+                    ..tk.accent
+                },
+            );
             frame.fill(&bar(run.warranted[0], run.warranted[1], 14.0), tk.accent);
         }
         // The stations at the ends and every tenth of the way.

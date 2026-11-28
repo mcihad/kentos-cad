@@ -11,8 +11,8 @@
 //! A refusal says why (another system or height datum stops it before any geometry); a height datum one side does not
 //! say is said above the tables. The check writes nothing.
 
-use std::sync::Arc;
 use crate::arch::ArchState;
+use std::sync::Arc;
 
 use iced::futures::channel::oneshot;
 use iced::widget::{Column, column, row, space};
@@ -60,7 +60,10 @@ impl std::fmt::Display for Tab {
 #[derive(Clone, Debug)]
 pub enum Outcome {
     Running,
-    Done { checked: Arc<UnderlayChecked>, warnings: Vec<String> },
+    Done {
+        checked: Arc<UnderlayChecked>,
+        warnings: Vec<String>,
+    },
     Refused(String),
 }
 
@@ -78,7 +81,12 @@ pub struct Check {
 
 impl Default for Check {
     fn default() -> Self {
-        Check { tolerance: "0.001".into(), outcome: None, tab: Tab::Levels, clash: None }
+        Check {
+            tolerance: "0.001".into(),
+            outcome: None,
+            tab: Tab::Levels,
+            clash: None,
+        }
     }
 }
 
@@ -105,7 +113,11 @@ fn signed(v: f64) -> String {
 
 /// What one answer says, in a line: how many stand where they should, clash, or only one model has.
 pub(crate) fn summary(c: &UnderlayChecked) -> String {
-    let levels = c.levels.iter().filter(|l| l.difference.is_some_and(|d| d.abs() > c.tolerance)).count();
+    let levels = c
+        .levels
+        .iter()
+        .filter(|l| l.difference.is_some_and(|d| d.abs() > c.tolerance))
+        .count();
     let axes = c
         .axes
         .iter()
@@ -126,16 +138,26 @@ pub(crate) trait UnderlayCheckViewApp {
     fn underlay_check_start(&mut self) -> Task<Message>;
     fn underlay_checked(&mut self, id: String, outcome: Outcome);
     fn underlay_clash_chosen(&mut self, k: usize);
-    fn underlay_check_section<'a>(&'a self, w: &'a Window, u: &ModelUnderlay) -> Element<'a, Message>;
+    fn underlay_check_section<'a>(
+        &'a self,
+        w: &'a Window,
+        u: &ModelUnderlay,
+    ) -> Element<'a, Message>;
 }
 
 impl UnderlayCheckViewApp for App {
     /// Denetle: the chosen underlay checked off the window's thread with the tolerance typed.
-    fn underlay_check_start(&mut self) -> Task<Message>{
-        let Some(doc) = self.document.as_ref() else { return Task::none() };
+    fn underlay_check_start(&mut self) -> Task<Message> {
+        let Some(doc) = self.document.as_ref() else {
+            return Task::none();
+        };
         let mut model = doc.model.clone();
-        let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else { return Task::none() };
-        let Some(id) = w.chosen.clone() else { return Task::none() };
+        let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else {
+            return Task::none();
+        };
+        let Some(id) = w.chosen.clone() else {
+            return Task::none();
+        };
         let typed = w.check.tolerance.trim().replace(',', ".");
         let tolerance = if typed.is_empty() {
             None
@@ -155,13 +177,25 @@ impl UnderlayCheckViewApp for App {
         w.check.outcome = Some((id.clone(), Outcome::Running));
         w.check.clash = None;
         let (done, wait) = oneshot::channel();
-        let input = UnderlayCheck { id: id.clone(), tolerance };
+        let input = UnderlayCheck {
+            id: id.clone(),
+            tolerance,
+        };
         // The drawing's model is built as its IFC export builds it: deep, as the export's own thread is.
-        let spawned = std::thread::Builder::new().name("altlik-denetimi".into()).stack_size(64 << 20).spawn(move || {
-            let _ = done.send(underlay_check::execute(&mut ExecutionContext::new(&mut model), input));
-        });
+        let spawned = std::thread::Builder::new()
+            .name("altlik-denetimi".into())
+            .stack_size(64 << 20)
+            .spawn(move || {
+                let _ = done.send(underlay_check::execute(
+                    &mut ExecutionContext::new(&mut model),
+                    input,
+                ));
+            });
         if spawned.is_err() {
-            w.check.outcome = Some((id, Outcome::Refused("Denetim başlatılamadı: iş parçacığı açılmadı.".into())));
+            w.check.outcome = Some((
+                id,
+                Outcome::Refused("Denetim başlatılamadı: iş parçacığı açılmadı.".into()),
+            ));
             return Task::none();
         }
         Task::perform(wait, move |answer| {
@@ -170,9 +204,11 @@ impl UnderlayCheckViewApp for App {
                     checked: Arc::new(output),
                     warnings: warnings.into_iter().map(|w| w.message).collect(),
                 },
-                Ok(CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error }) => {
-                    Outcome::Refused(error.message)
-                }
+                Ok(
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error },
+                ) => Outcome::Refused(error.message),
                 Ok(CommandResult::Queued { .. } | CommandResult::Cancelled) | Err(_) => {
                     Outcome::Refused("Denetim yarıda kaldı.".into())
                 }
@@ -182,33 +218,54 @@ impl UnderlayCheckViewApp for App {
     }
 
     /// A check's answer came: kept while the window waits for it.
-    fn underlay_checked(&mut self, id: String, outcome: Outcome){
+    fn underlay_checked(&mut self, id: String, outcome: Outcome) {
         if let Some(w) = self.modules.arch_mut().underlays_window.as_mut()
-            && w.check.outcome.as_ref().is_some_and(|(i, o)| *i == id && matches!(o, Outcome::Running))
+            && w.check
+                .outcome
+                .as_ref()
+                .is_some_and(|(i, o)| *i == id && matches!(o, Outcome::Running))
         {
             if let Outcome::Done { checked, .. } = &outcome {
                 // The table worth looking at first: the clashes when there are some.
-                w.check.tab = if checked.clashes.is_empty() { Tab::Levels } else { Tab::Clashes };
+                w.check.tab = if checked.clashes.is_empty() {
+                    Tab::Levels
+                } else {
+                    Tab::Clashes
+                };
             }
             w.check.outcome = Some((id, outcome));
         }
     }
 
     /// A clash chosen: the drawing's object selected and shown, the file's object under Seçilen nesne.
-    fn underlay_clash_chosen(&mut self, k: usize){
-        let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else { return };
-        let Some((id, Outcome::Done { checked, .. })) = w.check.outcome.clone() else { return };
-        let Some(c) = checked.clashes.get(k) else { return };
+    fn underlay_clash_chosen(&mut self, k: usize) {
+        let Some(w) = self.modules.arch_mut().underlays_window.as_mut() else {
+            return;
+        };
+        let Some((id, Outcome::Done { checked, .. })) = w.check.outcome.clone() else {
+            return;
+        };
+        let Some(c) = checked.clashes.get(k) else {
+            return;
+        };
         w.check.clash = Some(k);
         let object = match self.modules.arch().underlays.states.get(&id).map(|s| &s.1) {
-            Some(crate::underlays::State::Ready(l)) => l.model.objects.iter().position(|o| o.global_id == c.object),
+            Some(crate::underlays::State::Ready(l)) => {
+                l.model.objects.iter().position(|o| o.global_id == c.object)
+            }
             _ => None,
         };
         if let Some(w) = self.modules.arch_mut().underlays_window.as_mut() {
             w.object = object.map(|o| (id.clone(), o));
         }
-        let Some(doc) = self.document.as_ref() else { return };
-        let slots: Vec<Slot> = Uuid::parse_str(&c.uid).ok().and_then(|u| doc.model.slot_of(u)).into_iter().collect();
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let slots: Vec<Slot> = Uuid::parse_str(&c.uid)
+            .ok()
+            .and_then(|u| doc.model.slot_of(u))
+            .into_iter()
+            .collect();
         let ids: Vec<f64> = slots.iter().map(|s| f64::from(s.0)).collect();
         self.selection.set(slots);
         if !ids.is_empty() {
@@ -217,14 +274,20 @@ impl UnderlayCheckViewApp for App {
     }
 
     /// The Denetim section of the chosen underlay: the tolerance, Denetle, and the answer.
-    fn underlay_check_section<'a>(&'a self, w: &'a Window, u: &ModelUnderlay) -> Element<'a, Message>{
+    fn underlay_check_section<'a>(
+        &'a self,
+        w: &'a Window,
+        u: &ModelUnderlay,
+    ) -> Element<'a, Message> {
         let mut form = Form::new()
             .label_width(scaled(110.0))
             .section("Denetim")
             .field(
                 "Tolerans",
                 row![
-                    text_field("0.001", &w.check.tolerance).on_input(|t| msg(Event::Tolerance(t))).width(scaled(90.0)),
+                    text_field("0.001", &w.check.tolerance)
+                        .on_input(|t| msg(Event::Tolerance(t)))
+                        .width(scaled(90.0)),
                     label::body("m"),
                     space::horizontal().width(scaled(8.0)),
                     words::primary(CHECK, Some(msg(Event::Check))),
@@ -232,7 +295,12 @@ impl UnderlayCheckViewApp for App {
                 .spacing(6)
                 .align_y(Center),
             );
-        let answer = w.check.outcome.as_ref().filter(|(id, _)| *id == u.id).map(|(_, o)| o);
+        let answer = w
+            .check
+            .outcome
+            .as_ref()
+            .filter(|(id, _)| *id == u.id)
+            .map(|(_, o)| o);
         match answer {
             None => {
                 form = form.wide(label::caption(
@@ -240,10 +308,18 @@ impl UnderlayCheckViewApp for App {
                      kayma bulgu sayılmaz. Çizime bir şey yazmaz.",
                 ));
             }
-            Some(Outcome::Running) => form = form.wide(words::text_line(Kind::Info, "Denetleniyor…")),
-            Some(Outcome::Refused(why)) => form = form.wide(words::text_line(Kind::Warn, why.clone())),
+            Some(Outcome::Running) => {
+                form = form.wide(words::text_line(Kind::Info, "Denetleniyor…"))
+            }
+            Some(Outcome::Refused(why)) => {
+                form = form.wide(words::text_line(Kind::Warn, why.clone()))
+            }
             Some(Outcome::Done { checked, warnings }) => {
-                let kind = if checked.clashes.is_empty() && checked.unmatched.is_empty() { Kind::Ok } else { Kind::Warn };
+                let kind = if checked.clashes.is_empty() && checked.unmatched.is_empty() {
+                    Kind::Ok
+                } else {
+                    Kind::Warn
+                };
                 form = form.wide(words::text_line(kind, summary(checked)));
                 for why in warnings {
                     form = form.wide(words::text_line(Kind::Warn, why.clone()));
@@ -285,7 +361,9 @@ fn levels_table(c: &UnderlayChecked) -> Element<'_, Message> {
         let state = match l.difference {
             Some(d) if d.abs() > c.tolerance => words::text_line(Kind::Warn, "farklı"),
             Some(_) => words::text_line(Kind::Ok, "aynı"),
-            None if l.storey.is_some() && l.file.is_none() => words::text_line(Kind::Info, "kotu yazılmamış"),
+            None if l.storey.is_some() && l.file.is_none() => {
+                words::text_line(Kind::Info, "kotu yazılmamış")
+            }
             None => words::text_line(Kind::Info, "eşi yok"),
         };
         t = t.push(Row::new([
@@ -312,7 +390,9 @@ fn axes_table(c: &UnderlayChecked) -> Element<'_, Message> {
     .empty("Ne projede ne dosyada aks var.");
     let yes = |b: bool| if b { "var" } else { "yok" };
     for a in &c.axes {
-        let turn = a.turn.map_or_else(|| "—".to_owned(), |d| format!("{d:.3}°").replace('.', ","));
+        let turn = a
+            .turn
+            .map_or_else(|| "—".to_owned(), |d| format!("{d:.3}°").replace('.', ","));
         // An axis turned is off along its length even where its middle is on the line.
         let off = a.offset.is_some_and(|o| o > c.tolerance) || a.turn.is_some_and(|d| d > 0.0005);
         let state = match a.offset {
@@ -351,7 +431,12 @@ fn clashes_table(c: &UnderlayChecked, chosen: Option<usize>) -> Element<'_, Mess
     for (k, x) in c.clashes.iter().enumerate() {
         let o = &x.overlap;
         let size = if o.len() == 6 {
-            format!("{} × {} × {}", metres(o[3] - o[0]), metres(o[4] - o[1]), metres(o[5] - o[2]))
+            format!(
+                "{} × {} × {}",
+                metres(o[3] - o[0]),
+                metres(o[4] - o[1]),
+                metres(o[5] - o[2])
+            )
         } else {
             "—".to_owned()
         };
@@ -366,8 +451,11 @@ fn clashes_table(c: &UnderlayChecked, chosen: Option<usize>) -> Element<'_, Mess
             .on_press(msg(Event::Clash(k))),
         );
     }
-    let lead = label::caption("Bir satır çizimdeki nesneyi seçer, dosyadakini Seçilen nesne'de gösterir.");
-    column![lead, t.height(height(c.clashes.len()))].spacing(6).into()
+    let lead =
+        label::caption("Bir satır çizimdeki nesneyi seçer, dosyadakini Seçilen nesne'de gösterir.");
+    column![lead, t.height(height(c.clashes.len()))]
+        .spacing(6)
+        .into()
 }
 
 fn unmatched_table(c: &UnderlayChecked) -> Element<'_, Message> {

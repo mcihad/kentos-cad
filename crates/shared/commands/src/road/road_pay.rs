@@ -40,7 +40,11 @@ pub struct PayEdit {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub version: Option<String>,
     /// The book's currency; null takes it off.
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<String>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<String>"))]
     pub currency: Option<Option<String>>,

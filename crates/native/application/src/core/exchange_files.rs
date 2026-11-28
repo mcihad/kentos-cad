@@ -18,7 +18,8 @@ pub(crate) fn write_bytes(path: &Path, bytes: &[u8]) -> Result<(), String> {
     let tmp = PathBuf::from(tmp);
     let done = (|| -> Result<(), String> {
         std::fs::write(&tmp, bytes).map_err(|e| format!("{} yazılamadı: {e}", tmp.display()))?;
-        let back = std::fs::read(&tmp).map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
+        let back =
+            std::fs::read(&tmp).map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
         if back != bytes {
             return Err("yazılan dosya geri okununca aynı çıkmadı".into());
         }
@@ -35,18 +36,31 @@ pub(crate) fn stamp_of(text: &str) -> Option<(String, String)> {
     let (d, t) = text.split_once('T')?;
     let ok_date = d.len() == 10 && d.as_bytes()[4] == b'-' && d.as_bytes()[7] == b'-';
     let ok_time = t.len() == 8 && t.as_bytes()[2] == b':' && t.as_bytes()[5] == b':';
-    let digits = |s: &str| s.chars().filter(|c| *c != '-' && *c != ':').all(|c| c.is_ascii_digit());
+    let digits = |s: &str| {
+        s.chars()
+            .filter(|c| *c != '-' && *c != ':')
+            .all(|c| c.is_ascii_digit())
+    };
     (ok_date && ok_time && digits(d) && digits(t)).then(|| (d.to_owned(), t.to_owned()))
 }
 
 /// Now, UTC, as a stamp.
 pub(crate) fn now() -> (String, String) {
-    let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs()) as i64;
+    let secs = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs()) as i64;
     let (y, m, d) = kentos_geometry_core::time::civil_from_days(secs.div_euclid(86_400));
     let s = secs.rem_euclid(86_400);
-    (format!("{y:04}-{m:02}-{d:02}"), format!("{:02}:{:02}:{:02}", s / 3600, s / 60 % 60, s % 60))
+    (
+        format!("{y:04}-{m:02}-{d:02}"),
+        format!("{:02}:{:02}:{:02}", s / 3600, s / 60 % 60, s % 60),
+    )
 }
 
 pub(crate) fn fail(code: &str, message: String, path: &str) -> Stop {
-    Stop::failed(error(code, message, (!path.is_empty()).then(|| path.to_owned())))
+    Stop::failed(error(
+        code,
+        message,
+        (!path.is_empty()).then(|| path.to_owned()),
+    ))
 }

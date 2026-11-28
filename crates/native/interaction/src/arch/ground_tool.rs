@@ -39,15 +39,22 @@ impl GroundTool {
     }
 
     fn name(&self) -> &'static str {
-        if self.graded { site_ground::GRADED_NAME } else { site_ground::NATURAL_NAME }
+        if self.graded {
+            site_ground::GRADED_NAME
+        } else {
+            site_ground::NATURAL_NAME
+        }
     }
 
     /// The survey point (a point with a height) under `at`, and its layer's id.
     fn point_at(at: Vec2, cx: &Context<'_>) -> Option<(Slot, String)> {
-        cx.spatial.hits(at, cx.pick_tolerance()).into_iter().find_map(|s| match cx.doc.get(s) {
-            Some(Entity::Point(p)) if p.z.is_some() => Some((s, p.base.layer_id.clone())),
-            _ => None,
-        })
+        cx.spatial
+            .hits(at, cx.pick_tolerance())
+            .into_iter()
+            .find_map(|s| match cx.doc.get(s) {
+                Some(Entity::Point(p)) if p.z.is_some() => Some((s, p.base.layer_id.clone())),
+                _ => None,
+            })
     }
 
     /// Makes the ground of the layer `layer`; says what it made, ±0.00 when it gave it, and the earthwork.
@@ -66,13 +73,30 @@ impl GroundTool {
         } else {
             format!("{}–{}", m2(made.low), m2(made.high))
         };
-        cx.say(Level::Success, format!("{} kuruldu: {} üçgen, kot {heights} m.", self.name(), made.triangles));
+        cx.say(
+            Level::Success,
+            format!(
+                "{} kuruldu: {} üçgen, kot {heights} m.",
+                self.name(),
+                made.triangles
+            ),
+        );
         // ±0.00 from the natural ground at the building's corners (PAİY 12/4), when the site has none.
-        let datum = cx.doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()).and_then(|s| s.datum);
+        let datum = cx
+            .doc
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.site.as_ref())
+            .and_then(|s| s.datum);
         if !self.graded && datum.is_none() {
             if let Some(d) = site_ground::datum_from_corners(cx.doc) {
                 let mut settings = cx.doc.settings().clone();
-                let site = settings.arch.get_or_insert_with(Default::default).site.get_or_insert_with(Default::default);
+                let site = settings
+                    .arch
+                    .get_or_insert_with(Default::default)
+                    .site
+                    .get_or_insert_with(Default::default);
                 site.datum = Some((d * 100.0).round() / 100.0);
                 cx.doc.set_settings(settings);
                 cx.say(
@@ -122,7 +146,11 @@ impl Tool for GroundTool {
     }
 
     fn prompt(&self) -> Prompt {
-        Prompt::new("Arazi zemini", "kotlu noktaların katmanından bir noktaya tıklayın").option_with("Tür", "T", self.name())
+        Prompt::new(
+            "Arazi zemini",
+            "kotlu noktaların katmanından bir noktaya tıklayın",
+        )
+        .option_with("Tür", "T", self.name())
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -134,7 +162,10 @@ impl Tool for GroundTool {
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         match Self::point_at(p.raw, cx) {
             Some((_, layer)) => self.write(&layer, cx),
-            None => cx.say(Level::Info, "Burada kotlu nokta yok: arazinin ölçü noktalarından birine tıklayın."),
+            None => cx.say(
+                Level::Info,
+                "Burada kotlu nokta yok: arazinin ölçü noktalarından birine tıklayın.",
+            ),
         }
     }
 
@@ -153,7 +184,10 @@ impl Tool for GroundTool {
                 "T",
                 "Tür",
                 crate::tool_settings::choices(
-                    &[("natural", site_ground::NATURAL_NAME), ("graded", site_ground::GRADED_NAME)],
+                    &[
+                        ("natural", site_ground::NATURAL_NAME),
+                        ("graded", site_ground::GRADED_NAME),
+                    ],
                     if self.graded { "graded" } else { "natural" },
                 ),
             ),
@@ -166,7 +200,10 @@ impl Tool for GroundTool {
     }
 
     fn option_choices(&self, key: &str) -> Vec<OptionChoice> {
-        self.settings(&Format::default()).into_iter().find(|s| s.key == key).map_or_else(Vec::new, |s| s.choices)
+        self.settings(&Format::default())
+            .into_iter()
+            .find(|s| s.key == key)
+            .map_or_else(Vec::new, |s| s.choices)
     }
 
     fn choose_option(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {

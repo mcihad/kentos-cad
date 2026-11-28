@@ -8,8 +8,8 @@
 mod common;
 
 use common::{
-    a_point, account, catalog_envelope, changed, envelope, member, new_cad_project, new_project, open,
-    personal, revoke, run, share,
+    a_point, account, catalog_envelope, changed, envelope, member, new_cad_project, new_project,
+    open, personal, revoke, run, share,
 };
 use kentos_application::commands::{self, CatalogPolicy};
 use kentos_application::identity::Actor;
@@ -119,7 +119,14 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
     // A project kept in the database is a CBS project's: it does not become a CAD type (docs/adr/9196 §2).
     let kent = new_project(&db, &pm, "Kent").await;
     let cbs = open(&db, &pm, kent).await;
-    match run(&db, &cbs, PROJECT_METADATA_UPDATE, json!({ "projectType": "road" })).await {
+    match run(
+        &db,
+        &cbs,
+        PROJECT_METADATA_UPDATE,
+        json!({ "projectType": "road" }),
+    )
+    .await
+    {
         Err(e @ AppError::Invalid { .. }) => {
             assert_eq!(e.path(), Some("projectType"));
             assert!(e.to_string().contains("“Yol” türündeki"), "{e}");
@@ -127,7 +134,14 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
         other => panic!("{other:?}"),
     }
     // Nor does a file project become a CBS one: a CBS project's data is its database.
-    match run(&db, &owner, PROJECT_METADATA_UPDATE, json!({ "projectType": "gis" })).await {
+    match run(
+        &db,
+        &owner,
+        PROJECT_METADATA_UPDATE,
+        json!({ "projectType": "gis" }),
+    )
+    .await
+    {
         Err(e @ AppError::Invalid { .. }) => {
             assert_eq!(e.path(), Some("projectType"));
             assert!(e.to_string().contains("“CBS” türündeki"), "{e}");
@@ -255,7 +269,10 @@ async fn catalog_metadata_is_checked_versioned_and_audited() {
     .await
     .unwrap();
     assert_eq!(renamed.len(), 1);
-    assert_eq!(renamed[0].1["rename"], json!({ "from": "Kent", "to": "Kent (son)" }));
+    assert_eq!(
+        renamed[0].1["rename"],
+        json!({ "from": "Kent", "to": "Kent (son)" })
+    );
     db.close().await;
 }
 
@@ -287,7 +304,11 @@ async fn views_are_searched_sorted_paged_and_counted_after_the_access_check() {
         (&space, "Bahçe"),
     ] {
         // Zeytinlik is a CBS project, kept in the database (docs/adr/9196 §2): a type keeps its storage.
-        let id = if name == "Zeytinlik" { new_project(&db, who, name).await } else { new_cad_project(&db, who, name).await };
+        let id = if name == "Zeytinlik" {
+            new_project(&db, who, name).await
+        } else {
+            new_cad_project(&db, who, name).await
+        };
         made.push((name, id));
     }
     let shared = new_cad_project(&db, &other_pm, "Ifraz komşu").await;

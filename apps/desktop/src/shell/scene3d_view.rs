@@ -45,7 +45,10 @@ impl OwnWindow for View3d {
 
     /// The in-canvas window's width and the scene's room under its tool strip.
     fn sizes(&self) -> (iced::Size, iced::Size) {
-        (iced::Size::new(1180.0, 760.0), iced::Size::new(720.0, 460.0))
+        (
+            iced::Size::new(1180.0, 760.0),
+            iced::Size::new(720.0, 460.0),
+        )
     }
 
     /// The model is looked at beside the plan, often on another screen.
@@ -94,7 +97,11 @@ impl OwnWindow for View3d {
         Some(TITLE.to_owned())
     }
 
-    fn trace_control(&self, app: &App, control: Control<'_>) -> Option<Result<Option<Message>, String>> {
+    fn trace_control(
+        &self,
+        app: &App,
+        control: Control<'_>,
+    ) -> Option<Result<Option<Message>, String>> {
         Some(app.scene3d_control(control))
     }
 }
@@ -108,19 +115,32 @@ impl App {
             return space().into();
         };
         let sized = kentos_ui::widget::sizable::sizes::get(TITLE).is_some();
-        let (low, high) = if w.building.is_some() { (420.0, 760.0) } else { (300.0, 640.0) };
+        let (low, high) = if w.building.is_some() {
+            (420.0, 760.0)
+        } else {
+            (300.0, 640.0)
+        };
         let room = (self.window_size.height - typography::scaled(270.0))
             .clamp(typography::scaled(low), typography::scaled(high));
         let viewer = container(self.scene3d_body(w))
             .height(Fill)
             .max_height(if sized { f32::INFINITY } else { room })
             .style(|t: &Theme| container::Style {
-                border: Border { color: Tokens::of(t).border, width: 1.0, radius: 0.0.into() },
+                border: Border {
+                    color: Tokens::of(t).border,
+                    width: 1.0,
+                    radius: 0.0.into(),
+                },
                 ..container::Style::default()
             });
         // A building's tree and details take 600 pixels of it: the scene keeps the road's room beside them.
         let width = if w.building.is_some() { 1280.0 } else { 1180.0 };
-        crate::windows::placed(Frame::new(TITLE).fill(viewer).width(width), SURFACE, false, msg(Event::Close))
+        crate::windows::placed(
+            Frame::new(TITLE).fill(viewer).width(width),
+            SURFACE,
+            false,
+            msg(Event::Close),
+        )
     }
 
     /// Beside the plan: the whole of its own window, the strip at the top, the bar at the bottom, the scene between.
@@ -145,9 +165,16 @@ impl App {
                 let mut items = vec![b.storeys_menu()];
                 items.extend(sun_items(b.sun));
                 items.push(crate::scene3d_sheet::sheet_button());
-                b.viewer.layout(self.viewer_host(|m| msg(Event::Viewer(m)), items))
+                b.viewer
+                    .layout(self.viewer_host(|m| msg(Event::Viewer(m)), items))
             }
-            None => column![self.scene3d_strip(w), strip::rule(), self.scene3d_scene(w), self.scene3d_status(w)].into(),
+            None => column![
+                self.scene3d_strip(w),
+                strip::rule(),
+                self.scene3d_scene(w),
+                self.scene3d_status(w)
+            ]
+            .into(),
         }
     }
 
@@ -170,7 +197,11 @@ impl App {
             ),
             strip::divider(),
         ];
-        left.push(container(label::body(EXAGGERATION).style(muted)).padding([0, 6]).into());
+        left.push(
+            container(label::body(EXAGGERATION).style(muted))
+                .padding([0, 6])
+                .into(),
+        );
         left.push(tip(
             kentos_ui::widget::text_field("1", &w.exaggeration)
                 .on_input(|t| msg(Event::Exaggeration(t)))
@@ -209,9 +240,17 @@ impl App {
             Some(msg(Event::Export)),
         ));
         strip::surface(
-            row![Row::with_children(left).spacing(1).align_y(Center).width(Fill).wrap().vertical_spacing(4), end]
-                .spacing(6)
-                .align_y(Center),
+            row![
+                Row::with_children(left)
+                    .spacing(1)
+                    .align_y(Center)
+                    .width(Fill)
+                    .wrap()
+                    .vertical_spacing(4),
+                end
+            ]
+            .spacing(6)
+            .align_y(Center),
         )
     }
 
@@ -239,7 +278,10 @@ impl App {
             pending: w.pending.clone(),
             sun: false,
         };
-        let swatches: Vec<(&str, [f32; 4])> = PARTS.iter().map(|(name, c)| (*name, [c[0], c[1], c[2], 1.0])).collect();
+        let swatches: Vec<(&str, [f32; 4])> = PARTS
+            .iter()
+            .map(|(name, c)| (*name, [c[0], c[1], c[2], 1.0]))
+            .collect();
         look::framed(
             scene::view(view, gesture),
             look::compass(&w.orbit, msg(Event::North)),
@@ -276,17 +318,22 @@ impl App {
                 )
             }
             None => bar.push(
-                Readout::new(label::body("Bir noktaya tıklayın: yeri ve neyin üstünde olduğu burada yazar.").style(muted))
-                    .icon(Icon::Crosshair),
+                Readout::new(
+                    label::body("Bir noktaya tıklayın: yeri ve neyin üstünde olduğu burada yazar.")
+                        .style(muted),
+                )
+                .icon(Icon::Crosshair),
             ),
         };
         bar = bar.spacer();
         let things = format!("{} yüzey ve koridor", w.scene.sources());
-        bar = bar.push(Readout::new(label::body(things.clone())).tip(Tip::new(things).body(format!(
-            "Sahne {} üçgen, {} karodur; yalnız ekranda görünen karolar çizilir.",
-            w.scene.triangles(),
-            w.scene.contents()
-        ))));
+        bar = bar.push(
+            Readout::new(label::body(things.clone())).tip(Tip::new(things).body(format!(
+                "Sahne {} üçgen, {} karodur; yalnız ekranda görünen karolar çizilir.",
+                w.scene.triangles(),
+                w.scene.contents()
+            ))),
+        );
         bar.separator()
             .push(Readout::new(label::body("Fare")).icon(Icon::Help).tip(Tip::new("Fareyle gezinme").body(
                 "Sürükleyin: döndürür. Sağ tuşla ya da Shift ile sürükleyin: kaydırır. Tekerlek: yaklaştırır, uzaklaştırır. Tıklayın: noktayı ve nesneyi seçer.",
@@ -317,7 +364,9 @@ fn gesture(g: Gesture) -> Message {
         // The road measures nothing yet: its scene never asks for the pointer's moves.
         Gesture::Hover(_, width, height) => Event::Sized(width, height),
         // A section's handles are a building's viewer's (the road's scene has none).
-        g @ (Gesture::Handle(..) | Gesture::HandleDone(_)) => Event::Viewer(kentos_model_view_ui::Message::Gesture(g)),
+        g @ (Gesture::Handle(..) | Gesture::HandleDone(_)) => {
+            Event::Viewer(kentos_model_view_ui::Message::Gesture(g))
+        }
     })
 }
 
@@ -326,11 +375,16 @@ fn gesture(g: Gesture) -> Message {
 pub(crate) fn sky(canvas: Canvas) -> Background {
     let [r, g, b, _] = crate::viewport::palette(canvas).background.0;
     let ground = Color::from_rgb8(r, g, b);
-    look::sky(ground, (canvas != Canvas::Black).then(|| crate::viewport::mark_colors(canvas).window))
+    look::sky(
+        ground,
+        (canvas != Canvas::Black).then(|| crate::viewport::mark_colors(canvas).window),
+    )
 }
 
 fn muted(t: &Theme) -> iced::widget::text::Style {
-    iced::widget::text::Style { color: Some(Tokens::of(t).muted) }
+    iced::widget::text::Style {
+        color: Some(Tokens::of(t).muted),
+    }
 }
 
 /// Güneş's strip items (scene3d_sun.rs): its switch, and while it is on its day and its hour with the steps either side.
@@ -344,14 +398,35 @@ fn sun_items<'a>(at: Option<SunAt>) -> Vec<Element<'a, Message>> {
         Message::Scene3d(Event::Sun(SunChange::Toggle)),
     )];
     let Some(at) = at else { return items };
-    items.push(strip::menu(Icon::Calendar, DAYS[at.day].1, "Tarih: güneşin günü.", move || {
-        DAYS.iter().enumerate().fold(Menu::new(), |m, (i, d)| {
-            m.radio(d.1.to_owned(), i == at.day, Message::Scene3d(Event::Sun(SunChange::Day(i))))
-        })
-    }));
+    items.push(strip::menu(
+        Icon::Calendar,
+        DAYS[at.day].1,
+        "Tarih: güneşin günü.",
+        move || {
+            DAYS.iter().enumerate().fold(Menu::new(), |m, (i, d)| {
+                m.radio(
+                    d.1.to_owned(),
+                    i == at.day,
+                    Message::Scene3d(Event::Sun(SunChange::Day(i))),
+                )
+            })
+        },
+    ));
     let step = |by: i8| Some(Message::Scene3d(Event::Sun(SunChange::Hour(by))));
-    items.push(strip::icon_button(Icon::ChevronLeft, "Bir saat önce", step(-1)));
-    items.push(strip::readout(kentos_native_application::shadows::clock(at.hour), "Saat: yerel saat (Türkiye UTC+3).", 44.0));
-    items.push(strip::icon_button(Icon::ChevronRight, "Bir saat sonra", step(1)));
+    items.push(strip::icon_button(
+        Icon::ChevronLeft,
+        "Bir saat önce",
+        step(-1),
+    ));
+    items.push(strip::readout(
+        kentos_native_application::shadows::clock(at.hour),
+        "Saat: yerel saat (Türkiye UTC+3).",
+        44.0,
+    ));
+    items.push(strip::icon_button(
+        Icon::ChevronRight,
+        "Bir saat sonra",
+        step(1),
+    ));
     items
 }

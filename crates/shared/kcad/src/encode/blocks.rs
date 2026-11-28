@@ -56,8 +56,9 @@ impl<'d> Encoder<'d> {
                 if let Some(why) = x.problem() {
                     return Err(self.fail(Code::BadValue, &why));
                 }
-                let value = serde_json::to_value(x)
-                    .map_err(|e| self.fail(Code::BadValue, &format!("dış başvuru yazılamadı: {e}")))?;
+                let value = serde_json::to_value(x).map_err(|e| {
+                    self.fail(Code::BadValue, &format!("dış başvuru yazılamadı: {e}"))
+                })?;
                 self.key("xref");
                 self.path.push(Seg::Name("xref"));
                 self.json(&value)?;
@@ -73,8 +74,9 @@ impl<'d> Encoder<'d> {
             }
             // Its parameters and actions (docs/adr/0318), as their JSON.
             if let Some(d) = &block.dynamic {
-                let value = serde_json::to_value(d)
-                    .map_err(|e| self.fail(Code::BadValue, &format!("dinamik bölüm yazılamadı: {e}")))?;
+                let value = serde_json::to_value(d).map_err(|e| {
+                    self.fail(Code::BadValue, &format!("dinamik bölüm yazılamadı: {e}"))
+                })?;
                 self.key("dynamic");
                 self.path.push(Seg::Name("dynamic"));
                 self.json(&value)?;
@@ -113,7 +115,9 @@ impl<'d> Encoder<'d> {
         if let Some(problem) = kentos_contracts::blocks::card_problem(card) {
             return Err(self.fail(Code::BadValue, &problem));
         }
-        let n = 1 + usize::from(!card.tags.is_empty()) + usize::from(card.category.is_some())
+        let n = 1
+            + usize::from(!card.tags.is_empty())
+            + usize::from(card.category.is_some())
             + usize::from(card.publication.is_some())
             + usize::from(card.element.is_some());
         self.open(n, true)?;
@@ -197,10 +201,17 @@ impl<'d> Encoder<'d> {
                 + usize::from(a.prompt.is_some())
                 + usize::from(a.align.is_some())
                 + usize::from(a.width_factor.is_some())
-                + [o.invisible, o.constant, o.verify, o.preset, o.movable, o.multiline]
-                    .iter()
-                    .filter(|b| **b)
-                    .count()
+                + [
+                    o.invisible,
+                    o.constant,
+                    o.verify,
+                    o.preset,
+                    o.movable,
+                    o.multiline,
+                ]
+                .iter()
+                .filter(|b| **b)
+                .count()
                 + usize::from(o.box_width.is_some())
                 + usize::from(o.field.is_some());
             if let Some(problem) = kentos_contracts::blocks::options_problem(o) {

@@ -43,11 +43,11 @@ use kentos_commands::{
 use kentos_domain::Slot;
 use kentos_interaction::elevation::{self, Change};
 use kentos_interaction::properties;
+use kentos_ui::icon::{Icon, icon};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::widget::property_grid::{self, PropertySheet};
 use kentos_ui::widget::{EditCell, Menu};
-use kentos_ui::icon::{Icon, icon};
 
 pub use rows::{Choice, Editor, Panel, Row, Summary};
 
@@ -610,25 +610,46 @@ fn boxed<'a>(content: impl Into<Element<'a, Message>>, padding: [u16; 2]) -> Ele
 impl App {
     /// Temporary object visibility uses the same product command as Python and MCP.
     pub(crate) fn object_isolation(&mut self, end: bool) {
-        use kentos_commands::{EntitiesIsolate, IsolationAction, CommandResult};
+        use kentos_commands::{CommandResult, EntitiesIsolate, IsolationAction};
         if self.session.is_running() {
-            self.warn("Önce etkin işlemi bitirin veya Esc ile iptal edin; ardından nesneleri yalıtın.");
+            self.warn(
+                "Önce etkin işlemi bitirin veya Esc ile iptal edin; ardından nesneleri yalıtın.",
+            );
             return;
         }
-        let Some(doc) = self.document.as_mut() else { return; };
-        let input = EntitiesIsolate { action: if end { IsolationAction::End } else {
-            IsolationAction::Isolate { uids: self.selection.ids().iter()
-                .filter_map(|s| doc.model.uid(*s)).map(|u| u.to_string()).collect() }
-        }};
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let input = EntitiesIsolate {
+            action: if end {
+                IsolationAction::End
+            } else {
+                IsolationAction::Isolate {
+                    uids: self
+                        .selection
+                        .ids()
+                        .iter()
+                        .filter_map(|s| doc.model.uid(*s))
+                        .map(|u| u.to_string())
+                        .collect(),
+                }
+            },
+        };
         match kentos_native_application::entities_select::isolation::execute(
-            &mut kentos_native_application::ExecutionContext::new(&mut doc.model), input) {
+            &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+            input,
+        ) {
             CommandResult::Completed { output, .. } => {
                 self.output(if output.active {
                     format!("Geçici nesne yalıtımı: {} nesne gizlendi. Katman ayarları korunuyor; Nesne yalıtımını bitir ile geri dönün.", output.hidden)
                 } else { "Nesne yalıtımı bitti. Katman görünürlüğü ve süzgeçleri korunuyor.".into() });
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } => self.warn(error.message),
-            CommandResult::Cancelled | CommandResult::Queued { .. } | CommandResult::NeedsInput { .. } => {}
+            CommandResult::Failed { error } | CommandResult::Conflict { error } => {
+                self.warn(error.message)
+            }
+            CommandResult::Cancelled
+            | CommandResult::Queued { .. }
+            | CommandResult::NeedsInput { .. } => {}
         }
     }
 }
@@ -666,7 +687,10 @@ fn survey_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
     if let Some(p) = &found.point {
         let r = &p.result;
         out.push(rows::Row::text("İşaret", p.mark.clone()));
-        out.push(rows::Row::text("Kabul edilen nokta", format!("{} · {}. revizyon", p.id, r.revision)));
+        out.push(rows::Row::text(
+            "Kabul edilen nokta",
+            format!("{} · {}. revizyon", p.id, r.revision),
+        ));
         out.push(rows::Row::text("Durum", survey_state_words(p.state)));
         for why in &p.why {
             out.push(rows::Row::note(why));
@@ -691,30 +715,56 @@ fn survey_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
                 format!("{} · {}", survey_kind_words(s.kind), roles.join(", ")),
             ));
         }
-        out.push(rows::Row::text("İşaret yüksekliği", format!("{:.3} m (elipsoit)", r.height)));
+        out.push(rows::Row::text(
+            "İşaret yüksekliği",
+            format!("{:.3} m (elipsoit)", r.height),
+        ));
         if let Some(g) = r.sigma {
-            out.push(rows::Row::text("σ K/D/Y", format!("{:.1} / {:.1} / {:.1} mm", g[0] * 1000.0, g[1] * 1000.0, g[2] * 1000.0)));
+            out.push(rows::Row::text(
+                "σ K/D/Y",
+                format!(
+                    "{:.1} / {:.1} / {:.1} mm",
+                    g[0] * 1000.0,
+                    g[1] * 1000.0,
+                    g[2] * 1000.0
+                ),
+            ));
         }
         out.push(rows::Row::text(
             "Epok",
-            r.target_epoch.map_or_else(|| "söylenmedi".to_owned(), |e| format!("{e:.2}")),
+            r.target_epoch
+                .map_or_else(|| "söylenmedi".to_owned(), |e| format!("{e:.2}")),
         ));
         out.push(rows::Row::text(
             "Koordinat zinciri",
-            if r.chain == "complete" { "Tam" } else { "Sınırlı: hassas dönüşüm sayılmaz" },
+            if r.chain == "complete" {
+                "Tam"
+            } else {
+                "Sınırlı: hassas dönüşüm sayılmaz"
+            },
         ));
         if p.history > 0 {
-            out.push(rows::Row::text("Eski sonuç", format!("{} (raporları korunur)", p.history)));
+            out.push(rows::Row::text(
+                "Eski sonuç",
+                format!("{} (raporları korunur)", p.history),
+            ));
         }
     }
     if let Some(u) = &found.used {
-        out.push(rows::Row::text("Dayandığı kayıt", format!("{} · {}", u.id, u.operation)));
+        out.push(rows::Row::text(
+            "Dayandığı kayıt",
+            format!("{} · {}", u.id, u.operation),
+        ));
         out.push(rows::Row::text("Güncellik", survey_state_words(u.state)));
         for why in &u.why {
             out.push(rows::Row::note(why));
         }
     }
-    Some(rows::Section { id: "mapSurvey".into(), title: "GNSS ölçümü".into(), rows: out })
+    Some(rows::Section {
+        id: "mapSurvey".into(),
+        title: "GNSS ölçümü".into(),
+        rows: out,
+    })
 }
 
 fn map_work_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
@@ -722,7 +772,10 @@ fn map_work_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
     let found = kentos_native_application::map_work::source_of(&doc.model, &uid)?;
     let work = doc.model.map_work()?;
     let name = |id: &Option<String>| {
-        id.as_deref().map(|i| work.item(i).map_or_else(|| i.to_owned(), |w| format!("{} ({i})", w.name)))
+        id.as_deref().map(|i| {
+            work.item(i)
+                .map_or_else(|| i.to_owned(), |w| format!("{} ({i})", w.name))
+        })
     };
     let role = match found.role {
         kentos_commands::WorkObjectRole::Source => "Kaynak veri",
@@ -739,16 +792,30 @@ fn map_work_section(doc: &Document, slot: Slot) -> Option<rows::Section> {
         out.push(rows::Row::text("Kaynağı", source));
     }
     if let Some(r) = &found.revision {
-        out.push(rows::Row::text("Kaynak revizyonu", r.chars().take(12).collect::<String>()));
+        out.push(rows::Row::text(
+            "Kaynak revizyonu",
+            r.chars().take(12).collect::<String>(),
+        ));
     }
     if let Some(op) = &found.operation {
         out.push(rows::Row::text("Üretim işlemi", op.clone()));
     }
     if let Some(current) = found.current {
-        out.push(rows::Row::text("Güncellik", if current { "Güncel" } else { "Güncel değil: kaynağı değişti" }));
+        out.push(rows::Row::text(
+            "Güncellik",
+            if current {
+                "Güncel"
+            } else {
+                "Güncel değil: kaynağı değişti"
+            },
+        ));
     }
     out.push(rows::Row::text("Kimlik", uid));
-    Some(rows::Section { id: "mapWork".into(), title: "Kaynağı".into(), rows: out })
+    Some(rows::Section {
+        id: "mapWork".into(),
+        title: "Kaynağı".into(),
+        rows: out,
+    })
 }
 
 mod panel;

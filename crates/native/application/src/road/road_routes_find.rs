@@ -8,7 +8,10 @@ use crate::ExecutionContext;
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RoutesFind) -> CommandResult<()> {
     match crate::road_routes::find(cx.doc, &input.ask) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: vec![] },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -16,7 +19,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &RoutesFind) -> CommandResult<
 /// The answer; reads only.
 pub fn plan(cx: &ExecutionContext<'_>, input: &RoutesFind) -> CommandResult<RouteFound> {
     match crate::road_routes::find(cx.doc, &input.ask) {
-        Ok(output) => CommandResult::Completed { output, warnings: vec![] },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }

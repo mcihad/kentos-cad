@@ -235,7 +235,11 @@ fn the_gis_changes_are_taken_back_or_the_link_broken() {
     send(&mut whole, Event::GisCheck(K::TakeBack));
     let said_whole = checking(&whole).said.clone().expect("said");
     assert!(!said_whole.0, "{}", said_whole.1);
-    assert!(said_whole.1.contains("1 satırın GIS'teki geometrisi"), "{}", said_whole.1);
+    assert!(
+        said_whole.1.contains("1 satırın GIS'teki geometrisi"),
+        "{}",
+        said_whole.1
+    );
     // The link broken on a copy: the file is the GIS's own afterwards.
     let dir = scratch("gis-bag");
     let copy = dir.join("ada.gpkg");

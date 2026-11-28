@@ -219,7 +219,12 @@ impl App {
                     .layers()
                     .leaves()
                     .into_iter()
-                    .map(|l| (l.id.clone(), crate::properties::layer_path(d.model.layers(), &l.id)))
+                    .map(|l| {
+                        (
+                            l.id.clone(),
+                            crate::properties::layer_path(d.model.layers(), &l.id),
+                        )
+                    })
                     .collect()
             }),
             // Worked out when a new sheet is asked for (`sheet_layer_bounds`, docs/adr/9147).
@@ -372,8 +377,8 @@ impl App {
             return;
         }
         self.sheet_data_key = Some(key);
-        let unscoped = (self.spatial.draws_otherwise() || doc.model.objects_isolated())
-            .then(|| {
+        let unscoped =
+            (self.spatial.draws_otherwise() || doc.model.objects_isolated()).then(|| {
                 let mut spatial = Spatial::new();
                 spatial.ignore_object_isolation();
                 spatial.reload(&doc.model);
@@ -423,7 +428,8 @@ impl App {
             .leaves()
             .into_iter()
             .filter_map(|l| {
-                kentos_native_application::sheets_fit::extent_of(&d.model, d.model.by_layer(&l.id)).map(|b| (l.id.clone(), b))
+                kentos_native_application::sheets_fit::extent_of(&d.model, d.model.by_layer(&l.id))
+                    .map(|b| (l.id.clone(), b))
             })
             .collect()
     }
@@ -478,7 +484,8 @@ impl App {
             &m,
             kentos_sheet_ui::Message::NewSheet
                 | kentos_sheet_ui::Message::Gallery(
-                    kentos_sheet_ui::gallery::GalleryMessage::Open | kentos_sheet_ui::gallery::GalleryMessage::Use
+                    kentos_sheet_ui::gallery::GalleryMessage::Open
+                        | kentos_sheet_ui::gallery::GalleryMessage::Use
                 )
         ) {
             // The drawing's box too: the window says what the fixed scale leaves out.
@@ -823,11 +830,14 @@ pub(crate) fn unreachable_layers(
         .filter(|n| layers.is_visible(&n.id))
         .filter_map(|n| {
             let why = if let Some(data) = &n.data {
-                let file = (data.driver == "gpkg").then(|| data.address.trim_start_matches("gpkg:").to_owned());
+                let file = (data.driver == "gpkg")
+                    .then(|| data.address.trim_start_matches("gpkg:").to_owned());
                 match file {
                     // The file by its name: the print check's line stays readable; the layer's binding has the path.
                     Some(f) if !std::path::Path::new(&f).exists() => {
-                        let name = std::path::Path::new(&f).file_name().map_or(f.clone(), |n| n.to_string_lossy().into_owned());
+                        let name = std::path::Path::new(&f)
+                            .file_name()
+                            .map_or(f.clone(), |n| n.to_string_lossy().into_owned());
                         Some(format!("kaynağı olan “{name}” dosyası yok"))
                     }
                     _ => data_failure(&n.id).map(|w| format!("kaynağına ulaşılamıyor ({w})")),
@@ -842,7 +852,10 @@ pub(crate) fn unreachable_layers(
             } else {
                 None
             }?;
-            Some(kentos_sheet::display::UnreachableLayer { name: n.name.clone(), why })
+            Some(kentos_sheet::display::UnreachableLayer {
+                name: n.name.clone(),
+                why,
+            })
         })
         .collect()
 }

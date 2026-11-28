@@ -25,11 +25,10 @@ use std::collections::BTreeMap;
 use kentos_commands::{
     ArchInfo, BeamsCreate, BeamsCreated, BeamsPlan, ColumnEntity, ColumnFields, ColumnsCreate,
     ColumnsCreated, ColumnsPlan, CommandResult, CommandWarning, Entity, EntityBase, GridEntity,
-    GridFields, GridSystem, GridsCreate, GridsCreated, GridsPlan, RadialGridSystem, RampEntity,
-    RailingsCreate, RailingsCreated, RailingsPlan, RampFields, RampsCreate, RampsCreated, RampsPlan, RoofsCreate,
-    RoofsCreated, RoofsPlan,
-    SeriesSide, StairEntity, StairFields, StairsCreate, StairsCreated, StairsPlan, SystemColumns,
-    Vec2,
+    GridFields, GridSystem, GridsCreate, GridsCreated, GridsPlan, RadialGridSystem, RailingsCreate,
+    RailingsCreated, RailingsPlan, RampEntity, RampFields, RampsCreate, RampsCreated, RampsPlan,
+    RoofsCreate, RoofsCreated, RoofsPlan, SeriesSide, StairEntity, StairFields, StairsCreate,
+    StairsCreated, StairsPlan, SystemColumns, Vec2,
 };
 use kentos_domain::arch_follow;
 use kentos_domain::{Document, Uuid};
@@ -314,7 +313,11 @@ fn grids_check(doc: &Document, input: &GridsCreate) -> Result<Checked, Stop> {
 /// The grids' checks and objects, with the persistent id each object gets (a system's columns name their grids').
 fn grids_with_ids(doc: &Document, input: &GridsCreate) -> Result<(Checked, Vec<Uuid>), Stop> {
     let series = input.series.as_ref().map_or(0, |s| s.spacings.len() + 1);
-    if input.grids.is_empty() && input.series.is_none() && input.system.is_none() && input.radial.is_none() {
+    if input.grids.is_empty()
+        && input.series.is_none()
+        && input.system.is_none()
+        && input.radial.is_none()
+    {
         return Err(fail(
             codes::NO_OBJECTS,
             "Yazılacak aks verilmedi. Akslar (grids), bir seri (series), bir aks ağı (system) ya da eğrisel aks ağı (radial) verin."
@@ -342,7 +345,10 @@ fn grids_with_ids(doc: &Document, input: &GridsCreate) -> Result<(Checked, Vec<U
             )?;
         }
         finite_each(
-            &[(n.bubble_size, "bubbleSize", "Balon çapı"), (n.ends, "ends", "Kesik aksın ucu")],
+            &[
+                (n.bubble_size, "bubbleSize", "Balon çapı"),
+                (n.ends, "ends", "Kesik aksın ucu"),
+            ],
             &at,
         )?;
         let g = GridFields {
@@ -360,7 +366,12 @@ fn grids_with_ids(doc: &Document, input: &GridsCreate) -> Result<(Checked, Vec<U
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Grid(GridEntity { base, grid: Box::new(g) })),
+            Box::new(move |base| {
+                Entity::Grid(GridEntity {
+                    base,
+                    grid: Box::new(g),
+                })
+            }),
         ));
     }
     if let Some(s) = &input.series {
@@ -378,7 +389,10 @@ fn grids_with_ids(doc: &Document, input: &GridsCreate) -> Result<(Checked, Vec<U
             }
         }
         finite_each(
-            &[(s.bubble_size, "bubbleSize", "Balon çapı"), (s.ends, "ends", "Kesik aksın ucu")],
+            &[
+                (s.bubble_size, "bubbleSize", "Balon çapı"),
+                (s.ends, "ends", "Kesik aksın ucu"),
+            ],
             "series",
         )?;
         let (dx, dy) = (s.to.x - s.from.x, s.to.y - s.from.y);
@@ -420,7 +434,12 @@ fn grids_with_ids(doc: &Document, input: &GridsCreate) -> Result<(Checked, Vec<U
             made.push((
                 "series".into(),
                 None,
-                Box::new(move |base| Entity::Grid(GridEntity { base, grid: Box::new(g) })),
+                Box::new(move |base| {
+                    Entity::Grid(GridEntity {
+                        base,
+                        grid: Box::new(g),
+                    })
+                }),
             ));
         }
     }
@@ -489,7 +508,9 @@ fn system_made(
     if let Some(c) = &s.columns {
         system_columns_finite(c, "system.columns")?;
     }
-    let extension = s.extension.unwrap_or(kentos_commands::DEFAULT_GRID_EXTENSION);
+    let extension = s
+        .extension
+        .unwrap_or(kentos_commands::DEFAULT_GRID_EXTENSION);
     if extension < 0.0 {
         return Err(fail(
             codes::INVALID_GRID,
@@ -568,7 +589,12 @@ fn system_made(
         made.push((
             "system".into(),
             None,
-            Box::new(move |base| Entity::Grid(GridEntity { base, grid: Box::new(g) })),
+            Box::new(move |base| {
+                Entity::Grid(GridEntity {
+                    base,
+                    grid: Box::new(g),
+                })
+            }),
         ));
         let id = Uuid::now_v7();
         grid_ids.push(id);
@@ -624,7 +650,12 @@ fn system_made(
             made.push((
                 "system.columns".into(),
                 None,
-                Box::new(move |base| Entity::Column(ColumnEntity { base, column: Box::new(column) })),
+                Box::new(move |base| {
+                    Entity::Column(ColumnEntity {
+                        base,
+                        column: Box::new(column),
+                    })
+                }),
             ));
             ids.push(Uuid::now_v7());
         }
@@ -708,7 +739,9 @@ fn radial_made(
             "radial.turns",
         ));
     }
-    let extension = r.extension.unwrap_or(kentos_commands::DEFAULT_GRID_EXTENSION);
+    let extension = r
+        .extension
+        .unwrap_or(kentos_commands::DEFAULT_GRID_EXTENSION);
     if extension < 0.0 {
         return Err(fail(
             codes::INVALID_GRID,
@@ -723,7 +756,10 @@ fn radial_made(
             "radial.extension",
         ));
     }
-    for (start, path) in [(&r.radial_start, "radial.radialStart"), (&r.arc_start, "radial.arcStart")] {
+    for (start, path) in [
+        (&r.radial_start, "radial.radialStart"),
+        (&r.arc_start, "radial.arcStart"),
+    ] {
         if start.as_deref().is_some_and(|t| t.trim().is_empty()) {
             return Err(fail(
                 codes::INVALID_GRID,
@@ -740,7 +776,11 @@ fn radial_made(
     )?;
     let info = r.arch.clone().unwrap_or_default();
     crate::walls::level_known(doc, &info, "radial.arch.level")?;
-    let sign = if r.turns.first().is_some_and(|t| *t < 0.0) { -1.0 } else { 1.0 };
+    let sign = if r.turns.first().is_some_and(|t| *t < 0.0) {
+        -1.0
+    } else {
+        1.0
+    };
     let first = r.angle.unwrap_or(0.0);
     let mut angles = vec![first];
     for t in &r.turns {
@@ -755,7 +795,10 @@ fn radial_made(
         x: c.x + radius * cos(a),
         y: c.y + radius * sin(a),
     };
-    let (inner, outer) = ((r.radius - extension).max(0.0), radii[radii.len() - 1] + extension);
+    let (inner, outer) = (
+        (r.radius - extension).max(0.0),
+        radii[radii.len() - 1] + extension,
+    );
     let last = angles[angles.len() - 1];
     // An arc's reach past the outermost radial grids, as an angle: never more than a quarter of the turn left.
     let room = (2.0 * PI - turned) / 4.0;
@@ -797,7 +840,12 @@ fn radial_made(
         made.push((
             "radial".into(),
             None,
-            Box::new(move |base| Entity::Grid(GridEntity { base, grid: Box::new(g) })),
+            Box::new(move |base| {
+                Entity::Grid(GridEntity {
+                    base,
+                    grid: Box::new(g),
+                })
+            }),
         ));
         let id = Uuid::now_v7();
         grid_ids.push(id);
@@ -831,7 +879,10 @@ fn radial_made(
                 tag: own_tag,
                 fill: cols.fill.unwrap_or(false),
                 material: None,
-                grids: Some(vec![grid_ids[i].to_string(), grid_ids[radial.len() + k].to_string()]),
+                grids: Some(vec![
+                    grid_ids[i].to_string(),
+                    grid_ids[radial.len() + k].to_string(),
+                ]),
                 place: Some(arch_follow::place_of(&gr.label, &ga.label)),
                 broken: None,
                 height: None,
@@ -842,7 +893,12 @@ fn radial_made(
             made.push((
                 "radial.columns".into(),
                 None,
-                Box::new(move |base| Entity::Column(ColumnEntity { base, column: Box::new(column) })),
+                Box::new(move |base| {
+                    Entity::Column(ColumnEntity {
+                        base,
+                        column: Box::new(column),
+                    })
+                }),
             ));
             ids.push(Uuid::now_v7());
         }
@@ -923,7 +979,12 @@ fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop>
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Column(ColumnEntity { base, column: Box::new(c) })),
+            Box::new(move |base| {
+                Entity::Column(ColumnEntity {
+                    base,
+                    column: Box::new(c),
+                })
+            }),
         ));
     }
     if let Some(x) = &input.crossings {
@@ -980,7 +1041,12 @@ fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop>
                     made.push((
                         "crossings".into(),
                         None,
-                        Box::new(move |base| Entity::Column(ColumnEntity { base, column: Box::new(c) })),
+                        Box::new(move |base| {
+                            Entity::Column(ColumnEntity {
+                                base,
+                                column: Box::new(c),
+                            })
+                        }),
                     ));
                 }
             }
@@ -1098,7 +1164,12 @@ fn stairs_check(doc: &Document, input: &StairsCreate) -> Result<Checked, Stop> {
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Stair(StairEntity { base, stair: Box::new(s) })),
+            Box::new(move |base| {
+                Entity::Stair(StairEntity {
+                    base,
+                    stair: Box::new(s),
+                })
+            }),
         ));
     }
     finish(
@@ -1145,8 +1216,15 @@ fn level_height(doc: &Document, n: &kentos_commands::NewStair, at: &str) -> Resu
         ));
     };
     crate::walls::level_known(doc, &arch, &format!("{at}.arch.level"))?;
-    let level = doc.settings().arch.as_ref().and_then(|a| a.levels.iter().find(|l| l.id == id));
-    match level.and_then(|l| l.height).filter(|h| h.is_finite() && *h > 0.0) {
+    let level = doc
+        .settings()
+        .arch
+        .as_ref()
+        .and_then(|a| a.levels.iter().find(|l| l.id == id));
+    match level
+        .and_then(|l| l.height)
+        .filter(|h| h.is_finite() && *h > 0.0)
+    {
         Some(h) => Ok(h),
         None => Err(fail(
             codes::INVALID_STAIR,
@@ -1162,7 +1240,11 @@ fn level_height(doc: &Document, n: &kentos_commands::NewStair, at: &str) -> Resu
 /// A stair whose rise is its level's height (docs/adr/0724 §1) with its riser height read from it, as the document
 /// keeps it; unchanged when the level has no height.
 pub(crate) fn stair_level_bound(doc: &Document, s: &mut StairFields) {
-    let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+    let levels = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.levels.as_slice());
     if let Some(h) = s.level_riser(levels) {
         s.riser_height = h;
     }
@@ -1171,12 +1253,17 @@ pub(crate) fn stair_level_bound(doc: &Document, s: &mut StairFields) {
 /// A stair's risers and their height (docs/adr/0704 §1): as given, or from its height (`height`, or its level's for
 /// `heightFromLevel`): its risers given or as many as keep each under its highest riser, each `height / risers` high.
 /// Third, the highest riser a given count exceeds.
-fn designed(n: &kentos_commands::NewStair, height: Option<f64>, at: &str) -> Result<(u32, f64, Option<f64>), Stop> {
+fn designed(
+    n: &kentos_commands::NewStair,
+    height: Option<f64>,
+    at: &str,
+) -> Result<(u32, f64, Option<f64>), Stop> {
     let Some(h) = height else {
         if n.max_riser.is_some() {
             return Err(fail(
                 codes::INVALID_STAIR,
-                "En fazla rıht yalnız yükseklikle kullanılır; merdivenin yüksekliğini verin.".into(),
+                "En fazla rıht yalnız yükseklikle kullanılır; merdivenin yüksekliğini verin."
+                    .into(),
                 &format!("{at}.maxRiser"),
             ));
         }
@@ -1253,7 +1340,11 @@ fn fitted(s: &StairFields, at: &str) -> Result<(Vec<Vec2>, Option<Vec<f64>>), St
 /// A ramp bound to its level (docs/adr/0723 §2) with its base read from it: the level's elevation plus its offset, as
 /// the document keeps it. Its level is known (checked before).
 pub(crate) fn level_bound(doc: &Document, r: &mut RampFields) {
-    let levels = doc.settings().arch.as_ref().map_or(&[][..], |a| a.levels.as_slice());
+    let levels = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map_or(&[][..], |a| a.levels.as_slice());
     if let Some(z) = r.bound_base(levels) {
         r.base = Some(z);
     }
@@ -1265,19 +1356,31 @@ const MAX_RAMP_RUN: f64 = 100.0;
 /// The ramp's line ending where its sloped length is its rise over its slope (docs/adr/0705 §1), its last point moved
 /// along its last segment.
 fn ramp_fitted(r: &RampFields, at: &str) -> Result<Vec<Vec2>, Stop> {
-    let refuse = |words: &str| Err(fail(codes::INVALID_RAMP, words.into(), &format!("{at}.fit")));
+    let refuse = |words: &str| {
+        Err(fail(
+            codes::INVALID_RAMP,
+            words.into(),
+            &format!("{at}.fit"),
+        ))
+    };
     if r.slope.is_none() {
-        return refuse("Eğim verilmedi; son kol eğime göre bitirilemez. Eğimi verin ya da son kolu tıklanan yerde bitirin.");
+        return refuse(
+            "Eğim verilmedi; son kol eğime göre bitirilemez. Eğimi verin ya da son kolu tıklanan yerde bitirin.",
+        );
     }
     if r.rise == 0.0 {
-        return refuse("Kot farkı sıfır; eğimli uzunluk yok, son kol eğime göre bitirilemez. Kot farkını verin ya da son kolu tıklanan yerde bitirin.");
+        return refuse(
+            "Kot farkı sıfır; eğimli uzunluk yok, son kol eğime göre bitirilemez. Kot farkını verin ya da son kolu tıklanan yerde bitirin.",
+        );
     }
     let shape = kentos_formats::arch_elements::core_ramp(r);
     let kentos_geometry_core::entity::Shape::Ramp { pts, ramp } = &shape else {
         unreachable!("core_ramp makes a ramp");
     };
     let Some(end) = arch::ramp_fit_end(pts, ramp) else {
-        return refuse("Son kol eğime göre bitirilemiyor: eğimli uzunluk son kolun sahanlığı bitmeden doluyor. Son dönüşü başa yaklaştırın ya da son kolu tıklanan yerde bitirin.");
+        return refuse(
+            "Son kol eğime göre bitirilemiyor: eğimli uzunluk son kolun sahanlığı bitmeden doluyor. Son dönüşü başa yaklaştırın ya da son kolu tıklanan yerde bitirin.",
+        );
     };
     let mut out = r.pts.clone();
     if let Some(last) = out.last_mut() {
@@ -1339,7 +1442,9 @@ fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {
             if !(max > 0.0 && max <= MAX_RAMP_RUN) {
                 return Err(fail(
                     codes::INVALID_RAMP,
-                    format!("En uzun kol 0'dan büyük ve en çok {MAX_RAMP_RUN} m olmalı; {max} verildi."),
+                    format!(
+                        "En uzun kol 0'dan büyük ve en çok {MAX_RAMP_RUN} m olmalı; {max} verildi."
+                    ),
                     &format!("{at}.maxRun"),
                 ));
             }
@@ -1358,7 +1463,12 @@ fn ramps_check(doc: &Document, input: &RampsCreate) -> Result<Checked, Stop> {
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Ramp(RampEntity { base, ramp: Box::new(r) })),
+            Box::new(move |base| {
+                Entity::Ramp(RampEntity {
+                    base,
+                    ramp: Box::new(r),
+                })
+            }),
         ));
     }
     finish(
@@ -1419,7 +1529,12 @@ fn beams_check(doc: &Document, input: &kentos_commands::BeamsCreate) -> Result<C
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Beam(kentos_commands::BeamEntity { base, beam: Box::new(b) })),
+            Box::new(move |base| {
+                Entity::Beam(kentos_commands::BeamEntity {
+                    base,
+                    beam: Box::new(b),
+                })
+            }),
         ));
     }
     finish(
@@ -1443,7 +1558,12 @@ fn railings_check(doc: &Document, input: &RailingsCreate) -> Result<Checked, Sto
             "railings",
         ));
     }
-    too_many(input.railings.len(), codes::INVALID_RAILING, "korkuluk", "railings")?;
+    too_many(
+        input.railings.len(),
+        codes::INVALID_RAILING,
+        "korkuluk",
+        "railings",
+    )?;
     let mut made: Vec<Made> = Vec::new();
     for (i, n) in input.railings.iter().enumerate() {
         let at = format!("railings[{i}]");
@@ -1468,13 +1588,22 @@ fn railings_check(doc: &Document, input: &RailingsCreate) -> Result<Checked, Sto
             arch: n.arch.clone().unwrap_or_default(),
         };
         if let Some((field, words)) = r.problem() {
-            return Err(fail(codes::INVALID_RAILING, words, &format!("{at}.{field}")));
+            return Err(fail(
+                codes::INVALID_RAILING,
+                words,
+                &format!("{at}.{field}"),
+            ));
         }
         crate::walls::level_known(doc, &r.arch, &format!("{at}.arch.level"))?;
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Railing(kentos_commands::RailingEntity { base, railing: Box::new(r) })),
+            Box::new(move |base| {
+                Entity::Railing(kentos_commands::RailingEntity {
+                    base,
+                    railing: Box::new(r),
+                })
+            }),
         ));
     }
     finish(
@@ -1542,7 +1671,12 @@ fn roofs_check(doc: &Document, input: &RoofsCreate) -> Result<Checked, Stop> {
         made.push((
             at,
             n.attrs.clone(),
-            Box::new(move |base| Entity::Roof(kentos_commands::RoofEntity { base, roof: Box::new(r) })),
+            Box::new(move |base| {
+                Entity::Roof(kentos_commands::RoofEntity {
+                    base,
+                    roof: Box::new(r),
+                })
+            }),
         ));
     }
     finish(
@@ -1706,7 +1840,8 @@ pub(crate) fn roof_parts_placed(
         .enumerate()
         .filter(|(_, p)| p.kind == RoofPartKind::Window)
         .filter_map(|(k, p)| {
-            core::part_ring(pts, spec, &kentos_formats::arch_elements::core_roof_part(p)).map(|r| (k, r))
+            core::part_ring(pts, spec, &kentos_formats::arch_elements::core_roof_part(p))
+                .map(|r| (k, r))
         })
         .collect();
     for (i, (_, a)) in windows.iter().enumerate() {
@@ -1714,7 +1849,8 @@ pub(crate) fn roof_parts_placed(
             if rings_overlap(a, b) {
                 return Err(fail(
                     codes::INVALID_ROOF,
-                    "Çatı penceresi başka bir çatı penceresinin üstüne geliyor; yerini kaydırın.".to_owned(),
+                    "Çatı penceresi başka bir çatı penceresinin üstüne geliyor; yerini kaydırın."
+                        .to_owned(),
                     &format!("{at}.parts[{k}].at"),
                 ));
             }
@@ -1735,7 +1871,8 @@ fn rings_overlap(a: &[kentos_geometry_core::Vec2], b: &[kentos_geometry_core::Ve
     };
     edges(a).iter().any(|&(p, q)| {
         edges(b).iter().any(|&(r, s)| {
-            orient2d(p, q, r) * orient2d(p, q, s) < 0.0 && orient2d(r, s, p) * orient2d(r, s, q) < 0.0
+            orient2d(p, q, r) * orient2d(p, q, s) < 0.0
+                && orient2d(r, s, p) * orient2d(r, s, q) < 0.0
         })
     })
 }
@@ -1866,7 +2003,10 @@ pub mod grids_create {
         })
     }
 
-    pub fn execute(cx: &mut ExecutionContext<'_>, input: GridsCreate) -> CommandResult<GridsCreated> {
+    pub fn execute(
+        cx: &mut ExecutionContext<'_>,
+        input: GridsCreate,
+    ) -> CommandResult<GridsCreated> {
         crate::call::recorded(
             cx,
             kentos_commands::CAD_GRIDS_CREATE,
@@ -1876,7 +2016,10 @@ pub mod grids_create {
         )
     }
 
-    fn write_execute(cx: &mut ExecutionContext<'_>, input: GridsCreate) -> CommandResult<GridsCreated> {
+    fn write_execute(
+        cx: &mut ExecutionContext<'_>,
+        input: GridsCreate,
+    ) -> CommandResult<GridsCreated> {
         let ((warnings, entities), ids) = match grids_with_ids(cx.doc, &input) {
             Ok(checked) => checked,
             Err(stop) => return stop.into(),

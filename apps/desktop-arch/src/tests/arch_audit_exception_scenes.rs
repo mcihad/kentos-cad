@@ -8,11 +8,11 @@
 //!
 //! Test code only.
 
-use crate::arch_ext::*;
 use crate::arch;
+use crate::arch::ArchState;
+use crate::arch_ext::*;
 use iced::keyboard::Modifiers;
 use serde_json::{Value, json};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::arch_audit::Event;
@@ -40,7 +40,8 @@ fn press(app: &mut App, row: usize, modifiers: Modifiers) {
 fn fixable_row_of(app: &App, code: &str) -> usize {
     let shown = app.arch_audit_shown();
     let findings = &app
-        .modules.arch()
+        .modules
+        .arch()
         .arch_audit
         .audited
         .as_ref()
@@ -56,7 +57,8 @@ fn fixable_row_of(app: &App, code: &str) -> usize {
 fn row_at(app: &App, code: &str, at: [f64; 2]) -> usize {
     let shown = app.arch_audit_shown();
     let findings = &app
-        .modules.arch()
+        .modules
+        .arch()
         .arch_audit
         .audited
         .as_ref()
@@ -64,7 +66,11 @@ fn row_at(app: &App, code: &str, at: [f64; 2]) -> usize {
         .findings;
     shown
         .iter()
-        .position(|&i| findings[i].code == code && (findings[i].at.x - at[0]).abs() < 1e-9 && (findings[i].at.y - at[1]).abs() < 1e-9)
+        .position(|&i| {
+            findings[i].code == code
+                && (findings[i].at.x - at[0]).abs() < 1e-9
+                && (findings[i].at.y - at[1]).abs() < 1e-9
+        })
         .expect("a finding of that code there")
 }
 
@@ -76,7 +82,11 @@ fn open_extras(app: &mut App) {
         .as_array()
         .expect("cases")
         .iter()
-        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Yeni denetimler")))
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("Yeni denetimler"))
+        })
         .expect("the new checks' case");
     let snapshot: kentos_commands::DocumentSnapshotV2 =
         serde_json::from_value(case["setup"].clone()).expect("the drawing reads");
@@ -172,10 +182,13 @@ fn scoped(app: &mut App) {
     open_flat(app, |_| {});
     run(app, "arch.audit");
     let doc = &app.document.as_ref().expect("a drawing").model;
-    let walls: Vec<kentos_domain::Slot> = ["0192f5a1-7030-7000-8000-000000000002", "0192f5a1-7030-7000-8000-000000000003"]
-        .iter()
-        .filter_map(|u| doc.slot_of(kentos_domain::Uuid::parse_str(u).ok()?))
-        .collect();
+    let walls: Vec<kentos_domain::Slot> = [
+        "0192f5a1-7030-7000-8000-000000000002",
+        "0192f5a1-7030-7000-8000-000000000003",
+    ]
+    .iter()
+    .filter_map(|u| doc.slot_of(kentos_domain::Uuid::parse_str(u).ok()?))
+    .collect();
     app.selection.set(walls);
     event(app, Event::Scope(2));
 }
@@ -192,7 +205,8 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
             let row = row_of(app, "arch_wall_end_gap");
             let i = app.arch_audit_shown()[row];
             let message = app
-                .modules.arch()
+                .modules
+                .arch()
                 .arch_audit
                 .audited
                 .as_ref()
@@ -219,7 +233,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
 }
 
 fn findings(app: &App) -> Vec<kentos_commands::ArchAuditFinding> {
-    app.modules.arch()
+    app.modules
+        .arch()
         .arch_audit
         .audited
         .as_ref()
@@ -230,7 +245,10 @@ fn findings(app: &App) -> Vec<kentos_commands::ArchAuditFinding> {
 
 fn exceptions(app: &App) -> Vec<kentos_commands::ArchAuditException> {
     let doc = &app.document.as_ref().expect("a drawing").model;
-    doc.settings().arch.as_ref().map_or_else(Vec::new, |a| a.audit_exceptions.clone())
+    doc.settings()
+        .arch
+        .as_ref()
+        .map_or_else(Vec::new, |a| a.audit_exceptions.clone())
 }
 
 /// docs/adr/0732 §5: Ctrl/⌘ adds rows and takes one away, Shift takes a range; the chosen fixes are previewed — what
@@ -251,13 +269,27 @@ fn rows_chosen_together_are_previewed_and_fixed_in_one_step() {
     assert_eq!(app.modules.arch().arch_audit.chosen.len(), 2);
     press(&mut app, third, Modifiers::COMMAND);
     assert_eq!(app.modules.arch().arch_audit.chosen.len(), 3);
-    let preview = app.arch_audit_preview().expect("a preview while the tab shows");
-    let danger = preview.strokes.iter().filter(|s| s.tone == kentos_interaction::Tone::Danger).count();
-    let accent = preview.strokes.iter().filter(|s| s.tone == kentos_interaction::Tone::Accent).count();
+    let preview = app
+        .arch_audit_preview()
+        .expect("a preview while the tab shows");
+    let danger = preview
+        .strokes
+        .iter()
+        .filter(|s| s.tone == kentos_interaction::Tone::Danger)
+        .count();
+    let accent = preview
+        .strokes
+        .iter()
+        .filter(|s| s.tone == kentos_interaction::Tone::Accent)
+        .count();
     assert!(danger > 0, "what goes is in the danger colour");
     assert!(accent > 0, "what changes is outlined");
     let tag = preview.tag.expect("the preview's tag");
-    assert!(tag.lines.iter().any(|l| l == "2 nesne silinir"), "{:?}", tag.lines);
+    assert!(
+        tag.lines.iter().any(|l| l == "2 nesne silinir"),
+        "{:?}",
+        tag.lines
+    );
     // The drawing is as it was: the preview wrote nothing.
     let doc = &app.document.as_ref().expect("a drawing").model;
     let (revision, objects) = (doc.revision(), doc.entities().count());
@@ -266,13 +298,24 @@ fn rows_chosen_together_are_previewed_and_fixed_in_one_step() {
     event(&mut app, Event::Fix);
     let doc = &app.document.as_ref().expect("a drawing").model;
     assert!(doc.revision() > revision);
-    assert_eq!(doc.entities().count(), objects - 2, "the duplicated wall and separator are gone");
-    assert_eq!(doc.undo_labels().last().map(String::as_str), Some("Denetim düzeltmeleri"));
+    assert_eq!(
+        doc.entities().count(),
+        objects - 2,
+        "the duplicated wall and separator are gone"
+    );
+    assert_eq!(
+        doc.undo_labels().last().map(String::as_str),
+        Some("Denetim düzeltmeleri")
+    );
     assert!(findings(&app).len() < before, "checked again");
     assert!(app.modules.arch().arch_audit.chosen.is_empty());
     run(&mut app, "edit.undo");
     let doc = &app.document.as_ref().expect("a drawing").model;
-    assert_eq!(doc.entities().count(), objects, "one Geri al takes the three back");
+    assert_eq!(
+        doc.entities().count(),
+        objects,
+        "one Geri al takes the three back"
+    );
     // Shift: the range from the row pressed last.
     event(&mut app, Event::Check);
     press(&mut app, 0, Modifiers::empty());
@@ -300,7 +343,8 @@ fn an_exception_hides_its_finding_until_the_finding_changes() {
     assert!(marked.iter().all(|x| x.note.as_deref() == Some(NOTE)));
     assert_eq!(findings(&app).len(), all - 2, "hidden");
     assert_eq!(
-        app.modules.arch()
+        app.modules
+            .arch()
             .arch_audit
             .audited
             .as_ref()
@@ -333,7 +377,11 @@ fn an_exception_hides_its_finding_until_the_finding_changes() {
         .collect();
     assert_eq!(lapsed.len(), 1, "{:?}", findings(&app));
     // İstisnayı kaldır on its row.
-    let row = app.arch_audit_shown().iter().position(|i| *i == lapsed[0]).expect("shown");
+    let row = app
+        .arch_audit_shown()
+        .iter()
+        .position(|i| *i == lapsed[0])
+        .expect("shown");
     event(&mut app, Event::Unexcept(Some(row)));
     assert_eq!(exceptions(&app).len(), 1);
     // The other's finding gone (the space taken away): Eski istisnaları temizle drops its exception.
@@ -341,7 +389,8 @@ fn an_exception_hides_its_finding_until_the_finding_changes() {
     command(&mut app, "cad.entities.delete", json!({ "uids": [space] }));
     event(&mut app, Event::Check);
     assert_eq!(
-        app.modules.arch()
+        app.modules
+            .arch()
             .arch_audit
             .audited
             .as_ref()
@@ -372,7 +421,8 @@ fn kapsam_keeps_to_the_level_and_the_selection() {
     event(&mut app, Event::Scope(1));
     let level = findings(&app).len();
     let outside = app
-        .modules.arch()
+        .modules
+        .arch()
         .arch_audit
         .audited
         .as_ref()
@@ -383,8 +433,15 @@ fn kapsam_keeps_to_the_level_and_the_selection() {
         "{level} + {outside} = {all}"
     );
     scoped(&mut app);
-    let ids = ["0192f5a1-7030-7000-8000-000000000002", "0192f5a1-7030-7000-8000-000000000003"];
-    assert!(findings(&app).iter().all(|f| f.uids.iter().any(|u| ids.contains(&u.as_str()))));
+    let ids = [
+        "0192f5a1-7030-7000-8000-000000000002",
+        "0192f5a1-7030-7000-8000-000000000003",
+    ];
+    assert!(
+        findings(&app)
+            .iter()
+            .all(|f| f.uids.iter().any(|u| ids.contains(&u.as_str())))
+    );
     assert!(!findings(&app).is_empty());
     event(&mut app, Event::Scope(0));
     assert_eq!(findings(&app).len(), all);

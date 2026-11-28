@@ -7,7 +7,9 @@
 
 use iced::Task;
 use kentos_commands::CallKind;
-use kentos_native_application::python_call::{python_echo, python_literal, redacted, redacted_names};
+use kentos_native_application::python_call::{
+    python_echo, python_literal, redacted, redacted_names,
+};
 
 use crate::app::{App, Message};
 
@@ -27,16 +29,27 @@ impl App {
     /// History changes do not append a journal row: echo the successful operation explicitly.
     pub(crate) fn echo_history(&mut self, undo: bool) {
         if self.settings.bool(SETTING) && self.python.running.is_none() {
-            self.python.repl.echo(if undo { "doc.undo()" } else { "doc.redo()" }.to_owned());
+            self.python
+                .repl
+                .echo(if undo { "doc.undo()" } else { "doc.redo()" }.to_owned());
         }
     }
 
     /// Explicit read-only GUI queries have no document journal row; echo the same public command once.
     pub(crate) fn echo_query(&mut self, command: &str, input: &serde_json::Value) -> Task<Message> {
-        if !self.settings.bool(SETTING) || self.python.running.is_some() { return Task::none(); }
-        let Some(doc) = &self.document else { return Task::none(); };
+        if !self.settings.bool(SETTING) || self.python.running.is_some() {
+            return Task::none();
+        }
+        let Some(doc) = &self.document else {
+            return Task::none();
+        };
         let names = redacted_names(&doc.model);
-        self.python.repl.echo(python_echo(command, Some(crate::history::text::title_of(command)), &redacted(input, &names), false));
+        self.python.repl.echo(python_echo(
+            command,
+            Some(crate::history::text::title_of(command)),
+            &redacted(input, &names),
+            false,
+        ));
         super::view::follow()
     }
 
@@ -64,7 +77,8 @@ impl App {
                 .journal()
                 .filter(|r| r.seq > from && r.kind == CallKind::Command)
             {
-                let (Some(command), Some(input)) = (row.command.as_deref(), row.input.as_ref()) else {
+                let (Some(command), Some(input)) = (row.command.as_deref(), row.input.as_ref())
+                else {
                     continue;
                 };
                 said.push(python_echo(
@@ -77,7 +91,8 @@ impl App {
         }
         self.python.echo.rows = Some((session, newest));
         let version = self.selection.version();
-        let changed = matches!(self.python.echo.selection, Some((s, v)) if s == session && v != version);
+        let changed =
+            matches!(self.python.echo.selection, Some((s, v)) if s == session && v != version);
         if on && !console && changed {
             let uids: Vec<String> = self
                 .selection
@@ -145,7 +160,11 @@ mod tests {
         let _ = app.update(Message::DialogClosed);
         let said = echoed(&app);
         assert_eq!(said.len(), 1, "{said:?}");
-        assert!(said[0].starts_with("# Seçim: 2 nesne\ndoc.select(["), "{}", said[0]);
+        assert!(
+            said[0].starts_with("# Seçim: 2 nesne\ndoc.select(["),
+            "{}",
+            said[0]
+        );
         // A command run: its call, title first.
         let uid = app
             .document
@@ -156,19 +175,26 @@ mod tests {
         let _ = app.update(Message::Run("tool.erase"));
         let said = echoed(&app);
         assert!(
-            said.iter().any(|s| s.contains("cad.entities.delete.execute_input(doc,") && s.contains(&uid)),
+            said.iter()
+                .any(|s| s.contains("cad.entities.delete.execute_input(doc,") && s.contains(&uid)),
             "{said:?}"
         );
         // Cleared.
         app.selection.clear();
         let _ = app.update(Message::DialogClosed);
-        assert!(echoed(&app).last().is_some_and(|s| s.ends_with("doc.select([])")));
+        assert!(
+            echoed(&app)
+                .last()
+                .is_some_and(|s| s.ends_with("doc.select([])"))
+        );
     }
 
     #[test]
     fn history_and_turning_the_echo_off_are_observed() {
         let mut app = app_with_drawing();
-        let _ = app.settings.choose(&[(SETTING, serde_json::Value::Bool(true))]);
+        let _ = app
+            .settings
+            .choose(&[(SETTING, serde_json::Value::Bool(true))]);
         let _ = app.update(Message::DialogClosed);
         app.selection.set([Slot(4)]);
         let _ = app.update(Message::Run("tool.erase"));
@@ -176,7 +202,9 @@ mod tests {
         assert!(echoed(&app).iter().any(|s| s == "doc.undo()"));
         let _ = app.update(Message::Run("edit.redo"));
         assert!(echoed(&app).iter().any(|s| s == "doc.redo()"));
-        let _ = app.settings.choose(&[(SETTING, serde_json::Value::Bool(false))]);
+        let _ = app
+            .settings
+            .choose(&[(SETTING, serde_json::Value::Bool(false))]);
         let _ = app.update(Message::DialogClosed);
         let before = echoed(&app);
         let _ = app.update(Message::Run("edit.undo"));
@@ -187,15 +215,27 @@ mod tests {
 
     #[test]
     fn a_large_selection_is_complete_executable_code() {
-        let many: Vec<String> = (0..6000).map(|i| format!("00000000-0000-7000-8000-{i:012}")).collect();
+        let many: Vec<String> = (0..6000)
+            .map(|i| format!("00000000-0000-7000-8000-{i:012}"))
+            .collect();
         let code = selection_code(&many);
-        let literal = code.split_once("doc.select(").expect("a Python call").1.strip_suffix(')').expect("closed call");
-        let actual: Vec<String> = serde_json::from_str(&literal.replace(",\n]", "\n]")).expect("the UUID list is also JSON");
+        let literal = code
+            .split_once("doc.select(")
+            .expect("a Python call")
+            .1
+            .strip_suffix(')')
+            .expect("closed call");
+        let actual: Vec<String> = serde_json::from_str(&literal.replace(",\n]", "\n]"))
+            .expect("the UUID list is also JSON");
         assert_eq!(actual, many);
         assert!(code.len() > 128 * 1024);
         let mut repl = kentos_ui::widget::python::ReplState::default();
         repl.echo(&code);
-        assert_eq!(repl.entries().next().expect("echoed code").text, code, "the console must not cut executable code");
+        assert_eq!(
+            repl.entries().next().expect("echoed code").text,
+            code,
+            "the console must not cut executable code"
+        );
         assert_eq!(selection_code(&[]), "# Seçim kaldırıldı\ndoc.select([])");
     }
 }

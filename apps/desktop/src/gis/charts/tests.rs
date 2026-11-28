@@ -96,7 +96,9 @@ fn the_picture_paints_the_surface_and_its_marks() {
     let (r, g, b) = ((blue >> 16) as u8, (blue >> 8) as u8, blue as u8);
     assert!(
         pixels
-            .as_chunks::<4>().0.iter()
+            .as_chunks::<4>()
+            .0
+            .iter()
             .any(|p| p[0] == r && p[1] == g && p[2] == b)
     );
 }

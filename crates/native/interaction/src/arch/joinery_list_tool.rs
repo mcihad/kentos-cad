@@ -155,9 +155,16 @@ impl JoineryListTool {
             let coverage = cx.doc.joinery_coverage();
             let openings: usize = rows.iter().map(|r| r.count).sum();
             let mut said = if updating {
-                format!("{LABEL}: {} yerleşim güncel · {} tip · {openings} açıklık.", self.placed, rows.len())
+                format!(
+                    "{LABEL}: {} yerleşim güncel · {} tip · {openings} açıklık.",
+                    self.placed,
+                    rows.len()
+                )
             } else {
-                let codes: Vec<_> = rows.iter().map(|r| r.kind.code.as_deref().unwrap_or(&r.kind.name)).collect();
+                let codes: Vec<_> = rows
+                    .iter()
+                    .map(|r| r.kind.code.as_deref().unwrap_or(&r.kind.name))
+                    .collect();
                 format!(
                     "{LABEL}: {} tip ({}), {openings} açıklık; tipler değişince liste kendini yeniden yazar.",
                     rows.len(),
@@ -182,7 +189,8 @@ impl JoineryListTool {
     /// The list's outline at the cursor.
     fn place_ghost(&mut self, cx: &Context<'_>) {
         self.ghost = Preview::default();
-        if self.updates_existing() || self.coverage.total == 0
+        if self.updates_existing()
+            || self.coverage.total == 0
             || (self.coverage.listed == 0 && !self.assign_codes)
         {
             return;
@@ -235,7 +243,11 @@ impl Tool for JoineryListTool {
             self.placed > 0,
             "Liste",
             "Y",
-            if self.separate { "Yeni kopya" } else { "Mevcut listeyi güncelle" },
+            if self.separate {
+                "Yeni kopya"
+            } else {
+                "Mevcut listeyi güncelle"
+            },
         );
         if self.coverage.coded < self.coverage.total {
             prompt.toggle("Kodları oluştur ve listele", "K", self.assign_codes)

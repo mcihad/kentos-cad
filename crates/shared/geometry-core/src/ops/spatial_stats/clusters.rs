@@ -153,10 +153,24 @@ pub fn dbscan_with(
             }
         );
         let mut notes = Notes::default();
-        let found = stable_clusters(&placed, &labels, stability, |pts| {
-            dbscan_labels(pts, radius, min_points, border_noise).map(|l| (l, false, false))
-        }, &mut notes)?;
-        stability_result(&mut run, shapes, &placed, &labels, stability, &found, "DBSCAN kümeleme", parameters, notes);
+        let found = stable_clusters(
+            &placed,
+            &labels,
+            stability,
+            |pts| dbscan_labels(pts, radius, min_points, border_noise).map(|l| (l, false, false)),
+            &mut notes,
+        )?;
+        stability_result(
+            &mut run,
+            shapes,
+            &placed,
+            &labels,
+            stability,
+            &found,
+            "DBSCAN kümeleme",
+            parameters,
+            notes,
+        );
     }
     Ok(run)
 }
@@ -286,12 +300,28 @@ pub fn k_means_with(shapes: &[Shape], k: usize, stability: Stability) -> Result<
     run.summary = format!("{n} nesne {clusters} kümeye ayrıldı ({rounds} yineleme).");
     if stability.resamples > 0 {
         let mut notes = Notes::default();
-        let found = stable_clusters(&placed, &numbered, stability, |sample| {
-            let d = distinct_places(sample);
-            let (labels, _, held) = k_means_labels(sample, k.min(d));
-            Ok((labels, d < k, !held))
-        }, &mut notes)?;
-        stability_result(&mut run, shapes, &placed, &numbered, stability, &found, "k-ortalamalar kümeleme", format!("k = {k}"), notes);
+        let found = stable_clusters(
+            &placed,
+            &numbered,
+            stability,
+            |sample| {
+                let d = distinct_places(sample);
+                let (labels, _, held) = k_means_labels(sample, k.min(d));
+                Ok((labels, d < k, !held))
+            },
+            &mut notes,
+        )?;
+        stability_result(
+            &mut run,
+            shapes,
+            &placed,
+            &numbered,
+            stability,
+            &found,
+            "k-ortalamalar kümeleme",
+            format!("k = {k}"),
+            notes,
+        );
     }
     Ok(run)
 }

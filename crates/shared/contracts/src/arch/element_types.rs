@@ -46,15 +46,30 @@ pub struct TypeField {
 }
 
 const fn field(key: &'static str, label: &'static str) -> TypeField {
-    TypeField { key, label, required: false, named: false }
+    TypeField {
+        key,
+        label,
+        required: false,
+        named: false,
+    }
 }
 
 const fn must(key: &'static str, label: &'static str) -> TypeField {
-    TypeField { key, label, required: true, named: false }
+    TypeField {
+        key,
+        label,
+        required: true,
+        named: false,
+    }
 }
 
 const fn named(key: &'static str, label: &'static str) -> TypeField {
-    TypeField { key, label, required: false, named: true }
+    TypeField {
+        key,
+        label,
+        required: false,
+        named: true,
+    }
 }
 
 /// A column's: what it is (a post), its outline and size, its own height, its fill and material; its name is its
@@ -309,7 +324,12 @@ impl ElementType {
         for (key, value) in &self.values {
             match kind.field(key) {
                 None => {
-                    let known: Vec<&str> = kind.fields().iter().filter(|f| !f.named).map(|f| f.key).collect();
+                    let known: Vec<&str> = kind
+                        .fields()
+                        .iter()
+                        .filter(|f| !f.named)
+                        .map(|f| f.key)
+                        .collect();
                     return Some((
                         format!("values.{key}"),
                         format!(
@@ -322,22 +342,37 @@ impl ElementType {
                 Some(f) if f.named => {
                     return Some((
                         format!("values.{key}"),
-                        format!("{} tipin adıdır; değerlerde verilmez, tipin adı değişir.", f.label),
+                        format!(
+                            "{} tipin adıdır; değerlerde verilmez, tipin adı değişir.",
+                            f.label
+                        ),
                     ));
                 }
                 Some(f) if value.is_null() => {
                     return Some((
                         format!("values.{key}"),
-                        format!("“{}” değeri boş olamaz; tip bu alanı vermiyorsa alan hiç yazılmaz.", f.label),
+                        format!(
+                            "“{}” değeri boş olamaz; tip bu alanı vermiyorsa alan hiç yazılmaz.",
+                            f.label
+                        ),
                     ));
                 }
                 Some(_) => {}
             }
         }
-        if let Some(f) = kind.fields().iter().find(|f| f.required && !self.values.contains_key(f.key)) {
+        if let Some(f) = kind
+            .fields()
+            .iter()
+            .find(|f| f.required && !self.values.contains_key(f.key))
+        {
             return Some((
                 format!("values.{}", f.key),
-                format!("{} tipi {} ({}) değerini vermeli.", kind.label(), f.label, f.key),
+                format!(
+                    "{} tipi {} ({}) değerini vermeli.",
+                    kind.label(),
+                    f.label,
+                    f.key
+                ),
             ));
         }
         let Value::Object(mut probe) = kind.probe() else {
@@ -356,7 +391,10 @@ impl ElementType {
         match fields_problem(kind, probe) {
             Ok(None) => None,
             Ok(Some((at, why))) => Some((format!("values.{at}"), why)),
-            Err(why) => Some(("values".into(), format!("{} tipinin değerleri okunmadı: {why}", kind.label()))),
+            Err(why) => Some((
+                "values".into(),
+                format!("{} tipinin değerleri okunmadı: {why}", kind.label()),
+            )),
         }
     }
 
@@ -398,11 +436,19 @@ impl ElementType {
 
     /// Its value of each of its kind's fields as an element following it writes it, by the fields' order.
     fn written(&self) -> Vec<Option<Value>> {
-        let canon = self.canonical_values().unwrap_or_else(|| self.values.clone());
+        let canon = self
+            .canonical_values()
+            .unwrap_or_else(|| self.values.clone());
         self.kind
             .fields()
             .iter()
-            .map(|f| if f.named { Some(Value::String(self.name.clone())) } else { canon.get(f.key).cloned() })
+            .map(|f| {
+                if f.named {
+                    Some(Value::String(self.name.clone()))
+                } else {
+                    canon.get(f.key).cloned()
+                }
+            })
             .collect()
     }
 }
@@ -412,10 +458,16 @@ impl TypeLink {
     /// twice.
     pub fn problem(&self, kind: ElementTypeKind) -> Problem {
         if !crate::opening_type_id_ok(&self.id) {
-            return Some(("elementType.id".into(), format!("“{}” tip kimliği olamaz.", self.id)));
+            return Some((
+                "elementType.id".into(),
+                format!("“{}” tip kimliği olamaz.", self.id),
+            ));
         }
         if self.version == 0 {
-            return Some(("elementType.version".into(), "Tipin sürümü 1'den başlar.".into()));
+            return Some((
+                "elementType.version".into(),
+                "Tipin sürümü 1'den başlar.".into(),
+            ));
         }
         for (k, key) in self.overrides.iter().enumerate() {
             if kind.field(key).is_none() {
@@ -425,7 +477,10 @@ impl TypeLink {
                 ));
             }
             if self.overrides[..k].contains(key) {
-                return Some((format!("elementType.overrides[{k}]"), format!("“{key}” iki kez yazılmış.")));
+                return Some((
+                    format!("elementType.overrides[{k}]"),
+                    format!("“{key}” iki kez yazılmış."),
+                ));
             }
         }
         None
@@ -471,12 +526,24 @@ fn fields_problem(kind: ElementTypeKind, m: Map<String, Value>) -> Result<Proble
     let v = Value::Object(m);
     let read = |e: serde_json::Error| e.to_string();
     Ok(match kind {
-        ElementTypeKind::Column => serde_json::from_value::<crate::ColumnFields>(v).map_err(read)?.problem(),
-        ElementTypeKind::Beam => serde_json::from_value::<crate::BeamFields>(v).map_err(read)?.problem(),
-        ElementTypeKind::Slab => serde_json::from_value::<crate::SlabFields>(v).map_err(read)?.problem(),
-        ElementTypeKind::Roof => serde_json::from_value::<crate::RoofFields>(v).map_err(read)?.problem(),
-        ElementTypeKind::Railing => serde_json::from_value::<crate::RailingFields>(v).map_err(read)?.problem(),
-        ElementTypeKind::Stair => serde_json::from_value::<crate::StairFields>(v).map_err(read)?.problem(),
+        ElementTypeKind::Column => serde_json::from_value::<crate::ColumnFields>(v)
+            .map_err(read)?
+            .problem(),
+        ElementTypeKind::Beam => serde_json::from_value::<crate::BeamFields>(v)
+            .map_err(read)?
+            .problem(),
+        ElementTypeKind::Slab => serde_json::from_value::<crate::SlabFields>(v)
+            .map_err(read)?
+            .problem(),
+        ElementTypeKind::Roof => serde_json::from_value::<crate::RoofFields>(v)
+            .map_err(read)?
+            .problem(),
+        ElementTypeKind::Railing => serde_json::from_value::<crate::RailingFields>(v)
+            .map_err(read)?
+            .problem(),
+        ElementTypeKind::Stair => serde_json::from_value::<crate::StairFields>(v)
+            .map_err(read)?
+            .problem(),
     })
 }
 
@@ -541,14 +608,27 @@ pub fn type_link(e: &Entity) -> Option<&TypeLink> {
 /// none; a column's type its name), but those in `keep`, which stay its own; it carries the type's id and version,
 /// `keep` its exceptions. Refused (field, why): no type serves `e`, `t` is another kind's, or the values make no
 /// element (its kind's own check, which the change would break: a leg thicker than the column).
-pub fn follow_type(e: &Entity, t: &ElementType, keep: &[String]) -> Result<Entity, (String, String)> {
+pub fn follow_type(
+    e: &Entity,
+    t: &ElementType,
+    keep: &[String],
+) -> Result<Entity, (String, String)> {
     let Some((kind, mut own)) = own_object(e) else {
-        return Err(("uids".into(), "Bu nesnenin tipi olmaz: kolon, kiriş, döşeme, çatı, korkuluk ya da merdiven değil.".into()));
+        return Err((
+            "uids".into(),
+            "Bu nesnenin tipi olmaz: kolon, kiriş, döşeme, çatı, korkuluk ya da merdiven değil."
+                .into(),
+        ));
     };
     if kind != t.kind {
         return Err((
             "uids".into(),
-            format!("“{}” bir {} tipi; bu nesne {}.", t.name, t.kind.words(), kind.words()),
+            format!(
+                "“{}” bir {} tipi; bu nesne {}.",
+                t.name,
+                t.kind.words(),
+                kind.words()
+            ),
         ));
     }
     for f in kind.fields() {
@@ -564,13 +644,30 @@ pub fn follow_type(e: &Entity, t: &ElementType, keep: &[String]) -> Result<Entit
             }
         }
     }
-    let mut out = with_object(e, own).map_err(|why| ("values".to_owned(), format!("Tipin değerleri bu {} nesnesine yazılmadı: {why}", kind.words())))?;
+    let mut out = with_object(e, own).map_err(|why| {
+        (
+            "values".to_owned(),
+            format!(
+                "Tipin değerleri bu {} nesnesine yazılmadı: {why}",
+                kind.words()
+            ),
+        )
+    })?;
     if let Some(problem) = element_problem(&out) {
         return Err(problem);
     }
-    let overrides = kind.fields().iter().filter(|f| keep.iter().any(|k| k == f.key)).map(|f| f.key.to_owned()).collect();
+    let overrides = kind
+        .fields()
+        .iter()
+        .filter(|f| keep.iter().any(|k| k == f.key))
+        .map(|f| f.key.to_owned())
+        .collect();
     if let Some(arch) = out.arch_info_mut() {
-        arch.element_type = Some(TypeLink { id: t.id.clone(), version: t.version, overrides });
+        arch.element_type = Some(TypeLink {
+            id: t.id.clone(),
+            version: t.version,
+            overrides,
+        });
     }
     Ok(out)
 }
@@ -608,7 +705,8 @@ pub fn exceptions_after(before: &Entity, after: &Entity, t: &ElementType) -> Vec
         .iter()
         .zip(t.written())
         .filter(|(f, v)| {
-            link.overrides.iter().any(|k| k == f.key) || (was.get(f.key) != now.get(f.key) && now.get(f.key) != v.as_ref())
+            link.overrides.iter().any(|k| k == f.key)
+                || (was.get(f.key) != now.get(f.key) && now.get(f.key) != v.as_ref())
         })
         .map(|(f, _)| f.key.to_owned())
         .collect()
@@ -619,7 +717,10 @@ pub fn element_types_problem(types: &[ElementType]) -> Problem {
     if types.len() > MAX_ELEMENT_TYPES {
         return Some((
             "elementTypes".into(),
-            format!("Bir projede en çok {MAX_ELEMENT_TYPES} eleman tipi olur; {} verildi.", types.len()),
+            format!(
+                "Bir projede en çok {MAX_ELEMENT_TYPES} eleman tipi olur; {} verildi.",
+                types.len()
+            ),
         ));
     }
     for (i, t) in types.iter().enumerate() {
@@ -629,14 +730,24 @@ pub fn element_types_problem(types: &[ElementType]) -> Problem {
         if let Some(u) = types[..i].iter().find(|u| u.id == t.id) {
             return Some((
                 format!("elementTypes[{i}].id"),
-                format!("“{}” kimliği iki tipte var (“{}”, “{}”).", t.id, u.name, t.name),
+                format!(
+                    "“{}” kimliği iki tipte var (“{}”, “{}”).",
+                    t.id, u.name, t.name
+                ),
             ));
         }
         let folded = t.name.to_lowercase();
-        if types[..i].iter().any(|u| u.kind == t.kind && u.name.to_lowercase() == folded) {
+        if types[..i]
+            .iter()
+            .any(|u| u.kind == t.kind && u.name.to_lowercase() == folded)
+        {
             return Some((
                 format!("elementTypes[{i}].name"),
-                format!("“{}” adında iki {} tipi var; birine başka ad verin.", t.name, t.kind.words()),
+                format!(
+                    "“{}” adında iki {} tipi var; birine başka ad verin.",
+                    t.name,
+                    t.kind.words()
+                ),
             ));
         }
     }
@@ -660,7 +771,9 @@ mod tests {
     #[test]
     fn every_kind_s_plain_element_holds_and_its_required_fields_are_those_it_needs() {
         for kind in ElementTypeKind::ALL {
-            let Value::Object(probe) = kind.probe() else { panic!("{kind:?}") };
+            let Value::Object(probe) = kind.probe() else {
+                panic!("{kind:?}")
+            };
             assert_eq!(fields_problem(kind, probe.clone()), Ok(None), "{kind:?}");
             for f in kind.fields().iter().filter(|f| !f.named) {
                 let mut without = probe.clone();
@@ -673,14 +786,25 @@ mod tests {
 
     #[test]
     fn a_type_must_give_its_kind_s_fields_and_only_them() {
-        assert_eq!(column_type(serde_json::json!({ "width": 0.3, "depth": 0.5 })).problem(), None);
-        let (at, _) = column_type(serde_json::json!({ "depth": 0.5 })).problem().expect("no width");
+        assert_eq!(
+            column_type(serde_json::json!({ "width": 0.3, "depth": 0.5 })).problem(),
+            None
+        );
+        let (at, _) = column_type(serde_json::json!({ "depth": 0.5 }))
+            .problem()
+            .expect("no width");
         assert_eq!(at, "values.width");
-        let (at, _) = column_type(serde_json::json!({ "width": 0.3, "tread": 0.25 })).problem().expect("not a column's");
+        let (at, _) = column_type(serde_json::json!({ "width": 0.3, "tread": 0.25 }))
+            .problem()
+            .expect("not a column's");
         assert_eq!(at, "values.tread");
-        let (at, _) = column_type(serde_json::json!({ "width": 0.3, "type": "S2" })).problem().expect("its name");
+        let (at, _) = column_type(serde_json::json!({ "width": 0.3, "type": "S2" }))
+            .problem()
+            .expect("its name");
         assert_eq!(at, "values.type");
-        let (at, _) = column_type(serde_json::json!({ "width": -0.3 })).problem().expect("no column");
+        let (at, _) = column_type(serde_json::json!({ "width": -0.3 }))
+            .problem()
+            .expect("no column");
         assert!(at.starts_with("values."), "{at}");
     }
 
@@ -694,14 +818,27 @@ mod tests {
         let t = column_type(serde_json::json!({ "width": 0.3, "depth": 0.5, "material": "C30" }));
         let typed = follow_type(&e, &t, &[]).expect("follows");
         let Entity::Column(c) = &typed else { panic!() };
-        assert_eq!((c.column.width, c.column.depth, c.column.material.as_deref()), (0.3, Some(0.5), Some("C30")));
+        assert_eq!(
+            (c.column.width, c.column.depth, c.column.material.as_deref()),
+            (0.3, Some(0.5), Some("C30"))
+        );
         assert_eq!(c.column.kind.as_deref(), Some("S1"));
-        assert_eq!((c.column.rotation, c.column.tag.as_deref()), (0.5, Some("S101")), "its own stay");
-        assert_eq!(type_link(&typed).map(|l| (l.version, l.overrides.len())), Some((1, 0)));
+        assert_eq!(
+            (c.column.rotation, c.column.tag.as_deref()),
+            (0.5, Some("S101")),
+            "its own stay"
+        );
+        assert_eq!(
+            type_link(&typed).map(|l| (l.version, l.overrides.len())),
+            Some((1, 0))
+        );
         assert!(fields_off_type(&typed, &t).is_empty());
         // Its width its own: an exception that stays when the type changes.
         let kept = follow_type(&e, &t, &["width".into()]).expect("follows");
-        assert_eq!(type_link(&kept).map(|l| l.overrides.clone()), Some(vec!["width".to_owned()]));
+        assert_eq!(
+            type_link(&kept).map(|l| l.overrides.clone()),
+            Some(vec!["width".to_owned()])
+        );
         assert_eq!(fields_off_type(&kept, &t), ["width"]);
         let mut wider = t.clone();
         wider.version = 2;
@@ -719,16 +856,25 @@ mod tests {
 
     #[test]
     fn a_type_s_values_are_written_as_the_element_writes_them() {
-        let t = column_type(serde_json::json!({ "width": 1, "fill": false, "shape": "rect", "depth": 0.5 }));
+        let t = column_type(
+            serde_json::json!({ "width": 1, "fill": false, "shape": "rect", "depth": 0.5 }),
+        );
         let canon = t.canonical_values().expect("they read");
-        assert_eq!(Value::Object(canon), serde_json::json!({ "width": 1.0, "depth": 0.5 }));
+        assert_eq!(
+            Value::Object(canon),
+            serde_json::json!({ "width": 1.0, "depth": 0.5 })
+        );
         // A column following it is not an exception for the default it was given.
         let e: Entity = serde_json::from_value(serde_json::json!({
             "kind": "column", "id": 1, "layerId": "kolon", "attrs": {}, "at": { "x": 0.0, "y": 0.0 }, "width": 0.3
         }))
         .expect("a column");
         let typed = follow_type(&e, &t, &[]).expect("follows");
-        assert!(fields_off_type(&typed, &t).is_empty(), "{:?}", fields_off_type(&typed, &t));
+        assert!(
+            fields_off_type(&typed, &t).is_empty(),
+            "{:?}",
+            fields_off_type(&typed, &t)
+        );
     }
 
     #[test]
@@ -739,7 +885,8 @@ mod tests {
         }))
         .expect("an L column");
         let t = column_type(serde_json::json!({ "width": 0.2 }));
-        let (at, _) = follow_type(&e, &t, &["shape".into(), "legs".into()]).expect_err("legs thicker than it");
+        let (at, _) = follow_type(&e, &t, &["shape".into(), "legs".into()])
+            .expect_err("legs thicker than it");
         assert!(at.starts_with("legs"), "{at}");
     }
 
@@ -748,13 +895,19 @@ mod tests {
         let a = column_type(serde_json::json!({ "width": 0.3 }));
         let mut b = a.clone();
         b.id = "s1-2".into();
-        assert_eq!(element_types_problem(&[a.clone(), b.clone()]).map(|p| p.0), Some("elementTypes[1].name".into()));
+        assert_eq!(
+            element_types_problem(&[a.clone(), b.clone()]).map(|p| p.0),
+            Some("elementTypes[1].name".into())
+        );
         let beam = ElementType {
             id: "s1-kiris".into(),
             name: "s1".into(),
             kind: ElementTypeKind::Beam,
             version: 1,
-            values: serde_json::json!({ "width": 0.25, "height": 0.5 }).as_object().cloned().unwrap_or_default(),
+            values: serde_json::json!({ "width": 0.25, "height": 0.5 })
+                .as_object()
+                .cloned()
+                .unwrap_or_default(),
         };
         assert_eq!(element_types_problem(&[a, beam]), None);
     }

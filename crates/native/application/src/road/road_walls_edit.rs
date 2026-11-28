@@ -3,8 +3,8 @@
 //! cases are `fixtures/commands/v1/road.walls.edit.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, RetainingWallDef, RetainingWallReport, RetainingWallsEdit, RetainingWallsWritten,
-    RoadEditOperation,
+    CommandResult, CommandWarning, RetainingWallDef, RetainingWallReport, RetainingWallsEdit,
+    RetainingWallsWritten, RoadEditOperation,
 };
 
 use crate::ExecutionContext;
@@ -26,13 +26,22 @@ fn check(doc: &kentos_domain::Document, input: &RetainingWallsEdit) -> Result<Ch
     common::road_project(doc)?;
     let own = doc.road_walls();
     let mut list = own.to_vec();
-    let found = input.wall.as_deref().and_then(|t| common::find(own, t, "wall").ok());
+    let found = input
+        .wall
+        .as_deref()
+        .and_then(|t| common::find(own, t, "wall").ok());
     if input.operation != RoadEditOperation::Set && found.is_none() {
         let name = input.wall.clone().unwrap_or_default();
-        return Err(common::find(own, &name, "wall").err().unwrap_or(Stop::Cancelled));
+        return Err(common::find(own, &name, "wall")
+            .err()
+            .unwrap_or(Stop::Cancelled));
     }
     let corridor = match input.corridor.as_deref() {
-        Some(c) => Some(corridors::find(doc.road_corridors(), c, "corridor")?.1.clone()),
+        Some(c) => Some(
+            corridors::find(doc.road_corridors(), c, "corridor")?
+                .1
+                .clone(),
+        ),
         None => None,
     };
     let target = match (input.operation, found) {
@@ -41,7 +50,11 @@ fn check(doc: &kentos_domain::Document, input: &RetainingWallsEdit) -> Result<Ch
             None
         }
         (RoadEditOperation::Rebind, Some((at, old))) => {
-            let now = doc.road_corridors().iter().find(|c| c.id == old.corridor).map_or(0, |c| c.revision);
+            let now = doc
+                .road_corridors()
+                .iter()
+                .find(|c| c.id == old.corridor)
+                .map_or(0, |c| c.revision);
             let mut d = old.clone();
             d.corridor_revision = now;
             if d != *old {
@@ -61,7 +74,11 @@ fn check(doc: &kentos_domain::Document, input: &RetainingWallsEdit) -> Result<Ch
                 || input.highest.is_some()
                 || input.material.is_some();
             if !given {
-                return Err(fail(codes::INVALID_RETAINING_WALL, "Değiştirilecek bir şey yok: duvarın bir alanını verin.".into(), ""));
+                return Err(fail(
+                    codes::INVALID_RETAINING_WALL,
+                    "Değiştirilecek bir şey yok: duvarın bir alanını verin.".into(),
+                    "",
+                ));
             }
             let mut d = old.clone();
             if let Some(n) = &input.name {
@@ -117,13 +134,22 @@ fn check(doc: &kentos_domain::Document, input: &RetainingWallsEdit) -> Result<Ch
                     field,
                 ));
             }
-            let (Some(name), Some(c), Some(side), Some(from), Some(to), Some(step), Some(shape)) =
-                (&input.name, &corridor, input.side, input.from, input.to, input.step, &input.shape)
-            else {
+            let (Some(name), Some(c), Some(side), Some(from), Some(to), Some(step), Some(shape)) = (
+                &input.name,
+                &corridor,
+                input.side,
+                input.from,
+                input.to,
+                input.step,
+                &input.shape,
+            ) else {
                 return Err(Stop::Cancelled);
             };
             let id = input.wall.clone().unwrap_or_else(|| {
-                (1..).map(|n| format!("d-{n}")).find(|id| own.iter().all(|x| &x.id != id)).unwrap_or_default()
+                (1..)
+                    .map(|n| format!("d-{n}"))
+                    .find(|id| own.iter().all(|x| &x.id != id))
+                    .unwrap_or_default()
             });
             list.push(RetainingWallDef {
                 id: id.clone(),
@@ -146,7 +172,10 @@ fn check(doc: &kentos_domain::Document, input: &RetainingWallsEdit) -> Result<Ch
     let mut road = doc.settings().road.clone().unwrap_or_default();
     road.walls = list.clone();
     judged(&road, codes::INVALID_RETAINING_WALL, "İstinat duvarı")?;
-    if let Some(d) = target.as_ref().and_then(|id| list.iter().find(|c| &c.id == id)) {
+    if let Some(d) = target
+        .as_ref()
+        .and_then(|id| list.iter().find(|c| &c.id == id))
+    {
         common::read(doc, d)?;
     }
     checks::revision(doc, input.expected_revision.as_deref())?;
@@ -156,9 +185,18 @@ fn check(doc: &kentos_domain::Document, input: &RetainingWallsEdit) -> Result<Ch
 fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<RetainingWallsWritten> {
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_walls(c.list.clone(), STEP) {
-        return fail(codes::INVALID_RETAINING_WALL, format!("İstinat duvarı kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_RETAINING_WALL,
+            format!("İstinat duvarı kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
-    let wall = match c.target.as_ref().and_then(|id| c.list.iter().find(|x| &x.id == id)) {
+    let wall = match c
+        .target
+        .as_ref()
+        .and_then(|id| c.list.iter().find(|x| &x.id == id))
+    {
         Some(d) => match common::read(doc, d) {
             Ok(r) => Some(r.report),
             Err(stop) => return stop.into(),
@@ -166,7 +204,11 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<RetainingWa
         None => None,
     };
     CommandResult::Completed {
-        output: RetainingWallsWritten { wall, walls: common::listed(&c.list), revision: doc.revision().to_string() },
+        output: RetainingWallsWritten {
+            wall,
+            walls: common::listed(&c.list),
+            revision: doc.revision().to_string(),
+        },
         warnings: vec![],
     }
 }
@@ -174,13 +216,19 @@ fn write(cx: &mut ExecutionContext<'_>, c: Checked) -> CommandResult<RetainingWa
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RetainingWallsEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: vec![] },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: vec![],
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What execute would write now; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &RetainingWallsEdit) -> CommandResult<RetainingWallsWritten> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &RetainingWallsEdit,
+) -> CommandResult<RetainingWallsWritten> {
     let c = match check(cx.doc, input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -194,7 +242,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &RetainingWallsEdit) -> CommandRes
 }
 
 /// Writes the wall: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RetainingWallsEdit) -> CommandResult<RetainingWallsWritten> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RetainingWallsEdit,
+) -> CommandResult<RetainingWallsWritten> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_WALLS_EDIT,
@@ -215,6 +266,12 @@ pub fn preview(
     let c = check(doc, input).map_err(crate::road_corridors::words)?;
     let mut copy = doc.reading_copy();
     copy.set_road_walls(c.list.clone(), STEP).map_err(|r| r.0)?;
-    let def = c.target.as_ref().and_then(|id| c.list.iter().find(|x| &x.id == id)).ok_or("İstinat duvarı yok.")?;
-    common::read(&copy, def).map(|r| (r.report, r.warnings)).map_err(crate::road_corridors::words)
+    let def = c
+        .target
+        .as_ref()
+        .and_then(|id| c.list.iter().find(|x| &x.id == id))
+        .ok_or("İstinat duvarı yok.")?;
+    common::read(&copy, def)
+        .map(|r| (r.report, r.warnings))
+        .map_err(crate::road_corridors::words)
 }

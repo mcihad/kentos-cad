@@ -8,8 +8,8 @@
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib element_types_tests::screens -- --ignored --nocapture
 //! ```
 
-use std::path::PathBuf;
 use crate::arch::ArchState;
+use std::path::PathBuf;
 
 use kentos_commands::{ArchChange, ArchOperation, Entity, type_link};
 use kentos_domain::Slot;
@@ -28,11 +28,20 @@ fn send(app: &mut App, e: Event) {
 
 fn opened() -> App {
     kentos_postgis::connections::keep_in_memory();
-    let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
-    app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+    let (mut app, _) = App::start_in(
+        Some(Module::Architecture),
+        None,
+        Settings::memory(),
+        Recovery::off(),
+    );
+    app.db_store = Box::leak(Box::new(
+        kentos_postgis::connections::ConnectionStore::open(None),
+    ));
     app.hand_over = |m, _| Ok(m.program().to_owned());
-    let snapshot =
-        kentos_kcad::decode(include_bytes!("../../../../fixtures/arch/v1/section-building.kcad")).expect("decodes");
+    let snapshot = kentos_kcad::decode(include_bytes!(
+        "../../../../fixtures/arch/v1/section-building.kcad"
+    ))
+    .expect("decodes");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -40,7 +49,11 @@ fn opened() -> App {
 
 fn columns(app: &App) -> Vec<Slot> {
     let doc = app.document.as_ref().expect("open");
-    doc.model.entities().filter(|e| matches!(e, Entity::Column(_))).map(|e| Slot(e.base().id)).collect()
+    doc.model
+        .entities()
+        .filter(|e| matches!(e, Entity::Column(_)))
+        .map(|e| Slot(e.base().id))
+        .collect()
 }
 
 fn width(app: &App, slot: Slot) -> f64 {
@@ -70,14 +83,25 @@ fn typed() -> (App, Vec<Slot>, String) {
     assert_eq!(cols.len(), 16, "the section building's columns");
     app.selection.set([cols[0]]);
     let _ = app.update(Message::Run("arch.elementTypeFrom"));
-    let id = app.modules.arch().element_types.as_ref().and_then(|w| w.chosen.clone()).expect("the new type chosen");
+    let id = app
+        .modules
+        .arch()
+        .element_types
+        .as_ref()
+        .and_then(|w| w.chosen.clone())
+        .expect("the new type chosen");
     app.selection.set(cols.clone());
     send(&mut app, Event::Assign(id.clone()));
     let last = cols[15];
     let own = width(&app, last) + 0.15;
     app.selection.set([last]);
-    let op = ArchOperation::Set(Box::new(ArchChange { width: Some(own), ..Default::default() }));
-    let task = app.update(Message::Properties(crate::properties::Event::Arch(last, op)));
+    let op = ArchOperation::Set(Box::new(ArchChange {
+        width: Some(own),
+        ..Default::default()
+    }));
+    let task = app.update(Message::Properties(crate::properties::Event::Arch(
+        last, op,
+    )));
     drive(&mut app, task);
     (app, cols, id)
 }
@@ -102,7 +126,13 @@ fn the_type_s_width_changed_fifteen_columns_follow_and_the_one_with_its_own_keep
     let next = was + 0.05;
     let f = kentos_interaction::Format::of(app.document.as_ref().expect("open").model.settings());
     send(&mut app, Event::Value("width", f.length_bare(next)));
-    let preview = app.modules.arch().element_types.as_ref().and_then(|w| w.preview.clone()).expect("a plan");
+    let preview = app
+        .modules
+        .arch()
+        .element_types
+        .as_ref()
+        .and_then(|w| w.preview.clone())
+        .expect("a plan");
     let plan = preview.expect("it holds");
     assert_eq!(plan.report.applied.len(), 16);
     assert_eq!(plan.report.kept.len(), 1);
@@ -110,17 +140,34 @@ fn the_type_s_width_changed_fifteen_columns_follow_and_the_one_with_its_own_keep
         crate::element_types_window::report_words(&plan.report),
         "15 eleman yeni değerleri alır; 1 eleman değişen alanda kendi değerini korur"
     );
-    assert!((width(&app, cols[0]) - was).abs() < 1e-12, "the plan writes nothing");
+    assert!(
+        (width(&app, cols[0]) - was).abs() < 1e-12,
+        "the plan writes nothing"
+    );
     send(&mut app, Event::Apply);
-    let followed = cols.iter().filter(|&&c| (width(&app, c) - next).abs() < 1e-9).count();
+    let followed = cols
+        .iter()
+        .filter(|&&c| (width(&app, c) - next).abs() < 1e-9)
+        .count();
     assert_eq!(followed, 15, "fifteen follow");
-    assert!((width(&app, last) - own).abs() < 1e-12, "the one with its own width keeps it");
+    assert!(
+        (width(&app, last) - own).abs() < 1e-12,
+        "the one with its own width keeps it"
+    );
     let doc = app.document.as_ref().expect("open");
-    assert!(cols.iter().all(|&c| doc.model.get(c).and_then(type_link).is_some_and(|l| l.version == 2)));
+    assert!(cols.iter().all(|&c| {
+        doc.model
+            .get(c)
+            .and_then(type_link)
+            .is_some_and(|l| l.version == 2)
+    }));
     // One undo step: the type and its columns back.
     let _ = app.update(Message::Run("edit.undo"));
     assert!((width(&app, cols[0]) - was).abs() < 1e-12);
-    assert_eq!(app.document.as_ref().expect("open").model.element_types()[0].version, 1);
+    assert_eq!(
+        app.document.as_ref().expect("open").model.element_types()[0].version,
+        1
+    );
 }
 
 #[test]
@@ -137,7 +184,11 @@ fn tipten_ayir_keeps_the_values_and_tipe_dondur_gives_the_type_s_back() {
     send(&mut app, Event::Detach);
     assert!((width(&app, last) - typed_width).abs() < 1e-12);
     assert_eq!(row(&app, "Tip").0, "Tipsiz");
-    assert_eq!(row(&app, "En").1, None, "no source for an element of its own");
+    assert_eq!(
+        row(&app, "En").1,
+        None,
+        "no source for an element of its own"
+    );
     // Aynı tiptekileri seç: the fifteen still following.
     app.selection.set([cols[0]]);
     let _ = app.update(Message::Run("arch.elementSameType"));
@@ -151,7 +202,8 @@ fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::{Input, Snapshot};
 
-    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/eleman-tipleri-8106");
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/eleman-tipleri-8106");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
@@ -160,7 +212,9 @@ fn screens() {
         let (mut app, cols, id) = typed();
         // Tipe çevir opened the window; Öznitelikler first.
         send(&mut app, Event::Close);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -171,7 +225,10 @@ fn screens() {
             app.toasts.clear();
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         // Öznitelikler, in a tall window so its type rows are in sight: a column following its type, then the one
@@ -180,7 +237,9 @@ fn screens() {
         let _ = app.update(Message::WindowResized(tall));
         let mut long = Snapshot::new(tall).expect("a renderer");
         app.selection.set([cols[3]]);
-        let _ = app.update(Message::Properties(crate::properties::Event::Toggle("general")));
+        let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+            "general",
+        )));
         shot(&mut app, &mut long, "1-oznitelikler-tipten");
         app.selection.set([cols[15]]);
         shot(&mut app, &mut long, "2-oznitelikler-ornekten");
@@ -196,7 +255,8 @@ fn screens() {
         // The window: the type's width typed, the plan said before Uygula.
         let _ = app.update(Message::Run("arch.elementTypes"));
         send(&mut app, Event::Choose(id.clone()));
-        let f = kentos_interaction::Format::of(app.document.as_ref().expect("open").model.settings());
+        let f =
+            kentos_interaction::Format::of(app.document.as_ref().expect("open").model.settings());
         let next = width(&app, cols[0]) + 0.05;
         send(&mut app, Event::Value("width", f.length_bare(next)));
         shot(&mut app, &mut snapshot, "3-pencere-onizleme");
@@ -211,7 +271,12 @@ fn screens() {
         let _ = app.update(Message::RibbonSearch("Eleman tipleri".into()));
         let _ = app.update(Message::RibbonSearchReveal(0));
         snapshot.settle(&mut app, App::view, &mut update);
-        snapshot.input(&mut app, App::view, &mut update, Input::Click(iced::Point::new(1278.0, 133.0)));
+        snapshot.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Click(iced::Point::new(1278.0, 133.0)),
+        );
         shot(&mut app, &mut snapshot, "6-serit-yeri");
     }
 }

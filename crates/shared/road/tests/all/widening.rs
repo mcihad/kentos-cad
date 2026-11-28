@@ -33,7 +33,11 @@ fn every_widening_is_the_references() {
             tangent: n(&r["tangent"]),
             clearance: n(&r["clearance"]),
             speed: r.get("speed").map(n),
-            method: if r["method"] == "simple" { WideningMethod::Simple } else { WideningMethod::Standard },
+            method: if r["method"] == "simple" {
+                WideningMethod::Simple
+            } else {
+                WideningMethod::Standard
+            },
         };
         let got = widening(n(&c["radius"]), &vehicle, &road);
         if c.get("error").is_some() {
@@ -49,11 +53,19 @@ fn every_widening_is_the_references() {
             ("width", w.width),
             ("widening", w.widening),
         ] {
-            assert!((value - n(&c[key])).abs() < WITHIN, "{name}: {key} {value} vs {}", c[key]);
+            assert!(
+                (value - n(&c[key])).abs() < WITHIN,
+                "{name}: {key} {value} vs {}",
+                c[key]
+            );
         }
         if let Some(rnd) = c.get("round") {
             let got = rounded(w.widening, rnd.get("step").map(n), rnd.get("least").map(n));
-            assert!((got - n(&c["rounded"])).abs() < WITHIN, "{name}: {got} vs {}", c["rounded"]);
+            assert!(
+                (got - n(&c["rounded"])).abs() < WITHIN,
+                "{name}: {got} vs {}",
+                c["rounded"]
+            );
         }
     }
 }
@@ -67,22 +79,57 @@ fn a_large_radius_keeps_its_digits() {
     let got = offtracking(r, sum).unwrap();
     assert!((got - exact).abs() / exact < 1e-12, "{got} vs {exact}");
     let naive = r - (r * r - sum).sqrt();
-    assert!((naive - exact).abs() / exact > 1e-8, "the difference form would lose digits: {naive}");
+    assert!(
+        (naive - exact).abs() / exact > 1e-8,
+        "the difference form would lose digits: {naive}"
+    );
 }
 
 #[test]
 fn a_bad_size_is_refused() {
-    let v = WideningVehicle { track: 2.59, front: 1.2, wheelbase: 6.6, trailer: None };
-    let road = WideningRoad { lanes: 2, tangent: 7.2, clearance: 0.9, speed: Some(80.0), method: WideningMethod::Standard };
+    let v = WideningVehicle {
+        track: 2.59,
+        front: 1.2,
+        wheelbase: 6.6,
+        trailer: None,
+    };
+    let road = WideningRoad {
+        lanes: 2,
+        tangent: 7.2,
+        clearance: 0.9,
+        speed: Some(80.0),
+        method: WideningMethod::Standard,
+    };
     for (r, v, road) in [
         (0.0, v, road),
         (f64::NAN, v, road),
         (150.0, WideningVehicle { track: 0.0, ..v }, road),
         (150.0, WideningVehicle { front: -1.0, ..v }, road),
-        (150.0, WideningVehicle { trailer: Some((0.0, 0.0)), ..v }, road),
+        (
+            150.0,
+            WideningVehicle {
+                trailer: Some((0.0, 0.0)),
+                ..v
+            },
+            road,
+        ),
         (150.0, v, WideningRoad { lanes: 0, ..road }),
-        (150.0, v, WideningRoad { speed: Some(0.0), ..road }),
-        (150.0, v, WideningRoad { clearance: -0.1, ..road }),
+        (
+            150.0,
+            v,
+            WideningRoad {
+                speed: Some(0.0),
+                ..road
+            },
+        ),
+        (
+            150.0,
+            v,
+            WideningRoad {
+                clearance: -0.1,
+                ..road
+            },
+        ),
     ] {
         assert_eq!(widening(r, &v, &road), Err(WideningError::Input));
     }
@@ -100,7 +147,13 @@ fn the_steady_state_bounds_the_drive() {
         front: 1.2,
         rear: 0.0,
         width: 2.59,
-        trailer: Some(Trailer { kingpin: -0.8, wheelbase: 12.5, front: 0.9, rear: 1.0, width: 2.59 }),
+        trailer: Some(Trailer {
+            kingpin: -0.8,
+            wheelbase: 12.5,
+            front: 0.9,
+            rear: 1.0,
+            width: 2.59,
+        }),
     };
     let sum = 6.6f64.powi(2) - 0.8f64.powi(2) + 12.5f64.powi(2);
     let mut rows = Vec::new();
@@ -117,25 +170,63 @@ fn the_steady_state_bounds_the_drive() {
     ] {
         let d: f64 = f64::to_radians(deflection);
         let pis = vec![
-            PiInput { id: "a".into(), x: -400.0, y: 0.0, radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false },
-            PiInput { id: "p".into(), x: 0.0, y: 0.0, radius, spiral_in: spiral, spiral_out: spiral, ove: false },
-            PiInput { id: "b".into(), x: 400.0 * d.cos(), y: 400.0 * d.sin(), radius: 0.0, spiral_in: 0.0, spiral_out: 0.0, ove: false },
+            PiInput {
+                id: "a".into(),
+                x: -400.0,
+                y: 0.0,
+                radius: 0.0,
+                spiral_in: 0.0,
+                spiral_out: 0.0,
+                ove: false,
+            },
+            PiInput {
+                id: "p".into(),
+                x: 0.0,
+                y: 0.0,
+                radius,
+                spiral_in: spiral,
+                spiral_out: spiral,
+                ove: false,
+            },
+            PiInput {
+                id: "b".into(),
+                x: 400.0 * d.cos(),
+                y: 400.0 * d.sin(),
+                radius: 0.0,
+                spiral_in: 0.0,
+                spiral_out: 0.0,
+                ove: false,
+            },
         ];
         let al = build(&pis).expect("builds");
         let n = (al.length / 0.25).ceil() as usize;
-        let path: Vec<[f64; 2]> = (0..=n).filter_map(|i| al.at((i as f64 * 0.25).min(al.length))).map(|p| [p.x, p.y]).collect();
+        let path: Vec<[f64; 2]> = (0..=n)
+            .filter_map(|i| al.at((i as f64 * 0.25).min(al.length)))
+            .map(|p| [p.x, p.y])
+            .collect();
         let swept = drive(&vehicle, &path, 0.25).expect("drives");
         let got = swept.trailer_offtracking.expect("a trailer");
         let steady = kentos_road::widening::offtracking(radius, sum).unwrap();
         // The drive's own error: the chords' sagitta and the sampling; within a centimetre of the steady state.
-        assert!(got <= steady + 0.01, "R {radius} Ls {spiral} Δ {deflection}°: {got} > {steady}");
+        assert!(
+            got <= steady + 0.01,
+            "R {radius} Ls {spiral} Δ {deflection}°: {got} > {steady}"
+        );
         rows.push((radius, spiral, deflection, got, steady));
     }
     // A 90° turn on R 60 m reaches the steady state; a 15° one does not come near it.
-    let ratio = |r: f64, s: f64, d: f64| rows.iter().find(|x| x.0 == r && x.1 == s && x.2 == d).map(|x| x.3 / x.4).unwrap();
+    let ratio = |r: f64, s: f64, d: f64| {
+        rows.iter()
+            .find(|x| x.0 == r && x.1 == s && x.2 == d)
+            .map(|x| x.3 / x.4)
+            .unwrap()
+    };
     assert!(ratio(60.0, 0.0, 90.0) > 0.97, "{rows:?}");
     assert!(ratio(60.0, 0.0, 15.0) < 0.8, "{rows:?}");
     for (r, s, d, got, steady) in &rows {
-        println!("R {r:>5} Ls {s:>4} Δ {d:>4}°: drive {got:.3} m, steady {steady:.3} m, {:.0} %", 100.0 * got / steady);
+        println!(
+            "R {r:>5} Ls {s:>4} Δ {d:>4}°: drive {got:.3} m, steady {steady:.3} m, {:.0} %",
+            100.0 * got / steady
+        );
     }
 }

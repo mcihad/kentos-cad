@@ -145,7 +145,10 @@ pub struct CandidateDecision {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub reject: Option<String>,
     #[serde(default, skip_serializing_if = "std::collections::BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<std::collections::BTreeMap<String, String>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<std::collections::BTreeMap<String, String>>")
+    )]
     pub fields: std::collections::BTreeMap<String, String>,
 }
 

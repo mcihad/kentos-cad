@@ -184,18 +184,19 @@ pub fn compare(loc: &Locator, rows: &[RegisterRow], tolerance: f64) -> Compariso
         let r = &rows[f];
         let g = &loc.groups[d.group];
         let mut parts = Vec::new();
-        let mut differ = |part: Part, said: &Option<String>, same: &dyn Fn(&str) -> bool, drawing: &str| {
-            if let Some(text) = said
-                && !text.is_empty()
-                && !same(text)
-            {
-                parts.push(PartDifference {
-                    part,
-                    drawing: drawing.to_owned(),
-                    register: text.clone(),
-                });
-            }
-        };
+        let mut differ =
+            |part: Part, said: &Option<String>, same: &dyn Fn(&str) -> bool, drawing: &str| {
+                if let Some(text) = said
+                    && !text.is_empty()
+                    && !same(text)
+                {
+                    parts.push(PartDifference {
+                        part,
+                        drawing: drawing.to_owned(),
+                        register: text.clone(),
+                    });
+                }
+            };
         differ(
             Part::Street,
             &r.street,
@@ -262,7 +263,11 @@ pub fn compare(loc: &Locator, rows: &[RegisterRow], tolerance: f64) -> Compariso
         let (Some((name, _)), Some(number)) = (street_value(street), door_value(door)) else {
             continue;
         };
-        let hood = r.neighbourhood.as_deref().map(area_value).unwrap_or_default();
+        let hood = r
+            .neighbourhood
+            .as_deref()
+            .map(area_value)
+            .unwrap_or_default();
         let district = r.district.as_deref().map(words_key).unwrap_or_default();
         let drawn = by_address
             .get(&(name.as_str(), number.as_str()))
@@ -363,6 +368,12 @@ mod tests {
         // Kuğulu 1 is undrawn with both its codes (two units of one building); Esat 5 has a door.
         assert_eq!(c.undrawn.len(), 1);
         assert_eq!(c.undrawn[0].codes, ["1003", "1004"]);
-        assert_eq!(c.repeats, [Repeat { code: "1001".into(), rows: vec![1, 5] }]);
+        assert_eq!(
+            c.repeats,
+            [Repeat {
+                code: "1001".into(),
+                rows: vec![1, 5]
+            }]
+        );
     }
 }

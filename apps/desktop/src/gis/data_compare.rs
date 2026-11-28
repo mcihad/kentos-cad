@@ -86,10 +86,23 @@ pub struct Other {
 /// a data layer's rows are its source's, not the drawing's objects); a source that cannot be read refuses, named.
 fn other_of(name: &str, model: &kentos_domain::Document) -> Result<Other, String> {
     let mut entities: Vec<Entity> = model.entities().cloned().collect();
-    for node in model.layers().leaves().into_iter().filter(|l| l.data.is_some()) {
+    for node in model
+        .layers()
+        .leaves()
+        .into_iter()
+        .filter(|l| l.data.is_some())
+    {
         let held = model.data_hidden(&node.id);
-        let read = kentos_native_application::data_write::all_rows(node, model.settings(), &held, &|| false)
-            .map_err(|why| format!("“{name}” dosyasının “{}” katmanının kaynağı okunamadı: {why}.", node.name))?;
+        let read =
+            kentos_native_application::data_write::all_rows(node, model.settings(), &held, &|| {
+                false
+            })
+            .map_err(|why| {
+                format!(
+                    "“{name}” dosyasının “{}” katmanının kaynağı okunamadı: {why}.",
+                    node.name
+                )
+            })?;
         entities.extend(read.rows.into_iter().map(|(_, e)| e));
     }
     Ok(Other {
@@ -474,7 +487,10 @@ impl App {
 
     /// The two sides as the window sets them; `rows`: the open drawing with its data layers' rows (docs/adr/9353), its
     /// side's objects then.
-    fn compare_sides<'a>(&'a self, rows: Option<&'a kentos_domain::Document>) -> Option<(Side<'a>, Side<'a>)> {
+    fn compare_sides<'a>(
+        &'a self,
+        rows: Option<&'a kentos_domain::Document>,
+    ) -> Option<(Side<'a>, Side<'a>)> {
         let (Some(w), Some(doc)) = (&self.gis.data_compare, &self.document) else {
             return None;
         };
@@ -555,10 +571,15 @@ impl App {
         // The open drawing's data layers are read with their rows (docs/adr/9353); while they are read, said so.
         let rows = self.source_copy();
         if let Some(r) = rows.as_ref().filter(|r| !r.reading.is_empty()) {
-            return Err(format!("Kaynaktan okunuyor: {}. Satırlar okununca karşılaştırın.", r.reading.join(", ")));
+            return Err(format!(
+                "Kaynaktan okunuyor: {}. Satırlar okununca karşılaştırın.",
+                r.reading.join(", ")
+            ));
         }
         if let Some((name, why)) = rows.as_ref().and_then(|r| r.failed.first()) {
-            return Err(format!("“{name}” katmanının kaynağı okunamadı: {why}. Karşılaştırma yapılmadı."));
+            return Err(format!(
+                "“{name}” katmanının kaynağı okunamadı: {why}. Karşılaştırma yapılmadı."
+            ));
         }
         let Some((old, new)) = self.compare_sides(rows.as_ref().map(|r| &r.doc)) else {
             return Err("Açık çizim yok.".to_owned());
@@ -894,7 +915,12 @@ impl App {
                     .parked
                     .iter()
                     .find(|p| p.document.session == session)
-                    .map(|p| (p.document.name().to_owned(), other_of(p.document.name(), &p.document.model)));
+                    .map(|p| {
+                        (
+                            p.document.name().to_owned(),
+                            other_of(p.document.name(), &p.document.model),
+                        )
+                    });
                 match read {
                     Some((_, Ok(other))) => {
                         let count = other.entities.len();
@@ -904,7 +930,12 @@ impl App {
                             w.old_here = false;
                             w.old_node.clear();
                         }
-                        self.say(Level::Info, format!("“{name}” sekmesi okundu: {count} nesne; Eski veri olarak seçildi."));
+                        self.say(
+                            Level::Info,
+                            format!(
+                                "“{name}” sekmesi okundu: {count} nesne; Eski veri olarak seçildi."
+                            ),
+                        );
                     }
                     Some((_, Err(why))) => self.warn(why),
                     None => {}
@@ -1010,7 +1041,11 @@ impl App {
                         w.outcome = Some(outcome);
                         w.stale = false;
                     }
-                    let level = if said.starts_with("karşılaştırılacak nesne yok") { Level::Warn } else { Level::Success };
+                    let level = if said.starts_with("karşılaştırılacak nesne yok") {
+                        Level::Warn
+                    } else {
+                        Level::Success
+                    };
                     self.say(level, format!("Karşılaştırıldı: {said}."));
                 }
                 Err(why) => self.warn(why),
@@ -1109,11 +1144,17 @@ impl App {
         sources.extend(tabs.iter().map(|(_, n)| Choice::new(n.clone())));
         let tab_sessions: Vec<u64> = tabs.iter().map(|(s, _)| *s).collect();
         let had_other = w.other.is_some();
-        let source = Select::new(sources, Some(if w.old_here { 0 } else { 1 }), move |i| match i {
-            0 => msg(Event::Source(true)),
-            1 if had_other => msg(Event::Source(false)),
-            i => msg(Event::Tab(tab_sessions.get(i - first_tab).copied().unwrap_or_default())),
-        });
+        let source = Select::new(
+            sources,
+            Some(if w.old_here { 0 } else { 1 }),
+            move |i| match i {
+                0 => msg(Event::Source(true)),
+                1 if had_other => msg(Event::Source(false)),
+                i => msg(Event::Tab(
+                    tab_sessions.get(i - first_tab).copied().unwrap_or_default(),
+                )),
+            },
+        );
         let pick = |tree: &[LayerNode], chosen: &str, on: fn(String) -> Event| {
             let choices = node_choices(tree);
             let at = choices.iter().position(|(id, _)| id == chosen);
@@ -1249,7 +1290,11 @@ impl App {
                 if o.rows.is_empty() {
                     format!("{}.", counts_text(&o.rows))
                 } else {
-                    format!("{} nesne karşılaştırıldı: {}.", o.rows.len(), counts_text(&o.rows))
+                    format!(
+                        "{} nesne karşılaştırıldı: {}.",
+                        o.rows.len(),
+                        counts_text(&o.rows)
+                    )
                 },
             )]),
             None => words::summary(vec![words::text_line(
@@ -1409,7 +1454,11 @@ fn column_bottom<'a>(e: Element<'a, Message>) -> Element<'a, Message> {
 
 /// “3 Kapı/pencere, 1 Kolon”: the kinds a write left out, with how many of each.
 fn kinds_said(kinds: &std::collections::BTreeMap<&'static str, usize>) -> String {
-    kinds.iter().map(|(k, n)| format!("{n} {k}")).collect::<Vec<_>>().join(", ")
+    kinds
+        .iter()
+        .map(|(k, n)| format!("{n} {k}"))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 #[cfg(test)]
@@ -1424,19 +1473,37 @@ mod tests {
     fn a_write_counts_what_it_drew_and_says_the_kinds_it_left_out() {
         let mut app = app_with_drawing();
         let model = &mut app.document.as_mut().expect("a drawing").model;
-        let old = model.add_layer(NewLayer::layer("Eski"), None, false).expect("a layer");
-        let new = model.add_layer(NewLayer::layer("Yeni"), None, false).expect("a layer");
+        let old = model
+            .add_layer(NewLayer::layer("Eski"), None, false)
+            .expect("a layer");
+        let new = model
+            .add_layer(NewLayer::layer("Yeni"), None, false)
+            .expect("a layer");
         for (layer, e) in [
-            (&old, json!({"kind":"line","a":{"x":500.,"y":500.},"b":{"x":510.,"y":500.}})),
-            (&new, json!({"kind":"line","a":{"x":600.,"y":600.},"b":{"x":610.,"y":600.}})),
-            (&new, json!({"kind":"line","a":{"x":700.,"y":700.},"b":{"x":710.,"y":700.}})),
-            (&new, json!({"kind":"column","at":{"x":800.,"y":800.},"width":0.5,"depth":0.6})),
+            (
+                &old,
+                json!({"kind":"line","a":{"x":500.,"y":500.},"b":{"x":510.,"y":500.}}),
+            ),
+            (
+                &new,
+                json!({"kind":"line","a":{"x":600.,"y":600.},"b":{"x":610.,"y":600.}}),
+            ),
+            (
+                &new,
+                json!({"kind":"line","a":{"x":700.,"y":700.},"b":{"x":710.,"y":700.}}),
+            ),
+            (
+                &new,
+                json!({"kind":"column","at":{"x":800.,"y":800.},"width":0.5,"depth":0.6}),
+            ),
         ] {
             let mut e = e;
             e["id"] = json!(0);
             e["layerId"] = json!(layer);
             e["attrs"] = json!({});
-            model.add(serde_json::from_value(e).expect("an object")).expect("added");
+            model
+                .add(serde_json::from_value(e).expect("an object"))
+                .expect("added");
         }
         let before = model.entities().count();
         app.open_data_compare_with(super::Preset {
@@ -1444,12 +1511,25 @@ mod tests {
             new_node: Some(new.clone()),
             ..super::Preset::default()
         });
-        let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(super::Event::Compare)));
-        let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(super::Event::Write)));
-        let after = app.document.as_ref().expect("a drawing").model.entities().count();
+        let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(
+            super::Event::Compare,
+        )));
+        let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(
+            super::Event::Write,
+        )));
+        let after = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .count();
         assert_eq!(after - before, 3, "two added lines and the removed one");
         let said = crate::files_testing::last_said(&app);
-        assert!(said.contains("2 eklenen") && said.contains("1 silinen"), "{said}");
+        assert!(
+            said.contains("2 eklenen") && said.contains("1 silinen"),
+            "{said}"
+        );
         assert!(said.contains("1 fark yazılmadı (1 Kolon)"), "{said}");
     }
 
@@ -1460,12 +1540,18 @@ mod tests {
     fn a_changed_tolerance_makes_the_outcome_stale_until_compared_again() {
         let mut app = app_with_drawing();
         let model = &mut app.document.as_mut().expect("a drawing").model;
-        let old = model.add_layer(NewLayer::layer("Eski"), None, false).expect("a layer");
-        let new = model.add_layer(NewLayer::layer("Yeni"), None, false).expect("a layer");
+        let old = model
+            .add_layer(NewLayer::layer("Eski"), None, false)
+            .expect("a layer");
+        let new = model
+            .add_layer(NewLayer::layer("Yeni"), None, false)
+            .expect("a layer");
         let square = |dx: f64| json!([{"x":500.0+dx,"y":500.0},{"x":510.0+dx,"y":500.0},{"x":510.0+dx,"y":510.0},{"x":500.0+dx,"y":510.0}]);
         for (layer, dx) in [(&old, 0.0), (&new, 0.4)] {
             let e = json!({"kind":"polygon","id":0,"layerId":layer,"attrs":{"No":"2"},"pts":square(dx)});
-            model.add(serde_json::from_value(e).expect("an object")).expect("added");
+            model
+                .add(serde_json::from_value(e).expect("an object"))
+                .expect("added");
         }
         app.open_data_compare_with(super::Preset {
             old_node: Some(old.clone()),
@@ -1482,16 +1568,39 @@ mod tests {
                 .data_compare
                 .as_ref()
                 .and_then(|w| w.outcome.as_ref())
-                .map_or(0, |o| o.rows.iter().filter(|r| r.status != super::Status::Same).count())
+                .map_or(0, |o| {
+                    o.rows
+                        .iter()
+                        .filter(|r| r.status != super::Status::Same)
+                        .count()
+                })
         };
         assert_eq!(changed(&app), 1, "0.4 m at 0.001 m");
         ev(&mut app, super::Event::OnlyDiffs(false));
-        assert!(!app.gis.data_compare.as_ref().expect("open").stale, "a filter of what is shown");
+        assert!(
+            !app.gis.data_compare.as_ref().expect("open").stale,
+            "a filter of what is shown"
+        );
         ev(&mut app, super::Event::Tolerance("2".into()));
         assert!(app.gis.data_compare.as_ref().expect("open").stale);
-        let before = app.document.as_ref().expect("a drawing").model.entities().count();
+        let before = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .entities()
+            .count();
         ev(&mut app, super::Event::Write);
-        assert_eq!(app.document.as_ref().expect("a drawing").model.entities().count(), before, "refused while stale");
+        assert_eq!(
+            app.document
+                .as_ref()
+                .expect("a drawing")
+                .model
+                .entities()
+                .count(),
+            before,
+            "refused while stale"
+        );
         assert!(crate::files_testing::last_said(&app).contains("yeniden Karşılaştır"));
         ev(&mut app, super::Event::Compare);
         assert!(!app.gis.data_compare.as_ref().expect("open").stale);
@@ -1504,7 +1613,10 @@ mod tests {
     #[test]
     fn two_data_layers_are_compared_by_their_rows() {
         crate::data_layers::register();
-        let (a, b) = (crate::data_layers_tests::municipal("karsilastir-a"), crate::data_layers_tests::municipal("karsilastir-b"));
+        let (a, b) = (
+            crate::data_layers_tests::municipal("karsilastir-a"),
+            crate::data_layers_tests::municipal("karsilastir-b"),
+        );
         let mut app = app_with_drawing();
         let ids = app
             .add_data_layers(vec![
@@ -1520,12 +1632,18 @@ mod tests {
             new_node: Some(ids[1].clone()),
             ..super::Preset::default()
         });
-        let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(super::Event::Compare)));
+        let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(
+            super::Event::Compare,
+        )));
         let said = crate::files_testing::last_said(&app);
         assert_eq!(said, "Karşılaştırıldı: 6 aynı.");
         let model = &app.document.as_ref().expect("a drawing").model;
         let other = super::other_of("kopya.kcad", model).expect("read");
-        assert_eq!(other.entities.len() - model.entities().count(), 12, "both layers' rows");
+        assert_eq!(
+            other.entities.len() - model.entities().count(),
+            12,
+            "both layers' rows"
+        );
     }
 
     /// The 9353 picture: two data layers compared by their rows.
@@ -1535,12 +1653,17 @@ mod tests {
         crate::drawing_fonts::load();
         crate::files_testing::usage_shots("9353", "02-veri-karsilastir", || {
             crate::data_layers::register();
-            let (a, b) = (crate::data_layers_tests::municipal("karsilastir-ra"), crate::data_layers_tests::municipal("karsilastir-rb"));
+            let (a, b) = (
+                crate::data_layers_tests::municipal("karsilastir-ra"),
+                crate::data_layers_tests::municipal("karsilastir-rb"),
+            );
             let mut app = app_with_drawing();
             let ids = app
                 .add_data_layers(vec![
-                    crate::data_layers::describe(&a.display().to_string(), "bakim").expect("described"),
-                    crate::data_layers::describe(&b.display().to_string(), "bakim").expect("described"),
+                    crate::data_layers::describe(&a.display().to_string(), "bakim")
+                        .expect("described"),
+                    crate::data_layers::describe(&b.display().to_string(), "bakim")
+                        .expect("described"),
                 ])
                 .expect("added");
             let _ = app.source_copy();
@@ -1551,8 +1674,12 @@ mod tests {
                 new_node: Some(ids[1].clone()),
                 ..super::Preset::default()
             });
-            let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(super::Event::OnlyDiffs(false))));
-            let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(super::Event::Compare)));
+            let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(
+                super::Event::OnlyDiffs(false),
+            )));
+            let _ = app.update(Message::Gis(crate::gis::Event::DataCompare(
+                super::Event::Compare,
+            )));
             app
         });
     }

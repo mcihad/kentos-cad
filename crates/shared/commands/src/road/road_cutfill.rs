@@ -303,7 +303,10 @@ pub struct TerrainsCutFilled {
     /// The materials (docs/adr/4760): `road.terrains.compare`'s zones, each one's words inside it, and the material
     /// table's cells (asked for with `table`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::TerrainZoneVolumes>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::TerrainZoneVolumes>>", optional)
+    )]
     pub materials: Vec<crate::TerrainZoneVolumes>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CutFillLabel>>", optional))]

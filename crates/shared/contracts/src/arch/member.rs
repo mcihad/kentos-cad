@@ -162,16 +162,25 @@ mod tests {
             predefined: "NOTDEFINED".into(),
             name: None,
         };
-        assert_eq!(bad.problem().map(|p| p.0).as_deref(), Some("member.predefined"));
+        assert_eq!(
+            bad.problem().map(|p| p.0).as_deref(),
+            Some("member.predefined")
+        );
         let nameless = Member {
             predefined: "USERDEFINED".into(),
             name: None,
         };
-        assert_eq!(nameless.problem().map(|p| p.0).as_deref(), Some("member.name"));
+        assert_eq!(
+            nameless.problem().map(|p| p.0).as_deref(),
+            Some("member.name")
+        );
         let padded = Member {
             predefined: "PURLIN".into(),
             name: Some(" Aşık".into()),
         };
-        assert_eq!(padded.problem().map(|p| p.0).as_deref(), Some("member.name"));
+        assert_eq!(
+            padded.problem().map(|p| p.0).as_deref(),
+            Some("member.name")
+        );
     }
 }

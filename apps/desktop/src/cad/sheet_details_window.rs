@@ -64,7 +64,11 @@ pub(crate) enum Scope {
     /// A model box, canonical metres.
     Bounds([f64; 4]),
     /// A model table's part, from 0; its parts.
-    Table { table: String, part: u32, parts: u32 },
+    Table {
+        table: String,
+        part: u32,
+        parts: u32,
+    },
 }
 
 /// One detail of the set as the window keeps it.
@@ -202,17 +206,26 @@ struct Paper {
 impl<M> canvas::Program<M> for Paper {
     type State = ();
 
-    fn draw(&self, _state: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _cursor: mouse::Cursor) -> Vec<Geometry> {
+    fn draw(
+        &self,
+        _state: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _cursor: mouse::Cursor,
+    ) -> Vec<Geometry> {
         let mut frame = Frame::new(renderer, bounds.size());
         let tokens = Tokens::of(theme);
         if self.sheets.is_empty() {
             return vec![frame.into_geometry()];
         }
         let gap = 20.0;
-        let total_w: f64 = self.sheets.iter().map(|s| s.0).sum::<f64>() + gap * (self.sheets.len() - 1) as f64;
+        let total_w: f64 =
+            self.sheets.iter().map(|s| s.0).sum::<f64>() + gap * (self.sheets.len() - 1) as f64;
         let total_h = self.sheets.iter().map(|s| s.1).fold(0.0, f64::max);
         let pad = 16.0;
-        let k = ((f64::from(bounds.width) - 2.0 * pad) / total_w).min((f64::from(bounds.height) - 2.0 * pad - 14.0) / total_h);
+        let k = ((f64::from(bounds.width) - 2.0 * pad) / total_w)
+            .min((f64::from(bounds.height) - 2.0 * pad - 14.0) / total_h);
         let mut x0 = (f64::from(bounds.width) - total_w * k) / 2.0;
         let y0 = pad + 14.0;
         let mut origins = Vec::new();
@@ -220,7 +233,10 @@ impl<M> canvas::Program<M> for Paper {
             let at = Point::new(x0 as f32, y0 as f32);
             let size = iced::Size::new((w * k) as f32, (h * k) as f32);
             frame.fill_rectangle(at, size, tokens.surface);
-            frame.stroke(&Path::rectangle(at, size), Stroke::default().with_color(tokens.muted).with_width(1.0));
+            frame.stroke(
+                &Path::rectangle(at, size),
+                Stroke::default().with_color(tokens.muted).with_width(1.0),
+            );
             frame.fill_text(Text {
                 content: number.clone(),
                 position: Point::new(at.x, at.y - 14.0),
@@ -232,11 +248,16 @@ impl<M> canvas::Program<M> for Paper {
             x0 += (w + gap) * k;
         }
         for (sheet, [l, t, w, h], words) in &self.frames {
-            let Some((x, y)) = origins.get(*sheet) else { continue };
+            let Some((x, y)) = origins.get(*sheet) else {
+                continue;
+            };
             let at = Point::new((x + l * k) as f32, (y + t * k) as f32);
             let size = iced::Size::new((w * k).max(1.0) as f32, (h * k).max(1.0) as f32);
             frame.fill_rectangle(at, size, tokens.accent.scale_alpha(0.16));
-            frame.stroke(&Path::rectangle(at, size), Stroke::default().with_color(tokens.accent).with_width(1.0));
+            frame.stroke(
+                &Path::rectangle(at, size),
+                Stroke::default().with_color(tokens.accent).with_width(1.0),
+            );
             frame.fill_text(Text {
                 content: words.clone(),
                 position: Point::new(at.x + 3.0, at.y + 2.0),
@@ -258,7 +279,12 @@ impl App {
         }
         let set = self.sheet_details.take().unwrap_or_default();
         self.sheet_details = Some(set);
-        if self.sheet_details.as_ref().is_some_and(|s| s.details.is_empty()) && !self.selection.ids().is_empty() {
+        if self
+            .sheet_details
+            .as_ref()
+            .is_some_and(|s| s.details.is_empty())
+            && !self.selection.ids().is_empty()
+        {
             self.sheet_details_add_selection();
         }
         self.sheet_details_preview();
@@ -270,10 +296,20 @@ impl App {
         let Some(doc) = self.document.as_ref() else {
             return (Vec::new(), Vec::new());
         };
-        let states = doc.model.settings().layer_states.iter().map(|s| s.name.clone()).collect();
+        let states = doc
+            .model
+            .settings()
+            .layer_states
+            .iter()
+            .map(|s| s.name.clone())
+            .collect();
         fn walk(nodes: &[kentos_commands::LayerNode], here: &str, out: &mut Vec<(String, String)>) {
             for n in nodes {
-                let path = if here.is_empty() { n.name.clone() } else { format!("{here} / {}", n.name) };
+                let path = if here.is_empty() {
+                    n.name.clone()
+                } else {
+                    format!("{here} / {}", n.name)
+                };
                 if n.kind == kentos_commands::LayerNodeType::Layer {
                     out.push((n.id.clone(), path.clone()));
                 }
@@ -287,21 +323,35 @@ impl App {
 
     /// A detail of the selection's box at 1:10 (none chosen yet), named after its place in the list.
     fn sheet_details_add_selection(&mut self) {
-        let Some(doc) = self.document.as_ref() else { return };
-        let ids: Vec<String> = self.selection.ids().iter().filter_map(|s| doc.model.uid(*s)).map(|u| u.to_string()).collect();
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let ids: Vec<String> = self
+            .selection
+            .ids()
+            .iter()
+            .filter_map(|s| doc.model.uid(*s))
+            .map(|u| u.to_string())
+            .collect();
         if ids.is_empty() {
             self.warn(format!("{TITLE}: çizimde seçili nesne yok. Detayın kapsamını seçip yeniden “{FROM_SELECTION}”e basın."));
             return;
         }
-        let Ok(Some(b)) = kentos_native_application::sheets_fit::object_extent(&doc.model, Some(&ids)) else {
-            self.warn(format!("{TITLE}: seçimin kapsamı bulunamadı (boyutu olmayan nesneler)."));
+        let Ok(Some(b)) =
+            kentos_native_application::sheets_fit::object_extent(&doc.model, Some(&ids))
+        else {
+            self.warn(format!(
+                "{TITLE}: seçimin kapsamı bulunamadı (boyutu olmayan nesneler)."
+            ));
             return;
         };
         // A margin of 5% of the longer side all round, as Seçime sığdır's: a single straight line still has a height.
         let m = MARGIN * (b[2] - b[0]).max(b[3] - b[1]);
         let bounds = [b[0] - m, b[1] - m, b[2] + m, b[3] + m];
         let ten = ratios().iter().position(|r| *r == (1.0, 10.0)).unwrap_or(0);
-        let Some(set) = self.sheet_details.as_mut() else { return };
+        let Some(set) = self.sheet_details.as_mut() else {
+            return;
+        };
         let n = set.details.len() + 1;
         set.details.push(Detail {
             name: format!("Detay {n}"),
@@ -317,21 +367,35 @@ impl App {
 
     /// One detail per part of the selected model table (docs/adr/1090 §3), at 1:20.
     fn sheet_details_add_table(&mut self) {
-        let Some(doc) = self.document.as_ref() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         let table = self.selection.ids().iter().find_map(|s| {
             let uid = doc.model.uid(*s)?.to_string();
             sheets_details::table_parts(&doc.model, &uid).map(|n| (uid, n))
         });
         let Some((uid, parts)) = table else {
-            self.warn(format!("{TITLE}: seçimde model tablosu yok. Tabloyu seçip yeniden “{FROM_TABLE}”e basın."));
+            self.warn(format!(
+                "{TITLE}: seçimde model tablosu yok. Tabloyu seçip yeniden “{FROM_TABLE}”e basın."
+            ));
             return;
         };
         let twenty = ratios().iter().position(|r| *r == (1.0, 20.0)).unwrap_or(0);
-        let Some(set) = self.sheet_details.as_mut() else { return };
+        let Some(set) = self.sheet_details.as_mut() else {
+            return;
+        };
         for part in 0..parts {
             set.details.push(Detail {
-                name: if parts > 1 { format!("Tablo {}/{parts}", part + 1) } else { "Tablo".into() },
-                scope: Scope::Table { table: uid.clone(), part, parts },
+                name: if parts > 1 {
+                    format!("Tablo {}/{parts}", part + 1)
+                } else {
+                    "Tablo".into()
+                },
+                scope: Scope::Table {
+                    table: uid.clone(),
+                    part,
+                    parts,
+                },
                 ratio: twenty,
                 state: None,
                 frozen: Vec::new(),
@@ -353,16 +417,18 @@ impl App {
             return;
         }
         let input = set.input();
-        set.result = Some(match sheets_details::plan(&ExecutionContext::new(&mut doc.model), &input) {
-            CommandResult::Completed { output, warnings } => {
-                set.warnings = warnings.into_iter().map(|w| w.message).collect();
-                Ok(output)
-            }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
-            }
-            _ => Err("Yapılamadı.".into()),
-        });
+        set.result = Some(
+            match sheets_details::plan(&ExecutionContext::new(&mut doc.model), &input) {
+                CommandResult::Completed { output, warnings } => {
+                    set.warnings = warnings.into_iter().map(|w| w.message).collect();
+                    Ok(output)
+                }
+                CommandResult::Failed { error }
+                | CommandResult::Conflict { error }
+                | CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Yapılamadı.".into()),
+            },
+        );
     }
 
     pub(crate) fn sheet_details_event(&mut self, event: Event) -> Task<Message> {
@@ -376,7 +442,9 @@ impl App {
             }
             other => {
                 let (states, layers) = self.sheet_details_layers();
-                let Some(set) = self.sheet_details.as_mut() else { return Task::none() };
+                let Some(set) = self.sheet_details.as_mut() else {
+                    return Task::none();
+                };
                 let chosen = set.chosen.filter(|k| *k < set.details.len());
                 match other {
                     Event::Choose(k) => set.chosen = Some(k),
@@ -394,10 +462,15 @@ impl App {
                         if k < set.details.len() {
                             set.details.remove(k);
                         }
-                        set.chosen = (!set.details.is_empty()).then(|| k.min(set.details.len() - 1));
+                        set.chosen =
+                            (!set.details.is_empty()).then(|| k.min(set.details.len() - 1));
                     }
                     Event::Part(p) => {
-                        if let Some(Detail { scope: Scope::Table { part, parts, .. }, .. }) = chosen.and_then(|k| set.details.get_mut(k)) {
+                        if let Some(Detail {
+                            scope: Scope::Table { part, parts, .. },
+                            ..
+                        }) = chosen.and_then(|k| set.details.get_mut(k))
+                        {
                             *part = u32::try_from(p).unwrap_or(0).min(parts.saturating_sub(1));
                         }
                     }
@@ -421,7 +494,9 @@ impl App {
                     }
                     Event::Annotation(i) => {
                         if let Some(d) = chosen.and_then(|k| set.details.get_mut(k)) {
-                            d.annotation = i.checked_sub(1).and_then(|i| ratios().get(i).map(|r| r.1 / r.0));
+                            d.annotation = i
+                                .checked_sub(1)
+                                .and_then(|i| ratios().get(i).map(|r| r.1 / r.0));
                         }
                     }
                     Event::Locked(on) => {
@@ -474,7 +549,9 @@ impl App {
                     ),
                 );
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.warn(format!("{TITLE}: {}", error.message));
             }
             _ => {}
@@ -502,15 +579,24 @@ impl App {
             .on_press(msg(e))
         };
         let list = road_dialog::edit_table(
-            vec![col("Ad", 120.0), col("Kaynak", 118.0), col("Oran", 64.0), col("", 28.0)],
+            vec![
+                col("Ad", 120.0),
+                col("Kaynak", 118.0),
+                col("Oran", 64.0),
+                col("", 28.0),
+            ],
             set.details.len(),
             {
                 let details = set.details.clone();
                 let words = words.clone();
                 move |i, k| match k {
-                    0 => road_dialog::edit(&details[i].name, false, move |t| msg(Event::Name(i, t))),
+                    0 => {
+                        road_dialog::edit(&details[i].name, false, move |t| msg(Event::Name(i, t)))
+                    }
                     1 => kentos_ui::widget::table::text(details[i].source_words()).into(),
-                    2 => road_dialog::pick(words.clone(), Some(details[i].ratio), move |r| msg(Event::Ratio(i, r))),
+                    2 => road_dialog::pick(words.clone(), Some(details[i].ratio), move |r| {
+                        msg(Event::Ratio(i, r))
+                    }),
                     _ => road_dialog::drop_cell(msg(Event::Remove(i))),
                 }
             },
@@ -525,10 +611,17 @@ impl App {
             .row(row![add(FROM_SELECTION, "selectWindow", Event::FromSelection), add(FROM_TABLE, "table", Event::FromTable)].spacing(8))
             .help("Kapsam seçili nesnelerin kutusudur; tablo parçası bölünmüş model tablosunun bir parçasıdır.");
         if let Some(d) = set.chosen.and_then(|k| set.details.get(k)) {
-            let state_words: Vec<String> = std::iter::once("Çizimin katmanları".to_owned()).chain(states.iter().cloned()).collect();
-            let state_at = d.state.as_ref().and_then(|s| states.iter().position(|x| x == s)).map_or(0, |i| i + 1);
-            let annotation_words: Vec<String> =
-                std::iter::once("Pencerenin ölçeği".to_owned()).chain(words.iter().cloned()).collect();
+            let state_words: Vec<String> = std::iter::once("Çizimin katmanları".to_owned())
+                .chain(states.iter().cloned())
+                .collect();
+            let state_at = d
+                .state
+                .as_ref()
+                .and_then(|s| states.iter().position(|x| x == s))
+                .map_or(0, |i| i + 1);
+            let annotation_words: Vec<String> = std::iter::once("Pencerenin ölçeği".to_owned())
+                .chain(words.iter().cloned())
+                .collect();
             let annotation_at = d
                 .annotation
                 .and_then(|a| ratios().iter().position(|r| (r.1 / r.0 - a).abs() < 1e-9))
@@ -536,34 +629,67 @@ impl App {
             form = form.section(format!("Seçili detay: {}", d.name));
             if let Scope::Table { part, parts, .. } = &d.scope {
                 let options: Vec<String> = (1..=*parts).map(|p| format!("{p}. parça")).collect();
-                form = form.field("Tablo parçası", road_dialog::pick(options, Some(*part as usize), |p| msg(Event::Part(p))));
+                form = form.field(
+                    "Tablo parçası",
+                    road_dialog::pick(options, Some(*part as usize), |p| msg(Event::Part(p))),
+                );
             }
             form = form
-                .field("Katmanlar", road_dialog::pick(state_words, Some(state_at), |i| msg(Event::State(i))))
-                .help("Katman durumu bağlı pencere, başka kullanıcının katman aç/kapasıyla değişmez.");
+                .field(
+                    "Katmanlar",
+                    road_dialog::pick(state_words, Some(state_at), |i| msg(Event::State(i))),
+                )
+                .help(
+                    "Katman durumu bağlı pencere, başka kullanıcının katman aç/kapasıyla değişmez.",
+                );
             let names: Vec<String> = layers.iter().map(|(_, p)| p.clone()).collect();
-            form = form.field("Dondur", road_dialog::pick(names, None, |i| msg(Event::Freeze(i))));
+            form = form.field(
+                "Dondur",
+                road_dialog::pick(names, None, |i| msg(Event::Freeze(i))),
+            );
             for id in &d.frozen {
-                let path = layers.iter().find(|(l, _)| l == id).map_or_else(|| id.clone(), |(_, p)| p.clone());
+                let path = layers
+                    .iter()
+                    .find(|(l, _)| l == id)
+                    .map_or_else(|| id.clone(), |(_, p)| p.clone());
                 let thaw = id.clone();
                 form = form.field(
                     "",
                     row![
                         label::body(path).width(Fill),
-                        button(label::caption("×")).style(style::button::ghost).padding([0, 6]).on_press(msg(Event::Thaw(thaw)))
+                        button(label::caption("×"))
+                            .style(style::button::ghost)
+                            .padding([0, 6])
+                            .on_press(msg(Event::Thaw(thaw)))
                     ]
                     .align_y(Center),
                 );
             }
             form = form
-                .field("Açıklama", road_dialog::pick(annotation_words, Some(annotation_at), |i| msg(Event::Annotation(i))))
-                .field("Kilit", Switch::new(d.locked, |on| msg(Event::Locked(on))).label("Görünüm kilitli"))
+                .field(
+                    "Açıklama",
+                    road_dialog::pick(annotation_words, Some(annotation_at), |i| {
+                        msg(Event::Annotation(i))
+                    }),
+                )
+                .field(
+                    "Kilit",
+                    Switch::new(d.locked, |on| msg(Event::Locked(on))).label("Görünüm kilitli"),
+                )
                 .help("Kilitli görünümde ekranı yakınlaştırmak baskı ölçeğini değiştirmez.");
         }
         form = form
             .section("Set")
-            .field("İlk numara", kentos_ui::widget::text_field("D-501", &set.first).on_input(|t| msg(Event::First(t))))
-            .field("Başlık", kentos_ui::widget::text_field("Detaylar", &set.title).on_input(|t| msg(Event::Title(t))));
+            .field(
+                "İlk numara",
+                kentos_ui::widget::text_field("D-501", &set.first)
+                    .on_input(|t| msg(Event::First(t))),
+            )
+            .field(
+                "Başlık",
+                kentos_ui::widget::text_field("Detaylar", &set.title)
+                    .on_input(|t| msg(Event::Title(t))),
+            );
         let mut d = RoadDialog::new(TITLE, form, msg(Event::Close))
             .form_width(420.0)
             .width(1180.0)
@@ -573,14 +699,25 @@ impl App {
             Some(Err(why)) => d = d.note(Banner::error(why.clone())),
             Some(Ok(out)) => {
                 can = !out.details.is_empty();
-                let size = |id: &str| out.edited.sheets.iter().find(|s| s.id == id).map(|s| (s.width, s.height));
+                let size = |id: &str| {
+                    out.edited
+                        .sheets
+                        .iter()
+                        .find(|s| s.id == id)
+                        .map(|s| (s.width, s.height))
+                };
                 let made: Vec<(String, f64, f64, String)> = out
                     .made
                     .iter()
                     .filter_map(|m| {
                         let id = m["sheet"].as_str()?.to_owned();
                         let (w, h) = size(&id).unwrap_or((420.0, 297.0));
-                        Some((id, w, h, m["number"].as_str().unwrap_or_default().to_owned()))
+                        Some((
+                            id,
+                            w,
+                            h,
+                            m["number"].as_str().unwrap_or_default().to_owned(),
+                        ))
                     })
                     .collect();
                 let mut frames = Vec::new();
@@ -592,7 +729,11 @@ impl App {
                     let mm = |k: &str| f[k].as_f64().unwrap_or(0.0) / 1000.0;
                     let name = det["name"].as_str().unwrap_or_default().to_owned();
                     let denominator = det["denominator"].as_f64().unwrap_or(1.0);
-                    frames.push((at, [mm("left"), mm("top"), mm("width"), mm("height")], name.clone()));
+                    frames.push((
+                        at,
+                        [mm("left"), mm("top"), mm("width"), mm("height")],
+                        name.clone(),
+                    ));
                     let number = made.get(at).map(|m| m.3.clone()).unwrap_or_default();
                     let ratio = if denominator >= 1.0 {
                         ratio_words(1.0, denominator)
@@ -603,7 +744,11 @@ impl App {
                         name,
                         number,
                         ratio,
-                        format!("{} × {}", road_dialog::grouped(mm("width"), 1), road_dialog::grouped(mm("height"), 1)),
+                        format!(
+                            "{} × {}",
+                            road_dialog::grouped(mm("width"), 1),
+                            road_dialog::grouped(mm("height"), 1)
+                        ),
                     ]);
                 }
                 // The ratios from the largest paper size to the smallest (2:1, 1:1, 1:5 … 1:100), each once.
@@ -630,7 +775,12 @@ impl App {
                     d = d.note(Banner::warning(w.clone()));
                 }
                 d = d.detail(road_dialog::table(
-                    vec![col("Detay", 120.0), col("Pafta", 70.0), col("Oran", 64.0), num("Kâğıtta (mm)", 110.0)],
+                    vec![
+                        col("Detay", 120.0),
+                        col("Pafta", 70.0),
+                        col("Oran", 64.0),
+                        num("Kâğıtta (mm)", 110.0),
+                    ],
                     rows,
                     "Detay yok",
                 ));

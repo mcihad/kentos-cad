@@ -5,7 +5,9 @@
 //! layer unchecked; a row taken into the drawing is checked as the drawing has it.
 
 use kentos_commands::{TopologyRule, TopologyRuleKind, TopologySettings};
-use kentos_data::{Coord, Curve, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value};
+use kentos_data::{
+    Coord, Curve, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value,
+};
 
 use super::Event;
 use crate::app::{App, Message};
@@ -13,7 +15,11 @@ use crate::files_testing::{app_with_drawing, drive, scratch};
 use crate::gis;
 
 /// The parcels' lower left corners in EPSG:5256; each is 100 m a side.
-const OVERLAPPING: [(f64, f64); 3] = [(486_500.0, 4_420_200.0), (486_580.0, 4_420_200.0), (486_800.0, 4_420_200.0)];
+const OVERLAPPING: [(f64, f64); 3] = [
+    (486_500.0, 4_420_200.0),
+    (486_580.0, 4_420_200.0),
+    (486_800.0, 4_420_200.0),
+];
 
 fn square(x: f64, y: f64) -> Geometry {
     Geometry::Polygon(vec![Curve::Line(vec![
@@ -30,7 +36,9 @@ fn parcels(tag: &str, corners: [(f64, f64); 3]) -> std::path::PathBuf {
     use kentos_data::Driver as _;
     let path = scratch(tag).join("parseller.gpkg");
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
-    let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+    let source = kentos_data_gpkg::Gpkg
+        .open(path.to_str().expect("utf-8"))
+        .expect("open");
     let mut tx = source.begin().expect("begin");
     tx.create_table(
         &NewTable {
@@ -70,9 +78,14 @@ fn parcels(tag: &str, corners: [(f64, f64); 3]) -> std::path::PathBuf {
 fn app_over(path: &std::path::Path) -> (App, String) {
     crate::data_layers::register();
     let mut app = app_with_drawing();
-    app.add_data_layers(vec![crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described")])
-        .expect("added");
-    let id = crate::data_layers_tests::node(&app, "parseller").expect("the layer").id.clone();
+    app.add_data_layers(vec![
+        crate::data_layers::describe(&path.display().to_string(), "parseller").expect("described"),
+    ])
+    .expect("added");
+    let id = crate::data_layers_tests::node(&app, "parseller")
+        .expect("the layer")
+        .id
+        .clone();
     rule_on(&mut app, &id);
     (app, id)
 }
@@ -155,27 +168,57 @@ fn on_postgresql_a_write_outside_makes_the_findings_old() {
     // within seconds).
     let insert = |name: &str, (x, y): (f64, f64)| {
         let (x2, y2) = (x + 100.0, y + 100.0);
-        format!("INSERT INTO {t} (ad, geom) VALUES ('{name}', ST_GeomFromText('POLYGON(({x} {y}, {x2} {y}, {x2} {y2}, {x} {y2}, {x} {y}))', 5256))")
+        format!(
+            "INSERT INTO {t} (ad, geom) VALUES ('{name}', ST_GeomFromText('POLYGON(({x} {y}, {x2} {y}, {x2} {y2}, {x} {y2}, {x} {y}))', 5256))"
+        )
     };
-    let mut statements: Vec<String> = OVERLAPPING.iter().zip(["P1", "P2", "P3"]).map(|(c, n)| insert(n, *c)).collect();
+    let mut statements: Vec<String> = OVERLAPPING
+        .iter()
+        .zip(["P1", "P2", "P3"])
+        .map(|(c, n)| insert(n, *c))
+        .collect();
     statements.push("SELECT pg_stat_force_next_flush()".into());
-    crate::pg_testing::sql(&pg, &statements.iter().map(String::as_str).collect::<Vec<_>>());
+    crate::pg_testing::sql(
+        &pg,
+        &statements.iter().map(String::as_str).collect::<Vec<_>>(),
+    );
     let mut app = app_with_drawing();
     let described = crate::data_layers::describe(&pg, &t).expect("described");
     let name = described.name.clone();
     app.add_data_layers(vec![described]).expect("added");
-    let id = crate::data_layers_tests::node(&app, &name).expect("the layer").id.clone();
+    let id = crate::data_layers_tests::node(&app, &name)
+        .expect("the layer")
+        .id
+        .clone();
     rule_on(&mut app, &id);
     check(&mut app);
     let c = app.topology_checked().expect("checked");
-    assert_eq!(c.findings.len(), 1, "the overlap found in the database's table: {:?}", said(&app));
-    assert!(c.g.sources_read[0].fingerprint.is_some(), "its counters kept");
+    assert_eq!(
+        c.findings.len(),
+        1,
+        "the overlap found in the database's table: {:?}",
+        said(&app)
+    );
+    assert!(
+        c.g.sources_read[0].fingerprint.is_some(),
+        "its counters kept"
+    );
     app.topology_ask_marks();
     assert!(!app.topology_stale(), "nothing written: current");
-    crate::pg_testing::sql(&pg, &[&insert("P4", (487_000.0, 4_420_200.0)), "SELECT pg_stat_force_next_flush()"]);
+    crate::pg_testing::sql(
+        &pg,
+        &[
+            &insert("P4", (487_000.0, 4_420_200.0)),
+            "SELECT pg_stat_force_next_flush()",
+        ],
+    );
     app.topology_ask_marks();
     assert!(app.topology_stale(), "written outside: old");
-    assert_eq!(app.topology_sources_changed(), [name.clone()], "said as the source's change");
+    assert_eq!(
+        app.topology_sources_changed(),
+        [name.clone()],
+        "said as the source's change"
+    );
     check(&mut app);
     app.topology_ask_marks();
     assert!(!app.topology_stale(), "checked again: current");
@@ -195,11 +238,17 @@ fn outside_screens() {
         let (mut app, _) = app_over(&path);
         check(&mut app);
         std::thread::sleep(std::time::Duration::from_millis(20));
-        let source = kentos_data_gpkg::Gpkg.open(&path.display().to_string()).expect("open");
+        let source = kentos_data_gpkg::Gpkg
+            .open(&path.display().to_string())
+            .expect("open");
         let mut tx = source.begin().expect("begin");
         tx.insert(
             "parseller",
-            &[NewFeature { fid: None, geometry: Some(square(487_000.0, 4_420_200.0)), values: vec![("ad".into(), Value::Text("P4".into()))] }],
+            &[NewFeature {
+                fid: None,
+                geometry: Some(square(487_000.0, 4_420_200.0)),
+                values: vec![("ad".into(), Value::Text("P4".into()))],
+            }],
         )
         .expect("a row");
         tx.commit().expect("written");

@@ -40,7 +40,11 @@ fn corner(app: &mut App, p: [f64; 2]) {
 }
 
 fn setting(app: &mut App, key: &'static str, value: &str) {
-    let _ = app.tool_setting(Commit { tool: "slab", key, value: value.into() });
+    let _ = app.tool_setting(Commit {
+        tool: "slab",
+        key,
+        value: value.into(),
+    });
 }
 
 /// The apartment's rooms found, closer than the walkthrough's view and with room north of it for the balcony; Mimari
@@ -49,7 +53,12 @@ fn apartment(app: &mut App) {
     rooms(app);
     view(app);
     app.viewport.camera.fit(
-        &kentos_render_wgpu::Bounds { min_x: E - 1.5, min_y: N - 1.5, max_x: E + 13.5, max_y: N + 11.5 },
+        &kentos_render_wgpu::Bounds {
+            min_x: E - 1.5,
+            min_y: N - 1.5,
+            max_x: E + 13.5,
+            max_y: N + 11.5,
+        },
         24.0,
     );
     app.tab = "arch";
@@ -142,7 +151,8 @@ fn measured(app: &mut App, tab: crate::quantities::Tab) {
             .filter_map(|e| match e {
                 Entity::Space(s) => {
                     let p = kentos_native_application::spaces::label_point(&s.space.parts)?;
-                    doc.uid(Slot(e.base().id)).map(|u| (u.to_string(), p.x, p.y))
+                    doc.uid(Slot(e.base().id))
+                        .map(|u| (u.to_string(), p.x, p.y))
                 }
                 _ => None,
             })
@@ -150,9 +160,23 @@ fn measured(app: &mut App, tab: crate::quantities::Tab) {
     };
     for (uid, x, y) in rooms {
         let (x, y) = (x - E, y - N);
-        let floor = if x > 4.2 && y > 5.2 { "Seramik" } else { "Laminat" };
-        let name = if x < 4.0 { "Salon" } else if y > 5.2 { "Banyo" } else { "Yatak odası" };
-        command(app, "cad.spaces.edit", json!({ "uids": [uid], "operation": { "kind": "set", "floor": floor, "name": name } }));
+        let floor = if x > 4.2 && y > 5.2 {
+            "Seramik"
+        } else {
+            "Laminat"
+        };
+        let name = if x < 4.0 {
+            "Salon"
+        } else if y > 5.2 {
+            "Banyo"
+        } else {
+            "Yatak odası"
+        };
+        command(
+            app,
+            "cad.spaces.edit",
+            json!({ "uids": [uid], "operation": { "kind": "set", "floor": floor, "name": name } }),
+        );
     }
     app.selection.clear();
     run(app, "arch.quantities");
@@ -181,7 +205,12 @@ pub(crate) fn pointed() -> Vec<crate::tools_screens::Pointed> {
             let _ = app.update(message);
         };
         let at = crate::tools_screens::caption_at(s, app, "Genel", false);
-        s.input(app, App::view, &mut update, kentos_ui::snapshot::Input::Scroll(at, -7.0));
+        s.input(
+            app,
+            App::view,
+            &mut update,
+            kentos_ui::snapshot::Input::Scroll(at, -7.0),
+        );
     })]
 }
 
@@ -220,18 +249,28 @@ mod tests {
             })
             .collect();
         assert_eq!(slabs.len(), 3, "the floor, the balcony and the wet room");
-        let area = |s: &kentos_commands::SlabFields| kentos_native_application::spaces::area_of(&s.parts);
+        let area =
+            |s: &kentos_commands::SlabFields| kentos_native_application::spaces::area_of(&s.parts);
         // The floor: the shell's outer faces, 12.5 × 9.5, less the wet room (7.85 × 3.85 clear).
         let wet = 7.85 * 3.85;
         // The walls were drawn with the pointer: their corners carry its rounding (a few micrometres).
-        assert!((area(slabs[0]) - (12.5 * 9.5 - wet)).abs() < 1e-4, "floor {}", area(slabs[0]));
+        assert!(
+            (area(slabs[0]) - (12.5 * 9.5 - wet)).abs() < 1e-4,
+            "floor {}",
+            area(slabs[0])
+        );
         assert_eq!(slabs[0].parts[0].holes.len(), 1);
         // The balcony: 6 × 1.5, its railing along its three free sides (the side on the wall's face is not free).
         assert!((area(slabs[1]) - 9.0).abs() < 1e-9, "{:?}", slabs[1].parts);
         assert!((kentos_interaction::slab_tools::edge_length(slabs[1]) - 9.0).abs() < 1e-9);
         assert_eq!(slabs[1].role, kentos_commands::SlabRole::Balcony);
         // The wet room's own slab, 5 cm lower, its material written.
-        assert!((area(slabs[2]) - wet).abs() < 1e-4, "{} {:?}", area(slabs[2]), slabs[2]);
+        assert!(
+            (area(slabs[2]) - wet).abs() < 1e-4,
+            "{} {:?}",
+            area(slabs[2]),
+            slabs[2]
+        );
         assert!((slabs[2].offset + 0.05).abs() < 1e-12);
         assert_eq!(slabs[2].material.as_deref(), Some("Su yalıtımlı şap"));
     }

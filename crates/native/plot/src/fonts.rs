@@ -8,13 +8,17 @@ use kentos_contracts::DrawingFont;
 
 // Shared byte-for-byte with the Unicode geometry layout. Existing callers retain
 // the 22 drawing faces; Unicode fallback faces are requested by the new layout explicitly.
-pub use kentos_geometry_core::text::font_data::{DRAWING_FACES as FACES, DRAWING_KEYS as FACE_KEYS};
+pub use kentos_geometry_core::text::font_data::{
+    DRAWING_FACES as FACES, DRAWING_KEYS as FACE_KEYS,
+};
 
 use kentos_geometry_core::text::font_data::{ADDED_FACES, ADDED_KEYS, added_face, installed};
 
 /// The fonts folders' faces with their keys (docs/adr/9313): the family's name, weight, slope.
 fn folder_faces() -> impl Iterator<Item = (&'static [u8], (&'static str, u16, bool))> {
-    installed().iter().map(|f| (f.bytes, (f.family, f.weight, f.italic)))
+    installed()
+        .iter()
+        .map(|f| (f.bytes, (f.family, f.weight, f.italic)))
 }
 
 /// The faces for a sheet PDF: their TrueType files, as the core names them; Arial's and Times New Roman's the
@@ -47,7 +51,11 @@ pub fn pdf_fonts() -> Vec<kentos_sheet::pdf::PdfFont> {
 /// (docs/adr/9313): what a file KentOS writes whole (an SVG's embedded faces, a raster's) carries, never a face of the
 /// operating system.
 pub fn bundled_faces() -> impl Iterator<Item = (&'static [u8], (&'static str, u16, bool))> {
-    FACES.into_iter().zip(FACE_KEYS).chain(ADDED_FACES.into_iter().zip(ADDED_KEYS)).chain(folder_faces())
+    FACES
+        .into_iter()
+        .zip(FACE_KEYS)
+        .chain(ADDED_FACES.into_iter().zip(ADDED_KEYS))
+        .chain(folder_faces())
 }
 
 /// The sheet core's id of a drawing typeface: an own face's id, a folder family's name, Arial for a family this
@@ -55,6 +63,8 @@ pub fn bundled_faces() -> impl Iterator<Item = (&'static [u8], (&'static str, u1
 pub fn sheet_font(font: DrawingFont) -> &'static str {
     match font.family() {
         None => font.id(),
-        Some(_) => kentos_geometry_core::text::Font::from_id(font.id()).drawn().id(),
+        Some(_) => kentos_geometry_core::text::Font::from_id(font.id())
+            .drawn()
+            .id(),
     }
 }

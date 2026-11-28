@@ -117,7 +117,9 @@ pub async fn project_preview(
 ) -> Result<Response, Failure> {
     let run = async {
         let a = project_access(&state, &caller, &tenant, &project).await?;
-        let seen = headers.get(header::IF_NONE_MATCH).and_then(|v| v.to_str().ok());
+        let seen = headers
+            .get(header::IF_NONE_MATCH)
+            .and_then(|v| v.to_str().ok());
         let p = preview::project(
             state.db()?,
             &state.blobs,

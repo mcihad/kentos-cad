@@ -294,7 +294,11 @@ impl crate::api::json::Flat for Spec {
             operation,
             hand_end: word(v, "hand").as_deref() == Some("end"),
             side_right: word(v, "side").as_deref() == Some("right"),
-            swing: swing.unwrap_or(if operation == Operation::Folding { FOLD_DRAWN } else { 90.0 }),
+            swing: swing.unwrap_or(if operation == Operation::Folding {
+                FOLD_DRAWN
+            } else {
+                90.0
+            }),
             show_swing: !matches!(v.get("showSwing"), Json::Bool(false)),
             frame: Option::<f64>::from_json(v.get("frame"))?.unwrap_or(0.0),
             sill: Option::<f64>::from_json(v.get("sill"))?,
@@ -336,7 +340,11 @@ impl crate::api::json::Flat for Spec {
         if self.side_right {
             field(out, first, "side", "right");
         }
-        let drawn = if self.operation == Operation::Folding { FOLD_DRAWN } else { 90.0 };
+        let drawn = if self.operation == Operation::Folding {
+            FOLD_DRAWN
+        } else {
+            90.0
+        };
         if self.swing != drawn {
             field(out, first, "swing", &self.swing);
         }
@@ -346,7 +354,12 @@ impl crate::api::json::Flat for Spec {
         if self.frame != 0.0 {
             field(out, first, "frame", &self.frame);
         }
-        for (name, v) in [("sill", self.sill), ("head", self.head), ("depth", self.depth), ("inset", self.inset)] {
+        for (name, v) in [
+            ("sill", self.sill),
+            ("head", self.head),
+            ("depth", self.depth),
+            ("inset", self.inset),
+        ] {
             if let Some(v) = v {
                 field(out, first, name, &v);
             }
@@ -426,19 +439,33 @@ impl Recess {
         }
         let (near, far) = self.across(t);
         // From the wall's left face.
-        let (a, b) = if self.right { (t - far, t - near) } else { (near, far) };
+        let (a, b) = if self.right {
+            (t - far, t - near)
+        } else {
+            (near, far)
+        };
         if b - a <= 1e-9 {
             return None;
         }
-        let at = |l: Vec2, r: Vec2, d: f64| Vec2::new(l.x + (r.x - l.x) * d / t, l.y + (r.y - l.y) * d / t);
-        Some(vec![at(l0, r0, a), at(l1, r1, a), at(l1, r1, b), at(l0, r0, b)])
+        let at = |l: Vec2, r: Vec2, d: f64| {
+            Vec2::new(l.x + (r.x - l.x) * d / t, l.y + (r.y - l.y) * d / t)
+        };
+        Some(vec![
+            at(l0, r0, a),
+            at(l1, r1, a),
+            at(l1, r1, b),
+            at(l0, r0, b),
+        ])
     }
 
     /// Its near and far distance from its face in a wall `thickness` thick, each within the wall.
     pub fn across(&self, thickness: f64) -> (f64, f64) {
         let near = js_max(
             0.0,
-            js_min(self.inset.unwrap_or((thickness - self.depth) / 2.0), thickness),
+            js_min(
+                self.inset.unwrap_or((thickness - self.depth) / 2.0),
+                thickness,
+            ),
         );
         (near, js_min(near + js_max(self.depth, 0.0), thickness))
     }
@@ -473,7 +500,10 @@ impl Hole {
 
     /// The same with a frame across the wall.
     pub fn framed(self, frame: HoleFrame) -> Hole {
-        Hole { frame: Some(frame), ..self }
+        Hole {
+            frame: Some(frame),
+            ..self
+        }
     }
 }
 
@@ -494,7 +524,10 @@ impl HoleFrame {
         if !(self.depth > 0.0 && self.depth < t) {
             return None;
         }
-        let near = self.offset.unwrap_or((t - self.depth) / 2.0).clamp(0.0, t - self.depth);
+        let near = self
+            .offset
+            .unwrap_or((t - self.depth) / 2.0)
+            .clamp(0.0, t - self.depth);
         Some(if self.right {
             (t - near - self.depth, t - near)
         } else {
@@ -528,7 +561,10 @@ pub fn pockets(width: f64, spec: &Spec) -> Vec<Pocket> {
     };
     if spec.leaves == 2 {
         let share = b.split.unwrap_or(0.5);
-        vec![pocket(false, light * share), pocket(true, light * (1.0 - share))]
+        vec![
+            pocket(false, light * share),
+            pocket(true, light * (1.0 - share)),
+        ]
     } else {
         vec![pocket(spec.hand_end, light)]
     }
@@ -827,7 +863,11 @@ fn along(a: Vec2, b: Vec2, centre: Option<Vec2>) -> Shape {
     let (aa, ab) = (atan2(a.y - c.y, a.x - c.x), atan2(b.y - c.y, b.x - c.x));
     let tau = 2.0 * crate::jsmath::PI;
     let ccw = (ab - aa).rem_euclid(tau);
-    let (a0, a1) = if ccw <= crate::jsmath::PI { (aa, ab) } else { (ab, aa) };
+    let (a0, a1) = if ccw <= crate::jsmath::PI {
+        (aa, ab)
+    } else {
+        (ab, aa)
+    };
     Shape::Arc { c, r, a0, a1 }
 }
 
@@ -839,7 +879,12 @@ fn across_jambs(place: &[Vec2], right: bool, near: f64, far: f64, thickness: f64
         (place[0], place[1], place[2], place[3])
     };
     let at = |f: Vec2, o: Vec2, d: f64| add(f, mul(sub(o, f), d / thickness));
-    [at(f0, o0, near), at(f0, o0, far), at(f1, o1, near), at(f1, o1, far)]
+    [
+        at(f0, o0, near),
+        at(f0, o0, far),
+        at(f1, o1, near),
+        at(f1, o1, far),
+    ]
 }
 
 /// The opening's pieces from its jambs (docs/adr/0341 §2, 0719 §2): a door's or window's symbol, a window over the
@@ -901,12 +946,20 @@ fn pieces_cut(place: &[Vec2], spec: &Spec, cut_at: f64) -> Vec<Mark> {
             if cut {
                 return Vec::new();
             }
-            let Some(d) = spec.depth else { return Vec::new() };
+            let Some(d) = spec.depth else {
+                return Vec::new();
+            };
             let [a0, b0, a1, b1] = across_jambs(place, spec.side_right, 0.0, js_min(d, t), t);
-            vec![mark(line(a0, b0)), mark(along(b0, b1, centre)), mark(line(b1, a1))]
+            vec![
+                mark(line(a0, b0)),
+                mark(along(b0, b1, centre)),
+                mark(line(b1, a1)),
+            ]
         }
         Form::Flue => {
-            let Some(d) = spec.depth else { return Vec::new() };
+            let Some(d) = spec.depth else {
+                return Vec::new();
+            };
             let (near, far) = Recess {
                 right: spec.side_right,
                 inset: spec.inset,
@@ -977,12 +1030,18 @@ impl Parts<'_> {
 
     /// The point `s` along the wall from the start jamb, `d` across it from the left face.
     fn along_start(&self, s: f64, d: f64) -> Vec2 {
-        add(self.across(self.place[0], self.place[1], d), mul(self.f.along, s))
+        add(
+            self.across(self.place[0], self.place[1], d),
+            mul(self.f.along, s),
+        )
     }
 
     /// The point `s` along the wall back from the end jamb, `d` across it from the left face.
     fn along_end(&self, s: f64, d: f64) -> Vec2 {
-        sub(self.across(self.place[2], self.place[3], d), mul(self.f.along, s))
+        sub(
+            self.across(self.place[2], self.place[3], d),
+            mul(self.f.along, s),
+        )
     }
 
     /// The point `d` from a jamb's left face point `l` toward its right one `r` (its faces and middle exactly).
@@ -1016,7 +1075,11 @@ impl Parts<'_> {
 
     /// The unit out of the wall on its left face's side (`left`) or its right face's.
     fn out(&self, left: bool) -> Vec2 {
-        if left { self.f.left } else { mul(self.f.left, -1.0) }
+        if left {
+            self.f.left
+        } else {
+            mul(self.f.left, -1.0)
+        }
     }
 }
 
@@ -1034,21 +1097,45 @@ fn swing_leaves(p: &Parts, spec: &Spec) -> Vec<Leaf> {
     let at0 = p.along_start(p.fit + p.fr, face);
     let at1 = p.along_end(p.fit + p.fr, face);
     if spec.leaves == 2 {
-        let share = spec.build.split.filter(|s| *s > 0.0 && *s < 1.0).unwrap_or(0.5);
+        let share = spec
+            .build
+            .split
+            .filter(|s| *s > 0.0 && *s < 1.0)
+            .unwrap_or(0.5);
         vec![
-            Leaf { hinge: at0, closed: u, len: p.clear * share },
-            Leaf { hinge: at1, closed: mul(u, -1.0), len: p.clear * (1.0 - share) },
+            Leaf {
+                hinge: at0,
+                closed: u,
+                len: p.clear * share,
+            },
+            Leaf {
+                hinge: at1,
+                closed: mul(u, -1.0),
+                len: p.clear * (1.0 - share),
+            },
         ]
     } else if spec.hand_end {
-        vec![Leaf { hinge: at1, closed: mul(u, -1.0), len: p.clear }]
+        vec![Leaf {
+            hinge: at1,
+            closed: mul(u, -1.0),
+            len: p.clear,
+        }]
     } else {
-        vec![Leaf { hinge: at0, closed: u, len: p.clear }]
+        vec![Leaf {
+            hinge: at0,
+            closed: u,
+            len: p.clear,
+        }]
     }
 }
 
 /// The turn, degrees, a leaf shut along `closed` makes toward the side it opens to.
 fn turn_of(p: &Parts, spec: &Spec, closed: Vec2) -> f64 {
-    let outward = if spec.side_right { mul(p.f.left, -1.0) } else { p.f.left };
+    let outward = if spec.side_right {
+        mul(p.f.left, -1.0)
+    } else {
+        p.f.left
+    };
     if closed.x * outward.y - closed.y * outward.x >= 0.0 {
         spec.swing
     } else {
@@ -1063,7 +1150,10 @@ pub fn symbol(place: &[Vec2], spec: &Spec) -> Vec<Shape> {
     if !matches!(spec.form, Form::Door | Form::Window) {
         return pieces(place, spec).into_iter().map(|m| m.shape).collect();
     }
-    symbol_parts(place, spec).into_iter().map(|(_, s)| s).collect()
+    symbol_parts(place, spec)
+        .into_iter()
+        .map(|(_, s)| s)
+        .collect()
 }
 
 /// [`pieces`] as a drawing at `view` shows them (docs/adr/8010): a door's and a window's parts by the view's detail and
@@ -1109,18 +1199,24 @@ pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
     let (dl, dr) = (p.dl, p.dr);
     let u = p.f.along;
     if fr > 0.0 {
-        out.push((Part::Frame, closed_ring(vec![
-            p.along_start(fit, dl),
-            p.along_start(fit + fr, dl),
-            p.along_start(fit + fr, dr),
-            p.along_start(fit, dr),
-        ])));
-        out.push((Part::Frame, closed_ring(vec![
-            p.along_end(fit, dl),
-            p.along_end(fit + fr, dl),
-            p.along_end(fit + fr, dr),
-            p.along_end(fit, dr),
-        ])));
+        out.push((
+            Part::Frame,
+            closed_ring(vec![
+                p.along_start(fit, dl),
+                p.along_start(fit + fr, dl),
+                p.along_start(fit + fr, dr),
+                p.along_start(fit, dr),
+            ]),
+        ));
+        out.push((
+            Part::Frame,
+            closed_ring(vec![
+                p.along_end(fit, dl),
+                p.along_end(fit + fr, dl),
+                p.along_end(fit + fr, dr),
+                p.along_end(fit, dr),
+            ]),
+        ));
     }
     let m0 = p.light_start();
     let depth = dr - dl;
@@ -1140,11 +1236,20 @@ pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
                 let k = depth / 12.0;
                 let lap = b.overlap.map_or(clear * 0.05, |o| o / 2.0);
                 let half = two_leaf_meet(spec, clear);
-                out.push((Part::Leaf, line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k))))));
-                out.push((Part::Leaf, line(
-                    add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
-                    add(m0, add(mul(u, clear), mul(p.f.left, -k))),
-                )));
+                out.push((
+                    Part::Leaf,
+                    line(
+                        add(m0, mul(p.f.left, k)),
+                        add(m0, add(mul(u, half + lap), mul(p.f.left, k))),
+                    ),
+                ));
+                out.push((
+                    Part::Leaf,
+                    line(
+                        add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
+                        add(m0, add(mul(u, clear), mul(p.f.left, -k))),
+                    ),
+                ));
                 if b.track {
                     out.push((Part::Track, line(m0, add(m0, mul(u, clear)))));
                 }
@@ -1165,7 +1270,10 @@ pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
                 let d = if left { 0.0 } else { p.f.thickness };
                 let o = p.out(left);
                 let (a, c) = (p.along_start(0.0, d), p.along_end(0.0, d));
-                out.push((Part::Sill, closed_ring(vec![a, c, add(c, mul(o, board)), add(a, mul(o, board))])));
+                out.push((
+                    Part::Sill,
+                    closed_ring(vec![a, c, add(c, mul(o, board)), add(a, mul(o, board))]),
+                ));
             }
         }
         Form::Door => {
@@ -1177,15 +1285,30 @@ pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
                     } else if spec.leaves == 1 && b.track {
                         out.extend(leaves(surface_slide(&p, spec)));
                     } else if spec.leaves == 1 {
-                        out.push((Part::Leaf, line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, clear), mul(p.f.left, k))))));
+                        out.push((
+                            Part::Leaf,
+                            line(
+                                add(m0, mul(p.f.left, k)),
+                                add(m0, add(mul(u, clear), mul(p.f.left, k))),
+                            ),
+                        ));
                     } else {
                         let lap = b.overlap.map_or(clear * 0.05, |o| o / 2.0);
                         let half = two_leaf_meet(spec, clear);
-                        out.push((Part::Leaf, line(add(m0, mul(p.f.left, k)), add(m0, add(mul(u, half + lap), mul(p.f.left, k))))));
-                        out.push((Part::Leaf, line(
-                            add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
-                            add(m0, add(mul(u, clear), mul(p.f.left, -k))),
-                        )));
+                        out.push((
+                            Part::Leaf,
+                            line(
+                                add(m0, mul(p.f.left, k)),
+                                add(m0, add(mul(u, half + lap), mul(p.f.left, k))),
+                            ),
+                        ));
+                        out.push((
+                            Part::Leaf,
+                            line(
+                                add(m0, add(mul(u, half - lap), mul(p.f.left, -k))),
+                                add(m0, add(mul(u, clear), mul(p.f.left, -k))),
+                            ),
+                        ));
                         if b.track {
                             out.push((Part::Track, line(m0, add(m0, mul(u, clear)))));
                         }
@@ -1198,7 +1321,10 @@ pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
                         let mut at = g.hinge;
                         for i in 0..g.panels {
                             let rise = if i % 2 == 0 { g.sin } else { -g.sin };
-                            let next = add(at, add(mul(g.dir, g.width * g.cos), mul(g.out, g.width * rise)));
+                            let next = add(
+                                at,
+                                add(mul(g.dir, g.width * g.cos), mul(g.out, g.width * rise)),
+                            );
                             out.push((Part::Leaf, line(at, next)));
                             at = next;
                         }
@@ -1216,28 +1342,54 @@ pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
                             // A thick leaf: a band on the side it swung from.
                             Some(t) => {
                                 let back = rotated(open, if turn < 0.0 { 90.0 } else { -90.0 });
-                                out.push((Part::Leaf, closed_ring(vec![l.hinge, tip, add(tip, mul(back, t)), add(l.hinge, mul(back, t))])));
+                                out.push((
+                                    Part::Leaf,
+                                    closed_ring(vec![
+                                        l.hinge,
+                                        tip,
+                                        add(tip, mul(back, t)),
+                                        add(l.hinge, mul(back, t)),
+                                    ]),
+                                ));
                             }
                             None => out.push((Part::Leaf, line(l.hinge, tip))),
                         }
                         if spec.show_swing {
                             let a_closed = atan2(l.closed.y, l.closed.x);
                             let a_open = atan2(open.y, open.x);
-                            let (a0, a1) = if turn > 0.0 { (a_closed, a_open) } else { (a_open, a_closed) };
-                            out.push((Part::Swing, Shape::Arc { c: l.hinge, r: l.len, a0, a1 }));
+                            let (a0, a1) = if turn > 0.0 {
+                                (a_closed, a_open)
+                            } else {
+                                (a_open, a_closed)
+                            };
+                            out.push((
+                                Part::Swing,
+                                Shape::Arc {
+                                    c: l.hinge,
+                                    r: l.len,
+                                    a0,
+                                    a1,
+                                },
+                            ));
                         }
                     }
                 }
             }
             if let Some(th) = b.threshold.filter(|v| *v > 0.0) {
                 let c = p.middle();
-                let (a, z) = (js_max(c - th / 2.0, 0.0), js_min(c + th / 2.0, p.f.thickness));
-                out.push((Part::Threshold, closed_ring(vec![
-                    p.along_start(fit + fr, a),
-                    p.along_end(fit + fr, a),
-                    p.along_end(fit + fr, z),
-                    p.along_start(fit + fr, z),
-                ])));
+                let (a, z) = (
+                    js_max(c - th / 2.0, 0.0),
+                    js_min(c + th / 2.0, p.f.thickness),
+                );
+                out.push((
+                    Part::Threshold,
+                    closed_ring(vec![
+                        p.along_start(fit + fr, a),
+                        p.along_end(fit + fr, a),
+                        p.along_end(fit + fr, z),
+                        p.along_start(fit + fr, z),
+                    ]),
+                ));
             }
         }
         Form::Opening | Form::Niche | Form::Flue => {}
@@ -1248,7 +1400,13 @@ pub fn symbol_parts(place: &[Vec2], spec: &Spec) -> Vec<(Part, Shape)> {
             let d = if left { 0.0 } else { p.f.thickness };
             let o = mul(p.out(left), CASING_PROJECTION);
             for along_end in [false, true] {
-                let at = |s: f64| if along_end { p.along_end(s, d) } else { p.along_start(s, d) };
+                let at = |s: f64| {
+                    if along_end {
+                        p.along_end(s, d)
+                    } else {
+                        p.along_start(s, d)
+                    }
+                };
                 let (a, c) = (at(s0), at(s1));
                 out.push((Part::Casing, closed_ring(vec![a, c, add(c, o), add(a, o)])));
             }
@@ -1292,22 +1450,47 @@ pub struct SlideLeaf {
 pub fn slide_leaves(spec: &Spec, light: f64) -> (u8, f64, Vec<SlideLeaf>) {
     let b = &spec.build;
     let n = spec.leaves.clamp(3, 4);
-    let t = if b.tracks == 0 { 2 } else { b.tracks.clamp(2, 3) };
+    let t = if b.tracks == 0 {
+        2
+    } else {
+        b.tracks.clamp(2, 3)
+    };
     let both = b.both_sides && n == 4;
     let o = b.overlap.unwrap_or(light * SLIDE_LAP / f64::from(n - 1));
     if b.both_sides && n == 3 {
         // XOX (docs/adr/0807 §1): the outer leaves on track 1 slide toward the middle one, which stays on track 0.
         let w = (light + 2.0 * o) / 3.0;
         let out = vec![
-            SlideLeaf { s: 0.0, track: 1, slides: true, to_end: true },
-            SlideLeaf { s: w - o, track: 0, slides: false, to_end: false },
-            SlideLeaf { s: 2.0 * (w - o), track: 1, slides: true, to_end: false },
+            SlideLeaf {
+                s: 0.0,
+                track: 1,
+                slides: true,
+                to_end: true,
+            },
+            SlideLeaf {
+                s: w - o,
+                track: 0,
+                slides: false,
+                to_end: false,
+            },
+            SlideLeaf {
+                s: 2.0 * (w - o),
+                track: 1,
+                slides: true,
+                to_end: false,
+            },
         ];
         return (2, w, out);
     }
     let group = |count: u8, to_end: bool| -> Vec<(u8, bool, bool)> {
         (0..count)
-            .map(|k| if k < t { (k, k > 0, to_end) } else { (0, false, to_end) })
+            .map(|k| {
+                if k < t {
+                    (k, k > 0, to_end)
+                } else {
+                    (0, false, to_end)
+                }
+            })
             .collect()
     };
     let order: Vec<(u8, bool, bool)> = if both {
@@ -1331,7 +1514,12 @@ pub fn slide_leaves(spec: &Spec, light: f64) -> (u8, f64, Vec<SlideLeaf>) {
         if i > 0 {
             s += if order[i - 1].0 != track { w - o } else { w };
         }
-        out.push(SlideLeaf { s, track, slides, to_end });
+        out.push(SlideLeaf {
+            s,
+            track,
+            slides,
+            to_end,
+        });
     }
     (t, w, out)
 }
@@ -1351,7 +1539,13 @@ fn multi_slide(p: &Parts, spec: &Spec, window: bool) -> Vec<Shape> {
     let u = p.f.along;
     let mut out = Vec::new();
     // A leaf a band its thickness wide (none: [`LEAF_THICKNESS`]) about its track, at most four fifths of the spacing.
-    let h = js_min(spec.build.leaf_thickness.filter(|t| *t > 0.0).unwrap_or(LEAF_THICKNESS), 0.8 * sp) / 2.0;
+    let h = js_min(
+        spec.build
+            .leaf_thickness
+            .filter(|t| *t > 0.0)
+            .unwrap_or(LEAF_THICKNESS),
+        0.8 * sp,
+    ) / 2.0;
     for l in &leaves {
         let d = d_of(l.track);
         let (a, z) = (s0 + l.s, s0 + l.s + w);
@@ -1420,7 +1614,11 @@ fn revolving(p: &Parts, spec: &Spec) -> Vec<Shape> {
 /// A pocket door's leaves shut (docs/adr/0777 §2): bands along the band's middle across the light, its leaf's thickness
 /// (none given: [`LEAF_THICKNESS`]) wide; two split as given. Its pockets are its wall's cavities.
 fn pocket_leaves(p: &Parts, spec: &Spec) -> Vec<Shape> {
-    let t = spec.build.leaf_thickness.filter(|t| *t > 0.0).unwrap_or(LEAF_THICKNESS);
+    let t = spec
+        .build
+        .leaf_thickness
+        .filter(|t| *t > 0.0)
+        .unwrap_or(LEAF_THICKNESS);
     let (lo, hi) = (p.middle() - t / 2.0, p.middle() + t / 2.0);
     let start = p.fit + p.fr;
     if let Some(c) = jambs_centre(p.place) {
@@ -1435,7 +1633,13 @@ fn pocket_leaves(p: &Parts, spec: &Spec) -> Vec<Shape> {
         ])
     };
     if spec.leaves == 2 {
-        let mid = start + p.clear * spec.build.split.filter(|s| *s > 0.0 && *s < 1.0).unwrap_or(0.5);
+        let mid = start
+            + p.clear
+                * spec
+                    .build
+                    .split
+                    .filter(|s| *s > 0.0 && *s < 1.0)
+                    .unwrap_or(0.5);
         vec![band(start, mid), band(mid, start + p.clear)]
     } else {
         vec![band(start, start + p.clear)]
@@ -1450,7 +1654,10 @@ fn arc_pocket_leaves(p: &Parts, spec: &Spec, c: Vec2, t: f64) -> Vec<Shape> {
     let m = p.across(p.place[0], p.place[1], p.middle());
     let r = js_hypot(m.x - c.x, m.y - c.y);
     let start = p.fit + p.fr;
-    let (e0, e1) = (p.along_start(start, p.middle()), p.along_start(start + p.clear, p.middle()));
+    let (e0, e1) = (
+        p.along_start(start, p.middle()),
+        p.along_start(start + p.clear, p.middle()),
+    );
     let th0 = atan2(e0.y - c.y, e0.x - c.x);
     let pi = crate::jsmath::PI;
     let mut d = atan2(e1.y - c.y, e1.x - c.x) - th0;
@@ -1473,7 +1680,11 @@ fn arc_pocket_leaves(p: &Parts, spec: &Spec, c: Vec2, t: f64) -> Vec<Shape> {
         }
     };
     if spec.leaves == 2 {
-        let share = spec.build.split.filter(|s| *s > 0.0 && *s < 1.0).unwrap_or(0.5);
+        let share = spec
+            .build
+            .split
+            .filter(|s| *s > 0.0 && *s < 1.0)
+            .unwrap_or(0.5);
         let mid = th0 + d * share;
         vec![band(th0, mid), band(mid, th0 + d)]
     } else {
@@ -1485,7 +1696,11 @@ fn arc_pocket_leaves(p: &Parts, spec: &Spec, c: Vec2, t: f64) -> Vec<Shape> {
 /// [`LEAF_THICKNESS`] (or its own) deep from a quarter of the wall's thickness out; its track along that face from the
 /// light's far side to a light past the jamb at its `hand`, where it slides to.
 fn surface_slide(p: &Parts, spec: &Spec) -> Vec<Shape> {
-    let t = spec.build.leaf_thickness.filter(|t| *t > 0.0).unwrap_or(LEAF_THICKNESS);
+    let t = spec
+        .build
+        .leaf_thickness
+        .filter(|t| *t > 0.0)
+        .unwrap_or(LEAF_THICKNESS);
     let left = !spec.side_right;
     let d = if left { 0.0 } else { p.f.thickness };
     let o = p.out(left);
@@ -1578,7 +1793,12 @@ pub fn swing_zones(place: &[Vec2], spec: &Spec) -> Vec<Vec<Vec2>> {
                 .map(|g| {
                     let along = mul(g.dir, g.width * f64::from(g.panels));
                     let deep = mul(g.out, g.width);
-                    vec![g.hinge, add(g.hinge, along), add(add(g.hinge, along), deep), add(g.hinge, deep)]
+                    vec![
+                        g.hinge,
+                        add(g.hinge, along),
+                        add(add(g.hinge, along), deep),
+                        add(g.hinge, deep),
+                    ]
                 })
                 .collect();
         }
@@ -1607,11 +1827,18 @@ pub fn swing_zones(place: &[Vec2], spec: &Spec) -> Vec<Vec<Vec2>> {
 /// the wall's thickness out and the leaf's thickness deep (docs/adr/0777 §4). None for a window.
 pub fn door_zones(place: &[Vec2], spec: &Spec) -> Vec<Vec<Vec2>> {
     let mut out = swing_zones(place, spec);
-    if spec.form == Form::Door && spec.operation == Operation::Slide && spec.leaves == 1 && spec.build.track
+    if spec.form == Form::Door
+        && spec.operation == Operation::Slide
+        && spec.leaves == 1
+        && spec.build.track
         && let Some(p) = Parts::new(place, spec)
         && p.clear > 0.0
     {
-        let t = spec.build.leaf_thickness.filter(|t| *t > 0.0).unwrap_or(LEAF_THICKNESS);
+        let t = spec
+            .build
+            .leaf_thickness
+            .filter(|t| *t > 0.0)
+            .unwrap_or(LEAF_THICKNESS);
         let left = !spec.side_right;
         let d = if left { 0.0 } else { p.f.thickness };
         let o = p.out(left);
@@ -1652,7 +1879,11 @@ pub fn door_approach(
     depth: f64,
     latch: f64,
 ) -> Option<[Vec2; 4]> {
-    if spec.form != Form::Door || spec.operation != Operation::Swing || spec.leaves != 1 || depth <= 0.0 {
+    if spec.form != Form::Door
+        || spec.operation != Operation::Swing
+        || spec.leaves != 1
+        || depth <= 0.0
+    {
         return None;
     }
     let parts = Parts::new(place, spec)?;

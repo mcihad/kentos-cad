@@ -44,7 +44,16 @@ fn office(
 }
 
 fn office_a() -> String {
-    office("ofis-a", "2026.1", "#ff0000", 0.35, [2.0, -1.0], 2.5, 1, 2.0)
+    office(
+        "ofis-a",
+        "2026.1",
+        "#ff0000",
+        0.35,
+        [2.0, -1.0],
+        2.5,
+        1,
+        2.0,
+    )
 }
 
 fn office_b() -> String {
@@ -160,7 +169,14 @@ fn place_doors(doc: &mut Document) -> kentos_commands::BlockId {
 
 /// A table on A-DUVAR following the drawing's CETVEL, its first data cell its own colour (a cell style of its own).
 fn place_table(doc: &mut Document) -> Slot {
-    let style = doc.settings().table_styles.iter().find(|s| s.name == "CETVEL").expect("CETVEL installed").id.clone();
+    let style = doc
+        .settings()
+        .table_styles
+        .iter()
+        .find(|s| s.name == "CETVEL")
+        .expect("CETVEL installed")
+        .id
+        .clone();
     doc.transact("Ekle", |doc| {
         let table: kentos_commands::Entity = serde_json::from_value(json!({"kind": "table", "id": 0,
             "layerId": DUVAR, "attrs": {}, "p": {"x": 20.0, "y": 5.0}, "rotation": 0.0, "height": 0.25,
@@ -173,7 +189,9 @@ fn place_table(doc: &mut Document) -> Slot {
 }
 
 fn table_style_of(doc: &Document, slot: Slot) -> (Option<String>, Option<f64>) {
-    let Some(kentos_commands::Entity::Table(t)) = doc.get(slot) else { panic!("the table") };
+    let Some(kentos_commands::Entity::Table(t)) = doc.get(slot) else {
+        panic!("the table")
+    };
     let height = t
         .table_style
         .as_ref()
@@ -225,7 +243,10 @@ fn two_office_profiles_map_layers_styles_blocks_and_templates_and_keep_overrides
     );
     let kapi = place_doors(&mut doc);
     let table = place_table(&mut doc);
-    assert_eq!(table_style_of(&doc, table), (Some("ofis-a-cetvel".into()), Some(2.0)));
+    assert_eq!(
+        table_style_of(&doc, table),
+        (Some("ofis-a-cetvel".into()), Some(2.0))
+    );
     two_viewports(&mut doc);
     let book = doc.sheets().cloned();
     assert_eq!(doc.layers().get(DUVAR).unwrap().style.color, "#ff0000");
@@ -239,15 +260,27 @@ fn two_office_profiles_map_layers_styles_blocks_and_templates_and_keep_overrides
     assert_eq!(row(&b, "textStyle", "A-NOT")["fields"], json!(["height"]));
     assert_eq!(row(&b, "sheetTemplate", "sys:cad-mimari")["status"], "same");
     let cetvel = row(&b, "tableStyle", "CETVEL");
-    assert_eq!((&cetvel["status"], &cetvel["fields"], &cetvel["uses"]), (&json!("differs"), &json!(["data"]), &json!(1)));
+    assert_eq!(
+        (&cetvel["status"], &cetvel["fields"], &cetvel["uses"]),
+        (&json!("differs"), &json!(["data"]), &json!(1))
+    );
     assert_eq!(
         (b["replaced"].as_u64(), b["renamed"].as_u64()),
         (Some(3), Some(1))
     );
     // The table still follows the drawing's CETVEL (its id kept), now the second office's; its own cell style stays.
-    assert_eq!(table_style_of(&doc, table), (Some("ofis-a-cetvel".into()), Some(2.5)));
-    let Some(kentos_commands::Entity::Table(t)) = doc.get(table) else { panic!("the table") };
-    assert_eq!(t.styles[0].color.as_deref(), Some("#00aa00"), "the table's own cell style");
+    assert_eq!(
+        table_style_of(&doc, table),
+        (Some("ofis-a-cetvel".into()), Some(2.5))
+    );
+    let Some(kentos_commands::Entity::Table(t)) = doc.get(table) else {
+        panic!("the table")
+    };
+    assert_eq!(
+        t.styles[0].color.as_deref(),
+        Some("#00aa00"),
+        "the table's own cell style"
+    );
 
     // The same-named block is replaced in place: its id stays, both inserts follow it, the definition is the second
     // release. The drawing's GAZ is kept and the second office's comes in as GAZ-B.
@@ -306,10 +339,7 @@ fn two_office_profiles_map_layers_styles_blocks_and_templates_and_keep_overrides
     assert_eq!(color.origin.label(), "Katman");
     assert_eq!(color.viewports, ["A-101 · Plan: #ff00ff"]);
     assert!(
-        color
-            .chain
-            .iter()
-            .any(|l| l.note == "ofis-b 2026.2 · aynı"),
+        color.chain.iter().any(|l| l.note == "ofis-b 2026.2 · aynı"),
         "{:?}",
         color.chain
     );
@@ -325,7 +355,10 @@ fn two_office_profiles_map_layers_styles_blocks_and_templates_and_keep_overrides
     let def = doc.block_named("KAPI").unwrap();
     assert_eq!((def.id, def.entities.len()), (kapi, 4));
     assert_eq!(gaz(&doc, "GAZ-B"), None);
-    assert_eq!(table_style_of(&doc, table), (Some("ofis-a-cetvel".into()), Some(2.0)));
+    assert_eq!(
+        table_style_of(&doc, table),
+        (Some("ofis-a-cetvel".into()), Some(2.0))
+    );
     assert_eq!(
         doc.settings()
             .text_styles
@@ -374,20 +407,41 @@ fn opening_a_project_bound_to_another_office_does_not_apply_it() {
     use kentos_commands::CallOp::Execute;
     let mut doc = fresh();
     profile(&mut doc, &office_a(), json!([]));
-    run(&mut doc, "cad.settings.set", Execute, json!({"standardDocs": [{"text": office_b()}]}));
+    run(
+        &mut doc,
+        "cad.settings.set",
+        Execute,
+        json!({"standardDocs": [{"text": office_b()}]}),
+    );
     let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).expect("writes");
-    let mut reopened = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("reads")).expect("opens");
+    let mut reopened =
+        Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("reads")).expect("opens");
     let opened = reopened.to_snapshot_v2();
     assert_eq!(opened, doc.to_snapshot_v2(), "opening changes nothing");
-    assert_eq!(reopened.layers().get(DUVAR).unwrap().style.color, "#ff0000", "still the first office's");
+    assert_eq!(
+        reopened.layers().get(DUVAR).unwrap().style.color,
+        "#ff0000",
+        "still the first office's"
+    );
     let resolved = run(&mut reopened, "cad.standards.resolve", Execute, json!({}));
-    let checked = run(&mut reopened, "cad.standards.check", Execute, json!({"standard": resolved["standard"]}));
+    let checked = run(
+        &mut reopened,
+        "cad.standards.check",
+        Execute,
+        json!({"standard": resolved["standard"]}),
+    );
     let issues = checked["issues"].as_array().unwrap();
     assert!(
-        issues.iter().any(|i| i["kind"] == "layerColor" && i["expected"] == "#0000ff" && i["found"] == "#ff0000"),
+        issues.iter().any(|i| i["kind"] == "layerColor"
+            && i["expected"] == "#0000ff"
+            && i["found"] == "#ff0000"),
         "{issues:?}"
     );
-    assert_eq!(reopened.to_snapshot_v2(), opened, "checking writes nothing either");
+    assert_eq!(
+        reopened.to_snapshot_v2(),
+        opened,
+        "checking writes nothing either"
+    );
     assert!(!reopened.can_undo());
 }
 
@@ -408,29 +462,68 @@ fn an_accepted_finding_survives_a_reopen_and_lapses_on_the_next_revision() {
     let mut doc = Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap();
     let check = |doc: &mut Document| {
         let resolved = run(doc, "cad.standards.resolve", Execute, json!({}));
-        let input = json!({"standard": resolved["standard"], "origin": resolved["provenance"]["rules"]});
+        let input =
+            json!({"standard": resolved["standard"], "origin": resolved["provenance"]["rules"]});
         (run(doc, "cad.standards.check", Execute, input), resolved)
     };
     let (before, resolved) = check(&mut doc);
     let finding = |report: &Value| {
-        report["issues"].as_array().unwrap().iter().find(|i| i["kind"] == "layerColor" && i["layer"] == DUVAR).cloned()
+        report["issues"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|i| i["kind"] == "layerColor" && i["layer"] == DUVAR)
+            .cloned()
     };
     assert_eq!(finding(&before).unwrap()["found"], "#00aa00");
-    let accepted = run(&mut doc, "cad.standards.exceptions", Execute, json!({"operation": "accept",
+    let accepted = run(
+        &mut doc,
+        "cad.standards.exceptions",
+        Execute,
+        json!({"operation": "accept",
         "standard": resolved["standard"], "origin": resolved["provenance"]["rules"],
         "findings": [{"kind": "layerColor", "subject": "A-DUVAR", "layer": DUVAR}],
-        "reason": "Bu projede duvarlar yeşil basılır.", "by": "ayse"}));
-    assert_eq!((accepted["changed"].as_u64(), accepted["exceptions"].as_u64()), (Some(1), Some(1)));
+        "reason": "Bu projede duvarlar yeşil basılır.", "by": "ayse"}),
+    );
+    assert_eq!(
+        (
+            accepted["changed"].as_u64(),
+            accepted["exceptions"].as_u64()
+        ),
+        (Some(1), Some(1))
+    );
     let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).expect("writes");
-    let mut reopened = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("reads")).expect("opens");
+    let mut reopened =
+        Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("reads")).expect("opens");
     let (after, _) = check(&mut reopened);
     let f = finding(&after).expect("still listed");
-    assert_eq!((f["state"].as_str(), f["reason"].as_str()), (Some("accepted"), Some("Bu projede duvarlar yeşil basılır.")));
+    assert_eq!(
+        (f["state"].as_str(), f["reason"].as_str()),
+        (Some("accepted"), Some("Bu projede duvarlar yeşil basılır."))
+    );
     assert_eq!(after["accepted"], 1);
-    assert_eq!(after["issues"].as_array().unwrap().len(), before["issues"].as_array().unwrap().len(), "not hidden");
+    assert_eq!(
+        after["issues"].as_array().unwrap().len(),
+        before["issues"].as_array().unwrap().len(),
+        "not hidden"
+    );
     // The same office's next revision: the acceptance lapses, its reason still said.
-    let next = office("ofis-a", "2026.3", "#ff0000", 0.35, [2.0, -1.0], 2.5, 1, 2.0);
-    run(&mut reopened, "cad.settings.set", Execute, json!({"standardDocs": [{"text": next}]}));
+    let next = office(
+        "ofis-a",
+        "2026.3",
+        "#ff0000",
+        0.35,
+        [2.0, -1.0],
+        2.5,
+        1,
+        2.0,
+    );
+    run(
+        &mut reopened,
+        "cad.settings.set",
+        Execute,
+        json!({"standardDocs": [{"text": next}]}),
+    );
     let (lapsed, _) = check(&mut reopened);
     assert_eq!(finding(&lapsed).unwrap()["state"], "lapsed");
     assert_eq!(lapsed["lapsed"], 1);
@@ -479,25 +572,63 @@ fn a_library_block_that_breaks_the_block_rules_is_refused() {
 /// Duvar and applied to sheet a-101. The model's own red and 0.25 mm are not changed.
 #[test]
 fn the_value_origin_says_what_the_sheets_plot_profile_prints() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.plotstyles.import.json"))
-        .expect("the cases");
-    let mut doc = Document::from_snapshot_v2(serde_json::from_value(cases["setup"].clone()).expect("a v2 snapshot"))
-        .expect("opens");
-    let made = run(&mut doc, "cad.line.create", kentos_commands::CallOp::Execute, json!({
-        "layerId": DUVAR, "a": {"x": 0, "y": 0}, "b": {"x": 4, "y": 0}}));
-    let uid = made["created"][0].as_str().or_else(|| made["uid"].as_str()).expect("the line").to_owned();
-    let slot = doc.slot_of(kentos_domain::Uuid::parse_str(&uid).unwrap()).expect("its slot");
-    let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/commands/v1/plotstyles");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.plotstyles.import.json"
+    ))
+    .expect("the cases");
+    let mut doc = Document::from_snapshot_v2(
+        serde_json::from_value(cases["setup"].clone()).expect("a v2 snapshot"),
+    )
+    .expect("opens");
+    let made = run(
+        &mut doc,
+        "cad.line.create",
+        kentos_commands::CallOp::Execute,
+        json!({
+        "layerId": DUVAR, "a": {"x": 0, "y": 0}, "b": {"x": 4, "y": 0}}),
+    );
+    let uid = made["created"][0]
+        .as_str()
+        .or_else(|| made["uid"].as_str())
+        .expect("the line")
+        .to_owned();
+    let slot = doc
+        .slot_of(kentos_domain::Uuid::parse_str(&uid).unwrap())
+        .expect("its slot");
+    let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/commands/v1/plotstyles");
     let before = kentos_native_application::appearance_origin::explain(&doc, slot);
-    assert!(before.iter().all(|p| p.printed.is_empty()), "no profile yet");
-    run(&mut doc, "cad.plotstyles.import", kentos_commands::CallOp::Execute, json!({
+    assert!(
+        before.iter().all(|p| p.printed.is_empty()),
+        "no profile yet"
+    );
+    run(
+        &mut doc,
+        "cad.plotstyles.import",
+        kentos_commands::CallOp::Execute,
+        json!({
         "path": "siyah.ctb", "base": base.display().to_string(),
         "assignments": [{"target": {"type": "modelLayer", "id": DUVAR}, "key": {"type": "aci", "index": 1}}],
-        "sheets": ["a-101"]}));
+        "sheets": ["a-101"]}),
+    );
     let explained = kentos_native_application::appearance_origin::explain(&doc, slot);
     let part = |name: &str| explained.iter().find(|p| p.part == name).expect(name);
-    assert!(part("color").printed.iter().any(|l| l.ends_with("“siyah” profili: #000000")), "{:?}", part("color").printed);
-    assert!(part("lineWeight").printed.iter().any(|l| l.ends_with("“siyah” profili: 0.5 mm")), "{:?}", part("lineWeight").printed);
+    assert!(
+        part("color")
+            .printed
+            .iter()
+            .any(|l| l.ends_with("“siyah” profili: #000000")),
+        "{:?}",
+        part("color").printed
+    );
+    assert!(
+        part("lineWeight")
+            .printed
+            .iter()
+            .any(|l| l.ends_with("“siyah” profili: 0.5 mm")),
+        "{:?}",
+        part("lineWeight").printed
+    );
     let _ = Slot(0);
 }
 
@@ -507,11 +638,14 @@ fn the_value_origin_says_what_the_sheets_plot_profile_prints() {
 /// one ByLayer colour on Ağaç (#2f9e44). Every line type and weight is the insert's, as none has its own.
 #[test]
 fn the_value_origin_of_an_insert_counts_where_the_blocks_parts_take_their_look() {
-    let style = |color: &str, w: f64| json!({"color": color, "lineType": "continuous", "lineWeight": w});
+    let style =
+        |color: &str, w: f64| json!({"color": color, "lineType": "continuous", "lineWeight": w});
     let line = |id: u32, layer: &str, extra: Value| {
         let mut e = json!({"kind": "line", "id": id, "layerId": layer, "attrs": {}, "a": {"x": 0.0, "y": f64::from(id)},
             "b": {"x": 1.0, "y": f64::from(id)}});
-        e.as_object_mut().unwrap().extend(extra.as_object().unwrap().clone());
+        e.as_object_mut()
+            .unwrap()
+            .extend(extra.as_object().unwrap().clone());
         e
     };
     let block = "0192f5a1-4444-7000-8000-000000000001";
@@ -538,18 +672,46 @@ fn the_value_origin_of_an_insert_counts_where_the_blocks_parts_take_their_look()
     });
     let doc = Document::from_snapshot_v2(serde_json::from_value(snapshot).unwrap()).unwrap();
     let explained = kentos_native_application::appearance_origin::explain(&doc, Slot(1));
-    let parts = explained.iter().find(|p| p.part == "blockParts").expect("the block's parts");
-    assert_eq!((parts.value.as_str(), parts.origin.label()), ("“KAPI” · 4 parça", "Blok"));
-    let said: Vec<(&str, &str, &str)> = parts.chain.iter().map(|l| (l.origin.label(), l.value.as_str(), l.note.as_str())).collect();
+    let parts = explained
+        .iter()
+        .find(|p| p.part == "blockParts")
+        .expect("the block's parts");
+    assert_eq!(
+        (parts.value.as_str(), parts.origin.label()),
+        ("“KAPI” · 4 parça", "Blok")
+    );
+    let said: Vec<(&str, &str, &str)> = parts
+        .chain
+        .iter()
+        .map(|l| (l.origin.label(), l.value.as_str(), l.note.as_str()))
+        .collect();
     let continuous = kentos_commands::LineType::Continuous.label();
-    assert_eq!(said, [
-        ("Nesne", "#00ff00", "Renk: 1/4 parça kendi değeri"),
-        ("Blok", "#ff0000", "Renk: 1/4 parça bloktan (ByBlock)"),
-        ("Katman", "#E5484D, #2f9e44", "Renk: 2/4 parça katmandan (ByLayer)"),
-        ("Blok", continuous, "Çizgi tipi: 4/4 parça bloktan (ByBlock)"),
-        ("Blok", "0.5 mm", "Çizgi kalınlığı: 4/4 parça bloktan (ByBlock)"),
-    ]);
+    assert_eq!(
+        said,
+        [
+            ("Nesne", "#00ff00", "Renk: 1/4 parça kendi değeri"),
+            ("Blok", "#ff0000", "Renk: 1/4 parça bloktan (ByBlock)"),
+            (
+                "Katman",
+                "#E5484D, #2f9e44",
+                "Renk: 2/4 parça katmandan (ByLayer)"
+            ),
+            (
+                "Blok",
+                continuous,
+                "Çizgi tipi: 4/4 parça bloktan (ByBlock)"
+            ),
+            (
+                "Blok",
+                "0.5 mm",
+                "Çizgi kalınlığı: 4/4 parça bloktan (ByBlock)"
+            ),
+        ]
+    );
     // The insert's own colour is still explained as the insert's.
     let color = explained.iter().find(|p| p.part == "color").unwrap();
-    assert_eq!((color.value.as_str(), color.origin.label()), ("#ff0000", "Nesne"));
+    assert_eq!(
+        (color.value.as_str(), color.origin.label()),
+        ("#ff0000", "Nesne")
+    );
 }

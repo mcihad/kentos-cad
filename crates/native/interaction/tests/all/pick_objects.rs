@@ -135,7 +135,10 @@ fn a_windows_selection_pick_keeps_to_the_active_layer_and_says_why() {
         )
     );
     assert!(
-        matches!(b.views.last(), Some(kentos_interaction::ViewChange::LayerLeftOut)),
+        matches!(
+            b.views.last(),
+            Some(kentos_interaction::ViewChange::LayerLeftOut)
+        ),
         "the host offers to turn Otomatik seçim on"
     );
     b.drag([-30.0, 0.0], [-6.0, 20.0]);
@@ -181,6 +184,8 @@ fn a_click_that_takes_nothing_says_why() {
     assert!(b.selected().is_empty());
     assert_eq!(
         b.said(before).last().map(|l| l.1),
-        Some("Parsel: yalnız “Çizim” katmanının nesneleri alınır; tıklanan nesne (Kapalı alan) başka katmanda.")
+        Some(
+            "Parsel: yalnız “Çizim” katmanının nesneleri alınır; tıklanan nesne (Kapalı alan) başka katmanda."
+        )
     );
 }

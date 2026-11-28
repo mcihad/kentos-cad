@@ -41,7 +41,8 @@ fn parse_int(text: &str) -> Option<u64> {
 /// A parcel's place: İl, İlçe, Mahalle and Ada, trimmed (docs/adr/1400: the parcel number is unique only within its
 /// place; Parsel 5 of Ada 101 and of Ada 102 are two parcels).
 pub fn place_of<'a>(attr: impl Fn(&str) -> Option<&'a String>) -> [String; 4] {
-    ["İl", "İlçe", "Mahalle", "Ada"].map(|k| attr(k).map(|v| v.trim().to_owned()).unwrap_or_default())
+    ["İl", "İlçe", "Mahalle", "Ada"]
+        .map(|k| attr(k).map(|v| v.trim().to_owned()).unwrap_or_default())
 }
 
 /// Whether a parcel at `other` is in the `given` place: every part given is the same; a part not given (empty)

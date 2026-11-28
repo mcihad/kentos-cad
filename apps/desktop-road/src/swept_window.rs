@@ -18,21 +18,23 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{Column, container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    Entity, JunctionReport, JunctionsQuery, SweptDraw, SweptJunctionPath, SweptQueried, SweptQuery, SweptTrailerDef,
-    SweptVehicleDef,
+    Entity, JunctionReport, JunctionsQuery, SweptDraw, SweptJunctionPath, SweptQueried, SweptQuery,
+    SweptTrailerDef, SweptVehicleDef,
 };
 use kentos_interaction::Level;
-use kentos_native_application::{ExecutionContext, road_junctions_query, road_swept, road_swept_draw};
+use kentos_native_application::{
+    ExecutionContext, road_junctions_query, road_swept, road_swept_draw,
+};
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::label;
 
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -114,7 +116,8 @@ fn number(text: &str, what: &str) -> Result<f64, String> {
     if t.is_empty() {
         return Err(format!("{what} yazılmalı."));
     }
-    t.parse::<f64>().map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.parse::<f64>()
+        .map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 impl Window {
@@ -135,14 +138,33 @@ impl Window {
         } else {
             None
         };
-        let vehicle =
-            SweptVehicleDef { name: None, wheelbase: self.value(0)?, front: self.value(1)?, rear: self.value(2)?, width: self.value(3)?, trailer };
+        let vehicle = SweptVehicleDef {
+            name: None,
+            wheelbase: self.value(0)?,
+            front: self.value(1)?,
+            rear: self.value(2)?,
+            width: self.value(3)?,
+            trailer,
+        };
         let (uid, junction) = match self.source {
             Source::Junction => {
                 let j = self.junction.clone().ok_or("Bir kavşak seçin.")?;
-                (None, Some(SweptJunctionPath { junction: j, quadrant: self.quadrant, offset: self.value(9)?, approach: self.value(10)? }))
+                (
+                    None,
+                    Some(SweptJunctionPath {
+                        junction: j,
+                        quadrant: self.quadrant,
+                        offset: self.value(9)?,
+                        approach: self.value(10)?,
+                    }),
+                )
             }
-            Source::Object => (Some(self.path.clone().ok_or("Yol için bir çizgi, çoklu çizgi ya da yay seçip Seçimden al'a basın.")?), None),
+            Source::Object => (
+                Some(self.path.clone().ok_or(
+                    "Yol için bir çizgi, çoklu çizgi ya da yay seçip Seçimden al'a basın.",
+                )?),
+                None,
+            ),
         };
         Ok(SweptQuery {
             vehicle,
@@ -156,15 +178,24 @@ impl Window {
     }
 
     fn every(&self) -> Option<u32> {
-        self.fields[12].trim().parse::<u32>().ok().filter(|n| *n > 0)
+        self.fields[12]
+            .trim()
+            .parse::<u32>()
+            .ok()
+            .filter(|n| *n > 0)
     }
 }
 
 /// The selected objects' uids, and whether the one selected is a path.
 fn chosen(app: &App) -> (Vec<String>, Option<String>) {
-    let Some(doc) = app.document.as_ref() else { return (Vec::new(), None) };
+    let Some(doc) = app.document.as_ref() else {
+        return (Vec::new(), None);
+    };
     let ids = app.selection.ids();
-    let uids: Vec<String> = ids.iter().filter_map(|s| doc.model.uid(*s).map(|u| u.to_string())).collect();
+    let uids: Vec<String> = ids
+        .iter()
+        .filter_map(|s| doc.model.uid(*s).map(|u| u.to_string()))
+        .collect();
     let path = match ids {
         [slot] => match doc.model.get(*slot) {
             Some(Entity::Line(_) | Entity::Arc(_)) => uids.first().cloned(),
@@ -195,7 +226,11 @@ impl SweptWindowApp for App {
         };
         let junction = doc.model.road_junctions().first().map(|j| j.id.clone());
         let (_, path) = chosen(self);
-        let source = if junction.is_some() && path.is_none() { Source::Junction } else { Source::Object };
+        let source = if junction.is_some() && path.is_none() {
+            Source::Junction
+        } else {
+            Source::Object
+        };
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
         self.modules.road_mut().swept_window = Some(Box::new(Window {
             fields: Default::default(),
@@ -226,13 +261,28 @@ impl SweptWindowApp for App {
             Ok((q, warnings)) => (Ok(q), warnings.into_iter().map(|x| x.message).collect()),
         };
         w.junction_read = match (w.source, &w.junction) {
-            (Source::Junction, Some(j)) => road_junctions_query::preview(&doc.model, &JunctionsQuery { junction: Some(j.clone()) })
-                .ok()
-                .and_then(|(q, _)| q.junctions.into_iter().next()),
+            (Source::Junction, Some(j)) => road_junctions_query::preview(
+                &doc.model,
+                &JunctionsQuery {
+                    junction: Some(j.clone()),
+                },
+            )
+            .ok()
+            .and_then(|(q, _)| q.junctions.into_iter().next()),
             _ => None,
         };
-        let step = w.fields[11].trim().parse::<f64>().ok().filter(|s| *s > 0.0).unwrap_or(1.0);
-        w.obstacle_lines = w.obstacles.iter().filter_map(|u| road_swept::obstacle_lines(&doc.model, u, step)).flatten().collect();
+        let step = w.fields[11]
+            .trim()
+            .parse::<f64>()
+            .ok()
+            .filter(|s| *s > 0.0)
+            .unwrap_or(1.0);
+        w.obstacle_lines = w
+            .obstacles
+            .iter()
+            .filter_map(|u| road_swept::obstacle_lines(&doc.model, u, step))
+            .flatten()
+            .collect();
         w.preview = Some(preview);
         w.warnings = warnings;
     }
@@ -261,7 +311,10 @@ impl SweptWindowApp for App {
             },
             Event::Obstacles => {
                 if picked.is_empty() {
-                    self.warn("Engel olacak çizgileri, çoklu çizgileri, yayları ya da daireleri seçin.".to_owned());
+                    self.warn(
+                        "Engel olacak çizgileri, çoklu çizgileri, yayları ya da daireleri seçin."
+                            .to_owned(),
+                    );
                     return Task::none();
                 }
                 for u in picked {
@@ -308,11 +361,22 @@ impl SweptWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let input = SweptDraw { query, layer_id: layer, every, labels: true, expected_revision: None };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let input = SweptDraw {
+            query,
+            layer_id: layer,
+            every,
+            labels: true,
+            expected_revision: None,
+        };
         let result = road_swept_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            self.say(Level::Success, format!("Araç izi planda, {} nesne.", out.uids.len()));
+            self.say(
+                Level::Success,
+                format!("Araç izi planda, {} nesne.", out.uids.len()),
+            );
             self.modules.road_mut().swept_window = None;
             self.dialog = None;
         }
@@ -323,35 +387,65 @@ impl SweptWindowApp for App {
         let Some(w) = &self.modules.road().swept_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let model = self.document.as_ref().map(|d| &d.model);
         let field = |hint: &'static str, k: usize, width: f32| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(width),
                 None,
             )
         };
         let pick = |names: Vec<&'static str>, at: usize, on: fn(usize) -> Event, width: f32| {
-            container(Select::new(names.into_iter().map(Choice::new), Some(at), move |i| msg(on(i)))).width(width)
+            container(Select::new(
+                names.into_iter().map(Choice::new),
+                Some(at),
+                move |i| msg(on(i)),
+            ))
+            .width(width)
         };
         let vehicle = row![
             field("m", 0, 130.0),
             field("m", 1, 110.0),
             field("m", 2, 110.0),
             field("m", 3, 100.0),
-            words::field("Römork", pick(vec!["Yok", "Var"], usize::from(w.trailer), |i| Event::Trailer(i == 1), 90.0), None),
+            words::field(
+                "Römork",
+                pick(
+                    vec!["Yok", "Var"],
+                    usize::from(w.trailer),
+                    |i| Event::Trailer(i == 1),
+                    90.0
+                ),
+                None
+            ),
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(12.0).push(vehicle);
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(12.0)
+            .push(vehicle);
         if w.trailer {
             body = body.push(
-                row![field("m", 4, 100.0), field("m", 5, 130.0), field("m", 6, 120.0), field("m", 7, 120.0), field("m", 8, 140.0)]
-                    .spacing(10)
-                    .align_y(iced::alignment::Vertical::Bottom),
+                row![
+                    field("m", 4, 100.0),
+                    field("m", 5, 130.0),
+                    field("m", 6, 120.0),
+                    field("m", 7, 120.0),
+                    field("m", 8, 140.0)
+                ]
+                .spacing(10)
+                .align_y(iced::alignment::Vertical::Bottom),
             );
         }
         let source = words::field(
@@ -359,45 +453,82 @@ impl SweptWindowApp for App {
             pick(
                 vec!["Kavşağın çeyreği", "Seçili nesne"],
                 usize::from(w.source == Source::Object),
-                |i| Event::Source(if i == 0 { Source::Junction } else { Source::Object }),
+                |i| {
+                    Event::Source(if i == 0 {
+                        Source::Junction
+                    } else {
+                        Source::Object
+                    })
+                },
                 170.0,
             ),
             None,
         );
-        let mut path_row = row![source].spacing(10).align_y(iced::alignment::Vertical::Bottom);
+        let mut path_row = row![source]
+            .spacing(10)
+            .align_y(iced::alignment::Vertical::Bottom);
         match w.source {
             Source::Junction => {
-                let junctions: Vec<(String, String)> =
-                    model.map_or_else(Vec::new, |m| m.road_junctions().iter().map(|j| (j.id.clone(), j.name.clone())).collect());
+                let junctions: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
+                    m.road_junctions()
+                        .iter()
+                        .map(|j| (j.id.clone(), j.name.clone()))
+                        .collect()
+                });
                 let jids: Vec<String> = junctions.iter().map(|j| j.0.clone()).collect();
                 let on_junction = Select::new(
                     junctions.iter().map(|j| Choice::new(j.1.clone())),
-                    w.junction.as_ref().and_then(|j| jids.iter().position(|i| i == j)),
+                    w.junction
+                        .as_ref()
+                        .and_then(|j| jids.iter().position(|i| i == j)),
                     move |i| msg(Event::Junction(jids[i].clone())),
                 )
                 .placeholder("Kavşak yok");
                 path_row = path_row
-                    .push(words::field("Kavşak", container(on_junction).width(160), None))
+                    .push(words::field(
+                        "Kavşak",
+                        container(on_junction).width(160),
+                        None,
+                    ))
                     .push(words::field(
                         "Çeyrek",
-                        pick(QUADRANTS.to_vec(), w.quadrant as usize, |i| Event::Quadrant(i as u32), 110.0),
+                        pick(
+                            QUADRANTS.to_vec(),
+                            w.quadrant as usize,
+                            |i| Event::Quadrant(i as u32),
+                            110.0,
+                        ),
                         None,
                     ))
                     .push(field("m", 9, 110.0))
                     .push(field("m", 10, 130.0));
             }
             Source::Object => {
-                let said = w.path.as_ref().map_or("seçilmedi".to_owned(), |u| format!("…{}", &u[u.len().saturating_sub(6)..]));
+                let said = w.path.as_ref().map_or("seçilmedi".to_owned(), |u| {
+                    format!("…{}", &u[u.len().saturating_sub(6)..])
+                });
                 path_row = path_row
                     .push(label::caption(format!("Yol nesnesi: {said}")).style(muted))
-                    .push(words::secondary(FROM_SELECTION, chosen(self).1.map(|_| msg(Event::FromSelection))));
+                    .push(words::secondary(
+                        FROM_SELECTION,
+                        chosen(self).1.map(|_| msg(Event::FromSelection)),
+                    ));
             }
         }
         body = body.push(path_row);
         let second = row![
             field("m", 11, 90.0),
             field("yalnız iz", 12, 130.0),
-            words::field("Yön", pick(vec!["Baştan", "Sondan"], usize::from(w.reverse), |i| Event::Reverse(i == 1), 100.0), None),
+            words::field(
+                "Yön",
+                pick(
+                    vec!["Baştan", "Sondan"],
+                    usize::from(w.reverse),
+                    |i| Event::Reverse(i == 1),
+                    100.0
+                ),
+                None
+            ),
             label::caption(format!("Engeller: {}", w.obstacles.len())).style(muted),
             words::secondary(OBSTACLES, Some(msg(Event::Obstacles))),
             words::secondary(CLEAR, (!w.obstacles.is_empty()).then(|| msg(Event::Clear))),
@@ -453,28 +584,37 @@ impl SweptWindowApp for App {
                 body = body.push_grow(row![picture, side].spacing(12).height(Fill), typography::scaled(340.0));
             }
         }
-        let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let lids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let on_layer = Select::new(
             lnames.iter().map(|n| Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+            w.layer
+                .as_ref()
+                .and_then(|l| lids.iter().position(|id| id == l)),
             move |i| msg(Event::Layer(lids[i].clone())),
         )
         .placeholder("Katman");
         let ready = matches!(&w.preview, Some(Ok(_)));
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                space::horizontal().width(Fill),
-                label::caption("Katman").style(muted),
-                container(on_layer).width(170),
-                words::secondary(DRAW, ready.then(|| msg(Event::Draw))),
-                space::horizontal().width(24),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
+        let footer = row![
+            space::horizontal().width(Fill),
+            label::caption("Katman").style(muted),
+            container(on_layer).width(170),
+            words::secondary(DRAW, ready.then(|| msg(Event::Draw))),
+            space::horizontal().width(24),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1180.0)
+            .modal(msg(Event::Close))
     }
 
     fn swept_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -509,15 +649,33 @@ struct Plan<'a> {
 impl canvas::Program<Message> for Plan<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let q = self.q;
-        let pts: Vec<[f64; 2]> = q.corners.iter().flatten().chain(&q.front).copied().collect();
+        let pts: Vec<[f64; 2]> = q
+            .corners
+            .iter()
+            .flatten()
+            .chain(&q.front)
+            .copied()
+            .collect();
         if pts.is_empty() {
             return vec![frame.into_geometry()];
         }
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in &pts {
             x0 = x0.min(p[0]);
             y0 = y0.min(p[1]);
@@ -527,10 +685,21 @@ impl canvas::Program<Message> for Plan<'_> {
         let grow = 0.06 * (x1 - x0).max(y1 - y0).max(1.0);
         (x0, y0, x1, y1) = (x0 - grow, y0 - grow, x1 + grow, y1 + grow);
         let pad = 18.0_f64;
-        let (w, h) = (f64::from(bounds.width) - 2.0 * pad, f64::from(bounds.height) - 2.0 * pad);
+        let (w, h) = (
+            f64::from(bounds.width) - 2.0 * pad,
+            f64::from(bounds.height) - 2.0 * pad,
+        );
         let scale = (w / (x1 - x0)).min(h / (y1 - y0));
-        let (ox, oy) = (pad + (w - (x1 - x0) * scale) / 2.0, pad + (h - (y1 - y0) * scale) / 2.0);
-        let at = |p: [f64; 2]| Point::new((ox + (p[0] - x0) * scale) as f32, (oy + (y1 - p[1]) * scale) as f32);
+        let (ox, oy) = (
+            pad + (w - (x1 - x0) * scale) / 2.0,
+            pad + (h - (y1 - y0) * scale) / 2.0,
+        );
+        let at = |p: [f64; 2]| {
+            Point::new(
+                (ox + (p[0] - x0) * scale) as f32,
+                (oy + (y1 - p[1]) * scale) as f32,
+            )
+        };
         let line = |ps: &[[f64; 2]], closed: bool| {
             Path::new(|b| {
                 if let Some(first) = ps.first() {
@@ -555,11 +724,17 @@ impl canvas::Program<Message> for Plan<'_> {
                         [r.cx + r.radius * a.cos(), r.cy + r.radius * a.sin()]
                     })
                     .collect();
-                frame.stroke(&line(&arc, false), Stroke::default().with_width(2.0).with_color(tk.text));
+                frame.stroke(
+                    &line(&arc, false),
+                    Stroke::default().with_width(2.0).with_color(tk.text),
+                );
             }
         }
         for o in self.obstacles {
-            frame.stroke(&line(o, false), Stroke::default().with_width(2.0).with_color(tk.text));
+            frame.stroke(
+                &line(o, false),
+                Stroke::default().with_width(2.0).with_color(tk.text),
+            );
         }
         let units = q.corners.len() / 4;
         let n = q.front.len();
@@ -568,19 +743,49 @@ impl canvas::Program<Message> for Plan<'_> {
             for j in 0..units {
                 let b: Vec<[f64; 2]> = (0..4).map(|i| q.corners[4 * j + i][k]).collect();
                 let shape = line(&b, true);
-                frame.fill(&shape, iced::Color { a: 0.08, ..colors[j % 2] });
-                frame.stroke(&shape, Stroke::default().with_width(0.8).with_color(iced::Color { a: 0.55, ..colors[j % 2] }));
+                frame.fill(
+                    &shape,
+                    iced::Color {
+                        a: 0.08,
+                        ..colors[j % 2]
+                    },
+                );
+                frame.stroke(
+                    &shape,
+                    Stroke::default().with_width(0.8).with_color(iced::Color {
+                        a: 0.55,
+                        ..colors[j % 2]
+                    }),
+                );
             }
         }
         for (i, c) in q.corners.iter().enumerate() {
-            frame.stroke(&line(c, false), Stroke::default().with_width(1.4).with_color(colors[(i / 4) % 2]));
+            frame.stroke(
+                &line(c, false),
+                Stroke::default()
+                    .with_width(1.4)
+                    .with_color(colors[(i / 4) % 2]),
+            );
         }
-        frame.stroke(&line(&q.front, false), Stroke::default().with_width(1.6).with_color(tk.muted));
-        frame.stroke(&line(&q.rear, false), Stroke::default().with_width(1.2).with_color(tk.warning));
+        frame.stroke(
+            &line(&q.front, false),
+            Stroke::default().with_width(1.6).with_color(tk.muted),
+        );
+        frame.stroke(
+            &line(&q.rear, false),
+            Stroke::default().with_width(1.2).with_color(tk.warning),
+        );
         if let Some(c) = &q.clearance {
             let p = at(c.at);
-            let color = if c.distance == 0.0 { tk.danger } else { tk.warning };
-            frame.stroke(&Path::circle(p, 7.0), Stroke::default().with_width(2.0).with_color(color));
+            let color = if c.distance == 0.0 {
+                tk.danger
+            } else {
+                tk.warning
+            };
+            frame.stroke(
+                &Path::circle(p, 7.0),
+                Stroke::default().with_width(2.0).with_color(color),
+            );
             frame.fill_text(Text {
                 content: format!("açıklık {:.2} m", c.distance),
                 position: p + iced::Vector::new(9.0, -16.0),
@@ -589,11 +794,25 @@ impl canvas::Program<Message> for Plan<'_> {
                 ..Text::default()
             });
         }
-        let legend = [("gövde izi", tk.accent), ("arka dingil", tk.warning), ("ön dingil yolu", tk.muted), ("bordür ve engel", tk.text)];
+        let legend = [
+            ("gövde izi", tk.accent),
+            ("arka dingil", tk.warning),
+            ("ön dingil yolu", tk.muted),
+            ("bordür ve engel", tk.text),
+        ];
         let mut x = 8.0_f32;
         for (word, color) in legend {
-            frame.stroke(&Path::line(Point::new(x, 12.0), Point::new(x + 14.0, 12.0)), Stroke::default().with_width(2.0).with_color(color));
-            frame.fill_text(Text { content: word.into(), position: Point::new(x + 18.0, 5.0), color: tk.muted, size: Pixels(11.0), ..Text::default() });
+            frame.stroke(
+                &Path::line(Point::new(x, 12.0), Point::new(x + 14.0, 12.0)),
+                Stroke::default().with_width(2.0).with_color(color),
+            );
+            frame.fill_text(Text {
+                content: word.into(),
+                position: Point::new(x + 18.0, 5.0),
+                color: tk.muted,
+                size: Pixels(11.0),
+                ..Text::default()
+            });
             x += 30.0 + 7.0 * word.chars().count() as f32;
         }
         vec![frame.into_geometry()]

@@ -43,8 +43,10 @@ fn labelled(mut base: kentos_commands::EntityBase, label: &str) -> kentos_comman
 fn drawing() -> Bench {
     // Its layer's labels turned on, one label each in its kind's style: a layer labels nothing until its labelling is
     // turned on (docs/adr/9311).
-    let mut drawing: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/interaction/v1/empty.kcad")).expect("JSON");
+    let mut drawing: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/interaction/v1/empty.kcad"
+    ))
+    .expect("JSON");
     drawing["layers"][0]["style"]["labels"] = serde_json::json!({ "mode": "single" });
     let mut b = Bench::on(&drawing.to_string());
     b.draft.snap = false;
@@ -470,19 +472,39 @@ fn reads_a_scale_as_one_to_n_or_n() {
 /// text the preview counts (the styled faces take the project's font), not invalid_style and nothing.
 #[test]
 fn styled_labels_are_written_with_the_projects_font() {
-    let mut b = Bench::on(include_str!("../../../../../fixtures/interaction/v1/label-engine.kcad"));
+    let mut b = Bench::on(include_str!(
+        "../../../../../fixtures/interaction/v1/label-engine.kcad"
+    ));
     let n0 = texts(&b).len();
     b.start("labelsToText");
     let promised = b
         .said(0)
         .iter()
-        .find_map(|(_, words)| words.split(" yazı olacak").next().and_then(|w| w.rsplit(' ').next()).and_then(|n| n.parse::<usize>().ok()))
+        .find_map(|(_, words)| {
+            words
+                .split(" yazı olacak")
+                .next()
+                .and_then(|w| w.rsplit(' ').next())
+                .and_then(|n| n.parse::<usize>().ok())
+        })
         .expect("the preview's count");
     b.confirm();
     let said: Vec<String> = b.said(0).iter().map(|(_, w)| (*w).to_owned()).collect();
-    assert!(!said.iter().any(|w| w.contains("invalid_style") || w.contains("Kalın, eğik")), "{said:?}");
-    assert!(said.iter().any(|w| w.ends_with(&format!("{promised} etiket yazıya çevrildi."))), "{said:?}");
+    assert!(
+        !said
+            .iter()
+            .any(|w| w.contains("invalid_style") || w.contains("Kalın, eğik")),
+        "{said:?}"
+    );
+    assert!(
+        said.iter()
+            .any(|w| w.ends_with(&format!("{promised} etiket yazıya çevrildi."))),
+        "{said:?}"
+    );
     assert_eq!(texts(&b).len(), n0 + promised, "{said:?}");
-    let styled = texts(&b).into_iter().filter(|t| t.face.bold || t.face.italic).collect::<Vec<_>>();
+    let styled = texts(&b)
+        .into_iter()
+        .filter(|t| t.face.bold || t.face.italic)
+        .collect::<Vec<_>>();
     assert!(!styled.is_empty() && styled.iter().all(|t| t.face.font.is_some()));
 }

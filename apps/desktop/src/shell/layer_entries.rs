@@ -213,7 +213,9 @@ impl LayerEntry {
             LayerEntry::Snap => &[Drawing, Annotation, Data, Bound, Group],
             LayerEntry::Scenario => &[Group],
             // A layer's summary: a group has no source, style or fields of its own.
-            LayerEntry::Properties => &[Drawing, Annotation, Data, Bound, Service, Raster, PointCloud],
+            LayerEntry::Properties => &[
+                Drawing, Annotation, Data, Bound, Service, Raster, PointCloud,
+            ],
         }
     }
 }

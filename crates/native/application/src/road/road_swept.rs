@@ -8,7 +8,8 @@
 //! radius with the same straight runs. Arcs are taken as chords no longer than the step (`swept::arc_places`).
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, MOST_SWEPT_OBSTACLES, MOST_SWEPT_SAMPLES, SweptClearance, SweptQueried, SweptQuery,
+    CommandResult, CommandWarning, Entity, MOST_SWEPT_OBSTACLES, MOST_SWEPT_SAMPLES,
+    SweptClearance, SweptQueried, SweptQuery,
 };
 use kentos_domain::Document;
 use kentos_road::swept::{self, Trailer, Vehicle};
@@ -41,7 +42,9 @@ fn vehicle_of(input: &SweptQuery) -> Vehicle {
 
 /// The query's own values judged, before anything is read.
 fn judged(input: &SweptQuery) -> Result<(), Stop> {
-    let given = usize::from(!input.path.is_empty()) + usize::from(input.uid.is_some()) + usize::from(input.junction.is_some());
+    let given = usize::from(!input.path.is_empty())
+        + usize::from(input.uid.is_some())
+        + usize::from(input.junction.is_some());
     if given != 1 {
         return Err(invalid("Tek bir yol verin: path (noktalar), uid (çizimdeki nesne) ya da junction (kavşağın çeyreği).".into(), "path"));
     }
@@ -53,22 +56,41 @@ fn judged(input: &SweptQuery) -> Result<(), Stop> {
         ));
     }
     if !(input.step.is_finite() && input.step > 0.0) {
-        return Err(invalid("Örnekleme aralığı (step) sıfırdan büyük olmalı.".into(), "step"));
+        return Err(invalid(
+            "Örnekleme aralığı (step) sıfırdan büyük olmalı.".into(),
+            "step",
+        ));
     }
     if let Some(j) = &input.junction {
         if j.quadrant > 3 {
-            return Err(invalid("Kavşağın çeyreği 0 ile 3 arası olmalı.".into(), "junction.quadrant"));
+            return Err(invalid(
+                "Kavşağın çeyreği 0 ile 3 arası olmalı.".into(),
+                "junction.quadrant",
+            ));
         }
         if !(j.offset.is_finite() && j.offset >= 0.0) {
-            return Err(invalid("Bordürden uzaklık (offset) eksi olmayan bir sayı olmalı.".into(), "junction.offset"));
+            return Err(invalid(
+                "Bordürden uzaklık (offset) eksi olmayan bir sayı olmalı.".into(),
+                "junction.offset",
+            ));
         }
         if !(j.approach.is_finite() && j.approach >= 0.0) {
-            return Err(invalid("Kollardaki düz yol (approach) eksi olmayan bir sayı olmalı.".into(), "junction.approach"));
+            return Err(invalid(
+                "Kollardaki düz yol (approach) eksi olmayan bir sayı olmalı.".into(),
+                "junction.approach",
+            ));
         }
     }
     if !input.path.is_empty() {
-        if let Some(k) = input.path.iter().position(|p| !(p[0].is_finite() && p[1].is_finite())) {
-            return Err(invalid("Yolun her yeri sonlu iki sayı olmalı.".into(), &format!("path[{k}]")));
+        if let Some(k) = input
+            .path
+            .iter()
+            .position(|p| !(p[0].is_finite() && p[1].is_finite()))
+        {
+            return Err(invalid(
+                "Yolun her yeri sonlu iki sayı olmalı.".into(),
+                &format!("path[{k}]"),
+            ));
         }
         let mut distinct = input.path.clone();
         distinct.dedup();
@@ -77,7 +99,10 @@ fn judged(input: &SweptQuery) -> Result<(), Stop> {
         }
     }
     if input.obstacles.len() > MOST_SWEPT_OBSTACLES {
-        return Err(invalid(format!("Bir soruda en çok {MOST_SWEPT_OBSTACLES} engel okunur."), "obstacles"));
+        return Err(invalid(
+            format!("Bir soruda en çok {MOST_SWEPT_OBSTACLES} engel okunur."),
+            "obstacles",
+        ));
     }
     Ok(())
 }
@@ -86,7 +111,13 @@ fn entity(doc: &Document, uid: &str, path: &str) -> Result<Entity, Stop> {
     doc.entities_with_uids()
         .find(|(u, _)| u.to_string() == uid)
         .map(|(_, e)| e.clone())
-        .ok_or_else(|| fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::ENTITY_NOT_FOUND,
+                format!("“{uid}” kimlikli nesne çizimde yok."),
+                path,
+            )
+        })
 }
 
 /// An arc entity's counter-clockwise sweep.
@@ -116,11 +147,29 @@ fn points(p: &[kentos_commands::Vec2]) -> Vec<[f64; 2]> {
 fn path_of(doc: &Document, uid: &str, step: f64) -> Result<Vec<[f64; 2]>, Stop> {
     match entity(doc, uid, "uid")? {
         Entity::Line(l) => Ok(vec![[l.a.x, l.a.y], [l.b.x, l.b.y]]),
-        Entity::Polyline(p) if !p.closed && p.parts.as_ref().is_none_or(|q| q.is_empty()) && p.pts.len() >= 2 => {
-            Ok(polyline_places(&points(&p.pts), p.bulges.as_deref().unwrap_or(&[]), false, step))
+        Entity::Polyline(p)
+            if !p.closed && p.parts.as_ref().is_none_or(|q| q.is_empty()) && p.pts.len() >= 2 =>
+        {
+            Ok(polyline_places(
+                &points(&p.pts),
+                p.bulges.as_deref().unwrap_or(&[]),
+                false,
+                step,
+            ))
         }
-        Entity::Arc(a) => Ok(swept::arc_places([a.c.x, a.c.y], a.r, a.a0, sweep_of(a.a0, a.a1), step)),
-        _ => Err(invalid(format!("“{uid}” yol olamaz: bir çizgi, açık tek parçalı çoklu çizgi ya da yay olmalı."), "uid")),
+        Entity::Arc(a) => Ok(swept::arc_places(
+            [a.c.x, a.c.y],
+            a.r,
+            a.a0,
+            sweep_of(a.a0, a.a1),
+            step,
+        )),
+        _ => Err(invalid(
+            format!(
+                "“{uid}” yol olamaz: bir çizgi, açık tek parçalı çoklu çizgi ya da yay olmalı."
+            ),
+            "uid",
+        )),
     }
 }
 
@@ -130,17 +179,42 @@ fn obstacle_of(doc: &Document, uid: &str, k: usize, step: f64) -> Result<Vec<Vec
     match entity(doc, uid, &path)? {
         Entity::Line(l) => Ok(vec![vec![[l.a.x, l.a.y], [l.b.x, l.b.y]]]),
         Entity::Polyline(p) if !p.pts.is_empty() => {
-            let mut lines = vec![polyline_places(&points(&p.pts), p.bulges.as_deref().unwrap_or(&[]), p.closed, step)];
+            let mut lines = vec![polyline_places(
+                &points(&p.pts),
+                p.bulges.as_deref().unwrap_or(&[]),
+                p.closed,
+                step,
+            )];
             for part in p.parts.iter().flatten() {
                 if !part.pts.is_empty() {
-                    lines.push(polyline_places(&points(&part.pts), part.bulges.as_deref().unwrap_or(&[]), p.closed, step));
+                    lines.push(polyline_places(
+                        &points(&part.pts),
+                        part.bulges.as_deref().unwrap_or(&[]),
+                        p.closed,
+                        step,
+                    ));
                 }
             }
             Ok(lines)
         }
-        Entity::Arc(a) => Ok(vec![swept::arc_places([a.c.x, a.c.y], a.r, a.a0, sweep_of(a.a0, a.a1), step)]),
-        Entity::Circle(c) => Ok(vec![swept::arc_places([c.c.x, c.c.y], c.r, 0.0, std::f64::consts::TAU, step)]),
-        _ => Err(invalid(format!("“{uid}” engel olamaz: bir çizgi, çoklu çizgi, yay ya da daire olmalı."), &path)),
+        Entity::Arc(a) => Ok(vec![swept::arc_places(
+            [a.c.x, a.c.y],
+            a.r,
+            a.a0,
+            sweep_of(a.a0, a.a1),
+            step,
+        )]),
+        Entity::Circle(c) => Ok(vec![swept::arc_places(
+            [c.c.x, c.c.y],
+            c.r,
+            0.0,
+            std::f64::consts::TAU,
+            step,
+        )]),
+        _ => Err(invalid(
+            format!("“{uid}” engel olamaz: bir çizgi, çoklu çizgi, yay ya da daire olmalı."),
+            &path,
+        )),
     }
 }
 
@@ -153,14 +227,22 @@ pub fn obstacle_lines(doc: &Document, uid: &str, step: f64) -> Option<Vec<Vec<[f
 type Quadrant = (String, Vec<[f64; 2]>, Vec<[f64; 2]>);
 
 /// A junction quadrant's path and curb.
-fn quadrant(doc: &Document, j: &kentos_commands::SweptJunctionPath, step: f64) -> Result<Quadrant, Stop> {
+fn quadrant(
+    doc: &Document,
+    j: &kentos_commands::SweptJunctionPath,
+    step: f64,
+) -> Result<Quadrant, Stop> {
     crate::road_junctions::road_project(doc)?;
-    let (_, def) = crate::road_junctions::find(doc.road_junctions(), &j.junction, "junction.junction")?;
+    let (_, def) =
+        crate::road_junctions::find(doc.road_junctions(), &j.junction, "junction.junction")?;
     let (report, _) = crate::road_junctions::read(doc, def)?;
     let Some(r) = report.returns.get(j.quadrant as usize) else {
         return Err(fail(
             codes::INVALID_JUNCTION,
-            format!("“{}” kavşağının bordür dönüşü yok (katlı kavşak); araç izi çeyreğin dönüşünde sürülür.", report.name),
+            format!(
+                "“{}” kavşağının bordür dönüşü yok (katlı kavşak); araç izi çeyreğin dönüşünde sürülür.",
+                report.name
+            ),
             "junction.junction",
         ));
     };
@@ -183,7 +265,10 @@ fn quadrant(doc: &Document, j: &kentos_commands::SweptJunctionPath, step: f64) -
 }
 
 /// The query answered now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &SweptQuery) -> Result<(SweptQueried, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &SweptQuery,
+) -> Result<(SweptQueried, Vec<CommandWarning>), Stop> {
     judged(input)?;
     let step = input.step;
     let (mut path, curb) = if let Some(j) = &input.junction {
@@ -209,17 +294,27 @@ pub(crate) fn answer(doc: &Document, input: &SweptQuery) -> Result<(SweptQueried
         lines.push(curb);
         owner.push((id, true));
     }
-    let estimate: f64 = path.windows(2).map(|w| ((w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]) / step).ceil().max(1.0)).sum();
+    let estimate: f64 = path
+        .windows(2)
+        .map(|w| {
+            ((w[1][0] - w[0][0]).hypot(w[1][1] - w[0][1]) / step)
+                .ceil()
+                .max(1.0)
+        })
+        .sum();
     if estimate + 1.0 > MOST_SWEPT_SAMPLES as f64 {
         return Err(invalid(
             format!("Yol bu aralıkla {MOST_SWEPT_SAMPLES} örnekten çok tutuyor; aralığı büyütün."),
             "step",
         ));
     }
-    let drive = swept::drive(&vehicle_of(input), &path, step).map_err(|e| invalid(format!("Araç sürülemiyor: {e}."), "path"))?;
+    let drive = swept::drive(&vehicle_of(input), &path, step)
+        .map_err(|e| invalid(format!("Araç sürülemiyor: {e}."), "path"))?;
     let units = drive.samples.first().map_or(0, |s| s.bodies.len());
-    let corners: Vec<Vec<[f64; 2]>> =
-        (0..units).flat_map(|j| (0..4).map(move |i| (j, i))).map(|(j, i)| drive.samples.iter().map(|s| s.bodies[j][i]).collect()).collect();
+    let corners: Vec<Vec<[f64; 2]>> = (0..units)
+        .flat_map(|j| (0..4).map(move |i| (j, i)))
+        .map(|(j, i)| drive.samples.iter().map(|s| s.bodies[j][i]).collect())
+        .collect();
     let mut warnings = Vec::new();
     let clearance = swept::clearance(&drive, &lines).map(|c| {
         let s = &drive.samples[c.sample];
@@ -231,9 +326,17 @@ pub(crate) fn answer(doc: &Document, input: &SweptQuery) -> Result<(SweptQueried
                     "Aracın {} gövdesi, yolun {:.2} m'sinde {} değiyor.",
                     if c.body == 0 { "çekici" } else { "römork" },
                     s.distance,
-                    if curb { "kavşağın bordürüne".to_owned() } else { format!("“{obstacle}” engeline") }
+                    if curb {
+                        "kavşağın bordürüne".to_owned()
+                    } else {
+                        format!("“{obstacle}” engeline")
+                    }
                 ),
-                path: Some(if curb { "junction".into() } else { "obstacles".into() }),
+                path: Some(if curb {
+                    "junction".into()
+                } else {
+                    "obstacles".into()
+                }),
             });
         }
         SweptClearance {
@@ -262,7 +365,10 @@ pub(crate) fn answer(doc: &Document, input: &SweptQuery) -> Result<(SweptQueried
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &SweptQuery) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -281,6 +387,9 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: SweptQuery) -> CommandResul
 }
 
 /// The drive for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &SweptQuery) -> Result<(SweptQueried, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &SweptQuery,
+) -> Result<(SweptQueried, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

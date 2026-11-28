@@ -45,20 +45,20 @@ mod address_tab_tests;
 #[path = "tests/buffer_side_tests.rs"]
 mod buffer_side_tests;
 #[cfg(test)]
-#[path = "tests/elevation_tests.rs"]
-mod elevation_tests;
-#[cfg(test)]
-#[path = "tests/location_data_tests.rs"]
-mod location_data_tests;
-#[cfg(test)]
 #[path = "tests/charts_tab_tests.rs"]
 mod charts_tab_tests;
 #[cfg(test)]
 #[path = "tests/conditions_tab_tests.rs"]
 mod conditions_tab_tests;
 #[cfg(test)]
+#[path = "tests/elevation_tests.rs"]
+mod elevation_tests;
+#[cfg(test)]
 #[path = "tests/features_tab_tests.rs"]
 mod features_tab_tests;
+#[cfg(test)]
+#[path = "tests/location_data_tests.rs"]
+mod location_data_tests;
 #[cfg(test)]
 #[path = "tests/points_target_tab_tests.rs"]
 mod points_target_tab_tests;

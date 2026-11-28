@@ -7,7 +7,11 @@
 pub(crate) fn explained(tolerance: &str, profile: Option<(&str, &str)>, unit: &str) -> String {
     let typed = |s: &str| {
         let s = s.trim();
-        if s.is_empty() { "…".to_owned() } else { format!("{s} {unit}") }
+        if s.is_empty() {
+            "…".to_owned()
+        } else {
+            format!("{s} {unit}")
+        }
     };
     let t = typed(tolerance);
     let mut out = format!(
@@ -31,9 +35,22 @@ mod tests {
     #[test]
     fn each_length_is_said_with_its_unit_and_comparison() {
         let words = explained("0,001", Some(("0,0001", "0,05")), "m");
-        assert!(words.starts_with("Tolerans 0,001 m: bir çizgi ucu başka bir çizgiye 0,001 m ya da daha yakınsa değer"), "{words}");
-        assert!(words.contains("Depolama hassasiyeti 0,0001 m: koordinatlar ona yuvarlanmaz"), "{words}");
-        assert!(words.contains("Kabul eşiği 0,05 m: bir onarım adımı kaynak köşeyi bundan uzağa taşıyamaz"), "{words}");
+        assert!(
+            words.starts_with(
+                "Tolerans 0,001 m: bir çizgi ucu başka bir çizgiye 0,001 m ya da daha yakınsa değer"
+            ),
+            "{words}"
+        );
+        assert!(
+            words.contains("Depolama hassasiyeti 0,0001 m: koordinatlar ona yuvarlanmaz"),
+            "{words}"
+        );
+        assert!(
+            words.contains(
+                "Kabul eşiği 0,05 m: bir onarım adımı kaynak köşeyi bundan uzağa taşıyamaz"
+            ),
+            "{words}"
+        );
         let none = explained("", None, "m");
         assert!(none.starts_with("Tolerans …:"), "{none}");
         assert!(none.ends_with("işaretler gerekçesiz olabilir."), "{none}");

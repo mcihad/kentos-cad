@@ -12,7 +12,8 @@ use std::sync::OnceLock;
 use kentos_commands::{DrawingFont, FontFamily, FontFile, FontFolder, FontRole};
 use kentos_geometry_core::text::face_info::{self, FaceInfo};
 use kentos_geometry_core::text::font_data::{
-    ADDED_FACES, ADDED_KEYS, DRAWING_FACES, DRAWING_KEYS, FALLBACK_FACES, InstalledFace, give, install,
+    ADDED_FACES, ADDED_KEYS, DRAWING_FACES, DRAWING_KEYS, FALLBACK_FACES, InstalledFace, give,
+    install,
 };
 
 /// A face the core takes in place of a bundled twin, by its key (`("arial", 400, false)`).
@@ -24,14 +25,41 @@ type Given = ((&'static str, u16, bool), &'static [u8]);
 const SYSTEM_FILES: [((&str, u16, bool), &[&str]); 8] = [
     (("arial", 400, false), &["Arial.ttf", "arial.ttf"]),
     (("arial", 500, false), &["Arial.ttf", "arial.ttf"]),
-    (("arial", 600, false), &["Arial Bold.ttf", "arialbd.ttf", "Arial_Bold.ttf"]),
-    (("arial", 700, false), &["Arial Bold.ttf", "arialbd.ttf", "Arial_Bold.ttf"]),
-    (("times-new-roman", 400, false), &["Times New Roman.ttf", "times.ttf", "Times_New_Roman.ttf"]),
-    (("times-new-roman", 700, false), &["Times New Roman Bold.ttf", "timesbd.ttf", "Times_New_Roman_Bold.ttf"]),
-    (("times-new-roman", 400, true), &["Times New Roman Italic.ttf", "timesi.ttf", "Times_New_Roman_Italic.ttf"]),
+    (
+        ("arial", 600, false),
+        &["Arial Bold.ttf", "arialbd.ttf", "Arial_Bold.ttf"],
+    ),
+    (
+        ("arial", 700, false),
+        &["Arial Bold.ttf", "arialbd.ttf", "Arial_Bold.ttf"],
+    ),
+    (
+        ("times-new-roman", 400, false),
+        &["Times New Roman.ttf", "times.ttf", "Times_New_Roman.ttf"],
+    ),
+    (
+        ("times-new-roman", 700, false),
+        &[
+            "Times New Roman Bold.ttf",
+            "timesbd.ttf",
+            "Times_New_Roman_Bold.ttf",
+        ],
+    ),
+    (
+        ("times-new-roman", 400, true),
+        &[
+            "Times New Roman Italic.ttf",
+            "timesi.ttf",
+            "Times_New_Roman_Italic.ttf",
+        ],
+    ),
     (
         ("times-new-roman", 700, true),
-        &["Times New Roman Bold Italic.ttf", "timesbi.ttf", "Times_New_Roman_Bold_Italic.ttf"],
+        &[
+            "Times New Roman Bold Italic.ttf",
+            "timesbi.ttf",
+            "Times_New_Roman_Bold_Italic.ttf",
+        ],
     ),
 ];
 
@@ -49,10 +77,16 @@ pub fn load() -> &'static [FontFile] {
         // Given before the core read a face: a program that drew a text first keeps the twins and says so.
         let late = !give(&given) || !install(installed);
         if late {
-            for f in files.iter_mut().filter(|f| matches!(f.role, FontRole::Given | FontRole::Family)) {
+            for f in files
+                .iter_mut()
+                .filter(|f| matches!(f.role, FontRole::Given | FontRole::Family))
+            {
                 f.role = FontRole::Unused;
                 f.face = None;
-                f.note = Some("program yazı tiplerini okumadan önce yazı çizdi; programı yeniden başlatın".to_owned());
+                f.note = Some(
+                    "program yazı tiplerini okumadan önce yazı çizdi; programı yeniden başlatın"
+                        .to_owned(),
+                );
             }
         }
         files
@@ -87,13 +121,18 @@ pub fn choices(also: Option<DrawingFont>) -> Vec<DrawingFont> {
 pub fn drawable(font: DrawingFont) -> bool {
     match font.family() {
         None => true,
-        Some(family) => listing().iter().any(|f| f.role == FontRole::Family && f.face == Some(DrawingFont::Installed(family))),
+        Some(family) => listing()
+            .iter()
+            .any(|f| f.role == FontRole::Family && f.face == Some(DrawingFont::Installed(family))),
     }
 }
 
 /// Reads `folders` in order, then the `system` folders for the Arial and Times New Roman faces the folders did not
 /// give. The files, the faces given in place of the twins, the families installed.
-fn read(folders: &[(FontFolder, PathBuf)], system: &[PathBuf]) -> (Vec<FontFile>, Vec<Given>, Vec<InstalledFace>) {
+fn read(
+    folders: &[(FontFolder, PathBuf)],
+    system: &[PathBuf],
+) -> (Vec<FontFile>, Vec<Given>, Vec<InstalledFace>) {
     let mut files: Vec<FontFile> = Vec::new();
     let mut given: Vec<Given> = Vec::new();
     let mut installed: Vec<InstalledFace> = Vec::new();
@@ -112,8 +151,15 @@ fn read(folders: &[(FontFolder, PathBuf)], system: &[PathBuf]) -> (Vec<FontFile>
         if given.iter().any(|(k, _)| *k == key) {
             continue;
         }
-        let family = if key.0 == "arial" { "Arial" } else { "Times New Roman" };
-        for path in system.iter().flat_map(|d| names.iter().map(move |n| d.join(n))) {
+        let family = if key.0 == "arial" {
+            "Arial"
+        } else {
+            "Times New Roman"
+        };
+        for path in system
+            .iter()
+            .flat_map(|d| names.iter().map(move |n| d.join(n)))
+        {
             if let Some((_, bytes)) = read.iter().find(|(p, _)| *p == path) {
                 given.push((key, *bytes));
                 break;
@@ -121,7 +167,11 @@ fn read(folders: &[(FontFolder, PathBuf)], system: &[PathBuf]) -> (Vec<FontFile>
             let Ok(bytes) = std::fs::read(&path) else {
                 continue;
             };
-            let Some(face) = face_info::describe(&bytes).into_iter().next().filter(|f| f.family == family) else {
+            let Some(face) = face_info::describe(&bytes)
+                .into_iter()
+                .next()
+                .filter(|f| f.family == family)
+            else {
                 continue;
             };
             let bytes: &'static [u8] = Box::leak(bytes.into_boxed_slice());
@@ -142,7 +192,11 @@ fn read(folders: &[(FontFolder, PathBuf)], system: &[PathBuf]) -> (Vec<FontFile>
 /// The file's place in its folder, with `/` (`cizim/Barlow-400.ttf`).
 fn relative(dir: &Path, path: &Path) -> String {
     let inner = path.strip_prefix(dir).unwrap_or(path);
-    inner.components().map(|c| c.as_os_str().to_string_lossy()).collect::<Vec<_>>().join("/")
+    inner
+        .components()
+        .map(|c| c.as_os_str().to_string_lossy())
+        .collect::<Vec<_>>()
+        .join("/")
 }
 
 /// A file not read, or not a font.
@@ -199,7 +253,11 @@ fn classify(
 ) {
     let faces = face_info::describe(&bytes);
     let Some(face) = faces.first() else {
-        files.push(unread(file, folder, "yazı tipi olarak okunamadı".to_owned()));
+        files.push(unread(
+            file,
+            folder,
+            "yazı tipi olarak okunamadı".to_owned(),
+        ));
         return;
     };
     if face_info::is_collection(&bytes) {
@@ -215,7 +273,11 @@ fn classify(
     let interface = folder == FontFolder::Program && base.file.starts_with("arayuz/");
     // KentOS's own copy, the same bytes: the program draws its own.
     if let Some(i) = DRAWING_FACES.iter().position(|d| *d == bytes.as_slice()) {
-        files.push(FontFile { role: FontRole::Own, face: DrawingFont::from_id(DRAWING_KEYS[i].0), ..base });
+        files.push(FontFile {
+            role: FontRole::Own,
+            face: DrawingFont::from_id(DRAWING_KEYS[i].0),
+            ..base
+        });
         return;
     }
     if let Some(i) = ADDED_FACES.iter().position(|d| *d == bytes.as_slice()) {
@@ -225,7 +287,12 @@ fn classify(
             face.map_or("", DrawingFont::label),
             face.map_or("", DrawingFont::label)
         );
-        files.push(FontFile { role: FontRole::Twin, face, note: Some(note), ..base });
+        files.push(FontFile {
+            role: FontRole::Twin,
+            face,
+            note: Some(note),
+            ..base
+        });
         return;
     }
     if FALLBACK_FACES.iter().any(|d| *d == bytes.as_slice()) {
@@ -238,43 +305,77 @@ fn classify(
     }
     match DrawingFont::own(&face.family) {
         Some(own @ (DrawingFont::Arial | DrawingFont::TimesNewRoman)) => {
-            let keys: Vec<_> = keys_for(own, face).into_iter().filter(|k| !given.iter().any(|(g, _)| g == k)).collect();
+            let keys: Vec<_> = keys_for(own, face)
+                .into_iter()
+                .filter(|k| !given.iter().any(|(g, _)| g == k))
+                .collect();
             if keys.is_empty() {
                 let why = if face.italic && own == DrawingFont::Arial {
                     "Arial'ın eğik yüzü kullanılmaz: KentOS Arial'ı kendisi eğer"
                 } else {
                     "aynı yüz önce başka bir dosyadan alındı"
                 };
-                files.push(FontFile { note: Some(why.to_owned()), ..base });
+                files.push(FontFile {
+                    note: Some(why.to_owned()),
+                    ..base
+                });
                 return;
             }
             let bytes: &'static [u8] = Box::leak(bytes.into_boxed_slice());
             given.extend(keys.into_iter().map(|k| (k, bytes)));
-            files.push(FontFile { role: FontRole::Given, face: Some(own), ..base });
+            files.push(FontFile {
+                role: FontRole::Given,
+                face: Some(own),
+                ..base
+            });
         }
         Some(own) => {
             let note = format!("KentOS kendi {} yüzüyle çizer", own.label());
-            let role = if interface { FontRole::Interface } else { FontRole::Unused };
-            files.push(FontFile { role, note: Some(note), ..base });
+            let role = if interface {
+                FontRole::Interface
+            } else {
+                FontRole::Unused
+            };
+            files.push(FontFile {
+                role,
+                note: Some(note),
+                ..base
+            });
         }
         None if !face.embeddable => {
             let note = "lisansı belgeye gömülmesini yasaklıyor: KentOS onunla çizmez (pafta PDF'i harflerini gömer)";
-            files.push(FontFile { note: Some(note.to_owned()), ..base });
+            files.push(FontFile {
+                note: Some(note.to_owned()),
+                ..base
+            });
         }
         None => {
             let Some(family) = FontFamily::new(&face.family) else {
                 files.push(FontFile {
-                    note: Some(format!("“{}” bir yazı tipi ailesinin adı olamaz", face.family)),
+                    note: Some(format!(
+                        "“{}” bir yazı tipi ailesinin adı olamaz",
+                        face.family
+                    )),
                     ..base
                 });
                 return;
             };
-            if installed.iter().any(|i| i.family == family.name() && i.weight == face.weight && i.italic == face.italic) {
-                files.push(FontFile { note: Some("aynı yüz önce başka bir dosyadan alındı".to_owned()), ..base });
+            if installed.iter().any(|i| {
+                i.family == family.name() && i.weight == face.weight && i.italic == face.italic
+            }) {
+                files.push(FontFile {
+                    note: Some("aynı yüz önce başka bir dosyadan alındı".to_owned()),
+                    ..base
+                });
                 return;
             }
             let bytes: &'static [u8] = Box::leak(bytes.into_boxed_slice());
-            installed.push(InstalledFace { family: family.name(), weight: face.weight, italic: face.italic, bytes });
+            installed.push(InstalledFace {
+                family: family.name(),
+                weight: face.weight,
+                italic: face.italic,
+                bytes,
+            });
             let mut notes: Vec<&str> = Vec::new();
             if interface {
                 notes.push("arayüzün de yazı tipi");
@@ -306,7 +407,10 @@ fn system_folders() -> Vec<PathBuf> {
     } else if cfg!(target_os = "windows") {
         let windir = std::env::var_os("WINDIR").map_or_else(|| "C:\\Windows".into(), PathBuf::from);
         out.push(windir.join("Fonts"));
-        out.extend(std::env::var_os("LOCALAPPDATA").map(|l| PathBuf::from(l).join("Microsoft/Windows/Fonts")));
+        out.extend(
+            std::env::var_os("LOCALAPPDATA")
+                .map(|l| PathBuf::from(l).join("Microsoft/Windows/Fonts")),
+        );
     } else {
         out.push("/usr/share/fonts/truetype/msttcorefonts".into());
         out.push("/usr/share/fonts/TTF".into());
@@ -329,22 +433,58 @@ mod tests {
     #[test]
     fn the_checkout_folder_lists_every_face_by_its_use() {
         let (files, given, installed) = read(&[(FontFolder::Program, checkout_fonts())], &[]);
-        let of = |file: &str| files.iter().find(|f| f.file == file).map(|f| (f.role, f.face));
-        assert_eq!(of("cizim/Barlow-400.ttf"), Some((FontRole::Own, Some(DrawingFont::Barlow))));
-        assert_eq!(of("cizim/LiberationSerif-Bold.ttf"), Some((FontRole::Twin, Some(DrawingFont::TimesNewRoman))));
-        assert_eq!(of("yedek/NotoSansArabic-400.ttf").map(|f| f.0), Some(FontRole::Fallback));
+        let of = |file: &str| {
+            files
+                .iter()
+                .find(|f| f.file == file)
+                .map(|f| (f.role, f.face))
+        };
+        assert_eq!(
+            of("cizim/Barlow-400.ttf"),
+            Some((FontRole::Own, Some(DrawingFont::Barlow)))
+        );
+        assert_eq!(
+            of("cizim/LiberationSerif-Bold.ttf"),
+            Some((FontRole::Twin, Some(DrawingFont::TimesNewRoman)))
+        );
+        assert_eq!(
+            of("yedek/NotoSansArabic-400.ttf").map(|f| f.0),
+            Some(FontRole::Fallback)
+        );
         let roboto = DrawingFont::from_name("Roboto");
-        assert_eq!(of("arayuz/Roboto-Regular.ttf"), Some((FontRole::Family, roboto)));
-        assert_eq!(of("arayuz/IBMPlexMono-Regular.ttf").map(|f| f.0), Some(FontRole::Interface));
+        assert_eq!(
+            of("arayuz/Roboto-Regular.ttf"),
+            Some((FontRole::Family, roboto))
+        );
+        assert_eq!(
+            of("arayuz/IBMPlexMono-Regular.ttf").map(|f| f.0),
+            Some(FontRole::Interface)
+        );
         assert!(given.is_empty());
         let families: Vec<&str> = installed.iter().map(|f| f.family).collect();
-        assert!(families.contains(&"Roboto") && families.contains(&"Inter"), "{families:?}");
+        assert!(
+            families.contains(&"Roboto") && families.contains(&"Inter"),
+            "{families:?}"
+        );
         assert!(!families.contains(&"IBM Plex Mono") && !families.contains(&"Barlow"));
         // Every file is listed, with its family and weight from its own name table.
-        assert_eq!(files.len(), kentos_launch::install::font_files(&checkout_fonts()).len());
-        let semibold = files.iter().find(|f| f.file == "arayuz/Roboto-SemiBold.ttf");
-        assert_eq!(semibold.map(|f| (f.family.as_str(), f.weight)), Some(("Roboto", 600)));
-        assert!(files.iter().all(|f| f.turkish || f.role == FontRole::Fallback), "every face writes Turkish");
+        assert_eq!(
+            files.len(),
+            kentos_launch::install::font_files(&checkout_fonts()).len()
+        );
+        let semibold = files
+            .iter()
+            .find(|f| f.file == "arayuz/Roboto-SemiBold.ttf");
+        assert_eq!(
+            semibold.map(|f| (f.family.as_str(), f.weight)),
+            Some(("Roboto", 600))
+        );
+        assert!(
+            files
+                .iter()
+                .all(|f| f.turkish || f.role == FontRole::Fallback),
+            "every face writes Turkish"
+        );
     }
 
     /// A user's folder: a family texts can take, a file that is not a font, a collection, a second copy of a face.
@@ -354,7 +494,8 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         let inner = dir.join("kurum");
         assert!(std::fs::create_dir_all(&inner).is_ok());
-        let roboto = std::fs::read(checkout_fonts().join("arayuz/Roboto-Regular.ttf")).unwrap_or_default();
+        let roboto =
+            std::fs::read(checkout_fonts().join("arayuz/Roboto-Regular.ttf")).unwrap_or_default();
         assert!(std::fs::write(inner.join("Kurum-Regular.ttf"), &roboto).is_ok());
         // Read after the family's own file (the files are read in their paths' order): the second copy.
         assert!(std::fs::write(dir.join("zz-kopya.ttf"), &roboto).is_ok());
@@ -369,8 +510,15 @@ mod tests {
         assert_eq!(installed.len(), 1, "the copy is not given twice");
         let copy = of("zz-kopya.ttf");
         assert_eq!(copy.as_ref().map(|f| f.role), Some(FontRole::Unused));
-        assert!(copy.and_then(|f| f.note).is_some_and(|n| n.contains("önce başka")));
-        assert!(of("bozuk.otf").and_then(|f| f.note).is_some_and(|n| n.contains("okunamadı")));
+        assert!(
+            copy.and_then(|f| f.note)
+                .is_some_and(|n| n.contains("önce başka"))
+        );
+        assert!(
+            of("bozuk.otf")
+                .and_then(|f| f.note)
+                .is_some_and(|n| n.contains("okunamadı"))
+        );
         assert_eq!(of("Barlow.ttf").map(|f| f.role), Some(FontRole::Own));
     }
 

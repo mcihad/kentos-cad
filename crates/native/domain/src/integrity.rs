@@ -128,11 +128,12 @@ impl Document {
             {
                 // A CBS project's objects are rows of tables of one kind (docs/adr/9196 §2, 9320): the way out is a data
                 // layer of the object's kind, never a layer made of any kind.
-                let way = if self.settings().project_type() == Some(kentos_contracts::Workspace::Gis) {
-                    "Nesneyi türüne uyan bir veri katmanına yazın."
-                } else {
-                    "Nesneyi türüne uyan bir katmana yazın ya da katmanın türünü Karışık yapın."
-                };
+                let way =
+                    if self.settings().project_type() == Some(kentos_contracts::Workspace::Gis) {
+                        "Nesneyi türüne uyan bir veri katmanına yazın."
+                    } else {
+                        "Nesneyi türüne uyan bir katmana yazın ya da katmanın türünü Karışık yapın."
+                    };
                 out.push(Fault {
                     uid: change.uid,
                     message: format!(

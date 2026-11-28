@@ -140,7 +140,14 @@ fn split(
     {
         return Err(fail());
     }
-    let dots = dots(&edges, total, closed, &dash, (-phase).rem_euclid(period), period)?;
+    let dots = dots(
+        &edges,
+        total,
+        closed,
+        &dash,
+        (-phase).rem_euclid(period),
+        period,
+    )?;
     let mut offset = (-phase).rem_euclid(period);
     let mut di = 0;
     while di + 1 < dash.len() && offset >= dash[di] {
@@ -476,7 +483,10 @@ mod tests {
         assert_eq!(got.len(), 1);
         assert!((got[0].pts[1].x).abs() < 1e-12);
         assert!((got[0].pts[1].y - 1.).abs() < 1e-12);
-        assert!((got[0].bulges[0] - kentos_geometry_core::jsmath::tan(std::f64::consts::PI / 8.)).abs() < 1e-12);
+        assert!(
+            (got[0].bulges[0] - kentos_geometry_core::jsmath::tan(std::f64::consts::PI / 8.)).abs()
+                < 1e-12
+        );
         assert_eq!(got[0].widths, vec![[2., 3.]]);
     }
     #[test]
@@ -533,8 +543,15 @@ mod tests {
     /// ADR 1121: a dot is the band's cross-section, across the width at the dot.
     #[test]
     fn dots_are_cross_sections_with_phase_ends_and_the_open_end() {
-        let (pieces, dots) =
-            split(&[p(0., 0.), p(4., 0.)], None, false, &[[2., 2.]], &[0., 2.], 0.).unwrap();
+        let (pieces, dots) = split(
+            &[p(0., 0.), p(4., 0.)],
+            None,
+            false,
+            &[[2., 2.]],
+            &[0., 2.],
+            0.,
+        )
+        .unwrap();
         assert!(pieces.is_empty());
         assert_eq!(
             dots,
@@ -545,12 +562,26 @@ mod tests {
             ]
         );
         // Phase 0.5: the pattern's dot lies 0.5 along the path, as a thin line's.
-        let (_, dots) =
-            split(&[p(0., 0.), p(4., 0.)], None, false, &[[2., 2.]], &[0., 2.], 0.5).unwrap();
+        let (_, dots) = split(
+            &[p(0., 0.), p(4., 0.)],
+            None,
+            false,
+            &[[2., 2.]],
+            &[0., 2.],
+            0.5,
+        )
+        .unwrap();
         assert_eq!(dots.iter().map(|d| d[0].x).collect::<Vec<_>>(), [0.5, 2.5]);
         // A dash, a gap, a dot, a gap: the ink keeps its pieces beside the dots.
-        let (pieces, dots) =
-            split(&[p(0., 0.), p(10., 0.)], None, false, &[[1., 1.]], &[3., 1., 0., 1.], 0.).unwrap();
+        let (pieces, dots) = split(
+            &[p(0., 0.), p(10., 0.)],
+            None,
+            false,
+            &[[1., 1.]],
+            &[3., 1., 0., 1.],
+            0.,
+        )
+        .unwrap();
         assert_eq!(pieces.len(), 2);
         assert_eq!(pieces[1].pts, vec![p(5., 0.), p(8., 0.)]);
         assert_eq!(dots.iter().map(|d| d[0].x).collect::<Vec<_>>(), [4., 9.]);
@@ -590,15 +621,33 @@ mod tests {
             0.,
         )
         .unwrap();
-        assert!(near(cw[1][0], p(0., -2.5)) && near(cw[1][1], p(0., 0.5)), "{:?}", cw[1]);
+        assert!(
+            near(cw[1][0], p(0., -2.5)) && near(cw[1][1], p(0., 0.5)),
+            "{:?}",
+            cw[1]
+        );
     }
     #[test]
     fn a_dot_where_the_width_is_zero_is_refused_not_dropped() {
-        let refused = split(&[p(0., 0.), p(4., 0.)], None, false, &[[0., 2.]], &[0., 2.], 0.);
+        let refused = split(
+            &[p(0., 0.), p(4., 0.)],
+            None,
+            false,
+            &[[0., 2.]],
+            &[0., 2.],
+            0.,
+        );
         assert!(refused.unwrap_err().contains("sıfır genişlikli"));
         // Phase 1: the first dot is at 1, width 0.5: drawn.
-        let (_, dots) =
-            split(&[p(0., 0.), p(4., 0.)], None, false, &[[0., 2.]], &[0., 2.], 1.).unwrap();
+        let (_, dots) = split(
+            &[p(0., 0.), p(4., 0.)],
+            None,
+            false,
+            &[[0., 2.]],
+            &[0., 2.],
+            1.,
+        )
+        .unwrap();
         assert_eq!(dots[0], [p(1., 0.25), p(1., -0.25)]);
     }
 }

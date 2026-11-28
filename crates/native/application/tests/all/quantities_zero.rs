@@ -13,14 +13,21 @@ fn metrajs_empty_sums_are_plus_zero() {
     );
     let empty = drawing(json!([]), "m");
     for doc in [walls, empty] {
-        let q = completed(kentos_native_application::spaces_quantities::plan_in(&doc, &Default::default()));
+        let q = completed(kentos_native_application::spaces_quantities::plan_in(
+            &doc,
+            &Default::default(),
+        ));
         let totals = serde_json::to_value(&q.totals).expect("json");
         for (name, value) in totals.as_object().expect("totals") {
             let v = value.as_f64().expect("a number");
             assert!(v.is_sign_positive(), "{name}: {v}");
         }
         for w in &q.walls {
-            assert!(w.openings_area.is_sign_positive(), "a wall's openings: {}", w.openings_area);
+            assert!(
+                w.openings_area.is_sign_positive(),
+                "a wall's openings: {}",
+                w.openings_area
+            );
         }
     }
 }

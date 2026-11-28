@@ -23,24 +23,25 @@
 //! └─────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, JunctionKind, JunctionLegDef, JunctionReport, JunctionsClearance, JunctionsCleared, JunctionsDraw,
-    JunctionsEdit, JunctionsOverlap, JunctionsOverlapped, JunctionsTie, JunctionsTied, RoadEditOperation,
+    CommandWarning, JunctionKind, JunctionLegDef, JunctionReport, JunctionsClearance,
+    JunctionsCleared, JunctionsDraw, JunctionsEdit, JunctionsOverlap, JunctionsOverlapped,
+    JunctionsTie, JunctionsTied, RoadEditOperation,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{
-    ExecutionContext, road_junctions_clearance, road_junctions_draw, road_junctions_edit, road_junctions_overlap,
-    road_junctions_tie,
+    ExecutionContext, road_junctions_clearance, road_junctions_draw, road_junctions_edit,
+    road_junctions_overlap, road_junctions_tie,
 };
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::label;
 
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -69,10 +70,15 @@ pub(crate) const FIELDS: [&str; 11] = [
 ];
 
 /// The clearance's typed fields: the deck's depth, the sampling step, the minimum asked.
-pub(crate) const CLEAR_FIELDS: [&str; 3] = ["Tabliye derinliği (m)", "Aralık (m)", "Gerekli açıklık (m)"];
+pub(crate) const CLEAR_FIELDS: [&str; 3] =
+    ["Tabliye derinliği (m)", "Aralık (m)", "Gerekli açıklık (m)"];
 
 /// The tie's typed fields: the primary road's left and right cross slopes, the largest grade change.
-pub(crate) const TIE_FIELDS: [&str; 3] = ["Sol enine eğim (%)", "Sağ enine eğim (%)", "En büyük eğim değişimi (%)"];
+pub(crate) const TIE_FIELDS: [&str; 3] = [
+    "Sol enine eğim (%)",
+    "Sağ enine eğim (%)",
+    "En büyük eğim değişimi (%)",
+];
 
 /// The tie as last read.
 pub(crate) type Tied = Result<(JunctionsTied, Vec<CommandWarning>), String>;
@@ -157,17 +163,24 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.replace(',', ".")
+        .parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 impl Window {
     /// The edit as typed, or why it is not one.
     pub(crate) fn input(&self) -> Result<JunctionsEdit, String> {
-        let need = |k: usize| number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]));
+        let need = |k: usize| {
+            number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]))
+        };
         let mut legs = Vec::new();
         for (i, a) in self.legs.iter().enumerate() {
             legs.push(JunctionLegDef {
-                alignment: a.clone().ok_or_else(|| format!("{}. kolun aksını seçin.", i + 1))?,
+                alignment: a
+                    .clone()
+                    .ok_or_else(|| format!("{}. kolun aksını seçin.", i + 1))?,
                 alignment_revision: 0,
                 left: need(3 + 2 * i)?,
                 right: need(4 + 2 * i)?,
@@ -175,14 +188,25 @@ impl Window {
         }
         let at = match self.fields[1].trim() {
             "" => 0,
-            t => t.parse::<u32>().map_err(|_| "Kesişim bir tam sayı olmalı (1 ilki).".to_owned())?.saturating_sub(1),
+            t => t
+                .parse::<u32>()
+                .map_err(|_| "Kesişim bir tam sayı olmalı (1 ilki).".to_owned())?
+                .saturating_sub(1),
         };
         let at_grade = self.kind == JunctionKind::AtGrade;
-        let quadrants: Vec<Option<f64>> = (7..11).map(|k| number(&self.fields[k], FIELDS[k])).collect::<Result<_, _>>()?;
+        let quadrants: Vec<Option<f64>> = (7..11)
+            .map(|k| number(&self.fields[k], FIELDS[k]))
+            .collect::<Result<_, _>>()?;
         let radii = if quadrants.iter().all(Option::is_none) {
             None
         } else {
-            Some(quadrants.iter().zip(7..).map(|(q, k)| q.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]))).collect::<Result<Vec<_>, _>>()?)
+            Some(
+                quadrants
+                    .iter()
+                    .zip(7..)
+                    .map(|(q, k)| q.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k])))
+                    .collect::<Result<Vec<_>, _>>()?,
+            )
         };
         Ok(JunctionsEdit {
             operation: RoadEditOperation::Set,
@@ -201,8 +225,14 @@ impl Window {
 impl Window {
     /// The clearance asked of the saved junction, or why not.
     pub(crate) fn clearance_input(&self) -> Result<JunctionsClearance, String> {
-        let junction = self.chosen.clone().ok_or_else(|| "Kaydedince düşey açıklık okunur.".to_owned())?;
-        let need = |k: usize| number(&self.clear_fields[k], CLEAR_FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", CLEAR_FIELDS[k]));
+        let junction = self
+            .chosen
+            .clone()
+            .ok_or_else(|| "Kaydedince düşey açıklık okunur.".to_owned())?;
+        let need = |k: usize| {
+            number(&self.clear_fields[k], CLEAR_FIELDS[k])?
+                .ok_or_else(|| format!("{} yazılmalı.", CLEAR_FIELDS[k]))
+        };
         let profiles = match &self.clear_profiles {
             [None, None] => None,
             [Some(a), Some(b)] => Some(vec![a.clone(), b.clone()]),
@@ -221,7 +251,10 @@ impl Window {
 impl Window {
     /// The tie asked of the saved junction, or why not.
     pub(crate) fn tie_input(&self) -> Result<JunctionsTie, String> {
-        let junction = self.chosen.clone().ok_or_else(|| "Kaydedince boykesit bağı okunur.".to_owned())?;
+        let junction = self
+            .chosen
+            .clone()
+            .ok_or_else(|| "Kaydedince boykesit bağı okunur.".to_owned())?;
         let profiles = match &self.clear_profiles {
             [None, None] => None,
             [Some(a), Some(b)] => Some(vec![a.clone(), b.clone()]),
@@ -230,8 +263,10 @@ impl Window {
         let crossfall = match self.tie_super {
             Some(_) => None,
             None => {
-                let need =
-                    |k: usize| number(&self.tie_fields[k], TIE_FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", TIE_FIELDS[k]));
+                let need = |k: usize| {
+                    number(&self.tie_fields[k], TIE_FIELDS[k])?
+                        .ok_or_else(|| format!("{} yazılmalı.", TIE_FIELDS[k]))
+                };
                 // The fields are percent, the command's cross slopes grades (docs/adr/0977).
                 Some([need(0)? / 100.0, need(1)? / 100.0])
             }
@@ -251,14 +286,23 @@ impl Window {
 impl Window {
     /// The overlap asked of the saved junction, or why not.
     pub(crate) fn overlap_input(&self) -> Result<JunctionsOverlap, String> {
-        let junction = self.chosen.clone().ok_or_else(|| "Kaydedince koridor örtüşmesi okunur.".to_owned())?;
+        let junction = self
+            .chosen
+            .clone()
+            .ok_or_else(|| "Kaydedince koridor örtüşmesi okunur.".to_owned())?;
         let corridors = match &self.overlap_corridors {
             [None, None] => None,
             [Some(a), Some(b)] => Some(vec![a.clone(), b.clone()]),
             _ => return Err("İki kolun koridorunu birlikte seçin.".into()),
         };
-        let cell = number(&self.overlap_cell, OVERLAP_CELL)?.ok_or_else(|| format!("{OVERLAP_CELL} yazılmalı."))?;
-        Ok(JunctionsOverlap { junction, corridors, primary: self.overlap_primary, cell })
+        let cell = number(&self.overlap_cell, OVERLAP_CELL)?
+            .ok_or_else(|| format!("{OVERLAP_CELL} yazılmalı."))?;
+        Ok(JunctionsOverlap {
+            junction,
+            corridors,
+            primary: self.overlap_primary,
+            cell,
+        })
     }
 }
 
@@ -286,9 +330,17 @@ impl JunctionWindowApp for App {
             self.warn("Kavşak yalnız yol projesinde (KentOS Yol) olur.".to_owned());
             return;
         }
-        let axes: Vec<String> = doc.model.road_alignments().iter().filter(|a| a.offset_of.is_none()).map(|a| a.id.clone()).collect();
+        let axes: Vec<String> = doc
+            .model
+            .road_alignments()
+            .iter()
+            .filter(|a| a.offset_of.is_none())
+            .map(|a| a.id.clone())
+            .collect();
         if axes.len() < 2 {
-            self.warn("Kavşak iki aksın kesişiminde olur: önce Güzergâh'ta iki aks oluşturun.".to_owned());
+            self.warn(
+                "Kavşak iki aksın kesişiminde olur: önce Güzergâh'ta iki aks oluşturun.".to_owned(),
+            );
             return;
         }
         let layer = self.relation_layers().into_iter().next().map(|(id, _)| id);
@@ -337,15 +389,35 @@ impl JunctionWindowApp for App {
             },
         };
         let saved_separated = w.kind == JunctionKind::Separated
-            && w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id && j.kind == JunctionKind::Separated));
-        w.clearance = saved_separated
-            .then(|| w.clearance_input().and_then(|q| road_junctions_clearance::preview(&doc.model, &q)));
+            && w.chosen.as_ref().is_some_and(|id| {
+                doc.model
+                    .road_junctions()
+                    .iter()
+                    .any(|j| &j.id == id && j.kind == JunctionKind::Separated)
+            });
+        w.clearance = saved_separated.then(|| {
+            w.clearance_input()
+                .and_then(|q| road_junctions_clearance::preview(&doc.model, &q))
+        });
         let saved_at_grade = w.kind == JunctionKind::AtGrade
-            && w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id && j.kind == JunctionKind::AtGrade));
-        w.tie = saved_at_grade.then(|| w.tie_input().and_then(|q| road_junctions_tie::preview(&doc.model, &q)));
-        let saved = w.chosen.as_ref().is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id));
-        w.overlap = (w.overlap_mode && saved)
-            .then(|| w.overlap_input().and_then(|q| road_junctions_overlap::preview(&doc.model, &q)));
+            && w.chosen.as_ref().is_some_and(|id| {
+                doc.model
+                    .road_junctions()
+                    .iter()
+                    .any(|j| &j.id == id && j.kind == JunctionKind::AtGrade)
+            });
+        w.tie = saved_at_grade.then(|| {
+            w.tie_input()
+                .and_then(|q| road_junctions_tie::preview(&doc.model, &q))
+        });
+        let saved = w
+            .chosen
+            .as_ref()
+            .is_some_and(|id| doc.model.road_junctions().iter().any(|j| &j.id == id));
+        w.overlap = (w.overlap_mode && saved).then(|| {
+            w.overlap_input()
+                .and_then(|q| road_junctions_overlap::preview(&doc.model, &q))
+        });
     }
 
     fn junction_event(&mut self, event: Event) -> Task<Message> {
@@ -364,10 +436,17 @@ impl JunctionWindowApp for App {
                 match id.as_ref().and_then(|id| kept.iter().find(|c| &c.id == id)) {
                     Some(j) => {
                         w.kind = j.kind;
-                        w.legs = [Some(j.legs[0].alignment.clone()), Some(j.legs[1].alignment.clone())];
+                        w.legs = [
+                            Some(j.legs[0].alignment.clone()),
+                            Some(j.legs[1].alignment.clone()),
+                        ];
                         f[0] = j.name.clone();
                         f[1] = (j.at + 1).to_string();
-                        f[2] = if j.radius == 0.0 { String::new() } else { trimmed(j.radius) };
+                        f[2] = if j.radius == 0.0 {
+                            String::new()
+                        } else {
+                            trimmed(j.radius)
+                        };
                         for (i, leg) in j.legs.iter().enumerate() {
                             f[3 + 2 * i] = trimmed(leg.left);
                             f[4 + 2 * i] = trimmed(leg.right);
@@ -379,7 +458,11 @@ impl JunctionWindowApp for App {
                     None => {
                         // A new one: its edges and radius are the user's; only the name and the first crossing.
                         let n = kept.len() + 1;
-                        f[0] = if n == 1 { "Kavşak".into() } else { format!("Kavşak {n}") };
+                        f[0] = if n == 1 {
+                            "Kavşak".into()
+                        } else {
+                            format!("Kavşak {n}")
+                        };
                         f[1] = "1".into();
                     }
                 }
@@ -429,11 +512,24 @@ impl JunctionWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let result = road_junctions_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        let Some(out) = self.answered(result) else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result =
+            road_junctions_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(out) = self.answered(result) else {
+            return Task::none();
+        };
         if let Some(r) = &out.junction {
-            self.say(Level::Success, format!("“{}”: {:.1}° açıyla, {} dönüş yayı.", r.name, r.angle, r.returns.len()));
+            self.say(
+                Level::Success,
+                format!(
+                    "“{}”: {:.1}° açıyla, {} dönüş yayı.",
+                    r.name,
+                    r.angle,
+                    r.returns.len()
+                ),
+            );
             let id = r.id.clone();
             return self.junction_event(Event::Choose(Some(id)));
         }
@@ -451,11 +547,20 @@ impl JunctionWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let result = road_junctions_tie::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             let most = out.changes.iter().fold(0.0_f64, |a, b| a.max(*b));
-            self.say(Level::Success, format!("“{}” boykesiti kavşağa bağlandı; en büyük eğim değişimi %{:.2}.", out.profile, 100.0 * most));
+            self.say(
+                Level::Success,
+                format!(
+                    "“{}” boykesiti kavşağa bağlandı; en büyük eğim değişimi %{:.2}.",
+                    out.profile,
+                    100.0 * most
+                ),
+            );
         }
         self.refresh_junction();
         Task::none()
@@ -469,9 +574,17 @@ impl JunctionWindowApp for App {
             self.warn("Çizmek için önce kavşağı kaydedin ve bir katman seçin.".to_owned());
             return Task::none();
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let input = JunctionsDraw { junction: id, layer_id: layer, labels: true, expected_revision: None };
-        let result = road_junctions_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let input = JunctionsDraw {
+            junction: id,
+            layer_id: layer,
+            labels: true,
+            expected_revision: None,
+        };
+        let result =
+            road_junctions_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
             self.say(Level::Success, "Kavşağın dönüş yayları planda.");
             self.modules.road_mut().junction_window = None;
@@ -482,7 +595,8 @@ impl JunctionWindowApp for App {
 
     fn remove_junction(&mut self) -> Task<Message> {
         let Some(id) = self
-            .modules.road()
+            .modules
+            .road()
             .junction_window
             .as_ref()
             .and_then(|w| w.chosen.clone())
@@ -503,9 +617,13 @@ impl JunctionWindowApp for App {
             radii: None,
             expected_revision: None,
         };
-        let result = road_junctions_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let result =
+            road_junctions_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
-            let next = self.document.as_ref().and_then(|d| d.model.road_junctions().first().map(|c| c.id.clone()));
+            let next = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.road_junctions().first().map(|c| c.id.clone()));
             return self.junction_event(Event::Choose(next));
         }
         Task::none()
@@ -515,14 +633,23 @@ impl JunctionWindowApp for App {
         let Some(w) = &self.modules.road().junction_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let model = self.document.as_ref().map(|d| &d.model);
         let mut listed: Vec<(Option<String>, String)> = vec![(None, "Yeni kavşak".into())];
-        listed.extend(
-            model.map_or_else(Vec::new, |m| m.road_junctions().iter().map(|c| (Some(c.id.clone()), c.name.clone())).collect()),
-        );
+        listed.extend(model.map_or_else(Vec::new, |m| {
+            m.road_junctions()
+                .iter()
+                .map(|c| (Some(c.id.clone()), c.name.clone()))
+                .collect()
+        }));
         let ids: Vec<Option<String>> = listed.iter().map(|x| x.0.clone()).collect();
         let on_junction = Select::new(
             listed.iter().map(|x| Choice::new(x.1.clone())),
@@ -530,21 +657,35 @@ impl JunctionWindowApp for App {
             move |i| msg(Event::Choose(ids[i].clone())),
         );
         let kinds = [JunctionKind::AtGrade, JunctionKind::Separated];
-        let on_kind = Select::new(["Hemzemin", "Katlı"].map(Choice::new), kinds.iter().position(|k| *k == w.kind), move |i| {
-            msg(Event::Kind(kinds[i]))
-        });
+        let on_kind = Select::new(
+            ["Hemzemin", "Katlı"].map(Choice::new),
+            kinds.iter().position(|k| *k == w.kind),
+            move |i| msg(Event::Kind(kinds[i])),
+        );
         let axes: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
-            m.road_alignments().iter().filter(|a| a.offset_of.is_none()).map(|a| (a.id.clone(), a.name.clone())).collect()
+            m.road_alignments()
+                .iter()
+                .filter(|a| a.offset_of.is_none())
+                .map(|a| (a.id.clone(), a.name.clone()))
+                .collect()
         });
         let leg = |i: usize| {
             let aids: Vec<String> = axes.iter().map(|a| a.0.clone()).collect();
-            let at = w.legs[i].as_ref().and_then(|l| aids.iter().position(|a| a == l));
-            Select::new(axes.iter().map(|a| Choice::new(a.1.clone())), at, move |k| msg(Event::Leg(i, aids[k].clone())))
+            let at = w.legs[i]
+                .as_ref()
+                .and_then(|l| aids.iter().position(|a| a == l));
+            Select::new(
+                axes.iter().map(|a| Choice::new(a.1.clone())),
+                at,
+                move |k| msg(Event::Leg(i, aids[k].clone())),
+            )
         };
         let field = |k: usize, hint: &'static str, width: f32| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(width),
                 None,
             )
         };
@@ -576,39 +717,67 @@ impl JunctionWindowApp for App {
         .align_y(iced::alignment::Vertical::Bottom);
         let mut legs = legs;
         if w.chosen.is_some() {
-            let first = if at_grade { "Boykesit bağı" } else { "Düşey açıklık" };
-            let on_check = Select::new([first, "Koridor örtüşmesi"].map(Choice::new), Some(usize::from(w.overlap_mode)), |k| {
-                msg(Event::OverlapMode(k == 1))
-            });
-            legs = legs.push(space::horizontal().width(14)).push(words::field("Denetim", container(on_check).width(160), None));
+            let first = if at_grade {
+                "Boykesit bağı"
+            } else {
+                "Düşey açıklık"
+            };
+            let on_check = Select::new(
+                [first, "Koridor örtüşmesi"].map(Choice::new),
+                Some(usize::from(w.overlap_mode)),
+                |k| msg(Event::OverlapMode(k == 1)),
+            );
+            legs = legs.push(space::horizontal().width(14)).push(words::field(
+                "Denetim",
+                container(on_check).width(160),
+                None,
+            ));
         }
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top).push(legs);
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(10.0)
+            .push(top)
+            .push(legs);
         let profile = |i: usize| {
-                let on = w.legs[i].clone();
-                let mut ids: Vec<Option<String>> = vec![None];
-                let mut names = vec!["Aksın tek boykesiti".to_owned()];
-                for p in model.map_or(&[][..], |m| m.road_profiles()).iter().filter(|p| Some(&p.alignment) == on.as_ref()) {
-                    ids.push(Some(p.id.clone()));
-                    names.push(p.name.clone());
-                }
-                let at = ids.iter().position(|x| *x == w.clear_profiles[i]);
-                Select::new(names.into_iter().map(Choice::new), at, move |k| msg(Event::ClearProfile(i, ids[k].clone())))
+            let on = w.legs[i].clone();
+            let mut ids: Vec<Option<String>> = vec![None];
+            let mut names = vec!["Aksın tek boykesiti".to_owned()];
+            for p in model
+                .map_or(&[][..], |m| m.road_profiles())
+                .iter()
+                .filter(|p| Some(&p.alignment) == on.as_ref())
+            {
+                ids.push(Some(p.id.clone()));
+                names.push(p.name.clone());
+            }
+            let at = ids.iter().position(|x| *x == w.clear_profiles[i]);
+            Select::new(names.into_iter().map(Choice::new), at, move |k| {
+                msg(Event::ClearProfile(i, ids[k].clone()))
+            })
         };
         if w.overlap_mode && w.chosen.is_some() {
             let corridor = |i: usize| {
                 let on = w.legs[i].clone();
                 let mut ids: Vec<Option<String>> = vec![None];
                 let mut names = vec!["Aksın tek koridoru".to_owned()];
-                for c in model.map_or(&[][..], |m| m.road_corridors()).iter().filter(|c| Some(&c.alignment) == on.as_ref()) {
+                for c in model
+                    .map_or(&[][..], |m| m.road_corridors())
+                    .iter()
+                    .filter(|c| Some(&c.alignment) == on.as_ref())
+                {
                     ids.push(Some(c.id.clone()));
                     names.push(c.name.clone());
                 }
                 let at = ids.iter().position(|x| *x == w.overlap_corridors[i]);
-                Select::new(names.into_iter().map(Choice::new), at, move |k| msg(Event::OverlapCorridor(i, ids[k].clone())))
+                Select::new(names.into_iter().map(Choice::new), at, move |k| {
+                    msg(Event::OverlapCorridor(i, ids[k].clone()))
+                })
             };
             let owners = ["1. kolun koridoru", "2. kolun koridoru"];
-            let on_owner =
-                Select::new(owners.map(Choice::new), Some(w.overlap_primary as usize), |k| msg(Event::OverlapPrimary(k as u32)));
+            let on_owner = Select::new(
+                owners.map(Choice::new),
+                Some(w.overlap_primary as usize),
+                |k| msg(Event::OverlapPrimary(k as u32)),
+            );
             body = body.push(
                 row![
                     words::field("1. kolun koridoru", container(corridor(0)).width(170), None),
@@ -616,7 +785,9 @@ impl JunctionWindowApp for App {
                     words::field("Kavşağın sahibi", container(on_owner).width(170), None),
                     words::field(
                         OVERLAP_CELL,
-                        kentos_ui::widget::text_field("m", &w.overlap_cell).on_input(|t| msg(Event::OverlapCell(t))).width(120),
+                        kentos_ui::widget::text_field("m", &w.overlap_cell)
+                            .on_input(|t| msg(Event::OverlapCell(t)))
+                            .width(120),
                         None
                     ),
                 ]
@@ -627,7 +798,9 @@ impl JunctionWindowApp for App {
             let clear = |k: usize, hint: &'static str| {
                 words::field(
                     CLEAR_FIELDS[k],
-                    kentos_ui::widget::text_field(hint, &w.clear_fields[k]).on_input(move |t| msg(Event::ClearField(k, t))).width(130),
+                    kentos_ui::widget::text_field(hint, &w.clear_fields[k])
+                        .on_input(move |t| msg(Event::ClearField(k, t)))
+                        .width(130),
                     None,
                 )
             };
@@ -644,21 +817,32 @@ impl JunctionWindowApp for App {
             );
         } else if w.chosen.is_some() {
             let primaries = ["1. kolun sırtı", "2. kolun sırtı"];
-            let on_primary =
-                Select::new(primaries.map(Choice::new), Some(w.tie_primary as usize), |k| msg(Event::TiePrimary(k as u32)));
+            let on_primary = Select::new(
+                primaries.map(Choice::new),
+                Some(w.tie_primary as usize),
+                |k| msg(Event::TiePrimary(k as u32)),
+            );
             let main_axis = w.legs[w.tie_primary as usize].clone();
             let mut sids: Vec<Option<String>> = vec![None];
             let mut snames = vec!["Yazılan eğimler".to_owned()];
-            for d in model.map_or(&[][..], |m| m.road_superelevations()).iter().filter(|d| Some(&d.alignment) == main_axis.as_ref()) {
+            for d in model
+                .map_or(&[][..], |m| m.road_superelevations())
+                .iter()
+                .filter(|d| Some(&d.alignment) == main_axis.as_ref())
+            {
                 sids.push(Some(d.id.clone()));
                 snames.push(d.name.clone());
             }
             let at = sids.iter().position(|x| *x == w.tie_super);
-            let on_super = Select::new(snames.into_iter().map(Choice::new), at, move |k| msg(Event::TieSuper(sids[k].clone())));
+            let on_super = Select::new(snames.into_iter().map(Choice::new), at, move |k| {
+                msg(Event::TieSuper(sids[k].clone()))
+            });
             let tie = |k: usize, hint: &'static str| {
                 words::field(
                     TIE_FIELDS[k],
-                    kentos_ui::widget::text_field(hint, &w.tie_fields[k]).on_input(move |t| msg(Event::TieField(k, t))).width(110),
+                    kentos_ui::widget::text_field(hint, &w.tie_fields[k])
+                        .on_input(move |t| msg(Event::TieField(k, t)))
+                        .width(110),
                     None,
                 )
             };
@@ -675,7 +859,10 @@ impl JunctionWindowApp for App {
             }
             inputs = inputs.push(tie(2, "isteğe bağlı")).push(words::secondary(
                 TIE,
-                w.tie.as_ref().is_some_and(Result::is_ok).then(|| msg(Event::Tie)),
+                w.tie
+                    .as_ref()
+                    .is_some_and(Result::is_ok)
+                    .then(|| msg(Event::Tie)),
             ));
             body = body.push(inputs);
         }
@@ -687,27 +874,66 @@ impl JunctionWindowApp for App {
                     r.legs[0].km_text,
                     r.legs[1].km_text,
                     r.angle,
-                    if r.connected { "kollar bağlı" } else { "katlı: kollar bağlı değil" }
+                    if r.connected {
+                        "kollar bağlı"
+                    } else {
+                        "katlı: kollar bağlı değil"
+                    }
                 )));
                 if !w.preview.warnings.is_empty() {
-                    let all = w.preview.warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                    let all = w
+                        .preview
+                        .warnings
+                        .iter()
+                        .map(|x| x.message.as_str())
+                        .collect::<Vec<_>>()
+                        .join(" ");
                     body = body.push(label::caption(all).style(warn));
                 }
                 let edges: [[f64; 2]; 2] = [
                     [w.legs_edge(3), w.legs_edge(4)],
                     [w.legs_edge(5), w.legs_edge(6)],
                 ];
-                let cleared = w.clearance.as_ref().filter(|_| !w.overlap_mode).and_then(|c| c.as_ref().ok()).map(|c| &c.0);
-                let overlapped = w.overlap.as_ref().and_then(|c| c.as_ref().ok()).map(|c| &c.0);
-                let picture = crate::picture::picture(iced::widget::canvas(Crossing { report: r, edges, cleared, overlapped }).width(Fill).height(Fill), TITLE);
+                let cleared = w
+                    .clearance
+                    .as_ref()
+                    .filter(|_| !w.overlap_mode)
+                    .and_then(|c| c.as_ref().ok())
+                    .map(|c| &c.0);
+                let overlapped = w
+                    .overlap
+                    .as_ref()
+                    .and_then(|c| c.as_ref().ok())
+                    .map(|c| &c.0);
+                let picture = crate::picture::picture(
+                    iced::widget::canvas(Crossing {
+                        report: r,
+                        edges,
+                        cleared,
+                        overlapped,
+                    })
+                    .width(Fill)
+                    .height(Fill),
+                    TITLE,
+                );
                 let side = |s: &str| if s == "right" { "sağ" } else { "sol" };
                 let mut list = Column::new().spacing(2).width(Fill);
                 // The curb returns' table makes room for the overlap's reading.
-                let returns = if w.overlap_mode { &[][..] } else { &r.returns[..] };
+                let returns = if w.overlap_mode {
+                    &[][..]
+                } else {
+                    &r.returns[..]
+                };
                 if !returns.is_empty() {
                     use crate::road_dialog::{col, grouped, num};
                     list = list.push(crate::road_dialog::table(
-                        vec![col("Çeyrek", 84.0), num("R (m)", 72.0), num("Uzunluk (m)", 96.0), num("1. kol km", 96.0), num("2. kol km", 96.0)],
+                        vec![
+                            col("Çeyrek", 84.0),
+                            num("R (m)", 72.0),
+                            num("Uzunluk (m)", 96.0),
+                            num("1. kol km", 96.0),
+                            num("2. kol km", 96.0),
+                        ],
                         returns
                             .iter()
                             .map(|q| {
@@ -727,39 +953,70 @@ impl JunctionWindowApp for App {
                     list = list.push(label::caption("Katlı kavşağın dönüş yayı yok.").style(muted));
                 }
                 if let Some(o) = &w.overlap {
-                    list = list.push(space::vertical().height(8)).push(label::caption("Koridor örtüşmesi").style(muted));
+                    list = list
+                        .push(space::vertical().height(8))
+                        .push(label::caption("Koridor örtüşmesi").style(muted));
                     match o {
                         Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
                         Ok((o, warnings)) => {
-                            let line = |a: &str, b: String| row![label::caption(a.to_owned()).width(170), label::caption(b)].spacing(6);
+                            let line = |a: &str, b: String| {
+                                row![label::caption(a.to_owned()).width(170), label::caption(b)]
+                                    .spacing(6)
+                            };
                             list = list
-                                .push(line("Örtüşen alan", format!("{:.1} m² ({} hücre)", o.area, o.cells)))
+                                .push(line(
+                                    "Örtüşen alan",
+                                    format!("{:.1} m² ({} hücre)", o.area, o.cells),
+                                ))
                                 .push(line("İki kez sayılan yarma", format!("{:.1} m³", o.cut)))
                                 .push(line("İki kez sayılan dolgu", format!("{:.1} m³", o.fill)));
                             if let (Some(mean), Some(l)) = (o.mean_difference, &o.largest) {
-                                list = list.push(line("Yüzeylerin farkı", format!("ortalama {mean:.3} m, en çok {:+.3} m", l.difference)));
+                                list = list.push(line(
+                                    "Yüzeylerin farkı",
+                                    format!("ortalama {mean:.3} m, en çok {:+.3} m", l.difference),
+                                ));
                             }
                             if let (Some(p), Some(q)) = (o.primary_range, o.secondary_range) {
                                 list = list
-                                    .push(line("Sahibin km aralığı", format!("{:.2} – {:.2}", p[0], p[1])))
-                                    .push(line("Talinin kırpılacak km'si", format!("{:.2} – {:.2}", q[0], q[1])));
+                                    .push(line(
+                                        "Sahibin km aralığı",
+                                        format!("{:.2} – {:.2}", p[0], p[1]),
+                                    ))
+                                    .push(line(
+                                        "Talinin kırpılacak km'si",
+                                        format!("{:.2} – {:.2}", q[0], q[1]),
+                                    ));
                             }
                             if !warnings.is_empty() {
-                                let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                                let all = warnings
+                                    .iter()
+                                    .map(|x| x.message.as_str())
+                                    .collect::<Vec<_>>()
+                                    .join(" ");
                                 list = list.push(label::caption(all).style(warn).width(Fill));
                             }
                         }
                     }
                 }
                 if let Some(t) = w.tie.as_ref().filter(|_| !w.overlap_mode) {
-                    list = list.push(space::vertical().height(8)).push(label::caption("Boykesit bağı").style(muted));
+                    list = list
+                        .push(space::vertical().height(8))
+                        .push(label::caption("Boykesit bağı").style(muted));
                     match t {
                         Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
                         Ok((t, warnings)) => {
                             use crate::road_dialog::{col, grouped, num};
-                            let signed = |v: f64, d: usize| format!("{}{}", if v > 0.0 { "+" } else { "" }, grouped(v, d));
+                            let signed = |v: f64, d: usize| {
+                                format!("{}{}", if v > 0.0 { "+" } else { "" }, grouped(v, d))
+                            };
                             list = list.push(crate::road_dialog::table(
-                                vec![col("PVI", 84.0), num("Tali km", 84.0), num("Kot (m)", 84.0), num("Fark (m)", 84.0), num("Eğim farkı", 96.0)],
+                                vec![
+                                    col("PVI", 84.0),
+                                    num("Tali km", 84.0),
+                                    num("Kot (m)", 84.0),
+                                    num("Fark (m)", 84.0),
+                                    num("Eğim farkı", 96.0),
+                                ],
                                 t.ties
                                     .iter()
                                     .zip(&t.changes)
@@ -775,77 +1032,131 @@ impl JunctionWindowApp for App {
                                     .collect(),
                                 "Bağlanan PVI yok",
                             ));
-                            let grades = t.grades.iter().map(|g| format!("%{:+.2}", 100.0 * g)).collect::<Vec<_>>().join(" → ");
-                            let gone = if t.removed.is_empty() { "kalkan PVI yok".to_owned() } else { format!("kalkan: {}", t.removed.join(", ")) };
-                            list = list.push(label::caption(format!("Eğimler {grades} · {gone}")).style(muted));
+                            let grades = t
+                                .grades
+                                .iter()
+                                .map(|g| format!("%{:+.2}", 100.0 * g))
+                                .collect::<Vec<_>>()
+                                .join(" → ");
+                            let gone = if t.removed.is_empty() {
+                                "kalkan PVI yok".to_owned()
+                            } else {
+                                format!("kalkan: {}", t.removed.join(", "))
+                            };
+                            list = list.push(
+                                label::caption(format!("Eğimler {grades} · {gone}")).style(muted),
+                            );
                             if !warnings.is_empty() {
-                                let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                                let all = warnings
+                                    .iter()
+                                    .map(|x| x.message.as_str())
+                                    .collect::<Vec<_>>()
+                                    .join(" ");
                                 list = list.push(label::caption(all).style(warn).width(Fill));
                             }
                         }
                     }
                 }
                 if let Some(c) = w.clearance.as_ref().filter(|_| !w.overlap_mode) {
-                    list = list.push(space::vertical().height(8)).push(label::caption("Düşey açıklık").style(muted));
+                    list = list
+                        .push(space::vertical().height(8))
+                        .push(label::caption("Düşey açıklık").style(muted));
                     match c {
                         Err(why) => list = list.push(label::caption(why.clone()).style(danger)),
                         Ok((c, warnings)) => {
-                            let at = |t: &str, a: &kentos_commands::JunctionClearanceAt, short: bool| {
-                                let value = label::caption(format!("{:.3} m", a.clearance)).width(80);
-                                row![
-                                    label::caption(t.to_owned()).width(80),
-                                    if short { value.style(danger) } else { value },
-                                    label::caption(format!("üst km {:.2} ({:+.2})", a.upper_station, a.upper_offset)).width(140),
-                                    label::caption(format!("alt km {:.2} ({:+.2})", a.lower_station, a.lower_offset)),
-                                ]
-                                .spacing(6)
-                            };
-                            let upper = r.legs.get(c.upper as usize).map_or(String::new(), |l| l.alignment.clone());
+                            let at =
+                                |t: &str, a: &kentos_commands::JunctionClearanceAt, short: bool| {
+                                    let value =
+                                        label::caption(format!("{:.3} m", a.clearance)).width(80);
+                                    row![
+                                        label::caption(t.to_owned()).width(80),
+                                        if short { value.style(danger) } else { value },
+                                        label::caption(format!(
+                                            "üst km {:.2} ({:+.2})",
+                                            a.upper_station, a.upper_offset
+                                        ))
+                                        .width(140),
+                                        label::caption(format!(
+                                            "alt km {:.2} ({:+.2})",
+                                            a.lower_station, a.lower_offset
+                                        )),
+                                    ]
+                                    .spacing(6)
+                                };
+                            let upper = r
+                                .legs
+                                .get(c.upper as usize)
+                                .map_or(String::new(), |l| l.alignment.clone());
                             list = list
-                                .push(label::caption(format!("Üst yol {}. kol ({upper}) · {} örnek", c.upper + 1, c.samples)).style(muted))
+                                .push(
+                                    label::caption(format!(
+                                        "Üst yol {}. kol ({upper}) · {} örnek",
+                                        c.upper + 1,
+                                        c.samples
+                                    ))
+                                    .style(muted),
+                                )
                                 .push(at("En az", &c.least, c.short))
                                 .push(at("En çok", &c.largest, false))
                                 .push(at("Kesişimde", &c.crossing, false));
                             if !warnings.is_empty() {
-                                let all = warnings.iter().map(|x| x.message.as_str()).collect::<Vec<_>>().join(" ");
+                                let all = warnings
+                                    .iter()
+                                    .map(|x| x.message.as_str())
+                                    .collect::<Vec<_>>()
+                                    .join(" ");
                                 list = list.push(label::caption(all).style(warn).width(Fill));
                             }
                         }
                     }
                 }
                 body = body.push_grow(
-                    row![picture, container(scrollable(list).height(Fill)).width(typography::scaled(600.0)).padding([6, 8])]
-                        .spacing(12)
-                        .height(Fill),
+                    row![
+                        picture,
+                        container(scrollable(list).height(Fill))
+                            .width(typography::scaled(600.0))
+                            .padding([6, 8])
+                    ]
+                    .spacing(12)
+                    .height(Fill),
                     typography::scaled(220.0),
                 );
             }
             _ => {}
         }
-        let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let lids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let on_layer = Select::new(
             lnames.iter().map(|n| Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+            w.layer
+                .as_ref()
+                .and_then(|l| lids.iter().position(|id| id == l)),
             move |i| msg(Event::Layer(lids[i].clone())),
         )
         .placeholder("Katman");
         let saved = w.chosen.is_some();
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
-                space::horizontal().width(Fill),
-                label::caption("Katman").style(muted),
-                container(on_layer).width(150),
-                words::secondary(DRAW, (saved && at_grade).then(|| msg(Event::Draw))),
-                space::horizontal().width(24),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-                words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
+        let footer = row![
+            words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
+            space::horizontal().width(Fill),
+            label::caption("Katman").style(muted),
+            container(on_layer).width(150),
+            words::secondary(DRAW, (saved && at_grade).then(|| msg(Event::Draw))),
+            space::horizontal().width(24),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+            words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1080.0)
+            .modal(msg(Event::Close))
     }
 
     fn junction_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -895,15 +1206,30 @@ struct Crossing<'a> {
 impl canvas::Program<Message> for Crossing<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let r = self.report;
         let reach = r
             .returns
             .iter()
-            .flat_map(|q| [(q.on_a.x - r.x).hypot(q.on_a.y - r.y), (q.on_b.x - r.x).hypot(q.on_b.y - r.y)])
-            .fold(self.edges.iter().flatten().fold(10.0_f64, |a, b| a.max(*b)) * 3.0, f64::max)
+            .flat_map(|q| {
+                [
+                    (q.on_a.x - r.x).hypot(q.on_a.y - r.y),
+                    (q.on_b.x - r.x).hypot(q.on_b.y - r.y),
+                ]
+            })
+            .fold(
+                self.edges.iter().flatten().fold(10.0_f64, |a, b| a.max(*b)) * 3.0,
+                f64::max,
+            )
             * 1.2;
         let scale = (f64::from(bounds.width.min(bounds.height)) / 2.0 - 10.0) / reach;
         let at = |x: f64, y: f64| {
@@ -915,16 +1241,29 @@ impl canvas::Program<Message> for Crossing<'_> {
         for (leg, e) in r.legs.iter().zip(&self.edges) {
             let d = leg.direction.to_radians();
             let (t, n) = ([d.cos(), d.sin()], [d.sin(), -d.cos()]);
-            for (off, color, width) in [(0.0, tk.muted, 1.0), (e[1], tk.text, 1.4), (-e[0], tk.text, 1.4)] {
+            for (off, color, width) in [
+                (0.0, tk.muted, 1.0),
+                (e[1], tk.text, 1.4),
+                (-e[0], tk.text, 1.4),
+            ] {
                 let line = Path::line(
-                    at(r.x + n[0] * off - t[0] * reach, r.y + n[1] * off - t[1] * reach),
-                    at(r.x + n[0] * off + t[0] * reach, r.y + n[1] * off + t[1] * reach),
+                    at(
+                        r.x + n[0] * off - t[0] * reach,
+                        r.y + n[1] * off - t[1] * reach,
+                    ),
+                    at(
+                        r.x + n[0] * off + t[0] * reach,
+                        r.y + n[1] * off + t[1] * reach,
+                    ),
                 );
                 frame.stroke(&line, Stroke::default().with_width(width).with_color(color));
             }
         }
         for q in &r.returns {
-            let (a0, sweep) = ((q.on_a.y - q.cy).atan2(q.on_a.x - q.cx), q.sweep.to_radians());
+            let (a0, sweep) = (
+                (q.on_a.y - q.cy).atan2(q.on_a.x - q.cx),
+                q.sweep.to_radians(),
+            );
             let arc = Path::new(|p| {
                 let n = 24;
                 for k in 0..=n {
@@ -937,14 +1276,20 @@ impl canvas::Program<Message> for Crossing<'_> {
                     }
                 }
             });
-            frame.stroke(&arc, Stroke::default().with_width(2.2).with_color(tk.accent));
+            frame.stroke(
+                &arc,
+                Stroke::default().with_width(2.2).with_color(tk.accent),
+            );
         }
         frame.fill(&Path::circle(at(r.x, r.y), 3.0), tk.success);
         if let Some(c) = self.cleared {
             let least = if c.short { tk.danger } else { tk.accent };
             for (a, color) in [(&c.largest, tk.success), (&c.least, least)] {
                 let p = at(a.x, a.y);
-                frame.stroke(&Path::circle(p, 6.0), Stroke::default().with_width(2.0).with_color(color));
+                frame.stroke(
+                    &Path::circle(p, 6.0),
+                    Stroke::default().with_width(2.0).with_color(color),
+                );
                 frame.fill_text(canvas::Text {
                     content: format!("{:.2}", a.clearance),
                     position: Point::new(p.x + 8.0, p.y - 14.0),
@@ -956,7 +1301,10 @@ impl canvas::Program<Message> for Crossing<'_> {
         }
         if let Some(l) = self.overlapped.and_then(|o| o.largest.as_ref()) {
             let p = at(l.x, l.y);
-            frame.stroke(&Path::circle(p, 6.0), Stroke::default().with_width(2.0).with_color(tk.warning));
+            frame.stroke(
+                &Path::circle(p, 6.0),
+                Stroke::default().with_width(2.0).with_color(tk.warning),
+            );
             frame.fill_text(canvas::Text {
                 content: format!("{:+.2}", l.difference),
                 position: Point::new(p.x + 8.0, p.y - 14.0),

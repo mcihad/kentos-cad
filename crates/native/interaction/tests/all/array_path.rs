@@ -334,12 +334,19 @@ fn an_arrays_path_is_not_made_a_curve() {
     b.click(5.0, 0.0);
     assert!(b.type_text("İ"));
     b.confirm();
-    assert_eq!(b.doc.arrays().len(), 1, "an associative array along the path");
+    assert_eq!(
+        b.doc.arrays().len(),
+        1,
+        "an associative array along the path"
+    );
     let before = b.doc.get(path).cloned();
     b.start("curveEdit");
     b.click(5.0, 0.0);
     assert!(b.type_text("E"));
     let said = b.last_text().unwrap_or_default().to_owned();
-    assert!(said.starts_with("Bu çoklu çizgi 1 ilişkili dizinin yolu"), "{said}");
+    assert!(
+        said.starts_with("Bu çoklu çizgi 1 ilişkili dizinin yolu"),
+        "{said}"
+    );
     assert_eq!(b.doc.get(path).cloned(), before, "the path is as it was");
 }

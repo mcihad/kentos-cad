@@ -192,7 +192,10 @@ fn the_3d_view_opens_apart_until_the_user_chooses_otherwise() {
     let dir = crate::files_testing::scratch("ayri-pencereler-3b");
     let mut memory = Memory::open(&dir);
     assert!(memory.apart(Surface::Scene3d), "beside the plan at first");
-    assert!(!memory.apart(Surface::ProcessingTool), "a tool over the drawing at first");
+    assert!(
+        !memory.apart(Surface::ProcessingTool),
+        "a tool over the drawing at first"
+    );
     // Its window resized before any choice: the size is kept, the window still opens apart.
     memory.keep_size(Surface::Scene3d, Size::new(1300.0, 820.0));
     memory.write();
@@ -200,7 +203,10 @@ fn the_3d_view_opens_apart_until_the_user_chooses_otherwise() {
     assert!(again.apart(Surface::Scene3d));
     assert_eq!(again.size(Surface::Scene3d), Some(Size::new(1300.0, 820.0)));
     let written = std::fs::read_to_string(dir.join(super::memory::FILE_NAME)).expect("written");
-    assert!(!written.contains("ownWindow"), "no choice written: {written}");
+    assert!(
+        !written.contains("ownWindow"),
+        "no choice written: {written}"
+    );
     // Brought into the main window: so it stays, in the next run too.
     let mut memory = again;
     memory.set_apart(Surface::Scene3d, false);
@@ -223,7 +229,9 @@ fn every_surface_fulfils_the_contract_with_a_name_of_its_own() {
             "{s:?}: the smallest size is not larger than the first"
         );
         assert!(
-            !spec.what().is_empty() && !spec.apart_tip().is_empty() && !spec.return_tip().is_empty(),
+            !spec.what().is_empty()
+                && !spec.apart_tip().is_empty()
+                && !spec.return_tip().is_empty(),
             "{s:?}: its button's tips say what they do"
         );
     }

@@ -160,7 +160,9 @@ impl App {
     #[cfg(test)]
     pub(super) fn geojson_scope_counts(&self) -> [usize; 3] {
         match &self.exchange {
-            Some(Window::GeoJsonExport(s)) => Scope::ALL.map(|scope| self.export_objects(&s.sources, scope).len()),
+            Some(Window::GeoJsonExport(s)) => {
+                Scope::ALL.map(|scope| self.export_objects(&s.sources, scope).len())
+            }
             _ => [0; 3],
         }
     }
@@ -359,7 +361,9 @@ impl App {
                     _ => Vec::new(),
                 };
                 for (layer, why) in failed {
-                    self.warn(format!("“{layer}” katmanı “{name}” içine yazılmadı: kaynağı okunamadı ({why})."));
+                    self.warn(format!(
+                        "“{layer}” katmanı “{name}” içine yazılmadı: kaynağı okunamadı ({why})."
+                    ));
                 }
                 self.close_exchange();
             }
@@ -419,16 +423,27 @@ impl App {
         // One layer's objects: one line, not a table of one row (GIS-011).
         let layered = self.export_by_layer(&s.sources, s.scope);
         if let ([(id, list)], Some(doc)) = (layered.as_slice(), &self.document) {
-            let name = doc.model.layers().get(id).map_or("Katmansız".to_owned(), |l| l.name.clone());
+            let name = doc
+                .model
+                .layers()
+                .get(id)
+                .map_or("Katmansız".to_owned(), |l| l.name.clone());
             let system = if s.wgs84 && self.geojson_can_move() {
                 "WGS 84".to_owned()
             } else {
                 crate::crs::project_name(doc.settings())
             };
-            let from = if s.sources.is_source(id) { " · kaynaktan" } else { "" };
+            let from = if s.sources.is_source(id) {
+                " · kaynaktan"
+            } else {
+                ""
+            };
             body = body.push(words::field(
                 "Katman",
-                words::text_line(Line::Info, format!("{} nesne · {name}{from} · {system}", list.len())),
+                words::text_line(
+                    Line::Info,
+                    format!("{} nesne · {name}{from} · {system}", list.len()),
+                ),
                 None,
             ));
         } else {
@@ -487,7 +502,10 @@ impl App {
                     .into(),
                     match (s.sources.is_source(id), s.sources.filtered(id)) {
                         (true, Some((kept, of))) if s.scope == Scope::Visible => {
-                            format!("kentos.layer: “{}” · kaynaktan, süzgeçten {kept}/{of}", l.name)
+                            format!(
+                                "kentos.layer: “{}” · kaynaktan, süzgeçten {kept}/{of}",
+                                l.name
+                            )
                         }
                         (true, _) => format!("kentos.layer: “{}” · kaynaktan", l.name),
                         _ => format!("kentos.layer: “{}”", l.name),

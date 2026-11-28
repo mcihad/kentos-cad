@@ -85,7 +85,12 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
         Shape::PointCloud { .. } | Shape::Record {} => return None,
         // A slab's vertices in the window move as an area's (docs/adr/0722 §1); its edge's runs are the document's.
         Shape::Space { parts, space } if space.slab.is_some() => {
-            let moved = stretch_entity(&Entity::new(crate::geom::space::as_polygon(parts)), r, dx, dy)?;
+            let moved = stretch_entity(
+                &Entity::new(crate::geom::space::as_polygon(parts)),
+                r,
+                dx,
+                dy,
+            )?;
             let parts = crate::ops::areas::areas_of_entity(&moved.shape);
             (!parts.is_empty()).then(|| Shape::Space {
                 parts,
@@ -95,14 +100,18 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
         // It moves whole when its label is in the window (docs/adr/0342 §3).
         Shape::Space { parts, .. } => {
             let c = crate::geom::space::label_at(parts)?;
-            inside(c, r)
-                .then(|| crate::ops::transform::translate_entity(&Entity::new(geom.shape.clone()), dx, dy).shape)?
+            inside(c, r).then(|| {
+                crate::ops::transform::translate_entity(&Entity::new(geom.shape.clone()), dx, dy)
+                    .shape
+            })?
         }
         // It moves whole when its middle is in the window; the document puts it back on its wall (docs/adr/0341 §3).
         Shape::Opening { place, .. } => {
             let c = crate::geom::opening::centre(place)?;
-            inside(c, r)
-                .then(|| crate::ops::transform::translate_entity(&Entity::new(geom.shape.clone()), dx, dy).shape)?
+            inside(c, r).then(|| {
+                crate::ops::transform::translate_entity(&Entity::new(geom.shape.clone()), dx, dy)
+                    .shape
+            })?
         }
         // A grid's, stair's or ramp's points in the window move; a column moves whole when its reference point is
         // (docs/adr/0343 §2, 0725 §2).
@@ -135,7 +144,10 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
                 mark.at = Some(mv(a));
             }
             Shape::ViewMark {
-                points: points.iter().map(|p| if inside(*p, r) { mv(*p) } else { *p }).collect(),
+                points: points
+                    .iter()
+                    .map(|p| if inside(*p, r) { mv(*p) } else { *p })
+                    .collect(),
                 mark,
             }
         }
@@ -256,7 +268,9 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
         } => (any(pts) || arms.iter().flatten().any(|a| any(&a.pts))).then(|| Shape::Leader {
             arms: arms.as_ref().map(|list| {
                 list.iter()
-                    .map(|a| crate::geom::leader::Arm { pts: a.pts.iter().map(|&p| mv(p)).collect() })
+                    .map(|a| crate::geom::leader::Arm {
+                        pts: a.pts.iter().map(|&p| mv(p)).collect(),
+                    })
                     .collect()
             }),
             blocks: blocks.clone(),

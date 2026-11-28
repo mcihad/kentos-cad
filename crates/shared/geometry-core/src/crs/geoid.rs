@@ -206,7 +206,9 @@ pub fn read_gtx(bytes: &[u8]) -> Result<NodeGrid, GeoidError> {
         west -= 360.0;
     }
     let values = bytes[40..40 + count * 4]
-        .as_chunks::<4>().0.iter()
+        .as_chunks::<4>()
+        .0
+        .iter()
         .map(|b| f32::from_be_bytes([b[0], b[1], b[2], b[3]]))
         .collect();
     let mut grid = NodeGrid::new(

@@ -648,8 +648,7 @@ mod tests {
                 .settings
                 .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
-            app.grids.library =
-                Some(Library::at(crate::files_testing::scratch("izgara-resim")));
+            app.grids.library = Some(Library::at(crate::files_testing::scratch("izgara-resim")));
             let doc = app.document.as_mut().expect("a drawing");
             let mut settings = doc.settings().clone();
             settings.second_srid = Some(4326);

@@ -9,7 +9,8 @@
 
 use kentos_commands::{
     CommandResult, PolygonCreate, PolygonCreated, PolygonPlan, RectangleCorners, RectangleCreate,
-    RectangleFrame, RegularFrame, RegularPolygonCreate, RevcloudCreate, RevcloudFrame, SectorCreate, Vec2 as Wire,
+    RectangleFrame, RegularFrame, RegularPolygonCreate, RevcloudCreate, RevcloudFrame,
+    SectorCreate, Vec2 as Wire,
 };
 use kentos_geometry_core::geom::shapes::{
     closed_outline, cloud_arcs, cloud_of, rect_from_corners, rect_from_edge, rect_from_size,
@@ -214,9 +215,7 @@ fn regular_ring_in(input: &RegularPolygonCreate) -> Result<Vec<Vec2>, Stop> {
 }
 
 /// The rectangle's ring as the command writes it, or the command's refusal: the tools' preview.
-pub fn rectangle_ring(
-    input: &RectangleCreate,
-) -> Result<Ring, Box<kentos_commands::CommandError>> {
+pub fn rectangle_ring(input: &RectangleCreate) -> Result<Ring, Box<kentos_commands::CommandError>> {
     rectangle_ring_in(input).map_err(|stop| Box::new(stop.into_error()))
 }
 
@@ -350,10 +349,15 @@ fn sector_ring_in(input: &SectorCreate) -> Result<Ring, Stop> {
     length(input.a1, "Bitiş açısı", "a1")?;
     // The core's own bound for a radius (a nanometre), so a radius it would not draw is said as a radius.
     if input.r <= 1e-9 {
-        return Err(refuse(codes::INVALID_DISTANCE, "Yarıçap sıfırdan büyük olmalı.", "r"));
+        return Err(refuse(
+            codes::INVALID_DISTANCE,
+            "Yarıçap sıfırdan büyük olmalı.",
+            "r",
+        ));
     }
-    let path = kentos_geometry_core::tools::construct::sector(v(input.c), input.r, input.a0, input.a1)
-        .ok_or_else(|| refuse(codes::DEGENERATE_SHAPE, SECTOR_DEGENERATE, "a1"))?;
+    let path =
+        kentos_geometry_core::tools::construct::sector(v(input.c), input.r, input.a0, input.a1)
+            .ok_or_else(|| refuse(codes::DEGENERATE_SHAPE, SECTOR_DEGENERATE, "a1"))?;
     Ok((path.pts, path.bulges))
 }
 
@@ -397,7 +401,10 @@ pub fn plan_sector(cx: &ExecutionContext<'_>, input: &SectorCreate) -> CommandRe
 }
 
 /// Writes the slice, one undo step.
-pub fn execute_sector(cx: &mut ExecutionContext<'_>, input: SectorCreate) -> CommandResult<PolygonCreated> {
+pub fn execute_sector(
+    cx: &mut ExecutionContext<'_>,
+    input: SectorCreate,
+) -> CommandResult<PolygonCreated> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_SECTOR_CREATE,
@@ -412,8 +419,7 @@ pub fn execute_sector(cx: &mut ExecutionContext<'_>, input: SectorCreate) -> Com
 
 const CLOUD_RECT_DEGENERATE: &str = "Dikdörtgenin bir kenarı sıfır uzunlukta: iki köşe aynı doğu ya da kuzey çizgisinde. Başka bir karşı köşe verin.";
 const CLOUD_FLAT: &str = "Bulutun köşeleri bir doğru üzerinde: alanı yok. Başka köşeler verin.";
-const CLOUD_CROSSING: &str =
-    "Bulutun sınırı kendini kesiyor: kenarları birbirinin üstünden geçiyor. Köşeleri sınır boyunca sırayla verin.";
+const CLOUD_CROSSING: &str = "Bulutun sınırı kendini kesiyor: kenarları birbirinin üstünden geçiyor. Köşeleri sınır boyunca sırayla verin.";
 
 /// Whether two edges of the closed ring that are not neighbours cross (each one's ends strictly on either side of
 /// the other, by the exact orientation).
@@ -427,7 +433,12 @@ fn ring_crosses_itself(ring: &[Vec2]) -> bool {
     (0..n).any(|i| {
         (i + 2..n).filter(|&j| !(i == 0 && j == n - 1)).any(|j| {
             let ((a, b), (c, d)) = (edge(i), edge(j));
-            let (d1, d2, d3, d4) = (orient2d(a, b, c), orient2d(a, b, d), orient2d(c, d, a), orient2d(c, d, b));
+            let (d1, d2, d3, d4) = (
+                orient2d(a, b, c),
+                orient2d(a, b, d),
+                orient2d(c, d, a),
+                orient2d(c, d, b),
+            );
             d1 * d2 < 0.0 && d3 * d4 < 0.0
         })
     })
@@ -437,7 +448,10 @@ const CLOUD_OPEN: &str = "Nesne kapalı değil: bulut alanın, kapalı çoklu ç
 
 /// The ring a cloud goes round, counter-clockwise or not: the rectangle's, the corners (repeats dropped), the object's
 /// outer outline. `doc` is none for a preview, which has no object.
-fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) -> Result<Vec<Vec2>, Stop> {
+fn cloud_frame(
+    doc: Option<&kentos_domain::Document>,
+    input: &RevcloudCreate,
+) -> Result<Vec<Vec2>, Stop> {
     match &input.frame {
         RevcloudFrame::Rectangle { a, b } => {
             checks::point(*a, "İlk köşenin", "frame.a")?;
@@ -445,7 +459,11 @@ fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) ->
             length(input.arc, "Yay boyu", "arc")?;
             positive(input.arc, "Yay boyu sıfırdan büyük olmalı.", "arc")?;
             if (b.x - a.x).abs() <= 1e-9 || (b.y - a.y).abs() <= 1e-9 {
-                return Err(refuse(codes::DEGENERATE_SHAPE, CLOUD_RECT_DEGENERATE, "frame"));
+                return Err(refuse(
+                    codes::DEGENERATE_SHAPE,
+                    CLOUD_RECT_DEGENERATE,
+                    "frame",
+                ));
             }
             Ok(vec![v(*a), Vec2::new(b.x, a.y), v(*b), Vec2::new(a.x, b.y)])
         }
@@ -457,11 +475,16 @@ fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) ->
             positive(input.arc, "Yay boyu sıfırdan büyük olmalı.", "arc")?;
             let mut ring: Vec<Vec2> = Vec::with_capacity(pts.len());
             for p in pts.iter().copied().map(v) {
-                if ring.last().is_none_or(|q| kentos_geometry_core::geometry::dist(*q, p) > 1e-9) {
+                if ring
+                    .last()
+                    .is_none_or(|q| kentos_geometry_core::geometry::dist(*q, p) > 1e-9)
+                {
                     ring.push(p);
                 }
             }
-            while ring.len() > 1 && kentos_geometry_core::geometry::dist(ring[0], ring[ring.len() - 1]) <= 1e-9 {
+            while ring.len() > 1
+                && kentos_geometry_core::geometry::dist(ring[0], ring[ring.len() - 1]) <= 1e-9
+            {
                 ring.pop();
             }
             if ring.len() < 3 {
@@ -481,7 +504,11 @@ fn cloud_frame(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) ->
             length(input.arc, "Yay boyu", "arc")?;
             positive(input.arc, "Yay boyu sıfırdan büyük olmalı.", "arc")?;
             let Some(doc) = doc else {
-                return Err(refuse(codes::ENTITY_NOT_FOUND, "Önizlemede nesne yok.", "frame.uid"));
+                return Err(refuse(
+                    codes::ENTITY_NOT_FOUND,
+                    "Önizlemede nesne yok.",
+                    "frame.uid",
+                ));
             };
             let entity = kentos_domain::Uuid::parse_str(uid)
                 .ok()
@@ -544,14 +571,21 @@ fn even_ring(dense: &[Vec2], arc: f64) -> Vec<Vec2> {
         }
         let (a, b) = (dense[i % n], dense[(i + 1) % n]);
         let len = side(i % n);
-        let t = if len > 0.0 { (want - walked) / len } else { 0.0 };
+        let t = if len > 0.0 {
+            (want - walked) / len
+        } else {
+            0.0
+        };
         out.push(Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t));
     }
     out
 }
 
 /// The cloud as the command writes it, or why not.
-pub(crate) fn cloud_ring_in(doc: Option<&kentos_domain::Document>, input: &RevcloudCreate) -> Result<Ring, Stop> {
+pub(crate) fn cloud_ring_in(
+    doc: Option<&kentos_domain::Document>,
+    input: &RevcloudCreate,
+) -> Result<Ring, Stop> {
     let ring = cloud_frame(doc, input)?;
     if cloud_arcs(&ring, input.arc) > kentos_commands::MOST_CLOUD_ARCS as f64 {
         return Err(refuse(
@@ -601,7 +635,10 @@ pub fn validate_revcloud(cx: &ExecutionContext<'_>, input: &RevcloudCreate) -> C
 }
 
 /// The cloud as it would be written.
-pub fn plan_revcloud(cx: &ExecutionContext<'_>, input: &RevcloudCreate) -> CommandResult<PolygonPlan> {
+pub fn plan_revcloud(
+    cx: &ExecutionContext<'_>,
+    input: &RevcloudCreate,
+) -> CommandResult<PolygonPlan> {
     match cloud_ring_in(Some(&*cx.doc), input) {
         Ok(ring) => polygon::plan(cx, &revcloud_polygon(input, ring)),
         Err(stop) => stop.into(),
@@ -609,7 +646,10 @@ pub fn plan_revcloud(cx: &ExecutionContext<'_>, input: &RevcloudCreate) -> Comma
 }
 
 /// Writes the cloud, one undo step.
-pub fn execute_revcloud(cx: &mut ExecutionContext<'_>, input: RevcloudCreate) -> CommandResult<PolygonCreated> {
+pub fn execute_revcloud(
+    cx: &mut ExecutionContext<'_>,
+    input: RevcloudCreate,
+) -> CommandResult<PolygonCreated> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_REVCLOUD_CREATE,

@@ -103,7 +103,10 @@ impl Document {
                 let holders: Vec<Slot> = self
                     .store
                     .on_layer(&r.parent)
-                    .filter(|p| key.code_of(p.uid, &p.entity).is_some_and(|c| named.contains(&c)))
+                    .filter(|p| {
+                        key.code_of(p.uid, &p.entity)
+                            .is_some_and(|c| named.contains(&c))
+                    })
                     .map(|p| p.slot())
                     .collect();
                 if !holders.is_empty() {

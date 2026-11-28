@@ -113,7 +113,10 @@ fn icon_names() -> HashMap<String, String> {
     let mut names = HashMap::new();
     for (file, key) in [
         (include_str!("../../../../docs/inventory/web.json"), "icons"),
-        (include_str!("../../../../catalog/v1/additions.json"), "icons"),
+        (
+            include_str!("../../../../catalog/v1/additions.json"),
+            "icons",
+        ),
     ] {
         let doc: serde_json::Value = serde_json::from_str(file).expect("an icon set");
         if let Some(icons) = doc.get(key).and_then(|v| v.as_object()) {

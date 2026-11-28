@@ -319,7 +319,10 @@ pub fn stakeout(input: &StakeoutInput) -> Result<Vec<Stake>, String> {
             };
             let factor = match &input.grid {
                 Some(g) if d > 0.0 => {
-                    let line = Grid { system: g.system.clone(), height: own.unwrap_or(g.height) };
+                    let line = Grid {
+                        system: g.system.clone(),
+                        height: own.unwrap_or(g.height),
+                    };
                     Some((grid_factor(&line, input.station, p)?, line.height))
                 }
                 _ => None,

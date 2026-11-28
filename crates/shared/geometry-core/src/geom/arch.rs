@@ -189,7 +189,8 @@ impl ColumnSpec {
 
 impl crate::api::json::Flat for ColumnSpec {
     const NAMES: &'static [&'static str] = &[
-        "shape", "width", "depth", "legs", "rotation", "anchor", "fill", "tag", "place", "material", "arch",
+        "shape", "width", "depth", "legs", "rotation", "anchor", "fill", "tag", "place",
+        "material", "arch",
     ];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
@@ -428,7 +429,8 @@ pub struct RampSpec {
 }
 
 impl crate::api::json::Flat for RampSpec {
-    const NAMES: &'static [&'static str] = &["width", "rise", "slope", "base", "landing", "railings"];
+    const NAMES: &'static [&'static str] =
+        &["width", "rise", "slope", "base", "landing", "railings"];
 
     fn read_flat(v: &Json) -> Result<Self, String> {
         Ok(RampSpec {
@@ -624,7 +626,11 @@ fn arc_polyline(a: Vec2, b: Vec2, bulge: f64) -> Shape {
 
 fn unit(v: Vec2) -> Vec2 {
     let l = js_hypot(v.x, v.y);
-    if l == 0.0 { v } else { Vec2::new(v.x / l, v.y / l) }
+    if l == 0.0 {
+        v
+    } else {
+        Vec2::new(v.x / l, v.y / l)
+    }
 }
 
 fn turned(v: Vec2, a: f64) -> Vec2 {
@@ -693,7 +699,12 @@ pub fn grid_end_segments(pts: &[Vec2], bulges: Option<&[f64]>, l: f64) -> Option
 
 /// A grid's pieces at 1:`scale`: its path (dash-dot), or a gapped grid's end segments, and a bubble and its label at
 /// each end it has one.
-pub fn grid_pieces(pts: &[Vec2], bulges: Option<&[f64]>, spec: &GridSpec, scale: f64) -> Vec<Piece> {
+pub fn grid_pieces(
+    pts: &[Vec2],
+    bulges: Option<&[f64]>,
+    spec: &GridSpec,
+    scale: f64,
+) -> Vec<Piece> {
     let mut out = Vec::new();
     let path = match bulges.filter(|b| b.iter().any(|x| *x != 0.0)) {
         Some(b) => Shape::Polyline {
@@ -707,7 +718,10 @@ pub fn grid_pieces(pts: &[Vec2], bulges: Option<&[f64]>, spec: &GridSpec, scale:
         None if pts.len() == 2 => line(pts[0], pts[1]),
         None => return out,
     };
-    let lines = match spec.ends.and_then(|e| grid_end_segments(pts, bulges, e * scale / 1000.0)) {
+    let lines = match spec
+        .ends
+        .and_then(|e| grid_end_segments(pts, bulges, e * scale / 1000.0))
+    {
         Some(ends) => ends.to_vec(),
         None => vec![path],
     };
@@ -723,7 +737,12 @@ pub fn grid_pieces(pts: &[Vec2], bulges: Option<&[f64]>, spec: &GridSpec, scale:
     let mut bubble = |end: Vec2, t: Vec2| {
         let c = Vec2::new(end.x + t.x * r, end.y + t.y * r);
         out.push(piece(Shape::Circle { c, r }));
-        out.push(piece(text(c, spec.label.clone(), r, TextAlign::MiddleCenter)));
+        out.push(piece(text(
+            c,
+            spec.label.clone(),
+            r,
+            TextAlign::MiddleCenter,
+        )));
     };
     if spec.bubbles.at_start() {
         bubble(pts[0], back);
@@ -783,7 +802,14 @@ pub fn column_corners(at: Vec2, spec: &ColumnSpec) -> Vec<Vec2> {
         Some([a, b]) => on_column(
             at,
             spec,
-            &[(-w, -d), (w, -d), (w, -d + a), (-w + b, -d + a), (-w + b, d), (-w, d)],
+            &[
+                (-w, -d),
+                (w, -d),
+                (w, -d + a),
+                (-w + b, -d + a),
+                (-w + b, d),
+                (-w, d),
+            ],
         ),
         None => on_column(at, spec, &[(-w, -d), (w, -d), (w, d), (-w, d)]),
     }
@@ -800,7 +826,9 @@ pub fn column_area(at: Vec2, spec: &ColumnSpec) -> Option<crate::geom::arrangeme
         .all(|v| v.is_finite())
         || spec.width <= 0.0
         || depth <= 0.0
-        || spec.legs.is_some_and(|[a, b]| !(a > 0.0 && a < depth && b > 0.0 && b < spec.width))
+        || spec
+            .legs
+            .is_some_and(|[a, b]| !(a > 0.0 && a < depth && b > 0.0 && b < spec.width))
     {
         return None;
     }
@@ -812,15 +840,27 @@ pub fn column_area(at: Vec2, spec: &ColumnSpec) -> Option<crate::geom::arrangeme
             bulges: Some(vec![1.0, 1.0]),
         }
     } else {
-        Ring { pts: column_corners(at, spec), bulges: None }
+        Ring {
+            pts: column_corners(at, spec),
+            bulges: None,
+        }
     };
-    if outer.pts.iter().any(|p| !p.x.is_finite() || !p.y.is_finite())
-        || outer.pts.iter().zip(outer.pts.iter().cycle().skip(1))
-            .any(|(a,b)| a == b)
+    if outer
+        .pts
+        .iter()
+        .any(|p| !p.x.is_finite() || !p.y.is_finite())
+        || outer
+            .pts
+            .iter()
+            .zip(outer.pts.iter().cycle().skip(1))
+            .any(|(a, b)| a == b)
     {
         return None;
     }
-    Some(Area { outer, holes: Vec::new() })
+    Some(Area {
+        outer,
+        holes: Vec::new(),
+    })
 }
 
 /// A round column's ring for its fill: 64 points on its circle.
@@ -918,13 +958,32 @@ fn column_pieces_at(
     let joined_look = joined.and_then(|(j, detail)| {
         use crate::geom::wall::Detail;
         if detail == Detail::Schematic {
-            j.fill.as_ref().map(|c| (HatchPattern::user("solid", 0.0, 1.0), Some(c.clone()), false))
+            j.fill.as_ref().map(|c| {
+                (
+                    HatchPattern::user("solid", 0.0, 1.0),
+                    Some(c.clone()),
+                    false,
+                )
+            })
         } else {
             let (fill, least, turn) = j.hatch.as_ref()?;
             (detail >= *least)
-                .then(|| crate::geom::wall::component_hatch(&fill.pattern, fill.scale, turn + fill.angle, scale))
+                .then(|| {
+                    crate::geom::wall::component_hatch(
+                        &fill.pattern,
+                        fill.scale,
+                        turn + fill.angle,
+                        scale,
+                    )
+                })
                 .flatten()
-                .map(|p| (p, fill.color.clone(), !fill.pattern.eq_ignore_ascii_case("solid")))
+                .map(|p| {
+                    (
+                        p,
+                        fill.color.clone(),
+                        !fill.pattern.eq_ignore_ascii_case("solid"),
+                    )
+                })
         }
     });
     // TS 5319's SN46 at 1:20 is reinforced concrete's: a column of another material is not hatched as concrete.
@@ -988,7 +1047,10 @@ fn column_pieces_at(
             Vec2::new(centre.x + r, centre.y + r)
         } else {
             let (w, d) = (spec.width / 2.0, spec.depth.unwrap_or(spec.width) / 2.0);
-            Vec2::new(centre.x + crate::jsmath::js_max(w, d), centre.y + crate::jsmath::js_max(w, d))
+            Vec2::new(
+                centre.x + crate::jsmath::js_max(w, d),
+                centre.y + crate::jsmath::js_max(w, d),
+            )
         };
         let p = Vec2::new(corner.x + h * 0.4, corner.y + h * 0.4);
         out.push(piece(text(p, words.join("\n"), h, TextAlign::BottomLeft)));
@@ -1114,7 +1176,9 @@ pub fn stair_landings(walk: &Walk, spec: &StairSpec) -> Vec<(f64, f64)> {
     }
     for (a, b) in walk.landings(spec.landing()) {
         match out.last_mut() {
-            Some(last) if a - last.1 < spec.tread - EPS => last.1 = crate::jsmath::js_max(last.1, b),
+            Some(last) if a - last.1 < spec.tread - EPS => {
+                last.1 = crate::jsmath::js_max(last.1, b)
+            }
             _ => out.push((a, b)),
         }
     }
@@ -1209,7 +1273,11 @@ fn arc_railings(walk: &Walk, spec: &StairSpec, cut: Option<(f64, f64)>) -> Vec<(
             Vec2::new(p.x + n.x * off * k, p.y + n.y * off * k)
         };
         let arc = |s0: f64, s1: f64| {
-            arc_polyline(at(s0), at(s1), crate::geom::bulge::bulge_of_sweep(turn * (s1 - s0) / a.r))
+            arc_polyline(
+                at(s0),
+                at(s1),
+                crate::geom::bulge::bulge_of_sweep(turn * (s1 - s0) / a.r),
+            )
         };
         match cut.map(|(l, r)| if on_left { l } else { r }) {
             Some(c) if c > EPS && c < total - EPS => {
@@ -1240,7 +1308,13 @@ pub fn railing_line(pts: &[Vec2], half: f64, left: bool) -> Vec<Vec2> {
 
 /// A railing's line cut where its walking line is `s` along: the part before and the part after; a turn at `s` keeps
 /// its mitred corner.
-fn railing_split(walk: &Walk, line: &[Vec2], half: f64, left: bool, s: f64) -> (Vec<Vec2>, Vec<Vec2>) {
+fn railing_split(
+    walk: &Walk,
+    line: &[Vec2],
+    half: f64,
+    left: bool,
+    s: f64,
+) -> (Vec<Vec2>, Vec<Vec2>) {
     if let Some(k) = walk.at.iter().position(|a| (a - s).abs() <= EPS) {
         return (line[..=k].to_vec(), line[k..].to_vec());
     }
@@ -1501,7 +1575,10 @@ fn point_on(line: &[Vec2], u: f64) -> Vec2 {
         let l = js_hypot(w[1].x - w[0].x, w[1].y - w[0].y);
         if left_over <= l || l <= EPS {
             let t = if l <= EPS { 0.0 } else { left_over / l };
-            return Vec2::new(w[0].x + (w[1].x - w[0].x) * t, w[0].y + (w[1].y - w[0].y) * t);
+            return Vec2::new(
+                w[0].x + (w[1].x - w[0].x) * t,
+                w[0].y + (w[1].y - w[0].y) * t,
+            );
         }
         left_over -= l;
     }
@@ -1685,13 +1762,17 @@ pub fn winder_treads(pts: &[Vec2], spec: &StairSpec) -> Vec<(usize, f64, f64)> {
 pub fn winder_problem(pts: &[Vec2], spec: &StairSpec) -> Option<String> {
     let w = spec.winders?;
     if spec.bulge != 0.0 {
-        return Some("Döner merdivende balansman olmaz: basamakları zaten yay boyunca dengeli.".into());
+        return Some(
+            "Döner merdivende balansman olmaz: basamakları zaten yay boyunca dengeli.".into(),
+        );
     }
     if pts.len() < 3 {
         return Some("Balansman merdivenin dönüşünde olur; düz merdivenin dönüşü yok.".into());
     }
     if w < 1.0 || w.fract() != 0.0 {
-        return Some("Balansman basamağı dönüşün iki yanında 1 ya da daha çok tam basamaktır.".into());
+        return Some(
+            "Balansman basamağı dönüşün iki yanında 1 ya da daha çok tam basamaktır.".into(),
+        );
     }
     let walk = Walk::of(pts);
     let turns = winder_turns(&walk, spec);
@@ -1750,7 +1831,11 @@ pub fn riser_stations(walk: &Walk, spec: &StairSpec) -> (Vec<f64>, u32) {
     let total = walk.length();
     let mut out = Vec::new();
     let mut s = 0.0;
-    let risers = if spec.risers > 0.0 { spec.risers as u32 } else { 0 };
+    let risers = if spec.risers > 0.0 {
+        spec.risers as u32
+    } else {
+        0
+    };
     let mut missing = 0;
     for _ in 0..risers {
         if let Some((_, b)) = landings.iter().find(|(a, b)| s > *a + EPS && s < *b - EPS) {
@@ -1947,7 +2032,8 @@ pub fn stair_measure(pts: &[Vec2], spec: &StairSpec) -> StairMeasure {
             let off = crate::jsmath::js_max(half - RAILING_INSET, 0.0);
             let side = |k: f64| a.sweep.abs() * (a.r - turn * k * off);
             let railing_length = spec.railings.map_or(0.0, |r| {
-                (if r.left() { side(1.0) } else { 0.0 }) + (if r.right() { side(-1.0) } else { 0.0 })
+                (if r.left() { side(1.0) } else { 0.0 })
+                    + (if r.right() { side(-1.0) } else { 0.0 })
             });
             StairMeasure {
                 length: walk.length(),
@@ -1969,7 +2055,11 @@ pub fn stair_measure(pts: &[Vec2], spec: &StairSpec) -> StairMeasure {
                 .sum();
             let railing_length = stair_railings(pts, spec)
                 .iter()
-                .map(|(line, _)| line.windows(2).map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y)).sum::<f64>())
+                .map(|(line, _)| {
+                    line.windows(2)
+                        .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+                        .sum::<f64>()
+                })
                 .sum();
             StairMeasure {
                 length: walk.length(),
@@ -2089,7 +2179,12 @@ fn stair_pieces_at(pts: &[Vec2], spec: &StairSpec, scale: f64, level: Level) -> 
             let (p, d) = walk.point(mid);
             let n = left(d);
             let at = Vec2::new(p.x + n.x * half / 2.0, p.y + n.y * half / 2.0);
-            out.push(piece(text(at, (i + 1).to_string(), h, TextAlign::MiddleCenter)));
+            out.push(piece(text(
+                at,
+                (i + 1).to_string(),
+                h,
+                TextAlign::MiddleCenter,
+            )));
         }
     }
     out
@@ -2130,7 +2225,10 @@ pub fn ramp_runs(walk: &Walk, spec: &RampSpec) -> Vec<(f64, f64)> {
     let length = walk.length();
     let mut out = Vec::new();
     let mut start = 0.0;
-    for (a, b) in ramp_landings(walk, spec).into_iter().chain(std::iter::once((length, length))) {
+    for (a, b) in ramp_landings(walk, spec)
+        .into_iter()
+        .chain(std::iter::once((length, length)))
+    {
         if a - start > EPS {
             out.push((start, a));
         }
@@ -2144,7 +2242,10 @@ pub fn turn_points(pts: &[Vec2]) -> Vec<usize> {
     (1..pts.len().saturating_sub(1))
         .filter(|&k| {
             let (a, b, c) = (pts[k - 1], pts[k], pts[k + 1]);
-            let (u, v) = (unit(Vec2::new(b.x - a.x, b.y - a.y)), unit(Vec2::new(c.x - b.x, c.y - b.y)));
+            let (u, v) = (
+                unit(Vec2::new(b.x - a.x, b.y - a.y)),
+                unit(Vec2::new(c.x - b.x, c.y - b.y)),
+            );
             (u.x * v.y - u.y * v.x).abs() > 1e-9 || u.x * v.x + u.y * v.y < 0.0
         })
         .collect()
@@ -2178,7 +2279,11 @@ pub fn ramp_measure(pts: &[Vec2], spec: &RampSpec) -> RampMeasure {
         .sum();
     let railing_length = ramp_railings(pts, spec)
         .iter()
-        .map(|(line, _)| line.windows(2).map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y)).sum::<f64>())
+        .map(|(line, _)| {
+            line.windows(2)
+                .map(|w| js_hypot(w[1].x - w[0].x, w[1].y - w[0].y))
+                .sum::<f64>()
+        })
         .sum();
     RampMeasure {
         length: walk.length(),
@@ -2209,7 +2314,11 @@ pub fn ramp_with_landings(pts: &[Vec2], spec: &RampSpec, max_run: f64, fit: bool
         let lands = ramp_landings(&walk, spec);
         let mut start = 0.0;
         let mut cut = None;
-        for (a, b) in lands.iter().copied().chain(std::iter::once((length, length))) {
+        for (a, b) in lands
+            .iter()
+            .copied()
+            .chain(std::iter::once((length, length)))
+        {
             if a - start > max_run + EPS && start + max_run + half < a - EPS {
                 cut = Some(start + max_run + half);
                 break;
@@ -2218,7 +2327,11 @@ pub fn ramp_with_landings(pts: &[Vec2], spec: &RampSpec, max_run: f64, fit: bool
         }
         let Some(at) = cut else { break };
         let (p, _) = walk.point(at);
-        let k = walk.at.iter().position(|&c| c > at).unwrap_or(pts.len() - 1);
+        let k = walk
+            .at
+            .iter()
+            .position(|&c| c > at)
+            .unwrap_or(pts.len() - 1);
         pts.insert(k.max(1), p);
     }
     pts
@@ -2411,17 +2524,19 @@ pub fn ramp_checks(pts: &[Vec2], spec: &RampSpec) -> Vec<Check> {
 /// path, a column's outline, a stair's or ramp's band; none for another shape.
 pub fn outline(shape: &Shape) -> Option<Shape> {
     Some(match shape {
-        Shape::Grid { pts, bulges, .. } => match bulges.as_ref().filter(|b| b.iter().any(|x| *x != 0.0)) {
-            Some(b) => Shape::Polyline {
-                pts: pts.clone(),
-                bulges: Some(b.clone()),
-                holes: None,
-                parts: None,
-                closed: false,
-                widths: None,
-            },
-            None => line(*pts.first()?, *pts.get(1)?),
-        },
+        Shape::Grid { pts, bulges, .. } => {
+            match bulges.as_ref().filter(|b| b.iter().any(|x| *x != 0.0)) {
+                Some(b) => Shape::Polyline {
+                    pts: pts.clone(),
+                    bulges: Some(b.clone()),
+                    holes: None,
+                    parts: None,
+                    closed: false,
+                    widths: None,
+                },
+                None => line(*pts.first()?, *pts.get(1)?),
+            }
+        }
         Shape::Column { at, column } => {
             if column.round {
                 Shape::Circle {
@@ -2449,7 +2564,11 @@ pub fn outline(shape: &Shape) -> Option<Shape> {
         // A view mark's points: its bubbles are sized on paper (docs/adr/0345 §1); a detail's circle is in the world.
         Shape::ViewMark { points, mark } => match (mark.form, mark.radius, points.first()) {
             (crate::geom::viewmark::Form::Detail, Some(r), Some(&c)) => Shape::Circle { c, r },
-            (_, _, Some(&p)) if points.len() == 1 => Shape::Point { p, z: None, parts: None },
+            (_, _, Some(&p)) if points.len() == 1 => Shape::Point {
+                p,
+                z: None,
+                parts: None,
+            },
             _ => Shape::Polyline {
                 pts: points.clone(),
                 bulges: None,
@@ -2494,7 +2613,9 @@ pub fn pieces(shape: &Shape, scale: f64) -> Vec<Piece> {
         Shape::Ramp { pts, ramp } => ramp_pieces(pts, ramp, scale),
         Shape::Beam { pts, beam } => crate::geom::beam::pieces_at(pts, beam, scale, Level::Whole),
         Shape::Roof { pts, roof } => crate::geom::roof::pieces_at(pts, roof, scale, Level::Whole),
-        Shape::Railing { pts, railing } => crate::geom::railing::pieces_at(pts, railing, Level::Whole),
+        Shape::Railing { pts, railing } => {
+            crate::geom::railing::pieces_at(pts, railing, Level::Whole)
+        }
         Shape::Tag { at, tag } => crate::geom::tag::pieces(*at, tag, scale),
         Shape::ViewMark { points, mark } => crate::geom::viewmark::pieces(points, mark, scale),
         _ => Vec::new(),
@@ -2551,7 +2672,9 @@ pub fn grid_edge(pts: &[Vec2], bulges: Option<&[f64]>) -> Option<crate::geom::in
     if pts.len() != 2 {
         return None;
     }
-    crate::geom::bulge::bulge_path_edges(pts, bulges, false).into_iter().next()
+    crate::geom::bulge::bulge_path_edges(pts, bulges, false)
+        .into_iter()
+        .next()
 }
 
 /// Where two grids cross with their lines unbounded and their arcs as whole circles, the crossing nearest `near`
@@ -2584,7 +2707,10 @@ pub fn grid_cross(
 }
 
 /// Where two grids cross within both of them, in order along the first (Aks kesişimleri).
-pub fn grid_crossings(a: &crate::geom::intersect::Edge, b: &crate::geom::intersect::Edge) -> Vec<Vec2> {
+pub fn grid_crossings(
+    a: &crate::geom::intersect::Edge,
+    b: &crate::geom::intersect::Edge,
+) -> Vec<Vec2> {
     let mut hits = crate::geom::intersect::intersect_edges(a, b);
     hits.sort_by(|h, k| h.t.total_cmp(&k.t));
     hits.into_iter().map(|h| h.p).collect()

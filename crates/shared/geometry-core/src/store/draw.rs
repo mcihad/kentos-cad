@@ -232,12 +232,18 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
             None => out.push(NONE),
         },
         // Its outline until the store expands it into its pieces (docs/adr/0343).
-        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Beam { .. } | Shape::Roof { .. } | Shape::Railing { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
-            match crate::geom::arch::outline(s) {
-                Some(o) => drawn_record(&o, oriented, clip, refs, out),
-                None => out.push(NONE),
-            }
-        }
+        Shape::Grid { .. }
+        | Shape::Column { .. }
+        | Shape::Stair { .. }
+        | Shape::Ramp { .. }
+        | Shape::Beam { .. }
+        | Shape::Roof { .. }
+        | Shape::Railing { .. }
+        | Shape::Tag { .. }
+        | Shape::ViewMark { .. } => match crate::geom::arch::outline(s) {
+            Some(o) => drawn_record(&o, oriented, clip, refs, out),
+            None => out.push(NONE),
+        },
         // Its path until the store expands it into its pieces (docs/adr/0339).
         Shape::Wall { pts, bulges, wall } => drawn_record(
             &crate::geom::wall::path_shape(pts, bulges.as_deref(), wall.closed),
@@ -317,7 +323,9 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
         Shape::Leader { pts, .. } => match leader::layout_of(s) {
             Some(l) => {
                 let arms = leader::arm_layouts(s);
-                let lines = 1 + l.head.lines.len() + arms.iter().map(|(_, h)| 1 + h.lines.len()).sum::<usize>();
+                let lines = 1
+                    + l.head.lines.len()
+                    + arms.iter().map(|(_, h)| 1 + h.lines.len()).sum::<usize>();
                 out.extend([MIXED, lines as f64]);
                 path(out, false, &leader::drawn_path(pts, &l));
                 for line in &l.head.lines {
@@ -329,9 +337,15 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
                         path(out, line.closed, &line.pts);
                     }
                 }
-                let fills = l.head.fills.len() + arms.iter().map(|(_, h)| h.fills.len()).sum::<usize>();
+                let fills =
+                    l.head.fills.len() + arms.iter().map(|(_, h)| h.fills.len()).sum::<usize>();
                 out.push(fills as f64);
-                for r in l.head.fills.iter().chain(arms.iter().flat_map(|(_, h)| &h.fills)) {
+                for r in l
+                    .head
+                    .fills
+                    .iter()
+                    .chain(arms.iter().flat_map(|(_, h)| &h.fills))
+                {
                     ring(out, r, false, oriented.then_some(true));
                 }
             }

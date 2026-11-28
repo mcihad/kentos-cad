@@ -14,10 +14,10 @@ use crate::Vec2;
 use crate::format::Format;
 use crate::tool::{self, Preview, Stroke, Tag, Tone};
 
-pub const STRAIGHT_ONLY: &str =
-    "Hedef alan şimdilik tek bir deliksiz, düz kenarlı alanda çalışır; yaylı ya da delikli alanı çizgiyle kesin.";
+pub const STRAIGHT_ONLY: &str = "Hedef alan şimdilik tek bir deliksiz, düz kenarlı alanda çalışır; yaylı ya da delikli alanı çizgiyle kesin.";
 pub const ONE_AREA: &str = "Hedef alanla bölmek için tek bir alan seçin.";
-pub const NO_EDGE_HERE: &str = "Tıklanan yerde alanın kenarı yok; seçili alanın bir kenarına tıklayın.";
+pub const NO_EDGE_HERE: &str =
+    "Tıklanan yerde alanın kenarı yok; seçili alanın bir kenarına tıklayın.";
 /// How far the cut is drawn past the boundary, so that the command meets it there whatever the last digit.
 const PAST: f64 = 0.01;
 
@@ -51,11 +51,21 @@ pub struct ByArea {
 impl ByArea {
     /// Over `area`, or why it cannot be cut so.
     pub fn over(area: &Area) -> Result<Self, &'static str> {
-        let curved = area.outer.bulges.as_ref().is_some_and(|b| b.iter().any(|&v| v != 0.0));
+        let curved = area
+            .outer
+            .bulges
+            .as_ref()
+            .is_some_and(|b| b.iter().any(|&v| v != 0.0));
         if curved || !area.holes.is_empty() || area.outer.pts.len() < 3 {
             return Err(STRAIGHT_ONLY);
         }
-        Ok(Self { area: area.clone(), total: net_area(area), edge: None, across: false, asked: None })
+        Ok(Self {
+            area: area.clone(),
+            total: net_area(area),
+            edge: None,
+            across: false,
+            asked: None,
+        })
     }
 
     pub fn has_edge(&self) -> bool {
@@ -79,7 +89,11 @@ impl ByArea {
             .filter(|&(_, d)| d <= tolerance)
             .min_by(|x, y| x.1.total_cmp(&y.1));
         let Some((edge, _)) = near else { return false };
-        self.edge = Some(Edged { edge, a: pts[edge], b: pts[(edge + 1) % n] });
+        self.edge = Some(Edged {
+            edge,
+            a: pts[edge],
+            b: pts[(edge + 1) % n],
+        });
         self.asked = None;
         true
     }
@@ -88,7 +102,11 @@ impl ByArea {
     /// makes: two pieces. Why not, when it cannot be.
     pub fn ask(&mut self, target: f64) -> Result<(), &'static str> {
         let Some(e) = &self.edge else { return Ok(()) };
-        let beside = if self.across { self.total - target } else { target };
+        let beside = if self.across {
+            self.total - target
+        } else {
+            target
+        };
         let cut = cut_for_area(&self.area.outer.pts, e.edge, beside)?;
         let mut pieces = split_area(&self.area, &line_source(&cut));
         if pieces.len() != 2 {
@@ -106,7 +124,11 @@ impl ByArea {
         if second {
             pieces.swap(0, 1);
         }
-        self.asked = Some(Asked { target, cut, pieces });
+        self.asked = Some(Asked {
+            target,
+            cut,
+            pieces,
+        });
         Ok(())
     }
 
@@ -136,9 +158,19 @@ impl ByArea {
     /// The area, its edge, the cut, the piece asked for filled and the rest faint, with the sizes.
     pub fn preview(&self, format: &Format) -> Preview {
         let mut out = Preview::default();
-        out.areas.push(tool::Area { rings: rings(&self.area), fill: 0.0, width: 2.0, dash: None, fill_tone: Tone::Accent });
+        out.areas.push(tool::Area {
+            rings: rings(&self.area),
+            fill: 0.0,
+            width: 2.0,
+            dash: None,
+            fill_tone: Tone::Accent,
+        });
         let Some(e) = &self.edge else { return out };
-        out.strokes.push(Stroke::solid(vec![e.a, e.b], false).width(3.0).tone(Tone::Snap));
+        out.strokes.push(
+            Stroke::solid(vec![e.a, e.b], false)
+                .width(3.0)
+                .tone(Tone::Snap),
+        );
         let Some(asked) = &self.asked else {
             out.tag = Some(Tag {
                 at: Vec2::new((e.a.x + e.b.x) / 2.0, (e.a.y + e.b.y) / 2.0),
@@ -153,14 +185,29 @@ impl ByArea {
                 fill: if i == wanted { 0.28 } else { 0.10 },
                 width: 1.0,
                 dash: Some([4.0, 3.0]),
-                fill_tone: if i == wanted { Tone::Accent } else { Tone::Snap },
+                fill_tone: if i == wanted {
+                    Tone::Accent
+                } else {
+                    Tone::Snap
+                },
             });
         }
-        out.strokes.push(Stroke::solid(vec![asked.cut.a, asked.cut.b], false).width(2.0).tone(Tone::Danger));
+        out.strokes.push(
+            Stroke::solid(vec![asked.cut.a, asked.cut.b], false)
+                .width(2.0)
+                .tone(Tone::Danger),
+        );
         let (near, far) = (asked.cut.near, asked.cut.far);
-        let (asked_size, rest) = if self.across { (far, near) } else { (near, far) };
+        let (asked_size, rest) = if self.across {
+            (far, near)
+        } else {
+            (near, far)
+        };
         out.tag = Some(Tag {
-            at: Vec2::new((asked.cut.a.x + asked.cut.b.x) / 2.0, (asked.cut.a.y + asked.cut.b.y) / 2.0),
+            at: Vec2::new(
+                (asked.cut.a.x + asked.cut.b.x) / 2.0,
+                (asked.cut.a.y + asked.cut.b.y) / 2.0,
+            ),
             lines: vec![
                 format!("istenen {}", format.area(asked_size)),
                 format!("kalan {}", format.area(rest)),
@@ -175,7 +222,11 @@ impl ByArea {
 fn seg_distance(p: Vec2, a: Vec2, b: Vec2) -> f64 {
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     let l2 = dx * dx + dy * dy;
-    let t = if l2 > 0.0 { (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0) } else { 0.0 };
+    let t = if l2 > 0.0 {
+        (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
     (p.x - (a.x + t * dx)).hypot(p.y - (a.y + t * dy))
 }
 
@@ -188,7 +239,11 @@ fn from_edge(e: &Edged, p: Vec2) -> f64 {
 /// The middle of an area's outer ring (its vertices' mean: enough to tell two pieces apart across a straight cut).
 fn middle(a: &Area) -> Vec2 {
     let n = a.outer.pts.len().max(1) as f64;
-    let (x, y) = a.outer.pts.iter().fold((0.0, 0.0), |(x, y), p| (x + p.x, y + p.y));
+    let (x, y) = a
+        .outer
+        .pts
+        .iter()
+        .fold((0.0, 0.0), |(x, y), p| (x + p.x, y + p.y));
     Vec2::new(x / n, y / n)
 }
 
@@ -197,13 +252,20 @@ fn past(cut: &Cut) -> (Vec2, Vec2) {
     let (dx, dy) = (cut.b.x - cut.a.x, cut.b.y - cut.a.y);
     let l = dx.hypot(dy);
     let (ux, uy) = (dx / l * PAST, dy / l * PAST);
-    (Vec2::new(cut.a.x - ux, cut.a.y - uy), Vec2::new(cut.b.x + ux, cut.b.y + uy))
+    (
+        Vec2::new(cut.a.x - ux, cut.a.y - uy),
+        Vec2::new(cut.b.x + ux, cut.b.y + uy),
+    )
 }
 
 /// The cut as the command cuts with it (Alan böl's straight line).
 fn line_source(cut: &Cut) -> Source {
     let (a, b) = past(cut);
-    Source { edges: vec![Edge::Seg { a, b }], points: Some(vec![a, b]), cut: Some(true) }
+    Source {
+        edges: vec![Edge::Seg { a, b }],
+        points: Some(vec![a, b]),
+        cut: Some(true),
+    }
 }
 
 /// An area's rings as the preview draws them.

@@ -2,12 +2,17 @@
 //! into an edit; a text made its row's values, to be moved into a table or saved back. The mapping (which column holds
 //! what) and the cells' rules are the contract's (`DataText`); this makes them objects and values.
 
-use kentos_commands::{AnnotationKind, DataText, Entity, ProjectSettings, TextCell, TextEntity, TextParts};
+use kentos_commands::{
+    AnnotationKind, DataText, Entity, ProjectSettings, TextCell, TextEntity, TextParts,
+};
 use serde_json::{Map, Value as J, json};
 
 /// The height a row without one takes: the project's text height at its drawing scale, as Yazı's.
 pub fn default_height(settings: &ProjectSettings) -> f64 {
-    kentos_commands::paper_height(settings.annotation_mm(AnnotationKind::Text), settings.plot_scale)
+    kentos_commands::paper_height(
+        settings.annotation_mm(AnnotationKind::Text),
+        settings.plot_scale,
+    )
 }
 
 /// A cell of an object's attributes as its text.
@@ -99,17 +104,41 @@ mod tests {
             "metin": "Ada 101", "yukseklik": "2.5", "aci": "90", "hiza": "orta", "genislik": "0.8", "tur": "ada"
         }))
         .expect("attrs");
-        let e = object(&DataText::written(), (600010.0, 4410020.0), "yazilar", 7, attrs, 2.0).expect("a text");
+        let e = object(
+            &DataText::written(),
+            (600010.0, 4410020.0),
+            "yazilar",
+            7,
+            attrs,
+            2.0,
+        )
+        .expect("a text");
         let Entity::Text(t) = &e else { panic!("{e:?}") };
-        assert_eq!((t.text.as_str(), t.height, t.rotation), ("Ada 101", 2.5, 90.0));
+        assert_eq!(
+            (t.text.as_str(), t.height, t.rotation),
+            ("Ada 101", 2.5, 90.0)
+        );
         assert_eq!(t.align, Some(kentos_commands::TextAlign::MiddleCenter));
         assert_eq!(t.width_factor, Some(0.8));
         assert_eq!((t.p.x, t.p.y), (600010.0, 4410020.0));
-        assert_eq!(t.base.attrs.get("tur").map(String::as_str), Some("ada"), "its other values kept");
+        assert_eq!(
+            t.base.attrs.get("tur").map(String::as_str),
+            Some("ada"),
+            "its other values kept"
+        );
         let cells = DataText::written().cells(&parts_of(t));
-        let values: Vec<(String, kentos_data::Value)> = cells.iter().map(|(c, v)| (c.clone(), value_of(v))).collect();
-        assert_eq!(values[1], ("yukseklik".to_owned(), kentos_data::Value::Real(2.5)));
-        assert_eq!(values[3], ("hiza".to_owned(), kentos_data::Value::Text("orta".into())));
+        let values: Vec<(String, kentos_data::Value)> = cells
+            .iter()
+            .map(|(c, v)| (c.clone(), value_of(v)))
+            .collect();
+        assert_eq!(
+            values[1],
+            ("yukseklik".to_owned(), kentos_data::Value::Real(2.5))
+        );
+        assert_eq!(
+            values[3],
+            ("hiza".to_owned(), kentos_data::Value::Text("orta".into()))
+        );
         assert!(!details_left(t), "a plain text loses nothing");
     }
 

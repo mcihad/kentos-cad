@@ -35,7 +35,9 @@ pub struct Rule {
 impl Rule {
     /// Whether a fill of `height` and run per rise `slope` needs a barrier.
     pub fn warrants(&self, height: f64, slope: f64) -> bool {
-        self.warrants.iter().any(|w| height >= w.height && w.slope.is_none_or(|s| slope <= s))
+        self.warrants
+            .iter()
+            .any(|w| height >= w.height && w.slope.is_none_or(|s| slope <= s))
     }
 }
 
@@ -53,7 +55,11 @@ pub struct Run {
 
 /// A side's runs, `samples` in station order, held within `range`.
 pub fn side_runs(samples: &[Sample], rule: &Rule, right: bool, range: [f64; 2]) -> Vec<Run> {
-    let (before, after) = if right { (rule.approach, rule.leaving) } else { (rule.leaving, rule.approach) };
+    let (before, after) = if right {
+        (rule.approach, rule.leaving)
+    } else {
+        (rule.leaving, rule.approach)
+    };
     let mut out: Vec<Run> = Vec::new();
     let mut open: Option<Run> = None;
     for s in samples {
@@ -65,7 +71,14 @@ pub fn side_runs(samples: &[Sample], rule: &Rule, right: bool, range: [f64; 2]) 
                 r.slope = r.slope.min(n);
             }
             (Some((h, n)), None) => {
-                open = Some(Run { right, from: 0.0, to: 0.0, warranted: [s.station; 2], height: h, slope: n });
+                open = Some(Run {
+                    right,
+                    from: 0.0,
+                    to: 0.0,
+                    warranted: [s.station; 2],
+                    height: h,
+                    slope: n,
+                });
             }
             (None, _) => out.extend(open.take()),
         }
@@ -94,7 +107,16 @@ mod tests {
 
     fn rule() -> Rule {
         Rule {
-            warrants: vec![Warrant { height: 3.0, slope: Some(3.0) }, Warrant { height: 6.0, slope: None }],
+            warrants: vec![
+                Warrant {
+                    height: 3.0,
+                    slope: Some(3.0),
+                },
+                Warrant {
+                    height: 6.0,
+                    slope: None,
+                },
+            ],
             approach: 20.0,
             leaving: 10.0,
             gap: 30.0,
@@ -102,7 +124,10 @@ mod tests {
     }
 
     fn at(station: f64, h: f64, n: f64) -> Sample {
-        Sample { station, fill: Some((h, n)) }
+        Sample {
+            station,
+            fill: Some((h, n)),
+        }
     }
 
     #[test]
@@ -112,7 +137,10 @@ mod tests {
             at(20.0, 3.5, 2.0),
             at(40.0, 4.0, 2.0),
             at(60.0, 4.0, 4.0),
-            Sample { station: 80.0, fill: None },
+            Sample {
+                station: 80.0,
+                fill: None,
+            },
             at(100.0, 7.0, 4.0),
             at(120.0, 1.0, 1.5),
             at(200.0, 3.0, 3.0),
@@ -120,13 +148,36 @@ mod tests {
         let right = side_runs(&s, &rule(), true, [0.0, 210.0]);
         // 20–40 lengthened to 0–50, 100 to 80–110 (joined: 30 apart is not less than 30), 200 to 180–210.
         let got: Vec<_> = right.iter().map(|r| (r.from, r.to, r.warranted)).collect();
-        assert_eq!(got, [(0.0, 50.0, [20.0, 40.0]), (80.0, 110.0, [100.0, 100.0]), (180.0, 210.0, [200.0, 200.0])]);
+        assert_eq!(
+            got,
+            [
+                (0.0, 50.0, [20.0, 40.0]),
+                (80.0, 110.0, [100.0, 100.0]),
+                (180.0, 210.0, [200.0, 200.0])
+            ]
+        );
         let left = side_runs(&s, &rule(), false, [0.0, 210.0]);
         // Before 10, after 20: 10–60, 90–120 (gap 30, kept apart), 190–210.
         let got: Vec<_> = left.iter().map(|r| (r.from, r.to)).collect();
         assert_eq!(got, [(10.0, 60.0), (90.0, 120.0), (190.0, 210.0)]);
-        let joined = side_runs(&s, &Rule { gap: 31.0, ..rule() }, false, [0.0, 210.0]);
+        let joined = side_runs(
+            &s,
+            &Rule {
+                gap: 31.0,
+                ..rule()
+            },
+            false,
+            [0.0, 210.0],
+        );
         assert_eq!(joined.len(), 2);
-        assert_eq!((joined[0].from, joined[0].to, joined[0].height, joined[0].slope), (10.0, 120.0, 7.0, 2.0));
+        assert_eq!(
+            (
+                joined[0].from,
+                joined[0].to,
+                joined[0].height,
+                joined[0].slope
+            ),
+            (10.0, 120.0, 7.0, 2.0)
+        );
     }
 }

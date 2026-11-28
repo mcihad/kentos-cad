@@ -27,5 +27,8 @@ fn railings_opt_into_schema_115_and_114_refuses_them() {
         }
     }
     let bytes = kentos_kcad::encode_verified(&plain).unwrap();
-    assert!(!bytes.windows(10).any(|w| w == b"\x67version\x18\x73"), "no railings, no schema 115");
+    assert!(
+        !bytes.windows(10).any(|w| w == b"\x67version\x18\x73"),
+        "no railings, no schema 115"
+    );
 }

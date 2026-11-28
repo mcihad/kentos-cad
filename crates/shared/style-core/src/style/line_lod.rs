@@ -103,7 +103,10 @@ mod tests {
         let mut most: f64 = 0.0;
         for w in kept.windows(2) {
             for p in &pts[w[0]..=w[1]] {
-                most = kentos_geometry_core::jsmath::js_max(most, segment_distance2(*p, pts[w[0]], pts[w[1]]).sqrt());
+                most = kentos_geometry_core::jsmath::js_max(
+                    most,
+                    segment_distance2(*p, pts[w[0]], pts[w[1]]).sqrt(),
+                );
             }
         }
         most
@@ -117,9 +120,17 @@ mod tests {
         for (k, kept) in levels.iter().enumerate() {
             assert_eq!(kept.first(), Some(&0));
             assert_eq!(kept.last(), Some(&399));
-            assert!(deviation(&pts, kept) <= tol[k], "level {k}: {}", deviation(&pts, kept));
+            assert!(
+                deviation(&pts, kept) <= tol[k],
+                "level {k}: {}",
+                deviation(&pts, kept)
+            );
             if k > 0 {
-                assert!(levels[k].iter().all(|i| levels[k - 1].contains(i)), "level {k} nests in {}", k - 1);
+                assert!(
+                    levels[k].iter().all(|i| levels[k - 1].contains(i)),
+                    "level {k} nests in {}",
+                    k - 1
+                );
                 assert!(levels[k].len() <= levels[k - 1].len());
             }
         }
@@ -144,7 +155,9 @@ mod tests {
     fn a_short_path_or_one_that_would_not_shrink_has_no_levels() {
         assert!(levels(&walk(7, 3), &[1.0]).is_none());
         // A zigzag much larger than the tolerance keeps all of its vertices.
-        let zig: Vec<Vec2> = (0..40).map(|i| Vec2::new(f64::from(i), f64::from(i % 2) * 10.0)).collect();
+        let zig: Vec<Vec2> = (0..40)
+            .map(|i| Vec2::new(f64::from(i), f64::from(i % 2) * 10.0))
+            .collect();
         assert!(levels(&zig, &[0.25]).is_none());
     }
 
@@ -181,8 +194,8 @@ mod tests {
 
     #[test]
     fn a_long_stroke_keeps_its_numbers_at_level_0_and_its_dash_starts_at_every_level() {
-        use kentos_geometry_core::api::json::Json;
         use super::super::batch::CURVE_LEVELS;
+        use kentos_geometry_core::api::json::Json;
         let pts = walk(400, 19);
         let (off, plain) = stroked(&pts, false);
         assert!(matches!(off.get("lod"), Json::Null), "{off:?}");
@@ -210,7 +223,11 @@ mod tests {
         for &len in &n[2..] {
             assert!(len > 0 && len < n[1], "{n:?}");
             for s in data[at..at + len].chunks(6) {
-                assert_eq!(starts.get(&(s[0].to_bits(), s[1].to_bits())), Some(&s[4]), "a level's dash phase");
+                assert_eq!(
+                    starts.get(&(s[0].to_bits(), s[1].to_bits())),
+                    Some(&s[4]),
+                    "a level's dash phase"
+                );
             }
             at += len;
         }

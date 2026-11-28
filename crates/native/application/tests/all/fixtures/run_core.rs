@@ -42,11 +42,15 @@ macro_rules! core_cases {
             kentos_commands::CAD_POLYGON_REGULAR => {
                 $then!(polygon_regular, kentos_commands::RegularPolygonCreate)
             }
-            kentos_commands::CAD_SECTOR_CREATE => $then!(sector_create, kentos_commands::SectorCreate),
+            kentos_commands::CAD_SECTOR_CREATE => {
+                $then!(sector_create, kentos_commands::SectorCreate)
+            }
             kentos_commands::CAD_REVCLOUD_CREATE => {
                 $then!(revcloud_create, kentos_commands::RevcloudCreate)
             }
-            kentos_commands::CAD_ENTITIES_ADJOIN => $then!(adjoin_cmd, kentos_commands::EntitiesAdjoin),
+            kentos_commands::CAD_ENTITIES_ADJOIN => {
+                $then!(adjoin_cmd, kentos_commands::EntitiesAdjoin)
+            }
             kentos_commands::CAD_CONSTRUCTIONS_CREATE => {
                 $then!(constructions, kentos_commands::ConstructionsCreate)
             }
@@ -54,7 +58,9 @@ macro_rules! core_cases {
             kentos_commands::CAD_ANNOTATIONS_WRITE => {
                 $then!(annotations_write, kentos_commands::AnnotationsWrite)
             }
-            kentos_commands::CAD_OBJECTS_DERIVE => $then!(objects_derive, kentos_commands::ObjectsDerive),
+            kentos_commands::CAD_OBJECTS_DERIVE => {
+                $then!(objects_derive, kentos_commands::ObjectsDerive)
+            }
             kentos_commands::CAD_SHAPES_EDIT => $then!(shape_edits, kentos_commands::ShapesEdit),
             kentos_commands::CAD_ENTITIES_VERTEX => {
                 $then!(entities_vertex, kentos_commands::EntitiesVertex)
@@ -71,7 +77,9 @@ macro_rules! core_cases {
             kentos_commands::CAD_ENTITIES_SELECT => {
                 $then!(entities_select, kentos_commands::EntitiesSelect)
             }
-            kentos_commands::CAD_ENTITIES_ISOLATE => $then!(isolation, kentos_commands::EntitiesIsolate),
+            kentos_commands::CAD_ENTITIES_ISOLATE => {
+                $then!(isolation, kentos_commands::EntitiesIsolate)
+            }
             kentos_commands::CAD_ENTITIES_TRIM => $then!(entities_trim, EntitiesTrim),
             kentos_commands::CAD_ENTITIES_EXTEND => $then!(entities_extend, EntitiesTrim),
             kentos_commands::CAD_ENTITIES_FILLET => $then!(entities_fillet, EntitiesFillet),
@@ -86,7 +94,9 @@ macro_rules! core_cases {
                 $then!(entities_lengthen, kentos_commands::EntitiesLengthen)
             }
             kentos_commands::CAD_ENTITIES_DIVIDE => $then!(divide, EntitiesDivide),
-            kentos_commands::CAD_DRAWING_INSPECT => $then!(drawing_inspect, kentos_commands::DrawingInspect),
+            kentos_commands::CAD_DRAWING_INSPECT => {
+                $then!(drawing_inspect, kentos_commands::DrawingInspect)
+            }
             kentos_commands::CAD_ARRAYS_FIND => {
                 $then!(arrays_find, kentos_commands::ArraysFind)
             }
@@ -232,10 +242,16 @@ macro_rules! core_cases {
                 $then!(inserts_clip, kentos_commands::InsertsClip)
             }
             kentos_commands::CAD_EXTRACT_RUN => $then!(extract_run, kentos_commands::ExtractRun),
-            kentos_commands::CAD_EXTRACT_TABLE => $then!(extract_table, kentos_commands::ExtractTable),
+            kentos_commands::CAD_EXTRACT_TABLE => {
+                $then!(extract_table, kentos_commands::ExtractTable)
+            }
             kentos_commands::CAD_ENTITIES_ORDER => $then!(entities_order, EntitiesOrder),
-            kentos_commands::CAD_ENTITIES_FLATTEN => $then!(entities_flatten, kentos_commands::EntitiesFlatten),
-            kentos_commands::CAD_ANNOTATIONS_SCALES => $then!(annotations_scales, AnnotationsScales),
+            kentos_commands::CAD_ENTITIES_FLATTEN => {
+                $then!(entities_flatten, kentos_commands::EntitiesFlatten)
+            }
+            kentos_commands::CAD_ANNOTATIONS_SCALES => {
+                $then!(annotations_scales, AnnotationsScales)
+            }
             CAD_ENTITIES_SET => $then!(set, EntitiesSetProperties),
             CAD_BLOCKS_DEFINE => $then!(blocks_define, BlocksDefine),
             CAD_BLOCKS_EDIT => $then!(blocks_edit, BlocksEdit),
@@ -286,16 +302,28 @@ macro_rules! core_cases {
                 $then!(labels_report, kentos_commands::LabelsReport)
             }
             kentos_commands::CAD_STANDARDS_CHECK => $then!(standards_check, StandardsCheck),
-            kentos_commands::CAD_STANDARDS_CONFLICTS => $then!(standards_conflicts, kentos_commands::StandardsConflicts),
-            kentos_commands::CAD_STANDARDS_RESOLVE => $then!(standards_resolve, kentos_commands::StandardsResolve),
-            kentos_commands::CAD_STANDARDS_PALETTES => $then!(standards_palettes, kentos_commands::StandardsPalettes),
+            kentos_commands::CAD_STANDARDS_CONFLICTS => {
+                $then!(standards_conflicts, kentos_commands::StandardsConflicts)
+            }
+            kentos_commands::CAD_STANDARDS_RESOLVE => {
+                $then!(standards_resolve, kentos_commands::StandardsResolve)
+            }
+            kentos_commands::CAD_STANDARDS_PALETTES => {
+                $then!(standards_palettes, kentos_commands::StandardsPalettes)
+            }
             kentos_commands::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
-            kentos_commands::CAD_PROFILES_APPLY => $then!(profiles_apply, kentos_commands::ProfilesApply),
-            kentos_commands::CAD_PROFILES_CHECK => $then!(profiles_check, kentos_commands::ProfilesCheck),
+            kentos_commands::CAD_PROFILES_APPLY => {
+                $then!(profiles_apply, kentos_commands::ProfilesApply)
+            }
+            kentos_commands::CAD_PROFILES_CHECK => {
+                $then!(profiles_check, kentos_commands::ProfilesCheck)
+            }
             kentos_commands::CAD_PROFILES_IMPORT => {
                 $then!(profiles_import, kentos_commands::ProfilesImport)
             }
-            kentos_commands::CAD_PROFILES_LIST => $then!(profiles_list, kentos_commands::ProfilesList),
+            kentos_commands::CAD_PROFILES_LIST => {
+                $then!(profiles_list, kentos_commands::ProfilesList)
+            }
             kentos_commands::CAD_PROFILES_MIGRATE => {
                 $then!(profiles_migrate, kentos_commands::ProfilesMigrate)
             }
@@ -303,7 +331,9 @@ macro_rules! core_cases {
                 $then!(profiles_remove, kentos_commands::ProfilesRemove)
             }
             kentos_commands::CAD_LINE_TYPES_EDIT => $then!(line_types_edit, LineTypesEdit),
-            kentos_commands::CAD_HATCH_PATTERNS_EDIT => $then!(hatch_patterns_edit, HatchPatternsEdit),
+            kentos_commands::CAD_HATCH_PATTERNS_EDIT => {
+                $then!(hatch_patterns_edit, HatchPatternsEdit)
+            }
             kentos_commands::CAD_LIBRARY_EDIT => $then!(library_edit, LibraryEdit),
             kentos_commands::CAD_STYLES_IMPACT => $then!(styles_impact, StylesImpact),
             kentos_commands::CAD_STYLES_EDIT => $then!(styles_edit, StylesEdit),
@@ -338,9 +368,15 @@ macro_rules! core_cases {
             kentos_commands::FILE_IMPORT_PDF => $then!(file_import_pdf, ImportPdf),
             kentos_commands::CAD_SHEETS_CREATE => $then!(sheets_create, SheetsCreate),
             kentos_commands::CAD_SHEETS_FIT => $then!(sheets_fit, SheetsFit),
-            kentos_commands::CAD_SHEETS_LEVELS => $then!(sheets_levels, kentos_commands::SheetsLevels),
-            kentos_commands::CAD_SHEETS_DETAILS => $then!(sheets_details, kentos_commands::SheetsDetails),
-            kentos_commands::CAD_PLOTSTYLES_IMPORT => $then!(plot_styles_import, kentos_commands::PlotStylesImport),
+            kentos_commands::CAD_SHEETS_LEVELS => {
+                $then!(sheets_levels, kentos_commands::SheetsLevels)
+            }
+            kentos_commands::CAD_SHEETS_DETAILS => {
+                $then!(sheets_details, kentos_commands::SheetsDetails)
+            }
+            kentos_commands::CAD_PLOTSTYLES_IMPORT => {
+                $then!(plot_styles_import, kentos_commands::PlotStylesImport)
+            }
             kentos_commands::CAD_SHEETS_EDIT => $then!(sheets_edit, SheetsEdit),
             kentos_commands::CAD_CHANGESET_APPLY => $then!(changeset, ChangesetApply),
             _ => $else,

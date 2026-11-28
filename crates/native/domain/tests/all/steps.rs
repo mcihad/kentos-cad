@@ -142,9 +142,12 @@ fn a_refused_step_takes_back_what_is_no_undo_step_too() {
 fn refused_settings_step_restores_derived_room_elevation_words_without_moving_tag() {
     let mut doc = empty();
     let mut settings = doc.settings().clone();
-    settings.arch = Some(serde_json::from_value(serde_json::json!({
-        "levels":[{"id":"ground","name":"Ground","elevation":-3.125,"height":4.}]
-    })).unwrap());
+    settings.arch = Some(
+        serde_json::from_value(serde_json::json!({
+            "levels":[{"id":"ground","name":"Ground","elevation":-3.125,"height":4.}]
+        }))
+        .unwrap(),
+    );
     doc.set_settings(settings);
     let room: Entity = serde_json::from_value(serde_json::json!({
         "kind":"space","id":0,"layerId":"b","attrs":{},"arch":{"level":"ground"},"height":2.75,
@@ -154,18 +157,22 @@ fn refused_settings_step_restores_derived_room_elevation_words_without_moving_ta
     let tag: Entity = serde_json::from_value(serde_json::json!({
         "kind":"tag","id":0,"layerId":"b","attrs":{},"of":doc.uid(source).unwrap().to_string(),
         "at":{"x":-5.,"y":8.},"content":"{floorElevation}/{ceilingElevation}","leader":true
-    })).unwrap();
+    }))
+    .unwrap();
     let slot = doc.add(tag).unwrap();
     let before = doc.to_snapshot_v2();
     let revision = doc.revision();
     doc.mark_saved(revision);
-    let result: Result<((), _), &str> = doc.run_step(|doc| {
-        let mut settings = doc.settings().clone();
-        settings.arch.as_mut().unwrap().levels[0].elevation = 12.375;
-        doc.set_settings(settings);
-        assert!(matches!(doc.get(slot),Some(Entity::Tag(t)) if t.tag.text == "12.375/15.125"));
-        Err("refused")
-    }, |_, _, _| Ok(None));
+    let result: Result<((), _), &str> = doc.run_step(
+        |doc| {
+            let mut settings = doc.settings().clone();
+            settings.arch.as_mut().unwrap().levels[0].elevation = 12.375;
+            doc.set_settings(settings);
+            assert!(matches!(doc.get(slot),Some(Entity::Tag(t)) if t.tag.text == "12.375/15.125"));
+            Err("refused")
+        },
+        |_, _, _| Ok(None),
+    );
     assert_eq!(result.err(), Some("refused"));
     assert_eq!(doc.to_snapshot_v2(), before);
     assert_eq!(doc.revision(), revision);
@@ -176,11 +183,18 @@ fn refused_settings_step_restores_derived_room_elevation_words_without_moving_ta
     settings.arch.as_mut().unwrap().levels[0].elevation = 12.375;
     doc.apply_external(kentos_domain::External {
         meta: Some(kentos_domain::ExternalMeta {
-            settings: Some(settings), ..Default::default()
-        }), ..Default::default()
-    }).unwrap();
+            settings: Some(settings),
+            ..Default::default()
+        }),
+        ..Default::default()
+    })
+    .unwrap();
     assert!(matches!(doc.get(slot),Some(Entity::Tag(t)) if t.tag.text == "12.375/15.125"));
-    assert_eq!(doc.revision(), revision, "remote settings are not a local edit");
+    assert_eq!(
+        doc.revision(),
+        revision,
+        "remote settings are not a local edit"
+    );
     assert!(!doc.is_dirty());
 }
 

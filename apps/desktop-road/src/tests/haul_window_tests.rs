@@ -1,16 +1,18 @@
 //! Brükner (haul_window.rs, plan/road.md Y9): the window reads the diagram as it is typed and writes through
 //! `road.hauls.edit` (one undo step); and its pictures.
 
-use crate::road::RoadState;
 use crate::app::{App, Message};
 use crate::haul_window::Event as W;
 use crate::road;
+use crate::road::RoadState;
 
 /// A road project with `road.hauls.query`'s drawing: two corridors, two volumes and two diagrams.
 fn app() -> App {
     let (mut app, _) = App::boot(None);
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.hauls.query.json")).expect("cases");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.hauls.query.json"
+    ))
+    .expect("cases");
     let snapshot: kentos_commands::DocumentSnapshotV2 =
         serde_json::from_value(cases["setup"].clone()).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -30,7 +32,10 @@ fn model(app: &mut App) -> &mut kentos_domain::Document {
 fn the_window_makes_a_diagram_with_a_site_and_reads_it() {
     let mut app = app();
     let _ = app.update(Message::Run("haul.new"));
-    assert_eq!(app.dialog, Some(crate::road::dialog(road::RoadDialogKind::Hauls)));
+    assert_eq!(
+        app.dialog,
+        Some(crate::road::dialog(road::RoadDialogKind::Hauls))
+    );
     send(&mut app, W::Name("Döküm Brükneri".into()));
     send(&mut app, W::Field(1, "200".into()));
     send(&mut app, W::Add);
@@ -50,7 +55,10 @@ fn the_window_makes_a_diagram_with_a_site_and_reads_it() {
     );
     assert!(rep.hauled > 1000.0 && rep.moment > 0.0, "{rep:?}");
     send(&mut app, W::Save);
-    assert!(app.modules.road().haul_window.is_none(), "Kaydet closes the window");
+    assert!(
+        app.modules.road().haul_window.is_none(),
+        "Kaydet closes the window"
+    );
     let doc = model(&mut app);
     assert_eq!(doc.road_hauls().len(), 3);
     assert_eq!(doc.road_hauls()[2].free, Some(200.0));
@@ -65,7 +73,8 @@ fn prices_and_a_payload_give_the_cost_and_are_written() {
     send(&mut app, W::Field(1, "100".into()));
     send(&mut app, W::Field(3, "12,5".into()));
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .haul_window
             .as_ref()
             .is_some_and(|w| w.preview.why.is_some()),
@@ -73,7 +82,8 @@ fn prices_and_a_payload_give_the_cost_and_are_written() {
     );
     send(&mut app, W::Field(3, "12.5".into()));
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .haul_window
             .as_ref()
             .and_then(|w| w.preview.why.as_deref())
@@ -90,7 +100,10 @@ fn prices_and_a_payload_give_the_cost_and_are_written() {
         .unwrap_or_else(|| panic!("reads: {:?}", w.preview.why));
     let cost = rep.cost.as_ref().expect("priced");
     assert_eq!(cost.currency, "TL");
-    assert!((cost.total - rep.over_moment / 1000.0 * 12.5).abs() < 1e-6, "{cost:?} {rep:?}");
+    assert!(
+        (cost.total - rep.over_moment / 1000.0 * 12.5).abs() < 1e-6,
+        "{cost:?} {rep:?}"
+    );
     assert!(cost.trips.is_some_and(|t| t >= 1.0));
     send(&mut app, W::Save);
     assert!(app.modules.road().haul_window.is_none());
@@ -110,7 +123,8 @@ fn a_bad_site_is_refused_and_the_window_stays() {
     send(&mut app, W::Site(0, 2, "9000".into()));
     send(&mut app, W::Site(0, 3, "10".into()));
     assert!(
-        app.modules.road()
+        app.modules
+            .road()
             .haul_window
             .as_ref()
             .is_some_and(|w| w.preview.why.is_some()),
@@ -139,7 +153,9 @@ fn screens() {
         ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
     ] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, message| {
@@ -148,7 +164,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("yol-y9-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         let _ = app.update(Message::RibbonTab("corridor"));
@@ -194,10 +213,21 @@ fn unsuitable_cut_and_barriers_are_typed_and_saved() {
     send(&mut app, W::Barrier(1, 1, "450".into()));
     send(&mut app, W::Save);
     let h = &app.document.as_ref().expect("a drawing").model.road_hauls()[0];
-    assert_eq!(h.unsuitable, vec![kentos_commands::HaulUnsuitableDef { from: 0.0, to: 250.0, share: 35.0 }]);
+    assert_eq!(
+        h.unsuitable,
+        vec![kentos_commands::HaulUnsuitableDef {
+            from: 0.0,
+            to: 250.0,
+            share: 35.0
+        }]
+    );
     assert_eq!(h.barriers.len(), 2);
     assert_eq!(h.barriers[0].detour, Some(400.0));
-    assert_eq!((h.barriers[1].name.as_str(), h.barriers[1].detour), ("Engel 2", None), "no detour: closed");
+    assert_eq!(
+        (h.barriers[1].name.as_str(), h.barriers[1].detour),
+        ("Engel 2", None),
+        "no detour: closed"
+    );
 }
 
 /// The unsuitable cut and the barriers in Brükner; `.run/gui-evidence/yol-y38/`:
@@ -211,11 +241,14 @@ fn screens_sorting() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y38");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y38");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         let mut app = app();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::RibbonTab("corridor"));
         let _ = app.update(Message::Run("haul.editor"));
@@ -234,7 +267,10 @@ fn screens_sorting() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let path = out.join(format!("y38-bruckner-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&path)
+            .expect("writes the picture");
         println!("{}", path.display());
     }
 }
@@ -259,13 +295,18 @@ fn the_window_writes_the_haul_road_network() {
     send(&mut app, W::Save);
     let h = model(&mut app).road_hauls()[0].clone();
     let n = h.network.expect("a network");
-    assert_eq!((n.layers.as_slice(), n.connect, n.reach), (["tasima".to_owned()].as_slice(), 0.5, Some(10.0)));
+    assert_eq!(
+        (n.layers.as_slice(), n.connect, n.reach),
+        (["tasima".to_owned()].as_slice(), 0.5, Some(10.0))
+    );
     assert_eq!(h.sites[0].at.map(|p| (p.x, p.y)), Some(site));
 }
 
 fn network_case() -> serde_json::Value {
-    let cases: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.hauls.network.json")).expect("cases");
+    let cases: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.hauls.network.json"
+    ))
+    .expect("cases");
     cases["setup"].clone()
 }
 
@@ -279,10 +320,17 @@ fn network_site() -> (f64, f64) {
 fn network_app() -> App {
     let (mut app, _) = App::boot(None);
     let mut setup = network_case();
-    let hauls = setup.pointer_mut("/settings/road/hauls").and_then(|h| h.as_array_mut()).expect("hauls");
-    hauls[0].as_object_mut().expect("a diagram").remove("network");
+    let hauls = setup
+        .pointer_mut("/settings/road/hauls")
+        .and_then(|h| h.as_array_mut())
+        .expect("hauls");
+    hauls[0]
+        .as_object_mut()
+        .expect("a diagram")
+        .remove("network");
     hauls[0]["sites"] = serde_json::json!([]);
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("the drawing reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("the drawing reads");
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -299,14 +347,18 @@ fn screens_network() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yol-y49");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yol-y49");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         let (mut app, _) = App::boot(None);
-        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(network_case()).expect("the drawing reads");
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(network_case()).expect("the drawing reads");
         let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
         let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::RibbonTab("corridor"));
         let _ = app.update(Message::Run("haul.editor"));
@@ -317,7 +369,10 @@ fn screens_network() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let path = out.join(format!("y49-bruckner-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&path).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&path)
+            .expect("writes the picture");
         println!("{}", path.display());
     }
 }

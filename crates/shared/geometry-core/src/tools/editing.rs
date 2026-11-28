@@ -97,10 +97,30 @@ pub fn grid_array_transforms(rows: f64, cols: f64, dx: f64, dy: f64) -> Vec<Affi
 
 /// A regular grid with independent world-axis directions (degrees). Item orientation is unchanged.
 /// The old axis-aligned Grid path remains byte-for-byte unchanged.
-pub fn lattice_array_transforms(rows: f64, cols: f64, dx: f64, dy: f64, column_angle: f64, row_angle: f64) -> Vec<Affine> {
-    let c = crate::block::placement(Vec2::new(0.,0.),1.,column_angle.rem_euclid(360.)*PI/180.,false);
-    let r = crate::block::placement(Vec2::new(0.,0.),1.,row_angle.rem_euclid(360.)*PI/180.,false);
-    grid_array_transforms(rows,cols,dx,dy).into_iter().map(|m|translation(m[4]*c[0]+m[5]*r[0],m[4]*c[1]+m[5]*r[1])).collect()
+pub fn lattice_array_transforms(
+    rows: f64,
+    cols: f64,
+    dx: f64,
+    dy: f64,
+    column_angle: f64,
+    row_angle: f64,
+) -> Vec<Affine> {
+    let c = crate::block::placement(
+        Vec2::new(0., 0.),
+        1.,
+        column_angle.rem_euclid(360.) * PI / 180.,
+        false,
+    );
+    let r = crate::block::placement(
+        Vec2::new(0., 0.),
+        1.,
+        row_angle.rem_euclid(360.) * PI / 180.,
+        false,
+    );
+    grid_array_transforms(rows, cols, dx, dy)
+        .into_iter()
+        .map(|m| translation(m[4] * c[0] + m[5] * r[0], m[4] * c[1] + m[5] * r[1]))
+        .collect()
 }
 
 /// Kopyala's Dizi (docs/adr/0291): the copies `k` = 1 … count − 1 moved
@@ -169,16 +189,24 @@ pub fn array_transforms(
                 && (2.0..=GRID_PLACES_MAX).contains(&(rows * cols));
             fits.then(|| grid_array_transforms(rows, cols, dx, dy))
         }
-        ("lattice", &[rows,cols,dx,dy,column_angle,row_angle]) => {
-            let valid=whole(rows) && whole(cols) && rows>=1. && cols>=1.
-                && (2.0..=GRID_PLACES_MAX).contains(&(rows*cols))
-                && [dx,dy,column_angle,row_angle].iter().all(|n|n.is_finite())
-                && sin((row_angle.rem_euclid(360.)-column_angle.rem_euclid(360.))*PI/180.).abs()>=1e-6;
-            valid.then(||lattice_array_transforms(rows,cols,dx,dy,column_angle,row_angle))
+        ("lattice", &[rows, cols, dx, dy, column_angle, row_angle]) => {
+            let valid = whole(rows)
+                && whole(cols)
+                && rows >= 1.
+                && cols >= 1.
+                && (2.0..=GRID_PLACES_MAX).contains(&(rows * cols))
+                && [dx, dy, column_angle, row_angle]
+                    .iter()
+                    .all(|n| n.is_finite())
+                && sin((row_angle.rem_euclid(360.) - column_angle.rem_euclid(360.)) * PI / 180.)
+                    .abs()
+                    >= 1e-6;
+            valid.then(|| lattice_array_transforms(rows, cols, dx, dy, column_angle, row_angle))
         }
         // Kopyala's Dizi (docs/adr/0291): along the displacement, or shared to fit it.
-        ("line", &[count, dx, dy, fit]) => (whole(count) && (2.0..=GRID_PLACES_MAX).contains(&count))
-            .then(|| line_array_transforms(count, dx, dy, fit != 0.0)),
+        ("line", &[count, dx, dy, fit]) => (whole(count)
+            && (2.0..=GRID_PLACES_MAX).contains(&count))
+        .then(|| line_array_transforms(count, dx, dy, fit != 0.0)),
         ("polar", &[cx, cy, count, fill, rotate]) => {
             if !(whole(count) && (2.0..=POLAR_COUNT_MAX).contains(&count)) {
                 return None;
@@ -200,7 +228,9 @@ pub fn array_transforms(
         }
         // Maps made elsewhere (a path array, docs/adr/0140): six numbers each, as Affine holds them.
         ("affines", p) if !p.is_empty() && p.len() % 6 == 0 => Some(
-            p.as_chunks::<6>().0.iter()
+            p.as_chunks::<6>()
+                .0
+                .iter()
                 .map(|m| [m[0], m[1], m[2], m[3], m[4], m[5]])
                 .collect(),
         ),

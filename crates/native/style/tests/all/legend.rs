@@ -225,7 +225,9 @@ fn a_data_layers_rows_come_from_its_tables_geometry() {
             Vec::new()
         }
         fn declared(&self, layer: &str) -> Option<Present> {
-            (layer == self.node.id).then(|| data_layer_present(&self.node)).flatten()
+            (layer == self.node.id)
+                .then(|| data_layer_present(&self.node))
+                .flatten()
         }
         fn symbol(&self, _: &str) -> Option<Value> {
             None
@@ -244,7 +246,8 @@ fn a_data_layers_rows_come_from_its_tables_geometry() {
         .expect("a style")
     };
     let node = |type_name: Option<&str>| -> kentos_contracts::LayerNode {
-        let mut data = json!({ "driver": "gpkg", "address": "Yollar.gpkg", "table": "yollar", "key": "fid" });
+        let mut data =
+            json!({ "driver": "gpkg", "address": "Yollar.gpkg", "table": "yollar", "key": "fid" });
         if let Some(t) = type_name {
             data["geometry"] = json!({ "column": "geom", "typeName": t, "srid": 5256 });
         }
@@ -255,22 +258,66 @@ fn a_data_layers_rows_come_from_its_tables_geometry() {
         .expect("a data layer")
     };
     let rows = |src: &Data, style: &LayerStyle| -> Vec<String> {
-        let layer = LegendLayer { id: "y", name: "Yollar", style };
-        legend_of(&[layer], src).into_iter().flat_map(|g| g.entries).map(|e| e.label).collect()
+        let layer = LegendLayer {
+            id: "y",
+            name: "Yollar",
+            style,
+        };
+        legend_of(&[layer], src)
+            .into_iter()
+            .flat_map(|g| g.entries)
+            .map(|e| e.label)
+            .collect()
     };
-    let roads = Data { node: node(Some("LINESTRING")) };
-    assert_eq!(rows(&roads, &style(None)), ["planlı"], "Diğer değerler off: no row for what no category takes");
-    assert_eq!(rows(&roads, &style(Some(line("#888888")))), ["planlı", "Diğer değerler"]);
+    let roads = Data {
+        node: node(Some("LINESTRING")),
+    };
+    assert_eq!(
+        rows(&roads, &style(None)),
+        ["planlı"],
+        "Diğer değerler off: no row for what no category takes"
+    );
+    assert_eq!(
+        rows(&roads, &style(Some(line("#888888")))),
+        ["planlı", "Diğer değerler"]
+    );
     // The classes each table's type draws as; a table without geometry draws nothing.
     let of = |t: Option<&str>| data_layer_present(&node(t)).expect("a data layer");
-    assert_eq!(of(Some("MULTILINESTRING")), Present { fill: 0, line: 1, marker: 0 });
-    assert_eq!(of(Some("POINT Z")), Present { fill: 0, line: 0, marker: 1 });
-    assert_eq!(of(Some("MULTIPOLYGON")), Present { fill: 1, line: 0, marker: 0 });
+    assert_eq!(
+        of(Some("MULTILINESTRING")),
+        Present {
+            fill: 0,
+            line: 1,
+            marker: 0
+        }
+    );
+    assert_eq!(
+        of(Some("POINT Z")),
+        Present {
+            fill: 0,
+            line: 0,
+            marker: 1
+        }
+    );
+    assert_eq!(
+        of(Some("MULTIPOLYGON")),
+        Present {
+            fill: 1,
+            line: 0,
+            marker: 0
+        }
+    );
     assert_eq!(of(None), Present::default());
-    assert_eq!(rows(&Data { node: node(None) }, &style(None)), Vec::<String>::new());
+    assert_eq!(
+        rows(&Data { node: node(None) }, &style(None)),
+        Vec::<String>::new()
+    );
     // A layer of the drawing says nothing beyond its objects.
     let mut drawing = node(Some("LINESTRING"));
     drawing.data = None;
     assert_eq!(data_layer_present(&drawing), None);
-    assert_eq!(rows(&Data { node: drawing }, &style(None)), Vec::<String>::new());
+    assert_eq!(
+        rows(&Data { node: drawing }, &style(None)),
+        Vec::<String>::new()
+    );
 }

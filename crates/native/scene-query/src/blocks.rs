@@ -23,11 +23,19 @@ pub fn contains_space_separator(
     let mut pending = vec![id];
     let mut seen = std::collections::HashSet::new();
     while let Some(id) = pending.pop() {
-        if !seen.insert(id) { continue; }
-        let Some(block) = doc.block(id) else { continue; };
+        if !seen.insert(id) {
+            continue;
+        }
+        let Some(block) = doc.block(id) else {
+            continue;
+        };
         for e in &block.entities {
-            if kentos_domain::space_follow::separator_path(e).is_some() { return true; }
-            if let Entity::Insert(i) = e { pending.push(i.block); }
+            if kentos_domain::space_follow::separator_path(e).is_some() {
+                return true;
+            }
+            if let Entity::Insert(i) = e {
+                pending.push(i.block);
+            }
         }
     }
     false
@@ -82,14 +90,24 @@ pub fn definition_box_in(
 /// Physical bounds of a static fixture with an authored housing outline, relative to the insertion point.
 /// A door swing or a clearance mark can extend beyond that outline. Dynamic definitions use their evaluated bounds.
 pub fn fixture_housing_bounds(block: &BlockDefinition) -> Option<[f64; 4]> {
-    if block.dynamic.is_some() { return None; }
+    if block.dynamic.is_some() {
+        return None;
+    }
     let outline = block.entities.iter().find(|e| {
-        e.base().attrs.get("KENTOS_IFC_ROLE").is_some_and(|role| role == "FOOTPRINT")
-            && (matches!(e, Entity::Polygon(_)) || matches!(e, Entity::Polyline(path) if path.closed))
+        e.base()
+            .attrs
+            .get("KENTOS_IFC_ROLE")
+            .is_some_and(|role| role == "FOOTPRINT")
+            && (matches!(e, Entity::Polygon(_))
+                || matches!(e, Entity::Polyline(path) if path.closed))
     })?;
     let bounds = kentos_geometry_core::entity::entity_bounds(&shape(outline));
-    Some([bounds.min_x - block.base.x, bounds.min_y - block.base.y,
-          bounds.max_x - block.base.x, bounds.max_y - block.base.y])
+    Some([
+        bounds.min_x - block.base.x,
+        bounds.min_y - block.base.y,
+        bounds.max_x - block.base.x,
+        bounds.max_y - block.base.y,
+    ])
 }
 
 /// The world-axis box of an insert's drawn pieces, excluding its insertion grip.
@@ -101,16 +119,25 @@ pub fn placed_box_in(
     blocks: &Blocks,
     insert: &Entity,
 ) -> Option<[f64; 4]> {
-    if !matches!(insert, Entity::Insert(_)) { return None; }
+    if !matches!(insert, Entity::Insert(_)) {
+        return None;
+    }
     let font = crate::geometry::drawing_font(doc.settings().drawing_font);
-    let boxes: Vec<_> = blocks.expand(&shape(insert)).into_iter()
-        .filter(|p| !kentos_geometry_core::block::shows_nothing(&p.shape)
-            && p.gates.iter().all(|l| doc.layers().is_visible(l)))
+    let boxes: Vec<_> = blocks
+        .expand(&shape(insert))
+        .into_iter()
+        .filter(|p| {
+            !kentos_geometry_core::block::shows_nothing(&p.shape)
+                && p.gates.iter().all(|l| doc.layers().is_visible(l))
+        })
         .map(|p| kentos_geometry_core::entity::entity_bounds_in(&p.shape, font))
-        .filter(|b| [b.min_x, b.min_y, b.max_x, b.max_y].iter().all(|v| v.is_finite()))
+        .filter(|b| {
+            [b.min_x, b.min_y, b.max_x, b.max_y]
+                .iter()
+                .all(|v| v.is_finite())
+        })
         .collect();
-    kentos_geometry_core::ops::arrange::union(&boxes)
-        .map(|b| [b.min_x, b.min_y, b.max_x, b.max_y])
+    kentos_geometry_core::ops::arrange::union(&boxes).map(|b| [b.min_x, b.min_y, b.max_x, b.max_y])
 }
 
 /// A dynamic block's values as the core draws them (docs/adr/0318 §3); none when there are none.
@@ -141,28 +168,44 @@ pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
 
 /// Resolve inherited Unicode text geometry in the same face as the drawing.
 pub fn drawing_blocks(doc: &kentos_domain::Document) -> Blocks {
-    core_blocks_in(doc.blocks(), crate::geometry::drawing_font(doc.settings().drawing_font))
+    core_blocks_in(
+        doc.blocks(),
+        crate::geometry::drawing_font(doc.settings().drawing_font),
+    )
 }
 
-pub fn core_blocks_in(blocks: &[Arc<BlockDefinition>], font: kentos_geometry_core::text::Font) -> Blocks {
+pub fn core_blocks_in(
+    blocks: &[Arc<BlockDefinition>],
+    font: kentos_geometry_core::text::Font,
+) -> Blocks {
     Blocks::new_in(
         blocks
             .iter()
             .map(|b| Definition {
-                dynamic: b.dynamic.as_ref().and_then(kentos_formats::blocks::core_dynamic),
+                dynamic: b
+                    .dynamic
+                    .as_ref()
+                    .and_then(kentos_formats::blocks::core_dynamic),
                 underlay: kentos_formats::blocks::core_underlay(b),
                 id: b.id.to_text(),
                 base: kentos_geometry_core::Vec2::new(b.base.x, b.base.y),
-                entities: b.entities.iter().enumerate().map(|(index, entity)| {
-                    let mut core = core_entity(entity);
-                    // Internal provenance only; the authoritative fields stay in
-                    // the immutable contract definition, never in render geometry.
-                    if matches!(entity, Entity::Text(_))
-                        || matches!(entity, Entity::Table(t) if !t.fields.is_empty()) {
-                        core.rest.push(("_annotationIndex".into(), Json::Num(index as f64)));
-                    }
-                    core
-                }).collect(),
+                entities: b
+                    .entities
+                    .iter()
+                    .enumerate()
+                    .map(|(index, entity)| {
+                        let mut core = core_entity(entity);
+                        // Internal provenance only; the authoritative fields stay in
+                        // the immutable contract definition, never in render geometry.
+                        if matches!(entity, Entity::Text(_))
+                            || matches!(entity, Entity::Table(t) if !t.fields.is_empty())
+                        {
+                            core.rest
+                                .push(("_annotationIndex".into(), Json::Num(index as f64)));
+                        }
+                        core
+                    })
+                    .collect(),
                 attributes: b
                     .attributes
                     .iter()
@@ -320,7 +363,11 @@ pub fn piece_entities(insert: &Entity, x: &Expanded) -> Vec<Entity> {
 }
 
 /// As `piece_entities`, restricted to the store's visible piece indices (selection highlight).
-pub fn piece_entities_shown(insert: &Entity, x: &Expanded, shown: impl Fn(usize) -> bool) -> Vec<Entity> {
+pub fn piece_entities_shown(
+    insert: &Entity,
+    x: &Expanded,
+    shown: impl Fn(usize) -> bool,
+) -> Vec<Entity> {
     let own = insert.base();
     x.shapes
         .iter()

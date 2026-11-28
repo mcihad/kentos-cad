@@ -116,7 +116,8 @@ pub fn asset_words(model: &Model, id: &str) -> String {
 /// pixels (a LAZ asset has none).
 pub fn cloud_asset_words(model: &Model, id: &str, format: &str, points: u64) -> String {
     let item = model.styles().items.iter().find(|it| {
-        it.get("kind").and_then(Value::as_str) == Some("asset") && it.get("id").and_then(Value::as_str) == Some(id)
+        it.get("kind").and_then(Value::as_str) == Some("asset")
+            && it.get("id").and_then(Value::as_str) == Some(id)
     });
     let count = crate::road_dialog::grouped(points as f64, 0);
     match item {
@@ -150,13 +151,19 @@ pub fn embed(model: &mut Model, slot: Slot, drawing: Option<&Path>) -> Vec<Strin
     };
     edit(
         model,
-        kentos_commands::ImagesOperation::Embed { uids: Some(vec![uid.to_string()]) },
+        kentos_commands::ImagesOperation::Embed {
+            uids: Some(vec![uid.to_string()]),
+        },
         drawing,
     )
 }
 
 /// Runs `cad.images.edit`: its refusal or warnings, said.
-pub fn edit(model: &mut Model, operation: kentos_commands::ImagesOperation, drawing: Option<&Path>) -> Vec<String> {
+pub fn edit(
+    model: &mut Model,
+    operation: kentos_commands::ImagesOperation,
+    drawing: Option<&Path>,
+) -> Vec<String> {
     use kentos_commands::CommandResult;
     let input = kentos_commands::ImagesEdit {
         operation,
@@ -165,8 +172,12 @@ pub fn edit(model: &mut Model, operation: kentos_commands::ImagesOperation, draw
     };
     let mut cx = kentos_native_application::ExecutionContext::new(model);
     match kentos_native_application::images_edit::execute(&mut cx, input) {
-        CommandResult::Completed { warnings, .. } => warnings.into_iter().map(|w| w.message).collect(),
-        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+        CommandResult::Completed { warnings, .. } => {
+            warnings.into_iter().map(|w| w.message).collect()
+        }
+        CommandResult::Failed { error }
+        | CommandResult::Conflict { error }
+        | CommandResult::NeedsInput { error } => {
             vec![error.message]
         }
         _ => Vec::new(),
@@ -232,8 +243,14 @@ impl crate::app::App {
     /// The frames of the linked pictures whose file was not read (docs/adr/0350 §3), for their marks: the drawing's
     /// objects are walked only while some picture is unread.
     pub(crate) fn missing_pictures(&self) -> Vec<[kentos_interaction::Vec2; 4]> {
-        let unread: std::collections::HashSet<String> =
-            self.styles.images.files().into_iter().filter(|(_, read)| !read).map(|(f, _)| f).collect();
+        let unread: std::collections::HashSet<String> = self
+            .styles
+            .images
+            .files()
+            .into_iter()
+            .filter(|(_, read)| !read)
+            .map(|(f, _)| f)
+            .collect();
         let Some(doc) = self.document.as_ref().filter(|_| !unread.is_empty()) else {
             return Vec::new();
         };
@@ -247,8 +264,15 @@ impl crate::app::App {
                 {
                     let i = &im.image;
                     let (c, s) = (i.rotation.cos(), i.rotation.sin());
-                    let at = |u: f64, v: f64| kentos_interaction::Vec2::new(i.p.x + u * c - v * s, i.p.y + u * s + v * c);
-                    Some([at(0.0, 0.0), at(i.width, 0.0), at(i.width, i.height), at(0.0, i.height)])
+                    let at = |u: f64, v: f64| {
+                        kentos_interaction::Vec2::new(i.p.x + u * c - v * s, i.p.y + u * s + v * c)
+                    };
+                    Some([
+                        at(0.0, 0.0),
+                        at(i.width, 0.0),
+                        at(i.width, i.height),
+                        at(0.0, i.height),
+                    ])
                 }
                 _ => None,
             })
@@ -263,7 +287,10 @@ mod stretch_tests {
     #[test]
     fn another_shape_in_the_frame_is_said() {
         let note = super::stretch_note(4.0, 2.828, 1254.0, 1254.0).expect("said");
-        assert!(note.contains("(1.00)") && note.contains("(1.41)") && note.contains("4.000 m"), "{note}");
+        assert!(
+            note.contains("(1.00)") && note.contains("(1.41)") && note.contains("4.000 m"),
+            "{note}"
+        );
         assert_eq!(super::stretch_note(4.0, 2.828, 2977.0, 2105.0), None);
     }
 }

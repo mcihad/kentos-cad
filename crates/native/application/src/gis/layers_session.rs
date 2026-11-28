@@ -5,8 +5,9 @@
 //! a save would meet, field by field; `save` with `choices` settles them as chosen and writes (docs/adr/9193).
 
 use kentos_commands::{
-    ClashChoice, ClashDeleted, ClashSide, CommandResult, CommandWarning, FieldConflict, LAYER_SESSION_KEYS_MOST,
-    LayersSession, LayersSessionDone, RowConflict, SessionAction, SessionLayer,
+    ClashChoice, ClashDeleted, ClashSide, CommandResult, CommandWarning, FieldConflict,
+    LAYER_SESSION_KEYS_MOST, LayersSession, LayersSessionDone, RowConflict, SessionAction,
+    SessionLayer,
 };
 use kentos_domain::Document;
 
@@ -39,14 +40,21 @@ fn check(doc: &Document, input: &LayersSession) -> Result<Vec<String>, Stop> {
     if single && named.len() > 1 {
         return Err(fail(
             codes::ONE_LAYER,
-            format!("Satır alma ve silme tek bir katmanla çalışır; {} katman verildi.", named.len()),
+            format!(
+                "Satır alma ve silme tek bir katmanla çalışır; {} katman verildi.",
+                named.len()
+            ),
             "layers",
         ));
     }
     if single {
         let keys = input.keys.as_deref().unwrap_or_default();
         if keys.is_empty() {
-            return Err(fail(codes::NO_KEYS, "Satırların anahtarlarını (keys) verin.".into(), "keys"));
+            return Err(fail(
+                codes::NO_KEYS,
+                "Satırların anahtarlarını (keys) verin.".into(),
+                "keys",
+            ));
         }
         if keys.len() > LAYER_SESSION_KEYS_MOST {
             return Err(fail(
@@ -59,17 +67,27 @@ fn check(doc: &Document, input: &LayersSession) -> Result<Vec<String>, Stop> {
             ));
         }
     }
-    let layers = if named.is_empty() { doc.edited_layers() } else { named };
+    let layers = if named.is_empty() {
+        doc.edited_layers()
+    } else {
+        named
+    };
     for (i, id) in layers.iter().enumerate() {
         let path = format!("layers[{i}]");
         let Some(node) = doc.layers().get(id) else {
-            return Err(fail(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), &path));
+            return Err(fail(
+                codes::LAYER_NOT_FOUND,
+                format!("“{id}” kimlikli katman çizimde yok."),
+                &path,
+            ));
         };
         let name = &node.name;
         let Some(data) = &node.data else {
             return Err(fail(
                 codes::NOT_A_DATA_LAYER,
-                format!("“{name}” bir veri katmanı değil; düzenleme oturumu yalnız bir tablodan gelen katmanın olur."),
+                format!(
+                    "“{name}” bir veri katmanı değil; düzenleme oturumu yalnız bir tablodan gelen katmanın olur."
+                ),
                 &path,
             ));
         };
@@ -86,7 +104,9 @@ fn check(doc: &Document, input: &LayersSession) -> Result<Vec<String>, Stop> {
         if !doc.editing(id) {
             return Err(fail(
                 codes::DATA_LAYER_NOT_EDITING,
-                format!("“{name}” düzenlemeye açık değil; önce düzenlemesini başlatın (action: start)."),
+                format!(
+                    "“{name}” düzenlemeye açık değil; önce düzenlemesini başlatın (action: start)."
+                ),
                 &path,
             ));
         }
@@ -109,7 +129,10 @@ fn check(doc: &Document, input: &LayersSession) -> Result<Vec<String>, Stop> {
     if action == SessionAction::Stop
         && let Some(id) = together.iter().find(|l| doc.data_modified(l))
     {
-        let name = doc.layers().get(id).map_or(id.as_str(), |n| n.name.as_str());
+        let name = doc
+            .layers()
+            .get(id)
+            .map_or(id.as_str(), |n| n.name.as_str());
         return Err(fail(
             codes::DATA_EDITS_UNSAVED,
             format!(
@@ -140,7 +163,11 @@ fn state(doc: &Document, layer: &str) -> SessionLayer {
     }
 }
 
-fn done(doc: &Document, layers: Vec<SessionLayer>, objects: Vec<Option<String>>) -> LayersSessionDone {
+fn done(
+    doc: &Document,
+    layers: Vec<SessionLayer>,
+    objects: Vec<Option<String>>,
+) -> LayersSessionDone {
     LayersSessionDone {
         layers,
         objects,
@@ -164,14 +191,21 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &LayersSession) -> CommandResu
 pub fn plan(cx: &ExecutionContext<'_>, input: &LayersSession) -> CommandResult<LayersSessionDone> {
     match check(cx.doc, input) {
         Ok(layers) => CommandResult::Completed {
-            output: done(cx.doc, layers.iter().map(|l| state(cx.doc, l)).collect(), Vec::new()),
+            output: done(
+                cx.doc,
+                layers.iter().map(|l| state(cx.doc, l)).collect(),
+                Vec::new(),
+            ),
             warnings: Vec::new(),
         },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersSession) -> CommandResult<LayersSessionDone> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersSession,
+) -> CommandResult<LayersSessionDone> {
     let layers = match check(cx.doc, &input) {
         Ok(l) => l,
         Err(stop) => return stop.into(),
@@ -204,7 +238,11 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersSession) -> CommandRe
                 }
             }
             CommandResult::Completed {
-                output: done(doc, layers.iter().map(|l| state(doc, l)).collect(), Vec::new()),
+                output: done(
+                    doc,
+                    layers.iter().map(|l| state(doc, l)).collect(),
+                    Vec::new(),
+                ),
                 warnings: Vec::new(),
             }
         }
@@ -212,13 +250,18 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersSession) -> CommandRe
 }
 
 /// `delete`'s write: one undo step of the document, journalled.
-fn write_delete(cx: &mut ExecutionContext<'_>, input: LayersSession) -> CommandResult<LayersSessionDone> {
+fn write_delete(
+    cx: &mut ExecutionContext<'_>,
+    input: LayersSession,
+) -> CommandResult<LayersSessionDone> {
     let layers = match check(cx.doc, &input) {
         Ok(l) => l,
         Err(stop) => return stop.into(),
     };
     let doc = &mut *cx.doc;
-    if let Err(refusal) = doc.delete_data_rows(&layers[0], input.keys.as_deref().unwrap_or_default()) {
+    if let Err(refusal) =
+        doc.delete_data_rows(&layers[0], input.keys.as_deref().unwrap_or_default())
+    {
         return fail(codes::DATA_LAYER_NOT_EDITING, refusal.0, "layers").into();
     }
     CommandResult::Completed {
@@ -228,9 +271,18 @@ fn write_delete(cx: &mut ExecutionContext<'_>, input: LayersSession) -> CommandR
 }
 
 /// `take`: the rows read from the table and taken into the drawing; their objects' ids in the keys' order.
-fn take(cx: &mut ExecutionContext<'_>, layer: &str, keys: &[i64]) -> CommandResult<LayersSessionDone> {
+fn take(
+    cx: &mut ExecutionContext<'_>,
+    layer: &str,
+    keys: &[i64],
+) -> CommandResult<LayersSessionDone> {
     let Some(node) = cx.doc.layers().get(layer).cloned() else {
-        return fail(codes::LAYER_NOT_FOUND, format!("“{layer}” kimlikli katman çizimde yok."), "layers").into();
+        return fail(
+            codes::LAYER_NOT_FOUND,
+            format!("“{layer}” kimlikli katman çizimde yok."),
+            "layers",
+        )
+        .into();
     };
     let settings = cx.doc.settings().clone();
     let rows = match data_write::rows_to_take(&node, &settings, keys, &|| cx.stopped()) {
@@ -258,7 +310,11 @@ fn take(cx: &mut ExecutionContext<'_>, layer: &str, keys: &[i64]) -> CommandResu
 /// `save`: the layers' changes written, each alone or a source's together in one transaction (docs/adr/9104 §2),
 /// checked against what others wrote since (unless `force`), and taken out of the drawing. One group that fails is the
 /// command's refusal (a conflict's own); of several, those that fail are warnings while the others are written.
-fn save(cx: &mut ExecutionContext<'_>, layers: &[String], input: &LayersSession) -> CommandResult<LayersSessionDone> {
+fn save(
+    cx: &mut ExecutionContext<'_>,
+    layers: &[String],
+    input: &LayersSession,
+) -> CommandResult<LayersSessionDone> {
     let force = input.force == Some(true);
     let choices = input.choices.as_deref();
     let settings = cx.doc.settings().clone();
@@ -288,8 +344,13 @@ fn save(cx: &mut ExecutionContext<'_>, layers: &[String], input: &LayersSession)
                 kentos_commands::CAD_LAYERS_SESSION_VERSION,
                 input.clone(),
                 move |cx, _| match crate::data_clash::settle(cx.doc, &chosen, &picks, SETTLE) {
-                    Ok(done) if done.problems.is_empty() => CommandResult::Completed { output: (), warnings: Vec::new() },
-                    Ok(done) => fail(codes::DATA_SAVE_FAILED, done.problems.join("; "), "choices").into(),
+                    Ok(done) if done.problems.is_empty() => CommandResult::Completed {
+                        output: (),
+                        warnings: Vec::new(),
+                    },
+                    Ok(done) => {
+                        fail(codes::DATA_SAVE_FAILED, done.problems.join("; "), "choices").into()
+                    }
                     Err(why) => fail(codes::DATA_SAVE_FAILED, why, "choices").into(),
                 },
             );
@@ -302,8 +363,15 @@ fn save(cx: &mut ExecutionContext<'_>, layers: &[String], input: &LayersSession)
                 CommandResult::Cancelled => return CommandResult::Cancelled,
             }
             settled.extend(rows.iter().map(row_conflict));
-            group = ids.iter().filter_map(|id| data_write::writes_of(cx.doc, id)).collect();
-            result = if group.is_empty() { Ok(Vec::new()) } else { data_write::write_group(&group, &settings, false) };
+            group = ids
+                .iter()
+                .filter_map(|id| data_write::writes_of(cx.doc, id))
+                .collect();
+            result = if group.is_empty() {
+                Ok(Vec::new())
+            } else {
+                data_write::write_group(&group, &settings, false)
+            };
         }
         match result {
             Ok(keys) => {
@@ -313,7 +381,8 @@ fn save(cx: &mut ExecutionContext<'_>, layers: &[String], input: &LayersSession)
                         w.changes.changed.len() as u32,
                         w.changes.deleted.len() as u32,
                     );
-                    if let Err(message) = cx.doc.data_saved(&w.layer, data_write::written(w, &keys)) {
+                    if let Err(message) = cx.doc.data_saved(&w.layer, data_write::written(w, &keys))
+                    {
                         failures.push((w.layer.clone(), WriteFailure::Refused(message, None)));
                         continue;
                     }
@@ -347,7 +416,9 @@ fn save(cx: &mut ExecutionContext<'_>, layers: &[String], input: &LayersSession)
     let order = |id: &str| layers.iter().position(|l| l == id).unwrap_or(usize::MAX);
     out.sort_by_key(|s| order(&s.layer));
     let doc = &*cx.doc;
-    let written = out.iter().any(|s| s.failed.is_none() && (s.added + s.changed + s.deleted) > 0);
+    let written = out
+        .iter()
+        .any(|s| s.failed.is_none() && (s.added + s.changed + s.deleted) > 0);
     if !failures.is_empty() && !written {
         let (id, failure) = failures.swap_remove(0);
         let path = format!("layers[{}]", order(&id).min(layers.len().saturating_sub(1)));
@@ -362,7 +433,9 @@ fn save(cx: &mut ExecutionContext<'_>, layers: &[String], input: &LayersSession)
                 e.retryable = true;
                 CommandResult::Conflict { error: e }
             }
-            WriteFailure::Unreachable(m) => Stop::failed(error(codes::SOURCE_UNREACHABLE, m, Some(path))).into(),
+            WriteFailure::Unreachable(m) => {
+                Stop::failed(error(codes::SOURCE_UNREACHABLE, m, Some(path))).into()
+            }
             // The commit's answer lost (docs/adr/9126): not retried by itself, the source may hold the rows already.
             WriteFailure::Uncertain(m, _) => {
                 let words = format!(
@@ -431,7 +504,11 @@ fn picks_of(
     choices: &[ClashChoice],
     clash_words: &str,
 ) -> Result<Vec<Vec<bool>>, Box<CommandResult<LayersSessionDone>>> {
-    let name = |layer: &str| doc.layers().get(layer).map_or_else(|| layer.to_owned(), |n| n.name.clone());
+    let name = |layer: &str| {
+        doc.layers()
+            .get(layer)
+            .map_or_else(|| layer.to_owned(), |n| n.name.clone())
+    };
     let bad = |i: usize, words: String| {
         Box::new(
             fail(
@@ -445,10 +522,25 @@ fn picks_of(
     let side = |s: ClashSide| s == ClashSide::Mine;
     for (i, c) in choices.iter().enumerate() {
         let Some(r) = rows.iter().find(|r| r.layer == c.layer && r.key == c.key) else {
-            return Err(bad(i, format!("“{}” katmanının {} anahtarlı satırı çakışmıyor", name(&c.layer), c.key)));
+            return Err(bad(
+                i,
+                format!(
+                    "“{}” katmanının {} anahtarlı satırı çakışmıyor",
+                    name(&c.layer),
+                    c.key
+                ),
+            ));
         };
-        let at = format!("“{}” katmanının {} anahtarlı satırının", name(&c.layer), c.key);
-        if let Some(f) = c.fields.keys().find(|f| !r.fields.iter().any(|x| &x.field == *f)) {
+        let at = format!(
+            "“{}” katmanının {} anahtarlı satırının",
+            name(&c.layer),
+            c.key
+        );
+        if let Some(f) = c
+            .fields
+            .keys()
+            .find(|f| !r.fields.iter().any(|x| &x.field == *f))
+        {
             return Err(bad(i, format!("{at} “{f}” alanı çakışmıyor")));
         }
         if c.shape.is_some() && !r.geometry {
@@ -456,12 +548,19 @@ fn picks_of(
         }
         match c.row {
             Some(_) if !(r.gone() || r.deleted_here()) => {
-                return Err(bad(i, format!("{at} iki yanı da duruyor; row yalnız bir yanda silinmiş satırda seçilir")));
+                return Err(bad(
+                    i,
+                    format!(
+                        "{at} iki yanı da duruyor; row yalnız bir yanda silinmiş satırda seçilir"
+                    ),
+                ));
             }
             Some(ClashSide::Mine) if r.gone() && !(r.may_add && r.mine.is_some()) => {
                 return Err(bad(
                     i,
-                    format!("{at} tablodaki kaydı silinmiş ve yeni satır olarak yazılamaz; yalnız theirs seçilir"),
+                    format!(
+                        "{at} tablodaki kaydı silinmiş ve yeni satır olarak yazılamaz; yalnız theirs seçilir"
+                    ),
                 ));
             }
             _ => {}
@@ -470,7 +569,9 @@ fn picks_of(
     let mut out = Vec::with_capacity(rows.len());
     let mut unchosen: Vec<String> = Vec::new();
     for r in rows {
-        let c = choices.iter().find(|c| c.layer == r.layer && c.key == r.key);
+        let c = choices
+            .iter()
+            .find(|c| c.layer == r.layer && c.key == r.key);
         let at = format!("satır {}", r.key);
         if r.gone() && (r.mine.is_none() || !r.may_add) {
             out.push(vec![false]);
@@ -529,12 +630,28 @@ fn conflicts(cx: &mut ExecutionContext<'_>, layers: &[String]) -> CommandResult<
     for group in &groups {
         match data_write::clashes_of_group(group, &settings) {
             Ok(rows) => found.extend(rows.iter().map(row_conflict)),
-            Err(WriteFailure::Unreachable(m)) => return fail(codes::SOURCE_UNREACHABLE, m, "layers").into(),
-            Err(failure) => return fail(codes::DATA_SAVE_FAILED, failure.message().to_owned(), "layers").into(),
+            Err(WriteFailure::Unreachable(m)) => {
+                return fail(codes::SOURCE_UNREACHABLE, m, "layers").into();
+            }
+            Err(failure) => {
+                return fail(
+                    codes::DATA_SAVE_FAILED,
+                    failure.message().to_owned(),
+                    "layers",
+                )
+                .into();
+            }
         }
     }
     let doc = &*cx.doc;
-    let mut output = done(doc, layers.iter().map(|l| state(doc, l)).collect(), Vec::new());
+    let mut output = done(
+        doc,
+        layers.iter().map(|l| state(doc, l)).collect(),
+        Vec::new(),
+    );
     output.conflicts = found;
-    CommandResult::Completed { output, warnings: Vec::new() }
+    CommandResult::Completed {
+        output,
+        warnings: Vec::new(),
+    }
 }

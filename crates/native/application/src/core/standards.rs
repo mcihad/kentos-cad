@@ -13,8 +13,8 @@
 use kentos_commands::{
     CommandResult, CommandWarning, DimensionStyleDef, DrawingFont, DrawingStandard, LayerNode,
     LayerNodeType, LayerStyle, LayersTranslate, LineType, StandardConflict, StandardIssue,
-    StandardIssueKind, StandardIssueState, StandardOrigin, StandardProvenance, StandardsApplied, StandardsApply,
-    StandardsCheck, StandardsConflicts, StandardsConflictsReport, StandardsReport,
+    StandardIssueKind, StandardIssueState, StandardOrigin, StandardProvenance, StandardsApplied,
+    StandardsApply, StandardsCheck, StandardsConflicts, StandardsConflictsReport, StandardsReport,
     StandardsResolve, StandardsResolved, TextStyleDef, TranslateRule, built_in_standard,
     built_in_standards, fold_name, font_id, font_label, pattern_matches, standard_problem,
 };
@@ -211,7 +211,9 @@ pub(crate) fn resolve_project(doc: &Document) -> CommandResult<StandardsResolved
         // Office tool palettes (docs/adr/1014): an id once, the first standard's.
         for item in &source.tool_palettes {
             if tool_palettes.insert(item.id.to_lowercase()) {
-                provenance.tool_palettes.insert(item.id.clone(), origin(package));
+                provenance
+                    .tool_palettes
+                    .insert(item.id.clone(), origin(package));
                 resources.tool_palettes.push(item.clone());
             }
         }
@@ -535,10 +537,8 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
             for item in &resources.blocks {
                 let key = kentos_commands::blocks::name_key(&item.name);
                 if let Some((first_id, first)) = blocks.get(&key) {
-                    let first_value =
-                        serde_json::to_value(first).unwrap_or_default();
-                    let later_value =
-                        serde_json::to_value(item).unwrap_or_default();
+                    let first_value = serde_json::to_value(first).unwrap_or_default();
+                    let later_value = serde_json::to_value(item).unwrap_or_default();
                     let fields = resource_differences(&first_value, &later_value);
                     if !fields.is_empty() {
                         conflicts.push(StandardConflict {
@@ -560,10 +560,8 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
                 if let Some((first_id, first)) = sheet_templates.get(&key) {
                     if first.revision != item.revision {
                         let fields = vec!["revision".into()];
-                        let first_value =
-                            serde_json::to_value(first).unwrap_or_default();
-                        let later_value =
-                            serde_json::to_value(item).unwrap_or_default();
+                        let first_value = serde_json::to_value(first).unwrap_or_default();
+                        let later_value = serde_json::to_value(item).unwrap_or_default();
                         conflicts.push(StandardConflict {
                             kind: "sheetTemplateReference".into(),
                             name: item.template_id.clone(),
@@ -581,10 +579,8 @@ fn project_conflicts(doc: &Document) -> CommandResult<StandardsConflictsReport> 
             for item in &resources.leader_styles {
                 let key = item.name.trim().to_lowercase();
                 if let Some((first_id, first)) = leader_styles.get(&key) {
-                    let mut first_value =
-                        serde_json::to_value(first).unwrap_or_default();
-                    let mut later_value =
-                        serde_json::to_value(item).unwrap_or_default();
+                    let mut first_value = serde_json::to_value(first).unwrap_or_default();
+                    let mut later_value = serde_json::to_value(item).unwrap_or_default();
                     for value in [&mut first_value, &mut later_value] {
                         if let Some(map) = value.as_object_mut() {
                             map.remove("id");
@@ -703,7 +699,10 @@ pub(crate) fn resource_appearance<T: serde::Serialize>(item: &T) -> serde_json::
     value
 }
 
-pub(crate) fn style_differences(first: &serde_json::Value, later: &serde_json::Value) -> Vec<String> {
+pub(crate) fn style_differences(
+    first: &serde_json::Value,
+    later: &serde_json::Value,
+) -> Vec<String> {
     fn equal(a: &serde_json::Value, b: &serde_json::Value) -> bool {
         match (a, b) {
             (serde_json::Value::Number(a), serde_json::Value::Number(b)) => a
@@ -1415,8 +1414,17 @@ pub fn execute_check(
 }
 
 fn report(doc: &Document, input: &StandardsCheck) -> CommandResult<StandardsReport> {
-    match checked_report(doc, input.name.as_deref(), input.standard.as_ref(), input.resources.as_ref(), input.origin.as_ref()) {
-        Ok(r) => CommandResult::Completed { output: r, warnings: Vec::new() },
+    match checked_report(
+        doc,
+        input.name.as_deref(),
+        input.standard.as_ref(),
+        input.resources.as_ref(),
+        input.origin.as_ref(),
+    ) {
+        Ok(r) => CommandResult::Completed {
+            output: r,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -1439,8 +1447,18 @@ pub(crate) fn checked_report(
     let origin = source_of(&standard, origin);
     let (mut accepted, mut lapsed) = (0, 0);
     for issue in &mut issues {
-        let Some(e) = doc.settings().standard_exceptions.iter().find(|e| names(e, issue, &origin)) else { continue };
-        issue.state = if e.revision == origin.revision && e.expected == issue.expected && e.found == issue.found {
+        let Some(e) = doc
+            .settings()
+            .standard_exceptions
+            .iter()
+            .find(|e| names(e, issue, &origin))
+        else {
+            continue;
+        };
+        issue.state = if e.revision == origin.revision
+            && e.expected == issue.expected
+            && e.found == issue.found
+        {
             accepted += 1;
             StandardIssueState::Accepted
         } else {
@@ -1464,17 +1482,32 @@ pub(crate) fn source_of(
     standard: &DrawingStandard,
     origin: Option<&kentos_commands::StandardOrigin>,
 ) -> kentos_commands::StandardOrigin {
-    origin.cloned().unwrap_or_else(|| kentos_commands::StandardOrigin { id: standard.name.clone(), revision: String::new() })
+    origin
+        .cloned()
+        .unwrap_or_else(|| kentos_commands::StandardOrigin {
+            id: standard.name.clone(),
+            revision: String::new(),
+        })
 }
 
 /// A finding's kind as the check names it (`layerColor`).
 pub(crate) fn kind_name(kind: StandardIssueKind) -> String {
-    serde_json::to_value(kind).ok().and_then(|v| v.as_str().map(str::to_owned)).unwrap_or_default()
+    serde_json::to_value(kind)
+        .ok()
+        .and_then(|v| v.as_str().map(str::to_owned))
+        .unwrap_or_default()
 }
 
 /// Whether the accepted finding `e` names `issue` against `origin` (its revision and values aside).
-pub(crate) fn names(e: &kentos_commands::StandardException, issue: &StandardIssue, origin: &kentos_commands::StandardOrigin) -> bool {
-    e.kind == kind_name(issue.kind) && e.subject == issue.subject && e.layer == issue.layer && e.standard == origin.id
+pub(crate) fn names(
+    e: &kentos_commands::StandardException,
+    issue: &StandardIssue,
+    origin: &kentos_commands::StandardOrigin,
+) -> bool {
+    e.kind == kind_name(issue.kind)
+        && e.subject == issue.subject
+        && e.layer == issue.layer
+        && e.standard == origin.id
 }
 
 fn check_resources(resources: Option<&kentos_commands::StandardResources>) -> Result<(), Stop> {
@@ -1530,8 +1563,14 @@ fn check_resources(resources: Option<&kentos_commands::StandardResources>) -> Re
             "resources.dimensionStyleDefinitions",
         ));
     }
-    if let Some(problem) = kentos_commands::table_style_defs_problem(&resources.table_style_definitions) {
-        return Err(fail(codes::INVALID_STANDARD, problem, "resources.tableStyleDefinitions"));
+    if let Some(problem) =
+        kentos_commands::table_style_defs_problem(&resources.table_style_definitions)
+    {
+        return Err(fail(
+            codes::INVALID_STANDARD,
+            problem,
+            "resources.tableStyleDefinitions",
+        ));
     }
     Ok(())
 }
@@ -2047,7 +2086,10 @@ fn resource_issues(
     // style are its impact (direct tables in `objects`, those inside block definitions in the message).
     if !resources.table_style_definitions.is_empty() {
         let mut table_uses = std::collections::BTreeMap::<&str, [usize; 2]>::new();
-        let defined = doc.blocks().iter().flat_map(|b| b.entities.iter().map(|e| (e, 1)));
+        let defined = doc
+            .blocks()
+            .iter()
+            .flat_map(|b| b.entities.iter().map(|e| (e, 1)));
         for (entity, index) in doc.entities().map(|e| (e, 0)).chain(defined) {
             if let kentos_commands::Entity::Table(t) = entity
                 && let Some(id) = t.table_style.as_deref()
@@ -2056,28 +2098,36 @@ fn resource_issues(
             }
         }
         for expected in &resources.table_style_definitions {
-            let found = doc
-                .settings()
-                .table_styles
-                .iter()
-                .find(|item| item.name.trim().to_lowercase() == expected.name.trim().to_lowercase());
+            let found = doc.settings().table_styles.iter().find(|item| {
+                item.name.trim().to_lowercase() == expected.name.trim().to_lowercase()
+            });
             let expected_value = resource_appearance(expected);
-            let [direct, block_parts] =
-                found.and_then(|item| table_uses.get(item.id.as_str())).copied().unwrap_or_default();
+            let [direct, block_parts] = found
+                .and_then(|item| table_uses.get(item.id.as_str()))
+                .copied()
+                .unwrap_or_default();
             let (kind, message, found_value) = match found {
                 None => (
                     StandardIssueKind::MissingTableStyleDefinition,
-                    format!("“{}” tablo stili çizimde yok; stili açıkça kurun.", expected.name),
-                    None,
-                ),
-                Some(found) if !style_differences(&resource_appearance(found), &expected_value).is_empty() => (
-                    StandardIssueKind::TableStyleDefinition,
                     format!(
-                        "“{}” tablo stilinin hücre stilleri ofis standardından farklı; değişimi açıkça inceleyin. Bu yerel stil {direct} doğrudan tabloda ve {block_parts} blok parçasında kullanılıyor.",
+                        "“{}” tablo stili çizimde yok; stili açıkça kurun.",
                         expected.name
                     ),
-                    Some(resource_appearance(found).to_string()),
+                    None,
                 ),
+                Some(found)
+                    if !style_differences(&resource_appearance(found), &expected_value)
+                        .is_empty() =>
+                {
+                    (
+                        StandardIssueKind::TableStyleDefinition,
+                        format!(
+                            "“{}” tablo stilinin hücre stilleri ofis standardından farklı; değişimi açıkça inceleyin. Bu yerel stil {direct} doğrudan tabloda ve {block_parts} blok parçasında kullanılıyor.",
+                            expected.name
+                        ),
+                        Some(resource_appearance(found).to_string()),
+                    )
+                }
                 Some(_) => continue,
             };
             issues.push(StandardIssue {
@@ -2105,9 +2155,10 @@ fn resource_issues(
             let Some(origin) = &sheet.origin else {
                 continue;
             };
-            let approved = resources.sheet_templates.iter().find(|item| {
-                item.template_id.to_lowercase() == origin.template_id.to_lowercase()
-            });
+            let approved = resources
+                .sheet_templates
+                .iter()
+                .find(|item| item.template_id.to_lowercase() == origin.template_id.to_lowercase());
             if approved.is_some_and(|item| item.revision == origin.revision) {
                 continue;
             }

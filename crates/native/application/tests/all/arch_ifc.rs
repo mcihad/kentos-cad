@@ -20,7 +20,9 @@ fn building() -> Document {
 fn usages(b: &kentos_ifc::building::Building) -> usize {
     let mut seen: Vec<(String, String, u64)> = Vec::new();
     for (k, top) in &b.layer_usages {
-        let Some((_, name, layers)) = b.layer_sets.iter().find(|(i, ..)| i == k) else { continue };
+        let Some((_, name, layers)) = b.layer_sets.iter().find(|(i, ..)| i == k) else {
+            continue;
+        };
         let key = (name.clone(), format!("{layers:?}"), top.to_bits());
         if !seen.contains(&key) {
             seen.push(key);
@@ -41,7 +43,11 @@ fn a_layered_slab_is_its_build_up_laid_from_its_top() {
     for (uid, e) in doc.entities_with_uids() {
         let Entity::Slab(sl) = e else { continue };
         let id = uid.as_u128();
-        let at = b.elements.iter().position(|el| el.id == Some(id)).expect("its element");
+        let at = b
+            .elements
+            .iter()
+            .position(|el| el.id == Some(id))
+            .expect("its element");
         let set = b.layer_sets.iter().find(|(k, ..)| *k == at);
         if sl.slab.layers.is_empty() {
             assert!(set.is_none(), "a plain slab keeps its one material");
@@ -51,16 +57,38 @@ fn a_layered_slab_is_its_build_up_laid_from_its_top() {
         let (_, name, layers) = set.expect("a layered slab's set");
         assert_eq!(name, "Döşeme katmanları");
         let total: f64 = layers.iter().map(|l| l.thickness).sum();
-        assert!((total - sl.slab.whole_thickness()).abs() < 1e-9, "{total} {}", sl.slab.whole_thickness());
+        assert!(
+            (total - sl.slab.whole_thickness()).abs() < 1e-9,
+            "{total} {}",
+            sl.slab.whole_thickness()
+        );
         let structure = &layers[sl.slab.layers.over.len()];
         assert_eq!(
-            (structure.name.as_str(), structure.material.as_deref(), structure.thickness, structure.category),
-            ("Taşıyıcı", sl.slab.material.as_deref(), sl.slab.thickness, Some("LoadBearing"))
+            (
+                structure.name.as_str(),
+                structure.material.as_deref(),
+                structure.thickness,
+                structure.category
+            ),
+            (
+                "Taşıyıcı",
+                sl.slab.material.as_deref(),
+                sl.slab.thickness,
+                Some("LoadBearing")
+            )
         );
-        assert_eq!(b.layer_usages.iter().find(|(k, _)| *k == at).map(|(_, t)| *t), Some(sl.slab.offset));
+        assert_eq!(
+            b.layer_usages
+                .iter()
+                .find(|(k, _)| *k == at)
+                .map(|(_, t)| *t),
+            Some(sl.slab.offset)
+        );
         if sl.slab.arch.level.as_deref() == Some("zemin") && sl.slab.layers.under.is_empty() {
-            let rows: Vec<(&str, f64, Option<&str>)> =
-                layers.iter().map(|l| (l.name.as_str(), l.thickness, l.category)).collect();
+            let rows: Vec<(&str, f64, Option<&str>)> = layers
+                .iter()
+                .map(|l| (l.name.as_str(), l.thickness, l.category))
+                .collect();
             assert_eq!(
                 rows,
                 [
@@ -75,9 +103,16 @@ fn a_layered_slab_is_its_build_up_laid_from_its_top() {
     }
     assert!(layered > 0, "the section building's slabs are layered");
     let text = kentos_ifc::building::write(&b);
-    assert_eq!(text.matches("IFCMATERIALLAYERSETUSAGE(").count(), usages(&b));
+    assert_eq!(
+        text.matches("IFCMATERIALLAYERSETUSAGE(").count(),
+        usages(&b)
+    );
     let laid = |l: &&str| l.contains(",.AXIS3.,.NEGATIVE.,");
-    assert!(text.lines().filter(|l| l.contains("IFCMATERIALLAYERSETUSAGE(")).all(|l| laid(&l)));
+    assert!(
+        text.lines()
+            .filter(|l| l.contains("IFCMATERIALLAYERSETUSAGE("))
+            .all(|l| laid(&l))
+    );
 }
 
 /// An element rising over its storey (docs/adr/8168): the section building's east wall drawn once over both storeys
@@ -93,41 +128,87 @@ fn a_wall_two_storeys_tall_spans_the_storey_over_its_own() {
     use kentos_native_application::{ExecutionContext, registry};
     let mut doc = building();
     let east = |pts: &[kentos_commands::Vec2]| {
-        pts.first().is_some_and(|p| p.x == 12.0 && p.y == 0.0) && pts.last().is_some_and(|q| q.x == 12.0 && q.y == 9.0)
+        pts.first().is_some_and(|p| p.x == 12.0 && p.y == 0.0)
+            && pts.last().is_some_and(|q| q.x == 12.0 && q.y == 9.0)
     };
     let (mut tall, mut gone, mut slabs) = (None, Vec::new(), Vec::new());
     for (u, e) in doc.entities_with_uids() {
         match e {
-            Entity::Wall(w) if east(&w.wall.pts) && w.wall.arch.level.as_deref() == Some("zemin") => tall = Some(u),
+            Entity::Wall(w)
+                if east(&w.wall.pts) && w.wall.arch.level.as_deref() == Some("zemin") =>
+            {
+                tall = Some(u)
+            }
             Entity::Wall(w) if east(&w.wall.pts) => gone.push(u.to_string()),
             Entity::Beam(b) if east(&b.beam.pts) => gone.push(u.to_string()),
-            Entity::Slab(s) if s.slab.arch.level.as_deref() == Some("k1") => slabs.push(u.to_string()),
+            Entity::Slab(s) if s.slab.arch.level.as_deref() == Some("k1") => {
+                slabs.push(u.to_string())
+            }
             _ => {}
         }
     }
     let uid = tall.expect("the ground storey's east wall").to_string();
-    assert_eq!((gone.len(), slabs.len()), (3, 2), "the first storey's east wall and both east beams; the two slabs");
+    assert_eq!(
+        (gone.len(), slabs.len()),
+        (3, 2),
+        "the first storey's east wall and both east beams; the two slabs"
+    );
     let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
     let strip = serde_json::json!({"outer": {"pts": [p(11.875, -0.5), p(12.5, -0.5), p(12.5, 9.5), p(11.875, 9.5)]}});
     for (command, input) in [
-        ("cad.walls.edit", serde_json::json!({"uids": [uid], "operation": {"kind": "set", "height": 6.6}})),
+        (
+            "cad.walls.edit",
+            serde_json::json!({"uids": [uid], "operation": {"kind": "set", "height": 6.6}}),
+        ),
         ("cad.entities.delete", serde_json::json!({"uids": gone})),
-        ("cad.slabs.edit", serde_json::json!({"uids": slabs, "operation": {"kind": "subtract", "parts": [strip]}})),
+        (
+            "cad.slabs.edit",
+            serde_json::json!({"uids": slabs, "operation": {"kind": "subtract", "parts": [strip]}}),
+        ),
     ] {
-        let answer = registry::run(&mut ExecutionContext::new(&mut doc), command, CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            command,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{command}: {answer}");
     }
     let (b, written) = arch_ifc::building(&doc, "2026-11-19T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new());
     let text = kentos_ifc::building::write(&b);
     let id = |l: &str| l.split('=').next().unwrap().to_owned();
-    let wall = id(text.lines().find(|l| l.contains("IFCWALL(") && l.contains(&uid)).expect("the tall wall"));
-    let storey = |name: &str| text.lines().find(|l| l.contains("IFCBUILDINGSTOREY(") && l.contains(name)).map(id);
-    let (upper, lower) = (storey("1._kat").expect("the 1. kat"), storey("Zemin").expect("the ground"));
+    let wall = id(text
+        .lines()
+        .find(|l| l.contains("IFCWALL(") && l.contains(&uid))
+        .expect("the tall wall"));
+    let storey = |name: &str| {
+        text.lines()
+            .find(|l| l.contains("IFCBUILDINGSTOREY(") && l.contains(name))
+            .map(id)
+    };
+    let (upper, lower) = (
+        storey("1._kat").expect("the 1. kat"),
+        storey("Zemin").expect("the ground"),
+    );
     // A relation's related objects: `(..,$,$,$,(#a,#b),#storey);`.
-    let list = |l: &str| l.split("$,$,$,(").nth(1).and_then(|x| x.split(')').next()).unwrap_or("").to_owned();
-    let refs: Vec<&str> = text.lines().filter(|l| l.contains("IFCRELREFERENCEDINSPATIALSTRUCTURE(")).collect();
-    assert!(refs.iter().any(|l| l.ends_with(&format!("({wall}),{upper});"))), "{refs:?}");
+    let list = |l: &str| {
+        l.split("$,$,$,(")
+            .nth(1)
+            .and_then(|x| x.split(')').next())
+            .unwrap_or("")
+            .to_owned()
+    };
+    let refs: Vec<&str> = text
+        .lines()
+        .filter(|l| l.contains("IFCRELREFERENCEDINSPATIALSTRUCTURE("))
+        .collect();
+    assert!(
+        refs.iter()
+            .any(|l| l.ends_with(&format!("({wall}),{upper});"))),
+        "{refs:?}"
+    );
     let contained = text
         .lines()
         .filter(|l| l.contains("IFCRELCONTAINEDINSPATIALSTRUCTURE("))
@@ -142,7 +223,12 @@ fn a_wall_two_storeys_tall_spans_the_storey_over_its_own() {
         .collect();
     assert!(!walls_and_columns.is_empty());
     for r in &refs {
-        assert!(list(r).split(',').all(|x| !walls_and_columns.iter().any(|w| w == x)), "{r}");
+        assert!(
+            list(r)
+                .split(',')
+                .all(|x| !walls_and_columns.iter().any(|w| w == x)),
+            "{r}"
+        );
     }
     if std::env::var_os("KENTOS_WRITE_IFC_BUILDING").is_some() {
         let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -165,20 +251,34 @@ fn a_curved_grid_system_is_a_radial_grid() {
     let input = serde_json::json!({"layerId": "aks", "radial": {
         "center": {"x": 12.0, "y": 4.5}, "angle": -45f64.to_radians(), "turns": [turn, turn, turn],
         "radius": 6.0, "rings": [4.0], "radialStart": "4", "arcStart": "E", "extension": 1.0}});
-    let answer =
-        registry::run(&mut ExecutionContext::new(&mut doc), "cad.grids.create", CallOp::Execute, input).unwrap();
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.grids.create",
+        CallOp::Execute,
+        input,
+    )
+    .unwrap();
     assert_eq!(answer["status"], "completed", "{answer}");
     let (b, written) = arch_ifc::building(&doc, "2026-11-19T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new());
     assert_eq!(written.grid_axes, 13);
-    let tags = |list: &[kentos_ifc::building::Axis]| list.iter().map(|a| a.tag.clone()).collect::<Vec<_>>();
-    let said: Vec<(&str, Vec<String>, Vec<String>)> =
-        b.grids.iter().map(|g| (g.predefined, tags(&g.u), tags(&g.v))).collect();
+    let tags = |list: &[kentos_ifc::building::Axis]| {
+        list.iter().map(|a| a.tag.clone()).collect::<Vec<_>>()
+    };
+    let said: Vec<(&str, Vec<String>, Vec<String>)> = b
+        .grids
+        .iter()
+        .map(|g| (g.predefined, tags(&g.u), tags(&g.v)))
+        .collect();
     let words = |l: &[&str]| l.iter().map(|s| s.to_string()).collect::<Vec<_>>();
     assert_eq!(
         said,
         [
-            ("RECTANGULAR", words(&["A", "B", "C", "D"]), words(&["1", "2", "3"])),
+            (
+                "RECTANGULAR",
+                words(&["A", "B", "C", "D"]),
+                words(&["1", "2", "3"])
+            ),
             ("RADIAL", words(&["4", "5", "6", "7"]), words(&["E", "F"])),
         ]
     );
@@ -187,11 +287,22 @@ fn a_curved_grid_system_is_a_radial_grid() {
     assert_eq!(text.matches("IFCGRID(").count(), 2);
     assert_eq!(text.matches("IFCTRIMMEDCURVE(").count(), 2);
     // Each axis's curve as the grid's footprint applies them: the straight ones polylines, the arcs trimmed circles.
-    let line_of = |id: &str| text.lines().find(|l| l.starts_with(&format!("{id}="))).unwrap_or_default();
+    let line_of = |id: &str| {
+        text.lines()
+            .find(|l| l.starts_with(&format!("{id}=")))
+            .unwrap_or_default()
+    };
     for axis in text.lines().filter(|l| l.contains("IFCGRIDAXIS(")) {
-        let curve = axis.split(",#").nth(1).and_then(|x| x.split(',').next()).expect("its curve");
+        let curve = axis
+            .split(",#")
+            .nth(1)
+            .and_then(|x| x.split(',').next())
+            .expect("its curve");
         let kind = line_of(&format!("#{curve}"));
-        assert!(kind.contains("=IFCPOLYLINE(") || kind.contains("=IFCTRIMMEDCURVE("), "{axis} {kind}");
+        assert!(
+            kind.contains("=IFCPOLYLINE(") || kind.contains("=IFCTRIMMEDCURVE("),
+            "{axis} {kind}"
+        );
     }
     if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_RADIAL") {
         std::fs::write(path, &text).expect("the file kept");
@@ -271,8 +382,15 @@ fn the_fire_compartments_are_zones_of_their_rooms() {
     use kentos_commands::{CallOp, IfcCompartment};
     use kentos_native_application::{ExecutionContext, registry};
     let mut doc = building();
-    let levels: Vec<String> =
-        doc.settings().arch.as_ref().expect("Mimari").levels.iter().map(|l| l.id.clone()).collect();
+    let levels: Vec<String> = doc
+        .settings()
+        .arch
+        .as_ref()
+        .expect("Mimari")
+        .levels
+        .iter()
+        .map(|l| l.id.clone())
+        .collect();
     let compartments: Vec<IfcCompartment> = levels
         .iter()
         .map(|level| IfcCompartment {
@@ -283,10 +401,17 @@ fn the_fire_compartments_are_zones_of_their_rooms() {
                 .collect(),
         })
         .collect();
-    assert_eq!(compartments.iter().map(|c| c.rooms.len()).collect::<Vec<_>>(), [5, 5]);
+    assert_eq!(
+        compartments
+            .iter()
+            .map(|c| c.rooms.len())
+            .collect::<Vec<_>>(),
+        [5, 5]
+    );
     let keep = std::env::var_os("KENTOS_WRITE_IFC_BUILDING").is_some();
     let path = if keep {
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/kesit-binasi-kompartiman.ifc")
+        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/arch/v1/ifc/kesit-binasi-kompartiman.ifc")
     } else {
         std::env::temp_dir().join(format!("kentos-kompartiman-{}.ifc", std::process::id()))
     };
@@ -294,7 +419,13 @@ fn the_fire_compartments_are_zones_of_their_rooms() {
         "path": path.display().to_string(), "stamp": "2026-11-11T12:00:00", "overwrite": true,
         "compartments": compartments,
     });
-    let answer = registry::run(&mut ExecutionContext::new(&mut doc), "cad.arch.ifc", CallOp::Execute, input).unwrap();
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.arch.ifc",
+        CallOp::Execute,
+        input,
+    )
+    .unwrap();
     assert_eq!(answer["status"], "completed", "{answer}");
     assert_eq!(answer["output"]["compartments"], 2, "{answer}");
     let text = std::fs::read_to_string(&path).expect("the file");
@@ -302,17 +433,29 @@ fn the_fire_compartments_are_zones_of_their_rooms() {
         let _ = std::fs::remove_file(&path);
     }
     // STEP writes “ı” as \X2\0131\X0\: the names end in their numbers.
-    let zones: Vec<&str> = text.lines().filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang")).collect();
+    let zones: Vec<&str> = text
+        .lines()
+        .filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang"))
+        .collect();
     assert_eq!(zones.len(), 2, "{zones:#?}");
-    assert!(zones[0].contains("_1'") && zones[1].contains("_2'"), "{zones:#?}");
+    assert!(
+        zones[0].contains("_1'") && zones[1].contains("_2'"),
+        "{zones:#?}"
+    );
     // Each zone groups five spaces.
     for z in &zones {
         let id = z.split('=').next().expect("its instance").trim();
         let rel = text
             .lines()
-            .find(|l| l.contains("IFCRELASSIGNSTOGROUP(") && l.trim_end().ends_with(&format!(",{id});")))
+            .find(|l| {
+                l.contains("IFCRELASSIGNSTOGROUP(") && l.trim_end().ends_with(&format!(",{id});"))
+            })
             .unwrap_or_else(|| panic!("{id}'s members"));
-        let members = rel.split("),$,").next().and_then(|x| x.rsplit('(').next()).expect("the list");
+        let members = rel
+            .split("),$,")
+            .next()
+            .and_then(|x| x.rsplit('(').next())
+            .expect("the list");
         assert_eq!(members.split(',').count(), 5, "{rel}");
     }
 }
@@ -333,12 +476,22 @@ fn a_wall_s_declared_load_bearing_role_is_its_common_set_s() {
     for ((_, uid), bearing) in walls.iter().zip([true, false]) {
         let input = serde_json::json!({"operation": {"kind": "objects", "uids": [uid],
             "loadBearing": {"bearing": bearing, "basis": {"kind": "author"}}}});
-        let answer = registry::run(&mut ExecutionContext::new(&mut doc), "cad.arch.performance", CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            "cad.arch.performance",
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{answer}");
     }
     let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
     let bearing = |id: u128| {
-        let e = b.elements.iter().find(|e| e.id == Some(id)).expect("the wall");
+        let e = b
+            .elements
+            .iter()
+            .find(|e| e.id == Some(id))
+            .expect("the wall");
         e.psets
             .iter()
             .filter(|p| p.name == "Pset_WallCommon")
@@ -367,24 +520,45 @@ fn a_wall_style_s_load_bearing_role_is_its_walls_common_set_s() {
     let styled: Vec<(u128, String, String)> = doc
         .entities_with_uids()
         .filter_map(|(u, e)| match e {
-            Entity::Wall(w) => w.wall.style.clone().map(|s| (u.as_u128(), u.to_string(), s)),
+            Entity::Wall(w) => w
+                .wall
+                .style
+                .clone()
+                .map(|s| (u.as_u128(), u.to_string(), s)),
             _ => None,
         })
         .collect();
-    let style = styled.first().map(|x| x.2.clone()).expect("a wall with a style");
+    let style = styled
+        .first()
+        .map(|x| x.2.clone())
+        .expect("a wall with a style");
     let mine: Vec<&(u128, String, String)> = styled.iter().filter(|x| x.2 == style).collect();
     assert!(mine.len() >= 2, "two walls of one style: {mine:?}");
     let mut run = |input: serde_json::Value| {
-        let answer = registry::run(&mut ExecutionContext::new(&mut doc), "cad.arch.performance", CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            "cad.arch.performance",
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{answer}");
     };
-    run(serde_json::json!({"operation": {"kind": "wallStyle", "style": style,
-        "loadBearing": {"bearing": true, "basis": {"kind": "author"}}}}));
-    run(serde_json::json!({"operation": {"kind": "objects", "uids": [mine[1].1],
-        "loadBearing": {"bearing": false, "basis": {"kind": "author"}}}}));
+    run(
+        serde_json::json!({"operation": {"kind": "wallStyle", "style": style,
+        "loadBearing": {"bearing": true, "basis": {"kind": "author"}}}}),
+    );
+    run(
+        serde_json::json!({"operation": {"kind": "objects", "uids": [mine[1].1],
+        "loadBearing": {"bearing": false, "basis": {"kind": "author"}}}}),
+    );
     let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
     let bearing = |id: u128| {
-        let e = b.elements.iter().find(|e| e.id == Some(id)).expect("the wall");
+        let e = b
+            .elements
+            .iter()
+            .find(|e| e.id == Some(id))
+            .expect("the wall");
         e.psets
             .iter()
             .filter(|p| p.name == "Pset_WallCommon")
@@ -393,7 +567,11 @@ fn a_wall_style_s_load_bearing_role_is_its_walls_common_set_s() {
             .map(|(_, v)| v.clone())
     };
     assert_eq!(bearing(mine[0].0), Some(Value::Bool(true)), "the style's");
-    assert_eq!(bearing(mine[1].0), Some(Value::Bool(false)), "the wall's own");
+    assert_eq!(
+        bearing(mine[1].0),
+        Some(Value::Bool(false)),
+        "the wall's own"
+    );
 }
 
 /// The künye a permit set writes into the drawing's variables (docs/adr/8037), as an office fills it.
@@ -467,10 +645,20 @@ fn the_kunye_is_the_project_s_people_and_place() {
         "260123_00_MM_XXXX_MD_XXX_NNN_01_000.ifc"
     );
     // EK-7 Tablo 7.1: the künye's description, the building kind a new build (IFC 4.3's PEnum_ProjectType).
-    assert_eq!(b.project.description.as_deref(), Some("İki katlı konut, kesit örneği"));
     assert_eq!(
-        b.project.psets.iter().find(|p| p.name == "Pset_ProjectCommon").map(|p| p.props.clone()),
-        Some(vec![("ProjectType".to_owned(), Value::Label("NEWBUILD".into()))])
+        b.project.description.as_deref(),
+        Some("İki katlı konut, kesit örneği")
+    );
+    assert_eq!(
+        b.project
+            .psets
+            .iter()
+            .find(|p| p.name == "Pset_ProjectCommon")
+            .map(|p| p.props.clone()),
+        Some(vec![(
+            "ProjectType".to_owned(),
+            Value::Label("NEWBUILD".into())
+        )])
     );
     // EK-7: the architect, their registration, their office and its tax number.
     let a = &b.actors[0];
@@ -566,8 +754,12 @@ fn every_standard_property_has_its_template_s_type() {
     // With the parcel's İmar durumu too: the building's footprint and gross area are written then.
     let mut zoned = with_kunye();
     let mut settings = zoned.settings().clone();
-    settings.arch.get_or_insert_with(Default::default).zoning =
-        Some(kentos_commands::Zoning { parcel_area: 400.0, far: Some(1.5), coverage: Some(0.4), ..Default::default() });
+    settings.arch.get_or_insert_with(Default::default).zoning = Some(kentos_commands::Zoning {
+        parcel_area: 400.0,
+        far: Some(1.5),
+        coverage: Some(0.4),
+        ..Default::default()
+    });
     zoned.set_settings(settings);
     for doc in [with_kunye(), building(), zoned] {
         let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
@@ -601,7 +793,9 @@ fn the_grids_are_one_rectangular_ifc_grid_and_one_direction_alone_is_left_out() 
     let (b, written) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
     assert_eq!(b.grids.len(), 1, "{:?}", b.grids);
     let g = &b.grids[0];
-    let tags = |axes: &[kentos_ifc::building::Axis]| axes.iter().map(|a| a.tag.clone()).collect::<Vec<_>>();
+    let tags = |axes: &[kentos_ifc::building::Axis]| {
+        axes.iter().map(|a| a.tag.clone()).collect::<Vec<_>>()
+    };
     assert_eq!(tags(&g.u), ["A", "B", "C", "D"]);
     assert_eq!(tags(&g.v), ["1", "2", "3"]);
     assert_eq!((g.predefined, g.storey), ("RECTANGULAR", None));
@@ -618,7 +812,10 @@ fn the_grids_are_one_rectangular_ifc_grid_and_one_direction_alone_is_left_out() 
     let gaps = kentos_ifc::required::gaps(&b);
     assert!(!gaps.iter().any(|g| g.class == "IfcGridAxis"), "{gaps:?}");
     // One direction alone.
-    let mut snap = kentos_kcad::decode(include_bytes!("../../../../../fixtures/arch/v1/section-building.kcad")).unwrap();
+    let mut snap = kentos_kcad::decode(include_bytes!(
+        "../../../../../fixtures/arch/v1/section-building.kcad"
+    ))
+    .unwrap();
     let keep: Vec<bool> = snap
         .entities
         .iter()
@@ -640,7 +837,8 @@ fn the_grids_are_one_rectangular_ifc_grid_and_one_direction_alone_is_left_out() 
     let one = kentos_domain::Document::from_snapshot_v2(snap).unwrap();
     let (b, written) = arch_ifc::building(&one, "2026-11-11T12:00:00", "KentOS Mimari");
     assert!(b.grids.is_empty());
-    let left: Vec<&kentos_ifc::arch::Left> = written.left.iter().filter(|l| l.what == "aks").collect();
+    let left: Vec<&kentos_ifc::arch::Left> =
+        written.left.iter().filter(|l| l.what == "aks").collect();
     assert_eq!(left.len(), 4, "{:?}", written.left);
     assert!(left.iter().all(|l| l.why == kentos_ifc::arch::Why::OneWay));
 }
@@ -657,30 +855,53 @@ fn the_library_s_fixtures_are_their_ifc_classes_with_their_bodies() {
     use kentos_native_application::{ExecutionContext, registry};
     let mut doc = building();
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> serde_json::Value {
-        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{name}: {answer}");
         answer
     };
     let library = include_str!("../../../../../catalog/v1/blocks/kentos-temel.kblok");
-    run(&mut doc, "cad.blocks.edit", serde_json::json!({"operation": "import", "library": library}));
-    let place = |doc: &mut Document, name: &str, x: f64, y: f64, extra: serde_json::Value| -> String {
-        let mut input = serde_json::json!({"name": name, "at": {"x": x, "y": y}, "layerId": "0",
+    run(
+        &mut doc,
+        "cad.blocks.edit",
+        serde_json::json!({"operation": "import", "library": library}),
+    );
+    let place =
+        |doc: &mut Document, name: &str, x: f64, y: f64, extra: serde_json::Value| -> String {
+            let mut input = serde_json::json!({"name": name, "at": {"x": x, "y": y}, "layerId": "0",
                                            "arch": {"level": "zemin"}});
-        for (k, v) in extra.as_object().into_iter().flatten() {
-            input[k] = v.clone();
-        }
-        let made = run(doc, "cad.blocks.insert", input);
-        made["output"]["uid"]
-            .as_str()
-            .or_else(|| made["output"]["uids"][0].as_str())
-            .unwrap()
-            .to_owned()
-    };
-    let lift = place(&mut doc, "Asansör", 5.0, 6.0, serde_json::json!({"attributes": {"KISI": "8", "YUK": "630"}}));
+            for (k, v) in extra.as_object().into_iter().flatten() {
+                input[k] = v.clone();
+            }
+            let made = run(doc, "cad.blocks.insert", input);
+            made["output"]["uid"]
+                .as_str()
+                .or_else(|| made["output"]["uids"][0].as_str())
+                .unwrap()
+                .to_owned()
+        };
+    let lift = place(
+        &mut doc,
+        "Asansör",
+        5.0,
+        6.0,
+        serde_json::json!({"attributes": {"KISI": "8", "YUK": "630"}}),
+    );
     let basin = place(&mut doc, "Lavabo", 8.5, 0.2, serde_json::Value::Null);
     let table = place(&mut doc, "Masa", 2.0, 6.5, serde_json::Value::Null);
     let wardrobe = place(&mut doc, "Dolap", 0.2, 2.0, serde_json::Value::Null);
-    let dishwasher = place(&mut doc, "Bulaşık makinesi", 4.0, 2.0, serde_json::Value::Null);
+    let dishwasher = place(
+        &mut doc,
+        "Bulaşık makinesi",
+        4.0,
+        2.0,
+        serde_json::Value::Null,
+    );
     let fridge = place(&mut doc, "Buzdolabı", 6.0, 2.0, serde_json::Value::Null);
     let mark = place(&mut doc, "Kot işareti", 1.0, 1.0, serde_json::Value::Null);
     let (b, written) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
@@ -691,9 +912,15 @@ fn the_library_s_fixtures_are_their_ifc_classes_with_their_bodies() {
     assert!(of(&mark).is_none(), "a level mark is no building element");
     assert_eq!(written.fixtures, 6);
     let (ring, _) = &b.fixture_plans[&of(&fridge).unwrap().id.unwrap()];
-    assert!((ring[2][1] - ring[0][1] - 0.65).abs() < 1e-8, "door swing excluded: {ring:?}");
+    assert!(
+        (ring[2][1] - ring[0][1] - 0.65).abs() < 1e-8,
+        "door swing excluded: {ring:?}"
+    );
     let machine = of(&dishwasher).expect("the dishwasher");
-    assert_eq!((machine.class, machine.predefined), (Class::ElectricAppliance, "DISHWASHER"));
+    assert_eq!(
+        (machine.class, machine.predefined),
+        (Class::ElectricAppliance, "DISHWASHER")
+    );
     assert_eq!(machine.tag.as_deref(), Some(dishwasher.as_str()));
     assert!(machine.name.starts_with("MM-ECZ-"));
     assert!(machine.shapes.is_empty(), "no height was entered");
@@ -701,33 +928,63 @@ fn the_library_s_fixtures_are_their_ifc_classes_with_their_bodies() {
     let step = kentos_ifc::building::write(&b);
     assert!(step.contains("IFCELECTRICAPPLIANCE(") && step.contains("'FootPrint','Curve2D'"));
     let lift_el = of(&lift).expect("the lift");
-    assert_eq!((lift_el.class, lift_el.predefined), (Class::TransportElement, "ELEVATOR"));
+    assert_eq!(
+        (lift_el.class, lift_el.predefined),
+        (Class::TransportElement, "ELEVATOR")
+    );
     assert_eq!(lift_el.name, "MM-TSM-Asansör");
     let capacity = lift_el
         .psets
         .iter()
         .find(|p| p.name == "Pset_TransportElementCommon")
         .expect("its capacity");
-    assert!(capacity.props.contains(&("CapacityPeople".into(), Value::Count(8))));
-    assert!(capacity.props.contains(&("CapacityWeight".into(), Value::Mass(630.0))));
+    assert!(
+        capacity
+            .props
+            .contains(&("CapacityPeople".into(), Value::Count(8)))
+    );
+    assert!(
+        capacity
+            .props
+            .contains(&("CapacityWeight".into(), Value::Mass(630.0)))
+    );
     let span = |e: &kentos_ifc::building::Element| match &e.shapes[..] {
-        [kentos_ifc::building::Shape::Prism { rings, bottom, top, .. }] => {
+        [
+            kentos_ifc::building::Shape::Prism {
+                rings, bottom, top, ..
+            },
+        ] => {
             let xs: Vec<f64> = rings[0].iter().map(|p| p[0]).collect();
             let ys: Vec<f64> = rings[0].iter().map(|p| p[1]).collect();
-            let w = xs.iter().cloned().fold(f64::MIN, f64::max) - xs.iter().cloned().fold(f64::MAX, f64::min);
-            let d = ys.iter().cloned().fold(f64::MIN, f64::max) - ys.iter().cloned().fold(f64::MAX, f64::min);
+            let w = xs.iter().cloned().fold(f64::MIN, f64::max)
+                - xs.iter().cloned().fold(f64::MAX, f64::min);
+            let d = ys.iter().cloned().fold(f64::MIN, f64::max)
+                - ys.iter().cloned().fold(f64::MAX, f64::min);
             (w, d, *bottom, *top)
         }
         other => panic!("{other:?}"),
     };
     let near = |a: f64, b: f64| (a - b).abs() < 1e-6;
     let (w, d, bottom, top) = span(lift_el);
-    assert!(near(w, 1.26) && near(d, 1.945) && near(bottom, 0.0) && near(top, 2.2), "{w} {d} {bottom} {top}");
+    assert!(
+        near(w, 1.26) && near(d, 1.945) && near(bottom, 0.0) && near(top, 2.2),
+        "{w} {d} {bottom} {top}"
+    );
     let basin_el = of(&basin).expect("the basin");
-    assert_eq!((basin_el.class, basin_el.predefined), (Class::SanitaryTerminal, "WASHHANDBASIN"));
+    assert_eq!(
+        (basin_el.class, basin_el.predefined),
+        (Class::SanitaryTerminal, "WASHHANDBASIN")
+    );
     assert!(near(span(basin_el).3, 0.85));
     let table_el = of(&table).expect("the table");
-    assert_eq!((table_el.class, table_el.predefined, table_el.object_type.as_deref()), (Class::Furniture, "TABLE", None));
+    assert_eq!(
+        (
+            table_el.class,
+            table_el.predefined,
+            table_el.object_type.as_deref()
+        ),
+        (Class::Furniture, "TABLE", None)
+    );
     assert!(near(span(table_el).3, 0.75));
     let wardrobe_el = of(&wardrobe).expect("the wardrobe");
     assert_eq!(
@@ -749,7 +1006,11 @@ fn the_library_s_fixtures_are_their_ifc_classes_with_their_bodies() {
     let text = kentos_ifc::building::write(&b);
     assert!(text.contains("IFCSIUNIT(*,.MASSUNIT.,.KILO.,.GRAM.)"));
     assert!(text.contains("IFCMASSMEASURE(630.)") && text.contains("IFCCOUNTMEASURE(8)"));
-    assert!(text.contains("IFCTRANSPORTELEMENT(") && text.contains("IFCSANITARYTERMINAL(") && text.contains("IFCFURNITURE("));
+    assert!(
+        text.contains("IFCTRANSPORTELEMENT(")
+            && text.contains("IFCSANITARYTERMINAL(")
+            && text.contains("IFCFURNITURE(")
+    );
 }
 
 /// Kaplama kalınlıkları (docs/adr/8070 §6; EK-6 Tablo 6.20's first way, the room's own set): the section building's
@@ -774,11 +1035,14 @@ fn a_room_carries_its_floor_finish_and_ceiling_plaster_thicknesses() {
         .filter(|s| get(s, "FloorCoveringThickness") == Some(Value::PositiveLength(0.02)))
         .count();
     assert!(thick >= 9, "{thick} of {} rooms", b.spaces.len());
-    assert!(b
-        .spaces
-        .iter()
-        .all(|s| get(s, "CeilingCoveringThickness").is_none_or(|v| v == Value::PositiveLength(0.02))));
-    assert!(b.spaces.iter().any(|s| get(s, "CeilingCoveringThickness").is_some()));
+    assert!(b.spaces.iter().all(|s| {
+        get(s, "CeilingCoveringThickness").is_none_or(|v| v == Value::PositiveLength(0.02))
+    }));
+    assert!(
+        b.spaces
+            .iter()
+            .any(|s| get(s, "CeilingCoveringThickness").is_some())
+    );
     // An asma tavan at 2.60 m: no ceiling thickness.
     let mut snap: DocumentSnapshotV2 = kentos_kcad::decode(include_bytes!(
         "../../../../../fixtures/arch/v1/section-building.kcad"
@@ -802,7 +1066,10 @@ fn a_room_carries_its_floor_finish_and_ceiling_plaster_thicknesses() {
         .find(|s| s.name.contains(name.as_deref().unwrap_or("?")))
         .expect("the room");
     assert_eq!(get(room, "CeilingCoveringThickness"), None);
-    assert_eq!(get(room, "FloorCoveringThickness"), Some(Value::PositiveLength(0.02)));
+    assert_eq!(
+        get(room, "FloorCoveringThickness"),
+        Some(Value::PositiveLength(0.02))
+    );
     let text = kentos_ifc::building::write(&b);
     assert!(text.contains("IFCPOSITIVELENGTHMEASURE(0.02)"));
 }
@@ -821,21 +1088,37 @@ fn a_post_and_a_rail_are_ifc_members_of_their_types() {
     let mut doc = building();
     let (_, before) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| {
-        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{answer}");
         answer["output"]["uids"][0].as_str().unwrap().to_owned()
     };
-    let post = run(&mut doc, "cad.columns.create", serde_json::json!({"layerId": "0", "columns": [{
-        "at": {"x": 20.0, "y": 2.0}, "width": 0.1, "depth": 0.1, "height": 2.4, "material": "Çelik",
-        "member": {"predefined": "POST"}, "arch": {"level": "zemin"}
-    }]}));
-    let rail = run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
-        "pts": [{"x": 20.0, "y": 0.0}, {"x": 26.0, "y": 0.0}], "width": 0.05, "height": 0.1, "baseOffset": 1.0,
-        "material": "Çelik", "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
-    }]}));
+    let post = run(
+        &mut doc,
+        "cad.columns.create",
+        serde_json::json!({"layerId": "0", "columns": [{
+            "at": {"x": 20.0, "y": 2.0}, "width": 0.1, "depth": 0.1, "height": 2.4, "material": "Çelik",
+            "member": {"predefined": "POST"}, "arch": {"level": "zemin"}
+        }]}),
+    );
+    let rail = run(
+        &mut doc,
+        "cad.beams.create",
+        serde_json::json!({"layerId": "0", "beams": [{
+            "pts": [{"x": 20.0, "y": 0.0}, {"x": 26.0, "y": 0.0}], "width": 0.05, "height": 0.1, "baseOffset": 1.0,
+            "material": "Çelik", "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
+        }]}),
+    );
     let m = sections::model(&doc);
     let body = |uid: &str| {
-        let i = (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(uid)).expect("its solid");
+        let i = (0..m.solids.len())
+            .find(|&i| m.owners[i].as_deref() == Some(uid))
+            .expect("its solid");
         let Height::Prism { bottom, top } = m.solids[i].height else {
             panic!("a prism")
         };
@@ -850,16 +1133,31 @@ fn a_post_and_a_rail_are_ifc_members_of_their_types() {
     assert_eq!(layer, "MM-DIGR-CELIK");
     let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new(), "every object written");
-    assert_eq!((written.members, written.columns, written.beams), (2, before.columns, before.beams));
+    assert_eq!(
+        (written.members, written.columns, written.beams),
+        (2, before.columns, before.beams)
+    );
     let element = |uid: &str| {
         let id = kentos_domain::Uuid::parse_str(uid).unwrap().as_u128();
-        b.elements.iter().find(|e| e.id == Some(id)).expect("its element")
+        b.elements
+            .iter()
+            .find(|e| e.id == Some(id))
+            .expect("its element")
     };
     let p = element(&post);
-    assert_eq!((p.class, p.predefined, p.object_type.as_deref()), (Class::Member, "POST", None));
-    assert_eq!((p.name.as_str(), p.material.as_deref()), ("MM-ELM-Dikme", Some("Çelik")));
+    assert_eq!(
+        (p.class, p.predefined, p.object_type.as_deref()),
+        (Class::Member, "POST", None)
+    );
+    assert_eq!(
+        (p.name.as_str(), p.material.as_deref()),
+        ("MM-ELM-Dikme", Some("Çelik"))
+    );
     let r = element(&rail);
-    assert_eq!((r.class, r.predefined, r.object_type.as_deref()), (Class::Member, "USERDEFINED", Some("Kayıt")));
+    assert_eq!(
+        (r.class, r.predefined, r.object_type.as_deref()),
+        (Class::Member, "USERDEFINED", Some("Kayıt"))
+    );
     assert_eq!(r.name, "MM-ELM-Kayıt");
     for e in [p, r] {
         let outside = e
@@ -869,7 +1167,11 @@ fn a_post_and_a_rail_are_ifc_members_of_their_types() {
             .and_then(|s| s.props.iter().find(|(k, _)| k == "IsExternal"))
             .map(|(_, v)| v.clone());
         assert_eq!(outside, Some(Value::Bool(true)), "{}", e.name);
-        assert!(!e.psets.iter().any(|s| s.name == "Pset_ColumnCommon"), "{}", e.name);
+        assert!(
+            !e.psets.iter().any(|s| s.name == "Pset_ColumnCommon"),
+            "{}",
+            e.name
+        );
     }
     let text = kentos_ifc::building::write(&b);
     assert_eq!(text.matches("IFCMEMBER(").count(), 2);
@@ -893,31 +1195,58 @@ fn a_sloped_rafter_rises_along_its_axis_and_says_its_slope() {
     use kentos_native_application::{ExecutionContext, registry, sections};
     let mut doc = building();
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| {
-        registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap()
+        registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap()
     };
-    let answer = run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
-        "pts": [{"x": 20.0, "y": 0.0}, {"x": 24.0, "y": 0.0}], "width": 0.05, "height": 0.1, "baseOffset": 2.5,
-        "material": "Ahşap", "member": {"predefined": "RAFTER"}, "rise": 3.0, "arch": {"level": "zemin"}
-    }]}));
+    let answer = run(
+        &mut doc,
+        "cad.beams.create",
+        serde_json::json!({"layerId": "0", "beams": [{
+            "pts": [{"x": 20.0, "y": 0.0}, {"x": 24.0, "y": 0.0}], "width": 0.05, "height": 0.1, "baseOffset": 2.5,
+            "material": "Ahşap", "member": {"predefined": "RAFTER"}, "rise": 3.0, "arch": {"level": "zemin"}
+        }]}),
+    );
     assert_eq!(answer["status"], "completed", "{answer}");
     let uid = answer["output"]["uids"][0].as_str().unwrap().to_owned();
     let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
     let m = sections::model(&doc);
-    let i = (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(uid.as_str())).expect("its solid");
-    let Height::Sloped(s) = &m.solids[i].height else { panic!("{:?}", m.solids[i].height) };
-    assert!(near(s.dx, 0.75) && near(s.dy, 0.0) && near(s.thickness, 0.125), "{s:?}");
-    assert!(near(s.z(P::new(20.0, 0.0)), 2.625) && near(s.z(P::new(24.0, 0.0)), 5.625), "{s:?}");
+    let i = (0..m.solids.len())
+        .find(|&i| m.owners[i].as_deref() == Some(uid.as_str()))
+        .expect("its solid");
+    let Height::Sloped(s) = &m.solids[i].height else {
+        panic!("{:?}", m.solids[i].height)
+    };
+    assert!(
+        near(s.dx, 0.75) && near(s.dy, 0.0) && near(s.thickness, 0.125),
+        "{s:?}"
+    );
+    assert!(
+        near(s.z(P::new(20.0, 0.0)), 2.625) && near(s.z(P::new(24.0, 0.0)), 5.625),
+        "{s:?}"
+    );
     let frame = Frame::new(P::new(22.0, -1.0), P::new(22.0, 1.0), true, None).unwrap();
     let cut = sec::section(&frame, &m.solids);
     let piece = cut.cut.iter().find(|c| c.solid == i).expect("cut across");
     let zs: Vec<f64> = piece.ring.iter().map(|q| q.y).collect();
-    let (z0, z1) = (zs.iter().copied().fold(f64::INFINITY, f64::min), zs.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+    let (z0, z1) = (
+        zs.iter().copied().fold(f64::INFINITY, f64::min),
+        zs.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+    );
     assert!(near(z0, 4.0) && near(z1, 4.125), "{zs:?}");
     // The IFC model.
     let (b, written) = arch_ifc::building(&doc, "2026-11-18T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new(), "every object written");
     let id = kentos_domain::Uuid::parse_str(&uid).unwrap().as_u128();
-    let e = b.elements.iter().find(|e| e.id == Some(id)).expect("its element");
+    let e = b
+        .elements
+        .iter()
+        .find(|e| e.id == Some(id))
+        .expect("its element");
     assert_eq!((e.class, e.predefined), (Class::Member, "RAFTER"));
     let slope = e
         .psets
@@ -926,21 +1255,50 @@ fn a_sloped_rafter_rises_along_its_axis_and_says_its_slope() {
         .and_then(|p| p.props.iter().find(|(k, _)| k == "Slope"))
         .map(|(_, v)| v.clone());
     assert_eq!(slope, Some(Value::PlaneAngle(0.75f64.atan())));
-    assert!(matches!(e.shapes.as_slice(), [kentos_ifc::building::Shape::Faces { .. }]), "{:?}", e.shapes);
+    assert!(
+        matches!(
+            e.shapes.as_slice(),
+            [kentos_ifc::building::Shape::Faces { .. }]
+        ),
+        "{:?}",
+        e.shapes
+    );
     // A frame beam takes no rise; nor does a bent member; 0 levels it.
-    let frame_beam = run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
-        "pts": [{"x": 20.0, "y": 3.0}, {"x": 24.0, "y": 3.0}], "width": 0.25, "height": 0.5, "rise": 1.0
-    }]}));
-    assert_eq!((frame_beam["error"]["code"].as_str(), frame_beam["error"]["path"].as_str()), (Some("invalid_beam"), Some("beams[0].rise")));
-    let bent = run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
-        "pts": [{"x": 20.0, "y": 3.0}, {"x": 24.0, "y": 3.0}, {"x": 24.0, "y": 5.0}], "width": 0.05, "height": 0.1,
-        "member": {"predefined": "BRACE"}, "rise": 1.0
-    }]}));
+    let frame_beam = run(
+        &mut doc,
+        "cad.beams.create",
+        serde_json::json!({"layerId": "0", "beams": [{
+            "pts": [{"x": 20.0, "y": 3.0}, {"x": 24.0, "y": 3.0}], "width": 0.25, "height": 0.5, "rise": 1.0
+        }]}),
+    );
+    assert_eq!(
+        (
+            frame_beam["error"]["code"].as_str(),
+            frame_beam["error"]["path"].as_str()
+        ),
+        (Some("invalid_beam"), Some("beams[0].rise"))
+    );
+    let bent = run(
+        &mut doc,
+        "cad.beams.create",
+        serde_json::json!({"layerId": "0", "beams": [{
+            "pts": [{"x": 20.0, "y": 3.0}, {"x": 24.0, "y": 3.0}, {"x": 24.0, "y": 5.0}], "width": 0.05, "height": 0.1,
+            "member": {"predefined": "BRACE"}, "rise": 1.0
+        }]}),
+    );
     assert_eq!(bent["error"]["code"], "invalid_beam", "{bent}");
-    let level = run(&mut doc, "cad.arch.edit", serde_json::json!({"uids": [uid], "operation": {"kind": "set", "rise": 0.0}}));
+    let level = run(
+        &mut doc,
+        "cad.arch.edit",
+        serde_json::json!({"uids": [uid], "operation": {"kind": "set", "rise": 0.0}}),
+    );
     assert_eq!(level["status"], "completed", "{level}");
-    let slot = doc.slot_of(kentos_domain::Uuid::parse_str(&uid).unwrap()).unwrap();
-    let Some(kentos_commands::Entity::Beam(beam)) = doc.get(slot) else { panic!("a beam") };
+    let slot = doc
+        .slot_of(kentos_domain::Uuid::parse_str(&uid).unwrap())
+        .unwrap();
+    let Some(kentos_commands::Entity::Beam(beam)) = doc.get(slot) else {
+        panic!("a beam")
+    };
     assert_eq!(beam.beam.rise, None);
 }
 
@@ -955,7 +1313,13 @@ fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out(
     use kentos_native_application::{ExecutionContext, registry, sections};
     let mut doc = building();
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> serde_json::Value {
-        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{name}: {answer}");
         answer
     };
@@ -967,32 +1331,60 @@ fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out(
             .to_owned()
     };
     let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
-    let ramp = uid(&run(&mut doc, "cad.ramps.create", serde_json::json!({"layerId": "0", "ramps": [{
-        "pts": [p(30.0, 0.0), p(36.0, 0.0), p(36.0, 4.0)], "width": 1.5, "rise": 0.75, "arch": {"level": "zemin"}
-    }]})));
-    let curtain = uid(&run(&mut doc, "cad.walls.create", serde_json::json!({"layerId": "0", "walls": [{
-        "pts": [p(20.0, -3.0), p(26.0, -3.0)], "width": 0.15, "height": 3.0, "arch": {"level": "zemin"},
-        "curtain": {"spacing": 1.5, "rows": 1.2, "panel": "Cam", "frames": "Alüminyum"}
-    }]})));
+    let ramp = uid(&run(
+        &mut doc,
+        "cad.ramps.create",
+        serde_json::json!({"layerId": "0", "ramps": [{
+            "pts": [p(30.0, 0.0), p(36.0, 0.0), p(36.0, 4.0)], "width": 1.5, "rise": 0.75, "arch": {"level": "zemin"}
+        }]}),
+    ));
+    let curtain = uid(&run(
+        &mut doc,
+        "cad.walls.create",
+        serde_json::json!({"layerId": "0", "walls": [{
+            "pts": [p(20.0, -3.0), p(26.0, -3.0)], "width": 0.15, "height": 3.0, "arch": {"level": "zemin"},
+            "curtain": {"spacing": 1.5, "rows": 1.2, "panel": "Cam", "frames": "Alüminyum"}
+        }]}),
+    ));
     let library = include_str!("../../../../../catalog/v1/blocks/kentos-temel.kblok");
-    run(&mut doc, "cad.blocks.edit", serde_json::json!({"operation": "import", "library": library}));
-    let lift = uid(&run(&mut doc, "cad.blocks.insert", serde_json::json!({
-        "name": "Asansör", "at": p(5.0, 6.0), "layerId": "0", "arch": {"level": "zemin"},
-        "attributes": {"KISI": "8", "YUK": "630"}
-    })));
-    let post = uid(&run(&mut doc, "cad.columns.create", serde_json::json!({"layerId": "0", "columns": [{
-        "at": p(28.0, 2.0), "width": 0.1, "height": 2.4, "material": "Çelik", "member": {"predefined": "POST"},
-        "arch": {"level": "zemin"}
-    }]})));
-    let rail = uid(&run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
-        "pts": [p(27.0, 0.0), p(29.0, 0.0)], "width": 0.05, "height": 0.1, "baseOffset": 1.0, "material": "Çelik",
-        "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
-    }]})));
-    let ceiling = uid(&run(&mut doc, "cad.slabs.create", serde_json::json!({"layerId": "0", "slabs": [{
-        "parts": [{"outer": {"pts": [p(1.0, 1.0), p(4.0, 1.0), p(4.0, 4.0), p(1.0, 4.0)]}}], "thickness": 0.0125,
-        "offset": 2.6, "material": "Alçıpan", "arch": {"level": "zemin"},
-        "covering": {"predefined": "CEILING", "name": "Asma tavan"}
-    }]})));
+    run(
+        &mut doc,
+        "cad.blocks.edit",
+        serde_json::json!({"operation": "import", "library": library}),
+    );
+    let lift = uid(&run(
+        &mut doc,
+        "cad.blocks.insert",
+        serde_json::json!({
+            "name": "Asansör", "at": p(5.0, 6.0), "layerId": "0", "arch": {"level": "zemin"},
+            "attributes": {"KISI": "8", "YUK": "630"}
+        }),
+    ));
+    let post = uid(&run(
+        &mut doc,
+        "cad.columns.create",
+        serde_json::json!({"layerId": "0", "columns": [{
+            "at": p(28.0, 2.0), "width": 0.1, "height": 2.4, "material": "Çelik", "member": {"predefined": "POST"},
+            "arch": {"level": "zemin"}
+        }]}),
+    ));
+    let rail = uid(&run(
+        &mut doc,
+        "cad.beams.create",
+        serde_json::json!({"layerId": "0", "beams": [{
+            "pts": [p(27.0, 0.0), p(29.0, 0.0)], "width": 0.05, "height": 0.1, "baseOffset": 1.0, "material": "Çelik",
+            "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
+        }]}),
+    ));
+    let ceiling = uid(&run(
+        &mut doc,
+        "cad.slabs.create",
+        serde_json::json!({"layerId": "0", "slabs": [{
+            "parts": [{"outer": {"pts": [p(1.0, 1.0), p(4.0, 1.0), p(4.0, 4.0), p(1.0, 4.0)]}}], "thickness": 0.0125,
+            "offset": 2.6, "material": "Alçıpan", "arch": {"level": "zemin"},
+            "covering": {"predefined": "CEILING", "name": "Asma tavan"}
+        }]}),
+    ));
     // Every new element's body in the section model.
     let m = sections::model(&doc);
     for (what, u) in [
@@ -1003,14 +1395,20 @@ fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out(
         ("kayıt", &rail),
         ("asma tavan", &ceiling),
     ] {
-        assert!(m.owners.iter().any(|o| o.as_deref() == Some(u.as_str())), "{what} kesit modelinde yok");
+        assert!(
+            m.owners.iter().any(|o| o.as_deref() == Some(u.as_str())),
+            "{what} kesit modelinde yok"
+        );
     }
     // The IFC model: nothing left out, each its class.
     let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new(), "the loss list is empty");
     let class_of = |u: &str| {
         let id = kentos_domain::Uuid::parse_str(u).unwrap().as_u128();
-        b.elements.iter().find(|e| e.id == Some(id)).map(|e| e.class)
+        b.elements
+            .iter()
+            .find(|e| e.id == Some(id))
+            .map(|e| e.class)
     };
     assert_eq!(class_of(&ramp), Some(Class::Ramp));
     assert_eq!(class_of(&curtain), Some(Class::CurtainWall));
@@ -1022,7 +1420,12 @@ fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out(
     // the lift's box, the walls, slabs, columns and beams.
     for e in &b.elements {
         for s in &e.shapes {
-            assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{} {s:?}", e.name);
+            assert_eq!(
+                kentos_ifc::closed::faults(s),
+                Vec::<String>::new(),
+                "{} {s:?}",
+                e.name
+            );
         }
     }
     // The schedules: the curtain wall among the doors and windows, the lift among the fixtures, the post among the
@@ -1033,11 +1436,26 @@ fn the_sample_building_with_a_ramp_a_curtain_wall_and_a_lift_leaves_nothing_out(
             .iter()
             .any(|row| row.iter().any(|m| m == u))
     };
-    assert!(listed(ScheduleOf::Openings, &curtain), "the curtain wall in the doors and windows' schedule");
-    assert!(listed(ScheduleOf::Fixtures, &lift), "the lift in the fixtures' schedule");
-    assert!(listed(ScheduleOf::Columns, &post), "the post in the columns' schedule");
-    assert!(listed(ScheduleOf::Beams, &rail), "the rail in the beams' schedule");
-    assert!(listed(ScheduleOf::Coverings, &ceiling), "the asma tavan in the coverings' schedule");
+    assert!(
+        listed(ScheduleOf::Openings, &curtain),
+        "the curtain wall in the doors and windows' schedule"
+    );
+    assert!(
+        listed(ScheduleOf::Fixtures, &lift),
+        "the lift in the fixtures' schedule"
+    );
+    assert!(
+        listed(ScheduleOf::Columns, &post),
+        "the post in the columns' schedule"
+    );
+    assert!(
+        listed(ScheduleOf::Beams, &rail),
+        "the rail in the beams' schedule"
+    );
+    assert!(
+        listed(ScheduleOf::Coverings, &ceiling),
+        "the asma tavan in the coverings' schedule"
+    );
 }
 
 /// Kaplama (docs/adr/8070 §10; EK-6 Tablo 6.20): an asma tavan drawn from one of the section building's rooms (bound to
@@ -1070,19 +1488,31 @@ fn a_ceiling_from_a_room_and_a_floor_covering_are_ifc_coverings() {
     let ceiling_before = doc.room_height(&room_fields).map(|h| h.ceiling);
     let (_, before) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     let run = |doc: &mut Document, input: serde_json::Value| {
-        let answer = registry::run(&mut ExecutionContext::new(doc), "cad.slabs.create", CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.slabs.create",
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{answer}");
         answer["output"]["uids"][0].as_str().unwrap().to_owned()
     };
-    let ceiling = run(&mut doc, serde_json::json!({"layerId": "0", "slabs": [{
-        "space": room, "thickness": 0.0125, "offset": 2.6, "material": "Alçıpan",
-        "arch": {"level": "zemin"}, "covering": {"predefined": "CEILING", "name": "Asma tavan"}
-    }]}));
+    let ceiling = run(
+        &mut doc,
+        serde_json::json!({"layerId": "0", "slabs": [{
+            "space": room, "thickness": 0.0125, "offset": 2.6, "material": "Alçıpan",
+            "arch": {"level": "zemin"}, "covering": {"predefined": "CEILING", "name": "Asma tavan"}
+        }]}),
+    );
     let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
-    let floor = run(&mut doc, serde_json::json!({"layerId": "0", "slabs": [{
-        "parts": [{"outer": {"pts": [p(20.0, 0.0), p(24.0, 0.0), p(24.0, 3.0), p(20.0, 3.0)]}}],
-        "thickness": 0.02, "offset": 0.02, "arch": {"level": "zemin"}, "covering": {"predefined": "FLOORING"}
-    }]}));
+    let floor = run(
+        &mut doc,
+        serde_json::json!({"layerId": "0", "slabs": [{
+            "parts": [{"outer": {"pts": [p(20.0, 0.0), p(24.0, 0.0), p(24.0, 3.0), p(20.0, 3.0)]}}],
+            "thickness": 0.02, "offset": 0.02, "arch": {"level": "zemin"}, "covering": {"predefined": "FLOORING"}
+        }]}),
+    );
     // Not a floor of the building.
     let walls_after: Vec<Option<f64>> = doc
         .entities()
@@ -1091,15 +1521,27 @@ fn a_ceiling_from_a_room_and_a_floor_covering_are_ifc_coverings() {
             _ => None,
         })
         .collect();
-    assert_eq!(walls_after, walls_before, "the walls do not stop at a covering");
-    assert_eq!(doc.room_height(&room_fields).map(|h| h.ceiling), ceiling_before, "nor the room's ceiling");
+    assert_eq!(
+        walls_after, walls_before,
+        "the walls do not stop at a covering"
+    );
+    assert_eq!(
+        doc.room_height(&room_fields).map(|h| h.ceiling),
+        ceiling_before,
+        "nor the room's ceiling"
+    );
     // Its plate in the section model.
     let m = sections::model(&doc);
-    let i = (0..m.solids.len()).find(|&i| m.owners[i].as_deref() == Some(ceiling.as_str())).expect("its plate");
+    let i = (0..m.solids.len())
+        .find(|&i| m.owners[i].as_deref() == Some(ceiling.as_str()))
+        .expect("its plate");
     let Height::Prism { bottom, top } = m.solids[i].height else {
         panic!("a prism")
     };
-    assert!((bottom - 2.5875).abs() < 1e-9 && (top - 2.6).abs() < 1e-9, "{bottom} {top}");
+    assert!(
+        (bottom - 2.5875).abs() < 1e-9 && (top - 2.6).abs() < 1e-9,
+        "{bottom} {top}"
+    );
     assert_eq!(m.looks[i].layer, "MM-ASTV-ALCIPAN");
     assert!(!m.looks[i].heavy);
     // The IFC model.
@@ -1108,36 +1550,94 @@ fn a_ceiling_from_a_room_and_a_floor_covering_are_ifc_coverings() {
     assert_eq!((written.coverings, written.slabs), (2, before.slabs));
     let element = |uid: &str| {
         let id = kentos_domain::Uuid::parse_str(uid).unwrap().as_u128();
-        b.elements.iter().find(|e| e.id == Some(id)).expect("its element")
+        b.elements
+            .iter()
+            .find(|e| e.id == Some(id))
+            .expect("its element")
     };
     let c = element(&ceiling);
-    assert_eq!((c.class, c.predefined, c.name.as_str()), (Class::Covering, "CEILING", "MM-KPL-Asma_tavan"));
+    assert_eq!(
+        (c.class, c.predefined, c.name.as_str()),
+        (Class::Covering, "CEILING", "MM-KPL-Asma_tavan")
+    );
     assert_eq!(c.material.as_deref(), Some("Alçıpan"));
     let f = element(&floor);
-    assert_eq!((f.class, f.predefined, f.name.as_str()), (Class::Covering, "FLOORING", "MM-KPL-Zemin_kaplaması"));
+    assert_eq!(
+        (f.class, f.predefined, f.name.as_str()),
+        (Class::Covering, "FLOORING", "MM-KPL-Zemin_kaplaması")
+    );
     let text = kentos_ifc::building::write(&b);
     assert_eq!(text.matches("IFCCOVERING(").count(), 2);
     // The ceiling bound to its room covers it (docs/adr/8127, `IfcRelCoversSpaces`); the floor covering drawn beside
     // the building stands in no room and covers none.
-    let ceiling_at = b.elements.iter().position(|e| e.id == element(&ceiling).id).expect("the ceiling");
-    let room_at = b.spaces.iter().position(|sp| sp.id.map(|i| kentos_domain::Uuid::from_u128(i).to_string()) == Some(room.clone()));
-    assert_eq!(b.covers, vec![(room_at.expect("the room"), vec![ceiling_at])]);
+    let ceiling_at = b
+        .elements
+        .iter()
+        .position(|e| e.id == element(&ceiling).id)
+        .expect("the ceiling");
+    let room_at = b.spaces.iter().position(|sp| {
+        sp.id.map(|i| kentos_domain::Uuid::from_u128(i).to_string()) == Some(room.clone())
+    });
+    assert_eq!(
+        b.covers,
+        vec![(room_at.expect("the room"), vec![ceiling_at])]
+    );
     assert_eq!(text.matches("IFCRELCOVERSSPACES(").count(), 1);
     // Each covering's plate is a layer set of one, its words, material and thickness (docs/adr/8166; EK-6 Tablo 6.20's
     // Kaplama Malzemesi and Kaplama Kalınlığı), laid down from its top: the ceiling's 2.60 m, the floor's 0.02 m.
-    let set_of = |at: usize| b.layer_sets.iter().find(|(k, ..)| *k == at).map(|(_, n, l)| (n.clone(), l.clone()));
-    let floor_at = b.elements.iter().position(|e| e.id == element(&floor).id).expect("the floor covering");
+    let set_of = |at: usize| {
+        b.layer_sets
+            .iter()
+            .find(|(k, ..)| *k == at)
+            .map(|(_, n, l)| (n.clone(), l.clone()))
+    };
+    let floor_at = b
+        .elements
+        .iter()
+        .position(|e| e.id == element(&floor).id)
+        .expect("the floor covering");
     let (name, layers) = set_of(ceiling_at).expect("the ceiling's set");
     assert_eq!(name, "Kaplama katmanları");
-    let plate: Vec<(&str, Option<&str>, f64, Option<&str>)> =
-        layers.iter().map(|l| (l.name.as_str(), l.material.as_deref(), l.thickness, l.category)).collect();
+    let plate: Vec<(&str, Option<&str>, f64, Option<&str>)> = layers
+        .iter()
+        .map(|l| {
+            (
+                l.name.as_str(),
+                l.material.as_deref(),
+                l.thickness,
+                l.category,
+            )
+        })
+        .collect();
     assert_eq!(plate, [("Asma tavan", Some("Alçıpan"), 0.0125, None)]);
     let (_, layers) = set_of(floor_at).expect("the floor covering's set");
-    assert_eq!(layers.iter().map(|l| (l.name.as_str(), l.thickness)).collect::<Vec<_>>(), [("Zemin kaplaması", 0.02)]);
-    assert_eq!(b.layer_usages.iter().find(|(k, _)| *k == ceiling_at).map(|(_, t)| *t), Some(2.6));
-    assert_eq!(b.layer_usages.iter().find(|(k, _)| *k == floor_at).map(|(_, t)| *t), Some(0.02));
+    assert_eq!(
+        layers
+            .iter()
+            .map(|l| (l.name.as_str(), l.thickness))
+            .collect::<Vec<_>>(),
+        [("Zemin kaplaması", 0.02)]
+    );
+    assert_eq!(
+        b.layer_usages
+            .iter()
+            .find(|(k, _)| *k == ceiling_at)
+            .map(|(_, t)| *t),
+        Some(2.6)
+    );
+    assert_eq!(
+        b.layer_usages
+            .iter()
+            .find(|(k, _)| *k == floor_at)
+            .map(|(_, t)| *t),
+        Some(0.02)
+    );
     assert!(usages(&b) >= 2);
-    assert_eq!(text.matches("IFCMATERIALLAYERSETUSAGE(").count(), usages(&b), "one for each set and top");
+    assert_eq!(
+        text.matches("IFCMATERIALLAYERSETUSAGE(").count(),
+        usages(&b),
+        "one for each set and top"
+    );
     if let Some(path) = std::env::var_os("KENTOS_WRITE_IFC_COVERINGS") {
         std::fs::write(path, &text).expect("the file kept");
     }
@@ -1152,36 +1652,81 @@ fn beam_and_covering_schedules_list_their_own_and_round_trip_under_arch_data_6()
     use kentos_native_application::{ExecutionContext, registry};
     let mut doc = building();
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> serde_json::Value {
-        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{name}: {answer}");
         answer
     };
     let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
-    let rail = run(&mut doc, "cad.beams.create", serde_json::json!({"layerId": "0", "beams": [{
-        "pts": [p(27.0, 0.0), p(29.0, 0.0)], "width": 0.05, "height": 0.1, "baseOffset": 1.0,
-        "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
-    }]}))["output"]["uids"][0]
+    let rail = run(
+        &mut doc,
+        "cad.beams.create",
+        serde_json::json!({"layerId": "0", "beams": [{
+            "pts": [p(27.0, 0.0), p(29.0, 0.0)], "width": 0.05, "height": 0.1, "baseOffset": 1.0,
+            "member": {"predefined": "USERDEFINED", "name": "Kayıt"}, "arch": {"level": "zemin"}
+        }]}),
+    )["output"]["uids"][0]
         .as_str()
         .unwrap()
         .to_owned();
-    let covering = run(&mut doc, "cad.slabs.create", serde_json::json!({"layerId": "0", "slabs": [{
-        "parts": [{"outer": {"pts": [p(20.0, 0.0), p(24.0, 0.0), p(24.0, 3.0), p(20.0, 3.0)]}}],
-        "thickness": 0.02, "offset": 0.02, "covering": {"predefined": "FLOORING"}
-    }]}))["output"]["uids"][0]
+    let covering = run(
+        &mut doc,
+        "cad.slabs.create",
+        serde_json::json!({"layerId": "0", "slabs": [{
+            "parts": [{"outer": {"pts": [p(20.0, 0.0), p(24.0, 0.0), p(24.0, 3.0), p(20.0, 3.0)]}}],
+            "thickness": 0.02, "offset": 0.02, "covering": {"predefined": "FLOORING"}
+        }]}),
+    )["output"]["uids"][0]
         .as_str()
         .unwrap()
         .to_owned();
-    let beams = doc.schedule_rows(ScheduleOf::Beams, &ScheduleOf::Beams.default_columns(), None, &[], false, false);
-    assert!(beams.members.iter().any(|r| r.contains(&rail)), "the rail among the beams");
+    let beams = doc.schedule_rows(
+        ScheduleOf::Beams,
+        &ScheduleOf::Beams.default_columns(),
+        None,
+        &[],
+        false,
+        false,
+    );
+    assert!(
+        beams.members.iter().any(|r| r.contains(&rail)),
+        "the rail among the beams"
+    );
     assert!(beams.members.len() > 1, "the frame's beams too");
-    let coverings =
-        doc.schedule_rows(ScheduleOf::Coverings, &ScheduleOf::Coverings.default_columns(), None, &[], false, false);
-    assert_eq!(coverings.members, vec![vec![covering]], "the covering alone, no floor");
-    run(&mut doc, "cad.schedules.create", serde_json::json!({"layerId": "0", "at": p(0.0, -20.0), "of": "beams"}));
+    let coverings = doc.schedule_rows(
+        ScheduleOf::Coverings,
+        &ScheduleOf::Coverings.default_columns(),
+        None,
+        &[],
+        false,
+        false,
+    );
+    assert_eq!(
+        coverings.members,
+        vec![vec![covering]],
+        "the covering alone, no floor"
+    );
+    run(
+        &mut doc,
+        "cad.schedules.create",
+        serde_json::json!({"layerId": "0", "at": p(0.0, -20.0), "of": "beams"}),
+    );
     let snap = doc.to_snapshot_v2();
-    assert_eq!(kentos_kcad::arch_version(&snap), kentos_kcad::ARCH_WITH_ELEMENT_SCHEDULES);
+    assert_eq!(
+        kentos_kcad::arch_version(&snap),
+        kentos_kcad::ARCH_WITH_ELEMENT_SCHEDULES
+    );
     let bytes = kentos_kcad::encode(&snap).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), snap, "the schedule read back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        snap,
+        "the schedule read back"
+    );
 }
 
 /// Geometri doğruluğu (docs/adr/8071; plan/bim-plan.md BIM-10's first acceptance) on the curved building
@@ -1199,30 +1744,53 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
     use kentos_commands::CallOp;
     use kentos_ifc::building::Shape;
     use kentos_native_application::{ExecutionContext, registry};
-    let snap: DocumentSnapshotV2 =
-        kentos_kcad::decode(include_bytes!("../../../../../fixtures/arch/v1/curved-building.kcad")).unwrap();
+    let snap: DocumentSnapshotV2 = kentos_kcad::decode(include_bytes!(
+        "../../../../../fixtures/arch/v1/curved-building.kcad"
+    ))
+    .unwrap();
     let mut doc = Document::from_snapshot_v2(snap).unwrap();
-    let expected: serde_json::Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/arch/v1/curved-building.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/arch/v1/curved-building.json"
+    ))
+    .unwrap();
     let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new(), "the loss list is empty");
     let element = |u: &str| {
         let id = kentos_domain::Uuid::parse_str(u).unwrap().as_u128();
-        b.elements.iter().find(|e| e.id == Some(id)).unwrap_or_else(|| panic!("{u} not written"))
+        b.elements
+            .iter()
+            .find(|e| e.id == Some(id))
+            .unwrap_or_else(|| panic!("{u} not written"))
     };
     let number = |v: &Value| match v {
         Value::Length(x) | Value::Area(x) | Value::Volume(x) => *x,
         other => panic!("{other:?}"),
     };
     let near = |a: f64, b: f64| (a - b).abs() <= 1e-9 * b.abs().max(1.0);
-    for (set, of) in [("walls", "Qto_WallBaseQuantities"), ("slabs", "Qto_SlabBaseQuantities")] {
+    for (set, of) in [
+        ("walls", "Qto_WallBaseQuantities"),
+        ("slabs", "Qto_SlabBaseQuantities"),
+    ] {
         for (u, want) in expected[set].as_object().unwrap() {
             let e = element(u);
-            let q = e.qtos.iter().find(|q| q.name == of).unwrap_or_else(|| panic!("{}: no {of}", e.name));
+            let q = e
+                .qtos
+                .iter()
+                .find(|q| q.name == of)
+                .unwrap_or_else(|| panic!("{}: no {of}", e.name));
             for (k, v) in want.as_object().unwrap() {
-                let got = q.quantities.iter().find(|(n, _)| n == k).map(|(_, v)| number(v));
+                let got = q
+                    .quantities
+                    .iter()
+                    .find(|(n, _)| n == k)
+                    .map(|(_, v)| number(v));
                 let v = v.as_f64().unwrap();
-                assert!(got.is_some_and(|g| near(g, v)), "{} {k}: {got:?}, the closed form {v}; {:?}", e.name, e.shapes);
+                assert!(
+                    got.is_some_and(|g| near(g, v)),
+                    "{} {k}: {got:?}, the closed form {v}; {:?}",
+                    e.name,
+                    e.shapes
+                );
             }
         }
     }
@@ -1230,38 +1798,86 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
     for (u, want) in expected["bodies"].as_object().unwrap() {
         let e = element(u);
         let floor = b.storeys[e.storey].elevation;
-        let (low, high) = e.shapes.iter().fold((f64::MAX, f64::MIN), |(l, h), s| match s {
-            Shape::Prism { bottom, top, .. } => (l.min(floor + bottom), h.max(floor + top)),
-            Shape::Faces { .. } => (l, h),
-        });
+        let (low, high) = e
+            .shapes
+            .iter()
+            .fold((f64::MAX, f64::MIN), |(l, h), s| match s {
+                Shape::Prism { bottom, top, .. } => (l.min(floor + bottom), h.max(floor + top)),
+                Shape::Faces { .. } => (l, h),
+            });
         let (bottom, top) = (want[0].as_f64().unwrap(), want[1].as_f64().unwrap());
-        assert!(near(low, bottom) && near(high, top), "{}: {low} → {high}, not {bottom} → {top}", e.name);
+        assert!(
+            near(low, bottom) && near(high, top),
+            "{}: {low} → {high}, not {bottom} → {top}",
+            e.name
+        );
     }
     // The rooms' quantities (docs/adr/8071 §7), the inner faces' arc measured as an arc, from floor to ceiling.
     for (u, want) in expected["spaces"].as_object().unwrap() {
         let id = kentos_domain::Uuid::parse_str(u).unwrap().as_u128();
-        let s = b.spaces.iter().find(|s| s.id == Some(id)).expect("the room written");
+        let s = b
+            .spaces
+            .iter()
+            .find(|s| s.id == Some(id))
+            .expect("the room written");
         for (k, v) in want.as_object().unwrap() {
-            let got = s.qtos.iter().flat_map(|q| &q.quantities).find(|(n, _)| n == k).map(|(_, v)| number(v));
+            let got = s
+                .qtos
+                .iter()
+                .flat_map(|q| &q.quantities)
+                .find(|(n, _)| n == k)
+                .map(|(_, v)| number(v));
             let v = v.as_f64().unwrap();
-            assert!(got.is_some_and(|g| near(g, v)), "{} {k}: {got:?}, the closed form {v}", s.name);
+            assert!(
+                got.is_some_and(|g| near(g, v)),
+                "{} {k}: {got:?}, the closed form {v}",
+                s.name
+            );
         }
-        assert!(near(s.top - s.bottom, want["Height"].as_f64().unwrap()), "{}: {} → {}", s.name, s.bottom, s.top);
-        assert!(s.bulges.iter().any(|r| r.iter().any(|x| *x != 0.0)), "{}: its arc written as an arc", s.name);
+        assert!(
+            near(s.top - s.bottom, want["Height"].as_f64().unwrap()),
+            "{}: {} → {}",
+            s.name,
+            s.bottom,
+            s.top
+        );
+        assert!(
+            s.bulges.iter().any(|r| r.iter().any(|x| *x != 0.0)),
+            "{}: its arc written as an arc",
+            s.name
+        );
     }
     // The spiral stair (docs/adr/0709, 8071): its treads pieces of a ring and its centre post a cylinder, their arcs
     // true; each one's bottom, top and plan area what the fixture works out, in the order it climbs, the post last.
     for (u, want) in expected["stairs"].as_object().unwrap() {
         let e = element(u);
-        assert_eq!((e.class, e.predefined), (Class::Stair, "SPIRAL_STAIR"), "{}", e.name);
+        assert_eq!(
+            (e.class, e.predefined),
+            (Class::Stair, "SPIRAL_STAIR"),
+            "{}",
+            e.name
+        );
         let floor = b.storeys[e.storey].elevation;
         let got: Vec<[f64; 3]> = e
             .shapes
             .iter()
             .map(|s| match s {
-                Shape::Prism { rings, bulges, bottom, top } => {
-                    assert!(bulges.iter().flatten().any(|x| *x != 0.0), "{}: its arcs as arcs", e.name);
-                    [floor + bottom, floor + top, kentos_ifc::quantities::area(rings, bulges)]
+                Shape::Prism {
+                    rings,
+                    bulges,
+                    bottom,
+                    top,
+                } => {
+                    assert!(
+                        bulges.iter().flatten().any(|x| *x != 0.0),
+                        "{}: its arcs as arcs",
+                        e.name
+                    );
+                    [
+                        floor + bottom,
+                        floor + top,
+                        kentos_ifc::quantities::area(rings, bulges),
+                    ]
                 }
                 Shape::Faces { .. } => panic!("{}: a prism", e.name),
             })
@@ -1273,9 +1889,18 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
             .map(|t| [0, 1, 2].map(|k| t[k].as_f64().unwrap()))
             .collect();
         wanted.push([0, 1, 2].map(|k| want["post"][k].as_f64().unwrap()));
-        assert_eq!(got.len(), wanted.len(), "{}: its treads and its post", e.name);
+        assert_eq!(
+            got.len(),
+            wanted.len(),
+            "{}: its treads and its post",
+            e.name
+        );
         for (g, w) in got.iter().zip(&wanted) {
-            assert!((0..3).all(|k| near(g[k], w[k])), "{}: {g:?}, the closed form {w:?}", e.name);
+            assert!(
+                (0..3).all(|k| near(g[k], w[k])),
+                "{}: {g:?}, the closed form {w:?}",
+                e.name
+            );
         }
         let v: f64 = e.shapes.iter().map(kentos_ifc::quantities::volume).sum();
         assert!(near(v, want["volume"].as_f64().unwrap()), "{}: {v}", e.name);
@@ -1283,7 +1908,12 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
     // Every body closed; the curved walls' and the slabs' with their arcs, the curved walls' windows too.
     for e in &b.elements {
         for s in &e.shapes {
-            assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{}", e.name);
+            assert_eq!(
+                kentos_ifc::closed::faults(s),
+                Vec::<String>::new(),
+                "{}",
+                e.name
+            );
         }
     }
     let curved: Vec<usize> = (0..b.elements.len())
@@ -1292,11 +1922,30 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
         })
         .collect();
     let classes: Vec<Class> = curved.iter().map(|&k| b.elements[k].class).collect();
-    assert_eq!(classes.iter().filter(|c| **c == Class::Wall).count(), 2, "the two curved walls: {classes:?}");
-    assert_eq!(classes.iter().filter(|c| **c == Class::Slab).count(), 3, "the three slabs: {classes:?}");
-    assert_eq!(classes.iter().filter(|c| **c == Class::Stair).count(), 1, "the spiral stair: {classes:?}");
-    let arched = b.openings.iter().filter(|o| o.bulges.iter().any(|x| *x != 0.0)).count();
-    assert_eq!(arched, 2, "a window through each curved wall along its faces' arcs");
+    assert_eq!(
+        classes.iter().filter(|c| **c == Class::Wall).count(),
+        2,
+        "the two curved walls: {classes:?}"
+    );
+    assert_eq!(
+        classes.iter().filter(|c| **c == Class::Slab).count(),
+        3,
+        "the three slabs: {classes:?}"
+    );
+    assert_eq!(
+        classes.iter().filter(|c| **c == Class::Stair).count(),
+        1,
+        "the spiral stair: {classes:?}"
+    );
+    let arched = b
+        .openings
+        .iter()
+        .filter(|o| o.bulges.iter().any(|x| *x != 0.0))
+        .count();
+    assert_eq!(
+        arched, 2,
+        "a window through each curved wall along its faces' arcs"
+    );
     let text = kentos_ifc::building::write(&b);
     assert!(text.contains("IFCARCINDEX(") && text.contains("IFCINDEXEDPOLYCURVE("));
     // Nothing said about chords: the arcs are written as arcs.
@@ -1312,22 +1961,40 @@ fn the_curved_building_s_bodies_are_their_closed_forms() {
     assert!(!said.contains("düz parçalarla"), "{said}");
     // The cut body (docs/adr/8071 §4): each wall less its openings is its net volume, each band closed, its arcs kept.
     for (u, want) in expected["walls"].as_object().unwrap() {
-        let k = b.elements.iter().position(|e| e.id == Some(kentos_domain::Uuid::parse_str(u).unwrap().as_u128())).unwrap();
-        let hosted: Vec<&kentos_ifc::building::Opening> = b.openings.iter().filter(|o| o.host == k).collect();
+        let k = b
+            .elements
+            .iter()
+            .position(|e| e.id == Some(kentos_domain::Uuid::parse_str(u).unwrap().as_u128()))
+            .unwrap();
+        let hosted: Vec<&kentos_ifc::building::Opening> =
+            b.openings.iter().filter(|o| o.host == k).collect();
         let body = kentos_ifc::quantities::cut(&b.elements[k].shapes, &hosted);
         let v: f64 = body.iter().map(kentos_ifc::quantities::volume).sum();
         let net = want["NetVolume"].as_f64().unwrap();
-        assert!(near(v, net), "{}: the cut body {v}, the closed form {net}", b.elements[k].name);
+        assert!(
+            near(v, net),
+            "{}: the cut body {v}, the closed form {net}",
+            b.elements[k].name
+        );
         for s in &body {
-            assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{}", b.elements[k].name);
+            assert_eq!(
+                kentos_ifc::closed::faults(s),
+                Vec::<String>::new(),
+                "{}",
+                b.elements[k].name
+            );
         }
     }
     let mut reference = b.clone();
     reference.view = kentos_ifc::building::View::Reference;
     let cut_text = kentos_ifc::building::write(&reference);
-    assert!(cut_text.contains("ViewDefinition [ReferenceView]") && cut_text.contains(",'Reference','SweptSolid',"));
+    assert!(
+        cut_text.contains("ViewDefinition [ReferenceView]")
+            && cut_text.contains(",'Reference','SweptSolid',")
+    );
     if std::env::var_os("KENTOS_WRITE_IFC_CURVED").is_some() {
-        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc");
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/arch/v1/ifc");
         std::fs::write(dir.join("egri-bina.ifc"), &text).expect("the file kept");
         std::fs::write(dir.join("egri-bina-referans.ifc"), &cut_text).expect("the file kept");
     }
@@ -1364,46 +2031,94 @@ fn a_shaft_takes_its_floor_out_of_its_storey_s_slab() {
     assert!(m.slab_cuts.iter().all(|c| c.source == shaft));
     let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new());
-    let slabs: Vec<(usize, &kentos_ifc::building::Element)> =
-        b.elements.iter().enumerate().filter(|(_, e)| e.class == Class::Slab).collect();
+    let slabs: Vec<(usize, &kentos_ifc::building::Element)> = b
+        .elements
+        .iter()
+        .enumerate()
+        .filter(|(_, e)| e.class == Class::Slab)
+        .collect();
     let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
     let (whole, hole, square) = (12.25 * 9.25, 2.85 * 3.94, 1.0);
     let mut cut_slabs = 0;
     for (k, e) in &slabs {
-        let hosted: Vec<&kentos_ifc::building::Opening> = b.openings.iter().filter(|o| o.host == *k).collect();
-        let q = e.qtos.iter().find(|q| q.name == "Qto_SlabBaseQuantities").expect("its quantities");
+        let hosted: Vec<&kentos_ifc::building::Opening> =
+            b.openings.iter().filter(|o| o.host == *k).collect();
+        let q = e
+            .qtos
+            .iter()
+            .find(|q| q.name == "Qto_SlabBaseQuantities")
+            .expect("its quantities");
         let get = |n: &str| match q.quantities.iter().find(|(k, _)| k == n).map(|(_, v)| v) {
             Some(Value::Area(x) | Value::Volume(x) | Value::Length(x)) => *x,
             other => panic!("{n}: {other:?}"),
         };
         // Its body its own outline: one ring each layer.
-        assert!(e.shapes.iter().all(|s| matches!(s, Shape::Prism { rings, .. } if rings.len() == 1)), "{}", e.name);
-        assert!(near(get("GrossArea"), whole), "{} {}", e.name, get("GrossArea"));
-        let holes = if hosted.iter().any(|o| o.name == "MM-ACL-Döşeme_boşluğu") { hole } else { 0.0 };
+        assert!(
+            e.shapes
+                .iter()
+                .all(|s| matches!(s, Shape::Prism { rings, .. } if rings.len() == 1)),
+            "{}",
+            e.name
+        );
+        assert!(
+            near(get("GrossArea"), whole),
+            "{} {}",
+            e.name,
+            get("GrossArea")
+        );
+        let holes = if hosted.iter().any(|o| o.name == "MM-ACL-Döşeme_boşluğu") {
+            hole
+        } else {
+            0.0
+        };
         match hosted.len() {
             0 => assert!(near(get("NetArea"), whole), "{}", e.name),
             1 | 2 => {
                 cut_slabs += 1;
-                assert!(hosted.iter().any(|o| o.name == "MM-ACL-1S1_Şaft"), "{:?}", hosted);
-                assert!(near(get("NetArea"), whole - holes - square), "{} {}", e.name, get("NetArea"));
+                assert!(
+                    hosted.iter().any(|o| o.name == "MM-ACL-1S1_Şaft"),
+                    "{:?}",
+                    hosted
+                );
+                assert!(
+                    near(get("NetArea"), whole - holes - square),
+                    "{} {}",
+                    e.name,
+                    get("NetArea")
+                );
                 let depth = get("Width");
-                assert!(near(get("NetVolume"), (whole - holes - square) * depth), "{}", e.name);
+                assert!(
+                    near(get("NetVolume"), (whole - holes - square) * depth),
+                    "{}",
+                    e.name
+                );
                 let body = kentos_ifc::quantities::cut(&e.shapes, &hosted);
                 let v: f64 = body.iter().map(kentos_ifc::quantities::volume).sum();
                 assert!(near(v, get("NetVolume")), "{v}");
                 for s in &body {
-                    assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new(), "{}", e.name);
+                    assert_eq!(
+                        kentos_ifc::closed::faults(s),
+                        Vec::<String>::new(),
+                        "{}",
+                        e.name
+                    );
                 }
             }
             n => panic!("{}: {n} openings", e.name),
         }
     }
-    assert_eq!(cut_slabs, 2, "the 1. kat's floor slab and the terrace over it");
+    assert_eq!(
+        cut_slabs, 2,
+        "the 1. kat's floor slab and the terrace over it"
+    );
     // Both views write it closed; the Reference View's slab is cut.
     for view in [View::DesignTransfer, View::Reference] {
         let mut v = b.clone();
         v.view = view;
-        assert_eq!(kentos_ifc::closed::open_bodies(&v), Vec::<(String, String)>::new());
+        assert_eq!(
+            kentos_ifc::closed::open_bodies(&v),
+            Vec::<(String, String)>::new()
+        );
     }
 }
 
@@ -1423,29 +2138,57 @@ fn a_sloped_slab_is_a_sloped_plate_of_its_closed_forms() {
     let mut doc = building();
     let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> String {
-        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{name}: {answer}");
         answer["output"]["uids"][0].as_str().unwrap().to_owned()
     };
-    let slab = run(&mut doc, "cad.slabs.create", serde_json::json!({"layerId": "0", "slabs": [{
-        "parts": [{"outer": {"pts": [p(20.0, 0.0), p(24.0, 0.0), p(24.0, 3.0), p(20.0, 3.0)]}}],
-        "thickness": 0.2, "offset": 3.0, "arch": {"level": "zemin"},
-        "slope": {"from": p(20.0, 0.0), "to": p(20.0, 3.0), "rise": 0.3}
-    }]}));
-    let wall = run(&mut doc, "cad.walls.create", serde_json::json!({"layerId": "0", "walls": [{
-        "pts": [p(20.0, 1.5), p(24.0, 1.5)], "width": 0.2, "arch": {"level": "zemin"}
-    }]}));
+    let slab = run(
+        &mut doc,
+        "cad.slabs.create",
+        serde_json::json!({"layerId": "0", "slabs": [{
+            "parts": [{"outer": {"pts": [p(20.0, 0.0), p(24.0, 0.0), p(24.0, 3.0), p(20.0, 3.0)]}}],
+            "thickness": 0.2, "offset": 3.0, "arch": {"level": "zemin"},
+            "slope": {"from": p(20.0, 0.0), "to": p(20.0, 3.0), "rise": 0.3}
+        }]}),
+    );
+    let wall = run(
+        &mut doc,
+        "cad.walls.create",
+        serde_json::json!({"layerId": "0", "walls": [{
+            "pts": [p(20.0, 1.5), p(24.0, 1.5)], "width": 0.2, "arch": {"level": "zemin"}
+        }]}),
+    );
     let k = (1.0_f64 + 0.01).sqrt();
     let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
     // The section model: a sloped plate, its top 3.00 at y 0 and 3.30 at y 3.
     let m = sections::model(&doc);
-    let i = m.owners.iter().position(|o| o.as_deref() == Some(slab.as_str())).expect("its plate");
-    let Height::Sloped(s) = &m.solids[i].height else { panic!("{:?}", m.solids[i].height) };
+    let i = m
+        .owners
+        .iter()
+        .position(|o| o.as_deref() == Some(slab.as_str()))
+        .expect("its plate");
+    let Height::Sloped(s) = &m.solids[i].height else {
+        panic!("{:?}", m.solids[i].height)
+    };
     let z = |x: f64, y: f64| s.z(kentos_geometry_core::Vec2::new(x, y));
-    assert!(near(z(20.0, 0.0), 3.0) && near(z(24.0, 3.0), 3.3), "{} {}", z(20.0, 0.0), z(24.0, 3.0));
+    assert!(
+        near(z(20.0, 0.0), 3.0) && near(z(24.0, 3.0), 3.3),
+        "{} {}",
+        z(20.0, 0.0),
+        z(24.0, 3.0)
+    );
     assert!(near(s.thickness, 0.2 * k), "{}", s.thickness);
     // The wall under it stops under its structure at the wall's middle.
-    let Some(Entity::Wall(w)) = doc.entities_with_uids().find_map(|(u, e)| (u.to_string() == wall).then_some(e)) else {
+    let Some(Entity::Wall(w)) = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| (u.to_string() == wall).then_some(e))
+    else {
         panic!("the wall")
     };
     let top = doc.wall_foot(&w.wall) + doc.wall_height(&w.wall).expect("a height");
@@ -1454,35 +2197,65 @@ fn a_sloped_slab_is_a_sloped_plate_of_its_closed_forms() {
     let (b, written) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
     assert_eq!(written.left, Vec::new());
     let id = kentos_domain::Uuid::parse_str(&slab).unwrap().as_u128();
-    let e = b.elements.iter().find(|e| e.id == Some(id)).expect("written");
+    let e = b
+        .elements
+        .iter()
+        .find(|e| e.id == Some(id))
+        .expect("written");
     assert_eq!(e.class, Class::Slab);
-    assert!(e.shapes.iter().all(|s| matches!(s, Shape::Faces { .. })), "{:?}", e.shapes);
+    assert!(
+        e.shapes.iter().all(|s| matches!(s, Shape::Faces { .. })),
+        "{:?}",
+        e.shapes
+    );
     for s in &e.shapes {
         assert_eq!(kentos_ifc::closed::faults(s), Vec::<String>::new());
     }
     let v: f64 = e.shapes.iter().map(kentos_ifc::quantities::volume).sum();
     assert!(near(v, 12.0 * 0.2 * k), "{v}");
-    let q = e.qtos.iter().find(|q| q.name == "Qto_SlabBaseQuantities").expect("its quantities");
+    let q = e
+        .qtos
+        .iter()
+        .find(|q| q.name == "Qto_SlabBaseQuantities")
+        .expect("its quantities");
     let get = |n: &str| match q.quantities.iter().find(|(k, _)| k == n).map(|(_, v)| v) {
         Some(Value::Area(x) | Value::Volume(x) | Value::Length(x)) => *x,
         other => panic!("{n}: {other:?}"),
     };
-    assert!(near(get("Width"), 0.2) && near(get("GrossArea"), 12.0 * k) && near(get("NetVolume"), 12.0 * 0.2 * k));
-    let pitch = e.psets.iter().flat_map(|p| &p.props).find(|(n, _)| n == "PitchAngle").map(|(_, v)| v.clone());
-    assert!(matches!(pitch, Some(Value::PlaneAngle(a)) if near(a, 0.1_f64.atan())), "{pitch:?}");
+    assert!(
+        near(get("Width"), 0.2)
+            && near(get("GrossArea"), 12.0 * k)
+            && near(get("NetVolume"), 12.0 * 0.2 * k)
+    );
+    let pitch = e
+        .psets
+        .iter()
+        .flat_map(|p| &p.props)
+        .find(|(n, _)| n == "PitchAngle")
+        .map(|(_, v)| v.clone());
+    assert!(
+        matches!(pitch, Some(Value::PlaneAngle(a)) if near(a, 0.1_f64.atan())),
+        "{pitch:?}"
+    );
     // The 3D view's triangles close the same volume.
-    let mesh = kentos_ifc::mesh::meshes(&b).into_iter().find(|m| m.id == Some(id)).expect("its mesh");
+    let mesh = kentos_ifc::mesh::meshes(&b)
+        .into_iter()
+        .find(|m| m.id == Some(id))
+        .expect("its mesh");
     let mv: f64 = mesh
         .triangles
         .iter()
         .map(|t| {
             let [a, b, c] = t.map(|k| mesh.vertices[k as usize]);
-            (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0
+            (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0])
+                + a[2] * (b[0] * c[1] - b[1] * c[0]))
+                / 6.0
         })
         .sum();
     assert!(near(mv.abs(), 12.0 * 0.2 * k), "{mv}");
     if std::env::var_os("KENTOS_WRITE_IFC_SLOPED").is_some() {
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc/egimli-doseme.ifc");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/arch/v1/ifc/egimli-doseme.ifc");
         std::fs::write(out, kentos_ifc::building::write(&b)).expect("the file kept");
     }
 }
@@ -1499,21 +2272,36 @@ fn a_room_is_closed_from_its_floor_to_its_ceiling() {
     let room = doc
         .entities_with_uids()
         .find_map(|(u, e)| match e {
-            Entity::Space(s) if s.space.arch.level.as_deref() == Some("zemin") && !s.space.void => Some(u),
+            Entity::Space(s) if s.space.arch.level.as_deref() == Some("zemin") && !s.space.void => {
+                Some(u)
+            }
             _ => None,
         })
         .expect("a ground room");
     let near = |a: f64, b: f64| (a - b).abs() < 1e-9;
     let quantity = |b: &kentos_ifc::building::Building, n: &str| -> Option<f64> {
         let s = b.spaces.iter().find(|s| s.id == Some(room.as_u128()))?;
-        s.qtos.iter().flat_map(|q| &q.quantities).find(|(k, _)| k == n).map(|(_, v)| match v {
-            Value::Length(x) | Value::Area(x) | Value::Volume(x) => *x,
-            other => panic!("{other:?}"),
-        })
+        s.qtos
+            .iter()
+            .flat_map(|q| &q.quantities)
+            .find(|(k, _)| k == n)
+            .map(|(_, v)| match v {
+                Value::Length(x) | Value::Area(x) | Value::Volume(x) => *x,
+                other => panic!("{other:?}"),
+            })
     };
     let (b, _) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
-    let s = b.spaces.iter().find(|s| s.id == Some(room.as_u128())).expect("written");
-    assert!(near(s.bottom, 0.0) && near(s.top, 2.76), "{} → {}", s.bottom, s.top);
+    let s = b
+        .spaces
+        .iter()
+        .find(|s| s.id == Some(room.as_u128()))
+        .expect("written");
+    assert!(
+        near(s.bottom, 0.0) && near(s.top, 2.76),
+        "{} → {}",
+        s.bottom,
+        s.top
+    );
     assert!(near(quantity(&b, "Height").unwrap(), 2.76));
     assert_eq!(quantity(&b, "FinishCeilingHeight"), None, "no asma tavan");
     let gross = quantity(&b, "GrossFloorArea").unwrap();
@@ -1527,7 +2315,10 @@ fn a_room_is_closed_from_its_floor_to_its_ceiling() {
     .unwrap();
     assert_eq!(answer["status"], "completed", "{answer}");
     let (b, _) = arch_ifc::building(&doc, "2026-11-16T12:00:00", "KentOS Mimari");
-    assert!(near(quantity(&b, "Height").unwrap(), 2.6) && near(quantity(&b, "FinishCeilingHeight").unwrap(), 2.6));
+    assert!(
+        near(quantity(&b, "Height").unwrap(), 2.6)
+            && near(quantity(&b, "FinishCeilingHeight").unwrap(), 2.6)
+    );
     for s in &b.spaces {
         let body = kentos_ifc::building::Shape::Prism {
             rings: s.rings.clone(),
@@ -1535,7 +2326,12 @@ fn a_room_is_closed_from_its_floor_to_its_ceiling() {
             bottom: s.bottom,
             top: s.top,
         };
-        assert_eq!(kentos_ifc::closed::faults(&body), Vec::<String>::new(), "{}", s.name);
+        assert_eq!(
+            kentos_ifc::closed::faults(&body),
+            Vec::<String>::new(),
+            "{}",
+            s.name
+        );
     }
 }
 
@@ -1549,25 +2345,47 @@ pub(crate) fn two_blocks() -> Document {
     let mut doc = building();
     let mut settings = doc.settings().clone();
     let arch = settings.arch.as_mut().expect("its levels");
-    for (id, name, elevation) in [("bodrum", "Bodrum kat", -3.0), ("b-zemin", "B zemin kat", 1.2)] {
-        arch.levels.push(serde_json::from_value(serde_json::json!({"id": id, "name": name, "elevation": elevation, "height": 3.0})).unwrap());
+    for (id, name, elevation) in [
+        ("bodrum", "Bodrum kat", -3.0),
+        ("b-zemin", "B zemin kat", 1.2),
+    ] {
+        arch.levels.push(
+            serde_json::from_value(
+                serde_json::json!({"id": id, "name": name, "elevation": elevation, "height": 3.0}),
+            )
+            .unwrap(),
+        );
     }
     arch.program.buildings = serde_json::from_value(serde_json::json!([
         {"id": "a", "name": "A Blok", "levels": ["bodrum", "zemin", "k1"], "code": "A1", "usage": "Konut", "zero": 0.0},
         {"id": "b", "name": "B Blok", "levels": ["bodrum", "b-zemin"], "code": "B1", "usage": "Ticaret", "zero": 1.2}
     ]))
     .unwrap();
-    arch.program.shared = vec![kentos_commands::SharedLevel { level: "bodrum".into(), building: "a".into() }];
+    arch.program.shared = vec![kentos_commands::SharedLevel {
+        level: "bodrum".into(),
+        building: "a".into(),
+    }];
     doc.set_settings(settings);
     let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
-    let rect = |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
+    let rect =
+        |x0: f64, y0: f64, x1: f64, y1: f64| vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1)];
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| {
-        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{name}: {answer}");
     };
-    run(&mut doc, "cad.slabs.create", serde_json::json!({"layerId": "0", "slabs": [{
-        "parts": [{"outer": {"pts": rect(-0.125, -0.125, 26.125, 9.125)}}], "thickness": 0.3, "arch": {"level": "bodrum"}
-    }]}));
+    run(
+        &mut doc,
+        "cad.slabs.create",
+        serde_json::json!({"layerId": "0", "slabs": [{
+            "parts": [{"outer": {"pts": rect(-0.125, -0.125, 26.125, 9.125)}}], "thickness": 0.3, "arch": {"level": "bodrum"}
+        }]}),
+    );
     let corners = [(20.0, 0.0), (26.0, 0.0), (26.0, 5.0), (20.0, 5.0)];
     let walls: Vec<serde_json::Value> = (0..4)
         .map(|k| {
@@ -1575,11 +2393,19 @@ pub(crate) fn two_blocks() -> Document {
             serde_json::json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": 0.25, "arch": {"level": "b-zemin"}})
         })
         .collect();
-    run(&mut doc, "cad.walls.create", serde_json::json!({"layerId": "0", "walls": walls}));
-    run(&mut doc, "cad.spaces.create", serde_json::json!({"layerId": "0", "spaces": [{
-        "parts": [{"outer": {"pts": rect(20.125, 0.125, 25.875, 4.875)}}], "number": "B01", "name": "Dükkân",
-        "arch": {"level": "b-zemin"}
-    }]}));
+    run(
+        &mut doc,
+        "cad.walls.create",
+        serde_json::json!({"layerId": "0", "walls": walls}),
+    );
+    run(
+        &mut doc,
+        "cad.spaces.create",
+        serde_json::json!({"layerId": "0", "spaces": [{
+            "parts": [{"outer": {"pts": rect(20.125, 0.125, 25.875, 4.875)}}], "number": "B01", "name": "Dükkân",
+            "arch": {"level": "b-zemin"}
+        }]}),
+    );
     doc
 }
 
@@ -1593,28 +2419,49 @@ fn two_blocks_are_two_models_with_their_own_zero_and_the_basement_once() {
     use kentos_ifc::building::{Shape, write};
     let doc = two_blocks();
     let stamp = "2026-11-16T12:00:00";
-    let (a, written_a, unplaced) = arch_ifc::building_of(&doc, "a", stamp, "KentOS Mimari").expect("A Blok");
+    let (a, written_a, unplaced) =
+        arch_ifc::building_of(&doc, "a", stamp, "KentOS Mimari").expect("A Blok");
     assert_eq!((unplaced, written_a.left.len()), (0, 0));
-    let (b, written_b, _) = arch_ifc::building_of(&doc, "b", stamp, "KentOS Mimari").expect("B Blok");
+    let (b, written_b, _) =
+        arch_ifc::building_of(&doc, "b", stamp, "KentOS Mimari").expect("B Blok");
     assert_eq!(written_b.left, Vec::new());
     assert!(arch_ifc::building_of(&doc, "c", stamp, "KentOS Mimari").is_none());
     let storeys = |x: &kentos_ifc::building::Building| {
-        let mut v: Vec<(String, f64)> = x.storeys.iter().map(|s| (s.long_name.clone().unwrap(), s.elevation)).collect();
+        let mut v: Vec<(String, f64)> = x
+            .storeys
+            .iter()
+            .map(|s| (s.long_name.clone().unwrap(), s.elevation))
+            .collect();
         v.sort_by(|p, q| p.1.total_cmp(&q.1));
         v
     };
     assert_eq!(
         storeys(&a),
-        vec![("Bodrum kat".into(), -3.0), ("Zemin kat".into(), 0.0), ("1. kat".into(), 3.0)]
+        vec![
+            ("Bodrum kat".into(), -3.0),
+            ("Zemin kat".into(), 0.0),
+            ("1. kat".into(), 3.0)
+        ]
     );
     assert_eq!(storeys(&b), vec![("B zemin kat".to_owned(), 0.0)]);
     assert_eq!((a.zero, b.zero), (0.0, 1.2));
-    let count = |x: &kentos_ifc::building::Building, c: Class| x.elements.iter().filter(|e| e.class == c).count();
+    let count = |x: &kentos_ifc::building::Building, c: Class| {
+        x.elements.iter().filter(|e| e.class == c).count()
+    };
     assert_eq!(count(&b, Class::Wall), 4);
     assert_eq!(count(&b, Class::Slab), 0, "the basement is A Blok's");
     assert_eq!(b.spaces.len(), 1);
-    assert_eq!(count(&a, Class::Slab), 4, "the ground, the 1. kat's, the terrace and the basement");
-    assert!(a.spaces.len() > 1 && a.spaces.iter().all(|s| s.long_name.as_deref() != Some("Dükkân")));
+    assert_eq!(
+        count(&a, Class::Slab),
+        4,
+        "the ground, the 1. kat's, the terrace and the basement"
+    );
+    assert!(
+        a.spaces.len() > 1
+            && a.spaces
+                .iter()
+                .all(|s| s.long_name.as_deref() != Some("Dükkân"))
+    );
     // B's walls stand at +1.20 over the project's ±0.00: its zero, its storey's elevation over it, their own foot.
     for e in b.elements.iter().filter(|e| e.class == Class::Wall) {
         let low = e
@@ -1625,16 +2472,29 @@ fn two_blocks_are_two_models_with_their_own_zero_and_the_basement_once() {
                 Shape::Faces { .. } => None,
             })
             .fold(f64::MAX, f64::min);
-        assert!((b.zero + b.storeys[e.storey].elevation + low - 1.2).abs() < 1e-9, "{}: {low}", e.name);
+        assert!(
+            (b.zero + b.storeys[e.storey].elevation + low - 1.2).abs() < 1e-9,
+            "{}: {low}",
+            e.name
+        );
     }
     // One site and one project in both files; each building its own name.
     let (fa, fb) = (write(&a), write(&b));
-    let line = |f: &str, what: &str| f.lines().find(|l| l.contains(what)).map(|l| l.split_once('=').unwrap().1.to_owned());
+    let line = |f: &str, what: &str| {
+        f.lines()
+            .find(|l| l.contains(what))
+            .map(|l| l.split_once('=').unwrap().1.to_owned())
+    };
     assert_eq!(line(&fa, "IFCSITE("), line(&fb, "IFCSITE("));
     assert_eq!(line(&fa, "IFCPROJECT("), line(&fb, "IFCPROJECT("));
-    assert!(fa.contains("'MM-BNA-A_Blok'") && fb.contains("'MM-BNA-B_Blok'"), "{}", line(&fb, "IFCBUILDING(").unwrap_or_default());
+    assert!(
+        fa.contains("'MM-BNA-A_Blok'") && fb.contains("'MM-BNA-B_Blok'"),
+        "{}",
+        line(&fb, "IFCBUILDING(").unwrap_or_default()
+    );
     if std::env::var_os("KENTOS_WRITE_IFC_BLOCKS").is_some() {
-        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/arch/v1/ifc");
+        let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/arch/v1/ifc");
         std::fs::write(dir.join("blok-a.ifc"), fa).expect("the file kept");
         std::fs::write(dir.join("blok-b.ifc"), fb).expect("the file kept");
     }
@@ -1648,7 +2508,8 @@ fn global_ids(doc: &Document, stamp: &str) -> Vec<String> {
         .filter_map(|l| {
             let i = l.find("('")?;
             let g = l.get(i + 2..i + 24)?;
-            (l.get(i + 24..i + 25) == Some("'") && kentos_ifc::step::unguid(g).is_some()).then(|| g.to_owned())
+            (l.get(i + 24..i + 25) == Some("'") && kentos_ifc::step::unguid(g).is_some())
+                .then(|| g.to_owned())
         })
         .collect()
 }
@@ -1663,36 +2524,72 @@ fn a_drawing_written_another_day_keeps_every_global_id() {
     use kentos_native_application::{ExecutionContext, registry};
     let mut doc = building();
     let run = |doc: &mut Document, name: &str, input: serde_json::Value| -> serde_json::Value {
-        let answer = registry::run(&mut ExecutionContext::new(doc), name, CallOp::Execute, input).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            name,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{name}: {answer}");
         answer
     };
     let p = |x: f64, y: f64| serde_json::json!({"x": x, "y": y});
     // A curtain wall and a library's lift: parts the export makes of their own (mullions, panels, the lift's fixtures).
-    run(&mut doc, "cad.walls.create", serde_json::json!({"layerId": "0", "walls": [{
-        "pts": [p(20.0, -3.0), p(26.0, -3.0)], "width": 0.15, "height": 3.0, "arch": {"level": "zemin"},
-        "curtain": {"spacing": 1.5, "rows": 1.2, "panel": "Cam", "frames": "Alüminyum"}
-    }]}));
+    run(
+        &mut doc,
+        "cad.walls.create",
+        serde_json::json!({"layerId": "0", "walls": [{
+            "pts": [p(20.0, -3.0), p(26.0, -3.0)], "width": 0.15, "height": 3.0, "arch": {"level": "zemin"},
+            "curtain": {"spacing": 1.5, "rows": 1.2, "panel": "Cam", "frames": "Alüminyum"}
+        }]}),
+    );
     let library = include_str!("../../../../../catalog/v1/blocks/kentos-temel.kblok");
-    run(&mut doc, "cad.blocks.edit", serde_json::json!({"operation": "import", "library": library}));
-    run(&mut doc, "cad.blocks.insert", serde_json::json!({
-        "name": "Asansör", "at": p(5.0, 6.0), "layerId": "0", "arch": {"level": "zemin"},
-        "attributes": {"KISI": "8", "YUK": "630"}
-    }));
+    run(
+        &mut doc,
+        "cad.blocks.edit",
+        serde_json::json!({"operation": "import", "library": library}),
+    );
+    run(
+        &mut doc,
+        "cad.blocks.insert",
+        serde_json::json!({
+            "name": "Asansör", "at": p(5.0, 6.0), "layerId": "0", "arch": {"level": "zemin"},
+            "attributes": {"KISI": "8", "YUK": "630"}
+        }),
+    );
     let before = global_ids(&doc, "2026-11-16T12:00:00");
     assert!(before.len() > 100, "{} GlobalIds", before.len());
-    assert_eq!(global_ids(&doc, "2026-11-18T09:30:00"), before, "another day, the same GlobalIds");
+    assert_eq!(
+        global_ids(&doc, "2026-11-18T09:30:00"),
+        before,
+        "another day, the same GlobalIds"
+    );
     let once: std::collections::BTreeSet<&String> = before.iter().collect();
     assert_eq!(once.len(), before.len(), "no GlobalId twice");
     // A door in a wall of its own, away from the rest.
-    let wall = run(&mut doc, "cad.walls.create", serde_json::json!({"layerId": "0", "walls": [{
-        "pts": [p(40.0, 0.0), p(46.0, 0.0)], "width": 0.2, "height": 3.0, "arch": {"level": "zemin"}
-    }]}));
-    let wall = wall["output"]["uids"][0].as_str().expect("the wall").to_owned();
-    run(&mut doc, "cad.openings.create", serde_json::json!({"layerId": "0", "openings": [{"host": wall, "at": 3.0, "width": 0.9}]}));
+    let wall = run(
+        &mut doc,
+        "cad.walls.create",
+        serde_json::json!({"layerId": "0", "walls": [{
+            "pts": [p(40.0, 0.0), p(46.0, 0.0)], "width": 0.2, "height": 3.0, "arch": {"level": "zemin"}
+        }]}),
+    );
+    let wall = wall["output"]["uids"][0]
+        .as_str()
+        .expect("the wall")
+        .to_owned();
+    run(
+        &mut doc,
+        "cad.openings.create",
+        serde_json::json!({"layerId": "0", "openings": [{"host": wall, "at": 3.0, "width": 0.9}]}),
+    );
     let after = global_ids(&doc, "2026-11-19T08:00:00");
     let lost: Vec<&String> = before.iter().filter(|g| !after.contains(g)).collect();
-    assert!(lost.is_empty(), "GlobalIds the door's change took away: {lost:?}");
+    assert!(
+        lost.is_empty(),
+        "GlobalIds the door's change took away: {lost:?}"
+    );
     assert!(after.len() > before.len());
 }
 
@@ -1708,7 +2605,13 @@ fn a_declared_reading_is_written_over_the_drawing_s() {
         b.elements
             .iter()
             .find(|e| e.id == Some(id))
-            .and_then(|e| e.psets.iter().filter(|p| p.name == set).flat_map(|p| p.props.iter()).find(|(n, _)| n == key))
+            .and_then(|e| {
+                e.psets
+                    .iter()
+                    .filter(|p| p.name == set)
+                    .flat_map(|p| p.props.iter())
+                    .find(|(n, _)| n == key)
+            })
             .map(|(_, v)| v.clone())
     };
     let (before, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
@@ -1716,7 +2619,9 @@ fn a_declared_reading_is_written_over_the_drawing_s() {
     let hosts: std::collections::BTreeSet<String> = doc
         .entities()
         .filter_map(|e| match e {
-            Entity::Opening(o) if o.opening.form == OpeningForm::Window => Some(o.opening.host.clone()),
+            Entity::Opening(o) if o.opening.form == OpeningForm::Window => {
+                Some(o.opening.host.clone())
+            }
             _ => None,
         })
         .collect();
@@ -1725,7 +2630,8 @@ fn a_declared_reading_is_written_over_the_drawing_s() {
         .find(|(u, e)| {
             matches!(e, Entity::Wall(_))
                 && hosts.contains(&u.to_string())
-                && prop(&before, u.as_u128(), "Pset_WallCommon", "IsExternal") == Some(Value::Bool(true))
+                && prop(&before, u.as_u128(), "Pset_WallCommon", "IsExternal")
+                    == Some(Value::Bool(true))
         })
         .map(|(u, _)| u)
         .expect("an outer wall with a window");
@@ -1744,23 +2650,64 @@ fn a_declared_reading_is_written_over_the_drawing_s() {
         .find(|(_, e)| matches!(e, Entity::Column(c) if c.column.member.is_none()))
         .map(|(u, _)| u)
         .expect("a column");
-    assert_eq!(prop(&before, window, "Pset_WindowCommon", "IsExternal"), Some(Value::Bool(true)));
-    assert_eq!(prop(&before, slab.as_u128(), "Pset_SlabCommon", "IsExternal"), Some(Value::Bool(false)));
-    assert_eq!(prop(&before, column.as_u128(), "Pset_ColumnCommon", "LoadBearing"), Some(Value::Bool(true)));
+    assert_eq!(
+        prop(&before, window, "Pset_WindowCommon", "IsExternal"),
+        Some(Value::Bool(true))
+    );
+    assert_eq!(
+        prop(&before, slab.as_u128(), "Pset_SlabCommon", "IsExternal"),
+        Some(Value::Bool(false))
+    );
+    assert_eq!(
+        prop(
+            &before,
+            column.as_u128(),
+            "Pset_ColumnCommon",
+            "LoadBearing"
+        ),
+        Some(Value::Bool(true))
+    );
     let run = |doc: &mut Document, op: serde_json::Value| {
-        let answer = registry::run(&mut ExecutionContext::new(doc), "cad.arch.performance", CallOp::Execute,
-            serde_json::json!({"operation": op})).unwrap();
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            "cad.arch.performance",
+            CallOp::Execute,
+            serde_json::json!({"operation": op}),
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{answer}");
     };
     let author = serde_json::json!({"kind": "author"});
-    run(&mut doc, serde_json::json!({"kind": "objects", "uids": [wall.to_string()], "external": {"external": false, "basis": author}}));
-    run(&mut doc, serde_json::json!({"kind": "objects", "uids": [slab.to_string()], "external": {"external": true, "basis": author}}));
-    run(&mut doc, serde_json::json!({"kind": "objects", "uids": [column.to_string()], "loadBearing": {"bearing": false, "basis": author}}));
+    run(
+        &mut doc,
+        serde_json::json!({"kind": "objects", "uids": [wall.to_string()], "external": {"external": false, "basis": author}}),
+    );
+    run(
+        &mut doc,
+        serde_json::json!({"kind": "objects", "uids": [slab.to_string()], "external": {"external": true, "basis": author}}),
+    );
+    run(
+        &mut doc,
+        serde_json::json!({"kind": "objects", "uids": [column.to_string()], "loadBearing": {"bearing": false, "basis": author}}),
+    );
     let (after, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
-    assert_eq!(prop(&after, wall.as_u128(), "Pset_WallCommon", "IsExternal"), Some(Value::Bool(false)));
-    assert_eq!(prop(&after, window, "Pset_WindowCommon", "IsExternal"), Some(Value::Bool(false)), "the window follows its wall");
-    assert_eq!(prop(&after, slab.as_u128(), "Pset_SlabCommon", "IsExternal"), Some(Value::Bool(true)));
-    assert_eq!(prop(&after, column.as_u128(), "Pset_ColumnCommon", "LoadBearing"), Some(Value::Bool(false)));
+    assert_eq!(
+        prop(&after, wall.as_u128(), "Pset_WallCommon", "IsExternal"),
+        Some(Value::Bool(false))
+    );
+    assert_eq!(
+        prop(&after, window, "Pset_WindowCommon", "IsExternal"),
+        Some(Value::Bool(false)),
+        "the window follows its wall"
+    );
+    assert_eq!(
+        prop(&after, slab.as_u128(), "Pset_SlabCommon", "IsExternal"),
+        Some(Value::Bool(true))
+    );
+    assert_eq!(
+        prop(&after, column.as_u128(), "Pset_ColumnCommon", "LoadBearing"),
+        Some(Value::Bool(false))
+    );
     // The fire rules read the same: the wall is no exterior wall, the column no frame's; every wall reads as the model
     // did before (the framed storey's outer walls on the outline, docs/adr/8124).
     let read_before: Vec<(String, bool)> = before
@@ -1774,15 +2721,36 @@ fn a_declared_reading_is_written_over_the_drawing_s() {
         })
         .collect();
     let fire = doc.fire_elements();
-    let of = |u: kentos_domain::Uuid| fire.iter().find(|f| f.uid == u.to_string()).expect("a fire element").clone();
-    assert_eq!((of(wall).exterior, of(wall).outline), (false, true), "declared inside, read on the outline");
+    let of = |u: kentos_domain::Uuid| {
+        fire.iter()
+            .find(|f| f.uid == u.to_string())
+            .expect("a fire element")
+            .clone()
+    };
+    assert_eq!(
+        (of(wall).exterior, of(wall).outline),
+        (false, true),
+        "declared inside, read on the outline"
+    );
     for (u, outside) in &read_before {
-        assert_eq!(fire.iter().find(|f| &f.uid == u).map(|f| f.outline), Some(*outside), "{u}");
+        assert_eq!(
+            fire.iter().find(|f| &f.uid == u).map(|f| f.outline),
+            Some(*outside),
+            "{u}"
+        );
     }
     assert!(!of(column).frame);
     // And the property panel's reading says why.
-    let read = doc.outside_reading(&wall.to_string(), doc.get(doc.slot_of(wall).unwrap()).unwrap()).unwrap();
-    assert_eq!((read.value, read.why), (true, "katın dış çizgisinde olduğu için dışarıda"));
+    let read = doc
+        .outside_reading(
+            &wall.to_string(),
+            doc.get(doc.slot_of(wall).unwrap()).unwrap(),
+        )
+        .unwrap();
+    assert_eq!(
+        (read.value, read.why),
+        (true, "katın dış çizgisinde olduğu için dışarıda")
+    );
 }
 
 /// The IFC Tag (docs/adr/8124): an element's own number (a door's mark, a column's tag), else its type's joinery code,
@@ -1802,21 +2770,44 @@ fn an_element_s_tag_is_its_number_else_its_type_s_code_else_its_id() {
     }
     assert!(doc.update(slot, e), "the column tagged");
     let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
-    let tag = |id: u128| b.elements.iter().find(|e| e.id == Some(id)).and_then(|e| e.tag.clone());
+    let tag = |id: u128| {
+        b.elements
+            .iter()
+            .find(|e| e.id == Some(id))
+            .and_then(|e| e.tag.clone())
+    };
     assert_eq!(tag(column.as_u128()).as_deref(), Some("S1"));
-    let wall = doc.entities_with_uids().find(|(_, e)| matches!(e, Entity::Wall(_))).map(|(u, _)| u).unwrap();
-    assert_eq!(tag(wall.as_u128()), Some(wall.to_string()), "a wall without a number: its id");
+    let wall = doc
+        .entities_with_uids()
+        .find(|(_, e)| matches!(e, Entity::Wall(_)))
+        .map(|(u, _)| u)
+        .unwrap();
+    assert_eq!(
+        tag(wall.as_u128()),
+        Some(wall.to_string()),
+        "a wall without a number: its id"
+    );
     for (u, e) in doc.entities_with_uids() {
         let Entity::Opening(o) = e else { continue };
         if !matches!(o.opening.form, OpeningForm::Door | OpeningForm::Window) {
             continue;
         }
-        let code = o
+        let code = o.opening.style.as_deref().and_then(|id| {
+            doc.settings()
+                .arch
+                .as_ref()?
+                .opening_types
+                .iter()
+                .find(|t| t.id == id)?
+                .code
+                .clone()
+        });
+        let want = o
             .opening
-            .style
-            .as_deref()
-            .and_then(|id| doc.settings().arch.as_ref()?.opening_types.iter().find(|t| t.id == id)?.code.clone());
-        let want = o.opening.number.clone().or(code).unwrap_or_else(|| u.to_string());
+            .number
+            .clone()
+            .or(code)
+            .unwrap_or_else(|| u.to_string());
         assert_eq!(tag(u.as_u128()), Some(want), "{u}");
     }
 }
@@ -1833,11 +2824,14 @@ fn an_accepted_survey_point_is_a_survey_annotation_of_the_site() {
     let id = snap.entities.iter().map(|e| e.base().id).max().unwrap_or(0) + 1;
     let layer = snap.entities[0].base().layer_id.clone();
     snap.entities.push(
-        serde_json::from_value(serde_json::json!({"kind": "point", "id": id, "layerId": layer, "attrs": {},
-            "p": {"x": -3.0, "y": -4.0}, "z": 1285.10}))
+        serde_json::from_value(
+            serde_json::json!({"kind": "point", "id": id, "layerId": layer, "attrs": {},
+            "p": {"x": -3.0, "y": -4.0}, "z": 1285.10}),
+        )
         .unwrap(),
     );
-    snap.uids.push(kentos_commands::EntityId::parse(uid).unwrap());
+    snap.uids
+        .push(kentos_commands::EntityId::parse(uid).unwrap());
     snap.settings.map_survey = Some(
         serde_json::from_value(serde_json::json!({"points": [{"id": "kn-1", "mark": "P1",
             "uid": uid, "result": {"revision": 1, "solutions": ["sc-1"], "method": "single", "lat": 39.75, "lon": 37.02,
@@ -1846,18 +2840,37 @@ fn an_accepted_survey_point_is_a_survey_annotation_of_the_site() {
         .unwrap(),
     );
     let doc = Document::from_snapshot_v2(snap.clone()).unwrap();
-    assert!(arch_ifc::surveys(&doc).is_empty(), "±0.00 of unknown height: the height is not guessed");
-    snap.settings.arch.get_or_insert_with(Default::default).site.get_or_insert_with(Default::default).datum = Some(1285.40);
+    assert!(
+        arch_ifc::surveys(&doc).is_empty(),
+        "±0.00 of unknown height: the height is not guessed"
+    );
+    snap.settings
+        .arch
+        .get_or_insert_with(Default::default)
+        .site
+        .get_or_insert_with(Default::default)
+        .datum = Some(1285.40);
     let doc = Document::from_snapshot_v2(snap).unwrap();
     let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
     assert_eq!(b.surveys.len(), 1);
     let s = &b.surveys[0];
     assert_eq!(s.name, "P1");
-    assert!(s.description.contains("kn-1") && s.description.contains("Tek çözüm") && s.description.contains("sc-1"));
-    assert!((s.at[2] - -0.30).abs() < 1e-9 && s.at[0] == -3.0 && s.at[1] == -4.0, "{:?}", s.at);
+    assert!(
+        s.description.contains("kn-1")
+            && s.description.contains("Tek çözüm")
+            && s.description.contains("sc-1")
+    );
+    assert!(
+        (s.at[2] - -0.30).abs() < 1e-9 && s.at[0] == -3.0 && s.at[1] == -4.0,
+        "{:?}",
+        s.at
+    );
     let text = kentos_ifc::building::write(&b);
     assert_eq!(text.matches("IFCANNOTATION(").count(), 1);
-    assert!(text.contains("'P1','Ölçüm noktası kn-1") || text.contains("'P1','\\X2\\"), "its name and source");
+    assert!(
+        text.contains("'P1','Ölçüm noktası kn-1") || text.contains("'P1','\\X2\\"),
+        "its name and source"
+    );
     assert!(text.contains(".SURVEY.)"));
     assert!(text.contains("'Annotation','Point'"));
 }
@@ -1874,8 +2887,15 @@ fn a_room_s_own_emsal_state_counts_and_an_increase_is_a_diger_zone() {
         "../../../../../fixtures/arch/v1/section-building.kcad"
     ))
     .unwrap();
-    snap.settings.arch.get_or_insert_with(Default::default).zoning =
-        Some(kentos_commands::Zoning { parcel_area: 450.0, far: Some(1.5), coverage: Some(0.4), ..Default::default() });
+    snap.settings
+        .arch
+        .get_or_insert_with(Default::default)
+        .zoning = Some(kentos_commands::Zoning {
+        parcel_area: 450.0,
+        far: Some(1.5),
+        coverage: Some(0.4),
+        ..Default::default()
+    });
     let mut doc = Document::from_snapshot_v2(snap).unwrap();
     let rooms: Vec<String> = doc
         .entities_with_uids()
@@ -1884,31 +2904,70 @@ fn a_room_s_own_emsal_state_counts_and_an_increase_is_a_diger_zone() {
         .take(2)
         .collect();
     let before = doc.zoning_report().expect("a zoning");
-    let gross = |doc: &Document, uid: &str| doc.zoning_rooms().into_iter().find(|r| r.uid == uid).map(|r| r.gross).unwrap();
+    let gross = |doc: &Document, uid: &str| {
+        doc.zoning_rooms()
+            .into_iter()
+            .find(|r| r.uid == uid)
+            .map(|r| r.gross)
+            .unwrap()
+    };
     let (g0, g1) = (gross(&doc, &rooms[0]), gross(&doc, &rooms[1]));
     for (uid, emsal) in rooms.iter().zip([
         serde_json::json!({"count": "exempt", "basis": "Planlı Alanlar İmar Yönetmeliği 22/1-a"}),
         serde_json::json!({"count": "bonus", "basis": "Sivas İmar Yönetmeliği 22/k"}),
     ]) {
-        let input = serde_json::json!({"uids": [uid], "operation": {"kind": "set", "emsal": emsal}});
-        let answer = registry::run(&mut ExecutionContext::new(&mut doc), "cad.spaces.edit", CallOp::Execute, input).unwrap();
+        let input =
+            serde_json::json!({"uids": [uid], "operation": {"kind": "set", "emsal": emsal}});
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            "cad.spaces.edit",
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(answer["status"], "completed", "{answer}");
     }
     let after = doc.zoning_report().expect("a zoning");
-    assert!((after.bonus - g1).abs() < 1e-9, "the increase apart: {} vs {g1}", after.bonus);
-    assert!((after.included - (before.included - g0 - g1)).abs() < 1e-6, "both out of katlar alanı");
+    assert!(
+        (after.bonus - g1).abs() < 1e-9,
+        "the increase apart: {} vs {g1}",
+        after.bonus
+    );
+    assert!(
+        (after.included - (before.included - g0 - g1)).abs() < 1e-6,
+        "both out of katlar alanı"
+    );
     assert!((after.exempt - (before.exempt + g0)).abs() < 1e-6);
     let table = doc.zoning_table();
-    assert!(table.rows.iter().any(|r| r[0].contains("Emsal artışı (DİĞER)")), "{:?}", table.rows);
+    assert!(
+        table
+            .rows
+            .iter()
+            .any(|r| r[0].contains("Emsal artışı (DİĞER)")),
+        "{:?}",
+        table.rows
+    );
     // The model: a DIGER zone on its storey, its basis the description.
     let (b, _) = arch_ifc::building(&doc, "2026-11-11T12:00:00", "KentOS Mimari");
     let diger: Vec<_> = b
         .zones
         .iter()
-        .filter(|z| z.psets.iter().flat_map(|p| p.props.iter()).any(|(k, v)| k == "EmsalDurumu" && *v == Value::Label("DIGER".into())))
+        .filter(|z| {
+            z.psets
+                .iter()
+                .flat_map(|p| p.props.iter())
+                .any(|(k, v)| k == "EmsalDurumu" && *v == Value::Label("DIGER".into()))
+        })
         .collect();
     assert_eq!(diger.len(), 1);
-    assert!(diger[0].description.as_deref().is_some_and(|d| d.contains("Sivas İmar Yönetmeliği 22/k")), "{:?}", diger[0].description);
+    assert!(
+        diger[0]
+            .description
+            .as_deref()
+            .is_some_and(|d| d.contains("Sivas İmar Yönetmeliği 22/k")),
+        "{:?}",
+        diger[0].description
+    );
     // Every room has its kind (EK-6 Tablo 6.58): the section building's are inside, none a car park.
     for s in &b.spaces {
         assert_eq!(s.predefined, "INTERNAL", "{}", s.name);

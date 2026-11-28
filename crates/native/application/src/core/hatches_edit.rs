@@ -186,7 +186,11 @@ fn closed_at(doc: &Document, uids: &[String], path: &str) -> Result<Vec<(EntityI
 
 /// The hatch's loops as the core holds them: its exact boundary, else its ring and holes.
 fn loops_of(h: &HatchEntity) -> Vec<HatchLoop> {
-    if let Some(b) = h.boundary.as_deref().and_then(kentos_formats::blocks::core_boundary) {
+    if let Some(b) = h
+        .boundary
+        .as_deref()
+        .and_then(kentos_formats::blocks::core_boundary)
+    {
         return b;
     }
     let plain = |pts: &[Point]| HatchLoop {
@@ -258,7 +262,11 @@ fn base_on(layer: &str) -> EntityBase {
 fn ring_of(l: &HatchLoop) -> (Vec<Point>, Option<Vec<f64>>, bool) {
     let (pts, bulges, approximated) = hatch_boundary::chorded(l);
     let any = bulges.iter().any(|b| *b != 0.0);
-    (pts.into_iter().map(wire).collect(), any.then_some(bulges), approximated)
+    (
+        pts.into_iter().map(wire).collect(),
+        any.then_some(bulges),
+        approximated,
+    )
 }
 
 /// Sınırı yeniden oluştur's objects: in `form` on `layer`, outer loop first; and whether a curve was chorded.
@@ -408,7 +416,9 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                 w.path = w.path.map(|p| p.replacen("region", "edit.region", 1));
                 w
             }));
-            let p = found.first().ok_or_else(|| not_enclosed("edit.region.at"))?;
+            let p = found
+                .first()
+                .ok_or_else(|| not_enclosed("edit.region.at"))?;
             warnings.extend(crate::region::gaps_said(doc, p).map(|mut w| {
                 w.path = Some("edit.region.gap".into());
                 w
@@ -437,7 +447,10 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                 Some(a) => {
                     let mut tie = a.clone();
                     for (id, _) in &islands {
-                        if tie.outer != Some(*id) && !tie.bounds.contains(id) && !tie.islands.contains(id) {
+                        if tie.outer != Some(*id)
+                            && !tie.bounds.contains(id)
+                            && !tie.islands.contains(id)
+                        {
                             tie.islands.push(*id);
                         }
                     }
@@ -454,12 +467,17 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                         assoc: Some(tie),
                         ..h.clone()
                     };
-                    doc.recut_hatch(&tied).ok_or_else(|| not_enclosed("edit.uids"))?
+                    doc.recut_hatch(&tied)
+                        .ok_or_else(|| not_enclosed("edit.uids"))?
                 }
                 None => {
                     let loops = loops_of(&h);
-                    let area = hatch_boundary::area_of(&loops).ok_or_else(|| not_enclosed("edit.uid"))?;
-                    let cutters: Vec<Area> = islands.iter().flat_map(|(_, s)| areas_of_entity(s)).collect();
+                    let area =
+                        hatch_boundary::area_of(&loops).ok_or_else(|| not_enclosed("edit.uid"))?;
+                    let cutters: Vec<Area> = islands
+                        .iter()
+                        .flat_map(|(_, s)| areas_of_entity(s))
+                        .collect();
                     let parts = subtract_areas(std::slice::from_ref(&area), &cutters);
                     let largest = parts
                         .iter()
@@ -499,7 +517,8 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                     let mut tie = a.clone();
                     for (i, uid) in uids.iter().enumerate() {
                         let id = Uuid::parse_str(uid).map(|u| EntityId(*u.as_bytes())).ok();
-                        let Some(k) = id.and_then(|id| tie.islands.iter().position(|x| *x == id)) else {
+                        let Some(k) = id.and_then(|id| tie.islands.iter().position(|x| *x == id))
+                        else {
                             return Err(fail(
                                 codes::ISLAND_NOT_FOUND,
                                 "Verilen nesne taramanın adalarından biri değil; ilişkideki adaları Öznitelikler gösterir.".into(),
@@ -513,7 +532,8 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                         assoc: Some(tie),
                         ..h.clone()
                     };
-                    doc.recut_hatch(&tied).ok_or_else(|| not_enclosed("edit.uids"))?
+                    doc.recut_hatch(&tied)
+                        .ok_or_else(|| not_enclosed("edit.uids"))?
                 }
                 None => {
                     if !uids.is_empty() {
@@ -529,7 +549,9 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                         if *k as usize >= count {
                             return Err(fail(
                                 codes::ISLAND_NOT_FOUND,
-                                format!("Taramanın {count} deliği var; {k}. sırada delik yok (0 ilki)."),
+                                format!(
+                                    "Taramanın {count} deliği var; {k}. sırada delik yok (0 ilki)."
+                                ),
                                 &format!("edit.holes[{i}]"),
                             ));
                         }
@@ -542,8 +564,12 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                         .filter(|(i, _)| !gone.contains(i))
                         .map(|(_, l)| l)
                         .collect();
-                    let area = hatch_boundary::area_of(&kept).ok_or_else(|| not_enclosed("edit.holes"))?;
-                    let sources: Vec<Shape> = kept.iter().filter_map(hatch_boundary::whole_curve).collect();
+                    let area =
+                        hatch_boundary::area_of(&kept).ok_or_else(|| not_enclosed("edit.holes"))?;
+                    let sources: Vec<Shape> = kept
+                        .iter()
+                        .filter_map(hatch_boundary::whole_curve)
+                        .collect();
                     with_area(&h, &area, &sources)
                 }
             };
@@ -572,17 +598,31 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
             }
             let hatches = hatches_at(doc, uids)?;
             checks::revision(doc, input.expected_revision.as_deref())?;
-            let rings: Vec<Vec<Vec2>> = hatches.iter().map(|(_, _, h)| h.ring.iter().map(|p| Vec2::new(p.x, p.y)).collect()).collect();
+            let rings: Vec<Vec<Vec2>> = hatches
+                .iter()
+                .map(|(_, _, h)| h.ring.iter().map(|p| Vec2::new(p.x, p.y)).collect())
+                .collect();
             let all = crate::region::box_of(rings.iter().map(Vec::as_slice));
             for ((slot, uid, mut h), ring) in hatches.into_iter().zip(&rings) {
                 if !lined(&h.pattern) {
-                    return Err(fail(codes::INVALID_REGION, "Başlangıç yalnız çizgili desenlerde değiştirilebilir.".into(), "edit.uids"));
+                    return Err(fail(
+                        codes::INVALID_REGION,
+                        "Başlangıç yalnız çizgili desenlerde değiştirilebilir.".into(),
+                        "edit.uids",
+                    ));
                 }
-                h.pattern.origin = crate::region::origin_of(Some(origin), crate::region::box_of([ring.as_slice()]), all);
+                h.pattern.origin = crate::region::origin_of(
+                    Some(origin),
+                    crate::region::box_of([ring.as_slice()]),
+                    all,
+                );
                 changed.push((slot, uid, h));
             }
         }
-        HatchEdit::Pattern { uids, pattern: spec } => {
+        HatchEdit::Pattern {
+            uids,
+            pattern: spec,
+        } => {
             let base = crate::region::pattern_of_spec(spec, doc.settings())
                 .map_err(|stop| reroot(stop, "pattern", "edit.pattern"))?;
             let hatches = hatches_at(doc, uids)?;
@@ -709,7 +749,11 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &HatchesEdit) -> CommandResult<Hat
 }
 
 /// [`plan`] over the document (a tool's preview).
-pub fn plan_in(doc: &Document, store: Option<&Store>, input: &HatchesEdit) -> CommandResult<HatchesPlan> {
+pub fn plan_in(
+    doc: &Document,
+    store: Option<&Store>,
+    input: &HatchesEdit,
+) -> CommandResult<HatchesPlan> {
     let mut own = None;
     let store = store_for(store, &mut own, doc);
     match check(doc, store, input) {
@@ -739,7 +783,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: HatchesEdit) -> CommandResu
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: HatchesEdit) -> CommandResult<HatchesEdited> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: HatchesEdit,
+) -> CommandResult<HatchesEdited> {
     let mut own = None;
     let c = {
         let store = store_for(cx.store, &mut own, cx.doc);
@@ -778,7 +825,11 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: HatchesEdit) -> CommandRe
                     outer: Some(*first),
                     bounds: Vec::new(),
                     islands: Vec::new(),
-                    cutouts: h.assoc.as_ref().map(|a| a.cutouts.clone()).unwrap_or_default(),
+                    cutouts: h
+                        .assoc
+                        .as_ref()
+                        .map(|a| a.cutouts.clone())
+                        .unwrap_or_default(),
                     seed,
                 },
                 BoundaryForm::Polyline => HatchAssoc {

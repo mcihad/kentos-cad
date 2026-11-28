@@ -44,7 +44,10 @@ pub enum Effect {
     /// A sheet is in front.
     ShowSheet,
     /// Ask where to write the export (the host's file dialog), then [`Designer::export_bytes`] (or [`Designer::export_pdf`]) and write them whole.
-    AskExportPath { kind: ExportKind, suggested: String },
+    AskExportPath {
+        kind: ExportKind,
+        suggested: String,
+    },
     /// Ask which `.kpafta` file to read (the host's file dialog), then give its text back as [`crate::Message::ImportText`].
     AskImportPath,
     /// Write the PDF (`Designer::pdf`) to a file of its own and open it in the system's viewer to print.
@@ -115,7 +118,7 @@ pub struct Context {
     pub project_types: Vec<ProjectType>,
     pub capabilities: Capabilities,
     /// Exact project plotting denominator; the profile capability retains legacy integer defaults.
-    pub exact_plot_scale:Option<f64>,
+    pub exact_plot_scale: Option<f64>,
     pub project: ProjectInfo,
     pub crs: Option<display::CrsInfo>,
     /// Where a new map looks (the drawing area's centre).
@@ -132,8 +135,8 @@ pub struct Context {
     /// The boxes of the layers that hold objects (id, box in canonical metres), for Yeni pafta's Katman extent
     /// (docs/adr/9147); the host gives them when a new sheet is asked for.
     pub layer_bounds: Vec<(String, [f64; 4])>,
-    pub named_views:Vec<kentos_sheet::viewport::NamedModelView>,
-    pub annotation_scales:Vec<f64>,
+    pub named_views: Vec<kentos_sheet::viewport::NamedModelView>,
+    pub annotation_scales: Vec<f64>,
     /// The project's layer states by name and its line types with patterns, for a map's own layers
     /// (docs/adr/0314 §1).
     pub layer_states: Vec<String>,
@@ -216,7 +219,12 @@ pub(crate) struct MapCache {
 #[derive(Debug)]
 pub(crate) enum Dialog {
     /// `at` of `count`: which of the chosen sheets the page is.
-    PrintPreview { image: crate::print_preview::Page, caption: String, at: usize, count: usize },
+    PrintPreview {
+        image: crate::print_preview::Page,
+        caption: String,
+        at: usize,
+        count: usize,
+    },
     Export {
         kind: ExportKind,
         dpi: u16,
@@ -572,7 +580,7 @@ impl Designer {
         self.pictures.borrow_mut().clear();
         self.asset_bytes = pictures.into_iter().collect();
         self.open = None;
-        self.model_scope=None;
+        self.model_scope = None;
         self.load(book);
     }
 
@@ -718,7 +726,7 @@ impl Designer {
     pub(crate) fn inputs(&self, mode: RenderMode) -> RenderInputs {
         let mut i = self.data.clone();
         i.mode = mode;
-        i.named_views=self.ctx.named_views.clone();
+        i.named_views = self.ctx.named_views.clone();
         i.project = self.ctx.project.clone();
         i.capabilities = self.ctx.capabilities.clone();
         if self.ctx.crs.is_some() {
@@ -731,7 +739,9 @@ impl Designer {
     /// findings, the guides and the inspector's values; the caches whose
     /// content changed are emptied.
     pub fn refresh(&mut self) {
-        if self.model_scope.is_some() && self.active_viewport().is_none() { self.model_scope=None; }
+        if self.model_scope.is_some() && self.active_viewport().is_none() {
+            self.model_scope = None;
+        }
         if self
             .open
             .as_ref()
@@ -902,7 +912,7 @@ impl Designer {
 /// Inputs with nothing of the host's yet.
 pub fn empty_inputs() -> RenderInputs {
     RenderInputs {
-        named_views:Vec::new(),
+        named_views: Vec::new(),
         mode: RenderMode::Design,
         project: ProjectInfo::default(),
         capabilities: Capabilities::default(),

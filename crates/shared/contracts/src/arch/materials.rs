@@ -20,7 +20,9 @@ pub const MAX_MATERIALS: usize = 256;
 pub const MAX_MATERIAL_NAME: usize = 128;
 
 /// What a material is for (the role ADR 0771 §7 named).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize,
+)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[serde(rename_all = "camelCase")]
@@ -168,7 +170,10 @@ impl MaterialsFile {
             ));
         }
         if self.library.trim().is_empty() {
-            return Some(("library".into(), "Malzeme kitaplığının adı boş olmamalı.".into()));
+            return Some((
+                "library".into(),
+                "Malzeme kitaplığının adı boş olmamalı.".into(),
+            ));
         }
         materials_problem(&self.materials)
     }
@@ -207,7 +212,11 @@ pub fn material_id_of(name: &str) -> String {
     while out.ends_with('-') {
         out.pop();
     }
-    if out.is_empty() { "malzeme".into() } else { out }
+    if out.is_empty() {
+        "malzeme".into()
+    } else {
+        out
+    }
 }
 
 /// A material name's problem: blank, edged with spaces, a control character, too long.
@@ -237,7 +246,10 @@ impl ArchMaterial {
         if !material_id_ok(&self.id) {
             return Some((
                 "id".into(),
-                format!("“{}” malzeme kimliği olamaz: küçük harf, rakam ve “-” ile en çok 64 harf.", self.id),
+                format!(
+                    "“{}” malzeme kimliği olamaz: küçük harf, rakam ve “-” ile en çok 64 harf.",
+                    self.id
+                ),
             ));
         }
         if let Some(words) = material_name_problem(&self.name) {
@@ -245,29 +257,52 @@ impl ArchMaterial {
         }
         if let Some(h) = &self.hatch {
             if h.pattern.trim().is_empty() {
-                return Some(("hatch.pattern".into(), format!("“{}” malzemesinin tarama deseni boş.", self.name)));
+                return Some((
+                    "hatch.pattern".into(),
+                    format!("“{}” malzemesinin tarama deseni boş.", self.name),
+                ));
             }
             if !(h.scale.is_finite() && h.scale > 0.0) {
-                return Some(("hatch.scale".into(), format!("“{}” malzemesinin tarama ölçeği sıfırdan büyük olmalı.", self.name)));
+                return Some((
+                    "hatch.scale".into(),
+                    format!(
+                        "“{}” malzemesinin tarama ölçeği sıfırdan büyük olmalı.",
+                        self.name
+                    ),
+                ));
             }
             if !h.angle.is_finite() {
-                return Some(("hatch.angle".into(), format!("“{}” malzemesinin tarama açısı sonlu olmalı.", self.name)));
+                return Some((
+                    "hatch.angle".into(),
+                    format!("“{}” malzemesinin tarama açısı sonlu olmalı.", self.name),
+                ));
             }
             if !colour_ok(&h.color) {
-                return Some(("hatch.color".into(), format!("“{}” malzemesinin tarama rengi #RRGGBB olmalı.", self.name)));
+                return Some((
+                    "hatch.color".into(),
+                    format!("“{}” malzemesinin tarama rengi #RRGGBB olmalı.", self.name),
+                ));
             }
         }
         if let Some(e) = &self.cut {
             if !colour_ok(&e.color) {
-                return Some(("cut.color".into(), format!("“{}” malzemesinin kesit kaleminin rengi #RRGGBB olmalı.", self.name)));
+                return Some((
+                    "cut.color".into(),
+                    format!(
+                        "“{}” malzemesinin kesit kaleminin rengi #RRGGBB olmalı.",
+                        self.name
+                    ),
+                ));
             }
-            if e
-                .line_weight
+            if e.line_weight
                 .is_some_and(|w| !(w.is_finite() && (0.0..=crate::MAX_LINE_WEIGHT).contains(&w)))
             {
                 return Some((
                     "cut.lineWeight".into(),
-                    format!("“{}” malzemesinin kesit kalemi 0 ile 100 mm arasında olmalı.", self.name),
+                    format!(
+                        "“{}” malzemesinin kesit kalemi 0 ile 100 mm arasında olmalı.",
+                        self.name
+                    ),
                 ));
             }
         }
@@ -292,7 +327,10 @@ pub fn materials_problem(list: &[ArchMaterial]) -> Option<(String, String)> {
     if list.len() > MAX_MATERIALS {
         return Some((
             "materials".into(),
-            format!("Bir projede en çok {MAX_MATERIALS} malzeme olur; {} verildi.", list.len()),
+            format!(
+                "Bir projede en çok {MAX_MATERIALS} malzeme olur; {} verildi.",
+                list.len()
+            ),
         ));
     }
     for (i, m) in list.iter().enumerate() {
@@ -303,13 +341,21 @@ pub fn materials_problem(list: &[ArchMaterial]) -> Option<(String, String)> {
         if let Some(j) = list[..i].iter().position(|o| o.id == m.id) {
             return Some((
                 format!("materials[{i}].id"),
-                format!("“{}” kimliği iki malzemede ({}. ve {}.) var.", m.id, j + 1, i + 1),
+                format!(
+                    "“{}” kimliği iki malzemede ({}. ve {}.) var.",
+                    m.id,
+                    j + 1,
+                    i + 1
+                ),
             ));
         }
         if list[..i].iter().any(|o| o.name.to_lowercase() == folded) {
             return Some((
                 format!("materials[{i}].name"),
-                format!("Projede “{}” adında bir malzeme zaten var; her malzemenin adı ayrı olmalı.", m.name),
+                format!(
+                    "Projede “{}” adında bir malzeme zaten var; her malzemenin adı ayrı olmalı.",
+                    m.name
+                ),
             ));
         }
     }

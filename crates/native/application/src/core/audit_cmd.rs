@@ -132,8 +132,18 @@ fn find(doc: &Document, input: &DrawingAudit) -> Found {
     let tables = doc.unused_table_styles();
     let purge_tables = input.purge.contains(&AuditPurge::TableStyles);
     for id in &tables {
-        let name = settings.table_styles.iter().find(|s| &s.id == id).map(|s| s.name.clone()).unwrap_or_default();
-        unused.push(UnusedResource { kind: ResourceKind::TableStyle, id: id.clone(), name, purged: purge_tables });
+        let name = settings
+            .table_styles
+            .iter()
+            .find(|s| &s.id == id)
+            .map(|s| s.name.clone())
+            .unwrap_or_default();
+        unused.push(UnusedResource {
+            kind: ResourceKind::TableStyle,
+            id: id.clone(),
+            name,
+            purged: purge_tables,
+        });
     }
     Found {
         findings,
@@ -177,7 +187,9 @@ fn write(cx: &mut ExecutionContext<'_>, found: Found) -> CommandResult<DrawingAu
     }
     if !text_styles.is_empty() || !dimension_styles.is_empty() || !table_styles.is_empty() {
         let mut settings = doc.settings().clone();
-        settings.table_styles.retain(|s| !table_styles.contains(&s.id));
+        settings
+            .table_styles
+            .retain(|s| !table_styles.contains(&s.id));
         settings
             .text_styles
             .retain(|s| !text_styles.contains(&s.id));

@@ -9,7 +9,8 @@
 //! (`invalid_casework`, the document's rule); 3. the line weight; 4. the expected revision; 5. the layer.
 
 use kentos_commands::{
-    BlockDefinition, BlockId, CaseworkBuilt, CaseworkPlan, CaseworkRun, CommandResult, CommandWarning,
+    BlockDefinition, BlockId, CaseworkBuilt, CaseworkPlan, CaseworkRun, CommandResult,
+    CommandWarning,
 };
 use kentos_domain::casework::{CaseworkStop, CaseworkWarning, Laid, labels};
 use kentos_domain::{Document, Uuid};
@@ -55,7 +56,11 @@ pub(crate) struct Checked {
 
 /// The run `recipe` lays and the command's own checks after the document's rule (`path` before a recipe's paths:
 /// none for the run itself).
-pub(crate) fn check_recipe(doc: &Document, recipe: &CaseworkRun, prefix: &str) -> Result<Checked, Stop> {
+pub(crate) fn check_recipe(
+    doc: &Document,
+    recipe: &CaseworkRun,
+    prefix: &str,
+) -> Result<Checked, Stop> {
     let mut fresh = fresh_id;
     let laid = doc
         .lay_casework(recipe, &library, &mut fresh)
@@ -142,10 +147,16 @@ pub struct CaseworkDrawn {
 }
 
 /// The shapes a laid run's objects draw, its inserts opened through their blocks.
-pub(crate) fn shapes_of(doc: &Document, laid: &Laid) -> Vec<(kentos_geometry_core::entity::Shape, bool)> {
+pub(crate) fn shapes_of(
+    doc: &Document,
+    laid: &Laid,
+) -> Vec<(kentos_geometry_core::entity::Shape, bool)> {
     let mut defs: Vec<std::sync::Arc<BlockDefinition>> = doc.blocks().to_vec();
     defs.extend(laid.added.iter().cloned().map(std::sync::Arc::new));
-    let blocks = crate::blocks::core_blocks_in(&defs, crate::geometry::drawing_font(doc.settings().drawing_font));
+    let blocks = crate::blocks::core_blocks_in(
+        &defs,
+        crate::geometry::drawing_font(doc.settings().drawing_font),
+    );
     let mut shapes = Vec::new();
     for m in &laid.members {
         let shape = crate::geometry::shape(&m.entity);
@@ -228,7 +239,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: CaseworkRun) -> CommandResu
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: CaseworkRun) -> CommandResult<CaseworkBuilt> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: CaseworkRun,
+) -> CommandResult<CaseworkBuilt> {
     let c = match check(cx.doc, &input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),

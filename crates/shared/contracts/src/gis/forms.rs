@@ -2206,7 +2206,6 @@ pub fn forms_of_layer<'a>(forms: &'a [ProjectForm], layer: &str) -> Vec<&'a Proj
     forms.iter().filter(|f| f.layer == layer).collect()
 }
 
-
 // A form's change between two versions (`cad.forms.compare`, docs/adr/0427): `kentos_forms::compare` writes them.
 /// What happened to an item from one version to the other.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -2616,8 +2615,7 @@ pub fn relation_problem(r: &ProjectRelation) -> Option<String> {
             r.name
         ));
     }
-    if r
-        .parent_key
+    if r.parent_key
         .as_ref()
         .is_some_and(|k| k.trim().is_empty() || k.chars().count() > MOST_FORM_NAME)
     {

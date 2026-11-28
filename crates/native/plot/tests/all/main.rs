@@ -12,9 +12,9 @@ mod book;
 mod map_layers;
 mod map_levels;
 mod map_view_cut;
+mod output;
 mod ramp_levels;
 mod stair_levels;
-mod output;
 mod units;
 
 mod viewport_annotations;
@@ -31,19 +31,19 @@ mod preview;
 
 mod calibration;
 mod coordinate_facts;
-mod survey_facts;
 mod outdated_drawings;
+mod survey_facts;
 
 mod drawing_set;
 
 mod source_snapshot;
 
-mod line_look_order;
-mod line_types;
+mod block_text_colours;
 mod curve_dashes;
 mod dots;
+mod line_look_order;
+mod line_types;
+mod missing_symbols;
+mod preflight_legend;
 mod shx_texts;
 mod table_styles;
-mod block_text_colours;
-mod preflight_legend;
-mod missing_symbols;

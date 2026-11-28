@@ -41,7 +41,10 @@ pub fn leapfrog(back: Sight, fore: Sight, unit: Unit, k: f64) -> Result<(f64, f6
     let mut parts = [(0.0, 0.0); 2];
     for (n, (side, s)) in [("Geri", back), ("İleri", fore)].into_iter().enumerate() {
         if !(s.slope > 0.0) {
-            return Err(format!("{side} nişanın eğik uzunluğu {}: sıfırdan büyük olmalı.", s.slope));
+            return Err(format!(
+                "{side} nişanın eğik uzunluğu {}: sıfırdan büyük olmalı.",
+                s.slope
+            ));
         }
         if !(s.zenith > 0.0 && s.zenith < unit.full() / 2.0) {
             return Err(format!(

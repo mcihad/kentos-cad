@@ -16,7 +16,8 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use kentos_contracts::{
-    Entity, NO_TARGET, ProjectSheets, ViewMarkBreak, ViewMarkFields, ViewMarkLabel, ViewTarget, view_key,
+    Entity, NO_TARGET, ProjectSheets, ViewMarkBreak, ViewMarkFields, ViewMarkLabel, ViewTarget,
+    view_key,
 };
 
 use crate::document::Document;
@@ -38,28 +39,50 @@ pub struct SheetFrames {
 impl SheetFrames {
     /// What a mark's bubble writes below for this sheet (docs/adr/0721 §1): its drawing number, else its name.
     pub fn label(&self) -> &str {
-        if self.number.is_empty() { &self.name } else { &self.number }
+        if self.number.is_empty() {
+            &self.name
+        } else {
+            &self.number
+        }
     }
 }
 
 /// The book's sheets and their map frames, in the book's order (the sheet core's `kentos.sheet/1` JSON, read as a
 /// JSON value: `sheets[].{id, name, drawingInfo.number, items[].{id, name, kind.type}}`).
 pub fn sheet_frames(sheets: Option<&ProjectSheets>) -> Vec<SheetFrames> {
-    let Some(list) = sheets.and_then(|s| s.book.get("sheets")).and_then(|v| v.as_array()) else {
+    let Some(list) = sheets
+        .and_then(|s| s.book.get("sheets"))
+        .and_then(|v| v.as_array())
+    else {
         return Vec::new();
     };
-    let text = |v: &serde_json::Value, k: &str| v.get(k).and_then(|x| x.as_str()).unwrap_or_default().to_owned();
+    let text = |v: &serde_json::Value, k: &str| {
+        v.get(k)
+            .and_then(|x| x.as_str())
+            .unwrap_or_default()
+            .to_owned()
+    };
     list.iter()
         .map(|s| SheetFrames {
             id: text(s, "id"),
             name: text(s, "name"),
-            number: s.get("drawingInfo").map(|d| text(d, "number")).unwrap_or_default().trim().to_owned(),
+            number: s
+                .get("drawingInfo")
+                .map(|d| text(d, "number"))
+                .unwrap_or_default()
+                .trim()
+                .to_owned(),
             frames: s
                 .get("items")
                 .and_then(|v| v.as_array())
                 .into_iter()
                 .flatten()
-                .filter(|i| i.get("kind").and_then(|k| k.get("type")).and_then(|t| t.as_str()) == Some("map"))
+                .filter(|i| {
+                    i.get("kind")
+                        .and_then(|k| k.get("type"))
+                        .and_then(|t| t.as_str())
+                        == Some("map")
+                })
                 .map(|i| (text(i, "id"), text(i, "name")))
                 .collect(),
         })
@@ -67,7 +90,11 @@ pub fn sheet_frames(sheets: Option<&ProjectSheets>) -> Vec<SheetFrames> {
 }
 
 /// Where a target is: its bottom words, and a sheet frame's order on its sheet (from 1); none: it is gone.
-pub fn target_place(doc: &Document, sheets: &[SheetFrames], t: &ViewTarget) -> Option<(String, Option<u32>)> {
+pub fn target_place(
+    doc: &Document,
+    sheets: &[SheetFrames],
+    t: &ViewTarget,
+) -> Option<(String, Option<u32>)> {
     match (&t.view, &t.sheet, &t.item) {
         (Some(id), None, None) => doc
             .settings()
@@ -78,7 +105,10 @@ pub fn target_place(doc: &Document, sheets: &[SheetFrames], t: &ViewTarget) -> O
         (None, Some(sheet), Some(item)) => {
             let s = sheets.iter().find(|s| s.id == *sheet)?;
             let k = s.frames.iter().position(|(id, _)| id == item)?;
-            Some((s.label().to_owned(), Some(u32::try_from(k + 1).unwrap_or(u32::MAX))))
+            Some((
+                s.label().to_owned(),
+                Some(u32::try_from(k + 1).unwrap_or(u32::MAX)),
+            ))
         }
         _ => None,
     }
@@ -152,7 +182,9 @@ impl Document {
         let own: BTreeSet<Uuid> = ops
             .iter()
             .filter_map(|op| match op {
-                Op::Add(s) | Op::Update { after: s, .. } if matches!(&*s.entity, Entity::ViewMark(_)) => {
+                Op::Add(s) | Op::Update { after: s, .. }
+                    if matches!(&*s.entity, Entity::ViewMark(_)) =>
+                {
                     Some(s.uid)
                 }
                 _ => None,

@@ -23,25 +23,26 @@
 //! └───────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    ClosureRange, CommandWarning, CulvertClosureRead, CulvertFlow, CulvertHydraulicsRead, CulvertInlet, CulvertReport,
-    CulvertShapeDef, CulvertWeir, CulvertsClosure, CulvertsDraw, CulvertsEdit, CulvertsHydraulics, HydrographPoint,
-    RoadEditOperation,
+    ClosureRange, CommandWarning, CulvertClosureRead, CulvertFlow, CulvertHydraulicsRead,
+    CulvertInlet, CulvertReport, CulvertShapeDef, CulvertWeir, CulvertsClosure, CulvertsDraw,
+    CulvertsEdit, CulvertsHydraulics, HydrographPoint, RoadEditOperation,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{
-    ExecutionContext, road_culverts_closure, road_culverts_draw, road_culverts_edit, road_culverts_hydraulics,
+    ExecutionContext, road_culverts_closure, road_culverts_draw, road_culverts_edit,
+    road_culverts_hydraulics,
 };
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::tabs::{Tab, Tabs};
-use kentos_ui::label;
 
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -87,14 +88,24 @@ pub(crate) const FLOOD: [&str; 8] = [
     "Cd üst",
 ];
 /// The hydraulics' typed fields, in order.
-pub(crate) const HYDRAULICS: [&str; 7] =
-    ["Debi (m³/s)", "Kuyruk suyu (m)", "Giriş kaybı ke", "Manning n", "Savak Cd", "Savak boyu (m)", "Kret kotu (m)"];
+pub(crate) const HYDRAULICS: [&str; 7] = [
+    "Debi (m³/s)",
+    "Kuyruk suyu (m)",
+    "Giriş kaybı ke",
+    "Manning n",
+    "Savak Cd",
+    "Savak boyu (m)",
+    "Kret kotu (m)",
+];
 /// The performance curve's points.
 const CURVE: u32 = 13;
 /// HDS-5's inlets KentOS names, the pipes' then the boxes', in words.
 const INLETS: [(CulvertInlet, &str); 7] = [
     (CulvertInlet::PipeSquareHeadwall, "Düz ağız, başlık duvarı"),
-    (CulvertInlet::PipeGrooveHeadwall, "Oluklu ağız, başlık duvarı"),
+    (
+        CulvertInlet::PipeGrooveHeadwall,
+        "Oluklu ağız, başlık duvarı",
+    ),
     (CulvertInlet::PipeGrooveProjecting, "Oluklu ağız, çıkıntılı"),
     (CulvertInlet::BoxWingwall30To75, "30°–75° kanat duvarı"),
     (CulvertInlet::BoxWingwall90And15, "90° ve 15° kanat duvarı"),
@@ -112,7 +123,9 @@ fn hydraulic_row(w: &Window, with_flow: bool) -> iced::widget::Row<'_, Message> 
     let field = |hint: &'static str, k: usize, width: f32| {
         words::field(
             HYDRAULICS[k],
-            kentos_ui::widget::text_field(hint, &w.hydraulic[k]).on_input(move |t| msg(Event::Hydraulic(k, t))).width(width),
+            kentos_ui::widget::text_field(hint, &w.hydraulic[k])
+                .on_input(move |t| msg(Event::Hydraulic(k, t)))
+                .width(width),
             None,
         )
     };
@@ -122,7 +135,9 @@ fn hydraulic_row(w: &Window, with_flow: bool) -> iced::widget::Row<'_, Message> 
         choices.iter().position(|(i, _)| *i == w.inlet),
         move |k| msg(Event::Inlet(choices[k].0)),
     );
-    let mut r = iced::widget::Row::new().spacing(10).align_y(iced::alignment::Vertical::Bottom);
+    let mut r = iced::widget::Row::new()
+        .spacing(10)
+        .align_y(iced::alignment::Vertical::Bottom);
     if with_flow {
         r = r.push(field("m³/s", 0, 90.0));
     }
@@ -199,7 +214,10 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.replace(',', ".")
+        .parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 impl Window {
@@ -213,12 +231,21 @@ impl Window {
             Err(e) => return Some(Err(e)),
         };
         Some((|| {
-            let ke = number(&f[2], HYDRAULICS[2])?.ok_or_else(|| format!("{} yazılmalı; KentOS vermez.", HYDRAULICS[2]))?;
+            let ke = number(&f[2], HYDRAULICS[2])?
+                .ok_or_else(|| format!("{} yazılmalı; KentOS vermez.", HYDRAULICS[2]))?;
             let (cd, length) = (number(&f[4], HYDRAULICS[4])?, number(&f[5], HYDRAULICS[5])?);
             let weir = match (cd, length) {
                 (None, None) => None,
-                (Some(cd), Some(length)) => Some(CulvertWeir { cd, length, crest: number(&f[6], HYDRAULICS[6])? }),
-                _ => return Err("Yolu savak saymak için savak Cd ve savak boyu birlikte yazılmalı.".into()),
+                (Some(cd), Some(length)) => Some(CulvertWeir {
+                    cd,
+                    length,
+                    crest: number(&f[6], HYDRAULICS[6])?,
+                }),
+                _ => {
+                    return Err(
+                        "Yolu savak saymak için savak Cd ve savak boyu birlikte yazılmalı.".into(),
+                    );
+                }
             };
             Ok(CulvertsHydraulics {
                 culvert: id,
@@ -244,15 +271,22 @@ impl Window {
             Err(e) => return Some(Err(e)),
         };
         Some((|| {
-            let need = |k: usize| number(&f[k], FLOOD[k])?.ok_or_else(|| format!("{} yazılmalı.", FLOOD[k]));
+            let need = |k: usize| {
+                number(&f[k], FLOOD[k])?.ok_or_else(|| format!("{} yazılmalı.", FLOOD[k]))
+            };
             let (rise, end) = (need(1)?, need(2)?);
             let base = number(&f[3], FLOOD[3])?.unwrap_or(0.0);
             let h = &self.hydraulic;
-            let ke = number(&h[2], HYDRAULICS[2])?.ok_or_else(|| format!("{} yazılmalı; KentOS vermez.", HYDRAULICS[2]))?;
-            let (Some(cd), Some(length)) = (number(&h[4], HYDRAULICS[4])?, number(&h[5], HYDRAULICS[5])?) else {
+            let ke = number(&h[2], HYDRAULICS[2])?
+                .ok_or_else(|| format!("{} yazılmalı; KentOS vermez.", HYDRAULICS[2]))?;
+            let (Some(cd), Some(length)) =
+                (number(&h[4], HYDRAULICS[4])?, number(&h[5], HYDRAULICS[5])?)
+            else {
                 return Err("Kapanma yolu savak sayar: savak Cd ve savak boyu yazılmalı.".into());
             };
-            let ranges: Vec<Option<f64>> = (4..8).map(|k| number(&f[k], FLOOD[k])).collect::<Result<_, _>>()?;
+            let ranges: Vec<Option<f64>> = (4..8)
+                .map(|k| number(&f[k], FLOOD[k]))
+                .collect::<Result<_, _>>()?;
             let range = match ranges.as_slice() {
                 [None, None, None, None] => None,
                 [Some(a), Some(b), c, d] => Some(ClosureRange {
@@ -261,20 +295,37 @@ impl Window {
                     cd_low: c.unwrap_or(cd),
                     cd_high: d.unwrap_or(cd),
                 }),
-                _ => return Err("Aralık için debi çarpanının altı ve üstü birlikte yazılmalı.".into()),
+                _ => {
+                    return Err(
+                        "Aralık için debi çarpanının altı ve üstü birlikte yazılmalı.".into(),
+                    );
+                }
             };
             Ok(CulvertsClosure {
                 culvert: id,
                 hydrograph: vec![
-                    HydrographPoint { time: 0.0, flow: base },
-                    HydrographPoint { time: rise, flow: peak },
-                    HydrographPoint { time: end, flow: base },
+                    HydrographPoint {
+                        time: 0.0,
+                        flow: base,
+                    },
+                    HydrographPoint {
+                        time: rise,
+                        flow: peak,
+                    },
+                    HydrographPoint {
+                        time: end,
+                        flow: base,
+                    },
                 ],
                 tailwater: number(&h[1], HYDRAULICS[1])?,
                 inlet: self.inlet,
                 entrance_loss: ke,
                 roughness: number(&h[3], HYDRAULICS[3])?,
-                weir: CulvertWeir { cd, length, crest: number(&h[6], HYDRAULICS[6])? },
+                weir: CulvertWeir {
+                    cd,
+                    length,
+                    crest: number(&h[6], HYDRAULICS[6])?,
+                },
                 range,
             })
         })())
@@ -282,9 +333,13 @@ impl Window {
 
     /// The edit as typed, or why it is not one.
     pub(crate) fn input(&self) -> Result<CulvertsEdit, String> {
-        let need = |k: usize| number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]));
+        let need = |k: usize| {
+            number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]))
+        };
         let count = |t: &str, what: &str| -> Result<u32, String> {
-            t.trim().parse::<u32>().map_err(|_| format!("{what} bir tam sayı olmalı."))
+            t.trim()
+                .parse::<u32>()
+                .map_err(|_| format!("{what} bir tam sayı olmalı."))
         };
         let shape = if self.pipe {
             CulvertShapeDef::Pipe {
@@ -333,7 +388,11 @@ pub(crate) trait CulvertWindowApp {
     fn draw_culvert(&mut self) -> Task<Message>;
     fn remove_culvert(&mut self) -> Task<Message>;
     fn culvert_view(&self) -> Element<'_, Message>;
-    fn culvert_frame<'a>(&'a self, w: &'a Window, body: kentos_ui::widget::grow::Grows<'a, Message>) -> Element<'a, Message>;
+    fn culvert_frame<'a>(
+        &'a self,
+        w: &'a Window,
+        body: kentos_ui::widget::grow::Grows<'a, Message>,
+    ) -> Element<'a, Message>;
     fn hydraulics_view<'a>(
         &'a self,
         w: &'a Window,
@@ -359,7 +418,10 @@ impl CulvertWindowApp for App {
             return;
         }
         let Some(first) = doc.model.road_corridors().first() else {
-            self.warn("Menfez bir koridorun altından geçer: önce Koridor'da bir koridor oluşturun.".to_owned());
+            self.warn(
+                "Menfez bir koridorun altından geçer: önce Koridor'da bir koridor oluşturun."
+                    .to_owned(),
+            );
             return;
         };
         let corridor = first.id.clone();
@@ -392,14 +454,26 @@ impl CulvertWindowApp for App {
         };
         w.preview = match w.input().and_then(|q| {
             let top = match q.shape.as_ref() {
-                Some(CulvertShapeDef::Pipe { diameter, thickness, .. }) => diameter + thickness,
+                Some(CulvertShapeDef::Pipe {
+                    diameter,
+                    thickness,
+                    ..
+                }) => diameter + thickness,
                 Some(CulvertShapeDef::Box { height, slab, .. }) => height + slab,
                 None => 0.0,
             };
             road_culverts_edit::preview(&doc.model, &q).map(|r| (r, top))
         }) {
-            Err(why) => Preview { why: Some(why), ..Preview::default() },
-            Ok(((report, warnings), top)) => Preview { report: Some(report), warnings, why: None, top },
+            Err(why) => Preview {
+                why: Some(why),
+                ..Preview::default()
+            },
+            Ok(((report, warnings), top)) => Preview {
+                report: Some(report),
+                warnings,
+                why: None,
+                top,
+            },
         };
         if !inlets(w.pipe).iter().any(|(i, _)| *i == w.inlet) {
             w.inlet = inlets(w.pipe)[0].0;
@@ -407,7 +481,9 @@ impl CulvertWindowApp for App {
         w.hydraulics = w
             .hydraulics_input()
             .map(|asked| asked.and_then(|q| road_culverts_hydraulics::preview(&doc.model, &q)));
-        w.closure = w.closure_input().map(|asked| asked.and_then(|q| road_culverts_closure::preview(&doc.model, &q)));
+        w.closure = w
+            .closure_input()
+            .map(|asked| asked.and_then(|q| road_culverts_closure::preview(&doc.model, &q)));
     }
 
     fn culvert_event(&mut self, event: Event) -> Task<Message> {
@@ -429,21 +505,44 @@ impl CulvertWindowApp for App {
                         w.flow = c.flow;
                         f[0] = c.name.clone();
                         f[1] = trimmed(c.station);
-                        f[2] = if c.skew == 0.0 { String::new() } else { trimmed(c.skew) };
+                        f[2] = if c.skew == 0.0 {
+                            String::new()
+                        } else {
+                            trimmed(c.skew)
+                        };
                         f[3] = trimmed(c.invert);
                         f[4] = crate::road_dialog::percent_text(c.slope);
-                        f[5] = if c.extend == 0.0 { String::new() } else { trimmed(c.extend) };
+                        f[5] = if c.extend == 0.0 {
+                            String::new()
+                        } else {
+                            trimmed(c.extend)
+                        };
                         f[6] = c.cover.map(trimmed).unwrap_or_default();
                         f[7] = c.material.clone().unwrap_or_default();
                         match c.shape {
-                            CulvertShapeDef::Pipe { diameter, thickness, count, spacing } => {
+                            CulvertShapeDef::Pipe {
+                                diameter,
+                                thickness,
+                                count,
+                                spacing,
+                            } => {
                                 w.pipe = true;
                                 f[8] = trimmed(diameter);
                                 f[9] = trimmed(thickness);
                                 f[10] = count.to_string();
-                                f[11] = if spacing == 0.0 { String::new() } else { trimmed(spacing) };
+                                f[11] = if spacing == 0.0 {
+                                    String::new()
+                                } else {
+                                    trimmed(spacing)
+                                };
                             }
-                            CulvertShapeDef::Box { width, height, thickness, slab, cells } => {
+                            CulvertShapeDef::Box {
+                                width,
+                                height,
+                                thickness,
+                                slab,
+                                cells,
+                            } => {
                                 w.pipe = false;
                                 f[12] = trimmed(width);
                                 f[13] = trimmed(height);
@@ -456,7 +555,11 @@ impl CulvertWindowApp for App {
                     None => {
                         // A new one: its sizes are the user's; only the name and one barrel are filled in.
                         let n = kept.len() + 1;
-                        f[0] = if n == 1 { "Menfez".into() } else { format!("Menfez {n}") };
+                        f[0] = if n == 1 {
+                            "Menfez".into()
+                        } else {
+                            format!("Menfez {n}")
+                        };
                         f[10] = "1".into();
                         w.cells = "1".into();
                     }
@@ -497,11 +600,21 @@ impl CulvertWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let result = road_culverts_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        let Some(out) = self.answered(result) else { return Task::none() };
+        let Some(out) = self.answered(result) else {
+            return Task::none();
+        };
         if let Some(c) = &out.culvert {
-            self.say(Level::Success, format!("“{}”: {:.2} m gövde, en az örtü {:.2} m.", c.name, c.length, c.cover));
+            self.say(
+                Level::Success,
+                format!(
+                    "“{}”: {:.2} m gövde, en az örtü {:.2} m.",
+                    c.name, c.length, c.cover
+                ),
+            );
             let id = c.id.clone();
             return self.culvert_event(Event::Choose(Some(id)));
         }
@@ -516,11 +629,21 @@ impl CulvertWindowApp for App {
             self.warn("Çizmek için önce menfezi kaydedin ve bir katman seçin.".to_owned());
             return Task::none();
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let input = CulvertsDraw { culvert: id, layer_id: layer, labels: true, expected_revision: None };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let input = CulvertsDraw {
+            culvert: id,
+            layer_id: layer,
+            labels: true,
+            expected_revision: None,
+        };
         let result = road_culverts_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            self.say(Level::Success, format!("Menfez planda, {:.2} m.", out.length));
+            self.say(
+                Level::Success,
+                format!("Menfez planda, {:.2} m.", out.length),
+            );
             self.modules.road_mut().culvert_window = None;
             self.dialog = None;
         }
@@ -529,7 +652,8 @@ impl CulvertWindowApp for App {
 
     fn remove_culvert(&mut self) -> Task<Message> {
         let Some(id) = self
-            .modules.road()
+            .modules
+            .road()
             .culvert_window
             .as_ref()
             .and_then(|w| w.chosen.clone())
@@ -558,7 +682,10 @@ impl CulvertWindowApp for App {
         };
         let result = road_culverts_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
-            let next = self.document.as_ref().and_then(|d| d.model.road_culverts().first().map(|c| c.id.clone()));
+            let next = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.road_culverts().first().map(|c| c.id.clone()));
             return self.culvert_event(Event::Choose(next));
         }
         Task::none()
@@ -568,36 +695,57 @@ impl CulvertWindowApp for App {
         let Some(w) = &self.modules.road().culvert_window else {
             return iced::widget::text("").into();
         };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let model = self.document.as_ref().map(|d| &d.model);
         let mut listed: Vec<(Option<String>, String)> = vec![(None, "Yeni menfez".into())];
-        listed.extend(
-            model.map_or_else(Vec::new, |m| m.road_culverts().iter().map(|c| (Some(c.id.clone()), c.name.clone())).collect()),
-        );
+        listed.extend(model.map_or_else(Vec::new, |m| {
+            m.road_culverts()
+                .iter()
+                .map(|c| (Some(c.id.clone()), c.name.clone()))
+                .collect()
+        }));
         let ids: Vec<Option<String>> = listed.iter().map(|x| x.0.clone()).collect();
         let on_culvert = Select::new(
             listed.iter().map(|x| Choice::new(x.1.clone())),
             ids.iter().position(|i| *i == w.chosen),
             move |i| msg(Event::Choose(ids[i].clone())),
         );
-        let corridors: Vec<(String, String)> =
-            model.map_or_else(Vec::new, |m| m.road_corridors().iter().map(|c| (c.id.clone(), c.name.clone())).collect());
+        let corridors: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
+            m.road_corridors()
+                .iter()
+                .map(|c| (c.id.clone(), c.name.clone()))
+                .collect()
+        });
         let cids: Vec<String> = corridors.iter().map(|c| c.0.clone()).collect();
         let on_corridor = Select::new(
             corridors.iter().map(|c| Choice::new(c.1.clone())),
-            w.corridor.as_ref().and_then(|c| cids.iter().position(|i| i == c)),
+            w.corridor
+                .as_ref()
+                .and_then(|c| cids.iter().position(|i| i == c)),
             move |i| msg(Event::Corridor(cids[i].clone())),
         );
-        let on_shape = Select::new(["Boru", "Kutu"].map(Choice::new), Some(usize::from(!w.pipe)), |i| msg(Event::Pipe(i == 0)));
+        let on_shape = Select::new(
+            ["Boru", "Kutu"].map(Choice::new),
+            Some(usize::from(!w.pipe)),
+            |i| msg(Event::Pipe(i == 0)),
+        );
         let flows = [CulvertFlow::Right, CulvertFlow::Left];
-        let on_flow = Select::new(["Sağa", "Sola"].map(Choice::new), flows.iter().position(|f| *f == w.flow), move |i| {
-            msg(Event::Flow(flows[i]))
-        });
+        let on_flow = Select::new(
+            ["Sağa", "Sola"].map(Choice::new),
+            flows.iter().position(|f| *f == w.flow),
+            move |i| msg(Event::Flow(flows[i])),
+        );
         let field = |hint: &'static str, k: usize, width: f32| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(width),
                 None,
             )
         };
@@ -613,9 +761,14 @@ impl CulvertWindowApp for App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut sizes = row![words::field("Kesit", container(on_shape).width(90), None)].spacing(10);
+        let mut sizes =
+            row![words::field("Kesit", container(on_shape).width(90), None)].spacing(10);
         if w.pipe {
-            sizes = sizes.push(field("m", 8, 70.0)).push(field("m", 9, 60.0)).push(field("1", 10, 60.0)).push(field("0", 11, 60.0));
+            sizes = sizes
+                .push(field("m", 8, 70.0))
+                .push(field("m", 9, 60.0))
+                .push(field("1", 10, 60.0))
+                .push(field("0", 11, 60.0));
         } else {
             sizes = sizes
                 .push(field("m", 12, 80.0))
@@ -624,12 +777,20 @@ impl CulvertWindowApp for App {
                 .push(field("m", 15, 60.0))
                 .push(words::field(
                     CELLS,
-                    kentos_ui::widget::text_field("1", &w.cells).on_input(|t| msg(Event::Cells(t))).width(60),
+                    kentos_ui::widget::text_field("1", &w.cells)
+                        .on_input(|t| msg(Event::Cells(t)))
+                        .width(60),
                     None,
                 ));
         }
-        sizes = sizes.push(field("0", 5, 70.0)).push(field("yok", 6, 80.0)).push(field("", 7, 110.0));
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top).push(sizes.align_y(iced::alignment::Vertical::Bottom));
+        sizes = sizes
+            .push(field("0", 5, 70.0))
+            .push(field("yok", 6, 80.0))
+            .push(field("", 7, 110.0));
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(10.0)
+            .push(top)
+            .push(sizes.align_y(iced::alignment::Vertical::Bottom));
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(r)) => {
@@ -646,7 +807,11 @@ impl CulvertWindowApp for App {
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
-                body = body.push(Tabs::new(PAGES.map(|t| Tab::new(t).closable(false)), w.page, |i| msg(Event::Page(i))));
+                body = body.push(Tabs::new(
+                    PAGES.map(|t| Tab::new(t).closable(false)),
+                    w.page,
+                    |i| msg(Event::Page(i)),
+                ));
                 if w.page == 1 {
                     body = self.hydraulics_view(w, body);
                     return self.culvert_frame(w, body);
@@ -655,24 +820,46 @@ impl CulvertWindowApp for App {
                     body = self.closure_view(w, body);
                     return self.culvert_frame(w, body);
                 }
-                let picture = crate::picture::picture(iced::widget::canvas(Barrel { report: r, top: w.preview.top }).width(Fill).height(Fill), TITLE);
+                let picture = crate::picture::picture(
+                    iced::widget::canvas(Barrel {
+                        report: r,
+                        top: w.preview.top,
+                    })
+                    .width(Fill)
+                    .height(Fill),
+                    TITLE,
+                );
                 use crate::road_dialog::{col, grouped, num};
                 let list = crate::road_dialog::sheet_fill(
-                    vec![col("Uç", 110.0), num("Öteleme (m)", 96.0), num("Y (m)", 112.0), num("X (m)", 112.0), num("Akış kotu (m)", 104.0)],
+                    vec![
+                        col("Uç", 110.0),
+                        num("Öteleme (m)", 96.0),
+                        num("Y (m)", 112.0),
+                        num("X (m)", 112.0),
+                        num("Akış kotu (m)", 104.0),
+                    ],
                     r.ends
                         .iter()
                         .map(|e| {
                             let side = if e.side == "left" { "Sol" } else { "Sağ" };
-                            let mark = if e.side == r.inlet { "giriş" } else { "çıkış" };
-                            vec![format!("{side} ({mark})"), grouped(e.offset, 2), grouped(e.x, 3), grouped(e.y, 3), grouped(e.invert, 3)]
+                            let mark = if e.side == r.inlet {
+                                "giriş"
+                            } else {
+                                "çıkış"
+                            };
+                            vec![
+                                format!("{side} ({mark})"),
+                                grouped(e.offset, 2),
+                                grouped(e.x, 3),
+                                grouped(e.y, 3),
+                                grouped(e.invert, 3),
+                            ]
                         })
                         .collect(),
                     "Uç yok",
                 );
                 body = body.push_grow(
-                    row![picture, list]
-                        .spacing(12)
-                        .height(Fill),
+                    row![picture, list].spacing(12).height(Fill),
                     typography::scaled(180.0),
                 );
             }
@@ -682,32 +869,47 @@ impl CulvertWindowApp for App {
     }
 
     /// The window around its body, the buttons its footer.
-    fn culvert_frame<'a>(&'a self, w: &'a Window, body: kentos_ui::widget::grow::Grows<'a, Message>) -> Element<'a, Message> {
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+    fn culvert_frame<'a>(
+        &'a self,
+        w: &'a Window,
+        body: kentos_ui::widget::grow::Grows<'a, Message>,
+    ) -> Element<'a, Message> {
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let lids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let on_layer = Select::new(
             lnames.iter().map(|n| Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+            w.layer
+                .as_ref()
+                .and_then(|l| lids.iter().position(|id| id == l)),
             move |i| msg(Event::Layer(lids[i].clone())),
         )
         .placeholder("Katman");
         let saved = w.chosen.is_some();
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
-                space::horizontal().width(Fill),
-                label::caption("Katman").style(muted),
-                container(on_layer).width(150),
-                words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
-                space::horizontal().width(24),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-                words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1180.0).modal(msg(Event::Close))
+        let footer = row![
+            words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
+            space::horizontal().width(Fill),
+            label::caption("Katman").style(muted),
+            container(on_layer).width(150),
+            words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
+            space::horizontal().width(24),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+            words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1180.0)
+            .modal(msg(Event::Close))
     }
 
     /// Hidrolik: the saved culvert's water at a flow, its performance curve and HY-8's summary table.
@@ -717,11 +919,20 @@ impl CulvertWindowApp for App {
         mut body: kentos_ui::widget::grow::Grows<'a, Message>,
     ) -> kentos_ui::widget::grow::Grows<'a, Message> {
         use crate::road_dialog::{col, grouped, num};
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         if w.chosen.is_none() {
-            return body.push(label::caption("Hidrolik kayıtlı menfezi okur: önce menfezi kaydedin.").style(muted));
+            return body.push(
+                label::caption("Hidrolik kayıtlı menfezi okur: önce menfezi kaydedin.")
+                    .style(muted),
+            );
         }
         body = body.push(hydraulic_row(w, true));
         let read = match &w.hydraulics {
@@ -740,13 +951,21 @@ impl CulvertWindowApp for App {
             Some(Ok((read, _))) => read,
         };
         let at = &read.at;
-        let control = if at.inlet_control { "giriş kontrolü" } else { "çıkış kontrolü" };
+        let control = if at.inlet_control {
+            "giriş kontrolü"
+        } else {
+            "çıkış kontrolü"
+        };
         let road = match (&read.crest, &at.over) {
             (_, Some(o)) => format!(
                 " · yoldan {:.2} m³/s, kret üstünde {:.2} m, derinlik {:.2} m, hız {:.2} m/s → {}",
                 at.overtopping, o.head, o.depth, o.speed, o.words
             ),
-            (Some(c), None) => format!(" · yol aşılmıyor: krete {:.2} m var (kret {:.2})", c - at.level, c),
+            (Some(c), None) => format!(
+                " · yol aşılmıyor: krete {:.2} m var (kret {:.2})",
+                c - at.level,
+                c
+            ),
             (None, None) => String::new(),
         };
         body = body.push(label::caption(format!(
@@ -779,8 +998,15 @@ impl CulvertWindowApp for App {
                     grouped(p.level, 3),
                     grouped(p.inlet_headwater, 2),
                     grouped(p.outlet_headwater, 2),
-                    if p.inlet_control { "Giriş" } else { "Çıkış" }.into(),
-                    p.over.as_ref().map_or_else(String::new, |o| format!("H{}", o.hazard)),
+                    if p.inlet_control {
+                        "Giriş"
+                    } else {
+                        "Çıkış"
+                    }
+                    .into(),
+                    p.over
+                        .as_ref()
+                        .map_or_else(String::new, |o| format!("H{}", o.hazard)),
                 ]
             })
             .collect();
@@ -799,7 +1025,9 @@ impl CulvertWindowApp for App {
             "Eğri yok",
         );
         let picture = crate::picture::picture(
-            iced::widget::canvas(Performance { read }).width(Fill).height(Fill),
+            iced::widget::canvas(Performance { read })
+                .width(Fill)
+                .height(Fill),
             "Menfez performans eğrisi",
         );
         // The curve keeps the larger share; a narrow window scrolls the table inside itself.
@@ -822,17 +1050,27 @@ impl CulvertWindowApp for App {
         mut body: kentos_ui::widget::grow::Grows<'a, Message>,
     ) -> kentos_ui::widget::grow::Grows<'a, Message> {
         use crate::road_dialog::{col, grouped, num};
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         if w.chosen.is_none() {
-            return body.push(label::caption("Kapanma kayıtlı menfezi okur: önce menfezi kaydedin.").style(muted));
+            return body.push(
+                label::caption("Kapanma kayıtlı menfezi okur: önce menfezi kaydedin.").style(muted),
+            );
         }
         body = body.push(hydraulic_row(w, false));
         let field = |hint: &'static str, k: usize, width: f32| {
             words::field(
                 FLOOD[k],
-                kentos_ui::widget::text_field(hint, &w.flood[k]).on_input(move |t| msg(Event::Flood(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.flood[k])
+                    .on_input(move |t| msg(Event::Flood(k, t)))
+                    .width(width),
                 None,
             )
         };
@@ -894,7 +1132,10 @@ impl CulvertWindowApp for App {
             .iter()
             .enumerate()
             .map(|(k, c)| {
-                let (first, last) = (c.spans.first().map(|s| s.from), c.spans.last().map(|s| s.to));
+                let (first, last) = (
+                    c.spans.first().map(|s| s.from),
+                    c.spans.last().map(|s| s.to),
+                );
                 let mut row = vec![
                     c.words.split(':').next().unwrap_or(&c.words).to_owned(),
                     c.flow.map_or_else(|| "—".into(), |q| grouped(q, 2)),
@@ -903,7 +1144,11 @@ impl CulvertWindowApp for App {
                     last.map_or_else(|| "—".into(), |t| grouped(t, 2)),
                 ];
                 if ranged {
-                    row.push(format!("{} – {}", grouped(read.floods[1].criteria[k].hours, 2), grouped(read.floods[2].criteria[k].hours, 2)));
+                    row.push(format!(
+                        "{} – {}",
+                        grouped(read.floods[1].criteria[k].hours, 2),
+                        grouped(read.floods[2].criteria[k].hours, 2)
+                    ));
                 }
                 row
             })
@@ -924,7 +1169,9 @@ impl CulvertWindowApp for App {
             _ => Vec::new(),
         };
         let picture = crate::picture::picture(
-            iced::widget::canvas(FloodChart { read, points }).width(Fill).height(Fill),
+            iced::widget::canvas(FloodChart { read, points })
+                .width(Fill)
+                .height(Fill),
             "Taşkın hidrografı",
         );
         body.push_grow(
@@ -956,11 +1203,14 @@ impl CulvertWindowApp for App {
                 let k = HYDRAULICS.iter().position(|f| *f == name).unwrap_or(0);
                 Some(msg(Event::Hydraulic(k, t.to_owned())))
             }
-            Control::Press(page) if PAGES.contains(&page) => {
-                Some(msg(Event::Page(PAGES.iter().position(|p| *p == page).unwrap_or(0))))
-            }
+            Control::Press(page) if PAGES.contains(&page) => Some(msg(Event::Page(
+                PAGES.iter().position(|p| *p == page).unwrap_or(0),
+            ))),
             Control::Pick("Giriş", words) => {
-                let found = INLETS.iter().find(|(_, w)| *w == words).ok_or_else(|| format!("“{words}” diye bir giriş yok"))?;
+                let found = INLETS
+                    .iter()
+                    .find(|(_, w)| *w == words)
+                    .ok_or_else(|| format!("“{words}” diye bir giriş yok"))?;
                 Some(msg(Event::Inlet(found.0)))
             }
             Control::Fill(name, t) if FIELDS.contains(&name) => {
@@ -981,19 +1231,34 @@ struct Barrel<'a> {
 impl canvas::Program<Message> for Barrel<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let [a, b] = [&self.report.ends[0], &self.report.ends[1]];
         let (z0, z1) = (a.invert.min(b.invert), a.invert.max(b.invert) + self.top);
         let pad = 30.0_f32;
-        let (w, h) = (f64::from(bounds.width - 2.0 * pad), f64::from(bounds.height - 2.0 * pad));
+        let (w, h) = (
+            f64::from(bounds.width - 2.0 * pad),
+            f64::from(bounds.height - 2.0 * pad),
+        );
         let span = (b.distance - a.distance).max(1e-6);
         // Heights drawn at most five times the length's scale, so a fall and a top read without filling the picture.
         let sx = w / span;
         let sy = (h / (z1 - z0).max(1e-6)).min(5.0 * sx);
         let base = f64::from(pad) + 0.5 * (h + (z1 - z0) * sy);
-        let at = |d: f64, z: f64| Point::new(pad + ((d - a.distance) * sx) as f32, (base - (z - z0) * sy) as f32);
+        let at = |d: f64, z: f64| {
+            Point::new(
+                pad + ((d - a.distance) * sx) as f32,
+                (base - (z - z0) * sy) as f32,
+            )
+        };
         let shape = Path::new(|p| {
             p.move_to(at(a.distance, a.invert));
             p.line_to(at(b.distance, b.invert));
@@ -1001,10 +1266,26 @@ impl canvas::Program<Message> for Barrel<'_> {
             p.line_to(at(a.distance, a.invert + self.top));
             p.close();
         });
-        frame.fill(&shape, iced::Color { a: 0.2, ..tk.accent });
-        frame.stroke(&shape, Stroke::default().with_width(1.4).with_color(tk.accent));
-        for (e, align) in [(a, iced::alignment::Horizontal::Left), (b, iced::alignment::Horizontal::Right)] {
-            let word = if e.side == self.report.inlet { "giriş" } else { "çıkış" };
+        frame.fill(
+            &shape,
+            iced::Color {
+                a: 0.2,
+                ..tk.accent
+            },
+        );
+        frame.stroke(
+            &shape,
+            Stroke::default().with_width(1.4).with_color(tk.accent),
+        );
+        for (e, align) in [
+            (a, iced::alignment::Horizontal::Left),
+            (b, iced::alignment::Horizontal::Right),
+        ] {
+            let word = if e.side == self.report.inlet {
+                "giriş"
+            } else {
+                "çıkış"
+            };
             frame.fill_text(Text {
                 content: format!("{word} {:.2}", e.invert),
                 position: at(e.distance, e.invert) + iced::Vector::new(0.0, 12.0),
@@ -1030,7 +1311,11 @@ impl canvas::Program<Message> for Barrel<'_> {
 fn tick(span: f64, n: f64) -> f64 {
     let raw = (span / n).max(1e-9);
     let p = 10f64.powf(raw.log10().floor());
-    [1.0, 2.0, 2.5, 5.0, 10.0].into_iter().map(|k| k * p).find(|s| *s >= raw).unwrap_or(10.0 * p)
+    [1.0, 2.0, 2.5, 5.0, 10.0]
+        .into_iter()
+        .map(|k| k * p)
+        .find(|s| *s >= raw)
+        .unwrap_or(10.0 * p)
 }
 
 /// The performance curve as HY-8 draws one: the water's level before the inlet against the total flow, the inlet's and
@@ -1042,7 +1327,14 @@ struct Performance<'a> {
 impl canvas::Program<Message> for Performance<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let r = self.read;
@@ -1052,15 +1344,24 @@ impl canvas::Program<Message> for Performance<'_> {
         }
         let invert = r.inlet_invert;
         let q1 = pts.iter().map(|p| p.flow).fold(0.0, f64::max).max(1e-9);
-        let mut z1 = pts.iter().map(|p| invert + p.inlet_headwater.max(p.outlet_headwater).max(p.headwater)).fold(invert, f64::max);
+        let mut z1 = pts
+            .iter()
+            .map(|p| invert + p.inlet_headwater.max(p.outlet_headwater).max(p.headwater))
+            .fold(invert, f64::max);
         if let Some(c) = r.crest {
             z1 = z1.max(c);
         }
         let (z0, z1) = (invert, z1 + 0.05 * (z1 - invert).max(0.1));
         let (left, right, top, bottom) = (52.0_f32, 14.0_f32, 26.0_f32, 30.0_f32);
-        let (w, h) = (f64::from(bounds.width - left - right), f64::from(bounds.height - top - bottom));
+        let (w, h) = (
+            f64::from(bounds.width - left - right),
+            f64::from(bounds.height - top - bottom),
+        );
         let at = |q: f64, z: f64| {
-            Point::new(left + (q / q1 * w) as f32, top + ((z1 - z.clamp(z0, z1)) / (z1 - z0) * h) as f32)
+            Point::new(
+                left + (q / q1 * w) as f32,
+                top + ((z1 - z.clamp(z0, z1)) / (z1 - z0) * h) as f32,
+            )
         };
         let small = Pixels(11.0);
         // The grid and its numbers.
@@ -1068,7 +1369,10 @@ impl canvas::Program<Message> for Performance<'_> {
         let mut z = (z0 / dz).ceil() * dz;
         while z <= z1 + 1e-9 {
             let p = at(0.0, z);
-            frame.stroke(&Path::line(p, Point::new(left + w as f32, p.y)), Stroke::default().with_width(1.0).with_color(tk.faint));
+            frame.stroke(
+                &Path::line(p, Point::new(left + w as f32, p.y)),
+                Stroke::default().with_width(1.0).with_color(tk.faint),
+            );
             frame.fill_text(Text {
                 content: format!("{z:.1}"),
                 position: Point::new(left - 6.0, p.y - 6.0),
@@ -1083,7 +1387,10 @@ impl canvas::Program<Message> for Performance<'_> {
         let mut q = 0.0;
         while q <= q1 + 1e-9 {
             let p = at(q, z0);
-            frame.stroke(&Path::line(at(q, z1), p), Stroke::default().with_width(1.0).with_color(tk.faint));
+            frame.stroke(
+                &Path::line(at(q, z1), p),
+                Stroke::default().with_width(1.0).with_color(tk.faint),
+            );
             frame.fill_text(Text {
                 content: trimmed((q * 100.0).round() / 100.0),
                 position: Point::new(p.x, p.y + 4.0),
@@ -1118,14 +1425,20 @@ impl canvas::Program<Message> for Performance<'_> {
             })
         };
         let dashed = |c: iced::Color| Stroke {
-            line_dash: canvas::LineDash { segments: &[5.0, 4.0], offset: 0 },
+            line_dash: canvas::LineDash {
+                segments: &[5.0, 4.0],
+                offset: 0,
+            },
             ..Stroke::default().with_width(1.3).with_color(c)
         };
         frame.stroke(&line(&|p| p.inlet_headwater), dashed(tk.success));
         frame.stroke(&line(&|p| p.outlet_headwater), dashed(tk.warning));
         if let Some(c) = r.crest {
             let (a, b) = (at(0.0, c), at(q1, c));
-            frame.stroke(&Path::line(a, b), Stroke::default().with_width(1.6).with_color(tk.danger));
+            frame.stroke(
+                &Path::line(a, b),
+                Stroke::default().with_width(1.6).with_color(tk.danger),
+            );
             frame.fill_text(Text {
                 content: format!("yol kreti {c:.2}"),
                 // Under the line at its left: the curve meets the crest far to the right, the axis' words sit above.
@@ -1135,16 +1448,25 @@ impl canvas::Program<Message> for Performance<'_> {
                 ..Text::default()
             });
         }
-        frame.stroke(&line(&|p| p.headwater), Stroke::default().with_width(2.4).with_color(tk.accent));
+        frame.stroke(
+            &line(&|p| p.headwater),
+            Stroke::default().with_width(2.4).with_color(tk.accent),
+        );
         for p in pts.iter().filter(|p| p.over.is_some()) {
             let hazard = p.over.as_ref().map_or(0, |o| o.hazard);
             let c = if hazard >= 3 { tk.danger } else { tk.warning };
             frame.fill(&Path::circle(at(p.flow, p.level), 3.5), c);
         }
         let asked = at(r.at.flow, r.at.level);
-        frame.stroke(&Path::line(Point::new(asked.x, top), at(r.at.flow, z0)), Stroke::default().with_width(1.0).with_color(tk.text));
+        frame.stroke(
+            &Path::line(Point::new(asked.x, top), at(r.at.flow, z0)),
+            Stroke::default().with_width(1.0).with_color(tk.text),
+        );
         frame.fill(&Path::circle(asked, 5.0), tk.accent);
-        frame.stroke(&Path::circle(asked, 5.0), Stroke::default().with_width(1.4).with_color(tk.text));
+        frame.stroke(
+            &Path::circle(asked, 5.0),
+            Stroke::default().with_width(1.4).with_color(tk.text),
+        );
         // Under the curve, which rises to the right: the asked flow's words there stay clear of it.
         frame.fill_text(Text {
             content: format!("Q {} m³/s → {:.2}", trimmed(r.at.flow), r.at.level),
@@ -1154,20 +1476,37 @@ impl canvas::Program<Message> for Performance<'_> {
             ..Text::default()
         });
         // The legend.
-        let legend = [("su kotu", tk.accent, false), ("giriş kontrolü", tk.success, true), ("çıkış kontrolü", tk.warning, true)];
-        let widths: Vec<f32> = legend.iter().map(|(word, _, _)| 18.0 + 6.2 * word.chars().count() as f32).collect();
+        let legend = [
+            ("su kotu", tk.accent, false),
+            ("giriş kontrolü", tk.success, true),
+            ("çıkış kontrolü", tk.warning, true),
+        ];
+        let widths: Vec<f32> = legend
+            .iter()
+            .map(|(word, _, _)| 18.0 + 6.2 * word.chars().count() as f32)
+            .collect();
         let whole: f32 = widths.iter().map(|w| w + 10.0).sum();
         let y = top + h as f32 - 10.0;
         frame.fill_rectangle(
             Point::new(left + w as f32 - whole - 6.0, y - 9.0),
             iced::Size::new(whole + 4.0, 18.0),
-            iced::Color { a: 0.92, ..tk.surface },
+            iced::Color {
+                a: 0.92,
+                ..tk.surface
+            },
         );
         let mut x = left + w as f32;
         for ((word, color, dash), width) in legend.iter().zip(&widths).rev() {
             x -= width + 10.0;
-            let stroke = if *dash { dashed(*color) } else { Stroke::default().with_width(2.4).with_color(*color) };
-            frame.stroke(&Path::line(Point::new(x, y), Point::new(x + 14.0, y)), stroke);
+            let stroke = if *dash {
+                dashed(*color)
+            } else {
+                Stroke::default().with_width(2.4).with_color(*color)
+            };
+            frame.stroke(
+                &Path::line(Point::new(x, y), Point::new(x + 14.0, y)),
+                stroke,
+            );
             frame.fill_text(Text {
                 content: (*word).into(),
                 position: Point::new(x + 18.0, y - 6.0),
@@ -1191,31 +1530,68 @@ struct FloodChart<'a> {
 impl canvas::Program<Message> for FloodChart<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let floods = &self.read.floods;
-        let Some(asked) = floods.first() else { return vec![frame.into_geometry()] };
+        let Some(asked) = floods.first() else {
+            return vec![frame.into_geometry()];
+        };
         let crit = |f: &kentos_commands::ClosureFlood, k: usize| f.criteria.get(k).cloned();
-        let q1 = floods.iter().map(|f| f.peak.flow).fold(0.0, f64::max).max(1e-9) * 1.08;
-        let t_end = self.points.iter().map(|p| p.0).fold(0.0, f64::max).max(1e-9);
+        let q1 = floods
+            .iter()
+            .map(|f| f.peak.flow)
+            .fold(0.0, f64::max)
+            .max(1e-9)
+            * 1.08;
+        let t_end = self
+            .points
+            .iter()
+            .map(|p| p.0)
+            .fold(0.0, f64::max)
+            .max(1e-9);
         let (left, right, top, bottom) = (48.0_f32, 14.0_f32, 26.0_f32, 30.0_f32);
-        let (w, h) = (f64::from(bounds.width - left - right), f64::from(bounds.height - top - bottom));
-        let at = |t: f64, q: f64| Point::new(left + (t / t_end * w) as f32, top + ((q1 - q.clamp(0.0, q1)) / q1 * h) as f32);
+        let (w, h) = (
+            f64::from(bounds.width - left - right),
+            f64::from(bounds.height - top - bottom),
+        );
+        let at = |t: f64, q: f64| {
+            Point::new(
+                left + (t / t_end * w) as f32,
+                top + ((q1 - q.clamp(0.0, q1)) / q1 * h) as f32,
+            )
+        };
         let small = Pixels(11.0);
         // The hours under water shaded; the vehicles' closures are drawn on their thresholds below (shaded too, the
         // three overlapped into one muddy band).
         if let Some(c) = crit(asked, 0) {
             for sp in &c.spans {
                 let (a, b) = (at(sp.from, q1), at(sp.to, 0.0));
-                frame.fill_rectangle(a, iced::Size::new(b.x - a.x, b.y - a.y), iced::Color { a: 0.10, ..tk.accent });
+                frame.fill_rectangle(
+                    a,
+                    iced::Size::new(b.x - a.x, b.y - a.y),
+                    iced::Color {
+                        a: 0.10,
+                        ..tk.accent
+                    },
+                );
             }
         }
         let dq = tick(q1, 5.0);
         let mut q = 0.0;
         while q <= q1 + 1e-9 {
             let p = at(0.0, q);
-            frame.stroke(&Path::line(p, Point::new(left + w as f32, p.y)), Stroke::default().with_width(1.0).with_color(tk.faint));
+            frame.stroke(
+                &Path::line(p, Point::new(left + w as f32, p.y)),
+                Stroke::default().with_width(1.0).with_color(tk.faint),
+            );
             frame.fill_text(Text {
                 content: trimmed(q),
                 position: Point::new(left - 6.0, p.y - 6.0),
@@ -1230,7 +1606,10 @@ impl canvas::Program<Message> for FloodChart<'_> {
         let mut t = 0.0;
         while t <= t_end + 1e-9 {
             let p = at(t, 0.0);
-            frame.stroke(&Path::line(at(t, q1), p), Stroke::default().with_width(1.0).with_color(tk.faint));
+            frame.stroke(
+                &Path::line(at(t, q1), p),
+                Stroke::default().with_width(1.0).with_color(tk.faint),
+            );
             frame.fill_text(Text {
                 content: trimmed(t),
                 position: Point::new(p.x, p.y + 4.0),
@@ -1258,19 +1637,35 @@ impl canvas::Program<Message> for FloodChart<'_> {
         });
         // The thresholds, labelled at the right; close thresholds' words pushed apart a line each (they overlapped).
         let mut words: Vec<(f32, String, iced::Color)> = Vec::new();
-        for (k, color, word) in [(0, tk.accent, "su altında"), (1, tk.warning, "küçük binek"), (3, tk.danger, "4×4")] {
-            let Some(qk) = crit(asked, k).and_then(|c| c.flow) else { continue };
+        for (k, color, word) in [
+            (0, tk.accent, "su altında"),
+            (1, tk.warning, "küçük binek"),
+            (3, tk.danger, "4×4"),
+        ] {
+            let Some(qk) = crit(asked, k).and_then(|c| c.flow) else {
+                continue;
+            };
             let (a, b) = (at(0.0, qk), at(t_end, qk));
             let dashed = Stroke {
-                line_dash: canvas::LineDash { segments: &[6.0, 4.0], offset: 0 },
+                line_dash: canvas::LineDash {
+                    segments: &[6.0, 4.0],
+                    offset: 0,
+                },
                 ..Stroke::default().with_width(1.3).with_color(color)
             };
             frame.stroke(&Path::line(a, b), dashed);
             // Where the flood is above it, the threshold drawn thick: the hours it holds.
             for sp in crit(asked, k).map(|c| c.spans).unwrap_or_default() {
-                frame.stroke(&Path::line(at(sp.from, qk), at(sp.to, qk)), Stroke::default().with_width(5.0).with_color(color));
+                frame.stroke(
+                    &Path::line(at(sp.from, qk), at(sp.to, qk)),
+                    Stroke::default().with_width(5.0).with_color(color),
+                );
             }
-            words.push((b.y - 14.0, format!("{word} {}", trimmed((qk * 100.0).round() / 100.0)), color));
+            words.push((
+                b.y - 14.0,
+                format!("{word} {}", trimmed((qk * 100.0).round() / 100.0)),
+                color,
+            ));
         }
         words.sort_by(|a, b| a.0.total_cmp(&b.0));
         for i in 1..words.len() {
@@ -1281,7 +1676,10 @@ impl canvas::Program<Message> for FloodChart<'_> {
             frame.fill_rectangle(
                 Point::new(left + w as f32 - 4.0 - width + 2.0, y - 1.0),
                 iced::Size::new(width, 14.0),
-                iced::Color { a: 0.92, ..tk.surface },
+                iced::Color {
+                    a: 0.92,
+                    ..tk.surface
+                },
             );
             frame.fill_text(Text {
                 content,
@@ -1304,7 +1702,10 @@ impl canvas::Program<Message> for FloodChart<'_> {
                 Stroke::default().with_width(2.4).with_color(tk.accent)
             } else {
                 Stroke {
-                    line_dash: canvas::LineDash { segments: &[3.0, 3.0], offset: 0 },
+                    line_dash: canvas::LineDash {
+                        segments: &[3.0, 3.0],
+                        offset: 0,
+                    },
                     ..Stroke::default().with_width(1.2).with_color(tk.muted)
                 }
             };

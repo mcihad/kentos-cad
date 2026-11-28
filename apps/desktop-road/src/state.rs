@@ -233,12 +233,18 @@ impl RoadDialogKind {
 
 /// The module's window `kind` as the shell's.
 pub fn dialog(kind: RoadDialogKind) -> crate::app::Dialog {
-    crate::app::Dialog::Module(crate::module_parts::ModuleDialog { module: kentos_launch::Module::Road, kind: kind.number() })
+    crate::app::Dialog::Module(crate::module_parts::ModuleDialog {
+        module: kentos_launch::Module::Road,
+        kind: kind.number(),
+    })
 }
 
 impl From<Event> for Message {
     fn from(event: Event) -> Self {
-        Message::Module(crate::module_parts::ModuleEvent::new(kentos_launch::Module::Road, event))
+        Message::Module(crate::module_parts::ModuleEvent::new(
+            kentos_launch::Module::Road,
+            event,
+        ))
     }
 }
 
@@ -251,11 +257,13 @@ pub trait RoadState {
 impl RoadState for crate::module_parts::ModuleStates {
     fn road(&self) -> &RoadUiState {
         // Every program with the module's parts starts its state (ModuleStates::start).
-        self.get::<RoadUiState>().expect("Yol modülünün durumu başlatılmamış")
+        self.get::<RoadUiState>()
+            .expect("Yol modülünün durumu başlatılmamış")
     }
 
     fn road_mut(&mut self) -> &mut RoadUiState {
-        self.get_mut::<RoadUiState>().expect("Yol modülünün durumu başlatılmamış")
+        self.get_mut::<RoadUiState>()
+            .expect("Yol modülünün durumu başlatılmamış")
     }
 }
 

@@ -35,7 +35,9 @@ struct Object {
 
 /// An ACI number as a colour a cell style keeps: none for ByBlock, ByLayer and 7 (the drawing's ink).
 fn colour(n: Option<i64>) -> Option<String> {
-    let n = u8::try_from(n?).ok().filter(|n| (1..=255).contains(n) && *n != 7)?;
+    let n = u8::try_from(n?)
+        .ok()
+        .filter(|n| (1..=255).contains(n) && *n != 7)?;
     let [r, g, b] = aci::rgb(n);
     Some(format!("#{r:02x}{g:02x}{b:02x}"))
 }
@@ -72,7 +74,10 @@ pub fn read(
         }
         let groups = lex.until_zero()?;
         let hex = |code: i32| {
-            groups.iter().find(|g| g.code == code).and_then(|g| u64::from_str_radix(g.text(), 16).ok())
+            groups
+                .iter()
+                .find(|g| g.code == code)
+                .and_then(|g| u64::from_str_radix(g.text(), 16).ok())
         };
         match kind.as_str() {
             "ACAD_TABLE" => followed.extend(hex(342)),
@@ -84,7 +89,9 @@ pub fn read(
                     match g.code {
                         3 => name = Some(dec.string(g.value)),
                         350 | 360 => {
-                            if let (Some(n), Ok(t)) = (name.take(), u64::from_str_radix(g.text(), 16)) {
+                            if let (Some(n), Ok(t)) =
+                                (name.take(), u64::from_str_radix(g.text(), 16))
+                            {
                                 entries.push((n, t));
                             }
                         }
@@ -92,7 +99,12 @@ pub fn read(
                     }
                 }
                 // The named object dictionary: the first, owned by no object.
-                if root.is_none() && groups.iter().find(|g| g.code == 330).is_some_and(|g| g.text() == "0") {
+                if root.is_none()
+                    && groups
+                        .iter()
+                        .find(|g| g.code == 330)
+                        .is_some_and(|g| g.text() == "0")
+                {
                     root = Some(h);
                 }
                 dictionaries.insert(h, entries);
@@ -103,7 +115,11 @@ pub fn read(
                     .and_then(|m| m.table_style)
                     .and_then(|j| serde_json::from_str::<TableStyleDef>(&j).ok())
                     .filter(|s| s.problem().is_none());
-                let groups = groups.iter().filter(|g| g.code < 1000).map(|g| (g.code, dec.string(g.value))).collect();
+                let groups = groups
+                    .iter()
+                    .filter(|g| g.code < 1000)
+                    .map(|g| (g.code, dec.string(g.value)))
+                    .collect();
                 objects.insert(h, Object { groups, kentos });
                 order.push(h);
             }
@@ -112,14 +128,22 @@ pub fn read(
     // The styles by the ACAD_TABLESTYLE dictionary's names, in its order; objects it does not name by their own.
     let named: Vec<(String, u64)> = root
         .and_then(|r| dictionaries.get(&r))
-        .and_then(|e| e.iter().find(|(n, _)| n.eq_ignore_ascii_case("ACAD_TABLESTYLE")))
+        .and_then(|e| {
+            e.iter()
+                .find(|(n, _)| n.eq_ignore_ascii_case("ACAD_TABLESTYLE"))
+        })
         .and_then(|(_, h)| dictionaries.get(h))
         .cloned()
         .unwrap_or_default();
     let mut listed: Vec<(String, u64)> = named.clone();
     for h in &order {
         if !named.iter().any(|(_, n)| n == h) {
-            let description = objects[h].groups.iter().find(|g| g.0 == 3).map(|g| g.1.clone()).unwrap_or_default();
+            let description = objects[h]
+                .groups
+                .iter()
+                .find(|g| g.0 == 3)
+                .map(|g| g.1.clone())
+                .unwrap_or_default();
             listed.push((description, *h));
         }
     }
@@ -140,7 +164,13 @@ pub fn read(
                     0,
                 );
                 if !lost.is_empty() {
-                    report.decide(Style, "table_style_lossy", &s.name, &format!("{}; KentOS bunları taşımaz", lost.join(", ")), 0);
+                    report.decide(
+                        Style,
+                        "table_style_lossy",
+                        &s.name,
+                        &format!("{}; KentOS bunları taşımaz", lost.join(", ")),
+                        0,
+                    );
                 }
                 s
             }
@@ -149,7 +179,10 @@ pub fn read(
                 continue;
             }
         };
-        for cell in [&style.title, &style.header, &style.data].into_iter().flatten() {
+        for cell in [&style.title, &style.header, &style.data]
+            .into_iter()
+            .flatten()
+        {
             if let Some(t) = &cell.text_style
                 && !out.text_styles.contains(&t.to_uppercase())
             {
@@ -163,7 +196,11 @@ pub fn read(
             Style,
             "table_style_unused_left_out",
             "Stil",
-            &format!("{} tablo stilini hiçbir tablo izlemiyor; alınmadı: {}", unused.len(), unused.join(", ")),
+            &format!(
+                "{} tablo stilini hiçbir tablo izlemiyor; alınmadı: {}",
+                unused.len(),
+                unused.join(", ")
+            ),
             0,
         );
     }
@@ -180,18 +217,36 @@ fn from_groups(
     share: &dyn Fn(&str) -> Option<f64>,
 ) -> (TableStyleDef, Vec<String>) {
     let mut lost: Vec<String> = Vec::new();
-    let mm = |v: Option<f64>| v.filter(|v| v.is_finite()).map(|v| metres(v) * 1000.0 / plot);
-    let at = groups.iter().position(|g| g.0 == 100 && g.1 == "AcDbTableStyle").map_or(0, |i| i + 1);
+    let mm = |v: Option<f64>| {
+        v.filter(|v| v.is_finite())
+            .map(|v| metres(v) * 1000.0 / plot)
+    };
+    let at = groups
+        .iter()
+        .position(|g| g.0 == 100 && g.1 == "AcDbTableStyle")
+        .map_or(0, |i| i + 1);
     let body = &groups[at..];
     let first_cell = body.iter().position(|g| g.0 == 7).unwrap_or(body.len());
     let (head, cells) = body.split_at(first_cell);
-    let real = |list: &[(i32, String)], code: i32| list.iter().find(|g| g.0 == code).and_then(|g| parse_real(&g.1));
-    let int = |list: &[(i32, String)], code: i32| list.iter().find(|g| g.0 == code).and_then(|g| parse_int(&g.1));
+    let real = |list: &[(i32, String)], code: i32| {
+        list.iter()
+            .find(|g| g.0 == code)
+            .and_then(|g| parse_real(&g.1))
+    };
+    let int = |list: &[(i32, String)], code: i32| {
+        list.iter()
+            .find(|g| g.0 == code)
+            .and_then(|g| parse_int(&g.1))
+    };
     if int(head, 70) == Some(1) {
         lost.push("tablonun yukarı akışı (aşağı akar)".to_owned());
     }
     // 280 is the version first, then the title's suppressed flag.
-    let flags: Vec<i64> = head.iter().filter(|g| g.0 == 280).filter_map(|g| parse_int(&g.1)).collect();
+    let flags: Vec<i64> = head
+        .iter()
+        .filter(|g| g.0 == 280)
+        .filter_map(|g| parse_int(&g.1))
+        .collect();
     if flags.get(1) == Some(&1) {
         lost.push("başlığın gizlenmesi".to_owned());
     }
@@ -201,7 +256,10 @@ fn from_groups(
     let keep = |v: Option<f64>, positive: bool| {
         v.filter(|v| if positive { *v > 0.0 } else { *v >= 0.0 } && *v <= MOST)
     };
-    let (h_margin, v_margin) = (keep(mm(real(head, 40)), false), keep(mm(real(head, 41)), false));
+    let (h_margin, v_margin) = (
+        keep(mm(real(head, 40)), false),
+        keep(mm(real(head, 41)), false),
+    );
     let mut blocks: Vec<&[(i32, String)]> = Vec::new();
     let mut start = 0;
     for (i, g) in cells.iter().enumerate().skip(1) {
@@ -216,7 +274,11 @@ fn from_groups(
     let mut kinds: [Option<TableCellStyleDef>; 3] = [None, None, None];
     for (k, b) in blocks.iter().take(3).enumerate() {
         let what = ["veri", "başlık", "sütun başı"][k];
-        let text_style = b.iter().find(|g| g.0 == 7).map(|g| g.1.trim().to_owned()).filter(|n| !n.is_empty() && !styles::is_standard(n));
+        let text_style = b
+            .iter()
+            .find(|g| g.0 == 7)
+            .map(|g| g.1.trim().to_owned())
+            .filter(|n| !n.is_empty() && !styles::is_standard(n));
         // Its capitals' height in its text style's face: KentOS's em over the share (docs/adr/8046 §3).
         let named = b
             .iter()
@@ -229,7 +291,9 @@ fn from_groups(
         );
         let align = int(b, 170).filter(|a| (1..=9).contains(a)).map(|a| {
             if !(4..=6).contains(&a) {
-                lost.push(format!("{what} hücresinin üst ya da alt hizası (ortalı çizilir)"));
+                lost.push(format!(
+                    "{what} hücresinin üst ya da alt hizası (ortalı çizilir)"
+                ));
             }
             match (a - 1) % 3 {
                 0 => TableAlign::Left,
@@ -240,17 +304,31 @@ fn from_groups(
         let fill_on = int(b, 283) == Some(1);
         // The borders: top, horizontal inside, bottom, left, vertical inside, right; KentOS keeps one look a cell
         // style, its bottom border's (the line under its row) when it is shown.
-        let shown: Vec<usize> = (0..6).filter(|i| int(b, 284 + *i as i32) != Some(0)).collect();
+        let shown: Vec<usize> = (0..6)
+            .filter(|i| int(b, 284 + *i as i32) != Some(0))
+            .collect();
         let weights: Vec<Option<i64>> = (0..6).map(|i| int(b, 274 + i)).collect();
         let colours: Vec<Option<i64>> = (0..6).map(|i| int(b, 64 + i)).collect();
-        let pick = shown.iter().copied().find(|i| *i == 2).or(shown.first().copied());
+        let pick = shown
+            .iter()
+            .copied()
+            .find(|i| *i == 2)
+            .or(shown.first().copied());
         if shown.len() < 6 {
             lost.push(format!("{what} hücresinin gizli kenarları"));
         }
-        if shown.iter().any(|i| weights[*i] != weights[shown[0]] || colours[*i] != colours[shown[0]]) {
-            lost.push(format!("{what} hücresinin kenarlarının farklı kalınlık ve renkleri (alt kenarınki alındı)"));
+        if shown
+            .iter()
+            .any(|i| weights[*i] != weights[shown[0]] || colours[*i] != colours[shown[0]])
+        {
+            lost.push(format!(
+                "{what} hücresinin kenarlarının farklı kalınlık ve renkleri (alt kenarınki alındı)"
+            ));
         }
-        let border_weight = pick.and_then(|i| weights[i]).filter(|w| *w >= 0).map(|w| w as f64 / 100.0);
+        let border_weight = pick
+            .and_then(|i| weights[i])
+            .filter(|w| *w >= 0)
+            .map(|w| w as f64 / 100.0);
         let border_color = pick.and_then(|i| colour(colours[i]));
         let cell = TableCellStyleDef {
             text_style,
@@ -270,6 +348,19 @@ fn from_groups(
     let [data, title, header] = kinds;
     lost.sort();
     lost.dedup();
-    let name = if name.is_empty() { "Tablo stili".to_owned() } else { name.to_owned() };
-    (TableStyleDef { id, name, title, header, data }, lost)
+    let name = if name.is_empty() {
+        "Tablo stili".to_owned()
+    } else {
+        name.to_owned()
+    };
+    (
+        TableStyleDef {
+            id,
+            name,
+            title,
+            header,
+            data,
+        },
+        lost,
+    )
 }

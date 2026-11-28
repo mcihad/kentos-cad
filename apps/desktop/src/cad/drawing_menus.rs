@@ -206,7 +206,11 @@ impl App {
         if self.drawing_menu.is_some() {
             return Task::none();
         }
-        if !self.field.as_ref().is_some_and(|f| f.preview != kentos_interaction::InputPreview::Off) {
+        if !self
+            .field
+            .as_ref()
+            .is_some_and(|f| f.preview != kentos_interaction::InputPreview::Off)
+        {
             self.field = None;
         }
         self.line_focused = false;
@@ -572,12 +576,15 @@ impl App {
     fn command_menu(&self) -> Menu<Message> {
         let prompt = self.prompt();
         let confirm = self.confirm_label();
-        let draft=self.field.as_ref().filter(|f|f.preview!=kentos_interaction::InputPreview::Off);
-        let invalid=draft.is_some_and(|f|f.preview==kentos_interaction::InputPreview::Invalid);
-        let confirm=match draft {
-            Some(_) if invalid=>"Önce değeri düzeltin".to_owned(),
-            Some(f) if !f.text.trim().is_empty()=>format!("Uygula: {}",f.text.trim()),
-            _=>confirm,
+        let draft = self
+            .field
+            .as_ref()
+            .filter(|f| f.preview != kentos_interaction::InputPreview::Off);
+        let invalid = draft.is_some_and(|f| f.preview == kentos_interaction::InputPreview::Invalid);
+        let confirm = match draft {
+            Some(_) if invalid => "Önce değeri düzeltin".to_owned(),
+            Some(f) if !f.text.trim().is_empty() => format!("Uygula: {}", f.text.trim()),
+            _ => confirm,
         };
         let mut menu = Menu::new()
             .header(prompt.title().unwrap_or_else(|| "Komut".to_owned()))
@@ -710,15 +717,12 @@ impl App {
         }
         menu.item(
             "İki nokta ortası",
-            Message::PointCalc(
-                kentos_interaction::point_calc::CalcKind::Mid,
-            ),
+            Message::PointCalc(kentos_interaction::point_calc::CalcKind::Mid),
         )
         .icon(crate::icons::from_web(Some("calcMid")))
         .separator()
     }
 }
-
 
 /// “sağ tıklayın”, “Enter ya da sağ tıkla …” and “Enter ya da sağ tık …” when a right click opens the command menu:
 /// Enter first, the menu's row `confirm` after the right click.
@@ -726,8 +730,14 @@ fn right_click_words(text: &str, confirm: &str) -> String {
     const MARK: &str = "\u{1}";
     text.replace("Enter ya da sağ tıkla ", MARK)
         .replace("Enter ya da sağ tık ", &format!("{MARK}{MARK}"))
-        .replace("sağ tıklayın", &format!("Enter'a basın (ya da sağ tık › {confirm})"))
-        .replace(&format!("{MARK}{MARK}"), &format!("Enter (ya da sağ tık › {confirm}) "))
+        .replace(
+            "sağ tıklayın",
+            &format!("Enter'a basın (ya da sağ tık › {confirm})"),
+        )
+        .replace(
+            &format!("{MARK}{MARK}"),
+            &format!("Enter (ya da sağ tık › {confirm}) "),
+        )
         .replace(MARK, &format!("Enter (ya da sağ tık › {confirm}) ile "))
 }
 
@@ -750,7 +760,10 @@ mod tests {
             super::right_click_words("Enter ya da sağ tık bitirir", c),
             "Enter (ya da sağ tık › Onayla / bitir) bitirir"
         );
-        assert_eq!(super::right_click_words("bir noktaya tıklayın", c), "bir noktaya tıklayın");
+        assert_eq!(
+            super::right_click_words("bir noktaya tıklayın", c),
+            "bir noktaya tıklayın"
+        );
     }
 
     /// UR-015's pictures (`.run/gui-evidence/kullanim-UR-015/`): Dikme in, its line picked, the step saying Enter and
@@ -764,11 +777,14 @@ mod tests {
     fn right_click_screens() {
         use crate::app::{App, Message};
         use crate::tools_scenes::{E, N, Objects, click, open, run};
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-015");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.run/gui-evidence/kullanim-UR-015");
         std::fs::create_dir_all(&out).expect("a folder");
         for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
             let (mut app, _) = App::boot(None);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let mut o = Objects::new();
             o.line("cizim", [0.0, 0.0], [20.0, 0.0]);
@@ -776,18 +792,27 @@ mod tests {
             crate::files_testing::make_cad(&mut app);
             app.draft.snap = false;
             app.viewport.camera.fit(
-                &kentos_render_wgpu::Bounds { min_x: E - 2.0, min_y: N - 6.0, max_x: E + 22.0, max_y: N + 6.0 },
+                &kentos_render_wgpu::Bounds {
+                    min_x: E - 2.0,
+                    min_y: N - 6.0,
+                    max_x: E + 22.0,
+                    max_y: N + 6.0,
+                },
                 24.0,
             );
             run(&mut app, "tool.perpIn");
             click(&mut app, [10.0, 0.0]);
-            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0))
+                .expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("sag-tik-istemi-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -799,29 +824,41 @@ mod tests {
     fn paragraph_shortcut_screens() {
         use crate::app::{App, Message};
         use crate::tools_scenes::{E, N, Objects, click, open, run};
-        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-016");
+        let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../.run/gui-evidence/kullanim-UR-016");
         std::fs::create_dir_all(&out).expect("a folder");
         for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
             let (mut app, _) = App::boot(None);
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             open(&mut app, Objects::new());
             crate::files_testing::make_cad(&mut app);
             app.draft.snap = false;
             app.viewport.camera.fit(
-                &kentos_render_wgpu::Bounds { min_x: E - 2.0, min_y: N - 6.0, max_x: E + 22.0, max_y: N + 6.0 },
+                &kentos_render_wgpu::Bounds {
+                    min_x: E - 2.0,
+                    min_y: N - 6.0,
+                    max_x: E + 22.0,
+                    max_y: N + 6.0,
+                },
                 24.0,
             );
             run(&mut app, "tool.mtext");
             click(&mut app, [2.0, 3.0]);
             click(&mut app, [14.0, -3.0]);
-            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0)).expect("a renderer");
+            let mut snapshot = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440.0, 900.0))
+                .expect("a renderer");
             let mut update = |app: &mut App, m: Message| {
                 let _ = app.update(m);
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("cok-satirli-yazi-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -834,8 +871,13 @@ mod tests {
             app.step_words("uygulamak için sağ tıklayın"),
             "uygulamak için Enter'a basın (ya da sağ tık › Onayla / bitir)"
         );
-        let _ = app.settings.choose(&[(super::RIGHT_CLICK_ENTER, serde_json::Value::Bool(true))]);
-        assert_eq!(app.step_words("uygulamak için sağ tıklayın"), "uygulamak için sağ tıklayın");
+        let _ = app
+            .settings
+            .choose(&[(super::RIGHT_CLICK_ENTER, serde_json::Value::Bool(true))]);
+        assert_eq!(
+            app.step_words("uygulamak için sağ tıklayın"),
+            "uygulamak için sağ tıklayın"
+        );
     }
 
     /// UR-016: a step's shortcut in the platform's spelling, the same the paragraph editor's hint uses.
@@ -843,11 +885,22 @@ mod tests {
     fn a_steps_shortcut_reads_as_the_platform_writes_it() {
         let app = crate::files_testing::app_with_drawing();
         let step = app.step_words("Enter yeni satır, Ctrl+Enter ya da Tamam ekler, Esc vazgeçer");
-        assert_eq!(step, crate::keys::shown("Enter yeni satır, Ctrl+Enter ya da Tamam ekler, Esc vazgeçer"));
+        assert_eq!(
+            step,
+            crate::keys::shown("Enter yeni satır, Ctrl+Enter ya da Tamam ekler, Esc vazgeçer")
+        );
         if cfg!(target_os = "macos") {
             assert!(step.contains("⌘Enter ya da Tamam ekler"), "{step}");
         }
-        assert!(crate::keys::shown("Ctrl+Enter: ekle · Esc: vazgeç").starts_with(if cfg!(target_os = "macos") { "⌘Enter" } else { "Ctrl+Enter" }));
+        assert!(
+            crate::keys::shown("Ctrl+Enter: ekle · Esc: vazgeç").starts_with(
+                if cfg!(target_os = "macos") {
+                    "⌘Enter"
+                } else {
+                    "Ctrl+Enter"
+                }
+            )
+        );
     }
     use iced::Point;
     use kentos_interaction::SnapKind;
@@ -923,9 +976,18 @@ mod tests {
         // The menu's Bitir, beside the pointer (the command line's chip says Bitir too).
         let bitir = crate::files_testing::find_texts(&mut snapshot, &app, "Bitir")
             .into_iter()
-            .min_by(|p, q| (p.center().y - b.y).abs().total_cmp(&(q.center().y - b.y).abs()))
+            .min_by(|p, q| {
+                (p.center().y - b.y)
+                    .abs()
+                    .total_cmp(&(q.center().y - b.y).abs())
+            })
             .expect("the menu's Bitir");
-        snapshot.input(&mut app, App::view, &mut update, Input::Click(bitir.center()));
+        snapshot.input(
+            &mut app,
+            App::view,
+            &mut update,
+            Input::Click(bitir.center()),
+        );
         assert!(app.drawing_menu.is_none(), "one click closes the menu");
         assert!(!app.session.is_running(), "Bitir leaves the tool");
         assert_eq!(count(&app), lines, "the menu's click drew nothing");
@@ -934,7 +996,13 @@ mod tests {
         assert_eq!(count(&app), lines, "no second chain began");
         assert_eq!(app.selection.ids().len(), 1, "the new line is selected");
         crate::files_testing::evidence(&mut snapshot, &app, "ur2-001", "2-secildi");
-        let picked = app.document.as_ref().unwrap().model.get(app.selection.ids()[0]).map(|e| e.kind());
+        let picked = app
+            .document
+            .as_ref()
+            .unwrap()
+            .model
+            .get(app.selection.ids()[0])
+            .map(|e| e.kind());
         assert_eq!(picked, Some("line"));
     }
 
@@ -1021,7 +1089,12 @@ mod tests {
             app.document.as_ref().unwrap().model.get(parcel),
             before.as_ref()
         );
-        assert!(app.session.prompt().step.starts_with("köşeyi ya da sırayla"));
+        assert!(
+            app.session
+                .prompt()
+                .step
+                .starts_with("köşeyi ya da sırayla")
+        );
         let _ = app.update(Message::Run("tool.cancel"));
         let _ = app.update(Message::Run("edit.undo"));
         assert_eq!(

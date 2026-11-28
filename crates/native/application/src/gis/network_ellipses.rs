@@ -14,7 +14,8 @@ use std::collections::BTreeMap;
 use std::f64::consts::{FRAC_1_SQRT_2, TAU};
 
 use kentos_commands::{
-    EllipseEntity, Entity, EntityBase, ErrorEllipse, NetworkEllipses, PathEntity, TextAlign, TextEntity, Vec2,
+    EllipseEntity, Entity, EntityBase, ErrorEllipse, NetworkEllipses, PathEntity, TextAlign,
+    TextEntity, Vec2,
 };
 use kentos_domain::Document;
 use kentos_geometry_core::entity::TextPlace;
@@ -31,19 +32,36 @@ fn four(v: f64) -> String {
 
 /// The ellipse of `mark`'s region `e` at its object's place `at` (the project's map), magnified as `with` says, made
 /// by the adjustment `da`; the convergence at `at` (radians, counter-clockwise from the map's up to the meridian).
-pub(crate) fn ellipse(mark: &str, da: &str, at: Vec2, e: &ErrorEllipse, with: &NetworkEllipses, convergence: f64) -> Entity {
+pub(crate) fn ellipse(
+    mark: &str,
+    da: &str,
+    at: Vec2,
+    e: &ErrorEllipse,
+    with: &NetworkEllipses,
+    convergence: f64,
+) -> Entity {
     // A circle has no azimuth: its "major" axis is drawn up the map.
     let bearing = e.azimuth.map_or(0.0, |az| az.to_radians() - convergence);
     let a = e.major * with.scale;
-    let major = Vec2 { x: a * sin(bearing), y: a * cos(bearing) };
-    let ratio = if e.major > 0.0 { e.minor / e.major } else { 1.0 };
+    let major = Vec2 {
+        x: a * sin(bearing),
+        y: a * cos(bearing),
+    };
+    let ratio = if e.major > 0.0 {
+        e.minor / e.major
+    } else {
+        1.0
+    };
     let mut attrs = BTreeMap::new();
     attrs.insert("İşaret".to_owned(), mark.to_owned());
     attrs.insert("Dengeleme".to_owned(), da.to_owned());
     attrs.insert("Güven".to_owned(), format!("{}", e.confidence));
     attrs.insert("Büyük yarı eksen (m)".to_owned(), four(e.major));
     attrs.insert("Küçük yarı eksen (m)".to_owned(), four(e.minor));
-    attrs.insert("Yön (°)".to_owned(), e.azimuth.map(four).unwrap_or_default());
+    attrs.insert(
+        "Yön (°)".to_owned(),
+        e.azimuth.map(four).unwrap_or_default(),
+    );
     attrs.insert("Büyütme".to_owned(), format!("{}", with.scale));
     Entity::Ellipse(EllipseEntity {
         base: EntityBase {
@@ -71,10 +89,19 @@ pub(crate) fn ellipse(mark: &str, da: &str, at: Vec2, e: &ErrorEllipse, with: &N
 /// (x + u/5, y + u), back to (x, y + u), down to (x, y − u), and the bottom tick from (x − u/5, y − u) to
 /// (x + u/5, y − u). Its attributes name the mark, the adjustment, the confidence, the half-interval and the
 /// magnification.
-pub(crate) fn height_bar(mark: &str, da: &str, at: Vec2, e: &ErrorEllipse, with: &NetworkEllipses) -> Entity {
+pub(crate) fn height_bar(
+    mark: &str,
+    da: &str,
+    at: Vec2,
+    e: &ErrorEllipse,
+    with: &NetworkEllipses,
+) -> Entity {
     let u = e.up * with.scale;
     let t = u / 5.0;
-    let p = |dx: f64, dy: f64| Vec2 { x: at.x + dx, y: at.y + dy };
+    let p = |dx: f64, dy: f64| Vec2 {
+        x: at.x + dx,
+        y: at.y + dy,
+    };
     let mut attrs = BTreeMap::new();
     attrs.insert("İşaret".to_owned(), mark.to_owned());
     attrs.insert("Dengeleme".to_owned(), da.to_owned());
@@ -94,7 +121,14 @@ pub(crate) fn height_bar(mark: &str, da: &str, at: Vec2, e: &ErrorEllipse, with:
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        pts: vec![p(-t, u), p(t, u), p(0.0, u), p(0.0, -u), p(-t, -u), p(t, -u)],
+        pts: vec![
+            p(-t, u),
+            p(t, u),
+            p(0.0, u),
+            p(0.0, -u),
+            p(-t, -u),
+            p(t, -u),
+        ],
         space_separator: None,
         bulges: None,
         holes: None,
@@ -134,7 +168,11 @@ pub(crate) fn label(
     plot_scale: f64,
     place: usize,
 ) -> Entity {
-    let h = with.label_height.unwrap_or(kentos_commands::ELLIPSE_LABEL_HEIGHT) * plot_scale / 1000.0;
+    let h = with
+        .label_height
+        .unwrap_or(kentos_commands::ELLIPSE_LABEL_HEIGHT)
+        * plot_scale
+        / 1000.0;
     let mut text = format!("a {:.1} · b {:.1} mm", e.major * 1000.0, e.minor * 1000.0);
     if with.heights {
         text.push_str(&format!(" · h ±{:.1} mm", e.up * 1000.0));
@@ -158,7 +196,10 @@ pub(crate) fn label(
         p: {
             let (ux, uy, _) = PLACES[place];
             let d = e.major * with.scale + h;
-            Vec2 { x: at.x + ux * d, y: at.y + uy * d }
+            Vec2 {
+                x: at.x + ux * d,
+                y: at.y + uy * d,
+            }
         },
         text,
         height: h,
@@ -181,8 +222,14 @@ type Frame = [f64; 4];
 /// A label's box as the drawing measures it (its typeface, its alignment; docs/adr/0145).
 fn frame_of(doc: &Document, label: &Entity) -> Option<Frame> {
     let shape = crate::geometry::shape(label);
-    let ring = TextPlace::of(&shape)?.outline(crate::geometry::drawing_font(doc.settings().drawing_font));
-    let mut f = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+    let ring =
+        TextPlace::of(&shape)?.outline(crate::geometry::drawing_font(doc.settings().drawing_font));
+    let mut f = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     for p in ring {
         f = [f[0].min(p.x), f[1].min(p.y), f[2].max(p.x), f[3].max(p.y)];
     }
@@ -198,7 +245,11 @@ fn frames_meet(a: &Frame, b: &Frame) -> bool {
 fn from_origin(p: (f64, f64), q: (f64, f64)) -> f64 {
     let (dx, dy) = (q.0 - p.0, q.1 - p.1);
     let len = dx * dx + dy * dy;
-    let t = if len > 0.0 { (-(p.0 * dx + p.1 * dy) / len).clamp(0.0, 1.0) } else { 0.0 };
+    let t = if len > 0.0 {
+        (-(p.0 * dx + p.1 * dy) / len).clamp(0.0, 1.0)
+    } else {
+        0.0
+    };
     (p.0 + t * dx).hypot(p.1 + t * dy)
 }
 
@@ -231,7 +282,17 @@ fn ellipse_meets(f: &Frame, c: Vec2, major: Vec2, ratio: f64) -> bool {
     let a = major.x.hypot(major.y);
     let b = a * ratio;
     if !(a > 0.0 && b > 0.0) {
-        return segment_meets(f, Vec2 { x: c.x - major.x, y: c.y - major.y }, Vec2 { x: c.x + major.x, y: c.y + major.y });
+        return segment_meets(
+            f,
+            Vec2 {
+                x: c.x - major.x,
+                y: c.y - major.y,
+            },
+            Vec2 {
+                x: c.x + major.x,
+                y: c.y + major.y,
+            },
+        );
     }
     if c.x > f[0] && c.x < f[2] && c.y > f[1] && c.y < f[3] {
         return true;
@@ -241,7 +302,12 @@ fn ellipse_meets(f: &Frame, c: Vec2, major: Vec2, ratio: f64) -> bool {
         let (dx, dy) = (x - c.x, y - c.y);
         ((dx * ux + dy * uy) / a, (-dx * uy + dy * ux) / b)
     };
-    let corners = [to(f[0], f[1]), to(f[2], f[1]), to(f[2], f[3]), to(f[0], f[3])];
+    let corners = [
+        to(f[0], f[1]),
+        to(f[2], f[1]),
+        to(f[2], f[3]),
+        to(f[0], f[3]),
+    ];
     (0..4).any(|i| from_origin(corners[i], corners[(i + 1) % 4]) < 1.0)
 }
 
@@ -271,7 +337,10 @@ pub(crate) fn placed_labels(
         let free = (0..PLACES.len()).find(|&place| {
             let candidate = label(mark, da, *at, e, with, plot_scale, place);
             frame_of(doc, &candidate).is_some_and(|f| {
-                !obstacles.iter().chain(out.iter()).any(|o| meets(doc, &f, o))
+                !obstacles
+                    .iter()
+                    .chain(out.iter())
+                    .any(|o| meets(doc, &f, o))
             })
         });
         match free {
@@ -290,7 +359,10 @@ pub(crate) fn check(doc: &Document, with: &NetworkEllipses) -> Result<(), Stop> 
     if !(with.scale.is_finite() && (lo..=hi).contains(&with.scale)) {
         return Err(fail(
             codes::INVALID_SURVEY_VALUE,
-            format!("Elipslerin büyütmesi 1 ile 100 000 arasında olmalı; {} verildi.", with.scale),
+            format!(
+                "Elipslerin büyütmesi 1 ile 100 000 arasında olmalı; {} verildi.",
+                with.scale
+            ),
             "operation.ellipses.scale",
         ));
     }
@@ -314,7 +386,10 @@ pub(crate) fn check(doc: &Document, with: &NetworkEllipses) -> Result<(), Stop> 
     if doc.layers().is_locked(&with.layer) {
         return Err(fail(
             codes::LAYER_LOCKED,
-            format!("“{}” katmanı kilitli: hata elipsleri kilitli katmana çizilmez. Kilidi açın.", doc.layers().path(&with.layer)),
+            format!(
+                "“{}” katmanı kilitli: hata elipsleri kilitli katmana çizilmez. Kilidi açın.",
+                doc.layers().path(&with.layer)
+            ),
             "operation.ellipses.layer",
         ));
     }
@@ -340,12 +415,21 @@ mod tests {
     use super::*;
 
     fn doc() -> Document {
-        let snapshot = kentos_kcad::decode(include_bytes!("../../../../../fixtures/kcad/v2/minimal.kcad")).unwrap();
+        let snapshot = kentos_kcad::decode(include_bytes!(
+            "../../../../../fixtures/kcad/v2/minimal.kcad"
+        ))
+        .unwrap();
         Document::from_snapshot_v2(snapshot).unwrap()
     }
 
     fn ellipse_at(x: f64, y: f64, major: Vec2, ratio: f64) -> Entity {
-        let with = NetworkEllipses { layer: "0".into(), scale: 1.0, heights: false, labels: false, label_height: None };
+        let with = NetworkEllipses {
+            layer: "0".into(),
+            scale: 1.0,
+            heights: false,
+            labels: false,
+            label_height: None,
+        };
         let mut e = ellipse("N", "da-1", Vec2 { x, y }, &region(1.0, 1.0), &with, 0.0);
         if let Entity::Ellipse(el) = &mut e {
             el.major = major;
@@ -355,7 +439,13 @@ mod tests {
     }
 
     fn region(major: f64, minor: f64) -> ErrorEllipse {
-        ErrorEllipse { major, minor, azimuth: None, up: 0.5, confidence: 0.95 }
+        ErrorEllipse {
+            major,
+            minor,
+            azimuth: None,
+            up: 0.5,
+            confidence: 0.95,
+        }
     }
 
     /// Docs/adr/4160: a box meets a turned ellipse where its edge comes within it, not where only its axis-aligned
@@ -363,16 +453,52 @@ mod tests {
     #[test]
     fn a_box_meets_an_ellipse_by_its_own_frame() {
         // An ellipse 10 long, 1 wide, turned 45°: its frame reaches (7.1, 7.1), the ellipse itself not.
-        let m = Vec2 { x: 10.0 * FRAC_1_SQRT_2, y: 10.0 * FRAC_1_SQRT_2 };
-        assert!(!ellipse_meets(&[5.0, -6.0, 7.0, -4.0], Vec2 { x: 0.0, y: 0.0 }, m, 0.1));
-        assert!(!ellipse_meets(&[4.0, -2.0, 6.0, 0.0], Vec2 { x: 0.0, y: 0.0 }, m, 0.1));
-        assert!(ellipse_meets(&[4.0, 3.0, 6.0, 5.0], Vec2 { x: 0.0, y: 0.0 }, m, 0.1));
+        let m = Vec2 {
+            x: 10.0 * FRAC_1_SQRT_2,
+            y: 10.0 * FRAC_1_SQRT_2,
+        };
+        assert!(!ellipse_meets(
+            &[5.0, -6.0, 7.0, -4.0],
+            Vec2 { x: 0.0, y: 0.0 },
+            m,
+            0.1
+        ));
+        assert!(!ellipse_meets(
+            &[4.0, -2.0, 6.0, 0.0],
+            Vec2 { x: 0.0, y: 0.0 },
+            m,
+            0.1
+        ));
+        assert!(ellipse_meets(
+            &[4.0, 3.0, 6.0, 5.0],
+            Vec2 { x: 0.0, y: 0.0 },
+            m,
+            0.1
+        ));
         // The centre inside the box.
-        assert!(ellipse_meets(&[-1.0, -1.0, 1.0, 1.0], Vec2 { x: 0.0, y: 0.0 }, m, 0.1));
+        assert!(ellipse_meets(
+            &[-1.0, -1.0, 1.0, 1.0],
+            Vec2 { x: 0.0, y: 0.0 },
+            m,
+            0.1
+        ));
         // Flat: its axis.
-        assert!(ellipse_meets(&[6.0, 6.0, 8.0, 8.0], Vec2 { x: 0.0, y: 0.0 }, m, 0.0));
-        assert!(!segment_meets(&[0.0, 0.0, 2.0, 2.0], Vec2 { x: 0.0, y: -1.0 }, Vec2 { x: 0.0, y: 3.0 }));
-        assert!(segment_meets(&[0.0, 0.0, 2.0, 2.0], Vec2 { x: 1.0, y: -1.0 }, Vec2 { x: 1.0, y: 3.0 }));
+        assert!(ellipse_meets(
+            &[6.0, 6.0, 8.0, 8.0],
+            Vec2 { x: 0.0, y: 0.0 },
+            m,
+            0.0
+        ));
+        assert!(!segment_meets(
+            &[0.0, 0.0, 2.0, 2.0],
+            Vec2 { x: 0.0, y: -1.0 },
+            Vec2 { x: 0.0, y: 3.0 }
+        ));
+        assert!(segment_meets(
+            &[0.0, 0.0, 2.0, 2.0],
+            Vec2 { x: 1.0, y: -1.0 },
+            Vec2 { x: 1.0, y: 3.0 }
+        ));
     }
 
     /// Docs/adr/4160: a label with every place taken stays east and counts as crowded; one whose east is taken goes
@@ -380,32 +506,62 @@ mod tests {
     #[test]
     fn a_label_goes_to_its_first_free_place_or_stays_east_crowded() {
         let doc = doc();
-        let with = NetworkEllipses { layer: "0".into(), scale: 1.0, heights: false, labels: true, label_height: None };
+        let with = NetworkEllipses {
+            layer: "0".into(),
+            scale: 1.0,
+            heights: false,
+            labels: true,
+            label_height: None,
+        };
         let e = region(1.0, 1.0);
         let at = Vec2 { x: 0.0, y: 0.0 };
         // An ellipse 2 high east: east is taken, the top right (its box from 2.4 up) is free.
         let east = ellipse_at(12.0, 0.0, Vec2 { x: 0.0, y: 2.0 }, 0.5);
-        let (labels, moved, crowded) =
-            placed_labels(&doc, &[("N".into(), at, e.clone())], std::slice::from_ref(&east), &with, "da-1", 1000.0);
+        let (labels, moved, crowded) = placed_labels(
+            &doc,
+            &[("N".into(), at, e.clone())],
+            std::slice::from_ref(&east),
+            &with,
+            "da-1",
+            1000.0,
+        );
         assert_eq!((moved, crowded), (1, 0));
-        let Entity::Text(t) = &labels[0] else { panic!("a text") };
+        let Entity::Text(t) = &labels[0] else {
+            panic!("a text")
+        };
         assert_eq!(t.align, Some(TextAlign::BottomLeft));
         // Taller, it takes the top right too: the top left then.
         let tall = ellipse_at(12.0, 0.0, Vec2 { x: 0.0, y: 6.0 }, 0.5);
-        let (labels, _, _) =
-            placed_labels(&doc, &[("N".into(), at, e.clone())], std::slice::from_ref(&tall), &with, "da-1", 1000.0);
-        let Entity::Text(t) = &labels[0] else { panic!("a text") };
+        let (labels, _, _) = placed_labels(
+            &doc,
+            &[("N".into(), at, e.clone())],
+            std::slice::from_ref(&tall),
+            &with,
+            "da-1",
+            1000.0,
+        );
+        let Entity::Text(t) = &labels[0] else {
+            panic!("a text")
+        };
         assert_eq!(t.align, Some(TextAlign::BottomRight));
         // A ring of big circles all round: no place is free.
         let ring: Vec<Entity> = (0..16)
             .map(|k| {
                 let a = f64::from(k) * TAU / 16.0;
-                ellipse_at(14.0 * a.cos(), 14.0 * a.sin(), Vec2 { x: 0.0, y: 11.0 }, 1.0)
+                ellipse_at(
+                    14.0 * a.cos(),
+                    14.0 * a.sin(),
+                    Vec2 { x: 0.0, y: 11.0 },
+                    1.0,
+                )
             })
             .collect();
-        let (labels, moved, crowded) = placed_labels(&doc, &[("N".into(), at, e)], &ring, &with, "da-1", 1000.0);
+        let (labels, moved, crowded) =
+            placed_labels(&doc, &[("N".into(), at, e)], &ring, &with, "da-1", 1000.0);
         assert_eq!((moved, crowded), (0, 1));
-        let Entity::Text(t) = &labels[0] else { panic!("a text") };
+        let Entity::Text(t) = &labels[0] else {
+            panic!("a text")
+        };
         assert_eq!(t.align, Some(TextAlign::MiddleLeft), "east");
     }
 }

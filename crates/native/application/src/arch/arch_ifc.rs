@@ -6,7 +6,9 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_commands::{CommandResult, CommandWarning, ExportIfcBuilding, IfcBuildingExported, IfcView};
+use kentos_commands::{
+    CommandResult, CommandWarning, ExportIfcBuilding, IfcBuildingExported, IfcView,
+};
 use kentos_commands::{SiteEdgeKind, VariableValue};
 use kentos_domain::Document;
 use kentos_ifc::arch::{Gap, Input, Particulars, Why, Written};
@@ -25,8 +27,12 @@ use crate::sections::{self, Left};
 fn fixtures(doc: &Document) -> Vec<kentos_ifc::arch::Fixture> {
     let mut out = Vec::new();
     for (uid, e) in doc.entities_with_uids() {
-        let kentos_commands::Entity::Insert(i) = e else { continue };
-        let Some(def) = doc.block(i.block) else { continue };
+        let kentos_commands::Entity::Insert(i) = e else {
+            continue;
+        };
+        let Some(def) = doc.block(i.block) else {
+            continue;
+        };
         let Some(element) = def.card.as_ref().and_then(|c| c.element.clone()) else {
             continue;
         };
@@ -48,7 +54,9 @@ fn fixtures(doc: &Document) -> Vec<kentos_ifc::arch::Fixture> {
             element,
             level: i.arch.level.clone(),
             ring,
-            people: number("KISI").filter(|v| v.fract() == 0.0).map(|v| v as i64),
+            people: number("KISI")
+                .filter(|v| v.fract() == 0.0)
+                .map(|v| v as i64),
             weight: number("YUK"),
         });
     }
@@ -78,36 +86,61 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
     }
     keys.into_iter()
         .map(|(level, rank_of)| {
-            let count = rooms.iter().find(|r| r.level == level && rank(r.count) == rank_of).map_or(EmsalCount::Included, |r| r.count);
+            let count = rooms
+                .iter()
+                .find(|r| r.level == level && rank(r.count) == rank_of)
+                .map_or(EmsalCount::Included, |r| r.count);
             let shapes: Vec<kentos_geometry_core::geom::arrangement::Area> = rooms
                 .iter()
                 .filter(|r| r.level == level && r.count == count)
                 .flat_map(|r| r.shape.iter().cloned())
                 .collect();
             let union = kentos_geometry_core::geom::region::union_areas(&shapes);
-            let ring = |r: &kentos_geometry_core::geom::arrangement::Ring| r.pts.iter().map(|p| [p.x, p.y]).collect::<Vec<[f64; 2]>>();
-            let rings = union.iter().flat_map(|a| std::iter::once(ring(&a.outer)).chain(a.holes.iter().map(ring))).collect();
+            let ring = |r: &kentos_geometry_core::geom::arrangement::Ring| {
+                r.pts.iter().map(|p| [p.x, p.y]).collect::<Vec<[f64; 2]>>()
+            };
+            let rings = union
+                .iter()
+                .flat_map(|a| std::iter::once(ring(&a.outer)).chain(a.holes.iter().map(ring)))
+                .collect();
             let holds = count == EmsalCount::Included
                 || (count == EmsalCount::Exempt
-                    && !rooms.iter().any(|r| r.level == level && r.count == EmsalCount::Included));
+                    && !rooms
+                        .iter()
+                        .any(|r| r.level == level && r.count == EmsalCount::Included));
             let part = |limit: ZoningLimit| -> f64 {
                 if holds {
-                    rooms.iter().filter(|r| r.level == level && r.limit == Some(limit)).map(|r| r.moved).sum()
+                    rooms
+                        .iter()
+                        .filter(|r| r.level == level && r.limit == Some(limit))
+                        .map(|r| r.moved)
+                        .sum()
                 } else {
                     0.0
                 }
             };
             // The basement rooms' part 5/8's list moves apart from the 30 % (docs/adr/8148), named in their own zone.
-            let apart = rooms.iter().filter(|r| r.level == level && r.count == count).map(|r| r.apart).sum();
+            let apart = rooms
+                .iter()
+                .filter(|r| r.level == level && r.count == count)
+                .map(|r| r.apart)
+                .sum();
             // The stone walls' part within the zone's rooms, out apart from the 30 % (docs/adr/8095).
             let walls = if count == EmsalCount::Outside {
                 0.0
             } else {
-                rooms.iter().filter(|r| r.level == level && r.count == count).map(|r| r.walls).sum()
+                rooms
+                    .iter()
+                    .filter(|r| r.level == level && r.count == count)
+                    .map(|r| r.walls)
+                    .sum()
             };
             // An emsal increase's bases, each once (docs/adr/8125): the zone's description.
             let mut bases: Vec<String> = Vec::new();
-            for r in rooms.iter().filter(|r| r.level == level && r.count == count) {
+            for r in rooms
+                .iter()
+                .filter(|r| r.level == level && r.count == count)
+            {
                 if let Some(b) = &r.basis
                     && !bases.contains(b)
                 {
@@ -115,7 +148,11 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
                 }
             }
             // The table's area of these rooms: their contours' (docs/adr/8125), what EK-9/10 compares the zone with.
-            let table = rooms.iter().filter(|r| r.level == level && r.count == count).map(|r| r.gross).sum::<f64>();
+            let table = rooms
+                .iter()
+                .filter(|r| r.level == level && r.count == count)
+                .map(|r| r.gross)
+                .sum::<f64>();
             kentos_ifc::arch::EmsalArea {
                 bases,
                 table: Some(table),
@@ -137,7 +174,9 @@ fn emsal_areas(doc: &Document) -> Vec<kentos_ifc::arch::EmsalArea> {
 
 /// The building program's units with their rooms (docs/adr/8069), in the program's order.
 fn unit_groups(doc: &Document) -> Vec<kentos_ifc::arch::UnitGroup> {
-    let Some(arch) = doc.settings().arch.as_ref() else { return Vec::new() };
+    let Some(arch) = doc.settings().arch.as_ref() else {
+        return Vec::new();
+    };
     arch.program
         .units
         .iter()
@@ -175,9 +214,17 @@ impl Scope {
             .map(|a| a.levels.iter().map(|l| l.id.clone()).collect::<Vec<_>>())
             .unwrap_or_default()
             .into_iter()
-            .filter(|l| program.building_of_level(l).is_some_and(|b| b.id == building.id))
+            .filter(|l| {
+                program
+                    .building_of_level(l)
+                    .is_some_and(|b| b.id == building.id)
+            })
             .collect();
-        Some(Scope { building, levels, several: program.buildings.len() > 1 })
+        Some(Scope {
+            building,
+            levels,
+            several: program.buildings.len() > 1,
+        })
     }
 
     /// Whether the file holds the object: an architectural one on one of its storeys; a grid on no level; an opening
@@ -188,11 +235,30 @@ impl Scope {
             Entity::Opening(o) => {
                 let host = kentos_domain::Uuid::parse_str(&o.opening.host).ok()?;
                 let wall = doc.get(doc.slot_of(host)?)?;
-                Some(kentos_ifc::arch::level_of(wall).is_some_and(|l| self.levels.iter().any(|x| x == l)))
+                Some(
+                    kentos_ifc::arch::level_of(wall)
+                        .is_some_and(|l| self.levels.iter().any(|x| x == l)),
+                )
             }
-            Entity::Insert(i) if doc.block(i.block).is_some_and(|b| b.card.as_ref().is_some_and(|c| c.element.is_some())) =>
-                Some(i.arch.level.as_ref().map_or(!self.several, |l| self.levels.contains(l))),
-            Entity::Grid(g) => Some(g.grid.arch.level.as_deref().is_none_or(|l| self.levels.iter().any(|x| x == l))),
+            Entity::Insert(i)
+                if doc
+                    .block(i.block)
+                    .is_some_and(|b| b.card.as_ref().is_some_and(|c| c.element.is_some())) =>
+            {
+                Some(
+                    i.arch
+                        .level
+                        .as_ref()
+                        .map_or(!self.several, |l| self.levels.contains(l)),
+                )
+            }
+            Entity::Grid(g) => Some(
+                g.grid
+                    .arch
+                    .level
+                    .as_deref()
+                    .is_none_or(|l| self.levels.iter().any(|x| x == l)),
+            ),
             _ => match kentos_ifc::arch::level_of(e) {
                 Some(l) => Some(self.levels.iter().any(|x| x == l)),
                 None if matches!(
@@ -226,7 +292,12 @@ fn made(doc: &Document, stamp: &str, application: &str) -> (Building, Written, u
 
 /// [`made`] of one of the program's buildings (docs/adr/8072 §2), and how many architectural objects of the project's
 /// no building holds (on no storey, or a shared one no building is chosen for) when it has several.
-fn made_for(doc: &Document, stamp: &str, application: &str, scope: Option<&Scope>) -> (Building, Written, usize, usize) {
+fn made_for(
+    doc: &Document,
+    stamp: &str,
+    application: &str,
+    scope: Option<&Scope>,
+) -> (Building, Written, usize, usize) {
     made_from(doc, sections::model(doc), stamp, application, scope)
 }
 
@@ -267,7 +338,10 @@ fn made_from(
                 let level = kentos_ifc::arch::level_of(e);
                 let no_one = match (program, level) {
                     (Some(p), Some(l)) => p.building_of_level(l).is_none(),
-                    (_, None) => !matches!(e, kentos_commands::Entity::Opening(_) | kentos_commands::Entity::Grid(_)),
+                    (_, None) => !matches!(
+                        e,
+                        kentos_commands::Entity::Opening(_) | kentos_commands::Entity::Grid(_)
+                    ),
                     _ => false,
                 };
                 if no_one {
@@ -278,7 +352,9 @@ fn made_from(
         })
         .map(|(u, e)| (u.as_u128(), u.to_string(), e))
         .collect();
-    let in_scope = |owner: &Option<String>| scope.is_none() || owner.as_ref().is_some_and(|o| kept.contains(o));
+    let in_scope = |owner: &Option<String>| {
+        scope.is_none() || owner.as_ref().is_some_and(|o| kept.contains(o))
+    };
     let gaps: Vec<Gap> = model
         .gaps
         .iter()
@@ -346,22 +422,37 @@ fn made_from(
         crs: crs(doc),
         emsal: emsal_areas(doc)
             .into_iter()
-            .filter(|z| scope.is_none_or(|s| z.level.as_ref().is_some_and(|l| s.levels.contains(l))))
+            .filter(|z| {
+                scope.is_none_or(|s| z.level.as_ref().is_some_and(|l| s.levels.contains(l)))
+            })
             .collect(),
         groups: unit_groups(doc)
             .into_iter()
-            .filter(|g| scope.is_none_or(|s| unit_building(doc, &g.number).as_deref() == Some(s.building.id.as_str())))
+            .filter(|g| {
+                scope.is_none_or(|s| {
+                    unit_building(doc, &g.number).as_deref() == Some(s.building.id.as_str())
+                })
+            })
             .collect(),
         fixtures: fixtures(doc)
             .into_iter()
-            .filter(|f| scope.is_none_or(|s| f.level.as_ref().map_or(!s.several, |l| s.levels.contains(l))))
+            .filter(|f| {
+                scope.is_none_or(|s| {
+                    f.level
+                        .as_ref()
+                        .map_or(!s.several, |l| s.levels.contains(l))
+                })
+            })
             .collect(),
         coverings: doc
             .entities_with_uids()
             .filter_map(|(u, e)| match e {
                 kentos_commands::Entity::Space(s) => {
                     let (floor, ceiling) = doc.room_coverings(&s.space);
-                    Some((u.to_string(), (floor, ceiling, doc.room_wall_finish(&s.space))))
+                    Some((
+                        u.to_string(),
+                        (floor, ceiling, doc.room_wall_finish(&s.space)),
+                    ))
                 }
                 _ => None,
             })
@@ -426,7 +517,13 @@ pub fn surveys(doc: &Document) -> Vec<kentos_ifc::building::SurveyPoint> {
     let Some(survey) = doc.settings().map_survey.as_ref() else {
         return Vec::new();
     };
-    let Some(datum) = doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()).and_then(|s| s.datum) else {
+    let Some(datum) = doc
+        .settings()
+        .arch
+        .as_ref()
+        .and_then(|a| a.site.as_ref())
+        .and_then(|s| s.datum)
+    else {
         return Vec::new();
     };
     survey
@@ -460,7 +557,15 @@ pub fn surveys(doc: &Document) -> Vec<kentos_ifc::building::SurveyPoint> {
 
 /// The program's building a unit belongs to, by the unit's number.
 fn unit_building(doc: &Document, number: &str) -> Option<String> {
-    doc.settings().arch.as_ref()?.program.units.iter().find(|u| u.number == number)?.building.clone()
+    doc.settings()
+        .arch
+        .as_ref()?
+        .program
+        .units
+        .iter()
+        .find(|u| u.number == number)?
+        .building
+        .clone()
 }
 
 /// The faces of the roofs standing on a storey (docs/adr/8071 §11), each its outline in plan and its underside's plane
@@ -487,10 +592,13 @@ fn undersides(doc: &Document, level: Option<&str>) -> Vec<kentos_ifc::under_roof
             if r.roof.layers.is_empty() {
                 r.roof.thickness_m()
             } else {
-                r.roof.layers.iter().map(|l| l.thickness).sum::<f64>() * (1.0 + dx * dx + dy * dy).sqrt()
+                r.roof.layers.iter().map(|l| l.thickness).sum::<f64>()
+                    * (1.0 + dx * dx + dy * dy).sqrt()
             }
         };
-        let ring = |q: &[kentos_geometry_core::Vec2]| q.iter().map(|p| [p.x, p.y]).collect::<Vec<[f64; 2]>>();
+        let ring = |q: &[kentos_geometry_core::Vec2]| {
+            q.iter().map(|p| [p.x, p.y]).collect::<Vec<[f64; 2]>>()
+        };
         match core::face_planes(&pts, &spec) {
             Ok(faces) if !faces.is_empty() => {
                 for (f, (c, dx, dy)) in faces {
@@ -589,7 +697,12 @@ pub fn particulars(doc: &Document) -> Particulars {
 /// ellipsoidal heights ITRF96's, EK-7's note). Why none, when the file cannot say one: no system, or ±0.00 of unknown
 /// height (never taken as 0).
 pub fn crs(doc: &Document) -> Result<kentos_ifc::crs::Crs, String> {
-    let datum = doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()).and_then(|s| s.datum);
+    let datum = doc
+        .settings()
+        .arch
+        .as_ref()
+        .and_then(|a| a.site.as_ref())
+        .and_then(|s| s.datum);
     crate::ifc_system::of(doc, datum)
 }
 
@@ -609,7 +722,14 @@ pub fn model(doc: &Document) -> (Building, Written, Particulars) {
 /// [`model`]'s building with its frame as drawn, not joined (`sections::unjoined_model`): what an underlay's elements
 /// are recognised by (docs/adr/8102 §3).
 pub fn unjoined_model(doc: &Document) -> Building {
-    made_from(doc, sections::unjoined_model(doc), "", "KentOS Mimari", None).0
+    made_from(
+        doc,
+        sections::unjoined_model(doc),
+        "",
+        "KentOS Mimari",
+        None,
+    )
+    .0
 }
 
 /// The building to write: `stamp` its time (`YYYY-MM-DDThh:mm:ss`), `application` KentOS's name.
@@ -620,7 +740,12 @@ pub fn building(doc: &Document, stamp: &str, application: &str) -> (Building, Wr
 
 /// One of the program's buildings to write (docs/adr/8072 §2): its storeys and their objects, at its ±0.00; with how
 /// many of the project's architectural objects no building holds. None for a building the program does not have.
-pub fn building_of(doc: &Document, id: &str, stamp: &str, application: &str) -> Option<(Building, Written, usize)> {
+pub fn building_of(
+    doc: &Document,
+    id: &str,
+    stamp: &str,
+    application: &str,
+) -> Option<(Building, Written, usize)> {
     let scope = Scope::of(doc, id)?;
     let (b, written, _, unplaced) = made_for(doc, stamp, application, Some(&scope));
     Some((b, written, unplaced))
@@ -637,7 +762,11 @@ pub fn file_name_of(doc: &Document, id: &str) -> String {
         .and_then(|a| a.program.buildings.iter().find(|b| b.id == id))
         .and_then(|b| b.code.clone());
     if k.project_code.is_none() {
-        return format!("{}_{}.ifc", doc.name(), code.unwrap_or_else(|| id.to_owned()));
+        return format!(
+            "{}_{}.ifc",
+            doc.name(),
+            code.unwrap_or_else(|| id.to_owned())
+        );
     }
     if code.is_some() {
         k.building_code = code;
@@ -752,7 +881,12 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
     // One of the program's buildings (docs/adr/8072 §2), else the project as one.
     let scope = match input.building.as_deref() {
         Some(id) => Some(Scope::of(doc, id).ok_or_else(|| {
-            bad("building", format!("“{id}” binası bina programında yok; programdaki bir binanın kimliğini verin."))
+            bad(
+                "building",
+                format!(
+                    "“{id}” binası bina programında yok; programdaki bir binanın kimliğini verin."
+                ),
+            )
         })?),
         None => None,
     };
@@ -766,11 +900,16 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
     for (i, c) in input.compartments.iter().flatten().enumerate() {
         let mut ids = Vec::new();
         for (j, r) in c.rooms.iter().enumerate() {
-            let id = kentos_domain::Uuid::parse_str(r.trim()).ok().map(|u| u.as_u128()).filter(|id| rooms.contains(id));
+            let id = kentos_domain::Uuid::parse_str(r.trim())
+                .ok()
+                .map(|u| u.as_u128())
+                .filter(|id| rooms.contains(id));
             let Some(id) = id else {
                 return Err(bad(
                     &format!("compartments[{i}].rooms[{j}]"),
-                    format!("“{r}” çizimin bir mahali değil; kompartımana çizimdeki mahallerin kimliklerini verin."),
+                    format!(
+                        "“{r}” çizimin bir mahali değil; kompartımana çizimdeki mahallerin kimliklerini verin."
+                    ),
                 ));
             };
             ids.push(id);
@@ -800,19 +939,40 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
     // Legacy and office cards may describe appliances without specifying an IFC class or an energy source.
     let mut missing = std::collections::BTreeMap::<&str, usize>::new();
     for (_, entity) in doc.entities_with_uids() {
-        let kentos_commands::Entity::Insert(insert) = entity else { continue };
-        if scope.as_ref().is_some_and(|s| !insert.arch.level.as_ref().map_or(!s.several, |l| s.levels.contains(l))) {
+        let kentos_commands::Entity::Insert(insert) = entity else {
+            continue;
+        };
+        if scope.as_ref().is_some_and(|s| {
+            !insert
+                .arch
+                .level
+                .as_ref()
+                .map_or(!s.several, |l| s.levels.contains(l))
+        }) {
             continue;
         }
-        let Some(block) = doc.block(insert.block) else { continue };
+        let Some(block) = doc.block(insert.block) else {
+            continue;
+        };
         let Some(card) = &block.card else { continue };
-        if card.element.is_none() && matches!(card.category.as_deref(), Some("Mutfak/Beyaz eşya" | "Mutfak/Pişirme" | "Islak hacim/Beyaz eşya")) {
+        if card.element.is_none()
+            && matches!(
+                card.category.as_deref(),
+                Some("Mutfak/Beyaz eşya" | "Mutfak/Pişirme" | "Islak hacim/Beyaz eşya")
+            )
+        {
             *missing.entry(&block.name).or_default() += 1;
         }
     }
     if !missing.is_empty() {
-        let names = missing.iter().map(|(name, count)| format!("{name} ({count})")).collect::<Vec<_>>().join(", ");
-        let message = format!("IFC sınıfı girilmemiş cihazlar aktarılmadı: {names}. Blok kartında ürünün sınıfını ve ön tanımlı tipini seçin.");
+        let names = missing
+            .iter()
+            .map(|(name, count)| format!("{name} ({count})"))
+            .collect::<Vec<_>>()
+            .join(", ");
+        let message = format!(
+            "IFC sınıfı girilmemiş cihazlar aktarılmadı: {names}. Blok kartında ürünün sınıfını ve ön tanımlı tipini seçin."
+        );
         if held == 0 {
             return Err(bad("", message));
         }
@@ -833,7 +993,10 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
         (Why::NoBody, "kesit modeli gövdesini kuramadı"),
         (Why::NoWall, "duvarı yazılmadı"),
         (Why::NoArea, "alanı yok"),
-        (Why::OneWay, "katında hep bir yönde; IFC'nin aks ızgarası iki yönde aks ister"),
+        (
+            Why::OneWay,
+            "katında hep bir yönde; IFC'nin aks ızgarası iki yönde aks ister",
+        ),
     ] {
         let list = counted(&written, why);
         if !list.is_empty() {
@@ -863,8 +1026,16 @@ fn check(doc: &Document, input: &ExportIfcBuilding) -> Result<Planned, Stop> {
     // Every body a closed, simple solid (docs/adr/8071 §3): a body that is not one is said, with the first thing wrong.
     let open = kentos_ifc::closed::open_bodies(&b);
     if !open.is_empty() {
-        let shown: Vec<String> = open.iter().take(5).map(|(name, why)| format!("{name}: {why}")).collect();
-        let more = if open.len() > 5 { format!(" ve {} nesne daha", open.len() - 5) } else { String::new() };
+        let shown: Vec<String> = open
+            .iter()
+            .take(5)
+            .map(|(name, why)| format!("{name}: {why}"))
+            .collect();
+        let more = if open.len() > 5 {
+            format!(" ve {} nesne daha", open.len() - 5)
+        } else {
+            String::new()
+        };
         warnings.push(CommandWarning {
             code: codes::IFC_OPEN_BODY.into(),
             message: format!(

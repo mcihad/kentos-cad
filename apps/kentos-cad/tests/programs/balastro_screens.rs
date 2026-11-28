@@ -21,7 +21,8 @@ use crate::points::edit::{Draft, write_draft};
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {
     crate::drawing_fonts::load_font_folders();
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9315");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-9315");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     // The glyph atlas makes a frame's new letters until a deadline; a picture draws its frames by hand, so a few first.
     let save = |snapshot: &mut Snapshot, app: &App, name: &str| {
@@ -29,7 +30,10 @@ fn screens() {
         for _ in 0..8 {
             let _ = snapshot.render(app.view(), &app.theme());
         }
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     };
     let settle = |snapshot: &mut Snapshot, app: &mut App| {

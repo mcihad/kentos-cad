@@ -48,7 +48,10 @@ impl App {
     }
 
     /// A window of the templates.
-    pub(crate) fn template_work_dialog_view(&self, kind: TemplateDialogKind) -> Element<'_, Message> {
+    pub(crate) fn template_work_dialog_view(
+        &self,
+        kind: TemplateDialogKind,
+    ) -> Element<'_, Message> {
         match kind {
             TemplateDialogKind::RemoveTemplate => self.remove_template_question(),
             TemplateDialogKind::TemplateEditor => self.template_editor_view(),

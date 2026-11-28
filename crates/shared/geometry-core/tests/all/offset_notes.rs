@@ -32,10 +32,20 @@ fn distance_to(p: Vec2, curve: &[Vec2]) -> f64 {
 #[test]
 fn a_fit_point_curve_is_offset_by_its_chords_within_the_tolerance() {
     let pts = vec![v(0.0, 0.0), v(10.0, 4.0), v(20.0, 0.0), v(30.0, 5.0)];
-    let curve = Shape::Spline { pts: pts.clone(), closed: false };
+    let curve = Shape::Spline {
+        pts: pts.clone(),
+        closed: false,
+    };
     let (g, note) = offset_noted(&curve, 2.0, v(10.0, 10.0));
-    let Geometry::Ok(copy) = g else { panic!("a copy") };
-    let Shape::Polyline { pts: out, closed, .. } = copy.shape else { panic!("a polyline") };
+    let Geometry::Ok(copy) = g else {
+        panic!("a copy")
+    };
+    let Shape::Polyline {
+        pts: out, closed, ..
+    } = copy.shape
+    else {
+        panic!("a polyline")
+    };
     assert!(!closed);
     assert_eq!(note.approximate, Some(CURVE_TOL));
     // A fine sampling: the chords of a tolerance a hundred times smaller would do; the outline itself is within it.
@@ -58,10 +68,25 @@ fn an_area_s_hole_goes_the_other_way() {
         parts: None,
     };
     let (g, note) = offset_noted(&area, 2.0, v(2.0, 2.0));
-    let Geometry::Ok(copy) = g else { panic!("a copy") };
-    let Shape::Polygon { pts, holes: Some(holes), .. } = copy.shape else { panic!("an area with its hole") };
-    assert_eq!(pts, vec![v(2.0, 2.0), v(18.0, 2.0), v(18.0, 18.0), v(2.0, 18.0)]);
-    assert_eq!(holes[0].pts, vec![v(4.0, 4.0), v(4.0, 16.0), v(16.0, 16.0), v(16.0, 4.0)]);
+    let Geometry::Ok(copy) = g else {
+        panic!("a copy")
+    };
+    let Shape::Polygon {
+        pts,
+        holes: Some(holes),
+        ..
+    } = copy.shape
+    else {
+        panic!("an area with its hole")
+    };
+    assert_eq!(
+        pts,
+        vec![v(2.0, 2.0), v(18.0, 2.0), v(18.0, 18.0), v(2.0, 18.0)]
+    );
+    assert_eq!(
+        holes[0].pts,
+        vec![v(4.0, 4.0), v(4.0, 16.0), v(16.0, 16.0), v(16.0, 4.0)]
+    );
     assert_eq!(note.approximate, None);
     // Inward past what the hole leaves: refused as the area closing up.
     match offset_noted(&area, 5.0, v(2.0, 2.0)).0 {
@@ -87,7 +112,15 @@ fn a_square_offset_inward_past_its_middle_collapses() {
 #[test]
 fn a_copy_crossing_itself_is_counted() {
     let path = Shape::Polyline {
-        pts: vec![v(0.0, 0.0), v(10.0, 0.0), v(10.0, 4.0), v(6.0, 4.0), v(6.0, 1.0), v(3.0, 1.0), v(3.0, 6.0)],
+        pts: vec![
+            v(0.0, 0.0),
+            v(10.0, 0.0),
+            v(10.0, 4.0),
+            v(6.0, 4.0),
+            v(6.0, 1.0),
+            v(3.0, 1.0),
+            v(3.0, 6.0),
+        ],
         bulges: None,
         holes: None,
         parts: None,

@@ -3,8 +3,8 @@
 //! `fixtures/commands/v1/road.routes.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, RouteFound, RoutesDraw,
-    RoutesDrawn, Vec2,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntityGeometry, NewObject,
+    RouteFound, RoutesDraw, RoutesDrawn, Vec2,
 };
 use kentos_domain::Document;
 
@@ -23,7 +23,11 @@ fn check(doc: &Document, input: &RoutesDraw) -> Result<Checked, Stop> {
     let warnings = checks::layer(doc, &input.layer_id)?;
     let object = NewObject {
         geometry: EntityGeometry::Polyline {
-            pts: route.points.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect(),
+            pts: route
+                .points
+                .iter()
+                .map(|p| Vec2 { x: p.x, y: p.y })
+                .collect(),
             bulges: None,
             zs: Some(route.points.iter().map(|p| Some(p.z)).collect()),
             ms: None,
@@ -43,10 +47,18 @@ fn check(doc: &Document, input: &RoutesDraw) -> Result<Checked, Stop> {
         order: None,
         transparency: None,
     };
-    Ok(Checked { route, object, warnings })
+    Ok(Checked {
+        route,
+        object,
+        warnings,
+    })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &RoutesDraw, c: Checked) -> CommandResult<RoutesDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &RoutesDraw,
+    c: Checked,
+) -> CommandResult<RoutesDrawn> {
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects: vec![c.object],
@@ -58,7 +70,11 @@ fn write(cx: &mut ExecutionContext<'_>, input: &RoutesDraw, c: Checked) -> Comma
         other => return crate::trim::relay(other),
     };
     CommandResult::Completed {
-        output: RoutesDrawn { route: c.route, uids: created.created, revision: cx.doc.revision().to_string() },
+        output: RoutesDrawn {
+            route: c.route,
+            uids: created.created,
+            revision: cx.doc.revision().to_string(),
+        },
         warnings: c.warnings,
     }
 }
@@ -66,7 +82,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &RoutesDraw, c: Checked) -> Comma
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RoutesDraw) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -88,10 +107,14 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &RoutesDraw) -> CommandResult<Rout
 
 /// Draws the route: one undo step.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: RoutesDraw) -> CommandResult<RoutesDrawn> {
-    crate::call::recorded(cx, kentos_commands::ROAD_ROUTES_DRAW, kentos_commands::ROAD_ROUTES_DRAW_VERSION, input, |cx, input| {
-        match check(cx.doc, &input) {
+    crate::call::recorded(
+        cx,
+        kentos_commands::ROAD_ROUTES_DRAW,
+        kentos_commands::ROAD_ROUTES_DRAW_VERSION,
+        input,
+        |cx, input| match check(cx.doc, &input) {
             Ok(c) => write(cx, &input, c),
             Err(stop) => stop.into(),
-        }
-    })
+        },
+    )
 }

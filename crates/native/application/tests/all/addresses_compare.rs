@@ -54,7 +54,11 @@ fn register(rows: usize, doors: usize, path: &std::path::Path) {
         let off = if i % 100 == 0 { 1.5 } else { 0.0 };
         let x = 500_000.0 + (i % 1000) as f64 + off;
         let y = 4_400_000.0 + (i / 1000) as f64;
-        let code = if i < doors { 1_000_000_000 + i } else { 2_000_000_000 + i };
+        let code = if i < doors {
+            1_000_000_000 + i
+        } else {
+            2_000_000_000 + i
+        };
         text.push_str(&format!(
             "{code:010};{road};{};Kızılay;Çankaya;{x};{y}\n",
             i % 100 + 1
@@ -96,7 +100,10 @@ fn a_register_longer_than_is_read_says_so() {
     let _ = std::fs::remove_dir_all(&dir);
     assert_eq!(warnings.len(), 1);
     assert_eq!(warnings[0].code, "register_cut");
-    assert_eq!(output.rows as usize, kentos_formats::table_file::PROCESSING_ROWS);
+    assert_eq!(
+        output.rows as usize,
+        kentos_formats::table_file::PROCESSING_ROWS
+    );
     assert_eq!(output.matched, 10);
 }
 

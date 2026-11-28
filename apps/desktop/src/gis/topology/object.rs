@@ -50,7 +50,10 @@ impl SelectionFindings {
 #[derive(Clone, Debug, PartialEq)]
 pub enum ObjectFindings {
     NotChecked,
-    Checked { findings: Vec<ObjectFinding>, old: bool },
+    Checked {
+        findings: Vec<ObjectFinding>,
+        old: bool,
+    },
 }
 
 impl App {
@@ -59,7 +62,12 @@ impl App {
         let doc = self.document.as_ref()?;
         let layer = doc.model.get(slot)?.base().layer_id.clone();
         let named = |id: &str| id == layer;
-        if !self.topology_settings()?.rules.iter().any(|r| named(&r.layer) || r.other.as_deref().is_some_and(named)) {
+        if !self
+            .topology_settings()?
+            .rules
+            .iter()
+            .any(|r| named(&r.layer) || r.other.as_deref().is_some_and(named))
+        {
             return None;
         }
         let Some(c) = self.topology_checked() else {
@@ -70,10 +78,18 @@ impl App {
         let findings = c
             .findings
             .iter()
-            .filter(|f| f.objects.iter().any(|&k| c.g.slots.get(k).copied().flatten() == Some(slot)))
+            .filter(|f| {
+                f.objects
+                    .iter()
+                    .any(|&k| c.g.slots.get(k).copied().flatten() == Some(slot))
+            })
             .map(|f| ObjectFinding {
                 problem: plan::problem_text(f, c.g.lapsed(f)),
-                rule: c.g.rules.get(f.rule).map_or_else(String::new, |r| plan::rule_text(r, name)),
+                rule: c
+                    .g
+                    .rules
+                    .get(f.rule)
+                    .map_or_else(String::new, |r| plan::rule_text(r, name)),
                 state: review::state_text(c, f),
                 measure: plan::measure_text(f, &format),
                 key: c.key(f),
@@ -81,7 +97,10 @@ impl App {
                 reason: c.g.review(f).and_then(|r| r.reason.clone()),
             })
             .collect();
-        Some(ObjectFindings::Checked { findings, old: self.topology_stale() })
+        Some(ObjectFindings::Checked {
+            findings,
+            old: self.topology_stale(),
+        })
     }
 
     /// The findings of several selected objects (docs/adr/4600): none when no rule names the layer of any of them;
@@ -89,18 +108,38 @@ impl App {
     pub fn selection_findings(&self, slots: &[Slot]) -> Option<Option<SelectionFindings>> {
         let doc = self.document.as_ref()?;
         let rules = &self.topology_settings()?.rules;
-        let named: HashSet<&str> = rules.iter().flat_map(|r| std::iter::once(r.layer.as_str()).chain(r.other.as_deref())).collect();
-        let chosen: HashSet<Slot> =
-            slots.iter().copied().filter(|s| doc.model.get(*s).is_some_and(|e| named.contains(e.base().layer_id.as_str()))).collect();
+        let named: HashSet<&str> = rules
+            .iter()
+            .flat_map(|r| std::iter::once(r.layer.as_str()).chain(r.other.as_deref()))
+            .collect();
+        let chosen: HashSet<Slot> = slots
+            .iter()
+            .copied()
+            .filter(|s| {
+                doc.model
+                    .get(*s)
+                    .is_some_and(|e| named.contains(e.base().layer_id.as_str()))
+            })
+            .collect();
         if chosen.is_empty() {
             return None;
         }
         let Some(c) = self.topology_checked() else {
             return Some(None);
         };
-        let mut out = SelectionFindings { objects: chosen.len(), old: self.topology_stale(), ..SelectionFindings::default() };
+        let mut out = SelectionFindings {
+            objects: chosen.len(),
+            old: self.topology_stale(),
+            ..SelectionFindings::default()
+        };
         for f in c.findings.iter() {
-            if !f.objects.iter().any(|&k| c.g.slots.get(k).copied().flatten().is_some_and(|s| chosen.contains(&s))) {
+            if !f.objects.iter().any(|&k| {
+                c.g.slots
+                    .get(k)
+                    .copied()
+                    .flatten()
+                    .is_some_and(|s| chosen.contains(&s))
+            }) {
                 continue;
             }
             match c.g.state(f) {
@@ -115,7 +154,9 @@ impl App {
 
     /// The Topoloji tab opened on the finding of `key`: every finding listed, its row chosen and shown over the drawing.
     pub(crate) fn topology_open_finding(&mut self, key: &str) {
-        let Some(c) = self.topology_checked() else { return };
+        let Some(c) = self.topology_checked() else {
+            return;
+        };
         let Some(at) = c.findings.iter().position(|f| c.key(f) == key) else {
             self.warn("Bu bulgu son denetimde yok; Topoloji sekmesinde yeniden denetleyin.");
             return;

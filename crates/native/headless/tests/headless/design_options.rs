@@ -8,7 +8,8 @@
 use std::time::Instant;
 
 use kentos_commands::{
-    CommandResult, DocumentSnapshotV2, Entity, OptionChoice, OptionsEdit, OptionsEdited, OptionsQuery,
+    CommandResult, DocumentSnapshotV2, Entity, OptionChoice, OptionsEdit, OptionsEdited,
+    OptionsQuery,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_headless::export;
@@ -92,27 +93,50 @@ fn a_kitchen_with_two_options_draws_counts_and_accepts_one() {
         &mut doc,
         json!({"kind": "define", "name": "Mutfak", "uids": kitchen()}),
     );
-    let b = edit(&mut doc, json!({"kind": "copy", "set": "mutfak", "option": "a"})).created;
+    let b = edit(
+        &mut doc,
+        json!({"kind": "copy", "set": "mutfak", "option": "a"}),
+    )
+    .created;
     assert_eq!(b.len(), 5);
     // B's partition a metre right: B's kitchen finds its boundary among B's walls, the living room among A's.
     moved(&mut doc, &b[0], 1.0);
     assert!((area(&doc, &b[2]) - 1.9 * 3.9).abs() < 1e-9, "B's kitchen");
-    assert!((area(&doc, &uid(7)) - 2.9 * 3.9).abs() < 1e-9, "A's kitchen");
-    assert!((area(&doc, &salon) - before).abs() < 1e-9, "the living room sees A");
+    assert!(
+        (area(&doc, &uid(7)) - 2.9 * 3.9).abs() < 1e-9,
+        "A's kitchen"
+    );
+    assert!(
+        (area(&doc, &salon) - before).abs() < 1e-9,
+        "the living room sees A"
+    );
     // The store: B left out, its partition joining nothing; A shown.
     let store = kentos_native_application::geometry_store::store_of(&doc);
     assert!(!store.view_shown(f64::from(slot(&doc, &b[0]).0)));
     assert!(store.view_shown(f64::from(slot(&doc, &uid(5)).0)));
     let issues = store.wall_issues().len();
     // B primary: the living room grows, the store shows B and hides A.
-    edit(&mut doc, json!({"kind": "primary", "set": "mutfak", "option": "b"}));
-    assert!((area(&doc, &salon) - 3.9 * 3.9).abs() < 1e-9, "the living room sees B");
+    edit(
+        &mut doc,
+        json!({"kind": "primary", "set": "mutfak", "option": "b"}),
+    );
+    assert!(
+        (area(&doc, &salon) - 3.9 * 3.9).abs() < 1e-9,
+        "the living room sees B"
+    );
     let store = kentos_native_application::geometry_store::store_of(&doc);
     assert!(store.view_shown(f64::from(slot(&doc, &b[0]).0)));
     assert!(!store.view_shown(f64::from(slot(&doc, &uid(5)).0)));
-    assert_eq!(store.wall_issues().len(), issues, "the two options' walls never meet");
+    assert_eq!(
+        store.wall_issues().len(),
+        issues,
+        "the two options' walls never meet"
+    );
     // The comparison: the partition and its door moved, the kitchens' areas differ.
-    let q: OptionsQuery = serde_json::from_value(json!({"compare": {"set": "mutfak", "a": "a", "b": "b", "search": 1.5}})).unwrap();
+    let q: OptionsQuery = serde_json::from_value(
+        json!({"compare": {"set": "mutfak", "a": "a", "b": "b", "search": 1.5}}),
+    )
+    .unwrap();
     let CommandResult::Completed { output, .. } = options_query::query(&doc, &q) else {
         panic!()
     };
@@ -120,8 +144,15 @@ fn a_kitchen_with_two_options_draws_counts_and_accepts_one() {
     assert!(c.changed.len() >= 2, "{c:?}");
     assert!((c.space_area - (1.9 - 2.9) * 3.9).abs() < 1e-9);
     // Two copies of a door on the main wall, in two options: neither is broken as overlapping.
-    edit(&mut doc, json!({"kind": "define", "name": "Giriş", "uids": [uid(10)]}));
-    let door = edit(&mut doc, json!({"kind": "copy", "set": "giris", "option": "a"})).created;
+    edit(
+        &mut doc,
+        json!({"kind": "define", "name": "Giriş", "uids": [uid(10)]}),
+    );
+    let door = edit(
+        &mut doc,
+        json!({"kind": "copy", "set": "giris", "option": "a"}),
+    )
+    .created;
     for u in [uid(10), door[0].clone()] {
         let Some(Entity::Opening(o)) = doc.get(slot(&doc, &u)) else {
             panic!()
@@ -130,22 +161,39 @@ fn a_kitchen_with_two_options_draws_counts_and_accepts_one() {
     }
     // The paper's look: the project's hides A (B primary), a recipe choosing A hides B.
     let look = kentos_plot::layers::phasing_of(&doc);
-    assert_eq!(look.look(slot(&doc, &uid(5)).0), kentos_commands::PhaseLook::Hidden);
-    assert_eq!(look.look(slot(&doc, &b[0]).0), kentos_commands::PhaseLook::Shown);
+    assert_eq!(
+        look.look(slot(&doc, &uid(5)).0),
+        kentos_commands::PhaseLook::Hidden
+    );
+    assert_eq!(
+        look.look(slot(&doc, &b[0]).0),
+        kentos_commands::PhaseLook::Shown
+    );
     let a = [OptionChoice {
         set: "mutfak".into(),
         option: "a".into(),
     }];
     let map = kentos_plot::layers::map_phasing_of(&doc, None, &[], &a);
-    assert_eq!(map.look(slot(&doc, &uid(5)).0), kentos_commands::PhaseLook::Shown);
-    assert_eq!(map.look(slot(&doc, &b[0]).0), kentos_commands::PhaseLook::Hidden);
+    assert_eq!(
+        map.look(slot(&doc, &uid(5)).0),
+        kentos_commands::PhaseLook::Shown
+    );
+    assert_eq!(
+        map.look(slot(&doc, &b[0]).0),
+        kentos_commands::PhaseLook::Hidden
+    );
     // KCAD keeps the sets.
     let bytes = kentos_kcad::encode_verified(&doc.to_snapshot_v2()).unwrap();
     let again = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).unwrap()).unwrap();
     assert_eq!(again.arch_options(), doc.arch_options());
     // DXF: only what is drawn, the rest said.
     let input = export::dxf_input(&doc, &export::by_layer(&doc, doc.entities()));
-    assert!(!input.entities.iter().any(|e| e.base().id == slot(&doc, &uid(5)).0));
+    assert!(
+        !input
+            .entities
+            .iter()
+            .any(|e| e.base().id == slot(&doc, &uid(5)).0)
+    );
     let note = input
         .notes
         .iter()
@@ -154,7 +202,10 @@ fn a_kitchen_with_two_options_draws_counts_and_accepts_one() {
     assert_eq!(note.count, 6, "A's five objects and the door's other copy");
     // Accepting B: A's objects go, the set goes, the living room keeps B's size; one undo gives all back.
     let kept = doc.to_snapshot_v2();
-    let done = edit(&mut doc, json!({"kind": "accept", "set": "mutfak", "option": "b"}));
+    let done = edit(
+        &mut doc,
+        json!({"kind": "accept", "set": "mutfak", "option": "b"}),
+    );
     assert_eq!(done.deleted.len(), 5);
     assert!(doc.slot_of(Uuid::parse_str(&uid(5)).unwrap()).is_none());
     assert_eq!(doc.arch_options().len(), 1);
@@ -169,7 +220,12 @@ fn a_kitchen_with_two_options_draws_counts_and_accepts_one() {
 fn a_drawing_without_options_writes_no_option_note() {
     let doc = drawing();
     let input = export::dxf_input(&doc, &export::by_layer(&doc, doc.entities()));
-    assert!(!input.notes.iter().any(|n| n.what == "Birincil olmayan tasarım seçeneği"));
+    assert!(
+        !input
+            .notes
+            .iter()
+            .any(|n| n.what == "Birincil olmayan tasarım seçeneği")
+    );
     assert!(doc.option_out().is_empty());
 }
 
@@ -183,13 +239,20 @@ fn design_options_timing() {
     );
     let t = Instant::now();
     for _ in 0..11 {
-        edit(&mut doc, json!({"kind": "copy", "set": "mutfak", "option": "a"}));
+        edit(
+            &mut doc,
+            json!({"kind": "copy", "set": "mutfak", "option": "a"}),
+        );
     }
     let copy_ms = t.elapsed().as_secs_f64() * 1000.0 / 11.0;
     let t = Instant::now();
-    edit(&mut doc, json!({"kind": "primary", "set": "mutfak", "option": "l"}));
+    edit(
+        &mut doc,
+        json!({"kind": "primary", "set": "mutfak", "option": "l"}),
+    );
     let primary_ms = t.elapsed().as_secs_f64() * 1000.0;
-    let q: OptionsQuery = serde_json::from_value(json!({"compare": {"set": "mutfak", "a": "a", "b": "l"}})).unwrap();
+    let q: OptionsQuery =
+        serde_json::from_value(json!({"compare": {"set": "mutfak", "a": "a", "b": "l"}})).unwrap();
     let t = Instant::now();
     let _ = options_query::query(&doc, &q);
     let compare_ms = t.elapsed().as_secs_f64() * 1000.0;
@@ -203,7 +266,8 @@ fn design_options_timing() {
 }
 
 fn views(doc: &mut Document, edit: Value) {
-    let input: kentos_commands::ViewsEdit = serde_json::from_value(json!({ "edit": edit })).unwrap();
+    let input: kentos_commands::ViewsEdit =
+        serde_json::from_value(json!({ "edit": edit })).unwrap();
     match kentos_native_application::views_edit::execute(&mut ExecutionContext::new(doc), input) {
         CommandResult::Completed { .. } => {}
         other => panic!("{other:?}"),
@@ -216,11 +280,27 @@ fn views(doc: &mut Document, edit: Value) {
 #[test]
 fn proposals_combine_the_sets_and_a_view_draws_one() {
     let mut doc = drawing();
-    edit(&mut doc, json!({"kind": "define", "name": "Mutfak", "uids": kitchen()}));
-    let b = edit(&mut doc, json!({"kind": "copy", "set": "mutfak", "option": "a"})).created;
-    edit(&mut doc, json!({"kind": "define", "name": "Not", "uids": [uid(13)]}));
-    let nb = edit(&mut doc, json!({"kind": "copy", "set": "not", "option": "a"})).created;
-    let first = edit(&mut doc, json!({"kind": "saveCombo", "name": "Teklif 1"})).combo.unwrap();
+    edit(
+        &mut doc,
+        json!({"kind": "define", "name": "Mutfak", "uids": kitchen()}),
+    );
+    let b = edit(
+        &mut doc,
+        json!({"kind": "copy", "set": "mutfak", "option": "a"}),
+    )
+    .created;
+    edit(
+        &mut doc,
+        json!({"kind": "define", "name": "Not", "uids": [uid(13)]}),
+    );
+    let nb = edit(
+        &mut doc,
+        json!({"kind": "copy", "set": "not", "option": "a"}),
+    )
+    .created;
+    let first = edit(&mut doc, json!({"kind": "saveCombo", "name": "Teklif 1"}))
+        .combo
+        .unwrap();
     assert_eq!(first.id, "teklif-1");
     assert_eq!(first.choices.len(), 2);
     let second = edit(
@@ -231,33 +311,77 @@ fn proposals_combine_the_sets_and_a_view_draws_one() {
     .unwrap();
     assert_eq!(second.id, "teklif-2");
     // A view showing the second, its own choice for the note above the combination's.
-    views(&mut doc, json!({"kind": "save", "name": "Teklif 2", "center": {"x": 3.0, "y": 2.0}, "width": 8.0, "height": 6.0}));
+    views(
+        &mut doc,
+        json!({"kind": "save", "name": "Teklif 2", "center": {"x": 3.0, "y": 2.0}, "width": 8.0, "height": 6.0}),
+    );
     views(
         &mut doc,
         json!({"kind": "recipe", "name": "Teklif 2", "recipe": {"combo": "teklif-2", "options": [{"set": "not", "option": "a"}]}}),
     );
     let drawn = doc.settings().drawn_views();
-    let recipe = drawn.iter().find(|v| v.name == "Teklif 2").unwrap().recipe.clone().unwrap();
-    assert_eq!(recipe.combo, None, "the map reads the combination's choices, not its id");
-    let shown: Vec<(String, String)> = recipe.options.iter().map(|c| (c.set.clone(), c.option.clone())).collect();
-    assert_eq!(shown, [("not".into(), "a".into()), ("mutfak".into(), "b".into())]);
+    let recipe = drawn
+        .iter()
+        .find(|v| v.name == "Teklif 2")
+        .unwrap()
+        .recipe
+        .clone()
+        .unwrap();
+    assert_eq!(
+        recipe.combo, None,
+        "the map reads the combination's choices, not its id"
+    );
+    let shown: Vec<(String, String)> = recipe
+        .options
+        .iter()
+        .map(|c| (c.set.clone(), c.option.clone()))
+        .collect();
+    assert_eq!(
+        shown,
+        [("not".into(), "a".into()), ("mutfak".into(), "b".into())]
+    );
     let map = kentos_plot::layers::map_phasing_of(&doc, None, &[], &recipe.options);
-    assert_eq!(map.look(slot(&doc, &uid(5)).0), kentos_commands::PhaseLook::Hidden);
-    assert_eq!(map.look(slot(&doc, &b[0]).0), kentos_commands::PhaseLook::Shown);
-    assert_eq!(map.look(slot(&doc, &uid(13)).0), kentos_commands::PhaseLook::Shown);
-    assert_eq!(map.look(slot(&doc, &nb[0]).0), kentos_commands::PhaseLook::Hidden);
+    assert_eq!(
+        map.look(slot(&doc, &uid(5)).0),
+        kentos_commands::PhaseLook::Hidden
+    );
+    assert_eq!(
+        map.look(slot(&doc, &b[0]).0),
+        kentos_commands::PhaseLook::Shown
+    );
+    assert_eq!(
+        map.look(slot(&doc, &uid(13)).0),
+        kentos_commands::PhaseLook::Shown
+    );
+    assert_eq!(
+        map.look(slot(&doc, &nb[0]).0),
+        kentos_commands::PhaseLook::Hidden
+    );
     // The read: the first is what the drawing shows now, the second is not.
-    let CommandResult::Completed { output, .. } = options_query::query(&doc, &OptionsQuery::default()) else {
+    let CommandResult::Completed { output, .. } =
+        options_query::query(&doc, &OptionsQuery::default())
+    else {
         panic!()
     };
-    assert_eq!(output.combos.iter().map(|c| c.current).collect::<Vec<_>>(), [true, false]);
+    assert_eq!(
+        output.combos.iter().map(|c| c.current).collect::<Vec<_>>(),
+        [true, false]
+    );
     // Applying it is one undo step; a view showing it keeps it from being deleted.
     let before = doc.to_snapshot_v2();
     edit(&mut doc, json!({"kind": "applyCombo", "combo": "Teklif 2"}));
-    assert_eq!(doc.arch_options().iter().map(|s| s.primary.as_str()).collect::<Vec<_>>(), ["b", "b"]);
+    assert_eq!(
+        doc.arch_options()
+            .iter()
+            .map(|s| s.primary.as_str())
+            .collect::<Vec<_>>(),
+        ["b", "b"]
+    );
     doc.undo();
     assert_eq!(doc.to_snapshot_v2().settings, before.settings);
-    let input: OptionsEdit = serde_json::from_value(json!({"operation": {"kind": "deleteCombo", "combo": "teklif-2"}})).unwrap();
+    let input: OptionsEdit =
+        serde_json::from_value(json!({"operation": {"kind": "deleteCombo", "combo": "teklif-2"}}))
+            .unwrap();
     match options_edit::execute(&mut ExecutionContext::new(&mut doc), input) {
         CommandResult::Failed { error } => assert_eq!(error.code, "option_combo_in_use"),
         other => panic!("{other:?}"),
@@ -267,7 +391,10 @@ fn proposals_combine_the_sets_and_a_view_draws_one() {
     let again = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).unwrap()).unwrap();
     assert_eq!(again.option_combos(), doc.option_combos());
     // Accepting the kitchen's A drops its choice from both, said once.
-    let input: OptionsEdit = serde_json::from_value(json!({"operation": {"kind": "accept", "set": "mutfak", "option": "a"}})).unwrap();
+    let input: OptionsEdit = serde_json::from_value(
+        json!({"operation": {"kind": "accept", "set": "mutfak", "option": "a"}}),
+    )
+    .unwrap();
     match options_edit::execute(&mut ExecutionContext::new(&mut doc), input) {
         CommandResult::Completed { warnings, .. } => {
             assert_eq!(warnings.len(), 1);
@@ -275,5 +402,9 @@ fn proposals_combine_the_sets_and_a_view_draws_one() {
         }
         other => panic!("{other:?}"),
     }
-    assert!(doc.option_combos().iter().all(|c| c.choices.iter().all(|ch| ch.set == "not")));
+    assert!(
+        doc.option_combos()
+            .iter()
+            .all(|c| c.choices.iter().all(|ch| ch.set == "not"))
+    );
 }

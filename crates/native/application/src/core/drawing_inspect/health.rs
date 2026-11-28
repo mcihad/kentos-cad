@@ -33,14 +33,24 @@ impl Health {
         let mut pts: Vec<Vec2> = Vec::new();
         match e {
             Entity::Line(l) => {
-                self.straights.push(Straight { uid, a: l.a, b: l.b, line: true });
+                self.straights.push(Straight {
+                    uid,
+                    a: l.a,
+                    b: l.b,
+                    line: true,
+                });
                 pts.extend([l.a, l.b]);
             }
             Entity::Polyline(_) | Entity::Polygon(_) => {
                 for edge in kentos_geometry_core::ops::edges::entity_edges(&shape(e)) {
                     if let kentos_geometry_core::geom::intersect::Edge::Seg { a, b } = edge {
                         let (a, b) = (Vec2 { x: a.x, y: a.y }, Vec2 { x: b.x, y: b.y });
-                        self.straights.push(Straight { uid, a, b, line: false });
+                        self.straights.push(Straight {
+                            uid,
+                            a,
+                            b,
+                            line: false,
+                        });
                         pts.extend([a, b]);
                     }
                 }
@@ -54,7 +64,10 @@ impl Health {
         }
         if !pts.is_empty() {
             let n = pts.len() as f64;
-            let c = Vec2 { x: pts.iter().map(|p| p.x).sum::<f64>() / n, y: pts.iter().map(|p| p.y).sum::<f64>() / n };
+            let c = Vec2 {
+                x: pts.iter().map(|p| p.x).sum::<f64>() / n,
+                y: pts.iter().map(|p| p.y).sum::<f64>() / n,
+            };
             self.centres.push((uid, c));
         }
     }
@@ -64,8 +77,15 @@ fn len(a: Vec2, b: Vec2) -> f64 {
     (b.x - a.x).hypot(b.y - a.y)
 }
 
-fn finding(code: &str, severity: InspectionSeverity, uids: Vec<String>, points: Vec<Vec2>, message: String,
-    repair: &str, distance: Option<f64>) -> InspectionFinding {
+fn finding(
+    code: &str,
+    severity: InspectionSeverity,
+    uids: Vec<String>,
+    points: Vec<Vec2>,
+    message: String,
+    repair: &str,
+    distance: Option<f64>,
+) -> InspectionFinding {
     InspectionFinding {
         group: InspectionGroup::Health,
         severity,
@@ -90,12 +110,20 @@ fn meet(e: Vec2, d: Vec2, s: &Straight) -> Option<(f64, Vec2)> {
     let t = (wx * uy - wy * ux) / den;
     let u = (wx * d.y - wy * d.x) / den;
     let inside = NEAR / len(s.a, s.b).max(NEAR);
-    (u > inside && u < 1.0 - inside).then_some((t, Vec2 { x: e.x + t * d.x, y: e.y + t * d.y }))
+    (u > inside && u < 1.0 - inside).then_some((
+        t,
+        Vec2 {
+            x: e.x + t * d.x,
+            y: e.y + t * d.y,
+        },
+    ))
 }
 
 /// A free end of line `l`: no other straight edge's end at it.
 fn free(end: Vec2, me: usize, all: &[&Straight]) -> bool {
-    !all.iter().enumerate().any(|(i, s)| i != me && (len(s.a, end) <= NEAR || len(s.b, end) <= NEAR))
+    !all.iter()
+        .enumerate()
+        .any(|(i, s)| i != me && (len(s.a, end) <= NEAR || len(s.b, end) <= NEAR))
 }
 
 /// What makes two block definitions one content (docs/adr/1005 §1): their parts without their ids, base and
@@ -119,7 +147,8 @@ pub(crate) fn content_key(b: &kentos_commands::BlockDefinition) -> String {
 /// The groups of block definitions of one content, by name, in the drawing's order (the health check's
 /// `block_definition_duplicate` findings, docs/adr/1005 §1): the first of a group is the one Onar keeps.
 pub fn duplicate_blocks(doc: &Document) -> Vec<Vec<String>> {
-    let mut seen: std::collections::BTreeMap<String, Vec<String>> = std::collections::BTreeMap::new();
+    let mut seen: std::collections::BTreeMap<String, Vec<String>> =
+        std::collections::BTreeMap::new();
     for b in doc.blocks().iter().filter(|b| b.xref.is_none()) {
         seen.entry(content_key(b)).or_default().push(b.name.clone());
     }
@@ -154,7 +183,10 @@ pub(super) fn inspect(
             if !free(end, i, &straights) {
                 continue;
             }
-            let d = Vec2 { x: (end.x - from.x) / length, y: (end.y - from.y) / length };
+            let d = Vec2 {
+                x: (end.x - from.x) / length,
+                y: (end.y - from.y) / length,
+            };
             let mut best: Option<(f64, Vec2, &&Straight)> = None;
             for s in straights.iter().filter(|s| s.uid != l.uid) {
                 if !budget.tick(stopped)? {
@@ -184,7 +216,11 @@ pub(super) fn inspect(
                         vec![end, x],
                         format!(
                             "Çizginin {} ucu öbür nesnenin kenarına {:.4} m {words}.",
-                            if name == "end" { "bitiş" } else { "başlangıç" },
+                            if name == "end" {
+                                "bitiş"
+                            } else {
+                                "başlangıç"
+                            },
                             t.abs()
                         ),
                         "Ucu kesişime getirin: Uzat/Buda ya da cad.drawing.repair (ölçülü ve kısıtlı nesneye dokunmaz).",
@@ -253,7 +289,9 @@ pub(super) fn inspect(
                         InspectionSeverity::Info,
                         vec![uid.to_string()],
                         vec![*c],
-                        format!("Nesne çizimin ana bölgesinden {away:.3} m uzakta; yanlışlıkla taşınmış ya da kopyalanmış olabilir."),
+                        format!(
+                            "Nesne çizimin ana bölgesinden {away:.3} m uzakta; yanlışlıkla taşınmış ya da kopyalanmış olabilir."
+                        ),
                         "Nesneye yakınlaştırıp inceleyin; gereksizse silin.",
                         Some(away),
                     ),
@@ -263,7 +301,8 @@ pub(super) fn inspect(
         }
     }
     // Block definitions of the same content.
-    let mut seen: std::collections::BTreeMap<String, Vec<String>> = std::collections::BTreeMap::new();
+    let mut seen: std::collections::BTreeMap<String, Vec<String>> =
+        std::collections::BTreeMap::new();
     for b in doc.blocks() {
         if b.xref.is_some() {
             continue;

@@ -48,7 +48,11 @@ pub struct HaulsEdit {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "volume")))]
     pub balance: Option<f64>,
     /// The free haul distance; null takes it off.
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<f64>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<f64>"))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "m")))]
@@ -57,7 +61,11 @@ pub struct HaulsEdit {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub sites: Option<Vec<HaulSiteDef>>,
     /// The prices and the truck's payload; null takes them off.
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
     #[cfg_attr(feature = "ts", ts(as = "Option<Option<HaulCostDef>>", optional))]
     #[cfg_attr(feature = "schema", schemars(with = "Option<HaulCostDef>"))]
     pub cost: Option<Option<HaulCostDef>>,
@@ -70,8 +78,15 @@ pub struct HaulsEdit {
     #[cfg_attr(feature = "ts", ts(optional))]
     pub barriers: Option<Vec<HaulBarrierDef>>,
     /// The haul road network its sites off the road are reached by (docs/adr/0955); null takes it off.
-    #[serde(default, with = "crate::cad_properties::nullable", skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Option<crate::HaulNetworkDef>>", optional))]
+    #[serde(
+        default,
+        with = "crate::cad_properties::nullable",
+        skip_serializing_if = "Option::is_none"
+    )]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Option<crate::HaulNetworkDef>>", optional)
+    )]
     #[cfg_attr(feature = "schema", schemars(with = "Option<crate::HaulNetworkDef>"))]
     pub network: Option<Option<crate::HaulNetworkDef>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]

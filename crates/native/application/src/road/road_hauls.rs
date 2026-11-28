@@ -3,7 +3,9 @@
 //! across a stretch without volume), each borrow or waste site a step in it, read against the balance line by
 //! `kentos-road`'s `haul::diagram`. Nothing read is kept: every read computes again (ROAD-MOD-06).
 
-use kentos_commands::{CommandWarning, HaulDef, HaulListed, HaulLoop, HaulReport, HaulSiteKind, VolumeReport};
+use kentos_commands::{
+    CommandWarning, HaulDef, HaulListed, HaulLoop, HaulReport, HaulSiteKind, VolumeReport,
+};
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
 use kentos_road::haul::diagram;
@@ -18,22 +20,44 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work == Some(kentos_commands::CadWork::Road) {
         Ok(())
     } else {
-        Err(fail(codes::NOT_A_ROAD_PROJECT, "Brükner yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(), ""))
+        Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "Brükner yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(),
+            "",
+        ))
     }
 }
 
 /// The diagram of `name`: by its id, else by its name (case aside).
-pub(crate) fn find<'a>(list: &'a [HaulDef], name: &str, path: &str) -> Result<(usize, &'a HaulDef), Stop> {
+pub(crate) fn find<'a>(
+    list: &'a [HaulDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a HaulDef), Stop> {
     list.iter()
         .position(|h| h.id == name)
-        .or_else(|| list.iter().position(|h| h.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .position(|h| h.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|i| (i, &list[i]))
-        .ok_or_else(|| fail(codes::UNKNOWN_HAUL, format!("“{name}” kimlikli ya da adlı Brükner projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_HAUL,
+                format!("“{name}” kimlikli ya da adlı Brükner projede yok."),
+                path,
+            )
+        })
 }
 
 pub(crate) fn listed(list: &[HaulDef]) -> Vec<HaulListed> {
     list.iter()
-        .map(|h| HaulListed { id: h.id.clone(), name: h.name.clone(), volume: h.volume.clone(), revision: h.revision })
+        .map(|h| HaulListed {
+            id: h.id.clone(),
+            name: h.name.clone(),
+            volume: h.volume.clone(),
+            revision: h.revision,
+        })
         .collect()
 }
 
@@ -75,7 +99,10 @@ const LAYERS: &str = "layers";
 
 /// The diagram's cost by its prices: the overhaul moment in m³·km times its price, the waste and the borrow times
 /// theirs, the total of those priced; the trips everything moved over the payload, rounded up.
-pub(crate) fn cost(c: &kentos_commands::HaulCostDef, d: &kentos_road::haul::Diagram) -> kentos_commands::HaulCostReport {
+pub(crate) fn cost(
+    c: &kentos_commands::HaulCostDef,
+    d: &kentos_road::haul::Diagram,
+) -> kentos_commands::HaulCostReport {
     let overhaul = c.overhaul.map(|p| d.over_moment / 1000.0 * p);
     let waste = c.waste.map(|p| d.waste * p);
     let borrow = c.borrow.map(|p| d.borrow * p);
@@ -85,24 +112,54 @@ pub(crate) fn cost(c: &kentos_commands::HaulCostDef, d: &kentos_road::haul::Diag
         waste,
         borrow,
         total: [overhaul, waste, borrow].into_iter().flatten().sum(),
-        trips: c.payload.map(|p| ((d.volume + d.waste + d.borrow) / p - 1e-9).ceil().max(0.0)),
+        trips: c
+            .payload
+            .map(|p| ((d.volume + d.waste + d.borrow) / p - 1e-9).ceil().max(0.0)),
     }
 }
 
 /// The diagram read now with its warnings; refused where its volume does not compute or a site is off its stations.
-pub(crate) fn read(doc: &Document, def: &HaulDef, points: bool) -> Result<(HaulReport, Vec<CommandWarning>), Stop> {
-    let vdef = doc.road_volumes().iter().find(|v| v.id == def.volume).ok_or_else(|| {
-        fail(codes::UNKNOWN_VOLUME, format!("“{}” kimlikli kübaj hesabı projede yok.", def.volume), "volume")
+pub(crate) fn read(
+    doc: &Document,
+    def: &HaulDef,
+    points: bool,
+) -> Result<(HaulReport, Vec<CommandWarning>), Stop> {
+    let vdef = doc
+        .road_volumes()
+        .iter()
+        .find(|v| v.id == def.volume)
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_VOLUME,
+                format!("“{}” kimlikli kübaj hesabı projede yok.", def.volume),
+                "volume",
+            )
+        })?;
+    let (report, vwarnings, alignment) = volumes::compute_on(doc, vdef).map_err(|stop| {
+        fail(
+            codes::INVALID_HAUL,
+            format!(
+                "“{}” kübajı hesaplanamıyor: {}",
+                vdef.name,
+                crate::road_corridors::words(stop)
+            ),
+            "volume",
+        )
     })?;
-    let (report, vwarnings, alignment) = volumes::compute_on(doc, vdef)
-        .map_err(|stop| fail(codes::INVALID_HAUL, format!("“{}” kübajı hesaplanamıyor: {}", vdef.name, crate::road_corridors::words(stop)), "volume"))?;
     let mut warnings: Vec<CommandWarning> = vwarnings
         .into_iter()
         .filter(|w| w.code == codes::CORRIDOR_STALE || w.code == codes::VOLUME_GAP)
         .collect();
     let mut curve = ordinate(&report);
     if curve.len() < 2 {
-        return Err(fail(codes::INVALID_HAUL, format!("“{}” kübajının hacimli aralığı yok; Brükner çizilemez.", vdef.name), "volume"));
+        return Err(fail(
+            codes::INVALID_HAUL,
+            format!(
+                "“{}” kübajının hacimli aralığı yok; Brükner çizilemez.",
+                vdef.name
+            ),
+            "volume",
+        ));
     }
     let (first, last) = (curve[0][0], curve[curve.len() - 1][0]);
     // A site off the road stands where its access meets the alignment; one the network does not reach is left out
@@ -116,7 +173,15 @@ pub(crate) fn read(doc: &Document, def: &HaulDef, points: bool) -> Result<(HaulR
         .zip(&placed.unconnected)
         .enumerate()
         .filter(|(_, (_, off))| !**off)
-        .map(|(j, ((s, p), _))| (j, kentos_commands::HaulSiteDef { station: p.station, ..s.clone() }))
+        .map(|(j, ((s, p), _))| {
+            (
+                j,
+                kentos_commands::HaulSiteDef {
+                    station: p.station,
+                    ..s.clone()
+                },
+            )
+        })
         .collect();
     sites.sort_by(|a, b| a.1.station.total_cmp(&b.1.station).then(a.0.cmp(&b.0)));
     for (j, site) in sites {
@@ -160,7 +225,10 @@ pub(crate) fn read(doc: &Document, def: &HaulDef, points: bool) -> Result<(HaulR
     if d.waste > 1e-6 || d.borrow > 1e-6 {
         warnings.push(CommandWarning {
             code: codes::HAUL_UNBALANCED.into(),
-            message: format!("“{}” Brüknerinde dengelenmeyen hacim var: döküm {:.3} m³, ödünç {:.3} m³.", def.name, d.waste, d.borrow),
+            message: format!(
+                "“{}” Brüknerinde dengelenmeyen hacim var: döküm {:.3} m³, ödünç {:.3} m³.",
+                def.name, d.waste, d.borrow
+            ),
             path: Some("haul".into()),
         });
     }
@@ -232,7 +300,15 @@ pub fn read_hauls(doc: &Document) -> Vec<(HaulDef, ReadHaul)> {
     if road_project(doc).is_err() {
         return Vec::new();
     }
-    doc.road_hauls().iter().map(|h| (h.clone(), read(doc, h, true).map_err(crate::road_corridors::words))).collect()
+    doc.road_hauls()
+        .iter()
+        .map(|h| {
+            (
+                h.clone(),
+                read(doc, h, true).map_err(crate::road_corridors::words),
+            )
+        })
+        .collect()
 }
 
 /// A diagram (perhaps not written) read now with its points, for the Brükner window.
@@ -241,11 +317,47 @@ pub fn preview(doc: &Document, def: &HaulDef) -> ReadHaul {
 }
 
 /// The alignment a diagram's volume's corridor lies on, built (docs/adr/0955: its haul road network joins it).
-pub(crate) fn alignment_of(doc: &Document, def: &HaulDef) -> Result<crate::road_alignments::Built, Stop> {
-    let bad = |words: String, path: &str| crate::road_terrains::fail(codes::INVALID_HAUL, words, path);
-    let v = doc.road_volumes().iter().find(|v| v.id == def.volume).ok_or_else(|| bad(format!("“{}” kimlikli kübaj hesabı projede yok.", def.volume), "volume"))?;
-    let c = doc.road_corridors().iter().find(|c| c.id == v.corridor).ok_or_else(|| bad(format!("“{}” kimlikli koridor projede yok.", v.corridor), "volume"))?;
+pub(crate) fn alignment_of(
+    doc: &Document,
+    def: &HaulDef,
+) -> Result<crate::road_alignments::Built, Stop> {
+    let bad =
+        |words: String, path: &str| crate::road_terrains::fail(codes::INVALID_HAUL, words, path);
+    let v = doc
+        .road_volumes()
+        .iter()
+        .find(|v| v.id == def.volume)
+        .ok_or_else(|| {
+            bad(
+                format!("“{}” kimlikli kübaj hesabı projede yok.", def.volume),
+                "volume",
+            )
+        })?;
+    let c = doc
+        .road_corridors()
+        .iter()
+        .find(|c| c.id == v.corridor)
+        .ok_or_else(|| {
+            bad(
+                format!("“{}” kimlikli koridor projede yok.", v.corridor),
+                "volume",
+            )
+        })?;
     let list = crate::road_alignments::alignments(doc);
-    let a = list.iter().find(|a| a.id == c.alignment).ok_or_else(|| bad(format!("“{}” kimlikli aks projede yok.", c.alignment), "volume"))?;
-    crate::road_alignments::build(list, a, "").map_err(|stop| bad(format!("“{}” aksı kurulamıyor: {}", a.name, crate::road_corridors::words(stop)), "volume"))
+    let a = list.iter().find(|a| a.id == c.alignment).ok_or_else(|| {
+        bad(
+            format!("“{}” kimlikli aks projede yok.", c.alignment),
+            "volume",
+        )
+    })?;
+    crate::road_alignments::build(list, a, "").map_err(|stop| {
+        bad(
+            format!(
+                "“{}” aksı kurulamıyor: {}",
+                a.name,
+                crate::road_corridors::words(stop)
+            ),
+            "volume",
+        )
+    })
 }

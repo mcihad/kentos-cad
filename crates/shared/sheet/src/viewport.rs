@@ -541,13 +541,19 @@ pub fn effective_fixed_view(
 
 /// The recipe of the named view a map is linked to (docs/adr/0774 §3): the current view's, found by its stable key;
 /// none for a map of its own camera, a snapshot, or a link whose view is gone (that one is refused elsewhere).
-pub fn linked_recipe<'a>(map: &crate::kinds::MapItem, views: &'a [NamedModelView]) -> Option<&'a kentos_contracts::ViewRecipe> {
+pub fn linked_recipe<'a>(
+    map: &crate::kinds::MapItem,
+    views: &'a [NamedModelView],
+) -> Option<&'a kentos_contracts::ViewRecipe> {
     linked_view(map, views).and_then(|v| v.recipe.as_ref())
 }
 
 /// The current named view a map is linked to, found by its stable key; none for a map of its own camera, a snapshot,
 /// or a link whose view is gone.
-pub fn linked_view<'a>(map: &crate::kinds::MapItem, views: &'a [NamedModelView]) -> Option<&'a NamedModelView> {
+pub fn linked_view<'a>(
+    map: &crate::kinds::MapItem,
+    views: &'a [NamedModelView],
+) -> Option<&'a NamedModelView> {
     let Source::ViewLink { view: link } = &map.source else {
         return None;
     };

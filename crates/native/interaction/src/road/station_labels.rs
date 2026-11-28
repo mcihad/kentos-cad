@@ -305,7 +305,10 @@ impl StationLabels {
             && let Some(ms) = &p.ms
         {
             let n = p.pts.len().min(ms.len());
-            let seg = |i: usize| ((p.pts[i + 1].x - p.pts[i].x).powi(2) + (p.pts[i + 1].y - p.pts[i].y).powi(2)).sqrt();
+            let seg = |i: usize| {
+                ((p.pts[i + 1].x - p.pts[i].x).powi(2) + (p.pts[i + 1].y - p.pts[i].y).powi(2))
+                    .sqrt()
+            };
             let first = ms[..n].iter().position(Option::is_some);
             let last = ms[..n].iter().rposition(Option::is_some);
             if let (Some(first), Some(last)) = (first, last) {

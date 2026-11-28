@@ -9,24 +9,26 @@
 pub mod access;
 pub mod area;
 pub mod blocked;
+mod build;
 pub mod check;
 pub mod clock;
 pub mod closest;
 pub mod graph;
-mod build;
-mod rebuild;
 pub mod input;
+mod rebuild;
 pub mod route;
 pub mod rules;
 pub mod search;
 pub mod session;
-pub mod trace;
 pub mod subnetworks;
 pub mod terminals;
+pub mod trace;
 pub mod turns;
 
+pub use access::{
+    Access, AccessRules, Closing, ClosureRule, Varied, day_of, hours_of, weekday_of, weekdays_of,
+};
 pub use blocked::{Blocked, Blocker, Why};
-pub use access::{Access, AccessRules, ClosureRule, Closing, Varied, day_of, hours_of, weekday_of, weekdays_of};
 pub use check::{Checked, Problem, ProblemKind};
 pub use graph::{BuildReport, EdgeIn, Graph, JunctionIn, Location, Role};
 pub use rebuild::Rebuilt;
@@ -37,7 +39,7 @@ pub use session::{
     Line, Missing, NetworkSession, Place, Reached, Refusal, Routed, Served, ServedArea, ServedLine,
     Subnet, TraceAnswer, Valve, points_of, problem_name,
 };
-pub use trace::TraceKind;
 pub use subnetworks::{Reach, Reached as SubnetReached};
 pub use terminals::{NO_DEVICE, NO_TERMINAL, Terminals};
+pub use trace::TraceKind;
 pub use turns::{Level, TurnIn};

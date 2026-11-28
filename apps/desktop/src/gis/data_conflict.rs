@@ -52,7 +52,11 @@ impl Conflict {
                 }
             })
             .collect();
-        Conflict { layers, rows, chosen }
+        Conflict {
+            layers,
+            rows,
+            chosen,
+        }
     }
 
     /// Whether every clash has a choice.
@@ -93,7 +97,9 @@ impl App {
         ));
         for (r_at, (r, picks)) in c.rows.iter().zip(&c.chosen).enumerate() {
             let layer = self.data_layer_name(&r.layer);
-            let mut block = Column::new().spacing(6).push(label::strong(format!("Satır {} · {layer}", r.key)));
+            let mut block = Column::new()
+                .spacing(6)
+                .push(label::strong(format!("Satır {} · {layer}", r.key)));
             let (mine, theirs) = ways(r);
             let choice = |i: usize, pick: Option<bool>| -> Element<'_, Message> {
                 let options = [Way(true, mine), Way(false, theirs)];
@@ -103,7 +109,10 @@ impl App {
                     Some(false) => options[1],
                     None => Way(true, ""),
                 };
-                Segmented::new(options, chosen, move |w: Way| event(Event::Choose(r_at, i, w.0))).into()
+                Segmented::new(options, chosen, move |w: Way| {
+                    event(Event::Choose(r_at, i, w.0))
+                })
+                .into()
             };
             if r.gone() || r.deleted_here() {
                 let what = if r.gone() {
@@ -114,12 +123,16 @@ impl App {
                 } else {
                     "Sizde silinmiş; tabloda değişmiş."
                 };
-                let line = row![container(label::body(what)).width(Fill)].spacing(12).align_y(Center);
+                let line = row![container(label::body(what)).width(Fill)]
+                    .spacing(12)
+                    .align_y(Center);
                 let line = if r.gone() && r.mine.is_none() {
                     line.push(label::muted("Bırakılır."))
                 } else if r.gone() && !r.may_add {
                     // No new row where the connection may not add one (docs/adr/9162): the draft is let go.
-                    line.push(label::muted("Bırakılır: bu bağlantının tabloya satır ekleme yetkisi yok."))
+                    line.push(label::muted(
+                        "Bırakılır: bu bağlantının tabloya satır ekleme yetkisi yok.",
+                    ))
                 } else {
                     line.push(choice(0, picks.first().copied().flatten()))
                 };
@@ -168,8 +181,14 @@ impl App {
         Frame::new(TITLE)
             .push(body)
             .action(words::secondary(KEEP, Some(event(Event::KeepConflict))))
-            .action(words::secondary(ALL_MINE, Some(event(Event::SaveOver(c.layers.clone())))))
-            .action(words::primary(SETTLE, c.ready().then(|| event(Event::Settle))))
+            .action(words::secondary(
+                ALL_MINE,
+                Some(event(Event::SaveOver(c.layers.clone()))),
+            ))
+            .action(words::primary(
+                SETTLE,
+                c.ready().then(|| event(Event::Settle)),
+            ))
             .width(860.0)
             .modal(event(Event::KeepConflict))
     }
@@ -180,7 +199,11 @@ impl App {
             .layers
             .iter()
             .map(|l| {
-                let ch = self.document.as_ref().map(|d| d.model.data_changes(l)).unwrap_or_default();
+                let ch = self
+                    .document
+                    .as_ref()
+                    .map(|d| d.model.data_changes(l))
+                    .unwrap_or_default();
                 ch.added.len() + ch.changed.len() + ch.deleted.len()
             })
             .sum();
@@ -188,13 +211,17 @@ impl App {
             .rows
             .iter()
             .zip(&c.chosen)
-            .filter(|(r, p)| (r.gone() || r.deleted_here()) && p.first().copied().flatten() == Some(false))
+            .filter(|(r, p)| {
+                (r.gone() || r.deleted_here()) && p.first().copied().flatten() == Some(false)
+            })
             .count();
         let written = waiting.saturating_sub(dropped);
         if dropped == 0 {
             format!("Seçilenleri kaydet {written} satırı tek işlemde yazar.")
         } else {
-            format!("Seçilenleri kaydet {written} satırı tek işlemde yazar; {dropped} satırın taslağı bırakılır.")
+            format!(
+                "Seçilenleri kaydet {written} satırı tek işlemde yazar; {dropped} satırın taslağı bırakılır."
+            )
         }
     }
 
@@ -216,15 +243,29 @@ impl App {
     /// Whether it settled; the layers to save.
     pub(crate) fn data_conflict_settle(&mut self) -> Option<Vec<String>> {
         // Not every clash chosen: the window stays as it is.
-        if !self.gis.data_edits.conflict.as_ref().is_some_and(Conflict::ready) {
+        if !self
+            .gis
+            .data_edits
+            .conflict
+            .as_ref()
+            .is_some_and(Conflict::ready)
+        {
             return None;
         }
         let c = self.gis.data_edits.conflict.take()?;
         let doc = self.document.as_mut()?;
         // The shared settling (docs/adr/9193), as cad.layers.session's choices settle.
-        let picks: Vec<Vec<bool>> =
-            c.chosen.iter().map(|r| r.iter().map(|p| p.unwrap_or(false)).collect()).collect();
-        let settled = match kentos_native_application::data_clash::settle(&mut doc.model, &c.rows, &picks, "Çakışmayı çöz") {
+        let picks: Vec<Vec<bool>> = c
+            .chosen
+            .iter()
+            .map(|r| r.iter().map(|p| p.unwrap_or(false)).collect())
+            .collect();
+        let settled = match kentos_native_application::data_clash::settle(
+            &mut doc.model,
+            &c.rows,
+            &picks,
+            "Çakışmayı çöz",
+        ) {
             Ok(s) => s,
             Err(why) => {
                 self.warn(why);

@@ -15,13 +15,29 @@ use crate::keymap::{Keymap, Source};
 
 impl App {
     /// The chosen command's form.
-    pub(super) fn keys_details<'a>(&self, map: &Keymap, page: &'a KeysPage, command: &'static Command) -> Element<'a, Message> {
-        let keys: Vec<String> = map.keys_of(command).iter().map(|k| (*k).to_owned()).collect();
+    pub(super) fn keys_details<'a>(
+        &self,
+        map: &Keymap,
+        page: &'a KeysPage,
+        command: &'static Command,
+    ) -> Element<'a, Message> {
+        let keys: Vec<String> = map
+            .keys_of(command)
+            .iter()
+            .map(|k| (*k).to_owned())
+            .collect();
         let user_keys = map.keys_source(command.id) == Source::User;
-        let names: Vec<String> = map.names_of(command.id).iter().map(|n| (*n).to_owned()).collect();
+        let names: Vec<String> = map
+            .names_of(command.id)
+            .iter()
+            .map(|n| (*n).to_owned())
+            .collect();
         let mut key_row = Row::new().spacing(6).align_y(Center);
         for key in &keys {
-            key_row = key_row.push(removable(shown(key), message(KeysEdit::RemoveKey(key.clone()))));
+            key_row = key_row.push(removable(
+                shown(key),
+                message(KeysEdit::RemoveKey(key.clone())),
+            ));
         }
         if keys.is_empty() {
             key_row = key_row.push(label::caption("Tuşu yok").style(style::text::muted));
@@ -40,13 +56,25 @@ impl App {
         let lost: Vec<String> = map
             .lost_keys(command)
             .into_iter()
-            .map(|(k, owner)| format!("“{}” {}", shown(k), catalog().get(owner).map_or(owner, |c| c.title)))
+            .map(|(k, owner)| {
+                format!(
+                    "“{}” {}",
+                    shown(k),
+                    catalog().get(owner).map_or(owner, |c| c.title)
+                )
+            })
             .collect();
         let key_help = match (user_keys, defaults.is_empty()) {
             (true, true) => "Tuşları sizin verdiğiniz; KentOS'ta tuşu yoktu.".to_owned(),
-            (true, false) => format!("Tuşları sizin verdiğiniz; KentOS'un verdiği: {}.", defaults.join(", ")),
+            (true, false) => format!(
+                "Tuşları sizin verdiğiniz; KentOS'un verdiği: {}.",
+                defaults.join(", ")
+            ),
             (false, _) if !lost.is_empty() => {
-                format!("KentOS'un verdiği tuşlardan sizin başka komuta verdikleriniz: {}.", lost.join(", "))
+                format!(
+                    "KentOS'un verdiği tuşlardan sizin başka komuta verdikleriniz: {}.",
+                    lost.join(", ")
+                )
             }
             (false, true) => "KentOS bu komuta tuş vermemiş; Tuş ekle ile verin.".to_owned(),
             (false, false) => "KentOS'un verdiği tuşlar.".to_owned(),
@@ -66,7 +94,10 @@ impl App {
         };
         let mut name_row = Row::new().spacing(6).align_y(Center);
         for name in &names {
-            name_row = name_row.push(removable(name.clone(), message(KeysEdit::RemoveName(name.clone()))));
+            name_row = name_row.push(removable(
+                name.clone(),
+                message(KeysEdit::RemoveName(name.clone())),
+            ));
         }
         if names.is_empty() {
             name_row = name_row.push(label::caption("Yok").style(style::text::muted));
@@ -113,12 +144,21 @@ impl App {
             form.row(reset),
         ]
         .spacing(8)
-        .padding(iced::Padding { right: 12.0, ..iced::Padding::ZERO })
+        .padding(iced::Padding {
+            right: 12.0,
+            ..iced::Padding::ZERO
+        })
         .into()
     }
 
     /// The banner of a key or a name another command has: whose, and Taşı or Vazgeç.
-    fn taken_banner<'a>(&self, map: &Keymap, what: String, from: &'static str, key: bool) -> Element<'a, Message> {
+    fn taken_banner<'a>(
+        &self,
+        map: &Keymap,
+        what: String,
+        from: &'static str,
+        key: bool,
+    ) -> Element<'a, Message> {
         let Some(other) = catalog().get(from) else {
             return space::vertical().height(0).into();
         };
@@ -130,7 +170,11 @@ impl App {
         let here = if self.offers(from) {
             String::new()
         } else {
-            format!(" {} {} yok; onun olduğu yerde geçerlidir.", other.title, self.here_words())
+            format!(
+                " {} {} yok; onun olduğu yerde geçerlidir.",
+                other.title,
+                self.here_words()
+            )
         };
         Banner::warning(format!(
             "“{what}” şu an {} komutunun {whose}.{here} Bu komuta taşınırsa {} onu kullanamaz.",
@@ -145,7 +189,9 @@ impl App {
 /// Keys as caps, side by side.
 pub(super) fn caps<'a>(keys: Vec<String>) -> Element<'a, Message> {
     keys.into_iter()
-        .fold(Row::new().spacing(4), |row, key| row.push(crate::shortcuts::kbd(key)))
+        .fold(Row::new().spacing(4), |row, key| {
+            row.push(crate::shortcuts::kbd(key))
+        })
         .into()
 }
 
@@ -155,5 +201,10 @@ fn removable<'a>(text: String, remove: Message) -> Element<'a, Message> {
         .on_press(remove)
         .padding(2)
         .style(style::button::ghost);
-    container(row![crate::shortcuts::kbd(text), close].spacing(2).align_y(Center)).into()
+    container(
+        row![crate::shortcuts::kbd(text), close]
+            .spacing(2)
+            .align_y(Center),
+    )
+    .into()
 }

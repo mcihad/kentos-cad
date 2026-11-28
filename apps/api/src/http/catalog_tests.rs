@@ -218,7 +218,12 @@ async fn catalog_routes_answer_404_alike_and_check_every_permission() {
             "POST",
             &format!("{uri}/commands"),
             &ayse,
-            envelope(&t, &project, "project.metadata.update", json!({ "tags": ["arşiv"] })),
+            envelope(
+                &t,
+                &project,
+                "project.metadata.update",
+                json!({ "tags": ["arşiv"] }),
+            ),
         ),
     )
     .await;

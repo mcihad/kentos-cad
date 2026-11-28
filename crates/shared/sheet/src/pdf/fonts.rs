@@ -129,7 +129,13 @@ impl Fonts {
             .find(|(_, e)| e.name == resource)
             .map_or_else(
                 || resource.to_owned(),
-                |((f, w, i), _)| if *i { format!("{f}-{w}-italic") } else { format!("{f}-{w}") },
+                |((f, w, i), _)| {
+                    if *i {
+                        format!("{f}-{w}-italic")
+                    } else {
+                        format!("{f}-{w}")
+                    }
+                },
             )
     }
 
@@ -256,7 +262,10 @@ impl Fonts {
                 },
             );
         }
-        Ok(Fonts { by_key, glyphs: super::glyphs::Fonts::embed(doc, &usage.glyphs)? })
+        Ok(Fonts {
+            by_key,
+            glyphs: super::glyphs::Fonts::embed(doc, &usage.glyphs)?,
+        })
     }
 }
 

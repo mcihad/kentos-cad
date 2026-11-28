@@ -13,18 +13,18 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{AlignmentFitMethod, AlignmentFitted, AlignmentsFit, CommandWarning, Entity};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_alignments_fit};
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::label;
 
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -34,8 +34,10 @@ use crate::traces::Control;
 pub const TITLE: &str = "Çizgiden aks";
 const CLOSE: &str = "Kapat";
 const MAKE: &str = "Aksı oluştur";
-const METHODS: [(&str, AlignmentFitMethod); 2] =
-    [("Eleman eleman", AlignmentFitMethod::Elements), ("En iyi uyum", AlignmentFitMethod::BestFit)];
+const METHODS: [(&str, AlignmentFitMethod); 2] = [
+    ("Eleman eleman", AlignmentFitMethod::Elements),
+    ("En iyi uyum", AlignmentFitMethod::BestFit),
+];
 
 /// The alignment as last read.
 #[derive(Debug, Clone, Default)]
@@ -78,7 +80,10 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.replace(',', ".")
+        .parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 impl Window {
@@ -142,7 +147,13 @@ impl RoadAlignmentFitWindowApp for App {
             source,
             method: AlignmentFitMethod::Elements,
             reverse: false,
-            fields: [String::new(), String::new(), String::new(), "0.05".into(), String::new()],
+            fields: [
+                String::new(),
+                String::new(),
+                String::new(),
+                "0.05".into(),
+                String::new(),
+            ],
             preview: Preview::default(),
         }));
         self.dialog = Some(crate::road::dialog(road::RoadDialogKind::RoadAlignmentFit));
@@ -202,9 +213,14 @@ impl RoadAlignmentFitWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let result = road_alignments_fit::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        let Some(out) = self.answered(result) else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result =
+            road_alignments_fit::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(out) = self.answered(result) else {
+            return Task::none();
+        };
         self.say(
             Level::Success,
             format!(
@@ -225,16 +241,24 @@ impl RoadAlignmentFitWindowApp for App {
         let Some(w) = &self.modules.road().road_alignment_fit_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let on_method = Select::new(
             METHODS.iter().map(|(n, _)| Choice::new(*n)),
             METHODS.iter().position(|(_, m)| *m == w.method),
             |i| msg(Event::Method(METHODS[i].1)),
         );
         let field = |hint: &'static str, k: usize, width: f32| {
-            kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width)
+            kentos_ui::widget::text_field(hint, &w.fields[k])
+                .on_input(move |t| msg(Event::Field(k, t)))
+                .width(width)
         };
         let mut top = row![
             words::field("Yöntem", container(on_method).width(150), None),
@@ -242,14 +266,27 @@ impl RoadAlignmentFitWindowApp for App {
         ]
         .spacing(10);
         top = match w.method {
-            AlignmentFitMethod::Elements => top.push(words::field("Kurp yarıçapı (m)", field("kurpsuz", 1, 110.0), None)),
-            AlignmentFitMethod::BestFit => top.push(words::field("En büyük yarıçap (m)", field("örn. 500", 2, 120.0), None)),
+            AlignmentFitMethod::Elements => top.push(words::field(
+                "Kurp yarıçapı (m)",
+                field("kurpsuz", 1, 110.0),
+                None,
+            )),
+            AlignmentFitMethod::BestFit => top.push(words::field(
+                "En büyük yarıçap (m)",
+                field("örn. 500", 2, 120.0),
+                None,
+            )),
         };
         top = top
             .push(words::field("Tolerans (m)", field("yok", 3, 90.0), None))
             .push(words::field("Baş km (m)", field("0", 4, 90.0), None))
-            .push(kentos_ui::widget::Switch::new(w.reverse, |r| msg(Event::Reverse(r))).label("Ters yön"));
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top.align_y(iced::alignment::Vertical::Bottom));
+            .push(
+                kentos_ui::widget::Switch::new(w.reverse, |r| msg(Event::Reverse(r)))
+                    .label("Ters yön"),
+            );
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(10.0)
+            .push(top.align_y(iced::alignment::Vertical::Bottom));
         match (&w.preview.why, &w.preview.fitted) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(f)) => {
@@ -264,36 +301,62 @@ impl RoadAlignmentFitWindowApp for App {
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
-                let picture = crate::picture::picture(iced::widget::canvas(Plan { source: &w.source, line: &w.preview.line, fitted: f }).width(Fill).height(Fill), TITLE);
+                let picture = crate::picture::picture(
+                    iced::widget::canvas(Plan {
+                        source: &w.source,
+                        line: &w.preview.line,
+                        fitted: f,
+                    })
+                    .width(Fill)
+                    .height(Fill),
+                    TITLE,
+                );
                 use crate::road_dialog::{col, grouped, num};
                 let list = crate::road_dialog::sheet_fill(
-                    vec![col("PI", 64.0), num("Y (m)", 120.0), num("X (m)", 120.0), num("R (m)", 96.0)],
+                    vec![
+                        col("PI", 64.0),
+                        num("Y (m)", 120.0),
+                        num("X (m)", 120.0),
+                        num("R (m)", 96.0),
+                    ],
                     f.pis
                         .iter()
-                        .map(|p| vec![p.id.clone(), grouped(p.x, 3), grouped(p.y, 3), if p.radius > 0.0 { grouped(p.radius, 3) } else { "—".into() }])
+                        .map(|p| {
+                            vec![
+                                p.id.clone(),
+                                grouped(p.x, 3),
+                                grouped(p.y, 3),
+                                if p.radius > 0.0 {
+                                    grouped(p.radius, 3)
+                                } else {
+                                    "—".into()
+                                },
+                            ]
+                        })
                         .collect(),
                     "PI yok",
                 );
                 body = body.push_grow(
-                    row![picture, list]
-                        .spacing(12)
-                        .height(Fill),
+                    row![picture, list].spacing(12).height(Fill),
                     typography::scaled(300.0),
                 );
             }
             _ => {}
         }
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                label::caption("Çizgi kalır; aks tek geri alma adımı.").style(muted),
-                space::horizontal().width(Fill),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-                words::primary(MAKE, w.preview.fitted.as_ref().map(|_| msg(Event::Make))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(960.0).modal(msg(Event::Close))
+        let footer = row![
+            label::caption("Çizgi kalır; aks tek geri alma adımı.").style(muted),
+            space::horizontal().width(Fill),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+            words::primary(MAKE, w.preview.fitted.as_ref().map(|_| msg(Event::Make))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(960.0)
+            .modal(msg(Event::Close))
     }
 
     fn road_alignment_fit_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -303,11 +366,15 @@ impl RoadAlignmentFitWindowApp for App {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(MAKE) => Some(msg(Event::Make)),
-            Control::Press("Eleman eleman") => Some(msg(Event::Method(AlignmentFitMethod::Elements))),
+            Control::Press("Eleman eleman") => {
+                Some(msg(Event::Method(AlignmentFitMethod::Elements)))
+            }
             Control::Press("En iyi uyum") => Some(msg(Event::Method(AlignmentFitMethod::BestFit))),
             Control::Fill("Ad", t) => Some(msg(Event::Field(0, t.to_owned()))),
             Control::Fill("Kurp yarıçapı (m)", t) => Some(msg(Event::Field(1, t.to_owned()))),
-            Control::Fill("En büyük yarıçap (m)", t) => Some(msg(Event::Field(2, t.to_owned()))),
+            Control::Fill("En büyük yarıçap (m)", t) => {
+                Some(msg(Event::Field(2, t.to_owned())))
+            }
             Control::Fill("Tolerans (m)", t) => Some(msg(Event::Field(3, t.to_owned()))),
             Control::Fill("Baş km (m)", t) => Some(msg(Event::Field(4, t.to_owned()))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
@@ -323,7 +390,11 @@ pub(crate) fn drawn_points(e: &Entity) -> Option<Vec<[f64; 2]>> {
             let bulges = p.bulges.clone().unwrap_or_default();
             let mut out = Vec::new();
             for (i, w) in p.pts.windows(2).enumerate() {
-                out.extend(arc_points([w[0].x, w[0].y], [w[1].x, w[1].y], bulges.get(i).copied().unwrap_or(0.0)));
+                out.extend(arc_points(
+                    [w[0].x, w[0].y],
+                    [w[1].x, w[1].y],
+                    bulges.get(i).copied().unwrap_or(0.0),
+                ));
             }
             if let Some(last) = p.pts.last() {
                 out.push([last.x, last.y]);
@@ -345,13 +416,17 @@ fn arc_points(a: [f64; 2], b: [f64; 2], g: f64) -> Vec<[f64; 2]> {
     let turn = 4.0 * g.atan();
     let r = chord / (2.0 * (0.5 * turn).sin()).abs();
     let h = r * (0.5 * turn).cos() * turn.signum();
-    let c = [0.5 * (a[0] + b[0]) - dy / chord * h, 0.5 * (a[1] + b[1]) + dx / chord * h];
+    let c = [
+        0.5 * (a[0] + b[0]) - dy / chord * h,
+        0.5 * (a[1] + b[1]) + dx / chord * h,
+    ];
     let a0 = (a[1] - c[1]).atan2(a[0] - c[0]);
-    (0..16).map(|k| {
-        let t = a0 + turn * k as f64 / 16.0;
-        [c[0] + r * t.cos(), c[1] + r * t.sin()]
-    })
-    .collect()
+    (0..16)
+        .map(|k| {
+            let t = a0 + turn * k as f64 / 16.0;
+            [c[0] + r * t.cos(), c[1] + r * t.sin()]
+        })
+        .collect()
 }
 
 /// The line (muted), the alignment over it and its PIs, north up.
@@ -364,7 +439,14 @@ struct Plan<'a> {
 impl canvas::Program<Message> for Plan<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let pis: Vec<[f64; 2]> = self.fitted.pis.iter().map(|p| [p.x, p.y]).collect();
@@ -372,7 +454,12 @@ impl canvas::Program<Message> for Plan<'_> {
         if pts.is_empty() {
             return vec![frame.into_geometry()];
         }
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in &pts {
             x0 = x0.min(p[0]);
             x1 = x1.max(p[0]);
@@ -380,7 +467,8 @@ impl canvas::Program<Message> for Plan<'_> {
             y1 = y1.max(p[1]);
         }
         let pad = 18.0;
-        let scale = ((bounds.width - 2.0 * pad) as f64 / (x1 - x0).max(1e-6)).min((bounds.height - 2.0 * pad) as f64 / (y1 - y0).max(1e-6));
+        let scale = ((bounds.width - 2.0 * pad) as f64 / (x1 - x0).max(1e-6))
+            .min((bounds.height - 2.0 * pad) as f64 / (y1 - y0).max(1e-6));
         let (cx, cy) = (0.5 * (x0 + x1), 0.5 * (y0 + y1));
         let at = |p: [f64; 2]| {
             Point::new(
@@ -401,14 +489,31 @@ impl canvas::Program<Message> for Plan<'_> {
         // The tangents through the PIs, thin and dashed.
         frame.stroke(
             &polyline(&pis),
-            Stroke { line_dash: canvas::LineDash { segments: &[4.0, 3.0], offset: 0 }, ..Stroke::default() }
-                .with_width(0.8)
-                .with_color(tk.muted),
+            Stroke {
+                line_dash: canvas::LineDash {
+                    segments: &[4.0, 3.0],
+                    offset: 0,
+                },
+                ..Stroke::default()
+            }
+            .with_width(0.8)
+            .with_color(tk.muted),
         );
-        frame.stroke(&polyline(self.source), Stroke::default().with_width(4.0).with_color(iced::Color { a: 0.35, ..tk.text }));
-        frame.stroke(&polyline(self.line), Stroke::default().with_width(1.6).with_color(tk.danger));
+        frame.stroke(
+            &polyline(self.source),
+            Stroke::default()
+                .with_width(4.0)
+                .with_color(iced::Color { a: 0.35, ..tk.text }),
+        );
+        frame.stroke(
+            &polyline(self.line),
+            Stroke::default().with_width(1.6).with_color(tk.danger),
+        );
         for p in &pis {
-            frame.stroke(&Path::circle(at(*p), 3.5), Stroke::default().with_width(1.2).with_color(tk.accent));
+            frame.stroke(
+                &Path::circle(at(*p), 3.5),
+                Stroke::default().with_width(1.2).with_color(tk.accent),
+            );
         }
         vec![frame.into_geometry()]
     }

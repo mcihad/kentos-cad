@@ -44,7 +44,10 @@ fn size(answer: &Value, name: &str) -> (f64, f64) {
         .iter()
         .find(|s| s["name"] == name)
         .unwrap_or_else(|| panic!("{name}'s size: {answer}"));
-    (s["width"].as_f64().expect("width"), s["depth"].as_f64().expect("depth"))
+    (
+        s["width"].as_f64().expect("width"),
+        s["depth"].as_f64().expect("depth"),
+    )
 }
 
 fn close(a: f64, b: f64) -> bool {
@@ -55,7 +58,9 @@ fn close(a: f64, b: f64) -> bool {
 fn ground(s: &Session, uid: &str) -> [f64; 4] {
     let doc = s.document();
     let id = uid.parse::<kentos_domain::Uuid>().expect("a uid");
-    let slot = doc.slot_of(id).unwrap_or_else(|| panic!("{uid} in the drawing"));
+    let slot = doc
+        .slot_of(id)
+        .unwrap_or_else(|| panic!("{uid} in the drawing"));
     let e = doc.get(slot).expect("the object");
     kentos_native_application::sheets_fit::extent_of(doc, std::iter::once(e)).expect("a box")
 }
@@ -87,11 +92,28 @@ fn library_blocks_come_in_at_their_real_size_and_go_round() {
                 "path": file("kitaplik/yemek/yemek-takimi.dxf"), "mode": "blocks", "names": ["Yemek masası"] } }))
             .expect("answers"));
         let (w, d) = size(&set, "Yemek masası");
-        assert!(close(w, 1.6) && close(d, 1.9), "{unit:?}: the table and its chairs {w} × {d}");
-        let table = s.blocks().into_iter().find(|b| b.name == "Yemek masası").expect("the table").clone();
-        let chair = s.blocks().into_iter().find(|b| b.name == "Sandalye").expect("the chair").id;
+        assert!(
+            close(w, 1.6) && close(d, 1.9),
+            "{unit:?}: the table and its chairs {w} × {d}"
+        );
+        let table = s
+            .blocks()
+            .into_iter()
+            .find(|b| b.name == "Yemek masası")
+            .expect("the table")
+            .clone();
+        let chair = s
+            .blocks()
+            .into_iter()
+            .find(|b| b.name == "Sandalye")
+            .expect("the chair")
+            .id;
         assert_eq!(
-            table.entities.iter().filter(|e| matches!(e, Entity::Insert(i) if i.block == chair)).count(),
+            table
+                .entities
+                .iter()
+                .filter(|e| matches!(e, Entity::Insert(i) if i.block == chair))
+                .count(),
             4
         );
         // The toilet names no unit: refused, then taken in millimetres.
@@ -108,7 +130,10 @@ fn library_blocks_come_in_at_their_real_size_and_go_round() {
         assert!(close(w, 0.38) && close(d, 0.55), "{unit:?}: {w} × {d}");
 
         // The bed placed turned a quarter and mirrored: 2.00 × 0.90 on the ground, whatever the plan's unit.
-        let layer = s.summary()["activeLayer"].as_str().expect("a layer").to_owned();
+        let layer = s.summary()["activeLayer"]
+            .as_str()
+            .expect("a layer")
+            .to_owned();
         let placed = ok(s
             .call(json!({ "command": "cad.blocks.insert", "input": {
                 "name": "Yatak 90", "at": { "x": 10.0, "y": 20.0 }, "rotation": std::f64::consts::FRAC_PI_2,
@@ -116,7 +141,12 @@ fn library_blocks_come_in_at_their_real_size_and_go_round() {
             .expect("answers"));
         let bed = placed["output"]["uid"].as_str().expect("its id").to_owned();
         let [x0, y0, x1, y1] = ground(&s, &bed);
-        assert!(close(x1 - x0, 2.0) && close(y1 - y0, 0.9), "{unit:?}: {} × {}", x1 - x0, y1 - y0);
+        assert!(
+            close(x1 - x0, 2.0) && close(y1 - y0, 0.9),
+            "{unit:?}: {} × {}",
+            x1 - x0,
+            y1 - y0
+        );
         // Mirrored in its x axis, then turned: its foot (local +y) runs towards +x.
         assert!(close(x0, 10.0) && close(x1, 12.0), "{unit:?}: {x0} … {x1}");
 
@@ -124,16 +154,29 @@ fn library_blocks_come_in_at_their_real_size_and_go_round() {
         let path = dir.join(format!("daire-{unit:?}.kcad"));
         s.save(Some(&path)).expect("saved");
         let again = Session::open(&path).expect("opened");
-        let bed_block = again.blocks().into_iter().find(|b| b.name == "Yatak 90").expect("the bed").clone();
+        let bed_block = again
+            .blocks()
+            .into_iter()
+            .find(|b| b.name == "Yatak 90")
+            .expect("the bed")
+            .clone();
         assert_eq!(bed_block.units, Some(BlockUnits::Mm));
         assert_eq!(
             bed_block.card.as_ref().and_then(|c| c.category.as_deref()),
             Some("kitaplik/yatak-odasi/yatak-odasi")
         );
-        let rug = again.blocks().into_iter().find(|b| b.name == "Kilim").expect("the rug").units;
+        let rug = again
+            .blocks()
+            .into_iter()
+            .find(|b| b.name == "Kilim")
+            .expect("the rug")
+            .units;
         assert_eq!(rug, Some(BlockUnits::Cm), "the rug in its own unit");
         let [x0, y0, x1, y1] = ground(&again, &bed);
-        assert!(close(x1 - x0, 2.0) && close(y1 - y0, 0.9), "{unit:?}: as saved");
+        assert!(
+            close(x1 - x0, 2.0) && close(y1 - y0, 0.9),
+            "{unit:?}: as saved"
+        );
 
         // Written to DXF: the bed's record in millimetres, its insert mirrored.
         let dxf = dir.join(format!("daire-{unit:?}.dxf"));
@@ -143,7 +186,11 @@ fn library_blocks_come_in_at_their_real_size_and_go_round() {
         if std::env::var_os("KENTOS_WRITE_LIBRARY").is_some() {
             let out = std::path::Path::new(ROOT).join("out");
             std::fs::create_dir_all(&out).expect("the output folder");
-            let name = if unit == DrawingUnit::M { "daire-m.dxf" } else { "daire-mm.dxf" };
+            let name = if unit == DrawingUnit::M {
+                "daire-m.dxf"
+            } else {
+                "daire-mm.dxf"
+            };
             std::fs::copy(&dxf, out.join(name)).expect("copied");
         }
     }

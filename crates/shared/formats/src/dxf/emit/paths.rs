@@ -6,7 +6,15 @@ use super::*;
 
 /// A clockwise arc: DXF stores it mirrored (angles negated). The start that
 /// meets the previous edge decides when a writer stored it the other way.
-pub(super) fn arc_edge(c: Vec2, r: f64, a0: f64, a1: f64, ccw: bool, prev: Option<Vec2>, out: &mut Vec<Vec2>) {
+pub(super) fn arc_edge(
+    c: Vec2,
+    r: f64,
+    a0: f64,
+    a1: f64,
+    ccw: bool,
+    prev: Option<Vec2>,
+    out: &mut Vec<Vec2>,
+) {
     let at = |d: f64| {
         let (s, co) = sin_cos_deg(d);
         v(c.x + r * co, c.y + r * s)
@@ -37,7 +45,9 @@ pub(super) fn path_loop(path: &Path) -> Option<CoreLoop> {
     match path {
         Path::Poly { pts, bulges } => {
             let mut pts: Vec<CoreVec2> = pts.iter().map(p2).collect();
-            let mut bulges: Vec<f64> = (0..pts.len()).map(|i| bulges.get(i).copied().unwrap_or(0.0)).collect();
+            let mut bulges: Vec<f64> = (0..pts.len())
+                .map(|i| bulges.get(i).copied().unwrap_or(0.0))
+                .collect();
             if pts.len() > 1 && pts.first() == pts.last() {
                 pts.pop();
                 bulges.pop();
@@ -59,8 +69,12 @@ pub(super) fn path_loop(path: &Path) -> Option<CoreLoop> {
                 .flat_map(|e| match e {
                     Edge::Line { a, b } => vec![a[0].abs(), a[1].abs(), b[0].abs(), b[1].abs()],
                     Edge::Arc { c, r, .. } => vec![c[0].abs() + r, c[1].abs() + r],
-                    Edge::Ellipse { c, major, .. } => vec![c[0].abs() + hypot(major[0], major[1]), c[1].abs()],
-                    Edge::Spline { ctrl, .. } => ctrl.iter().flat_map(|p| [p[0].abs(), p[1].abs()]).collect(),
+                    Edge::Ellipse { c, major, .. } => {
+                        vec![c[0].abs() + hypot(major[0], major[1]), c[1].abs()]
+                    }
+                    Edge::Spline { ctrl, .. } => {
+                        ctrl.iter().flat_map(|p| [p[0].abs(), p[1].abs()]).collect()
+                    }
                 })
                 .fold(1.0_f64, f64::max);
             let tol = 1e-6 + 1e-9 * size;
@@ -86,7 +100,9 @@ pub(super) fn path_loop(path: &Path) -> Option<CoreLoop> {
                             let pv = prev.map(|p| Vec2 { x: p.x, y: p.y });
                             let to = |x: CoreVec2| Vec2 { x: x.x, y: x.y };
                             let (s, e) = match pv {
-                                Some(p) if dist(to(at(*a0)), p) < dist(to(at(-a0)), p) => (*a0, *a1),
+                                Some(p) if dist(to(at(*a0)), p) < dist(to(at(-a0)), p) => {
+                                    (*a0, *a1)
+                                }
                                 _ => (-a0, -a1),
                             };
                             let span = (s - e).rem_euclid(360.0);
@@ -156,7 +172,11 @@ pub(super) fn path_loop(path: &Path) -> Option<CoreLoop> {
                     return None;
                 }
                 pts.push(start);
-                bulges.push(if bulge.is_finite() { bulge } else { return None });
+                bulges.push(if bulge.is_finite() {
+                    bulge
+                } else {
+                    return None;
+                });
                 curves.push(curve);
                 ends.push(end);
                 prev = Some(end);
@@ -199,7 +219,10 @@ pub(super) struct Boundary {
 /// four paths of one line each was no ring at all and was left out (the YILTAŞ DWGs' 130 column hatches). A piece
 /// nothing meets comes back with its path's index: it stays the ring its path always made, closed by its last edge.
 pub(super) fn stitch(mut pieces: Vec<(usize, Vec<Vec2>)>) -> Vec<(Option<usize>, Vec<Vec2>)> {
-    let (mut lo, mut hi) = (v(f64::INFINITY, f64::INFINITY), v(f64::NEG_INFINITY, f64::NEG_INFINITY));
+    let (mut lo, mut hi) = (
+        v(f64::INFINITY, f64::INFINITY),
+        v(f64::NEG_INFINITY, f64::NEG_INFINITY),
+    );
     for p in pieces.iter().flat_map(|(_, r)| r) {
         lo = v(lo.x.min(p.x), lo.y.min(p.y));
         hi = v(hi.x.max(p.x), hi.y.max(p.y));
@@ -215,7 +238,10 @@ pub(super) fn stitch(mut pieces: Vec<(usize, Vec<Vec2>)>) -> Vec<(Option<usize>,
             if chain.len() > 2 && near(chain[0], end) {
                 break;
             }
-            match pieces.iter().position(|(_, p)| near(p[0], end) || near(p[p.len() - 1], end)) {
+            match pieces
+                .iter()
+                .position(|(_, p)| near(p[0], end) || near(p[p.len() - 1], end))
+            {
                 Some(i) => {
                     let (_, mut next) = pieces.remove(i);
                     if !near(next[0], end) {

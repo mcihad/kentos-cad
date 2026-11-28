@@ -1,8 +1,8 @@
 //! Protocol pins ignore replay bookkeeping, bind file/context versions, and reject stale source deliveries.
-use std::{fs, path::Path};
-use serde_json::{Value, json};
 use kentos_commands::{CallEnvelope, CallOp, CommandResult};
 use kentos_domain::Document;
+use serde_json::{Value, json};
+use std::{fs, path::Path};
 fn call(
     doc: &mut Document,
     input: Value,

@@ -588,10 +588,17 @@ impl App {
                 // The projects kept in its schemas (docs/adr/9107): read where a schema has the projects table.
                 let mut reads = Vec::new();
                 if let Ok(catalog) = &result
-                    && let Some(c) = kentos_postgis::connections::store().list().into_iter().find(|c| c.name == name)
+                    && let Some(c) = kentos_postgis::connections::store()
+                        .list()
+                        .into_iter()
+                        .find(|c| c.name == name)
                 {
                     let address = c.address();
-                    for r in catalog.relations.iter().filter(|r| r.name == kentos_data::projects::PROJECTS_TABLE) {
+                    for r in catalog
+                        .relations
+                        .iter()
+                        .filter(|r| r.name == kentos_data::projects::PROJECTS_TABLE)
+                    {
                         reads.push(self.read_stored(address.clone(), Some(r.schema.clone())));
                     }
                 }
@@ -620,9 +627,15 @@ impl App {
                     Some(Browse::Failed(d)) => d.message.clone(),
                     _ => "Sunucu parola istiyor.".to_owned(),
                 };
-                self.ask_db_password(&name, reason, crate::db_connections::Retry::Browse(name.clone()));
+                self.ask_db_password(
+                    &name,
+                    reason,
+                    crate::db_connections::Retry::Browse(name.clone()),
+                );
             }
-            Event::AddTable(name, table, area) => return self.add_database_table(name, table, area),
+            Event::AddTable(name, table, area) => {
+                return self.add_database_table(name, table, area);
+            }
             Event::Reproject(yes) => {
                 if let Some(ask) = self.gis.sources.reproject.take()
                     && yes
@@ -948,7 +961,10 @@ impl App {
     pub(crate) fn read_stored(&mut self, address: String, schema: Option<String>) -> Task<Message> {
         let key = stored_key(&address, schema.as_deref());
         off_thread(
-            move || kentos_native_application::project_store::list(&address, schema.as_deref()).unwrap_or_default(),
+            move || {
+                kentos_native_application::project_store::list(&address, schema.as_deref())
+                    .unwrap_or_default()
+            },
             move |list| Event::StoredListed(key, list),
         )
     }
@@ -1134,7 +1150,13 @@ impl App {
     }
 
     /// A database's table bound to a new layer on a thread of its own (exchange/binding.rs, docs/adr/0757).
-    fn bind_from_sources(&mut self, name: &str, table: &str, reproject: bool, area: bool) -> Task<Message> {
+    fn bind_from_sources(
+        &mut self,
+        name: &str,
+        table: &str,
+        reproject: bool,
+        area: bool,
+    ) -> Task<Message> {
         let Some(c) = self.db_store.get(name) else {
             return Task::none();
         };
@@ -1278,7 +1300,11 @@ impl SourcesPanel {
     pub(crate) fn forget_connection(&mut self, name: &str) {
         self.catalogs.remove(name);
         self.open.remove(&connection_key(name));
-        if self.reproject.as_ref().is_some_and(|r| r.connection == name) {
+        if self
+            .reproject
+            .as_ref()
+            .is_some_and(|r| r.connection == name)
+        {
             self.reproject = None;
         }
     }
@@ -1313,7 +1339,8 @@ pub(crate) fn tables_key(origin: &Origin) -> String {
 }
 
 fn origin_of_key(key: &str) -> Option<Origin> {
-    key.strip_prefix("g:").map(|p| Origin::File(PathBuf::from(p)))
+    key.strip_prefix("g:")
+        .map(|p| Origin::File(PathBuf::from(p)))
 }
 
 /// The key of a place's projects (docs/adr/9107): its address and, for a database, its schema.

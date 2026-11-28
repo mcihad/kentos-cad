@@ -40,7 +40,8 @@ fn doc() -> Document {
                      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }],
         "activeLayer": "cizim", "entities": [], "styles": { "items": [], "categories": [] }
     });
-    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     Document::from_snapshot(snapshot).expect("setup")
 }
 
@@ -53,9 +54,17 @@ fn attach(doc: &mut Document, file: &Path, drawing: Option<&Path>) -> Value {
 }
 
 fn state(doc: &mut Document, drawing: &Path) -> String {
-    let answer = run(doc, "cad.xrefs.list", CallOp::Execute, json!({ "drawing": drawing }));
+    let answer = run(
+        doc,
+        "cad.xrefs.list",
+        CallOp::Execute,
+        json!({ "drawing": drawing }),
+    );
     let listed = ok(&answer)["xrefs"].as_array().cloned().unwrap_or_default();
-    let plan = listed.iter().find(|x| x["name"] == "Plan").expect("Plan is listed");
+    let plan = listed
+        .iter()
+        .find(|x| x["name"] == "Plan")
+        .expect("Plan is listed");
     plan["state"].as_str().unwrap_or("").to_owned()
 }
 
@@ -83,23 +92,45 @@ fn a_reload_follows_the_ties_into_the_pieces() {
     // The architect's next version: the second wall gone, so the circle is the second piece now, its radius 1.
     std::fs::copy(fixtures().join("plan2.kcad"), &file).expect("copy");
     assert_eq!(state(&mut d, &drawing), "changed");
-    let answer = run(&mut d, "cad.xrefs.edit", CallOp::Execute,
-                     json!({ "operation": { "kind": "reload", "name": "Plan" }, "drawing": drawing }));
+    let answer = run(
+        &mut d,
+        "cad.xrefs.edit",
+        CallOp::Execute,
+        json!({ "operation": { "kind": "reload", "name": "Plan" }, "drawing": drawing }),
+    );
     assert_eq!(ok(&answer)["layers"], json!(["Merdiven"]));
     assert_eq!(state(&mut d, &drawing), "loaded");
-    let Some(Entity::Dimension(dim)) = d.get(slot) else { panic!("the dimension is gone") };
+    let Some(Entity::Dimension(dim)) = d.get(slot) else {
+        panic!("the dimension is gone")
+    };
     let refs = dim.refs.as_ref().expect("its ties");
     let a = refs.a.as_ref().expect("a");
     let b = refs.b.as_ref().expect("b");
-    assert_eq!((a.path.clone(), a.broken.as_deref()), (vec![1], None), "the circle's new place");
+    assert_eq!(
+        (a.path.clone(), a.broken.as_deref()),
+        (vec![1], None),
+        "the circle's new place"
+    );
     // Its id is in the new definition no more: the place it had holds the circle, so the tie breaks (the core's
     // rule, docs/adr/0315 §1), never moved silently onto another object.
     assert!(b.broken.is_some(), "the wall went: {b:?}");
-    assert_eq!((dim.a.x, dim.a.y), (2.0, 1.0), "the circle's centre, where the insert puts it");
+    assert_eq!(
+        (dim.a.x, dim.a.y),
+        (2.0, 1.0),
+        "the circle's centre, where the insert puts it"
+    );
     // Undo puts the old content and the ties back.
     assert!(d.undo().is_some());
-    let Some(Entity::Dimension(dim)) = d.get(slot) else { panic!("the dimension is gone") };
-    assert_eq!(dim.refs.as_ref().and_then(|r| r.a.as_ref()).map(|a| a.path.clone()), Some(vec![2]));
+    let Some(Entity::Dimension(dim)) = d.get(slot) else {
+        panic!("the dimension is gone")
+    };
+    assert_eq!(
+        dim.refs
+            .as_ref()
+            .and_then(|r| r.a.as_ref())
+            .map(|a| a.path.clone()),
+        Some(vec![2])
+    );
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -125,7 +156,13 @@ fn a_source_pointing_back_is_a_cycle() {
     let mut d = doc();
     let answer = attach(&mut d, &file, None);
     assert_eq!(answer["error"]["code"], "xref_cycle", "{answer}");
-    assert!(answer["error"]["message"].as_str().unwrap_or("").contains("“Detay”"), "{answer}");
+    assert!(
+        answer["error"]["message"]
+            .as_str()
+            .unwrap_or("")
+            .contains("“Detay”"),
+        "{answer}"
+    );
     // Back at the open drawing.
     let drawing = dir.join("ana.kcad");
     let other = dir.join("plan.kcad");
@@ -146,7 +183,12 @@ fn a_save_writes_the_relative_path() {
     ok(&attach(&mut d, &file, None));
     let mut snapshot = d.to_snapshot_v2();
     kentos_native_application::xrefs::with_relative(&mut snapshot.blocks, &dir.join("ana.kcad"));
-    let plan = snapshot.blocks.iter().find(|b| b.name == "Plan").and_then(|b| b.xref.clone()).expect("the reference");
+    let plan = snapshot
+        .blocks
+        .iter()
+        .find(|b| b.name == "Plan")
+        .and_then(|b| b.xref.clone())
+        .expect("the reference");
     assert_eq!(plan.relative.as_deref(), Some("mimari/plan.kcad"));
     // The source moved with the drawing to another folder: found by its relative path.
     let moved = scratch("moved");
@@ -154,7 +196,8 @@ fn a_save_writes_the_relative_path() {
     std::fs::copy(&file, moved.join("mimari").join("plan.kcad")).expect("copy");
     let _ = std::fs::remove_dir_all(&dir);
     let bytes = kentos_kcad::encode_verified(&snapshot).expect("encode");
-    let mut opened = Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("decode")).expect("open");
+    let mut opened =
+        Document::from_snapshot_v2(kentos_kcad::decode(&bytes).expect("decode")).expect("open");
     assert_eq!(state(&mut opened, &moved.join("ana.kcad")), "loaded");
     let _ = std::fs::remove_dir_all(&moved);
 }
@@ -164,14 +207,18 @@ fn a_save_writes_the_relative_path() {
 #[test]
 fn a_dimension_on_a_pdf_underlay_is_said_to_be_read_off_paper() {
     let mut doc = doc();
-    let pdf = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/pdf/v1/cizgiler.pdf");
+    let pdf =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/pdf/v1/cizgiler.pdf");
     let attached = run(
         &mut doc,
         "cad.xrefs.edit",
         CallOp::Execute,
         json!({ "operation": { "kind": "attach", "path": pdf, "page": 1, "layerId": "cizim" } }),
     );
-    let insert = ok(&attached)["insert"].as_str().expect("the insert").to_owned();
+    let insert = ok(&attached)["insert"]
+        .as_str()
+        .expect("the insert")
+        .to_owned();
     // The PDF's first stroke, 10,10 → 110,10 pt: its end at 110 pt from the page's corner, in paper metres.
     let end = 110.0 * 0.0254 / 72.0;
     let low = 10.0 * 0.0254 / 72.0;
@@ -185,9 +232,24 @@ fn a_dimension_on_a_pdf_underlay_is_said_to_be_read_off_paper() {
         CallOp::Plan,
         measure(json!({ "kind": "place", "uid": insert, "place": { "kind": "end" }, "path": [0] })),
     );
-    let codes: Vec<&str> = on_paper["warnings"].as_array().into_iter().flatten().filter_map(|w| w["code"].as_str()).collect();
+    let codes: Vec<&str> = on_paper["warnings"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|w| w["code"].as_str())
+        .collect();
     assert!(codes.contains(&"underlay_measure"), "{on_paper}");
-    let own = run(&mut doc, "cad.dimensions.create", CallOp::Plan, measure(json!({ "kind": "at", "at": { "x": end, "y": low } })));
+    let own = run(
+        &mut doc,
+        "cad.dimensions.create",
+        CallOp::Plan,
+        measure(json!({ "kind": "at", "at": { "x": end, "y": low } })),
+    );
     assert_eq!(own["status"], "completed", "{own}");
-    assert!(own["warnings"].as_array().is_none_or(|w| w.iter().all(|w| w["code"] != "underlay_measure")), "{own}");
+    assert!(
+        own["warnings"]
+            .as_array()
+            .is_none_or(|w| w.iter().all(|w| w["code"] != "underlay_measure")),
+        "{own}"
+    );
 }

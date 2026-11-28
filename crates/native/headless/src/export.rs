@@ -175,7 +175,11 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         .map(|a| {
             a.modules
                 .iter()
-                .flat_map(|m| m.instances.iter().flat_map(|i| i.members.iter().map(|o| o.uid.clone())))
+                .flat_map(|m| {
+                    m.instances
+                        .iter()
+                        .flat_map(|i| i.members.iter().map(|o| o.uid.clone()))
+                })
                 .collect()
         })
         .unwrap_or_default();
@@ -187,15 +191,17 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
             a.modules
                 .iter()
                 .flat_map(|m| {
-                    m.instances.iter().filter(|i| {
-                        i.members.iter().any(|o| {
-                            kentos_domain::Uuid::parse_str(&o.uid)
-                                .ok()
-                                .and_then(|u| doc.slot_of(u))
-                                .is_some_and(|s| chosen_slots.contains(&s.0))
+                    m.instances
+                        .iter()
+                        .filter(|i| {
+                            i.members.iter().any(|o| {
+                                kentos_domain::Uuid::parse_str(&o.uid)
+                                    .ok()
+                                    .and_then(|u| doc.slot_of(u))
+                                    .is_some_and(|s| chosen_slots.contains(&s.0))
+                            })
                         })
-                    })
-                    .map(|i| (m.id.clone(), i.id.clone()))
+                        .map(|i| (m.id.clone(), i.id.clone()))
                 })
                 .collect()
         })
@@ -244,7 +250,11 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     let (layouts, layout_notes) = kentos_native_application::cad_layouts::export(doc);
     notes.extend(layout_notes);
     let settings = doc.settings();
-    if settings.arch.as_ref().is_some_and(|a| a.has_space_choices()) {
+    if settings
+        .arch
+        .as_ref()
+        .is_some_and(|a| a.has_space_choices())
+    {
         notes.push(kentos_commands::ReportItem {
             severity: Some(kentos_commands::ReportSeverity::Warning),
             details: Vec::new(),

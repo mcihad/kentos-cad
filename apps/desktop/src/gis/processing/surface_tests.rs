@@ -290,7 +290,11 @@ fn slope_on_an_area_is_written_on_the_source_s_grid() {
 fn an_automatic_result_file_never_writes_over_an_earlier_one() {
     let dir = crate::files_testing::scratch("yuzey-otomatik-ad");
     std::fs::create_dir_all(dir.join("rasters")).expect("a folder");
-    std::fs::copy(fixtures().join("interaction/v1/rasters/dem.tif"), dir.join("rasters/dem.tif")).expect("the model");
+    std::fs::copy(
+        fixtures().join("interaction/v1/rasters/dem.tif"),
+        dir.join("rasters/dem.tif"),
+    )
+    .expect("the model");
     let snapshot = DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
     let doc = Document::new(snapshot, Some(dir.join("vadi.kcad"))).expect("opens");
     let (mut app, _) = App::boot(None);
@@ -313,20 +317,34 @@ fn an_automatic_result_file_never_writes_over_an_earlier_one() {
         let bytes = std::fs::read(path).expect("written");
         let text = String::from_utf8_lossy(&bytes).into_owned();
         ["degree", "percent"].into_iter().find(|u| {
-            text.contains(&format!("<Item name=\"UNITTYPE\" sample=\"0\" role=\"unittype\">{u}</Item>"))
+            text.contains(&format!(
+                "<Item name=\"UNITTYPE\" sample=\"0\" role=\"unittype\">{u}</Item>"
+            ))
         })
     };
     assert_eq!(unit_of(&first), Some("degree"));
-    assert_eq!(unit_of(&dir.join("rasters/dem-egim-yuzde.tif")), Some("percent"));
+    assert_eq!(
+        unit_of(&dir.join("rasters/dem-egim-yuzde.tif")),
+        Some("percent")
+    );
     slope(&mut app, "degrees");
-    assert!(dir.join("rasters/dem-egim-2.tif").exists(), "a second degree slope takes its own file");
-    assert_eq!(std::fs::read(&first).expect("still there"), before, "the first result is not written over");
+    assert!(
+        dir.join("rasters/dem-egim-2.tif").exists(),
+        "a second degree slope takes its own file"
+    );
+    assert_eq!(
+        std::fs::read(&first).expect("still there"),
+        before,
+        "the first result is not written over"
+    );
     // Each result's object reads its own file.
     let doc = &mut app.document.as_mut().expect("open").model;
     let files: Vec<String> = doc
         .entities()
         .filter_map(|e| match e {
-            Entity::Raster(r) if r.raster.file.as_deref().is_some_and(|f| f.contains("egim")) => r.raster.file.clone(),
+            Entity::Raster(r) if r.raster.file.as_deref().is_some_and(|f| f.contains("egim")) => {
+                r.raster.file.clone()
+            }
             _ => None,
         })
         .collect();

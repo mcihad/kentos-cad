@@ -22,8 +22,14 @@ pub fn compile(
     let schema = schema_in(fields, variables, unit);
     let e = compile_with(scope, &schema)
         .map_err(|e| format!("Formun kapsamı okunamadı: {}", e.text()))?;
-    if let Some(name) = e.fields.iter().find(|n| !fields.iter().any(|f| &f.name == *n)) {
-        return Err(format!("Formun kapsamı katmanda olmayan “{name}” alanını okuyor."));
+    if let Some(name) = e
+        .fields
+        .iter()
+        .find(|n| !fields.iter().any(|f| &f.name == *n))
+    {
+        return Err(format!(
+            "Formun kapsamı katmanda olmayan “{name}” alanını okuyor."
+        ));
     }
     Ok(e)
 }
@@ -255,7 +261,10 @@ mod tests {
     }
 
     fn attrs(pairs: &[(&str, &str)]) -> Attrs {
-        pairs.iter().map(|(k, v)| ((*k).to_owned(), (*v).to_owned())).collect()
+        pairs
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+            .collect()
     }
 
     fn form(layer: &str, scope: Option<&str>, withdrawn: bool) -> ProjectForm {
@@ -274,7 +283,10 @@ mod tests {
 
     #[test]
     fn a_scope_reaches_the_records_it_holds_true_for() {
-        let s = scopes(&[form("bina", Some("Sorumlu = @kullanici_eposta"), false)], "ali@k.test");
+        let s = scopes(
+            &[form("bina", Some("Sorumlu = @kullanici_eposta"), false)],
+            "ali@k.test",
+        );
         let o = Object::default();
         assert!(s.narrows());
         assert_eq!(s.scoped_layers(), vec!["bina".to_owned()]);
@@ -290,7 +302,10 @@ mod tests {
     fn a_form_without_a_scope_reaches_all_and_one_that_does_not_compile_nothing() {
         let o = Object::default();
         let all = scopes(
-            &[form("bina", Some("Kat > 3"), false), form("bina", None, false)],
+            &[
+                form("bina", Some("Kat > 3"), false),
+                form("bina", None, false),
+            ],
             "ali@k.test",
         );
         assert!(!all.narrows());
@@ -302,11 +317,18 @@ mod tests {
         assert!(!gone.narrows());
         // Two scopes: either reaches.
         let two = scopes(
-            &[form("bina", Some("Kat > 3"), false), form("bina", Some("Sorumlu = @kullanici_eposta"), false)],
+            &[
+                form("bina", Some("Kat > 3"), false),
+                form("bina", Some("Sorumlu = @kullanici_eposta"), false),
+            ],
             "ali@k.test",
         );
         assert!(two.sees("bina", &attrs(&[("Kat", "9")]), &o));
-        assert!(two.sees("bina", &attrs(&[("Kat", "1"), ("Sorumlu", "ali@k.test")]), &o));
+        assert!(two.sees(
+            "bina",
+            &attrs(&[("Kat", "1"), ("Sorumlu", "ali@k.test")]),
+            &o
+        ));
         assert!(!two.sees("bina", &attrs(&[("Kat", "1"), ("Sorumlu", "x")]), &o));
     }
 
@@ -348,10 +370,16 @@ mod tests {
     #[test]
     fn a_changed_scope_is_said_between_versions() {
         let body = |scope: Option<&str>| -> FormBody {
-            serde_json::from_value(serde_json::json!({ "revision": 1, "items": [], "scope": scope })).unwrap()
+            serde_json::from_value(
+                serde_json::json!({ "revision": 1, "items": [], "scope": scope }),
+            )
+            .unwrap()
         };
         let words = |a: &FormBody, b: &FormBody| -> Vec<String> {
-            crate::compare::compare(a, b).into_iter().map(|c| c.words).collect()
+            crate::compare::compare(a, b)
+                .into_iter()
+                .map(|c| c.words)
+                .collect()
         };
         assert_eq!(
             words(&body(None), &body(Some("Kat > 3"))),
@@ -372,9 +400,9 @@ mod tests {
         .unwrap();
         let issues = crate::preflight(&body, &fields(), &me("a@k.test"));
         assert!(
-            issues
-                .iter()
-                .any(|i| i.code == crate::codes::SCOPE_INVALID && i.rule.as_deref() == Some("scope")),
+            issues.iter().any(
+                |i| i.code == crate::codes::SCOPE_INVALID && i.rule.as_deref() == Some("scope")
+            ),
             "{issues:?}"
         );
         assert!(scope_problem(&body, &fields(), &me("a@k.test"), Unit::METRE).is_some());
@@ -386,16 +414,30 @@ mod tests {
 
     #[test]
     fn a_scope_is_sent_as_sql_on_its_text_fields() {
-        let s = scopes(&[form("bina", Some("Sorumlu = @kullanici_eposta"), false)], "ali@k.test");
+        let s = scopes(
+            &[form("bina", Some("Sorumlu = @kullanici_eposta"), false)],
+            "ali@k.test",
+        );
         let Some(ScopeSql::Where(p)) = s.sql_of("bina", &pg, Dialect::Postgres, 3) else {
             panic!("{:?}", s.sql_of("bina", &pg, Dialect::Postgres, 3));
         };
         assert_eq!(p.sql, "(properties->>'Sorumlu') = $4");
-        assert_eq!(p.params, vec![kentos_expression::pushdown::Param::Text("ali@k.test".into())]);
+        assert_eq!(
+            p.params,
+            vec![kentos_expression::pushdown::Param::Text(
+                "ali@k.test".into()
+            )]
+        );
         assert!(p.exact);
         // A layer no form edits, or one a form reaches all of, is not narrowed.
         assert_eq!(s.sql_of("yol", &pg, Dialect::Postgres, 3), None);
-        let all = scopes(&[form("bina", Some("Kat > 3"), false), form("bina", None, false)], "a@k.test");
+        let all = scopes(
+            &[
+                form("bina", Some("Kat > 3"), false),
+                form("bina", None, false),
+            ],
+            "a@k.test",
+        );
         assert_eq!(all.sql_of("bina", &pg, Dialect::Postgres, 0), None);
     }
 
@@ -418,16 +460,34 @@ mod tests {
         assert_eq!(p.params.len(), 3);
         // A number field is read as a number: its stored text is not compared in SQL.
         let number = scopes(&[form("bina", Some("Kat > 3"), false)], "x@k.test");
-        assert_eq!(number.sql_of("bina", &pg, Dialect::Postgres, 0), Some(ScopeSql::Judge));
+        assert_eq!(
+            number.sql_of("bina", &pg, Dialect::Postgres, 0),
+            Some(ScopeSql::Judge)
+        );
         // One form with nothing to send makes the layer judged, whatever the other sends.
         let mixed = scopes(
-            &[form("bina", Some("Sorumlu = 'a@k.test'"), false), form("bina", Some("Kat > 3"), false)],
+            &[
+                form("bina", Some("Sorumlu = 'a@k.test'"), false),
+                form("bina", Some("Kat > 3"), false),
+            ],
             "x@k.test",
         );
-        assert_eq!(mixed.sql_of("bina", &pg, Dialect::Postgres, 0), Some(ScopeSql::Judge));
+        assert_eq!(
+            mixed.sql_of("bina", &pg, Dialect::Postgres, 0),
+            Some(ScopeSql::Judge)
+        );
         // A part of an `and` the source cannot check is left out: the SQL keeps more, not fewer.
-        let and = scopes(&[form("bina", Some("Sorumlu = 'a@k.test' and Kat > 3"), false)], "x@k.test");
-        let Some(ScopeSql::Where(p)) = and.sql_of("bina", &pg, Dialect::Postgres, 0) else { panic!() };
+        let and = scopes(
+            &[form(
+                "bina",
+                Some("Sorumlu = 'a@k.test' and Kat > 3"),
+                false,
+            )],
+            "x@k.test",
+        );
+        let Some(ScopeSql::Where(p)) = and.sql_of("bina", &pg, Dialect::Postgres, 0) else {
+            panic!()
+        };
         assert_eq!(p.sql, "(properties->>'Sorumlu') = $1");
         assert!(!p.exact);
     }
@@ -435,7 +495,10 @@ mod tests {
     #[test]
     fn a_scope_that_does_not_compile_reads_nothing() {
         let s = scopes(&[form("bina", Some("Yok = 1"), false)], "x@k.test");
-        assert_eq!(s.sql_of("bina", &pg, Dialect::Postgres, 0), Some(ScopeSql::Nothing));
+        assert_eq!(
+            s.sql_of("bina", &pg, Dialect::Postgres, 0),
+            Some(ScopeSql::Nothing)
+        );
         // A field name with a quote is quoted, not run.
         assert_eq!(pg("a'b"), "(properties->>'a''b')");
     }

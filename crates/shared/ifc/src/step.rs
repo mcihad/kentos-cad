@@ -73,7 +73,9 @@ pub fn unguid(s: &str) -> Option<u128> {
     }
     let digit = |c: u8| GUID.iter().position(|&g| g == c).map(|i| i as u128);
     let first = digit(b[0]).filter(|&d| d < 4)?;
-    b[1..].iter().try_fold(first, |n, &c| Some((n << 6) | digit(c)?))
+    b[1..]
+        .iter()
+        .try_fold(first, |n, &c| Some((n << 6) | digit(c)?))
 }
 
 /// The GlobalId a root's line starts with (`IFCWALL('…',`): its first attribute, 22 characters in apostrophes.
@@ -200,13 +202,28 @@ mod tests {
 
     #[test]
     fn a_global_id_reads_back_to_its_number() {
-        for n in [0u128, 1, 7, u128::MAX, 0x0123_4567_89ab_cdef_fedc_ba98_7654_3210, 1 << 126] {
+        for n in [
+            0u128,
+            1,
+            7,
+            u128::MAX,
+            0x0123_4567_89ab_cdef_fedc_ba98_7654_3210,
+            1 << 126,
+        ] {
             assert_eq!(unguid(&guid(n)), Some(n), "{n:x}");
         }
         assert_eq!(unguid("0000000000000000000000"), Some(0));
-        assert_eq!(unguid("4000000000000000000000"), None, "the first character holds 2 bits");
+        assert_eq!(
+            unguid("4000000000000000000000"),
+            None,
+            "the first character holds 2 bits"
+        );
         assert_eq!(unguid("000000000000000000000"), None, "21 characters");
-        assert_eq!(unguid("00000000000000000000-0"), None, "not a GlobalId's character");
+        assert_eq!(
+            unguid("00000000000000000000-0"),
+            None,
+            "not a GlobalId's character"
+        );
     }
     use super::*;
 

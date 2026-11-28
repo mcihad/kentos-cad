@@ -215,12 +215,25 @@ impl Source for GpkgSource {
                 .into_iter()
                 .filter_map(|(c, rule)| {
                     let rule = match rule? {
-                        kentos_geopackage::schema::Rule::Values(values) => kentos_data::ColumnRule::Values(values),
-                        kentos_geopackage::schema::Rule::Range { min, min_included, max, max_included } => {
-                            kentos_data::ColumnRule::Range { min, min_included, max, max_included }
+                        kentos_geopackage::schema::Rule::Values(values) => {
+                            kentos_data::ColumnRule::Values(values)
                         }
+                        kentos_geopackage::schema::Rule::Range {
+                            min,
+                            min_included,
+                            max,
+                            max_included,
+                        } => kentos_data::ColumnRule::Range {
+                            min,
+                            min_included,
+                            max,
+                            max_included,
+                        },
                     };
-                    Some(kentos_data::RuledColumn { column: c.column, rule: Some(rule) })
+                    Some(kentos_data::RuledColumn {
+                        column: c.column,
+                        rule: Some(rule),
+                    })
                 })
                 .collect())
         })
@@ -426,7 +439,11 @@ impl Source for GpkgSource {
         let w = where_of(&request, &s.schema, table, s.layer.indexed)?;
         let col = format!("t.{}", quote(field));
         // A text in the Turkish alphabet's order, as a group's (docs/adr/9108 §2).
-        let by = if kind.is_text() { format!("kentos_order({col})") } else { col.clone() };
+        let by = if kind.is_text() {
+            format!("kentos_order({col})")
+        } else {
+            col.clone()
+        };
         let sql = format!(
             "SELECT DISTINCT {col} FROM {} t{} ORDER BY {by} LIMIT {limit}",
             s.from,
@@ -471,7 +488,11 @@ impl Source for GpkgSource {
         };
         let w = where_of(&request, &s.schema, table, s.layer.indexed)?;
         let col = format!("t.{}", quote(field));
-        let by = if kind.is_text() { format!("kentos_order({col})") } else { col.clone() };
+        let by = if kind.is_text() {
+            format!("kentos_order({col})")
+        } else {
+            col.clone()
+        };
         let sql = format!(
             "SELECT {col}, count(*) FROM {} t{} GROUP BY {col} ORDER BY ({col} IS NULL), {by} LIMIT {limit}",
             s.from,
@@ -486,7 +507,10 @@ impl Source for GpkgSource {
             let mut out = Vec::new();
             while let Some(r) = rows.next().map_err(failed)? {
                 let n: i64 = r.get(1).map_err(failed)?;
-                out.push((value_of(r.get_ref(0).map_err(failed)?, &kind), u64::try_from(n).unwrap_or(0)));
+                out.push((
+                    value_of(r.get_ref(0).map_err(failed)?, &kind),
+                    u64::try_from(n).unwrap_or(0),
+                ));
             }
             Ok(out)
         })

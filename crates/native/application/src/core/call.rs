@@ -398,8 +398,18 @@ fn row_of(
         },
         arrays: NodeChanges {
             added: report.arrays.added.iter().map(|id| id.to_text()).collect(),
-            changed: report.arrays.changed.iter().map(|id| id.to_text()).collect(),
-            removed: report.arrays.removed.iter().map(|id| id.to_text()).collect(),
+            changed: report
+                .arrays
+                .changed
+                .iter()
+                .map(|id| id.to_text())
+                .collect(),
+            removed: report
+                .arrays
+                .removed
+                .iter()
+                .map(|id| id.to_text())
+                .collect(),
         },
         truncated,
         warnings: warnings.to_vec(),
@@ -539,7 +549,10 @@ fn summarize(
             if let Ok(uid) = Uuid::parse_str(text)
                 && let Some(entity) = doc.slot_of(uid).and_then(|s| doc.get(s))
             {
-                summary.sources.objects.insert(text.clone(), entity_stamp(uid, entity));
+                summary
+                    .sources
+                    .objects
+                    .insert(text.clone(), entity_stamp(uid, entity));
                 blocks_named(doc, entity, &mut referenced);
             }
         }
@@ -631,10 +644,20 @@ fn summarize(
             .collect(),
     };
     summary.arrays = NodeChanges {
-            added: report.arrays.added.iter().map(|id| id.to_text()).collect(),
-            changed: report.arrays.changed.iter().map(|id| id.to_text()).collect(),
-            removed: report.arrays.removed.iter().map(|id| id.to_text()).collect(),
-        };
+        added: report.arrays.added.iter().map(|id| id.to_text()).collect(),
+        changed: report
+            .arrays
+            .changed
+            .iter()
+            .map(|id| id.to_text())
+            .collect(),
+        removed: report
+            .arrays
+            .removed
+            .iter()
+            .map(|id| id.to_text())
+            .collect(),
+    };
     summary.project = report.parts.clone();
     let scale_reads_dimensions = parts.plot_scale != doc.settings().plot_scale
         && (parts.had_dimension_sets || !doc.dimension_sets().is_empty());
@@ -720,11 +743,18 @@ fn summarize(
     if command == kentos_commands::CAD_ARRAYS_ADOPT {
         // Hash the metadata that is actually added, without the freshly allocated
         // array id. Other commands keep their existing plan fingerprints.
-        essence["result"]["arrays"] = Value::Array(report.arrays.added.iter().filter_map(|id| {
-            let mut value = serde_json::to_value(doc.array(*id)?).ok()?;
-            value.as_object_mut()?.remove("id");
-            Some(value)
-        }).collect());
+        essence["result"]["arrays"] = Value::Array(
+            report
+                .arrays
+                .added
+                .iter()
+                .filter_map(|id| {
+                    let mut value = serde_json::to_value(doc.array(*id)?).ok()?;
+                    value.as_object_mut()?.remove("id");
+                    Some(value)
+                })
+                .collect(),
+        );
     }
     // Optional metadata stays out of legacy plan fingerprints. Hash the new recipe JSON only
     // after replacing fresh set/member identities; raw stamps would make plan and execute differ.

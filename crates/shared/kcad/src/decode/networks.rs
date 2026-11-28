@@ -7,10 +7,11 @@
 //! network's vehicle `profiles` and dated `closures`.
 
 use kentos_contracts::{
-    DeviceTerminal, JunctionLayer, JunctionRole, NetworkConnect, NetworkCost, NetworkCostKind,
-    NetworkClosures, NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels, NetworkPeriod,
-    NetworkProfile, NetworkSubnetworks, ProfileForbid, ProfileLimit, NetworkTerminals, NetworkTurns, NetworkUTurns, SubnetworkReach,
-    TerminalConfig, TerminalDevice, TurnLayer, networks_problem,
+    DeviceTerminal, JunctionLayer, JunctionRole, NetworkClosures, NetworkConnect, NetworkCost,
+    NetworkCostKind, NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels,
+    NetworkPeriod, NetworkProfile, NetworkSubnetworks, NetworkTerminals, NetworkTurns,
+    NetworkUTurns, ProfileForbid, ProfileLimit, SubnetworkReach, TerminalConfig, TerminalDevice,
+    TurnLayer, networks_problem,
 };
 
 use super::{list, map, named, required, text, unknown};

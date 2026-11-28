@@ -14,13 +14,20 @@ use crate::runtime;
 
 /// The schema projects are kept in (`public` when none is said), quoted, with the table.
 fn table_in(schema: Option<&str>) -> Result<String, DataError> {
-    let schema = schema.map(str::trim).filter(|s| !s.is_empty()).unwrap_or("public");
+    let schema = schema
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+        .unwrap_or("public");
     Ok(format!("{}.{}", quote(schema), quote(PROJECTS_TABLE)))
 }
 
 impl PgSource {
     /// Whether the table is there yet (`to_regclass`: no error for a table that is not).
-    async fn has_projects(&self, conn: &mut sqlx::PgConnection, table: &str) -> Result<bool, DataError> {
+    async fn has_projects(
+        &self,
+        conn: &mut sqlx::PgConnection,
+        table: &str,
+    ) -> Result<bool, DataError> {
         let row = sqlx::query("SELECT to_regclass($1) IS NOT NULL")
             .bind(table)
             .fetch_one(conn)
@@ -67,11 +74,13 @@ impl ProjectStore for PgSource {
             if !self.has_projects(&mut conn, &table).await? {
                 return Err(DataError::NoProject(name.to_owned()));
             }
-            let row = sqlx::query(sqlx::AssertSqlSafe(format!("SELECT content FROM {table} WHERE name = $1")))
-                .bind(name)
-                .fetch_optional(&mut *conn)
-                .await
-                .map_err(error_of)?;
+            let row = sqlx::query(sqlx::AssertSqlSafe(format!(
+                "SELECT content FROM {table} WHERE name = $1"
+            )))
+            .bind(name)
+            .fetch_optional(&mut *conn)
+            .await
+            .map_err(error_of)?;
             match row {
                 Some(r) => r.try_get::<Vec<u8>, _>(0).map_err(error_of),
                 None => Err(DataError::NoProject(name.to_owned())),
@@ -120,11 +129,13 @@ impl ProjectStore for PgSource {
             if !self.has_projects(&mut conn, &table).await? {
                 return Err(DataError::NoProject(name.to_owned()));
             }
-            let done = sqlx::query(sqlx::AssertSqlSafe(format!("DELETE FROM {table} WHERE name = $1")))
-                .bind(name)
-                .execute(&mut *conn)
-                .await
-                .map_err(error_of)?;
+            let done = sqlx::query(sqlx::AssertSqlSafe(format!(
+                "DELETE FROM {table} WHERE name = $1"
+            )))
+            .bind(name)
+            .execute(&mut *conn)
+            .await
+            .map_err(error_of)?;
             if done.rows_affected() == 0 {
                 return Err(DataError::NoProject(name.to_owned()));
             }

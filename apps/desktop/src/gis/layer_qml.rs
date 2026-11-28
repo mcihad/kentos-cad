@@ -143,7 +143,10 @@ impl App {
         lost: &[String],
         warnings: Vec<kentos_commands::CommandWarning>,
     ) {
-        let gathers = |code: &str| code == kentos_commands::codes::IMPORT_LOSSES || code == kentos_commands::codes::EXPORT_LOSSES;
+        let gathers = |code: &str| {
+            code == kentos_commands::codes::IMPORT_LOSSES
+                || code == kentos_commands::codes::EXPORT_LOSSES
+        };
         for w in warnings {
             if lost.is_empty() || !gathers(&w.code) {
                 self.say(Level::Warn, w.message);

@@ -118,11 +118,10 @@ impl App {
             .take(PAGE)
             .map(|(i, f)| {
                 let refused = f.fix.as_ref().and_then(|_| self.ext_audit_fix_refused(i));
-                let fix = f
-                    .fix
-                    .as_ref()
-                    .filter(|_| refused.is_none())
-                    .map(|x| json!({ "title": x.title, "command": x.command, "input": x.input }));
+                let fix =
+                    f.fix.as_ref().filter(|_| refused.is_none()).map(
+                        |x| json!({ "title": x.title, "command": x.command, "input": x.input }),
+                    );
                 json!({
                     "finding": i + 1,
                     "severity": f.severity.code(),
@@ -182,7 +181,10 @@ impl App {
                 .as_ref()
                 .filter(|a| format!("ext.{}.{}", a.ext, a.local) == id && a.running.is_none())
             else {
-                return Err(("stale_report", format!("Son eklenti denetimi “{id}” değil.")));
+                return Err((
+                    "stale_report",
+                    format!("Son eklenti denetimi “{id}” değil."),
+                ));
             };
             if state.findings.get(i).and_then(|f| f.fix.as_ref()).is_none() {
                 return Err(("unknown_finding", format!("{n}. bulgunun düzeltmesi yok.")));

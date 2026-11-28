@@ -17,11 +17,25 @@ fn count(v: &Value) -> usize {
 
 #[test]
 fn the_findings_go_to_the_error_layer_over_mcp_as_the_case_says() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/processing/v1/geometry.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["id"] == "topology-check-errors").unwrap().clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_str(include_str!("../../../../fixtures/processing/v1/topology.kcad")).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-topology-errors-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/processing/v1/geometry.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["id"] == "topology-check-errors")
+        .unwrap()
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../fixtures/processing/v1/topology.kcad"
+    ))
+    .unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-topology-errors-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -29,7 +43,11 @@ fn the_findings_go_to_the_error_layer_over_mcp_as_the_case_says() {
     let drawing = opened["structuredContent"]["drawing"].clone();
 
     // Without the box: the findings' objects chosen, nothing written.
-    let read = call(&mut server, "cad.processing.run", json!({"drawing": drawing, "tool": "topology.check", "parameters": {}}));
+    let read = call(
+        &mut server,
+        "cad.processing.run",
+        json!({"drawing": drawing, "tool": "topology.check", "parameters": {}}),
+    );
     assert_eq!(read["isError"], false, "{read}");
     let out = &read["structuredContent"]["output"];
     assert_eq!(count(&out["added"]), 0, "{out}");
@@ -49,12 +67,19 @@ fn the_findings_go_to_the_error_layer_over_mcp_as_the_case_says() {
     let shapes = want["addedShapes"].as_array().unwrap();
     assert_eq!(added.len(), shapes.len());
     for (uid, shape) in added.iter().zip(shapes) {
-        let got = call(&mut server, "drawing.entity", json!({"drawing": drawing, "uid": uid}));
+        let got = call(
+            &mut server,
+            "drawing.entity",
+            json!({"drawing": drawing, "uid": uid}),
+        );
         let e = &got["structuredContent"]["entity"];
         assert_eq!(e["kind"], "point", "{e}");
         assert_eq!(e["attrs"], shape["attrs"], "{e}");
         for key in ["x", "y"] {
-            let (a, b) = (e["p"][key].as_f64().unwrap(), shape["points"][0][key].as_f64().unwrap());
+            let (a, b) = (
+                e["p"][key].as_f64().unwrap(),
+                shape["points"][0][key].as_f64().unwrap(),
+            );
             assert!((a - b).abs() < 1e-6, "{key}: {a} != {b}");
         }
     }
@@ -63,6 +88,10 @@ fn the_findings_go_to_the_error_layer_over_mcp_as_the_case_says() {
     let undone = call(&mut server, "drawing.undo", json!({"drawing": drawing}));
     assert_eq!(undone["isError"], false, "{undone}");
     let left = call(&mut server, "drawing.entities", json!({"drawing": drawing}));
-    assert_eq!(left["structuredContent"]["items"].as_array().unwrap().len(), 5, "{left}");
+    assert_eq!(
+        left["structuredContent"]["items"].as_array().unwrap().len(),
+        5,
+        "{left}"
+    );
     let _ = std::fs::remove_file(path);
 }

@@ -6,8 +6,8 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, RoadDrawingDef, RoadDrawingLeft, RoadDrawingRebuilt, RoadNodeState as S,
-    RoadProjectRebuild, RoadProjectRebuilt,
+    CommandResult, CommandWarning, RoadDrawingDef, RoadDrawingLeft, RoadDrawingRebuilt,
+    RoadNodeState as S, RoadProjectRebuild, RoadProjectRebuilt,
 };
 use kentos_domain::Uuid;
 use serde_json::Value;
@@ -25,11 +25,21 @@ const SHARE: u64 = 1000;
 
 /// Runs `f` with the job's progress narrowed to drawing `k` of `total` (docs/adr/3640, QGIS's sub-range feedback): a
 /// drawing that tells its own progress (a corridor's sections) moves within its share; the stop stays the job's.
-pub(crate) fn in_share<T>(cx: &mut ExecutionContext<'_>, k: u64, total: u64, f: impl FnOnce(&mut ExecutionContext<'_>) -> T) -> T {
+pub(crate) fn in_share<T>(
+    cx: &mut ExecutionContext<'_>,
+    k: u64,
+    total: u64,
+    f: impl FnOnce(&mut ExecutionContext<'_>) -> T,
+) -> T {
     let Some(job) = cx.job else { return f(cx) };
     let share = job.span(k * SHARE, SHARE, total * SHARE);
     let call = cx.call.take();
-    let mut inner = ExecutionContext { doc: &mut *cx.doc, store: cx.store, call, job: Some(&share) };
+    let mut inner = ExecutionContext {
+        doc: &mut *cx.doc,
+        store: cx.store,
+        call,
+        job: Some(&share),
+    };
     let out = f(&mut inner);
     let call = inner.call.take();
     cx.call = call;
@@ -49,7 +59,17 @@ pub(crate) fn run_drawing(
 ) -> Result<(Vec<String>, Vec<CommandWarning>), (Refused, bool)> {
     let value = Value::Object(input.clone().into_iter().collect());
     let bad = |e: serde_json::Error| -> (Refused, bool) {
-        (Box::new(Stop::failed(error(codes::UNKNOWN_DRAWING, format!("“{id}” çiziminin girdisi okunamadı: {e}."), None)).into()), false)
+        (
+            Box::new(
+                Stop::failed(error(
+                    codes::UNKNOWN_DRAWING,
+                    format!("“{id}” çiziminin girdisi okunamadı: {e}."),
+                    None,
+                ))
+                .into(),
+            ),
+            false,
+        )
     };
     macro_rules! again {
         ($m:ident, $t:ty) => {{
@@ -100,17 +120,29 @@ pub(crate) fn run_drawing(
 
 /// Draws `d` again in the step it runs in. Answers what it did and the command's warnings, or the command's refusal
 /// (nothing written: the check runs before the objects go).
-pub(crate) fn redraw(cx: &mut ExecutionContext<'_>, d: &RoadDrawingDef) -> Result<(RoadDrawingRebuilt, Vec<CommandWarning>), Refused> {
+pub(crate) fn redraw(
+    cx: &mut ExecutionContext<'_>,
+    d: &RoadDrawingDef,
+) -> Result<(RoadDrawingRebuilt, Vec<CommandWarning>), Refused> {
     let Some(main) = road_drawings::main_of(&d.command) else {
-        return Err(Box::new(Stop::failed(error(codes::UNKNOWN_DRAWING, format!("“{}” çiziminin komutu yeniden üretilemez.", d.id), None)).into()));
+        return Err(Box::new(
+            Stop::failed(error(
+                codes::UNKNOWN_DRAWING,
+                format!("“{}” çiziminin komutu yeniden üretilemez.", d.id),
+                None,
+            ))
+            .into(),
+        ));
     };
     let present: Vec<kentos_domain::Slot> = d
         .uids
         .iter()
         .filter_map(|u| Uuid::parse_str(u).ok().and_then(|u| cx.doc.slot_of(u)))
         .collect();
-    let (uids, warnings) = run_drawing(cx, &d.id, &d.command, &d.input, &present).map_err(|(refused, _)| refused)?;
-    road_drawings::keep(cx.doc, &d.command, &d.input, main, &uids, Some(&d.id)).map_err(|stop| Box::new(stop.into()))?;
+    let (uids, warnings) =
+        run_drawing(cx, &d.id, &d.command, &d.input, &present).map_err(|(refused, _)| refused)?;
+    road_drawings::keep(cx.doc, &d.command, &d.input, main, &uids, Some(&d.id))
+        .map_err(|stop| Box::new(stop.into()))?;
     Ok((
         RoadDrawingRebuilt {
             drawing: d.id.clone(),
@@ -125,12 +157,19 @@ pub(crate) fn redraw(cx: &mut ExecutionContext<'_>, d: &RoadDrawingDef) -> Resul
 }
 
 fn left(d: &RoadDrawingDef, why: &str, message: String) -> RoadDrawingLeft {
-    RoadDrawingLeft { drawing: d.id.clone(), why: why.into(), message }
+    RoadDrawingLeft {
+        drawing: d.id.clone(),
+        why: why.into(),
+        message,
+    }
 }
 
 /// What to draw again: the named drawings, refused when one is not kept, gone or (without `edited`) changed by hand;
 /// or every stale or missing drawing, those changed by hand and those whose source is gone left with why.
-fn chosen(cx: &ExecutionContext<'_>, input: &RoadProjectRebuild) -> Result<(Vec<RoadDrawingDef>, Vec<RoadDrawingLeft>), Stop> {
+fn chosen(
+    cx: &ExecutionContext<'_>,
+    input: &RoadProjectRebuild,
+) -> Result<(Vec<RoadDrawingDef>, Vec<RoadDrawingLeft>), Stop> {
     checks::revision(cx.doc, input.expected_revision.as_deref())?;
     crate::road_project::road_project(cx.doc)?;
     let all = cx.doc.road_drawings();
@@ -140,20 +179,28 @@ fn chosen(cx: &ExecutionContext<'_>, input: &RoadProjectRebuild) -> Result<(Vec<
         Some(ids) => {
             for id in ids {
                 let Some(d) = all.iter().find(|d| &d.id == id) else {
-                    return Err(Stop::failed(error(codes::UNKNOWN_DRAWING, format!("“{id}” yol çizimi projede yok."), Some("drawings".into()))));
+                    return Err(Stop::failed(error(
+                        codes::UNKNOWN_DRAWING,
+                        format!("“{id}” yol çizimi projede yok."),
+                        Some("drawings".into()),
+                    )));
                 };
                 match crate::road_project::drawing_state(cx.doc, d).0 {
                     S::Gone => {
                         return Err(Stop::failed(error(
                             codes::DRAWING_SOURCE_GONE,
-                            format!("“{id}” çiziminin kaynağı projede yok; yeniden üretilemez, isterseniz nesnelerini silin."),
+                            format!(
+                                "“{id}” çiziminin kaynağı projede yok; yeniden üretilemez, isterseniz nesnelerini silin."
+                            ),
                             Some("drawings".into()),
                         )));
                     }
                     S::Edited if !input.edited => {
                         return Err(Stop::failed(error(
                             codes::DRAWING_EDITED,
-                            format!("“{id}” çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler. edited ile isteyin."),
+                            format!(
+                                "“{id}” çiziminin nesneleri elle değişti; yeniden üretmek bu değişiklikleri siler. edited ile isteyin."
+                            ),
                             Some("edited".into()),
                         )));
                     }
@@ -169,7 +216,11 @@ fn chosen(cx: &ExecutionContext<'_>, input: &RoadProjectRebuild) -> Result<(Vec<
             for d in all {
                 match crate::road_project::drawing_state(cx.doc, d).0 {
                     S::Stale | S::Missing => out.push(d.clone()),
-                    S::Edited => skipped.push(left(d, "edited", "Nesneleri elle değişti; adıyla ve edited ile yeniden üretilir.".into())),
+                    S::Edited => skipped.push(left(
+                        d,
+                        "edited",
+                        "Nesneleri elle değişti; adıyla ve edited ile yeniden üretilir.".into(),
+                    )),
                     S::Gone => skipped.push(left(d, "gone", "Kaynağı projede yok.".into())),
                     _ => {}
                 }
@@ -179,7 +230,10 @@ fn chosen(cx: &ExecutionContext<'_>, input: &RoadProjectRebuild) -> Result<(Vec<
     Ok((out, skipped))
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: RoadProjectRebuild) -> CommandResult<RoadProjectRebuilt> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: RoadProjectRebuild,
+) -> CommandResult<RoadProjectRebuilt> {
     let (drawings, left) = match chosen(cx, &input) {
         Ok(x) => x,
         Err(stop) => return stop.into(),
@@ -201,7 +255,11 @@ fn write(cx: &mut ExecutionContext<'_>, input: RoadProjectRebuild) -> CommandRes
         // Docs/adr/4320: asked `regional`, only what changed is written.
         let regional = input.regional;
         let drawn = in_share(cx, k as u64, total, |cx| {
-            if regional { crate::road_project_regional::redraw_regional(cx, d) } else { redraw(cx, d) }
+            if regional {
+                crate::road_project_regional::redraw_regional(cx, d)
+            } else {
+                redraw(cx, d)
+            }
         });
         match drawn {
             Ok((r, w)) => {
@@ -212,19 +270,32 @@ fn write(cx: &mut ExecutionContext<'_>, input: RoadProjectRebuild) -> CommandRes
         }
     }
     cx.progress(total, total);
-    CommandResult::Completed { output: RoadProjectRebuilt { rebuilt, left, revision: cx.doc.revision().to_string() }, warnings }
+    CommandResult::Completed {
+        output: RoadProjectRebuilt {
+            rebuilt,
+            left,
+            revision: cx.doc.revision().to_string(),
+        },
+        warnings,
+    }
 }
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &RoadProjectRebuild) -> CommandResult<()> {
     match plan(cx, input) {
-        CommandResult::Completed { warnings, .. } => CommandResult::Completed { output: (), warnings },
+        CommandResult::Completed { warnings, .. } => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         other => relay(other),
     }
 }
 
 /// What execute would draw again, on a reading copy; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &RoadProjectRebuild) -> CommandResult<RoadProjectRebuilt> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &RoadProjectRebuild,
+) -> CommandResult<RoadProjectRebuilt> {
     let mut copy = cx.doc.reading_copy();
     let mut planned = write(&mut ExecutionContext::new(&mut copy), input.clone());
     if let CommandResult::Completed { output, .. } = &mut planned {
@@ -234,7 +305,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &RoadProjectRebuild) -> CommandRes
     planned
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RoadProjectRebuild) -> CommandResult<RoadProjectRebuilt> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RoadProjectRebuild,
+) -> CommandResult<RoadProjectRebuilt> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_PROJECT_REBUILD,
@@ -257,12 +331,22 @@ pub(crate) fn follow(doc: &mut kentos_domain::Document, command: &str) -> Vec<Co
     {
         return Vec::new();
     }
-    let stale: Vec<RoadDrawingDef> =
-        doc.road_drawings().iter().filter(|d| crate::road_project::drawing_state(doc, d).0 == S::Stale).cloned().collect();
+    let stale: Vec<RoadDrawingDef> = doc
+        .road_drawings()
+        .iter()
+        .filter(|d| crate::road_project::drawing_state(doc, d).0 == S::Stale)
+        .cloned()
+        .collect();
     let mut warnings = Vec::new();
     let mut names = Vec::new();
-    for d in doc.road_drawings().iter().filter(|d| crate::road_project::drawing_state(doc, d).0 == S::Edited) {
-        let stale_too = d.sources.iter().any(|s| road_drawings::stamp_now(doc, s.kind, &s.id).as_deref() != Some(s.digest.as_str()));
+    for d in doc
+        .road_drawings()
+        .iter()
+        .filter(|d| crate::road_project::drawing_state(doc, d).0 == S::Edited)
+    {
+        let stale_too = d.sources.iter().any(|s| {
+            road_drawings::stamp_now(doc, s.kind, &s.id).as_deref() != Some(s.digest.as_str())
+        });
         if stale_too {
             warnings.push(CommandWarning {
                 code: codes::DRAWING_EDITED.into(),
@@ -274,12 +358,18 @@ pub(crate) fn follow(doc: &mut kentos_domain::Document, command: &str) -> Vec<Co
     let whole = doc.road_rebuild_whole();
     let mut cx = ExecutionContext::new(doc);
     for d in &stale {
-        let drawn = if whole { redraw(&mut cx, d) } else { crate::road_project_regional::redraw_regional(&mut cx, d) };
+        let drawn = if whole {
+            redraw(&mut cx, d)
+        } else {
+            crate::road_project_regional::redraw_regional(&mut cx, d)
+        };
         match drawn {
             Ok(_) => names.push(d.id.clone()),
             Err(refused) => {
                 let why = match *refused {
-                    CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => error.message,
+                    CommandResult::Failed { error }
+                    | CommandResult::Conflict { error }
+                    | CommandResult::NeedsInput { error } => error.message,
                     _ => String::new(),
                 };
                 warnings.push(CommandWarning {
@@ -295,7 +385,10 @@ pub(crate) fn follow(doc: &mut kentos_domain::Document, command: &str) -> Vec<Co
             0,
             CommandWarning {
                 code: codes::DRAWINGS_REBUILT.into(),
-                message: format!("Eskiyen yol çizimleri kendiliğinden yeniden üretildi: {}.", names.join(", ")),
+                message: format!(
+                    "Eskiyen yol çizimleri kendiliğinden yeniden üretildi: {}.",
+                    names.join(", ")
+                ),
                 path: None,
             },
         );
@@ -313,23 +406,46 @@ mod tests {
     /// The shared cases' road project with its corridor and guardrail drawn, then the template they read changed: two
     /// drawings stale (`road.project.rebuild`'s case “İki eskiyen çizim birlikte, tek adımda”).
     fn two_stale() -> kentos_domain::Document {
-        let cases: Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/road.project.rebuild.json")).expect("cases");
-        let snapshot: DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
+        let cases: Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/commands/v1/road.project.rebuild.json"
+        ))
+        .expect("cases");
+        let snapshot: DocumentSnapshotV2 =
+            serde_json::from_value(cases["setup"].clone()).expect("a snapshot");
         let mut doc = kentos_domain::Document::from_snapshot_v2(snapshot).expect("opens");
         for (command, input) in [
-            ("road.corridors.draw", json!({"corridor": "c-1", "layerId": "0"})),
-            ("road.guardrails.draw", json!({"guardrail": "o-1", "layerId": "korkuluk"})),
-            ("road.templates.edit", json!({"template": "tk-2", "operation": "set", "name": "Tip 2b"})),
+            (
+                "road.corridors.draw",
+                json!({"corridor": "c-1", "layerId": "0"}),
+            ),
+            (
+                "road.guardrails.draw",
+                json!({"guardrail": "o-1", "layerId": "korkuluk"}),
+            ),
+            (
+                "road.templates.edit",
+                json!({"template": "tk-2", "operation": "set", "name": "Tip 2b"}),
+            ),
         ] {
-            let r = crate::registry::run(&mut ExecutionContext::new(&mut doc), command, CallOp::Execute, input).expect("runs");
+            let r = crate::registry::run(
+                &mut ExecutionContext::new(&mut doc),
+                command,
+                CallOp::Execute,
+                input,
+            )
+            .expect("runs");
             assert_eq!(r["status"], "completed", "{command}: {r}");
         }
         doc
     }
 
     fn all() -> RoadProjectRebuild {
-        RoadProjectRebuild { drawings: None, edited: false, regional: false, expected_revision: None }
+        RoadProjectRebuild {
+            drawings: None,
+            edited: false,
+            regional: false,
+            expected_revision: None,
+        }
     }
 
     /// docs/adr/2440: a stop asked before the first drawing is heard: cancelled, nothing written.
@@ -381,7 +497,9 @@ mod tests {
         let job = Progress::default();
         let mut cx = ExecutionContext::new(&mut doc);
         cx.job = Some(&job);
-        let CommandResult::Completed { output, .. } = write(&mut cx, all()) else { panic!("rebuilt") };
+        let CommandResult::Completed { output, .. } = write(&mut cx, all()) else {
+            panic!("rebuilt")
+        };
         let names: Vec<&str> = output.rebuilt.iter().map(|r| r.drawing.as_str()).collect();
         assert_eq!(names, ["cz-1", "cz-2"]);
         assert_eq!(job.fraction(), Some(1.0));

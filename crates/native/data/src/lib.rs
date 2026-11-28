@@ -58,6 +58,8 @@ pub use projects::{ProjectStore, StoredProject};
 pub use query::{QueryColumn, QueryTable};
 pub use registry::{Registry, registry};
 pub use request::{Order, Request};
-pub use schema::{ColumnRule, Family, Field, FieldKind, GeometryField, RuledColumn, Schema, family_of};
+pub use schema::{
+    ColumnRule, Family, Field, FieldKind, GeometryField, RuledColumn, Schema, family_of,
+};
 pub use secrets::{Secrets, set_secrets};
 pub use value::Value;

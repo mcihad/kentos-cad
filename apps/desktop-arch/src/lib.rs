@@ -88,35 +88,23 @@ mod wall_styles;
 
 // The module's tests (docs/adr/9199 §4.11).
 #[cfg(test)]
-#[path = "tests/arch_icons.rs"]
-mod arch_icons;
-#[cfg(test)]
-#[path = "tests/arch_screens.rs"]
-mod arch_screens;
-#[cfg(test)]
-#[path = "tests/program_window_scenes.rs"]
-mod program_window_scenes;
-#[cfg(test)]
-#[path = "tests/quantities_scenes.rs"]
-mod quantities_scenes;
-#[cfg(test)]
-#[path = "tests/wall_style_scenes.rs"]
-mod wall_style_scenes;
-#[cfg(test)]
-#[path = "tests/render_conformance_tests.rs"]
-mod render_conformance_tests;
-#[cfg(test)]
 #[path = "tests/arch_audit_exception_scenes.rs"]
 mod arch_audit_exception_scenes;
 #[cfg(test)]
 #[path = "tests/arch_audit_scenes.rs"]
 mod arch_audit_scenes;
 #[cfg(test)]
+#[path = "tests/arch_icons.rs"]
+mod arch_icons;
+#[cfg(test)]
 #[path = "tests/arch_ifc_tests.rs"]
 mod arch_ifc_tests;
 #[cfg(test)]
 #[path = "tests/arch_project_scenes.rs"]
 mod arch_project_scenes;
+#[cfg(test)]
+#[path = "tests/arch_screens.rs"]
+mod arch_screens;
 #[cfg(test)]
 #[path = "tests/architecture_ribbon_tests.rs"]
 mod architecture_ribbon_tests;
@@ -126,6 +114,9 @@ mod basement_list_tests;
 #[cfg(test)]
 #[path = "tests/boiler_room_tests.rs"]
 mod boiler_room_tests;
+#[cfg(test)]
+#[path = "tests/building_ifc_reach_tests.rs"]
+mod building_ifc_reach_tests;
 #[cfg(test)]
 #[path = "tests/building_plan_notes_tests.rs"]
 mod building_plan_notes_tests;
@@ -163,6 +154,9 @@ mod door_clash_scenes;
 #[path = "tests/double_door_tests.rs"]
 mod double_door_tests;
 #[cfg(test)]
+#[path = "tests/ek_rules_tests.rs"]
+mod ek_rules_tests;
+#[cfg(test)]
 #[path = "tests/element_types_tests.rs"]
 mod element_types_tests;
 #[cfg(test)]
@@ -195,6 +189,12 @@ mod material_library_scenes;
 #[cfg(test)]
 #[path = "tests/material_scenes.rs"]
 mod material_scenes;
+#[cfg(test)]
+#[path = "tests/mimari_dimension_layer_tests.rs"]
+mod mimari_dimension_layer_tests;
+#[cfg(test)]
+#[path = "tests/mimari_fixture_tests.rs"]
+mod mimari_fixture_tests;
 #[cfg(test)]
 #[path = "tests/module_flat_scenes.rs"]
 mod module_flat_scenes;
@@ -229,8 +229,14 @@ mod plan_limits_tests;
 #[path = "tests/plan_notes_tests.rs"]
 mod plan_notes_tests;
 #[cfg(test)]
+#[path = "tests/program_window_scenes.rs"]
+mod program_window_scenes;
+#[cfg(test)]
 #[path = "tests/projection_tests.rs"]
 mod projection_tests;
+#[cfg(test)]
+#[path = "tests/quantities_scenes.rs"]
+mod quantities_scenes;
 #[cfg(test)]
 #[path = "tests/ramp_scenes.rs"]
 mod ramp_scenes;
@@ -240,6 +246,9 @@ mod regulation_audit_tests;
 #[cfg(test)]
 #[path = "tests/regulation_dates_tests.rs"]
 mod regulation_dates_tests;
+#[cfg(test)]
+#[path = "tests/render_conformance_tests.rs"]
+mod render_conformance_tests;
 #[cfg(test)]
 #[path = "tests/resistance_tests.rs"]
 mod resistance_tests;
@@ -298,17 +307,8 @@ mod use_class_tests;
 #[path = "tests/wall_insulation_tests.rs"]
 mod wall_insulation_tests;
 #[cfg(test)]
+#[path = "tests/wall_style_scenes.rs"]
+mod wall_style_scenes;
+#[cfg(test)]
 #[path = "tests/zone_tests.rs"]
 mod zone_tests;
-#[cfg(test)]
-#[path = "tests/ek_rules_tests.rs"]
-mod ek_rules_tests;
-#[cfg(test)]
-#[path = "tests/mimari_dimension_layer_tests.rs"]
-mod mimari_dimension_layer_tests;
-#[cfg(test)]
-#[path = "tests/mimari_fixture_tests.rs"]
-mod mimari_fixture_tests;
-#[cfg(test)]
-#[path = "tests/building_ifc_reach_tests.rs"]
-mod building_ifc_reach_tests;

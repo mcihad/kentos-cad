@@ -181,7 +181,10 @@ fn exception_digests_are_schema_99_and_come_back() {
     let doc = content("topology-digests.json");
     let written = kentos_kcad::encode(&doc).expect("writes");
     assert_eq!(schema(&written), 99);
-    assert!(written == read("topology-digests.kcad"), "the reference's bytes");
+    assert!(
+        written == read("topology-digests.kcad"),
+        "the reference's bytes"
+    );
     let back = kentos_kcad::decode(&written).expect("reads");
     assert_eq!(back.settings.topology, doc.settings.topology);
     let t = back.settings.topology.expect("topology");
@@ -195,7 +198,10 @@ fn exception_digests_are_schema_99_and_come_back() {
     }
     assert_eq!(schema(&kentos_kcad::encode(&plain).expect("writes")), 27);
     for (name, code) in [
-        ("broken/topology-digest-in-schema-98.kcad", Code::UnknownField),
+        (
+            "broken/topology-digest-in-schema-98.kcad",
+            Code::UnknownField,
+        ),
         ("broken/topology-digest-upper.kcad", Code::BadValue),
         ("broken/topology-digest-short.kcad", Code::BadValue),
     ] {

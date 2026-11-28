@@ -226,7 +226,12 @@ pub fn structure_words(doc: &Document) -> Option<String> {
     if let Some(s) = &arch.structure {
         return Some(words(s));
     }
-    let mut own = arch.program.buildings.iter().filter_map(|b| b.structure.as_ref()).map(words);
+    let mut own = arch
+        .program
+        .buildings
+        .iter()
+        .filter_map(|b| b.structure.as_ref())
+        .map(words);
     let first = own.next()?;
     own.all(|w| w == first).then_some(first)
 }
@@ -235,11 +240,17 @@ pub fn structure_words(doc: &Document) -> Option<String> {
 /// declaration's words ([`structure_words`], docs/adr/8146) unless `values` gives one.
 pub fn with_particulars_of(doc: &Document, values: &[(String, String)]) -> Vec<ProjectVariable> {
     let fold = |s: &str| kentos_sheet::expr::fold(s);
-    let had = doc.settings().variables.iter().any(|v| fold(&v.name) == fold("tasiyici_sistem"));
+    let had = doc
+        .settings()
+        .variables
+        .iter()
+        .any(|v| fold(&v.name) == fold("tasiyici_sistem"));
     let mut out = with_particulars(&doc.settings().variables, doc.name(), values);
     if !had
         && let Some(words) = structure_words(doc)
-        && let Some(v) = out.iter_mut().find(|v| fold(&v.name) == fold("tasiyici_sistem"))
+        && let Some(v) = out
+            .iter_mut()
+            .find(|v| fold(&v.name) == fold("tasiyici_sistem"))
         && matches!(v.value, VariableValue::Null)
     {
         v.value = VariableValue::Text(words);
@@ -387,7 +398,9 @@ pub(crate) fn pages(
         let Some(b) = program.building(id) else {
             return Err(Stop::failed(error(
                 crate::codes::BUILDING_NOT_FOUND,
-                format!("Bina programında “{id}” kimlikli bina yok. Var olan bir binanın kimliğini verin."),
+                format!(
+                    "Bina programında “{id}” kimlikli bina yok. Var olan bir binanın kimliğini verin."
+                ),
                 Some("building".into()),
             )));
         };
@@ -396,7 +409,10 @@ pub(crate) fn pages(
         zero = b.zero.unwrap_or(0.0);
         let code = b.code.clone().unwrap_or_else(|| "00".to_owned());
         values.push(("bina_kodu".to_owned(), code.clone()));
-        values.push(("blok_no".to_owned(), b.code.clone().unwrap_or_else(|| b.name.clone())));
+        values.push((
+            "blok_no".to_owned(),
+            b.code.clone().unwrap_or_else(|| b.name.clone()),
+        ));
     }
     if levels.is_empty() {
         return Err(Stop::failed(error(
@@ -906,8 +922,10 @@ mod tests {
     #[test]
     fn the_kunye_s_structure_is_the_declaration_s() {
         use kentos_commands::{BuildingStructure, ProgramBuilding, StructuralSystem};
-        let raw: serde_json::Value =
-            serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/dynamic-blocks.json")).unwrap();
+        let raw: serde_json::Value = serde_json::from_str(include_str!(
+            "../../../../../fixtures/kcad/v2/dynamic-blocks.json"
+        ))
+        .unwrap();
         let mut doc = Document::from_snapshot_v2(serde_json::from_value(raw).unwrap()).unwrap();
         assert_eq!(structure_words(&doc), None);
         let mut settings = doc.settings().clone();
@@ -915,7 +933,10 @@ mod tests {
         let building = |id: &str, system, traditional| ProgramBuilding {
             id: id.into(),
             name: id.to_uppercase(),
-            structure: Some(BuildingStructure { system, traditional }),
+            structure: Some(BuildingStructure {
+                system,
+                traditional,
+            }),
             ..Default::default()
         };
         arch.program.buildings = vec![
@@ -923,27 +944,51 @@ mod tests {
             building("b", StructuralSystem::CutStoneMasonry, true),
         ];
         doc.set_settings(settings.clone());
-        assert_eq!(structure_words(&doc).as_deref(), Some("Kesme taş yığma (geleneksel mimari öğeli)"));
+        assert_eq!(
+            structure_words(&doc).as_deref(),
+            Some("Kesme taş yığma (geleneksel mimari öğeli)")
+        );
         // Buildings that differ say none; the project's own declaration says it.
         let arch = settings.arch.as_mut().unwrap();
         arch.program.buildings[1] = building("b", StructuralSystem::Steel, false);
         doc.set_settings(settings.clone());
         assert_eq!(structure_words(&doc), None);
-        assert!(missing_particulars(&doc).iter().any(|(n, _)| *n == "tasiyici_sistem"));
-        settings.arch.as_mut().unwrap().structure =
-            Some(BuildingStructure { system: StructuralSystem::ReinforcedConcrete, traditional: false });
+        assert!(
+            missing_particulars(&doc)
+                .iter()
+                .any(|(n, _)| *n == "tasiyici_sistem")
+        );
+        settings.arch.as_mut().unwrap().structure = Some(BuildingStructure {
+            system: StructuralSystem::ReinforcedConcrete,
+            traditional: false,
+        });
         doc.set_settings(settings.clone());
-        assert!(!missing_particulars(&doc).iter().any(|(n, _)| *n == "tasiyici_sistem"));
+        assert!(
+            !missing_particulars(&doc)
+                .iter()
+                .any(|(n, _)| *n == "tasiyici_sistem")
+        );
         let get = |out: &[ProjectVariable]| {
-            out.iter().find(|v| v.name == "tasiyici_sistem").map(|v| v.value.clone())
+            out.iter()
+                .find(|v| v.name == "tasiyici_sistem")
+                .map(|v| v.value.clone())
         };
-        assert_eq!(get(&with_particulars_of(&doc, &[])), Some(VariableValue::Text("Betonarme".into())));
+        assert_eq!(
+            get(&with_particulars_of(&doc, &[])),
+            Some(VariableValue::Text("Betonarme".into()))
+        );
         // Typed in the window, the typed words; a drawing that has its own keeps it.
         let typed = [("tasiyici_sistem".to_owned(), "Betonarme karkas".to_owned())];
-        assert_eq!(get(&with_particulars_of(&doc, &typed)), Some(VariableValue::Text("Betonarme karkas".into())));
+        assert_eq!(
+            get(&with_particulars_of(&doc, &typed)),
+            Some(VariableValue::Text("Betonarme karkas".into()))
+        );
         settings.variables = with_particulars_of(&doc, &typed);
         doc.set_settings(settings.clone());
-        assert_eq!(get(&with_particulars_of(&doc, &[])), Some(VariableValue::Text("Betonarme karkas".into())));
+        assert_eq!(
+            get(&with_particulars_of(&doc, &[])),
+            Some(VariableValue::Text("Betonarme karkas".into()))
+        );
     }
 
     /// The scope decision's particulars (docs/adr/8063) join the variables only when given; a given one is written,
@@ -953,10 +998,18 @@ mod tests {
         let out = with_particulars(
             &[],
             "Daire",
-            &[("kullanim".into(), " konut ".into()), ("il_nufusu".into(), String::new())],
+            &[
+                ("kullanim".into(), " konut ".into()),
+                ("il_nufusu".into(), String::new()),
+            ],
         );
-        let get = |out: &[ProjectVariable], n: &str| out.iter().find(|v| v.name == n).map(|v| v.value.clone());
-        assert_eq!(get(&out, "kullanim"), Some(VariableValue::Text("konut".into())));
+        let get = |out: &[ProjectVariable], n: &str| {
+            out.iter().find(|v| v.name == n).map(|v| v.value.clone())
+        };
+        assert_eq!(
+            get(&out, "kullanim"),
+            Some(VariableValue::Text("konut".into()))
+        );
         assert_eq!(get(&out, "il_nufusu"), None, "not asked, not added");
         assert_eq!(out.len(), permit::PARTICULARS.len() + 2);
         let again = with_particulars(&out, "Daire", &[("kullanim".into(), String::new())]);

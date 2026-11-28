@@ -23,9 +23,9 @@
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    ArchModule, CommandResult, CommandWarning, Entity, ModuleBreak, ModuleConflictWhy, ModuleCopied,
-    ModuleInstance, ModuleMember, ModuleNumbering, ModuleObject, ModulePlaced, ModuleReport,
-    ModuleSkipWhy, ModuleSkipped, ModulesEdit, ModulesEdited, ModulesOperation, Vec2,
+    ArchModule, CommandResult, CommandWarning, Entity, ModuleBreak, ModuleConflictWhy,
+    ModuleCopied, ModuleInstance, ModuleMember, ModuleNumbering, ModuleObject, ModulePlaced,
+    ModuleReport, ModuleSkipWhy, ModuleSkipped, ModulesEdit, ModulesEdited, ModulesOperation, Vec2,
     module_kind_ok, opening_type_id_of,
 };
 use kentos_domain::{Document, Slot, Uuid};
@@ -115,7 +115,11 @@ pub(crate) fn storey_order(doc: &Document) -> Vec<String> {
 
 /// The level `storey` storeys above `base` in `order`: the base itself for storey 0; none when the project has no
 /// such level (or no base for an upper storey).
-pub(crate) fn storey_level(order: &[String], base: Option<&str>, storey: u32) -> Option<Option<String>> {
+pub(crate) fn storey_level(
+    order: &[String],
+    base: Option<&str>,
+    storey: u32,
+) -> Option<Option<String>> {
     if storey == 0 {
         return Some(base.map(str::to_owned));
     }
@@ -243,7 +247,12 @@ fn instantiate(
     wall_of: &dyn Fn(&str) -> Option<Entity>,
 ) -> Result<Entity, Stop> {
     let m = matrix(inst.at, inst.rotation, inst.mirror);
-    let mut e = crate::transform::by_matrix(&member.entity, &m, crate::geometry::drawing_font(doc.settings().drawing_font)).ok_or_else(|| {
+    let mut e = crate::transform::by_matrix(
+        &member.entity,
+        &m,
+        crate::geometry::drawing_font(doc.settings().drawing_font),
+    )
+    .ok_or_else(|| {
         fail(
             codes::NOT_FINITE,
             "Modülün bir nesnesi yerleştirilemedi.".into(),
@@ -438,12 +447,12 @@ type Placement = (Vec<ModuleObject>, Vec<(Uuid, Entity)>);
 
 /// Places every member of `m` the instance `inst` holds (a single-storey instance its storey's, docs/adr/0811): its
 /// objects (key and new id) and the new objects.
-fn place_all(
-    doc: &Document,
-    m: &ArchModule,
-    inst: &ModuleInstance,
-) -> Result<Placement, Stop> {
-    let held: Vec<&ModuleMember> = m.members.iter().filter(|mem| more::holds(m, inst, mem)).collect();
+fn place_all(doc: &Document, m: &ArchModule, inst: &ModuleInstance) -> Result<Placement, Stop> {
+    let held: Vec<&ModuleMember> = m
+        .members
+        .iter()
+        .filter(|mem| more::holds(m, inst, mem))
+        .collect();
     let ids: Vec<Uuid> = held.iter().map(|_| Uuid::now_v7()).collect();
     let map: HashMap<String, String> = held
         .iter()
@@ -662,7 +671,9 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                         let Some(r) = order.iter().position(|x| x == l) else {
                             return Err(fail(
                                 codes::MODULE_LEVELS,
-                                format!("Nesnenin katı “{l}” projede yok; önce ona projenin bir katını verin."),
+                                format!(
+                                    "Nesnenin katı “{l}” projede yok; önce ona projenin bir katını verin."
+                                ),
                                 &path,
                             ));
                         };
@@ -708,7 +719,12 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                     (Some(lo), Some(l)) => order.iter().position(|x| x == l).map_or(0, |r| r - lo),
                     _ => 0,
                 };
-                let mut t = crate::transform::by_matrix(e, &back, crate::geometry::drawing_font(doc.settings().drawing_font)).ok_or_else(|| {
+                let mut t = crate::transform::by_matrix(
+                    e,
+                    &back,
+                    crate::geometry::drawing_font(doc.settings().drawing_font),
+                )
+                .ok_or_else(|| {
                     fail(
                         codes::NOT_FINITE,
                         "Nesne modüle alınamadı.".into(),
@@ -821,7 +837,10 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                     return Err(fail(
                         codes::INVALID_INPUT,
                         if all <= 1 {
-                            format!("“{}” modülü tek katlı; kat seçmeden yerleştirin.", modules[k].name)
+                            format!(
+                                "“{}” modülü tek katlı; kat seçmeden yerleştirin.",
+                                modules[k].name
+                            )
                         } else {
                             format!(
                                 "“{}” modülü {all} katlı; kat 0 ile {} arasında olur.",
@@ -835,7 +854,10 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                 if level.is_none() {
                     return Err(fail(
                         codes::INVALID_INPUT,
-                        format!("“{}” modülünün tek katı bir katta yerleşir; bir kat seçin.", modules[k].name),
+                        format!(
+                            "“{}” modülünün tek katı bir katta yerleşir; bir kat seçin.",
+                            modules[k].name
+                        ),
                         "operation.level",
                     ));
                 }
@@ -933,7 +955,12 @@ fn check(doc: &Document, input: &ModulesEdit) -> Result<Work, Stop> {
                         "operation.from",
                     ));
                 };
-                let mut t = crate::transform::by_matrix(e, &back, crate::geometry::drawing_font(doc.settings().drawing_font)).ok_or_else(|| {
+                let mut t = crate::transform::by_matrix(
+                    e,
+                    &back,
+                    crate::geometry::drawing_font(doc.settings().drawing_font),
+                )
+                .ok_or_else(|| {
                     fail(
                         codes::NOT_FINITE,
                         "Nesne kaynağa alınamadı.".into(),

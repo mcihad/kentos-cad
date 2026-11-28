@@ -19,14 +19,17 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::sync::Arc;
 
-use kentos_contracts::block_dynamic::{BlockParameter, ParamValue, same_param_value, value_problem};
+use kentos_contracts::block_dynamic::{
+    BlockParameter, ParamValue, same_param_value, value_problem,
+};
 use kentos_contracts::codes;
 use kentos_contracts::{
     BlockDefinition, BlockId, BlockUnits, CASEWORK_APPLIANCE, CASEWORK_SINK_MODULE, CaseworkBreak,
-    CaseworkCorner, CaseworkEnd, CaseworkFace, CaseworkFridge, CaseworkHand, CaseworkId, CaseworkLeg,
-    CaseworkMember, CaseworkModule, CaseworkModuleKind, CaseworkPart, CaseworkRecord, CaseworkRun,
-    CaseworkSide, CaseworkTie, DEFAULT_CASEWORK_DEPTH, DEFAULT_CASEWORK_MODULE, Entity, EntityBase,
-    EntityId, InsertEntity, OpeningForm, PathEntity, RingGeometry, Vec2, casework_problem,
+    CaseworkCorner, CaseworkEnd, CaseworkFace, CaseworkFridge, CaseworkHand, CaseworkId,
+    CaseworkLeg, CaseworkMember, CaseworkModule, CaseworkModuleKind, CaseworkPart, CaseworkRecord,
+    CaseworkRun, CaseworkSide, CaseworkTie, DEFAULT_CASEWORK_DEPTH, DEFAULT_CASEWORK_MODULE,
+    Entity, EntityBase, EntityId, InsertEntity, OpeningForm, PathEntity, RingGeometry, Vec2,
+    casework_problem,
 };
 use kentos_geometry_core::api::json::{FromJson, Json};
 use kentos_geometry_core::block::{Blocks, Definition};
@@ -169,7 +172,11 @@ fn core_definition(b: &BlockDefinition) -> Definition {
 
 /// The box of what `block` draws placed at the origin at scale 1, its parameters' defaults: `[x0, y0, x1, y1]`
 /// relative to its base point; none for one that draws nothing.
-fn block_box(blocks: &Blocks, block: BlockId, font: kentos_geometry_core::text::Font) -> Option<[f64; 4]> {
+fn block_box(
+    blocks: &Blocks,
+    block: BlockId,
+    font: kentos_geometry_core::text::Font,
+) -> Option<[f64; 4]> {
     let insert = Shape::Insert {
         params: None,
         block: block.to_text(),
@@ -188,12 +195,20 @@ fn block_box(blocks: &Blocks, block: BlockId, font: kentos_geometry_core::text::
             continue;
         }
         let b = kentos_geometry_core::entity::entity_bounds_in(&piece.shape, font);
-        if ![b.min_x, b.min_y, b.max_x, b.max_y].iter().all(|v| v.is_finite()) {
+        if ![b.min_x, b.min_y, b.max_x, b.max_y]
+            .iter()
+            .all(|v| v.is_finite())
+        {
             continue;
         }
         out = Some(match out {
             None => [b.min_x, b.min_y, b.max_x, b.max_y],
-            Some(a) => [a[0].min(b.min_x), a[1].min(b.min_y), a[2].max(b.max_x), a[3].max(b.max_y)],
+            Some(a) => [
+                a[0].min(b.min_x),
+                a[1].min(b.min_y),
+                a[2].max(b.max_x),
+                a[3].max(b.max_y),
+            ],
         });
     }
     out
@@ -229,7 +244,12 @@ fn at(f: &Frame, a: f64, b: f64) -> Vec2 {
 
 /// The counter-clockwise rectangle `a`..`b` along a leg, `0`..`depth` into its side.
 fn band(f: &Frame, a: f64, b: f64, depth: f64, left: bool) -> Vec<Vec2> {
-    let mut out = vec![at(f, a, 0.0), at(f, b, 0.0), at(f, b, depth), at(f, a, depth)];
+    let mut out = vec![
+        at(f, a, 0.0),
+        at(f, b, 0.0),
+        at(f, b, depth),
+        at(f, a, depth),
+    ];
     if !left {
         out.reverse();
     }
@@ -245,7 +265,12 @@ fn cut(f: &Frame, a: f64, z: f64, t0: f64, t1: f64, left: bool) -> Vec<Vec2> {
     out
 }
 
-fn path_entity(base: &EntityBase, pts: Vec<Vec2>, holes: Option<Vec<RingGeometry>>, area: bool) -> Entity {
+fn path_entity(
+    base: &EntityBase,
+    pts: Vec<Vec2>,
+    holes: Option<Vec<RingGeometry>>,
+    area: bool,
+) -> Entity {
     let path = PathEntity {
         base: base.clone(),
         pts,
@@ -298,7 +323,12 @@ fn wall_faces(e: &Entity) -> Option<[(Vec<CoreVec2>, Vec<bool>); 2]> {
     let lines = kentos_geometry_core::geom::wall::lines(pts, bulges.as_deref(), wall).ok()?;
     let n = pts.len();
     let straight: Vec<bool> = (0..n)
-        .map(|i| bulges.as_ref().and_then(|b| b.get(i)).is_none_or(|b| *b == 0.0))
+        .map(|i| {
+            bulges
+                .as_ref()
+                .and_then(|b| b.get(i))
+                .is_none_or(|b| *b == 0.0)
+        })
         .collect();
     let first = lines.first()?;
     let last = lines.last()?;
@@ -321,7 +351,11 @@ fn face_edge(e: &Entity, face: CaseworkFace, edge: u32) -> Option<(CoreVec2, Cor
     }];
     let n = pts.len();
     let k = edge as usize;
-    let edges = if w.wall.closed { n } else { n.saturating_sub(1) };
+    let edges = if w.wall.closed {
+        n
+    } else {
+        n.saturating_sub(1)
+    };
     if k >= edges || !straight[k] {
         return None;
     }
@@ -362,12 +396,9 @@ impl Document {
     /// The run an object is part of, and its place in it.
     pub fn casework_member(&self, uid: Uuid) -> Option<(&CaseworkRecord, &CaseworkMember)> {
         let id = EntityId(uid.into_bytes());
-        self.casework.iter().find_map(|r| {
-            r.members
-                .iter()
-                .find(|m| m.uid == id)
-                .map(|m| (&**r, m))
-        })
+        self.casework
+            .iter()
+            .find_map(|r| r.members.iter().find(|m| m.uid == id).map(|m| (&**r, m)))
     }
 
     /// Why `runs` cannot be the drawing's, or none: the contract's rules and every object an object of the drawing.
@@ -401,15 +432,27 @@ impl Document {
         let through = recipe.through.clone().unwrap_or_default();
         let pts = recipe.path();
         if let Some(level) = &recipe.level
-            && !self.settings().arch.as_ref().is_some_and(|a| a.levels.iter().any(|l| &l.id == level))
+            && !self
+                .settings()
+                .arch
+                .as_ref()
+                .is_some_and(|a| a.levels.iter().any(|l| &l.id == level))
         {
-            return Err(invalid(format!("Mutfak dizisinin katı projede bulunamadı: {level}."), "level"));
+            return Err(invalid(
+                format!("Mutfak dizisinin katı projede bulunamadı: {level}."),
+                "level",
+            ));
         }
         if recipe.filler_ends.len() > pts.len() - 1 {
-            return Err(invalid("Dolgu ucu yalnızca dizide bulunan kollar için seçilebilir.".into(), "fillerEnds"));
+            return Err(invalid(
+                "Dolgu ucu yalnızca dizide bulunan kollar için seçilebilir.".into(),
+                "fillerEnds",
+            ));
         }
         let mut names: Vec<(String, String)> = vec![("from".into(), "Dizinin başının".into())];
-        names.extend((0..through.len()).map(|i| (format!("through[{i}]"), format!("{}. köşenin", i + 1))));
+        names.extend(
+            (0..through.len()).map(|i| (format!("through[{i}]"), format!("{}. köşenin", i + 1))),
+        );
         names.push(("to".into(), "Dizinin sonunun".into()));
         for (p, (path, whose)) in pts.iter().zip(&names) {
             for (axis, name, v) in [("x", "doğu (Y)", p.x), ("y", "kuzey (X)", p.y)] {
@@ -433,7 +476,9 @@ impl Document {
             {
                 return Err(CaseworkStop {
                     code: codes::NOT_FINITE,
-                    message: format!("{what} sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin."),
+                    message: format!(
+                        "{what} sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin."
+                    ),
                     path: path.into(),
                 });
             }
@@ -445,7 +490,9 @@ impl Document {
             {
                 return Err(CaseworkStop {
                     code: codes::NOT_FINITE,
-                    message: "Modülün eni sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.".into(),
+                    message:
+                        "Modülün eni sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin."
+                            .into(),
                     path: format!("perModule[{i}].width"),
                 });
             }
@@ -470,7 +517,10 @@ impl Document {
                 }
                 None => {
                     return Err(invalid(
-                        format!("{}. kolun başı ile sonu aynı nokta; kolun çizgisini verin.", j + 1),
+                        format!(
+                            "{}. kolun başı ile sonu aynı nokta; kolun çizgisini verin.",
+                            j + 1
+                        ),
                         leg_path(j, n),
                     ));
                 }
@@ -496,7 +546,9 @@ impl Document {
             }
             if (cross > 0.0) != left {
                 return Err(invalid(
-                    format!("{k}. köşe dolapların öbür yanına dönüyor; köşe dolapların durduğu yana dönmeli."),
+                    format!(
+                        "{k}. köşe dolapların öbür yanına dönüyor; köşe dolapların durduğu yana dönmeli."
+                    ),
                     format!("through[{}]", k - 1),
                 ));
             }
@@ -517,25 +569,33 @@ impl Document {
             }
         }
         let mut added: Vec<BlockDefinition> = Vec::new();
-        let mut definition = |name: &str, added: &mut Vec<BlockDefinition>| -> Option<BlockDefinition> {
-            if let Some(b) = self.block_named(name) {
-                return Some(b.clone());
-            }
-            if let Some(b) = added.iter().find(|b| b.name == name) {
-                return Some(b.clone());
-            }
-            let mut b = library(name)?;
-            if self.block(b.id).is_some() || added.iter().any(|a| a.id == b.id) {
-                b.id = fresh();
-            }
-            added.push(b.clone());
-            Some(b)
+        let mut definition =
+            |name: &str, added: &mut Vec<BlockDefinition>| -> Option<BlockDefinition> {
+                if let Some(b) = self.block_named(name) {
+                    return Some(b.clone());
+                }
+                if let Some(b) = added.iter().find(|b| b.name == name) {
+                    return Some(b.clone());
+                }
+                let mut b = library(name)?;
+                if self.block(b.id).is_some() || added.iter().any(|a| a.id == b.id) {
+                    b.id = fresh();
+                }
+                added.push(b.clone());
+                Some(b)
+            };
+        let missing = |name: &str| {
+            invalid(
+                format!("“{name}” bloğu ne çizimde ne KentOS kitaplığında var."),
+                "layerId",
+            )
         };
-        let missing = |name: &str| invalid(format!("“{name}” bloğu ne çizimde ne KentOS kitaplığında var."), "layerId");
         let cabinet = definition(BASE, &mut added).ok_or_else(|| missing(BASE))?;
         let Some(width) = width_param(&cabinet).cloned() else {
             return Err(invalid(
-                format!("“{BASE}” bloğunun “{WIDTH}” parametresi yok; dizi modülün enini bu parametreyle verir."),
+                format!(
+                    "“{BASE}” bloğunun “{WIDTH}” parametresi yok; dizi modülün enini bu parametreyle verir."
+                ),
                 "module",
             ));
         };
@@ -549,13 +609,15 @@ impl Document {
         }
         let font = crate::linked::font_of(self.settings.drawing_font);
         let blocks_now = |added: &[BlockDefinition]| {
-            let mut defs: Vec<Definition> = self.blocks.iter().map(|b| core_definition(b)).collect();
+            let mut defs: Vec<Definition> =
+                self.blocks.iter().map(|b| core_definition(b)).collect();
             defs.extend(added.iter().map(core_definition));
             Blocks::new(defs)
         };
         let cab_depth = {
             let blocks = blocks_now(&added);
-            block_box(&blocks, cabinet.id, font).map_or(DEFAULT_CASEWORK_DEPTH, |b| b[3] * cab_factor)
+            block_box(&blocks, cabinet.id, font)
+                .map_or(DEFAULT_CASEWORK_DEPTH, |b| b[3] * cab_factor)
         };
         let (sink, cooktop, dishwasher) = (recipe.sink, recipe.cooktop, recipe.dishwasher);
         let oven = recipe.oven == Some(true);
@@ -568,7 +630,10 @@ impl Document {
                 && let Some(why) = width_problem(&width, w / cab_factor)
             {
                 return Err(invalid(
-                    format!("{}. modülün eni {w} m; “{BASE}” bloğunun eni için {why}.", m.module),
+                    format!(
+                        "{}. modülün eni {w} m; “{BASE}” bloğunun eni için {why}.",
+                        m.module
+                    ),
                     format!("perModule[{i}].width"),
                 ));
             }
@@ -610,14 +675,23 @@ impl Document {
         let mut index = 1u32;
         for (j, f) in frames.iter().enumerate() {
             let s0 = if j == 0 {
-                if fridge == Some(CaseworkEnd::Start) { fridge_span } else { 0.0 }
+                if fridge == Some(CaseworkEnd::Start) {
+                    fridge_span
+                } else {
+                    0.0
+                }
             } else if corner == CaseworkCorner::Blind {
                 cab_depth + GAP
             } else {
                 cab_depth
             };
             let s1 = if j + 1 == n {
-                f.length - if fridge == Some(CaseworkEnd::End) { fridge_span } else { 0.0 }
+                f.length
+                    - if fridge == Some(CaseworkEnd::End) {
+                        fridge_span
+                    } else {
+                        0.0
+                    }
             } else if corner == CaseworkCorner::Blind {
                 f.length
             } else {
@@ -700,7 +774,8 @@ impl Document {
         }
         if dishwasher.is_some() && (dishwasher == sink || dishwasher == cooktop) {
             return Err(invalid(
-                "Bulaşık makinesi evyenin ya da ocağın modülüne konamaz; başka bir modül seçin.".into(),
+                "Bulaşık makinesi evyenin ya da ocağın modülüne konamaz; başka bir modül seçin."
+                    .into(),
                 "dishwasher",
             ));
         }
@@ -732,7 +807,10 @@ impl Document {
                 }
                 if width_of(k) > CASEWORK_APPLIANCE + SLACK {
                     return Err(invalid(
-                        format!("{k}. modül çift kapılı ({} m); açılması verilmez.", width_of(k)),
+                        format!(
+                            "{k}. modül çift kapılı ({} m); açılması verilmez.",
+                            width_of(k)
+                        ),
                         format!("perModule[{i}].hand"),
                     ));
                 }
@@ -747,7 +825,11 @@ impl Document {
                 None => *j == 0 && n > 1,
             };
             let mut x = if back { s1 - total } else { *s0 };
-            let gap = if back { (*s0, s1 - total) } else { (s0 + total, *s1) };
+            let gap = if back {
+                (*s0, s1 - total)
+            } else {
+                (s0 + total, *s1)
+            };
             for &(number, w) in laid {
                 placed.push(Placed {
                     number,
@@ -831,7 +913,9 @@ impl Document {
                 let b = definition(UPPER, &mut added).ok_or_else(|| missing(UPPER))?;
                 let Some(p) = width_param(&b).cloned() else {
                     return Err(invalid(
-                        format!("“{UPPER}” bloğunun “{WIDTH}” parametresi yok; dizi modülün enini bu parametreyle verir."),
+                        format!(
+                            "“{UPPER}” bloğunun “{WIDTH}” parametresi yok; dizi modülün enini bu parametreyle verir."
+                        ),
                         "upper",
                     ));
                 };
@@ -916,28 +1000,29 @@ impl Document {
         for q in &placed {
             let f = &frames[q.leg];
             let is_oven = oven && Some(q.number) == cooktop;
-            let (kind, block, hand) = if let (true, Some(b)) = (Some(q.number) == dishwasher, &washer) {
-                (CaseworkModuleKind::Dishwasher, b, None)
-            } else if let (true, Some(b)) = (is_oven, &oven_block) {
-                (CaseworkModuleKind::Cooktop, b, None)
-            } else {
-                let kind = if Some(q.number) == sink {
-                    CaseworkModuleKind::Sink
-                } else if Some(q.number) == cooktop {
-                    CaseworkModuleKind::Cooktop
+            let (kind, block, hand) =
+                if let (true, Some(b)) = (Some(q.number) == dishwasher, &washer) {
+                    (CaseworkModuleKind::Dishwasher, b, None)
+                } else if let (true, Some(b)) = (is_oven, &oven_block) {
+                    (CaseworkModuleKind::Cooktop, b, None)
                 } else {
-                    CaseworkModuleKind::Base
+                    let kind = if Some(q.number) == sink {
+                        CaseworkModuleKind::Sink
+                    } else if Some(q.number) == cooktop {
+                        CaseworkModuleKind::Cooktop
+                    } else {
+                        CaseworkModuleKind::Base
+                    };
+                    let hand = if q.width > CASEWORK_APPLIANCE + SLACK {
+                        CaseworkHand::Double
+                    } else {
+                        match given.get(&q.number).and_then(|m| m.hand) {
+                            Some(kentos_contracts::CaseworkDoor::Right) => CaseworkHand::Right,
+                            _ => CaseworkHand::Left,
+                        }
+                    };
+                    (kind, &cabinet, Some(hand))
                 };
-                let hand = if q.width > CASEWORK_APPLIANCE + SLACK {
-                    CaseworkHand::Double
-                } else {
-                    match given.get(&q.number).and_then(|m| m.hand) {
-                        Some(kentos_contracts::CaseworkDoor::Right) => CaseworkHand::Right,
-                        _ => CaseworkHand::Left,
-                    }
-                };
-                (kind, &cabinet, Some(hand))
-            };
             let word = if is_oven {
                 "Fırın"
             } else {
@@ -966,9 +1051,23 @@ impl Document {
             let factor = self.casework_factor(block);
             // A cabinet stands from its module's start, an appliance on its middle (its base point its back's).
             let entity = if hand.is_some() {
-                insert(block, at(f, q.start, 0.0), f, width_values(&width, q.width / factor), attrs, factor)
+                insert(
+                    block,
+                    at(f, q.start, 0.0),
+                    f,
+                    width_values(&width, q.width / factor),
+                    attrs,
+                    factor,
+                )
             } else {
-                insert(block, at(f, q.start + q.width / 2.0, 0.0), f, BTreeMap::new(), attrs, factor)
+                insert(
+                    block,
+                    at(f, q.start + q.width / 2.0, 0.0),
+                    f,
+                    BTreeMap::new(),
+                    attrs,
+                    factor,
+                )
             };
             members.push(LaidMember {
                 part: CaseworkPart::Module,
@@ -992,10 +1091,24 @@ impl Document {
             members.push(LaidMember {
                 part: fx.part,
                 index: None,
-                entity: insert(&fx.block, at(f, fx.at.0, fx.at.1), f, BTreeMap::new(), BTreeMap::new(), fx.factor),
+                entity: insert(
+                    &fx.block,
+                    at(f, fx.at.0, fx.at.1),
+                    f,
+                    BTreeMap::new(),
+                    BTreeMap::new(),
+                    fx.factor,
+                ),
             });
             let (a0, a1, t0, t1) = fx.footprint;
-            holes.push(ring(cut(f, a0 + CUT_IN, a1 - CUT_IN, t0 + CUT_IN, t1 - CUT_IN, left)));
+            holes.push(ring(cut(
+                f,
+                a0 + CUT_IN,
+                a1 - CUT_IN,
+                t0 + CUT_IN,
+                t1 - CUT_IN,
+                left,
+            )));
         }
         let mut fridge_out = None;
         if let (Some(end), Some(b)) = (fridge, &fridge_block) {
@@ -1057,16 +1170,28 @@ impl Document {
             filler += leftover;
             let at_start = (a - legs[j].start).abs() < SLACK;
             let (message, path) = if n == 1 && at_start {
-                (format!("Dizinin başında {} m dolgu kalıyor.", fixed(leftover, 3)), "from".to_owned())
+                (
+                    format!("Dizinin başında {} m dolgu kalıyor.", fixed(leftover, 3)),
+                    "from".to_owned(),
+                )
             } else if n == 1 {
                 (
-                    format!("{laid} modülden sonra dizinin sonunda {} m dolgu kalıyor.", fixed(leftover, 3)),
+                    format!(
+                        "{laid} modülden sonra dizinin sonunda {} m dolgu kalıyor.",
+                        fixed(leftover, 3)
+                    ),
                     "to".to_owned(),
                 )
             } else {
                 (
                     format!("{}. kolda {} m dolgu kalıyor.", j + 1, fixed(leftover, 3)),
-                    if at_start && j == 0 { "from".to_owned() } else if at_start { leg_path(j - 1, n) } else { leg_path(j, n) },
+                    if at_start && j == 0 {
+                        "from".to_owned()
+                    } else if at_start {
+                        leg_path(j - 1, n)
+                    } else {
+                        leg_path(j, n)
+                    },
                 )
             };
             warnings.push(CaseworkWarning {
@@ -1087,9 +1212,15 @@ impl Document {
                 },
                 "cooktop",
             ),
-            (dishwasher, "bulaşık makinesinin kapağı açılamaz", "dishwasher"),
+            (
+                dishwasher,
+                "bulaşık makinesinin kapağı açılamaz",
+                "dishwasher",
+            ),
         ] {
-            let Some(q) = k.and_then(|k| by_number.get(&k)) else { continue };
+            let Some(q) = k.and_then(|k| by_number.get(&k)) else {
+                continue;
+            };
             let over = blind_by(q);
             if over > SLACK {
                 warnings.push(CaseworkWarning {
@@ -1116,9 +1247,18 @@ impl Document {
                 entity: path_entity(&base, pts, None, false),
             });
         }
-        let cs = if fridge == Some(CaseworkEnd::Start) { fridge_span } else { 0.0 };
+        let cs = if fridge == Some(CaseworkEnd::Start) {
+            fridge_span
+        } else {
+            0.0
+        };
         let last = &frames[n - 1];
-        let ce = last.length - if fridge == Some(CaseworkEnd::End) { fridge_span } else { 0.0 };
+        let ce = last.length
+            - if fridge == Some(CaseworkEnd::End) {
+                fridge_span
+            } else {
+                0.0
+            };
         let mut outer = vec![at(&frames[0], cs, 0.0)];
         outer.extend(pts[1..n].iter().copied());
         outer.push(at(last, ce, 0.0));
@@ -1142,7 +1282,9 @@ impl Document {
             index: None,
             entity: path_entity(&base, counter, (!holes.is_empty()).then_some(holes), true),
         });
-        let ties: Vec<Option<CaseworkTie>> = (0..n).map(|j| self.casework_tie(pts[j], pts[j + 1], recipe.level.as_deref())).collect();
+        let ties: Vec<Option<CaseworkTie>> = (0..n)
+            .map(|j| self.casework_tie(pts[j], pts[j + 1], recipe.level.as_deref()))
+            .collect();
         for (j, tie) in ties.iter().enumerate() {
             let Some(tie) = tie else { continue };
             legs[j].wall = Some(tie.wall.to_text());
@@ -1150,12 +1292,14 @@ impl Document {
             warnings.extend(self.casework_swing_clashes(tie.wall, &frames[j], depth, j, n));
         }
         // Its modules stand on their wall's level (docs/adr/0733 §1): the first wall's.
-        let level = recipe.level.clone().or_else(|| ties.iter().flatten().find_map(|t| {
-            let slot = crate::identity::Uuid::parse_str(&t.wall.to_text())
-                .ok()
-                .and_then(|u| self.slot_of(u))?;
-            self.get(slot)?.own_level().map(str::to_owned)
-        }));
+        let level = recipe.level.clone().or_else(|| {
+            ties.iter().flatten().find_map(|t| {
+                let slot = crate::identity::Uuid::parse_str(&t.wall.to_text())
+                    .ok()
+                    .and_then(|u| self.slot_of(u))?;
+                self.get(slot)?.own_level().map(str::to_owned)
+            })
+        });
         if let Some(level) = level {
             for m in &mut members {
                 if let Entity::Insert(i) = &mut m.entity {
@@ -1179,18 +1323,33 @@ impl Document {
     /// its right; none.
     fn casework_tie(&self, a: Vec2, b: Vec2, level: Option<&str>) -> Option<CaseworkTie> {
         for s in self.store.iter() {
-            let Entity::Wall(w) = &*s.entity else { continue };
-            if level.is_some() && w.wall.arch.level.as_deref() != level { continue; }
-            let Some(faces) = wall_faces(&s.entity) else { continue };
-            for (face, (pts, straight)) in [CaseworkFace::Left, CaseworkFace::Right].into_iter().zip(&faces) {
+            let Entity::Wall(w) = &*s.entity else {
+                continue;
+            };
+            if level.is_some() && w.wall.arch.level.as_deref() != level {
+                continue;
+            }
+            let Some(faces) = wall_faces(&s.entity) else {
+                continue;
+            };
+            for (face, (pts, straight)) in [CaseworkFace::Left, CaseworkFace::Right]
+                .into_iter()
+                .zip(&faces)
+            {
                 let n = pts.len();
-                let edges = if w.wall.closed { n } else { n.saturating_sub(1) };
+                let edges = if w.wall.closed {
+                    n
+                } else {
+                    n.saturating_sub(1)
+                };
                 for k in 0..edges {
                     if !straight[k] {
                         continue;
                     }
                     let (p, q) = (pts[k], pts[(k + 1) % n]);
-                    let (Some((s0, d0, length)), Some((s1, d1, _))) = (along(p, q, a), along(p, q, b)) else {
+                    let (Some((s0, d0, length)), Some((s1, d1, _))) =
+                        (along(p, q, a), along(p, q, b))
+                    else {
                         continue;
                     };
                     let within = |s: f64| (-TIE..=length + TIE).contains(&s);
@@ -1208,16 +1367,25 @@ impl Document {
     }
 
     /// The leg `j` of `n` on `wall` in front of its doors, passages and low windows (docs/adr/0727 §2).
-    fn casework_clashes(&self, wall: EntityId, f: &Frame, j: usize, n: usize) -> Vec<CaseworkWarning> {
+    fn casework_clashes(
+        &self,
+        wall: EntityId,
+        f: &Frame,
+        j: usize,
+        n: usize,
+    ) -> Vec<CaseworkWarning> {
         let host = wall.to_text();
         let mut out = Vec::new();
         for s in self.store.iter() {
-            let Entity::Opening(o) = &*s.entity else { continue };
+            let Entity::Opening(o) = &*s.entity else {
+                continue;
+            };
             let o = &o.opening;
             if o.host != host || o.place.len() != 4 {
                 continue;
             }
-            let low = o.form == OpeningForm::Window && o.sill.is_some_and(|h| h < COUNTER_HEIGHT - SLACK);
+            let low =
+                o.form == OpeningForm::Window && o.sill.is_some_and(|h| h < COUNTER_HEIGHT - SLACK);
             if !matches!(o.form, OpeningForm::Door | OpeningForm::Opening) && !low {
                 continue;
             }
@@ -1237,8 +1405,16 @@ impl Document {
                     fixed(o.sill.unwrap_or_default(), 2)
                 )
             } else {
-                let what = if o.form == OpeningForm::Door { "kapısının" } else { "boşluğunun" };
-                format!("{}. kol {mark} {what} önüne geliyor ({} m).", j + 1, fixed(over, 3))
+                let what = if o.form == OpeningForm::Door {
+                    "kapısının"
+                } else {
+                    "boşluğunun"
+                };
+                format!(
+                    "{}. kol {mark} {what} önüne geliyor ({} m).",
+                    j + 1,
+                    fixed(over, 3)
+                )
             };
             out.push(CaseworkWarning {
                 code: codes::CASEWORK_CLASH,
@@ -1250,18 +1426,41 @@ impl Document {
     }
 
     /// The leg `j` of `n` in the sweep of a door of another wall (docs/adr/0772 §5): its leaf, opening, strikes the run.
-    fn casework_swing_clashes(&self, wall: EntityId, f: &Frame, depth: f64, j: usize, n: usize) -> Vec<CaseworkWarning> {
+    fn casework_swing_clashes(
+        &self,
+        wall: EntityId,
+        f: &Frame,
+        depth: f64,
+        j: usize,
+        n: usize,
+    ) -> Vec<CaseworkWarning> {
         use kentos_geometry_core::Vec2 as V;
         let host = wall.to_text();
-        let at = |a: f64, b: f64| V::new(f.from.x + f.along.x * a + f.into.x * b, f.from.y + f.along.y * a + f.into.y * b);
+        let at = |a: f64, b: f64| {
+            V::new(
+                f.from.x + f.along.x * a + f.into.x * b,
+                f.from.y + f.along.y * a + f.into.y * b,
+            )
+        };
         // The run's footprint, a millimetre in from each side: touching is no clash.
         let s = 0.001;
-        let run = [at(s, s), at(f.length - s, s), at(f.length - s, depth - s), at(s, depth - s)];
+        let run = [
+            at(s, s),
+            at(f.length - s, s),
+            at(f.length - s, depth - s),
+            at(s, depth - s),
+        ];
         let mut out = Vec::new();
         for st in self.store.iter() {
-            let Entity::Opening(o) = &*st.entity else { continue };
+            let Entity::Opening(o) = &*st.entity else {
+                continue;
+            };
             let o = &o.opening;
-            if o.host == host || o.form != OpeningForm::Door || o.place.len() != 4 || o.broken.is_some() {
+            if o.host == host
+                || o.form != OpeningForm::Door
+                || o.place.len() != 4
+                || o.broken.is_some()
+            {
                 continue;
             }
             let place: Vec<V> = o.place.iter().map(|p| V::new(p.x, p.y)).collect();
@@ -1275,7 +1474,10 @@ impl Document {
             let mark = o.number.clone().unwrap_or_else(|| "numarasız".into());
             out.push(CaseworkWarning {
                 code: codes::CASEWORK_CLASH,
-                message: format!("{}. kol {mark} kapısının kanadının açılma alanına giriyor.", j + 1),
+                message: format!(
+                    "{}. kol {mark} kapısının kanadının açılma alanına giriyor.",
+                    j + 1
+                ),
                 path: if n > 1 { leg_path(j, n) } else { "to".into() },
             });
         }
@@ -1290,7 +1492,12 @@ impl Document {
         laid: &Laid,
     ) -> Result<MemberOps, Refusal> {
         let old: HashMap<(CaseworkPart, Option<u32>), EntityId> = record
-            .map(|r| r.members.iter().map(|m| ((m.part, m.index), m.uid)).collect())
+            .map(|r| {
+                r.members
+                    .iter()
+                    .map(|m| ((m.part, m.index), m.uid))
+                    .collect()
+            })
             .unwrap_or_default();
         let keep: HashSet<(CaseworkPart, Option<u32>)> =
             laid.members.iter().map(|m| (m.part, m.index)).collect();
@@ -1526,7 +1733,10 @@ impl Document {
                     removed.contains(&m.uid) && self.slot_of(Uuid::from_bytes(m.uid.0)).is_none()
                 })
             {
-                let op = Op::CaseworkRemove { index, run: run.clone() };
+                let op = Op::CaseworkRemove {
+                    index,
+                    run: run.clone(),
+                };
                 self.apply_op(&op);
                 out.push(op);
                 continue;
@@ -1599,18 +1809,25 @@ impl Document {
             return Vec::new();
         }
         let runs = &report.casework;
-        let authorized =
-            |id: &CaseworkId| runs.added.contains(id) || runs.changed.contains(id) || runs.removed.contains(id);
+        let authorized = |id: &CaseworkId| {
+            runs.added.contains(id) || runs.changed.contains(id) || runs.removed.contains(id)
+        };
         // A removed part of a run the step kept: the run still names it.
         let owners: HashMap<Uuid, CaseworkId> = self
             .casework
             .iter()
-            .flat_map(|r| r.members.iter().map(move |m| (Uuid::from_bytes(m.uid.0), r.id)))
+            .flat_map(|r| {
+                r.members
+                    .iter()
+                    .map(move |m| (Uuid::from_bytes(m.uid.0), r.id))
+            })
             .collect();
         let message = "Mutfak dizisinin nesnesi diziden ayrı değiştirilemez ya da silinemez; diziyi düzenleyin (Öznitelikler › Mutfak dizisi), bırakın ya da dizinin tamamını silin.";
         let mut out = Vec::new();
         for change in &report.objects {
-            let Some(owner) = owners.get(&change.uid).copied() else { continue };
+            let Some(owner) = owners.get(&change.uid).copied() else {
+                continue;
+            };
             if authorized(&owner) {
                 continue;
             }
@@ -1641,7 +1858,8 @@ fn same_owned(before: &Entity, after: &Entity) -> bool {
         base.look = Default::default();
         base.label_pins = Vec::new();
         base.attachments = Vec::new();
-        base.attrs.retain(|k, _| matches!(k.as_str(), "Modül" | "Tür" | "Açılma"));
+        base.attrs
+            .retain(|k, _| matches!(k.as_str(), "Modül" | "Tür" | "Açılma"));
         e
     };
     strip(before) == strip(after)
@@ -1650,11 +1868,17 @@ fn same_owned(before: &Entity, after: &Entity) -> bool {
 /// The run's path moved and turned as its objects were when the step changed every one of them by the same move and
 /// turn, read from its countertop's first two corners (a scale or a mirror is none: the run keeps its sizes and side);
 /// none otherwise.
-fn moved_path(run: &CaseworkRecord, updated: &HashMap<EntityId, (Arc<Entity>, Arc<Entity>)>) -> Option<Vec<Vec2>> {
+fn moved_path(
+    run: &CaseworkRecord,
+    updated: &HashMap<EntityId, (Arc<Entity>, Arc<Entity>)>,
+) -> Option<Vec<Vec2>> {
     if run.members.is_empty() || !run.members.iter().all(|m| updated.contains_key(&m.uid)) {
         return None;
     }
-    let counter = run.members.iter().find(|m| m.part == CaseworkPart::Counter)?;
+    let counter = run
+        .members
+        .iter()
+        .find(|m| m.part == CaseworkPart::Counter)?;
     let (before, after) = updated.get(&counter.uid)?;
     let (Entity::Polygon(b), Entity::Polygon(a)) = (&**before, &**after) else {
         return None;
@@ -1663,13 +1887,18 @@ fn moved_path(run: &CaseworkRecord, updated: &HashMap<EntityId, (Arc<Entity>, Ar
         return None;
     }
     let (p0, p1, q0, q1) = (b.pts[0], b.pts[1], a.pts[0], a.pts[1]);
-    let (lb, la) = ((p1.x - p0.x).hypot(p1.y - p0.y), (q1.x - q0.x).hypot(q1.y - q0.y));
+    let (lb, la) = (
+        (p1.x - p0.x).hypot(p1.y - p0.y),
+        (q1.x - q0.x).hypot(q1.y - q0.y),
+    );
     if lb.is_nan() || lb <= SLACK || (la - lb).abs() > 1e-9 * lb.max(1.0) {
         return None;
     }
     let signed = |pts: &[Vec2]| {
         let n = pts.len();
-        (0..n).map(|i| pts[i].x * pts[(i + 1) % n].y - pts[(i + 1) % n].x * pts[i].y).sum::<f64>()
+        (0..n)
+            .map(|i| pts[i].x * pts[(i + 1) % n].y - pts[(i + 1) % n].x * pts[i].y)
+            .sum::<f64>()
     };
     if (signed(&b.pts) > 0.0) != (signed(&a.pts) > 0.0) {
         return None;
@@ -1717,7 +1946,9 @@ fn followed_path(
     for j in 0..n {
         let u = unit(pts[j], pts[j + 1])?;
         let tie = ties.get(j).cloned().flatten();
-        let Some((tie, (before, Some(after)))) = tie.and_then(|t| changed.get(&t.wall).map(|w| (t, w.clone()))) else {
+        let Some((tie, (before, Some(after)))) =
+            tie.and_then(|t| changed.get(&t.wall).map(|w| (t, w.clone())))
+        else {
             lines.push((pts[j], u));
             edges.push(None);
             continue;
@@ -1725,7 +1956,11 @@ fn followed_path(
         let (oa, ob) = face_edge(&before, tie.face, tie.edge)?;
         let (na, nb) = face_edge(&after, tie.face, tie.edge)?;
         let (ou, nu) = (unit(oa, ob)?, unit(na, nb)?);
-        let sign = if u.x * ou.x + u.y * ou.y >= 0.0 { 1.0 } else { -1.0 };
+        let sign = if u.x * ou.x + u.y * ou.y >= 0.0 {
+            1.0
+        } else {
+            -1.0
+        };
         lines.push((na, CoreVec2::new(sign * nu.x, sign * nu.y)));
         edges.push(Some((oa, ob, na, nb)));
     }
@@ -1738,7 +1973,11 @@ fn followed_path(
         let mut out = Vec::with_capacity(2);
         for q in &pts {
             let s = (q.x - oa.x) * old.along.x + (q.y - oa.y) * old.along.y;
-            let at = if s <= old.length / 2.0 { s } else { new.length - (old.length - s) };
+            let at = if s <= old.length / 2.0 {
+                s
+            } else {
+                new.length - (old.length - s)
+            };
             out.push(wire(new.at(at, 0.0)));
         }
         return Some(out);
@@ -1772,8 +2011,14 @@ fn rings_meet(a: &[kentos_geometry_core::Vec2], b: &[kentos_geometry_core::Vec2]
     use kentos_geometry_core::Vec2 as V;
     let cross = |o: V, p: V, q: V| (p.x - o.x) * (q.y - o.y) - (p.y - o.y) * (q.x - o.x);
     let crosses = |p: V, q: V, r: V, t: V| {
-        let (d1, d2, d3, d4) = (cross(r, t, p), cross(r, t, q), cross(p, q, r), cross(p, q, t));
-        ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0)) && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
+        let (d1, d2, d3, d4) = (
+            cross(r, t, p),
+            cross(r, t, q),
+            cross(p, q, r),
+            cross(p, q, t),
+        );
+        ((d1 > 0.0 && d2 < 0.0) || (d1 < 0.0 && d2 > 0.0))
+            && ((d3 > 0.0 && d4 < 0.0) || (d3 < 0.0 && d4 > 0.0))
     };
     let inside = |ring: &[V], p: V| {
         let mut odd = false;

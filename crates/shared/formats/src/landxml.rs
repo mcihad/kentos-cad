@@ -50,8 +50,17 @@ pub struct LxSurface {
 #[derive(Clone, Debug, PartialEq)]
 pub enum LxKind {
     Line,
-    Curve { radius: f64, clockwise: bool, center: Option<[f64; 2]> },
-    Spiral { radius_start: Option<f64>, radius_end: Option<f64>, clockwise: bool, clothoid: bool },
+    Curve {
+        radius: f64,
+        clockwise: bool,
+        center: Option<[f64; 2]>,
+    },
+    Spiral {
+        radius_start: Option<f64>,
+        radius_end: Option<f64>,
+        clockwise: bool,
+        clothoid: bool,
+    },
 }
 
 /// A horizontal element (docs/adr/0908 §7): its kind, its start and end, its PI where the file gives one, its length
@@ -158,7 +167,8 @@ impl LxError {
 }
 
 fn named<'a, 'b>(n: Node<'a, 'b>, name: &str) -> impl Iterator<Item = Node<'a, 'b>> {
-    n.children().filter(move |c| c.is_element() && c.tag_name().name() == name)
+    n.children()
+        .filter(move |c| c.is_element() && c.tag_name().name() == name)
 }
 
 fn first<'a, 'b>(n: Node<'a, 'b>, name: &str) -> Option<Node<'a, 'b>> {
@@ -167,7 +177,13 @@ fn first<'a, 'b>(n: Node<'a, 'b>, name: &str) -> Option<Node<'a, 'b>> {
 
 fn numbers(text: &str) -> Result<Vec<f64>, LxError> {
     text.split_whitespace()
-        .map(|w| w.replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite()).ok_or(LxError::BadNumber))
+        .map(|w| {
+            w.replace(',', ".")
+                .parse::<f64>()
+                .ok()
+                .filter(|v| v.is_finite())
+                .ok_or(LxError::BadNumber)
+        })
         .collect()
 }
 
@@ -220,7 +236,12 @@ pub fn read(bytes: &[u8]) -> Result<LandXml, LxError> {
     // Docs/adr/0988: a roadway's design speeds, km/h (the schema's `speed`: kilometers per hour in Metric, miles per
     // hour in Imperial; 1 mi = 1.609344 km by definition).
     let units = first(root, "Units").and_then(|u| u.children().find(|c| c.is_element()));
-    let kmh = match units.map(|m| (m.tag_name().name(), m.attribute("velocityUnit").unwrap_or(""))) {
+    let kmh = match units.map(|m| {
+        (
+            m.tag_name().name(),
+            m.attribute("velocityUnit").unwrap_or(""),
+        )
+    }) {
         Some((_, "metersPerSecond")) => 3.6,
         Some((_, "feetPerSecond")) => 0.3048 * 3.6,
         Some(("Imperial", _)) => 1.609344,
@@ -231,8 +252,14 @@ pub fn read(bytes: &[u8]) -> Result<LandXml, LxError> {
             let refs = r.attribute("alignmentRefs").unwrap_or("");
             let mut speeds = Vec::new();
             for s in named(r, "Speeds").flat_map(|s| named(s, "DesignSpeed").collect::<Vec<_>>()) {
-                let Some(v) = attr(s, "speed", kmh)? else { continue };
-                speeds.push(LxSpeed { sta_start: attr(s, "staStart", k)?, sta_end: attr(s, "staEnd", k)?, speed: v });
+                let Some(v) = attr(s, "speed", kmh)? else {
+                    continue;
+                };
+                speeds.push(LxSpeed {
+                    sta_start: attr(s, "staStart", k)?,
+                    sta_end: attr(s, "staEnd", k)?,
+                    speed: v,
+                });
             }
             // The refs are names split on spaces; a name with spaces in it matches the whole text.
             for a in &mut out.alignments {
@@ -250,7 +277,14 @@ fn attr(n: Node<'_, '_>, name: &str, k: f64) -> Result<Option<f64>, LxError> {
     match n.attribute(name) {
         None => Ok(None),
         Some(t) if t.trim().eq_ignore_ascii_case("INF") => Ok(None),
-        Some(t) => t.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite()).map(|v| Some(v * k)).ok_or(LxError::BadNumber),
+        Some(t) => t
+            .trim()
+            .replace(',', ".")
+            .parse::<f64>()
+            .ok()
+            .filter(|v| v.is_finite())
+            .map(|v| Some(v * k))
+            .ok_or(LxError::BadNumber),
     }
 }
 
@@ -295,7 +329,9 @@ fn alignment(a: Node<'_, '_>, k: f64) -> Result<LxAlignment, LxError> {
                     continue;
                 }
             };
-            let (Some(start), Some(end)) = (place(first(e, "Start"), k)?, place(first(e, "End"), k)?) else {
+            let (Some(start), Some(end)) =
+                (place(first(e, "Start"), k)?, place(first(e, "End"), k)?)
+            else {
                 out.left.push(named_as());
                 continue;
             };
@@ -323,7 +359,9 @@ fn alignment(a: Node<'_, '_>, k: f64) -> Result<LxAlignment, LxError> {
             for v in pa.children().filter(|c| c.is_element()) {
                 let curve = match v.tag_name().name() {
                     "PVI" => LxVCurve::None,
-                    "ParaCurve" => LxVCurve::Parabola { length: attr(v, "length", k)?.ok_or(LxError::BadNumber)? },
+                    "ParaCurve" => LxVCurve::Parabola {
+                        length: attr(v, "length", k)?.ok_or(LxError::BadNumber)?,
+                    },
                     "UnsymParaCurve" => LxVCurve::Unsymmetric {
                         length_in: attr(v, "lengthIn", k)?.ok_or(LxError::BadNumber)?,
                         length_out: attr(v, "lengthOut", k)?.ok_or(LxError::BadNumber)?,
@@ -335,11 +373,21 @@ fn alignment(a: Node<'_, '_>, k: f64) -> Result<LxAlignment, LxError> {
                     _ => continue,
                 };
                 let xy = numbers(v.text().unwrap_or(""))?;
-                let [station, elevation] = xy[..] else { return Err(LxError::BadNumber) };
-                pvis.push(LxPvi { station: station * k, elevation: elevation * k, curve });
+                let [station, elevation] = xy[..] else {
+                    return Err(LxError::BadNumber);
+                };
+                pvis.push(LxPvi {
+                    station: station * k,
+                    elevation: elevation * k,
+                    curve,
+                });
             }
             out.profiles.push(LxProfile {
-                name: pa.attribute("name").or(prof.attribute("name")).unwrap_or("").to_owned(),
+                name: pa
+                    .attribute("name")
+                    .or(prof.attribute("name"))
+                    .unwrap_or("")
+                    .to_owned(),
                 pvis,
             });
         }
@@ -366,7 +414,12 @@ fn surface(s: Node<'_, '_>, k: f64) -> Result<LxSurface, LxError> {
                     continue;
                 }
                 at.insert(id.clone(), out.points.len());
-                out.points.push(LxPoint { id, x: e * k, y: n * k, z: z * k });
+                out.points.push(LxPoint {
+                    id,
+                    x: e * k,
+                    y: n * k,
+                    z: z * k,
+                });
             }
         }
         if let Some(faces) = first(def, "Faces") {
@@ -386,12 +439,17 @@ fn surface(s: Node<'_, '_>, k: f64) -> Result<LxSurface, LxError> {
     if let Some(source) = first(s, "SourceData") {
         if let Some(lines) = first(source, "Breaklines") {
             for b in named(lines, "Breakline") {
-                let Some(list) = first(b, "PntList3D") else { continue };
+                let Some(list) = first(b, "PntList3D") else {
+                    continue;
+                };
                 let v = numbers(list.text().unwrap_or(""))?;
                 if v.len() % 3 != 0 {
                     return Err(LxError::BadNumber);
                 }
-                let pts: Vec<[f64; 3]> = v.chunks(3).map(|c| [c[1] * k, c[0] * k, c[2] * k]).collect();
+                let pts: Vec<[f64; 3]> = v
+                    .chunks(3)
+                    .map(|c| [c[1] * k, c[0] * k, c[2] * k])
+                    .collect();
                 if pts.len() >= 2 {
                     out.breaklines.push(pts);
                 }
@@ -399,7 +457,9 @@ fn surface(s: Node<'_, '_>, k: f64) -> Result<LxSurface, LxError> {
         }
         if let Some(bounds) = first(source, "Boundaries") {
             for b in named(bounds, "Boundary") {
-                let void = b.attribute("bndType").is_some_and(|t| t.eq_ignore_ascii_case("void"));
+                let void = b
+                    .attribute("bndType")
+                    .is_some_and(|t| t.eq_ignore_ascii_case("void"));
                 let (list, step) = match (first(b, "PntList2D"), first(b, "PntList3D")) {
                     (Some(l), _) => (l, 2),
                     (None, Some(l)) => (l, 3),
@@ -444,11 +504,21 @@ mod tests {
         let s = &x.surfaces[0];
         assert_eq!(s.name, "EG");
         assert_eq!(s.points.len(), 3);
-        assert_eq!((s.points[0].x, s.points[0].y), (20.0 * 0.3048, 10.0 * 0.3048));
+        assert_eq!(
+            (s.points[0].x, s.points[0].y),
+            (20.0 * 0.3048, 10.0 * 0.3048)
+        );
         assert_eq!((s.twice, s.broken_faces), (1, 1));
         assert_eq!(s.faces.iter().filter(|f| f.ignored).count(), 1);
-        assert_eq!(s.breaklines[0][1], [20.0 * 0.3048, 20.0 * 0.3048, 5.0 * 0.3048]);
-        assert_eq!(s.boundaries[0].points.len(), 3, "a closed ring's last place goes");
+        assert_eq!(
+            s.breaklines[0][1],
+            [20.0 * 0.3048, 20.0 * 0.3048, 5.0 * 0.3048]
+        );
+        assert_eq!(
+            s.boundaries[0].points.len(),
+            3,
+            "a closed ring's last place goes"
+        );
         assert_eq!(read(b"<a/>"), Err(LxError::NotLandXml));
         assert_eq!(read(b"<LandXML><Surfaces><Surface><Definition><Pnts><P id=\"1\">x 1 2</P></Pnts></Definition></Surface></Surfaces></LandXML>"), Err(LxError::BadNumber));
     }
@@ -471,12 +541,26 @@ mod tests {
         let x = read(file(r#"<Metric linearUnit="meter"/>"#).as_bytes()).expect("reads");
         let main = &x.alignments[0].speeds;
         assert_eq!(main.len(), 2);
-        assert_eq!((main[0].sta_start, main[0].sta_end, main[0].speed), (Some(1000.0), Some(1300.0), 80.0));
-        assert_eq!(x.alignments[1].speeds, vec![LxSpeed { sta_start: None, sta_end: None, speed: 60.0 }]);
+        assert_eq!(
+            (main[0].sta_start, main[0].sta_end, main[0].speed),
+            (Some(1000.0), Some(1300.0), 80.0)
+        );
+        assert_eq!(
+            x.alignments[1].speeds,
+            vec![LxSpeed {
+                sta_start: None,
+                sta_end: None,
+                speed: 60.0
+            }]
+        );
         let imperial = read(file(r#"<Imperial linearUnit="foot"/>"#).as_bytes()).expect("reads");
         assert!((imperial.alignments[0].speeds[0].speed - 80.0 * 1.609344).abs() < 1e-9);
-        assert!((imperial.alignments[0].speeds[0].sta_start.unwrap() - 1000.0 * 0.3048).abs() < 1e-9);
-        let ms = read(file(r#"<Metric linearUnit="meter" velocityUnit="metersPerSecond"/>"#).as_bytes()).expect("reads");
+        assert!(
+            (imperial.alignments[0].speeds[0].sta_start.unwrap() - 1000.0 * 0.3048).abs() < 1e-9
+        );
+        let ms =
+            read(file(r#"<Metric linearUnit="meter" velocityUnit="metersPerSecond"/>"#).as_bytes())
+                .expect("reads");
         assert!((ms.alignments[1].speeds[0].speed - 216.0).abs() < 1e-9);
     }
 }

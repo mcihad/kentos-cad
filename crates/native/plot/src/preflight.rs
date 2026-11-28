@@ -1,4 +1,5 @@
 //! Native print checks: the same visible map layers and source resources as the PDF/CPU painter.
+use crate::{book::PlotError, images::Images};
 use kentos_contracts::Entity;
 use kentos_domain::Document;
 use kentos_native_style::picture::ImageSource;
@@ -8,7 +9,6 @@ use kentos_sheet::{
     display::{self, Prim, RenderInputs},
     preflight::{Finding, Severity},
 };
-use crate::{book::PlotError, images::Images};
 
 fn finding(item: &str, code: &str, message: String, fix: &str, severity: Severity) -> Finding {
     Finding {
@@ -36,7 +36,9 @@ pub(crate) fn outdated_on_maps(doc: &Document, scene: &kentos_sheet::scene::Scen
     let mut out = Vec::new();
     for (item, _) in scene.all() {
         // The same ground and the same test as the project's graph (road.project.graph, docs/adr/1940).
-        let Some(ground) = kentos_native_application::road_project_graph::map_ground(item) else { continue };
+        let Some(ground) = kentos_native_application::road_project_graph::map_ground(item) else {
+            continue;
+        };
         for (d, word, why) in &outdated {
             if !kentos_native_application::road_project_graph::drawing_within(doc, d, ground) {
                 continue;
@@ -110,22 +112,38 @@ fn epsg_codes(text: &str) -> Vec<u32> {
 /// the grid, datum and epoch from the same project information): an EPSG code that is not the project's own, its
 /// second or its map's; a datum family the project's system is not on, in a text that names none of the project's.
 /// The `@` values (`@epsg_kodu`, `@datum`, `@koordinat_sistemi`) say it from the project.
-pub(crate) fn crs_texts(settings: &kentos_contracts::ProjectSettings, scene: &kentos_sheet::scene::Scene) -> Vec<Finding> {
-    let Some(own) = kentos_project::crs::system(settings.srid).filter(|_| settings.srid != kentos_project::crs::LOCAL_SRID)
+pub(crate) fn crs_texts(
+    settings: &kentos_contracts::ProjectSettings,
+    scene: &kentos_sheet::scene::Scene,
+) -> Vec<Finding> {
+    let Some(own) = kentos_project::crs::system(settings.srid)
+        .filter(|_| settings.srid != kentos_project::crs::LOCAL_SRID)
     else {
         return Vec::new();
     };
-    let known: Vec<u32> = [Some(settings.srid), settings.second_srid, settings.map_srid].into_iter().flatten().collect();
+    let known: Vec<u32> = [Some(settings.srid), settings.second_srid, settings.map_srid]
+        .into_iter()
+        .flatten()
+        .collect();
     let family = DATUMS.iter().find(|(id, _)| *id == own.datum);
     let mut out = Vec::new();
     for (item, _) in scene.all() {
-        let kentos_sheet::kinds::ItemKind::Text(t) = &item.kind else { continue };
+        let kentos_sheet::kinds::ItemKind::Text(t) = &item.kind else {
+            continue;
+        };
         let words = literal(&t.content);
         let upper = words.to_ascii_uppercase();
         let names = |list: &[&str]| list.iter().any(|w| upper.contains(w));
         let foreign_code = epsg_codes(&words).into_iter().find(|c| !known.contains(c));
         let foreign_datum = family.and_then(|(_, own_words)| {
-            (!names(own_words)).then(|| DATUMS.iter().find(|(id, list)| *id != own.datum && names(list)).map(|(id, _)| *id)).flatten()
+            (!names(own_words))
+                .then(|| {
+                    DATUMS
+                        .iter()
+                        .find(|(id, list)| *id != own.datum && names(list))
+                        .map(|(id, _)| *id)
+                })
+                .flatten()
         });
         let said = match (foreign_code, foreign_datum) {
             (Some(code), _) => format!("EPSG:{code}"),
@@ -158,30 +176,56 @@ pub(crate) fn quality_texts(
     scene: &kentos_sheet::scene::Scene,
 ) -> Vec<Finding> {
     let p = &render.project;
-    const NAMES: [&str; 4] = ["konum_dogrulugu", "yukseklik_dogrulugu", "ag_dengelemesi", "olcme_kalitesi"];
-    let (primary, framed) = kentos_sheet::display::survey_maps(book, sheet, render).unwrap_or_default();
+    const NAMES: [&str; 4] = [
+        "konum_dogrulugu",
+        "yukseklik_dogrulugu",
+        "ag_dengelemesi",
+        "olcme_kalitesi",
+    ];
+    let (primary, framed) =
+        kentos_sheet::display::survey_maps(book, sheet, render).unwrap_or_default();
     // A map's own words, and whether they are a map's.
     let words_of = |map: Option<&String>| -> ([&str; 4], bool) {
         match map.and_then(|id| surveys.iter().find(|m| &m.item == id)) {
             Some(m) => ([&m.position, &m.height, &m.network, &m.note], true),
-            None => ([&p.position_accuracy, &p.height_accuracy, &p.network_adjustment, &p.survey_quality], false),
+            None => (
+                [
+                    &p.position_accuracy,
+                    &p.height_accuracy,
+                    &p.network_adjustment,
+                    &p.survey_quality,
+                ],
+                false,
+            ),
         }
     };
     let own = |name: &str| {
-        let named = |vars: &[kentos_sheet::model::Variable]| vars.iter().any(|v| v.name.eq_ignore_ascii_case(name));
+        let named = |vars: &[kentos_sheet::model::Variable]| {
+            vars.iter().any(|v| v.name.eq_ignore_ascii_case(name))
+        };
         named(&book.variables)
             || book.sheet(sheet).is_some_and(|s| named(&s.variables))
-            || p.variables.iter().any(|v| v.name.eq_ignore_ascii_case(name))
+            || p.variables
+                .iter()
+                .any(|v| v.name.eq_ignore_ascii_case(name))
     };
     let mut out = Vec::new();
     for (item, _) in scene.all() {
-        let kentos_sheet::kinds::ItemKind::Text(t) = &item.kind else { continue };
-        let map = t.map.as_ref().filter(|id| framed.contains(id)).or(primary.as_ref());
+        let kentos_sheet::kinds::ItemKind::Text(t) = &item.kind else {
+            continue;
+        };
+        let map = t
+            .map
+            .as_ref()
+            .filter(|id| framed.contains(id))
+            .or(primary.as_ref());
         let (words, of_map) = words_of(map);
         let empty: Vec<&str> = NAMES
             .iter()
             .zip(words)
-            .filter(|(name, value)| value.is_empty() && t.content.contains(&format!("@{name}")) && !own(name))
+            .filter(|(name, value)| {
+                value.is_empty() && t.content.contains(&format!("@{name}")) && !own(name)
+            })
             .map(|(name, _)| *name)
             .collect();
         if empty.is_empty() {
@@ -224,22 +268,32 @@ pub fn inspect(
     render: &RenderInputs,
     drawing: Option<&str>,
 ) -> Result<Vec<Finding>, PlotError> {
-    inspect_captured(doc,book,sheet,render,drawing,None)
+    inspect_captured(doc, book, sheet, render, drawing, None)
 }
-pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&RenderInputs,drawing:Option<&str>,sources:Option<std::sync::Arc<crate::source_images::SourceImages>>)->Result<Vec<Finding>,PlotError>{
+pub(crate) fn inspect_captured(
+    doc: &Document,
+    book: &SheetBook,
+    sheet: &str,
+    render: &RenderInputs,
+    drawing: Option<&str>,
+    sources: Option<std::sync::Arc<crate::source_images::SourceImages>>,
+) -> Result<Vec<Finding>, PlotError> {
     let mut spatial = Spatial::new();
     spatial.ignore_object_isolation();
     spatial.reload(doc);
     // The sheet's legends, tables and coordinate lists as its output reads them (UR2-023: a legend the PDF printed
     // with four rows was said empty), when the caller gave none.
     let mut owned;
-    let render = if render.legends.is_empty() && render.tables.is_empty() && render.coordinates.is_empty()
+    let render = if render.legends.is_empty()
+        && render.tables.is_empty()
+        && render.coordinates.is_empty()
         && let Some(page) = book.sheet(sheet)
     {
         owned = render.clone();
         let library = crate::book::library_of(doc);
         let first = display::display_list(book, sheet, &owned).ok();
-        let data = crate::inputs::sheet_data(doc, &spatial, &library, &[], book, page, first.as_ref());
+        let data =
+            crate::inputs::sheet_data(doc, &spatial, &library, &[], book, page, first.as_ref());
         owned.tables.extend(data.tables);
         owned.coordinates.extend(data.coordinates);
         owned.legends.extend(data.legends);
@@ -252,7 +306,10 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
     out.retain(|f| f.code != "svg_not_in_pdf");
     let list = display::display_list(book, sheet, render)
         .map_err(|e| PlotError::new(&e.code, e.message))?;
-    let images=match sources{Some(sources)=>Images::captured(doc,drawing,sources),None=>Images::new(doc,drawing)};
+    let images = match sources {
+        Some(sources) => Images::captured(doc, drawing, sources),
+        None => Images::new(doc, drawing),
+    };
     let factor = kentos_sheet::print_setup::plan_for(book, sheet)
         .map_err(|e| PlotError::new(&e.code, e.message))?
         .map_or(1., |p| p.factor);
@@ -262,8 +319,16 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
         .map_err(|e| PlotError::new(&e.code, e.message))?;
     out.extend(crs_texts(doc.settings(), &scene));
     // Each map's own survey quality (docs/adr/2800): the caller's, else worked out from this list's maps.
-    let surveys = if render.map_surveys.is_empty() { crate::survey_scope::map_surveys(doc, Some(&list)) } else { Vec::new() };
-    let surveys = if render.map_surveys.is_empty() { &surveys } else { &render.map_surveys };
+    let surveys = if render.map_surveys.is_empty() {
+        crate::survey_scope::map_surveys(doc, Some(&list))
+    } else {
+        Vec::new()
+    };
+    let surveys = if render.map_surveys.is_empty() {
+        &surveys
+    } else {
+        &render.map_surveys
+    };
     out.extend(quality_texts(book, sheet, render, surveys, &scene));
     out.extend(outdated_on_maps(doc, &scene));
     let library = crate::book::library_of(doc);
@@ -358,9 +423,12 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
         };
         out.extend(map_text_coverage(doc, m));
         let losses = if crate::maps::line_type_check_needed(doc, m, &library) {
-            line_type_drawer.inspect_line_types(book, m, sheet)
-            .map_err(|message| PlotError::new("style_compile_failed", message))?
-        } else { Vec::new() };
+            line_type_drawer
+                .inspect_line_types(book, m, sheet)
+                .map_err(|message| PlotError::new("style_compile_failed", message))?
+        } else {
+            Vec::new()
+        };
         for message in losses {
             out.push(finding(&m.item, "linetype_unsupported", message,
                 "Çizgi tipinin kaynak ve görünüş sorununu giderin veya desteklenen deseni açıkça seçin; eksik desen teslim edilmez.",
@@ -372,7 +440,7 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
             &m.layers,
             &m.layer_overrides,
         );
-        let shown_ids: std::collections::HashSet<_> = shown.iter().map(|l|l.id.as_str()).collect();
+        let shown_ids: std::collections::HashSet<_> = shown.iter().map(|l| l.id.as_str()).collect();
         // A symbol the print's library has not (docs/adr/9317): one of Kitaplığım the project was not saved with, say. The
         // map prints that layer's plain look; said once a symbol.
         let mut missing = std::collections::BTreeMap::new();
@@ -414,30 +482,76 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
                     out.push(finding(&m.item,"plot_provider_unsupported",format!("{id} numaralı raster/nokta bulutu bu çıktı hattında çizilemiyor; eksik pafta üretilmeyecek."),"Baskı için desteklenen bir resim altlığı hazırlayın veya bu katmanı viewportta baskıdan çıkarın.",Severity::Error));
                 }
                 // A leader's note too: its SHX text style (docs/adr/1025).
-                if matches!(e, Entity::Dimension(_) | Entity::Text(_) | Entity::Table(_) | Entity::Leader(_))
-                    && let Some(uid) = doc.uid(kentos_domain::Slot(id))
+                if matches!(
+                    e,
+                    Entity::Dimension(_) | Entity::Text(_) | Entity::Table(_) | Entity::Leader(_)
+                ) && let Some(uid) = doc.uid(kentos_domain::Slot(id))
                 {
-                    for f in kentos_native_application::drawing_inspect::annotations::findings(doc, uid, e)
-                        .into_iter().filter(|f| matches!(f.code.as_str(), "dimension_override" | "dimension_partial" | "dimension_invalid")
-                            || f.code.starts_with("text_") || f.code.starts_with("table_field_"))
-                    {
-                        out.push(finding(&m.item, &f.code, format!("{id}: {}", f.message), &f.repair,
-                            match f.severity { kentos_commands::InspectionSeverity::Error => Severity::Error, kentos_commands::InspectionSeverity::Warning => Severity::Warning, kentos_commands::InspectionSeverity::Info => Severity::Info }));
+                    for f in kentos_native_application::drawing_inspect::annotations::findings(
+                        doc, uid, e,
+                    )
+                    .into_iter()
+                    .filter(|f| {
+                        matches!(
+                            f.code.as_str(),
+                            "dimension_override" | "dimension_partial" | "dimension_invalid"
+                        ) || f.code.starts_with("text_")
+                            || f.code.starts_with("table_field_")
+                    }) {
+                        out.push(finding(
+                            &m.item,
+                            &f.code,
+                            format!("{id}: {}", f.message),
+                            &f.repair,
+                            match f.severity {
+                                kentos_commands::InspectionSeverity::Error => Severity::Error,
+                                kentos_commands::InspectionSeverity::Warning => Severity::Warning,
+                                kentos_commands::InspectionSeverity::Info => Severity::Info,
+                            },
+                        ));
                     }
                 }
                 if matches!(e, Entity::Insert(_))
                     && let Some(uid) = doc.uid(kentos_domain::Slot(id))
-                    && let Some(expanded) = spatial.store().get(f64::from(id)).and_then(|item|item.expanded.as_deref()) {
+                    && let Some(expanded) = spatial
+                        .store()
+                        .get(f64::from(id))
+                        .and_then(|item| item.expanded.as_deref())
+                {
                     for (piece, origin) in &expanded.annotation_origins {
-                        if !expanded.gates.get(*piece).is_none_or(|gates|gates.iter().all(|l|shown_ids.contains(l.as_str()))) {continue;}
-                        let Some(shape)=expanded.shapes.get(*piece) else {continue;};
-                        for f in kentos_native_application::drawing_inspect::annotations::piece_findings(doc,uid,origin,shape) {
-                            if !f.points.iter().any(|p|kentos_sheet::pdf::includes_text_anchor(m,[p.x,p.y])) {continue;}
-                            out.push(finding(&m.item,&f.code,format!("{id}: {}",f.message),&f.repair,match f.severity {
-                                kentos_commands::InspectionSeverity::Error=>Severity::Error,
-                                kentos_commands::InspectionSeverity::Warning=>Severity::Warning,
-                                kentos_commands::InspectionSeverity::Info=>Severity::Info,
-                            }));
+                        if !expanded.gates.get(*piece).is_none_or(|gates| {
+                            gates.iter().all(|l| shown_ids.contains(l.as_str()))
+                        }) {
+                            continue;
+                        }
+                        let Some(shape) = expanded.shapes.get(*piece) else {
+                            continue;
+                        };
+                        for f in
+                            kentos_native_application::drawing_inspect::annotations::piece_findings(
+                                doc, uid, origin, shape,
+                            )
+                        {
+                            if !f
+                                .points
+                                .iter()
+                                .any(|p| kentos_sheet::pdf::includes_text_anchor(m, [p.x, p.y]))
+                            {
+                                continue;
+                            }
+                            out.push(finding(
+                                &m.item,
+                                &f.code,
+                                format!("{id}: {}", f.message),
+                                &f.repair,
+                                match f.severity {
+                                    kentos_commands::InspectionSeverity::Error => Severity::Error,
+                                    kentos_commands::InspectionSeverity::Warning => {
+                                        Severity::Warning
+                                    }
+                                    kentos_commands::InspectionSeverity::Info => Severity::Info,
+                                },
+                            ));
                         }
                     }
                 }
@@ -550,29 +664,50 @@ pub(crate) fn inspect_captured(doc:&Document,book:&SheetBook,sheet:&str,render:&
 /// Inspect actual map label pieces, including block text and generated values.
 /// Sheet-only preflight does not see the map's text and cannot detect its `?` substitutions.
 fn map_text_coverage(doc: &Document, map: &kentos_sheet::display::MapPrim) -> Vec<Finding> {
+    use kentos_sheet::{
+        style::TextStyle,
+        text::{self, Glyph},
+    };
     use std::collections::{BTreeMap, BTreeSet};
-    use kentos_sheet::{style::TextStyle, text::{self, Glyph}};
     let scaled = doc.at_scale(map.view.annotation_denominator());
     let source = scaled.as_ref().unwrap_or(doc);
     let mut spatial = Spatial::new();
     spatial.ignore_object_isolation();
     spatial.reload(source);
-    let mut out=Vec::new();
+    let mut out = Vec::new();
     let mut missing: BTreeMap<(String, u16, bool), BTreeSet<char>> = BTreeMap::new();
     for label in crate::labels::map_labels(source, &spatial, map) {
-        if !kentos_sheet::pdf::includes_text_anchor(map, [label.at.x, label.at.y]) { continue; }
+        if !kentos_sheet::pdf::includes_text_anchor(map, [label.at.x, label.at.y]) {
+            continue;
+        }
         // An SHX text's letters are its font's strokes (ADR 1125); its fonts were checked as the text was laid out.
-        if label.shx.is_some() { continue; }
-        if let Some(unicode)=&label.unicode {
-            if let Err(error)=&unicode.text.plan {
+        if label.shx.is_some() {
+            continue;
+        }
+        if let Some(unicode) = &label.unicode {
+            if let Err(error) = &unicode.text.plan {
                 out.push(finding(&map.item,"text_layout_unsupported",error.message(&unicode.text.source),
                     "Yazı denetimindeki harf ve biçim sorununu giderin; kısmi metin teslim edilmez.",Severity::Error));
             }
             continue;
         }
-        let key = (label.font.map_or("barlow", crate::fonts::sheet_font).to_owned(), label.weight, label.italic);
-        let Some(face) = text::face(&TextStyle { font:key.0.clone(), weight:key.1, italic:key.2,
-            size:1000, color:String::new() }) else { continue; };
+        let key = (
+            label
+                .font
+                .map_or("barlow", crate::fonts::sheet_font)
+                .to_owned(),
+            label.weight,
+            label.italic,
+        );
+        let Some(face) = text::face(&TextStyle {
+            font: key.0.clone(),
+            weight: key.1,
+            italic: key.2,
+            size: 1000,
+            color: String::new(),
+        }) else {
+            continue;
+        };
         for c in label.text.chars() {
             if matches!(text::glyph(face, c), Glyph::Missing(_)) {
                 missing.entry(key.clone()).or_default().insert(c);

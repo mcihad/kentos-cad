@@ -44,14 +44,22 @@ fn run() {
             "{} MB, {} ({}), {} kayıt, {} nesne, {} ilişki, {} bulgu; yüz {:.3} s",
             bytes.len() / 1_000_000,
             m.summary.schema,
-            m.summary.header.originating_system.as_deref().unwrap_or("?"),
+            m.summary
+                .header
+                .originating_system
+                .as_deref()
+                .unwrap_or("?"),
             m.summary.records,
             m.objects.len(),
             m.relations.len(),
             m.findings.len(),
             face.as_secs_f64()
         ),
-        Err(e) => println!("{} MB: {e}; {:.3} s", bytes.len() / 1_000_000, face.as_secs_f64()),
+        Err(e) => println!(
+            "{} MB: {e}; {:.3} s",
+            bytes.len() / 1_000_000,
+            face.as_secs_f64()
+        ),
     }
     if let Ok(m) = &read {
         let mut codes = std::collections::BTreeMap::new();
@@ -78,7 +86,8 @@ fn run() {
                 let mut why = std::collections::BTreeMap::new();
                 for n in &b.not_shown {
                     let reason: String = n.reason.chars().take(90).collect();
-                    *why.entry((m.objects[n.object].class.clone(), reason)).or_insert(0) += 1;
+                    *why.entry((m.objects[n.object].class.clone(), reason))
+                        .or_insert(0) += 1;
                 }
                 for ((class, reason), count) in why {
                     println!("  gösterilemeyen {count} × {class}: {reason}");
@@ -89,6 +98,10 @@ fn run() {
     }
     let _ = bodies;
     if let Some(s) = stop {
-        println!("durdurma {} ms sonra istendi; toplam {:.3} s", s.as_millis(), start.elapsed().as_secs_f64());
+        println!(
+            "durdurma {} ms sonra istendi; toplam {:.3} s",
+            s.as_millis(),
+            start.elapsed().as_secs_f64()
+        );
     }
 }

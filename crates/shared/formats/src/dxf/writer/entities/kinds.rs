@@ -133,9 +133,16 @@ pub(super) fn finite(e: &Entity) -> bool {
         Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_) | Entity::Record(_) => true,
         Entity::Wall(w) => w.wall.pts.iter().all(|p| ok(*p)) && w.wall.width.is_finite(),
         Entity::Opening(o) => o.opening.place.iter().all(|p| ok(*p)) && o.opening.width.is_finite(),
-        Entity::Space(s) => s.space.parts.iter().all(|p| all_ok(&p.outer.pts) && p.holes.iter().all(|h| all_ok(&h.pts))),
+        Entity::Space(s) => s
+            .space
+            .parts
+            .iter()
+            .all(|p| all_ok(&p.outer.pts) && p.holes.iter().all(|h| all_ok(&h.pts))),
         Entity::Slab(s) => {
-            s.slab.parts.iter().all(|p| all_ok(&p.outer.pts) && p.holes.iter().all(|h| all_ok(&h.pts)))
+            s.slab
+                .parts
+                .iter()
+                .all(|p| all_ok(&p.outer.pts) && p.holes.iter().all(|h| all_ok(&h.pts)))
                 && nums_ok(&[s.slab.thickness, s.slab.offset])
         }
         // A mass's rule holds its numbers finite (docs/adr/8178).
@@ -144,7 +151,9 @@ pub(super) fn finite(e: &Entity) -> bool {
         Entity::Column(c) => ok(c.column.at) && nums_ok(&[c.column.width, c.column.rotation]),
         Entity::Stair(s) => all_ok(&s.stair.pts) && nums_ok(&[s.stair.width, s.stair.tread]),
         Entity::Ramp(r) => all_ok(&r.ramp.pts) && nums_ok(&[r.ramp.width, r.ramp.rise]),
-        Entity::Beam(b) => all_ok(&b.beam.pts) && nums_ok(&[b.beam.width, b.beam.height, b.beam.offset]),
+        Entity::Beam(b) => {
+            all_ok(&b.beam.pts) && nums_ok(&[b.beam.width, b.beam.height, b.beam.offset])
+        }
         Entity::Roof(r) => {
             all_ok(&r.roof.pts)
                 && r.roof.slopes.iter().flatten().all(|s| s.is_finite())

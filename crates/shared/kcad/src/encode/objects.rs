@@ -326,7 +326,10 @@ impl<'d> Encoder<'d> {
             }
             Entity::Polyline(e) | Entity::Polygon(e) => {
                 if let Some(role) = &e.space_separator {
-                    f.push(("spaceSeparator", Val::Json(serde_json::to_value(role).unwrap_or_default())));
+                    f.push((
+                        "spaceSeparator",
+                        Val::Json(serde_json::to_value(role).unwrap_or_default()),
+                    ));
                 }
                 f.push(("pts", Val::Points(&e.pts)));
                 if let Some(b) = &e.bulges {
@@ -485,7 +488,10 @@ impl<'d> Encoder<'d> {
                     f.push(("style", Val::Text(style)));
                 }
                 if !w.components.is_empty() {
-                    f.push(("components", Val::Json(serde_json::to_value(&w.components).unwrap_or_default())));
+                    f.push((
+                        "components",
+                        Val::Json(serde_json::to_value(&w.components).unwrap_or_default()),
+                    ));
                 }
                 if w.caps == kentos_contracts::WallCaps::Open {
                     f.push(("caps", Val::Name("open")));
@@ -497,17 +503,26 @@ impl<'d> Encoder<'d> {
                     f.push(("height", Val::Float(h)));
                 }
                 if !w.arch.is_empty() {
-                    f.push(("arch", Val::Json(serde_json::to_value(&w.arch).unwrap_or_default())));
+                    f.push((
+                        "arch",
+                        Val::Json(serde_json::to_value(&w.arch).unwrap_or_default()),
+                    ));
                 }
                 if !w.joins.is_auto() {
-                    f.push(("joins", Val::Json(serde_json::to_value(&w.joins).unwrap_or_default())));
+                    f.push((
+                        "joins",
+                        Val::Json(serde_json::to_value(&w.joins).unwrap_or_default()),
+                    ));
                 }
                 if !w.cleanup {
                     f.push(("cleanup", Val::Bool(false)));
                 }
                 // A curtain wall's grid (architecture data 3, docs/adr/8070 §7).
                 if let Some(c) = &w.curtain {
-                    f.push(("curtain", Val::Json(serde_json::to_value(c).unwrap_or_default())));
+                    f.push((
+                        "curtain",
+                        Val::Json(serde_json::to_value(c).unwrap_or_default()),
+                    ));
                 }
             }
             // A grid, a column, a stair or a ramp (docs/adr/0343 §1): its fields as one map under its kind's name.
@@ -516,28 +531,40 @@ impl<'d> Encoder<'d> {
                     self.path.push(Seg::Name(kind));
                     return Err(self.fail(Code::BadValue, &problem));
                 }
-                f.push(("grid", Val::Json(serde_json::to_value(&e.grid).unwrap_or_default())));
+                f.push((
+                    "grid",
+                    Val::Json(serde_json::to_value(&e.grid).unwrap_or_default()),
+                ));
             }
             Entity::Column(e) => {
                 if let Some((_, problem)) = e.column.problem() {
                     self.path.push(Seg::Name(kind));
                     return Err(self.fail(Code::BadValue, &problem));
                 }
-                f.push(("column", Val::Json(serde_json::to_value(&e.column).unwrap_or_default())));
+                f.push((
+                    "column",
+                    Val::Json(serde_json::to_value(&e.column).unwrap_or_default()),
+                ));
             }
             Entity::Stair(e) => {
                 if let Some((_, problem)) = e.stair.problem() {
                     self.path.push(Seg::Name(kind));
                     return Err(self.fail(Code::BadValue, &problem));
                 }
-                f.push(("stair", Val::Json(serde_json::to_value(&e.stair).unwrap_or_default())));
+                f.push((
+                    "stair",
+                    Val::Json(serde_json::to_value(&e.stair).unwrap_or_default()),
+                ));
             }
             Entity::Ramp(e) => {
                 if let Some((_, problem)) = e.ramp.problem() {
                     self.path.push(Seg::Name(kind));
                     return Err(self.fail(Code::BadValue, &problem));
                 }
-                f.push(("ramp", Val::Json(serde_json::to_value(&e.ramp).unwrap_or_default())));
+                f.push((
+                    "ramp",
+                    Val::Json(serde_json::to_value(&e.ramp).unwrap_or_default()),
+                ));
             }
             // A tag (docs/adr/0344 §1): its fields as one map.
             Entity::Tag(e) => {
@@ -545,7 +572,10 @@ impl<'d> Encoder<'d> {
                     self.path.push(Seg::Name(kind));
                     return Err(self.fail(Code::BadValue, &problem));
                 }
-                f.push(("tag", Val::Json(serde_json::to_value(&e.tag).unwrap_or_default())));
+                f.push((
+                    "tag",
+                    Val::Json(serde_json::to_value(&e.tag).unwrap_or_default()),
+                ));
             }
             // A view mark (docs/adr/0345 §1): its fields as one map.
             Entity::ViewMark(e) => {
@@ -553,7 +583,10 @@ impl<'d> Encoder<'d> {
                     self.path.push(Seg::Name(kind));
                     return Err(self.fail(Code::BadValue, &problem));
                 }
-                f.push(("viewmark", Val::Json(serde_json::to_value(&e.mark).unwrap_or_default())));
+                f.push((
+                    "viewmark",
+                    Val::Json(serde_json::to_value(&e.mark).unwrap_or_default()),
+                ));
             }
             // A slab (docs/adr/0722): its fields as one map.
             Entity::Slab(e) => {
@@ -566,14 +599,30 @@ impl<'d> Encoder<'d> {
                     self.path.push(Seg::Name(kind));
                     return Err(self.fail(Code::BadValue, &problem));
                 }
-                f.push(("slab", Val::Json(serde_json::to_value(&e.slab).unwrap_or_default())));
+                f.push((
+                    "slab",
+                    Val::Json(serde_json::to_value(&e.slab).unwrap_or_default()),
+                ));
             }
             // A beam (docs/adr/8041 §1), a roof (8044 §1), a railing (8045 §3) and a mass (8178): their fields as one
             // map; the drawing's only.
-            Entity::Beam(e) => self.arch_map(uid, kind, "kiriş", e.beam.problem(), ("beam", &e.beam), f)?,
-            Entity::Roof(e) => self.arch_map(uid, kind, "çatı", e.roof.problem(), ("roof", &e.roof), f)?,
-            Entity::Railing(e) => self.arch_map(uid, kind, "korkuluk", e.railing.problem(), ("railing", &e.railing), f)?,
-            Entity::Mass(e) => self.arch_map(uid, kind, "kütle", e.mass.problem(), ("mass", &e.mass), f)?,
+            Entity::Beam(e) => {
+                self.arch_map(uid, kind, "kiriş", e.beam.problem(), ("beam", &e.beam), f)?
+            }
+            Entity::Roof(e) => {
+                self.arch_map(uid, kind, "çatı", e.roof.problem(), ("roof", &e.roof), f)?
+            }
+            Entity::Railing(e) => self.arch_map(
+                uid,
+                kind,
+                "korkuluk",
+                e.railing.problem(),
+                ("railing", &e.railing),
+                f,
+            )?,
+            Entity::Mass(e) => {
+                self.arch_map(uid, kind, "kütle", e.mass.problem(), ("mass", &e.mass), f)?
+            }
             // A space (docs/adr/0342 §1): its parts and the rest of its fields.
             Entity::Space(e) => {
                 let s = &e.space;
@@ -581,10 +630,15 @@ impl<'d> Encoder<'d> {
                     self.path.push(Seg::Name(kind));
                     return Err(self.fail(Code::BadValue, &problem));
                 }
-                f.push(("parts", Val::Json(serde_json::to_value(&s.parts).unwrap_or_default())));
+                f.push((
+                    "parts",
+                    Val::Json(serde_json::to_value(&s.parts).unwrap_or_default()),
+                ));
                 f.push((
                     "space",
-                    Val::Json(serde_json::to_value(crate::space::SpaceRest::of(s)).unwrap_or_default()),
+                    Val::Json(
+                        serde_json::to_value(crate::space::SpaceRest::of(s)).unwrap_or_default(),
+                    ),
                 ));
             }
             // An opening (docs/adr/0341 §1): written only when it is one.
@@ -600,7 +654,10 @@ impl<'d> Encoder<'d> {
                 f.push(("place", Val::Points(&o.place)));
                 f.push((
                     "opening",
-                    Val::Json(serde_json::to_value(crate::opening::OpeningRest::of(o)).unwrap_or_default()),
+                    Val::Json(
+                        serde_json::to_value(crate::opening::OpeningRest::of(o))
+                            .unwrap_or_default(),
+                    ),
                 ));
             }
             Entity::Text(e) => {
@@ -649,11 +706,17 @@ impl<'d> Encoder<'d> {
                 }
                 // Schema 65 (docs/adr/0324 §1): its indents, tabs and columns, as their JSON.
                 if let Some(l) = &para.layout {
-                    f.push(("layout", Val::Json(serde_json::to_value(l).unwrap_or_default())));
+                    f.push((
+                        "layout",
+                        Val::Json(serde_json::to_value(l).unwrap_or_default()),
+                    ));
                 }
                 // Schema 66 (docs/adr/0325 §1): its fields, as their JSON.
                 if !para.fields.is_empty() {
-                    f.push(("fields", Val::Json(serde_json::to_value(&para.fields).unwrap_or_default())));
+                    f.push((
+                        "fields",
+                        Val::Json(serde_json::to_value(&para.fields).unwrap_or_default()),
+                    ));
                 }
                 // The object whose label it writes (docs/adr/0175 §4), and only the drawing's texts (a block
                 // definition's objects have no persistent ids to name): a scale never without its object; the object
@@ -867,7 +930,12 @@ impl<'d> Encoder<'d> {
                         return refuse(self, Code::BadValue, "level", &words);
                     }
                     if e.style != Some(DimensionStyle::Elevation) {
-                        return refuse(self, Code::BadValue, "level", "katı yalnız kot ölçüsü anar");
+                        return refuse(
+                            self,
+                            Code::BadValue,
+                            "level",
+                            "katı yalnız kot ölçüsü anar",
+                        );
                     }
                     f.push(("level", Val::Json(json(serde_json::to_value(l)))));
                 }
@@ -958,7 +1026,10 @@ impl<'d> Encoder<'d> {
                     if let Some(words) = kentos_contracts::boundary_problem(b) {
                         return refuse(self, "boundary", &words);
                     }
-                    f.push(("boundary", Val::Json(serde_json::to_value(b).unwrap_or_default())));
+                    f.push((
+                        "boundary",
+                        Val::Json(serde_json::to_value(b).unwrap_or_default()),
+                    ));
                 }
                 // What its region follows (§6): only the drawing's hatches (a block
                 // definition's objects have no persistent ids to name).
@@ -1013,11 +1084,17 @@ impl<'d> Encoder<'d> {
                         self.path.push(Seg::Name("clipping"));
                         return Err(self.fail(Code::BadValue, &why));
                     }
-                    f.push(("clipping", Val::Json(serde_json::to_value(c).unwrap_or_default())));
+                    f.push((
+                        "clipping",
+                        Val::Json(serde_json::to_value(c).unwrap_or_default()),
+                    ));
                 }
                 // Its level and phase (docs/adr/0733 §1): no field when none.
                 if !e.arch.is_empty() {
-                    f.push(("arch", Val::Json(serde_json::to_value(&e.arch).unwrap_or_default())));
+                    f.push((
+                        "arch",
+                        Val::Json(serde_json::to_value(&e.arch).unwrap_or_default()),
+                    ));
                 }
             }
             Entity::Table(e) => {
@@ -1119,7 +1196,12 @@ impl<'d> Encoder<'d> {
                         } => {
                             f.push(("source", Val::Source(source)));
                             // Schema 68 (docs/adr/0327 §5): a linked file's path, digest, copy and rule, as their JSON.
-                            if path.is_some() || digest.is_some() || copy.is_some() || !overrides.is_keep() || key_column.is_some() {
+                            if path.is_some()
+                                || digest.is_some()
+                                || copy.is_some()
+                                || !overrides.is_keep()
+                                || key_column.is_some()
+                            {
                                 let mut link = serde_json::Map::new();
                                 if let Some(p) = path {
                                     link.insert("path".into(), serde_json::json!(p));
@@ -1144,17 +1226,29 @@ impl<'d> Encoder<'d> {
                 }
                 // Schema 68 (docs/adr/0327 §1–§3): the cells' styles, formulas and fields, as their JSON.
                 if !e.styles.is_empty() {
-                    f.push(("styles", Val::Json(serde_json::to_value(&e.styles).unwrap_or_default())));
+                    f.push((
+                        "styles",
+                        Val::Json(serde_json::to_value(&e.styles).unwrap_or_default()),
+                    ));
                 }
                 if !e.formulas.is_empty() {
-                    f.push(("formulas", Val::Json(serde_json::to_value(&e.formulas).unwrap_or_default())));
+                    f.push((
+                        "formulas",
+                        Val::Json(serde_json::to_value(&e.formulas).unwrap_or_default()),
+                    ));
                 }
                 if !e.fields.is_empty() {
-                    f.push(("fields", Val::Json(serde_json::to_value(&e.fields).unwrap_or_default())));
+                    f.push((
+                        "fields",
+                        Val::Json(serde_json::to_value(&e.fields).unwrap_or_default()),
+                    ));
                 }
                 // Schema 182 (docs/adr/1030 §7): its parts, as their JSON.
                 if let Some(b) = &e.breaks {
-                    f.push(("breaks", Val::Json(serde_json::to_value(b).unwrap_or_default())));
+                    f.push((
+                        "breaks",
+                        Val::Json(serde_json::to_value(b).unwrap_or_default()),
+                    ));
                 }
                 // Schema 185 (docs/adr/1126 §3): the table style it follows, by id.
                 if let Some(id) = &e.table_style {
@@ -1288,11 +1382,17 @@ impl<'d> Encoder<'d> {
                 }
                 // Schema 88 (docs/adr/0518 §1): its georeference record, as its JSON.
                 if let Some(g) = &r.georef {
-                    f.push(("georef", Val::Json(serde_json::to_value(g).unwrap_or_default())));
+                    f.push((
+                        "georef",
+                        Val::Json(serde_json::to_value(g).unwrap_or_default()),
+                    ));
                 }
                 // Schema 103 (docs/adr/0627 §3): the GeoPackage tile table it shows, as its JSON.
                 if let Some(t) = &r.tiles {
-                    f.push(("tiles", Val::Json(serde_json::to_value(t).unwrap_or_default())));
+                    f.push((
+                        "tiles",
+                        Val::Json(serde_json::to_value(t).unwrap_or_default()),
+                    ));
                 }
             }
             // A record has no fields of its own; only the drawing's (docs/adr/0410 §2).
@@ -1403,13 +1503,22 @@ impl<'d> Encoder<'d> {
                     return refuse(self, field, &words);
                 }
                 if !e.arms.is_empty() {
-                    f.push(("arms", Val::Json(serde_json::to_value(&e.arms).unwrap_or_default())));
+                    f.push((
+                        "arms",
+                        Val::Json(serde_json::to_value(&e.arms).unwrap_or_default()),
+                    ));
                 }
                 if let Some(t) = &e.tip {
-                    f.push(("tip", Val::Json(serde_json::to_value(t).unwrap_or_default())));
+                    f.push((
+                        "tip",
+                        Val::Json(serde_json::to_value(t).unwrap_or_default()),
+                    ));
                 }
                 if !e.blocks.is_empty() {
-                    f.push(("blocks", Val::Json(serde_json::to_value(&e.blocks).unwrap_or_default())));
+                    f.push((
+                        "blocks",
+                        Val::Json(serde_json::to_value(&e.blocks).unwrap_or_default()),
+                    ));
                 }
                 if let Some(s) = &e.leader_style {
                     f.push(("leaderStyle", Val::Text(s)));
@@ -1423,7 +1532,10 @@ impl<'d> Encoder<'d> {
                 self.path.push(Seg::Name("annotative"));
                 return Err(self.fail(Code::BadValue, &words));
             }
-            f.push(("annotative", Val::Json(serde_json::to_value(a).unwrap_or_default())));
+            f.push((
+                "annotative",
+                Val::Json(serde_json::to_value(a).unwrap_or_default()),
+            ));
         }
         f.sort_by(|a, b| key_order(a.0, b.0));
         self.open(1, true)?;
@@ -2129,7 +2241,11 @@ impl<'d> Encoder<'d> {
                     self.key("outer");
                     self.at(Seg::Name("outer"), |e| e.id(&outer.0))?;
                 }
-                for (key, ids) in [("bounds", &a.bounds), ("cutouts", &a.cutouts), ("islands", &a.islands)] {
+                for (key, ids) in [
+                    ("bounds", &a.bounds),
+                    ("cutouts", &a.cutouts),
+                    ("islands", &a.islands),
+                ] {
                     if ids.is_empty() {
                         continue;
                     }

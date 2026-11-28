@@ -39,27 +39,48 @@ fn tab_commands(app: &App, tab: &str) -> Vec<&'static str> {
 fn duvar_finds_no_building_command_in_a_cbs_project_and_does_not_run() {
     let mut app = gis_app();
     assert!(app.program.is_none(), "kentos-cad, every module");
-    assert_eq!(app.active_module(), Some(Module::Gis), "the screen is the project's module's");
-    assert!(!app.offers("tool.wall") && app.offers("file.export.gpkg"), "the CBS module's commands alone");
+    assert_eq!(
+        app.active_module(),
+        Some(Module::Gis),
+        "the screen is the project's module's"
+    );
+    assert!(
+        !app.offers("tool.wall") && app.offers("file.export.gpkg"),
+        "the CBS module's commands alone"
+    );
     let ids = found(&mut app, "duvar");
     assert!(!ids.contains(&"tool.wall"), "{ids:?}");
     assert!(!ids.iter().any(|id| id.starts_with("arch.")), "{ids:?}");
     // Run all the same (an alias typed, a shortcut): refused, and said where it is.
     let _ = app.update(Message::Run("tool.wall"));
     let said = last_said(&app);
-    assert!(said.contains("“Duvar” bu CBS projesinde yok") && said.contains("KentOS Mimari"), "{said}");
+    assert!(
+        said.contains("“Duvar” bu CBS projesinde yok") && said.contains("KentOS Mimari"),
+        "{said}"
+    );
 }
 
 #[test]
 fn the_cbs_ribbon_carries_no_building_export_ucs_or_point_cloud_analysis() {
     let app = gis_app();
     let file = tab_commands(&app, "file");
-    assert!(!file.contains(&"arch.ifcExport") && !file.contains(&"arch.ifcExportCut"), "{file:?}");
+    assert!(
+        !file.contains(&"arch.ifcExport") && !file.contains(&"arch.ifcExportCut"),
+        "{file:?}"
+    );
     assert!(file.contains(&"file.export.gpkg"), "the map's exports stay");
     let view = tab_commands(&app, "view");
-    assert!(!view.iter().any(|id| id.starts_with("ucs.") || id.starts_with("tool.ucs")), "{view:?}");
+    assert!(
+        !view
+            .iter()
+            .any(|id| id.starts_with("ucs.") || id.starts_with("tool.ucs")),
+        "{view:?}"
+    );
     let analysis = tab_commands(&app, "analysis");
-    assert!(!analysis.iter().any(|id| id.starts_with("pointcloud.")), "{analysis:?}");
+    assert!(
+        !analysis.iter().any(|id| id.starts_with("pointcloud.")),
+        "{analysis:?}"
+    );
     // The point cloud tools are the selected point cloud's, and Menülerde ara still finds them.
     let mut app = app;
     assert!(app.offers("pointcloud.profile"));

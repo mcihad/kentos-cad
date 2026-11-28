@@ -28,7 +28,13 @@ const COLOURED_BUDGET: usize = 256 * 1024 * 1024;
 /// A file of a cloud as the service opens it: where it is read from, its
 /// format, its name, an embedded one's bytes, and its place in the drawing
 /// (docs/adr/5100: 16 numbers row by row; none: where the file says).
-pub type MemberFile = (Origin, CloudFormat, String, Option<Arc<Vec<u8>>>, Option<[f64; 16]>);
+pub type MemberFile = (
+    Origin,
+    CloudFormat,
+    String,
+    Option<Arc<Vec<u8>>>,
+    Option<[f64; 16]>,
+);
 
 /// What a file of a cloud is doing.
 #[derive(Clone, Debug)]

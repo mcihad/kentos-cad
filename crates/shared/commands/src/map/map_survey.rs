@@ -13,8 +13,9 @@ use ts_rs::TS;
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
 use crate::{
-    AcceptMethod, BaselineSolution, SolutionKind, SurveyAdjustment, SurveyAntenna, SurveyBaselineSession,
-    SurveyFileFormat, SurveyGrid, SurveyKnown, SurveyReceiver, SurveyResult, SurveyTolerance, TimeSystem,
+    AcceptMethod, BaselineSolution, SolutionKind, SurveyAdjustment, SurveyAntenna,
+    SurveyBaselineSession, SurveyFileFormat, SurveyGrid, SurveyKnown, SurveyReceiver, SurveyResult,
+    SurveyTolerance, TimeSystem,
 };
 
 pub const MAP_SURVEY_QUERY: &str = "map.survey.query";
@@ -396,7 +397,10 @@ pub struct MapSurveyTree {
     pub adjustments: Vec<SurveyAdjustment>,
     /// The baseline sessions with their cross-correlations (docs/adr/4920).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<SurveyBaselineSession>>"))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(optional, as = "Option<Vec<SurveyBaselineSession>>")
+    )]
     pub baseline_sessions: Vec<SurveyBaselineSession>,
     /// The place limits kept in the project, with their source (docs/adr/4920); `places` reads them when the input
     /// gives none.
@@ -420,7 +424,12 @@ pub struct MapSurveyTree {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(tag = "op", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
+#[serde(
+    tag = "op",
+    rename_all = "camelCase",
+    rename_all_fields = "camelCase",
+    deny_unknown_fields
+)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub enum MapSurveyOperation {
     /// A new campaign `kp-N`: its name, the map's work item it is (a campaign item), its operator, its epoch decision
@@ -723,7 +732,11 @@ pub enum MapSurveyOperation {
         method: Option<AcceptMethod>,
     },
     /// Objects recorded as made from accepted points by `operation`, at their revisions now.
-    Use { uids: Vec<String>, points: Vec<String>, operation: String },
+    Use {
+        uids: Vec<String>,
+        points: Vec<String>,
+        operation: String,
+    },
     /// The known points' place limits kept in the project with their source (docs/adr/4920): a regulation's article
     /// or an administration's specification; none of the three takes the kept limits away.
     Tolerance {
@@ -908,7 +921,10 @@ pub struct GnssRules {
 
 /// KentOS's GNSS network rule package (BÖHHBÜY 2018, Articles 15, 20 and 22).
 pub fn gnss_rules_default() -> Option<GnssRules> {
-    serde_json::from_str(include_str!("../../../../../catalog/v1/rules/gnss-ag-bohhbuy-2018.json")).ok()
+    serde_json::from_str(include_str!(
+        "../../../../../catalog/v1/rules/gnss-ag-bohhbuy-2018.json"
+    ))
+    .ok()
 }
 
 /// Input of `map.survey.network` v1 (docs/adr/1740): the project's GNSS network adjusted from its archive, reading

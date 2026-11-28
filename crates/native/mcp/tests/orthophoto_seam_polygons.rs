@@ -13,7 +13,11 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 /// A text with its `$fixture:` paths made absolute, as the shared runners make them.
 fn fixtures(v: &Value) -> Value {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/");
-    serde_json::from_str(&v.to_string().replace("$fixture:", &root.display().to_string())).unwrap()
+    serde_json::from_str(
+        &v.to_string()
+            .replace("$fixture:", &root.display().to_string()),
+    )
+    .unwrap()
 }
 
 /// Two numbers' lists or numbers alike within 10⁻⁹.
@@ -34,7 +38,10 @@ fn near(got: &Value, want: &Value, at: &str) {
 
 #[test]
 fn the_seam_along_the_seamline_polygons_over_mcp_is_the_cases() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.orthophoto.compare.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.orthophoto.compare.json"
+    ))
+    .unwrap();
     for name in [
         "dikiş çokgenlerinden: ortak sınırları dikiş hattının kendisi, yerleri onun yerleri",
         "dikiş çokgenleri öbür sırayla: ortak sınır öbür yönde, yerler güneyden",
@@ -42,9 +49,19 @@ fn the_seam_along_the_seamline_polygons_over_mcp_is_the_cases() {
         "dikiş çokgeni 0,4 mm kaymış: 1 mm içinde ortak sınır",
         "dikiş çokgenleri 2 mm ayrık: ortak sınır yok",
     ] {
-        let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == name).unwrap().clone();
-        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(fixtures(&case["setup"])).unwrap();
-        let path = std::env::temp_dir().join(format!("kentos-orthophoto-seam-polygons-{}.kcad", std::process::id()));
+        let case = cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"] == name)
+            .unwrap()
+            .clone();
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(fixtures(&case["setup"])).unwrap();
+        let path = std::env::temp_dir().join(format!(
+            "kentos-orthophoto-seam-polygons-{}.kcad",
+            std::process::id()
+        ));
         std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
         let mut server = Server::new();
         let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -57,19 +74,39 @@ fn the_seam_along_the_seamline_polygons_over_mcp_is_the_cases() {
         if step["result"]["status"] == "failed" {
             assert_eq!(r["isError"], true, "{name}: {r}");
             let said = r.to_string();
-            assert!(said.contains("seam.polygons") && said.contains("ortak sınırı yok"), "{name}: {said}");
+            assert!(
+                said.contains("seam.polygons") && said.contains("ortak sınırı yok"),
+                "{name}: {said}"
+            );
             continue;
         }
         assert_eq!(r["isError"], false, "{name}: {r}");
-        let (got, want) = (&r["structuredContent"]["output"]["seam"], &step["result"]["output"]["seam"]);
-        assert_eq!(got["shared"]["polygons"], want["shared"]["polygons"], "{name}");
+        let (got, want) = (
+            &r["structuredContent"]["output"]["seam"],
+            &step["result"]["output"]["seam"],
+        );
+        assert_eq!(
+            got["shared"]["polygons"], want["shared"]["polygons"],
+            "{name}"
+        );
         for key in ["parts", "length", "places", "outside"] {
-            near(&got["shared"][key], &want["shared"][key], &format!("{name} shared.{key}"));
+            near(
+                &got["shared"][key],
+                &want["shared"][key],
+                &format!("{name} shared.{key}"),
+            );
         }
-        let (g, w) = (got["patches"].as_array().unwrap(), want["patches"].as_array().unwrap());
+        let (g, w) = (
+            got["patches"].as_array().unwrap(),
+            want["patches"].as_array().unwrap(),
+        );
         assert_eq!(g.len(), w.len(), "{name}");
         for (a, b) in g.iter().zip(w) {
-            assert_eq!((&a["state"], &a["part"]), (&b["state"], &b["part"]), "{name}");
+            assert_eq!(
+                (&a["state"], &a["part"]),
+                (&b["state"], &b["part"]),
+                "{name}"
+            );
             for key in ["at", "dx", "dy", "correlation", "station"] {
                 near(&a[key], &b[key], &format!("{name} {key}"));
             }

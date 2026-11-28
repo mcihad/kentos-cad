@@ -30,7 +30,11 @@ pub(crate) fn library() -> &'static [BlockDefinition] {
 
 /// The block `name` places: the drawing's (Turkish case folded), else the library's under `fresh`'s id when the
 /// drawing has its own id; none when neither has it.
-pub(crate) fn symbol(doc: &Document, name: &str, fresh: impl FnOnce() -> BlockId) -> Option<Symbol> {
+pub(crate) fn symbol(
+    doc: &Document,
+    name: &str,
+    fresh: impl FnOnce() -> BlockId,
+) -> Option<Symbol> {
     if let Some(b) = doc.block_named(name) {
         return Some(Symbol {
             def: b.clone(),

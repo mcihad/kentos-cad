@@ -360,7 +360,11 @@ impl TableGeom<'_> {
             .iter()
             .any(|s| s.border_weight.is_some() || s.border_color.is_some());
         let look = |row: usize, col: usize| -> Look {
-            if bordered { self.border_at(row, col) } else { None }
+            if bordered {
+                self.border_at(row, col)
+            } else {
+                None
+            }
         };
         let mut out = Vec::new();
         for part in self.parts() {
@@ -514,7 +518,8 @@ impl TableGeom<'_> {
     /// The border look of the cell at `row`, `col`: none when its style sets no border weight nor colour.
     fn border_at(&self, row: usize, col: usize) -> Look {
         let s = self.style_at(row, col);
-        (s.border_weight.is_some() || s.border_color.is_some()).then_some((s.border_weight, s.border_color))
+        (s.border_weight.is_some() || s.border_color.is_some())
+            .then_some((s.border_weight, s.border_color))
     }
 
     /// Its frame's band, placed, part by part: the top and bottom strips the whole width, the left and right ones
@@ -885,7 +890,9 @@ impl TableGeom<'_> {
                     continue;
                 };
                 let style = self.style_at(i, j);
-                let bold = style.bold.unwrap_or((self.header && i == 0) || self.face.is_bold());
+                let bold = style
+                    .bold
+                    .unwrap_or((self.header && i == 0) || self.face.is_bold());
                 let h = style.height.unwrap_or(self.height);
                 let pad = style.margin.unwrap_or(PAD * h);
                 let lines: Vec<&str> = words.split('\n').collect();

@@ -5,9 +5,9 @@
 //! drawing is not enough; the CSV; nothing written; Harita and GIS offer it. Kayıklık ölçümü gives the shared seam case's
 //! places (docs/adr/2460). And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -16,16 +16,26 @@ use crate::app::{App, Message};
 use crate::ortho_compare_window::Event as C;
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.orthophoto.compare.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.orthophoto.compare.json"
+    ))
+    .expect("cases")
 }
 
 /// A shared case by the start of its name.
 pub(crate) fn case(name: &str) -> Value {
-    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(name))).cloned().expect(name)
+    cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with(name)))
+        .cloned()
+        .expect(name)
 }
 
 pub(crate) fn open(setup: &Value, program: Option<Module>) -> App {
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup.clone()).expect("reads");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup.clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -55,7 +65,11 @@ pub(crate) fn close(got: &Value, want: &Value, at: &str) {
             keys.sort();
             keys.dedup();
             for k in keys {
-                close(a.get(k).unwrap_or(&Value::Null), b.get(k).unwrap_or(&Value::Null), &format!("{at}.{k}"));
+                close(
+                    a.get(k).unwrap_or(&Value::Null),
+                    b.get(k).unwrap_or(&Value::Null),
+                    &format!("{at}.{k}"),
+                );
             }
         }
         _ => assert_eq!(got, want, "{at}"),
@@ -64,7 +78,8 @@ pub(crate) fn close(got: &Value, want: &Value, at: &str) {
 
 fn answer(app: &App) -> Value {
     serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -124,7 +139,11 @@ fn the_two_orthophotos_are_compared_as_the_shared_cases() {
     let text = std::fs::read_to_string(&file).expect("written");
     assert_eq!(text.lines().filter(|l| l.ends_with(";Hayır")).count(), 10);
     let _ = std::fs::remove_dir_all(dir);
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
 }
 
 #[test]
@@ -180,15 +199,22 @@ fn harita_and_gis_offer_it() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ortofoto-karsilastirma-1780");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ortofoto-karsilastirma-1780");
     std::fs::create_dir_all(&out).expect("a folder");
     let blunder = case("kaba okunmuş nokta")["setup"].clone();
-    for (setup, stem) in [(cases()["setup"].clone(), "1-iki-zaman"), (blunder, "2-siniri-asan")] {
-        for (theme, size, name) in
-            [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")]
-        {
+    for (setup, stem) in [
+        (cases()["setup"].clone(), "1-iki-zaman"),
+        (blunder, "2-siniri-asan"),
+    ] {
+        for (theme, size, name) in [
+            ("light", Size::new(1440.0, 900.0), "acik-genis"),
+            ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+        ] {
             let mut app = open(&setup, Some(Module::Map));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -201,7 +227,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -218,7 +247,10 @@ fn screens() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("3-serit-raster-sekmesi.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
 }
 
@@ -227,7 +259,9 @@ use crate::ortho_compare_window::Show;
 /// A case's setup with its `$fixture:` paths made absolute (the shared runners do it the same way).
 pub(crate) fn with_fixtures(setup: &Value) -> Value {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/");
-    let text = setup.to_string().replace("$fixture:", &root.display().to_string());
+    let text = setup
+        .to_string()
+        .replace("$fixture:", &root.display().to_string());
     serde_json::from_str(&text).expect("the setup")
 }
 
@@ -254,7 +288,8 @@ fn dikis_olcumu_gives_the_shared_case_s_places() {
     }
     assert_eq!(app.modules.map().ortho_compare.show, Show::Seam);
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -284,15 +319,28 @@ fn dikis_olcumu_gives_the_shared_case_s_places() {
 fn seam_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dikis-olcumu-2460");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/dikis-olcumu-2460");
     std::fs::create_dir_all(&out).expect("a folder");
     for (theme, size, name, case_name) in [
-        ("light", Size::new(1440.0, 900.0), "acik-genis", "dikiş: örtüşmede ölçülen kayma"),
-        ("dark", Size::new(1100.0, 760.0), "koyu-dar", "dikiş: 2,7 piksellik kayma"),
+        (
+            "light",
+            Size::new(1440.0, 900.0),
+            "acik-genis",
+            "dikiş: örtüşmede ölçülen kayma",
+        ),
+        (
+            "dark",
+            Size::new(1100.0, 760.0),
+            "koyu-dar",
+            "dikiş: 2,7 piksellik kayma",
+        ),
     ] {
         let c = case(case_name);
         let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -312,7 +360,10 @@ fn seam_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-dikis-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -341,9 +392,13 @@ fn the_seam_is_measured_along_the_chosen_line() {
     );
     app.selection.set(vec![Slot(3)]);
     let _ = app.update(Message::from(map::Event::OrthoCompare(C::TakeLine)));
-    assert_eq!(app.modules.map().ortho_compare.seam_line_name, "Çoklu çizgi");
+    assert_eq!(
+        app.modules.map().ortho_compare.seam_line_name,
+        "Çoklu çizgi"
+    );
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -360,7 +415,8 @@ fn the_seam_is_measured_along_the_chosen_line() {
     assert_eq!(rows[0][0], "4.000", "the first place 4 m along the line");
     let _ = app.update(Message::from(map::Event::OrthoCompare(C::DropLine)));
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -384,12 +440,18 @@ fn the_seam_is_measured_along_the_chosen_line() {
 fn line_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dikis-hatti-2860");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/dikis-hatti-2860");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let c = case("dikiş hattı boyunca");
         let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -411,7 +473,10 @@ fn line_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-dikis-hatti-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -435,7 +500,8 @@ fn piksel_alti_cift_kubik_gives_the_shared_case_s_places() {
         let _ = app.update(Message::from(map::Event::OrthoCompare(e)));
     }
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -463,7 +529,8 @@ fn piksel_alti_cift_kubik_gives_the_shared_case_s_places() {
         Refine::Parabola,
     ))));
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -496,7 +563,8 @@ fn the_seam_is_measured_along_an_arc() {
     app.selection.set(vec![Slot(3)]);
     let _ = app.update(Message::from(map::Event::OrthoCompare(C::TakeLine)));
     let got = serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -522,23 +590,49 @@ fn subpixel_screens() {
     use crate::ortho_compare_window::Refine;
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/dikis-cift-kubik-3260");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/dikis-cift-kubik-3260");
     std::fs::create_dir_all(&out).expect("a folder");
     for (theme, size, name, arc) in [
-        ("light", Size::new(1440.0, 900.0), "cift-kubik-acik-genis", false),
+        (
+            "light",
+            Size::new(1440.0, 900.0),
+            "cift-kubik-acik-genis",
+            false,
+        ),
         ("dark", Size::new(1100.0, 760.0), "yayli-hat-koyu-dar", true),
     ] {
-        let c = case(if arc { "dikiş hattı yaylı" } else { "dikiş: görüntünün çift kübik ara değeriyle" });
+        let c = case(if arc {
+            "dikiş hattı yaylı"
+        } else {
+            "dikiş: görüntünün çift kübik ara değeriyle"
+        });
         let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("raster.compare"));
         let asked = if arc {
-            [C::Seam(true), C::Step(1.0), C::Window(21.0), C::Search(5.0), C::Correlation("0,8".into()), C::Refine(Refine::Parabola)]
+            [
+                C::Seam(true),
+                C::Step(1.0),
+                C::Window(21.0),
+                C::Search(5.0),
+                C::Correlation("0,8".into()),
+                C::Refine(Refine::Parabola),
+            ]
         } else {
-            [C::Seam(true), C::Step(2.0), C::Window(11.0), C::Search(3.0), C::Correlation("0,8".into()), C::Refine(Refine::Bicubic)]
+            [
+                C::Seam(true),
+                C::Step(2.0),
+                C::Window(11.0),
+                C::Search(3.0),
+                C::Correlation("0,8".into()),
+                C::Refine(Refine::Bicubic),
+            ]
         };
         for e in asked {
             let _ = app.update(Message::from(map::Event::OrthoCompare(e)));
@@ -553,7 +647,10 @@ fn subpixel_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -562,7 +659,10 @@ fn subpixel_screens() {
 /// places (the second resampled onto the first's grid) and the note saying so; the turned image's case too.
 #[test]
 fn yeniden_ornekleme_gives_the_shared_cases_places() {
-    for name in ["dikiş: ikinci görüntü 0,08 m pikselli", "dikiş: ikinci görüntü 9° dönük"] {
+    for name in [
+        "dikiş: ikinci görüntü 0,08 m pikselli",
+        "dikiş: ikinci görüntü 9° dönük",
+    ] {
         let c = case(name);
         let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
         let _ = app.update(Message::Run("raster.compare"));
@@ -575,14 +675,21 @@ fn yeniden_ornekleme_gives_the_shared_cases_places() {
         ] {
             let _ = app.update(Message::from(map::Event::OrthoCompare(e)));
         }
-        let refused = app.modules.map().ortho_compare.answer.clone().expect("an answer");
+        let refused = app
+            .modules
+            .map()
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer");
         assert!(
             refused.as_ref().is_err_and(|why| why.contains("resample")),
             "{name}: {refused:?}"
         );
         let _ = app.update(Message::from(map::Event::OrthoCompare(C::Resample(true))));
         let got = serde_json::to_value(
-            app.modules.map()
+            app.modules
+                .map()
                 .ortho_compare
                 .answer
                 .clone()
@@ -612,8 +719,14 @@ fn yeniden_ornekleme_gives_the_shared_cases_places() {
 #[test]
 fn a_turned_first_image_is_the_grid_as_the_shared_cases_say() {
     for (name, bicubic) in [
-        ("dikiş: birinci görüntü 9° dönük; ızgara onun pikselleri, ikincisi ona örneklenir (parabol)", false),
-        ("dikiş: birinci görüntü 9° dönük, çift kübik piksel altı", true),
+        (
+            "dikiş: birinci görüntü 9° dönük; ızgara onun pikselleri, ikincisi ona örneklenir (parabol)",
+            false,
+        ),
+        (
+            "dikiş: birinci görüntü 9° dönük, çift kübik piksel altı",
+            true,
+        ),
     ] {
         let c = case(name);
         let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
@@ -632,14 +745,21 @@ fn a_turned_first_image_is_the_grid_as_the_shared_cases_say() {
                 crate::ortho_compare_window::Refine::Bicubic,
             ))));
         }
-        let refused = app.modules.map().ortho_compare.answer.clone().expect("an answer");
+        let refused = app
+            .modules
+            .map()
+            .ortho_compare
+            .answer
+            .clone()
+            .expect("an answer");
         assert!(
             refused.as_ref().is_err_and(|why| why.contains("resample")),
             "{name}: {refused:?}"
         );
         let _ = app.update(Message::from(map::Event::OrthoCompare(C::Resample(true))));
         let got = serde_json::to_value(
-            app.modules.map()
+            app.modules
+                .map()
                 .ortho_compare
                 .answer
                 .clone()
@@ -660,7 +780,8 @@ fn a_turned_first_image_is_the_grid_as_the_shared_cases_say() {
             (Value::Bool(true), Value::Bool(true))
         );
         let answer = app
-            .modules.map()
+            .modules
+            .map()
             .ortho_compare
             .answer
             .clone()
@@ -685,13 +806,19 @@ fn a_turned_first_image_is_the_grid_as_the_shared_cases_say() {
 fn turned_first_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/donuk-birinci-4060");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/donuk-birinci-4060");
     std::fs::create_dir_all(&out).expect("a folder");
     let case_name = "dikiş: birinci görüntü 9° dönük, çift kübik piksel altı";
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let c = case(case_name);
         let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -713,7 +840,10 @@ fn turned_first_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-donuk-birinci-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -728,15 +858,28 @@ fn turned_first_screens() {
 fn resample_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/yeniden-ornekleme-3660");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/yeniden-ornekleme-3660");
     std::fs::create_dir_all(&out).expect("a folder");
     for (theme, size, name, case_name) in [
-        ("light", Size::new(1440.0, 900.0), "ince-piksel-acik-genis", "dikiş: ikinci görüntü 0,08 m pikselli"),
-        ("dark", Size::new(1100.0, 760.0), "donuk-koyu-dar", "dikiş: ikinci görüntü 9° dönük"),
+        (
+            "light",
+            Size::new(1440.0, 900.0),
+            "ince-piksel-acik-genis",
+            "dikiş: ikinci görüntü 0,08 m pikselli",
+        ),
+        (
+            "dark",
+            Size::new(1100.0, 760.0),
+            "donuk-koyu-dar",
+            "dikiş: ikinci görüntü 9° dönük",
+        ),
     ] {
         let c = case(case_name);
         let mut app = open(&with_fixtures(&c["setup"]), Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -757,7 +900,10 @@ fn resample_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

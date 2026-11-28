@@ -35,7 +35,9 @@ pub fn ring_holds(ring: &[[f64; 2]], p: [f64; 2]) -> bool {
     let mut hit = false;
     for i in 0..n {
         let (a, b) = (ring[i], ring[(i + 1) % n]);
-        if (a[1] > p[1]) != (b[1] > p[1]) && p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]) {
+        if (a[1] > p[1]) != (b[1] > p[1])
+            && p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1])
+        {
             hit = !hit;
         }
     }
@@ -59,7 +61,9 @@ fn span(lo: f64, hi: f64, cell: f64) -> (i64, usize) {
 impl Surface {
     /// The cells a density grid of `cell` would have over the boundary's or the surface's extent.
     pub fn density_cells(&self, boundary: Option<&Region>, cell: f64) -> usize {
-        let Some([lo, hi]) = self.grid_bounds(boundary) else { return 0 };
+        let Some([lo, hi]) = self.grid_bounds(boundary) else {
+            return 0;
+        };
         let (_, columns) = span(lo[0], hi[0], cell);
         let (_, rows) = span(lo[1], hi[1], cell);
         columns.saturating_mul(rows)
@@ -71,7 +75,10 @@ impl Surface {
             None => Box::new(self.vertices.iter().map(|v| [v[0], v[1]])),
         };
         let b = points.fold([[f64::INFINITY; 2], [f64::NEG_INFINITY; 2]], |b, p| {
-            [[b[0][0].min(p[0]), b[0][1].min(p[1])], [b[1][0].max(p[0]), b[1][1].max(p[1])]]
+            [
+                [b[0][0].min(p[0]), b[0][1].min(p[1])],
+                [b[1][0].max(p[0]), b[1][1].max(p[1])],
+            ]
         });
         (b[0][0] <= b[1][0] && b[0][1] <= b[1][1]).then_some(b)
     }
@@ -79,12 +86,17 @@ impl Surface {
     /// The density grid of square cells of `cell` (positive; the caller bounds the cell count with
     /// [`Surface::density_cells`]); `least` counts the cells with fewer points.
     pub fn density(&self, boundary: Option<&Region>, cell: f64, least: Option<u32>) -> Density {
-        let Some([lo, hi]) = self.grid_bounds(boundary) else { return Density::default() };
+        let Some([lo, hi]) = self.grid_bounds(boundary) else {
+            return Density::default();
+        };
         let (fx, columns) = span(lo[0], hi[0], cell);
         let (fy, rows) = span(lo[1], hi[1], cell);
         let mut counts = vec![0u32; columns * rows];
         for v in &self.vertices {
-            let (i, j) = ((v[0] / cell).floor() as i64 - fx, (v[1] / cell).floor() as i64 - fy);
+            let (i, j) = (
+                (v[0] / cell).floor() as i64 - fx,
+                (v[1] / cell).floor() as i64 - fy,
+            );
             if (0..columns as i64).contains(&i) && (0..rows as i64).contains(&j) {
                 counts[j as usize * columns + i as usize] += 1;
             }
@@ -103,7 +115,10 @@ impl Surface {
             .enumerate()
             .map(|(k, &n)| {
                 let (i, j) = (k % columns, k / columns);
-                let c = [(fx + i as i64) as f64 * cell + cell / 2.0, (fy + j as i64) as f64 * cell + cell / 2.0];
+                let c = [
+                    (fx + i as i64) as f64 * cell + cell / 2.0,
+                    (fy + j as i64) as f64 * cell + cell / 2.0,
+                ];
                 let counts = match boundary {
                     Some(r) => r.holds(c),
                     None => self.height_walking(c[0], c[1], &mut start).z.is_some(),
@@ -135,12 +150,18 @@ impl Density {
     pub fn outlines(&self, chosen: impl Fn(u32) -> bool) -> Vec<Vec<[f64; 2]>> {
         use std::collections::{BTreeMap, BTreeSet};
         let take = |i: usize, j: usize| self.counts[j * self.columns + i].is_some_and(&chosen);
-        let corner = |i: usize, j: usize| u32::try_from(j * (self.columns + 1) + i).unwrap_or(u32::MAX);
+        let corner =
+            |i: usize, j: usize| u32::try_from(j * (self.columns + 1) + i).unwrap_or(u32::MAX);
         let mut edges: BTreeSet<(u32, u32)> = BTreeSet::new();
         for j in 0..self.rows {
             for i in 0..self.columns {
                 if take(i, j) {
-                    let c = [corner(i, j), corner(i + 1, j), corner(i + 1, j + 1), corner(i, j + 1)];
+                    let c = [
+                        corner(i, j),
+                        corner(i + 1, j),
+                        corner(i + 1, j + 1),
+                        corner(i, j + 1),
+                    ];
                     for k in 0..4 {
                         edges.insert((c[k], c[(k + 1) % 4]));
                     }
@@ -157,7 +178,10 @@ impl Density {
         chain(
             |v| {
                 let (i, j) = (v as usize % width, v as usize / width);
-                [self.origin[0] + i as f64 * self.cell, self.origin[1] + j as f64 * self.cell]
+                [
+                    self.origin[0] + i as f64 * self.cell,
+                    self.origin[1] + j as f64 * self.cell,
+                ]
             },
             next,
         )

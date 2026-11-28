@@ -37,7 +37,7 @@ pub(crate) fn scheme_name(scheme: Option<ColorScheme>) -> &'static str {
 
 impl ArchProjectApp for App {
     /// The project's phase view.
-    fn phase_view(&self) -> PhaseView{
+    fn phase_view(&self) -> PhaseView {
         self.document
             .as_ref()
             .and_then(|d| d.model.settings().arch.as_ref().and_then(|a| a.phase_view))
@@ -45,7 +45,7 @@ impl ArchProjectApp for App {
     }
 
     /// Tadilat ▸ `name` (`arch.phase.all` …).
-    fn set_phase_view(&mut self, name: &str){
+    fn set_phase_view(&mut self, name: &str) {
         let Some(view) = PhaseView::ALL.into_iter().find(|v| v.name() == name) else {
             return;
         };
@@ -102,13 +102,19 @@ impl ArchProjectApp for App {
         arch.color_plan = scheme.map(|scheme| ColorPlan { scheme });
         let result = kentos_native_application::settings_set::execute(
             &mut ExecutionContext::new(&mut doc.model),
-            SettingsSet { arch: Some(arch), ..Default::default() },
+            SettingsSet {
+                arch: Some(arch),
+                ..Default::default()
+            },
         );
         if self.answered(result).is_some() {
             let words = match scheme {
                 None => "Mahal renk planı kapandı.".to_owned(),
                 Some(s) => {
-                    let rows = self.document.as_ref().map_or(0, |d| d.model.color_legend(None).len());
+                    let rows = self
+                        .document
+                        .as_ref()
+                        .map_or(0, |d| d.model.color_legend(None).len());
                     format!(
                         "Mahal renk planı: {}. Mahaller {rows} renkle dolduruldu; Renk planı lejandı renklerin \
                          lejandını çizer, aynı şema yeniden seçilince plan kapanır.",
@@ -118,12 +124,16 @@ impl ArchProjectApp for App {
             };
             self.say(Level::Info, words);
             // A fill covers what lies under its rooms' layer (docs/adr/8176 §3.4): said with the layers, and how.
-            let covered = self.document.as_ref().map_or_else(Vec::new, |d| d.model.covered_layers());
+            let covered = self
+                .document
+                .as_ref()
+                .map_or_else(Vec::new, |d| d.model.covered_layers());
             if scheme.is_some() && !covered.is_empty() {
                 let rows: Vec<String> = covered
                     .iter()
                     .map(|(rooms, under)| {
-                        let names: Vec<String> = under.iter().take(4).map(|n| format!("“{n}”")).collect();
+                        let names: Vec<String> =
+                            under.iter().take(4).map(|n| format!("“{n}”")).collect();
                         let tail = match (under.len(), under.len().saturating_sub(4)) {
                             (1, _) => "katmanının üstünde".to_owned(),
                             (_, 0) => "katmanlarının üstünde".to_owned(),
@@ -188,13 +198,19 @@ mod tests {
         assert_eq!(scheme_name(app.color_plan()), "off");
         let _ = app.update(Message::Run("arch.colorPlan.usage"));
         assert_eq!(app.color_plan(), Some(ColorScheme::Usage));
-        assert!(crate::files_testing::last_said(&app).starts_with("Mahal renk planı: Kullanım."), "a drawing with no room covers nothing");
+        assert!(
+            crate::files_testing::last_said(&app).starts_with("Mahal renk planı: Kullanım."),
+            "a drawing with no room covers nothing"
+        );
         let _ = app.update(Message::Run("arch.colorPlan.unit"));
         assert_eq!(scheme_name(app.color_plan()), "unit");
         // The scheme on, chosen again: off.
         let _ = app.update(Message::Run("arch.colorPlan.unit"));
         assert_eq!(app.color_plan(), None);
-        assert_eq!(crate::files_testing::last_said(&app), "Mahal renk planı kapandı.");
+        assert_eq!(
+            crate::files_testing::last_said(&app),
+            "Mahal renk planı kapandı."
+        );
         let _ = app.update(Message::Run("arch.colorPlan.usage"));
         let _ = app.update(Message::Run("arch.colorPlan.off"));
         assert_eq!(app.color_plan(), None);

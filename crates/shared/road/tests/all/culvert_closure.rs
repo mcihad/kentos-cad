@@ -16,14 +16,25 @@ fn n(v: &Value) -> f64 {
 fn same(name: &str, what: &str, got: &Span, want: &Value) {
     match (got.flow, want["flow"].as_f64()) {
         (None, None) => {}
-        (Some(a), Some(b)) => assert!((a - b).abs() <= 1e-7 * b.max(1.0), "{name} {what}: threshold {a} vs {b}"),
+        (Some(a), Some(b)) => assert!(
+            (a - b).abs() <= 1e-7 * b.max(1.0),
+            "{name} {what}: threshold {a} vs {b}"
+        ),
         other => panic!("{name} {what}: threshold {other:?}"),
     }
-    assert!((got.hours - n(&want["hours"])).abs() <= 1e-7, "{name} {what}: hours {} vs {}", got.hours, want["hours"]);
+    assert!(
+        (got.hours - n(&want["hours"])).abs() <= 1e-7,
+        "{name} {what}: hours {} vs {}",
+        got.hours,
+        want["hours"]
+    );
     let spans = want["spans"].as_array().expect("spans");
     assert_eq!(got.spans.len(), spans.len(), "{name} {what}: spans");
     for (g, w) in got.spans.iter().zip(spans) {
-        assert!((g.0 - n(&w[0])).abs() <= 1e-7 && (g.1 - n(&w[1])).abs() <= 1e-7, "{name} {what}: {g:?} vs {w}");
+        assert!(
+            (g.0 - n(&w[0])).abs() <= 1e-7 && (g.1 - n(&w[1])).abs() <= 1e-7,
+            "{name} {what}: {g:?} vs {w}"
+        );
     }
 }
 
@@ -34,7 +45,10 @@ fn the_closures_are_the_references() {
     assert_eq!(vehicles.len(), VEHICLES.len());
     for (v, (name, limits)) in vehicles.iter().zip(VEHICLES) {
         assert_eq!(v["name"].as_str(), Some(name));
-        assert_eq!((n(&v["depth"]), n(&v["speed"]), n(&v["product"])), (limits.depth, limits.speed, limits.product));
+        assert_eq!(
+            (n(&v["depth"]), n(&v["speed"]), n(&v["product"])),
+            (limits.depth, limits.speed, limits.product)
+        );
     }
     let cases = doc["cases"].as_array().expect("cases");
     assert!(cases.len() >= 12);
@@ -43,9 +57,14 @@ fn the_closures_are_the_references() {
         let k = &c["culvert"];
         let s = &k["section"];
         let section = if s["kind"] == "circle" {
-            Section::Circle { diameter: n(&s["diameter"]) }
+            Section::Circle {
+                diameter: n(&s["diameter"]),
+            }
         } else {
-            Section::Box { width: n(&s["width"]), height: n(&s["height"]) }
+            Section::Box {
+                width: n(&s["width"]),
+                height: n(&s["height"]),
+            }
         };
         let culvert = Culvert {
             section,
@@ -57,18 +76,54 @@ fn the_closures_are_the_references() {
             ke: n(&k["ke"]),
         };
         let w = &c["weir"];
-        let weir = Weir { crest: n(&w["crest"]), length: n(&w["length"]), cd: n(&w["cd"]) };
-        let points: Vec<(f64, f64)> = c["hydrograph"].as_array().unwrap().iter().map(|p| (n(&p[0]), n(&p[1]))).collect();
+        let weir = Weir {
+            crest: n(&w["crest"]),
+            length: n(&w["length"]),
+            cd: n(&w["cd"]),
+        };
+        let points: Vec<(f64, f64)> = c["hydrograph"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|p| (n(&p[0]), n(&p[1])))
+            .collect();
         for f in c["floods"].as_array().unwrap() {
-            let got = flood(&culvert, &weir, n(&c["tailwater"]), &points, n(&f["factor"]), n(&f["cd"]));
-            assert!((got.peak_flow - n(&f["peakFlow"])).abs() < 1e-12, "{name}: peak");
-            assert!((got.peak.headwater - n(&f["peakHeadwater"])).abs() < 1e-9, "{name}: peak headwater");
-            assert_eq!(u64::from(got.peak.hazard), f["peakHazard"].as_u64().unwrap(), "{name}: peak hazard");
+            let got = flood(
+                &culvert,
+                &weir,
+                n(&c["tailwater"]),
+                &points,
+                n(&f["factor"]),
+                n(&f["cd"]),
+            );
+            assert!(
+                (got.peak_flow - n(&f["peakFlow"])).abs() < 1e-12,
+                "{name}: peak"
+            );
+            assert!(
+                (got.peak.headwater - n(&f["peakHeadwater"])).abs() < 1e-9,
+                "{name}: peak headwater"
+            );
+            assert_eq!(
+                u64::from(got.peak.hazard),
+                f["peakHazard"].as_u64().unwrap(),
+                "{name}: peak hazard"
+            );
             same(name, "submerged", &got.submerged, &f["submerged"]);
-            for (k, (g, w)) in got.vehicles.iter().zip(f["vehicles"].as_array().unwrap()).enumerate() {
+            for (k, (g, w)) in got
+                .vehicles
+                .iter()
+                .zip(f["vehicles"].as_array().unwrap())
+                .enumerate()
+            {
                 same(name, VEHICLES[k].0, g, w);
             }
-            for (k, (g, w)) in got.hazards.iter().zip(f["hazards"].as_array().unwrap()).enumerate() {
+            for (k, (g, w)) in got
+                .hazards
+                .iter()
+                .zip(f["hazards"].as_array().unwrap())
+                .enumerate()
+            {
                 same(name, &format!("H{}", k + 2), g, w);
             }
         }

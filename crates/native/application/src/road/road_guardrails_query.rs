@@ -7,7 +7,10 @@ use crate::ExecutionContext;
 use crate::checks::Stop;
 use crate::road_guardrails as common;
 
-fn answer(doc: &kentos_domain::Document, input: &GuardrailsQuery) -> Result<(GuardrailsQueried, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &kentos_domain::Document,
+    input: &GuardrailsQuery,
+) -> Result<(GuardrailsQueried, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let own = doc.road_guardrails();
     let Some(name) = input.guardrail.as_deref() else {
@@ -26,19 +29,30 @@ fn answer(doc: &kentos_domain::Document, input: &GuardrailsQuery) -> Result<(Gua
     };
     let (_, def) = common::find(own, name, "guardrail")?;
     let r = common::read(doc, def)?;
-    Ok((GuardrailsQueried { guardrails: vec![r.report] }, r.warnings))
+    Ok((
+        GuardrailsQueried {
+            guardrails: vec![r.report],
+        },
+        r.warnings,
+    ))
 }
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &GuardrailsQuery) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &GuardrailsQuery) -> CommandResult<GuardrailsQueried> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &GuardrailsQuery,
+) -> CommandResult<GuardrailsQueried> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -46,11 +60,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &GuardrailsQuery) -> CommandResult
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: GuardrailsQuery) -> CommandResult<GuardrailsQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: GuardrailsQuery,
+) -> CommandResult<GuardrailsQueried> {
     plan(cx, &input)
 }
 
 /// The guardrails for a window, or why they do not read.
-pub fn preview(doc: &kentos_domain::Document, input: &GuardrailsQuery) -> Result<(GuardrailsQueried, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &kentos_domain::Document,
+    input: &GuardrailsQuery,
+) -> Result<(GuardrailsQueried, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

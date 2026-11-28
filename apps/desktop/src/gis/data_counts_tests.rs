@@ -17,7 +17,9 @@
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
-use kentos_data::{Coord, Driver as _, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value};
+use kentos_data::{
+    Coord, Driver as _, Field, FieldKind, Geometry, GeometryField, NewFeature, NewTable, Value,
+};
 use kentos_geometry_core::ops::charts::fields::{Detail, Summary};
 use kentos_geometry_core::ops::charts::model::{Aggregate, ChartKind, Spec};
 
@@ -31,9 +33,18 @@ type Row = (String, Option<f64>, String);
 
 /// The report's six points.
 fn report() -> Vec<Row> {
-    let bedel = [Some(0.0), Some(100.0), Some(250.0), None, Some(50.0), Some(100.0)];
+    let bedel = [
+        Some(0.0),
+        Some(100.0),
+        Some(250.0),
+        None,
+        Some(50.0),
+        Some(100.0),
+    ];
     let durum = ["acil", "acil", "planlı", "planlı", "tamam", "tamam"];
-    (0..6).map(|i| (format!("B0{}", i + 1), bedel[i], durum[i].to_owned())).collect()
+    (0..6)
+        .map(|i| (format!("B0{}", i + 1), bedel[i], durum[i].to_owned()))
+        .collect()
 }
 
 /// A `table` of `rows` made in `source` (one there before is replaced).
@@ -68,7 +79,10 @@ fn fill(source: &dyn kentos_data::Source, table: &str, rows: &[Row]) {
         .enumerate()
         .map(|(i, (kod, bedel, durum))| NewFeature {
             fid: None,
-            geometry: Some(Geometry::Point(Some(Coord::xy(484_000.0 + i as f64 * 10.0, 4_420_000.0)))),
+            geometry: Some(Geometry::Point(Some(Coord::xy(
+                484_000.0 + i as f64 * 10.0,
+                4_420_000.0,
+            )))),
             values: vec![
                 ("kod".into(), Value::Text(kod.clone())),
                 ("bedel".into(), bedel.map_or(Value::Null, Value::Real)),
@@ -84,7 +98,9 @@ fn fill(source: &dyn kentos_data::Source, table: &str, rows: &[Row]) {
 fn table(tag: &str, rows: &[Row]) -> std::path::PathBuf {
     let path = scratch(tag).join("bakim.gpkg");
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
-    let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+    let source = kentos_data_gpkg::Gpkg
+        .open(path.to_str().expect("utf-8"))
+        .expect("open");
     fill(source.as_ref(), "bakim", rows);
     path
 }
@@ -101,7 +117,10 @@ fn open_on(address: &str, table: &str) -> (App, String) {
     let described = crate::data_layers::describe(address, table).expect("described");
     let name = described.name.clone();
     app.add_data_layers(vec![described]).expect("added");
-    let layer = crate::data_layers_tests::node(&app, &name).expect("the layer").id.clone();
+    let layer = crate::data_layers_tests::node(&app, &name)
+        .expect("the layer")
+        .id
+        .clone();
     (app, layer)
 }
 
@@ -152,7 +171,10 @@ fn shown(app: &mut App) -> Vec<(Summary, Detail)> {
         let _ = app.statistics_seen();
         let now = app.gis.charts.stats.borrow();
         let i = now.keys.iter().position(|k| *k == key).expect("the field");
-        out.push((now.summaries[i].clone().expect("summed up"), now.detail.clone().expect("its statistics")));
+        out.push((
+            now.summaries[i].clone().expect("summed up"),
+            now.detail.clone().expect("its statistics"),
+        ));
     }
     out
 }
@@ -167,7 +189,9 @@ fn read(app: &mut App, layer: &str) -> Vec<(Summary, Detail)> {
     let mut d = crate::charts::data::LayerData::of(app, doc, layer);
     assert_eq!(d.from, crate::charts::data::From::Source, "read");
     let all: Vec<u32> = (0..d.slots.len() as u32).collect();
-    (0..d.work.data.columns.len()).map(|i| (d.work.summary(i, &all), d.work.detail(i, &all).clone())).collect()
+    (0..d.work.data.columns.len())
+        .map(|i| (d.work.summary(i, &all), d.work.detail(i, &all).clone()))
+        .collect()
 }
 
 /// A field's statistics without its value rows' places (a count's are its values', the rows read's their rows').
@@ -191,27 +215,58 @@ fn the_report_is_counted(app: &mut App, layer: &str) {
     statistics(app, layer);
     // Asked of the source: the tab says it counts.
     assert_eq!(app.statistics_seen().expect("the tab is open").0, "0 nesne");
-    assert_eq!(words(app), ("Kaynak sayıyor…".to_owned(), "Kaynak sayıyor…".to_owned()));
+    assert_eq!(
+        words(app),
+        ("Kaynak sayıyor…".to_owned(), "Kaynak sayıyor…".to_owned())
+    );
     counted(app);
     let bedel = summary(app, "bedel");
     // Alan | Tür | Dolu | Boş | Benzersiz | En az | En çok | Ortalama | Toplam
-    assert_eq!((bedel[2].as_str(), bedel[3].as_str(), bedel[4].as_str()), ("5", "1", "4"), "{bedel:?}");
-    assert_eq!((number(&bedel[5]), number(&bedel[6])), (Some(0.0), Some(250.0)), "{bedel:?}");
-    assert_eq!((number(&bedel[7]), number(&bedel[8])), (Some(100.0), Some(500.0)), "{bedel:?}");
+    assert_eq!(
+        (bedel[2].as_str(), bedel[3].as_str(), bedel[4].as_str()),
+        ("5", "1", "4"),
+        "{bedel:?}"
+    );
+    assert_eq!(
+        (number(&bedel[5]), number(&bedel[6])),
+        (Some(0.0), Some(250.0)),
+        "{bedel:?}"
+    );
+    assert_eq!(
+        (number(&bedel[7]), number(&bedel[8])),
+        (Some(100.0), Some(500.0)),
+        "{bedel:?}"
+    );
     let durum = summary(app, "durum");
-    assert_eq!((durum[2].as_str(), durum[4].as_str()), ("6", "3"), "{durum:?}");
+    assert_eq!(
+        (durum[2].as_str(), durum[4].as_str()),
+        ("6", "3"),
+        "{durum:?}"
+    );
     assert_eq!(app.statistics_seen().expect("open").0, "6 nesne");
     assert_eq!(words(app).0, "6 satır, kaynakta sayıldı");
     // durum's values: two each, a third each.
     ev(app, crate::statistics::Event::Field("durum".into()));
     let _ = app.statistics_seen();
-    let values: Vec<(String, usize, String)> = app.gis.charts.stats.borrow().detail.as_ref().expect("its statistics").values
+    let values: Vec<(String, usize, String)> = app
+        .gis
+        .charts
+        .stats
+        .borrow()
+        .detail
+        .as_ref()
+        .expect("its statistics")
+        .values
         .iter()
         .map(|v| (v.text.clone(), v.count, v.share.clone()))
         .collect();
     assert_eq!(
         values,
-        [("acil".into(), 2, "33.3".into()), ("planlı".into(), 2, "33.3".into()), ("tamam".into(), 2, "33.3".into())]
+        [
+            ("acil".into(), 2, "33.3".into()),
+            ("planlı".into(), 2, "33.3".into()),
+            ("tamam".into(), 2, "33.3".into())
+        ]
     );
     // No row was read for it: the rows' reader was never asked.
     assert_eq!(app.layer_rows_from(), None);
@@ -219,9 +274,35 @@ fn the_report_is_counted(app: &mut App, layer: &str) {
 
 /// 240 rows: decimals at several scales, a value many times, empty ones; words that sort in the Turkish alphabet.
 fn decimals() -> Vec<Row> {
-    let bedel = [Some(12.5), Some(0.25), None, Some(-3.75), Some(1250.0), Some(12.50), Some(7.125), Some(0.0)];
-    let durum = ["İnceleme", "ılık", "acil", "çalışma", "Işık", "acil", "", "Ödendi"];
-    (0..240).map(|i| (format!("K{i:03}"), bedel[i % 8].map(|b| b + (i / 8) as f64 % 3.0), durum[i % 7].to_owned())).collect()
+    let bedel = [
+        Some(12.5),
+        Some(0.25),
+        None,
+        Some(-3.75),
+        Some(1250.0),
+        Some(12.50),
+        Some(7.125),
+        Some(0.0),
+    ];
+    let durum = [
+        "İnceleme",
+        "ılık",
+        "acil",
+        "çalışma",
+        "Işık",
+        "acil",
+        "",
+        "Ödendi",
+    ];
+    (0..240)
+        .map(|i| {
+            (
+                format!("K{i:03}"),
+                bedel[i % 8].map(|b| b + (i / 8) as f64 % 3.0),
+                durum[i % 7].to_owned(),
+            )
+        })
+        .collect()
 }
 
 #[test]
@@ -237,7 +318,10 @@ fn the_counts_are_the_rows_reads(app: &mut App, layer: &str) {
     let _ = app.statistics_seen();
     counted(app);
     let by_source = shown(app);
-    assert!(app.gis.charts.stats.borrow().counted.is_some(), "counted by the source");
+    assert!(
+        app.gis.charts.stats.borrow().counted.is_some(),
+        "counted by the source"
+    );
     let by_rows = read(app, layer);
     assert_eq!(by_source.len(), by_rows.len());
     for ((s, d), (rs, rd)) in by_source.iter().zip(&by_rows) {
@@ -251,7 +335,9 @@ fn change(app: &mut App, layer: &str, fid: i64, field: &str, value: &str) {
     let doc = app.document.as_ref().expect("a drawing");
     let node = doc.model.layers().get(layer).cloned().expect("the layer");
     let settings = doc.model.settings().clone();
-    let rows = kentos_native_application::data_write::rows_to_take(&node, &settings, &[fid], &|| false).expect("read");
+    let rows =
+        kentos_native_application::data_write::rows_to_take(&node, &settings, &[fid], &|| false)
+            .expect("read");
     let doc = app.document.as_mut().expect("a drawing");
     let taken = doc.model.take_data_rows(layer, rows).expect("taken")[0].expect("the row");
     let slot = doc.model.slot_of(taken).expect("its object");
@@ -276,26 +362,57 @@ fn in_an_edit_session_the_rows_the_drawing_holds_are_counted_as_it_has_them() {
     }))
     .expect("an input");
     let done = kentos_native_application::create::execute(
-        &mut kentos_native_application::ExecutionContext::new(&mut app.document.as_mut().expect("a drawing").model),
+        &mut kentos_native_application::ExecutionContext::new(
+            &mut app.document.as_mut().expect("a drawing").model,
+        ),
         input,
     );
-    assert!(matches!(done, kentos_commands::CommandResult::Completed { .. }), "{done:?}");
+    assert!(
+        matches!(done, kentos_commands::CommandResult::Completed { .. }),
+        "{done:?}"
+    );
     statistics(&mut app, &layer);
     let _ = app.statistics_seen();
     counted(&mut app);
     // bedel: 0, 100, NULL, 50 from the source; 300 and 40 from the drawing.
     let bedel = summary(&app, "bedel");
-    assert_eq!((bedel[2].as_str(), bedel[3].as_str()), ("5", "1"), "{bedel:?}");
-    assert_eq!((number(&bedel[5]), number(&bedel[6]), number(&bedel[8])), (Some(0.0), Some(300.0), Some(490.0)), "{bedel:?}");
+    assert_eq!(
+        (bedel[2].as_str(), bedel[3].as_str()),
+        ("5", "1"),
+        "{bedel:?}"
+    );
+    assert_eq!(
+        (number(&bedel[5]), number(&bedel[6]), number(&bedel[8])),
+        (Some(0.0), Some(300.0), Some(490.0)),
+        "{bedel:?}"
+    );
     // durum: acil B01, B02 and the new one; planlı B03 (taken) and B04; tamam B05.
     ev(&mut app, crate::statistics::Event::Field("durum".into()));
     let _ = app.statistics_seen();
-    let values: Vec<(String, usize)> = app.gis.charts.stats.borrow().detail.as_ref().expect("its statistics").values
+    let values: Vec<(String, usize)> = app
+        .gis
+        .charts
+        .stats
+        .borrow()
+        .detail
+        .as_ref()
+        .expect("its statistics")
+        .values
         .iter()
         .map(|v| (v.text.clone(), v.count))
         .collect();
-    assert_eq!(values, [("acil".into(), 3), ("planlı".into(), 2), ("tamam".into(), 1)]);
-    assert_eq!(words(&app).0, "6 satır, kaynakta sayıldı; kaynağa yazılmamış değişiklikler bu cihazdaki hâliyle");
+    assert_eq!(
+        values,
+        [
+            ("acil".into(), 3),
+            ("planlı".into(), 2),
+            ("tamam".into(), 1)
+        ]
+    );
+    assert_eq!(
+        words(&app).0,
+        "6 satır, kaynakta sayıldı; kaynağa yazılmamış değişiklikler bu cihazdaki hâliyle"
+    );
     // As the rows read with the drawing's give them.
     let by_source = shown(&mut app);
     let by_rows = read(&mut app, &layer);
@@ -307,7 +424,14 @@ fn in_an_edit_session_the_rows_the_drawing_holds_are_counted_as_it_has_them() {
 
 /// The value row of the chosen field's statistics showing `text`.
 fn value_row(app: &App, text: &str) -> usize {
-    app.gis.charts.stats.borrow().detail.as_ref().expect("its statistics").values
+    app.gis
+        .charts
+        .stats
+        .borrow()
+        .detail
+        .as_ref()
+        .expect("its statistics")
+        .values
         .iter()
         .position(|v| v.text == text)
         .unwrap_or_else(|| panic!("no value {text}"))
@@ -336,7 +460,10 @@ fn presses_select_the_rows(app: &mut App, layer: &str) {
     ev(app, crate::statistics::Event::Value(acil));
     assert_eq!(chosen(app, layer), [1, 2]);
     let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
-    assert!(said.iter().any(|t| t == "“acil”: 2 satır seçildi."), "{said:#?}");
+    assert!(
+        said.iter().any(|t| t == "“acil”: 2 satır seçildi."),
+        "{said:#?}"
+    );
     // Shift adds tamam's; Ctrl takes acil's away.
     app.modifiers = iced::keyboard::Modifiers::SHIFT;
     let tamam = value_row(app, "tamam");
@@ -384,36 +511,62 @@ fn grafik_draws_a_one_field_chart_from_the_counts_and_selects_a_bars_rows() {
 /// Grafik over the report's points (`layer`): durum's bars and bedel's histogram from the counts, as the rows read give
 /// them; a bar's press selects its rows; bedel's sum by durum reads the rows.
 fn grafik_draws_from_the_counts(app: &mut App, layer: &str) {
-    let bars = Spec { category: Some("durum".into()), ..Spec::new(ChartKind::Bar) };
+    let bars = Spec {
+        category: Some("durum".into()),
+        ..Spec::new(ChartKind::Bar)
+    };
     chart(app, layer, bars);
     let seen = app.chart_seen().expect("a chart");
     assert_eq!(seen.rows, ["acil | 2", "planlı | 2", "tamam | 2"]);
-    assert!(app.gis.charts.chart.borrow().counted, "counted by the source");
+    assert!(
+        app.gis.charts.chart.borrow().counted,
+        "counted by the source"
+    );
     assert_eq!(app.layer_rows_from(), None, "no row read");
     // A bar's press: its rows chosen in the table.
-    let acil = seen.rows.iter().position(|r| r.starts_with("acil")).expect("acil's bar") as u32;
-    let task = app.update(Message::Gis(gis::Event::Charts(crate::charts::Event::Press(Some(acil)))));
+    let acil = seen
+        .rows
+        .iter()
+        .position(|r| r.starts_with("acil"))
+        .expect("acil's bar") as u32;
+    let task = app.update(Message::Gis(gis::Event::Charts(
+        crate::charts::Event::Press(Some(acil)),
+    )));
     drive(app, task);
     assert_eq!(chosen(app, layer), [1, 2]);
     // bedel's histogram: as the rows read give it, the empty one said.
-    let histogram = Spec { value: Some("bedel".into()), ..Spec::new(ChartKind::Histogram) };
+    let histogram = Spec {
+        value: Some("bedel".into()),
+        ..Spec::new(ChartKind::Histogram)
+    };
     chart(app, layer, histogram);
     let (table, notes) = {
         let now = app.gis.charts.chart.borrow();
         assert!(now.counted, "counted by the source");
-        (now.table.clone().expect("its numbers").rows, now.notes.clone())
+        (
+            now.table.clone().expect("its numbers").rows,
+            now.notes.clone(),
+        )
     };
     let whole = app.whole_spec().expect("a spec");
     assert_eq!(chart_of_rows(app, layer, &whole), (table, notes));
     // bedel's sum by durum reads two fields: the rows are read for it.
-    let sums = Spec { category: Some("durum".into()), value: Some("bedel".into()), aggregate: Aggregate::Sum, ..Spec::new(ChartKind::Bar) };
+    let sums = Spec {
+        category: Some("durum".into()),
+        value: Some("bedel".into()),
+        aggregate: Aggregate::Sum,
+        ..Spec::new(ChartKind::Bar)
+    };
     app.open_chart(Some(layer.to_owned()), None, Some(sums));
     app.chart_refresh();
     assert!(!app.gis.charts.chart.borrow().counted, "read, not counted");
     let task = app.data_rows_tasks();
     drive(app, task);
     let seen = app.chart_seen().expect("a chart");
-    assert_eq!(seen.rows, ["acil | 2 | 100", "planlı | 2 | 250", "tamam | 2 | 150"]);
+    assert_eq!(
+        seen.rows,
+        ["acil | 2 | 100", "planlı | 2 | 250", "tamam | 2 | 150"]
+    );
 }
 
 #[test]
@@ -427,34 +580,59 @@ fn a_field_left_to_the_rows_reads_them_and_a_source_that_cannot_count_says_why()
     let put = |app: &mut App, field: &str, counts: Counts| {
         app.gis.data_counts.kept.borrow_mut().insert(
             (layer.clone(), field.to_owned()),
-            Kept { stamp, held: Arc::new(BTreeSet::new()), counts },
+            Kept {
+                stamp,
+                held: Arc::new(BTreeSet::new()),
+                counts,
+            },
         );
     };
     // A source that cannot count a field: the tab says why.
     put(&mut app, "bedel", Counts::Failed("bağlantı kesildi".into()));
     let _ = app.statistics_seen();
-    assert_eq!(words(&app), ("Kaynak sayamadı".to_owned(), "Kaynak sayamadı: bağlantı kesildi".to_owned()));
+    assert_eq!(
+        words(&app),
+        (
+            "Kaynak sayamadı".to_owned(),
+            "Kaynak sayamadı: bağlantı kesildi".to_owned()
+        )
+    );
     // A field with too many values: the rows are read and counted as before.
     put(&mut app, "bedel", Counts::Rows);
     let _ = app.statistics_seen();
-    assert_eq!(app.layer_rows_from(), Some(crate::charts::data::From::Reading));
+    assert_eq!(
+        app.layer_rows_from(),
+        Some(crate::charts::data::From::Reading)
+    );
     let task = app.data_rows_tasks();
     drive(&mut app, task);
     let bedel = summary(&app, "bedel");
-    assert_eq!((bedel[2].as_str(), number(&bedel[8])), ("5", Some(500.0)), "{bedel:?}");
+    assert_eq!(
+        (bedel[2].as_str(), number(&bedel[8])),
+        ("5", Some(500.0)),
+        "{bedel:?}"
+    );
     assert_eq!(words(&app).0, "6 satır, kaynaktan");
 }
 
 #[test]
 fn a_postgis_layer_is_counted_by_the_server_alike() {
-    let Some(address) = std::env::var("KENTOS_DATA_PG").ok().filter(|a| !a.is_empty()) else {
+    let Some(address) = std::env::var("KENTOS_DATA_PG")
+        .ok()
+        .filter(|a| !a.is_empty())
+    else {
         eprintln!("KENTOS_DATA_PG yok: PostGIS'te kaynağın sayımı atlandı");
         return;
     };
     crate::data_layers::register();
-    let source = kentos_data::registry().source(&address).expect("the source");
+    let source = kentos_data::registry()
+        .source(&address)
+        .expect("the source");
     let id = std::process::id();
-    let (a, b) = (format!("public.kentos_istatistik_{id}"), format!("public.kentos_istatistik_esit_{id}"));
+    let (a, b) = (
+        format!("public.kentos_istatistik_{id}"),
+        format!("public.kentos_istatistik_esit_{id}"),
+    );
     fill(source.as_ref(), &a, &report());
     fill(source.as_ref(), &b, &decimals());
     let (mut app, layer) = open_on(&address, &a);
@@ -494,9 +672,14 @@ fn screens() {
     });
     crate::files_testing::usage_shots("9181", "02-grafik", || {
         let (mut app, layer) = open(&path);
-        let bars = Spec { category: Some("durum".into()), ..Spec::new(ChartKind::Bar) };
+        let bars = Spec {
+            category: Some("durum".into()),
+            ..Spec::new(ChartKind::Bar)
+        };
         chart(&mut app, &layer, bars);
-        let task = app.update(Message::Gis(gis::Event::Charts(crate::charts::Event::Press(Some(0)))));
+        let task = app.update(Message::Gis(gis::Event::Charts(
+            crate::charts::Event::Press(Some(0)),
+        )));
         drive(&mut app, task);
         framed(&mut app, &layer);
         app
@@ -512,9 +695,15 @@ fn screens() {
 #[ignore = "a measurement"]
 fn measure_a_million_parcels() {
     use kentos_data::Curve;
-    let (address, table) = match std::env::var("KENTOS_OLCUM_PG").ok().filter(|a| !a.is_empty()) {
+    let (address, table) = match std::env::var("KENTOS_OLCUM_PG")
+        .ok()
+        .filter(|a| !a.is_empty())
+    {
         Some(pg) => (pg, "public.kentos_olcum_parsel"),
-        None => (std::env::var("KENTOS_OLCUM_GPKG").expect("KENTOS_OLCUM_GPKG or KENTOS_OLCUM_PG"), "parsel"),
+        None => (
+            std::env::var("KENTOS_OLCUM_GPKG").expect("KENTOS_OLCUM_GPKG or KENTOS_OLCUM_PG"),
+            "parsel",
+        ),
     };
     let way = std::env::var("KENTOS_OLCUM_YOL").unwrap_or_default();
     const N: usize = 1_000_000;
@@ -524,7 +713,9 @@ fn measure_a_million_parcels() {
             let _ = std::fs::remove_file(&address);
             kentos_geopackage::GeoPackage::create(std::path::Path::new(&address)).expect("a file");
         }
-        let source = kentos_data::registry().source(&address).expect("the source");
+        let source = kentos_data::registry()
+            .source(&address)
+            .expect("the source");
         let mut tx = source.begin().expect("begin");
         tx.create_table(
             &NewTable {
@@ -555,14 +746,32 @@ fn measure_a_million_parcels() {
         )
         .expect("table");
         tx.commit().expect("commit");
-        let mahalle = ["Çankaya", "Öveçler", "Işıklar", "İlkadım", "Kızılay", "Bahçelievler", "Şehitlik", "Ümitköy"];
+        let mahalle = [
+            "Çankaya",
+            "Öveçler",
+            "Işıklar",
+            "İlkadım",
+            "Kızılay",
+            "Bahçelievler",
+            "Şehitlik",
+            "Ümitköy",
+        ];
         let kullanim = ["Konut", "Ticaret", "Park", "Eğitim", "Sağlık", "Sanayi"];
         for part in 0..N / 50_000 {
             let mut tx = source.begin().expect("begin");
             let rows: Vec<NewFeature> = (part * 50_000..(part + 1) * 50_000)
                 .map(|i| {
-                    let (x, y) = (480_000.0 + (i % 1000) as f64 * 20.0, 4_400_000.0 + (i / 1000) as f64 * 20.0);
-                    let ring = vec![Coord::xy(x, y), Coord::xy(x + 18.0, y), Coord::xy(x + 18.0, y + 18.0), Coord::xy(x, y + 18.0), Coord::xy(x, y)];
+                    let (x, y) = (
+                        480_000.0 + (i % 1000) as f64 * 20.0,
+                        4_400_000.0 + (i / 1000) as f64 * 20.0,
+                    );
+                    let ring = vec![
+                        Coord::xy(x, y),
+                        Coord::xy(x + 18.0, y),
+                        Coord::xy(x + 18.0, y + 18.0),
+                        Coord::xy(x, y + 18.0),
+                        Coord::xy(x, y),
+                    ];
                     NewFeature {
                         fid: None,
                         geometry: Some(Geometry::Polygon(vec![Curve::Line(ring)])),
@@ -570,10 +779,26 @@ fn measure_a_million_parcels() {
                             ("kod".into(), Value::Text(format!("P{i:07}"))),
                             ("ada".into(), Value::Int((i / 200) as i64 % 5000)),
                             ("parsel".into(), Value::Int((i % 200) as i64 + 1)),
-                            ("mahalle".into(), Value::Text(mahalle[(i / 7) % mahalle.len()].into())),
-                            ("kullanim".into(), Value::Text(kullanim[(i * 7 + i / 13) % kullanim.len()].into())),
-                            ("alan".into(), Value::Real(((i * 7919) % 900_000) as f64 / 100.0 + 100.0)),
-                            ("bedel".into(), if i % 10 == 3 { Value::Null } else { Value::Real(((i * 31) % 2000) as f64 * 250.0) }),
+                            (
+                                "mahalle".into(),
+                                Value::Text(mahalle[(i / 7) % mahalle.len()].into()),
+                            ),
+                            (
+                                "kullanim".into(),
+                                Value::Text(kullanim[(i * 7 + i / 13) % kullanim.len()].into()),
+                            ),
+                            (
+                                "alan".into(),
+                                Value::Real(((i * 7919) % 900_000) as f64 / 100.0 + 100.0),
+                            ),
+                            (
+                                "bedel".into(),
+                                if i % 10 == 3 {
+                                    Value::Null
+                                } else {
+                                    Value::Real(((i * 31) % 2000) as f64 * 250.0)
+                                },
+                            ),
                         ],
                     }
                 })
@@ -591,7 +816,10 @@ fn measure_a_million_parcels() {
             statistics(&mut app, &layer);
             let _ = app.statistics_seen();
             counted(&mut app);
-            assert!(app.gis.charts.stats.borrow().counted.is_some(), "counted by the source");
+            assert!(
+                app.gis.charts.stats.borrow().counted.is_some(),
+                "counted by the source"
+            );
             app.statistics_seen().expect("the tab is open").1
         }
         "okuma" => {

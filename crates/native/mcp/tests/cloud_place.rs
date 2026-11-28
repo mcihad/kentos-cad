@@ -11,7 +11,11 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 fn fixtures(v: &Value) -> Value {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/");
-    serde_json::from_str(&v.to_string().replace("$fixture:", &root.display().to_string())).unwrap()
+    serde_json::from_str(
+        &v.to_string()
+            .replace("$fixture:", &root.display().to_string()),
+    )
+    .unwrap()
 }
 
 fn near(got: &Value, want: &Value, at: &str) {
@@ -39,8 +43,12 @@ fn near(got: &Value, want: &Value, at: &str) {
 
 #[test]
 fn placing_a_cloud_over_mcp_is_the_cases() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pointclouds.place.json")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(fixtures(&cases["setup"])).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.pointclouds.place.json"
+    ))
+    .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(fixtures(&cases["setup"])).unwrap();
     let path = std::env::temp_dir().join(format!("kentos-cloud-place-{}.kcad", std::process::id()));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
@@ -48,21 +56,35 @@ fn placing_a_cloud_over_mcp_is_the_cases() {
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
     let uid = snapshot.uids[0];
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().starts_with("Euler: üç açı")).unwrap().clone();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"].as_str().unwrap().starts_with("Euler: üç açı"))
+        .unwrap()
+        .clone();
     let steps = case["steps"].as_array().unwrap();
     let mut args = steps[0]["input"].clone();
     args["uid"] = json!(uid);
     args["drawing"] = drawing.clone();
     let r = call(&mut server, "cad.pointclouds.place", args);
     assert_eq!(r["isError"], false, "{r}");
-    near(&r["structuredContent"]["output"], &steps[0]["result"]["output"], "place");
+    near(
+        &r["structuredContent"]["output"],
+        &steps[0]["result"]["output"],
+        "place",
+    );
     // Nokta sorgula then reads the file's point where the drawing shows it.
     let mut query = steps[1]["input"].clone();
     query["uids"] = json!([uid]);
     query["drawing"] = drawing.clone();
     let q = call(&mut server, "cad.pointclouds.query", query);
     assert_eq!(q["isError"], false, "{q}");
-    near(&q["structuredContent"]["output"]["point"], &steps[1]["result"]["output"]["point"], "query");
+    near(
+        &q["structuredContent"]["output"]["point"],
+        &steps[1]["result"]["output"]["point"],
+        "query",
+    );
     // A matrix that scales is refused.
     let scaled = call(
         &mut server,

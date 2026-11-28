@@ -3,13 +3,13 @@
 //! never from KentOS), and the 1:500/1:1000/1:5000 acceptance read back by independent readers: the plot tests' PDF
 //! reader for paper lengths and, when installed, GDAL (`gdalinfo`) for the pages' ground coordinates and Poppler
 //! (`pdftotext`) for the printed revision and date.
+use crate::files;
 use kentos_commands::{CallEnvelope, CallOp, CommandResult, encoding::sha256_hex};
 use kentos_domain::{Document, Slot};
 use kentos_sheet::{SheetBook, project::project_sheets};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
-use crate::files;
 
 const CASES: &str =
     include_str!("../../../../../fixtures/commands/v1/file.publish.sheets.update.json");

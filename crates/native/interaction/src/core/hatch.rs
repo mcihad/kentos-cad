@@ -173,7 +173,8 @@ impl Hatch {
         let ring = ring_points(&area.outer);
         let holes: Vec<Vec<Vec2>> = area.holes.iter().map(ring_points).collect();
         let own = kentos_native_application::region::box_of([ring.as_slice()]);
-        pattern.origin = kentos_native_application::region::origin_of(spec.origin.as_ref(), own, own);
+        pattern.origin =
+            kentos_native_application::region::origin_of(spec.origin.as_ref(), own, own);
         let pieces = pattern_pieces(&ring, &holes, &core_pattern(&pattern), PREVIEW_PIECES);
         if !pieces.capped {
             self.hover_lines = pieces.segments;
@@ -271,26 +272,31 @@ impl Tool for Hatch {
             return options::asking_prompt(LABEL, a).option(back, "Enter");
         }
         let m = self.memory;
-        let prompt =
-            options::with_pattern_options(Prompt::new(LABEL, "taranacak yerin içine tıklayın"), &m, &self.user)
-                .option_with(
-                    "Sınır",
-                    "B",
-                    if m.hatch_by_lines {
-                        "çizgiler"
-                    } else {
-                        "kapalı nesne"
-                    },
-                );
+        let prompt = options::with_pattern_options(
+            Prompt::new(LABEL, "taranacak yerin içine tıklayın"),
+            &m,
+            &self.user,
+        )
+        .option_with(
+            "Sınır",
+            "B",
+            if m.hatch_by_lines {
+                "çizgiler"
+            } else {
+                "kapalı nesne"
+            },
+        );
         let prompt = options::with_region_options(prompt, &m, true);
         if m.hatch_by_lines {
             let layer = self
                 .boundary_name
                 .clone()
                 .unwrap_or_else(|| "tümü".to_owned());
-            return prompt
-                .option_with("Sınır katmanı", "K", layer)
-                .option_with("Boşluk", "G", crate::format::js_number(m.hatch_gap));
+            return prompt.option_with("Sınır katmanı", "K", layer).option_with(
+                "Boşluk",
+                "G",
+                crate::format::js_number(m.hatch_gap),
+            );
         }
         prompt
     }

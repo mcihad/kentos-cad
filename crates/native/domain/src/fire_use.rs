@@ -278,9 +278,15 @@ mod tests {
     fn a_lodging_building_and_its_bedrooms_are_read_from_their_words() {
         let none: [&str; 0] = [];
         assert_eq!(lodging_of(["Otel"], 0, 0, none), Some(Use::Hotel));
-        assert_eq!(lodging_of(["Öğrenci yurdu"], 0, 0, none), Some(Use::Dormitory));
+        assert_eq!(
+            lodging_of(["Öğrenci yurdu"], 0, 0, none),
+            Some(Use::Dormitory)
+        );
         assert_eq!(lodging_of(["Otel ve yurt"], 0, 0, none), Some(Use::Hotel));
-        assert_eq!(lodging_of(["Yurt", "Pansiyon"], 0, 0, none), Some(Use::Hotel));
+        assert_eq!(
+            lodging_of(["Yurt", "Pansiyon"], 0, 0, none),
+            Some(Use::Hotel)
+        );
         assert_eq!(lodging_of(["Büro"], 0, 0, ["Otel odası 5"]), None);
         assert_eq!(lodging_of([" "], 0, 0, ["Otel odası 5"]), Some(Use::Hotel));
         assert_eq!(lodging_of(none, 2, 2, ["Yurt odası"]), None);
@@ -296,7 +302,15 @@ mod tests {
         ] {
             assert!(lodging_bedroom(name), "{name}");
         }
-        for name in ["Süit 301 banyosu", "Kat holü", "Koridor", "Toplantı odası", "Lobi", "Etüt odası", ""] {
+        for name in [
+            "Süit 301 banyosu",
+            "Kat holü",
+            "Koridor",
+            "Toplantı odası",
+            "Lobi",
+            "Etüt odası",
+            "",
+        ] {
             assert!(!lodging_bedroom(name), "{name}");
         }
     }

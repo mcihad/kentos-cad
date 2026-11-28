@@ -24,23 +24,34 @@ fn check(doc: &Document, input: &ProgramEdit) -> Result<Work, Stop> {
     if input.program.is_none() && input.assign.is_empty() {
         return Err(fail(
             codes::NOTHING_TO_SET,
-            "Değiştirilecek bir şey verilmedi: programı ya da bölümlere verilecek mahalleri verin.".into(),
+            "Değiştirilecek bir şey verilmedi: programı ya da bölümlere verilecek mahalleri verin."
+                .into(),
             "",
         ));
     }
     let program = input.program.clone().unwrap_or_else(|| doc.program());
     // A building or a wing taken away that groups still name (docs/adr/0784 §1): the groups said by their numbers.
     let before = doc.program();
-    let kept: Vec<&str> =
-        program.buildings.iter().flat_map(|b| std::iter::once(b.id.as_str()).chain(b.wings.iter().map(|w| w.id.as_str()))).collect();
+    let kept: Vec<&str> = program
+        .buildings
+        .iter()
+        .flat_map(|b| std::iter::once(b.id.as_str()).chain(b.wings.iter().map(|w| w.id.as_str())))
+        .collect();
     for b in &before.buildings {
-        let gone = std::iter::once((b.id.as_str(), format!("“{}” binası", b.name)))
-            .chain(b.wings.iter().map(|w| (w.id.as_str(), format!("“{}” kanadı", w.name))));
+        let gone = std::iter::once((b.id.as_str(), format!("“{}” binası", b.name))).chain(
+            b.wings
+                .iter()
+                .map(|w| (w.id.as_str(), format!("“{}” kanadı", w.name))),
+        );
         for (id, what) in gone {
             if kept.contains(&id) {
                 continue;
             }
-            let users: Vec<String> = program.users_of(id).iter().map(|u| format!("“{}”", u.number)).collect();
+            let users: Vec<String> = program
+                .users_of(id)
+                .iter()
+                .map(|u| format!("“{}”", u.number))
+                .collect();
             if !users.is_empty() {
                 return Err(fail(
                     codes::BUILDING_IN_USE,
@@ -57,16 +68,26 @@ fn check(doc: &Document, input: &ProgramEdit) -> Result<Work, Stop> {
         return Err(fail(codes::INVALID_PROGRAM, why, &format!("program.{at}")));
     }
     // A building's or a wing's levels are the project's (docs/adr/0784 §1).
-    let levels: Vec<String> =
-        doc.settings().arch.as_ref().map(|a| a.levels.iter().map(|l| l.id.clone()).collect()).unwrap_or_default();
+    let levels: Vec<String> = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.iter().map(|l| l.id.clone()).collect())
+        .unwrap_or_default();
     for (i, b) in program.buildings.iter().enumerate() {
-        let lists = std::iter::once((format!("buildings[{i}]"), &b.levels))
-            .chain(b.wings.iter().enumerate().map(|(k, w)| (format!("buildings[{i}].wings[{k}]"), &w.levels)));
+        let lists = std::iter::once((format!("buildings[{i}]"), &b.levels)).chain(
+            b.wings
+                .iter()
+                .enumerate()
+                .map(|(k, w)| (format!("buildings[{i}].wings[{k}]"), &w.levels)),
+        );
         for (at, list) in lists {
             if let Some((k, l)) = list.iter().enumerate().find(|(_, l)| !levels.contains(l)) {
                 return Err(fail(
                     codes::LEVEL_NOT_FOUND,
-                    format!("“{l}” katı projede yok; önce Proje ayarları › Mimari'de katı ekleyin."),
+                    format!(
+                        "“{l}” katı projede yok; önce Proje ayarları › Mimari'de katı ekleyin."
+                    ),
                     &format!("program.{at}.levels[{k}]"),
                 ));
             }
@@ -75,7 +96,8 @@ fn check(doc: &Document, input: &ProgramEdit) -> Result<Work, Stop> {
     let mut units: Vec<(Slot, Option<String>)> = Vec::new();
     for (i, a) in input.assign.iter().enumerate() {
         let under = format!("assign[{i}].");
-        checks::uids(&a.uids, "Bölüme verilecek mahal verilmedi.").map_err(|s| prefixed(s, &under))?;
+        checks::uids(&a.uids, "Bölüme verilecek mahal verilmedi.")
+            .map_err(|s| prefixed(s, &under))?;
         let found = checks::named(doc, &a.uids).map_err(|s| prefixed(s, &under))?;
         for (k, slot, e, _) in found {
             if !matches!(e, Entity::Space(_)) {
@@ -131,10 +153,15 @@ fn check(doc: &Document, input: &ProgramEdit) -> Result<Work, Stop> {
         let Some(e) = doc.get(*slot) else { continue };
         let layer = &e.base().layer_id;
         if doc.layers().is_locked(layer) {
-            let name = doc.layers().get(layer).map_or(layer.as_str(), |n| n.name.as_str());
+            let name = doc
+                .layers()
+                .get(layer)
+                .map_or(layer.as_str(), |n| n.name.as_str());
             return Err(fail(
                 codes::LAYER_LOCKED,
-                format!("“{name}” katmanı kilitli; üzerindeki mahal bölüme verilemez. Kilidi Katmanlar panelinden açın."),
+                format!(
+                    "“{name}” katmanı kilitli; üzerindeki mahal bölüme verilemez. Kilidi Katmanlar panelinden açın."
+                ),
                 "assign",
             ));
         }
@@ -166,7 +193,10 @@ fn assigned(doc: &Document, work: &Work) -> Vec<String> {
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ProgramEdit) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -195,17 +225,26 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ProgramEdit) -> CommandResu
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: ProgramEdit) -> CommandResult<ProgramEdited> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProgramEdit,
+) -> CommandResult<ProgramEdited> {
     let work = match check(cx.doc, &input) {
         Ok(work) => work,
         Err(stop) => return stop.into(),
     };
     let changed = assigned(cx.doc, &work);
     if let Err(e) = cx.doc.set_program(work.program.clone(), work.units, STEP) {
-        return CommandResult::Failed { error: error(codes::INVALID_PROGRAM, e.0, Some("program".into())) };
+        return CommandResult::Failed {
+            error: error(codes::INVALID_PROGRAM, e.0, Some("program".into())),
+        };
     }
     CommandResult::Completed {
-        output: ProgramEdited { program: work.program, assigned: changed, revision: cx.doc.revision().to_string() },
+        output: ProgramEdited {
+            program: work.program,
+            assigned: changed,
+            revision: cx.doc.revision().to_string(),
+        },
         warnings: Vec::new(),
     }
 }

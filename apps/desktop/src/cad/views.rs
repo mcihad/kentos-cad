@@ -84,7 +84,10 @@ pub enum Event {
     /// The recipe's draft (docs/adr/0774 §2, `views_recipe.rs`).
     RecipePreset(usize),
     RecipeCeiling(bool),
-    RecipeCeilingBound { low: bool, metres: f64 },
+    RecipeCeilingBound {
+        low: bool,
+        metres: f64,
+    },
     RecipeLevel(Option<usize>),
     RecipeBelow(bool),
     RecipePhase(usize),
@@ -220,8 +223,14 @@ impl App {
             return;
         };
         let ceiling = self.document.as_ref().and_then(|d| {
-            let r = kentos_commands::resolved_recipe(v.recipe.as_ref()?, &d.model.settings().view_templates);
-            Some((r.level.map(|l| l.id).or_else(|| self.active_level()), r.ceiling?))
+            let r = kentos_commands::resolved_recipe(
+                v.recipe.as_ref()?,
+                &d.model.settings().view_templates,
+            );
+            Some((
+                r.level.map(|l| l.id).or_else(|| self.active_level()),
+                r.ceiling?,
+            ))
         });
         self.navigating(|app| {
             app.viewport.show_view(&v);
@@ -368,14 +377,17 @@ impl App {
                 .width(Fill);
             // A view with a recipe says what it draws (docs/adr/0774 §2).
             let words = match &v.recipe {
-                Some(r) => format!("{} · {}", view_caption(self, v), crate::views_recipe::recipe_caption(self, r)),
+                Some(r) => format!(
+                    "{} · {}",
+                    view_caption(self, v),
+                    crate::views_recipe::recipe_caption(self, r)
+                ),
                 None => view_caption(self, v),
             };
-            let caption = label::caption(words).style(|theme: &iced::Theme| {
-                iced::widget::text::Style {
+            let caption =
+                label::caption(words).style(|theme: &iced::Theme| iced::widget::text::Style {
                     color: Some(Tokens::of(theme).muted),
-                }
-            });
+                });
             let face = row![name, caption].spacing(6).align_y(Center);
             list = list.push(
                 button(face)
@@ -557,7 +569,11 @@ mod tests {
         snapshot.settle(&mut app, App::view, &mut update);
         let after = crate::files_testing::find_texts(&mut snapshot, &app, "Giriş");
         assert!(!before.is_empty());
-        assert_eq!(before.first().map(|r| r.y), after.first().map(|r| r.y), "the row did not move");
+        assert_eq!(
+            before.first().map(|r| r.y),
+            after.first().map(|r| r.y),
+            "the row did not move"
+        );
     }
 
     #[test]

@@ -13,8 +13,8 @@ use std::collections::{BTreeMap, BTreeSet, HashSet};
 
 mod grid;
 mod lattice;
-mod polar;
 mod path;
+mod polar;
 
 const WORK_MAX: u64 = 2_000_000;
 
@@ -91,7 +91,11 @@ fn check(
     if input.kind == Some(ArrayFindKind::Path) {
         path::guide(doc, input)?;
     } else if input.path.is_some() {
-        return Err(refuse(codes::INVALID_PATH, "Kılavuz yolu yalnız Yol boyunca düzeniyle verin.", "path"));
+        return Err(refuse(
+            codes::INVALID_PATH,
+            "Kılavuz yolu yalnız Yol boyunca düzeniyle verin.",
+            "path",
+        ));
     }
     for array in doc.arrays() {
         for item in &array.items {
@@ -248,7 +252,13 @@ fn search(
         let reason = match e {
             Entity::Insert(_) if owned.contains(&id) => Some("array_member"),
             Entity::Insert(i) if doc.layers().is_locked(&i.base.layer_id) => Some("layer_locked"),
-            Entity::Insert(i) if compatible(source, i, matches!(input.kind, Some(ArrayFindKind::Polar | ArrayFindKind::Path))) => {
+            Entity::Insert(i)
+                if compatible(
+                    source,
+                    i,
+                    matches!(input.kind, Some(ArrayFindKind::Polar | ArrayFindKind::Path)),
+                ) =>
+            {
                 points.push(Point {
                     uid: id,
                     x: i.p.x,
@@ -275,11 +285,36 @@ fn search(
     };
     let mut matches: Vec<ArrayPattern> = Vec::new();
     if input.kind == Some(ArrayFindKind::Path) {
-        matches = path::find(doc, input, &points, seed, tolerance, checked.limit, &mut budget, &mut stopped)?;
+        matches = path::find(
+            doc,
+            input,
+            &points,
+            seed,
+            tolerance,
+            checked.limit,
+            &mut budget,
+            &mut stopped,
+        )?;
     } else if input.kind == Some(ArrayFindKind::Polar) {
-        matches = polar::find(doc, &points, seed, tolerance, checked.limit, &mut budget, &mut stopped)?;
+        matches = polar::find(
+            doc,
+            &points,
+            seed,
+            tolerance,
+            checked.limit,
+            &mut budget,
+            &mut stopped,
+        )?;
     } else if input.kind == Some(ArrayFindKind::Lattice) {
-        matches = lattice::find(doc,&points,seed,tolerance,checked.limit,&mut budget,&mut stopped)?;
+        matches = lattice::find(
+            doc,
+            &points,
+            seed,
+            tolerance,
+            checked.limit,
+            &mut budget,
+            &mut stopped,
+        )?;
     } else if input.kind == Some(ArrayFindKind::Grid) {
         matches = grid::find(
             doc,

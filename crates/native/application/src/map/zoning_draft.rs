@@ -10,9 +10,9 @@
 use std::collections::HashMap;
 
 use kentos_commands::{
-    CommandResult, DRAFT_FIELDS, DataProfile, Entity, INFRASTRUCTURE_USES, MAX_DRAFT_ID, MAX_DRAFT_REASON,
-    MAX_ZONING_LABEL, PlanDraft, PlanDraftChange, ZONING_PROFILE, ZoningDraft, ZoningDraftFinding, ZoningDraftUse,
-    ZoningDrafted, ZoningPlanData, builtin_profile,
+    CommandResult, DRAFT_FIELDS, DataProfile, Entity, INFRASTRUCTURE_USES, MAX_DRAFT_ID,
+    MAX_DRAFT_REASON, MAX_ZONING_LABEL, PlanDraft, PlanDraftChange, ZONING_PROFILE, ZoningDraft,
+    ZoningDraftFinding, ZoningDraftUse, ZoningDrafted, ZoningPlanData, builtin_profile,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::entity::entity_area;
@@ -29,7 +29,15 @@ pub const STEP: &str = "Plan değişikliği taslağı";
 pub const REMOVE_STEP: &str = "Plan değişikliği taslağını sil";
 
 /// The fields whose value is a number of 0 or more.
-const NUMBERS: [&str; 7] = ["TAKS", "KAKS", "KatAdedi", "Hmax", "OnCekme", "YanCekme", "ArkaCekme"];
+const NUMBERS: [&str; 7] = [
+    "TAKS",
+    "KAKS",
+    "KatAdedi",
+    "Hmax",
+    "OnCekme",
+    "YanCekme",
+    "ArkaCekme",
+];
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.to_owned())))
@@ -53,12 +61,20 @@ fn label(p: &DataProfile, domain: &str, code: &str) -> String {
 }
 
 fn attr(e: &Entity, key: &str) -> String {
-    e.base().attrs.get(key).map(|v| v.trim().to_owned()).unwrap_or_default()
+    e.base()
+        .attrs
+        .get(key)
+        .map(|v| v.trim().to_owned())
+        .unwrap_or_default()
 }
 
 /// A value as a number: a dot or a comma as the decimal sign; none when it is not a finite number.
 fn number(text: &str) -> Option<f64> {
-    text.trim().replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite())
+    text.trim()
+        .replace(',', ".")
+        .parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
 }
 
 /// Whether two values of a field are the same: as numbers for a measured field when both are numbers, else as text.
@@ -84,18 +100,28 @@ struct Layers {
 fn layers(doc: &Document, p: &DataProfile) -> Result<Layers, Stop> {
     let layer = |class: &str| -> Result<String, Stop> {
         let Some(c) = p.classes.iter().find(|c| c.id == class) else {
-            return Err(fail(codes::INVALID_INPUT, "İmar planı profilinde plan sınırı ya da karar alanı sınıfı yok.".into(), "plan"));
+            return Err(fail(
+                codes::INVALID_INPUT,
+                "İmar planı profilinde plan sınırı ya da karar alanı sınıfı yok.".into(),
+                "plan",
+            ));
         };
         match find(doc.layers().nodes(), &c.layer) {
             Place::Layer(id) => Ok(id),
             _ => Err(Stop::failed(error(
                 codes::LAYER_NOT_FOUND,
-                format!("“{}” katmanı yok; {ZONING_PROFILE} profilini uygulayın (cad.profiles.apply).", path_words(&c.layer)),
+                format!(
+                    "“{}” katmanı yok; {ZONING_PROFILE} profilini uygulayın (cad.profiles.apply).",
+                    path_words(&c.layer)
+                ),
                 None,
             ))),
         }
     };
-    Ok(Layers { plans: layer("plan-siniri")?, decisions: layer("karar-alani")? })
+    Ok(Layers {
+        plans: layer("plan-siniri")?,
+        decisions: layer("karar-alani")?,
+    })
 }
 
 fn is_area(e: &Entity, layer: &str) -> bool {
@@ -104,7 +130,10 @@ fn is_area(e: &Entity, layer: &str) -> bool {
 
 /// The plan boundaries' ids and levels, in the drawing's order.
 fn plans_of(doc: &Document, l: &Layers) -> Vec<(String, String)> {
-    doc.entities().filter(|e| is_area(e, &l.plans)).map(|e| (attr(e, "PlanKimlik"), attr(e, "Seviye"))).collect()
+    doc.entities()
+        .filter(|e| is_area(e, &l.plans))
+        .map(|e| (attr(e, "PlanKimlik"), attr(e, "Seviye")))
+        .collect()
 }
 
 /// The plan a decision area belongs to: the one its `Plan` names, or the only one when it names none.
@@ -113,7 +142,10 @@ fn plan_of(e: &Entity, plans: &[(String, String)]) -> Option<String> {
     if written.is_empty() {
         (plans.len() == 1).then(|| plans[0].0.clone())
     } else {
-        plans.iter().any(|(id, _)| *id == written).then_some(written)
+        plans
+            .iter()
+            .any(|(id, _)| *id == written)
+            .then_some(written)
     }
 }
 
@@ -124,7 +156,9 @@ fn run(doc: &Document, input: &ZoningDraft) -> Result<(ZoningDrafted, ZoningPlan
     if !text_ok(id, MAX_DRAFT_ID) {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Taslağın kimliği boşluksuz başlayıp biten 1–{MAX_DRAFT_ID} karakterdir (yazılan “{id}”)."),
+            format!(
+                "Taslağın kimliği boşluksuz başlayıp biten 1–{MAX_DRAFT_ID} karakterdir (yazılan “{id}”)."
+            ),
             "id",
         ));
     }
@@ -133,22 +167,42 @@ fn run(doc: &Document, input: &ZoningDraft) -> Result<(ZoningDrafted, ZoningPlan
         let before = data.drafts.len();
         data.drafts.retain(|d| d.id != id);
         if data.drafts.len() == before {
-            return Err(fail(codes::UNKNOWN_DRAFT, format!("“{id}” kimlikli plan değişikliği taslağı projede yok."), "id"));
+            return Err(fail(
+                codes::UNKNOWN_DRAFT,
+                format!("“{id}” kimlikli plan değişikliği taslağı projede yok."),
+                "id",
+            ));
         }
-        let out = ZoningDrafted { drafts: count(&data), revision: doc.revision().to_string(), ..ZoningDrafted::default() };
+        let out = ZoningDrafted {
+            drafts: count(&data),
+            revision: doc.revision().to_string(),
+            ..ZoningDrafted::default()
+        };
         return Ok((out, data));
     }
     let Some(p) = builtin_profile(ZONING_PROFILE) else {
-        return Err(fail(codes::INVALID_INPUT, "İmar planı profili okunamadı.".into(), "plan"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "İmar planı profili okunamadı.".into(),
+            "plan",
+        ));
     };
     let l = layers(doc, &p)?;
     let plans = plans_of(doc, &l);
     let plan = input.plan.trim();
     if plan.is_empty() {
-        return Err(fail(codes::INVALID_INPUT, "Değişecek planı yazın: plan sınırının PlanKimlik'i.".into(), "plan"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Değişecek planı yazın: plan sınırının PlanKimlik'i.".into(),
+            "plan",
+        ));
     }
     let Some((_, level)) = plans.iter().find(|(pid, _)| pid == plan) else {
-        return Err(fail(codes::UNKNOWN_PLAN, format!("“{plan}” kimlikli plan sınırı çizimde yok."), "plan"));
+        return Err(fail(
+            codes::UNKNOWN_PLAN,
+            format!("“{plan}” kimlikli plan sınırı çizimde yok."),
+            "plan",
+        ));
     };
     let reason = input.reason.trim();
     if reason.is_empty() {
@@ -160,7 +214,11 @@ fn run(doc: &Document, input: &ZoningDraft) -> Result<(ZoningDrafted, ZoningPlan
         ));
     }
     if reason.chars().count() > MAX_DRAFT_REASON {
-        return Err(fail(codes::INVALID_INPUT, format!("Gerekçe en çok {MAX_DRAFT_REASON} karakterdir."), "reason"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Gerekçe en çok {MAX_DRAFT_REASON} karakterdir."),
+            "reason",
+        ));
     }
     if input.changes.is_empty() {
         return Err(fail(
@@ -172,7 +230,10 @@ fn run(doc: &Document, input: &ZoningDraft) -> Result<(ZoningDrafted, ZoningPlan
     if input.changes.len() > kentos_commands::MAX_DRAFT_CHANGES {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Taslakta en çok {} değişiklik olur.", kentos_commands::MAX_DRAFT_CHANGES),
+            format!(
+                "Taslakta en çok {} değişiklik olur.",
+                kentos_commands::MAX_DRAFT_CHANGES
+            ),
             "changes",
         ));
     }
@@ -180,7 +241,10 @@ fn run(doc: &Document, input: &ZoningDraft) -> Result<(ZoningDrafted, ZoningPlan
     for (i, c) in input.changes.iter().enumerate() {
         let at = |f: &str| format!("changes[{i}]{f}");
         let (uid, field, value) = (c.uid.trim(), c.field.trim(), c.value.trim());
-        if input.changes[..i].iter().any(|o| o.uid.trim() == uid && o.field.trim() == field) {
+        if input.changes[..i]
+            .iter()
+            .any(|o| o.uid.trim() == uid && o.field.trim() == field)
+        {
             return Err(fail(
                 codes::INVALID_INPUT,
                 format!("“{uid}” karar alanının {field} alanı iki kez değişiyor."),
@@ -190,36 +254,57 @@ fn run(doc: &Document, input: &ZoningDraft) -> Result<(ZoningDrafted, ZoningPlan
         if !checks::is_uid_text(uid) {
             return Err(fail(
                 codes::INVALID_UID,
-                format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+                format!(
+                    "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+                ),
                 &at(".uid"),
             ));
         }
-        let Some(e) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)) else {
-            return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), &at(".uid")));
+        let Some(e) = Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+        else {
+            return Err(fail(
+                codes::ENTITY_NOT_FOUND,
+                format!("“{uid}” kimlikli nesne çizimde yok."),
+                &at(".uid"),
+            ));
         };
         if !is_area(e, &l.decisions) {
             return Err(fail(
                 codes::NOT_A_DECISION,
-                format!("“{uid}” imar planının karar katmanında bir alan değil; taslak karar alanlarını değiştirir."),
+                format!(
+                    "“{uid}” imar planının karar katmanında bir alan değil; taslak karar alanlarını değiştirir."
+                ),
                 &at(".uid"),
             ));
         }
         if plan_of(e, &plans).as_deref() != Some(plan) {
             return Err(fail(
                 codes::INVALID_INPUT,
-                format!("“{uid}” karar alanı “{plan}” planının değil; taslak bir planın karar alanlarını değiştirir."),
+                format!(
+                    "“{uid}” karar alanı “{plan}” planının değil; taslak bir planın karar alanlarını değiştirir."
+                ),
                 &at(".uid"),
             ));
         }
         if !DRAFT_FIELDS.contains(&field) {
             return Err(fail(
                 codes::INVALID_INPUT,
-                format!("Taslak “{field}” alanını değiştirmez; değiştirdikleri: {}.", DRAFT_FIELDS.join(", ")),
+                format!(
+                    "Taslak “{field}” alanını değiştirmez; değiştirdikleri: {}.",
+                    DRAFT_FIELDS.join(", ")
+                ),
                 &at(".field"),
             ));
         }
         if value.is_empty() {
-            return Err(fail(codes::INVALID_INPUT, format!("{field} için yeni değeri yazın; taslak bir değeri silmez."), &at(".value")));
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!("{field} için yeni değeri yazın; taslak bir değeri silmez."),
+                &at(".value"),
+            ));
         }
         if value.chars().count() > MAX_ZONING_LABEL || value.chars().any(char::is_control) {
             return Err(fail(
@@ -229,9 +314,13 @@ fn run(doc: &Document, input: &ZoningDraft) -> Result<(ZoningDrafted, ZoningPlan
             ));
         }
         let wrong = match field {
-            "Kullanim" => (!listed(&p, "plan-kullanim", value)).then(|| format!("“{value}” kullanım listesinde yok (plan-kullanim).")),
-            "Nizam" => (!listed(&p, "yapi-nizami", value)).then(|| format!("“{value}” yapı nizamı listesinde yok (yapi-nizami).")),
-            _ => number(value).is_none_or(|v| v < 0.0).then(|| format!("{field} için “{value}” 0 ya da daha büyük bir sayı değil.")),
+            "Kullanim" => (!listed(&p, "plan-kullanim", value))
+                .then(|| format!("“{value}” kullanım listesinde yok (plan-kullanim).")),
+            "Nizam" => (!listed(&p, "yapi-nizami", value))
+                .then(|| format!("“{value}” yapı nizamı listesinde yok (yapi-nizami).")),
+            _ => number(value)
+                .is_none_or(|v| v < 0.0)
+                .then(|| format!("{field} için “{value}” 0 ya da daha büyük bir sayı değil.")),
         };
         if let Some(why) = wrong {
             return Err(fail(codes::INVALID_INPUT, why, &at(".value")));
@@ -244,7 +333,12 @@ fn run(doc: &Document, input: &ZoningDraft) -> Result<(ZoningDrafted, ZoningPlan
                 &at(".value"),
             ));
         }
-        changes.push(PlanDraftChange { area: uid.to_owned(), field: field.to_owned(), before, after: value.to_owned() });
+        changes.push(PlanDraftChange {
+            area: uid.to_owned(),
+            field: field.to_owned(),
+            before,
+            after: value.to_owned(),
+        });
     }
     let draft = PlanDraft {
         id: id.to_owned(),
@@ -261,7 +355,10 @@ fn run(doc: &Document, input: &ZoningDraft) -> Result<(ZoningDrafted, ZoningPlan
     if data.drafts.len() > kentos_commands::MAX_PLAN_DRAFTS {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Projede en çok {} plan değişikliği taslağı saklanır; eskilerden birini silin.", kentos_commands::MAX_PLAN_DRAFTS),
+            format!(
+                "Projede en çok {} plan değişikliği taslağı saklanır; eskilerden birini silin.",
+                kentos_commands::MAX_PLAN_DRAFTS
+            ),
             "id",
         ));
     }
@@ -289,7 +386,11 @@ fn compare(
     draft: &PlanDraft,
 ) -> (Vec<ZoningDraftUse>, Vec<ZoningDraftFinding>) {
     let after_of = |uid: &str, field: &str| {
-        draft.changes.iter().find(|c| c.area == uid && c.field == field).map(|c| c.after.clone())
+        draft
+            .changes
+            .iter()
+            .find(|c| c.area == uid && c.field == field)
+            .map(|c| c.after.clone())
     };
     let mut by_use: HashMap<String, (f64, f64)> = HashMap::new();
     let mut per_area: Vec<ZoningDraftFinding> = Vec::new();
@@ -297,7 +398,10 @@ fn compare(
         if plan_of(e, plans).as_deref() != Some(draft.plan.as_str()) {
             continue;
         }
-        let uid = doc.uid(kentos_domain::Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default();
+        let uid = doc
+            .uid(kentos_domain::Slot(e.base().id))
+            .map(|u| u.to_string())
+            .unwrap_or_default();
         let area = entity_area(&shape(e)).unwrap_or(0.0);
         let before = attr(e, "Kullanim");
         let after = after_of(&uid, "Kullanim").unwrap_or_else(|| before.clone());
@@ -311,7 +415,10 @@ fn compare(
         };
         let name = attr(e, "KararKimlik");
         let name = if name.is_empty() { uid.clone() } else { name };
-        let density: Vec<String> = [rise("KAKS", "KAKS"), rise("KatAdedi", "kat adedi")].into_iter().flatten().collect();
+        let density: Vec<String> = [rise("KAKS", "KAKS"), rise("KatAdedi", "kat adedi")]
+            .into_iter()
+            .flatten()
+            .collect();
         if !density.is_empty() {
             per_area.push(ZoningDraftFinding {
                 kind: "densityUp".into(),
@@ -324,7 +431,10 @@ fn compare(
                 ),
             });
         }
-        let height: Vec<String> = [rise("KatAdedi", "kat adedi"), rise("Hmax", "Hmax")].into_iter().flatten().collect();
+        let height: Vec<String> = [rise("KatAdedi", "kat adedi"), rise("Hmax", "Hmax")]
+            .into_iter()
+            .flatten()
+            .collect();
         if !height.is_empty() {
             per_area.push(ZoningDraftFinding {
                 kind: "heightUp".into(),
@@ -347,12 +457,23 @@ fn compare(
         .unwrap_or_default();
     let mut codes_: Vec<String> = by_use.keys().cloned().collect();
     // The list's order, then uses off the list by their code, then areas without a use.
-    codes_.sort_by_key(|c| (c.is_empty(), order.iter().position(|o| o == c).unwrap_or(order.len()), c.clone()));
+    codes_.sort_by_key(|c| {
+        (
+            c.is_empty(),
+            order.iter().position(|o| o == c).unwrap_or(order.len()),
+            c.clone(),
+        )
+    });
     let uses: Vec<ZoningDraftUse> = codes_
         .iter()
         .map(|c| {
             let (before, after) = by_use[c];
-            ZoningDraftUse { usage: c.clone(), before, after, difference: after - before }
+            ZoningDraftUse {
+                usage: c.clone(),
+                before,
+                after,
+                difference: after - before,
+            }
         })
         .collect();
     let mut findings: Vec<ZoningDraftFinding> = uses
@@ -376,7 +497,10 @@ fn compare(
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ZoningDraft) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -384,7 +508,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ZoningDraft) -> CommandResult
 /// What execute would keep; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ZoningDraft) -> CommandResult<ZoningDrafted> {
     match run(cx.doc, input) {
-        Ok((out, _)) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok((out, _)) => CommandResult::Completed {
+            output: out,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -394,33 +521,53 @@ fn write(cx: &mut ExecutionContext<'_>, input: ZoningDraft) -> CommandResult<Zon
         Ok(done) => done,
         Err(stop) => return stop.into(),
     };
-    cx.doc.set_zoning_plan(Some(data), if input.remove { REMOVE_STEP } else { STEP });
+    cx.doc
+        .set_zoning_plan(Some(data), if input.remove { REMOVE_STEP } else { STEP });
     out.revision = cx.doc.revision().to_string();
-    CommandResult::Completed { output: out, warnings: Vec::new() }
+    CommandResult::Completed {
+        output: out,
+        warnings: Vec::new(),
+    }
 }
 
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ZoningDraft) -> CommandResult<ZoningDrafted> {
-    crate::call::recorded(cx, kentos_commands::CAD_ZONING_DRAFT, kentos_commands::CAD_ZONING_DRAFT_VERSION, input, write)
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_ZONING_DRAFT,
+        kentos_commands::CAD_ZONING_DRAFT_VERSION,
+        input,
+        write,
+    )
 }
 
 /// The project's drafts, for a window.
 pub fn drafts(doc: &Document) -> Vec<PlanDraft> {
-    doc.zoning_plan().map(|z| z.drafts.clone()).unwrap_or_default()
+    doc.zoning_plan()
+        .map(|z| z.drafts.clone())
+        .unwrap_or_default()
 }
 
 /// The drawing's plan boundaries (id, level) in its order, for a window; none without the zoning layers.
 pub fn plans(doc: &Document) -> Vec<(String, String)> {
-    builtin_profile(ZONING_PROFILE).and_then(|p| layers(doc, &p).ok()).map(|l| plans_of(doc, &l)).unwrap_or_default()
+    builtin_profile(ZONING_PROFILE)
+        .and_then(|p| layers(doc, &p).ok())
+        .map(|l| plans_of(doc, &l))
+        .unwrap_or_default()
 }
 
 /// A plan's decision areas in the drawing's order, for a window: each one's persistent id, `KararKimlik` and use.
 pub fn areas(doc: &Document, plan: &str) -> Vec<(String, String, String)> {
-    let Some(l) = builtin_profile(ZONING_PROFILE).and_then(|p| layers(doc, &p).ok()) else { return Vec::new() };
+    let Some(l) = builtin_profile(ZONING_PROFILE).and_then(|p| layers(doc, &p).ok()) else {
+        return Vec::new();
+    };
     let plans = plans_of(doc, &l);
     doc.entities()
         .filter(|e| is_area(e, &l.decisions) && plan_of(e, &plans).as_deref() == Some(plan))
         .map(|e| {
-            let uid = doc.uid(kentos_domain::Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default();
+            let uid = doc
+                .uid(kentos_domain::Slot(e.base().id))
+                .map(|u| u.to_string())
+                .unwrap_or_default();
             (uid, attr(e, "KararKimlik"), attr(e, "Kullanim"))
         })
         .collect()
@@ -428,7 +575,12 @@ pub fn areas(doc: &Document, plan: &str) -> Vec<(String, String, String)> {
 
 /// A decision area's value of a field as the draft reads it (trimmed; empty when it has none or is not there).
 pub fn value(doc: &Document, uid: &str, field: &str) -> String {
-    Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)).map(|e| attr(e, field)).unwrap_or_default()
+    Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s))
+        .map(|e| attr(e, field))
+        .unwrap_or_default()
 }
 
 /// What changed after the drafts (docs/adr/5040, the zoning check's `draftStale`): for each draft in its order, each
@@ -436,7 +588,9 @@ pub fn value(doc: &Document, uid: &str, field: &str) -> String {
 /// none when it is gone), and a draft whose plan is gone (no area); with what to say.
 pub(crate) fn stale(doc: &Document) -> Vec<(Option<String>, String)> {
     let mut out = Vec::new();
-    let Some(data) = doc.zoning_plan() else { return out };
+    let Some(data) = doc.zoning_plan() else {
+        return out;
+    };
     let plans: Vec<String> = builtin_profile(ZONING_PROFILE)
         .and_then(|p| layers(doc, &p).ok())
         .map(|l| plans_of(doc, &l).into_iter().map(|(id, _)| id).collect())
@@ -449,7 +603,10 @@ pub(crate) fn stale(doc: &Document) -> Vec<(Option<String>, String)> {
             ));
         }
         for c in &d.changes {
-            let found = Uuid::parse_str(&c.area).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
+            let found = Uuid::parse_str(&c.area)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s));
             match found {
                 None => out.push((
                     None,

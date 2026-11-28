@@ -29,7 +29,11 @@ fn close(got: &Value, want: &Value, at: &str) {
             keys.sort();
             keys.dedup();
             for k in keys {
-                close(a.get(k).unwrap_or(&Value::Null), b.get(k).unwrap_or(&Value::Null), &format!("{at}.{k}"));
+                close(
+                    a.get(k).unwrap_or(&Value::Null),
+                    b.get(k).unwrap_or(&Value::Null),
+                    &format!("{at}.{k}"),
+                );
             }
         }
         _ => assert_eq!(got, want, "{at}"),
@@ -38,13 +42,26 @@ fn close(got: &Value, want: &Value, at: &str) {
 
 #[test]
 fn the_preview_over_mcp_is_the_cases() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.layers.reproject.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.layers.reproject.json"
+    ))
+    .unwrap();
     let case = |start: &str| {
-        cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().starts_with(start)).unwrap().clone()
+        cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"].as_str().unwrap().starts_with(start))
+            .unwrap()
+            .clone()
     };
-    let v1: kentos_commands::DocumentSnapshotV1 = serde_json::from_value(cases["setup"].clone()).unwrap();
+    let v1: kentos_commands::DocumentSnapshotV1 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
     let snapshot = kentos_commands::migrate_v1(v1).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-layer-reproject-{}.kcad", std::process::id()));
+    let path = std::env::temp_dir().join(format!(
+        "kentos-layer-reproject-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -54,26 +71,58 @@ fn the_preview_over_mcp_is_the_cases() {
     // The plan: the case's preview, nothing written.
     let c = case("önizleme: kullanım alanlarının dışındaki nokta");
     let want = &c["steps"][0]["result"];
-    let plan = call(&mut server, "cad.layers.reproject", json!({"drawing": drawing, "layer": "uzak", "from": 2322, "op": "plan"}));
+    let plan = call(
+        &mut server,
+        "cad.layers.reproject",
+        json!({"drawing": drawing, "layer": "uzak", "from": 2322, "op": "plan"}),
+    );
     assert_eq!(plan["isError"], false, "{plan}");
     let got = &plan["structuredContent"];
     close(&got["output"], &want["output"], "plan");
-    let codes = |w: &Value| w.as_array().unwrap().iter().map(|w| w["code"].clone()).collect::<Vec<_>>();
+    let codes = |w: &Value| {
+        w.as_array()
+            .unwrap()
+            .iter()
+            .map(|w| w["code"].clone())
+            .collect::<Vec<_>>()
+    };
     assert_eq!(codes(&got["warnings"]), codes(&want["warnings"]));
     let far = &got["output"]["shifts"][0];
-    assert_eq!((far["before"]["y"].as_f64(), far["notes"].as_array().map(Vec::len)), (Some(4_900_000.0), Some(3)));
+    assert_eq!(
+        (
+            far["before"]["y"].as_f64(),
+            far["notes"].as_array().map(Vec::len)
+        ),
+        (Some(4_900_000.0), Some(3))
+    );
 
     // Executed: the move the plan said.
-    let done = call(&mut server, "cad.layers.reproject", json!({"drawing": drawing, "layer": "uzak", "from": 2322}));
+    let done = call(
+        &mut server,
+        "cad.layers.reproject",
+        json!({"drawing": drawing, "layer": "uzak", "from": 2322}),
+    );
     assert_eq!(done["isError"], false, "{done}");
-    close(&done["structuredContent"]["output"], &c["steps"][1]["result"]["output"], "execute");
+    close(
+        &done["structuredContent"]["output"],
+        &c["steps"][1]["result"]["output"],
+        "execute",
+    );
 
     // Refused, each reason counted.
     let r = case("ret: nedenler karışıkken");
-    let refused = call(&mut server, "cad.layers.reproject", json!({"drawing": drawing, "layer": "yazilar", "from": 4326}));
+    let refused = call(
+        &mut server,
+        "cad.layers.reproject",
+        json!({"drawing": drawing, "layer": "yazilar", "from": 4326}),
+    );
     let error = &refused["structuredContent"]["error"];
     let want = &r["steps"][0]["result"]["error"];
-    assert_eq!((&error["code"], &error["message"]), (&want["code"], &want["message"]), "{refused}");
+    assert_eq!(
+        (&error["code"], &error["message"]),
+        (&want["code"], &want["message"]),
+        "{refused}"
+    );
     assert_eq!(error["uids"].as_array().map(Vec::len), Some(3));
     let _ = std::fs::remove_file(path);
 }

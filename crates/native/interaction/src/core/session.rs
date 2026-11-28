@@ -23,7 +23,6 @@ use kentos_geometry_core::tools::locks::{LockText, parse_lock_text};
 use kentos_geometry_core::tools::point_text::point_name;
 
 use crate::Vec2;
-pub(crate) use crate::named_points::named_point_at;
 use crate::align::{self, Align};
 use crate::arc::{self, Arc};
 use crate::array::{self, Array};
@@ -39,6 +38,7 @@ use crate::locks::{LockPick, NO_LOCK_EDGE, Toward, picked_edge};
 use crate::log::Level;
 use crate::mirror::{self, Mirror};
 use crate::move_copy::{self, Move};
+pub(crate) use crate::named_points::named_point_at;
 use crate::navigate::{self, Pan, ZoomWindow};
 use crate::object::{self, ObjectAction};
 use crate::object_tracking::{Aids, ObjectTracking, TRACK_PX};
@@ -139,10 +139,15 @@ pub const TOOLS: &[&str] = &[
     // docs/adr/8041 §1: Kiriş; 8172–8178: temeller, Radye, profiller, arazi, Zemin kotu, Renk planı lejandı, Gölge, Kütle.
     crate::beam_tools::BEAM_ID,
     crate::beam_tools::RAIL_ID,
-    crate::footing_tools::PAD_ID, crate::footing_tools::STRIP_ID,
+    crate::footing_tools::PAD_ID,
+    crate::footing_tools::STRIP_ID,
     crate::slab_tools::RAFT_ID,
-    crate::profile_tools::MOULDING_ID, crate::profile_tools::COPING_ID,
-    crate::ground_tool::ID, crate::ground_level_tool::ID, crate::color_legend_tool::ID, crate::shadow_tool::ID,
+    crate::profile_tools::MOULDING_ID,
+    crate::profile_tools::COPING_ID,
+    crate::ground_tool::ID,
+    crate::ground_level_tool::ID,
+    crate::color_legend_tool::ID,
+    crate::shadow_tool::ID,
     crate::mass_tool::ID,
     // docs/adr/8044 §4: Çatı; §6: Çatı bacası, Çatı penceresi.
     crate::roof_tools::ROOF_ID,
@@ -574,7 +579,9 @@ impl Session {
             crate::slab_tools::SLAB_ID => Box::new(crate::slab_tools::SlabTool::new()),
             crate::slab_tools::RAFT_ID => Box::new(crate::slab_tools::SlabTool::raft()),
             crate::slab_edge_tool::ID => Box::new(crate::slab_edge_tool::SlabEdgeTool::default()),
-            crate::ceiling_device_tool::ID => Box::new(crate::ceiling_device_tool::CeilingDeviceTool::default()),
+            crate::ceiling_device_tool::ID => {
+                Box::new(crate::ceiling_device_tool::CeilingDeviceTool::default())
+            }
             crate::covering_tool::ID => Box::new(crate::covering_tool::CoveringTool::new()),
             crate::space_number::ID => Box::new(crate::space_number::Number::default()),
             crate::space_discover::ID => Box::new(crate::space_discover::Discover::default()),
@@ -592,16 +599,26 @@ impl Session {
             crate::beam_tools::RAIL_ID => Box::new(crate::beam_tools::BeamTool::rail()),
             crate::footing_tools::PAD_ID => Box::new(crate::footing_tools::FootingTool::pad()),
             crate::footing_tools::STRIP_ID => Box::new(crate::footing_tools::FootingTool::strip()),
-            crate::profile_tools::MOULDING_ID => Box::new(crate::profile_tools::ProfileTool::moulding()),
-            crate::profile_tools::COPING_ID => Box::new(crate::profile_tools::ProfileTool::coping()),
+            crate::profile_tools::MOULDING_ID => {
+                Box::new(crate::profile_tools::ProfileTool::moulding())
+            }
+            crate::profile_tools::COPING_ID => {
+                Box::new(crate::profile_tools::ProfileTool::coping())
+            }
             crate::ground_tool::ID => Box::new(crate::ground_tool::GroundTool::new()),
-            crate::ground_level_tool::ID => Box::new(crate::ground_level_tool::GroundLevelTool::new()),
-            crate::color_legend_tool::ID => Box::new(crate::color_legend_tool::ColorLegendTool::new()),
+            crate::ground_level_tool::ID => {
+                Box::new(crate::ground_level_tool::GroundLevelTool::new())
+            }
+            crate::color_legend_tool::ID => {
+                Box::new(crate::color_legend_tool::ColorLegendTool::new())
+            }
             crate::shadow_tool::ID => Box::new(crate::shadow_tool::ShadowTool::new()),
             crate::mass_tool::ID => Box::new(crate::mass_tool::MassTool::new()),
             crate::roof_tools::ROOF_ID => Box::new(crate::roof_tools::RoofTool::new()),
             crate::railing_tools::RAILING_ID => Box::new(crate::railing_tools::RailingTool::new()),
-            crate::roof_part_tools::CHIMNEY_ID => Box::new(crate::roof_part_tools::RoofPartTool::chimney()),
+            crate::roof_part_tools::CHIMNEY_ID => {
+                Box::new(crate::roof_part_tools::RoofPartTool::chimney())
+            }
             crate::roof_part_tools::WINDOW_ID => {
                 Box::new(crate::roof_part_tools::RoofPartTool::window())
             }
@@ -1824,7 +1841,9 @@ impl Session {
     }
 
     pub fn preview_input(&mut self, text: Option<&str>, cx: &Context<'_>) -> crate::InputPreview {
-        self.tool.as_mut().map_or(crate::InputPreview::Off, |t|t.preview_input(text,cx))
+        self.tool
+            .as_mut()
+            .map_or(crate::InputPreview::Off, |t| t.preview_input(text, cx))
     }
 
     pub fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {

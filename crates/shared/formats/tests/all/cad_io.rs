@@ -284,8 +284,14 @@ fn planar_widths_bulges_closure_and_elevation_are_standard_dxf_without_metadata(
         // assertion proves standard 38/40/41/42/70 behavior without a private payload.
         let text = String::from_utf8(bytes).unwrap();
         let lines: Vec<_> = text.lines().collect();
-        let bytes = lines.as_chunks::<2>().0.iter().filter(|p| p[0].trim().parse::<i32>().unwrap() < 1000)
-            .map(|p| format!("{}\n{}\n",p[0],p[1])).collect::<String>().into_bytes();
+        let bytes = lines
+            .as_chunks::<2>()
+            .0
+            .iter()
+            .filter(|p| p[0].trim().parse::<i32>().unwrap() < 1000)
+            .map(|p| format!("{}\n{}\n", p[0], p[1]))
+            .collect::<String>()
+            .into_bytes();
         let back = dxf::read(&bytes, &options).expect("back");
         let Entity::Polyline(b) = &back.entities[0] else {
             panic!("polyline");
@@ -310,21 +316,35 @@ fn json_writer_preserves_flattened_object_overrides_and_polyline_fields() {
 
 #[test]
 fn twenty_independent_polyline_sources_refuse_by_default_and_allow_only_explicit_loss() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/formats/v1/cad-io");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/formats/v1/cad-io");
     let mut count = 0;
     for entry in std::fs::read_dir(root).unwrap() {
         let file = entry.unwrap().path();
         let name = file.file_name().unwrap().to_string_lossy();
-        if !(name.starts_with("ocs-") || name.starts_with("nonuniform-")) { continue; }
+        if !(name.starts_with("ocs-") || name.starts_with("nonuniform-")) {
+            continue;
+        }
         let bytes = std::fs::read(&file).unwrap();
-        let mut opts = DxfReadOptions { explode_blocks: name.starts_with("nonuniform-"), ..Default::default() };
+        let mut opts = DxfReadOptions {
+            explode_blocks: name.starts_with("nonuniform-"),
+            ..Default::default()
+        };
         if name.starts_with("nonuniform-") && name.ends_with("-width.dxf") {
             // ADR 1061 §3: a straight wide edge keeps a strip under any affine map; read without loss, its widths
             // the source's times |det M| / |M·t| (the command cases check each against the INSERT's own map).
             let read = dxf::read_checked(&bytes, &opts).expect(&name);
-            let kentos_contracts::Entity::Polyline(p) = &read.entities[0] else { panic!("{name}: polyline") };
+            let kentos_contracts::Entity::Polyline(p) = &read.entities[0] else {
+                panic!("{name}: polyline")
+            };
             assert!(p.widths.is_some(), "{name}");
-            assert!(read.report.notes.iter().all(|r| r.details.iter().all(|d| !d.property.starts_with("polyline.loss."))), "{name}");
+            assert!(
+                read.report.notes.iter().all(|r| r
+                    .details
+                    .iter()
+                    .all(|d| !d.property.starts_with("polyline.loss."))),
+                "{name}"
+            );
             count += 1;
             continue;
         }
@@ -333,10 +353,27 @@ fn twenty_independent_polyline_sources_refuse_by_default_and_allow_only_explicit
         opts.allow_polyline_loss = true;
         let read = dxf::read_checked(&bytes, &opts).expect(&name);
         assert_eq!(read.entities.len(), 1, "{name}");
-        let loss = read.report.notes.iter().find(|r| r.details.iter().any(|d| d.property.starts_with("polyline.loss."))).expect("structured property");
-        assert_eq!(loss.severity, Some(kentos_contracts::ReportSeverity::Warning));
+        let loss = read
+            .report
+            .notes
+            .iter()
+            .find(|r| {
+                r.details
+                    .iter()
+                    .any(|d| d.property.starts_with("polyline.loss."))
+            })
+            .expect("structured property");
+        assert_eq!(
+            loss.severity,
+            Some(kentos_contracts::ReportSeverity::Warning)
+        );
         assert!(loss.details.len() <= 5);
-        assert!(loss.details.iter().any(|d| d.source_id.as_deref() == Some("AF")), "{name}: {loss:?}");
+        assert!(
+            loss.details
+                .iter()
+                .any(|d| d.source_id.as_deref() == Some("AF")),
+            "{name}: {loss:?}"
+        );
         count += 1;
     }
     assert_eq!(count, 20);
@@ -344,36 +381,65 @@ fn twenty_independent_polyline_sources_refuse_by_default_and_allow_only_explicit
 
 #[test]
 fn explicit_zero_vertex_width_overrides_constant_width_instead_of_falling_back() {
-    let bytes = drawing("AC1032", "UTF-8", "0\nLWPOLYLINE\n90\n2\n43\n7\n10\n0\n20\n0\n40\n0\n41\n0\n10\n3\n20\n4\n40\n0\n41\n0\n");
+    let bytes = drawing(
+        "AC1032",
+        "UTF-8",
+        "0\nLWPOLYLINE\n90\n2\n43\n7\n10\n0\n20\n0\n40\n0\n41\n0\n10\n3\n20\n4\n40\n0\n41\n0\n",
+    );
     let read = dxf::read_checked(&bytes, &Default::default()).unwrap();
-    let kentos_contracts::Entity::Polyline(p) = &read.entities[0] else { panic!("polyline") };
+    let kentos_contracts::Entity::Polyline(p) = &read.entities[0] else {
+        panic!("polyline")
+    };
     assert_eq!(p.widths, None);
 }
 
 #[test]
 fn nonuniform_and_mirrored_block_factors_survive_the_streaming_json_writer_exactly() {
     use kentos_contracts::Entity;
-    for (sx,sy,angle) in [(2.0f64,3.0f64,90.),(-2.,3.,30.),(2.,-3.,270.),(1.,1.0000000001,0.)] {
-        let body = format!("0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n2\nB\n70\n0\n10\n0\n20\n0\n0\nLWPOLYLINE\n90\n2\n43\n0.2\n10\n0\n20\n0\n42\n0.5\n10\n3\n20\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nINSERT\n2\nB\n10\n10\n20\n20\n41\n{sx}\n42\n{sy}\n50\n{angle}\n0\nENDSEC\n0\nEOF\n");
+    for (sx, sy, angle) in [
+        (2.0f64, 3.0f64, 90.),
+        (-2., 3., 30.),
+        (2., -3., 270.),
+        (1., 1.0000000001, 0.),
+    ] {
+        let body = format!(
+            "0\nSECTION\n2\nBLOCKS\n0\nBLOCK\n2\nB\n70\n0\n10\n0\n20\n0\n0\nLWPOLYLINE\n90\n2\n43\n0.2\n10\n0\n20\n0\n42\n0.5\n10\n3\n20\n0\n0\nENDBLK\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n0\nINSERT\n2\nB\n10\n10\n20\n20\n41\n{sx}\n42\n{sy}\n50\n{angle}\n0\nENDSEC\n0\nEOF\n"
+        );
         let read = dxf::read_checked(body.as_bytes(), &Default::default()).unwrap();
-        let Entity::Insert(i) = &read.entities[0] else { panic!("insert") };
-        assert_eq!((i.scale,i.y_scale,i.mirror), (sx.abs(),Some(sy.abs()),sx*sy<0.));
+        let Entity::Insert(i) = &read.entities[0] else {
+            panic!("insert")
+        };
+        assert_eq!(
+            (i.scale, i.y_scale, i.mirror),
+            (sx.abs(), Some(sy.abs()), sx * sy < 0.)
+        );
         let input = dxf::input_from_json(&serde_json::json!({"entities":read.entities,"blocks":read.blocks,"layers":[],"scale":1000.,"lengthDecimals":3,"grads":false}).to_string()).unwrap();
         assert_eq!(input.entities, read.entities, "JSON must not drop yScale");
         let (bytes, _) = dxf::write_checked(&input).unwrap();
         let back = dxf::read_checked(&bytes, &Default::default()).unwrap();
-        let Entity::Insert(b) = &back.entities[0] else { panic!("insert back") };
-        assert_eq!((i.p,i.scale,i.y_scale,i.rotation,i.mirror),(b.p,b.scale,b.y_scale,b.rotation,b.mirror));
+        let Entity::Insert(b) = &back.entities[0] else {
+            panic!("insert back")
+        };
+        assert_eq!(
+            (i.p, i.scale, i.y_scale, i.rotation, i.mirror),
+            (b.p, b.scale, b.y_scale, b.rotation, b.mirror)
+        );
     }
 }
 
 #[test]
 fn nonplanar_width_or_bulge_export_requires_acceptance_even_without_kentos_metadata() {
-    for (widths,bulges) in [(Some(vec![[0.2,0.4],[0.,0.]]),None),(None,Some(vec![0.5]))] {
+    for (widths, bulges) in [
+        (Some(vec![[0.2, 0.4], [0., 0.]]), None),
+        (None, Some(vec![0.5])),
+    ] {
         let mut input = dxf::input_from_json(&serde_json::json!({"entities":[{"kind":"polyline","id":1,"layerId":"0","attrs":{},"pts":[{"x":0.,"y":0.},{"x":3.,"y":4.}],"zs":[7.,8.],"widths":widths,"bulges":bulges}],"layers":[],"scale":1000.,"lengthDecimals":3,"grads":false,"annotations":{"metadata":false}}).to_string()).unwrap();
-        assert_eq!(dxf::write_checked(&input).unwrap_err().code,"polyline_geometry_loss");
-        input.allow_polyline_loss=true;
-        let (bytes,report)=dxf::write_checked(&input).unwrap();
+        assert_eq!(
+            dxf::write_checked(&input).unwrap_err().code,
+            "polyline_geometry_loss"
+        );
+        input.allow_polyline_loss = true;
+        let (bytes, report) = dxf::write_checked(&input).unwrap();
         assert!(!bytes.is_empty());
         assert!(dxf::polyline_policy::refusal(report.notes.iter()).is_some());
     }
@@ -382,5 +448,8 @@ fn nonplanar_width_or_bulge_export_requires_acceptance_even_without_kentos_metad
 #[test]
 fn writer_keeps_host_loss_properties_so_checked_export_cannot_bypass_them() {
     let input = dxf::input_from_json(&serde_json::json!({"entities":[],"layers":[],"scale":1000.,"lengthDecimals":3,"grads":false,"notes":[{"what":"Pafta çoklu çizgisi","reason":"genişlik kaybı","count":2,"lines":[],"severity":"warning","details":[{"entityType":"LWPOLYLINE","property":"polyline.loss.paper_width"}]}]}).to_string()).unwrap();
-    assert_eq!(dxf::write_checked(&input).unwrap_err().code,"polyline_geometry_loss");
+    assert_eq!(
+        dxf::write_checked(&input).unwrap_err().code,
+        "polyline_geometry_loss"
+    );
 }

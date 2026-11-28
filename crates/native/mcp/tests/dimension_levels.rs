@@ -5,10 +5,12 @@ use serde_json::{Value, json};
 
 fn call(server: &mut Server, name: &str, args: Value) -> Value {
     let result = server
-        .handle(&json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
+        .handle(
+            &json!({"jsonrpc":"2.0","id":1,"method":"tools/call","params":{
             "name":name,"arguments":args,"_meta":{"io.modelcontextprotocol/protocolVersion":MODERN,
             "io.modelcontextprotocol/clientInfo":{"name":"dimension-levels-test","version":"1"},
-            "io.modelcontextprotocol/clientCapabilities":{}}}}))
+            "io.modelcontextprotocol/clientCapabilities":{}}}}),
+        )
         .unwrap()["result"]
         .clone();
     assert_eq!(result["resultType"], "complete", "{result}");
@@ -26,32 +28,55 @@ fn a_kot_bound_to_a_level_follows_it_and_keeps_it() {
         "layers":[{"id":"olcu","name":"Ölçü","type":"layer","visible":true,"locked":false,"expanded":true,
                    "style":{"color":"fg","lineType":"continuous","lineWeight":0.25},"children":[]}],
         "activeLayer":"olcu","entities":[],"styles":{"items":[],"categories":[]}});
-    let dir = std::env::temp_dir().join(format!("kentos-mcp-dimension-levels-{}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!(
+        "kentos-mcp-dimension-levels-{}",
+        std::process::id()
+    ));
     std::fs::create_dir_all(&dir).unwrap();
     let source = dir.join("kotlar.json");
     std::fs::write(&source, doc.to_string()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path":source}));
     let drawing = opened["structuredContent"]["drawing"].clone();
-    let made = call(&mut server, "cad.dimensions.create", json!({"drawing":drawing,"layerId":"olcu","at":{"x":5,"y":4},
-        "measure":{"kind":"elevation","a":{"kind":"at","at":{"x":4,"y":3}},"level":{"id":"k1","offset":-0.02}}}));
+    let made = call(
+        &mut server,
+        "cad.dimensions.create",
+        json!({"drawing":drawing,"layerId":"olcu","at":{"x":5,"y":4},
+        "measure":{"kind":"elevation","a":{"kind":"at","at":{"x":4,"y":3}},"level":{"id":"k1","offset":-0.02}}}),
+    );
     assert_eq!(made["isError"], false, "{made}");
     let kot = |server: &mut Server| {
-        call(server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"][0].clone()
+        call(server, "drawing.entities", json!({"drawing":drawing}))["structuredContent"]["items"]
+            [0]
+        .clone()
     };
     let item = kot(&mut server);
     assert_eq!(item["entity"]["za"], json!(3.25 + -0.02), "{item}");
     assert_eq!(item["entity"]["level"], json!({"id":"k1","offset":-0.02}));
     // 1. kat raised: the Kot follows.
     let raised = json!([levels[0], {"id":"k1","name":"1. kat","elevation":6.5}]);
-    let set = call(&mut server, "cad.settings.set", json!({"drawing":drawing,"arch":{"levels":raised}}));
+    let set = call(
+        &mut server,
+        "cad.settings.set",
+        json!({"drawing":drawing,"arch":{"levels":raised}}),
+    );
     assert_eq!(set["isError"], false, "{set}");
     assert_eq!(kot(&mut server)["entity"]["za"], json!(6.5 + -0.02));
     // Taken away while the Kot names it: kept, its id said.
-    let gone = call(&mut server, "cad.settings.set", json!({"drawing":drawing,"arch":{"levels":[levels[0]]}}));
+    let gone = call(
+        &mut server,
+        "cad.settings.set",
+        json!({"drawing":drawing,"arch":{"levels":[levels[0]]}}),
+    );
     let error = &gone["structuredContent"]["error"];
     assert_eq!(error["code"], "level_in_use", "{gone}");
-    assert!(error["message"].as_str().unwrap().starts_with("“1. kat” katını 1 kot işareti anıyor"), "{gone}");
+    assert!(
+        error["message"]
+            .as_str()
+            .unwrap()
+            .starts_with("“1. kat” katını 1 kot işareti anıyor"),
+        "{gone}"
+    );
     assert_eq!(error["uids"], json!([item["uid"]]));
     let _ = std::fs::remove_dir_all(dir);
 }

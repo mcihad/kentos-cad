@@ -112,14 +112,10 @@ pub(super) struct Gradient {
 /// The gradient over the triangles `t` (the batch's numbers) as filled bands, moved by `(bx, by)`.
 pub(super) fn bands(t: &[f64], g: &Gradient, bx: f64, by: f64) -> Vec<Shape> {
     let triangles: Vec<[[f64; 2]; 3]> = t
-        .as_chunks::<6>().0.iter()
-        .map(|c| {
-            [
-                [c[0], c[1]],
-                [c[2], c[3]],
-                [c[4], c[5]],
-            ]
-        })
+        .as_chunks::<6>()
+        .0
+        .iter()
+        .map(|c| [[c[0], c[1]], [c[2], c[3]], [c[4], c[5]]])
         .collect();
     let paint = |t: f64| {
         let t = if g.inverted { 1.0 - t } else { t };

@@ -4,8 +4,9 @@
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, CommandWarning, IfcChange, IfcCompare, IfcCompared, IfcComparedChange, IfcComparedFile,
-    IfcComparedObject, IfcRepeatedId, MAX_IFC_COMPARE_TOLERANCE, MIN_IFC_COMPARE_TOLERANCE, IFC_COMPARE_TOLERANCE,
+    CommandResult, CommandWarning, IFC_COMPARE_TOLERANCE, IfcChange, IfcCompare, IfcCompared,
+    IfcComparedChange, IfcComparedFile, IfcComparedObject, IfcRepeatedId,
+    MAX_IFC_COMPARE_TOLERANCE, MIN_IFC_COMPARE_TOLERANCE,
 };
 use kentos_ifc::compare::{self, Change};
 use kentos_ifc::read::{self as ifc, Limits, Model};
@@ -20,7 +21,9 @@ pub(crate) fn ifc_file(text: &str, field: &str) -> Result<(Vec<u8>, Model), Stop
     let wrong = |why: &str| {
         Stop::failed(checks::error(
             codes::INVALID_FILE_PATH,
-            format!("IFC dosyasının yolu {why}: tam yolunu verin, .ifc ile biten ve var olan bir dosya."),
+            format!(
+                "IFC dosyasının yolu {why}: tam yolunu verin, .ifc ile biten ve var olan bir dosya."
+            ),
             Some(field.into()),
         ))
     };
@@ -30,16 +33,25 @@ pub(crate) fn ifc_file(text: &str, field: &str) -> Result<(Vec<u8>, Model), Stop
     if !path.is_absolute() {
         return Err(wrong("göreli"));
     }
-    if !path.extension().is_some_and(|e| e.eq_ignore_ascii_case("ifc")) {
+    if !path
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("ifc"))
+    {
         return Err(wrong(".ifc ile bitmiyor"));
     }
     let bytes = match std::fs::read(path) {
         Ok(b) => b,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Err(wrong("bir dosya göstermiyor")),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            return Err(wrong("bir dosya göstermiyor"));
+        }
         Err(e) => return Err(wrong(&format!("okunamıyor ({e})"))),
     };
     let model = ifc::read(&bytes, &Limits::default(), &|| false).map_err(|e| {
-        Stop::failed(checks::error(codes::IFC_UNREADABLE, format!("{}: {e}", path.display()), Some(field.into())))
+        Stop::failed(checks::error(
+            codes::IFC_UNREADABLE,
+            format!("{}: {e}", path.display()),
+            Some(field.into()),
+        ))
     })?;
     Ok((bytes, model))
 }
@@ -47,30 +59,52 @@ pub(crate) fn ifc_file(text: &str, field: &str) -> Result<(Vec<u8>, Model), Stop
 /// An object as the lists name it.
 pub(crate) fn named(model: &Model, i: usize) -> IfcComparedObject {
     let o = &model.objects[i];
-    IfcComparedObject { global_id: o.global_id.clone(), class: o.class.clone(), name: o.name.clone() }
+    IfcComparedObject {
+        global_id: o.global_id.clone(),
+        class: o.class.clone(),
+        name: o.name.clone(),
+    }
 }
 
 fn changes(older: &Model, newer: &Model, list: &[Change]) -> Vec<IfcChange> {
     list.iter()
         .map(|c| match c {
-            Change::Class { old, new } => IfcChange::Class { old: old.clone(), new: new.clone() },
-            Change::Attribute { name, old, new } => {
-                IfcChange::Attribute { name: (*name).to_owned(), old: old.clone(), new: new.clone() }
-            }
+            Change::Class { old, new } => IfcChange::Class {
+                old: old.clone(),
+                new: new.clone(),
+            },
+            Change::Attribute { name, old, new } => IfcChange::Attribute {
+                name: (*name).to_owned(),
+                old: old.clone(),
+                new: new.clone(),
+            },
             Change::Container { old, new } => IfcChange::Container {
                 old: old.map(|i| named(older, i)),
                 new: new.map(|i| named(newer, i)),
             },
-            Change::Type { old, new } => {
-                IfcChange::Type { old: old.map(|i| named(older, i)), new: new.map(|i| named(newer, i)) }
-            }
-            Change::Body { old, new } => IfcChange::Body { old: *old, new: *new },
+            Change::Type { old, new } => IfcChange::Type {
+                old: old.map(|i| named(older, i)),
+                new: new.map(|i| named(newer, i)),
+            },
+            Change::Body { old, new } => IfcChange::Body {
+                old: *old,
+                new: *new,
+            },
             Change::Moved { by } => IfcChange::Moved {
                 by: by.to_vec(),
                 distance: (by[0] * by[0] + by[1] * by[1] + by[2] * by[2]).sqrt(),
             },
-            Change::Resized { old, new } => IfcChange::Resized { old: old.to_vec(), new: new.to_vec() },
-            Change::Property { set, from_type, name, old, new } => IfcChange::Property {
+            Change::Resized { old, new } => IfcChange::Resized {
+                old: old.to_vec(),
+                new: new.to_vec(),
+            },
+            Change::Property {
+                set,
+                from_type,
+                name,
+                old,
+                new,
+            } => IfcChange::Property {
                 set: set.clone(),
                 from_type: *from_type,
                 name: name.clone(),
@@ -85,7 +119,11 @@ fn compared(input: &IfcCompare) -> Result<(IfcCompared, Vec<CommandWarning>), St
     // Both paths first, then the tolerance, then the reading.
     for (field, text) in [("older", &input.older), ("newer", &input.newer)] {
         let p = Path::new(text.trim());
-        if text.trim().is_empty() || !p.is_absolute() || !p.extension().is_some_and(|e| e.eq_ignore_ascii_case("ifc")) || !p.is_file() {
+        if text.trim().is_empty()
+            || !p.is_absolute()
+            || !p.extension().is_some_and(|e| e.eq_ignore_ascii_case("ifc"))
+            || !p.is_file()
+        {
             // The same words as the reading's refusal.
             ifc_file(text, field)?;
         }
@@ -102,9 +140,14 @@ fn compared(input: &IfcCompare) -> Result<(IfcCompared, Vec<CommandWarning>), St
     }
     let (old_bytes, older) = ifc_file(&input.older, "older")?;
     let (new_bytes, newer) = ifc_file(&input.newer, "newer")?;
-    let c = compare::compare(&older, &old_bytes, &newer, &new_bytes, tolerance, &|| false).map_err(|e| {
-        Stop::failed(checks::error(codes::IFC_UNREADABLE, e.to_string(), Some("newer".into())))
-    })?;
+    let c = compare::compare(&older, &old_bytes, &newer, &new_bytes, tolerance, &|| false)
+        .map_err(|e| {
+            Stop::failed(checks::error(
+                codes::IFC_UNREADABLE,
+                e.to_string(),
+                Some("newer".into()),
+            ))
+        })?;
     let file = |path: &str, m: &Model| IfcComparedFile {
         path: path.trim().to_owned(),
         schema: m.summary.schema.clone(),
@@ -113,7 +156,10 @@ fn compared(input: &IfcCompare) -> Result<(IfcCompared, Vec<CommandWarning>), St
     let repeated: Vec<IfcRepeatedId> = c
         .repeated
         .iter()
-        .map(|(newer, gid)| IfcRepeatedId { file: if *newer { "newer" } else { "older" }.into(), global_id: gid.clone() })
+        .map(|(newer, gid)| IfcRepeatedId {
+            file: if *newer { "newer" } else { "older" }.into(),
+            global_id: gid.clone(),
+        })
         .collect();
     let warnings = if repeated.is_empty() {
         Vec::new()
@@ -124,7 +170,12 @@ fn compared(input: &IfcCompare) -> Result<(IfcCompared, Vec<CommandWarning>), St
                 "{} GlobalId bir dosyada birden çok nesnede ({}): bu nesneler karşılaştırılmadı. Dosyayı yazan programdan \
                  GlobalId'leri tek tek veren bir dışa aktarım isteyin.",
                 repeated.len(),
-                repeated.iter().take(5).map(|r| r.global_id.as_str()).collect::<Vec<_>>().join(", ")
+                repeated
+                    .iter()
+                    .take(5)
+                    .map(|r| r.global_id.as_str())
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ),
             path: None,
         }]
@@ -139,7 +190,12 @@ fn compared(input: &IfcCompare) -> Result<(IfcCompared, Vec<CommandWarning>), St
             .iter()
             .map(|x| {
                 let n = named(&newer, x.newer);
-                IfcComparedChange { global_id: n.global_id, class: n.class, name: n.name, changes: changes(&older, &newer, &x.changes) }
+                IfcComparedChange {
+                    global_id: n.global_id,
+                    class: n.class,
+                    name: n.name,
+                    changes: changes(&older, &newer, &x.changes),
+                }
             })
             .collect(),
         unchanged: c.unchanged as u64,
@@ -151,7 +207,10 @@ fn compared(input: &IfcCompare) -> Result<(IfcCompared, Vec<CommandWarning>), St
 
 pub fn validate(_: &ExecutionContext<'_>, input: &IfcCompare) -> CommandResult<()> {
     match compared(input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }

@@ -102,7 +102,9 @@ impl StyleNames {
     /// The STYLE record a table style's cell style names by `name` (the project's text style of that name, case
     /// aside); none: Standard.
     pub fn text_named<'a>(&'a self, text_styles: &[TextStyleDef], name: &str) -> Option<&'a str> {
-        let s = text_styles.iter().find(|s| s.name.eq_ignore_ascii_case(name))?;
+        let s = text_styles
+            .iter()
+            .find(|s| s.name.eq_ignore_ascii_case(name))?;
         self.text.get(&s.id).map(String::as_str)
     }
 
@@ -196,10 +198,8 @@ impl StyleNames {
 
     /// The STYLE a dimension's value names in its block (7): its typeface's record, or Standard.
     pub fn value(&self, font: Option<DrawingFont>) -> &str {
-        font.and_then(|font| {
-            self.synthetic.get(&(font, false, false))
-        })
-        .map_or("Standard", String::as_str)
+        font.and_then(|font| self.synthetic.get(&(font, false, false)))
+            .map_or("Standard", String::as_str)
     }
 
     /// The STYLE a text names (7): its style's, its typeface's, or Standard.
@@ -326,7 +326,15 @@ pub fn style_table(
             "AcDbTextStyleTableRecord",
         );
         // A styleless face's record: no style of the project (its KENTOS data says none).
-        style_groups(out, name, 0.0, 1.0, 0.0, &font_file(font, *bold, *italic), "");
+        style_groups(
+            out,
+            name,
+            0.0,
+            1.0,
+            0.0,
+            &font_file(font, *bold, *italic),
+            "",
+        );
         style_data(out, font, *bold, *italic, super::super::xdata::STYLELESS);
     }
     for file in shape_files {

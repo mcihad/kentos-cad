@@ -8,8 +8,9 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use kentos_commands::{
-    CommandResult, WorkDerivationRow, MapWork, MapWorkQuery, MapWorkTree, WorkObjectRole, WorkObjectSource, WorkDerivation,
-    WorkFileRow, WorkFileState as F, WorkItem, WorkRow, WorkState as S, WorkStatus, encoding::sha256_hex,
+    CommandResult, MapWork, MapWorkQuery, MapWorkTree, WorkDerivation, WorkDerivationRow,
+    WorkFileRow, WorkFileState as F, WorkItem, WorkObjectRole, WorkObjectSource, WorkRow,
+    WorkState as S, WorkStatus, encoding::sha256_hex,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -52,7 +53,9 @@ fn layer_items<'w>(doc: &Document, work: &'w MapWork) -> HashMap<String, &'w Wor
 
 /// The file's SHA-256, or none when it cannot be read.
 pub(crate) fn file_sha(path: &str) -> Option<String> {
-    crate::file_digest::sha256(Path::new(path)).ok().map(|(_, sha)| sha)
+    crate::file_digest::sha256(Path::new(path))
+        .ok()
+        .map(|(_, sha)| sha)
 }
 
 /// How an item's file stands: its state, read deep its content's SHA-256, where it was found and how.
@@ -67,7 +70,12 @@ pub(crate) struct FileLook {
 /// How each item's file stands, by item id: looked for at its path, then (with the open project's file `drawing`) at
 /// its relative path from the project's folder and in the project's search paths (docs/adr/1201 §1); read deep, its
 /// content's SHA-256 against the item's revision.
-pub(crate) fn files_at(doc: &Document, work: &MapWork, deep: bool, drawing: Option<&str>) -> HashMap<String, FileLook> {
+pub(crate) fn files_at(
+    doc: &Document,
+    work: &MapWork,
+    deep: bool,
+    drawing: Option<&str>,
+) -> HashMap<String, FileLook> {
     let search = &doc.settings().xref_paths;
     work.items
         .iter()
@@ -75,12 +83,37 @@ pub(crate) fn files_at(doc: &Document, work: &MapWork, deep: bool, drawing: Opti
             let f = i.file.as_ref()?;
             let found = crate::links::find(&f.path, f.relative.as_deref(), drawing, search);
             let look = match (&found.at, deep) {
-                (None, _) => FileLook { state: F::Missing, sha: None, at: None, via: found.via },
-                (Some(at), false) => FileLook { state: F::Found, sha: None, at: Some(at.clone()), via: found.via },
+                (None, _) => FileLook {
+                    state: F::Missing,
+                    sha: None,
+                    at: None,
+                    via: found.via,
+                },
+                (Some(at), false) => FileLook {
+                    state: F::Found,
+                    sha: None,
+                    at: Some(at.clone()),
+                    via: found.via,
+                },
                 (Some(at), true) => match file_sha(&at.display().to_string()) {
-                    Some(sha) if sha == f.revision => FileLook { state: F::Current, sha: Some(sha), at: Some(at.clone()), via: found.via },
-                    Some(sha) => FileLook { state: F::Changed, sha: Some(sha), at: Some(at.clone()), via: found.via },
-                    None => FileLook { state: F::Missing, sha: None, at: None, via: kentos_commands::AssetVia::None },
+                    Some(sha) if sha == f.revision => FileLook {
+                        state: F::Current,
+                        sha: Some(sha),
+                        at: Some(at.clone()),
+                        via: found.via,
+                    },
+                    Some(sha) => FileLook {
+                        state: F::Changed,
+                        sha: Some(sha),
+                        at: Some(at.clone()),
+                        via: found.via,
+                    },
+                    None => FileLook {
+                        state: F::Missing,
+                        sha: None,
+                        at: None,
+                        via: kentos_commands::AssetVia::None,
+                    },
                 },
             };
             Some((i.id.clone(), look))
@@ -90,7 +123,10 @@ pub(crate) fn files_at(doc: &Document, work: &MapWork, deep: bool, drawing: Opti
 
 /// [`files_at`] at the items' paths only, by item id: the state and, read deep, the SHA-256.
 fn files(doc: &Document, work: &MapWork, deep: bool) -> HashMap<String, (F, Option<String>)> {
-    files_at(doc, work, deep, None).into_iter().map(|(id, l)| (id, (l.state, l.sha))).collect()
+    files_at(doc, work, deep, None)
+        .into_iter()
+        .map(|(id, l)| (id, (l.state, l.sha)))
+        .collect()
 }
 
 /// The content revision's name and version (docs/adr/2080 §1).
@@ -106,14 +142,21 @@ pub fn content_revision(doc: &Document, work: &MapWork, item: &str) -> String {
 
 /// The list [`content_revision`] is the digest of: `[persistent id, object digest]` of the objects the item's layers
 /// hold, by id (docs/adr/2880 keeps it with an approval).
-pub fn content_objects(doc: &Document, work: &MapWork, item: &str) -> Vec<(kentos_commands::EntityId, String)> {
+pub fn content_objects(
+    doc: &Document,
+    work: &MapWork,
+    item: &str,
+) -> Vec<(kentos_commands::EntityId, String)> {
     let mut pairs: Vec<(kentos_commands::EntityId, String)> = Vec::new();
     for leaf in doc.layers().leaves() {
         if item_of_layer(doc, work, &leaf.id).is_none_or(|i| i.id != item) {
             continue;
         }
         for (uid, entity) in doc.by_layer_with_uids(&leaf.id) {
-            pairs.push((kentos_commands::EntityId(*uid.as_bytes()), crate::sheets_sources::object_digest(entity)));
+            pairs.push((
+                kentos_commands::EntityId(*uid.as_bytes()),
+                crate::sheets_sources::object_digest(entity),
+            ));
         }
     }
     pairs.sort_unstable();
@@ -124,12 +167,21 @@ pub fn content_objects(doc: &Document, work: &MapWork, item: &str) -> Vec<(kento
 fn parts_now(doc: &Document, uid: &kentos_commands::EntityId) -> Option<[String; 4]> {
     let slot = doc.slot_of(kentos_domain::Uuid::from_bytes(uid.0))?;
     let entity = doc.get(slot)?;
-    Some(kentos_commands::object_parts(&serde_json::to_value(entity).ok()?))
+    Some(kentos_commands::object_parts(
+        &serde_json::to_value(entity).ok()?,
+    ))
 }
 
 /// The parts' digests of the objects `pairs` names, in its order (docs/adr/3280); none when one is not in the drawing.
-pub(crate) fn parts_of(doc: &Document, pairs: &[(kentos_commands::EntityId, String)]) -> Vec<[String; 4]> {
-    pairs.iter().map(|(uid, _)| parts_now(doc, uid)).collect::<Option<Vec<_>>>().unwrap_or_default()
+pub(crate) fn parts_of(
+    doc: &Document,
+    pairs: &[(kentos_commands::EntityId, String)],
+) -> Vec<[String; 4]> {
+    pairs
+        .iter()
+        .map(|(uid, _)| parts_now(doc, uid))
+        .collect::<Option<Vec<_>>>()
+        .unwrap_or_default()
 }
 
 /// An object's snapshot form now without its slot id (the value its digest is taken of); none when not in the drawing.
@@ -142,7 +194,10 @@ fn value_now(doc: &Document, uid: &kentos_commands::EntityId) -> Option<serde_js
 
 /// The values of the objects `pairs` names, in its order (docs/adr/3680): each the very text its object digest is the
 /// SHA-256 of; none when one is not in the drawing, or together they pass [`kentos_commands::MAX_APPROVED_VALUES_BYTES`].
-pub(crate) fn values_of(doc: &Document, pairs: &[(kentos_commands::EntityId, String)]) -> Vec<String> {
+pub(crate) fn values_of(
+    doc: &Document,
+    pairs: &[(kentos_commands::EntityId, String)],
+) -> Vec<String> {
     let Some(values) = pairs
         .iter()
         .map(|(uid, _)| value_now(doc, uid).and_then(|v| serde_json::to_string(&v).ok()))
@@ -151,20 +206,36 @@ pub(crate) fn values_of(doc: &Document, pairs: &[(kentos_commands::EntityId, Str
         return Vec::new();
     };
     let bytes: usize = values.iter().map(String::len).sum();
-    if bytes > kentos_commands::MAX_APPROVED_VALUES_BYTES { Vec::new() } else { values }
+    if bytes > kentos_commands::MAX_APPROVED_VALUES_BYTES {
+        Vec::new()
+    } else {
+        values
+    }
 }
 
 /// docs/adr/3680: the attributes (`attrs`) that differ between an object's value as approved and now, by name, each with
 /// its value then and now; and whether its attachments differ.
-fn attributes_changed(then: &serde_json::Value, now: &serde_json::Value) -> (Vec<kentos_commands::WorkChangedAttribute>, bool) {
+fn attributes_changed(
+    then: &serde_json::Value,
+    now: &serde_json::Value,
+) -> (Vec<kentos_commands::WorkChangedAttribute>, bool) {
     let empty = serde_json::Map::new();
-    let attrs = |v: &serde_json::Value| v.get("attrs").and_then(serde_json::Value::as_object).cloned().unwrap_or_else(|| empty.clone());
+    let attrs = |v: &serde_json::Value| {
+        v.get("attrs")
+            .and_then(serde_json::Value::as_object)
+            .cloned()
+            .unwrap_or_else(|| empty.clone())
+    };
     let (a, b) = (attrs(then), attrs(now));
     let names: std::collections::BTreeSet<&String> = a.keys().chain(b.keys()).collect();
     let changed = names
         .into_iter()
         .filter(|k| a.get(*k) != b.get(*k))
-        .map(|k| kentos_commands::WorkChangedAttribute { name: k.clone(), approved: a.get(k).cloned(), now: b.get(k).cloned() })
+        .map(|k| kentos_commands::WorkChangedAttribute {
+            name: k.clone(),
+            approved: a.get(k).cloned(),
+            now: b.get(k).cloned(),
+        })
         .collect();
     (changed, then.get("attachments") != now.get("attachments"))
 }
@@ -180,19 +251,32 @@ fn shift_of(
     limit: Option<f64>,
 ) -> Option<kentos_commands::WorkShift> {
     let then = crate::map_work_restore::approved_entity(approved)?;
-    let now = doc.slot_of(kentos_domain::Uuid::from_bytes(uid.0)).and_then(|s| doc.get(s))?;
+    let now = doc
+        .slot_of(kentos_domain::Uuid::from_bytes(uid.0))
+        .and_then(|s| doc.get(s))?;
     let (a, b) = (crate::geometry::shape(&then), crate::geometry::shape(now));
     let s = kentos_geometry_core::ops::shape_shift::shift(&a, &b);
     let n = |k: usize| u32::try_from(k).unwrap_or(u32::MAX);
-    let measure = s.largest.as_ref().map(|m| m.d).or(s.hausdorff.as_ref().map(|h| h.d));
+    let measure = s
+        .largest
+        .as_ref()
+        .map(|m| m.d)
+        .or(s.hausdorff.as_ref().map(|h| h.d));
     let beyond = limit.zip(measure).map(|(l, d)| d > l);
-    let over = limit.and_then(|l| kentos_geometry_core::ops::shape_shift::vertices_beyond(&a, &b, l)).map(n);
+    let over = limit
+        .and_then(|l| kentos_geometry_core::ops::shape_shift::vertices_beyond(&a, &b, l))
+        .map(n);
     Some(kentos_commands::WorkShift {
         beyond,
         over,
         paired: s.paired,
         vertices: [n(s.vertices[0]), n(s.vertices[1])],
-        largest: s.largest.map(|m| kentos_commands::WorkVertexMove { index: n(m.index), dx: m.dx, dy: m.dy, d: m.d }),
+        largest: s.largest.map(|m| kentos_commands::WorkVertexMove {
+            index: n(m.index),
+            dx: m.dx,
+            dy: m.dy,
+            d: m.d,
+        }),
         rms: s.rms,
         hausdorff: s.hausdorff.map(|h| kentos_commands::WorkFarthest {
             d: h.d,
@@ -221,7 +305,9 @@ pub(crate) fn changes_of(
     let with_parts = then_parts.len() == then.len() && !then.is_empty();
     let with_values = then_values.len() == then.len() && !then.is_empty();
     let value_then = |k: usize| -> Option<serde_json::Value> {
-        with_values.then(|| serde_json::from_str(&then_values[k]).ok()).flatten()
+        with_values
+            .then(|| serde_json::from_str(&then_values[k]).ok())
+            .flatten()
     };
     let mut counts = [0u32; 4];
     let mut objects: Vec<kentos_commands::WorkChangedObject> = Vec::new();
@@ -230,7 +316,10 @@ pub(crate) fn changes_of(
         if removed_objects.len() < kentos_commands::WORK_CHANGES_LISTED
             && let Some(approved) = value_then(k)
         {
-            removed_objects.push(kentos_commands::WorkRemovedObject { uid: kentos_commands::uuid_text(&then[k].0.0), approved });
+            removed_objects.push(kentos_commands::WorkRemovedObject {
+                uid: kentos_commands::uuid_text(&then[k].0.0),
+                approved,
+            });
         }
     };
     let note = |u: &kentos_commands::EntityId, uids: &mut Vec<String>| {
@@ -245,23 +334,35 @@ pub(crate) fn changes_of(
                     changed += 1;
                     note(&b.0, &mut uids);
                     if with_parts && let Some(now_parts) = parts_now(doc, &b.0) {
-                        let differ: Vec<usize> = (0..4).filter(|k| then_parts[i][*k] != now_parts[*k]).collect();
+                        let differ: Vec<usize> = (0..4)
+                            .filter(|k| then_parts[i][*k] != now_parts[*k])
+                            .collect();
                         for k in &differ {
                             counts[*k] += 1;
                         }
                         if objects.len() < kentos_commands::WORK_CHANGES_LISTED {
                             // docs/adr/3680: the attributes by name, their values then and now.
                             let then_value = value_then(i);
-                            let (attributes, attachments) = match (&then_value, value_now(doc, &b.0)) {
-                                (Some(t), Some(n)) => attributes_changed(t, &n),
-                                _ => (Vec::new(), false),
-                            };
+                            let (attributes, attachments) =
+                                match (&then_value, value_now(doc, &b.0)) {
+                                    (Some(t), Some(n)) => attributes_changed(t, &n),
+                                    _ => (Vec::new(), false),
+                                };
                             // docs/adr/4480: a changed geometry's object as approved; docs/adr/4880: how far it moved.
-                            let approved = if differ.contains(&0) { then_value } else { None };
-                            let shift = approved.as_ref().and_then(|a| shift_of(doc, a, &b.0, limit));
+                            let approved = if differ.contains(&0) {
+                                then_value
+                            } else {
+                                None
+                            };
+                            let shift = approved
+                                .as_ref()
+                                .and_then(|a| shift_of(doc, a, &b.0, limit));
                             objects.push(kentos_commands::WorkChangedObject {
                                 uid: kentos_commands::uuid_text(&b.0.0),
-                                parts: differ.iter().map(|k| kentos_commands::OBJECT_PARTS[*k].to_owned()).collect(),
+                                parts: differ
+                                    .iter()
+                                    .map(|k| kentos_commands::OBJECT_PARTS[*k].to_owned())
+                                    .collect(),
                                 attributes,
                                 attachments,
                                 approved,
@@ -299,10 +400,24 @@ pub(crate) fn changes_of(
     });
     // docs/adr/5280: of the listed objects, those beyond the limit.
     let beyond = limit.map(|_| {
-        u32::try_from(objects.iter().filter(|o| o.shift.as_ref().and_then(|s| s.beyond) == Some(true)).count())
-            .unwrap_or(u32::MAX)
+        u32::try_from(
+            objects
+                .iter()
+                .filter(|o| o.shift.as_ref().and_then(|s| s.beyond) == Some(true))
+                .count(),
+        )
+        .unwrap_or(u32::MAX)
     });
-    kentos_commands::WorkChanges { added, removed, changed, uids, parts, objects, removed_objects, beyond }
+    kentos_commands::WorkChanges {
+        added,
+        removed,
+        changed,
+        uids,
+        parts,
+        objects,
+        removed_objects,
+        beyond,
+    }
 }
 
 /// Each item's revision now, worked out once a read: an item with a file, its kept revision (or read deep, a changed
@@ -315,8 +430,17 @@ pub(crate) struct Revisions<'a> {
 }
 
 impl<'a> Revisions<'a> {
-    pub(crate) fn new(doc: &'a Document, work: &'a MapWork, files: HashMap<String, (F, Option<String>)>) -> Self {
-        Revisions { doc, work, files, contents: RefCell::new(HashMap::new()) }
+    pub(crate) fn new(
+        doc: &'a Document,
+        work: &'a MapWork,
+        files: HashMap<String, (F, Option<String>)>,
+    ) -> Self {
+        Revisions {
+            doc,
+            work,
+            files,
+            contents: RefCell::new(HashMap::new()),
+        }
     }
 
     /// The content revision of an item without a file, worked out once.
@@ -325,7 +449,9 @@ impl<'a> Revisions<'a> {
             return c.clone();
         }
         let c = content_revision(self.doc, self.work, item);
-        self.contents.borrow_mut().insert(item.to_owned(), c.clone());
+        self.contents
+            .borrow_mut()
+            .insert(item.to_owned(), c.clone());
         c
     }
 
@@ -354,7 +480,12 @@ impl<'a> Revisions<'a> {
 /// How many derivations are out of date by the items' revisions (their kept files' and their contents now).
 pub(crate) fn stale_count(doc: &Document, work: &MapWork) -> u32 {
     let revisions = Revisions::new(doc, work, HashMap::new());
-    count(work.derivations.iter().filter(|d| revisions.stale(d)).count())
+    count(
+        work.derivations
+            .iter()
+            .filter(|d| revisions.stale(d))
+            .count(),
+    )
 }
 
 fn count(n: usize) -> u32 {
@@ -362,22 +493,36 @@ fn count(n: usize) -> u32 {
 }
 
 fn item_name(work: &MapWork, id: &str) -> String {
-    work.item(id).map_or_else(|| id.to_owned(), |i| i.name.clone())
+    work.item(id)
+        .map_or_else(|| id.to_owned(), |i| i.name.clone())
 }
 
 /// The objects of out-of-date derivations whose layer `item` holds (an approved item's warning, approval's refusal).
-pub(crate) fn stale_objects_in(doc: &Document, work: &MapWork, item: &WorkItem, deep_files: bool) -> u32 {
-    let files = if deep_files { files(doc, work, true) } else { HashMap::new() };
+pub(crate) fn stale_objects_in(
+    doc: &Document,
+    work: &MapWork,
+    item: &WorkItem,
+    deep_files: bool,
+) -> u32 {
+    let files = if deep_files {
+        files(doc, work, true)
+    } else {
+        HashMap::new()
+    };
     stale_objects_by(doc, work, item, &Revisions::new(doc, work, files))
 }
 
 /// [`stale_objects_in`] by the revisions a read already worked out.
-fn stale_objects_by(doc: &Document, work: &MapWork, item: &WorkItem, revisions: &Revisions<'_>) -> u32 {
+fn stale_objects_by(
+    doc: &Document,
+    work: &MapWork,
+    item: &WorkItem,
+    revisions: &Revisions<'_>,
+) -> u32 {
     let mut n = 0usize;
     for d in work.derivations.iter().filter(|d| revisions.stale(d)) {
         for u in &d.uids {
-            let Some(entity) = doc.slot_of(Uuid::from_bytes(u.0)).and_then(|s| doc.get(s))
-            else {
+            let Some(entity) = doc.slot_of(Uuid::from_bytes(u.0)).and_then(|s| doc.get(s)) else {
                 continue;
             };
             if item_of_layer(doc, work, &entity.base().layer_id).is_some_and(|i| i.id == item.id) {
@@ -400,12 +545,13 @@ pub(crate) fn tree(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, 
         )));
     }
     // docs/adr/5280: the limit's value and source.
-    let limit = match &input.limit {
-        Some(l) => Some(kentos_commands::limit_metres(l).map_err(|(path, why)| {
-            Stop::failed(error(codes::INVALID_INPUT, why, Some(path)))
-        })?),
-        None => None,
-    };
+    let limit =
+        match &input.limit {
+            Some(l) => Some(kentos_commands::limit_metres(l).map_err(|(path, why)| {
+                Stop::failed(error(codes::INVALID_INPUT, why, Some(path)))
+            })?),
+            None => None,
+        };
     let metres = limit.as_ref().map(|l| l.metres);
     let empty = MapWork::default();
     let work = doc.map_work().unwrap_or(&empty);
@@ -414,8 +560,10 @@ pub(crate) fn tree(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, 
         None => None,
     };
     let looks = files_at(doc, work, deep, drawing);
-    let files: HashMap<String, (F, Option<String>)> =
-        looks.iter().map(|(id, l)| (id.clone(), (l.state, l.sha.clone()))).collect();
+    let files: HashMap<String, (F, Option<String>)> = looks
+        .iter()
+        .map(|(id, l)| (id.clone(), (l.state, l.sha.clone())))
+        .collect();
     let revisions = Revisions::new(doc, work, files);
     let held = layer_items(doc, work);
     let mut objects: HashMap<&str, usize> = HashMap::new();
@@ -503,7 +651,11 @@ pub(crate) fn tree(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, 
         }
         for l in &i.layers {
             if doc.layers().get(l).is_none() {
-                worse(S::Incomplete, format!("“{l}” katmanı çizimde yok."), &mut why);
+                worse(
+                    S::Incomplete,
+                    format!("“{l}” katmanı çizimde yok."),
+                    &mut why,
+                );
             }
         }
         if i.status == WorkStatus::Approved {
@@ -511,7 +663,9 @@ pub(crate) fn tree(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, 
             if n > 0 {
                 worse(
                     S::Stale,
-                    format!("Onaylı, ama katmanlarındaki {n} türetilmiş nesnenin kaynağı onaydan sonra değişti."),
+                    format!(
+                        "Onaylı, ama katmanlarındaki {n} türetilmiş nesnenin kaynağı onaydan sonra değişti."
+                    ),
                     &mut why,
                 );
             }
@@ -522,7 +676,11 @@ pub(crate) fn tree(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, 
         // An approval's stamp against the item's revision now (docs/adr/2080 §3); what changed, object by object, when
         // the approval kept its objects' digests (docs/adr/2880).
         let mut changes = None;
-        if let Some(stamp) = i.approved.as_ref().filter(|_| i.status == WorkStatus::Approved) {
+        if let Some(stamp) = i
+            .approved
+            .as_ref()
+            .filter(|_| i.status == WorkStatus::Approved)
+        {
             let now = revisions.kept(i);
             if now != *stamp {
                 if i.file.is_none() && !i.approved_objects.is_empty() {
@@ -535,7 +693,11 @@ pub(crate) fn tree(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, 
                         metres,
                     ));
                 }
-                let what = if i.file.is_some() { "dosyası" } else { "içeriği" };
+                let what = if i.file.is_some() {
+                    "dosyası"
+                } else {
+                    "içeriği"
+                };
                 worse(
                     S::Revised,
                     format!(
@@ -546,7 +708,10 @@ pub(crate) fn tree(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, 
                     &mut why,
                 );
                 // docs/adr/5280: how many moved beyond the limit; a measure, not a ruling.
-                if let (Some(l), Some(k)) = (&limit, changes.as_ref().and_then(|c| c.beyond).filter(|k| *k > 0)) {
+                if let (Some(l), Some(k)) = (
+                    &limit,
+                    changes.as_ref().and_then(|c| c.beyond).filter(|k| *k > 0),
+                ) {
                     why.push(format!(
                         "{k} nesne seçilen sınırın dışına kaydı: {} m ({}).",
                         format!("{}", l.metres).replace('.', ","),
@@ -579,7 +744,16 @@ pub(crate) fn tree(doc: &Document, input: &MapWorkQuery) -> Result<MapWorkTree, 
             why,
         });
     }
-    Ok(MapWorkTree { items, derivations, object, stale, problems, deep, limit, revision: doc.revision().to_string() })
+    Ok(MapWorkTree {
+        items,
+        derivations,
+        object,
+        stale,
+        problems,
+        deep,
+        limit,
+        revision: doc.revision().to_string(),
+    })
 }
 
 /// A revision's first 12 hex digits, as the panel shows it.
@@ -599,11 +773,17 @@ fn object_source(
     if !crate::checks::is_uid_text(uid) {
         return Err(Stop::failed(error(
             codes::INVALID_UID,
-            format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+            format!(
+                "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+            ),
             Some("uid".into()),
         )));
     }
-    let Some(entity) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)) else {
+    let Some(entity) = Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s))
+    else {
         return Err(Stop::failed(error(
             codes::ENTITY_NOT_FOUND,
             format!("“{uid}” kimlikli nesne çizimde yok."),
@@ -625,12 +805,20 @@ fn object_source(
     let revisions = match shared {
         Some(r) => r,
         None => {
-            let files = if deep { files(doc, work, true) } else { HashMap::new() };
+            let files = if deep {
+                files(doc, work, true)
+            } else {
+                HashMap::new()
+            };
             own = Revisions::new(doc, work, files);
             &own
         }
     };
-    if let Some(d) = work.derivations.iter().find(|d| d.uids.iter().any(|u| u.to_text() == uid)) {
+    if let Some(d) = work
+        .derivations
+        .iter()
+        .find(|d| d.uids.iter().any(|u| u.to_text() == uid))
+    {
         out.role = WorkObjectRole::Derived;
         out.derivation = Some(d.id.clone());
         out.source = Some(d.source.clone());
@@ -648,7 +836,10 @@ fn object_source(
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &MapWorkQuery) -> CommandResult<()> {
     match tree(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -656,7 +847,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &MapWorkQuery) -> CommandResul
 /// The answer; reads only.
 pub fn plan(cx: &ExecutionContext<'_>, input: &MapWorkQuery) -> CommandResult<MapWorkTree> {
     match tree(cx.doc, input) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -682,9 +876,13 @@ pub fn sources_of(doc: &Document, uids: &[String]) -> Vec<WorkObjectSource> {
     if doc.settings().cad_work != Some(kentos_commands::CadWork::Map) {
         return Vec::new();
     }
-    let Some(work) = doc.map_work() else { return Vec::new() };
+    let Some(work) = doc.map_work() else {
+        return Vec::new();
+    };
     let revisions = Revisions::new(doc, work, HashMap::new());
-    uids.iter().filter_map(|u| object_source(doc, work, u, false, Some(&revisions)).ok()).collect()
+    uids.iter()
+        .filter_map(|u| object_source(doc, work, u, false, Some(&revisions)).ok())
+        .collect()
 }
 
 /// An object's role and the item its layer belongs to, nothing worked out (the ribbon asks every frame); none outside

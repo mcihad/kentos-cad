@@ -71,7 +71,12 @@ impl OpenReport {
         let opened = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| u64::try_from(d.as_millis()).unwrap_or(0));
-        Self { file, opened, items, chosen }
+        Self {
+            file,
+            opened,
+            items,
+            chosen,
+        }
     }
 
     /// Whether anything was left out or changed: the window comes up by itself.
@@ -160,7 +165,9 @@ impl App {
                 if left > 0 {
                     lines.push(words::text_line(
                         Kind::Error,
-                        format!("{left} öğe çizime alınmadı: KCAD olarak kaydedilen çizimde bulunmaz."),
+                        format!(
+                            "{left} öğe çizime alınmadı: KCAD olarak kaydedilen çizimde bulunmaz."
+                        ),
                     ));
                 }
                 if changed > 0 {
@@ -172,7 +179,10 @@ impl App {
                     ));
                 }
                 if left == 0 && changed == 0 {
-                    lines.push(words::text_line(Kind::Ok, "Bütün öğeler olduğu gibi alındı."));
+                    lines.push(words::text_line(
+                        Kind::Ok,
+                        "Bütün öğeler olduğu gibi alındı.",
+                    ));
                 }
                 for (fate, item) in &r.items {
                     rows.push(vec![
@@ -183,17 +193,27 @@ impl App {
                     ]);
                 }
             }
-            None => lines.push(words::text_line(Kind::Info, "Açık çizimin açılış raporu yok.")),
+            None => lines.push(words::text_line(
+                Kind::Info,
+                "Açık çizimin açılış raporu yok.",
+            )),
         }
         // The reason takes what the window leaves (UR2-024: cut with 500 px free beside it); the chosen row's item and
         // reason are written whole under the table, selectable.
-        let chosen = self.open_report().and_then(|r| r.chosen.and_then(|i| r.items.get(i).map(|(_, item)| (i, item))));
+        let chosen = self.open_report().and_then(|r| {
+            r.chosen
+                .and_then(|i| r.items.get(i).map(|(_, item)| (i, item)))
+        });
         let table = sheet_chosen(
             vec![
                 col("Durum", 100.0),
                 col("Öğe", 190.0),
                 num("Adet", 60.0),
-                Col { title: "Açıklama", width: None, number: false },
+                Col {
+                    title: "Açıklama",
+                    width: None,
+                    number: false,
+                },
             ],
             rows,
             "Raporlanacak bir şey yok.",
@@ -201,11 +221,15 @@ impl App {
             chosen.map(|(i, _)| i),
             |i| msg(Event::Choose(i)),
         );
-        let mut body = Column::new().spacing(12).push(words::summary(lines)).push(table);
+        let mut body = Column::new()
+            .spacing(12)
+            .push(words::summary(lines))
+            .push(table);
         if let Some((_, item)) = chosen {
             body = body.push(
                 iced::widget::row![
-                    kentos_ui::label::body(format!("{}: {}", item.what, item.reason)).width(iced::Fill),
+                    kentos_ui::label::body(format!("{}: {}", item.what, item.reason))
+                        .width(iced::Fill),
                     words::ghost("Kopyala", Some(msg(Event::Copy))),
                 ]
                 .spacing(12)
@@ -219,7 +243,10 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn open_report_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn open_report_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),

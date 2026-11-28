@@ -259,7 +259,10 @@ impl format::Sink for Emitter {
                 let at = e.coords.first().filter(|c| {
                     c.x.is_finite() && c.y.is_finite() && c.x.abs() <= WORLD && c.y.abs() <= WORLD
                 });
-                let entry = self.skipped.entry((kind_words(e.kind), why)).or_insert((0, None));
+                let entry = self
+                    .skipped
+                    .entry((kind_words(e.kind), why))
+                    .or_insert((0, None));
                 entry.0 += 1;
                 if entry.1.is_none() {
                     entry.1 = at.map(|c| Vec2 { x: c.x, y: c.y });
@@ -931,7 +934,11 @@ impl Emitter {
         for (&(what, why), &(n, at)) in &self.skipped {
             // `+ 0.0` writes a negative zero as 0; the file's easting is Y, its northing X.
             let reason = match at {
-                Some(at) => format!("{why}; ilki Y {:.0}, X {:.0} yakınında", at.x + 0.0, at.y + 0.0),
+                Some(at) => format!(
+                    "{why}; ilki Y {:.0}, X {:.0} yakınında",
+                    at.x + 0.0,
+                    at.y + 0.0
+                ),
                 None => why.to_owned(),
             };
             self.report.skip_n(what, &reason, 0, n);
@@ -1367,7 +1374,10 @@ const LEAST_PARCELS: usize = 10;
 /// Whether a label is a parcel's `ada/parsel`: the layers whose areas mostly carry one are the cadastre's. A plan's
 /// areas carry labels too (`70`, `İRT_A952`, `OA_2_1`), and Netcad writes none of them on the plan.
 fn block_and_parcel(label: &str) -> bool {
-    label.trim().split_once('/').is_some_and(|(ada, _)| !ada.is_empty() && ada.chars().all(|c| c.is_ascii_digit()))
+    label
+        .trim()
+        .split_once('/')
+        .is_some_and(|(ada, _)| !ada.is_empty() && ada.chars().all(|c| c.is_ascii_digit()))
         && parcel_number(label).is_some()
 }
 
@@ -1399,7 +1409,10 @@ fn area_centroid(pts: &[Vec2]) -> Option<Vec2> {
         cx += (px + qx) * c;
         cy += (py + qy) * c;
     }
-    (a.abs() > 1e-12 && a.is_finite()).then(|| Vec2 { x: o.x + cx / (3.0 * a), y: o.y + cy / (3.0 * a) })
+    (a.abs() > 1e-12 && a.is_finite()).then(|| Vec2 {
+        x: o.x + cx / (3.0 * a),
+        y: o.y + cy / (3.0 * a),
+    })
 }
 
 /// Whether `p` is inside the ring (even-odd).
@@ -1444,13 +1457,22 @@ fn parcel_numbers(entities: &[Entity]) -> (Vec<Entity>, usize, usize) {
         let entry = layers.entry(p.base.layer_id.as_str()).or_default();
         entry.1 += usize::from(label.is_some());
         entry.2 += usize::from(label.is_some_and(|l| block_and_parcel(l)));
-        let bounds = p.pts.iter().fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, q| {
-            [b[0].min(q.x), b[1].min(q.y), b[2].max(q.x), b[3].max(q.y)]
-        });
+        let bounds = p
+            .pts
+            .iter()
+            .fold([f64::MAX, f64::MAX, f64::MIN, f64::MIN], |b, q| {
+                [b[0].min(q.x), b[1].min(q.y), b[2].max(q.x), b[3].max(q.y)]
+            });
         let parcel = label.and_then(|l| parcel_number(l).map(|n| (l.trim(), n)));
-        entry.0.push(Area { ring: &p.pts, bounds, parcel, shown: false });
+        entry.0.push(Area {
+            ring: &p.pts,
+            bounds,
+            parcel,
+            shown: false,
+        });
     }
-    layers.retain(|_, (_, labelled, slashed)| *slashed >= LEAST_PARCELS && 2 * *slashed >= *labelled);
+    layers
+        .retain(|_, (_, labelled, slashed)| *slashed >= LEAST_PARCELS && 2 * *slashed >= *labelled);
     if layers.is_empty() {
         return (Vec::new(), 0, 0);
     }
@@ -1469,16 +1491,27 @@ fn parcel_numbers(entities: &[Entity]) -> (Vec<Entity>, usize, usize) {
         }
     }
     let inside = |a: &Area<'_>, p: Vec2| {
-        (a.bounds[0]..=a.bounds[2]).contains(&p.x) && (a.bounds[1]..=a.bounds[3]).contains(&p.y) && in_ring(a.ring, p)
+        (a.bounds[0]..=a.bounds[2]).contains(&p.x)
+            && (a.bounds[1]..=a.bounds[3]).contains(&p.y)
+            && in_ring(a.ring, p)
     };
     for e in entities {
         let Entity::Text(t) = e else { continue };
         let layer = t.base.layer_id.as_str();
-        let (Some((areas, _, _)), Some(grid)) = (layers.get_mut(layer), grids.get(layer)) else { continue };
+        let (Some((areas, _, _)), Some(grid)) = (layers.get_mut(layer), grids.get(layer)) else {
+            continue;
+        };
         let text = t.text.trim();
-        for &i in grid.get(&(cell(t.p.x), cell(t.p.y))).map_or(&[][..], Vec::as_slice) {
+        for &i in grid
+            .get(&(cell(t.p.x), cell(t.p.y)))
+            .map_or(&[][..], Vec::as_slice)
+        {
             let a = &areas[i];
-            if !a.shown && a.parcel.is_some_and(|(label, number)| text == number || text == label) && inside(a, t.p) {
+            if !a.shown
+                && a.parcel
+                    .is_some_and(|(label, number)| text == number || text == label)
+                && inside(a, t.p)
+            {
                 areas[i].shown = true;
             }
         }
@@ -1488,12 +1521,16 @@ fn parcel_numbers(entities: &[Entity]) -> (Vec<Entity>, usize, usize) {
     for (layer, (areas, _, _)) in &layers {
         let grid = &grids[layer];
         for (i, a) in areas.iter().enumerate() {
-            let Some((_, number)) = a.parcel else { continue };
+            let Some((_, number)) = a.parcel else {
+                continue;
+            };
             if a.shown {
                 shown += 1;
                 continue;
             }
-            let Some(at) = area_centroid(a.ring) else { continue };
+            let Some(at) = area_centroid(a.ring) else {
+                continue;
+            };
             let alone = grid
                 .get(&(cell(at.x), cell(at.y)))
                 .is_some_and(|near| near.iter().filter(|&&j| inside(&areas[j], at)).eq([&i]));
@@ -1601,7 +1638,10 @@ pub fn read(
     let (marked, unmarked) = std::mem::take(&mut em.legend);
     if marked > 0 || !unmarked.is_empty() {
         let left: u32 = unmarked.values().sum();
-        let codes: Vec<String> = unmarked.iter().map(|(code, n)| format!("{code} ({n})")).collect();
+        let codes: Vec<String> = unmarked
+            .iter()
+            .map(|(code, n)| format!("{code} ({n})"))
+            .collect();
         report.about(
             "Plan sembolü",
             &format!(
@@ -1646,7 +1686,9 @@ mod tests {
             id: 0,
             layer_id: layer.into(),
             color: None,
-            attrs: label.map(|l| BTreeMap::from([("Etiket".to_owned(), l.to_owned())])).unwrap_or_default(),
+            attrs: label
+                .map(|l| BTreeMap::from([("Etiket".to_owned(), l.to_owned())]))
+                .unwrap_or_default(),
             label: None,
             symbol: None,
             line_weight: None,
@@ -1657,7 +1699,8 @@ mod tests {
 
     /// A 20 m square parcel at `x`, labelled.
     fn parcel(layer: &str, x: f64, label: &str) -> Entity {
-        let pts = [(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)].map(|(a, b)| Vec2 { x: x + a, y: b });
+        let pts = [(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)]
+            .map(|(a, b)| Vec2 { x: x + a, y: b });
         Entity::Polygon(PathEntity {
             space_separator: None,
             ms: None,
@@ -1695,38 +1738,61 @@ mod tests {
     /// imar planı with a centroid mark (docs/adr/9218); a trade area's level is read by its mark.
     #[test]
     fn the_legend_marks_are_the_system_librarys_area_symbols() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../native/style/assets/system-library.kstil");
-        let library: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(path).expect("the library")).expect("json");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../native/style/assets/system-library.kstil");
+        let library: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).expect("the library"))
+                .expect("json");
         let items = library["items"].as_array().expect("items");
         let mut found = 0;
         for n in 0..=200 {
             let code = format!("S{n}");
-            let Some((id, read)) = legend_mark(&code) else { continue };
+            let Some((id, read)) = legend_mark(&code) else {
+                continue;
+            };
             found += 1;
-            let item = items.iter().find(|i| i["id"] == id).unwrap_or_else(|| panic!("{code}: {id} is not in the library"));
+            let item = items
+                .iter()
+                .find(|i| i["id"] == id)
+                .unwrap_or_else(|| panic!("{code}: {id} is not in the library"));
             let layers = item["symbol"]["layers"].as_array().expect("layers");
             assert_eq!(item["symbol"]["type"], "fill", "{code}");
-            assert!(layers.iter().any(|l| l["type"] == "centroidMarker"), "{code}: {id} has a centroid mark");
+            assert!(
+                layers.iter().any(|l| l["type"] == "centroidMarker"),
+                "{code}: {id} has a centroid mark"
+            );
             if let Some((key, _)) = read {
-                assert!(item.to_string().contains(&format!("[{key}]")), "{code}: its mark reads {key}");
+                assert!(
+                    item.to_string().contains(&format!("[{key}]")),
+                    "{code}: its mark reads {key}"
+                );
             }
         }
         assert_eq!(found, 47);
         // The overlays' area and line symbols, by their numbers in Netcad's library (docs/adr/9219).
         let kind = |id: &str| {
-            items.iter().find(|i| i["id"] == id).map(|i| i["symbol"]["type"].as_str().unwrap_or("").to_owned())
+            items
+                .iter()
+                .find(|i| i["id"] == id)
+                .map(|i| i["symbol"]["type"].as_str().unwrap_or("").to_owned())
         };
         let (mut areas, mut lines) = (0, 0);
         for n in 0..=255u8 {
             if let Some(id) = overlay_area(n) {
                 areas += 1;
                 assert_eq!(kind(id).as_deref(), Some("fill"), "{n}: {id}");
-                assert!(legend_mark(&format!("S{n}")).is_none(), "{n}: an overlay's number is no plan area's mark");
+                assert!(
+                    legend_mark(&format!("S{n}")).is_none(),
+                    "{n}: an overlay's number is no plan area's mark"
+                );
             }
             if let Some(id) = overlay_area_of_line(n) {
                 areas += 1;
                 assert_eq!(kind(id).as_deref(), Some("fill"), "{n}: {id}");
-                assert!(overlay_line(n).is_none(), "{n}: a line type is an area's or a line's, not both");
+                assert!(
+                    overlay_line(n).is_none(),
+                    "{n}: a line type is an area's or a line's, not both"
+                );
             }
             if let Some(id) = overlay_line(n) {
                 lines += 1;
@@ -1734,10 +1800,24 @@ mod tests {
             }
         }
         assert_eq!((areas, lines), (13, 11));
-        assert_eq!(legend_mark("S6"), Some(("mpyy.uip.calisma.ticaret-alani", Some(("Kademe", "1")))));
-        assert_eq!(legend_mark("S75"), Some(("mpyy.uip.egitim.anaokulu-alani", None)));
-        assert_eq!(legend_mark("S101"), None, "Netcad draws a park's mark empty");
-        assert_eq!(legend_mark("S180"), None, "a private institution's Ö mark has no row in the legend");
+        assert_eq!(
+            legend_mark("S6"),
+            Some(("mpyy.uip.calisma.ticaret-alani", Some(("Kademe", "1"))))
+        );
+        assert_eq!(
+            legend_mark("S75"),
+            Some(("mpyy.uip.egitim.anaokulu-alani", None))
+        );
+        assert_eq!(
+            legend_mark("S101"),
+            None,
+            "Netcad draws a park's mark empty"
+        );
+        assert_eq!(
+            legend_mark("S180"),
+            None,
+            "a private institution's Ö mark has no row in the legend"
+        );
     }
 
     #[test]
@@ -1749,7 +1829,9 @@ mod tests {
         assert_eq!(parcel_number("KORUNMA"), None);
         assert_eq!(parcel_number("A/5"), None, "a block is a number");
         assert_eq!(parcel_number("12/"), None);
-        assert!(block_and_parcel("1588/10") && !block_and_parcel("6587") && !block_and_parcel("OA_2_1"));
+        assert!(
+            block_and_parcel("1588/10") && !block_and_parcel("6587") && !block_and_parcel("OA_2_1")
+        );
     }
 
     /// Of twelve parcels, the eight a text of their layer numbers keep only it; the four others get their number at
@@ -1762,19 +1844,36 @@ mod tests {
             all.push(parcel("KADASTRO", x, &format!("101/{i}")));
             if i % 3 != 0 {
                 // The number inside, as Netcad's own texts are; one of them the whole label.
-                all.push(text("KADASTRO", x + 8.0, 9.0, &if i == 1 { "101/1".to_owned() } else { i.to_string() }));
+                all.push(text(
+                    "KADASTRO",
+                    x + 8.0,
+                    9.0,
+                    &if i == 1 {
+                        "101/1".to_owned()
+                    } else {
+                        i.to_string()
+                    },
+                ));
             }
         }
         // The number of another parcel inside this one does not number it; nor does a text of another layer.
         all.push(text("KADASTRO", 3.0 * 30.0 + 5.0, 5.0, "7"));
         all.push(text("YAZI", 6.0 * 30.0 + 5.0, 5.0, "6"));
         for i in 0..5 {
-            all.push(parcel("AZ", 1000.0 + f64::from(i) * 30.0, &format!("5/{i}")));
+            all.push(parcel(
+                "AZ",
+                1000.0 + f64::from(i) * 30.0,
+                &format!("5/{i}"),
+            ));
         }
         for i in 0..12 {
             all.push(parcel("PLAN", 2000.0 + f64::from(i) * 30.0, "KONUT"));
             // A plan's areas numbered without a block: Netcad writes none of them.
-            all.push(parcel("PL_KONUT", 3000.0 + f64::from(i) * 30.0, &(70 + i).to_string()));
+            all.push(parcel(
+                "PL_KONUT",
+                3000.0 + f64::from(i) * 30.0,
+                &(70 + i).to_string(),
+            ));
         }
         // A parcel under another (its centroid in both): not written, whatever the label says.
         all.push(parcel("KADASTRO", 400.0, "101/40"));
@@ -1785,13 +1884,24 @@ mod tests {
             .iter()
             .map(|e| match e {
                 Entity::Text(t) => {
-                    assert_eq!((t.height, t.align, t.base.layer_id.as_str()), (3.0, Some(TextAlign::MiddleCenter), "KADASTRO"));
+                    assert_eq!(
+                        (t.height, t.align, t.base.layer_id.as_str()),
+                        (3.0, Some(TextAlign::MiddleCenter), "KADASTRO")
+                    );
                     (t.text.as_str(), t.p.x, t.p.y)
                 }
                 _ => panic!("a text"),
             })
             .collect();
-        assert_eq!(written, [("0", 10.0, 10.0), ("3", 100.0, 10.0), ("6", 190.0, 10.0), ("9", 280.0, 10.0)]);
+        assert_eq!(
+            written,
+            [
+                ("0", 10.0, 10.0),
+                ("3", 100.0, 10.0),
+                ("6", 190.0, 10.0),
+                ("9", 280.0, 10.0)
+            ]
+        );
     }
 
     #[test]
@@ -1834,7 +1944,10 @@ mod tests {
             end_angle: a1,
             ..record(Kind::Arc, &[(x, y, 0.0)])
         };
-        let circle = |x: f64, y: f64, r: f64| format::Entity { radius: r, ..record(Kind::Circle, &[(x, y, 0.0)]) };
+        let circle = |x: f64, y: f64, r: f64| format::Entity {
+            radius: r,
+            ..record(Kind::Circle, &[(x, y, 0.0)])
+        };
         let pi = std::f64::consts::PI;
         for e in [
             // A whole turn short of a hair, in radians: its ends meet.
@@ -1855,12 +1968,23 @@ mod tests {
         );
         em.tally(&Header::default(), &[]);
         let report = std::mem::take(&mut em.report).import();
-        let skipped: Vec<(&str, u32, &str)> =
-            report.skipped.iter().map(|i| (i.what.as_str(), i.count, i.reason.as_str())).collect();
+        let skipped: Vec<(&str, u32, &str)> = report
+            .skipped
+            .iter()
+            .map(|i| (i.what.as_str(), i.count, i.reason.as_str()))
+            .collect();
         for want in [
             ("Yay", 1, "açıklığı boş; ilki Y 300, X 400 yakınında"),
-            ("Yay", 1, "yarıçapı sıfır ya da eksi; ilki Y 500, X 600 yakınında"),
-            ("Daire", 2, "yarıçapı sayı değil; ilki Y 700, X 800 yakınında"),
+            (
+                "Yay",
+                1,
+                "yarıçapı sıfır ya da eksi; ilki Y 500, X 600 yakınında",
+            ),
+            (
+                "Daire",
+                2,
+                "yarıçapı sayı değil; ilki Y 700, X 800 yakınında",
+            ),
         ] {
             assert!(skipped.contains(&want), "{want:?} in {skipped:?}");
         }
@@ -1959,8 +2083,8 @@ mod tests {
         assert_eq!((zs(8), zs(9), zs(10)), (None, None, None));
         // The heights are counted where every import says it: as a fact of the file.
         let mut result = ImportResult {
-        layouts: Vec::new(),
-        source_handles: Vec::new(),
+            layouts: Vec::new(),
+            source_handles: Vec::new(),
             line_type_scale: None,
             line_types: Vec::new(),
             entities: out.clone(),

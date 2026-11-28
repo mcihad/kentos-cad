@@ -17,8 +17,8 @@
 //! a rule decides only what the form shows and asks.
 
 mod child_actions;
-mod entry_writes;
 pub mod compare;
+mod entry_writes;
 pub mod field_refs;
 mod generate;
 pub mod layer_rules;
@@ -42,13 +42,13 @@ pub use entry_writes::{EntryRefusal, entry_write_refusal};
 pub use generate::{generate, item_id_of, widget_of};
 pub use layer_rules::LayerRules;
 pub use lookup::{OtherLayer, PickMiss, World, WorldRelation, labels_of};
-pub use relatives::{named_relations, related_needs};
 pub use object::{kind_label, object_of};
 pub use preflight::{preflight, preflight_in, widget_fits};
 pub use publish_check::{PublishKind, blocks_publishing, publish_blockers, publish_words};
 pub use record::{
     Attached, Attrs, Object, answering_with, calc_schema, form_schema_in, schema_in, schema_of,
 };
+pub use relatives::{named_relations, related_needs};
 pub use requirements::{requirements, unsupported};
 pub use session::{
     CHOICE_CODE, CHOICE_LABEL, HOST_ONLY, Left, MOMENT, Moment, Prepared, added_key,

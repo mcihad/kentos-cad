@@ -22,8 +22,9 @@ use kentos_ui::widget::{Form, ListDetails, Menu, MenuButton};
 use kentos_ui::{label, style};
 
 use super::{
-    ADD, CANCEL, Cell, DOWN, Event, FIELDS_TITLE, FROM_DATA, FieldRow, MIGRATE, REFRESH, REMOVE, RULES, SAVE, UP,
-    Window, cell_id, column_said, constraints_said, msg, problem_of, renames_of, unique_in_table,
+    ADD, CANCEL, Cell, DOWN, Event, FIELDS_TITLE, FROM_DATA, FieldRow, MIGRATE, REFRESH, REMOVE,
+    RULES, SAVE, UP, Window, cell_id, column_said, constraints_said, msg, problem_of, renames_of,
+    unique_in_table,
 };
 use crate::app::{App, Message};
 use crate::exchange::words::{self, Kind};
@@ -48,7 +49,10 @@ fn sized(kind: LayerFieldKind) -> Option<&'static str> {
 fn listed(kind: LayerFieldKind) -> bool {
     matches!(
         kind,
-        LayerFieldKind::Text | LayerFieldKind::Integer | LayerFieldKind::BigInt | LayerFieldKind::Decimal
+        LayerFieldKind::Text
+            | LayerFieldKind::Integer
+            | LayerFieldKind::BigInt
+            | LayerFieldKind::Decimal
     )
 }
 
@@ -65,16 +69,22 @@ impl App {
                 "GeoPackage tablosu “{}”: alanlar tablonun sütunlarıdır.",
                 d.table
             ),
-            Some(d) => format!("Veritabanı tablosu “{}”: alanlar tablonun sütunlarıdır.", d.table),
+            Some(d) => format!(
+                "Veritabanı tablosu “{}”: alanlar tablonun sütunlarıdır.",
+                d.table
+            ),
             None => "Alanlar katmanın nesnelerinin öznitelikleridir.".to_owned(),
         };
         let more = {
             let data = data_layer;
             MenuButton::new(
                 container(
-                    row![label::body("Diğer"), icon(Icon::ChevronDown).size(10.0).tone(Tone::Muted)]
-                        .spacing(4)
-                        .align_y(Center),
+                    row![
+                        label::body("Diğer"),
+                        icon(Icon::ChevronDown).size(10.0).tone(Tone::Muted)
+                    ]
+                    .spacing(4)
+                    .align_y(Center),
                 )
                 .padding(kentos_ui::theme::metrics::action()),
                 move || {
@@ -118,7 +128,10 @@ impl App {
             .push(column![head, body].spacing(12))
             .status(fields_status(w))
             .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
-            .action(words::primary(SAVE, (problem_of(&w.rows).is_none() && w.changed()).then(|| msg(Event::Save))))
+            .action(words::primary(
+                SAVE,
+                (problem_of(&w.rows).is_none() && w.changed()).then(|| msg(Event::Save)),
+            ))
             .width(WIDTH)
             .modal(msg(Event::Cancel));
         match &w.choices {
@@ -136,14 +149,22 @@ impl App {
         }
         let mut list = Column::new().spacing(1).padding([4, 4]);
         for (i, r) in w.rows.iter().enumerate() {
-            let name = if r.name.trim().is_empty() { "(adsız)".to_owned() } else { r.name.clone() };
+            let name = if r.name.trim().is_empty() {
+                "(adsız)".to_owned()
+            } else {
+                r.name.clone()
+            };
             let mut names = column![label::body(name)].spacing(1);
             if !r.alias.trim().is_empty() {
                 names = names.push(label::caption(r.alias.clone()).style(style::text::muted));
             }
             let mut marks = row![].spacing(6).align_y(Center);
             if r.from.is_none() {
-                marks = marks.push(container(label::caption("yeni")).padding([0, 6]).style(style::container::badge));
+                marks = marks.push(
+                    container(label::caption("yeni"))
+                        .padding([0, 6])
+                        .style(style::container::badge),
+                );
             } else if r.from.as_deref() != Some(r.name.as_str()) {
                 marks = marks.push(label::caption("ad değişiyor").style(style::text::warning));
             }
@@ -155,9 +176,12 @@ impl App {
             }
             let line = row![
                 names.width(Fill),
-                column![label::caption(r.kind.label()).style(style::text::muted), marks]
-                    .spacing(2)
-                    .align_x(iced::Alignment::End),
+                column![
+                    label::caption(r.kind.label()).style(style::text::muted),
+                    marks
+                ]
+                .spacing(2)
+                .align_x(iced::Alignment::End),
             ]
             .spacing(8)
             .align_y(Center);
@@ -186,7 +210,10 @@ impl App {
             return space().into();
         };
         let domains = &doc.model.settings().domains;
-        let linked = r.domain.as_ref().and_then(|id| domains.iter().find(|d| d.id == *id));
+        let linked = r
+            .domain
+            .as_ref()
+            .and_then(|id| domains.iter().find(|d| d.id == *id));
         let input = |cell: Cell, value: &str, placeholder: &'static str| -> Element<'a, Message> {
             kentos_ui::widget::focus_watch::focus_watch(
                 kentos_ui::widget::text_field(placeholder, value)
@@ -196,15 +223,25 @@ impl App {
             .on_focus(move |on| msg(Event::Focused(i, on)))
             .into()
         };
-        let check = |on: bool, words: &'static str, then: Option<Message>| words::check(on, words, then);
-        let short = |e: Element<'a, Message>, width: f32| container(e).width(Length::Fixed(typography::scaled(width)));
+        let check =
+            |on: bool, words: &'static str, then: Option<Message>| words::check(on, words, then);
+        let short = |e: Element<'a, Message>, width: f32| {
+            container(e).width(Length::Fixed(typography::scaled(width)))
+        };
         let mut form = Form::new().label_width(LABELS).section("Genel");
-        form = form.field("Ad", input(Cell::Name, &r.name, "Ad")).required();
+        form = form
+            .field("Ad", input(Cell::Name, &r.name, "Ad"))
+            .required();
         if let Some(from) = r.from.as_deref().filter(|f| *f != r.name) {
-            form = form.warning(Some(format!("Önceki adı “{from}”: değerleri kaydedince yeni adla taşınır.")));
+            form = form.warning(Some(format!(
+                "Önceki adı “{from}”: değerleri kaydedince yeni adla taşınır."
+            )));
         }
         form = form
-            .field("Takma ad", input(Cell::Alias, &r.alias, "Tablo ve formda görünen ad"))
+            .field(
+                "Takma ad",
+                input(Cell::Alias, &r.alias, "Tablo ve formda görünen ad"),
+            )
             .help("Tablonun başlığında, formda ve Öznitelikler'de görünür.")
             .field(
                 "Tür",
@@ -224,7 +261,12 @@ impl App {
         if r.kind.is_number() {
             form = form.field(
                 "Birim",
-                short(kentos_ui::widget::text_field("m², kg …", &r.unit).on_input(|t| msg(Event::Unit(t))).into(), 120.0),
+                short(
+                    kentos_ui::widget::text_field("m², kg …", &r.unit)
+                        .on_input(|t| msg(Event::Unit(t)))
+                        .into(),
+                    120.0,
+                ),
             );
         }
         // Değerler: what a value must be.
@@ -233,7 +275,11 @@ impl App {
                 kentos_ui::widget::tip(
                     row![
                         check_box(
-                            if r.required { Check::Checked } else { Check::Unchecked },
+                            if r.required {
+                                Check::Checked
+                            } else {
+                                Check::Unchecked
+                            },
                             Some(msg(Event::Required(i, !r.required))),
                         ),
                         label::body("Zorunlu"),
@@ -243,49 +289,90 @@ impl App {
                     kentos_ui::widget::Tip::new("Zorunlu").body("Değeri boş bir kayıt yazılmaz."),
                     iced::widget::tooltip::Position::Top,
                 ),
-                check(r.unique, "Tekil", (r.kind != LayerFieldKind::Boolean).then(|| msg(Event::Unique(!r.unique)))),
+                check(
+                    r.unique,
+                    "Tekil",
+                    (r.kind != LayerFieldKind::Boolean).then(|| msg(Event::Unique(!r.unique)))
+                ),
             ]
             .spacing(20)
             .align_y(Center),
         );
-        form = form.field("Varsayılan", short(input(Cell::Default, &r.default, "Yeni kayda yazılan değer"), 260.0));
+        form = form.field(
+            "Varsayılan",
+            short(
+                input(Cell::Default, &r.default, "Yeni kayda yazılan değer"),
+                260.0,
+            ),
+        );
         let ranged = (r.kind.is_number() || r.kind.is_temporal()) && r.domain.is_none();
         if ranged {
             let end = |cell: Cell, value: &str, out: bool, then: fn(bool) -> Event| {
                 row![
                     short(input(cell, value, ""), 120.0),
-                    check(out, "hariç", (!value.trim().is_empty()).then(|| msg(then(!out)))),
+                    check(
+                        out,
+                        "hariç",
+                        (!value.trim().is_empty()).then(|| msg(then(!out)))
+                    ),
                 ]
                 .spacing(10)
                 .align_y(Center)
             };
             form = form
-                .field("En az", end(Cell::Min, &r.min, r.min_exclusive, Event::MinExclusive))
-                .field("En çok", end(Cell::Max, &r.max, r.max_exclusive, Event::MaxExclusive));
+                .field(
+                    "En az",
+                    end(Cell::Min, &r.min, r.min_exclusive, Event::MinExclusive),
+                )
+                .field(
+                    "En çok",
+                    end(Cell::Max, &r.max, r.max_exclusive, Event::MaxExclusive),
+                );
         }
         if listed(r.kind) {
             let (words_now, summary) = match (linked, &r.values) {
-                (Some(d), _) => (format!("Projenin listesi: {}", d.name), "Kodları Değer listeleri penceresindedir.".to_owned()),
+                (Some(d), _) => (
+                    format!("Projenin listesi: {}", d.name),
+                    "Kodları Değer listeleri penceresindedir.".to_owned(),
+                ),
                 (None, Some(v)) if !v.is_empty() => {
-                    let shown: Vec<String> = v.iter().take(4).map(|c| format!("{} ({})", c.label, c.code)).collect();
-                    let more = if v.len() > 4 { format!(" ve {} değer daha", v.len() - 4) } else { String::new() };
-                    (format!("{} değer", v.len()), format!("{}{more}.", shown.join(", ")))
+                    let shown: Vec<String> = v
+                        .iter()
+                        .take(4)
+                        .map(|c| format!("{} ({})", c.label, c.code))
+                        .collect();
+                    let more = if v.len() > 4 {
+                        format!(" ve {} değer daha", v.len() - 4)
+                    } else {
+                        String::new()
+                    };
+                    (
+                        format!("{} değer", v.len()),
+                        format!("{}{more}.", shown.join(", ")),
+                    )
                 }
-                _ => ("Liste yok".to_owned(), "Bir liste verilirse kayda kod yazılır, tabloda ve formda etiketi görünür.".to_owned()),
+                _ => (
+                    "Liste yok".to_owned(),
+                    "Bir liste verilirse kayda kod yazılır, tabloda ve formda etiketi görünür."
+                        .to_owned(),
+                ),
             };
             form = form
                 .field(
                     "Değer listesi",
                     row![
                         label::body(words_now),
-                        button(label::body(if r.values.as_ref().is_some_and(|v| !v.is_empty()) || linked.is_some() {
-                            "Düzenle…"
-                        } else {
-                            "Liste ekle…"
-                        }))
-                            .style(style::button::secondary)
-                            .padding(kentos_ui::theme::metrics::action_small())
-                            .on_press(msg(Event::OpenList(i))),
+                        button(label::body(
+                            if r.values.as_ref().is_some_and(|v| !v.is_empty()) || linked.is_some()
+                            {
+                                "Düzenle…"
+                            } else {
+                                "Liste ekle…"
+                            }
+                        ))
+                        .style(style::button::secondary)
+                        .padding(kentos_ui::theme::metrics::action_small())
+                        .on_press(msg(Event::OpenList(i))),
                     ]
                     .spacing(12)
                     .align_y(Center),
@@ -373,22 +460,58 @@ impl App {
             .iter()
             .find(|s| s.layer == w.layer)
             .filter(|s| !s.checks.is_empty() || s.uniques.iter().any(|u| u.columns.len() > 1))?;
-        let fields = doc.model.layers().get(&w.layer).map(|n| n.fields.clone()).unwrap_or_default();
-        let mut list = Column::new().spacing(4).push(label::strong("Tablonun kısıtları"));
+        let fields = doc
+            .model
+            .layers()
+            .get(&w.layer)
+            .map(|n| n.fields.clone())
+            .unwrap_or_default();
+        let mut list = Column::new()
+            .spacing(4)
+            .push(label::strong("Tablonun kısıtları"));
         for (said, judged) in constraints_said(link, &fields) {
-            list = list.push(row![container(label::body(said)).width(Fill), label::muted(judged)].spacing(12).align_y(Center));
+            list = list.push(
+                row![
+                    container(label::body(said)).width(Fill),
+                    label::muted(judged)
+                ]
+                .spacing(12)
+                .align_y(Center),
+            );
         }
-        Some(container(list).padding([8, 10]).style(style::container::field_box).width(Fill).into())
+        Some(
+            container(list)
+                .padding([8, 10])
+                .style(style::container::field_box)
+                .width(Fill)
+                .into(),
+        )
     }
 
     /// Değer listesi · <alan>: the codes, their labels, descriptions and days, or the project's list it links.
-    fn value_list_window<'a>(&'a self, w: &'a Window, c: &'a super::Choices) -> Element<'a, Message> {
-        let domains: &[kentos_commands::FieldDomain] =
-            self.document.as_ref().map_or(&[], |d| d.model.settings().domains.as_slice());
-        let name = w.rows.get(c.row).map(|r| r.name.clone()).unwrap_or_default();
+    fn value_list_window<'a>(
+        &'a self,
+        w: &'a Window,
+        c: &'a super::Choices,
+    ) -> Element<'a, Message> {
+        let domains: &[kentos_commands::FieldDomain] = self
+            .document
+            .as_ref()
+            .map_or(&[], |d| d.model.settings().domains.as_slice());
+        let name = w
+            .rows
+            .get(c.row)
+            .map(|r| r.name.clone())
+            .unwrap_or_default();
         let row_kind = w.rows.get(c.row).map(|r| r.kind);
-        let fitting: Vec<&kentos_commands::FieldDomain> = domains.iter().filter(|d| Some(d.kind) == row_kind).collect();
-        let linked = c.domain.as_ref().and_then(|id| fitting.iter().find(|d| d.id == *id).copied());
+        let fitting: Vec<&kentos_commands::FieldDomain> = domains
+            .iter()
+            .filter(|d| Some(d.kind) == row_kind)
+            .collect();
+        let linked = c
+            .domain
+            .as_ref()
+            .and_then(|id| fitting.iter().find(|d| d.id == *id).copied());
         let own = linked.is_none();
         let heads = row![
             container(label::caption("Kod")).width(Length::Fixed(100.0)),
@@ -408,7 +531,11 @@ impl App {
         for (k, choice) in c.list.iter().enumerate() {
             let typed = |placeholder: &'static str, value: &str, on: fn(usize, String) -> Event| {
                 let field = kentos_ui::widget::text_field(placeholder, value);
-                if own { field.on_input(move |t| msg(on(k, t))) } else { field }
+                if own {
+                    field.on_input(move |t| msg(on(k, t)))
+                } else {
+                    field
+                }
             };
             list = list.push(
                 row![
@@ -439,14 +566,21 @@ impl App {
             Choice::new(if d.coded() {
                 format!("{} ({} kod)", d.name, d.values.as_ref().map_or(0, Vec::len))
             } else {
-                format!("{} ({} – {})", d.name, d.min.as_deref().unwrap_or("…"), d.max.as_deref().unwrap_or("…"))
+                format!(
+                    "{} ({} – {})",
+                    d.name,
+                    d.min.as_deref().unwrap_or("…"),
+                    d.max.as_deref().unwrap_or("…")
+                )
             })
         }));
         let now = match &c.domain {
             None => Some(0),
             Some(id) => ids.iter().position(|x| x == id).map(|p| p + 1),
         };
-        let pick = Select::new(offered, now, move |k| msg(Event::ListDomain(k.checked_sub(1).map(|k| ids[k].clone()))));
+        let pick = Select::new(offered, now, move |k| {
+            msg(Event::ListDomain(k.checked_sub(1).map(|k| ids[k].clone())))
+        });
         let mut body = Column::new().spacing(10).push(words::field(
             "Projenin listesi",
             container(pick).width(320),
@@ -477,15 +611,25 @@ impl App {
                     .push(list);
                 if own {
                     body = body.push(
-                        button(row![icon(from_web(Some("plus"))).size(14.0), label::body("Değer ekle")].spacing(6).align_y(Center))
-                            .style(style::button::secondary)
-                            .padding(kentos_ui::theme::metrics::action())
-                            .on_press(msg(Event::ListAdd)),
+                        button(
+                            row![
+                                icon(from_web(Some("plus"))).size(14.0),
+                                label::body("Değer ekle")
+                            ]
+                            .spacing(6)
+                            .align_y(Center),
+                        )
+                        .style(style::button::secondary)
+                        .padding(kentos_ui::theme::metrics::action())
+                        .on_press(msg(Event::ListAdd)),
                     );
                 }
             }
         }
-        if w.rows.get(c.row).is_some_and(|r| r.kind == LayerFieldKind::Text) {
+        if w.rows
+            .get(c.row)
+            .is_some_and(|r| r.kind == LayerFieldKind::Text)
+        {
             body = body.push(words::check(
                 c.multiple,
                 "Birden çok değer seçilebilir",
@@ -517,13 +661,25 @@ fn fields_list_foot<'a>(w: &Window) -> Element<'a, Message> {
     };
     container(
         row![
-            button(row![icon(from_web(Some("plus"))).size(14.0), label::body(ADD)].spacing(6).align_y(Center))
-                .style(style::button::secondary)
-                .padding(kentos_ui::theme::metrics::action())
-                .on_press(msg(Event::Add)),
+            button(
+                row![icon(from_web(Some("plus"))).size(14.0), label::body(ADD)]
+                    .spacing(6)
+                    .align_y(Center)
+            )
+            .style(style::button::secondary)
+            .padding(kentos_ui::theme::metrics::action())
+            .on_press(msg(Event::Add)),
             space::horizontal(),
-            small("chevronUp", UP, chosen.filter(|&i| i > 0).map(|_| msg(Event::Up))),
-            small("chevronDown", DOWN, chosen.filter(|&i| i + 1 < n).map(|_| msg(Event::Down))),
+            small(
+                "chevronUp",
+                UP,
+                chosen.filter(|&i| i > 0).map(|_| msg(Event::Up))
+            ),
+            small(
+                "chevronDown",
+                DOWN,
+                chosen.filter(|&i| i + 1 < n).map(|_| msg(Event::Down))
+            ),
             small("erase", REMOVE, chosen.map(|_| msg(Event::Remove))),
         ]
         .spacing(4)
@@ -542,12 +698,18 @@ fn fields_status<'a>(w: &Window) -> Element<'a, Message> {
     let line = match (&w.said, &problem) {
         (Some((kind, text)), _) => words::text_line(*kind, text.clone()),
         (None, Some(p)) => words::text_line(Kind::Error, p.clone()),
-        (None, None) if w.rows.is_empty() => words::text_line(Kind::Ok, "Alan yok: katmanın öznitelikleri serbest.".to_owned()),
+        (None, None) if w.rows.is_empty() => words::text_line(
+            Kind::Ok,
+            "Alan yok: katmanın öznitelikleri serbest.".to_owned(),
+        ),
         (None, None) if renamed > 0 => words::text_line(
             Kind::Ok,
             format!("{n} alan; {renamed} alanın adı değişiyor, değerleri yeni adla taşınacak."),
         ),
-        (None, None) if w.changed() => words::text_line(Kind::Ok, format!("{n} alan; değişiklikler Kaydet ile yazılır.")),
+        (None, None) if w.changed() => words::text_line(
+            Kind::Ok,
+            format!("{n} alan; değişiklikler Kaydet ile yazılır."),
+        ),
         (None, None) => words::text_line(Kind::Ok, format!("{n} alan.")),
     };
     line
@@ -559,7 +721,10 @@ fn policy_selects<'a>(i: usize, r: &FieldRow) -> (Element<'a, Message>, Element<
     let units = matches!(r.kind, LayerFieldKind::Integer | LayerFieldKind::BigInt)
         || (r.kind == LayerFieldKind::Decimal && !r.size.trim().is_empty());
     let number = r.kind.is_number();
-    let splits: Vec<SplitPolicy> = SplitPolicy::ALL.into_iter().filter(|p| *p != SplitPolicy::Ratio || units).collect();
+    let splits: Vec<SplitPolicy> = SplitPolicy::ALL
+        .into_iter()
+        .filter(|p| *p != SplitPolicy::Ratio || units)
+        .collect();
     let merges: Vec<MergePolicy> = MergePolicy::ALL
         .into_iter()
         .filter(|p| match p {
@@ -568,21 +733,33 @@ fn policy_selects<'a>(i: usize, r: &FieldRow) -> (Element<'a, Message>, Element<
             _ => true,
         })
         .collect();
-    let split_at = splits.iter().position(|p| Some(*p) == r.split.or(Some(SplitPolicy::Copy)));
-    let merge_at = merges.iter().position(|p| Some(*p) == r.merge.or(Some(MergePolicy::First)));
+    let split_at = splits
+        .iter()
+        .position(|p| Some(*p) == r.split.or(Some(SplitPolicy::Copy)));
+    let merge_at = merges
+        .iter()
+        .position(|p| Some(*p) == r.merge.or(Some(MergePolicy::First)));
     let split = {
         let picks = splits.clone();
-        Select::new(splits.iter().map(|p| Choice::new(p.label())), split_at, move |k| {
-            let p = picks[k];
-            msg(Event::Split(i, (p != SplitPolicy::Copy).then_some(p)))
-        })
+        Select::new(
+            splits.iter().map(|p| Choice::new(p.label())),
+            split_at,
+            move |k| {
+                let p = picks[k];
+                msg(Event::Split(i, (p != SplitPolicy::Copy).then_some(p)))
+            },
+        )
     };
     let merge = {
         let picks = merges.clone();
-        Select::new(merges.iter().map(|p| Choice::new(p.label())), merge_at, move |k| {
-            let p = picks[k];
-            msg(Event::Merge(i, (p != MergePolicy::First).then_some(p)))
-        })
+        Select::new(
+            merges.iter().map(|p| Choice::new(p.label())),
+            merge_at,
+            move |k| {
+                let p = picks[k];
+                msg(Event::Merge(i, (p != MergePolicy::First).then_some(p)))
+            },
+        )
     };
     (split.into(), merge.into())
 }

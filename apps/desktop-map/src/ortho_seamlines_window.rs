@@ -24,15 +24,15 @@
 //! └─────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
 use iced::{Center, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandResult, Entity, OrthoSeamMethod, OrthophotoSeamlines, OrthophotoSeamlinesBuilt, RasterFields, SEAMLINE_LAYER,
-    SEAMLINE_LAYER_NAME,
+    CommandResult, Entity, OrthoSeamMethod, OrthophotoSeamlines, OrthophotoSeamlinesBuilt,
+    RasterFields, SEAMLINE_LAYER, SEAMLINE_LAYER_NAME,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, orthophoto_seamlines};
@@ -190,19 +190,35 @@ impl OrthoSeamlinesWindowApp for App {
         let s = &self.modules.map().ortho_seamlines;
         let footprints = match s.prints {
             Prints::Bounds => None,
-            Prints::Areas => Some(s.areas.clone().ok_or("Ayak izi olarak iki alan seçip Seçili alanları al'a basın.")?),
+            Prints::Areas => Some(
+                s.areas
+                    .clone()
+                    .ok_or("Ayak izi olarak iki alan seçip Seçili alanları al'a basın.")?,
+            ),
         };
         let radiometry = s.method == Method::Radiometry;
         let corridor = match s.corridor.trim().replace(',', ".").as_str() {
             "" => None,
-            t => Some(t.parse::<f64>().map_err(|_| format!("Arama bandı “{}” bir sayı değil.", s.corridor))?),
+            t => Some(
+                t.parse::<f64>()
+                    .map_err(|_| format!("Arama bandı “{}” bir sayı değil.", s.corridor))?,
+            ),
         };
-        let folder = self.document.as_ref().and_then(|d| d.path.as_ref()).and_then(|p| p.parent()).map(|p| p.display().to_string());
+        let folder = self
+            .document
+            .as_ref()
+            .and_then(|d| d.path.as_ref())
+            .and_then(|p| p.parent())
+            .map(|p| p.display().to_string());
         Ok(OrthophotoSeamlines {
             first: s.first.clone(),
             second: s.second.clone(),
             footprints,
-            method: if radiometry { OrthoSeamMethod::Radiometry } else { OrthoSeamMethod::Voronoi },
+            method: if radiometry {
+                OrthoSeamMethod::Radiometry
+            } else {
+                OrthoSeamMethod::Voronoi
+            },
             step: (!radiometry).then_some(s.step),
             cell: radiometry.then_some(s.cell.max(0.0) as u32),
             corridor: if radiometry { corridor } else { None },
@@ -254,8 +270,17 @@ impl OrthoSeamlinesWindowApp for App {
             self.warn("Mozaik birleşme çizgisi: çizimde ortofoto (raster) yok; önce ekleyin.");
             return Task::none();
         }
-        let selected: Vec<String> = self.selection.ids().iter().filter_map(|s| doc.model.uid(*s).map(|u| u.to_string())).collect();
-        let mut picked: Vec<String> = rasters.iter().filter(|(u, _)| selected.contains(u)).map(|(u, _)| u.clone()).collect();
+        let selected: Vec<String> = self
+            .selection
+            .ids()
+            .iter()
+            .filter_map(|s| doc.model.uid(*s).map(|u| u.to_string()))
+            .collect();
+        let mut picked: Vec<String> = rasters
+            .iter()
+            .filter(|(u, _)| selected.contains(u))
+            .map(|(u, _)| u.clone())
+            .collect();
         for (u, _) in &rasters {
             if picked.len() >= 2 {
                 break;
@@ -264,16 +289,29 @@ impl OrthoSeamlinesWindowApp for App {
                 picked.push(u.clone());
             }
         }
-        let layers: Vec<(String, String)> =
-            doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
-        let layer = if layers.iter().any(|(id, _)| id == SEAMLINE_LAYER) { SEAMLINE_LAYER.to_owned() } else { String::new() };
+        let layers: Vec<(String, String)> = doc
+            .model
+            .layers()
+            .leaves()
+            .iter()
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect();
+        let layer = if layers.iter().any(|(id, _)| id == SEAMLINE_LAYER) {
+            SEAMLINE_LAYER.to_owned()
+        } else {
+            String::new()
+        };
         // Docs/adr/5260: one raster only: its footprint.
         let lone = picked.len() < 2;
         self.modules.map_mut().ortho_seamlines = State {
             first: picked[0].clone(),
             second: picked.get(1).cloned().unwrap_or_default(),
             net: crate::ortho_network_section::NetState {
-                mode: if lone { crate::ortho_network_section::Mode::Footprint } else { Default::default() },
+                mode: if lone {
+                    crate::ortho_network_section::Mode::Footprint
+                } else {
+                    Default::default()
+                },
                 ticked: rasters.iter().map(|(u, _)| u.clone()).collect(),
                 raster: picked[0].clone(),
                 ..Default::default()
@@ -296,14 +334,17 @@ impl OrthoSeamlinesWindowApp for App {
 
     /// The two areas (or closed polylines) selected, in the selection's order.
     fn ortho_seamlines_take(&mut self) {
-        let Some(doc) = self.document.as_ref() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
         let areas: Vec<(String, String)> = self
             .selection
             .ids()
             .iter()
             .filter_map(|s| {
                 let e = doc.model.get(*s)?;
-                let fits = matches!(e, Entity::Polygon(_)) || matches!(e, Entity::Polyline(p) if p.closed);
+                let fits =
+                    matches!(e, Entity::Polygon(_)) || matches!(e, Entity::Polyline(p) if p.closed);
                 let uid = doc.model.uid(*s)?;
                 fits.then(|| (uid.to_string(), format!("#{}", s.0)))
             })
@@ -312,8 +353,10 @@ impl OrthoSeamlinesWindowApp for App {
             self.warn(format!("{TITLE}: ayak izi olarak iki alan (ya da kapalı çoklu çizgi) seçin; seçimde {} var.", areas.len()));
             return;
         }
-        self.modules.map_mut().ortho_seamlines.areas = Some([areas[0].0.clone(), areas[1].0.clone()]);
-        self.modules.map_mut().ortho_seamlines.areas_name = format!("{} ve {}", areas[0].1, areas[1].1);
+        self.modules.map_mut().ortho_seamlines.areas =
+            Some([areas[0].0.clone(), areas[1].0.clone()]);
+        self.modules.map_mut().ortho_seamlines.areas_name =
+            format!("{} ve {}", areas[0].1, areas[1].1);
         self.modules.map_mut().ortho_seamlines.prints = Prints::Areas;
     }
 
@@ -325,8 +368,11 @@ impl OrthoSeamlinesWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let result = orthophoto_seamlines::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let result =
+            orthophoto_seamlines::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
             let slots: Vec<kentos_domain::Slot> =
                 self.document.as_ref().map_or_else(Vec::new, |d| {
@@ -341,7 +387,8 @@ impl OrthoSeamlinesWindowApp for App {
                         .collect()
                 });
             let layer = self
-                .modules.map()
+                .modules
+                .map()
                 .ortho_seamlines
                 .layers
                 .iter()
@@ -380,7 +427,12 @@ impl OrthoSeamlinesWindowApp for App {
             }
             Event::Write => return self.ortho_seamlines_write(),
             Event::Net(e) => {
-                let back = matches!(e, crate::ortho_network_section::NetEvent::Mode(crate::ortho_network_section::Mode::Pair));
+                let back = matches!(
+                    e,
+                    crate::ortho_network_section::NetEvent::Mode(
+                        crate::ortho_network_section::Mode::Pair
+                    )
+                );
                 self.ortho_net_event(e);
                 if !back {
                     return Task::none();
@@ -404,9 +456,20 @@ impl OrthoSeamlinesWindowApp for App {
             Some(Err(why)) => lines.push(words::text_line(Kind::Error, why.clone())),
             Some(Ok(r)) => {
                 // The colour-matching and keep-out notes are the radiometry rows' help already.
-                let said = ["BÖHHBÜY m. 67(6): ortak alanda", "Geçilmeyecek alanların piksellerini"];
-                for (k, n) in r.notes.iter().enumerate().filter(|(_, n)| !said.iter().any(|w| n.starts_with(w))) {
-                    lines.push(words::text_line(if k == 0 { Kind::Ok } else { Kind::Info }, n.clone()));
+                let said = [
+                    "BÖHHBÜY m. 67(6): ortak alanda",
+                    "Geçilmeyecek alanların piksellerini",
+                ];
+                for (k, n) in r
+                    .notes
+                    .iter()
+                    .enumerate()
+                    .filter(|(_, n)| !said.iter().any(|w| n.starts_with(w)))
+                {
+                    lines.push(words::text_line(
+                        if k == 0 { Kind::Ok } else { Kind::Info },
+                        n.clone(),
+                    ));
                 }
                 let f = self.format();
                 let mut along = 0.0;
@@ -414,7 +477,12 @@ impl OrthoSeamlinesWindowApp for App {
                     if k > 0 {
                         along += (p[0] - r.seam[k - 1][0]).hypot(p[1] - r.seam[k - 1][1]);
                     }
-                    rows.push(vec![(k + 1).to_string(), f.coord(p[0]), f.coord(p[1]), f.length_bare(along)]);
+                    rows.push(vec![
+                        (k + 1).to_string(),
+                        f.coord(p[0]),
+                        f.coord(p[1]),
+                        f.length_bare(along),
+                    ]);
                 }
             }
         }
@@ -423,13 +491,23 @@ impl OrthoSeamlinesWindowApp for App {
 
     fn ortho_seamlines_view(&self) -> Element<'_, Message> {
         let s = &self.modules.map().ortho_seamlines;
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
         let mut avoids = vec![(NONE.to_owned(), NONE.to_owned())];
         avoids.extend(s.layers.iter().cloned());
         let mut targets = vec![(NONE.to_owned(), format!("{SEAMLINE_LAYER_NAME} (yeni)"))];
         targets.extend(s.layers.iter().cloned());
-        let avoid = if s.avoid.is_empty() { NONE } else { s.avoid.as_str() };
-        let target = if s.layer.is_empty() { NONE } else { s.layer.as_str() };
+        let avoid = if s.avoid.is_empty() {
+            NONE
+        } else {
+            s.avoid.as_str()
+        };
+        let target = if s.layer.is_empty() {
+            NONE
+        } else {
+            s.layer.as_str()
+        };
         let mut form = Form::new()
             .label_width(150.0)
             // The two images on one row, the swap between them (related small controls share a row).
@@ -486,10 +564,20 @@ impl OrthoSeamlinesWindowApp for App {
         let shown: Element<'_, Message> = match (&s.answer, s.show) {
             (Some(Ok(r)), Show::Plan) => {
                 let avoid = self.ortho_seamlines_avoided();
-                crate::picture::picture(iced::widget::canvas(Plan { r, avoid }).width(Fill).height(Fill), TITLE)
+                crate::picture::picture(
+                    iced::widget::canvas(Plan { r, avoid })
+                        .width(Fill)
+                        .height(Fill),
+                    TITLE,
+                )
             }
             _ => sheet(
-                vec![num("No", 50.0), num(f.east_label(), 130.0), num(f.north_label(), 130.0), num("Çizgi boyunca (m)", 130.0)],
+                vec![
+                    num("No", 50.0),
+                    num(f.east_label(), 130.0),
+                    num(f.north_label(), 130.0),
+                    num("Çizgi boyunca (m)", 130.0),
+                ],
                 rows,
                 "Birleşme çizgisi yok.",
                 240.0,
@@ -498,7 +586,10 @@ impl OrthoSeamlinesWindowApp for App {
         let ready = matches!(&s.answer, Some(Ok(_)));
         let write = row![
             label::caption("Yazılacak katman").style(muted),
-            container(fields::select_owned(targets, target, |v| msg(Event::Layer(v)))).width(240),
+            container(fields::select_owned(targets, target, |v| msg(
+                Event::Layer(v)
+            )))
+            .width(240),
             space::horizontal().width(Fill),
             words::primary(WRITE, ready.then(|| msg(Event::Write))),
         ]
@@ -507,13 +598,22 @@ impl OrthoSeamlinesWindowApp for App {
         // The plan takes the height the rest leaves (a resized or full screen window), at least a readable one; the
         // body scrolls in a short window and the footer keeps Kapat on the dialog's bottom edge.
         let modes = Segmented::new(
-            [crate::ortho_network_section::Mode::Pair, crate::ortho_network_section::Mode::Network, crate::ortho_network_section::Mode::Footprint],
+            [
+                crate::ortho_network_section::Mode::Pair,
+                crate::ortho_network_section::Mode::Network,
+                crate::ortho_network_section::Mode::Footprint,
+            ],
             s.net.mode,
             |v| msg(Event::Net(crate::ortho_network_section::NetEvent::Mode(v))),
         );
         if s.net.mode != crate::ortho_network_section::Mode::Pair {
             return Frame::new(TITLE)
-                .scroll(Grows::new().spacing(12.0).push(modes).push(self.ortho_net_view()))
+                .scroll(
+                    Grows::new()
+                        .spacing(12.0)
+                        .push(modes)
+                        .push(self.ortho_net_view()),
+                )
                 .action(words::secondary(CLOSE, Some(msg(Event::Close))))
                 .width(880.0)
                 .modal(msg(Event::Close));
@@ -525,7 +625,9 @@ impl OrthoSeamlinesWindowApp for App {
             .push(words::summary(lines))
             // Writing is its own section, above the views, so a short window never hides it.
             .push(write)
-            .push(Segmented::new([Show::Plan, Show::Points], s.show, |v| msg(Event::Show(v))))
+            .push(Segmented::new([Show::Plan, Show::Points], s.show, |v| {
+                msg(Event::Show(v))
+            }))
             .push_grow(shown, typography::scaled(260.0));
         Frame::new(TITLE)
             .scroll(body)
@@ -537,7 +639,11 @@ impl OrthoSeamlinesWindowApp for App {
     /// The rings of the layer the radiometric line keeps out of (geçilmeyecek alanlar), drawn in the plan.
     fn ortho_seamlines_avoided(&self) -> Vec<Vec<[f64; 2]>> {
         let s = &self.modules.map().ortho_seamlines;
-        let Some(doc) = self.document.as_ref().filter(|_| s.method == Method::Radiometry && !s.avoid.is_empty()) else {
+        let Some(doc) = self
+            .document
+            .as_ref()
+            .filter(|_| s.method == Method::Radiometry && !s.avoid.is_empty())
+        else {
             return Vec::new();
         };
         doc.model
@@ -574,7 +680,10 @@ fn centroid(r: &[[f64; 2]]) -> [f64; 2] {
     let o = r[0];
     let (mut a, mut cx, mut cy) = (0.0, 0.0, 0.0);
     for k in 1..r.len().saturating_sub(1) {
-        let (p, q) = ([r[k][0] - o[0], r[k][1] - o[1]], [r[k + 1][0] - o[0], r[k + 1][1] - o[1]]);
+        let (p, q) = (
+            [r[k][0] - o[0], r[k][1] - o[1]],
+            [r[k + 1][0] - o[0], r[k + 1][1] - o[1]],
+        );
         let w = p[0] * q[1] - q[0] * p[1];
         a += w;
         cx += (p[0] + q[0]) * w;
@@ -591,14 +700,31 @@ fn centroid(r: &[[f64; 2]]) -> [f64; 2] {
 impl canvas::Program<Message> for Plan<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
-        let pts: Vec<[f64; 2]> = self.r.polygons.iter().flat_map(|p| p.ring.iter().copied()).collect();
+        let pts: Vec<[f64; 2]> = self
+            .r
+            .polygons
+            .iter()
+            .flat_map(|p| p.ring.iter().copied())
+            .collect();
         if pts.is_empty() {
             return vec![frame.into_geometry()];
         }
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for p in &pts {
             x0 = x0.min(p[0]);
             y0 = y0.min(p[1]);
@@ -606,10 +732,21 @@ impl canvas::Program<Message> for Plan<'_> {
             y1 = y1.max(p[1]);
         }
         let pad = 24.0_f64;
-        let (w, h) = (f64::from(bounds.width) - 2.0 * pad, f64::from(bounds.height) - 2.0 * pad);
+        let (w, h) = (
+            f64::from(bounds.width) - 2.0 * pad,
+            f64::from(bounds.height) - 2.0 * pad,
+        );
         let scale = (w / (x1 - x0).max(1e-9)).min(h / (y1 - y0).max(1e-9));
-        let (ox, oy) = (pad + (w - (x1 - x0) * scale) / 2.0, pad + (h - (y1 - y0) * scale) / 2.0);
-        let at = |p: [f64; 2]| Point::new((ox + (p[0] - x0) * scale) as f32, (oy + (y1 - p[1]) * scale) as f32);
+        let (ox, oy) = (
+            pad + (w - (x1 - x0) * scale) / 2.0,
+            pad + (h - (y1 - y0) * scale) / 2.0,
+        );
+        let at = |p: [f64; 2]| {
+            Point::new(
+                (ox + (p[0] - x0) * scale) as f32,
+                (oy + (y1 - p[1]) * scale) as f32,
+            )
+        };
         let ring = |r: &[[f64; 2]]| {
             Path::new(|b| {
                 b.move_to(at(r[0]));
@@ -638,13 +775,31 @@ impl canvas::Program<Message> for Plan<'_> {
             });
         }
         if self.r.overlap.len() >= 3 {
-            let dashed = Stroke { line_dash: canvas::LineDash { segments: &[5.0, 4.0], offset: 0 }, ..Stroke::default() };
-            frame.stroke(&ring(&self.r.overlap), dashed.with_width(1.0).with_color(tk.muted));
+            let dashed = Stroke {
+                line_dash: canvas::LineDash {
+                    segments: &[5.0, 4.0],
+                    offset: 0,
+                },
+                ..Stroke::default()
+            };
+            frame.stroke(
+                &ring(&self.r.overlap),
+                dashed.with_width(1.0).with_color(tk.muted),
+            );
         }
         for a in self.avoid.iter().filter(|a| a.len() >= 3) {
             let shape = ring(a);
-            frame.fill(&shape, iced::Color { a: 0.3, ..tk.danger });
-            frame.stroke(&shape, Stroke::default().with_width(1.2).with_color(tk.danger));
+            frame.fill(
+                &shape,
+                iced::Color {
+                    a: 0.3,
+                    ..tk.danger
+                },
+            );
+            frame.stroke(
+                &shape,
+                Stroke::default().with_width(1.2).with_color(tk.danger),
+            );
         }
         if self.r.seam.len() >= 2 {
             let seam = Path::new(|b| {
@@ -653,7 +808,10 @@ impl canvas::Program<Message> for Plan<'_> {
                     b.line_to(at(*q));
                 }
             });
-            frame.stroke(&seam, Stroke::default().with_width(2.6).with_color(tk.warning));
+            frame.stroke(
+                &seam,
+                Stroke::default().with_width(2.6).with_color(tk.warning),
+            );
             for e in &self.r.ends {
                 frame.fill(&Path::circle(at(e.at), 4.0), tk.warning);
             }

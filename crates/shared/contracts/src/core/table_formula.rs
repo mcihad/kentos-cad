@@ -122,10 +122,16 @@ pub fn turkish_number_of(words: &str) -> Option<f64> {
     let groups: Vec<&str> = whole.split('.').collect();
     let grouped = groups.len() > 1;
     let first = groups.first()?;
-    if first.is_empty() || first.len() > if grouped { 3 } else { usize::MAX } || !first.bytes().all(|b| b.is_ascii_digit()) {
+    if first.is_empty()
+        || first.len() > if grouped { 3 } else { usize::MAX }
+        || !first.bytes().all(|b| b.is_ascii_digit())
+    {
         return None;
     }
-    if groups[1..].iter().any(|g| g.len() != 3 || !g.bytes().all(|b| b.is_ascii_digit())) {
+    if groups[1..]
+        .iter()
+        .any(|g| g.len() != 3 || !g.bytes().all(|b| b.is_ascii_digit()))
+    {
         return None;
     }
     // Without a comma it must be grouped (`2.087`), else it is the point's own form, read by `number_of`.
@@ -133,7 +139,10 @@ pub fn turkish_number_of(words: &str) -> Option<f64> {
         return None;
     }
     let text = format!("{}.{}", groups.concat(), frac.unwrap_or("0"));
-    text.parse::<f64>().ok().filter(|x| x.is_finite()).map(|x| sign * x)
+    text.parse::<f64>()
+        .ok()
+        .filter(|x| x.is_finite())
+        .map(|x| sign * x)
 }
 
 /// `x` in its shortest decimal form, without an exponent (`0.1`, `1200`, `-3.5`); 0 is `0`.
@@ -226,11 +235,18 @@ fn round_words(s: &str, d: i32) -> String {
     let whole: String = if point == 0 {
         "0".to_owned()
     } else {
-        digits[..point].iter().map(|d| char::from(b'0' + d)).collect()
+        digits[..point]
+            .iter()
+            .map(|d| char::from(b'0' + d))
+            .collect()
     };
     let whole = {
         let t = whole.trim_start_matches('0');
-        if t.is_empty() { "0".to_owned() } else { t.to_owned() }
+        if t.is_empty() {
+            "0".to_owned()
+        } else {
+            t.to_owned()
+        }
     };
     let mut out = whole;
     if d > 0 {
@@ -315,7 +331,10 @@ fn reference_at(s: &str) -> Option<(usize, usize, usize)> {
     while i < b.len() && b[i].is_ascii_digit() {
         i += 1;
     }
-    if digits_from == i || b.get(i).is_some_and(|c| c.is_ascii_alphanumeric() || *c == b'_') {
+    if digits_from == i
+        || b.get(i)
+            .is_some_and(|c| c.is_ascii_alphanumeric() || *c == b'_')
+    {
         return None;
     }
     let col = column_index(letters)?;
@@ -756,7 +775,11 @@ fn arithmetic(v: Value) -> Result<f64, &'static str> {
 }
 
 /// The cells an expression reads that are formulas.
-fn reads(e: &Expr, formulas: &HashMap<(usize, usize), Option<Expr>>, out: &mut Vec<(usize, usize)>) {
+fn reads(
+    e: &Expr,
+    formulas: &HashMap<(usize, usize), Option<Expr>>,
+    out: &mut Vec<(usize, usize)>,
+) {
     match e {
         Expr::Ref(r, c) => {
             if formulas.contains_key(&(*r, *c)) {
@@ -911,7 +934,13 @@ fn range_moved(a: usize, b: usize, at: usize, count: isize) -> Option<(usize, us
         return Some((moved(a, at, count)?, moved(b, at, count)?));
     }
     let n = count.unsigned_abs();
-    let a2 = if a < at { a } else if a < at + n { at } else { a - n };
+    let a2 = if a < at {
+        a
+    } else if a < at + n {
+        at
+    } else {
+        a - n
+    };
     let b2 = if b < at {
         b
     } else if b < at + n {
@@ -956,10 +985,13 @@ pub fn shift(formula: &str, axis: Axis, at: usize, count: isize) -> String {
                 {
                     let next = next.trim_start();
                     let (dc2, dr2) = dollars(&next[..m]);
-                    let (r0, c0, r1, c1) = (row.min(row2), col.min(col2), row.max(row2), col.max(col2));
+                    let (r0, c0, r1, c1) =
+                        (row.min(row2), col.min(col2), row.max(row2), col.max(col2));
                     let moved_range = match axis {
                         Axis::Rows => range_moved(r0, r1, at, count).map(|(a, b)| (a, c0, b, c1)),
-                        Axis::Columns => range_moved(c0, c1, at, count).map(|(a, b)| (r0, a, r1, b)),
+                        Axis::Columns => {
+                            range_moved(c0, c1, at, count).map(|(a, b)| (r0, a, r1, b))
+                        }
                     };
                     match moved_range {
                         Some((a, b, c, d)) => {
@@ -1033,7 +1065,11 @@ pub fn remap_rows_spanning(
                         rest = &next[m..];
                         continue;
                     }
-                    let mapped: Vec<usize> = rows.get(first..=last)?.iter().copied().collect::<Option<_>>()?;
+                    let mapped: Vec<usize> = rows
+                        .get(first..=last)?
+                        .iter()
+                        .copied()
+                        .collect::<Option<_>>()?;
                     let lo = *mapped.iter().min()?;
                     let hi = *mapped.iter().max()?;
                     if hi.checked_sub(lo)? + 1 != mapped.len() {
@@ -1116,7 +1152,11 @@ mod tests {
         assert_eq!(turkish_number_of("2.087,13"), Some(2087.13));
         assert_eq!(turkish_number_of("-1.234.567,5"), Some(-1_234_567.5));
         assert_eq!(turkish_number_of("1,2,3"), None);
-        assert_eq!(turkish_number_of("1.5"), None, "the point's own form is number_of's");
+        assert_eq!(
+            turkish_number_of("1.5"),
+            None,
+            "the point's own form is number_of's"
+        );
         assert_eq!(turkish_number_of("12.34,5"), None, "groups of three only");
     }
 
@@ -1133,8 +1173,14 @@ mod tests {
     #[test]
     fn references_follow_keyed_rows_without_changing_functions() {
         let rows = [Some(0), Some(2), Some(1)];
-        assert_eq!(remap_rows("=ROUND($B$2+B3;2)", &rows).as_deref(), Some("=ROUND($B$3+B2;2)"));
-        assert_eq!(remap_rows("=SUM(B2:B3)", &rows).as_deref(), Some("=SUM(B2:B3)"));
+        assert_eq!(
+            remap_rows("=ROUND($B$2+B3;2)", &rows).as_deref(),
+            Some("=ROUND($B$3+B2;2)")
+        );
+        assert_eq!(
+            remap_rows("=SUM(B2:B3)", &rows).as_deref(),
+            Some("=SUM(B2:B3)")
+        );
         assert_eq!(remap_rows("=B4", &rows), None);
         let split = [Some(0), Some(1), Some(3), Some(2)];
         assert_eq!(remap_rows("=SUM(B2:B3)", &split), None);
@@ -1158,7 +1204,13 @@ mod tests {
         assert_eq!(one(&cells, "=Z99"), BAD_REF);
         assert_eq!(one(&cells, "=SUM("), NOT_READ);
         assert_eq!(one(&cells, "=0.1+0.2"), "0.3");
-        assert_eq!(one(&cells, "=0.028+0.111+0.241+0.273+0.282+0.238+0.153+0.056+0.034"), "1.416");
+        assert_eq!(
+            one(
+                &cells,
+                "=0.028+0.111+0.241+0.273+0.282+0.238+0.153+0.056+0.034"
+            ),
+            "1.416"
+        );
     }
 
     #[test]
@@ -1169,7 +1221,10 @@ mod tests {
         assert_eq!(general(1.0 / 3.0), "0.333333333333333");
         assert_eq!(general(2.0 / 3.0), "0.666666666666667");
         assert_eq!(general(12345678901234567.0), "12345678901234600");
-        assert_eq!(general(0.000_123_456_789_012_345_67), "0.000123456789012346");
+        assert_eq!(
+            general(0.000_123_456_789_012_345_67),
+            "0.000123456789012346"
+        );
         assert_eq!(general(1e-20), "0.00000000000000000001");
         assert_eq!(general(1234.5), "1234.5");
         assert_eq!(general(0.0), "0");
@@ -1191,7 +1246,10 @@ mod tests {
         assert_eq!(shift("=SUM(A1:A3)+B2", Axis::Rows, 1, 2), "=SUM(A1:A5)+B4");
         assert_eq!(shift("=A2+A1", Axis::Rows, 1, -1), "=#BAŞV!+A1");
         assert_eq!(shift("=SUM(A1:A3)", Axis::Rows, 0, -3), "=SUM(#BAŞV!)");
-        assert_eq!(shift("=$B$1*TOPLA(C1:D1)", Axis::Columns, 1, 1), "=$C$1*TOPLA(D1:E1)");
+        assert_eq!(
+            shift("=$B$1*TOPLA(C1:D1)", Axis::Columns, 1, 1),
+            "=$C$1*TOPLA(D1:E1)"
+        );
     }
 
     #[test]

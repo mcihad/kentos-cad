@@ -180,7 +180,14 @@ pub fn read_tools(registry: &Registry, contributions: &[Registered], environment
             })
             .and_then(|descriptor| {
                 let modules: Vec<&str> = manifest.modules.iter().map(|m| m.id()).collect();
-                external::from_descriptor(&ext, &manifest.name, &plan.version, &local, &modules, &descriptor)
+                external::from_descriptor(
+                    &ext,
+                    &manifest.name,
+                    &plan.version,
+                    &local,
+                    &modules,
+                    &descriptor,
+                )
             });
         match read {
             Ok(mut tool) => {

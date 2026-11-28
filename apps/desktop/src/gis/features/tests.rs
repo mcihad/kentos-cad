@@ -100,7 +100,10 @@ fn outgoing_screens() {
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
                 app.apply_settings();
                 let _ = app.update(Message::WindowResized(Size::new(width, height)));
-                ev(&mut app, Event::Columns(ColumnsEvent::Toggle("Ruhsat".into())));
+                ev(
+                    &mut app,
+                    Event::Columns(ColumnsEvent::Toggle("Ruhsat".into())),
+                );
                 ev(&mut app, Event::Search("102".into()));
                 match scene {
                     "istatistik" => {
@@ -194,8 +197,8 @@ fn app_with_secret() -> App {
         "id": "parsel-formu", "name": "Parsel formu", "layer": "parsel",
         "draft": {"revision": 1, "items": [{"type": "field", "id": "alan", "field": "Alan", "redact": true}]}
     }]);
-    let snapshot =
-        kentos_commands::DocumentSnapshotV1::from_json(&value.to_string()).expect("the drawing reads");
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&value.to_string())
+        .expect("the drawing reads");
     let (mut app, _) = App::boot(None);
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
@@ -215,13 +218,34 @@ fn kinds_app(keep: bool) -> App {
         .map(|e| kentos_domain::Slot(e.base().id))
         .collect();
     let values = [
-        ["9007199254740993", "2024-03-01T10:20:30.5+03:00", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001", r#"{"kot":[1.25,12345678901234567890]}"#, "QUJD"],
-        ["-9223372036854775808", "2024-03-01T07:20:30Z", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002", "[]", ""],
-        ["12", "2023-12-31T23:59:59.999999999-05:00", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003", r#""ç""#, "a2VudG9zIGNhZA=="],
+        [
+            "9007199254740993",
+            "2024-03-01T10:20:30.5+03:00",
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001",
+            r#"{"kot":[1.25,12345678901234567890]}"#,
+            "QUJD",
+        ],
+        [
+            "-9223372036854775808",
+            "2024-03-01T07:20:30Z",
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002",
+            "[]",
+            "",
+        ],
+        [
+            "12",
+            "2023-12-31T23:59:59.999999999-05:00",
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003",
+            r#""ç""#,
+            "a2VudG9zIGNhZA==",
+        ],
     ];
     for (slot, row) in slots.iter().zip(values) {
         let mut e = model.get(*slot).cloned().expect("a parcel");
-        for (name, v) in ["Kimlik", "Ölçüm anı", "Cihaz", "Ek bilgi", "İmza"].into_iter().zip(row) {
+        for (name, v) in ["Kimlik", "Ölçüm anı", "Cihaz", "Ek bilgi", "İmza"]
+            .into_iter()
+            .zip(row)
+        {
             e.base_mut().attrs.insert(name.into(), v.into());
         }
         model.update(*slot, e);
@@ -279,9 +303,9 @@ fn kinds_screens() {
                 .document
                 .as_ref()
                 .and_then(|d| {
-                    d.model
-                        .entities()
-                        .find(|e| e.base().attrs.get("Kimlik").map(String::as_str) == Some("9007199254740993"))
+                    d.model.entities().find(|e| {
+                        e.base().attrs.get("Kimlik").map(String::as_str) == Some("9007199254740993")
+                    })
                 })
                 .map(|e| kentos_domain::Slot(e.base().id))
                 .expect("the first parcel");
@@ -309,12 +333,17 @@ fn kinds_screens() {
 fn a_locked_layers_cell_opens_no_editor() {
     let mut app = app_with_table();
     let layer = app.gis.features.layer.clone().or_else(|| {
-        app.document.as_ref().map(|d| d.model.layers().active().to_owned())
+        app.document
+            .as_ref()
+            .map(|d| d.model.layers().active().to_owned())
     });
     let layer = layer.expect("a layer");
-    app.document.as_mut().unwrap().model.set_layer_locked(&layer, true);
+    app.document
+        .as_mut()
+        .unwrap()
+        .model
+        .set_layer_locked(&layer, true);
     ev(&mut app, Event::Edit(0, 1));
     assert!(!app.gis.features.editing(), "no editor on a locked layer");
     assert!(crate::files_testing::last_said(&app).contains("kilitli"));
 }
-

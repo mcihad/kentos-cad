@@ -292,6 +292,9 @@ fn a_circles_cloud_follows_yay_boyu() {
         b.click(1.2, 0.0);
         let (pts, _) = ring(&b);
         assert_eq!(pts.len(), arcs, "{mm} mm: {:?}", b.last_text());
-        assert_eq!(b.last_text(), Some(format!("Revizyon bulutu eklendi: {arcs} yay.").as_str()));
+        assert_eq!(
+            b.last_text(),
+            Some(format!("Revizyon bulutu eklendi: {arcs} yay.").as_str())
+        );
     }
 }

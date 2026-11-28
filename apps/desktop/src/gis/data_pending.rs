@@ -117,7 +117,11 @@ fn row_words(entity: &kentos_commands::Entity) -> String {
         .filter(|(_, v)| !v.trim().is_empty())
         .map(|(k, v)| format!("{k}={v}"))
         .collect();
-    if words.is_empty() { "boş satır".to_owned() } else { words.join(", ") }
+    if words.is_empty() {
+        "boş satır".to_owned()
+    } else {
+        words.join(", ")
+    }
 }
 
 /// The shape of an object without its fields: whether the geometry changed.
@@ -136,7 +140,13 @@ fn lines_of(model: &kentos_domain::Document, layer: &str) -> Vec<Line> {
     let c = model.data_changes(layer);
     let mut out = Vec::new();
     for (_, entity) in &c.added {
-        out.push(["Yeni".into(), "—".into(), "bütün satır".into(), "—".into(), row_words(entity)]);
+        out.push([
+            "Yeni".into(),
+            "—".into(),
+            "bütün satır".into(),
+            "—".into(),
+            row_words(entity),
+        ]);
     }
     for d in &c.changed {
         let (now, was) = (&d.now.base().attrs, &d.row.base().attrs);
@@ -144,19 +154,49 @@ fn lines_of(model: &kentos_domain::Document, layer: &str) -> Vec<Line> {
         fields.sort();
         fields.dedup();
         for f in fields {
-            let (a, b) = (was.get(f).map_or("", String::as_str), now.get(f).map_or("", String::as_str));
+            let (a, b) = (
+                was.get(f).map_or("", String::as_str),
+                now.get(f).map_or("", String::as_str),
+            );
             if a != b {
-                let shown = |v: &str| if v.is_empty() { "boş".to_owned() } else { v.to_owned() };
-                out.push(["Değişen".into(), d.key.to_string(), f.clone(), shown(a), shown(b)]);
+                let shown = |v: &str| {
+                    if v.is_empty() {
+                        "boş".to_owned()
+                    } else {
+                        v.to_owned()
+                    }
+                };
+                out.push([
+                    "Değişen".into(),
+                    d.key.to_string(),
+                    f.clone(),
+                    shown(a),
+                    shown(b),
+                ]);
             }
         }
         if shape_of(&d.now) != shape_of(&d.row) {
-            out.push(["Değişen".into(), d.key.to_string(), "şekil".into(), "kaynaktaki".into(), "taşındı".into()]);
+            out.push([
+                "Değişen".into(),
+                d.key.to_string(),
+                "şekil".into(),
+                "kaynaktaki".into(),
+                "taşındı".into(),
+            ]);
         }
     }
     for key in &c.deleted {
-        let was = c.originals.get(key).map_or_else(|| "kaynaktaki satır".to_owned(), |(_, e)| row_words(e));
-        out.push(["Silinen".into(), key.to_string(), "bütün satır".into(), was, "—".into()]);
+        let was = c
+            .originals
+            .get(key)
+            .map_or_else(|| "kaynaktaki satır".to_owned(), |(_, e)| row_words(e));
+        out.push([
+            "Silinen".into(),
+            key.to_string(),
+            "bütün satır".into(),
+            was,
+            "—".into(),
+        ]);
     }
     out
 }
@@ -214,14 +254,25 @@ impl App {
         let mut waiting = counted(doc);
         for w in &mut waiting {
             w.failed = self.gis.data_edits.failed_of(&w.layer).map(str::to_owned);
-            w.uncertain = self.gis.data_edits.uncertain.get(&w.layer).map(|u| u.receipt.is_some());
+            w.uncertain = self
+                .gis
+                .data_edits
+                .uncertain
+                .get(&w.layer)
+                .map(|u| u.receipt.is_some());
         }
         waiting
     }
 
     /// A layer's data source, when it is a data layer.
     fn data_of(&self, layer: &str) -> Option<kentos_commands::DataLayer> {
-        self.document.as_ref()?.model.layers().get(layer)?.data.clone()
+        self.document
+            .as_ref()?
+            .model
+            .layers()
+            .get(layer)?
+            .data
+            .clone()
     }
 
     fn data_layer_name_of(&self, layer: &str) -> String {
@@ -237,7 +288,12 @@ impl App {
         let tasks: Vec<Task<Message>> = self
             .data_waiting()
             .into_iter()
-            .filter_map(|w| Some((w.layer.clone(), self.data_of(&w.layer).filter(|d| d.driver == "postgis")?)))
+            .filter_map(|w| {
+                Some((
+                    w.layer.clone(),
+                    self.data_of(&w.layer).filter(|d| d.driver == "postgis")?,
+                ))
+            })
             .map(|(layer, data)| {
                 crate::db_connections::off_thread(
                     move || kentos_native_application::data_write::receipts_ready(&data),
@@ -253,7 +309,11 @@ impl App {
     pub(crate) fn waiting_words_of(&self, uid: &str) -> Option<String> {
         let doc = self.document.as_ref()?;
         let uid = kentos_domain::Uuid::parse_str(uid).ok()?;
-        let layer = doc.model.slot_of(uid).and_then(|s| doc.model.get(s)).map(|e| e.base().layer_id.clone())?;
+        let layer = doc
+            .model
+            .slot_of(uid)
+            .and_then(|s| doc.model.get(s))
+            .map(|e| e.base().layer_id.clone())?;
         let w = self.data_waiting().into_iter().find(|w| w.layer == layer)?;
         Some(format!(
             "Değer “{}” katmanında bekliyor, kaynağa yazılmadı: {}. Kaynağa yazmak için tablonun altındaki Kaynağa \
@@ -295,18 +355,34 @@ impl App {
              kaynağa yazın ya da geri alın.",
             waiting
                 .iter()
-                .map(|w| format!("{} ({}): {}", w.name, w.place, crate::data_edits::counts_words(w.added, w.changed, w.deleted)))
+                .map(|w| format!(
+                    "{} ({}): {}",
+                    w.name,
+                    w.place,
+                    crate::data_edits::counts_words(w.added, w.changed, w.deleted)
+                ))
                 .collect::<Vec<_>>()
                 .join("; "),
             self.data_draft_words()
         );
-        let body = match waiting.iter().find_map(|w| w.failed.as_ref().map(|f| (w.name.clone(), f.clone()))) {
-            Some((name, why)) => format!("Son yazma denemesi “{name}” için başarısız: {why} Değişiklikler duruyor. {body}"),
+        let body = match waiting
+            .iter()
+            .find_map(|w| w.failed.as_ref().map(|f| (w.name.clone(), f.clone())))
+        {
+            Some((name, why)) => format!(
+                "Son yazma denemesi “{name}” için başarısız: {why} Değişiklikler duruyor. {body}"
+            ),
             None => body,
         };
         Some(
-            Readout::new(label::strong(words).style(move |theme: &iced::Theme| iced::widget::text::Style {
-                color: Some(if failed { Tokens::of(theme).danger } else { Tokens::of(theme).warning }),
+            Readout::new(label::strong(words).style(move |theme: &iced::Theme| {
+                iced::widget::text::Style {
+                    color: Some(if failed {
+                        Tokens::of(theme).danger
+                    } else {
+                        Tokens::of(theme).warning
+                    }),
+                }
             }))
             .icon(crate::icons::from_web(Some("save")))
             .tip(Tip::new("Katman değişiklikleri").body(body))
@@ -340,7 +416,10 @@ impl App {
         match event {
             Event::Open(layer) => {
                 let first = self.data_waiting().first().map(|w| w.layer.clone());
-                let w = self.gis.data_pending.get_or_insert_with(PendingWindow::default);
+                let w = self
+                    .gis
+                    .data_pending
+                    .get_or_insert_with(PendingWindow::default);
                 if layer.is_some() || w.chosen.is_none() {
                     w.chosen = layer.or(first);
                 }
@@ -425,7 +504,10 @@ impl App {
             }
             Event::Close => {
                 self.gis.data_pending = None;
-                if matches!(self.dialog, Some(AppDialog::Gis(crate::gis::GisDialogKind::DataPending))) {
+                if matches!(
+                    self.dialog,
+                    Some(AppDialog::Gis(crate::gis::GisDialogKind::DataPending))
+                ) {
                     self.dialog = None;
                 }
             }
@@ -467,7 +549,11 @@ impl App {
                 .padding([0, 16]),
             );
             let list = waiting.iter().fold(column![].spacing(1), |c, w| {
-                let mut subtitle = format!("{} · {}", w.place, crate::data_edits::counts_words(w.added, w.changed, w.deleted));
+                let mut subtitle = format!(
+                    "{} · {}",
+                    w.place,
+                    crate::data_edits::counts_words(w.added, w.changed, w.deleted)
+                );
                 if w.uncertain.is_some() {
                     subtitle.push_str(" · sonucu bilinmiyor");
                 } else if w.failed.is_some() {
@@ -480,8 +566,15 @@ impl App {
                         .current(chosen.as_ref().is_some_and(|ch| ch.layer == w.layer)),
                 )
             });
-            let details = chosen.map_or_else(|| column![].into(), |w| self.data_pending_details(w, &state, saving));
-            dialog = dialog.push(ListDetails::new(list, details).list_width(220.0).height(380.0));
+            let details = chosen.map_or_else(
+                || column![].into(),
+                |w| self.data_pending_details(w, &state, saving),
+            );
+            dialog = dialog.push(
+                ListDetails::new(list, details)
+                    .list_width(220.0)
+                    .height(380.0),
+            );
         }
         let mut dialog = dialog.action(words::secondary("Kapat", Some(message(Event::Close))));
         if waiting.len() > 1 {
@@ -493,12 +586,26 @@ impl App {
         if saving {
             dialog = dialog.status(label::caption("Kaynağa yazılıyor…"));
         }
-        overlay::blocking(dialog.width(860.0).max_height(620.0).on_close(Some(message(Event::Close))))
+        overlay::blocking(
+            dialog
+                .width(860.0)
+                .max_height(620.0)
+                .on_close(Some(message(Event::Close))),
+        )
     }
 
     /// The chosen layer: its source, its counts, why its last write failed, its rows and its two actions.
-    fn data_pending_details(&self, w: Waiting, state: &PendingWindow, saving: bool) -> Element<'_, Message> {
-        let lines = self.document.as_ref().map(|d| lines_of(&d.model, &w.layer)).unwrap_or_default();
+    fn data_pending_details(
+        &self,
+        w: Waiting,
+        state: &PendingWindow,
+        saving: bool,
+    ) -> Element<'_, Message> {
+        let lines = self
+            .document
+            .as_ref()
+            .map(|d| lines_of(&d.model, &w.layer))
+            .unwrap_or_default();
         let mut c = column![
             label::heading(w.name.clone()),
             label::caption(format!(
@@ -548,13 +655,19 @@ impl App {
                 );
             }
             Some(Err(why)) => {
-                c = c.push(words::text_line(words::Kind::Info, format!("İşlem kaydı sorulamadı: {why}")));
+                c = c.push(words::text_line(
+                    words::Kind::Info,
+                    format!("İşlem kaydı sorulamadı: {why}"),
+                ));
             }
             _ => {}
         }
         let table = table::Table::new([
-            table::Column::new("Durum").width(Length::Fixed(kentos_ui::theme::typography::scaled(64.0))),
-            table::Column::new("Anahtar").width(Length::Fixed(kentos_ui::theme::typography::scaled(64.0))).align_right(),
+            table::Column::new("Durum")
+                .width(Length::Fixed(kentos_ui::theme::typography::scaled(64.0))),
+            table::Column::new("Anahtar")
+                .width(Length::Fixed(kentos_ui::theme::typography::scaled(64.0)))
+                .align_right(),
             table::Column::new("Alan").width(Length::FillPortion(2)),
             table::Column::new("Kaynakta").width(Length::FillPortion(3)),
             table::Column::new("Bu cihazda").width(Length::FillPortion(3)),
@@ -569,8 +682,13 @@ impl App {
             ])
         }))
         .height(Length::Fill);
-        c = c.push(container(table).height(Length::Fill).style(kentos_ui::style::container::bordered));
-        let actions: Element<'_, Message> = if state.resending.as_deref() == Some(w.layer.as_str()) {
+        c = c.push(
+            container(table)
+                .height(Length::Fill)
+                .style(kentos_ui::style::container::bordered),
+        );
+        let actions: Element<'_, Message> = if state.resending.as_deref() == Some(w.layer.as_str())
+        {
             row![
                 label::body(
                     "Satırlar kaynağa yeniden gönderilecek; önceki yazım tamamlanmışsa yeni satırlar ikinci kez eklenir."
@@ -585,8 +703,14 @@ impl App {
         } else if w.uncertain == Some(false) {
             row![
                 iced::widget::Space::new().width(Length::Fill),
-                words::ghost("Değişiklikleri geri al…", (!saving).then(|| message(Event::Rollback(w.layer.clone())))),
-                words::secondary("Yeniden gönder…", (!saving).then(|| message(Event::Resend(w.layer.clone())))),
+                words::ghost(
+                    "Değişiklikleri geri al…",
+                    (!saving).then(|| message(Event::Rollback(w.layer.clone())))
+                ),
+                words::secondary(
+                    "Yeniden gönder…",
+                    (!saving).then(|| message(Event::Resend(w.layer.clone())))
+                ),
             ]
             .spacing(8)
             .align_y(iced::Alignment::Center)
@@ -599,7 +723,10 @@ impl App {
                 ))
                 .width(Length::Fill),
                 words::secondary("Vazgeç", Some(message(Event::RollbackCancelled))),
-                words::danger("Geri al", Some(message(Event::RollbackConfirmed(w.layer.clone())))),
+                words::danger(
+                    "Geri al",
+                    Some(message(Event::RollbackConfirmed(w.layer.clone())))
+                ),
             ]
             .spacing(8)
             .align_y(iced::Alignment::Center)
@@ -607,8 +734,14 @@ impl App {
         } else {
             row![
                 iced::widget::Space::new().width(Length::Fill),
-                words::ghost("Değişiklikleri geri al…", (!saving).then(|| message(Event::Rollback(w.layer.clone())))),
-                words::primary("Kaynağa yaz", (!saving).then(|| message(Event::Save(vec![w.layer.clone()])))),
+                words::ghost(
+                    "Değişiklikleri geri al…",
+                    (!saving).then(|| message(Event::Rollback(w.layer.clone())))
+                ),
+                words::primary(
+                    "Kaynağa yaz",
+                    (!saving).then(|| message(Event::Save(vec![w.layer.clone()])))
+                ),
             ]
             .spacing(8)
             .align_y(iced::Alignment::Center)

@@ -320,7 +320,9 @@ pub fn pose_problem(m: &[f64; 16]) -> Option<String> {
 impl CloudSource {
     /// Its bounds in the drawing: the header's taken through its place (docs/adr/5100), else the header's.
     pub fn placed_bounds(&self) -> [f64; 6] {
-        self.pose.as_ref().map_or(self.bounds, |m| pose_box(m, &self.bounds))
+        self.pose
+            .as_ref()
+            .map_or(self.bounds, |m| pose_box(m, &self.bounds))
     }
 }
 
@@ -407,7 +409,14 @@ impl PointCloudFields {
     /// The members' bounds in the drawing together (each taken through its place, docs/adr/5100); the files' own
     /// when none has one.
     pub fn placed_bounds(&self) -> [f64; 6] {
-        let mut out = [f64::INFINITY, f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        let mut out = [
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        ];
         for s in &self.sources {
             let b = s.placed_bounds();
             for a in 0..3 {
@@ -476,7 +485,10 @@ impl PointCloudFields {
                 return Some(format!("{}. dosyanın konumu: {p}", i + 1));
             }
             if bounds_problem(&s.placed_bounds()) {
-                return Some(format!("{}. dosyanın konumdaki kapsamı sonlu olmalı.", i + 1));
+                return Some(format!(
+                    "{}. dosyanın konumdaki kapsamı sonlu olmalı.",
+                    i + 1
+                ));
             }
         }
         if bounds_problem(&self.bounds) {
@@ -587,7 +599,9 @@ mod tests {
     #[test]
     fn places() {
         let mut c = cloud();
-        let turn = [0.0, -1.0, 0.0, 100.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 0.0, 1.0];
+        let turn = [
+            0.0, -1.0, 0.0, 100.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0, 0.0, 0.0, 0.0, 1.0,
+        ];
         c.sources[0].pose = Some(turn);
         assert_eq!(c.problem(), None);
         assert_eq!(c.placed_bounds(), [90.0, 0.0, 2.0, 100.0, 10.0, 7.0]);
@@ -596,7 +610,9 @@ mod tests {
         scaled[0] = 2.0;
         c.sources[0].pose = Some(scaled);
         assert!(c.problem().unwrap().contains("katı dönüşüm"));
-        let mut mirror = [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0];
+        let mut mirror = [
+            1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0,
+        ];
         c.sources[0].pose = Some(mirror);
         assert!(c.problem().unwrap().contains("katı dönüşüm"));
         mirror[10] = 1.0;

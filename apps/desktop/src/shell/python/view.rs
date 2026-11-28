@@ -203,7 +203,9 @@ impl App {
             } else {
                 kentos_ui::style::text::muted
             });
-            let mut line = iced::widget::row![container(said).width(Fill)].spacing(8).align_y(iced::Center);
+            let mut line = iced::widget::row![container(said).width(Fill)]
+                .spacing(8)
+                .align_y(iced::Center);
             if setup {
                 line = line.push(crate::exchange::words::secondary(
                     "Python ortamını yapılandır",

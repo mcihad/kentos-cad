@@ -100,7 +100,11 @@ impl Boundary {
         let layer = cx.doc.layers().active().to_owned();
         if let Some(slot) = same_area(cx.doc, &layer, &area) {
             cx.selection.set([slot]);
-            let name = cx.doc.layers().get(&layer).map_or_else(|| layer.clone(), |n| n.name.clone());
+            let name = cx
+                .doc
+                .layers()
+                .get(&layer)
+                .map_or_else(|| layer.clone(), |n| n.name.clone());
             cx.say(
                 Level::Info,
                 format!(
@@ -140,25 +144,40 @@ fn same_area(doc: &kentos_domain::Document, layer: &str, area: &Area) -> Option<
             return false;
         }
         let eq = |p: &kentos_commands::Vec2, q: &Vec2| p.x == q.x && p.y == q.y;
-        (0..n).any(|s| (0..n).all(|i| eq(&a[(s + i) % n], &b[i])) || (0..n).all(|i| eq(&a[(s + n - i) % n], &b[i])))
+        (0..n).any(|s| {
+            (0..n).all(|i| eq(&a[(s + i) % n], &b[i]))
+                || (0..n).all(|i| eq(&a[(s + n - i) % n], &b[i]))
+        })
     }
-    let straight = |r: &kentos_geometry_core::geom::arrangement::Ring| r.bulges.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0));
+    let straight = |r: &kentos_geometry_core::geom::arrangement::Ring| {
+        r.bulges
+            .as_ref()
+            .is_none_or(|b| b.iter().all(|x| *x == 0.0))
+    };
     if !straight(&area.outer) || !area.holes.iter().all(straight) {
         return None;
     }
-    doc.layer_slots(layer).find_map(|(_, slot)| match doc.get(slot)? {
-        kentos_commands::Entity::Polygon(p)
-            if p.bulges.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0))
-                && same_ring(&p.pts, &area.outer.pts)
-                && p.holes.as_ref().map_or(0, Vec::len) == area.holes.len()
-                && area.holes.iter().all(|h| {
-                    p.holes.iter().flatten().any(|ph| ph.bulges.as_ref().is_none_or(|b| b.iter().all(|x| *x == 0.0)) && same_ring(&ph.pts, &h.pts))
-                }) =>
-        {
-            Some(slot)
-        }
-        _ => None,
-    })
+    doc.layer_slots(layer)
+        .find_map(|(_, slot)| match doc.get(slot)? {
+            kentos_commands::Entity::Polygon(p)
+                if p.bulges
+                    .as_ref()
+                    .is_none_or(|b| b.iter().all(|x| *x == 0.0))
+                    && same_ring(&p.pts, &area.outer.pts)
+                    && p.holes.as_ref().map_or(0, Vec::len) == area.holes.len()
+                    && area.holes.iter().all(|h| {
+                        p.holes.iter().flatten().any(|ph| {
+                            ph.bulges
+                                .as_ref()
+                                .is_none_or(|b| b.iter().all(|x| *x == 0.0))
+                                && same_ring(&ph.pts, &h.pts)
+                        })
+                    }) =>
+            {
+                Some(slot)
+            }
+            _ => None,
+        })
 }
 
 impl Tool for Boundary {

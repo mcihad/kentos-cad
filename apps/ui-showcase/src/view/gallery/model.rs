@@ -7,10 +7,10 @@ use iced::{Alignment, Element, Fill};
 use kentos_model_view::{OrbitCamera, PARTS, VIEWS};
 use kentos_model_view_ui::{Host, look};
 use kentos_ui::attribute::number;
+use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::EmptyState;
-use kentos_ui::icon::Icon;
 
 use super::{entry, pressed};
 use crate::app::Showcase;
@@ -75,17 +75,28 @@ impl Showcase {
             east: "Y",
             north: "X",
         });
-        container(viewer).width(Fill).height(typography::scaled(VIEWER_HEIGHT)).into()
+        container(viewer)
+            .width(Fill)
+            .height(typography::scaled(VIEWER_HEIGHT))
+            .into()
     }
 
     /// The north arrow from the four views and the viewer's legend.
     fn model_look(&self) -> Element<'_, Message> {
         let arrows = VIEWS.iter().map(|(name, azimuth, elevation)| {
-            let orbit = OrbitCamera { target: [0.0; 3], azimuth: *azimuth, elevation: *elevation, distance: 10.0 };
-            column![look::compass(&orbit, pressed("Kuzeye bak")), label::caption(*name)]
-                .spacing(6)
-                .align_x(Alignment::Center)
-                .into()
+            let orbit = OrbitCamera {
+                target: [0.0; 3],
+                azimuth: *azimuth,
+                elevation: *elevation,
+                distance: 10.0,
+            };
+            column![
+                look::compass(&orbit, pressed("Kuzeye bak")),
+                label::caption(*name)
+            ]
+            .spacing(6)
+            .align_x(Alignment::Center)
+            .into()
         });
         let parts: Vec<(&str, [f32; 4])> = PARTS.iter().take(10).copied().collect();
         row![

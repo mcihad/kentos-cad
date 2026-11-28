@@ -115,7 +115,11 @@ pub(crate) fn library_warning(
     renames: &[(String, String)],
     path: &str,
 ) -> Option<kentos_commands::CommandWarning> {
-    let fields = doc.layers().get(layer).map(|n| n.fields.clone()).unwrap_or_default();
+    let fields = doc
+        .layers()
+        .get(layer)
+        .map(|n| n.fields.clone())
+        .unwrap_or_default();
     let mut said: Vec<String> = Vec::new();
     for (from, to) in renames.iter().filter(|(a, b)| a != b) {
         let Some(field) = fields.iter().find(|f| f.name == *from) else {
@@ -142,4 +146,3 @@ pub(crate) fn library_warning(
         path: Some(path.into()),
     })
 }
-

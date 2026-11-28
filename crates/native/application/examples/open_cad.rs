@@ -74,7 +74,14 @@ fn main() {
                     let blocks = count(&mut snap.blocks.iter().flat_map(|b| b.entities.iter()));
                     println!(
                         "  GÖRÜNÜŞ çizim {} nesne: kesikli/noktalı {}, adlı desen {}, saydam {}; bloklar {} nesne: kesikli/noktalı {}, adlı desen {}, saydam {}",
-                        model[3], model[0], model[1], model[2], blocks[3], blocks[0], blocks[1], blocks[2]
+                        model[3],
+                        model[0],
+                        model[1],
+                        model[2],
+                        blocks[3],
+                        blocks[0],
+                        blocks[1],
+                        blocks[2]
                     );
                 }
                 // KENTOS_SAVE_KCAD: written as Kaydet writes it, read back and compared (`encode_verified`).

@@ -248,7 +248,10 @@ fn query_of(table: &str) -> Result<(String, String), ProviderError> {
             "sorgu katmanı tek bir SELECT deyimidir; noktalı virgül olmaz".into(),
         ));
     }
-    Ok((sql.to_owned(), format!("sorgu_{}", &sha256_hex(sql.as_bytes())[..16])))
+    Ok((
+        sql.to_owned(),
+        format!("sorgu_{}", &sha256_hex(sql.as_bytes())[..16]),
+    ))
 }
 
 /// A view's or a query's key: the first of `KEYS` among its integer columns.
@@ -281,7 +284,11 @@ fn geometry_decl(decl: &str) -> Option<(String, Option<u32>, bool)> {
         return Some(("GEOMETRY".into(), fallback, geography));
     };
     let mut parts = inner.split(',');
-    let kind = parts.next().unwrap_or("Geometry").trim().to_ascii_uppercase();
+    let kind = parts
+        .next()
+        .unwrap_or("Geometry")
+        .trim()
+        .to_ascii_uppercase();
     let srid = parts
         .next()
         .and_then(|s| s.trim().parse::<u32>().ok())
@@ -449,9 +456,11 @@ async fn shape(conn: &mut PgConnection, table: &str) -> Result<Shape, ProviderEr
     let gname = geometry.as_ref().map(|g| g.0.clone());
     let geography = geometry.as_ref().is_some_and(|g| g.4);
     // An untyped `geometry` column takes any dimension: Z and M optional (docs/adr/0584 §2).
-    let untyped = gname
-        .as_ref()
-        .is_some_and(|g| attributes.iter().any(|(n, d, ..)| n == g && !d.contains('(')));
+    let untyped = gname.as_ref().is_some_and(|g| {
+        attributes
+            .iter()
+            .any(|(n, d, ..)| n == g && !d.contains('('))
+    });
     let columns = columns_of(attributes, &fid, gname.as_ref());
     let writable: bool = !view
         && !geography
@@ -510,9 +519,9 @@ async fn query_shape(conn: &mut PgConnection, table: &str) -> Result<Shape, Prov
         .collect();
     let fid = key_among(&name, &named)?;
     let from = format!("({sql}) AS q");
-    let geometry = attributes
-        .iter()
-        .find_map(|(n, d, ..)| geometry_decl(d).map(|(kind, srid, geography)| (n.clone(), kind, srid, geography)));
+    let geometry = attributes.iter().find_map(|(n, d, ..)| {
+        geometry_decl(d).map(|(kind, srid, geography)| (n.clone(), kind, srid, geography))
+    });
     let srid = match &geometry {
         None => None,
         Some((_, _, Some(s), _)) => Some(*s),
@@ -553,7 +562,10 @@ fn select_of(s: &Shape, columns: &[gpkg::Column], geometry: bool) -> String {
 }
 
 /// A row read by `select_of`.
-fn row_of(r: &PgRow, columns: &[gpkg::Column]) -> Result<(gpkg::Row, Option<Vec<u8>>), ProviderError> {
+fn row_of(
+    r: &PgRow,
+    columns: &[gpkg::Column],
+) -> Result<(gpkg::Row, Option<Vec<u8>>), ProviderError> {
     let fid: i64 = r.try_get(0).map_err(unreachable)?;
     let wkb: Option<Vec<u8>> = r.try_get(1).map_err(unreachable)?;
     Ok((
@@ -592,7 +604,9 @@ async fn rows(
         "SELECT {} FROM {} {} ORDER BY {}",
         select_of(s, &s.layer.columns, true),
         s.from,
-        boxed.as_ref().map_or(String::new(), |w| format!("WHERE {w}")),
+        boxed
+            .as_ref()
+            .map_or(String::new(), |w| format!("WHERE {w}")),
         quote(&s.layer.fid)
     );
     let mut q = sqlx::query(sqlx::AssertSqlSafe(sql.as_str()));
@@ -661,8 +675,17 @@ async fn rows_by_keys(
 /// Of `keys`, those whose rows the account sees but may not change: seen by a plain select, not by one `FOR UPDATE`
 /// (which takes the UPDATE privilege and the row security's UPDATE policies). A key no select sees is not here: the
 /// update finds no row and says so. Without the privilege at all, every key.
-async fn denied_keys(conn: &mut PgConnection, s: &Shape, keys: &[i64]) -> Result<Vec<i64>, ProviderError> {
-    let seen_sql = format!("SELECT {}::bigint FROM {} WHERE {} = ANY($1)", quote(&s.layer.fid), s.from, quote(&s.layer.fid));
+async fn denied_keys(
+    conn: &mut PgConnection,
+    s: &Shape,
+    keys: &[i64],
+) -> Result<Vec<i64>, ProviderError> {
+    let seen_sql = format!(
+        "SELECT {}::bigint FROM {} WHERE {} = ANY($1)",
+        quote(&s.layer.fid),
+        s.from,
+        quote(&s.layer.fid)
+    );
     let seen: Vec<i64> = sqlx::query_scalar(sqlx::AssertSqlSafe(seen_sql.as_str()))
         .bind(keys)
         .fetch_all(&mut *conn)
@@ -690,11 +713,19 @@ fn is_denied(e: &sqlx::Error) -> bool {
 
 /// A write's error: the row `key` the account may not change, or a refusal.
 fn denied_or_refused(e: sqlx::Error, key: i64) -> ProviderError {
-    if is_denied(&e) { ProviderError::RowsDenied(vec![key]) } else { refused(e) }
+    if is_denied(&e) {
+        ProviderError::RowsDenied(vec![key])
+    } else {
+        refused(e)
+    }
 }
 
 /// A row's values for `columns`, read from `first` on.
-fn values_of(r: &PgRow, columns: &[gpkg::Column], first: usize) -> Result<Vec<Value>, ProviderError> {
+fn values_of(
+    r: &PgRow,
+    columns: &[gpkg::Column],
+    first: usize,
+) -> Result<Vec<Value>, ProviderError> {
     let mut values = Vec::with_capacity(columns.len());
     for (i, c) in columns.iter().enumerate() {
         let at = i + first;
@@ -806,7 +837,9 @@ async fn scan(
         Some(o) => {
             let at = q
                 .columns
-                .map_or(Some(o.column), |list| list.iter().position(|&i| i == o.column))
+                .map_or(Some(o.column), |list| {
+                    list.iter().position(|&i| i == o.column)
+                })
                 .ok_or_else(|| refused(format!("{}. sütun sıralanıyor ama okunmuyor", o.column)))?;
             let c = s
                 .layer
@@ -847,7 +880,9 @@ async fn scan(
         }
         let order_by = match &ordered {
             None => key.clone(),
-            Some((_, c, _, d)) => format!("{c} {} NULLS LAST, {key}", if *d { "DESC" } else { "ASC" }),
+            Some((_, c, _, d)) => {
+                format!("{c} {} NULLS LAST, {key}", if *d { "DESC" } else { "ASC" })
+            }
         };
         let sql = format!(
             "SELECT {} FROM {sql_name}{}{} ORDER BY {order_by} LIMIT {}",
@@ -954,7 +989,10 @@ async fn read_only(
 }
 
 /// The lasting ids KentOS keeps for the rows of `s` (none for a query).
-async fn uids_of(conn: &mut PgConnection, s: &Shape) -> Result<HashMap<i64, String>, ProviderError> {
+async fn uids_of(
+    conn: &mut PgConnection,
+    s: &Shape,
+) -> Result<HashMap<i64, String>, ProviderError> {
     match &s.schema {
         Some(schema) => uids(conn, schema, &s.layer.name).await,
         None => Ok(HashMap::new()),
@@ -978,9 +1016,11 @@ async fn edit_in(
     let sql_name = s.from.clone();
     let full = s.layer.name.clone();
     let schema = s.schema.clone().unwrap_or_default();
-    tx.execute(sqlx::AssertSqlSafe(format!("LOCK TABLE {sql_name} IN SHARE ROW EXCLUSIVE MODE")))
-        .await
-        .map_err(refused)?;
+    tx.execute(sqlx::AssertSqlSafe(format!(
+        "LOCK TABLE {sql_name} IN SHARE ROW EXCLUSIVE MODE"
+    )))
+    .await
+    .map_err(refused)?;
     // The rows the edits touch, as they now are, against the layer's base (docs/adr/0582 §2).
     let checked = check.is_some();
     if let Some(check) = check {
@@ -1012,23 +1052,34 @@ async fn edit_in(
         }
     }
     for c in &edits.add_columns {
-        tx.execute(sqlx::AssertSqlSafe(format!("ALTER TABLE {sql_name} ADD COLUMN {} {}", quote(&c.name), pg_type(c))))
-            .await
-            .map_err(refused)?;
+        tx.execute(sqlx::AssertSqlSafe(format!(
+            "ALTER TABLE {sql_name} ADD COLUMN {} {}",
+            quote(&c.name),
+            pg_type(c)
+        )))
+        .await
+        .map_err(refused)?;
     }
     // The columns written, in the rows' order: the table's, then those added.
     let mut columns: Vec<(String, String, bool)> = s
         .layer
         .columns
         .iter()
-        .map(|c| (quote(&c.name), c.decl.clone(), matches!(c.kind, ColumnKind::Blob(_))))
+        .map(|c| {
+            (
+                quote(&c.name),
+                c.decl.clone(),
+                matches!(c.kind, ColumnKind::Blob(_)),
+            )
+        })
         .collect();
-    columns.extend(
-        edits
-            .add_columns
-            .iter()
-            .map(|c| (quote(&c.name), pg_type(c), matches!(c.kind, ColumnKind::Blob(_)))),
-    );
+    columns.extend(edits.add_columns.iter().map(|c| {
+        (
+            quote(&c.name),
+            pg_type(c),
+            matches!(c.kind, ColumnKind::Blob(_)),
+        )
+    }));
     let srid = s.srid.unwrap_or(0);
     let geom = s.layer.geometry.as_ref().map(|g| quote(&g.name));
     let mut targets: Vec<String> = Vec::new();
@@ -1042,12 +1093,19 @@ async fn edit_in(
     for (q, decl, bytes) in &columns {
         n += 1;
         targets.push(q.clone());
-        slots.push(if *bytes { format!("${n}") } else { format!("CAST(${n} AS {decl})") });
+        slots.push(if *bytes {
+            format!("${n}")
+        } else {
+            format!("CAST(${n} AS {decl})")
+        });
     }
     let width = columns.len();
     let bind_row = |row: &gpkg::NewRow| -> Result<(Option<Vec<u8>>, Vec<Bound>), ProviderError> {
         if row.values.len() != width {
-            return Err(refused(format!("satırda {} değer var, {width} sütun bekleniyor", row.values.len())));
+            return Err(refused(format!(
+                "satırda {} değer var, {width} sütun bekleniyor",
+                row.values.len()
+            )));
         }
         Ok((
             row.geometry.as_ref().map(gpkg::write_wkb),
@@ -1148,7 +1206,10 @@ async fn edit_in(
         let (wkb, vals) = bind_row(row)?;
         let left = gpkg::left_to_default(&s.layer.columns, &row.values);
         let sql = if targets.is_empty() {
-            format!("INSERT INTO {sql_name} DEFAULT VALUES RETURNING {}::bigint", quote(&s.layer.fid))
+            format!(
+                "INSERT INTO {sql_name} DEFAULT VALUES RETURNING {}::bigint",
+                quote(&s.layer.fid)
+            )
         } else {
             let mut k = 0usize;
             let places: Vec<String> = slots
@@ -1175,7 +1236,11 @@ async fn edit_in(
             .filter(|(i, _)| !left.contains(i))
             .map(|(_, v)| v)
             .collect();
-        let q = with_values!(sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(sql.as_str())), wkb, vals);
+        let q = with_values!(
+            sqlx::query_scalar::<_, i64>(sqlx::AssertSqlSafe(sql.as_str())),
+            wkb,
+            vals
+        );
         inserted.push(q.fetch_one(&mut *tx).await.map_err(refused)?);
         lefts.push(left);
     }
@@ -1230,7 +1295,12 @@ async fn edit_in(
         }
         let gone = format!("DELETE FROM {side} WHERE table_name = $1 AND pk = $2");
         for fid in &edits.delete {
-            sqlx::query(sqlx::AssertSqlSafe(gone.as_str())).bind(&full).bind(*fid).execute(&mut *tx).await.map_err(refused)?;
+            sqlx::query(sqlx::AssertSqlSafe(gone.as_str()))
+                .bind(&full)
+                .bind(*fid)
+                .execute(&mut *tx)
+                .await
+                .map_err(refused)?;
         }
     }
     lineage_in(&mut *tx, &schema, &full, &edits.lineage).await?;
@@ -1546,17 +1616,25 @@ impl TableProvider for PostGis {
             order.sort();
             order.dedup_by(|a, b| a.0 == b.0);
             for (from, i) in &order {
-                tx.execute(sqlx::AssertSqlSafe(format!("LOCK TABLE {from} IN SHARE ROW EXCLUSIVE MODE")))
-                    .await
-                    .map_err(|e| (*i, refused(e)))?;
+                tx.execute(sqlx::AssertSqlSafe(format!(
+                    "LOCK TABLE {from} IN SHARE ROW EXCLUSIVE MODE"
+                )))
+                .await
+                .map_err(|e| (*i, refused(e)))?;
             }
             let n = items.len();
             let mut out = Vec::with_capacity(n);
             for (i, t) in items.into_iter().enumerate() {
-                out.push(edit_in(&mut tx, t.table, t.area, t.revision, t.check, t.edits).await.map_err(|e| (i, e))?);
+                out.push(
+                    edit_in(&mut tx, t.table, t.area, t.revision, t.check, t.edits)
+                        .await
+                        .map_err(|e| (i, e))?,
+                );
             }
             for (m, w) in maps.iter().enumerate() {
-                junctions::write(&mut tx, w, &out).await.map_err(|e| (n + m, e))?;
+                junctions::write(&mut tx, w, &out)
+                    .await
+                    .map_err(|e| (n + m, e))?;
             }
             tx.commit().await.map_err(|e| (0, refused(e)))?;
             let _ = conn.close().await;
@@ -1587,7 +1665,12 @@ impl TableProvider for PostGis {
         })
     }
 
-    fn relation(&self, address: &str, child: &str, parent: &str) -> Result<DbRelation, ProviderError> {
+    fn relation(
+        &self,
+        address: &str,
+        child: &str,
+        parent: &str,
+    ) -> Result<DbRelation, ProviderError> {
         self.runtime.block_on(async {
             let mut conn = connect(address).await?;
             let found = junctions::relation(&mut conn, child, parent).await;
@@ -1763,13 +1846,34 @@ mod tests {
 
     #[test]
     fn geometry_and_geography_columns_read_their_type_and_system() {
-        assert_eq!(geometry_decl("geometry(MultiPolygon,5256)"), Some(("MULTIPOLYGON".into(), Some(5256), false)));
-        assert_eq!(geometry_decl("geometry"), Some(("GEOMETRY".into(), None, false)));
-        assert_eq!(geometry_decl("geometry(PointZ)"), Some(("POINTZ".into(), None, false)));
-        assert_eq!(geometry_decl("geography(Point,4326)"), Some(("POINT".into(), Some(4326), true)));
-        assert_eq!(geometry_decl("geography(LineString)"), Some(("LINESTRING".into(), Some(4326), true)));
-        assert_eq!(geometry_decl("geography"), Some(("GEOMETRY".into(), Some(4326), true)));
-        assert_eq!(geometry_decl("geography(Polygon,4258)"), Some(("POLYGON".into(), Some(4258), true)));
+        assert_eq!(
+            geometry_decl("geometry(MultiPolygon,5256)"),
+            Some(("MULTIPOLYGON".into(), Some(5256), false))
+        );
+        assert_eq!(
+            geometry_decl("geometry"),
+            Some(("GEOMETRY".into(), None, false))
+        );
+        assert_eq!(
+            geometry_decl("geometry(PointZ)"),
+            Some(("POINTZ".into(), None, false))
+        );
+        assert_eq!(
+            geometry_decl("geography(Point,4326)"),
+            Some(("POINT".into(), Some(4326), true))
+        );
+        assert_eq!(
+            geometry_decl("geography(LineString)"),
+            Some(("LINESTRING".into(), Some(4326), true))
+        );
+        assert_eq!(
+            geometry_decl("geography"),
+            Some(("GEOMETRY".into(), Some(4326), true))
+        );
+        assert_eq!(
+            geometry_decl("geography(Polygon,4258)"),
+            Some(("POLYGON".into(), Some(4258), true))
+        );
         assert_eq!(geometry_decl("text"), None);
     }
 

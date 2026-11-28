@@ -69,7 +69,9 @@ pub struct Way {
 }
 
 fn along(points: &[[f64; 2]], s: f64) -> f64 {
-    let (Some(first), Some(last)) = (points.first(), points.last()) else { return 0.0 };
+    let (Some(first), Some(last)) = (points.first(), points.last()) else {
+        return 0.0;
+    };
     if s <= first[0] {
         return first[1];
     }
@@ -78,7 +80,11 @@ fn along(points: &[[f64; 2]], s: f64) -> f64 {
     }
     let i = points.partition_point(|p| p[0] <= s);
     let (a, b) = (points[i - 1], points[i]);
-    if b[0] == a[0] { b[1] } else { a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0]) }
+    if b[0] == a[0] {
+        b[1]
+    } else {
+        a[1] + (b[1] - a[1]) * (s - a[0]) / (b[0] - a[0])
+    }
 }
 
 /// The derivative of a piecewise linear function on the stretch holding `(a, b)`.
@@ -89,7 +95,11 @@ fn rate(points: &[[f64; 2]], a: f64, b: f64) -> f64 {
     }
     let i = points.partition_point(|p| p[0] <= m);
     let (p, q) = (points[i - 1], points[i]);
-    if q[0] == p[0] { 0.0 } else { (q[1] - p[1]) / (q[0] - p[0]) }
+    if q[0] == p[0] {
+        0.0
+    } else {
+        (q[1] - p[1]) / (q[0] - p[0])
+    }
 }
 
 /// A stretch's relative gradients (per one): each side's edge over the axis of rotation, the largest size on it.
@@ -105,7 +115,12 @@ pub struct Gradient {
 /// widths' break points (where neither changes, both are 0).
 pub fn relative_gradients(way: &Way, pivot: Pivot, from: f64, to: f64) -> Vec<Gradient> {
     let mut stops: Vec<f64> = vec![from, to];
-    for pts in [&way.left_slope, &way.right_slope, &way.left_width, &way.right_width] {
+    for pts in [
+        &way.left_slope,
+        &way.right_slope,
+        &way.left_width,
+        &way.right_width,
+    ] {
         stops.extend(pts.iter().map(|p| p[0]).filter(|s| *s > from && *s < to));
     }
     stops.sort_by(f64::total_cmp);
@@ -135,7 +150,12 @@ pub fn relative_gradients(way: &Way, pivot: Pivot, from: f64, to: f64) -> Vec<Gr
             }
         };
         let most = |is_left: bool| edge(a, is_left).abs().max(edge(b, is_left).abs());
-        out.push(Gradient { from: a, to: b, left: most(true), right: most(false) });
+        out.push(Gradient {
+            from: a,
+            to: b,
+            left: most(true),
+            right: most(false),
+        });
     }
     out
 }
@@ -153,7 +173,11 @@ pub fn friction(speed: f64, radius: f64, e: f64) -> f64 {
 pub fn toward_centre(left: f64, right: f64, left_turn: bool) -> f64 {
     // A left curve's centre is on the left: the left side falls toward it when its outward slope is negative, the right
     // side when its outward slope is positive.
-    let (l, r) = if left_turn { (-left, right) } else { (left, -right) };
+    let (l, r) = if left_turn {
+        (-left, right)
+    } else {
+        (left, -right)
+    };
     l.min(r)
 }
 
@@ -200,7 +224,11 @@ pub fn curve_friction(
         for s in at {
             let Some(p) = al.at(s) else { continue };
             // At an element's end the curvature is the element's own: read just inside the curve.
-            let k = if p.curvature == 0.0 { al.at((s + 1e-6).min(to)).map_or(0.0, |q| q.curvature) } else { p.curvature };
+            let k = if p.curvature == 0.0 {
+                al.at((s + 1e-6).min(to)).map_or(0.0, |q| q.curvature)
+            } else {
+                p.curvature
+            };
             if k == 0.0 {
                 continue;
             }
@@ -211,7 +239,15 @@ pub fn curve_friction(
             // Full superelevation on the circular part is a plateau of one friction: within 1e-12 the first
             // station stays, so the place does not hang on the last bit of the curvature.
             if best.as_ref().is_none_or(|b| f > b.most + 1e-12) {
-                best = Some(CurveFriction { pi: c.pi.clone(), from, to, most: f, at: s, radius, e });
+                best = Some(CurveFriction {
+                    pi: c.pi.clone(),
+                    from,
+                    to,
+                    most: f,
+                    at: s,
+                    radius,
+                    e,
+                });
             }
         }
         out.extend(best);

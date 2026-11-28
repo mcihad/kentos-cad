@@ -37,7 +37,10 @@ pub fn reads(level: Option<&str>, other: Option<&str>) -> bool {
 /// The drawing's passages, in its order.
 pub fn passages(doc: &Document) -> Vec<Passage> {
     let by_uid = |u: &str| {
-        crate::identity::Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s))
+        crate::identity::Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
     };
     doc.entities()
         .filter_map(|e| {
@@ -51,7 +54,10 @@ pub fn passages(doc: &Document) -> Vec<Passage> {
             let p = &x.place;
             let mid = |s: &Vec2, t: &Vec2| CoreVec2::new((s.x + t.x) / 2.0, (s.y + t.y) / 2.0);
             Some(Passage {
-                uid: doc.uid(Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default(),
+                uid: doc
+                    .uid(Slot(e.base().id))
+                    .map(|u| u.to_string())
+                    .unwrap_or_default(),
                 number: x.number.clone(),
                 width: x.width,
                 a: mid(&p[0], &p[1]),
@@ -65,7 +71,10 @@ pub fn passages(doc: &Document) -> Vec<Passage> {
 
 fn signed(pts: &[Vec2]) -> f64 {
     let n = pts.len();
-    (0..n).map(|i| pts[i].x * pts[(i + 1) % n].y - pts[(i + 1) % n].x * pts[i].y).sum::<f64>() / 2.0
+    (0..n)
+        .map(|i| pts[i].x * pts[(i + 1) % n].y - pts[(i + 1) % n].x * pts[i].y)
+        .sum::<f64>()
+        / 2.0
 }
 
 /// How much of `p`'s axis a room's straight edges run along inside its band, and the side the room lies on
@@ -85,7 +94,11 @@ pub fn along(parts: &[SpacePart], p: &Passage) -> Option<(f64, f64)> {
             // Its inside is to the left of its edges: an outer ring counter-clockwise, a hole clockwise.
             let left = (signed(&ring.pts) > 0.0) == (h == 0);
             for i in 0..n {
-                if ring.bulges.as_ref().is_some_and(|b| b.get(i).copied().unwrap_or(0.0) != 0.0) {
+                if ring
+                    .bulges
+                    .as_ref()
+                    .is_some_and(|b| b.get(i).copied().unwrap_or(0.0) != 0.0)
+                {
                     continue;
                 }
                 let (s, t) = (ring.pts[i], ring.pts[(i + 1) % n]);
@@ -98,13 +111,20 @@ pub fn along(parts: &[SpacePart], p: &Passage) -> Option<(f64, f64)> {
                 if off > p.half + BAND {
                     continue;
                 }
-                let (k0, k1) = (ux * (s.x - p.a.x) + uy * (s.y - p.a.y), ux * (t.x - p.a.x) + uy * (t.y - p.a.y));
+                let (k0, k1) = (
+                    ux * (s.x - p.a.x) + uy * (s.y - p.a.y),
+                    ux * (t.x - p.a.x) + uy * (t.y - p.a.y),
+                );
                 let over = k0.max(k1).min(len) - k0.min(k1).max(0.0);
                 if over <= 0.0 {
                     continue;
                 }
                 total += over;
-                let side = if (ux * ex + uy * ey > 0.0) == left { 1.0 } else { -1.0 };
+                let side = if (ux * ex + uy * ey > 0.0) == left {
+                    1.0
+                } else {
+                    -1.0
+                };
                 if best.is_none_or(|(o, _)| over > o) {
                     best = Some((over, side));
                 }
@@ -121,6 +141,6 @@ pub fn baseboard(parts: &[SpacePart], level: Option<&str>, all: &[Passage]) -> f
         .filter(|p| reads(level, p.level.as_deref()))
         .filter_map(|p| along(parts, p).map(|(o, _)| o))
         .sum();
-    (kentos_geometry_core::geom::space::perimeter(&crate::arch_values::core_areas(parts)) - off).max(0.0)
+    (kentos_geometry_core::geom::space::perimeter(&crate::arch_values::core_areas(parts)) - off)
+        .max(0.0)
 }
-

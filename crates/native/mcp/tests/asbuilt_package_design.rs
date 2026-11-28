@@ -10,14 +10,25 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 }
 
 fn fixture(rel: &str) -> String {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures").join(rel).display().to_string()
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures")
+        .join(rel)
+        .display()
+        .to_string()
 }
 
 #[test]
 fn the_record_with_its_package_s_own_design_over_mcp() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.asbuilt.check.json")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-asbuilt-package-design-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.asbuilt.check.json"
+    ))
+    .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-asbuilt-package-design-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -36,7 +47,15 @@ fn the_record_with_its_package_s_own_design_over_mcp() {
     let r = call(&mut server, "cad.asbuilt.check", args.clone());
     assert_eq!(r["isError"], false, "{r}");
     let (got, want) = (&r["structuredContent"]["output"], &step["result"]["output"]);
-    for key in ["designDigest", "designChanged", "within", "outside", "unmatched", "ambiguous", "missing"] {
+    for key in [
+        "designDigest",
+        "designChanged",
+        "within",
+        "outside",
+        "unmatched",
+        "ambiguous",
+        "missing",
+    ] {
         assert_eq!(got[key], want[key], "{key}");
     }
     assert_eq!(got["package"]["design"], true);

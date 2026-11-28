@@ -18,7 +18,12 @@ fn bench(tool: &str) -> Bench {
 }
 
 fn chips(b: &Bench) -> Vec<String> {
-    b.session.prompt().options.iter().map(|o| o.label.to_string()).collect()
+    b.session
+        .prompt()
+        .options
+        .iter()
+        .map(|o| o.label.to_string())
+        .collect()
 }
 
 /// The newest object, a footing.
@@ -31,7 +36,11 @@ fn footing(b: &Bench) -> kentos_commands::BeamFields {
 
 fn layer_of(b: &Bench) -> String {
     let id = b.newest().base().layer_id.clone();
-    b.doc.layers().get(&id).map(|l| l.name.clone()).unwrap_or_default()
+    b.doc
+        .layers()
+        .get(&id)
+        .map(|l| l.name.clone())
+        .unwrap_or_default()
 }
 
 /// Its axis's middle (from E, N), its direction in degrees and its length.
@@ -63,10 +72,21 @@ fn the_pad_tool_puts_a_pad_under_the_column_it_clicks_turned_with_it() {
     b.start("footingPad");
     assert_eq!(b.session.tool_id(), "footingPad");
     let shown = chips(&b);
-    for want in ["Tür", "Genişlik", "Uzunluk", "Yükseklik", "Kattan yükseklik", "Açı", "Numara"] {
+    for want in [
+        "Tür",
+        "Genişlik",
+        "Uzunluk",
+        "Yükseklik",
+        "Kattan yükseklik",
+        "Açı",
+        "Numara",
+    ] {
         assert!(shown.iter().any(|c| c == want), "{want}: {shown:?}");
     }
-    assert!(!shown.iter().any(|c| c == "Hiza" || c == "Kot farkı"), "{shown:?}");
+    assert!(
+        !shown.iter().any(|c| c == "Hiza" || c == "Kot farkı"),
+        "{shown:?}"
+    );
 
     // A click a little off the column's middle, inside it: the pad's middle is the column's, turned with it.
     b.click(2.08, 1.95);
@@ -90,11 +110,19 @@ fn the_pad_tool_puts_a_pad_under_the_column_it_clicks_turned_with_it() {
     let k = footing(&b);
     let (middle, turn, length) = axis(&k);
     assert!(near(middle[0], 8.0) && near(middle[1], 2.0), "{middle:?}");
-    assert!(near(turn, 90.0) && near(length, 2.0) && near(k.width, 1.2), "{turn} {length} {}", k.width);
+    assert!(
+        near(turn, 90.0) && near(length, 2.0) && near(k.width, 1.2),
+        "{turn} {length} {}",
+        k.width
+    );
     assert_eq!(k.tag.as_deref(), Some("T101"));
     assert_eq!(b.last_text(), Some("Tekil temel kondu: T101 120×200/50."));
     b.click(12.0, 2.0);
-    assert_eq!(footing(&b).tag.as_deref(), Some("T102"), "the next one the next number");
+    assert_eq!(
+        footing(&b).tag.as_deref(),
+        Some("T102"),
+        "the next one the next number"
+    );
 
     // A size of 0 is refused and the old one stays; the tool stays on.
     assert!(!b.run(|s, cx| s.configure("Y", "0", cx)));
@@ -108,10 +136,20 @@ fn the_strip_tool_draws_a_strip_along_its_axis_and_enter_writes_it() {
     let mut b = bench("footingStrip");
     assert_eq!(b.session.tool_id(), "footingStrip");
     let shown = chips(&b);
-    for want in ["Tür", "Genişlik", "Yükseklik", "Hiza", "Kattan yükseklik", "Numara"] {
+    for want in [
+        "Tür",
+        "Genişlik",
+        "Yükseklik",
+        "Hiza",
+        "Kattan yükseklik",
+        "Numara",
+    ] {
         assert!(shown.iter().any(|c| c == want), "{want}: {shown:?}");
     }
-    assert!(!shown.iter().any(|c| c == "Uzunluk" || c == "Açı"), "{shown:?}");
+    assert!(
+        !shown.iter().any(|c| c == "Uzunluk" || c == "Açı"),
+        "{shown:?}"
+    );
 
     // An L along its axis, 1.20 m deep.
     assert!(b.run(|s, cx| s.configure("A", "-1.2", cx)));
@@ -126,14 +164,21 @@ fn the_strip_tool_draws_a_strip_along_its_axis_and_enter_writes_it() {
     assert_eq!((k.width, k.height, k.base_offset), (0.6, 0.5, Some(-1.2)));
     assert_eq!(layer_of(&b), "MM-TEML-SUREKLI");
     assert_eq!(b.last_text(), Some("Sürekli temel çizildi: 60/50."));
-    assert_eq!(b.session.tool_id(), "footingStrip", "Enter writes it and the tool stays on");
+    assert_eq!(
+        b.session.tool_id(),
+        "footingStrip",
+        "Enter writes it and the tool stays on"
+    );
 
     // Tür: a pad with a pad's sizes; again: a strip with a strip's.
     assert!(b.type_text("T"));
     assert!(chips(&b).iter().any(|c| c == "Uzunluk"));
     b.click(10.0, 10.0);
     let k = footing(&b);
-    assert_eq!((k.role, k.width, k.height), (BeamRole::PadFooting, 1.5, 0.5));
+    assert_eq!(
+        (k.role, k.width, k.height),
+        (BeamRole::PadFooting, 1.5, 0.5)
+    );
     assert!(b.run(|s, cx| s.configure("T", "stripFooting", cx)));
     assert!(chips(&b).iter().any(|c| c == "Hiza"));
 }
@@ -155,13 +200,31 @@ fn the_raft_tool_writes_a_raft_past_its_outline_and_tur_gives_a_slab_s_sizes_bac
     assert_eq!(s.slab.role, kentos_commands::SlabRole::Raft);
     assert_eq!((s.slab.thickness, s.slab.offset), (0.6, -0.3));
     let ring = &s.slab.parts[0].outer.pts;
-    let (min_x, max_x) = ring.iter().fold((f64::MAX, f64::MIN), |(a, z), p| (a.min(p.x - E), z.max(p.x - E)));
-    let (min_y, max_y) = ring.iter().fold((f64::MAX, f64::MIN), |(a, z), p| (a.min(p.y - N), z.max(p.y - N)));
-    assert!(near(min_x, -0.5) && near(max_x, 10.5) && near(min_y, -0.5) && near(max_y, 8.5), "{ring:?}");
+    let (min_x, max_x) = ring.iter().fold((f64::MAX, f64::MIN), |(a, z), p| {
+        (a.min(p.x - E), z.max(p.x - E))
+    });
+    let (min_y, max_y) = ring.iter().fold((f64::MAX, f64::MIN), |(a, z), p| {
+        (a.min(p.y - N), z.max(p.y - N))
+    });
+    assert!(
+        near(min_x, -0.5) && near(max_x, 10.5) && near(min_y, -0.5) && near(max_y, 8.5),
+        "{ring:?}"
+    );
     assert_eq!(layer_of(&b), "MM-TEML-RADYE");
     // Tür: Döşeme with a slab's sizes again, its id the slab tool's.
     assert!(b.run(|s, cx| s.configure("T", "floor", cx)));
     assert_eq!(b.session.tool_id(), "slab");
-    let thickness = b.session.prompt().options.iter().find(|o| o.label == "Kalınlık").and_then(|o| o.value.clone());
-    assert!(thickness.as_deref().is_some_and(|t| t.starts_with("0.15") || t.starts_with("15")), "{thickness:?}");
+    let thickness = b
+        .session
+        .prompt()
+        .options
+        .iter()
+        .find(|o| o.label == "Kalınlık")
+        .and_then(|o| o.value.clone());
+    assert!(
+        thickness
+            .as_deref()
+            .is_some_and(|t| t.starts_with("0.15") || t.starts_with("15")),
+        "{thickness:?}"
+    );
 }

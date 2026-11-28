@@ -25,7 +25,17 @@ pub const MAX_DRAFT_REASON: usize = 4000;
 
 /// The decision area fields a draft may change (the profile `imar-plani`'s `karar-alani`): the use, the building order
 /// and the measured values.
-pub const DRAFT_FIELDS: [&str; 9] = ["Kullanim", "Nizam", "TAKS", "KAKS", "KatAdedi", "Hmax", "OnCekme", "YanCekme", "ArkaCekme"];
+pub const DRAFT_FIELDS: [&str; 9] = [
+    "Kullanim",
+    "Nizam",
+    "TAKS",
+    "KAKS",
+    "KatAdedi",
+    "Hmax",
+    "OnCekme",
+    "YanCekme",
+    "ArkaCekme",
+];
 
 /// The user's symbol for a use at a level: a library id among the level's choices.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -101,59 +111,107 @@ fn label_ok(t: &str, most: usize) -> bool {
 /// A persistent id as the drawing writes it: a lowercase, hyphenated UUID.
 fn uid_ok(t: &str) -> bool {
     t.len() == 36
-        && t.char_indices().all(|(i, c)| if matches!(i, 8 | 13 | 18 | 23) { c == '-' } else { c.is_ascii_digit() || ('a'..='f').contains(&c) })
+        && t.char_indices().all(|(i, c)| {
+            if matches!(i, 8 | 13 | 18 | 23) {
+                c == '-'
+            } else {
+                c.is_ascii_digit() || ('a'..='f').contains(&c)
+            }
+        })
 }
 
 /// Why the data cannot be kept: the field and what is wrong, or none.
 pub fn zoning_plan_problem(d: &ZoningPlanData) -> Option<String> {
     if d.symbols.len() > MAX_KEPT_SYMBOLS {
-        return Some(format!("symbols: en çok {MAX_KEPT_SYMBOLS} sembol seçimi saklanır"));
+        return Some(format!(
+            "symbols: en çok {MAX_KEPT_SYMBOLS} sembol seçimi saklanır"
+        ));
     }
     for (i, s) in d.symbols.iter().enumerate() {
-        if ![&s.level, &s.usage, &s.symbol].iter().all(|t| label_ok(t, MAX_ZONING_LABEL)) {
+        if ![&s.level, &s.usage, &s.symbol]
+            .iter()
+            .all(|t| label_ok(t, MAX_ZONING_LABEL))
+        {
             return Some(format!(
                 "symbols[{i}]: kademe, kullanım ve sembol boşluksuz başlayıp biten 1–{MAX_ZONING_LABEL} karakterdir"
             ));
         }
-        if d.symbols[..i].iter().any(|o| o.level == s.level && o.usage == s.usage) {
-            return Some(format!("symbols[{i}]: aynı kademe ve kullanımın sembolü iki kez yazılmış"));
+        if d.symbols[..i]
+            .iter()
+            .any(|o| o.level == s.level && o.usage == s.usage)
+        {
+            return Some(format!(
+                "symbols[{i}]: aynı kademe ve kullanımın sembolü iki kez yazılmış"
+            ));
         }
     }
     if d.drafts.len() > MAX_PLAN_DRAFTS {
-        return Some(format!("drafts: en çok {MAX_PLAN_DRAFTS} plan değişikliği taslağı saklanır"));
+        return Some(format!(
+            "drafts: en çok {MAX_PLAN_DRAFTS} plan değişikliği taslağı saklanır"
+        ));
     }
     for (i, t) in d.drafts.iter().enumerate() {
         let at = |f: &str| format!("drafts[{i}].{f}");
         if !label_ok(&t.id, MAX_DRAFT_ID) {
-            return Some(format!("{}: taslağın kimliği boşluksuz başlayıp biten 1–{MAX_DRAFT_ID} karakterdir", at("id")));
+            return Some(format!(
+                "{}: taslağın kimliği boşluksuz başlayıp biten 1–{MAX_DRAFT_ID} karakterdir",
+                at("id")
+            ));
         }
         if d.drafts[..i].iter().any(|o| o.id == t.id) {
             return Some(format!("{}: “{}” kimlikli iki taslak var", at("id"), t.id));
         }
         if !label_ok(&t.plan, MAX_ZONING_LABEL) {
-            return Some(format!("{}: planın kimliği boşluksuz başlayıp biten 1–{MAX_ZONING_LABEL} karakterdir", at("plan")));
+            return Some(format!(
+                "{}: planın kimliği boşluksuz başlayıp biten 1–{MAX_ZONING_LABEL} karakterdir",
+                at("plan")
+            ));
         }
         if t.revision.is_empty() || !t.revision.chars().all(|c| c.is_ascii_digit()) {
-            return Some(format!("{}: taslağın yapıldığı çizim sürümü bir tamsayı yazısıdır", at("revision")));
+            return Some(format!(
+                "{}: taslağın yapıldığı çizim sürümü bir tamsayı yazısıdır",
+                at("revision")
+            ));
         }
-        if t.reason.trim() != t.reason || t.reason.is_empty() || t.reason.chars().count() > MAX_DRAFT_REASON {
-            return Some(format!("{}: gerekçe boşluksuz başlayıp biten 1–{MAX_DRAFT_REASON} karakterdir", at("reason")));
+        if t.reason.trim() != t.reason
+            || t.reason.is_empty()
+            || t.reason.chars().count() > MAX_DRAFT_REASON
+        {
+            return Some(format!(
+                "{}: gerekçe boşluksuz başlayıp biten 1–{MAX_DRAFT_REASON} karakterdir",
+                at("reason")
+            ));
         }
         if t.changes.is_empty() || t.changes.len() > MAX_DRAFT_CHANGES {
-            return Some(format!("{}: taslakta 1–{MAX_DRAFT_CHANGES} değişiklik olur", at("changes")));
+            return Some(format!(
+                "{}: taslakta 1–{MAX_DRAFT_CHANGES} değişiklik olur",
+                at("changes")
+            ));
         }
         for (k, c) in t.changes.iter().enumerate() {
             let at = format!("drafts[{i}].changes[{k}]");
             if !uid_ok(&c.area) {
-                return Some(format!("{at}.area: karar alanının kimliği küçük harfli, tireli bir UUID'dir"));
+                return Some(format!(
+                    "{at}.area: karar alanının kimliği küçük harfli, tireli bir UUID'dir"
+                ));
             }
             if !DRAFT_FIELDS.contains(&c.field.as_str()) {
-                return Some(format!("{at}.field: taslak yalnız {} alanlarını değiştirir", DRAFT_FIELDS.join(", ")));
+                return Some(format!(
+                    "{at}.field: taslak yalnız {} alanlarını değiştirir",
+                    DRAFT_FIELDS.join(", ")
+                ));
             }
-            if t.changes[..k].iter().any(|o| o.area == c.area && o.field == c.field) {
-                return Some(format!("{at}: aynı karar alanının aynı alanı iki kez değişiyor"));
+            if t.changes[..k]
+                .iter()
+                .any(|o| o.area == c.area && o.field == c.field)
+            {
+                return Some(format!(
+                    "{at}: aynı karar alanının aynı alanı iki kez değişiyor"
+                ));
             }
-            if !(c.before.is_empty() || label_ok(&c.before, MAX_ZONING_LABEL)) || !label_ok(&c.after, MAX_ZONING_LABEL) {
+            if !(c.before.is_empty() || label_ok(&c.before, MAX_ZONING_LABEL))
+                || !label_ok(&c.after, MAX_ZONING_LABEL)
+            {
                 return Some(format!(
                     "{at}: önceki ve sonraki değer boşluksuz başlayıp biten en çok {MAX_ZONING_LABEL} karakterdir; sonraki boş olmaz"
                 ));
@@ -172,7 +230,11 @@ mod tests {
 
     fn draft() -> ZoningPlanData {
         ZoningPlanData {
-            symbols: vec![ZoningSymbolPick { level: "uip".into(), usage: "konut".into(), symbol: "a".into() }],
+            symbols: vec![ZoningSymbolPick {
+                level: "uip".into(),
+                usage: "konut".into(),
+                symbol: "a".into(),
+            }],
             drafts: vec![PlanDraft {
                 id: "T1".into(),
                 plan: "UİP-1".into(),

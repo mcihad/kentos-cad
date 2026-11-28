@@ -444,15 +444,24 @@ fn money(kurus: i64) -> String {
 /// total and whether it is paid. Assessing one and recording its payment are the web portal's.
 fn portal_fees<'a>(p: &'a Portal, d: &'a DossierDetail) -> Element<'a, Message> {
     use kentos_commands::{DossierSide, FeeAssessmentState};
-    let Some(list) = p.fees.as_ref().filter(|(id, _)| *id == d.summary.id).map(|(_, l)| l) else {
+    let Some(list) = p
+        .fees
+        .as_ref()
+        .filter(|(id, _)| *id == d.summary.id)
+        .map(|(_, l)| l)
+    else {
         return label::caption("Harç ve ücretler okunuyor…").into();
     };
     let zone = crate::cloud::local_time::Zone::system();
     let mut out = column![].spacing(18);
     if list.is_empty() {
         out = out.push(label::body(match d.side {
-            DossierSide::Municipality => "Bu başvuruya harç tahakkuk edilmedi. Tahakkuk web portalında yapılır.",
-            DossierSide::Professional => "Belediye harç ve ücret tahakkuk ettirdiğinde burada görünür.",
+            DossierSide::Municipality => {
+                "Bu başvuruya harç tahakkuk edilmedi. Tahakkuk web portalında yapılır."
+            }
+            DossierSide::Professional => {
+                "Belediye harç ve ücret tahakkuk ettirdiğinde burada görünür."
+            }
         }));
     }
     for f in list.iter().rev() {
@@ -470,17 +479,28 @@ fn portal_fees<'a>(p: &'a Portal, d: &'a DossierDetail) -> Element<'a, Message> 
             table = table.push(Row::new([
                 column![
                     label::body(l.label.clone()).wrapping(Wrapping::WordOrGlyph),
-                    label::caption(l.legal_basis.clone()).style(style::text::muted).wrapping(Wrapping::WordOrGlyph),
+                    label::caption(l.legal_basis.clone())
+                        .style(style::text::muted)
+                        .wrapping(Wrapping::WordOrGlyph),
                 ]
                 .spacing(2)
                 .into(),
-                label::body(l.basis.clone()).wrapping(Wrapping::WordOrGlyph).into(),
+                label::body(l.basis.clone())
+                    .wrapping(Wrapping::WordOrGlyph)
+                    .into(),
                 label::body(money(l.amount + l.vat)).into(),
             ]));
         }
         let mut rows: Vec<(&'static str, String)> = vec![
             ("Toplam", money(f.total)),
-            ("Tahakkuk", format!("{}, {}", crate::cloud::local_time::when(&f.issued_at, zone), f.issued_by_name)),
+            (
+                "Tahakkuk",
+                format!(
+                    "{}, {}",
+                    crate::cloud::local_time::when(&f.issued_at, zone),
+                    f.issued_by_name
+                ),
+            ),
         ];
         if let Some(due) = &f.due_on {
             rows.push(("Son ödeme", day(due)));
@@ -498,9 +518,13 @@ fn portal_fees<'a>(p: &'a Portal, d: &'a DossierDetail) -> Element<'a, Message> 
             )
         });
         let mut block = column![
-            row![label::strong(f.schedule_name.clone()), space::horizontal(), words::text_line(kind, state)]
-                .spacing(12)
-                .align_y(Center),
+            row![
+                label::strong(f.schedule_name.clone()),
+                space::horizontal(),
+                words::text_line(kind, state)
+            ]
+            .spacing(12)
+            .align_y(Center),
             table,
             pairs,
         ]
@@ -508,7 +532,10 @@ fn portal_fees<'a>(p: &'a Portal, d: &'a DossierDetail) -> Element<'a, Message> 
         if f.state == FeeAssessmentState::Issued
             && let Some(note) = &f.payment_note
         {
-            block = block.push(words::text_line(words::Kind::Info, format!("Nasıl ödenir: {note}")));
+            block = block.push(words::text_line(
+                words::Kind::Info,
+                format!("Nasıl ödenir: {note}"),
+            ));
         }
         out = out.push(block);
     }

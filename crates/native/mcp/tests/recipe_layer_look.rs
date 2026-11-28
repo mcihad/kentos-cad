@@ -11,13 +11,24 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 }
 
 fn fixture(rel: &str) -> String {
-    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures").join(rel).display().to_string()
+    std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures")
+        .join(rel)
+        .display()
+        .to_string()
 }
 
 fn opened(server: &mut Server, name: &str) -> Value {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/road.project.produce.json")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-recipe-look-{name}-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/road.project.produce.json"
+    ))
+    .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-recipe-look-{name}-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let opened = call(server, "drawing.open", json!({"path": path}));
     assert_eq!(opened["isError"], false, "{opened}");
@@ -30,17 +41,36 @@ fn a_recipe_layer_s_transparency_type_and_print_over_mcp() {
     let mut server = Server::new();
     let drawing = opened(&mut server, "saydam");
     let recipe = fixture("recipes/v1/saydam-katmanli.json");
-    let r = call(&mut server, "road.project.produce", json!({"drawing": drawing, "path": recipe}));
+    let r = call(
+        &mut server,
+        "road.project.produce",
+        json!({"drawing": drawing, "path": recipe}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     let out = &r["structuredContent"]["output"];
     assert_eq!(out["layers"][0]["how"], "created", "{out}");
     let said = r["structuredContent"].to_string();
-    assert!(said.contains("Tarifteki gibi saydamlığı %40, karışım kipi Çoğalt, türü Çizgi ve yazdırılmaz."), "{said}");
+    assert!(
+        said.contains(
+            "Tarifteki gibi saydamlığı %40, karışım kipi Çoğalt, türü Çizgi ve yazdırılmaz."
+        ),
+        "{said}"
+    );
 
     // The graph's recipes keep them as the recipe gave them.
     let theirs: Value = serde_json::from_str(&std::fs::read_to_string(&recipe).unwrap()).unwrap();
-    let def = theirs["nodes"].as_array().unwrap().iter().find_map(|n| n.get("recipe")).unwrap()["layer"].clone();
-    let graph = call(&mut server, "road.project.graph", json!({"drawing": drawing}));
+    let def = theirs["nodes"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find_map(|n| n.get("recipe"))
+        .unwrap()["layer"]
+        .clone();
+    let graph = call(
+        &mut server,
+        "road.project.graph",
+        json!({"drawing": drawing}),
+    );
     assert_eq!(graph["isError"], false, "{graph}");
     let layers: Vec<Value> = graph["structuredContent"]["output"]["nodes"]
         .as_array()
@@ -59,13 +89,24 @@ fn a_recipe_layer_s_transparency_type_and_print_over_mcp() {
     let other = opened(&mut server, "nokta");
     let point = fixture("recipes/v1/nokta-katmanli.json");
     for op in ["plan", "execute"] {
-        let r = call(&mut server, "road.project.produce", json!({"drawing": other, "path": point, "op": op}));
+        let r = call(
+            &mut server,
+            "road.project.produce",
+            json!({"drawing": other, "path": point, "op": op}),
+        );
         assert_eq!(r["isError"], true, "{op}: {r}");
-        assert!(r.to_string().contains("layer_geometry_mismatch"), "{op}: {r}");
+        assert!(
+            r.to_string().contains("layer_geometry_mismatch"),
+            "{op}: {r}"
+        );
     }
 
     // A composition with a mask: refused.
-    let r = call(&mut server, "road.project.produce", json!({"drawing": other, "path": fixture("recipes/v1/maskeli.json")}));
+    let r = call(
+        &mut server,
+        "road.project.produce",
+        json!({"drawing": other, "path": fixture("recipes/v1/maskeli.json")}),
+    );
     assert_eq!(r["isError"], true, "{r}");
     assert!(r.to_string().contains("invalid_project_recipe"), "{r}");
 }

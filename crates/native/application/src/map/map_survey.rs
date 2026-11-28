@@ -8,11 +8,12 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use kentos_commands::{
-    AcceptMethod, AntennaUsed, ChainStatus, CommandResult, CrsPoint, CrsSide, CrsTransform, FixCount, HeightKind,
-    HeightReference, MapSurvey, MapSurveyQuery, MapSurveyTree, SurveyBaseline, SurveyBaselineRow, SurveyCampaign,
-    SurveyCampaignRow, SurveyFileRow, SurveyFileState as F, SurveyMarkRow, SurveyObject, SurveyPoint, SurveyPointRow,
-    SurveyReplay, SurveyResult, SurveySession, SurveySessionRow, SurveySolution, SurveySolutionRow, SurveyState as S,
-    SurveyUse, SurveyUseRow, VelocityModel, survey_seconds, survey_time,
+    AcceptMethod, AntennaUsed, ChainStatus, CommandResult, CrsPoint, CrsSide, CrsTransform,
+    FixCount, HeightKind, HeightReference, MapSurvey, MapSurveyQuery, MapSurveyTree,
+    SurveyBaseline, SurveyBaselineRow, SurveyCampaign, SurveyCampaignRow, SurveyFileRow,
+    SurveyFileState as F, SurveyMarkRow, SurveyObject, SurveyPoint, SurveyPointRow, SurveyReplay,
+    SurveyResult, SurveySession, SurveySessionRow, SurveySolution, SurveySolutionRow,
+    SurveyState as S, SurveyUse, SurveyUseRow, VelocityModel, survey_seconds, survey_time,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -52,17 +53,26 @@ pub(crate) fn epoch_text(e: Option<f64>) -> String {
 
 /// The session's vertical antenna height now.
 pub(crate) fn vertical(s: &SurveySession) -> Option<f64> {
-    s.antenna.as_ref().map(kentos_commands::SurveyAntenna::vertical)
+    s.antenna
+        .as_ref()
+        .map(kentos_commands::SurveyAntenna::vertical)
 }
 
 /// The campaign a solution's session belongs to.
-pub(crate) fn campaign_of<'a>(survey: &'a MapSurvey, solution: &SurveySolution) -> Option<&'a SurveyCampaign> {
-    survey.session(&solution.session).and_then(|s| survey.campaign(&s.campaign))
+pub(crate) fn campaign_of<'a>(
+    survey: &'a MapSurvey,
+    solution: &SurveySolution,
+) -> Option<&'a SurveyCampaign> {
+    survey
+        .session(&solution.session)
+        .and_then(|s| survey.campaign(&s.campaign))
 }
 
 /// The epoch decision a campaign's points are given in: its own, else the project's.
 pub(crate) fn decision(doc: &Document, campaign: Option<&SurveyCampaign>) -> Option<f64> {
-    campaign.and_then(|c| c.epoch).or(doc.settings().coordinate_epoch)
+    campaign
+        .and_then(|c| c.epoch)
+        .or(doc.settings().coordinate_epoch)
 }
 
 /// Whether an object with this persistent id is in the drawing.
@@ -71,14 +81,21 @@ pub(crate) fn present(doc: &Document, uid: &kentos_commands::EntityId) -> bool {
 }
 
 /// The campaign a result's epoch decision is of: its first solution's, or its network adjustment's first baseline's.
-pub(crate) fn campaign_of_result<'a>(survey: &'a MapSurvey, r: &SurveyResult) -> Option<&'a SurveyCampaign> {
+pub(crate) fn campaign_of_result<'a>(
+    survey: &'a MapSurvey,
+    r: &SurveyResult,
+) -> Option<&'a SurveyCampaign> {
     match r.adjustment.as_deref() {
         Some(a) => survey
             .adjustment(a)
             .and_then(|a| a.baselines.first())
             .and_then(|b| survey.baseline(b))
             .and_then(|b| survey.campaign(&b.campaign)),
-        None => r.solutions.first().and_then(|s| survey.solution(s)).and_then(|s| campaign_of(survey, s)),
+        None => r
+            .solutions
+            .first()
+            .and_then(|s| survey.solution(s))
+            .and_then(|s| campaign_of(survey, s)),
     }
 }
 
@@ -138,7 +155,11 @@ pub(crate) fn point_why(doc: &Document, survey: &MapSurvey, p: &SurveyPoint) -> 
     let campaign = campaign_of_result(survey, &p.result);
     let now = decision(doc, campaign);
     if now != p.result.target_epoch {
-        why.push(format!("Epok kararı {} iken {} oldu.", epoch_text(p.result.target_epoch), epoch_text(now)));
+        why.push(format!(
+            "Epok kararı {} iken {} oldu.",
+            epoch_text(p.result.target_epoch),
+            epoch_text(now)
+        ));
     }
     for s in &p.result.solutions {
         if let Some(reason) = survey.solution(s).and_then(|s| s.excluded.as_ref()) {
@@ -210,8 +231,16 @@ pub(crate) fn use_row(doc: &Document, survey: &MapSurvey, u: &SurveyUse) -> Surv
 
 /// How many accepted points and uses are out of date.
 pub(crate) fn stale_count(doc: &Document, survey: &MapSurvey) -> u32 {
-    let points = survey.points.iter().filter(|p| !point_why(doc, survey, p).is_empty()).count();
-    let uses = survey.uses.iter().filter(|u| use_row(doc, survey, u).state == S::Stale).count();
+    let points = survey
+        .points
+        .iter()
+        .filter(|p| !point_why(doc, survey, p).is_empty())
+        .count();
+    let uses = survey
+        .uses
+        .iter()
+        .filter(|u| use_row(doc, survey, u).state == S::Stale)
+        .count();
     count(points + uses)
 }
 
@@ -229,9 +258,20 @@ pub(crate) fn replay(s: &SurveySession) -> Option<SurveyReplay> {
         }
     }
     let fixed = |o: &kentos_commands::GnssPoint| o.fix.as_deref() == Some("RTK sabit");
-    let float_drops = s.observations.windows(2).filter(|w| fixed(&w[0]) && !fixed(&w[1])).count();
-    let timed: Vec<f64> = s.observations.iter().filter_map(|o| o.time.as_deref().and_then(survey_seconds)).collect();
-    let steps: Vec<i64> = timed.windows(2).map(|w| ((w[1] - w[0]) * 1000.0 + 0.5).floor() as i64).collect();
+    let float_drops = s
+        .observations
+        .windows(2)
+        .filter(|w| fixed(&w[0]) && !fixed(&w[1]))
+        .count();
+    let timed: Vec<f64> = s
+        .observations
+        .iter()
+        .filter_map(|o| o.time.as_deref().and_then(survey_seconds))
+        .collect();
+    let steps: Vec<i64> = timed
+        .windows(2)
+        .map(|w| ((w[1] - w[0]) * 1000.0 + 0.5).floor() as i64)
+        .collect();
     let mut tally: Vec<(i64, usize)> = Vec::new();
     for &st in steps.iter().filter(|&&st| st > 0) {
         match tally.iter_mut().find(|t| t.0 == st) {
@@ -239,8 +279,15 @@ pub(crate) fn replay(s: &SurveySession) -> Option<SurveyReplay> {
             None => tally.push((st, 1)),
         }
     }
-    let nominal = tally.iter().copied().max_by(|a, b| a.1.cmp(&b.1).then(b.0.cmp(&a.0))).map(|t| t.0);
-    let time_jumps = steps.iter().filter(|&&st| st <= 0 || nominal.is_some_and(|n| st > 2 * n)).count();
+    let nominal = tally
+        .iter()
+        .copied()
+        .max_by(|a, b| a.1.cmp(&b.1).then(b.0.cmp(&a.0)))
+        .map(|t| t.0);
+    let time_jumps = steps
+        .iter()
+        .filter(|&&st| st <= 0 || nominal.is_some_and(|n| st > 2 * n))
+        .count();
     Some(SurveyReplay {
         fixes,
         float_drops: count(float_drops),
@@ -250,17 +297,30 @@ pub(crate) fn replay(s: &SurveySession) -> Option<SurveyReplay> {
 }
 
 /// When a solution was measured: its session's end, else its start (sortable), none when neither is given.
-fn measured(survey: &MapSurvey, s: &SurveySolution) -> Option<(u32, u32, u32, u32, u32, u32, String)> {
+fn measured(
+    survey: &MapSurvey,
+    s: &SurveySolution,
+) -> Option<(u32, u32, u32, u32, u32, u32, String)> {
     let session = survey.session(&s.session)?;
-    session.end.as_deref().or(session.start.as_deref()).and_then(survey_time)
+    session
+        .end
+        .as_deref()
+        .or(session.start.as_deref())
+        .and_then(survey_time)
 }
 
 fn number_of(id: &str) -> u64 {
-    id.split_once('-').and_then(|(_, n)| n.parse().ok()).unwrap_or(0)
+    id.split_once('-')
+        .and_then(|(_, n)| n.parse().ok())
+        .unwrap_or(0)
 }
 
 /// A solution's row for its mark.
-pub(crate) fn solution_row(survey: &MapSurvey, s: &SurveySolution, latest: Option<&str>) -> SurveySolutionRow {
+pub(crate) fn solution_row(
+    survey: &MapSurvey,
+    s: &SurveySolution,
+    latest: Option<&str>,
+) -> SurveySolutionRow {
     let session = survey.session(&s.session);
     SurveySolutionRow {
         id: s.id.clone(),
@@ -272,7 +332,9 @@ pub(crate) fn solution_row(survey: &MapSurvey, s: &SurveySolution, latest: Optio
         srid: s.srid,
         epoch: s.epoch,
         antenna_applied: s.antenna_applied,
-        mark_height: session.and_then(vertical).map(|h| s.height + s.antenna_applied - h),
+        mark_height: session
+            .and_then(vertical)
+            .map(|h| s.height + s.antenna_applied - h),
         fix: s.fix.clone(),
         epochs: s.epochs,
         sigma: s.sigma,
@@ -286,9 +348,12 @@ pub(crate) fn solution_row(survey: &MapSurvey, s: &SurveySolution, latest: Optio
 /// The last measured solution of each mark.
 fn latest_of(survey: &MapSurvey) -> HashMap<String, String> {
     #[allow(clippy::type_complexity)]
-    let mut best: HashMap<String, (&SurveySolution, (u32, u32, u32, u32, u32, u32, String))> = HashMap::new();
+    let mut best: HashMap<String, (&SurveySolution, (u32, u32, u32, u32, u32, u32, String))> =
+        HashMap::new();
     for s in &survey.solutions {
-        let (Some(mark), Some(when)) = (survey.mark_of(s), measured(survey, s)) else { continue };
+        let (Some(mark), Some(when)) = (survey.mark_of(s), measured(survey, s)) else {
+            continue;
+        };
         let take = match best.get(mark) {
             None => true,
             Some((b, bw)) => when > *bw || (when == *bw && number_of(&s.id) > number_of(&b.id)),
@@ -297,11 +362,18 @@ fn latest_of(survey: &MapSurvey) -> HashMap<String, String> {
             best.insert(mark.to_owned(), (s, when));
         }
     }
-    best.into_iter().map(|(m, (s, _))| (m, s.id.clone())).collect()
+    best.into_iter()
+        .map(|(m, (s, _))| (m, s.id.clone()))
+        .collect()
 }
 
 /// The rows of the archive as they stand now.
-pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, places: bool) -> Result<MapSurveyTree, Stop> {
+pub(crate) fn tree(
+    doc: &Document,
+    deep: bool,
+    uid: Option<&str>,
+    places: bool,
+) -> Result<MapSurveyTree, Stop> {
     map_project(doc)?;
     let target = match uid {
         Some(u) => Some(target(doc, u)?),
@@ -317,11 +389,20 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, places: bool) 
             id: c.id.clone(),
             name: c.name.clone(),
             work: c.work.clone(),
-            work_missing: c.work.as_deref().is_some_and(|w| work.and_then(|mw| mw.item(w)).is_none()),
+            work_missing: c
+                .work
+                .as_deref()
+                .is_some_and(|w| work.and_then(|mw| mw.item(w)).is_none()),
             operator: c.operator.clone(),
             epoch: c.epoch,
             velocity: c.velocity.as_ref().map(|g| g.name.clone()),
-            sessions: count(survey.sessions.iter().filter(|s| s.campaign == c.id).count()),
+            sessions: count(
+                survey
+                    .sessions
+                    .iter()
+                    .filter(|s| s.campaign == c.id)
+                    .count(),
+            ),
         })
         .collect();
     let sessions = survey
@@ -345,7 +426,13 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, places: bool) 
             }),
             observations: count(s.observations.len()),
             replay: replay(s),
-            solutions: count(survey.solutions.iter().filter(|x| x.session == s.id).count()),
+            solutions: count(
+                survey
+                    .solutions
+                    .iter()
+                    .filter(|x| x.session == s.id)
+                    .count(),
+            ),
         })
         .collect();
     let latest = latest_of(survey);
@@ -357,23 +444,46 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, places: bool) 
                 mark: s.mark.clone(),
                 sessions: vec![s.id.clone()],
                 solutions: Vec::new(),
-                point: survey.points.iter().find(|p| p.mark == s.mark).map(|p| p.id.clone()),
+                point: survey
+                    .points
+                    .iter()
+                    .find(|p| p.mark == s.mark)
+                    .map(|p| p.id.clone()),
             }),
         }
     }
     for s in &survey.solutions {
-        let Some(mark) = survey.mark_of(s) else { continue };
+        let Some(mark) = survey.mark_of(s) else {
+            continue;
+        };
         if let Some(m) = marks.iter_mut().find(|m| m.mark == mark) {
-            m.solutions.push(solution_row(survey, s, latest.get(mark).map(String::as_str)));
+            m.solutions.push(solution_row(
+                survey,
+                s,
+                latest.get(mark).map(String::as_str),
+            ));
         }
     }
-    let points: Vec<SurveyPointRow> = survey.points.iter().map(|p| point_row(doc, survey, p)).collect();
-    let uses: Vec<SurveyUseRow> = survey.uses.iter().map(|u| use_row(doc, survey, u)).collect();
+    let points: Vec<SurveyPointRow> = survey
+        .points
+        .iter()
+        .map(|p| point_row(doc, survey, p))
+        .collect();
+    let uses: Vec<SurveyUseRow> = survey
+        .uses
+        .iter()
+        .map(|u| use_row(doc, survey, u))
+        .collect();
     let stale = count(
-        points.iter().filter(|p| p.state == S::Stale).count() + uses.iter().filter(|u| u.state == S::Stale).count(),
+        points.iter().filter(|p| p.state == S::Stale).count()
+            + uses.iter().filter(|u| u.state == S::Stale).count(),
     );
     let object = target.map(|u| object(doc, survey, &u, &latest));
-    let baselines = survey.baselines.iter().map(|b| baseline_row(survey, b, deep)).collect();
+    let baselines = survey
+        .baselines
+        .iter()
+        .map(|b| baseline_row(survey, b, deep))
+        .collect();
     Ok(MapSurveyTree {
         campaigns,
         sessions,
@@ -386,7 +496,11 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, places: bool) 
         baseline_sessions: survey.baseline_sessions.clone(),
         tolerance: survey.tolerance.clone(),
         // Docs/adr/4120: the known points' own places, when asked.
-        known_places: if places { crate::map_survey_places::known_places(doc, survey) } else { Vec::new() },
+        known_places: if places {
+            crate::map_survey_places::known_places(doc, survey)
+        } else {
+            Vec::new()
+        },
         object,
         stale,
         deep,
@@ -395,7 +509,10 @@ pub(crate) fn tree(doc: &Document, deep: bool, uid: Option<&str>, places: bool) 
 }
 
 /// docs/adr/5320: a baseline session's independent and dependent baselines (by its id), for a window.
-pub fn independent_baselines(survey: &MapSurvey, session: &str) -> Option<(Vec<String>, Vec<String>)> {
+pub fn independent_baselines(
+    survey: &MapSurvey,
+    session: &str,
+) -> Option<(Vec<String>, Vec<String>)> {
     let s = survey.baseline_sessions.iter().find(|x| x.id == session)?;
     Some(crate::map_survey_sessions::independent(survey, s))
 }
@@ -425,18 +542,32 @@ fn baseline_row(survey: &MapSurvey, b: &SurveyBaseline, deep: bool) -> SurveyBas
             state: file_state(&f.path, &f.revision, deep),
         }),
         source: b.source.clone(),
-        adjustments: survey.adjustments.iter().filter(|a| a.baselines.contains(&b.id)).map(|a| a.id.clone()).collect(),
+        adjustments: survey
+            .adjustments
+            .iter()
+            .filter(|a| a.baselines.contains(&b.id))
+            .map(|a| a.id.clone())
+            .collect(),
         session: survey.session_of(&b.id).map(|s| s.id.clone()),
         // docs/adr/5320: one of its session's n − 1 independent baselines, or a dependent one.
-        independent: survey.session_of(&b.id).filter(|_| b.excluded.is_none()).map(|s| {
-            crate::map_survey_sessions::independent(survey, s).0.contains(&b.id)
-        }),
+        independent: survey
+            .session_of(&b.id)
+            .filter(|_| b.excluded.is_none())
+            .map(|s| {
+                crate::map_survey_sessions::independent(survey, s)
+                    .0
+                    .contains(&b.id)
+            }),
     }
 }
 
 fn file_state(path: &str, revision: &str, deep: bool) -> F {
     if !deep {
-        return if Path::new(path).is_file() { F::Found } else { F::Missing };
+        return if Path::new(path).is_file() {
+            F::Found
+        } else {
+            F::Missing
+        };
     }
     match crate::map_work::file_sha(path) {
         Some(sha) if sha == revision => F::Current,
@@ -450,17 +581,32 @@ fn target(doc: &Document, uid: &str) -> Result<String, Stop> {
     if !crate::checks::is_uid_text(uid) {
         return Err(fail(
             codes::INVALID_UID,
-            format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+            format!(
+                "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+            ),
             "uid",
         ));
     }
-    if Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).is_none() {
-        return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), "uid"));
+    if Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .is_none()
+    {
+        return Err(fail(
+            codes::ENTITY_NOT_FOUND,
+            format!("“{uid}” kimlikli nesne çizimde yok."),
+            "uid",
+        ));
     }
     Ok(uid.to_owned())
 }
 
-fn object(doc: &Document, survey: &MapSurvey, uid: &str, latest: &HashMap<String, String>) -> SurveyObject {
+fn object(
+    doc: &Document,
+    survey: &MapSurvey,
+    uid: &str,
+    latest: &HashMap<String, String>,
+) -> SurveyObject {
     let point = survey.points.iter().find(|p| p.uid.to_text() == uid);
     let solutions = point
         .map(|p| {
@@ -476,7 +622,11 @@ fn object(doc: &Document, survey: &MapSurvey, uid: &str, latest: &HashMap<String
         uid: uid.to_owned(),
         point: point.map(|p| point_row(doc, survey, p)),
         solutions,
-        used: survey.uses.iter().find(|u| u.uids.iter().any(|x| x.to_text() == uid)).map(|u| use_row(doc, survey, u)),
+        used: survey
+            .uses
+            .iter()
+            .find(|u| u.uids.iter().any(|x| x.to_text() == uid))
+            .map(|u| use_row(doc, survey, u)),
     }
 }
 
@@ -494,10 +644,18 @@ pub(crate) fn compute(
     for (i, id) in ids.iter().enumerate() {
         let path = format!("{at}[{i}]");
         let Some(s) = survey.solution(id) else {
-            return Err(fail(codes::UNKNOWN_SURVEY_RECORD, format!("GNSS arşivinde “{id}” kimlikli çözüm yok."), &path));
+            return Err(fail(
+                codes::UNKNOWN_SURVEY_RECORD,
+                format!("GNSS arşivinde “{id}” kimlikli çözüm yok."),
+                &path,
+            ));
         };
         if ids[..i].contains(id) {
-            return Err(fail(codes::INVALID_SURVEY_VALUE, format!("“{id}” çözümü iki kez verilmiş."), &path));
+            return Err(fail(
+                codes::INVALID_SURVEY_VALUE,
+                format!("“{id}” çözümü iki kez verilmiş."),
+                &path,
+            ));
         }
         sols.push(s);
     }
@@ -506,14 +664,21 @@ pub(crate) fn compute(
         if let Some(reason) = &s.excluded {
             return Err(fail(
                 codes::SOLUTION_EXCLUDED,
-                format!("“{}” çözümü dışlanmış ({reason}); önce dışlamayı kaldırın ya da başka çözüm seçin.", s.id),
+                format!(
+                    "“{}” çözümü dışlanmış ({reason}); önce dışlamayı kaldırın ya da başka çözüm seçin.",
+                    s.id
+                ),
                 &path,
             ));
         }
         if survey.mark_of(s) != Some(mark) {
             return Err(fail(
                 codes::MARK_MISMATCH,
-                format!("“{}” çözümü “{}” işaretinin, “{mark}” işaretinin değil.", s.id, survey.mark_of(s).unwrap_or("")),
+                format!(
+                    "“{}” çözümü “{}” işaretinin, “{mark}” işaretinin değil.",
+                    s.id,
+                    survey.mark_of(s).unwrap_or("")
+                ),
                 &path,
             ));
         }
@@ -522,7 +687,8 @@ pub(crate) fn compute(
     if method == AcceptMethod::Network {
         return Err(fail(
             codes::METHOD_COUNT,
-            "Ağ dengelemesi çözümlerle seçilmez; noktayı ağ dengelemesiyle (network) kabul edin.".into(),
+            "Ağ dengelemesi çözümlerle seçilmez; noktayı ağ dengelemesiyle (network) kabul edin."
+                .into(),
             at,
         ));
     }
@@ -533,7 +699,15 @@ pub(crate) fn compute(
     if !fits {
         return Err(fail(
             codes::METHOD_COUNT,
-            format!("{} yöntemi {} ister; {n} çözüm verildi.", method.title(), if method == AcceptMethod::Single { "tek çözüm" } else { "en az iki çözüm" }),
+            format!(
+                "{} yöntemi {} ister; {n} çözüm verildi.",
+                method.title(),
+                if method == AcceptMethod::Single {
+                    "tek çözüm"
+                } else {
+                    "en az iki çözüm"
+                }
+            ),
             at,
         ));
     }
@@ -542,7 +716,10 @@ pub(crate) fn compute(
     {
         return Err(fail(
             codes::SIGMA_MISSING,
-            format!("Ağırlıklı ortalama her çözümün σ'sını ister; “{}” çözümünün σ'sı yok.", s.id),
+            format!(
+                "Ağırlıklı ortalama her çözümün σ'sını ister; “{}” çözümünün σ'sı yok.",
+                s.id
+            ),
             &format!("{at}[{i}]"),
         ));
     }
@@ -551,7 +728,8 @@ pub(crate) fn compute(
     for (i, s) in sols.iter().enumerate().skip(1) {
         let c = campaign_of(survey, s);
         let same_frame = s.srid == first.srid && s.epoch == first.epoch;
-        let same_decision = c.map(|c| (c.epoch, &c.velocity)) == campaign.map(|c| (c.epoch, &c.velocity));
+        let same_decision =
+            c.map(|c| (c.epoch, &c.velocity)) == campaign.map(|c| (c.epoch, &c.velocity));
         if !same_frame || !same_decision {
             return Err(fail(
                 codes::SOLUTIONS_DIFFER,
@@ -571,25 +749,36 @@ pub(crate) fn compute(
         let Some(a) = session.and_then(|x| x.antenna.as_ref()) else {
             return Err(fail(
                 codes::ANTENNA_UNKNOWN,
-                format!("“{}” oturumunun anten yüksekliği yok; anteni ve yüksekliğin ölçüldüğü yeri girin.", s.session),
+                format!(
+                    "“{}” oturumunun anten yüksekliği yok; anteni ve yüksekliğin ölçüldüğü yeri girin.",
+                    s.session
+                ),
                 &path,
             ));
         };
         if a.eccentric() {
             return Err(fail(
                 codes::ANTENNA_ECCENTRIC,
-                format!("“{}” oturumunun anteni işaretin dışında (doğu/kuzey dış merkezlik); bu sürümde indirgenmez.", s.session),
+                format!(
+                    "“{}” oturumunun anteni işaretin dışında (doğu/kuzey dış merkezlik); bu sürümde indirgenmez.",
+                    s.session
+                ),
                 &path,
             ));
         }
         let h = a.vertical();
         if !antenna.iter().any(|u| u.session == s.session) {
-            antenna.push(AntennaUsed { session: s.session.clone(), height: h });
+            antenna.push(AntennaUsed {
+                session: s.session.clone(),
+                height: h,
+            });
         }
         heights.push(s.height + s.antenna_applied - h);
     }
     let (lat, lon, height, sigma) = match method {
-        AcceptMethod::Single | AcceptMethod::Network => (first.lat, first.lon, heights[0], first.sigma),
+        AcceptMethod::Single | AcceptMethod::Network => {
+            (first.lat, first.lon, heights[0], first.sigma)
+        }
         AcceptMethod::Mean => {
             let (mut a, mut b, mut c) = (0.0, 0.0, 0.0);
             for (s, h) in sols.iter().zip(&heights) {
@@ -615,7 +804,14 @@ pub(crate) fn compute(
             (v(0), v(1), v(2), Some([g(0), g(1), g(2)]))
         }
     };
-    let placed = place(doc, campaign, (lat, lon, height), first.srid, first.epoch, at)?;
+    let placed = place(
+        doc,
+        campaign,
+        (lat, lon, height),
+        first.srid,
+        first.epoch,
+        at,
+    )?;
     Ok(SurveyResult {
         revision: 1,
         solutions: ids.to_vec(),
@@ -660,15 +856,34 @@ pub(crate) fn place(
 ) -> Result<Placed, Stop> {
     let target = decision(doc, campaign);
     let with_z = doc.settings().heights.is_some();
-    let ellipsoidal = HeightReference { kind: HeightKind::Ellipsoidal, vertical_srid: None, geoid: None };
+    let ellipsoidal = HeightReference {
+        kind: HeightKind::Ellipsoidal,
+        vertical_srid: None,
+        geoid: None,
+    };
     let input = CrsTransform {
-        points: vec![CrsPoint { x: lon, y: lat, z: with_z.then_some(height) }],
-        from: Some(CrsSide { srid: Some(srid), heights: with_z.then_some(ellipsoidal), epoch }),
-        to: Some(CrsSide { srid: None, heights: None, epoch: target }),
+        points: vec![CrsPoint {
+            x: lon,
+            y: lat,
+            z: with_z.then_some(height),
+        }],
+        from: Some(CrsSide {
+            srid: Some(srid),
+            heights: with_z.then_some(ellipsoidal),
+            epoch,
+        }),
+        to: Some(CrsSide {
+            srid: None,
+            heights: None,
+            epoch: target,
+        }),
         uncertainty: None,
         velocity: campaign
             .and_then(|c| c.velocity.as_ref())
-            .map(|g| VelocityModel { name: g.name.clone(), sha256: g.sha256.clone() }),
+            .map(|g| VelocityModel {
+                name: g.name.clone(),
+                sha256: g.sha256.clone(),
+            }),
     };
     let out = match crate::crs_transform::answer(doc, &input) {
         CommandResult::Completed { output, .. } => output,
@@ -684,7 +899,10 @@ pub(crate) fn place(
         }
     };
     let Some(Some(p)) = out.points.first() else {
-        let why = out.unreached.first().map_or("", |u| crate::crs_transform::reason_text(&u.reason));
+        let why = out
+            .unreached
+            .first()
+            .map_or("", |u| crate::crs_transform::reason_text(&u.reason));
         return Err(fail(
             codes::INVALID_SURVEY_VALUE,
             format!("İşaretin konumu projenin sistemine taşınamadı: {why}"),
@@ -705,19 +923,39 @@ pub(crate) fn place(
 
 /// Docs/adr/4520: the tolerance's own rules: with `places`, one limit at least, each a length above 0.
 fn tolerance_checked(input: &MapSurveyQuery) -> Result<(), Stop> {
-    let Some(t) = &input.tolerance else { return Ok(()) };
-    let bad = |message: &str, path: &str| Err(Stop::failed(error(codes::INVALID_INPUT, message.to_owned(), Some(path.to_owned()))));
+    let Some(t) = &input.tolerance else {
+        return Ok(());
+    };
+    let bad = |message: &str, path: &str| {
+        Err(Stop::failed(error(
+            codes::INVALID_INPUT,
+            message.to_owned(),
+            Some(path.to_owned()),
+        )))
+    };
     if !input.places {
-        return bad("Kabul farkı sınırı bilinen noktaların yerleriyle okunur: places'i de verin.", "tolerance");
+        return bad(
+            "Kabul farkı sınırı bilinen noktaların yerleriyle okunur: places'i de verin.",
+            "tolerance",
+        );
     }
     if t.horizontal.is_none() && t.vertical.is_none() {
-        return bad("Kabul farkı sınırı boş: yatay ya da düşey sınırı verin (m).", "tolerance");
+        return bad(
+            "Kabul farkı sınırı boş: yatay ya da düşey sınırı verin (m).",
+            "tolerance",
+        );
     }
-    for (v, what, path) in [(t.horizontal, "Yatay", "tolerance.horizontal"), (t.vertical, "Düşey", "tolerance.vertical")] {
+    for (v, what, path) in [
+        (t.horizontal, "Yatay", "tolerance.horizontal"),
+        (t.vertical, "Düşey", "tolerance.vertical"),
+    ] {
         if let Some(v) = v
             && !(v.is_finite() && v > 0.0)
         {
-            return bad(&format!("{what} sınır 0'dan büyük bir uzunluk olmalı (m)."), path);
+            return bad(
+                &format!("{what} sınır 0'dan büyük bir uzunluk olmalı (m)."),
+                path,
+            );
         }
     }
     Ok(())
@@ -728,9 +966,11 @@ fn tolerance_checked(input: &MapSurveyQuery) -> Result<(), Stop> {
 fn asked_tree(doc: &Document, input: &MapSurveyQuery) -> Result<MapSurveyTree, Stop> {
     tolerance_checked(input)?;
     let mut out = tree(doc, input.deep, input.uid.as_deref(), input.places)?;
-    let kept = out.tolerance.as_ref().filter(|_| input.places).map(|t| kentos_commands::SurveyPlaceTolerance {
-        horizontal: t.horizontal,
-        vertical: t.vertical,
+    let kept = out.tolerance.as_ref().filter(|_| input.places).map(|t| {
+        kentos_commands::SurveyPlaceTolerance {
+            horizontal: t.horizontal,
+            vertical: t.vertical,
+        }
     });
     if let Some(t) = input.tolerance.as_ref().or(kept.as_ref()) {
         crate::map_survey_places::judged(&mut out.known_places, t);
@@ -741,7 +981,10 @@ fn asked_tree(doc: &Document, input: &MapSurveyQuery) -> Result<MapSurveyTree, S
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &MapSurveyQuery) -> CommandResult<()> {
     match asked_tree(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -749,19 +992,30 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &MapSurveyQuery) -> CommandRes
 /// The answer; reads only.
 pub fn plan(cx: &ExecutionContext<'_>, input: &MapSurveyQuery) -> CommandResult<MapSurveyTree> {
     match asked_tree(cx.doc, input) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: MapSurveyQuery) -> CommandResult<MapSurveyTree> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: MapSurveyQuery,
+) -> CommandResult<MapSurveyTree> {
     plan(cx, &input)
 }
 
 /// The archive for a panel (and, with `uid`, what that object is; with `places` the known points' own places,
 /// docs/adr/4120), or why it does not read.
-pub fn preview(doc: &Document, deep: bool, uid: Option<&str>, places: bool) -> Result<MapSurveyTree, String> {
+pub fn preview(
+    doc: &Document,
+    deep: bool,
+    uid: Option<&str>,
+    places: bool,
+) -> Result<MapSurveyTree, String> {
     tree(doc, deep, uid, places).map_err(|stop| stop.into_error().message)
 }
 
@@ -772,7 +1026,12 @@ pub fn preview_judged(
     deep: bool,
     tolerance: Option<kentos_commands::SurveyPlaceTolerance>,
 ) -> Result<MapSurveyTree, String> {
-    let input = MapSurveyQuery { deep, uid: None, places: true, tolerance };
+    let input = MapSurveyQuery {
+        deep,
+        uid: None,
+        places: true,
+        tolerance,
+    };
     asked_tree(doc, &input).map_err(|stop| stop.into_error().message)
 }
 

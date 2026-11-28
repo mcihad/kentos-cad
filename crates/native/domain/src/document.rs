@@ -129,16 +129,20 @@ impl Document {
 
     /// The session mask alone; a true result does not override layers, filters or phases.
     pub fn isolation_shown(&self, slot: Slot) -> bool {
-        self.object_isolation.as_ref().is_none_or(|hidden|
-            self.uid(slot).is_some_and(|uid| !hidden.contains(&uid)))
+        self.object_isolation
+            .as_ref()
+            .is_none_or(|hidden| self.uid(slot).is_some_and(|uid| !hidden.contains(&uid)))
     }
 
     /// Replace the temporary mask. New objects stay visible; deletion and Undo retain UID semantics.
     /// Hosts validate all targets before calling this. No saved revision or Undo step is changed.
     pub fn isolate_objects(&mut self, keep: &[Uuid]) {
         let keep: std::collections::BTreeSet<_> = keep.iter().copied().collect();
-        let hidden = self.entities_with_uids().map(|(uid, _)| uid)
-            .filter(|uid| !keep.contains(uid)).collect();
+        let hidden = self
+            .entities_with_uids()
+            .map(|(uid, _)| uid)
+            .filter(|uid| !keep.contains(uid))
+            .collect();
         let next = Some(Arc::new(hidden));
         if self.object_isolation != next {
             self.object_isolation = next;

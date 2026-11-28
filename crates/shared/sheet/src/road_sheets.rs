@@ -69,7 +69,11 @@ pub fn road_sheets(
     mut ids: impl FnMut(&str) -> InstanceIds,
 ) -> Result<RoadSheets> {
     let maps = template_maps(template);
-    let need = if frames.iter().any(|f| f.profile.is_some()) { 2 } else { 1 };
+    let need = if frames.iter().any(|f| f.profile.is_some()) {
+        2
+    } else {
+        1
+    };
     if maps.len() < need {
         return Err(SheetError::at(
             "not_fixed_map",
@@ -97,7 +101,11 @@ pub fn road_sheets(
         .collect();
     let mut taken: BTreeSet<String> = book.sheets.iter().map(|s| s.id.clone()).collect();
     let mut next = start;
-    let mut out = RoadSheets { ops: Vec::new(), pictures: Vec::new(), made: Vec::new() };
+    let mut out = RoadSheets {
+        ops: Vec::new(),
+        pictures: Vec::new(),
+        made: Vec::new(),
+    };
     for (k, frame) in frames.iter().enumerate() {
         let number = loop {
             let n = format!("{before}{next:0width$}{after}");
@@ -126,11 +134,17 @@ pub fn road_sheets(
             }
         }
         let instance = crate::template::instantiate(template, &ids, &own)?;
-        let views = [Some((frame.center, frame.rotation)), frame.profile.map(|c| (c, 0))];
+        let views = [
+            Some((frame.center, frame.rotation)),
+            frame.profile.map(|c| (c, 0)),
+        ];
         for (at, view) in maps.iter().zip(views) {
-            let Some((center, rotation)) = view else { continue };
+            let Some((center, rotation)) = view else {
+                continue;
+            };
             let item = &instance.sheet.items[*at];
-            let fixed = matches!(&item.kind, ItemKind::Map(m) if matches!(m.view, MapView::Fixed(_)));
+            let fixed =
+                matches!(&item.kind, ItemKind::Map(m) if matches!(m.view, MapView::Fixed(_)));
             if !fixed {
                 return Err(SheetError::at(
                     "not_fixed_map",
@@ -145,19 +159,26 @@ pub fn road_sheets(
             {
                 patch["kind"]["view"]["ratio"] = serde_json::Value::Null;
             }
-            out.ops.push(Op::SetItemProps(SetItemProps { id: item.id.clone(), patch }));
+            out.ops.push(Op::SetItemProps(SetItemProps {
+                id: item.id.clone(),
+                patch,
+            }));
         }
-        out.ops.push(Op::SetDrawingInfo(crate::drawing_set::SetDrawingInfo {
-            id: ids.sheet.clone(),
-            info: Some(crate::drawing_set::DrawingInfo {
-                number: number.clone(),
-                title: frame.title.clone(),
-                revision: String::new(),
-                status: String::new(),
-                subset: subset.to_vec(),
-            }),
-        }));
-        out.made.push(RoadSheet { sheet: ids.sheet, number });
+        out.ops
+            .push(Op::SetDrawingInfo(crate::drawing_set::SetDrawingInfo {
+                id: ids.sheet.clone(),
+                info: Some(crate::drawing_set::DrawingInfo {
+                    number: number.clone(),
+                    title: frame.title.clone(),
+                    revision: String::new(),
+                    status: String::new(),
+                    subset: subset.to_vec(),
+                }),
+            }));
+        out.made.push(RoadSheet {
+            sheet: ids.sheet,
+            number,
+        });
     }
     Ok(out)
 }

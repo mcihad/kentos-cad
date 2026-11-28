@@ -370,7 +370,10 @@ pub struct OpeningFields {
     pub type_version: Option<u32>,
     /// The fields of its type it keeps its own value of (örnek istisnası), in the order the fields are listed.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::OpeningTypeField>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<Vec<crate::OpeningTypeField>>", optional)
+    )]
     pub overrides: Vec<crate::OpeningTypeField>,
     /// Its construction (docs/adr/0772 §2, §3): sizes, leaves, frame, threshold, casing, sill board, panes, use zone.
     /// Absent: drawn and measured as before.
@@ -469,7 +472,9 @@ pub fn needs_special_doors(e: &crate::Entity) -> bool {
         crate::Entity::Opening(o) => {
             let f = &o.opening;
             f.operation.is_special()
-                || f.build.as_ref().is_some_and(crate::OpeningBuild::is_special)
+                || f.build
+                    .as_ref()
+                    .is_some_and(crate::OpeningBuild::is_special)
                 || f.overrides.iter().any(|o| o.is_special())
         }
         crate::Entity::Table(t) => matches!(&t.source,
@@ -483,7 +488,9 @@ pub fn needs_special_doors(e: &crate::Entity) -> bool {
 /// what only schema 157 says.
 pub fn is_multi_slide(f: &OpeningFields) -> bool {
     (f.operation == OpeningOperation::Slide && f.leaves > 2)
-        || f.build.as_ref().is_some_and(crate::OpeningBuild::is_multi_slide)
+        || f.build
+            .as_ref()
+            .is_some_and(crate::OpeningBuild::is_multi_slide)
         || f.overrides.iter().any(|o| o.is_multi_slide())
 }
 
@@ -503,12 +510,15 @@ pub fn needs_multi_slide(e: &crate::Entity) -> bool {
 /// (docs/adr/0807): what only schema 153 says. An XOX slide in an older schema is refused (`bad_value`); a split on a
 /// sliding one there was read and left unused.
 pub fn is_slide_more(f: &OpeningFields) -> bool {
-    f.operation == OpeningOperation::Slide && (is_xox(f) || (f.leaves == 2 && f.build.as_ref().is_some_and(|b| b.split.is_some())))
+    f.operation == OpeningOperation::Slide
+        && (is_xox(f) || (f.leaves == 2 && f.build.as_ref().is_some_and(|b| b.split.is_some())))
 }
 
 /// Whether an opening's fields are an XOX slide (docs/adr/0807 §1): three sliding leaves to both sides.
 pub fn is_xox(f: &OpeningFields) -> bool {
-    f.operation == OpeningOperation::Slide && f.leaves == 3 && f.build.as_ref().is_some_and(|b| b.both_sides == Some(true))
+    f.operation == OpeningOperation::Slide
+        && f.leaves == 3
+        && f.build.as_ref().is_some_and(|b| b.both_sides == Some(true))
 }
 
 /// Whether `e` says what only schema 153 can (docs/adr/0807): [`is_slide_more`].
@@ -543,7 +553,10 @@ impl OpeningFields {
             if self.depth.is_some() {
                 return Some((
                     "depth".into(),
-                    format!("Derinlik yalnız niş ve bacanındır; {} duvarı geçer. Derinliği kaldırın ya da biçimi Niş yapın.", label.to_lowercase()),
+                    format!(
+                        "Derinlik yalnız niş ve bacanındır; {} duvarı geçer. Derinliği kaldırın ya da biçimi Niş yapın.",
+                        label.to_lowercase()
+                    ),
                 ));
             }
             if self.inset.is_some() {
@@ -557,13 +570,17 @@ impl OpeningFields {
         let Some(d) = self.depth else {
             return Some((
                 "depth".into(),
-                format!("{label} derinliği belirtilmeli: duvarın içine ne kadar girdiği (ör. 0,10 m)."),
+                format!(
+                    "{label} derinliği belirtilmeli: duvarın içine ne kadar girdiği (ör. 0,10 m)."
+                ),
             ));
         };
         if !(d.is_finite() && d > 0.0 && d <= MAX_RECESS_DEPTH) {
             return Some((
                 "depth".into(),
-                format!("{label} derinliği {d}; sıfırdan büyük, en çok {MAX_RECESS_DEPTH} m olmalı."),
+                format!(
+                    "{label} derinliği {d}; sıfırdan büyük, en çok {MAX_RECESS_DEPTH} m olmalı."
+                ),
             ));
         }
         match (self.form, self.inset) {
@@ -600,7 +617,11 @@ impl OpeningFields {
         let tol = 1e-9 * thickness.abs().max(1.0);
         match self.recess_in(thickness) {
             None => true,
-            Some((near, far)) => near > -tol && far < thickness - tol && (self.form != OpeningForm::Flue || near > tol),
+            Some((near, far)) => {
+                near > -tol
+                    && far < thickness - tol
+                    && (self.form != OpeningForm::Flue || near > tol)
+            }
         }
     }
 
@@ -683,7 +704,10 @@ impl OpeningFields {
             return Some((
                 "leaves".into(),
                 if self.operation == OpeningOperation::Slide {
-                    format!("Sürme açıklığın kanat sayısı {}; 1 ile 4 arasında olmalı.", self.leaves)
+                    format!(
+                        "Sürme açıklığın kanat sayısı {}; 1 ile 4 arasında olmalı.",
+                        self.leaves
+                    )
                 } else if !self.operation.is_special() {
                     format!("Açıklığın kanat sayısı {}; 1 ya da 2 olmalı.", self.leaves)
                 } else if least + 1 == most {
@@ -726,7 +750,10 @@ impl OpeningFields {
             {
                 return Some((
                     name.into(),
-                    format!("Açıklığın {} yüksekliği sonlu olmalı.", if name == "sill" { "denizlik" } else { "lento" }),
+                    format!(
+                        "Açıklığın {} yüksekliği sonlu olmalı.",
+                        if name == "sill" { "denizlik" } else { "lento" }
+                    ),
                 ));
             }
         }
@@ -741,8 +768,15 @@ impl OpeningFields {
         if let Some(why) = self.recess_problem() {
             return Some(why);
         }
-        if self.build.as_ref().is_some_and(crate::OpeningBuild::is_empty) {
-            return Some(("build".into(), "Boş yapı yazılmaz; yapının en az bir alanı olur.".into()));
+        if self
+            .build
+            .as_ref()
+            .is_some_and(crate::OpeningBuild::is_empty)
+        {
+            return Some((
+                "build".into(),
+                "Boş yapı yazılmaz; yapının en az bir alanı olur.".into(),
+            ));
         }
         if let Some(why) = self
             .build
@@ -781,7 +815,10 @@ impl OpeningFields {
         if self.place.len() != 4 {
             return Some((
                 "place".into(),
-                format!("Açıklığın pervazları dört noktadır; {} verildi.", self.place.len()),
+                format!(
+                    "Açıklığın pervazları dört noktadır; {} verildi.",
+                    self.place.len()
+                ),
             ));
         }
         if let Some(i) = self
@@ -862,15 +899,41 @@ pub fn builtin_opening_types() -> Vec<OpeningTypeDef> {
         head,
         depth: None,
     };
-    let recess = |id: &str, name: &str, form: OpeningForm, width: f64, depth: f64, sill: Option<f64>, head: Option<f64>| {
+    let recess = |id: &str,
+                  name: &str,
+                  form: OpeningForm,
+                  width: f64,
+                  depth: f64,
+                  sill: Option<f64>,
+                  head: Option<f64>| {
         OpeningTypeDef {
             depth: Some(depth),
             ..t(id, name, form, width, 1, Fixed, None, sill, head)
         }
     };
     vec![
-        t("kentos-kapi-90", "Kapı 90", Door, 0.9, 1, Swing, Some(0.05), None, Some(2.1)),
-        t("kentos-kapi-80", "Kapı 80", Door, 0.8, 1, Swing, Some(0.05), None, Some(2.1)),
+        t(
+            "kentos-kapi-90",
+            "Kapı 90",
+            Door,
+            0.9,
+            1,
+            Swing,
+            Some(0.05),
+            None,
+            Some(2.1),
+        ),
+        t(
+            "kentos-kapi-80",
+            "Kapı 80",
+            Door,
+            0.8,
+            1,
+            Swing,
+            Some(0.05),
+            None,
+            Some(2.1),
+        ),
         t(
             "kentos-iki-kanatli-kapi-140",
             "İki kanatlı kapı 140",
@@ -915,12 +978,48 @@ pub fn builtin_opening_types() -> Vec<OpeningTypeDef> {
             Some(0.9),
             Some(2.2),
         ),
-        t("kentos-bosluk-100", "Boşluk 100", Opening, 1.0, 1, Fixed, None, None, Some(2.1)),
+        t(
+            "kentos-bosluk-100",
+            "Boşluk 100",
+            Opening,
+            1.0,
+            1,
+            Fixed,
+            None,
+            None,
+            Some(2.1),
+        ),
         // A service hole high in the wall: above the plan's cut, dashed (docs/adr/0719 §2).
-        t("kentos-tesisat-20", "Tesisat boşluğu 20", Opening, 0.2, 1, Fixed, None, Some(2.3), Some(2.5)),
-        recess("kentos-nis-60", "Niş 60", Niche, 0.6, 0.1, Some(0.9), Some(1.5)),
+        t(
+            "kentos-tesisat-20",
+            "Tesisat boşluğu 20",
+            Opening,
+            0.2,
+            1,
+            Fixed,
+            None,
+            Some(2.3),
+            Some(2.5),
+        ),
+        recess(
+            "kentos-nis-60",
+            "Niş 60",
+            Niche,
+            0.6,
+            0.1,
+            Some(0.9),
+            Some(1.5),
+        ),
         // Under a window: below the plan's cut, dashed.
-        recess("kentos-kalorifer-nisi-100", "Kalorifer nişi 100", Niche, 1.0, 0.1, Some(0.1), Some(0.8)),
+        recess(
+            "kentos-kalorifer-nisi-100",
+            "Kalorifer nişi 100",
+            Niche,
+            1.0,
+            0.1,
+            Some(0.1),
+            Some(0.8),
+        ),
         // Full height: cut, centred in its wall.
         recess("kentos-baca-20", "Baca 20", Flue, 0.2, 0.2, None, None),
     ]

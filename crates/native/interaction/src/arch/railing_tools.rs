@@ -321,7 +321,9 @@ impl RailingTool {
                 }
                 _ => false,
             },
-            "Y" => length(MAX_RAILING_HEIGHT).map(|v| self.height = v).is_some(),
+            "Y" => length(MAX_RAILING_HEIGHT)
+                .map(|v| self.height = v)
+                .is_some(),
             "E" => length(MAX_RAILING_WIDTH).map(|v| self.width = v).is_some(),
             "A" => length(MAX_RAILING_GAP).map(|v| self.gap = v).is_some(),
             "F" => {
@@ -342,10 +344,19 @@ impl RailingTool {
             "Y" => ("Korkuluk yüksekliği", MAX_RAILING_HEIGHT),
             "E" => ("Küpeşte eni", MAX_RAILING_WIDTH),
             "A" => ("Çubuk aralığı", MAX_RAILING_GAP),
-            "F" => return format!("Kot farkı {} ile {} arasında olmalı.", f.length(-MAX_RAILING_OFFSET), f.length(MAX_RAILING_OFFSET)),
+            "F" => {
+                return format!(
+                    "Kot farkı {} ile {} arasında olmalı.",
+                    f.length(-MAX_RAILING_OFFSET),
+                    f.length(MAX_RAILING_OFFSET)
+                );
+            }
             _ => return "Geçerli bir korkuluk seçeneği belirleyin.".into(),
         };
-        format!("{name} sıfırdan büyük ve en çok {} olmalı.", f.length(limit))
+        format!(
+            "{name} sıfırdan büyük ve en çok {} olmalı.",
+            f.length(limit)
+        )
     }
 }
 
@@ -441,7 +452,9 @@ impl Tool for RailingTool {
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
         if self.line == Line::Void {
             match self.round_void(p.world, cx) {
-                Ok(pieces) => { self.write(&pieces, cx); }
+                Ok(pieces) => {
+                    self.write(&pieces, cx);
+                }
                 Err(why) => cx.say(Level::Info, why),
             }
             self.see(cx);

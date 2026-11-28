@@ -624,12 +624,17 @@ pub(crate) fn listed(key: &'static str, current: &Value) -> Element<'static, Mes
         descriptor.map(|d| d.choices.clone()).unwrap_or_default();
     // A typeface's list: KentOS's own faces, then the fonts folders' families (docs/adr/9313), the value's too.
     if descriptor.is_some_and(|d| d.font) {
-        let current = current.as_str().and_then(kentos_commands::DrawingFont::from_name);
+        let current = current
+            .as_str()
+            .and_then(kentos_commands::DrawingFont::from_name);
         choices.extend(
             kentos_native_application::font_folders::choices(current)
                 .into_iter()
                 .filter(|f| f.family().is_some())
-                .map(|f| kentos_commands::SettingChoice { value: Value::from(f.id()), label: f.label().into() }),
+                .map(|f| kentos_commands::SettingChoice {
+                    value: Value::from(f.id()),
+                    label: f.label().into(),
+                }),
         );
     }
     let selected = choices.iter().position(|c| same_value(&c.value, current));

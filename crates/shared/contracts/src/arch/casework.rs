@@ -445,7 +445,9 @@ pub fn casework_problem(runs: &[CaseworkRecord]) -> Option<(usize, String)> {
             return fail("Mutfak dizisinin katmanı boş.");
         }
         let corners = r.through.as_ref().map_or(0, Vec::len);
-        if r.filler_ends.len() > corners + 1 || r.level.as_deref().is_some_and(|l| l.trim().is_empty()) {
+        if r.filler_ends.len() > corners + 1
+            || r.level.as_deref().is_some_and(|l| l.trim().is_empty())
+        {
             return fail("Mutfak dizisinin katı veya dolgu kolu geçersiz.");
         }
         if corners > CASEWORK_CORNERS_MAX {
@@ -483,4 +485,3 @@ pub fn casework_problem(runs: &[CaseworkRecord]) -> Option<(usize, String)> {
     }
     None
 }
-

@@ -41,7 +41,8 @@ use crate::log::Level;
 use crate::points::{self, plain_number};
 use crate::prompt::{Prompt, upper_tr};
 use crate::tool::{
-    Context, Cursor, Flow, Label, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone, Tool,
+    Context, Cursor, Flow, Label, Marker, MarkerShape, Memory, Pointer, Preview, Stroke, Tag, Tone,
+    Tool,
 };
 use crate::{InputPreview, Vec2, js_trim};
 use plan::Op;
@@ -253,8 +254,8 @@ impl CornerTool {
     }
 
     fn reset(&mut self) {
-        self.input_draft=None;
-        self.input_ready=false;
+        self.input_draft = None;
+        self.input_ready = false;
         self.stage = Stage::Find;
         self.corner = None;
         self.first = None;
@@ -339,7 +340,7 @@ impl CornerTool {
     /// its objects, and with a size the reach along both sides, the result
     /// and the size beside the cursor.
     fn redraw(&mut self, cx: &Context<'_>) {
-        self.input_ready=false;
+        self.input_ready = false;
         self.drawn = Preview::default();
         let doc = &*cx.doc;
         if self.stage == Stage::Second {
@@ -347,8 +348,15 @@ impl CornerTool {
                 let out = Outline::of(&shape(e), None, 2.0, Tone::Accent);
                 self.drawn.strokes = out.strokes;
             }
-            if self.kind == Kind::Chamfer && let Some((_, at)) = self.first {
-                self.drawn.labels.push(Label { at, text:"1. kenar".into(), offset:[10.,-18.], tone:Tone::Accent });
+            if self.kind == Kind::Chamfer
+                && let Some((_, at)) = self.first
+            {
+                self.drawn.labels.push(Label {
+                    at,
+                    text: "1. kenar".into(),
+                    offset: [10., -18.],
+                    tone: Tone::Accent,
+                });
             }
             return;
         }
@@ -373,23 +381,28 @@ impl CornerTool {
             return;
         }
         let pulled = self.op_for_pull(self.pulled_distance(&c, cx), &c);
-        let op=match self.input_draft {
-            Some(Some(op))=>op,
-            Some(None)=> {
-                self.drawn.strokes=out.strokes;
-                self.drawn.tag=Some(Tag { at:self.mouse.unwrap_or(c.geom.at), lines:vec![match self.kind {
-                    Kind::Fillet=>"Geçerli bir yarıçap yazın (ör. 25cm).".into(),
-                    Kind::Chamfer=>"İki kenar mesafesini yazın (ör. 10cm;20cm).".into(),
-                }] });
+        let op = match self.input_draft {
+            Some(Some(op)) => op,
+            Some(None) => {
+                self.drawn.strokes = out.strokes;
+                self.drawn.tag = Some(Tag {
+                    at: self.mouse.unwrap_or(c.geom.at),
+                    lines: vec![match self.kind {
+                        Kind::Fillet => "Geçerli bir yarıçap yazın (ör. 25cm).".into(),
+                        Kind::Chamfer => "İki kenar mesafesini yazın (ör. 10cm;20cm).".into(),
+                    }],
+                });
                 return;
             }
-            None=>pulled,
+            None => pulled,
         };
         if self.kind == Kind::Chamfer {
-            for (i,u) in [c.geom.u1,c.geom.u2].into_iter().enumerate() {
+            for (i, u) in [c.geom.u1, c.geom.u2].into_iter().enumerate() {
                 self.drawn.labels.push(Label {
-                    at:offset_along(c.geom.at,u,cx.view.world_length(60.)),
-                    text:format!("{}. kenar",i+1),offset:[10.,-18.],tone:Tone::Accent,
+                    at: offset_along(c.geom.at, u, cx.view.world_length(60.)),
+                    text: format!("{}. kenar", i + 1),
+                    offset: [10., -18.],
+                    tone: Tone::Accent,
                 });
             }
         }
@@ -402,20 +415,23 @@ impl CornerTool {
         };
         let planned = corner_plan(doc, request);
         if let CommandResult::Completed { output, .. } = &planned {
-            self.input_ready=true;
+            self.input_ready = true;
             // Reach guides must describe this exact typed/mouse plan, and
             // must never imply a valid result when the semantic plan failed.
-            let reaches=match op {
-                Op::Cut(a,b)=>[a,b],
-                Op::Radius(r)=> {
-                    let factor=fillet_radius_for(1.,c.geom.phi);
-                    [if factor>1e-12 {r/factor} else {0.};2]
+            let reaches = match op {
+                Op::Cut(a, b) => [a, b],
+                Op::Radius(r) => {
+                    let factor = fillet_radius_for(1., c.geom.phi);
+                    [if factor > 1e-12 { r / factor } else { 0. }; 2]
                 }
             };
-            if !matches!(c.site, Site::Curves {..}) {
-                for (u,reach) in [c.geom.u1,c.geom.u2].into_iter().zip(reaches) {
-                    out.strokes.push(Stroke::solid(vec![c.geom.at,offset_along(c.geom.at,u,reach)],false)
-                        .width(2.).tone(Tone::Snap));
+            if !matches!(c.site, Site::Curves { .. }) {
+                for (u, reach) in [c.geom.u1, c.geom.u2].into_iter().zip(reaches) {
+                    out.strokes.push(
+                        Stroke::solid(vec![c.geom.at, offset_along(c.geom.at, u, reach)], false)
+                            .width(2.)
+                            .tone(Tone::Snap),
+                    );
                 }
             }
             for e in &output.changed {
@@ -428,10 +444,17 @@ impl CornerTool {
                 self.drawn.tag = Some(Tag {
                     at: mouse,
                     lines: {
-                        let mut lines = vec![self.describe(op), if self.input_draft.is_some() {
-                            "Enter veya tıkla: yazılan değeri uygula".to_owned()
-                        } else {"Tıkla: bu önizlemeyi uygula".to_owned()}];
-                        if self.input_draft.is_none() && let Some(last) = self.last() {
+                        let mut lines = vec![
+                            self.describe(op),
+                            if self.input_draft.is_some() {
+                                "Enter veya tıkla: yazılan değeri uygula".to_owned()
+                            } else {
+                                "Tıkla: bu önizlemeyi uygula".to_owned()
+                            },
+                        ];
+                        if self.input_draft.is_none()
+                            && let Some(last) = self.last()
+                        {
                             lines.push(format!("Enter: son değer — {}", self.describe(last)));
                         }
                         lines
@@ -447,14 +470,15 @@ impl CornerTool {
                 if !line.is_empty() && line.chars().count() + word.chars().count() + 1 > 44 {
                     lines.push(std::mem::take(&mut line));
                 }
-                if !line.is_empty() { line.push(' '); }
+                if !line.is_empty() {
+                    line.push(' ');
+                }
                 line.push_str(word);
             }
-            if !line.is_empty() { lines.push(line); }
-            self.drawn.tag = Some(Tag {
-                at: mouse,
-                lines,
-            });
+            if !line.is_empty() {
+                lines.push(line);
+            }
+            self.drawn.tag = Some(Tag { at: mouse, lines });
         }
         self.drawn.strokes = out.strokes;
         self.drawn.marks = out.marks;
@@ -584,9 +608,12 @@ impl Tool for CornerTool {
         if self.stage == Stage::Size {
             if let Some(c) = self.corner {
                 match self.input_draft {
-                    Some(Some(op)) => self.commit(op,cx),
-                    Some(None) => cx.say(Level::Warn,"Önce geçerli bir değer yazın veya Esc ile iptal edin."),
-                    None => self.commit(self.op_for_pull(self.pulled_distance(&c,cx),&c),cx),
+                    Some(Some(op)) => self.commit(op, cx),
+                    Some(None) => cx.say(
+                        Level::Warn,
+                        "Önce geçerli bir değer yazın veya Esc ile iptal edin.",
+                    ),
+                    None => self.commit(self.op_for_pull(self.pulled_distance(&c, cx), &c), cx),
                 }
             }
             self.see(cx);
@@ -701,7 +728,10 @@ impl Tool for CornerTool {
             return Flow::Exit;
         };
         let fallback = matches!(c.site, Site::Lines { .. }).then(|| self.op_for_pull(0.0, &c));
-        let op=match self.input_draft {Some(op)=>op,None=>self.last().or(fallback)};
+        let op = match self.input_draft {
+            Some(op) => op,
+            None => self.last().or(fallback),
+        };
         match op {
             Some(op) => self.commit(op, cx),
             None => cx.say(

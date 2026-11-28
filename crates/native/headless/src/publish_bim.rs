@@ -122,8 +122,12 @@ pub(crate) fn package(
         },
     });
     // The drawing's answers (docs/adr/8077), a question's answer given to the publication over its own.
-    let mut given: Vec<kentos_commands::FormAnswer> =
-        doc.form_answers().iter().filter(|a| !bim.answers.iter().any(|b| b.no == a.no)).cloned().collect();
+    let mut given: Vec<kentos_commands::FormAnswer> = doc
+        .form_answers()
+        .iter()
+        .filter(|a| !bim.answers.iter().any(|b| b.no == a.no))
+        .cloned()
+        .collect();
     given.extend(bim.answers.iter().cloned());
     given.sort_by_key(|a| a.no);
     let answers = serde_json::to_value(&given).unwrap_or(Value::Null);
@@ -220,7 +224,11 @@ pub(crate) fn package(
         "results": report.results,
         "versions": versions,
     });
-    Some(Packed { report, files: vec![model], manifest })
+    Some(Packed {
+        report,
+        files: vec![model],
+        manifest,
+    })
 }
 
 /// A request the package cannot meet: an error issue, and no part.

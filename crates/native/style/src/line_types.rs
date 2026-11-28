@@ -115,9 +115,13 @@ impl LineTypes {
         let mut marks = HashMap::new();
         for def in &settings.line_types {
             match text::prepare(def, settings, plot_scale, styles) {
-                Ok(Some(prepared)) => { marks.insert(def.name.to_lowercase(), prepared); }
-                Ok(None) => {},
-                Err(error) => { losses.insert(def.name.to_lowercase(), format!("“{}”: {error}", def.name)); }
+                Ok(Some(prepared)) => {
+                    marks.insert(def.name.to_lowercase(), prepared);
+                }
+                Ok(None) => {}
+                Err(error) => {
+                    losses.insert(def.name.to_lowercase(), format!("“{}”: {error}", def.name));
+                }
             }
         }
         Self {
@@ -126,12 +130,7 @@ impl LineTypes {
             by_name: settings
                 .line_types
                 .iter()
-                .map(|t| {
-                    (
-                        t.name.to_lowercase(),
-                        dashes_of(t, plot_scale, unit),
-                    )
-                })
+                .map(|t| (t.name.to_lowercase(), dashes_of(t, plot_scale, unit)))
                 .collect(),
             scale: settings.line_type_scale.unwrap_or(1.0),
         }
@@ -170,7 +169,13 @@ impl LineTypes {
         if dash.is_none() && self.scale == 1.0 && loss.is_none() && marks.is_none() {
             return symbols;
         }
-        fn walk(v: &mut Value, dash: Option<Option<&Dashes>>, scale: f64, loss: Option<&str>, marks: Option<&Value>) {
+        fn walk(
+            v: &mut Value,
+            dash: Option<Option<&Dashes>>,
+            scale: f64,
+            loss: Option<&str>,
+            marks: Option<&Value>,
+        ) {
             match v {
                 Value::Object(map) => {
                     if map.get("type").and_then(Value::as_str) == Some("simpleLine") {
@@ -207,7 +212,9 @@ impl LineTypes {
                         walk(x, dash, scale, loss, marks);
                     }
                 }
-                Value::Array(list) => list.iter_mut().for_each(|x| walk(x, dash, scale, loss, marks)),
+                Value::Array(list) => list
+                    .iter_mut()
+                    .for_each(|x| walk(x, dash, scale, loss, marks)),
                 _ => {}
             }
         }
@@ -218,13 +225,21 @@ impl LineTypes {
 
 /// Scale physical placement once; normalized glyph contours remain unchanged.
 pub(crate) fn scale_marks(v: &mut Value, scale: f64) {
-    if scale == 1. { return; }
+    if scale == 1. {
+        return;
+    }
     fn times(v: &mut Value, name: &str, scale: f64) {
-        if let Some(n) = v.get(name).and_then(Value::as_f64) { v[name] = json!(n * scale); }
+        if let Some(n) = v.get(name).and_then(Value::as_f64) {
+            v[name] = json!(n * scale);
+        }
     }
     times(v, "period", scale);
     if let Some(marks) = v.get_mut("marks").and_then(Value::as_array_mut) {
-        for mark in marks { for key in ["at", "height", "x", "y"] { times(mark, key, scale); } }
+        for mark in marks {
+            for key in ["at", "height", "x", "y"] {
+                times(mark, key, scale);
+            }
+        }
     }
 }
 

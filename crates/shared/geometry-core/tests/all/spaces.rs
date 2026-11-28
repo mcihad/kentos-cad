@@ -143,15 +143,31 @@ fn a_void_is_crossed_inside_its_parts() {
     };
     let near = |p: Vec2, x: f64, y: f64| (p.x - x).abs() < 1e-12 && (p.y - y).abs() < 1e-12;
     // A 0.8 × 0.6 shaft.
-    let shaft = Area { outer: ring(&[(1.0, 1.0), (1.8, 1.0), (1.8, 1.6), (1.0, 1.6)]), holes: vec![] };
+    let shaft = Area {
+        outer: ring(&[(1.0, 1.0), (1.8, 1.0), (1.8, 1.6), (1.0, 1.6)]),
+        holes: vec![],
+    };
     let cross = lines(space::void_cross(&[shaft]));
     assert_eq!(cross.len(), 2);
-    assert!(near(cross[0].0, 1.0, 1.0) && near(cross[0].1, 1.8, 1.6), "{cross:?}");
-    assert!(near(cross[1].0, 1.8, 1.0) && near(cross[1].1, 1.0, 1.6), "{cross:?}");
+    assert!(
+        near(cross[0].0, 1.0, 1.0) && near(cross[0].1, 1.8, 1.6),
+        "{cross:?}"
+    );
+    assert!(
+        near(cross[1].0, 1.8, 1.0) && near(cross[1].1, 1.0, 1.6),
+        "{cross:?}"
+    );
     // An L (4 × 4 less its upper right 2 × 2): the rectangle's diagonal from (0, 0) leaves it at (2, 2); the other
     // runs from (4, 0) to (2, 2) and again from (2, 2) to (0, 4).
     let l = Area {
-        outer: ring(&[(0.0, 0.0), (4.0, 0.0), (4.0, 2.0), (2.0, 2.0), (2.0, 4.0), (0.0, 4.0)]),
+        outer: ring(&[
+            (0.0, 0.0),
+            (4.0, 0.0),
+            (4.0, 2.0),
+            (2.0, 2.0),
+            (2.0, 4.0),
+            (0.0, 4.0),
+        ]),
         holes: vec![],
     };
     let cross = lines(space::void_cross(&[l]));
@@ -169,7 +185,10 @@ fn a_void_is_crossed_inside_its_parts() {
     assert_eq!(cross.len(), 4, "{cross:?}");
     // The space's pieces carry the cross only when it is a void.
     let room = space::Spec::default();
-    let shaft = Area { outer: ring(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]), holes: vec![] };
+    let shaft = Area {
+        outer: ring(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)]),
+        holes: vec![],
+    };
     let plain = space::pieces(std::slice::from_ref(&shaft), &room, 50.0);
     let void = space::pieces(&[shaft], &space::Spec { void: true, ..room }, 50.0);
     assert_eq!(void.len(), plain.len() + 2);
@@ -197,7 +216,12 @@ fn a_tagged_space_is_drawn_without_its_label() {
     let texts = |s: &Store| {
         s.get(1.0)
             .and_then(|it| it.expanded.as_ref())
-            .map_or(0, |x| x.shapes.iter().filter(|p| matches!(p, Shape::Text { .. })).count())
+            .map_or(0, |x| {
+                x.shapes
+                    .iter()
+                    .filter(|p| matches!(p, Shape::Text { .. }))
+                    .count()
+            })
     };
     let mut store = Store::new();
     store.put(1.0, "0", false, shape.clone());
@@ -218,30 +242,73 @@ fn a_filled_space_is_drawn_solid_under_its_rings() {
     use kentos_geometry_core::entity::Shape;
     use kentos_geometry_core::geom::arrangement::Area;
     use kentos_geometry_core::store::Store;
-    let ring = |pts: &[(f64, f64)]| Ring { pts: pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(), bulges: None };
+    let ring = |pts: &[(f64, f64)]| Ring {
+        pts: pts.iter().map(|&(x, y)| Vec2::new(x, y)).collect(),
+        bulges: None,
+    };
     let room = Area {
         outer: ring(&[(0.0, 0.0), (4.0, 0.0), (4.0, 3.0), (0.0, 3.0)]),
         holes: vec![ring(&[(1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 2.0)])],
     };
-    let shape = Shape::Space { parts: vec![room], space: space::Spec::default() };
+    let shape = Shape::Space {
+        parts: vec![room],
+        space: space::Spec::default(),
+    };
     let first = |s: &Store| {
-        let x = s.get(1.0).and_then(|it| it.expanded.clone()).expect("expanded");
-        (x.shapes[0].clone(), x.colors[0].clone(), x.shapes.iter().filter(|p| matches!(p, Shape::Text { .. })).count())
+        let x = s
+            .get(1.0)
+            .and_then(|it| it.expanded.clone())
+            .expect("expanded");
+        (
+            x.shapes[0].clone(),
+            x.colors[0].clone(),
+            x.shapes
+                .iter()
+                .filter(|p| matches!(p, Shape::Text { .. }))
+                .count(),
+        )
     };
     let mut store = Store::new();
     store.put(1.0, "0", false, shape.clone());
     let (plain, _, labels) = first(&store);
-    assert!(!matches!(plain, Shape::Hatch { .. }) && labels == 1, "no fill without a colour plan");
+    assert!(
+        !matches!(plain, Shape::Hatch { .. }) && labels == 1,
+        "no fill without a colour plan"
+    );
     store.set_space_fills(&[(1.0, "#FDB462".to_owned())]);
     let (fill, color, labels) = first(&store);
-    let Shape::Hatch { ring, holes, pattern, .. } = fill else { panic!("a hatch first, under the rings") };
-    assert_eq!((pattern.kind.as_str(), color.as_deref(), labels), ("solid", Some("#FDB462"), 1));
-    assert_eq!((ring.len(), holes.map(|h| h.len())), (4, Some(1)), "its outline less its hole");
+    let Shape::Hatch {
+        ring,
+        holes,
+        pattern,
+        ..
+    } = fill
+    else {
+        panic!("a hatch first, under the rings")
+    };
+    assert_eq!(
+        (pattern.kind.as_str(), color.as_deref(), labels),
+        ("solid", Some("#FDB462"), 1)
+    );
+    assert_eq!(
+        (ring.len(), holes.map(|h| h.len())),
+        (4, Some(1)),
+        "its outline less its hole"
+    );
     store.put(1.0, "0", false, shape.clone());
-    assert!(matches!(first(&store).0, Shape::Hatch { .. }), "put again while filled");
+    assert!(
+        matches!(first(&store).0, Shape::Hatch { .. }),
+        "put again while filled"
+    );
     store.set_tagged_spaces(&[1.0]);
     let (fill, _, labels) = first(&store);
-    assert!(matches!(fill, Shape::Hatch { .. }) && labels == 0, "tagged and filled");
+    assert!(
+        matches!(fill, Shape::Hatch { .. }) && labels == 0,
+        "tagged and filled"
+    );
     store.set_space_fills(&[]);
-    assert!(!matches!(first(&store).0, Shape::Hatch { .. }), "the fills gone");
+    assert!(
+        !matches!(first(&store).0, Shape::Hatch { .. }),
+        "the fills gone"
+    );
 }

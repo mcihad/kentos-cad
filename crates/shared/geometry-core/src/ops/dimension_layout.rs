@@ -91,9 +91,10 @@ fn blocked(r: &Rect, placed: &[Rect], lines: &[RowLine], margin: f64) -> bool {
     placed
         .iter()
         .any(|q| r.t0 < q.t1 + margin && r.t1 > q.t0 - margin && r.o0 < q.o1 && r.o1 > q.o0)
-        || lines.iter().enumerate().any(|(k, l)| {
-            k != r.line && r.o0 < l.o && r.o1 > l.o && r.t0 < l.t1 && r.t1 > l.t0
-        })
+        || lines
+            .iter()
+            .enumerate()
+            .any(|(k, l)| k != r.line && r.o0 < l.o && r.o1 > l.o && r.t0 < l.t1 && r.t1 > l.t0)
 }
 
 /// The values' places (docs/adr/0730 §2), in the order given (rows in the recipe's order, along each row): those that fit
@@ -118,7 +119,11 @@ pub fn place_values(values: &[ValueBox], lines: &[RowLine]) -> Vec<Placement> {
         let margin = v.height * 0.5;
         let c = (v.t0 + v.t1) * 0.5;
         // Beyond its reading end and before its reading start, as far along as half a height clears the line's end.
-        let (end, start) = if v.reading >= 0.0 { (v.t1, v.t0) } else { (v.t0, v.t1) };
+        let (end, start) = if v.reading >= 0.0 {
+            (v.t1, v.t0)
+        } else {
+            (v.t0, v.t1)
+        };
         let beyond = v.reading * (end + v.reading * (margin + v.width * 0.5) - c);
         let before = v.reading * (start - v.reading * (margin + v.width * 0.5) - c);
         let up = v.height * (1.0 + v.gap);
@@ -220,12 +225,19 @@ mod tests {
 
     #[test]
     fn a_value_that_does_not_fit_goes_beyond_its_end_then_before_its_start_then_above() {
-        let lines = [RowLine { o: -1.0, t0: 0.0, t1: 10.0 }];
+        let lines = [RowLine {
+            o: -1.0,
+            t0: 0.0,
+            t1: 10.0,
+        }];
         // Alone: beyond its reading end, half a height clear of its line's end.
         let thin = value(0.0, 0.25, 0.3);
         assert!(!fits(&thin));
         let beyond = 0.25 + 0.0625 + 0.15 - 0.125;
-        assert_eq!(place_values(&[thin], &lines), [Placement::Moved(beyond, 0.0)]);
+        assert_eq!(
+            place_values(&[thin], &lines),
+            [Placement::Moved(beyond, 0.0)]
+        );
         // A fitting neighbour's value there: before its start.
         let next = value(0.25, 1.25, 0.4);
         assert!(fits(&next));
@@ -240,7 +252,11 @@ mod tests {
         };
         assert_eq!(
             place_values(&[moved, thin, next], &lines),
-            [Placement::Fixed, Placement::Moved(0.0, 0.125 * 1.5), Placement::Fits]
+            [
+                Placement::Fixed,
+                Placement::Moved(0.0, 0.125 * 1.5),
+                Placement::Fits
+            ]
         );
     }
 
@@ -248,9 +264,21 @@ mod tests {
     fn a_value_with_no_free_place_stays_and_another_rows_line_is_never_crossed() {
         // Its own line's neighbours on both sides, another row's line through its places above and below.
         let lines = [
-            RowLine { o: 0.0, t0: 0.0, t1: 10.0 },
-            RowLine { o: 0.3, t0: 0.0, t1: 10.0 },
-            RowLine { o: -0.1, t0: 0.0, t1: 10.0 },
+            RowLine {
+                o: 0.0,
+                t0: 0.0,
+                t1: 10.0,
+            },
+            RowLine {
+                o: 0.3,
+                t0: 0.0,
+                t1: 10.0,
+            },
+            RowLine {
+                o: -0.1,
+                t0: 0.0,
+                t1: 10.0,
+            },
         ];
         let thin = value(1.0, 1.25, 0.3);
         let left = value(0.0, 1.0, 0.6);
@@ -263,10 +291,19 @@ mod tests {
 
     #[test]
     fn rounded_parts_against_the_overall_are_added_exactly() {
-        assert_eq!(rounding_gap(&["1.000", "1.000", "1.000"], "3.001").as_deref(), Some("3.000"));
+        assert_eq!(
+            rounding_gap(&["1.000", "1.000", "1.000"], "3.001").as_deref(),
+            Some("3.000")
+        );
         assert_eq!(rounding_gap(&["1.175", "0.900", "1.925"], "4.000"), None);
-        assert_eq!(rounding_gap(&["-0.300", "0.100"], "-0.150").as_deref(), Some("-0.200"));
-        assert_eq!(rounding_gap(&["0.001", "0.001"], "0.003").as_deref(), Some("0.002"));
+        assert_eq!(
+            rounding_gap(&["-0.300", "0.100"], "-0.150").as_deref(),
+            Some("-0.200")
+        );
+        assert_eq!(
+            rounding_gap(&["0.001", "0.001"], "0.003").as_deref(),
+            Some("0.002")
+        );
         // Not plain decimals in the same decimals: nothing said.
         assert_eq!(rounding_gap(&["1.00", "2.000"], "3.001"), None);
         assert_eq!(rounding_gap(&["~1.000", "2.000"], "3.001"), None);

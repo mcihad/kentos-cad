@@ -205,7 +205,11 @@ impl OpeningTool {
             .as_deref()
             .and_then(|k| all.iter().find(|t| t.id == k))
             .cloned()
-            .or_else(|| builtin_opening_types().into_iter().find(|t| t.form == self.form))
+            .or_else(|| {
+                builtin_opening_types()
+                    .into_iter()
+                    .find(|t| t.form == self.form)
+            })
     }
 
     /// Whether Yüz, Alt and Üst apply: a bare opening, a niche or a flue (docs/adr/0719 §2); a window's heights are its
@@ -233,7 +237,9 @@ impl OpeningTool {
         let mut number = match &self.numbering {
             Numbering::Off => return None,
             Numbering::Next(n) => n.clone(),
-            Numbering::Auto => last.map_or_else(|| format!("{}1", self.prefix()), |(_, n)| next_after(&n)),
+            Numbering::Auto => {
+                last.map_or_else(|| format!("{}1", self.prefix()), |(_, n)| next_after(&n))
+            }
         };
         // Bounded: as many steps as there are numbers in use and one more.
         for _ in 0..=used.len() {
@@ -259,16 +265,17 @@ impl OpeningTool {
     fn set_numbering(&mut self, value: &str, cx: &mut Context<'_>) -> bool {
         let value = js_trim(value);
         let folded = value.to_lowercase();
-        self.numbering = if value.is_empty() || folded == "otomatik" || folded.ends_with("· otomatik") {
-            Numbering::Auto
-        } else if folded == "yok" || value == "-" {
-            Numbering::Off
-        } else if value.chars().count() > 128 {
-            cx.say(Level::Warn, "Numara en çok 128 karakter olabilir.");
-            return false;
-        } else {
-            Numbering::Next(value.to_owned())
-        };
+        self.numbering =
+            if value.is_empty() || folded == "otomatik" || folded.ends_with("· otomatik") {
+                Numbering::Auto
+            } else if folded == "yok" || value == "-" {
+                Numbering::Off
+            } else if value.chars().count() > 128 {
+                cx.say(Level::Warn, "Numara en çok 128 karakter olabilir.");
+                return false;
+            } else {
+                Numbering::Next(value.to_owned())
+            };
         self.see(cx);
         true
     }
@@ -315,7 +322,10 @@ impl OpeningTool {
                 sill: self.sill,
                 head: self.head,
                 depth: self.depth.filter(|_| self.form.is_recess()),
-                inset: self.inset.flatten().filter(|_| self.form == OpeningForm::Flue),
+                inset: self
+                    .inset
+                    .flatten()
+                    .filter(|_| self.form == OpeningForm::Flue),
                 // Numara (docs/adr/0714), explicit in the input (CMD-07).
                 number: self.next_number(cx.doc),
                 operation,
@@ -450,7 +460,9 @@ impl OpeningTool {
     fn height_shown(&self, sill: bool) -> String {
         let f = &self.placement.format;
         let own = if sill { self.sill } else { self.head };
-        let typed = self.kind_def().and_then(|t| if sill { t.sill } else { t.head });
+        let typed = self
+            .kind_def()
+            .and_then(|t| if sill { t.sill } else { t.head });
         match (own, typed) {
             (Some(v), _) => f.length(v),
             (None, Some(v)) => format!("{} · türün", f.length(v)),
@@ -467,9 +479,14 @@ impl OpeningTool {
                 cx.say(Level::Warn, "Derinlik sıfırdan büyük, en çok 10 m olmalı.");
                 return false;
             }
-            Ask::Inset if v > 0.0 && v <= kentos_commands::MAX_RECESS_DEPTH => self.inset = Some(Some(v)),
+            Ask::Inset if v > 0.0 && v <= kentos_commands::MAX_RECESS_DEPTH => {
+                self.inset = Some(Some(v))
+            }
             Ask::Inset => {
-                cx.say(Level::Warn, "Yüzden uzaklık sıfırdan büyük olmalı; ortada için boş bırakın.");
+                cx.say(
+                    Level::Warn,
+                    "Yüzden uzaklık sıfırdan büyük olmalı; ortada için boş bırakın.",
+                );
                 return false;
             }
             Ask::Sill | Ask::Head if v.abs() > 1000.0 => {
@@ -550,29 +567,42 @@ impl Tool for OpeningTool {
                     .option("Geri", "G");
             }
             Some(Ask::Inset) => {
-                return Prompt::new(self.label(), "bacanın yüzden uzaklığını yazın (boş: ortada)")
-                    .option("Geri", "G");
+                return Prompt::new(
+                    self.label(),
+                    "bacanın yüzden uzaklığını yazın (boş: ortada)",
+                )
+                .option("Geri", "G");
             }
             Some(Ask::Sill) => {
-                return Prompt::new(self.label(), "alt kotunu yazın (döşemeden)").option("Geri", "G");
+                return Prompt::new(self.label(), "alt kotunu yazın (döşemeden)")
+                    .option("Geri", "G");
             }
             Some(Ask::Head) => {
-                return Prompt::new(self.label(), "üst kotunu yazın (döşemeden)").option("Geri", "G");
+                return Prompt::new(self.label(), "üst kotunu yazın (döşemeden)")
+                    .option("Geri", "G");
             }
             Some(Ask::Leaves) => {
-                return Prompt::new(self.label(), "kanat ya da panel sayısını yazın").option("Geri", "G");
+                return Prompt::new(self.label(), "kanat ya da panel sayısını yazın")
+                    .option("Geri", "G");
             }
             Some(Ask::Drum) => {
-                return Prompt::new(self.label(), "tamburun iç çapını yazın (boş: ışık kadar)").option("Geri", "G");
+                return Prompt::new(self.label(), "tamburun iç çapını yazın (boş: ışık kadar)")
+                    .option("Geri", "G");
             }
             Some(Ask::Lip) => {
-                return Prompt::new(self.label(), "açıkken cepten kalan payı yazın").option("Geri", "G");
+                return Prompt::new(self.label(), "açıkken cepten kalan payı yazın")
+                    .option("Geri", "G");
             }
             Some(Ask::Overlap) => {
-                return Prompt::new(self.label(), "iki kanadın bindirmesini yazın (boş: %5)").option("Geri", "G");
+                return Prompt::new(self.label(), "iki kanadın bindirmesini yazın (boş: %5)")
+                    .option("Geri", "G");
             }
             Some(Ask::Split) => {
-                return Prompt::new(self.label(), "birinci kanadın payını yazın: %60 ya da 0.6 (boş: eşit)").option("Geri", "G");
+                return Prompt::new(
+                    self.label(),
+                    "birinci kanadın payını yazın: %60 ya da 0.6 (boş: eşit)",
+                )
+                .option("Geri", "G");
             }
             None => {}
         }
@@ -613,15 +643,17 @@ impl Tool for OpeningTool {
                 .option_with("Üst kot", "Ü", self.height_shown(false));
         }
         if self.form == OpeningForm::Door {
-            p = p.option_with("Açılma yanı", "Y", self.side_label()).option_with(
-                "Menteşe",
-                "M",
-                if self.hand == OpeningHand::End {
-                    "Son"
-                } else {
-                    "Baş"
-                },
-            );
+            p = p
+                .option_with("Açılma yanı", "Y", self.side_label())
+                .option_with(
+                    "Menteşe",
+                    "M",
+                    if self.hand == OpeningHand::End {
+                        "Son"
+                    } else {
+                        "Baş"
+                    },
+                );
             p = self.door_prompt(p, &self.placement.format);
         }
         if self.placement.two_points {

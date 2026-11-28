@@ -103,9 +103,6 @@ fn an_installed_extension_is_in_the_agents_catalog() {
         "catalog.describe",
         &json!({ "extension": "tr.ornek.yok" }),
     );
-    assert_eq!(
-        unknown.err().map(|e| e.code),
-        Some("unknown_extension")
-    );
+    assert_eq!(unknown.err().map(|e| e.code), Some("unknown_extension"));
     let _ = std::fs::remove_dir_all(&root);
 }

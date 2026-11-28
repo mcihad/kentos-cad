@@ -8,9 +8,9 @@ use std::sync::Arc;
 
 use super::{Expanded, IdMap, IdSet, Store};
 use crate::entity::{Shape, entity_bounds_in};
+use crate::geom::opening;
 use crate::geom::wall;
 use crate::geom::wall_join::{self, IssueCode, JOIN_TOLERANCE, WallIn};
-use crate::geom::opening;
 use crate::geometry::Bounds;
 use crate::vec2::Vec2;
 
@@ -83,7 +83,11 @@ impl Store {
     }
 
     /// Wall `item`'s drawing `d` cut by the columns on its level that reach it (docs/adr/8041 §2); none when none does.
-    fn cut_by_columns(&self, item: &super::Item, d: &crate::geom::wall::Drawn) -> Option<crate::geom::wall::Drawn> {
+    fn cut_by_columns(
+        &self,
+        item: &super::Item,
+        d: &crate::geom::wall::Drawn,
+    ) -> Option<crate::geom::wall::Drawn> {
         let Shape::Wall { wall, .. } = &item.shape else {
             return None;
         };
@@ -143,7 +147,8 @@ impl Store {
                 })
                 .collect();
             walls.sort_by_key(|w| w.0);
-            let at: Vec<crate::geom::column_join::WallAt<'_>> = walls.into_iter().map(|w| w.1).collect();
+            let at: Vec<crate::geom::column_join::WallAt<'_>> =
+                walls.into_iter().map(|w| w.1).collect();
             looks.push((key, crate::geom::column_join::joined(&foot, &at)));
         }
         for (key, look) in looks {
@@ -161,7 +166,9 @@ impl Store {
             let fresh = self.slots[slot as usize]
                 .as_ref()
                 .map(|it| self.expansion_of(it.id, &it.shape));
-            if let (Some(it), Some((expanded, bounds))) = (self.slots[slot as usize].as_mut(), fresh) {
+            if let (Some(it), Some((expanded, bounds))) =
+                (self.slots[slot as usize].as_mut(), fresh)
+            {
                 it.bounds = bounds;
                 it.expanded = expanded;
                 it.veiled = None;
@@ -268,7 +275,11 @@ impl Store {
         if !self.wall_ids.contains(&key) {
             return;
         }
-        if let Some(it) = self.by_id.get(&key).and_then(|&s| self.slots[s as usize].as_ref()) {
+        if let Some(it) = self
+            .by_id
+            .get(&key)
+            .and_then(|&s| self.slots[s as usize].as_ref())
+        {
             self.wall_dirty.push(it.bounds);
         }
     }
@@ -281,7 +292,11 @@ impl Store {
             if self.option_out.contains(&o) {
                 continue;
             }
-            let Some(it) = self.by_id.get(&o).and_then(|&s| self.slots[s as usize].as_ref()) else {
+            let Some(it) = self
+                .by_id
+                .get(&o)
+                .and_then(|&s| self.slots[s as usize].as_ref())
+            else {
                 continue;
             };
             if let Shape::Opening {
@@ -489,7 +504,8 @@ impl Store {
                         .as_ref()
                         .and_then(|it| self.cut_by_columns(it, &d));
                     let whole = Arc::new(d);
-                    self.wall_drawn.insert(key, cut.map_or_else(|| whole.clone(), Arc::new));
+                    self.wall_drawn
+                        .insert(key, cut.map_or_else(|| whole.clone(), Arc::new));
                     self.wall_whole.insert(key, whole);
                 }
                 None => {
@@ -522,7 +538,11 @@ impl Store {
     pub fn loose_openings(&self) -> Vec<Vec2> {
         self.opening_loose
             .iter()
-            .filter_map(|k| self.by_id.get(k).and_then(|&s| self.slots[s as usize].as_ref()))
+            .filter_map(|k| {
+                self.by_id
+                    .get(k)
+                    .and_then(|&s| self.slots[s as usize].as_ref())
+            })
             .filter_map(|it| match &it.shape {
                 Shape::Opening { place, .. } => opening::centre(place),
                 _ => None,

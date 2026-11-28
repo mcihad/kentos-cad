@@ -4,7 +4,8 @@
 //! area and concrete. Nothing read is kept: every read computes again.
 
 use kentos_commands::{
-    CommandWarning, RetainingWallDef, RetainingWallListed, RetainingWallReport, RetainingWallRow, WallSide,
+    CommandWarning, RetainingWallDef, RetainingWallListed, RetainingWallReport, RetainingWallRow,
+    WallSide,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -22,17 +23,35 @@ pub(crate) fn road_project(doc: &Document) -> Result<(), Stop> {
     if doc.settings().cad_work == Some(kentos_commands::CadWork::Road) {
         Ok(())
     } else {
-        Err(fail(codes::NOT_A_ROAD_PROJECT, "İstinat duvarı yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil.".into(), ""))
+        Err(fail(
+            codes::NOT_A_ROAD_PROJECT,
+            "İstinat duvarı yalnız yol projesinde (KentOS Yol) olur; bu çizim yol projesi değil."
+                .into(),
+            "",
+        ))
     }
 }
 
 /// The wall of `name`: by its id, else by its name (case aside).
-pub(crate) fn find<'a>(list: &'a [RetainingWallDef], name: &str, path: &str) -> Result<(usize, &'a RetainingWallDef), Stop> {
+pub(crate) fn find<'a>(
+    list: &'a [RetainingWallDef],
+    name: &str,
+    path: &str,
+) -> Result<(usize, &'a RetainingWallDef), Stop> {
     list.iter()
         .position(|c| c.id == name)
-        .or_else(|| list.iter().position(|c| c.name.to_lowercase() == name.to_lowercase()))
+        .or_else(|| {
+            list.iter()
+                .position(|c| c.name.to_lowercase() == name.to_lowercase())
+        })
         .map(|i| (i, &list[i]))
-        .ok_or_else(|| fail(codes::UNKNOWN_RETAINING_WALL, format!("“{name}” kimlikli ya da adlı istinat duvarı projede yok."), path))
+        .ok_or_else(|| {
+            fail(
+                codes::UNKNOWN_RETAINING_WALL,
+                format!("“{name}” kimlikli ya da adlı istinat duvarı projede yok."),
+                path,
+            )
+        })
 }
 
 pub(crate) fn listed(list: &[RetainingWallDef]) -> Vec<RetainingWallListed> {
@@ -51,7 +70,15 @@ pub(crate) fn listed(list: &[RetainingWallDef]) -> Vec<RetainingWallListed> {
 
 pub(crate) fn shape_of(def: &RetainingWallDef) -> Shape {
     let s = &def.shape;
-    Shape { top: s.top, batter: s.batter, footing: s.footing, base: s.base, toe: s.toe, cover: s.cover, above: s.above }
+    Shape {
+        top: s.top,
+        batter: s.batter,
+        footing: s.footing,
+        base: s.base,
+        toe: s.toe,
+        cover: s.cover,
+        above: s.above,
+    }
 }
 
 fn num(v: f64) -> String {
@@ -68,7 +95,11 @@ pub(crate) struct Read {
 /// The wall's footing edges' offsets at a row: the toe's (in front of the face) and the heel's. The face looks away
 /// from what it holds: outward from the road over a fill, toward it in a cut.
 pub(crate) fn footing_edges(def: &RetainingWallDef, offset: f64, fill: bool) -> [f64; 2] {
-    let side = if def.side == WallSide::Right { 1.0 } else { -1.0 };
+    let side = if def.side == WallSide::Right {
+        1.0
+    } else {
+        -1.0
+    };
     let facing = if fill { side } else { -side };
     let toe = offset + facing * def.shape.toe;
     [toe, toe - facing * def.shape.footing]
@@ -81,12 +112,24 @@ pub(crate) fn read(doc: &Document, def: &RetainingWallDef) -> Result<Read, Stop>
 
 /// [`read`] telling `tick` how far it has come (`done` of 2 × [`corridors::TICKS`], docs/adr/4040): its corridor's
 /// sections the first half, the wall's own stations the second; `tick` answering true stops it there, cancelled.
-pub(crate) fn read_told(doc: &Document, def: &RetainingWallDef, tick: &dyn Fn(u64, u64) -> bool) -> Result<Read, Stop> {
+pub(crate) fn read_told(
+    doc: &Document,
+    def: &RetainingWallDef,
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Result<Read, Stop> {
     let whole = 2 * corridors::TICKS;
     let (_, corridor) = corridors::find(doc.road_corridors(), &def.corridor, "corridor")?;
     let bad = |words: String, path: &str| fail(codes::INVALID_RETAINING_WALL, words, path);
-    let first = corridor.regions.iter().map(|r| r.from).fold(f64::INFINITY, f64::min);
-    let last = corridor.regions.iter().map(|r| r.to).fold(f64::NEG_INFINITY, f64::max);
+    let first = corridor
+        .regions
+        .iter()
+        .map(|r| r.from)
+        .fold(f64::INFINITY, f64::min);
+    let last = corridor
+        .regions
+        .iter()
+        .map(|r| r.to)
+        .fold(f64::NEG_INFINITY, f64::max);
     for (v, path) in [(def.from, "from"), (def.to, "to")] {
         if v < first - 1e-9 || v > last + 1e-9 {
             return Err(bad(
@@ -101,31 +144,70 @@ pub(crate) fn read_told(doc: &Document, def: &RetainingWallDef, tick: &dyn Fn(u6
             ));
         }
     }
-    let first = |done: u64, all: u64| tick((done * corridors::TICKS).checked_div(all).unwrap_or(0), whole);
+    let first = |done: u64, all: u64| {
+        tick(
+            (done * corridors::TICKS).checked_div(all).unwrap_or(0),
+            whole,
+        )
+    };
     let made = corridors::make_ticked(doc, corridor, false, &first).map_err(|stop| match stop {
         Stop::Cancelled => Stop::Cancelled,
         stop => {
             let why = format!("“{}” koridoru kurulamıyor: {}", corridor.name, words(stop));
-            bad(format!("“{}” istinat duvarının koridoru okunamıyor: {why}", def.name), "corridor")
+            bad(
+                format!(
+                    "“{}” istinat duvarının koridoru okunamıyor: {why}",
+                    def.name
+                ),
+                "corridor",
+            )
         }
     })?;
     let mut warnings = made.warnings.clone();
     let shape = shape_of(def);
     let text = |s: f64| km_text(made.sampler.alignment.km(s), 3);
-    let (mut rows, mut lines, mut slices, mut places) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+    let (mut rows, mut lines, mut slices, mut places) =
+        (Vec::new(), Vec::new(), Vec::new(), Vec::new());
     let stations = crate::road_stakeout::stepped(def.from, def.to, def.step);
     let all = stations.len() as u64;
     for (k, s) in stations.into_iter().enumerate() {
         if tick(corridors::TICKS + k as u64 * corridors::TICKS / all, whole) {
             return Err(Stop::Cancelled);
         }
-        let none = || bad(format!("“{}” istinat duvarının km {}'sinde koridorun kesiti yok.", def.name, text(s)), "from");
-        let ri = corridor.regions.iter().position(|r| s >= r.from - 1e-9 && s <= r.to + 1e-9).ok_or_else(none)?;
-        let (cross, terrain) = made.sampler.sample(&made.template_at(ri, s), s).ok_or_else(none)?;
+        let none = || {
+            bad(
+                format!(
+                    "“{}” istinat duvarının km {}'sinde koridorun kesiti yok.",
+                    def.name,
+                    text(s)
+                ),
+                "from",
+            )
+        };
+        let ri = corridor
+            .regions
+            .iter()
+            .position(|r| s >= r.from - 1e-9 && s <= r.to + 1e-9)
+            .ok_or_else(none)?;
+        let (cross, terrain) = made
+            .sampler
+            .sample(&made.template_at(ri, s), s)
+            .ok_or_else(none)?;
         let section = cross.section.as_ref().ok_or_else(none)?;
-        let hinge = if def.side == WallSide::Right { section.right.hinge } else { section.left.hinge };
+        let hinge = if def.side == WallSide::Right {
+            section.right.hinge
+        } else {
+            section.left.hinge
+        };
         let ground = ground_at(&terrain, hinge[0]).ok_or_else(|| {
-            bad(format!("“{}” istinat duvarının km {}'sinde yüzün altında zemin yok.", def.name, text(s)), "side")
+            bad(
+                format!(
+                    "“{}” istinat duvarının km {}'sinde yüzün altında zemin yok.",
+                    def.name,
+                    text(s)
+                ),
+                "side",
+            )
         })?;
         let sl = slice(hinge[1], ground, &shape);
         let p = place(&cross.line, hinge[0]);
@@ -193,7 +275,11 @@ pub(crate) fn read_told(doc: &Document, def: &RetainingWallDef, tick: &dyn Fn(u6
         highest,
         highest_at,
     };
-    Ok(Read { report, warnings, lines })
+    Ok(Read {
+        report,
+        warnings,
+        lines,
+    })
 }
 
 /// A wall that does not read: its names and nothing else.

@@ -1,9 +1,9 @@
 //! The chosen fixes previewed on the drawing (docs/adr/0732 §5): run on a reading copy of it, nothing written; the
 //! objects they write outlined dashed as they would be, those they remove in the danger colour.
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use std::collections::BTreeSet;
-use crate::arch::ArchState;
 
 use kentos_commands::CallOp;
 use kentos_domain::Slot;
@@ -25,8 +25,10 @@ impl ArchAuditPreviewApp for App {
     /// The chosen findings' fixes as they would draw (docs/adr/0732 §5), for the drawing's preview layer: none while
     /// the tab is not shown, the check is old or no chosen finding has a fix. Kept until the drawing or the choice
     /// changes.
-    fn arch_audit_preview(&self) -> Option<kentos_interaction::Preview>{
-        if !(self.command_expanded && self.bottom_tab == BottomTab::Audit) || self.arch_audit_stale() {
+    fn arch_audit_preview(&self) -> Option<kentos_interaction::Preview> {
+        if !(self.command_expanded && self.bottom_tab == BottomTab::Audit)
+            || self.arch_audit_stale()
+        {
             return None;
         }
         // A chosen fixture finding's use zone (docs/adr/8025), dashed in the danger colour: what is taken.
@@ -47,17 +49,21 @@ impl ArchAuditPreviewApp for App {
 
     /// The chosen fixtures findings' use zones (docs/adr/8025): each its fixture's zone, outlined dashed in the danger
     /// colour.
-    fn arch_audit_zones(&self) -> Vec<kentos_interaction::Stroke>{
+    fn arch_audit_zones(&self) -> Vec<kentos_interaction::Stroke> {
         use kentos_commands::ArchAuditCheck;
         use kentos_interaction::{Stroke, Tone, Vec2};
         let Some(doc) = self.document.as_ref() else {
             return Vec::new();
         };
         let chosen = self.arch_audit_chosen();
-        let mut zones: Vec<_> = chosen.iter().filter(|f| !f.outline.is_empty())
+        let mut zones: Vec<_> = chosen
+            .iter()
+            .filter(|f| !f.outline.is_empty())
             .map(|f| {
                 let points = f.outline.iter().map(|p| Vec2::new(p.x, p.y)).collect();
-                Stroke::dashed(points, true, [6.0, 4.0]).width(2.0).tone(Tone::Danger)
+                Stroke::dashed(points, true, [6.0, 4.0])
+                    .width(2.0)
+                    .tone(Tone::Danger)
             })
             .collect();
         let wanted: Vec<Slot> = chosen
@@ -70,19 +76,22 @@ impl ArchAuditPreviewApp for App {
         if wanted.is_empty() {
             return zones;
         }
-        zones.extend(kentos_native_application::fixture_audit::fixtures(&doc.model)
-            .into_iter()
-            .filter(|f| wanted.contains(&f.slot))
-            .map(|f| {
-                let pts = f.zone.iter().map(|p| Vec2::new(p.x, p.y)).collect();
-                Stroke::dashed(pts, true, [6.0, 4.0]).width(2.0).tone(Tone::Danger)
-            })
+        zones.extend(
+            kentos_native_application::fixture_audit::fixtures(&doc.model)
+                .into_iter()
+                .filter(|f| wanted.contains(&f.slot))
+                .map(|f| {
+                    let pts = f.zone.iter().map(|p| Vec2::new(p.x, p.y)).collect();
+                    Stroke::dashed(pts, true, [6.0, 4.0])
+                        .width(2.0)
+                        .tone(Tone::Danger)
+                }),
         );
         zones
     }
 
     /// The chosen findings' fixes as they would draw (docs/adr/0732 §5).
-    fn arch_audit_fix_preview(&self) -> Option<kentos_interaction::Preview>{
+    fn arch_audit_fix_preview(&self) -> Option<kentos_interaction::Preview> {
         let doc = self.document.as_ref()?;
         let keys = self
             .arch_audit_chosen()
@@ -110,7 +119,7 @@ impl ArchAuditPreviewApp for App {
 
     /// The fixes run on a reading copy of the drawing (nothing written): the objects they write outlined dashed in
     /// the accent as they would be, those they remove in the danger colour as they are, and a tag that counts them.
-    fn arch_audit_preview_made(&self) -> Option<kentos_interaction::Preview>{
+    fn arch_audit_preview_made(&self) -> Option<kentos_interaction::Preview> {
         use kentos_geometry_core::geom::affine::IDENTITY;
         use kentos_interaction::{Preview, Tag, Tone as Ink};
         use kentos_native_application::{blocks, geometry, geometry_store, walls};
@@ -119,7 +128,13 @@ impl ArchAuditPreviewApp for App {
         let (command, input, _) = self.arch_audit_fix_call()?;
         let mut copy = doc.model.reading_copy();
         let mark = copy.change_mark();
-        let answer = registry::run(&mut ExecutionContext::new(&mut copy), &command, CallOp::Execute, input).ok()?;
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut copy),
+            &command,
+            CallOp::Execute,
+            input,
+        )
+        .ok()?;
         if answer["status"] != "completed" {
             return None;
         }
@@ -127,30 +142,42 @@ impl ArchAuditPreviewApp for App {
             kentos_domain::Changes::Slots(slots) => slots.iter().copied().collect(),
             kentos_domain::Changes::All => return None,
         };
-        let (kept, gone): (Vec<Slot>, Vec<Slot>) = touched.into_iter().partition(|s| copy.get(*s).is_some());
+        let (kept, gone): (Vec<Slot>, Vec<Slot>) =
+            touched.into_iter().partition(|s| copy.get(*s).is_some());
         let gone: Vec<f64> = gone
             .into_iter()
             .filter(|s| doc.model.get(*s).is_some())
             .map(|s| f64::from(s.0))
             .collect();
         // The written objects in a store of their own, with the walls their openings are in.
-        let written: Vec<&kentos_commands::Entity> = kept.iter().filter_map(|s| copy.get(*s)).collect();
-        let hosts: Vec<&kentos_commands::Entity> = geometry_store::opening_hosts(&copy, written.iter().copied())
-            .into_iter()
-            .filter_map(|(_, host)| host)
-            .map(|h| Slot(h as u32))
-            .filter(|h| !kept.contains(h))
-            .filter_map(|h| copy.get(h))
-            .collect();
+        let written: Vec<&kentos_commands::Entity> =
+            kept.iter().filter_map(|s| copy.get(*s)).collect();
+        let hosts: Vec<&kentos_commands::Entity> =
+            geometry_store::opening_hosts(&copy, written.iter().copied())
+                .into_iter()
+                .filter_map(|(_, host)| host)
+                .map(|h| Slot(h as u32))
+                .filter(|h| !kept.contains(h))
+                .filter_map(|h| copy.get(h))
+                .collect();
         let mut store = kentos_geometry_core::store::Store::new();
         store.set_font(geometry::drawing_font(copy.settings().drawing_font));
         store.set_blocks(blocks::core_blocks(copy.blocks()));
         store.set_wall_view(walls::view_of(copy.settings()));
-        store.put_many(written.iter().chain(hosts.iter()).map(|e| geometry_store::record(e)));
-        store.set_hosts(geometry_store::opening_hosts(&copy, written.iter().copied()));
+        store.put_many(
+            written
+                .iter()
+                .chain(hosts.iter())
+                .map(|e| geometry_store::record(e)),
+        );
+        store.set_hosts(geometry_store::opening_hosts(
+            &copy,
+            written.iter().copied(),
+        ));
         let ids: Vec<f64> = kept.iter().map(|s| f64::from(s.0)).collect();
-        let (mut strokes, mut marks) =
-            kentos_interaction::modify::ghosts(&store.transform_outlines(&ids, &[IDENTITY], PREVIEW_LIMIT));
+        let (mut strokes, mut marks) = kentos_interaction::modify::ghosts(
+            &store.transform_outlines(&ids, &[IDENTITY], PREVIEW_LIMIT),
+        );
         let (removed, removed_marks) = kentos_interaction::modify::ghosts(
             &self
                 .spatial
@@ -181,7 +208,11 @@ impl ArchAuditPreviewApp for App {
             strokes,
             marks,
             tag: Some(Tag { at, lines }),
-            tag_tone: if gone.is_empty() { Ink::Accent } else { Ink::Danger },
+            tag_tone: if gone.is_empty() {
+                Ink::Accent
+            } else {
+                Ink::Danger
+            },
             ..Preview::default()
         })
     }

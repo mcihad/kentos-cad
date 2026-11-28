@@ -9,7 +9,9 @@
 //!   file. It has no spatial index: the box is asked of each geometry's own (`ST_MinX` …). It is never writable.
 
 use kentos_data::{DataError, QueryTable};
-use kentos_geopackage::{Column, ColumnKind, DataType, GeoPackage, GeometryColumn, Layer, quote, read_blob};
+use kentos_geopackage::{
+    Column, ColumnKind, DataType, GeoPackage, GeometryColumn, Layer, quote, read_blob,
+};
 use rusqlite::types::ValueRef;
 
 fn unreadable(e: rusqlite::Error) -> DataError {
@@ -30,13 +32,20 @@ fn declared_by(v: ValueRef<'_>) -> Option<&'static str> {
 /// The query's columns with their declared types (empty: a computed column's), as a temporary view of it says them:
 /// the view is made in the connection's own temporary schema, which a read-only connection may write, and dropped.
 fn declared(c: &rusqlite::Connection, sql: &str) -> Result<Vec<(String, String)>, DataError> {
-    c.execute_batch(&format!("DROP VIEW IF EXISTS temp.kentos_sorgu; CREATE TEMP VIEW kentos_sorgu AS {sql}"))
-        .map_err(unreadable)?;
+    c.execute_batch(&format!(
+        "DROP VIEW IF EXISTS temp.kentos_sorgu; CREATE TEMP VIEW kentos_sorgu AS {sql}"
+    ))
+    .map_err(unreadable)?;
     let read = c
         .prepare("SELECT name, type FROM pragma_table_info('kentos_sorgu', 'temp') ORDER BY cid")
         .and_then(|mut st| {
-            st.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, Option<String>>(1)?.unwrap_or_default())))?
-                .collect::<Result<Vec<_>, _>>()
+            st.query_map([], |r| {
+                Ok((
+                    r.get::<_, String>(0)?,
+                    r.get::<_, Option<String>>(1)?.unwrap_or_default(),
+                ))
+            })?
+            .collect::<Result<Vec<_>, _>>()
         });
     let _ = c.execute_batch("DROP VIEW IF EXISTS temp.kentos_sorgu");
     read.map_err(unreadable)
@@ -47,17 +56,33 @@ fn names_geometry(decl: &str) -> bool {
     let up = decl.trim().to_ascii_uppercase();
     matches!(
         up.as_str(),
-        "GEOMETRY" | "POINT" | "LINESTRING" | "POLYGON" | "MULTIPOINT" | "MULTILINESTRING" | "MULTIPOLYGON"
-            | "GEOMETRYCOLLECTION" | "CIRCULARSTRING" | "COMPOUNDCURVE" | "CURVEPOLYGON" | "MULTICURVE" | "MULTISURFACE"
+        "GEOMETRY"
+            | "POINT"
+            | "LINESTRING"
+            | "POLYGON"
+            | "MULTIPOINT"
+            | "MULTILINESTRING"
+            | "MULTIPOLYGON"
+            | "GEOMETRYCOLLECTION"
+            | "CIRCULARSTRING"
+            | "COMPOUNDCURVE"
+            | "CURVEPOLYGON"
+            | "MULTICURVE"
+            | "MULTISURFACE"
     )
 }
 
 /// The query's columns, each with whether it is an integer or a geometry: its declared type, else its first value.
-pub(crate) fn columns(gp: &GeoPackage, sql: &str) -> Result<Vec<kentos_data::QueryColumn>, DataError> {
+pub(crate) fn columns(
+    gp: &GeoPackage,
+    sql: &str,
+) -> Result<Vec<kentos_data::QueryColumn>, DataError> {
     kentos_data::query::check(sql).map_err(DataError::Invalid)?;
     let c = gp.connection();
     let declared = declared(c, sql)?;
-    let mut stmt = c.prepare(&format!("SELECT * FROM ({sql}) LIMIT 1")).map_err(unreadable)?;
+    let mut stmt = c
+        .prepare(&format!("SELECT * FROM ({sql}) LIMIT 1"))
+        .map_err(unreadable)?;
     let mut rows = stmt.query([]).map_err(unreadable)?;
     let first = rows.next().map_err(unreadable)?;
     Ok(declared
@@ -67,8 +92,10 @@ pub(crate) fn columns(gp: &GeoPackage, sql: &str) -> Result<Vec<kentos_data::Que
             let value = first.and_then(|r| r.get_ref(i).ok());
             kentos_data::QueryColumn {
                 name: name.clone(),
-                integer: decl.to_ascii_uppercase().contains("INT") || matches!(value, Some(ValueRef::Integer(_))),
-                geometry: names_geometry(decl) || matches!(value, Some(ValueRef::Blob(b)) if read_blob(b).is_ok()),
+                integer: decl.to_ascii_uppercase().contains("INT")
+                    || matches!(value, Some(ValueRef::Integer(_))),
+                geometry: names_geometry(decl)
+                    || matches!(value, Some(ValueRef::Blob(b)) if read_blob(b).is_ok()),
             }
         })
         .collect())
@@ -79,7 +106,9 @@ pub(crate) fn layer(gp: &GeoPackage, table: &str, q: &QueryTable) -> Result<Laye
     kentos_data::query::check(&q.sql).map_err(DataError::Invalid)?;
     let c = gp.connection();
     let declared = declared(c, &q.sql)?;
-    let mut stmt = c.prepare(&format!("SELECT * FROM ({}) LIMIT 1", q.sql)).map_err(unreadable)?;
+    let mut stmt = c
+        .prepare(&format!("SELECT * FROM ({}) LIMIT 1", q.sql))
+        .map_err(unreadable)?;
     let mut rows = stmt.query([]).map_err(unreadable)?;
     let first = rows.next().map_err(unreadable)?;
     let mut columns = Vec::new();
@@ -87,9 +116,14 @@ pub(crate) fn layer(gp: &GeoPackage, table: &str, q: &QueryTable) -> Result<Laye
     let mut geometry_seen = false;
     for (i, (name, decl)) in declared.iter().enumerate() {
         let value = first.and_then(|r| r.get_ref(i).ok());
-        let decl = if decl.is_empty() { value.and_then(declared_by).unwrap_or("TEXT").to_owned() } else { decl.clone() };
+        let decl = if decl.is_empty() {
+            value.and_then(declared_by).unwrap_or("TEXT").to_owned()
+        } else {
+            decl.clone()
+        };
         if *name == q.key {
-            let integer = decl.to_ascii_uppercase().contains("INT") || matches!(value, Some(ValueRef::Integer(_)));
+            let integer = decl.to_ascii_uppercase().contains("INT")
+                || matches!(value, Some(ValueRef::Integer(_)));
             if !integer {
                 return Err(DataError::Invalid(format!(
                     "“{name}” sütunu tam sayı değil ({decl}); anahtar olarak sorgunun tam sayı bir sütununu seçin."
@@ -102,37 +136,70 @@ pub(crate) fn layer(gp: &GeoPackage, table: &str, q: &QueryTable) -> Result<Laye
             geometry_seen = true;
             continue;
         }
-        columns.push(Column { name: name.clone(), kind: ColumnKind::read(&decl), decl, not_null: false, default: None });
+        columns.push(Column {
+            name: name.clone(),
+            kind: ColumnKind::read(&decl),
+            decl,
+            not_null: false,
+            default: None,
+        });
     }
     drop(rows);
     if !key_seen {
-        return Err(DataError::Invalid(format!("Sorguda “{}” sütunu yok; anahtar olarak sorgunun bir sütununu seçin.", q.key)));
+        return Err(DataError::Invalid(format!(
+            "Sorguda “{}” sütunu yok; anahtar olarak sorgunun bir sütununu seçin.",
+            q.key
+        )));
     }
     let mut srs_id = None;
     let geometry = match &q.geometry {
         None => None,
         Some(g) if !geometry_seen => {
-            return Err(DataError::Invalid(format!("Sorguda “{g}” sütunu yok; geometri olarak sorgunun bir sütununu seçin.")));
+            return Err(DataError::Invalid(format!(
+                "Sorguda “{g}” sütunu yok; geometri olarak sorgunun bir sütununu seçin."
+            )));
         }
         Some(g) => {
             let col = quote(g);
             let blob: Option<Vec<u8>> = c
-                .query_row(&format!("SELECT {col} FROM ({}) WHERE {col} IS NOT NULL LIMIT 1", q.sql), [], |r| r.get(0))
+                .query_row(
+                    &format!(
+                        "SELECT {col} FROM ({}) WHERE {col} IS NOT NULL LIMIT 1",
+                        q.sql
+                    ),
+                    [],
+                    |r| r.get(0),
+                )
                 .map(Some)
-                .or_else(|e| if matches!(e, rusqlite::Error::QueryReturnedNoRows) { Ok(None) } else { Err(unreadable(e)) })?;
+                .or_else(|e| {
+                    if matches!(e, rusqlite::Error::QueryReturnedNoRows) {
+                        Ok(None)
+                    } else {
+                        Err(unreadable(e))
+                    }
+                })?;
             let read = blob.as_deref().map(read_blob).transpose().map_err(|e| {
                 DataError::Invalid(format!("“{g}” sütunu GeoPackage geometrisi tutmuyor ({e}); geometri olarak bir geometri sütunu seçin."))
             })?;
-            let (type_name, (z, m)) = read
-                .as_ref()
-                .map_or(("GEOMETRY", (false, false)), |b| (b.geometry.type_name(), b.geometry.dims()));
+            let (type_name, (z, m)) = read.as_ref().map_or(("GEOMETRY", (false, false)), |b| {
+                (b.geometry.type_name(), b.geometry.dims())
+            });
             srs_id = read.as_ref().map(|b| b.srs_id).filter(|s| *s > 0);
-            Some(GeometryColumn { name: g.clone(), type_name: type_name.to_owned(), z: u8::from(z), m: u8::from(m) })
+            Some(GeometryColumn {
+                name: g.clone(),
+                type_name: type_name.to_owned(),
+                z: u8::from(z),
+                m: u8::from(m),
+            })
         }
     };
     Ok(Layer {
         name: table.to_owned(),
-        data_type: if geometry.is_some() { DataType::Features } else { DataType::Attributes },
+        data_type: if geometry.is_some() {
+            DataType::Features
+        } else {
+            DataType::Attributes
+        },
         identifier: None,
         description: None,
         bounds: None,

@@ -197,7 +197,10 @@ impl Transaction for PgTransaction {
             let wkb: Option<Vec<u8>> = r.try_get(1).map_err(error_of)?;
             let mut values = Vec::with_capacity(shape.schema.fields.len());
             for (i, f) in shape.schema.fields.iter().enumerate() {
-                values.push(crate::sql::value_of(r.try_get(i + 2).map_err(error_of)?, &f.kind));
+                values.push(crate::sql::value_of(
+                    r.try_get(i + 2).map_err(error_of)?,
+                    &f.kind,
+                ));
             }
             out.push(kentos_data::Feature {
                 fid,
@@ -399,7 +402,14 @@ impl Transaction for PgTransaction {
     fn add_columns(&mut self, table: &str, fields: &[kentos_data::Field]) -> Result<(), DataError> {
         let (sql, ..) = qualified(table);
         for f in fields {
-            self.run(&format!("ALTER TABLE {sql} ADD COLUMN {} {}", quote(&f.name), native_of(&f.kind)), &[])?;
+            self.run(
+                &format!(
+                    "ALTER TABLE {sql} ADD COLUMN {} {}",
+                    quote(&f.name),
+                    native_of(&f.kind)
+                ),
+                &[],
+            )?;
         }
         self.own.remove(table);
         Ok(())
@@ -407,18 +417,31 @@ impl Transaction for PgTransaction {
 
     /// The rules as check constraints `kentos_<column>`, each replacing the column's, its labels in its comment
     /// (docs/adr/9324, rules.rs). `NOT VALID`: the rows there are not checked; every later write is.
-    fn set_rules(&mut self, table: &str, columns: &[kentos_data::RuledColumn]) -> Result<(), DataError> {
+    fn set_rules(
+        &mut self,
+        table: &str,
+        columns: &[kentos_data::RuledColumn],
+    ) -> Result<(), DataError> {
         let (sql, ..) = qualified(table);
         for c in columns {
             let name = quote(&crate::rules::constraint_name(&c.column));
-            self.run(&format!("ALTER TABLE {sql} DROP CONSTRAINT IF EXISTS {name}"), &[])?;
+            self.run(
+                &format!("ALTER TABLE {sql} DROP CONSTRAINT IF EXISTS {name}"),
+                &[],
+            )?;
             let Some(rule) = &c.rule else {
                 continue;
             };
             let check = crate::rules::check_sql(&quote(&c.column), rule);
-            self.run(&format!("ALTER TABLE {sql} ADD CONSTRAINT {name} CHECK ({check}) NOT VALID"), &[])?;
+            self.run(
+                &format!("ALTER TABLE {sql} ADD CONSTRAINT {name} CHECK ({check}) NOT VALID"),
+                &[],
+            )?;
             let note = crate::rules::literal(&crate::rules::comment_of(&c.column, rule));
-            self.run(&format!("COMMENT ON CONSTRAINT {name} ON {sql} IS {note}"), &[])?;
+            self.run(
+                &format!("COMMENT ON CONSTRAINT {name} ON {sql} IS {note}"),
+                &[],
+            )?;
         }
         Ok(())
     }
@@ -427,7 +450,11 @@ impl Transaction for PgTransaction {
         let by = receipt.by.clone().map_or(Arg::Null, Arg::Text);
         self.run(
             &crate::receipts::insert_sql(scope),
-            &[Arg::Text(receipt.id.clone()), by, Arg::Text(receipt.written.clone())],
+            &[
+                Arg::Text(receipt.id.clone()),
+                by,
+                Arg::Text(receipt.written.clone()),
+            ],
         )?;
         Ok(())
     }

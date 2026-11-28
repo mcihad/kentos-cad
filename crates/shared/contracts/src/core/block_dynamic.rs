@@ -34,7 +34,10 @@ pub struct DynamicBlock {
     pub type_parameters: Vec<String>,
     /// Common inputs and calculated caches; geometric defaults remain action reference coordinates.
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<String, ParamValue>>", optional))]
+    #[cfg_attr(
+        feature = "ts",
+        ts(as = "Option<BTreeMap<String, ParamValue>>", optional)
+    )]
     pub type_values: BTreeMap<String, ParamValue>,
     /// Applied in this order to the definition's objects, each on what the ones before left.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
@@ -544,27 +547,44 @@ pub fn parameter_groups_problem(d: &DynamicBlock) -> Option<(String, String)> {
     let mut groups = HashSet::new();
     let mut members = HashSet::new();
     if d.parameter_groups.len() > MAX_DYNAMIC_ITEMS {
-        return Some(("parameterGroups".into(), "parametre grubu sayısı sınırı aşıldı".into()));
+        return Some((
+            "parameterGroups".into(),
+            "parametre grubu sayısı sınırı aşıldı".into(),
+        ));
     }
     for (i, group) in d.parameter_groups.iter().enumerate() {
         let path = |field| format!("parameterGroups[{i}].{field}");
-        if group.name.trim() != group.name || group.name.is_empty()
-            || group.name.chars().count() > 64 || group.name.chars().any(char::is_control)
+        if group.name.trim() != group.name
+            || group.name.is_empty()
+            || group.name.chars().count() > 64
+            || group.name.chars().any(char::is_control)
         {
             return Some((path("name"), "grup adı 1–64 karakter olmalı; başında/sonunda boşluk veya denetim karakteri olamaz".into()));
         }
         if !groups.insert(name_key(&group.name)) {
-            return Some((path("name"), format!("“{}” adlı iki parametre grubu var", group.name)));
+            return Some((
+                path("name"),
+                format!("“{}” adlı iki parametre grubu var", group.name),
+            ));
         }
         if group.parameters.is_empty() || group.parameters.len() > MAX_DYNAMIC_ITEMS {
-            return Some((path("parameters"), "parametre grubu en az bir geçerli parametre içermeli".into()));
+            return Some((
+                path("parameters"),
+                "parametre grubu en az bir geçerli parametre içermeli".into(),
+            ));
         }
         for (j, name) in group.parameters.iter().enumerate() {
             if !d.parameters.iter().any(|p| p.name() == name) {
-                return Some((format!("{}[{j}]", path("parameters")), format!("“{name}” parametresi tanımda yok")));
+                return Some((
+                    format!("{}[{j}]", path("parameters")),
+                    format!("“{name}” parametresi tanımda yok"),
+                ));
             }
             if !members.insert(name) {
-                return Some((format!("{}[{j}]", path("parameters")), format!("“{name}” parametresi birden fazla grupta veya aynı grupta iki kez")));
+                return Some((
+                    format!("{}[{j}]", path("parameters")),
+                    format!("“{name}” parametresi birden fazla grupta veya aynı grupta iki kez"),
+                ));
             }
         }
     }
@@ -817,7 +837,10 @@ pub fn values_problem(
 ) -> Option<(String, String)> {
     for (name, v) in values {
         if d.is_type_parameter(name) {
-            return Some((name.clone(), format!("“{name}” ortak tip değeri; örnekte saklanamaz")));
+            return Some((
+                name.clone(),
+                format!("“{name}” ortak tip değeri; örnekte saklanamaz"),
+            ));
         }
         let Some(p) = d.parameters.iter().find(|p| p.name() == name) else {
             return Some((name.clone(), format!("blokta “{name}” parametresi yok")));

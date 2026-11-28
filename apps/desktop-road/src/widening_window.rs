@@ -17,12 +17,14 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road_ext::*;
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
+use crate::road_ext::*;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Theme, mouse};
-use kentos_commands::{SuperelevationsWiden, SuperelevationsWidened, SweptTrailerDef, SweptVehicleDef, WideningMethod};
+use kentos_commands::{
+    SuperelevationsWiden, SuperelevationsWidened, SweptTrailerDef, SweptVehicleDef, WideningMethod,
+};
 use kentos_road::widening::{self as wid, WideningRoad, WideningVehicle};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
@@ -113,19 +115,37 @@ fn msg(e: Event) -> Message {
 impl Widen {
     /// The query from the typed fields; why not, in words.
     pub(crate) fn input(&self, superelevation: &str) -> Result<SuperelevationsWiden, String> {
-        let read = |k: usize| number(&self.fields[k]).map_err(|()| format!("{} bir sayı olmalı.", FIELDS[k]));
+        let read = |k: usize| {
+            number(&self.fields[k]).map_err(|()| format!("{} bir sayı olmalı.", FIELDS[k]))
+        };
         let need = |k: usize| read(k)?.ok_or_else(|| format!("{} yazın.", FIELDS[k]));
         // In the form's order, so the first empty field is the one named.
         let (wheelbase, front, width) = (need(0)?, need(1)?, need(2)?);
         let trailer = if self.trailer {
-            Some(SweptTrailerDef { kingpin: need(4)?, wheelbase: need(5)?, front: 0.0, rear: 0.0, width })
+            Some(SweptTrailerDef {
+                kingpin: need(4)?,
+                wheelbase: need(5)?,
+                front: 0.0,
+                rear: 0.0,
+                width,
+            })
         } else {
             None
         };
         Ok(SuperelevationsWiden {
             superelevation: superelevation.to_owned(),
-            template: self.template.clone().ok_or("Bir tip kesit seçin: şerit sayısı ve genişliği ondan okunur.")?,
-            vehicle: SweptVehicleDef { name: None, wheelbase, front, rear: 0.0, width, trailer },
+            template: self
+                .template
+                .clone()
+                .ok_or("Bir tip kesit seçin: şerit sayısı ve genişliği ondan okunur.")?,
+            vehicle: SweptVehicleDef {
+                name: None,
+                wheelbase,
+                front,
+                rear: 0.0,
+                width,
+                trailer,
+            },
             track: read(3)?,
             clearance: need(6)?,
             speed: read(7)?,
@@ -145,7 +165,11 @@ pub(crate) trait WideningWindowApp {
     fn open_widening(&mut self);
     fn refresh_widening(&mut self);
     fn widening_event(&mut self, event: Event);
-    fn widening_view<'a>(&'a self, w: &'a crate::superelevation_window::Window, x: &'a Widen) -> Element<'a, Message>;
+    fn widening_view<'a>(
+        &'a self,
+        w: &'a crate::superelevation_window::Window,
+        x: &'a Widen,
+    ) -> Element<'a, Message>;
     fn widening_vehicle(&self, x: &Widen) -> Option<(WideningVehicle, WideningRoad)>;
 }
 
@@ -153,9 +177,19 @@ impl WideningWindowApp for App {
     /// Genişletme öner… from Dever: the window on the chosen schedule, the vehicle from Araç izi if it holds one, the
     /// template and speed from Dever's Denetim.
     fn open_widening(&mut self) {
-        let swept: Option<([String; 5], bool)> = self.modules.road().swept_window.as_ref().map(|s| {
-            ([s.fields[0].clone(), s.fields[1].clone(), s.fields[3].clone(), s.fields[4].clone(), s.fields[5].clone()], s.trailer)
-        });
+        let swept: Option<([String; 5], bool)> =
+            self.modules.road().swept_window.as_ref().map(|s| {
+                (
+                    [
+                        s.fields[0].clone(),
+                        s.fields[1].clone(),
+                        s.fields[3].clone(),
+                        s.fields[4].clone(),
+                        s.fields[5].clone(),
+                    ],
+                    s.trailer,
+                )
+            });
         let Some(w) = self.modules.road_mut().superelevation_window.as_mut() else {
             return;
         };
@@ -165,7 +199,13 @@ impl WideningWindowApp for App {
         };
         x.fields[7] = w.check[0].clone();
         if let Some((f, trailer)) = swept {
-            [x.fields[0], x.fields[1], x.fields[2], x.fields[4], x.fields[5]] = f;
+            [
+                x.fields[0],
+                x.fields[1],
+                x.fields[2],
+                x.fields[4],
+                x.fields[5],
+            ] = f;
             x.trailer = trailer;
         }
         w.widen = Some(Box::new(x));
@@ -184,10 +224,11 @@ impl WideningWindowApp for App {
             None => Err("Dever penceresinde bir çizelge seçin.".into()),
             Some(Err(e)) => Err(e),
             Some(Ok(def)) => x.input(&def.id).and_then(|q| {
-                kentos_native_application::road_superelevations_widen::preview(&doc.model, &def, &q).map(|(out, warnings)| {
-                    x.warnings = warnings.into_iter().map(|w| w.message).collect();
-                    out
-                })
+                kentos_native_application::road_superelevations_widen::preview(&doc.model, &def, &q)
+                    .map(|(out, warnings)| {
+                        x.warnings = warnings.into_iter().map(|w| w.message).collect();
+                        out
+                    })
             }),
         });
         if matches!(x.result, Some(Err(_))) {
@@ -217,7 +258,11 @@ impl WideningWindowApp for App {
             }
             Event::Apply => {
                 let Some(Ok(out)) = &x.result else { return };
-                let suggested: Vec<(String, f64)> = out.curves.iter().map(|c| (c.pi.clone(), c.suggested)).collect();
+                let suggested: Vec<(String, f64)> = out
+                    .curves
+                    .iter()
+                    .map(|c| (c.pi.clone(), c.suggested))
+                    .collect();
                 if let Some(r) = w.chosen.and_then(|i| w.rows.get_mut(i)) {
                     let missing = r.set_widening(&suggested);
                     w.widen = None;
@@ -236,22 +281,36 @@ impl WideningWindowApp for App {
     }
 
     /// The window over Dever's.
-    fn widening_view<'a>(&'a self, w: &'a crate::superelevation_window::Window, x: &'a Widen) -> Element<'a, Message> {
-        let templates: Vec<(String, String)> = self
-            .document
-            .as_ref()
-            .map_or_else(Vec::new, |d| d.model.road_templates().iter().map(|t| (t.id.clone(), t.name.clone())).collect());
+    fn widening_view<'a>(
+        &'a self,
+        w: &'a crate::superelevation_window::Window,
+        x: &'a Widen,
+    ) -> Element<'a, Message> {
+        let templates: Vec<(String, String)> = self.document.as_ref().map_or_else(Vec::new, |d| {
+            d.model
+                .road_templates()
+                .iter()
+                .map(|t| (t.id.clone(), t.name.clone()))
+                .collect()
+        });
         let ids: Vec<String> = templates.iter().map(|t| t.0.clone()).collect();
         let pick = Select::new(
             templates.iter().map(|t| Choice::new(t.1.clone())),
-            x.template.as_ref().and_then(|t| ids.iter().position(|i| i == t)),
+            x.template
+                .as_ref()
+                .and_then(|t| ids.iter().position(|i| i == t)),
             move |i| msg(Event::Template(ids[i].clone())),
         )
         .placeholder("Tip kesit");
-        let field = |k: usize, hint: &'a str| kentos_ui::widget::text_field(hint, &x.fields[k]).on_input(move |t| msg(Event::Field(k, t)));
-        let towed = Segmented::new([Towed::No, Towed::Yes], if x.trailer { Towed::Yes } else { Towed::No }, |t| {
-            msg(Event::Trailer(t == Towed::Yes))
-        });
+        let field = |k: usize, hint: &'a str| {
+            kentos_ui::widget::text_field(hint, &x.fields[k])
+                .on_input(move |t| msg(Event::Field(k, t)))
+        };
+        let towed = Segmented::new(
+            [Towed::No, Towed::Yes],
+            if x.trailer { Towed::Yes } else { Towed::No },
+            |t| msg(Event::Trailer(t == Towed::Yes)),
+        );
         let mut form = Form::new()
             .label_width(150.0)
             .section("Taşıt")
@@ -277,14 +336,28 @@ impl WideningWindowApp for App {
             .field(FIELDS[7], field(7, "yok"))
             .help("Boşsa sürüş güçlüğü payı (Z) eklenmez.")
             .section("Öneri")
-            .field("Yöntem", Segmented::new([Method::Standard, Method::Simple], x.method, |m| msg(Event::Method(m))))
+            .field(
+                "Yöntem",
+                Segmented::new([Method::Standard, Method::Simple], x.method, |m| {
+                    msg(Event::Method(m))
+                }),
+            )
             .help("Standart: N(U + C) + (N − 1)·F_A + Z. Basit: N(U + C).")
             .field(FIELDS[8], field(8, "yok"))
             .field(FIELDS[9], field(9, "yok"))
             .help("Bunun altındaki genişletme yazılmaz.")
-            .field("Sürüş", Switch::new(x.drive, |on| msg(Event::Drive(on))).label("Taşıtı her kurpta sür"));
-        let curves_method = w.chosen.and_then(|i| w.rows.get(i)).is_some_and(|r| r.method == 0);
-        let mut d = RoadDialog::new(TITLE, form, msg(Event::Back)).form_width(400.0).width(1200.0).close_caption(BACK);
+            .field(
+                "Sürüş",
+                Switch::new(x.drive, |on| msg(Event::Drive(on))).label("Taşıtı her kurpta sür"),
+            );
+        let curves_method = w
+            .chosen
+            .and_then(|i| w.rows.get(i))
+            .is_some_and(|r| r.method == 0);
+        let mut d = RoadDialog::new(TITLE, form, msg(Event::Back))
+            .form_width(400.0)
+            .width(1200.0)
+            .close_caption(BACK);
         let ok = x.result.as_ref().and_then(|r| r.as_ref().ok());
         let vehicle = self.widening_vehicle(x);
         d = d
@@ -312,7 +385,9 @@ impl WideningWindowApp for App {
                     d = d.note(Banner::warning(warning.clone()));
                 }
                 if !curves_method {
-                    d = d.note(Banner::info("Km satırlı çizelgeye genişletme yazılmaz; öneri yalnız okunur."));
+                    d = d.note(Banner::info(
+                        "Km satırlı çizelgeye genişletme yazılmaz; öneri yalnız okunur.",
+                    ));
                 }
                 // The terms the widening is made of, then what is suggested and what the schedule has (U and W_c follow
                 // from them; at 1100 px eleven columns cut the suggestion off).
@@ -392,7 +467,14 @@ struct Curve<'a> {
 impl canvas::Program<Message> for Curve<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let t = Tokens::of(theme);
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let word = |frame: &mut canvas::Frame, s: String, at: Point, color: Color| {
@@ -406,25 +488,50 @@ impl canvas::Program<Message> for Curve<'_> {
             });
         };
         let (Some(out), Some((vehicle, road))) = (self.out, self.vehicle) else {
-            word(&mut frame, "Taşıtın ölçülerini ve açıklığı yazınca genişletme burada çizilir.".into(), Point::new(16.0, 20.0), t.muted);
+            word(
+                &mut frame,
+                "Taşıtın ölçülerini ve açıklığı yazınca genişletme burada çizilir.".into(),
+                Point::new(16.0, 20.0),
+                t.muted,
+            );
             return vec![frame.into_geometry()];
         };
         // The radii round the alignment's curves (a third of the least to four times the most, at least 1000 m), not
         // down to where the vehicle cannot turn: there the widening runs to tens of metres and flattens the curves'.
-        let least_r = out.curves.iter().map(|c| c.radius).fold(f64::INFINITY, f64::min);
+        let least_r = out
+            .curves
+            .iter()
+            .map(|c| c.radius)
+            .fold(f64::INFINITY, f64::min);
         let most_r = out.curves.iter().map(|c| c.radius).fold(0.0, f64::max);
-        let low = (vehicle.sum_of_squares().max(0.0).sqrt() * 1.05).max(if least_r.is_finite() { least_r / 3.0 } else { 30.0 });
+        let low = (vehicle.sum_of_squares().max(0.0).sqrt() * 1.05).max(if least_r.is_finite() {
+            least_r / 3.0
+        } else {
+            30.0
+        });
         let high = (4.0 * most_r).max(1000.0);
         let (r0, r1) = (low.ln(), high.ln());
         let samples: Vec<(f64, f64)> = (0..=160)
             .filter_map(|i| {
                 let r = (r0 + (r1 - r0) * f64::from(i) / 160.0).exp();
-                wid::widening(r, &vehicle, &road).ok().map(|w| (r, w.widening))
+                wid::widening(r, &vehicle, &road)
+                    .ok()
+                    .map(|w| (r, w.widening))
             })
             .collect();
-        let top = samples.iter().map(|s| s.1).chain(out.curves.iter().map(|c| c.widening)).fold(0.5, f64::max) * 1.05;
+        let top = samples
+            .iter()
+            .map(|s| s.1)
+            .chain(out.curves.iter().map(|c| c.widening))
+            .fold(0.5, f64::max)
+            * 1.05;
         let bottom = samples.iter().map(|s| s.1).fold(0.0, f64::min).min(0.0);
-        let plot = Rectangle { x: 48.0, y: 12.0, width: bounds.width - 60.0, height: bounds.height - 34.0 };
+        let plot = Rectangle {
+            x: 48.0,
+            y: 12.0,
+            width: bounds.width - 60.0,
+            height: bounds.height - 34.0,
+        };
         let x = |r: f64| plot.x + plot.width * ((r.ln() - r0) / (r1 - r0)) as f32;
         let y = |v: f64| plot.y + plot.height * ((top - v) / (top - bottom)) as f32;
         let thin = |c: Color| Stroke::default().with_color(c).with_width(1.0);
@@ -433,23 +540,57 @@ impl canvas::Program<Message> for Curve<'_> {
             if r < low || r > high {
                 continue;
             }
-            frame.stroke(&Path::line(Point::new(x(r), plot.y), Point::new(x(r), plot.y + plot.height)), thin(t.border));
+            frame.stroke(
+                &Path::line(
+                    Point::new(x(r), plot.y),
+                    Point::new(x(r), plot.y + plot.height),
+                ),
+                thin(t.border),
+            );
             // The last name kept inside the picture.
             let at = (x(r) - 8.0).min(plot.x + plot.width - 28.0);
-            word(&mut frame, format!("{r:.0}"), Point::new(at, plot.y + plot.height + 4.0), t.muted);
+            word(
+                &mut frame,
+                format!("{r:.0}"),
+                Point::new(at, plot.y + plot.height + 4.0),
+                t.muted,
+            );
         }
         // At most six lines across the widening.
-        let step = [0.25, 0.5, 1.0, 2.0, 5.0, 10.0].into_iter().find(|s| (top - bottom) / s <= 6.0).unwrap_or(20.0);
+        let step = [0.25, 0.5, 1.0, 2.0, 5.0, 10.0]
+            .into_iter()
+            .find(|s| (top - bottom) / s <= 6.0)
+            .unwrap_or(20.0);
         let mut v = (bottom / step).ceil() * step;
         while v <= top {
-            frame.stroke(&Path::line(Point::new(plot.x, y(v)), Point::new(plot.x + plot.width, y(v))), thin(if v == 0.0 { t.muted } else { t.border }));
-            word(&mut frame, comma_text(v, 1), Point::new(4.0, y(v) - 7.0), t.muted);
+            frame.stroke(
+                &Path::line(
+                    Point::new(plot.x, y(v)),
+                    Point::new(plot.x + plot.width, y(v)),
+                ),
+                thin(if v == 0.0 { t.muted } else { t.border }),
+            );
+            word(
+                &mut frame,
+                comma_text(v, 1),
+                Point::new(4.0, y(v) - 7.0),
+                t.muted,
+            );
             v += step;
         }
         if let Some(l) = self.least.filter(|l| *l > bottom && *l < top) {
             frame.stroke(
-                &Path::line(Point::new(plot.x, y(l)), Point::new(plot.x + plot.width, y(l))),
-                Stroke { line_dash: LineDash { segments: &[4.0, 4.0], offset: 0 }, ..thin(t.warning) },
+                &Path::line(
+                    Point::new(plot.x, y(l)),
+                    Point::new(plot.x + plot.width, y(l)),
+                ),
+                Stroke {
+                    line_dash: LineDash {
+                        segments: &[4.0, 4.0],
+                        offset: 0,
+                    },
+                    ..thin(t.warning)
+                },
             );
         }
         let line = Path::new(|p| {
@@ -458,14 +599,22 @@ impl canvas::Program<Message> for Curve<'_> {
                 if i == 0 { p.move_to(at) } else { p.line_to(at) }
             }
         });
-        frame.stroke(&line, Stroke::default().with_color(t.accent).with_width(2.0));
+        frame.stroke(
+            &line,
+            Stroke::default().with_color(t.accent).with_width(2.0),
+        );
         for c in &out.curves {
             if c.radius < low || c.radius > 2000.0 {
                 continue;
             }
             let at = Point::new(x(c.radius), y(c.widening));
             frame.fill(&Path::circle(at, 4.0), t.danger);
-            word(&mut frame, c.pi.clone(), Point::new(at.x + 6.0, at.y - 14.0), t.text);
+            word(
+                &mut frame,
+                c.pi.clone(),
+                Point::new(at.x + 6.0, at.y - 14.0),
+                t.text,
+            );
         }
         vec![frame.into_geometry()]
     }

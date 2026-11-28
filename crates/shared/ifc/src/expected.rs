@@ -31,7 +31,12 @@ pub fn of(b: &Building) -> Vec<Expected> {
     let mut out = Vec::new();
     let mut put = |id: Option<u128>, object: Option<u128>, class: &'static str, stand_in: bool| {
         if let Some(id) = id.filter(|&id| !crate::step::is_derived(id)) {
-            out.push(Expected { global_id: guid(id), object: object.unwrap_or(id), class, stand_in });
+            out.push(Expected {
+                global_id: guid(id),
+                object: object.unwrap_or(id),
+                class,
+                stand_in,
+            });
         }
     };
     put(b.project.id, None, "IFCPROJECT", false);
@@ -90,9 +95,20 @@ mod tests {
     #[test]
     fn an_object_is_named_by_its_global_id_and_the_object_it_shows() {
         let roof = 0x0123_4567_89ab_cdef_0123_4567_89ab_cdef_u128;
-        let storey = Storey { id: Some(8), name: String::new(), long_name: None, elevation: 0.0, psets: Vec::new(), qtos: Vec::new(), unentered: Vec::new() };
+        let storey = Storey {
+            id: Some(8),
+            name: String::new(),
+            long_name: None,
+            elevation: 0.0,
+            psets: Vec::new(),
+            qtos: Vec::new(),
+            unentered: Vec::new(),
+        };
         let b = Building {
-            project: Place { id: Some(7), ..Place::default() },
+            project: Place {
+                id: Some(7),
+                ..Place::default()
+            },
             storeys: vec![storey],
             elements: vec![
                 element(Class::Roof, Some(roof), None),
@@ -104,8 +120,14 @@ mod tests {
             ..Building::default()
         };
         let e = of(&b);
-        assert_eq!(e.iter().map(|x| x.class).collect::<Vec<_>>(), ["IFCPROJECT", "IFCBUILDINGSTOREY", "IFCROOF", "IFCCHIMNEY"]);
+        assert_eq!(
+            e.iter().map(|x| x.class).collect::<Vec<_>>(),
+            ["IFCPROJECT", "IFCBUILDINGSTOREY", "IFCROOF", "IFCCHIMNEY"]
+        );
         assert_eq!(e[2].global_id, guid(roof));
-        assert_eq!((e[3].global_id.clone(), e[3].object), (guid(roof + 1), roof));
+        assert_eq!(
+            (e[3].global_id.clone(), e[3].object),
+            (guid(roof + 1), roof)
+        );
     }
 }

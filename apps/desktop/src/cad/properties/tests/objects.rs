@@ -7,22 +7,37 @@ use super::*;
 fn cad_inspector_explains_inherited_and_own_model_appearance_without_writing() {
     let mut app = objects();
     crate::files_testing::make_cad(&mut app);
-    let slot = add(&mut app, Entity::Line(LineEntity {
-        base: base("parsel"),
-        a: Wire { x: E, y: N },
-        b: Wire { x: E + 1.0, y: N },
-        za: None, zb: None, ma: None, mb: None,
-    }));
+    let slot = add(
+        &mut app,
+        Entity::Line(LineEntity {
+            base: base("parsel"),
+            a: Wire { x: E, y: N },
+            b: Wire { x: E + 1.0, y: N },
+            za: None,
+            zb: None,
+            ma: None,
+            mb: None,
+        }),
+    );
     select(&mut app, &[slot]);
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let source = value(&app, "Temel model görünüşü", "Renk");
     assert!(source.contains("Katman:"), "{source}");
     assert!(value(&app, "Temel model görünüşü", "Çizgi tipi").contains("Katman:"));
     assert!(value(&app, "Temel model görünüşü", "Çizgi kalınlığı").contains("Katman:"));
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 
-    event(&mut app, Event::Color(vec![Slot(slot)], Some("#E5484D".into())));
-    assert_eq!(value(&app, "Temel model görünüşü", "Renk"), "#E5484D · Nesne");
+    event(
+        &mut app,
+        Event::Color(vec![Slot(slot)], Some("#E5484D".into())),
+    );
+    assert_eq!(
+        value(&app, "Temel model görünüşü", "Renk"),
+        "#E5484D · Nesne"
+    );
     assert!(value(&app, "Temel model görünüşü", "Çizgi kalınlığı").contains("Katman:"));
     event(&mut app, Event::Color(vec![Slot(slot)], None));
     assert!(value(&app, "Temel model görünüşü", "Renk").contains("Katman:"));
@@ -34,23 +49,40 @@ fn cad_inspector_explains_inherited_and_own_model_appearance_without_writing() {
 fn the_value_origin_section_names_the_level_and_the_reset_scope() {
     let mut app = objects();
     crate::files_testing::make_cad(&mut app);
-    let slot = add(&mut app, Entity::Line(LineEntity {
-        base: base("parsel"),
-        a: Wire { x: E, y: N },
-        b: Wire { x: E + 1.0, y: N },
-        za: None, zb: None, ma: None, mb: None,
-    }));
+    let slot = add(
+        &mut app,
+        Entity::Line(LineEntity {
+            base: base("parsel"),
+            a: Wire { x: E, y: N },
+            b: Wire { x: E + 1.0, y: N },
+            za: None,
+            zb: None,
+            ma: None,
+            mb: None,
+        }),
+    );
     select(&mut app, &[slot]);
     assert!(value(&app, "Bu değer nereden geliyor?", "Renk").ends_with("· Katman"));
     assert!(value(&app, "Bu değer nereden geliyor?", "Çizgi kalınlığı").ends_with("· Katman"));
-    event(&mut app, Event::Color(vec![Slot(slot)], Some("#E5484D".into())));
-    assert_eq!(value(&app, "Bu değer nereden geliyor?", "Renk"), "#E5484D · Nesne");
+    event(
+        &mut app,
+        Event::Color(vec![Slot(slot)], Some("#E5484D".into())),
+    );
+    assert_eq!(
+        value(&app, "Bu değer nereden geliyor?", "Renk"),
+        "#E5484D · Nesne"
+    );
     let notes: Vec<String> = rows(&app)
         .into_iter()
         .find(|(title, _)| title == "Bu değer nereden geliyor?")
         .map(|(_, rows)| rows.into_iter().map(|r| r.value).collect())
         .unwrap_or_default();
-    assert!(notes.iter().any(|n| n.starts_with("Sıfırla → ") && n.contains("· bu nesne (1)")), "{notes:?}");
+    assert!(
+        notes
+            .iter()
+            .any(|n| n.starts_with("Sıfırla → ") && n.contains("· bu nesne (1)")),
+        "{notes:?}"
+    );
     event(&mut app, Event::Color(vec![Slot(slot)], None));
     assert!(value(&app, "Bu değer nereden geliyor?", "Renk").ends_with("· Katman"));
 }
@@ -71,10 +103,14 @@ fn nothing_selected_shows_the_drawing() {
 }
 
 pub(super) fn scoped_text(app: &mut App, layer: &str, height: f64) -> Slot {
-    Slot(add(app, serde_json::from_value(serde_json::json!({
-        "kind":"text", "id":0, "layerId":layer, "attrs":{}, "p":{"x":E,"y":N},
-        "text":"Ölçülü metin", "height":height, "rotation":0
-    })).unwrap()))
+    Slot(add(
+        app,
+        serde_json::from_value(serde_json::json!({
+            "kind":"text", "id":0, "layerId":layer, "attrs":{}, "p":{"x":E,"y":N},
+            "text":"Ölçülü metin", "height":height, "rotation":0
+        }))
+        .unwrap(),
+    ))
 }
 
 #[test]
@@ -91,48 +127,92 @@ fn type_scope_preserves_selection_counts_locked_targets_and_edits_only_its_texts
     let panel = app.properties_panel(doc);
     assert_eq!(panel.total, 4);
     assert_eq!(panel.editable, 2);
-    assert!(matches!(panel.summary, Summary::Many { count:3, .. }));
+    assert!(matches!(panel.summary, Summary::Many { count: 3, .. }));
     assert_eq!(app.selection.ids(), [Slot(4), a, b, locked]);
     assert_eq!(doc.model.to_snapshot_v2(), before);
-    let height = panel.sections.into_iter().flat_map(|s| s.rows).find(|r| r.label == "Yükseklik").unwrap();
+    let height = panel
+        .sections
+        .into_iter()
+        .flat_map(|s| s.rows)
+        .find(|r| r.label == "Yükseklik")
+        .unwrap();
     assert_eq!(height.value, "Çeşitli");
-    let Some(Editor::Number(Field::TextHeights(ids))) = height.editor else {panic!("bulk height")};
+    let Some(Editor::Number(Field::TextHeights(ids))) = height.editor else {
+        panic!("bulk height")
+    };
     assert_eq!(ids, [a, b]);
-    event(&mut app, Event::Commit(Field::TextHeights(ids), "25 cm".into()));
-    for slot in [a,b] {
-        let Entity::Text(t) = entity(&app,slot.0) else {panic!("text")};
+    event(
+        &mut app,
+        Event::Commit(Field::TextHeights(ids), "25 cm".into()),
+    );
+    for slot in [a, b] {
+        let Entity::Text(t) = entity(&app, slot.0) else {
+            panic!("text")
+        };
         assert_eq!(t.height, 0.25);
         assert_eq!(t.text, "Ölçülü metin");
     }
-    let Entity::Text(t) = entity(&app,locked.0) else {panic!("text")};
-    assert_eq!(t.height,0.4);
-    assert_eq!(undo_label(&mut app).as_deref(),Some("Yazı yüksekliği"));
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    let Entity::Text(t) = entity(&app, locked.0) else {
+        panic!("text")
+    };
+    assert_eq!(t.height, 0.4);
+    assert_eq!(undo_label(&mut app).as_deref(), Some("Yazı yüksekliği"));
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
     app.selection.set([Slot(4)]);
-    assert!(app.properties_kind(app.document.as_ref().unwrap()).is_none());
+    assert!(
+        app.properties_kind(app.document.as_ref().unwrap())
+            .is_none()
+    );
 }
 
 #[test]
 fn an_queued_property_edit_cannot_write_after_selection_revision_or_scope_changes() {
     let mut app = objects();
-    let a = scoped_text(&mut app,"cizim",0.2);
-    let b = scoped_text(&mut app,"cizim",0.2);
+    let a = scoped_text(&mut app, "cizim", 0.2);
+    let b = scoped_text(&mut app, "cizim", 0.2);
     app.selection.set([a]);
     let key = app.properties_key(app.document.as_ref().unwrap());
-    let old = Event::Guarded(key,Box::new(Event::Commit(Field::Text(a),"Yanlış hedef".into())));
+    let old = Event::Guarded(
+        key,
+        Box::new(Event::Commit(Field::Text(a), "Yanlış hedef".into())),
+    );
     app.selection.set([b]);
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
-    event(&mut app,old);
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    event(&mut app, old);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
     let key = app.properties_key(app.document.as_ref().unwrap());
-    event(&mut app,Event::Kind(Some("text".into())));
-    event(&mut app,Event::Guarded(key,Box::new(Event::Commit(Field::Text(b),"Eski kapsam".into()))));
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    event(&mut app, Event::Kind(Some("text".into())));
+    event(
+        &mut app,
+        Event::Guarded(
+            key,
+            Box::new(Event::Commit(Field::Text(b), "Eski kapsam".into())),
+        ),
+    );
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
     let key = app.properties_key(app.document.as_ref().unwrap());
-    scoped_text(&mut app,"cizim",0.1);
+    scoped_text(&mut app, "cizim", 0.1);
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
-    event(&mut app,Event::Guarded(key,Box::new(Event::Commit(Field::Text(b),"Eski revizyon".into()))));
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(),before);
+    event(
+        &mut app,
+        Event::Guarded(
+            key,
+            Box::new(Event::Commit(Field::Text(b), "Eski revizyon".into())),
+        ),
+    );
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 }
 
 #[test]
@@ -282,12 +362,21 @@ fn a_point_is_moved_by_its_typed_coordinates_read_whole() {
     };
     let before = y(&app);
     for typed in ["yok", "4419990abc", "12mmx"] {
-        event(&mut app, Event::Commit(Field::PointY(Slot(5)), typed.into()));
+        event(
+            &mut app,
+            Event::Commit(Field::PointY(Slot(5)), typed.into()),
+        );
         assert_eq!(y(&app), before, "{typed}");
         let said = crate::files_testing::last_said(&app);
-        assert!(said.contains("bir uzunluk olarak okunamadı"), "{typed}: {said}");
+        assert!(
+            said.contains("bir uzunluk olarak okunamadı"),
+            "{typed}: {said}"
+        );
     }
-    event(&mut app, Event::Commit(Field::PointY(Slot(5)), "4419990000 mm".into()));
+    event(
+        &mut app,
+        Event::Commit(Field::PointY(Slot(5)), "4419990000 mm".into()),
+    );
     assert!((y(&app) - (N - 10.0)).abs() < 1e-6);
     assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
 }
@@ -308,14 +397,30 @@ fn a_lines_ends_and_a_circles_centre_and_radius_are_typed() {
         .map(|e| e.base().id)
         .expect("a line");
     select(&mut app, &[line]);
-    event(&mut app, Event::Commit(Field::Geometry(Slot(line), Coord::EndEast), (E + 50.0).to_string()));
-    let Entity::Line(l) = entity(&app, line) else { panic!("a line") };
+    event(
+        &mut app,
+        Event::Commit(
+            Field::Geometry(Slot(line), Coord::EndEast),
+            (E + 50.0).to_string(),
+        ),
+    );
+    let Entity::Line(l) = entity(&app, line) else {
+        panic!("a line")
+    };
     assert!((l.b.x - (E + 50.0)).abs() < 1e-9);
     assert_eq!(undo_label(&mut app).as_deref(), Some("Değiştir"));
-    let Entity::Line(l) = entity(&app, line) else { panic!("a line") };
+    let Entity::Line(l) = entity(&app, line) else {
+        panic!("a line")
+    };
     let (ax, ay) = (l.a.x, l.a.y);
-    event(&mut app, Event::Commit(Field::Geometry(Slot(line), Coord::EndEast), ax.to_string()));
-    event(&mut app, Event::Commit(Field::Geometry(Slot(line), Coord::EndNorth), ay.to_string()));
+    event(
+        &mut app,
+        Event::Commit(Field::Geometry(Slot(line), Coord::EndEast), ax.to_string()),
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::Geometry(Slot(line), Coord::EndNorth), ay.to_string()),
+    );
     assert!(crate::files_testing::last_said(&app).contains("iki ucu aynı yere gelemez"));
     // A circle: its centre and radius.
     let doc = &mut app.document.as_mut().unwrap().model;
@@ -325,14 +430,38 @@ fn a_lines_ends_and_a_circles_centre_and_radius_are_typed() {
         })).unwrap())
         .expect("a slot");
     select(&mut app, &[circle.0]);
-    assert!(rows(&app).iter().flat_map(|(_, r)| r).any(|r| r.label == "Yarıçap" && r.editor.is_some()));
-    event(&mut app, Event::Commit(Field::Geometry(circle, Coord::Radius), "3,5".into()));
-    event(&mut app, Event::Commit(Field::Geometry(circle, Coord::CenterNorth), (N + 1.0).to_string()));
-    let Entity::Circle(c) = entity(&app, circle.0) else { panic!("a circle") };
+    assert!(
+        rows(&app)
+            .iter()
+            .flat_map(|(_, r)| r)
+            .any(|r| r.label == "Yarıçap" && r.editor.is_some())
+    );
+    event(
+        &mut app,
+        Event::Commit(Field::Geometry(circle, Coord::Radius), "3,5".into()),
+    );
+    event(
+        &mut app,
+        Event::Commit(
+            Field::Geometry(circle, Coord::CenterNorth),
+            (N + 1.0).to_string(),
+        ),
+    );
+    let Entity::Circle(c) = entity(&app, circle.0) else {
+        panic!("a circle")
+    };
     assert!((c.r - 3.5).abs() < 1e-12 && (c.c.y - (N + 1.0)).abs() < 1e-9);
-    event(&mut app, Event::Commit(Field::Geometry(circle, Coord::Radius), "0".into()));
-    assert_eq!(crate::files_testing::last_said(&app), "Yarıçap sıfırdan büyük olmalı.");
-    let Entity::Circle(c) = entity(&app, circle.0) else { panic!("a circle") };
+    event(
+        &mut app,
+        Event::Commit(Field::Geometry(circle, Coord::Radius), "0".into()),
+    );
+    assert_eq!(
+        crate::files_testing::last_said(&app),
+        "Yarıçap sıfırdan büyük olmalı."
+    );
+    let Entity::Circle(c) = entity(&app, circle.0) else {
+        panic!("a circle")
+    };
     assert!((c.r - 3.5).abs() < 1e-12);
 }
 
@@ -619,18 +748,34 @@ fn a_linked_text_names_its_object_and_bagi_kopar_breaks_the_link() {
 #[test]
 fn a_bow_ties_area_is_said_not_computable() {
     let mut app = objects();
-    let tie = add(&mut app, serde_json::from_value(serde_json::json!({
-        "kind":"polygon","id":0,"layerId":"parsel","attrs":{},
-        "pts":[{"x":0.,"y":4.},{"x":4.,"y":0.},{"x":0.,"y":0.},{"x":4.,"y":4.}]
-    })).unwrap());
+    let tie = add(
+        &mut app,
+        serde_json::from_value(serde_json::json!({
+            "kind":"polygon","id":0,"layerId":"parsel","attrs":{},
+            "pts":[{"x":0.,"y":4.},{"x":4.,"y":0.},{"x":0.,"y":0.},{"x":4.,"y":4.}]
+        }))
+        .unwrap(),
+    );
     select(&mut app, &[tie]);
     assert_eq!(value(&app, "Geometri", "Alan"), "Hesaplanamaz");
-    let notes: Vec<String> = rows(&app).into_iter().flat_map(|(_, r)| r).filter(|r| r.note).map(|r| r.value).collect();
-    assert!(notes.iter().any(|n| n == "Kenarlar 1 yerde kesişiyor."), "{notes:?}");
-    let square = add(&mut app, serde_json::from_value(serde_json::json!({
-        "kind":"polygon","id":0,"layerId":"parsel","attrs":{},
-        "pts":[{"x":0.,"y":0.},{"x":4.,"y":0.},{"x":4.,"y":4.},{"x":0.,"y":4.}]
-    })).unwrap());
+    let notes: Vec<String> = rows(&app)
+        .into_iter()
+        .flat_map(|(_, r)| r)
+        .filter(|r| r.note)
+        .map(|r| r.value)
+        .collect();
+    assert!(
+        notes.iter().any(|n| n == "Kenarlar 1 yerde kesişiyor."),
+        "{notes:?}"
+    );
+    let square = add(
+        &mut app,
+        serde_json::from_value(serde_json::json!({
+            "kind":"polygon","id":0,"layerId":"parsel","attrs":{},
+            "pts":[{"x":0.,"y":0.},{"x":4.,"y":0.},{"x":4.,"y":4.},{"x":0.,"y":4.}]
+        }))
+        .unwrap(),
+    );
     select(&mut app, &[square]);
     assert_ne!(value(&app, "Geometri", "Alan"), "Hesaplanamaz");
 }
@@ -640,18 +785,25 @@ fn a_bow_ties_area_is_said_not_computable() {
 fn bow_tie_properties_screens() {
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
-    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-UR-049");
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-UR-049");
     std::fs::create_dir_all(&out).unwrap();
     let mut app = objects();
-    let tie = add(&mut app, serde_json::from_value(serde_json::json!({
-        "kind":"polygon","id":0,"layerId":"parsel","attrs":{},
-        "pts":[{"x":0.,"y":4.},{"x":4.,"y":0.},{"x":0.,"y":0.},{"x":4.,"y":4.}]
-    })).unwrap());
+    let tie = add(
+        &mut app,
+        serde_json::from_value(serde_json::json!({
+            "kind":"polygon","id":0,"layerId":"parsel","attrs":{},
+            "pts":[{"x":0.,"y":4.},{"x":4.,"y":0.},{"x":0.,"y":0.},{"x":4.,"y":4.}]
+        }))
+        .unwrap(),
+    );
     select(&mut app, &[tie]);
     let mut snap = kentos_ui::snapshot::Snapshot::new(iced::Size::new(1440., 1500.)).unwrap();
     let mut update = |app: &mut App, m: Message| {
         let _ = app.update(m);
     };
     snap.settle(&mut app, App::view, &mut update);
-    snap.render(app.view(), &app.theme()).save(out.join("papyon-alan.png")).unwrap();
+    snap.render(app.view(), &app.theme())
+        .save(out.join("papyon-alan.png"))
+        .unwrap();
 }

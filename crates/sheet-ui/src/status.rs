@@ -17,7 +17,11 @@ use crate::message::{InspectorTab, Message};
 
 /// The drawing's tab's name by the project's type: Harita for a CBS project, Model for any other (docs/adr/9185).
 pub fn model_name(workspace: Option<kentos_contracts::Workspace>) -> &'static str {
-    if workspace == Some(kentos_contracts::Workspace::Gis) { "Harita" } else { "Model" }
+    if workspace == Some(kentos_contracts::Workspace::Gis) {
+        "Harita"
+    } else {
+        "Model"
+    }
 }
 
 /// Millimetres with one decimal, by the display rule (ADR 0149: a point, as the web's `fixed`).
@@ -74,14 +78,23 @@ impl Designer {
             (mm1(p[0]), mm1(p[1]))
         });
         cells.push(
-            Readout::new(label::mono(if let Some(p)=self.hover.and_then(|p|self.active_viewport()?.model_point(p)) {format!("Y {:.3}  X {:.3} m",p[0],p[1])} else {format!("Sol {l}  Üst {t} mm")}))
-                .icon(Icon::Crosshair)
-                .width(150.0)
-                .tip(
-                    Tip::new("İmleç kâğıtta")
-                        .body("Kâğıdın sol üst köşesinden milimetre: Sol sağa, Üst aşağı doğru."),
-                )
-                .into(),
+            Readout::new(label::mono(
+                if let Some(p) = self
+                    .hover
+                    .and_then(|p| self.active_viewport()?.model_point(p))
+                {
+                    format!("Y {:.3}  X {:.3} m", p[0], p[1])
+                } else {
+                    format!("Sol {l}  Üst {t} mm")
+                },
+            ))
+            .icon(Icon::Crosshair)
+            .width(150.0)
+            .tip(
+                Tip::new("İmleç kâğıtta")
+                    .body("Kâğıdın sol üst köşesinden milimetre: Sol sağa, Üst aşağı doğru."),
+            )
+            .into(),
         );
         if let Some(b) = self.chosen_bounds() {
             let n = self.selection.len();

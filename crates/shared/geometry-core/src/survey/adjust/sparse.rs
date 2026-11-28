@@ -46,11 +46,17 @@ pub(crate) fn reverse_cuthill_mckee(neighbours: &[Vec<usize>]) -> Vec<usize> {
         }
         // The component's node of least degree, ties by number.
         let component: Vec<usize> = levels(first, &mut mark).into_iter().flatten().collect();
-        let mut root = component.iter().copied().min_by_key(|&v| (degree(v), v)).unwrap_or(first);
+        let mut root = component
+            .iter()
+            .copied()
+            .min_by_key(|&v| (degree(v), v))
+            .unwrap_or(first);
         let mut depth = levels(root, &mut mark).len();
         loop {
             let last = levels(root, &mut mark).pop().unwrap_or_default();
-            let Some(far) = last.iter().copied().min_by_key(|&v| (degree(v), v)) else { break };
+            let Some(far) = last.iter().copied().min_by_key(|&v| (degree(v), v)) else {
+                break;
+            };
             let deeper = levels(far, &mut mark).len();
             if deeper > depth {
                 root = far;
@@ -66,7 +72,11 @@ pub(crate) fn reverse_cuthill_mckee(neighbours: &[Vec<usize>]) -> Vec<usize> {
         let mut k = start;
         while k < order.len() {
             let v = order[k];
-            let mut next: Vec<usize> = neighbours[v].iter().copied().filter(|&w| !seen[w]).collect();
+            let mut next: Vec<usize> = neighbours[v]
+                .iter()
+                .copied()
+                .filter(|&w| !seen[w])
+                .collect();
             next.sort_by_key(|&w| (degree(w), w));
             for w in next {
                 seen[w] = true;
@@ -90,7 +100,11 @@ pub(crate) struct Envelope {
 impl Envelope {
     /// The entries an envelope of rows starting at `first` holds (each `first[i] ≤ i`).
     pub(crate) fn entries(first: &[usize]) -> usize {
-        first.iter().enumerate().map(|(i, &f)| i + 1 - f.min(i)).sum()
+        first
+            .iter()
+            .enumerate()
+            .map(|(i, &f)| i + 1 - f.min(i))
+            .sum()
     }
 
     pub(crate) fn new(mut first: Vec<usize>) -> Envelope {
@@ -102,7 +116,11 @@ impl Envelope {
             at += i + 1 - *f;
         }
         start.push(at);
-        Envelope { first, start, a: vec![0.0; at] }
+        Envelope {
+            first,
+            start,
+            a: vec![0.0; at],
+        }
     }
 
     pub(crate) fn size(&self) -> usize {
@@ -217,7 +235,11 @@ impl EnvelopeFactor {
                 fill[j] += 1;
             }
         }
-        let mut z = Envelope { first: self.l.first.clone(), start: self.l.start.clone(), a: vec![0.0; self.l.a.len()] };
+        let mut z = Envelope {
+            first: self.l.first.clone(),
+            start: self.l.start.clone(),
+            a: vec![0.0; self.l.a.len()],
+        };
         let entry = |e: &Envelope, i: usize, j: usize| e.at(i, j).map_or(0.0, |k| e.a[k]);
         for j in (0..n).rev() {
             let below = &rows[count[j]..count[j + 1]];
@@ -319,7 +341,11 @@ mod tests {
             at[v] = p;
         }
         let band = |pos: &dyn Fn(usize) -> usize| {
-            (0..40).flat_map(|i| g[i].iter().map(move |&j| (i, j))).map(|(i, j)| pos(i).abs_diff(pos(j))).max().unwrap_or(0)
+            (0..40)
+                .flat_map(|i| g[i].iter().map(move |&j| (i, j)))
+                .map(|(i, j)| pos(i).abs_diff(pos(j)))
+                .max()
+                .unwrap_or(0)
         };
         // The natural numbering joins 0 to 39 and 38 (bandwidth 39); the new order walks the ring's two arms side by
         // side, four nodes a level (two each side), so a neighbour is at most two levels' worth away.
@@ -375,7 +401,9 @@ mod tests {
                 }
             }
         }
-        let b: Vec<f64> = (0..30).map(|i| crate::jsmath::sin(i as f64 * 0.37)).collect();
+        let b: Vec<f64> = (0..30)
+            .map(|i| crate::jsmath::sin(i as f64 * 0.37))
+            .collect();
         let pb: Vec<f64> = (0..30).map(|p| b[order[p]]).collect();
         let factor = env.cholesky().expect("positive definite");
         let x = factor.solve(&pb);
@@ -387,9 +415,15 @@ mod tests {
         let z = factor.inverse();
         let q = dense_factor.inverse();
         for i in 0..30 {
-            assert!((z.get(at[i], at[i]) - Inverse::get(&q, i, i)).abs() < 1e-12, "Z[{i}][{i}]");
+            assert!(
+                (z.get(at[i], at[i]) - Inverse::get(&q, i, i)).abs() < 1e-12,
+                "Z[{i}][{i}]"
+            );
             for &j in &g[i] {
-                assert!((z.get(at[i], at[j]) - Inverse::get(&q, i, j)).abs() < 1e-12, "Z[{i}][{j}]");
+                assert!(
+                    (z.get(at[i], at[j]) - Inverse::get(&q, i, j)).abs() < 1e-12,
+                    "Z[{i}][{j}]"
+                );
             }
         }
     }

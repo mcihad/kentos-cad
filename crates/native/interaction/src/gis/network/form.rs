@@ -18,10 +18,11 @@
 //! fields (docs/adr/0568).
 
 use kentos_commands::{
-    DeviceTerminal, JunctionLayer, JunctionRole, NETWORK_TOLERANCE, NetworkConnect, NetworkCost,
-    NetworkCostKind, NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels,
-    NetworkClosures, NetworkPeriod, NetworkProfile, ProfileForbid, ProfileLimit, NetworkSubnetworks, NetworkTerminals, NetworkTurns, NetworkUTurns,
-    SubnetworkReach, TerminalConfig, TerminalDevice, TurnLayer, clock_text,
+    DeviceTerminal, JunctionLayer, JunctionRole, NETWORK_TOLERANCE, NetworkClosures,
+    NetworkConnect, NetworkCost, NetworkCostKind, NetworkDef, NetworkDirection, NetworkKind,
+    NetworkLayer, NetworkLevels, NetworkPeriod, NetworkProfile, NetworkSubnetworks,
+    NetworkTerminals, NetworkTurns, NetworkUTurns, ProfileForbid, ProfileLimit, SubnetworkReach,
+    TerminalConfig, TerminalDevice, TurnLayer, clock_text,
 };
 use kentos_geometry_core::tools::point_text::js_trim;
 
@@ -338,13 +339,21 @@ pub fn configs_text(configs: &[TerminalConfig]) -> String {
 /// A profile's limits as typed: split at semicolons, each an edge field then the vehicle's value (the last word).
 pub fn limits_of(text: &str) -> Result<Vec<ProfileLimit>, String> {
     let mut out = Vec::new();
-    for (i, part) in text.split(';').map(js_trim).filter(|p| !p.is_empty()).enumerate() {
+    for (i, part) in text
+        .split(';')
+        .map(js_trim)
+        .filter(|p| !p.is_empty())
+        .enumerate()
+    {
         let read = part
             .rsplit_once(char::is_whitespace)
             .and_then(|(f, v)| Some((js_trim(f), decimal(v)?)))
             .filter(|(f, _)| !f.is_empty());
         let Some((field, value)) = read else {
-            return Err(format!("{}. sınır “agirlik 18” gibi yazılır: alan ve değer.", i + 1));
+            return Err(format!(
+                "{}. sınır “agirlik 18” gibi yazılır: alan ve değer.",
+                i + 1
+            ));
         };
         out.push(ProfileLimit {
             field: field.to_owned(),
@@ -366,9 +375,17 @@ pub fn limits_text(limits: &[ProfileLimit]) -> String {
 /// A profile's forbidding fields as typed: split at semicolons, each `field = values` (the values at commas).
 pub fn forbidden_of(text: &str) -> Result<Vec<ProfileForbid>, String> {
     let mut out = Vec::new();
-    for (i, part) in text.split(';').map(js_trim).filter(|p| !p.is_empty()).enumerate() {
+    for (i, part) in text
+        .split(';')
+        .map(js_trim)
+        .filter(|p| !p.is_empty())
+        .enumerate()
+    {
         let Some((field, values)) = part.split_once('=') else {
-            return Err(format!("{}. yasak “tur = yaya, bisiklet” gibi yazılır.", i + 1));
+            return Err(format!(
+                "{}. yasak “tur = yaya, bisiklet” gibi yazılır.",
+                i + 1
+            ));
         };
         out.push(ProfileForbid {
             field: js_trim(field).to_owned(),
@@ -815,7 +832,10 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
         let top_speed = if top.is_empty() {
             None
         } else {
-            Some(decimal(top).ok_or_else(|| format!("{whose} en yüksek hızı bir sayı olmalı (km/sa)."))?)
+            Some(
+                decimal(top)
+                    .ok_or_else(|| format!("{whose} en yüksek hızı bir sayı olmalı (km/sa)."))?,
+            )
         };
         profiles.push(NetworkProfile {
             limits: limits_of(&p.limits).map_err(|e| format!("{whose} sınırları: {e}"))?,
@@ -833,7 +853,12 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
             ));
         }
         (None, None) => None,
-        (Some(from), Some(to)) => Some(NetworkClosures { from, to, days, hours }),
+        (Some(from), Some(to)) => Some(NetworkClosures {
+            from,
+            to,
+            days,
+            hours,
+        }),
         _ => {
             return Err(format!(
                 "{who} kapanmaları için ilk ve son gün alanı birlikte yazılır."

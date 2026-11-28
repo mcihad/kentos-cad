@@ -11,7 +11,8 @@
 use std::collections::{BTreeSet, HashSet};
 
 use kentos_commands::{
-    CommandResult, DrapeRange, DrapedObject, EntitiesDrape, EntitiesDraped, Entity, MAX_DRAPED, PathEntity, Vec2,
+    CommandResult, DrapeRange, DrapedObject, EntitiesDrape, EntitiesDraped, Entity, MAX_DRAPED,
+    PathEntity, Vec2,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_road::surface::Surface;
@@ -58,7 +59,11 @@ fn crossings(p: Vec2, q: Vec2, edges: &[([f64; 2], [f64; 2])]) -> Vec<f64> {
     let (lo_x, hi_x, lo_y, hi_y) = (p.x.min(q.x), p.x.max(q.x), p.y.min(q.y), p.y.max(q.y));
     let mut ts: Vec<f64> = Vec::new();
     for (c, d) in edges {
-        if c[0].max(d[0]) < lo_x || c[0].min(d[0]) > hi_x || c[1].max(d[1]) < lo_y || c[1].min(d[1]) > hi_y {
+        if c[0].max(d[0]) < lo_x
+            || c[0].min(d[0]) > hi_x
+            || c[1].max(d[1]) < lo_y
+            || c[1].min(d[1]) > hi_y
+        {
             continue;
         }
         let (sx, sy) = (d[0] - c[0], d[1] - c[1]);
@@ -147,13 +152,20 @@ fn ring(
         } else {
             None
         };
-        let (Some(edges), Some(q)) = (edges, next) else { continue };
+        let (Some(edges), Some(q)) = (edges, next) else {
+            continue;
+        };
         if bulge.unwrap_or(0.0) != 0.0 || !over.edge(k) {
             continue;
         }
         for t in crossings(p, q, edges) {
-            let at = Vec2 { x: p.x + t * (q.x - p.x), y: p.y + t * (q.y - p.y) };
-            let Some(h) = surface.height(at.x, at.y).z else { continue };
+            let at = Vec2 {
+                x: p.x + t * (q.x - p.x),
+                y: p.y + t * (q.y - p.y),
+            };
+            let Some(h) = surface.height(at.x, at.y).z else {
+                continue;
+            };
             out_pts.push(at);
             out_zs.push(Some(h + over.offset));
             // An inserted vertex's edge is straight; the list keeps its length's meaning (per vertex) only when the old
@@ -174,15 +186,31 @@ fn ring_at(
     p: &mut PathEntity,
     area: bool,
     (part, ring): (usize, usize),
-) -> Option<(&mut Vec<Vec2>, &mut Option<Vec<f64>>, &mut Option<Vec<Option<f64>>>, bool)> {
+) -> Option<(
+    &mut Vec<Vec2>,
+    &mut Option<Vec<f64>>,
+    &mut Option<Vec<Option<f64>>>,
+    bool,
+)> {
     let closed = area || p.closed;
     match (part, ring) {
         (0, 0) => Some((&mut p.pts, &mut p.bulges, &mut p.zs, closed)),
-        (0, h) => p.holes.as_mut()?.get_mut(h - 1).map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs, true)),
-        (k, 0) => p.parts.as_mut()?.get_mut(k - 1).map(|q| (&mut q.pts, &mut q.bulges, &mut q.zs, area)),
+        (0, h) => p
+            .holes
+            .as_mut()?
+            .get_mut(h - 1)
+            .map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs, true)),
+        (k, 0) => p
+            .parts
+            .as_mut()?
+            .get_mut(k - 1)
+            .map(|q| (&mut q.pts, &mut q.bulges, &mut q.zs, area)),
         (k, h) => {
             let q = p.parts.as_mut()?.get_mut(k - 1)?;
-            q.holes.as_mut()?.get_mut(h - 1).map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs, true))
+            q.holes
+                .as_mut()?
+                .get_mut(h - 1)
+                .map(|r| (&mut r.pts, &mut r.bulges, &mut r.zs, true))
         }
     }
 }
@@ -193,7 +221,11 @@ fn ring_count(e: &Entity, (part, ring): (usize, usize)) -> Result<usize, (&'stat
         Entity::Line(_) if part == 0 && ring == 0 => return Ok(2),
         Entity::Line(_) => {
             return Err((
-                if part != 0 { "range.part" } else { "range.ring" },
+                if part != 0 {
+                    "range.part"
+                } else {
+                    "range.ring"
+                },
                 "Çizginin tek parçası ve tek halkası var: parça ve halka 0 olmalı.".into(),
             ));
         }
@@ -202,7 +234,10 @@ fn ring_count(e: &Entity, (part, ring): (usize, usize)) -> Result<usize, (&'stat
     };
     let parts = 1 + p.parts.as_ref().map_or(0, Vec::len);
     if part >= parts {
-        return Err(("range.part", format!("Nesnenin {parts} parçası var (0'dan): {part}. parça yok.")));
+        return Err((
+            "range.part",
+            format!("Nesnenin {parts} parçası var (0'dan): {part}. parça yok."),
+        ));
     }
     let (outer, holes) = match part {
         0 => (p.pts.len(), p.holes.as_deref().unwrap_or(&[])),
@@ -216,7 +251,10 @@ fn ring_count(e: &Entity, (part, ring): (usize, usize)) -> Result<usize, (&'stat
         h if h <= holes.len() => Ok(holes[h - 1].pts.len()),
         h => Err((
             "range.ring",
-            format!("{part}. parçanın {} deliği var: {h}. halka yok (0 dış halka, 1'den delikler).", holes.len()),
+            format!(
+                "{part}. parçanın {} deliği var: {h}. halka yok (0 dış halka, 1'den delikler).",
+                holes.len()
+            ),
         )),
     }
 }
@@ -235,7 +273,13 @@ fn draped(
     edges: Option<&[([f64; 2], [f64; 2])]>,
     over: Over,
 ) -> Option<(Entity, DrapedObject)> {
-    let mut row = DrapedObject { uid: uid.to_owned(), set: 0, outside: 0, inserted: 0, unsplit: false };
+    let mut row = DrapedObject {
+        uid: uid.to_owned(),
+        set: 0,
+        outside: 0,
+        inserted: 0,
+        unsplit: false,
+    };
     let mut next = e.clone();
     let count = |s: u32, o: u32, i: u32, row: &mut DrapedObject| {
         row.set += s;
@@ -268,13 +312,24 @@ fn draped(
             let area = matches!(e, Entity::Polygon(_));
             // Measures and widths are per vertex: a vertex put in would need its own; such a path is not split.
             let measured = p.ms.as_ref().is_some_and(|m| m.iter().any(Option::is_some))
-                || p.parts.iter().flatten().any(|q| q.ms.as_ref().is_some_and(|m| m.iter().any(Option::is_some)))
+                || p.parts
+                    .iter()
+                    .flatten()
+                    .any(|q| q.ms.as_ref().is_some_and(|m| m.iter().any(Option::is_some)))
                 || p.widths.is_some();
             let split = if measured { None } else { edges };
             // With a range only the ring it names takes heights (docs/adr/4980); the check found it.
             if over.range.is_some() {
                 let (pts, bulges, zs, closed) = ring_at(p, area, over.at)?;
-                let (new_pts, new_bulges, new_zs, s, o, i) = ring(pts, bulges.as_ref(), zs.as_ref(), closed, surface, split, over);
+                let (new_pts, new_bulges, new_zs, s, o, i) = ring(
+                    pts,
+                    bulges.as_ref(),
+                    zs.as_ref(),
+                    closed,
+                    surface,
+                    split,
+                    over,
+                );
                 *pts = new_pts;
                 *bulges = new_bulges;
                 *zs = stored(new_zs);
@@ -282,27 +337,62 @@ fn draped(
                 row.unsplit = edges.is_some() && measured;
                 return Some((next, row));
             }
-            let (pts, bulges, zs, s, o, i) = ring(&p.pts, p.bulges.as_ref(), p.zs.as_ref(), area || p.closed, surface, split, over);
+            let (pts, bulges, zs, s, o, i) = ring(
+                &p.pts,
+                p.bulges.as_ref(),
+                p.zs.as_ref(),
+                area || p.closed,
+                surface,
+                split,
+                over,
+            );
             p.pts = pts;
             p.bulges = bulges;
             p.zs = stored(zs);
             count(s, o, i, &mut row);
-            let whole = Over { range: None, ..over };
+            let whole = Over {
+                range: None,
+                ..over
+            };
             for h in p.holes.iter_mut().flatten() {
-                let (pts, bulges, zs, s, o, i) = ring(&h.pts, h.bulges.as_ref(), h.zs.as_ref(), true, surface, split, whole);
+                let (pts, bulges, zs, s, o, i) = ring(
+                    &h.pts,
+                    h.bulges.as_ref(),
+                    h.zs.as_ref(),
+                    true,
+                    surface,
+                    split,
+                    whole,
+                );
                 h.pts = pts;
                 h.bulges = bulges;
                 h.zs = stored(zs);
                 count(s, o, i, &mut row);
             }
             for part in p.parts.iter_mut().flatten() {
-                let (pts, bulges, zs, s, o, i) = ring(&part.pts, part.bulges.as_ref(), part.zs.as_ref(), area, surface, split, whole);
+                let (pts, bulges, zs, s, o, i) = ring(
+                    &part.pts,
+                    part.bulges.as_ref(),
+                    part.zs.as_ref(),
+                    area,
+                    surface,
+                    split,
+                    whole,
+                );
                 part.pts = pts;
                 part.bulges = bulges;
                 part.zs = stored(zs);
                 count(s, o, i, &mut row);
                 for h in part.holes.iter_mut().flatten() {
-                    let (pts, bulges, zs, s, o, i) = ring(&h.pts, h.bulges.as_ref(), h.zs.as_ref(), true, surface, split, whole);
+                    let (pts, bulges, zs, s, o, i) = ring(
+                        &h.pts,
+                        h.bulges.as_ref(),
+                        h.zs.as_ref(),
+                        true,
+                        surface,
+                        split,
+                        whole,
+                    );
                     h.pts = pts;
                     h.bulges = bulges;
                     h.zs = stored(zs);
@@ -321,31 +411,48 @@ fn draped(
 }
 
 /// The objects draped and the answer, or why not.
-fn check(doc: &Document, input: &EntitiesDrape) -> Result<(Vec<(Slot, Entity)>, EntitiesDraped), Stop> {
+fn check(
+    doc: &Document,
+    input: &EntitiesDrape,
+) -> Result<(Vec<(Slot, Entity)>, EntitiesDraped), Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     terrains::terrain_project(doc)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
     if input.uids.is_empty() || input.uids.len() > MAX_DRAPED {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("1 ile {MAX_DRAPED} arasında nesne verin; {} verildi.", input.uids.len()),
+            format!(
+                "1 ile {MAX_DRAPED} arasında nesne verin; {} verildi.",
+                input.uids.len()
+            ),
             "uids",
         ));
     }
     let mut seen = HashSet::new();
     for (i, uid) in input.uids.iter().enumerate() {
         if !seen.insert(uid.as_str()) {
-            return Err(fail(codes::INVALID_INPUT, format!("“{uid}” nesnesi iki kez verildi."), &format!("uids[{i}]")));
+            return Err(fail(
+                codes::INVALID_INPUT,
+                format!("“{uid}” nesnesi iki kez verildi."),
+                &format!("uids[{i}]"),
+            ));
         }
     }
     // Docs/adr/4580: the height over the surface and the range.
     if input.offset.is_some_and(|v| !v.is_finite()) {
-        return Err(fail(codes::INVALID_INPUT, "Yüzeyle kot farkı sonlu bir sayı olmalı (m).".into(), "offset"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Yüzeyle kot farkı sonlu bir sayı olmalı (m).".into(),
+            "offset",
+        ));
     }
     if input.range.is_some() && input.uids.len() != 1 {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Köşe aralığı tek bir nesneye verilir; {} nesne verildi.", input.uids.len()),
+            format!(
+                "Köşe aralığı tek bir nesneye verilir; {} nesne verildi.",
+                input.uids.len()
+            ),
             "range",
         ));
     }
@@ -355,24 +462,45 @@ fn check(doc: &Document, input: &EntitiesDrape) -> Result<(Vec<(Slot, Entity)>, 
         if !checks::is_uid_text(uid) {
             return Err(fail(
                 codes::INVALID_UID,
-                format!("“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+                format!(
+                    "“{uid}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+                ),
                 &path,
             ));
         }
         let Some(slot) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)) else {
-            return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), &path));
+            return Err(fail(
+                codes::ENTITY_NOT_FOUND,
+                format!("“{uid}” kimlikli nesne çizimde yok."),
+                &path,
+            ));
         };
         let Some(e) = doc.get(slot) else {
-            return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), &path));
+            return Err(fail(
+                codes::ENTITY_NOT_FOUND,
+                format!("“{uid}” kimlikli nesne çizimde yok."),
+                &path,
+            ));
         };
-        if !matches!(e, Entity::Point(_) | Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)) {
+        if !matches!(
+            e,
+            Entity::Point(_) | Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)
+        ) {
             return Err(fail(
                 codes::NOT_A_PATH,
-                format!("“{uid}” nokta, çizgi, çoklu çizgi ya da alan değil: köşesi yok, yüzeyden kot alamaz."),
+                format!(
+                    "“{uid}” nokta, çizgi, çoklu çizgi ya da alan değil: köşesi yok, yüzeyden kot alamaz."
+                ),
                 &path,
             ));
         }
-        if let Some(DrapeRange { from, to, part, ring }) = input.range {
+        if let Some(DrapeRange {
+            from,
+            to,
+            part,
+            ring,
+        }) = input.range
+        {
             if matches!(e, Entity::Point(_)) {
                 return Err(fail(
                     codes::NOT_A_PATH,
@@ -380,35 +508,52 @@ fn check(doc: &Document, input: &EntitiesDrape) -> Result<(Vec<(Slot, Entity)>, 
                     "range",
                 ));
             }
-            let count = ring_count(e, (part as usize, ring as usize)).map_err(|(at, why)| fail(codes::WRONG_PLACE, why, at))?;
+            let count = ring_count(e, (part as usize, ring as usize))
+                .map_err(|(at, why)| fail(codes::WRONG_PLACE, why, at))?;
             if !(from < to && (to as usize) < count) {
-                let whose = if part == 0 && ring == 0 { "nesnenin".to_owned() } else { format!("{part}. parçanın {ring}. halkasının") };
+                let whose = if part == 0 && ring == 0 {
+                    "nesnenin".to_owned()
+                } else {
+                    format!("{part}. parçanın {ring}. halkasının")
+                };
                 return Err(fail(
                     codes::WRONG_PLACE,
-                    format!("Köşe aralığı {from}–{to} olamaz: {whose} {count} köşesi var (0'dan), başlangıç bitişten önce olmalı."),
+                    format!(
+                        "Köşe aralığı {from}–{to} olamaz: {whose} {count} köşesi var (0'dan), başlangıç bitişten önce olmalı."
+                    ),
                     "range",
                 ));
             }
         }
         objects.push((slot, e.clone(), uid.clone()));
     }
-    let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+    let def = terrains::surfaces(doc)
+        .iter()
+        .find(|s| s.id == id)
+        .cloned()
+        .ok_or(Stop::Cancelled)?;
     let made = terrains::make(doc, &def);
     let surface = made.built()?;
     let edges = input.breaks.then(|| edges_of(surface));
     let over = Over {
         offset: input.offset.unwrap_or(0.0),
         range: input.range.map(|r| (r.from as usize, r.to as usize)),
-        at: input.range.map_or((0, 0), |r| (r.part as usize, r.ring as usize)),
+        at: input
+            .range
+            .map_or((0, 0), |r| (r.part as usize, r.ring as usize)),
     };
     let mut changed = Vec::new();
     let mut rows = Vec::new();
     for (slot, e, uid) in &objects {
-        let Some((after, row)) = draped(e, uid, surface, edges.as_deref(), over) else { continue };
+        let Some((after, row)) = draped(e, uid, surface, edges.as_deref(), over) else {
+            continue;
+        };
         changed.push((*slot, after));
         rows.push(row);
     }
-    let (set, outside, inserted) = rows.iter().fold((0u32, 0u32, 0u32), |a, r| (a.0 + r.set, a.1 + r.outside, a.2 + r.inserted));
+    let (set, outside, inserted) = rows.iter().fold((0u32, 0u32, 0u32), |a, r| {
+        (a.0 + r.set, a.1 + r.outside, a.2 + r.inserted)
+    });
     if set == 0 {
         return Err(fail(
             codes::OFF_SURFACE,
@@ -417,7 +562,10 @@ fn check(doc: &Document, input: &EntitiesDrape) -> Result<(Vec<(Slot, Entity)>, 
                     "Köşe aralığının ({}–{}) hiçbir köşesi “{}” yüzeyinin üstünde değil; aralığı yüzeyin içinde seçin.",
                     r.from, r.to, def.name
                 ),
-                None => format!("Nesnelerin hiçbir köşesi “{}” yüzeyinin üstünde değil; yüzeyin içindeki nesneleri seçin.", def.name),
+                None => format!(
+                    "Nesnelerin hiçbir köşesi “{}” yüzeyinin üstünde değil; yüzeyin içindeki nesneleri seçin.",
+                    def.name
+                ),
             },
             "uids",
         ));
@@ -426,19 +574,32 @@ fn check(doc: &Document, input: &EntitiesDrape) -> Result<(Vec<(Slot, Entity)>, 
         if doc.layers().is_locked(&e.base().layer_id) {
             return Err(fail(
                 codes::LAYER_LOCKED,
-                format!("“{}” katmanı kilitli: nesnenin kotları yazılamaz. Kilidi açın.", doc.layers().path(&e.base().layer_id)),
+                format!(
+                    "“{}” katmanı kilitli: nesnenin kotları yazılamaz. Kilidi açın.",
+                    doc.layers().path(&e.base().layer_id)
+                ),
                 &format!("uids[{i}]"),
             ));
         }
     }
-    let out = EntitiesDraped { surface: id, objects: rows, set, outside, inserted, revision: doc.revision().to_string() };
+    let out = EntitiesDraped {
+        surface: id,
+        objects: rows,
+        set,
+        outside,
+        inserted,
+        revision: doc.revision().to_string(),
+    };
     Ok((changed, out))
 }
 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesDrape) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -446,7 +607,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &EntitiesDrape) -> CommandResu
 /// What execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &EntitiesDrape) -> CommandResult<EntitiesDraped> {
     match check(cx.doc, input) {
-        Ok((_, out)) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok((_, out)) => CommandResult::Completed {
+            output: out,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -458,9 +622,21 @@ fn write(cx: &mut ExecutionContext<'_>, input: EntitiesDrape) -> CommandResult<E
     };
     cx.doc.update_many(changed, STEP);
     out.revision = cx.doc.revision().to_string();
-    CommandResult::Completed { output: out, warnings: Vec::new() }
+    CommandResult::Completed {
+        output: out,
+        warnings: Vec::new(),
+    }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: EntitiesDrape) -> CommandResult<EntitiesDraped> {
-    crate::call::recorded(cx, kentos_commands::CAD_ENTITIES_DRAPE, kentos_commands::CAD_ENTITIES_DRAPE_VERSION, input, write)
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: EntitiesDrape,
+) -> CommandResult<EntitiesDraped> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_ENTITIES_DRAPE,
+        kentos_commands::CAD_ENTITIES_DRAPE_VERSION,
+        input,
+        write,
+    )
 }

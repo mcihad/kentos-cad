@@ -40,7 +40,9 @@ pub fn program_dir() -> Option<PathBuf> {
 /// `Contents/Resources`, else the program's own folder.
 pub fn resources_for(os: &str, dir: &Path) -> PathBuf {
     match dir.parent() {
-        Some(contents) if os == "macos" && dir.ends_with("Contents/MacOS") => contents.join("Resources"),
+        Some(contents) if os == "macos" && dir.ends_with("Contents/MacOS") => {
+            contents.join("Resources")
+        }
         _ => dir.to_path_buf(),
     }
 }
@@ -53,7 +55,10 @@ pub fn resources() -> Option<PathBuf> {
     }
     let dir = program_dir()?;
     let installed = resources_for(std::env::consts::OS, &dir);
-    if [FONTS, EXTENSIONS, SCRIPTS].iter().any(|f| installed.join(f).is_dir()) {
+    if [FONTS, EXTENSIONS, SCRIPTS]
+        .iter()
+        .any(|f| installed.join(f).is_dir())
+    {
         return Some(installed);
     }
     dir.ancestors()
@@ -135,10 +140,11 @@ pub fn font_files(dir: &Path) -> Vec<PathBuf> {
                     walk(&path, depth + 1, out);
                 }
             } else if kind.is_file() || kind.is_symlink() && path.is_file() {
-                let font = path
-                    .extension()
-                    .and_then(|e| e.to_str())
-                    .is_some_and(|e| ["ttf", "otf", "ttc", "otc"].iter().any(|x| e.eq_ignore_ascii_case(x)));
+                let font = path.extension().and_then(|e| e.to_str()).is_some_and(|e| {
+                    ["ttf", "otf", "ttc", "otc"]
+                        .iter()
+                        .any(|x| e.eq_ignore_ascii_case(x))
+                });
                 if font {
                     out.push(path);
                 }
@@ -163,11 +169,23 @@ mod tests {
     #[test]
     fn a_bundle_keeps_its_resources_in_contents_and_a_folder_beside_the_program() {
         let app = Path::new("/Applications/KentOS.app/Contents/MacOS");
-        assert_eq!(resources_for("macos", app), Path::new("/Applications/KentOS.app/Contents/Resources"));
-        assert_eq!(resources_for("windows", Path::new("C:/KentOS")), Path::new("C:/KentOS"));
-        assert_eq!(resources_for("linux", Path::new("/opt/kentos")), Path::new("/opt/kentos"));
+        assert_eq!(
+            resources_for("macos", app),
+            Path::new("/Applications/KentOS.app/Contents/Resources")
+        );
+        assert_eq!(
+            resources_for("windows", Path::new("C:/KentOS")),
+            Path::new("C:/KentOS")
+        );
+        assert_eq!(
+            resources_for("linux", Path::new("/opt/kentos")),
+            Path::new("/opt/kentos")
+        );
         // A program outside a bundle on macOS is a folder install.
-        assert_eq!(resources_for("macos", Path::new("/opt/kentos")), Path::new("/opt/kentos"));
+        assert_eq!(
+            resources_for("macos", Path::new("/opt/kentos")),
+            Path::new("/opt/kentos")
+        );
     }
 
     #[test]
@@ -183,10 +201,17 @@ mod tests {
         );
         assert_eq!(
             user_root_for("macos", None, Some(Path::new("/Users/a")), None),
-            Some(PathBuf::from("/Users/a/Library/Application Support/kentos-cad"))
+            Some(PathBuf::from(
+                "/Users/a/Library/Application Support/kentos-cad"
+            ))
         );
         assert_eq!(
-            user_root_for("windows", Some(Path::new("C:/Users/a/AppData/Roaming")), None, None),
+            user_root_for(
+                "windows",
+                Some(Path::new("C:/Users/a/AppData/Roaming")),
+                None,
+                None
+            ),
             Some(PathBuf::from("C:/Users/a/AppData/Roaming/kentos-cad"))
         );
         assert_eq!(user_root_for("windows", None, Some(home), None), None);
@@ -200,7 +225,11 @@ mod tests {
         for folder in [FONTS, EXTENSIONS, SCRIPTS] {
             assert!(paket.join(folder).is_dir(), "paket/{folder}");
         }
-        assert!(paket.join("eklentiler/ornek-isleme/manifest.json").is_file());
+        assert!(
+            paket
+                .join("eklentiler/ornek-isleme/manifest.json")
+                .is_file()
+        );
     }
 
     /// Every font KentOS brings is under `paket/fonts`, in its three folders (docs/adr/9313).
@@ -209,9 +238,16 @@ mod tests {
         let fonts = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../paket/fonts");
         let files = font_files(&fonts);
         for folder in ["cizim", "arayuz", "yedek"] {
-            assert!(files.iter().any(|f| f.starts_with(fonts.join(folder))), "{folder}");
+            assert!(
+                files.iter().any(|f| f.starts_with(fonts.join(folder))),
+                "{folder}"
+            );
         }
-        assert!(files.iter().all(|f| f.extension().is_some_and(|e| e == "ttf")));
+        assert!(
+            files
+                .iter()
+                .all(|f| f.extension().is_some_and(|e| e == "ttf"))
+        );
         assert!(files.windows(2).all(|w| w[0] < w[1]));
         assert!(files.iter().any(|f| f.ends_with("cizim/Barlow-400.ttf")));
         assert!(font_files(&fonts.join("yok")).is_empty());

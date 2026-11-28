@@ -60,13 +60,36 @@ fn a_table_whose_rows_hold_no_geometry_says_so_when_bound() {
     std::fs::copy(dir().join("qgis.gpkg"), &tmp).expect("copied");
     {
         let mut g = kentos_geopackage::GeoPackage::open(&tmp, true).expect("opened");
-        let layer = g.layers().expect("layers").into_iter().find(|l| l.name == "parsel").expect("parsel");
-        let rows = g.rows(&layer, &kentos_geopackage::Query::default()).expect("rows");
+        let layer = g
+            .layers()
+            .expect("layers")
+            .into_iter()
+            .find(|l| l.name == "parsel")
+            .expect("parsel");
+        let rows = g
+            .rows(&layer, &kentos_geopackage::Query::default())
+            .expect("rows");
         let update = rows
             .into_iter()
-            .map(|r| (r.fid, kentos_geopackage::NewRow { fid: Some(r.fid), geometry: None, values: r.values }))
+            .map(|r| {
+                (
+                    r.fid,
+                    kentos_geopackage::NewRow {
+                        fid: Some(r.fid),
+                        geometry: None,
+                        values: r.values,
+                    },
+                )
+            })
             .collect();
-        g.edit(&layer, &kentos_geopackage::Edits { update, ..Default::default() }).expect("emptied");
+        g.edit(
+            &layer,
+            &kentos_geopackage::Edits {
+                update,
+                ..Default::default()
+            },
+        )
+        .expect("emptied");
     }
     let path = tmp.display().to_string();
     let mut d = doc();
@@ -78,8 +101,16 @@ fn a_table_whose_rows_hold_no_geometry_says_so_when_bound() {
     );
     assert_eq!(ok(&linked)["objects"], 3);
     let warnings = linked["warnings"].as_array().expect("warnings");
-    let bare = warnings.iter().find(|w| w["code"] == "rows_without_geometry").expect("the warning");
-    assert!(bare["message"].as_str().is_some_and(|m| m.contains("3 satırının hiçbirinde")), "{bare}");
+    let bare = warnings
+        .iter()
+        .find(|w| w["code"] == "rows_without_geometry")
+        .expect("the warning");
+    assert!(
+        bare["message"]
+            .as_str()
+            .is_some_and(|m| m.contains("3 satırının hiçbirinde")),
+        "{bare}"
+    );
     assert_eq!(bare["path"], "edit.table");
     let layer = link_of(&d).layer;
     assert!(d.by_layer(&layer).all(|e| !e.has_geometry()));
@@ -92,7 +123,11 @@ fn a_table_whose_rows_hold_no_geometry_says_so_when_bound() {
         CallOp::Execute,
         json!({ "edit": { "kind": "link", "path": dir().join("qgis.gpkg").display().to_string(), "table": "parsel" } }),
     );
-    assert!(linked["warnings"].as_array().is_none_or(|w| w.iter().all(|w| w["code"] != "rows_without_geometry")));
+    assert!(
+        linked["warnings"]
+            .as_array()
+            .is_none_or(|w| w.iter().all(|w| w["code"] != "rows_without_geometry"))
+    );
 }
 
 #[test]
@@ -605,14 +640,7 @@ fn rewrite_nudged(file: &std::path::Path, extra: usize, dx: f64) {
     use kentos_geopackage::{Coord, Curve, Edits, GeoPackage, Geometry, NewRow, Query};
     let nudge = |g: &Geometry| -> Geometry {
         let shift = |c: &Curve| match c {
-            Curve::Line(p) => Curve::Line(
-                p.iter()
-                    .map(|q| Coord {
-                        x: q.x + dx,
-                        ..*q
-                    })
-                    .collect(),
-            ),
+            Curve::Line(p) => Curve::Line(p.iter().map(|q| Coord { x: q.x + dx, ..*q }).collect()),
             other => other.clone(),
         };
         match g {
@@ -649,10 +677,9 @@ fn rewrite_nudged(file: &std::path::Path, extra: usize, dx: f64) {
         if let Some(g) = &row.geometry {
             row.geometry = Some(nudge(g));
         }
-        edits.insert.push((
-            format!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d77{i:02}"),
-            row,
-        ));
+        edits
+            .insert
+            .push((format!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d77{i:02}"), row));
     }
     for k in 0..extra {
         edits.insert.push((
@@ -680,7 +707,12 @@ fn pinned_parcels(tag: &str, key: Option<&str>) -> (Document, PathBuf) {
     if let Some(k) = key {
         edit["key"] = json!(k);
     }
-    ok(&run(&mut d, "cad.sources.edit", CallOp::Execute, json!({ "edit": edit })));
+    ok(&run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": edit }),
+    ));
     for (ada, x) in [("Çağlayan", 1.0), ("Işık-Ğüşöç", 2.0)] {
         let uid = uid_of(&d, ada);
         ok(&run(
@@ -712,7 +744,11 @@ fn read_again(d: &mut Document) -> Value {
 fn warning_codes(answer: &Value) -> Vec<String> {
     answer["warnings"]
         .as_array()
-        .map(|w| w.iter().map(|w| w["code"].as_str().unwrap_or("").to_string()).collect())
+        .map(|w| {
+            w.iter()
+                .map(|w| w["code"].as_str().unwrap_or("").to_string())
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -723,11 +759,21 @@ fn pins_follow_their_key_when_the_table_is_written_again() {
     rewrite(&tmp, 0);
     let read = read_again(&mut d);
     let out = ok(&read);
-    assert_eq!(out["pins"]["moved"].as_array().map(Vec::len), Some(2), "{read}");
+    assert_eq!(
+        out["pins"]["moved"].as_array().map(Vec::len),
+        Some(2),
+        "{read}"
+    );
     assert!(out["pins"].get("lost").is_none(), "{read}");
     assert_eq!(warning_codes(&read), ["label_pins_moved"], "{read}");
-    assert_eq!(pins_of(&d, "Çağlayan"), json!([{ "at": { "x": 1.0, "y": 2.0 } }]));
-    assert_eq!(pins_of(&d, "Işık-Ğüşöç"), json!([{ "at": { "x": 2.0, "y": 2.0 } }]));
+    assert_eq!(
+        pins_of(&d, "Çağlayan"),
+        json!([{ "at": { "x": 1.0, "y": 2.0 } }])
+    );
+    assert_eq!(
+        pins_of(&d, "Işık-Ğüşöç"),
+        json!([{ "at": { "x": 2.0, "y": 2.0 } }])
+    );
     let _ = std::fs::remove_file(&tmp);
 }
 
@@ -739,13 +785,29 @@ fn pins_follow_the_same_geometry_of_a_rewritten_table_without_a_key() {
     rewrite(&tmp, 0);
     let read = read_again(&mut d);
     let out = ok(&read);
-    assert_eq!(out["pins"]["moved"].as_array().map(Vec::len), Some(2), "{read}");
-    assert!(out["pins"]["moved"].as_array().expect("moved").iter().all(|m| m["by"] == "geometry"
-        && m.get("key").is_none()), "{read}");
+    assert_eq!(
+        out["pins"]["moved"].as_array().map(Vec::len),
+        Some(2),
+        "{read}"
+    );
+    assert!(
+        out["pins"]["moved"]
+            .as_array()
+            .expect("moved")
+            .iter()
+            .all(|m| m["by"] == "geometry" && m.get("key").is_none()),
+        "{read}"
+    );
     assert!(out["pins"].get("lost").is_none(), "{read}");
     assert_eq!(warning_codes(&read), ["label_pins_moved"], "{read}");
-    assert_eq!(pins_of(&d, "Çağlayan"), json!([{ "at": { "x": 1.0, "y": 2.0 } }]));
-    assert_eq!(pins_of(&d, "Işık-Ğüşöç"), json!([{ "at": { "x": 2.0, "y": 2.0 } }]));
+    assert_eq!(
+        pins_of(&d, "Çağlayan"),
+        json!([{ "at": { "x": 1.0, "y": 2.0 } }])
+    );
+    assert_eq!(
+        pins_of(&d, "Işık-Ğüşöç"),
+        json!([{ "at": { "x": 2.0, "y": 2.0 } }])
+    );
     let _ = std::fs::remove_file(&tmp);
 }
 
@@ -759,9 +821,17 @@ fn pins_follow_the_nearest_feature_within_the_tolerance_without_a_key() {
     let out = ok(&read);
     let moved = out["pins"]["moved"].as_array().expect("moved");
     assert_eq!(moved.len(), 2, "{read}");
-    assert!(moved.iter().all(|m| m["by"] == "nearest" && m["distance"] == 0.03125), "{read}");
+    assert!(
+        moved
+            .iter()
+            .all(|m| m["by"] == "nearest" && m["distance"] == 0.03125),
+        "{read}"
+    );
     assert_eq!(warning_codes(&read), ["label_pins_moved"], "{read}");
-    assert_eq!(pins_of(&d, "Çağlayan"), json!([{ "at": { "x": 1.0, "y": 2.0 } }]));
+    assert_eq!(
+        pins_of(&d, "Çağlayan"),
+        json!([{ "at": { "x": 1.0, "y": 2.0 } }])
+    );
     let _ = std::fs::remove_file(&tmp);
 }
 
@@ -772,7 +842,11 @@ fn pins_of_rows_a_rewritten_table_lacks_are_said_without_a_key() {
     rewrite_nudged(&tmp, 0, 0.5);
     let read = read_again(&mut d);
     let out = ok(&read);
-    assert_eq!(out["pins"]["lost"].as_array().map(Vec::len), Some(2), "{read}");
+    assert_eq!(
+        out["pins"]["lost"].as_array().map(Vec::len),
+        Some(2),
+        "{read}"
+    );
     assert_eq!(out["pins"]["lost"][0]["reason"], "deleted", "{read}");
     assert_eq!(warning_codes(&read), ["label_pins_lost"], "{read}");
     assert_eq!(pins_of(&d, "Çağlayan"), json!([]));
@@ -787,10 +861,21 @@ fn pins_are_not_given_to_one_of_two_equal_rows() {
     rewrite(&tmp, 1);
     let read = read_again(&mut d);
     let out = ok(&read);
-    assert_eq!(out["pins"]["lost"].as_array().map(Vec::len), Some(1), "{read}");
+    assert_eq!(
+        out["pins"]["lost"].as_array().map(Vec::len),
+        Some(1),
+        "{read}"
+    );
     assert_eq!(out["pins"]["lost"][0]["reason"], "ambiguous", "{read}");
-    assert_eq!(out["pins"]["moved"].as_array().map(Vec::len), Some(1), "{read}");
-    assert_eq!(pins_of(&d, "Işık-Ğüşöç"), json!([{ "at": { "x": 2.0, "y": 2.0 } }]));
+    assert_eq!(
+        out["pins"]["moved"].as_array().map(Vec::len),
+        Some(1),
+        "{read}"
+    );
+    assert_eq!(
+        pins_of(&d, "Işık-Ğüşöç"),
+        json!([{ "at": { "x": 2.0, "y": 2.0 } }])
+    );
     assert_eq!(pins_of(&d, "Çağlayan"), json!([]));
     let _ = std::fs::remove_file(&tmp);
 }
@@ -943,7 +1028,10 @@ fn pins_of_an_object_that_left_the_part_are_parked_and_given_back() {
     assert_eq!(warning_codes(&read), ["label_pins_parked"], "{read}");
     let parked = &link_of(&d).parked;
     assert_eq!(parked.len(), 1);
-    assert_eq!((parked[0].uid.as_str(), parked[0].pins.len()), (uid.as_str(), 1));
+    assert_eq!(
+        (parked[0].uid.as_str(), parked[0].pins.len()),
+        (uid.as_str(), 1)
+    );
     // The report lists them.
     let report = run(
         &mut d,
@@ -952,8 +1040,15 @@ fn pins_of_an_object_that_left_the_part_are_parked_and_given_back() {
         json!({ "pxPerMetre": 4.0, "window": [486000.0, 4419000.0, 488000.0, 4421000.0] }),
     );
     let layer = &ok(&report)["layers"][0];
-    assert_eq!(layer["parked"], json!([{ "uid": uid, "pins": 1 }]), "{report}");
-    assert_eq!(layer["neighbours"], 0, "the band holds no other row: {report}");
+    assert_eq!(
+        layer["parked"],
+        json!([{ "uid": uid, "pins": 1 }]),
+        "{report}"
+    );
+    assert_eq!(
+        layer["neighbours"], 0,
+        "the band holds no other row: {report}"
+    );
     // The area takes every row: the object comes back with its pins, the binding parks nothing.
     let widened = run(
         &mut d,
@@ -963,9 +1058,16 @@ fn pins_of_an_object_that_left_the_part_are_parked_and_given_back() {
     );
     let out = ok(&widened);
     assert_eq!(out["pins"]["restored"], json!([uid]), "{widened}");
-    assert_eq!(warning_codes(&widened), ["label_pins_restored"], "{widened}");
+    assert_eq!(
+        warning_codes(&widened),
+        ["label_pins_restored"],
+        "{widened}"
+    );
     assert!(link_of(&d).parked.is_empty());
-    assert_eq!(pins_of(&d, "Çağlayan"), json!([{ "at": { "x": 1.0, "y": 2.0 } }]));
+    assert_eq!(
+        pins_of(&d, "Çağlayan"),
+        json!([{ "at": { "x": 1.0, "y": 2.0 } }])
+    );
     let _ = std::fs::remove_file(&tmp);
 }
 
@@ -979,12 +1081,16 @@ fn halves(d: &Document, uid: &str) -> (Value, Value) {
     let pts = v["pts"].as_array().expect("pts");
     let xs: Vec<f64> = pts.iter().map(|p| p["x"].as_f64().expect("x")).collect();
     let ys: Vec<f64> = pts.iter().map(|p| p["y"].as_f64().expect("y")).collect();
-    let (x0, x1) = (xs.iter().copied().fold(f64::MAX, f64::min), xs.iter().copied().fold(f64::MIN, f64::max));
-    let (y0, y1) = (ys.iter().copied().fold(f64::MAX, f64::min), ys.iter().copied().fold(f64::MIN, f64::max));
+    let (x0, x1) = (
+        xs.iter().copied().fold(f64::MAX, f64::min),
+        xs.iter().copied().fold(f64::MIN, f64::max),
+    );
+    let (y0, y1) = (
+        ys.iter().copied().fold(f64::MAX, f64::min),
+        ys.iter().copied().fold(f64::MIN, f64::max),
+    );
     let xm = (x0 + x1) / 2.0;
-    let rect = |a: f64, b: f64| {
-        json!({ "kind": "polygon", "pts": [{ "x": a, "y": y0 }, { "x": b, "y": y0 }, { "x": b, "y": y1 }, { "x": a, "y": y1 }] })
-    };
+    let rect = |a: f64, b: f64| json!({ "kind": "polygon", "pts": [{ "x": a, "y": y0 }, { "x": b, "y": y0 }, { "x": b, "y": y1 }, { "x": a, "y": y1 }] });
     (rect(x0, xm), rect(xm, x1))
 }
 
@@ -1012,7 +1118,10 @@ fn a_split_parcel_writes_its_parent_beside_its_rows() {
         json!({ "edit": { "kind": "link", "path": path, "table": "parsel" } }),
     ));
     let layer = link_of(&d).layer;
-    let uids: Vec<String> = d.by_layer_with_uids(&layer).map(|(u, _)| u.to_string()).collect();
+    let uids: Vec<String> = d
+        .by_layer_with_uids(&layer)
+        .map(|(u, _)| u.to_string())
+        .collect();
     let write = json!({ "layer": layer, "direction": "write" });
     let (a, b) = halves(&d, &uids[0]);
     let split = ok(&run(
@@ -1029,18 +1138,38 @@ fn a_split_parcel_writes_its_parent_beside_its_rows() {
         serde_json::to_value(d.lineage()).expect("json"),
         json!([{ "child": piece, "parents": [uids[0]], "operation": "split", "step": "Alan böl" }])
     );
-    ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, write.clone()));
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        write.clone(),
+    ));
     assert_eq!(
         lineage_in(&tmp),
-        vec![(piece.clone(), uids[0].clone(), "split".into(), "Alan böl".into())]
+        vec![(
+            piece.clone(),
+            uids[0].clone(),
+            "split".into(),
+            "Alan böl".into()
+        )]
     );
     // Undo is the drawing's: the record goes with the piece; the next write takes the piece's row and its parent out.
     assert_eq!(d.undo().as_deref(), Some("Alan böl"));
     assert!(d.lineage().is_empty());
-    ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, write.clone()));
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        write.clone(),
+    ));
     assert!(lineage_in(&tmp).is_empty(), "{:?}", lineage_in(&tmp));
     assert_eq!(d.redo().as_deref(), Some("Alan böl"));
-    ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, write.clone()));
+    ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        write.clone(),
+    ));
     assert_eq!(lineage_in(&tmp).len(), 1);
     // A merge of the piece and another parcel: the new object names both, in the step's order.
     let (whole, _) = halves(&d, &uids[1]);
@@ -1056,8 +1185,18 @@ fn a_split_parcel_writes_its_parent_beside_its_rows() {
     let union = merged["created"][0].as_str().expect("union").to_owned();
     ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, write));
     let mut want = vec![
-        (union.clone(), piece.clone(), "merge".to_owned(), "Alan birleştir".to_owned()),
-        (union, uids[1].clone(), "merge".into(), "Alan birleştir".into()),
+        (
+            union.clone(),
+            piece.clone(),
+            "merge".to_owned(),
+            "Alan birleştir".to_owned(),
+        ),
+        (
+            union,
+            uids[1].clone(),
+            "merge".into(),
+            "Alan birleştir".into(),
+        ),
     ];
     // The piece is gone from the table; its own parent stays: it was split, then merged away.
     want.push((piece, uids[0].clone(), "split".into(), "Alan böl".into()));

@@ -750,7 +750,11 @@ fn an_edge_follows_its_two_ends_and_breaks_when_one_goes() {
     checked_update(&mut doc, wall, fewer).unwrap();
     let broken = doc.dimension_set(SET).unwrap();
     assert_eq!(broken.broken, Some(DimensionSetBreak::UnsupportedWall));
-    assert_eq!(broken.members.len(), 1, "the last geometry stays for repair");
+    assert_eq!(
+        broken.members.len(),
+        1,
+        "the last geometry stays for repair"
+    );
     doc.undo().unwrap();
     let back = doc.dimension_set(SET).unwrap();
     assert_eq!((back.edge, back.broken), (Some(3), None));

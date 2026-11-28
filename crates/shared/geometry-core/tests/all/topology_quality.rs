@@ -92,7 +92,10 @@ fn said(c: &Checked, uids: &[String]) -> Vec<String> {
                 "{} {} {:?} {:.6} {:.6} {:?} {}",
                 f.rule,
                 f.problem,
-                f.objects.iter().map(|&i| uids[i].as_str()).collect::<Vec<_>>(),
+                f.objects
+                    .iter()
+                    .map(|&i| uids[i].as_str())
+                    .collect::<Vec<_>>(),
                 f.at.x,
                 f.at.y,
                 f.measure.map(|m| format!("{m:.6}")),
@@ -124,7 +127,11 @@ fn rules() -> Vec<Rule> {
 }
 
 /// The edits in order, each the object's new shape (none: removed; a new uid: added), checked again after each.
-fn edits_agree(mut d: Drawing, exceptions: &[Exception], edits: Vec<(String, Option<Shape>)>) -> Vec<Checked> {
+fn edits_agree(
+    mut d: Drawing,
+    exceptions: &[Exception],
+    edits: Vec<(String, Option<Shape>)>,
+) -> Vec<Checked> {
     let rules = rules();
     let mut last = check(&d.objects(), &rules, T, exceptions);
     let mut last_uids = d.uids.clone();
@@ -194,8 +201,18 @@ fn overlaps(c: &Checked) -> Vec<f64> {
 #[test]
 fn neighbours_with_a_curved_edge() {
     let (b1, b2) = (0.2, 0.1);
-    let a = area(rect(0.0, 0.0, 10.0, 10.0), Some(vec![0.0, b1, 0.0, 0.0]), Vec::new());
-    let with = |b: f64| area(rect(10.0, 0.0, 20.0, 10.0), Some(vec![0.0, 0.0, 0.0, -b]), Vec::new());
+    let a = area(
+        rect(0.0, 0.0, 10.0, 10.0),
+        Some(vec![0.0, b1, 0.0, 0.0]),
+        Vec::new(),
+    );
+    let with = |b: f64| {
+        area(
+            rect(10.0, 0.0, 20.0, 10.0),
+            Some(vec![0.0, 0.0, 0.0, -b]),
+            Vec::new(),
+        )
+    };
     let d = Drawing {
         shapes: vec![a, with(b1)],
         layers: vec!["parsel".into(); 2],
@@ -206,7 +223,10 @@ fn neighbours_with_a_curved_edge() {
         &[],
         vec![
             ("B".into(), Some(with(b2))),
-            ("B".into(), Some(area(rect(10.0, 0.0, 20.0, 10.0), None, Vec::new()))),
+            (
+                "B".into(),
+                Some(area(rect(10.0, 0.0, 20.0, 10.0), None, Vec::new())),
+            ),
             ("B".into(), Some(with(b1))),
         ],
     );
@@ -214,9 +234,17 @@ fn neighbours_with_a_curved_edge() {
     let lens = segment(10.0, b1) - segment(10.0, b2);
     let got = overlaps(&checks[1]);
     assert_eq!(got.len(), 1, "{:?}", checks[1].findings);
-    assert!((got[0] - lens).abs() < 1e-6, "overlap {} against {lens}", got[0]);
+    assert!(
+        (got[0] - lens).abs() < 1e-6,
+        "overlap {} against {lens}",
+        got[0]
+    );
     let got = overlaps(&checks[2]);
-    assert!((got[0] - segment(10.0, b1)).abs() < 1e-6, "overlap {:?}", got);
+    assert!(
+        (got[0] - segment(10.0, b1)).abs() < 1e-6,
+        "overlap {:?}",
+        got
+    );
     assert!(overlaps(&checks[3]).is_empty());
 }
 
@@ -225,7 +253,11 @@ fn neighbours_with_a_curved_edge() {
 /// added in the same place) and a neighbour added that overlaps the area by 2 × 30: the same findings either way.
 #[test]
 fn an_area_with_a_hole_its_island_and_a_neighbour_read_again() {
-    let holed = area(rect(0.0, 0.0, 30.0, 30.0), None, vec![rect(10.0, 10.0, 20.0, 20.0)]);
+    let holed = area(
+        rect(0.0, 0.0, 30.0, 30.0),
+        None,
+        vec![rect(10.0, 10.0, 20.0, 20.0)],
+    );
     let island = |dx: f64| area(rect(10.0 + dx, 10.0, 20.0 + dx, 20.0), None, Vec::new());
     let d = Drawing {
         shapes: vec![holed, island(0.0)],
@@ -240,7 +272,10 @@ fn an_area_with_a_hole_its_island_and_a_neighbour_read_again() {
             ("I".into(), Some(island(0.0))),
             ("I".into(), None),
             ("I2".into(), Some(island(0.0))),
-            ("K".into(), Some(area(rect(28.0, 0.0, 40.0, 30.0), None, Vec::new()))),
+            (
+                "K".into(),
+                Some(area(rect(28.0, 0.0, 40.0, 30.0), None, Vec::new())),
+            ),
         ],
     );
     assert!(checks[0].findings.is_empty(), "{:?}", checks[0].findings);
@@ -277,17 +312,29 @@ fn an_exception_covering_its_objects_anywhere() {
         uids: vec!["A".into(), "B".into()],
     };
     let first = check(&d().objects(), &rules(), T, &[]);
-    let o = first.findings.iter().find(|f| f.problem == "overlap").expect("an overlap");
+    let o = first
+        .findings
+        .iter()
+        .find(|f| f.problem == "overlap")
+        .expect("an overlap");
     let mark = |anywhere| Exception {
         rule: "r1".into(),
         objects: vec!["A".into(), "B".into()],
         at: o.at,
         anywhere,
     };
-    let moved = vec![("B".into(), Some(area(rect(9.0, 5.0, 20.0, 15.0), None, Vec::new())))];
+    let moved = vec![(
+        "B".into(),
+        Some(area(rect(9.0, 5.0, 20.0, 15.0), None, Vec::new())),
+    )];
     let anywhere = edits_agree(d(), &[mark(true)], moved.clone());
     let placed = edits_agree(d(), &[mark(false)], moved);
-    let is_exception = |c: &Checked| c.findings.iter().find(|f| f.problem == "overlap").map(|f| f.exception);
+    let is_exception = |c: &Checked| {
+        c.findings
+            .iter()
+            .find(|f| f.problem == "overlap")
+            .map(|f| f.exception)
+    };
     assert_eq!(is_exception(&anywhere[0]), Some(true));
     assert_eq!(is_exception(&anywhere[1]), Some(true));
     assert_eq!(is_exception(&placed[0]), Some(true));
@@ -301,12 +348,24 @@ fn an_exception_covering_its_objects_anywhere() {
 fn how_far_a_repair_takes_source_vertices() {
     let a = area(rect(0.0, 0.0, 10.0, 10.0), None, Vec::new());
     let notched = area(
-        vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 2.0), p(8.0, 2.0), p(8.0, 8.0), p(10.0, 8.0), p(10.0, 10.0), p(0.0, 10.0)],
+        vec![
+            p(0.0, 0.0),
+            p(10.0, 0.0),
+            p(10.0, 2.0),
+            p(8.0, 2.0),
+            p(8.0, 8.0),
+            p(10.0, 8.0),
+            p(10.0, 10.0),
+            p(0.0, 10.0),
+        ],
         None,
         Vec::new(),
     );
     let (s, under) = shift(&a, &notched, 0.0001);
-    assert_eq!((s.kept, s.moved, s.max, s.total, under), (4, 0, 0.0, 0.0, 0));
+    assert_eq!(
+        (s.kept, s.moved, s.max, s.total, under),
+        (4, 0, 0.0, 0.0, 0)
+    );
 
     let b = area(rect(8.0, 2.0, 18.0, 8.0), None, Vec::new());
     let cut = area(rect(10.0, 2.0, 18.0, 8.0), None, Vec::new());
@@ -314,11 +373,21 @@ fn how_far_a_repair_takes_source_vertices() {
     assert_eq!((s.kept, s.moved, s.max, s.total), (2, 2, 2.0, 4.0));
 
     let five = area(
-        vec![p(50.0, 0.0), p(60.0, 0.0), p(60.0, 10.0), p(50.5, 10.0), p(50.0, 10.0)],
+        vec![
+            p(50.0, 0.0),
+            p(60.0, 0.0),
+            p(60.0, 10.0),
+            p(50.5, 10.0),
+            p(50.0, 10.0),
+        ],
         None,
         Vec::new(),
     );
-    let four = area(vec![p(50.0, 0.0), p(60.0, 0.0), p(60.0, 10.0), p(50.5, 10.0)], None, Vec::new());
+    let four = area(
+        vec![p(50.0, 0.0), p(60.0, 0.0), p(60.0, 10.0), p(50.5, 10.0)],
+        None,
+        Vec::new(),
+    );
     let (s, _) = shift(&five, &four, 0.0);
     assert_eq!((s.kept, s.moved), (4, 1));
     assert!((s.max - 10.0 / 401f64.sqrt()).abs() < 1e-9, "{}", s.max);
@@ -332,7 +401,11 @@ fn how_far_a_repair_takes_source_vertices() {
     assert_eq!((s.kept, s.moved, under), (3, 1, 1));
     assert!(s.max > 0.0 && s.max < 0.0001, "{}", s.max);
 
-    let pt = |x, y| Shape::Point { p: p(x, y), z: None, parts: None };
+    let pt = |x, y| Shape::Point {
+        p: p(x, y),
+        z: None,
+        parts: None,
+    };
     let (s, _) = shift(&pt(0.0, 0.0), &pt(3.0, 4.0), 0.0);
     assert_eq!((s.kept, s.moved), (0, 1));
     assert!((s.max - 5.0).abs() < 1e-9);

@@ -334,7 +334,9 @@ impl Text {
                     text: initial.clone().unwrap_or_default(),
                     height: cx.annotation_height(AnnotationKind::Text),
                     rotation: m.text_angle,
-                    align: m.text_align.and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
+                    align: m
+                        .text_align
+                        .and_then(|a| kentos_geometry_core::text::TextAlign::from_name(a.name())),
                     mask: m.text_mask,
                     face: styles::text_face(cx),
                     width_factor: m.text_width_factor,
@@ -634,7 +636,10 @@ impl Tool for Text {
         if self.stage == Stage::Typing {
             return match &self.draft {
                 Some(draft) if !js_trim(&draft.text).is_empty() => Preview {
-                    texts: vec![crate::tool::TextGhost { text: js_trim(&draft.text).to_owned(), ..draft.clone() }],
+                    texts: vec![crate::tool::TextGhost {
+                        text: js_trim(&draft.text).to_owned(),
+                        ..draft.clone()
+                    }],
                     ..Preview::default()
                 },
                 _ => Preview::default(),

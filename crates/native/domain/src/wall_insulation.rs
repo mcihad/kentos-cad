@@ -52,17 +52,28 @@ fn material_of<'a>(c: &WallComponent, materials: &'a [ArchMaterial]) -> Option<&
     if let Some(id) = c.material_id.as_deref() {
         return materials.iter().find(|m| m.id == id);
     }
-    let name = c.material.as_deref().map(str::trim).filter(|n| !n.is_empty())?;
+    let name = c
+        .material
+        .as_deref()
+        .map(str::trim)
+        .filter(|n| !n.is_empty())?;
     let folded = name.to_lowercase();
-    materials.iter().find(|m| m.id == name || m.name.to_lowercase() == folded)
+    materials
+        .iter()
+        .find(|m| m.id == name || m.name.to_lowercase() == folded)
 }
 
 impl Document {
     /// Each wall with an insulation layer inside, in the drawing's order (docs/adr/8151).
     pub fn inner_insulations(&self) -> Vec<InnerInsulation> {
-        let Some(arch) = self.settings().arch.as_ref() else { return Vec::new() };
+        let Some(arch) = self.settings().arch.as_ref() else {
+            return Vec::new();
+        };
         let materials = arch.materials.as_slice();
-        if !materials.iter().any(|m| m.category == MaterialCategory::Insulation) {
+        if !materials
+            .iter()
+            .any(|m| m.category == MaterialCategory::Insulation)
+        {
             return Vec::new();
         }
         let exterior: std::collections::BTreeSet<String> = self
@@ -78,14 +89,23 @@ impl Document {
             if w.wall.curtain.is_some() || w.wall.components.is_empty() {
                 continue;
             }
-            let kinds: Vec<Option<MaterialCategory>> =
-                w.wall.components.iter().map(|c| material_of(c, materials).map(|m| m.category)).collect();
+            let kinds: Vec<Option<MaterialCategory>> = w
+                .wall
+                .components
+                .iter()
+                .map(|c| material_of(c, materials).map(|m| m.category))
+                .collect();
             if !kinds.contains(&Some(MaterialCategory::Insulation)) {
                 continue;
             }
             let uid = uid.to_string();
             let level = e.own_level().map(str::to_owned);
-            let Shape::Wall { pts, wall: spec, .. } = core_wall(&w.wall) else { continue };
+            let Shape::Wall {
+                pts, wall: spec, ..
+            } = core_wall(&w.wall)
+            else {
+                continue;
+            };
             // The rooms on each side, walking out from the middle of the longest straight segment.
             let side = |sign: f64| -> Option<String> {
                 let (a, b) = pts.windows(2).map(|p| (p[0], p[1])).max_by(|x, y| {
@@ -104,7 +124,9 @@ impl Document {
                     let p = Vec2::new(m.x - dy * s, m.y + dx * s);
                     rooms
                         .iter()
-                        .find(|(_, l, areas)| *l == level && areas.iter().any(|x| inside_area(x, p)))
+                        .find(|(_, l, areas)| {
+                            *l == level && areas.iter().any(|x| inside_area(x, p))
+                        })
                         .map(|(r, _, _)| r.clone())
                 })
             };
@@ -122,20 +144,36 @@ impl Document {
             };
             let n = kinds.len();
             let (indices, side_rooms, known): (Vec<usize>, Vec<String>, bool) = if !is_exterior {
-                ((0..n).filter(|&i| insulation(i)).collect(), left.iter().chain(right.iter()).cloned().collect(), true)
+                (
+                    (0..n).filter(|&i| insulation(i)).collect(),
+                    left.iter().chain(right.iter()).cloned().collect(),
+                    true,
+                )
             } else {
                 // From the inner face to the first load-bearing layer.
                 let structure = |i: &usize| kinds[*i] == Some(MaterialCategory::Structure);
                 match (&left, &right) {
                     (Some(r), None) => {
                         let stop = (0..n).find(structure).unwrap_or(n);
-                        ((0..stop).filter(|&i| insulation(i)).collect(), vec![r.clone()], true)
+                        (
+                            (0..stop).filter(|&i| insulation(i)).collect(),
+                            vec![r.clone()],
+                            true,
+                        )
                     }
                     (None, Some(r)) => {
                         let stop = (0..n).rev().find(structure).map_or(0, |i| i + 1);
-                        ((stop..n).filter(|&i| insulation(i)).collect(), vec![r.clone()], true)
+                        (
+                            (stop..n).filter(|&i| insulation(i)).collect(),
+                            vec![r.clone()],
+                            true,
+                        )
                     }
-                    _ => ((0..n).filter(|&i| insulation(i)).collect(), Vec::new(), false),
+                    _ => (
+                        (0..n).filter(|&i| insulation(i)).collect(),
+                        Vec::new(),
+                        false,
+                    ),
                 }
             };
             if indices.is_empty() {

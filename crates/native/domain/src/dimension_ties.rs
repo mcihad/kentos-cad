@@ -166,7 +166,10 @@ type Changed = BTreeMap<Uuid, (Arc<Entity>, Option<Arc<Entity>>)>;
 
 impl Document {
     pub(crate) fn blocks_in_drawing_font(&self, blocks: &[Arc<BlockDefinition>]) -> Blocks {
-        let family = self.settings().drawing_font.unwrap_or(kentos_contracts::DrawingFont::Barlow);
+        let family = self
+            .settings()
+            .drawing_font
+            .unwrap_or(kentos_contracts::DrawingFont::Barlow);
         let font = kentos_geometry_core::text::Font::from_id(family.id());
         core_blocks(blocks).with_font(font)
     }
@@ -275,10 +278,15 @@ impl Document {
                 // An explicit new binding names the geometry AFTER this step. In particular a
                 // replacement insert/new definition has no corresponding piece in blocks_before.
                 // Following that new path through the old geometry would break a valid binding.
-                let rebound = was.as_ref().is_some_and(|w| reference_of(w, name) != Some(r));
+                let rebound = was
+                    .as_ref()
+                    .is_some_and(|w| reference_of(w, name) != Some(r));
                 let newly_bound = added.contains(&slot) && (redefined || changed.contains_key(&of));
                 if rebound || newly_bound {
-                    if let Some(p) = self.object_now(r).and_then(|e| point(&e, core_place(r.place))) {
+                    if let Some(p) = self
+                        .object_now(r)
+                        .and_then(|e| point(&e, core_place(r.place)))
+                    {
                         set_point(&mut next, name, wire(p));
                     } else if let Some(s) = reference_mut(&mut next_refs, name) {
                         let reason = if self.slot_of(of).is_none() {

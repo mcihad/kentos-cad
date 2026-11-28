@@ -107,10 +107,19 @@ impl Store {
     /// [`Store::hit`]'s answer among the objects whose boxes come within `within` of `p`: the nearest edge in reach
     /// and the smallest area around `p`, each with its distance or its size.
     #[allow(clippy::type_complexity)]
-    fn hit_within(&self, p: Vec2, tol: f64, within: f64) -> (Option<(f64, f64)>, Option<(f64, f64)>) {
+    fn hit_within(
+        &self,
+        p: Vec2,
+        tol: f64,
+        within: f64,
+    ) -> (Option<(f64, f64)>, Option<(f64, f64)>) {
         let mut edge: Option<(f64, f64)> = None;
         let mut area: Option<(f64, f64)> = None;
-        for it in self.near(p, within).into_iter().filter(|it| self.pickable(it)) {
+        for it in self
+            .near(p, within)
+            .into_iter()
+            .filter(|it| self.pickable(it))
+        {
             let s = self.score(it, p, tol);
             if let Some(d) = s.edge
                 && edge.is_none_or(|(_, best)| d < best)
@@ -137,7 +146,11 @@ impl Store {
         // is, so it goes after every area there (docs/adr/0776 §3, B4) and the wall is the click's first.
         let mut rooms: Vec<(f64, f64)> = Vec::new();
         let mut in_wall = false;
-        for it in self.near(p, tol * 1.5).into_iter().filter(|it| self.pickable(it)) {
+        for it in self
+            .near(p, tol * 1.5)
+            .into_iter()
+            .filter(|it| self.pickable(it))
+        {
             let s = self.score(it, p, tol);
             in_wall |= matches!(it.shape, Shape::Wall { .. }) && s.area.is_some();
             match (s.edge, s.area) {
@@ -163,7 +176,12 @@ impl Store {
         crate::jsmath::stable_sort(&mut edges, &mut |a, b| order(a, b));
         crate::jsmath::stable_sort(&mut areas, &mut |a, b| order(a, b));
         crate::jsmath::stable_sort(&mut rooms, &mut |a, b| order(a, b));
-        edges.into_iter().chain(areas).chain(rooms).map(|(id, _)| id).collect()
+        edges
+            .into_iter()
+            .chain(areas)
+            .chain(rooms)
+            .map(|(id, _)| id)
+            .collect()
     }
 
     /// How an object answers a click at `p`: its nearest point or edge

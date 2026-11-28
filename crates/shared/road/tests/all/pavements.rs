@@ -20,15 +20,37 @@ fn side(v: &Value) -> Side {
             .unwrap()
             .iter()
             .map(|c| match c["kind"].as_str().unwrap() {
-                "lane" => Component::Lane { width: n(&c["width"]), slope: n(&c["slope"]) },
-                _ => Component::Shoulder { width: n(&c["width"]), slope: n(&c["slope"]) },
+                "lane" => Component::Lane {
+                    width: n(&c["width"]),
+                    slope: n(&c["slope"]),
+                },
+                _ => Component::Shoulder {
+                    width: n(&c["width"]),
+                    slope: n(&c["slope"]),
+                },
             })
             .collect(),
         cut: n(&v["cut"]),
         fill: n(&v["fill"]),
-        ditch: v.get("ditch").map(|d| Ditch { fore: n(&d["fore"]), depth: n(&d["depth"]), bottom: n(&d["bottom"]) }),
-        bench: v.get("bench").map(|b| kentos_road::section::template::SlopeBench { height: n(&b["height"]), width: n(&b["width"]), fall: b.get("fall").map_or(0.0, n) }),
-        fill_bench: v.get("fillBench").map(|b| kentos_road::section::template::SlopeBench { height: n(&b["height"]), width: n(&b["width"]), fall: b.get("fall").map_or(0.0, n) }),
+        ditch: v.get("ditch").map(|d| Ditch {
+            fore: n(&d["fore"]),
+            depth: n(&d["depth"]),
+            bottom: n(&d["bottom"]),
+        }),
+        bench: v
+            .get("bench")
+            .map(|b| kentos_road::section::template::SlopeBench {
+                height: n(&b["height"]),
+                width: n(&b["width"]),
+                fall: b.get("fall").map_or(0.0, n),
+            }),
+        fill_bench: v
+            .get("fillBench")
+            .map(|b| kentos_road::section::template::SlopeBench {
+                height: n(&b["height"]),
+                width: n(&b["width"]),
+                fall: b.get("fall").map_or(0.0, n),
+            }),
     }
 }
 
@@ -54,23 +76,38 @@ fn every_pavement_builds_what_the_reference_says() {
     let all: Value = serde_json::from_str(CASES).expect("json");
     for c in all["cases"].as_array().expect("cases") {
         let name = c["name"].as_str().unwrap();
-        let t = Template { left: side(&c["template"]["left"]), right: side(&c["template"]["right"]) };
+        let t = Template {
+            left: side(&c["template"]["left"]),
+            right: side(&c["template"]["right"]),
+        };
         let natural = ground(&c["ground"], 0.0);
         let strip = c.get("strip").map_or(0.0, n);
         let stripped = ground(&c["ground"], strip);
-        let section = tpl::build(&t, n(&c["axis"]), &natural).unwrap_or_else(|e| panic!("{name}: {e:?}"));
+        let section =
+            tpl::build(&t, n(&c["axis"]), &natural).unwrap_or_else(|e| panic!("{name}: {e:?}"));
         let p = Pavement {
-            layers: c["pavement"]["layers"].as_array().unwrap().iter().map(n).collect(),
-            edge: c["pavement"]["edge"].as_f64().map_or(Edge::Vertical, Edge::Slope),
+            layers: c["pavement"]["layers"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(n)
+                .collect(),
+            edge: c["pavement"]["edge"]
+                .as_f64()
+                .map_or(Edge::Vertical, Edge::Slope),
         };
         let got = build(&t, &section, &p, &stripped);
         if let Some(e) = c.get("error") {
             let want = if let Some(i) = e.get("layer") {
                 PavementError::Layer(i.as_u64().map(|i| i as usize))
             } else if let Some(r) = e.get("edge") {
-                PavementError::Edge { right: r.as_bool().unwrap() }
+                PavementError::Edge {
+                    right: r.as_bool().unwrap(),
+                }
             } else {
-                PavementError::NoPlatform { right: e["noPlatform"].as_bool().unwrap() }
+                PavementError::NoPlatform {
+                    right: e["noPlatform"].as_bool().unwrap(),
+                }
             };
             assert_eq!(got, Err(want), "{name}");
             continue;
@@ -88,9 +125,21 @@ fn every_pavement_builds_what_the_reference_says() {
         let road = tpl::earthwork(&section, &natural, strip, None);
         near(road.cut, &c["road"]["cut"], &format!("{name}: Yol kazı"));
         near(road.fill, &c["road"]["fill"], &format!("{name}: Yol dolgu"));
-        near(road.cut + got.below, &c["formation"]["cut"], &format!("{name}: Formasyon kazı"));
-        near(road.fill - got.above, &c["formation"]["fill"], &format!("{name}: Formasyon dolgu"));
+        near(
+            road.cut + got.below,
+            &c["formation"]["cut"],
+            &format!("{name}: Formasyon kazı"),
+        );
+        near(
+            road.fill - got.above,
+            &c["formation"]["fill"],
+            &format!("{name}: Formasyon dolgu"),
+        );
         // The formation runs from the left edge to the right through the axis, under the finish grade.
-        assert!(got.formation.windows(2).all(|w| w[0][0] <= w[1][0] + 1e-12), "{name}: {:?}", got.formation);
+        assert!(
+            got.formation.windows(2).all(|w| w[0][0] <= w[1][0] + 1e-12),
+            "{name}: {:?}",
+            got.formation
+        );
     }
 }

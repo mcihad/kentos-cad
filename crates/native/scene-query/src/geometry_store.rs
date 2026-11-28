@@ -61,7 +61,12 @@ fn layer_rows(tree: &LayerTree) -> Vec<(String, LayerFlags)> {
                     visible: tree.is_visible(&node.id),
                     locked: tree.is_locked(&node.id),
                     pick_interior: node.style.pick_interior != Some(false),
-                    snap: node.snap.as_ref().map_or(u32::MAX,|s|kentos_geometry_core::store::snap::layer_mask(s.off,s.kinds.as_deref().unwrap_or_default())),
+                    snap: node.snap.as_ref().map_or(u32::MAX, |s| {
+                        kentos_geometry_core::store::snap::layer_mask(
+                            s.off,
+                            s.kinds.as_deref().unwrap_or_default(),
+                        )
+                    }),
                 },
             ));
             walk(&node.children, tree, out);
@@ -96,12 +101,15 @@ pub fn store_for_viewport(
             .collect::<Vec<_>>(),
     );
     // The colour plan's fills (docs/adr/8176): a sheet's map draws them as the plan does.
-    let fills: Vec<(f64, String)> = doc.space_fills().into_iter().map(|(id, c)| (f64::from(id), c.to_owned())).collect();
+    let fills: Vec<(f64, String)> = doc
+        .space_fills()
+        .into_iter()
+        .map(|(id, c)| (f64::from(id), c.to_owned()))
+        .collect();
     store.set_space_fills(&fills);
-    store
-        .put_many(doc.entities().filter_map(|e| {
-            crate::viewport_scope::record_at(e, scope.map(|s| s.annotation_scale), doc.settings())
-        }));
+    store.put_many(doc.entities().filter_map(|e| {
+        crate::viewport_scope::record_at(e, scope.map(|s| s.annotation_scale), doc.settings())
+    }));
     store.set_hosts(opening_hosts(doc, doc.entities()));
     // The masks are picked by their boundary only (docs/adr/0310 §4).
     store.set_masks(

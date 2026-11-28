@@ -290,9 +290,17 @@ impl ChartsPanel {
     /// The work the chart shown is drawn from: a counted chart's, the layer's or the table's.
     pub(crate) fn with_work<R>(&self, f: impl FnOnce(&mut Work) -> R) -> Option<R> {
         match self.source {
-            Source::Table if self.table.is_some() => self.table_data.borrow_mut().as_mut().map(|(_, w)| f(w)),
-            _ if self.chart.borrow().counted => self.counted.borrow_mut().as_mut().map(|c| f(&mut c.work)),
-            _ => self.layer_data.borrow_mut().as_mut().map(|(_, d)| f(&mut d.work)),
+            Source::Table if self.table.is_some() => {
+                self.table_data.borrow_mut().as_mut().map(|(_, w)| f(w))
+            }
+            _ if self.chart.borrow().counted => {
+                self.counted.borrow_mut().as_mut().map(|c| f(&mut c.work))
+            }
+            _ => self
+                .layer_data
+                .borrow_mut()
+                .as_mut()
+                .map(|(_, d)| f(&mut d.work)),
         }
     }
 }
@@ -564,9 +572,20 @@ impl App {
         match element {
             Some(e) => {
                 // A data layer's chart counted by its source (docs/adr/9181): the element's values asked of the source.
-                let counted = self.gis.charts.counted.borrow().as_ref().filter(|_| self.gis.charts.chart.borrow().counted).map(|c| {
-                    (c.layer.clone(), c.field.clone(), c.picker.picked(c.work.element_rows(e as usize)))
-                });
+                let counted = self
+                    .gis
+                    .charts
+                    .counted
+                    .borrow()
+                    .as_ref()
+                    .filter(|_| self.gis.charts.chart.borrow().counted)
+                    .map(|c| {
+                        (
+                            c.layer.clone(),
+                            c.field.clone(),
+                            c.picker.picked(c.work.element_rows(e as usize)),
+                        )
+                    });
                 if let Some((layer, field, picked)) = counted {
                     let label = self.element_label(e as usize);
                     return self.pick_values(&layer, &field, label, picked);
@@ -607,13 +626,23 @@ impl App {
     /// The layer's rows picked (Shift adds, Ctrl takes away): the drawing's objects as its selection, a data layer's
     /// rows read from its source in its table (docs/adr/9181).
     pub(crate) fn pick_rows(&mut self, rows: &[u32]) -> Task<Message> {
-        let picked = self.gis.charts.layer_data.borrow().as_ref().map(|(_, d)| (d.picked(rows), d.layer().to_owned()));
+        let picked = self
+            .gis
+            .charts
+            .layer_data
+            .borrow()
+            .as_ref()
+            .map(|(_, d)| (d.picked(rows), d.layer().to_owned()));
         let Some(((slots, keys), layer)) = picked else {
             return Task::none();
         };
         let pick = self.pick_now();
         self.apply_pick(slots);
-        let data = self.document.as_ref().and_then(|d| d.model.layers().get(&layer)).is_some_and(|n| n.data.is_some());
+        let data = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().get(&layer))
+            .is_some_and(|n| n.data.is_some());
         if data {
             use crate::data_counts::Pick;
             let table = &mut self.gis.features.data;
@@ -629,9 +658,13 @@ impl App {
     /// Something read from the chart's work as it is now (the layer's, a counted chart's or the table's).
     pub(crate) fn charts_work<R>(&self, read: impl FnOnce(&Work) -> R) -> Option<R> {
         match self.gis.charts.source {
-            Source::Layer if self.gis.charts.chart.borrow().counted => {
-                self.gis.charts.counted.borrow().as_ref().map(|c| read(&c.work))
-            }
+            Source::Layer if self.gis.charts.chart.borrow().counted => self
+                .gis
+                .charts
+                .counted
+                .borrow()
+                .as_ref()
+                .map(|c| read(&c.work)),
             Source::Layer => self
                 .gis
                 .charts

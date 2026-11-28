@@ -125,7 +125,10 @@ fn a_typed_distance_and_zemin() {
     let made = dims(&b);
     assert_eq!(made.len(), 4);
     assert!(made.iter().all(|d| d.offset == -2.5 && d.mask), "{made:?}");
-    assert_eq!(b.last_text(), Some("Hızlı ölçü: 4 ölçü eklendi; ölçüler kenarlarının köşelerine bağlı."));
+    assert_eq!(
+        b.last_text(),
+        Some("Hızlı ölçü: 4 ölçü eklendi; ölçüler kenarlarının köşelerine bağlı.")
+    );
     // Zemin stays for the next run, as Ölçülendirme's.
     assert!(b.memory.dimension_mask);
 }
@@ -161,10 +164,17 @@ fn quick_dimensions_follow_their_object() {
     let straight: Vec<&DimensionEntity> = made.iter().filter(|d| d.style.is_none()).collect();
     assert!(!straight.is_empty());
     assert!(
-        straight.iter().all(|d| d.refs.as_ref().is_some_and(|r| r.a.is_some() && r.b.is_some())),
+        straight.iter().all(|d| d
+            .refs
+            .as_ref()
+            .is_some_and(|r| r.a.is_some() && r.b.is_some())),
         "every straight edge's ends tied"
     );
-    assert!(made.iter().filter(|d| d.style == Some(DimensionStyle::ArcLength)).all(|d| d.refs.is_none()));
+    assert!(
+        made.iter()
+            .filter(|d| d.style == Some(DimensionStyle::ArcLength))
+            .all(|d| d.refs.is_none())
+    );
     let before: Vec<[[f64; 2]; 2]> = straight.iter().map(|d| [rel(d.a), rel(d.b)]).collect();
     let ids: Vec<u32> = straight.iter().map(|d| d.base.id).collect();
 
@@ -175,10 +185,15 @@ fn quick_dimensions_follow_their_object() {
     let after = dims(&b);
     let mut followed = 0;
     for (id, was) in ids.iter().zip(&before) {
-        let d = after.iter().find(|d| d.base.id == *id).expect("still there");
+        let d = after
+            .iter()
+            .find(|d| d.base.id == *id)
+            .expect("still there");
         let moved = [rel(d.a), rel(d.b)];
         let tied_to_west = d.refs.as_ref().and_then(|r| r.a.as_ref()).is_some_and(|r| {
-            Some(kentos_commands::EntityId(*b.doc.uid(west).expect("west's id").as_bytes())) == Some(r.uid)
+            Some(kentos_commands::EntityId(
+                *b.doc.uid(west).expect("west's id").as_bytes(),
+            )) == Some(r.uid)
         });
         if tied_to_west {
             assert!(

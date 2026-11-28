@@ -3,8 +3,8 @@
 //! case's (P4 and P8 said); Kural › Atıksu takes the limits not written from the 2017 sewer regulation's EK-1, the
 //! table shows each pipe's class and limits; Hat profili draws the run's own outer walls. And its pictures.
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use kentos_commands::Entity;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -13,18 +13,29 @@ use crate::app::{App, Message};
 use crate::pipes_check_window::Event as P;
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pipes.check.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.pipes.check.json"
+    ))
+    .expect("cases")
 }
 
 fn case(name: &str) -> Value {
-    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case").clone()
+    cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case")
+        .clone()
 }
 
 /// The outers' drawing, the window open on the sewer with the cases' catalogue.
 fn opened() -> App {
     kentos_processing::command::register_as("desktop");
-    let setup = case("dış çap: et dış çaptan, iç çapın altındaki dış çap söylenir")["setup"].clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(setup).expect("reads");
+    let setup =
+        case("dış çap: et dış çaptan, iç çapın altındaki dış çap söylenir")["setup"].clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(setup).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = Some(Module::Map);
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -38,7 +49,8 @@ fn opened() -> App {
 
 fn answer(app: &App) -> Value {
     serde_json::to_value(
-        app.modules.map()
+        app.modules
+            .map()
             .pipes_check
             .answer
             .clone()
@@ -71,7 +83,9 @@ fn the_outer_diameter_is_found_and_the_answer_is_the_cases() {
         ["output"];
     assert_eq!(&answer(&app), want);
     // Without Et, the wall is the outer's alone: P4's is half its outer less its inner.
-    let _ = app.update(Message::from(map::Event::PipesCheck(P::Wall(String::new()))));
+    let _ = app.update(Message::from(map::Event::PipesCheck(
+        P::Wall(String::new()),
+    )));
     let want = &case("dış çap: et dış çaptan, iç çapın altındaki dış çap söylenir")["steps"][0]["result"]
         ["output"];
     assert_eq!(&answer(&app), want);
@@ -80,10 +94,12 @@ fn the_outer_diameter_is_found_and_the_answer_is_the_cases() {
 #[test]
 fn the_rules_take_the_limits_not_written() {
     let mut app = opened();
-    let _ = app.update(Message::from(map::Event::PipesCheck(P::Wall(String::new()))));
     let _ = app.update(Message::from(map::Event::PipesCheck(
-        P::Outer(String::new()),
+        P::Wall(String::new()),
     )));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Outer(
+        String::new(),
+    ))));
     let _ = app.update(Message::from(map::Event::PipesCheck(P::Rules(
         "atiksu".into(),
     ))));
@@ -91,8 +107,14 @@ fn the_rules_take_the_limits_not_written() {
         ["steps"][0]["result"]["output"];
     assert_eq!(&answer(&app), want);
     // The table's limits and the summary's words are the package's.
-    assert_eq!(crate::pipes_check_rules::limits("atiksu", "Tali kanal").as_deref(), Some("2,00–40,00"));
-    assert_eq!(crate::pipes_check_rules::limits("yagmursuyu", "φ400").as_deref(), Some("1,67–40,00 (istisnai 1,11)"));
+    assert_eq!(
+        crate::pipes_check_rules::limits("atiksu", "Tali kanal").as_deref(),
+        Some("2,00–40,00")
+    );
+    assert_eq!(
+        crate::pipes_check_rules::limits("yagmursuyu", "φ400").as_deref(),
+        Some("1,67–40,00 (istisnai 1,11)")
+    );
     let f = app.format();
     let line = crate::pipes_check_rules::line("atiksu", &f).expect("a line");
     assert!(
@@ -115,7 +137,8 @@ fn the_rules_take_the_limits_not_written() {
         "9".into(),
     ))));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .pipes_check
         .answer
         .clone()
@@ -133,16 +156,20 @@ fn outer_walls(app: &App, before: usize) -> usize {
     let doc = &app.document.as_ref().expect("a drawing").model;
     doc.entities()
         .skip(before)
-        .filter(|e| matches!(e, Entity::Polyline(_)) && e.base().line_weight == Some(0.13) && e.base().color.as_deref() == Some("#d62828"))
+        .filter(|e| {
+            matches!(e, Entity::Polyline(_))
+                && e.base().line_weight == Some(0.13)
+                && e.base().color.as_deref() == Some("#d62828")
+        })
         .count()
 }
 
 #[test]
 fn the_profile_draws_the_runs_own_outer_walls() {
     let mut app = opened();
-    let _ = app.update(Message::from(map::Event::PipesCheck(
-        P::Outer(String::new()),
-    )));
+    let _ = app.update(Message::from(map::Event::PipesCheck(P::Outer(
+        String::new(),
+    ))));
     let before = app
         .document
         .as_ref()
@@ -160,10 +187,12 @@ fn the_profile_draws_the_runs_own_outer_walls() {
     let undone = app.document.as_mut().and_then(|d| d.model.undo());
     assert_eq!(undone.as_deref(), Some("Hat profili"));
     let mut app2 = opened();
-    let _ = app2.update(Message::from(map::Event::PipesCheck(P::Wall(String::new()))));
     let _ = app2.update(Message::from(map::Event::PipesCheck(
-        P::Outer(String::new()),
+        P::Wall(String::new()),
     )));
+    let _ = app2.update(Message::from(map::Event::PipesCheck(P::Outer(
+        String::new(),
+    ))));
     let before = app2
         .document
         .as_ref()
@@ -185,11 +214,17 @@ fn the_profile_draws_the_runs_own_outer_walls() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kanal-kurali-4780");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kanal-kurali-4780");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened();
-        let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -202,12 +237,15 @@ fn screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-pencere-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
         // The profile with Et alone (P4 and P8 agree with no outer then), its own outer walls drawn.
-        let _ = app.update(Message::from(map::Event::PipesCheck(
-            P::Outer(String::new()),
-        )));
+        let _ = app.update(Message::from(map::Event::PipesCheck(P::Outer(
+            String::new(),
+        ))));
         let before = app
             .document
             .as_ref()
@@ -235,13 +273,32 @@ fn screens() {
         // Close on B4, where P4 (30 mm wall) leaves at 150 m: the outer bottom, the invert, the crown, the outer top.
         let (bx, by) = invert.expect("the invert line");
         for (bounds, file) in [
-            (kentos_render_wgpu::Bounds { min_x: x0 - 30.0, min_y: y0 - 10.0, max_x: x1 + 10.0, max_y: y1 + 10.0 }, "2-profil"),
-            (kentos_render_wgpu::Bounds { min_x: bx - 7.0, min_y: by - 2.0, max_x: bx + 7.0, max_y: by + 6.5 }, "3-b4-yakin"),
+            (
+                kentos_render_wgpu::Bounds {
+                    min_x: x0 - 30.0,
+                    min_y: y0 - 10.0,
+                    max_x: x1 + 10.0,
+                    max_y: y1 + 10.0,
+                },
+                "2-profil",
+            ),
+            (
+                kentos_render_wgpu::Bounds {
+                    min_x: bx - 7.0,
+                    min_y: by - 2.0,
+                    max_x: bx + 7.0,
+                    max_y: by + 6.5,
+                },
+                "3-b4-yakin",
+            ),
         ] {
             app.viewport.camera.fit(&bounds, 12.0);
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }

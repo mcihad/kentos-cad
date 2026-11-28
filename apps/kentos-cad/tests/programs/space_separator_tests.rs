@@ -12,8 +12,10 @@ use crate::document::Document;
 /// The selection traces' drawing (fixtures/interaction/v1/objects.kcad), open in an area of 800 × 600.
 fn objects() -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = DocumentSnapshotV1::from_json(include_str!("../../../../fixtures/interaction/v1/objects.kcad"))
-        .expect("the drawing reads");
+    let snapshot = DocumentSnapshotV1::from_json(include_str!(
+        "../../../../fixtures/interaction/v1/objects.kcad"
+    ))
+    .expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -21,7 +23,10 @@ fn objects() -> App {
 
 /// An open polyline on `cizim` through three vertices 10 m apart.
 fn polyline(app: &mut App) -> u32 {
-    let wire = |x: f64, y: f64| Wire { x: 487000.0 + x, y: 4420000.0 + y };
+    let wire = |x: f64, y: f64| Wire {
+        x: 487000.0 + x,
+        y: 4420000.0 + y,
+    };
     let base = EntityBase {
         look: Default::default(),
         id: 0,
@@ -46,7 +51,13 @@ fn polyline(app: &mut App) -> u32 {
         closed: false,
         widths: None,
     });
-    app.document.as_mut().expect("open").model.add(e).expect("a slot").0
+    app.document
+        .as_mut()
+        .expect("open")
+        .model
+        .add(e)
+        .expect("a slot")
+        .0
 }
 
 /// Whether Öznitelikler's section has the row.
@@ -75,6 +86,10 @@ fn a_maps_polyline_has_no_space_separator_row() {
         doc.set_settings(settings);
         let id = polyline(&mut app);
         app.selection.set([kentos_domain::Slot(id)]);
-        assert_eq!(has_row(&app, "Geometri", "Mahal ayırıcı"), shown, "{program:?}");
+        assert_eq!(
+            has_row(&app, "Geometri", "Mahal ayırıcı"),
+            shown,
+            "{program:?}"
+        );
     }
 }

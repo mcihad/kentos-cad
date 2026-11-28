@@ -19,8 +19,12 @@ pub struct CommandKeys<'a, Message> {
 }
 
 /// `content`'i sarar: ⌘'li tuş metni içine yazılmaz.
-pub fn command_keys<'a, Message: 'a>(content: impl Into<Element<'a, Message>>) -> CommandKeys<'a, Message> {
-    CommandKeys { content: content.into() }
+pub fn command_keys<'a, Message: 'a>(
+    content: impl Into<Element<'a, Message>>,
+) -> CommandKeys<'a, Message> {
+    CommandKeys {
+        content: content.into(),
+    }
 }
 
 /// Komut tuşu: macOS'ta ⌘ (logo); başka yerde Ctrl'li harf zaten denetim karakteridir, metin kutusu yazmaz.
@@ -30,7 +34,12 @@ fn command_held(modifiers: keyboard::Modifiers) -> bool {
 
 /// ⌘ basılıyken gelen tuşun metinsiz kopyası; başka olay için hiçbiri.
 fn without_command_text(event: &Event) -> Option<Event> {
-    let Event::Keyboard(keyboard::Event::KeyPressed { modifiers, text: Some(_), .. }) = event else {
+    let Event::Keyboard(keyboard::Event::KeyPressed {
+        modifiers,
+        text: Some(_),
+        ..
+    }) = event
+    else {
         return None;
     };
     if !command_held(*modifiers) {
@@ -207,9 +216,12 @@ mod tests {
 
     #[test]
     fn a_command_key_types_nothing_and_a_plain_s_types() {
-        let mut snapshot = crate::snapshot::Snapshot::new(Size::new(300.0, 40.0)).expect("a renderer");
+        let mut snapshot =
+            crate::snapshot::Snapshot::new(Size::new(300.0, 40.0)).expect("a renderer");
         for event in [
-            Event::Mouse(mouse::Event::CursorMoved { position: iced::Point::new(50.0, 10.0) }),
+            Event::Mouse(mouse::Event::CursorMoved {
+                position: iced::Point::new(50.0, 10.0),
+            }),
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)),
             Event::Mouse(mouse::Event::ButtonReleased(mouse::Button::Left)),
         ] {

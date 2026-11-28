@@ -214,7 +214,12 @@ impl App {
                 open,
             } => self.file_table_row(key, origin, table, bound.as_ref(), *depth, *open, chosen),
             // A project kept in the source (docs/adr/9107): a click opens it.
-            Line::Stored { key, at, meta: about, depth } => {
+            Line::Stored {
+                key,
+                at,
+                meta: about,
+                depth,
+            } => {
                 let face = self.row_button(
                     row![
                         indent(*depth),
@@ -227,7 +232,11 @@ impl App {
                     chosen,
                 );
                 let _ = key;
-                let written = if about.is_empty() { String::new() } else { format!(" Son yazan: {about}.") };
+                let written = if about.is_empty() {
+                    String::new()
+                } else {
+                    format!(" Son yazan: {about}.")
+                };
                 tip(
                     face,
                     Tip::new(at.name.clone()).body(format!(

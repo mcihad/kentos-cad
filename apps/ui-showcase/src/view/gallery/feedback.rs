@@ -5,12 +5,15 @@ use iced::widget::{Row, button, column, container, row};
 use iced::{Center, Element, Fill};
 
 use kentos_ui::icon::Icon;
+use kentos_ui::icon::icon;
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::progress::{self, State, Task, TaskList, Tint};
-use kentos_ui::icon::icon;
-use kentos_ui::widget::{Banner, Confirm, EmptyState, PropertiesDialog, Status, StatusItem, StatusTree, Wizard, status_pill};
+use kentos_ui::widget::{
+    Banner, Confirm, EmptyState, PropertiesDialog, Status, StatusItem, StatusTree, Wizard,
+    status_pill,
+};
 
 use super::{entry, pressed};
 use crate::app::Showcase;
@@ -289,7 +292,11 @@ impl Showcase {
                                 .meta("293 nesne")
                                 .status(Status::Warning, "Güncel değil")
                                 .detail("“Tip 2” enkesiti değişti.")
-                                .action(redo(), "Yeniden üret", pressed("Yeniden üret: Şevli plan")),
+                                .action(
+                                    redo(),
+                                    "Yeniden üret",
+                                    pressed("Yeniden üret: Şevli plan"),
+                                ),
                         )
                         .push(
                             StatusItem::new("cz-2", "Korkuluk")
@@ -307,12 +314,23 @@ impl Showcase {
                         .status(Status::Danger, "Kurulamıyor")
                         .detail("0+120 – 0+180 arasında şev zemine ulaşmıyor."),
                 ),
-            StatusItem::new("a-3", "Servis yolu").icon(icon(Icon::Measure).size(14.0)).meta("0,31 km"),
+            StatusItem::new("a-3", "Servis yolu")
+                .icon(icon(Icon::Measure).size(14.0))
+                .meta("0,31 km"),
         ];
         StatusTree::new(items)
-            .toggled(&self.gallery.status_toggled, |key| Message::Gallery(Demo::StatusToggle(key)))
-            .filter(self.gallery.status_filter, |f| Message::Gallery(Demo::StatusFilter(f)))
-            .bulk(redo(), "Hepsini yeniden üret", 2, Some(pressed("Hepsini yeniden üret")))
+            .toggled(&self.gallery.status_toggled, |key| {
+                Message::Gallery(Demo::StatusToggle(key))
+            })
+            .filter(self.gallery.status_filter, |f| {
+                Message::Gallery(Demo::StatusFilter(f))
+            })
+            .bulk(
+                redo(),
+                "Hepsini yeniden üret",
+                2,
+                Some(pressed("Hepsini yeniden üret")),
+            )
             .counted("Güncel değil", "Sorun")
             .meta_column(true)
             .into()

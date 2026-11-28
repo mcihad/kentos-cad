@@ -171,7 +171,11 @@ fn every_edge_of_a_closed_wall_in_one_step() {
     // Inside the room, the rows still go out from the outer faces.
     b.move_to(10., 1.);
     let preview = b.session.preview(&Default::default()).unwrap();
-    assert_eq!(preview.texts.len(), 4, "four edges, one dimension each: no openings, the overall row not repeated");
+    assert_eq!(
+        preview.texts.len(),
+        4,
+        "four edges, one dimension each: no openings, the overall row not repeated"
+    );
     assert!(
         preview
             .tag
@@ -446,7 +450,13 @@ fn house() -> (Bench, [Slot; 5]) {
     b.doc.set_settings(settings);
     b.session.exit();
     let mut slots = Vec::new();
-    for (a, z) in [((0., 0.), (10., 0.)), ((10., 0.), (10., 8.)), ((10., 8.), (0., 8.)), ((0., 8.), (0., 0.)), ((4., 0.), (4., 8.))] {
+    for (a, z) in [
+        ((0., 0.), (10., 0.)),
+        ((10., 0.), (10., 8.)),
+        ((10., 8.), (0., 8.)),
+        ((0., 8.), (0., 0.)),
+        ((4., 0.), (4., 8.)),
+    ] {
         b.start("wall");
         b.click(a.0, a.1);
         b.click(z.0, z.1);
@@ -486,9 +496,25 @@ fn a_facade_of_the_clicked_wall_runs_to_its_corner_walls_outer_faces() {
     assert_eq!(b.doc.to_snapshot_v2(), before, "the preview writes nothing");
     let lines = tag(&b);
     assert!(lines[0].starts_with("6 ölçü"), "{lines:?}");
-    assert!(lines.iter().any(|l| l.starts_with("Açıklıklar: 5 ölçü · 4 kaynak")), "{lines:?}");
-    let values: Vec<String> = b.session.preview(&Default::default()).unwrap().texts.iter().map(|t| t.text.clone()).collect();
-    assert_eq!(values, ["1.100", "1.000", "4.000", "1.000", "3.100", "10.200"], "outer face to outer face");
+    assert!(
+        lines
+            .iter()
+            .any(|l| l.starts_with("Açıklıklar: 5 ölçü · 4 kaynak")),
+        "{lines:?}"
+    );
+    let values: Vec<String> = b
+        .session
+        .preview(&Default::default())
+        .unwrap()
+        .texts
+        .iter()
+        .map(|t| t.text.clone())
+        .collect();
+    assert_eq!(
+        values,
+        ["1.100", "1.000", "4.000", "1.000", "3.100", "10.200"],
+        "outer face to outer face"
+    );
     b.click(5., -1.5);
     assert!(!b.session.is_running());
     let set = &b.doc.dimension_sets()[0];
@@ -507,7 +533,10 @@ fn selected_walls_make_a_facade_and_four_sides_go_in_one_step() {
     b.selection.set([s, e, n, w]);
     b.start("wallDimensions");
     let settings = b.session.settings(&Default::default());
-    assert!(settings.iter().any(|r| r.key == "M" && r.value == "Cephe"), "several walls are a façade");
+    assert!(
+        settings.iter().any(|r| r.key == "M" && r.value == "Cephe"),
+        "several walls are a façade"
+    );
     for key in ["O", "Y", "N", "W", "G"] {
         assert!(settings.iter().any(|r| r.key == key), "{key}");
     }
@@ -519,7 +548,10 @@ fn selected_walls_make_a_facade_and_four_sides_go_in_one_step() {
     assert!(!b.session.is_running());
     let sets = b.doc.dimension_sets();
     assert_eq!(sets.len(), 4);
-    assert!(sets.iter().all(|s| s.span.as_ref().is_some_and(|p| p.walls.len() == 3)));
+    assert!(
+        sets.iter()
+            .all(|s| s.span.as_ref().is_some_and(|p| p.walls.len() == 3))
+    );
     b.doc.undo().unwrap();
     assert!(b.doc.dimension_sets().is_empty());
     assert_eq!(b.doc.to_snapshot_v2().entities, before.entities);
@@ -537,19 +569,42 @@ fn values_that_do_not_fit_are_moved_aside_or_counted_and_drawn_in_the_danger_ton
     b.move_to(5., -1.5);
     // Sığmayan yazı → Kaydır, the new recipe's (docs/adr/0730 §2): the thin walls' values go aside, none in danger.
     let lines = tag(&b);
-    assert!(lines.iter().any(|l| l == "3 ölçünün yazısı yana alındı"), "{lines:?}");
+    assert!(
+        lines.iter().any(|l| l == "3 ölçünün yazısı yana alındı"),
+        "{lines:?}"
+    );
     let settings = b.session.settings(&Default::default());
-    assert!(!settings.iter().any(|r| r.key == "U"), "nothing left that does not fit");
+    assert!(
+        !settings.iter().any(|r| r.key == "U"),
+        "nothing left that does not fit"
+    );
     let preview = b.session.preview(&Default::default()).unwrap();
-    assert!(!preview.strokes.iter().any(|s| s.tone == kentos_interaction::Tone::Danger));
+    assert!(
+        !preview
+            .strokes
+            .iter()
+            .any(|s| s.tone == kentos_interaction::Tone::Danger)
+    );
     // Yerinde: they stay where they are, said and drawn in the danger tone (docs/adr/0729 §6).
     assert!(configure(&mut b, "I", "keep"));
     let settings = b.session.settings(&Default::default());
-    let notice = settings.iter().find(|r| r.key == "U").expect("the tight values are said");
+    let notice = settings
+        .iter()
+        .find(|r| r.key == "U")
+        .expect("the tight values are said");
     assert!(notice.value.starts_with("3 ölçünün"), "{}", notice.value);
     let preview = b.session.preview(&Default::default()).unwrap();
-    assert!(preview.strokes.iter().any(|s| s.tone == kentos_interaction::Tone::Danger));
-    assert!(tag(&b).iter().any(|l| l.starts_with("Duvarlar: 5 ölçü")), "{:?}", tag(&b));
+    assert!(
+        preview
+            .strokes
+            .iter()
+            .any(|s| s.tone == kentos_interaction::Tone::Danger)
+    );
+    assert!(
+        tag(&b).iter().any(|l| l.starts_with("Duvarlar: 5 ölçü")),
+        "{:?}",
+        tag(&b)
+    );
     // Pafta ölçekleri, typed in any order: read back ascending, each sheet said; one confirmation writes them.
     assert!(configure(&mut b, "I", "shift"));
     assert!(configure(&mut b, "Ö", "1:200 100"));
@@ -557,9 +612,16 @@ fn values_that_do_not_fit_are_moved_aside_or_counted_and_drawn_in_the_danger_ton
     let settings = b.session.settings(&Default::default());
     let scales = settings.iter().find(|r| r.key == "Ö").unwrap();
     assert_eq!(scales.value, "1:100, 1:200");
-    let sheets = settings.iter().find(|r| r.key == "V").expect("each sheet said");
+    let sheets = settings
+        .iter()
+        .find(|r| r.key == "V")
+        .expect("each sheet said");
     assert!(sheets.value.starts_with("1:100: "), "{}", sheets.value);
-    assert!(tag(&b).iter().any(|l| l.starts_with("1:200: ")), "{:?}", tag(&b));
+    assert!(
+        tag(&b).iter().any(|l| l.starts_with("1:200: ")),
+        "{:?}",
+        tag(&b)
+    );
     b.confirm();
     let set = &b.doc.dimension_sets()[0];
     assert_eq!(set.scales, [100.0, 200.0]);
@@ -587,8 +649,15 @@ fn a_space_clicked_is_measured_with_its_door() {
     assert!(configure(&mut b, "O", "across"));
     b.move_to(2., -1.5);
     let settings = b.session.settings(&Default::default());
-    assert!(settings.iter().any(|r| r.key == "C" && r.value.starts_with("Mahal")));
-    assert!(!settings.iter().any(|r| r.key == "Y"), "a room has no core to choose");
+    assert!(
+        settings
+            .iter()
+            .any(|r| r.key == "C" && r.value.starts_with("Mahal"))
+    );
+    assert!(
+        !settings.iter().any(|r| r.key == "Y"),
+        "a room has no core to choose"
+    );
     b.confirm();
     let set = &b.doc.dimension_sets()[0];
     assert!(set.span.as_ref().is_some_and(|s| s.space));
@@ -596,15 +665,21 @@ fn a_space_clicked_is_measured_with_its_door() {
         .members
         .iter()
         .map(|m| {
-            let Some(Entity::Dimension(d)) =
-                b.doc.slot_of(kentos_domain::Uuid::from_bytes(m.uid.0)).and_then(|s| b.doc.get(s))
+            let Some(Entity::Dimension(d)) = b
+                .doc
+                .slot_of(kentos_domain::Uuid::from_bytes(m.uid.0))
+                .and_then(|s| b.doc.get(s))
             else {
                 panic!("a dimension");
             };
             ((d.b.x - d.a.x).abs() * 1e6).round() / 1e6
         })
         .collect();
-    assert_eq!(lengths, [0.9, 1.0, 1.9, 3.8], "west to east: the door in the room's south edge, its net length");
+    assert_eq!(
+        lengths,
+        [0.9, 1.0, 1.9, 3.8],
+        "west to east: the door in the room's south edge, its net length"
+    );
 }
 
 /// The source wall with a dimension set on it and a 1 m door at 5 m: the set's four members.
@@ -701,10 +776,21 @@ fn a_row_whose_values_do_not_add_up_to_the_overall_is_said() {
     b.move_to(1.5, 1.5);
     let lines = tag(&b);
     assert!(
-        lines.iter().any(|l| l == "Yuvarlama · Açıklıklar: parçalar 3.000 · toplam 3.001"),
+        lines
+            .iter()
+            .any(|l| l == "Yuvarlama · Açıklıklar: parçalar 3.000 · toplam 3.001"),
         "{lines:?}"
     );
     let settings = b.session.settings(&Default::default());
-    let notice = settings.iter().find(|r| r.key == "Z").expect("the rounding said");
-    assert!(notice.value.starts_with("Açıklıklar: parçalar 3.000 · toplam 3.001."), "{}", notice.value);
+    let notice = settings
+        .iter()
+        .find(|r| r.key == "Z")
+        .expect("the rounding said");
+    assert!(
+        notice
+            .value
+            .starts_with("Açıklıklar: parçalar 3.000 · toplam 3.001."),
+        "{}",
+        notice.value
+    );
 }

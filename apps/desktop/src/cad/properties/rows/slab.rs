@@ -18,15 +18,16 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
     use kentos_commands::{NewSlabEdge, SlabChange, SlabEdgeKind, SlabRole, SlabsOperation};
     let x = &sl.slab;
     let set = |c: SlabChange| Message::Properties(Event::Slab(slot, SlabsOperation::Set(c)));
-    let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
-        label,
-        swatch: None,
-        icon,
-        wide: false,
-        chosen,
-        enabled: true,
-        message,
-    };
+    let pick =
+        |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
+            label,
+            swatch: None,
+            icon,
+            wide: false,
+            chosen,
+            enabled: true,
+            message,
+        };
     let select = |text: String, items: Vec<Choice>| {
         edit(Editor::Select {
             text,
@@ -38,9 +39,21 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
     // Döşeme or Kaplama (docs/adr/8070 §10): a covering is no floor of the building, an IfcCovering of its type.
     {
         use kentos_commands::Covering;
-        let kind = if x.covering.is_some() { "Kaplama" } else { "Döşeme" };
+        let kind = if x.covering.is_some() {
+            "Kaplama"
+        } else {
+            "Döşeme"
+        };
         let kinds = vec![
-            pick("Döşeme".into(), x.covering.is_none(), set(SlabChange { covering: Some(None), ..Default::default() }), None),
+            pick(
+                "Döşeme".into(),
+                x.covering.is_none(),
+                set(SlabChange {
+                    covering: Some(None),
+                    ..Default::default()
+                }),
+                None,
+            ),
             pick(
                 "Kaplama".into(),
                 x.covering.is_some(),
@@ -57,12 +70,25 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
         ];
         geo.push(Row::text("Tür", kind).editor(select(kind.into(), kinds)));
         if let Some(c) = &x.covering {
-            let shown = |t: &str| format!("{} ({t})", if t == "CEILING" { "Asma tavan" } else { Covering::word(t) });
+            let shown = |t: &str| {
+                format!(
+                    "{} ({t})",
+                    if t == "CEILING" {
+                        "Asma tavan"
+                    } else {
+                        Covering::word(t)
+                    }
+                )
+            };
             let types = Covering::TYPES
                 .iter()
                 .map(|&t| {
                     let name = if t == "USERDEFINED" {
-                        Some(c.name.clone().unwrap_or_else(|| Covering::word(&c.predefined).to_owned()))
+                        Some(
+                            c.name
+                                .clone()
+                                .unwrap_or_else(|| Covering::word(&c.predefined).to_owned()),
+                        )
                     } else {
                         c.name.clone()
                     };
@@ -70,23 +96,44 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
                         shown(t),
                         t == c.predefined,
                         set(SlabChange {
-                            covering: Some(Some(Covering { predefined: t.to_owned(), name })),
+                            covering: Some(Some(Covering {
+                                predefined: t.to_owned(),
+                                name,
+                            })),
                             ..Default::default()
                         }),
                         None,
                     )
                 })
                 .collect();
-            geo.push(Row::text("Kaplama tipi", shown(&c.predefined)).editor(select(shown(&c.predefined), types)));
-            geo.push(Row::text("Kaplama adı", c.words()).editor(edit(Editor::Text(Field::SlabCoveringName(slot)))));
+            geo.push(
+                Row::text("Kaplama tipi", shown(&c.predefined))
+                    .editor(select(shown(&c.predefined), types)),
+            );
+            geo.push(
+                Row::text("Kaplama adı", c.words())
+                    .editor(edit(Editor::Text(Field::SlabCoveringName(slot)))),
+            );
         }
     }
     let roles = SlabRole::ALL
         .iter()
-        .map(|&r| pick(r.label().into(), r == x.role, set(SlabChange { role: Some(r), ..Default::default() }), Some("slab")))
+        .map(|&r| {
+            pick(
+                r.label().into(),
+                r == x.role,
+                set(SlabChange {
+                    role: Some(r),
+                    ..Default::default()
+                }),
+                Some("slab"),
+            )
+        })
         .collect();
     if x.covering.is_none() {
-        geo.push(Row::text("Döşeme türü", x.role.label()).editor(select(x.role.label().into(), roles)));
+        geo.push(
+            Row::text("Döşeme türü", x.role.label()).editor(select(x.role.label().into(), roles)),
+        );
     }
     // Sınır (docs/adr/0771 §4, 0791): an outline of its own, bound to its walls or to a space of its level.
     let spaces = super::super::wall_parts::space_choices(&doc.model, x);
@@ -132,13 +179,28 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
         if let Some(sl) = x.slope {
             let dir = (sl.to.y - sl.from.y).atan2(sl.to.x - sl.from.x);
             // Its words carry the angle's mark (° or g): no unit column beside it.
-            geo.push(Row::figure("Eğim yönü", f.angle(dir)).editor(number(Field::SlabSlopeDirection(slot))));
+            geo.push(
+                Row::figure("Eğim yönü", f.angle(dir))
+                    .editor(number(Field::SlabSlopeDirection(slot))),
+            );
         }
     }
-    let levels = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
-    let level = x.arch.level.as_deref().and_then(|id| levels.iter().find(|l| l.id == id));
+    let levels = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.clone())
+        .unwrap_or_default();
+    let level = x
+        .arch
+        .level
+        .as_deref()
+        .and_then(|id| levels.iter().find(|l| l.id == id));
     if let Some(l) = level {
-        geo.push(Row::figure("Üst kot", f.length_bare(l.elevation + x.offset)).unit(f.length_unit_label()));
+        geo.push(
+            Row::figure("Üst kot", f.length_bare(l.elevation + x.offset))
+                .unit(f.length_unit_label()),
+        );
     }
     // Its layers (docs/adr/8040 §2): a build-up picked whole, then each layer's thickness from the top, and
     // the whole thickness.
@@ -198,7 +260,10 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
             pick(
                 k.map_or("Yok", SlabEdgeKind::label).into(),
                 k == x.edge.as_ref().map(|e| e.kind),
-                set(SlabChange { edge: Some(k.map(|kind| NewSlabEdge { kind, width: None })), ..Default::default() }),
+                set(SlabChange {
+                    edge: Some(k.map(|kind| NewSlabEdge { kind, width: None })),
+                    ..Default::default()
+                }),
                 kentos_interaction::slab_tools::edge_icon(k),
             )
         })
@@ -218,43 +283,88 @@ pub(super) fn rows(k: &Kit, sl: &kentos_commands::SlabEntity) -> Vec<Row> {
         }
     }
     geo.push(
-        Row::text("Malzeme", x.material.clone().unwrap_or_default()).editor(edit(Editor::Text(Field::SlabMaterial(slot)))),
+        Row::text("Malzeme", x.material.clone().unwrap_or_default())
+            .editor(edit(Editor::Text(Field::SlabMaterial(slot)))),
     );
-    let level_name = level.map_or_else(|| x.arch.level.clone().unwrap_or_else(|| "Yok".into()), |l| l.name.clone());
+    let level_name = level.map_or_else(
+        || x.arch.level.clone().unwrap_or_else(|| "Yok".into()),
+        |l| l.name.clone(),
+    );
     let mut level_items = vec![pick(
         "Yok".into(),
         x.arch.level.is_none(),
-        set(SlabChange { level: Some(None), ..Default::default() }),
+        set(SlabChange {
+            level: Some(None),
+            ..Default::default()
+        }),
         None,
     )];
     level_items.extend(levels.iter().map(|l| {
         pick(
             l.name.clone(),
             x.arch.level.as_deref() == Some(l.id.as_str()),
-            set(SlabChange { level: Some(Some(l.id.clone())), ..Default::default() }),
+            set(SlabChange {
+                level: Some(Some(l.id.clone())),
+                ..Default::default()
+            }),
             None,
         )
     }));
     level_items.push(Choice::Separator);
-    level_items.push(Choice::Command { label: "Katları düzenle…", icon: crate::icons::from_web(Some("archSettings")), id: "arch.settings" });
+    level_items.push(Choice::Command {
+        label: "Katları düzenle…",
+        icon: crate::icons::from_web(Some("archSettings")),
+        id: "arch.settings",
+    });
     geo.push(Row::text("Kat", level_name.clone()).editor(select(level_name, level_items)));
-    let phase_name = x.arch.phase.map_or("Yok", kentos_commands::ArchPhase::label);
-    let mut phases =
-        vec![pick("Yok".to_owned(), x.arch.phase.is_none(), set(SlabChange { phase: Some(None), ..Default::default() }), None)];
+    let phase_name = x
+        .arch
+        .phase
+        .map_or("Yok", kentos_commands::ArchPhase::label);
+    let mut phases = vec![pick(
+        "Yok".to_owned(),
+        x.arch.phase.is_none(),
+        set(SlabChange {
+            phase: Some(None),
+            ..Default::default()
+        }),
+        None,
+    )];
     phases.extend(kentos_commands::ArchPhase::ALL.iter().map(|&p| {
-        pick(p.label().to_owned(), x.arch.phase == Some(p), set(SlabChange { phase: Some(Some(p)), ..Default::default() }), None)
+        pick(
+            p.label().to_owned(),
+            x.arch.phase == Some(p),
+            set(SlabChange {
+                phase: Some(Some(p)),
+                ..Default::default()
+            }),
+            None,
+        )
     }));
     geo.push(Row::text("Tadilat durumu", phase_name).editor(select(phase_name.to_owned(), phases)));
     geo.extend(super::arch::performance_rows(k.doc, k.slot, k.e, k.locked));
     let summed = if x.excluded { "Dışında" } else { "Toplamda" };
     let sums = [(false, "Toplamda"), (true, "Dışında")]
         .into_iter()
-        .map(|(v, label)| pick(label.into(), v == x.excluded, set(SlabChange { excluded: Some(v), ..Default::default() }), None))
+        .map(|(v, label)| {
+            pick(
+                label.into(),
+                v == x.excluded,
+                set(SlabChange {
+                    excluded: Some(v),
+                    ..Default::default()
+                }),
+                None,
+            )
+        })
         .collect();
     geo.push(Row::text("Metraj", summed).editor(select(summed.into(), sums)));
     let a = kentos_native_application::spaces::area_of(&x.parts);
     geo.extend(area(a));
-    geo.push(metres("Çevre", kentos_native_application::spaces::perimeter_of(&x.parts)));
+    geo.push(metres(
+        "Çevre",
+        kentos_native_application::spaces::perimeter_of(&x.parts),
+    ));
     geo.push(Row::figure("Hacim", fixed(a * x.thickness, decimals)).unit("m³"));
     geo
 }

@@ -9,8 +9,8 @@
 use std::collections::{HashMap, HashSet};
 
 use kentos_commands::{
-    CommandResult, CommandWarning, DesignOption, Entity, OptionChoice, OptionCombo, OptionSet, OptionsEdit,
-    OptionsEdited, OptionsOperation, opening_type_id_of, option_combo, option_set,
+    CommandResult, CommandWarning, DesignOption, Entity, OptionChoice, OptionCombo, OptionSet,
+    OptionsEdit, OptionsEdited, OptionsOperation, opening_type_id_of, option_combo, option_set,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -145,7 +145,10 @@ fn option_at(set: &OptionSet, key: &str, path: &str) -> Result<usize, Stop> {
         .ok_or_else(|| {
             fail(
                 codes::OPTION_NOT_FOUND,
-                format!("“{}” kümesinde “{key}” adlı ya da kimlikli seçenek yok.", set.name),
+                format!(
+                    "“{}” kümesinde “{key}” adlı ya da kimlikli seçenek yok.",
+                    set.name
+                ),
                 path,
             )
         })
@@ -383,7 +386,11 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
                 }
                 None => {
                     let stem = opening_type_id_of(name);
-                    let stem = if stem == "tip" { "secenek".to_owned() } else { stem };
+                    let stem = if stem == "tip" {
+                        "secenek".to_owned()
+                    } else {
+                        stem
+                    };
                     let mut sid = stem.clone();
                     let mut n = 2;
                     while sets.iter().any(|s| s.id == sid) {
@@ -398,7 +405,10 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
             if sets.len() >= kentos_commands::MAX_OPTION_SETS {
                 return Err(fail(
                     codes::INVALID_INPUT,
-                    format!("Bir projede en çok {} seçenek kümesi olur.", kentos_commands::MAX_OPTION_SETS),
+                    format!(
+                        "Bir projede en çok {} seçenek kümesi olur.",
+                        kentos_commands::MAX_OPTION_SETS
+                    ),
                     "operation",
                 ));
             }
@@ -440,10 +450,17 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
             let new_name = name.clone().unwrap_or_else(|| id.to_uppercase());
             name_ok(&new_name, "operation.name")?;
             let folded = new_name.to_lowercase();
-            if sets[si].options.iter().any(|o| o.name.to_lowercase() == folded) {
+            if sets[si]
+                .options
+                .iter()
+                .any(|o| o.name.to_lowercase() == folded)
+            {
                 return Err(fail(
                     codes::OPTION_EXISTS,
-                    format!("“{}” kümesinde “{new_name}” adlı bir seçenek var.", sets[si].name),
+                    format!(
+                        "“{}” kümesinde “{new_name}” adlı bir seçenek var.",
+                        sets[si].name
+                    ),
                     "operation.name",
                 ));
             }
@@ -588,7 +605,11 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
             match option {
                 None => {
                     if sets[si].name == *name {
-                        return Err(fail(codes::NOTHING_TO_SET, "Küme zaten bu adda.".into(), "operation.name"));
+                        return Err(fail(
+                            codes::NOTHING_TO_SET,
+                            "Küme zaten bu adda.".into(),
+                            "operation.name",
+                        ));
                     }
                     if sets
                         .iter()
@@ -606,7 +627,11 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
                 Some(o) => {
                     let oi = option_at(&sets[si], o, "operation.option")?;
                     if sets[si].options[oi].name == *name {
-                        return Err(fail(codes::NOTHING_TO_SET, "Seçenek zaten bu adda.".into(), "operation.name"));
+                        return Err(fail(
+                            codes::NOTHING_TO_SET,
+                            "Seçenek zaten bu adda.".into(),
+                            "operation.name",
+                        ));
                     }
                     if sets[si]
                         .options
@@ -616,7 +641,10 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
                     {
                         return Err(fail(
                             codes::OPTION_EXISTS,
-                            format!("“{}” kümesinde “{name}” adlı bir seçenek var.", sets[si].name),
+                            format!(
+                                "“{}” kümesinde “{name}” adlı bir seçenek var.",
+                                sets[si].name
+                            ),
                             "operation.name",
                         ));
                     }
@@ -647,7 +675,11 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
                     let mut out: Vec<OptionChoice> = Vec::new();
                     for (i, ch) in list.iter().enumerate() {
                         let si = set_at_in(&sets, &ch.set, &format!("operation.choices[{i}].set"))?;
-                        let oi = option_at(&sets[si], &ch.option, &format!("operation.choices[{i}].option"))?;
+                        let oi = option_at(
+                            &sets[si],
+                            &ch.option,
+                            &format!("operation.choices[{i}].option"),
+                        )?;
                         if out.iter().any(|c| c.set == sets[si].id) {
                             return Err(fail(
                                 codes::INVALID_INPUT,
@@ -698,7 +730,9 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
                     {
                         return Err(fail(
                             codes::INVALID_INPUT,
-                            format!("“{id}” bileşim kimliği olamaz: küçük harf, rakam ve tire, en çok 64 karakter."),
+                            format!(
+                                "“{id}” bileşim kimliği olamaz: küçük harf, rakam ve tire, en çok 64 karakter."
+                            ),
                             "operation.id",
                         ));
                     }
@@ -744,7 +778,10 @@ fn check(doc: &Document, input: &OptionsEdit) -> Result<Work, Stop> {
             if !changed {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
-                    format!("“{}” bileşiminin seçenekleri zaten birincil.", combos[ci].name),
+                    format!(
+                        "“{}” bileşiminin seçenekleri zaten birincil.",
+                        combos[ci].name
+                    ),
                     "operation.combo",
                 ));
             }
@@ -846,7 +883,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: OptionsEdit) -> CommandResu
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: OptionsEdit) -> CommandResult<OptionsEdited> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: OptionsEdit,
+) -> CommandResult<OptionsEdited> {
     let work = match check(cx.doc, &input) {
         Ok(work) => work,
         Err(stop) => return stop.into(),

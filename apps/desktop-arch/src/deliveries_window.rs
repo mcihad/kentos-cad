@@ -19,16 +19,16 @@
 //! └────────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
+use crate::arch::ArchState;
 use std::fmt;
 use std::path::PathBuf;
 use std::sync::Arc;
-use crate::arch::ArchState;
 
 use iced::widget::{Column, column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
-    CommandResult, Delivery, DeliveryChange, DeliveryChannel, DeliveryEdit, DeliveryEdited, DeliveryOutcome,
-    ReviewNoteOp, ReviewNotesEdit, ReviewOrigin,
+    CommandResult, Delivery, DeliveryChange, DeliveryChannel, DeliveryEdit, DeliveryEdited,
+    DeliveryOutcome, ReviewNoteOp, ReviewNotesEdit, ReviewOrigin,
 };
 use kentos_native_application::delivery_compare::{self, Compared, FileChange, Publication};
 use kentos_native_application::{ExecutionContext, delivery_edit, review_notes};
@@ -36,7 +36,9 @@ use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::theme::typography::scaled;
 use kentos_ui::widget::table::{self, Column as Col, Row, Table};
-use kentos_ui::widget::{Choice, Dialog as Frame, Form, ListDetails, Segmented, Select, text_field};
+use kentos_ui::widget::{
+    Choice, Dialog as Frame, Form, ListDetails, Segmented, Select, text_field,
+};
 
 use crate::app::{App, Message};
 use crate::arch;
@@ -70,7 +72,11 @@ pub fn day(iso: &str) -> String {
     let mut parts = iso.split('-');
     match (parts.next(), parts.next(), parts.next(), parts.next()) {
         (Some(y), Some(m), Some(d), None) if y.len() == 4 => {
-            format!("{}.{}.{y}", d.trim_start_matches('0'), m.trim_start_matches('0'))
+            format!(
+                "{}.{}.{y}",
+                d.trim_start_matches('0'),
+                m.trim_start_matches('0')
+            )
         }
         _ => iso.to_owned(),
     }
@@ -87,7 +93,9 @@ fn today() -> String {
 
 /// Who publishes, as the machine names its user; empty when it does not.
 fn user() -> String {
-    std::env::var("USER").map(|u| u.trim().to_owned()).unwrap_or_default()
+    std::env::var("USER")
+        .map(|u| u.trim().to_owned())
+        .unwrap_or_default()
 }
 
 /// The answer as the segmented choice names it.
@@ -196,14 +204,23 @@ fn msg(e: Event) -> Message {
 
 /// A revision number one more than `r`'s, three digits; `r` itself when it is not one.
 fn next(r: &str) -> String {
-    r.parse::<u32>().ok().filter(|_| r.len() == 3).map_or_else(|| r.to_owned(), |n| format!("{:03}", n + 1))
+    r.parse::<u32>()
+        .ok()
+        .filter(|_| r.len() == 3)
+        .map_or_else(|| r.to_owned(), |n| format!("{:03}", n + 1))
 }
 
 /// A new delivery's revision: the last delivery's, one more when it came back returned; 000 for the first.
 fn next_revision(last: Option<&Delivery>) -> String {
     match last {
         None => "000".to_owned(),
-        Some(d) if d.response.as_ref().is_some_and(|r| r.outcome == DeliveryOutcome::Returned) => next(&d.revision),
+        Some(d)
+            if d.response
+                .as_ref()
+                .is_some_and(|r| r.outcome == DeliveryOutcome::Returned) =>
+        {
+            next(&d.revision)
+        }
         Some(d) => d.revision.clone(),
     }
 }
@@ -223,7 +240,12 @@ fn cut(text: &str, most: usize) -> String {
     if line.chars().count() <= most && !text.contains('\n') {
         return line.to_owned();
     }
-    format!("{}…", line.chars().take(most.saturating_sub(1)).collect::<String>())
+    format!(
+        "{}…",
+        line.chars()
+            .take(most.saturating_sub(1))
+            .collect::<String>()
+    )
 }
 
 /// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
@@ -242,20 +264,32 @@ pub(crate) trait DeliveriesWindowApp {
     fn deliveries_compare(&mut self) -> Task<Message>;
     fn deliveries_view(&self) -> Element<'_, Message>;
     fn delivery_details<'a>(&'a self, w: &'a Window, list: &'a [Delivery]) -> Element<'a, Message>;
-    fn chosen_view<'a>(&'a self, w: &'a Window, d: &'a Delivery, list: &'a [Delivery]) -> Element<'a, Message>;
+    fn chosen_view<'a>(
+        &'a self,
+        w: &'a Window,
+        d: &'a Delivery,
+        list: &'a [Delivery],
+    ) -> Element<'a, Message>;
     fn answer_form<'a>(&'a self, w: &'a Window) -> Element<'a, Message>;
-    fn compare_view<'a>(&'a self, w: &'a Window, d: &'a Delivery, list: &'a [Delivery]) -> Element<'a, Message>;
+    fn compare_view<'a>(
+        &'a self,
+        w: &'a Window,
+        d: &'a Delivery,
+        list: &'a [Delivery],
+    ) -> Element<'a, Message>;
     fn deliveries_control(&self, control: Control<'_>) -> Result<Option<Message>, String>;
 }
 
 impl DeliveriesWindowApp for App {
     /// The drawing's delivery record.
-    fn deliveries(&self) -> &[Delivery]{
-        self.document.as_ref().map_or(&[][..], |d| d.model.deliveries())
+    fn deliveries(&self) -> &[Delivery] {
+        self.document
+            .as_ref()
+            .map_or(&[][..], |d| d.model.deliveries())
     }
 
     /// Teslim kaydı (`arch.deliveries`): the record, its last delivery chosen.
-    fn open_deliveries(&mut self){
+    fn open_deliveries(&mut self) {
         if self.document.is_none() {
             self.output("Açık çizim yok.");
             return;
@@ -272,28 +306,33 @@ impl DeliveriesWindowApp for App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::Deliveries));
     }
 
-    fn deliveries_said(&mut self, kind: Kind, words: impl Into<String>){
+    fn deliveries_said(&mut self, kind: Kind, words: impl Into<String>) {
         if let Some(w) = self.modules.arch_mut().deliveries.as_mut() {
             w.said = Some((kind, words.into()));
         }
     }
 
     /// `cad.delivery.edit` on the open drawing; its refusal's words.
-    fn delivery_edit(&mut self, change: DeliveryChange) -> Result<DeliveryEdited, String>{
+    fn delivery_edit(&mut self, change: DeliveryChange) -> Result<DeliveryEdited, String> {
         let Some(doc) = self.document.as_mut() else {
             return Err("Açık çizim yok.".into());
         };
-        let input = DeliveryEdit { change, expected_revision: None };
+        let input = DeliveryEdit {
+            change,
+            expected_revision: None,
+        };
         match delivery_edit::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, .. } => Ok(output),
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
-                Err(error.message)
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => Err(error.message),
+            CommandResult::Queued { .. } | CommandResult::Cancelled => {
+                Err("Teslim kaydı yazılmadı.".into())
             }
-            CommandResult::Queued { .. } | CommandResult::Cancelled => Err("Teslim kaydı yazılmadı.".into()),
         }
     }
 
-    fn deliveries_event(&mut self, event: Event) -> Task<Message>{
+    fn deliveries_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Close => {
                 self.modules.arch_mut().deliveries = None;
@@ -311,7 +350,7 @@ impl DeliveriesWindowApp for App {
     }
 
     /// A choice or a box of the window.
-    fn deliveries_form(&mut self, event: Event){
+    fn deliveries_form(&mut self, event: Event) {
         let list = self.deliveries().to_vec();
         let Some(w) = self.modules.arch_mut().deliveries.as_mut() else {
             return;
@@ -371,7 +410,10 @@ impl DeliveriesWindowApp for App {
                     w.comparing = false;
                     w.said = match &*result {
                         Ok(_) => None,
-                        Err(_) => Some((Kind::Warn, "Karşılaştırılamadı; nedeni karşılaştırmanın yerinde.".into())),
+                        Err(_) => Some((
+                            Kind::Warn,
+                            "Karşılaştırılamadı; nedeni karşılaştırmanın yerinde.".into(),
+                        )),
                     };
                     w.compared = Some((id, result));
                 }
@@ -388,7 +430,7 @@ impl DeliveriesWindowApp for App {
     }
 
     /// Klasör seç…: the publication folder of the package that went.
-    fn deliveries_pick(&mut self) -> Task<Message>{
+    fn deliveries_pick(&mut self) -> Task<Message> {
         if let crate::app::Picker::File(path) = &self.picker {
             return Task::done(msg(Event::Picked(Some(path.clone()))));
         }
@@ -405,16 +447,28 @@ impl DeliveriesWindowApp for App {
     }
 
     /// Teslimi kaydet: the new delivery written.
-    fn deliveries_save(&mut self){
-        let Some(draft) = self.modules.arch().deliveries.as_ref().and_then(|w| w.draft.clone()) else {
+    fn deliveries_save(&mut self) {
+        let Some(draft) = self
+            .modules
+            .arch()
+            .deliveries
+            .as_ref()
+            .and_then(|w| w.draft.clone())
+        else {
             return;
         };
         let Some(Ok(publication)) = &draft.read else {
-            self.deliveries_said(Kind::Warn, "Önce teslim edilen paketin yayın klasörünü seçin.");
+            self.deliveries_said(
+                Kind::Warn,
+                "Önce teslim edilen paketin yayın klasörünü seçin.",
+            );
             return;
         };
         let Some(at) = typed(&draft.at) else {
-            self.deliveries_said(Kind::Warn, format!("“{}” bir gün değil: GG.AA.YYYY yazın.", draft.at.trim()));
+            self.deliveries_said(
+                Kind::Warn,
+                format!("“{}” bir gün değil: GG.AA.YYYY yazın.", draft.at.trim()),
+            );
             return;
         };
         let change = DeliveryChange::Add {
@@ -442,8 +496,14 @@ impl DeliveriesWindowApp for App {
     }
 
     /// Kaydı sil: the chosen record taken away (one undo step); its notes stay.
-    fn deliveries_remove(&mut self){
-        let Some(id) = self.modules.arch().deliveries.as_ref().and_then(|w| w.chosen.clone()) else {
+    fn deliveries_remove(&mut self) {
+        let Some(id) = self
+            .modules
+            .arch()
+            .deliveries
+            .as_ref()
+            .and_then(|w| w.chosen.clone())
+        else {
             return;
         };
         match self.delivery_edit(DeliveryChange::Remove { id }) {
@@ -453,7 +513,13 @@ impl DeliveriesWindowApp for App {
                     w.chosen = last.as_ref().map(|d| d.id.clone());
                     w.answer = Answer::of(last.as_ref());
                     w.compared = None;
-                    w.said = Some((Kind::Ok, format!("{}. teslim kaydı silindi; inceleme notları duruyor.", done.number)));
+                    w.said = Some((
+                        Kind::Ok,
+                        format!(
+                            "{}. teslim kaydı silindi; inceleme notları duruyor.",
+                            done.number
+                        ),
+                    ));
                 }
             }
             Err(why) => self.deliveries_said(Kind::Warn, why),
@@ -461,7 +527,7 @@ impl DeliveriesWindowApp for App {
     }
 
     /// Cevabı yaz: the authority's answer to the chosen delivery, in place of the one it has.
-    fn deliveries_respond(&mut self){
+    fn deliveries_respond(&mut self) {
         let Some(w) = self.modules.arch().deliveries.as_ref() else {
             return;
         };
@@ -470,7 +536,10 @@ impl DeliveriesWindowApp for App {
         };
         let a = w.answer.clone();
         let Some(at) = typed(&a.at) else {
-            self.deliveries_said(Kind::Warn, format!("“{}” bir gün değil: GG.AA.YYYY yazın.", a.at.trim()));
+            self.deliveries_said(
+                Kind::Warn,
+                format!("“{}” bir gün değil: GG.AA.YYYY yazın.", a.at.trim()),
+            );
             return;
         };
         let change = DeliveryChange::Respond {
@@ -482,28 +551,47 @@ impl DeliveriesWindowApp for App {
             receipt: Some(a.receipt),
         };
         match self.delivery_edit(change) {
-            Ok(done) => self.deliveries_said(Kind::Ok, format!("{}. teslimin cevabı yazıldı.", done.number)),
+            Ok(done) => self.deliveries_said(
+                Kind::Ok,
+                format!("{}. teslimin cevabı yazıldı.", done.number),
+            ),
             Err(why) => self.deliveries_said(Kind::Warn, why),
         }
     }
 
     /// Seçilenlere bağla: a review note of the typed text bound to the objects selected, held in the answer.
-    fn deliveries_bind(&mut self){
+    fn deliveries_bind(&mut self) {
         let Some(w) = self.modules.arch().deliveries.as_ref() else {
             return;
         };
         let text = w.answer.note.trim().to_owned();
-        let revision = w.chosen.as_ref().and_then(|id| self.deliveries().iter().find(|d| &d.id == id)).map(|d| d.revision.clone());
+        let revision = w
+            .chosen
+            .as_ref()
+            .and_then(|id| self.deliveries().iter().find(|d| &d.id == id))
+            .map(|d| d.revision.clone());
         if text.is_empty() {
-            self.deliveries_said(Kind::Warn, "Notun metnini yazın: gerekçenin seçili nesnelerdeki karşılığı.");
+            self.deliveries_said(
+                Kind::Warn,
+                "Notun metnini yazın: gerekçenin seçili nesnelerdeki karşılığı.",
+            );
             return;
         }
         let anchors: Vec<String> = match self.document.as_ref() {
-            Some(d) => self.selection.ids().iter().filter_map(|s| d.model.uid(*s)).map(|u| u.to_string()).collect(),
+            Some(d) => self
+                .selection
+                .ids()
+                .iter()
+                .filter_map(|s| d.model.uid(*s))
+                .map(|u| u.to_string())
+                .collect(),
             None => Vec::new(),
         };
         if anchors.is_empty() {
-            self.deliveries_said(Kind::Warn, "Önce çizimde gerekçenin ilgili olduğu nesneleri seçin.");
+            self.deliveries_said(
+                Kind::Warn,
+                "Önce çizimde gerekçenin ilgili olduğu nesneleri seçin.",
+            );
             return;
         }
         let objects = anchors.len();
@@ -525,7 +613,10 @@ impl DeliveriesWindowApp for App {
         };
         let result = review_notes::execute(
             &mut ExecutionContext::new(&mut doc.model),
-            ReviewNotesEdit { change, expected_revision: None },
+            ReviewNotesEdit {
+                change,
+                expected_revision: None,
+            },
         );
         match result {
             CommandResult::Completed { output, .. } => {
@@ -534,11 +625,16 @@ impl DeliveriesWindowApp for App {
                     w.answer.note.clear();
                     w.said = Some((
                         Kind::Ok,
-                        format!("{}. inceleme notu {objects} nesneye bağlandı; cevapla birlikte yazın.", output.number),
+                        format!(
+                            "{}. inceleme notu {objects} nesneye bağlandı; cevapla birlikte yazın.",
+                            output.number
+                        ),
                     ));
                 }
             }
-            CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
                 self.deliveries_said(Kind::Warn, error.message);
             }
             CommandResult::Queued { .. } | CommandResult::Cancelled => {}
@@ -547,35 +643,57 @@ impl DeliveriesWindowApp for App {
 
     /// Öncekiyle karşılaştır: the chosen delivery's package beside the previous one's to the same authority, read off
     /// the window's thread.
-    fn deliveries_compare(&mut self) -> Task<Message>{
+    fn deliveries_compare(&mut self) -> Task<Message> {
         let list = self.deliveries();
-        let Some(id) = self.modules.arch().deliveries.as_ref().and_then(|w| w.chosen.clone()) else {
+        let Some(id) = self
+            .modules
+            .arch()
+            .deliveries
+            .as_ref()
+            .and_then(|w| w.chosen.clone())
+        else {
             return Task::none();
         };
         let Some(chosen) = list.iter().find(|d| d.id == id).cloned() else {
             return Task::none();
         };
         let Some(previous) = chosen.previous(list).cloned() else {
-            self.deliveries_said(Kind::Info, format!("“{}” kurumuna bundan önce teslim yok.", chosen.to));
+            self.deliveries_said(
+                Kind::Info,
+                format!("“{}” kurumuna bundan önce teslim yok.", chosen.to),
+            );
             return Task::none();
         };
-        let wanted: Vec<String> = previous.response.as_ref().map(|r| r.notes.clone()).unwrap_or_default();
+        let wanted: Vec<String> = previous
+            .response
+            .as_ref()
+            .map(|r| r.notes.clone())
+            .unwrap_or_default();
         let notes: Vec<_> = self
             .document
             .as_ref()
-            .map(|d| d.model.settings().review_notes.iter().filter(|n| wanted.contains(&n.id)).cloned().collect())
+            .map(|d| {
+                d.model
+                    .settings()
+                    .review_notes
+                    .iter()
+                    .filter(|n| wanted.contains(&n.id))
+                    .cloned()
+                    .collect()
+            })
             .unwrap_or_default();
         if let Some(w) = self.modules.arch_mut().deliveries.as_mut() {
             w.compared = None;
             w.comparing = true;
             w.said = Some((Kind::Info, "Paketler karşılaştırılıyor…".into()));
         }
-        Task::perform(async move { delivery_compare::compare(&chosen, &previous, &notes) }, move |r| {
-            msg(Event::Compared(id.clone(), Arc::new(r)))
-        })
+        Task::perform(
+            async move { delivery_compare::compare(&chosen, &previous, &notes) },
+            move |r| msg(Event::Compared(id.clone(), Arc::new(r))),
+        )
     }
 
-    fn deliveries_view(&self) -> Element<'_, Message>{
+    fn deliveries_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().deliveries else {
             return space::horizontal().into();
         };
@@ -588,9 +706,12 @@ impl DeliveriesWindowApp for App {
                 .into();
         let mut foot = row![].spacing(8).align_y(Center);
         if let Some((kind, said)) = &w.said {
-            foot = foot.push(container(words::text_line(*kind, said.clone())).width(Length::Shrink));
+            foot =
+                foot.push(container(words::text_line(*kind, said.clone())).width(Length::Shrink));
         }
-        let foot = foot.push(space::horizontal().width(Fill)).push(words::secondary(CLOSE, Some(msg(Event::Close))));
+        let foot = foot
+            .push(space::horizontal().width(Fill))
+            .push(words::secondary(CLOSE, Some(msg(Event::Close))));
         Frame::new(TITLE)
             .push(label::caption(LEAD))
             .scroll(body)
@@ -600,19 +721,30 @@ impl DeliveriesWindowApp for App {
     }
 
     /// The right side: the new delivery's form, the chosen delivery, or what to do on an empty record.
-    fn delivery_details<'a>(&'a self, w: &'a Window, list: &'a [Delivery]) -> Element<'a, Message>{
+    fn delivery_details<'a>(&'a self, w: &'a Window, list: &'a [Delivery]) -> Element<'a, Message> {
         let inner: Element<'a, Message> = if let Some(draft) = &w.draft {
             draft_view(draft)
-        } else if let Some(d) = w.chosen.as_ref().and_then(|id| list.iter().find(|d| &d.id == id)) {
+        } else if let Some(d) = w
+            .chosen
+            .as_ref()
+            .and_then(|id| list.iter().find(|d| &d.id == id))
+        {
             self.chosen_view(w, d, list)
         } else {
             steps()
         };
-        scrollable(container(inner).padding(iced::Padding::ZERO.right(14))).height(Fill).into()
+        scrollable(container(inner).padding(iced::Padding::ZERO.right(14)))
+            .height(Fill)
+            .into()
     }
 
     /// The chosen delivery: its record, the answer's form and the comparison with the previous delivery.
-    fn chosen_view<'a>(&'a self, w: &'a Window, d: &'a Delivery, list: &'a [Delivery]) -> Element<'a, Message>{
+    fn chosen_view<'a>(
+        &'a self,
+        w: &'a Window,
+        d: &'a Delivery,
+        list: &'a [Delivery],
+    ) -> Element<'a, Message> {
         let head = row![
             label::strong(format!("{}. teslim · Rev. {}", d.number, d.revision)),
             space::horizontal().width(Fill),
@@ -633,7 +765,11 @@ impl DeliveriesWindowApp for App {
                     "SHA-256 {}… · {} dosya{}",
                     &package.manifest[..package.manifest.len().min(12)],
                     package.files,
-                    package.source.as_ref().map(|s| format!(" · çizim revizyonu {s}")).unwrap_or_default()
+                    package
+                        .source
+                        .as_ref()
+                        .map(|s| format!(" · çizim revizyonu {s}"))
+                        .unwrap_or_default()
                 )),
             );
         if let Some(p) = &package.path {
@@ -651,22 +787,44 @@ impl DeliveriesWindowApp for App {
     }
 
     /// İdarenin cevabı: Kabul or İade, its day, its reason, the notes that bind the reasons to objects, its receipt.
-    fn answer_form<'a>(&'a self, w: &'a Window) -> Element<'a, Message>{
+    fn answer_form<'a>(&'a self, w: &'a Window) -> Element<'a, Message> {
         let a = &w.answer;
-        let notes = self.document.as_ref().map(|doc| doc.model.settings().review_notes.as_slice()).unwrap_or_default();
+        let notes = self
+            .document
+            .as_ref()
+            .map(|doc| doc.model.settings().review_notes.as_slice())
+            .unwrap_or_default();
         let mut checks = Column::new().spacing(4);
         let held: Vec<_> = notes.iter().filter(|n| a.notes.contains(&n.id)).collect();
-        let others: Vec<_> = notes.iter().rev().filter(|n| !a.notes.contains(&n.id)).take(NOTES_SHOWN).collect();
+        let others: Vec<_> = notes
+            .iter()
+            .rev()
+            .filter(|n| !a.notes.contains(&n.id))
+            .take(NOTES_SHOWN)
+            .collect();
         for n in held.iter().chain(&others) {
             let on = a.notes.contains(&n.id);
-            let words = format!("{}. {} · {} nesne", n.number, cut(&n.text, 54), n.anchors.len());
-            checks = checks.push(words::check(on, words, Some(msg(Event::Toggle(n.id.clone())))));
+            let words = format!(
+                "{}. {} · {} nesne",
+                n.number,
+                cut(&n.text, 54),
+                n.anchors.len()
+            );
+            checks = checks.push(words::check(
+                on,
+                words,
+                Some(msg(Event::Toggle(n.id.clone()))),
+            ));
         }
         let hidden = notes.len().saturating_sub(held.len() + others.len());
         if notes.is_empty() {
-            checks = checks.push(label::caption("Çizimde inceleme notu yok; aşağıdan seçili nesnelere bağlayın."));
+            checks = checks.push(label::caption(
+                "Çizimde inceleme notu yok; aşağıdan seçili nesnelere bağlayın.",
+            ));
         } else if hidden > 0 {
-            checks = checks.push(label::caption(format!("{hidden} not daha İnceleme notları'nda.")));
+            checks = checks.push(label::caption(format!(
+                "{hidden} not daha İnceleme notları'nda."
+            )));
         }
         let returned = a.outcome == DeliveryOutcome::Returned;
         let form = Form::new()
@@ -715,13 +873,21 @@ impl DeliveriesWindowApp for App {
     }
 
     /// Öncekiyle karşılaştır: the previous delivery to the same authority and the two packages side by side.
-    fn compare_view<'a>(&'a self, w: &'a Window, d: &'a Delivery, list: &'a [Delivery]) -> Element<'a, Message>{
+    fn compare_view<'a>(
+        &'a self,
+        w: &'a Window,
+        d: &'a Delivery,
+        list: &'a [Delivery],
+    ) -> Element<'a, Message> {
         let mut out = Column::new().spacing(8);
         let Some(previous) = d.previous(list) else {
             return Form::new()
                 .label_width(scaled(LABELS))
                 .section(COMPARE)
-                .wide(label::caption(format!("“{}” kurumuna bundan önce teslim yok.", d.to)))
+                .wide(label::caption(format!(
+                    "“{}” kurumuna bundan önce teslim yok.",
+                    d.to
+                )))
                 .into();
         };
         let before = format!(
@@ -729,7 +895,10 @@ impl DeliveriesWindowApp for App {
             previous.number,
             previous.revision,
             day(&previous.at),
-            previous.response.as_ref().map_or("cevap bekleniyor", |r| r.outcome.label())
+            previous
+                .response
+                .as_ref()
+                .map_or("cevap bekleniyor", |r| r.outcome.label())
         );
         let action = if w.comparing {
             words::secondary(COMPARE, None)
@@ -755,7 +924,11 @@ impl DeliveriesWindowApp for App {
                     Col::new("Durum").width(scaled(86.0)),
                 ])
                 .empty("Dosyalar aynı.");
-                let differ: Vec<_> = c.files.iter().filter(|f| f.change != FileChange::Same).collect();
+                let differ: Vec<_> = c
+                    .files
+                    .iter()
+                    .filter(|f| f.change != FileChange::Same)
+                    .collect();
                 for f in &differ {
                     let (name, before) = match (&f.new, &f.old) {
                         (Some(n), Some(o)) if n == o => (n.clone(), "—".to_owned()),
@@ -780,7 +953,10 @@ impl DeliveriesWindowApp for App {
                             g.same, g.changed, g.added, g.removed
                         );
                         if g.project > 0 {
-                            line.push_str(&format!("; paftalarda ve görünüşlerde {} fark", g.project));
+                            line.push_str(&format!(
+                                "; paftalarda ve görünüşlerde {} fark",
+                                g.project
+                            ));
                         }
                         line.push('.');
                         out = out.push(label::body(line));
@@ -816,7 +992,7 @@ impl DeliveriesWindowApp for App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    fn deliveries_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
+    fn deliveries_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().deliveries.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }
@@ -837,12 +1013,18 @@ impl DeliveriesWindowApp for App {
 
 /// The files' changes in words, the kinds there are: “Dosyalar: 1 aynı, 2 değişti.”
 fn files_words(files: &[delivery_compare::FileCompared]) -> String {
-    let parts: Vec<String> = [FileChange::Same, FileChange::Changed, FileChange::Renamed, FileChange::Added, FileChange::Removed]
-        .into_iter()
-        .map(|k| (k, files.iter().filter(|f| f.change == k).count()))
-        .filter(|(_, n)| *n > 0)
-        .map(|(k, n)| format!("{n} {}", k.label().to_lowercase()))
-        .collect();
+    let parts: Vec<String> = [
+        FileChange::Same,
+        FileChange::Changed,
+        FileChange::Renamed,
+        FileChange::Added,
+        FileChange::Removed,
+    ]
+    .into_iter()
+    .map(|k| (k, files.iter().filter(|f| f.change == k).count()))
+    .filter(|(_, n)| *n > 0)
+    .map(|(k, n)| format!("{n} {}", k.label().to_lowercase()))
+    .collect();
     if parts.is_empty() {
         return "Paketlerde dosya yok.".to_owned();
     }
@@ -852,7 +1034,11 @@ fn files_words(files: &[delivery_compare::FileCompared]) -> String {
 /// A file's previous name beside its new one: from the separator before the first difference when the two share a
 /// long beginning (the model's EK-2 name differs in its revision: “…_000.ifc”), whole otherwise.
 pub(crate) fn renamed(old: &str, new: &str) -> String {
-    let same = old.chars().zip(new.chars()).take_while(|(a, b)| a == b).count();
+    let same = old
+        .chars()
+        .zip(new.chars())
+        .take_while(|(a, b)| a == b)
+        .count();
     if same < 8 {
         return old.to_owned();
     }
@@ -912,8 +1098,16 @@ fn draft_view(draft: &Draft) -> Element<'_, Message> {
                     "SHA-256 {}… · {} dosya{}{}",
                     &p.package.manifest[..12],
                     p.package.files,
-                    p.package.source.as_ref().map(|s| format!(" · çizim revizyonu {s}")).unwrap_or_default(),
-                    if p.drawing.is_some() { " · çizimi var" } else { "" }
+                    p.package
+                        .source
+                        .as_ref()
+                        .map(|s| format!(" · çizim revizyonu {s}"))
+                        .unwrap_or_default(),
+                    if p.drawing.is_some() {
+                        " · çizimi var"
+                    } else {
+                        ""
+                    }
                 )),
             );
             if p.drawing.is_none() {
@@ -923,30 +1117,48 @@ fn draft_view(draft: &Draft) -> Element<'_, Message> {
         Some(Err(why)) => form = form.warning(Some(why.as_str())),
         None => {}
     }
-    let channel_at = DeliveryChannel::ALL.iter().position(|c| *c == draft.channel);
+    let channel_at = DeliveryChannel::ALL
+        .iter()
+        .position(|c| *c == draft.channel);
     let form = form
         .section("Teslim")
         .field(
             "Revizyon",
-            text_field("000", &draft.revision).on_input(|t| msg(Event::Revision(t))).width(scaled(80.0)),
+            text_field("000", &draft.revision)
+                .on_input(|t| msg(Event::Revision(t)))
+                .width(scaled(80.0)),
         )
         .help("EK-2'nin revizyon numarası: üç rakam (000, 001…).")
         .field(
             "Kurum",
-            text_field("Paketin gittiği idare", &draft.to).on_input(|t| msg(Event::To(t))).width(scaled(340.0)),
+            text_field("Paketin gittiği idare", &draft.to)
+                .on_input(|t| msg(Event::To(t)))
+                .width(scaled(340.0)),
         )
         .field(
             "Kanal",
             container(
-                Select::new(DeliveryChannel::ALL.iter().map(|c| Choice::new(c.label())), channel_at, |k| {
-                    msg(Event::Channel(k))
-                })
+                Select::new(
+                    DeliveryChannel::ALL.iter().map(|c| Choice::new(c.label())),
+                    channel_at,
+                    |k| msg(Event::Channel(k)),
+                )
                 .searchable(false),
             )
             .width(scaled(220.0)),
         )
-        .field("Gün", text_field("GG.AA.YYYY", &draft.at).on_input(|t| msg(Event::At(t))).width(scaled(120.0)))
-        .field("Yayımlayan", text_field("—", &draft.by).on_input(|t| msg(Event::By(t))).width(scaled(220.0)))
+        .field(
+            "Gün",
+            text_field("GG.AA.YYYY", &draft.at)
+                .on_input(|t| msg(Event::At(t)))
+                .width(scaled(120.0)),
+        )
+        .field(
+            "Yayımlayan",
+            text_field("—", &draft.by)
+                .on_input(|t| msg(Event::By(t)))
+                .width(scaled(220.0)),
+        )
         .field(
             "Makbuz",
             text_field("Sistemin evrak ya da başvuru numarası", &draft.receipt)
@@ -954,10 +1166,15 @@ fn draft_view(draft: &Draft) -> Element<'_, Message> {
                 .width(scaled(300.0)),
         )
         .row(
-            row![words::secondary(CANCEL, Some(msg(Event::Cancel))), words::primary(SAVE, Some(msg(Event::Save)))]
-                .spacing(8),
+            row![
+                words::secondary(CANCEL, Some(msg(Event::Cancel))),
+                words::primary(SAVE, Some(msg(Event::Save)))
+            ]
+            .spacing(8),
         );
-    column![label::strong("Yeni teslim"), form].spacing(12).into()
+    column![label::strong("Yeni teslim"), form]
+        .spacing(12)
+        .into()
 }
 
 /// An empty record's details: what to do, step by step (DESIGN.md §7.5).
@@ -971,11 +1188,16 @@ fn steps<'a>() -> Element<'a, Message> {
     let mut out = Column::new()
         .spacing(10)
         .push(label::strong("Teslim yok"))
-        .push(label::caption("Projenin paketi idareye gidince buraya kaydedilir."));
+        .push(label::caption(
+            "Projenin paketi idareye gidince buraya kaydedilir.",
+        ));
     for (k, s) in list.iter().enumerate() {
         out = out.push(
-            row![container(label::strong((k + 1).to_string())).width(scaled(18.0)), container(label::body(*s)).width(Fill)]
-                .spacing(6),
+            row![
+                container(label::strong((k + 1).to_string())).width(scaled(18.0)),
+                container(label::body(*s)).width(Fill)
+            ]
+            .spacing(6),
         );
     }
     out.into()

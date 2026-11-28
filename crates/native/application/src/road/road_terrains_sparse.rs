@@ -4,7 +4,8 @@
 //! `fixtures/commands/v1/road.terrains.sparse.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, NewObject, TerrainsCoverageDrawn, TerrainsSparseDraw,
+    CommandResult, CommandWarning, CreateOperation, EntitiesCreate, NewObject,
+    TerrainsCoverageDrawn, TerrainsSparseDraw,
 };
 use kentos_domain::Document;
 
@@ -25,14 +26,35 @@ struct Checked {
 fn check(doc: &Document, input: &TerrainsSparseDraw) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     numbers(input.cell, Some(input.least), None)?;
-    let (id, _, d) = grid(doc, &input.surface, input.boundary.as_deref(), input.cell, Some(input.least))?;
+    let (id, _, d) = grid(
+        doc,
+        &input.surface,
+        input.boundary.as_deref(),
+        input.cell,
+        Some(input.least),
+    )?;
     let warnings = checks::layer(doc, &input.layer_id)?;
     let loops = d.outlines(|n| n < input.least);
-    let (objects, areas, holes, area) = outlined(&loops, doc.settings().plot_scale, input.labels.then_some("Seyrek"));
-    Ok(Checked { objects, surface: id, areas, holes, area, warnings })
+    let (objects, areas, holes, area) = outlined(
+        &loops,
+        doc.settings().plot_scale,
+        input.labels.then_some("Seyrek"),
+    );
+    Ok(Checked {
+        objects,
+        surface: id,
+        areas,
+        holes,
+        area,
+        warnings,
+    })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &TerrainsSparseDraw, c: Checked) -> CommandResult<TerrainsCoverageDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &TerrainsSparseDraw,
+    c: Checked,
+) -> CommandResult<TerrainsCoverageDrawn> {
     let uids = if c.objects.is_empty() {
         Vec::new()
     } else {
@@ -63,13 +85,19 @@ fn write(cx: &mut ExecutionContext<'_>, input: &TerrainsSparseDraw, c: Checked) 
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsSparseDraw) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// What execute would write now; writes nothing.
-pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsSparseDraw) -> CommandResult<TerrainsCoverageDrawn> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &TerrainsSparseDraw,
+) -> CommandResult<TerrainsCoverageDrawn> {
     let c = match check(cx.doc, input) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
@@ -83,7 +111,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsSparseDraw) -> CommandRes
 }
 
 /// Draws the sparse cells: one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsSparseDraw) -> CommandResult<TerrainsCoverageDrawn> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsSparseDraw,
+) -> CommandResult<TerrainsCoverageDrawn> {
     crate::call::recorded(
         cx,
         kentos_commands::ROAD_TERRAINS_SPARSE_DRAW,

@@ -5,7 +5,10 @@
 use kentos_contracts::FormAnswer;
 
 fn sample() -> kentos_contracts::DocumentSnapshotV2 {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/arch/v1/section-building.kcad");
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/arch/v1/section-building.kcad"
+    );
     kentos_kcad::decode(&std::fs::read(path).expect("the building")).expect("decodes")
 }
 
@@ -14,7 +17,8 @@ fn the_form_s_answers_round_trip_under_arch_data_10() {
     let plain = sample();
     assert!(!kentos_kcad::uses_form_answers(&plain));
     assert!(kentos_kcad::arch_version(&plain) < kentos_kcad::ARCH_WITH_FORM_ANSWERS);
-    let again = kentos_kcad::decode(&kentos_kcad::encode(&plain).expect("encodes")).expect("decodes");
+    let again =
+        kentos_kcad::decode(&kentos_kcad::encode(&plain).expect("encodes")).expect("decodes");
     assert_eq!(again, plain, "a drawing without answers is as it was");
 
     let mut doc = plain.clone();
@@ -28,7 +32,14 @@ fn the_form_s_answers_round_trip_under_arch_data_10() {
         FormAnswer { no: 7, yes: false, note: String::new(), basis: String::new() },
     ];
     assert!(kentos_kcad::uses_form_answers(&doc));
-    assert_eq!(kentos_kcad::arch_version(&doc), kentos_kcad::ARCH_WITH_FORM_ANSWERS);
+    assert_eq!(
+        kentos_kcad::arch_version(&doc),
+        kentos_kcad::ARCH_WITH_FORM_ANSWERS
+    );
     let bytes = kentos_kcad::encode(&doc).expect("encodes");
-    assert_eq!(kentos_kcad::decode(&bytes).expect("decodes"), doc, "the answers read back");
+    assert_eq!(
+        kentos_kcad::decode(&bytes).expect("decodes"),
+        doc,
+        "the answers read back"
+    );
 }

@@ -234,7 +234,10 @@ impl Registry {
             .iter()
             .filter_map(|t| {
                 let name = fold_turkish(&t.label);
-                let alias = t.aliases.iter().any(|a| fold_turkish(a) == folded.replace(' ', ""));
+                let alias = t
+                    .aliases
+                    .iter()
+                    .any(|a| fold_turkish(a) == folded.replace(' ', ""));
                 let rank = if name == folded || alias {
                     0
                 } else if name.starts_with(folded.as_str()) {
@@ -247,7 +250,10 @@ impl Registry {
                 Some((rank, t))
             })
             .collect();
-        out.sort_by(|a, b| a.0.cmp(&b.0).then_with(|| compare_tr(&a.1.label, &b.1.label)));
+        out.sort_by(|a, b| {
+            a.0.cmp(&b.0)
+                .then_with(|| compare_tr(&a.1.label, &b.1.label))
+        });
         out.into_iter().map(|(_, t)| t).collect()
     }
 

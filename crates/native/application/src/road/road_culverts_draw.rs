@@ -4,8 +4,8 @@
 //! The shared cases are `fixtures/commands/v1/road.culverts.draw.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, CreateOperation, CulvertShapeDef, CulvertsDraw, CulvertsDrawn, EntitiesCreate,
-    EntityGeometry, NewObject, TextAlign, TextFace, Vec2,
+    CommandResult, CommandWarning, CreateOperation, CulvertShapeDef, CulvertsDraw, CulvertsDrawn,
+    EntitiesCreate, EntityGeometry, NewObject, TextAlign, TextFace, Vec2,
 };
 use kentos_domain::Document;
 
@@ -55,17 +55,36 @@ fn polyline(pts: &[[f64; 2]], closed: bool) -> NewObject {
 /// The cross in words: “Ø1.00 m × 2” or “2.00 × 1.50 m kutu × 2”.
 fn cross_words(shape: &CulvertShapeDef) -> String {
     match *shape {
-        CulvertShapeDef::Pipe { diameter, count, .. } => {
-            if count > 1 { format!("Ø{diameter:.2} m × {count}") } else { format!("Ø{diameter:.2} m") }
+        CulvertShapeDef::Pipe {
+            diameter, count, ..
+        } => {
+            if count > 1 {
+                format!("Ø{diameter:.2} m × {count}")
+            } else {
+                format!("Ø{diameter:.2} m")
+            }
         }
-        CulvertShapeDef::Box { width, height, cells, .. } => {
+        CulvertShapeDef::Box {
+            width,
+            height,
+            cells,
+            ..
+        } => {
             let one = format!("{width:.2} × {height:.2} m kutu");
-            if cells > 1 { format!("{one} × {cells}") } else { one }
+            if cells > 1 {
+                format!("{one} × {cells}")
+            } else {
+                one
+            }
         }
     }
 }
 
-fn check(doc: &Document, input: &CulvertsDraw, told: &dyn Fn(u64, u64) -> bool) -> Result<Checked, Stop> {
+fn check(
+    doc: &Document,
+    input: &CulvertsDraw,
+    told: &dyn Fn(u64, u64) -> bool,
+) -> Result<Checked, Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_culverts(), &input.culvert, "culvert")?;
@@ -75,10 +94,23 @@ fn check(doc: &Document, input: &CulvertsDraw, told: &dyn Fn(u64, u64) -> bool) 
     let r = &read.report;
     let (cos, sin) = (read.angle.cos(), read.angle.sin());
     let half = 0.5 * r.width;
-    let along = |d: f64, side: f64| [read.at[0] + cos * d - sin * side, read.at[1] + sin * d + cos * side];
+    let along = |d: f64, side: f64| {
+        [
+            read.at[0] + cos * d - sin * side,
+            read.at[1] + sin * d + cos * side,
+        ]
+    };
     let (d0, d1) = (r.ends[0].distance, r.ends[1].distance);
     let mut objects = vec![
-        polyline(&[along(d0, half), along(d1, half), along(d1, -half), along(d0, -half)], true),
+        polyline(
+            &[
+                along(d0, half),
+                along(d1, half),
+                along(d1, -half),
+                along(d0, -half),
+            ],
+            true,
+        ),
         polyline(&[along(d0, 0.0), along(d1, 0.0)], false),
     ];
     if input.labels {
@@ -92,7 +124,12 @@ fn check(doc: &Document, input: &CulvertsDraw, told: &dyn Fn(u64, u64) -> bool) 
             layout: None,
             annotative: None,
             p: Vec2 { x: p[0], y: p[1] },
-            text: format!("Menfez km {} · {} · L={:.2} m", r.km_text, cross_words(&def.shape), r.length),
+            text: format!(
+                "Menfez km {} · {} · L={:.2} m",
+                r.km_text,
+                cross_words(&def.shape),
+                r.length
+            ),
             height: h,
             rotation: angle,
             align: Some(TextAlign::MiddleCenter),
@@ -105,10 +142,19 @@ fn check(doc: &Document, input: &CulvertsDraw, told: &dyn Fn(u64, u64) -> bool) 
             path: None,
         }));
     }
-    Ok(Checked { id: def.id.clone(), length: r.length, objects, warnings })
+    Ok(Checked {
+        id: def.id.clone(),
+        length: r.length,
+        objects,
+        warnings,
+    })
 }
 
-fn write(cx: &mut ExecutionContext<'_>, input: &CulvertsDraw, c: Checked) -> CommandResult<CulvertsDrawn> {
+fn write(
+    cx: &mut ExecutionContext<'_>,
+    input: &CulvertsDraw,
+    c: Checked,
+) -> CommandResult<CulvertsDrawn> {
     let create = EntitiesCreate {
         layer_id: input.layer_id.clone(),
         objects: c.objects,
@@ -133,7 +179,10 @@ fn write(cx: &mut ExecutionContext<'_>, input: &CulvertsDraw, c: Checked) -> Com
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &CulvertsDraw) -> CommandResult<()> {
     match check(cx.doc, input, &cx.stop_only()) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -156,7 +205,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CulvertsDraw) -> CommandResult<Cu
 /// Draws the barrel: one undo step.
 /// Draws `input` now, checked and written in the step it runs in, its drawing not kept (`road.project.rebuild` keeps it,
 /// docs/adr/0911 §3).
-pub(crate) fn draw(cx: &mut ExecutionContext<'_>, input: &kentos_commands::CulvertsDraw) -> CommandResult<kentos_commands::CulvertsDrawn> {
+pub(crate) fn draw(
+    cx: &mut ExecutionContext<'_>,
+    input: &kentos_commands::CulvertsDraw,
+) -> CommandResult<kentos_commands::CulvertsDrawn> {
     let checked = check(cx.doc, input, &cx.told());
     match checked {
         Ok(c) => write(cx, input, c),
@@ -176,7 +228,14 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: CulvertsDraw) -> CommandRes
                 Ok(c) => write(cx, &input, c),
                 Err(stop) => stop.into(),
             };
-            crate::road_drawings::kept(cx, kentos_commands::ROAD_CULVERTS_DRAW, &input, (kentos_commands::RoadSourceKind::Culvert, "culvert"), r, |o| &o.uids)
+            crate::road_drawings::kept(
+                cx,
+                kentos_commands::ROAD_CULVERTS_DRAW,
+                &input,
+                (kentos_commands::RoadSourceKind::Culvert, "culvert"),
+                r,
+                |o| &o.uids,
+            )
         },
     )
 }
@@ -190,13 +249,15 @@ mod stop_tests {
 
     #[test]
     fn its_reckoning_is_told_and_hears_a_stop() {
-        let (doc, input): (kentos_domain::Document, kentos_commands::CulvertsDraw) = crate::told_tests::project(CASES);
+        let (doc, input): (kentos_domain::Document, kentos_commands::CulvertsDraw) =
+            crate::told_tests::project(CASES);
         crate::told_tests::told_and_stopped(|told| check(&doc, &input, told));
     }
 
     #[test]
     fn a_stopped_job_draws_nothing() {
-        let (mut doc, input): (kentos_domain::Document, kentos_commands::CulvertsDraw) = crate::told_tests::project(CASES);
+        let (mut doc, input): (kentos_domain::Document, kentos_commands::CulvertsDraw) =
+            crate::told_tests::project(CASES);
         crate::told_tests::stopped_job_draws_nothing(&mut doc, |cx| draw(cx, &input));
     }
 }

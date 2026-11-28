@@ -185,17 +185,21 @@ fn spatial_stability_timing() {
     use kentos_geometry_core::ops::spatial_stats::nearest::{Simulation, nearest_with};
     use kentos_geometry_core::ops::spatial_stats::stability::{Scheme, Stability};
     let (shapes, _) = scene(10_000);
-    let r = time("En yakın komşu, 10 000 nokta, 999 rastgele desen", 5.0, || {
-        nearest_with(
-            &shapes,
-            None,
-            Simulation {
-                count: 999,
-                seed: 1,
-            },
-        )
-        .expect("ran")
-    });
+    let r = time(
+        "En yakın komşu, 10 000 nokta, 999 rastgele desen",
+        5.0,
+        || {
+            nearest_with(
+                &shapes,
+                None,
+                Simulation {
+                    count: 999,
+                    seed: 1,
+                },
+            )
+            .expect("ran")
+        },
+    );
     println!("  {}", r.summary);
     let boot = Stability {
         scheme: Scheme::Bootstrap,
@@ -206,9 +210,11 @@ fn spatial_stability_timing() {
         dbscan_with(&shapes, 60.0, 5, false, boot).expect("ran")
     });
     println!("  {}", r.summary);
-    let r = time("k-ortalamalar, 10 000 nokta, k = 10, 100 bootstrap tekrarı", 3.0, || {
-        k_means_with(&shapes, 10, boot).expect("ran")
-    });
+    let r = time(
+        "k-ortalamalar, 10 000 nokta, k = 10, 100 bootstrap tekrarı",
+        3.0,
+        || k_means_with(&shapes, 10, boot).expect("ran"),
+    );
     println!("  {}", r.summary);
 }
 
@@ -246,17 +252,21 @@ fn spatial_study_timing() {
         parts: None,
     };
     let study = [area];
-    let r = time("En yakın komşu, çalışma alanı, 10 000 nokta, 999 desen", 8.0, || {
-        nearest_in(
-            &shapes,
-            Window::Areas(&study),
-            Simulation {
-                count: 999,
-                seed: 1,
-            },
-        )
-        .expect("ran")
-    });
+    let r = time(
+        "En yakın komşu, çalışma alanı, 10 000 nokta, 999 desen",
+        8.0,
+        || {
+            nearest_in(
+                &shapes,
+                Window::Areas(&study),
+                Simulation {
+                    count: 999,
+                    seed: 1,
+                },
+            )
+            .expect("ran")
+        },
+    );
     println!("  {}", r.summary);
     let grid = Grid {
         first: 3,
@@ -274,8 +284,10 @@ fn spatial_study_timing() {
         resamples: 10,
         seed: 1,
     };
-    let r = time("DBSCAN taraması, 10 000 nokta, 42 hücre, 10 bootstrap", 6.0, || {
-        dbscan_sweep(&shapes, grid, false, boot).expect("ran")
-    });
+    let r = time(
+        "DBSCAN taraması, 10 000 nokta, 42 hücre, 10 bootstrap",
+        6.0,
+        || dbscan_sweep(&shapes, grid, false, boot).expect("ran"),
+    );
     println!("  {}", r.summary);
 }

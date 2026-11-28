@@ -94,8 +94,15 @@ impl App {
         let locked = form.locked_in_reach(&doc.model, self.selection.ids());
         if !locked.is_empty() {
             let layers = doc.model.layers();
-            let names: Vec<String> =
-                locked.iter().map(|l| format!("“{}”", layers.get(l).map_or(l.as_str(), |n| n.name.as_str()))).collect();
+            let names: Vec<String> = locked
+                .iter()
+                .map(|l| {
+                    format!(
+                        "“{}”",
+                        layers.get(l).map_or(l.as_str(), |n| n.name.as_str())
+                    )
+                })
+                .collect();
             self.gis.calc.fit.status = Some(super::words::locked_words(&names));
             return;
         }

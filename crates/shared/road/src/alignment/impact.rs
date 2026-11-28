@@ -56,7 +56,9 @@ pub fn foot(line: &Alignment, other: &Alignment, s: f64) -> Option<(f64, f64)> {
 
 /// The new station of old station `s`, or none where its place left the line by more than `tolerance`.
 pub fn map(before: &Alignment, after: &Alignment, s: f64, tolerance: f64) -> Option<f64> {
-    foot(before, after, s).filter(|(_, o)| o.abs() <= tolerance).map(|(t, _)| t)
+    foot(before, after, s)
+        .filter(|(_, o)| o.abs() <= tolerance)
+        .map(|(t, _)| t)
 }
 
 /// The stretches of `line` off `other` by more than `tolerance`.
@@ -72,7 +74,9 @@ pub fn off(line: &Alignment, other: &Alignment, tolerance: f64) -> Vec<Stretch> 
         if b - a < 1e-12 {
             continue;
         }
-        let samples: Vec<f64> = (0..=SAMPLES).map(|i| a + (b - a) * i as f64 / SAMPLES as f64).collect();
+        let samples: Vec<f64> = (0..=SAMPLES)
+            .map(|i| a + (b - a) * i as f64 / SAMPLES as f64)
+            .collect();
         if start.is_none() && over(samples[0]) {
             start = Some(samples[0]);
         }
@@ -93,14 +97,22 @@ pub fn off(line: &Alignment, other: &Alignment, tolerance: f64) -> Vec<Stretch> 
                 }
                 let x = 0.5 * (lo + hi);
                 match start.take() {
-                    Some(from) => out.push(Stretch { from, to: x, most: None }),
+                    Some(from) => out.push(Stretch {
+                        from,
+                        to: x,
+                        most: None,
+                    }),
                     None => start = Some(x),
                 }
             }
         }
     }
     if let Some(from) = start {
-        out.push(Stretch { from, to: line.length, most: None });
+        out.push(Stretch {
+            from,
+            to: line.length,
+            most: None,
+        });
     }
     // A stretch of no length is a single place on the edge of the tolerance: none.
     out.retain(|st| st.to - st.from > 1e-9);
@@ -114,7 +126,9 @@ pub fn off(line: &Alignment, other: &Alignment, tolerance: f64) -> Vec<Stretch> 
 /// foot.
 fn most(from: f64, to: f64, gap: &impl Fn(f64) -> f64) -> Option<f64> {
     const N: usize = 256;
-    let xs: Vec<f64> = (0..=N).map(|i| from + (to - from) * i as f64 / N as f64).collect();
+    let xs: Vec<f64> = (0..=N)
+        .map(|i| from + (to - from) * i as f64 / N as f64)
+        .collect();
     let vals: Vec<f64> = xs.iter().map(|x| gap(*x)).collect();
     if vals.iter().any(|v| !v.is_finite()) {
         return None;
@@ -147,15 +161,30 @@ pub fn moved(before: &Alignment, after: &Alignment, tolerance: f64) -> Moved {
             .at(s)
             .and_then(|p| {
                 let got = after.locate([p.x, p.y]);
-                got.nearest.or(got.beyond.map(|(_, f)| f)).map(|f| f.at.station - s)
+                got.nearest
+                    .or(got.beyond.map(|(_, f)| f))
+                    .map(|f| f.at.station - s)
             })
             .unwrap_or(0.0)
     };
-    for r in removed.iter().map(|r| (r.from, r.to)).chain([(before.length, before.length)]) {
+    for r in removed
+        .iter()
+        .map(|r| (r.from, r.to))
+        .chain([(before.length, before.length)])
+    {
         if r.0 - at > 1e-9 {
-            runs.push(Run { from: at, to: r.0, shift_from: shift(at), shift_to: shift(r.0) });
+            runs.push(Run {
+                from: at,
+                to: r.0,
+                shift_from: shift(at),
+                shift_to: shift(r.0),
+            });
         }
         at = r.1;
     }
-    Moved { removed, added, runs }
+    Moved {
+        removed,
+        added,
+        runs,
+    }
 }

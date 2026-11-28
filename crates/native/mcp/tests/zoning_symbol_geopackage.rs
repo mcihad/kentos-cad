@@ -20,23 +20,48 @@ fn open(server: &mut Server, snapshot: &kentos_commands::DocumentSnapshotV2, nam
 
 #[test]
 fn the_symbol_against_the_decision_and_the_error_layer_to_a_file_over_mcp() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.zoning.check.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().starts_with("sembol kararı göstermiyor")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.zoning.check.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .unwrap()
+                .starts_with("sembol kararı göstermiyor")
+        })
+        .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
     let mut server = Server::new();
     let drawing = open(&mut server, &snapshot, "zoning-symbol");
     let r = call(&mut server, "cad.zoning.check", json!({"drawing": drawing}));
     assert_eq!(r["isError"], false, "{r}");
-    let found: Vec<&Value> =
-        r["structuredContent"]["output"]["findings"].as_array().unwrap().iter().filter(|f| f["kind"] == "symbolMismatch").collect();
+    let found: Vec<&Value> = r["structuredContent"]["output"]["findings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|f| f["kind"] == "symbolMismatch")
+        .collect();
     assert_eq!(found.len(), 1, "{r}");
-    assert_eq!(found[0]["uids"], json!([snapshot.uids[1].to_string()]), "S1, the trade area");
+    assert_eq!(
+        found[0]["uids"],
+        json!([snapshot.uids[1].to_string()]),
+        "S1, the trade area"
+    );
 
     // The error layer to a GeoPackage: the drawing stays.
-    let roads: kentos_commands::DocumentSnapshotV2 =
-        serde_json::from_str(include_str!("../../../../fixtures/processing/v1/zoning-yollar.kcad")).unwrap();
+    let roads: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(include_str!(
+        "../../../../fixtures/processing/v1/zoning-yollar.kcad"
+    ))
+    .unwrap();
     let drawing = open(&mut server, &roads, "zoning-gpkg");
-    let gpkg = std::env::temp_dir().join(format!("kentos-zoning-errors-{}.gpkg", std::process::id()));
+    let gpkg =
+        std::env::temp_dir().join(format!("kentos-zoning-errors-{}.gpkg", std::process::id()));
     let _ = std::fs::remove_file(&gpkg);
     let ran = call(
         &mut server,
@@ -47,10 +72,26 @@ fn the_symbol_against_the_decision_and_the_error_layer_to_a_file_over_mcp() {
     assert_eq!(ran["isError"], false, "{ran}");
     let sink = &ran["structuredContent"]["output"]["sink"];
     assert_eq!(sink["tables"][0]["table"], "İmar bulguları", "{sink}");
-    assert_eq!((sink["tables"][0]["rows"].as_u64(), sink["tables"][0]["geometry"].as_str()), (Some(7), Some("POLYGON")), "{sink}");
+    assert_eq!(
+        (
+            sink["tables"][0]["rows"].as_u64(),
+            sink["tables"][0]["geometry"].as_str()
+        ),
+        (Some(7), Some("POLYGON")),
+        "{sink}"
+    );
     assert!(gpkg.exists());
     // The seven areas were made on a copy and went to the file; the drawing has its own objects only.
-    let items = call(&mut server, "drawing.entities", json!({"drawing": drawing, "limit": 1000}))["structuredContent"]["items"].clone();
-    assert_eq!(items.as_array().map(Vec::len), Some(roads.entities.len()), "the drawing stays");
+    let items = call(
+        &mut server,
+        "drawing.entities",
+        json!({"drawing": drawing, "limit": 1000}),
+    )["structuredContent"]["items"]
+        .clone();
+    assert_eq!(
+        items.as_array().map(Vec::len),
+        Some(roads.entities.len()),
+        "the drawing stays"
+    );
     let _ = std::fs::remove_file(&gpkg);
 }

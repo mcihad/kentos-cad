@@ -19,40 +19,40 @@ use kentos_render_wgpu::{
     Camera, FrameInput, Palette, RenderSettings, Renderer, Rgba8, ScenePart, Vec2,
 };
 
+#[path = "gpu/cells.rs"]
+mod cells;
 #[path = "gpu/compose.rs"]
 mod compose;
 #[path = "gpu/compose_timing.rs"]
 mod compose_timing;
-#[path = "gpu/hatch.rs"]
-mod hatch;
-#[path = "gpu/weights.rs"]
-mod weights;
-#[path = "gpu/joins.rs"]
-mod joins;
-#[path = "gpu/plain_joins.rs"]
-mod plain_joins;
-#[path = "gpu/far_cost.rs"]
-mod far_cost;
-#[path = "gpu/text_marks.rs"]
-mod text_marks;
-#[path = "gpu/single.rs"]
-mod single;
-#[path = "gpu/ends.rs"]
-mod ends;
 #[path = "gpu/dashes.rs"]
 mod dashes;
+#[path = "gpu/ends.rs"]
+mod ends;
+#[path = "gpu/far_cost.rs"]
+mod far_cost;
 #[path = "gpu/glyphs.rs"]
 mod glyphs;
+#[path = "gpu/hatch.rs"]
+mod hatch;
+#[path = "gpu/joins.rs"]
+mod joins;
+#[path = "gpu/on_gpu.rs"]
+mod on_gpu;
+#[path = "gpu/plain_joins.rs"]
+mod plain_joins;
 #[path = "gpu/precision.rs"]
 mod precision;
 #[path = "gpu/scene3d.rs"]
 mod scene3d;
-#[path = "gpu/on_gpu.rs"]
-mod on_gpu;
+#[path = "gpu/single.rs"]
+mod single;
+#[path = "gpu/text_marks.rs"]
+mod text_marks;
 #[path = "gpu/vector_tiles.rs"]
 mod vector_tiles;
-#[path = "gpu/cells.rs"]
-mod cells;
+#[path = "gpu/weights.rs"]
+mod weights;
 
 const SAMPLE: &str = include_str!("../../../../fixtures/document/v1/sample.json");
 const E: f64 = 487_012.346;
@@ -78,7 +78,9 @@ struct Gpu {
 
 impl Gpu {
     fn open() -> Self {
-        let turn = ONE_AT_A_TIME.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        let turn = ONE_AT_A_TIME
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::from_env().unwrap_or(wgpu::Backends::PRIMARY),
             flags: wgpu::InstanceFlags::empty(),
@@ -587,7 +589,9 @@ fn numbers_on_the_gpu_only() {
 #[test]
 fn joins_on_a_real_gpu() {
     if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
-        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1 to run the GPU test (a skipped test is not a pass)");
+        eprintln!(
+            "SKIPPED: set KENTOS_GPU_TESTS=1 to run the GPU test (a skipped test is not a pass)"
+        );
         return;
     }
     joins::seen_through_corners_are_drawn_once(&mut Gpu::open());
@@ -648,7 +652,9 @@ fn plain_joins_on_a_real_gpu() {
 #[test]
 fn paper_widths_on_a_real_gpu() {
     if std::env::var("KENTOS_GPU_TESTS").as_deref() != Ok("1") {
-        eprintln!("SKIPPED: set KENTOS_GPU_TESTS=1 to run the GPU test (a skipped test is not a pass)");
+        eprintln!(
+            "SKIPPED: set KENTOS_GPU_TESTS=1 to run the GPU test (a skipped test is not a pass)"
+        );
         return;
     }
     let mut gpu = Gpu::open();
@@ -775,12 +781,17 @@ fn a_kept_picture_is_composed_again_with_the_hover_over_it(gpu: &mut Gpu) {
     assert!(!kept(gpu), "one sample: its own targets, drawn");
     settings.samples = 4;
     let settled = gpu.draw(&[&fixed, &hover_a], &camera, &settings, width, height);
-    assert!(kept(gpu), "four samples again: the targets kept aside, with their picture");
+    assert!(
+        kept(gpu),
+        "four samples again: the targets kept aside, with their picture"
+    );
     assert_eq!(settled, whole, "the same pixels as drawn whole");
     assert_eq!(moving.len(), whole.len());
     gpu.keep = false;
     gpu.overlays = 0;
-    eprintln!("sample switch on the GPU: the other count's targets kept aside and their picture with them");
+    eprintln!(
+        "sample switch on the GPU: the other count's targets kept aside and their picture with them"
+    );
 }
 
 /// One grey square turned by 30° on black: its edges cross pixels at every

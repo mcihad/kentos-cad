@@ -325,7 +325,9 @@ impl Interned {
     /// filled symbol hid the railway's line under it.
     fn own_seen_through(&mut self, id: &str, t: f64) -> i32 {
         let key = format!("{id}#saydam{t}");
-        self.seen_through.entry(key.clone()).or_insert_with(|| (id.to_owned(), t));
+        self.seen_through
+            .entry(key.clone())
+            .or_insert_with(|| (id.to_owned(), t));
         self.own(&key)
     }
 
@@ -343,7 +345,10 @@ impl Interned {
 /// `symbol` as its object's transparency `t` draws it, by the style core (`seen_through`, docs/adr/9219).
 fn seen_through(symbol: &Value, t: f64) -> Option<Value> {
     let core = Json::parse(&symbol.to_string()).ok()?;
-    serde_json::from_str(&json_text(&kentos_style_core::style::seen_through::seen_through(&core, t))).ok()
+    serde_json::from_str(&json_text(
+        &kentos_style_core::style::seen_through::seen_through(&core, t),
+    ))
+    .ok()
 }
 
 /// A layer's bands with masks (docs/adr/0310 §2): the objects come in their drawing order, and within each order a
@@ -540,39 +545,66 @@ pub fn layer_call(
                 });
             }
         }
-        let (mode, a) = match e {
-            Entity::Text(_) => (MODE_SKIP, 0),
-            Entity::Dimension(_) => (MODE_DIMENSION, 0),
-            // Its own bytes over its frame, its frame a hairline (docs/adr/0192 §3).
-            Entity::Image(_) => (MODE_IMAGE, 0),
-            // Its tiles over its frame, its frame a hairline (docs/adr/0204 §5).
-            Entity::Raster(_) => (MODE_RASTER, 0),
-            Entity::PointCloud(_) => (MODE_POINTCLOUD, 0),
-            Entity::Hatch(h) => (
-                MODE_SET,
-                it.set(stroke.apply(json!({ "fill": hatch_symbol_of(h, color, opts.origin) }))),
-            ),
-            // Its lines in its colour and weight, its arrowhead solid (docs/adr/0146 §5); as a hatch, never another
-            // symbol. A table's lines so, its frame's band solid (docs/adr/0184 §2).
-            Entity::Leader(_) | Entity::Table(_) => (
-                MODE_SET,
-                it.set(stroke.apply(it.lines.apply(base.look.line_pattern.as_deref().or(if stroke.line_type.is_none() { style.line_pattern.as_deref() } else { None }), leader_symbols_of(style, color, weight, opts.hairlines)))),
-            ),
-            // A wide polyline's band solid in its colour, its edges without width its line, as
-            // AutoCAD draws one; its widths are its look (docs/adr/0258 §2).
-            Entity::Polyline(p) if p.widths.is_some() => (
-                MODE_SET,
-                it.set(stroke.apply(it.lines.apply(base.look.line_pattern.as_deref().or(if stroke.line_type.is_none() { style.line_pattern.as_deref() } else { None }), leader_symbols_of(style, color, weight, opts.hairlines)))),
-            ),
-            _ => match &base.symbol {
-                Some(id) => match base.look.transparency.filter(|t| *t > 0.0) {
-                    Some(t) => (MODE_OWN, it.own_seen_through(id, t)),
-                    None => (MODE_OWN, it.own(id)),
+        let (mode, a) =
+            match e {
+                Entity::Text(_) => (MODE_SKIP, 0),
+                Entity::Dimension(_) => (MODE_DIMENSION, 0),
+                // Its own bytes over its frame, its frame a hairline (docs/adr/0192 §3).
+                Entity::Image(_) => (MODE_IMAGE, 0),
+                // Its tiles over its frame, its frame a hairline (docs/adr/0204 §5).
+                Entity::Raster(_) => (MODE_RASTER, 0),
+                Entity::PointCloud(_) => (MODE_POINTCLOUD, 0),
+                Entity::Hatch(h) => (
+                    MODE_SET,
+                    it.set(stroke.apply(json!({ "fill": hatch_symbol_of(h, color, opts.origin) }))),
+                ),
+                // Its lines in its colour and weight, its arrowhead solid (docs/adr/0146 §5); as a hatch, never another
+                // symbol. A table's lines so, its frame's band solid (docs/adr/0184 §2).
+                Entity::Leader(_) | Entity::Table(_) => {
+                    (
+                        MODE_SET,
+                        it.set(stroke.apply(
+                            it.lines.apply(
+                                base.look.line_pattern.as_deref().or(
+                                    if stroke.line_type.is_none() {
+                                        style.line_pattern.as_deref()
+                                    } else {
+                                        None
+                                    },
+                                ),
+                                leader_symbols_of(style, color, weight, opts.hairlines),
+                            ),
+                        )),
+                    )
+                }
+                // A wide polyline's band solid in its colour, its edges without width its line, as
+                // AutoCAD draws one; its widths are its look (docs/adr/0258 §2).
+                Entity::Polyline(p) if p.widths.is_some() => {
+                    (
+                        MODE_SET,
+                        it.set(stroke.apply(
+                            it.lines.apply(
+                                base.look.line_pattern.as_deref().or(
+                                    if stroke.line_type.is_none() {
+                                        style.line_pattern.as_deref()
+                                    } else {
+                                        None
+                                    },
+                                ),
+                                leader_symbols_of(style, color, weight, opts.hairlines),
+                            ),
+                        )),
+                    )
+                }
+                _ => match &base.symbol {
+                    Some(id) => match base.look.transparency.filter(|t| *t > 0.0) {
+                        Some(t) => (MODE_OWN, it.own_seen_through(id, t)),
+                        None => (MODE_OWN, it.own(id)),
+                    },
+                    None if style.renderer.is_none() => (MODE_SET, s),
+                    None => (MODE_RENDERER, 0),
                 },
-                None if style.renderer.is_none() => (MODE_SET, s),
-                None => (MODE_RENDERER, 0),
-            },
-        };
+            };
         objects.extend([mode, a, s, c]);
     }
     let mut used = it.refs.clone();
@@ -588,7 +620,10 @@ pub fn layer_call(
         if let Some(sym) = opts.library.symbol(&id) {
             symbols.insert(id, sym.clone());
         } else if let Some((source, t)) = it.seen_through.get(&id)
-            && let Some(sym) = opts.library.symbol(source).and_then(|s| seen_through(s, *t))
+            && let Some(sym) = opts
+                .library
+                .symbol(source)
+                .and_then(|s| seen_through(s, *t))
         {
             symbols.insert(id, sym);
         }
@@ -680,7 +715,10 @@ pub fn build_layer(
         opts.origin,
         opts.plot_scale,
         opts.screen,
-        View { position_low: true, ..opts.view },
+        View {
+            position_low: true,
+            ..opts.view
+        },
         frame,
     )?;
     Ok((call, batches))

@@ -33,13 +33,24 @@ pub struct GlyphQuad {
 impl GlyphQuad {
     /// A parallelogram from `origin` along `x` and `y` (the text's unit).
     pub fn spanned(origin: [f64; 2], x: [f64; 2], y: [f64; 2], color: Rgba8) -> GlyphQuad {
-        GlyphQuad { transform: [x[0], x[1], y[0], y[1], origin[0], origin[1]], color, triangle: false }
+        GlyphQuad {
+            transform: [x[0], x[1], y[0], y[1], origin[0], origin[1]],
+            color,
+            triangle: false,
+        }
     }
 
     /// The triangle `a`, `b`, `c` (the text's unit).
     pub fn triangle(a: [f64; 2], b: [f64; 2], c: [f64; 2], color: Rgba8) -> GlyphQuad {
         GlyphQuad {
-            transform: [b[0] - a[0], b[1] - a[1], c[0] - b[0], c[1] - b[1], a[0], a[1]],
+            transform: [
+                b[0] - a[0],
+                b[1] - a[1],
+                c[0] - b[0],
+                c[1] - b[1],
+                a[0],
+                a[1],
+            ],
             color,
             triangle: true,
         }
@@ -48,20 +59,33 @@ impl GlyphQuad {
     /// A filled ring (the text's unit; convex or not, no holes): its triangles, then its outline `edge` wide laid just
     /// inside it, so its edge is smoothed where it lies (half a smoothed pixel either side) and it grows no larger.
     pub fn ring(points: &[[f64; 2]], edge: f64, color: Rgba8) -> Vec<GlyphQuad> {
-        let pts: Vec<kentos_geometry_core::Vec2> =
-            points.iter().map(|p| kentos_geometry_core::Vec2::new(p[0], p[1])).collect();
+        let pts: Vec<kentos_geometry_core::Vec2> = points
+            .iter()
+            .map(|p| kentos_geometry_core::Vec2::new(p[0], p[1]))
+            .collect();
         if pts.len() < 3 {
             return Vec::new();
         }
         let mut indices = Vec::new();
         // One ring: the outer one, no holes.
         let outer = 0..pts.len();
-        kentos_geometry_core::triangulate::triangulate_into(&pts, std::slice::from_ref(&outer), &mut indices);
+        kentos_geometry_core::triangulate::triangulate_into(
+            &pts,
+            std::slice::from_ref(&outer),
+            &mut indices,
+        );
         let mut out: Vec<GlyphQuad> = indices
             .as_chunks::<3>()
             .0
             .iter()
-            .map(|t| GlyphQuad::triangle(points[t[0] as usize], points[t[1] as usize], points[t[2] as usize], color))
+            .map(|t| {
+                GlyphQuad::triangle(
+                    points[t[0] as usize],
+                    points[t[1] as usize],
+                    points[t[2] as usize],
+                    color,
+                )
+            })
             .collect();
         out.extend(outline(points, edge, color, false));
         out
@@ -80,7 +104,10 @@ impl GlyphQuad {
         let mut ranges = Vec::new();
         for ring in rings {
             ranges.push(pts.len()..pts.len() + ring.len());
-            pts.extend(ring.iter().map(|p| kentos_geometry_core::Vec2::new(p[0], p[1])));
+            pts.extend(
+                ring.iter()
+                    .map(|p| kentos_geometry_core::Vec2::new(p[0], p[1])),
+            );
         }
         let mut indices = Vec::new();
         kentos_geometry_core::triangulate::triangulate_into(&pts, &ranges, &mut indices);
@@ -106,7 +133,12 @@ impl GlyphQuad {
             return None;
         }
         let (nx, ny) = (-dy / length * width, dx / length * width);
-        Some(GlyphQuad::spanned([a[0] - nx / 2.0, a[1] - ny / 2.0], [dx, dy], [nx, ny], color))
+        Some(GlyphQuad::spanned(
+            [a[0] - nx / 2.0, a[1] - ny / 2.0],
+            [dx, dy],
+            [nx, ny],
+            color,
+        ))
     }
 }
 
@@ -154,9 +186,19 @@ impl GlyphPlace {
     /// plan's transform into model metres from the text's point.
     pub fn of(placed: &PlacedGlyph) -> GlyphPlace {
         let g = &placed.glyph;
-        let own = [g.size, 0.0, g.size * g.slant, g.size, g.origin[0], g.origin[1]];
+        let own = [
+            g.size,
+            0.0,
+            g.size * g.slant,
+            g.size,
+            g.origin[0],
+            g.origin[1],
+        ];
         GlyphPlace {
-            key: GlyphKey { font: g.font, glyph: g.id },
+            key: GlyphKey {
+                font: g.font,
+                glyph: g.id,
+            },
             transform: then(&placed.transform, &own),
         }
     }
@@ -171,7 +213,11 @@ fn outline(points: &[[f64; 2]], edge: f64, color: Rgba8, hole: bool) -> Vec<Glyp
             a[0] * b[1] - b[0] * a[1]
         })
         .sum();
-    let side = if (twice_area >= 0.0) != hole { 1.0 } else { -1.0 };
+    let side = if (twice_area >= 0.0) != hole {
+        1.0
+    } else {
+        -1.0
+    };
     let mut out = Vec::with_capacity(points.len());
     for i in 0..points.len() {
         let (a, b) = (points[i], points[(i + 1) % points.len()]);
@@ -180,8 +226,16 @@ fn outline(points: &[[f64; 2]], edge: f64, color: Rgba8, hole: bool) -> Vec<Glyp
         if length <= 0.0 || !length.is_finite() {
             continue;
         }
-        let (nx, ny) = (-dy / length * side * edge / 2.0, dx / length * side * edge / 2.0);
-        out.extend(GlyphQuad::segment([a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], edge, color));
+        let (nx, ny) = (
+            -dy / length * side * edge / 2.0,
+            dx / length * side * edge / 2.0,
+        );
+        out.extend(GlyphQuad::segment(
+            [a[0] + nx, a[1] + ny],
+            [b[0] + nx, b[1] + ny],
+            edge,
+            color,
+        ));
     }
     out
 }
@@ -190,7 +244,14 @@ fn outline(points: &[[f64; 2]], edge: f64, color: Rgba8, hole: bool) -> Vec<Glyp
 fn then(outer: &[f64; 6], inner: &[f64; 6]) -> [f64; 6] {
     let [a, b, c, d, e, f] = *outer;
     let [p, q, r, s, t, u] = *inner;
-    [a * p + c * q, b * p + d * q, a * r + c * s, b * r + d * s, a * t + c * u + e, b * t + d * u + f]
+    [
+        a * p + c * q,
+        b * p + d * q,
+        a * r + c * s,
+        b * r + d * s,
+        a * t + c * u + e,
+        b * t + d * u + f,
+    ]
 }
 
 /// A text drawn with the glyph pipeline.
@@ -242,7 +303,8 @@ mod tests {
         assert_eq!(layout.glyphs.len(), 2);
         for g in &layout.glyphs {
             let at = GlyphPlace::of(g);
-            let bytes = kentos_geometry_core::text::shaping::font_bytes(g.glyph.font).expect("bytes");
+            let bytes =
+                kentos_geometry_core::text::shaping::font_bytes(g.glyph.font).expect("bytes");
             let face = ttf_parser::Face::parse(bytes, 0).expect("a face");
             let units = f64::from(face.units_per_em());
             // The outline's first point in the face's units, as an em, through the place.
@@ -261,10 +323,14 @@ mod tests {
             let [x, y] = first.0.expect("an outline").map(|v| f64::from(v) / units);
             let m = at.transform;
             let ours = [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
-            let Some(OutlineOp::Move(theirs)) = g.outline().expect("an outline").first().cloned() else {
+            let Some(OutlineOp::Move(theirs)) = g.outline().expect("an outline").first().cloned()
+            else {
                 panic!("an outline starts with a move")
             };
-            assert!((ours[0] - theirs[0]).abs() < 1e-9 && (ours[1] - theirs[1]).abs() < 1e-9, "{ours:?} {theirs:?}");
+            assert!(
+                (ours[0] - theirs[0]).abs() < 1e-9 && (ours[1] - theirs[1]).abs() < 1e-9,
+                "{ours:?} {theirs:?}"
+            );
         }
     }
 }

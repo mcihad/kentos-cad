@@ -98,7 +98,7 @@ fn model_scope_uses_real_drawing_tools_and_model_history_then_restores_camera() 
 }
 
 #[test]
-#[ignore="GPU images, run alone"]
+#[ignore = "GPU images, run alone"]
 fn sheet13_model_scope_screens() {
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
@@ -175,15 +175,17 @@ fn sheet13_model_scope_screens() {
                 .unwrap();
             let task = app.update(Message::TextField(crate::text_field::Event::Keep));
             drive(&mut app, task);
-            assert!(app.document.as_ref().unwrap().model.entities().any(
-                |e| matches!(e,kentos_commands::Entity::Text(t) if t.text=="Model yazısı")
-            ));
+            assert!(
+                app.document.as_ref().unwrap().model.entities().any(
+                    |e| matches!(e,kentos_commands::Entity::Text(t) if t.text=="Model yazısı")
+                )
+            );
         }
     }
 }
 
 #[test]
-#[ignore="GPU images and independent PDF, run alone"]
+#[ignore = "GPU images and independent PDF, run alone"]
 fn sheet14_named_view_screens() {
     use kentos_sheet::{ItemKind, MapView, viewport::Source};
     crate::drawing_fonts::load();
@@ -356,15 +358,13 @@ fn sheet15_annotation_layer_screens() {
     ))
     .unwrap();
     let cases = data["cases"].as_array().unwrap();
-    let mut page: kentos_sheet::Sheet =
-        serde_json::from_value(cases[12]["sheet"].clone()).unwrap();
+    let mut page: kentos_sheet::Sheet = serde_json::from_value(cases[12]["sheet"].clone()).unwrap();
     page.name = "A-101 · Katman ve açıklama temsilleri".into();
     page.items.clear();
     for (index, c) in cases[12..16].iter().enumerate() {
         let mut item: kentos_sheet::Item =
             serde_json::from_value(c["sheet"]["items"][0].clone()).unwrap();
-        let patch: kentos_sheet::ops::Op =
-            serde_json::from_value(c["operation"].clone()).unwrap();
+        let patch: kentos_sheet::ops::Op = serde_json::from_value(c["operation"].clone()).unwrap();
         let mut one = kentos_sheet::SheetBook::default();
         let mut single = page.clone();
         single.items.clear();
@@ -548,7 +548,7 @@ fn sheet_model_scope_uses_visible_source_ids_and_new_text_takes_the_physical_pap
 }
 
 #[test]
-#[ignore="GPU images, run alone"]
+#[ignore = "GPU images, run alone"]
 fn sheet16_original_identity_screens() {
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
@@ -626,9 +626,33 @@ fn an_active_viewport_index_cannot_hide_source_objects_in_another_map_or_export(
 
 #[test]
 fn a_lost_active_source_returns_to_paper_instead_of_using_an_unscoped_model_camera() {
-    let mut app=identity_scope_app(12,"light",13);let camera=app.viewport.camera;
-    let view=kentos_commands::NamedView{id:"lost-view".into(),name:"Plan".into(),center:kentos_commands::Vec2{x:0.,y:0.},width:19.5,height:11.5,twist:0.,recipe:None};
-    let mut ctx=app.sheets.context().clone();ctx.named_views=vec![view.clone()];app.sheets.set_context(ctx.clone());let mut book=app.sheets.book().clone();if let kentos_sheet::ItemKind::Map(m)=&mut book.sheets[0].items[0].kind {m.source=kentos_sheet::viewport::Source::ViewLink{view};}
-    app.sheets.load(book);app.sheets.update(Sheet::Tab(1));app.sheets.update(Sheet::EnterModel("viewport".into()));app.sync_sheet_model_camera();assert!(app.spatial.has_sheet_view());
-    ctx.named_views.clear();app.sheets.set_context(ctx);app.sync_sheet_model_camera();assert!(app.sheets.model_scope().is_none());assert!(!app.spatial.has_sheet_view());assert_eq!(app.viewport.camera,camera);
+    let mut app = identity_scope_app(12, "light", 13);
+    let camera = app.viewport.camera;
+    let view = kentos_commands::NamedView {
+        id: "lost-view".into(),
+        name: "Plan".into(),
+        center: kentos_commands::Vec2 { x: 0., y: 0. },
+        width: 19.5,
+        height: 11.5,
+        twist: 0.,
+        recipe: None,
+    };
+    let mut ctx = app.sheets.context().clone();
+    ctx.named_views = vec![view.clone()];
+    app.sheets.set_context(ctx.clone());
+    let mut book = app.sheets.book().clone();
+    if let kentos_sheet::ItemKind::Map(m) = &mut book.sheets[0].items[0].kind {
+        m.source = kentos_sheet::viewport::Source::ViewLink { view };
+    }
+    app.sheets.load(book);
+    app.sheets.update(Sheet::Tab(1));
+    app.sheets.update(Sheet::EnterModel("viewport".into()));
+    app.sync_sheet_model_camera();
+    assert!(app.spatial.has_sheet_view());
+    ctx.named_views.clear();
+    app.sheets.set_context(ctx);
+    app.sync_sheet_model_camera();
+    assert!(app.sheets.model_scope().is_none());
+    assert!(!app.spatial.has_sheet_view());
+    assert_eq!(app.viewport.camera, camera);
 }

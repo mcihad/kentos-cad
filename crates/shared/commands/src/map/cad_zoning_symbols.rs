@@ -68,7 +68,10 @@ pub struct ZoningSymbolChoice {
 
 /// KentOS's table, as it ships.
 pub fn builtin_zoning_symbols() -> Option<ZoningSymbols> {
-    serde_json::from_str(include_str!("../../../../../catalog/v1/profiles/imar-plani-semboller.json")).ok()
+    serde_json::from_str(include_str!(
+        "../../../../../catalog/v1/profiles/imar-plani-semboller.json"
+    ))
+    .ok()
 }
 
 impl ZoningSymbols {
@@ -166,10 +169,18 @@ mod tests {
     #[test]
     fn the_table_reads_and_its_symbols_are_choices() {
         let t = builtin_zoning_symbols().expect("the table");
-        assert_eq!((t.format.as_str(), t.version, t.profile.as_str()), (ZONING_SYMBOLS_FORMAT, 1, crate::ZONING_PROFILE));
+        assert_eq!(
+            (t.format.as_str(), t.version, t.profile.as_str()),
+            (ZONING_SYMBOLS_FORMAT, 1, crate::ZONING_PROFILE)
+        );
         for level in &t.levels {
             for u in &level.uses {
-                assert!(level.choices.iter().any(|c| c.id == u.symbol), "{}: {}", level.level, u.symbol);
+                assert!(
+                    level.choices.iter().any(|c| c.id == u.symbol),
+                    "{}: {}",
+                    level.level,
+                    u.symbol
+                );
             }
         }
         assert!(t.level("uip").is_some() && t.level("nip").is_some());

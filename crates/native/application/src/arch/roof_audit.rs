@@ -78,7 +78,15 @@ pub fn measures(doc: &Document) -> Vec<RoofMeasure> {
         .filter(|ring| ring.len() >= 3);
     // The projections and the footprint they stand out of (docs/adr/8164), each storey's floor by its id.
     let (footprint, projections) = doc.projection_parts();
-    let floor_of = |id: &str| doc.settings().arch.as_ref()?.levels.iter().find(|l| l.id == id).map(|l| l.elevation);
+    let floor_of = |id: &str| {
+        doc.settings()
+            .arch
+            .as_ref()?
+            .levels
+            .iter()
+            .find(|l| l.id == id)
+            .map(|l| l.elevation)
+    };
     for e in doc.entities() {
         let Entity::Roof(r) = e else { continue };
         let Shape::Roof { pts, roof: spec } = crate::geometry::roof_shape(r, doc.settings()) else {
@@ -92,7 +100,10 @@ pub fn measures(doc: &Document) -> Vec<RoofMeasure> {
             pts.iter().map(|p| p.y).sum::<f64>() / pts.len() as f64,
         );
         let sloping = spec.slopes.iter().any(Option::is_some);
-        let ridge = sloping.then(|| core::ridge_rise(&pts, &spec).ok()).flatten().map(|rise| rise + r.roof.offset);
+        let ridge = sloping
+            .then(|| core::ridge_rise(&pts, &spec).ok())
+            .flatten()
+            .map(|rise| rise + r.roof.offset);
         // The windows' outlines in plan and on the roof, by their index among the parts (the spec's are the drawn
         // parts in their order).
         let overhang = r.roof.overhang.unwrap_or(0.0);
@@ -105,7 +116,13 @@ pub fn measures(doc: &Document) -> Vec<RoofMeasure> {
                 let ring = core::part_ring(&pts, &spec, p)?;
                 let lifted = ring
                     .iter()
-                    .map(|q| [q.x, q.y, core::height_at(&pts, &spec, *q).unwrap_or(spec.base)])
+                    .map(|q| {
+                        [
+                            q.x,
+                            q.y,
+                            core::height_at(&pts, &spec, *q).unwrap_or(spec.base),
+                        ]
+                    })
                     .collect();
                 Some((i, lifted, ring))
             })
@@ -117,9 +134,16 @@ pub fn measures(doc: &Document) -> Vec<RoofMeasure> {
             .enumerate()
             .map(|(i, part)| PartMeasure {
                 part: part.clone(),
-                top: matches!(part.kind, RoofPartKind::Chimney | RoofPartKind::Vent).then(|| part.rise_m()).flatten(),
+                top: matches!(part.kind, RoofPartKind::Chimney | RoofPartKind::Vent)
+                    .then(|| part.rise_m())
+                    .flatten(),
                 facade: windows.iter().find(|(k, ..)| *k == i).map(|(_, _, ring)| {
-                    (ring.iter().map(|q| inside(&pts, *q)).fold(f64::INFINITY, f64::min) - overhang).max(0.0)
+                    (ring
+                        .iter()
+                        .map(|q| inside(&pts, *q))
+                        .fold(f64::INFINITY, f64::min)
+                        - overhang)
+                        .max(0.0)
                 }),
             })
             .collect();
@@ -143,8 +167,10 @@ pub fn measures(doc: &Document) -> Vec<RoofMeasure> {
             over_projection: {
                 // The projections on the roof's storey and under it; all of them for a roof on no storey.
                 let top = e.own_level().and_then(floor_of);
-                let under: Vec<&kentos_domain::projections::ProjectionPart> =
-                    projections.iter().filter(|p| top.is_none_or(|f| p.floor <= f + 1e-6)).collect();
+                let under: Vec<&kentos_domain::projections::ProjectionPart> = projections
+                    .iter()
+                    .filter(|p| top.is_none_or(|f| p.floor <= f + 1e-6))
+                    .collect();
                 past_projections(&pts, &under, &footprint)
             },
             walls: crate::roof_walls::walls_over(doc, &pts, &spec),
@@ -157,7 +183,13 @@ pub fn measures(doc: &Document) -> Vec<RoofMeasure> {
 /// the ring's sides; 0 when it stays within.
 fn past(pts: &[V], ring: &[V]) -> f64 {
     use kentos_geometry_core::geom::arrangement::{Area, Ring};
-    let area = |p: &[V]| Area { outer: Ring { pts: p.to_vec(), bulges: None }, holes: Vec::new() };
+    let area = |p: &[V]| Area {
+        outer: Ring {
+            pts: p.to_vec(),
+            bulges: None,
+        },
+        holes: Vec::new(),
+    };
     let rest = kentos_geometry_core::geom::region::subtract_areas(&[area(pts)], &[area(ring)]);
     let to_ring = |q: V| {
         (0..ring.len())
@@ -165,12 +197,19 @@ fn past(pts: &[V], ring: &[V]) -> f64 {
                 let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
                 let (dx, dy) = (b.x - a.x, b.y - a.y);
                 let len2 = dx * dx + dy * dy;
-                let t = if len2 > 0.0 { (((q.x - a.x) * dx + (q.y - a.y) * dy) / len2).clamp(0.0, 1.0) } else { 0.0 };
+                let t = if len2 > 0.0 {
+                    (((q.x - a.x) * dx + (q.y - a.y) * dy) / len2).clamp(0.0, 1.0)
+                } else {
+                    0.0
+                };
                 (q.x - (a.x + dx * t)).hypot(q.y - (a.y + dy * t))
             })
             .fold(f64::INFINITY, f64::min)
     };
-    rest.iter().flat_map(|a| a.outer.pts.iter().copied()).map(to_ring).fold(0.0, f64::max)
+    rest.iter()
+        .flat_map(|a| a.outer.pts.iter().copied())
+        .map(to_ring)
+        .fold(0.0, f64::max)
 }
 
 /// How far the eaves line `pts` reaches past the projections' front faces (docs/adr/8164; PAİY 42/3), m: from each
@@ -184,7 +223,13 @@ fn past_projections(
 ) -> Option<f64> {
     use kentos_geometry_core::geom::arrangement::{Area, Ring};
     use kentos_geometry_core::geom::region::inside_area;
-    let roof = Area { outer: Ring { pts: pts.to_vec(), bulges: None }, holes: Vec::new() };
+    let roof = Area {
+        outer: Ring {
+            pts: pts.to_vec(),
+            bulges: None,
+        },
+        holes: Vec::new(),
+    };
     let within = |shape: &[Area], q: V| shape.iter().any(|a| inside_area(a, q));
     let at = |q: V, d: V, t: f64| V::new(q.x + d.x * t, q.y + d.y * t);
     let mut most: Option<f64> = None;
@@ -195,7 +240,9 @@ fn past_projections(
             if n < 3 {
                 continue;
             }
-            let twice: f64 = (0..n).map(|i| ring[i].x * ring[(i + 1) % n].y - ring[(i + 1) % n].x * ring[i].y).sum();
+            let twice: f64 = (0..n)
+                .map(|i| ring[i].x * ring[(i + 1) % n].y - ring[(i + 1) % n].x * ring[i].y)
+                .sum();
             for k in 0..n {
                 let (a, b) = (ring[k], ring[(k + 1) % n]);
                 let len = (b.x - a.x).hypot(b.y - a.y);
@@ -204,16 +251,26 @@ fn past_projections(
                 }
                 let u = V::new((b.x - a.x) / len, (b.y - a.y) / len);
                 // Outward: right of the side going anticlockwise.
-                let out = if twice > 0.0 { V::new(u.y, -u.x) } else { V::new(-u.y, u.x) };
+                let out = if twice > 0.0 {
+                    V::new(u.y, -u.x)
+                } else {
+                    V::new(-u.y, u.x)
+                };
                 let mid = V::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0);
                 // An outer side: beyond it neither the footprint nor another projection of its storey.
                 let beyond = at(mid, out, 0.01);
-                if within(footprint, beyond) || parts.iter().any(|q| q.level == p.level && within(&q.shape, beyond)) {
+                if within(footprint, beyond)
+                    || parts
+                        .iter()
+                        .any(|q| q.level == p.level && within(&q.shape, beyond))
+                {
                     continue;
                 }
                 // A front face: going in, the projection runs back to the footprint (its sides run along it).
                 let back = V::new(-out.x, -out.y);
-                let Some(depth) = first_hit(ring, mid, back) else { continue };
+                let Some(depth) = first_hit(ring, mid, back) else {
+                    continue;
+                };
                 if !within(footprint, at(mid, back, depth + 0.01)) {
                     continue;
                 }
@@ -357,12 +414,31 @@ mod tests {
 
     #[test]
     fn eaves_past_the_parcel() {
-        let parcel = [V::new(0.0, 0.0), V::new(10.0, 0.0), V::new(10.0, 8.0), V::new(0.0, 8.0)];
-        let within = [V::new(1.0, 1.0), V::new(9.0, 1.0), V::new(9.0, 7.0), V::new(1.0, 7.0)];
+        let parcel = [
+            V::new(0.0, 0.0),
+            V::new(10.0, 0.0),
+            V::new(10.0, 8.0),
+            V::new(0.0, 8.0),
+        ];
+        let within = [
+            V::new(1.0, 1.0),
+            V::new(9.0, 1.0),
+            V::new(9.0, 7.0),
+            V::new(1.0, 7.0),
+        ];
         assert!(past(&within, &parcel).abs() < 1e-9);
         // 1.25 m past the west side, clockwise.
-        let over = [V::new(-1.25, 1.0), V::new(-1.25, 7.0), V::new(9.0, 7.0), V::new(9.0, 1.0)];
-        assert!((past(&over, &parcel) - 1.25).abs() < 1e-9, "{}", past(&over, &parcel));
+        let over = [
+            V::new(-1.25, 1.0),
+            V::new(-1.25, 7.0),
+            V::new(9.0, 7.0),
+            V::new(9.0, 1.0),
+        ];
+        assert!(
+            (past(&over, &parcel) - 1.25).abs() < 1e-9,
+            "{}",
+            past(&over, &parcel)
+        );
     }
 
     /// PAİY 42/3 (docs/adr/8164): a 6 m wide balcony 1.20 m deep south of a 10 × 8 m footprint; the eaves 2.00 m south
@@ -371,9 +447,17 @@ mod tests {
     #[test]
     fn eaves_past_a_projection() {
         use kentos_geometry_core::geom::arrangement::{Area, Ring};
-        let area = |pts: Vec<V>| Area { outer: Ring { pts, bulges: None }, holes: Vec::new() };
+        let area = |pts: Vec<V>| Area {
+            outer: Ring { pts, bulges: None },
+            holes: Vec::new(),
+        };
         let rect = |x0: f64, y0: f64, x1: f64, y1: f64| {
-            vec![V::new(x0, y0), V::new(x1, y0), V::new(x1, y1), V::new(x0, y1)]
+            vec![
+                V::new(x0, y0),
+                V::new(x1, y0),
+                V::new(x1, y1),
+                V::new(x0, y1),
+            ]
         };
         let footprint = [area(rect(0.0, 0.0, 10.0, 8.0))];
         let balcony = kentos_domain::projections::ProjectionPart {
@@ -395,7 +479,10 @@ mod tests {
         turned.shape = vec![area(rect(2.0, -1.2, 8.0, 0.0).into_iter().rev().collect())];
         let past = past_projections(&roof, &[&turned], &footprint).expect("under the roof");
         assert!((past - 0.8).abs() < 1e-9, "{past}");
-        assert_eq!(past_projections(&rect(-1.0, -1.0, 11.0, 9.0), &[&balcony], &footprint), None);
+        assert_eq!(
+            past_projections(&rect(-1.0, -1.0, 11.0, 9.0), &[&balcony], &footprint),
+            None
+        );
     }
 
     #[test]
@@ -410,5 +497,4 @@ mod tests {
         let clockwise: Vec<V> = rect.iter().rev().copied().collect();
         assert!((inside(&clockwise, V::new(11.0, 4.0)) - 1.0).abs() < 1e-12);
     }
-
 }

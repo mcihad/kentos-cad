@@ -19,7 +19,8 @@ use crate::app::{App, Message};
 use crate::document::Document;
 
 fn out() -> PathBuf {
-    let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/bohhbuy-kitaplik");
+    let dir =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/bohhbuy-kitaplik");
     std::fs::create_dir_all(&dir).expect("a folder for the pictures");
     dir
 }
@@ -67,16 +68,28 @@ fn sheet(members: &[&Value]) -> (Document, kentos_render_wgpu::Bounds) {
         let id = item["id"].as_str().unwrap_or("");
         let attrs = sample(id);
         match item["symbol"]["type"].as_str() {
-            Some("marker") => add(json!({ "kind": "point", "layerId": "ornek", "p": at(x + 13.0, y), "symbol": id }), attrs),
-            Some("line") => add(json!({ "kind": "polyline", "layerId": "ornek",
+            Some("marker") => add(
+                json!({ "kind": "point", "layerId": "ornek", "p": at(x + 13.0, y), "symbol": id }),
+                attrs,
+            ),
+            Some("line") => add(
+                json!({ "kind": "polyline", "layerId": "ornek",
                                         "pts": pts(&[(x, y - 2.0), (x + 20.0, y - 2.0), (x + 28.0, y + 4.0)]),
-                                        "bulges": [0, 0, 0], "symbol": id }), attrs),
-            _ => add(json!({ "kind": "polygon", "layerId": "ornek",
+                                        "bulges": [0, 0, 0], "symbol": id }),
+                attrs,
+            ),
+            _ => add(
+                json!({ "kind": "polygon", "layerId": "ornek",
                              "pts": pts(&[(x, y - 7.0), (x + 26.0, y - 7.0), (x + 26.0, y + 7.0), (x, y + 7.0)]),
-                             "bulges": [0, 0, 0, 0], "symbol": id }), attrs),
+                             "bulges": [0, 0, 0, 0], "symbol": id }),
+                attrs,
+            ),
         }
-        add(json!({ "kind": "text", "layerId": "yazilar", "p": at(x + 33.0, y), "text": item["name"], "height": 2.6,
-                    "rotation": 0, "align": "middleLeft" }), json!({}));
+        add(
+            json!({ "kind": "text", "layerId": "yazilar", "p": at(x + 33.0, y), "text": item["name"], "height": 2.6,
+                    "rotation": 0, "align": "middleLeft" }),
+            json!({}),
+        );
     }
     let layer = |id: &str, name: &str| {
         json!({ "id": id, "name": name, "type": "layer", "visible": true, "locked": false, "expanded": true,
@@ -106,10 +119,18 @@ fn bohhbuy_catalog_pictures() {
     let (items, categories) = library.dump(Source::System);
     let dir = out();
     let only = std::env::var("BOHHBUY_CLASS").ok();
-    let themes: &[(&str, &str)] =
-        if std::env::var("BOHHBUY_LIGHT").is_ok() { &[("light", "")] } else { &[("light", ""), ("dark", "-koyu")] };
+    let themes: &[(&str, &str)] = if std::env::var("BOHHBUY_LIGHT").is_ok() {
+        &[("light", "")]
+    } else {
+        &[("light", ""), ("dark", "-koyu")]
+    };
     for c in &categories {
-        let path: Vec<&str> = c["path"].as_array().into_iter().flatten().filter_map(Value::as_str).collect();
+        let path: Vec<&str> = c["path"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter_map(Value::as_str)
+            .collect();
         if path.len() != 2 || path[0] != "BÖHHBÜY" || path[1] == "Piktogramlar" {
             continue;
         }
@@ -118,7 +139,12 @@ fn bohhbuy_catalog_pictures() {
         }
         let mut members: Vec<&Value> = items
             .iter()
-            .filter(|i| i["kind"] == "symbol" && i["path"].as_array().is_some_and(|p| p.iter().filter_map(Value::as_str).eq(path.iter().copied())))
+            .filter(|i| {
+                i["kind"] == "symbol"
+                    && i["path"].as_array().is_some_and(|p| {
+                        p.iter().filter_map(Value::as_str).eq(path.iter().copied())
+                    })
+            })
             .collect();
         members.sort_by(|a, b| a["id"].as_str().cmp(&b["id"].as_str()));
         let class = slug(path[1].split(' ').next().unwrap_or(""));
@@ -129,13 +155,19 @@ fn bohhbuy_catalog_pictures() {
                 let _ = app.update(Message::Opened(Some(Ok(Box::new(doc.clone())))));
                 themed(&mut app, mode);
                 // Twice the pixels: the signs' fine lines and dots stay legible when the picture is enlarged.
-                let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer").scale(2.0);
+                let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0))
+                    .expect("a renderer")
+                    .scale(2.0);
                 let mut update = |app: &mut App, message| {
                     let _ = app.update(message);
                 };
                 snapshot.settle(&mut app, App::view, &mut update);
                 app.viewport.camera.fit(&b, 24.0);
-                picture(&mut snapshot, &mut app, dir.join(format!("katalog-{class}-{}{suffix}.png", page + 1)));
+                picture(
+                    &mut snapshot,
+                    &mut app,
+                    dir.join(format!("katalog-{class}-{}{suffix}.png", page + 1)),
+                );
             }
         }
     }
@@ -151,13 +183,23 @@ fn bohhbuy_manager_pictures() {
     let dir = out();
     for (mode, suffix) in [("light", ""), ("dark", "-koyu")] {
         for c in &categories {
-            let path: Vec<String> = c["path"].as_array().into_iter().flatten().filter_map(Value::as_str).map(str::to_owned).collect();
+            let path: Vec<String> = c["path"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(Value::as_str)
+                .map(str::to_owned)
+                .collect();
             if path.len() != 2 || path[0] != "BÖHHBÜY" || path[1] == "Piktogramlar" {
                 continue;
             }
             let Some(first) = items.iter().find(|i| {
                 i["kind"] == "symbol"
-                    && i["path"].as_array().is_some_and(|p| p.iter().filter_map(Value::as_str).eq(path.iter().map(String::as_str)))
+                    && i["path"].as_array().is_some_and(|p| {
+                        p.iter()
+                            .filter_map(Value::as_str)
+                            .eq(path.iter().map(String::as_str))
+                    })
             }) else {
                 continue;
             };
@@ -165,12 +207,26 @@ fn bohhbuy_manager_pictures() {
             let _ = app.update(Message::Opened(Some(Ok(Box::new(town())))));
             themed(&mut app, mode);
             let _ = app.update(Message::Run("style.manager"));
-            let _ = app.update(Message::StyleManager(Box::new(Event::Go(Source::System, path[..1].to_vec(), true))));
-            let _ = app.update(Message::StyleManager(Box::new(Event::Go(Source::System, path.clone(), false))));
-            let _ = app.update(Message::StyleManager(Box::new(Event::Press(first["id"].as_str().unwrap_or("").to_owned()))));
+            let _ = app.update(Message::StyleManager(Box::new(Event::Go(
+                Source::System,
+                path[..1].to_vec(),
+                true,
+            ))));
+            let _ = app.update(Message::StyleManager(Box::new(Event::Go(
+                Source::System,
+                path.clone(),
+                false,
+            ))));
+            let _ = app.update(Message::StyleManager(Box::new(Event::Press(
+                first["id"].as_str().unwrap_or("").to_owned(),
+            ))));
             let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer");
             let class = slug(path[1].split(' ').next().unwrap_or(""));
-            picture(&mut snapshot, &mut app, dir.join(format!("yonetici-{class}{suffix}.png")));
+            picture(
+                &mut snapshot,
+                &mut app,
+                dir.join(format!("yonetici-{class}{suffix}.png")),
+            );
         }
     }
 }
@@ -185,10 +241,17 @@ fn bohhbuy_close_pictures() {
     let (items, _) = library.dump(Source::System);
     let mut signs: Vec<&Value> = items
         .iter()
-        .filter(|i| i["kind"] == "symbol" && i["id"].as_str().is_some_and(|id| id.starts_with("bohhbuy.")))
+        .filter(|i| {
+            i["kind"] == "symbol"
+                && i["id"]
+                    .as_str()
+                    .is_some_and(|id| id.starts_with("bohhbuy."))
+        })
         .collect();
     signs.sort_by(|a, b| a["id"].as_str().cmp(&b["id"].as_str()));
-    let only = std::env::var("BOHHBUY_PAGE").ok().and_then(|p| p.parse::<usize>().ok());
+    let only = std::env::var("BOHHBUY_PAGE")
+        .ok()
+        .and_then(|p| p.parse::<usize>().ok());
     let dir = out();
     for (page, chunk) in signs.chunks(16).enumerate() {
         if only.is_some_and(|o| o != page + 1) {
@@ -206,16 +269,28 @@ fn bohhbuy_close_pictures() {
             let id = item["id"].as_str().unwrap_or("");
             let attrs = sample(id);
             match item["symbol"]["type"].as_str() {
-                Some("marker") => add(json!({ "kind": "point", "layerId": "ornek", "p": at(cx, cy + 1.0), "symbol": id }), attrs),
-                Some("line") => add(json!({ "kind": "polyline", "layerId": "ornek",
+                Some("marker") => add(
+                    json!({ "kind": "point", "layerId": "ornek", "p": at(cx, cy + 1.0), "symbol": id }),
+                    attrs,
+                ),
+                Some("line") => add(
+                    json!({ "kind": "polyline", "layerId": "ornek",
                                             "pts": pts(&[(cx - 10.0, cy - 1.0), (cx + 4.0, cy - 1.0), (cx + 10.0, cy + 4.0)]),
-                                            "bulges": [0, 0, 0], "symbol": id }), attrs),
-                _ => add(json!({ "kind": "polygon", "layerId": "ornek",
+                                            "bulges": [0, 0, 0], "symbol": id }),
+                    attrs,
+                ),
+                _ => add(
+                    json!({ "kind": "polygon", "layerId": "ornek",
                                  "pts": pts(&[(cx - 9.0, cy - 4.5), (cx + 9.0, cy - 4.5), (cx + 9.0, cy + 5.5), (cx - 9.0, cy + 5.5)]),
-                                 "bulges": [0, 0, 0, 0], "symbol": id }), attrs),
+                                 "bulges": [0, 0, 0, 0], "symbol": id }),
+                    attrs,
+                ),
             }
-            add(json!({ "kind": "text", "layerId": "yazilar", "p": at(cx - 11.5, cy + 7.0), "text": &id[8..], "height": 1.6,
-                        "rotation": 0, "align": "topLeft" }), json!({}));
+            add(
+                json!({ "kind": "text", "layerId": "yazilar", "p": at(cx - 11.5, cy + 7.0), "text": &id[8..], "height": 1.6,
+                        "rotation": 0, "align": "topLeft" }),
+                json!({}),
+            );
         }
         let layer = |id: &str, name: &str| {
             json!({ "id": id, "name": name, "type": "layer", "visible": true, "locked": false, "expanded": true,
@@ -231,17 +306,24 @@ fn bohhbuy_close_pictures() {
             "entities": entities,
             "styles": { "items": [], "categories": [] },
         });
-        let snapshot = DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("the sheet reads");
+        let snapshot =
+            DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("the sheet reads");
         let doc = Document::new(snapshot, None).expect("the sheet opens");
         let (mut app, _) = App::boot(None);
         let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
         themed(&mut app, "light");
-        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0)).expect("a renderer").scale(2.0);
+        let mut snapshot = Snapshot::new(Size::new(1440.0, 900.0))
+            .expect("a renderer")
+            .scale(2.0);
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
         };
         snapshot.settle(&mut app, App::view, &mut update);
         app.viewport.camera.fit(&bounds(0.0, -64.0, 96.0, 0.0), 8.0);
-        picture(&mut snapshot, &mut app, dir.join(format!("yakin-{:02}.png", page + 1)));
+        picture(
+            &mut snapshot,
+            &mut app,
+            dir.join(format!("yakin-{:02}.png", page + 1)),
+        );
     }
 }

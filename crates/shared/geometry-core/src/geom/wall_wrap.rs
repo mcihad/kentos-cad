@@ -91,7 +91,10 @@ fn plan_at(spec: &Spec, frame: Option<(f64, f64)>) -> Option<Wraps> {
     // Where the turns stop: the frame's faces, else both at `m`.
     let (top, bottom) = match frame {
         Some((top, bottom)) => {
-            if !(top >= bottom - eps && (l == 0 || top <= o[l] + eps) && (r == 0 || bottom >= o[n - r] - eps)) {
+            if !(top >= bottom - eps
+                && (l == 0 || top <= o[l] + eps)
+                && (r == 0 || bottom >= o[n - r] - eps))
+            {
                 return None;
             }
             (top, bottom)
@@ -316,11 +319,16 @@ impl Solver<'_> {
         // The through holes' jambs, when the turns fit before the wall's ends and other holes; a pocket door's stay
         // square, its pocket opening there (docs/adr/0777 §2).
         let through: Vec<usize> = (0..holes.len())
-            .filter(|&h| holes[h].lo <= right + eps && holes[h].hi >= left - eps && holes[h].open == [None, None])
+            .filter(|&h| {
+                holes[h].lo <= right + eps
+                    && holes[h].hi >= left - eps
+                    && holes[h].open == [None, None]
+            })
             .collect();
         // A jamb with a frame turns its layers up to the frame's faces (docs/adr/0785 §5): its own plan.
         let mut framed: Vec<Wraps> = Vec::new();
-        let mut sides: Vec<(EndSide, Option<usize>)> = sides.into_iter().map(|s| (s, None)).collect();
+        let mut sides: Vec<(EndSide, Option<usize>)> =
+            sides.into_iter().map(|s| (s, None)).collect();
         for &h in &through {
             let (s0, s1) = (holes[h].s0, holes[h].s1);
             let fits = (spec.closed || (s0 - w.reach > eps && s1 + w.reach < len - eps))
@@ -330,7 +338,9 @@ impl Solver<'_> {
             if !fits {
                 continue;
             }
-            let own = holes[h].frame.and_then(|(top, bottom)| plan_framed(spec, top, bottom));
+            let own = holes[h]
+                .frame
+                .and_then(|(top, bottom)| plan_framed(spec, top, bottom));
             let at = own.map(|p| {
                 framed.push(p);
                 framed.len() - 1
@@ -340,7 +350,10 @@ impl Solver<'_> {
             let grown: Vec<Option<Span>> = paths
                 .iter()
                 .enumerate()
-                .map(|(k, lp)| lp.as_ref().map(|lp| span_on(lp, base, s0 - plan.pull[k], s1 + plan.pull[k], o[k])))
+                .map(|(k, lp)| {
+                    lp.as_ref()
+                        .map(|lp| span_on(lp, base, s0 - plan.pull[k], s1 + plan.pull[k], o[k]))
+                })
                 .collect();
             for (k, g) in grown.into_iter().enumerate() {
                 if let Some(g) = g {

@@ -90,7 +90,13 @@ pub(crate) fn review(
 /// The nodes under the layer group `group` (the group too), each its id and its path in the drawing's tree
 /// (`Dış başvuru: Plan / Mimari / Duvar`), in the tree's order.
 pub fn group_paths(doc: &Document, group: &str) -> Vec<(String, String)> {
-    fn walk(nodes: &[LayerNode], here: &str, group: &str, inside: bool, out: &mut Vec<(String, String)>) {
+    fn walk(
+        nodes: &[LayerNode],
+        here: &str,
+        group: &str,
+        inside: bool,
+        out: &mut Vec<(String, String)>,
+    ) {
         for n in nodes {
             let path = if here.is_empty() {
                 n.name.clone()
@@ -119,7 +125,8 @@ pub fn viewport_overrides(doc: &Document, group: Option<&str>) -> Vec<XrefViewpo
     let Some(Ok((book, _))) = doc.sheets().map(kentos_sheet::project::read_project_sheets) else {
         return Vec::new();
     };
-    let paths: std::collections::HashMap<String, String> = group_paths(doc, group).into_iter().collect();
+    let paths: std::collections::HashMap<String, String> =
+        group_paths(doc, group).into_iter().collect();
     let mut out = Vec::new();
     for sheet in &book.sheets {
         for item in &sheet.items {

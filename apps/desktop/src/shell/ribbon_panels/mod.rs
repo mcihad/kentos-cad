@@ -151,10 +151,12 @@ impl App {
         let group = group.launcher(message, launcher.title);
         // A launcher that opens a command shows that command's icon, as the ribbon's own (docs/adr/9337).
         Some(match launcher.target {
-            crate::catalog::LauncherTarget::Command(id) => match crate::catalog::catalog().get(id) {
-                Some(command) => group.launcher_icon(command.icon),
-                None => group,
-            },
+            crate::catalog::LauncherTarget::Command(id) => {
+                match crate::catalog::catalog().get(id) {
+                    Some(command) => group.launcher_icon(command.icon),
+                    None => group,
+                }
+            }
             crate::catalog::LauncherTarget::Tab(_) => group,
         })
     }
@@ -476,7 +478,10 @@ impl App {
                     weights,
                 )
         };
-        Some(Group::new(properties_title(panel.label, !self.selection.is_empty())).stepped(widths, view, folded))
+        Some(
+            Group::new(properties_title(panel.label, !self.selection.is_empty()))
+                .stepped(widths, view, folded),
+        )
     }
 
     /// Seçim: the count and the kinds of the selection, then its commands

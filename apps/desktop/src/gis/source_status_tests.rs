@@ -10,7 +10,10 @@ use crate::files_testing::{app_with_drawing, drive};
 
 fn with_two_parcels(tag: &str) -> (App, String, String) {
     crate::data_layers::register();
-    let (a, b) = (parcels(&format!("{tag}-a"), 4), parcels(&format!("{tag}-b"), 2));
+    let (a, b) = (
+        parcels(&format!("{tag}-a"), 4),
+        parcels(&format!("{tag}-b"), 2),
+    );
     let mut app = app_with_drawing();
     app.add_data_layers(vec![
         crate::data_layers::describe(&a.display().to_string(), "parseller").expect("a"),
@@ -38,10 +41,17 @@ fn data_layers_are_listed_with_their_tables_counted_by_their_sources() {
     let w = app.gis.source_status.as_ref().expect("the window");
     let rows = app.source_data_rows();
     assert_eq!(rows.len(), 2);
-    assert!(w.counts_for_test().is_empty(), "hesaplanmadı until the sources answer");
+    assert!(
+        w.counts_for_test().is_empty(),
+        "hesaplanmadı until the sources answer"
+    );
     drive(&mut app, task);
     let w = app.gis.source_status.as_ref().expect("the window");
-    let mut counts: Vec<u64> = w.counts_for_test().values().filter_map(|r| r.as_ref().ok().copied()).collect();
+    let mut counts: Vec<u64> = w
+        .counts_for_test()
+        .values()
+        .filter_map(|r| r.as_ref().ok().copied())
+        .collect();
     counts.sort_unstable();
     assert_eq!(counts, [2, 4], "each table's real count");
 }
@@ -60,9 +70,19 @@ fn the_inspector_says_the_data_layers_apart_from_the_drawings_objects() {
         .collect();
     let value = |l: &str| rows.iter().find(|(k, _)| k == l).map(|(_, v)| v.clone());
     // The drawing's own objects and the sources' rows apart, the rows never 0 before they are counted (docs/adr/9340).
-    assert_eq!(value("Veri katmanları").as_deref(), Some("2 katman"), "{rows:?}");
-    assert!(value("Çizimdeki nesne").is_some() && value("Nesne sayısı").is_none(), "{rows:?}");
-    assert!(value("Kaynaktaki satır").is_some_and(|v| v != "0"), "{rows:?}");
+    assert_eq!(
+        value("Veri katmanları").as_deref(),
+        Some("2 katman"),
+        "{rows:?}"
+    );
+    assert!(
+        value("Çizimdeki nesne").is_some() && value("Nesne sayısı").is_none(),
+        "{rows:?}"
+    );
+    assert!(
+        value("Kaynaktaki satır").is_some_and(|v| v != "0"),
+        "{rows:?}"
+    );
 }
 
 #[test]
@@ -70,14 +90,23 @@ fn katman_tells_same_named_layers_apart_and_the_table_names_the_target() {
     let (mut app, a, b) = with_two_parcels("ayni-ad");
     let names = app.table_layer_words_for_test();
     assert!(!names.is_empty());
-    let ours: Vec<&String> = names.iter().filter(|n| n.starts_with("parseller (veri")).collect();
+    let ours: Vec<&String> = names
+        .iter()
+        .filter(|n| n.starts_with("parseller (veri"))
+        .collect();
     assert_eq!(ours.len(), 2, "{names:?}");
     assert_ne!(ours[0], ours[1], "told apart by their sources: {names:?}");
-    assert!(ours.iter().all(|n| n.contains(".gpkg › parseller")), "{names:?}");
+    assert!(
+        ours.iter().all(|n| n.contains(".gpkg › parseller")),
+        "{names:?}"
+    );
     // The table on the first, the second drawn on: both said.
     let doc = app.document.as_mut().expect("a drawing");
     doc.model.set_active_layer(&b);
     app.gis.features.layer = Some(a);
-    assert!(app.table_target_words_for_test().is_some_and(|w| w.starts_with("Çizim hedefi:")));
+    assert!(
+        app.table_target_words_for_test()
+            .is_some_and(|w| w.starts_with("Çizim hedefi:"))
+    );
     let _ = node(&app, "parseller");
 }

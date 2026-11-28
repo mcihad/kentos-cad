@@ -15,7 +15,12 @@ impl App {
         if doc.model.object_policy() != kentos_domain::ObjectPolicy::AttributesOnly {
             return Vec::new();
         }
-        let fields_of = |l: &str| doc.model.layers().get(l).map_or(&[][..], |n| n.fields.as_slice());
+        let fields_of = |l: &str| {
+            doc.model
+                .layers()
+                .get(l)
+                .map_or(&[][..], |n| n.fields.as_slice())
+        };
         let reach = kentos_forms::reach::Reach::new(
             &doc.model.settings().forms,
             fields_of,
@@ -33,7 +38,10 @@ impl App {
 
 /// The words for fields withheld from the caller.
 pub(crate) fn withheld_words(fields: &[String]) -> String {
-    format!("Rolünüz bu alanları okumuyor, gösterilmiyor: {}", fields.join(", "))
+    format!(
+        "Rolünüz bu alanları okumuyor, gösterilmiyor: {}",
+        fields.join(", ")
+    )
 }
 
 #[cfg(test)]

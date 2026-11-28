@@ -11,10 +11,10 @@
 use std::collections::HashMap;
 
 use super::linalg::Inverse;
-use super::session::{Group, whitener};
-pub use super::session::GnssSession;
-use super::sparse::{Envelope, reverse_cuthill_mckee};
 use super::robust::{MAX_ROUNDS, Robust, Rounds, TOLERANCE};
+pub use super::session::GnssSession;
+use super::session::{Group, whitener};
+use super::sparse::{Envelope, reverse_cuthill_mckee};
 use super::{ObservationResult, Observed, Statistics, name_key, statistics};
 use crate::jsmath::{atan2, cos, js_hypot, js_max, sin};
 
@@ -108,7 +108,11 @@ pub struct Refused {
 }
 
 fn refuse(code: &'static str, message: String, path: String) -> Refused {
-    Refused { code, message, path }
+    Refused {
+        code,
+        message,
+        path,
+    }
 }
 
 /// The most entries the normal matrix's envelope may hold (docs/adr/4560): the factor and the inverse's entries are as
@@ -131,7 +135,11 @@ fn places(
     }
     let mut neighbours: Vec<Vec<usize>> = vec![Vec::new(); free.len()];
     // A session's stations are all neighbours (docs/adr/4920): its full weight joins every pair of them.
-    for (from, to) in ends.iter().map(|(f, t, _)| (f, t)).chain(joined.iter().map(|(a, b)| (a, b))) {
+    for (from, to) in ends
+        .iter()
+        .map(|(f, t, _)| (f, t))
+        .chain(joined.iter().map(|(a, b)| (a, b)))
+    {
         let (a, b) = (node[*from], node[*to]);
         if a != usize::MAX && b != usize::MAX {
             neighbours[a].push(b);
@@ -151,7 +159,10 @@ fn places(
     let mut first = vec![0usize; 3 * free.len()];
     for (p, &k) in order.iter().enumerate() {
         slot[free[k]] = Some(3 * p);
-        let earliest = neighbours[k].iter().map(|&w| position[w]).fold(p, usize::min);
+        let earliest = neighbours[k]
+            .iter()
+            .map(|&w| position[w])
+            .fold(p, usize::min);
         for c in 0..3 {
             first[3 * p + c] = 3 * earliest;
         }
@@ -163,7 +174,11 @@ fn places(
 /// by docs/adr/4560): the stations joined by baselines fall into parts; a part with no fixed or weighted station floats,
 /// and the dense factor fails at the last station of a floating part, the first failure being the part whose last
 /// station comes first.
-fn floating(input: &GnssInput, ends: &[(usize, usize, [[f64; 3]; 3])], fixed: &[bool]) -> Option<usize> {
+fn floating(
+    input: &GnssInput,
+    ends: &[(usize, usize, [[f64; 3]; 3])],
+    fixed: &[bool],
+) -> Option<usize> {
     let n = input.stations.len();
     let mut root: Vec<usize> = (0..n).collect();
     fn find(root: &mut [usize], mut v: usize) -> usize {
@@ -187,7 +202,10 @@ fn floating(input: &GnssInput, ends: &[(usize, usize, [[f64; 3]; 3])], fixed: &[
         anchored[r] |= fixed[i] || s.sigma.is_some() || s.cov.is_some();
         last[r] = last[r].max(i);
     }
-    (0..n).filter(|&r| find(&mut root, r) == r && !anchored[r]).map(|r| last[r]).min()
+    (0..n)
+        .filter(|&r| find(&mut root, r) == r && !anchored[r])
+        .map(|r| last[r])
+        .min()
 }
 
 /// The lower Cholesky factor of a 3×3 covariance (xx, xy, xz, yy, yz, zz), none when it is not positive definite.
@@ -244,7 +262,11 @@ pub fn to_ecef(a: f64, inv_f: f64, lat: f64, lon: f64, h: f64) -> [f64; 3] {
     let e2 = f * (2.0 - f);
     let (sl, cl) = (sin(lat), cos(lat));
     let n = a / (1.0 - e2 * sl * sl).sqrt();
-    [(n + h) * cl * cos(lon), (n + h) * cl * sin(lon), (n * (1.0 - e2) + h) * sl]
+    [
+        (n + h) * cl * cos(lon),
+        (n + h) * cl * sin(lon),
+        (n * (1.0 - e2) + h) * sl,
+    ]
 }
 
 /// An ECEF point's latitude, longitude (radians) and ellipsoidal height (m) on an ellipsoid: Bowring's iteration to
@@ -270,7 +292,11 @@ pub fn to_geodetic(a: f64, inv_f: f64, p: [f64; 3]) -> (f64, f64, f64) {
 pub fn enu_rows(lat: f64, lon: f64) -> [[f64; 3]; 3] {
     let (sl, cl) = (sin(lat), cos(lat));
     let (sn, cn) = (sin(lon), cos(lon));
-    [[-sn, cn, 0.0], [-sl * cn, -sl * sn, cl], [cl * cn, cl * sn, sl]]
+    [
+        [-sn, cn, 0.0],
+        [-sl * cn, -sl * sn, cl],
+        [cl * cn, cl * sn, sl],
+    ]
 }
 
 /// A whitened equation: its coefficients (unknown, value), right-hand side, kind and the baseline or station it is of.
@@ -278,9 +304,16 @@ type Row = (Vec<(usize, f64)>, f64, &'static str, usize);
 
 /// The sessions as groups whitened whole (docs/adr/4920), or why not: a baseline in two sessions or none of the
 /// network's, a pair of its baselines without its block, a full covariance that is not positive definite.
-fn session_groups(input: &GnssInput, ends: &[(usize, usize, [[f64; 3]; 3])]) -> Result<Vec<Group>, Refused> {
+fn session_groups(
+    input: &GnssInput,
+    ends: &[(usize, usize, [[f64; 3]; 3])],
+) -> Result<Vec<Group>, Refused> {
     if !input.sessions.is_empty() && !input.correlated {
-        return Err(refuse("invalid_input", "Oturumlu ağın bazları korelasyonlu ölçü gibi sınanır.".into(), "correlated".into()));
+        return Err(refuse(
+            "invalid_input",
+            "Oturumlu ağın bazları korelasyonlu ölçü gibi sınanır.".into(),
+            "correlated".into(),
+        ));
     }
     let mut seen = vec![false; ends.len()];
     let mut out = Vec::with_capacity(input.sessions.len());
@@ -289,7 +322,14 @@ fn session_groups(input: &GnssInput, ends: &[(usize, usize, [[f64; 3]; 3])]) -> 
         let mut place = HashMap::new();
         for (p, &k) in session.baselines.iter().enumerate() {
             if k >= ends.len() || std::mem::replace(&mut seen[k], true) {
-                return Err(refuse("invalid_input", format!("“{}” oturumunun bazları ağın ayrı bazları olmalı.", session.name), at("baselines")));
+                return Err(refuse(
+                    "invalid_input",
+                    format!(
+                        "“{}” oturumunun bazları ağın ayrı bazları olmalı.",
+                        session.name
+                    ),
+                    at("baselines"),
+                ));
             }
             place.insert(k, p);
         }
@@ -298,29 +338,58 @@ fn session_groups(input: &GnssInput, ends: &[(usize, usize, [[f64; 3]; 3])]) -> 
         let mut pairs = std::collections::HashSet::new();
         for &(a, b, c) in &session.cross {
             let (Some(&p), Some(&q)) = (place.get(&a), place.get(&b)) else {
-                return Err(refuse("invalid_input", format!("“{}” oturumunun bloğu oturumun bazlarını eşlemeli.", session.name), at("cross")));
+                return Err(refuse(
+                    "invalid_input",
+                    format!(
+                        "“{}” oturumunun bloğu oturumun bazlarını eşlemeli.",
+                        session.name
+                    ),
+                    at("cross"),
+                ));
             };
             if p == q || !pairs.insert((p.min(q), p.max(q))) || !c.iter().all(|v| v.is_finite()) {
-                return Err(refuse("invalid_input", format!("“{}” oturumunun blokları iki ayrı bazın tek, sonlu bloğu olmalı.", session.name), at("cross")));
+                return Err(refuse(
+                    "invalid_input",
+                    format!(
+                        "“{}” oturumunun blokları iki ayrı bazın tek, sonlu bloğu olmalı.",
+                        session.name
+                    ),
+                    at("cross"),
+                ));
             }
             cross.push((p, q, c));
         }
         if pairs.len() != m * (m.saturating_sub(1)) / 2 {
             return Err(refuse(
                 "session_blocks_missing",
-                format!("“{}” oturumunun {m} bazı için {} blok olmalı, {} var.", session.name, m * (m.saturating_sub(1)) / 2, pairs.len()),
+                format!(
+                    "“{}” oturumunun {m} bazı için {} blok olmalı, {} var.",
+                    session.name,
+                    m * (m.saturating_sub(1)) / 2,
+                    pairs.len()
+                ),
                 at("cross"),
             ));
         }
-        let own: Vec<[f64; 6]> = session.baselines.iter().map(|&k| input.baselines[k].cov).collect();
+        let own: Vec<[f64; 6]> = session
+            .baselines
+            .iter()
+            .map(|&k| input.baselines[k].cov)
+            .collect();
         let w = whitener(&own, &cross, input.scale).ok_or_else(|| {
             refuse(
                 "session_covariance_invalid",
-                format!("“{}” oturumunun tam kovaryansı pozitif tanımlı değil.", session.name),
+                format!(
+                    "“{}” oturumunun tam kovaryansı pozitif tanımlı değil.",
+                    session.name
+                ),
                 at("cross"),
             )
         })?;
-        out.push(Group { baselines: session.baselines.clone(), w });
+        out.push(Group {
+            baselines: session.baselines.clone(),
+            w,
+        });
     }
     Ok(out)
 }
@@ -328,11 +397,19 @@ fn session_groups(input: &GnssInput, ends: &[(usize, usize, [[f64; 3]; 3])]) -> 
 /// The network adjusted, or why not.
 pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
     if !(input.scale.is_finite() && input.scale > 0.0) {
-        return Err(refuse("invalid_input", "Varyans çarpanı sıfırdan büyük bir sayı olmalı.".into(), "scale".into()));
+        return Err(refuse(
+            "invalid_input",
+            "Varyans çarpanı sıfırdan büyük bir sayı olmalı.".into(),
+            "scale".into(),
+        ));
     }
     if let Some(r) = input.robust {
         if !(r.c.is_finite() && r.c > 0.0) {
-            return Err(refuse("invalid_input", "Dayanıklı kestirimin c sabiti sıfırdan büyük bir sayı olmalı.".into(), "robust.c".into()));
+            return Err(refuse(
+                "invalid_input",
+                "Dayanıklı kestirimin c sabiti sıfırdan büyük bir sayı olmalı.".into(),
+                "robust.c".into(),
+            ));
         }
         if !input.sessions.is_empty() || input.correlated {
             return Err(refuse(
@@ -343,57 +420,125 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         }
     }
     if input.baselines.is_empty() {
-        return Err(refuse("no_baselines", "Baz vektörü yok; en az bir baz verin.".into(), "baselines".into()));
+        return Err(refuse(
+            "no_baselines",
+            "Baz vektörü yok; en az bir baz verin.".into(),
+            "baselines".into(),
+        ));
     }
     // The stations by name, each once.
     let mut index: HashMap<String, usize> = HashMap::new();
     for (i, s) in input.stations.iter().enumerate() {
         let key = name_key(&s.name);
         if key.is_empty() {
-            return Err(refuse("invalid_input", "İstasyonun adı boş olamaz.".into(), format!("stations[{i}].name")));
+            return Err(refuse(
+                "invalid_input",
+                "İstasyonun adı boş olamaz.".into(),
+                format!("stations[{i}].name"),
+            ));
         }
         if index.insert(key, i).is_some() {
-            return Err(refuse("duplicate_station", format!("“{}” istasyonu iki kez verilmiş.", s.name.trim()), format!("stations[{i}].name")));
+            return Err(refuse(
+                "duplicate_station",
+                format!("“{}” istasyonu iki kez verilmiş.", s.name.trim()),
+                format!("stations[{i}].name"),
+            ));
         }
         if let Some(x) = s.xyz
             && !x.iter().all(|v| v.is_finite())
         {
-            return Err(refuse("invalid_input", "İstasyonun koordinatı sonlu olmalı.".into(), format!("stations[{i}].xyz")));
+            return Err(refuse(
+                "invalid_input",
+                "İstasyonun koordinatı sonlu olmalı.".into(),
+                format!("stations[{i}].xyz"),
+            ));
         }
         if (s.fixed || s.sigma.is_some()) && s.xyz.is_none() {
-            return Err(refuse("invalid_input", format!("“{}” sabit ya da ağırlıklı ama koordinatı yok.", s.name.trim()), format!("stations[{i}].xyz")));
+            return Err(refuse(
+                "invalid_input",
+                format!(
+                    "“{}” sabit ya da ağırlıklı ama koordinatı yok.",
+                    s.name.trim()
+                ),
+                format!("stations[{i}].xyz"),
+            ));
         }
         if let Some(sg) = s.sigma
             && !sg.iter().all(|v| v.is_finite() && *v > 0.0)
         {
-            return Err(refuse("invalid_input", "Bilinen istasyonun standart sapmaları sıfırdan büyük olmalı.".into(), format!("stations[{i}].sigma")));
+            return Err(refuse(
+                "invalid_input",
+                "Bilinen istasyonun standart sapmaları sıfırdan büyük olmalı.".into(),
+                format!("stations[{i}].sigma"),
+            ));
         }
-        if (s.fixed && (s.sigma.is_some() || s.cov.is_some())) || (s.sigma.is_some() && s.cov.is_some()) {
-            return Err(refuse("invalid_input", format!("“{}” hem sabit hem ağırlıklı olamaz.", s.name.trim()), format!("stations[{i}]")));
+        if (s.fixed && (s.sigma.is_some() || s.cov.is_some()))
+            || (s.sigma.is_some() && s.cov.is_some())
+        {
+            return Err(refuse(
+                "invalid_input",
+                format!("“{}” hem sabit hem ağırlıklı olamaz.", s.name.trim()),
+                format!("stations[{i}]"),
+            ));
         }
         if s.cov.is_some() && s.xyz.is_none() {
-            return Err(refuse("invalid_input", format!("“{}” ağırlıklı ama koordinatı yok.", s.name.trim()), format!("stations[{i}].xyz")));
+            return Err(refuse(
+                "invalid_input",
+                format!("“{}” ağırlıklı ama koordinatı yok.", s.name.trim()),
+                format!("stations[{i}].xyz"),
+            ));
         }
         if let Some(c) = s.cov
             && cholesky3(&c).is_none()
         {
-            return Err(refuse("invalid_covariance", format!("“{}” istasyonunun kovaryansı pozitif tanımlı değil.", s.name.trim()), format!("stations[{i}].cov")));
+            return Err(refuse(
+                "invalid_covariance",
+                format!(
+                    "“{}” istasyonunun kovaryansı pozitif tanımlı değil.",
+                    s.name.trim()
+                ),
+                format!("stations[{i}].cov"),
+            ));
         }
     }
     let mut ends: Vec<(usize, usize, [[f64; 3]; 3])> = Vec::new();
     for (k, b) in input.baselines.iter().enumerate() {
         let at = |f: &str| format!("baselines[{k}].{f}");
-        let from = *index.get(&name_key(&b.from)).ok_or_else(|| refuse("unknown_station", format!("“{}” istasyonu verilmedi.", b.from.trim()), at("from")))?;
-        let to = *index.get(&name_key(&b.to)).ok_or_else(|| refuse("unknown_station", format!("“{}” istasyonu verilmedi.", b.to.trim()), at("to")))?;
+        let from = *index.get(&name_key(&b.from)).ok_or_else(|| {
+            refuse(
+                "unknown_station",
+                format!("“{}” istasyonu verilmedi.", b.from.trim()),
+                at("from"),
+            )
+        })?;
+        let to = *index.get(&name_key(&b.to)).ok_or_else(|| {
+            refuse(
+                "unknown_station",
+                format!("“{}” istasyonu verilmedi.", b.to.trim()),
+                at("to"),
+            )
+        })?;
         if from == to {
-            return Err(refuse("invalid_input", "Bazın iki ucu aynı istasyon.".into(), at("to")));
+            return Err(refuse(
+                "invalid_input",
+                "Bazın iki ucu aynı istasyon.".into(),
+                at("to"),
+            ));
         }
         if !b.d.iter().chain(b.cov.iter()).all(|v| v.is_finite()) {
-            return Err(refuse("invalid_input", "Bazın bileşenleri ve kovaryansı sonlu olmalı.".into(), at("d")));
+            return Err(refuse(
+                "invalid_input",
+                "Bazın bileşenleri ve kovaryansı sonlu olmalı.".into(),
+                at("d"),
+            ));
         }
         let scaled = b.cov.map(|c| c * input.scale);
         let l = cholesky3(&scaled).ok_or_else(|| {
-            refuse("invalid_covariance", format!("{}. bazın kovaryansı pozitif tanımlı değil.", k + 1), at("cov"))
+            refuse(
+                "invalid_covariance",
+                format!("{}. bazın kovaryansı pozitif tanımlı değil.", k + 1),
+                at("cov"),
+            )
         })?;
         ends.push((from, to, l));
     }
@@ -405,7 +550,11 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         for &k in &g.baselines {
             grouped[k] = true;
         }
-        let at: Vec<usize> = g.baselines.iter().flat_map(|&k| [ends[k].0, ends[k].1]).collect();
+        let at: Vec<usize> = g
+            .baselines
+            .iter()
+            .flat_map(|&k| [ends[k].0, ends[k].1])
+            .collect();
         for (p, &a) in at.iter().enumerate() {
             for &b in &at[p + 1..] {
                 if a != b {
@@ -416,10 +565,16 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
     }
     // The datum: fixed and weighted stations, else the minimal constraint.
     let mut fixed: Vec<bool> = input.stations.iter().map(|s| s.fixed).collect();
-    let anchored = input.stations.iter().any(|s| s.fixed || s.sigma.is_some() || s.cov.is_some());
+    let anchored = input
+        .stations
+        .iter()
+        .any(|s| s.fixed || s.sigma.is_some() || s.cov.is_some());
     let mut held = None;
     if !anchored {
-        match (input.datum, input.stations.iter().position(|s| s.xyz.is_some())) {
+        match (
+            input.datum,
+            input.stations.iter().position(|s| s.xyz.is_some()),
+        ) {
             (Datum::Minimal, Some(i)) => {
                 fixed[i] = true;
                 held = Some(input.stations[i].name.trim().to_owned());
@@ -482,7 +637,10 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         if let Some(f) = slot[from] {
             coef.push((f + c, -1.0));
         }
-        (coef, input.baselines[k].d[c] - (known(to)[c] - known(from)[c]))
+        (
+            coef,
+            input.baselines[k].d[c] - (known(to)[c] - known(from)[c]),
+        )
     };
     for g in &groups {
         for r in 0..g.size() {
@@ -533,14 +691,22 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
     for (i, s) in input.stations.iter().enumerate() {
         if let (Some(sg), Some(x), Some(t)) = (s.sigma, s.xyz, slot[i]) {
             for c in 0..3 {
-                rows.push((vec![(t + c, 1.0 / sg[c])], (x[c] - known(i)[c]) / sg[c], "station", i));
+                rows.push((
+                    vec![(t + c, 1.0 / sg[c])],
+                    (x[c] - known(i)[c]) / sg[c],
+                    "station",
+                    i,
+                ));
             }
         }
         // A full covariance: the three pseudo-observations whitened by its Cholesky factor, as a baseline's are.
         if let (Some(c), Some(x), Some(t)) = (s.cov, s.xyz, slot[i])
             && let Some(l) = cholesky3(&c)
         {
-            let wr = whiten(&l, [x[0] - known(i)[0], x[1] - known(i)[1], x[2] - known(i)[2]]);
+            let wr = whiten(
+                &l,
+                [x[0] - known(i)[0], x[1] - known(i)[1], x[2] - known(i)[2]],
+            );
             for r in 0..3 {
                 let mut coef = Vec::new();
                 for k in 0..3 {
@@ -577,8 +743,17 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         let weighted: Vec<Row> = rows
             .iter()
             .map(|(coef, l, kind, row)| {
-                let s = if *kind == "baseline" { factors[*row].sqrt() } else { 1.0 };
-                (coef.iter().map(|&(i, a)| (i, a * s)).collect(), l * s, *kind, *row)
+                let s = if *kind == "baseline" {
+                    factors[*row].sqrt()
+                } else {
+                    1.0
+                };
+                (
+                    coef.iter().map(|&(i, a)| (i, a * s)).collect(),
+                    l * s,
+                    *kind,
+                    *row,
+                )
             })
             .collect();
         let mut n = Envelope::new(first.clone());
@@ -595,11 +770,17 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         }
         let factor = n.cholesky().map_err(|bad| {
             // The station the dense factor in input order named (a floating part), else the one whose pivot failed here.
-            let station = floating(input, &ends, &fixed)
-                .unwrap_or_else(|| slot.iter().position(|s| s.is_some_and(|t| bad >= t && bad < t + 3)).unwrap_or(0));
+            let station = floating(input, &ends, &fixed).unwrap_or_else(|| {
+                slot.iter()
+                    .position(|s| s.is_some_and(|t| bad >= t && bad < t + 3))
+                    .unwrap_or(0)
+            });
             refuse(
                 "network_disconnected",
-                format!("“{}” istasyonu datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı.", input.stations[station].name.trim()),
+                format!(
+                    "“{}” istasyonu datuma bağlı değil: ona ulaşan baz yok ya da ağ parçalı.",
+                    input.stations[station].name.trim()
+                ),
                 "baselines".into(),
             )
         })?;
@@ -612,7 +793,10 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         let next: Vec<f64> = (0..input.baselines.len())
             .map(|k| robust.factor(Some(standardised(k, &x))))
             .collect();
-        let moved = next.iter().zip(&factors).fold(0.0, |m, (a, b)| js_max(m, (a - b).abs()));
+        let moved = next
+            .iter()
+            .zip(&factors)
+            .fold(0.0, |m, (a, b)| js_max(m, (a - b).abs()));
         if moved <= TOLERANCE || rounds == MAX_ROUNDS {
             converged = moved <= TOLERANCE;
             break (weighted, x, q);
@@ -624,7 +808,13 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         .iter()
         .map(|(coef, l, kind, row)| {
             let computed: f64 = coef.iter().map(|&(i, a)| a * x[i]).sum();
-            Observed { kind, row: *row, coef: coef.clone(), l: l - computed, sigma: 1.0 }
+            Observed {
+                kind,
+                row: *row,
+                coef: coef.clone(),
+                l: l - computed,
+                sigma: 1.0,
+            }
         })
         .collect();
     let mut stats = statistics(&obs, &q);
@@ -633,8 +823,13 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         let mut all = groups.clone();
         for (k, (_, _, l)) in ends.iter().enumerate() {
             if !grouped[k] {
-                let flat = [l[0][0], 0.0, 0.0, l[1][0], l[1][1], 0.0, l[2][0], l[2][1], l[2][2]];
-                all.push(Group { baselines: vec![k], w: super::session::lower_inverse(&flat, 3) });
+                let flat = [
+                    l[0][0], 0.0, 0.0, l[1][0], l[1][1], 0.0, l[2][0], l[2][1], l[2][2],
+                ];
+                all.push(Group {
+                    baselines: vec![k],
+                    w: super::session::lower_inverse(&flat, 3),
+                });
             }
         }
         let mut tested: Vec<Option<ObservationResult>> = vec![None; 3 * input.baselines.len()];
@@ -672,7 +867,11 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
                         gqg += a * q.get(i, j) * b;
                     }
                 }
-                let aqg: f64 = parts[p].0.iter().map(|&(i, a)| gq.iter().map(|&(j, b)| a * q.get(i, j) * b).sum::<f64>()).sum();
+                let aqg: f64 = parts[p]
+                    .0
+                    .iter()
+                    .map(|&(i, a)| gq.iter().map(|&(j, b)| a * q.get(i, j) * b).sum::<f64>())
+                    .sum();
                 let r = 1.0 - aqg;
                 let den = pm[p * n + p] - gqg;
                 let (w, flag) = if !(r >= super::UNCONTROLLED) || !(den > 0.0) {
@@ -683,12 +882,25 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
                 };
                 let c = input.baselines[k].cov;
                 let var = [c[0], c[3], c[5]][p % 3] * input.scale;
-                tested[3 * k + p % 3] =
-                    Some(ObservationResult { kind: "baseline", row: k, v: parts[p].1, sigma: var.sqrt(), r, w, flag });
+                tested[3 * k + p % 3] = Some(ObservationResult {
+                    kind: "baseline",
+                    row: k,
+                    v: parts[p].1,
+                    sigma: var.sqrt(),
+                    r,
+                    w,
+                    flag,
+                });
             }
         }
         let mut observations: Vec<ObservationResult> = tested.into_iter().flatten().collect();
-        observations.extend(stats.observations.iter().filter(|o| o.kind == "station").cloned());
+        observations.extend(
+            stats
+                .observations
+                .iter()
+                .filter(|o| o.kind == "station")
+                .cloned(),
+        );
         let mut worst: Option<usize> = None;
         for (i, o) in observations.iter().enumerate() {
             if o.flag == "blunder" && worst.is_none_or(|k| o.w > observations[k].w) {
@@ -730,19 +942,39 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
                     };
                     let senu = [0, 1, 2].map(|k| js_max(m(k, k), 0.0).sqrt());
                     let cenu = [m(0, 0), m(0, 1), m(0, 2), m(1, 1), m(1, 2), m(2, 2)];
-                    ([cov(0, 0).sqrt(), cov(1, 1).sqrt(), cov(2, 2).sqrt()], senu, cenu)
+                    (
+                        [cov(0, 0).sqrt(), cov(1, 1).sqrt(), cov(2, 2).sqrt()],
+                        senu,
+                        cenu,
+                    )
                 }
             };
-            AdjustedStation { name: s.name.trim().to_owned(), xyz: p, sxyz, senu, cenu, held: fixed[i] }
+            AdjustedStation {
+                name: s.name.trim().to_owned(),
+                xyz: p,
+                sxyz,
+                senu,
+                cenu,
+                held: fixed[i],
+            }
         })
         .collect();
     let mut baselines = Vec::with_capacity(input.baselines.len());
     for (k, (from, to, _)) in ends.iter().enumerate() {
         let (pf, pt) = (coord(*from), coord(*to));
         let d = input.baselines[k].d;
-        let v = [pt[0] - pf[0] - d[0], pt[1] - pf[1] - d[1], pt[2] - pf[2] - d[2]];
+        let v = [
+            pt[0] - pf[0] - d[0],
+            pt[1] - pf[1] - d[1],
+            pt[2] - pf[2] - d[2],
+        ];
         let parts = &stats.observations[3 * k..3 * k + 3];
-        let w = parts.iter().filter_map(|o| o.w).fold(None, |m: Option<f64>, w| Some(m.map_or(w, |m| if w > m { w } else { m })));
+        let w = parts
+            .iter()
+            .filter_map(|o| o.w)
+            .fold(None, |m: Option<f64>, w| {
+                Some(m.map_or(w, |m| if w > m { w } else { m }))
+            });
         let flag = if parts.iter().any(|o| o.flag == "blunder") {
             "blunder"
         } else if parts.iter().all(|o| o.flag == "uncontrolled") {
@@ -758,13 +990,31 @@ pub fn adjust(input: &GnssInput) -> Result<GnssResult, Refused> {
         let (st, sf) = (slot[*to], slot[*from]);
         let mut adjusted = [0.0; 3];
         for (c, out) in adjusted.iter_mut().enumerate() {
-            let var = block(st, st, c, c) + block(sf, sf, c, c) - block(st, sf, c, c) - block(sf, st, c, c);
+            let var = block(st, st, c, c) + block(sf, sf, c, c)
+                - block(st, sf, c, c)
+                - block(sf, st, c, c);
             *out = js_max(var * s0 * s0, 0.0).sqrt();
         }
-        baselines.push(BaselineResidual { v, w, flag, adjusted });
+        baselines.push(BaselineResidual {
+            v,
+            w,
+            flag,
+            adjusted,
+        });
     }
-    let rounds = input.robust.map(|robust| Rounds { robust, rounds, converged });
-    Ok(GnssResult { stations, baselines, held, stats, factors, rounds })
+    let rounds = input.robust.map(|robust| Rounds {
+        robust,
+        rounds,
+        converged,
+    });
+    Ok(GnssResult {
+        stations,
+        baselines,
+        held,
+        stats,
+        factors,
+        rounds,
+    })
 }
 
 #[cfg(test)]
@@ -779,7 +1029,9 @@ mod tests {
     fn grid(w: usize) -> GnssInput {
         let base = [4_121_000.0, 2_652_000.0, 4_069_000.0];
         let (east, north) = ([-0.54, 0.84, 0.0], [-0.53, -0.34, 0.78]);
-        let at = |r: usize, c: usize| [0, 1, 2].map(|k| base[k] + 1000.0 * (c as f64 * east[k] + r as f64 * north[k]));
+        let at = |r: usize, c: usize| {
+            [0, 1, 2].map(|k| base[k] + 1000.0 * (c as f64 * east[k] + r as f64 * north[k]))
+        };
         let mut stations = Vec::with_capacity(w * w);
         for r in 0..w {
             for c in 0..w {
@@ -801,7 +1053,11 @@ mod tests {
                     if r + dr < w && c + dc < w {
                         let (a, b) = (at(r, c), at(r + dr, c + dc));
                         let k = baselines.len() as f64;
-                        let noise = [0.003 * crate::jsmath::sin(k * 0.7), 0.003 * crate::jsmath::cos(k * 1.3), 0.006 * crate::jsmath::sin(k * 0.9)];
+                        let noise = [
+                            0.003 * crate::jsmath::sin(k * 0.7),
+                            0.003 * crate::jsmath::cos(k * 1.3),
+                            0.006 * crate::jsmath::sin(k * 0.9),
+                        ];
                         baselines.push(Baseline {
                             from: format!("S{}", r * w + c),
                             to: format!("S{}", (r + dr) * w + c + dc),
@@ -812,14 +1068,27 @@ mod tests {
                 }
             }
         }
-        GnssInput { stations, baselines, scale: 1.0, datum: Datum::Given, sessions: Vec::new(), correlated: false, robust: None }
+        GnssInput {
+            stations,
+            baselines,
+            scale: 1.0,
+            datum: Datum::Given,
+            sessions: Vec::new(),
+            correlated: false,
+            robust: None,
+        }
     }
 
     /// The same network by dense normal equations in input order (ADR 1380's solve, the unknowns corrections to
     /// coordinates carried along the baselines): the coordinates and the X, Y, Z standard deviations, by name.
     fn dense(input: &GnssInput) -> HashMap<String, ([f64; 3], [f64; 3])> {
         let n = input.stations.len();
-        let index: HashMap<&str, usize> = input.stations.iter().enumerate().map(|(i, s)| (s.name.as_str(), i)).collect();
+        let index: HashMap<&str, usize> = input
+            .stations
+            .iter()
+            .enumerate()
+            .map(|(i, s)| (s.name.as_str(), i))
+            .collect();
         let mut slot = vec![None; n];
         let mut u = 0;
         for (i, s) in input.stations.iter().enumerate() {
@@ -905,7 +1174,10 @@ mod tests {
             .enumerate()
             .map(|(i, s)| {
                 let v = match slot[i] {
-                    Some(t) => ([0, 1, 2].map(|c| held(i)[c] + x[t + c]), [0, 1, 2].map(|c| (q.get(t + c, t + c)).sqrt() * s0)),
+                    Some(t) => (
+                        [0, 1, 2].map(|c| held(i)[c] + x[t + c]),
+                        [0, 1, 2].map(|c| (q.get(t + c, t + c)).sqrt() * s0),
+                    ),
                     None => (held(i), [0.0; 3]),
                 };
                 (s.name.clone(), v)
@@ -921,7 +1193,13 @@ mod tests {
         for s in &got.stations {
             let (xyz, sigma) = want[&s.name];
             for c in 0..3 {
-                assert!((s.xyz[c] - xyz[c]).abs() < 1e-9, "{} {c}: {} {}", s.name, s.xyz[c], xyz[c]);
+                assert!(
+                    (s.xyz[c] - xyz[c]).abs() < 1e-9,
+                    "{} {c}: {} {}",
+                    s.name,
+                    s.xyz[c],
+                    xyz[c]
+                );
                 assert!((s.sxyz[c] - sigma[c]).abs() < 1e-12, "{} σ{c}", s.name);
             }
         }
@@ -936,50 +1214,111 @@ mod tests {
         let plain = grid(4);
         let mut zero = plain.clone();
         zero.correlated = true;
-        zero.sessions = vec![GnssSession { name: "O1".into(), baselines: vec![0, 1, 2], cross: vec![(0, 1, [0.0; 9]), (0, 2, [0.0; 9]), (1, 2, [0.0; 9])] }];
+        zero.sessions = vec![GnssSession {
+            name: "O1".into(),
+            baselines: vec![0, 1, 2],
+            cross: vec![(0, 1, [0.0; 9]), (0, 2, [0.0; 9]), (1, 2, [0.0; 9])],
+        }];
         let (a, b) = (adjust(&plain).expect("plain"), adjust(&zero).expect("zero"));
         for (s, t) in a.stations.iter().zip(&b.stations) {
             for c in 0..3 {
-                assert!((s.xyz[c] - t.xyz[c]).abs() < 1e-9 && (s.sxyz[c] - t.sxyz[c]).abs() < 1e-12, "{}", s.name);
+                assert!(
+                    (s.xyz[c] - t.xyz[c]).abs() < 1e-9 && (s.sxyz[c] - t.sxyz[c]).abs() < 1e-12,
+                    "{}",
+                    s.name
+                );
             }
         }
         assert!((a.stats.omega - b.stats.omega).abs() < 1e-9);
         let block = [3e-6, 0.0, 0.0, 0.0, 3e-6, 0.0, 0.0, 0.0, 9e-6];
         let mut one = plain.clone();
         one.correlated = true;
-        one.sessions = vec![GnssSession { name: "O1".into(), baselines: vec![0, 1, 2], cross: vec![(0, 1, block), (0, 2, block), (1, 2, block)] }];
+        one.sessions = vec![GnssSession {
+            name: "O1".into(),
+            baselines: vec![0, 1, 2],
+            cross: vec![(0, 1, block), (0, 2, block), (1, 2, block)],
+        }];
         let mut other = one.clone();
         other.sessions[0].baselines = vec![2, 0, 1];
         let (x, y) = (adjust(&one).expect("one"), adjust(&other).expect("other"));
-        assert!((x.stations[1].xyz[0] - a.stations[1].xyz[0]).abs() > 1e-6, "the correlations move the solution");
+        assert!(
+            (x.stations[1].xyz[0] - a.stations[1].xyz[0]).abs() > 1e-6,
+            "the correlations move the solution"
+        );
         for (s, t) in x.stats.observations.iter().zip(&y.stats.observations) {
             assert!((s.w.unwrap_or(0.0) - t.w.unwrap_or(0.0)).abs() < 1e-9 && s.row == t.row);
         }
         let mut missing = one.clone();
         missing.sessions[0].cross.pop();
-        assert_eq!(adjust(&missing).expect_err("missing").code, "session_blocks_missing");
+        assert_eq!(
+            adjust(&missing).expect_err("missing").code,
+            "session_blocks_missing"
+        );
         let mut bad = one.clone();
         bad.sessions[0].cross[0].2 = [9e-6, 0.0, 0.0, 0.0, 9e-6, 0.0, 0.0, 0.0, 36e-6];
-        assert_eq!(adjust(&bad).expect_err("bad").code, "session_covariance_invalid");
+        assert_eq!(
+            adjust(&bad).expect_err("bad").code,
+            "session_covariance_invalid"
+        );
     }
 
     #[test]
     fn a_floating_part_is_named_as_the_dense_factor_named_it() {
         // Two parts float: S3–S5 and S1–S6; the dense factor in input order fails at S5 first (its part ends at S5).
         let mut input = grid(2);
-        input.stations.extend(["S4", "S5", "S6"].map(|n| GnssStation { name: n.into(), xyz: None, fixed: false, sigma: None, cov: None }));
+        input
+            .stations
+            .extend(["S4", "S5", "S6"].map(|n| GnssStation {
+                name: n.into(),
+                xyz: None,
+                fixed: false,
+                sigma: None,
+                cov: None,
+            }));
         let cov = [9e-6, 0.0, 0.0, 9e-6, 0.0, 36e-6];
-        input.baselines.push(Baseline { from: "S4".into(), to: "S5".into(), d: [10.0, 0.0, 0.0], cov });
-        input.baselines.push(Baseline { from: "S6".into(), to: "S4".into(), d: [10.0, 0.0, 0.0], cov });
+        input.baselines.push(Baseline {
+            from: "S4".into(),
+            to: "S5".into(),
+            d: [10.0, 0.0, 0.0],
+            cov,
+        });
+        input.baselines.push(Baseline {
+            from: "S6".into(),
+            to: "S4".into(),
+            d: [10.0, 0.0, 0.0],
+            cov,
+        });
         let refused = adjust(&input).expect_err("floating");
         assert_eq!(refused.code, "network_disconnected");
         assert!(refused.message.starts_with("“S6”"), "{}", refused.message);
         let mut apart = grid(2);
-        apart.stations.extend(["S4", "S5", "S6", "S7"].map(|n| GnssStation { name: n.into(), xyz: None, fixed: false, sigma: None, cov: None }));
-        apart.baselines.push(Baseline { from: "S7".into(), to: "S4".into(), d: [10.0, 0.0, 0.0], cov });
-        apart.baselines.push(Baseline { from: "S5".into(), to: "S6".into(), d: [10.0, 0.0, 0.0], cov });
+        apart
+            .stations
+            .extend(["S4", "S5", "S6", "S7"].map(|n| GnssStation {
+                name: n.into(),
+                xyz: None,
+                fixed: false,
+                sigma: None,
+                cov: None,
+            }));
+        apart.baselines.push(Baseline {
+            from: "S7".into(),
+            to: "S4".into(),
+            d: [10.0, 0.0, 0.0],
+            cov,
+        });
+        apart.baselines.push(Baseline {
+            from: "S5".into(),
+            to: "S6".into(),
+            d: [10.0, 0.0, 0.0],
+            cov,
+        });
         let refused = adjust(&apart).expect_err("floating");
-        assert!(refused.message.starts_with("“S6”"), "the part S5–S6 ends first: {}", refused.message);
+        assert!(
+            refused.message.starts_with("“S6”"),
+            "the part S5–S6 ends first: {}",
+            refused.message
+        );
     }
 
     /// The measurement of docs/adr/4560 (grids of 50 × 50 to 180 × 180 stations: the envelope's entries, the time),
@@ -994,16 +1333,30 @@ mod tests {
         for w in [50usize, 100, 140, 180] {
             let input = grid(w);
             let fixed: Vec<bool> = input.stations.iter().map(|s| s.fixed).collect();
-            let index: HashMap<&str, usize> = input.stations.iter().enumerate().map(|(i, s)| (s.name.as_str(), i)).collect();
-            let ends: Vec<(usize, usize, [[f64; 3]; 3])> =
-                input.baselines.iter().map(|b| (index[b.from.as_str()], index[b.to.as_str()], [[0.0; 3]; 3])).collect();
+            let index: HashMap<&str, usize> = input
+                .stations
+                .iter()
+                .enumerate()
+                .map(|(i, s)| (s.name.as_str(), i))
+                .collect();
+            let ends: Vec<(usize, usize, [[f64; 3]; 3])> = input
+                .baselines
+                .iter()
+                .map(|b| (index[b.from.as_str()], index[b.to.as_str()], [[0.0; 3]; 3]))
+                .collect();
             let (_, first, _) = places(&fixed, &ends, &[]);
             println!("{w}×{w}: envelope {} entries", Envelope::entries(&first));
             let t = std::time::Instant::now();
             let got = adjust(&input);
             let took = t.elapsed();
             match got {
-                Ok(r) => println!("{w}×{w}: {} stations, {} unknowns, m0 {:?}, {:.3} s", w * w, r.stats.u, r.stats.m0, took.as_secs_f64()),
+                Ok(r) => println!(
+                    "{w}×{w}: {} stations, {} unknowns, m0 {:?}, {:.3} s",
+                    w * w,
+                    r.stats.u,
+                    r.stats.m0,
+                    took.as_secs_f64()
+                ),
                 Err(e) => println!("{w}×{w}: {} ({:.3} s)", e.message, took.as_secs_f64()),
             }
         }

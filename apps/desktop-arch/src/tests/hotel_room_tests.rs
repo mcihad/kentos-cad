@@ -9,10 +9,10 @@
 //! RUST_MIN_STACK=67108864 cargo test -p kentos-desktop --lib hotel_room_tests::screens -- --ignored --nocapture
 //! ```
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use kentos_commands::ArchAuditOutcome as O;
 use serde_json::json;
-use crate::arch::ArchState;
 
 use crate::app::App;
 use crate::use_class_tests::{building, checked, p, rect, run, spaces};
@@ -20,7 +20,14 @@ use crate::use_class_tests::{building, checked, p, rect, run, spaces};
 /// The hotel's deep room and its corridor; its far wall's persistent id.
 fn hotel() -> (App, String) {
     let mut app = building(2, "Otel");
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     let wall = |a: (f64, f64), b: (f64, f64)| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": 0.2, "arch": {"level": "k01"}});
     let walls = run(
         &mut app,
@@ -30,8 +37,12 @@ fn hotel() -> (App, String) {
             wall((0.0, 4.0), (0.0, 0.0)), wall((2.0, 0.0), (2.0, 4.0))
         ]}),
     );
-    let walls: Vec<String> =
-        walls["output"]["uids"].as_array().expect("walls").iter().map(|u| u.as_str().expect("a wall").to_owned()).collect();
+    let walls: Vec<String> = walls["output"]["uids"]
+        .as_array()
+        .expect("walls")
+        .iter()
+        .map(|u| u.as_str().expect("a wall").to_owned())
+        .collect();
     run(
         &mut app,
         "cad.openings.create",
@@ -48,14 +59,29 @@ fn hotel() -> (App, String) {
 }
 
 fn row(app: &App) -> O {
-    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
-    set.rules.iter().find(|r| r.rule == "BYKHY 50/3").unwrap_or_else(|| panic!("50/3: {:#?}", set.rules)).state
+    let set = app
+        .modules
+        .arch()
+        .arch_audit
+        .rule_set
+        .as_ref()
+        .expect("the rule set");
+    set.rules
+        .iter()
+        .find(|r| r.rule == "BYKHY 50/3")
+        .unwrap_or_else(|| panic!("50/3: {:#?}", set.rules))
+        .state
 }
 
 fn walk(app: &App) -> f64 {
     let doc = &app.document.as_ref().expect("a drawing").model;
     let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
-    facts.spaces.iter().find(|s| s.name == "Oda 101").and_then(|s| s.to_door).expect("the room's walk to its door")
+    facts
+        .spaces
+        .iter()
+        .find(|s| s.name == "Oda 101")
+        .and_then(|s| s.to_door)
+        .expect("the room's walk to its door")
 }
 
 #[test]
@@ -66,16 +92,35 @@ fn a_deep_hotel_room_with_one_door_fails_and_a_second_door_passes() {
     assert!(d > 17.0 && d < 18.0, "{d}");
     checked(&mut app);
     assert_eq!(row(&app), O::Failed);
-    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
+    let audited = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
     assert!(
         audited
             .findings
             .iter()
-            .any(|f| f.code == "bykhy_hotel_room_distance" && f.message.contains("> 15,00 m") && f.message.contains("1 kapı")),
+            .any(|f| f.code == "bykhy_hotel_room_distance"
+                && f.message.contains("> 15,00 m")
+                && f.message.contains("1 kapı")),
         "{:?}",
-        audited.findings.iter().map(|f| (&f.code, &f.message)).collect::<Vec<_>>()
+        audited
+            .findings
+            .iter()
+            .map(|f| (&f.code, &f.message))
+            .collect::<Vec<_>>()
     );
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     run(
         &mut app,
         "cad.openings.create",
@@ -95,7 +140,8 @@ fn screens() {
 
     use crate::app::Message;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/otel-odasi-8111");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/otel-odasi-8111");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     crate::drawing_fonts::load();
     kentos_ui::theme::motion::set_reduced(true);
@@ -106,21 +152,39 @@ fn screens() {
         }
         let (mut app, _) = hotel();
         checked(&mut app);
-        let group =
-            crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(kentos_commands::ArchAuditCheck::Regulation)));
+        let group = crate::arch::Event::ArchAudit(crate::arch_audit::Event::Group(Some(
+            kentos_commands::ArchAuditCheck::Regulation,
+        )));
         let _ = app.update(Message::from(group));
         let shown = app.arch_audit_shown();
-        let findings = &app.modules.arch().arch_audit.audited.as_ref().expect("checked").findings;
-        let row = shown.iter().position(|&i| findings[i].code == "bykhy_hotel_room_distance").expect("the finding shown");
-        let _ = app.update(Message::from(crate::arch::Event::ArchAudit(crate::arch_audit::Event::Press(row))));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let findings = &app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked")
+            .findings;
+        let row = shown
+            .iter()
+            .position(|&i| findings[i].code == "bykhy_hotel_room_distance")
+            .expect("the finding shown");
+        let _ = app.update(Message::from(crate::arch::Event::ArchAudit(
+            crate::arch_audit::Event::Press(row),
+        )));
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         app.toasts.clear();
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-derin-oda-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }

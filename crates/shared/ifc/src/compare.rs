@@ -19,22 +19,49 @@ use crate::read::{Model, PropertySet, ReadError, SetKind, ValueKind};
 /// What changed on an object both files have.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Change {
-    Class { old: String, new: String },
+    Class {
+        old: String,
+        new: String,
+    },
     /// An attribute by its schema name (`Name`, `Tag`), absent where unset.
-    Attribute { name: &'static str, old: Option<String>, new: Option<String> },
+    Attribute {
+        name: &'static str,
+        old: Option<String>,
+        new: Option<String>,
+    },
     /// The spatial structure containing it: its index in the older file's objects and in the newer's.
-    Container { old: Option<usize>, new: Option<usize> },
+    Container {
+        old: Option<usize>,
+        new: Option<usize>,
+    },
     /// Its type object: its index in each file's objects.
-    Type { old: Option<usize>, new: Option<usize> },
+    Type {
+        old: Option<usize>,
+        new: Option<usize>,
+    },
     /// A body on one side only.
-    Body { old: bool, new: bool },
+    Body {
+        old: bool,
+        new: bool,
+    },
     /// Its box's middle moved, metres (x, y, z of the newer less the older's).
-    Moved { by: [f64; 3] },
+    Moved {
+        by: [f64; 3],
+    },
     /// Its box's size, metres (along x, y, z), in each file.
-    Resized { old: [f64; 3], new: [f64; 3] },
+    Resized {
+        old: [f64; 3],
+        new: [f64; 3],
+    },
     /// A property or a quantity: its set's name, whether the set is its type's, its name, its value in each file
     /// (absent where it has none).
-    Property { set: String, from_type: bool, name: String, old: Option<ValueKind>, new: Option<ValueKind> },
+    Property {
+        set: String,
+        from_type: bool,
+        name: String,
+        old: Option<ValueKind>,
+        new: Option<ValueKind>,
+    },
 }
 
 /// An object both files have and what changed on it: its index in each file's objects.
@@ -65,23 +92,45 @@ fn same_real(a: f64, b: f64) -> bool {
 /// record's number is the file's own).
 pub fn same_value(a: &ValueKind, b: &ValueKind) -> bool {
     match (a, b) {
-        (ValueKind::Number { value: x, measure: m }, ValueKind::Number { value: y, measure: n }) => {
-            m == n && same_real(*x, *y)
+        (
+            ValueKind::Number {
+                value: x,
+                measure: m,
+            },
+            ValueKind::Number {
+                value: y,
+                measure: n,
+            },
+        ) => m == n && same_real(*x, *y),
+        (ValueKind::List(x), ValueKind::List(y)) => {
+            x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same_value(p, q))
         }
-        (ValueKind::List(x), ValueKind::List(y)) => x.len() == y.len() && x.iter().zip(y).all(|(p, q)| same_value(p, q)),
-        (ValueKind::Bounded { lower: l1, upper: u1 }, ValueKind::Bounded { lower: l2, upper: u2 }) => {
-            same_value(l1, l2) && same_value(u1, u2)
-        }
+        (
+            ValueKind::Bounded {
+                lower: l1,
+                upper: u1,
+            },
+            ValueKind::Bounded {
+                lower: l2,
+                upper: u2,
+            },
+        ) => same_value(l1, l2) && same_value(u1, u2),
         (ValueKind::Reference(_), ValueKind::Reference(_)) => true,
         _ => a == b,
     }
 }
 
 /// Each object's body box (x, y, z from, x, y, z to), metres in the file's world; none without a body.
-fn boxes(model: &Model, bytes: &[u8], cancel: &dyn Fn() -> bool) -> Result<Vec<Option<[f64; 6]>>, ReadError> {
+fn boxes(
+    model: &Model,
+    bytes: &[u8],
+    cancel: &dyn Fn() -> bool,
+) -> Result<Vec<Option<[f64; 6]>>, ReadError> {
     let mut out = vec![None; model.objects.len()];
     for b in model.bodies(bytes, cancel)?.bodies {
-        let Some(slot) = out.get_mut(b.object) else { continue };
+        let Some(slot) = out.get_mut(b.object) else {
+            continue;
+        };
         for p in &b.positions {
             let k = slot.get_or_insert([p[0], p[1], p[2], p[0], p[1], p[2]]);
             for i in 0..3 {
@@ -160,11 +209,15 @@ pub fn compare(
     let old_boxes = boxes(older, older_bytes, cancel)?;
     let new_boxes = boxes(newer, newer_bytes, cancel)?;
     let mut out = Comparison::default();
-    let mut repeated: Vec<(bool, String)> = old_twice.iter().map(|g| (false, (*g).to_owned())).collect();
+    let mut repeated: Vec<(bool, String)> =
+        old_twice.iter().map(|g| (false, (*g).to_owned())).collect();
     repeated.extend(new_twice.iter().map(|g| (true, (*g).to_owned())));
     repeated.sort();
     out.repeated = repeated;
-    let gid_of = |m: &Model, i: Option<usize>| i.and_then(|i| m.objects.get(i)).map(|o| o.global_id.clone());
+    let gid_of = |m: &Model, i: Option<usize>| {
+        i.and_then(|i| m.objects.get(i))
+            .map(|o| o.global_id.clone())
+    };
     for (j, n) in newer.objects.iter().enumerate() {
         if cancel() {
             return Err(ReadError::Cancelled);
@@ -179,18 +232,31 @@ pub fn compare(
         let o = &older.objects[i];
         let mut changes = Vec::new();
         if o.class != n.class {
-            changes.push(Change::Class { old: o.class.clone(), new: n.class.clone() });
+            changes.push(Change::Class {
+                old: o.class.clone(),
+                new: n.class.clone(),
+            });
         }
         for ((name, a), (_, b)) in attributes(o).into_iter().zip(attributes(n)) {
             if a != b {
-                changes.push(Change::Attribute { name, old: a.map(str::to_owned), new: b.map(str::to_owned) });
+                changes.push(Change::Attribute {
+                    name,
+                    old: a.map(str::to_owned),
+                    new: b.map(str::to_owned),
+                });
             }
         }
         if gid_of(older, o.container) != gid_of(newer, n.container) {
-            changes.push(Change::Container { old: o.container, new: n.container });
+            changes.push(Change::Container {
+                old: o.container,
+                new: n.container,
+            });
         }
         if gid_of(older, o.type_object) != gid_of(newer, n.type_object) {
-            changes.push(Change::Type { old: o.type_object, new: n.type_object });
+            changes.push(Change::Type {
+                old: o.type_object,
+                new: n.type_object,
+            });
         }
         match (old_boxes[i], new_boxes[j]) {
             (Some(a), Some(b)) => {
@@ -202,18 +268,26 @@ pub fn compare(
                 if crate::math::hypot(crate::math::hypot(by[0], by[1]), by[2]) > tolerance {
                     changes.push(Change::Moved { by });
                 }
-                let (sa, sb) = ([a[3] - a[0], a[4] - a[1], a[5] - a[2]], [b[3] - b[0], b[4] - b[1], b[5] - b[2]]);
+                let (sa, sb) = (
+                    [a[3] - a[0], a[4] - a[1], a[5] - a[2]],
+                    [b[3] - b[0], b[4] - b[1], b[5] - b[2]],
+                );
                 if (0..3).any(|k| (sa[k] - sb[k]).abs() > tolerance) {
                     changes.push(Change::Resized { old: sa, new: sb });
                 }
             }
             (None, None) => {}
-            (a, b) => changes.push(Change::Body { old: a.is_some(), new: b.is_some() }),
+            (a, b) => changes.push(Change::Body {
+                old: a.is_some(),
+                new: b.is_some(),
+            }),
         }
         let old_values = values(&older.property_sets(older_bytes, i)?);
         let new_values = values(&newer.property_sets(newer_bytes, j)?);
-        let old_map: BTreeMap<&(String, bool, String), &ValueKind> = old_values.iter().map(|(k, v)| (k, v)).collect();
-        let new_keys: HashSet<&(String, bool, String)> = new_values.iter().map(|(k, _)| k).collect();
+        let old_map: BTreeMap<&(String, bool, String), &ValueKind> =
+            old_values.iter().map(|(k, v)| (k, v)).collect();
+        let new_keys: HashSet<&(String, bool, String)> =
+            new_values.iter().map(|(k, _)| k).collect();
         for (key, value) in &new_values {
             match old_map.get(key) {
                 Some(was) if same_value(was, value) => {}
@@ -240,11 +314,17 @@ pub fn compare(
         if changes.is_empty() {
             out.unchanged += 1;
         } else {
-            out.changed.push(Changed { older: i, newer: j, changes });
+            out.changed.push(Changed {
+                older: i,
+                newer: j,
+                changes,
+            });
         }
     }
     for (i, o) in older.objects.iter().enumerate() {
-        if !o.global_id.is_empty() && !old_twice.contains(o.global_id.as_str()) && !new_ids.contains_key(o.global_id.as_str())
+        if !o.global_id.is_empty()
+            && !old_twice.contains(o.global_id.as_str())
+            && !new_ids.contains_key(o.global_id.as_str())
             && !new_twice.contains(o.global_id.as_str())
         {
             out.removed.push(i);
@@ -295,9 +375,16 @@ mod tests {
     fn a_moved_wall_a_new_fire_rating_and_a_removed_slab_are_found() {
         let a = file(0.0, "REI 60", true, "a.ifc");
         let b = file(0.5, "REI 90", false, "b.ifc");
-        let (ma, mb) = (read(&a, &Limits::default(), &|| false).unwrap(), read(&b, &Limits::default(), &|| false).unwrap());
+        let (ma, mb) = (
+            read(&a, &Limits::default(), &|| false).unwrap(),
+            read(&b, &Limits::default(), &|| false).unwrap(),
+        );
         let c = compare(&ma, &a, &mb, &b, 0.001, &|| false).unwrap();
-        let removed: Vec<&str> = c.removed.iter().map(|&i| ma.objects[i].class.as_str()).collect();
+        let removed: Vec<&str> = c
+            .removed
+            .iter()
+            .map(|&i| ma.objects[i].class.as_str())
+            .collect();
         assert_eq!(removed, ["IfcSlab"]);
         assert!(c.added.is_empty());
         assert_eq!(c.changed.len(), 1, "{:?}", c.changed);
@@ -308,15 +395,37 @@ mod tests {
             _ => None,
         });
         let by = moved.expect("moved");
-        assert!((by[0] - 0.5).abs() < 1e-6 && by[1].abs() < 1e-6 && by[2].abs() < 1e-6, "{by:?}");
+        assert!(
+            (by[0] - 0.5).abs() < 1e-6 && by[1].abs() < 1e-6 && by[2].abs() < 1e-6,
+            "{by:?}"
+        );
         let rating = wall.changes.iter().find_map(|x| match x {
-            Change::Property { set, name, old, new, .. } if set == "Pset_WallCommon" && name == "FireRating" => {
+            Change::Property {
+                set,
+                name,
+                old,
+                new,
+                ..
+            } if set == "Pset_WallCommon" && name == "FireRating" => {
                 Some((old.clone(), new.clone()))
             }
             _ => None,
         });
-        assert_eq!(rating, Some((Some(ValueKind::Text("REI 60".into())), Some(ValueKind::Text("REI 90".into())))));
-        assert!(!wall.changes.iter().any(|x| matches!(x, Change::Resized { .. })), "{:?}", wall.changes);
+        assert_eq!(
+            rating,
+            Some((
+                Some(ValueKind::Text("REI 60".into())),
+                Some(ValueKind::Text("REI 90".into()))
+            ))
+        );
+        assert!(
+            !wall
+                .changes
+                .iter()
+                .any(|x| matches!(x, Change::Resized { .. })),
+            "{:?}",
+            wall.changes
+        );
         // The project and the storey are the same.
         assert_eq!(c.unchanged, 2);
     }
@@ -325,9 +434,15 @@ mod tests {
     fn a_move_within_the_tolerance_is_no_change_and_the_same_file_is_the_same() {
         let a = file(0.0, "REI 60", true, "a.ifc");
         let b = file(0.0005, "REI 60", true, "b.ifc");
-        let (ma, mb) = (read(&a, &Limits::default(), &|| false).unwrap(), read(&b, &Limits::default(), &|| false).unwrap());
+        let (ma, mb) = (
+            read(&a, &Limits::default(), &|| false).unwrap(),
+            read(&b, &Limits::default(), &|| false).unwrap(),
+        );
         let c = compare(&ma, &a, &mb, &b, 0.001, &|| false).unwrap();
-        assert!(c.changed.is_empty() && c.added.is_empty() && c.removed.is_empty(), "{c:?}");
+        assert!(
+            c.changed.is_empty() && c.added.is_empty() && c.removed.is_empty(),
+            "{c:?}"
+        );
         assert_eq!(c.unchanged, 4);
         let c = compare(&ma, &a, &ma, &a, 0.001, &|| false).unwrap();
         assert_eq!((c.changed.len(), c.unchanged), (0, 4));
@@ -335,9 +450,18 @@ mod tests {
 
     #[test]
     fn reals_equal_to_nine_digits_are_the_same() {
-        let n = |v: f64| ValueKind::Number { value: v, measure: Some("IFCLENGTHMEASURE".into()) };
+        let n = |v: f64| ValueKind::Number {
+            value: v,
+            measure: Some("IFCLENGTHMEASURE".into()),
+        };
         assert!(same_value(&n(3.0), &n(3.000_000_000_1)));
         assert!(!same_value(&n(3.0), &n(3.000_01)));
-        assert!(!same_value(&n(3.0), &ValueKind::Number { value: 3.0, measure: None }));
+        assert!(!same_value(
+            &n(3.0),
+            &ValueKind::Number {
+                value: 3.0,
+                measure: None
+            }
+        ));
     }
 }

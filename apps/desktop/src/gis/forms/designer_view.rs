@@ -391,8 +391,7 @@ impl App {
         }
         frame = if self.project_forms().is_empty() {
             frame.fill(
-                container(self.forms_empty(w, locked.is_none()))
-                    .height(typography::scaled(360.0)),
+                container(self.forms_empty(w, locked.is_none())).height(typography::scaled(360.0)),
             )
         } else {
             frame.fill(main)
@@ -588,7 +587,10 @@ impl App {
             );
         col = match &w.new_form {
             Some(n) => col.push(self.new_form_fields(n, editable)),
-            None => col.push(words::primary(NEW_FORM, editable.then(|| msg(Event::NewForm)))),
+            None => col.push(words::primary(
+                NEW_FORM,
+                editable.then(|| msg(Event::NewForm)),
+            )),
         };
         container(col).center(Fill).into()
     }
@@ -612,8 +614,10 @@ impl App {
                     ask.field.kind.label()
                 )))
                 .push(
-                    label::caption("Tablodaki sütun geri alınmaz; katmanın alanı Ctrl+Z ile geri alınır.")
-                        .style(muted),
+                    label::caption(
+                        "Tablodaki sütun geri alınmaz; katmanın alanı Ctrl+Z ile geri alınır.",
+                    )
+                    .style(muted),
                 )
                 .push(
                     row![

@@ -125,10 +125,8 @@ fn timing() {
         expected_revision: None,
     };
     let t = Instant::now();
-    let result = kentos_native_application::delete::execute(
-        &mut ExecutionContext::new(&mut doc),
-        input,
-    );
+    let result =
+        kentos_native_application::delete::execute(&mut ExecutionContext::new(&mut doc), input);
     let step = t.elapsed().as_secs_f64() * 1e3;
     assert!(matches!(result, CommandResult::Completed { .. }));
     println!(

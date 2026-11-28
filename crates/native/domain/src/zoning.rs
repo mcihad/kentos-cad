@@ -58,7 +58,8 @@
 //! A ratio is the drawing's measure, not an approval; the plan's own notes are the next step.
 
 use kentos_contracts::{
-    ArchLevel, AreaUnit, BuildingProgram, CellRange, CellStyle, EmsalCount, Entity, SpaceMethod, TableAlign, Zoning,
+    ArchLevel, AreaUnit, BuildingProgram, CellRange, CellStyle, EmsalCount, Entity, SpaceMethod,
+    TableAlign, Zoning,
 };
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::region;
@@ -68,17 +69,19 @@ use crate::arch_values::core_areas;
 use crate::room_names;
 use crate::space_follow::SpaceSearch;
 
-mod corners;
 mod basement;
+mod corners;
 mod limits;
 mod masonry;
 
-use limits::{buried_levels, names, says_amenity, says_balcony, says_traditional};
-pub use limits::{
-    AMENITY_AREA, AMENITY_SHARE, BALCONY_SHARE, CARETAKER_AREA, LIBRARY_AREA, STORAGE_SHARE, ZoningLimit,
-    ZoningLimitUse, amenity_allowed,
+pub use basement::{
+    BasementApart, BasementBent, CHILDREN_AREA, MASJID_DWELLINGS, MASJID_OTHERS, PARKING_TIMES,
 };
-pub use basement::{BasementApart, BasementBent, CHILDREN_AREA, MASJID_DWELLINGS, MASJID_OTHERS, PARKING_TIMES};
+pub use limits::{
+    AMENITY_AREA, AMENITY_SHARE, BALCONY_SHARE, CARETAKER_AREA, LIBRARY_AREA, STORAGE_SHARE,
+    ZoningLimit, ZoningLimitUse, amenity_allowed,
+};
+use limits::{buried_levels, names, says_amenity, says_balcony, says_traditional};
 pub use masonry::{EXTERIOR_KEPT, INTERIOR_KEPT};
 
 /// The drawing's floor area ratio and coverage against the parcel's zoning, m² and ratios.
@@ -166,7 +169,6 @@ pub struct ZoningRoom {
     pub bent: Option<BasementBent>,
 }
 
-
 /// One storey's rooms as the ratios count them, m².
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct ZoningLevel {
@@ -207,7 +209,12 @@ impl ZoningReport {
     /// One of the program's buildings' share (docs/adr/8072 §4): its yapı inşaat alanı (the storeys it counts, a shared
     /// one only where it is chosen) and its taban alanı (its ground storey's rooms); the buildings' together are the
     /// project's, a shared basement once. `levels` are the project's.
-    pub fn of_building(&self, program: &BuildingProgram, levels: &[ArchLevel], building: &str) -> (f64, f64) {
+    pub fn of_building(
+        &self,
+        program: &BuildingProgram,
+        levels: &[ArchLevel],
+        building: &str,
+    ) -> (f64, f64) {
         let mine = program.counted_levels(building);
         let construction = self
             .levels
@@ -366,19 +373,25 @@ impl Document {
             let group = x.unit.as_deref().and_then(|u| program.unit(u));
             let own = room_names::words(name, usage);
             let theirs = if by_use == EmsalCount::Included {
-                group.map_or_else(Vec::new, |g| room_names::words(g.name.as_deref(), g.nature.as_deref()))
+                group.map_or_else(Vec::new, |g| {
+                    room_names::words(g.name.as_deref(), g.nature.as_deref())
+                })
             } else {
                 Vec::new()
             };
             let indoor = !x.void && !outdoor;
             let caretaker = indoor && names("KAPICI", &own, &theirs);
             let library = indoor && room_names::has(&own, "KUTUPHANE");
-            let traditional = !x.void && arch.traditional_cut_stone_on(x.arch.level.as_deref()) && says_traditional(&own);
+            let traditional = !x.void
+                && arch.traditional_cut_stone_on(x.arch.level.as_deref())
+                && says_traditional(&own);
             let storage_of = group
                 .filter(|g| g.kind == kentos_contracts::UnitKind::Annex)
                 .and_then(|g| g.annex_of.clone())
                 .filter(|owner| {
-                    program.unit(owner).is_some_and(|u| u.kind == kentos_contracts::UnitKind::Unit)
+                    program
+                        .unit(owner)
+                        .is_some_and(|u| u.kind == kentos_contracts::UnitKind::Unit)
                 })
                 .filter(|_| {
                     indoor
@@ -399,12 +412,21 @@ impl Document {
                 && room_names::stair_name(name, usage)
                 && group.is_none_or(|g| g.kind != kentos_contracts::UnitKind::Unit);
             // Its own state wins (docs/adr/8125), then its brief's, then its words'.
-            let count = match x.emsal.as_ref().map(|e| e.count).or_else(|| brief.and_then(|b| b.emsal)) {
+            let count = match x
+                .emsal
+                .as_ref()
+                .map(|e| e.count)
+                .or_else(|| brief.and_then(|b| b.emsal))
+            {
                 Some(c) => c,
                 None if outdoor => EmsalCount::Exempt,
                 None => match by_use {
                     EmsalCount::Included
-                        if caretaker || storage_of.is_some() || stair_hall || traditional || amenity =>
+                        if caretaker
+                            || storage_of.is_some()
+                            || stair_hall
+                            || traditional
+                            || amenity =>
                     {
                         EmsalCount::Exempt
                     }
@@ -417,7 +439,10 @@ impl Document {
                 let outline = measured(&mut search, x, SpaceMethod::Net);
                 let low = crate::under_stair::low_on(&unders, &x.arch.level);
                 let all = kentos_geometry_core::geom::space::area(&outline);
-                (all - crate::under_stair::taken(&outline, &low).min(all), outline)
+                (
+                    all - crate::under_stair::taken(&outline, &low).min(all),
+                    outline,
+                )
             };
             rooms.push(Room {
                 level: x.arch.level.clone(),
@@ -516,7 +541,9 @@ impl Document {
             // A façade corner two rooms' contours share is split at the wall between them (docs/adr/8097): each shape
             // keeps its own side, as the gross halves the corner, so that an emsal zone's area is its rooms' gross.
             for (a, b, both) in &overlaps {
-                if let Some((own_a, own_b)) = corners::split(both, &rooms[*a].net_shape, &rooms[*b].net_shape) {
+                if let Some((own_a, own_b)) =
+                    corners::split(both, &rooms[*a].net_shape, &rooms[*b].net_shape)
+                {
                     if !own_b.is_empty() {
                         shapes[*a] = region::subtract_areas(&shapes[*a], &own_b);
                     }
@@ -526,15 +553,22 @@ impl Document {
                 }
             }
             if let Some(walls) = stone.storeys.get(level) {
-                let contours: Vec<Area> = cut.iter().flat_map(|(_, c, _)| c.iter().cloned()).collect();
-                let nets: Vec<Area> = here.iter().flat_map(|&i| rooms[i].net_shape.iter().cloned()).collect();
+                let contours: Vec<Area> =
+                    cut.iter().flat_map(|(_, c, _)| c.iter().cloned()).collect();
+                let nets: Vec<Area> = here
+                    .iter()
+                    .flat_map(|&i| rooms[i].net_shape.iter().cloned())
+                    .collect();
                 let (outer, inner) = masonry::parts(walls, &contours, &nets);
                 for (part, into) in [(&outer, &mut outer_part), (&inner, &mut inner_part)] {
                     if part.is_empty() {
                         continue;
                     }
                     let within = |a: &[Area]| {
-                        kentos_geometry_core::geom::space::area(&region::intersect_area_sets(&[a.to_vec(), part.clone()]))
+                        kentos_geometry_core::geom::space::area(&region::intersect_area_sets(&[
+                            a.to_vec(),
+                            part.clone(),
+                        ]))
                     };
                     for (i, c, _) in &cut {
                         into[*i] = within(c);
@@ -549,15 +583,28 @@ impl Document {
         }
         // The stone walls' parts are out apart from the 30 % (5/8, docs/adr/8095): a room counts its contour less its
         // part, in or out.
-        let walls_of: Vec<f64> = outer_part.iter().zip(&inner_part).map(|(a, b)| a + b).collect();
+        let walls_of: Vec<f64> = outer_part
+            .iter()
+            .zip(&inner_part)
+            .map(|(a, b)| a + b)
+            .collect();
         let kept: Vec<f64> = gross.iter().zip(&walls_of).map(|(g, w)| g - w).collect();
         // The limits of 22/1 (docs/adr/8069, 8079): each limited use's part past its limit counted in.
         // 22/1-g (docs/adr/8149): the building's needed shelter area, net, when the program's units tell it.
-        let shelter_need = if rooms.iter().any(|r| !r.void && r.shelter && r.count == EmsalCount::Exempt)
-            && program.units.iter().any(|u| u.kind == kentos_contracts::UnitKind::Unit)
+        let shelter_need = if rooms
+            .iter()
+            .any(|r| !r.void && r.shelter && r.count == EmsalCount::Exempt)
+            && program
+                .units
+                .iter()
+                .any(|u| u.kind == kentos_contracts::UnitKind::Unit)
         {
             let s = self.shelter_report();
-            Some(if s.exempt.is_some() { 0.0 } else { s.area_needed })
+            Some(if s.exempt.is_some() {
+                0.0
+            } else {
+                s.area_needed
+            })
         } else {
             None
         };
@@ -575,17 +622,24 @@ impl Document {
             })
             .collect();
         let levels = basement::basement_levels(arch);
-        let (apart, bent_of, basements) =
-            basement::apply(&rooms, &within, &uids, program, &levels, &buried, shelter_need.is_some(), || {
-                basement::Needs {
-                    parking: f64::from(self.parking_report().required) * crate::provisions::PARKING_UNIT,
-                    dwellings: program.units.iter().any(|u| {
-                        u.kind == kentos_contracts::UnitKind::Unit
-                            && crate::provisions::parking_use(u.nature.as_deref())
-                                == Some(crate::provisions::ParkingUse::Dwelling)
-                    }),
-                }
-            });
+        let (apart, bent_of, basements) = basement::apply(
+            &rooms,
+            &within,
+            &uids,
+            program,
+            &levels,
+            &buried,
+            shelter_need.is_some(),
+            || basement::Needs {
+                parking: f64::from(self.parking_report().required)
+                    * crate::provisions::PARKING_UNIT,
+                dwellings: program.units.iter().any(|u| {
+                    u.kind == kentos_contracts::UnitKind::Unit
+                        && crate::provisions::parking_use(u.nature.as_deref())
+                            == Some(crate::provisions::ParkingUse::Dwelling)
+                }),
+            },
+        );
         let parcel = zoning.map_or(0.0, |z| z.parcel_area);
         let mut out = ZoningReport {
             parcel,
@@ -602,7 +656,13 @@ impl Document {
                 .unwrap_or(usize::MAX - 1),
             None => usize::MAX,
         };
-        for (i, (((r, g), m), limit)) in rooms.iter().zip(&kept).zip(&moved).zip(&limit_of).enumerate() {
+        for (i, (((r, g), m), limit)) in rooms
+            .iter()
+            .zip(&kept)
+            .zip(&moved)
+            .zip(&limit_of)
+            .enumerate()
+        {
             if r.void {
                 continue;
             }
@@ -646,7 +706,11 @@ impl Document {
                 }
             }
             // A room out apart from the 30 % (5/8's own) keeps its whole contour there, its walls' part with it.
-            let out_apart = if r.count == EmsalCount::Outside { gross[i] } else { walls_of[i] + apart[i] };
+            let out_apart = if r.count == EmsalCount::Outside {
+                gross[i]
+            } else {
+                walls_of[i] + apart[i]
+            };
             out.outside += out_apart;
             level.outside += out_apart;
             out.masonry += walls_of[i];
@@ -693,7 +757,11 @@ impl Document {
                 .levels
                 .iter()
                 .find(|l| kentos_contracts::is_ground_name(&l.name))
-                .or_else(|| arch.levels.iter().min_by(|a, b| a.elevation.abs().total_cmp(&b.elevation.abs())))
+                .or_else(|| {
+                    arch.levels
+                        .iter()
+                        .min_by(|a, b| a.elevation.abs().total_cmp(&b.elevation.abs()))
+                })
         {
             grounds.push(l.id.clone());
         }
@@ -717,11 +785,20 @@ impl Document {
                 (g.clone(), on)
             })
             .collect();
-        out.masonry_footprint = rooms.iter().zip(&outer_part).filter(|(r, _)| counted(r)).map(|(_, w)| w).sum();
+        out.masonry_footprint = rooms
+            .iter()
+            .zip(&outer_part)
+            .filter(|(r, _)| counted(r))
+            .map(|(_, w)| w)
+            .sum();
         // Each storey's share (docs/adr/8150): the rules read a building's walls by its storeys.
         for l in &mut out.levels {
-            l.masonry_footprint =
-                rooms.iter().zip(&outer_part).filter(|(r, _)| counted(r) && r.level == l.level).map(|(_, w)| w).sum();
+            l.masonry_footprint = rooms
+                .iter()
+                .zip(&outer_part)
+                .filter(|(r, _)| counted(r) && r.level == l.level)
+                .map(|(_, w)| w)
+                .sum();
         }
         let outline: Vec<Area> = rooms
             .iter()
@@ -737,9 +814,18 @@ impl Document {
         // One ground storey: its rooms' gross, as before; several (blocks, a podium and a tower): the area their
         // contours cover on the parcel together, an overlap once.
         out.footprint = if grounds.len() > 1 {
-            out.footprint_shape.iter().map(region::net_area).sum::<f64>() - out.masonry_footprint
+            out.footprint_shape
+                .iter()
+                .map(region::net_area)
+                .sum::<f64>()
+                - out.masonry_footprint
         } else {
-            rooms.iter().zip(&footing).filter(|(r, _)| counted(r)).map(|(_, g)| g).sum()
+            rooms
+                .iter()
+                .zip(&footing)
+                .filter(|(r, _)| counted(r))
+                .map(|(_, g)| g)
+                .sum()
         };
         out
     }
@@ -747,27 +833,43 @@ impl Document {
     /// The ratios' whole count, with or without the parcel's zoning (a parcel of 0 without one): what the audit facts
     /// read at once (docs/adr/8095).
     pub fn zoning_counted(&self) -> ZoningReport {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
+        let zoning = self
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.zoning.as_ref());
         self.zoning_measured(zoning)
     }
 
     /// Each room as the ratios count it, with or without the parcel's zoning (docs/adr/8069): what the model's emsal zones
     /// are made of.
     pub fn zoning_rooms(&self) -> Vec<ZoningRoom> {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
+        let zoning = self
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.zoning.as_ref());
         self.zoning_measured(zoning).rooms
     }
 
     /// The uses 22/1 lets out of katlar alanı only up to a limit, with or without the parcel's zoning (docs/adr/8079):
     /// what the regulation's rules read the limits' conditions on.
     pub fn zoning_limits(&self) -> Vec<ZoningLimitUse> {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
+        let zoning = self
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.zoning.as_ref());
         self.zoning_measured(zoning).limits
     }
 
     /// The building's footprint as the ratios count it (docs/adr/8032): its area and outline, with or without a zoning.
     pub fn footprint(&self) -> (f64, Vec<Area>) {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
+        let zoning = self
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.zoning.as_ref());
         let r = self.zoning_measured(zoning);
         (r.footprint, r.footprint_shape)
     }
@@ -777,7 +879,11 @@ impl Document {
     /// storey's area counted in and out and their total. Areas in the project's area unit and decimals, ratios with
     /// two; “—” for what the zoning does not give (none at all: the storeys' areas alone are numbers).
     pub fn zoning_table(&self) -> ZoningTable {
-        let zoning = self.settings().arch.as_ref().and_then(|a| a.zoning.as_ref());
+        let zoning = self
+            .settings()
+            .arch
+            .as_ref()
+            .and_then(|a| a.zoning.as_ref());
         let r = self.zoning_measured(zoning);
         let s = self.settings();
         let unit = match s.area_unit {
@@ -874,12 +980,30 @@ impl Document {
         // Each limited use's part past its limit, counted into Emsale konu alan (22/1-l, docs/adr/8069; 22/1-k, -ç,
         // -f, docs/adr/8079; 22/1-j, docs/adr/8147): a row only when something passed.
         for (over, words) in [
-            (r.balcony_over, "Balkonların %20'yi aşan kısmı, emsale eklenen"),
-            (r.storage_over, "Depo eklentilerinin %50'yi aşan kısmı, emsale eklenen"),
-            (r.caretaker_over, "Kapıcı dairelerinin 70 m²'yi aşan kısmı, emsale eklenen"),
-            (r.library_over, "Kütüphanenin 50 m²'yi aşan kısmı, emsale eklenen"),
-            (r.shelter_over, "Sığınağın gerekli alanı aşan kısmı, emsale eklenen"),
-            (r.amenity_over, "Bodrumdaki ortak mekânların sınırı aşan kısmı, emsale eklenen"),
+            (
+                r.balcony_over,
+                "Balkonların %20'yi aşan kısmı, emsale eklenen",
+            ),
+            (
+                r.storage_over,
+                "Depo eklentilerinin %50'yi aşan kısmı, emsale eklenen",
+            ),
+            (
+                r.caretaker_over,
+                "Kapıcı dairelerinin 70 m²'yi aşan kısmı, emsale eklenen",
+            ),
+            (
+                r.library_over,
+                "Kütüphanenin 50 m²'yi aşan kısmı, emsale eklenen",
+            ),
+            (
+                r.shelter_over,
+                "Sığınağın gerekli alanı aşan kısmı, emsale eklenen",
+            ),
+            (
+                r.amenity_over,
+                "Bodrumdaki ortak mekânların sınırı aşan kısmı, emsale eklenen",
+            ),
         ] {
             if over > 0.0 {
                 rows.push(vec![named(words), String::new(), area(over), String::new()]);
@@ -910,10 +1034,17 @@ impl Document {
                     "— bodrumda mescit, 150 m²'ye kadar"
                 }
                 BasementBent::Masjid => "— bodrumda mescit, 300 m²'ye kadar",
-                BasementBent::Children => "— bodrumda çocuk oyun ve bakım alanları, 100 m²'ye kadar",
+                BasementBent::Children => {
+                    "— bodrumda çocuk oyun ve bakım alanları, 100 m²'ye kadar"
+                }
                 BasementBent::Parking => "— bodrumda otopark, zorunlu alanın 2 katına kadar",
             };
-            rows.push(vec![named(words), String::new(), area(b.apart), String::new()]);
+            rows.push(vec![
+                named(words),
+                String::new(),
+                area(b.apart),
+                String::new(),
+            ]);
         }
         // The rooms the administration's own rules add to the emsal base (docs/adr/8125, EK-6 DIGER): apart, said.
         if r.bonus > 0.0 {

@@ -1,7 +1,7 @@
 use kentos_sheet::{
-    *,
     ops::{self, Op},
     plot_profile::*,
+    *,
 };
 fn cases() -> serde_json::Value {
     serde_json::from_str(include_str!(
@@ -128,7 +128,15 @@ fn libraries_survive_no_sheets_transfer_preserves_source_keys_and_snapshots_pin_
             &[],
         )
         .unwrap();
-        assert!(t.sheet.plot.as_ref().unwrap().settings.profile_snapshot.is_some());
+        assert!(
+            t.sheet
+                .plot
+                .as_ref()
+                .unwrap()
+                .settings
+                .profile_snapshot
+                .is_some()
+        );
         let inst = template::instantiate(
             &t,
             &template::InstanceIds {

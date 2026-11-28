@@ -30,12 +30,30 @@ pub enum TraceError {
 }
 
 fn pi(id: String, p: [f64; 2], radius: f64) -> PiInput {
-    PiInput { id, x: p[0], y: p[1], radius, spiral_in: 0.0, spiral_out: 0.0, ove: false }
+    PiInput {
+        id,
+        x: p[0],
+        y: p[1],
+        radius,
+        spiral_in: 0.0,
+        spiral_out: 0.0,
+        ove: false,
+    }
 }
 
 /// The ids of `n` PIs: `a`, `p1`, …, `b`.
 fn ids(n: usize) -> Vec<String> {
-    (0..n).map(|i| if i == 0 { "a".into() } else if i + 1 == n { "b".into() } else { format!("p{i}") }).collect()
+    (0..n)
+        .map(|i| {
+            if i == 0 {
+                "a".into()
+            } else if i + 1 == n {
+                "b".into()
+            } else {
+                format!("p{i}")
+            }
+        })
+        .collect()
 }
 
 /// A polyline's segments as elements: a straight one a tangent, one with a bulge `b` its circular arc (`b` the tangent
@@ -49,7 +67,13 @@ pub fn elements_of(points: &[[f64; 2]], bulges: &[f64]) -> Vec<FitElement> {
             let chord = (b[0] - a[0]).hypot(b[1] - a[1]);
             let bulge = bulges.get(i).copied().unwrap_or(0.0);
             if bulge == 0.0 {
-                return FitElement { kind: FitKind::Line, start: a, end: b, pi: None, length: chord };
+                return FitElement {
+                    kind: FitKind::Line,
+                    start: a,
+                    end: b,
+                    pi: None,
+                    length: chord,
+                };
             }
             let turn = 4.0 * bulge.atan();
             let radius = chord / (2.0 * (turn / 2.0).sin()).abs();
@@ -59,7 +83,11 @@ pub fn elements_of(points: &[[f64; 2]], bulges: &[f64]) -> Vec<FitElement> {
             let h = radius * (turn / 2.0).cos() * turn.signum();
             let center = [mx - uy * h, my + ux * h];
             FitElement {
-                kind: FitKind::Curve { radius, clockwise: bulge < 0.0, center: Some(center) },
+                kind: FitKind::Curve {
+                    radius,
+                    clockwise: bulge < 0.0,
+                    center: Some(center),
+                },
                 start: a,
                 end: b,
                 pi: None,
@@ -70,7 +98,11 @@ pub fn elements_of(points: &[[f64; 2]], bulges: &[f64]) -> Vec<FitElement> {
 }
 
 /// The PIs of a polyline taken element by element; `radius` > 0 puts that curve on every inner PI without one.
-pub fn from_elements(points: &[[f64; 2]], bulges: &[f64], radius: f64) -> Result<Vec<PiInput>, TraceError> {
+pub fn from_elements(
+    points: &[[f64; 2]],
+    bulges: &[f64],
+    radius: f64,
+) -> Result<Vec<PiInput>, TraceError> {
     let points = distinct(points);
     if points.len() < 2 {
         return Err(TraceError::TooFew);
@@ -104,8 +136,11 @@ pub fn circumradius(a: [f64; 2], b: [f64; 2], c: [f64; 2]) -> f64 {
     if cross == 0.0 {
         return f64::INFINITY;
     }
-    let (ab, bc, ca) =
-        ((b[0] - a[0]).hypot(b[1] - a[1]), (c[0] - b[0]).hypot(c[1] - b[1]), (a[0] - c[0]).hypot(a[1] - c[1]));
+    let (ab, bc, ca) = (
+        (b[0] - a[0]).hypot(b[1] - a[1]),
+        (c[0] - b[0]).hypot(c[1] - b[1]),
+        (a[0] - c[0]).hypot(a[1] - c[1]),
+    );
     ab * bc * ca / (2.0 * cross.abs())
 }
 
@@ -159,8 +194,14 @@ fn misfit(v: [f64; 2], d: [f64; 2], e: [f64; 2], r: f64, points: &[[f64; 2]]) ->
     // The bisector inward: the sum of the reversed in direction and the out direction.
     let (bx, by) = (e[0] - d[0], e[1] - d[1]);
     let bl = bx.hypot(by);
-    let c = [v[0] + bx / bl * r / half.cos(), v[1] + by / bl * r / half.cos()];
-    points.iter().map(|p| ((p[0] - c[0]).hypot(p[1] - c[1]) - r).powi(2)).sum()
+    let c = [
+        v[0] + bx / bl * r / half.cos(),
+        v[1] + by / bl * r / half.cos(),
+    ];
+    points
+        .iter()
+        .map(|p| ((p[0] - c[0]).hypot(p[1] - c[1]) - r).powi(2))
+        .sum()
 }
 
 /// The radius in (0, `most`] whose arc lies nearest `points` (golden section, to a millimetre's millionth).
@@ -199,8 +240,9 @@ pub fn best_fit(points: &[[f64; 2]], max_radius: f64) -> Result<Vec<PiInput>, Tr
         return Err(TraceError::TooFew);
     }
     // Each vertex on a tangent (true) or a curve; the ends on a tangent.
-    let straight: Vec<bool> =
-        (0..n).map(|i| i == 0 || i + 1 == n || circumradius(p[i - 1], p[i], p[i + 1]) >= max_radius).collect();
+    let straight: Vec<bool> = (0..n)
+        .map(|i| i == 0 || i + 1 == n || circumradius(p[i - 1], p[i], p[i + 1]) >= max_radius)
+        .collect();
     // The tangent runs: two or more tangent vertices in a row.
     let mut runs: Vec<(usize, usize)> = Vec::new();
     let mut i = 0;
@@ -234,7 +276,9 @@ pub fn best_fit(points: &[[f64; 2]], max_radius: f64) -> Result<Vec<PiInput>, Tr
         } else {
             // The arc's tangent points stay on the runs' own lines: its tangent length at most the PI's distance to
             // the runs' far ends.
-            let turn = (d0[0] * d1[1] - d0[1] * d1[0]).atan2(d0[0] * d1[0] + d0[1] * d1[1]).abs();
+            let turn = (d0[0] * d1[1] - d0[1] * d1[0])
+                .atan2(d0[0] * d1[0] + d0[1] * d1[1])
+                .abs();
             let reach = |q: [f64; 2]| (q[0] - v[0]).hypot(q[1] - v[1]);
             let room = reach(p[runs[k - 1].0]).min(reach(p[runs[k].1]));
             best_radius(v, d0, d1, &between, room / (0.5 * turn).tan())
@@ -246,7 +290,12 @@ pub fn best_fit(points: &[[f64; 2]], max_radius: f64) -> Result<Vec<PiInput>, Tr
     places.push(foot(last.0, last.1, p[n - 1]));
     radii.push(0.0);
     let names = ids(places.len());
-    Ok(names.into_iter().zip(places).zip(radii).map(|((id, at), r)| pi(id, at, r)).collect())
+    Ok(names
+        .into_iter()
+        .zip(places)
+        .zip(radii)
+        .map(|((id, at), r)| pi(id, at, r))
+        .collect())
 }
 
 #[cfg(test)]
@@ -257,9 +306,19 @@ mod tests {
     fn a_polyline_with_an_arc_gives_its_pi() {
         // A tangent east, a quarter turn left of radius 10, a tangent north.
         let b = (std::f64::consts::FRAC_PI_8).tan();
-        let pis = from_elements(&[[0.0, 0.0], [20.0, 0.0], [30.0, 10.0], [30.0, 30.0]], &[0.0, b, 0.0], 0.0).unwrap();
+        let pis = from_elements(
+            &[[0.0, 0.0], [20.0, 0.0], [30.0, 10.0], [30.0, 30.0]],
+            &[0.0, b, 0.0],
+            0.0,
+        )
+        .unwrap();
         assert_eq!(pis.len(), 3);
-        assert!((pis[1].x - 30.0).abs() < 1e-9 && pis[1].y.abs() < 1e-9 && (pis[1].radius - 10.0).abs() < 1e-9, "{pis:?}");
+        assert!(
+            (pis[1].x - 30.0).abs() < 1e-9
+                && pis[1].y.abs() < 1e-9
+                && (pis[1].radius - 10.0).abs() < 1e-9,
+            "{pis:?}"
+        );
     }
 
     #[test]
@@ -278,7 +337,10 @@ mod tests {
         }
         let pis = best_fit(&pts, 500.0).unwrap();
         assert_eq!(pis.len(), 3, "{pis:?}");
-        assert!((pis[1].x - 100.0).abs() < 1e-6 && pis[1].y.abs() < 1e-6, "{pis:?}");
+        assert!(
+            (pis[1].x - 100.0).abs() < 1e-6 && pis[1].y.abs() < 1e-6,
+            "{pis:?}"
+        );
         assert!((pis[1].radius - 50.0).abs() < 1e-3, "{pis:?}");
     }
 }

@@ -42,17 +42,28 @@ fn a_settled_wheel_draws_the_placing_made_where_it_stopped() {
     let _ = app.view();
     let first = app.label_spots.placing().expect("placed");
     app.viewport.update(
-        crate::viewport::Event::Zoomed { factor: 1.1, at: iced::Point::new(300.0, 300.0) },
+        crate::viewport::Event::Zoomed {
+            factor: 1.1,
+            at: iced::Point::new(300.0, 300.0),
+        },
         None,
     );
     assert!(app.viewport.moving());
     let _ = app.view();
-    assert_eq!(app.label_spots.placing(), Some(first), "the last placing serves while the wheel turns");
+    assert_eq!(
+        app.label_spots.placing(),
+        Some(first),
+        "the last placing serves while the wheel turns"
+    );
     let camera = app.viewport.camera;
     app.viewport.update(crate::viewport::Event::Settled, None);
     let _ = app.view();
     assert_eq!(app.viewport.camera, camera, "the view did not move");
-    assert_eq!(app.label_spots.placing(), Some(first + 1), "placed again where it stopped");
+    assert_eq!(
+        app.label_spots.placing(),
+        Some(first + 1),
+        "placed again where it stopped"
+    );
 }
 
 /// A zoom out while the view still moves places the labels for the larger view at once: the last placing served

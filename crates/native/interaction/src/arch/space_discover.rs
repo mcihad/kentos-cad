@@ -84,8 +84,10 @@ impl Discover {
                             vec![EMPTY_SCOPE.into(), "Başka bir bölge seçebilirsiniz.".into()]
                         } else {
                             vec![
-                                format!("{} yeni · {} mevcut · {} çakışan",
-                                    self.counts[0], self.counts[1], self.counts[2]),
+                                format!(
+                                    "{} yeni · {} mevcut · {} çakışan",
+                                    self.counts[0], self.counts[1], self.counts[2]
+                                ),
                                 self.review_step().into(),
                             ]
                         },
@@ -121,9 +123,7 @@ impl Discover {
         match key {
             "B" => self.sources.choices(),
             "D" => crate::space_tools::column_choices(self.columns),
-            "L" => {
-                self.level.setting().choices
-            }
+            "L" => self.level.setting().choices,
             "K" => choices(
                 &[("all", "Tüm ağ"), ("region", "Bölge seç")],
                 if self.region { "region" } else { "all" },
@@ -194,7 +194,10 @@ impl Tool for Discover {
             .option("Kolon alanı", "D");
         if self.error.is_none() && self.counts[0] > 0 && self.counts[2] == 0 {
             prompt.option("Uygula", "Enter")
-        } else if self.error.is_none() && self.counts[2] == 0 && (self.counts[1] > 0 || !self.region) {
+        } else if self.error.is_none()
+            && self.counts[2] == 0
+            && (self.counts[1] > 0 || !self.region)
+        {
             prompt.option("Bitir", "Enter")
         } else {
             prompt
@@ -249,12 +252,19 @@ impl Tool for Discover {
         }
         if self.revision != Some(cx.doc.revision()) || self.layer != cx.doc.layers().active() {
             self.see(cx);
-            cx.say(Level::Info, "Çizim değişti. Güncel mahal önizlemesini kontrol edin.");
+            cx.say(
+                Level::Info,
+                "Çizim değişti. Güncel mahal önizlemesini kontrol edin.",
+            );
             return Flow::Stay;
         }
         if self.error.is_none() && self.counts[0] == 0 && self.counts[2] == 0 {
             cx.say(Level::Info, self.review_step());
-            return if self.region && self.counts[1] == 0 { Flow::Stay } else { Flow::Exit };
+            return if self.region && self.counts[1] == 0 {
+                Flow::Stay
+            } else {
+                Flow::Exit
+            };
         }
         let mut written = None;
         let before = cx.doc.revision();
@@ -293,7 +303,11 @@ impl Tool for Discover {
     }
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         match upper_tr(text.trim()).as_str() {
-            "B" => {self.sources.toggle();self.see(cx);true}
+            "B" => {
+                self.sources.toggle();
+                self.see(cx);
+                true
+            }
             "K" => {
                 self.region = !self.region;
                 self.corners.clear();
@@ -301,10 +315,13 @@ impl Tool for Discover {
                 true
             }
             "D" => {
-                self.columns=Some(match self.columns.unwrap_or(SpaceColumns::Net) {
-                    SpaceColumns::Ignore => SpaceColumns::Net, SpaceColumns::Net => SpaceColumns::All, SpaceColumns::All => SpaceColumns::Ignore,
+                self.columns = Some(match self.columns.unwrap_or(SpaceColumns::Net) {
+                    SpaceColumns::Ignore => SpaceColumns::Net,
+                    SpaceColumns::Net => SpaceColumns::All,
+                    SpaceColumns::All => SpaceColumns::Ignore,
                 });
-                self.see(cx);true
+                self.see(cx);
+                true
             }
             "L" => {
                 self.level.next();
@@ -352,9 +369,14 @@ impl Tool for Discover {
     }
     fn configure(&mut self, key: &str, value: &str, cx: &mut Context<'_>) -> bool {
         let valid = match (key, value) {
-            ("B",_) => self.sources.choose(value),
+            ("B", _) => self.sources.choose(value),
             ("D", _) => {
-                if let Some(m) = SpaceColumns::ALL.into_iter().find(|m|m.name()==value) { self.columns=Some(m);true } else { false }
+                if let Some(m) = SpaceColumns::ALL.into_iter().find(|m| m.name() == value) {
+                    self.columns = Some(m);
+                    true
+                } else {
+                    false
+                }
             }
             ("L", _) => {
                 self.level.see(cx.doc.settings());

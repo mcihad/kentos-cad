@@ -5,10 +5,10 @@
 //! rejections row's angle and edges as the shared cases give them (docs/adr/2700); Buluta uygula's Dönüşüm uygula on
 //! the moving scan with the answer's matrix, after which nothing is left to fit (docs/adr/3100). And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::gis;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -17,7 +17,10 @@ use crate::app::{App, Dialog, Message};
 use crate::register_window::{Event as R, View, Weights};
 
 fn cases() -> Value {
-    serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.pointclouds.register.json")).expect("cases")
+    serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.pointclouds.register.json"
+    ))
+    .expect("cases")
 }
 
 pub(crate) fn opened(program: Option<Module>) -> App {
@@ -34,8 +37,12 @@ pub(crate) fn opened(program: Option<Module>) -> App {
 
 /// The output of the shared case named `name`.
 fn case_output(name: &str) -> Value {
-    cases()["cases"].as_array().expect("cases").iter().find(|c| c["name"] == name).expect("the case")["steps"][0]["result"]
-        ["output"]
+    cases()["cases"]
+        .as_array()
+        .expect("cases")
+        .iter()
+        .find(|c| c["name"] == name)
+        .expect("the case")["steps"][0]["result"]["output"]
         .clone()
 }
 
@@ -53,7 +60,8 @@ fn the_weights_hold_the_fit_against_gross_mismatches() {
     let _ = app.update(Message::from(map::Event::Register(R::Moving(e))));
     let same = |app: &App, name: &str| {
         let r = app
-            .modules.map()
+            .modules
+            .map()
             .register
             .answer
             .clone()
@@ -61,13 +69,19 @@ fn the_weights_hold_the_fit_against_gross_mismatches() {
             .expect("registered");
         let want = case_output(name);
         for (i, t) in r.translation.iter().enumerate() {
-            assert!((t - want["translation"][i].as_f64().expect("a number")).abs() < 1e-7, "{name} {i}: {t}");
+            assert!(
+                (t - want["translation"][i].as_f64().expect("a number")).abs() < 1e-7,
+                "{name} {i}: {t}"
+            );
         }
         match (&r.robust, want.get("robust")) {
             (Some(w), Some(x)) => {
                 assert_eq!(Value::from(w.lighter), x["lighter"], "{name}");
                 if let Some(s) = w.scale {
-                    assert!((s - x["scale"].as_f64().expect("a scale")).abs() < 1e-9, "{name}");
+                    assert!(
+                        (s - x["scale"].as_f64().expect("a scale")).abs() < 1e-9,
+                        "{name}"
+                    );
                 }
             }
             (None, None) => {}
@@ -96,7 +110,8 @@ fn the_rejections_leave_out_what_one_scan_did_not_see() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
     let clouds: Vec<String> = app
-        .modules.map()
+        .modules
+        .map()
         .register
         .clouds
         .iter()
@@ -105,7 +120,8 @@ fn the_rejections_leave_out_what_one_scan_did_not_see() {
     assert_eq!(clouds.len(), 8, "a, b, c, d, e, f, h, i");
     let same = |app: &App, name: &str| {
         let r = app
-            .modules.map()
+            .modules
+            .map()
             .register
             .answer
             .clone()
@@ -113,11 +129,21 @@ fn the_rejections_leave_out_what_one_scan_did_not_see() {
             .expect("registered");
         let want = case_output(name);
         for (i, t) in r.translation.iter().enumerate() {
-            assert!((t - want["translation"][i].as_f64().expect("a number")).abs() < 1e-7, "{name} {i}: {t}");
+            assert!(
+                (t - want["translation"][i].as_f64().expect("a number")).abs() < 1e-7,
+                "{name} {i}: {t}"
+            );
         }
         assert_eq!(Value::from(r.pairs), want["pairs"], "{name}");
-        let got = r.rejected.as_ref().map(|x| serde_json::json!({"edges": x.edges, "angle": x.angle}));
-        assert_eq!(got.unwrap_or(Value::Null), want.get("rejected").cloned().unwrap_or(Value::Null), "{name}");
+        let got = r
+            .rejected
+            .as_ref()
+            .map(|x| serde_json::json!({"edges": x.edges, "angle": x.angle}));
+        assert_eq!(
+            got.unwrap_or(Value::Null),
+            want.get("rejected").cloned().unwrap_or(Value::Null),
+            "{name}"
+        );
     };
     let _ = app.update(Message::from(map::Event::Register(R::Fixed(
         clouds[0].clone(),
@@ -158,12 +184,18 @@ fn the_rejections_leave_out_what_one_scan_did_not_see() {
 fn rejection_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tarama-ayiklama-2700");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/tarama-ayiklama-2700");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (pair, stem) in [((0, 5), "1-duvar-normal-acisi"), ((6, 7), "2-bordur-kenar")] {
             let mut app = opened(Some(Module::Map));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -181,13 +213,15 @@ fn rejection_screens() {
             })));
             if pair.0 != 0 {
                 // The synthetic sidewalk stands 15 cm over the control points set on the plain ground.
-                let _ = app.update(Message::from(map::Event::Register(
-                    R::Control(String::new()),
-                )));
+                let _ = app.update(Message::from(map::Event::Register(R::Control(
+                    String::new(),
+                ))));
             }
             // The clouds' indexes are made in the background; their cards would cover the window.
             let until = std::time::Instant::now() + std::time::Duration::from_secs(30);
-            while !crate::pointclouds::index::progress().is_empty() && std::time::Instant::now() < until {
+            while !crate::pointclouds::index::progress().is_empty()
+                && std::time::Instant::now() < until
+            {
                 std::thread::sleep(std::time::Duration::from_millis(100));
             }
             let mut snapshot = Snapshot::new(size).expect("a renderer");
@@ -196,7 +230,10 @@ fn rejection_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -212,12 +249,18 @@ fn rejection_screens() {
 fn weights_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tarama-agirlik-2300");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/tarama-agirlik-2300");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         for (weights, stem) in [(Weights::Plain, "1-esit"), (Weights::Huber, "2-huber")] {
             let mut app = opened(Some(Module::Map));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -235,7 +278,10 @@ fn weights_screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -246,22 +292,48 @@ fn the_moved_scan_is_fitted_as_the_shared_case_says() {
     let mut app = opened(Some(Module::Map));
     let revision = app.document.as_ref().map(|d| d.model.revision());
     let _ = app.update(Message::Run("pointcloud.register"));
-    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Register)));
+    assert_eq!(
+        app.dialog,
+        Some(crate::map::dialog(map::MapDialogKind::Register))
+    );
     assert_eq!(app.modules.map().register.control, "gnss");
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .register
         .answer
         .clone()
         .expect("an answer")
         .expect("registered");
     let want = &cases()["cases"][0]["steps"][0]["result"]["output"];
-    assert_eq!((Value::from(r.iterations), Value::from(r.converged), Value::from(r.pairs)), (want["iterations"].clone(), want["converged"].clone(), want["pairs"].clone()));
+    assert_eq!(
+        (
+            Value::from(r.iterations),
+            Value::from(r.converged),
+            Value::from(r.pairs)
+        ),
+        (
+            want["iterations"].clone(),
+            want["converged"].clone(),
+            want["pairs"].clone()
+        )
+    );
     for (i, t) in r.translation.iter().enumerate() {
-        assert!((t - want["translation"][i].as_f64().expect("a number")).abs() < 1e-7, "{i}: {t}");
+        assert!(
+            (t - want["translation"][i].as_f64().expect("a number")).abs() < 1e-7,
+            "{i}: {t}"
+        );
     }
-    let (before, after) = (r.control_before.clone().expect("before"), r.control_after.clone().expect("after"));
-    assert!(before.koh_z > 0.04 && after.koh_z < 0.01, "{} → {}", before.koh_z, after.koh_z);
+    let (before, after) = (
+        r.control_before.clone().expect("before"),
+        r.control_after.clone().expect("after"),
+    );
+    assert!(
+        before.koh_z > 0.04 && after.koh_z < 0.01,
+        "{} → {}",
+        before.koh_z,
+        after.koh_z
+    );
     // The flat pair: the height found, the plan shift loose.
     let (c, d) = (
         app.modules.map().register.clouds[2].0.clone(),
@@ -270,7 +342,8 @@ fn the_moved_scan_is_fitted_as_the_shared_case_says() {
     let _ = app.update(Message::from(map::Event::Register(R::Fixed(c))));
     let _ = app.update(Message::from(map::Event::Register(R::Moving(d))));
     let flat = app
-        .modules.map()
+        .modules
+        .map()
         .register
         .answer
         .clone()
@@ -287,9 +360,17 @@ fn the_moved_scan_is_fitted_as_the_shared_case_says() {
     let file = dir.join("kayit.csv");
     app.register_save(file.clone());
     let text = std::fs::read_to_string(&file).expect("written");
-    assert!(text.starts_with("Kural paketi;lidar-uyum-ornek;") && text.contains("\nMatris (hareketli → sabit)\n"), "{text}");
+    assert!(
+        text.starts_with("Kural paketi;lidar-uyum-ornek;")
+            && text.contains("\nMatris (hareketli → sabit)\n"),
+        "{text}"
+    );
     let _ = std::fs::remove_dir_all(dir);
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
 }
 
 /// docs/adr/3100: Buluta uygula selects the moving scan and opens Dönüşüm uygula with the answer's matrix and a layer
@@ -301,7 +382,8 @@ fn the_fit_is_applied_to_the_moving_scan() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .register
         .answer
         .clone()
@@ -323,12 +405,26 @@ fn the_fit_is_applied_to_the_moving_scan() {
         .as_ref()
         .expect("the tool's window");
     assert_eq!(window.tool.id, "pointcloud.transform");
-    assert_eq!(window.values.get("matrix"), Some(&Value::from(crate::register_window::matrix_text(&r.matrix))));
+    assert_eq!(
+        window.values.get("matrix"),
+        Some(&Value::from(crate::register_window::matrix_text(&r.matrix)))
+    );
     let slot = |app: &App, uid: &str| {
-        app.document.as_ref().and_then(|d| d.model.slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))).expect("on the drawing")
+        app.document
+            .as_ref()
+            .and_then(|d| {
+                d.model
+                    .slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))
+            })
+            .expect("on the drawing")
     };
-    assert_eq!(app.selection.ids(), [slot(&app, &moving)], "the moving scan is the tool's input");
-    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/pointcloud/v1/files/kayit-b.xyz");
+    assert_eq!(
+        app.selection.ids(),
+        [slot(&app, &moving)],
+        "the moving scan is the tool's input"
+    );
+    let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/pointcloud/v1/files/kayit-b.xyz");
     let before = std::fs::read(&source).expect("the source");
     let dir = crate::files_testing::scratch("buluta-uygula");
     let out = dir.join("kayitli.laz");
@@ -339,14 +435,32 @@ fn the_fit_is_applied_to_the_moving_scan() {
     let task = app.update(Message::Gis(gis::Event::Processing(P::Run)));
     crate::files_testing::drive(&mut app, task);
     let status = app.gis.processing.dialog.as_ref().map(|w| w.status.clone());
-    let Some(RunStatus::Ok { text, .. }) = status else { panic!("{status:?}") };
-    assert!(text.contains("4.320 nokta taşındı") && text.contains("dönüklük"), "{text}");
-    assert_eq!(std::fs::read(&source).expect("the source"), before, "the source untouched");
+    let Some(RunStatus::Ok { text, .. }) = status else {
+        panic!("{status:?}")
+    };
+    assert!(
+        text.contains("4.320 nokta taşındı") && text.contains("dönüklük"),
+        "{text}"
+    );
+    assert_eq!(
+        std::fs::read(&source).expect("the source"),
+        before,
+        "the source untouched"
+    );
     let doc = &app.document.as_ref().expect("open").model;
-    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Kaydedilmiş bulut").expect("its layer").id.clone();
+    let layer = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "Kaydedilmiş bulut")
+        .expect("its layer")
+        .id
+        .clone();
     let (moved, _) = doc
         .entities_with_uids()
-        .find(|(_, e)| e.base().layer_id == layer && matches!(e, kentos_commands::Entity::PointCloud(_)))
+        .find(|(_, e)| {
+            e.base().layer_id == layer && matches!(e, kentos_commands::Entity::PointCloud(_))
+        })
         .expect("the moved scan");
     let moved = moved.to_string();
     // Fitted again against the fixed scan: nothing left to move.
@@ -361,7 +475,8 @@ fn the_fit_is_applied_to_the_moving_scan() {
         (fixed.as_str(), moved.as_str())
     );
     let again = app
-        .modules.map()
+        .modules
+        .map()
         .register
         .answer
         .clone()
@@ -370,11 +485,33 @@ fn the_fit_is_applied_to_the_moving_scan() {
     // The moved scan starts where the first fit left it (its RMS, rounded to the file's grid), the height is held and
     // the control points' KOH_Z is the fitted one; what a second fit still turns in the plan (a flat ground, strength
     // about 0.13) lowers the RMS by less than a tenth of a millimetre.
-    assert!((again.rms_before - r.rms_after).abs() < 0.0005, "{} vs {}", again.rms_before, r.rms_after);
-    assert!(again.rms_before - again.rms_after < 0.0001, "{} -> {}", again.rms_before, again.rms_after);
-    assert!(again.translation[2].abs() < 0.0005, "{:?}", again.translation);
-    let (fitted, moved_koh) = (r.control_after.clone().expect("after"), again.control_before.clone().expect("before"));
-    assert!((fitted.koh_z - moved_koh.koh_z).abs() < 0.001, "{} vs {}", fitted.koh_z, moved_koh.koh_z);
+    assert!(
+        (again.rms_before - r.rms_after).abs() < 0.0005,
+        "{} vs {}",
+        again.rms_before,
+        r.rms_after
+    );
+    assert!(
+        again.rms_before - again.rms_after < 0.0001,
+        "{} -> {}",
+        again.rms_before,
+        again.rms_after
+    );
+    assert!(
+        again.translation[2].abs() < 0.0005,
+        "{:?}",
+        again.translation
+    );
+    let (fitted, moved_koh) = (
+        r.control_after.clone().expect("after"),
+        again.control_before.clone().expect("before"),
+    );
+    assert!(
+        (fitted.koh_z - moved_koh.koh_z).abs() < 0.001,
+        "{} vs {}",
+        fitted.koh_z,
+        moved_koh.koh_z
+    );
 }
 
 /// docs/adr/3500: the fit applied, then the same matrix with Tersini uygula on the moved scan: the scan is back where
@@ -386,7 +523,8 @@ fn tersini_uygula_takes_the_scan_back_and_the_history_grows() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .register
         .answer
         .clone()
@@ -410,21 +548,44 @@ fn tersini_uygula_takes_the_scan_back_and_the_history_grows() {
         assert!(matches!(status, Some(RunStatus::Ok { .. })), "{status:?}");
     };
     run(&mut app, "kayitli.laz");
-    let clouds_on = |app: &App, name: &str| -> Vec<(String, std::collections::BTreeMap<String, String>)> {
+    let clouds_on = |app: &App,
+                     name: &str|
+     -> Vec<(String, std::collections::BTreeMap<String, String>)> {
         let doc = &app.document.as_ref().expect("open").model;
-        let layer = doc.layers().leaves().into_iter().find(|l| l.name == name).expect("the layer").id.clone();
+        let layer = doc
+            .layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == name)
+            .expect("the layer")
+            .id
+            .clone();
         doc.entities_with_uids()
-            .filter(|(_, e)| e.base().layer_id == layer && matches!(e, kentos_commands::Entity::PointCloud(_)))
+            .filter(|(_, e)| {
+                e.base().layer_id == layer && matches!(e, kentos_commands::Entity::PointCloud(_))
+            })
             .map(|(u, e)| (u.to_string(), e.base().attrs.clone()))
             .collect()
     };
     let moved = clouds_on(&app, "Kaydedilmiş bulut");
     let (moved_uid, moved_attrs) = moved.last().cloned().expect("the moved scan");
-    assert_eq!(moved_attrs.get("Dönüşümler").map(|h| h.split(" | ").count()), Some(1), "{moved_attrs:?}");
+    assert_eq!(
+        moved_attrs
+            .get("Dönüşümler")
+            .map(|h| h.split(" | ").count()),
+        Some(1),
+        "{moved_attrs:?}"
+    );
     // Back: the same matrix, inverted, on the moved scan.
     let _ = app.update(Message::Gis(gis::Event::Processing(P::Close)));
     let slot = |app: &App, uid: &str| {
-        app.document.as_ref().and_then(|d| d.model.slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))).expect("on the drawing")
+        app.document
+            .as_ref()
+            .and_then(|d| {
+                d.model
+                    .slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))
+            })
+            .expect("on the drawing")
     };
     app.selection.set([slot(&app, &moved_uid)]);
     let _ = app.update(Message::Run("processing.run.pointcloud.transform"));
@@ -451,13 +612,18 @@ fn tersini_uygula_takes_the_scan_back_and_the_history_grows() {
     let history: Vec<&str> = back_attrs["Dönüşümler"].split(" | ").collect();
     assert_eq!(history.len(), 2, "{back_attrs:?}");
     assert_eq!(history[0], moved_attrs["Dönüşümler"]);
-    assert_eq!(back_attrs["Kaynak"], moved_attrs["Kaynak"], "the first file kept");
+    assert_eq!(
+        back_attrs["Kaynak"], moved_attrs["Kaynak"],
+        "the first file kept"
+    );
     // Fitted again against the fixed scan from where it is back: the first fit's RMS before.
     let _ = app.update(Message::Gis(gis::Event::Processing(P::Close)));
-    app.selection.set([slot(&app, &fixed), slot(&app, &back_uid)]);
+    app.selection
+        .set([slot(&app, &fixed), slot(&app, &back_uid)]);
     let _ = app.update(Message::Run("pointcloud.register"));
     let again = app
-        .modules.map()
+        .modules
+        .map()
         .register
         .answer
         .clone()
@@ -481,7 +647,8 @@ fn son_donusumu_geri_al_takes_the_last_step_back() {
     let mut app = opened(Some(Module::Map));
     let _ = app.update(Message::Run("pointcloud.register"));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .register
         .answer
         .clone()
@@ -504,9 +671,18 @@ fn son_donusumu_geri_al_takes_the_last_step_back() {
     run(&mut app, "kayitli.laz");
     let last_on = |app: &App, name: &str| -> (String, std::collections::BTreeMap<String, String>) {
         let doc = &app.document.as_ref().expect("open").model;
-        let layer = doc.layers().leaves().into_iter().find(|l| l.name == name).expect("the layer").id.clone();
+        let layer = doc
+            .layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == name)
+            .expect("the layer")
+            .id
+            .clone();
         doc.entities_with_uids()
-            .filter(|(_, e)| e.base().layer_id == layer && matches!(e, kentos_commands::Entity::PointCloud(_)))
+            .filter(|(_, e)| {
+                e.base().layer_id == layer && matches!(e, kentos_commands::Entity::PointCloud(_))
+            })
             .map(|(u, e)| (u.to_string(), e.base().attrs.clone()))
             .last()
             .expect("a cloud")
@@ -514,7 +690,13 @@ fn son_donusumu_geri_al_takes_the_last_step_back() {
     let (moved_uid, moved_attrs) = last_on(&app, "Kaydedilmiş bulut");
     let _ = app.update(Message::Gis(gis::Event::Processing(P::Close)));
     let slot = |app: &App, uid: &str| {
-        app.document.as_ref().and_then(|d| d.model.slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))).expect("on the drawing")
+        app.document
+            .as_ref()
+            .and_then(|d| {
+                d.model
+                    .slot_of(kentos_domain::Uuid::parse_str(uid).expect("a uid"))
+            })
+            .expect("on the drawing")
     };
     app.selection.set([slot(&app, &moved_uid)]);
     let _ = app.update(Message::Run("processing.run.pointcloud.transform"));
@@ -528,13 +710,22 @@ fn son_donusumu_geri_al_takes_the_last_step_back() {
     ))));
     run(&mut app, "geri-alinan.laz");
     let (back_uid, back_attrs) = last_on(&app, "Kaydedilmiş bulut");
-    assert_eq!(back_attrs.get("Kaynak"), moved_attrs.get("Kaynak"), "the first file kept");
-    assert!(!back_attrs.contains_key("Dönüşümler"), "no step left: {back_attrs:?}");
+    assert_eq!(
+        back_attrs.get("Kaynak"),
+        moved_attrs.get("Kaynak"),
+        "the first file kept"
+    );
+    assert!(
+        !back_attrs.contains_key("Dönüşümler"),
+        "no step left: {back_attrs:?}"
+    );
     let _ = app.update(Message::Gis(gis::Event::Processing(P::Close)));
-    app.selection.set([slot(&app, &fixed), slot(&app, &back_uid)]);
+    app.selection
+        .set([slot(&app, &fixed), slot(&app, &back_uid)]);
     let _ = app.update(Message::Run("pointcloud.register"));
     let again = app
-        .modules.map()
+        .modules
+        .map()
         .register
         .answer
         .clone()
@@ -560,7 +751,8 @@ fn undo_screens() {
     use crate::processing::Event as P;
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/son-donusum-geri-3900");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/son-donusum-geri-3900");
     std::fs::create_dir_all(&out).expect("a folder");
     let size = Size::new(1440.0, 900.0);
     let mut app = opened(Some(Module::Map));
@@ -580,7 +772,14 @@ fn undo_screens() {
     run(&mut app, "kayitli.laz");
     let _ = app.update(Message::Gis(gis::Event::Processing(P::Close)));
     let doc = &app.document.as_ref().expect("open").model;
-    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Kaydedilmiş bulut").expect("the layer").id.clone();
+    let layer = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "Kaydedilmiş bulut")
+        .expect("the layer")
+        .id
+        .clone();
     let moved = doc
         .entities()
         .filter(|e| e.base().layer_id == layer)
@@ -599,19 +798,28 @@ fn undo_screens() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("1-pencere-acik-genis.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
     run(&mut app, "geri-alinan.laz");
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("2-sonuc-acik-genis.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
 }
 
 #[test]
 fn harita_and_gis_offer_it() {
     for module in [Module::Map, Module::Gis] {
-        assert!(opened(Some(module)).offers("pointcloud.register"), "{module:?}");
+        assert!(
+            opened(Some(module)).offers("pointcloud.register"),
+            "{module:?}"
+        );
     }
 }
 
@@ -625,14 +833,21 @@ fn harita_and_gis_offer_it() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tarama-kaydi-1800");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/tarama-kaydi-1800");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (pair, view, stem) in [((0usize, 1usize), View::Control, "1-kaydirilmis-kontrol"), ((2, 3), View::Worst, "2-duz-zemin")] {
-        for (theme, size, name) in
-            [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")]
-        {
+    for (pair, view, stem) in [
+        ((0usize, 1usize), View::Control, "1-kaydirilmis-kontrol"),
+        ((2, 3), View::Worst, "2-duz-zemin"),
+    ] {
+        for (theme, size, name) in [
+            ("light", Size::new(1440.0, 900.0), "acik-genis"),
+            ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+        ] {
             let mut app = opened(Some(Module::Map));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -650,16 +865,25 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
     // docs/adr/3100: Buluta uygula, Dönüşüm uygula's window with the matrix, and the moved scan on the drawing.
-    let out3100 = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/donusum-uygula-3100");
+    let out3100 = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/donusum-uygula-3100");
     std::fs::create_dir_all(&out3100).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
@@ -671,7 +895,10 @@ fn screens() {
         let mut shot = |app: &mut App, stem: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out3100.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         };
         shot(&mut app, "1-tarama-kaydi");
@@ -709,7 +936,10 @@ fn screens() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out3100.join("5-menu-bulut-sekmesi.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
     // Where it sits: the point cloud's context tab, beside Tarama uyumu.
     let mut app = opened(Some(Module::Map));
@@ -724,7 +954,10 @@ fn screens() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("3-menu-bulut-sekmesi.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
 }
 
@@ -740,17 +973,24 @@ fn inverse_screens() {
     use crate::processing::Event as P;
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/tersini-uygula-3500");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/tersini-uygula-3500");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let _ = app.update(Message::Run("pointcloud.register"));
         let r = app
-            .modules.map()
+            .modules
+            .map()
             .register
             .answer
             .clone()
@@ -769,8 +1009,20 @@ fn inverse_screens() {
         run(&mut app, "kayitli.laz");
         let _ = app.update(Message::Gis(gis::Event::Processing(P::Close)));
         let doc = &app.document.as_ref().expect("open").model;
-        let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Kaydedilmiş bulut").expect("its layer").id.clone();
-        let moved = doc.entities_with_uids().filter(|(_, e)| e.base().layer_id == layer).map(|(u, _)| u).last().expect("moved");
+        let layer = doc
+            .layers()
+            .leaves()
+            .into_iter()
+            .find(|l| l.name == "Kaydedilmiş bulut")
+            .expect("its layer")
+            .id
+            .clone();
+        let moved = doc
+            .entities_with_uids()
+            .filter(|(_, e)| e.base().layer_id == layer)
+            .map(|(u, _)| u)
+            .last()
+            .expect("moved");
         let moved = doc.slot_of(moved).expect("its slot");
         app.selection.set([moved]);
         let _ = app.update(Message::Run("processing.run.pointcloud.transform"));
@@ -792,18 +1044,29 @@ fn inverse_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-tersini-uygula-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
         run(&mut app, "geri.laz");
         let _ = app.update(Message::Gis(gis::Event::Processing(P::Close)));
         let doc = &app.document.as_ref().expect("open").model;
-        let back = doc.entities_with_uids().filter(|(_, e)| e.base().layer_id == layer).map(|(u, _)| u).last().expect("back");
+        let back = doc
+            .entities_with_uids()
+            .filter(|(_, e)| e.base().layer_id == layer)
+            .map(|(u, _)| u)
+            .last()
+            .expect("back");
         let back = doc.slot_of(back).expect("its slot");
         app.selection.set([back]);
         app.follow_selection_tab();
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("2-gecmis-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -844,25 +1107,50 @@ fn an_axis_and_an_angle_from_the_pane_move_the_scan() {
     let task = app.update(Message::Gis(gis::Event::Processing(P::Run)));
     crate::files_testing::drive(&mut app, task);
     let doc = &app.document.as_ref().expect("open").model;
-    let layer = doc.layers().leaves().into_iter().find(|l| l.name == "Dönen bulut").expect("the layer").id.clone();
+    let layer = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "Dönen bulut")
+        .expect("the layer")
+        .id
+        .clone();
     let history = doc
         .entities()
         .filter(|e| e.base().layer_id == layer)
         .find_map(|e| e.base().attrs.get("Dönüşümler").cloned())
         .expect("a history");
-    let m: Vec<f64> = history.split_whitespace().map(|w| w.parse().expect("a number")).collect();
+    let m: Vec<f64> = history
+        .split_whitespace()
+        .map(|w| w.parse().expect("a number"))
+        .collect();
     // The quaternion (cos θ/2, sin θ/2 · ẑ): a rotation of 0.5° about Z.
     let h = 0.5_f64.to_radians() / 2.0;
     let (w, z) = (h.cos(), h.sin());
-    let want = [[1.0 - 2.0 * z * z, -2.0 * z * w, 0.0], [2.0 * z * w, 1.0 - 2.0 * z * z, 0.0], [0.0, 0.0, 1.0]];
+    let want = [
+        [1.0 - 2.0 * z * z, -2.0 * z * w, 0.0],
+        [2.0 * z * w, 1.0 - 2.0 * z * z, 0.0],
+        [0.0, 0.0, 1.0],
+    ];
     let middle = [0, 1, 2].map(|k| (bounds[k] + bounds[k + 3]) / 2.0);
     let moved = [1.0, -2.0, 0.5];
     for i in 0..3 {
         for j in 0..3 {
-            assert!((m[4 * i + j] - want[i][j]).abs() < 1e-12, "R[{i}][{j}] {} vs {}", m[4 * i + j], want[i][j]);
+            assert!(
+                (m[4 * i + j] - want[i][j]).abs() < 1e-12,
+                "R[{i}][{j}] {} vs {}",
+                m[4 * i + j],
+                want[i][j]
+            );
         }
-        let image = m[4 * i] * middle[0] + m[4 * i + 1] * middle[1] + m[4 * i + 2] * middle[2] + m[4 * i + 3];
-        assert!((image - (middle[i] + moved[i])).abs() < 1e-6, "{i}: {image}");
+        let image = m[4 * i] * middle[0]
+            + m[4 * i + 1] * middle[1]
+            + m[4 * i + 2] * middle[2]
+            + m[4 * i + 3];
+        assert!(
+            (image - (middle[i] + moved[i])).abs() < 1e-6,
+            "{i}: {image}"
+        );
     }
 }
 
@@ -877,17 +1165,26 @@ fn axis_screens() {
     use crate::processing::Event as P;
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/eksen-aci-4300");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/eksen-aci-4300");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+    ] {
         let mut app = opened(Some(Module::Map));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let _ = app.update(Message::Run("view.zoomExtents"));
         let slot = {
             let doc = &app.document.as_ref().expect("open").model;
-            doc.entities().find(|e| matches!(e, kentos_commands::Entity::PointCloud(_))).map(|e| Slot(e.base().id)).expect("a scan")
+            doc.entities()
+                .find(|e| matches!(e, kentos_commands::Entity::PointCloud(_)))
+                .map(|e| Slot(e.base().id))
+                .expect("a scan")
         };
         app.selection.set([slot]);
         let _ = app.update(Message::Run("processing.run.pointcloud.transform"));
@@ -905,7 +1202,10 @@ fn axis_screens() {
         };
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("donusum-uygula-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }
@@ -930,6 +1230,9 @@ fn the_actions_keep_their_row_at_the_usual_size() {
             .into_iter()
             .max_by(|a, b| a.y.total_cmp(&b.y))
             .unwrap_or_else(|| panic!("{caption} drawn"));
-        assert!(at.height >= 12.0 && at.y + at.height <= size.height, "{caption}: {at:?}");
+        assert!(
+            at.height >= 12.0 && at.y + at.height <= size.height,
+            "{caption}: {at:?}"
+        );
     }
 }

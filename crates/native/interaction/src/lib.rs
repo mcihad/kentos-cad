@@ -157,8 +157,14 @@ pub mod continuation;
 #[path = "viewer_tools/coordinate.rs"]
 pub mod coordinate;
 // Ölçü kutusu: the last measurement as the host's box shows it (docs/adr/9328).
-#[path = "viewer_tools/measured.rs"]
-pub mod measured;
+#[path = "core/annotative.rs"]
+pub mod annotative;
+#[path = "core/area_cut.rs"]
+pub mod area_cut;
+#[path = "core/constraint_marks.rs"]
+pub mod constraint_marks;
+#[path = "core/constraint_tool.rs"]
+pub mod constraint_tool;
 #[path = "viewer_tools/coordinate_labels.rs"]
 pub mod coordinate_labels;
 #[path = "core/copy_base.rs"]
@@ -171,20 +177,14 @@ pub mod curve_edit;
 pub mod data_search;
 #[path = "core/dimension.rs"]
 pub mod dimension;
-#[path = "core/constraint_marks.rs"]
-pub mod constraint_marks;
 #[path = "core/dimension_bonds.rs"]
 pub mod dimension_bonds;
 #[path = "core/dimension_chain.rs"]
 pub mod dimension_chain;
-#[path = "core/dimension_preview.rs"]
-mod dimension_preview;
-#[path = "core/annotative.rs"]
-pub mod annotative;
 #[path = "core/dimension_marks.rs"]
 pub mod dimension_marks;
-#[path = "core/constraint_tool.rs"]
-pub mod constraint_tool;
+#[path = "core/dimension_preview.rs"]
+mod dimension_preview;
 #[path = "core/dimension_reassociate.rs"]
 pub mod dimension_reassociate;
 #[path = "core/divide.rs"]
@@ -197,8 +197,6 @@ pub mod draw_order;
 pub mod drawing_extras;
 #[path = "core/edge.rs"]
 mod edge;
-#[path = "core/area_cut.rs"]
-pub mod area_cut;
 #[path = "core/edge_shift.rs"]
 pub mod edge_shift;
 #[path = "arch/elevation.rs"]
@@ -215,6 +213,8 @@ pub mod feature_table;
 mod fence;
 #[path = "core/find_replace.rs"]
 pub mod find_replace;
+#[path = "viewer_tools/measured.rs"]
+pub mod measured;
 /// Numbers as the user reads them: the project crate's (the headless host formats the same).
 mod format {
     pub use kentos_project::format::*;
@@ -227,10 +227,10 @@ pub mod grip_edit;
 pub mod grip_menu;
 #[path = "map/ground.rs"]
 pub mod ground;
-#[path = "viewer_tools/scale_summary.rs"]
-pub mod scale_summary;
 #[path = "core/hatch.rs"]
 pub mod hatch;
+#[path = "core/hatch_edit.rs"]
+pub mod hatch_edit;
 #[path = "core/hatch_options.rs"]
 pub mod hatch_options;
 #[path = "core/hatch_selected.rs"]
@@ -241,10 +241,10 @@ pub mod holes;
 pub mod identify;
 #[path = "gis/image_clip.rs"]
 pub mod image_clip;
-#[path = "core/insert_clip.rs"]
-pub mod insert_clip;
 #[path = "gis/image_insert.rs"]
 pub mod image_insert;
+#[path = "core/insert_clip.rs"]
+pub mod insert_clip;
 #[path = "core/label_tools.rs"]
 pub mod label_tools;
 #[path = "core/labels_to_text.rs"]
@@ -265,8 +265,6 @@ pub mod locks;
 mod log;
 #[path = "core/look.rs"]
 pub mod look;
-#[path = "core/hatch_edit.rs"]
-pub mod hatch_edit;
 #[path = "core/match_properties.rs"]
 pub mod match_properties;
 #[path = "viewer_tools/meeting.rs"]
@@ -291,6 +289,8 @@ pub mod object;
 pub mod object_tracking;
 #[path = "core/offset.rs"]
 pub mod offset;
+#[path = "arch/opening_codes_tool.rs"]
+pub mod opening_codes_tool;
 #[path = "core/outlines.rs"]
 mod outlines;
 #[path = "map/overlap.rs"]
@@ -301,6 +301,8 @@ pub mod paragraph;
 pub mod parallel;
 #[path = "core/param_grip.rs"]
 mod param_grip;
+#[path = "map/parcel_tool.rs"]
+pub mod parcel_tool;
 #[path = "core/paste.rs"]
 pub mod paste;
 #[path = "core/path.rs"]
@@ -339,31 +341,29 @@ pub mod regular;
 pub mod reshape;
 #[path = "core/reshape_by.rs"]
 pub mod reshape_by;
-#[path = "arch/opening_codes_tool.rs"]
-pub mod opening_codes_tool;
-#[path = "map/parcel_tool.rs"]
-pub mod parcel_tool;
+#[path = "viewer_tools/scale_summary.rs"]
+pub mod scale_summary;
 // Parsel alan çizelgesini yerleştir: the window's table hung from the cursor (docs/adr/9306).
-#[path = "map/parcel_table_place.rs"]
-pub mod parcel_table_place;
+#[path = "arch/arch_layer.rs"]
+pub mod arch_layer;
 #[path = "gis/calc_tables.rs"]
 pub mod calc_tables;
-#[path = "arch/joinery_list_tool.rs"]
-pub mod joinery_list_tool;
-#[path = "arch/renovation_legend_tool.rs"]
-pub mod renovation_legend_tool;
 #[path = "core/escape_tool.rs"]
 pub mod escape_tool;
-#[path = "arch/walk_tool.rs"]
-pub mod walk_tool;
+#[path = "arch/joinery_list_tool.rs"]
+pub mod joinery_list_tool;
+#[path = "core/named_points.rs"]
+mod named_points;
+#[path = "map/parcel_table_place.rs"]
+pub mod parcel_table_place;
 #[path = "arch/plan_dimensions.rs"]
 pub mod plan_dimensions;
+#[path = "arch/renovation_legend_tool.rs"]
+pub mod renovation_legend_tool;
 #[path = "core/revcloud.rs"]
 pub mod revcloud;
 #[path = "arch/room_grip.rs"]
 pub mod room_grip;
-#[path = "arch/symbols.rs"]
-pub mod symbols;
 #[path = "core/rotate.rs"]
 pub mod rotate;
 #[path = "core/rotated.rs"]
@@ -378,8 +378,6 @@ pub mod sector;
 pub mod segment_edit;
 #[path = "viewer_tools/select.rs"]
 pub mod select;
-#[path = "viewer_tools/snap_names.rs"]
-pub mod snap_names;
 #[path = "viewer_tools/select_circle.rs"]
 pub mod select_circle;
 #[path = "viewer_tools/select_containing.rs"]
@@ -396,12 +394,12 @@ pub mod selectable;
 mod selection;
 #[path = "core/session.rs"]
 mod session;
-#[path = "core/named_points.rs"]
-mod named_points;
 #[path = "core/session_hooks.rs"]
 mod session_hooks;
 #[path = "arch/set_elevation.rs"]
 pub mod set_elevation;
+#[path = "viewer_tools/snap_names.rs"]
+pub mod snap_names;
 #[path = "gis/sources.rs"]
 pub mod sources;
 #[path = "core/spline.rs"]
@@ -410,46 +408,58 @@ pub mod spline;
 pub mod split;
 #[path = "core/standard_layer.rs"]
 mod standard_layer;
-#[path = "arch/arch_layer.rs"]
-pub mod arch_layer;
 #[path = "road/station_labels.rs"]
 pub mod station_labels;
 #[path = "viewer_tools/station_offset.rs"]
 pub mod station_offset;
 #[path = "core/stretch.rs"]
 pub mod stretch;
+#[path = "arch/symbols.rs"]
+pub mod symbols;
 #[path = "core/temporary_refs.rs"]
 pub mod temporary_refs;
 #[path = "core/ucs_tool.rs"]
 pub mod ucs_tool;
+#[path = "arch/walk_tool.rs"]
+pub mod walk_tool;
 /// Moved to the commands' crate, where `cad.styles.edit` writes through it (docs/adr/0248 §4).
 pub use kentos_native_application::style_tables;
+#[path = "core/bond_refusal.rs"]
+pub mod bond_refusal;
+#[path = "core/extract_place.rs"]
+pub mod extract_place;
+#[path = "core/kept.rs"]
+mod kept;
+#[path = "arch/opening_array.rs"]
+pub mod opening_array;
+#[path = "arch/opening_distance.rs"]
+pub mod opening_distance;
+#[path = "arch/opening_tools.rs"]
+pub mod opening_tools;
+#[path = "arch/space_tools.rs"]
+pub mod space_tools;
 #[path = "core/styles.rs"]
 pub mod styles;
 #[path = "core/table.rs"]
 pub mod table;
 #[path = "core/table_place.rs"]
 pub mod table_place;
-#[path = "core/extract_place.rs"]
-pub mod extract_place;
 #[path = "arch/templates.rs"]
 pub mod templates;
 #[path = "core/text.rs"]
 pub mod text;
 #[path = "core/text_along.rs"]
 pub mod text_along;
-#[path = "core/text_layout.rs"]
-pub mod text_layout;
 #[path = "core/text_file.rs"]
 pub mod text_file;
+#[path = "core/text_layout.rs"]
+pub mod text_layout;
 #[path = "gis/time_version.rs"]
 pub mod time_version;
-#[path = "core/tool_layer.rs"]
-pub mod tool_layer;
 #[path = "core/tool.rs"]
 mod tool;
-#[path = "core/kept.rs"]
-mod kept;
+#[path = "core/tool_layer.rs"]
+pub mod tool_layer;
 #[path = "gis/topology.rs"]
 pub mod topology;
 #[path = "road/trace_work.rs"]
@@ -466,91 +476,81 @@ pub mod view_history;
 pub mod view_twist;
 #[path = "arch/wall.rs"]
 pub mod wall;
-#[path = "arch/wall_edit_tools.rs"]
-pub mod wall_edit_tools;
-#[path = "arch/opening_distance.rs"]
-pub mod opening_distance;
-#[path = "core/bond_refusal.rs"]
-pub mod bond_refusal;
 #[path = "arch/wall_distance.rs"]
 pub mod wall_distance;
+#[path = "arch/wall_edit_tools.rs"]
+pub mod wall_edit_tools;
 #[path = "arch/wall_shift.rs"]
 pub mod wall_shift;
-#[path = "arch/opening_tools.rs"]
-pub mod opening_tools;
-#[path = "arch/opening_array.rs"]
-pub mod opening_array;
-#[path = "arch/space_tools.rs"]
-pub mod space_tools;
 // Döşeme (docs/adr/0722).
-#[path = "arch/slab_tools.rs"]
-pub mod slab_tools;
-#[path = "arch/slab_edge_tool.rs"]
-pub mod slab_edge_tool;
 #[path = "arch/ceiling_device_tool.rs"]
 pub mod ceiling_device_tool;
+#[path = "arch/slab_edge_tool.rs"]
+pub mod slab_edge_tool;
+#[path = "arch/slab_tools.rs"]
+pub mod slab_tools;
 // Kaplama (docs/adr/8070 §10).
-#[path = "arch/covering_tool.rs"]
-pub mod covering_tool;
-#[path = "arch/space_discover.rs"]
-pub mod space_discover;
-#[path = "arch/space_number.rs"]
-pub mod space_number;
-#[path = "arch/architecture_level.rs"]
-mod architecture_level;
-#[path = "arch/space_level.rs"]
-mod space_level;
-#[path = "arch/space_sources.rs"]
-mod space_sources;
 #[path = "arch/arch_tools.rs"]
 pub mod arch_tools;
+#[path = "arch/architecture_level.rs"]
+mod architecture_level;
 #[path = "arch/beam_tools.rs"]
 pub mod beam_tools;
-#[path = "arch/footing_tools.rs"]
-pub mod footing_tools;
-#[path = "arch/profile_tools.rs"]
-pub mod profile_tools;
-#[path = "arch/ground_tool.rs"]
-pub mod ground_tool;
-#[path = "arch/ground_level_tool.rs"]
-pub mod ground_level_tool;
+#[path = "arch/casework.rs"]
+pub mod casework;
 #[path = "arch/color_legend_tool.rs"]
 pub mod color_legend_tool;
-#[path = "arch/shadow_tool.rs"]
-pub mod shadow_tool;
+#[path = "arch/covering_tool.rs"]
+pub mod covering_tool;
+#[path = "arch/footing_tools.rs"]
+pub mod footing_tools;
+#[path = "map/grid_system.rs"]
+pub mod grid_system;
+#[path = "arch/ground_level_tool.rs"]
+pub mod ground_level_tool;
+#[path = "arch/ground_tool.rs"]
+pub mod ground_tool;
 #[path = "arch/mass_tool.rs"]
 pub mod mass_tool;
+#[path = "arch/module_place.rs"]
+pub mod module_place;
+#[path = "arch/profile_tools.rs"]
+pub mod profile_tools;
 #[path = "arch/railing_tools.rs"]
 pub mod railing_tools;
 #[path = "arch/roof_part_tools.rs"]
 pub mod roof_part_tools;
 #[path = "arch/roof_tools.rs"]
 pub mod roof_tools;
-#[path = "arch/casework.rs"]
-pub mod casework;
-#[path = "map/grid_system.rs"]
-pub mod grid_system;
-#[path = "arch/module_place.rs"]
-pub mod module_place;
+#[path = "arch/shadow_tool.rs"]
+pub mod shadow_tool;
+#[path = "arch/space_discover.rs"]
+pub mod space_discover;
+#[path = "arch/space_level.rs"]
+mod space_level;
+#[path = "arch/space_number.rs"]
+pub mod space_number;
+#[path = "arch/space_sources.rs"]
+mod space_sources;
 // Oda iç görünüşü: a derived drawing (docs/adr/0799).
 #[path = "arch/room_elevation.rs"]
 pub mod room_elevation;
 #[path = "arch/section_tool.rs"]
 pub mod section_tool;
-#[path = "viewer_tools/view_crop.rs"]
-pub mod view_crop;
 #[path = "arch/tag_tools.rs"]
 pub mod tag_tools;
+#[path = "viewer_tools/view_crop.rs"]
+pub mod view_crop;
 #[path = "arch/viewmark_tools.rs"]
 pub mod viewmark_tools;
-#[path = "arch/wall_from_lines.rs"]
-pub mod wall_from_lines;
-#[path = "arch/wall_rectangle.rs"]
-pub mod wall_rectangle;
-#[path = "arch/wall_partition.rs"]
-pub mod wall_partition;
 #[path = "arch/wall_dimensions.rs"]
 pub mod wall_dimensions;
+#[path = "arch/wall_from_lines.rs"]
+pub mod wall_from_lines;
+#[path = "arch/wall_partition.rs"]
+pub mod wall_partition;
+#[path = "arch/wall_rectangle.rs"]
+pub mod wall_rectangle;
 // İç ölçü zinciri (docs/adr/0711).
 #[path = "arch/interior_dims.rs"]
 pub mod interior_dims;
@@ -591,9 +591,9 @@ pub use spatial::{
 };
 pub use tool::{Area, CellGhost, ImageFile, InputPreview, Label, TextGhost, frame_of};
 pub use tool::{
-    Context, Corners, Cursor, DataRegion, DimensionMode, Draft, DraftColor, Flow, LengthenMode, Marker,
-    MarkerShape, Memory, Name, Offers, OptionChoice, Overlap, ParagraphField, Pointer, Preview,
-    Stroke, Tag, TextField, Tone, Tool, ToolOption, View, ViewChange, default_snap_kinds,
+    Context, Corners, Cursor, DataRegion, DimensionMode, Draft, DraftColor, Flow, LengthenMode,
+    Marker, MarkerShape, Memory, Name, Offers, OptionChoice, Overlap, ParagraphField, Pointer,
+    Preview, Stroke, Tag, TextField, Tone, Tool, ToolOption, View, ViewChange, default_snap_kinds,
     screen_scale, snap_kinds,
 };
 pub use view_history::{ViewHistory, Viewpoint};

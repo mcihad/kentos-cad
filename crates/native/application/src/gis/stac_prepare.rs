@@ -268,7 +268,13 @@ fn write(cx: &mut ExecutionContext<'_>, input: StacPrepare) -> CommandResult<Sta
     let above_base = base_index(cx.doc);
     let written = cx.doc.transact("STAC verisini hazırla", |doc| {
         let group = doc
-            .add_layer_at(NewLayer::group(planned.group.clone()), None, above_base, None, false)
+            .add_layer_at(
+                NewLayer::group(planned.group.clone()),
+                None,
+                above_base,
+                None,
+                false,
+            )
             .map_err(|r| {
                 Stop::failed(checks::error(
                     kentos_commands::codes::INVALID_GROUP_NAME,

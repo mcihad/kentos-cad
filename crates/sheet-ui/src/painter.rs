@@ -21,7 +21,7 @@ use kentos_sheet::kinds::MapLayers;
 #[derive(Clone, Debug, PartialEq)]
 pub struct MapRequest<'a> {
     /// Owner page, required when a shared master is exported with page-specific plot ink.
-    pub sheet:Option<&'a str>,
+    pub sheet: Option<&'a str>,
     pub primitive: Option<&'a MapPrim>,
     /// The map item's id.
     pub item: &'a str,
@@ -47,7 +47,7 @@ impl<'a> MapRequest<'a> {
         // A metre on the ground is 1 000 000 / scale micrometres on the paper.
         let ppm = kentos_sheet::projection::Scale::for_rendering(m.view.scale).pixels_per_metre(k);
         MapRequest {
-            sheet:None,
+            sheet: None,
             primitive: Some(m),
             item: &m.item,
             size,
@@ -61,7 +61,10 @@ impl<'a> MapRequest<'a> {
         }
     }
 
-    pub fn for_sheet(mut self,sheet:&'a str)->Self {self.sheet=Some(sheet);self}
+    pub fn for_sheet(mut self, sheet: &'a str) -> Self {
+        self.sheet = Some(sheet);
+        self
+    }
 
     /// The content's box, pixels from its top-left corner: what a painter
     /// draws keeps inside it (a turned frame turns the box with it, and a
@@ -95,7 +98,7 @@ impl<'a> MapRequest<'a> {
 /// Paints the content of map frames.
 pub trait MapPainter {
     /// Ephemeral model tool aids. Never part of preview/export content or its cache.
-    fn interaction(&self,_request:&MapRequest<'_>,_frame:&mut Frame) {}
+    fn interaction(&self, _request: &MapRequest<'_>, _frame: &mut Frame) {}
     /// Paints the content into `frame`, whose origin is the content's top-left
     /// corner; what it draws keeps inside [`MapRequest::bounds`] ([`clip_segment`],
     /// [`clip_polygon`]; a text wholly inside or not at all). False when there
@@ -118,7 +121,12 @@ pub trait MapPainter {
     }
 
     /// A vector/raster choice may be unavailable; invalid source geometry is an error, never a placeholder.
-    fn export_content(&self,request:&MapRequest<'_>)->Result<Option<kentos_sheet::pdf::MapContent>,String>{Ok(self.vector(request))}
+    fn export_content(
+        &self,
+        request: &MapRequest<'_>,
+    ) -> Result<Option<kentos_sheet::pdf::MapContent>, String> {
+        Ok(self.vector(request))
+    }
 
     /// Whether [`vector`](Self::vector) gives the maps' vectors (the export window says how the
     /// maps go before anything is written).
@@ -147,7 +155,9 @@ pub fn lend<'a>(painter: &'a dyn MapPainter) -> Painter<'a> {
 struct Lent<'a>(&'a dyn MapPainter);
 
 impl MapPainter for Lent<'_> {
-    fn interaction(&self,r:&MapRequest<'_>,f:&mut Frame) {self.0.interaction(r,f)}
+    fn interaction(&self, r: &MapRequest<'_>, f: &mut Frame) {
+        self.0.interaction(r, f)
+    }
     fn paint(&self, request: &MapRequest<'_>, frame: &mut Frame) -> bool {
         self.0.paint(request, frame)
     }
@@ -160,7 +170,12 @@ impl MapPainter for Lent<'_> {
         self.0.vector(request)
     }
 
-    fn export_content(&self,request:&MapRequest<'_>)->Result<Option<kentos_sheet::pdf::MapContent>,String>{self.0.export_content(request)}
+    fn export_content(
+        &self,
+        request: &MapRequest<'_>,
+    ) -> Result<Option<kentos_sheet::pdf::MapContent>, String> {
+        self.0.export_content(request)
+    }
 
     fn vectors(&self) -> bool {
         self.0.vectors()
@@ -346,7 +361,7 @@ mod tests {
     fn the_demo_town_keeps_inside_the_content_s_box() {
         for rotation in [0, 30_000] {
             let view = MapViewPrim {
-                annotation_scale:None,
+                annotation_scale: None,
                 center: Some(GroundPoint {
                     x: 1_000.0,
                     y: 2_000.0,
@@ -356,7 +371,7 @@ mod tests {
             };
             let layers = MapLayers::default();
             let r = MapRequest {
-                sheet:None,
+                sheet: None,
                 primitive: None,
                 item: "m",
                 size: Size::new(160.0, 90.0),
@@ -412,7 +427,7 @@ mod tests {
     #[test]
     fn a_ground_point_lands_where_the_core_puts_it() {
         let view = MapViewPrim {
-                annotation_scale:None,
+            annotation_scale: None,
             center: Some(GroundPoint {
                 x: 500_000.0,
                 y: 4_400_000.0,
@@ -422,7 +437,7 @@ mod tests {
         };
         let layers = MapLayers::default();
         let r = MapRequest {
-                sheet:None,
+            sheet: None,
             primitive: None,
             item: "m",
             size: Size::new(200.0, 100.0),
@@ -439,7 +454,7 @@ mod tests {
         assert_eq!(r.to_px(500_010.0, 4_400_005.0), Point::new(120.0, 40.0));
         // Turned a quarter clockwise: east points down.
         let turned = MapViewPrim {
-                annotation_scale:None,
+            annotation_scale: None,
             rotation: 90_000,
             ..view.clone()
         };

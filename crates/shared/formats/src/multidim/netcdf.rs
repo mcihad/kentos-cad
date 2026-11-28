@@ -337,32 +337,44 @@ pub fn decode(kind: NcType, bytes: &[u8], out: &mut Vec<f64>) {
         NcType::Char | NcType::UByte => out.extend(bytes.iter().map(|&b| f64::from(b))),
         NcType::Short => out.extend(
             bytes
-                .as_chunks::<2>().0.iter()
+                .as_chunks::<2>()
+                .0
+                .iter()
                 .map(|c| f64::from(i16::from_be_bytes([c[0], c[1]]))),
         ),
         NcType::UShort => out.extend(
             bytes
-                .as_chunks::<2>().0.iter()
+                .as_chunks::<2>()
+                .0
+                .iter()
                 .map(|c| f64::from(u16::from_be_bytes([c[0], c[1]]))),
         ),
         NcType::Int => out.extend(
             bytes
-                .as_chunks::<4>().0.iter()
+                .as_chunks::<4>()
+                .0
+                .iter()
                 .map(|c| f64::from(i32::from_be_bytes([c[0], c[1], c[2], c[3]]))),
         ),
         NcType::UInt => out.extend(
             bytes
-                .as_chunks::<4>().0.iter()
+                .as_chunks::<4>()
+                .0
+                .iter()
                 .map(|c| f64::from(u32::from_be_bytes([c[0], c[1], c[2], c[3]]))),
         ),
         NcType::Float => out.extend(
             bytes
-                .as_chunks::<4>().0.iter()
+                .as_chunks::<4>()
+                .0
+                .iter()
                 .map(|c| f64::from(f32::from_be_bytes([c[0], c[1], c[2], c[3]]))),
         ),
         NcType::Double => out.extend(
             bytes
-                .as_chunks::<8>().0.iter()
+                .as_chunks::<8>()
+                .0
+                .iter()
                 .map(|c| f64::from_be_bytes([c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]])),
         ),
         NcType::Int64 => {

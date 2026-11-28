@@ -24,10 +24,15 @@ fn drawing(own: bool) -> Document {
 
 /// The project with its sheet; `archive` false: without its GNSS archive.
 fn drawing_of(own: bool, archive: bool) -> Document {
-    let mut v: Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/kcad/v2/map-survey-network.json")).expect("the file");
+    let mut v: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/kcad/v2/map-survey-network.json"
+    ))
+    .expect("the file");
     if !archive {
-        v["settings"].as_object_mut().expect("settings").remove("mapSurvey");
+        v["settings"]
+            .as_object_mut()
+            .expect("settings")
+            .remove("mapSurvey");
     }
     if own {
         v["settings"]["variables"] = json!([
@@ -47,15 +52,20 @@ fn drawing_of(own: bool, archive: bool) -> Document {
             text("not", 80000, "[% @olcme_kalitesi %]")
         ]}}]))
     .expect("ops");
-    let book = kentos_sheet::ops::apply_all(&SheetBook::default(), &ops).expect("the sheet").book;
-    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept")).expect("the book");
+    let book = kentos_sheet::ops::apply_all(&SheetBook::default(), &ops)
+        .expect("the sheet")
+        .book;
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept"))
+        .expect("the book");
     doc
 }
 
 /// Each text's words, its lines joined.
 fn texts(doc: &Document) -> Vec<(String, String)> {
-    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets")).expect("the book");
-    let list = display_list(&book, "pafta", &base_inputs(doc, "Ayşe", "2026-11-08")).expect("drawn");
+    let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets"))
+        .expect("the book");
+    let list =
+        display_list(&book, "pafta", &base_inputs(doc, "Ayşe", "2026-11-08")).expect("drawn");
     texts_of(&list)
 }
 
@@ -77,7 +87,9 @@ fn texts_of(list: &kentos_sheet::display::DisplayList) -> Vec<(String, String)> 
 }
 
 fn said<'a>(all: &'a [(String, String)], id: &str) -> &'a str {
-    all.iter().find(|(i, _)| i == id).map_or("", |(_, w)| w.as_str())
+    all.iter()
+        .find(|(i, _)| i == id)
+        .map_or("", |(_, w)| w.as_str())
 }
 
 #[test]
@@ -85,7 +97,10 @@ fn a_sheet_reads_the_archive_s_survey_quality() {
     let all = texts(&drawing(false));
     assert_eq!(said(&all, "konum"), "Konum: ±0,5 cm");
     assert_eq!(said(&all, "yukseklik"), "Yükseklik: ±0,9 cm");
-    assert_eq!(said(&all, "ag"), "da-1, C3 sınıfı, kurallar sağlandı (bohhbuy-2018-gnss@1), m0 0,98, serbestlik 3");
+    assert_eq!(
+        said(&all, "ag"),
+        "da-1, C3 sınıfı, kurallar sağlandı (bohhbuy-2018-gnss@1), m0 0,98, serbestlik 3"
+    );
     assert_eq!(
         said(&all, "not"),
         "GNSS ile 2 nokta: en büyük nokta konum hatası ±0,5 cm, yükseklik hatası ±0,9 cm (ortalama hata); ağ dengelemesi da-1 (C3, \
@@ -106,30 +121,48 @@ fn a_project_s_own_variable_comes_first() {
 #[test]
 fn the_print_check_says_a_quality_the_project_lacks() {
     let found = |doc: &Document| -> Vec<String> {
-        let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets")).expect("the book");
+        let (book, _) = kentos_sheet::project::read_project_sheets(doc.sheets().expect("sheets"))
+            .expect("the book");
         let inputs = base_inputs(doc, "Ayşe", "2026-11-08");
-        let all = kentos_plot::preflight::inspect(doc, &book, "pafta", &inputs, None).expect("checked");
-        let mut items: Vec<String> =
-            all.iter().filter(|f| f.code == "survey_quality_missing").filter_map(|f| f.item.clone()).collect();
+        let all =
+            kentos_plot::preflight::inspect(doc, &book, "pafta", &inputs, None).expect("checked");
+        let mut items: Vec<String> = all
+            .iter()
+            .filter(|f| f.code == "survey_quality_missing")
+            .filter_map(|f| f.item.clone())
+            .collect();
         items.sort();
         items
     };
     assert!(found(&drawing(false)).is_empty());
-    assert_eq!(found(&drawing_of(false, false)), ["ag", "konum", "not", "yukseklik"]);
-    assert_eq!(found(&drawing_of(true, false)), ["ag", "not", "yukseklik"], "the project's own konum_dogrulugu");
+    assert_eq!(
+        found(&drawing_of(false, false)),
+        ["ag", "konum", "not", "yukseklik"]
+    );
+    assert_eq!(
+        found(&drawing_of(true, false)),
+        ["ag", "not", "yukseklik"],
+        "the project's own konum_dogrulugu"
+    );
 }
 
 /// The scope's drawing with its sheet: fixtures/sheet/v1/survey-scope.json (scripts/fixtures/sheet_survey_scope_cases.py,
 /// no KentOS code).
 fn scope_case() -> (Value, Document) {
-    let case: Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/survey-scope.json")).expect("the cases");
-    let snapshot: DocumentSnapshotV2 = serde_json::from_value(case["drawing"].clone()).expect("a snapshot");
+    let case: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/survey-scope.json"
+    ))
+    .expect("the cases");
+    let snapshot: DocumentSnapshotV2 =
+        serde_json::from_value(case["drawing"].clone()).expect("a snapshot");
     let mut doc = Document::from_snapshot_v2(snapshot).expect("opens");
     let ops: Vec<kentos_sheet::ops::Op> =
         serde_json::from_value(json!([{"op": "addSheet", "sheet": case["sheet"]}])).expect("ops");
-    let book = kentos_sheet::ops::apply_all(&SheetBook::default(), &ops).expect("the sheet").book;
-    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept")).expect("the book");
+    let book = kentos_sheet::ops::apply_all(&SheetBook::default(), &ops)
+        .expect("the sheet")
+        .book;
+    doc.set_sheets(kentos_sheet::project::project_sheets(&book, |_| None).expect("kept"))
+        .expect("the book");
     (case, doc)
 }
 
@@ -148,13 +181,19 @@ fn each_map_says_its_own_points() {
     spatial.reload(&doc);
     let library = kentos_plot::book::library_of(&doc);
     let sheet = book.sheet("pafta").expect("the sheet");
-    let data = kentos_plot::inputs::sheet_data(&doc, &spatial, &library, &[], &book, sheet, Some(&first));
+    let data =
+        kentos_plot::inputs::sheet_data(&doc, &spatial, &library, &[], &book, sheet, Some(&first));
     let maps = case["maps"].as_object().expect("maps");
     assert_eq!(data.surveys.len(), maps.len());
     for m in &data.surveys {
         let want = &maps[&m.item];
         assert_eq!(
-            (m.position.as_str(), m.height.as_str(), m.network.as_str(), m.note.as_str()),
+            (
+                m.position.as_str(),
+                m.height.as_str(),
+                m.network.as_str(),
+                m.note.as_str()
+            ),
             (
                 want["position"].as_str().unwrap_or(""),
                 want["height"].as_str().unwrap_or(""),
@@ -171,15 +210,27 @@ fn each_map_says_its_own_points() {
         assert_eq!(said(&all, id), want.as_str().unwrap_or(""), "{id}");
     }
     let inputs = base_inputs(&doc, "Ayşe", "2026-11-08");
-    let found = kentos_plot::preflight::inspect(&doc, &book, "pafta", &inputs, None).expect("checked");
+    let found =
+        kentos_plot::preflight::inspect(&doc, &book, "pafta", &inputs, None).expect("checked");
     let missing: Vec<(&str, &str)> = found
         .iter()
         .filter(|f| f.code == "survey_quality_missing")
         .map(|f| (f.item.as_deref().unwrap_or(""), f.message.as_str()))
         .collect();
-    let want: Vec<&str> = case["findings"].as_array().into_iter().flatten().filter_map(|f| f["item"].as_str()).collect();
+    let want: Vec<&str> = case["findings"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|f| f["item"].as_str())
+        .collect();
     assert_eq!(missing.iter().map(|(i, _)| *i).collect::<Vec<_>>(), want);
-    assert!(missing[0].1.contains("haritanın içinde GNSS ile kabul edilmiş nokta yok"), "{}", missing[0].1);
+    assert!(
+        missing[0]
+            .1
+            .contains("haritanın içinde GNSS ile kabul edilmiş nokta yok"),
+        "{}",
+        missing[0].1
+    );
 }
 
 /// `.run/gui-evidence/olcme-kalitesi-2400/pafta.pdf`, the sheet as printed:
@@ -190,9 +241,11 @@ fn each_map_says_its_own_points() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn picture() {
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence/olcme-kalitesi-2400");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../.run/gui-evidence/olcme-kalitesi-2400");
     std::fs::create_dir_all(&out).expect("a folder");
-    let made = kentos_plot::book::book_pdf(&drawing(false), &[], "Ayşe", "2026-11-08").expect("a PDF");
+    let made =
+        kentos_plot::book::book_pdf(&drawing(false), &[], "Ayşe", "2026-11-08").expect("a PDF");
     std::fs::write(out.join("pafta.pdf"), &made.bytes).expect("writes");
     println!("{}", out.join("pafta.pdf").display());
 }
@@ -206,7 +259,8 @@ fn picture() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn scope_picture() {
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence/harita-kirpma-3200");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../.run/gui-evidence/harita-kirpma-3200");
     std::fs::create_dir_all(&out).expect("a folder");
     let (_, doc) = scope_case();
     let made = kentos_plot::book::book_pdf(&doc, &[], "Ayşe", "2026-11-08").expect("a PDF");

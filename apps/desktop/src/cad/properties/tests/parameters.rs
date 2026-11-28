@@ -30,14 +30,22 @@ fn block_parameter_mm_input_uses_canonical_metres_rules_and_one_undo() {
     use kentos_commands::DrawingUnit;
     let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
     assert_eq!(value(&app, "Boyut ve konum", "Genişlik"), "900 mm");
-    assert!(rows(&app).iter().flat_map(|(_, rows)| rows).any(|r| r.note && r.value == "Tanım varsayılanı · En az 600 mm · En çok 1200 mm · Adım 50 mm"));
+    assert!(
+        rows(&app).iter().flat_map(|(_, rows)| rows).any(|r| r.note
+            && r.value == "Tanım varsayılanı · En az 600 mm · En çok 1200 mm · Adım 50 mm")
+    );
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     event(
         &mut app,
         Event::Commit(Field::Parameter(slot, "Genişlik".into()), "1050".into()),
     );
     assert_eq!(value(&app, "Boyut ve konum", "Genişlik"), "1050 mm");
-    assert!(rows(&app).iter().flat_map(|(_, rows)| rows).any(|r| r.note && r.value.starts_with("Örneğe özel · En az 600 mm")));
+    assert!(
+        rows(&app)
+            .iter()
+            .flat_map(|(_, rows)| rows)
+            .any(|r| r.note && r.value.starts_with("Örneğe özel · En az 600 mm"))
+    );
     let model = &app.document.as_ref().unwrap().model;
     let Entity::Insert(i) = model.get(slot).unwrap() else {
         panic!()
@@ -250,9 +258,19 @@ fn custom_parameter_groups_keep_explicit_member_order_independent_collapse_and_n
     use kentos_commands::{BlockParameterGroup, DrawingUnit};
     let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
     let mut snapshot = app.document.as_ref().unwrap().model.to_snapshot_v2();
-    snapshot.blocks[0].dynamic.as_mut().unwrap().parameter_groups = vec![
-        BlockParameterGroup { name: "Ürün".into(), parameters: vec!["Tip".into(), "Görünüş".into()] },
-        BlockParameterGroup { name: "Kanat".into(), parameters: vec!["Yön".into(), "Genişlik".into()] },
+    snapshot.blocks[0]
+        .dynamic
+        .as_mut()
+        .unwrap()
+        .parameter_groups = vec![
+        BlockParameterGroup {
+            name: "Ürün".into(),
+            parameters: vec!["Tip".into(), "Görünüş".into()],
+        },
+        BlockParameterGroup {
+            name: "Kanat".into(),
+            parameters: vec!["Yön".into(), "Genişlik".into()],
+        },
     ];
     let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
@@ -260,10 +278,32 @@ fn custom_parameter_groups_keep_explicit_member_order_independent_collapse_and_n
     let before = app.document.as_ref().unwrap().model.to_snapshot_v2();
     let doc = app.document.as_ref().unwrap();
     let sections = app.properties_panel(doc).sections;
-    let custom: Vec<_> = sections.iter().filter(|s| s.id.starts_with("blockParamsGroup:")).collect();
-    assert_eq!(custom.iter().map(|s| s.title.as_ref()).collect::<Vec<_>>(), ["Ürün", "Kanat"]);
-    assert_eq!(custom[0].rows.iter().filter(|r| !r.note).map(|r| r.label.as_ref()).collect::<Vec<_>>(), ["Tip", "Görünüş"]);
-    assert_eq!(custom[1].rows.iter().filter(|r| !r.note).map(|r| r.label.as_ref()).collect::<Vec<_>>(), ["Yön", "Genişlik"]);
+    let custom: Vec<_> = sections
+        .iter()
+        .filter(|s| s.id.starts_with("blockParamsGroup:"))
+        .collect();
+    assert_eq!(
+        custom.iter().map(|s| s.title.as_ref()).collect::<Vec<_>>(),
+        ["Ürün", "Kanat"]
+    );
+    assert_eq!(
+        custom[0]
+            .rows
+            .iter()
+            .filter(|r| !r.note)
+            .map(|r| r.label.as_ref())
+            .collect::<Vec<_>>(),
+        ["Tip", "Görünüş"]
+    );
+    assert_eq!(
+        custom[1]
+            .rows
+            .iter()
+            .filter(|r| !r.note)
+            .map(|r| r.label.as_ref())
+            .collect::<Vec<_>>(),
+        ["Yön", "Genişlik"]
+    );
     assert_ne!(custom[0].id, custom[1].id);
     let first = custom[0].id.clone();
     let second = custom[1].id.clone();
@@ -272,7 +312,10 @@ fn custom_parameter_groups_keep_explicit_member_order_independent_collapse_and_n
     assert!(!app.props_groups_closed.contains(second.as_ref()));
     assert_eq!(value(&app, "Kanat", "Genişlik"), "900 mm");
     assert!(row_editable(&app, "Kanat", "Genişlik"));
-    assert_eq!(app.document.as_ref().unwrap().model.to_snapshot_v2(), before);
+    assert_eq!(
+        app.document.as_ref().unwrap().model.to_snapshot_v2(),
+        before
+    );
 }
 
 #[test]
@@ -280,15 +323,24 @@ fn automatic_parameter_headings_remain_distinguishable_from_a_custom_group_with_
     use kentos_commands::{BlockParameterGroup, DrawingUnit};
     let (mut app, slot) = parameter_drawing(DrawingUnit::Mm, false);
     let mut snapshot = app.document.as_ref().unwrap().model.to_snapshot_v2();
-    snapshot.blocks[0].dynamic.as_mut().unwrap().parameter_groups = vec![
-        BlockParameterGroup { name: "Görünüş".into(), parameters: vec!["Genişlik".into()] },
-    ];
+    snapshot.blocks[0]
+        .dynamic
+        .as_mut()
+        .unwrap()
+        .parameter_groups = vec![BlockParameterGroup {
+        name: "Görünüş".into(),
+        parameters: vec!["Genişlik".into()],
+    }];
     let doc = crate::document::Document::from_v2(snapshot, None).unwrap();
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.selection.set([slot]);
     assert_eq!(value(&app, "Görünüş", "Genişlik"), "900 mm");
     assert_eq!(value(&app, "Görünüş · Otomatik", "Yön"), "Hayır");
-    assert!(rows(&app).iter().any(|(title, _)| title == "Katalog · Otomatik"));
+    assert!(
+        rows(&app)
+            .iter()
+            .any(|(title, _)| title == "Katalog · Otomatik")
+    );
 }
 
 #[test]
@@ -452,14 +504,8 @@ fn block_parameter_angles_local_points_and_derived_values_follow_project_units()
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.selection.set([slot]);
     assert_eq!(value(&app, "Boyut ve konum", "Dönüş"), "100.0000 g");
-    assert_eq!(
-        value(&app, "Boyut ve konum", "Yerel nokta"),
-        "125, -250 mm"
-    );
-    assert_eq!(
-        value(&app, "Hesaplanan", "Çift genişlik"),
-        "1800 mm"
-    );
+    assert_eq!(value(&app, "Boyut ve konum", "Yerel nokta"), "125, -250 mm");
+    assert_eq!(value(&app, "Hesaplanan", "Çift genişlik"), "1800 mm");
     assert!(
         rows(&app)
             .iter()
@@ -469,7 +515,12 @@ fn block_parameter_angles_local_points_and_derived_values_follow_project_units()
             .editor
             .is_none()
     );
-    assert!(rows(&app).iter().flat_map(|(_, rows)| rows).any(|r| r.note && r.value == "Hesaplanan · @Genişlik * 2"));
+    assert!(
+        rows(&app)
+            .iter()
+            .flat_map(|(_, rows)| rows)
+            .any(|r| r.note && r.value == "Hesaplanan · @Genişlik * 2")
+    );
     event(
         &mut app,
         Event::Commit(Field::Parameter(slot, "Dönüş".into()), "50".into()),
@@ -482,10 +533,7 @@ fn block_parameter_angles_local_points_and_derived_values_follow_project_units()
         ),
     );
     assert_eq!(value(&app, "Boyut ve konum", "Dönüş"), "50.0000 g");
-    assert_eq!(
-        value(&app, "Boyut ve konum", "Yerel nokta"),
-        "250, -500 mm"
-    );
+    assert_eq!(value(&app, "Boyut ve konum", "Yerel nokta"), "250, -500 mm");
     let Entity::Insert(i) = app.document.as_ref().unwrap().model.get(slot).unwrap() else {
         panic!()
     };
@@ -503,10 +551,7 @@ fn block_parameter_angles_local_points_and_derived_values_follow_project_units()
         Event::Parameter(slot, "Tip".into(), ParamValue::Text("Dar".into())),
     );
     assert_eq!(value(&app, "Boyut ve konum", "Genişlik"), "700 mm");
-    assert_eq!(
-        value(&app, "Hesaplanan", "Çift genişlik"),
-        "1400 mm"
-    );
+    assert_eq!(value(&app, "Hesaplanan", "Çift genişlik"), "1400 mm");
     event(
         &mut app,
         Event::Commit(

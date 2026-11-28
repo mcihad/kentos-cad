@@ -398,7 +398,11 @@ impl AtlasPlanned {
     /// atlas's PDF draws it: what the sheets' preflight reads an atlas sheet with, page by page (GIS-031,
     /// docs/adr/1090).
     pub fn page_contexts(&self) -> Vec<(String, display::AtlasPageInput)> {
-        self.pages.iter().map(|p| p.name.clone()).zip(self.plan.iter().cloned()).collect()
+        self.pages
+            .iter()
+            .map(|p| p.name.clone())
+            .zip(self.plan.iter().cloned())
+            .collect()
     }
 }
 
@@ -499,13 +503,15 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
                 ));
             };
             let filter = node.filter.as_ref().and_then(|f| f.expression.as_deref());
-            let time = input.time.zip(node.time.clone()).map(|(at, fields)| {
-                kentos_commands::QueryTime {
-                    at: Some(at.trim().to_owned()),
-                    fields: Some(fields),
-                    ..Default::default()
-                }
-            });
+            let time =
+                input
+                    .time
+                    .zip(node.time.clone())
+                    .map(|(at, fields)| kentos_commands::QueryTime {
+                        at: Some(at.trim().to_owned()),
+                        fields: Some(fields),
+                        ..Default::default()
+                    });
             let (objects, read) = source_rows(settings, link, filter, None, time.as_ref())?;
             source_left = read.saturating_sub(objects.len() as u64);
             source_read.push(AtlasRead {
@@ -641,7 +647,9 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
         // The planner fits the object on the paper's ground: its box moved there.
         let moved = match map {
             None => Some(own),
-            Some(m) => kentos_geometry_core::crs::transform_bounds(&m.project, &m.map, own, 21, &m.choices),
+            Some(m) => {
+                kentos_geometry_core::crs::transform_bounds(&m.project, &m.map, own, 21, &m.choices)
+            }
         };
         let Some(moved) = moved else {
             unreached += 1;
@@ -820,7 +828,11 @@ pub fn plan(doc: &Document, input: &AtlasInput<'_>) -> Result<AtlasPlanned, Atla
 
 /// `doc` with its layer `layer`'s objects in place of the rows `rows` (docs/adr/0638 §3): a reading copy, the
 /// drawing untouched. An object of another layer with a row's lasting id gives way (the same table imported twice).
-fn with_rows(doc: &Document, layer: &str, rows: Vec<(Uuid, Entity)>) -> Result<Document, AtlasError> {
+fn with_rows(
+    doc: &Document,
+    layer: &str,
+    rows: Vec<(Uuid, Entity)>,
+) -> Result<Document, AtlasError> {
     let mut work = doc.reading_copy();
     let own: Vec<Slot> = work.layer_slots(layer).map(|(_, s)| s).collect();
     work.remove(&own);
@@ -861,7 +873,9 @@ fn outline_of(shape: &Shape, bbox: [f64; 4]) -> Option<Vec<kentos_geometry_core:
             for p in parts.iter().flatten() {
                 rings.push(plot_outline::bulges(&p.pts, p.bulges.as_deref(), true, tol).ok()?);
             }
-            rings.into_iter().max_by(|a, b| area(a).total_cmp(&area(b)))?
+            rings
+                .into_iter()
+                .max_by(|a, b| area(a).total_cmp(&area(b)))?
         }
         Shape::Polyline {
             pts,
@@ -927,11 +941,21 @@ impl AtlasPlanned {
     }
 
     /// [`Self::pdf`], with `after` called once the pages are made and before the files are looked at again.
-    pub fn pdf_with(&self, doc: &Document, after: &dyn Fn()) -> Result<AtlasPdf, AtlasError> {self.pdf_with_at(doc,None,after)}
+    pub fn pdf_with(&self, doc: &Document, after: &dyn Fn()) -> Result<AtlasPdf, AtlasError> {
+        self.pdf_with_at(doc, None, after)
+    }
     /// The file host supplies the source drawing so relative image versions are frozen too.
-    pub fn pdf_at(&self,doc:&Document,drawing:Option<&str>)->Result<AtlasPdf,AtlasError>{self.pdf_with_at(doc,drawing,&||{})}
-    fn pdf_with_at(&self,original:&Document,drawing:Option<&str>,after:&dyn Fn())->Result<AtlasPdf,AtlasError>{
-        let captured=crate::provenance::Capture::new(original,&self.user,&self.date,drawing).map_err(|e|AtlasError::new(&e.code,e.message,"sources"))?;
+    pub fn pdf_at(&self, doc: &Document, drawing: Option<&str>) -> Result<AtlasPdf, AtlasError> {
+        self.pdf_with_at(doc, drawing, &|| {})
+    }
+    fn pdf_with_at(
+        &self,
+        original: &Document,
+        drawing: Option<&str>,
+        after: &dyn Fn(),
+    ) -> Result<AtlasPdf, AtlasError> {
+        let captured = crate::provenance::Capture::new(original, &self.user, &self.date, drawing)
+            .map_err(|e| AtlasError::new(&e.code, e.message, "sources"))?;
         // The pages' drawing: the captured one, its coverage layer the source's rows when read from it.
         let mut work = match &self.staged {
             Some(rows) => with_rows(&captured.doc, &self.layer, rows.clone())?,
@@ -991,12 +1015,12 @@ impl AtlasPlanned {
         if self.map.is_some() {
             // The title block, the grid and the north say the paper's system (docs/adr/0638 §1).
             base.project.crs_name = self.bindings.crs_name.clone();
-            base.crs = Some(
-                crate::inputs::crs_info(self.bindings.srid).unwrap_or(kentos_sheet::display::CrsInfo {
+            base.crs = Some(crate::inputs::crs_info(self.bindings.srid).unwrap_or(
+                kentos_sheet::display::CrsInfo {
                     name: self.bindings.crs_name.clone(),
                     tm: None,
-                }),
-            );
+                },
+            ));
         }
         let sheet = book
             .sheet(&self.sheet)
@@ -1031,7 +1055,11 @@ impl AtlasPlanned {
                 "maps": maps, "tables": data.tables, "coordinates": data.coordinates,
                 "legends": data.legends, "surveys": data.surveys,
             });
-            Ok(Drawn { feature: page.feature.id.clone(), list, page: page_json })
+            Ok(Drawn {
+                feature: page.feature.id.clone(),
+                list,
+                page: page_json,
+            })
         };
         let said = |drawer: MapDrawer<'_>, notes: &mut Vec<String>| -> Result<(), AtlasError> {
             for n in drawer
@@ -1051,7 +1079,16 @@ impl AtlasPlanned {
             for page in &self.plan {
                 let list = list_of(page)?;
                 let (maps, data) = self.page_maps(
-                    &work, &spatial, &library, &book, &sheet, page, &list, &mut drawer, &mut shared, true,
+                    &work,
+                    &spatial,
+                    &library,
+                    &book,
+                    &sheet,
+                    page,
+                    &list,
+                    &mut drawer,
+                    &mut shared,
+                    true,
                 );
                 drawn.push(drawn_of(page, &maps, &data)?);
                 pages.push(PdfAtlasPage {
@@ -1073,7 +1110,16 @@ impl AtlasPlanned {
                     // The maps that stand still, of the drawing as it is, before any page's rows come in.
                     let mut drawer = self.drawer(&work, &spatial, &library, &images, drawing);
                     self.page_maps(
-                        &work, &spatial, &library, &book, &sheet, page, &list, &mut drawer, &mut shared, false,
+                        &work,
+                        &spatial,
+                        &library,
+                        &book,
+                        &sheet,
+                        page,
+                        &list,
+                        &mut drawer,
+                        &mut shared,
+                        false,
                     );
                     said(drawer, &mut notes)?;
                 }
@@ -1102,7 +1148,16 @@ impl AtlasPlanned {
                 spatial.sync(&work);
                 let mut drawer = self.drawer(&work, &spatial, &library, &images, drawing);
                 let (maps, data) = self.page_maps(
-                    &work, &spatial, &library, &book, &sheet, page, &list, &mut drawer, &mut shared, true,
+                    &work,
+                    &spatial,
+                    &library,
+                    &book,
+                    &sheet,
+                    page,
+                    &list,
+                    &mut drawer,
+                    &mut shared,
+                    true,
                 );
                 said(drawer, &mut notes)?;
                 drawn.push(drawn_of(page, &maps, &data)?);
@@ -1132,7 +1187,10 @@ impl AtlasPlanned {
             );
         }
         // Docs/adr/4820: the looks, now that the maps standing on every page are all drawn.
-        let looks: Vec<(String, String)> = drawn.iter().map(|d| (d.feature.clone(), look_of(d, &shared))).collect();
+        let looks: Vec<(String, String)> = drawn
+            .iter()
+            .map(|d| (d.feature.clone(), look_of(d, &shared)))
+            .collect();
         let assets = self
             .pictures
             .iter()
@@ -1152,7 +1210,13 @@ impl AtlasPlanned {
                 sheet: self.sheet.clone(),
                 pages,
             }),
-            keywords: Some(format!("{}; snapshot={}",keywords(self),captured.keywords().map_err(|e|AtlasError::new(&e.code,e.message,"sources"))?)),
+            keywords: Some(format!(
+                "{}; snapshot={}",
+                keywords(self),
+                captured
+                    .keywords()
+                    .map_err(|e| AtlasError::new(&e.code, e.message, "sources"))?
+            )),
         };
         let options = PdfOptions {
             sheets: vec![self.sheet.clone()],
@@ -1282,9 +1346,10 @@ impl AtlasPlanned {
         list.prims
             .iter()
             .filter_map(|p| match p {
-                Prim::Map(m) if m.view.center.is_some() => {
-                    m.extent.and_then(|e| crate::maps::project_box(self.map, e)).map(|b| (m.item.clone(), b))
-                }
+                Prim::Map(m) if m.view.center.is_some() => m
+                    .extent
+                    .and_then(|e| crate::maps::project_box(self.map, e))
+                    .map(|b| (m.item.clone(), b)),
                 _ => None,
             })
             .collect()
@@ -1303,7 +1368,12 @@ impl AtlasPlanned {
             };
             out = Some(match out {
                 None => b,
-                Some(o) => [o[0].min(b[0]), o[1].min(b[1]), o[2].max(b[2]), o[3].max(b[3])],
+                Some(o) => [
+                    o[0].min(b[0]),
+                    o[1].min(b[1]),
+                    o[2].max(b[2]),
+                    o[3].max(b[3]),
+                ],
             });
         }
         out

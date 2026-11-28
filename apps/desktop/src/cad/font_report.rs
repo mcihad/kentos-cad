@@ -150,7 +150,15 @@ impl App {
             lines.push(words::text_line(Kind::Info, "Çizimde yazı stili yok."));
         }
         // The fonts folders (docs/adr/9313): every file, what KentOS does with it.
-        let folder_header = ["Aile", "Biçem", "Dosya", "Yer", "Kullanımı", "Türkçe", "Not"];
+        let folder_header = [
+            "Aile",
+            "Biçem",
+            "Dosya",
+            "Yer",
+            "Kullanımı",
+            "Türkçe",
+            "Not",
+        ];
         let folder_widths: [f32; 7] = [130.0, 90.0, 190.0, 80.0, 100.0, 50.0, 220.0];
         let folder_columns = folder_header
             .iter()
@@ -160,10 +168,18 @@ impl App {
             .files
             .iter()
             .map(|f| {
-                let style = if f.style.is_empty() { f.weight.to_string() } else { f.style.clone() };
+                let style = if f.style.is_empty() {
+                    f.weight.to_string()
+                } else {
+                    f.style.clone()
+                };
                 table::Row::new(
                     [
-                        if f.family.is_empty() { "—".to_owned() } else { f.family.clone() },
+                        if f.family.is_empty() {
+                            "—".to_owned()
+                        } else {
+                            f.family.clone()
+                        },
                         style,
                         f.file.clone(),
                         folder_text(f.folder).to_owned(),
@@ -184,7 +200,11 @@ impl App {
         )
         .style(style::container::field_box)
         .width(Fill);
-        let families = report.choices.iter().filter(|f| f.family().is_some()).count();
+        let families = report
+            .choices
+            .iter()
+            .filter(|f| f.family().is_some())
+            .count();
         let mut folder_lines = vec![words::text_line(
             Kind::Info,
             format!(

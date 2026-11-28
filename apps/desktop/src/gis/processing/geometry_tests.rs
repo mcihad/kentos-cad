@@ -28,9 +28,13 @@ fn app_with_geometry() -> App {
 /// docs/adr/2200).
 fn app_with(text: &str) -> App {
     let (mut app, _) = App::boot(None);
-    let v2 = serde_json::from_str::<serde_json::Value>(text).ok().and_then(|v| v["version"].as_u64()) == Some(2);
+    let v2 = serde_json::from_str::<serde_json::Value>(text)
+        .ok()
+        .and_then(|v| v["version"].as_u64())
+        == Some(2);
     let doc = if v2 {
-        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_str(text).expect("the drawing reads");
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_str(text).expect("the drawing reads");
         Document::from_v2(snapshot, None).expect("the drawing opens")
     } else {
         let snapshot = DocumentSnapshotV1::from_json(text).expect("the drawing reads");
@@ -103,7 +107,11 @@ fn a_gis_buffers_layer_is_an_area_layer_that_turns_the_point_tool_off() {
     value(&mut app, "input", layer("parsel"));
     value(&mut app, "distance", json!(10));
     event(&mut app, Event::Run);
-    assert!(matches!(status(&app), RunStatus::Ok { .. }), "{:?}", status(&app));
+    assert!(
+        matches!(status(&app), RunStatus::Ok { .. }),
+        "{:?}",
+        status(&app)
+    );
     let _ = app.update(Message::Gis(gis::Event::Processing(Event::Close)));
     let doc = &mut app.document.as_mut().expect("open").model;
     let made = doc
@@ -121,9 +129,13 @@ fn a_gis_buffers_layer_is_an_area_layer_that_turns_the_point_tool_off() {
     assert!(crate::layer_types::misfit(doc, "tool.polygon").is_none());
     if std::env::var_os("KENTOS_SHOTS").is_some() {
         app.tab = "edit";
-        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+            drop(app.update(m))
+        });
         let _ = app.update(Message::Run("view.zoomExtents"));
-        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+            drop(app.update(m))
+        });
         crate::files_testing::evidence(&mut shot, &app, "gis-001", "tampon-alan-katmani");
     }
 }
@@ -170,12 +182,29 @@ fn the_topology_rules_from_the_toolbox_give_the_commands_findings() {
     let RunStatus::Ok { text, table, .. } = status(&app) else {
         panic!("{:?}", status(&app));
     };
-    assert_eq!(text, "2 kural 5 nesnede 3 bulgu verdi (3 değerlendirilmedi); bulgulu nesneler seçildi.");
+    assert_eq!(
+        text,
+        "2 kural 5 nesnede 3 bulgu verdi (3 değerlendirilmedi); bulgulu nesneler seçildi."
+    );
     let table = table.expect("the table");
-    assert_eq!(table.columns, ["Kural", "Sorun", "Durum", "Nesneler", "Doğu", "Kuzey", "Ölçü", "Gerekçe"]);
+    assert_eq!(
+        table.columns,
+        [
+            "Kural", "Sorun", "Durum", "Nesneler", "Doğu", "Kuzey", "Ölçü", "Gerekçe"
+        ]
+    );
     assert_eq!(
         table.rows[2],
-        ["r2", "Kısa kenar", "Değerlendirilmedi", "#5", "487050.250", "4420010.000", "0.500 m", ""]
+        [
+            "r2",
+            "Kısa kenar",
+            "Değerlendirilmedi",
+            "#5",
+            "487050.250",
+            "4420010.000",
+            "0.500 m",
+            ""
+        ]
     );
     let selected: Vec<u32> = app.selection.ids().iter().map(|s| s.0).collect();
     assert_eq!(selected, [1, 2, 3, 4, 5]);
@@ -194,9 +223,15 @@ fn the_findings_go_to_an_error_layer_in_one_step() {
     let RunStatus::Ok { text, table, .. } = status(&app) else {
         panic!("{:?}", status(&app));
     };
-    assert_eq!(text, "2 kural 5 nesnede 3 bulgu verdi (3 değerlendirilmedi); 3 bulgu hata katmanına yazıldı.");
+    assert_eq!(
+        text,
+        "2 kural 5 nesnede 3 bulgu verdi (3 değerlendirilmedi); 3 bulgu hata katmanına yazıldı."
+    );
     assert_eq!(table.expect("the table").rows.len(), 3);
-    assert!(app.selection.ids().is_empty(), "the points are the result, not the objects' selection");
+    assert!(
+        app.selection.ids().is_empty(),
+        "the points are the result, not the objects' selection"
+    );
     let doc = &mut app.document.as_mut().expect("open").model;
     let layer = doc
         .layers()
@@ -205,7 +240,11 @@ fn the_findings_go_to_an_error_layer_in_one_step() {
         .find(|l| l.name == "Topoloji bulguları")
         .map(|l| l.id.clone())
         .expect("the error layer");
-    let points: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
+    let points: Vec<_> = doc
+        .entities()
+        .filter(|e| e.base().layer_id == layer)
+        .cloned()
+        .collect();
     assert_eq!(points.len(), 3);
     let kentos_commands::Entity::Point(short) = &points[2] else {
         panic!("{:?}", points[2]);
@@ -219,7 +258,12 @@ fn the_findings_go_to_an_error_layer_in_one_step() {
     assert_eq!(attrs["Anahtar"].len(), 16);
     assert!(!attrs.contains_key("Gerekçe"));
     assert_eq!(doc.undo().as_deref(), Some("Topolojiyi kurallarla denetle"));
-    assert!(doc.layers().leaves().iter().all(|l| l.name != "Topoloji bulguları"));
+    assert!(
+        doc.layers()
+            .leaves()
+            .iter()
+            .all(|l| l.name != "Topoloji bulguları")
+    );
     assert!(!doc.can_undo());
 }
 
@@ -236,10 +280,23 @@ fn the_zoning_regions_go_to_an_error_layer_in_one_step() {
     let RunStatus::Ok { text, table, .. } = status(&app) else {
         panic!("{:?}", status(&app));
     };
-    assert!(text.ends_with("1 bulgu verdi; 1 bulgunun 2 bölgesi hata katmanına yazıldı."), "{text}");
+    assert!(
+        text.ends_with("1 bulgu verdi; 1 bulgunun 2 bölgesi hata katmanına yazıldı."),
+        "{text}"
+    );
     let table = table.expect("the table");
-    assert_eq!((table.rows.len(), table.rows[0][0].as_str(), table.rows[0][3].as_str()), (1, "Yola giren karar", "2"));
-    assert!(app.selection.ids().is_empty(), "the areas are the result, not the objects' selection");
+    assert_eq!(
+        (
+            table.rows.len(),
+            table.rows[0][0].as_str(),
+            table.rows[0][3].as_str()
+        ),
+        (1, "Yola giren karar", "2")
+    );
+    assert!(
+        app.selection.ids().is_empty(),
+        "the areas are the result, not the objects' selection"
+    );
     let doc = &mut app.document.as_mut().expect("open").model;
     let layer = doc
         .layers()
@@ -248,16 +305,31 @@ fn the_zoning_regions_go_to_an_error_layer_in_one_step() {
         .find(|l| l.name == "İmar bulguları")
         .map(|l| l.id.clone())
         .expect("the error layer");
-    let areas: Vec<_> = doc.entities().filter(|e| e.base().layer_id == layer).cloned().collect();
+    let areas: Vec<_> = doc
+        .entities()
+        .filter(|e| e.base().layer_id == layer)
+        .cloned()
+        .collect();
     assert_eq!(areas.len(), 2);
     for (k, a) in areas.iter().enumerate() {
-        let kentos_commands::Entity::Polygon(p) = a else { panic!("{a:?}") };
+        let kentos_commands::Entity::Polygon(p) = a else {
+            panic!("{a:?}")
+        };
         assert_eq!(p.base.attrs["Bölge"], format!("{}/2", k + 1));
         assert_eq!(p.base.attrs["Tür"], "Yola giren karar");
-        assert!(p.base.attrs["İleti"].contains("giriyor"), "{:?}", p.base.attrs);
+        assert!(
+            p.base.attrs["İleti"].contains("giriyor"),
+            "{:?}",
+            p.base.attrs
+        );
     }
     assert_eq!(doc.undo().as_deref(), Some("İmar planını denetle"));
-    assert!(doc.layers().leaves().iter().all(|l| l.name != "İmar bulguları"));
+    assert!(
+        doc.layers()
+            .leaves()
+            .iter()
+            .all(|l| l.name != "İmar bulguları")
+    );
 }
 
 /// docs/adr/4640: İmar planını denetle with Bulguları hata katmanına yaz and Sonucun yeri a GeoPackage: the run is made on
@@ -272,25 +344,39 @@ fn the_zoning_error_layer_goes_to_a_geopackage() {
     let dir = crate::files_testing::scratch("imar-bulgulari-gpkg");
     let out = dir.join("imar-bulgulari.gpkg");
     event(&mut app, Event::Sink(SinkEvent::Place(Place::File)));
-    event(&mut app, Event::Sink(SinkEvent::Path(out.display().to_string())));
+    event(
+        &mut app,
+        Event::Sink(SinkEvent::Path(out.display().to_string())),
+    );
     let before = app.document.as_ref().expect("open").model.revision();
     let input = app.processing_sink_input().expect("an input");
     event(&mut app, Event::Run);
     let mut copy = app.document.as_ref().expect("open").model.reading_copy();
-    let end = run_to_sink(&mut copy, &input, std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)));
+    let end = run_to_sink(
+        &mut copy,
+        &input,
+        std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+    );
     event(&mut app, Event::Sink(SinkEvent::Ran(end)));
     let RunStatus::Ok { text, undo, .. } = status(&app) else {
         panic!("{:?}", status(&app));
     };
     assert!(!undo);
-    assert!(text.contains("1 bulgunun 2 bölgesi hata katmanına yazıldı."), "{text}");
+    assert!(
+        text.contains("1 bulgunun 2 bölgesi hata katmanına yazıldı."),
+        "{text}"
+    );
     // The tool's findings table goes to the file too (UR2-029).
     assert!(
         text.contains("Sonuç imar-bulgulari.gpkg dosyasına yazıldı: İmar bulguları (2 satır), Bulgular (1 satır)."),
         "{text}"
     );
     assert!(out.exists(), "the file is written");
-    assert_eq!(app.document.as_ref().expect("open").model.revision(), before, "the drawing does not change");
+    assert_eq!(
+        app.document.as_ref().expect("open").model.revision(),
+        before,
+        "the drawing does not change"
+    );
 }
 
 /// İmar planını denetle with Bulguları hata katmanına yaz on the drawing with four decisions and three parcels in a
@@ -304,10 +390,13 @@ fn the_zoning_error_layer_goes_to_a_geopackage() {
 fn zoning_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/imar-hata-3840");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/imar-hata-3840");
     std::fs::create_dir_all(&out).expect("a folder");
     let size = Size::new(1440.0, 900.0);
-    let mut app = app_with(include_str!("../../../../../fixtures/processing/v1/zoning-yollar.kcad"));
+    let mut app = app_with(include_str!(
+        "../../../../../fixtures/processing/v1/zoning-yollar.kcad"
+    ));
     app.program = Some(kentos_launch::Module::Map);
     let _ = app.update(Message::WindowResized(size));
     let _ = app.update(Message::Run("view.zoomExtents"));
@@ -321,7 +410,10 @@ fn zoning_screens() {
     value(&mut app, "write", json!(true));
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("1-pencere-acik-genis.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
     event(&mut app, Event::Run);
     snapshot.settle(&mut app, App::view, &mut update);
@@ -356,17 +448,46 @@ fn the_scenario_s_areas_are_joined_to_the_line_in_one_step() {
     let RunStatus::Ok { text, table, .. } = status(&app) else {
         panic!("{:?}", status(&app));
     };
-    assert_eq!(text, "“Alternatif A”: 11 alan en yakın altyapı nesnesine bağlandı; 11 bağ yazıldı.");
+    assert_eq!(
+        text,
+        "“Alternatif A”: 11 alan en yakın altyapı nesnesine bağlandı; 11 bağ yazıldı."
+    );
     assert_eq!(table.expect("the table").rows.len(), 11);
     let doc = &mut app.document.as_mut().expect("open").model;
-    let id = doc.layers().leaves().into_iter().find(|l| l.name == "Altyapı bağları").map(|l| l.id.clone()).expect("the layer");
-    let lines: Vec<_> = doc.entities().filter(|e| e.base().layer_id == id).cloned().collect();
+    let id = doc
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "Altyapı bağları")
+        .map(|l| l.id.clone())
+        .expect("the layer");
+    let lines: Vec<_> = doc
+        .entities()
+        .filter(|e| e.base().layer_id == id)
+        .cloned()
+        .collect();
     assert_eq!(lines.len(), 11);
-    let kentos_commands::Entity::Line(first) = &lines[0] else { panic!("{:?}", lines[0]) };
-    assert_eq!((first.a.x, first.a.y, first.b.x, first.b.y), (487020.0, 4420025.0, 487020.0, 4420060.0));
-    assert_eq!((first.base.attrs["Taraf"].as_str(), first.base.attrs["Uzaklık"].as_str()), ("Mevcut durum", "35.000 m"));
+    let kentos_commands::Entity::Line(first) = &lines[0] else {
+        panic!("{:?}", lines[0])
+    };
+    assert_eq!(
+        (first.a.x, first.a.y, first.b.x, first.b.y),
+        (487020.0, 4420025.0, 487020.0, 4420060.0)
+    );
+    assert_eq!(
+        (
+            first.base.attrs["Taraf"].as_str(),
+            first.base.attrs["Uzaklık"].as_str()
+        ),
+        ("Mevcut durum", "35.000 m")
+    );
     assert_eq!(doc.undo().as_deref(), Some("Altyapı bağlarını çiz"));
-    assert!(doc.layers().leaves().iter().all(|l| l.name != "Altyapı bağları"));
+    assert!(
+        doc.layers()
+            .leaves()
+            .iter()
+            .all(|l| l.name != "Altyapı bağları")
+    );
 }
 
 /// Altyapı bağlarını çiz's window after its run and the links on the drawing, `.run/gui-evidence/altyapi-baglari-3860/`:
@@ -379,7 +500,8 @@ fn the_scenario_s_areas_are_joined_to_the_line_in_one_step() {
 fn links_screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/altyapi-baglari-3860");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/altyapi-baglari-3860");
     std::fs::create_dir_all(&out).expect("a folder");
     let size = Size::new(1440.0, 900.0);
     let mut app = app_with(LINKS);
@@ -468,8 +590,11 @@ fn screens() {
                 {
                     continue;
                 }
-                let mut app =
-                    if name.starts_with("topoloji") { app_with(TOPOLOGY) } else { app_with_geometry() };
+                let mut app = if name.starts_with("topoloji") {
+                    app_with(TOPOLOGY)
+                } else {
+                    app_with_geometry()
+                };
                 let _ = app
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
@@ -605,10 +730,12 @@ fn an_inward_buffer_result_goes_above_its_source() {
     let doc = &mut app.document.as_mut().expect("open").model;
     let input = kentos_commands::LayersRenderer {
         layer: "parsel".into(),
-        renderer: Some(json!({ "type": "categorized", "expr": "Tür", "categories": [
+        renderer: Some(
+            json!({ "type": "categorized", "expr": "Tür", "categories": [
             { "value": "Konut", "label": "Konut", "symbols": { "fill": { "type": "fill", "color": "#ff0000" } } },
             { "value": "Ticaret", "label": "Ticaret", "symbols": { "fill": { "type": "fill", "color": "#0000ff" } } }
-        ] })),
+        ] }),
+        ),
         expected_revision: None,
     };
     assert!(matches!(
@@ -629,6 +756,14 @@ fn an_inward_buffer_result_goes_above_its_source() {
     let at = |id: &str| order.iter().position(|l| l == id).expect("in the tree");
     // The tree's first is drawn on top: the results' layer right above the parcels'.
     assert_eq!(at(&out_layer) + 1, at("parsel"), "{order:?}");
-    let uids: Vec<String> = pick.iter().filter_map(|s| doc.uid(*s)).map(|u| u.to_string()).collect();
-    assert_eq!(app.unstyled_note(&uids), None, "its own look draws every result");
+    let uids: Vec<String> = pick
+        .iter()
+        .filter_map(|s| doc.uid(*s))
+        .map(|u| u.to_string())
+        .collect();
+    assert_eq!(
+        app.unstyled_note(&uids),
+        None,
+        "its own look draws every result"
+    );
 }

@@ -16,9 +16,9 @@
 use std::collections::{BTreeMap, HashMap};
 
 use kentos_commands::{
-    CloudRules, CommandResult, CommandWarning, Entity, LayerNodeType, OverlapControlStats, PointCloudsRegister,
-    PointCloudsRegistered, REGISTER_MOST_ITERATIONS, REGISTER_MOST_POINTS, RegisterCell, RegisterControl,
-    RegisterRejectReport, RegisterRobustReport, cloud_rules_default,
+    CloudRules, CommandResult, CommandWarning, Entity, LayerNodeType, OverlapControlStats,
+    PointCloudsRegister, PointCloudsRegistered, REGISTER_MOST_ITERATIONS, REGISTER_MOST_POINTS,
+    RegisterCell, RegisterControl, RegisterRejectReport, RegisterRobustReport, cloud_rules_default,
 };
 use kentos_domain::Document;
 
@@ -47,7 +47,11 @@ fn dot(a: P, b: P) -> f64 {
 }
 
 fn cross(a: P, b: P) -> P {
-    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+    [
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    ]
 }
 
 /// A symmetric matrix's eigenvalues and eigenvectors (columns), by cyclic Jacobi rotations; ascending.
@@ -58,7 +62,10 @@ fn eigen<const N: usize>(m: [[f64; N]; N]) -> ([f64; N], [[f64; N]; N]) {
         row[i] = 1.0;
     }
     for _ in 0..100 {
-        let off: f64 = (0..N).flat_map(|i| (0..N).filter(move |j| *j != i).map(move |j| (i, j))).map(|(i, j)| a[i][j] * a[i][j]).sum();
+        let off: f64 = (0..N)
+            .flat_map(|i| (0..N).filter(move |j| *j != i).map(move |j| (i, j)))
+            .map(|(i, j)| a[i][j] * a[i][j])
+            .sum();
         if off <= 1e-300 {
             break;
         }
@@ -115,14 +122,23 @@ struct Grid<'a> {
 impl<'a> Grid<'a> {
     fn new(points: &'a [P], g: f64) -> Self {
         let mut cells: HashMap<(i64, i64, i64), Vec<u32>> = HashMap::new();
-        let (mut lo, mut hi) = ((i64::MAX, i64::MAX, i64::MAX), (i64::MIN, i64::MIN, i64::MIN));
+        let (mut lo, mut hi) = (
+            (i64::MAX, i64::MAX, i64::MAX),
+            (i64::MIN, i64::MIN, i64::MIN),
+        );
         for (i, p) in points.iter().enumerate() {
             let k = key(*p, g);
             lo = (lo.0.min(k.0), lo.1.min(k.1), lo.2.min(k.2));
             hi = (hi.0.max(k.0), hi.1.max(k.1), hi.2.max(k.2));
             cells.entry(k).or_default().push(i as u32);
         }
-        Grid { points, g, cells, lo, hi }
+        Grid {
+            points,
+            g,
+            cells,
+            lo,
+            hi,
+        }
     }
 
     /// The cells at Chebyshev ring `r` around `c`, each point's squared distance to `q` given to `see`.
@@ -146,9 +162,16 @@ impl<'a> Grid<'a> {
 
     /// The farthest ring that can hold a point.
     fn last_ring(&self, c: (i64, i64, i64)) -> i64 {
-        [c.0 - self.lo.0, self.hi.0 - c.0, c.1 - self.lo.1, self.hi.1 - c.1, c.2 - self.lo.2, self.hi.2 - c.2]
-            .into_iter()
-            .fold(0, i64::max)
+        [
+            c.0 - self.lo.0,
+            self.hi.0 - c.0,
+            c.1 - self.lo.1,
+            self.hi.1 - c.1,
+            c.2 - self.lo.2,
+            self.hi.2 - c.2,
+        ]
+        .into_iter()
+        .fold(0, i64::max)
     }
 
     /// The `k` nearest points to `q`, by squared distance, then index.
@@ -208,7 +231,11 @@ impl<'a> Grid<'a> {
 }
 
 fn key(p: P, g: f64) -> (i64, i64, i64) {
-    ((p[0] / g).floor() as i64, (p[1] / g).floor() as i64, (p[2] / g).floor() as i64)
+    (
+        (p[0] / g).floor() as i64,
+        (p[1] / g).floor() as i64,
+        (p[2] / g).floor() as i64,
+    )
 }
 
 /// A rigid transform about a centre: p ↦ R(p − c) + c + t.
@@ -220,7 +247,10 @@ struct Rigid {
 
 impl Rigid {
     fn identity() -> Self {
-        Rigid { r: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], t: [0.0; 3] }
+        Rigid {
+            r: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+            t: [0.0; 3],
+        }
     }
 
     fn apply(&self, p: P, c: P) -> P {
@@ -243,7 +273,10 @@ impl Rigid {
             }
         }
         let st = [dot(s[0], self.t), dot(s[1], self.t), dot(s[2], self.t)];
-        Rigid { r, t: [st[0] + t[0], st[1] + t[1], st[2] + t[2]] }
+        Rigid {
+            r,
+            t: [st[0] + t[0], st[1] + t[1], st[2] + t[2]],
+        }
     }
 }
 
@@ -262,7 +295,9 @@ fn rotation(w: P) -> [[f64; 3]; 3] {
 /// The voxel points: each voxel's points' mean, voxels in key order.
 #[allow(clippy::type_complexity)]
 fn voxels(sums: &BTreeMap<(i64, i64, i64), (f64, f64, f64, f64)>) -> Vec<P> {
-    sums.values().map(|(x, y, z, n)| [x / n, y / n, z / n]).collect()
+    sums.values()
+        .map(|(x, y, z, n)| [x / n, y / n, z / n])
+        .collect()
 }
 
 /// A pair: the moving point's index, its place now, the fixed point's index, the residual along its normal.
@@ -296,8 +331,12 @@ fn pairs(
     let (mut edges, mut angle) = (0u32, 0u32);
     for (j, m) in moving.iter().enumerate() {
         let at = now.apply(*m, c);
-        let Some((_, i)) = grid.nearest(at, reach) else { continue };
-        let Some(n) = normals[i as usize] else { continue };
+        let Some((_, i)) = grid.nearest(at, reach) else {
+            continue;
+        };
+        let Some(n) = normals[i as usize] else {
+            continue;
+        };
         if rule.edge.is_some_and(|e| e[i as usize]) {
             edges += 1;
             continue;
@@ -314,7 +353,11 @@ fn pairs(
                 continue;
             }
         }
-        out.push(Pair { at, fixed: i as usize, r: dot(sub(at, fixed[i as usize]), n) });
+        out.push(Pair {
+            at,
+            fixed: i as usize,
+            r: dot(sub(at, fixed[i as usize]), n),
+        });
     }
     (out, edges, angle)
 }
@@ -354,7 +397,11 @@ fn normal_of(points: &[P], grid: &Grid<'_>, p: P, k: usize) -> Option<P> {
 /// the directions of its neighbours (the points within the reach) in its tangent plane (u ⟂ n, v = n × u; the point
 /// itself and a neighbour straight above it left out) leave a gap over 90°; fewer than two directions is an edge too.
 fn on_edge(points: &[P], p: P, n: P, near: &[(f64, u32)]) -> bool {
-    let e = if n[2].abs() < 0.9 { [0.0, 0.0, 1.0] } else { [1.0, 0.0, 0.0] };
+    let e = if n[2].abs() < 0.9 {
+        [0.0, 0.0, 1.0]
+    } else {
+        [1.0, 0.0, 0.0]
+    };
     let u = cross(n, e);
     let len = dot(u, u).sqrt();
     let u = [u[0] / len, u[1] / len, u[2] / len];
@@ -380,7 +427,12 @@ fn on_edge(points: &[P], p: P, n: P, near: &[(f64, u32)]) -> bool {
 }
 
 /// The normal matrix Σ w a aᵀ and Σ w a r of the pairs, each pair's weight `weights[k]` (none: 1).
-fn normal_matrix(ps: &[Pair], normals: &[Option<P>], c: P, weights: Option<&[f64]>) -> ([[f64; 6]; 6], [f64; 6]) {
+fn normal_matrix(
+    ps: &[Pair],
+    normals: &[Option<P>],
+    c: P,
+    weights: Option<&[f64]>,
+) -> ([[f64; 6]; 6], [f64; 6]) {
     let mut m = [[0.0; 6]; 6];
     let mut v = [0.0; 6];
     for (k, p) in ps.iter().enumerate() {
@@ -425,10 +477,23 @@ fn weights(ps: &[Pair], robust: &Robust) -> (Vec<f64>, Option<f64>) {
                 return (Vec::new(), None);
             }
             let abs = |i: usize| ps[order[i]].r.abs();
-            let median = if n % 2 == 1 { abs(n / 2) } else { (abs(n / 2 - 1) + abs(n / 2)) / 2.0 };
+            let median = if n % 2 == 1 {
+                abs(n / 2)
+            } else {
+                (abs(n / 2 - 1) + abs(n / 2)) / 2.0
+            };
             let s = MAD_SIGMA * median;
             let cut = k * s;
-            let w = ps.iter().map(|p| if cut <= 0.0 || p.r.abs() <= cut { 1.0 } else { cut / p.r.abs() }).collect();
+            let w = ps
+                .iter()
+                .map(|p| {
+                    if cut <= 0.0 || p.r.abs() <= cut {
+                        1.0
+                    } else {
+                        cut / p.r.abs()
+                    }
+                })
+                .collect();
             (w, Some(s))
         }
         Robust::Trimmed(ratio) => {
@@ -462,7 +527,10 @@ fn step(m: [[f64; 6]; 6], v: [f64; 6]) -> [f64; 6] {
     x
 }
 
-fn run(doc: &Document, input: &PointCloudsRegister) -> Result<(PointCloudsRegistered, Vec<CommandWarning>), Stop> {
+fn run(
+    doc: &Document,
+    input: &PointCloudsRegister,
+) -> Result<(PointCloudsRegistered, Vec<CommandWarning>), Stop> {
     registered(doc, input).map(|(out, warnings, _)| (out, warnings))
 }
 
@@ -485,42 +553,77 @@ pub(crate) fn registered_from(
     further: [Option<&kentos_pointcloud::ops::transform::Affine>; 2],
 ) -> Result<(PointCloudsRegistered, Vec<CommandWarning>, NormalMatrix), Stop> {
     if input.uids.len() != 2 || input.uids[0] == input.uids[1] {
-        return Err(fail(codes::INVALID_INPUT, "İki ayrı nokta bulutu verin: sabit tarama ve ona oturtulacak tarama.".into(), "uids"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "İki ayrı nokta bulutu verin: sabit tarama ve ona oturtulacak tarama.".into(),
+            "uids",
+        ));
     }
     checks::uids(&input.uids, "")?;
     let owned: Vec<(String, kentos_commands::PointCloudEntity)> = clouds(doc, &input.uids)?
         .into_iter()
         .zip(further)
-        .map(|((u, c), m)| (u, m.map_or_else(|| c.clone(), |m| crate::pointcloud_place::moved_further(c, m))))
+        .map(|((u, c), m)| {
+            (
+                u,
+                m.map_or_else(
+                    || c.clone(),
+                    |m| crate::pointcloud_place::moved_further(c, m),
+                ),
+            )
+        })
         .collect();
-    let chosen: Vec<(String, &kentos_commands::PointCloudEntity)> = owned.iter().map(|(u, c)| (u.clone(), c)).collect();
+    let chosen: Vec<(String, &kentos_commands::PointCloudEntity)> =
+        owned.iter().map(|(u, c)| (u.clone(), c)).collect();
     let positive = |v: Option<f64>, default: f64, path: &str, what: &str| -> Result<f64, Stop> {
         let v = v.unwrap_or(default);
         if v.is_finite() && v > 0.0 {
             Ok(v)
         } else {
-            Err(fail(codes::INVALID_INPUT, format!("{what} sonlu ve sıfırdan büyük olmalı (yazılan {v})."), path))
+            Err(fail(
+                codes::INVALID_INPUT,
+                format!("{what} sonlu ve sıfırdan büyük olmalı (yazılan {v})."),
+                path,
+            ))
         }
     };
     let spacing = positive(input.spacing, 0.5, "spacing", "Voksel kenarı")?;
     let reach = positive(input.reach, 1.0, "reach", "Eşleşme erişimi")?;
     let iterations = input.iterations.unwrap_or(30);
     if !(1..=REGISTER_MOST_ITERATIONS).contains(&iterations) {
-        return Err(fail(codes::INVALID_INPUT, format!("Yineleme sayısı 1 ile {REGISTER_MOST_ITERATIONS} arasında olmalı."), "iterations"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            format!("Yineleme sayısı 1 ile {REGISTER_MOST_ITERATIONS} arasında olmalı."),
+            "iterations",
+        ));
     }
     let tolerance = positive(input.tolerance, 0.0001, "tolerance", "Durma toleransı")?;
     let neighbours = input.neighbours.unwrap_or(8);
     if !(3..=32).contains(&neighbours) {
-        return Err(fail(codes::INVALID_INPUT, "Normal için komşu sayısı 3 ile 32 arasında olmalı.".into(), "neighbours"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Normal için komşu sayısı 3 ile 32 arasında olmalı.".into(),
+            "neighbours",
+        ));
     }
     let cell = positive(input.cell, 2.0, "cell", "Kapsam hücresi")?;
     let least = input.least.unwrap_or(4);
     if least == 0 {
-        return Err(fail(codes::INVALID_INPUT, "Bir kapsam hücresi için en az 1 eşleşme gerekir.".into(), "least"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Bir kapsam hücresi için en az 1 eşleşme gerekir.".into(),
+            "least",
+        ));
     }
     let radius = positive(input.radius, cell, "radius", "Kontrol noktasının çevresi")?;
     let scale = match input.scale {
-        Some(0) => return Err(fail(codes::INVALID_INPUT, "Ölçek paydası 0 olamaz.".into(), "scale")),
+        Some(0) => {
+            return Err(fail(
+                codes::INVALID_INPUT,
+                "Ölçek paydası 0 olamaz.".into(),
+                "scale",
+            ));
+        }
         Some(s) => s,
         None => doc.settings().plot_scale.round().max(1.0) as u32,
     };
@@ -531,7 +634,11 @@ pub(crate) fn registered_from(
             "huber" => {
                 let k = r.k.unwrap_or(HUBER_K);
                 if !(k.is_finite() && k > 0.0) {
-                    return Err(fail(codes::INVALID_INPUT, format!("Huber'in k'si sonlu ve sıfırdan büyük olmalı (yazılan {k})."), "robust.k"));
+                    return Err(fail(
+                        codes::INVALID_INPUT,
+                        format!("Huber'in k'si sonlu ve sıfırdan büyük olmalı (yazılan {k})."),
+                        "robust.k",
+                    ));
                 }
                 Some(Robust::Huber(k))
             }
@@ -544,7 +651,13 @@ pub(crate) fn registered_from(
                     ));
                 };
                 if !(ratio.is_finite() && ratio > 0.0 && ratio <= 1.0) {
-                    return Err(fail(codes::INVALID_INPUT, format!("Tutulacak eşleşme payı 0'dan büyük, en çok 1 olmalı (yazılan {ratio})."), "robust.ratio"));
+                    return Err(fail(
+                        codes::INVALID_INPUT,
+                        format!(
+                            "Tutulacak eşleşme payı 0'dan büyük, en çok 1 olmalı (yazılan {ratio})."
+                        ),
+                        "robust.ratio",
+                    ));
                 }
                 Some(Robust::Trimmed(ratio))
             }
@@ -571,31 +684,70 @@ pub(crate) fn registered_from(
             if let Some(a) = r.angle
                 && !(a.is_finite() && a > 0.0 && a < 90.0)
             {
-                return Err(fail(codes::INVALID_INPUT, format!("Normal açısı 0° ile 90° arasında olmalı (yazılan {a})."), "reject.angle"));
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    format!("Normal açısı 0° ile 90° arasında olmalı (yazılan {a})."),
+                    "reject.angle",
+                ));
             }
             Some(r.clone())
         }
     };
     let rules: CloudRules = match &input.rules {
         Some(r) => r.clone(),
-        None => cloud_rules_default().ok_or_else(|| fail(codes::INVALID_INPUT, "Yerleşik kural paketi okunamadı.".into(), "rules"))?,
+        None => cloud_rules_default().ok_or_else(|| {
+            fail(
+                codes::INVALID_INPUT,
+                "Yerleşik kural paketi okunamadı.".into(),
+                "rules",
+            )
+        })?,
     };
     if rules.id.trim().is_empty() || rules.source.trim().is_empty() {
         return Err(fail(codes::INVALID_INPUT, "Kural paketinin kimliği ya da kaynağı boş; sınırın dayanağı yazılmadan denetim yapılmaz.".into(), "rules"));
     }
-    if rules.xy.iter().chain([&rules.z_factor, &rules.interswath]).any(|v| !v.is_finite()) {
-        return Err(fail(codes::INVALID_INPUT, "Kural paketinin bir sınırı sonlu bir sayı değil.".into(), "rules"));
+    if rules
+        .xy
+        .iter()
+        .chain([&rules.z_factor, &rules.interswath])
+        .any(|v| !v.is_finite())
+    {
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Kural paketinin bir sınırı sonlu bir sayı değil.".into(),
+            "rules",
+        ));
     }
     // The control points: named, with a height.
-    let field = input.field.as_deref().map(str::trim).filter(|f| !f.is_empty()).unwrap_or(FIELD);
+    let field = input
+        .field
+        .as_deref()
+        .map(str::trim)
+        .filter(|f| !f.is_empty())
+        .unwrap_or(FIELD);
     let mut controls: Vec<(String, f64, f64, f64)> = Vec::new();
     if let Some(layer) = input.control.as_deref().map(str::trim) {
-        if !doc.layers().get(layer).is_some_and(|n| n.kind == LayerNodeType::Layer) {
-            return Err(fail(codes::LAYER_NOT_FOUND, format!("“{layer}” katmanı çizimde yok."), "control"));
+        if !doc
+            .layers()
+            .get(layer)
+            .is_some_and(|n| n.kind == LayerNodeType::Layer)
+        {
+            return Err(fail(
+                codes::LAYER_NOT_FOUND,
+                format!("“{layer}” katmanı çizimde yok."),
+                "control",
+            ));
         }
         for e in doc.entities().filter(|e| e.base().layer_id == layer) {
             let Entity::Point(p) = e else { continue };
-            let (Some(name), Some(z)) = (e.base().attrs.get(field).map(|v| v.trim().to_owned()).filter(|v| !v.is_empty()), p.z) else {
+            let (Some(name), Some(z)) = (
+                e.base()
+                    .attrs
+                    .get(field)
+                    .map(|v| v.trim().to_owned())
+                    .filter(|v| !v.is_empty()),
+                p.z,
+            ) else {
                 continue;
             };
             if !controls.iter().any(|c| c.0 == name) {
@@ -604,38 +756,64 @@ pub(crate) fn registered_from(
         }
     }
     // Where the two boxes meet, widened by the reach.
-    let b: Vec<[f64; 4]> = chosen.iter().map(|(_, c)| [c.cloud.bounds[0], c.cloud.bounds[1], c.cloud.bounds[3], c.cloud.bounds[4]]).collect();
-    let meet = [b[0][0].max(b[1][0]) - reach, b[0][1].max(b[1][1]) - reach, b[0][2].min(b[1][2]) + reach, b[0][3].min(b[1][3]) + reach];
+    let b: Vec<[f64; 4]> = chosen
+        .iter()
+        .map(|(_, c)| {
+            [
+                c.cloud.bounds[0],
+                c.cloud.bounds[1],
+                c.cloud.bounds[3],
+                c.cloud.bounds[4],
+            ]
+        })
+        .collect();
+    let meet = [
+        b[0][0].max(b[1][0]) - reach,
+        b[0][1].max(b[1][1]) - reach,
+        b[0][2].min(b[1][2]) + reach,
+        b[0][3].min(b[1][3]) + reach,
+    ];
     let classes = input.classes.clone();
     #[allow(clippy::type_complexity)]
-    let mut sums: [BTreeMap<(i64, i64, i64), (f64, f64, f64, f64)>; 2] = [BTreeMap::new(), BTreeMap::new()];
+    let mut sums: [BTreeMap<(i64, i64, i64), (f64, f64, f64, f64)>; 2] =
+        [BTreeMap::new(), BTreeMap::new()];
     let mut warnings = Vec::new();
     let mut read = vec![0u64; 2];
-    Scan { doc, drawing: input.drawing.as_deref(), chosen: &chosen, boxes: &[meet], what: "Bu kayıt", path: "uids" }.run(
-        &mut warnings,
-        &mut read,
-        &mut |s| {
-            if let Some(cs) = &classes
-                && !cs.contains(&s.layout.class(s.record))
-            {
-                return;
-            }
-            let [x, y, z] = s.xyz;
-            if x < meet[0] || x > meet[2] || y < meet[1] || y > meet[3] {
-                return;
-            }
-            let e = sums[s.cloud].entry(key(s.xyz, spacing)).or_insert((0.0, 0.0, 0.0, 0.0));
-            e.0 += x;
-            e.1 += y;
-            e.2 += z;
-            e.3 += 1.0;
-        },
-    )?;
+    Scan {
+        doc,
+        drawing: input.drawing.as_deref(),
+        chosen: &chosen,
+        boxes: &[meet],
+        what: "Bu kayıt",
+        path: "uids",
+    }
+    .run(&mut warnings, &mut read, &mut |s| {
+        if let Some(cs) = &classes
+            && !cs.contains(&s.layout.class(s.record))
+        {
+            return;
+        }
+        let [x, y, z] = s.xyz;
+        if x < meet[0] || x > meet[2] || y < meet[1] || y > meet[3] {
+            return;
+        }
+        let e = sums[s.cloud]
+            .entry(key(s.xyz, spacing))
+            .or_insert((0.0, 0.0, 0.0, 0.0));
+        e.0 += x;
+        e.1 += y;
+        e.2 += z;
+        e.3 += 1.0;
+    })?;
     for (k, s) in sums.iter().enumerate() {
         if s.len() > REGISTER_MOST_POINTS as usize {
             return Err(fail(
                 codes::TOO_MANY_CLOUD_POINTS,
-                format!("{}. bulut {} voksel noktası veriyor; bir bulut en çok {REGISTER_MOST_POINTS} voksel noktası verir. Vokseli büyütün (spacing) ya da sınıf seçin.", k + 1, s.len()),
+                format!(
+                    "{}. bulut {} voksel noktası veriyor; bir bulut en çok {REGISTER_MOST_POINTS} voksel noktası verir. Vokseli büyütün (spacing) ya da sınıf seçin.",
+                    k + 1,
+                    s.len()
+                ),
                 "spacing",
             ));
         }
@@ -650,7 +828,10 @@ pub(crate) fn registered_from(
     ];
     let grid = Grid::new(&fixed, 2.0 * spacing);
     let k = (neighbours as usize).min(fixed.len());
-    let normals: Vec<Option<P>> = fixed.iter().map(|p| normal_of(&fixed, &grid, *p, k)).collect();
+    let normals: Vec<Option<P>> = fixed
+        .iter()
+        .map(|p| normal_of(&fixed, &grid, *p, k))
+        .collect();
     // docs/adr/2700: the fixed points on their cloud's edge, judged from the fixed points within the reach (as far as a
     // pair can be): a moving point beyond the edge pairs with it though the fixed scan saw nothing there.
     let edges: Vec<bool> = if reject.as_ref().is_some_and(|r| r.edges) {
@@ -667,18 +848,29 @@ pub(crate) fn registered_from(
         Some(_) => {
             let moving_grid = Grid::new(&moving, 2.0 * spacing);
             let km = (neighbours as usize).min(moving.len());
-            moving.iter().map(|p| normal_of(&moving, &moving_grid, *p, km)).collect()
+            moving
+                .iter()
+                .map(|p| normal_of(&moving, &moving_grid, *p, km))
+                .collect()
         }
         None => Vec::new(),
     };
     let rule = Rule {
         edge: (!edges.is_empty()).then_some(edges.as_slice()),
-        moving: reject.as_ref().and_then(|r| r.angle).map(|a| (own.as_slice(), a.to_radians().cos())),
+        moving: reject
+            .as_ref()
+            .and_then(|r| r.angle)
+            .map(|a| (own.as_slice(), a.to_radians().cos())),
     };
     let radius_rms = if moving.is_empty() {
         1.0
     } else {
-        let r = (moving.iter().map(|m| dot(sub(*m, c), sub(*m, c))).sum::<f64>() / moving.len() as f64).sqrt();
+        let r = (moving
+            .iter()
+            .map(|m| dot(sub(*m, c), sub(*m, c)))
+            .sum::<f64>()
+            / moving.len() as f64)
+            .sqrt();
         if r > 0.0 { r } else { 1.0 }
     };
     let mut now = Rigid::identity();
@@ -698,7 +890,11 @@ pub(crate) fn registered_from(
         let x = step(m, v);
         now = now.then([x[0], x[1], x[2]], [x[3], x[4], x[5]]);
         done += 1;
-        let moved = x[3].abs().max(x[4].abs()).max(x[5].abs()).max(x[0].abs().max(x[1].abs()).max(x[2].abs()) * radius_rms);
+        let moved = x[3]
+            .abs()
+            .max(x[4].abs())
+            .max(x[5].abs())
+            .max(x[0].abs().max(x[1].abs()).max(x[2].abs()) * radius_rms);
         if moved < tolerance {
             converged = true;
             break;
@@ -709,7 +905,10 @@ pub(crate) fn registered_from(
     let (rms_after, mean_after) = if last.is_empty() {
         (0.0, 0.0)
     } else {
-        ((last.iter().map(|p| p.r * p.r).sum::<f64>() / np).sqrt(), last.iter().map(|p| p.r).sum::<f64>() / np)
+        (
+            (last.iter().map(|p| p.r * p.r).sum::<f64>() / np).sqrt(),
+            last.iter().map(|p| p.r).sum::<f64>() / np,
+        )
     };
     // What the robust weights did at the last pairs.
     let robust_report = robust.as_ref().map(|r| {
@@ -718,31 +917,54 @@ pub(crate) fn registered_from(
             Robust::Huber(k) => ("huber", Some(*k), None),
             Robust::Trimmed(ratio) => ("trimmed", None, Some(*ratio)),
         };
-        RegisterRobustReport { kind: kind.to_owned(), k, ratio, scale: s, lighter: w.iter().filter(|x| **x < 1.0).count() as u32 }
+        RegisterRobustReport {
+            kind: kind.to_owned(),
+            k,
+            ratio,
+            scale: s,
+            lighter: w.iter().filter(|x| **x < 1.0).count() as u32,
+        }
     });
     // How firmly the pairs hold the six parameters: the angles as metres at the RMS radius (every pair weighing one).
     let (m, _) = normal_matrix(&last, &normals, c, None);
     let mut scaled = m;
     for i in 0..6 {
         for j in 0..6 {
-            let f = (if i < 3 { 1.0 / radius_rms } else { 1.0 }) * (if j < 3 { 1.0 / radius_rms } else { 1.0 });
+            let f = (if i < 3 { 1.0 / radius_rms } else { 1.0 })
+                * (if j < 3 { 1.0 / radius_rms } else { 1.0 });
             scaled[i][j] = m[i][j] * f;
         }
     }
     let (values, _) = eigen(scaled);
-    let strength = if values[5] > 0.0 { (values[0].max(0.0) / values[5]).sqrt() } else { 0.0 };
+    let strength = if values[5] > 0.0 {
+        (values[0].max(0.0) / values[5]).sqrt()
+    } else {
+        0.0
+    };
     let (a, bb, d) = (m[3][3], m[3][4], m[4][4]);
     let plan_min = (a + d) / 2.0 - (((a - d) / 2.0).powi(2) + bb * bb).sqrt();
-    let horizontal = if m[5][5] > 0.0 { (plan_min.max(0.0) / m[5][5]).sqrt() } else { 0.0 };
+    let horizontal = if m[5][5] > 0.0 {
+        (plan_min.max(0.0) / m[5][5]).sqrt()
+    } else {
+        0.0
+    };
     // The coverage: plan cells of the moving points where they are now.
     let mut cells: BTreeMap<(i64, i64), (f64, u32)> = BTreeMap::new();
     for p in &last {
-        let e = cells.entry(((p.at[0] / cell).floor() as i64, (p.at[1] / cell).floor() as i64)).or_insert((0.0, 0));
+        let e = cells
+            .entry((
+                (p.at[0] / cell).floor() as i64,
+                (p.at[1] / cell).floor() as i64,
+            ))
+            .or_insert((0.0, 0));
         e.0 += p.r * p.r;
         e.1 += 1;
     }
-    let held: Vec<((i64, i64), f64, u32)> =
-        cells.iter().filter(|(_, v)| v.1 >= least).map(|(k, v)| (*k, (v.0 / f64::from(v.1)).sqrt(), v.1)).collect();
+    let held: Vec<((i64, i64), f64, u32)> = cells
+        .iter()
+        .filter(|(_, v)| v.1 >= least)
+        .map(|(k, v)| (*k, (v.0 / f64::from(v.1)).sqrt(), v.1))
+        .collect();
     let covered = held.len() as f64 * cell * cell;
     let reliable = held.iter().filter(|h| h.1 <= rules.interswath).count() as f64 * cell * cell;
     let mut worst = held.clone();
@@ -750,7 +972,12 @@ pub(crate) fn registered_from(
     let worst: Vec<RegisterCell> = worst
         .into_iter()
         .take(MOST_WORST)
-        .map(|((i, j), rms, n)| RegisterCell { x: (i as f64 + 0.5) * cell, y: (j as f64 + 0.5) * cell, n, rms })
+        .map(|((i, j), rms, n)| RegisterCell {
+            x: (i as f64 + 0.5) * cell,
+            y: (j as f64 + 0.5) * cell,
+            n,
+            rms,
+        })
         .collect();
     // The control points: each cloud's plane around one.
     let plane = |points: &mut dyn Iterator<Item = P>, cx: f64, cy: f64| -> Option<f64> {
@@ -779,11 +1006,19 @@ pub(crate) fn registered_from(
         let v: Vec<f64> = control.iter().filter_map(pick).collect();
         (!controls.is_empty()).then(|| {
             let k = v.len() as f64;
-            let koh = if v.is_empty() { 0.0 } else { (v.iter().map(|d| d * d).sum::<f64>() / k).sqrt() };
+            let koh = if v.is_empty() {
+                0.0
+            } else {
+                (v.iter().map(|d| d * d).sum::<f64>() / k).sqrt()
+            };
             OverlapControlStats {
                 n: v.len() as u32,
                 koh_z: koh,
-                mean: if v.is_empty() { 0.0 } else { v.iter().sum::<f64>() / k },
+                mean: if v.is_empty() {
+                    0.0
+                } else {
+                    v.iter().sum::<f64>() / k
+                },
                 passed: (!v.is_empty()).then_some(koh <= limit_z),
             }
         })
@@ -792,12 +1027,21 @@ pub(crate) fn registered_from(
     let control_before = stats(|c| c.dz_before);
     let control_after = stats(|c| c.dz_after);
     let r = now.r;
-    let rotation = [r[2][1].atan2(r[2][2]), (-r[2][0]).clamp(-1.0, 1.0).asin(), r[1][0].atan2(r[0][0])];
+    let rotation = [
+        r[2][1].atan2(r[2][2]),
+        (-r[2][0]).clamp(-1.0, 1.0).asin(),
+        r[1][0].atan2(r[0][0]),
+    ];
     // The matrix in the project's coordinates: t' = c + t − R c.
     let rc = [dot(r[0], c), dot(r[1], c), dot(r[2], c)];
-    let t0 = [c[0] + now.t[0] - rc[0], c[1] + now.t[1] - rc[1], c[2] + now.t[2] - rc[2]];
+    let t0 = [
+        c[0] + now.t[0] - rc[0],
+        c[1] + now.t[1] - rc[1],
+        c[2] + now.t[2] - rc[2],
+    ];
     let matrix = [
-        r[0][0], r[0][1], r[0][2], t0[0], r[1][0], r[1][1], r[1][2], t0[1], r[2][0], r[2][1], r[2][2], t0[2], 0.0, 0.0, 0.0, 1.0,
+        r[0][0], r[0][1], r[0][2], t0[0], r[1][0], r[1][1], r[1][2], t0[1], r[2][0], r[2][1],
+        r[2][2], t0[2], 0.0, 0.0, 0.0, 1.0,
     ];
     let mut notes = vec![
         "Dönüşüm hareketli buluta uygulanmadı; bulut yerinde durur. Tarif: p ↦ R(p − merkez) + merkez + öteleme, R = Rz(κ)·Ry(φ)·Rx(ω).".to_owned(),
@@ -831,7 +1075,11 @@ pub(crate) fn registered_from(
             translation: now.t,
             matrix,
             pairs: last.len() as u32,
-            overlap: if moving.is_empty() { 0.0 } else { np / moving.len() as f64 },
+            overlap: if moving.is_empty() {
+                0.0
+            } else {
+                np / moving.len() as f64
+            },
             rms_before,
             rms_after,
             mean_after,
@@ -848,7 +1096,10 @@ pub(crate) fn registered_from(
             control_after,
             limit_z,
             robust: robust_report,
-            rejected: reject.as_ref().map(|_| RegisterRejectReport { edges: at_edges, angle: by_angle }),
+            rejected: reject.as_ref().map(|_| RegisterRejectReport {
+                edges: at_edges,
+                angle: by_angle,
+            }),
             notes,
         },
         warnings,
@@ -858,13 +1109,19 @@ pub(crate) fn registered_from(
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &PointCloudsRegister) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &PointCloudsRegister) -> CommandResult<PointCloudsRegistered> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &PointCloudsRegister,
+) -> CommandResult<PointCloudsRegistered> {
     match run(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -872,7 +1129,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PointCloudsRegister) -> CommandRe
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: PointCloudsRegister) -> CommandResult<PointCloudsRegistered> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: PointCloudsRegister,
+) -> CommandResult<PointCloudsRegistered> {
     plan(cx, &input)
 }
 
@@ -896,13 +1156,23 @@ mod tests {
 
     #[test]
     fn the_grid_finds_what_a_full_search_finds() {
-        let points: Vec<P> = (0..400).map(|i| {
-            let f = i as f64;
-            [(f * 0.37).sin() * 10.0, (f * 0.11).cos() * 10.0, (f * 0.07).sin()]
-        }).collect();
+        let points: Vec<P> = (0..400)
+            .map(|i| {
+                let f = i as f64;
+                [
+                    (f * 0.37).sin() * 10.0,
+                    (f * 0.11).cos() * 10.0,
+                    (f * 0.07).sin(),
+                ]
+            })
+            .collect();
         let grid = Grid::new(&points, 1.3);
         for q in [[0.2, 0.3, 0.0], [5.0, -3.0, 0.4], [-9.0, 9.5, -0.8]] {
-            let mut all: Vec<(f64, u32)> = points.iter().enumerate().map(|(i, p)| (dot(sub(*p, q), sub(*p, q)), i as u32)).collect();
+            let mut all: Vec<(f64, u32)> = points
+                .iter()
+                .enumerate()
+                .map(|(i, p)| (dot(sub(*p, q), sub(*p, q)), i as u32))
+                .collect();
             all.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)));
             assert_eq!(grid.nearest_k(q, 8), all[..8].to_vec());
             assert_eq!(grid.nearest(q, 100.0), Some(all[0]));

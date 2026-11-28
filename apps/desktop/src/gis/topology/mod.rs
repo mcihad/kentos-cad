@@ -30,13 +30,13 @@ mod tolerance_words;
 mod view;
 
 #[cfg(test)]
-mod object_tests;
+mod municipal_tests;
 #[cfg(test)]
-mod tests;
+mod object_tests;
 #[cfg(test)]
 mod source_tests;
 #[cfg(test)]
-mod municipal_tests;
+mod tests;
 
 pub use plan::{Filter, texts};
 
@@ -99,10 +99,15 @@ impl Checked {
     /// docs/adr/9124), a row outside a part “dışarıda”.
     pub(crate) fn object_words(&self) -> Vec<String> {
         (0..self.g.shapes.len())
-            .map(|k| match (self.g.slots.get(k).copied().flatten(), self.g.rows.get(k).cloned().flatten()) {
-                (_, Some((_, key))) => format!("satır {key}"),
-                (Some(slot), None) => format!("#{}", slot.0),
-                (None, None) => "dışarıda".to_owned(),
+            .map(|k| {
+                match (
+                    self.g.slots.get(k).copied().flatten(),
+                    self.g.rows.get(k).cloned().flatten(),
+                ) {
+                    (_, Some((_, key))) => format!("satır {key}"),
+                    (Some(slot), None) => format!("#{}", slot.0),
+                    (None, None) => "dışarıda".to_owned(),
+                }
             })
             .collect()
     }
@@ -152,7 +157,9 @@ pub fn marks_ticks() -> impl iced::futures::Stream<Item = Message> {
         loop {
             std::thread::sleep(MARKS_EVERY);
             let tick = Message::Gis(gis::Event::Topology(Event::MarksTick));
-            if iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, tick)).is_err() {
+            if iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, tick))
+                .is_err()
+            {
                 break;
             }
         }
@@ -246,7 +253,10 @@ impl App {
         let (Some(doc), Some(c)) = (self.document.as_ref(), self.topology_checked()) else {
             return Vec::new();
         };
-        data_sources_changed(&doc.model, c, &self.gis.topology.marks).iter().map(|l| self.topology_layer_name(l)).collect()
+        data_sources_changed(&doc.model, c, &self.gis.topology.marks)
+            .iter()
+            .map(|l| self.topology_layer_name(l))
+            .collect()
     }
 
     /// The database tables the check read and kept a mark of, with their bindings (docs/adr/9182).
@@ -259,28 +269,39 @@ impl App {
             .filter(|s| s.fingerprint.is_some())
             .filter_map(|s| {
                 let data = doc.model.layers().get(&s.layer)?.data.clone()?;
-                (data.driver != "gpkg" && data.address == s.address && data.table == s.table).then(|| (s.layer.clone(), data))
+                (data.driver != "gpkg" && data.address == s.address && data.table == s.table)
+                    .then(|| (s.layer.clone(), data))
             })
             .collect()
     }
 
     /// Whether the tab watches a database table's mark: it is shown, over a check that read one (docs/adr/9182).
     pub(crate) fn topology_watches_marks(&self) -> bool {
-        self.command_expanded && self.bottom_tab == BottomTab::Topology && !self.topology_database_sources().is_empty()
+        self.command_expanded
+            && self.bottom_tab == BottomTab::Topology
+            && !self.topology_database_sources().is_empty()
     }
 
     /// After every message: while the tab watches them, the database tables' marks asked off the interface's thread,
     /// at most every [`MARKS_EVERY`] (docs/adr/9182).
     pub(crate) fn topology_marks_tasks(&mut self) -> Task<Message> {
         let t = &self.gis.topology;
-        if t.marks_running || t.marks_asked.is_some_and(|at| at.elapsed() < MARKS_EVERY) || !self.topology_watches_marks() {
+        if t.marks_running
+            || t.marks_asked.is_some_and(|at| at.elapsed() < MARKS_EVERY)
+            || !self.topology_watches_marks()
+        {
             return Task::none();
         }
         let sources = self.topology_database_sources();
         self.gis.topology.marks_running = true;
         self.gis.topology.marks_asked = Some(std::time::Instant::now());
         crate::db_connections::off_thread(
-            move || sources.iter().map(|(layer, data)| (layer.clone(), topology_check::database_mark(data))).collect(),
+            move || {
+                sources
+                    .iter()
+                    .map(|(layer, data)| (layer.clone(), topology_check::database_mark(data)))
+                    .collect()
+            },
             |marks| Message::Gis(gis::Event::Topology(Event::Marks(marks))),
         )
     }
@@ -324,7 +345,12 @@ impl App {
         if c.generation == doc.model.generation() && c.revision == doc.model.revision() {
             return false;
         }
-        let key = (c.generation, c.revision, doc.model.generation(), doc.model.revision());
+        let key = (
+            c.generation,
+            c.revision,
+            doc.model.generation(),
+            doc.model.revision(),
+        );
         if let Some((k, old)) = self.gis.topology.stale.get()
             && k == key
         {
@@ -379,7 +405,12 @@ impl App {
         let Some(doc) = self.document.as_ref() else {
             return Task::none();
         };
-        let state = (doc.session, doc.model.generation(), doc.model.revision(), doc.model.change_mark());
+        let state = (
+            doc.session,
+            doc.model.generation(),
+            doc.model.revision(),
+            doc.model.change_mark(),
+        );
         let mut layers: Vec<&str> = Vec::new();
         for r in self.topology_settings().map_or(&[][..], |t| &t.rules[..]) {
             for l in std::iter::once(r.layer.as_str()).chain(r.other.as_deref()) {
@@ -390,7 +421,9 @@ impl App {
         }
         let objects: usize = layers.iter().map(|l| doc.model.count(l)).sum();
         // A data layer's table is read from its source (docs/adr/9124): never on the interface's thread.
-        let sourced = layers.iter().any(|l| doc.model.layers().get(l).is_some_and(|n| n.data.is_some()));
+        let sourced = layers
+            .iter()
+            .any(|l| doc.model.layers().get(l).is_some_and(|n| n.data.is_some()));
         if objects < running::THREAD_FROM && !sourced {
             if let Some(ran) = running::compute(&work, &doc.model, &core::Unwatched) {
                 self.topology_found(ran, then, state);
@@ -452,8 +485,11 @@ impl App {
             Ran::Checked { g, found } => {
                 let n_rules = g.rules.len();
                 let n_objects = g.checked();
-                let sources: Vec<(String, usize)> =
-                    g.sources_read.iter().map(|s| (self.topology_layer_name(&s.layer), s.checked)).collect();
+                let sources: Vec<(String, usize)> = g
+                    .sources_read
+                    .iter()
+                    .map(|s| (self.topology_layer_name(&s.layer), s.checked))
+                    .collect();
                 let missing = g.missing;
                 let incomplete = g.incomplete.clone();
                 let checked = Checked {
@@ -494,7 +530,10 @@ impl App {
                         if incomplete.is_empty() && n_objects == 0 && n_rules > 0 {
                             self.warn(plan::nothing_checked(n_rules));
                         } else if incomplete.is_empty() {
-                            self.say(Level::Success, plan::no_findings(n_rules, n_objects, &sources));
+                            self.say(
+                                Level::Success,
+                                plan::no_findings(n_rules, n_objects, &sources),
+                            );
                         }
                     } else {
                         self.say(
@@ -723,7 +762,12 @@ impl App {
         if self.gis.topology.selected != [finding] {
             self.gis.topology.reason = self
                 .topology_checked()
-                .and_then(|c| c.findings.get(finding).and_then(|f| c.g.review(f)).and_then(|r| r.reason.clone()))
+                .and_then(|c| {
+                    c.findings
+                        .get(finding)
+                        .and_then(|f| c.g.review(f))
+                        .and_then(|r| r.reason.clone())
+                })
                 .unwrap_or_default();
         }
         self.gis.topology.selected = vec![finding];
@@ -746,14 +790,21 @@ impl App {
             .collect();
         // A data layer's rows read from its source: the table's selection of that layer (docs/adr/9124), outlined on
         // the map while its table shows.
-        let mut rows: Vec<(String, i64)> =
-            f.objects.iter().filter(|&&k| c.g.in_source(k)).filter_map(|&k| c.g.rows.get(k).cloned().flatten()).collect();
+        let mut rows: Vec<(String, i64)> = f
+            .objects
+            .iter()
+            .filter(|&&k| c.g.in_source(k))
+            .filter_map(|&k| c.g.rows.get(k).cloned().flatten())
+            .collect();
         let view = plan::finding_view(&f.bounds);
         self.selection.set(slots);
         if let Some((layer, _)) = rows.first().cloned() {
             rows.retain(|(l, _)| *l == layer);
             self.gis.features.data.selected.clear();
-            self.gis.features.data.select_rows(&layer, rows.into_iter().map(|(_, k)| k).collect());
+            self.gis
+                .features
+                .data
+                .select_rows(&layer, rows.into_iter().map(|(_, k)| k).collect());
         }
         self.navigating(|app| {
             app.viewport.change(ViewChange::Fit {
@@ -795,7 +846,9 @@ impl App {
         if let Some(ch) = changes.iter().find(|ch| c.g.in_source(ch.object))
             && let Some(doc) = self.document.as_ref()
         {
-            let words = kentos_native_application::topology_check::source_row_words(&doc.model, &c.g, ch.object);
+            let words = kentos_native_application::topology_check::source_row_words(
+                &doc.model, &c.g, ch.object,
+            );
             self.warn(format!(
                 "Bu düzeltme {words} değiştirir; satır çizimde değil. Katmanı düzenlemeye açıp satırı alın (Düzenlemeyi başlat, sonra satırı seçin), sonra düzeltin."
             ));
@@ -951,7 +1004,9 @@ impl App {
 
     /// A fix's words in Düzelt ▾ (plan.rs's `fix_label`).
     pub(crate) fn topology_fix_label(&self, f: &Finding, key: &str) -> String {
-        let ids: Vec<String> = self.topology_checked().map_or_else(Vec::new, Checked::object_words);
+        let ids: Vec<String> = self
+            .topology_checked()
+            .map_or_else(Vec::new, Checked::object_words);
         let format = self.format();
         plan::fix_label(f, key, &ids, |m| format.length(m))
     }
@@ -1060,7 +1115,9 @@ fn data_sources_changed(
             if data.driver == "gpkg" {
                 topology_check::data_fingerprint(data).as_ref() != Some(was)
             } else {
-                marks.get(&s.layer).is_some_and(|now| now.as_ref() != Some(was))
+                marks
+                    .get(&s.layer)
+                    .is_some_and(|now| now.as_ref() != Some(was))
             }
         })
         .map(|s| s.layer.clone())
@@ -1076,7 +1133,12 @@ fn inputs_changed(doc: &kentos_domain::Document, c: &Checked) -> bool {
     }
     // A bound layer's source read at another version.
     let sources = &doc.settings().sources;
-    if c.g.stamp.sources.iter().any(|s| sources.iter().find(|l| l.layer == s.layer).is_none_or(|l| l.revision != s.revision)) {
+    if c.g.stamp.sources.iter().any(|s| {
+        sources
+            .iter()
+            .find(|l| l.layer == s.layer)
+            .is_none_or(|l| l.revision != s.revision)
+    }) {
         return true;
     }
     let slots = match doc.changes_since(c.mark) {
@@ -1086,20 +1148,18 @@ fn inputs_changed(doc: &kentos_domain::Document, c: &Checked) -> bool {
     if slots.is_empty() {
         return false;
     }
-    let layers: std::collections::HashSet<&str> = c
-        .g
-        .rules
-        .iter()
-        .flat_map(|r| std::iter::once(r.layer.as_str()).chain(r.other.as_deref()))
-        .collect();
-    let was: std::collections::HashMap<Slot, usize> = c
-        .g
-        .slots
-        .iter()
-        .take(c.g.drawn)
-        .enumerate()
-        .filter_map(|(k, s)| s.map(|s| (s, k)))
-        .collect();
+    let layers: std::collections::HashSet<&str> =
+        c.g.rules
+            .iter()
+            .flat_map(|r| std::iter::once(r.layer.as_str()).chain(r.other.as_deref()))
+            .collect();
+    let was: std::collections::HashMap<Slot, usize> =
+        c.g.slots
+            .iter()
+            .take(c.g.drawn)
+            .enumerate()
+            .filter_map(|(k, s)| s.map(|s| (s, k)))
+            .collect();
     let mut seen: std::collections::HashSet<Slot> = std::collections::HashSet::new();
     for &slot in slots {
         if !seen.insert(slot) {
@@ -1112,7 +1172,10 @@ fn inputs_changed(doc: &kentos_domain::Document, c: &Checked) -> bool {
             (Some(e), None) => layers.contains(e.base().layer_id.as_str()),
             (Some(e), Some(&k)) => {
                 c.g.layers.get(k).is_none_or(|l| *l != e.base().layer_id)
-                    || c.g.shapes.get(k).is_none_or(|s| *s != kentos_native_application::geometry::shape(e))
+                    || c.g
+                        .shapes
+                        .get(k)
+                        .is_none_or(|s| *s != kentos_native_application::geometry::shape(e))
             }
         };
         if changed {

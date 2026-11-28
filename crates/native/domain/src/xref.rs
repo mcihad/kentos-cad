@@ -17,8 +17,8 @@ use kentos_contracts::{BlockId, DocumentSnapshotV2, XrefKind, XrefSource, xref_g
 use serde_json::{Map, Value, json};
 
 use crate::exchange::{
-    Same, all_ids, arr, arr_mut, blocks_by_id, fold, from_json, map_object, our_node_for, path_of, placed_blocks,
-    str_of, take_items, take_layers, to_json, unique_names, walked,
+    Same, all_ids, arr, arr_mut, blocks_by_id, fold, from_json, map_object, our_node_for, path_of,
+    placed_blocks, str_of, take_items, take_layers, to_json, unique_names, walked,
 };
 
 /// What [`load`] made: the drawing with the reference's definition (and those it brought), and what the answer says.
@@ -39,8 +39,12 @@ pub struct XrefLoad {
 
 /// A brought block's id: ours and theirs mixed, the same every time this reference is loaded.
 fn nested_id(ours: &str, theirs: &str) -> String {
-    let a = uuid::Uuid::parse_str(ours).map(|u| *u.as_bytes()).unwrap_or_default();
-    let b = uuid::Uuid::parse_str(theirs).map(|u| *u.as_bytes()).unwrap_or_default();
+    let a = uuid::Uuid::parse_str(ours)
+        .map(|u| *u.as_bytes())
+        .unwrap_or_default();
+    let b = uuid::Uuid::parse_str(theirs)
+        .map(|u| *u.as_bytes())
+        .unwrap_or_default();
     let mut c = [0u8; 16];
     for i in 0..16 {
         c[i] = a[i] ^ b[i].rotate_left(3) ^ 0x5a;
@@ -55,7 +59,12 @@ fn nested_id(ours: &str, theirs: &str) -> String {
 fn overlaid(theirs: &Value) -> HashSet<String> {
     arr(theirs, "blocks")
         .iter()
-        .filter(|b| b.get("xref").and_then(|x| x.get("kind")).and_then(Value::as_str) == Some("overlay"))
+        .filter(|b| {
+            b.get("xref")
+                .and_then(|x| x.get("kind"))
+                .and_then(Value::as_str)
+                == Some("overlay")
+        })
         .map(|b| str_of(b, "id").to_owned())
         .collect()
 }
@@ -83,7 +92,12 @@ pub fn load(
     let nested = info
         .nested
         .iter()
-        .filter_map(|(i, n)| Some((BlockId(*uuid::Uuid::parse_str(i).ok()?.as_bytes()), n.clone())))
+        .filter_map(|(i, n)| {
+            Some((
+                BlockId(*uuid::Uuid::parse_str(i).ok()?.as_bytes()),
+                n.clone(),
+            ))
+        })
         .collect();
     Ok(XrefLoad {
         drawing: from_json(drawing)?,
@@ -109,7 +123,13 @@ pub struct LoadInfo {
 }
 
 /// [`load`] over the contract's JSON (the cases' form); none when nothing may go in the block.
-pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: XrefSource) -> Option<(Value, LoadInfo)> {
+pub fn load_json(
+    ours: &Value,
+    theirs: &Value,
+    name: &str,
+    id: &str,
+    source: XrefSource,
+) -> Option<(Value, LoadInfo)> {
     let mut ours = ours.clone();
     // A reload: the definition and what it brought go (a block another object of ours places too stays); the new ones
     // take their places by id.
@@ -118,7 +138,10 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
     let old_ids: HashMap<String, u64> = ours_by_id
         .get(id)
         .map(|old| {
-            let objects = old.get("xref").map(|x| arr(x, "objects")).unwrap_or_default();
+            let objects = old
+                .get("xref")
+                .map(|x| arr(x, "objects"))
+                .unwrap_or_default();
             objects
                 .iter()
                 .zip(arr(old, "entities"))
@@ -130,7 +153,12 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
         .get(id)
         .map(|old| placed_blocks(arr(old, "entities"), &ours_by_id))
         .unwrap_or_default();
-    old_nested.extend(arr(&ours, "blocks").iter().filter(|b| brought_by(b, id)).map(|b| str_of(b, "id").to_owned()));
+    old_nested.extend(
+        arr(&ours, "blocks")
+            .iter()
+            .filter(|b| brought_by(b, id))
+            .map(|b| str_of(b, "id").to_owned()),
+    );
     let outside: Vec<Value> = arr(&ours, "entities")
         .iter()
         .filter(|e| !(str_of(e, "kind") == "insert" && str_of(e, "block") == id))
@@ -142,9 +170,14 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
     // ties into its pieces stay with it.
     let old_ids_by_name: HashMap<String, String> = old_nested
         .iter()
-        .filter_map(|b| ours_by_id.get(b).map(|def| (fold(str_of(def, "name")), b.clone())))
+        .filter_map(|b| {
+            ours_by_id
+                .get(b)
+                .map(|def| (fold(str_of(def, "name")), b.clone()))
+        })
         .collect();
-    arr_mut(&mut ours, "blocks").retain(|b| str_of(b, "id") != id && !old_nested.contains(str_of(b, "id")));
+    arr_mut(&mut ours, "blocks")
+        .retain(|b| str_of(b, "id") != id && !old_nested.contains(str_of(b, "id")));
     let skip = overlaid(theirs);
     let all = arr(theirs, "entities");
     let uids = arr(theirs, "uids");
@@ -199,7 +232,10 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
         .filter(|b| placed.contains(str_of(b, "id")))
         .cloned()
         .collect();
-    let taken_names: Vec<String> = arr(&ours, "blocks").iter().map(|b| str_of(b, "name").to_owned()).collect();
+    let taken_names: Vec<String> = arr(&ours, "blocks")
+        .iter()
+        .map(|b| str_of(b, "name").to_owned())
+        .collect();
     let incoming: Vec<String> = brought
         .iter()
         .map(|b| format!("{name}|{}", str_of(b, "name")))
@@ -209,7 +245,10 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
         .iter()
         .zip(&names)
         .map(|(b, n)| {
-            let new = old_ids_by_name.get(&fold(n)).cloned().unwrap_or_else(|| nested_id(id, str_of(b, "id")));
+            let new = old_ids_by_name
+                .get(&fold(n))
+                .cloned()
+                .unwrap_or_else(|| nested_id(id, str_of(b, "id")));
             (str_of(b, "id").to_owned(), new)
         })
         .collect();
@@ -229,7 +268,10 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
         out
     };
     // The library items the objects draw with.
-    let have: HashSet<String> = arr(&ours["styles"], "items").iter().map(|it| str_of(it, "id").to_owned()).collect();
+    let have: HashSet<String> = arr(&ours["styles"], "items")
+        .iter()
+        .map(|it| str_of(it, "id").to_owned())
+        .collect();
     let symbols: Vec<String> = kept
         .iter()
         .chain(brought.iter().flat_map(|b| arr(b, "entities")))
@@ -280,8 +322,15 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
     }
     // Numbered from 1 as a file numbers them; on a reload an object the definition had keeps its id and a new one
     // takes the next after the highest the definition had (a removed object's id is never given to another).
-    let old_entities: Vec<Value> = ours_by_id.get(id).map(|old| arr(old, "entities").to_vec()).unwrap_or_default();
-    let mut next = old_entities.iter().filter_map(|e| e.get("id").and_then(Value::as_u64)).max().unwrap_or(0);
+    let old_entities: Vec<Value> = ours_by_id
+        .get(id)
+        .map(|old| arr(old, "entities").to_vec())
+        .unwrap_or_default();
+    let mut next = old_entities
+        .iter()
+        .filter_map(|e| e.get("id").and_then(Value::as_u64))
+        .max()
+        .unwrap_or(0);
     next = next.max(old_ids.values().copied().max().unwrap_or(0));
     // An object whose persistent id the old definition does not know (a source that gives none, or gives new ones
     // every time: a PDF page, a v1 drawing, a DXF object without a handle) is found again by its content: the same
@@ -289,12 +338,22 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
     // (docs/adr/1060 §3). An object found neither way is new; one of the old found neither way is gone, and the ties
     // into it break instead of moving to whatever now has its place.
     let new_uids: HashSet<&str> = kept_uids.iter().filter_map(Value::as_str).collect();
-    let old_objects = ours_by_id.get(id).map(|old| old.get("xref").map(|x| arr(x, "objects")).unwrap_or_default().to_vec());
+    let old_objects = ours_by_id.get(id).map(|old| {
+        old.get("xref")
+            .map(|x| arr(x, "objects"))
+            .unwrap_or_default()
+            .to_vec()
+    });
     let old_objects = old_objects.unwrap_or_default();
     let mut unmatched: Vec<(Value, u64, bool)> = old_entities
         .iter()
         .enumerate()
-        .filter(|(k, _)| old_objects.get(*k).and_then(Value::as_str).is_none_or(|u| !new_uids.contains(u)))
+        .filter(|(k, _)| {
+            old_objects
+                .get(*k)
+                .and_then(Value::as_str)
+                .is_none_or(|u| !new_uids.contains(u))
+        })
         .filter_map(|(_, e)| Some((content_of(e), e.get("id")?.as_u64()?, false)))
         .collect();
     let entities: Vec<Value> = kept
@@ -306,7 +365,9 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
             let local = by_uid
                 .or_else(|| {
                     let content = content_of(&m);
-                    let hit = unmatched.iter_mut().find(|(c, _, used)| !*used && *c == content)?;
+                    let hit = unmatched
+                        .iter_mut()
+                        .find(|(c, _, used)| !*used && *c == content)?;
                     hit.2 = true;
                     Some(hit.1)
                 })
@@ -342,11 +403,22 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
     block.insert("name".into(), json!(name));
     block.insert("base".into(), json!({ "x": 0.0, "y": 0.0 }));
     block.insert("entities".into(), Value::Array(entities));
-    let unit = theirs["settings"].get("drawingUnit").and_then(Value::as_str).unwrap_or("m");
+    let unit = theirs["settings"]
+        .get("drawingUnit")
+        .and_then(Value::as_str)
+        .unwrap_or("m");
     block.insert("units".into(), json!(unit));
     block.insert("xref".into(), x);
     mine.push(Value::Object(block));
-    Some((ours, LoadInfo { objects, left, nested, group: group_id }))
+    Some((
+        ours,
+        LoadInfo {
+            objects,
+            left,
+            nested,
+            group: group_id,
+        },
+    ))
 }
 
 /// An object's content as a definition holds it: its JSON without its local id (docs/adr/1060 §3).
@@ -381,10 +453,13 @@ pub fn source_layers(
         if their == "xref-group" {
             continue;
         }
-        let Some(our) = our_node_for(&ours_json, &paths, their, true) else { continue };
+        let Some(our) = our_node_for(&ours_json, &paths, their, true) else {
+            continue;
+        };
         let mut node = n.clone();
         node["children"] = json!([]);
-        let node: kentos_contracts::LayerNode = serde_json::from_value(node).map_err(|e| e.to_string())?;
+        let node: kentos_contracts::LayerNode =
+            serde_json::from_value(node).map_err(|e| e.to_string())?;
         out.push((our, node));
     }
     Ok(out)
@@ -392,7 +467,10 @@ pub fn source_layers(
 
 /// A definition one reference brought (its `parent`), or a block named `ref|…` it brought.
 fn brought_by(b: &Value, id: &str) -> bool {
-    b.get("xref").and_then(|x| x.get("parent")).and_then(Value::as_str) == Some(id)
+    b.get("xref")
+        .and_then(|x| x.get("parent"))
+        .and_then(Value::as_str)
+        == Some(id)
 }
 
 /// The source of a reference's definition, if it is one.
@@ -415,14 +493,21 @@ pub fn is_overlay(kind: XrefKind) -> bool {
 
 /// What [`bind_layers`] gives: the drawing's layer tree, each group layer's id to the drawing's, and the names that
 /// joined an existing layer.
-pub type BoundLayers = (Vec<kentos_contracts::LayerNode>, HashMap<String, String>, Vec<String>);
+pub type BoundLayers = (
+    Vec<kentos_contracts::LayerNode>,
+    HashMap<String, String>,
+    Vec<String>,
+);
 
 /// Bind › Insert's layers (docs/adr/0348 §3): the layers under the reference's group `group` joined to the drawing's
 /// layers of the same path outside it (made with their groups where missing). Gives the drawing's tree with the new
 /// nodes, each group layer's id to the drawing's, and the names of those that joined an existing layer.
 pub fn bind_layers(ours: &DocumentSnapshotV2, group: &str) -> Result<BoundLayers, String> {
     let mut ours_json = to_json(ours)?;
-    let Some((node, _)) = walked(arr(&ours_json, "layers")).into_iter().find(|(n, _)| str_of(n, "id") == group) else {
+    let Some((node, _)) = walked(arr(&ours_json, "layers"))
+        .into_iter()
+        .find(|(n, _)| str_of(n, "id") == group)
+    else {
         return Ok((ours.layers.clone(), HashMap::new(), Vec::new()));
     };
     let theirs = json!({ "layers": arr(&node, "children"), "settings": {}, "styles": {} });
@@ -435,7 +520,15 @@ pub fn bind_layers(ours: &DocumentSnapshotV2, group: &str) -> Result<BoundLayers
     // Which already were the drawing's, outside the group.
     let before: HashSet<String> = their_paths
         .iter()
-        .filter(|(_, here)| our_node_for(&ours_json, &their_paths, &here_id(&their_paths, here), false).is_some())
+        .filter(|(_, here)| {
+            our_node_for(
+                &ours_json,
+                &their_paths,
+                &here_id(&their_paths, here),
+                false,
+            )
+            .is_some()
+        })
         .map(|(id, _)| id.clone())
         .collect();
     let mut taken = all_ids(arr(&ours_json, "layers"));
@@ -460,5 +553,9 @@ pub fn bind_layers(ours: &DocumentSnapshotV2, group: &str) -> Result<BoundLayers
 
 /// A path's own node id among `paths` (the reverse lookup `our_node_for` needs).
 fn here_id(paths: &HashMap<String, Vec<String>>, here: &[String]) -> String {
-    paths.iter().find(|(_, p)| p.as_slice() == here).map(|(id, _)| id.clone()).unwrap_or_default()
+    paths
+        .iter()
+        .find(|(_, p)| p.as_slice() == here)
+        .map(|(id, _)| id.clone())
+        .unwrap_or_default()
 }

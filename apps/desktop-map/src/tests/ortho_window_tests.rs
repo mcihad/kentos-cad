@@ -2,9 +2,9 @@
 //! selected orthophoto, its layers guessed (GNSS, read on the image), KOH within BÖHHBÜY's limit at 1/1000 and out of
 //! it at 1/500, the fit points apart, the CSV, nothing written; Harita and GIS offer it. And its pictures.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use kentos_domain::Slot;
 use kentos_launch::Module;
 use serde_json::Value;
@@ -13,9 +13,12 @@ use crate::app::{App, Message};
 use crate::ortho_window::Event as O;
 
 fn opened(program: Option<Module>) -> App {
-    let cases: Value =
-        serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.orthophoto.check.json")).expect("cases");
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(cases["setup"].clone()).expect("reads");
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.orthophoto.check.json"
+    ))
+    .expect("cases");
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(cases["setup"].clone()).expect("reads");
     let (mut app, _) = App::boot(None);
     app.program = program;
     let doc = crate::document::Document::from_v2(snapshot, None).expect("opens");
@@ -35,7 +38,10 @@ fn the_orthophoto_is_checked_against_the_gnss_points() {
     );
     app.selection.set([Slot(1)]);
     let _ = app.update(Message::Run("raster.accuracy"));
-    assert_eq!(app.dialog, Some(crate::map::dialog(map::MapDialogKind::Ortho)));
+    assert_eq!(
+        app.dialog,
+        Some(crate::map::dialog(map::MapDialogKind::Ortho))
+    );
     assert_eq!(
         (
             app.modules.map().ortho.known.as_str(),
@@ -44,7 +50,8 @@ fn the_orthophoto_is_checked_against_the_gnss_points() {
         ("gnss", "okuma")
     );
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .ortho
         .answer
         .clone()
@@ -54,7 +61,8 @@ fn the_orthophoto_is_checked_against_the_gnss_points() {
     assert_eq!(r.passed_xy, Some(true));
     let _ = app.update(Message::from(map::Event::Ortho(O::Scale(500.0))));
     let r = app
-        .modules.map()
+        .modules
+        .map()
         .ortho
         .answer
         .clone()
@@ -69,7 +77,11 @@ fn the_orthophoto_is_checked_against_the_gnss_points() {
     assert_eq!(text.lines().filter(|l| l.contains(";Denetim;")).count(), 8);
     assert_eq!(text.lines().filter(|l| l.contains(";Uyum;")).count(), 2);
     let _ = std::fs::remove_dir_all(dir);
-    assert_eq!(app.document.as_ref().map(|d| d.model.revision()), revision, "nothing written");
+    assert_eq!(
+        app.document.as_ref().map(|d| d.model.revision()),
+        revision,
+        "nothing written"
+    );
 }
 
 #[test]
@@ -89,14 +101,18 @@ fn harita_and_gis_offer_it() {
 fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/ortofoto-dogruluk-1480");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/ortofoto-dogruluk-1480");
     std::fs::create_dir_all(&out).expect("a folder");
     for (scale, stem) in [(1000.0, "1-binlik"), (500.0, "2-beslik-disinda")] {
-        for (theme, size, name) in
-            [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 760.0), "koyu-dar")]
-        {
+        for (theme, size, name) in [
+            ("light", Size::new(1440.0, 900.0), "acik-genis"),
+            ("dark", Size::new(1100.0, 760.0), "koyu-dar"),
+        ] {
             let mut app = opened(Some(Module::Map));
-            let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
             app.apply_settings();
             let _ = app.update(Message::WindowResized(size));
             let _ = app.update(Message::Run("view.zoomExtents"));
@@ -110,7 +126,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{stem}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }
@@ -127,6 +146,9 @@ fn screens() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     let file = out.join("3-menu-raster-sekmesi.png");
-    snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+    snapshot
+        .render(app.view(), &app.theme())
+        .save(&file)
+        .expect("writes");
     println!("{}", file.display());
 }

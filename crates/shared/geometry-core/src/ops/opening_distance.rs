@@ -33,7 +33,13 @@ pub struct Candidate {
 pub fn nearest(candidates: &[Candidate], s: f64, before: bool) -> Option<Candidate> {
     let side: Vec<&Candidate> = candidates
         .iter()
-        .filter(|c| if before { c.s <= s + TIE } else { c.s >= s - TIE })
+        .filter(|c| {
+            if before {
+                c.s <= s + TIE
+            } else {
+                c.s >= s - TIE
+            }
+        })
         .collect();
     let edge = side
         .iter()
@@ -42,14 +48,11 @@ pub fn nearest(candidates: &[Candidate], s: f64, before: bool) -> Option<Candida
     side.into_iter()
         .filter(|c| (c.s - edge).abs() <= TIE)
         .min_by(|a, b| {
-            a.kind
-                .cmp(&b.kind)
-                .then(a.key.cmp(&b.key))
-                .then(if before {
-                    b.s.total_cmp(&a.s)
-                } else {
-                    a.s.total_cmp(&b.s)
-                })
+            a.kind.cmp(&b.kind).then(a.key.cmp(&b.key)).then(if before {
+                b.s.total_cmp(&a.s)
+            } else {
+                a.s.total_cmp(&b.s)
+            })
         })
         .copied()
 }
@@ -101,7 +104,10 @@ mod tests {
         ];
         assert_eq!(nearest(&all, 4.0, true).map(|c| c.key), Some(7));
         assert_eq!(nearest(&all[..3], 4.0, true).map(|c| c.key), Some(5));
-        assert_eq!(nearest(&all[..1], 4.0, true).map(|c| c.kind), Some(Kind::End));
+        assert_eq!(
+            nearest(&all[..1], 4.0, true).map(|c| c.kind),
+            Some(Kind::End)
+        );
     }
 
     #[test]
@@ -109,7 +115,15 @@ mod tests {
         let (a, b) = (Vec2::new(0.125, 0.125), Vec2::new(7.875, 0.125));
         let t = crossing(a, b, Vec2::new(3.95, 0.0), Vec2::new(3.95, 3.0)).unwrap();
         assert!((t * 7.75 - 3.825).abs() < 1e-12);
-        assert_eq!(crossing(a, b, Vec2::new(3.95, 0.2), Vec2::new(3.95, 3.0)), None, "short of it");
-        assert_eq!(crossing(a, b, Vec2::new(0.0, 0.125), Vec2::new(1.0, 0.125)), None, "along it");
+        assert_eq!(
+            crossing(a, b, Vec2::new(3.95, 0.2), Vec2::new(3.95, 3.0)),
+            None,
+            "short of it"
+        );
+        assert_eq!(
+            crossing(a, b, Vec2::new(0.0, 0.125), Vec2::new(1.0, 0.125)),
+            None,
+            "along it"
+        );
     }
 }

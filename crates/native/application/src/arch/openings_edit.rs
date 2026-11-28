@@ -110,7 +110,10 @@ fn changed(o: &OpeningFields, c: &OpeningChange) -> OpeningFields {
             .and_then(|v| v.as_object().cloned())
     {
         for (k, v) in map {
-            if let Some(field) = kentos_commands::OpeningTypeField::ALL.into_iter().find(|x| x.name() == k) {
+            if let Some(field) = kentos_commands::OpeningTypeField::ALL
+                .into_iter()
+                .find(|x| x.name() == k)
+            {
                 let _ = f.set_value(field, &v);
             }
         }
@@ -161,21 +164,25 @@ fn named_uids(doc: &Document, input: &OpeningsEdit) -> Result<Vec<String>, Stop>
     }
     let pick: Option<Pick> = match &input.operation {
         OpeningsOperation::ReplaceType {
-            from: Some(from), level, ..
+            from: Some(from),
+            level,
+            ..
         } => {
             // A project type's id, KentOS's type by id or name, or the words themselves (docs/adr/0772 §4).
             let id = crate::opening_types::project_type(doc, from).map(|t| t.id);
             let from = from.clone();
-            let levels: Option<std::collections::HashMap<String, Option<String>>> = level.as_ref().map(|_| {
-                doc.entities()
-                    .filter_map(|e| match e {
-                        Entity::Opening(o) => {
-                            Some((o.opening.host.clone(), crate::opening_types::level_of(doc, &o.opening)))
-                        }
-                        _ => None,
-                    })
-                    .collect()
-            });
+            let levels: Option<std::collections::HashMap<String, Option<String>>> =
+                level.as_ref().map(|_| {
+                    doc.entities()
+                        .filter_map(|e| match e {
+                            Entity::Opening(o) => Some((
+                                o.opening.host.clone(),
+                                crate::opening_types::level_of(doc, &o.opening),
+                            )),
+                            _ => None,
+                        })
+                        .collect()
+                });
             let level = level.clone();
             Some(Box::new(move |o| {
                 let of = match &id {
@@ -314,7 +321,12 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             distance,
             to,
         } => {
-            checks::finite(*distance, "Mesafe", "Sonlu bir sayı verin.", "operation.distance")?;
+            checks::finite(
+                *distance,
+                "Mesafe",
+                "Sonlu bir sayı verin.",
+                "operation.distance",
+            )?;
             if *distance < 0.0 {
                 return Err(fail(
                     codes::INVALID_OPENING,
@@ -348,11 +360,18 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                 };
                 // The reference stays: the jamb goes to it plus (start) or less (end) the distance.
                 let mut f = o.opening.clone();
-                f.at += if start { distance - now } else { now - distance };
+                f.at += if start {
+                    distance - now
+                } else {
+                    now - distance
+                };
                 // It stays on its edge: the reference was there.
                 let line = host_line(doc, &f, &path)?;
                 let p = &line.path;
-                let (lo, hi) = (p.cum[m.edge], p.cum[m.edge] + kentos_geometry_core::ops::edges::edge_length(&p.edges[m.edge]));
+                let (lo, hi) = (
+                    p.cum[m.edge],
+                    p.cum[m.edge] + kentos_geometry_core::ops::edges::edge_length(&p.edges[m.edge]),
+                );
                 let (s0, s1) = opening_follow::span(&f);
                 let tol = 1e-9 * p.length.max(1.0);
                 if s0 < lo - tol || s1 > hi + tol {
@@ -415,11 +434,15 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             // The project's type, else KentOS's as before (its refusal `style_not_found`).
             let kind = match crate::opening_types::project_type(doc, to) {
                 Some(t) => crate::opening_types::Found::Project(Box::new(t)),
-                None => crate::opening_types::Found::Builtin(openings::find_type(to, "operation.to")?),
+                None => {
+                    crate::opening_types::Found::Builtin(openings::find_type(to, "operation.to")?)
+                }
             };
             let mut any = false;
             for (at, slot, o) in &list {
-                if from.as_deref().is_some_and(|k| !of_type(doc, &o.opening, k))
+                if from
+                    .as_deref()
+                    .is_some_and(|k| !of_type(doc, &o.opening, k))
                     || !on_level(doc, &o.opening, level.as_ref())
                 {
                     continue;
@@ -495,7 +518,11 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             typed(&source.opening, *at)?;
             let id = source.opening.style.clone().unwrap_or_default();
             let old = crate::opening_types::find_project(doc, &id, &format!("uids[{at}]"))?;
-            let pushed: Vec<_> = if fields.is_empty() { source.opening.overrides.clone() } else { fields.clone() };
+            let pushed: Vec<_> = if fields.is_empty() {
+                source.opening.overrides.clone()
+            } else {
+                fields.clone()
+            };
             if pushed.is_empty() {
                 return Err(fail(
                     codes::NOTHING_TO_SET,
@@ -514,7 +541,11 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                 new.width = f.width;
             }
             if let Some((field, words)) = new.problem() {
-                return Err(fail(codes::INVALID_OPENING_TYPE, words, &format!("operation.{field}")));
+                return Err(fail(
+                    codes::INVALID_OPENING_TYPE,
+                    words,
+                    &format!("operation.{field}"),
+                ));
             }
             let changed_fields = new.differs_from(&old);
             if changed_fields.is_empty() {
@@ -527,13 +558,19 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
             new.version = old.version + 1;
             let mut own = (*source).clone();
             own.opening.overrides.retain(|k| !pushed.contains(k));
-            let followed =
-                crate::opening_types::follow(doc, &new, &changed_fields, Default::default(), Some((*slot, own)))?;
+            let followed = crate::opening_types::follow(
+                doc,
+                &new,
+                &changed_fields,
+                Default::default(),
+                Some((*slot, own)),
+            )?;
             let mut table = doc.opening_types().to_vec();
             if let Some(t) = table.iter_mut().find(|t| t.id == new.id) {
                 *t = new;
             }
-            work.warnings.extend(crate::opening_types::warnings(&followed.report));
+            work.warnings
+                .extend(crate::opening_types::warnings(&followed.report));
             for (s, e) in followed.updates {
                 let path = doc.uid(s).map(|u| u.to_string()).unwrap_or_default();
                 work.updates.push((s, e, path));

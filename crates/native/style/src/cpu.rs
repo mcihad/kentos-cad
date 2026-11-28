@@ -249,7 +249,13 @@ fn dash_cover(d: &[f64], s: f64, k: f64, total_raw: f64, on_share: f64, offset_r
 
 /// `dashCover`, or a stroke's `strokeDash` without its dots (`with_dots` false): those are `dot_cover`'s, round
 /// (ADR 1124), so the segment that does not own a dot adds no pixel of it.
-fn dash_cover_of(d: &[f64], s: f64, k: f64, (total_raw, on_share, offset_raw): (f64, f64, f64), with_dots: bool) -> f64 {
+fn dash_cover_of(
+    d: &[f64],
+    s: f64,
+    k: f64,
+    (total_raw, on_share, offset_raw): (f64, f64, f64),
+    with_dots: bool,
+) -> f64 {
     let total = total_raw * k;
     if total <= 0.0 {
         return 1.0;
@@ -429,14 +435,8 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
     let dashes = st.dashes();
     let (w, h) = (pixmap.width(), pixmap.height());
     for seg in data.as_chunks::<6>().0.iter() {
-        let a = view.px(
-            seg[0] + b.origin[0],
-            seg[1] + b.origin[1],
-        );
-        let e = view.px(
-            seg[2] + b.origin[0],
-            seg[3] + b.origin[1],
-        );
+        let a = view.px(seg[0] + b.origin[0], seg[1] + b.origin[1]);
+        let e = view.px(seg[2] + b.origin[0], seg[3] + b.origin[1]);
         let d = [e[0] - a[0], e[1] - a[1]];
         let len = d[0].hypot(d[1]);
         let dir = if len > 1e-4 {
@@ -449,7 +449,12 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
         let s0 = seg[4] * view.px_per_m;
         let meta = (seg[5] + 0.5) as u32;
         let ends = meta & 3;
-        let joins = joins_of(meta, len, ext, view.m[0] * view.m[3] - view.m[1] * view.m[2] < 0.0);
+        let joins = joins_of(
+            meta,
+            len,
+            ext,
+            view.m[0] * view.m[3] - view.m[1] * view.m[2] < 0.0,
+        );
         let at = |along: f64, across: f64| {
             [
                 a[0] + dir[0] * along + n[0] * across,
@@ -468,7 +473,9 @@ fn strokes(pixmap: &mut Pixmap, view: &CpuView, b: &StyledBatch, st: &Style, dat
             let x = p[0] * dir[0] + p[1] * dir[1];
             let across = p[0] * n[0] + p[1] * n[1];
             // The joins' sides, as `stroke.wgsl` splits them (docs/adr/9226).
-            if x * joins[0] + across * joins[1] < -0.01 || (x - len) * joins[2] + across * joins[3] > 0.01 {
+            if x * joins[0] + across * joins[1] < -0.01
+                || (x - len) * joins[2] + across * joins[3] > 0.01
+            {
                 return;
             }
             let y = across.abs();
@@ -524,7 +531,8 @@ fn joins_of(meta: u32, len: f64, ext: f64, flipped: bool) -> [f64; 4] {
     };
     let (cs, ce) = ((meta >> 2) & 2047, (meta >> 13) & 2047);
     let (ts, te) = (turn(cs), turn(ce));
-    let reach = if cs != 0 { (0.5 * ts).tan().abs() } else { 0.0 } + if ce != 0 { (0.5 * te).tan().abs() } else { 0.0 };
+    let reach = if cs != 0 { (0.5 * ts).tan().abs() } else { 0.0 }
+        + if ce != 0 { (0.5 * te).tan().abs() } else { 0.0 };
     let mut joins = [0.0; 4];
     if len > ext * reach + 1.0 {
         let unit = |x: f64, y: f64| {
@@ -558,10 +566,7 @@ fn coverage(
     let mut pb = PathBuilder::new();
     for t in data.as_chunks::<6>().0.iter() {
         let p = |i: usize| {
-            let q = view.px(
-                t[i] + b.origin[0],
-                t[i + 1] + b.origin[1],
-            );
+            let q = view.px(t[i] + b.origin[0], t[i + 1] + b.origin[1]);
             (q[0] as f32, q[1] as f32)
         };
         let (a, c, d) = (p(0), p(2), p(4));
@@ -848,10 +853,7 @@ fn warped_picture(
     let (w, h) = (f64::from(pixmap.width()), f64::from(pixmap.height()));
     for t in data.as_chunks::<12>().0.iter() {
         let corner = |k: usize| {
-            let q = view.px(
-                t[k * 4] + b.origin[0],
-                t[k * 4 + 1] + b.origin[1],
-            );
+            let q = view.px(t[k * 4] + b.origin[0], t[k * 4 + 1] + b.origin[1]);
             (q, [t[k * 4 + 2], t[k * 4 + 3]])
         };
         let ((a, ua), (p, up), (c, uc)) = (corner(0), corner(1), corner(2));
@@ -1591,7 +1593,10 @@ mod tests {
         let lit = |x: usize, y: usize| px(&img, x, y)[3] > 128;
         for c in [8, 20, 32] {
             // Its centre, 2 m along and across it: inside the 3 m radius.
-            assert!(lit(c, 20) && lit(c - 2, 20) && lit(c + 2, 20) && lit(c, 18) && lit(c, 22), "{c}");
+            assert!(
+                lit(c, 20) && lit(c - 2, 20) && lit(c + 2, 20) && lit(c, 18) && lit(c, 22),
+                "{c}"
+            );
             // A pixel 2.5 m along and 2.5 m across (3.5 m out): in a square of the weight, outside the round dot.
             assert!(!lit(c + 2, 22) && !lit(c - 3, 17), "{c}");
         }
@@ -1599,7 +1604,9 @@ mod tests {
         assert!(!lit(14, 20) && !lit(26, 20));
         // A dot on the corner of a two-segment path is drawn once: its centre is not darker than a lone dot's.
         let corner = shot(&StyledLayer {
-            data: vec![2.0, 20.0, 20.0, 20.0, 0.0, 1.0, 20.0, 20.0, 20.0, 38.0, 18.0, 2.0],
+            data: vec![
+                2.0, 20.0, 20.0, 20.0, 0.0, 1.0, 20.0, 20.0, 20.0, 38.0, 18.0, 2.0,
+            ],
             batches: vec![batch(
                 BatchKind::Stroke {
                     color: [1.0, 0.0, 0.0, 0.5],
@@ -1615,7 +1622,10 @@ mod tests {
             ..StyledLayer::default()
         });
         let at = px(&corner, 20, 20)[3];
-        assert!((100..=140).contains(&at), "a half-transparent dot once: {at}");
+        assert!(
+            (100..=140).contains(&at),
+            "a half-transparent dot once: {at}"
+        );
     }
 
     /// A shape marker: its distance field filled at the point, turned and anchored.

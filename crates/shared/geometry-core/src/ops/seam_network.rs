@@ -46,11 +46,12 @@ pub struct Network {
 /// Twice the ring's signed area (counter-clockwise positive).
 pub fn signed2(r: &[Pt]) -> f64 {
     let n = r.len();
-    (0..n).map(|k| {
-        let (a, b) = (r[k], r[(k + 1) % n]);
-        a[0] * b[1] - b[0] * a[1]
-    })
-    .sum()
+    (0..n)
+        .map(|k| {
+            let (a, b) = (r[k], r[(k + 1) % n]);
+            a[0] * b[1] - b[0] * a[1]
+        })
+        .sum()
 }
 
 /// The area centroid of a simple ring.
@@ -59,7 +60,10 @@ pub fn centroid(r: &[Pt]) -> Pt {
     let o = r[0];
     let (mut a2, mut cx, mut cy) = (0.0, 0.0, 0.0);
     for k in 0..n {
-        let (p, q) = ([r[k][0] - o[0], r[k][1] - o[1]], [r[(k + 1) % n][0] - o[0], r[(k + 1) % n][1] - o[1]]);
+        let (p, q) = (
+            [r[k][0] - o[0], r[k][1] - o[1]],
+            [r[(k + 1) % n][0] - o[0], r[(k + 1) % n][1] - o[1]],
+        );
         let c = p[0] * q[1] - q[0] * p[1];
         a2 += c;
         cx += (p[0] + q[0]) * c;
@@ -87,7 +91,13 @@ fn clip(poly: &[Pt], n: Pt, c: f64) -> Vec<Pt> {
 }
 
 fn area_of(ring: &[Pt]) -> Area {
-    Area { outer: Ring { pts: ring.iter().map(|p| Vec2::new(p[0], p[1])).collect(), bulges: None }, holes: Vec::new() }
+    Area {
+        outer: Ring {
+            pts: ring.iter().map(|p| Vec2::new(p[0], p[1])).collect(),
+            bulges: None,
+        },
+        holes: Vec::new(),
+    }
 }
 
 /// The ring tidied (module's rule): closing repeat and collinear corners dropped, turned `ccw` or not, started at its
@@ -107,7 +117,10 @@ pub fn tidy(ring: &[Pt], ccw: bool, tol: f64) -> Vec<Pt> {
             let (a, b, c) = (r[(k + n - 1) % n], r[k], r[(k + 1) % n]);
             let (u, v) = ([b[0] - a[0], b[1] - a[1]], [c[0] - b[0], c[1] - b[1]]);
             let cross = u[0] * v[1] - u[1] * v[0];
-            let len = crate::jsmath::js_max(crate::jsmath::js_hypot(u[0], u[1]), crate::jsmath::js_hypot(v[0], v[1]));
+            let len = crate::jsmath::js_max(
+                crate::jsmath::js_hypot(u[0], u[1]),
+                crate::jsmath::js_hypot(v[0], v[1]),
+            );
             cross.abs() <= tol * len || crate::jsmath::js_hypot(u[0], u[1]) <= tol
         });
         match drop {
@@ -120,7 +133,11 @@ pub fn tidy(ring: &[Pt], ccw: bool, tol: f64) -> Vec<Pt> {
     if (signed2(&r) > 0.0) != ccw {
         r.reverse();
     }
-    if let Some(s) = (0..r.len()).min_by(|&a, &b| r[a][1].total_cmp(&r[b][1]).then(r[a][0].total_cmp(&r[b][0]))) {
+    if let Some(s) = (0..r.len()).min_by(|&a, &b| {
+        r[a][1]
+            .total_cmp(&r[b][1])
+            .then(r[a][0].total_cmp(&r[b][0]))
+    }) {
         r.rotate_left(s);
     }
     r
@@ -129,8 +146,15 @@ pub fn tidy(ring: &[Pt], ccw: bool, tol: f64) -> Vec<Pt> {
 /// The network of `footprints` (convex, counter-clockwise, at least three corners each); `tol` the length below which
 /// two corners are one (10⁻⁶ of the coordinates' size is the caller's).
 pub fn network(footprints: &[Vec<Pt>], tol: f64) -> Network {
-    let o = footprints.first().and_then(|f| f.first()).copied().unwrap_or([0.0, 0.0]);
-    let local: Vec<Vec<Pt>> = footprints.iter().map(|f| f.iter().map(|p| [p[0] - o[0], p[1] - o[1]]).collect()).collect();
+    let o = footprints
+        .first()
+        .and_then(|f| f.first())
+        .copied()
+        .unwrap_or([0.0, 0.0]);
+    let local: Vec<Vec<Pt>> = footprints
+        .iter()
+        .map(|f| f.iter().map(|p| [p[0] - o[0], p[1] - o[1]]).collect())
+        .collect();
     let centres: Vec<Pt> = local.iter().map(|f| centroid(f)).collect();
     let mut elements = Vec::new();
     for (i, fi) in local.iter().enumerate() {
@@ -155,22 +179,46 @@ pub fn network(footprints: &[Vec<Pt>], tol: f64) -> Network {
         }
         let rest = subtract_areas(&[area_of(fi)], &cutters);
         let ring = |r: &Ring, ccw: bool| -> Vec<Pt> {
-            tidy(&r.pts.iter().map(|v| [v.x + o[0], v.y + o[1]]).collect::<Vec<_>>(), ccw, tol)
+            tidy(
+                &r.pts
+                    .iter()
+                    .map(|v| [v.x + o[0], v.y + o[1]])
+                    .collect::<Vec<_>>(),
+                ccw,
+                tol,
+            )
         };
         let mut parts: Vec<Part> = rest
             .iter()
-            .map(|a| Part { ring: ring(&a.outer, true), holes: a.holes.iter().map(|h| ring(h, false)).collect() })
+            .map(|a| Part {
+                ring: ring(&a.outer, true),
+                holes: a.holes.iter().map(|h| ring(h, false)).collect(),
+            })
             .filter(|p| p.ring.len() >= 3)
             .collect();
         for p in &mut parts {
             p.holes.retain(|h| h.len() >= 3);
-            p.holes.sort_by(|a, b| a[0][1].total_cmp(&b[0][1]).then(a[0][0].total_cmp(&b[0][0])));
+            p.holes.sort_by(|a, b| {
+                a[0][1]
+                    .total_cmp(&b[0][1])
+                    .then(a[0][0].total_cmp(&b[0][0]))
+            });
         }
-        parts.sort_by(|a, b| a.ring[0][1].total_cmp(&b.ring[0][1]).then(a.ring[0][0].total_cmp(&b.ring[0][0])));
+        parts.sort_by(|a, b| {
+            a.ring[0][1]
+                .total_cmp(&b.ring[0][1])
+                .then(a.ring[0][0].total_cmp(&b.ring[0][0]))
+        });
         let area = parts
             .iter()
             .map(|p| {
-                let rel = |r: &[Pt]| signed2(&r.iter().map(|q| [q[0] - o[0], q[1] - o[1]]).collect::<Vec<_>>()) / 2.0;
+                let rel = |r: &[Pt]| {
+                    signed2(
+                        &r.iter()
+                            .map(|q| [q[0] - o[0], q[1] - o[1]])
+                            .collect::<Vec<_>>(),
+                    ) / 2.0
+                };
                 rel(&p.ring) + p.holes.iter().map(|h| rel(h)).sum::<f64>()
             })
             .sum();
@@ -180,7 +228,10 @@ pub fn network(footprints: &[Vec<Pt>], tol: f64) -> Network {
     for (i, e) in elements.iter().enumerate() {
         for p in &e.parts {
             for q in p.ring.iter().chain(p.holes.iter().flatten()) {
-                match corners.iter_mut().find(|(at, _)| (at[0] - q[0]).abs() <= tol && (at[1] - q[1]).abs() <= tol) {
+                match corners
+                    .iter_mut()
+                    .find(|(at, _)| (at[0] - q[0]).abs() <= tol && (at[1] - q[1]).abs() <= tol)
+                {
                     Some((_, who)) => {
                         if !who.contains(&i) {
                             who.push(i);
@@ -200,13 +251,22 @@ pub fn network(footprints: &[Vec<Pt>], tol: f64) -> Network {
         })
         .collect();
     junctions.sort_by(|a, b| a.0[1].total_cmp(&b.0[1]).then(a.0[0].total_cmp(&b.0[0])));
-    Network { elements, junctions }
+    Network {
+        elements,
+        junctions,
+    }
 }
 
 /// The valid pixels' outline (module's rule): rings of pixel corners (column, row), outer rings clockwise in (column,
 /// row), holes anticlockwise; and whether each is a hole.
 pub fn outline(valid: &[bool], w: usize, h: usize) -> Vec<(Vec<[i64; 2]>, bool)> {
-    let at = |c: i64, r: i64| c >= 0 && r >= 0 && (c as usize) < w && (r as usize) < h && valid[r as usize * w + c as usize];
+    let at = |c: i64, r: i64| {
+        c >= 0
+            && r >= 0
+            && (c as usize) < w
+            && (r as usize) < h
+            && valid[r as usize * w + c as usize]
+    };
     // Directed edges with the valid pixel on the right (rows down): top edge left→right, right edge down, bottom right→
     // left, left edge up.
     let mut out_of: HashMap<[i64; 2], Vec<[i64; 2]>> = HashMap::new();
@@ -249,7 +309,10 @@ pub fn outline(valid: &[bool], w: usize, h: usize) -> Vec<(Vec<[i64; 2]>, bool)>
                 // (−dy, dx).
                 let right = [-d[1], d[0]];
                 let k = if choices.len() > 1 {
-                    choices.iter().position(|q| [q[0] - cur[0], q[1] - cur[1]] == right).unwrap_or(0)
+                    choices
+                        .iter()
+                        .position(|q| [q[0] - cur[0], q[1] - cur[1]] == right)
+                        .unwrap_or(0)
                 } else {
                     0
                 };
@@ -275,7 +338,9 @@ pub fn outline(valid: &[bool], w: usize, h: usize) -> Vec<(Vec<[i64; 2]>, bool)>
                 }
             }
             // Clockwise in (column, row) with rows down is a positive shoelace in those numbers: an outer ring.
-            let s2: i64 = (0..t.len()).map(|k| t[k][0] * t[(k + 1) % t.len()][1] - t[(k + 1) % t.len()][0] * t[k][1]).sum();
+            let s2: i64 = (0..t.len())
+                .map(|k| t[k][0] * t[(k + 1) % t.len()][1] - t[(k + 1) % t.len()][0] * t[k][1])
+                .sum();
             (t, s2 < 0)
         })
         .collect()
@@ -287,7 +352,10 @@ pub fn hull(valid: &[bool], w: usize, h: usize) -> Vec<[i64; 2]> {
     let mut pts: Vec<[i64; 2]> = Vec::new();
     for r in 0..h {
         let row = &valid[r * w..(r + 1) * w];
-        let (Some(first), Some(last)) = (row.iter().position(|v| *v), row.iter().rposition(|v| *v)) else { continue };
+        let (Some(first), Some(last)) = (row.iter().position(|v| *v), row.iter().rposition(|v| *v))
+        else {
+            continue;
+        };
         for c in [first, last + 1] {
             pts.push([c as i64, r as i64]);
             pts.push([c as i64, r as i64 + 1]);
@@ -298,7 +366,9 @@ pub fn hull(valid: &[bool], w: usize, h: usize) -> Vec<[i64; 2]> {
     if pts.len() < 3 {
         return pts;
     }
-    let cross = |o: [i64; 2], a: [i64; 2], b: [i64; 2]| (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]);
+    let cross = |o: [i64; 2], a: [i64; 2], b: [i64; 2]| {
+        (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+    };
     let mut lower: Vec<[i64; 2]> = Vec::new();
     for &p in &pts {
         while lower.len() >= 2 && cross(lower[lower.len() - 2], lower[lower.len() - 1], p) <= 0 {
@@ -340,7 +410,9 @@ mod tests {
     #[test]
     fn the_outline_keeps_holes_and_diagonal_pixels_apart() {
         // 4 × 3: a ring of valid pixels round one hole, and a lone pixel touching it only at a corner.
-        let v = [true, true, true, false, true, false, true, false, true, true, true, false];
+        let v = [
+            true, true, true, false, true, false, true, false, true, true, true, false,
+        ];
         let mut v2 = v.to_vec();
         v2.extend([false, false, false, true]);
         let rings = outline(&v2, 4, 4);

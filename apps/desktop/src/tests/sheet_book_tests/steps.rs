@@ -189,7 +189,9 @@ fn transaction_screens() {
         // when the book's three items and the UI tree are still present.
         let red = image
             .rgba
-            .as_chunks::<4>().0.iter()
+            .as_chunks::<4>()
+            .0
+            .iter()
             .filter(|p| p[0] > 150 && p[1] < 70 && p[2] < 70 && p[3] > 200)
             .count();
         assert!(
@@ -362,8 +364,8 @@ fn sheet08_analytic_paper_screens() {
     model.set_sheets(sheets).unwrap();
     let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).unwrap();
-    let pdf=kentos_plot::book::book_pdf(&model,&[],"Test","2026-10-22").unwrap();
-    std::fs::write(out.join("sheet08-curves.pdf"),pdf.bytes).unwrap();
+    let pdf = kentos_plot::book::book_pdf(&model, &[], "Test", "2026-10-22").unwrap();
+    std::fs::write(out.join("sheet08-curves.pdf"), pdf.bytes).unwrap();
     for (theme, text, width, height) in [
         ("light", 13, 1440., 900.),
         ("dark", 13, 1440., 900.),
@@ -387,11 +389,24 @@ fn sheet08_analytic_paper_screens() {
         sheet(&mut app, Sheet::ZoomPage);
         snap.settle(&mut app, App::view, &mut update);
         let image = snap.render(app.view(), &app.theme());
-        let(x0,y0,x1,y1,least)=if text==13{(301,222,1094,783,2000)}else{(328,250,734,537,400)};
-        let mut blue=0;
-        for y in y0..y1{for x in x0..x1{let at=(y*width as usize+x)*4;let p=&image.rgba[at..at+4];if p[2]>90&&p[0]<70&&p[1]<120{blue+=1;}}}
-        let path=out.join(format!("sheet08-curves-{theme}-{text}.png"));image.save(&path).unwrap();
-        assert!(blue>least,"{theme}-{text}: missing curves {blue}");
+        let (x0, y0, x1, y1, least) = if text == 13 {
+            (301, 222, 1094, 783, 2000)
+        } else {
+            (328, 250, 734, 537, 400)
+        };
+        let mut blue = 0;
+        for y in y0..y1 {
+            for x in x0..x1 {
+                let at = (y * width as usize + x) * 4;
+                let p = &image.rgba[at..at + 4];
+                if p[2] > 90 && p[0] < 70 && p[1] < 120 {
+                    blue += 1;
+                }
+            }
+        }
+        let path = out.join(format!("sheet08-curves-{theme}-{text}.png"));
+        image.save(&path).unwrap();
+        assert!(blue > least, "{theme}-{text}: missing curves {blue}");
         println!("{}", path.display());
     }
 }
@@ -512,10 +527,24 @@ fn sheet09_viewport_screens() {
         snap.settle(&mut app, App::view, &mut update);
         let path = out.join(format!("sheet09-viewport-{theme}-{text}.png"));
         let image = snap.render(app.view(), &app.theme());
-        let (x0,y0,x1,y1,least)=if text==13{(560,340,855,570,900)}else{(458,310,615,430,400)};
-        let mut ink=0;
-        for y in y0..y1{for x in x0..x1{let at=(y*width as usize+x)*4;if image.rgba[at..at+3].iter().all(|c|*c<220){ink+=1;}}}
-        assert!(ink>least,"{theme}-{text}: viewport geometry missing ({ink})");
+        let (x0, y0, x1, y1, least) = if text == 13 {
+            (560, 340, 855, 570, 900)
+        } else {
+            (458, 310, 615, 430, 400)
+        };
+        let mut ink = 0;
+        for y in y0..y1 {
+            for x in x0..x1 {
+                let at = (y * width as usize + x) * 4;
+                if image.rgba[at..at + 3].iter().all(|c| *c < 220) {
+                    ink += 1;
+                }
+            }
+        }
+        assert!(
+            ink > least,
+            "{theme}-{text}: viewport geometry missing ({ink})"
+        );
         image.save(&path).unwrap();
         println!("{}", path.display());
         if theme == "light" {
@@ -794,18 +823,39 @@ fn sheet11_exact_scale_screens() {
         );
         image.save(&path).unwrap();
         println!("{}", path.display());
-        if text==18 {
-            snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Scroll(iced::Point::new(width-100.,height-140.),-9.));
-            snap.render(app.view(),&app.theme()).save(out.join("sheet11-exact-scale-dark-18-scrolled.png")).unwrap();
+        if text == 18 {
+            snap.input(
+                &mut app,
+                App::view,
+                &mut update,
+                kentos_ui::snapshot::Input::Scroll(
+                    iced::Point::new(width - 100., height - 140.),
+                    -9.,
+                ),
+            );
+            snap.render(app.view(), &app.theme())
+                .save(out.join("sheet11-exact-scale-dark-18-scrolled.png"))
+                .unwrap();
         }
-        if theme=="light" {
-            let before=app.sheets.book().clone();
-            snap.input(&mut app,App::view,&mut update,kentos_ui::snapshot::Input::Click(iced::Point::new(1150.,357.)));
-            let item=app.sheets.book().item(&map).unwrap();
-            let kentos_sheet::ItemKind::Map(m)=&item.kind else{panic!()};
-            assert!(m.view_locked,"a real mouse press locks the viewport");
-            let kentos_sheet::MapView::Fixed(v)=&m.view else{panic!()};assert_eq!(v.denominator(),37.123456789123);
-            sheet(&mut app,Sheet::Undo);assert_eq!(app.sheets.book(),&before);
+        if theme == "light" {
+            let before = app.sheets.book().clone();
+            snap.input(
+                &mut app,
+                App::view,
+                &mut update,
+                kentos_ui::snapshot::Input::Click(iced::Point::new(1150., 357.)),
+            );
+            let item = app.sheets.book().item(&map).unwrap();
+            let kentos_sheet::ItemKind::Map(m) = &item.kind else {
+                panic!()
+            };
+            assert!(m.view_locked, "a real mouse press locks the viewport");
+            let kentos_sheet::MapView::Fixed(v) = &m.view else {
+                panic!()
+            };
+            assert_eq!(v.denominator(), 37.123456789123);
+            sheet(&mut app, Sheet::Undo);
+            assert_eq!(app.sheets.book(), &before);
         }
         if theme == "light" {
             let pdf = kentos_plot::book::book_pdf(

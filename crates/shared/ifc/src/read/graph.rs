@@ -11,7 +11,9 @@ use ifc_lite_core::{AttributeValue, DecodedEntity, EntityDecoder, EntityScanner,
 use super::checks::{cycles, global_ids, placement_cycles};
 use super::scan::{CANCEL_EVERY, Lines, Scanned, references};
 use super::units::{location, units};
-use super::{Family, Finding, Header, Limits, Model, Object, ReadError, Relation, Severity, Summary, header};
+use super::{
+    Family, Finding, Header, Limits, Model, Object, ReadError, Relation, Severity, Summary, header,
+};
 
 /// The most findings of one kind kept with their lines; the rest are counted.
 const KEEP: usize = 100;
@@ -32,9 +34,20 @@ enum Role {
 #[derive(Debug, Clone)]
 enum Kind {
     /// `outside`: not a product nor the project (a type, a group, an actor…), never in the spatial tree.
-    Object { class: String, at: [Option<usize>; 8], outside: bool },
-    Relation { class: String, relating: Option<usize>, related: Vec<usize>, role: Role },
-    Placement { rel_to: Option<usize> },
+    Object {
+        class: String,
+        at: [Option<usize>; 8],
+        outside: bool,
+    },
+    Relation {
+        class: String,
+        relating: Option<usize>,
+        related: Vec<usize>,
+        role: Role,
+    },
+    Placement {
+        rel_to: Option<usize>,
+    },
     Project,
     MapConversion,
     Other,
@@ -43,8 +56,16 @@ enum Kind {
 
 /// The object attributes the face reads, in this order: GlobalId, Name, Description, ObjectType (ElementType on a
 /// type), LongName, Tag, PredefinedType, Representation.
-const OBJECT_ATTRS: [&str; 8] =
-    ["GlobalId", "Name", "Description", "ObjectType", "LongName", "Tag", "PredefinedType", "Representation"];
+const OBJECT_ATTRS: [&str; 8] = [
+    "GlobalId",
+    "Name",
+    "Description",
+    "ObjectType",
+    "LongName",
+    "Tag",
+    "PredefinedType",
+    "Representation",
+];
 
 fn kind_of(schema: SchemaVersion, keyword: &str) -> Kind {
     if schema.entity_info(keyword).is_none() {
@@ -62,10 +83,16 @@ fn kind_of(schema: SchemaVersion, keyword: &str) -> Kind {
     if sub("IfcObjectDefinition") {
         // The spatial tree holds the project and products; types, groups, actors, processes, resources and controls
         // are assigned, not placed.
-        return object(class, &at, !(sub("IfcProduct") || sub("IfcContext"))).unwrap_or(Kind::Other);
+        return object(class, &at, !(sub("IfcProduct") || sub("IfcContext")))
+            .unwrap_or(Kind::Other);
     }
     if sub("IfcRelationship") {
-        let related = names.iter().enumerate().filter(|(_, a)| a.starts_with("Related")).map(|(i, _)| i).collect();
+        let related = names
+            .iter()
+            .enumerate()
+            .filter(|(_, a)| a.starts_with("Related"))
+            .map(|(i, _)| i)
+            .collect();
         let role = if sub("IfcRelAggregates") || sub("IfcRelNests") {
             Role::Parts
         } else if sub("IfcRelContainedInSpatialStructure") {
@@ -87,7 +114,9 @@ fn kind_of(schema: SchemaVersion, keyword: &str) -> Kind {
         };
     }
     if sub("IfcObjectPlacement") {
-        return Kind::Placement { rel_to: at("PlacementRelTo") };
+        return Kind::Placement {
+            rel_to: at("PlacementRelTo"),
+        };
     }
     if sub("IfcMapConversion") || keyword.eq_ignore_ascii_case("IfcMapConversion") {
         return Kind::MapConversion;
@@ -102,7 +131,11 @@ fn object(class: String, at: &dyn Fn(&str) -> Option<usize>, outside: bool) -> O
         i[3] = at("ElementType");
     }
     i[0]?;
-    Some(Kind::Object { class, at: i, outside })
+    Some(Kind::Object {
+        class,
+        at: i,
+        outside,
+    })
 }
 
 /// The second pass and what follows it.
@@ -117,7 +150,10 @@ pub(super) fn build(
     scanned: Scanned,
 ) -> Result<Model, ReadError> {
     let version = header::version(family);
-    let Scanned { index, mut findings } = scanned;
+    let Scanned {
+        index,
+        mut findings,
+    } = scanned;
     let index = Arc::new(index);
     let mut decoder = EntityDecoder::with_arc_index(bytes, index.clone());
     let mut classes_seen: HashMap<String, usize> = HashMap::new();
@@ -187,7 +223,11 @@ pub(super) fn build(
         };
         match &kinds[k] {
             Kind::Object { class, at, outside } => {
-                let text = |i: Option<usize>| i.and_then(|i| e.get(i)).and_then(AttributeValue::as_string).map(str::to_owned);
+                let text = |i: Option<usize>| {
+                    i.and_then(|i| e.get(i))
+                        .and_then(AttributeValue::as_string)
+                        .map(str::to_owned)
+                };
                 if class == "IfcProject" {
                     project = Some(id);
                 }
@@ -202,21 +242,36 @@ pub(super) fn build(
                     object_type: text(at[3]),
                     long_name: text(at[4]),
                     tag: text(at[5]),
-                    predefined: at[6].and_then(|i| e.get(i)).and_then(AttributeValue::as_enum).map(str::to_owned),
+                    predefined: at[6]
+                        .and_then(|i| e.get(i))
+                        .and_then(AttributeValue::as_enum)
+                        .map(str::to_owned),
                     parent: None,
                     container: None,
                     reference: None,
                     type_object: None,
                     children: Vec::new(),
-                    has_shape: at[7].and_then(|i| e.get(i)).is_some_and(|v| v.as_entity_ref().is_some()),
+                    has_shape: at[7]
+                        .and_then(|i| e.get(i))
+                        .is_some_and(|v| v.as_entity_ref().is_some()),
                 });
             }
-            Kind::Relation { class, relating, related, role } => {
+            Kind::Relation {
+                class,
+                relating,
+                related,
+                role,
+            } => {
                 let mut out = Vec::new();
                 for &i in related {
                     match e.get(i) {
                         Some(v) if v.as_entity_ref().is_some() => out.extend(v.as_entity_ref()),
-                        Some(v) => out.extend(v.as_list().unwrap_or(&[]).iter().filter_map(AttributeValue::as_entity_ref)),
+                        Some(v) => out.extend(
+                            v.as_list()
+                                .unwrap_or(&[])
+                                .iter()
+                                .filter_map(AttributeValue::as_entity_ref),
+                        ),
                         None => {}
                     }
                 }
@@ -225,13 +280,18 @@ pub(super) fn build(
                 relations.push(Relation {
                     step: id,
                     class: class.clone(),
-                    relating: relating.and_then(|i| e.get(i)).and_then(AttributeValue::as_entity_ref),
+                    relating: relating
+                        .and_then(|i| e.get(i))
+                        .and_then(AttributeValue::as_entity_ref),
                     related: out,
                 });
             }
             Kind::Placement { rel_to } => {
                 line_of.insert(id, line);
-                if let Some(to) = rel_to.and_then(|i| e.get(i)).and_then(AttributeValue::as_entity_ref) {
+                if let Some(to) = rel_to
+                    .and_then(|i| e.get(i))
+                    .and_then(AttributeValue::as_entity_ref)
+                {
                     placements.insert(id, to);
                 }
             }
@@ -240,7 +300,11 @@ pub(super) fn build(
             Kind::Other | Kind::Unknown => {}
         }
     }
-    missing.close(&mut findings, "reference_missing_more", "kayıt olmayan kayıtlara başvuruyor");
+    missing.close(
+        &mut findings,
+        "reference_missing_more",
+        "kayıt olmayan kayıtlara başvuruyor",
+    );
     unreadable.close(&mut findings, "record_unreadable_more", "kayıt okunamadı");
     for (keyword, (count, line)) in &unknown {
         findings.push(Finding {
@@ -253,8 +317,19 @@ pub(super) fn build(
             ),
         });
     }
-    let by_step: HashMap<u32, usize> = objects.iter().enumerate().map(|(i, o)| (o.step, i)).collect();
-    let voiding = tree(&mut objects, &relations, &roles, &by_step, &line_of, &mut findings);
+    let by_step: HashMap<u32, usize> = objects
+        .iter()
+        .enumerate()
+        .map(|(i, o)| (o.step, i))
+        .collect();
+    let voiding = tree(
+        &mut objects,
+        &relations,
+        &roles,
+        &by_step,
+        &line_of,
+        &mut findings,
+    );
     // An element or a zone a structure references (and openings voiding a host) is in the tree through that, not a
     // root of it.
     let inverse = inverse(&relations);
@@ -271,19 +346,34 @@ pub(super) fn build(
     for o in &objects {
         *classes.entry(o.class.clone()).or_insert(0) += 1;
     }
-    let units = project.map(|p| units(&mut decoder, version, p)).unwrap_or_default();
-    let location = conversions.first().and_then(|&c| location(&mut decoder, version, c));
+    let units = project
+        .map(|p| units(&mut decoder, version, p))
+        .unwrap_or_default();
+    let location = conversions
+        .first()
+        .and_then(|&c| location(&mut decoder, version, c));
     if conversions.len() > 1 {
         findings.push(Finding {
             code: "map_conversion_many",
             severity: Severity::Warning,
             step: conversions.get(1).copied(),
             line: conversions.get(1).and_then(|c| line_of.get(c)).copied(),
-            message: format!("Dosyada {} harita dönüşümü var; ilki gösterildi.", conversions.len()),
+            message: format!(
+                "Dosyada {} harita dönüşümü var; ilki gösterildi.",
+                conversions.len()
+            ),
         });
     }
     Ok(Model {
-        summary: Summary { schema, family, header, records: index.len(), classes, units, location },
+        summary: Summary {
+            schema,
+            family,
+            header,
+            records: index.len(),
+            classes,
+            units,
+            location,
+        },
         objects,
         relations,
         roots,
@@ -335,7 +425,13 @@ fn tree(
 ) -> HashSet<u32> {
     let mut voiding = HashSet::new();
     // Parts first, then what is contained, so a structure's children list its parts before its elements.
-    for pass in [Role::Parts, Role::Contains, Role::Types, Role::Voids, Role::References] {
+    for pass in [
+        Role::Parts,
+        Role::Contains,
+        Role::Types,
+        Role::Voids,
+        Role::References,
+    ] {
         for (r, role) in relations.iter().zip(roles) {
             if *role != pass {
                 continue;
@@ -357,7 +453,9 @@ fn tree(
                 }
                 continue;
             }
-            let Some(&up) = r.relating.as_ref().and_then(|s| by_step.get(s)) else { continue };
+            let Some(&up) = r.relating.as_ref().and_then(|s| by_step.get(s)) else {
+                continue;
+            };
             for s in &r.related {
                 let Some(&c) = by_step.get(s) else { continue };
                 let slot = match pass {
@@ -411,9 +509,12 @@ fn inverse(relations: &[Relation]) -> HashMap<u32, Vec<usize>> {
 }
 
 /// An attribute of a decoded record by its name in the file's schema; none when it is unset.
-pub(super) fn named<'e>(schema: SchemaVersion, e: &'e DecodedEntity, name: &str) -> Option<&'e AttributeValue> {
+pub(super) fn named<'e>(
+    schema: SchemaVersion,
+    e: &'e DecodedEntity,
+    name: &str,
+) -> Option<&'e AttributeValue> {
     let names = schema.attribute_names(e.ifc_type.name())?;
     let i = names.iter().position(|a| a.eq_ignore_ascii_case(name))?;
     e.get(i).filter(|v| !v.is_null())
 }
-

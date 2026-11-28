@@ -19,7 +19,13 @@ fn a_room_before_the_works_is_bounded_by_what_stands_then_and_a_new_room_by_what
     assert!(!phase_bounds(Some(New), Some(Demolish)));
     assert!(!phase_bounds(Some(New), Some(Temporary)));
     // Without a phase on either side, or a temporary room: every source, as before.
-    for p in [None, Some(Existing), Some(Demolish), Some(New), Some(Temporary)] {
+    for p in [
+        None,
+        Some(Existing),
+        Some(Demolish),
+        Some(New),
+        Some(Temporary),
+    ] {
         assert!(phase_bounds(None, p));
         assert!(phase_bounds(Some(Temporary), p));
         assert!(phase_bounds(p, None));

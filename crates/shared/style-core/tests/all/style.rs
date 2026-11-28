@@ -135,8 +135,15 @@ fn whole_layers_as_frozen() {
                 }
                 b
             };
-            assert_eq!(spans(&batches), spans(&c["batches"]), "katman {i}: topluluklar");
-            rewritten.push((out.data.clone(), (batches != c["batches"]).then_some(batches)));
+            assert_eq!(
+                spans(&batches),
+                spans(&c["batches"]),
+                "katman {i}: topluluklar"
+            );
+            rewritten.push((
+                out.data.clone(),
+                (batches != c["batches"]).then_some(batches),
+            ));
             numbers_checked += want.len();
             continue;
         }
@@ -163,7 +170,10 @@ fn whole_layers_as_frozen() {
 /// A case whose fill was triangulated otherwise (docs/adr/9228) also has its batches' `from` and `len` written anew,
 /// and its numbers between the first and the last that differ.
 fn write_layer_numbers(layers: &[(Vec<f32>, Option<Json>)]) {
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../fixtures/style/v1/cases.json");
+    let path = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../../fixtures/style/v1/cases.json"
+    );
     let text = std::fs::read_to_string(path).unwrap_or_else(|e| panic!("{path}: {e}"));
     let start = text.find("\n \"layers\": [\n").expect("the layers' list");
     let (head, rest) = text.split_at(start);
@@ -173,7 +183,10 @@ fn write_layer_numbers(layers: &[(Vec<f32>, Option<Json>)]) {
     let mut changed = 0;
     let mut spans = 0;
     for line in rest.split_inclusive('\n') {
-        let Some(at) = line.find("\"data\":[").filter(|_| line.trim_start().starts_with('{') && case < layers.len()) else {
+        let Some(at) = line
+            .find("\"data\":[")
+            .filter(|_| line.trim_start().starts_with('{') && case < layers.len())
+        else {
             out.push_str(line);
             continue;
         };
@@ -183,12 +196,28 @@ fn write_layer_numbers(layers: &[(Vec<f32>, Option<Json>)]) {
             line = write_spans(&line, batches, case);
             spans += 1;
         }
-        let at = if batches.is_some() { line.find("\"data\":[").expect("the data") } else { at };
+        let at = if batches.is_some() {
+            line.find("\"data\":[").expect("the data")
+        } else {
+            at
+        };
         let open = at + "\"data\":[".len();
         let close = open + line[open..].find(']').expect("the data's end");
-        let old: Vec<&str> = if close > open { line[open..close].split(',').collect() } else { Vec::new() };
-        let bits = |was: &str| (num(&serde_json::from_str::<Json>(was).expect("a number")) as f32).to_bits();
-        let text_of = |now: f32| if now.is_nan() { "\"NaN\"".to_owned() } else { format!("{now}") };
+        let old: Vec<&str> = if close > open {
+            line[open..close].split(',').collect()
+        } else {
+            Vec::new()
+        };
+        let bits = |was: &str| {
+            (num(&serde_json::from_str::<Json>(was).expect("a number")) as f32).to_bits()
+        };
+        let text_of = |now: f32| {
+            if now.is_nan() {
+                "\"NaN\"".to_owned()
+            } else {
+                format!("{now}")
+            }
+        };
         let new: Vec<String> = if old.len() == data.len() {
             old.iter()
                 .zip(data)
@@ -203,7 +232,11 @@ fn write_layer_numbers(layers: &[(Vec<f32>, Option<Json>)]) {
                 .collect()
         } else {
             // The same numbers before the first difference and after the last kept as they were written.
-            let first = old.iter().zip(data).take_while(|(was, now)| bits(was) == now.to_bits()).count();
+            let first = old
+                .iter()
+                .zip(data)
+                .take_while(|(was, now)| bits(was) == now.to_bits())
+                .count();
             let last = old
                 .iter()
                 .rev()
@@ -234,20 +267,32 @@ fn write_layer_numbers(layers: &[(Vec<f32>, Option<Json>)]) {
 fn write_spans(line: &str, batches: &Json, case: usize) -> String {
     let list = batches.as_array().expect("batches");
     let start = line.find("\"batches\":[").expect("the batches");
-    let end = start + line[start..].find(",\"data\":[").expect("the data after the batches");
+    let end = start
+        + line[start..]
+            .find(",\"data\":[")
+            .expect("the data after the batches");
     let mut part = line[start..end].to_owned();
     let mut at = 0;
     for b in list {
         for key in ["from", "len"] {
             let mark = format!("\"{key}\":");
-            let k = at + part[at..].find(&mark).unwrap_or_else(|| panic!("katman {case}: {key}"));
+            let k = at
+                + part[at..]
+                    .find(&mark)
+                    .unwrap_or_else(|| panic!("katman {case}: {key}"));
             let v = k + mark.len();
             let stop = v + part[v..].find([',', '}']).expect("the number's end");
-            let now = b[key].as_u64().unwrap_or_else(|| panic!("katman {case}: {key}")).to_string();
+            let now = b[key]
+                .as_u64()
+                .unwrap_or_else(|| panic!("katman {case}: {key}"))
+                .to_string();
             part.replace_range(v..stop, &now);
             at = v + now.len();
         }
     }
-    assert!(!part[at..].contains("\"from\":") && !part[at..].contains("\"len\":"), "katman {case}: spans");
+    assert!(
+        !part[at..].contains("\"from\":") && !part[at..].contains("\"len\":"),
+        "katman {case}: spans"
+    );
     format!("{}{}{}", &line[..start], part, &line[end..])
 }

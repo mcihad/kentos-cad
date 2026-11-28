@@ -6,8 +6,9 @@
 //! `fixtures/commands/v1/cad.navigator.read.json`.
 
 use kentos_commands::{
-    AffectReason, CommandResult, Entity, NamedView, NavLevel, NavMap, NavObject, NavSchedule, NavSheet,
-    NavSheetMap, NavView, NavigatorRead, NavigatorReadResult, SheetsSet, TableSource, view_key,
+    AffectReason, CommandResult, Entity, NamedView, NavLevel, NavMap, NavObject, NavSchedule,
+    NavSheet, NavSheetMap, NavView, NavigatorRead, NavigatorReadResult, SheetsSet, TableSource,
+    view_key,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geometry::Bounds;
@@ -23,7 +24,12 @@ use crate::sheets_set::{recipe_draws, set_of};
 fn view_box(v: &NamedView) -> [f64; 4] {
     let (s, c) = v.twist.sin_cos();
     let (hw, hh) = (v.width / 2.0, v.height / 2.0);
-    let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     for (x, y) in [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)] {
         let (px, py) = (v.center.x + x * c - y * s, v.center.y + x * s + y * c);
         b = [b[0].min(px), b[1].min(py), b[2].max(px), b[3].max(py)];
@@ -45,7 +51,10 @@ pub(crate) fn read(doc: &Document, input: &NavigatorRead) -> Result<NavigatorRea
     let object = match &input.uid {
         None => None,
         Some(uid) => {
-            let found = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
+            let found = Uuid::parse_str(uid)
+                .ok()
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s));
             let Some(e) = found else {
                 return Err(Stop::failed(error(
                     codes::ENTITY_NOT_FOUND,
@@ -65,8 +74,18 @@ pub(crate) fn read(doc: &Document, input: &NavigatorRead) -> Result<NavigatorRea
             ..Default::default()
         },
     )?;
-    let by_uid = |u: &str| Uuid::parse_str(u).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
-    let levels_of = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
+    let by_uid = |u: &str| {
+        Uuid::parse_str(u)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+            .and_then(|s| doc.get(s))
+    };
+    let levels_of = doc
+        .settings()
+        .arch
+        .as_ref()
+        .map(|a| a.levels.clone())
+        .unwrap_or_default();
     let known = |id: &str| levels_of.iter().any(|l| l.id == id);
     let views = &doc.settings().drawn_views();
 
@@ -74,7 +93,10 @@ pub(crate) fn read(doc: &Document, input: &NavigatorRead) -> Result<NavigatorRea
     let mut counts = vec![0u32; levels_of.len()];
     let mut unleveled = 0u32;
     for e in doc.entities() {
-        match e.level(by_uid).and_then(|id| levels_of.iter().position(|l| l.id == id)) {
+        match e
+            .level(by_uid)
+            .and_then(|id| levels_of.iter().position(|l| l.id == id))
+        {
             Some(i) => counts[i] += 1,
             None => unleveled += 1,
         }
@@ -119,7 +141,11 @@ pub(crate) fn read(doc: &Document, input: &NavigatorRead) -> Result<NavigatorRea
         .map(|v| {
             let key = view_key(v);
             NavView {
-                level: v.recipe.as_ref().and_then(|r| r.level.as_ref()).map(|l| l.id.clone()),
+                level: v
+                    .recipe
+                    .as_ref()
+                    .and_then(|r| r.level.as_ref())
+                    .map(|l| l.id.clone()),
                 recipe: v.recipe.as_ref().map(|r| r.version),
                 scale: v.recipe.as_ref().and_then(|r| r.scale),
                 maps: sheet_maps(&|f| f.view.as_deref() == Some(key.as_str())),
@@ -156,7 +182,9 @@ pub(crate) fn read(doc: &Document, input: &NavigatorRead) -> Result<NavigatorRea
     let mut listing: Vec<String> = Vec::new();
     for e in doc.entities() {
         let Entity::Table(t) = e else { continue };
-        let Some(TableSource::Schedule { of, members, .. }) = &t.source else { continue };
+        let Some(TableSource::Schedule { of, members, .. }) = &t.source else {
+            continue;
+        };
         let mut seen: Vec<&String> = members.iter().flatten().collect();
         seen.sort();
         seen.dedup();
@@ -236,7 +264,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &NavigatorRead) -> CommandResu
     }
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, input: &NavigatorRead) -> CommandResult<NavigatorReadResult> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &NavigatorRead,
+) -> CommandResult<NavigatorReadResult> {
     plan_in(cx.doc, input)
 }
 
@@ -252,6 +283,9 @@ pub fn plan_in(doc: &Document, input: &NavigatorRead) -> CommandResult<Navigator
 }
 
 /// Read-only: the same answer as the plan.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: NavigatorRead) -> CommandResult<NavigatorReadResult> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: NavigatorRead,
+) -> CommandResult<NavigatorReadResult> {
     plan(cx, &input)
 }

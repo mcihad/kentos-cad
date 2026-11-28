@@ -18,7 +18,9 @@ pub struct ModelDemo {
 
 impl std::fmt::Debug for ModelDemo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ModelDemo").field("viewer", &self.viewer).finish_non_exhaustive()
+        f.debug_struct("ModelDemo")
+            .field("viewer", &self.viewer)
+            .finish_non_exhaustive()
     }
 }
 
@@ -37,7 +39,13 @@ impl ModelDemo {
         let model = match read {
             Ok((m, bodies)) => {
                 let schema = m.summary.schema.clone();
-                viewer.load(ifc::view::input(NAME, &m, &bodies), vec![(schema, "Dosyanın şeması, başlığında yazdığı gibi.".to_owned())]);
+                viewer.load(
+                    ifc::view::input(NAME, &m, &bodies),
+                    vec![(
+                        schema,
+                        "Dosyanın şeması, başlığında yazdığı gibi.".to_owned(),
+                    )],
+                );
                 Some(m)
             }
             Err(e) => {
@@ -58,10 +66,17 @@ impl ModelDemo {
                     Err(e) => return Some(format!("Galeri: nesnenin özellikleri okunamadı: {e}")),
                 }
                 let o = &model.objects[object];
-                Some(format!("Galeri: model görüntüleyicide {} ({}) seçildi.", o.name.as_deref().unwrap_or("adsız"), o.class))
+                Some(format!(
+                    "Galeri: model görüntüleyicide {} ({}) seçildi.",
+                    o.name.as_deref().unwrap_or("adsız"),
+                    o.class
+                ))
             }
             Out::Chosen(None) => None,
-            Out::Cancel | Out::Close => Some("Galeri: örnekte görüntüleyici kapanmaz; uygulamada IFC modeli penceresi kapanır.".to_owned()),
+            Out::Cancel | Out::Close => Some(
+                "Galeri: örnekte görüntüleyici kapanmaz; uygulamada IFC modeli penceresi kapanır."
+                    .to_owned(),
+            ),
         }
     }
 }

@@ -310,7 +310,10 @@ impl ViewMarkFields {
         {
             return Some(("target".into(), why));
         }
-        for (f, s) in [("words.top", &self.words.top), ("words.bottom", &self.words.bottom)] {
+        for (f, s) in [
+            ("words.top", &self.words.top),
+            ("words.bottom", &self.words.bottom),
+        ] {
             if let Some(why) = words_problem(f, s, 128) {
                 return Some(why);
             }

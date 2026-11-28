@@ -159,7 +159,11 @@ fn shx_text(
     let lean = tan(style.oblique.unwrap_or(0.).to_radians());
     Ok(paths
         .into_iter()
-        .map(|p| p.into_iter().map(|[x, y]| [(x + y * lean) * width, y]).collect())
+        .map(|p| {
+            p.into_iter()
+                .map(|[x, y]| [(x + y * lean) * width, y])
+                .collect()
+        })
         .collect())
 }
 
@@ -185,7 +189,11 @@ pub(super) fn prepare(
     for e in &def.elements {
         if let Some(shape) = &e.shape {
             let file = kentos_contracts::shape_resource::source_name(&shape.file);
-            let bytes = attached(resources, &shape.file, &format!("“{}” SHX şekli", shape.name))?;
+            let bytes = attached(
+                resources,
+                &shape.file,
+                &format!("“{}” SHX şekli", shape.name),
+            )?;
             let paths = kentos_geometry_core::text::shx::ShapeFile::read(&bytes)
                 .and_then(|f| f.draw(&shape.name))
                 .map_err(|e| format!("“{}” SHX şekli (“{file}”): {e}", shape.name))?;
@@ -274,9 +282,12 @@ pub(super) fn prepare(
             lean: tan(style.and_then(|s| s.oblique).unwrap_or(0.).to_radians()),
             path: None,
         };
-        let face =
-            shaping::select_font(font.drawn().id(), if place.bold { 600 } else { 400 }, place.italic)
-                .ok_or_else(|| "Çizgi tipi yazısının font yüzü bulunamadı.".to_owned())?;
+        let face = shaping::select_font(
+            font.drawn().id(),
+            if place.bold { 600 } else { 400 },
+            place.italic,
+        )
+        .ok_or_else(|| "Çizgi tipi yazısının font yüzü bulunamadı.".to_owned())?;
         let cap = shaping::cap_em(face).map_err(|e| e.message(&text.text))?;
         let layout =
             placed::layout(&place, font, place.italic).map_err(|e| e.message(&text.text))?;
@@ -448,7 +459,10 @@ mod tests {
                 assert_eq!(&m["paths"], paths, "{text}");
                 assert_eq!(m["cap"], 1.);
                 assert_eq!(m["polygons"], json!([]));
-                assert!((m["height"].as_f64().unwrap() - 2.).abs() < 1e-12, "paper S");
+                assert!(
+                    (m["height"].as_f64().unwrap() - 2.).abs() < 1e-12,
+                    "paper S"
+                );
                 assert!((raw["cadMarks"]["period"].as_f64().unwrap() - 13.).abs() < 1e-12);
             }
         }

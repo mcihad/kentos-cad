@@ -276,7 +276,12 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
 
     /// A tab a narrow strip keeps in sight even when another is open, as the open and contextual tabs are: a module
     /// program's own tab (Mimari's Mimari), never put into the ⋯ menu (docs/adr/8005).
-    pub fn pinned_tab(mut self, label: impl IntoFragment<'a>, selected: bool, on_press: Message) -> Self {
+    pub fn pinned_tab(
+        mut self,
+        label: impl IntoFragment<'a>,
+        selected: bool,
+        on_press: Message,
+    ) -> Self {
         self.tabs.push(Tab {
             label: label.into_fragment(),
             selected,
@@ -450,18 +455,17 @@ impl<'a, Message: Clone + 'a> Ribbon<'a, Message> {
             .collect();
         if tab_viewport.is_some() {
             strip = strip.push(
-                responsive(move |size| fitted_tabs(&specs, collapsed, size.width, selected, &selected_name))
-                    .width(Fill)
-                    .height(tab_height()),
+                responsive(move |size| {
+                    fitted_tabs(&specs, collapsed, size.width, selected, &selected_name)
+                })
+                .width(Fill)
+                .height(tab_height()),
             );
         } else {
-            strip = strip.push(
-                specs
-                    .iter()
-                    .fold(iced::widget::Row::new().height(tab_height()), |row, spec| {
-                        row.push(tab_element(spec, collapsed))
-                    }),
-            );
+            strip = strip.push(specs.iter().fold(
+                iced::widget::Row::new().height(tab_height()),
+                |row, spec| row.push(tab_element(spec, collapsed)),
+            ));
         }
 
         let trailing = container(trailing.unwrap_or_else(|| space::horizontal().into()))
@@ -736,14 +740,23 @@ impl<Message> TabSpec<Message> {
     fn width(&self) -> f32 {
         let name = typography::measured_width(&self.label, typography::body(), self.selected);
         let count = self.count.as_ref().map_or(0.0, |c| {
-            4.0 + 6.0 + 10.0 + typography::measured_font_width(c, typography::caption() - 1.0, typography::mono())
+            4.0 + 6.0
+                + 10.0
+                + typography::measured_font_width(
+                    c,
+                    typography::caption() - 1.0,
+                    typography::mono(),
+                )
         });
         name + 22.0 + count
     }
 }
 
 /// A tab: its face, open or not, a contextual one's accent line and its key tip.
-fn tab_element<'a, Message: Clone + 'a>(spec: &TabSpec<Message>, collapsed: bool) -> Element<'a, Message> {
+fn tab_element<'a, Message: Clone + 'a>(
+    spec: &TabSpec<Message>,
+    collapsed: bool,
+) -> Element<'a, Message> {
     let contextual = spec.count.is_some();
     // Daraltılmış şeritte hiçbir sekme açık görünmez (web'in `data-collapsed`'i).
     let open = spec.selected && !collapsed;
@@ -795,11 +808,15 @@ fn fitted_tabs<'a, Message: Clone + 'a>(
     selected_name: &str,
 ) -> Element<'a, Message> {
     let widths: Vec<f32> = specs.iter().map(TabSpec::width).collect();
-    let keep: Vec<bool> = specs.iter().map(|s| s.selected || s.pinned || s.count.is_some()).collect();
+    let keep: Vec<bool> = specs
+        .iter()
+        .map(|s| s.selected || s.pinned || s.count.is_some())
+        .collect();
     let all = || {
-        specs
-            .iter()
-            .fold(iced::widget::Row::new().height(tab_height()), |row, spec| row.push(tab_element(spec, collapsed)))
+        specs.iter().fold(
+            iced::widget::Row::new().height(tab_height()),
+            |row, spec| row.push(tab_element(spec, collapsed)),
+        )
     };
     let shown = match tab_fit::plan(&widths, &keep, MORE_TAB, width) {
         None => return tabs::active_tabs(all().into(), selected, selected_name.to_owned()),
@@ -812,19 +829,37 @@ fn fitted_tabs<'a, Message: Clone + 'a>(
         .filter(|(_, s)| !**s)
         .map(|(spec, _)| (spec.label.clone(), spec.on_press.clone()))
         .collect();
-    let names = hidden.iter().map(|(n, _)| n.as_str()).collect::<Vec<_>>().join(", ");
+    let names = hidden
+        .iter()
+        .map(|(n, _)| n.as_str())
+        .collect::<Vec<_>>()
+        .join(", ");
     let more = move || {
         let hidden = hidden.clone();
         let menu = MenuButton::new(
-            container(icon(Icon::More).size(14.0)).padding([0, 10]).height(tab_height()).align_y(iced::Center),
-            move || hidden.iter().fold(Menu::new(), |menu, (name, on_press)| menu.item(name.clone(), on_press.clone())),
+            container(icon(Icon::More).size(14.0))
+                .padding([0, 10])
+                .height(tab_height())
+                .align_y(iced::Center),
+            move || {
+                hidden.iter().fold(Menu::new(), |menu, (name, on_press)| {
+                    menu.item(name.clone(), on_press.clone())
+                })
+            },
         );
         underlined(
-            tip(menu, Tip::new("Diğer sekmeler").body(names.clone()), tooltip::Position::Bottom),
+            tip(
+                menu,
+                Tip::new("Diğer sekmeler").body(names.clone()),
+                tooltip::Position::Bottom,
+            ),
             Length::Shrink,
         )
     };
-    let first_contextual = specs.iter().position(|s| s.count.is_some()).unwrap_or(specs.len());
+    let first_contextual = specs
+        .iter()
+        .position(|s| s.count.is_some())
+        .unwrap_or(specs.len());
     let mut row = iced::widget::Row::new().height(tab_height());
     for (i, spec) in specs.iter().enumerate() {
         if i == first_contextual {
@@ -896,7 +931,11 @@ mod fit_tests {
     /// last of all. Each level's width: large, small, icons (as small: no icon-only step), folded.
     #[test]
     fn a_kept_panel_stays_large_until_the_others_fold() {
-        let widths = [[300.0, 200.0, 200.0, 80.0], [250.0, 180.0, 180.0, 70.0], [200.0, 150.0, 150.0, 60.0]];
+        let widths = [
+            [300.0, 200.0, 200.0, 80.0],
+            [250.0, 180.0, 180.0, 70.0],
+            [200.0, 150.0, 150.0, 60.0],
+        ];
         let keep = [true, false, false];
         assert_eq!(fit(&widths, &keep, 750.0), (vec![0, 0, 0], false));
         // The rightmost steps down first.

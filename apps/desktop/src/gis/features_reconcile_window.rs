@@ -18,7 +18,9 @@
 use crate::gis;
 use iced::widget::{container, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_commands::{CandidateDecision, CandidateSource, CommandResult, FeaturesReconcile, FeaturesReconciled};
+use kentos_commands::{
+    CandidateDecision, CandidateSource, CommandResult, FeaturesReconcile, FeaturesReconciled,
+};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, map_features_reconcile};
 use kentos_ui::label;
@@ -106,7 +108,10 @@ impl App {
                 .sources
                 .iter()
                 .filter(|(layer, _)| !layer.is_empty())
-                .map(|(layer, name)| CandidateSource { layer: layer.clone(), name: name.clone() })
+                .map(|(layer, name)| CandidateSource {
+                    layer: layer.clone(),
+                    name: name.clone(),
+                })
                 .collect(),
             field: some(&s.field).filter(|f| f != kentos_commands::DEFAULT_CODE_FIELD),
             confidence: some(&s.confidence),
@@ -142,7 +147,13 @@ impl App {
             self.output("Açık çizim yok.");
             return Task::none();
         };
-        let layers: Vec<(String, String)> = doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+        let layers: Vec<(String, String)> = doc
+            .model
+            .layers()
+            .leaves()
+            .iter()
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect();
         // The candidates' layers by their names: one with LiDAR (or bulut), one with ortofoto.
         let guess = |words: &[&str]| -> String {
             layers
@@ -183,7 +194,11 @@ impl App {
         };
         let mut made = Vec::new();
         for uid in &g.candidates {
-            let class = answer.candidates.iter().find(|c| c.uid == *uid).and_then(|c| c.class.as_deref());
+            let class = answer
+                .candidates
+                .iter()
+                .find(|c| c.uid == *uid)
+                .and_then(|c| c.class.as_deref());
             if let Some(d) = f(uid, class) {
                 made.push(d);
             }
@@ -233,11 +248,18 @@ impl App {
                 self.reconcile_run();
             }
             Event::Accept(g) => self.reconcile_decide(g, |uid, _| {
-                Some(CandidateDecision { candidate: uid.to_owned(), accept: true, ..CandidateDecision::default() })
+                Some(CandidateDecision {
+                    candidate: uid.to_owned(),
+                    accept: true,
+                    ..CandidateDecision::default()
+                })
             }),
             Event::Correct(g, class) => self.reconcile_decide(g, |uid, now| {
-                (now != Some(class.as_str()))
-                    .then(|| CandidateDecision { candidate: uid.to_owned(), class: Some(class.clone()), ..CandidateDecision::default() })
+                (now != Some(class.as_str())).then(|| CandidateDecision {
+                    candidate: uid.to_owned(),
+                    class: Some(class.clone()),
+                    ..CandidateDecision::default()
+                })
             }),
             Event::Reject(g) => self.reconcile_decide(g, |uid, _| {
                 Some(CandidateDecision {
@@ -260,20 +282,33 @@ impl App {
             }
             Event::Run => {
                 // Docs/adr/4140: the decisions are recorded as review notes at this time.
-                let input = FeaturesReconcile { reviewed_at: Some(crate::review_window::iso_utc_now()), ..self.reconcile_input() };
+                let input = FeaturesReconcile {
+                    reviewed_at: Some(crate::review_window::iso_utc_now()),
+                    ..self.reconcile_input()
+                };
                 if let Some(doc) = self.document.as_mut() {
-                    let result = map_features_reconcile::execute(&mut ExecutionContext::new(&mut doc.model), input);
+                    let result = map_features_reconcile::execute(
+                        &mut ExecutionContext::new(&mut doc.model),
+                        input,
+                    );
                     if let Some(out) = self.answered(result) {
                         let notes = match out.notes.as_slice() {
                             [] => String::new(),
                             [n] => format!("; karar {n} numaralı inceleme notu olarak kaydedildi"),
                             [first, .., last] => {
-                                format!("; {} karar {first}–{last} numaralı inceleme notları olarak kaydedildi", out.notes.len())
+                                format!(
+                                    "; {} karar {first}–{last} numaralı inceleme notları olarak kaydedildi",
+                                    out.notes.len()
+                                )
                             }
                         };
                         self.say(
                             Level::Success,
-                            format!("{} varlık yazıldı, {} aday işaretlendi{notes}.", out.written.len(), out.marked),
+                            format!(
+                                "{} varlık yazıldı, {} aday işaretlendi{notes}.",
+                                out.written.len(),
+                                out.marked
+                            ),
                         );
                     }
                 }
@@ -292,14 +327,24 @@ impl App {
         let s = &self.gis.features_reconcile;
         let source = |i: usize| {
             row![
-                container(fields::select_owned(s.layers.clone(), &s.sources[i].0, move |v| msg(Event::Layer(i, v)))).width(240),
-                container(fields::input(None, "Adı", &s.sources[i].1, false, false).on_input(move |v| msg(Event::Name(i, v)))).width(160)
+                container(fields::select_owned(
+                    s.layers.clone(),
+                    &s.sources[i].0,
+                    move |v| msg(Event::Layer(i, v))
+                ))
+                .width(240),
+                container(
+                    fields::input(None, "Adı", &s.sources[i].1, false, false)
+                        .on_input(move |v| msg(Event::Name(i, v)))
+                )
+                .width(160)
             ]
             .spacing(8)
             .align_y(Center)
         };
         let text = |value: &str, hint: &str, on: fn(String) -> Event| {
-            container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v)))).width(160)
+            container(fields::input(None, hint, value, false, false).on_input(move |v| msg(on(v))))
+                .width(160)
         };
         let form = Form::new()
             .label_width(130.0)
@@ -344,9 +389,21 @@ impl App {
                         a.groups.iter().filter(|g| g.writes).count()
                     ),
                 ));
-                let duplicates = a.candidates.iter().filter(|c| c.status == "duplicate").count();
-                let unknown = a.candidates.iter().filter(|c| matches!(c.status.as_str(), "unknown" | "wrongKind")).count();
-                let reviewed = a.candidates.iter().filter(|c| c.status == "reviewed").count();
+                let duplicates = a
+                    .candidates
+                    .iter()
+                    .filter(|c| c.status == "duplicate")
+                    .count();
+                let unknown = a
+                    .candidates
+                    .iter()
+                    .filter(|c| matches!(c.status.as_str(), "unknown" | "wrongKind"))
+                    .count();
+                let reviewed = a
+                    .candidates
+                    .iter()
+                    .filter(|c| c.status == "reviewed")
+                    .count();
                 if duplicates + unknown + reviewed > 0 {
                     lines.push(words::text_line(
                         Kind::Warn,
@@ -358,21 +415,36 @@ impl App {
                     let mut numbers: Vec<u32> = a.reapplied.iter().map(|r| r.note).collect();
                     numbers.sort_unstable();
                     numbers.dedup();
-                    let numbers = numbers.iter().map(u32::to_string).collect::<Vec<_>>().join(", ");
+                    let numbers = numbers
+                        .iter()
+                        .map(u32::to_string)
+                        .collect::<Vec<_>>()
+                        .join(", ");
                     lines.push(words::text_line(
                         Kind::Info,
-                        format!("{} adaya önceki karar yeniden uygulandı (inceleme notu {numbers}).", a.reapplied.len()),
+                        format!(
+                            "{} adaya önceki karar yeniden uygulandı (inceleme notu {numbers}).",
+                            a.reapplied.len()
+                        ),
                     ));
                 }
                 let missing = a.groups.iter().filter(|g| !g.missing.is_empty()).count();
                 if missing > 0 {
-                    lines.push(words::text_line(Kind::Warn, format!("{missing} grubun zorunlu alanı eksik: alan verilmeden yazılmaz.")));
+                    lines.push(words::text_line(
+                        Kind::Warn,
+                        format!("{missing} grubun zorunlu alanı eksik: alan verilmeden yazılmaz."),
+                    ));
                 }
                 // docs/adr/2540: the values the class layers' field rules refuse, each with the rule's sentence.
                 for g in a.groups.iter().filter(|g| !g.invalid.is_empty()) {
                     for t in &g.invalid {
-                        let class = crate::features_reconcile_fill::class_title(g.class.as_deref().unwrap_or_default());
-                        lines.push(words::text_line(Kind::Warn, format!("{class} yazılmaz: {}", t.message)));
+                        let class = crate::features_reconcile_fill::class_title(
+                            g.class.as_deref().unwrap_or_default(),
+                        );
+                        lines.push(words::text_line(
+                            Kind::Warn,
+                            format!("{class} yazılmaz: {}", t.message),
+                        ));
                     }
                 }
                 if missing > 0 || a.groups.iter().any(|g| !g.invalid.is_empty()) {
@@ -383,10 +455,12 @@ impl App {
                     "Tek kaynaklı aday kabul edilmeden, çelişen aday sınıfı düzeltilmeden kesin varlık olmaz; kararlar Eşleştir'le yazılır.",
                 ));
                 // The classes by the profile's titles (the answer names them by id).
-                let titles: std::collections::BTreeMap<String, String> = kentos_commands::builtin_profile(PROFILE)
-                    .map(|p| p.classes.into_iter().map(|c| (c.id, c.title)).collect())
-                    .unwrap_or_default();
-                let title = move |id: &str| titles.get(id).cloned().unwrap_or_else(|| id.to_owned());
+                let titles: std::collections::BTreeMap<String, String> =
+                    kentos_commands::builtin_profile(PROFILE)
+                        .map(|p| p.classes.into_iter().map(|c| (c.id, c.title)).collect())
+                        .unwrap_or_default();
+                let title =
+                    move |id: &str| titles.get(id).cloned().unwrap_or_else(|| id.to_owned());
                 let rows = a.groups.clone();
                 table = road_dialog::grid_table(
                     vec![
@@ -403,52 +477,90 @@ impl App {
                     rows.len(),
                     move |i, k| {
                         let g = &rows[i];
-                        let text = |t: String| -> Element<'_, Message> { kentos_ui::widget::table::text(t).into() };
+                        let text = |t: String| -> Element<'_, Message> {
+                            kentos_ui::widget::table::text(t).into()
+                        };
                         let button = |words: String, event: Event| -> Element<'_, Message> {
-                            iced::widget::button(label::caption(words)).style(kentos_ui::style::button::ghost).padding([0, 6]).on_press(msg(event)).into()
+                            iced::widget::button(label::caption(words))
+                                .style(kentos_ui::style::button::ghost)
+                                .padding([0, 6])
+                                .on_press(msg(event))
+                                .into()
                         };
                         match k {
                             0 => text(match &g.class {
                                 Some(c) => title(c),
-                                None => g.classes.iter().map(|c| title(c)).collect::<Vec<_>>().join(" / "),
+                                None => g
+                                    .classes
+                                    .iter()
+                                    .map(|c| title(c))
+                                    .collect::<Vec<_>>()
+                                    .join(" / "),
                             }),
                             1 => text(status_word(&g.status).to_owned()),
                             2 => text(g.sources.join(", ")),
-                            3 => kentos_ui::widget::table::number(g.candidates.len().to_string()).into(),
-                            4 => kentos_ui::widget::table::number(format!("{:.0}", g.spread * 1000.0)).into(),
-                            5 => kentos_ui::widget::table::number(g.overlap.map_or(String::new(), |o| format!("{o:.2}"))).into(),
+                            3 => kentos_ui::widget::table::number(g.candidates.len().to_string())
+                                .into(),
+                            4 => kentos_ui::widget::table::number(format!(
+                                "{:.0}",
+                                g.spread * 1000.0
+                            ))
+                            .into(),
+                            5 => kentos_ui::widget::table::number(
+                                g.overlap.map_or(String::new(), |o| format!("{o:.2}")),
+                            )
+                            .into(),
                             6 => {
                                 // The fields by their aliases (docs/adr/2540).
                                 let class = g.class.clone().unwrap_or_default();
-                                let name = |f: &str| crate::features_reconcile_fill::field_title(&class, f);
+                                let name = |f: &str| {
+                                    crate::features_reconcile_fill::field_title(&class, f)
+                                };
                                 text(
                                     g.missing
                                         .iter()
                                         .map(|f| format!("{} eksik", name(f)))
-                                        .chain(g.invalid.iter().map(|t| format!("{} kurala uymaz", name(&t.field))))
+                                        .chain(
+                                            g.invalid.iter().map(|t| {
+                                                format!("{} kurala uymaz", name(&t.field))
+                                            }),
+                                        )
                                         .collect::<Vec<_>>()
                                         .join(", "),
                                 )
                             }
-                            7 => text(if g.writes { "Evet".into() } else { "—".into() }),
+                            7 => text(if g.writes {
+                                "Evet".into()
+                            } else {
+                                "—".into()
+                            }),
                             _ => {
                                 let mut actions = row![].spacing(2);
                                 match g.status.as_str() {
-                                    "single" if !g.writes => actions = actions.push(button("Kabul".into(), Event::Accept(i))),
+                                    "single" if !g.writes => {
+                                        actions =
+                                            actions.push(button("Kabul".into(), Event::Accept(i)))
+                                    }
                                     "conflict" => {
                                         for c in &g.classes {
-                                            actions = actions.push(button(title(c), Event::Correct(i, c.clone())));
+                                            actions = actions.push(button(
+                                                title(c),
+                                                Event::Correct(i, c.clone()),
+                                            ));
                                         }
                                     }
                                     _ => {}
                                 }
                                 if !g.missing.is_empty() || !g.invalid.is_empty() {
-                                    actions = actions.push(button("Alan gir".into(), Event::Fill(i)));
+                                    actions =
+                                        actions.push(button("Alan gir".into(), Event::Fill(i)));
                                 }
                                 if g.status != "existing" {
-                                    actions = actions.push(button("Reddet".into(), Event::Reject(i)));
+                                    actions =
+                                        actions.push(button("Reddet".into(), Event::Reject(i)));
                                 }
-                                kentos_ui::widget::Cell::padded(container(actions).center_x(Fill)).into()
+                                kentos_ui::widget::Cell::padded(container(actions).center_x(Fill))
+                                    .into()
                             }
                         }
                     },
@@ -475,12 +587,19 @@ impl App {
             .modal(msg(Event::Close))
     }
 
-    pub(crate) fn features_reconcile_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
+    pub(crate) fn features_reconcile_control(
+        &self,
+        control: Control<'_>,
+    ) -> Result<Option<Message>, String> {
         Ok(match control {
             Control::Press(CLOSE) => Some(msg(Event::Close)),
             Control::Press(RUN) => Some(msg(Event::Run)),
-            Control::Press(crate::features_reconcile_fill::FILL_APPLY) => Some(msg(Event::FillApply)),
-            Control::Press(crate::features_reconcile_fill::FILL_CANCEL) => Some(msg(Event::FillCancel)),
+            Control::Press(crate::features_reconcile_fill::FILL_APPLY) => {
+                Some(msg(Event::FillApply))
+            }
+            Control::Press(crate::features_reconcile_fill::FILL_CANCEL) => {
+                Some(msg(Event::FillCancel))
+            }
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

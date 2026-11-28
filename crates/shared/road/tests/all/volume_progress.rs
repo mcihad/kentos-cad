@@ -42,7 +42,10 @@ fn the_progress_is_the_reference() {
             ("uncovered", got.uncovered),
         ] {
             let b = n(&e[key]);
-            assert!((a - b).abs() <= 1e-9 * b.abs().max(1.0), "{name}: {key} {a} ≠ {b}");
+            assert!(
+                (a - b).abs() <= 1e-9 * b.abs().max(1.0),
+                "{name}: {key} {a} ≠ {b}"
+            );
         }
     }
 }

@@ -207,10 +207,18 @@ impl FaceIndex {
     /// Every bounded face with a point just inside it. The probe is computed
     /// from analytic arrangement edges, not a tessellated label polygon.
     pub fn faces_with_probes(&self) -> Vec<(Area, Vec2)> {
-        self.outers.iter().map(|&o| (Area {
-            outer: self.rings[o].ring.clone(),
-            holes: self.holes_of(o),
-        }, self.rings[o].probe)).collect()
+        self.outers
+            .iter()
+            .map(|&o| {
+                (
+                    Area {
+                        outer: self.rings[o].ring.clone(),
+                        holes: self.holes_of(o),
+                    },
+                    self.rings[o].probe,
+                )
+            })
+            .collect()
     }
 
     /// Every bounded face, smallest first; with `islands`, the closed groups
@@ -244,7 +252,12 @@ impl FaceIndex {
             .iter()
             .copied()
             .filter(|&g| in_box(&self.rings[g], p) && self.rings[g].contains(p))
-            .max_by(|&a, &b| self.rings[a].area.abs().total_cmp(&self.rings[b].area.abs()))
+            .max_by(|&a, &b| {
+                self.rings[a]
+                    .area
+                    .abs()
+                    .total_cmp(&self.rings[b].area.abs())
+            })
             .map(|g| self.rings[g].ring.clone())
     }
 

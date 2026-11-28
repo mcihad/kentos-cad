@@ -40,14 +40,14 @@ use kentos_commands::{
     ArchEdit, AssetsCheck, AttachmentsInspect, BeamsCreate, BlocksFreeze, BlocksInsert,
     BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, ColumnsCreate, ConstraintsEdit,
     ConstraintsQuery, DomainsEdit, DomainsExport, FieldsMigrate, FieldsWrite, FormsExport,
-    FormsImport, GridsCreate, ImagesEdit, ImportBlock, InsertsClip, NavigatorRead, OpeningsCreate,
-    OpeningsEdit, ParametersEdit, ProcessingBatch, ProcessingRun, ProcessingTools, RailingsCreate, MassesCreate,
-    RampsCreate, RastersGeoref, RastersMosaic, RastersReproject, RecordsPage, RoofsCreate,
-    SchedulesCreate, SchedulesEdit, SchedulesQuery, SchemaDescribe, SheetsSet, SourcesDescribe,
-    SourcesEdit, SourcesQuery, SourcesReconcile, SourcesRelate, SourcesSync, SpacesCreate,
-    SpacesEdit, SpacesFinish, SpacesQuantities, StairsCreate, TagsCheck, TagsCreate, TagsEdit,
-    TemplatesApply, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, WallsJoins, XrefsEdit,
-    XrefsList,
+    FormsImport, GridsCreate, ImagesEdit, ImportBlock, InsertsClip, MassesCreate, NavigatorRead,
+    OpeningsCreate, OpeningsEdit, ParametersEdit, ProcessingBatch, ProcessingRun, ProcessingTools,
+    RailingsCreate, RampsCreate, RastersGeoref, RastersMosaic, RastersReproject, RecordsPage,
+    RoofsCreate, SchedulesCreate, SchedulesEdit, SchedulesQuery, SchemaDescribe, SheetsSet,
+    SourcesDescribe, SourcesEdit, SourcesQuery, SourcesReconcile, SourcesRelate, SourcesSync,
+    SpacesCreate, SpacesEdit, SpacesFinish, SpacesQuantities, StairsCreate, TagsCheck, TagsCreate,
+    TagsEdit, TemplatesApply, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, WallsJoins,
+    XrefsEdit, XrefsList,
 };
 use kentos_commands::{DimensionSetsCreateInput, DimensionSetsEditInput, DimensionSetsQueryInput};
 use serde_json::Value;
@@ -215,23 +215,19 @@ use crate::{sensors_ingest, sensors_latest};
 use crate::bcf_exchange::{read as bcf_read, write as bcf_write};
 #[cfg(feature = "mod-arch")]
 use crate::{
-    arch_audit, arch_edit, arch_exceptions, arch_form_answers, arch_ifc, arch_performance, arch_recognize, arch_walk, beams_create,
-    delivery_edit,
-    underlay_edit,
-    underlay_check,
-    casework_edit,
-    ifc_inspect, zoning_parcel,
-    ifc_compare,
-    casework_query, casework_run, columns_create, columns_distances, elevations_edit,
-    elevations_query, grids_create, legends, levels_assign, materials_edit, modules_edit,
-    modules_query, north, opening_types_edit, element_types_edit, openings_create, openings_distances, openings_edit,
-    openings_query, options_edit, options_query, program_check, program_edit, railings_create, masses_create,
-    ramps_create, revisions, roofs_create, schedules_create, schedules_edit, schedules_query,
-    sections_edit, sections_query, slabs_create, slabs_edit, spaces_create, spaces_discover,
-    spaces_edit, spaces_finish, spaces_quantities, stairs_create, tags_check, tags_create,
-    tags_edit, templates_apply, viewmarks_create, viewmarks_edit, viewmarks_references, views_edit,
-    walls_create, walls_distances, walls_edit, walls_from_lines, walls_joins, walls_partition,
-    walls_rectangle,
+    arch_audit, arch_edit, arch_exceptions, arch_form_answers, arch_ifc, arch_performance,
+    arch_recognize, arch_walk, beams_create, casework_edit, casework_query, casework_run,
+    columns_create, columns_distances, delivery_edit, element_types_edit, elevations_edit,
+    elevations_query, grids_create, ifc_compare, ifc_inspect, legends, levels_assign,
+    masses_create, materials_edit, modules_edit, modules_query, north, opening_types_edit,
+    openings_create, openings_distances, openings_edit, openings_query, options_edit,
+    options_query, program_check, program_edit, railings_create, ramps_create, revisions,
+    roofs_create, schedules_create, schedules_edit, schedules_query, sections_edit, sections_query,
+    slabs_create, slabs_edit, spaces_create, spaces_discover, spaces_edit, spaces_finish,
+    spaces_quantities, stairs_create, tags_check, tags_create, tags_edit, templates_apply,
+    underlay_check, underlay_edit, viewmarks_create, viewmarks_edit, viewmarks_references,
+    views_edit, walls_create, walls_distances, walls_edit, walls_from_lines, walls_joins,
+    walls_partition, walls_rectangle, zoning_parcel,
 };
 #[cfg(feature = "mod-gis")]
 use crate::{datasets_describe, datasets_edit, joins_edit, joins_query};
@@ -239,11 +235,12 @@ use crate::{entities_chamfer, entities_extend, entities_fillet, entities_trim};
 #[cfg(feature = "mod-gis")]
 use crate::{
     fields_edit, fields_usage, gis_derivation, gis_detach, gis_takeback, images_clip, images_edit,
-    layers_compose, layers_contingents, layers_edit, layers_filter, layers_find, layers_indexes,
-    layer_classes, layer_export, layers_columns, layers_create, layers_data, layers_migrate, layers_rows, layers_session, layers_info, layers_labels, layers_renderer, layers_rules, layers_service, layers_set,
-    layers_states, layers_subtypes, layers_table, layers_time, layers_translate, linearref_define,
-    maplibre, network_define, qml, rasters_georef, rasters_mosaic, rasters_reproject,
-    scenarios_edit, sld, time_version,
+    layer_classes, layer_export, layers_columns, layers_compose, layers_contingents, layers_create,
+    layers_data, layers_edit, layers_filter, layers_find, layers_indexes, layers_info,
+    layers_labels, layers_migrate, layers_renderer, layers_rows, layers_rules, layers_service,
+    layers_session, layers_set, layers_states, layers_subtypes, layers_table, layers_time,
+    layers_translate, linearref_define, maplibre, network_define, qml, rasters_georef,
+    rasters_mosaic, rasters_reproject, scenarios_edit, sld, time_version,
 };
 #[cfg(feature = "mod-gis")]
 use crate::{

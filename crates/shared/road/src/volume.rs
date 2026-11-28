@@ -44,10 +44,16 @@ pub fn end_areas(sections: &[SectionAreas]) -> Vec<Between> {
         .map(|w| {
             let l = w[1].station - w[0].station;
             let volumes = match (w[0].areas, w[1].areas) {
-                (Some((c0, f0)), Some((c1, f1))) => Some((l * (c0 + c1) / 2.0, l * (f0 + f1) / 2.0)),
+                (Some((c0, f0)), Some((c1, f1))) => {
+                    Some((l * (c0 + c1) / 2.0, l * (f0 + f1) / 2.0))
+                }
                 _ => None,
             };
-            Between { from: w[0].station, to: w[1].station, volumes }
+            Between {
+                from: w[0].station,
+                to: w[1].station,
+                volumes,
+            }
         })
         .collect()
 }
@@ -74,7 +80,10 @@ pub fn effective(s: &CurvedSection) -> Option<Option<(f64, f64)>> {
     if k != 0.0 && 1.0 + k * inside <= 0.0 {
         return None;
     }
-    Some(s.areas.map(|(c, f)| (c + k * s.moments.0, f + k * s.moments.1)))
+    Some(
+        s.areas
+            .map(|(c, f)| (c + k * s.moments.0, f + k * s.moments.1)),
+    )
 }
 
 /// The average end area volumes of the effective areas: `L·(A′₀ + A′₁)/2`, cut and fill apart; exact for a constant
@@ -85,10 +94,16 @@ pub fn end_areas_curved(sections: &[CurvedSection]) -> Vec<Between> {
         .map(|w| {
             let l = w[1].station - w[0].station;
             let volumes = match (effective(&w[0]), effective(&w[1])) {
-                (Some(Some((c0, f0))), Some(Some((c1, f1)))) => Some((l * (c0 + c1) / 2.0, l * (f0 + f1) / 2.0)),
+                (Some(Some((c0, f0))), Some(Some((c1, f1)))) => {
+                    Some((l * (c0 + c1) / 2.0, l * (f0 + f1) / 2.0))
+                }
                 _ => None,
             };
-            Between { from: w[0].station, to: w[1].station, volumes }
+            Between {
+                from: w[0].station,
+                to: w[1].station,
+                volumes,
+            }
         })
         .collect()
 }
@@ -169,7 +184,13 @@ pub(crate) fn split(poly: &[([f64; 2], f64)], above: bool) -> Vec<([f64; 2], f64
         }
         if (p.1 > 0.0 && q.1 < 0.0) || (p.1 < 0.0 && q.1 > 0.0) {
             let t = p.1 / (p.1 - q.1);
-            out.push(([p.0[0] + (q.0[0] - p.0[0]) * t, p.0[1] + (q.0[1] - p.0[1]) * t], 0.0));
+            out.push((
+                [
+                    p.0[0] + (q.0[0] - p.0[0]) * t,
+                    p.0[1] + (q.0[1] - p.0[1]) * t,
+                ],
+                0.0,
+            ));
         }
     }
     out
@@ -199,7 +220,12 @@ struct Grid {
 
 impl Grid {
     fn new(tris: &[Triangle]) -> Self {
-        let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+        let (mut x0, mut y0, mut x1, mut y1) = (
+            f64::INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NEG_INFINITY,
+        );
         for t in tris {
             for p in t {
                 x0 = x0.min(p[0]);
@@ -212,7 +238,14 @@ impl Grid {
         let size = ((x1 - x0).max(y1 - y0) / n as f64).max(1e-9);
         let nx = (((x1 - x0) / size).ceil() as usize).max(1);
         let ny = (((y1 - y0) / size).ceil() as usize).max(1);
-        let mut grid = Self { x0, y0, size, nx, ny, cells: vec![Vec::new(); nx * ny] };
+        let mut grid = Self {
+            x0,
+            y0,
+            size,
+            nx,
+            ny,
+            cells: vec![Vec::new(); nx * ny],
+        };
         for (i, t) in tris.iter().enumerate() {
             let (a, b) = grid.span(t);
             for cy in a[1]..=b[1] {
@@ -225,16 +258,26 @@ impl Grid {
     }
 
     fn cell(&self, x: f64, y: f64) -> [usize; 2] {
-        let cx = ((x - self.x0) / self.size).floor().clamp(0.0, (self.nx - 1) as f64) as usize;
-        let cy = ((y - self.y0) / self.size).floor().clamp(0.0, (self.ny - 1) as f64) as usize;
+        let cx = ((x - self.x0) / self.size)
+            .floor()
+            .clamp(0.0, (self.nx - 1) as f64) as usize;
+        let cy = ((y - self.y0) / self.size)
+            .floor()
+            .clamp(0.0, (self.ny - 1) as f64) as usize;
         [cx, cy]
     }
 
     fn span(&self, t: &Triangle) -> ([usize; 2], [usize; 2]) {
         let xs = [t[0][0], t[1][0], t[2][0]];
         let ys = [t[0][1], t[1][1], t[2][1]];
-        let lo = self.cell(xs.iter().copied().fold(f64::INFINITY, f64::min), ys.iter().copied().fold(f64::INFINITY, f64::min));
-        let hi = self.cell(xs.iter().copied().fold(f64::NEG_INFINITY, f64::max), ys.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+        let lo = self.cell(
+            xs.iter().copied().fold(f64::INFINITY, f64::min),
+            ys.iter().copied().fold(f64::INFINITY, f64::min),
+        );
+        let hi = self.cell(
+            xs.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+            ys.iter().copied().fold(f64::NEG_INFINITY, f64::max),
+        );
         (lo, hi)
     }
 }
@@ -254,7 +297,12 @@ impl Ground {
         let tris: Vec<Triangle> = ground.iter().filter_map(ccw).collect();
         let grid = (!tris.is_empty()).then(|| Grid::new(&tris));
         let seen = vec![0; tris.len()];
-        Self { tris, grid, seen, stamp: 0 }
+        Self {
+            tris,
+            grid,
+            seen,
+            stamp: 0,
+        }
     }
 
     /// The volumes between a design (triangles that do not overlap in plan) and this ground, over the design's plan.
@@ -282,7 +330,11 @@ impl Ground {
                             let g = &self.tris[gi as usize];
                             let mut poly = plan.to_vec();
                             for k in 0..3 {
-                                poly = clip(&poly, [g[k][0], g[k][1]], [g[(k + 1) % 3][0], g[(k + 1) % 3][1]]);
+                                poly = clip(
+                                    &poly,
+                                    [g[k][0], g[k][1]],
+                                    [g[(k + 1) % 3][0], g[(k + 1) % 3][1]],
+                                );
                                 if poly.len() < 3 {
                                     break;
                                 }
@@ -290,7 +342,10 @@ impl Ground {
                             if poly.len() < 3 {
                                 continue;
                             }
-                            let with: Vec<([f64; 2], f64)> = poly.iter().map(|p| (*p, plane_z(&d, *p) - plane_z(g, *p))).collect();
+                            let with: Vec<([f64; 2], f64)> = poly
+                                .iter()
+                                .map(|p| (*p, plane_z(&d, *p) - plane_z(g, *p)))
+                                .collect();
                             let (a, _) = integral(&with);
                             if a <= 0.0 {
                                 continue;
@@ -321,7 +376,8 @@ pub fn closest_on_triangle(p: [f64; 3], t: &Triangle) -> [f64; 3] {
     let dot = |u: [f64; 3], v: [f64; 3]| u[0] * v[0] + u[1] * v[1] + u[2] * v[2];
     let (a, b, c) = (sub(t[0], p), sub(t[1], p), sub(t[2], p));
     let at = |u: [f64; 3]| [u[0] + p[0], u[1] + p[1], u[2] + p[2]];
-    let along = |u: [f64; 3], d: [f64; 3], k: f64| at([u[0] + k * d[0], u[1] + k * d[1], u[2] + k * d[2]]);
+    let along =
+        |u: [f64; 3], d: [f64; 3], k: f64| at([u[0] + k * d[0], u[1] + k * d[1], u[2] + k * d[2]]);
     let o = [0.0; 3];
     let (ab, ac, ap) = (sub(b, a), sub(c, a), sub(o, a));
     let (d1, d2) = (dot(ab, ap), dot(ac, ap));
@@ -352,7 +408,11 @@ pub fn closest_on_triangle(p: [f64; 3], t: &Triangle) -> [f64; 3] {
     }
     let denom = va + vb + vc;
     let (v, w) = (vb / denom, vc / denom);
-    at([a[0] + v * ab[0] + w * ac[0], a[1] + v * ab[1] + w * ac[1], a[2] + v * ab[2] + w * ac[2]])
+    at([
+        a[0] + v * ab[0] + w * ac[0],
+        a[1] + v * ab[1] + w * ac[1],
+        a[2] + v * ab[2] + w * ac[2],
+    ])
 }
 
 /// Whether `p` is in the counterclockwise triangle `t`, its edges and corners included within 10⁻⁹ m.
@@ -371,13 +431,17 @@ impl Ground {
     /// none when no triangle comes within reach.
     pub fn nearest(&self, p: [f64; 3], reach: f64) -> Option<([f64; 3], f64)> {
         let grid = self.grid.as_ref()?;
-        let (lo, hi) = (grid.cell(p[0] - reach, p[1] - reach), grid.cell(p[0] + reach, p[1] + reach));
+        let (lo, hi) = (
+            grid.cell(p[0] - reach, p[1] - reach),
+            grid.cell(p[0] + reach, p[1] + reach),
+        );
         let mut best: Option<([f64; 3], f64)> = None;
         for cy in lo[1]..=hi[1] {
             for cx in lo[0]..=hi[0] {
                 for &i in &grid.cells[cy * grid.nx + cx] {
                     let q = closest_on_triangle(p, &self.tris[i as usize]);
-                    let d = ((q[0] - p[0]).powi(2) + (q[1] - p[1]).powi(2) + (q[2] - p[2]).powi(2)).sqrt();
+                    let d = ((q[0] - p[0]).powi(2) + (q[1] - p[1]).powi(2) + (q[2] - p[2]).powi(2))
+                        .sqrt();
                     if best.is_none_or(|b| d < b.1) {
                         best = Some((q, d));
                     }
@@ -391,7 +455,11 @@ impl Ground {
     pub fn height(&self, p: [f64; 2]) -> Option<f64> {
         let grid = self.grid.as_ref()?;
         let [cx, cy] = grid.cell(p[0], p[1]);
-        grid.cells[cy * grid.nx + cx].iter().map(|&i| &self.tris[i as usize]).find(|g| holds(g, p)).map(|g| plane_z(g, p))
+        grid.cells[cy * grid.nx + cx]
+            .iter()
+            .map(|&i| &self.tris[i as usize])
+            .find(|g| holds(g, p))
+            .map(|g| plane_z(g, p))
     }
 
     /// The volumes between a design and this ground on a regular grid (docs/adr/0974; ROAD-VOL-03): the cells `cell` m
@@ -399,20 +467,36 @@ impl Ground {
     /// measured once (`counted` keeps the centres measured, so strips that share an edge do not count it twice). At a
     /// centre `d = z_design − z_ground` and the cell's volume is `cell²·d` (the midpoint rule, O(h²)): `d > 0` to the
     /// fill, `d < 0` to the cut, the cell's area to their plan areas; a centre the ground does not reach to `uncovered`.
-    pub fn grid_volumes(&self, design: &[Triangle], cell: f64, counted: &mut std::collections::HashSet<(i64, i64)>) -> Volumes {
+    pub fn grid_volumes(
+        &self,
+        design: &[Triangle],
+        cell: f64,
+        counted: &mut std::collections::HashSet<(i64, i64)>,
+    ) -> Volumes {
         let mut out = Volumes::default();
         let area = cell * cell;
         for d in design {
             let Some(d) = ccw(d) else { continue };
-            let (mut x0, mut y0, mut x1, mut y1) = (f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY);
+            let (mut x0, mut y0, mut x1, mut y1) = (
+                f64::INFINITY,
+                f64::INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+            );
             for p in &d {
                 x0 = x0.min(p[0]);
                 y0 = y0.min(p[1]);
                 x1 = x1.max(p[0]);
                 y1 = y1.max(p[1]);
             }
-            let (i0, i1) = ((x0 / cell - 0.5).ceil() as i64, (x1 / cell - 0.5).floor() as i64);
-            let (j0, j1) = ((y0 / cell - 0.5).ceil() as i64, (y1 / cell - 0.5).floor() as i64);
+            let (i0, i1) = (
+                (x0 / cell - 0.5).ceil() as i64,
+                (x1 / cell - 0.5).floor() as i64,
+            );
+            let (j0, j1) = (
+                (y0 / cell - 0.5).ceil() as i64,
+                (y1 / cell - 0.5).floor() as i64,
+            );
             for j in j0..=j1 {
                 for i in i0..=i1 {
                     let p = [(i as f64 + 0.5) * cell, (j as f64 + 0.5) * cell];
@@ -443,8 +527,13 @@ impl Ground {
 impl Ground {
     /// Each piece where a design triangle and a ground triangle overlap in plan, with `d = z_design − z_ground` at its
     /// corners (counterclockwise, convex); and the area both cover and the design's area the ground does not.
-    pub fn overlay(&mut self, design: &[Triangle], mut visit: impl FnMut(&[([f64; 2], f64)])) -> (f64, f64) {
-        self.overlay_on(design, |_, with| visit(with), &|_, _| false).unwrap_or_default()
+    pub fn overlay(
+        &mut self,
+        design: &[Triangle],
+        mut visit: impl FnMut(&[([f64; 2], f64)]),
+    ) -> (f64, f64) {
+        self.overlay_on(design, |_, with| visit(with), &|_, _| false)
+            .unwrap_or_default()
     }
 
     /// [`Ground::overlay`] telling `tick` how many design triangles it has gone through of all before each one
@@ -493,7 +582,11 @@ impl Ground {
                             let g = &self.tris[gi as usize];
                             let mut poly = plan.to_vec();
                             for k in 0..3 {
-                                poly = clip(&poly, [g[k][0], g[k][1]], [g[(k + 1) % 3][0], g[(k + 1) % 3][1]]);
+                                poly = clip(
+                                    &poly,
+                                    [g[k][0], g[k][1]],
+                                    [g[(k + 1) % 3][0], g[(k + 1) % 3][1]],
+                                );
                                 if poly.len() < 3 {
                                     break;
                                 }
@@ -501,7 +594,10 @@ impl Ground {
                             if poly.len() < 3 {
                                 continue;
                             }
-                            let with: Vec<([f64; 2], f64)> = poly.iter().map(|p| (*p, plane_z(&d, *p) - plane_z(g, *p))).collect();
+                            let with: Vec<([f64; 2], f64)> = poly
+                                .iter()
+                                .map(|p| (*p, plane_z(&d, *p) - plane_z(g, *p)))
+                                .collect();
                             let (a, _) = integral(&with);
                             if a <= 0.0 {
                                 continue;
@@ -533,7 +629,10 @@ pub struct Difference {
 /// The part of a convex polygon with the linear `d` on the `above` side of `level`.
 pub(crate) fn cut_at(poly: &[([f64; 2], f64)], level: f64, above: bool) -> Vec<([f64; 2], f64)> {
     let shifted: Vec<([f64; 2], f64)> = poly.iter().map(|(p, d)| (*p, d - level)).collect();
-    split(&shifted, above).into_iter().map(|(p, d)| (p, d + level)).collect()
+    split(&shifted, above)
+        .into_iter()
+        .map(|(p, d)| (p, d + level))
+        .collect()
 }
 
 /// The difference of `comparison` over `base`, over the comparison's plan; `breaks` (increasing, at least two) bands
@@ -552,10 +651,16 @@ pub fn difference(comparison: &[Triangle], base: &[Triangle], breaks: &[f64]) ->
         out.volumes.cut -= cv;
         out.volumes.cut_area += ca;
         for (p, d) in with {
-            if out.least.is_none_or(|(v, at)| *d < v || (*d == v && (p[0], p[1]) < (at[0], at[1]))) {
+            if out
+                .least
+                .is_none_or(|(v, at)| *d < v || (*d == v && (p[0], p[1]) < (at[0], at[1])))
+            {
                 out.least = Some((*d, *p));
             }
-            if out.largest.is_none_or(|(v, at)| *d > v || (*d == v && (p[0], p[1]) < (at[0], at[1]))) {
+            if out
+                .largest
+                .is_none_or(|(v, at)| *d > v || (*d == v && (p[0], p[1]) < (at[0], at[1])))
+            {
                 out.largest = Some((*d, *p));
             }
         }
@@ -602,34 +707,42 @@ pub fn zero_lines(comparison: &[Triangle], base: &[Triangle]) -> (Vec<ZeroLine>,
 
 /// [`zero_lines`] telling `tick` how many of the comparison's triangles it has gone through of all before each one
 /// (docs/adr/4040); `tick` answering true stops it there: none.
-pub fn zero_lines_told(comparison: &[Triangle], base: &[Triangle], tick: &dyn Fn(u64, u64) -> bool) -> Option<(Vec<ZeroLine>, f64)> {
+pub fn zero_lines_told(
+    comparison: &[Triangle],
+    base: &[Triangle],
+    tick: &dyn Fn(u64, u64) -> bool,
+) -> Option<(Vec<ZeroLine>, f64)> {
     let mut ground = Ground::new(base);
     let mut segments: Vec<[[f64; 2]; 2]> = Vec::new();
     let mut coincident = 0.0;
-    ground.overlay_told(comparison, |with| {
-        if with.iter().all(|(_, d)| *d == 0.0) {
-            coincident += integral(with).0;
-            return;
-        }
-        let mut at: Vec<[f64; 2]> = Vec::new();
-        for k in 0..with.len() {
-            let ((p, dp), (q, dq)) = (with[k], with[(k + 1) % with.len()]);
-            if dp == 0.0 {
-                at.push(p);
+    ground.overlay_told(
+        comparison,
+        |with| {
+            if with.iter().all(|(_, d)| *d == 0.0) {
+                coincident += integral(with).0;
+                return;
             }
-            if (dp < 0.0 && dq > 0.0) || (dp > 0.0 && dq < 0.0) {
-                let t = dp / (dp - dq);
-                at.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]);
+            let mut at: Vec<[f64; 2]> = Vec::new();
+            for k in 0..with.len() {
+                let ((p, dp), (q, dq)) = (with[k], with[(k + 1) % with.len()]);
+                if dp == 0.0 {
+                    at.push(p);
+                }
+                if (dp < 0.0 && dq > 0.0) || (dp > 0.0 && dq < 0.0) {
+                    let t = dp / (dp - dq);
+                    at.push([p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]);
+                }
             }
-        }
-        at.dedup();
-        if at.len() > 1 && at.first() == at.last() {
-            at.pop();
-        }
-        if at.len() == 2 {
-            segments.push([at[0], at[1]]);
-        }
-    }, tick)?;
+            at.dedup();
+            if at.len() > 1 && at.first() == at.last() {
+                at.pop();
+            }
+            if at.len() == 2 {
+                segments.push([at[0], at[1]]);
+            }
+        },
+        tick,
+    )?;
     Some((join(segments), coincident))
 }
 
@@ -658,7 +771,11 @@ fn join(segments: Vec<[[f64; 2]; 2]>) -> Vec<ZeroLine> {
     let mut used = vec![false; segments.len()];
     let mut lines = Vec::new();
     // Open lines first, from their ends (a joint of one segment, or of three or more), then the loops.
-    let ends: Vec<(i64, i64)> = at.iter().filter(|(_, v)| v.len() != 2).map(|(k, _)| *k).collect();
+    let ends: Vec<(i64, i64)> = at
+        .iter()
+        .filter(|(_, v)| v.len() != 2)
+        .map(|(k, _)| *k)
+        .collect();
     let walk = |start: usize, from: [f64; 2], used: &mut Vec<bool>| {
         let mut points = vec![from];
         let mut here = from;
@@ -666,7 +783,11 @@ fn join(segments: Vec<[[f64; 2]; 2]>) -> Vec<ZeroLine> {
         while let Some(i) = next {
             used[i] = true;
             let s = segments[i];
-            let other = if joint(s[0]) == joint(here) { s[1] } else { s[0] };
+            let other = if joint(s[0]) == joint(here) {
+                s[1]
+            } else {
+                s[0]
+            };
             points.push(other);
             here = other;
             let k = joint(here);
@@ -685,14 +806,20 @@ fn join(segments: Vec<[[f64; 2]; 2]>) -> Vec<ZeroLine> {
             let s = segments[i];
             let from = if joint(s[0]) == *e { s[0] } else { s[1] };
             let points = walk(i, from, &mut used);
-            lines.push(ZeroLine { points, closed: false });
+            lines.push(ZeroLine {
+                points,
+                closed: false,
+            });
         }
     }
     for i in 0..segments.len() {
         if !used[i] {
             let mut points = walk(i, segments[i][0], &mut used);
             points.pop();
-            lines.push(ZeroLine { points, closed: true });
+            lines.push(ZeroLine {
+                points,
+                closed: true,
+            });
         }
     }
     for l in &mut lines {
@@ -701,7 +828,9 @@ fn join(segments: Vec<[[f64; 2]; 2]>) -> Vec<ZeroLine> {
         let less = |a: &[f64; 2], b: &[f64; 2]| (a[0], a[1]) < (b[0], b[1]);
         if l.closed {
             if let Some(k) = (0..l.points.len()).min_by(|&a, &b| {
-                (l.points[a][0], l.points[a][1]).partial_cmp(&(l.points[b][0], l.points[b][1])).unwrap_or(std::cmp::Ordering::Equal)
+                (l.points[a][0], l.points[a][1])
+                    .partial_cmp(&(l.points[b][0], l.points[b][1]))
+                    .unwrap_or(std::cmp::Ordering::Equal)
             }) {
                 l.points.rotate_left(k);
             }
@@ -713,7 +842,9 @@ fn join(segments: Vec<[[f64; 2]; 2]>) -> Vec<ZeroLine> {
     }
     lines.sort_by(|a, b| {
         let (p, q) = (a.points[0], b.points[0]);
-        (p[0], p[1]).partial_cmp(&(q[0], q[1])).unwrap_or(std::cmp::Ordering::Equal)
+        (p[0], p[1])
+            .partial_cmp(&(q[0], q[1]))
+            .unwrap_or(std::cmp::Ordering::Equal)
     });
     lines
 }
@@ -733,7 +864,11 @@ fn straighten(l: &mut ZeroLine) {
     let mut out: Vec<[f64; 2]> = Vec::with_capacity(n);
     for (k, p) in l.points.iter().enumerate() {
         let open_end = !l.closed && (k == 0 || k == n - 1);
-        let prev = if k == 0 { l.points[n - 1] } else { l.points[k - 1] };
+        let prev = if k == 0 {
+            l.points[n - 1]
+        } else {
+            l.points[k - 1]
+        };
         let next = l.points[(k + 1) % n];
         if !open_end && inline(*out.last().unwrap_or(&prev), *p, next) {
             continue;
@@ -777,16 +912,33 @@ fn area_centroid(poly: &[([f64; 2], f64)]) -> (f64, [f64; 2]) {
         cx += s * (a[0] + b[0] + c[0]) / 3.0;
         cy += s * (a[1] + b[1] + c[1]) / 3.0;
     }
-    if area > 0.0 { (area, [cx / area, cy / area]) } else { (0.0, [0.0, 0.0]) }
+    if area > 0.0 {
+        (area, [cx / area, cy / area])
+    } else {
+        (0.0, [0.0, 0.0])
+    }
 }
 
 /// The sensitivity of the volumes between `design` and the ground TIN (`vertices`, `triangles` by corner index), and the
 /// area where `|d| < near`.
-pub fn sensitivity(design: &[Triangle], vertices: &[[f64; 3]], triangles: &[[u32; 3]], near: f64) -> Sensitivity {
+pub fn sensitivity(
+    design: &[Triangle],
+    vertices: &[[f64; 3]],
+    triangles: &[[u32; 3]],
+    near: f64,
+) -> Sensitivity {
     let mut kept: Vec<(Triangle, [u32; 3])> = Vec::with_capacity(triangles.len());
     for t in triangles {
-        let tri = [vertices[t[0] as usize], vertices[t[1] as usize], vertices[t[2] as usize]];
-        let a = area2([tri[0][0], tri[0][1]], [tri[1][0], tri[1][1]], [tri[2][0], tri[2][1]]);
+        let tri = [
+            vertices[t[0] as usize],
+            vertices[t[1] as usize],
+            vertices[t[2] as usize],
+        ];
+        let a = area2(
+            [tri[0][0], tri[0][1]],
+            [tri[1][0], tri[1][1]],
+            [tri[2][0], tri[2][1]],
+        );
         if a > 0.0 {
             kept.push((tri, *t));
         } else if a < 0.0 {
@@ -795,44 +947,54 @@ pub fn sensitivity(design: &[Triangle], vertices: &[[f64; 3]], triangles: &[[u32
     }
     let plain: Vec<Triangle> = kept.iter().map(|k| k.0).collect();
     let mut ground = Ground::new(&plain);
-    let mut out = Sensitivity { cut: vec![0.0; vertices.len()], fill: vec![0.0; vertices.len()], ..Sensitivity::default() };
-    let covered = ground.overlay_on(design, |gi, with| {
-        let band = cut_at(with, -near, true);
-        if band.len() >= 3 {
-            let band = cut_at(&band, near, false);
-            if band.len() >= 3 {
-                out.near_area += integral(&band).0;
-            }
-        }
-        let (g, ids) = &kept[gi];
-        let (a, b, c) = ([g[0][0], g[0][1]], [g[1][0], g[1][1]], [g[2][0], g[2][1]]);
-        let whole = area2(a, b, c);
-        let weights = |p: [f64; 2]| {
-            let wa = area2(p, b, c) / whole;
-            let wb = area2(a, p, c) / whole;
-            [wa, wb, 1.0 - wa - wb]
-        };
-        for (above, sign) in [(true, -1.0), (false, 1.0)] {
-            let part = split(with, above);
-            if part.len() < 3 {
-                continue;
-            }
-            let (area, at) = area_centroid(&part);
-            if area <= 0.0 {
-                continue;
-            }
-            let phi = weights(at);
-            let into = if above { &mut out.fill } else { &mut out.cut };
-            for k in 0..3 {
-                into[ids[k] as usize] += sign * area * phi[k];
-            }
-            if above {
-                out.fill_area += area;
-            } else {
-                out.cut_area += area;
-            }
-        }
-    }, &|_, _| false).unwrap_or_default();
+    let mut out = Sensitivity {
+        cut: vec![0.0; vertices.len()],
+        fill: vec![0.0; vertices.len()],
+        ..Sensitivity::default()
+    };
+    let covered = ground
+        .overlay_on(
+            design,
+            |gi, with| {
+                let band = cut_at(with, -near, true);
+                if band.len() >= 3 {
+                    let band = cut_at(&band, near, false);
+                    if band.len() >= 3 {
+                        out.near_area += integral(&band).0;
+                    }
+                }
+                let (g, ids) = &kept[gi];
+                let (a, b, c) = ([g[0][0], g[0][1]], [g[1][0], g[1][1]], [g[2][0], g[2][1]]);
+                let whole = area2(a, b, c);
+                let weights = |p: [f64; 2]| {
+                    let wa = area2(p, b, c) / whole;
+                    let wb = area2(a, p, c) / whole;
+                    [wa, wb, 1.0 - wa - wb]
+                };
+                for (above, sign) in [(true, -1.0), (false, 1.0)] {
+                    let part = split(with, above);
+                    if part.len() < 3 {
+                        continue;
+                    }
+                    let (area, at) = area_centroid(&part);
+                    if area <= 0.0 {
+                        continue;
+                    }
+                    let phi = weights(at);
+                    let into = if above { &mut out.fill } else { &mut out.cut };
+                    for k in 0..3 {
+                        into[ids[k] as usize] += sign * area * phi[k];
+                    }
+                    if above {
+                        out.fill_area += area;
+                    } else {
+                        out.cut_area += area;
+                    }
+                }
+            },
+            &|_, _| false,
+        )
+        .unwrap_or_default();
     out.covered = covered.0;
     out
 }
@@ -880,7 +1042,10 @@ fn split3(poly: &Tri3, f: [f64; 3], above: bool) -> Tri3 {
         }
         if (vp > 0.0 && vq < 0.0) || (vp < 0.0 && vq > 0.0) {
             let t = vp / (vp - vq);
-            let at = [p.0[0] + (q.0[0] - p.0[0]) * t, p.0[1] + (q.0[1] - p.0[1]) * t];
+            let at = [
+                p.0[0] + (q.0[0] - p.0[0]) * t,
+                p.0[1] + (q.0[1] - p.0[1]) * t,
+            ];
             let z = [0, 1, 2].map(|k| p.1[k] + (q.1[k] - p.1[k]) * t);
             out.push((at, z));
         }
@@ -899,7 +1064,11 @@ fn mean3(poly: &Tri3) -> (f64, [f64; 3]) {
             *zk += s * (a.1[k] + b.1[k] + c.1[k]) / 3.0;
         }
     }
-    if area > 0.0 { (area, z.map(|v| v / area)) } else { (0.0, [0.0; 3]) }
+    if area > 0.0 {
+        (area, z.map(|v| v / area))
+    } else {
+        (0.0, [0.0; 3])
+    }
 }
 
 /// The progress of `design` over `original` as `now` surveys it (each a set of triangles that do not overlap in plan),
@@ -907,12 +1076,20 @@ fn mean3(poly: &Tri3) -> (f64, [f64; 3]) {
 /// lines where two of the three heights meet; on each piece their order is fixed, every quantity is linear and its
 /// integral is the area times its value at the centroid: exact.
 pub fn progress(design: &[Triangle], original: &[Triangle], now: &[Triangle]) -> Progress {
-    let (o_tris, n_tris): (Vec<Triangle>, Vec<Triangle>) =
-        (original.iter().filter_map(ccw).collect(), now.iter().filter_map(ccw).collect());
+    let (o_tris, n_tris): (Vec<Triangle>, Vec<Triangle>) = (
+        original.iter().filter_map(ccw).collect(),
+        now.iter().filter_map(ccw).collect(),
+    );
     let mut out = Progress::default();
-    let (Some(go), Some(gn)) = ((!o_tris.is_empty()).then(|| Grid::new(&o_tris)), (!n_tris.is_empty()).then(|| Grid::new(&n_tris)))
-    else {
-        out.uncovered = design.iter().filter_map(ccw).map(|d| area2([d[0][0], d[0][1]], [d[1][0], d[1][1]], [d[2][0], d[2][1]]) / 2.0).sum();
+    let (Some(go), Some(gn)) = (
+        (!o_tris.is_empty()).then(|| Grid::new(&o_tris)),
+        (!n_tris.is_empty()).then(|| Grid::new(&n_tris)),
+    ) else {
+        out.uncovered = design
+            .iter()
+            .filter_map(ccw)
+            .map(|d| area2([d[0][0], d[0][1]], [d[1][0], d[1][1]], [d[2][0], d[2][1]]) / 2.0)
+            .sum();
         return out;
     };
     let near = |grid: &Grid, t: &Triangle| {
@@ -937,7 +1114,11 @@ pub fn progress(design: &[Triangle], original: &[Triangle], now: &[Triangle]) ->
             let o = &o_tris[oi as usize];
             let mut base = plan.to_vec();
             for k in 0..3 {
-                base = clip(&base, [o[k][0], o[k][1]], [o[(k + 1) % 3][0], o[(k + 1) % 3][1]]);
+                base = clip(
+                    &base,
+                    [o[k][0], o[k][1]],
+                    [o[(k + 1) % 3][0], o[(k + 1) % 3][1]],
+                );
                 if base.len() < 3 {
                     break;
                 }
@@ -949,7 +1130,11 @@ pub fn progress(design: &[Triangle], original: &[Triangle], now: &[Triangle]) ->
                 let n = &n_tris[ni as usize];
                 let mut poly = base.clone();
                 for k in 0..3 {
-                    poly = clip(&poly, [n[k][0], n[k][1]], [n[(k + 1) % 3][0], n[(k + 1) % 3][1]]);
+                    poly = clip(
+                        &poly,
+                        [n[k][0], n[k][1]],
+                        [n[(k + 1) % 3][0], n[(k + 1) % 3][1]],
+                    );
                     if poly.len() < 3 {
                         break;
                     }
@@ -957,7 +1142,10 @@ pub fn progress(design: &[Triangle], original: &[Triangle], now: &[Triangle]) ->
                 if poly.len() < 3 {
                     continue;
                 }
-                let piece: Tri3 = poly.iter().map(|p| (*p, [plane_z(&d, *p), plane_z(o, *p), plane_z(n, *p)])).collect();
+                let piece: Tri3 = poly
+                    .iter()
+                    .map(|p| (*p, [plane_z(&d, *p), plane_z(o, *p), plane_z(n, *p)]))
+                    .collect();
                 covered += mean3(&piece).0;
                 // The lines z_o = z_d, z_n = z_d, z_o = z_n (heights in the order design, original, survey). A piece
                 // on such a line throughout (a survey that has reached the design) goes to one side only, or it would
@@ -967,8 +1155,14 @@ pub fn progress(design: &[Triangle], original: &[Triangle], now: &[Triangle]) ->
                     parts = parts
                         .into_iter()
                         .flat_map(|p| {
-                            let flat = p.iter().all(|(_, z)| (f[0] * z[0] + f[1] * z[1] + f[2] * z[2]).abs() <= 1e-12);
-                            if flat { vec![p] } else { vec![split3(&p, f, true), split3(&p, f, false)] }
+                            let flat = p.iter().all(|(_, z)| {
+                                (f[0] * z[0] + f[1] * z[1] + f[2] * z[2]).abs() <= 1e-12
+                            });
+                            if flat {
+                                vec![p]
+                            } else {
+                                vec![split3(&p, f, true), split3(&p, f, false)]
+                            }
                         })
                         .filter(|p| p.len() >= 3)
                         .collect();
@@ -1013,7 +1207,10 @@ mod nearest_tests {
         let (x0, y0) = (500_000.0, 4_400_000.0);
         let far: Triangle = t.map(|c| [c[0] + x0, c[1] + y0, c[2] + 100.0]);
         let q = closest_on_triangle([x0 + 8.0, y0 + 8.0, 100.0], &far);
-        assert!((q[0] - (x0 + 5.0)).abs() < 1e-6 && (q[1] - (y0 + 5.0)).abs() < 1e-6, "{q:?}");
+        assert!(
+            (q[0] - (x0 + 5.0)).abs() < 1e-6 && (q[1] - (y0 + 5.0)).abs() < 1e-6,
+            "{q:?}"
+        );
     }
 
     /// A ground tilted 1 in 2 eastwards: a point 1 m above it is 1/√1.25 from it, the foot up the slope's normal.
@@ -1021,15 +1218,30 @@ mod nearest_tests {
     fn the_nearest_ground_is_along_its_normal() {
         let z = |x: f64| 100.0 + 0.5 * x;
         let ground = Ground::new(&[
-            [[0.0, 0.0, z(0.0)], [20.0, 0.0, z(20.0)], [20.0, 20.0, z(20.0)]],
-            [[0.0, 0.0, z(0.0)], [20.0, 20.0, z(20.0)], [0.0, 20.0, z(0.0)]],
+            [
+                [0.0, 0.0, z(0.0)],
+                [20.0, 0.0, z(20.0)],
+                [20.0, 20.0, z(20.0)],
+            ],
+            [
+                [0.0, 0.0, z(0.0)],
+                [20.0, 20.0, z(20.0)],
+                [0.0, 20.0, z(0.0)],
+            ],
         ]);
         let p = [10.0, 10.0, z(10.0) + 1.0];
         let (q, d) = ground.nearest(p, 1.0).expect("within reach");
         assert!((d - 1.0 / 1.25f64.sqrt()).abs() < 1e-12, "{d}");
         // The foot moves down the slope's normal: −0.5 east for every 1 up, scaled.
-        assert!((q[0] - (10.0 + 0.5 / 1.25)).abs() < 1e-12 && (q[1] - 10.0).abs() < 1e-12, "{q:?}");
-        assert!(ground.nearest([100.0, 100.0, 0.0], 1.0).is_none_or(|(_, d)| d > 1.0));
+        assert!(
+            (q[0] - (10.0 + 0.5 / 1.25)).abs() < 1e-12 && (q[1] - 10.0).abs() < 1e-12,
+            "{q:?}"
+        );
+        assert!(
+            ground
+                .nearest([100.0, 100.0, 0.0], 1.0)
+                .is_none_or(|(_, d)| d > 1.0)
+        );
     }
 }
 
@@ -1065,8 +1277,14 @@ mod told_tests {
             false
         });
         assert_eq!(told, Some(Ground::new(&base).overlay(&design, |_| {})));
-        assert_eq!(seen.into_inner(), (0..32).map(|k| (k, 32)).collect::<Vec<_>>());
-        assert_eq!(zero_lines_told(&design, &base, &|_, _| false), Some(zero_lines(&design, &base)));
+        assert_eq!(
+            seen.into_inner(),
+            (0..32).map(|k| (k, 32)).collect::<Vec<_>>()
+        );
+        assert_eq!(
+            zero_lines_told(&design, &base, &|_, _| false),
+            Some(zero_lines(&design, &base))
+        );
         let asked = Cell::new(0);
         let stopped = zero_lines_told(&design, &base, &|_, _| {
             asked.set(asked.get() + 1);

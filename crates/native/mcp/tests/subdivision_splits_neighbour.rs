@@ -11,10 +11,22 @@ fn call(s: &mut Server, name: &str, args: Value) -> Value {
 
 #[test]
 fn a_subdivision_splits_the_neighbour_s_boundary_over_mcp() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.parcels.record.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"].as_str().unwrap().starts_with("İfraz: 101/7")).unwrap();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-subdivision-split-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.parcels.record.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"].as_str().unwrap().starts_with("İfraz: 101/7"))
+        .unwrap();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-subdivision-split-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let open = call(&mut server, "drawing.open", json!({"path": path}));
@@ -26,10 +38,21 @@ fn a_subdivision_splits_the_neighbour_s_boundary_over_mcp() {
     let r = call(&mut server, "cad.parcels.record", input);
     assert_eq!(r["isError"], false, "{r}");
     let out = &r["structuredContent"]["output"];
-    assert_eq!((out["boundariesSplit"].as_u64(), out["neighbours"].clone()), (Some(1), json!([3])), "{out}");
-    let listed = call(&mut server, "cad.parcels.records", json!({"drawing": drawing}));
+    assert_eq!(
+        (out["boundariesSplit"].as_u64(), out["neighbours"].clone()),
+        (Some(1), json!([3])),
+        "{out}"
+    );
+    let listed = call(
+        &mut server,
+        "cad.parcels.records",
+        json!({"drawing": drawing}),
+    );
     assert_eq!(listed["isError"], false, "{listed}");
-    let parcels = listed["structuredContent"]["output"]["parcels"].as_array().unwrap().clone();
+    let parcels = listed["structuredContent"]["output"]["parcels"]
+        .as_array()
+        .unwrap()
+        .clone();
     let p3 = parcels.iter().find(|p| p["number"] == 3).expect("101/9");
     assert_eq!(p3["neighbours"], json!([4, 5]), "{p3}");
 }

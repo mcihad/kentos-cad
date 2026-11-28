@@ -18,15 +18,26 @@ fn wall(tool: &str) -> Bench {
 
 #[test]
 fn the_next_opening_waits_for_the_pointer_and_an_overlap_is_still_refused() {
-    for (tool, label) in [("door", "Kapı"), ("window", "Pencere"), ("opening", "Boşluk")] {
+    for (tool, label) in [
+        ("door", "Kapı"),
+        ("window", "Pencere"),
+        ("opening", "Boşluk"),
+    ] {
         let mut b = wall(tool);
         b.move_to(5.0, 0.3);
         b.click(5.0, 0.3);
         let count = b.doc.len();
         assert_eq!(b.last_level(), Some(Level::Success), "{tool}");
-        assert!(b.last_text().is_some_and(|t| t.starts_with(label)), "{tool}: {:?}", b.last_text());
+        assert!(
+            b.last_text().is_some_and(|t| t.starts_with(label)),
+            "{tool}: {:?}",
+            b.last_text()
+        );
         let still = b.session.preview(&Default::default()).unwrap_or_default();
-        assert!(still.tag.is_none(), "{tool}: nothing beside the cursor until it moves");
+        assert!(
+            still.tag.is_none(),
+            "{tool}: nothing beside the cursor until it moves"
+        );
         assert_ne!(still.tag_tone, Tone::Danger, "{tool}");
 
         // Moved, back onto the one just placed: the overlap is shown and a click there adds nothing.

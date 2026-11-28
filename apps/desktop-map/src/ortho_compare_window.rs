@@ -9,15 +9,15 @@
 //! shift in the images themselves where they overlap: its step, window, search and least correlation on one line, its
 //! places in their own table (Noktalar | Kayıklık).
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use std::path::PathBuf;
 
 use iced::widget::{Column, container, row};
 use iced::{Center, Element, Task};
 use kentos_commands::{
-    CommandResult, Entity, OrthoSeamAsk, OrthoSubpixel, OrthophotoChecked, OrthophotoCompare, OrthophotoCompared,
-    RasterFields,
+    CommandResult, Entity, OrthoSeamAsk, OrthoSubpixel, OrthophotoChecked, OrthophotoCompare,
+    OrthophotoCompared, RasterFields,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, orthophoto_compare};
@@ -181,14 +181,19 @@ fn year(text: &str) -> Option<&str> {
     let b = text.as_bytes();
     (0..b.len().saturating_sub(3)).find_map(|i| {
         let digits = b[i..i + 4].iter().all(u8::is_ascii_digit);
-        let alone = (i == 0 || !b[i - 1].is_ascii_digit()) && (i + 4 == b.len() || !b[i + 4].is_ascii_digit());
-        (digits && alone && (b[i..].starts_with(b"19") || b[i..].starts_with(b"20"))).then(|| &text[i..i + 4])
+        let alone = (i == 0 || !b[i - 1].is_ascii_digit())
+            && (i + 4 == b.len() || !b[i + 4].is_ascii_digit());
+        (digits && alone && (b[i..].starts_with(b"19") || b[i..].starts_with(b"20")))
+            .then(|| &text[i..i + 4])
     })
 }
 
 /// An image's own error at a point (its check's horizontal error), when the ground's points were given.
 fn error_at(check: Option<&OrthophotoChecked>, name: &str) -> String {
-    check.and_then(|c| c.points.iter().find(|p| p.name == name)).map(|p| cm(p.d)).unwrap_or_default()
+    check
+        .and_then(|c| c.points.iter().find(|p| p.name == name))
+        .map(|p| cm(p.d))
+        .unwrap_or_default()
 }
 
 /// The shifts as CSV (metres as computed).
@@ -198,7 +203,14 @@ pub fn csv(r: &OrthophotoCompared) -> String {
         r.rules, r.limit, r.gsd[0], r.gsd[1]
     );
     for p in &r.pairs {
-        out.push_str(&format!("{};{};{};{};{}\n", p.name, p.dx, p.dy, p.d, if p.over { "Evet" } else { "Hayır" }));
+        out.push_str(&format!(
+            "{};{};{};{};{}\n",
+            p.name,
+            p.dx,
+            p.dy,
+            p.d,
+            if p.over { "Evet" } else { "Hayır" }
+        ));
     }
     out
 }
@@ -229,7 +241,12 @@ impl OrthoCompareWindowApp for App {
                 }
             },
         };
-        let folder = self.document.as_ref().and_then(|d| d.path.as_ref()).and_then(|p| p.parent()).map(|p| p.display().to_string());
+        let folder = self
+            .document
+            .as_ref()
+            .and_then(|d| d.path.as_ref())
+            .and_then(|p| p.parent())
+            .map(|p| p.display().to_string());
         let seam = s.seam.then(|| OrthoSeamAsk {
             step: s.step,
             window: s.window.max(0.0) as u32,
@@ -286,8 +303,17 @@ impl OrthoCompareWindowApp for App {
             self.warn("Ortofoto karşılaştırması: çizimde karşılaştırılacak iki ortofoto (raster) yok; ikincisini ekleyin.");
             return Task::none();
         }
-        let selected: Vec<String> = self.selection.ids().iter().filter_map(|s| doc.model.uid(*s).map(|u| u.to_string())).collect();
-        let mut picked: Vec<String> = rasters.iter().filter(|(u, _)| selected.contains(u)).map(|(u, _)| u.clone()).collect();
+        let selected: Vec<String> = self
+            .selection
+            .ids()
+            .iter()
+            .filter_map(|s| doc.model.uid(*s).map(|u| u.to_string()))
+            .collect();
+        let mut picked: Vec<String> = rasters
+            .iter()
+            .filter(|(u, _)| selected.contains(u))
+            .map(|(u, _)| u.clone())
+            .collect();
         for (u, _) in &rasters {
             if picked.len() >= 2 {
                 break;
@@ -297,15 +323,28 @@ impl OrthoCompareWindowApp for App {
             }
         }
         let (first, second) = (picked[0].clone(), picked[1].clone());
-        let layers: Vec<(String, String)> =
-            doc.model.layers().leaves().iter().map(|n| (n.id.clone(), n.name.clone())).collect();
+        let layers: Vec<(String, String)> = doc
+            .model
+            .layers()
+            .leaves()
+            .iter()
+            .map(|n| (n.id.clone(), n.name.clone()))
+            .collect();
         let with_points: Vec<&(String, String)> = layers
             .iter()
-            .filter(|(id, _)| doc.model.entities().any(|e| e.base().layer_id == *id && matches!(e, Entity::Point(_))))
+            .filter(|(id, _)| {
+                doc.model
+                    .entities()
+                    .any(|e| e.base().layer_id == *id && matches!(e, Entity::Point(_)))
+            })
             .collect();
         let known = with_points
             .iter()
-            .find(|(_, n)| ["gnss", "arazi", "denetim"].iter().any(|w| n.to_lowercase().contains(w)))
+            .find(|(_, n)| {
+                ["gnss", "arazi", "denetim"]
+                    .iter()
+                    .any(|w| n.to_lowercase().contains(w))
+            })
             .map(|(id, _)| id.clone())
             .unwrap_or_default();
         // The layers with points, else (a seam measured alone, docs/adr/2460) every layer but the rasters'.
@@ -315,19 +354,43 @@ impl OrthoCompareWindowApp for App {
             .filter(|e| matches!(e, Entity::Raster(_)))
             .map(|e| e.base().layer_id.clone())
             .collect();
-        let mut readings: Vec<&String> = with_points.iter().map(|(id, _)| id).filter(|id| **id != known).collect();
+        let mut readings: Vec<&String> = with_points
+            .iter()
+            .map(|(id, _)| id)
+            .filter(|id| **id != known)
+            .collect();
         if readings.is_empty() {
-            readings = layers.iter().map(|(id, _)| id).filter(|id| **id != known && !raster_layers.contains(id) && id.as_str() != "0").collect();
+            readings = layers
+                .iter()
+                .map(|(id, _)| id)
+                .filter(|id| **id != known && !raster_layers.contains(id) && id.as_str() != "0")
+                .collect();
         }
-        let name_of = |uid: &str| rasters.iter().find(|(u, _)| u == uid).map(|(_, n)| n.clone()).unwrap_or_default();
+        let name_of = |uid: &str| {
+            rasters
+                .iter()
+                .find(|(u, _)| u == uid)
+                .map(|(_, n)| n.clone())
+                .unwrap_or_default()
+        };
         let reading_for = |raster: &str, taken: &str| -> String {
-            let free: Vec<&String> = readings.iter().copied().filter(|id| id.as_str() != taken).collect();
+            let free: Vec<&String> = readings
+                .iter()
+                .copied()
+                .filter(|id| id.as_str() != taken)
+                .collect();
             let by_year = year(&name_of(raster)).and_then(|y| {
                 free.iter().copied().find(|id| {
-                    id.contains(y) || layers.iter().any(|(l, n)| l.as_str() == id.as_str() && n.contains(y))
+                    id.contains(y)
+                        || layers
+                            .iter()
+                            .any(|(l, n)| l.as_str() == id.as_str() && n.contains(y))
                 })
             });
-            by_year.or_else(|| free.first().copied()).cloned().unwrap_or_default()
+            by_year
+                .or_else(|| free.first().copied())
+                .cloned()
+                .unwrap_or_default()
         };
         let first_points = reading_for(&first, "");
         let second_points = reading_for(&second, &first_points);
@@ -365,7 +428,14 @@ impl OrthoCompareWindowApp for App {
             return;
         };
         match std::fs::write(&path, csv(r)) {
-            Ok(()) => self.say(Level::Success, format!("{TITLE}: {} nokta {} dosyasına yazıldı.", r.pairs.len(), path.display())),
+            Ok(()) => self.say(
+                Level::Success,
+                format!(
+                    "{TITLE}: {} nokta {} dosyasına yazıldı.",
+                    r.pairs.len(),
+                    path.display()
+                ),
+            ),
             Err(e) => self.warn(format!("{TITLE}: {} yazılamadı: {e}.", path.display())),
         }
     }
@@ -393,15 +463,22 @@ impl OrthoCompareWindowApp for App {
             Event::TakeLine => {
                 // The one line or polyline chosen (docs/adr/2860): its persistent id and words.
                 let chosen = self.selection.ids().to_vec();
-                let picked = self.document.as_ref().and_then(|doc| match chosen.as_slice() {
-                    [slot] => match doc.model.get(*slot) {
-                        Some(kentos_commands::Entity::Line(_)) => Some(("Çizgi", *slot)),
-                        Some(kentos_commands::Entity::Polyline(_)) => Some(("Çoklu çizgi", *slot)),
+                let picked = self
+                    .document
+                    .as_ref()
+                    .and_then(|doc| match chosen.as_slice() {
+                        [slot] => match doc.model.get(*slot) {
+                            Some(kentos_commands::Entity::Line(_)) => Some(("Çizgi", *slot)),
+                            Some(kentos_commands::Entity::Polyline(_)) => {
+                                Some(("Çoklu çizgi", *slot))
+                            }
+                            _ => None,
+                        }
+                        .and_then(|(kind, slot)| {
+                            doc.model.uid(slot).map(|u| (kind, u.to_string()))
+                        }),
                         _ => None,
-                    }
-                    .and_then(|(kind, slot)| doc.model.uid(slot).map(|u| (kind, u.to_string()))),
-                    _ => None,
-                });
+                    });
                 match picked {
                     Some((kind, uid)) => {
                         let s = &mut self.modules.map_mut().ortho_compare;
@@ -410,7 +487,10 @@ impl OrthoCompareWindowApp for App {
                         s.seam_polygons = None;
                     }
                     None => {
-                        self.warn("Birleşme çizgisi için çizimde tek bir çizgi ya da çoklu çizgi seçin.".to_owned());
+                        self.warn(
+                            "Birleşme çizgisi için çizimde tek bir çizgi ya da çoklu çizgi seçin."
+                                .to_owned(),
+                        );
                         return Task::none();
                     }
                 }
@@ -420,8 +500,12 @@ impl OrthoCompareWindowApp for App {
                 let chosen = self.selection.ids().to_vec();
                 let picked = self.document.as_ref().and_then(|doc| {
                     let seamline = |slot: kentos_domain::Slot| match doc.model.get(slot) {
-                        Some(kentos_commands::Entity::Polygon(_)) => doc.model.uid(slot).map(|u| u.to_string()),
-                        Some(kentos_commands::Entity::Polyline(p)) if p.closed => doc.model.uid(slot).map(|u| u.to_string()),
+                        Some(kentos_commands::Entity::Polygon(_)) => {
+                            doc.model.uid(slot).map(|u| u.to_string())
+                        }
+                        Some(kentos_commands::Entity::Polyline(p)) if p.closed => {
+                            doc.model.uid(slot).map(|u| u.to_string())
+                        }
                         _ => None,
                     };
                     match chosen.as_slice() {
@@ -501,7 +585,11 @@ impl OrthoCompareWindowApp for App {
             }
         };
         let coarse = r.gsd[0].max(r.gsd[1]);
-        let times = if coarse > 0.0 { format!("{}", (r.limit / coarse * 10.0).round() / 10.0) } else { "?".into() };
+        let times = if coarse > 0.0 {
+            format!("{}", (r.limit / coarse * 10.0).round() / 10.0)
+        } else {
+            "?".into()
+        };
         let over = r.pairs.iter().filter(|p| p.over).count();
         lines.push(match r.passed {
             Some(true) => words::text_line(
@@ -538,7 +626,11 @@ impl OrthoCompareWindowApp for App {
         }
         lines.push(words::text_line(
             Kind::Info,
-            format!("Yer örnekleme aralığı: birinci {} cm, ikinci {} cm.", cm(r.gsd[0]), cm(r.gsd[1])),
+            format!(
+                "Yer örnekleme aralığı: birinci {} cm, ikinci {} cm.",
+                cm(r.gsd[0]),
+                cm(r.gsd[1])
+            ),
         ));
         for (which, check) in [("Birinci", &r.first_check), ("İkinci", &r.second_check)] {
             let Some(c) = check else { continue };
@@ -557,10 +649,16 @@ impl OrthoCompareWindowApp for App {
             });
         }
         if r.first_check.is_none() {
-            lines.push(words::text_line(Kind::Info, "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi."));
+            lines.push(words::text_line(
+                Kind::Info,
+                "Arazi noktaları verilmedi: görüntülerin kendi doğruluğu denetlenmedi.",
+            ));
         }
         if !r.unmatched.is_empty() {
-            lines.push(words::text_line(Kind::Warn, format!("Eşi bulunmayan noktalar: {}.", r.unmatched.join(", "))));
+            lines.push(words::text_line(
+                Kind::Warn,
+                format!("Eşi bulunmayan noktalar: {}.", r.unmatched.join(", ")),
+            ));
         }
         if let Some(m) = &r.seam {
             // Along a seam line (docs/adr/2860): its places in the overlap and those outside it.
@@ -585,10 +683,7 @@ impl OrthoCompareWindowApp for App {
             };
             let counted = format!(
                 "Kayıklık ölçümü: {where_}; {} sayıldı, {} korelasyonu düşük, {} tepe arama sınırında, {} dokusuz.",
-                m.ok,
-                m.low,
-                m.edge,
-                m.flat
+                m.ok, m.low, m.edge, m.flat
             );
             lines.push(match (&m.shift, m.passed) {
                 (Some(st), Some(ok)) => words::text_line(
@@ -615,7 +710,11 @@ impl OrthoCompareWindowApp for App {
         if self.modules.map().ortho_compare.show == Show::Seam {
             let f = self.format();
             // Docs/adr/4460: with more than one part of the shared boundary, each distance after its part's number.
-            let parts = r.seam.as_ref().and_then(|m| m.shared.as_ref()).map_or(0, |sh| sh.parts.len());
+            let parts = r
+                .seam
+                .as_ref()
+                .and_then(|m| m.shared.as_ref())
+                .map_or(0, |sh| sh.parts.len());
             for p in r.seam.iter().flat_map(|m| &m.patches) {
                 let o = |v: Option<f64>| v.map(cm).unwrap_or_default();
                 let station = p.station.map(|v| f.length_bare(v)).unwrap_or_default();
@@ -651,7 +750,11 @@ impl OrthoCompareWindowApp for App {
                 cm(p.d),
                 error_at(r.first_check.as_ref(), &p.name),
                 error_at(r.second_check.as_ref(), &p.name),
-                if p.over { "Sınırı aşar".to_owned() } else { "İçinde".to_owned() },
+                if p.over {
+                    "Sınırı aşar".to_owned()
+                } else {
+                    "İçinde".to_owned()
+                },
             ]);
         }
         (lines, rows)
@@ -662,7 +765,11 @@ impl OrthoCompareWindowApp for App {
         let caption = |text: &'static str| container(label::caption(text)).width(120);
         let mut grounds = vec![(NONE.to_owned(), NONE.to_owned())];
         grounds.extend(s.layers.iter().cloned());
-        let known = if s.known.is_empty() { NONE } else { s.known.as_str() };
+        let known = if s.known.is_empty() {
+            NONE
+        } else {
+            s.known.as_str()
+        };
         let form = Form::new()
             .label_width(130.0)
             .field(
@@ -787,9 +894,14 @@ impl OrthoCompareWindowApp for App {
                 240.0,
             )
         };
-        let mut body = Column::new().spacing(12).push(form).push(words::summary(lines));
+        let mut body = Column::new()
+            .spacing(12)
+            .push(form)
+            .push(words::summary(lines));
         if s.seam {
-            body = body.push(Segmented::new([Show::Points, Show::Seam], s.show, |v| msg(Event::Show(v))));
+            body = body.push(Segmented::new([Show::Points, Show::Seam], s.show, |v| {
+                msg(Event::Show(v))
+            }));
         }
         let body = body.push(table);
         let ready = matches!(&s.answer, Some(Ok(r)) if !r.pairs.is_empty());

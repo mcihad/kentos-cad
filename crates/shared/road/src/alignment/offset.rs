@@ -14,10 +14,19 @@ use super::element::Kind;
 pub enum OffsetError {
     /// It folds into a cusp between these stations, on the element `element` whose tightest radius on the offset's
     /// side is `radius` (m).
-    Cusp { from: f64, to: f64, element: String, radius: f64 },
+    Cusp {
+        from: f64,
+        to: f64,
+        element: String,
+        radius: f64,
+    },
     /// It crosses itself: its places at the stations `a` < `b` are one point. `kink`: the PI of the source's kink (a
     /// direction jump, a PI without a curve) between them, when there is one.
-    Crosses { a: f64, b: f64, kink: Option<String> },
+    Crosses {
+        a: f64,
+        b: f64,
+        kink: Option<String>,
+    },
 }
 
 /// The offset place at a station.
@@ -48,7 +57,11 @@ pub fn check(al: &Alignment, d: f64) -> Result<(), OffsetError> {
             // Where k·d = −1 along a clothoid's linear curvature.
             let cross = |k_at: f64| {
                 let rate = e.rate();
-                if rate == 0.0 { 0.0 } else { ((k_at - e.k0) / rate).clamp(0.0, e.length) }
+                if rate == 0.0 {
+                    0.0
+                } else {
+                    ((k_at - e.k0) / rate).clamp(0.0, e.length)
+                }
             };
             let s_fold = cross(-1.0 / d);
             let (from, to) = match (a, b) {
@@ -57,7 +70,11 @@ pub fn check(al: &Alignment, d: f64) -> Result<(), OffsetError> {
                 _ => (s_fold, e.length),
             };
             // The tightest radius on the folding side: 1/|k| at the end that folds furthest.
-            let k = [(a, e.k0), (b, e.k1)].iter().filter(|(f, _)| *f).map(|(_, k)| k.abs()).fold(0.0, f64::max);
+            let k = [(a, e.k0), (b, e.k1)]
+                .iter()
+                .filter(|(f, _)| *f)
+                .map(|(_, k)| k.abs())
+                .fold(0.0, f64::max);
             return Err(OffsetError::Cusp {
                 from: e.station + from,
                 to: e.station + to,
@@ -79,7 +96,8 @@ pub fn check(al: &Alignment, d: f64) -> Result<(), OffsetError> {
     let pts: Vec<[f64; 2]> = stations.iter().filter_map(|s| place(al, *s, d)).collect();
     let cell = (al.length / pts.len() as f64 * 4.0).max(d.abs()).max(1e-6);
     let key = |p: [f64; 2]| ((p[0] / cell).floor() as i64, (p[1] / cell).floor() as i64);
-    let mut grid: std::collections::HashMap<(i64, i64), Vec<usize>> = std::collections::HashMap::new();
+    let mut grid: std::collections::HashMap<(i64, i64), Vec<usize>> =
+        std::collections::HashMap::new();
     for i in 0..pts.len() - 1 {
         let (a, b) = (key(pts[i]), key(pts[i + 1]));
         for x in a.0.min(b.0)..=a.0.max(b.0) {

@@ -1067,23 +1067,38 @@ impl App {
     ) -> Element<'a, Message> {
         use crate::forms::designer::lists::{FieldList, list_summary, list_words};
         let layers = self.form_layers();
-        let field = self
-            .chosen_form()
-            .and_then(|form| self.layer_fields_of(&form.layer).into_iter().find(|x| x.key() == f.field));
-        let lists = field.as_ref().map(|x| self.lists_for(x.kind)).unwrap_or_default();
+        let field = self.chosen_form().and_then(|form| {
+            self.layer_fields_of(&form.layer)
+                .into_iter()
+                .find(|x| x.key() == f.field)
+        });
+        let lists = field
+            .as_ref()
+            .map(|x| self.lists_for(x.kind))
+            .unwrap_or_default();
         let now = field.as_ref().map(|x| self.field_list(x, &lists));
         let linked = match &now {
             Some(FieldList::Linked(d)) => Some((*d).clone()),
             _ => None,
         };
         let own = match &now {
-            Some(FieldList::Linked(d)) => format!("Katman alanının listesi · {} (proje listesi)", d.name),
+            Some(FieldList::Linked(d)) => {
+                format!("Katman alanının listesi · {} (proje listesi)", d.name)
+            }
             Some(FieldList::Own(n)) => format!("Katman alanının listesi · kendi {n} kodu"),
             _ => "Katman alanının listesi · liste yok".to_owned(),
         };
         let mut names = vec![Choice::new(own)];
-        names.extend(lists.iter().map(|d| Choice::new(format!("Proje listesi: {}", list_words(d)))));
-        names.extend(layers.iter().map(|(_, n)| Choice::new(format!("Başka katmandan: {n}"))));
+        names.extend(
+            lists
+                .iter()
+                .map(|d| Choice::new(format!("Proje listesi: {}", list_words(d)))),
+        );
+        names.extend(
+            layers
+                .iter()
+                .map(|(_, n)| Choice::new(format!("Başka katmandan: {n}"))),
+        );
         let at = f
             .lookup
             .as_ref()
@@ -1094,9 +1109,14 @@ impl App {
         let pick_source = Select::new(names, Some(at), move |i| match i {
             0 => msg(Event::LookupLayer(None)),
             i if i <= list_ids.len() => msg(Event::LinkDomain(list_ids[i - 1].clone())),
-            i => msg(Event::LookupLayer(picks.get(i - 1 - list_ids.len()).map(|(l, _)| l.clone()))),
+            i => msg(Event::LookupLayer(
+                picks.get(i - 1 - list_ids.len()).map(|(l, _)| l.clone()),
+            )),
         });
-        let mut col = Column::new().spacing(8).push(words::field("Seçenek kaynağı", pick_source, error));
+        let mut col =
+            Column::new()
+                .spacing(8)
+                .push(words::field("Seçenek kaynağı", pick_source, error));
         if f.lookup.is_none()
             && let Some(x) = &field
         {
@@ -1419,20 +1439,26 @@ impl App {
             "Örnek kayıt: haritada seçili nesne, değerleriyle."
         };
         let role_words = match w.preview_role {
-            crate::forms::designer::PreviewRole::Editor => "Kaydı düzenleyen bütün formu görür ve değiştirir.",
+            crate::forms::designer::PreviewRole::Editor => {
+                "Kaydı düzenleyen bütün formu görür ve değiştirir."
+            }
             crate::forms::designer::PreviewRole::Entry => {
                 "Veri girişi yalnız yayınlanmış formla kaydın özniteliklerini değiştirir; nesne ekleyemez, silemez, \
                  şeklini değiştiremez."
             }
-            crate::forms::designer::PreviewRole::Viewer => "Okuyan kaydı okur; formda hiçbir şeyi değiştiremez.",
+            crate::forms::designer::PreviewRole::Viewer => {
+                "Okuyan kaydı okur; formda hiçbir şeyi değiştiremez."
+            }
         };
         let head = column![
             label::caption(format!("{sample} Önizlemede yazılanlar kayda geçmez.")).style(muted),
             row![
                 label::caption("Rol").style(muted),
-                Segmented::new(crate::forms::designer::PreviewRole::ALL, w.preview_role, |r| {
-                    msg(Event::PreviewRole(r))
-                }),
+                Segmented::new(
+                    crate::forms::designer::PreviewRole::ALL,
+                    w.preview_role,
+                    |r| { msg(Event::PreviewRole(r)) }
+                ),
             ]
             .spacing(8)
             .align_y(Center),

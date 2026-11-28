@@ -190,7 +190,9 @@ impl App {
         if let Some(writer) = self.extension_writing() {
             return Err(refused(
                 "busy",
-                &format!("Masaüstü şu an meşgul: {writer} çizime yazıyor. Biraz sonra yeniden deneyin."),
+                &format!(
+                    "Masaüstü şu an meşgul: {writer} çizime yazıyor. Biraz sonra yeniden deneyin."
+                ),
             ));
         }
         let mut params = request.get("params").cloned().unwrap_or_else(|| json!({}));
@@ -237,14 +239,26 @@ impl App {
             .collect();
         if matches!(method, "select" | "selection") {
             let (doc, selected) = if named.is_none() || named == front {
-                (self.document.as_ref().map(|d| &d.model), &mut self.selection)
-            } else if let Some(parked) = self.doc_tabs.parked.iter_mut().find(|p| Some(p.document.session) == named) {
+                (
+                    self.document.as_ref().map(|d| &d.model),
+                    &mut self.selection,
+                )
+            } else if let Some(parked) = self
+                .doc_tabs
+                .parked
+                .iter_mut()
+                .find(|p| Some(p.document.session) == named)
+            {
                 (Some(&parked.document.model), &mut parked.selection)
             } else {
-                return Err(refused("document_closed", "İstenen çizim kapatıldı ya da hiç açılmadı."));
+                return Err(refused(
+                    "document_closed",
+                    "İstenen çizim kapatıldı ya da hiç açılmadı.",
+                ));
             };
             let doc = doc.ok_or_else(|| refused("no_document", "Masaüstünde açık çizim yok."))?;
-            return super::selection::answer(doc, selected, method, &params).map_err(|e| (e.code.to_owned(), e.message));
+            return super::selection::answer(doc, selected, method, &params)
+                .map_err(|e| (e.code.to_owned(), e.message));
         }
         if method == "view" {
             // A drawing in a tab behind has no view on the screen: its camera waits with it.
@@ -418,7 +432,9 @@ impl App {
             return Err(match named {
                 Some(s) => refused(
                     "document_closed",
-                    &format!("{s} numaralı çizim kapatıldı ya da hiç açılmadı; hello açık çizimleri sayar."),
+                    &format!(
+                        "{s} numaralı çizim kapatıldı ya da hiç açılmadı; hello açık çizimleri sayar."
+                    ),
                 ),
                 None => refused("no_document", "Masaüstünde açık çizim yok."),
             });

@@ -40,22 +40,40 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
     alignments::road_project(doc)?;
     let text = input.path.trim();
     if text.is_empty() || !Path::new(text).is_absolute() {
-        return Err(fail(codes::INVALID_FILE_PATH, "IFC'nin yolu boş ya da göreli; mutlak bir .ifc yolu verin.".into(), "path"));
+        return Err(fail(
+            codes::INVALID_FILE_PATH,
+            "IFC'nin yolu boş ya da göreli; mutlak bir .ifc yolu verin.".into(),
+            "path",
+        ));
     }
     if !text.to_ascii_lowercase().ends_with(".ifc") {
-        return Err(fail(codes::INVALID_FILE_PATH, format!("“{text}” bir .ifc dosyası değil."), "path"));
+        return Err(fail(
+            codes::INVALID_FILE_PATH,
+            format!("“{text}” bir .ifc dosyası değil."),
+            "path",
+        ));
     }
     let path = PathBuf::from(text);
     let folder = path.parent().map(Path::to_path_buf).unwrap_or_default();
     if !folder.is_dir() {
         return Err(fail(
             codes::INVALID_FILE_PATH,
-            format!("“{}” klasörü yok; dosya var olan bir klasöre yazılır.", folder.display()),
+            format!(
+                "“{}” klasörü yok; dosya var olan bir klasöre yazılır.",
+                folder.display()
+            ),
             "path",
         ));
     }
     if path.exists() && !input.overwrite {
-        return Err(fail(codes::FILE_EXISTS, format!("{} var; üzerine yazmak için overwrite verin.", path.display()), "path"));
+        return Err(fail(
+            codes::FILE_EXISTS,
+            format!(
+                "{} var; üzerine yazmak için overwrite verin.",
+                path.display()
+            ),
+            "path",
+        ));
     }
     let list = alignments::alignments(doc);
     let chosen: Vec<(usize, bool)> = match &input.alignments {
@@ -77,8 +95,12 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
             format!("{d}T{t}")
         }
         Some(s) => {
-            let (d, t) = stamp_of(s)
-                .ok_or_else(|| bad("stamp", format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın.")))?;
+            let (d, t) = stamp_of(s).ok_or_else(|| {
+                bad(
+                    "stamp",
+                    format!("“{s}” bir tarih ve saat değil; YYYY-MM-DDThh:mm:ss yazın."),
+                )
+            })?;
             format!("{d}T{t}")
         }
     };
@@ -87,7 +109,9 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
     let crs = match crate::ifc_system::of(doc, Some(0.0)) {
         Ok(c) => Some(c),
         Err(why) => {
-            warnings.push(losses(format!("IFC'ye harita dönüşümü (IfcMapConversion) yazılmadı: {why}.")));
+            warnings.push(losses(format!(
+                "IFC'ye harita dönüşümü (IfcMapConversion) yazılmadı: {why}."
+            )));
             None
         }
     };
@@ -102,16 +126,29 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
     for (i, asked) in chosen {
         let def = &list[i];
         if def.offset_of.is_some() {
-            warnings.push(losses(format!("“{}” paralel bir aks; IFC'ye yazılmadı.", def.name)));
+            warnings.push(losses(format!(
+                "“{}” paralel bir aks; IFC'ye yazılmadı.",
+                def.name
+            )));
             continue;
         }
         let b = match alignments::build(list, def, "") {
             Ok(b) => b,
             Err(stop) if asked => {
-                return Err(bad("alignments", format!("“{}” aksı kurulamıyor: {}", def.name, crate::road_corridors::words(stop))));
+                return Err(bad(
+                    "alignments",
+                    format!(
+                        "“{}” aksı kurulamıyor: {}",
+                        def.name,
+                        crate::road_corridors::words(stop)
+                    ),
+                ));
             }
             Err(_) => {
-                warnings.push(losses(format!("“{}” aksı kurulamıyor; yazılmadı.", def.name)));
+                warnings.push(losses(format!(
+                    "“{}” aksı kurulamıyor; yazılmadı.",
+                    def.name
+                )));
                 continue;
             }
         };
@@ -139,13 +176,19 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
         let mut verticals = Vec::new();
         if !input.without_profiles {
             for p in doc.road_profiles().iter().filter(|p| p.alignment == def.id) {
-                match kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(p)).ok().and_then(|v| vertical(&p.name, &v.pieces)) {
+                match kentos_road::profile::vertical::build(&crate::road_profiles::pvis_of(p))
+                    .ok()
+                    .and_then(|v| vertical(&p.name, &v.pieces))
+                {
                     Some(v) => {
                         written.vertical_segments += v.segments.len() as u32;
                         written.profiles.push(p.name.clone());
                         verticals.push(v);
                     }
-                    None => warnings.push(losses(format!("“{}” boykesiti kurulamıyor; yazılmadı.", p.name))),
+                    None => warnings.push(losses(format!(
+                        "“{}” boykesiti kurulamıyor; yazılmadı.",
+                        p.name
+                    ))),
                 }
             }
         }
@@ -171,7 +214,10 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
         return Err(bad("", "Yazılacak bir şey yok: seçilen aks yok.".into()));
     }
     let text = write(&file);
-    let sha256 = Sha256::digest(text.as_bytes()).iter().map(|b| format!("{b:02x}")).collect();
+    let sha256 = Sha256::digest(text.as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect();
     let out = IfcExported {
         path: path.display().to_string(),
         schema: "IFC4X3_ADD2".into(),
@@ -191,7 +237,10 @@ fn check(doc: &Document, input: &ExportIfc) -> Result<Planned, Stop> {
 /// Checks `input` against the document; writes nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &ExportIfc) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: (), warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: (),
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -199,7 +248,10 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ExportIfc) -> CommandResult<(
 /// What the file would hold; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ExportIfc) -> CommandResult<IfcExported> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: p.out, warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: p.out,
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -218,5 +270,8 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ExportIfc) -> CommandResult
         ))
         .into();
     }
-    CommandResult::Completed { output: p.out, warnings: p.warnings }
+    CommandResult::Completed {
+        output: p.out,
+        warnings: p.warnings,
+    }
 }

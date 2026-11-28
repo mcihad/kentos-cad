@@ -102,11 +102,19 @@ impl ParcelTool {
             .doc
             .projections_for(site)
             .iter()
-            .flat_map(|p| p.shape.iter().map(|a| a.outer.pts.clone()).collect::<Vec<_>>())
+            .flat_map(|p| {
+                p.shape
+                    .iter()
+                    .map(|a| a.outer.pts.clone())
+                    .collect::<Vec<_>>()
+            })
             .filter(|pts| pts.len() >= 3)
             .map(|pts| kentos_commands::NewObject {
                 geometry: EntityGeometry::Polyline {
-                    pts: pts.iter().map(|p| kentos_commands::Vec2 { x: p.x, y: p.y }).collect(),
+                    pts: pts
+                        .iter()
+                        .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
+                        .collect(),
                     bulges: None,
                     zs: None,
                     ms: None,
@@ -118,7 +126,9 @@ impl ParcelTool {
                 line_weight: None,
                 line_type: Some(LineType::Dashed),
                 line_pattern: None,
-                attrs: Some(std::iter::once((MARK_ATTR.to_owned(), "Çıkma izdüşümü".to_owned())).collect()),
+                attrs: Some(
+                    std::iter::once((MARK_ATTR.to_owned(), "Çıkma izdüşümü".to_owned())).collect(),
+                ),
                 label: Some("Çıkma izdüşümü".to_owned()),
                 label_of: None,
                 label_scale: None,

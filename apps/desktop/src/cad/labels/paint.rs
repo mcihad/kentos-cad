@@ -11,16 +11,21 @@ impl Labels<'_> {
         let area = Size::new(self.view.width as f32, self.view.height as f32);
         let margin = self.margin.get();
         let scale = self.view.map_px() as f32;
-        let letters = |text: &str, height: f64| (text.chars().count() as f32 * 0.8 + 2.0) * height as f32 * scale;
+        let letters = |text: &str, height: f64| {
+            (text.chars().count() as f32 * 0.8 + 2.0) * height as f32 * scale
+        };
         let (at, reach) = match spot {
-            LabelSpot::Line {unicode:Some(_),..} => return true,
+            LabelSpot::Line {
+                unicode: Some(_), ..
+            } => return true,
             LabelSpot::Text { slot, at, .. } => {
                 let reach = match self.doc.get(*slot) {
                     Some(Entity::Text(t)) => {
                         let longest = t.text.lines().map(|l| l.chars().count()).max().unwrap_or(1);
                         let lines = t.text.lines().count().max(1) as f32;
                         let box_width = t.paragraph.box_width.map_or(0.0, |w| w as f32 * scale);
-                        (longest as f32 * 0.8 + 2.0).max(lines * 1.6) * t.height as f32 * scale + box_width
+                        (longest as f32 * 0.8 + 2.0).max(lines * 1.6) * t.height as f32 * scale
+                            + box_width
                     }
                     _ => area.width.max(area.height) / 4.0,
                 };
@@ -31,13 +36,19 @@ impl Labels<'_> {
                     Some(Entity::Dimension(d)) => d.height,
                     _ => 0.0,
                 };
-                (*at, letters("00000000", height).max(area.width.max(area.height) / 16.0))
+                (
+                    *at,
+                    letters("00000000", height).max(area.width.max(area.height) / 16.0),
+                )
             }
-            LabelSpot::PieceText { at, height, text, .. } => (*at, letters(text, *height)),
+            LabelSpot::PieceText {
+                at, height, text, ..
+            } => (*at, letters(text, *height)),
             LabelSpot::PieceDimension { at, height, .. } => (*at, letters("00000000", *height)),
-            LabelSpot::Line { at, height, .. } | LabelSpot::ParagraphMask { at, height, .. } => {
-                (*at, area.width.max(area.height) / 4.0 + *height as f32 * scale * 4.0)
-            }
+            LabelSpot::Line { at, height, .. } | LabelSpot::ParagraphMask { at, height, .. } => (
+                *at,
+                area.width.max(area.height) / 4.0 + *height as f32 * scale * 4.0,
+            ),
             LabelSpot::Placed { at, .. }
             | LabelSpot::PlacedLine { at, .. }
             | LabelSpot::PlacedLetter { at, .. }
@@ -283,7 +294,15 @@ impl Labels<'_> {
         match &self.marks {
             Some(slot) => {
                 let mut gpu = crate::gpu_frame::GpuFrame::on_screen(frame.size());
-                crate::map_marks::paint(&mut gpu, camera, &self.colors, self.format.axes, ucs, lift, per_unit);
+                crate::map_marks::paint(
+                    &mut gpu,
+                    camera,
+                    &self.colors,
+                    self.format.axes,
+                    ucs,
+                    lift,
+                    per_unit,
+                );
                 slot.put(gpu.finish(), camera.map_px());
             }
             None => frame.marks(camera, &self.colors, self.format.axes, ucs, lift, per_unit),
@@ -296,10 +315,24 @@ impl Labels<'_> {
         use std::hash::{Hash, Hasher};
         let mut key = std::collections::hash_map::DefaultHasher::new();
         let c = &self.view;
-        (c.center.x.to_bits(), c.center.y.to_bits(), c.scale.to_bits(), c.width.to_bits(), c.height.to_bits())
+        (
+            c.center.x.to_bits(),
+            c.center.y.to_bits(),
+            c.scale.to_bits(),
+            c.width.to_bits(),
+            c.height.to_bits(),
+        )
             .hash(&mut key);
-        (c.twist.to_bits(), size.width.to_bits(), size.height.to_bits(), self.map_marks.map(f32::to_bits)).hash(&mut key);
-        crate::map_marks::metres_per_unit(self.doc.settings(), c).to_bits().hash(&mut key);
+        (
+            c.twist.to_bits(),
+            size.width.to_bits(),
+            size.height.to_bits(),
+            self.map_marks.map(f32::to_bits),
+        )
+            .hash(&mut key);
+        crate::map_marks::metres_per_unit(self.doc.settings(), c)
+            .to_bits()
+            .hash(&mut key);
         format!("{:?}{:?}", self.colors, self.format).hash(&mut key);
         key.finish()
     }
@@ -420,7 +453,8 @@ impl Labels<'_> {
                             }
                         }
                         let size = (d.height * self.camera.get().scale) as f32;
-                        let font = drawing_fonts::font(d.look.font.unwrap_or(self.font), 500, false);
+                        let font =
+                            drawing_fonts::font(d.look.font.unwrap_or(self.font), 500, false);
                         self.draw(
                             frame,
                             &Piece {
@@ -489,7 +523,10 @@ impl Labels<'_> {
                     ) => {
                         // As its table style draws it where it sets nothing itself (docs/adr/1126 §3, 1127 §1).
                         if drawn_table.as_ref().is_none_or(|(of, _)| *of != slot) {
-                            let shape = kentos_native_application::geometry::styled_table(t, self.doc.settings());
+                            let shape = kentos_native_application::geometry::styled_table(
+                                t,
+                                self.doc.settings(),
+                            );
                             drawn_table = Some((slot, shape));
                         }
                         let drawn = kentos_commands::styled(t, self.doc.settings());
@@ -499,16 +536,17 @@ impl Labels<'_> {
                         };
                         // The line of its words this place stands for (docs/adr/1030 §7).
                         let words = kentos_geometry_core::geom::table::cell_line(words, *line);
-                        let geom = drawn_table
-                            .as_ref()
-                            .and_then(|(_, shape)| kentos_geometry_core::geom::table::table_geom(shape));
+                        let geom = drawn_table.as_ref().and_then(|(_, shape)| {
+                            kentos_geometry_core::geom::table::table_geom(shape)
+                        });
                         // Its cell style's height, else the table's (docs/adr/1127 §1).
                         let height = geom
                             .as_ref()
                             .and_then(|g| g.style_at(*row, *col).height)
                             .unwrap_or(t.height);
                         // Its cells' fills (docs/adr/0327 §1), a pixel in from their lines.
-                        if t.styles.iter().any(|s| s.fill.is_some()) && filled.insert(slot)
+                        if t.styles.iter().any(|s| s.fill.is_some())
+                            && filled.insert(slot)
                             && let Some(g) = &geom
                         {
                             for f in g.fills() {
@@ -538,10 +576,8 @@ impl Labels<'_> {
                         // A cell style's colour over the table's (docs/adr/0327 §1).
                         let own = t.cell_style(*row, *col).color;
                         let color = self.ink_of(
-                            own.as_deref().or(base
-                                .color
-                                .as_deref()
-                                .or(self.layer_color(layer))),
+                            own.as_deref()
+                                .or(base.color.as_deref().or(self.layer_color(layer))),
                         );
                         // In its face's SHX text style (docs/adr/1026), as a text is.
                         if let Some(w) = kentos_native_application::shx_text::words_in(
@@ -581,11 +617,8 @@ impl Labels<'_> {
                         Entity::Leader(l),
                     ) => {
                         if grow.k > 1.0 {
-                            let color = self.ink_of(
-                                base.color
-                                    .as_deref()
-                                    .or(self.layer_color(layer)),
-                            );
+                            let color =
+                                self.ink_of(base.color.as_deref().or(self.layer_color(layer)));
                             self.grown_arrowhead(frame, l, grow.k, color);
                         }
                         let Some(note) = l.text.as_deref() else {
@@ -759,11 +792,19 @@ impl Labels<'_> {
                         // An SHX text's mask is its own box, drawn with its strokes (ADR 1125); a block's piece's
                         // too (docs/adr/1022).
                         let shx_ok = |t: &kentos_commands::TextEntity| {
-                            kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
-                                .is_some_and(|p| p.is_ok())
+                            kentos_native_application::shx_text::place_cached(
+                                self.doc.settings(),
+                                self.doc.styles(),
+                                t,
+                            )
+                            .is_some_and(|p| p.is_ok())
                         };
-                        let piece = placed.as_deref().and_then(kentos_native_application::shx_text::placed_piece);
-                        if matches!(entity, Entity::Text(t) if shx_ok(t)) || piece.as_ref().is_some_and(shx_ok) {
+                        let piece = placed
+                            .as_deref()
+                            .and_then(kentos_native_application::shx_text::placed_piece);
+                        if matches!(entity, Entity::Text(t) if shx_ok(t))
+                            || piece.as_ref().is_some_and(shx_ok)
+                        {
                             continue;
                         }
                         let r = rotation.to_radians();
@@ -785,9 +826,16 @@ impl Labels<'_> {
                             frame.fill_quad(quad, self.colors.halo, Some(slot));
                         }
                     }
-                    (LabelSpot::Line{unicode:Some(text),at,..},_)=> {
-                        let color=self.ink_of(base.color.as_deref().or(self.layer_color(layer)));
-                        self.draw_unicode(frame,text,*at,color);
+                    (
+                        LabelSpot::Line {
+                            unicode: Some(text),
+                            at,
+                            ..
+                        },
+                        _,
+                    ) => {
+                        let color = self.ink_of(base.color.as_deref().or(self.layer_color(layer)));
+                        self.draw_unicode(frame, text, *at, color);
                     }
                     (
                         LabelSpot::Line {
@@ -810,8 +858,12 @@ impl Labels<'_> {
                             .as_deref()
                             .and_then(kentos_native_application::shx_text::placed_piece)
                             .filter(|t| {
-                                kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
-                                    .is_some_and(|p| p.is_ok())
+                                kentos_native_application::shx_text::place_cached(
+                                    self.doc.settings(),
+                                    self.doc.styles(),
+                                    t,
+                                )
+                                .is_some_and(|p| p.is_ok())
                             })
                         {
                             if *start == 0 {
@@ -832,8 +884,12 @@ impl Labels<'_> {
                                     // An SHX text is drawn whole at its first line's place (ADR 1125).
                                     let ink = self.text_ink(base.color.as_deref(), layer);
                                     if (*start > 0 || self.shx_text(frame, slot, t, ink))
-                                        && kentos_native_application::shx_text::place_cached(self.doc.settings(), self.doc.styles(), t)
-                                            .is_some_and(|p| p.is_ok())
+                                        && kentos_native_application::shx_text::place_cached(
+                                            self.doc.settings(),
+                                            self.doc.styles(),
+                                            t,
+                                        )
+                                        .is_some_and(|p| p.is_ok())
                                     {
                                         continue;
                                     }
@@ -954,7 +1010,10 @@ impl Labels<'_> {
                 m.keep(
                     part,
                     entity,
-                    (self.layer_color_of(slot), self.cells_print(slot, part, &tables)),
+                    (
+                        self.layer_color_of(slot),
+                        self.cells_print(slot, part, &tables),
+                    ),
                     &self.bands.borrow()[made.0..],
                 );
             }
@@ -967,53 +1026,61 @@ impl Labels<'_> {
         self.camera.set(self.view);
         // The multi-line text being written or edited, over the rest (docs/adr/0182 §4).
         if let Some(p) = &self.preview {
-            if let Some(text)=&p.unicode {
-                if let Some(r)=p.records.as_chunks::<{ kentos_geometry_core::store::labels::LABEL_STRIDE }>().0.iter().next() {
-                    self.draw_unicode(frame,text,Vec2::new(r[2],r[3]),self.colors.label);
+            if let Some(text) = &p.unicode {
+                if let Some(r) = p
+                    .records
+                    .as_chunks::<{ kentos_geometry_core::store::labels::LABEL_STRIDE }>()
+                    .0
+                    .iter()
+                    .next()
+                {
+                    self.draw_unicode(frame, text, Vec2::new(r[2], r[3]), self.colors.label);
                 }
             } else {
-            for r in p
-                .records
-                .as_chunks::<{ kentos_geometry_core::store::labels::LABEL_STRIDE }>().0.iter()
-            {
-                let at = Vec2::new(r[2], r[3]);
-                if r[1] == kentos_geometry_core::store::labels::LABEL_PARAGRAPH_MASK {
-                    let rad = r[4].to_radians();
-                    let (u, v) = (
-                        Vec2::new(rad.cos(), rad.sin()),
-                        Vec2::new(-rad.sin(), rad.cos()),
-                    );
-                    let lean = kentos_native_application::geometry::core_face(&p.face).lean();
-                    let corner = |x: f64, y: f64| {
-                        let x = x + y * lean;
-                        self.screen(Vec2::new(
-                            at.x + u.x * x + v.x * y,
-                            at.y + u.y * x + v.y * y,
-                        ))
-                    };
-                    let quad = [
-                        corner(0.0, 0.0),
-                        corner(r[5], 0.0),
-                        corner(r[5], r[6]),
-                        corner(0.0, r[6]),
-                    ];
-                    frame.fill_quad(quad, self.colors.halo, None);
-                } else {
-                    self.line(
-                        frame,
-                        &p.text,
-                        &p.runs,
-                        (r[7] as usize, r[8] as usize),
-                        at,
-                        r[4],
-                        r[5],
-                        r[6],
-                        &p.face,
-                        self.colors.label,
-                    );
+                for r in p
+                    .records
+                    .as_chunks::<{ kentos_geometry_core::store::labels::LABEL_STRIDE }>()
+                    .0
+                    .iter()
+                {
+                    let at = Vec2::new(r[2], r[3]);
+                    if r[1] == kentos_geometry_core::store::labels::LABEL_PARAGRAPH_MASK {
+                        let rad = r[4].to_radians();
+                        let (u, v) = (
+                            Vec2::new(rad.cos(), rad.sin()),
+                            Vec2::new(-rad.sin(), rad.cos()),
+                        );
+                        let lean = kentos_native_application::geometry::core_face(&p.face).lean();
+                        let corner = |x: f64, y: f64| {
+                            let x = x + y * lean;
+                            self.screen(Vec2::new(
+                                at.x + u.x * x + v.x * y,
+                                at.y + u.y * x + v.y * y,
+                            ))
+                        };
+                        let quad = [
+                            corner(0.0, 0.0),
+                            corner(r[5], 0.0),
+                            corner(r[5], r[6]),
+                            corner(0.0, r[6]),
+                        ];
+                        frame.fill_quad(quad, self.colors.halo, None);
+                    } else {
+                        self.line(
+                            frame,
+                            &p.text,
+                            &p.runs,
+                            (r[7] as usize, r[8] as usize),
+                            at,
+                            r[4],
+                            r[5],
+                            r[6],
+                            &p.face,
+                            self.colors.label,
+                        );
+                    }
                 }
             }
-        }
         }
         // The texts too small to read, as faint bands, one stroke a colour and thickness (docs/adr/0626 §6): a
         // stroke's tessellation is linear where a fill's sweeps and sorts, and a butt-ended stroke as thick as the

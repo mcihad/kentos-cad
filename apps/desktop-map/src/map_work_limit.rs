@@ -41,7 +41,12 @@ pub struct LimitPick {
 
 impl Default for LimitPick {
     fn default() -> Self {
-        LimitPick { basis: "none", metres: "0,05".into(), scale: 1000, method: "sayisal".into() }
+        LimitPick {
+            basis: "none",
+            metres: "0,05".into(),
+            scale: 1000,
+            method: "sayisal".into(),
+        }
     }
 }
 
@@ -57,7 +62,13 @@ impl LimitPick {
         };
         Some(ShiftLimit {
             basis,
-            metres: (basis == LimitBasis::Own).then(|| self.metres.trim().replace(',', ".").parse().unwrap_or(f64::NAN)),
+            metres: (basis == LimitBasis::Own).then(|| {
+                self.metres
+                    .trim()
+                    .replace(',', ".")
+                    .parse()
+                    .unwrap_or(f64::NAN)
+            }),
             scale: matches!(basis, LimitBasis::Drawing | LimitBasis::Method).then_some(self.scale),
             method: (basis == LimitBasis::Method).then(|| self.method.clone()),
         })
@@ -65,12 +76,14 @@ impl LimitPick {
 
     /// The limit's value and source, or why it does not hold; none for “Sınır yok”.
     pub fn used(&self) -> Option<Result<ShiftLimitUsed, String>> {
-        self.input().map(|l| kentos_commands::limit_metres(&l).map_err(|(_, why)| why))
+        self.input()
+            .map(|l| kentos_commands::limit_metres(&l).map_err(|(_, why)| why))
     }
 
     /// The limit the query takes: one that holds.
     pub fn holding(&self) -> Option<ShiftLimit> {
-        self.input().filter(|l| kentos_commands::limit_metres(l).is_ok())
+        self.input()
+            .filter(|l| kentos_commands::limit_metres(l).is_ok())
     }
 
     /// A key of the choice, for the panel's kept read.
@@ -106,21 +119,37 @@ pub fn view(pick: &LimitPick) -> Element<'_, Message> {
     let rules = kentos_commands::position_accuracy();
     let mut line = row![
         container(label::caption("Kayma sınırı")).width(84),
-        container(crate::style::fields::select(&BASES, pick.basis, |b| msg(LimitEvent::Basis(b)))).width(Fill),
+        container(crate::style::fields::select(&BASES, pick.basis, |b| msg(
+            LimitEvent::Basis(b)
+        )))
+        .width(Fill),
     ]
     .spacing(4)
     .align_y(Center);
     let scales: Vec<(String, String)> = rules
         .as_ref()
-        .map(|r| r.table.scales.iter().map(|s| (s.to_string(), format!("1/{s}"))).collect())
+        .map(|r| {
+            r.table
+                .scales
+                .iter()
+                .map(|s| (s.to_string(), format!("1/{s}")))
+                .collect()
+        })
         .unwrap_or_default();
     let mut second = None;
     match pick.basis {
         "own" => {
             line = line.push(
                 container(
-                    crate::style::fields::input(None, "0,05", &pick.metres, false, pick.input().is_some_and(|l| kentos_commands::limit_metres(&l).is_err()))
-                        .on_input(|m| msg(LimitEvent::Metres(m))),
+                    crate::style::fields::input(
+                        None,
+                        "0,05",
+                        &pick.metres,
+                        false,
+                        pick.input()
+                            .is_some_and(|l| kentos_commands::limit_metres(&l).is_err()),
+                    )
+                    .on_input(|m| msg(LimitEvent::Metres(m))),
                 )
                 .width(64),
             );
@@ -128,22 +157,40 @@ pub fn view(pick: &LimitPick) -> Element<'_, Message> {
         }
         "drawing" => {
             line = line.push(
-                container(crate::style::fields::select_owned(scales, &pick.scale.to_string(), |s| msg(LimitEvent::Scale(s))))
-                    .width(84),
+                container(crate::style::fields::select_owned(
+                    scales,
+                    &pick.scale.to_string(),
+                    |s| msg(LimitEvent::Scale(s)),
+                ))
+                .width(84),
             );
         }
         "method" => {
             let methods: Vec<(String, String)> = rules
                 .as_ref()
-                .map(|r| r.table.methods.iter().map(|m| (m.id.clone(), m.title.clone())).collect())
+                .map(|r| {
+                    r.table
+                        .methods
+                        .iter()
+                        .map(|m| (m.id.clone(), m.title.clone()))
+                        .collect()
+                })
                 .unwrap_or_default();
             second = Some(
                 row![
                     container(label::caption("")).width(84),
-                    container(crate::style::fields::select_owned(methods, &pick.method, |m| msg(LimitEvent::Method(m))))
-                        .width(Fill),
-                    container(crate::style::fields::select_owned(scales, &pick.scale.to_string(), |s| msg(LimitEvent::Scale(s))))
-                        .width(84),
+                    container(crate::style::fields::select_owned(
+                        methods,
+                        &pick.method,
+                        |m| msg(LimitEvent::Method(m))
+                    ))
+                    .width(Fill),
+                    container(crate::style::fields::select_owned(
+                        scales,
+                        &pick.scale.to_string(),
+                        |s| msg(LimitEvent::Scale(s))
+                    ))
+                    .width(84),
                 ]
                 .spacing(4)
                 .align_y(Center),
@@ -158,8 +205,12 @@ pub fn view(pick: &LimitPick) -> Element<'_, Message> {
     match pick.used() {
         Some(Ok(u)) => {
             // One line in the narrow dock: the value and what follows the article; the whole source in the tip.
-            let short = u.source.rsplit_once(": ").map_or(u.source.as_str(), |(_, w)| w);
-            let line = label::caption(format!("{} m · {short}", metres_words(u.metres))).style(kentos_ui::style::text::muted);
+            let short = u
+                .source
+                .rsplit_once(": ")
+                .map_or(u.source.as_str(), |(_, w)| w);
+            let line = label::caption(format!("{} m · {short}", metres_words(u.metres)))
+                .style(kentos_ui::style::text::muted);
             all = all.push(kentos_ui::widget::tip(
                 line,
                 kentos_ui::widget::Tip::new(u.source.clone()),

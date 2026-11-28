@@ -8,9 +8,9 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::{LineType, fold_name};
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
+use crate::{LineType, fold_name};
 
 // ── The name pattern ────────────────────────────────────────────────────────
 

@@ -37,7 +37,11 @@ impl NurbsRoute {
         let c = self.curve.view();
         let u = c.param_at_length(distance);
         let d = c.derivs(u, 1);
-        if !u.is_finite() || !d[0].x.is_finite() || !d[1].x.is_finite() || (d[1].x == 0. && d[1].y == 0.) {
+        if !u.is_finite()
+            || !d[0].x.is_finite()
+            || !d[1].x.is_finite()
+            || (d[1].x == 0. && d[1].y == 0.)
+        {
             return Err("NURBS üzerindeki çizgi tipi işaretinin konumu doğrulanamadı; eksik çıktı üretilmedi.".into());
         }
         Ok((d[0], atan2(d[1].y, d[1].x)))
@@ -184,7 +188,10 @@ impl Route {
     pub(super) fn point_at(&self, distance: f64) -> Option<Vec2> {
         let d = distance.clamp(0., self.total);
         if let Some(e) = &self.ellipse {
-            return e.sample(d, js_max(self.total, 1.) * 1e-13).ok().map(|s| s.0);
+            return e
+                .sample(d, js_max(self.total, 1.) * 1e-13)
+                .ok()
+                .map(|s| s.0);
         }
         if let Some(n) = &self.nurbs {
             return n.sample(d).ok().map(|s| s.0);
@@ -955,11 +962,13 @@ mod tests {
                 let angle = n as f64 * 0.5;
                 let p = &stroke["path"][0];
                 assert!(
-                    (p["x"].as_f64().unwrap() - kentos_geometry_core::jsmath::cos(angle)).abs() < 1e-12,
+                    (p["x"].as_f64().unwrap() - kentos_geometry_core::jsmath::cos(angle)).abs()
+                        < 1e-12,
                     "{i}: {p}"
                 );
                 assert!(
-                    (p["y"].as_f64().unwrap() - kentos_geometry_core::jsmath::sin(angle)).abs() < 1e-12,
+                    (p["y"].as_f64().unwrap() - kentos_geometry_core::jsmath::sin(angle)).abs()
+                        < 1e-12,
                     "{i}: {p}"
                 );
             }
@@ -1029,14 +1038,20 @@ mod tests {
         let env = env(&aspects);
         let ring = [[0., 0.], [1., 0.], [1., 1.]];
         let read = |m: serde_json::Value| {
-            Marks::read(&Json::parse(&serde_json::json!({"period":4.,"marks":[m]}).to_string()).unwrap())
-                .unwrap()
-                .unwrap()
+            Marks::read(
+                &Json::parse(&serde_json::json!({"period":4.,"marks":[m]}).to_string()).unwrap(),
+            )
+            .unwrap()
+            .unwrap()
         };
-        let text = read(serde_json::json!({"at":0.,"cap":1.,"height":2.,"x":0.5,"y":-0.25,"rotation":30.,
-            "polygons":[],"paths":[ring]}));
-        let fill = read(serde_json::json!({"at":0.,"cap":1.,"height":2.,"x":0.5,"y":-0.25,"rotation":30.,
-            "polygons":[[ring]]}));
+        let text = read(
+            serde_json::json!({"at":0.,"cap":1.,"height":2.,"x":0.5,"y":-0.25,"rotation":30.,
+            "polygons":[],"paths":[ring]}),
+        );
+        let fill = read(
+            serde_json::json!({"at":0.,"cap":1.,"height":2.,"x":0.5,"y":-0.25,"rotation":30.,
+            "polygons":[[ring]]}),
+        );
         let path = [Vec2::new(1., 2.), Vec2::new(3., 5.)];
         let style = StrokeStyle {
             color: "#123456".into(),
@@ -1066,7 +1081,10 @@ mod tests {
         assert_eq!(stroke.len(), 3);
         for (a, b) in stroke.iter().zip(fill) {
             for k in ["x", "y"] {
-                assert!((a[k].as_f64().unwrap() - b[k].as_f64().unwrap()).abs() < 1e-12, "{a} {b}");
+                assert!(
+                    (a[k].as_f64().unwrap() - b[k].as_f64().unwrap()).abs() < 1e-12,
+                    "{a} {b}"
+                );
             }
         }
     }

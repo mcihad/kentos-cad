@@ -10,9 +10,9 @@
 //! oluştur), place the chosen one and purge the unused ones. Every change goes through
 //! `cad.blocks.edit` in the words of `kentos_interaction::blocks`, the web's.
 
-mod replace;
-mod find;
 mod arrays;
+mod find;
+mod replace;
 pub(crate) use find::TITLE as FIND_TITLE;
 pub(crate) use replace::{Event as ReplaceEvent, TITLE as REPLACE_TITLE};
 
@@ -558,8 +558,12 @@ impl App {
 
     /// The panel's body: the search box and the list.
     pub(crate) fn blocks_panel_view(&self) -> Element<'_, Message> {
-        if self.blocks_panel.arrays.is_some() { return arrays::panel(self); }
-        if self.blocks_panel.find.is_some() { return find::panel(self); }
+        if self.blocks_panel.arrays.is_some() {
+            return arrays::panel(self);
+        }
+        if self.blocks_panel.find.is_some() {
+            return find::panel(self);
+        }
         // Bu çizim | Kitaplık (docs/adr/0726 §1), as AutoCAD's Blocks palette has Current Drawing and Libraries.
         let shown = self.blocks_panel.library_shown;
         let side = |library: bool, words: &'static str| {
@@ -605,14 +609,26 @@ impl App {
         )
         .padding([6, 8])
         .width(Fill);
-        let recognition = container(row![
-            button(label::caption("Bileşenleri bul…"))
-                .on_press_maybe(self.available("block.find").then_some(Message::Run("block.find")))
-                .style(style::button::ghost).width(Fill),
-            button(label::caption("Dizileri bul…"))
-                .on_press_maybe(self.available("array.find").then_some(Message::Run("array.find")))
-                .style(style::button::ghost).width(Fill),
-        ].spacing(4)).padding([4,8]);
+        let recognition = container(
+            row![
+                button(label::caption("Bileşenleri bul…"))
+                    .on_press_maybe(
+                        self.available("block.find")
+                            .then_some(Message::Run("block.find"))
+                    )
+                    .style(style::button::ghost)
+                    .width(Fill),
+                button(label::caption("Dizileri bul…"))
+                    .on_press_maybe(
+                        self.available("array.find")
+                            .then_some(Message::Run("array.find"))
+                    )
+                    .style(style::button::ghost)
+                    .width(Fill),
+            ]
+            .spacing(4),
+        )
+        .padding([4, 8]);
         let search = column![search, recognition, self.blocks_view_bar()];
         let rows = self.listed_blocks();
         if rows.is_empty() {
@@ -657,8 +673,15 @@ impl App {
             false,
         );
         let side = typography::scaled(THUMB);
-        let picture = container(Canvas::new(Thumb { paths, placement: None }).width(side).height(side))
-            .style(move |theme: &Theme| thumb_tile(theme, chosen));
+        let picture = container(
+            Canvas::new(Thumb {
+                paths,
+                placement: None,
+            })
+            .width(side)
+            .height(side),
+        )
+        .style(move |theme: &Theme| thumb_tile(theme, chosen));
         let name: Element<'a, Message> = match &self.blocks_panel.renaming {
             Some((renamed, text)) if *renamed == id => tree_view::rename(
                 text,
@@ -836,9 +859,16 @@ impl App {
             false,
         );
         let side = typography::scaled(CARD_THUMB);
-        let picture = container(Canvas::new(Thumb { paths, placement: None }).width(side).height(side))
-            .center_x(Fill)
-            .style(move |theme: &Theme| thumb_tile(theme, chosen));
+        let picture = container(
+            Canvas::new(Thumb {
+                paths,
+                placement: None,
+            })
+            .width(side)
+            .height(side),
+        )
+        .center_x(Fill)
+        .style(move |theme: &Theme| thumb_tile(theme, chosen));
         let block = self.document.as_ref().and_then(|d| d.model.block(id));
         let card = block.and_then(|b| b.card.as_ref());
         let faint = |t: &Theme| text::Style {
@@ -852,9 +882,15 @@ impl App {
         let category = card
             .and_then(|c| c.category.as_deref())
             .map_or_else(|| "Kategorisiz".to_owned(), |c| c.replace('/', " › "));
-        let version = card.map_or_else(|| "Kartsız".to_owned(), |c| {
-            c.publication.as_ref().map_or_else(|| format!("Yerel {}", c.version), |p| format!("Yayın {}", p.release))
-        });
+        let version = card.map_or_else(
+            || "Kartsız".to_owned(),
+            |c| {
+                c.publication.as_ref().map_or_else(
+                    || format!("Yerel {}", c.version),
+                    |p| format!("Yayın {}", p.release),
+                )
+            },
+        );
         let words = column![
             text(r.name.clone())
                 .font(font)
@@ -878,7 +914,12 @@ impl App {
             .style(style::button::row(chosen));
         let mut body = Vec::new();
         if let Some(p) = card.and_then(|c| c.publication.as_ref()) {
-            body.push(format!("Tip: {} · Yayın {} · Aile: {}", p.type_name, p.release, p.family_id.to_text()));
+            body.push(format!(
+                "Tip: {} · Yayın {} · Aile: {}",
+                p.type_name,
+                p.release,
+                p.family_id.to_text()
+            ));
         }
         if let Some(about) = &r.about {
             body.push(about.clone());
@@ -980,9 +1021,21 @@ impl App {
             .icon(crate::icons::from_web(Some("blockFields")))
             .item("Kart…", msg(Event::Card(id)))
             .icon(crate::icons::from_web(Some("blockCard")))
-            .item("Tip değerleri…", model.block(id).and_then(|b| b.dynamic.as_ref()).map(|_| msg(Event::TypeValues(id))))
+            .item(
+                "Tip değerleri…",
+                model
+                    .block(id)
+                    .and_then(|b| b.dynamic.as_ref())
+                    .map(|_| msg(Event::TypeValues(id))),
+            )
             .detail("Ortak tip değerleri ile yerleştirmeye özel değerlerin kapsamını düzenler.")
-            .item("Parametre grupları…", model.block(id).and_then(|b| b.dynamic.as_ref()).map(|_| msg(Event::ParameterGroups(id))))
+            .item(
+                "Parametre grupları…",
+                model
+                    .block(id)
+                    .and_then(|b| b.dynamic.as_ref())
+                    .map(|_| msg(Event::ParameterGroups(id))),
+            )
             .detail("Özellik panelindeki başlıkları düzenler; ölçüler ve örnek değerleri korunur.")
             .submenu("Başka blokla değiştir", self.replace_menu(id, inserts))
             .icon(crate::icons::from_web(Some("blockReplace")))
@@ -1128,7 +1181,14 @@ pub(crate) fn size_text(app: &App, id: BlockId) -> Option<String> {
     let b = doc.model.block(id)?;
     let store = app.spatial.store();
     let [min_x, min_y, max_x, max_y] = kentos_native_application::blocks::fixture_housing_bounds(b)
-        .or_else(|| kentos_native_application::blocks::definition_box_in(store.blocks(), store.font(), id, None))?;
+        .or_else(|| {
+            kentos_native_application::blocks::definition_box_in(
+                store.blocks(),
+                store.font(),
+                id,
+                None,
+            )
+        })?;
     let factor = kentos_native_application::blocks_insert::unit_factor(&doc.model, b);
     let format = app.format();
     let unit = b.units.map_or_else(
@@ -1259,7 +1319,10 @@ impl<M> canvas::Program<M> for Thumb {
         if let Some(guide) = &self.placement {
             let accent = Tokens::of(theme).accent;
             if let Some([left, right, back]) = guide.back {
-                frame.stroke(&Path::line(at(left, back), at(right, back)), Stroke::default().with_color(accent).with_width(2.0));
+                frame.stroke(
+                    &Path::line(at(left, back), at(right, back)),
+                    Stroke::default().with_color(accent).with_width(2.0),
+                );
             }
             frame.fill(&Path::circle(at(0., 0.), 2.4), accent);
         }

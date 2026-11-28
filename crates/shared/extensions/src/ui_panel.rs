@@ -2149,8 +2149,15 @@ mod section_tests {
             { "type": "section", "id": "yardim", "label": "Yardım", "visibleWhen": "adet > 0" },
             { "type": "text", "text": "Bir yardım satırı." }
         ]);
-        assert!(problems(body.clone()).is_empty(), "{:?}", problems(body.clone()));
-        let panel = read(&json!({ "format": FORMAT, "schemaVersion": VERSION, "title": "B", "body": body })).unwrap();
+        assert!(
+            problems(body.clone()).is_empty(),
+            "{:?}",
+            problems(body.clone())
+        );
+        let panel = read(
+            &json!({ "format": FORMAT, "schemaVersion": VERSION, "title": "B", "body": body }),
+        )
+        .unwrap();
         assert_eq!(
             panel.body[1],
             Component::Section {
@@ -2168,10 +2175,14 @@ mod section_tests {
         assert_eq!(
             wrong,
             [
-                ("/body/0".to_owned(), "section bileşeni boş olmayan bir ad (label) ister.".to_owned()),
+                (
+                    "/body/0".to_owned(),
+                    "section bileşeni boş olmayan bir ad (label) ister.".to_owned()
+                ),
                 (
                     "/body/1/collapsed".to_owned(),
-                    "collapsed true ya da false olmalı: bölüm panel açılırken kapalı mı.".to_owned()
+                    "collapsed true ya da false olmalı: bölüm panel açılırken kapalı mı."
+                        .to_owned()
                 )
             ]
         );

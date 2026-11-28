@@ -4,14 +4,16 @@
 
 use crate::app::App;
 use crate::data_layers_tests::{municipal, node};
-use kentos_data::{Driver as _, Field, FieldKind, GeometryField, NewTable};
 use crate::files_testing::{app_with_drawing, scratch};
+use kentos_data::{Driver as _, Field, FieldKind, GeometryField, NewTable};
 
 /// Another package with a table named bakim of other columns: an integer `no` and a text `ad`, points in 4326.
 fn other_bakim() -> std::path::PathBuf {
     let path = scratch("baska-paket").join("baska.gpkg");
     kentos_geopackage::GeoPackage::create(&path).expect("a file");
-    let source = kentos_data_gpkg::Gpkg.open(path.to_str().expect("utf-8")).expect("open");
+    let source = kentos_data_gpkg::Gpkg
+        .open(path.to_str().expect("utf-8"))
+        .expect("open");
     let mut tx = source.begin().expect("begin");
     tx.create_table(
         &NewTable {
@@ -20,7 +22,13 @@ fn other_bakim() -> std::path::PathBuf {
             description: None,
             key: "no".into(),
             fields: vec![Field::new("ad", FieldKind::Text { max: Some(20) })],
-            geometry: Some(GeometryField { name: "geom".into(), type_name: "POINT".into(), z: false, m: false, srid: Some(4326) }),
+            geometry: Some(GeometryField {
+                name: "geom".into(),
+                type_name: "POINT".into(),
+                z: false,
+                m: false,
+                srid: Some(4326),
+            }),
             spatial_index: false,
             system: None,
         },
@@ -32,7 +40,10 @@ fn other_bakim() -> std::path::PathBuf {
 }
 
 fn address_of(app: &App, name: &str) -> String {
-    node(app, name).and_then(|n| n.data.as_ref()).map(|d| d.address.clone()).expect("a data layer")
+    node(app, name)
+        .and_then(|n| n.data.as_ref())
+        .map(|d| d.address.clone())
+        .expect("a data layer")
 }
 
 #[test]
@@ -53,8 +64,13 @@ fn a_moved_file_is_pointed_at_once_and_a_different_package_is_refused() {
     // A package with a same-named table that is not the layer's: refused, nothing bound.
     let other = other_bakim();
     let bakim = node(&app, "bakim").expect("bakim").id.clone();
-    let refused = app.relink_data_layers(&bakim, &other).expect_err("not the layer's table");
-    assert!(refused.contains("“bakim” tablosu “bakim” katmanının tablosu değil"), "{refused}");
+    let refused = app
+        .relink_data_layers(&bakim, &other)
+        .expect_err("not the layer's table");
+    assert!(
+        refused.contains("“bakim” tablosu “bakim” katmanının tablosu değil"),
+        "{refused}"
+    );
     assert!(refused.contains("Hiçbir katman bağlanmadı"), "{refused}");
     assert_eq!(address_of(&app, "bakim"), address, "nothing bound");
     // The new place: both layers of the file follow.

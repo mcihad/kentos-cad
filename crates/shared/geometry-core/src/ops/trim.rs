@@ -13,9 +13,7 @@ use crate::geom::intersect::{
     Edge, circle_circle, full_circle, line_circle_params, on_edge_arc, point_at, ray_edge,
 };
 use crate::geometry::Bounds;
-use crate::jsmath::{
-    TAU, acos, atan2, cos, js_hypot, js_max, js_max_all, js_min, js_min_all, sin,
-};
+use crate::jsmath::{TAU, acos, atan2, cos, js_hypot, js_max, js_max_all, js_min, js_min_all, sin};
 use crate::op;
 use crate::ops::curve_cuts::{
     Cut, Geometry, construction_of, ellipse_of, extend_ellipse, trim_construction, trim_ellipse,

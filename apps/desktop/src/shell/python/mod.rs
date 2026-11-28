@@ -18,16 +18,16 @@
 mod agents;
 mod assist;
 pub(crate) mod echo;
-mod selection;
 pub(crate) mod host;
 pub(crate) mod link;
 pub(crate) mod script;
+mod selection;
 mod view;
 
 #[cfg(test)]
-mod tests;
-#[cfg(test)]
 mod check_tests;
+#[cfg(test)]
+mod tests;
 
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
@@ -234,7 +234,9 @@ impl Console {
             (Some(ready), _, _) => (format!("{words} · {ready}"), false),
             (None, _, Some(Err(why))) => (missing(why), true),
             (None, Some(why), _) => (missing(why), true),
-            (None, None, Some(Ok(seen))) => (format!("{words} · {seen} · ilk ifadede başlar"), false),
+            (None, None, Some(Ok(seen))) => {
+                (format!("{words} · {seen} · ilk ifadede başlar"), false)
+            }
             (None, None, None) => (format!("{words} ({path}) denetleniyor…"), false),
         })
     }
@@ -286,7 +288,10 @@ pub enum Event {
 fn look_at(python: &std::path::Path) -> Result<String, String> {
     let mut command = std::process::Command::new(python);
     command
-        .args(["-c", "import platform, kentos; print(platform.python_version(), kentos.__version__)"])
+        .args([
+            "-c",
+            "import platform, kentos; print(platform.python_version(), kentos.__version__)",
+        ])
         .env("PYTHONIOENCODING", "utf-8");
     #[cfg(windows)]
     {
@@ -444,17 +449,24 @@ impl App {
     /// The Python tab shown (docs/adr/9336): the chosen Python looked at once, on a thread of its own, whether it holds
     /// the kentos package; nothing stays running. Again after Yeniden başlat.
     pub(crate) fn python_check(&mut self) -> Task<Message> {
-        if self.python.check.is_some() || self.python.host.is_some() || self.python.running.is_some() {
+        if self.python.check.is_some()
+            || self.python.host.is_some()
+            || self.python.running.is_some()
+        {
             return Task::none();
         }
         let (python, source) = kentos_standards::interpreter_choice();
         self.python.python = python.clone();
         self.python.source = Some(source);
-        iced_runtime::task::blocking(move |mut out: iced::futures::channel::mpsc::Sender<Message>| {
-            let seen = look_at(&python);
-            let answer = Message::Python(Event::Checked(python, seen));
-            let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(&mut out, answer));
-        })
+        iced_runtime::task::blocking(
+            move |mut out: iced::futures::channel::mpsc::Sender<Message>| {
+                let seen = look_at(&python);
+                let answer = Message::Python(Event::Checked(python, seen));
+                let _ = iced::futures::executor::block_on(iced::futures::SinkExt::send(
+                    &mut out, answer,
+                ));
+            },
+        )
     }
 
     /// The console's own events: Enter sends the code to the process, Durdur

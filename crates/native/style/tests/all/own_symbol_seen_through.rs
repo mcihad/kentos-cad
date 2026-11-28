@@ -26,8 +26,10 @@ fn band(transparency: Option<f64>) -> Entity {
 
 /// The program's symbols for one band.
 fn symbols(e: &Entity) -> serde_json::Map<String, Value> {
-    let style: LayerStyle =
-        serde_json::from_value(json!({"color": "#336699", "lineType": "continuous", "lineWeight": 0.25})).expect("a style");
+    let style: LayerStyle = serde_json::from_value(
+        json!({"color": "#336699", "lineType": "continuous", "lineWeight": 0.25}),
+    )
+    .expect("a style");
     let mut store = Store::new();
     store.put_many([(1.0, "a", false, shape(e))]);
     let library = system::library();
@@ -71,7 +73,10 @@ fn an_objects_transparency_sees_its_own_symbol_through() {
     assert_eq!(plain.keys().collect::<Vec<_>>(), [BAND]);
     let seen = symbols(&band(Some(0.6)));
     let (id, symbol) = seen.iter().next().expect("one symbol");
-    assert_ne!(id, BAND, "an id of its own: the library symbol stays as it is for the others");
+    assert_ne!(
+        id, BAND,
+        "an id of its own: the library symbol stays as it is for the others"
+    );
     let (was, now) = (opacities(&plain[BAND]), opacities(symbol));
     // The fill, the dashed edge, the edge's crosses and code, the centroid's squares, cross and code.
     assert_eq!(was.len(), 8);

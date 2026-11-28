@@ -264,7 +264,9 @@ pub(crate) fn picture(layout: &Layout, t: &Tokens, w: u32, h: u32, k: f32) -> Op
                 alpha,
             } => {
                 let mut steps: Vec<Step> = pts
-                    .as_chunks::<2>().0.iter()
+                    .as_chunks::<2>()
+                    .0
+                    .iter()
                     .enumerate()
                     .map(|(i, q)| {
                         if i == 0 {

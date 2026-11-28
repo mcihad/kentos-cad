@@ -42,7 +42,12 @@ fn viewmarks_draw_as_the_reference_says() {
                     let dashed = p.stroke.line_type.as_deref() == Some("dashed");
                     assert_eq!(dashed, w["dashed"] == true, "{at}: kesikli");
                 }
-                (Shape::Text { p: q, text, height, .. }, "text") => {
+                (
+                    Shape::Text {
+                        p: q, text, height, ..
+                    },
+                    "text",
+                ) => {
                     assert_eq!(text, w["text"].as_str().unwrap(), "{at}");
                     close(q.x, &w["p"][0], &at);
                     close(q.y, &w["p"][1], &at);

@@ -76,7 +76,10 @@ pub fn publish_words(issues: &[FormIssue]) -> String {
     publish_blockers(issues)
         .into_iter()
         .map(|(kind, list)| {
-            let messages: Vec<&str> = list.iter().map(|i| i.message.trim().trim_end_matches('.')).collect();
+            let messages: Vec<&str> = list
+                .iter()
+                .map(|i| i.message.trim().trim_end_matches('.'))
+                .collect();
             format!("{}: {}.", kind.label(), messages.join("; "))
         })
         .collect::<Vec<_>>()
@@ -95,17 +98,45 @@ mod tests {
     #[test]
     fn each_kind_is_said_under_its_heading_in_order() {
         let issues = vec![
-            at(codes::DEFAULT_INVALID, FormSeverity::Error, "“tur” alanında “Köşk” değeri listede yok."),
-            at(codes::FIELD_UNKNOWN, FormSeverity::Error, "Katmanda “eski” alanı yok."),
-            at(codes::REQUIRED_HIDDEN, FormSeverity::Error, "“durum” alanı katmanda zorunlu ama formda yok; ekleyin."),
-            at(codes::WIDGET_NEEDS_VALUES, FormSeverity::Error, "Açılır liste değer listesi ister; “tip” alanının listesi yok."),
-            at(codes::REQUIRED_READ_ONLY, FormSeverity::Error, "“no” hem zorunlu hem salt okunur; varsayılanı olmadan doldurulamaz."),
+            at(
+                codes::DEFAULT_INVALID,
+                FormSeverity::Error,
+                "“tur” alanında “Köşk” değeri listede yok.",
+            ),
+            at(
+                codes::FIELD_UNKNOWN,
+                FormSeverity::Error,
+                "Katmanda “eski” alanı yok.",
+            ),
+            at(
+                codes::REQUIRED_HIDDEN,
+                FormSeverity::Error,
+                "“durum” alanı katmanda zorunlu ama formda yok; ekleyin.",
+            ),
+            at(
+                codes::WIDGET_NEEDS_VALUES,
+                FormSeverity::Error,
+                "Açılır liste değer listesi ister; “tip” alanının listesi yok.",
+            ),
+            at(
+                codes::REQUIRED_READ_ONLY,
+                FormSeverity::Error,
+                "“no” hem zorunlu hem salt okunur; varsayılanı olmadan doldurulamaz.",
+            ),
             at(codes::SUGGEST_UNFIT, FormSeverity::Warning, "Bir uyarı."),
         ];
-        let kinds: Vec<(PublishKind, usize)> = publish_blockers(&issues).iter().map(|(k, l)| (*k, l.len())).collect();
+        let kinds: Vec<(PublishKind, usize)> = publish_blockers(&issues)
+            .iter()
+            .map(|(k, l)| (*k, l.len()))
+            .collect();
         assert_eq!(
             kinds,
-            [(PublishKind::Required, 2), (PublishKind::Default, 1), (PublishKind::List, 1), (PublishKind::Other, 1)],
+            [
+                (PublishKind::Required, 2),
+                (PublishKind::Default, 1),
+                (PublishKind::List, 1),
+                (PublishKind::Other, 1)
+            ],
             "a warning blocks nothing"
         );
         assert_eq!(
@@ -118,9 +149,19 @@ mod tests {
 
     #[test]
     fn an_empty_form_blocks_publishing_though_it_is_a_warning_while_drawn() {
-        let issues = vec![at(codes::EMPTY, FormSeverity::Warning, "Formda alan yok; kayıt bu formla düzenlenemez.")];
+        let issues = vec![at(
+            codes::EMPTY,
+            FormSeverity::Warning,
+            "Formda alan yok; kayıt bu formla düzenlenemez.",
+        )];
         assert!(!crate::has_errors(&issues), "a draft may be kept empty");
-        assert_eq!(publish_words(&issues), "Boş form: Formda alan yok; kayıt bu formla düzenlenemez.");
-        assert!(publish_blockers(&[at(codes::SUGGEST_UNFIT, FormSeverity::Warning, "Uyarı.")]).is_empty());
+        assert_eq!(
+            publish_words(&issues),
+            "Boş form: Formda alan yok; kayıt bu formla düzenlenemez."
+        );
+        assert!(
+            publish_blockers(&[at(codes::SUGGEST_UNFIT, FormSeverity::Warning, "Uyarı.")])
+                .is_empty()
+        );
     }
 }

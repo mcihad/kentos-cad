@@ -32,22 +32,54 @@ fn volume(m: &Mesh) -> f64 {
         .iter()
         .map(|t| {
             let [a, b, c] = t.map(|k| m.vertices[k as usize]);
-            (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0]) + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0
+            (a[0] * (b[1] * c[2] - b[2] * c[1]) - a[1] * (b[0] * c[2] - b[2] * c[0])
+                + a[2] * (b[0] * c[1] - b[1] * c[0]))
+                / 6.0
         })
         .sum()
 }
 
 fn building() -> Building {
     let storeys = vec![
-        Storey { id: None, name: "Zemin".into(), long_name: None, elevation: 0.0, psets: vec![], qtos: vec![], unentered: vec![] },
-        Storey { id: None, name: "1. kat".into(), long_name: None, elevation: 3.0, psets: vec![], qtos: vec![], unentered: vec![] },
+        Storey {
+            id: None,
+            name: "Zemin".into(),
+            long_name: None,
+            elevation: 0.0,
+            psets: vec![],
+            qtos: vec![],
+            unentered: vec![],
+        },
+        Storey {
+            id: None,
+            name: "1. kat".into(),
+            long_name: None,
+            elevation: 3.0,
+            psets: vec![],
+            qtos: vec![],
+            unentered: vec![],
+        },
     ];
     // A 5 × 0.25 m wall 3 m high on the first floor, a 1 m window from 0.90 to 2.10 through it.
-    let wall = element(Class::Wall, vec![Shape::Prism { rings: vec![rect(0.0, 0.0, 5.0, 0.25)], bulges: vec![], bottom: 0.0, top: 3.0 }], 1);
+    let wall = element(
+        Class::Wall,
+        vec![Shape::Prism {
+            rings: vec![rect(0.0, 0.0, 5.0, 0.25)],
+            bulges: vec![],
+            bottom: 0.0,
+            top: 3.0,
+        }],
+        1,
+    );
     // A slab with a 1 × 1 m hole (even-odd rings), 0.2 m thick.
     let slab = element(
         Class::Slab,
-        vec![Shape::Prism { rings: vec![rect(0.0, 0.0, 4.0, 4.0), rect(1.0, 1.0, 2.0, 2.0)], bulges: vec![], bottom: -0.2, top: 0.0 }],
+        vec![Shape::Prism {
+            rings: vec![rect(0.0, 0.0, 4.0, 4.0), rect(1.0, 1.0, 2.0, 2.0)],
+            bulges: vec![],
+            bottom: -0.2,
+            top: 0.0,
+        }],
         0,
     );
     // A roof face over 2 × 2 m rising 1 m to the north, 0.2 m thick, its faces as the writer gives them.
@@ -99,10 +131,28 @@ fn every_element_with_a_body_and_every_space_is_a_closed_mesh_of_its_volume() {
     let b = building();
     let all = meshes(&b);
     let kinds: Vec<Kind> = all.iter().map(|m| m.kind).collect();
-    assert_eq!(kinds, [Kind::Element(Class::Wall), Kind::Element(Class::Slab), Kind::Element(Class::Roof), Kind::Space]);
+    assert_eq!(
+        kinds,
+        [
+            Kind::Element(Class::Wall),
+            Kind::Element(Class::Slab),
+            Kind::Element(Class::Roof),
+            Kind::Space
+        ]
+    );
     // The wall less its window: 5 · 0.25 · 3 − 1 · 0.25 · 1.2.
-    assert!((volume(&all[0]) - (3.75 - 0.3)).abs() < 1e-9, "{}", volume(&all[0]));
-    assert!(all[0].vertices.iter().all(|v| v[2] >= 3.0 - 1e-9 && v[2] <= 6.0 + 1e-9), "its storey's floor added");
+    assert!(
+        (volume(&all[0]) - (3.75 - 0.3)).abs() < 1e-9,
+        "{}",
+        volume(&all[0])
+    );
+    assert!(
+        all[0]
+            .vertices
+            .iter()
+            .all(|v| v[2] >= 3.0 - 1e-9 && v[2] <= 6.0 + 1e-9),
+        "its storey's floor added"
+    );
     // The slab less its hole: (16 − 1) · 0.2.
     assert!((volume(&all[1]) - 3.0).abs() < 1e-9, "{}", volume(&all[1]));
     // The roof face: a sheared box, 2 · 2 · 0.2.
@@ -123,16 +173,27 @@ fn a_window_is_a_hole_through_the_wall() {
         .filter(|t| {
             let [a, b, c] = t.map(|k| wall.vertices[k as usize]);
             // Möller–Trumbore along +x.
-            let (e1, e2) = ([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
+            let (e1, e2) = (
+                [b[0] - a[0], b[1] - a[1], b[2] - a[2]],
+                [c[0] - a[0], c[1] - a[1], c[2] - a[2]],
+            );
             let d = [1.0, 0.0, 0.0];
-            let p = [d[1] * e2[2] - d[2] * e2[1], d[2] * e2[0] - d[0] * e2[2], d[0] * e2[1] - d[1] * e2[0]];
+            let p = [
+                d[1] * e2[2] - d[2] * e2[1],
+                d[2] * e2[0] - d[0] * e2[2],
+                d[0] * e2[1] - d[1] * e2[0],
+            ];
             let det = e1[0] * p[0] + e1[1] * p[1] + e1[2] * p[2];
             if det.abs() < 1e-12 {
                 return false;
             }
             let s = [o[0] - a[0], o[1] - a[1], o[2] - a[2]];
             let u = (s[0] * p[0] + s[1] * p[1] + s[2] * p[2]) / det;
-            let q = [s[1] * e1[2] - s[2] * e1[1], s[2] * e1[0] - s[0] * e1[2], s[0] * e1[1] - s[1] * e1[0]];
+            let q = [
+                s[1] * e1[2] - s[2] * e1[1],
+                s[2] * e1[0] - s[0] * e1[2],
+                s[0] * e1[1] - s[1] * e1[0],
+            ];
             let v = (d[0] * q[0] + d[1] * q[1] + d[2] * q[2]) / det;
             let t = (e2[0] * q[0] + e2[1] * q[1] + e2[2] * q[2]) / det;
             u > 1e-9 && v > 1e-9 && u + v < 1.0 - 1e-9 && t > 1e-9
@@ -158,7 +219,15 @@ fn a_curved_prism_is_a_closed_mesh_of_its_flattened_arcs() {
         0,
     );
     let b = Building {
-        storeys: vec![Storey { id: None, name: "Zemin".into(), long_name: None, elevation: 0.0, psets: vec![], qtos: vec![], unentered: vec![] }],
+        storeys: vec![Storey {
+            id: None,
+            name: "Zemin".into(),
+            long_name: None,
+            elevation: 0.0,
+            psets: vec![],
+            qtos: vec![],
+            unentered: vec![],
+        }],
         elements: vec![wall],
         ..Default::default()
     };

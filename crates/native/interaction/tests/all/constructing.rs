@@ -755,10 +755,16 @@ fn kot_oku_says_a_points_elevation_first_and_writes_nothing() {
     b.click(5.02, 5.02);
     let said = b.said(before);
     assert!(
-        said.contains(&(Level::Success, "Kot oku: Z=12.500 (Y=487005.000, X=4420005.000)")),
+        said.contains(&(
+            Level::Success,
+            "Kot oku: Z=12.500 (Y=487005.000, X=4420005.000)"
+        )),
         "{said:?}"
     );
-    assert!(matches!(b.views.last(), Some(kentos_interaction::ViewChange::RasterValues(_))));
+    assert!(matches!(
+        b.views.last(),
+        Some(kentos_interaction::ViewChange::RasterValues(_))
+    ));
     // A place without an elevation: why, and what to do.
     let before = b.log.len();
     b.click(30.0, 30.0);

@@ -11,12 +11,19 @@ use crate::history::Op;
 impl Document {
     /// The author's answers, by question; empty when none is given.
     pub fn form_answers(&self) -> &[FormAnswer] {
-        self.settings.arch.as_ref().map_or(&[], |a| a.form_answers.as_slice())
+        self.settings
+            .arch
+            .as_ref()
+            .map_or(&[], |a| a.form_answers.as_slice())
     }
 
     /// Gives the drawing `next` (by question) as one change named `label` (into the open transaction, else an undo step
     /// of its own). Refused with nothing changed: an answer with a problem, a question twice. Whether anything changed.
-    pub fn set_form_answers(&mut self, mut next: Vec<FormAnswer>, label: &str) -> Result<bool, Refusal> {
+    pub fn set_form_answers(
+        &mut self,
+        mut next: Vec<FormAnswer>,
+        label: &str,
+    ) -> Result<bool, Refusal> {
         if let Some((_, why)) = FormAnswer::list_problem(&next) {
             return Err(Refusal(why));
         }
@@ -26,7 +33,13 @@ impl Document {
         }
         let before = std::sync::Arc::new(self.form_answers().to_vec());
         self.transact(label, |doc| {
-            doc.record(vec![Op::Arch(ArchOp::FormAnswers { before, after: std::sync::Arc::new(next) })], label);
+            doc.record(
+                vec![Op::Arch(ArchOp::FormAnswers {
+                    before,
+                    after: std::sync::Arc::new(next),
+                })],
+                label,
+            );
             Ok(true)
         })
     }

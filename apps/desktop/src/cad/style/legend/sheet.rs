@@ -198,7 +198,9 @@ pub fn png(sheet: &Sheet) -> Result<Vec<u8>, String> {
     // Unit tests draw with the software renderer: GPU devices opened by tests
     // in parallel crash drivers (KentOS UI's snapshot); pictures for the owner
     // name a backend (KENTOS_SNAPSHOT_BACKEND=wgpu).
-    let snapshot = if cfg!(any(test, feature = "testing")) && std::env::var_os("KENTOS_SNAPSHOT_BACKEND").is_none() {
+    let snapshot = if cfg!(any(test, feature = "testing"))
+        && std::env::var_os("KENTOS_SNAPSHOT_BACKEND").is_none()
+    {
         Snapshot::software(size)
     } else {
         Snapshot::new(size)

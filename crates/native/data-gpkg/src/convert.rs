@@ -9,7 +9,14 @@ use rusqlite::types::{ToSqlOutput, Value as Sql, ValueRef};
 /// An integer column's width by its declared type: TINYINT 8, SMALLINT 16, MEDIUMINT 32, INT and INTEGER 64 bits
 /// (GeoPackage 1.3, Table 1; GDAL reads them so).
 fn int_bits(decl: &str) -> u8 {
-    match decl.split('(').next().unwrap_or_default().trim().to_ascii_uppercase().as_str() {
+    match decl
+        .split('(')
+        .next()
+        .unwrap_or_default()
+        .trim()
+        .to_ascii_uppercase()
+        .as_str()
+    {
         "TINYINT" => 8,
         "SMALLINT" => 16,
         "MEDIUMINT" => 32,
@@ -31,7 +38,9 @@ fn int_decl(bits: u8) -> &'static str {
 pub fn kind_of(c: &ColumnKind, decl: &str) -> FieldKind {
     match c {
         ColumnKind::Boolean => FieldKind::Bool,
-        ColumnKind::Integer => FieldKind::Int { bits: int_bits(decl) },
+        ColumnKind::Integer => FieldKind::Int {
+            bits: int_bits(decl),
+        },
         ColumnKind::Real => FieldKind::Real,
         ColumnKind::Text(max) => FieldKind::Text { max: *max },
         ColumnKind::Blob(_) => FieldKind::Blob,

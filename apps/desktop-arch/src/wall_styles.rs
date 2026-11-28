@@ -14,15 +14,16 @@
 //! (an arc too tight for its new faces) is said and nothing is written. Vazgeç, Esc and × leave it.
 
 use crate::arch;
-use std::collections::HashMap;
 use crate::arch::ArchState;
+use std::collections::HashMap;
 
 use iced::widget::canvas::{self, Frame, Path, Stroke};
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Color, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    AnnotationStyleKind, ArchMaterial, ComponentHatch, Entity, StyleEditOperation, StylesEdit, WallCaps,
-    WallComponent, WallDetail, WallFields, WallStyleDef, builtin_wall_styles, wall_styles_problem,
+    AnnotationStyleKind, ArchMaterial, ComponentHatch, Entity, StyleEditOperation, StylesEdit,
+    WallCaps, WallComponent, WallDetail, WallFields, WallStyleDef, builtin_wall_styles,
+    wall_styles_problem,
 };
 use kentos_interaction::{Format, Level};
 use kentos_ui::theme::{Tokens, typography};
@@ -165,7 +166,11 @@ impl Window {
     }
 
     fn problem(&self) -> Option<String> {
-        if let Some(style) = self.styles.iter().find(|s| self.invalid_widths.contains_key(&s.id)) {
+        if let Some(style) = self
+            .styles
+            .iter()
+            .find(|s| self.invalid_widths.contains_key(&s.id))
+        {
             return Some(format!(
                 "“{}” için kalınlığı metre cinsinden sayı olarak girin",
                 style.name
@@ -201,9 +206,16 @@ impl Window {
         let Some((s, _)) = self.shown_style() else {
             return;
         };
-        let width = self.invalid_widths.get(&s.id).cloned().unwrap_or_else(|| shown(s.width));
+        let width = self
+            .invalid_widths
+            .get(&s.id)
+            .cloned()
+            .unwrap_or_else(|| shown(s.width));
         let comps = s.components.clone();
-        let fire = s.fire_rating.as_ref().map_or_else(String::new, |d| d.value.clone());
+        let fire = s
+            .fire_rating
+            .as_ref()
+            .map_or_else(String::new, |d| d.value.clone());
         self.width_typed = width;
         self.fire_typed = fire;
         for (i, c) in comps.iter().enumerate() {
@@ -263,14 +275,14 @@ pub(crate) trait WallStylesApp {
 }
 
 impl WallStylesApp for App {
-    fn saved_wall_styles(&self) -> Vec<WallStyleDef>{
+    fn saved_wall_styles(&self) -> Vec<WallStyleDef> {
         self.document
             .as_ref()
             .map_or_else(Vec::new, |d| d.model.settings().wall_styles.clone())
     }
 
     /// Duvar stilleri (`arch.wallStyles`): the window.
-    fn open_wall_styles(&mut self){
+    fn open_wall_styles(&mut self) {
         let Some(doc) = self.document.as_ref() else {
             self.output("Açık çizim yok.");
             return;
@@ -308,18 +320,17 @@ impl WallStylesApp for App {
         self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::WallStyles));
     }
 
-    fn wall_styles_changed(&self) -> bool{
-        self.modules.arch()
-            .wall_styles
-            .as_ref()
-            .is_some_and(|w| {
-                w.styles != self.saved_wall_styles()
-                    || w.styles.iter().any(|s| w.invalid_widths.contains_key(&s.id))
-            })
+    fn wall_styles_changed(&self) -> bool {
+        self.modules.arch().wall_styles.as_ref().is_some_and(|w| {
+            w.styles != self.saved_wall_styles()
+                || w.styles
+                    .iter()
+                    .any(|s| w.invalid_widths.contains_key(&s.id))
+        })
     }
 
     /// Kaydet: each style removed, made or changed through `cad.styles.edit`, in one undo step.
-    fn save_wall_styles(&mut self){
+    fn save_wall_styles(&mut self) {
         let Some(w) = self.modules.arch().wall_styles.clone() else {
             return;
         };
@@ -418,7 +429,7 @@ impl WallStylesApp for App {
         self.dialog = None;
     }
 
-    fn wall_styles_event(&mut self, event: Event) -> Task<Message>{
+    fn wall_styles_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Save => {
                 self.save_wall_styles();
@@ -550,7 +561,8 @@ impl WallStylesApp for App {
                     w.styles.push(taken);
                 }
                 if let Some(s) = w.own() {
-                    s.fire_rating = (!value.is_empty()).then(|| kentos_commands::Declared::author(&value));
+                    s.fire_rating =
+                        (!value.is_empty()).then(|| kentos_commands::Declared::author(&value));
                 }
             }
             Event::LoadBearing(v) => {
@@ -667,7 +679,7 @@ impl WallStylesApp for App {
         Task::none()
     }
 
-    fn wall_styles_view(&self) -> Element<'_, Message>{
+    fn wall_styles_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().wall_styles else {
             return iced::widget::text("").into();
         };
@@ -813,14 +825,16 @@ impl WallStylesApp for App {
         w: &'a Window,
         s: &'a WallStyleDef,
         format: &Format,
-    ) -> Element<'a, Message>{
+    ) -> Element<'a, Message> {
         let name =
             kentos_ui::widget::text_field("Stilin adı", &s.name).on_input(|t| msg(Event::Name(t)));
         let fixed = kentos_commands::fixed_width(&s.components);
         let width = kentos_ui::widget::text_field("", &w.width_typed)
             .on_input(|t| msg(Event::Width(t)))
             .on_submit(msg(Event::CheckWidth))
-            .style(style::field::validated(w.show_problem && number(&w.width_typed).is_err()));
+            .style(style::field::validated(
+                w.show_problem && number(&w.width_typed).is_err(),
+            ));
         let width_hint = match fixed {
             Some(f) => format!("Bileşenlerin toplamı: {}", format.length(f)),
             None => format!("Yeni duvarın; şimdi {}", format.length(s.new_width())),
@@ -863,12 +877,17 @@ impl WallStylesApp for App {
             container(words::field("Şematik dolgu", fill, None)).width(Fill),
             container(words::field(
                 "Yangın dayanımı",
-                kentos_ui::widget::text_field("REI 120", &w.fire_typed).on_input(|t| msg(Event::FireRating(t))),
+                kentos_ui::widget::text_field("REI 120", &w.fire_typed)
+                    .on_input(|t| msg(Event::FireRating(t))),
                 Some("Kendi sınıfı olmayan duvarlar taşır; boş: eksik".to_owned()),
             ))
             .width(Fill),
-            container(words::field("Taşıyıcı", bearing, Some("Kendi rolü olmayan duvarlar taşır".to_owned())))
-                .width(Fill),
+            container(words::field(
+                "Taşıyıcı",
+                bearing,
+                Some("Kendi rolü olmayan duvarlar taşır".to_owned())
+            ))
+            .width(Fill),
         ]
         .spacing(12)
         .align_y(iced::Top);
@@ -972,8 +991,17 @@ impl WallStylesApp for App {
                 let pick = Select::new(
                     std::iter::once(Choice::new("Metin (bağsız)").shown(""))
                         .chain(w.materials.iter().map(|m| Choice::new(m.name.clone()))),
-                    Some(bound.and_then(|m| ids.iter().position(|id| *id == m.id)).map_or(0, |k| k + 1)),
-                    move |k| msg(Event::Material(i, k.checked_sub(1).and_then(|k| ids.get(k)).cloned())),
+                    Some(
+                        bound
+                            .and_then(|m| ids.iter().position(|id| *id == m.id))
+                            .map_or(0, |k| k + 1),
+                    ),
+                    move |k| {
+                        msg(Event::Material(
+                            i,
+                            k.checked_sub(1).and_then(|k| ids.get(k)).cloned(),
+                        ))
+                    },
                 );
                 if bound.is_some() {
                     container(pick).width(iced::Length::FillPortion(4)).into()
@@ -1001,15 +1029,22 @@ impl WallStylesApp for App {
                         .and_then(|c| c.line_weight)
                         .map_or_else(String::new, |w| format!(" · {} mm", shown(Some(w))));
                     read_only(
-                        format!("{}{pen}", m.hatch.as_ref().map_or("Yok", |h| h.pattern.as_str())),
+                        format!(
+                            "{}{pen}",
+                            m.hatch.as_ref().map_or("Yok", |h| h.pattern.as_str())
+                        ),
                         4,
                     )
                 }
-                None => container(pattern).width(iced::Length::FillPortion(4)).into(),
+                None => container(pattern)
+                    .width(iced::Length::FillPortion(4))
+                    .into(),
             };
             let scale: Element<'_, Message> = if let Some(m) = bound {
                 read_only(
-                    m.hatch.as_ref().map_or_else(String::new, |h| shown(Some(h.scale))),
+                    m.hatch
+                        .as_ref()
+                        .map_or_else(String::new, |h| shown(Some(h.scale))),
                     2,
                 )
             } else if c.hatch.is_some() {

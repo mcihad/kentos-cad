@@ -80,20 +80,30 @@ fn common(h: &mut HeaderMap, tag: &str) {
         h.insert(header::ETAG, v);
     }
     h.insert(header::ACCEPT_RANGES, HeaderValue::from_static("bytes"));
-    h.insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
+    h.insert(
+        header::X_CONTENT_TYPE_OPTIONS,
+        HeaderValue::from_static("nosniff"),
+    );
     h.insert(
         header::CONTENT_SECURITY_POLICY,
-        HeaderValue::from_static("default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox"),
+        HeaderValue::from_static(
+            "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox",
+        ),
     );
     // Private: kept by the caller's own client, which asks again with the tag (a 304 is a few bytes).
-    h.insert(header::CACHE_CONTROL, HeaderValue::from_static("private, no-cache"));
+    h.insert(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("private, no-cache"),
+    );
 }
 
 /// The answer for `stored` to a request with `headers`.
 pub async fn respond(headers: &HeaderMap, stored: Stored<'_>) -> Result<Response, AppError> {
     let tag = format!("\"{}\"", stored.sha256);
     if kentos_application::preview::already_has(
-        headers.get(header::IF_NONE_MATCH).and_then(|v| v.to_str().ok()),
+        headers
+            .get(header::IF_NONE_MATCH)
+            .and_then(|v| v.to_str().ok()),
         &tag,
     ) {
         let mut response = StatusCode::NOT_MODIFIED.into_response();
@@ -116,7 +126,9 @@ pub async fn respond(headers: &HeaderMap, stored: Stored<'_>) -> Result<Response
     let mut file = stored.file;
     if start > 0 {
         use tokio::io::AsyncSeekExt as _;
-        file.seek(std::io::SeekFrom::Start(start)).await.map_err(AppError::Storage)?;
+        file.seek(std::io::SeekFrom::Start(start))
+            .await
+            .map_err(AppError::Storage)?;
     }
     let mut response = Body::new(FileBody::part(file, len)).into_response();
     *response.status_mut() = status;
@@ -128,8 +140,13 @@ pub async fn respond(headers: &HeaderMap, stored: Stored<'_>) -> Result<Response
     {
         h.insert(header::CONTENT_RANGE, v);
     }
-    let shown = stored.inline && kentos_application::attachments::VIEWABLE.contains(&stored.media_type);
-    let media = if shown { stored.media_type } else { "application/octet-stream" };
+    let shown =
+        stored.inline && kentos_application::attachments::VIEWABLE.contains(&stored.media_type);
+    let media = if shown {
+        stored.media_type
+    } else {
+        "application/octet-stream"
+    };
     if let Ok(v) = HeaderValue::from_str(media) {
         h.insert(header::CONTENT_TYPE, v);
     }
@@ -144,10 +161,14 @@ pub fn picture(tag: &str, svg: Option<String>, drawn: usize, skipped: usize) -> 
     let mut response = match svg {
         Some(svg) => {
             let mut r = Body::from(svg).into_response();
+            r.headers_mut().insert(
+                header::CONTENT_TYPE,
+                HeaderValue::from_static("image/svg+xml; charset=utf-8"),
+            );
             r.headers_mut()
-                .insert(header::CONTENT_TYPE, HeaderValue::from_static("image/svg+xml; charset=utf-8"));
-            r.headers_mut().insert("x-kentos-drawn", HeaderValue::from(drawn));
-            r.headers_mut().insert("x-kentos-skipped", HeaderValue::from(skipped));
+                .insert("x-kentos-drawn", HeaderValue::from(drawn));
+            r.headers_mut()
+                .insert("x-kentos-skipped", HeaderValue::from(skipped));
             r
         }
         None => StatusCode::NOT_MODIFIED.into_response(),
@@ -156,12 +177,18 @@ pub fn picture(tag: &str, svg: Option<String>, drawn: usize, skipped: usize) -> 
     if let Ok(v) = HeaderValue::from_str(tag) {
         h.insert(header::ETAG, v);
     }
-    h.insert(header::X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
+    h.insert(
+        header::X_CONTENT_TYPE_OPTIONS,
+        HeaderValue::from_static("nosniff"),
+    );
     h.insert(
         header::CONTENT_SECURITY_POLICY,
         HeaderValue::from_static("default-src 'none'; style-src 'unsafe-inline'; sandbox"),
     );
-    h.insert(header::CACHE_CONTROL, HeaderValue::from_static("private, no-cache"));
+    h.insert(
+        header::CACHE_CONTROL,
+        HeaderValue::from_static("private, no-cache"),
+    );
     response
 }
 
@@ -182,15 +209,42 @@ mod tests {
     fn a_range_is_read_as_one_part_or_the_whole() {
         let tag = "\"ab\"";
         assert_eq!(wanted(&HeaderMap::new(), 100, tag), Wanted::Whole);
-        assert_eq!(wanted(&ranged("bytes=0-9", None), 100, tag), Wanted::Part(0, 9));
-        assert_eq!(wanted(&ranged("bytes=90-", None), 100, tag), Wanted::Part(90, 99));
-        assert_eq!(wanted(&ranged("bytes=-10", None), 100, tag), Wanted::Part(90, 99));
-        assert_eq!(wanted(&ranged("bytes=95-500", None), 100, tag), Wanted::Part(95, 99));
-        assert_eq!(wanted(&ranged("bytes=100-", None), 100, tag), Wanted::Unsatisfiable);
-        assert_eq!(wanted(&ranged("bytes=9-3", None), 100, tag), Wanted::Unsatisfiable);
-        assert_eq!(wanted(&ranged("bytes=0-1,5-6", None), 100, tag), Wanted::Whole);
+        assert_eq!(
+            wanted(&ranged("bytes=0-9", None), 100, tag),
+            Wanted::Part(0, 9)
+        );
+        assert_eq!(
+            wanted(&ranged("bytes=90-", None), 100, tag),
+            Wanted::Part(90, 99)
+        );
+        assert_eq!(
+            wanted(&ranged("bytes=-10", None), 100, tag),
+            Wanted::Part(90, 99)
+        );
+        assert_eq!(
+            wanted(&ranged("bytes=95-500", None), 100, tag),
+            Wanted::Part(95, 99)
+        );
+        assert_eq!(
+            wanted(&ranged("bytes=100-", None), 100, tag),
+            Wanted::Unsatisfiable
+        );
+        assert_eq!(
+            wanted(&ranged("bytes=9-3", None), 100, tag),
+            Wanted::Unsatisfiable
+        );
+        assert_eq!(
+            wanted(&ranged("bytes=0-1,5-6", None), 100, tag),
+            Wanted::Whole
+        );
         assert_eq!(wanted(&ranged("items=0-1", None), 100, tag), Wanted::Whole);
-        assert_eq!(wanted(&ranged("bytes=0-9", Some("\"ab\"")), 100, tag), Wanted::Part(0, 9));
-        assert_eq!(wanted(&ranged("bytes=0-9", Some("\"cd\"")), 100, tag), Wanted::Whole);
+        assert_eq!(
+            wanted(&ranged("bytes=0-9", Some("\"ab\"")), 100, tag),
+            Wanted::Part(0, 9)
+        );
+        assert_eq!(
+            wanted(&ranged("bytes=0-9", Some("\"cd\"")), 100, tag),
+            Wanted::Whole
+        );
     }
 }

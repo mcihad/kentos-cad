@@ -24,7 +24,11 @@ fn height(p: Plane, at: Vec2) -> f64 {
 
 /// The room's pieces under the faces, each its area (arcs kept) and its face's underside; none when some of the room is
 /// under no face, or a piece has a hole (a face set here has no inner loops).
-pub fn pieces(rings: &[Vec<[f64; 2]>], bulges: &[Vec<f64>], faces: &[UnderFace]) -> Option<Vec<(Area, Plane)>> {
+pub fn pieces(
+    rings: &[Vec<[f64; 2]>],
+    bulges: &[Vec<f64>],
+    faces: &[UnderFace],
+) -> Option<Vec<(Area, Plane)>> {
     let room = crate::quantities::areas(rings, bulges);
     let whole: f64 = room.iter().map(net_area).sum();
     if whole.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) {
@@ -34,7 +38,10 @@ pub fn pieces(rings: &[Vec<[f64; 2]>], bulges: &[Vec<f64>], faces: &[UnderFace])
     let mut covered = 0.0;
     for (ring, plane) in faces {
         let face = Area {
-            outer: Ring { pts: ring.iter().map(|p| Vec2::new(p[0], p[1])).collect(), bulges: None },
+            outer: Ring {
+                pts: ring.iter().map(|p| Vec2::new(p[0], p[1])).collect(),
+                bulges: None,
+            },
             holes: Vec::new(),
         };
         for a in intersect_area_sets(&[room.clone(), vec![face]]) {
@@ -57,7 +64,10 @@ pub fn volume(pieces: &[(Area, Plane)], floor: f64) -> f64 {
     pieces
         .iter()
         .filter_map(|(a, p)| {
-            let c = area_centroid((&a.outer.pts, a.outer.bulges.as_deref()), std::iter::empty())?;
+            let c = area_centroid(
+                (&a.outer.pts, a.outer.bulges.as_deref()),
+                std::iter::empty(),
+            )?;
             Some(net_area(a) * (height(*p, c) - floor))
         })
         .sum()
@@ -87,12 +97,17 @@ pub fn shapes(pieces: &[(Area, Plane)], floor: f64) -> Vec<Shape> {
             if n < 3 {
                 return None;
             }
-            let twice: f64 = (0..n).map(|i| flat[i][0] * flat[(i + 1) % n][1] - flat[(i + 1) % n][0] * flat[i][1]).sum();
+            let twice: f64 = (0..n)
+                .map(|i| flat[i][0] * flat[(i + 1) % n][1] - flat[(i + 1) % n][0] * flat[i][1])
+                .sum();
             if twice < 0.0 {
                 flat.reverse();
             }
             let mut vertices: Vec<[f64; 3]> = flat.iter().map(|q| [q[0], q[1], floor]).collect();
-            vertices.extend(flat.iter().map(|q| [q[0], q[1], height(*p, Vec2::new(q[0], q[1]))]));
+            vertices.extend(
+                flat.iter()
+                    .map(|q| [q[0], q[1], height(*p, Vec2::new(q[0], q[1]))]),
+            );
             let mut faces: Vec<Vec<usize>> = vec![(0..n).rev().collect(), (n..2 * n).collect()];
             faces.extend((0..n).map(|i| vec![i, (i + 1) % n, n + (i + 1) % n, n + i]));
             Some(Shape::Faces { vertices, faces })
@@ -112,8 +127,14 @@ mod tests {
         let rings = vec![vec![[0.0, 0.0], [4.0, 0.0], [4.0, 3.0], [0.0, 3.0]]];
         let plane = (2.5, 0.0, 0.5);
         let faces = vec![
-            (vec![[-1.0, -1.0], [5.0, -1.0], [5.0, 1.0], [-1.0, 1.0]], plane),
-            (vec![[-1.0, 1.0], [5.0, 1.0], [5.0, 4.0], [-1.0, 4.0]], plane),
+            (
+                vec![[-1.0, -1.0], [5.0, -1.0], [5.0, 1.0], [-1.0, 1.0]],
+                plane,
+            ),
+            (
+                vec![[-1.0, 1.0], [5.0, 1.0], [5.0, 4.0], [-1.0, 4.0]],
+                plane,
+            ),
         ];
         let p = pieces(&rings, &[vec![]], &faces).expect("wholly under the roof");
         assert_eq!(p.len(), 2);
@@ -126,7 +147,10 @@ mod tests {
             assert_eq!(crate::closed::faults(s), Vec::<String>::new());
         }
         // A room reaching past the roof's faces is not under it.
-        let short = vec![(vec![[-1.0, -1.0], [5.0, -1.0], [5.0, 2.0], [-1.0, 2.0]], plane)];
+        let short = vec![(
+            vec![[-1.0, -1.0], [5.0, -1.0], [5.0, 2.0], [-1.0, 2.0]],
+            plane,
+        )];
         assert!(pieces(&rings, &[vec![]], &short).is_none());
     }
 
@@ -136,9 +160,16 @@ mod tests {
     fn an_arc_is_measured_as_an_arc() {
         let rings = vec![vec![[2.0, 0.0], [-2.0, 0.0]]];
         let bulges = vec![vec![1.0, 0.0]];
-        let faces = vec![(vec![[-3.0, -3.0], [3.0, -3.0], [3.0, 3.0], [-3.0, 3.0]], (3.0, 0.0, 0.0))];
+        let faces = vec![(
+            vec![[-3.0, -3.0], [3.0, -3.0], [3.0, 3.0], [-3.0, 3.0]],
+            (3.0, 0.0, 0.0),
+        )];
         let p = pieces(&rings, &bulges, &faces).expect("under the roof");
         let want = std::f64::consts::PI * 4.0 / 2.0 * 3.0;
-        assert!((volume(&p, 0.0) - want).abs() < 1e-9, "{} {want}", volume(&p, 0.0));
+        assert!(
+            (volume(&p, 0.0) - want).abs() < 1e-9,
+            "{} {want}",
+            volume(&p, 0.0)
+        );
     }
 }

@@ -78,7 +78,14 @@ pub(super) fn walls(doc: &Document, traditional: &dyn Fn(Option<&str>) -> bool) 
         if !traditional(e.own_level()) {
             continue;
         }
-        let Shape::Wall { pts, bulges, wall: spec } = kentos_formats::walls::core_wall(&w.wall) else { continue };
+        let Shape::Wall {
+            pts,
+            bulges,
+            wall: spec,
+        } = kentos_formats::walls::core_wall(&w.wall)
+        else {
+            continue;
+        };
         let uid = uid.to_string();
         let declared = w.wall.arch.load_bearing.as_ref();
         let stone = declared.is_some_and(|b| b.bearing);
@@ -89,13 +96,17 @@ pub(super) fn walls(doc: &Document, traditional: &dyn Fn(Option<&str>) -> bool) 
                 out.undeclared.push(uid.clone());
             }
         }
-        out.storeys.entry(e.own_level().map(str::to_owned)).or_default().walls.push(Wall {
-            pts,
-            bulges,
-            spec: *spec,
-            exterior: exterior.contains(&uid),
-            stone,
-        });
+        out.storeys
+            .entry(e.own_level().map(str::to_owned))
+            .or_default()
+            .walls
+            .push(Wall {
+                pts,
+                bulges,
+                spec: *spec,
+                exterior: exterior.contains(&uid),
+                stone,
+            });
     }
     out
 }
@@ -106,11 +117,24 @@ fn band(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool, left: f64, right: f6
     if left - right <= 1e-9 {
         return None;
     }
-    let spec = Spec { closed, width: left - right, justify: Justify::Left, offset: left, ..Spec::default() };
+    let spec = Spec {
+        closed,
+        width: left - right,
+        justify: Justify::Left,
+        offset: left,
+        ..Spec::default()
+    };
     let (outer, holes) = wall_geom::body(pts, bulges, &spec).ok()?;
     Some(Area {
-        outer: Ring { pts: outer, bulges: None },
-        holes: holes.unwrap_or_default().into_iter().map(|pts| Ring { pts, bulges: None }).collect(),
+        outer: Ring {
+            pts: outer,
+            bulges: None,
+        },
+        holes: holes
+            .unwrap_or_default()
+            .into_iter()
+            .map(|pts| Ring { pts, bulges: None })
+            .collect(),
     })
 }
 
@@ -121,7 +145,11 @@ fn carried(pts: &[Vec2], bulges: Option<&[f64]>, by: f64) -> Vec<Vec2> {
     if n < 2 {
         return out;
     }
-    let straight = |i: usize| bulges.and_then(|b| b.get(i)).is_none_or(|b| b.abs() < 1e-12);
+    let straight = |i: usize| {
+        bulges
+            .and_then(|b| b.get(i))
+            .is_none_or(|b| b.abs() < 1e-12)
+    };
     let unit = |a: Vec2, b: Vec2| {
         let d = Vec2::new(b.x - a.x, b.y - a.y);
         let l = (d.x * d.x + d.y * d.y).sqrt();
@@ -149,7 +177,10 @@ fn middle(pts: &[Vec2]) -> Option<Vec2> {
         let l = len(w[0], w[1]);
         if l >= left && l > 0.0 {
             let t = left / l;
-            return Some(Vec2::new(w[0].x + (w[1].x - w[0].x) * t, w[0].y + (w[1].y - w[0].y) * t));
+            return Some(Vec2::new(
+                w[0].x + (w[1].x - w[0].x) * t,
+                w[0].y + (w[1].y - w[0].y) * t,
+            ));
         }
         left -= l;
     }
@@ -165,7 +196,11 @@ fn open_beyond(w: &Wall, d: f64, contours: &[Area]) -> Option<bool> {
 
 /// A storey's stone walls' parts in its wall mass: the exterior walls' (out of taban alanı too) and the interior walls'.
 /// `contours` are the storey's rooms' contours, `nets` their net areas.
-pub(super) fn parts(walls: &StoreyWalls, contours: &[Area], nets: &[Area]) -> (Vec<Area>, Vec<Area>) {
+pub(super) fn parts(
+    walls: &StoreyWalls,
+    contours: &[Area],
+    nets: &[Area],
+) -> (Vec<Area>, Vec<Area>) {
     let mass = region::subtract_areas(&region::union_areas(contours), &region::union_areas(nets));
     if mass.is_empty() {
         return (Vec::new(), Vec::new());
@@ -193,7 +228,10 @@ pub(super) fn parts(walls: &StoreyWalls, contours: &[Area], nets: &[Area]) -> (V
         }
         // An exterior wall's outer face: no room beyond it; rooms on both sides make it an interior wall.
         let outer_left = if w.exterior {
-            match (open_beyond(w, left + PROBE, contours), open_beyond(w, right - PROBE, contours)) {
+            match (
+                open_beyond(w, left + PROBE, contours),
+                open_beyond(w, right - PROBE, contours),
+            ) {
                 (Some(true), Some(false)) => Some(true),
                 (Some(false), Some(true)) => Some(false),
                 (Some(false), Some(false)) => None,
@@ -208,7 +246,11 @@ pub(super) fn parts(walls: &StoreyWalls, contours: &[Area], nets: &[Area]) -> (V
                 if e <= 1e-9 {
                     continue;
                 }
-                let path = if closed { w.pts.clone() } else { carried(&w.pts, bulges, t) };
+                let path = if closed {
+                    w.pts.clone()
+                } else {
+                    carried(&w.pts, bulges, t)
+                };
                 let b = if on_left {
                     band(&path, bulges, closed, left, left - e)
                 } else {
@@ -224,7 +266,13 @@ pub(super) fn parts(walls: &StoreyWalls, contours: &[Area], nets: &[Area]) -> (V
                 }
                 inner_bands.extend(band(&w.pts, bulges, closed, left, left - e / 2.0));
                 inner_bands.extend(band(&w.pts, bulges, closed, right + e / 2.0, right));
-                cores.extend(band(&w.pts, bulges, closed, left - e / 2.0, right + e / 2.0));
+                cores.extend(band(
+                    &w.pts,
+                    bulges,
+                    closed,
+                    left - e / 2.0,
+                    right + e / 2.0,
+                ));
             }
         }
     }
@@ -232,14 +280,26 @@ pub(super) fn parts(walls: &StoreyWalls, contours: &[Area], nets: &[Area]) -> (V
         Vec::new()
     } else {
         let kept = region::intersect_area_sets(&[region::union_areas(&outer_bands), mass.clone()]);
-        if not_stone_exterior.is_empty() { kept } else { region::subtract_areas(&kept, &not_stone_exterior) }
+        if not_stone_exterior.is_empty() {
+            kept
+        } else {
+            region::subtract_areas(&kept, &not_stone_exterior)
+        }
     };
     let inner = if inner_bands.is_empty() {
         Vec::new()
     } else {
         let kept = region::intersect_area_sets(&[region::union_areas(&inner_bands), mass]);
-        let off: Vec<Area> = exterior_bodies.into_iter().chain(cores).chain(outer.iter().cloned()).collect();
-        if off.is_empty() { kept } else { region::subtract_areas(&kept, &off) }
+        let off: Vec<Area> = exterior_bodies
+            .into_iter()
+            .chain(cores)
+            .chain(outer.iter().cloned())
+            .collect();
+        if off.is_empty() {
+            kept
+        } else {
+            region::subtract_areas(&kept, &off)
+        }
     };
     (outer, inner)
 }

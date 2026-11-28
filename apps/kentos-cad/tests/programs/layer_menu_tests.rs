@@ -85,7 +85,12 @@ const TABLE: [(LayerEntry, &str, &str, &str); 43] = [
     ),
     (LayerEntry::Remove, "Sil", "MHYC", "davbsrng"),
     // A CBS layer's summary for reading, the last entry (docs/adr/9350).
-    (LayerEntry::Properties, "Katman özellikleri…", "C", "davbsrn"),
+    (
+        LayerEntry::Properties,
+        "Katman özellikleri…",
+        "C",
+        "davbsrn",
+    ),
 ];
 
 /// The project's layers: one of each kind, its id, its name in the tree and the kind it is.
@@ -266,7 +271,9 @@ fn check(module: Option<Module>, program: Option<Module>) -> Vec<String> {
             "Bütün katmanları geri al",
         ] {
             if has(&menu, label) {
-                wrong.push(format!("{module:?} in {program:?}, {kind:?}: “{label}” in the menu"));
+                wrong.push(format!(
+                    "{module:?} in {program:?}, {kind:?}: “{label}” in the menu"
+                ));
             }
         }
     }
@@ -279,13 +286,30 @@ fn check(module: Option<Module>, program: Option<Module>) -> Vec<String> {
 fn the_phone_edits_a_cbs_data_layer_alone() {
     use kentos_commands::LayerMobile;
     let item = |menu: &str, label: &str| menu.contains(&format!("label: \"{label}\""));
-    for (module, edits) in [(Some(Module::Gis), true), (Some(Module::Map), false), (Some(Module::Architecture), false)] {
+    for (module, edits) in [
+        (Some(Module::Gis), true),
+        (Some(Module::Map), false),
+        (Some(Module::Architecture), false),
+    ] {
         let mut app = every_kind(module, None);
-        let mobile = |app: &App, id: &str| app.document.as_ref().and_then(|d| d.model.layers().get(id)).and_then(|n| n.mobile);
+        let mobile = |app: &App, id: &str| {
+            app.document
+                .as_ref()
+                .and_then(|d| d.model.layers().get(id))
+                .and_then(|n| n.mobile)
+        };
         for (id, _, kind) in LAYERS {
-            let node = app.document.as_ref().and_then(|d| d.model.layers().get(id)).cloned().expect("the layer");
+            let node = app
+                .document
+                .as_ref()
+                .and_then(|d| d.model.layers().get(id))
+                .cloned()
+                .expect("the layer");
             let menu = format!("{:?}", app.layer_menu(&node, false));
-            assert!(item(&menu, "Gösterme") && item(&menu, "Göster"), "{module:?} {kind:?}");
+            assert!(
+                item(&menu, "Gösterme") && item(&menu, "Göster"),
+                "{module:?} {kind:?}"
+            );
             let editable = edits && kind == LayerKind::Data;
             assert_eq!(item(&menu, "Düzenle"), editable, "{module:?} {kind:?}");
         }
@@ -294,10 +318,23 @@ fn the_phone_edits_a_cbs_data_layer_alone() {
         app.set_layer_mobile("veri", LayerMobile::Hide);
         assert_eq!(mobile(&app, "veri"), Some(LayerMobile::Hide));
         app.set_layer_mobile("veri", LayerMobile::Edit);
-        assert_eq!(mobile(&app, "veri"), Some(if edits { LayerMobile::Edit } else { LayerMobile::Hide }), "{module:?}");
+        assert_eq!(
+            mobile(&app, "veri"),
+            Some(if edits {
+                LayerMobile::Edit
+            } else {
+                LayerMobile::Hide
+            }),
+            "{module:?}"
+        );
         if !edits {
             let said: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
-            assert!(said.iter().any(|t| t.contains("mobilde düzenlenemez: mobil uygulama CAD projesini yazmaz")), "{said:?}");
+            assert!(
+                said.iter().any(
+                    |t| t.contains("mobilde düzenlenemez: mobil uygulama CAD projesini yazmaz")
+                ),
+                "{said:?}"
+            );
         }
         app.set_layer_mobile("veri", LayerMobile::Show);
         assert_eq!(mobile(&app, "veri"), None);
@@ -435,12 +472,34 @@ fn each_modules_layer_menu_pictures() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn labels_are_a_cbs_s_menu_pictures() {
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9316");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-9316");
     std::fs::create_dir_all(&out).expect("a folder");
     let size = Size::new(1440.0, 900.0);
-    picture(Module::Map, "Çizim katmanı", LayerKind::Drawing, Some("Görünüş"), size, &out);
-    picture(Module::Road, "Çizim katmanı", LayerKind::Drawing, Some("Görünüş"), size, &out);
-    picture(Module::Gis, "Veri katmanı", LayerKind::Data, Some("Görünüş"), size, &out);
+    picture(
+        Module::Map,
+        "Çizim katmanı",
+        LayerKind::Drawing,
+        Some("Görünüş"),
+        size,
+        &out,
+    );
+    picture(
+        Module::Road,
+        "Çizim katmanı",
+        LayerKind::Drawing,
+        Some("Görünüş"),
+        size,
+        &out,
+    );
+    picture(
+        Module::Gis,
+        "Veri katmanı",
+        LayerKind::Data,
+        Some("Görünüş"),
+        size,
+        &out,
+    );
 }
 
 /// The picture of docs/adr/9301: a CBS data layer's right-click menu without the edit session (Düzenle's Düzenleme
@@ -448,9 +507,17 @@ fn labels_are_a_cbs_s_menu_pictures() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn the_data_layer_menu_without_its_session_picture() {
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9301");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-9301");
     std::fs::create_dir_all(&out).expect("a folder");
-    picture(Module::Gis, "Veri katmanı", LayerKind::Data, None, Size::new(1440.0, 900.0), &out);
+    picture(
+        Module::Gis,
+        "Veri katmanı",
+        LayerKind::Data,
+        None,
+        Size::new(1440.0, 900.0),
+        &out,
+    );
 }
 
 /// The pictures of docs/adr/9198: Görünürlük ▸ Mobilde ▸ on a CBS project's data layer (Göster, Düzenle, Gösterme) and
@@ -459,7 +526,8 @@ fn the_data_layer_menu_without_its_session_picture() {
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
 fn the_phone_menu_pictures() {
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kullanim-9198");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kullanim-9198");
     std::fs::create_dir_all(&out).expect("a folder");
     let size = Size::new(1440.0, 900.0);
     for (module, name, kind) in [
@@ -467,7 +535,9 @@ fn the_phone_menu_pictures() {
         (Module::Map, "Çizim katmanı", LayerKind::Drawing),
     ] {
         let mut app = every_kind(Some(module), None);
-        let _ = app.settings.choose(&[("appearance.theme", Value::from("light"))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", Value::from("light"))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         let mut snapshot = kentos_ui::snapshot::Snapshot::new(size).expect("a renderer");
@@ -481,11 +551,23 @@ fn the_phone_menu_pictures() {
             let item = crate::scenes::caption_at(&mut snapshot, &app, caption, false);
             snapshot.input(&mut app, App::view, &mut update, Input::Click(item));
             snapshot.settle(&mut app, App::view, &mut update);
-            snapshot.input(&mut app, App::view, &mut update, Input::Move(Point::new(item.x + 4.0, item.y)));
+            snapshot.input(
+                &mut app,
+                App::view,
+                &mut update,
+                Input::Move(Point::new(item.x + 4.0, item.y)),
+            );
             snapshot.settle(&mut app, App::view, &mut update);
         }
-        let file = out.join(format!("mobilde-{}-{}.png", module.id(), kind.title().replace(' ', "-")));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+        let file = out.join(format!(
+            "mobilde-{}-{}.png",
+            module.id(),
+            kind.title().replace(' ', "-")
+        ));
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes");
         println!("{}", file.display());
     }
 }

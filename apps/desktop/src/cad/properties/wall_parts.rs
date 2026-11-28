@@ -65,7 +65,11 @@ pub(crate) fn space_words(s: &kentos_commands::SpaceFields) -> String {
         .filter(|t| !t.trim().is_empty())
         .collect::<Vec<_>>()
         .join(" ");
-    if words.is_empty() { "Mahal".into() } else { words }
+    if words.is_empty() {
+        "Mahal".into()
+    } else {
+        words
+    }
 }
 
 /// The spaces a slab may be bound to: those of its level (every one when it has none), by their persistent ids and
@@ -79,7 +83,10 @@ pub fn space_choices(doc: &Document, s: &SlabFields) -> Vec<(String, String)> {
         .filter_map(|e| match e {
             Entity::Space(sp) if s.arch.level.is_none() || sp.space.arch.level == s.arch.level => {
                 let uid = doc.uid(Slot(e.base().id))?.to_string();
-                let d = match (at, kentos_native_application::spaces::label_point(&sp.space.parts)) {
+                let d = match (
+                    at,
+                    kentos_native_application::spaces::label_point(&sp.space.parts),
+                ) {
                     (Some(a), Some(b)) => (a.x - b.x).hypot(a.y - b.y),
                     _ => f64::INFINITY,
                 };
@@ -90,7 +97,9 @@ pub fn space_choices(doc: &Document, s: &SlabFields) -> Vec<(String, String)> {
         .collect();
     found.sort_by(|a, b| a.0.total_cmp(&b.0).then_with(|| a.2.cmp(&b.2)));
     let mut out: Vec<(String, String)> = found.into_iter().map(|(_, u, w)| (u, w)).collect();
-    if let Some(i) = bound.as_ref().and_then(|b| out.iter().position(|(u, _)| u == b))
+    if let Some(i) = bound
+        .as_ref()
+        .and_then(|b| out.iter().position(|(u, _)| u == b))
         && i >= MOST_SPACES
     {
         let kept = out.remove(i);
@@ -111,13 +120,20 @@ pub fn bound_text(s: &SlabFields, spaces: &[(String, String)]) -> String {
                 (SlabSourceKind::Walls, SlabFace::Room) => "Odaya bağlı",
                 (SlabSourceKind::Edges, _) => {
                     let (linked, locked) = b.edges.as_ref().map_or((0, 0), |edges| {
-                        (edges.links.len(), edges.links.iter().filter(|link| link.locked).count())
+                        (
+                            edges.links.len(),
+                            edges.links.iter().filter(|link| link.locked).count(),
+                        )
                     });
                     named = format!("{linked} bağlı kenar · {locked} kilitli");
                     named.as_str()
                 }
                 (SlabSourceKind::Space, _) => {
-                    match b.space.as_ref().and_then(|u| spaces.iter().find(|(id, _)| id == u)) {
+                    match b
+                        .space
+                        .as_ref()
+                        .and_then(|u| spaces.iter().find(|(id, _)| id == u))
+                    {
                         Some((_, words)) => {
                             named = format!("Mahale bağlı · {words}");
                             named.as_str()
@@ -138,7 +154,10 @@ pub fn bound_text(s: &SlabFields, spaces: &[(String, String)]) -> String {
 /// The operations a slab's Sınır row offers, each with its label and whether it is the slab's now: Bağımsız kontur
 /// (Ayır), bound to the walls' outer faces or a room's, read round the slab's label point, and bound to each space of
 /// `spaces` (from [`space_choices`]; the slab's offset kept).
-pub fn bound_choices(s: &SlabFields, spaces: &[(String, String)]) -> Vec<(String, bool, Option<SlabsOperation>)> {
+pub fn bound_choices(
+    s: &SlabFields,
+    spaces: &[(String, String)],
+) -> Vec<(String, bool, Option<SlabsOperation>)> {
     let at =
         kentos_native_application::spaces::label_point(&s.parts).map(|p| Vec2 { x: p.x, y: p.y });
     let offset = s.bound.as_ref().map(|b| b.offset).filter(|o| *o != 0.0);

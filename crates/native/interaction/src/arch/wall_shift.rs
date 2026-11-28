@@ -178,7 +178,9 @@ impl WallShift {
 
     /// The plan of the shift `by` (docs/adr/0770 §3), or its refusal (docs/adr/0790 §1).
     fn see(&mut self, at: Vec2, by: f64, cx: &mut Context<'_>) {
-        let Some(input) = self.request(by) else { return };
+        let Some(input) = self.request(by) else {
+            return;
+        };
         let f = cx.format();
         let result = walls_edit::plan(&ExecutionContext::new(cx.doc), &input);
         let mut seen = Seen {
@@ -192,9 +194,10 @@ impl WallShift {
         } else {
             match result {
                 CommandResult::Completed { output, .. } => {
-                    seen.lines = output.effects.as_ref().map_or_else(Vec::new, |e| {
-                        effect_lines(e, output.joined.len(), None, &f)
-                    });
+                    seen.lines = output
+                        .effects
+                        .as_ref()
+                        .map_or_else(Vec::new, |e| effect_lines(e, output.joined.len(), None, &f));
                     seen.walls = output.walls.into_iter().chain(output.joined).collect();
                 }
                 CommandResult::Failed { error }
@@ -291,7 +294,11 @@ impl Tool for WallShift {
                     .spatial
                     .hits(p.raw, reach.max(0.3))
                     .into_iter()
-                    .find(|s| cx.doc.get(*s).is_some_and(|e| nearest_edge(e, p.raw, reach).is_some()));
+                    .find(|s| {
+                        cx.doc
+                            .get(*s)
+                            .is_some_and(|e| nearest_edge(e, p.raw, reach).is_some())
+                    });
                 cx.selection.set_hover(hit);
             }
         }

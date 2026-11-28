@@ -166,7 +166,12 @@ pub(super) fn decode_png(bytes: &[u8]) -> Option<Decoded> {
                 header = Some(h);
             }
             b"PLTE" => {
-                palette = data.as_chunks::<3>().0.iter().map(|c| [c[0], c[1], c[2]]).collect();
+                palette = data
+                    .as_chunks::<3>()
+                    .0
+                    .iter()
+                    .map(|c| [c[0], c[1], c[2]])
+                    .collect();
             }
             b"tRNS" => trns = data.to_vec(),
             b"IDAT" => idat.extend_from_slice(data),

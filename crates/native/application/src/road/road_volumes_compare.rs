@@ -5,8 +5,8 @@
 //! shared cases are `fixtures/commands/v1/road.volumes.compare.json`.
 
 use kentos_commands::{
-    AgainstBase, AlternativeApproval, AlternativeFigures, AlternativeReport, CommandResult, CommandWarning, DepartureRow,
-    VolumeDef, VolumesCompare, VolumesCompared,
+    AgainstBase, AlternativeApproval, AlternativeFigures, AlternativeReport, CommandResult,
+    CommandWarning, DepartureRow, VolumeDef, VolumesCompare, VolumesCompared,
 };
 use kentos_domain::Document;
 use kentos_road::alignment::km_text;
@@ -42,7 +42,12 @@ fn of(doc: &Document, def: &VolumeDef, warnings: &mut Vec<CommandWarning>) -> Bu
     let computed = common::compute(doc, def);
     let (figures, approved, problem) = match &computed {
         Ok((r, _)) => (
-            Some(AlternativeFigures { cut: r.cut, fill: r.fill, factored_cut: r.factored_cut, factored_fill: r.factored_fill }),
+            Some(AlternativeFigures {
+                cut: r.cut,
+                fill: r.fill,
+                factored_cut: r.factored_cut,
+                factored_fill: r.factored_fill,
+            }),
             r.approval.as_ref().map(|a| AlternativeApproval {
                 at: a.approved.at.clone(),
                 changed: a.changed,
@@ -57,7 +62,10 @@ fn of(doc: &Document, def: &VolumeDef, warnings: &mut Vec<CommandWarning>) -> Bu
     if let Some(why) = &problem {
         warnings.push(CommandWarning {
             code: codes::VOLUME_COMPARE_BROKEN.into(),
-            message: format!("“{}” kübajı hesaplanamıyor; karşılaştırmada hacmi yok: {why}", def.name),
+            message: format!(
+                "“{}” kübajı hesaplanamıyor; karşılaştırmada hacmi yok: {why}",
+                def.name
+            ),
             path: Some("volumes".into()),
         });
     }
@@ -71,7 +79,9 @@ fn of(doc: &Document, def: &VolumeDef, warnings: &mut Vec<CommandWarning>) -> Bu
             profile: cdef.map(|c| c.profile.clone()).unwrap_or_default(),
             profile_revision: profile.map_or(0, |p| p.revision),
             surface: cdef.map(|c| c.surface.clone()).unwrap_or_default(),
-            surface_digest: surface.map(|s| terrains::sources_digest(doc, s)).unwrap_or_default(),
+            surface_digest: surface
+                .map(|s| terrains::sources_digest(doc, s))
+                .unwrap_or_default(),
             length: made.as_ref().map(|m| m.sampler.alignment.core.length),
             figures: figures.filter(|_| problem.is_none()),
             problem,
@@ -82,7 +92,11 @@ fn of(doc: &Document, def: &VolumeDef, warnings: &mut Vec<CommandWarning>) -> Bu
     }
 }
 
-fn rows(list: Vec<Departure>, other: &corridors::Made, base: &corridors::Made) -> Vec<DepartureRow> {
+fn rows(
+    list: Vec<Departure>,
+    other: &corridors::Made,
+    base: &corridors::Made,
+) -> Vec<DepartureRow> {
     let text = |m: &corridors::Made, s: f64| km_text(m.sampler.alignment.km(s), 3);
     list.into_iter()
         .map(|d| DepartureRow {
@@ -98,27 +112,45 @@ fn rows(list: Vec<Departure>, other: &corridors::Made, base: &corridors::Made) -
 }
 
 /// The comparison now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &VolumesCompare) -> Result<(VolumesCompared, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &VolumesCompare,
+) -> Result<(VolumesCompared, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     if !(2..=6).contains(&input.volumes.len()) {
-        return Err(bad("volumes", "İkiden altıya kadar kübaj karşılaştırılır; ilki taban."));
+        return Err(bad(
+            "volumes",
+            "İkiden altıya kadar kübaj karşılaştırılır; ilki taban.",
+        ));
     }
     let mut defs: Vec<&VolumeDef> = Vec::new();
     for (i, name) in input.volumes.iter().enumerate() {
         let (_, def) = common::find(doc.road_volumes(), name, &format!("volumes[{i}]"))?;
         if defs.iter().any(|d| d.id == def.id) {
-            return Err(bad(&format!("volumes[{i}]"), &format!("“{}” kübajı iki kez seçilmiş.", def.name)));
+            return Err(bad(
+                &format!("volumes[{i}]"),
+                &format!("“{}” kübajı iki kez seçilmiş.", def.name),
+            ));
         }
         defs.push(def);
     }
     let fine = |v: Option<f64>| v.is_none_or(|t| t.is_finite() && t > 0.0 && t <= 10.0);
     if !fine(input.tolerance) {
-        return Err(bad("tolerance", "Plan toleransı 0'dan büyük, en çok 10 m olmalı."));
+        return Err(bad(
+            "tolerance",
+            "Plan toleransı 0'dan büyük, en çok 10 m olmalı.",
+        ));
     }
     if !fine(input.height) {
-        return Err(bad("height", "Kot toleransı 0'dan büyük, en çok 10 m olmalı."));
+        return Err(bad(
+            "height",
+            "Kot toleransı 0'dan büyük, en çok 10 m olmalı.",
+        ));
     }
-    let (tolerance, h) = (input.tolerance.unwrap_or(TOLERANCE), input.height.unwrap_or(HEIGHT));
+    let (tolerance, h) = (
+        input.tolerance.unwrap_or(TOLERANCE),
+        input.height.unwrap_or(HEIGHT),
+    );
     let mut warnings = Vec::new();
     let built: Vec<Built> = defs.iter().map(|d| of(doc, d, &mut warnings)).collect();
     let base = &built[0];
@@ -127,8 +159,27 @@ pub(crate) fn answer(doc: &Document, input: &VolumesCompare) -> Result<(VolumesC
         let mut report = b.report.clone();
         let (plan_rows, height_rows) = match (&b.made, &base.made) {
             (Some(o), Some(m)) => (
-                rows(alt::plan(&m.sampler.alignment.core, &o.sampler.alignment.core, tolerance), o, m),
-                rows(alt::height(&m.sampler.alignment.core, &m.sampler.vertical, &o.sampler.alignment.core, &o.sampler.vertical, tolerance, h), o, m),
+                rows(
+                    alt::plan(
+                        &m.sampler.alignment.core,
+                        &o.sampler.alignment.core,
+                        tolerance,
+                    ),
+                    o,
+                    m,
+                ),
+                rows(
+                    alt::height(
+                        &m.sampler.alignment.core,
+                        &m.sampler.vertical,
+                        &o.sampler.alignment.core,
+                        &o.sampler.vertical,
+                        tolerance,
+                        h,
+                    ),
+                    o,
+                    m,
+                ),
             ),
             _ => (Vec::new(), Vec::new()),
         };
@@ -149,12 +200,22 @@ pub(crate) fn answer(doc: &Document, input: &VolumesCompare) -> Result<(VolumesC
         });
         alternatives.push(report);
     }
-    Ok((VolumesCompared { tolerance, height: h, alternatives }, warnings))
+    Ok((
+        VolumesCompared {
+            tolerance,
+            height: h,
+            alternatives,
+        },
+        warnings,
+    ))
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &VolumesCompare) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -168,12 +229,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &VolumesCompare) -> CommandResult<
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: VolumesCompare) -> CommandResult<VolumesCompared> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: VolumesCompare,
+) -> CommandResult<VolumesCompared> {
     plan(cx, &input)
 }
 
 /// The comparison for the desktop's Kübaj window: the reports, or why there is none.
-pub fn preview(doc: &Document, input: &VolumesCompare) -> Result<(VolumesCompared, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &VolumesCompare,
+) -> Result<(VolumesCompared, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(|stop| match stop {
         Stop::Failed(e) | Stop::Conflict(e) => e.message,
         Stop::Cancelled => String::new(),
@@ -200,7 +267,9 @@ pub fn traces(doc: &Document, input: &VolumesCompare) -> Vec<Trace> {
         .filter_map(|n| common::find(doc.road_volumes(), n, "").ok().map(|(_, d)| d))
         .map(|d| of(doc, d, &mut warnings))
         .collect();
-    let Some(Some(base)) = built.first().map(|b| b.made.as_ref()) else { return Vec::new() };
+    let Some(Some(base)) = built.first().map(|b| b.made.as_ref()) else {
+        return Vec::new();
+    };
     built[1..]
         .iter()
         .filter_map(|b| {
@@ -211,16 +280,24 @@ pub fn traces(doc: &Document, input: &VolumesCompare) -> Vec<Trace> {
             let mut height_pts = Vec::with_capacity(n + 1);
             for i in 0..=n {
                 let s = length * i as f64 / n as f64;
-                let Some(l) = o.sampler.alignment.core.at(s) else { continue };
+                let Some(l) = o.sampler.alignment.core.at(s) else {
+                    continue;
+                };
                 let (d, station) = alt::distance(&base.sampler.alignment.core, [l.x, l.y]);
                 plan_pts.push((s, d));
                 let dz = (d <= tolerance)
                     .then_some(station)
                     .flatten()
-                    .and_then(|sb| Some(o.sampler.vertical.at(s)?.0 - base.sampler.vertical.at(sb)?.0));
+                    .and_then(|sb| {
+                        Some(o.sampler.vertical.at(s)?.0 - base.sampler.vertical.at(sb)?.0)
+                    });
                 height_pts.push((s, dz));
             }
-            Some(Trace { name: b.report.name.clone(), plan: plan_pts, height: height_pts })
+            Some(Trace {
+                name: b.report.name.clone(),
+                plan: plan_pts,
+                height: height_pts,
+            })
         })
         .collect()
 }

@@ -122,17 +122,20 @@ impl GeometryStore {
     /// mode −1 (or one not known) takes the object's time away.
     #[wasm_bindgen(js_name = setTimes)]
     pub fn set_times(&mut self, ids: &[f64], times: &[f64]) {
-        let entries = ids.iter().zip(times.as_chunks::<3>().0.iter()).map(|(&id, t)| {
-            let mode = (t[2] >= 0.0).then(|| Mode::from_code(t[2] as u8)).flatten();
-            (
-                id,
-                mode.map(|mode| Time {
-                    s: t[0],
-                    e: t[1],
-                    mode,
-                }),
-            )
-        });
+        let entries = ids
+            .iter()
+            .zip(times.as_chunks::<3>().0.iter())
+            .map(|(&id, t)| {
+                let mode = (t[2] >= 0.0).then(|| Mode::from_code(t[2] as u8)).flatten();
+                (
+                    id,
+                    mode.map(|mode| Time {
+                        s: t[0],
+                        e: t[1],
+                        mode,
+                    }),
+                )
+            });
         self.store_mut().set_times(entries);
     }
 

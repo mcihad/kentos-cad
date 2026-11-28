@@ -82,7 +82,12 @@ pub fn meets(a: &Box4, b: &Box4) -> bool {
 }
 
 fn around(pts: impl IntoIterator<Item = Vec2>) -> Option<Box4> {
-    let mut b = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
     let mut any = false;
     for q in pts {
         any = true;
@@ -95,8 +100,9 @@ fn around(pts: impl IntoIterator<Item = Vec2>) -> Option<Box4> {
 /// column's; none for anything else.
 pub fn reach_box(e: &Entity) -> Option<Box4> {
     match e {
-        Entity::Wall(w) => around(w.wall.pts.iter().copied())
-            .map(|b| grow(b, w.wall.width + w.wall.offset.abs())),
+        Entity::Wall(w) => {
+            around(w.wall.pts.iter().copied()).map(|b| grow(b, w.wall.width + w.wall.offset.abs()))
+        }
         Entity::Opening(o) => around(o.opening.place.iter().copied()),
         Entity::Grid(g) => around(g.grid.pts.iter().copied()),
         Entity::Space(s) => around(
@@ -115,14 +121,22 @@ pub fn reach_box(e: &Entity) -> Option<Box4> {
 
 /// The box a recipe reads in: its sources' bodies (as `find` has them), grown by [`REACH`]; none when no source is
 /// left.
-pub fn reach<'a>(set: &DimensionSet, find: &dyn Fn(EntityId) -> Option<&'a Entity>) -> Option<Box4> {
+pub fn reach<'a>(
+    set: &DimensionSet,
+    find: &dyn Fn(EntityId) -> Option<&'a Entity>,
+) -> Option<Box4> {
     let mut b: Option<Box4> = None;
     for id in set.sources() {
         let Some(r) = find(id).and_then(reach_box) else {
             continue;
         };
         b = Some(match b {
-            Some(b) => [b[0].min(r[0]), b[1].min(r[1]), b[2].max(r[2]), b[3].max(r[3])],
+            Some(b) => [
+                b[0].min(r[0]),
+                b[1].min(r[1]),
+                b[2].max(r[2]),
+                b[3].max(r[3]),
+            ],
             None => r,
         });
     }
@@ -306,7 +320,8 @@ pub fn plan<'a>(
                 }
             }
             Entity::Opening(o) => {
-                let on_source = EntityId::parse(&o.opening.host).is_some_and(|h| sources.contains(&h));
+                let on_source =
+                    EntityId::parse(&o.opening.host).is_some_and(|h| sources.contains(&h));
                 if rule.space {
                     if reach_box(e).is_some_and(|b| meets(&b, &reach)) {
                         openings.push((n.id, &o.opening));
@@ -322,7 +337,11 @@ pub fn plan<'a>(
             Entity::Grid(g) => {
                 let on = g.grid.arch.level.is_none() || g.grid.arch.level.as_ref() == level;
                 if n.shown && on && g.grid.pts.len() == 2 {
-                    grids.push((n.id, g.grid.pts.iter().copied().map(p).collect(), g.grid.bulges.clone()));
+                    grids.push((
+                        n.id,
+                        g.grid.pts.iter().copied().map(p).collect(),
+                        g.grid.bulges.clone(),
+                    ));
                 }
             }
             _ => {}
@@ -417,17 +436,23 @@ pub fn plan<'a>(
         gap: set.gap_mm * plot_scale / 1000.0,
         row_places: &places,
     };
-    let planned = span::plan(&recipe, &wall_ins, &opening_ins, &grid_ins, space_in.as_ref(), &drop).map_err(
-        |fault| match fault {
-            span::Fault::Direction => Refusal::of(DimensionSetBreak::UnsupportedWall),
-            span::Fault::Nothing => Refusal::of(DimensionSetBreak::HostGone),
-            span::Fault::Unsupported(source, why) => Refusal {
-                broken: DimensionSetBreak::UnsupportedWall,
-                source: ids.get(source).copied(),
-                why: Some(why),
-            },
+    let planned = span::plan(
+        &recipe,
+        &wall_ins,
+        &opening_ins,
+        &grid_ins,
+        space_in.as_ref(),
+        &drop,
+    )
+    .map_err(|fault| match fault {
+        span::Fault::Direction => Refusal::of(DimensionSetBreak::UnsupportedWall),
+        span::Fault::Nothing => Refusal::of(DimensionSetBreak::HostGone),
+        span::Fault::Unsupported(source, why) => Refusal {
+            broken: DimensionSetBreak::UnsupportedWall,
+            source: ids.get(source).copied(),
+            why: Some(why),
         },
-    )?;
+    })?;
     Ok(Planned {
         rows: planned
             .rows
@@ -439,7 +464,11 @@ pub fn plan<'a>(
                 spans: r.spans,
             })
             .collect(),
-        skipped: planned.skipped.iter().filter_map(|s| ids.get(*s).copied()).collect(),
+        skipped: planned
+            .skipped
+            .iter()
+            .filter_map(|s| ids.get(*s).copied())
+            .collect(),
         side: planned.side,
         origin: planned.origin,
         direction: planned.direction,
@@ -454,7 +483,12 @@ pub fn plan<'a>(
 pub fn row_delta(planned: &Planned, at: CoreVec2) -> f64 {
     let (d, o) = (planned.direction, planned.origin);
     let across = (at.x - o.x) * -d.y + (at.y - o.y) * d.x;
-    across - if planned.side > 0.0 { planned.body.1 } else { planned.body.0 }
+    across
+        - if planned.side > 0.0 {
+            planned.body.1
+        } else {
+            planned.body.0
+        }
 }
 
 /// Whether a member's representations at the recipe's sheet scales are the recipe's (docs/adr/0730 §1, §5): its own at
@@ -473,7 +507,8 @@ pub fn scales_agree(
     if set.scales.is_empty() {
         return true;
     }
-    let close = |a: f64, b: f64| (a - b).abs() <= 1e-9 + 16. * f64::EPSILON * js_max(a.abs(), b.abs());
+    let close =
+        |a: f64, b: f64| (a - b).abs() <= 1e-9 + 16. * f64::EPSILON * js_max(a.abs(), b.abs());
     let Some(a) = d.annotative.as_deref() else {
         return false;
     };

@@ -188,13 +188,26 @@ fn plan_take(d: &kentos_commands::ParcelDecision) -> Option<PlanTake> {
     };
     let far = value("KAKS").filter(|v| *v > 0.0 && *v <= 50.0);
     let coverage = value("TAKS").filter(|v| *v > 0.0 && *v <= 1.0);
-    let height = value("Hmax").filter(|v| *v > 0.0 && *v <= kentos_commands::PLAN_BUILDING_HEIGHT_MAX);
+    let height =
+        value("Hmax").filter(|v| *v > 0.0 && *v <= kentos_commands::PLAN_BUILDING_HEIGHT_MAX);
     let storeys = value("KatAdedi")
         .filter(|v| v.fract() == 0.0 && (1.0..=kentos_commands::PLAN_STOREYS_MAX).contains(v));
-    let layout =
-        d.values.iter().find(|v| v.field == "Nizam").and_then(|v| kentos_commands::BuildingLayout::from_plan(&v.value));
-    let zone = d.values.iter().find(|v| v.field == "Kullanim").and_then(|v| kentos_commands::Zone::from_plan(&v.value));
-    if far.is_none() && coverage.is_none() && height.is_none() && storeys.is_none() && layout.is_none() && zone.is_none()
+    let layout = d
+        .values
+        .iter()
+        .find(|v| v.field == "Nizam")
+        .and_then(|v| kentos_commands::BuildingLayout::from_plan(&v.value));
+    let zone = d
+        .values
+        .iter()
+        .find(|v| v.field == "Kullanim")
+        .and_then(|v| kentos_commands::Zone::from_plan(&v.value));
+    if far.is_none()
+        && coverage.is_none()
+        && height.is_none()
+        && storeys.is_none()
+        && layout.is_none()
+        && zone.is_none()
     {
         return None;
     }
@@ -206,10 +219,21 @@ fn plan_take(d: &kentos_commands::ParcelDecision) -> Option<PlanTake> {
         source.push_str(&format!(", onay {o}"));
     }
     source.push_str(&format!(", karar {}", d.id));
-    if source.chars().count() > kentos_commands::MAX_ZONING_SOURCE || source.chars().any(char::is_control) {
+    if source.chars().count() > kentos_commands::MAX_ZONING_SOURCE
+        || source.chars().any(char::is_control)
+    {
         return None;
     }
-    Some(PlanTake { decision: d.id.clone(), far, coverage, height, storeys, layout, zone, source })
+    Some(PlanTake {
+        decision: d.id.clone(),
+        far,
+        coverage,
+        height,
+        storeys,
+        layout,
+        zone,
+        source,
+    })
 }
 
 /// A decision field's words as İmar durumu says them.
@@ -226,7 +250,14 @@ fn field_words(field: &str) -> &str {
 }
 
 fn plan_words(doc: &kentos_domain::Document) -> PlanRead {
-    if doc.settings().arch.as_ref().and_then(|a| a.site.as_ref()).and_then(|s| s.parcel.as_ref()).is_none() {
+    if doc
+        .settings()
+        .arch
+        .as_ref()
+        .and_then(|a| a.site.as_ref())
+        .and_then(|s| s.parcel.as_ref())
+        .is_none()
+    {
         return PlanRead::default();
     }
     let input = kentos_commands::ZoningParcel::default();
@@ -238,8 +269,15 @@ fn plan_words(doc: &kentos_domain::Document) -> PlanRead {
     let mut out: Vec<(String, bool)> = Vec::new();
     let mut takes: Vec<(usize, PlanTake)> = Vec::new();
     for d in &a.decisions {
-        let values: Vec<String> = d.values.iter().map(|v| format!("{} {}", field_words(&v.field), v.value)).collect();
-        out.push((format!("{} ({}): {}", d.id, m2(d.share), values.join(" · ")), false));
+        let values: Vec<String> = d
+            .values
+            .iter()
+            .map(|v| format!("{} {}", field_words(&v.field), v.value))
+            .collect();
+        out.push((
+            format!("{} ({}): {}", d.id, m2(d.share), values.join(" · ")),
+            false,
+        ));
         if let Some(p) = &d.plan {
             out.push((format!("Kaynak: {}", plan_source(p)), false));
         }
@@ -251,7 +289,10 @@ fn plan_words(doc: &kentos_domain::Document) -> PlanRead {
         }
     }
     if a.uncovered > 0.0 {
-        out.push((format!("Hiçbir kararın altında olmayan alan: {}", m2(a.uncovered)), true));
+        out.push((
+            format!("Hiçbir kararın altında olmayan alan: {}", m2(a.uncovered)),
+            true,
+        ));
     }
     for c in &a.conflicts {
         out.push((
@@ -267,7 +308,15 @@ fn plan_words(doc: &kentos_domain::Document) -> PlanRead {
     }
     for g in &a.against {
         let typed = if g.field == "KAKS" { "emsal" } else { "TAKS" };
-        out.push((format!("İmar durumunda {typed} {}; plan kararı {} {}.", n2(g.typed), g.field, g.plan.join(" / ")), true));
+        out.push((
+            format!(
+                "İmar durumunda {typed} {}; plan kararı {} {}.",
+                n2(g.typed),
+                g.field,
+                g.plan.join(" / ")
+            ),
+            true,
+        ));
     }
     out.extend(a.notes.iter().map(|n| (n.clone(), false)));
     PlanRead { lines: out, takes }

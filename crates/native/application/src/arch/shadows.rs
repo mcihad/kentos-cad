@@ -14,7 +14,8 @@
 //! do not follow the building; they are drawn again after a change.
 
 use kentos_commands::{
-    CommandResult, EntitiesCreate, EntityGeometry, HatchPattern, HatchPatternType, NewObject, TextAlign, Vec2,
+    CommandResult, EntitiesCreate, EntityGeometry, HatchPattern, HatchPatternType, NewObject,
+    TextAlign, Vec2,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
@@ -72,7 +73,9 @@ fn middle(doc: &Document) -> Option<P> {
 
 /// The latitude and longitude of the building's middle by the project's coordinate system; none without one.
 fn located_at(doc: &Document, at: P) -> Option<(f64, f64)> {
-    kentos_project::systems::own(doc.settings()).and_then(|n| n.system).and_then(|s| s.geographic_of(at))
+    kentos_project::systems::own(doc.settings())
+        .and_then(|n| n.system)
+        .and_then(|s| s.geographic_of(at))
 }
 
 /// Whether the project's coordinate system gives the building's latitude and longitude: else they are asked for.
@@ -92,7 +95,10 @@ pub fn place(doc: &Document, given: Option<(f64, f64)>, zone: f64) -> Result<Pla
         }
         (None, Some(ll)) => ll,
         (None, None) => {
-            return Err("Projenin koordinat sistemi yok: binanın enlemini (E) ve boylamını (B) verin.".into());
+            return Err(
+                "Projenin koordinat sistemi yok: binanın enlemini (E) ve boylamını (B) verin."
+                    .into(),
+            );
         }
     };
     let north = match crate::north::model_north(doc) {
@@ -102,7 +108,13 @@ pub fn place(doc: &Document, given: Option<(f64, f64)>, zone: f64) -> Result<Pla
             0.0
         }
     };
-    Ok(Place { lat, lon, zone, north, notes })
+    Ok(Place {
+        lat,
+        lon,
+        zone,
+        north,
+        notes,
+    })
 }
 
 /// The sun at `place` on day `day` (1–366) at clock time `hours`, and towards it in the plan.
@@ -113,7 +125,10 @@ pub fn sun_at(place: &Place, day: u32, hours: f64) -> (Sun, [f64; 3]) {
 }
 
 fn area(pts: Vec<P>) -> Area {
-    Area { outer: Ring { pts, bulges: None }, holes: Vec::new() }
+    Area {
+        outer: Ring { pts, bulges: None },
+        holes: Vec::new(),
+    }
 }
 
 /// Whether `ring` turns one way only (a straight run is no turn).
@@ -142,7 +157,13 @@ fn sweep(ring: &[P], b: f64, t: f64, v: (f64, f64), out: &mut Vec<Area>) {
     }
     let at = |p: &P, z: f64| P::new(p.x + v.0 * z, p.y + v.1 * z);
     if convex(ring) {
-        let hull = convex_hull(&ring.iter().map(|p| at(p, b)).chain(ring.iter().map(|p| at(p, t))).collect::<Vec<_>>());
+        let hull = convex_hull(
+            &ring
+                .iter()
+                .map(|p| at(p, b))
+                .chain(ring.iter().map(|p| at(p, t)))
+                .collect::<Vec<_>>(),
+        );
         if hull.len() >= 3 {
             out.push(area(hull));
         }
@@ -165,8 +186,12 @@ pub struct Caster {
 
 /// The caster of the drawing's building.
 pub fn caster(doc: &Document) -> Caster {
-    let building = crate::site_ground::building_corners(doc).map(|c| c.iter().map(|p| P::new(p.x, p.y)).collect());
-    Caster { model: crate::sections::model(doc), building }
+    let building = crate::site_ground::building_corners(doc)
+        .map(|c| c.iter().map(|p| P::new(p.x, p.y)).collect());
+    Caster {
+        model: crate::sections::model(doc),
+        building,
+    }
 }
 
 /// The building's shadow on the ground at ±0.00 with the sun towards `sun` (plan x, y, up): its areas. None with the
@@ -194,7 +219,9 @@ fn inside_of(ring: &[P]) -> Option<P> {
             return Some(c);
         }
     }
-    let (lo, hi) = ring.iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| (lo.min(p.y), hi.max(p.y)));
+    let (lo, hi) = ring.iter().fold((f64::MAX, f64::MIN), |(lo, hi), p| {
+        (lo.min(p.y), hi.max(p.y))
+    });
     let y = lo + (hi - lo) * 0.5003;
     let mut xs: Vec<f64> = (0..n)
         .filter_map(|i| {
@@ -214,7 +241,13 @@ fn holes_of(rings: &[Vec<P>]) -> Vec<bool> {
         .enumerate()
         .map(|(i, r)| {
             r.first().is_some_and(|&p| {
-                rings.iter().enumerate().filter(|&(j, o)| j != i && o.len() >= 3 && point_in_polygon(p, o)).count() % 2 == 1
+                rings
+                    .iter()
+                    .enumerate()
+                    .filter(|&(j, o)| j != i && o.len() >= 3 && point_in_polygon(p, o))
+                    .count()
+                    % 2
+                    == 1
             })
         })
         .collect()
@@ -227,7 +260,11 @@ fn covered(model: &crate::sections::Model, ground: Vec<Area>) -> Vec<Area> {
         .flat_map(|a| &a.holes)
         .filter(|h| {
             inside_of(&h.pts).is_some_and(|p| {
-                model.solids.iter().any(|s| s.rings.iter().any(|r| r.len() >= 3 && point_in_polygon(p, r)))
+                model.solids.iter().any(|s| {
+                    s.rings
+                        .iter()
+                        .any(|r| r.len() >= 3 && point_in_polygon(p, r))
+                })
             })
         })
         .map(|h| area(h.pts.clone()))
@@ -248,7 +285,13 @@ pub fn shadow_of(caster: &Caster, sun: [f64; 3]) -> Vec<Area> {
     let v = (-sx / up, -sy / up);
     let model = &caster.model;
     let (mut pieces, mut footprint) = (Vec::new(), Vec::new());
-    footprint.extend(caster.building.as_ref().filter(|b| b.len() >= 3).map(|b| area(b.clone())));
+    footprint.extend(
+        caster
+            .building
+            .as_ref()
+            .filter(|b| b.len() >= 3)
+            .map(|b| area(b.clone())),
+    );
     for solid in &model.solids {
         match &solid.height {
             Height::Prism { bottom, top } => {
@@ -268,10 +311,17 @@ pub fn shadow_of(caster: &Caster, sun: [f64; 3]) -> Vec<Area> {
                 }
                 // A solid with holes (a courtyard, a stair's opening): its outer rings' sweep less the light through
                 // each hole, the rays its bottom and its top both let by. Swept whole, a slab's hole cast a shadow.
-                let (mut own, mut light, mut ground, mut open) = (Vec::new(), Vec::new(), Vec::new(), Vec::new());
+                let (mut own, mut light, mut ground, mut open) =
+                    (Vec::new(), Vec::new(), Vec::new(), Vec::new());
                 for (ring, hole) in solid.rings.iter().zip(&holes).filter(|(r, _)| r.len() >= 3) {
                     if *hole {
-                        let at = |z: f64| area(ring.iter().map(|p| P::new(p.x + v.0 * z, p.y + v.1 * z)).collect());
+                        let at = |z: f64| {
+                            area(
+                                ring.iter()
+                                    .map(|p| P::new(p.x + v.0 * z, p.y + v.1 * z))
+                                    .collect(),
+                            )
+                        };
                         light.extend(intersect_area_sets(&[vec![at(b)], vec![at(*top)]]));
                         if *bottom <= 0.01 {
                             open.push(area(ring.clone()));
@@ -323,23 +373,36 @@ pub fn shadows_of(caster: &Caster, suns: &[[f64; 3]]) -> Vec<Vec<Area>> {
         return suns.iter().map(|s| shadow_of(caster, *s)).collect();
     }
     std::thread::scope(|scope| {
-        let hours: Vec<_> = suns.iter().map(|s| scope.spawn(move || shadow_of(caster, *s))).collect();
-        hours.into_iter().map(|h| h.join().unwrap_or_default()).collect()
+        let hours: Vec<_> = suns
+            .iter()
+            .map(|s| scope.spawn(move || shadow_of(caster, *s)))
+            .collect();
+        hours
+            .into_iter()
+            .map(|h| h.join().unwrap_or_default())
+            .collect()
     })
 }
 
 /// A clock time as a label writes it: 09:00.
 pub fn clock(hours: f64) -> String {
     let minutes = (hours * 60.0).round() as i64;
-    format!("{:02}:{:02}", minutes.div_euclid(60).rem_euclid(24), minutes.rem_euclid(60))
+    format!(
+        "{:02}:{:02}",
+        minutes.div_euclid(60).rem_euclid(24),
+        minutes.rem_euclid(60)
+    )
 }
 
 /// Draws `shadows` (each a time's words, the sun's plan direction and its areas) on `layer`, the old shadows taken
 /// away first; how many areas. One time: filled with a light hatch under its outline; several: each its outline and its
 /// time at its tip, the point farthest down the sun's rays. One undo step when the caller holds a group.
 pub fn draw(doc: &mut Document, layer: &str, shadows: &[Hour]) -> Result<usize, String> {
-    let old: Vec<Slot> =
-        doc.entities().filter(|e| e.base().attrs.contains_key(MARK_ATTR)).map(|e| Slot(e.base().id)).collect();
+    let old: Vec<Slot> = doc
+        .entities()
+        .filter(|e| e.base().attrs.contains_key(MARK_ATTR))
+        .map(|e| Slot(e.base().id))
+        .collect();
     if !old.is_empty() {
         doc.remove(&old);
     }
@@ -359,7 +422,12 @@ pub fn draw(doc: &mut Document, layer: &str, shadows: &[Hour]) -> Result<usize, 
         order: None,
         transparency: None,
     };
-    let pts = |r: &Ring| r.pts.iter().map(|p| Vec2 { x: p.x, y: p.y }).collect::<Vec<_>>();
+    let pts = |r: &Ring| {
+        r.pts
+            .iter()
+            .map(|p| Vec2 { x: p.x, y: p.y })
+            .collect::<Vec<_>>()
+    };
     let mut objects = Vec::new();
     let mut count = 0;
     for (time, sun, areas) in shadows {
@@ -370,7 +438,11 @@ pub fn draw(doc: &mut Document, layer: &str, shadows: &[Hour]) -> Result<usize, 
                 let hatch = EntityGeometry::Hatch {
                     ring: pts(&a.outer),
                     holes: (!a.holes.is_empty()).then(|| a.holes.iter().map(pts).collect()),
-                    pattern: HatchPattern::user(HatchPatternType::Lines, 45.0, 0.003 * doc.settings().plot_scale),
+                    pattern: HatchPattern::user(
+                        HatchPatternType::Lines,
+                        45.0,
+                        0.003 * doc.settings().plot_scale,
+                    ),
                     assoc: None,
                     boundary: None,
                     annotative: None,
@@ -419,7 +491,12 @@ pub fn draw(doc: &mut Document, layer: &str, shadows: &[Hour]) -> Result<usize, 
     if objects.is_empty() {
         return Ok(0);
     }
-    let input = EntitiesCreate { layer_id: layer.to_owned(), objects, operation: None, expected_revision: None };
+    let input = EntitiesCreate {
+        layer_id: layer.to_owned(),
+        objects,
+        operation: None,
+        expected_revision: None,
+    };
     match create::execute(&mut ExecutionContext::new(doc), input) {
         CommandResult::Completed { .. } => Ok(count),
         CommandResult::Failed { error } | CommandResult::NeedsInput { error } => Err(error.message),

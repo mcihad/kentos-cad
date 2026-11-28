@@ -73,14 +73,14 @@ mod file;
 mod file_follow;
 #[cfg(test)]
 mod file_follow_tests;
-pub(crate) mod kinds;
-#[cfg(test)]
-mod kinds_tests;
 mod follow;
 pub mod forms_plan;
 #[cfg(test)]
 mod forms_plan_tests;
 pub mod history;
+pub(crate) mod kinds;
+#[cfg(test)]
+mod kinds_tests;
 mod leaving;
 mod live;
 pub mod local_time;
@@ -882,7 +882,14 @@ impl App {
     /// Why a cloud command of the open project is off (the CBS review of 27 November, 3rd item; docs/adr/9342): a local
     /// project, no session, no connection, an archived project, the role, or nothing to settle, each said apart.
     pub(crate) fn cloud_why(&self, id: &str) -> Option<String> {
-        const OWN: [&str; 6] = ["cloud.share", "cloud.history", "cloud.rename", "cloud.delete", "cloud.openNewest", "cloud.conflicts"];
+        const OWN: [&str; 6] = [
+            "cloud.share",
+            "cloud.history",
+            "cloud.rename",
+            "cloud.delete",
+            "cloud.openNewest",
+            "cloud.conflicts",
+        ];
         if !OWN.contains(&id) || self.cloud_available(id) {
             return None;
         }
@@ -1152,9 +1159,9 @@ impl App {
                 }
             }
             // Şablon düzenleyici closes; its typing is not kept (template_editor.rs).
-            Some(Dialog::TemplateWork(crate::template_work::TemplateDialogKind::TemplateEditor)) => {
-                self.template_work.template_editor = None
-            }
+            Some(Dialog::TemplateWork(
+                crate::template_work::TemplateDialogKind::TemplateEditor,
+            )) => self.template_work.template_editor = None,
             Some(Dialog::Gis(gis::GisDialogKind::PointBatch)) => self.gis.points.close_batch(),
             // Formla düzenle: its Vazgeç, which asks first when something was typed (docs/adr/0443 §6).
             Some(Dialog::Gis(gis::GisDialogKind::FormEntry)) => {

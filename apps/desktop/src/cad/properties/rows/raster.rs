@@ -45,11 +45,18 @@ fn mesh_described(doc: &Document, r: &RasterEntity) -> kentos_commands::MeshDesc
         "{:?}|{:?}|{:?}|{:?}",
         r.raster.file,
         r.raster.asset,
-        r.raster.dataset.as_ref().map(|d| (&d.variable, &d.mesh, d.slice())),
+        r.raster
+            .dataset
+            .as_ref()
+            .map(|d| (&d.variable, &d.mesh, d.slice())),
         doc.path
     );
     let seen = SEEN.get_or_init(|| Mutex::new(HashMap::new()));
-    if let Some(d) = seen.lock().unwrap_or_else(PoisonError::into_inner).get(&key) {
+    if let Some(d) = seen
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .get(&key)
+    {
         return d.clone();
     }
     let d = kentos_native_application::meshes::described(
@@ -143,7 +150,14 @@ pub(super) fn rows(
     let x = &r.raster;
     let (source, linked) = match (&x.asset, &x.file, &x.url) {
         (Some(a), _, _) => (crate::pictures::asset_words(&doc.model, a), false),
-        (None, Some(path), _) => (crate::pictures::file_words(path, doc.path.as_deref(), &doc.model.settings().xref_paths), true),
+        (None, Some(path), _) => (
+            crate::pictures::file_words(
+                path,
+                doc.path.as_deref(),
+                &doc.model.settings().xref_paths,
+            ),
+            true,
+        ),
         // An address is read by ranges, not embedded (docs/adr/0207 §1).
         (None, None, Some(u)) => (format!("Adres: {u}"), false),
         _ => ("—".to_owned(), false),

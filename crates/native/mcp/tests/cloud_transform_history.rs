@@ -18,27 +18,55 @@ fn fixtures() -> PathBuf {
 
 #[test]
 fn moved_and_moved_back_the_history_grows() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/processing/v1/pointcloud.json")).unwrap();
-    let case = |id: &str| cases["cases"].as_array().unwrap().iter().find(|c| c["id"] == id).unwrap().clone();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/processing/v1/pointcloud.json"
+    ))
+    .unwrap();
+    let case = |id: &str| {
+        cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["id"] == id)
+            .unwrap()
+            .clone()
+    };
     let dir = std::env::temp_dir().join(format!("kentos-cloud-history-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
-    std::fs::copy(fixtures().join("pointcloud.kcad"), dir.join("pointcloud.kcad")).unwrap();
+    std::fs::copy(
+        fixtures().join("pointcloud.kcad"),
+        dir.join("pointcloud.kcad"),
+    )
+    .unwrap();
     for (name, rel) in cases["rasters"].as_object().unwrap() {
         std::fs::copy(fixtures().join(rel.as_str().unwrap()), dir.join(name)).unwrap();
     }
     let mut server = Server::new();
-    let opened = call(&mut server, "drawing.open", json!({"path": dir.join("pointcloud.kcad")}));
+    let opened = call(
+        &mut server,
+        "drawing.open",
+        json!({"path": dir.join("pointcloud.kcad")}),
+    );
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
-    let entity = |s: &mut Server, uid: &Value| call(s, "drawing.entity", json!({"drawing": drawing, "uid": uid}))["structuredContent"]["entity"].clone();
+    let entity = |s: &mut Server, uid: &Value| {
+        call(s, "drawing.entity", json!({"drawing": drawing, "uid": uid}))["structuredContent"]["entity"].clone()
+    };
 
     // Moved: the case's history.
     let rotated = case("transform-rotated");
-    let ran = call(&mut server, "cad.processing.run", json!({"drawing": drawing, "tool": "pointcloud.transform", "parameters": rotated["values"]}));
+    let ran = call(
+        &mut server,
+        "cad.processing.run",
+        json!({"drawing": drawing, "tool": "pointcloud.transform", "parameters": rotated["values"]}),
+    );
     assert_eq!(ran["isError"], false, "{ran}");
     let moved_uid = ran["structuredContent"]["output"]["added"][0].clone();
     let moved = entity(&mut server, &moved_uid);
-    assert_eq!(moved["attrs"], rotated["expect"]["added"][0]["attrs"], "{moved}");
+    assert_eq!(
+        moved["attrs"], rotated["expect"]["added"][0]["attrs"],
+        "{moved}"
+    );
     let first = moved["attrs"]["Dönüşümler"].as_str().unwrap().to_owned();
 
     // Moved back from the moved cloud: the first file kept, both matrices, the inverse's as the case writes it.
@@ -47,11 +75,21 @@ fn moved_and_moved_back_the_history_grows() {
     back["input"] = json!({"scope": "layer", "layerId": moved["layerId"]});
     back["invert"] = json!(true);
     back["output"] = json!("geri-donmus");
-    let ran = call(&mut server, "cad.processing.run", json!({"drawing": drawing, "tool": "pointcloud.transform", "parameters": back}));
+    let ran = call(
+        &mut server,
+        "cad.processing.run",
+        json!({"drawing": drawing, "tool": "pointcloud.transform", "parameters": back}),
+    );
     assert_eq!(ran["isError"], false, "{ran}");
     let again = entity(&mut server, &ran["structuredContent"]["output"]["added"][0]);
     assert_eq!(again["attrs"]["Kaynak"], json!("koy.laz"), "{again}");
-    let undone = inverse["expect"]["added"][0]["attrs"]["Dönüşümler"].as_str().unwrap();
-    assert_eq!(again["attrs"]["Dönüşümler"], json!(format!("{first} | {undone}")), "{again}");
+    let undone = inverse["expect"]["added"][0]["attrs"]["Dönüşümler"]
+        .as_str()
+        .unwrap();
+    assert_eq!(
+        again["attrs"]["Dönüşümler"],
+        json!(format!("{first} | {undone}")),
+        "{again}"
+    );
     let _ = std::fs::remove_dir_all(dir);
 }

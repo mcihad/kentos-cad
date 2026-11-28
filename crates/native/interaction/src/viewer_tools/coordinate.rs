@@ -115,16 +115,28 @@ impl CrsQuery {
 
 impl Tool for CrsQuery {
     fn id(&self) -> &'static str {
-        if self.elevation_first { ELEVATION_ID } else { ID }
+        if self.elevation_first {
+            ELEVATION_ID
+        } else {
+            ID
+        }
     }
 
     fn label(&self) -> &'static str {
-        if self.elevation_first { ELEVATION_LABEL } else { LABEL }
+        if self.elevation_first {
+            ELEVATION_LABEL
+        } else {
+            LABEL
+        }
     }
 
     fn prompt(&self) -> Prompt {
         if self.elevation_first {
-            return Prompt::new(ELEVATION_LABEL, "kotu okunacak noktaya ya da köşeye tıklayın").note("Esc: bitir");
+            return Prompt::new(
+                ELEVATION_LABEL,
+                "kotu okunacak noktaya ya da köşeye tıklayın",
+            )
+            .note("Esc: bitir");
         }
         Prompt::new(LABEL, "okunacak noktaya tıklayın").note("Esc: bitir")
     }
@@ -164,7 +176,13 @@ impl Tool for CrsQuery {
         }
         // Kot oku: the elevation first, or why there is none here (docs/adr/9335).
         if self.elevation_first {
-            let at = format!("{}={}, {}={}", f.east_label(), f.coord(p.world.x), f.north_label(), f.coord(p.world.y));
+            let at = format!(
+                "{}={}, {}={}",
+                f.east_label(),
+                f.coord(p.world.x),
+                f.north_label(),
+                f.coord(p.world.y)
+            );
             match z {
                 Some(z) => cx.say(Level::Success, format!("{ELEVATION_LABEL}: Z={} ({at})", f.length_bare(z))),
                 None => cx.say(
@@ -175,8 +193,15 @@ impl Tool for CrsQuery {
                     ),
                 ),
             }
-            *cx.measured = Some(crate::measured::point(cx.doc.settings(), &f, p.world, z, Vec::new()));
-            cx.view_changes.push(crate::tool::ViewChange::RasterValues(p.world));
+            *cx.measured = Some(crate::measured::point(
+                cx.doc.settings(),
+                &f,
+                p.world,
+                z,
+                Vec::new(),
+            ));
+            cx.view_changes
+                .push(crate::tool::ViewChange::RasterValues(p.world));
             self.last = Some(p.world);
             return;
         }
@@ -194,7 +219,16 @@ impl Tool for CrsQuery {
                 f.north_label(),
                 f.coord(u.y)
             );
-            more.push(("UCS".to_owned(), format!("{}={}, {}={}", f.east_label(), f.coord(u.x), f.north_label(), f.coord(u.y))));
+            more.push((
+                "UCS".to_owned(),
+                format!(
+                    "{}={}, {}={}",
+                    f.east_label(),
+                    f.coord(u.x),
+                    f.north_label(),
+                    f.coord(u.y)
+                ),
+            ));
             cx.say(Level::Info, line);
         }
         // The second coordinate system's values, and how sure they are (docs/adr/0167 §2, §5).
@@ -215,7 +249,13 @@ impl Tool for CrsQuery {
                 ),
             }
         }
-        *cx.measured = Some(crate::measured::point(cx.doc.settings(), &f, p.world, z, more));
+        *cx.measured = Some(crate::measured::point(
+            cx.doc.settings(),
+            &f,
+            p.world,
+            z,
+            more,
+        ));
         // The rasters' values under the point, said once read (docs/adr/0204 §8).
         cx.view_changes
             .push(crate::tool::ViewChange::RasterValues(p.world));

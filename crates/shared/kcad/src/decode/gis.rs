@@ -79,8 +79,8 @@ pub(super) fn sources(
 ) -> Result<Vec<kentos_contracts::SourceLink>, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
-    let list: Vec<kentos_contracts::SourceLink> = serde_json::from_value(value.clone())
-        .map_err(|e| {
+    let list: Vec<kentos_contracts::SourceLink> =
+        serde_json::from_value(value.clone()).map_err(|e| {
             let words = e.to_string();
             let code = if words.contains("unknown field") {
                 Code::UnknownField
@@ -128,8 +128,8 @@ pub(super) fn source_bases(
 ) -> Result<Vec<kentos_contracts::SourceBase>, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
-    let list: Vec<kentos_contracts::SourceBase> = serde_json::from_value(value.clone())
-        .map_err(|e| {
+    let list: Vec<kentos_contracts::SourceBase> =
+        serde_json::from_value(value.clone()).map_err(|e| {
             let words = e.to_string();
             let code = if words.contains("unknown field") {
                 Code::UnknownField
@@ -163,8 +163,8 @@ pub(super) fn relations(
 ) -> Result<Vec<kentos_contracts::ProjectRelation>, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
-    let list: Vec<kentos_contracts::ProjectRelation> =
-        serde_json::from_value(value.clone()).map_err(|e| {
+    let list: Vec<kentos_contracts::ProjectRelation> = serde_json::from_value(value.clone())
+        .map_err(|e| {
             let words = e.to_string();
             let code = if words.contains("unknown field") {
                 Code::UnknownField
@@ -185,7 +185,10 @@ pub(super) fn relations(
         return Err(r.fail_at(
             Code::UnknownField,
             at,
-            &format!("ilişkinin parentKey alanı CBS verisi {} ister", crate::GIS_WITH_RELATION_KEYS),
+            &format!(
+                "ilişkinin parentKey alanı CBS verisi {} ister",
+                crate::GIS_WITH_RELATION_KEYS
+            ),
         ));
     }
     if list.is_empty() {
@@ -208,16 +211,16 @@ pub(super) fn join_views(
 ) -> Result<Vec<kentos_contracts::JoinView>, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
-    let list: Vec<kentos_contracts::JoinView> = serde_json::from_value(value.clone())
-        .map_err(|e| {
-        let words = e.to_string();
-        let code = if words.contains("unknown field") {
-            Code::UnknownField
-        } else {
-            Code::BadValue
-        };
-        r.fail_at(code, at, &format!("birleşik görünümler okunamadı: {words}"))
-    })?;
+    let list: Vec<kentos_contracts::JoinView> =
+        serde_json::from_value(value.clone()).map_err(|e| {
+            let words = e.to_string();
+            let code = if words.contains("unknown field") {
+                Code::UnknownField
+            } else {
+                Code::BadValue
+            };
+            r.fail_at(code, at, &format!("birleşik görünümler okunamadı: {words}"))
+        })?;
     if serde_json::to_value(&list).ok().as_ref() != Some(&value) {
         return Err(r.fail_at(
             Code::BadValue,
@@ -256,8 +259,8 @@ pub(super) fn linear_events(
 ) -> Result<Vec<kentos_contracts::EventLink>, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
-    let list: Vec<kentos_contracts::EventLink> = serde_json::from_value(value.clone())
-        .map_err(|e| {
+    let list: Vec<kentos_contracts::EventLink> =
+        serde_json::from_value(value.clone()).map_err(|e| {
             let words = e.to_string();
             let code = if words.contains("unknown field") {
                 Code::UnknownField
@@ -292,8 +295,8 @@ pub(super) fn profile_files(
 ) -> Result<Vec<kentos_contracts::ProjectProfileFile>, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
-    let list: Vec<kentos_contracts::ProjectProfileFile> =
-        serde_json::from_value(value.clone()).map_err(|e| {
+    let list: Vec<kentos_contracts::ProjectProfileFile> = serde_json::from_value(value.clone())
+        .map_err(|e| {
             let words = e.to_string();
             let code = if words.contains("unknown field") {
                 Code::UnknownField
@@ -321,8 +324,8 @@ pub(super) fn lineage(
 ) -> Result<Vec<kentos_contracts::LineageRecord>, KcadError> {
     let at = r.position();
     let value = r.opaque()?;
-    let list: Vec<kentos_contracts::LineageRecord> =
-        serde_json::from_value(value.clone()).map_err(|e| {
+    let list: Vec<kentos_contracts::LineageRecord> = serde_json::from_value(value.clone())
+        .map_err(|e| {
             let words = e.to_string();
             let code = if words.contains("unknown field") {
                 Code::UnknownField
@@ -401,7 +404,8 @@ pub(super) fn topology_settings(
             }
             "tolerance" => t.tolerance = Some(r.float()?),
             "profile" if reviews => {
-                let (mut name, mut edition, mut precision, mut acceptance) = (None, None, None, None);
+                let (mut name, mut edition, mut precision, mut acceptance) =
+                    (None, None, None, None);
                 map(r, |r, key| {
                     match key {
                         "name" => name = Some(text(r)?),
@@ -422,7 +426,8 @@ pub(super) fn topology_settings(
             "exceptions" => {
                 t.exceptions = list(r, |r, _| {
                     let (mut at, mut rule, mut objects, mut digest) = (None, None, None, None);
-                    let (mut decision, mut reason, mut rule_digest, mut scope) = (None, None, None, None);
+                    let (mut decision, mut reason, mut rule_digest, mut scope) =
+                        (None, None, None, None);
                     map(r, |r, key| {
                         match key {
                             "at" => at = Some(point(r)?),

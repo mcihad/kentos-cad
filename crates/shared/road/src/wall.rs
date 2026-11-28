@@ -44,7 +44,13 @@ pub fn slice(road: f64, ground: f64, shape: &Shape) -> Slice {
     let top = road.max(ground) + shape.above;
     let footing = road.min(ground) - shape.cover;
     let height = top - footing;
-    Slice { top, footing, height, area: area(height, shape), fill: road > ground }
+    Slice {
+        top,
+        footing,
+        height,
+        area: area(height, shape),
+        fill: road > ground,
+    }
 }
 
 /// The cross's concrete area of a stem `height` high.
@@ -91,7 +97,15 @@ pub fn ground_at(ground: &[crate::section::GroundPoint], offset: f64) -> Option<
 mod tests {
     use super::*;
 
-    const SHAPE: Shape = Shape { top: 0.3, batter: 0.1, footing: 2.0, base: 0.5, toe: 0.5, cover: 0.6, above: 0.9 };
+    const SHAPE: Shape = Shape {
+        top: 0.3,
+        batter: 0.1,
+        footing: 2.0,
+        base: 0.5,
+        toe: 0.5,
+        cover: 0.6,
+        above: 0.9,
+    };
 
     #[test]
     fn a_fill_wall_stands_from_below_the_ground_to_above_the_road() {

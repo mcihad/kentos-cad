@@ -142,7 +142,12 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
 
 /// The tables chosen, by name.
 fn chosen_tables(s: &State) -> Vec<String> {
-    s.tables.iter().zip(&s.chosen).filter(|(_, c)| **c).map(|(t, _)| t.name.clone()).collect()
+    s.tables
+        .iter()
+        .zip(&s.chosen)
+        .filter(|(_, c)| **c)
+        .map(|(t, _)| t.name.clone())
+        .collect()
 }
 
 /// The command's input for the window as it stands; `files` gives the rows refused their file (not for a plan).
@@ -249,7 +254,9 @@ impl App {
                 };
                 let path = s.path.clone();
                 self.close_exchange();
-                return Task::done(message(Exchange::GpkgTiles(super::gpkg_tiles::Event::Opened(Some(path)))));
+                return Task::done(message(Exchange::GpkgTiles(
+                    super::gpkg_tiles::Event::Opened(Some(path)),
+                )));
             }
             Event::Key(k) => {
                 if let Some(Window::Gpkg(s)) = &mut self.exchange {
@@ -497,7 +504,8 @@ impl App {
             |n| n.to_string_lossy().into_owned(),
         );
         let profile = profile_words(output.relations.len(), output.styles);
-        let into = !output.kept.is_empty() || output.tables.iter().any(|t| t.appended || t.replaced);
+        let into =
+            !output.kept.is_empty() || output.tables.iter().any(|t| t.appended || t.replaced);
         let text = if into {
             let mut parts: Vec<String> = output
                 .tables
@@ -517,7 +525,10 @@ impl App {
             }
             format!("“{name}” yazıldı: {}{profile}.", parts.join("; "))
         } else {
-            format!("“{name}” yazıldı. {} tablo, {rows} satır{profile}.", output.tables.len())
+            format!(
+                "“{name}” yazıldı. {} tablo, {rows} satır{profile}.",
+                output.tables.len()
+            )
         };
         self.announce(
             if warnings.is_empty() {
@@ -567,12 +578,19 @@ impl App {
             .filter(|(t, c)| **c && t.features)
             .map(|(t, _)| t)
             .collect();
-        let foreign: std::collections::BTreeSet<u32> =
-            picked.iter().filter_map(|t| t.srid).filter(|&f| f != project).collect();
+        let foreign: std::collections::BTreeSet<u32> = picked
+            .iter()
+            .filter_map(|t| t.srid)
+            .filter(|&f| f != project)
+            .collect();
         let own = picked.iter().filter(|t| t.srid == Some(project)).count();
         let undeclared = picked.iter().filter(|t| t.srid.is_none()).count();
         let mismatch = !foreign.is_empty();
-        let foreign_words = foreign.iter().map(|f| format!("EPSG:{f}")).collect::<Vec<_>>().join(", ");
+        let foreign_words = foreign
+            .iter()
+            .map(|f| format!("EPSG:{f}"))
+            .collect::<Vec<_>>()
+            .join(", ");
         if own > 0 && !mismatch && undeclared == 0 {
             lines.push(words::text_line(
                 Line::Ok,
@@ -591,7 +609,10 @@ impl App {
             ));
         }
         if mismatch {
-            let n = picked.iter().filter(|t| t.srid.is_some_and(|f| f != project)).count();
+            let n = picked
+                .iter()
+                .filter(|t| t.srid.is_some_and(|f| f != project))
+                .count();
             lines.push(words::text_line(
                 if s.reproject || as_data { Line::Info } else { Line::Warn },
                 if as_data {
@@ -648,7 +669,10 @@ impl App {
                 iced::widget::row![
                     iced::widget::container(words::text_line(
                         Line::Info,
-                        format!("{}: raster karoları; GeoPackage karolarını oku ile eklenir.", s.tiles.join(", ")),
+                        format!(
+                            "{}: raster karoları; GeoPackage karolarını oku ile eklenir.",
+                            s.tiles.join(", ")
+                        ),
                     ))
                     .width(Fill),
                     words::secondary("Karoları aç…", Some(event(Event::Tiles))),

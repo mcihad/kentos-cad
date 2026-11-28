@@ -65,7 +65,11 @@ pub(crate) fn name(k: usize) -> Option<&'static str> {
     let installed = installed_families();
     match k.checked_sub(installed.len()) {
         None => installed.get(k).copied(),
-        Some(j) => MET.lock().unwrap_or_else(PoisonError::into_inner).get(j).copied(),
+        Some(j) => MET
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .get(j)
+            .copied(),
     }
 }
 
@@ -82,8 +86,13 @@ pub(crate) fn is_installed(k: usize) -> bool {
 /// An installed family's advances in thousandths of an em, as the tables' rows: not bold (500) and bold (600).
 pub(crate) fn rows(k: usize) -> Option<&'static ([u16; 352], [u16; 352])> {
     static ROWS: OnceLock<Vec<([u16; 352], [u16; 352])>> = OnceLock::new();
-    ROWS.get_or_init(|| installed_families().iter().map(|f| (row_of(f, 500), row_of(f, 600))).collect())
-        .get(k)
+    ROWS.get_or_init(|| {
+        installed_families()
+            .iter()
+            .map(|f| (row_of(f, 500), row_of(f, 600)))
+            .collect()
+    })
+    .get(k)
 }
 
 /// The family's advances at `weight`, upright, from its nearest face; 0 for a letter it has no glyph of (the tables'
@@ -99,7 +108,9 @@ fn row_of(family: &str, weight: u16) -> [u16; 352] {
             .and_then(|c| face.glyph_index(c))
             .and_then(|g| face.glyph_hor_advance(g));
         if let Some(a) = advance {
-            *cell = (f64::from(a) * 1000.0 / em).round().clamp(0.0, f64::from(u16::MAX)) as u16;
+            *cell = (f64::from(a) * 1000.0 / em)
+                .round()
+                .clamp(0.0, f64::from(u16::MAX)) as u16;
         }
     }
     row

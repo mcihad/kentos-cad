@@ -13,8 +13,8 @@ use std::collections::HashMap;
 use crate::geometry::{edit_geometry, shape};
 use crate::{ExecutionContext, edit};
 use kentos_commands::{
-    DimensionStyleDef, EditOperation, EntitiesEdit, Entity, EntityEdit, LeaderStyleDef, TextLook, TextStyleDef,
-    follow_dimension_style, follow_leader_style, follow_text_style,
+    DimensionStyleDef, EditOperation, EntitiesEdit, Entity, EntityEdit, LeaderStyleDef, TextLook,
+    TextStyleDef, follow_dimension_style, follow_leader_style, follow_text_style,
 };
 use kentos_domain::{Document, Slot};
 
@@ -108,12 +108,19 @@ fn follow(doc: &mut Document, operation: EditOperation, updates: Vec<(Slot, Enti
 /// stili”; those on locked layers left and counted; a removed style's leaders keep their look and follow none.
 pub fn save_leader_styles(doc: &mut Document, next: Vec<LeaderStyleDef>) -> Saved {
     let mut settings = doc.settings().clone();
-    let before: HashMap<String, LeaderStyleDef> =
-        settings.leader_styles.iter().map(|s| (s.id.clone(), s.clone())).collect();
+    let before: HashMap<String, LeaderStyleDef> = settings
+        .leader_styles
+        .iter()
+        .map(|s| (s.id.clone(), s.clone()))
+        .collect();
     settings.leader_styles = next;
     doc.set_settings(settings);
-    let after: HashMap<String, LeaderStyleDef> =
-        doc.settings().leader_styles.iter().map(|s| (s.id.clone(), s.clone())).collect();
+    let after: HashMap<String, LeaderStyleDef> = doc
+        .settings()
+        .leader_styles
+        .iter()
+        .map(|s| (s.id.clone(), s.clone()))
+        .collect();
     let scale = doc.settings().plot_scale;
     let (mut updates, mut locked) = (Vec::new(), 0);
     for e in doc.entities() {
@@ -122,7 +129,10 @@ pub fn save_leader_styles(doc: &mut Document, next: Vec<LeaderStyleDef>) -> Save
             continue;
         };
         let next = match after.get(&old.id) {
-            None => kentos_commands::LeaderEntity { leader_style: None, ..l.clone() },
+            None => kentos_commands::LeaderEntity {
+                leader_style: None,
+                ..l.clone()
+            },
             Some(now) if now == old => continue,
             Some(now) => follow_leader_style(old, now, l, scale),
         };
@@ -139,7 +149,11 @@ pub fn save_leader_styles(doc: &mut Document, next: Vec<LeaderStyleDef>) -> Save
     if changed > 0 {
         doc.update_many(updates, "Kılavuz stili");
     }
-    Saved { changed, locked, said: Vec::new() }
+    Saved {
+        changed,
+        locked,
+        said: Vec::new(),
+    }
 }
 
 /// Saves the table styles (docs/adr/1127 §2): the table, then the tables of a removed style, which lose the link and
@@ -150,7 +164,12 @@ pub fn save_table_styles(doc: &mut Document, next: Vec<kentos_commands::TableSty
     let mut settings = doc.settings().clone();
     settings.table_styles = next;
     doc.set_settings(settings);
-    let kept: std::collections::HashSet<String> = doc.settings().table_styles.iter().map(|s| s.id.clone()).collect();
+    let kept: std::collections::HashSet<String> = doc
+        .settings()
+        .table_styles
+        .iter()
+        .map(|s| s.id.clone())
+        .collect();
     let (mut updates, mut locked) = (Vec::new(), 0);
     for e in doc.entities() {
         let Entity::Table(t) = e else { continue };
@@ -161,13 +180,23 @@ pub fn save_table_styles(doc: &mut Document, next: Vec<kentos_commands::TableSty
             locked += 1;
             continue;
         }
-        updates.push((Slot(t.base.id), Entity::Table(Box::new(kentos_commands::TableEntity { table_style: None, ..(**t).clone() }))));
+        updates.push((
+            Slot(t.base.id),
+            Entity::Table(Box::new(kentos_commands::TableEntity {
+                table_style: None,
+                ..(**t).clone()
+            })),
+        ));
     }
     let changed = updates.len();
     if changed > 0 {
         doc.update_many(updates, "Tablo stili");
     }
-    Saved { changed, locked, said: Vec::new() }
+    Saved {
+        changed,
+        locked,
+        said: Vec::new(),
+    }
 }
 
 /// The walls that take a style table, and how many a locked layer keeps.
@@ -177,10 +206,18 @@ pub type WallFollowers = (Vec<(Slot, Entity)>, usize);
 /// ends and fill, and the width they fix (its own when one component takes the rest); a wall of a style removed keeps
 /// its look without the link. Walls on locked layers are counted, not changed. A wall the new components do not fit,
 /// or whose faces they make undrawable, is the refusal (its code and words).
-pub fn wall_followers(doc: &Document, next: &[kentos_commands::WallStyleDef]) -> Result<WallFollowers, (&'static str, String)> {
-    let before: HashMap<&str, &kentos_commands::WallStyleDef> =
-        doc.settings().wall_styles.iter().map(|s| (s.id.as_str(), s)).collect();
-    let after: HashMap<&str, &kentos_commands::WallStyleDef> = next.iter().map(|s| (s.id.as_str(), s)).collect();
+pub fn wall_followers(
+    doc: &Document,
+    next: &[kentos_commands::WallStyleDef],
+) -> Result<WallFollowers, (&'static str, String)> {
+    let before: HashMap<&str, &kentos_commands::WallStyleDef> = doc
+        .settings()
+        .wall_styles
+        .iter()
+        .map(|s| (s.id.as_str(), s))
+        .collect();
+    let after: HashMap<&str, &kentos_commands::WallStyleDef> =
+        next.iter().map(|s| (s.id.as_str(), s)).collect();
     let (mut updates, mut locked) = (Vec::new(), 0);
     for e in doc.entities() {
         let Entity::Wall(w) = e else { continue };
@@ -207,14 +244,25 @@ pub fn wall_followers(doc: &Document, next: &[kentos_commands::WallStyleDef]) ->
             locked += 1;
             continue;
         }
-        let uid = doc.uid(Slot(w.base.id)).map(|u| u.to_string()).unwrap_or_default();
+        let uid = doc
+            .uid(Slot(w.base.id))
+            .map(|u| u.to_string())
+            .unwrap_or_default();
         if let Some((_, why)) = next.wall.problem() {
-            return Err((crate::codes::INVALID_WALL, format!("“{uid}” kimlikli duvar stilin yeni bileşenleriyle olmaz: {why}")));
+            return Err((
+                crate::codes::INVALID_WALL,
+                format!("“{uid}” kimlikli duvar stilin yeni bileşenleriyle olmaz: {why}"),
+            ));
         }
         let spec = kentos_formats::walls::spec(&next.wall);
         let pts = crate::walls::core_points(&next.wall.pts);
-        if let Err(why) = kentos_geometry_core::geom::wall::lines(&pts, next.wall.bulges.as_deref(), &spec) {
-            return Err((crate::codes::WALL_COLLAPSES, format!("“{uid}” kimlikli duvar: {why}")));
+        if let Err(why) =
+            kentos_geometry_core::geom::wall::lines(&pts, next.wall.bulges.as_deref(), &spec)
+        {
+            return Err((
+                crate::codes::WALL_COLLAPSES,
+                format!("“{uid}” kimlikli duvar: {why}"),
+            ));
         }
         updates.push((Slot(w.base.id), Entity::Wall(next)));
     }
@@ -232,7 +280,11 @@ pub fn save_wall_styles(doc: &mut Document, next: Vec<kentos_commands::WallStyle
     if changed > 0 {
         doc.update_many(updates, "Duvar stili");
     }
-    Saved { changed, locked, said: Vec::new() }
+    Saved {
+        changed,
+        locked,
+        said: Vec::new(),
+    }
 }
 
 /// Saves the text styles: the table, then the texts that follow them (Yazı stili).
@@ -264,7 +316,10 @@ pub fn save_text_styles(doc: &mut Document, next: Vec<TextStyleDef>) -> Saved {
     }
     // The table styles' cell styles name their text style by its name (docs/adr/1127 §2): a renamed one with it.
     for style in &mut settings.table_styles {
-        for cell in [&mut style.title, &mut style.header, &mut style.data].into_iter().flatten() {
+        for cell in [&mut style.title, &mut style.header, &mut style.data]
+            .into_iter()
+            .flatten()
+        {
             if let Some(name) = &mut cell.text_style
                 && let Some(old) = before.values().find(|s| s.name.eq_ignore_ascii_case(name))
                 && let Some(now) = next.iter().find(|s| s.id == old.id)

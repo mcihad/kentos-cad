@@ -346,7 +346,9 @@ impl Targets {
             size,
             1,
             format,
-            wgpu::TextureUsages::COPY_SRC | wgpu::TextureUsages::COPY_DST | wgpu::TextureUsages::TEXTURE_BINDING,
+            wgpu::TextureUsages::COPY_SRC
+                | wgpu::TextureUsages::COPY_DST
+                | wgpu::TextureUsages::TEXTURE_BINDING,
         ));
         let wide = device.create_texture(&texture_descriptor(
             "kentos.cad2d.picture.wide",
@@ -367,9 +369,18 @@ impl Targets {
                 label: Some("kentos.cad2d.picture.zoomed"),
                 layout: &compose.zoom_layout,
                 entries: &[
-                    wgpu::BindGroupEntry { binding: 0, resource: wgpu::BindingResource::TextureView(&view) },
-                    wgpu::BindGroupEntry { binding: 1, resource: wgpu::BindingResource::Sampler(&compose.smooth) },
-                    wgpu::BindGroupEntry { binding: 2, resource: uniform.as_entire_binding() },
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: wgpu::BindingResource::TextureView(&view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Sampler(&compose.smooth),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: uniform.as_entire_binding(),
+                    },
                 ],
             });
             (uniform, bind)
@@ -531,7 +542,14 @@ mod place_tests {
     use super::Place;
 
     fn at(x: f64, y: f64) -> Place {
-        Place { center: [x, y], origin: [486_000.0, 4_420_000.0], px_per_unit: 2.0, size: [100, 80], twist: 0.0, dpr: 2.0 }
+        Place {
+            center: [x, y],
+            origin: [486_000.0, 4_420_000.0],
+            px_per_unit: 2.0,
+            size: [100, 80],
+            twist: 0.0,
+            dpr: 2.0,
+        }
     }
 
     /// A pan by whole pixels moves the picture (x right, y down); a fraction, a turn, another scale or a move past
@@ -540,12 +558,30 @@ mod place_tests {
     fn only_a_pan_by_whole_pixels_moves_the_picture() {
         // The camera 4.5 m west and 2 m north: the picture moves 9 px right and 4 px down.
         assert_eq!(at(10.0, 5.0).shift_to(&at(5.5, 7.0)), Some([9, 4]));
-        assert_eq!(at(10.0, 5.0).shift_to(&at(10.25, 5.0)), None, "half a pixel");
-        assert_eq!(at(10.0, 5.0).shift_to(&at(10.0, 5.0)), None, "nothing to move");
-        assert_eq!(at(10.0, 5.0).shift_to(&at(10.0 - 60.0, 5.0)), None, "past the picture");
-        let turned = Place { twist: 0.1, ..at(5.5, 7.0) };
+        assert_eq!(
+            at(10.0, 5.0).shift_to(&at(10.25, 5.0)),
+            None,
+            "half a pixel"
+        );
+        assert_eq!(
+            at(10.0, 5.0).shift_to(&at(10.0, 5.0)),
+            None,
+            "nothing to move"
+        );
+        assert_eq!(
+            at(10.0, 5.0).shift_to(&at(10.0 - 60.0, 5.0)),
+            None,
+            "past the picture"
+        );
+        let turned = Place {
+            twist: 0.1,
+            ..at(5.5, 7.0)
+        };
         assert_eq!(at(10.0, 5.0).shift_to(&turned), None);
-        let scaled = Place { px_per_unit: 2.5, ..at(5.5, 7.0) };
+        let scaled = Place {
+            px_per_unit: 2.5,
+            ..at(5.5, 7.0)
+        };
         assert_eq!(at(10.0, 5.0).shift_to(&scaled), None);
     }
 }

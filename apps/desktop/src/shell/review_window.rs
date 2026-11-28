@@ -8,7 +8,8 @@ use std::fmt;
 use iced::widget::{column, container, row, scrollable};
 use iced::{Element, Fill, Task};
 use kentos_commands::{
-    ReviewAnchorState, ReviewNoteOp, ReviewNoteState, ReviewNotesEdit, ReviewNotesList, ReviewOrigin, ReviewStatus,
+    ReviewAnchorState, ReviewNoteOp, ReviewNoteState, ReviewNotesEdit, ReviewNotesList,
+    ReviewOrigin, ReviewStatus,
 };
 use kentos_domain::Uuid;
 use kentos_interaction::Level;
@@ -108,8 +109,16 @@ fn msg(event: Event) -> Message {
 /// Now as UTC ISO 8601 (`2026-11-05T18:30:00Z`), from the system clock: the host gives the note its time.
 /// A recorded decision (docs/adr/4140) in a line: whose, the candidate's source, what it binds.
 pub(crate) fn decision_words(d: &kentos_commands::ReviewDecision) -> String {
-    let whose = if d.command == kentos_commands::MAP_FEATURES_RECONCILE { "Detay eşleştirme" } else { d.command.as_str() };
-    let bound = if d.asset.is_some() { "aday ve yazılan varlık bağlı" } else { "aday bağlı" };
+    let whose = if d.command == kentos_commands::MAP_FEATURES_RECONCILE {
+        "Detay eşleştirme"
+    } else {
+        d.command.as_str()
+    };
+    let bound = if d.asset.is_some() {
+        "aday ve yazılan varlık bağlı"
+    } else {
+        "aday bağlı"
+    };
     format!("Kayıt: {whose} kararı · kaynak {} · {bound}", d.source)
 }
 
@@ -128,11 +137,19 @@ pub fn iso_utc_now() -> String {
     let d = doy - (153 * mp + 2) / 5 + 1;
     let m = if mp < 10 { mp + 3 } else { mp - 9 };
     let y = yoe + era * 400 + i64::from(m <= 2);
-    format!("{y:04}-{m:02}-{d:02}T{:02}:{:02}:{:02}Z", rest / 3600, rest % 3600 / 60, rest % 60)
+    format!(
+        "{y:04}-{m:02}-{d:02}T{:02}:{:02}:{:02}Z",
+        rest / 3600,
+        rest % 3600 / 60,
+        rest % 60
+    )
 }
 
 fn author() -> Option<String> {
-    std::env::var("USER").ok().map(|u| u.trim().to_owned()).filter(|u| !u.is_empty() && u.chars().count() <= 120)
+    std::env::var("USER")
+        .ok()
+        .map(|u| u.trim().to_owned())
+        .filter(|u| !u.is_empty() && u.chars().count() <= 120)
 }
 
 fn anchor_words(n: &ReviewNoteState) -> String {
@@ -152,8 +169,11 @@ fn stale_words(n: &ReviewNoteState) -> String {
     }
     let count = |s: ReviewAnchorState| n.anchor_states.iter().filter(|a| a.state == s).count();
     let mut parts = Vec::new();
-    let (changed, block, gone) =
-        (count(ReviewAnchorState::Changed), count(ReviewAnchorState::BlockChanged), count(ReviewAnchorState::Removed));
+    let (changed, block, gone) = (
+        count(ReviewAnchorState::Changed),
+        count(ReviewAnchorState::BlockChanged),
+        count(ReviewAnchorState::Removed),
+    );
     if changed > 0 {
         parts.push(format!("{changed} nesne değişti"));
     }
@@ -178,8 +198,15 @@ impl App {
             self.output("Açık çizim yok.");
             return;
         }
-        let first = self.review_listed().notes.first().map(|n| n.note.id.clone());
-        self.review_window = Some(Window { chosen: first, ..Window::default() });
+        let first = self
+            .review_listed()
+            .notes
+            .first()
+            .map(|n| n.note.id.clone());
+        self.review_window = Some(Window {
+            chosen: first,
+            ..Window::default()
+        });
         self.dialog = Some(Dialog::ReviewNotes);
     }
 
@@ -194,7 +221,10 @@ impl App {
         let doc = self.document.as_mut()?;
         let result = review_notes::execute(
             &mut ExecutionContext::new(&mut doc.model),
-            ReviewNotesEdit { change, expected_revision: None },
+            ReviewNotesEdit {
+                change,
+                expected_revision: None,
+            },
         );
         self.answered(result)
     }
@@ -222,12 +252,15 @@ impl App {
                 // The choice follows the filter: kept while shown, else the first note shown (none on an empty table).
                 let listed = self.review_listed();
                 if let Some(w) = self.review_window.as_mut() {
-                    let keeps = w
-                        .chosen
-                        .as_ref()
-                        .is_some_and(|id| listed.notes.iter().any(|n| &n.note.id == id && f.passes(n)));
+                    let keeps = w.chosen.as_ref().is_some_and(|id| {
+                        listed.notes.iter().any(|n| &n.note.id == id && f.passes(n))
+                    });
                     if !keeps {
-                        w.chosen = listed.notes.iter().find(|n| f.passes(n)).map(|n| n.note.id.clone());
+                        w.chosen = listed
+                            .notes
+                            .iter()
+                            .find(|n| f.passes(n))
+                            .map(|n| n.note.id.clone());
                     }
                 }
             }
@@ -237,7 +270,13 @@ impl App {
             Event::Add => {
                 let text = w.text.trim().to_owned();
                 let anchors: Vec<String> = match self.document.as_ref() {
-                    Some(d) => self.selection.ids().iter().filter_map(|s| d.model.uid(*s)).map(|u| u.to_string()).collect(),
+                    Some(d) => self
+                        .selection
+                        .ids()
+                        .iter()
+                        .filter_map(|s| d.model.uid(*s))
+                        .map(|u| u.to_string())
+                        .collect(),
                     None => Vec::new(),
                 };
                 let change = ReviewNoteOp::Add {
@@ -253,7 +292,10 @@ impl App {
                     created_at: Some(iso_utc_now()),
                 };
                 if let Some(done) = self.review_edit(change) {
-                    self.say(Level::Success, format!("{}. inceleme notu eklendi.", done.number));
+                    self.say(
+                        Level::Success,
+                        format!("{}. inceleme notu eklendi.", done.number),
+                    );
                     if let Some(w) = self.review_window.as_mut() {
                         w.text.clear();
                         w.chosen = Some(done.id);
@@ -265,8 +307,13 @@ impl App {
                     return Task::none();
                 };
                 let text = w.reply.trim().to_owned();
-                let change =
-                    ReviewNoteOp::Reply { id, text, author: author(), created_at: Some(iso_utc_now()), status: None };
+                let change = ReviewNoteOp::Reply {
+                    id,
+                    text,
+                    author: author(),
+                    created_at: Some(iso_utc_now()),
+                    status: None,
+                };
                 if self.review_edit(change).is_some()
                     && let Some(w) = self.review_window.as_mut()
                 {
@@ -275,22 +322,41 @@ impl App {
             }
             Event::Status(Status(status)) => {
                 if let Some(id) = visible {
-                    let _ = self.review_edit(ReviewNoteOp::Update { id, text: None, status: Some(status), revision: None });
+                    let _ = self.review_edit(ReviewNoteOp::Update {
+                        id,
+                        text: None,
+                        status: Some(status),
+                        revision: None,
+                    });
                 }
             }
             Event::Rebind => {
                 if let Some(id) = visible
-                    && self.review_edit(ReviewNoteOp::Rebind { id, anchors: None }).is_some()
+                    && self
+                        .review_edit(ReviewNoteOp::Rebind { id, anchors: None })
+                        .is_some()
                 {
-                    self.say(Level::Success, "Not çizimin şimdiki hâline yeniden bağlandı.".to_owned());
+                    self.say(
+                        Level::Success,
+                        "Not çizimin şimdiki hâline yeniden bağlandı.".to_owned(),
+                    );
                 }
             }
             Event::Remove => {
                 if let Some(id) = visible
                     && self.review_edit(ReviewNoteOp::Remove { id }).is_some()
                 {
-                    let filter = self.review_window.as_ref().map(|w| w.filter).unwrap_or_default();
-                    let next = self.review_listed().notes.iter().find(|n| filter.passes(n)).map(|n| n.note.id.clone());
+                    let filter = self
+                        .review_window
+                        .as_ref()
+                        .map(|w| w.filter)
+                        .unwrap_or_default();
+                    let next = self
+                        .review_listed()
+                        .notes
+                        .iter()
+                        .find(|n| filter.passes(n))
+                        .map(|n| n.note.id.clone());
                     if let Some(w) = self.review_window.as_mut() {
                         w.chosen = next;
                     }
@@ -330,9 +396,16 @@ impl App {
             return iced::widget::text("").into();
         };
         let listed = self.review_listed();
-        let shown: Vec<&ReviewNoteState> = listed.notes.iter().filter(|n| w.filter.passes(n)).collect();
+        let shown: Vec<&ReviewNoteState> =
+            listed.notes.iter().filter(|n| w.filter.passes(n)).collect();
         let filters = Segmented::new(
-            [Filter::All, Filter::Open, Filter::Answered, Filter::Resolved, Filter::Stale],
+            [
+                Filter::All,
+                Filter::Open,
+                Filter::Answered,
+                Filter::Resolved,
+                Filter::Stale,
+            ],
             w.filter,
             |f| msg(Event::Filter(f)),
         );
@@ -357,7 +430,9 @@ impl App {
                     label::caption(first_line).into(),
                     label::caption(anchor_words(n)).into(),
                     if n.stale {
-                        label::caption(stale_words(n)).style(style::text::warning).into()
+                        label::caption(stale_words(n))
+                            .style(style::text::warning)
+                            .into()
                     } else {
                         label::caption(stale_words(n)).into()
                     },
@@ -367,15 +442,19 @@ impl App {
                     .on_press(msg(Event::Pick(n.note.id.clone())))
             })
             .collect();
-        let chosen = w
-            .chosen
-            .as_ref()
-            .and_then(|id| listed.notes.iter().find(|n| &n.note.id == id && w.filter.passes(n)));
+        let chosen = w.chosen.as_ref().and_then(|id| {
+            listed
+                .notes
+                .iter()
+                .find(|n| &n.note.id == id && w.filter.passes(n))
+        });
         // A note whose state just took it out of the filter: said, its details and actions gone with its row.
-        let hidden = w
-            .chosen
-            .as_ref()
-            .and_then(|id| listed.notes.iter().find(|n| &n.note.id == id && !w.filter.passes(n)));
+        let hidden = w.chosen.as_ref().and_then(|id| {
+            listed
+                .notes
+                .iter()
+                .find(|n| &n.note.id == id && !w.filter.passes(n))
+        });
         let selected = self.selection.len();
         let add_row = row![
             container(
@@ -419,8 +498,11 @@ impl App {
             )));
         }
         if let Some(n) = chosen {
-            let mut detail = column![label::body(format!("{}. not", n.note.number)), label::caption(n.note.text.clone())]
-                .spacing(4);
+            let mut detail = column![
+                label::body(format!("{}. not", n.note.number)),
+                label::caption(n.note.text.clone())
+            ]
+            .spacing(4);
             let mut meta = Vec::new();
             if let Some(a) = &n.note.author {
                 meta.push(a.clone());
@@ -451,7 +533,10 @@ impl App {
                 detail = detail.push(label::caption(format!("↳ {who}: {}", r.text)));
             }
             body = body.push(
-                container(scrollable(detail).height(84.0)).padding([6, 10]).width(Fill).style(style::container::field_box),
+                container(scrollable(detail).height(84.0))
+                    .padding([6, 10])
+                    .width(Fill)
+                    .style(style::container::field_box),
             );
             body = body.push(
                 row![
@@ -462,18 +547,28 @@ impl App {
                             .id("inceleme-yanit"),
                     )
                     .width(Fill),
-                    words::secondary("Yanıtla", (!w.reply.trim().is_empty()).then(|| msg(Event::SendReply))),
+                    words::secondary(
+                        "Yanıtla",
+                        (!w.reply.trim().is_empty()).then(|| msg(Event::SendReply))
+                    ),
                 ]
                 .spacing(8),
             );
             body = body.push(
                 row![
                     Segmented::new(
-                        [Status(ReviewStatus::Open), Status(ReviewStatus::Answered), Status(ReviewStatus::Resolved)],
+                        [
+                            Status(ReviewStatus::Open),
+                            Status(ReviewStatus::Answered),
+                            Status(ReviewStatus::Resolved)
+                        ],
                         Status(n.note.status),
                         |s| msg(Event::Status(s)),
                     ),
-                    words::secondary("Nesneleri seç", (!n.note.anchors.is_empty()).then(|| msg(Event::Select))),
+                    words::secondary(
+                        "Nesneleri seç",
+                        (!n.note.anchors.is_empty()).then(|| msg(Event::Select))
+                    ),
                     words::secondary("Yeniden bağla", n.stale.then(|| msg(Event::Rebind))),
                     words::secondary("Sil", Some(msg(Event::Remove))),
                 ]

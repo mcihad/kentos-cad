@@ -13,9 +13,9 @@
 //! and then its lines (`l<TAB>x,y;x,y…`), each on its own line, in the drawing's order.
 
 use kentos_commands::encoding::sha256_hex;
-use kentos_commands::{AsbuiltSurfaceBy, 
-    ASBUILT_FLAGS, ASBUILT_LIMIT, AsbuiltCheck, AsbuiltChecked, AsbuiltControl, AsbuiltKind, AsbuiltMissing,
-    AsbuiltPackage, AsbuiltPoint, CommandResult, Entity, Vec2,
+use kentos_commands::{
+    ASBUILT_FLAGS, ASBUILT_LIMIT, AsbuiltCheck, AsbuiltChecked, AsbuiltControl, AsbuiltKind,
+    AsbuiltMissing, AsbuiltPackage, AsbuiltPoint, AsbuiltSurfaceBy, CommandResult, Entity, Vec2,
 };
 use kentos_domain::{Document, Slot};
 use kentos_road::surface::Surface;
@@ -60,7 +60,11 @@ impl Heights<'_> {
 
 /// A surface's kept triangles as the core's ground takes them.
 fn ground_of(s: &Surface) -> Ground {
-    let tris: Vec<[[f64; 3]; 3]> = s.triangles.iter().map(|t| t.map(|i| s.vertices[i as usize])).collect();
+    let tris: Vec<[[f64; 3]; 3]> = s
+        .triangles
+        .iter()
+        .map(|t| t.map(|i| s.vertices[i as usize]))
+        .collect();
     Ground::new(&tris)
 }
 
@@ -72,7 +76,9 @@ fn plain(text: &str) -> Option<f64> {
         Some((w, f)) => digits(w) && digits(f),
         None => digits(body),
     };
-    ok.then(|| t.replace(',', ".").parse::<f64>().ok()).flatten().filter(|v| v.is_finite())
+    ok.then(|| t.replace(',', ".").parse::<f64>().ok())
+        .flatten()
+        .filter(|v| v.is_finite())
 }
 
 pub(crate) struct Point {
@@ -85,17 +91,37 @@ pub(crate) struct Point {
 }
 
 /// The points of a layer (a group: its layers), in the drawing's order.
-pub(crate) fn points(doc: &Document, layer: &str, field: &str, quality: Option<&str>) -> Vec<Point> {
-    let ids: Vec<String> = doc.layers().leaves_of(layer).into_iter().map(|n| n.id.clone()).collect();
+pub(crate) fn points(
+    doc: &Document,
+    layer: &str,
+    field: &str,
+    quality: Option<&str>,
+) -> Vec<Point> {
+    let ids: Vec<String> = doc
+        .layers()
+        .leaves_of(layer)
+        .into_iter()
+        .map(|n| n.id.clone())
+        .collect();
     doc.entities()
         .filter(|e| ids.contains(&e.base().layer_id))
         .filter_map(|e| match e {
             Entity::Point(p) => Some(Point {
-                uid: doc.uid(Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default(),
-                name: e.base().attrs.get(field).map(|n| n.trim().to_owned()).unwrap_or_default(),
+                uid: doc
+                    .uid(Slot(e.base().id))
+                    .map(|u| u.to_string())
+                    .unwrap_or_default(),
+                name: e
+                    .base()
+                    .attrs
+                    .get(field)
+                    .map(|n| n.trim().to_owned())
+                    .unwrap_or_default(),
                 p: p.p,
                 z: p.z,
-                sigma: quality.and_then(|q| e.base().attrs.get(q)).and_then(|v| plain(v)),
+                sigma: quality
+                    .and_then(|q| e.base().attrs.get(q))
+                    .and_then(|v| plain(v)),
             }),
             _ => None,
         })
@@ -111,20 +137,44 @@ pub(crate) struct Line {
 }
 
 pub(crate) fn lines(doc: &Document, layer: &str) -> Vec<Line> {
-    let ids: Vec<String> = doc.layers().leaves_of(layer).into_iter().map(|n| n.id.clone()).collect();
-    let uid_of = |e: &Entity| doc.uid(Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default();
+    let ids: Vec<String> = doc
+        .layers()
+        .leaves_of(layer)
+        .into_iter()
+        .map(|n| n.id.clone())
+        .collect();
+    let uid_of = |e: &Entity| {
+        doc.uid(Slot(e.base().id))
+            .map(|u| u.to_string())
+            .unwrap_or_default()
+    };
     doc.entities()
         .filter(|e| ids.contains(&e.base().layer_id))
         .filter_map(|e| match e {
-            Entity::Line(l) => Some(Line { uid: uid_of(e), pts: vec![l.a, l.b], bulges: vec![0.0] }),
+            Entity::Line(l) => Some(Line {
+                uid: uid_of(e),
+                pts: vec![l.a, l.b],
+                bulges: vec![0.0],
+            }),
             Entity::Polyline(p) if p.pts.len() >= 2 => {
                 let mut pts = p.pts.clone();
                 if p.closed {
                     pts.push(p.pts[0]);
                 }
                 let n = pts.len() - 1;
-                let bulges = (0..n).map(|i| p.bulges.as_ref().and_then(|b| b.get(i).copied()).unwrap_or(0.0)).collect();
-                Some(Line { uid: uid_of(e), pts, bulges })
+                let bulges = (0..n)
+                    .map(|i| {
+                        p.bulges
+                            .as_ref()
+                            .and_then(|b| b.get(i).copied())
+                            .unwrap_or(0.0)
+                    })
+                    .collect();
+                Some(Line {
+                    uid: uid_of(e),
+                    pts,
+                    bulges,
+                })
             }
             _ => None,
         })
@@ -140,7 +190,10 @@ fn signed(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
     if bulge != 0.0 && chord > 0.0 {
         let k = chord * (1.0 - bulge * bulge) / (4.0 * bulge);
         let (ux, uy) = (dx / chord, dy / chord);
-        let c = Vec2 { x: (a.x + b.x) / 2.0 - uy * k, y: (a.y + b.y) / 2.0 + ux * k };
+        let c = Vec2 {
+            x: (a.x + b.x) / 2.0 - uy * k,
+            y: (a.y + b.y) / 2.0 + ux * k,
+        };
         let theta = 4.0 * bulge.atan();
         let r = chord / (2.0 * (theta / 2.0).sin().abs());
         let start = if bulge > 0.0 { a } else { b };
@@ -155,7 +208,11 @@ fn signed(p: Vec2, a: Vec2, b: Vec2, bulge: f64) -> f64 {
         return side(da.min(db), dx * (p.y - a.y) - dy * (p.x - a.x));
     }
     let l2 = dx * dx + dy * dy;
-    let t = if l2 == 0.0 { 0.0 } else { (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0) };
+    let t = if l2 == 0.0 {
+        0.0
+    } else {
+        (((p.x - a.x) * dx + (p.y - a.y) * dy) / l2).clamp(0.0, 1.0)
+    };
     let d = (p.x - a.x - t * dx).hypot(p.y - a.y - t * dy);
     side(d, dx * (p.y - a.y) - dy * (p.x - a.x))
 }
@@ -167,7 +224,11 @@ pub(crate) fn digest(design: &[Point], lines: &[Line]) -> String {
         text.push_str(&format!("p\t{}\t{:.6}\t{:.6}\t{z}\n", p.name, p.p.x, p.p.y));
     }
     for l in lines {
-        let pts: Vec<String> = l.pts.iter().map(|v| format!("{:.6},{:.6}", v.x, v.y)).collect();
+        let pts: Vec<String> = l
+            .pts
+            .iter()
+            .map(|v| format!("{:.6},{:.6}", v.x, v.y))
+            .collect();
         text.push_str(&format!("l\t{}\n", pts.join(";")));
     }
     sha256_hex(text.as_bytes())
@@ -178,7 +239,10 @@ fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
     // A monitoring job (docs/adr/3620): the same marks at two epochs, by name; the design's other parts are not its.
     if input.kind == Some(AsbuiltKind::Monitoring) {
         if input.design.is_none() {
-            return bad("İzleme işinde önceki dönemin noktalarının katmanını (design) verin; noktalar adla karşılaştırılır.", "design");
+            return bad(
+                "İzleme işinde önceki dönemin noktalarının katmanını (design) verin; noktalar adla karşılaştırılır.",
+                "design",
+            );
         }
         let foreign = [
             (input.surface.is_some(), "surface"),
@@ -193,13 +257,23 @@ fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
             );
         }
     } else if !input.control.is_empty() {
-        return bad("Kontrol noktaları izleme işinindir (kind: monitoring).", "control");
+        return bad(
+            "Kontrol noktaları izleme işinindir (kind: monitoring).",
+            "control",
+        );
     }
     if input.control.iter().any(|c| c.trim().is_empty()) {
         return bad("Kontrol noktasının adı boş; adını yazın.", "control");
     }
-    if input.design.is_none() && input.surface.is_none() && input.lines.is_none() && !input.package_design {
-        return bad("Karşılaştırılacak tasarım yok: tasarım noktalarının katmanını, yüzeyi ya da tasarım çizgilerinin katmanını verin.", "design");
+    if input.design.is_none()
+        && input.surface.is_none()
+        && input.lines.is_none()
+        && !input.package_design
+    {
+        return bad(
+            "Karşılaştırılacak tasarım yok: tasarım noktalarının katmanını, yüzeyi ya da tasarım çizgilerinin katmanını verin.",
+            "design",
+        );
     }
     for (v, path, words) in [
         (input.search, "search", "Arama yarıçapı"),
@@ -218,16 +292,32 @@ fn asked(input: &AsbuiltCheck) -> Result<(), Stop> {
         }
     }
     if input.field.as_deref().is_some_and(|f| f.trim().is_empty()) {
-        return bad("Ad özniteliği boş; özniteliğin adını yazın ya da boş bırakın (Ad).", "field");
+        return bad(
+            "Ad özniteliği boş; özniteliğin adını yazın ya da boş bırakın (Ad).",
+            "field",
+        );
     }
-    if input.quality_field.as_deref().is_some_and(|f| f.trim().is_empty()) {
-        return bad("Kalite özniteliği boş; σ'nın yazıldığı özniteliğin adını yazın.", "qualityField");
+    if input
+        .quality_field
+        .as_deref()
+        .is_some_and(|f| f.trim().is_empty())
+    {
+        return bad(
+            "Kalite özniteliği boş; σ'nın yazıldığı özniteliğin adını yazın.",
+            "qualityField",
+        );
     }
     if input.quality.is_some() && input.quality_field.is_none() {
-        return bad("Kalite sınırı verildi ama σ'nın özniteliği yok; qualityField'ı da verin.", "qualityField");
+        return bad(
+            "Kalite sınırı verildi ama σ'nın özniteliği yok; qualityField'ı da verin.",
+            "qualityField",
+        );
     }
     if input.package_design && input.package.is_none() {
-        return bad("Paketin tasarımıyla denetlemek için kaydın saha paketini (package) de verin.", "packageDesign");
+        return bad(
+            "Paketin tasarımıyla denetlemek için kaydın saha paketini (package) de verin.",
+            "packageDesign",
+        );
     }
     // Docs/adr/4420: a monitoring job's series and its days.
     crate::asbuilt_series::asked(input)
@@ -237,12 +327,20 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
     asked(input)?;
     // The field package the record was made with (docs/adr/2420): its digest expected, its limits where the input
     // gives none (the quality limit only with the σ's attribute).
-    let package = input.package.as_deref().map(crate::asbuilt_package::read).transpose()?;
+    let package = input
+        .package
+        .as_deref()
+        .map(crate::asbuilt_package::read)
+        .transpose()?;
     let mut taken: Vec<String> = Vec::new();
     let effective;
     let input = match &package {
         Some(p) => {
-            if input.expected_design.as_deref().is_some_and(|e| e != p.digest) {
+            if input
+                .expected_design
+                .as_deref()
+                .is_some_and(|e| e != p.digest)
+            {
                 return Err(refuse(
                     codes::INVALID_ASBUILT_CHECK,
                     "Beklenen tasarım özeti saha paketininkinden farklı; yalnız paketi ya da yalnız özeti verin.".into(),
@@ -272,7 +370,11 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
         if doc.layers().get(id).is_some() {
             Ok(())
         } else {
-            Err(refuse(codes::LAYER_NOT_FOUND, format!("“{id}” kimlikli katman çizimde yok."), path))
+            Err(refuse(
+                codes::LAYER_NOT_FOUND,
+                format!("“{id}” kimlikli katman çizimde yok."),
+                path,
+            ))
         }
     };
     layer(&input.measured, "measured")?;
@@ -297,16 +399,23 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
         Some(name) => {
             terrains::terrain_project(doc)?;
             let id = crate::road_profiles::surface_id(doc, name, "surface")?;
-            let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+            let def = terrains::surfaces(doc)
+                .iter()
+                .find(|s| s.id == id)
+                .cloned()
+                .ok_or(Stop::Cancelled)?;
             let named = package.as_ref().and_then(|p| p.surface.as_ref());
             match carried {
                 Some(_) => {
-                    surface_changed = named.is_some_and(|s| s.id != def.id || s.digest != terrains::sources_digest(doc, &def));
+                    surface_changed = named.is_some_and(|s| {
+                        s.id != def.id || s.digest != terrains::sources_digest(doc, &def)
+                    });
                     None
                 }
                 None => {
                     made = terrains::make(doc, &def);
-                    surface_changed = named.is_some_and(|s| s.id != def.id || s.digest != made.gathered.digest);
+                    surface_changed =
+                        named.is_some_and(|s| s.id != def.id || s.digest != made.gathered.digest);
                     Some(made.built()?)
                 }
             }
@@ -321,12 +430,21 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
     if measured.len() > ASBUILT_LIMIT {
         return Err(refuse(
             codes::INVALID_ASBUILT_CHECK,
-            format!("{} ölçülen nokta var; en çok {ASBUILT_LIMIT} nokta denetlenir. Katmanı bölün.", measured.len()),
+            format!(
+                "{} ölçülen nokta var; en çok {ASBUILT_LIMIT} nokta denetlenir. Katmanı bölün.",
+                measured.len()
+            ),
             "measured",
         ));
     }
-    let here = input.design.as_deref().map_or_else(Vec::new, |d| points(doc, d, field, None));
-    let here_lines = input.lines.as_deref().map_or_else(Vec::new, |l| lines(doc, l));
+    let here = input
+        .design
+        .as_deref()
+        .map_or_else(Vec::new, |d| points(doc, d, field, None));
+    let here_lines = input
+        .lines
+        .as_deref()
+        .map_or_else(Vec::new, |l| lines(doc, l));
     // The design compared: the drawing's, or the package's own (docs/adr/2820), read back to its digest; then whether
     // the drawing's design (the layers given) is the package's.
     let (design, design_lines, design_changed) = match (input.package_design, &package) {
@@ -343,17 +461,23 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
                     "package",
                 ));
             }
-            let changed = (input.design.is_some() || input.lines.is_some()) && digest(&here, &here_lines) != p.digest;
+            let changed = (input.design.is_some() || input.lines.is_some())
+                && digest(&here, &here_lines) != p.digest;
             (pts, lns, changed)
         }
         _ => {
-            let changed = input.expected_design.as_deref().is_some_and(|e| e != digest(&here, &here_lines));
+            let changed = input
+                .expected_design
+                .as_deref()
+                .is_some_and(|e| e != digest(&here, &here_lines));
             (here, here_lines, changed)
         }
     };
     let design_digest = digest(&design, &design_lines);
     let ground = match (carried, &package) {
-        (Some((file, sha256)), Some(p)) => Some(crate::asbuilt_package::ground(&p.path, file, sha256)?),
+        (Some((file, sha256)), Some(p)) => {
+            Some(crate::asbuilt_package::ground(&p.path, file, sha256)?)
+        }
         _ => None,
     };
     let heights = match (&ground, surface) {
@@ -366,7 +490,12 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
         if name.is_empty() {
             return Vec::new();
         }
-        design.iter().enumerate().filter(|(_, d)| d.name == name).map(|(i, _)| i).collect()
+        design
+            .iter()
+            .enumerate()
+            .filter(|(_, d)| d.name == name)
+            .map(|(i, _)| i)
+            .collect()
     };
     let claimed: Vec<bool> = {
         let mut c = vec![false; design.len()];
@@ -465,7 +594,9 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
                         point.surface = Some(d);
                         // Docs/adr/4020: the nearest place in space, within the vertical distance (the foot under or
                         // over the point is on the surface), signed as the difference.
-                        let near = h.nearest([m.p.x, m.p.y, mz], d.abs()).map(|(q, n)| (q, n.min(d.abs()).copysign(d)));
+                        let near = h
+                            .nearest([m.p.x, m.p.y, mz], d.abs())
+                            .map(|(q, n)| (q, n.min(d.abs()).copysign(d)));
                         point.nearest = near.map(|(_, n)| n).or(Some(d));
                         point.nearest_at = near.map(|(q, _)| q).or(Some([m.p.x, m.p.y, g]));
                         let held = match input.surface_by.unwrap_or_default() {
@@ -544,27 +675,41 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
         .iter()
         .zip(&used)
         .filter(|(_, u)| !**u)
-        .map(|(d, _)| AsbuiltMissing { uid: d.uid.clone(), name: d.name.clone() })
+        .map(|(d, _)| AsbuiltMissing {
+            uid: d.uid.clone(),
+            name: d.name.clone(),
+        })
         .collect();
     let rms = |sum: f64, n: usize| (n > 0).then(|| (sum / n as f64).sqrt());
     let surface_taken = ground.is_some();
     // A monitoring job's control points (docs/adr/3620): matched by name at both epochs, moved when a limit is broken.
-    let control = (input.kind == Some(AsbuiltKind::Monitoring) && !input.control.is_empty()).then(|| {
-        let mut c = AsbuiltControl { checked: Vec::new(), moved: Vec::new(), missing: Vec::new() };
-        for name in &input.control {
-            let name = name.trim();
-            match out.iter().find(|p| p.name == name && p.by.as_deref() == Some("name")) {
-                Some(p) => {
-                    c.checked.push(name.to_owned());
-                    if p.flags.iter().any(|f| f == "outsideHorizontal" || f == "outsideVertical") {
-                        c.moved.push(name.to_owned());
+    let control =
+        (input.kind == Some(AsbuiltKind::Monitoring) && !input.control.is_empty()).then(|| {
+            let mut c = AsbuiltControl {
+                checked: Vec::new(),
+                moved: Vec::new(),
+                missing: Vec::new(),
+            };
+            for name in &input.control {
+                let name = name.trim();
+                match out
+                    .iter()
+                    .find(|p| p.name == name && p.by.as_deref() == Some("name"))
+                {
+                    Some(p) => {
+                        c.checked.push(name.to_owned());
+                        if p.flags
+                            .iter()
+                            .any(|f| f == "outsideHorizontal" || f == "outsideVertical")
+                        {
+                            c.moved.push(name.to_owned());
+                        }
                     }
+                    None => c.missing.push(name.to_owned()),
                 }
-                None => c.missing.push(name.to_owned()),
             }
-        }
-        c
-    });
+            c
+        });
     Ok(AsbuiltChecked {
         kind: input.kind,
         control,
@@ -610,13 +755,18 @@ pub(crate) fn run(doc: &Document, input: &AsbuiltCheck) -> Result<AsbuiltChecked
 
 /// A path's file name, as a refusal names it.
 fn file_name(path: &str) -> String {
-    std::path::Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned())
+    std::path::Path::new(path)
+        .file_name()
+        .map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned())
 }
 
 /// Checks the question, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &AsbuiltCheck) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -624,12 +774,18 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &AsbuiltCheck) -> CommandResul
 /// The check; the same as execute.
 pub fn plan(cx: &ExecutionContext<'_>, input: &AsbuiltCheck) -> CommandResult<AsbuiltChecked> {
     match run(cx.doc, input) {
-        Ok(out) => CommandResult::Completed { output: out, warnings: Vec::new() },
+        Ok(out) => CommandResult::Completed {
+            output: out,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The check, read only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: AsbuiltCheck) -> CommandResult<AsbuiltChecked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: AsbuiltCheck,
+) -> CommandResult<AsbuiltChecked> {
     plan(cx, &input)
 }

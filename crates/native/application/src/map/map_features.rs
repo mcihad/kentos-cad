@@ -7,8 +7,8 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CodedClass, CommandResult, CommandWarning, DEFAULT_CODE_FIELD, DataProfile, Entity, EntityBase, EntityGeometry,
-    FeaturesCode, FeaturesCoded, ProfileClass, ProfileGeometry, UnknownCode, Vec2,
+    CodedClass, CommandResult, CommandWarning, DEFAULT_CODE_FIELD, DataProfile, Entity, EntityBase,
+    EntityGeometry, FeaturesCode, FeaturesCoded, ProfileClass, ProfileGeometry, UnknownCode, Vec2,
 };
 use kentos_domain::{Document, Slot, Uuid};
 
@@ -23,7 +23,11 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
 }
 
 fn warning(code: &str, message: String) -> CommandWarning {
-    CommandWarning { code: code.into(), message, path: None }
+    CommandWarning {
+        code: code.into(),
+        message,
+        path: None,
+    }
 }
 
 /// A coded point read: its slot, place, elevation, the code's letters and string number, its controls.
@@ -71,10 +75,21 @@ struct Plan {
 
 fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), Stop> {
     checks::revision(doc, input.expected_revision.as_deref())?;
-    let profile = profile_only(Some(&input.name), None, Shelf::of(doc, input.drawing.as_deref()))?;
-    let field = input.field.clone().unwrap_or_else(|| DEFAULT_CODE_FIELD.to_owned());
+    let profile = profile_only(
+        Some(&input.name),
+        None,
+        Shelf::of(doc, input.drawing.as_deref()),
+    )?;
+    let field = input
+        .field
+        .clone()
+        .unwrap_or_else(|| DEFAULT_CODE_FIELD.to_owned());
     if field.trim().is_empty() {
-        return Err(fail(codes::INVALID_INPUT, "Kod alanının adı boş olamaz.".into(), "field"));
+        return Err(fail(
+            codes::INVALID_INPUT,
+            "Kod alanının adı boş olamaz.".into(),
+            "field",
+        ));
     }
     let layers = doc.layers();
     // The points, in the order given or the drawing's.
@@ -84,14 +99,29 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
             for (i, u) in uids.iter().enumerate() {
                 let at = format!("uids[{i}]");
                 if !checks::is_uid_text(u) {
-                    return Err(fail(codes::INVALID_UID, format!("“{u}” geçerli bir nesne kimliği değil."), &at));
+                    return Err(fail(
+                        codes::INVALID_UID,
+                        format!("“{u}” geçerli bir nesne kimliği değil."),
+                        &at,
+                    ));
                 }
-                let Some((slot, e)) = Uuid::parse_str(u).ok().and_then(|x| doc.slot_of(x)).and_then(|s| doc.get(s).map(|e| (s, e)))
+                let Some((slot, e)) = Uuid::parse_str(u)
+                    .ok()
+                    .and_then(|x| doc.slot_of(x))
+                    .and_then(|s| doc.get(s).map(|e| (s, e)))
                 else {
-                    return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{u}” kimlikli nesne çizimde yok."), &at));
+                    return Err(fail(
+                        codes::ENTITY_NOT_FOUND,
+                        format!("“{u}” kimlikli nesne çizimde yok."),
+                        &at,
+                    ));
                 };
                 if !matches!(e, Entity::Point(_)) {
-                    return Err(fail(codes::NOT_A_POINT, format!("“{u}” bir nokta değil; Kodla çiz kodlu noktaları işler."), &at));
+                    return Err(fail(
+                        codes::NOT_A_POINT,
+                        format!("“{u}” bir nokta değil; Kodla çiz kodlu noktaları işler."),
+                        &at,
+                    ));
                 }
                 points.push((slot, e));
             }
@@ -116,11 +146,23 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
     let mut class_of: Vec<usize> = Vec::new();
     for (slot, e) in points {
         let Entity::Point(pt) = e else { continue };
-        let Some(text) = pt.base.attrs.get(&field).map(|t| t.trim()).filter(|t| !t.is_empty()) else { continue };
+        let Some(text) = pt
+            .base
+            .attrs
+            .get(&field)
+            .map(|t| t.trim())
+            .filter(|t| !t.is_empty())
+        else {
+            continue;
+        };
         let (code, string, controls, token) = match split(text) {
             Some(s) => s,
             None => {
-                let raw = text.split_whitespace().next().unwrap_or(text).to_uppercase();
+                let raw = text
+                    .split_whitespace()
+                    .next()
+                    .unwrap_or(text)
+                    .to_uppercase();
                 if !unknown.contains_key(&raw) {
                     unknown_order.push(raw.clone());
                 }
@@ -135,18 +177,31 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
             *unknown.entry(code).or_default() += 1;
             continue;
         };
-        for c in controls.iter().filter(|c| !matches!(c.as_str(), "B" | "K" | "S")) {
+        for c in controls
+            .iter()
+            .filter(|c| !matches!(c.as_str(), "B" | "K" | "S"))
+        {
             if !controls_unknown.contains(c) {
                 controls_unknown.push(c.clone());
             }
         }
         class_of.push(ci);
-        coded.push(Coded { slot, layer: pt.base.layer_id.clone(), p: pt.p, z: pt.z, string, controls, token });
+        coded.push(Coded {
+            slot,
+            layer: pt.base.layer_id.clone(),
+            p: pt.p,
+            z: pt.z,
+            string,
+            controls,
+            token,
+        });
     }
     if coded.is_empty() {
         return Err(fail(
             codes::NO_CODED_POINTS,
-            format!("“{field}” alanında profilin bir sınıfının kodunu taşıyan nokta yok; noktaların kodunu yazın ya da alanın adını verin."),
+            format!(
+                "“{field}” alanında profilin bir sınıfının kodunu taşıyan nokta yok; noktaların kodunu yazın ya da alanın adını verin."
+            ),
             "uids",
         ));
     }
@@ -195,12 +250,19 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
     let mut open: BTreeMap<(usize, String), Open> = BTreeMap::new();
     let mut opened: Vec<(usize, String)> = Vec::new();
     let (mut short, mut unclosed) = (0u32, 0u32);
-    let finish = |s: Open, closed: bool, makes: &mut Vec<(String, EntityGeometry, String)>, rows: &mut Vec<CodedClass>,
-                  short: &mut u32, unclosed: &mut u32| {
+    let finish = |s: Open,
+                  closed: bool,
+                  makes: &mut Vec<(String, EntityGeometry, String)>,
+                  rows: &mut Vec<CodedClass>,
+                  short: &mut u32,
+                  unclosed: &mut u32| {
         let class: &ProfileClass = &profile.classes[s.class];
         let pts: Vec<Vec2> = s.points.iter().map(|i| coded[*i].p).collect();
-        let zs: Option<Vec<Option<f64>>> =
-            s.points.iter().all(|i| coded[*i].z.is_some()).then(|| s.points.iter().map(|i| coded[*i].z).collect());
+        let zs: Option<Vec<Option<f64>>> = s
+            .points
+            .iter()
+            .all(|i| coded[*i].z.is_some())
+            .then(|| s.points.iter().map(|i| coded[*i].z).collect());
         let token = coded[s.points[0]].token.clone();
         let r = row(rows, s.class);
         match class.geometry {
@@ -211,7 +273,15 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
                 }
                 makes.push((
                     layer_of[&s.class].clone(),
-                    EntityGeometry::Polyline { pts, bulges: None, zs, ms: None, parts: None, closed, widths: None },
+                    EntityGeometry::Polyline {
+                        pts,
+                        bulges: None,
+                        zs,
+                        ms: None,
+                        parts: None,
+                        closed,
+                        widths: None,
+                    },
                     token,
                 ));
                 rows[r].lines += 1;
@@ -225,7 +295,17 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
                     *short += 1;
                     return;
                 }
-                makes.push((layer_of[&s.class].clone(), EntityGeometry::Polygon { pts, bulges: None, holes: None, zs, parts: None }, token));
+                makes.push((
+                    layer_of[&s.class].clone(),
+                    EntityGeometry::Polygon {
+                        pts,
+                        bulges: None,
+                        holes: None,
+                        zs,
+                        parts: None,
+                    },
+                    token,
+                ));
                 rows[r].areas += 1;
             }
             _ => {}
@@ -242,7 +322,10 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
                     if layers.is_locked(&c.layer) {
                         return Err(fail(
                             codes::LAYER_LOCKED,
-                            format!("“{}” katmanı kilitli: üstündeki kodlu nokta sınıfının katmanına taşınamaz. Kilidi açın.", layers.path(&c.layer)),
+                            format!(
+                                "“{}” katmanı kilitli: üstündeki kodlu nokta sınıfının katmanına taşınamaz. Kilidi açın.",
+                                layers.path(&c.layer)
+                            ),
                             "uids",
                         ));
                     }
@@ -261,7 +344,13 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
                     opened.retain(|k| *k != key);
                     opened.push(key.clone());
                 }
-                open.entry(key.clone()).or_insert_with(|| Open { class: ci, points: Vec::new() }).points.push(i);
+                open.entry(key.clone())
+                    .or_insert_with(|| Open {
+                        class: ci,
+                        points: Vec::new(),
+                    })
+                    .points
+                    .push(i);
                 if c.controls.iter().any(|w| w == "K") {
                     if let Some(s) = open.remove(&key) {
                         finish(s, true, &mut makes, &mut rows, &mut short, &mut unclosed);
@@ -286,12 +375,17 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
     // (no code, another code) is not one.
     let before = makes.len();
     makes.retain(|(layer, geometry, token)| {
-        let drawn = doc.layer_slots(layer).filter_map(|(_, slot)| doc.get(slot)).any(|e| {
-            e.base().attrs.get(&field) == Some(token)
-                && crate::geometry::entity_of(geometry, e.base().clone()) == *e
-        });
+        let drawn = doc
+            .layer_slots(layer)
+            .filter_map(|(_, slot)| doc.get(slot))
+            .any(|e| {
+                e.base().attrs.get(&field) == Some(token)
+                    && crate::geometry::entity_of(geometry, e.base().clone()) == *e
+            });
         if drawn
-            && let Some(r) = rows.iter().position(|r| r.layer == *layer && (r.lines > 0 || r.areas > 0))
+            && let Some(r) = rows
+                .iter()
+                .position(|r| r.layer == *layer && (r.lines > 0 || r.areas > 0))
         {
             match geometry {
                 EntityGeometry::Polygon { .. } if rows[r].areas > 0 => rows[r].areas -= 1,
@@ -314,7 +408,10 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
         if layers.is_locked(layer) {
             return Err(fail(
                 codes::LAYER_LOCKED,
-                format!("“{}” katmanı kilitli: Kodla çiz oraya çizemez. Kilidi açın.", layers.path(layer)),
+                format!(
+                    "“{}” katmanı kilitli: Kodla çiz oraya çizemez. Kilidi açın.",
+                    layers.path(layer)
+                ),
                 "name",
             ));
         }
@@ -330,7 +427,11 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
             codes::CONTROL_UNKNOWN,
             format!(
                 "{} denetim kodu değil (B başla, K kapat, S son); yok sayıldı.",
-                controls_unknown.iter().map(|c| format!("“{c}”")).collect::<Vec<_>>().join(", ")
+                controls_unknown
+                    .iter()
+                    .map(|c| format!("“{c}”"))
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ),
         ));
     }
@@ -346,12 +447,33 @@ fn check(doc: &Document, input: &FeaturesCode) -> Result<(Plan, DataProfile), St
             format!("{unclosed} alan dizisi K ile kapatılmadığı için alan çizilmedi."),
         ));
     }
-    let unknown = unknown_order.into_iter().map(|c| UnknownCode { points: unknown[&c], code: c }).collect();
-    Ok((Plan { rows, moves, makes, unknown, warnings, field }, profile))
+    let unknown = unknown_order
+        .into_iter()
+        .map(|c| UnknownCode {
+            points: unknown[&c],
+            code: c,
+        })
+        .collect();
+    Ok((
+        Plan {
+            rows,
+            moves,
+            makes,
+            unknown,
+            warnings,
+            field,
+        },
+        profile,
+    ))
 }
 
 fn output(plan: &Plan, created: Vec<String>, revision: String) -> FeaturesCoded {
-    FeaturesCoded { classes: plan.rows.clone(), created, unknown: plan.unknown.clone(), revision }
+    FeaturesCoded {
+        classes: plan.rows.clone(),
+        created,
+        unknown: plan.unknown.clone(),
+        revision,
+    }
 }
 
 fn write(cx: &mut ExecutionContext<'_>, input: FeaturesCode) -> CommandResult<FeaturesCoded> {
@@ -395,17 +517,27 @@ fn write(cx: &mut ExecutionContext<'_>, input: FeaturesCode) -> CommandResult<Fe
             .collect();
         if !news.is_empty() {
             let slots = doc.add_many(news, label).map_err(|_| ())?;
-            created = slots.iter().filter_map(|s| doc.uid(*s)).map(|u| u.to_string()).collect();
+            created = slots
+                .iter()
+                .filter_map(|s| doc.uid(*s))
+                .map(|u| u.to_string())
+                .collect();
         }
         Ok(())
     });
     let output = output(&plan, created, cx.doc.revision().to_string());
-    CommandResult::Completed { output, warnings: plan.warnings }
+    CommandResult::Completed {
+        output,
+        warnings: plan.warnings,
+    }
 }
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &FeaturesCode) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok((p, _)) => CommandResult::Completed { output: (), warnings: p.warnings },
+        Ok((p, _)) => CommandResult::Completed {
+            output: (),
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -415,12 +547,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &FeaturesCode) -> CommandResult<Fe
     match check(cx.doc, input) {
         Ok((p, _)) => {
             let output = output(&p, Vec::new(), cx.doc.revision().to_string());
-            CommandResult::Completed { output, warnings: p.warnings }
+            CommandResult::Completed {
+                output,
+                warnings: p.warnings,
+            }
         }
         Err(stop) => stop.into(),
     }
 }
 
 pub fn execute(cx: &mut ExecutionContext<'_>, input: FeaturesCode) -> CommandResult<FeaturesCoded> {
-    crate::call::recorded(cx, kentos_commands::MAP_FEATURES_CODE, kentos_commands::MAP_FEATURES_CODE_VERSION, input, write)
+    crate::call::recorded(
+        cx,
+        kentos_commands::MAP_FEATURES_CODE,
+        kentos_commands::MAP_FEATURES_CODE_VERSION,
+        input,
+        write,
+    )
 }

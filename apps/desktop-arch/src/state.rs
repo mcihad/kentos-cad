@@ -212,12 +212,18 @@ impl ArchDialogKind {
 
 /// The module's window `kind` as the shell's.
 pub fn dialog(kind: ArchDialogKind) -> crate::app::Dialog {
-    crate::app::Dialog::Module(crate::module_parts::ModuleDialog { module: kentos_launch::Module::Architecture, kind: kind.number() })
+    crate::app::Dialog::Module(crate::module_parts::ModuleDialog {
+        module: kentos_launch::Module::Architecture,
+        kind: kind.number(),
+    })
 }
 
 impl From<Event> for Message {
     fn from(event: Event) -> Self {
-        Message::Module(crate::module_parts::ModuleEvent::new(kentos_launch::Module::Architecture, event))
+        Message::Module(crate::module_parts::ModuleEvent::new(
+            kentos_launch::Module::Architecture,
+            event,
+        ))
     }
 }
 
@@ -230,11 +236,13 @@ pub trait ArchState {
 impl ArchState for crate::module_parts::ModuleStates {
     fn arch(&self) -> &ArchUiState {
         // Every program with the module's parts starts its state (ModuleStates::start).
-        self.get::<ArchUiState>().expect("Mimari modülünün durumu başlatılmamış")
+        self.get::<ArchUiState>()
+            .expect("Mimari modülünün durumu başlatılmamış")
     }
 
     fn arch_mut(&mut self) -> &mut ArchUiState {
-        self.get_mut::<ArchUiState>().expect("Mimari modülünün durumu başlatılmamış")
+        self.get_mut::<ArchUiState>()
+            .expect("Mimari modülünün durumu başlatılmamış")
     }
 }
 
@@ -246,7 +254,7 @@ pub(crate) trait StateApp {
 
 impl StateApp for App {
     /// A message of the module; a window's own handler is in its file.
-    fn arch_event(&mut self, event: Event) -> Task<Message>{
+    fn arch_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::ArchAudit(event) => return self.arch_audit_event(event),
             Event::Program(event) => return self.program_event(event),
@@ -280,7 +288,7 @@ impl StateApp for App {
     }
 
     /// A window of the module.
-    fn arch_dialog_view(&self, kind: ArchDialogKind) -> Element<'_, Message>{
+    fn arch_dialog_view(&self, kind: ArchDialogKind) -> Element<'_, Message> {
         match kind {
             ArchDialogKind::Program => self.program_view(),
             ArchDialogKind::SpaceMerge => self.space_merge_question(),

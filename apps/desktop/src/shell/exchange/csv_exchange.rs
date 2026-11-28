@@ -315,7 +315,9 @@ impl App {
                     time,
                 };
                 s.status = Some((false, format!("{} yazılıyor…", path.display())));
-                let model = source.as_ref().map_or_else(|| doc.model.clone(), |c| c.doc.clone());
+                let model = source
+                    .as_ref()
+                    .map_or_else(|| doc.model.clone(), |c| c.doc.clone());
                 return off_thread(
                     move || {
                         kentos_headless::file_commands::export_csv(&model, &input)

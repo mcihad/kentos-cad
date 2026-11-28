@@ -83,7 +83,10 @@ fn rewrite_expects(path: &std::path::Path, answers: &[(String, String, Value)]) 
     let mut written = 0;
     for line in text.split_inclusive('\n') {
         let found = answers.iter().find(|(f, name, _)| {
-            let (name, f) = (serde_json::to_string(name).unwrap(), serde_json::to_string(f).unwrap());
+            let (name, f) = (
+                serde_json::to_string(name).unwrap(),
+                serde_json::to_string(f).unwrap(),
+            );
             let head = format!("{{\"name\":{name},\"fn\":{f},");
             line.trim_start().starts_with(&head)
         });
@@ -99,7 +102,12 @@ fn rewrite_expects(path: &std::path::Path, answers: &[(String, String, Value)]) 
             None => out.push_str(line),
         }
     }
-    assert_eq!(written, answers.len(), "{}: every answer written", path.display());
+    assert_eq!(
+        written,
+        answers.len(),
+        "{}: every answer written",
+        path.display()
+    );
     std::fs::write(path, out).expect("fixture written");
     println!("{}: {written} case(s) written", path.display());
 }
@@ -155,7 +163,8 @@ fn every_call_fixture_matches_the_typescript_reference() {
                 Ok(v) => {
                     if let Err(e) = same(&v, &c["expect"], abs, rel, &label) {
                         if writing {
-                            let (f, name) = (c["fn"].as_str().unwrap(), c["name"].as_str().unwrap());
+                            let (f, name) =
+                                (c["fn"].as_str().unwrap(), c["name"].as_str().unwrap());
                             answers.push((f.to_string(), name.to_string(), v));
                         } else {
                             failures.push(e);

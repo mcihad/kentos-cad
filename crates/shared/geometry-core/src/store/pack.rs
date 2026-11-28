@@ -445,11 +445,21 @@ impl Reader<'_> {
                     bulges: bulges.iter().any(|&b| b != 0.0).then_some(bulges),
                 });
                 let flow = if kind == 37.0 {
-                    let text = self.string()?.ok_or_else(|| "Yazı düzeninin metni eksik.".to_owned())?;
+                    let text = self
+                        .string()?
+                        .ok_or_else(|| "Yazı düzeninin metni eksik.".to_owned())?;
                     let v = Json::parse(&text)?;
-                    if !matches!(v, Json::Obj(_)) { return Err("Yazı düzeni bir nesne olmalı.".into()); }
-                    Some(Box::new(<crate::text::paragraph::Flow as crate::api::json::FromJson>::from_json(&v)?))
-                } else { None };
+                    if !matches!(v, Json::Obj(_)) {
+                        return Err("Yazı düzeni bir nesne olmalı.".into());
+                    }
+                    Some(Box::new(
+                        <crate::text::paragraph::Flow as crate::api::json::FromJson>::from_json(
+                            &v,
+                        )?,
+                    ))
+                } else {
+                    None
+                };
                 Shape::Text {
                     flow,
                     p,
@@ -651,7 +661,9 @@ impl Reader<'_> {
                     let n = self.count()?;
                     arms.reserve(n.min(64));
                     for _ in 0..n {
-                        arms.push(crate::geom::leader::Arm { pts: self.points()? });
+                        arms.push(crate::geom::leader::Arm {
+                            pts: self.points()?,
+                        });
                     }
                     blocks = self.count()?;
                 }
@@ -723,7 +735,9 @@ impl Reader<'_> {
                 Shape::Wall {
                     pts,
                     bulges,
-                    wall: Box::new(<crate::geom::wall::Spec as crate::api::json::Flat>::read_flat(&v)?),
+                    wall: Box::new(
+                        <crate::geom::wall::Spec as crate::api::json::Flat>::read_flat(&v)?,
+                    ),
                 }
             }
             // docs/adr/0341: its place along its wall, its width, its jambs, then the rest as its JSON text.
@@ -737,7 +751,9 @@ impl Reader<'_> {
                     at,
                     width,
                     place,
-                    opening: Box::new(<crate::geom::opening::Spec as crate::api::json::Flat>::read_flat(&v)?),
+                    opening: Box::new(
+                        <crate::geom::opening::Spec as crate::api::json::Flat>::read_flat(&v)?,
+                    ),
                 }
             }
             // docs/adr/0343, 0344, 0345, 3041, 8044, 8045: a grid, a column, a stair, a ramp, a tag, a view mark, a beam,
@@ -758,7 +774,10 @@ impl Reader<'_> {
                     _ => matches!(shape, Shape::ViewMark { .. }),
                 };
                 if !want {
-                    return Err(format!("paketin {}. sayısının türü ({kind}) metnindeki türle aynı değil", self.at));
+                    return Err(format!(
+                        "paketin {}. sayısının türü ({kind}) metnindeki türle aynı değil",
+                        self.at
+                    ));
                 }
                 shape
             }
@@ -877,15 +896,23 @@ impl Reader<'_> {
                 let styles = if kind == 25.0 || kind == 38.0 {
                     let text = self.string()?.unwrap_or_default();
                     let json = crate::api::json::Json::parse(&text)?;
-                    Some(<Vec<crate::entity::CellLook> as crate::api::json::FromJson>::from_json(&json)?)
-                        .filter(|s| !s.is_empty())
+                    Some(
+                        <Vec<crate::entity::CellLook> as crate::api::json::FromJson>::from_json(
+                            &json,
+                        )?,
+                    )
+                    .filter(|s| !s.is_empty())
                 } else {
                     None
                 };
                 let breaks = if kind == 38.0 {
                     let (height, gap) = (self.num()?, self.num()?);
                     let once = self.flag()?;
-                    Some(crate::entity::TableBreaks { height, gap: Some(gap), once: once.then_some(true) })
+                    Some(crate::entity::TableBreaks {
+                        height,
+                        gap: Some(gap),
+                        once: once.then_some(true),
+                    })
                 } else {
                     None
                 };
@@ -1730,24 +1757,37 @@ mod tests {
         let mut shape = Shape::from_json(&Json::parse(r#"{"kind":"text","p":{"x":2,"y":3},"text":"A\t1/2\nİstanbul","height":0.25,"rotation":30,
           "boxWidth":2,"runs":[{"start":2,"end":5,"script":"stack"}],
           "layout":{"indent":0.5,"leftIndent":1,"tabs":[2,4],"columns":{"count":2,"gap":1,"height":2}}}"#).unwrap()).unwrap();
-        if let Shape::Text { p, .. } = &mut shape { p.x = -0.; }
+        if let Shape::Text { p, .. } = &mut shape {
+            p.x = -0.;
+        }
         let mut packed = Packer::default();
         packed.object(1., "yazı", false, &shape);
         assert_eq!(packed.nums[3], 37.);
-        let back = unpack(&packed.nums,&packed.strings).unwrap();
-        let Shape::Text { p, .. } = &back[0].3 else { panic!() };
+        let back = unpack(&packed.nums, &packed.strings).unwrap();
+        let Shape::Text { p, .. } = &back[0].3 else {
+            panic!()
+        };
         assert_eq!(p.x.to_bits(), (-0f64).to_bits());
-        for m in [crate::geom::affine::IDENTITY, crate::geom::affine::scaling(2.,Vec2::new(0.,0.)),
-            crate::geom::affine::translation(4.,5.)] {
-            let changed = transform_packed_objects(&packed.nums,&packed.strings,&[m]).unwrap();
-            let back = unpack(&changed.nums,&changed.strings).unwrap();
-            assert_eq!(json::to_string(&back[0].3),json::to_string(&transform_shape(&shape,&m)));
+        for m in [
+            crate::geom::affine::IDENTITY,
+            crate::geom::affine::scaling(2., Vec2::new(0., 0.)),
+            crate::geom::affine::translation(4., 5.),
+        ] {
+            let changed = transform_packed_objects(&packed.nums, &packed.strings, &[m]).unwrap();
+            let back = unpack(&changed.nums, &changed.strings).unwrap();
+            assert_eq!(
+                json::to_string(&back[0].3),
+                json::to_string(&transform_shape(&shape, &m))
+            );
         }
-        let bad = vec!["yazı".into(), r#"{"kind":"point","p":{"x":0,"y":0}}"#.into()];
-        assert!(unpack(&[1.,0.,0.,37.,1.],&bad).is_err());
+        let bad = vec![
+            "yazı".into(),
+            r#"{"kind":"point","p":{"x":0,"y":0}}"#.into(),
+        ];
+        assert!(unpack(&[1., 0., 0., 37., 1.], &bad).is_err());
         let mut bad = packed.strings.clone();
         *bad.last_mut().unwrap() = "false".into();
-        assert!(unpack(&packed.nums,&bad).is_err());
+        assert!(unpack(&packed.nums, &bad).is_err());
     }
 
     #[test]

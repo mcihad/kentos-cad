@@ -33,7 +33,10 @@ fn opened() -> (App, String, String) {
             name: "Saha Durumu".into(),
             description: None,
             kind: LayerFieldKind::Text,
-            values: Some(vec![FieldChoice::new("A", "Aktif"), FieldChoice::new("B", "Bakımda")]),
+            values: Some(vec![
+                FieldChoice::new("A", "Aktif"),
+                FieldChoice::new("B", "Bakımda"),
+            ]),
             min: None,
             max: None,
             min_exclusive: false,
@@ -61,7 +64,10 @@ fn opened() -> (App, String, String) {
         serde_json::json!({ "operation": "add", "name": "Saha" }),
     )
     .expect("runs");
-    let layer = done["output"]["layer"].as_str().expect("the layer").to_owned();
+    let layer = done["output"]["layer"]
+        .as_str()
+        .expect("the layer")
+        .to_owned();
     let task = app.update(Message::Run("data.forms"));
     drive(&mut app, task);
     ev(&mut app, Event::NewForm);
@@ -86,13 +92,20 @@ fn opened() -> (App, String, String) {
 }
 
 fn field_domain(app: &App, layer: &str) -> Option<String> {
-    app.layer_fields_of(layer).into_iter().find(|f| f.name == "durum").and_then(|f| f.domain)
+    app.layer_fields_of(layer)
+        .into_iter()
+        .find(|f| f.name == "durum")
+        .and_then(|f| f.domain)
 }
 
 #[test]
 fn a_project_list_of_the_fields_kind_is_offered_and_links_the_layer_field() {
     let (mut app, layer, item) = opened();
-    let names: Vec<String> = app.lists_for(LayerFieldKind::Text).into_iter().map(|d| d.name).collect();
+    let names: Vec<String> = app
+        .lists_for(LayerFieldKind::Text)
+        .into_iter()
+        .map(|d| d.name)
+        .collect();
     assert_eq!(names, ["Saha Durumu"], "the lists of the field's kind only");
     assert_eq!(field_domain(&app, &layer), None);
     ev(&mut app, Event::LinkDomain("saha-durumu".into()));
@@ -124,7 +137,10 @@ fn liste_olustur_ve_bagla_makes_the_list_links_it_and_comes_back_as_it_was() {
     assert_eq!(app.dialog, Some(Dialog::Gis(gis::GisDialogKind::Domains)));
     let w = app.gis.domains.as_ref().expect("Değer listeleri");
     let at = w.chosen.expect("the new list chosen");
-    assert_eq!((w.domains[at].name.as_str(), w.domains[at].kind), ("durum", LayerFieldKind::Text));
+    assert_eq!(
+        (w.domains[at].name.as_str(), w.domains[at].kind),
+        ("durum", LayerFieldKind::Text)
+    );
     // Its codes typed; Kaydet: the list made and linked in one step, the designer back on the item, the draft kept.
     lists(&mut app, Lists::Code(0, "A".into()));
     lists(&mut app, Lists::Label(0, "Aktif".into()));
@@ -132,21 +148,43 @@ fn liste_olustur_ve_bagla_makes_the_list_links_it_and_comes_back_as_it_was() {
     lists(&mut app, Lists::Code(1, "B".into()));
     lists(&mut app, Lists::Label(1, "Bakımda".into()));
     lists(&mut app, Lists::Save);
-    assert_eq!(app.dialog, Some(Dialog::Gis(gis::GisDialogKind::Forms)), "back to the designer");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::Forms)),
+        "back to the designer"
+    );
     let id = app
         .document
         .as_ref()
-        .and_then(|d| d.model.settings().domains.iter().find(|d| d.name == "durum").map(|d| d.id.clone()))
+        .and_then(|d| {
+            d.model
+                .settings()
+                .domains
+                .iter()
+                .find(|d| d.name == "durum")
+                .map(|d| d.id.clone())
+        })
         .expect("the list made");
     assert_eq!(field_domain(&app, &layer), Some(id));
     let w = app.gis.forms_window.as_ref().expect("the designer");
-    assert_eq!((w.item.as_deref(), w.dirty, w.properties_offset), (Some(item.as_str()), true, 120.0));
+    assert_eq!(
+        (w.item.as_deref(), w.dirty, w.properties_offset),
+        (Some(item.as_str()), true, 120.0)
+    );
     // Vazgeç comes back the same way, nothing made.
-    let before = app.document.as_ref().map(|d| d.model.settings().domains.len());
+    let before = app
+        .document
+        .as_ref()
+        .map(|d| d.model.settings().domains.len());
     ev(&mut app, Event::NewDomainForField);
     lists(&mut app, Lists::Cancel);
     assert_eq!(app.dialog, Some(Dialog::Gis(gis::GisDialogKind::Forms)));
-    assert_eq!(app.document.as_ref().map(|d| d.model.settings().domains.len()), before);
+    assert_eq!(
+        app.document
+            .as_ref()
+            .map(|d| d.model.settings().domains.len()),
+        before
+    );
 }
 
 #[test]
@@ -155,9 +193,17 @@ fn degerlistelerine_formdan_gidilince_taslak_ve_secim_kalir() {
     ev(&mut app, Event::OpenDomains);
     assert_eq!(app.dialog, Some(Dialog::Gis(gis::GisDialogKind::Domains)));
     lists(&mut app, Lists::Cancel);
-    assert_eq!(app.dialog, Some(Dialog::Gis(gis::GisDialogKind::Forms)), "back to the designer");
+    assert_eq!(
+        app.dialog,
+        Some(Dialog::Gis(gis::GisDialogKind::Forms)),
+        "back to the designer"
+    );
     let w = app.gis.forms_window.as_ref().expect("the designer");
-    assert_eq!((w.item.as_deref(), w.dirty), (Some(item.as_str()), true), "the unsaved item and the choice kept");
+    assert_eq!(
+        (w.item.as_deref(), w.dirty),
+        (Some(item.as_str()), true),
+        "the unsaved item and the choice kept"
+    );
     // From the ribbon it closes as before.
     let task = app.update(Message::Run("data.domains"));
     drive(&mut app, task);
@@ -175,10 +221,18 @@ fn two_lists_of_one_name_are_refused() {
     lists(&mut app, Lists::Label(0, "Diğer".into()));
     let w = app.gis.domains.as_ref().expect("Değer listeleri");
     let problem = kentos_commands::domains_problem(&w.domains).map(|(_, why)| why);
-    assert_eq!(problem.as_deref(), Some("“saha durumu” adlı iki değer listesi var."));
+    assert_eq!(
+        problem.as_deref(),
+        Some("“saha durumu” adlı iki değer listesi var.")
+    );
     // Kaydet is refused while it says so: nothing written.
     lists(&mut app, Lists::Save);
-    assert_eq!(app.document.as_ref().map(|d| d.model.settings().domains.len()), Some(2));
+    assert_eq!(
+        app.document
+            .as_ref()
+            .map(|d| d.model.settings().domains.len()),
+        Some(2)
+    );
 }
 
 /// The pictures (`.run/gui-evidence/kullanim-9322/`): Seçenek kaynağı with the project's list offered and its summary,

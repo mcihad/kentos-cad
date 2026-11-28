@@ -13,7 +13,8 @@ fn voids_opt_into_schema_116_and_115_refuses_them() {
     let read = kentos_kcad::decode(BYTES).unwrap();
     assert_eq!(read.entities, model.entities);
     assert!(BYTES.windows(10).any(|w| w == b"\x67version\x18\x74"));
-    let old = include_bytes!("../../../../../fixtures/kcad/v2/broken/space-voids-in-schema-115.kcad");
+    let old =
+        include_bytes!("../../../../../fixtures/kcad/v2/broken/space-voids-in-schema-115.kcad");
     assert_eq!(
         kentos_kcad::decode(old).expect_err("refused").code,
         kentos_kcad::Code::UnknownField
@@ -25,5 +26,8 @@ fn voids_opt_into_schema_116_and_115_refuses_them() {
         }
     }
     let bytes = kentos_kcad::encode_verified(&rooms).unwrap();
-    assert!(!bytes.windows(10).any(|w| w == b"\x67version\x18\x74"), "no void, no schema 116");
+    assert!(
+        !bytes.windows(10).any(|w| w == b"\x67version\x18\x74"),
+        "no void, no schema 116"
+    );
 }

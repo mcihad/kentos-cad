@@ -18,7 +18,7 @@ use kentos_contracts::{
     CheckpointChange, CheckpointKind, CommandEnvelope, DocumentSnapshotV1, EntityId, FeatureChange,
     FileUploadBegin, GrantRole, PROJECT_ARCHIVE, PROJECT_CHECKPOINT_CREATE,
     PROJECT_CHECKPOINT_DELETE, PROJECT_CHECKPOINT_RESTORE, PROJECT_FILE_COMMIT, ProjectChanges,
-    ProjectCreate, ProjectDuplicated, ProjectPatch, ProjectStorage, TenantRole, ProjectType,
+    ProjectCreate, ProjectDuplicated, ProjectPatch, ProjectStorage, ProjectType, TenantRole,
 };
 use kentos_postgres::testing::TestDb;
 use serde_json::json;

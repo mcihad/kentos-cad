@@ -16,8 +16,8 @@
 //! └─────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use std::sync::Arc;
 use crate::arch::ArchState;
+use std::sync::Arc;
 
 use iced::widget::Column;
 use iced::{Element, Fill, Task};
@@ -132,12 +132,16 @@ impl Window {
     pub fn new() -> Self {
         let rules = Arc::new(rules::all());
         let decisions = Arc::new(rules::decisions());
-        let findings = catalog_schema::compare(kentos_ifc::catalog::base(), catalog_schema::dictionary());
+        let findings =
+            catalog_schema::compare(kentos_ifc::catalog::base(), catalog_schema::dictionary());
         let differences = findings
             .into_iter()
             .map(|finding| {
                 let key = finding.key();
-                let decision = decisions.iter().find(|d| d.settles_key(&key)).map(|d| d.id.clone());
+                let decision = decisions
+                    .iter()
+                    .find(|d| d.settles_key(&key))
+                    .map(|d| d.id.clone());
                 Difference { finding, decision }
             })
             .collect();
@@ -174,9 +178,19 @@ impl Window {
         self.decisions
             .iter()
             .enumerate()
-            .filter(|(_, d)| self.filter.annex.is_none_or(|a| d.sources.iter().any(|s| s.annex == a)))
             .filter(|(_, d)| {
-                let hay = rules::fold(&format!("{} {} {} {}", d.id, d.title, d.text, d.rows.join(" ")));
+                self.filter
+                    .annex
+                    .is_none_or(|a| d.sources.iter().any(|s| s.annex == a))
+            })
+            .filter(|(_, d)| {
+                let hay = rules::fold(&format!(
+                    "{} {} {} {}",
+                    d.id,
+                    d.title,
+                    d.text,
+                    d.rows.join(" ")
+                ));
                 words.split_whitespace().all(|w| hay.contains(w))
             })
             .map(|(i, _)| i)
@@ -190,12 +204,16 @@ impl Window {
             .iter()
             .enumerate()
             .filter(|(_, x)| {
-                self.filter.annex.is_none_or(|a| {
-                    x.finding.rows().iter().any(|r| annex_of_row(r) == Some(a))
-                })
+                self.filter
+                    .annex
+                    .is_none_or(|a| x.finding.rows().iter().any(|r| annex_of_row(r) == Some(a)))
             })
             .filter(|(_, x)| {
-                let hay = rules::fold(&format!("{} {}", x.finding.message(), x.finding.rows().join(" ")));
+                let hay = rules::fold(&format!(
+                    "{} {}",
+                    x.finding.message(),
+                    x.finding.rows().join(" ")
+                ));
                 words.split_whitespace().all(|w| hay.contains(w))
             })
             .map(|(i, _)| i)
@@ -213,7 +231,10 @@ impl Window {
 
     /// A row's source as the list cites it, by its id; the id itself where the catalog has no such row.
     fn cite_of(&self, id: &str) -> String {
-        self.rules.iter().find(|r| r.id == id).map_or_else(|| id.to_owned(), |r| r.source.cite())
+        self.rules
+            .iter()
+            .find(|r| r.id == id)
+            .map_or_else(|| id.to_owned(), |r| r.source.cite())
     }
 
     /// The decisions still waiting for an answer.
@@ -263,7 +284,11 @@ impl Window {
                 .map(|x| {
                     vec![
                         x.finding.message(),
-                        x.finding.rows().first().map(|r| self.cite_of(r)).unwrap_or_default(),
+                        x.finding
+                            .rows()
+                            .first()
+                            .map(|r| self.cite_of(r))
+                            .unwrap_or_default(),
                         x.decision.clone().unwrap_or_else(|| "karar yok".to_owned()),
                     ]
                 })
@@ -274,7 +299,11 @@ impl Window {
 
 /// The annex a catalog row id names: “T6.92/…” 6, “M5.5.4” 5.
 fn annex_of_row(id: &str) -> Option<u8> {
-    id.trim_start_matches(['T', 'M', 'S']).split(['.', '/']).next()?.parse().ok()
+    id.trim_start_matches(['T', 'M', 'S'])
+        .split(['.', '/'])
+        .next()?
+        .parse()
+        .ok()
 }
 
 /// A decision's parameter as the list says it: its value, “açık” with KentOS's default, or nothing; a name pattern is
@@ -303,12 +332,14 @@ pub(crate) trait DigitalRulesApp {
 
 impl DigitalRulesApp for App {
     /// Dijital proje kuralları (`arch.digitalRules`): the base profile's rules, the architectural model's first.
-    fn open_digital_rules(&mut self){
+    fn open_digital_rules(&mut self) {
         self.modules.arch_mut().digital_rules = Some(Window::new());
-        self.dialog = Some(crate::arch::dialog(crate::arch::ArchDialogKind::DigitalRules));
+        self.dialog = Some(crate::arch::dialog(
+            crate::arch::ArchDialogKind::DigitalRules,
+        ));
     }
 
-    fn digital_rules_event(&mut self, event: Event) -> Task<Message>{
+    fn digital_rules_event(&mut self, event: Event) -> Task<Message> {
         if let Event::Close = event {
             self.modules.arch_mut().digital_rules = None;
             self.dialog = None;
@@ -344,12 +375,16 @@ impl DigitalRulesApp for App {
         Task::none()
     }
 
-    fn digital_rules_view(&self) -> Element<'_, Message>{
+    fn digital_rules_view(&self) -> Element<'_, Message> {
         let Some(w) = &self.modules.arch().digital_rules else {
             return iced::widget::text("").into();
         };
         let profile = &kentos_ifc::catalog::base().profile;
-        let annex_at = w.filter.annex.and_then(|a| ANNEXES.iter().position(|x| x.0 == a)).map_or(0, |i| i + 1);
+        let annex_at = w
+            .filter
+            .annex
+            .and_then(|a| ANNEXES.iter().position(|x| x.0 == a))
+            .map_or(0, |i| i + 1);
         let form = Form::new()
             .wide(label::caption("Yönetmeliğin eklerindeki kurallar; her satır ekini, tablosunu ve PDF sayfasını söyler."))
             .section("Profil")
@@ -396,22 +431,45 @@ impl DigitalRulesApp for App {
                 "{open} nokta idarenin ya da Bakanlığın cevabını bekliyor; değeri boş kalır, tahminle doldurulmaz."
             )));
         }
-        let unsettled = w.differences.iter().filter(|x| x.decision.is_none()).count();
+        let unsettled = w
+            .differences
+            .iter()
+            .filter(|x| x.decision.is_none())
+            .count();
         if unsettled > 0 {
-            d = d.note(Banner::warning(format!("{unsettled} şema farkının kararı yok.")));
+            d = d.note(Banner::warning(format!(
+                "{unsettled} şema farkının kararı yok."
+            )));
         }
         let (cols, empty) = match w.list {
             Listed::Rules => (
-                vec![col("Kural", 220.0), col("Sınıf", 130.0), col("Yol / kod", 190.0), col("Zorunluluk", 76.0), col("Kaynak", 250.0)],
+                vec![
+                    col("Kural", 220.0),
+                    col("Sınıf", 130.0),
+                    col("Yol / kod", 190.0),
+                    col("Zorunluluk", 76.0),
+                    col("Kaynak", 250.0),
+                ],
                 "Süzgece uyan kural yok.",
             ),
             Listed::Decisions => (
-                vec![col("No", 40.0), col("Karar", 290.0), col("Nasıl", 120.0), col("Değer", 150.0), col("Kaynak", 200.0)],
+                vec![
+                    col("No", 40.0),
+                    col("Karar", 290.0),
+                    col("Nasıl", 120.0),
+                    col("Değer", 150.0),
+                    col("Kaynak", 200.0),
+                ],
                 "Süzgece uyan karar yok.",
             ),
-            Listed::Findings => (vec![col("Fark", 500.0), col("Satır", 250.0), col("Karar", 60.0)], "Süzgece uyan şema farkı yok."),
+            Listed::Findings => (
+                vec![col("Fark", 500.0), col("Satır", 250.0), col("Karar", 60.0)],
+                "Süzgece uyan şema farkı yok.",
+            ),
         };
-        let table = road_dialog::sheet_chosen(cols, w.rows(), empty, 330.0, w.chosen, |k| msg(Event::Choose(k)));
+        let table = road_dialog::sheet_chosen(cols, w.rows(), empty, 330.0, w.chosen, |k| {
+            msg(Event::Choose(k))
+        });
         d = d.detail(road_dialog::detail_choice(
             [Listed::Rules, Listed::Decisions, Listed::Findings],
             w.list,
@@ -425,7 +483,7 @@ impl DigitalRulesApp for App {
     }
 
     /// The chosen row's words, source and decisions under the table.
-    fn digital_rules_chosen<'a>(&self, w: &'a Window) -> Option<Element<'a, Message>>{
+    fn digital_rules_chosen<'a>(&self, w: &'a Window) -> Option<Element<'a, Message>> {
         let k = w.chosen?;
         let mut col = Column::new().spacing(4).width(Fill);
         match w.list {
@@ -437,13 +495,23 @@ impl DigitalRulesApp for App {
                 }
                 for id in &r.decisions {
                     if let Some(dec) = w.decisions.iter().find(|x| &x.id == id) {
-                        col = col.push(label::caption(format!("Karar {} — {}: {}", dec.id, dec.kind.named(), dec.text)));
+                        col = col.push(label::caption(format!(
+                            "Karar {} — {}: {}",
+                            dec.id,
+                            dec.kind.named(),
+                            dec.text
+                        )));
                     }
                 }
             }
             Listed::Decisions => {
                 let dec = w.decisions.get(*w.decisions_shown().get(k)?)?;
-                col = col.push(label::strong(format!("{} · {} · {}", dec.id, dec.title, dec.kind.named())));
+                col = col.push(label::strong(format!(
+                    "{} · {} · {}",
+                    dec.id,
+                    dec.title,
+                    dec.kind.named()
+                )));
                 col = col.push(label::body(dec.text.clone()));
                 let sources: Vec<String> = dec.sources.iter().map(Source::cite).collect();
                 col = col.push(label::caption(format!("Kaynak: {}", sources.join("; "))));
@@ -460,8 +528,17 @@ impl DigitalRulesApp for App {
                 col = col.push(label::strong(x.finding.message()));
                 let cited: Vec<String> = x.finding.rows().iter().map(|r| w.cite_of(r)).collect();
                 col = col.push(label::caption(format!("Satırlar: {}", cited.join("; "))));
-                if let Some(dec) = x.decision.as_ref().and_then(|id| w.decisions.iter().find(|d| &d.id == id)) {
-                    col = col.push(label::body(format!("Karar {} — {}: {}", dec.id, dec.kind.named(), dec.text)));
+                if let Some(dec) = x
+                    .decision
+                    .as_ref()
+                    .and_then(|id| w.decisions.iter().find(|d| &d.id == id))
+                {
+                    col = col.push(label::body(format!(
+                        "Karar {} — {}: {}",
+                        dec.id,
+                        dec.kind.named(),
+                        dec.text
+                    )));
                 }
             }
         }
@@ -475,7 +552,7 @@ impl DigitalRulesApp for App {
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
-    fn digital_rules_control(&self, control: Control<'_>) -> Result<Option<Message>, String>{
+    fn digital_rules_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
         if self.modules.arch().digital_rules.is_none() {
             return Err(format!("{TITLE} penceresi açık değil"));
         }

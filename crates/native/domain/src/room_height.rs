@@ -77,7 +77,10 @@ impl Document {
     /// The floor slab the room stands on (docs/adr/8076 §3), with its level's floor: the one under its point; where its
     /// point is over an opening of it (a stair's), the one under most of a 9 × 9 grid of points inside its rings. The
     /// slab is a choice; what is read of it is its own.
-    pub(crate) fn room_floor_slab(&self, s: &SpaceFields) -> Option<(&kentos_contracts::SlabFields, f64)> {
+    pub(crate) fn room_floor_slab(
+        &self,
+        s: &SpaceFields,
+    ) -> Option<(&kentos_contracts::SlabFields, f64)> {
         use kentos_geometry_core::{Vec2 as V, geometry::point_in_polygon};
         let (storey_floor, _) = self.storey_of(&s.arch);
         if let Some(found) = room_point(s).and_then(|at| self.floor_slab_under(at, storey_floor)) {
@@ -87,7 +90,9 @@ impl Document {
             .parts
             .iter()
             .map(|p| {
-                let ring = |r: &kentos_contracts::SpaceRing| r.pts.iter().map(|q| V::new(q.x, q.y)).collect::<Vec<V>>();
+                let ring = |r: &kentos_contracts::SpaceRing| {
+                    r.pts.iter().map(|q| V::new(q.x, q.y)).collect::<Vec<V>>()
+                };
                 (ring(&p.outer), p.holes.iter().map(ring).collect())
             })
             .collect();
@@ -108,19 +113,26 @@ impl Document {
                     lo.x + (hi.x - lo.x) * (i as f64 + 0.5) / N as f64,
                     lo.y + (hi.y - lo.y) * (j as f64 + 0.5) / N as f64,
                 );
-                let inside =
-                    rings.iter().any(|(o, holes)| point_in_polygon(p, o) && !holes.iter().any(|h| point_in_polygon(p, h)));
+                let inside = rings.iter().any(|(o, holes)| {
+                    point_in_polygon(p, o) && !holes.iter().any(|h| point_in_polygon(p, h))
+                });
                 if !inside {
                     continue;
                 }
-                let Some((slab, f)) = self.floor_slab_under(Vec2 { x: p.x, y: p.y }, storey_floor) else { continue };
+                let Some((slab, f)) = self.floor_slab_under(Vec2 { x: p.x, y: p.y }, storey_floor)
+                else {
+                    continue;
+                };
                 match under.iter_mut().find(|(x, ..)| std::ptr::eq(*x, slab)) {
                     Some(u) => u.2 += 1,
                     None => under.push((slab, f, 1)),
                 }
             }
         }
-        under.into_iter().max_by_key(|u| u.2).map(|(slab, f, _)| (slab, f))
+        under
+            .into_iter()
+            .max_by_key(|u| u.2)
+            .map(|(slab, f, _)| (slab, f))
     }
 
     /// The room's construction floor and the slab over it: the slabs its floor and ceiling are found on.
@@ -378,9 +390,13 @@ mod tests {
     }
 
     #[test]
-    fn a_room_s_construction_floor_is_its_slab_s_structure_and_the_slab_over_it_bounds_its_heights() {
+    fn a_room_s_construction_floor_is_its_slab_s_structure_and_the_slab_over_it_bounds_its_heights()
+    {
         // Ara kat on both floors: the structure's top 0.07 under each finished floor, 0.15 thick.
-        let doc = document(serde_json::json!([layered("zemin", 0.0), layered("k1", 0.0)]));
+        let doc = document(serde_json::json!([
+            layered("zemin", 0.0),
+            layered("k1", 0.0)
+        ]));
         let s = doc.room_structure(&room("zemin", serde_json::json!({})));
         assert!(near(s.floor.unwrap(), -0.07), "{s:?}");
         let (top, under) = s.over.unwrap();

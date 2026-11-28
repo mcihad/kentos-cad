@@ -16,12 +16,25 @@ const CASES: [&str; 3] = [
 
 #[test]
 fn the_road_width_findings_over_mcp_are_the_cases() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/cad.zoning.check.json")).unwrap();
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/cad.zoning.check.json"
+    ))
+    .unwrap();
     let mut server = Server::new();
     for (n, name) in CASES.iter().enumerate() {
-        let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == *name).unwrap().clone();
-        let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-        let path = std::env::temp_dir().join(format!("kentos-zoning-road-width-{}-{n}.kcad", std::process::id()));
+        let case = cases["cases"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|c| c["name"] == *name)
+            .unwrap()
+            .clone();
+        let snapshot: kentos_commands::DocumentSnapshotV2 =
+            serde_json::from_value(case["setup"].clone()).unwrap();
+        let path = std::env::temp_dir().join(format!(
+            "kentos-zoning-road-width-{}-{n}.kcad",
+            std::process::id()
+        ));
         std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
         let opened = call(&mut server, "drawing.open", json!({"path": path}));
         assert_eq!(opened["isError"], false, "{opened}");
@@ -29,8 +42,14 @@ fn the_road_width_findings_over_mcp_are_the_cases() {
         args["drawing"] = opened["structuredContent"]["drawing"].clone();
         let r = call(&mut server, "cad.zoning.check", args);
         assert_eq!(r["isError"], false, "{r}");
-        let got = r["structuredContent"]["output"]["findings"].as_array().cloned().unwrap_or_default();
-        let want = case["steps"][0]["result"]["output"]["findings"].as_array().cloned().unwrap_or_default();
+        let got = r["structuredContent"]["output"]["findings"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
+        let want = case["steps"][0]["result"]["output"]["findings"]
+            .as_array()
+            .cloned()
+            .unwrap_or_default();
         assert_eq!(got.len(), want.len(), "{name}: {got:?}");
         for (g, w) in got.iter().zip(&want) {
             for key in ["kind", "uids", "message"] {

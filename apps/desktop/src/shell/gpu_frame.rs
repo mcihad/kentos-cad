@@ -53,7 +53,15 @@ const MITER_LIMIT: f64 = 4.0;
 /// What fills the gap two pieces of a stroke leave on the outer side of their corner at `b`, as the stroke's join asks:
 /// a miter as long as the canvas draws one (else a bevel), a bevel, or a round fan. `hw`: half the stroke's width.
 /// Without it a selection's 2.5 px outline lost a square of a pixel and more at each right-angled corner.
-fn join(a: [f64; 2], b: [f64; 2], c: [f64; 2], hw: f64, how: LineJoin, color: Rgba8, out: &mut Vec<GlyphQuad>) {
+fn join(
+    a: [f64; 2],
+    b: [f64; 2],
+    c: [f64; 2],
+    hw: f64,
+    how: LineJoin,
+    color: Rgba8,
+    out: &mut Vec<GlyphQuad>,
+) {
     let unit = |p: [f64; 2], q: [f64; 2]| {
         let (dx, dy) = (q[0] - p[0], q[1] - p[1]);
         let l = dx.hypot(dy);
@@ -174,12 +182,21 @@ fn solid(style: canvas::Style) -> Option<Color> {
 impl GpuFrame {
     /// A frame for a layer of the drawing in `view`, `size` its area.
     pub fn on_map(view: Camera, size: Size) -> GpuFrame {
-        GpuFrame { size, anchor: Anchor::Map(view), at: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], saved: Vec::new(), texts: Vec::new() }
+        GpuFrame {
+            size,
+            anchor: Anchor::Map(view),
+            at: [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+            saved: Vec::new(),
+            texts: Vec::new(),
+        }
     }
 
     /// A frame for the screen's own marks.
     pub fn on_screen(size: Size) -> GpuFrame {
-        GpuFrame { anchor: Anchor::Screen, ..GpuFrame::on_map(Camera::default(), size) }
+        GpuFrame {
+            anchor: Anchor::Screen,
+            ..GpuFrame::on_map(Camera::default(), size)
+        }
     }
 
     pub fn finish(self) -> Vec<GlyphText> {
@@ -252,7 +269,9 @@ fn inside(ring: &[[f64; 2]], p: [f64; 2]) -> bool {
     let mut odd = false;
     for i in 0..ring.len() {
         let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
-        if (a[1] > p[1]) != (b[1] > p[1]) && p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1]) {
+        if (a[1] > p[1]) != (b[1] > p[1])
+            && p[0] < a[0] + (p[1] - a[1]) * (b[0] - a[0]) / (b[1] - a[1])
+        {
             odd = !odd;
         }
     }
@@ -263,10 +282,16 @@ fn inside(ring: &[[f64; 2]], p: [f64; 2]) -> bool {
 /// largest one does are outer, the others holes of the smallest outer ring they lie in (a letter's counters, a terrain's
 /// gaps; a letter's separate parts are separate outers).
 fn polygons(rings: Vec<Vec<[f64; 2]>>) -> Vec<Vec<Vec<[f64; 2]>>> {
-    let Some(largest) = rings.iter().map(|r| twice_area(r)).max_by(|a, b| a.abs().total_cmp(&b.abs())) else {
+    let Some(largest) = rings
+        .iter()
+        .map(|r| twice_area(r))
+        .max_by(|a, b| a.abs().total_cmp(&b.abs()))
+    else {
         return Vec::new();
     };
-    let (outers, holes): (Vec<_>, Vec<_>) = rings.into_iter().partition(|r| (twice_area(r) >= 0.0) == (largest >= 0.0));
+    let (outers, holes): (Vec<_>, Vec<_>) = rings
+        .into_iter()
+        .partition(|r| (twice_area(r) >= 0.0) == (largest >= 0.0));
     let mut out: Vec<Vec<Vec<[f64; 2]>>> = outers.into_iter().map(|o| vec![o]).collect();
     for hole in holes {
         let Some(&p) = hole.first() else { continue };
@@ -297,7 +322,10 @@ fn dashed(pts: &[Point], pattern: &[f32], offset: usize) -> Vec<Vec<Point>> {
         let mut along = 0.0;
         while length - along > left {
             along += left;
-            let p = Point::new(a.x + (b.x - a.x) * along / length, a.y + (b.y - a.y) * along / length);
+            let p = Point::new(
+                a.x + (b.x - a.x) * along / length,
+                a.y + (b.y - a.y) * along / length,
+            );
             if on {
                 piece.push(p);
                 out.push(std::mem::take(&mut piece));
@@ -346,14 +374,26 @@ impl Paint for GpuFrame {
             let whole = stroke.line_dash.segments.is_empty();
             for piece in dashed(&pts, stroke.line_dash.segments, stroke.line_dash.offset) {
                 let piece: Vec<[f64; 2]> = piece.iter().map(at).collect();
-                text.under.extend(piece.windows(2).filter_map(|w| GlyphQuad::segment(w[0], w[1], width, ink)));
+                text.under.extend(
+                    piece
+                        .windows(2)
+                        .filter_map(|w| GlyphQuad::segment(w[0], w[1], width, ink)),
+                );
                 // The corners' joins; a closed figure drawn whole turns at its start too.
                 for w in piece.windows(3) {
                     join(w[0], w[1], w[2], hw, stroke.line_join, ink, &mut text.under);
                 }
                 if closed && whole && piece.len() > 3 {
                     let n = piece.len();
-                    join(piece[n - 2], piece[0], piece[1], hw, stroke.line_join, ink, &mut text.under);
+                    join(
+                        piece[n - 2],
+                        piece[0],
+                        piece[1],
+                        hw,
+                        stroke.line_join,
+                        ink,
+                        &mut text.under,
+                    );
                 }
             }
         }
@@ -372,11 +412,15 @@ impl Paint for GpuFrame {
             return;
         };
         let at = |p: &Point| [f64::from(p.x - first.x), -f64::from(p.y - first.y)];
-        let rings: Vec<Vec<[f64; 2]>> =
-            figures.iter().filter(|(pts, _)| pts.len() >= 3).map(|(pts, _)| pts.iter().map(at).collect()).collect();
+        let rings: Vec<Vec<[f64; 2]>> = figures
+            .iter()
+            .filter(|(pts, _)| pts.len() >= 3)
+            .map(|(pts, _)| pts.iter().map(at).collect())
+            .collect();
         let mut text = self.anchored(first, color);
         for polygon in polygons(rings) {
-            text.under.extend(GlyphQuad::polygon(&polygon, 1.0, rgba(color)));
+            text.under
+                .extend(GlyphQuad::polygon(&polygon, 1.0, rgba(color)));
         }
         self.texts.push(text);
     }
@@ -420,8 +464,14 @@ impl Paint for GpuFrame {
             .glyphs
             .iter()
             .map(|(key, [x, y])| {
-                let p = out(along + size * f64::from(*x), top + baseline - size * f64::from(*y));
-                kentos_render_wgpu::glyphs::GlyphPlace { key: *key, transform: [ex[0], ex[1], ey[0], ey[1], p[0], p[1]] }
+                let p = out(
+                    along + size * f64::from(*x),
+                    top + baseline - size * f64::from(*y),
+                );
+                kentos_render_wgpu::glyphs::GlyphPlace {
+                    key: *key,
+                    transform: [ex[0], ex[1], ey[0], ey[1], p[0], p[1]],
+                }
             })
             .collect();
         self.texts.push(glyphs);
@@ -435,7 +485,14 @@ impl Paint for GpuFrame {
     fn rotate(&mut self, angle: f32) {
         let (s, k) = angle.sin_cos();
         let [a, b, c, d, e, f] = self.at;
-        self.at = [a * k + c * s, b * k + d * s, -a * s + c * k, -b * s + d * k, e, f];
+        self.at = [
+            a * k + c * s,
+            b * k + d * s,
+            -a * s + c * k,
+            -b * s + d * k,
+            e,
+            f,
+        ];
     }
 
     fn with_save(&mut self, f: impl FnOnce(&mut Self)) {
@@ -460,7 +517,11 @@ mod tests {
     /// A dash pattern cuts a line into its drawn pieces, the pattern going on round a corner.
     #[test]
     fn a_dash_pattern_cuts_a_polyline_into_its_pieces() {
-        let line = [Point::new(0.0, 0.0), Point::new(20.0, 0.0), Point::new(20.0, 10.0)];
+        let line = [
+            Point::new(0.0, 0.0),
+            Point::new(20.0, 0.0),
+            Point::new(20.0, 10.0),
+        ];
         let pieces = dashed(&line, &[9.0, 4.0], 0);
         let lengths: Vec<f32> = pieces
             .iter()
@@ -468,7 +529,12 @@ mod tests {
             .collect();
         // 9 on, 4 off, 9 on (7 along, 2 down), 4 off, the last 4 on.
         assert_eq!(lengths.len(), 3, "{lengths:?}");
-        assert!((lengths[0] - 9.0).abs() < 1e-4 && (lengths[1] - 9.0).abs() < 1e-4 && (lengths[2] - 4.0).abs() < 1e-4, "{lengths:?}");
+        assert!(
+            (lengths[0] - 9.0).abs() < 1e-4
+                && (lengths[1] - 9.0).abs() < 1e-4
+                && (lengths[2] - 4.0).abs() < 1e-4,
+            "{lengths:?}"
+        );
         assert_eq!(pieces[1].len(), 3, "the second piece turns the corner");
     }
 
@@ -479,16 +545,31 @@ mod tests {
         let mut view = Camera::default();
         view.set_size(400.0, 300.0);
         let mut frame = GpuFrame::on_map(view, Size::new(400.0, 300.0));
-        frame.stroke(&Path::line(Point::new(10.0, 10.0), Point::new(50.0, 10.0)), Stroke::default().with_width(2.0));
+        frame.stroke(
+            &Path::line(Point::new(10.0, 10.0), Point::new(50.0, 10.0)),
+            Stroke::default().with_width(2.0),
+        );
         frame.fill(&Path::circle(Point::new(100.0, 100.0), 6.0), Color::BLACK);
         let font = crate::drawing_fonts::font(kentos_commands::DrawingFont::Arimo, 400, false);
-        frame.fill_text(Text { content: "km 0+100".into(), position: Point::new(200.0, 150.0), font, ..Text::default() });
+        frame.fill_text(Text {
+            content: "km 0+100".into(),
+            position: Point::new(200.0, 150.0),
+            font,
+            ..Text::default()
+        });
         let texts = frame.finish();
         assert_eq!(texts.len(), 3);
         assert_eq!(texts[0].under.len(), 1, "one segment");
-        assert!(texts[1].under.iter().any(|q| q.triangle), "the circle's fan");
+        assert!(
+            texts[1].under.iter().any(|q| q.triangle),
+            "the circle's fan"
+        );
         let run = crate::labels::text_run("km 0+100", font).expect("a drawing face's run");
-        assert_eq!(texts[2].glyphs.len(), run.glyphs.len(), "every letter placed");
+        assert_eq!(
+            texts[2].glyphs.len(),
+            run.glyphs.len(),
+            "every letter placed"
+        );
         assert!(texts[2].glyphs.len() >= 7);
         let at = view.screen_to_map(10.0, 10.0);
         assert_eq!(texts[0].at, [at.x, at.y]);
@@ -501,10 +582,19 @@ mod tests {
         let square = Path::rectangle(Point::new(10.0, 10.0), Size::new(40.0, 40.0));
         let quads = |join: LineJoin| {
             let mut frame = GpuFrame::on_screen(Size::new(100.0, 100.0));
-            frame.stroke(&square, Stroke { line_join: join, ..Stroke::default().with_width(2.5) });
+            frame.stroke(
+                &square,
+                Stroke {
+                    line_join: join,
+                    ..Stroke::default().with_width(2.5)
+                },
+            );
             let texts = frame.finish();
             let under = &texts[0].under;
-            (under.iter().filter(|q| !q.triangle).count(), under.iter().filter(|q| q.triangle).count())
+            (
+                under.iter().filter(|q| !q.triangle).count(),
+                under.iter().filter(|q| q.triangle).count(),
+            )
         };
         assert_eq!(quads(LineJoin::Miter), (4, 8));
         assert_eq!(quads(LineJoin::Bevel), (4, 4));
@@ -519,10 +609,19 @@ mod tests {
             .under
             .iter()
             .filter(|q| q.triangle)
-            .map(|q| [q.transform[4] + q.transform[0], q.transform[5] + q.transform[1]])
+            .map(|q| {
+                [
+                    q.transform[4] + q.transform[0],
+                    q.transform[5] + q.transform[1],
+                ]
+            })
             .collect();
         // The anchor is the square's first corner (10, 10); y up from it. The corner opposite is (50, 50) on screen.
-        assert!(tips.iter().any(|t| (t[0] - 41.25).abs() < 1e-9 && (t[1] + 41.25).abs() < 1e-9), "{tips:?}");
+        assert!(
+            tips.iter()
+                .any(|t| (t[0] - 41.25).abs() < 1e-9 && (t[1] + 41.25).abs() < 1e-9),
+            "{tips:?}"
+        );
         let mut frame = GpuFrame::on_screen(Size::new(100.0, 100.0));
         let straight = Path::new(|p| {
             p.move_to(Point::new(0.0, 0.0));
@@ -530,7 +629,10 @@ mod tests {
             p.line_to(Point::new(20.0, 0.1));
         });
         frame.stroke(&straight, Stroke::default().with_width(2.0));
-        assert!(frame.finish()[0].under.iter().all(|q| !q.triangle), "a turn of a hundredth: no join");
+        assert!(
+            frame.finish()[0].under.iter().all(|q| !q.triangle),
+            "a turn of a hundredth: no join"
+        );
     }
 
     /// The screen's marks are lettered in the interface's face: the glyph layer takes it (none of them is lost), and
@@ -548,7 +650,13 @@ mod tests {
         let texts = frame.finish();
         assert_eq!(texts.len(), 1);
         assert!(texts[0].glyphs.len() >= 4, "{}", texts[0].glyphs.len());
-        assert!(texts[0].glyphs.iter().all(|g| g.key.font.0 >= kentos_render_wgpu::glyphs::EXTRA_FACES), "an interface face");
+        assert!(
+            texts[0]
+                .glyphs
+                .iter()
+                .all(|g| g.key.font.0 >= kentos_render_wgpu::glyphs::EXTRA_FACES),
+            "an interface face"
+        );
         assert_eq!(texts[0].unit, GlyphUnit::Screen);
         assert_eq!(texts[0].at, [300.0, 280.0]);
     }
@@ -564,6 +672,13 @@ mod tests {
         frame.on_map_of(&view, |f| f.fill(&dot, Color::BLACK));
         frame.fill(&dot, Color::BLACK);
         let units: Vec<GlyphUnit> = frame.finish().iter().map(|t| t.unit).collect();
-        assert_eq!(units, [GlyphUnit::Screen, GlyphUnit::Px { turns: false }, GlyphUnit::Screen]);
+        assert_eq!(
+            units,
+            [
+                GlyphUnit::Screen,
+                GlyphUnit::Px { turns: false },
+                GlyphUnit::Screen
+            ]
+        );
     }
 }

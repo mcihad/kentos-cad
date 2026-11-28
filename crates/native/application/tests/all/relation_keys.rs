@@ -14,8 +14,11 @@ fn drawing() -> Document {
             "style":{{"color":"ink","lineType":"continuous","lineWeight":0.25}},"children":[],"fields":[{fields}]}}"#
         )
     };
-    let layers = [layer("mahalle", [text("kod"), text("ad")].join(",")), layer("bakim", [text("kod"), text("mahalle")].join(","))]
-        .join(",");
+    let layers = [
+        layer("mahalle", [text("kod"), text("ad")].join(",")),
+        layer("bakim", [text("kod"), text("mahalle")].join(",")),
+    ]
+    .join(",");
     let json = format!(
         r#"{{"format":"kentos.document","version":1,"name":"Mahalle","settings":{{"srid":5256,"lengthDecimals":3,
         "areaDecimals":2,"areaUnit":"m2","angleUnit":"grad","plotScale":1000,"workspace":"gis","drawingFont":"barlow"}},
@@ -40,7 +43,10 @@ fn create(doc: &mut Document, parent_key: &str) -> CommandResult<kentos_commands
     .expect("a relation");
     relations_edit::execute(
         &mut ExecutionContext::new(doc),
-        RelationsEdit { edit: RelationsOp::Create { relation }, expected_revision: None },
+        RelationsEdit {
+            edit: RelationsOp::Create { relation },
+            expected_revision: None,
+        },
     )
 }
 
@@ -51,16 +57,39 @@ fn the_commands_tie_by_the_parent_key() {
     match create(&mut doc, "yok") {
         CommandResult::Failed { error } => {
             assert_eq!(error.path.as_deref(), Some("edit.relation.parentKey"));
-            assert!(error.message.contains("“yok” alanı yok"), "{}", error.message);
+            assert!(
+                error.message.contains("“yok” alanı yok"),
+                "{}",
+                error.message
+            );
         }
         other => panic!("not refused: {other:?}"),
     }
-    assert!(matches!(create(&mut doc, "kod"), CommandResult::Completed { .. }));
-    let m1 = doc.add(record(1, "mahalle", serde_json::json!({"kod": "M1", "ad": "Çınar"}))).expect("a slot");
-    let m2 = doc.add(record(2, "mahalle", serde_json::json!({"kod": "M2", "ad": "İstasyon"}))).expect("a slot");
+    assert!(matches!(
+        create(&mut doc, "kod"),
+        CommandResult::Completed { .. }
+    ));
+    let m1 = doc
+        .add(record(
+            1,
+            "mahalle",
+            serde_json::json!({"kod": "M1", "ad": "Çınar"}),
+        ))
+        .expect("a slot");
+    let m2 = doc
+        .add(record(
+            2,
+            "mahalle",
+            serde_json::json!({"kod": "M2", "ad": "İstasyon"}),
+        ))
+        .expect("a slot");
     for (i, code) in ["M1", "M1", "M2", "M9"].iter().enumerate() {
-        doc.add(record(10 + i as u32, "bakim", serde_json::json!({"kod": format!("B0{}", i + 1), "mahalle": code})))
-            .expect("a slot");
+        doc.add(record(
+            10 + i as u32,
+            "bakim",
+            serde_json::json!({"kod": format!("B0{}", i + 1), "mahalle": code}),
+        ))
+        .expect("a slot");
     }
     let page = |doc: &mut Document, of: kentos_domain::Slot, side: &str| {
         let input = serde_json::from_value(serde_json::json!({
@@ -68,9 +97,11 @@ fn the_commands_tie_by_the_parent_key() {
         }))
         .expect("an input");
         match records_page::execute(&mut ExecutionContext::new(doc), input) {
-            CommandResult::Completed { output, .. } => {
-                output.records.iter().map(|r| r.attrs.get("kod").cloned().unwrap_or_default()).collect::<Vec<_>>()
-            }
+            CommandResult::Completed { output, .. } => output
+                .records
+                .iter()
+                .map(|r| r.attrs.get("kod").cloned().unwrap_or_default())
+                .collect::<Vec<_>>(),
             other => panic!("not read: {other:?}"),
         }
     };
@@ -78,7 +109,11 @@ fn the_commands_tie_by_the_parent_key() {
     works.sort();
     assert_eq!(works, ["B01", "B02"]);
     // A work's neighbourhood by the code it holds.
-    let b03 = doc.by_layer_with_uids("bakim").nth(2).map(|(u, _)| u).expect("B03");
+    let b03 = doc
+        .by_layer_with_uids("bakim")
+        .nth(2)
+        .map(|(u, _)| u)
+        .expect("B03");
     let b03 = doc.slot_of(b03).expect("a slot");
     assert_eq!(page(&mut doc, b03, "parents"), ["M2"]);
     let _ = m2;

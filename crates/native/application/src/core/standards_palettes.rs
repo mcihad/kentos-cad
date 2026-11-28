@@ -20,19 +20,28 @@ fn canonical(v: &Value) -> String {
         Value::Object(map) => {
             let mut keys: Vec<&String> = map.keys().collect();
             keys.sort();
-            let parts: Vec<String> =
-                keys.iter().map(|k| format!("{}:{}", Value::String((*k).clone()), canonical(&map[*k]))).collect();
+            let parts: Vec<String> = keys
+                .iter()
+                .map(|k| format!("{}:{}", Value::String((*k).clone()), canonical(&map[*k])))
+                .collect();
             format!("{{{}}}", parts.join(","))
         }
-        Value::Array(items) => format!("[{}]", items.iter().map(canonical).collect::<Vec<_>>().join(",")),
+        Value::Array(items) => format!(
+            "[{}]",
+            items.iter().map(canonical).collect::<Vec<_>>().join(",")
+        ),
         other => other.to_string(),
     }
 }
 
 /// The recipe's digest: SHA-256 of `{"command":…,"commandVersion":…,"input":…}` as canonical JSON.
 pub fn digest(command: &str, version: u32, input: &Value) -> String {
-    let recipe = serde_json::json!({ "command": command, "commandVersion": version, "input": input });
-    Sha256::digest(canonical(&recipe).as_bytes()).iter().map(|b| format!("{b:02x}")).collect()
+    let recipe =
+        serde_json::json!({ "command": command, "commandVersion": version, "input": input });
+    Sha256::digest(canonical(&recipe).as_bytes())
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 fn read(cx: &ExecutionContext<'_>) -> Result<StandardsPalettesRead, Stop> {
@@ -47,13 +56,21 @@ fn read(cx: &ExecutionContext<'_>) -> Result<StandardsPalettesRead, Stop> {
     };
     let mut palettes = Vec::new();
     for p in &resolved.resources.tool_palettes {
-        let origin = resolved.provenance.tool_palettes.get(&p.id).cloned().unwrap_or_else(|| resolved.provenance.rules.clone());
+        let origin = resolved
+            .provenance
+            .tool_palettes
+            .get(&p.id)
+            .cloned()
+            .unwrap_or_else(|| resolved.provenance.rules.clone());
         let mut tools = Vec::new();
         for t in &p.tools {
             let problem = match crate::registry::version_of(&t.command) {
                 None => Some(PaletteToolProblem {
                     code: crate::codes::UNKNOWN_COMMAND.into(),
-                    message: format!("“{}” bu çizimde çalışan bir komut değil; araç çalışmaz.", t.command),
+                    message: format!(
+                        "“{}” bu çizimde çalışan bir komut değil; araç çalışmaz.",
+                        t.command
+                    ),
                     path: Some("command".into()),
                 }),
                 Some(v) if v != t.command_version => Some(PaletteToolProblem {
@@ -69,7 +86,12 @@ fn read(cx: &ExecutionContext<'_>) -> Result<StandardsPalettesRead, Stop> {
                     // sure of it.
                     let mut copy = cx.doc.clone();
                     let mut inner = ExecutionContext::new(&mut copy);
-                    match crate::registry::run(&mut inner, &t.command, CallOp::Validate, t.input.clone()) {
+                    match crate::registry::run(
+                        &mut inner,
+                        &t.command,
+                        CallOp::Validate,
+                        t.input.clone(),
+                    ) {
                         Err(unrun) => Some(PaletteToolProblem {
                             code: unrun.code.into(),
                             message: unrun.message,
@@ -78,9 +100,17 @@ fn read(cx: &ExecutionContext<'_>) -> Result<StandardsPalettesRead, Stop> {
                         Ok(answer) => match answer["status"].as_str() {
                             Some("completed") => None,
                             _ => Some(PaletteToolProblem {
-                                code: answer["error"]["code"].as_str().unwrap_or("invalid_input").into(),
-                                message: answer["error"]["message"].as_str().unwrap_or_default().into(),
-                                path: answer["error"]["path"].as_str().map(|p| format!("input.{p}")),
+                                code: answer["error"]["code"]
+                                    .as_str()
+                                    .unwrap_or("invalid_input")
+                                    .into(),
+                                message: answer["error"]["message"]
+                                    .as_str()
+                                    .unwrap_or_default()
+                                    .into(),
+                                path: answer["error"]["path"]
+                                    .as_str()
+                                    .map(|p| format!("input.{p}")),
                             }),
                         },
                     }
@@ -108,18 +138,30 @@ fn read(cx: &ExecutionContext<'_>) -> Result<StandardsPalettesRead, Stop> {
 
 pub fn validate(cx: &ExecutionContext<'_>, _input: &StandardsPalettes) -> CommandResult<()> {
     match read(cx) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, _input: &StandardsPalettes) -> CommandResult<StandardsPalettesRead> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    _input: &StandardsPalettes,
+) -> CommandResult<StandardsPalettesRead> {
     match read(cx) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: StandardsPalettes) -> CommandResult<StandardsPalettesRead> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: StandardsPalettes,
+) -> CommandResult<StandardsPalettesRead> {
     plan(cx, &input)
 }

@@ -21,7 +21,8 @@ fn query(server: &mut Server, args: Value) -> Value {
 #[test]
 fn a_limit_and_the_suggested_profile_over_mcp() {
     let mut server = Server::new();
-    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/kcad/v2/map-work-approved-parts.kcad");
+    let sample = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../fixtures/kcad/v2/map-work-approved-parts.kcad");
     let opened = call(&mut server, "drawing.open", json!({"path": sample}));
     assert_eq!(opened["isError"], false, "{opened}");
     let drawing = opened["structuredContent"]["drawing"].clone();
@@ -31,7 +32,11 @@ fn a_limit_and_the_suggested_profile_over_mcp() {
     assert_eq!(design["kind"], "design", "{design}");
     assert_eq!(design["suggested"][0]["name"], "imar-plani", "{design}");
 
-    let r = call(&mut server, "map.work.edit", json!({"drawing": drawing, "operation": {"op": "set", "item": "is-3", "status": "approved"}}));
+    let r = call(
+        &mut server,
+        "map.work.edit",
+        json!({"drawing": drawing, "operation": {"op": "set", "item": "is-3", "status": "approved"}}),
+    );
     assert_eq!(r["isError"], false, "{r}");
     let r = call(
         &mut server,
@@ -40,18 +45,38 @@ fn a_limit_and_the_suggested_profile_over_mcp() {
     );
     assert_eq!(r["isError"], false, "{r}");
 
-    let tree = query(&mut server, json!({"drawing": drawing, "limit": {"basis": "method", "method": "sayisal", "scale": 1000}}));
+    let tree = query(
+        &mut server,
+        json!({"drawing": drawing, "limit": {"basis": "method", "method": "sayisal", "scale": 1000}}),
+    );
     assert_eq!(tree["limit"]["metres"], 0.09, "{tree}");
     let row = &tree["items"][2];
-    let shift = row["changes"]["objects"].as_array().unwrap().iter().find(|o| o["uid"] == LINE).expect("moved")["shift"].clone();
-    assert_eq!((shift["beyond"].clone(), shift["over"].clone()), (json!(true), json!(2)), "{shift}");
+    let shift = row["changes"]["objects"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|o| o["uid"] == LINE)
+        .expect("moved")["shift"]
+        .clone();
+    assert_eq!(
+        (shift["beyond"].clone(), shift["over"].clone()),
+        (json!(true), json!(2)),
+        "{shift}"
+    );
     assert_eq!(row["changes"]["beyond"], 1, "{row}");
 
-    let tree = query(&mut server, json!({"drawing": drawing, "limit": {"basis": "drawing", "scale": 5000}}));
+    let tree = query(
+        &mut server,
+        json!({"drawing": drawing, "limit": {"basis": "drawing", "scale": 5000}}),
+    );
     let row = &tree["items"][2];
     assert_eq!(row["changes"]["beyond"], 0, "{row}");
 
-    let r = call(&mut server, "map.work.query", json!({"drawing": drawing, "limit": {"basis": "method", "method": "fotoplan", "scale": 500}}));
+    let r = call(
+        &mut server,
+        "map.work.query",
+        json!({"drawing": drawing, "limit": {"basis": "method", "method": "fotoplan", "scale": 500}}),
+    );
     assert_eq!(r["isError"], true, "{r}");
     assert!(r.to_string().contains("limit.scale"), "{r}");
 }

@@ -2,8 +2,8 @@
 //! This module does not change legacy text layout. All coordinates are ems,
 //! all source ranges refer to the unchanged logical input, and no OS font is read.
 pub mod paragraph;
-pub mod rich;
 pub mod placed;
+pub mod rich;
 mod scripts;
 
 use std::ops::Range;
@@ -111,7 +111,7 @@ pub enum Error {
 
 impl Error {
     /// User-facing explanation; byte ranges remain diagnostic metadata only.
-    pub fn message(&self,text:&str)->String {
+    pub fn message(&self, text: &str) -> String {
         match self {
             Self::Unsupported{bytes}=> {
                 let sample=text.get(bytes.clone()).unwrap_or("");
@@ -188,17 +188,25 @@ pub fn is_fallback(id: FontId) -> bool {
 }
 /// The face whose bytes these are (a text system's copy of one), any of the core's; none for another face.
 pub fn font_of_bytes(data: &[u8]) -> Option<FontId> {
-    (0..font_count()).map(|i| FontId(i as u16)).find(|id| font_bytes(*id).is_some_and(|b| b == data))
+    (0..font_count())
+        .map(|i| FontId(i as u16))
+        .find(|id| font_bytes(*id).is_some_and(|b| b == data))
 }
 
 /// Nominal capital height in ems for a rotation/anchor pivot. This does
 /// not reinterpret the model's text height or rescale existing glyph plans.
 pub fn cap_em(id: FontId) -> Result<f64, Error> {
     let face = parsed(id)?;
-    let cap = face.capital_height().filter(|h| *h > 0)
-        .or_else(|| face.glyph_index('H')
-            .and_then(|g| face.glyph_bounding_box(g)).map(|b| b.y_max))
-        .filter(|h| *h > 0).ok_or(Error::BadFont(id))?;
+    let cap = face
+        .capital_height()
+        .filter(|h| *h > 0)
+        .or_else(|| {
+            face.glyph_index('H')
+                .and_then(|g| face.glyph_bounding_box(g))
+                .map(|b| b.y_max)
+        })
+        .filter(|h| *h > 0)
+        .ok_or(Error::BadFont(id))?;
     Ok(f64::from(cap) / f64::from(face.units_per_em()))
 }
 pub fn font_key(id: FontId) -> Option<(&'static str, u16, bool)> {
@@ -208,9 +216,13 @@ pub fn font_key(id: FontId) -> Option<(&'static str, u16, bool)> {
     } else if i < DRAWING_KEYS.len() + FALLBACK_KEYS.len() {
         FALLBACK_KEYS.get(i - DRAWING_KEYS.len()).copied()
     } else if i < OWN_FACES {
-        ADDED_KEYS.get(i - DRAWING_KEYS.len() - FALLBACK_KEYS.len()).copied()
+        ADDED_KEYS
+            .get(i - DRAWING_KEYS.len() - FALLBACK_KEYS.len())
+            .copied()
     } else {
-        installed().get(i - OWN_FACES).map(|f| (f.family, f.weight, f.italic))
+        installed()
+            .get(i - OWN_FACES)
+            .map(|f| (f.family, f.weight, f.italic))
     }
 }
 /// Whether the face is a fonts folder's (docs/adr/9313), not one of the core's own.

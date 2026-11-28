@@ -17,8 +17,8 @@
 //! └───────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, LineDash, Path, Stroke, Text};
 use iced::{Color, Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{ProfilesSight, ProfilesSightRead, SightReach, SightSide};
@@ -36,7 +36,13 @@ pub const TITLE: &str = "Görüş mesafesi";
 const PREVIEW: &str = "Önizle";
 const CLOSE: &str = "Kapat";
 /// The typed fields, in order.
-pub(crate) const FIELDS: [&str; 5] = ["Göz (m)", "Nesne (m)", "Bakılan (m)", "Adım (m)", "Gereken (m)"];
+pub(crate) const FIELDS: [&str; 5] = [
+    "Göz (m)",
+    "Nesne (m)",
+    "Bakılan (m)",
+    "Adım (m)",
+    "Gereken (m)",
+];
 const SIDES: [&str; 3] = ["İki yön", "İleri", "Geri"];
 
 #[derive(Debug, Clone, Default)]
@@ -63,13 +69,18 @@ fn msg(event: Event) -> Message {
 
 impl Window {
     pub(crate) fn input(&self) -> Result<ProfilesSight, String> {
-        let Some(profile) = self.profile.clone() else { return Err("Bir boykesit seçin.".into()) };
+        let Some(profile) = self.profile.clone() else {
+            return Err("Bir boykesit seçin.".into());
+        };
         let number = |k: usize| -> Result<Option<f64>, String> {
             let t = self.fields[k].trim();
             if t.is_empty() {
                 return Ok(None);
             }
-            t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("{} bir sayı olmalı: “{t}”.", FIELDS[k]))
+            t.replace(',', ".")
+                .parse::<f64>()
+                .map(Some)
+                .map_err(|_| format!("{} bir sayı olmalı: “{t}”.", FIELDS[k]))
         };
         let need = |k: usize| -> Result<f64, String> {
             number(k)?.ok_or_else(|| {
@@ -110,7 +121,10 @@ impl SightWindowApp for App {
             return;
         }
         let Some(first) = doc.model.road_profiles().first().map(|p| p.id.clone()) else {
-            self.warn("Görüş mesafesi bir boykesitte okunur: önce Boykesit'te bir boykesit oluşturun.".to_owned());
+            self.warn(
+                "Görüş mesafesi bir boykesitte okunur: önce Boykesit'te bir boykesit oluşturun."
+                    .to_owned(),
+            );
             return;
         };
         self.modules.road_mut().sight_window = Some(Box::new(Window {
@@ -130,8 +144,13 @@ impl SightWindowApp for App {
             Event::Side(i) => w.side = i.min(2),
             Event::Field(k, t) => w.fields[k.min(FIELDS.len() - 1)] = t,
             Event::Preview => {
-                let Some(doc) = &self.document else { return Task::none() };
-                match w.input().and_then(|q| road_profiles_sight::preview(&doc.model, &q)) {
+                let Some(doc) = &self.document else {
+                    return Task::none();
+                };
+                match w
+                    .input()
+                    .and_then(|q| road_profiles_sight::preview(&doc.model, &q))
+                {
                     Ok((r, warnings)) => {
                         w.preview = Some(Ok(r));
                         w.warnings = warnings.into_iter().map(|x| x.message).collect();
@@ -157,15 +176,30 @@ impl SightWindowApp for App {
         let Some(w) = &self.modules.road().sight_window else {
             return iced::widget::text("").into();
         };
-        let profiles: Vec<(String, String)> = self
-            .document
-            .as_ref()
-            .map_or_else(Vec::new, |d| d.model.road_profiles().iter().map(|p| (p.id.clone(), p.name.clone())).collect());
+        let profiles: Vec<(String, String)> = self.document.as_ref().map_or_else(Vec::new, |d| {
+            d.model
+                .road_profiles()
+                .iter()
+                .map(|p| (p.id.clone(), p.name.clone()))
+                .collect()
+        });
         let ids: Vec<String> = profiles.iter().map(|p| p.0.clone()).collect();
-        let chosen = w.profile.as_ref().and_then(|p| ids.iter().position(|i| i == p));
-        let pick = Select::new(profiles.iter().map(|p| Choice::new(p.1.clone())), chosen, move |i| msg(Event::Profile(ids[i].clone())));
-        let side = Select::new(SIDES.iter().map(|s| Choice::new(*s)), Some(w.side), |i| msg(Event::Side(i)));
-        let field = |k: usize| kentos_ui::widget::text_field(if k == 4 { "yok" } else { "" }, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t)));
+        let chosen = w
+            .profile
+            .as_ref()
+            .and_then(|p| ids.iter().position(|i| i == p));
+        let pick = Select::new(
+            profiles.iter().map(|p| Choice::new(p.1.clone())),
+            chosen,
+            move |i| msg(Event::Profile(ids[i].clone())),
+        );
+        let side = Select::new(SIDES.iter().map(|s| Choice::new(*s)), Some(w.side), |i| {
+            msg(Event::Side(i))
+        });
+        let field = |k: usize| {
+            kentos_ui::widget::text_field(if k == 4 { "yok" } else { "" }, &w.fields[k])
+                .on_input(move |t| msg(Event::Field(k, t)))
+        };
         let form = Form::new()
             .label_width(110.0)
             .section("Girdi")
@@ -187,7 +221,8 @@ impl SightWindowApp for App {
             Some(Err(why)) => d = d.note(Banner::error(why.clone())),
             Some(Ok(r)) => {
                 let least = |l: &Option<kentos_commands::SightLeast>| {
-                    l.as_ref().map_or_else(|| "—".to_owned(), |l| format!("{:.1} m", l.distance))
+                    l.as_ref()
+                        .map_or_else(|| "—".to_owned(), |l| format!("{:.1} m", l.distance))
                 };
                 d = d
                     .picture(
@@ -207,12 +242,22 @@ impl SightWindowApp for App {
                     d = d.note(Banner::warning(wn.clone()));
                 }
                 d = d.detail(road_dialog::table(
-                    vec![col("Yön", 90.0), num("Baş (m)", 110.0), num("Son (m)", 110.0), num("En kısa (m)", 110.0)],
+                    vec![
+                        col("Yön", 90.0),
+                        num("Baş (m)", 110.0),
+                        num("Son (m)", 110.0),
+                        num("En kısa (m)", 110.0),
+                    ],
                     r.short
                         .iter()
                         .map(|s| {
                             vec![
-                                if s.side == SightSide::Forward { "İleri" } else { "Geri" }.to_owned(),
+                                if s.side == SightSide::Forward {
+                                    "İleri"
+                                } else {
+                                    "Geri"
+                                }
+                                .to_owned(),
                                 format!("{:.1}", s.from),
                                 format!("{:.1}", s.to),
                                 format!("{:.1}", s.least),
@@ -251,22 +296,44 @@ struct Chart<'a> {
 impl canvas::Program<Message> for Chart<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let rows = &self.read.rows;
         let text = |frame: &mut canvas::Frame, s: String, p: Point, color: Color| {
-            frame.fill_text(Text { content: s, position: p, color, size: Pixels(11.0), ..Text::default() })
+            frame.fill_text(Text {
+                content: s,
+                position: p,
+                color,
+                size: Pixels(11.0),
+                ..Text::default()
+            })
         };
         if rows.len() < 2 {
-            text(&mut frame, "Çizilecek km yok.".into(), Point::new(10.0, 10.0), tk.muted);
+            text(
+                &mut frame,
+                "Çizilecek km yok.".into(),
+                Point::new(10.0, 10.0),
+                tk.muted,
+            );
             return vec![frame.into_geometry()];
         }
         let (left, right) = (54.0_f32, bounds.width - 14.0);
         let (s0, s1) = (rows[0].station, rows[rows.len() - 1].station);
         let x = |s: f64| left + ((s - s0) / (s1 - s0).max(1e-9)) as f32 * (right - left);
         // The profile, in the upper third.
-        let (zlo, zhi) = rows.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), r| (a.min(r.elevation), b.max(r.elevation)));
+        let (zlo, zhi) = rows
+            .iter()
+            .fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), r| {
+                (a.min(r.elevation), b.max(r.elevation))
+            });
         let (ptop, pbot) = (24.0_f32, bounds.height * 0.34);
         let pz = |z: f64| pbot - ((z - zlo) / (zhi - zlo).max(1e-6)) as f32 * (pbot - ptop);
         let profile = Path::new(|p| {
@@ -275,10 +342,28 @@ impl canvas::Program<Message> for Chart<'_> {
                 p.line_to(Point::new(x(r.station), pz(r.elevation)));
             }
         });
-        frame.stroke(&profile, Stroke::default().with_width(2.0).with_color(tk.danger));
-        text(&mut frame, "Boykesit".into(), Point::new(10.0, 6.0), tk.muted);
-        text(&mut frame, format!("{zhi:.2}"), Point::new(4.0, ptop - 6.0), tk.muted);
-        text(&mut frame, format!("{zlo:.2}"), Point::new(4.0, pbot - 6.0), tk.muted);
+        frame.stroke(
+            &profile,
+            Stroke::default().with_width(2.0).with_color(tk.danger),
+        );
+        text(
+            &mut frame,
+            "Boykesit".into(),
+            Point::new(10.0, 6.0),
+            tk.muted,
+        );
+        text(
+            &mut frame,
+            format!("{zhi:.2}"),
+            Point::new(4.0, ptop - 6.0),
+            tk.muted,
+        );
+        text(
+            &mut frame,
+            format!("{zlo:.2}"),
+            Point::new(4.0, pbot - 6.0),
+            tk.muted,
+        );
         // The distance seen, below.
         let (dtop, dbot) = (bounds.height * 0.42, bounds.height - 26.0);
         let most = rows
@@ -293,11 +378,31 @@ impl canvas::Program<Message> for Chart<'_> {
             &Path::line(Point::new(left, dbot), Point::new(right, dbot)),
             Stroke::default().with_width(1.0).with_color(tk.border),
         );
-        text(&mut frame, "Görülen uzaklık (m)".into(), Point::new(10.0, dtop - 18.0), tk.muted);
-        text(&mut frame, format!("{most:.0}"), Point::new(4.0, dtop - 6.0), tk.muted);
-        text(&mut frame, "0".into(), Point::new(4.0, dbot - 6.0), tk.muted);
-        let series = |pick: fn(&kentos_commands::SightRow) -> Option<&SightReach>, color: Color, frame: &mut canvas::Frame| {
-            let pts: Vec<Point> = rows.iter().filter_map(|r| pick(r).map(|v| Point::new(x(r.station), dy(v.distance)))).collect();
+        text(
+            &mut frame,
+            "Görülen uzaklık (m)".into(),
+            Point::new(10.0, dtop - 18.0),
+            tk.muted,
+        );
+        text(
+            &mut frame,
+            format!("{most:.0}"),
+            Point::new(4.0, dtop - 6.0),
+            tk.muted,
+        );
+        text(
+            &mut frame,
+            "0".into(),
+            Point::new(4.0, dbot - 6.0),
+            tk.muted,
+        );
+        let series = |pick: fn(&kentos_commands::SightRow) -> Option<&SightReach>,
+                      color: Color,
+                      frame: &mut canvas::Frame| {
+            let pts: Vec<Point> = rows
+                .iter()
+                .filter_map(|r| pick(r).map(|v| Point::new(x(r.station), dy(v.distance))))
+                .collect();
             if pts.len() > 1 {
                 let path = Path::new(|p| {
                     p.move_to(pts[0]);
@@ -309,9 +414,13 @@ impl canvas::Program<Message> for Chart<'_> {
             }
             for r in rows {
                 if let Some(v) = pick(r) {
-                    let short = v.until == kentos_commands::SightUntil::Hidden && self.required.is_some_and(|q| v.distance < q);
+                    let short = v.until == kentos_commands::SightUntil::Hidden
+                        && self.required.is_some_and(|q| v.distance < q);
                     let at = Point::new(x(r.station), dy(v.distance));
-                    frame.fill(&Path::circle(at, if short { 3.5 } else { 2.2 }), if short { tk.danger } else { color });
+                    frame.fill(
+                        &Path::circle(at, if short { 3.5 } else { 2.2 }),
+                        if short { tk.danger } else { color },
+                    );
                 }
             }
         };
@@ -321,14 +430,45 @@ impl canvas::Program<Message> for Chart<'_> {
             let y = dy(q);
             frame.stroke(
                 &Path::line(Point::new(left, y), Point::new(right, y)),
-                Stroke { line_dash: LineDash { segments: &[6.0, 4.0], offset: 0 }, ..Stroke::default().with_width(1.2).with_color(tk.danger) },
+                Stroke {
+                    line_dash: LineDash {
+                        segments: &[6.0, 4.0],
+                        offset: 0,
+                    },
+                    ..Stroke::default().with_width(1.2).with_color(tk.danger)
+                },
             );
-            text(&mut frame, format!("Gereken {q} m"), Point::new(right - 110.0, y - 15.0), tk.danger);
+            text(
+                &mut frame,
+                format!("Gereken {q} m"),
+                Point::new(right - 110.0, y - 15.0),
+                tk.danger,
+            );
         }
-        text(&mut frame, format!("{s0:.0}"), Point::new(left - 4.0, bounds.height - 18.0), tk.muted);
-        text(&mut frame, format!("{s1:.0} m"), Point::new(right - 40.0, bounds.height - 18.0), tk.muted);
-        text(&mut frame, "— İleri".into(), Point::new(150.0, dtop - 18.0), tk.accent);
-        text(&mut frame, "— Geri".into(), Point::new(205.0, dtop - 18.0), tk.success);
+        text(
+            &mut frame,
+            format!("{s0:.0}"),
+            Point::new(left - 4.0, bounds.height - 18.0),
+            tk.muted,
+        );
+        text(
+            &mut frame,
+            format!("{s1:.0} m"),
+            Point::new(right - 40.0, bounds.height - 18.0),
+            tk.muted,
+        );
+        text(
+            &mut frame,
+            "— İleri".into(),
+            Point::new(150.0, dtop - 18.0),
+            tk.accent,
+        );
+        text(
+            &mut frame,
+            "— Geri".into(),
+            Point::new(205.0, dtop - 18.0),
+            tk.success,
+        );
         vec![frame.into_geometry()]
     }
 }

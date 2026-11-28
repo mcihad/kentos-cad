@@ -4,7 +4,8 @@
 //! `fixtures/commands/v1/road.junctions.clearance.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, JunctionClearanceAt, JunctionKind, JunctionsCleared, JunctionsClearance, MOST_CLEARANCE_SAMPLES,
+    CommandResult, CommandWarning, JunctionClearanceAt, JunctionKind, JunctionsClearance,
+    JunctionsCleared, MOST_CLEARANCE_SAMPLES,
 };
 use kentos_domain::Document;
 use kentos_road::junction::{Deck, Overlap, overlap, overlap_grid};
@@ -19,52 +20,88 @@ fn bad(words: String, path: &str) -> Stop {
     fail(codes::INVALID_CLEARANCE, words, path)
 }
 
-fn answer(doc: &Document, input: &JunctionsClearance) -> Result<(JunctionsCleared, Vec<CommandWarning>), Stop> {
+fn answer(
+    doc: &Document,
+    input: &JunctionsClearance,
+) -> Result<(JunctionsCleared, Vec<CommandWarning>), Stop> {
     common::road_project(doc)?;
     let (_, def) = common::find(doc.road_junctions(), &input.junction, "junction")?;
     let (report, mut warnings) = common::read(doc, def)?;
     if def.kind == JunctionKind::AtGrade {
         return Err(fail(
             codes::INVALID_JUNCTION,
-            format!("“{}” hemzemin kavşak; düşey açıklık yalnız ayrı seviyeli kavşakta olur.", def.name),
+            format!(
+                "“{}” hemzemin kavşak; düşey açıklık yalnız ayrı seviyeli kavşakta olur.",
+                def.name
+            ),
             "junction",
         ));
     }
-    let (chosen, built) = common::leg_profiles(doc, &report, input.profiles.as_deref(), codes::INVALID_CLEARANCE)?;
+    let (chosen, built) = common::leg_profiles(
+        doc,
+        &report,
+        input.profiles.as_deref(),
+        codes::INVALID_CLEARANCE,
+    )?;
     if !(input.depth.is_finite() && input.depth >= 0.0) {
-        return Err(bad("Tabliye derinliği (depth) 0 ya da daha büyük olmalı.".into(), "depth"));
+        return Err(bad(
+            "Tabliye derinliği (depth) 0 ya da daha büyük olmalı.".into(),
+            "depth",
+        ));
     }
     if !(input.step.is_finite() && input.step > 0.0) {
-        return Err(bad("Örnekleme aralığı (step) 0'dan büyük olmalı.".into(), "step"));
+        return Err(bad(
+            "Örnekleme aralığı (step) 0'dan büyük olmalı.".into(),
+            "step",
+        ));
     }
     if input.minimum.is_some_and(|m| !(m.is_finite() && m >= 0.0)) {
-        return Err(bad("Gerekli açıklık (minimum) 0 ya da daha büyük olmalı.".into(), "minimum"));
+        return Err(bad(
+            "Gerekli açıklık (minimum) 0 ya da daha büyük olmalı.".into(),
+            "minimum",
+        ));
     }
     warnings.extend(common::profiles_stale(doc, &chosen));
     // The upper road: the higher at the crossing.
     let height = |k: usize, s: f64| built[k].vertical.at(s).map(|r| r.0);
     let (s0, s1) = (report.legs[0].station, report.legs[1].station);
     let (Some(h0), Some(h1)) = (height(0, s0), height(1, s1)) else {
-        return Err(bad("Bir boykesit aksların kesişimini örtmüyor.".into(), "profiles"));
+        return Err(bad(
+            "Bir boykesit aksların kesişimini örtmüyor.".into(),
+            "profiles",
+        ));
     };
     if (h0 - h1).abs() < 1e-9 {
-        return Err(bad(format!("İki kol kesişimde aynı kotta ({h0:.3} m); biri üstten geçmeli."), "profiles"));
+        return Err(bad(
+            format!("İki kol kesişimde aynı kotta ({h0:.3} m); biri üstten geçmeli."),
+            "profiles",
+        ));
     }
     let upper = usize::from(h1 > h0);
     let lower = 1 - upper;
-    let deck = |k: usize| Deck { alignment: &built[k].alignment.core, left: def.legs[k].left, right: def.legs[k].right };
+    let deck = |k: usize| Deck {
+        alignment: &built[k].alignment.core,
+        left: def.legs[k].left,
+        right: def.legs[k].right,
+    };
     let sine = (report.angle.to_radians()).sin();
     let crossing = report.legs[lower].station;
     let (n, m, _, _) = overlap_grid(deck(upper), deck(lower), crossing, sine, input.step);
     if n.saturating_mul(m) > MOST_CLEARANCE_SAMPLES {
-        return Err(bad(format!("Aralık çok küçük: {n} × {m} ızgara noktası; en çok {MOST_CLEARANCE_SAMPLES}."), "step"));
+        return Err(bad(
+            format!("Aralık çok küçük: {n} × {m} ızgara noktası; en çok {MOST_CLEARANCE_SAMPLES}."),
+            "step",
+        ));
     }
     let places = overlap(deck(upper), deck(lower), crossing, sine, input.step);
     if places.is_empty() {
         return Err(bad("Yollar planda örtüşmüyor.".into(), "junction"));
     }
     let at = |p: &Overlap| -> Option<JunctionClearanceAt> {
-        let (hu, hl) = (height(upper, p.upper_station)?, height(lower, p.lower_station)?);
+        let (hu, hl) = (
+            height(upper, p.upper_station)?,
+            height(lower, p.lower_station)?,
+        );
         Some(JunctionClearanceAt {
             x: p.x,
             y: p.y,
@@ -81,7 +118,10 @@ fn answer(doc: &Document, input: &JunctionsClearance) -> Result<(JunctionsCleare
     for p in &places {
         let Some(c) = at(p) else {
             return Err(bad(
-                format!("Boykesitler örtüşme bölgesini örtmüyor ({:.3} m km'sinde).", p.lower_station),
+                format!(
+                    "Boykesitler örtüşme bölgesini örtmüyor ({:.3} m km'sinde).",
+                    p.lower_station
+                ),
                 "profiles",
             ));
         };
@@ -89,12 +129,14 @@ fn answer(doc: &Document, input: &JunctionsClearance) -> Result<(JunctionsCleare
     }
     // The first of equal ones, in the samples' order.
     let pick = |better: fn(f64, f64) -> bool| {
-        read.iter().fold(None::<&JunctionClearanceAt>, |b, c| match b {
-            Some(b) if !better(c.clearance, b.clearance) => Some(b),
-            _ => Some(c),
-        })
+        read.iter()
+            .fold(None::<&JunctionClearanceAt>, |b, c| match b {
+                Some(b) if !better(c.clearance, b.clearance) => Some(b),
+                _ => Some(c),
+            })
     };
-    let (Some(least), Some(largest)) = (pick(|a, b| a < b).cloned(), pick(|a, b| a > b).cloned()) else {
+    let (Some(least), Some(largest)) = (pick(|a, b| a < b).cloned(), pick(|a, b| a > b).cloned())
+    else {
         return Err(bad("Yollar planda örtüşmüyor.".into(), "junction"));
     };
     let (pu, pl) = (&report.legs[upper], &report.legs[lower]);
@@ -106,7 +148,10 @@ fn answer(doc: &Document, input: &JunctionsClearance) -> Result<(JunctionsCleare
         lower_station: pl.station,
         lower_offset: 0.0,
     }) else {
-        return Err(bad("Bir boykesit aksların kesişimini örtmüyor.".into(), "profiles"));
+        return Err(bad(
+            "Bir boykesit aksların kesişimini örtmüyor.".into(),
+            "profiles",
+        ));
     };
     let short = input.minimum.is_some_and(|m| least.clearance < m);
     if short {
@@ -143,13 +188,19 @@ fn answer(doc: &Document, input: &JunctionsClearance) -> Result<(JunctionsCleare
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &JunctionsClearance) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &JunctionsClearance) -> CommandResult<JunctionsCleared> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &JunctionsClearance,
+) -> CommandResult<JunctionsCleared> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -157,11 +208,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &JunctionsClearance) -> CommandRes
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: JunctionsClearance) -> CommandResult<JunctionsCleared> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: JunctionsClearance,
+) -> CommandResult<JunctionsCleared> {
     plan(cx, &input)
 }
 
 /// The clearance for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &JunctionsClearance) -> Result<(JunctionsCleared, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &JunctionsClearance,
+) -> Result<(JunctionsCleared, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

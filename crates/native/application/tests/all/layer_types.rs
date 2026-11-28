@@ -54,31 +54,61 @@ fn a_typed_layer_takes_only_its_kind() {
     assert_eq!(refused["status"], "failed", "{refused}");
     assert_eq!(refused["error"]["code"], "layer_geometry_mismatch");
     let message = refused["error"]["message"].as_str().unwrap_or_default();
-    assert!(message.contains("“Yol” bir çizgi katmanı; alan bu katmana yazılmaz"), "{message}");
+    assert!(
+        message.contains("“Yol” bir çizgi katmanı; alan bu katmana yazılmaz"),
+        "{message}"
+    );
     assert_eq!(doc.revision(), revision, "nothing written");
     // The kinds that fit: an area on the area layer, a line on the line layer, a point on the point layer, a circle on
     // both the line and the area layer, anything on the untyped one.
     for (command, input) in [
         ("cad.polygon.create", square("parsel")),
-        ("cad.line.create", json!({"layerId": "yol", "a": {"x": 487000.0, "y": 4420030.0}, "b": {"x": 487020.0, "y": 4420030.0}})),
-        ("cad.point.create", json!({"layerId": "nokta", "p": {"x": 487001.0, "y": 4420001.0}})),
-        ("cad.circle.create", json!({"layerId": "yol", "c": {"x": 487040.0, "y": 4420040.0}, "r": 2.0})),
-        ("cad.circle.create", json!({"layerId": "parsel", "c": {"x": 487040.0, "y": 4420040.0}, "r": 2.0})),
-        ("cad.point.create", json!({"layerId": "serbest", "p": {"x": 487002.0, "y": 4420002.0}})),
+        (
+            "cad.line.create",
+            json!({"layerId": "yol", "a": {"x": 487000.0, "y": 4420030.0}, "b": {"x": 487020.0, "y": 4420030.0}}),
+        ),
+        (
+            "cad.point.create",
+            json!({"layerId": "nokta", "p": {"x": 487001.0, "y": 4420001.0}}),
+        ),
+        (
+            "cad.circle.create",
+            json!({"layerId": "yol", "c": {"x": 487040.0, "y": 4420040.0}, "r": 2.0}),
+        ),
+        (
+            "cad.circle.create",
+            json!({"layerId": "parsel", "c": {"x": 487040.0, "y": 4420040.0}, "r": 2.0}),
+        ),
+        (
+            "cad.point.create",
+            json!({"layerId": "serbest", "p": {"x": 487002.0, "y": 4420002.0}}),
+        ),
         ("cad.polygon.create", square("serbest")),
     ] {
         let done = run(&mut doc, command, input);
         assert_eq!(done["status"], "completed", "{command}: {done}");
     }
     // A point on the area layer is refused.
-    let point = run(&mut doc, "cad.point.create", json!({"layerId": "parsel", "p": {"x": 487003.0, "y": 4420003.0}}));
+    let point = run(
+        &mut doc,
+        "cad.point.create",
+        json!({"layerId": "parsel", "p": {"x": 487003.0, "y": 4420003.0}}),
+    );
     assert_eq!(point["error"]["code"], "layer_geometry_mismatch", "{point}");
     // Moving the line onto the area layer is refused too, and the line stays where it was.
     let uid = doc.uid(Slot(1)).expect("the line").to_string();
-    let moved = run(&mut doc, "cad.entities.set",
-        json!({"uids": [uid], "operation": "layer", "layerId": "parsel"}));
+    let moved = run(
+        &mut doc,
+        "cad.entities.set",
+        json!({"uids": [uid], "operation": "layer", "layerId": "parsel"}),
+    );
     assert_eq!(moved["error"]["code"], "layer_geometry_mismatch", "{moved}");
-    assert_eq!(doc.get(Slot(1)).map(|e| e.base().layer_id.clone()).as_deref(), Some("yol"));
+    assert_eq!(
+        doc.get(Slot(1))
+            .map(|e| e.base().layer_id.clone())
+            .as_deref(),
+        Some("yol")
+    );
 }
 
 /// The refusal's way out (docs/adr/9320): a CBS project's objects are rows of tables of one kind, so it names a data
@@ -88,9 +118,19 @@ fn a_cbs_refusal_names_a_data_layer_and_a_cad_one_may_make_the_layer_karisik() {
     let point = json!({"layerId": "parsel", "p": {"x": 487003.0, "y": 4420003.0}});
     let mut gis = drawing();
     let refused = run(&mut gis, "cad.point.create", point.clone());
-    let message = refused["error"]["message"].as_str().unwrap_or_default().to_owned();
-    assert_eq!(refused["error"]["code"], "layer_geometry_mismatch", "{refused}");
-    assert!(message.ends_with("nokta bu katmana yazılmaz. Nesneyi türüne uyan bir veri katmanına yazın."), "{message}");
+    let message = refused["error"]["message"]
+        .as_str()
+        .unwrap_or_default()
+        .to_owned();
+    assert_eq!(
+        refused["error"]["code"], "layer_geometry_mismatch",
+        "{refused}"
+    );
+    assert!(
+        message
+            .ends_with("nokta bu katmana yazılmaz. Nesneyi türüne uyan bir veri katmanına yazın."),
+        "{message}"
+    );
     assert!(!message.contains("Karışık"), "{message}");
     let mut cad = drawing();
     let mut settings = cad.settings().clone();
@@ -98,7 +138,10 @@ fn a_cbs_refusal_names_a_data_layer_and_a_cad_one_may_make_the_layer_karisik() {
     cad.set_settings(settings);
     let refused = run(&mut cad, "cad.point.create", point);
     let message = refused["error"]["message"].as_str().unwrap_or_default();
-    assert!(message.ends_with("ya da katmanın türünü Karışık yapın."), "{message}");
+    assert!(
+        message.ends_with("ya da katmanın türünü Karışık yapın."),
+        "{message}"
+    );
 }
 
 #[test]
@@ -107,9 +150,20 @@ fn a_layers_type_is_set_only_when_its_objects_fit() {
     // The untyped layer holds a polygon (drawn there first): it may become an area layer, not a line layer.
     let made = run(&mut doc, "cad.polygon.create", square("serbest"));
     assert_eq!(made["status"], "completed", "{made}");
-    let to_line = run(&mut doc, "cad.layers.edit", json!({"operation": "geometry", "layer": "serbest", "geometry": "line"}));
-    assert_eq!(to_line["error"]["code"], "layer_geometry_mismatch", "{to_line}");
-    let to_area = run(&mut doc, "cad.layers.edit", json!({"operation": "geometry", "layer": "serbest", "geometry": "area"}));
+    let to_line = run(
+        &mut doc,
+        "cad.layers.edit",
+        json!({"operation": "geometry", "layer": "serbest", "geometry": "line"}),
+    );
+    assert_eq!(
+        to_line["error"]["code"], "layer_geometry_mismatch",
+        "{to_line}"
+    );
+    let to_area = run(
+        &mut doc,
+        "cad.layers.edit",
+        json!({"operation": "geometry", "layer": "serbest", "geometry": "area"}),
+    );
     assert_eq!(to_area["status"], "completed", "{to_area}");
     assert_eq!(
         doc.layers().get("serbest").and_then(|n| n.geometry),

@@ -26,9 +26,16 @@ pub fn pvis(v: &Value) -> Vec<Pvi> {
             curve: match p.get("curve") {
                 None => VCurve::None,
                 Some(c) => match c["kind"].as_str().unwrap() {
-                    "parabola" => VCurve::Parabola { length: n(&c["length"]) },
-                    "asymmetric" => VCurve::Asymmetric { length_in: n(&c["lengthIn"]), length_out: n(&c["lengthOut"]) },
-                    _ => VCurve::Circle { radius: n(&c["radius"]) },
+                    "parabola" => VCurve::Parabola {
+                        length: n(&c["length"]),
+                    },
+                    "asymmetric" => VCurve::Asymmetric {
+                        length_in: n(&c["lengthIn"]),
+                        length_out: n(&c["lengthOut"]),
+                    },
+                    _ => VCurve::Circle {
+                        radius: n(&c["radius"]),
+                    },
                 },
             },
         })
@@ -55,7 +62,11 @@ fn every_vertical_is_what_the_reference_says() {
             };
             assert_eq!(kind, e["kind"].as_str().unwrap(), "{name}");
             if let VerticalError::Overlap { a, b, excess } = &got {
-                assert_eq!((a.as_str(), b.as_str()), (e["a"].as_str().unwrap(), e["b"].as_str().unwrap()), "{name}");
+                assert_eq!(
+                    (a.as_str(), b.as_str()),
+                    (e["a"].as_str().unwrap(), e["b"].as_str().unwrap()),
+                    "{name}"
+                );
                 near(*excess, n(&e["excess"]), 1e-9, name);
             }
             continue;
@@ -99,7 +110,12 @@ fn every_vertical_is_what_the_reference_says() {
 /// form and its Gauss–Legendre branch (where the grade hardly changes) against composite Simpson on √(1 + z′²).
 #[test]
 fn the_length_in_space_is_the_arc_length() {
-    let p = |id: &str, s: f64, z: f64, curve: VCurve| Pvi { id: id.into(), station: s, elevation: z, curve };
+    let p = |id: &str, s: f64, z: f64, curve: VCurve| Pvi {
+        id: id.into(),
+        station: s,
+        elevation: z,
+        curve,
+    };
     let v = build(&[
         p("a", 0.0, 100.0, VCurve::None),
         p("v1", 200.0, 130.0, VCurve::Parabola { length: 100.0 }),
@@ -107,17 +123,40 @@ fn the_length_in_space_is_the_arc_length() {
         p("b", 600.0, 140.0, VCurve::None),
     ])
     .expect("builds");
-    near(v.length_to(150.0).unwrap(), 150.0 * 1.0225f64.sqrt(), 1e-12, "15 % grade");
+    near(
+        v.length_to(150.0).unwrap(),
+        150.0 * 1.0225f64.sqrt(),
+        1e-12,
+        "15 % grade",
+    );
     let c = &v.curves[1];
     let arc = 500.0 * (c.g_out.atan() - c.g_in.atan()).abs();
-    near(v.length_to(c.end[0]).unwrap() - v.length_to(c.start[0]).unwrap(), arc, 1e-9, "circle R·Δθ");
+    near(
+        v.length_to(c.end[0]).unwrap() - v.length_to(c.start[0]).unwrap(),
+        arc,
+        1e-9,
+        "circle R·Δθ",
+    );
     near(v.length(), v.length_to(600.0).unwrap(), 0.0, "whole");
     assert!(v.length_to(-1.0).is_none() && v.length_to(600.1).is_none());
     let simpson = |a: f64, b: f64| {
         let m = 20_000;
         let h = (b - a) / m as f64;
         let f = |s: f64| v.at(s).unwrap().1.hypot(1.0);
-        (0..=m).map(|i| f(a + i as f64 * h) * if i == 0 || i == m { 1.0 } else if i % 2 == 1 { 4.0 } else { 2.0 }).sum::<f64>() * h / 3.0
+        (0..=m)
+            .map(|i| {
+                f(a + i as f64 * h)
+                    * if i == 0 || i == m {
+                        1.0
+                    } else if i % 2 == 1 {
+                        4.0
+                    } else {
+                        2.0
+                    }
+            })
+            .sum::<f64>()
+            * h
+            / 3.0
     };
     // Piece by piece, so Simpson never straddles a curve's end.
     let mut cuts = vec![0.0, 200.0, 400.0, 600.0];
@@ -141,10 +180,24 @@ fn the_length_in_space_is_the_arc_length() {
         let h = (c.end[0] - c.start[0]) / m as f64;
         let f = |s: f64| flat.at(s).unwrap().1.hypot(1.0);
         let simpson = (0..=m)
-            .map(|i| f(c.start[0] + i as f64 * h) * if i == 0 || i == m { 1.0 } else if i % 2 == 1 { 4.0 } else { 2.0 })
+            .map(|i| {
+                f(c.start[0] + i as f64 * h)
+                    * if i == 0 || i == m {
+                        1.0
+                    } else if i % 2 == 1 {
+                        4.0
+                    } else {
+                        2.0
+                    }
+            })
             .sum::<f64>()
             * h
             / 3.0;
-        near(flat.length_to(c.end[0]).unwrap() - flat.length_to(c.start[0]).unwrap(), simpson, 1e-10, "small Δg");
+        near(
+            flat.length_to(c.end[0]).unwrap() - flat.length_to(c.start[0]).unwrap(),
+            simpson,
+            1e-10,
+            "small Δg",
+        );
     }
 }

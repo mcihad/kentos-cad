@@ -1,9 +1,9 @@
 use kentos_sheet::{
-    *,
     ops::{self, Op},
     plot_profile::{PlotProfile, SavePlotProfiles},
-    print_setup::{SavePageSetups, ApplyPageSetup},
+    print_setup::{ApplyPageSetup, SavePageSetups},
     project::project_sheets,
+    *,
 };
 fn book(c: &serde_json::Value) -> SheetBook {
     let mut b = SheetBook::default();

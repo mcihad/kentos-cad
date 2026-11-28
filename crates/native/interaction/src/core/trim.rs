@@ -566,7 +566,8 @@ impl Tool for Boundary {
         // visible fill cannot prevent editing it; a lone hatch still gives its refusal.
         let hit = edge::pick(p, cx, |e, doc| {
             edge::unlocked(e, doc) && !matches!(e, kentos_commands::Entity::Hatch(_))
-        }).or_else(|| edge::pick(p, cx, edge::unlocked));
+        })
+        .or_else(|| edge::pick(p, cx, edge::unlocked));
         cx.selection.set_hover(hit);
         self.hover = hit.map(|slot| Hover { slot, at: p.raw });
         self.redraw(cx);

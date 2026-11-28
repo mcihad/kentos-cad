@@ -4,8 +4,8 @@
 //! geometry columns or none, and the layer named (after its first table unless named). Ekle checks the key tells the
 //! rows apart and adds the layer; its rows stay in the database and the view reads them as it draws.
 
-use iced::widget::{Column, row};
 use iced::Task;
+use iced::widget::{Column, row};
 use kentos_data::{QueryColumn, QueryTable};
 use kentos_ui::widget::{Choice, InputField, Select};
 
@@ -19,8 +19,7 @@ fn event(e: Event) -> Message {
 }
 
 /// The query's words a column list or a key needs: a column's name can go on the layer's line only without spaces.
-const NO_KEY: &str =
-    "Sorguda tam sayı bir sütun yok: anahtar, satırları ayıran tam sayı bir sütundur (fid, id, gid ya da bir sayaç). Sorguya ekleyin, sonra Sütunları oku'ya basın.";
+const NO_KEY: &str = "Sorguda tam sayı bir sütun yok: anahtar, satırları ayıran tam sayı bir sütundur (fid, id, gid ya da bir sayaç). Sorguya ekleyin, sonra Sütunları oku'ya basın.";
 
 /// A query longer than a layer keeps: its text is the layer's table, at most `MAX_DATA_TEXT` bytes.
 fn too_long(q: &QueryTable) -> bool {
@@ -71,7 +70,12 @@ impl State {
             self.query_key = kentos_data::query::likely_key(cols).map(str::to_owned);
             self.query_geometry = cols.iter().find(|c| c.geometry).map(|c| c.name.clone());
             if self.query_name.trim().is_empty() {
-                self.query_name = QueryTable { sql: sql.to_owned(), key: String::new(), geometry: None }.shown();
+                self.query_name = QueryTable {
+                    sql: sql.to_owned(),
+                    key: String::new(),
+                    geometry: None,
+                }
+                .shown();
             }
         }
         self.query_columns = Some(read);
@@ -121,36 +125,57 @@ pub(super) fn view<'a>(s: &'a State, mut body: Column<'a, Message>) -> Column<'a
     ));
     let reading = s.query_reading;
     let can_read = !s.query.trim().is_empty() && !reading;
-    body = body.push(row![
-        words::secondary(if reading { "Okunuyor…" } else { "Sütunları oku" }, can_read.then(|| event(Event::QueryRead))),
-    ]);
+    body = body.push(row![words::secondary(
+        if reading {
+            "Okunuyor…"
+        } else {
+            "Sütunları oku"
+        },
+        can_read.then(|| event(Event::QueryRead))
+    ),]);
     match &s.query_columns {
         None => {}
         Some(Err(why)) => body = body.push(words::text_line(Line::Warn, why.clone())),
         Some(Ok(cols)) => {
-            let keys: Vec<&QueryColumn> = cols.iter().filter(|c| c.integer && QueryTable::plain(&c.name)).collect();
+            let keys: Vec<&QueryColumn> = cols
+                .iter()
+                .filter(|c| c.integer && QueryTable::plain(&c.name))
+                .collect();
             if keys.is_empty() {
                 body = body.push(words::text_line(Line::Warn, NO_KEY));
                 return body;
             }
             let key_names: Vec<String> = keys.iter().map(|c| c.name.clone()).collect();
-            let at = key_names.iter().position(|k| Some(k) == s.query_key.as_ref());
-            let key = Select::new(key_names.iter().cloned().map(Choice::new), at, |i| event(Event::QueryKey(i))).searchable(false);
+            let at = key_names
+                .iter()
+                .position(|k| Some(k) == s.query_key.as_ref());
+            let key = Select::new(key_names.iter().cloned().map(Choice::new), at, |i| {
+                event(Event::QueryKey(i))
+            })
+            .searchable(false);
             body = body.push(words::field(
                 "Anahtar sütunu",
                 key,
                 Some("Her satırda başka olan tam sayı sütun; eklerken denetlenir.".to_owned()),
             ));
-            let mut geometries: Vec<String> = cols.iter().filter(|c| c.geometry && QueryTable::plain(&c.name)).map(|c| c.name.clone()).collect();
+            let mut geometries: Vec<String> = cols
+                .iter()
+                .filter(|c| c.geometry && QueryTable::plain(&c.name))
+                .map(|c| c.name.clone())
+                .collect();
             geometries.push("Geometrisiz (tablo)".to_owned());
             let at = s
                 .query_geometry
                 .as_ref()
                 .and_then(|g| geometries.iter().position(|n| n == g))
                 .or(Some(geometries.len() - 1));
-            let geometry = Select::new(geometries.into_iter().map(Choice::new), at, |i| event(Event::QueryGeometry(i))).searchable(false);
+            let geometry = Select::new(geometries.into_iter().map(Choice::new), at, |i| {
+                event(Event::QueryGeometry(i))
+            })
+            .searchable(false);
             body = body.push(words::field("Geometri sütunu", geometry, None));
-            let name = InputField::new("Katmanın adı", &s.query_name).on_input(|t| event(Event::QueryName(t)));
+            let name = InputField::new("Katmanın adı", &s.query_name)
+                .on_input(|t| event(Event::QueryName(t)));
             body = body.push(words::field("Katmanın adı", name, None));
             if s.query_chosen().is_some_and(|q| too_long(&q)) {
                 body = body.push(words::text_line(Line::Warn, too_long_words()));
@@ -163,13 +188,23 @@ pub(super) fn view<'a>(s: &'a State, mut body: Column<'a, Message>) -> Column<'a
 /// What a choice of the lists means: the key by its place among the integer columns, the geometry among the geometry
 /// columns (the last place: none).
 pub(super) fn choose(s: &mut State, e: &Event) {
-    let Some(Ok(cols)) = &s.query_columns else { return };
+    let Some(Ok(cols)) = &s.query_columns else {
+        return;
+    };
     match e {
         Event::QueryKey(i) => {
-            s.query_key = cols.iter().filter(|c| c.integer && QueryTable::plain(&c.name)).nth(*i).map(|c| c.name.clone());
+            s.query_key = cols
+                .iter()
+                .filter(|c| c.integer && QueryTable::plain(&c.name))
+                .nth(*i)
+                .map(|c| c.name.clone());
         }
         Event::QueryGeometry(i) => {
-            s.query_geometry = cols.iter().filter(|c| c.geometry && QueryTable::plain(&c.name)).nth(*i).map(|c| c.name.clone());
+            s.query_geometry = cols
+                .iter()
+                .filter(|c| c.geometry && QueryTable::plain(&c.name))
+                .nth(*i)
+                .map(|c| c.name.clone());
         }
         _ => {}
     }

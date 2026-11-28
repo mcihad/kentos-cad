@@ -12,8 +12,10 @@ use kentos_sheet::{
 use serde_json::{Value, json};
 
 fn book() -> SheetBook {
-    let data: Value =
-        serde_json::from_str(include_str!("../../../../../fixtures/sheet/v1/viewport-annotations.json")).unwrap();
+    let data: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/sheet/v1/viewport-annotations.json"
+    ))
+    .unwrap();
     let mut book = SheetBook::default();
     book.sheets
         .push(serde_json::from_value(data["cases"][0]["sheet"].clone()).unwrap());
@@ -34,18 +36,51 @@ fn level_of(book: &SheetBook) -> Option<MapLevel> {
 #[test]
 fn a_level_is_set_whole_taken_off_and_undone() {
     let b0 = book();
-    let a = ops::apply(&b0, &set(json!({"type": "level", "id": "kat-1", "below": true}))).unwrap();
-    assert_eq!(level_of(&a.book), Some(MapLevel { id: "kat-1".into(), below: true, roof: false }));
+    let a = ops::apply(
+        &b0,
+        &set(json!({"type": "level", "id": "kat-1", "below": true})),
+    )
+    .unwrap();
+    assert_eq!(
+        level_of(&a.book),
+        Some(MapLevel {
+            id: "kat-1".into(),
+            below: true,
+            roof: false
+        })
+    );
     // Another level without `below`: not faint (the patch writes the level whole).
     let b = ops::apply(&a.book, &set(json!({"type": "level", "id": "zemin"}))).unwrap();
-    assert_eq!(level_of(&b.book), Some(MapLevel { id: "zemin".into(), below: false, roof: false }));
+    assert_eq!(
+        level_of(&b.book),
+        Some(MapLevel {
+            id: "zemin".into(),
+            below: false,
+            roof: false
+        })
+    );
     // Its inverse puts kat-1 and its faint level below back.
-    let back = b.inverse.iter().fold(b.book.clone(), |book, op| ops::apply(&book, op).unwrap().book);
+    let back = b.inverse.iter().fold(b.book.clone(), |book, op| {
+        ops::apply(&book, op).unwrap().book
+    });
     assert_eq!(level_of(&back), level_of(&a.book));
     // The roof plan (docs/adr/8044 §7) over a level without it, and its inverse: the old level back, no roof.
-    let roof = ops::apply(&b.book, &set(json!({"type": "level", "id": "zemin", "roof": true}))).unwrap();
-    assert_eq!(level_of(&roof.book), Some(MapLevel { id: "zemin".into(), below: false, roof: true }));
-    let undone = roof.inverse.iter().fold(roof.book.clone(), |book, op| ops::apply(&book, op).unwrap().book);
+    let roof = ops::apply(
+        &b.book,
+        &set(json!({"type": "level", "id": "zemin", "roof": true})),
+    )
+    .unwrap();
+    assert_eq!(
+        level_of(&roof.book),
+        Some(MapLevel {
+            id: "zemin".into(),
+            below: false,
+            roof: true
+        })
+    );
+    let undone = roof.inverse.iter().fold(roof.book.clone(), |book, op| {
+        ops::apply(&book, op).unwrap().book
+    });
     assert_eq!(level_of(&undone), level_of(&b.book));
     let all = ops::apply(&b.book, &set(json!({"type": "all"}))).unwrap();
     assert_eq!(level_of(&all.book), None);
@@ -90,7 +125,9 @@ fn an_empty_or_overlong_level_is_refused() {
 fn level_sheets_share_the_ground_and_number_on() {
     use kentos_sheet::levels::{LevelSheetsOptions, level_sheets};
     use kentos_sheet::template::{InstanceOptions, system_template};
-    let t = system_template("sys:cad-teknik").expect("a system template").clone();
+    let t = system_template("sys:cad-teknik")
+        .expect("a system template")
+        .clone();
     let levels = vec![
         ("zemin".to_owned(), "Zemin kat".to_owned()),
         ("kat-1".to_owned(), "1. kat".to_owned()),
@@ -100,11 +137,20 @@ fn level_sheets_share_the_ground_and_number_on() {
         ..Default::default()
     };
     let ids = |sheet: &str| kentos_sheet::create::ids_for(&t, sheet);
-    let made = level_sheets(&SheetBook::default(), &t, &InstanceOptions::default(), &levels, &how, ids)
-        .expect("made");
+    let made = level_sheets(
+        &SheetBook::default(),
+        &t,
+        &InstanceOptions::default(),
+        &levels,
+        &how,
+        ids,
+    )
+    .expect("made");
     let numbers: Vec<&str> = made.made.iter().map(|m| m.number.as_str()).collect();
     assert_eq!(numbers, ["A-101", "A-102"]);
-    let book = ops::apply_all(&SheetBook::default(), &made.ops).expect("applies").book;
+    let book = ops::apply_all(&SheetBook::default(), &made.ops)
+        .expect("applies")
+        .book;
     // Each map's centre, scale and level.
     type Shown = (Option<(f64, f64)>, u32, Option<String>);
     let views: Vec<Shown> = book
@@ -122,25 +168,42 @@ fn level_sheets_share_the_ground_and_number_on() {
             let MapView::Fixed(v) = &m.view else {
                 panic!("a fixed map")
             };
-            (v.center.map(|c| (c.x, c.y)), v.scale, m.level.as_ref().map(|l| l.id.clone()))
+            (
+                v.center.map(|c| (c.x, c.y)),
+                v.scale,
+                m.level.as_ref().map(|l| l.id.clone()),
+            )
         })
         .collect();
     assert_eq!(views[0], (Some((5.0, 4.0)), 100, Some("zemin".into())));
-    assert_eq!(views[1], (Some((5.0, 4.0)), 100, Some("kat-1".into())), "the same ground and scale");
+    assert_eq!(
+        views[1],
+        (Some((5.0, 4.0)), 100, Some("kat-1".into())),
+        "the same ground and scale"
+    );
     assert_eq!(book.sheets[0].name, "A-101 Zemin kat planı");
     assert_eq!(
-        book.sheets[1].drawing_info.as_ref().map(|i| (i.number.as_str(), i.title.as_str())),
+        book.sheets[1]
+            .drawing_info
+            .as_ref()
+            .map(|i| (i.number.as_str(), i.title.as_str())),
         Some(("A-102", "1. kat planı"))
     );
     // Again: Zemin kat is shown, 1. kat too; with `again` a second sheet of Zemin kat, numbered on, its id `-2`.
     let none = level_sheets(&book, &t, &InstanceOptions::default(), &levels, &how, ids);
-    assert_eq!(none.err().map(|e| e.code), Some("levels_have_sheets".to_owned()));
+    assert_eq!(
+        none.err().map(|e| e.code),
+        Some("levels_have_sheets".to_owned())
+    );
     let again = level_sheets(
         &book,
         &t,
         &InstanceOptions::default(),
         &levels[..1],
-        &LevelSheetsOptions { again: true, ..how.clone() },
+        &LevelSheetsOptions {
+            again: true,
+            ..how.clone()
+        },
         ids,
     )
     .expect("made again");

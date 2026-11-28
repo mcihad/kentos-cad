@@ -29,9 +29,30 @@ pub struct Vehicle {
 
 /// Shand et al. (2011)'s classes: small passenger, large passenger, large 4WD.
 pub const VEHICLES: [(&str, Vehicle); 3] = [
-    ("smallPassenger", Vehicle { depth: 0.3, speed: 3.0, product: 0.3 }),
-    ("largePassenger", Vehicle { depth: 0.4, speed: 3.0, product: 0.45 }),
-    ("large4wd", Vehicle { depth: 0.5, speed: 3.0, product: 0.6 }),
+    (
+        "smallPassenger",
+        Vehicle {
+            depth: 0.3,
+            speed: 3.0,
+            product: 0.3,
+        },
+    ),
+    (
+        "largePassenger",
+        Vehicle {
+            depth: 0.4,
+            speed: 3.0,
+            product: 0.45,
+        },
+    ),
+    (
+        "large4wd",
+        Vehicle {
+            depth: 0.5,
+            speed: 3.0,
+            product: 0.6,
+        },
+    ),
 ];
 
 impl Vehicle {
@@ -84,7 +105,13 @@ fn holds_over(criterion: Criterion, weir: &Weir, h: f64) -> bool {
 /// the culvert's flow with the water at the crest. The others are found on the head over the crest, which rises with
 /// the flow: by bisection on the criterion itself to the least head h, the flow the culvert's at the crest + h plus
 /// the road's (bisecting the total flow, each step a performance, took minutes).
-pub fn threshold(culvert: &Culvert, weir: &Weir, tw: f64, criterion: Criterion, top: &Performance) -> Option<f64> {
+pub fn threshold(
+    culvert: &Culvert,
+    weir: &Weir,
+    tw: f64,
+    criterion: Criterion,
+    top: &Performance,
+) -> Option<f64> {
     let upto = top.culvert + top.overtopping;
     let start = culvert.flow_at(weir.crest, tw);
     if matches!(criterion, Criterion::Submerged) {
@@ -152,7 +179,14 @@ pub struct Flood {
 }
 
 /// The hydrograph `points` (hours, m³/s) times `factor` through `culvert` and the road `weir` with its Cd `cd`.
-pub fn flood(culvert: &Culvert, weir: &Weir, tw: f64, points: &[(f64, f64)], factor: f64, cd: f64) -> Flood {
+pub fn flood(
+    culvert: &Culvert,
+    weir: &Weir,
+    tw: f64,
+    points: &[(f64, f64)],
+    factor: f64,
+    cd: f64,
+) -> Flood {
     let scaled: Vec<(f64, f64)> = points.iter().map(|&(t, q)| (t, q * factor)).collect();
     let weir = Weir { cd, ..*weir };
     let peak_flow = scaled.iter().map(|p| p.1).fold(0.0, f64::max);
@@ -168,7 +202,10 @@ pub fn flood(culvert: &Culvert, weir: &Weir, tw: f64, points: &[(f64, f64)], fac
         peak_flow,
         peak,
         submerged: span(Criterion::Submerged),
-        vehicles: VEHICLES.iter().map(|(_, v)| span(Criterion::Vehicle(*v))).collect(),
+        vehicles: VEHICLES
+            .iter()
+            .map(|(_, v)| span(Criterion::Vehicle(*v)))
+            .collect(),
         hazards: (2..=6).map(|k| span(Criterion::Hazard(k))).collect(),
     }
 }

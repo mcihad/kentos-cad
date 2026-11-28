@@ -556,7 +556,12 @@ mod tests {
         let visible = app.selection_tab().expect("the selected area has a tab").id;
         let _ = app.update(Message::Run("view.keyTips"));
         for tab in app.contextual_tabs() {
-            assert_eq!(tip(&app, TipKey::Tab(tab.id)).is_some(), tab.id == visible, "{}", tab.id);
+            assert_eq!(
+                tip(&app, TipKey::Tab(tab.id)).is_some(),
+                tab.id == visible,
+                "{}",
+                tab.id
+            );
         }
         let _ = app.update(Message::Run("edit.deselect"));
         for tab in app.contextual_tabs() {

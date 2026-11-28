@@ -406,7 +406,12 @@ impl Tool for Lengthen {
         self.see(cx);
         if let (Some((slot, at_end)), Some(mouse)) = (self.target, self.mouse) {
             self.target = None;
-            self.apply(slot, at_end, LengthenChange::Dynamic { to: wire(mouse) }, cx);
+            self.apply(
+                slot,
+                at_end,
+                LengthenChange::Dynamic { to: wire(mouse) },
+                cx,
+            );
             self.drawn = Preview::default();
             self.see(cx);
             return Flow::Stay;

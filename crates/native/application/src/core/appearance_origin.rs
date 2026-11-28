@@ -284,7 +284,9 @@ fn printed(doc: &Document, layer: &str, part: &str, value: &str) -> Vec<String> 
             continue;
         };
         let ink = match part {
-            "color" if value.starts_with('#') => kentos_sheet::plot_profile::apply::color(value, style),
+            "color" if value.starts_with('#') => {
+                kentos_sheet::plot_profile::apply::color(value, style)
+            }
             // A theme token (`fg`, `ink`): the pen's own colour when the profile fixes one; not resolved here.
             "color" => match &style.color {
                 kentos_sheet::plot_profile::PlotColor::Black => "#000000".to_owned(),
@@ -298,7 +300,10 @@ fn printed(doc: &Document, layer: &str, part: &str, value: &str) -> Vec<String> 
             },
         };
         if ink != value {
-            out.push(format!("{} · “{}” profili: {ink}", sheet.name, profile.name));
+            out.push(format!(
+                "{} · “{}” profili: {ink}",
+                sheet.name, profile.name
+            ));
         }
     }
     out
@@ -388,7 +393,10 @@ pub fn explain(doc: &Document, slot: Slot) -> Vec<Explained> {
             insert,
         ));
     }
-    for part in out.iter_mut().filter(|p| matches!(p.part, "color" | "lineWeight")) {
+    for part in out
+        .iter_mut()
+        .filter(|p| matches!(p.part, "color" | "lineWeight"))
+    {
         part.printed = printed(doc, &base.layer_id, part.part, &part.value);
     }
     if let Entity::Text(t) = e {
@@ -444,7 +452,9 @@ fn block_parts(
         let style = if b.layer_id.is_empty() {
             insert_layer
         } else {
-            doc.layers().get(&b.layer_id).map_or(insert_layer, |n| &n.style)
+            doc.layers()
+                .get(&b.layer_id)
+                .map_or(insert_layer, |n| &n.style)
         };
         let r = resolve_look(
             OwnLook {
@@ -463,7 +473,11 @@ fn block_parts(
                 .unwrap_or_else(|| r.line_type.label().to_owned()),
             weight(r.line_weight),
         ];
-        for (k, (from, value)) in [r.from[0], r.from[1], r.from[3]].into_iter().zip(values).enumerate() {
+        for (k, (from, value)) in [r.from[0], r.from[1], r.from[3]]
+            .into_iter()
+            .zip(values)
+            .enumerate()
+        {
             let cell = &mut tally[k][index(from)];
             cell.0 += 1;
             if !cell.1.contains(&value) {
@@ -520,7 +534,10 @@ fn block_parts(
 /// override of it (kept through a reload, set back by Katmanları kaynağa döndür) and each sheet viewport's own
 /// override (no reference operation touches it). None for a reference without its layer group.
 fn xref_layers(doc: &Document, x: &kentos_commands::XrefSource) -> Option<Explained> {
-    let group = x.group.as_deref().filter(|g| doc.layers().get(g).is_some())?;
+    let group = x
+        .group
+        .as_deref()
+        .filter(|g| doc.layers().get(g).is_some())?;
     let layers = crate::xrefs_review::group_paths(doc, group)
         .iter()
         .filter(|(id, _)| {

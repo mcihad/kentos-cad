@@ -4,10 +4,10 @@
 //! lengths, vectors and searchable text; a stale sheet and a stopped publication reported, the stopped one resumed.
 //! The expected lengths are the model's lengths times 1000 / the ratio's denominator, computed here, never read from
 //! KentOS's output.
+use crate::files;
 use kentos_commands::{CallEnvelope, CallOp, CommandResult};
 use kentos_domain::{Document, Slot};
 use serde_json::{Value, json};
-use crate::files;
 
 const CASES: &str = include_str!("../../../../../fixtures/commands/v1/cad.sheets.details.json");
 

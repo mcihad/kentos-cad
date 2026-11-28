@@ -298,14 +298,23 @@ fn positions_outside_the_projects_zone_are_said() {
     doc.model.set_settings(settings);
     assert!(app.gnss_zone_line(&points).is_some(), "TM30 does not");
     let area = kentos_project::crs::area(5254).expect("TM30's area");
-    let out = points.iter().filter(|p| !area.holds_near(p.lon, p.lat)).count();
-    assert_eq!(out, points.len(), "every sample position is east of TM30's zone");
+    let out = points
+        .iter()
+        .filter(|p| !area.holds_near(p.lon, p.lat))
+        .count();
+    assert_eq!(
+        out,
+        points.len(),
+        "every sample position is east of TM30's zone"
+    );
     if std::env::var_os("KENTOS_SHOTS").is_some() {
         send(&mut app, Event::Close);
         app.picker = Picker::File(sample("sample.gpx"));
         run(&mut app, "file.import.gnss");
         let mut shot = crate::files_testing::pictured(iced::Size::new(1440., 900.));
-        shot.settle(&mut app, App::view, &mut |app: &mut App, m| drop(app.update(m)));
+        shot.settle(&mut app, App::view, &mut |app: &mut App, m| {
+            drop(app.update(m))
+        });
         crate::files_testing::evidence(&mut shot, &app, "gis-034", "tm30-dilim-disi");
     }
 }
@@ -313,7 +322,12 @@ fn positions_outside_the_projects_zone_are_said() {
 /// The layers of the open drawing by name, with how many objects each holds.
 fn layers(app: &App) -> Vec<(String, usize)> {
     let model = &app.document.as_ref().expect("open").model;
-    model.layers().leaves().into_iter().map(|l| (l.name.clone(), model.count(&l.id))).collect()
+    model
+        .layers()
+        .leaves()
+        .into_iter()
+        .map(|l| (l.name.clone(), model.count(&l.id)))
+        .collect()
 }
 
 /// docs/adr/9329: a new layer is never one of the drawing's. The GPX's points go onto “sample”, its track onto a layer
@@ -331,42 +345,81 @@ fn a_new_layer_is_never_one_of_the_drawings_and_the_lines_have_their_own() {
     assert!(had.contains(&("sample_iz".to_owned(), 1)), "{had:?}");
     // The transformation and the heights are said after the import too.
     let log: Vec<String> = app.log.lines().map(|l| l.text.clone()).collect();
-    assert!(log.iter().any(|l| l.starts_with("“sample.gpx”: dönüşüm ")), "{log:?}");
-    assert!(log.iter().any(|l| l.contains("Kot elipsoit yüksekliğidir")), "{log:?}");
+    assert!(
+        log.iter().any(|l| l.starts_with("“sample.gpx”: dönüşüm ")),
+        "{log:?}"
+    );
+    assert!(
+        log.iter().any(|l| l.contains("Kot elipsoit yüksekliğidir")),
+        "{log:?}"
+    );
     // The NMEA log of the same name: free names.
     app.picker = Picker::File(sample("sample.nmea"));
     run(&mut app, "file.import.gnss");
     let s = window(&app);
-    assert_eq!((s.name_for_test(), s.lines_name_for_test()), ("sample_2", "sample_2_iz"));
+    assert_eq!(
+        (s.name_for_test(), s.lines_name_for_test()),
+        ("sample_2", "sample_2_iz")
+    );
     // A name a layer has: refused with the way to it.
     gnss(&mut app, Gnss::Name("SAMPLE".into()));
     let before = layers(&app);
     gnss(&mut app, Gnss::Run);
     assert_eq!(layers(&app), before, "nothing taken");
-    assert!(matches!(app.exchange, Some(Window::GnssImport(_))), "the window stays");
+    assert!(
+        matches!(app.exchange, Some(Window::GnssImport(_))),
+        "the window stays"
+    );
     // The lines with the points, onto a new layer.
     gnss(&mut app, Gnss::Name("nmea".into()));
     gnss(&mut app, Gnss::LinesTo(super::gnss_import::LinesTo::Points));
     gnss(&mut app, Gnss::Run);
     let now = layers(&app);
-    assert!(now.contains(&("nmea".to_owned(), 5)), "4 fixes and the line together: {now:?}");
+    assert!(
+        now.contains(&("nmea".to_owned(), 5)),
+        "4 fixes and the line together: {now:?}"
+    );
     // Its record: the format, the file, its SHA-256.
     let model = &app.document.as_ref().expect("open").model;
-    let id = model.layers().leaves().into_iter().find(|l| l.name == "nmea").map(|l| l.id.clone()).expect("nmea");
-    let origin = model.layers().info_of(&id).and_then(|i| i.origin).expect("its origin");
+    let id = model
+        .layers()
+        .leaves()
+        .into_iter()
+        .find(|l| l.name == "nmea")
+        .map(|l| l.id.clone())
+        .expect("nmea");
+    let origin = model
+        .layers()
+        .info_of(&id)
+        .and_then(|i| i.origin)
+        .expect("its origin");
     assert_eq!(origin.driver, "nmea");
-    assert!(origin.address.ends_with("sample.nmea"), "{}", origin.address);
+    assert!(
+        origin.address.ends_with("sample.nmea"),
+        "{}",
+        origin.address
+    );
     // Written and opened again: the layers, their objects and their records are there.
     let path = crate::files_testing::scratch("gnss-yeniden").join("gnss.kcad");
     crate::document::write(&model.to_snapshot_v2(), &path).expect("written");
     let again = crate::document::Document::read(&path).expect("read again");
     let leaves = again.model.layers().leaves();
-    let find = |name: &str| leaves.iter().find(|l| l.name == name).map(|l| (l.id.clone(), again.model.count(&l.id)));
+    let find = |name: &str| {
+        leaves
+            .iter()
+            .find(|l| l.name == name)
+            .map(|l| (l.id.clone(), again.model.count(&l.id)))
+    };
     assert_eq!(find("sample").map(|(_, n)| n), Some(9));
     assert_eq!(find("sample_iz").map(|(_, n)| n), Some(1));
     assert_eq!(find("nmea").map(|(_, n)| n), Some(5));
     let (sample_id, _) = find("sample").expect("sample");
-    let kept = again.model.layers().info_of(&sample_id).and_then(|i| i.origin).expect("kept");
+    let kept = again
+        .model
+        .layers()
+        .info_of(&sample_id)
+        .and_then(|i| i.origin)
+        .expect("kept");
     assert_eq!(kept.driver, "gpx");
 }
 

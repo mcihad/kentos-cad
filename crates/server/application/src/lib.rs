@@ -7,8 +7,8 @@
 
 pub mod access;
 pub mod admin;
-pub mod attachments;
 pub mod api_keys;
+pub mod attachments;
 pub mod audit_catalog;
 pub mod backup;
 pub mod blobs;

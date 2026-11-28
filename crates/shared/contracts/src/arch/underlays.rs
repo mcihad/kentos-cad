@@ -116,16 +116,25 @@ impl ModelUnderlay {
     /// The first problem of a list of underlays, with its path (`underlays.{i}.field`).
     pub fn list_problem(list: &[ModelUnderlay]) -> Option<(String, String)> {
         if list.len() > MAX_UNDERLAYS {
-            return Some(("underlays".into(), format!("En çok {MAX_UNDERLAYS} altlık model tutulur.")));
+            return Some((
+                "underlays".into(),
+                format!("En çok {MAX_UNDERLAYS} altlık model tutulur."),
+            ));
         }
         for (i, u) in list.iter().enumerate() {
             let at = |f: &str| format!("underlays.{i}.{f}");
             let n = i + 1;
             if !is_id(&u.id) {
-                return Some((at("id"), format!("{n}. altlığın kimliği küçük harfli, tireli bir UUID olmalı.")));
+                return Some((
+                    at("id"),
+                    format!("{n}. altlığın kimliği küçük harfli, tireli bir UUID olmalı."),
+                ));
             }
             if list[..i].iter().any(|v| v.id == u.id) {
-                return Some((at("id"), format!("{n}. altlığın kimliği başka bir altlıkta da var.")));
+                return Some((
+                    at("id"),
+                    format!("{n}. altlığın kimliği başka bir altlıkta da var."),
+                ));
             }
             if let Some(why) = label_problem(&u.name, MAX_UNDERLAY_LABEL) {
                 return Some((at("name"), format!("{n}. altlığın adı {why}.")));
@@ -133,17 +142,30 @@ impl ModelUnderlay {
             if let Some(why) = label_problem(&u.file, MAX_UNDERLAY_PATH) {
                 return Some((at("file"), format!("{n}. altlığın dosyası {why}.")));
             }
-            if u.sha256.len() != 64 || !u.sha256.chars().all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c)) {
+            if u.sha256.len() != 64
+                || !u
+                    .sha256
+                    .chars()
+                    .all(|c| c.is_ascii_digit() || ('a'..='f').contains(&c))
+            {
                 return Some((
                     at("sha256"),
-                    format!("{n}. altlığın dosyası SHA-256'sıyla (64 küçük onaltılık rakam) anılır."),
+                    format!(
+                        "{n}. altlığın dosyası SHA-256'sıyla (64 küçük onaltılık rakam) anılır."
+                    ),
                 ));
             }
             if let Some(why) = label_problem(&u.schema, 64) {
                 return Some((at("schema"), format!("{n}. altlığın şeması {why}.")));
             }
-            for (field, value, words) in [("discipline", &u.discipline, "disiplini"), ("revision", &u.revision, "revizyonu")] {
-                if let Some(why) = value.as_deref().and_then(|v| label_problem(v, MAX_UNDERLAY_LABEL)) {
+            for (field, value, words) in [
+                ("discipline", &u.discipline, "disiplini"),
+                ("revision", &u.revision, "revizyonu"),
+            ] {
+                if let Some(why) = value
+                    .as_deref()
+                    .and_then(|v| label_problem(v, MAX_UNDERLAY_LABEL))
+                {
                     return Some((at(field), format!("{n}. altlığın {words} {why}.")));
                 }
             }
@@ -175,23 +197,41 @@ mod tests {
     fn an_underlay_is_written_and_checked_as_a_file_by_its_digest() {
         let u = one();
         let json = serde_json::to_value(&u).unwrap();
-        assert!(json.get("placement").is_none() && json.get("shown").is_none(), "the defaults are not written");
+        assert!(
+            json.get("placement").is_none() && json.get("shown").is_none(),
+            "the defaults are not written"
+        );
         let back: ModelUnderlay = serde_json::from_value(json).unwrap();
         assert_eq!(back, u);
         let mut hidden = one();
         (hidden.shown, hidden.placement) = (false, UnderlayPlacement::Origin);
         let json = serde_json::to_value(&hidden).unwrap();
-        assert_eq!((json["shown"].clone(), json["placement"].clone()), (false.into(), "origin".into()));
+        assert_eq!(
+            (json["shown"].clone(), json["placement"].clone()),
+            (false.into(), "origin".into())
+        );
         assert_eq!(ModelUnderlay::list_problem(&[one()]), None);
         let mut bad = one();
         bad.sha256 = "AB".repeat(32);
-        assert_eq!(ModelUnderlay::list_problem(&[bad]).map(|p| p.0), Some("underlays.0.sha256".into()));
+        assert_eq!(
+            ModelUnderlay::list_problem(&[bad]).map(|p| p.0),
+            Some("underlays.0.sha256".into())
+        );
         let mut bad = one();
         bad.name = " Statik".into();
-        assert_eq!(ModelUnderlay::list_problem(&[bad]).map(|p| p.0), Some("underlays.0.name".into()));
-        assert_eq!(ModelUnderlay::list_problem(&[one(), one()]).map(|p| p.0), Some("underlays.1.id".into()));
+        assert_eq!(
+            ModelUnderlay::list_problem(&[bad]).map(|p| p.0),
+            Some("underlays.0.name".into())
+        );
+        assert_eq!(
+            ModelUnderlay::list_problem(&[one(), one()]).map(|p| p.0),
+            Some("underlays.1.id".into())
+        );
         let mut bad = one();
         bad.discipline = Some(String::new());
-        assert_eq!(ModelUnderlay::list_problem(&[bad]).map(|p| p.0), Some("underlays.0.discipline".into()));
+        assert_eq!(
+            ModelUnderlay::list_problem(&[bad]).map(|p| p.0),
+            Some("underlays.0.discipline".into())
+        );
     }
 }

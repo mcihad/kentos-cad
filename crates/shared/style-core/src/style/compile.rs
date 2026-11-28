@@ -374,7 +374,12 @@ fn turned_text(st: &MarkerStyle) -> MarkerStyle {
 
 // ── Lines ──────────────────────────────────────────────────────────────
 
-pub(super) fn stroke_style(layer: &SimpleLine, level: f64, t: &dyn Values, env: &Env) -> Option<StrokeStyle> {
+pub(super) fn stroke_style(
+    layer: &SimpleLine,
+    level: f64,
+    t: &dyn Values,
+    env: &Env,
+) -> Option<StrokeStyle> {
     let color = dd_color(&layer.color, t).filter(|c| !c.is_empty())?;
     let unit = layer.base.unit;
     let width = dd_number(&layer.width, t, 0.0);
@@ -525,7 +530,9 @@ pub(super) fn emit_line_layer_on(
                 }
             }
             if let Some(Ok(marks)) = marks {
-                for mark in marks { mark.paint(&style, l.base.unit, env, sink); }
+                for mark in marks {
+                    mark.paint(&style, l.base.unit, env, sink);
+                }
             }
         }
         Layer::MarkerLine(l) => emit_markers_along(l, &path, closed, level, t, env, sink),

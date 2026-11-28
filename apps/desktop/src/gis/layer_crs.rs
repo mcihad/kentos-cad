@@ -85,7 +85,10 @@ impl App {
             let said = match (&out.crs, out.changed) {
                 (_, false) => format!("“{name}” katmanının kaynak sistemi zaten böyle."),
                 (Some(c), true) => {
-                    format!("“{name}” katmanının kaynak sistemi: {}. Nesneler değişmedi.", c.name)
+                    format!(
+                        "“{name}” katmanının kaynak sistemi: {}. Nesneler değişmedi.",
+                        c.name
+                    )
                 }
                 (None, true) => format!("“{name}” katmanının kaynak sistemi kaydı silindi."),
             };
@@ -168,7 +171,6 @@ impl App {
                     });
             moving = moving.submenu(*datum, list);
         }
-        menu.submenu("Dönüştür", moving)
-            .icon(icon("geoReproject"))
+        menu.submenu("Dönüştür", moving).icon(icon("geoReproject"))
     }
 }

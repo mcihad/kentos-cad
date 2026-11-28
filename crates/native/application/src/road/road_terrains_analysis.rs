@@ -3,8 +3,8 @@
 //! written. The shared cases are `fixtures/commands/v1/road.terrains.analysis.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, TerrainBand, TerrainBands, TerrainGridSlope, TerrainRoughness, TerrainsAnalysed,
-    TerrainsAnalysis,
+    CommandResult, CommandWarning, TerrainBand, TerrainBands, TerrainGridSlope, TerrainRoughness,
+    TerrainsAnalysed, TerrainsAnalysis,
 };
 use kentos_domain::Document;
 use kentos_road::surface::{AnalysisError, Measure, Surface};
@@ -24,14 +24,31 @@ fn count(n: usize) -> u32 {
 
 /// The query's own values judged, before anything is read.
 fn judged(input: &TerrainsAnalysis) -> Result<(), Stop> {
-    if input.elevations.is_none() && input.slopes.is_none() && input.aspects.is_none() && !input.roughness && input.grid.is_none() {
-        return Err(invalid("Bir şey sorun: elevations, slopes, aspects, roughness ya da grid.", ""));
+    if input.elevations.is_none()
+        && input.slopes.is_none()
+        && input.aspects.is_none()
+        && !input.roughness
+        && input.grid.is_none()
+    {
+        return Err(invalid(
+            "Bir şey sorun: elevations, slopes, aspects, roughness ya da grid.",
+            "",
+        ));
     }
-    for (breaks, path) in [(&input.elevations, "elevations"), (&input.slopes, "slopes"), (&input.aspects, "aspects")] {
+    for (breaks, path) in [
+        (&input.elevations, "elevations"),
+        (&input.slopes, "slopes"),
+        (&input.aspects, "aspects"),
+    ] {
         if let Some(b) = breaks
-            && (b.len() < 2 || b.iter().any(|v| !v.is_finite()) || b.windows(2).any(|w| w[0] >= w[1]))
+            && (b.len() < 2
+                || b.iter().any(|v| !v.is_finite())
+                || b.windows(2).any(|w| w[0] >= w[1]))
         {
-            return Err(invalid("Aralık sınırları en az iki, sonlu ve artan sayılar olmalı.", path));
+            return Err(invalid(
+                "Aralık sınırları en az iki, sonlu ve artan sayılar olmalı.",
+                path,
+            ));
         }
     }
     if input.grid.is_some_and(|c| !(c.is_finite() && c > 0.0)) {
@@ -40,8 +57,15 @@ fn judged(input: &TerrainsAnalysis) -> Result<(), Stop> {
     Ok(())
 }
 
-fn banded(surface: &Surface, measure: Measure, breaks: &[f64], pieces: bool) -> Result<TerrainBands, Stop> {
-    let (b, parts) = surface.bands(measure, breaks, pieces).map_err(|_| invalid("Aralık sınırları geçerli değil.", ""))?;
+fn banded(
+    surface: &Surface,
+    measure: Measure,
+    breaks: &[f64],
+    pieces: bool,
+) -> Result<TerrainBands, Stop> {
+    let (b, parts) = surface
+        .bands(measure, breaks, pieces)
+        .map_err(|_| invalid("Aralık sınırları geçerli değil.", ""))?;
     let mut parts = parts.into_iter();
     Ok(TerrainBands {
         bands: b
@@ -64,19 +88,42 @@ fn banded(surface: &Surface, measure: Measure, breaks: &[f64], pieces: bool) -> 
 }
 
 /// The analysis now, and its warnings.
-pub(crate) fn answer(doc: &Document, input: &TerrainsAnalysis) -> Result<(TerrainsAnalysed, Vec<CommandWarning>), Stop> {
+pub(crate) fn answer(
+    doc: &Document,
+    input: &TerrainsAnalysis,
+) -> Result<(TerrainsAnalysed, Vec<CommandWarning>), Stop> {
     terrains::terrain_project(doc)?;
     judged(input)?;
     let id = crate::road_profiles::surface_id(doc, &input.surface, "surface")?;
-    let def = terrains::surfaces(doc).iter().find(|s| s.id == id).cloned().ok_or(Stop::Cancelled)?;
+    let def = terrains::surfaces(doc)
+        .iter()
+        .find(|s| s.id == id)
+        .cloned()
+        .ok_or(Stop::Cancelled)?;
     let made = terrains::make(doc, &def);
     let surface = made.built()?;
     let (area, surface_area) = surface.areas();
-    let elevations = input.elevations.as_deref().map(|b| banded(surface, Measure::Elevation, b, input.pieces)).transpose()?;
-    let slopes = input.slopes.as_deref().map(|b| banded(surface, Measure::Slope, b, input.pieces)).transpose()?;
-    let aspects = input.aspects.as_deref().map(|b| banded(surface, Measure::Aspect, b, input.pieces)).transpose()?;
+    let elevations = input
+        .elevations
+        .as_deref()
+        .map(|b| banded(surface, Measure::Elevation, b, input.pieces))
+        .transpose()?;
+    let slopes = input
+        .slopes
+        .as_deref()
+        .map(|b| banded(surface, Measure::Slope, b, input.pieces))
+        .transpose()?;
+    let aspects = input
+        .aspects
+        .as_deref()
+        .map(|b| banded(surface, Measure::Aspect, b, input.pieces))
+        .transpose()?;
     let roughness = if input.roughness {
-        surface.roughness().map(|r| TerrainRoughness { mean: r.mean, max: r.max, at: r.at })
+        surface.roughness().map(|r| TerrainRoughness {
+            mean: r.mean,
+            max: r.max,
+            at: r.at,
+        })
     } else {
         None
     };
@@ -92,7 +139,10 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsAnalysis) -> Result<(Terrai
             }),
             Err(AnalysisError::TooMany) => {
                 return Err(invalid(
-                    &format!("Izgara bu hücreyle {} hücreden çok tutuyor; hücreyi büyütün.", kentos_road::surface::MAX_GRID_CELLS),
+                    &format!(
+                        "Izgara bu hücreyle {} hücreden çok tutuyor; hücreyi büyütün.",
+                        kentos_road::surface::MAX_GRID_CELLS
+                    ),
                     "grid",
                 ));
             }
@@ -100,19 +150,37 @@ pub(crate) fn answer(doc: &Document, input: &TerrainsAnalysis) -> Result<(Terrai
         },
         None => None,
     };
-    Ok((TerrainsAnalysed { surface: id, area, surface_area, elevations, slopes, aspects, roughness, grid }, Vec::new()))
+    Ok((
+        TerrainsAnalysed {
+            surface: id,
+            area,
+            surface_area,
+            elevations,
+            slopes,
+            aspects,
+            roughness,
+            grid,
+        },
+        Vec::new(),
+    ))
 }
 
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &TerrainsAnalysis) -> CommandResult<()> {
     match answer(cx.doc, input) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsAnalysis) -> CommandResult<TerrainsAnalysed> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &TerrainsAnalysis,
+) -> CommandResult<TerrainsAnalysed> {
     match answer(cx.doc, input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),
@@ -120,11 +188,17 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &TerrainsAnalysis) -> CommandResul
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TerrainsAnalysis) -> CommandResult<TerrainsAnalysed> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TerrainsAnalysis,
+) -> CommandResult<TerrainsAnalysed> {
     plan(cx, &input)
 }
 
 /// The analysis for a window, or why it does not read.
-pub fn preview(doc: &Document, input: &TerrainsAnalysis) -> Result<(TerrainsAnalysed, Vec<CommandWarning>), String> {
+pub fn preview(
+    doc: &Document,
+    input: &TerrainsAnalysis,
+) -> Result<(TerrainsAnalysed, Vec<CommandWarning>), String> {
     answer(doc, input).map_err(crate::road_corridors::words)
 }

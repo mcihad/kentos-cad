@@ -264,8 +264,12 @@ impl Form {
                 {
                     // Each line at its own height, or why at the mean (docs/adr/2900 §3).
                     match &read.heights {
-                        Some(Ok(model)) => lines.push((Line::Info, own_height_note(h, model.as_deref()))),
-                        Some(Err(why)) => lines.push((Line::Info, format!("{} {why}", grid_note(h)))),
+                        Some(Ok(model)) => {
+                            lines.push((Line::Info, own_height_note(h, model.as_deref())))
+                        }
+                        Some(Err(why)) => {
+                            lines.push((Line::Info, format!("{} {why}", grid_note(h))))
+                        }
                         None => lines.push((Line::Info, grid_note(h))),
                     }
                 }
@@ -329,45 +333,54 @@ impl Form {
             };
             let table = if reduced && own {
                 result_table(
-                    &super::parts::axis_heads(model, &[
-                        "Nokta",
-                        "Semt",
-                        "Zeminde (m)",
-                        "Düzlemde (m)",
-                        "Çarpan",
-                        "Y (sağa)",
-                        "X (yukarı)",
-                        "Z (m)",
-                        "h (m)",
-                    ]),
+                    &super::parts::axis_heads(
+                        model,
+                        &[
+                            "Nokta",
+                            "Semt",
+                            "Zeminde (m)",
+                            "Düzlemde (m)",
+                            "Çarpan",
+                            "Y (sağa)",
+                            "X (yukarı)",
+                            "Z (m)",
+                            "h (m)",
+                        ],
+                    ),
                     rows,
                     &[false, true, true, true, true, true, true, true, true],
                 )
             } else if reduced {
                 result_table(
-                    &super::parts::axis_heads(model, &[
-                        "Nokta",
-                        "Semt",
-                        "Zeminde (m)",
-                        "Düzlemde (m)",
-                        "Çarpan",
-                        "Y (sağa)",
-                        "X (yukarı)",
-                        "Z (m)",
-                    ]),
+                    &super::parts::axis_heads(
+                        model,
+                        &[
+                            "Nokta",
+                            "Semt",
+                            "Zeminde (m)",
+                            "Düzlemde (m)",
+                            "Çarpan",
+                            "Y (sağa)",
+                            "X (yukarı)",
+                            "Z (m)",
+                        ],
+                    ),
                     rows,
                     &[false, true, true, true, true, true, true, true],
                 )
             } else {
                 result_table(
-                    &super::parts::axis_heads(model, &[
-                        "Nokta",
-                        "Semt",
-                        "Yatay uzunluk (m)",
-                        "Y (sağa)",
-                        "X (yukarı)",
-                        "Z (m)",
-                    ]),
+                    &super::parts::axis_heads(
+                        model,
+                        &[
+                            "Nokta",
+                            "Semt",
+                            "Yatay uzunluk (m)",
+                            "Y (sağa)",
+                            "X (yukarı)",
+                            "Z (m)",
+                        ],
+                    ),
                     rows,
                     &[false, true, true, true, true, true],
                 )

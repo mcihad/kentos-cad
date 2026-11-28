@@ -479,7 +479,7 @@ pub struct View {
     /// Optional residual vertex stream; false for legacy backends. This never changes model geometry.
     pub position_low: bool,
     /// Explicit physical CAD output precision; screen/unit choices keep their existing geometry.
-    pub plot_precision:bool,
+    pub plot_precision: bool,
     pub fills: bool,
     pub area_edges: bool,
     pub map: Option<&'static kentos_geometry_core::crs::map::MapProjection>,
@@ -516,7 +516,9 @@ pub use kentos_geometry_core::geom::deep::Deep;
 
 impl PartialEq for View {
     fn eq(&self, o: &Self) -> bool {
-        self.position_low == o.position_low && self.plot_precision == o.plot_precision && self.fills == o.fills
+        self.position_low == o.position_low
+            && self.plot_precision == o.plot_precision
+            && self.fills == o.fills
             && self.cad_phase == o.cad_phase
             && self.area_edges == o.area_edges
             && self.walls == o.walls
@@ -540,7 +542,7 @@ impl Default for View {
     fn default() -> Self {
         View {
             position_low: false,
-            plot_precision:false,
+            plot_precision: false,
             fills: true,
             area_edges: true,
             map: None,
@@ -661,8 +663,8 @@ struct Cx {
     /// The screen's curves round to this world tolerance outside a deep view (`View::curve_tolerance`); none while a
     /// block's definition is recorded (its units are not the drawing's).
     curve_tolerance: Option<f64>,
-    plot_precision:bool,
-    precision_error:Option<String>,
+    plot_precision: bool,
+    precision_error: Option<String>,
     patches: Patches,
     dots_left: u64,
     px_per_m: Option<f64>,
@@ -729,18 +731,23 @@ pub fn build_layer_in(
     };
     let mut sink = BatchSink::new(origin);
     sink.set_position_low(view.position_low);
-    sink.set_line_lod(view.line_lod && view.map.is_none() && !view.plot_precision && view.deep.is_none());
+    sink.set_line_lod(
+        view.line_lod && view.map.is_none() && !view.plot_precision && view.deep.is_none(),
+    );
     sink.set_map(view.map);
     let mut buf = Vec::new();
     let mut piece_at = 0usize;
     let mut cx = Cx {
-        curve_lod: view.curve_lod && view.map.is_none() && !view.plot_precision && view.deep.is_none(),
+        curve_lod: view.curve_lod
+            && view.map.is_none()
+            && !view.plot_precision
+            && view.deep.is_none(),
         deep: view.deep,
-        curve_tolerance: view
-            .curve_tolerance
-            .filter(|t| *t > 0.0 && view.deep.is_none() && view.map.is_none() && !view.plot_precision),
-        plot_precision:view.plot_precision,
-        precision_error:None,
+        curve_tolerance: view.curve_tolerance.filter(|t| {
+            *t > 0.0 && view.deep.is_none() && view.map.is_none() && !view.plot_precision
+        }),
+        plot_precision: view.plot_precision,
+        precision_error: None,
         patches: Patches::default(),
         dots_left: MOST_DOTS,
         px_per_m: frame.map(|f| f.px_per_m),
@@ -752,7 +759,7 @@ pub fn build_layer_in(
         && view.walls.is_none()
         && !view.plot_precision
         && view.deep.is_none())
-        .then(|| instances::Instancer::new(store, o));
+    .then(|| instances::Instancer::new(store, o));
     for (i, &id) in o.ids.iter().enumerate() {
         let [mode, a, simple, color] = [
             o.objects[4 * i],
@@ -869,7 +876,9 @@ pub fn build_layer_in(
             r, &taken, program, &table, &env, clip, frame, &mut sink, &mut cx,
         );
     }
-    if let Some(error)=cx.precision_error{return Err(error);}
+    if let Some(error) = cx.precision_error {
+        return Err(error);
+    }
     Ok(sink.finish())
 }
 
@@ -890,10 +899,13 @@ fn output_parts(
     // Bulged edges as points the same way; a CAD line type's dash is still measured on `s` itself.
     let refined = round.and_then(|d| deep::refined(s, &d));
     let s = refined.as_ref().unwrap_or(s);
-    let tolerance = (cx.plot_precision).then_some(js_max(env.plot_scale,1e-6) * 0.005 / 1000.);
+    let tolerance = (cx.plot_precision).then_some(js_max(env.plot_scale, 1e-6) * 0.005 / 1000.);
     match styled_parts_precision(s, clip, buf, tolerance) {
         Ok(parts) => match cx.deep {
-            Some(d) => parts.into_iter().map(|g| deep::split(g, &d.bounds)).collect(),
+            Some(d) => parts
+                .into_iter()
+                .map(|g| deep::split(g, &d.bounds))
+                .collect(),
             None => parts,
         },
         Err(error) => {
@@ -1873,7 +1885,7 @@ fn take(
     cx: &mut Cx,
     taken: &mut Taken,
 ) {
-    let parts=output_parts(shape,clip,buf,env,cx);
+    let parts = output_parts(shape, clip, buf, env, cx);
     let mut one = |g: Geom| {
         match (r, g) {
             (Renderer::Heatmap { weight, .. }, Geom::Marker(at)) => {

@@ -2,7 +2,7 @@
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::entity::{Entity, Shape, ellipse_geom};
 use kentos_geometry_core::geom::ellipse::{ellipse_point, is_full_ellipse};
-use kentos_geometry_core::jsmath::{PI, TAU, cos, sin, js_hypot};
+use kentos_geometry_core::jsmath::{PI, TAU, cos, js_hypot, sin};
 use kentos_geometry_core::ops::grips::{entity_grips, move_grip};
 
 fn close(a: Vec2, b: Vec2) {

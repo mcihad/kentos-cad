@@ -36,13 +36,22 @@ pub const UNITS: &[(&str, &str)] = &[
     ),
     ("elevation", "Düşey metre: kot, z, yükseklik."),
     ("volume", "Hacim: m³ (alan × düşey metre)."),
-    ("volume-m", "Taşıma momenti: m³·m (hacim × taşıma uzaklığı)."),
+    (
+        "volume-m",
+        "Taşıma momenti: m³·m (hacim × taşıma uzaklığı).",
+    ),
     ("discharge", "Debi: m³/s."),
     ("velocity", "Hız: m/s."),
     ("rainfall", "Yağış şiddeti: mm/sa."),
     ("money", "Para: tanımın para biriminde."),
-    ("money/volume", "Birim fiyat: para / m³, tanımın para biriminde."),
-    ("money/volume-km", "Taşıma birim fiyatı: para / (m³·km), tanımın para biriminde."),
+    (
+        "money/volume",
+        "Birim fiyat: para / m³, tanımın para biriminde.",
+    ),
+    (
+        "money/volume-km",
+        "Taşıma birim fiyatı: para / (m³·km), tanımın para biriminde.",
+    ),
     (
         "m",
         "Her sistemde metre: izdüşümün parametreleri, ölçme doğrulukları.",
@@ -123,11 +132,20 @@ pub const UNITS: &[(&str, &str)] = &[
     ),
     ("km/h", "Kilometre bölü saat."),
     ("t/m3", "Yoğunluk: ton bölü metreküp."),
-    ("m2/s", "Metre başına debi: m³/s bölü metre, birim genişlikten geçen su (yolu aşan suyun metresi)."),
+    (
+        "m2/s",
+        "Metre başına debi: m³/s bölü metre, birim genişlikten geçen su (yolu aşan suyun metresi).",
+    ),
     ("m/s2", "Metre bölü saniye kare: ivme ve yavaşlama."),
-    ("m/s3", "Metre bölü saniye küp: ivmenin değişme hızı (klotoidde konfor)."),
+    (
+        "m/s3",
+        "Metre bölü saniye küp: ivmenin değişme hızı (klotoidde konfor).",
+    ),
     ("s", "Saniye."),
-    ("m2", "Metre kare: bir konum kovaryansının ve varyansının birimi (σ²)."),
+    (
+        "m2",
+        "Metre kare: bir konum kovaryansının ve varyansının birimi (σ²).",
+    ),
     (
         "day-min",
         "Günün dakikası: 0 gece yarısı, 1440 ertesi gece yarısı (07:30 450'dir).",
@@ -167,7 +185,10 @@ pub const UNITS: &[(&str, &str)] = &[
     ("min", "Dakika."),
     ("h", "Saat."),
     ("L", "Litre: yakıt."),
-    ("L/kWh", "Litre bölü kilovatsaat: motorun özgül yakıt tüketimi."),
+    (
+        "L/kWh",
+        "Litre bölü kilovatsaat: motorun özgül yakıt tüketimi.",
+    ),
     ("L/h", "Litre bölü saat: rölantide yakıt."),
     ("kg/L", "Kilogram bölü litre: yakıtın litresinin salımı."),
     ("volume/h", "Saatte hacim: üretim."),

@@ -9,7 +9,11 @@ use kentos_interaction::Level;
 fn square() -> (Bench, kentos_domain::Slot) {
     let mut b = Bench::on(crate::common::EMPTY);
     b.draft.snap = false;
-    let slot = b.add_path("cizim", &[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], true);
+    let slot = b.add_path(
+        "cizim",
+        &[[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]],
+        true,
+    );
     hedef_alan(&mut b, slot);
     (b, slot)
 }
@@ -18,7 +22,11 @@ fn square() -> (Bench, kentos_domain::Slot) {
 fn hedef_alan(b: &mut Bench, slot: kentos_domain::Slot) {
     b.selection.set([slot]);
     b.start("areaSplit");
-    assert!(b.session.prompt().text().contains("Hedef alan (H)"), "{}", b.session.prompt().text());
+    assert!(
+        b.session.prompt().text().contains("Hedef alan (H)"),
+        "{}",
+        b.session.prompt().text()
+    );
     assert!(b.type_text("H"));
 }
 
@@ -50,13 +58,22 @@ fn areas(b: &Bench) -> Vec<(f64, f64)> {
 fn the_piece_asked_for_lies_beside_the_edge() {
     let (mut b, _) = square();
     b.click(5.0, 0.0);
-    assert!(b.run(|s, _| s.prompt().step.contains("ayrılacak alanı")), "the edge taken");
+    assert!(
+        b.run(|s, _| s.prompt().step.contains("ayrılacak alanı")),
+        "the edge taken"
+    );
     assert!(b.type_text("40"));
     b.confirm();
     let got = areas(&b);
     assert_eq!(got.len(), 2, "{got:?}");
-    assert!((got[0].0 - 40.0).abs() < 1e-9 && (got[1].0 - 60.0).abs() < 1e-9, "{got:?}");
-    assert!(got[0].1.abs() < 1e-9, "the 40 m² piece is the one on the south edge: {got:?}");
+    assert!(
+        (got[0].0 - 40.0).abs() < 1e-9 && (got[1].0 - 60.0).abs() < 1e-9,
+        "{got:?}"
+    );
+    assert!(
+        got[0].1.abs() < 1e-9,
+        "the 40 m² piece is the one on the south edge: {got:?}"
+    );
     assert_eq!(b.last_level(), Some(Level::Success), "{:?}", b.last_text());
     // One undo step takes the cut back.
     assert!(b.doc.undo().is_some());
@@ -71,7 +88,10 @@ fn karsi_taraf_gives_the_target_to_the_far_side() {
     assert!(b.type_text("T"));
     b.confirm();
     let got = areas(&b);
-    assert!((got[0].0 - 30.0).abs() < 1e-9 && (got[0].1 - 7.0).abs() < 1e-9, "the 30 m² piece is the north one: {got:?}");
+    assert!(
+        (got[0].0 - 30.0).abs() < 1e-9 && (got[0].1 - 7.0).abs() < 1e-9,
+        "the 30 m² piece is the north one: {got:?}"
+    );
 }
 
 #[test]
@@ -83,22 +103,38 @@ fn a_target_the_area_cannot_give_is_said_and_nothing_is_cut() {
     assert!(b.type_text("120"));
     b.confirm();
     assert_eq!(b.doc.revision(), revision);
-    let said: Vec<_> = b.said(before).into_iter().map(|(_, t)| t.to_owned()).collect();
-    assert!(said.iter().any(|t| t.contains("alanın tamamından küçük")), "{said:?}");
+    let said: Vec<_> = b
+        .said(before)
+        .into_iter()
+        .map(|(_, t)| t.to_owned())
+        .collect();
+    assert!(
+        said.iter().any(|t| t.contains("alanın tamamından küçük")),
+        "{said:?}"
+    );
 }
 
 #[test]
 fn an_area_with_a_hole_is_left_to_alan_bol() {
     let mut b = Bench::on(crate::common::EMPTY);
-    let w = |q: [f64; 2]| kentos_commands::Vec2 { x: E + q[0], y: N + q[1] };
+    let w = |q: [f64; 2]| kentos_commands::Vec2 {
+        x: E + q[0],
+        y: N + q[1],
+    };
     let path = kentos_commands::PathEntity {
         space_separator: None,
         ms: None,
         base: crate::common::base("cizim"),
-        pts: [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]].into_iter().map(w).collect(),
+        pts: [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]]
+            .into_iter()
+            .map(w)
+            .collect(),
         bulges: None,
         holes: Some(vec![kentos_commands::RingGeometry {
-            pts: [[4.0, 4.0], [6.0, 4.0], [6.0, 6.0], [4.0, 6.0]].into_iter().map(w).collect(),
+            pts: [[4.0, 4.0], [6.0, 4.0], [6.0, 6.0], [4.0, 6.0]]
+                .into_iter()
+                .map(w)
+                .collect(),
             bulges: None,
             zs: None,
         }]),
@@ -113,5 +149,9 @@ fn an_area_with_a_hole_is_left_to_alan_bol() {
     b.start("areaSplit");
     assert!(b.type_text("H"));
     b.click(5.0, 0.0);
-    assert!(b.last_text().is_some_and(|t| t.contains("deliksiz")), "{:?}", b.last_text());
+    assert!(
+        b.last_text().is_some_and(|t| t.contains("deliksiz")),
+        "{:?}",
+        b.last_text()
+    );
 }

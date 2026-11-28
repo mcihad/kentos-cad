@@ -49,7 +49,13 @@ pub struct Shown {
 
 impl Shown {
     pub fn new(session: u64, uids: Option<Vec<String>>) -> Self {
-        Self { session, uids, tolerance: None, focus: None, made: RefCell::new(None) }
+        Self {
+            session,
+            uids,
+            tolerance: None,
+            focus: None,
+            made: RefCell::new(None),
+        }
     }
 }
 
@@ -77,12 +83,19 @@ pub enum Focus {
 
 impl Focus {
     /// The row `i` of the table showing `show`.
-    pub fn of(g: &ParcelsBounded, show: crate::parcel_boundaries_window::Show, i: usize) -> Option<Focus> {
+    pub fn of(
+        g: &ParcelsBounded,
+        show: crate::parcel_boundaries_window::Show,
+        i: usize,
+    ) -> Option<Focus> {
         use crate::parcel_boundaries_window::Show;
         match show {
             Show::Boundaries => g.boundaries.get(i).map(|b| Focus::Boundary(b.id.clone())),
             Show::Corners => g.corners.get(i).map(|c| Focus::Corner(c.id.clone())),
-            Show::Problems => g.problems.get(i).map(|p| Focus::Problem(p.kind.clone(), p.at)),
+            Show::Problems => g
+                .problems
+                .get(i)
+                .map(|p| Focus::Problem(p.kind.clone(), p.at)),
         }
     }
 
@@ -93,8 +106,12 @@ impl Focus {
         let corner = |id: &str| g.corners.iter().find(|c| c.id == id).map(|c| at(c.at));
         match self {
             Focus::Boundary(id) => {
-                let Some(b) = g.boundaries.iter().find(|b| b.id == *id) else { return Vec::new() };
-                let (Some(a), Some(e)) = (corner(&b.from), corner(&b.to)) else { return Vec::new() };
+                let Some(b) = g.boundaries.iter().find(|b| b.id == *id) else {
+                    return Vec::new();
+                };
+                let (Some(a), Some(e)) = (corner(&b.from), corner(&b.to)) else {
+                    return Vec::new();
+                };
                 if b.bulge == 0.0 {
                     return vec![a, e];
                 }
@@ -104,7 +121,11 @@ impl Focus {
             }
             Focus::Corner(id) => corner(id).into_iter().collect(),
             Focus::Problem(kind, p) => {
-                if g.problems.iter().any(|q| q.kind == *kind && q.at == *p) { vec![at(*p)] } else { Vec::new() }
+                if g.problems.iter().any(|q| q.kind == *kind && q.at == *p) {
+                    vec![at(*p)]
+                } else {
+                    Vec::new()
+                }
             }
         }
     }
@@ -113,7 +134,9 @@ impl Focus {
     pub fn name(&self) -> String {
         match self {
             Focus::Boundary(id) | Focus::Corner(id) => id.clone(),
-            Focus::Problem(kind, _) => crate::parcel_boundaries_window::problem_word(kind).to_owned(),
+            Focus::Problem(kind, _) => {
+                crate::parcel_boundaries_window::problem_word(kind).to_owned()
+            }
         }
     }
 
@@ -121,7 +144,11 @@ impl Focus {
     pub fn bounds(&self, g: &ParcelsBounded, all: Option<[f64; 4]>) -> Option<[f64; 4]> {
         let pts = self.points(g);
         let first = pts.first()?;
-        let b = pts.iter().fold([first.x, first.y, first.x, first.y], |b, p| [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]);
+        let b = pts
+            .iter()
+            .fold([first.x, first.y, first.x, first.y], |b, p| {
+                [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
+            });
         let least = all.map_or(10.0, |a| ((a[2] - a[0]).max(a[3] - a[1]) * 0.1).max(2.0));
         let half = ((b[2] - b[0]).max(b[3] - b[1]) / 2.0).max(least / 2.0);
         let (cx, cy) = ((b[0] + b[2]) / 2.0, (b[1] + b[3]) / 2.0);
@@ -132,7 +159,11 @@ impl Focus {
 impl GraphMarks {
     pub fn of(g: &ParcelsBounded) -> Self {
         let at = |p: [f64; 2]| Vec2::new(p[0], p[1]);
-        let places: BTreeMap<&str, Vec2> = g.corners.iter().map(|c| (c.id.as_str(), at(c.at))).collect();
+        let places: BTreeMap<&str, Vec2> = g
+            .corners
+            .iter()
+            .map(|c| (c.id.as_str(), at(c.at)))
+            .collect();
         let boundaries = g
             .boundaries
             .iter()
@@ -140,7 +171,10 @@ impl GraphMarks {
                 let (a, e) = (places.get(b.from.as_str())?, places.get(b.to.as_str())?);
                 // Its middle on its curve: a positive bulge bows right of the way (docs/adr/2000).
                 let (dx, dy) = (e.x - a.x, e.y - a.y);
-                let middle = Vec2::new((a.x + e.x) / 2.0 + dy * b.bulge / 2.0, (a.y + e.y) / 2.0 - dx * b.bulge / 2.0);
+                let middle = Vec2::new(
+                    (a.x + e.x) / 2.0 + dy * b.bulge / 2.0,
+                    (a.y + e.y) / 2.0 - dx * b.bulge / 2.0,
+                );
                 Some((middle, b.id.clone()))
             })
             .collect();
@@ -149,7 +183,14 @@ impl GraphMarks {
             .problems
             .iter()
             .filter(|p| p.kind == "approxArc")
-            .filter_map(|p| strip(g, &places, &p.boundaries, p.gap.map(|w| (w / 200.0).max(1e-6))))
+            .filter_map(|p| {
+                strip(
+                    g,
+                    &places,
+                    &p.boundaries,
+                    p.gap.map(|w| (w / 200.0).max(1e-6)),
+                )
+            })
             .collect();
         Self {
             focus: None,
@@ -157,7 +198,12 @@ impl GraphMarks {
             problems: g
                 .problems
                 .iter()
-                .map(|p| (at(p.at), crate::parcel_boundaries_window::problem_short(&p.kind).to_owned()))
+                .map(|p| {
+                    (
+                        at(p.at),
+                        crate::parcel_boundaries_window::problem_short(&p.kind).to_owned(),
+                    )
+                })
                 .collect(),
             corners: g.corners.iter().map(|c| (at(c.at), c.id.clone())).collect(),
             boundaries,
@@ -179,18 +225,32 @@ fn curve(a: Vec2, e: Vec2, bulge: f64, finer: Option<f64>) -> Vec<Vec2> {
 /// An arc drawn with chords' strip (docs/adr/3420's `boundaries`: the arc, then the chain's boundaries): the arc from
 /// its `from` corner to its `to`, then the chain walked back from `to` to `from`; none when the chain does not join
 /// them.
-fn strip(g: &ParcelsBounded, places: &BTreeMap<&str, Vec2>, ids: &[String], finer: Option<f64>) -> Option<Vec<Vec2>> {
+fn strip(
+    g: &ParcelsBounded,
+    places: &BTreeMap<&str, Vec2>,
+    ids: &[String],
+    finer: Option<f64>,
+) -> Option<Vec<Vec2>> {
     let find = |id: &String| g.boundaries.iter().find(|b| b.id == *id);
     let (arc, chain) = ids.split_first()?;
     let arc = find(arc)?;
-    let mut out = curve(*places.get(arc.from.as_str())?, *places.get(arc.to.as_str())?, arc.bulge, finer);
+    let mut out = curve(
+        *places.get(arc.from.as_str())?,
+        *places.get(arc.to.as_str())?,
+        arc.bulge,
+        finer,
+    );
     // The chain from the arc's end back to its start, each boundary taken in the way it is walked.
     let mut left: Vec<_> = chain.iter().filter_map(find).collect();
     let mut at = arc.to.as_str();
     while at != arc.from.as_str() {
         let k = left.iter().position(|b| b.from == at || b.to == at)?;
         let b = left.swap_remove(k);
-        let (next, bulge) = if b.from == at { (b.to.as_str(), b.bulge) } else { (b.from.as_str(), -b.bulge) };
+        let (next, bulge) = if b.from == at {
+            (b.to.as_str(), b.bulge)
+        } else {
+            (b.from.as_str(), -b.bulge)
+        };
         let piece = curve(*places.get(at)?, *places.get(next)?, bulge, finer);
         out.extend(piece.into_iter().skip(1));
         at = next;
@@ -204,7 +264,9 @@ fn strip(g: &ParcelsBounded, places: &BTreeMap<&str, Vec2>, ids: &[String], fine
 pub fn gathered(problems: &[(Point, &str)]) -> Vec<(Point, String)> {
     let mut groups: Vec<(Point, Vec<(&str, usize)>)> = Vec::new();
     for (c, w) in problems {
-        let near = groups.iter_mut().find(|(g, _)| (g.x - c.x).hypot(g.y - c.y) < 2.0 * RING);
+        let near = groups
+            .iter_mut()
+            .find(|(g, _)| (g.x - c.x).hypot(g.y - c.y) < 2.0 * RING);
         match near {
             Some((_, words)) => match words.iter_mut().find(|(k, _)| k == w) {
                 Some((_, n)) => *n += 1,
@@ -218,7 +280,13 @@ pub fn gathered(problems: &[(Point, &str)]) -> Vec<(Point, String)> {
         .map(|(c, words)| {
             let phrase = words
                 .iter()
-                .map(|(w, n)| if *n > 1 { format!("{w} ({n})") } else { (*w).to_owned() })
+                .map(|(w, n)| {
+                    if *n > 1 {
+                        format!("{w} ({n})")
+                    } else {
+                        (*w).to_owned()
+                    }
+                })
                 .collect::<Vec<_>>()
                 .join(" · ");
             (c, phrase)
@@ -247,13 +315,22 @@ impl ParcelBoundariesMarksApp for App {
         {
             return made.clone();
         }
-        let input = ParcelsBoundaries { uids: shown.uids.clone(), arc_tolerance: shown.tolerance };
-        let made = parcels_boundaries::preview(&doc.model, &input).ok().map(|g| {
-            let mut marks = GraphMarks::of(&g);
-            // The chosen row, found again in the graph as it is now (docs/adr/3020).
-            marks.focus = shown.focus.as_ref().map(|f| (f.points(&g), f.name())).filter(|(pts, _)| !pts.is_empty());
-            Arc::new(marks)
-        });
+        let input = ParcelsBoundaries {
+            uids: shown.uids.clone(),
+            arc_tolerance: shown.tolerance,
+        };
+        let made = parcels_boundaries::preview(&doc.model, &input)
+            .ok()
+            .map(|g| {
+                let mut marks = GraphMarks::of(&g);
+                // The chosen row, found again in the graph as it is now (docs/adr/3020).
+                marks.focus = shown
+                    .focus
+                    .as_ref()
+                    .map(|f| (f.points(&g), f.name()))
+                    .filter(|(pts, _)| !pts.is_empty());
+                Arc::new(marks)
+            });
         *shown.made.borrow_mut() = Some((generation, revision, made.clone()));
         made
     }
@@ -281,8 +358,13 @@ impl Crowd {
     /// The cells of words `width` wide starting at `p`, as tall as a line of them.
     fn cells(p: Point, width: f32) -> Vec<(i32, i32)> {
         let (x0, y0) = Self::cell(p);
-        let (x1, y1) = Self::cell(Point::new(p.x + width, p.y + typography::scaled(11.0) * 1.2));
-        (x0..=x1).flat_map(|x| (y0..=y1).map(move |y| (x, y))).collect()
+        let (x1, y1) = Self::cell(Point::new(
+            p.x + width,
+            p.y + typography::scaled(11.0) * 1.2,
+        ));
+        (x0..=x1)
+            .flat_map(|x| (y0..=y1).map(move |y| (x, y)))
+            .collect()
     }
 
     /// Whether words `width` wide at `p` meet nothing taken.
@@ -292,7 +374,10 @@ impl Crowd {
 
     /// How many taken cells words `width` wide at `p` meet, but those in `own` (their own ring's).
     fn met(&self, p: Point, width: f32, own: &[(i32, i32)]) -> usize {
-        Self::cells(p, width).iter().filter(|c| self.0.contains(c) && !own.contains(c)).count()
+        Self::cells(p, width)
+            .iter()
+            .filter(|c| self.0.contains(c) && !own.contains(c))
+            .count()
     }
 
     /// Takes the cells of words `width` wide at `p` whatever is there (a problem's words).
@@ -307,18 +392,32 @@ fn width_of(content: &str) -> f32 {
 }
 
 /// Words at `at` in `color` on a halo of the area's colour.
-fn words(frame: &mut canvas::Frame, at: Point, content: &str, color: iced::Color, halo: iced::Color, strong: bool) {
+fn words(
+    frame: &mut canvas::Frame,
+    at: Point,
+    content: &str,
+    color: iced::Color,
+    halo: iced::Color,
+    strong: bool,
+) {
     let text = Text {
         content: content.to_owned(),
         position: at,
         color: halo,
         size: Pixels(typography::scaled(11.0)),
-        font: if strong { typography::ui_strong() } else { typography::ui() },
+        font: if strong {
+            typography::ui_strong()
+        } else {
+            typography::ui()
+        },
         align_y: iced::alignment::Vertical::Top,
         ..Text::default()
     };
     for (dx, dy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
-        frame.fill_text(Text { position: text.position + Vector::new(dx, dy), ..text.clone() });
+        frame.fill_text(Text {
+            position: text.position + Vector::new(dx, dy),
+            ..text.clone()
+        });
     }
     frame.fill_text(Text { color, ..text });
 }
@@ -338,12 +437,19 @@ pub fn draw(
         let s = camera.world_to_screen(p);
         Point::new(s[0].round() as f32 + 0.5, s[1].round() as f32 + 0.5)
     };
-    let inside = |p: Point| p.x >= -24.0 && p.y >= -24.0 && p.x <= size.width + 24.0 && p.y <= size.height + 24.0;
-    let stroke = |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
+    let inside = |p: Point| {
+        p.x >= -24.0 && p.y >= -24.0 && p.x <= size.width + 24.0 && p.y <= size.height + 24.0
+    };
+    let stroke =
+        |width: f32, color: iced::Color| Stroke::default().with_color(color).with_width(width);
     let mut crowd = Crowd::default();
     // Problems whose rings would meet share one ring and one phrase (docs/adr/3820).
-    let problems: Vec<(Point, &str)> =
-        m.problems.iter().map(|(p, w)| (screen(*p), w.as_str())).filter(|(c, _)| inside(*c)).collect();
+    let problems: Vec<(Point, &str)> = m
+        .problems
+        .iter()
+        .map(|(p, w)| (screen(*p), w.as_str()))
+        .filter(|(c, _)| inside(*c))
+        .collect();
     let problems = gathered(&problems);
     // An arc drawn with chords' strip under all: filled faintly in the danger colour, outlined (docs/adr/3820).
     for outline in &m.strips {
@@ -362,8 +468,12 @@ pub fn draw(
         frame.stroke(&shape, stroke(3.0, colors.halo));
         frame.stroke(&shape, stroke(1.5, danger));
     }
-    let corners: Vec<(Point, &str)> =
-        m.corners.iter().map(|(p, n)| (screen(*p), n.as_str())).filter(|(c, _)| inside(*c)).collect();
+    let corners: Vec<(Point, &str)> = m
+        .corners
+        .iter()
+        .map(|(p, n)| (screen(*p), n.as_str()))
+        .filter(|(c, _)| inside(*c))
+        .collect();
     // The corners' dots, all of them in the view.
     let dots = Path::new(|b| {
         for (c, _) in &corners {
@@ -451,7 +561,14 @@ pub fn draw(
             frame.stroke(&rings, stroke(2.5, accent));
         }
         if let Some(c) = on.get(on.len() / 2) {
-            words(frame, *c + Vector::new(20.0, 8.0), name, accent, colors.halo, true);
+            words(
+                frame,
+                *c + Vector::new(20.0, 8.0),
+                name,
+                accent,
+                colors.halo,
+                true,
+            );
         }
     }
 }

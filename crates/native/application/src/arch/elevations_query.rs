@@ -58,7 +58,10 @@ pub fn row(doc: &Document, layer: &str) -> Option<ElevationRow> {
 /// A legacy derivation can detect local edits only while its source remains unchanged.
 pub fn supports_batch_refresh(doc: &Document, layer: &str) -> bool {
     elevations::on_layer(doc, layer).is_some_and(|(_, record)| {
-        record.members.keys().all(|role| record.member_hashes.contains_key(role))
+        record
+            .members
+            .keys()
+            .all(|role| record.member_hashes.contains_key(role))
     })
 }
 
@@ -75,7 +78,10 @@ fn check(doc: &Document, input: &ElevationsQuery) -> Result<Vec<ElevationRow>, S
         if elevations::on_layer(doc, l).is_none() {
             return Err(fail(
                 codes::ELEVATION_NOT_FOUND,
-                format!("“{}” katmanı bir oda iç görünüşü değil (türetim kaydı yok).", node.name),
+                format!(
+                    "“{}” katmanı bir oda iç görünüşü değil (türetim kaydı yok).",
+                    node.name
+                ),
                 "layer",
             ));
         }
@@ -85,11 +91,17 @@ fn check(doc: &Document, input: &ElevationsQuery) -> Result<Vec<ElevationRow>, S
         if !checks::is_uid_text(u) {
             return Err(fail(
                 codes::INVALID_UID,
-                format!("“{u}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."),
+                format!(
+                    "“{u}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir."
+                ),
                 "uid",
             ));
         }
-        if Uuid::parse_str(u).ok().and_then(|x| doc.slot_of(x)).is_none() {
+        if Uuid::parse_str(u)
+            .ok()
+            .and_then(|x| doc.slot_of(x))
+            .is_none()
+        {
             return Err(fail(
                 codes::ENTITY_NOT_FOUND,
                 format!("“{u}” kimlikli nesne çizimde yok."),
@@ -136,11 +148,17 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ElevationsQuery) -> CommandRe
     }
 }
 
-pub fn plan(cx: &ExecutionContext<'_>, input: &ElevationsQuery) -> CommandResult<ElevationsQueried> {
+pub fn plan(
+    cx: &ExecutionContext<'_>,
+    input: &ElevationsQuery,
+) -> CommandResult<ElevationsQueried> {
     execute_in(cx.doc, input)
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ElevationsQuery) -> CommandResult<ElevationsQueried> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ElevationsQuery,
+) -> CommandResult<ElevationsQueried> {
     execute_in(cx.doc, &input)
 }
 

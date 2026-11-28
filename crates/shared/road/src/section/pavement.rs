@@ -108,7 +108,10 @@ impl Pl {
             return None;
         }
         let slope = (b[1] - a[1]) / (b[0] - a[0]);
-        Some(Line { a: a[1] - slope * a[0], b: slope })
+        Some(Line {
+            a: a[1] - slope * a[0],
+            b: slope,
+        })
     }
 
     fn corners(&self) -> impl Iterator<Item = f64> + '_ {
@@ -123,7 +126,12 @@ fn integral(hi: &[&Pl], caps: &[Pl], lo: &[&Pl], u0: f64, u1: f64) -> f64 {
         return 0.0;
     }
     let mut stops: Vec<f64> = vec![u0, u1];
-    for f in hi.iter().copied().chain(caps.iter()).chain(lo.iter().copied()) {
+    for f in hi
+        .iter()
+        .copied()
+        .chain(caps.iter())
+        .chain(lo.iter().copied())
+    {
         stops.extend(f.corners().filter(|u| *u > u0 && *u < u1));
     }
     stops.sort_by(f64::total_cmp);
@@ -135,8 +143,12 @@ fn integral(hi: &[&Pl], caps: &[Pl], lo: &[&Pl], u0: f64, u1: f64) -> f64 {
             continue;
         }
         let (Some(mut h), Some(l)) = (
-            hi.iter().map(|f| f.line(a, b)).collect::<Option<Vec<Line>>>(),
-            lo.iter().map(|f| f.line(a, b)).collect::<Option<Vec<Line>>>(),
+            hi.iter()
+                .map(|f| f.line(a, b))
+                .collect::<Option<Vec<Line>>>(),
+            lo.iter()
+                .map(|f| f.line(a, b))
+                .collect::<Option<Vec<Line>>>(),
         ) else {
             continue;
         };
@@ -166,8 +178,16 @@ fn integral(hi: &[&Pl], caps: &[Pl], lo: &[&Pl], u0: f64, u1: f64) -> f64 {
             }
             // On (x0, x1) both envelopes are linear: the difference is, read at the ends from the mid's lines.
             let m = 0.5 * (x0 + x1);
-            let pick_h = h.iter().copied().min_by(|p, q| p.at(m).total_cmp(&q.at(m))).expect("a line");
-            let pick_l = l.iter().copied().max_by(|p, q| p.at(m).total_cmp(&q.at(m))).expect("a line");
+            let pick_h = h
+                .iter()
+                .copied()
+                .min_by(|p, q| p.at(m).total_cmp(&q.at(m)))
+                .expect("a line");
+            let pick_l = l
+                .iter()
+                .copied()
+                .max_by(|p, q| p.at(m).total_cmp(&q.at(m)))
+                .expect("a line");
             let (f0, f1) = (pick_h.at(x0) - pick_l.at(x0), pick_h.at(x1) - pick_l.at(x1));
             total += positive_part(x0, x1, f0, f1);
         }
@@ -204,7 +224,9 @@ fn finish_of(components: &[Component], axis: f64) -> (Vec<[f64; 2]>, f64) {
     let (mut u, mut z, mut last) = (0.0, axis, 0.0);
     for c in components {
         let (w, s) = match *c {
-            Component::Lane { width, slope } | Component::Shoulder { width, slope } => (width, slope),
+            Component::Lane { width, slope } | Component::Shoulder { width, slope } => {
+                (width, slope)
+            }
         };
         u += w;
         z += w * s;
@@ -229,7 +251,12 @@ fn side_fns(
     let (mut finish, last) = finish_of(components, axis);
     let hinge = *finish.last().expect("a corner");
     // The finished line outward from the hinge (the ditch, the slope), from the section as built.
-    let outward: Vec<[f64; 2]> = built.points.iter().map(|p| [sign * p[0], p[1]]).filter(|p| p[0] >= hinge[0]).collect();
+    let outward: Vec<[f64; 2]> = built
+        .points
+        .iter()
+        .map(|p| [sign * p[0], p[1]])
+        .filter(|p| p[0] >= hinge[0])
+        .collect();
     let mut caps = Vec::new();
     let end = match edge {
         Edge::Vertical => hinge[0],
@@ -249,17 +276,28 @@ fn side_fns(
             end.min(foot)
         }
     };
-    Ok(SideFns { finish: Pl(finish), caps, end, hinge, sign })
+    Ok(SideFns {
+        finish: Pl(finish),
+        caps,
+        end,
+        hinge,
+        sign,
+    })
 }
 
 /// The ground outward on a side: its stretches on the surface as separate functions.
 fn ground_runs(ground: &[GroundPoint], right: bool) -> Vec<Pl> {
     let sign = if right { 1.0 } else { -1.0 };
-    let mut pts: Vec<(f64, Option<f64>, bool)> = ground.iter().map(|g| (sign * g.offset, g.z, g.gap)).collect();
+    let mut pts: Vec<(f64, Option<f64>, bool)> = ground
+        .iter()
+        .map(|g| (sign * g.offset, g.z, g.gap))
+        .collect();
     if !right {
         // Read leftward: the gap flag belongs to the stretch before a place in the left-to-right order.
         let n = pts.len();
-        let gaps: Vec<bool> = (0..n).map(|i| ground.get(i + 1).is_some_and(|g| g.gap)).collect();
+        let gaps: Vec<bool> = (0..n)
+            .map(|i| ground.get(i + 1).is_some_and(|g| g.gap))
+            .collect();
         for (p, gap) in pts.iter_mut().zip(gaps) {
             p.2 = gap;
         }
@@ -319,8 +357,22 @@ pub fn build(
         })
         .collect();
     let total = *depths.last().expect("a layer");
-    let left = side_fns(&template.left.components, &section.left, section.axis, total, pavement.edge, false)?;
-    let right = side_fns(&template.right.components, &section.right, section.axis, total, pavement.edge, true)?;
+    let left = side_fns(
+        &template.left.components,
+        &section.left,
+        section.axis,
+        total,
+        pavement.edge,
+        false,
+    )?;
+    let right = side_fns(
+        &template.right.components,
+        &section.right,
+        section.axis,
+        total,
+        pavement.edge,
+        true,
+    )?;
 
     let mut layers = vec![0.0; depths.len()];
     let (mut below, mut above) = (0.0, 0.0);
@@ -340,14 +392,32 @@ pub fn build(
             above += integral(&[&top], &s.caps, &[&bottom, &g], 0.0, s.end);
         }
         // Lines for drawing, outward: each layer's bottom to the edge; the formation is the last of them.
-        let lines: Vec<Vec<[f64; 2]>> = depths.iter().map(|d| edge_cut(&shifted(&s.finish, *d), s, pavement.edge)).collect();
-        halves.push(lines.into_iter().map(|l| l.into_iter().map(|p| [s.sign * p[0], p[1]]).collect()).collect());
+        let lines: Vec<Vec<[f64; 2]>> = depths
+            .iter()
+            .map(|d| edge_cut(&shifted(&s.finish, *d), s, pavement.edge))
+            .collect();
+        halves.push(
+            lines
+                .into_iter()
+                .map(|l| l.into_iter().map(|p| [s.sign * p[0], p[1]]).collect())
+                .collect(),
+        );
     }
     // Left to right: the left half reversed, then the right without its axis point.
-    let join = |l: &[[f64; 2]], r: &[[f64; 2]]| -> Vec<[f64; 2]> { l.iter().rev().chain(r.iter().skip(1)).copied().collect() };
-    let bottoms: Vec<Vec<[f64; 2]>> = (0..depths.len()).map(|i| join(&halves[0][i], &halves[1][i])).collect();
+    let join = |l: &[[f64; 2]], r: &[[f64; 2]]| -> Vec<[f64; 2]> {
+        l.iter().rev().chain(r.iter().skip(1)).copied().collect()
+    };
+    let bottoms: Vec<Vec<[f64; 2]>> = (0..depths.len())
+        .map(|i| join(&halves[0][i], &halves[1][i]))
+        .collect();
     let formation = bottoms.last().cloned().unwrap_or_default();
-    Ok(PavementSection { layers, below, above, formation, bottoms })
+    Ok(PavementSection {
+        layers,
+        below,
+        above,
+        formation,
+        bottoms,
+    })
 }
 
 /// A layer bottom `line` (outward) to where it meets the side's edge: the hinge's foot for a vertical edge, the edge
@@ -359,18 +429,31 @@ fn edge_cut(line: &Pl, s: &SideFns, edge: Edge) -> Vec<[f64; 2]> {
             // The edge line from the hinge: where the layer's line meets it.
             let cap = &s.caps[0].0;
             let (h0, h1) = (cap[0], cap[1]);
-            let e = Line { b: (h1[1] - h0[1]) / (h1[0] - h0[0]), a: h0[1] - (h1[1] - h0[1]) / (h1[0] - h0[0]) * h0[0] };
+            let e = Line {
+                b: (h1[1] - h0[1]) / (h1[0] - h0[0]),
+                a: h0[1] - (h1[1] - h0[1]) / (h1[0] - h0[0]) * h0[0],
+            };
             let n = line.0.len();
             let (p, q) = (line.0[n - 2], line.0[n - 1]);
-            let l = Line { b: (q[1] - p[1]) / (q[0] - p[0]), a: p[1] - (q[1] - p[1]) / (q[0] - p[0]) * p[0] };
+            let l = Line {
+                b: (q[1] - p[1]) / (q[0] - p[0]),
+                a: p[1] - (q[1] - p[1]) / (q[0] - p[0]) * p[0],
+            };
             let u = (l.a - e.a) / (e.b - l.b);
             u.clamp(s.hinge[0], s.end)
         }
     };
     let mut out: Vec<[f64; 2]> = line.0.iter().copied().filter(|p| p[0] < end).collect();
-    let i = line.0.partition_point(|p| p[0] < end).clamp(1, line.0.len() - 1);
+    let i = line
+        .0
+        .partition_point(|p| p[0] < end)
+        .clamp(1, line.0.len() - 1);
     let (p, q) = (line.0[i - 1], line.0[i]);
-    let z = if q[0] == p[0] { q[1] } else { p[1] + (q[1] - p[1]) * (end - p[0]) / (q[0] - p[0]) };
+    let z = if q[0] == p[0] {
+        q[1]
+    } else {
+        p[1] + (q[1] - p[1]) * (end - p[0]) / (q[0] - p[0])
+    };
     out.push([end, z]);
     out
 }

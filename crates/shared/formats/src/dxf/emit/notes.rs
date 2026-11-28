@@ -380,7 +380,10 @@ impl Emitter<'_> {
                 list.into_iter()
                     .filter(|a| !a.is_empty())
                     .map(|a| kentos_contracts::LeaderArm {
-                        pts: a.iter().map(|p| ctx.tf.apply(Vec2 { x: p[0], y: p[1] })).collect(),
+                        pts: a
+                            .iter()
+                            .map(|p| ctx.tf.apply(Vec2 { x: p[0], y: p[1] }))
+                            .collect(),
                         tip: None,
                     })
                     .collect()

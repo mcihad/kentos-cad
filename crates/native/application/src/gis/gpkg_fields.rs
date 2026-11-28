@@ -42,7 +42,11 @@ pub fn rules_document(fields: &[LayerField], columns: &[(String, String)]) -> Op
 
 /// The schema extension's rows of a layer's fields written to `table`'s `columns`: each shown name, and each number's
 /// range or list's values as a rule named after the table and the column.
-pub fn schema_rows(table: &str, fields: &[LayerField], columns: &[(String, String)]) -> (Vec<DataColumn>, Vec<(String, Rule)>) {
+pub fn schema_rows(
+    table: &str,
+    fields: &[LayerField],
+    columns: &[(String, String)],
+) -> (Vec<DataColumn>, Vec<(String, Rule)>) {
     let mut out = Vec::new();
     let mut rules = Vec::new();
     for f in fields {
@@ -50,7 +54,12 @@ pub fn schema_rows(table: &str, fields: &[LayerField], columns: &[(String, Strin
             continue;
         };
         let rule = if let Some(values) = f.values.as_ref().filter(|v| !v.is_empty()) {
-            Some(Rule::Values(values.iter().map(|c| (c.code.clone(), Some(c.label.clone()))).collect()))
+            Some(Rule::Values(
+                values
+                    .iter()
+                    .map(|c| (c.code.clone(), Some(c.label.clone())))
+                    .collect(),
+            ))
         } else if f.kind.is_number() && (f.min.is_some() || f.max.is_some()) {
             let number = |t: &Option<String>| t.as_deref().and_then(|t| t.parse::<f64>().ok());
             Some(Rule::Range {
@@ -106,7 +115,10 @@ pub fn take_rules(gp: &GeoPackage, table: &str, fields: &mut [LayerField]) -> Re
     if !own.is_empty() {
         for f in fields.iter_mut() {
             if let Some(rule) = own.get(&f.name) {
-                *f = LayerField { name: f.name.clone(), ..rule.clone() };
+                *f = LayerField {
+                    name: f.name.clone(),
+                    ..rule.clone()
+                };
             }
         }
         return Ok(());
@@ -124,10 +136,18 @@ pub fn take_rules(gp: &GeoPackage, table: &str, fields: &mut [LayerField]) -> Re
             continue;
         };
         if f.alias.is_none() {
-            f.alias = c.name.clone().filter(|n| !n.trim().is_empty() && *n != f.name);
+            f.alias = c
+                .name
+                .clone()
+                .filter(|n| !n.trim().is_empty() && *n != f.name);
         }
         match rule {
-            Some(Rule::Range { min, min_included, max, max_included }) if f.kind.is_number() => {
+            Some(Rule::Range {
+                min,
+                min_included,
+                max,
+                max_included,
+            }) if f.kind.is_number() => {
                 let text = |v: f64| format!("{v}");
                 if f.min.is_none() {
                     f.min = min.map(text);
@@ -142,7 +162,12 @@ pub fn take_rules(gp: &GeoPackage, table: &str, fields: &mut [LayerField]) -> Re
                 f.values = Some(
                     values
                         .iter()
-                        .map(|(code, label)| FieldChoice::new(code.clone(), label.clone().unwrap_or_else(|| code.clone())))
+                        .map(|(code, label)| {
+                            FieldChoice::new(
+                                code.clone(),
+                                label.clone().unwrap_or_else(|| code.clone()),
+                            )
+                        })
                         .collect(),
                 );
             }
@@ -169,7 +194,11 @@ pub fn rule_breaks(doc: &Document, layers: &[String]) -> Vec<String> {
             for (i, (_, e)) in doc.by_layer_with_uids(id).enumerate() {
                 let who = || {
                     let label = e.base().label.as_deref().unwrap_or("").trim();
-                    if label.is_empty() { format!("{}. nesne", i + 1) } else { label.to_owned() }
+                    if label.is_empty() {
+                        format!("{}. nesne", i + 1)
+                    } else {
+                        label.to_owned()
+                    }
                 };
                 let value = e.base().attrs.get(&f.name).map(|v| v.trim()).unwrap_or("");
                 if value.is_empty() {

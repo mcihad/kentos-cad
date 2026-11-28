@@ -21,11 +21,12 @@ pub struct Area {
 /// A ring's signed area (counter-clockwise positive).
 pub fn signed_area(ring: &[[f64; 2]]) -> f64 {
     let n = ring.len();
-    (0..n).map(|i| {
-        let (a, b) = (ring[i], ring[(i + 1) % n]);
-        a[0] * b[1] - b[0] * a[1]
-    })
-    .sum::<f64>()
+    (0..n)
+        .map(|i| {
+            let (a, b) = (ring[i], ring[(i + 1) % n]);
+            a[0] * b[1] - b[0] * a[1]
+        })
+        .sum::<f64>()
         / 2.0
 }
 
@@ -116,16 +117,23 @@ pub fn length_inside(ring: &[[f64; 2]], a: [f64; 2], b: [f64; 2]) -> f64 {
 impl Area {
     /// The area's own size: the outer ring's less the holes'.
     pub fn size(&self) -> f64 {
-        signed_area(&self.outer).abs() - self.holes.iter().map(|h| signed_area(h).abs()).sum::<f64>()
+        signed_area(&self.outer).abs()
+            - self.holes.iter().map(|h| signed_area(h).abs()).sum::<f64>()
     }
 
     /// A triangle's overlap with the area.
     pub fn covered(&self, triangle: [[f64; 2]; 3]) -> f64 {
-        overlap(triangle, &self.outer) - self.holes.iter().map(|h| overlap(triangle, h)).sum::<f64>()
+        overlap(triangle, &self.outer)
+            - self.holes.iter().map(|h| overlap(triangle, h)).sum::<f64>()
     }
 
     /// The length of the segment a→b inside the area.
     pub fn reach(&self, a: [f64; 2], b: [f64; 2]) -> f64 {
-        length_inside(&self.outer, a, b) - self.holes.iter().map(|h| length_inside(h, a, b)).sum::<f64>()
+        length_inside(&self.outer, a, b)
+            - self
+                .holes
+                .iter()
+                .map(|h| length_inside(h, a, b))
+                .sum::<f64>()
     }
 }

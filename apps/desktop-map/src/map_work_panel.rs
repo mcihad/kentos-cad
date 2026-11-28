@@ -18,8 +18,8 @@
 //! docs/adr/5280: the table sets each shift against the limit Kayma sınırı picks (map_work_limit.rs); Tipli katman
 //! offers, for an item without a profile, the profile whose classes suit its kind (KentOS's or the project's own).
 
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::path::PathBuf;
@@ -27,8 +27,8 @@ use std::path::PathBuf;
 use iced::widget::{column, container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    WorkDerivationRow, MapWorkEdit, MapWorkOperation, MapWorkTree, WorkChanges, WorkFileState as F, WorkKind as K,
-    WorkRow, WorkState as S, WorkStatus as W,
+    MapWorkEdit, MapWorkOperation, MapWorkTree, WorkChanges, WorkDerivationRow, WorkFileState as F,
+    WorkKind as K, WorkRow, WorkState as S, WorkStatus as W,
 };
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
@@ -134,7 +134,9 @@ impl Default for PanelState {
 
 impl std::fmt::Debug for PanelState {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PanelState").field("deep", &self.deep).finish()
+        f.debug_struct("PanelState")
+            .field("deep", &self.deep)
+            .finish()
     }
 }
 
@@ -158,7 +160,10 @@ const KIND_CHOICES: [crate::style::fields::Choice; 6] = [
 ];
 
 fn kind_of(name: &str) -> K {
-    KINDS.iter().find(|k| k.0 == name).map_or(K::Working, |k| k.1)
+    KINDS
+        .iter()
+        .find(|k| k.0 == name)
+        .map_or(K::Working, |k| k.1)
 }
 
 /// The status in words, and what it says beside: the office's record, never an institution's approval.
@@ -194,14 +199,20 @@ fn derivation_words(s: S) -> &'static str {
 /// The module's `App` methods of this file, as an extension trait (docs/adr/9199 §3.5).
 pub(crate) trait MapWorkPanelApp {
     fn map_work_read(&self) -> Option<Result<MapWorkTree, String>>;
-    fn map_work_edit(&mut self, operation: MapWorkOperation) -> Option<kentos_commands::MapWorkEdited>;
+    fn map_work_edit(
+        &mut self,
+        operation: MapWorkOperation,
+    ) -> Option<kentos_commands::MapWorkEdited>;
     fn map_work_restore(&mut self, id: &str);
     fn map_work_layer(&self) -> Option<String>;
     fn map_work_add(&mut self, file: Option<PathBuf>);
     fn map_work_profile_add(&mut self);
     fn map_work_suggest(&mut self, item: &str);
     fn map_work_shifts_again(&mut self);
-    fn pick_file(title: &'static str, then: impl FnOnce(Option<PathBuf>) -> Event + Send + 'static) -> Task<Message>;
+    fn pick_file(
+        title: &'static str,
+        then: impl FnOnce(Option<PathBuf>) -> Event + Send + 'static,
+    ) -> Task<Message>;
     fn map_work_event(&mut self, event: Event) -> Task<Message>;
     fn selected_uids(&self) -> Vec<String>;
     fn selected_sources(&self) -> Vec<kentos_commands::WorkObjectSource>;
@@ -234,7 +245,11 @@ impl MapWorkPanelApp for App {
             return Some(answer.clone());
         }
         // A moved project's files are found by their relative paths and the search paths (docs/adr/1201 §1).
-        let drawing = doc.path.as_ref().filter(|p| p.is_absolute()).map(|p| p.display().to_string());
+        let drawing = doc
+            .path
+            .as_ref()
+            .filter(|p| p.is_absolute())
+            .map(|p| p.display().to_string());
         // docs/adr/5280: the limit when it holds (the row says why not), and the suggested profiles.
         let input = kentos_commands::MapWorkQuery {
             deep,
@@ -248,11 +263,22 @@ impl MapWorkPanelApp for App {
         Some(answer)
     }
 
-    fn map_work_edit(&mut self, operation: MapWorkOperation) -> Option<kentos_commands::MapWorkEdited> {
+    fn map_work_edit(
+        &mut self,
+        operation: MapWorkOperation,
+    ) -> Option<kentos_commands::MapWorkEdited> {
         let doc = self.document.as_mut()?;
         // A project's own profile is found in its folder (docs/adr/4880).
-        let drawing = doc.path.as_ref().filter(|p| p.is_absolute()).map(|p| p.display().to_string());
-        let input = MapWorkEdit { operation, drawing, expected_revision: None };
+        let drawing = doc
+            .path
+            .as_ref()
+            .filter(|p| p.is_absolute())
+            .map(|p| p.display().to_string());
+        let input = MapWorkEdit {
+            operation,
+            drawing,
+            expected_revision: None,
+        };
         let result = map_work_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         self.answered(result)
     }
@@ -260,9 +286,18 @@ impl MapWorkPanelApp for App {
     /// Onaylı hâline getir (docs/adr/4080): the item's removed objects made again with their ids and its changed ones
     /// set back to their approved values, one undo step; what it did is said, the added objects that stay too.
     fn map_work_restore(&mut self, id: &str) {
-        let Some(doc) = self.document.as_mut() else { return };
-        let input = kentos_commands::MapWorkRestore { item: id.to_owned(), uids: Vec::new(), expected_revision: None };
-        let result = kentos_native_application::map_work_restore::execute(&mut ExecutionContext::new(&mut doc.model), input);
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let input = kentos_commands::MapWorkRestore {
+            item: id.to_owned(),
+            uids: Vec::new(),
+            expected_revision: None,
+        };
+        let result = kentos_native_application::map_work_restore::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            input,
+        );
         if let Some(out) = self.answered(result) {
             self.say(Level::Success, restored_words(&out));
         }
@@ -271,7 +306,11 @@ impl MapWorkPanelApp for App {
     /// The layer a new item takes: the one chosen in Katmanlar, else the active one.
     fn map_work_layer(&self) -> Option<String> {
         let doc = self.document.as_ref()?;
-        Some(self.selected_layer.clone().unwrap_or_else(|| doc.model.layers().active().to_owned()))
+        Some(
+            self.selected_layer
+                .clone()
+                .unwrap_or_else(|| doc.model.layers().active().to_owned()),
+        )
     }
 
     fn map_work_add(&mut self, file: Option<PathBuf>) {
@@ -293,7 +332,13 @@ impl MapWorkPanelApp for App {
         };
         if let Some(out) = self.map_work_edit(operation) {
             self.modules.map_mut().map_work.name.clear();
-            self.say(Level::Success, format!("“{name}” harita işine eklendi ({}).", out.item.unwrap_or_default()));
+            self.say(
+                Level::Success,
+                format!(
+                    "“{name}” harita işine eklendi ({}).",
+                    out.item.unwrap_or_default()
+                ),
+            );
         }
     }
 
@@ -304,7 +349,8 @@ impl MapWorkPanelApp for App {
             return;
         };
         let Some(item) = self
-            .modules.map()
+            .modules
+            .map()
             .map_work
             .profile_item
             .clone()
@@ -314,7 +360,8 @@ impl MapWorkPanelApp for App {
             return;
         };
         let chosen = self
-            .modules.map()
+            .modules
+            .map()
             .map_work
             .profile_class
             .clone()
@@ -340,12 +387,23 @@ impl MapWorkPanelApp for App {
             Some(p) => (vec![class.to_owned()], Some(p.name)),
             None => (vec![class.to_owned()], None),
         };
-        let op = MapWorkOperation::Profile { item: item.clone(), name: Some(name.to_owned()), classes };
+        let op = MapWorkOperation::Profile {
+            item: item.clone(),
+            name: Some(name.to_owned()),
+            classes,
+        };
         if let Some(out) = self.map_work_edit(op) {
-            let title = profile_classes().into_iter().find(|c| c.0 == chosen).map_or(chosen.clone(), |c| c.1);
+            let title = profile_classes()
+                .into_iter()
+                .find(|c| c.0 == chosen)
+                .map_or(chosen.clone(), |c| c.1);
             let mut words = format!("“{title}” sınıfı öğeye verildi");
             if !out.layers.is_empty() || !out.fields.is_empty() {
-                words.push_str(&format!(" ({} katman, {} alan eklendi)", out.layers.len(), out.fields.len()));
+                words.push_str(&format!(
+                    " ({} katman, {} alan eklendi)",
+                    out.layers.len(),
+                    out.fields.len()
+                ));
             }
             words.push('.');
             if let Some(old) = replaced {
@@ -357,9 +415,23 @@ impl MapWorkPanelApp for App {
 
     /// docs/adr/5280: the item given the first profile suggested for its kind, with the classes that suit it.
     fn map_work_suggest(&mut self, item: &str) {
-        let Some(Ok(tree)) = self.map_work_read() else { return };
-        let Some(s) = tree.items.iter().find(|r| r.id == item).and_then(|r| r.suggested.first()).cloned() else { return };
-        let op = MapWorkOperation::Profile { item: item.to_owned(), name: Some(s.name.clone()), classes: s.classes.clone() };
+        let Some(Ok(tree)) = self.map_work_read() else {
+            return;
+        };
+        let Some(s) = tree
+            .items
+            .iter()
+            .find(|r| r.id == item)
+            .and_then(|r| r.suggested.first())
+            .cloned()
+        else {
+            return;
+        };
+        let op = MapWorkOperation::Profile {
+            item: item.to_owned(),
+            name: Some(s.name.clone()),
+            classes: s.classes.clone(),
+        };
         if let Some(out) = self.map_work_edit(op) {
             self.say(
                 Level::Success,
@@ -396,9 +468,18 @@ impl MapWorkPanelApp for App {
         }
     }
 
-    fn pick_file(title: &'static str, then: impl FnOnce(Option<PathBuf>) -> Event + Send + 'static) -> Task<Message> {
+    fn pick_file(
+        title: &'static str,
+        then: impl FnOnce(Option<PathBuf>) -> Event + Send + 'static,
+    ) -> Task<Message> {
         Task::perform(
-            async move { rfd::AsyncFileDialog::new().set_title(title).pick_file().await.map(|f| f.path().to_path_buf()) },
+            async move {
+                rfd::AsyncFileDialog::new()
+                    .set_title(title)
+                    .pick_file()
+                    .await
+                    .map(|f| f.path().to_path_buf())
+            },
             move |path| msg(then(path)),
         )
     }
@@ -423,7 +504,9 @@ impl MapWorkPanelApp for App {
                 if let Some(out) = self.map_work_edit(MapWorkOperation::Relink { item: id, file }) {
                     let words = match out.relinked {
                         0 => "Kaynak yeniden bağlandı.".to_owned(),
-                        n => format!("Kaynak yeniden bağlandı; {n} resim de yeni dosyayı gösteriyor."),
+                        n => format!(
+                            "Kaynak yeniden bağlandı; {n} resim de yeni dosyayı gösteriyor."
+                        ),
                     };
                     self.say(Level::Success, words);
                 }
@@ -431,14 +514,27 @@ impl MapWorkPanelApp for App {
             Event::Relinked(_, None) => {}
             Event::Refresh(id) => {
                 if let Some(out) = self.map_work_edit(MapWorkOperation::Refresh { item: id }) {
-                    self.say(Level::Info, format!("Kaynağın yeni içeriği kabul edildi; {} türetme güncel değil.", out.stale));
+                    self.say(
+                        Level::Info,
+                        format!(
+                            "Kaynağın yeni içeriği kabul edildi; {} türetme güncel değil.",
+                            out.stale
+                        ),
+                    );
                 }
             }
             Event::Status(id, status) => {
-                let op = MapWorkOperation::Set { item: id, name: None, status: Some(status), layers: None };
+                let op = MapWorkOperation::Set {
+                    item: id,
+                    name: None,
+                    status: Some(status),
+                    layers: None,
+                };
                 if self.map_work_edit(op).is_some() {
                     let words = match status {
-                        W::Approved => "Onaylı teslim revizyonu kaydedildi; bu ofisin kaydıdır, kurum onayı değildir.",
+                        W::Approved => {
+                            "Onaylı teslim revizyonu kaydedildi; bu ofisin kaydıdır, kurum onayı değildir."
+                        }
                         W::Review => "Öğe denetlenecek.",
                         W::Draft => "Öğe taslağa döndü.",
                     };
@@ -463,8 +559,19 @@ impl MapWorkPanelApp for App {
                 self.map_work_shifts_again();
             }
             Event::ProfileRemove(id) => {
-                if self.map_work_edit(MapWorkOperation::Profile { item: id, name: None, classes: Vec::new() }).is_some() {
-                    self.say(Level::Info, "Öğenin tipli katman profili kaldırıldı; katmanları öğede kalır.".to_owned());
+                if self
+                    .map_work_edit(MapWorkOperation::Profile {
+                        item: id,
+                        name: None,
+                        classes: Vec::new(),
+                    })
+                    .is_some()
+                {
+                    self.say(
+                        Level::Info,
+                        "Öğenin tipli katman profili kaldırıldı; katmanları öğede kalır."
+                            .to_owned(),
+                    );
                 }
             }
         }
@@ -473,14 +580,23 @@ impl MapWorkPanelApp for App {
 
     /// The lasting ids of the selected objects.
     fn selected_uids(&self) -> Vec<String> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
-        self.selection.ids().iter().filter_map(|s| doc.model.uid(*s)).map(|u| u.to_string()).collect()
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        self.selection
+            .ids()
+            .iter()
+            .filter_map(|s| doc.model.uid(*s))
+            .map(|u| u.to_string())
+            .collect()
     }
 
     /// Where each selected object comes from in the map's work (read quickly: the items' revisions, a design's content
     /// revision worked out once).
     fn selected_sources(&self) -> Vec<kentos_commands::WorkObjectSource> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
         map_work::sources_of(&doc.model, &self.selected_uids())
     }
 
@@ -488,12 +604,23 @@ impl MapWorkPanelApp for App {
     /// and Harita işi brought to the front: the way from what is selected to where it came from.
     fn map_work_show_source(&mut self) {
         let Some(src) = self.selected_sources().into_iter().next() else {
-            self.say(Level::Warn, "Seçili nesne harita işinin bir öğesinde değil.");
+            self.say(
+                Level::Warn,
+                "Seçili nesne harita işinin bir öğesinde değil.",
+            );
             return;
         };
-        let Some(work) = self.document.as_ref().and_then(|d| d.model.map_work().cloned()) else { return };
+        let Some(work) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.map_work().cloned())
+        else {
+            return;
+        };
         let name = |id: &Option<String>| {
-            id.as_deref().and_then(|i| work.item(i)).map_or_else(|| "?".to_owned(), |i| i.name.clone())
+            id.as_deref()
+                .and_then(|i| work.item(i))
+                .map_or_else(|| "?".to_owned(), |i| i.name.clone())
         };
         let words = match src.role {
             kentos_commands::WorkObjectRole::Derived => format!(
@@ -501,16 +628,30 @@ impl MapWorkPanelApp for App {
                 name(&src.source),
                 src.derivation.clone().unwrap_or_default(),
                 src.operation.clone().unwrap_or_default(),
-                if src.current == Some(false) { "kaynağı sonra değişti, güncel değil" } else { "güncel" }
+                if src.current == Some(false) {
+                    "kaynağı sonra değişti, güncel değil"
+                } else {
+                    "güncel"
+                }
             ),
-            kentos_commands::WorkObjectRole::Source => format!("Nesne “{}” öğesinin kaynak verisi.", name(&src.source)),
+            kentos_commands::WorkObjectRole::Source => {
+                format!("Nesne “{}” öğesinin kaynak verisi.", name(&src.source))
+            }
             kentos_commands::WorkObjectRole::Free => match &src.item {
-                Some(_) => format!("Nesne “{}” öğesinde, kullanıcının bağımsız çizimi.", name(&src.item)),
-                None => "Nesne harita işinin bir öğesinde değil; kullanıcının bağımsız çizimi.".to_owned(),
+                Some(_) => format!(
+                    "Nesne “{}” öğesinde, kullanıcının bağımsız çizimi.",
+                    name(&src.item)
+                ),
+                None => "Nesne harita işinin bir öğesinde değil; kullanıcının bağımsız çizimi."
+                    .to_owned(),
             },
         };
         let item = src.source.clone().or(src.item.clone());
-        if let Some(first) = item.as_deref().and_then(|i| work.item(i)).and_then(|i| i.layers.first()) {
+        if let Some(first) = item
+            .as_deref()
+            .and_then(|i| work.item(i))
+            .and_then(|i| i.layers.first())
+        {
             self.selected_layer = Some(first.clone());
         }
         if item.is_some() {
@@ -521,7 +662,10 @@ impl MapWorkPanelApp for App {
             if !self.right_panel_shown() {
                 self.toggle_right_panel();
             }
-            self.docks.update(kentos_ui::widget::docking::Event::Selected(crate::app::Panel::MapWork));
+            self.docks
+                .update(kentos_ui::widget::docking::Event::Selected(
+                    crate::app::Panel::MapWork,
+                ));
         }
         self.say(Level::Info, words);
     }
@@ -535,7 +679,10 @@ impl MapWorkPanelApp for App {
             .map(|s| s.uid)
             .collect();
         if uids.is_empty() {
-            self.say(Level::Warn, "Seçimde türetilmiş nesne yok; bağımsız yapılacak bir şey yok.");
+            self.say(
+                Level::Warn,
+                "Seçimde türetilmiş nesne yok; bağımsız yapılacak bir şey yok.",
+            );
             return;
         }
         if let Some(out) = self.map_work_edit(MapWorkOperation::Release { uids }) {
@@ -543,14 +690,21 @@ impl MapWorkPanelApp for App {
                 0 => String::new(),
                 n => format!(" {n} türetme kaydı boşaldı ve kalktı."),
             };
-            self.say(Level::Success, format!("{} nesne bağımsız çizim oldu; kaynağını izlemiyor.{gone}", out.freed));
+            self.say(
+                Level::Success,
+                format!(
+                    "{} nesne bağımsız çizim oldu; kaynağını izlemiyor.{gone}",
+                    out.freed
+                ),
+            );
         }
     }
 
     /// Seçimi türet: the selected objects recorded as made from the item chosen, at its revision now.
     fn map_work_derive(&mut self) {
         let Some(source) = self
-            .modules.map()
+            .modules
+            .map()
             .map_work
             .derive_from
             .clone()
@@ -562,16 +716,30 @@ impl MapWorkPanelApp for App {
         if uids.is_empty() {
             return;
         }
-        let operation = MapWorkOperation::Derive { source, uids, operation: "Elle türetme kaydı".into() };
+        let operation = MapWorkOperation::Derive {
+            source,
+            uids,
+            operation: "Elle türetme kaydı".into(),
+        };
         if let Some(out) = self.map_work_edit(operation) {
-            self.say(Level::Success, format!("Seçim türetildi diye kaydedildi ({}).", out.derivation.unwrap_or_default()));
+            self.say(
+                Level::Success,
+                format!(
+                    "Seçim türetildi diye kaydedildi ({}).",
+                    out.derivation.unwrap_or_default()
+                ),
+            );
         }
     }
 
     /// The selected objects no derivation names yet: what Seçimi türet records (a derived one is already another's).
     fn underived_uids(&self) -> Vec<String> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
-        let Some(work) = doc.model.map_work() else { return self.selected_uids() };
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        let Some(work) = doc.model.map_work() else {
+            return self.selected_uids();
+        };
         // One pass over the records' objects (the panel draws every frame; a record may hold an import's 10⁵ points).
         let mut left: Vec<String> = self.selected_uids();
         let mut wanted: HashSet<String> = left.iter().cloned().collect();
@@ -588,8 +756,12 @@ impl MapWorkPanelApp for App {
     /// The items the selection can be recorded as made from, by id and name: those with a file, and those without
     /// one (a design, by its content revision; docs/adr/2080 §2) that hold none of the selected objects.
     fn source_items(&self) -> Vec<(String, String)> {
-        let Some(doc) = self.document.as_ref() else { return Vec::new() };
-        let Some(work) = doc.model.map_work() else { return Vec::new() };
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        let Some(work) = doc.model.map_work() else {
+            return Vec::new();
+        };
         let mut holding: HashSet<&str> = HashSet::new();
         for slot in self.selection.ids() {
             if let Some(e) = doc.model.get(*slot)
@@ -611,10 +783,17 @@ impl MapWorkPanelApp for App {
         if self.selection.is_empty() || self.selection.len() > 10_000 {
             return false;
         }
-        let Some(doc) = self.document.as_ref() else { return false };
-        let mut roles = self.selected_uids().into_iter().filter_map(|u| map_work::role_of(&doc.model, &u));
+        let Some(doc) = self.document.as_ref() else {
+            return false;
+        };
+        let mut roles = self
+            .selected_uids()
+            .into_iter()
+            .filter_map(|u| map_work::role_of(&doc.model, &u));
         match id {
-            "map.workSource" => roles.any(|(role, item)| item.is_some() || role != kentos_commands::WorkObjectRole::Free),
+            "map.workSource" => roles.any(|(role, item)| {
+                item.is_some() || role != kentos_commands::WorkObjectRole::Free
+            }),
             _ => roles.any(|(role, _)| role == kentos_commands::WorkObjectRole::Derived),
         }
     }
@@ -628,14 +807,23 @@ impl MapWorkPanelApp for App {
     }
 
     fn select_item(&mut self, id: &str) {
-        let Some(doc) = self.document.as_ref() else { return };
-        let Some(item) = doc.model.map_work().and_then(|w| w.item(id)).cloned() else { return };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let Some(item) = doc.model.map_work().and_then(|w| w.item(id)).cloned() else {
+            return;
+        };
         let layers = doc.model.layers();
         let slots: Vec<Slot> = item
             .layers
             .iter()
             .flat_map(|l| layers.leaves_of(l))
-            .flat_map(|leaf| doc.model.by_layer_with_uids(&leaf.id).map(|(u, _)| u).collect::<Vec<_>>())
+            .flat_map(|leaf| {
+                doc.model
+                    .by_layer_with_uids(&leaf.id)
+                    .map(|(u, _)| u)
+                    .collect::<Vec<_>>()
+            })
             .filter_map(|u| doc.model.slot_of(u))
             .collect();
         if let Some(first) = item.layers.first() {
@@ -645,11 +833,22 @@ impl MapWorkPanelApp for App {
     }
 
     fn select_derivation(&mut self, id: &str) {
-        let Some(doc) = self.document.as_ref() else { return };
-        let Some(d) = doc.model.map_work().and_then(|w| w.derivations.iter().find(|d| d.id == id)).cloned() else {
+        let Some(doc) = self.document.as_ref() else {
             return;
         };
-        let slots = d.uids.iter().filter_map(|u| doc.model.slot_of(Uuid::from_bytes(u.0))).collect();
+        let Some(d) = doc
+            .model
+            .map_work()
+            .and_then(|w| w.derivations.iter().find(|d| d.id == id))
+            .cloned()
+        else {
+            return;
+        };
+        let slots = d
+            .uids
+            .iter()
+            .filter_map(|u| doc.model.slot_of(Uuid::from_bytes(u.0)))
+            .collect();
         self.select_slots(slots);
     }
 
@@ -657,11 +856,26 @@ impl MapWorkPanelApp for App {
     /// and shown, as the tree lists them (at most `WORK_CHANGES_LISTED`); the removed ones are gone from the drawing.
     fn select_changes(&mut self, id: &str) {
         self.modules.map_mut().map_work.changes_of = Some(id.to_owned());
-        let Some(Ok(tree)) = self.map_work_read() else { return };
-        let Some(c) = tree.items.iter().find(|r| r.id == id).and_then(|r| r.changes.clone()) else { return };
-        let Some(doc) = self.document.as_ref() else { return };
-        let slots: Vec<Slot> =
-            c.uids.iter().filter_map(|u| Uuid::parse_str(u).ok()).filter_map(|u| doc.model.slot_of(u)).collect();
+        let Some(Ok(tree)) = self.map_work_read() else {
+            return;
+        };
+        let Some(c) = tree
+            .items
+            .iter()
+            .find(|r| r.id == id)
+            .and_then(|r| r.changes.clone())
+        else {
+            return;
+        };
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let slots: Vec<Slot> = c
+            .uids
+            .iter()
+            .filter_map(|u| Uuid::parse_str(u).ok())
+            .filter_map(|u| doc.model.slot_of(u))
+            .collect();
         let n = slots.len();
         // Docs/adr/3680: a removed object as approved, when the approval kept its objects' values.
         let gone = match (c.removed, removed_words(&c)) {
@@ -672,13 +886,21 @@ impl MapWorkPanelApp for App {
         let attributes = attribute_words(&c).map_or(String::new(), |w| format!(" ({w})"));
         // Docs/adr/3280: the changed objects' parts, when the approval kept them.
         let which = c.parts.as_ref().map_or(String::new(), |p| {
-            let named: Vec<String> =
-                [(p.geometry, "geometrisi"), (p.attributes, "öznitelikleri"), (p.layer, "katmanı"), (p.look, "görünüşü")]
-                    .into_iter()
-                    .filter(|(k, _)| *k > 0)
-                    .map(|(k, w)| format!("{k} nesnenin {w}"))
-                    .collect();
-            if named.is_empty() { String::new() } else { format!("; değişen: {}{attributes}", named.join(", ")) }
+            let named: Vec<String> = [
+                (p.geometry, "geometrisi"),
+                (p.attributes, "öznitelikleri"),
+                (p.layer, "katmanı"),
+                (p.look, "görünüşü"),
+            ]
+            .into_iter()
+            .filter(|(k, _)| *k > 0)
+            .map(|(k, w)| format!("{k} nesnenin {w}"))
+            .collect();
+            if named.is_empty() {
+                String::new()
+            } else {
+                format!("; değişen: {}{attributes}", named.join(", "))
+            }
         });
         // Docs/adr/4480: the approved shapes of those whose geometry changed, over the drawing with the selection;
         // docs/adr/4880: and of the removed ones.
@@ -689,20 +911,25 @@ impl MapWorkPanelApp for App {
             .filter_map(kentos_native_application::map_work_restore::approved_entity)
             .collect();
         let moved = shapes.len();
-        shapes.extend(
-            c.removed_objects.iter().filter_map(|r| kentos_native_application::map_work_restore::approved_entity(&r.approved)),
-        );
+        shapes.extend(c.removed_objects.iter().filter_map(|r| {
+            kentos_native_application::map_work_restore::approved_entity(&r.approved)
+        }));
         let gone_drawn = shapes.len() - moved;
         let drawn = match (moved, gone_drawn) {
             (0, 0) => String::new(),
-            (k, 0) => format!(" Geometrisi değişen {k} nesnenin onaylanan şekli kesik çizgiyle gösteriliyor."),
+            (k, 0) => format!(
+                " Geometrisi değişen {k} nesnenin onaylanan şekli kesik çizgiyle gösteriliyor."
+            ),
             (0, g) => format!(" Silinen {g} nesnenin onaylanan şekli kesik çizgiyle gösteriliyor."),
             (k, g) => format!(
                 " Geometrisi değişen {k} ve silinen {g} nesnenin onaylanan şekli kesik çizgiyle gösteriliyor."
             ),
         };
         // Docs/adr/4880: how far each moved, in the table under the tree; the largest said.
-        let decimals = self.document.as_ref().map_or(3, |d| d.model.settings().length_decimals as usize);
+        let decimals = self
+            .document
+            .as_ref()
+            .map_or(3, |d| d.model.settings().length_decimals as usize);
         self.modules.map_mut().map_work.shifts = shift_rows(&c, decimals);
         let largest = c
             .objects
@@ -711,15 +938,23 @@ impl MapWorkPanelApp for App {
             .map(|h| h.d)
             .fold(None, |m: Option<f64>, d| Some(m.map_or(d, |m| m.max(d))));
         let drawn = match largest {
-            Some(h) => format!("{drawn} En büyük kayma (Hausdorff) {h:.decimals$} m; kaymalar tabloda."),
+            Some(h) => {
+                format!("{drawn} En büyük kayma (Hausdorff) {h:.decimals$} m; kaymalar tabloda.")
+            }
             None => drawn,
         };
         let words = if n == 0 {
             format!("Onaydan sonra değişen ya da eklenen nesne çizimde yok{gone}.")
         } else {
-            let first = if (c.changed + c.added) as usize > n { format!(" (ilk {n})") } else { String::new() };
+            let first = if (c.changed + c.added) as usize > n {
+                format!(" (ilk {n})")
+            } else {
+                String::new()
+            };
             self.select_slots(slots);
-            format!("Onaydan sonra değişen ya da eklenen {n} nesne seçildi{first}{which}{gone}.{drawn}")
+            format!(
+                "Onaydan sonra değişen ya da eklenen {n} nesne seçildi{first}{which}{gone}.{drawn}"
+            )
         };
         self.modules.map_mut().map_work.approved = (!shapes.is_empty())
             .then(|| crate::approved_layer::Approved::of(&shapes, self.selection.version()));
@@ -728,7 +963,9 @@ impl MapWorkPanelApp for App {
 
     fn map_work_view(&self) -> Element<'_, Message> {
         let Some(read) = self.map_work_read() else {
-            return container(label::caption("Açık çizim yok.")).padding([8, 12]).into();
+            return container(label::caption("Açık çizim yok."))
+                .padding([8, 12])
+                .into();
         };
         let tree = match read {
             Ok(t) => t,
@@ -757,7 +994,11 @@ impl MapWorkPanelApp for App {
                 "Ekle: Katmanlar'da seçili katmanla (Enter)",
                 Some(msg(Event::Add(false))),
             ),
-            crate::style::strip::icon_button(Icon::Folder, "Ekle: dosyasıyla…", Some(msg(Event::Add(true)))),
+            crate::style::strip::icon_button(
+                Icon::Folder,
+                "Ekle: dosyasıyla…",
+                Some(msg(Event::Add(true)))
+            ),
             crate::style::strip::icon_toggle(
                 Icon::Hash,
                 "Dosyaları oku: içeriklerini (SHA-256) kabul edilen revizyonla karşılaştır",
@@ -771,16 +1012,23 @@ impl MapWorkPanelApp for App {
         // Seçimi türet (docs/adr/1201 §3): the selection recorded as made from an item with a file or a design
         // (docs/adr/2080 §2).
         let sources = self.source_items();
-        let free = if sources.is_empty() || self.selection.len() > 10_000 { 0 } else { self.underived_uids().len() };
+        let free = if sources.is_empty() || self.selection.len() > 10_000 {
+            0
+        } else {
+            self.underived_uids().len()
+        };
         if free > 0 {
             let chosen = self
-                .modules.map()
+                .modules
+                .map()
                 .map_work
                 .derive_from
                 .clone()
                 .filter(|c| sources.iter().any(|s| s.0 == *c))
                 .unwrap_or_else(|| sources[0].0.clone());
-            let pick = crate::style::fields::select_owned(sources, &chosen, |id| msg(Event::DeriveFrom(id)));
+            let pick = crate::style::fields::select_owned(sources, &chosen, |id| {
+                msg(Event::DeriveFrom(id))
+            });
             head = head.push(
                 row![
                     label::caption(format!("{free} nesnenin kaynağı:")),
@@ -803,7 +1051,8 @@ impl MapWorkPanelApp for App {
                 .map(|r| (r.id.clone(), r.name.clone()))
                 .collect();
             let item = self
-                .modules.map()
+                .modules
+                .map()
                 .map_work
                 .profile_item
                 .clone()
@@ -811,7 +1060,8 @@ impl MapWorkPanelApp for App {
                 .unwrap_or_else(|| owners[0].0.clone());
             let classes = profile_classes();
             let class = self
-                .modules.map()
+                .modules
+                .map()
                 .map_work
                 .profile_class
                 .clone()
@@ -820,7 +1070,10 @@ impl MapWorkPanelApp for App {
             head = head.push(
                 row![
                     container(label::caption("Tipli katman")).width(84),
-                    container(crate::style::fields::select_owned(owners, &item, |id| msg(Event::ProfileItem(id)))).width(Fill),
+                    container(crate::style::fields::select_owned(owners, &item, |id| msg(
+                        Event::ProfileItem(id)
+                    )))
+                    .width(Fill),
                 ]
                 .spacing(4)
                 .align_y(Center),
@@ -828,7 +1081,12 @@ impl MapWorkPanelApp for App {
             head = head.push(
                 row![
                     container(label::caption("Sınıf")).width(84),
-                    container(crate::style::fields::select_owned(classes, &class, |c| msg(Event::ProfileClass(c)))).width(Fill),
+                    container(crate::style::fields::select_owned(
+                        classes,
+                        &class,
+                        |c| msg(Event::ProfileClass(c))
+                    ))
+                    .width(Fill),
                     crate::style::strip::icon_button(
                         Icon::Plus,
                         "Sınıfı öğeye ver: katmanı ve alanları yoksa eklenir, katman öğeye girer",
@@ -839,7 +1097,12 @@ impl MapWorkPanelApp for App {
                 .align_y(Center),
             );
             // docs/adr/5280: the profile suggested for the item's kind, when it has none.
-            if let Some(s) = tree.items.iter().find(|r| r.id == item).and_then(|r| r.suggested.first()) {
+            if let Some(s) = tree
+                .items
+                .iter()
+                .find(|r| r.id == item)
+                .and_then(|r| r.suggested.first())
+            {
                 head = head.push(
                     row![
                         container(label::caption("Önerilen")).width(84),
@@ -878,10 +1141,13 @@ impl MapWorkPanelApp for App {
             .filter(self.modules.map().map_work.filter, |f| msg(Event::Filter(f)))
             .counted("Güncel değil", "Sorun")
             .empty("Harita işinde öğe yok: türünü ve adını yazıp Katmanlar'da seçili katmanla ya da dosyasıyla ekleyin.");
-        let mut all = column![head, kentos_ui::widget::horizontal_divider(), body.view()].spacing(4).padding([6, 0]);
+        let mut all = column![head, kentos_ui::widget::horizontal_divider(), body.view()]
+            .spacing(4)
+            .padding([6, 0]);
         // Docs/adr/4880: how far the objects Değişenler selected moved, while their shapes are drawn.
         if self
-            .modules.map()
+            .modules
+            .map()
             .map_work
             .approved
             .as_ref()
@@ -925,7 +1191,11 @@ impl MapWorkPanelApp for App {
 fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
     let mut detail: Vec<String> = r.why.clone();
     if let Some(f) = &r.file {
-        detail.push(format!("Dosyası: {} (revizyon {}).", f.path, short(&f.revision)));
+        detail.push(format!(
+            "Dosyası: {} (revizyon {}).",
+            f.path,
+            short(&f.revision)
+        ));
     }
     if let Some(c) = &r.content {
         detail.push(format!("İçerik revizyonu {}.", short(c)));
@@ -951,7 +1221,11 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
         S::Incomplete | S::Changed | S::Revised => (Status::Warning, state_words(r.state)),
         S::Missing | S::Stale => (Status::Danger, state_words(r.state)),
     };
-    let meta = if r.layers.is_empty() { "katmansız".to_owned() } else { format!("{} nesne", r.objects) };
+    let meta = if r.layers.is_empty() {
+        "katmansız".to_owned()
+    } else {
+        format!("{} nesne", r.objects)
+    };
     let mut item = StatusItem::new(format!("item:{}", r.id), r.name.clone())
         .meta(meta)
         .status(tone, words)
@@ -965,12 +1239,16 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
             "Yeniden onayla: bugünkü revizyonu damgala (kurum onayı değildir)",
             msg(Event::Status(r.id.clone(), W::Approved)),
         ),
-        (Some(F::Missing), _) => {
-            item.action(icon(Icon::Folder).size(13.0), "Yeniden bağla…", msg(Event::Relink(r.id.clone())))
-        }
-        (Some(F::Changed), _) => {
-            item.action(icon(Icon::Redo).size(13.0), "Yenile: yeni içeriği kabul et", msg(Event::Refresh(r.id.clone())))
-        }
+        (Some(F::Missing), _) => item.action(
+            icon(Icon::Folder).size(13.0),
+            "Yeniden bağla…",
+            msg(Event::Relink(r.id.clone())),
+        ),
+        (Some(F::Changed), _) => item.action(
+            icon(Icon::Redo).size(13.0),
+            "Yenile: yeni içeriği kabul et",
+            msg(Event::Refresh(r.id.clone())),
+        ),
         (_, W::Draft) => item.action(
             icon(Icon::Check).size(13.0),
             "Denetime gönder",
@@ -981,9 +1259,11 @@ fn work_item<'a>(r: &WorkRow) -> StatusItem<'a, Message> {
             "Onayla: ofisin teslim revizyonu (kurum onayı değildir)",
             msg(Event::Status(r.id.clone(), W::Approved)),
         ),
-        (_, W::Approved) => {
-            item.action(icon(Icon::Undo).size(13.0), "Taslağa döndür", msg(Event::Status(r.id.clone(), W::Draft)))
-        }
+        (_, W::Approved) => item.action(
+            icon(Icon::Undo).size(13.0),
+            "Taslağa döndür",
+            msg(Event::Status(r.id.clone(), W::Draft)),
+        ),
     };
     if let Some(c) = &r.changes {
         item = item.push(changes_item(r, c));
@@ -1003,7 +1283,9 @@ pub(crate) fn profile_classes() -> Vec<(String, String)> {
         .flat_map(|p| {
             let title = p.title.clone();
             let name = p.name.clone();
-            p.classes.into_iter().map(move |c| (format!("{name}/{}", c.id), format!("{} · {title}", c.title)))
+            p.classes
+                .into_iter()
+                .map(move |c| (format!("{name}/{}", c.id), format!("{} · {title}", c.title)))
         })
         .collect()
 }
@@ -1014,7 +1296,10 @@ fn profile_item<'a>(r: &WorkRow, p: &kentos_commands::WorkProfileRow) -> StatusI
     let title = p.title.clone().unwrap_or_else(|| p.name.clone());
     let mut detail = Vec::new();
     let (tone, words) = if !p.found {
-        detail.push(format!("“{}” profili bulunamadı: KentOS'un profili değil, projenin klasöründe de yok.", p.name));
+        detail.push(format!(
+            "“{}” profili bulunamadı: KentOS'un profili değil, projenin klasöründe de yok.",
+            p.name
+        ));
         (Status::Warning, "Profil yok".to_owned())
     } else if p.findings.is_empty() {
         (Status::Ok, "Uyuyor".to_owned())
@@ -1022,14 +1307,21 @@ fn profile_item<'a>(r: &WorkRow, p: &kentos_commands::WorkProfileRow) -> StatusI
         (Status::Warning, format!("{} bulgu", p.findings.len()))
     };
     for c in &p.classes {
-        let state = if c.findings == 0 { "uyuyor".to_owned() } else { format!("{} bulgu", c.findings) };
+        let state = if c.findings == 0 {
+            "uyuyor".to_owned()
+        } else {
+            format!("{} bulgu", c.findings)
+        };
         detail.push(format!("{}: {} nesne, {state}.", c.title, c.objects));
     }
     for f in p.findings.iter().take(3) {
         detail.push(f.message.clone());
     }
     if !p.free.is_empty() {
-        detail.push(format!("Serbest katmanlar (tipsiz): {}.", p.free.join(", ")));
+        detail.push(format!(
+            "Serbest katmanlar (tipsiz): {}.",
+            p.free.join(", ")
+        ));
     }
     detail.push("Bulgusu olan öğe onaylanmaz.".to_owned());
     StatusItem::new(format!("pr:{}", r.id), format!("Profil: {title}"))
@@ -1037,7 +1329,11 @@ fn profile_item<'a>(r: &WorkRow, p: &kentos_commands::WorkProfileRow) -> StatusI
         .meta(format!("{} sınıf", p.classes.len()))
         .status(tone, words)
         .detail(detail.join(" "))
-        .action(icon(Icon::Close).size(13.0), "Profili kaldır (katmanlar öğede kalır)", msg(Event::ProfileRemove(r.id.clone())))
+        .action(
+            icon(Icon::Close).size(13.0),
+            "Profili kaldır (katmanlar öğede kalır)",
+            msg(Event::ProfileRemove(r.id.clone())),
+        )
 }
 
 /// docs/adr/4880: the shift table's rows: each changed object whose geometry moved, its kind, its vertices then and
@@ -1049,7 +1345,12 @@ pub(crate) fn shift_rows(c: &WorkChanges, decimals: usize) -> Vec<Vec<String>> {
         .iter()
         .filter_map(|o| {
             let s = o.shift.as_ref()?;
-            let kind = o.approved.as_ref().and_then(|a| a.get("kind")).and_then(serde_json::Value::as_str).unwrap_or("");
+            let kind = o
+                .approved
+                .as_ref()
+                .and_then(|a| a.get("kind"))
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("");
             let corners = if s.vertices[0] == s.vertices[1] {
                 s.vertices[0].to_string()
             } else {
@@ -1059,7 +1360,9 @@ pub(crate) fn shift_rows(c: &WorkChanges, decimals: usize) -> Vec<Vec<String>> {
                 crate::selecting::kind_title(kind).to_string(),
                 corners,
                 s.largest.as_ref().map_or("—".to_owned(), |l| m(l.d)),
-                s.largest.as_ref().map_or("—".to_owned(), |l| (l.index + 1).to_string()),
+                s.largest
+                    .as_ref()
+                    .map_or("—".to_owned(), |l| (l.index + 1).to_string()),
                 s.rms.map_or("—".to_owned(), m),
                 s.hausdorff.as_ref().map_or("—".to_owned(), |h| m(h.d)),
             ])
@@ -1067,11 +1370,14 @@ pub(crate) fn shift_rows(c: &WorkChanges, decimals: usize) -> Vec<Vec<String>> {
                 // docs/adr/5280: against the limit, with the vertices beyond it when they pair.
                 // Beside the object: the dock is narrow.
                 if let Some(b) = s.beyond {
-                    r.insert(1, match (b, s.over) {
-                        (true, Some(k)) => format!("Dışında ({k} köşe)"),
-                        (true, None) => "Dışında".to_owned(),
-                        (false, _) => "İçinde".to_owned(),
-                    });
+                    r.insert(
+                        1,
+                        match (b, s.over) {
+                            (true, Some(k)) => format!("Dışında ({k} köşe)"),
+                            (true, None) => "Dışında".to_owned(),
+                            (false, _) => "İçinde".to_owned(),
+                        },
+                    );
                 }
                 r
             })
@@ -1095,7 +1401,9 @@ pub(crate) fn attribute_words(c: &WorkChanges) -> Option<String> {
         .iter()
         .flat_map(|o| &o.attributes)
         .map(|a| {
-            let side = |v: &Option<serde_json::Value>| v.as_ref().map_or_else(|| "yok".to_owned(), value_words);
+            let side = |v: &Option<serde_json::Value>| {
+                v.as_ref().map_or_else(|| "yok".to_owned(), value_words)
+            };
             format!("{}: {} → {}", a.name, side(&a.approved), side(&a.now))
         })
         .collect();
@@ -1104,7 +1412,11 @@ pub(crate) fn attribute_words(c: &WorkChanges) -> Option<String> {
     }
     let more = all.len().saturating_sub(3);
     let first = all.into_iter().take(3).collect::<Vec<_>>().join("; ");
-    Some(if more > 0 { format!("{first} ve {more} değişiklik daha") } else { first })
+    Some(if more > 0 {
+        format!("{first} ve {more} değişiklik daha")
+    } else {
+        first
+    })
 }
 
 /// docs/adr/3680: the removed objects as approved, the first three: each its kind, layer and attributes.
@@ -1117,37 +1429,77 @@ pub(crate) fn removed_words(c: &WorkChanges) -> Option<String> {
         .iter()
         .take(3)
         .map(|r| {
-            let kind = crate::selecting::kind_title(r.approved.get("kind").and_then(serde_json::Value::as_str).unwrap_or(""));
-            let layer = r.approved.get("layerId").and_then(serde_json::Value::as_str).unwrap_or("");
+            let kind = crate::selecting::kind_title(
+                r.approved
+                    .get("kind")
+                    .and_then(serde_json::Value::as_str)
+                    .unwrap_or(""),
+            );
+            let layer = r
+                .approved
+                .get("layerId")
+                .and_then(serde_json::Value::as_str)
+                .unwrap_or("");
             let attrs: Vec<String> = r
                 .approved
                 .get("attrs")
                 .and_then(serde_json::Value::as_object)
-                .map(|m| m.iter().map(|(k, v)| format!("{k} {}", value_words(v))).collect())
+                .map(|m| {
+                    m.iter()
+                        .map(|(k, v)| format!("{k} {}", value_words(v)))
+                        .collect()
+                })
                 .unwrap_or_default();
-            if attrs.is_empty() { format!("{kind} ({layer})") } else { format!("{kind} ({layer}; {})", attrs.join(", ")) }
+            if attrs.is_empty() {
+                format!("{kind} ({layer})")
+            } else {
+                format!("{kind} ({layer}; {})", attrs.join(", "))
+            }
         })
         .collect();
     let more = c.removed_objects.len().saturating_sub(3);
-    Some(if more > 0 { format!("{} ve {more} nesne daha", said.join("; ")) } else { said.join("; ") })
+    Some(if more > 0 {
+        format!("{} ve {more} nesne daha", said.join("; "))
+    } else {
+        said.join("; ")
+    })
 }
 
 /// What an approved item's objects did since its approval, in one sentence (docs/adr/2880 §4); with the approval's
 /// parts (docs/adr/3280), which parts of the changed objects changed, each part's count.
 pub(crate) fn changes_words(c: &WorkChanges) -> String {
     let which = c.parts.as_ref().map_or(String::new(), |p| {
-        let named: Vec<String> = [(p.geometry, "geometri"), (p.attributes, "öznitelik"), (p.layer, "katman"), (p.look, "görünüş")]
-            .into_iter()
-            .filter(|(n, _)| *n > 0)
-            .map(|(n, w)| format!("{w} {n}"))
-            .collect();
-        if named.is_empty() { String::new() } else { format!(" ({})", named.join(", ")) }
-    });
-    let parts: Vec<String> = [(c.changed, "değişti"), (c.added, "eklendi"), (c.removed, "silindi")]
+        let named: Vec<String> = [
+            (p.geometry, "geometri"),
+            (p.attributes, "öznitelik"),
+            (p.layer, "katman"),
+            (p.look, "görünüş"),
+        ]
         .into_iter()
         .filter(|(n, _)| *n > 0)
-        .map(|(n, w)| if w == "değişti" { format!("{n} nesne {w}{which}") } else { format!("{n} nesne {w}") })
+        .map(|(n, w)| format!("{w} {n}"))
         .collect();
+        if named.is_empty() {
+            String::new()
+        } else {
+            format!(" ({})", named.join(", "))
+        }
+    });
+    let parts: Vec<String> = [
+        (c.changed, "değişti"),
+        (c.added, "eklendi"),
+        (c.removed, "silindi"),
+    ]
+    .into_iter()
+    .filter(|(n, _)| *n > 0)
+    .map(|(n, w)| {
+        if w == "değişti" {
+            format!("{n} nesne {w}{which}")
+        } else {
+            format!("{n} nesne {w}")
+        }
+    })
+    .collect();
     match parts.is_empty() {
         true => "Onaydan sonra nesneleri değişti.".to_owned(),
         false => format!("Onaydan sonra {}.", parts.join(", ")),
@@ -1171,7 +1523,8 @@ fn changes_item<'a>(r: &WorkRow, c: &WorkChanges) -> StatusItem<'a, Message> {
     detail.push(match (there, c.removed) {
         (0, _) => "Silinenler çizimde yok; seçilecek nesne yok.".to_owned(),
         (_, 0) => "Basınca değişen ve eklenen nesneler seçilir ve gösterilir.".to_owned(),
-        _ => "Basınca değişen ve eklenen nesneler seçilir ve gösterilir; silinenler çizimde yok.".to_owned(),
+        _ => "Basınca değişen ve eklenen nesneler seçilir ve gösterilir; silinenler çizimde yok."
+            .to_owned(),
     });
     if there > c.uids.len() {
         detail.push(format!("İlk {} nesne seçilir.", c.uids.len()));
@@ -1200,21 +1553,29 @@ fn changes_item<'a>(r: &WorkRow, c: &WorkChanges) -> StatusItem<'a, Message> {
 }
 
 /// The Değişenler row's button (docs/adr/4080).
-pub(crate) const RESTORE_TIP: &str =
-    "Onaylı hâline getir: silinenler aynı kimlikle geri gelir, değişenler onaylanan değerine döner; eklenenler kalır";
+pub(crate) const RESTORE_TIP: &str = "Onaylı hâline getir: silinenler aynı kimlikle geri gelir, değişenler onaylanan değerine döner; eklenenler kalır";
 
 /// What Onaylı hâline getir did (docs/adr/4080): the objects made again, those set back, the added ones that stay.
 pub(crate) fn restored_words(out: &kentos_commands::MapWorkRestored) -> String {
     let mut parts = Vec::new();
     if !out.restored.is_empty() {
-        parts.push(format!("{} silinen nesne aynı kimlikle geri geldi", out.restored.len()));
+        parts.push(format!(
+            "{} silinen nesne aynı kimlikle geri geldi",
+            out.restored.len()
+        ));
     }
     if !out.reverted.is_empty() {
-        parts.push(format!("{} değişen nesne onaylanan değerine döndü", out.reverted.len()));
+        parts.push(format!(
+            "{} değişen nesne onaylanan değerine döndü",
+            out.reverted.len()
+        ));
     }
     let mut words = format!("Onaylı hâline getirildi: {}.", parts.join(", "));
     if out.added > 0 {
-        words.push_str(&format!(" Onaydan sonra eklenen {} nesne yerinde kaldı.", out.added));
+        words.push_str(&format!(
+            " Onaydan sonra eklenen {} nesne yerinde kaldı.",
+            out.added
+        ));
     }
     words
 }

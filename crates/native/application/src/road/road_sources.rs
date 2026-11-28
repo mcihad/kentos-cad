@@ -9,7 +9,9 @@ use kentos_domain::Document;
 /// The terrain surface `id`: the digest of what it is made of now (absent where the project has no such surface) and
 /// the one it was last accepted from.
 pub(crate) fn surface(doc: &Document, id: &str) -> RoadSurfaceSource {
-    let def = crate::road_terrains::surfaces(doc).iter().find(|s| s.id == id);
+    let def = crate::road_terrains::surfaces(doc)
+        .iter()
+        .find(|s| s.id == id);
     RoadSurfaceSource {
         id: id.to_owned(),
         digest: def.map(|d| crate::road_terrains::sources_digest(doc, d)),
@@ -20,23 +22,51 @@ pub(crate) fn surface(doc: &Document, id: &str) -> RoadSurfaceSource {
 /// What a corridor's results are computed from, each as it is now: the corridor, its alignment and profile, its
 /// regions' templates in order and once each, its superelevation schedule and its terrain surface.
 pub(crate) fn corridor(doc: &Document, def: &CorridorDef) -> VolumeSources {
-    let alignment = doc.road_alignments().iter().find(|a| a.id == def.alignment).map_or(0, |a| a.revision);
-    let profile = doc.road_profiles().iter().find(|p| p.id == def.profile).map_or(0, |p| p.revision);
+    let alignment = doc
+        .road_alignments()
+        .iter()
+        .find(|a| a.id == def.alignment)
+        .map_or(0, |a| a.revision);
+    let profile = doc
+        .road_profiles()
+        .iter()
+        .find(|p| p.id == def.profile)
+        .map_or(0, |p| p.revision);
     let mut templates: Vec<RoadSource> = Vec::new();
     for r in &def.regions {
         if !templates.iter().any(|t| t.id == r.template) {
-            let revision = doc.road_templates().iter().find(|t| t.id == r.template).map_or(0, |t| t.revision);
-            templates.push(RoadSource { id: r.template.clone(), revision });
+            let revision = doc
+                .road_templates()
+                .iter()
+                .find(|t| t.id == r.template)
+                .map_or(0, |t| t.revision);
+            templates.push(RoadSource {
+                id: r.template.clone(),
+                revision,
+            });
         }
     }
     VolumeSources {
-        corridor: RoadSource { id: def.id.clone(), revision: def.revision },
-        alignment: RoadSource { id: def.alignment.clone(), revision: alignment },
-        profile: RoadSource { id: def.profile.clone(), revision: profile },
+        corridor: RoadSource {
+            id: def.id.clone(),
+            revision: def.revision,
+        },
+        alignment: RoadSource {
+            id: def.alignment.clone(),
+            revision: alignment,
+        },
+        profile: RoadSource {
+            id: def.profile.clone(),
+            revision: profile,
+        },
         templates,
         superelevation: def.superelevation.as_ref().map(|id| RoadSource {
             id: id.clone(),
-            revision: doc.road_superelevations().iter().find(|s| s.id == *id).map_or(0, |s| s.revision),
+            revision: doc
+                .road_superelevations()
+                .iter()
+                .find(|s| s.id == *id)
+                .map_or(0, |s| s.revision),
         }),
         surface: surface(doc, &def.surface),
     }
@@ -74,8 +104,14 @@ mod tests {
         let (a, b) = ("a".repeat(64), "b".repeat(64));
         assert_eq!(acceptance_words(&of(Some(&a), None)), "kabul edilmedi");
         assert_eq!(acceptance_words(&of(Some(&a), Some(&a))), "kabul edildi");
-        assert_eq!(acceptance_words(&of(Some(&a), Some(&b))), "kabulden sonra değişti");
-        assert_eq!(surface_words(&of(Some(&a), Some(&a))), format!("{a} (kabul edildi)"));
+        assert_eq!(
+            acceptance_words(&of(Some(&a), Some(&b))),
+            "kabulden sonra değişti"
+        );
+        assert_eq!(
+            surface_words(&of(Some(&a), Some(&a))),
+            format!("{a} (kabul edildi)")
+        );
         assert_eq!(surface_words(&of(None, None)), "projede yok");
     }
 }

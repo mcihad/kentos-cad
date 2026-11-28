@@ -4,7 +4,10 @@ use kentos_native_application::drawing_inspect;
 use serde_json::{Value, json};
 
 fn document() -> Document {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
     let mut raw = fixture["setup"].clone();
     raw["entities"] = json!([
         {"kind":"line","id":1,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":1.,"y":0.}},
@@ -20,16 +23,37 @@ fn gap_inspection_is_read_only_and_threshold_is_diagnostic() {
     let doc = document();
     let before = doc.to_snapshot_v2();
     let undo = doc.undo_labels();
-    let input = DrawingInspect { max_gap: Some(0.01), ..Default::default() };
-    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &input, || false) else { panic!("inspection failed") };
-    let gap = output.findings.iter().find(|f| f.code == "boundary_gap").expect("4 mm gap");
+    let input = DrawingInspect {
+        max_gap: Some(0.01),
+        ..Default::default()
+    };
+    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &input, || false)
+    else {
+        panic!("inspection failed")
+    };
+    let gap = output
+        .findings
+        .iter()
+        .find(|f| f.code == "boundary_gap")
+        .expect("4 mm gap");
     assert!((gap.distance.unwrap() - 0.004).abs() < 1e-9);
     assert_eq!(doc.to_snapshot_v2(), before);
     assert_eq!(doc.undo_labels(), undo);
-    let input = DrawingInspect { max_gap: Some(0.), ..input };
-    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &input, || false) else { panic!("inspection failed") };
+    let input = DrawingInspect {
+        max_gap: Some(0.),
+        ..input
+    };
+    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &input, || false)
+    else {
+        panic!("inspection failed")
+    };
     assert!(!output.findings.iter().any(|f| f.code == "boundary_gap"));
-    assert!(output.findings.iter().any(|f| f.code == "boundary_open_end"));
+    assert!(
+        output
+            .findings
+            .iter()
+            .any(|f| f.code == "boundary_open_end")
+    );
 }
 
 #[test]
@@ -262,43 +286,93 @@ fn unicode_mirror_uses_the_inherited_drawing_font_in_plan_execute_and_undo() {
 fn cancelled_inspection_does_not_change_document() {
     let doc = document();
     let before = doc.to_snapshot_v2();
-    assert!(matches!(drawing_inspect::inspect(&doc, &DrawingInspect::default(), || true), CommandResult::Cancelled));
+    assert!(matches!(
+        drawing_inspect::inspect(&doc, &DrawingInspect::default(), || true),
+        CommandResult::Cancelled
+    ));
     assert_eq!(doc.to_snapshot_v2(), before);
 }
 
 #[test]
 fn blocks_outside_boundary_coverage_are_reported() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
     let mut raw = fixture["setup"].clone();
     let block = "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4001";
     raw["blocks"] = json!([{"id":block,"name":"Test","base":{"x":0.,"y":0.},"units":"m","entities":[{"kind":"line","id":1,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":1.,"y":0.}}]}]);
     raw["entities"] = json!([{"kind":"insert","id":1,"layerId":"a","attrs":{},"block":block,"p":{"x":0.,"y":0.},"scale":1.,"rotation":0.}]);
-    let doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
-    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false) else { panic!("inspection failed") };
-    assert_eq!(output.unsupported.len(), 1, "block geometry must not be silently treated as inspected");
+    let doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let CommandResult::Completed { output, .. } =
+        drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false)
+    else {
+        panic!("inspection failed")
+    };
+    assert_eq!(
+        output.unsupported.len(),
+        1,
+        "block geometry must not be silently treated as inspected"
+    );
 }
 
 #[test]
 fn deleted_source_warns_and_undo_restores_association() {
     use kentos_commands::{CallOp, Entity};
     use kentos_domain::Slot;
-    use kentos_native_application::{registry, ExecutionContext};
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    use kentos_native_application::{ExecutionContext, registry};
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
     let mut raw = fixture["setup"].clone();
     raw["entities"] = json!([{"kind":"polygon","id":1,"layerId":"a","attrs":{},"pts":[{"x":0.,"y":0.},{"x":4.,"y":0.},{"x":4.,"y":3.},{"x":0.,"y":3.}]}]);
-    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let mut doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
     let source = doc.uid(Slot(1)).unwrap().to_string();
     let created = registry::run(&mut ExecutionContext::new(&mut doc), "cad.entities.hatch", CallOp::Execute,
         json!({"region":{"kind":"point","at":{"x":2.,"y":1.},"associative":true},"pattern":{"name":"Dolu"},"layerId":"a"})).unwrap();
     assert_eq!(created["status"], "completed", "{created}");
     let before = doc.to_snapshot_v2();
-    let deleted = registry::run(&mut ExecutionContext::new(&mut doc), "cad.entities.delete", CallOp::Execute, json!({"uids":[source]})).unwrap();
+    let deleted = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.entities.delete",
+        CallOp::Execute,
+        json!({"uids":[source]}),
+    )
+    .unwrap();
     assert_eq!(deleted["status"], "completed", "{deleted}");
-    assert!(deleted["warnings"].as_array().unwrap().iter().any(|w| w["code"] == "hatch_association_lost"), "{deleted}");
-    let h = doc.entities().find_map(|e| if let Entity::Hatch(h) = e { Some(h) } else { None }).unwrap();
+    assert!(
+        deleted["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|w| w["code"] == "hatch_association_lost"),
+        "{deleted}"
+    );
+    let h = doc
+        .entities()
+        .find_map(|e| {
+            if let Entity::Hatch(h) = e {
+                Some(h)
+            } else {
+                None
+            }
+        })
+        .unwrap();
     assert!(h.assoc.is_none());
-    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false) else { panic!("inspection failed") };
-    assert!(output.findings.iter().any(|f| f.code == "hatch_unassociated"));
+    let CommandResult::Completed { output, .. } =
+        drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false)
+    else {
+        panic!("inspection failed")
+    };
+    assert!(
+        output
+            .findings
+            .iter()
+            .any(|f| f.code == "hatch_unassociated")
+    );
     doc.undo();
     assert_eq!(doc.to_snapshot_v2(), before);
 }
@@ -307,23 +381,49 @@ fn deleted_source_warns_and_undo_restores_association() {
 fn caps_and_stale_revision_are_explicit_and_read_only() {
     let doc = document();
     let before = doc.to_snapshot_v2();
-    let input = DrawingInspect { uids: Some(vec!["bad".into(); 50_001]), ..Default::default() };
-    let CommandResult::Failed { error } = drawing_inspect::inspect(&doc, &input, || false) else { panic!("scope cap") };
+    let input = DrawingInspect {
+        uids: Some(vec!["bad".into(); 50_001]),
+        ..Default::default()
+    };
+    let CommandResult::Failed { error } = drawing_inspect::inspect(&doc, &input, || false) else {
+        panic!("scope cap")
+    };
     assert_eq!(error.code, "inspection_scope_limit");
-    let input = DrawingInspect { limit: Some(1), max_gap: Some(0.), ..Default::default() };
-    let CommandResult::Completed { output, warnings } = drawing_inspect::inspect(&doc, &input, || false) else { panic!("partial") };
+    let input = DrawingInspect {
+        limit: Some(1),
+        max_gap: Some(0.),
+        ..Default::default()
+    };
+    let CommandResult::Completed { output, warnings } =
+        drawing_inspect::inspect(&doc, &input, || false)
+    else {
+        panic!("partial")
+    };
     assert!(output.truncated);
     assert!(warnings.iter().any(|w| w.code == "inspection_truncated"));
-    let input = DrawingInspect { expected_revision: Some("bad".into()), ..Default::default() };
-    assert!(matches!(drawing_inspect::inspect(&doc, &input, || false), CommandResult::Failed { error } if error.code == "invalid_revision"));
-    let input = DrawingInspect { expected_revision: Some("999999999".into()), ..Default::default() };
-    assert!(matches!(drawing_inspect::inspect(&doc, &input, || false), CommandResult::Conflict { error } if error.code == "revision_conflict"));
+    let input = DrawingInspect {
+        expected_revision: Some("bad".into()),
+        ..Default::default()
+    };
+    assert!(
+        matches!(drawing_inspect::inspect(&doc, &input, || false), CommandResult::Failed { error } if error.code == "invalid_revision")
+    );
+    let input = DrawingInspect {
+        expected_revision: Some("999999999".into()),
+        ..Default::default()
+    };
+    assert!(
+        matches!(drawing_inspect::inspect(&doc, &input, || false), CommandResult::Conflict { error } if error.code == "revision_conflict")
+    );
     assert_eq!(doc.to_snapshot_v2(), before);
 }
 
 #[test]
 fn duplicate_crossing_and_tangent_are_distinguished_without_healing() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
     let mut raw = fixture["setup"].clone();
     raw["entities"] = json!([
         {"kind":"line","id":1,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.,"y":0.}},
@@ -332,79 +432,164 @@ fn duplicate_crossing_and_tangent_are_distinguished_without_healing() {
         {"kind":"circle","id":4,"layerId":"a","attrs":{},"c":{"x":4.,"y":1.},"r":1.},
         {"kind":"line","id":5,"layerId":"a","attrs":{},"a":{"x":3.,"y":0.},"b":{"x":5.,"y":0.}}
     ]);
-    let doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
-    let before=doc.to_snapshot_v2();
-    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false) else { panic!("inspection failed") };
-    for code in ["boundary_duplicate", "boundary_crossing", "boundary_tangent"] {
-        assert!(output.findings.iter().any(|f| f.code == code), "missing {code}: {:?}", output.findings);
+    let doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let before = doc.to_snapshot_v2();
+    let CommandResult::Completed { output, .. } =
+        drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false)
+    else {
+        panic!("inspection failed")
+    };
+    for code in [
+        "boundary_duplicate",
+        "boundary_crossing",
+        "boundary_tangent",
+    ] {
+        assert!(
+            output.findings.iter().any(|f| f.code == code),
+            "missing {code}: {:?}",
+            output.findings
+        );
     }
     assert_eq!(doc.to_snapshot_v2(), before);
 }
 
 #[test]
 fn self_intersection_is_identified_on_the_source_at_large_coordinates() {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
     let mut raw = fixture["setup"].clone();
     raw["entities"] = json!([{"kind":"polygon","id":1,"layerId":"a","attrs":{},"pts":[
         {"x":500000.,"y":4500000.}, {"x":500004.,"y":4500004.},
         {"x":500000.,"y":4500004.}, {"x":500004.,"y":4500000.}
     ]}]);
-    let doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
     let before = doc.to_snapshot_v2();
-    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false) else { panic!("inspection failed") };
-    let hit = output.findings.iter().find(|f| f.code == "boundary_self_intersection").expect("bow-tie crossing");
+    let CommandResult::Completed { output, .. } =
+        drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false)
+    else {
+        panic!("inspection failed")
+    };
+    let hit = output
+        .findings
+        .iter()
+        .find(|f| f.code == "boundary_self_intersection")
+        .expect("bow-tie crossing");
     assert_eq!(hit.uids.len(), 1);
     assert_eq!(hit.points.len(), 1);
     assert!((hit.points[0].x - 500002.).abs() < 1e-8);
     assert!((hit.points[0].y - 4500002.).abs() < 1e-8);
-    assert!(!output.findings.iter().any(|f| f.code == "boundary_open_end"));
+    assert!(
+        !output
+            .findings
+            .iter()
+            .any(|f| f.code == "boundary_open_end")
+    );
     assert_eq!(doc.to_snapshot_v2(), before);
 }
 
 #[test]
 fn millimetre_gap_keeps_its_distance_at_map_coordinates() {
     // Reuse the supported v1 input and translate every endpoint, preserving a 4 mm gap.
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
     let mut raw = fixture["setup"].clone();
     raw["entities"] = json!([
         {"kind":"line","id":1,"layerId":"a","attrs":{},"a":{"x":500000.,"y":4500000.},"b":{"x":500001.,"y":4500000.}},
         {"kind":"line","id":2,"layerId":"a","attrs":{},"a":{"x":500001.004,"y":4500000.},"b":{"x":500002.,"y":4500000.}}
     ]);
-    let doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
-    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &DrawingInspect {max_gap: Some(0.005), ..Default::default()}, || false) else { panic!("inspection failed") };
-    let gap = output.findings.iter().find(|f| f.code == "boundary_gap").expect("4 mm map-coordinate gap");
+    let doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(
+        &doc,
+        &DrawingInspect {
+            max_gap: Some(0.005),
+            ..Default::default()
+        },
+        || false,
+    ) else {
+        panic!("inspection failed")
+    };
+    let gap = output
+        .findings
+        .iter()
+        .find(|f| f.code == "boundary_gap")
+        .expect("4 mm map-coordinate gap");
     assert!((gap.distance.unwrap() - 0.004).abs() < 1e-8);
 }
 
 #[test]
 fn analytic_hatch_with_two_islands_keeps_area_origin_and_single_undo_on_rebind() {
     use kentos_commands::{CallOp, Entity};
-    use kentos_native_application::{registry, ExecutionContext};
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    use kentos_native_application::{ExecutionContext, registry};
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
     let mut raw = fixture["setup"].clone();
     raw["entities"] = json!([
         {"kind":"circle","id":1,"layerId":"a","attrs":{},"c":{"x":0.,"y":0.},"r":10.},
         {"kind":"circle","id":2,"layerId":"a","attrs":{},"c":{"x":-3.,"y":0.},"r":1.},
         {"kind":"circle","id":3,"layerId":"a","attrs":{},"c":{"x":3.,"y":0.},"r":1.}
     ]);
-    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let mut doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
     let created = registry::run(&mut ExecutionContext::new(&mut doc), "cad.entities.hatch", CallOp::Execute,
         json!({"region":{"kind":"point","at":{"x":0.,"y":4.},"associative":true},"pattern":{"name":"ANSI31","angle":30.,"scale":2.,"origin":{"kind":"point","at":{"x":0.123,"y":0.456}}},"layerId":"a"})).unwrap();
     assert_eq!(created["status"], "completed", "{created}");
-    let (uid, original) = doc.entities_with_uids().find_map(|(u,e)| if let Entity::Hatch(h)=e {Some((u.to_string(),h.clone()))} else {None}).unwrap();
+    let (uid, original) = doc
+        .entities_with_uids()
+        .find_map(|(u, e)| {
+            if let Entity::Hatch(h) = e {
+                Some((u.to_string(), h.clone()))
+            } else {
+                None
+            }
+        })
+        .unwrap();
     assert_eq!(original.holes.as_ref().unwrap().len(), 2);
-    assert!(original.boundary.is_some(), "circular boundary must remain analytic");
-    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false) else {panic!("inspect")};
-    assert!((output.hatches[0].area - 98. * std::f64::consts::PI).abs() < 1e-6, "{:?}", output.hatches);
+    assert!(
+        original.boundary.is_some(),
+        "circular boundary must remain analytic"
+    );
+    let CommandResult::Completed { output, .. } =
+        drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false)
+    else {
+        panic!("inspect")
+    };
+    assert!(
+        (output.hatches[0].area - 98. * std::f64::consts::PI).abs() < 1e-6,
+        "{:?}",
+        output.hatches
+    );
     assert_eq!(output.hatches[0].pattern_origin, original.pattern.origin);
-    let untied = registry::run(&mut ExecutionContext::new(&mut doc), "cad.hatches.edit", CallOp::Execute,
-        json!({"edit":{"kind":"untie","uids":[uid]}})).unwrap();
+    let untied = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.hatches.edit",
+        CallOp::Execute,
+        json!({"edit":{"kind":"untie","uids":[uid]}}),
+    )
+    .unwrap();
     assert_eq!(untied["status"], "completed", "{untied}");
     let before = doc.to_snapshot_v2();
     let rebound = registry::run(&mut ExecutionContext::new(&mut doc), "cad.hatches.edit", CallOp::Execute,
         json!({"edit":{"kind":"reselect","uid":uid,"region":{"kind":"point","at":{"x":0.,"y":4.},"associative":true}}})).unwrap();
     assert_eq!(rebound["status"], "completed", "{rebound}");
-    let h = doc.entities().find_map(|e| if let Entity::Hatch(h)=e {Some(h)} else {None}).unwrap();
+    let h = doc
+        .entities()
+        .find_map(|e| {
+            if let Entity::Hatch(h) = e {
+                Some(h)
+            } else {
+                None
+            }
+        })
+        .unwrap();
     assert_eq!(h.pattern, original.pattern);
     let a = h.boundary.as_ref().unwrap();
     let b = original.boundary.as_ref().unwrap();
@@ -414,7 +599,8 @@ fn analytic_hatch_with_two_islands_keeps_area_origin_and_single_undo_on_rebind()
         // A closed loop may start at a different vertex; each analytic edge must be retained.
         assert!((0..a.pts.len()).any(|shift| (0..a.pts.len()).all(|i| {
             a.pts[(i + shift) % a.pts.len()] == b.pts[i]
-                && a.bulges.as_ref().unwrap()[(i + shift) % a.pts.len()] == b.bulges.as_ref().unwrap()[i]
+                && a.bulges.as_ref().unwrap()[(i + shift) % a.pts.len()]
+                    == b.bulges.as_ref().unwrap()[i]
         })));
         assert_eq!(a.curves, b.curves);
     }
@@ -427,40 +613,78 @@ fn analytic_hatch_with_two_islands_keeps_area_origin_and_single_undo_on_rebind()
 fn moving_hatch_origins_is_atomic_and_preserves_pattern_boundary_and_ties() {
     use kentos_commands::{CallOp, Entity};
     use kentos_native_application::{ExecutionContext, registry};
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
     let mut raw = fixture["setup"].clone();
     raw["entities"] = json!([
         {"kind":"circle","id":1,"layerId":"a","attrs":{},"c":{"x":0.,"y":0.},"r":5.},
         {"kind":"circle","id":2,"layerId":"a","attrs":{},"c":{"x":12.,"y":0.},"r":2.}
     ]);
-    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let mut doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
     for (x, name) in [(0., "ANSI31"), (12., "Dolu")] {
-        let pattern = if name == "Dolu" { json!({"name":name}) } else {
+        let pattern = if name == "Dolu" {
+            json!({"name":name})
+        } else {
             json!({"name":name,"angle":31.,"scale":2.,"origin":{"kind":"point","at":{"x":0.123,"y":0.456}}})
         };
-        let made = registry::run(&mut ExecutionContext::new(&mut doc), "cad.entities.hatch", CallOp::Execute,
+        let made = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            "cad.entities.hatch",
+            CallOp::Execute,
             json!({"region":{"kind":"point","at":{"x":x,"y":0.},"associative":true},
-                "pattern":pattern,"layerId":"a"})).unwrap();
+                "pattern":pattern,"layerId":"a"}),
+        )
+        .unwrap();
         assert_eq!(made["status"], "completed", "{made}");
     }
-    let hatches: Vec<_> = doc.entities().filter_map(|e| match e { Entity::Hatch(h) => Some((doc.uid(kentos_domain::Slot(h.base.id)).unwrap().to_string(), h.clone())), _ => None }).collect();
+    let hatches: Vec<_> = doc
+        .entities()
+        .filter_map(|e| match e {
+            Entity::Hatch(h) => Some((
+                doc.uid(kentos_domain::Slot(h.base.id)).unwrap().to_string(),
+                h.clone(),
+            )),
+            _ => None,
+        })
+        .collect();
     let before = doc.to_snapshot_v2();
     let undo = doc.undo_labels();
     let failed = registry::run(&mut ExecutionContext::new(&mut doc), "cad.hatches.edit", CallOp::Execute,
         json!({"edit":{"kind":"origin","uids":[hatches[0].0,hatches[1].0],"origin":{"kind":"point","at":{"x":7.,"y":8.}}}})).unwrap();
     assert_eq!(failed["status"], "failed", "{failed}");
-    assert_eq!(doc.to_snapshot_v2(), before, "solid in a batch rejects the entire change");
+    assert_eq!(
+        doc.to_snapshot_v2(),
+        before,
+        "solid in a batch rejects the entire change"
+    );
     assert_eq!(doc.undo_labels(), undo);
     for (origin, expected) in [
-        (json!({"kind":"point","at":{"x":7.,"y":8.}}), Some(kentos_commands::Vec2 { x:7., y:8. })),
+        (
+            json!({"kind":"point","at":{"x":7.,"y":8.}}),
+            Some(kentos_commands::Vec2 { x: 7., y: 8. }),
+        ),
         (json!({"kind":"world"}), None),
     ] {
-        let done = registry::run(&mut ExecutionContext::new(&mut doc), "cad.hatches.edit", CallOp::Execute,
-            json!({"edit":{"kind":"origin","uids":[hatches[0].0],"origin":origin}})).unwrap();
+        let done = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            "cad.hatches.edit",
+            CallOp::Execute,
+            json!({"edit":{"kind":"origin","uids":[hatches[0].0],"origin":origin}}),
+        )
+        .unwrap();
         assert_eq!(done["status"], "completed", "{done}");
         let mut wanted = hatches[0].1.clone();
         wanted.pattern.origin = expected;
-        let current = doc.entities().find_map(|e| match e { Entity::Hatch(h) if h.base.id == wanted.base.id => Some(h), _ => None }).unwrap();
+        let current = doc
+            .entities()
+            .find_map(|e| match e {
+                Entity::Hatch(h) if h.base.id == wanted.base.id => Some(h),
+                _ => None,
+            })
+            .unwrap();
         assert_eq!(current, &wanted);
         assert_eq!(doc.undo().as_deref(), Some("Tarama başlangıcı"));
         assert_eq!(doc.to_snapshot_v2(), before);
@@ -472,73 +696,155 @@ fn annotation_inspection_distinguishes_partial_broken_and_overridden_values_with
     use kentos_commands::{CallOp, Entity, InspectionGroup};
     use kentos_domain::Slot;
     use kentos_native_application::{ExecutionContext, registry};
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
     let mut raw = fixture["setup"].clone();
     raw["settings"]["drawingUnit"] = json!("mm");
     raw["entities"] = json!([
         {"kind":"line","id":1,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.5,"y":0.}},
         {"kind":"line","id":2,"layerId":"a","attrs":{},"a":{"x":0.,"y":1.},"b":{"x":2.5,"y":1.}}
     ]);
-    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
+    let mut doc =
+        Document::from_snapshot(DocumentSnapshotV1::from_json(&raw.to_string()).unwrap()).unwrap();
     let source = doc.uid(Slot(1)).unwrap().to_string();
     let removed = doc.uid(Slot(2)).unwrap().to_string();
     let mut dimensions = Vec::new();
-    for (i, text) in [None, None, Some("2400"), Some("<> mm")].into_iter().enumerate() {
+    for (i, text) in [None, None, Some("2400"), Some("<> mm")]
+        .into_iter()
+        .enumerate()
+    {
         let mut e = json!({"kind":"dimension","id":0,"layerId":"a","attrs":{},"a":{"x":0.,"y":0.},"b":{"x":2.5,"y":0.},"height":0.1,"offset":0.3 + i as f64 * 0.2});
-        if let Some(text) = text { e["text"] = json!(text); }
+        if let Some(text) = text {
+            e["text"] = json!(text);
+        }
         let slot = doc.add(serde_json::from_value(e).unwrap()).unwrap();
         dimensions.push(doc.uid(slot).unwrap().to_string());
     }
     let mut execute = |command, input| {
-        let r = registry::run(&mut ExecutionContext::new(&mut doc), command, CallOp::Execute, input).unwrap();
+        let r = registry::run(
+            &mut ExecutionContext::new(&mut doc),
+            command,
+            CallOp::Execute,
+            input,
+        )
+        .unwrap();
         assert_eq!(r["status"], "completed", "{r}");
     };
-    execute("cad.dimensions.reassociate", json!({"uid":dimensions[0],"points":[{"point":"a","to":{"uid":source,"place":{"kind":"start"}}}]}));
-    execute("cad.dimensions.reassociate", json!({"uid":dimensions[1],"points":[
+    execute(
+        "cad.dimensions.reassociate",
+        json!({"uid":dimensions[0],"points":[{"point":"a","to":{"uid":source,"place":{"kind":"start"}}}]}),
+    );
+    execute(
+        "cad.dimensions.reassociate",
+        json!({"uid":dimensions[1],"points":[
         {"point":"a","to":{"uid":source,"place":{"kind":"start"}}},
-        {"point":"b","to":{"uid":removed,"place":{"kind":"end"}}}]}));
-    let leader: Entity = serde_json::from_value(json!({"kind":"leader","id":0,"layerId":"a","attrs":{},
+        {"point":"b","to":{"uid":removed,"place":{"kind":"end"}}}]}),
+    );
+    let leader: Entity =
+        serde_json::from_value(json!({"kind":"leader","id":0,"layerId":"a","attrs":{},
         "pts":[{"x":0.,"y":0.},{"x":3.,"y":0.}],"height":0.1,"rotation":0.,"text":"QA",
-        "arms":[{"pts":[{"x":2.5,"y":1.}],"tip":{"uid":removed,"place":{"kind":"end"}}}]})).unwrap();
+        "arms":[{"pts":[{"x":2.5,"y":1.}],"tip":{"uid":removed,"place":{"kind":"end"}}}]}))
+        .unwrap();
     let slot = doc.add(leader).unwrap();
     let leader = doc.uid(slot).unwrap().to_string();
-    let deleted = registry::run(&mut ExecutionContext::new(&mut doc), "cad.entities.delete", CallOp::Execute, json!({"uids":[removed]})).unwrap();
+    let deleted = registry::run(
+        &mut ExecutionContext::new(&mut doc),
+        "cad.entities.delete",
+        CallOp::Execute,
+        json!({"uids":[removed]}),
+    )
+    .unwrap();
     assert_eq!(deleted["status"], "completed", "{deleted}");
     let before = doc.to_snapshot_v2();
     let undo = doc.undo_labels();
-    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(&doc, &DrawingInspect { checks: vec![InspectionGroup::Annotations], ..Default::default() }, || false) else { panic!("inspection") };
-    let has = |code: &str, uid: &str| output.findings.iter().any(|f| f.code == code && f.uids.first().map(String::as_str) == Some(uid));
+    let CommandResult::Completed { output, .. } = drawing_inspect::inspect(
+        &doc,
+        &DrawingInspect {
+            checks: vec![InspectionGroup::Annotations],
+            ..Default::default()
+        },
+        || false,
+    ) else {
+        panic!("inspection")
+    };
+    let has = |code: &str, uid: &str| {
+        output
+            .findings
+            .iter()
+            .any(|f| f.code == code && f.uids.first().map(String::as_str) == Some(uid))
+    };
     assert!(has("dimension_partial", &dimensions[0]));
-    assert_eq!(output.findings.iter().find(|f| f.code == "dimension_partial").unwrap().points,
-        vec![kentos_commands::Vec2 { x:2.5, y:0. }], "mark the free end, not the still-bound end");
+    assert_eq!(
+        output
+            .findings
+            .iter()
+            .find(|f| f.code == "dimension_partial")
+            .unwrap()
+            .points,
+        vec![kentos_commands::Vec2 { x: 2.5, y: 0. }],
+        "mark the free end, not the still-bound end"
+    );
     assert!(has("dimension_broken", &dimensions[1]));
     assert!(has("dimension_override", &dimensions[2]));
-    assert!(!has("dimension_override", &dimensions[3]), "<> still displays the real measure");
-    assert!(has("leader_broken", &leader), "all arms, not only the first tip, are inspected");
-    let value = output.dimensions.iter().find(|d| d.uid == dimensions[2]).unwrap();
+    assert!(
+        !has("dimension_override", &dimensions[3]),
+        "<> still displays the real measure"
+    );
+    assert!(
+        has("leader_broken", &leader),
+        "all arms, not only the first tip, are inspected"
+    );
+    let value = output
+        .dimensions
+        .iter()
+        .find(|d| d.uid == dimensions[2])
+        .unwrap();
     assert_eq!(value.measured, 2.5);
     assert_eq!(value.shown, "2400");
     assert!(value.overridden);
-    let broken = output.findings.iter().find(|f| f.code == "dimension_broken").unwrap();
-    assert!(broken.uids.contains(&removed), "missing source identity remains explainable");
+    let broken = output
+        .findings
+        .iter()
+        .find(|f| f.code == "dimension_broken")
+        .unwrap();
+    assert!(
+        broken.uids.contains(&removed),
+        "missing source identity remains explainable"
+    );
     assert_eq!(doc.to_snapshot_v2(), before);
     assert_eq!(doc.undo_labels(), undo);
 }
 
 fn field_drawing(count: usize) -> kentos_commands::DocumentSnapshotV2 {
-    let fixture: Value = serde_json::from_str(include_str!("../../../../../fixtures/commands/v1/cad.blocks.find.json")).unwrap();
+    let fixture: Value = serde_json::from_str(include_str!(
+        "../../../../../fixtures/commands/v1/cad.blocks.find.json"
+    ))
+    .unwrap();
     let mut raw = fixture["setup"].clone();
     raw["name"] = json!("Güncel proje");
-    raw["entities"] = Value::Array((1..=count).map(|i| json!({
-        "kind":"text", "id":i, "layerId":"a", "attrs":{}, "p":{"x":i as f64,"y":0.},
-        "text":"Eski", "height":0.125, "rotation":0.
-    })).collect());
-    Document::from_snapshot(serde_json::from_value(raw).unwrap()).unwrap().to_snapshot_v2()
+    raw["entities"] = Value::Array(
+        (1..=count)
+            .map(|i| {
+                json!({
+                    "kind":"text", "id":i, "layerId":"a", "attrs":{}, "p":{"x":i as f64,"y":0.},
+                    "text":"Eski", "height":0.125, "rotation":0.
+                })
+            })
+            .collect(),
+    );
+    Document::from_snapshot(serde_json::from_value(raw).unwrap())
+        .unwrap()
+        .to_snapshot_v2()
 }
 
 fn set_field(snapshot: &mut kentos_commands::DocumentSnapshotV2, index: usize, source: Value) {
-    let kentos_commands::Entity::Text(t) = &mut snapshot.entities[index] else { panic!() };
-    t.paragraph.fields = serde_json::from_value(json!([{"start":0,"end":4,"source":source}])).unwrap();
+    let kentos_commands::Entity::Text(t) = &mut snapshot.entities[index] else {
+        panic!()
+    };
+    t.paragraph.fields =
+        serde_json::from_value(json!([{"start":0,"end":4,"source":source}])).unwrap();
 }
 
 #[test]
@@ -564,18 +870,38 @@ fn opened_field_cache_is_compared_to_live_value_without_rewriting_the_file() {
 fn hidden_stale_text_source_and_cycles_cannot_be_mistaken_for_current_values() {
     let mut snapshot = field_drawing(3);
     let uids = snapshot.uids.clone();
-    set_field(&mut snapshot, 0, json!({"kind":"object","uid":uids[1],"value":"text"}));
+    set_field(
+        &mut snapshot,
+        0,
+        json!({"kind":"object","uid":uids[1],"value":"text"}),
+    );
     set_field(&mut snapshot, 1, json!({"kind":"project","value":"name"}));
     let doc = Document::from_snapshot_v2(snapshot.clone()).unwrap();
-    let found = drawing_inspect::annotations::findings(&doc, kentos_domain::Uuid::from_bytes(uids[0].0), &snapshot.entities[0]);
+    let found = drawing_inspect::annotations::findings(
+        &doc,
+        kentos_domain::Uuid::from_bytes(uids[0].0),
+        &snapshot.entities[0],
+    );
     assert!(found.iter().any(|f| f.code == "text_field_stale"));
     // Close a dependency ring. The detector is iterative and reports live failure,
     // even if the imported file did not store a broken flag.
-    set_field(&mut snapshot, 1, json!({"kind":"object","uid":uids[2],"value":"text"}));
-    set_field(&mut snapshot, 2, json!({"kind":"object","uid":uids[1],"value":"text"}));
+    set_field(
+        &mut snapshot,
+        1,
+        json!({"kind":"object","uid":uids[2],"value":"text"}),
+    );
+    set_field(
+        &mut snapshot,
+        2,
+        json!({"kind":"object","uid":uids[1],"value":"text"}),
+    );
     let doc = Document::from_snapshot_v2(snapshot.clone()).unwrap();
     let before = doc.to_snapshot_v2();
-    let found = drawing_inspect::annotations::findings(&doc, kentos_domain::Uuid::from_bytes(uids[0].0), &snapshot.entities[0]);
+    let found = drawing_inspect::annotations::findings(
+        &doc,
+        kentos_domain::Uuid::from_bytes(uids[0].0),
+        &snapshot.entities[0],
+    );
     assert!(found.iter().any(|f| f.code == "text_field_stale"));
     assert!(found.iter().any(|f| f.code == "text_field_broken"));
     assert_eq!(doc.to_snapshot_v2(), before);
@@ -586,31 +912,60 @@ fn long_field_chains_stop_with_an_explicit_unverified_finding() {
     let mut snapshot = field_drawing(513);
     let uids = snapshot.uids.clone();
     for i in 0..512 {
-        set_field(&mut snapshot, i, json!({"kind":"object","uid":uids[i+1],"value":"text"}));
+        set_field(
+            &mut snapshot,
+            i,
+            json!({"kind":"object","uid":uids[i+1],"value":"text"}),
+        );
     }
     let doc = Document::from_snapshot_v2(snapshot.clone()).unwrap();
-    let found = drawing_inspect::annotations::findings(&doc, kentos_domain::Uuid::from_bytes(uids[0].0), &snapshot.entities[0]);
+    let found = drawing_inspect::annotations::findings(
+        &doc,
+        kentos_domain::Uuid::from_bytes(uids[0].0),
+        &snapshot.entities[0],
+    );
     assert!(found.iter().any(|f| f.code == "text_field_unverified"));
 }
 
 #[test]
 fn unicode_profile_reports_real_fallback_and_unsupported_text_without_rewriting_it() {
-    use kentos_commands::{Entity,InspectionSeverity};
-    for (words,code,severity) in [
-        ("Çap ⌀32 — العربية","text_font_fallback",InspectionSeverity::Info),
-        ("Eksik 🛸","text_layout_unsupported",InspectionSeverity::Error),
+    use kentos_commands::{Entity, InspectionSeverity};
+    for (words, code, severity) in [
+        (
+            "Çap ⌀32 — العربية",
+            "text_font_fallback",
+            InspectionSeverity::Info,
+        ),
+        (
+            "Eksik 🛸",
+            "text_layout_unsupported",
+            InspectionSeverity::Error,
+        ),
     ] {
-        let mut snapshot=field_drawing(1);
-        let Entity::Text(t)=&mut snapshot.entities[0] else {panic!()};
-        t.text=words.into();t.face.font=Some(kentos_commands::DrawingFont::Arimo);
-        t.paragraph.layout=serde_json::from_value(json!({"engine":"unicode-v1"})).unwrap();
-        let doc=Document::from_snapshot_v2(snapshot).unwrap();
-        let before=doc.to_snapshot_v2();
-        let CommandResult::Completed {output,..}=drawing_inspect::inspect(&doc,&DrawingInspect::default(),||false) else {panic!()};
-        let f=output.findings.iter().find(|f|f.code==code).expect(words);
-        assert_eq!(f.severity,severity);
-        if code=="text_font_fallback" {assert!(f.message.contains("noto-sans-math")&&f.message.contains("noto-sans-arabic"));}
-        assert_eq!(doc.to_snapshot_v2(),before);
+        let mut snapshot = field_drawing(1);
+        let Entity::Text(t) = &mut snapshot.entities[0] else {
+            panic!()
+        };
+        t.text = words.into();
+        t.face.font = Some(kentos_commands::DrawingFont::Arimo);
+        t.paragraph.layout = serde_json::from_value(json!({"engine":"unicode-v1"})).unwrap();
+        let doc = Document::from_snapshot_v2(snapshot).unwrap();
+        let before = doc.to_snapshot_v2();
+        let CommandResult::Completed { output, .. } =
+            drawing_inspect::inspect(&doc, &DrawingInspect::default(), || false)
+        else {
+            panic!()
+        };
+        let f = output
+            .findings
+            .iter()
+            .find(|f| f.code == code)
+            .expect(words);
+        assert_eq!(f.severity, severity);
+        if code == "text_font_fallback" {
+            assert!(f.message.contains("noto-sans-math") && f.message.contains("noto-sans-arabic"));
+        }
+        assert_eq!(doc.to_snapshot_v2(), before);
     }
 }
 fn field_table(source: Value) -> kentos_commands::Entity {
@@ -918,34 +1273,54 @@ fn block_inspection_checks_cancellation_inside_a_clean_single_insert() {
     assert_eq!(doc.to_snapshot_v2(), before);
 }
 
-
 #[test]
 fn annotation_visitor_preserves_rendered_shapes_and_honours_early_stop() {
     use kentos_commands::Entity;
     use kentos_native_application::{blocks::core_blocks, geometry::shape};
-    let mut snapshot=nested_field_block_drawing();
+    let mut snapshot = nested_field_block_drawing();
     // More than one visitor batch; each leaf retains its original definition ordinal.
-    let Entity::Text(first)=snapshot.blocks[1].entities[0].clone() else {panic!()};
-    snapshot.blocks[1].entities=(1..=130).map(|i| {
-        let mut t=first.clone();t.base.id=i;t.p.x=i as f64;Entity::Text(t)
-    }).collect();
-    let doc=Document::from_snapshot_v2(snapshot).unwrap();
-    let library=core_blocks(doc.blocks());
-    let insert=shape(doc.get(kentos_domain::Slot(1)).unwrap());
-    let all=library.expand(&insert);
-    let mut visited=Vec::new();
-    let complete:Result<bool,()>=library.try_visit_annotations(&insert,|piece|{visited.extend(piece);Ok(true)});
-    assert_eq!(complete,Ok(true));assert_eq!(visited,all);
-    let mut seen=0;
-    let complete:Result<bool,()>=library.try_visit_annotations(&insert,|piece| {
-        if piece.is_some() {seen+=1;} Ok(seen<3)
+    let Entity::Text(first) = snapshot.blocks[1].entities[0].clone() else {
+        panic!()
+    };
+    snapshot.blocks[1].entities = (1..=130)
+        .map(|i| {
+            let mut t = first.clone();
+            t.base.id = i;
+            t.p.x = i as f64;
+            Entity::Text(t)
+        })
+        .collect();
+    let doc = Document::from_snapshot_v2(snapshot).unwrap();
+    let library = core_blocks(doc.blocks());
+    let insert = shape(doc.get(kentos_domain::Slot(1)).unwrap());
+    let all = library.expand(&insert);
+    let mut visited = Vec::new();
+    let complete: Result<bool, ()> = library.try_visit_annotations(&insert, |piece| {
+        visited.extend(piece);
+        Ok(true)
     });
-    assert_eq!(complete,Ok(false));assert_eq!(seen,3);
-    let mut ticks=0;
-    let complete=library.try_visit_annotations(&insert,|_| {
-        ticks+=1;if ticks==7 {Err("cancelled")} else {Ok(true)}
+    assert_eq!(complete, Ok(true));
+    assert_eq!(visited, all);
+    let mut seen = 0;
+    let complete: Result<bool, ()> = library.try_visit_annotations(&insert, |piece| {
+        if piece.is_some() {
+            seen += 1;
+        }
+        Ok(seen < 3)
     });
-    assert_eq!(complete,Err("cancelled"));assert_eq!(ticks,7);
+    assert_eq!(complete, Ok(false));
+    assert_eq!(seen, 3);
+    let mut ticks = 0;
+    let complete = library.try_visit_annotations(&insert, |_| {
+        ticks += 1;
+        if ticks == 7 {
+            Err("cancelled")
+        } else {
+            Ok(true)
+        }
+    });
+    assert_eq!(complete, Err("cancelled"));
+    assert_eq!(ticks, 7);
 }
 
 #[test]
@@ -953,17 +1328,23 @@ fn invalid_block_annotation_provenance_is_an_explicit_error() {
     use kentos_commands::InspectionSeverity;
     use kentos_domain::Slot;
     use kentos_geometry_core::block::AnnotationOrigin;
-    let doc=Document::from_snapshot_v2(nested_field_block_drawing()).unwrap();
-    let uid=doc.uid(Slot(1)).unwrap();
-    let shape=kentos_native_application::geometry::shape(&doc.blocks()[1].entities[0]);
+    let doc = Document::from_snapshot_v2(nested_field_block_drawing()).unwrap();
+    let uid = doc.uid(Slot(1)).unwrap();
+    let shape = kentos_native_application::geometry::shape(&doc.blocks()[1].entities[0]);
     for origin in [
-        AnnotationOrigin {definition:"missing".into(),entity:0},
-        AnnotationOrigin {definition:doc.blocks()[1].id.to_text(),entity:99},
+        AnnotationOrigin {
+            definition: "missing".into(),
+            entity: 0,
+        },
+        AnnotationOrigin {
+            definition: doc.blocks()[1].id.to_text(),
+            entity: 99,
+        },
     ] {
-        let found=drawing_inspect::annotations::piece_findings(&doc,uid,&origin,&shape);
-        assert_eq!(found.len(),1);
-        assert_eq!(found[0].code,"block_field_unverified");
-        assert_eq!(found[0].severity,InspectionSeverity::Error);
-        assert_eq!(found[0].uids,[uid.to_string()]);
+        let found = drawing_inspect::annotations::piece_findings(&doc, uid, &origin, &shape);
+        assert_eq!(found.len(), 1);
+        assert_eq!(found[0].code, "block_field_unverified");
+        assert_eq!(found[0].severity, InspectionSeverity::Error);
+        assert_eq!(found[0].uids, [uid.to_string()]);
     }
 }

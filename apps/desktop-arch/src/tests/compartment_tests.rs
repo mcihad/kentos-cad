@@ -3,10 +3,10 @@
 //! (16–20), each drawn to its walls' faces. The wall at x = 12 is declared REI 90 and holds a 1.00 m door; the one at
 //! x = 16 is declared as each test says. The building is used as a büro (Ek-4: 8000 m²).
 
+use crate::arch::ArchState;
 use crate::arch_ext::*;
 use kentos_launch::Module;
 use serde_json::{Value, json};
-use crate::arch::ArchState;
 
 use crate::app::{App, Message};
 use crate::files_testing::drive;
@@ -29,8 +29,15 @@ fn run(app: &mut App, name: &str, input: Value) -> Value {
 /// The office's storey: the boiler room's wall declared `boiler`, the office's door `door` (none: not declared).
 fn storey(boiler: &str, door: Option<&str>) -> App {
     kentos_postgis::connections::keep_in_memory();
-    let (mut app, _) = App::start_in(Some(Module::Architecture), None, Settings::memory(), Recovery::off());
-    app.db_store = Box::leak(Box::new(kentos_postgis::connections::ConnectionStore::open(None)));
+    let (mut app, _) = App::start_in(
+        Some(Module::Architecture),
+        None,
+        Settings::memory(),
+        Recovery::off(),
+    );
+    app.db_store = Box::leak(Box::new(
+        kentos_postgis::connections::ConnectionStore::open(None),
+    ));
     app.hand_over = |m, _| Ok(m.program().to_owned());
     let task = app.update(Message::Run("file.new"));
     drive(&mut app, task);
@@ -47,7 +54,14 @@ fn storey(boiler: &str, door: Option<&str>) -> App {
             "units": [{"id": "b1", "number": "1", "nature": "Büro"}]
         }}),
     );
-    let layer = app.document.as_ref().expect("a drawing").model.layers().active().to_owned();
+    let layer = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned();
     let p = |x: f64, y: f64| json!({"x": x, "y": y});
     let wall = |a: (f64, f64), b: (f64, f64)| json!({"pts": [p(a.0, a.1), p(b.0, b.1)], "width": 0.2, "arch": {"level": "k00"}});
     let walls = run(
@@ -58,7 +72,12 @@ fn storey(boiler: &str, door: Option<&str>) -> App {
             wall((0.0, 10.0), (0.0, 0.0)), wall((12.0, 0.0), (12.0, 10.0)), wall((16.0, 0.0), (16.0, 10.0))
         ]}),
     );
-    let host = |i: usize| walls["output"]["uids"][i].as_str().expect("a wall").to_owned();
+    let host = |i: usize| {
+        walls["output"]["uids"][i]
+            .as_str()
+            .expect("a wall")
+            .to_owned()
+    };
     let doors = run(
         &mut app,
         "cad.openings.create",
@@ -98,7 +117,14 @@ fn the_facts_say_what_separates_each_two_rooms() {
     let app = storey("EI 30", None);
     let doc = &app.document.as_ref().expect("a drawing").model;
     let facts = kentos_processing::audit_facts::building::measure(doc).normalized();
-    let name = |uid: &str| facts.spaces.iter().find(|s| s.uid == uid).map(|s| s.name.clone()).unwrap_or_default();
+    let name = |uid: &str| {
+        facts
+            .spaces
+            .iter()
+            .find(|s| s.uid == uid)
+            .map(|s| s.name.clone())
+            .unwrap_or_default()
+    };
     #[allow(clippy::type_complexity)]
     let mut seps: Vec<(Vec<String>, Vec<(String, Option<String>, f64)>, f64)> = facts
         .separations
@@ -119,13 +145,27 @@ fn the_facts_say_what_separates_each_two_rooms() {
     assert_eq!(seps.len(), 2, "{seps:?}");
     assert_eq!(seps[0].0, ["Arşiv", "Kazan dairesi"]);
     assert_eq!(seps[0].1.len(), 1);
-    assert_eq!((seps[0].1[0].0.as_str(), seps[0].1[0].1.as_deref()), ("wall", Some("EI 30")));
+    assert_eq!(
+        (seps[0].1[0].0.as_str(), seps[0].1[0].1.as_deref()),
+        ("wall", Some("EI 30"))
+    );
     assert!((seps[0].1[0].2 - 9.2).abs() < 0.13, "{seps:?}");
     assert_eq!(seps[1].0, ["Arşiv", "Ofis"]);
-    let kinds: Vec<(&str, Option<&str>)> = seps[1].1.iter().map(|(k, r, _)| (k.as_str(), r.as_deref())).collect();
-    assert_eq!(kinds, [("wall", Some("REI 90")), ("door", None)], "{seps:?}");
+    let kinds: Vec<(&str, Option<&str>)> = seps[1]
+        .1
+        .iter()
+        .map(|(k, r, _)| (k.as_str(), r.as_deref()))
+        .collect();
+    assert_eq!(
+        kinds,
+        [("wall", Some("REI 90")), ("door", None)],
+        "{seps:?}"
+    );
     let (wall, door) = (seps[1].1[0].2, seps[1].1[1].2);
-    assert!((door - 1.0).abs() < 0.13 && (wall + door - 9.2).abs() < 0.13, "{seps:?}");
+    assert!(
+        (door - 1.0).abs() < 0.13 && (wall + door - 9.2).abs() < 0.13,
+        "{seps:?}"
+    );
     assert!(seps.iter().all(|s| s.2 < 1e-9), "no open stretch: {seps:?}");
     assert_eq!(facts.spaces.len(), 3);
 }
@@ -134,11 +174,21 @@ fn the_facts_say_what_separates_each_two_rooms() {
 fn checked(app: &mut App) {
     let _ = app.update(Message::Run("arch.audit"));
     app.arch_audit_standards_settle();
-    assert_eq!(app.modules.arch().arch_audit.regulation_failed, None, "the national regulation's rule answers");
+    assert_eq!(
+        app.modules.arch().arch_audit.regulation_failed,
+        None,
+        "the national regulation's rule answers"
+    );
 }
 
 fn outcome(app: &App, rule: &str) -> Option<kentos_commands::ArchAuditOutcome> {
-    let set = app.modules.arch().arch_audit.rule_set.as_ref().expect("the rule set");
+    let set = app
+        .modules
+        .arch()
+        .arch_audit
+        .rule_set
+        .as_ref()
+        .expect("the rule set");
     set.rules.iter().find(|r| r.rule == rule).map(|r| r.state)
 }
 
@@ -149,19 +199,48 @@ fn the_boiler_room_s_wall_and_the_compartment_wall_s_door_are_read_by_bykhy_24()
     use kentos_commands::{ArchAuditOutcome as O, ArchAuditState as S};
     let mut app = storey("EI 30", None);
     checked(&mut app);
-    let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-    let hazard = audited.findings.iter().find(|f| f.code == "bykhy_hazard_room_separation").expect("24/2");
-    assert!(hazard.message.contains("Kazan dairesi") && hazard.message.contains("EI 30"), "{}", hazard.message);
+    let audited = app
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
+    let hazard = audited
+        .findings
+        .iter()
+        .find(|f| f.code == "bykhy_hazard_room_separation")
+        .expect("24/2");
+    assert!(
+        hazard.message.contains("Kazan dairesi") && hazard.message.contains("EI 30"),
+        "{}",
+        hazard.message
+    );
     assert_eq!(hazard.state, None);
-    let opening = audited.findings.iter().find(|f| f.code == "bykhy_compartment_opening").expect("24/7");
+    let opening = audited
+        .findings
+        .iter()
+        .find(|f| f.code == "bykhy_compartment_opening")
+        .expect("24/7");
     assert_eq!(opening.state, Some(S::MissingData), "{}", opening.message);
     assert_eq!(outcome(&app, "BYKHY 24/2"), Some(O::Failed));
     assert_eq!(outcome(&app, "BYKHY 24/6"), Some(O::Passed));
     assert_eq!(outcome(&app, "BYKHY 24/7"), Some(O::MissingData));
     let mut fixed = storey("REI 120", Some("EI2 60-S200C5"));
     checked(&mut fixed);
-    let audited = fixed.modules.arch().arch_audit.audited.as_ref().expect("checked");
-    assert!(!audited.findings.iter().any(|f| f.code.starts_with("bykhy_compartment") || f.code.starts_with("bykhy_hazard")));
+    let audited = fixed
+        .modules
+        .arch()
+        .arch_audit
+        .audited
+        .as_ref()
+        .expect("checked");
+    assert!(
+        !audited
+            .findings
+            .iter()
+            .any(|f| f.code.starts_with("bykhy_compartment") || f.code.starts_with("bykhy_hazard"))
+    );
     assert_eq!(outcome(&fixed, "BYKHY 24/2"), Some(O::Passed));
     assert_eq!(outcome(&fixed, "BYKHY 24/7"), Some(O::Passed));
 }
@@ -177,26 +256,44 @@ fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kompartiman-8081");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kompartiman-8081");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik"), ("dark", Size::new(1280.0, 800.0), "koyu")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik"),
+        ("dark", Size::new(1280.0, 800.0), "koyu"),
+    ] {
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
         };
         let mut app = storey("EI 30", None);
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
         checked(&mut app);
-        let audited = app.modules.arch().arch_audit.audited.as_ref().expect("checked");
-        app.modules.arch_mut().arch_audit.selected = audited.findings.iter().position(|f| f.code == "bykhy_hazard_room_separation");
+        let audited = app
+            .modules
+            .arch()
+            .arch_audit
+            .audited
+            .as_ref()
+            .expect("checked");
+        app.modules.arch_mut().arch_audit.selected = audited
+            .findings
+            .iter()
+            .position(|f| f.code == "bykhy_hazard_room_separation");
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         snapshot.settle(&mut app, App::view, &mut update);
         app.selection.set(Vec::new());
         let _ = app.update(Message::Run("view.zoomExtents"));
         snapshot.settle(&mut app, App::view, &mut update);
         let file = out.join(format!("1-kompartiman-{name}.png"));
-        snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+        snapshot
+            .render(app.view(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
     }
 }
@@ -205,7 +302,8 @@ fn screens() {
 /// and the boiler room's wall EI 60 the package finds three compartments, and IFC dışa aktar (bina) writes each as an
 /// `IfcZone` of its room, “Yangın kompartımanı N”.
 fn exported_with_compartments(app: &mut App, name: &str) -> std::path::PathBuf {
-    let dir = std::env::temp_dir().join(format!("kentos-kompartiman-{}-{name}", std::process::id()));
+    let dir =
+        std::env::temp_dir().join(format!("kentos-kompartiman-{}-{name}", std::process::id()));
     std::fs::create_dir_all(&dir).expect("a folder");
     let path = dir.join("bina.ifc");
     let _ = app.ifc_building_chosen(Some(path.clone()), kentos_commands::IfcView::DesignTransfer);
@@ -217,23 +315,37 @@ fn the_building_s_ifc_writes_the_compartments_the_package_finds() {
     let mut app = storey("EI 60", Some("EI2 60-S200C5"));
     let path = exported_with_compartments(&mut app, "sinama");
     let text = std::fs::read_to_string(&path).expect("the file written");
-    let zones: Vec<&str> = text.lines().filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang")).collect();
+    let zones: Vec<&str> = text
+        .lines()
+        .filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang"))
+        .collect();
     assert_eq!(zones.len(), 3, "{zones:#?}");
     // Each zone groups one room: the three rooms are three compartments.
     for z in &zones {
         let id = z.split('=').next().expect("its instance").trim();
         let rel = text
             .lines()
-            .find(|l| l.contains("IFCRELASSIGNSTOGROUP(") && l.trim_end().ends_with(&format!(",{id});")))
+            .find(|l| {
+                l.contains("IFCRELASSIGNSTOGROUP(") && l.trim_end().ends_with(&format!(",{id});"))
+            })
             .unwrap_or_else(|| panic!("{id}'s members"));
-        let members = rel.split("),$,").next().and_then(|x| x.rsplit('(').next()).expect("the list");
+        let members = rel
+            .split("),$,")
+            .next()
+            .and_then(|x| x.rsplit('(').next())
+            .expect("the list");
         assert_eq!(members.split(',').count(), 1, "{rel}");
     }
     // Undeclared walls between the rooms: one compartment, one zone of three rooms.
     let mut open = storey("EI 30", None);
     let path_open = exported_with_compartments(&mut open, "tek");
     let text = std::fs::read_to_string(&path_open).expect("the file written");
-    assert_eq!(text.lines().filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang")).count(), 1);
+    assert_eq!(
+        text.lines()
+            .filter(|l| l.contains("IFCZONE(") && l.contains("'MM-ZON-Yang"))
+            .count(),
+        1
+    );
     let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
     let _ = std::fs::remove_dir_all(path_open.parent().expect("its folder"));
 }
@@ -251,29 +363,47 @@ fn zone_screens() {
     use kentos_model_view_ui::Message as V;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/kompartiman-ifc-8088");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/kompartiman-ifc-8088");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (theme, name) in [("light", "acik"), ("dark", "koyu")] {
         let mut update = |app: &mut App, message| {
             let _ = app.update(message);
         };
         let mut app = storey("EI 60", Some("EI2 60-S200C5"));
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(Size::new(1440.0, 900.0)));
         let path = exported_with_compartments(&mut app, &format!("resim-{name}"));
-        let _ = app.update(Message::IfcViewer(crate::ifc_viewer::Event::Open(path.clone())));
+        let _ = app.update(Message::IfcViewer(crate::ifc_viewer::Event::Open(
+            path.clone(),
+        )));
         app.ifc_viewer_read_now();
         let boiler = {
-            let v = app.ifc_viewer.as_ref().and_then(|w| w.viewer.view()).expect("the model");
-            v.input().objects.iter().position(|o| o.class == "IfcSpace" && o.label.contains("Kazan")).expect("the room")
+            let v = app
+                .ifc_viewer
+                .as_ref()
+                .and_then(|w| w.viewer.view())
+                .expect("the model");
+            v.input()
+                .objects
+                .iter()
+                .position(|o| o.class == "IfcSpace" && o.label.contains("Kazan"))
+                .expect("the room")
         };
-        let _ = app.update(Message::IfcViewer(crate::ifc_viewer::Event::Viewer(V::Choose(Some(boiler)))));
+        let _ = app.update(Message::IfcViewer(crate::ifc_viewer::Event::Viewer(
+            V::Choose(Some(boiler)),
+        )));
         let mut apart = Snapshot::new(Size::new(1400.0, 860.0)).expect("a renderer");
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         apart.settle(&mut app, App::ifc_viewer_shown, &mut update);
         let file = out.join(format!("1-ifc-zon-{name}.png"));
-        apart.render(app.ifc_viewer_shown(), &app.theme()).save(&file).expect("writes the picture");
+        apart
+            .render(app.ifc_viewer_shown(), &app.theme())
+            .save(&file)
+            .expect("writes the picture");
         println!("{}", file.display());
         let _ = std::fs::remove_dir_all(path.parent().expect("its folder"));
     }

@@ -33,12 +33,36 @@ pub struct EmsalArea {
 /// counted in ends them (Turkish vowel harmony: “balkon da”, “eklentisi de”).
 fn limited_parts(a: &EmsalArea) -> [(f64, &'static str, &'static str); 6] {
     [
-        (a.moved, "22/1-l: bağımsız bölüm net alanının %20'sini aşan {} m² balkon", " da dahil"),
-        (a.storage, "22/1-k: bağımsız bölüm net alanının %50'sini aşan {} m² depo eklentisi", " de dahil"),
-        (a.caretaker, "22/1-ç: kapıcı dairelerinin toplam 70 m²'sini aşan {} m²", " de dahil"),
-        (a.library, "22/1-f: kütüphanenin 50 m²'sini aşan {} m²", " de dahil"),
-        (a.shelter, "22/1-g: sığınağın gerekli alanını aşan {} m²", " de dahil"),
-        (a.amenity, "22/1-j: bodrumdaki ortak mekânların sınırını aşan {} m²", " de dahil"),
+        (
+            a.moved,
+            "22/1-l: bağımsız bölüm net alanının %20'sini aşan {} m² balkon",
+            " da dahil",
+        ),
+        (
+            a.storage,
+            "22/1-k: bağımsız bölüm net alanının %50'sini aşan {} m² depo eklentisi",
+            " de dahil",
+        ),
+        (
+            a.caretaker,
+            "22/1-ç: kapıcı dairelerinin toplam 70 m²'sini aşan {} m²",
+            " de dahil",
+        ),
+        (
+            a.library,
+            "22/1-f: kütüphanenin 50 m²'sini aşan {} m²",
+            " de dahil",
+        ),
+        (
+            a.shelter,
+            "22/1-g: sığınağın gerekli alanını aşan {} m²",
+            " de dahil",
+        ),
+        (
+            a.amenity,
+            "22/1-j: bodrumdaki ortak mekânların sınırını aşan {} m²",
+            " de dahil",
+        ),
     ]
 }
 
@@ -64,7 +88,10 @@ pub(super) fn emsal_state(a: &EmsalArea) -> (&'static str, &'static str, String)
         }
         // The basement's rooms 5/8's list moves apart from the 30 % (docs/adr/8148).
         if a.apart > 0.0 {
-            words.push_str(&format!("; 5/8: bodrumda {:.2} m² emsal harici, %30 dışında", a.apart));
+            words.push_str(&format!(
+                "; 5/8: bodrumda {:.2} m² emsal harici, %30 dışında",
+                a.apart
+            ));
         }
         words
     };

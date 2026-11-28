@@ -4,9 +4,9 @@
 pub mod checks;
 pub mod compare;
 pub mod crossings;
+pub mod lengths;
 pub mod propose;
 pub mod sight;
-pub mod lengths;
 pub mod terrain;
 pub mod trace;
 pub mod vertical;
@@ -44,7 +44,11 @@ mod tests {
         assert_eq!(grade_text(0.05241), "+%5.241");
         assert_eq!(grade_text(-0.03202), "-%3.202");
         assert_eq!(grade_text(0.0), "%0.000");
-        assert_eq!(grade_text(-0.000_004), "%0.000", "−0.0004 % rounds to no grade, not to −%0.000");
+        assert_eq!(
+            grade_text(-0.000_004),
+            "%0.000",
+            "−0.0004 % rounds to no grade, not to −%0.000"
+        );
         assert_eq!(grade_text(0.000_005), "+%0.001");
         assert_eq!(grade_text(-0.002_941_176_470_588_235_3), "-%0.294");
         assert_eq!(grade_text(0.08), "+%8.000");

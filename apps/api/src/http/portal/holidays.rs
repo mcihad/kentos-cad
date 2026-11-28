@@ -25,7 +25,9 @@ pub async fn list(
     caller: Caller,
     Query(q): Query<YearQuery>,
 ) -> Result<Json<Vec<HolidayView>>, Failure> {
-    let year = q.year.unwrap_or_else(|| time::OffsetDateTime::now_utc().year());
+    let year = q
+        .year
+        .unwrap_or_else(|| time::OffsetDateTime::now_utc().year());
     let run = async { holidays::list(state.db()?, &caller.0, year).await };
     run.await.map(Json).map_err(|e| Failure::with(e, &headers))
 }
@@ -38,7 +40,9 @@ pub async fn add(
     Body(input): Body<HolidayCreate>,
 ) -> Result<(StatusCode, Json<HolidayView>), Failure> {
     let run = async { holidays::add(state.db()?, &caller.0, &input).await };
-    run.await.map(|h| (StatusCode::CREATED, Json(h))).map_err(|e| Failure::with(e, &headers))
+    run.await
+        .map(|h| (StatusCode::CREATED, Json(h)))
+        .map_err(|e| Failure::with(e, &headers))
 }
 
 /// `DELETE /v1/platform/holidays/{day}` (204).
@@ -49,5 +53,7 @@ pub async fn remove(
     Path(day): Path<String>,
 ) -> Result<StatusCode, Failure> {
     let run = async { holidays::remove(state.db()?, &caller.0, &day).await };
-    run.await.map(|()| StatusCode::NO_CONTENT).map_err(|e| Failure::with(e, &headers))
+    run.await
+        .map(|()| StatusCode::NO_CONTENT)
+        .map_err(|e| Failure::with(e, &headers))
 }

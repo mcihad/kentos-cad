@@ -53,8 +53,15 @@ impl Document {
         // The relations over a related item's layer and field: one with a parent key lists by that key's value
         // (docs/adr/9135).
         for (_, item) in body.walk() {
-            let FormItem::Related { layer, field, .. } = item else { continue };
-            for r in self.settings.relations.iter().filter(|r| r.child == *layer && r.field == *field) {
+            let FormItem::Related { layer, field, .. } = item else {
+                continue;
+            };
+            for r in self
+                .settings
+                .relations
+                .iter()
+                .filter(|r| r.child == *layer && r.field == *field)
+            {
                 let relation = self.world_relation(r);
                 if let Some(other) = world.get_mut(layer)
                     && !other.relations.iter().any(|o| o.id == relation.id)
@@ -290,7 +297,10 @@ impl Document {
 
     /// What the enforcing forms' `ilişkili_toplam` reads (docs/adr/0761): (the form's layer, the relation's
     /// child layer, the child field's name), each once.
-    fn related_reads(&self, enforcing: &[ProjectForm]) -> Vec<(String, String, String, crate::ParentKey)> {
+    fn related_reads(
+        &self,
+        enforcing: &[ProjectForm],
+    ) -> Vec<(String, String, String, crate::ParentKey)> {
         let fold = |t: &str| kentos_expression::js::text::fold_turkish(t.trim());
         let mut out: Vec<(String, String, String, crate::ParentKey)> = Vec::new();
         for f in enforcing {
@@ -368,9 +378,15 @@ impl Document {
                 };
                 // By a parent key: the parents holding one of the codes (docs/adr/9135).
                 if !matches!(key, crate::ParentKey::Uid) {
-                    let codes: HashSet<&str> = held.split(';').map(str::trim).filter(|h| !h.is_empty()).collect();
+                    let codes: HashSet<&str> = held
+                        .split(';')
+                        .map(str::trim)
+                        .filter(|h| !h.is_empty())
+                        .collect();
                     for p in self.store.on_layer(parent_layer) {
-                        if key.code_of(p.uid, &p.entity).is_some_and(|c| codes.contains(c.as_str()))
+                        if key
+                            .code_of(p.uid, &p.entity)
+                            .is_some_and(|c| codes.contains(c.as_str()))
                             && seen.insert(p.uid)
                         {
                             out.push(p.uid);

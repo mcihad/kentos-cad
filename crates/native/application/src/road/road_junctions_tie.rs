@@ -5,7 +5,8 @@
 //! `fixtures/commands/v1/road.junctions.tie.json`.
 
 use kentos_commands::{
-    CommandResult, CommandWarning, JunctionKind, JunctionTie, JunctionsTie, JunctionsTied, ProfileDef, ProfilePvi,
+    CommandResult, CommandWarning, JunctionKind, JunctionTie, JunctionsTie, JunctionsTied,
+    ProfileDef, ProfilePvi,
 };
 use kentos_domain::Document;
 use kentos_road::junction::{Deck, edge_stations};
@@ -39,13 +40,20 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
     if def.kind == JunctionKind::Separated {
         return Err(fail(
             codes::INVALID_JUNCTION,
-            format!("“{}” ayrı seviyeli kavşak; boykesit bağı yalnız hemzemin kavşakta olur.", def.name),
+            format!(
+                "“{}” ayrı seviyeli kavşak; boykesit bağı yalnız hemzemin kavşakta olur.",
+                def.name
+            ),
             "junction",
         ));
     }
-    let (chosen, built) = common::leg_profiles(doc, &report, input.profiles.as_deref(), codes::INVALID_TIE)?;
+    let (chosen, built) =
+        common::leg_profiles(doc, &report, input.profiles.as_deref(), codes::INVALID_TIE)?;
     if input.primary > 1 {
-        return Err(bad("Sırtı korunan kol (primary) 0 ya da 1 olmalı.".into(), "primary"));
+        return Err(bad(
+            "Sırtı korunan kol (primary) 0 ya da 1 olmalı.".into(),
+            "primary",
+        ));
     }
     let (p, q) = (input.primary as usize, 1 - input.primary as usize);
     // The primary road's cross slopes: given, or its superelevation's.
@@ -58,9 +66,15 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
         }
         (Some(c), None) => {
             if !c.iter().all(|v| v.is_finite()) {
-                return Err(bad("Enine eğimler sonlu sayılar olmalı.".into(), "crossfall"));
+                return Err(bad(
+                    "Enine eğimler sonlu sayılar olmalı.".into(),
+                    "crossfall",
+                ));
             }
-            let c = Crossfall { left: c[0], right: c[1] };
+            let c = Crossfall {
+                left: c[0],
+                right: c[1],
+            };
             Box::new(move |_| c)
         }
         (None, Some(name)) => {
@@ -68,23 +82,46 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
             let on = supers::alignment_of(doc, sdef)?;
             let (schedule, _) = supers::schedule(sdef, &on)?;
             if sdef.alignment != report.legs[p].alignment {
-                return Err(bad(format!("“{}” dever çizelgesi ana yolun aksında değil.", sdef.name), "superelevation"));
+                return Err(bad(
+                    format!("“{}” dever çizelgesi ana yolun aksında değil.", sdef.name),
+                    "superelevation",
+                ));
             }
             warnings.extend(supers::stale_warning(doc, sdef));
             let normal = supers::normal(sdef);
             Box::new(move |s| schedule.at(s, normal))
         }
     };
-    if input.max_grade_change.is_some_and(|m| !(m.is_finite() && m >= 0.0)) {
-        return Err(bad("En büyük eğim değişimi (maxGradeChange) 0 ya da daha büyük olmalı.".into(), "maxGradeChange"));
+    if input
+        .max_grade_change
+        .is_some_and(|m| !(m.is_finite() && m >= 0.0))
+    {
+        return Err(bad(
+            "En büyük eğim değişimi (maxGradeChange) 0 ya da daha büyük olmalı.".into(),
+            "maxGradeChange",
+        ));
     }
     warnings.extend(common::profiles_stale(doc, &chosen));
     let (primary, secondary) = (&built[p], &built[q]);
-    let deck = Deck { alignment: &primary.alignment.core, left: def.legs[p].left, right: def.legs[p].right };
+    let deck = Deck {
+        alignment: &primary.alignment.core,
+        left: def.legs[p].left,
+        right: def.legs[p].right,
+    };
     let sine = report.angle.to_radians().sin();
-    let edges = edge_stations(deck, &secondary.alignment.core, report.legs[q].station, sine);
+    let edges = edge_stations(
+        deck,
+        &secondary.alignment.core,
+        report.legs[q].station,
+        sine,
+    );
     let red = |b: &profiles::Built, s: f64| b.vertical.at(s).map(|r| r.0);
-    let uncovered = |who: &ProfileDef| bad(format!("“{}” boykesiti bağı örtmüyor.", who.name), "profiles");
+    let uncovered = |who: &ProfileDef| {
+        bad(
+            format!("“{}” boykesiti bağı örtmüyor.", who.name),
+            "profiles",
+        )
+    };
     // The ties, unordered: the crossing, then the left and the right edge.
     let mut ties: Vec<JunctionTie> = Vec::new();
     let (sp, sq) = (report.legs[p].station, report.legs[q].station);
@@ -102,12 +139,28 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
     for (k, station) in edges.iter().enumerate() {
         let Some(station) = *station else {
             let side = if k == 0 { "sol" } else { "sağ" };
-            return Err(bad(format!("Tali yolun ekseni ana yolun {side} kenarını kesmiyor."), "junction"));
+            return Err(bad(
+                format!("Tali yolun ekseni ana yolun {side} kenarını kesmiyor."),
+                "junction",
+            ));
         };
-        let place = secondary.alignment.core.at(station).ok_or_else(|| uncovered(chosen[q]))?;
-        let foot = primary.alignment.core.locate([place.x, place.y]).nearest.ok_or_else(|| uncovered(chosen[p]))?;
+        let place = secondary
+            .alignment
+            .core
+            .at(station)
+            .ok_or_else(|| uncovered(chosen[q]))?;
+        let foot = primary
+            .alignment
+            .core
+            .locate([place.x, place.y])
+            .nearest
+            .ok_or_else(|| uncovered(chosen[p]))?;
         let slope = slopes(foot.at.station);
-        let (slope, width) = if k == 0 { (slope.left, deck.left) } else { (slope.right, deck.right) };
+        let (slope, width) = if k == 0 {
+            (slope.left, deck.left)
+        } else {
+            (slope.right, deck.right)
+        };
         let z = red(primary, foot.at.station).ok_or_else(|| uncovered(chosen[p]))? + slope * width;
         ties.push(JunctionTie {
             pvi: String::new(),
@@ -123,10 +176,15 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
     ties.sort_by(|a, b| a.station.total_cmp(&b.station));
     let sdef = chosen[q];
     let (lo, hi) = (ties[0].station - 1e-6, ties[2].station + 1e-6);
-    let (Some(first), Some(last)) = (sdef.pvis.first(), sdef.pvis.last()) else { return Err(uncovered(sdef)) };
+    let (Some(first), Some(last)) = (sdef.pvis.first(), sdef.pvis.last()) else {
+        return Err(uncovered(sdef));
+    };
     if first.station >= lo || last.station <= hi {
         return Err(bad(
-            format!("“{}” boykesiti bağı örtmüyor: ilk ve son PVI'sı ana yolun iki kenarının dışında olmalı.", sdef.name),
+            format!(
+                "“{}” boykesiti bağı örtmüyor: ilk ve son PVI'sı ana yolun iki kenarının dışında olmalı.",
+                sdef.name
+            ),
             "profiles",
         ));
     }
@@ -136,10 +194,18 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
         t.difference = t.elevation - t.before;
     }
     let inside = |v: &ProfilePvi| v.station >= lo && v.station <= hi;
-    let removed: Vec<String> = sdef.pvis.iter().filter(|v| inside(v)).map(|v| v.id.clone()).collect();
+    let removed: Vec<String> = sdef
+        .pvis
+        .iter()
+        .filter(|v| inside(v))
+        .map(|v| v.id.clone())
+        .collect();
     for t in &ties {
         if sdef.pvis.iter().any(|v| !inside(v) && v.id == t.pvi) {
-            return Err(bad(format!("“{}” kimlikli PVI boykesitte zaten var.", t.pvi), "profiles"));
+            return Err(bad(
+                format!("“{}” kimlikli PVI boykesitte zaten var.", t.pvi),
+                "profiles",
+            ));
         }
     }
     let new: Vec<ProfilePvi> = ties
@@ -157,7 +223,12 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
     let before: Vec<&ProfilePvi> = sdef.pvis.iter().filter(|v| v.station < lo).collect();
     let after: Vec<&ProfilePvi> = sdef.pvis.iter().filter(|v| v.station > hi).collect();
     let mut tied = sdef.clone();
-    tied.pvis = before.iter().map(|v| (*v).clone()).chain(new.iter().cloned()).chain(after.iter().map(|v| (*v).clone())).collect();
+    tied.pvis = before
+        .iter()
+        .map(|v| (*v).clone())
+        .chain(new.iter().cloned())
+        .chain(after.iter().map(|v| (*v).clone()))
+        .collect();
     tied.revision = sdef.revision.saturating_add(1);
     let mut list = profiles::profiles(doc).to_vec();
     if let Some(slot) = list.iter_mut().find(|x| x.id == sdef.id) {
@@ -173,7 +244,10 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
         .chain(ties.iter().map(|t| (t.station, t.elevation)))
         .chain(next.map(|v| (v.station, v.elevation)))
         .collect();
-    let grades: Vec<f64> = points.windows(2).map(|w| (w[1].1 - w[0].1) / (w[1].0 - w[0].0)).collect();
+    let grades: Vec<f64> = points
+        .windows(2)
+        .map(|w| (w[1].1 - w[0].1) / (w[1].0 - w[0].0))
+        .collect();
     let changes: Vec<f64> = grades.windows(2).map(|w| (w[1] - w[0]).abs()).collect();
     if let Some(most) = input.max_grade_change {
         for (t, c) in ties.iter().zip(&changes) {
@@ -211,7 +285,10 @@ fn check(doc: &Document, input: &JunctionsTie) -> Result<Checked, Stop> {
 /// Checks `input` against the document, writing nothing.
 pub fn validate(cx: &ExecutionContext<'_>, input: &JunctionsTie) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: (), warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: (),
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -219,14 +296,23 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &JunctionsTie) -> CommandResul
 /// What execute would write now; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &JunctionsTie) -> CommandResult<JunctionsTied> {
     match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed { output: c.tied, warnings: c.warnings },
+        Ok(c) => CommandResult::Completed {
+            output: c.tied,
+            warnings: c.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// Writes the tie: one undo step.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: JunctionsTie) -> CommandResult<JunctionsTied> {
-    crate::call::recorded(cx, kentos_commands::ROAD_JUNCTIONS_TIE, kentos_commands::ROAD_JUNCTIONS_TIE_VERSION, input, write)
+    crate::call::recorded(
+        cx,
+        kentos_commands::ROAD_JUNCTIONS_TIE,
+        kentos_commands::ROAD_JUNCTIONS_TIE_VERSION,
+        input,
+        write,
+    )
 }
 
 fn write(cx: &mut ExecutionContext<'_>, input: JunctionsTie) -> CommandResult<JunctionsTied> {
@@ -236,14 +322,27 @@ fn write(cx: &mut ExecutionContext<'_>, input: JunctionsTie) -> CommandResult<Ju
     };
     let doc = &mut *cx.doc;
     if let Err(r) = doc.set_road_profiles(c.list, STEP) {
-        return fail(codes::INVALID_ROAD_PROFILE, format!("Boykesit kurallarına uymuyor: {}.", r.0), "").into();
+        return fail(
+            codes::INVALID_ROAD_PROFILE,
+            format!("Boykesit kurallarına uymuyor: {}.", r.0),
+            "",
+        )
+        .into();
     }
     let mut tied = c.tied;
     tied.revision = doc.revision().to_string();
-    CommandResult::Completed { output: tied, warnings: c.warnings }
+    CommandResult::Completed {
+        output: tied,
+        warnings: c.warnings,
+    }
 }
 
 /// The tie for a window, or why it does not hold.
-pub fn preview(doc: &Document, input: &JunctionsTie) -> Result<(JunctionsTied, Vec<CommandWarning>), String> {
-    check(doc, input).map(|c| (c.tied, c.warnings)).map_err(crate::road_corridors::words)
+pub fn preview(
+    doc: &Document,
+    input: &JunctionsTie,
+) -> Result<(JunctionsTied, Vec<CommandWarning>), String> {
+    check(doc, input)
+        .map(|c| (c.tied, c.warnings))
+        .map_err(crate::road_corridors::words)
 }

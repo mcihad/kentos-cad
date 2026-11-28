@@ -16,12 +16,18 @@ pub struct Split {
 /// it has no dot, so the stroke is written as it always was. A dot is an ink element of length zero followed by a
 /// gap (the renderers' rule, `dashCover`); negative lengths count as zero, as the PDF writer clamps them.
 pub fn split(dash: &[f64], phase: f64) -> Option<Split> {
-    let mut d: Vec<f64> = dash.iter().map(|v| if v.is_finite() { v.max(0.0) } else { 0.0 }).collect();
+    let mut d: Vec<f64> = dash
+        .iter()
+        .map(|v| if v.is_finite() { v.max(0.0) } else { 0.0 })
+        .collect();
     if d.len() % 2 == 1 {
         d.extend_from_within(..);
     }
     let period: f64 = d.iter().sum();
-    if d.is_empty() || period.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater) || !phase.is_finite() {
+    if d.is_empty()
+        || period.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater)
+        || !phase.is_finite()
+    {
         return None;
     }
     let mut runs: Vec<(f64, f64)> = Vec::new();
@@ -122,7 +128,10 @@ mod tests {
             }
             let (want, got) = (dots(&source, phase, 72.), dots(&dots_of, q, 72.));
             assert_eq!(want.len(), got.len(), "{phase}");
-            assert!(want.iter().zip(&got).all(|(a, b)| (a - b).abs() < 1e-9), "{phase}: {want:?} {got:?}");
+            assert!(
+                want.iter().zip(&got).all(|(a, b)| (a - b).abs() < 1e-9),
+                "{phase}: {want:?} {got:?}"
+            );
         }
     }
 

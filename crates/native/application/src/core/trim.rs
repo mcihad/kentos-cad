@@ -150,13 +150,13 @@ pub fn execute(
                 relocate(cx.doc, &changes, &output.created);
             }
             CommandResult::Completed {
-            output: EntitiesTrimmed {
-                changed: output.changed,
-                created: output.created,
-                removed: output.removed,
-                revision: output.revision,
-            },
-            warnings: [checked.warnings, warnings].concat(),
+                output: EntitiesTrimmed {
+                    changed: output.changed,
+                    created: output.created,
+                    removed: output.removed,
+                    revision: output.revision,
+                },
+                warnings: [checked.warnings, warnings].concat(),
             }
         }
         other => relay(other),

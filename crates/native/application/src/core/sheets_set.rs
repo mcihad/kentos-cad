@@ -6,7 +6,8 @@
 
 use kentos_commands::{
     AffectReason, AffectedFrame, CommandResult, Entity, OTHER_SERIES, SetFrame, SetSheet,
-    SheetDependency, SheetDependencyState as Fresh, SheetSeries, SheetsSet, SheetsSetResult, Vec2, ViewTarget, series_of, series_title,
+    SheetDependency, SheetDependencyState as Fresh, SheetSeries, SheetsSet, SheetsSetResult, Vec2,
+    ViewTarget, series_of, series_title,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
@@ -58,10 +59,20 @@ pub(crate) fn drawn_by<'a>(
     let level = recipe
         .as_ref()
         .and_then(|r| r.level.as_ref().map(|l| l.id.clone()))
-        .or_else(|| map.as_ref().and_then(|m| m.level.as_ref().map(|l| l.id.clone())));
+        .or_else(|| {
+            map.as_ref()
+                .and_then(|m| m.level.as_ref().map(|l| l.id.clone()))
+        });
     let phase = recipe.as_ref().and_then(|r| r.phase);
-    let ceiling: std::collections::HashSet<u32> = recipe.as_ref().and_then(|r| r.ceiling)
-        .map(|r| crate::ceiling_plan::hidden(doc, level.as_deref(), r).into_iter().collect()).unwrap_or_default();
+    let ceiling: std::collections::HashSet<u32> = recipe
+        .as_ref()
+        .and_then(|r| r.ceiling)
+        .map(|r| {
+            crate::ceiling_plan::hidden(doc, level.as_deref(), r)
+                .into_iter()
+                .collect()
+        })
+        .unwrap_or_default();
     // The cropping view's area as a box: a turned view's is wider, so more may be listed, never fewer.
     let crop = recipe
         .as_ref()
@@ -70,8 +81,20 @@ pub(crate) fn drawn_by<'a>(
         .and_then(|m| kentos_sheet::viewport::linked_view(m, views))
         .map(|v| {
             kentos_sheet::viewport::view_ring(v).iter().fold(
-                [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY],
-                |b, p| [b[0].min(p[0]), b[1].min(p[1]), b[2].max(p[0]), b[3].max(p[1])],
+                [
+                    f64::INFINITY,
+                    f64::INFINITY,
+                    f64::NEG_INFINITY,
+                    f64::NEG_INFINITY,
+                ],
+                |b, p| {
+                    [
+                        b[0].min(p[0]),
+                        b[1].min(p[1]),
+                        b[2].max(p[0]),
+                        b[3].max(p[1]),
+                    ]
+                },
             )
         });
     let hidden = recipe.map(|r| r.hidden).unwrap_or_default();
@@ -92,11 +115,18 @@ pub(crate) fn drawn_by<'a>(
         if crop.is_some_and(|c| !meets(bounds, &c)) {
             return false;
         }
-        let Some(slot) = kentos_domain::Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)) else {
+        let Some(slot) = kentos_domain::Uuid::parse_str(uid)
+            .ok()
+            .and_then(|u| doc.slot_of(u))
+        else {
             return true;
         };
         doc.get(slot).is_none_or(|e| {
-            !ceiling.contains(&e.base().id) && draws(e) && printed.as_ref().is_none_or(|p| p.contains(e.base().layer_id.as_str()))
+            !ceiling.contains(&e.base().id)
+                && draws(e)
+                && printed
+                    .as_ref()
+                    .is_none_or(|p| p.contains(e.base().layer_id.as_str()))
         })
     }
 }
@@ -197,7 +227,9 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
                 let target = ViewTarget::sheet(&s.id, &item.id);
                 let views = &doc.settings().drawn_views();
                 let linked = match &m.source {
-                    kentos_sheet::viewport::Source::ViewLink { view } => Some(kentos_commands::view_key(view)),
+                    kentos_sheet::viewport::Source::ViewLink { view } => {
+                        Some(kentos_commands::view_key(view))
+                    }
                     _ => None,
                 };
                 let current = linked
@@ -276,7 +308,10 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
             })
             .collect();
         let tables = reading_tables(doc, &named);
-        let table_reads: Vec<Vec<String>> = tables.iter().map(|(_, e)| reads_of(doc, e, &named)).collect();
+        let table_reads: Vec<Vec<String>> = tables
+            .iter()
+            .map(|(_, e)| reads_of(doc, e, &named))
+            .collect();
         let table_boxes: Vec<(String, Bounds)> = tables
             .iter()
             .map(|(uid, e)| (uid.clone(), object_bounds(&shape(e), &blocks, font)))
@@ -347,7 +382,9 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
         out
     });
     Ok(SheetsSetResult {
-        dependencies: input.dependencies.then(|| dependencies(doc, &sheets, book.as_ref())),
+        dependencies: input
+            .dependencies
+            .then(|| dependencies(doc, &sheets, book.as_ref())),
         book: input.details.then(|| {
             serde_json::to_value(book.as_ref().cloned().unwrap_or_default()).unwrap_or_default()
         }),
@@ -362,7 +399,7 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
             .details
             .then(|| kentos_sheet::viewport::standard_ratios().to_vec()),
         named_views: input.details.then(|| doc.settings().named_views.clone()),
-        annotation_scales:input.details.then(||doc.annotation_scales()),
+        annotation_scales: input.details.then(|| doc.annotation_scales()),
         series,
         sheets,
         affected,
@@ -370,25 +407,50 @@ pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResul
     })
 }
 
-fn dependencies(doc: &Document, sheets: &[SetSheet], book: Option<&kentos_sheet::SheetBook>) -> Vec<SheetDependency> {
+fn dependencies(
+    doc: &Document,
+    sheets: &[SetSheet],
+    book: Option<&kentos_sheet::SheetBook>,
+) -> Vec<SheetDependency> {
     use kentos_commands::{BuildingSectionState, ElevationState};
     use kentos_domain::{Uuid, joinery_list::JOINERY_LIST_ID};
     use sha2::{Digest, Sha256};
     let fingerprint = |objects: &[Entity]| {
         let bytes = serde_json::to_vec(&crate::sections_edit::bare(objects)).unwrap_or_default();
-        Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect::<String>()
+        Sha256::digest(bytes)
+            .iter()
+            .map(|b| format!("{b:02x}"))
+            .collect::<String>()
     };
     let where_shown = |uids: &[String]| {
-        let objects: Vec<_> = uids.iter().filter_map(|u| {
-            let e = doc.get(doc.slot_of(Uuid::parse_str(u).ok()?)?)?;
-            let [min_x, min_y, max_x, max_y] = crate::sheets_fit::extent_of(doc, std::iter::once(e))?;
-            Some((u, Bounds { min_x, min_y, max_x, max_y }))
-        }).collect();
-        sheets.iter().filter(|s| s.frames.iter().any(|f| {
-            let Some(b) = &f.bounds else { return false };
-            let draws = drawn_by(doc, &s.id, &f.item, book);
-            objects.iter().any(|(u, x)| meets(x, b) && draws(u, x))
-        })).map(|s| s.id.clone()).collect()
+        let objects: Vec<_> = uids
+            .iter()
+            .filter_map(|u| {
+                let e = doc.get(doc.slot_of(Uuid::parse_str(u).ok()?)?)?;
+                let [min_x, min_y, max_x, max_y] =
+                    crate::sheets_fit::extent_of(doc, std::iter::once(e))?;
+                Some((
+                    u,
+                    Bounds {
+                        min_x,
+                        min_y,
+                        max_x,
+                        max_y,
+                    },
+                ))
+            })
+            .collect();
+        sheets
+            .iter()
+            .filter(|s| {
+                s.frames.iter().any(|f| {
+                    let Some(b) = &f.bounds else { return false };
+                    let draws = drawn_by(doc, &s.id, &f.item, book);
+                    objects.iter().any(|(u, x)| meets(x, b) && draws(u, x))
+                })
+            })
+            .map(|s| s.id.clone())
+            .collect()
     };
     let placements = |block| {
         doc.entities_with_uids()
@@ -397,43 +459,75 @@ fn dependencies(doc: &Document, sheets: &[SetSheet], book: Option<&kentos_sheet:
             .collect::<Vec<_>>()
     };
 
-    let mut out: Vec<_> = crate::sections_query::rows(doc).into_iter().map(|section| {
-        let block = section.block.as_deref().and_then(kentos_commands::BlockId::parse).and_then(|id| doc.block(id));
-        let mark = section.mark.as_deref().and_then(|m| Uuid::parse_str(m).ok()).and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s));
-        let generated = block.map(|b| fingerprint(&b.entities));
-        let model = match (section.state, mark) {
-            (BuildingSectionState::Current, _) => generated.clone(),
-            (_, Some(Entity::ViewMark(v))) => crate::sections_query::current_entities(doc, &v.mark).map(|o| fingerprint(&o)),
-            _ => None,
-        };
-        SheetDependency {
-            name: section.name,
-            source: section.mark.unwrap_or_else(|| "Kesit/cephe işareti".into()),
-            state: match section.state {
-                BuildingSectionState::Current => Fresh::Current,
-                BuildingSectionState::Stale => Fresh::Stale,
-                BuildingSectionState::Gone => Fresh::SourceGone,
-                BuildingSectionState::NotDrawn => Fresh::NotDrawn,
-            },
-            generated, model,
-            sheets: block.map_or_else(Vec::new, |b| where_shown(&placements(b.id))),
-        }
-    }).collect();
-    if let CommandResult::Completed { output, .. } = crate::elevations_query::execute_in(doc, &Default::default()) {
+    let mut out: Vec<_> = crate::sections_query::rows(doc)
+        .into_iter()
+        .map(|section| {
+            let block = section
+                .block
+                .as_deref()
+                .and_then(kentos_commands::BlockId::parse)
+                .and_then(|id| doc.block(id));
+            let mark = section
+                .mark
+                .as_deref()
+                .and_then(|m| Uuid::parse_str(m).ok())
+                .and_then(|u| doc.slot_of(u))
+                .and_then(|s| doc.get(s));
+            let generated = block.map(|b| fingerprint(&b.entities));
+            let model = match (section.state, mark) {
+                (BuildingSectionState::Current, _) => generated.clone(),
+                (_, Some(Entity::ViewMark(v))) => {
+                    crate::sections_query::current_entities(doc, &v.mark).map(|o| fingerprint(&o))
+                }
+                _ => None,
+            };
+            SheetDependency {
+                name: section.name,
+                source: section.mark.unwrap_or_else(|| "Kesit/cephe işareti".into()),
+                state: match section.state {
+                    BuildingSectionState::Current => Fresh::Current,
+                    BuildingSectionState::Stale => Fresh::Stale,
+                    BuildingSectionState::Gone => Fresh::SourceGone,
+                    BuildingSectionState::NotDrawn => Fresh::NotDrawn,
+                },
+                generated,
+                model,
+                sheets: block.map_or_else(Vec::new, |b| where_shown(&placements(b.id))),
+            }
+        })
+        .collect();
+    if let CommandResult::Completed { output, .. } =
+        crate::elevations_query::execute_in(doc, &Default::default())
+    {
         for row in output.elevations {
-            let Some((_, record)) = crate::elevations::on_layer(doc, &row.layer) else { continue };
+            let Some((_, record)) = crate::elevations::on_layer(doc, &row.layer) else {
+                continue;
+            };
             let state = match row.state {
                 ElevationState::Gone => Fresh::SourceGone,
                 _ if !row.edited.is_empty() => Fresh::Edited,
                 ElevationState::Current => Fresh::Current,
-                ElevationState::Stale if !crate::elevations_query::supports_batch_refresh(doc, &row.layer) => Fresh::Legacy,
+                ElevationState::Stale
+                    if !crate::elevations_query::supports_batch_refresh(doc, &row.layer) =>
+                {
+                    Fresh::Legacy
+                }
                 ElevationState::Stale => Fresh::Stale,
             };
-            let model = if state == Fresh::Current { Some(record.digest.clone()) } else {
-                crate::elevations::standing(doc, &row.layer, &record).drawn.as_ref().map(|d| crate::elevations::digest(&d.items))
+            let model = if state == Fresh::Current {
+                Some(record.digest.clone())
+            } else {
+                crate::elevations::standing(doc, &row.layer, &record)
+                    .drawn
+                    .as_ref()
+                    .map(|d| crate::elevations::digest(&d.items))
             };
             out.push(SheetDependency {
-                name: row.name, source: row.space, state, model, generated: Some(record.digest),
+                name: row.name,
+                source: row.space,
+                state,
+                model,
+                generated: Some(record.digest),
                 sheets: where_shown(&record.members.into_values().collect::<Vec<_>>()),
             });
         }
@@ -443,9 +537,16 @@ fn dependencies(doc: &Document, sheets: &[SetSheet], book: Option<&kentos_sheet:
         let generated = fingerprint(&block.entities);
         let model = fingerprint(&current.entities);
         out.push(SheetDependency {
-            name: "Doğrama listesi".into(), source: "Açıklık örnekleri ve proje tipleri".into(),
-            state: if *block == current { Fresh::Current } else { Fresh::Stale },
-            generated: Some(generated), model: Some(model), sheets: where_shown(&placements(JOINERY_LIST_ID)),
+            name: "Doğrama listesi".into(),
+            source: "Açıklık örnekleri ve proje tipleri".into(),
+            state: if *block == current {
+                Fresh::Current
+            } else {
+                Fresh::Stale
+            },
+            generated: Some(generated),
+            model: Some(model),
+            sheets: where_shown(&placements(JOINERY_LIST_ID)),
         });
     }
     out
@@ -454,22 +555,31 @@ fn dependencies(doc: &Document, sheets: &[SetSheet], book: Option<&kentos_sheet:
 /// Which of `named` a model table's rows or fields come from (docs/adr/1090 §6), by persistent id, in their order: a
 /// coordinate, area or attribute table of it, a block schedule counting its insert (every block's without names), a
 /// schedule listing it among its rows' members, a cell field reading it.
-pub(crate) fn reads_of(doc: &Document, table: &Entity, named: &[(usize, Slot, &Entity, &String)]) -> Vec<String> {
+pub(crate) fn reads_of(
+    doc: &Document,
+    table: &Entity,
+    named: &[(usize, Slot, &Entity, &String)],
+) -> Vec<String> {
     let Entity::Table(t) = table else {
         return Vec::new();
     };
-    let bytes = |u: &str| kentos_domain::Uuid::parse_str(u).ok().map(|u| *u.as_bytes());
+    let bytes = |u: &str| {
+        kentos_domain::Uuid::parse_str(u)
+            .ok()
+            .map(|u| *u.as_bytes())
+    };
     let mut out = Vec::new();
     for (_, _, e, uid) in named {
         let Some(b) = bytes(uid) else { continue };
         let by_source = match &t.source {
             Some(kentos_commands::TableSource::Coordinates { objects })
             | Some(kentos_commands::TableSource::Areas { objects })
-            | Some(kentos_commands::TableSource::Attributes { objects }) => objects.iter().any(|o| o.0 == b),
+            | Some(kentos_commands::TableSource::Attributes { objects }) => {
+                objects.iter().any(|o| o.0 == b)
+            }
             Some(kentos_commands::TableSource::Blocks { names, .. }) => match e {
                 Entity::Insert(i) => {
-                    names.is_empty()
-                        || doc.block(i.block).is_some_and(|d| names.contains(&d.name))
+                    names.is_empty() || doc.block(i.block).is_some_and(|d| names.contains(&d.name))
                 }
                 _ => false,
             },
@@ -489,12 +599,16 @@ pub(crate) fn reads_of(doc: &Document, table: &Entity, named: &[(usize, Slot, &E
 }
 
 /// The drawing's model tables that read some of `named` (and are not among them), by persistent id, in its order.
-fn reading_tables<'a>(doc: &'a Document, named: &[(usize, Slot, &Entity, &String)]) -> Vec<(String, &'a Entity)> {
+fn reading_tables<'a>(
+    doc: &'a Document,
+    named: &[(usize, Slot, &Entity, &String)],
+) -> Vec<(String, &'a Entity)> {
     doc.entities()
         .filter(|e| matches!(e, Entity::Table(_)))
         .filter_map(|e| {
             let uid = doc.uid(Slot(e.base().id))?.to_string();
-            (!named.iter().any(|(_, _, _, u)| **u == uid) && !reads_of(doc, e, named).is_empty()).then_some((uid, e))
+            (!named.iter().any(|(_, _, _, u)| **u == uid) && !reads_of(doc, e, named).is_empty())
+                .then_some((uid, e))
         })
         .collect()
 }

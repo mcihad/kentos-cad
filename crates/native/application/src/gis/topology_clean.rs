@@ -9,15 +9,18 @@
 use std::collections::HashSet;
 
 use kentos_commands::{
-    AreaPart, CommandResult, EditOperation, EntitiesEdit, Entity, EntityEdit, EntityGeometry, RingGeometry,
-    TopologyClean, TopologyCleanChange, TopologyCleanCounts, TopologyCleanMove, TopologyCleaned,
+    AreaPart, CommandResult, EditOperation, EntitiesEdit, Entity, EntityEdit, EntityGeometry,
+    RingGeometry, TopologyClean, TopologyCleanChange, TopologyCleanCounts, TopologyCleanMove,
+    TopologyCleaned,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length};
 use kentos_geometry_core::geom::arc::ArcGeom;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::ops::edges::entity_edges;
-use kentos_geometry_core::ops::topology::{TopoObject, TopoPath, TopoWorks, arc_path, path_arc, topology_clean};
+use kentos_geometry_core::ops::topology::{
+    TopoObject, TopoPath, TopoWorks, arc_path, path_arc, topology_clean,
+};
 use kentos_geometry_core::vec2::Vec2;
 
 use crate::ExecutionContext;
@@ -38,7 +41,10 @@ pub const FIRST_WORKS: TopoWorks = TopoWorks {
 
 /// The kinds the cleanup corrects (docs/adr/0148 §2).
 pub fn corrected(e: &Entity) -> bool {
-    matches!(e, Entity::Line(_) | Entity::Polyline(_) | Entity::Arc(_) | Entity::Polygon(_))
+    matches!(
+        e,
+        Entity::Line(_) | Entity::Polyline(_) | Entity::Arc(_) | Entity::Polygon(_)
+    )
 }
 
 /// The kinds that take part: the corrected ones and the supports' own.
@@ -46,14 +52,20 @@ pub fn takes_part(e: &Entity) -> bool {
     corrected(e)
         || matches!(
             e,
-            Entity::Point(_) | Entity::Circle(_) | Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_)
+            Entity::Point(_)
+                | Entity::Circle(_)
+                | Entity::Ellipse(_)
+                | Entity::Spline(_)
+                | Entity::Nurbs(_)
         )
 }
 
 /// A path's bulges as the core takes them: one a vertex, when any bends; none when all are straight.
 fn bulges_of(n: usize, bulges: Option<&[f64]>) -> Option<Vec<f64>> {
     let b = bulges?;
-    b.iter().any(|v| *v != 0.0).then(|| (0..n).map(|i| b.get(i).copied().unwrap_or(0.0)).collect())
+    b.iter()
+        .any(|v| *v != 0.0)
+        .then(|| (0..n).map(|i| b.get(i).copied().unwrap_or(0.0)).collect())
 }
 
 /// A circle as a boundary: two half turns (docs/adr/0148 §2).
@@ -73,8 +85,18 @@ fn circle_object(c: Vec2, r: f64) -> TopoObject {
 /// An edge of an ellipse's or a curve's outline (its 0.1 mm chords, docs/adr/0149 §5.3) as a path of its own.
 fn edge_path(edge: &Edge) -> Option<TopoPath> {
     match *edge {
-        Edge::Seg { a, b } => Some(TopoPath { pts: vec![a, b], bulges: None, closed: false, zs: vec![None, None] }),
-        Edge::Arc { c, r, a0, sweep } => arc_path(&ArcGeom { c, r, a0, a1: a0 + sweep }),
+        Edge::Seg { a, b } => Some(TopoPath {
+            pts: vec![a, b],
+            bulges: None,
+            closed: false,
+            zs: vec![None, None],
+        }),
+        Edge::Arc { c, r, a0, sweep } => arc_path(&ArcGeom {
+            c,
+            r,
+            a0,
+            a1: a0 + sweep,
+        }),
     }
 }
 
@@ -94,28 +116,52 @@ pub fn object(e: &Entity, fixed: bool) -> Option<TopoObject> {
     let paths = || {
         elevated_paths(e)
             .into_iter()
-            .map(|p| TopoPath { bulges: bulges_of(p.pts.len(), p.bulges.as_deref()), pts: p.pts, closed: p.closed, zs: p.zs })
+            .map(|p| TopoPath {
+                bulges: bulges_of(p.pts.len(), p.bulges.as_deref()),
+                pts: p.pts,
+                closed: p.closed,
+                zs: p.zs,
+            })
             .collect()
     };
-    let kind = |k: &str, paths: Vec<TopoPath>| Some(TopoObject { kind: k.into(), fixed, paths });
+    let kind = |k: &str, paths: Vec<TopoPath>| {
+        Some(TopoObject {
+            kind: k.into(),
+            fixed,
+            paths,
+        })
+    };
     match e {
         Entity::Line(_) => kind("line", paths()),
         Entity::Polyline(_) => kind("polyline", paths()),
         Entity::Polygon(_) => kind("area", paths()),
-        Entity::Arc(a) => match arc_path(&ArcGeom { c: v(&a.c), r: a.r, a0: a.a0, a1: a.a1 }) {
+        Entity::Arc(a) => match arc_path(&ArcGeom {
+            c: v(&a.c),
+            r: a.r,
+            a0: a.a0,
+            a1: a.a1,
+        }) {
             Some(path) => kind("arc", vec![path]),
             None => Some(circle_object(v(&a.c), a.r)),
         },
         Entity::Point(p) => Some(TopoObject {
             kind: "point".into(),
             fixed: true,
-            paths: vec![TopoPath { pts: vec![v(&p.p)], bulges: None, closed: false, zs: vec![p.z] }],
+            paths: vec![TopoPath {
+                pts: vec![v(&p.p)],
+                bulges: None,
+                closed: false,
+                zs: vec![p.z],
+            }],
         }),
         Entity::Circle(c) => Some(circle_object(v(&c.c), c.r)),
         Entity::Ellipse(_) | Entity::Spline(_) | Entity::Nurbs(_) => Some(TopoObject {
             kind: "edges".into(),
             fixed: true,
-            paths: entity_edges(&shape(e)).iter().filter_map(edge_path).collect(),
+            paths: entity_edges(&shape(e))
+                .iter()
+                .filter_map(edge_path)
+                .collect(),
         }),
         _ => None,
     }
@@ -134,7 +180,12 @@ pub fn geometry_of(e: &Entity, paths: &[TopoPath]) -> Option<EntityGeometry> {
     match e {
         Entity::Line(_) => {
             let p = paths.first()?;
-            Some(EntityGeometry::Line { ms: None, a: w(*p.pts.first()?), b: w(*p.pts.get(1)?), zs: Some(p.zs.clone()) })
+            Some(EntityGeometry::Line {
+                ms: None,
+                a: w(*p.pts.first()?),
+                b: w(*p.pts.get(1)?),
+                zs: Some(p.zs.clone()),
+            })
         }
         Entity::Polyline(_) => {
             let mut next = paths.iter();
@@ -143,7 +194,13 @@ pub fn geometry_of(e: &Entity, paths: &[TopoPath]) -> Option<EntityGeometry> {
             let parts: Vec<AreaPart> = next
                 .map(|q| {
                     let own = ring(q);
-                    AreaPart { ms: None, pts: own.pts, bulges: own.bulges, holes: None, zs: own.zs }
+                    AreaPart {
+                        ms: None,
+                        pts: own.pts,
+                        bulges: own.bulges,
+                        holes: None,
+                        zs: own.zs,
+                    }
                 })
                 .collect();
             Some(EntityGeometry::Polyline {
@@ -189,7 +246,12 @@ pub fn geometry_of(e: &Entity, paths: &[TopoPath]) -> Option<EntityGeometry> {
         }
         Entity::Arc(_) => {
             let arc = path_arc(paths.first()?)?;
-            Some(EntityGeometry::Arc { c: w(arc.c), r: arc.r, a0: arc.a0, a1: arc.a1 })
+            Some(EntityGeometry::Arc {
+                c: w(arc.c),
+                r: arc.r,
+                a0: arc.a0,
+                a1: arc.a1,
+            })
         }
         _ => None,
     }
@@ -223,7 +285,10 @@ fn plan_in(doc: &Document, input: &TopologyClean) -> Result<Planned, Stop> {
     if !input.tolerance.is_finite() || input.tolerance < LEAST_TOLERANCE {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Tolerans sonlu ve en az {LEAST_TOLERANCE} m olmalı (yazılan {}).", input.tolerance),
+            format!(
+                "Tolerans sonlu ve en az {LEAST_TOLERANCE} m olmalı (yazılan {}).",
+                input.tolerance
+            ),
             "tolerance",
         ));
     }
@@ -241,10 +306,22 @@ fn plan_in(doc: &Document, input: &TopologyClean) -> Result<Planned, Stop> {
             for (i, uid) in uids.iter().enumerate() {
                 let path = format!("uids[{i}]");
                 if !checks::is_uid_text(uid) {
-                    return Err(fail(codes::INVALID_UID, format!("“{uid}” geçerli bir nesne kimliği değil."), &path));
+                    return Err(fail(
+                        codes::INVALID_UID,
+                        format!("“{uid}” geçerli bir nesne kimliği değil."),
+                        &path,
+                    ));
                 }
-                let Some(e) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)) else {
-                    return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), &path));
+                let Some(e) = Uuid::parse_str(uid)
+                    .ok()
+                    .and_then(|u| doc.slot_of(u))
+                    .and_then(|s| doc.get(s))
+                else {
+                    return Err(fail(
+                        codes::ENTITY_NOT_FOUND,
+                        format!("“{uid}” kimlikli nesne çizimde yok."),
+                        &path,
+                    ));
                 };
                 if open(e) {
                     targets.insert(e.base().id);
@@ -274,9 +351,18 @@ fn plan_in(doc: &Document, input: &TopologyClean) -> Result<Planned, Stop> {
         }
     }
     let supports = objects.iter().filter(|o| o.fixed).count();
-    let result = topology_clean(&objects, input.tolerance, works)
-        .map_err(|why| fail(codes::INVALID_INPUT, format!("Temizlik hesaplanamadı: {why}."), "tolerance"))?;
-    let uid_of = |k: usize| doc.uid(kentos_domain::Slot(taken[k].base().id)).map(|u| u.to_string()).unwrap_or_default();
+    let result = topology_clean(&objects, input.tolerance, works).map_err(|why| {
+        fail(
+            codes::INVALID_INPUT,
+            format!("Temizlik hesaplanamadı: {why}."),
+            "tolerance",
+        )
+    })?;
+    let uid_of = |k: usize| {
+        doc.uid(kentos_domain::Slot(taken[k].base().id))
+            .map(|u| u.to_string())
+            .unwrap_or_default()
+    };
     let moves: Vec<TopologyCleanMove> = result
         .changes
         .iter()
@@ -288,7 +374,12 @@ fn plan_in(doc: &Document, input: &TopologyClean) -> Result<Planned, Stop> {
             distance: far(c.from, c.to),
         })
         .collect();
-    let acceptance = doc.settings().topology.as_ref().and_then(|t| t.profile.as_ref()).map(|p| p.acceptance);
+    let acceptance = doc
+        .settings()
+        .topology
+        .as_ref()
+        .and_then(|t| t.profile.as_ref())
+        .map(|p| p.acceptance);
     let mut changes = Vec::new();
     let mut edits = Vec::new();
     let mut area_change = 0.0;
@@ -297,7 +388,9 @@ fn plan_in(doc: &Document, input: &TopologyClean) -> Result<Planned, Stop> {
             continue;
         }
         let e = taken[c.object];
-        let Some(geometry) = geometry_of(e, &c.paths) else { continue };
+        let Some(geometry) = geometry_of(e, &c.paths) else {
+            continue;
+        };
         let uid = uid_of(c.object);
         let before: Shape = shape(e);
         let after: Shape = shape(&entity_of(&geometry, e.base().clone()));
@@ -308,16 +401,32 @@ fn plan_in(doc: &Document, input: &TopologyClean) -> Result<Planned, Stop> {
         }
         let now: Vec<Vec2> = vertices(&c.paths).collect();
         let kept = vertices(&objects[c.object].paths)
-            .filter(|p| now.iter().any(|q| q.x.to_bits() == p.x.to_bits() && q.y.to_bits() == p.y.to_bits()))
+            .filter(|p| {
+                now.iter()
+                    .any(|q| q.x.to_bits() == p.x.to_bits() && q.y.to_bits() == p.y.to_bits())
+            })
             .count();
-        let own: Vec<f64> = result.changes.iter().filter(|m| m.object == c.object).map(|m| far(m.from, m.to)).collect();
+        let own: Vec<f64> = result
+            .changes
+            .iter()
+            .filter(|m| m.object == c.object)
+            .map(|m| far(m.from, m.to))
+            .collect();
         changes.push(TopologyCleanChange {
             uid: uid.clone(),
             layer: e.base().layer_id.clone(),
             area_before,
             area_after,
-            length_before: if area_before.is_none() { entity_length(&before) } else { None },
-            length_after: if area_before.is_none() { entity_length(&after) } else { None },
+            length_before: if area_before.is_none() {
+                entity_length(&before)
+            } else {
+                None
+            },
+            length_after: if area_before.is_none() {
+                entity_length(&after)
+            } else {
+                None
+            },
             kept: count(kept),
             moves: count(own.len()),
             max_moved: own.iter().copied().fold(0.0, f64::max),
@@ -355,13 +464,24 @@ fn plan_in(doc: &Document, input: &TopologyClean) -> Result<Planned, Stop> {
 
 /// The write's last check: no move past the quality profile's acceptance threshold (docs/adr/1260 §2).
 fn within_acceptance(doc: &Document, out: &TopologyCleaned) -> Result<(), Stop> {
-    let (Some(a), Some(far)) = (out.acceptance, out.moves.iter().max_by(|x, y| x.distance.total_cmp(&y.distance))) else {
+    let (Some(a), Some(far)) = (
+        out.acceptance,
+        out.moves
+            .iter()
+            .max_by(|x, y| x.distance.total_cmp(&y.distance)),
+    ) else {
         return Ok(());
     };
     if far.distance <= a {
         return Ok(());
     }
-    let name = doc.settings().topology.as_ref().and_then(|t| t.profile.as_ref()).map(|p| p.name.clone()).unwrap_or_default();
+    let name = doc
+        .settings()
+        .topology
+        .as_ref()
+        .and_then(|t| t.profile.as_ref())
+        .map(|p| p.name.clone())
+        .unwrap_or_default();
     Err(fail(
         codes::CLEAN_BEYOND_ACCEPTANCE,
         format!(
@@ -374,7 +494,10 @@ fn within_acceptance(doc: &Document, out: &TopologyCleaned) -> Result<(), Stop> 
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &TopologyClean) -> CommandResult<()> {
     match plan_in(cx.doc, input).and_then(|p| within_acceptance(cx.doc, &p.output)) {
-        Ok(()) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(()) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -382,25 +505,46 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &TopologyClean) -> CommandResu
 /// The report; nothing written. A move past the acceptance threshold is counted (`beyond`), not refused.
 pub fn plan(cx: &ExecutionContext<'_>, input: &TopologyClean) -> CommandResult<TopologyCleaned> {
     match plan_in(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: p.output, warnings: Vec::new() },
+        Ok(p) => CommandResult::Completed {
+            output: p.output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
-pub fn execute(cx: &mut ExecutionContext<'_>, input: TopologyClean) -> CommandResult<TopologyCleaned> {
-    crate::call::recorded(cx, kentos_commands::CAD_TOPOLOGY_CLEAN, kentos_commands::CAD_TOPOLOGY_CLEAN_VERSION, input, write)
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: TopologyClean,
+) -> CommandResult<TopologyCleaned> {
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_TOPOLOGY_CLEAN,
+        kentos_commands::CAD_TOPOLOGY_CLEAN_VERSION,
+        input,
+        write,
+    )
 }
 
 /// [`execute`]'s write: the objects through `cad.entities.edit`'s write (`topology`), its checks once more.
 fn write(cx: &mut ExecutionContext<'_>, input: TopologyClean) -> CommandResult<TopologyCleaned> {
-    let Planned { edits, mut output } = match plan_in(cx.doc, &input).and_then(|p| within_acceptance(cx.doc, &p.output).map(|()| p)) {
+    let Planned { edits, mut output } = match plan_in(cx.doc, &input)
+        .and_then(|p| within_acceptance(cx.doc, &p.output).map(|()| p))
+    {
         Ok(p) => p,
         Err(stop) => return stop.into(),
     };
     if edits.is_empty() {
-        return CommandResult::Completed { output, warnings: Vec::new() };
+        return CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        };
     }
-    let edit = EntitiesEdit { operation: EditOperation::Topology, changes: edits, expected_revision: None };
+    let edit = EntitiesEdit {
+        operation: EditOperation::Topology,
+        changes: edits,
+        expected_revision: None,
+    };
     match crate::edit::write_in(cx, edit) {
         CommandResult::Completed { warnings, .. } => {
             output.revision = cx.doc.revision().to_string();

@@ -12,13 +12,19 @@ use crate::calc::{Event as CalcEvent, Window};
 
 /// The shared case's leap-frog adjustment (fixtures/commands/v1/cad.survey.adjust.json).
 fn shared() -> Value {
-    let all: Value =
-        serde_json::from_str(include_str!("../../../../../../fixtures/commands/v1/cad.survey.adjust.json")).expect("reads");
+    let all: Value = serde_json::from_str(include_str!(
+        "../../../../../../fixtures/commands/v1/cad.survey.adjust.json"
+    ))
+    .expect("reads");
     all["cases"]
         .as_array()
         .expect("cases")
         .iter()
-        .find(|c| c["name"].as_str().is_some_and(|n| n.starts_with("Atlamalı nivelman: iki reper")))
+        .find(|c| {
+            c["name"]
+                .as_str()
+                .is_some_and(|n| n.starts_with("Atlamalı nivelman: iki reper"))
+        })
         .cloned()
         .expect("the case")
 }
@@ -100,8 +106,14 @@ fn the_setups_adjust_as_the_command_and_write_their_heights() {
     let doc = app.document.as_ref().expect("a drawing");
     for p in out["points"].as_array().expect("points") {
         let name = text(&p["name"]);
-        let z = super::named_points(&doc.model, &name).first().and_then(|q| q.z).expect("written");
-        assert!((z - p["h"].as_f64().unwrap_or(f64::NAN)).abs() < 1e-6, "{name}");
+        let z = super::named_points(&doc.model, &name)
+            .first()
+            .and_then(|q| q.z)
+            .expect("written");
+        assert!(
+            (z - p["h"].as_f64().unwrap_or(f64::NAN)).abs() < 1e-6,
+            "{name}"
+        );
     }
 }
 
@@ -118,7 +130,11 @@ fn the_area_map_reads_the_system_s_and_the_operation_s_polygons() {
     let map = crate::project::area_map_of(5254, Some(2320));
     assert_eq!(map.0, Some(1525), "TM30's land");
     assert_eq!(map.1, Some(1237), "the datum operations' Türkiye");
-    assert_eq!(crate::project::area_map_of(5254, Some(5255)).1, None, "the same datum");
+    assert_eq!(
+        crate::project::area_map_of(5254, Some(5255)).1,
+        None,
+        "the same datum"
+    );
 }
 
 /// `.run/gui-evidence/atlamali-nivelman-5300/`:
@@ -132,12 +148,22 @@ fn screens() {
     use iced::Size;
     use kentos_ui::snapshot::Snapshot;
 
-    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence/atlamali-nivelman-5300");
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../.run/gui-evidence/atlamali-nivelman-5300");
     std::fs::create_dir_all(&out).expect("a folder");
-    for (theme, w, h, name) in [("light", 1440.0, 900.0, "acik-genis"), ("dark", 1100.0, 760.0, "koyu-dar")] {
+    for (theme, w, h, name) in [
+        ("light", 1440.0, 900.0, "acik-genis"),
+        ("dark", 1100.0, 760.0, "koyu-dar"),
+    ] {
         for shot in ["kot-agi", "kullanim-alani"] {
-            let mut app = if shot == "kot-agi" { app() } else { crate::files_testing::app_with_drawing() };
-            let _ = app.settings.choose(&[("appearance.theme", Value::from(theme))]);
+            let mut app = if shot == "kot-agi" {
+                app()
+            } else {
+                crate::files_testing::app_with_drawing()
+            };
+            let _ = app
+                .settings
+                .choose(&[("appearance.theme", Value::from(theme))]);
             app.apply_settings();
             if shot == "kot-agi" {
                 let _ = leapfrog_with(&mut app, LevelKind::Trigonometric);
@@ -148,9 +174,9 @@ fn screens() {
                 settings.second_srid = Some(2320);
                 doc.model.set_settings(settings);
                 let _ = app.update(Message::Run("file.settings"));
-                let _ = app.update(crate::project::settings_message(crate::project::SettingsEvent::Section(
-                    crate::project::settings::Section::Crs,
-                )));
+                let _ = app.update(crate::project::settings_message(
+                    crate::project::SettingsEvent::Section(crate::project::settings::Section::Crs),
+                ));
             }
             app.follow.flash = None;
             let mut snapshot = Snapshot::new(Size::new(w, h)).expect("a renderer");
@@ -159,7 +185,10 @@ fn screens() {
             };
             snapshot.settle(&mut app, App::view, &mut update);
             let file = out.join(format!("{shot}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes");
             println!("{}", file.display());
         }
     }

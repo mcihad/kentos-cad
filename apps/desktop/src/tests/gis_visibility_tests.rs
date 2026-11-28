@@ -37,12 +37,23 @@ fn context(app: &App) -> Option<&'static str> {
 /// A new layer made the active one (Katman ekle); its id.
 fn new_active_layer(app: &mut App) -> String {
     let _ = app.update(Message::Run("layer.new"));
-    app.document.as_ref().expect("a drawing").model.layers().active().to_owned()
+    app.document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .layers()
+        .active()
+        .to_owned()
 }
 
 fn add(app: &mut App, json: serde_json::Value) {
     let e: Entity = serde_json::from_value(json).expect("an object");
-    app.document.as_mut().expect("a drawing").model.add(e).expect("added");
+    app.document
+        .as_mut()
+        .expect("a drawing")
+        .model
+        .add(e)
+        .expect("added");
 }
 
 /// A 700 × 300 colour raster at 1.5 m on the layer: the GeoTIFF of the tiles' cases when `file` (its picture drawn),
@@ -82,7 +93,12 @@ fn raster_file_on(app: &mut App, layer: &str, file: Option<String>) {
             tiles: None,
         }),
     });
-    app.document.as_mut().expect("a drawing").model.add(e).expect("added");
+    app.document
+        .as_mut()
+        .expect("a drawing")
+        .model
+        .add(e)
+        .expect("added");
 }
 
 #[test]
@@ -91,13 +107,32 @@ fn the_contextual_tab_follows_the_selection_and_the_active_layer() {
     // An empty CBS project on a vector layer: its own tabs, no contextual tab.
     assert_eq!(context(&app), None);
     let tabs: Vec<&str> = app.ribbon_tabs().map(|t| t.id).collect();
-    assert_eq!(tabs, ["file", "map", "edit", "data", "analysis", "survey", "view", "extensions", "output"]);
+    assert_eq!(
+        tabs,
+        [
+            "file",
+            "map",
+            "edit",
+            "data",
+            "analysis",
+            "survey",
+            "view",
+            "extensions",
+            "output"
+        ]
+    );
     // A point, a line, a path, an area: each its own tab; a mixed selection Seçim.
-    for (kind, tab) in [("point", "ctx.point"), ("line", "ctx.line"), ("polyline", "ctx.line"), ("polygon", "ctx.area")] {
+    for (kind, tab) in [
+        ("point", "ctx.point"),
+        ("line", "ctx.line"),
+        ("polyline", "ctx.line"),
+        ("polygon", "ctx.area"),
+    ] {
         app.selection.set(vec![slot_of(&app, kind)]);
         assert_eq!(context(&app), Some(tab), "{kind}");
     }
-    app.selection.set(vec![slot_of(&app, "point"), slot_of(&app, "polygon")]);
+    app.selection
+        .set(vec![slot_of(&app, "point"), slot_of(&app, "polygon")]);
     assert_eq!(context(&app), Some("selection"));
     app.selection.set(Vec::new());
     app.follow_selection_tab();
@@ -107,7 +142,11 @@ fn the_contextual_tab_follows_the_selection_and_the_active_layer() {
     assert_eq!(context(&app), None, "an empty layer");
     raster_on(&mut app, &orto);
     assert_eq!(context(&app), Some("ctx.raster"));
-    assert_ne!(app.shown_tab(), "ctx.raster", "beside the chosen tab, not over it");
+    assert_ne!(
+        app.shown_tab(),
+        "ctx.raster",
+        "beside the chosen tab, not over it"
+    );
     let _ = app.update(Message::RibbonTab("ctx.raster"));
     assert_eq!(app.shown_tab(), "ctx.raster");
     assert!(app.offers("raster.style"));
@@ -115,7 +154,11 @@ fn the_contextual_tab_follows_the_selection_and_the_active_layer() {
     app.layer_pressed("parsel".into());
     app.follow_selection_tab();
     assert_eq!(context(&app), None);
-    assert!(app.ribbon_tabs().any(|t| t.id == app.shown_tab()), "{}", app.shown_tab());
+    assert!(
+        app.ribbon_tabs().any(|t| t.id == app.shown_tab()),
+        "{}",
+        app.shown_tab()
+    );
     // A selection wins over the layer: an area selected on the raster layer's neighbour opens Alan.
     app.layer_pressed(orto.clone());
     assert_eq!(context(&app), Some("ctx.raster"));
@@ -151,7 +194,12 @@ fn the_contextual_tab_follows_the_selection_and_the_active_layer() {
     let network = app.context_tab().expect("Ağ");
     assert_eq!(network.label, "Ağ");
     let tools: Vec<&str> = network.panels.iter().flat_map(|p| p.commands()).collect();
-    for id in ["network.manage", "tool.netRoute", "tool.netServiceArea", "tool.netTrace"] {
+    for id in [
+        "network.manage",
+        "tool.netRoute",
+        "tool.netServiceArea",
+        "tool.netTrace",
+    ] {
         assert!(tools.contains(&id) && app.offers(id), "{id}");
     }
     app.layer_pressed("parsel".into());
@@ -166,12 +214,18 @@ fn a_read_only_table_offers_no_drawing_and_one_in_its_session_its_own_geometry()
     let mut read_only = crate::data_layers::describe(&path, "parseller").expect("described");
     read_only.data.read_only = true;
     let ids = app
-        .add_data_layers(vec![crate::data_layers::describe(&path, "parseller").expect("described"), read_only])
+        .add_data_layers(vec![
+            crate::data_layers::describe(&path, "parseller").expect("described"),
+            read_only,
+        ])
         .expect("added");
     // The read-only table: no drawing tool, said why; the table and its style stay.
     app.layer_pressed(ids[1].clone());
     assert!(!app.available("tool.polygon") && !app.available("tool.point"));
-    assert!(app.why_disabled("tool.polygon").is_some_and(|w| w.contains("salt okunur")));
+    assert!(
+        app.why_disabled("tool.polygon")
+            .is_some_and(|w| w.contains("salt okunur"))
+    );
     assert!(app.available("data.featureTable") && app.available("style.layerStyle"));
     // The writable one: closed, then in its edit session the area tool and not the point tool (its geometry).
     app.layer_pressed(ids[0].clone());
@@ -179,7 +233,10 @@ fn a_read_only_table_offers_no_drawing_and_one_in_its_session_its_own_geometry()
     let doc = app.document.as_mut().expect("a drawing");
     doc.model.start_editing(&ids[0]).expect("editing");
     assert!(app.available("tool.polygon"), "in its session");
-    assert!(!app.available("tool.point"), "a table of areas takes no point");
+    assert!(
+        !app.available("tool.point"),
+        "a table of areas takes no point"
+    );
 }
 
 #[test]
@@ -208,13 +265,26 @@ fn a_cad_project_left_for_a_cbs_project_brings_nothing_of_its_own_back() {
     let _ = app.update(Message::Opened(Some(Ok(Box::new(gis)))));
     assert_eq!(app.work_mode(), Workspace::Gis);
     assert_eq!(context(&app), None);
-    assert!(app.ribbon_tabs().any(|t| t.id == app.shown_tab()), "a CBS tab in front: {}", app.shown_tab());
+    assert!(
+        app.ribbon_tabs().any(|t| t.id == app.shown_tab()),
+        "a CBS tab in front: {}",
+        app.shown_tab()
+    );
     assert!(!app.ribbon_tabs().any(|t| t.id == "arch"));
     assert!(!app.offers("tool.wall") && !app.offers("arch.ifcExport"));
     // Its bottom strip: no Kalınlık lamp (Çizgi kalınlığı stays in Görünüm), the drawing's tab named Harita.
     assert!(!app.shows_aid("view.lineWeights"));
-    assert!(app.offers("view.lineWeights") && app.ribbon_tabs().any(|t| t.id == "view" && t.panels.iter().any(|p| p.commands().contains(&"view.lineWeights"))));
-    assert_eq!(kentos_sheet_ui::status::model_name(Some(app.work_mode())), "Harita");
+    assert!(
+        app.offers("view.lineWeights")
+            && app.ribbon_tabs().any(|t| t.id == "view"
+                && t.panels
+                    .iter()
+                    .any(|p| p.commands().contains(&"view.lineWeights")))
+    );
+    assert_eq!(
+        kentos_sheet_ui::status::model_name(Some(app.work_mode())),
+        "Harita"
+    );
 }
 
 /// A road network on Çizim, the sample's lines (docs/adr/0209 §2).
@@ -250,7 +320,8 @@ fn screens() {
         input.id = Some("orto".into());
         input.activate = Some(true);
         app.edit_layers(input).expect("added");
-        let tif = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/gpkg-tiles/v1/kaynak/rgb.tif");
+        let tif = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/gpkg-tiles/v1/kaynak/rgb.tif");
         raster_file_on(&mut app, "orto", Some(tif.display().to_string()));
         let _ = app.update(Message::Run("view.zoomExtents"));
         app
@@ -274,4 +345,3 @@ fn screens() {
         app
     });
 }
-

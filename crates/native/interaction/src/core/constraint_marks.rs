@@ -204,7 +204,10 @@ pub fn parameter_label_words(
         return parameter_value_words(v, kind, settings);
     }
     let value = if rounded.contains('.') {
-        rounded.trim_end_matches('0').trim_end_matches('.').to_owned()
+        rounded
+            .trim_end_matches('0')
+            .trim_end_matches('.')
+            .to_owned()
     } else {
         rounded
     };

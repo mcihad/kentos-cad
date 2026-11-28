@@ -4,8 +4,8 @@
 //! recorded as made from the design (Seçimi türet offers it, never for the design's own lines) and goes out of date
 //! when the design changes. And the pictures.
 
-use crate::map_ext::*;
 use crate::map;
+use crate::map_ext::*;
 use kentos_commands::{WorkState as S, WorkStatus as W};
 use kentos_domain::Slot;
 use kentos_launch::Module;
@@ -42,16 +42,25 @@ pub(crate) fn send(app: &mut App, e: P) {
 }
 
 pub(crate) fn tree(app: &App) -> kentos_commands::MapWorkTree {
-    app.map_work_read().expect("a drawing").expect("a map project")
+    app.map_work_read()
+        .expect("a drawing")
+        .expect("a map project")
 }
 
 pub(crate) fn uid(app: &App, slot: u32) -> String {
-    app.document.as_ref().expect("a drawing").model.uid(Slot(slot)).expect("a lasting id").to_string()
+    app.document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .uid(Slot(slot))
+        .expect("a lasting id")
+        .to_string()
 }
 
 /// One of the design's lines given a height attribute: its content moves on.
 pub(crate) fn change_line(app: &mut App, slot: u32, height: &str) {
-    let input = json!({"uids": [uid(app, slot)], "attrs": {"Kot": height}, "operation": "attributes"});
+    let input =
+        json!({"uids": [uid(app, slot)], "attrs": {"Kot": height}, "operation": "attributes"});
     let doc = app.document.as_mut().expect("a drawing");
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
@@ -72,43 +81,80 @@ fn source_rows(app: &mut App, slot: u32) -> Vec<(String, String)> {
         .sections
         .iter()
         .find(|s| s.id == "mapWork")
-        .map(|s| s.rows.iter().map(|r| (r.label.to_string(), r.value.clone())).collect())
+        .map(|s| {
+            s.rows
+                .iter()
+                .map(|r| (r.label.to_string(), r.value.clone()))
+                .collect()
+        })
         .unwrap_or_default()
 }
 
 fn row<'a>(rows: &'a [(String, String)], label: &str) -> Option<&'a str> {
-    rows.iter().find(|(l, _)| l == label).map(|(_, v)| v.as_str())
+    rows.iter()
+        .find(|(l, _)| l == label)
+        .map(|(_, v)| v.as_str())
 }
 
 #[test]
 fn an_approved_design_shows_its_change_and_is_approved_again() {
     let mut app = opened();
     // In review, without a stamp, its content revision is not worked out on a quick read.
-    assert_eq!((tree(&app).items[3].content.as_deref(), tree(&app).items[3].approved.as_deref()), (None, None));
+    assert_eq!(
+        (
+            tree(&app).items[3].content.as_deref(),
+            tree(&app).items[3].approved.as_deref()
+        ),
+        (None, None)
+    );
     send(&mut app, P::Status("is-4".into(), W::Approved));
     let design = tree(&app).items[3].clone();
     assert_eq!((design.status, design.state), (W::Approved, S::Current));
-    assert!(design.approved.as_ref().is_some_and(|a| a.len() == 64), "{design:?}");
-    assert_eq!(design.approved, design.content, "the stamp is its content revision");
+    assert!(
+        design.approved.as_ref().is_some_and(|a| a.len() == 64),
+        "{design:?}"
+    );
+    assert_eq!(
+        design.approved, design.content,
+        "the stamp is its content revision"
+    );
     // A line of the design changed after the approval.
     change_line(&mut app, 6, "1060");
     let t = tree(&app);
     assert_eq!(t.items[3].state, S::Revised);
-    assert!(t.items[3].why[0].starts_with("Onaydan sonra içeriği değişti"), "{:?}", t.items[3].why);
+    assert!(
+        t.items[3].why[0].starts_with("Onaydan sonra içeriği değişti"),
+        "{:?}",
+        t.items[3].why
+    );
     assert_ne!(t.items[3].content, t.items[3].approved);
     assert_eq!(t.problems, 1);
-    assert_eq!(crate::map_work_panel::state_words(S::Revised), "Onay eskidi");
+    assert_eq!(
+        crate::map_work_panel::state_words(S::Revised),
+        "Onay eskidi"
+    );
     // Yeniden onayla: today's revision stamped, one undo step.
     send(&mut app, P::Status("is-4".into(), W::Approved));
     let t = tree(&app);
     assert_eq!((t.items[3].state, t.problems), (S::Current, 0));
     assert_eq!(t.items[3].approved, t.items[3].content);
     let _ = app.update(Message::Run("edit.undo"));
-    assert_eq!(tree(&app).items[3].state, S::Revised, "undone: the old stamp again");
+    assert_eq!(
+        tree(&app).items[3].state,
+        S::Revised,
+        "undone: the old stamp again"
+    );
     // Back to draft: the stamp goes with the approval.
     send(&mut app, P::Status("is-4".into(), W::Draft));
     let t = tree(&app);
-    assert_eq!((t.items[3].status, t.items[3].approved.as_deref(), t.items[3].state), (W::Draft, None, S::Current));
+    assert_eq!(
+        (
+            t.items[3].status,
+            t.items[3].approved.as_deref(),
+            t.items[3].state
+        ),
+        (W::Draft, None, S::Current)
+    );
 }
 
 #[test]
@@ -127,9 +173,18 @@ fn a_line_is_recorded_as_made_from_the_design_and_follows_it() {
     send(&mut app, P::DeriveFrom("is-4".into()));
     send(&mut app, P::Derive);
     let t = tree(&app);
-    let d = t.derivations.iter().find(|d| d.source == "is-4").expect("recorded").clone();
+    let d = t
+        .derivations
+        .iter()
+        .find(|d| d.source == "is-4")
+        .expect("recorded")
+        .clone();
     assert_eq!((d.state, d.objects), (S::Current, 1));
-    assert_eq!(Some(&d.revision), t.items[3].content.as_ref(), "the design's content revision then");
+    assert_eq!(
+        Some(&d.revision),
+        t.items[3].content.as_ref(),
+        "the design's content revision then"
+    );
     let rows = source_rows(&mut app, 8);
     assert_eq!(row(&rows, "Rol"), Some("Kaynaktan türetildi"));
     assert_eq!(row(&rows, "Kaynağı"), Some("Tasarım yüzeyi (is-4)"));
@@ -137,9 +192,16 @@ fn a_line_is_recorded_as_made_from_the_design_and_follows_it() {
     // The design changes: the recorded line is out of date, in the tree and in Öznitelikler.
     change_line(&mut app, 7, "1061");
     let t = tree(&app);
-    let d = t.derivations.iter().find(|d| d.source == "is-4").expect("recorded");
+    let d = t
+        .derivations
+        .iter()
+        .find(|d| d.source == "is-4")
+        .expect("recorded");
     assert_eq!((d.state, t.stale), (S::Stale, 1));
-    assert_eq!(row(&source_rows(&mut app, 8), "Güncellik"), Some("Güncel değil: kaynağı değişti"));
+    assert_eq!(
+        row(&source_rows(&mut app, 8), "Güncellik"),
+        Some("Güncel değil: kaynağı değişti")
+    );
     // Undone: up to date again.
     let _ = app.update(Message::Run("edit.undo"));
     assert_eq!(tree(&app).stale, 0);
@@ -156,7 +218,11 @@ fn a_stamp_and_a_design_source_survive_saving_and_opening_again() {
     let model = &app.document.as_ref().expect("a drawing").model;
     let bytes = kentos_kcad::encode(&model.to_snapshot_v2()).expect("encodes");
     let back = kentos_kcad::decode(&bytes).expect("reads");
-    assert_eq!(back.settings.map_work, model.map_work().cloned(), "the stamp and the record are saved whole");
+    assert_eq!(
+        back.settings.map_work,
+        model.map_work().cloned(),
+        "the stamp and the record are saved whole"
+    );
     // Opened again: the objects' content gives the same revision, so the approval and the record stay up to date.
     let (mut again, _) = App::boot(None);
     again.program = Some(Module::Map);
@@ -165,7 +231,11 @@ fn a_stamp_and_a_design_source_survive_saving_and_opening_again() {
     let after = tree(&again);
     assert_eq!(after.items, before.items);
     assert_eq!(after.derivations, before.derivations);
-    assert_eq!((after.items[3].state, after.stale, after.problems), (S::Current, 0, 0), "{after:?}");
+    assert_eq!(
+        (after.items[3].state, after.stale, after.problems),
+        (S::Current, 0, 0),
+        "{after:?}"
+    );
 }
 
 /// The panel: the approved design changed after its approval (Yeniden onayla on its row) and the line made from it out
@@ -182,12 +252,18 @@ fn screens() {
     use kentos_ui::snapshot::Snapshot;
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/gui-evidence");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (theme, size, name) in [("light", Size::new(1440.0, 900.0), "acik-genis"), ("dark", Size::new(1100.0, 650.0), "koyu-dar")] {
+    for (theme, size, name) in [
+        ("light", Size::new(1440.0, 900.0), "acik-genis"),
+        ("dark", Size::new(1100.0, 650.0), "koyu-dar"),
+    ] {
         let mut app = opened();
-        let _ = app.settings.choose(&[("appearance.theme", serde_json::Value::from(theme))]);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
         app.apply_settings();
         let _ = app.update(Message::WindowResized(size));
-        app.docks.update(kentos_ui::widget::docking::Event::Selected(Panel::MapWork));
+        app.docks
+            .update(kentos_ui::widget::docking::Event::Selected(Panel::MapWork));
         let mut snapshot = Snapshot::new(size).expect("a renderer");
         let mut update = |app: &mut App, m: Message| {
             let _ = app.update(m);
@@ -195,7 +271,10 @@ fn screens() {
         let mut shot = |app: &mut App, file: &str| {
             snapshot.settle(app, App::view, &mut update);
             let file = out.join(format!("harita-isi-damga-{file}-{name}.png"));
-            snapshot.render(app.view(), &app.theme()).save(&file).expect("writes the picture");
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
             println!("{}", file.display());
         };
         // The user's own line selected: Seçimi türet offers the design.

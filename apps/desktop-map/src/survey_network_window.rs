@@ -17,16 +17,16 @@
 //! session`), Yeni noktaların hızı reads each new mark's velocity from the campaign's velocity grid; the summary says
 //! which correlations went in and from which grid, Noktalar the velocities, Bazlar each baseline's session.
 
-use crate::map_ext::*;
-use crate::map::MapState;
 use crate::map;
+use crate::map::MapState;
+use crate::map_ext::*;
 use std::path::PathBuf;
 
 use iced::widget::{container, row};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, KnownMovedBy, MapSurveyNetwork, MapSurveyNetworked, MapSurveyOperation as Op, NetworkCorrelations,
-    NetworkEpochFrom, NetworkStage,
+    CommandResult, KnownMovedBy, MapSurveyNetwork, MapSurveyNetworked, MapSurveyOperation as Op,
+    NetworkCorrelations, NetworkEpochFrom, NetworkStage,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, map_survey_network};
@@ -213,7 +213,11 @@ fn number(text: &str, words: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.parse::<f64>().ok().filter(|v| v.is_finite()).map(Some).ok_or_else(|| format!("{words} “{t}” bir sayı değil (ondalıktan önce nokta)."))
+    t.parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .map(Some)
+        .ok_or_else(|| format!("{words} “{t}” bir sayı değil (ondalıktan önce nokta)."))
 }
 
 /// The summary's confidence region line (docs/adr/2560): the largest error ellipse of the marks the stage moved, its
@@ -239,15 +243,30 @@ pub(crate) fn epoch_line(a: &MapSurveyNetworked) -> String {
     let e = |v: f64| format!("{v:.2}");
     let mut line = match (a.epoch_from, a.epoch) {
         (NetworkEpochFrom::Given, Some(t)) => format!("Ölçme epoku {} (yazılan).", e(t)),
-        (NetworkEpochFrom::Baselines, Some(t)) => format!("Ölçme epoku {} (bazların gözlem zamanlarının ortası).", e(t)),
-        (_, Some(t)) => format!("Bazların gözlem zamanı yok: ağın epoku bilinen noktalarınki, {}.", e(t)),
-        _ => "Bazların gözlem zamanı ve bilinen noktaların epoku yok: ağın epoku belirsiz.".to_owned(),
+        (NetworkEpochFrom::Baselines, Some(t)) => format!(
+            "Ölçme epoku {} (bazların gözlem zamanlarının ortası).",
+            e(t)
+        ),
+        (_, Some(t)) => format!(
+            "Bazların gözlem zamanı yok: ağın epoku bilinen noktalarınki, {}.",
+            e(t)
+        ),
+        _ => "Bazların gözlem zamanı ve bilinen noktaların epoku yok: ağın epoku belirsiz."
+            .to_owned(),
     };
     if !a.moved.is_empty() {
-        let horizontal = a.moved.iter().map(|m| m.shift[0].hypot(m.shift[1])).fold(0.0, f64::max);
+        let horizontal = a
+            .moved
+            .iter()
+            .map(|m| m.shift[0].hypot(m.shift[1]))
+            .fold(0.0, f64::max);
         let up = a.moved.iter().map(|m| m.shift[2].abs()).fold(0.0, f64::max);
         // By their own velocity, the campaign's grid, or both (docs/adr/2520).
-        let own = a.moved.iter().filter(|m| m.by == KnownMovedBy::Velocity).count();
+        let own = a
+            .moved
+            .iter()
+            .filter(|m| m.by == KnownMovedBy::Velocity)
+            .count();
         let how = match (own, a.moved.len() - own) {
             (_, 0) => " kendi hızıyla oraya taşındı".to_owned(),
             (0, _) => " arazi ölçümünün hız ızgarasıyla oraya taşındı".to_owned(),
@@ -266,19 +285,30 @@ pub(crate) fn epoch_line(a: &MapSurveyNetworked) -> String {
 /// The summary's similarity line (Madde 15(1)(c), docs/adr/2160): the scale, its test, the class's limit.
 fn similarity_line(a: &MapSurveyNetworked) -> (Kind, String) {
     let Some(s) = &a.similarity else {
-        return (Kind::Info, "Benzerlik dönüşümü (Madde 15(1)(c)) için en az üç bilinen nokta gerekir.".to_owned());
+        return (
+            Kind::Info,
+            "Benzerlik dönüşümü (Madde 15(1)(c)) için en az üç bilinen nokta gerekir.".to_owned(),
+        );
     };
     let test = if s.agrees {
         format!("t = {:.2} ≤ {:.2}, ölçek uyumlu", s.t, s.quantile)
     } else {
         format!("t = {:.2} > {:.2}, ölçek uyumsuz", s.t, s.quantile)
     };
-    let limit = match a.rules.as_ref().and_then(|r| r.similarity.map(|h| (r.class.clone(), h))) {
+    let limit = match a
+        .rules
+        .as_ref()
+        .and_then(|r| r.similarity.map(|h| (r.class.clone(), h)))
+    {
         Some((class, true)) => format!("; {class} sınırı tutar"),
         Some((class, false)) => format!("; {class} sınırını aşar"),
         None => String::new(),
     };
-    let kind = if s.agrees && !limit.contains("aşar") { Kind::Ok } else { Kind::Warn };
+    let kind = if s.agrees && !limit.contains("aşar") {
+        Kind::Ok
+    } else {
+        Kind::Warn
+    };
     (
         kind,
         format!(
@@ -316,7 +346,10 @@ pub(crate) fn sessions_line(a: &MapSurveyNetworked) -> Option<(Kind, String)> {
         });
     }
     if let Some(g) = &a.velocity_grid {
-        parts.push(format!("yeni noktaların hızı “{}” hız ızgarasından", g.name));
+        parts.push(format!(
+            "yeni noktaların hızı “{}” hız ızgarasından",
+            g.name
+        ));
     }
     let text = parts.join("; ");
     let mut chars = text.chars();
@@ -344,16 +377,34 @@ struct BaselineRow {
 fn stage_line(name: &str, st: &NetworkStage) -> (Kind, String) {
     let held = st.held.join(", ");
     let test = match (st.m0, st.passed) {
-        (Some(m0), Some(true)) => format!("m0 = {m0:.2}, χ² geçti (vᵀPv {:.2} ≤ {:.2}, serbestlik {})", st.omega, st.chi2.unwrap_or(0.0), st.dof),
-        (Some(m0), Some(false)) => format!("m0 = {m0:.2}, χ² geçmedi (vᵀPv {:.2} > {:.2})", st.omega, st.chi2.unwrap_or(0.0)),
+        (Some(m0), Some(true)) => format!(
+            "m0 = {m0:.2}, χ² geçti (vᵀPv {:.2} ≤ {:.2}, serbestlik {})",
+            st.omega,
+            st.chi2.unwrap_or(0.0),
+            st.dof
+        ),
+        (Some(m0), Some(false)) => format!(
+            "m0 = {m0:.2}, χ² geçmedi (vᵀPv {:.2} > {:.2})",
+            st.omega,
+            st.chi2.unwrap_or(0.0)
+        ),
         _ => "fazla ölçü yok, sınanamaz".to_owned(),
     };
     let blunders = if st.blunders == 0 {
         format!("uyuşumsuz ölçü yok (w ≤ {:.2})", st.limit)
     } else {
-        format!("{} uyuşumsuz ölçü (w > {:.2}), en kötüsü {}", st.blunders, st.limit, st.worst.clone().unwrap_or_default())
+        format!(
+            "{} uyuşumsuz ölçü (w > {:.2}), en kötüsü {}",
+            st.blunders,
+            st.limit,
+            st.worst.clone().unwrap_or_default()
+        )
     };
-    let kind = if st.blunders > 0 || st.passed == Some(false) { Kind::Error } else { Kind::Ok };
+    let kind = if st.blunders > 0 || st.passed == Some(false) {
+        Kind::Error
+    } else {
+        Kind::Ok
+    };
     (kind, format!("{name} ({held} sabit): {test}; {blunders}."))
 }
 
@@ -380,10 +431,12 @@ impl SurveyNetworkWindowApp for App {
         };
         let input = MapSurveyNetwork {
             class: self.modules.map_mut().survey_network.class.id(),
-            scale: (self.modules.map().survey_network.scale != 1.0).then_some(self.modules.map().survey_network.scale),
+            scale: (self.modules.map().survey_network.scale != 1.0)
+                .then_some(self.modules.map().survey_network.scale),
             epoch,
             correlations: self
-                .modules.map_mut()
+                .modules
+                .map_mut()
                 .survey_network
                 .correlated
                 .then_some(NetworkCorrelations::Session),
@@ -422,8 +475,13 @@ impl SurveyNetworkWindowApp for App {
 
     /// A baseline file brought into the last arazi ölçümü (a test or a trace gives it here, the picker in the app).
     fn survey_network_file(&mut self, path: PathBuf) {
-        let Some(campaign) = self.survey_campaign() else { return };
-        let operation = Op::Baselines { campaign, file: path.to_string_lossy().into_owned() };
+        let Some(campaign) = self.survey_campaign() else {
+            return;
+        };
+        let operation = Op::Baselines {
+            campaign,
+            file: path.to_string_lossy().into_owned(),
+        };
         if let Some(out) = self.map_survey_edit(operation) {
             // The records are the new baselines (`bz-`) and the file's sessions (`bo-`), counted apart (UR2-018).
             let baselines = out.records.iter().filter(|r| r.starts_with("bz-")).count();
@@ -440,31 +498,69 @@ impl SurveyNetworkWindowApp for App {
     fn survey_network_known(&mut self) {
         let k = self.modules.map().survey_network.known.clone();
         let read = || -> Result<Op, String> {
-            let need = |v: Option<f64>, words: &str| v.ok_or_else(|| format!("{words} boş; değerini yazın."));
+            let need = |v: Option<f64>, words: &str| {
+                v.ok_or_else(|| format!("{words} boş; değerini yazın."))
+            };
             let lat = need(number(&k.lat, "Enlem")?, "Enlem")?;
             let lon = need(number(&k.lon, "Boylam")?, "Boylam")?;
-            let height = need(number(&k.height, "Elipsoit yüksekliği")?, "Elipsoit yüksekliği")?;
-            let srid = k.srid.trim().parse::<u32>().map_err(|_| format!("Çerçeve “{}” bir EPSG kodu değil.", k.srid.trim()))?;
+            let height = need(
+                number(&k.height, "Elipsoit yüksekliği")?,
+                "Elipsoit yüksekliği",
+            )?;
+            let srid = k
+                .srid
+                .trim()
+                .parse::<u32>()
+                .map_err(|_| format!("Çerçeve “{}” bir EPSG kodu değil.", k.srid.trim()))?;
             let epoch = number(&k.epoch, "Epok")?;
-            let s = [number(&k.sigma[0], "σ kuzey")?, number(&k.sigma[1], "σ doğu")?, number(&k.sigma[2], "σ yukarı")?];
-            let sigma = match s {
-                [None, None, None] => None,
-                [Some(n), Some(e), Some(u)] => Some([n, e, u]),
-                _ => return Err("σ'nın üçünü birden yazın (ağırlıklı) ya da üçünü de boş bırakın (sabit).".into()),
-            };
-            let v = [number(&k.velocity[0], "VX")?, number(&k.velocity[1], "VY")?, number(&k.velocity[2], "VZ")?];
+            let s = [
+                number(&k.sigma[0], "σ kuzey")?,
+                number(&k.sigma[1], "σ doğu")?,
+                number(&k.sigma[2], "σ yukarı")?,
+            ];
+            let sigma =
+                match s {
+                    [None, None, None] => None,
+                    [Some(n), Some(e), Some(u)] => Some([n, e, u]),
+                    _ => return Err(
+                        "σ'nın üçünü birden yazın (ağırlıklı) ya da üçünü de boş bırakın (sabit)."
+                            .into(),
+                    ),
+                };
+            let v = [
+                number(&k.velocity[0], "VX")?,
+                number(&k.velocity[1], "VY")?,
+                number(&k.velocity[2], "VZ")?,
+            ];
             let velocity = match v {
                 [None, None, None] => None,
                 [Some(x), Some(y), Some(z)] => Some([x, y, z]),
                 _ => return Err("Hızın üç bileşenini birden yazın (VX, VY, VZ, m/yıl) ya da üçünü de boş bırakın.".into()),
             };
             let source = Some(k.source.trim().to_owned()).filter(|t| !t.is_empty());
-            Ok(Op::Known { mark: k.mark.trim().to_owned(), lat, lon, height, srid, epoch, sigma, velocity, source })
+            Ok(Op::Known {
+                mark: k.mark.trim().to_owned(),
+                lat,
+                lon,
+                height,
+                srid,
+                epoch,
+                sigma,
+                velocity,
+                source,
+            })
         };
         match read() {
             Ok(op) => {
                 if let Some(out) = self.map_survey_edit(op) {
-                    self.say(Level::Success, format!("“{}” bilinen nokta olarak eklendi ({}).", k.mark.trim(), out.id.unwrap_or_default()));
+                    self.say(
+                        Level::Success,
+                        format!(
+                            "“{}” bilinen nokta olarak eklendi ({}).",
+                            k.mark.trim(),
+                            out.id.unwrap_or_default()
+                        ),
+                    );
                     self.modules.map_mut().survey_network.known = KnownForm::default();
                 }
             }
@@ -476,7 +572,8 @@ impl SurveyNetworkWindowApp for App {
     fn survey_network_accept(&mut self) {
         let op = Op::Network {
             campaign: None,
-            scale: (self.modules.map().survey_network.scale != 1.0).then_some(self.modules.map().survey_network.scale),
+            scale: (self.modules.map().survey_network.scale != 1.0)
+                .then_some(self.modules.map().survey_network.scale),
             class: self.modules.map_mut().survey_network.class.id(),
             rules: None,
             hold: None,
@@ -484,18 +581,16 @@ impl SurveyNetworkWindowApp for App {
                 .ok()
                 .flatten(),
             correlations: self
-                .modules.map_mut()
+                .modules
+                .map_mut()
                 .survey_network
                 .correlated
                 .then_some(NetworkCorrelations::Session),
             velocities: self.modules.map().survey_network.velocities,
             layer: None,
             // On the layer chosen in Katmanlar, else the active one (docs/adr/2960).
-            ellipses: self
-                .modules.map()
-                .survey_network
-                .ellipses
-                .then(|| kentos_commands::NetworkEllipses {
+            ellipses: self.modules.map().survey_network.ellipses.then(|| {
+                kentos_commands::NetworkEllipses {
                     layer: self.selected_layer.clone().unwrap_or_else(|| {
                         self.document
                             .as_ref()
@@ -506,7 +601,8 @@ impl SurveyNetworkWindowApp for App {
                     heights: self.modules.map().survey_network.bars,
                     labels: self.modules.map().survey_network.labels,
                     label_height: None,
-                }),
+                }
+            }),
         };
         if let Some(out) = self.map_survey_edit(op) {
             let drawn = match (out.ellipses, out.bars) {
@@ -527,13 +623,21 @@ impl SurveyNetworkWindowApp for App {
             };
             let drawn = match (out.labels_moved, out.labels_crowded) {
                 (0, 0) => drawn,
-                (m, 0) => format!("{drawn} ({m}'i elipse ya da etikete düşmesin diye başka yana kondu)"),
+                (m, 0) => {
+                    format!("{drawn} ({m}'i elipse ya da etikete düşmesin diye başka yana kondu)")
+                }
                 (0, c) => format!("{drawn} ({c}'i için boş yer yok, doğuda çakışıyor)"),
-                (m, c) => format!("{drawn} ({m}'i başka yana kondu; {c}'i için boş yer yok, doğuda çakışıyor)"),
+                (m, c) => format!(
+                    "{drawn} ({m}'i başka yana kondu; {c}'i için boş yer yok, doğuda çakışıyor)"
+                ),
             };
             self.say(
                 Level::Success,
-                format!("Ağ dengelemesi kabul edildi ({}): {} nokta yazıldı{drawn}.", out.id.unwrap_or_default(), out.records.len()),
+                format!(
+                    "Ağ dengelemesi kabul edildi ({}): {} nokta yazıldı{drawn}.",
+                    out.id.unwrap_or_default(),
+                    out.records.len()
+                ),
             );
         }
         self.survey_network_run();
@@ -596,7 +700,10 @@ impl SurveyNetworkWindowApp for App {
                     .and_then(|a| a.baselines.iter().find(|b| b.id == id))
                     .and_then(|b| b.free.w.map(|w| format!("Serbest dengelemede uyuşumsuz (w = {w:.2}); GNSS ağ dengelemesi penceresinden.")))
                     .unwrap_or_else(|| "GNSS ağ dengelemesi penceresinden dışlandı.".to_owned());
-                self.map_survey_edit(Op::Exclude { solution: id, reason });
+                self.map_survey_edit(Op::Exclude {
+                    solution: id,
+                    reason,
+                });
                 self.survey_network_run();
             }
             Event::Independent => {
@@ -636,7 +743,13 @@ impl SurveyNetworkWindowApp for App {
         let s = &self.modules.map().survey_network;
         let survey = self.document.as_ref().and_then(|d| d.model.map_survey());
         let (count, used) = survey.map_or((0, 0), |sv| {
-            (sv.baselines.len(), sv.baselines.iter().filter(|b| b.adjust && b.excluded.is_none()).count())
+            (
+                sv.baselines.len(),
+                sv.baselines
+                    .iter()
+                    .filter(|b| b.adjust && b.excluded.is_none())
+                    .count(),
+            )
         });
         let head = Form::new()
             .label_width(130.0)
@@ -722,7 +835,10 @@ impl SurveyNetworkWindowApp for App {
             Some(Ok(a)) => {
                 acceptable = a.acceptable;
                 lines.push(words::text_line(Kind::Info, epoch_line(a)));
-                for (name, st) in [("Serbest dengeleme", &a.free), ("Bilinen noktalara dayalı", &a.constrained)] {
+                for (name, st) in [
+                    ("Serbest dengeleme", &a.free),
+                    ("Bilinen noktalara dayalı", &a.constrained),
+                ] {
                     let (kind, text) = stage_line(name, st);
                     lines.push(words::text_line(kind, text));
                 }
@@ -735,7 +851,9 @@ impl SurveyNetworkWindowApp for App {
                     lines.push(words::text_line(kind, text));
                 }
                 if let Some(r) = &a.rules {
-                    let confidence = r.confidence.map_or("Baarda α₀ = 0,001".to_owned(), |c| format!("güven {c}"));
+                    let confidence = r
+                        .confidence
+                        .map_or("Baarda α₀ = 0,001".to_owned(), |c| format!("güven {c}"));
                     lines.push(words::text_line(
                         if r.passed { Kind::Ok } else { Kind::Warn },
                         if r.passed {
@@ -756,9 +874,15 @@ impl SurveyNetworkWindowApp for App {
                 if a.acceptable {
                     lines.push(words::text_line(Kind::Info, "Kabul edilebilir: Kabul et yeni noktaları çizer, kabul edilmiş noktaları eski sonucunu koruyarak taşır."));
                 }
-                let accepted = a.current.as_ref().map(|id| format!("Bu ağ “{id}” dengelemesiyle kabul edildi; noktaları güncel."));
+                let accepted = a.current.as_ref().map(|id| {
+                    format!("Bu ağ “{id}” dengelemesiyle kabul edildi; noktaları güncel.")
+                });
                 for why in &a.why {
-                    let kind = if accepted.as_ref() == Some(why) { Kind::Ok } else { Kind::Error };
+                    let kind = if accepted.as_ref() == Some(why) {
+                        Kind::Ok
+                    } else {
+                        Kind::Error
+                    };
                     lines.push(words::text_line(kind, why.clone()));
                 }
                 lines.push(words::text_line(
@@ -797,16 +921,27 @@ impl SurveyNetworkWindowApp for App {
                                     mm(st.sigma[1]),
                                     mm(st.sigma[2]),
                                     // Docs/adr/4920: from the campaign's grid, east/north/up.
-                                    st.velocity.map_or(String::new(), |v| format!("{}/{}/{}", mm(v[0]), mm(v[1]), mm(v[2]))),
+                                    st.velocity.map_or(String::new(), |v| {
+                                        format!("{}/{}/{}", mm(v[0]), mm(v[1]), mm(v[2]))
+                                    }),
                                     // The error ellipse's semi-axes, its direction (a semt), the height's interval.
                                     st.ellipse.as_ref().map_or(String::new(), |e| {
-                                        let way = e.azimuth.map_or("yönsüz".to_owned(), |d| self.format().bearing(d * 10.0 / 9.0));
-                                        format!("{}/{} · {way} · ±{}", mm(e.major), mm(e.minor), mm(e.up))
+                                        let way = e.azimuth.map_or("yönsüz".to_owned(), |d| {
+                                            self.format().bearing(d * 10.0 / 9.0)
+                                        });
+                                        format!(
+                                            "{}/{} · {way} · ±{}",
+                                            mm(e.major),
+                                            mm(e.minor),
+                                            mm(e.up)
+                                        )
                                     }),
                                     f(st.dx),
                                     f(st.dy),
                                     f(st.dz),
-                                    st.rules.map_or(String::new(), |ok| if ok { "Tutar".into() } else { "Aşar".into() }),
+                                    st.rules.map_or(String::new(), |ok| {
+                                        if ok { "Tutar".into() } else { "Aşar".into() }
+                                    }),
                                     st.point.clone().unwrap_or_default(),
                                 ]
                             })
@@ -872,8 +1007,12 @@ impl SurveyNetworkWindowApp for App {
                             rows.len(),
                             move |i, k| {
                                 let b = &rows[i];
-                                let text = |t: String| -> Element<'_, Message> { kentos_ui::widget::table::text(t).into() };
-                                let number = |t: String| -> Element<'_, Message> { kentos_ui::widget::table::number(t).into() };
+                                let text = |t: String| -> Element<'_, Message> {
+                                    kentos_ui::widget::table::text(t).into()
+                                };
+                                let number = |t: String| -> Element<'_, Message> {
+                                    kentos_ui::widget::table::number(t).into()
+                                };
                                 match k {
                                     0 => text(b.id.clone()),
                                     1 => text(b.session.clone()),
@@ -884,7 +1023,9 @@ impl SurveyNetworkWindowApp for App {
                                     6 => number(b.up.map_or(String::new(), mm)),
                                     7 => number(b.w.map_or("—".to_owned(), |w| format!("{w:.2}"))),
                                     8 => text(b.state.to_owned()),
-                                    9 => text(b.rules.map_or(String::new(), |ok| if ok { "Tutar".into() } else { "Aşar".into() })),
+                                    9 => text(b.rules.map_or(String::new(), |ok| {
+                                        if ok { "Tutar".into() } else { "Aşar".into() }
+                                    })),
                                     _ => {
                                         let (words, event) = if b.excluded {
                                             ("Geri al", Event::Include(b.id.clone()))
@@ -895,7 +1036,8 @@ impl SurveyNetworkWindowApp for App {
                                             .style(kentos_ui::style::button::ghost)
                                             .padding([0, 6])
                                             .on_press(msg(event));
-                                        kentos_ui::widget::Cell::padded(container(x).center_x(Fill)).into()
+                                        kentos_ui::widget::Cell::padded(container(x).center_x(Fill))
+                                            .into()
                                     }
                                 }
                             },
@@ -914,7 +1056,11 @@ impl SurveyNetworkWindowApp for App {
                             col("Taşınma D/K/Y (mm)", 150.0),
                             num("Artık D/K/Y (mm)", 120.0),
                             col("Ağırlık", 90.0),
-                            road_dialog::Col { title: "Kaynak", width: None, number: false },
+                            road_dialog::Col {
+                                title: "Kaynak",
+                                width: None,
+                                number: false,
+                            },
                         ],
                         survey
                             .map(|sv| {
@@ -931,23 +1077,44 @@ impl SurveyNetworkWindowApp for App {
                                             k.epoch.map_or(String::new(), |e| format!("{e}")),
                                             // Moved to the measurement epoch by its own velocity or along the
                                             // velocity grid (docs/adr/2120, 2520).
-                                            a.moved.iter().find(|m| m.id == k.id).map_or(String::new(), |m| {
-                                                format!(
-                                                    "{} {}/{}/{}",
-                                                    if m.by == KnownMovedBy::Velocity { "hız" } else { "ızgara" },
-                                                    mm(m.shift[0]),
-                                                    mm(m.shift[1]),
-                                                    mm(m.shift[2])
-                                                )
-                                            }),
+                                            a.moved.iter().find(|m| m.id == k.id).map_or(
+                                                String::new(),
+                                                |m| {
+                                                    format!(
+                                                        "{} {}/{}/{}",
+                                                        if m.by == KnownMovedBy::Velocity {
+                                                            "hız"
+                                                        } else {
+                                                            "ızgara"
+                                                        },
+                                                        mm(m.shift[0]),
+                                                        mm(m.shift[1]),
+                                                        mm(m.shift[2])
+                                                    )
+                                                },
+                                            ),
                                             // The similarity's residual (Madde 15(1)(c), docs/adr/2160).
                                             a.similarity
                                                 .as_ref()
-                                                .and_then(|s| s.residuals.iter().find(|r| r.id == k.id))
-                                                .map_or(String::new(), |r| format!("{}/{}/{}", mm(r.enu[0]), mm(r.enu[1]), mm(r.enu[2]))),
+                                                .and_then(|s| {
+                                                    s.residuals.iter().find(|r| r.id == k.id)
+                                                })
+                                                .map_or(String::new(), |r| {
+                                                    format!(
+                                                        "{}/{}/{}",
+                                                        mm(r.enu[0]),
+                                                        mm(r.enu[1]),
+                                                        mm(r.enu[2])
+                                                    )
+                                                }),
                                             match (&k.excluded, k.sigma) {
                                                 (Some(_), _) => "Dışlandı".to_owned(),
-                                                (None, Some(g)) => format!("σ {}/{}/{} mm", mm(g[0]), mm(g[1]), mm(g[2])),
+                                                (None, Some(g)) => format!(
+                                                    "σ {}/{}/{} mm",
+                                                    mm(g[0]),
+                                                    mm(g[1]),
+                                                    mm(g[2])
+                                                ),
                                                 (None, None) => "Sabit".to_owned(),
                                             },
                                             k.source.clone().unwrap_or_default(),
@@ -984,7 +1151,8 @@ impl SurveyNetworkWindowApp for App {
                                                     .collect::<Vec<_>>()
                                                     .join("  ")
                                             };
-                                            let most = b.r.iter().fold(0.0_f64, |m, v| m.max(v.abs()));
+                                            let most =
+                                                b.r.iter().fold(0.0_f64, |m, v| m.max(v.abs()));
                                             vec![
                                                 o.id.clone(),
                                                 o.name.clone(),
@@ -1010,7 +1178,11 @@ impl SurveyNetworkWindowApp for App {
         }
         let k = &s.known;
         let input = |value: &str, hint: &str, field: Field, width: f32| {
-            container(fields::input(None, hint, value, false, false).on_input(move |v| msg(Event::Known(field, v)))).width(width)
+            container(
+                fields::input(None, hint, value, false, false)
+                    .on_input(move |v| msg(Event::Known(field, v))),
+            )
+            .width(width)
         };
         // One label column, three equal boxes a row (the owner: a form's fields line up), their hints the words.
         let box_ = 150.0;
@@ -1018,15 +1190,23 @@ impl SurveyNetworkWindowApp for App {
             .label_width(130.0)
             .field(
                 "İşaret, çerçeve, epok",
-                row![input(&k.mark, "İşaret", Field::Mark, box_), input(&k.srid, "EPSG (5252)", Field::Srid, box_), input(&k.epoch, "Epok (2026.84)", Field::Epoch, box_)]
-                    .spacing(8)
-                    .align_y(Center),
+                row![
+                    input(&k.mark, "İşaret", Field::Mark, box_),
+                    input(&k.srid, "EPSG (5252)", Field::Srid, box_),
+                    input(&k.epoch, "Epok (2026.84)", Field::Epoch, box_)
+                ]
+                .spacing(8)
+                .align_y(Center),
             )
             .field(
                 "Enlem, boylam, h",
-                row![input(&k.lat, "Enlem (°)", Field::Lat, box_), input(&k.lon, "Boylam (°)", Field::Lon, box_), input(&k.height, "h (m)", Field::Height, box_)]
-                    .spacing(8)
-                    .align_y(Center),
+                row![
+                    input(&k.lat, "Enlem (°)", Field::Lat, box_),
+                    input(&k.lon, "Boylam (°)", Field::Lon, box_),
+                    input(&k.height, "h (m)", Field::Height, box_)
+                ]
+                .spacing(8)
+                .align_y(Center),
             )
             .field(
                 "σ (m)",
@@ -1050,16 +1230,28 @@ impl SurveyNetworkWindowApp for App {
             )
             .field(
                 "Kaynak",
-                row![input(&k.source, "TUSAGA-Aktif, C1 …", Field::Source, 3.0 * box_ + 16.0), words::secondary(ADD, Some(msg(Event::AddKnown)))]
-                    .spacing(8)
-                    .align_y(Center),
+                row![
+                    input(
+                        &k.source,
+                        "TUSAGA-Aktif, C1 …",
+                        Field::Source,
+                        3.0 * box_ + 16.0
+                    ),
+                    words::secondary(ADD, Some(msg(Event::AddKnown)))
+                ]
+                .spacing(8)
+                .align_y(Center),
             );
         let mut body = Grows::new()
             .spacing(12.0)
             .width(Fill)
             .push(head)
             .push(words::summary(lines))
-            .push(Segmented::new([View::Marks, View::Baselines, View::Known, View::Sessions], s.view, |v| msg(Event::View(v))));
+            .push(Segmented::new(
+                [View::Marks, View::Baselines, View::Known, View::Sessions],
+                s.view,
+                |v| msg(Event::View(v)),
+            ));
         body = body.push_fit(table, kentos_ui::theme::typography::scaled(120.0));
         if s.view == View::Known {
             body = body.push(known);
@@ -1081,7 +1273,10 @@ impl SurveyNetworkWindowApp for App {
         }
         Frame::new(TITLE)
             .scroll(body)
-            .aside(words::secondary(ACCEPT, acceptable.then(|| msg(Event::Accept))))
+            .aside(words::secondary(
+                ACCEPT,
+                acceptable.then(|| msg(Event::Accept)),
+            ))
             .action(words::primary(CLOSE, Some(msg(Event::Close))))
             .width(1000.0)
             .modal(msg(Event::Close))
@@ -1093,12 +1288,12 @@ impl SurveyNetworkWindowApp for App {
             Control::Press(ACCEPT) => Some(msg(Event::Accept)),
             Control::Press(IMPORT) => Some(msg(Event::Import)),
             Control::Press(ADD) => Some(msg(Event::AddKnown)),
-            Control::Press(CORRELATED) => {
-                Some(msg(Event::Correlated(!self.modules.map().survey_network.correlated)))
-            }
-            Control::Press(VELOCITIES) => {
-                Some(msg(Event::Velocities(!self.modules.map().survey_network.velocities)))
-            }
+            Control::Press(CORRELATED) => Some(msg(Event::Correlated(
+                !self.modules.map().survey_network.correlated,
+            ))),
+            Control::Press(VELOCITIES) => Some(msg(Event::Velocities(
+                !self.modules.map().survey_network.velocities,
+            ))),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

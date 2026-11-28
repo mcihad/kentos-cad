@@ -16,13 +16,13 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, Entity, ImpactChange, ImpactLayer, ImpactMeasure, ImpactReach, ImpactUse, LayerNodeType,
-    ScenariosImpact, ScenariosImpacted, scenario_pairs,
+    CommandResult, Entity, ImpactChange, ImpactLayer, ImpactMeasure, ImpactReach, ImpactUse,
+    LayerNodeType, ScenariosImpact, ScenariosImpacted, scenario_pairs,
 };
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::{Shape, entity_area, entity_length};
-use kentos_geometry_core::geom::centroid::shape_centroid;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
+use kentos_geometry_core::geom::centroid::shape_centroid;
 use kentos_geometry_core::geom::region::{intersect_area_sets, net_area};
 use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_geometry_core::ops::spatial_query::{distance, geometry_of};
@@ -63,13 +63,34 @@ pub(crate) fn stamp(doc: &Document, layers: &[String]) -> String {
     let mut h = Sha256::new();
     for layer in layers {
         for e in doc.entities().filter(|e| e.base().layer_id == *layer) {
-            let attrs: Vec<String> = e.base().attrs.iter().map(|(k, v)| format!("{k}={v}")).collect();
-            let pts: Vec<String> =
-                vertices(e).iter().map(|(x, y)| format!("{:016x},{:016x}", x.to_bits(), y.to_bits())).collect();
-            h.update(format!("{}|{}|{}|{}|{}\n", e.base().id, layer, e.kind(), attrs.join(";"), pts.join(";")).as_bytes());
+            let attrs: Vec<String> = e
+                .base()
+                .attrs
+                .iter()
+                .map(|(k, v)| format!("{k}={v}"))
+                .collect();
+            let pts: Vec<String> = vertices(e)
+                .iter()
+                .map(|(x, y)| format!("{:016x},{:016x}", x.to_bits(), y.to_bits()))
+                .collect();
+            h.update(
+                format!(
+                    "{}|{}|{}|{}|{}\n",
+                    e.base().id,
+                    layer,
+                    e.kind(),
+                    attrs.join(";"),
+                    pts.join(";")
+                )
+                .as_bytes(),
+            );
         }
     }
-    h.finalize().iter().take(8).map(|b| format!("{b:02x}")).collect()
+    h.finalize()
+        .iter()
+        .take(8)
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// One side's measures over its layers.
@@ -93,20 +114,34 @@ fn side<'a>(doc: &'a Document, layers: &[String], field: &str, key: &str) -> Sid
     for layer in layers {
         for e in doc.entities().filter(|e| e.base().layer_id == *layer) {
             s.objects += 1;
-            let attr = |k: &str| e.base().attrs.get(k).map(|v| v.trim().to_owned()).unwrap_or_default();
+            let attr = |k: &str| {
+                e.base()
+                    .attrs
+                    .get(k)
+                    .map(|v| v.trim().to_owned())
+                    .unwrap_or_default()
+            };
             match e {
                 Entity::Polygon(_) => {
                     let area = entity_area(&shape(e)).unwrap_or(0.0);
                     s.area += area;
                     let usage = attr(field);
-                    let uid = doc.uid(Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default();
+                    let uid = doc
+                        .uid(Slot(e.base().id))
+                        .map(|u| u.to_string())
+                        .unwrap_or_default();
                     s.areas.push((shape(e), usage.clone(), area, uid));
                     if usage.is_empty() {
                         s.no_use += 1;
                     }
                     *s.uses.entry(usage.clone()).or_default() += area;
                     if !OPEN_USES.contains(&usage.as_str()) {
-                        match attr("KAKS").replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite()) {
+                        match attr("KAKS")
+                            .replace(',', ".")
+                            .parse::<f64>()
+                            .ok()
+                            .filter(|v| v.is_finite())
+                        {
                             Some(k) => s.capacity += area * k,
                             None => s.no_kaks += 1,
                         }
@@ -118,7 +153,9 @@ fn side<'a>(doc: &'a Document, layers: &[String], field: &str, key: &str) -> Sid
                         s.keyed.push((k, e, area));
                     }
                 }
-                Entity::Line(_) | Entity::Polyline(_) => s.length += entity_length(&shape(e)).unwrap_or(0.0),
+                Entity::Line(_) | Entity::Polyline(_) => {
+                    s.length += entity_length(&shape(e)).unwrap_or(0.0)
+                }
                 _ => {}
             }
         }
@@ -128,11 +165,22 @@ fn side<'a>(doc: &'a Document, layers: &[String], field: &str, key: &str) -> Sid
 
 /// A decision's capacity: area × KAKS; none on an open use or without a KAKS.
 fn capacity(e: &Entity, area: f64, field: &str) -> Option<f64> {
-    let attr = |k: &str| e.base().attrs.get(k).map(|v| v.trim().to_owned()).unwrap_or_default();
+    let attr = |k: &str| {
+        e.base()
+            .attrs
+            .get(k)
+            .map(|v| v.trim().to_owned())
+            .unwrap_or_default()
+    };
     if OPEN_USES.contains(&attr(field).as_str()) {
         return Some(0.0);
     }
-    attr("KAKS").replace(',', ".").parse::<f64>().ok().filter(|v| v.is_finite()).map(|k| area * k)
+    attr("KAKS")
+        .replace(',', ".")
+        .parse::<f64>()
+        .ok()
+        .filter(|v| v.is_finite())
+        .map(|k| area * k)
 }
 
 /// The impervious area of a side: each area × its use's share; the uses with area and no share.
@@ -161,8 +209,15 @@ struct Reached {
 
 /// The access on a side: the `from` areas whose centroid lies within `d` of a `to` area.
 fn reached(s: &Side<'_>, access: &kentos_commands::ImpactAccess) -> Reached {
-    let to: Vec<_> = s.areas.iter().filter(|(_, u, _, _)| access.to.contains(u)).collect();
-    let targets: Vec<_> = to.iter().filter_map(|(sh, _, _, _)| geometry_of(sh)).collect();
+    let to: Vec<_> = s
+        .areas
+        .iter()
+        .filter(|(_, u, _, _)| access.to.contains(u))
+        .collect();
+    let targets: Vec<_> = to
+        .iter()
+        .filter_map(|(sh, _, _, _)| geometry_of(sh))
+        .collect();
     let mut r = Reached {
         got: 0.0,
         whole: 0.0,
@@ -170,11 +225,26 @@ fn reached(s: &Side<'_>, access: &kentos_commands::ImpactAccess) -> Reached {
         unreached: Vec::new(),
         targets: to.iter().map(|(_, _, _, uid)| uid.clone()).collect(),
     };
-    for (sh, _, area, uid) in s.areas.iter().filter(|(_, u, _, _)| access.from.contains(u)) {
+    for (sh, _, area, uid) in s
+        .areas
+        .iter()
+        .filter(|(_, u, _, _)| access.from.contains(u))
+    {
         r.whole += area;
         let near = shape_centroid(sh)
-            .and_then(|c| geometry_of(&Shape::Point { p: c, z: None, parts: None }))
-            .is_some_and(|point| targets.iter().map(|t| distance(&point, t)).any(|d| d <= access.distance));
+            .and_then(|c| {
+                geometry_of(&Shape::Point {
+                    p: c,
+                    z: None,
+                    parts: None,
+                })
+            })
+            .is_some_and(|point| {
+                targets
+                    .iter()
+                    .map(|t| distance(&point, t))
+                    .any(|d| d <= access.distance)
+            });
         if near {
             r.got += area;
             r.reached.push(uid.clone());
@@ -201,7 +271,11 @@ struct Near {
 
 /// The nearest place of `t` to the point `p` (its geometry `point`), and the distance: `p` itself when `t` reaches it
 /// (as `distance` counts 0), else the nearest of `t`'s points and of its edges' nearest places, the first of equals.
-fn nearest_of(p: kentos_geometry_core::Vec2, point: &kentos_geometry_core::ops::spatial_query::Geometry, t: &kentos_geometry_core::ops::spatial_query::Geometry) -> ([f64; 2], f64) {
+fn nearest_of(
+    p: kentos_geometry_core::Vec2,
+    point: &kentos_geometry_core::ops::spatial_query::Geometry,
+    t: &kentos_geometry_core::ops::spatial_query::Geometry,
+) -> ([f64; 2], f64) {
     use kentos_geometry_core::geom::intersect::closest_on_edge;
     if kentos_geometry_core::ops::spatial_query::intersects(point, t) {
         return ([p.x, p.y], 0.0);
@@ -223,7 +297,12 @@ fn nearest_of(p: kentos_geometry_core::Vec2, point: &kentos_geometry_core::ops::
 }
 
 /// The area of a side's measured areas (`from`'s uses, or all) whose centroid lies within `d` of an object of `layer`.
-fn near(doc: &Document, s: &Side<'_>, layer: &str, infra: &kentos_commands::ImpactInfrastructure) -> Near {
+fn near(
+    doc: &Document,
+    s: &Side<'_>,
+    layer: &str,
+    infra: &kentos_commands::ImpactInfrastructure,
+) -> Near {
     let mut ids = Vec::new();
     let lines: Vec<_> = doc
         .entities_with_uids()
@@ -234,13 +313,33 @@ fn near(doc: &Document, s: &Side<'_>, layer: &str, infra: &kentos_commands::Impa
             Some(g)
         })
         .collect();
-    let mut r = Near { got: 0.0, whole: 0.0, objects: lines.len(), near: Vec::new(), far: Vec::new(), lines: ids, links: Vec::new() };
-    let measured = |u: &String| infra.from.iter().all(|f| f.trim().is_empty()) || infra.from.contains(u);
+    let mut r = Near {
+        got: 0.0,
+        whole: 0.0,
+        objects: lines.len(),
+        near: Vec::new(),
+        far: Vec::new(),
+        lines: ids,
+        links: Vec::new(),
+    };
+    let measured =
+        |u: &String| infra.from.iter().all(|f| f.trim().is_empty()) || infra.from.contains(u);
     for (sh, _, area, uid) in s.areas.iter().filter(|(_, u, _, _)| measured(u)) {
         r.whole += area;
         let centre = shape_centroid(sh);
-        let point = centre.and_then(|c| geometry_of(&Shape::Point { p: c, z: None, parts: None }));
-        let close = point.as_ref().is_some_and(|point| lines.iter().map(|t| distance(point, t)).any(|d| d <= infra.distance));
+        let point = centre.and_then(|c| {
+            geometry_of(&Shape::Point {
+                p: c,
+                z: None,
+                parts: None,
+            })
+        });
+        let close = point.as_ref().is_some_and(|point| {
+            lines
+                .iter()
+                .map(|t| distance(point, t))
+                .any(|d| d <= infra.distance)
+        });
         // The nearest object and its nearest place (docs/adr/3460): the first of equals in the drawing's order.
         if let (Some(c), Some(point)) = (centre, point.as_ref()) {
             let mut best: Option<(usize, [f64; 2], f64)> = None;
@@ -251,7 +350,13 @@ fn near(doc: &Document, s: &Side<'_>, layer: &str, infra: &kentos_commands::Impa
                 }
             }
             if let Some((k, to, d)) = best {
-                r.links.push(kentos_commands::ImpactLink { area: uid.clone(), line: r.lines[k].clone(), from: [c.x, c.y], to, distance: d });
+                r.links.push(kentos_commands::ImpactLink {
+                    area: uid.clone(),
+                    line: r.lines[k].clone(),
+                    from: [c.x, c.y],
+                    to,
+                    distance: d,
+                });
             }
         }
         if close {
@@ -307,13 +412,24 @@ fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<SlopeTriangle> {
         .iter()
         .filter_map(|t| {
             let [a, b, c] = t.map(|i| s.vertices[i as usize]);
-            let (u, v) = ([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
-            let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+            let (u, v) = (
+                [b[0] - a[0], b[1] - a[1], b[2] - a[2]],
+                [c[0] - a[0], c[1] - a[1], c[2] - a[2]],
+            );
+            let n = [
+                u[1] * v[2] - u[2] * v[1],
+                u[2] * v[0] - u[0] * v[2],
+                u[0] * v[1] - u[1] * v[0],
+            ];
             if n[2] == 0.0 {
                 return None;
             }
             let slope = n[0].hypot(n[1]) / n[2].abs() * 100.0;
-            let up = if n[2] > 0.0 { [n[0], n[1]] } else { [-n[0], -n[1]] };
+            let up = if n[2] > 0.0 {
+                [n[0], n[1]]
+            } else {
+                [-n[0], -n[1]]
+            };
             let aspect = if up[0] == 0.0 && up[1] == 0.0 {
                 0
             } else {
@@ -322,7 +438,13 @@ fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<SlopeTriangle> {
             };
             // Counter-clockwise, as an area's outer ring.
             let pts = if n[2] > 0.0 { [a, b, c] } else { [a, c, b] };
-            let ring = Ring { pts: pts.iter().map(|p| kentos_geometry_core::Vec2::new(p[0], p[1])).collect(), bulges: None };
+            let ring = Ring {
+                pts: pts
+                    .iter()
+                    .map(|p| kentos_geometry_core::Vec2::new(p[0], p[1]))
+                    .collect(),
+                bulges: None,
+            };
             let xs = [a[0], b[0], c[0]];
             let ys = [a[1], b[1], c[1]];
             let bounds = [
@@ -331,21 +453,46 @@ fn slope_triangles(s: &kentos_road::surface::Surface) -> Vec<SlopeTriangle> {
                 xs.iter().copied().fold(f64::NEG_INFINITY, f64::max),
                 ys.iter().copied().fold(f64::NEG_INFINITY, f64::max),
             ];
-            Some((Area { outer: ring, holes: Vec::new() }, bounds, slope, aspect))
+            Some((
+                Area {
+                    outer: ring,
+                    holes: Vec::new(),
+                },
+                bounds,
+                slope,
+                aspect,
+            ))
         })
         .collect()
 }
 
-fn slopes(s: &Side<'_>, wanted: &kentos_commands::ImpactSlope, triangles: &[SlopeTriangle]) -> Slopes {
-    let mut r = Slopes { classes: vec![0.0; wanted.classes.len() + 1], ..Slopes::default() };
+fn slopes(
+    s: &Side<'_>,
+    wanted: &kentos_commands::ImpactSlope,
+    triangles: &[SlopeTriangle],
+) -> Slopes {
+    let mut r = Slopes {
+        classes: vec![0.0; wanted.classes.len() + 1],
+        ..Slopes::default()
+    };
     let every = wanted.from.iter().all(|f| f.trim().is_empty());
-    for (sh, _, area, uid) in s.areas.iter().filter(|(_, u, _, _)| every || wanted.from.iter().any(|f| f.trim() == u)) {
+    for (sh, _, area, uid) in s
+        .areas
+        .iter()
+        .filter(|(_, u, _, _)| every || wanted.from.iter().any(|f| f.trim() == u))
+    {
         r.whole += area;
         let parts = areas_of_entity(sh);
         let points = parts.iter().flat_map(|a| a.outer.pts.iter());
-        let [x0, y0, x1, y1] = points.fold([f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY], |b, p| {
-            [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)]
-        });
+        let [x0, y0, x1, y1] = points.fold(
+            [
+                f64::INFINITY,
+                f64::INFINITY,
+                f64::NEG_INFINITY,
+                f64::NEG_INFINITY,
+            ],
+            |b, p| [b[0].min(p.x), b[1].min(p.y), b[2].max(p.x), b[3].max(p.y)],
+        );
         let mine = r.pieces.len();
         for (triangle, b, slope, aspect) in triangles {
             if b[0] > x1 || b[2] < x0 || b[1] > y1 || b[3] < y0 {
@@ -383,8 +530,13 @@ fn slopes(s: &Side<'_>, wanted: &kentos_commands::ImpactSlope, triangles: &[Slop
             }
         }
         // An area's parts by their first vertex, south first, then west: the same map whatever the surface's order.
-        let first = |p: &kentos_commands::ImpactSlopePiece| p.ring.first().copied().unwrap_or([0.0; 2]);
-        r.pieces[mine..].sort_by(|a, b| first(a)[1].total_cmp(&first(b)[1]).then(first(a)[0].total_cmp(&first(b)[0])));
+        let first =
+            |p: &kentos_commands::ImpactSlopePiece| p.ring.first().copied().unwrap_or([0.0; 2]);
+        r.pieces[mine..].sort_by(|a, b| {
+            first(a)[1]
+                .total_cmp(&first(b)[1])
+                .then(first(a)[0].total_cmp(&first(b)[0]))
+        });
     }
     r
 }
@@ -398,7 +550,12 @@ fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
             || !rising
             || s.classes.iter().any(|b| !(b.is_finite() && *b > 0.0))
         {
-            let written = s.classes.iter().map(|b| b.to_string()).collect::<Vec<_>>().join("; ");
+            let written = s
+                .classes
+                .iter()
+                .map(|b| b.to_string())
+                .collect::<Vec<_>>()
+                .join("; ");
             return Err(fail(
                 codes::INVALID_INPUT,
                 format!(
@@ -414,7 +571,10 @@ fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
     {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Dik eğim eşiği 0'dan büyük bir yüzde olmalı (yazılan {}).", s.threshold),
+            format!(
+                "Dik eğim eşiği 0'dan büyük bir yüzde olmalı (yazılan {}).",
+                s.threshold
+            ),
             "slope.threshold",
         ));
     }
@@ -422,7 +582,9 @@ fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
         if !(k.is_finite() && (0.0..=1.0).contains(k)) {
             return Err(fail(
                 codes::INVALID_INPUT,
-                format!("“{code}” kullanımının geçirimsizlik payı 0 ile 1 arasında olmalı (yazılan {k})."),
+                format!(
+                    "“{code}” kullanımının geçirimsizlik payı 0 ile 1 arasında olmalı (yazılan {k})."
+                ),
                 &format!("impervious.{code}"),
             ));
         }
@@ -431,17 +593,33 @@ fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
         if !(a.distance.is_finite() && a.distance > 0.0) {
             return Err(fail(
                 codes::INVALID_INPUT,
-                format!("Erişim uzaklığı 0'dan büyük olmalı (yazılan {}).", a.distance),
+                format!(
+                    "Erişim uzaklığı 0'dan büyük olmalı (yazılan {}).",
+                    a.distance
+                ),
                 "access.distance",
             ));
         }
-        for (list, path, words) in [(&a.from, "access.from", "Erişen"), (&a.to, "access.to", "Erişilen")] {
+        for (list, path, words) in [
+            (&a.from, "access.from", "Erişen"),
+            (&a.to, "access.to", "Erişilen"),
+        ] {
             if list.iter().all(|u| u.trim().is_empty()) {
-                return Err(fail(codes::INVALID_INPUT, format!("{words} kullanım verilmemiş; en az bir kullanım kodu yazın."), path));
+                return Err(fail(
+                    codes::INVALID_INPUT,
+                    format!("{words} kullanım verilmemiş; en az bir kullanım kodu yazın."),
+                    path,
+                ));
             }
         }
         // Docs/adr/5060: along a network, the user's leg to it.
-        match (a.network.as_deref().map(str::trim).filter(|n| !n.is_empty()), a.connect) {
+        match (
+            a.network
+                .as_deref()
+                .map(str::trim)
+                .filter(|n| !n.is_empty()),
+            a.connect,
+        ) {
             (Some(_), None) => {
                 return Err(fail(
                     codes::INVALID_INPUT,
@@ -471,7 +649,10 @@ fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
     {
         return Err(fail(
             codes::INVALID_INPUT,
-            format!("Altyapı uzaklığı 0'dan büyük olmalı (yazılan {}).", i.distance),
+            format!(
+                "Altyapı uzaklığı 0'dan büyük olmalı (yazılan {}).",
+                i.distance
+            ),
             "infrastructure.distance",
         ));
     }
@@ -481,40 +662,87 @@ fn asked(input: &ScenariosImpact) -> Result<(), Stop> {
 pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosImpacted, Stop> {
     asked(input)?;
     let id = input.scenario.trim();
-    let Some(group) = doc.layers().get(id).filter(|n| n.kind == LayerNodeType::Group && n.scenario.is_some()) else {
+    let Some(group) = doc
+        .layers()
+        .get(id)
+        .filter(|n| n.kind == LayerNodeType::Group && n.scenario.is_some())
+    else {
         return Err(fail(
             codes::SCENARIO_NOT_FOUND,
             format!("“{id}” kimlikli senaryo çizimde yok. Bir senaryo grubunun kimliğini verin."),
             "scenario",
         ));
     };
-    let pairs: Vec<(String, String)> =
-        scenario_pairs(doc.layers().nodes(), group).into_iter().map(|(b, l)| (b.to_owned(), l.to_owned())).collect();
+    let pairs: Vec<(String, String)> = scenario_pairs(doc.layers().nodes(), group)
+        .into_iter()
+        .map(|(b, l)| (b.to_owned(), l.to_owned()))
+        .collect();
     if pairs.is_empty() {
         return Err(fail(
             codes::NOTHING_TO_COMPARE,
-            format!("“{}” senaryosunun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.", group.name),
+            format!(
+                "“{}” senaryosunun hiçbir katmanı bir ana katmanın yerine geçmiyor; karşılaştırılacak bir şey yok.",
+                group.name
+            ),
             "scenario",
         ));
     }
-    let field = input.field.as_deref().map(str::trim).filter(|f| !f.is_empty()).unwrap_or(FIELD).to_owned();
-    let key = input.key.as_deref().map(str::trim).filter(|f| !f.is_empty()).unwrap_or(KEY).to_owned();
+    let field = input
+        .field
+        .as_deref()
+        .map(str::trim)
+        .filter(|f| !f.is_empty())
+        .unwrap_or(FIELD)
+        .to_owned();
+    let key = input
+        .key
+        .as_deref()
+        .map(str::trim)
+        .filter(|f| !f.is_empty())
+        .unwrap_or(KEY)
+        .to_owned();
     let bases: Vec<String> = pairs.iter().map(|(b, _)| b.clone()).collect();
     let alts: Vec<String> = pairs.iter().map(|(_, l)| l.clone()).collect();
-    let (b, a) = (side(doc, &bases, &field, &key), side(doc, &alts, &field, &key));
-    let measure = |id: &str, label: &str, unit: &str, base: f64, alternative: f64, method: &str| ImpactMeasure {
-        id: id.into(),
-        label: label.into(),
-        unit: unit.into(),
-        base,
-        alternative,
-        difference: alternative - base,
-        method: method.into(),
+    let (b, a) = (
+        side(doc, &bases, &field, &key),
+        side(doc, &alts, &field, &key),
+    );
+    let measure = |id: &str, label: &str, unit: &str, base: f64, alternative: f64, method: &str| {
+        ImpactMeasure {
+            id: id.into(),
+            label: label.into(),
+            unit: unit.into(),
+            base,
+            alternative,
+            difference: alternative - base,
+            method: method.into(),
+        }
     };
     let mut measures = vec![
-        measure("objects", "Nesne sayısı", "count", b.objects as f64, a.objects as f64, "Karşılaştırılan katmanlardaki bütün nesneler."),
-        measure("area", "Alanların toplamı", "m2", b.area, a.area, "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil)."),
-        measure("length", "Çizgilerin uzunluğu", "m", b.length, a.length, "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu."),
+        measure(
+            "objects",
+            "Nesne sayısı",
+            "count",
+            b.objects as f64,
+            a.objects as f64,
+            "Karşılaştırılan katmanlardaki bütün nesneler.",
+        ),
+        measure(
+            "area",
+            "Alanların toplamı",
+            "m2",
+            b.area,
+            a.area,
+            "Alanların düzlemsel alanı, koordinatlardan (yay ve delikler dahil).",
+        ),
+        measure(
+            "length",
+            "Çizgilerin uzunluğu",
+            "m",
+            b.length,
+            a.length,
+            "Çizgi ve çoklu çizgilerin düzlemsel uzunluğu.",
+        ),
         measure(
             "capacity",
             "İnşaat alanı (alan × KAKS)",
@@ -540,8 +768,20 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
         missing.sort();
         missing.dedup();
         if !missing.is_empty() {
-            let words: Vec<String> = missing.iter().map(|m| if m.is_empty() { "(kullanımı yok)".to_owned() } else { m.clone() }).collect();
-            asked_gaps.push(format!("Geçirimsizlik payı verilmemiş kullanım: {}; geçirimsiz alan onlarsız hesaplandı.", words.join(", ")));
+            let words: Vec<String> = missing
+                .iter()
+                .map(|m| {
+                    if m.is_empty() {
+                        "(kullanımı yok)".to_owned()
+                    } else {
+                        m.clone()
+                    }
+                })
+                .collect();
+            asked_gaps.push(format!(
+                "Geçirimsizlik payı verilmemiş kullanım: {}; geçirimsiz alan onlarsız hesaplandı.",
+                words.join(", ")
+            ));
         }
     }
     let mut reach = None;
@@ -554,11 +794,17 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
         let mut resolve = |names: &[String]| -> Vec<String> {
             names
                 .iter()
-                .map(|n| match present.iter().find(|p| ***p == *n).or_else(|| present.iter().find(|p| fold(p) == fold(n))) {
-                    Some(p) => (*p).clone(),
-                    None => {
-                        unknown.push(n.trim().to_owned());
-                        n.clone()
+                .map(|n| {
+                    match present
+                        .iter()
+                        .find(|p| ***p == *n)
+                        .or_else(|| present.iter().find(|p| fold(p) == fold(n)))
+                    {
+                        Some(p) => (*p).clone(),
+                        None => {
+                            unknown.push(n.trim().to_owned());
+                            n.clone()
+                        }
                     }
                 })
                 .collect()
@@ -578,7 +824,11 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
     }
     if let Some((access, _)) = &resolved_access {
         let (from, to) = (access.from.join(", "), access.to.join(", "));
-        let network = access.network.as_deref().map(str::trim).filter(|n| !n.is_empty());
+        let network = access
+            .network
+            .as_deref()
+            .map(str::trim)
+            .filter(|n| !n.is_empty());
         let (xg, xw, xt, yg, yw, yt, label, method);
         match (network, access.connect) {
             // Docs/adr/5060: along the project's network.
@@ -588,8 +838,18 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
                     crate::scenarios_impact_network::along(&gb, &b.areas, access, connect),
                     crate::scenarios_impact_network::along(&ga, &a.areas, access, connect),
                 );
-                (xg, xw, xt, yg, yw, yt) = (x.got, x.whole, !x.targets.is_empty(), y.got, y.whole, !y.targets.is_empty());
-                label = format!("Erişen alan ({from} → {to}, {} m, {net} ağı boyunca)", access.distance);
+                (xg, xw, xt, yg, yw, yt) = (
+                    x.got,
+                    x.whole,
+                    !x.targets.is_empty(),
+                    y.got,
+                    y.whole,
+                    !y.targets.is_empty(),
+                );
+                label = format!(
+                    "Erişen alan ({from} → {to}, {} m, {net} ağı boyunca)",
+                    access.distance
+                );
                 method = format!(
                     "Kullanımı {from} olan alanların ağırlık merkezinden kullanımı {to} olan en yakın alanın ağırlık merkezine {net} ağı boyunca uzaklık en çok {} m ise alanı sayılır: merkezden ağın en yakın yerine bağlanma, ağda tanımının izin verdiği en kısa yol ve ağdan hedefin merkezine bağlanma; merkezi ağa {connect} m'den uzak alan ağa bağlanamaz.",
                     access.distance
@@ -622,7 +882,14 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
             }
             _ => {
                 let (x, y) = (reached(&b, access), reached(&a, access));
-                (xg, xw, xt, yg, yw, yt) = (x.got, x.whole, !x.targets.is_empty(), y.got, y.whole, !y.targets.is_empty());
+                (xg, xw, xt, yg, yw, yt) = (
+                    x.got,
+                    x.whole,
+                    !x.targets.is_empty(),
+                    y.got,
+                    y.whole,
+                    !y.targets.is_empty(),
+                );
                 label = format!("Erişen alan ({from} → {to}, {} m)", access.distance);
                 method = format!(
                     "Kullanımı {from} olan alanların ağırlık merkezinden kullanımı {to} olan en yakın alana düz uzaklık en çok {} m ise alanı sayılır; merkez alanın içindeyse uzaklık 0.",
@@ -640,18 +907,31 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
             }
         }
         measures.push(measure("access", &label, "m2", xg, yg, &method));
-        let share = |got: f64, whole: f64| if whole > 0.0 { got / whole * 100.0 } else { 0.0 };
+        let share = |got: f64, whole: f64| {
+            if whole > 0.0 {
+                got / whole * 100.0
+            } else {
+                0.0
+            }
+        };
         measures.push(measure(
             "accessShare",
             "Erişen alanın payı",
             "%",
             share(xg, xw),
             share(yg, yw),
-            &format!("Erişen alanın {from} alanlarının toplamına oranı; {from} alanı olmayan tarafta 0."),
+            &format!(
+                "Erişen alanın {from} alanlarının toplamına oranı; {from} alanı olmayan tarafta 0."
+            ),
         ));
-        for (has_from, has_to, side) in [(xw > 0.0, xt, "mevcut durumda"), (yw > 0.0, yt, "senaryoda")] {
+        for (has_from, has_to, side) in [
+            (xw > 0.0, xt, "mevcut durumda"),
+            (yw > 0.0, yt, "senaryoda"),
+        ] {
             if has_from && !has_to {
-                asked_gaps.push(format!("Erişilecek kullanım ({to}) {side} yok; erişen alan 0."));
+                asked_gaps.push(format!(
+                    "Erişilecek kullanım ({to}) {side} yok; erişen alan 0."
+                ));
             }
         }
     }
@@ -659,14 +939,23 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
     let mut near_out = None;
     if let Some(infra) = &input.infrastructure {
         let id = infra.layer.trim();
-        let Some(node) = doc.layers().get(id).filter(|n| n.kind != LayerNodeType::Group) else {
+        let Some(node) = doc
+            .layers()
+            .get(id)
+            .filter(|n| n.kind != LayerNodeType::Group)
+        else {
             return Err(fail(
                 codes::INVALID_INPUT,
-                format!("“{id}” kimlikli altyapı katmanı çizimde yok; bir katmanın kimliğini verin."),
+                format!(
+                    "“{id}” kimlikli altyapı katmanı çizimde yok; bir katmanın kimliğini verin."
+                ),
                 "infrastructure.layer",
             ));
         };
-        let theirs = pairs.iter().find(|(base, _)| base == id).map_or(id, |(_, l)| l.as_str());
+        let theirs = pairs
+            .iter()
+            .find(|(base, _)| base == id)
+            .map_or(id, |(_, l)| l.as_str());
         let (x, y) = (near(doc, &b, id, infra), near(doc, &a, theirs, infra));
         near_out = Some(kentos_commands::ImpactNear {
             base_near: x.near.clone(),
@@ -679,12 +968,24 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
             alternative_links: y.links.clone(),
         });
         let name = &node.name;
-        let uses: Vec<&str> = infra.from.iter().map(|u| u.trim()).filter(|u| !u.is_empty()).collect();
+        let uses: Vec<&str> = infra
+            .from
+            .iter()
+            .map(|u| u.trim())
+            .filter(|u| !u.is_empty())
+            .collect();
         let (label, which) = if uses.is_empty() {
-            (format!("Altyapıya yakın alan ({name}, {} m)", infra.distance), "Alanların".to_owned())
+            (
+                format!("Altyapıya yakın alan ({name}, {} m)", infra.distance),
+                "Alanların".to_owned(),
+            )
         } else {
             (
-                format!("Altyapıya yakın alan ({} → {name}, {} m)", uses.join(", "), infra.distance),
+                format!(
+                    "Altyapıya yakın alan ({} → {name}, {} m)",
+                    uses.join(", "),
+                    infra.distance
+                ),
                 format!("Kullanımı {} olan alanların", uses.join(", ")),
             )
         };
@@ -699,7 +1000,13 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
                 infra.distance
             ),
         ));
-        let share = |got: f64, whole: f64| if whole > 0.0 { got / whole * 100.0 } else { 0.0 };
+        let share = |got: f64, whole: f64| {
+            if whole > 0.0 {
+                got / whole * 100.0
+            } else {
+                0.0
+            }
+        };
         measures.push(measure(
             "infrastructureShare",
             "Altyapıya yakın alanın payı",
@@ -710,7 +1017,9 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
         ));
         for (n, side) in [(&x, "mevcut durumda"), (&y, "senaryoda")] {
             if n.whole > 0.0 && n.objects == 0 {
-                asked_gaps.push(format!("Altyapı katmanında ({name}) {side} nesne yok; yakın alan 0."));
+                asked_gaps.push(format!(
+                    "Altyapı katmanında ({name}) {side} nesne yok; yakın alan 0."
+                ));
             }
         }
     }
@@ -876,14 +1185,33 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
     let uses = codes_
         .into_iter()
         .map(|c| {
-            let (x, y) = (b.uses.get(c).copied().unwrap_or(0.0), a.uses.get(c).copied().unwrap_or(0.0));
-            ImpactUse { code: c.clone(), base: x, alternative: y, difference: y - x }
+            let (x, y) = (
+                b.uses.get(c).copied().unwrap_or(0.0),
+                a.uses.get(c).copied().unwrap_or(0.0),
+            );
+            ImpactUse {
+                code: c.clone(),
+                base: x,
+                alternative: y,
+                difference: y - x,
+            }
         })
         .collect();
     // The decisions that changed, matched by their key: the base's in its order, then the alternative's new ones.
-    let attr = |e: &Entity, k: &str| e.base().attrs.get(k).map(|v| v.trim().to_owned()).filter(|v| !v.is_empty());
+    let attr = |e: &Entity, k: &str| {
+        e.base()
+            .attrs
+            .get(k)
+            .map(|v| v.trim().to_owned())
+            .filter(|v| !v.is_empty())
+    };
     let decided = |e: &Entity| -> BTreeMap<String, String> {
-        e.base().attrs.iter().map(|(k, v)| (k.clone(), v.trim().to_owned())).filter(|(_, v)| !v.is_empty()).collect()
+        e.base()
+            .attrs
+            .iter()
+            .map(|(k, v)| (k.clone(), v.trim().to_owned()))
+            .filter(|(_, v)| !v.is_empty())
+            .collect()
     };
     let mut changes = Vec::new();
     for (k, eb, ab) in &b.keyed {
@@ -942,7 +1270,10 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
         ));
     }
     if b.no_use + a.no_use > 0 {
-        gaps.push(format!("Kullanımı ({field}) olmayan alan: mevcut durumda {}, senaryoda {}.", b.no_use, a.no_use));
+        gaps.push(format!(
+            "Kullanımı ({field}) olmayan alan: mevcut durumda {}, senaryoda {}.",
+            b.no_use, a.no_use
+        ));
     }
     if b.no_key + a.no_key > 0 {
         gaps.push(format!(
@@ -952,7 +1283,10 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
     }
     gaps.extend(asked_gaps);
     let assumptions = vec![
-        format!("Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:{}).", doc.settings().srid),
+        format!(
+            "Alanlar ve uzunluklar düzlemsel, projenin koordinatlarından (EPSG:{}).",
+            doc.settings().srid
+        ),
         "İnşaat alanı = alan × KAKS: brüt alan, terk ve DOP düşülmeden.".to_owned(),
         "Park, yeşil alan, meydan ve yol inşaat alanı taşımaz.".to_owned(),
         "Tek puan yok: ölçüler yan yana verilir; senaryoyu kullanıcı seçer.".to_owned(),
@@ -960,11 +1294,22 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
     let now = stamp(doc, &bases);
     // Docs/adr/5060: the scenario layers' stamp, made as the base's.
     let scenario_now = stamp(doc, &alts);
-    let names = |l: &str| doc.layers().get(l).map_or_else(|| l.to_owned(), |n| n.name.clone());
+    let names = |l: &str| {
+        doc.layers()
+            .get(l)
+            .map_or_else(|| l.to_owned(), |n| n.name.clone())
+    };
     Ok(ScenariosImpacted {
         scenario: id.to_owned(),
         name: group.name.clone(),
-        layers: pairs.iter().map(|(b, l)| ImpactLayer { base: b.clone(), layer: l.clone(), name: names(b) }).collect(),
+        layers: pairs
+            .iter()
+            .map(|(b, l)| ImpactLayer {
+                base: b.clone(),
+                layer: l.clone(),
+                name: names(b),
+            })
+            .collect(),
         field,
         key,
         measures,
@@ -985,7 +1330,10 @@ pub(crate) fn run(doc: &Document, input: &ScenariosImpact) -> Result<ScenariosIm
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ScenariosImpact) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -1001,12 +1349,18 @@ pub fn plan(
     input: &ScenariosImpact,
 ) -> CommandResult<ScenariosImpacted> {
     match run(cx.doc, input) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ScenariosImpact) -> CommandResult<ScenariosImpacted> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ScenariosImpact,
+) -> CommandResult<ScenariosImpacted> {
     plan(cx, &input)
 }

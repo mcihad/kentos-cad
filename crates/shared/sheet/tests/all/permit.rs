@@ -492,6 +492,9 @@ fn a_tadilat_plan_draws_its_view_s_state_on_its_own_storey() {
 #[test]
 fn every_personal_particular_is_a_variable_of_the_kunye() {
     for name in kentos_contracts::PERSONAL_PARTICULARS {
-        assert!(permit::PARTICULARS.iter().any(|(n, _, _)| *n == name), "@{name} is not a künye variable");
+        assert!(
+            permit::PARTICULARS.iter().any(|(n, _, _)| *n == name),
+            "@{name} is not a künye variable"
+        );
     }
 }

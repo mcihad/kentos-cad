@@ -606,17 +606,32 @@ fn a_wheel_turn_moves_the_live_camera_and_reaches_the_app_once_settled() {
     };
     snapshot.settle(&mut app, App::view, &mut update);
     let before = app.viewport.camera;
-    assert_eq!(app.viewport.live.camera(), before, "the area shows the app's camera");
+    assert_eq!(
+        app.viewport.live.camera(),
+        before,
+        "the area shows the app's camera"
+    );
     let at = app.viewport.bounds.center();
     snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 1.0));
     snapshot.input(&mut app, App::view, &mut update, Input::Scroll(at, 1.0));
-    assert_eq!(app.viewport.camera, before, "the app's camera waits for the view to settle");
+    assert_eq!(
+        app.viewport.camera, before,
+        "the app's camera waits for the view to settle"
+    );
     let live = app.viewport.live.camera();
-    assert!(live.scale > before.scale, "the area's live camera zoomed in: {} → {}", before.scale, live.scale);
+    assert!(
+        live.scale > before.scale,
+        "the area's live camera zoomed in: {} → {}",
+        before.scale,
+        live.scale
+    );
     assert!(!app.view_history.can_back(), "nothing recorded yet");
     std::thread::sleep(live::SETTLE + Duration::from_millis(40));
     snapshot.settle(&mut app, App::view, &mut update);
-    assert_eq!(app.viewport.camera, live, "the app took the camera the gesture stopped at");
+    assert_eq!(
+        app.viewport.camera, live,
+        "the app took the camera the gesture stopped at"
+    );
     assert!(!app.viewport.live.moving(), "told once");
     assert!(app.view_history.can_back(), "the view left is kept");
 }
@@ -633,15 +648,22 @@ fn a_settled_pan_puts_the_pointer_where_the_drag_left_it() {
     let _ = app.update(Message::Viewport(Event::Moved(start)));
     let held = app.viewport.cursor.expect("a point");
     let end = Point::new(340.0, 175.0);
-    app.viewport.live.pan(end - start, end, iced::time::Instant::now());
+    app.viewport
+        .live
+        .pan(end - start, end, iced::time::Instant::now());
     let (from, to, at) = app.viewport.take_live().expect("a gesture");
     assert_eq!(at, Some(end));
     let _ = app.update(Message::Viewport(Event::ViewChanged { from, to, at }));
     let cursor = app.viewport.cursor.expect("a point");
-    assert!((cursor.x - held.x).abs() < 1e-9 && (cursor.y - held.y).abs() < 1e-9, "{cursor:?} against {held:?}");
+    assert!(
+        (cursor.x - held.x).abs() < 1e-9 && (cursor.y - held.y).abs() < 1e-9,
+        "{cursor:?} against {held:?}"
+    );
     let _ = app.view();
     let past = Point::new(-30.0, 175.0);
-    app.viewport.live.pan(past - end, past, iced::time::Instant::now());
+    app.viewport
+        .live
+        .pan(past - end, past, iced::time::Instant::now());
     let (from, to, at) = app.viewport.take_live().expect("a gesture");
     let _ = app.update(Message::Viewport(Event::ViewChanged { from, to, at }));
     assert!(app.viewport.cursor.is_none(), "off the area");
@@ -659,7 +681,10 @@ fn a_zoom_about_the_middle_leaves_the_pointer_where_it_is_on_the_screen() {
     app.zoom_in();
     let cursor = app.viewport.cursor.expect("a point");
     let under = app.viewport.camera.screen_to_world(120.0, 80.0);
-    assert!((cursor.x - under.x).abs() < 1e-9 && (cursor.y - under.y).abs() < 1e-9, "{cursor:?} against {under:?}");
+    assert!(
+        (cursor.x - under.x).abs() < 1e-9 && (cursor.y - under.y).abs() < 1e-9,
+        "{cursor:?} against {under:?}"
+    );
     let _ = app.update(Message::Viewport(Event::Left));
     app.zoom_out();
     assert!(app.viewport.cursor.is_none(), "off the area");
@@ -675,16 +700,31 @@ fn a_move_reads_the_live_camera_and_a_press_takes_it() {
     let _ = app.view();
     let before = app.viewport.camera;
     assert_eq!(app.viewport.live.camera(), before);
-    app.viewport.live.zoom(1.5, Point::new(400.0, 300.0), iced::time::Instant::now());
+    app.viewport
+        .live
+        .zoom(1.5, Point::new(400.0, 300.0), iced::time::Instant::now());
     let live = app.viewport.live.camera();
     assert_ne!(live, before);
-    let near = |a: kentos_render_wgpu::Vec2, b: kentos_render_wgpu::Vec2| (a.x - b.x).abs() < 1e-9 && (a.y - b.y).abs() < 1e-9;
+    let near = |a: kentos_render_wgpu::Vec2, b: kentos_render_wgpu::Vec2| {
+        (a.x - b.x).abs() < 1e-9 && (a.y - b.y).abs() < 1e-9
+    };
     let _ = app.update(Message::Viewport(Event::Moved(Point::new(120.0, 80.0))));
-    assert_eq!(app.viewport.camera, before, "a move does not take the gesture");
-    assert!(near(app.viewport.cursor.expect("a point"), live.screen_to_world(120.0, 80.0)), "read through the live camera");
+    assert_eq!(
+        app.viewport.camera, before,
+        "a move does not take the gesture"
+    );
+    assert!(
+        near(
+            app.viewport.cursor.expect("a point"),
+            live.screen_to_world(120.0, 80.0)
+        ),
+        "read through the live camera"
+    );
     let _ = app.update(Message::Viewport(Event::Pressed(Point::new(130.0, 90.0))));
     assert_eq!(app.viewport.camera, live, "a press takes the gesture first");
     assert!(!app.viewport.live.moving());
-    assert!(near(app.viewport.cursor.expect("a point"), live.screen_to_world(130.0, 90.0)));
+    assert!(near(
+        app.viewport.cursor.expect("a point"),
+        live.screen_to_world(130.0, 90.0)
+    ));
 }
-

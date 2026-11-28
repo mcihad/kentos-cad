@@ -33,8 +33,15 @@ impl DataLabels {
         self.doc
             .entities()
             .filter_map(|e| {
-                let b = kentos_geometry_core::entity::entity_bounds(&kentos_native_application::geometry::shape(e));
-                b.min_x.is_finite().then(|| kentos_interaction::Vec2::new((b.min_x + b.max_x) / 2.0, (b.min_y + b.max_y) / 2.0))
+                let b = kentos_geometry_core::entity::entity_bounds(
+                    &kentos_native_application::geometry::shape(e),
+                );
+                b.min_x.is_finite().then(|| {
+                    kentos_interaction::Vec2::new(
+                        (b.min_x + b.max_x) / 2.0,
+                        (b.min_y + b.max_y) / 2.0,
+                    )
+                })
             })
             .collect()
     }
@@ -75,18 +82,23 @@ impl App {
                 labelled,
             });
         }
-        self.gis.data_labels
+        self.gis
+            .data_labels
             .retain(|d| view.drawn_read(&d.layer) == Some(d.read));
     }
 
     /// The data layers' labels over the drawing area, each of its layer's drawn read.
-    pub(crate) fn data_label_layers(&self, format: &kentos_interaction::Format) -> Vec<Element<'_, Message>> {
+    pub(crate) fn data_label_layers(
+        &self,
+        format: &kentos_interaction::Format,
+    ) -> Vec<Element<'_, Message>> {
         if self.gis.data_labels.is_empty() {
             return Vec::new();
         }
         let view = crate::data_view::service();
         let palette = crate::viewport::palette(self.canvas());
-        self.gis.data_labels
+        self.gis
+            .data_labels
             .iter()
             .filter(|d| d.labelled && view.drawn_read(&d.layer) == Some(d.read))
             .map(|d| {
@@ -102,7 +114,10 @@ impl App {
                     self.color_mode(),
                     self.label_size(),
                     // Through the area's renderer as the drawing's own (docs/adr/9214).
-                    crate::labels::Engine { gpu: crate::labels::gpu_text(), ..self.label_engine() },
+                    crate::labels::Engine {
+                        gpu: crate::labels::gpu_text(),
+                        ..self.label_engine()
+                    },
                 )
             })
             .collect()
@@ -111,7 +126,8 @@ impl App {
     /// The slots the data layers' labels send the area's renderer, in their layers' order (docs/adr/9214).
     pub(crate) fn data_label_glyphs(&self) -> Vec<crate::labels::GlyphSlot> {
         let view = crate::data_view::service();
-        self.gis.data_labels
+        self.gis
+            .data_labels
             .iter()
             .filter(|d| d.labelled && view.drawn_read(&d.layer) == Some(d.read))
             .map(|d| d.spots.glyphs().clone())
@@ -121,13 +137,19 @@ impl App {
     /// The labelled data layer whose label or row lies under `at`, by name (docs/adr/9341): what the label tools found
     /// no drawing label for. A data layer's labels are placed from its source's rows; none is pinned, turned or hidden
     /// alone. Its placed label is looked for first, then the row the label is of (a label lies on or by its row).
-    pub(crate) fn data_label_under(&self, at: kentos_interaction::Vec2, tol: f64) -> Option<String> {
+    pub(crate) fn data_label_under(
+        &self,
+        at: kentos_interaction::Vec2,
+        tol: f64,
+    ) -> Option<String> {
         let doc = self.document.as_ref()?;
         self.gis
             .data_labels
             .iter()
             .filter(|d| d.labelled)
-            .find(|d| d.spatial.label_at(at, tol, true).is_some() || d.spatial.pick(at, tol).is_some())
+            .find(|d| {
+                d.spatial.label_at(at, tol, true).is_some() || d.spatial.pick(at, tol).is_some()
+            })
             .and_then(|d| doc.model.layers().get(&d.layer).map(|n| n.name.clone()))
     }
 
@@ -139,7 +161,10 @@ impl App {
             return;
         };
         let layers = doc.model.layers();
-        let drawing_labels = layers.leaves().iter().any(|l| l.data.is_none() && l.style.labels_on() && layers.is_visible(&l.id));
+        let drawing_labels = layers
+            .leaves()
+            .iter()
+            .any(|l| l.data.is_none() && l.style.labels_on() && layers.is_visible(&l.id));
         let data: Vec<String> = self
             .gis
             .data_labels
@@ -150,7 +175,10 @@ impl App {
         if drawing_labels || data.is_empty() {
             return;
         }
-        let names: Vec<String> = data.iter().filter_map(|id| layers.get(id).map(|n| format!("“{}”", n.name))).collect();
+        let names: Vec<String> = data
+            .iter()
+            .filter_map(|id| layers.get(id).map(|n| format!("“{}”", n.name)))
+            .collect();
         let words = format!(
             "Haritadaki etiketler veri katmanının ({}): kaynağın satırlarından yerleşir, tek tek taşınmaz, döndürülmez, \
              sabitlenmez ve gizlenmez. Yerleri için Yerleşim ayarlarını, bir satırın etiketini göstermemek için etiket \
@@ -169,18 +197,30 @@ impl App {
         self.toast(
             kentos_ui::widget::Toast::info("Veri katmanının etiketi")
                 .body(words)
-                .action("Yerleşim ayarlarını aç", msg(Event::OpenAt(layer.to_owned(), crate::labelling::form::Tab::Place)))
+                .action(
+                    "Yerleşim ayarlarını aç",
+                    msg(Event::OpenAt(
+                        layer.to_owned(),
+                        crate::labelling::form::Tab::Place,
+                    )),
+                )
                 .duration(std::time::Duration::from_secs(20)),
         );
     }
 
     /// The labelled data layer under `at`, by id (T24): the notice's actions open its window.
-    pub(crate) fn data_label_layer_under(&self, at: kentos_interaction::Vec2, tol: f64) -> Option<String> {
+    pub(crate) fn data_label_layer_under(
+        &self,
+        at: kentos_interaction::Vec2,
+        tol: f64,
+    ) -> Option<String> {
         self.gis
             .data_labels
             .iter()
             .filter(|d| d.labelled)
-            .find(|d| d.spatial.label_at(at, tol, true).is_some() || d.spatial.pick(at, tol).is_some())
+            .find(|d| {
+                d.spatial.label_at(at, tol, true).is_some() || d.spatial.pick(at, tol).is_some()
+            })
             .map(|d| d.layer.clone())
     }
 
@@ -201,10 +241,17 @@ impl App {
     ) -> Option<kentos_geometry_core::store::snap::SnapHit> {
         let doc = self.document.as_ref()?;
         let shown = crate::data_view::service();
-        self.gis.data_labels
+        self.gis
+            .data_labels
             .iter()
-            .filter(|d| (shown.snaps_all() || doc.model.editing(&d.layer)) && shown.drawn_read(&d.layer) == Some(d.read))
-            .filter_map(|d| self.session.snap(&d.spatial, at, view, draft, &self.tracking))
+            .filter(|d| {
+                (shown.snaps_all() || doc.model.editing(&d.layer))
+                    && shown.drawn_read(&d.layer) == Some(d.read)
+            })
+            .filter_map(|d| {
+                self.session
+                    .snap(&d.spatial, at, view, draft, &self.tracking)
+            })
             .map(|mut hit| {
                 hit.id = kentos_geometry_core::store::snap::NO_OBJECT;
                 hit

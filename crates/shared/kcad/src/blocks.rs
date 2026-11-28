@@ -145,7 +145,10 @@ pub(crate) fn said(fault: &BlockFault, blocks: &[BlockDefinition]) -> Said {
         } => (
             Code::BadValue,
             "blocks",
-            in_block(*definition, &[Seg::Name("attributes"), Seg::Index(*attribute)]),
+            in_block(
+                *definition,
+                &[Seg::Name("attributes"), Seg::Index(*attribute)],
+            ),
             format!("“{}” bloğunun özniteliği: {problem}", name(*definition)),
         ),
         BlockFault::BadCard {
@@ -174,11 +177,19 @@ pub(crate) fn said(fault: &BlockFault, blocks: &[BlockDefinition]) -> Said {
             Code::BadValue,
             "blocks",
             in_block(*definition, &[Seg::Name("dynamic")]),
-            format!("“{}” bloğunun dinamik bölümü ({path}): {problem}", name(*definition)),
+            format!(
+                "“{}” bloğunun dinamik bölümü ({path}): {problem}",
+                name(*definition)
+            ),
         ),
         BlockFault::BadValues { at, problem } => {
             let (list, path) = insert(at, "parameters");
-            (Code::BadValue, list, path, format!("parametre değerleri: {problem}"))
+            (
+                Code::BadValue,
+                list,
+                path,
+                format!("parametre değerleri: {problem}"),
+            )
         }
         BlockFault::TooLarge { definition } => (
             Code::BlockTooLarge,

@@ -12,8 +12,9 @@ use std::fs::File;
 use std::path::{Component, Path, PathBuf};
 
 use kentos_commands::{
-    CommandResult, CommandWarning, Entity, EntityBase, MOSAIC_MOST_SOURCES, MosaicOrder, MosaicResolution,
-    MosaicSource, RasterEntity, RasterFields, RasterSample, RastersMosaic, RastersMosaicked, codes,
+    CommandResult, CommandWarning, Entity, EntityBase, MOSAIC_MOST_SOURCES, MosaicOrder,
+    MosaicResolution, MosaicSource, RasterEntity, RasterFields, RasterSample, RastersMosaic,
+    RastersMosaicked, codes,
 };
 use kentos_domain::Document;
 use kentos_formats::raster::source::Reader;
@@ -35,7 +36,9 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
 }
 
 fn file_name(path: &str) -> String {
-    Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned())
+    Path::new(path)
+        .file_name()
+        .map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned())
 }
 
 /// A file of the mosaic as its header says.
@@ -56,7 +59,8 @@ struct Source {
 
 /// `len` bytes of `file` from `offset`.
 fn read_at(file: &File, offset: u64, len: u64) -> std::io::Result<Vec<u8>> {
-    let mut out = vec![0u8; usize::try_from(len).map_err(|_| std::io::Error::other("çok büyük"))?];
+    let mut out =
+        vec![0u8; usize::try_from(len).map_err(|_| std::io::Error::other("çok büyük"))?];
     #[cfg(unix)]
     {
         use std::os::unix::fs::FileExt;
@@ -80,7 +84,10 @@ fn read_at(file: &File, offset: u64, len: u64) -> std::io::Result<Vec<u8>> {
 /// A TIFF's directories read from its file; why not.
 fn header(path: &Path) -> Result<Tiff, String> {
     let file = File::open(path).map_err(|e| format!("açılamadı: {e}"))?;
-    let size = file.metadata().map_err(|e| format!("okunamadı: {e}"))?.len();
+    let size = file
+        .metadata()
+        .map_err(|e| format!("okunamadı: {e}"))?
+        .len();
     let head = read_at(&file, 0, size.min(16)).map_err(|e| format!("okunamadı: {e}"))?;
     if !tiff::sniff(&head) {
         return Err("GeoTIFF değil".into());
@@ -95,7 +102,10 @@ fn header(path: &Path) -> Result<Tiff, String> {
                 if taken > HEADER_MOST {
                     return Err("TIFF'in başlığı çok büyük".into());
                 }
-                store.put(n.offset, read_at(&file, n.offset, n.len).map_err(|e| format!("okunamadı: {e}"))?);
+                store.put(
+                    n.offset,
+                    read_at(&file, n.offset, n.len).map_err(|e| format!("okunamadı: {e}"))?,
+                );
             }
         }
     }
@@ -105,7 +115,8 @@ fn header(path: &Path) -> Result<Tiff, String> {
 pub fn iso_date(text: &str) -> Option<String> {
     let t = text.trim_matches(|c: char| c == '\0' || c.is_whitespace());
     let b = t.as_bytes();
-    let digits = |r: std::ops::Range<usize>| b.get(r).is_some_and(|s| s.iter().all(u8::is_ascii_digit));
+    let digits =
+        |r: std::ops::Range<usize>| b.get(r).is_some_and(|s| s.iter().all(u8::is_ascii_digit));
     let ok = b.len() == 19
         && digits(0..4)
         && b[4] == b':'
@@ -143,7 +154,10 @@ fn vrt_name(file: &Path, folder: &Path) -> (String, bool) {
     let (f, d) = (lexical(file), lexical(folder));
     match f.strip_prefix(&d) {
         Ok(rest) if !rest.as_os_str().is_empty() => (
-            rest.components().map(|c| c.as_os_str().to_string_lossy().into_owned()).collect::<Vec<_>>().join("/"),
+            rest.components()
+                .map(|c| c.as_os_str().to_string_lossy().into_owned())
+                .collect::<Vec<_>>()
+                .join("/"),
             true,
         ),
         _ => (file.display().to_string(), false),
@@ -157,23 +171,38 @@ fn source(doc_drawing: Option<&str>, text: &str, given: usize) -> Result<Source,
     let Some(read) = found.at else {
         return Err(refuse(
             codes::FILE_NOT_FOUND,
-            format!("{} bulunamadı. Bakılan yerler: {}.", file_name(text), found.tried.join(", ")),
+            format!(
+                "{} bulunamadı. Bakılan yerler: {}.",
+                file_name(text),
+                found.tried.join(", ")
+            ),
             &at,
         ));
     };
     let name = file_name(text);
     let t = header(&read).map_err(|why| {
-        refuse(codes::IMPORT_UNREADABLE, format!("{name} okunamadı ({why}); mozaiğe yalnız GeoTIFF konur."), &at)
+        refuse(
+            codes::IMPORT_UNREADABLE,
+            format!("{name} okunamadı ({why}); mozaiğe yalnız GeoTIFF konur."),
+            &at,
+        )
     })?;
-    let reader = Reader::tiff(&t, None, 0)
-        .map_err(|e| refuse(codes::IMPORT_UNREADABLE, format!("{name} okunamadı: {}", e.0), &at))?;
+    let reader = Reader::tiff(&t, None, 0).map_err(|e| {
+        refuse(
+            codes::IMPORT_UNREADABLE,
+            format!("{name} okunamadı: {}", e.0),
+            &at,
+        )
+    })?;
     let info = &reader.info;
     let affine = match (info.affine, info.placed_by.as_str()) {
         (Some(a), "geotiff") => a,
         _ => {
             return Err(refuse(
                 codes::MOSAIC_UNPLACED,
-                format!("{name} dosyasının yerini GeoTIFF etiketleri söylemiyor; önce Raster oturt ile yerine koyup GeoTIFF olarak yazın."),
+                format!(
+                    "{name} dosyasının yerini GeoTIFF etiketleri söylemiyor; önce Raster oturt ile yerine koyup GeoTIFF olarak yazın."
+                ),
                 &at,
             ));
         }
@@ -183,7 +212,9 @@ fn source(doc_drawing: Option<&str>, text: &str, given: usize) -> Result<Source,
     if !north_up {
         return Err(refuse(
             codes::MOSAIC_ROTATED,
-            format!("{name} dönük ya da kuzeyi yukarıda değil; mozaik yalnız kuzeyi yukarıda dosyaları yan yana koyar."),
+            format!(
+                "{name} dönük ya da kuzeyi yukarıda değil; mozaik yalnız kuzeyi yukarıda dosyaları yan yana koyar."
+            ),
             &at,
         ));
     }
@@ -226,24 +257,38 @@ fn sample_name(s: RasterSample) -> &'static str {
 fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
     let drawing = input.drawing.as_deref();
     if input.sources.is_empty() {
-        return Err(refuse(codes::MOSAIC_EMPTY, "Mozaiğe konacak GeoTIFF dosyası verilmedi.".into(), "sources"));
+        return Err(refuse(
+            codes::MOSAIC_EMPTY,
+            "Mozaiğe konacak GeoTIFF dosyası verilmedi.".into(),
+            "sources",
+        ));
     }
     if input.sources.len() > MOSAIC_MOST_SOURCES {
         return Err(refuse(
             codes::MOSAIC_TOO_LARGE,
-            format!("{} dosya verildi; mozaik en çok {MOSAIC_MOST_SOURCES} dosya alır.", input.sources.len()),
+            format!(
+                "{} dosya verildi; mozaik en çok {MOSAIC_MOST_SOURCES} dosya alır.",
+                input.sources.len()
+            ),
             "sources",
         ));
     }
     // The mosaic's path: a .vrt in a folder that is there.
     let text = input.path.trim();
     if text.is_empty() {
-        return Err(refuse(codes::INVALID_FILE_PATH, "Mozaiğin dosya yolu boş; bir .vrt dosyasının yolunu verin.".into(), "path"));
+        return Err(refuse(
+            codes::INVALID_FILE_PATH,
+            "Mozaiğin dosya yolu boş; bir .vrt dosyasının yolunu verin.".into(),
+            "path",
+        ));
     }
     if !text.to_ascii_lowercase().ends_with(".vrt") {
         return Err(refuse(
             codes::INVALID_FILE_PATH,
-            format!("“{}” bir .vrt dosyası değil; mozaik VRT dosyası olarak yazılır.", file_name(text)),
+            format!(
+                "“{}” bir .vrt dosyası değil; mozaik VRT dosyası olarak yazılır.",
+                file_name(text)
+            ),
             "path",
         ));
     }
@@ -254,7 +299,9 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
     } else {
         return Err(refuse(
             codes::INVALID_FILE_PATH,
-            format!("“{text}” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin."),
+            format!(
+                "“{text}” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin."
+            ),
             "path",
         ));
     };
@@ -262,19 +309,28 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
     if !folder.is_dir() {
         return Err(refuse(
             codes::INVALID_FILE_PATH,
-            format!("“{}” klasörü yok; mozaik var olan bir klasöre yazılır.", folder.display()),
+            format!(
+                "“{}” klasörü yok; mozaik var olan bir klasöre yazılır.",
+                folder.display()
+            ),
             "path",
         ));
     }
     for (i, s) in input.sources.iter().enumerate() {
         let t = s.trim();
         if t.is_empty() {
-            return Err(refuse(codes::INVALID_FILE_PATH, format!("{}. dosyanın yolu boş.", i + 1), &format!("sources[{i}]")));
+            return Err(refuse(
+                codes::INVALID_FILE_PATH,
+                format!("{}. dosyanın yolu boş.", i + 1),
+                &format!("sources[{i}]"),
+            ));
         }
         if Path::new(t).is_relative() && drawing.is_none() {
             return Err(refuse(
                 codes::INVALID_FILE_PATH,
-                format!("“{t}” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin."),
+                format!(
+                    "“{t}” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin."
+                ),
                 &format!("sources[{i}]"),
             ));
         }
@@ -282,7 +338,11 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
     if let Some(p) = input.pixel_size
         && !(p.is_finite() && p > 0.0)
     {
-        return Err(refuse(codes::INVALID_PIXEL_SIZE, "Piksel boyu sıfırdan büyük, sonlu bir sayı olmalı.".into(), "pixelSize"));
+        return Err(refuse(
+            codes::INVALID_PIXEL_SIZE,
+            "Piksel boyu sıfırdan büyük, sonlu bir sayı olmalı.".into(),
+            "pixelSize",
+        ));
     }
     // Each file's header, in the order given; every file like the first.
     let mut files: Vec<Source> = Vec::with_capacity(input.sources.len());
@@ -292,19 +352,34 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
             let name = file_name(s);
             let first_name = file_name(&input.sources[0]);
             let why = if f.epsg != first.epsg {
-                let sys = |e: Option<u32>| e.map_or_else(|| "sistemsiz".to_owned(), |e| format!("EPSG:{e}"));
-                Some(format!("{name} {}, {first_name} {}", sys(f.epsg), sys(first.epsg)))
+                let sys = |e: Option<u32>| {
+                    e.map_or_else(|| "sistemsiz".to_owned(), |e| format!("EPSG:{e}"))
+                };
+                Some(format!(
+                    "{name} {}, {first_name} {}",
+                    sys(f.epsg),
+                    sys(first.epsg)
+                ))
             } else if f.bands != first.bands {
-                Some(format!("{name} {} bantlı, {first_name} {} bantlı", f.bands, first.bands))
+                Some(format!(
+                    "{name} {} bantlı, {first_name} {} bantlı",
+                    f.bands, first.bands
+                ))
             } else if f.sample != first.sample {
-                Some(format!("{name} {}, {first_name} {}", sample_name(f.sample), sample_name(first.sample)))
+                Some(format!(
+                    "{name} {}, {first_name} {}",
+                    sample_name(f.sample),
+                    sample_name(first.sample)
+                ))
             } else {
                 None
             };
             if let Some(why) = why {
                 return Err(refuse(
                     codes::MOSAIC_MISMATCH,
-                    format!("Dosyalar mozaiğe birlikte konmaz: {why}. Hepsi aynı sistemde, bant sayısında ve veri türünde olmalı."),
+                    format!(
+                        "Dosyalar mozaiğe birlikte konmaz: {why}. Hepsi aynı sistemde, bant sayısında ve veri türünde olmalı."
+                    ),
                     &format!("sources[{i}]"),
                 ));
             }
@@ -325,8 +400,12 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
         (Some(p), _) => (p, p),
         (None, MosaicResolution::Highest) => files
             .iter()
-            .fold((f64::INFINITY, f64::INFINITY), |(w, n), f| (w.min(f.affine[1]), n.min(-f.affine[5]))),
-        (None, MosaicResolution::Lowest) => files.iter().fold((0.0_f64, 0.0_f64), |(w, n), f| (w.max(f.affine[1]), n.max(-f.affine[5]))),
+            .fold((f64::INFINITY, f64::INFINITY), |(w, n), f| {
+                (w.min(f.affine[1]), n.min(-f.affine[5]))
+            }),
+        (None, MosaicResolution::Lowest) => files.iter().fold((0.0_f64, 0.0_f64), |(w, n), f| {
+            (w.max(f.affine[1]), n.max(-f.affine[5]))
+        }),
         (None, MosaicResolution::Average) => {
             let (mut w, mut n) = (0.0, 0.0);
             for f in &files {
@@ -341,15 +420,24 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
     if !(wx < SIDE_MOST && wy < SIDE_MOST) {
         return Err(refuse(
             codes::MOSAIC_TOO_LARGE,
-            format!("Mozaik {wx:.0} × {wy:.0} piksel olurdu; bir kenarı en çok 2 milyar piksel olabilir. Daha büyük bir piksel boyu verin."),
-            if input.pixel_size.is_some() { "pixelSize" } else { "resolution" },
+            format!(
+                "Mozaik {wx:.0} × {wy:.0} piksel olurdu; bir kenarı en çok 2 milyar piksel olabilir. Daha büyük bir piksel boyu verin."
+            ),
+            if input.pixel_size.is_some() {
+                "pixelSize"
+            } else {
+                "resolution"
+            },
         ));
     }
     let (width, height) = ((wx as u32).max(1), (wy as u32).max(1));
     if path.exists() && input.overwrite != Some(true) {
         return Err(refuse(
             codes::FILE_EXISTS,
-            format!("{} var; üzerine yazmak için overwrite verin.", path.display()),
+            format!(
+                "{} var; üzerine yazmak için overwrite verin.",
+                path.display()
+            ),
             "path",
         ));
     }
@@ -407,7 +495,14 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
             dst,
             nodata: f.nodata,
         });
-        vrt_sources.push(VrtSource { file, relative, band: 1, src, dst, nodata: f.nodata });
+        vrt_sources.push(VrtSource {
+            file,
+            relative,
+            band: 1,
+            src,
+            dst,
+            nodata: f.nodata,
+        });
     }
     // The VRT bottom first: the source on top is the last.
     vrt_sources.reverse();
@@ -427,7 +522,13 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
                 }
                 .to_owned(),
             ),
-            sources: vrt_sources.iter().map(|s| VrtSource { band: b + 1, ..s.clone() }).collect(),
+            sources: vrt_sources
+                .iter()
+                .map(|s| VrtSource {
+                    band: b + 1,
+                    ..s.clone()
+                })
+                .collect(),
         })
         .collect();
     let affine = [min_x, we, 0.0, max_y, 0.0, -ns];
@@ -453,7 +554,11 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
             message: format!(
                 "{} {} pikseli mozaiğinkinden ({} × {}) başka; en yakın pikselden okunur.",
                 resampled.join(", "),
-                if resampled.len() == 1 { "dosyasının" } else { "dosyalarının" },
+                if resampled.len() == 1 {
+                    "dosyasının"
+                } else {
+                    "dosyalarının"
+                },
                 kentos_formats::num::plain(we),
                 kentos_formats::num::plain(ns)
             ),
@@ -461,15 +566,27 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
         });
     }
     if input.order == MosaicOrder::Newest {
-        let undated: Vec<String> = files.iter().filter(|f| f.date.is_none()).map(|f| file_name(&input.sources[f.given])).collect();
+        let undated: Vec<String> = files
+            .iter()
+            .filter(|f| f.date.is_none())
+            .map(|f| file_name(&input.sources[f.given]))
+            .collect();
         if !undated.is_empty() {
             warnings.push(CommandWarning {
                 code: codes::MOSAIC_UNDATED.into(),
                 message: format!(
                     "{} {} tarihi (TIFF DateTime) yok; en alta {}.",
                     undated.join(", "),
-                    if undated.len() == 1 { "dosyasının" } else { "dosyalarının" },
-                    if undated.len() == 1 { "kondu" } else { "kondular" }
+                    if undated.len() == 1 {
+                        "dosyasının"
+                    } else {
+                        "dosyalarının"
+                    },
+                    if undated.len() == 1 {
+                        "kondu"
+                    } else {
+                        "kondular"
+                    }
                 ),
                 path: Some("order".into()),
             });
@@ -486,7 +603,11 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
                     codes::CRS_MISMATCH,
                     format!(
                         "Mozaiğin sistemi EPSG:{srid}, projeninki {}; raster çevrilmeden eklenmez. Dosyayı yazmak için layer'ı vermeyin.",
-                        if project == 0 { "yerel".to_owned() } else { format!("EPSG:{project}") }
+                        if project == 0 {
+                            "yerel".to_owned()
+                        } else {
+                            format!("EPSG:{project}")
+                        }
                     ),
                     "layer",
                 ));
@@ -548,7 +669,10 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &RastersMosaic) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: (), warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: (),
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -556,14 +680,20 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &RastersMosaic) -> CommandResu
 /// What execute would write; writes nothing.
 pub fn plan(cx: &ExecutionContext<'_>, input: &RastersMosaic) -> CommandResult<RastersMosaicked> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: p.out, warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: p.out,
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// Checks `input` again, writes the VRT (beside its place, read back, then moved there) and, with `layer`, adds the
 /// raster as one undo step “Sanal mozaik”.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RastersMosaic) -> CommandResult<RastersMosaicked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RastersMosaic,
+) -> CommandResult<RastersMosaicked> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_RASTERS_MOSAIC,
@@ -581,8 +711,10 @@ fn write_file(path: &Path, v: &Vrt) -> Result<(), String> {
     tmp.push(".kentos-yaziliyor");
     let tmp = PathBuf::from(tmp);
     let done = (|| -> Result<(), String> {
-        std::fs::write(&tmp, text.as_bytes()).map_err(|e| format!("{} yazılamadı: {e}", tmp.display()))?;
-        let back = std::fs::read_to_string(&tmp).map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
+        std::fs::write(&tmp, text.as_bytes())
+            .map_err(|e| format!("{} yazılamadı: {e}", tmp.display()))?;
+        let back = std::fs::read_to_string(&tmp)
+            .map_err(|e| format!("{} geri okunamadı: {e}", tmp.display()))?;
         let read = vrt::parse(&back).map_err(|e| e.0)?;
         vrt::members(&read).map_err(|e| e.0)?;
         if read != *v {
@@ -596,8 +728,17 @@ fn write_file(path: &Path, v: &Vrt) -> Result<(), String> {
     done
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: RastersMosaic) -> CommandResult<RastersMosaicked> {
-    let Planned { vrt: v, path, mut out, raster, warnings } = match check(cx.doc, &input) {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RastersMosaic,
+) -> CommandResult<RastersMosaicked> {
+    let Planned {
+        vrt: v,
+        path,
+        mut out,
+        raster,
+        warnings,
+    } = match check(cx.doc, &input) {
         Ok(p) => p,
         Err(stop) => return stop.into(),
     };
@@ -610,7 +751,9 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: RastersMosaic) -> Command
         .into();
     }
     if let Some(entity) = raster {
-        let added = cx.doc.transact("Sanal mozaik", |doc| checks::add(doc, entity));
+        let added = cx
+            .doc
+            .transact("Sanal mozaik", |doc| checks::add(doc, entity));
         match added {
             Ok((_, uid, revision)) => {
                 out.uid = Some(uid);
@@ -619,7 +762,10 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: RastersMosaic) -> Command
             Err(stop) => return stop.into(),
         }
     }
-    CommandResult::Completed { output: out, warnings }
+    CommandResult::Completed {
+        output: out,
+        warnings,
+    }
 }
 
 #[cfg(test)]
@@ -628,16 +774,31 @@ mod tests {
 
     #[test]
     fn tiff_dates_are_read_as_iso() {
-        assert_eq!(iso_date("2023:06:01 10:00:00").as_deref(), Some("2023-06-01T10:00:00"));
-        assert_eq!(iso_date("2023:06:01 10:00:00\0").as_deref(), Some("2023-06-01T10:00:00"));
+        assert_eq!(
+            iso_date("2023:06:01 10:00:00").as_deref(),
+            Some("2023-06-01T10:00:00")
+        );
+        assert_eq!(
+            iso_date("2023:06:01 10:00:00\0").as_deref(),
+            Some("2023-06-01T10:00:00")
+        );
         assert_eq!(iso_date("2023-06-01"), None);
         assert_eq!(iso_date(""), None);
     }
 
     #[test]
     fn files_under_the_vrts_folder_are_named_from_it() {
-        assert_eq!(vrt_name(Path::new("/a/b/c/x.tif"), Path::new("/a/b")), ("c/x.tif".into(), true));
-        assert_eq!(vrt_name(Path::new("/a/b/../d/x.tif"), Path::new("/a/d")), ("x.tif".into(), true));
-        assert_eq!(vrt_name(Path::new("/e/x.tif"), Path::new("/a/b")), ("/e/x.tif".into(), false));
+        assert_eq!(
+            vrt_name(Path::new("/a/b/c/x.tif"), Path::new("/a/b")),
+            ("c/x.tif".into(), true)
+        );
+        assert_eq!(
+            vrt_name(Path::new("/a/b/../d/x.tif"), Path::new("/a/d")),
+            ("x.tif".into(), true)
+        );
+        assert_eq!(
+            vrt_name(Path::new("/e/x.tif"), Path::new("/a/b")),
+            ("/e/x.tif".into(), false)
+        );
     }
 }

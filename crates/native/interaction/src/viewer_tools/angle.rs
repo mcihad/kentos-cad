@@ -75,7 +75,12 @@ impl MeasureAngle {
                         Level::Success,
                         format!("Açı: {}, dış açı: {}", f.angle(a.inner), f.angle(a.outer)),
                     );
-                    *cx.measured = Some(crate::measured::angle(cx.doc.settings(), &f, a.inner, a.outer));
+                    *cx.measured = Some(crate::measured::angle(
+                        cx.doc.settings(),
+                        &f,
+                        a.inner,
+                        a.outer,
+                    ));
                 }
                 None => cx.say(
                     Level::Warn,

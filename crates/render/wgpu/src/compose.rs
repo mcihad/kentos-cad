@@ -874,9 +874,20 @@ impl<'a> Planner<'a> {
         self.passes.push(Pass::Single { seq });
         let (bind, offset) = self.slot(
             numbers([1.0, 0.0, 0.0, 0.0]),
-            [Tex::Single, Tex::None, Tex::None, Tex::None, Tex::None, Tex::None],
+            [
+                Tex::Single,
+                Tex::None,
+                Tex::None,
+                Tex::None,
+                Tex::None,
+                Tex::None,
+            ],
         );
-        self.passes.push(Pass::Layer { blend: false, bind, offset });
+        self.passes.push(Pass::Layer {
+            blend: false,
+            bind,
+            offset,
+        });
     }
 
     /// Lengths in the effect's unit as device pixels.

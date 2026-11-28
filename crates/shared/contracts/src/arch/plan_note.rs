@@ -119,12 +119,18 @@ impl PlanNoteKey {
 
     /// Whether a note of it is about the roof (docs/adr/8160): its ridge, its slope or its eaves.
     pub fn is_roof(self) -> bool {
-        matches!(self, PlanNoteKey::RidgeMost | PlanNoteKey::RoofSlopeMost | PlanNoteKey::EavesMost)
+        matches!(
+            self,
+            PlanNoteKey::RidgeMost | PlanNoteKey::RoofSlopeMost | PlanNoteKey::EavesMost
+        )
     }
 
     /// Whether a note of it is about the projections or the basements (docs/adr/8162).
     pub fn is_mass(self) -> bool {
-        matches!(self, PlanNoteKey::ProjectionMost | PlanNoteKey::BasementsMost)
+        matches!(
+            self,
+            PlanNoteKey::ProjectionMost | PlanNoteKey::BasementsMost
+        )
     }
 }
 
@@ -166,37 +172,43 @@ impl PlanNote {
     /// characters); one note for each measure.
     pub fn list_problem(notes: &[PlanNote]) -> Option<(String, String)> {
         if notes.len() > PLAN_NOTES_MAX {
-            return Some(("planNotes".into(), format!("En çok {PLAN_NOTES_MAX} plan notu verilebilir.")));
+            return Some((
+                "planNotes".into(),
+                format!("En çok {PLAN_NOTES_MAX} plan notu verilebilir."),
+            ));
         }
         for (i, n) in notes.iter().enumerate() {
             let wrong = match n.key {
                 PlanNoteKey::GroundStoreyHeight | PlanNoteKey::StoreyHeight => {
-                    (!(n.value.is_finite() && n.value > 0.0 && n.value <= 20.0)).then_some("sıfırdan büyük, en çok 20 m")
+                    (!(n.value.is_finite() && n.value > 0.0 && n.value <= 20.0))
+                        .then_some("sıfırdan büyük, en çok 20 m")
                 }
-                PlanNoteKey::BuildingHeight => (!(n.value.is_finite()
-                    && n.value > 0.0
-                    && n.value <= PLAN_BUILDING_HEIGHT_MAX))
-                    .then_some("sıfırdan büyük, en çok 1000 m"),
+                PlanNoteKey::BuildingHeight => {
+                    (!(n.value.is_finite() && n.value > 0.0 && n.value <= PLAN_BUILDING_HEIGHT_MAX))
+                        .then_some("sıfırdan büyük, en çok 1000 m")
+                }
                 PlanNoteKey::Storeys => (!(n.value.is_finite()
                     && n.value.fract() == 0.0
                     && (1.0..=PLAN_STOREYS_MAX).contains(&n.value)))
-                    .then_some("1 ile 200 arasında bir tam sayı"),
+                .then_some("1 ile 200 arasında bir tam sayı"),
                 PlanNoteKey::PlinthMost | PlanNoteKey::PlinthLeast => (!(n.value.is_finite()
                     && (-PLAN_PLINTH_MAX..=PLAN_PLINTH_MAX).contains(&n.value)))
-                    .then_some("−10 ile +10 m arasında"),
-                PlanNoteKey::RidgeMost => (!(n.value.is_finite() && n.value > 0.0 && n.value <= 20.0))
-                    .then_some("sıfırdan büyük, en çok 20 m"),
-                PlanNoteKey::RoofSlopeMost => (!(n.value.is_finite()
-                    && n.value > 0.0
-                    && n.value <= PLAN_ROOF_SLOPE_MAX))
-                    .then_some("sıfırdan büyük, en çok %200"),
-                PlanNoteKey::EavesMost | PlanNoteKey::ProjectionMost => {
-                    (!(n.value.is_finite() && (0.0..=5.0).contains(&n.value))).then_some("0 ile 5 m arasında")
+                .then_some("−10 ile +10 m arasında"),
+                PlanNoteKey::RidgeMost => {
+                    (!(n.value.is_finite() && n.value > 0.0 && n.value <= 20.0))
+                        .then_some("sıfırdan büyük, en çok 20 m")
                 }
+                PlanNoteKey::RoofSlopeMost => {
+                    (!(n.value.is_finite() && n.value > 0.0 && n.value <= PLAN_ROOF_SLOPE_MAX))
+                        .then_some("sıfırdan büyük, en çok %200")
+                }
+                PlanNoteKey::EavesMost | PlanNoteKey::ProjectionMost => (!(n.value.is_finite()
+                    && (0.0..=5.0).contains(&n.value)))
+                .then_some("0 ile 5 m arasında"),
                 PlanNoteKey::BasementsMost => (!(n.value.is_finite()
                     && n.value.fract() == 0.0
                     && (0.0..=20.0).contains(&n.value)))
-                    .then_some("0 ile 20 arasında bir tam sayı"),
+                .then_some("0 ile 20 arasında bir tam sayı"),
             };
             if let Some(what) = wrong {
                 return Some((
@@ -217,19 +229,26 @@ impl PlanNote {
             if source.chars().count() > 200 {
                 return Some((
                     format!("planNotes.{i}.source"),
-                    format!("“{}” plan notunun kaynağı en çok 200 karakter olmalı.", n.key.label()),
+                    format!(
+                        "“{}” plan notunun kaynağı en çok 200 karakter olmalı.",
+                        n.key.label()
+                    ),
                 ));
             }
             if notes[..i].iter().any(|m| m.key == n.key) {
                 return Some((
                     format!("planNotes.{i}.key"),
-                    format!("“{}” için iki plan notu var; birini kaldırın.", n.key.label()),
+                    format!(
+                        "“{}” için iki plan notu var; birini kaldırın.",
+                        n.key.label()
+                    ),
                 ));
             }
         }
         // The subasman's least above its most leaves no floor level (docs/adr/8158).
         let of = |k: PlanNoteKey| notes.iter().position(|n| n.key == k);
-        if let (Some(most), Some(least)) = (of(PlanNoteKey::PlinthMost), of(PlanNoteKey::PlinthLeast))
+        if let (Some(most), Some(least)) =
+            (of(PlanNoteKey::PlinthMost), of(PlanNoteKey::PlinthLeast))
             && notes[least].value > notes[most].value
         {
             return Some((

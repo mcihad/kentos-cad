@@ -153,9 +153,16 @@ impl Viewport {
         let (mut cut, mut under) = (Vec::new(), Vec::new());
         for l in lines.iter() {
             let pair = [at(l.a), at(l.b)];
-            if l.cut { cut.push(pair) } else { under.push(pair) }
+            if l.cut {
+                cut.push(pair)
+            } else {
+                under.push(pair)
+            }
         }
-        let part = Arc::new(scene::build_lines(origin, &[(&under, colors[1]), (&cut, colors[0])]));
+        let part = Arc::new(scene::build_lines(
+            origin,
+            &[(&under, colors[1]), (&cut, colors[0])],
+        ));
         *kept = Some((*version, origin, colors, map, part.clone()));
         part
     }
@@ -211,7 +218,7 @@ impl Viewport {
     /// its start view, else to `extent`, its box as its store has it (the
     /// web's `replaceDrawing`); without one, to its objects' boxes.
     pub fn opened(&mut self, doc: &Document, extent: Option<Bounds>) {
-        self.sheet_saved_camera=None;
+        self.sheet_saved_camera = None;
         self.generation += 1;
         self.cursor = None;
         self.fit_pending = true;
@@ -379,16 +386,39 @@ impl Viewport {
         let drawing = {
             use std::hash::{Hash, Hasher};
             let mut h = std::collections::hash_map::DefaultHasher::new();
-            (doc.session, doc.model.generation(), selection.version(), self.grid_shown).hash(&mut h);
-            (palette.background.0, accent.0, settings.samples, settings.hi_dpi).hash(&mut h);
+            (
+                doc.session,
+                doc.model.generation(),
+                selection.version(),
+                self.grid_shown,
+            )
+                .hash(&mut h);
+            (
+                palette.background.0,
+                accent.0,
+                settings.samples,
+                settings.hi_dpi,
+            )
+                .hash(&mut h);
             settings.highlight_width.to_bits().hash(&mut h);
-            styling.map(|s| (s.screen_symbols, s.line_weights)).hash(&mut h);
-            (!self.fresh && graphics.zoom_scaled && ZOOM_SCALED.with(std::cell::Cell::get)).then(|| h.finish())
+            styling
+                .map(|s| (s.screen_symbols, s.line_weights))
+                .hash(&mut h);
+            (!self.fresh && graphics.zoom_scaled && ZOOM_SCALED.with(std::cell::Cell::get))
+                .then(|| h.finish())
         };
         let area: Element<'a, Message> = shader(Program {
             id: self.id,
             document: doc.session,
-            parts: [grid, underlay, fixed, curves, construction, selected, hovered],
+            parts: [
+                grid,
+                underlay,
+                fixed,
+                curves,
+                construction,
+                selected,
+                hovered,
+            ],
             origin,
             settings,
             status: self.status.clone(),
@@ -397,7 +427,11 @@ impl Viewport {
             images: styling.map(|s| s.styles.images.clone()),
             settle_at: styling
                 .filter(|s| {
-                    s.screen_symbols || self.styled_in_use().try_borrow().is_ok_and(|c| c.scales_with_view())
+                    s.screen_symbols
+                        || self
+                            .styled_in_use()
+                            .try_borrow()
+                            .is_ok_and(|c| c.scales_with_view())
                 })
                 .and_then(|_| self.settling())
                 .max(self.moved_until()),
@@ -688,7 +722,12 @@ impl Viewport {
         if !screen || self.settling().is_none() {
             return now;
         }
-        match self.styled_in_use().try_borrow().ok().and_then(|c| c.built_scale()) {
+        match self
+            .styled_in_use()
+            .try_borrow()
+            .ok()
+            .and_then(|c| c.built_scale())
+        {
             Some((built, true)) => built,
             _ => now,
         }
@@ -701,17 +740,31 @@ impl Viewport {
     /// Metres a world unit is (1 when the camera's is not a positive number).
     fn metres_a_unit(&self) -> f64 {
         let unit = self.camera.metres_per_unit;
-        if unit.is_finite() && unit > 0.0 { unit } else { 1.0 }
+        if unit.is_finite() && unit > 0.0 {
+            unit
+        } else {
+            1.0
+        }
     }
 
     fn deep_box(&self) -> Option<kentos_native_style::Deep> {
         let px_per_m = self.camera.scale / self.metres_a_unit();
         let was = self.deep.get();
-        let deep = px_per_m >= if was.is_some() { DEEP_PX_PER_M / 2.0 } else { DEEP_PX_PER_M };
+        let deep = px_per_m
+            >= if was.is_some() {
+                DEEP_PX_PER_M / 2.0
+            } else {
+                DEEP_PX_PER_M
+            };
         let view = self.camera.visible_bounds();
         let tolerance = DEEP_TOLERANCE_PX / self.camera.scale;
         let next = deep.then(|| match was {
-            Some(d) if !clip_stale(&view, &d.bounds) && (0.5..=2.0).contains(&(d.tolerance / tolerance)) => d,
+            Some(d)
+                if !clip_stale(&view, &d.bounds)
+                    && (0.5..=2.0).contains(&(d.tolerance / tolerance)) =>
+            {
+                d
+            }
             _ => kentos_native_style::Deep {
                 bounds: construction_clip(&view),
                 tolerance,
@@ -998,7 +1051,8 @@ impl Viewport {
     pub fn put_camera(&mut self, camera: Camera) {
         self.camera = camera;
         if self.bounds.width > 0.0 && self.bounds.height > 0.0 {
-            self.camera.set_size(f64::from(self.bounds.width), f64::from(self.bounds.height));
+            self.camera
+                .set_size(f64::from(self.bounds.width), f64::from(self.bounds.height));
         }
     }
 
@@ -1105,9 +1159,10 @@ impl Viewport {
     /// area. Yakınlaştır and Uzaklaştır zoom about the middle (`App::zoom`): the drawing moves under a still pointer
     /// (docs/adr/9251).
     pub fn repoint_cursor(&mut self) {
-        self.cursor = self
-            .pointer_px
-            .map(|at| self.camera.screen_to_world(f64::from(at.x), f64::from(at.y)));
+        self.cursor = self.pointer_px.map(|at| {
+            self.camera
+                .screen_to_world(f64::from(at.x), f64::from(at.y))
+        });
     }
 
     /// The world point at a position of the area, through the float64 camera.
@@ -1119,7 +1174,11 @@ impl Viewport {
     /// The camera the area shows: a running gesture's live one (live.rs), else the app's. The pointer's world point
     /// and a snap's reach are read through it, so a move while the wheel turns lands where the screen shows it.
     pub fn shown(&self) -> Camera {
-        if self.live.moving() { self.live.camera() } else { self.camera }
+        if self.live.moving() {
+            self.live.camera()
+        } else {
+            self.camera
+        }
     }
 }
 

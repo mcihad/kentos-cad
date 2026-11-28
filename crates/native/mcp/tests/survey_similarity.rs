@@ -19,10 +19,23 @@ fn near(got: &Value, want: &Value, at: &str, within: f64) {
 
 #[test]
 fn the_similarity_over_mcp_is_the_case_s() {
-    let cases: Value = serde_json::from_str(include_str!("../../../../fixtures/commands/v1/map.survey.network.json")).unwrap();
-    let case = cases["cases"].as_array().unwrap().iter().find(|c| c["name"] == CASE).unwrap().clone();
-    let snapshot: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(case["setup"].clone()).unwrap();
-    let path = std::env::temp_dir().join(format!("kentos-survey-similarity-{}.kcad", std::process::id()));
+    let cases: Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/commands/v1/map.survey.network.json"
+    ))
+    .unwrap();
+    let case = cases["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|c| c["name"] == CASE)
+        .unwrap()
+        .clone();
+    let snapshot: kentos_commands::DocumentSnapshotV2 =
+        serde_json::from_value(case["setup"].clone()).unwrap();
+    let path = std::env::temp_dir().join(format!(
+        "kentos-survey-similarity-{}.kcad",
+        std::process::id()
+    ));
     std::fs::write(&path, kentos_kcad::encode(&snapshot).unwrap()).unwrap();
     let mut server = Server::new();
     let opened = call(&mut server, "drawing.open", json!({"path": path}));
@@ -31,18 +44,34 @@ fn the_similarity_over_mcp_is_the_case_s() {
     args["drawing"] = opened["structuredContent"]["drawing"].clone();
     let r = call(&mut server, "map.survey.network", args);
     assert_eq!(r["isError"], false, "{r}");
-    let (got, want) = (&r["structuredContent"]["output"], &case["steps"][0]["result"]["output"]);
+    let (got, want) = (
+        &r["structuredContent"]["output"],
+        &case["steps"][0]["result"]["output"],
+    );
     let (g, w) = (&got["similarity"], &want["similarity"]);
-    assert_eq!((&g["known"], &g["dof"], &g["agrees"]), (&w["known"], &w["dof"], &w["agrees"]));
+    assert_eq!(
+        (&g["known"], &g["dof"], &g["agrees"]),
+        (&w["known"], &w["dof"], &w["agrees"])
+    );
     // The case's own tolerance (1e-5: t divides 10⁻⁷ by 10⁻⁸).
     for key in ["scale", "sigma", "t", "quantile"] {
         near(&g[key], &w[key], key, 1e-5);
     }
     for k in 0..3 {
-        near(&g["translation"][k], &w["translation"][k], "translation", 1e-5);
+        near(
+            &g["translation"][k],
+            &w["translation"][k],
+            "translation",
+            1e-5,
+        );
         near(&g["rotation"][k], &w["rotation"][k], "rotation", 1e-5);
     }
-    for (a, b) in g["residuals"].as_array().unwrap().iter().zip(w["residuals"].as_array().unwrap()) {
+    for (a, b) in g["residuals"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .zip(w["residuals"].as_array().unwrap())
+    {
         for k in 0..3 {
             near(&a["enu"][k], &b["enu"][k], "residual", 1e-5);
         }

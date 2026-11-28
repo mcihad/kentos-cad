@@ -936,7 +936,8 @@ impl Prepared {
                     .get(&added_key(&c.layer, &c.field))
                     .copied()
                     .unwrap_or(0);
-                let count = (related.of(attrs, object).len() as i64 + i64::from(more)).max(0) as u32;
+                let count =
+                    (related.of(attrs, object).len() as i64 + i64::from(more)).max(0) as u32;
                 issues.extend(related_issues(&node.id, c, count));
             }
             let Some(b) = &node.field else { continue };

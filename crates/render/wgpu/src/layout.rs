@@ -70,7 +70,11 @@ pub fn join_code(from: [f64; 2], to: [f64; 2]) -> u32 {
     const STEPS: f64 = 1024.0;
     let turn = (from[0] * to[1] - from[1] * to[0]).atan2(from[0] * to[0] + from[1] * to[1]);
     let steps = (turn / std::f64::consts::PI * STEPS).round();
-    if steps.is_finite() && steps.abs() < STEPS { (steps + STEPS) as u32 } else { 0 }
+    if steps.is_finite() && steps.abs() < STEPS {
+        (steps + STEPS) as u32
+    } else {
+        0
+    }
 }
 
 /// A segment's [`SegmentInstance::joins`] from its start's and its end's codes.

@@ -12,9 +12,10 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    BlockDefinition, BlockId, CommandResult, CommandWarning, Entity, EntityBase, InsertEntity, MAX_REVISION_DATE,
-    MAX_REVISION_DESCRIPTION, MAX_REVISION_NUMBER, REVISION_BLOCK, REVISION_SIZE, REVISION_TAG, RevcloudCreate,
-    RevisionMarked, RevisionPlan, RevisionsMark, Vec2 as Wire,
+    BlockDefinition, BlockId, CommandResult, CommandWarning, Entity, EntityBase, InsertEntity,
+    MAX_REVISION_DATE, MAX_REVISION_DESCRIPTION, MAX_REVISION_NUMBER, REVISION_BLOCK,
+    REVISION_SIZE, REVISION_TAG, RevcloudCreate, RevisionMarked, RevisionPlan, RevisionsMark,
+    Vec2 as Wire,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -81,10 +82,21 @@ fn check(
             "number",
         ));
     }
-    if input.date.as_deref().is_some_and(|d| !plain(d, MAX_REVISION_DATE)) {
-        return Err(invalid("Revizyonun tarihi kenarı boşluksuz, denetim karaktersiz ve en çok 32 karakter olmalı.", "date"));
+    if input
+        .date
+        .as_deref()
+        .is_some_and(|d| !plain(d, MAX_REVISION_DATE))
+    {
+        return Err(invalid(
+            "Revizyonun tarihi kenarı boşluksuz, denetim karaktersiz ve en çok 32 karakter olmalı.",
+            "date",
+        ));
     }
-    if input.description.as_deref().is_some_and(|d| !plain(d, MAX_REVISION_DESCRIPTION)) {
+    if input
+        .description
+        .as_deref()
+        .is_some_and(|d| !plain(d, MAX_REVISION_DESCRIPTION))
+    {
         return Err(invalid(
             "Revizyonun açıklaması kenarı boşluksuz, denetim karaktersiz ve en çok 240 karakter olmalı.",
             "description",
@@ -94,7 +106,12 @@ fn check(
         checks::point(at, "Revizyon üçgeninin yerinin", "at")?;
     }
     let size = input.size.unwrap_or(REVISION_SIZE);
-    checks::finite(size, "Revizyon üçgeninin boyu", "Boyu kâğıt milimetresi olarak sonlu bir sayıyla verin.", "size")?;
+    checks::finite(
+        size,
+        "Revizyon üçgeninin boyu",
+        "Boyu kâğıt milimetresi olarak sonlu bir sayıyla verin.",
+        "size",
+    )?;
     if !(size > 0.0 && size <= MAX_SIZE) {
         return Err(Stop::failed(error(
             codes::INVALID_SCALE,
@@ -112,7 +129,11 @@ fn check(
         east = east.max(p.x);
         north = north.max(p.y);
     }
-    let cloud = crate::polygon::ruled(doc, store, &crate::shapes::revcloud_polygon(&cloud_in, ring))?;
+    let cloud = crate::polygon::ruled(
+        doc,
+        store,
+        &crate::shapes::revcloud_polygon(&cloud_in, ring),
+    )?;
     let Some(symbol) = library_symbols::symbol(doc, REVISION_BLOCK, fresh) else {
         return Err(Stop::failed(error(
             codes::UNKNOWN_BLOCK,
@@ -220,24 +241,36 @@ pub fn last_number(doc: &Document) -> Option<String> {
 /// The date and the description the drawing's deltas of revision `number` give (each the first that has one, in
 /// the drawing's order): what another mark of the same revision takes by default.
 pub fn data_of(doc: &Document, number: &str) -> (Option<String>, Option<String>) {
-    let Some(block) = doc.block_named(kentos_commands::REVISION_BLOCK).map(|b| b.id) else {
+    let Some(block) = doc
+        .block_named(kentos_commands::REVISION_BLOCK)
+        .map(|b| b.id)
+    else {
         return (None, None);
     };
     let deltas = || {
         doc.entities().filter_map(move |e| match e {
-            Entity::Insert(i) if i.block == block && i.base.attrs.get(REVISION_TAG).map(String::as_str) == Some(number) => {
+            Entity::Insert(i)
+                if i.block == block
+                    && i.base.attrs.get(REVISION_TAG).map(String::as_str) == Some(number) =>
+            {
                 Some(&i.base.attrs)
             }
             _ => None,
         })
     };
     let first = |key: &str| deltas().find_map(|a| a.get(key).filter(|v| !v.is_empty()).cloned());
-    (first(kentos_commands::REVISION_DATE), first(kentos_commands::REVISION_DESCRIPTION))
+    (
+        first(kentos_commands::REVISION_DATE),
+        first(kentos_commands::REVISION_DESCRIPTION),
+    )
 }
 
 /// Checks `input` again and writes the cloud and its delta (the library's block first when the drawing lacks it) as
 /// one undo step.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RevisionsMark) -> CommandResult<RevisionMarked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RevisionsMark,
+) -> CommandResult<RevisionMarked> {
     crate::call::recorded(
         cx,
         kentos_commands::CAD_REVISIONS_MARK,
@@ -247,8 +280,13 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: RevisionsMark) -> CommandRe
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: RevisionsMark) -> CommandResult<RevisionMarked> {
-    let c = match check(cx.doc, cx.store, &input, || BlockId(*Uuid::now_v7().as_bytes())) {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RevisionsMark,
+) -> CommandResult<RevisionMarked> {
+    let c = match check(cx.doc, cx.store, &input, || {
+        BlockId(*Uuid::now_v7().as_bytes())
+    }) {
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };

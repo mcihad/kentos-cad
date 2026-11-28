@@ -387,7 +387,10 @@ impl StyledCache {
     }
 
     /// The faces text markers are drawn as vectors with (docs/adr/9245): the style's images, which read them.
-    pub fn text_from(&mut self, source: Arc<dyn kentos_native_style::picture::ImageSource + Send + Sync>) {
+    pub fn text_from(
+        &mut self,
+        source: Arc<dyn kentos_native_style::picture::ImageSource + Send + Sync>,
+    ) {
         self.text = Some(source);
     }
 
@@ -471,7 +474,12 @@ impl StyledCache {
         // width rebuilt a 10⁶ drawing's scene for nothing, docs/adr/1068 §5).
         let clipped = match self.clip {
             Some(c) if !clip_stale(view, &c) => true,
-            Some(_) if !self.layers.values().any(|l| l.parts.values().any(|p| p.construction)) => {
+            Some(_)
+                if !self
+                    .layers
+                    .values()
+                    .any(|l| l.parts.values().any(|p| p.construction)) =>
+            {
                 self.clip = Some(construction_clip(view));
                 true
             }
@@ -781,7 +789,9 @@ impl StyledCache {
                 // A deep view's scene: the objects its box meets; the others neither built nor noted as the window's
                 // (an object the store has no box for is kept).
                 if let Some(b) = &only
-                    && store.get(f64::from(id)).is_some_and(|item| !meets(&item.bounds, b))
+                    && store
+                        .get(f64::from(id))
+                        .is_some_and(|item| !meets(&item.bounds, b))
                 {
                     return false;
                 }
@@ -1006,7 +1016,10 @@ impl StyledCache {
                     ordered: plan.ordered.clone(),
                 });
                 entry.parts.clear();
-                entry.parts.insert(0, new_part(layer, &entities, framed, masks_by_markers(plan.node)));
+                entry.parts.insert(
+                    0,
+                    new_part(layer, &entities, framed, masks_by_markers(plan.node)),
+                );
                 entry.reads_index = true;
                 entry.run = plan.run;
             }
@@ -1057,7 +1070,10 @@ impl StyledCache {
                 if entities.is_empty() && split {
                     entry.parts.remove(&key);
                 } else {
-                    entry.parts.insert(key, new_part(layer, entities, framed, masks_by_markers(plan.node)));
+                    entry.parts.insert(
+                        key,
+                        new_part(layer, entities, framed, masks_by_markers(plan.node)),
+                    );
                 }
             }
         }
@@ -1069,7 +1085,11 @@ impl StyledCache {
                 continue;
             };
             for kind in [LeftOut::Dots, LeftOut::Markers, LeftOut::Waves] {
-                let left = layer.parts.values().map(|p| kind.of(&p.part)).fold(0u64, u64::saturating_add);
+                let left = layer
+                    .parts
+                    .values()
+                    .map(|p| kind.of(&p.part))
+                    .fold(0u64, u64::saturating_add);
                 if left > 0 && self.dropped_said.insert((id.clone(), kind)) {
                     self.dropped.push((plan.node.name.clone(), kind, left));
                 }
@@ -1399,7 +1419,10 @@ fn new_part(layer: StyledLayer, entities: &[&Entity], framed: bool, mask: bool) 
 
 /// Whether the layer's markers cut other layers (a mask by its markers' boxes, docs/adr/0226 §3).
 fn masks_by_markers(node: &LayerNode) -> bool {
-    node.compose.as_ref().and_then(|c| c.mask.as_ref()).is_some_and(|m| m.markers)
+    node.compose
+        .as_ref()
+        .and_then(|c| c.mask.as_ref())
+        .is_some_and(|m| m.markers)
 }
 
 /// A layer's objects in its drawing order (docs/adr/0260 §5): by their order,

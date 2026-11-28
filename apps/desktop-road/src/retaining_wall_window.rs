@@ -15,20 +15,21 @@
 //! └──────────────────────────────────────────────────────────────────────────────────────────────┘
 //! ```
 
-use crate::road::RoadState;
 use crate::road;
+use crate::road::RoadState;
 use iced::widget::canvas::{self, Path, Stroke, Text};
 use iced::widget::{container, row, space};
 use iced::{Element, Fill, Pixels, Point, Rectangle, Renderer, Task, Theme, mouse};
 use kentos_commands::{
-    CommandWarning, RetainingWallReport, RetainingWallsDraw, RetainingWallsEdit, RoadEditOperation, WallShapeDef, WallSide,
+    CommandWarning, RetainingWallReport, RetainingWallsDraw, RetainingWallsEdit, RoadEditOperation,
+    WallShapeDef, WallSide,
 };
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, road_walls_draw, road_walls_edit};
+use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::Dialog as Frame;
 use kentos_ui::widget::select::{Choice, Select};
-use kentos_ui::label;
 
 use crate::app::{App, Message};
 use crate::exchange::words;
@@ -107,13 +108,18 @@ fn number(text: &str, what: &str) -> Result<Option<f64>, String> {
     if t.is_empty() {
         return Ok(None);
     }
-    t.replace(',', ".").parse::<f64>().map(Some).map_err(|_| format!("{what}: “{t}” bir sayı değil."))
+    t.replace(',', ".")
+        .parse::<f64>()
+        .map(Some)
+        .map_err(|_| format!("{what}: “{t}” bir sayı değil."))
 }
 
 impl Window {
     /// The edit as typed, or why it is not one.
     pub(crate) fn input(&self) -> Result<RetainingWallsEdit, String> {
-        let need = |k: usize| number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]));
+        let need = |k: usize| {
+            number(&self.fields[k], FIELDS[k])?.ok_or_else(|| format!("{} yazılmalı.", FIELDS[k]))
+        };
         let may = |k: usize| number(&self.fields[k], FIELDS[k]).map(|v| v.unwrap_or(0.0));
         let shape = WallShapeDef {
             top: need(SHAPE_AT)?,
@@ -240,7 +246,11 @@ impl RetainingWallWindowApp for App {
                     None => {
                         // A new one: its sizes and stations are the user's; only the name is filled in.
                         let n = kept.len() + 1;
-                        f[0] = if n == 1 { "İstinat duvarı".into() } else { format!("İstinat duvarı {n}") };
+                        f[0] = if n == 1 {
+                            "İstinat duvarı".into()
+                        } else {
+                            format!("İstinat duvarı {n}")
+                        };
                     }
                 }
                 w.fields = f;
@@ -273,11 +283,21 @@ impl RetainingWallWindowApp for App {
                 return Task::none();
             }
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
         let result = road_walls_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
-        let Some(out) = self.answered(result) else { return Task::none() };
+        let Some(out) = self.answered(result) else {
+            return Task::none();
+        };
         if let Some(r) = &out.wall {
-            self.say(Level::Success, format!("“{}”: {:.2} m, en yüksek gövde {:.2} m.", r.name, r.length, r.highest));
+            self.say(
+                Level::Success,
+                format!(
+                    "“{}”: {:.2} m, en yüksek gövde {:.2} m.",
+                    r.name, r.length, r.highest
+                ),
+            );
             let id = r.id.clone();
             return self.retaining_wall_event(Event::Choose(Some(id)));
         }
@@ -292,11 +312,21 @@ impl RetainingWallWindowApp for App {
             self.warn("Çizmek için önce duvarı kaydedin ve bir katman seçin.".to_owned());
             return Task::none();
         };
-        let Some(doc) = self.document.as_mut() else { return Task::none() };
-        let input = RetainingWallsDraw { wall: id, layer_id: layer, labels: true, expected_revision: None };
+        let Some(doc) = self.document.as_mut() else {
+            return Task::none();
+        };
+        let input = RetainingWallsDraw {
+            wall: id,
+            layer_id: layer,
+            labels: true,
+            expected_revision: None,
+        };
         let result = road_walls_draw::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if let Some(out) = self.answered(result) {
-            self.say(Level::Success, format!("İstinat duvarı planda, {:.2} m.", out.length));
+            self.say(
+                Level::Success,
+                format!("İstinat duvarı planda, {:.2} m.", out.length),
+            );
             self.modules.road_mut().retaining_wall_window = None;
             self.dialog = None;
         }
@@ -305,7 +335,8 @@ impl RetainingWallWindowApp for App {
 
     fn remove_retaining_wall(&mut self) -> Task<Message> {
         let Some(id) = self
-            .modules.road()
+            .modules
+            .road()
             .retaining_wall_window
             .as_ref()
             .and_then(|w| w.chosen.clone())
@@ -331,7 +362,10 @@ impl RetainingWallWindowApp for App {
         };
         let result = road_walls_edit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         if self.answered(result).is_some() {
-            let next = self.document.as_ref().and_then(|d| d.model.road_walls().first().map(|c| c.id.clone()));
+            let next = self
+                .document
+                .as_ref()
+                .and_then(|d| d.model.road_walls().first().map(|c| c.id.clone()));
             return self.retaining_wall_event(Event::Choose(next));
         }
         Task::none()
@@ -341,36 +375,55 @@ impl RetainingWallWindowApp for App {
         let Some(w) = &self.modules.road().retaining_wall_window else {
             return iced::widget::text("").into();
         };
-        let muted = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).muted) };
-        let warn = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).warning) };
-        let danger = |t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).danger) };
+        let muted = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).muted),
+        };
+        let warn = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).warning),
+        };
+        let danger = |t: &Theme| iced::widget::text::Style {
+            color: Some(Tokens::of(t).danger),
+        };
         let model = self.document.as_ref().map(|d| &d.model);
         let mut listed: Vec<(Option<String>, String)> = vec![(None, "Yeni duvar".into())];
-        listed.extend(
-            model.map_or_else(Vec::new, |m| m.road_walls().iter().map(|c| (Some(c.id.clone()), c.name.clone())).collect()),
-        );
+        listed.extend(model.map_or_else(Vec::new, |m| {
+            m.road_walls()
+                .iter()
+                .map(|c| (Some(c.id.clone()), c.name.clone()))
+                .collect()
+        }));
         let ids: Vec<Option<String>> = listed.iter().map(|x| x.0.clone()).collect();
         let on_wall = Select::new(
             listed.iter().map(|x| Choice::new(x.1.clone())),
             ids.iter().position(|i| *i == w.chosen),
             move |i| msg(Event::Choose(ids[i].clone())),
         );
-        let corridors: Vec<(String, String)> =
-            model.map_or_else(Vec::new, |m| m.road_corridors().iter().map(|c| (c.id.clone(), c.name.clone())).collect());
+        let corridors: Vec<(String, String)> = model.map_or_else(Vec::new, |m| {
+            m.road_corridors()
+                .iter()
+                .map(|c| (c.id.clone(), c.name.clone()))
+                .collect()
+        });
         let cids: Vec<String> = corridors.iter().map(|c| c.0.clone()).collect();
         let on_corridor = Select::new(
             corridors.iter().map(|c| Choice::new(c.1.clone())),
-            w.corridor.as_ref().and_then(|c| cids.iter().position(|i| i == c)),
+            w.corridor
+                .as_ref()
+                .and_then(|c| cids.iter().position(|i| i == c)),
             move |i| msg(Event::Corridor(cids[i].clone())),
         );
         let sides = [WallSide::Left, WallSide::Right];
-        let on_side = Select::new(["Sol", "Sağ"].map(Choice::new), sides.iter().position(|s| *s == w.side), move |i| {
-            msg(Event::Side(sides[i]))
-        });
+        let on_side = Select::new(
+            ["Sol", "Sağ"].map(Choice::new),
+            sides.iter().position(|s| *s == w.side),
+            move |i| msg(Event::Side(sides[i])),
+        );
         let field = |hint: &'static str, k: usize, width: f32| {
             words::field(
                 FIELDS[k],
-                kentos_ui::widget::text_field(hint, &w.fields[k]).on_input(move |t| msg(Event::Field(k, t))).width(width),
+                kentos_ui::widget::text_field(hint, &w.fields[k])
+                    .on_input(move |t| msg(Event::Field(k, t)))
+                    .width(width),
                 None,
             )
         };
@@ -398,7 +451,10 @@ impl RetainingWallWindowApp for App {
         ]
         .spacing(10)
         .align_y(iced::alignment::Vertical::Bottom);
-        let mut body = kentos_ui::widget::grow::Grows::new().spacing(10.0).push(top).push(shape);
+        let mut body = kentos_ui::widget::grow::Grows::new()
+            .spacing(10.0)
+            .push(top)
+            .push(shape);
         match (&w.preview.why, &w.preview.report) {
             (Some(e), _) => body = body.push(label::caption(e.clone()).style(danger)),
             (None, Some(r)) => {
@@ -413,7 +469,12 @@ impl RetainingWallWindowApp for App {
                 for wn in &w.preview.warnings {
                     body = body.push(label::caption(wn.message.clone()).style(warn));
                 }
-                let picture = crate::picture::picture(iced::widget::canvas(Along { report: r }).width(Fill).height(Fill), TITLE);
+                let picture = crate::picture::picture(
+                    iced::widget::canvas(Along { report: r })
+                        .width(Fill)
+                        .height(Fill),
+                    TITLE,
+                );
                 use crate::road_dialog::{col, grouped, num};
                 let list = crate::road_dialog::sheet_fill(
                     vec![
@@ -444,38 +505,45 @@ impl RetainingWallWindowApp for App {
                     "Duvar satırı yok",
                 );
                 body = body.push_grow(
-                    row![picture, list]
-                        .spacing(12)
-                        .height(Fill),
+                    row![picture, list].spacing(12).height(Fill),
                     typography::scaled(200.0),
                 );
             }
             _ => {}
         }
-        let lids: Vec<String> = self.relation_layers().into_iter().map(|(id, _)| id).collect();
+        let lids: Vec<String> = self
+            .relation_layers()
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
         let lnames: Vec<String> = self.relation_layers().into_iter().map(|(_, n)| n).collect();
         let on_layer = Select::new(
             lnames.iter().map(|n| Choice::new(n.clone())),
-            w.layer.as_ref().and_then(|l| lids.iter().position(|id| id == l)),
+            w.layer
+                .as_ref()
+                .and_then(|l| lids.iter().position(|id| id == l)),
             move |i| msg(Event::Layer(lids[i].clone())),
         )
         .placeholder("Katman");
         let saved = w.chosen.is_some();
         // The buttons are the dialog's footer: resized or full screen they sit on its bottom edge (ADR 0746 eki).
-        let footer =
-            row![
-                words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
-                space::horizontal().width(Fill),
-                label::caption("Katman").style(muted),
-                container(on_layer).width(150),
-                words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
-                space::horizontal().width(24),
-                words::secondary(CLOSE, Some(msg(Event::Close))),
-                words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
-            ]
-            .spacing(8)
-            .align_y(iced::alignment::Vertical::Center);
-        Frame::new(TITLE).scroll(body).footer(footer).width(1080.0).modal(msg(Event::Close))
+        let footer = row![
+            words::secondary(REMOVE, saved.then(|| msg(Event::Remove))),
+            space::horizontal().width(Fill),
+            label::caption("Katman").style(muted),
+            container(on_layer).width(150),
+            words::secondary(DRAW, saved.then(|| msg(Event::Draw))),
+            space::horizontal().width(24),
+            words::secondary(CLOSE, Some(msg(Event::Close))),
+            words::primary(SAVE, w.preview.report.as_ref().map(|_| msg(Event::Save))),
+        ]
+        .spacing(8)
+        .align_y(iced::alignment::Vertical::Center);
+        Frame::new(TITLE)
+            .scroll(body)
+            .footer(footer)
+            .width(1080.0)
+            .modal(msg(Event::Close))
     }
 
     fn retaining_wall_control(&self, control: Control<'_>) -> Result<Option<Message>, String> {
@@ -504,7 +572,14 @@ struct Along<'a> {
 impl canvas::Program<Message> for Along<'_> {
     type State = ();
 
-    fn draw(&self, _: &(), renderer: &Renderer, theme: &Theme, bounds: Rectangle, _: mouse::Cursor) -> Vec<canvas::Geometry> {
+    fn draw(
+        &self,
+        _: &(),
+        renderer: &Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        _: mouse::Cursor,
+    ) -> Vec<canvas::Geometry> {
         let mut frame = canvas::Frame::new(renderer, bounds.size());
         let tk = Tokens::of(theme);
         let rows = &self.report.rows;
@@ -515,7 +590,10 @@ impl canvas::Program<Message> for Along<'_> {
         let z0 = rows.iter().map(|r| r.footing).fold(f64::INFINITY, f64::min);
         let z1 = rows.iter().map(|r| r.top).fold(f64::NEG_INFINITY, f64::max);
         let pad = 28.0_f64;
-        let (w, h) = (f64::from(bounds.width) - 2.0 * pad, f64::from(bounds.height) - 2.0 * pad);
+        let (w, h) = (
+            f64::from(bounds.width) - 2.0 * pad,
+            f64::from(bounds.height) - 2.0 * pad,
+        );
         let at = |s: f64, z: f64| {
             Point::new(
                 (pad + (s - s0) / (s1 - s0).max(1e-6) * w) as f32,
@@ -532,8 +610,17 @@ impl canvas::Program<Message> for Along<'_> {
             }
             p.close();
         });
-        frame.fill(&body, iced::Color { a: 0.2, ..tk.accent });
-        frame.stroke(&body, Stroke::default().with_width(1.4).with_color(tk.accent));
+        frame.fill(
+            &body,
+            iced::Color {
+                a: 0.2,
+                ..tk.accent
+            },
+        );
+        frame.stroke(
+            &body,
+            Stroke::default().with_width(1.4).with_color(tk.accent),
+        );
         let line = |pick: fn(&kentos_commands::RetainingWallRow) -> f64| {
             Path::new(|p| {
                 p.move_to(at(rows[0].station, pick(&rows[0])));
@@ -542,9 +629,18 @@ impl canvas::Program<Message> for Along<'_> {
                 }
             })
         };
-        frame.stroke(&line(|r| r.ground), Stroke::default().with_width(1.4).with_color(tk.success));
-        frame.stroke(&line(|r| r.road), Stroke::default().with_width(1.4).with_color(tk.text));
-        for (word, z, color) in [("yol", rows[0].road, tk.text), ("zemin", rows[0].ground, tk.success)] {
+        frame.stroke(
+            &line(|r| r.ground),
+            Stroke::default().with_width(1.4).with_color(tk.success),
+        );
+        frame.stroke(
+            &line(|r| r.road),
+            Stroke::default().with_width(1.4).with_color(tk.text),
+        );
+        for (word, z, color) in [
+            ("yol", rows[0].road, tk.text),
+            ("zemin", rows[0].ground, tk.success),
+        ] {
             frame.fill_text(Text {
                 content: word.into(),
                 position: at(s0, z) + iced::Vector::new(4.0, -12.0),
@@ -560,7 +656,12 @@ impl canvas::Program<Message> for Along<'_> {
                 position: Point::new(at(r.station, z0).x, bounds.height - 14.0),
                 color: tk.muted,
                 size: Pixels(11.0),
-                align_x: if right { iced::alignment::Horizontal::Right } else { iced::alignment::Horizontal::Left }.into(),
+                align_x: if right {
+                    iced::alignment::Horizontal::Right
+                } else {
+                    iced::alignment::Horizontal::Left
+                }
+                .into(),
                 ..Text::default()
             });
         }

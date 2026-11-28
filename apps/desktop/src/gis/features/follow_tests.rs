@@ -41,12 +41,19 @@ pub(super) fn opened(tag: &str) -> (App, String, String) {
     let path = municipal(tag).display().to_string();
     let mut app = app_with_drawing();
     app.add_data_layers(
-        ["bakim", "mahalleler"].into_iter().map(|t| crate::data_layers::describe(&path, t).expect("described")).collect(),
+        ["bakim", "mahalleler"]
+            .into_iter()
+            .map(|t| crate::data_layers::describe(&path, t).expect("described"))
+            .collect(),
     )
     .expect("added");
     let bakim = node(&app, "bakim").expect("bakim").id.clone();
     let mahalleler = node(&app, "mahalleler").expect("mahalleler").id.clone();
-    app.document.as_mut().expect("open").model.set_active_layer(&bakim);
+    app.document
+        .as_mut()
+        .expect("open")
+        .model
+        .set_active_layer(&bakim);
     (app, bakim, mahalleler)
 }
 
@@ -58,13 +65,20 @@ fn tablo_opens_the_active_layer_and_seciler_stays_with_its_layer() {
     assert_eq!(pinned(&app), None, "the table follows the active layer");
     // Katman ▾ pins it to mahalleler: said, with the active layer named.
     ev(&mut app, Event::Layer(mahalleler.clone()));
-    assert_eq!(pinned(&app), Some(("mahalleler".to_owned(), "bakim".to_owned())));
+    assert_eq!(
+        pinned(&app),
+        Some(("mahalleler".to_owned(), "bakim".to_owned()))
+    );
     // Seçililer on mahalleler: not carried to bakim, come to for the first time; back on mahalleler.
     ev(&mut app, Event::Show(Show::Selected));
     ev(&mut app, Event::Layer(bakim.clone()));
     assert_eq!(app.gis.features.show, Show::All, "bakim shows all its rows");
     ev(&mut app, Event::Layer(mahalleler.clone()));
-    assert_eq!(app.gis.features.show, Show::Selected, "mahalleler's own choice comes back");
+    assert_eq!(
+        app.gis.features.show,
+        Show::Selected,
+        "mahalleler's own choice comes back"
+    );
     // Etkin katmana geç: the table on bakim, following it.
     ev(&mut app, Event::FollowActive);
     assert_eq!(app.gis.features.layer, None);
@@ -76,7 +90,11 @@ fn tablo_opens_the_active_layer_and_seciler_stays_with_its_layer() {
     assert_eq!(table_layer(&app).as_deref(), Some(bakim.as_str()));
     assert_eq!(pinned(&app), None);
     // The active layer made mahalleler: the table follows it.
-    app.document.as_mut().expect("open").model.set_active_layer(&mahalleler);
+    app.document
+        .as_mut()
+        .expect("open")
+        .model
+        .set_active_layer(&mahalleler);
     assert_eq!(table_layer(&app).as_deref(), Some(mahalleler.as_str()));
 }
 
@@ -87,9 +105,15 @@ fn the_asked_filter_is_marked_under_the_table_and_taken_off_there() {
     run(&mut app, "data.featureTable");
     assert_eq!(table_layer(&app).as_deref(), Some(bakim.as_str()));
     ev(&mut app, Event::Filter("fid > 2".into()));
-    ev(&mut app, Event::Data(crate::features::data::DataEvent::Apply));
+    ev(
+        &mut app,
+        Event::Data(crate::features::data::DataEvent::Apply),
+    );
     assert_eq!(app.gis.features.data.asked_filter(), "fid > 2");
-    ev(&mut app, Event::Data(crate::features::data::DataEvent::ClearFilter));
+    ev(
+        &mut app,
+        Event::Data(crate::features::data::DataEvent::ClearFilter),
+    );
     assert_eq!(app.gis.features.data.asked_filter(), "");
     assert_eq!(app.gis.features.filter, "");
 }
@@ -104,7 +128,10 @@ fn filter_picture() {
         run(&mut app, "data.featureTable");
         ev(&mut app, Event::Layer(mahalleler.clone()));
         ev(&mut app, Event::Filter("mahalle = 'M2'".into()));
-        ev(&mut app, Event::Data(crate::features::data::DataEvent::Apply));
+        ev(
+            &mut app,
+            Event::Data(crate::features::data::DataEvent::Apply),
+        );
         crate::data_layers_tests::answer_pages(&mut app);
         app
     });

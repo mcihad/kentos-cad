@@ -256,7 +256,10 @@ pub use kentos_domain::room_names::{RoomKind, has, is, kind_of, words};
 /// A passage's least width (docs/adr/8112, 8110) and the middle of its narrowest neck; 0 and none without a ring.
 pub(crate) fn neck_of(parts: &[kentos_commands::SpacePart]) -> (f64, Option<V>) {
     match kentos_domain::room_width::least_of(parts) {
-        Some(w) => (w.width, Some(V::new((w.from.x + w.to.x) / 2.0, (w.from.y + w.to.y) / 2.0))),
+        Some(w) => (
+            w.width,
+            Some(V::new((w.from.x + w.to.x) / 2.0, (w.from.y + w.to.y) / 2.0)),
+        ),
         None => (0.0, None),
     }
 }
@@ -1654,7 +1657,10 @@ pub fn findings(
                     if v.mark.form == kentos_commands::ViewMarkForm::Elevation
                         && doc.block(crate::sections::block_id(u)).is_some() =>
                 {
-                    Some((Slot(e.base().id), crate::sections::facing_rank(doc, &v.mark)))
+                    Some((
+                        Slot(e.base().id),
+                        crate::sections::facing_rank(doc, &v.mark),
+                    ))
                 }
                 _ => None,
             })

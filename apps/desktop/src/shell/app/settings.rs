@@ -45,7 +45,10 @@ impl App {
         self.crosshair = crate::marks::CrosshairSize::parse(&s.text("appearance.crosshair"));
         self.viewport.grid_shown = s.bool("drafting.grid");
         // Nokta etiketleri and Nokta kodları: the label engine's texts of points (docs/adr/1540, 9316).
-        let (labels, codes) = (s.bool("graphics.pointLabels"), s.bool("graphics.pointCodes"));
+        let (labels, codes) = (
+            s.bool("graphics.pointLabels"),
+            s.bool("graphics.pointCodes"),
+        );
         self.spatial
             .set_point_texts(self.document.as_ref().map(|d| &d.model), labels, codes);
         // The user's keys and names at once, no restart (keymap.rs, docs/adr/9308).

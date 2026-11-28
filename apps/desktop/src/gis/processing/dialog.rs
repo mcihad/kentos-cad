@@ -10,8 +10,8 @@ use kentos_domain::Slot;
 use kentos_processing::model_runner::MODEL_PREFIX;
 use kentos_processing::parameters::{default_values, restore_values};
 use kentos_processing::{
-    Defaults, InputSummary, Issue, Outcome, OutputKind, ParamDef, ParamKind, Registry, Runner, Scene, Target,
-    Tool, Values,
+    Defaults, InputSummary, Issue, Outcome, OutputKind, ParamDef, ParamKind, Registry, Runner,
+    Scene, Target, Tool, Values,
 };
 use serde_json::{Value, json};
 
@@ -240,10 +240,21 @@ impl ToolDialog {
         // from the tool's own and offers the last one as Son ifade. Values given on purpose stay.
         let mut recalled = BTreeMap::new();
         if !explicit {
-            for p in tool.parameters.iter().filter(|p| matches!(p.kind, ParamKind::Expression { .. })) {
-                let last = values.get(&p.name).and_then(Value::as_str).map(str::trim).filter(|t| !t.is_empty());
+            for p in tool
+                .parameters
+                .iter()
+                .filter(|p| matches!(p.kind, ParamKind::Expression { .. }))
+            {
+                let last = values
+                    .get(&p.name)
+                    .and_then(Value::as_str)
+                    .map(str::trim)
+                    .filter(|t| !t.is_empty());
                 let own = base.get(&p.name);
-                if let Some(last) = last.filter(|l| own.and_then(Value::as_str) != Some(*l)).map(str::to_owned) {
+                if let Some(last) = last
+                    .filter(|l| own.and_then(Value::as_str) != Some(*l))
+                    .map(str::to_owned)
+                {
                     recalled.insert(p.name.clone(), last);
                     match own {
                         Some(v) => values.insert(p.name.clone(), v.clone()),
@@ -351,7 +362,10 @@ impl ToolDialog {
         let mut held: HashMap<&str, BTreeSet<&'static str>> = HashMap::new();
         let mut taken = false;
         for p in &self.tool.parameters {
-            let ParamKind::Features { kinds: Some(kinds), .. } = &p.kind else {
+            let ParamKind::Features {
+                kinds: Some(kinds), ..
+            } = &p.kind
+            else {
                 continue;
             };
             if kinds.is_empty() || given.is_some_and(|g| g.contains_key(&p.name)) {
@@ -365,11 +379,16 @@ impl ToolDialog {
             }
             if !taken {
                 for e in doc.entities() {
-                    held.entry(e.base().layer_id.as_str()).or_default().insert(e.kind());
+                    held.entry(e.base().layer_id.as_str())
+                        .or_default()
+                        .insert(e.kind());
                 }
                 taken = true;
             }
-            let holds = |id: &str| held.get(id).is_some_and(|k| k.iter().any(|k| kinds.iter().any(|w| w == k)));
+            let holds = |id: &str| {
+                held.get(id)
+                    .is_some_and(|k| k.iter().any(|k| kinds.iter().any(|w| w == k)))
+            };
             let now = v.get("layerId").and_then(|l| l.as_str()).unwrap_or("");
             if holds(now) {
                 continue;
@@ -386,7 +405,11 @@ impl ToolDialog {
     /// the tool's name and its first measure with its unit. A name typed (or given by history) is the person's; an
     /// existing layer chosen keeps its name; an input of no one layer (the view, the drawing, a file) leaves the
     /// tool's own name.
-    pub fn derive_names(&mut self, doc: &kentos_domain::Document, selection: &kentos_interaction::Selection) {
+    pub fn derive_names(
+        &mut self,
+        doc: &kentos_domain::Document,
+        selection: &kentos_interaction::Selection,
+    ) {
         let Some(name) = derived_name(&self.tool, &self.values, doc, selection) else {
             return;
         };
@@ -394,10 +417,16 @@ impl ToolDialog {
             if !matches!(p.kind, ParamKind::Layer { .. }) || self.named.contains(&p.name) {
                 continue;
             }
-            if self.values.get(&p.name).and_then(|v| v.get("newName")).is_none() {
+            if self
+                .values
+                .get(&p.name)
+                .and_then(|v| v.get("newName"))
+                .is_none()
+            {
                 continue;
             }
-            self.values.insert(p.name.clone(), json!({ "newName": name }));
+            self.values
+                .insert(p.name.clone(), json!({ "newName": name }));
         }
     }
 
@@ -415,7 +444,11 @@ impl ToolDialog {
         for p in &self.tool.parameters {
             if matches!(p.kind, ParamKind::Layer { .. })
                 && let Some(kentos_processing::types::DefaultValue::Value(v)) = &p.default
-                && self.values.get(&p.name).and_then(|x| x.get("newName")).is_some()
+                && self
+                    .values
+                    .get(&p.name)
+                    .and_then(|x| x.get("newName"))
+                    .is_some()
             {
                 self.values.insert(p.name.clone(), v.clone());
             }
@@ -514,7 +547,12 @@ impl ToolDialog {
             Event::Value(name, value) => {
                 self.drafts.remove(&name);
                 // A layer chosen or named on purpose is the person's: its name is no longer derived (docs/adr/9189).
-                if self.tool.parameters.iter().any(|p| p.name == name && matches!(p.kind, ParamKind::Layer { .. })) {
+                if self
+                    .tool
+                    .parameters
+                    .iter()
+                    .any(|p| p.name == name && matches!(p.kind, ParamKind::Layer { .. }))
+                {
                     self.named.insert(name.clone());
                 }
                 self.set(name, value)
@@ -692,8 +730,14 @@ impl ToolDialog {
     /// how many the input holds; none while the input holds nothing or is a file's rows.
     pub(super) fn acting(&self, def: &ParamDef) -> Option<(usize, usize)> {
         let a = def.acts_on.as_ref()?;
-        let input = self.inputs.get(&a.input).filter(|i| i.count > 0 && !i.rows)?;
-        Some((input.acting.get(&def.name).copied().unwrap_or(0), input.count))
+        let input = self
+            .inputs
+            .get(&a.input)
+            .filter(|i| i.count > 0 && !i.rows)?;
+        Some((
+            input.acting.get(&def.name).copied().unwrap_or(0),
+            input.count,
+        ))
     }
 
     /// What is said under such a parameter: why its other choices are off while the input holds none of its objects;
@@ -703,7 +747,10 @@ impl ToolDialog {
         let (n, all) = self.acting(def)?;
         if n == 0 {
             let mut none = a.none.chars();
-            let first = none.next().map(|c| kentos_processing::text::tr_upper(&c.to_string())).unwrap_or_default();
+            let first = none
+                .next()
+                .map(|c| kentos_processing::text::tr_upper(&c.to_string()))
+                .unwrap_or_default();
             return Some(format!("{first}{}; nesneler {}.", none.as_str(), a.others));
         }
         let ParamKind::Choice { options } = &def.kind else {
@@ -839,13 +886,20 @@ pub(super) fn derived_name(
     doc: &kentos_domain::Document,
     selection: &kentos_interaction::Selection,
 ) -> Option<String> {
-    let input = tool.parameters.iter().find(|p| matches!(p.kind, ParamKind::Features { .. }))?;
+    let input = tool
+        .parameters
+        .iter()
+        .find(|p| matches!(p.kind, ParamKind::Features { .. }))?;
     let v = values.get(&input.name)?;
     let source = match v.get("scope").and_then(Value::as_str)? {
         "layer" => doc.layers().get(v.get("layerId")?.as_str()?)?.name.clone(),
         "selection" => {
-            let layers: BTreeSet<&str> =
-                selection.ids().iter().filter_map(|s| doc.get(*s)).map(|e| e.base().layer_id.as_str()).collect();
+            let layers: BTreeSet<&str> = selection
+                .ids()
+                .iter()
+                .filter_map(|s| doc.get(*s))
+                .map(|e| e.base().layer_id.as_str())
+                .collect();
             match (layers.len(), layers.first()) {
                 (1, Some(id)) => doc.layers().get(id)?.name.clone(),
                 (0, _) => return None,
@@ -862,7 +916,10 @@ pub(super) fn derived_name(
         .find_map(|p| match &p.kind {
             ParamKind::Number { unit, .. } if !unit.is_empty() && unit != "adet" => {
                 let n = values.get(&p.name)?.as_f64().filter(|n| n.is_finite())?;
-                Some(format!("{} {unit}", kentos_project::new_project::js_number(n)))
+                Some(format!(
+                    "{} {unit}",
+                    kentos_project::new_project::js_number(n)
+                ))
             }
             _ => None,
         });
@@ -871,4 +928,3 @@ pub(super) fn derived_name(
         None => format!("{source} — {what}"),
     })
 }
-

@@ -87,7 +87,9 @@ pub fn write_bytes(bytes: &[u8], path: &Path) -> Result<usize, HeadlessError> {
 /// Commit with an explicit replacement policy. A no-replace commit is atomic
 /// even if another process creates the destination after the plan was made.
 pub fn write_bytes_with_overwrite(
-    bytes: &[u8], path: &Path, overwrite: bool,
+    bytes: &[u8],
+    path: &Path,
+    overwrite: bool,
 ) -> Result<usize, HeadlessError> {
     let fail = |what: String| HeadlessError::new("file_unwritable", what);
     let dir = match path.parent() {
@@ -98,9 +100,15 @@ pub fn write_bytes_with_overwrite(
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| "cizim".to_owned());
-    let temp = dir.join(format!(".{name}.{}.yaziliyor", kentos_domain::Uuid::now_v7()));
+    let temp = dir.join(format!(
+        ".{name}.{}.yaziliyor",
+        kentos_domain::Uuid::now_v7()
+    ));
     let result = (|| {
-        let mut file = fs::OpenOptions::new().write(true).create_new(true).open(&temp)
+        let mut file = fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temp)
             .map_err(|e| fail(format!("{} yazılamadı: {e}", temp.display())))?;
         file.write_all(bytes)
             .and_then(|()| file.sync_all())
@@ -125,15 +133,22 @@ pub fn write_bytes_with_overwrite(
         };
         committed.map_err(|e| {
             if !overwrite && e.kind() == std::io::ErrorKind::AlreadyExists {
-                return HeadlessError::new("file_exists", format!(
-                    "{} başka bir işlem tarafından oluşturuldu; üzerine yazılmadı.", path.display()));
+                return HeadlessError::new(
+                    "file_exists",
+                    format!(
+                        "{} başka bir işlem tarafından oluşturuldu; üzerine yazılmadı.",
+                        path.display()
+                    ),
+                );
             }
             fail(format!(
                 "{} yerine konamadı: {e}. Hedef klasörün yazılabilir olduğunu denetleyin.",
                 path.display()
             ))
         })?;
-        if !overwrite { let _ = fs::remove_file(&temp); }
+        if !overwrite {
+            let _ = fs::remove_file(&temp);
+        }
         Ok(())
     })();
     if result.is_err() {
@@ -188,19 +203,31 @@ mod tests {
         let d = folder("yarisan");
         let target = d.join("dosya.dwg");
         let barrier = std::sync::Arc::new(std::sync::Barrier::new(8));
-        let jobs: Vec<_> = (0..8).map(|i| {
-            let (path, barrier) = (target.clone(), barrier.clone());
-            std::thread::spawn(move || {
-                let bytes = vec![i as u8; 1024 * 64];
-                barrier.wait();
-                (i as u8, write_bytes_with_overwrite(&bytes, &path, false))
+        let jobs: Vec<_> = (0..8)
+            .map(|i| {
+                let (path, barrier) = (target.clone(), barrier.clone());
+                std::thread::spawn(move || {
+                    let bytes = vec![i as u8; 1024 * 64];
+                    barrier.wait();
+                    (i as u8, write_bytes_with_overwrite(&bytes, &path, false))
+                })
             })
-        }).collect();
-        let done: Vec<_> = jobs.into_iter().map(|j| j.join().expect("writer")).collect();
+            .collect();
+        let done: Vec<_> = jobs
+            .into_iter()
+            .map(|j| j.join().expect("writer"))
+            .collect();
         let winners: Vec<_> = done.iter().filter(|(_, r)| r.is_ok()).collect();
         assert_eq!(winners.len(), 1);
-        assert_eq!(fs::read(&target).expect("complete file"), vec![winners[0].0; 1024 * 64]);
-        for (_, result) in done { if let Err(e) = result { assert_eq!(e.code, "file_exists"); } }
+        assert_eq!(
+            fs::read(&target).expect("complete file"),
+            vec![winners[0].0; 1024 * 64]
+        );
+        for (_, result) in done {
+            if let Err(e) = result {
+                assert_eq!(e.code, "file_exists");
+            }
+        }
         assert_eq!(names(&d), ["dosya.dwg"]);
         fs::remove_dir_all(d).expect("cleanup");
     }

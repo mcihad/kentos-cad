@@ -9,7 +9,10 @@ use crate::road_pay as common;
 /// Checks `input` against the document.
 pub fn validate(cx: &ExecutionContext<'_>, input: &PayQuery) -> CommandResult<()> {
     match common::answer(cx.doc, input.item.as_deref()) {
-        Ok((_, warnings)) => CommandResult::Completed { output: (), warnings },
+        Ok((_, warnings)) => CommandResult::Completed {
+            output: (),
+            warnings,
+        },
         Err(stop) => stop.into(),
     }
 }

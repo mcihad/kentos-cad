@@ -26,7 +26,11 @@ pub struct Plane {
 impl Plane {
     /// A flat one at `z`.
     pub fn flat(z: f64) -> Plane {
-        Plane { top: z, dx: 0.0, dy: 0.0 }
+        Plane {
+            top: z,
+            dx: 0.0,
+            dy: 0.0,
+        }
     }
 
     /// Its height at plan point `p`.
@@ -81,7 +85,13 @@ pub struct RailRun {
 /// side's line in pieces, left first, in order along it. Its balusters: one every `step` along each side's line, the
 /// first half a step in; each in the piece it falls in (one on two pieces' meeting in the later one). A part of a line
 /// over no stretch has no piece.
-pub fn rail_runs(walk: &Walk, sides: Option<Railings>, half: f64, stretches: &[Stretch], step: f64) -> Vec<RailRun> {
+pub fn rail_runs(
+    walk: &Walk,
+    sides: Option<Railings>,
+    half: f64,
+    stretches: &[Stretch],
+    step: f64,
+) -> Vec<RailRun> {
     let mut out = Vec::new();
     let Some(r) = sides else { return out };
     let n = walk.pts.len();
@@ -106,7 +116,10 @@ pub fn rail_runs(walk: &Walk, sides: Option<Railings>, half: f64, stretches: &[S
                 walked += l;
                 continue;
             }
-            let dir = Vec2::new((walk.pts[k + 1].x - o.x) / len, (walk.pts[k + 1].y - o.y) / len);
+            let dir = Vec2::new(
+                (walk.pts[k + 1].x - o.x) / len,
+                (walk.pts[k + 1].y - o.y) / len,
+            );
             // The line's piece runs along its segment: a point's distance is the walking line's across from it.
             let s0 = walk.at[k] + (p.x - o.x) * dir.x + (p.y - o.y) * dir.y;
             let s1 = s0 + l;
@@ -130,7 +143,11 @@ pub fn rail_runs(walk: &Walk, sides: Option<Railings>, half: f64, stretches: &[S
                     let mut j = js_max(((start - step / 2.0) / step - 1e-6).ceil(), 0.0);
                     loop {
                         let d = step / 2.0 + j * step;
-                        if if closes { d > end + EPS } else { d >= end - EPS } {
+                        if if closes {
+                            d > end + EPS
+                        } else {
+                            d >= end - EPS
+                        } {
                             break;
                         }
                         if d >= start - EPS {
@@ -141,7 +158,13 @@ pub fn rail_runs(walk: &Walk, sides: Option<Railings>, half: f64, stretches: &[S
                         j += 1.0;
                     }
                 }
-                out.push(RailRun { left, a: at(lo), b: at(hi), plane: st.plane, balusters });
+                out.push(RailRun {
+                    left,
+                    a: at(lo),
+                    b: at(hi),
+                    plane: st.plane,
+                    balusters,
+                });
             }
             walked += l;
         }
@@ -191,9 +214,17 @@ pub fn stair_rails(pts: &[Vec2], spec: &StairSpec, base: f64, step: f64) -> Vec<
             i += 1;
             continue;
         }
-        if landings.iter().any(|(x, y)| *x < sb - EPS && *y > sa + EPS) || sb - sa > spec.tread + EPS {
+        if landings.iter().any(|(x, y)| *x < sb - EPS && *y > sa + EPS)
+            || sb - sa > spec.tread + EPS
+        {
             // A landing between them: the tread and the landing at its height.
-            stretches.push(Stretch { from: sa, to: sb, segment: None, plane: Plane::flat(ha), steps: Vec::new() });
+            stretches.push(Stretch {
+                from: sa,
+                to: sb,
+                segment: None,
+                plane: Plane::flat(ha),
+                steps: Vec::new(),
+            });
             i += 1;
             continue;
         }
@@ -215,21 +246,34 @@ pub fn stair_rails(pts: &[Vec2], spec: &StairSpec, base: f64, step: f64) -> Vec<
             j += 1;
         }
         let (o, len) = (walk.pts[k], walk.at[k + 1] - walk.at[k]);
-        let dir = Vec2::new((walk.pts[k + 1].x - o.x) / len, (walk.pts[k + 1].y - o.y) / len);
+        let dir = Vec2::new(
+            (walk.pts[k + 1].x - o.x) / len,
+            (walk.pts[k + 1].y - o.y) / len,
+        );
         // z = ha + pitch · (s − sa), s = at[k] + (p − o)·dir.
         let top = ha + pitch * (walk.at[k] - o.x * dir.x - o.y * dir.y - sa);
         stretches.push(Stretch {
             from: sa,
             to: stations[j],
             segment: Some(k),
-            plane: Plane { top, dx: pitch * dir.x, dy: pitch * dir.y },
+            plane: Plane {
+                top,
+                dx: pitch * dir.x,
+                dy: pitch * dir.y,
+            },
             steps: (i..j).map(nosing).collect(),
         });
         i = j;
     }
     if total - last > EPS {
         let (_, h) = nosing(stations.len() - 1);
-        stretches.push(Stretch { from: last, to: total, segment: None, plane: Plane::flat(h), steps: Vec::new() });
+        stretches.push(Stretch {
+            from: last,
+            to: total,
+            segment: None,
+            plane: Plane::flat(h),
+            steps: Vec::new(),
+        });
     }
     rail_runs(&walk, spec.railings, spec.width / 2.0, &stretches, step)
 }
@@ -271,10 +315,16 @@ mod tests {
         assert_eq!(runs.len(), 2, "{runs:?}");
         let pitch = 0.17 / 0.28;
         for (run, y) in runs.iter().zip([0.55, -0.55]) {
-            assert!(near(run.a.x, 0.0) && near(run.a.y, y) && near(run.b.x, 4.76) && near(run.b.y, y), "{run:?}");
+            assert!(
+                near(run.a.x, 0.0) && near(run.a.y, y) && near(run.b.x, 4.76) && near(run.b.y, y),
+                "{run:?}"
+            );
             for i in 0..18 {
                 let x = 0.28 * i as f64;
-                assert!(near(run.plane.z(Vec2::new(x, y)), 0.17 * (i + 1) as f64), "nosing {i}: {run:?}");
+                assert!(
+                    near(run.plane.z(Vec2::new(x, y)), 0.17 * (i + 1) as f64),
+                    "nosing {i}: {run:?}"
+                );
             }
             assert!(near(run.plane.dx, pitch) && run.plane.dy == 0.0);
             assert_eq!(run.balusters.len(), 40);
@@ -307,11 +357,17 @@ mod tests {
         let pitch = 0.17 / 0.28;
         for side in [&left, &right] {
             let (first, last) = (side[0], side[4]);
-            assert!(near(first.plane.z(Vec2::new(0.0, 0.0)), 0.17) && near(first.plane.dx, pitch), "{first:?}");
+            assert!(
+                near(first.plane.z(Vec2::new(0.0, 0.0)), 0.17) && near(first.plane.dx, pitch),
+                "{first:?}"
+            );
             assert!(near(first.plane.z(Vec2::new(2.24, 0.0)), 1.53), "{first:?}");
             assert!(near(first.b.x, 2.24), "{first:?}");
             for flat in &side[1..4] {
-                assert!(flat.plane.is_flat() && near(flat.plane.top, 1.53), "{flat:?}");
+                assert!(
+                    flat.plane.is_flat() && near(flat.plane.top, 1.53),
+                    "{flat:?}"
+                );
                 for (_, foot) in &flat.balusters {
                     assert!(near(*foot, 1.53));
                 }
@@ -321,12 +377,30 @@ mod tests {
             assert!(near(last.plane.z(Vec2::new(0.0, 1.2)), 3.06), "{last:?}");
         }
         // The inner side's pieces over the landing: (2.24, 0.55)–(2.29, 0.55), up to (2.29, 0.65), back to (2.24, 0.65).
-        let lengths: Vec<f64> = left[1..4].iter().map(|r| js_hypot(r.b.x - r.a.x, r.b.y - r.a.y)).collect();
-        assert!(near(lengths[0], 0.05) && near(lengths[1], 0.10) && near(lengths[2], 0.05), "{lengths:?}");
+        let lengths: Vec<f64> = left[1..4]
+            .iter()
+            .map(|r| js_hypot(r.b.x - r.a.x, r.b.y - r.a.y))
+            .collect();
+        assert!(
+            near(lengths[0], 0.05) && near(lengths[1], 0.10) && near(lengths[2], 0.05),
+            "{lengths:?}"
+        );
         // The outer side's: along y = −0.55 to x = 3.39, up x = 3.39 to y = 1.75, back to x = 2.24.
-        assert!(near(right[1].b.x, 3.39) && near(right[1].b.y, -0.55), "{:?}", right[1]);
-        assert!(near(right[2].b.x, 3.39) && near(right[2].b.y, 1.75), "{:?}", right[2]);
-        assert!(near(right[3].b.x, 2.24) && near(right[3].b.y, 1.75), "{:?}", right[3]);
+        assert!(
+            near(right[1].b.x, 3.39) && near(right[1].b.y, -0.55),
+            "{:?}",
+            right[1]
+        );
+        assert!(
+            near(right[2].b.x, 3.39) && near(right[2].b.y, 1.75),
+            "{:?}",
+            right[2]
+        );
+        assert!(
+            near(right[3].b.x, 2.24) && near(right[3].b.y, 1.75),
+            "{:?}",
+            right[3]
+        );
         // Its balusters: the inner line is 4.68 m (39 of them), the outer 9.08 m (76).
         let count = |side: &[&RailRun]| side.iter().map(|r| r.balusters.len()).sum::<usize>();
         assert_eq!((count(&left), count(&right)), (39, 76));

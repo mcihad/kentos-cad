@@ -101,7 +101,12 @@ impl<'a, Message> Item<'a, Message> {
     }
 
     /// Satırın sağındaki eylem düğmesi: ikonu, ipucu ve mesajı.
-    pub fn action(mut self, glyph: impl Into<Element<'a, Message>>, words: impl Into<String>, message: Message) -> Self {
+    pub fn action(
+        mut self,
+        glyph: impl Into<Element<'a, Message>>,
+        words: impl Into<String>,
+        message: Message,
+    ) -> Self {
         self.action = Some((glyph.into(), words.into(), message));
         self
     }
@@ -137,7 +142,8 @@ impl<'a, Message> Item<'a, Message> {
     }
 
     fn count(&self, status: Status) -> usize {
-        usize::from(self.state() == status) + self.children.iter().map(|c| c.count(status)).sum::<usize>()
+        usize::from(self.state() == status)
+            + self.children.iter().map(|c| c.count(status)).sum::<usize>()
     }
 }
 
@@ -175,13 +181,21 @@ impl<'a, Message: Clone + 'a> StatusTree<'a, Message> {
     }
 
     /// Kullanıcının başlangıca göre açıp kapattığı dalların anahtarları ve bir dalın okuna basılınca giden mesaj.
-    pub fn toggled(mut self, toggled: &'a HashSet<String>, on_toggle: impl Fn(String) -> Message + 'a) -> Self {
+    pub fn toggled(
+        mut self,
+        toggled: &'a HashSet<String>,
+        on_toggle: impl Fn(String) -> Message + 'a,
+    ) -> Self {
         self.toggled = Some((toggled, Box::new(on_toggle)));
         self
     }
 
     /// Seçili süzgeç (yok: hepsi) ve bir hapa basılınca giden mesaj.
-    pub fn filter(mut self, filter: Option<Status>, on_filter: impl Fn(Option<Status>) -> Message + 'a) -> Self {
+    pub fn filter(
+        mut self,
+        filter: Option<Status>,
+        on_filter: impl Fn(Option<Status>) -> Message + 'a,
+    ) -> Self {
         self.filter = Some((filter, Box::new(on_filter)));
         self
     }
@@ -218,7 +232,10 @@ impl<'a, Message: Clone + 'a> StatusTree<'a, Message> {
     }
 
     fn open(&self, item: &Item<'a, Message>) -> bool {
-        let toggled = self.toggled.as_ref().is_some_and(|(set, _)| set.contains(&item.key));
+        let toggled = self
+            .toggled
+            .as_ref()
+            .is_some_and(|(set, _)| set.contains(&item.key));
         let filtered = self.filter.as_ref().is_some_and(|(f, _)| f.is_some());
         filtered || item.troubled() != toggled
     }
@@ -230,7 +247,18 @@ impl<'a, Message: Clone + 'a> StatusTree<'a, Message> {
             return None;
         }
         let open = self.open(&item);
-        let Item { key, title, icon, meta, status, detail, action, on_press, active, children } = item;
+        let Item {
+            key,
+            title,
+            icon,
+            meta,
+            status,
+            detail,
+            action,
+            on_press,
+            active,
+            children,
+        } = item;
         let (meta, detail) = if self.meta_column {
             (meta, detail)
         } else {
@@ -243,7 +271,9 @@ impl<'a, Message: Clone + 'a> StatusTree<'a, Message> {
         let meta_cell: Element<'a, Message> = match meta {
             Some(m) => label::caption(m)
                 .wrapping(iced::widget::text::Wrapping::None)
-                .style(|t: &Theme| iced::widget::text::Style { color: Some(Tokens::of(t).faint) })
+                .style(|t: &Theme| iced::widget::text::Style {
+                    color: Some(Tokens::of(t).faint),
+                })
                 .into(),
             None => space::horizontal().width(0).into(),
         };
@@ -262,8 +292,11 @@ impl<'a, Message: Clone + 'a> StatusTree<'a, Message> {
             ),
             None => space::horizontal().width(0).into(),
         };
-        let cells: Vec<Element<'a, Message>> =
-            if self.meta_column { vec![meta_cell, pill, act] } else { vec![pill, act] };
+        let cells: Vec<Element<'a, Message>> = if self.meta_column {
+            vec![meta_cell, pill, act]
+        } else {
+            vec![pill, act]
+        };
         let mut node = Node::new(title).cells(cells).selected(active);
         if let Some(i) = icon {
             node = node.icon(i);
@@ -286,22 +319,33 @@ impl<'a, Message: Clone + 'a> StatusTree<'a, Message> {
     }
 
     fn summary(&mut self) -> Element<'a, Message> {
-        let counts: Vec<(Status, String, usize)> =
-            [(Status::Warning, self.words.0.clone()), (Status::Danger, self.words.1.clone())]
-                .into_iter()
-                .map(|(s, w)| (s, w, self.items.iter().map(|i| i.count(s)).sum()))
-            .filter(|(_, _, n)| *n > 0)
-            .collect();
+        let counts: Vec<(Status, String, usize)> = [
+            (Status::Warning, self.words.0.clone()),
+            (Status::Danger, self.words.1.clone()),
+        ]
+        .into_iter()
+        .map(|(s, w)| (s, w, self.items.iter().map(|i| i.count(s)).sum()))
+        .filter(|(_, _, n)| *n > 0)
+        .collect();
         let mut bar = Row::new().spacing(6).align_y(Center);
         if let Some((current, on_filter)) = &self.filter {
             for (s, words, n) in &counts {
                 let active = *current == Some(*s);
                 let next = if active { None } else { Some(*s) };
-                bar = bar.push(status_filter(*s, words.clone(), *n, active, on_filter(next)));
+                bar = bar.push(status_filter(
+                    *s,
+                    words.clone(),
+                    *n,
+                    active,
+                    on_filter(next),
+                ));
             }
             if current.is_some() {
                 bar = bar.push(
-                    button(label::caption("Tümü")).padding([1, 6]).style(style::button::subtle).on_press(on_filter(None)),
+                    button(label::caption("Tümü"))
+                        .padding([1, 6])
+                        .style(style::button::subtle)
+                        .on_press(on_filter(None)),
                 );
             }
         }
@@ -309,9 +353,16 @@ impl<'a, Message: Clone + 'a> StatusTree<'a, Message> {
             bar = bar.push(status_pill(Status::Ok, "Hepsi güncel"));
         }
         // The pills wrap in what the button leaves; the button keeps its line.
-        let mut head = Row::new().spacing(8).align_y(Center).push(container(bar.wrap().vertical_spacing(4)).width(Fill));
+        let mut head = Row::new()
+            .spacing(8)
+            .align_y(Center)
+            .push(container(bar.wrap().vertical_spacing(4)).width(Fill));
         if let Some((glyph, words, n, message)) = self.bulk.take() {
-            let words = if n > 0 { format!("{words} ({n})") } else { words };
+            let words = if n > 0 {
+                format!("{words} ({n})")
+            } else {
+                words
+            };
             let mut b = button(
                 Row::new()
                     .spacing(5)
@@ -352,13 +403,13 @@ impl<'a, Message: Clone + 'a> StatusTree<'a, Message> {
         } else {
             vec![
                 tree_view::Column::new("Ad").width(Fill),
-                tree_view::Column::new("Durum").width(iced::Length::Shrink).align_right(),
+                tree_view::Column::new("Durum")
+                    .width(iced::Length::Shrink)
+                    .align_right(),
                 tree_view::Column::new("").width(ACTION),
             ]
         };
-        let tree = TreeView::new(columns)
-        .header(false)
-        .extend(nodes);
+        let tree = TreeView::new(columns).header(false).extend(nodes);
         out.push(tree).into()
     }
 }
@@ -375,7 +426,10 @@ mod tests {
 
     fn items() -> Vec<Item<'static, ()>> {
         vec![
-            Item::new("a", "Ana aks").push(Item::new("c", "Koridor").push(Item::new("cz", "Plan").status(Status::Warning, "Güncel değil"))),
+            Item::new("a", "Ana aks").push(
+                Item::new("c", "Koridor")
+                    .push(Item::new("cz", "Plan").status(Status::Warning, "Güncel değil")),
+            ),
             Item::new("b", "Servis yolu").push(Item::new("p", "Profil")),
             Item::new("y", "Zemin").status(Status::Danger, "Kurulamıyor"),
         ]
@@ -385,7 +439,10 @@ mod tests {
     fn a_branch_with_trouble_opens_and_the_user_turns_it_over() {
         let none = HashSet::new();
         let tree = StatusTree::new(items()).toggled(&none, |_| ());
-        assert!(tree.open(&tree.items[0]), "the stale drawing's branch opens");
+        assert!(
+            tree.open(&tree.items[0]),
+            "the stale drawing's branch opens"
+        );
         assert!(!tree.open(&tree.items[1]), "a quiet branch stays shut");
         let turned: HashSet<String> = ["a".to_string(), "b".to_string()].into();
         let tree = StatusTree::new(items()).toggled(&turned, |_| ());
@@ -395,11 +452,24 @@ mod tests {
     #[test]
     fn the_filter_keeps_what_is_in_that_state_and_its_parents() {
         let tree = StatusTree::new(items()).filter(Some(Status::Warning), |_| ());
-        let kept: Vec<bool> = tree.items.iter().map(|i| i.passes(Status::Warning)).collect();
+        let kept: Vec<bool> = tree
+            .items
+            .iter()
+            .map(|i| i.passes(Status::Warning))
+            .collect();
         assert_eq!(kept, [true, false, false]);
         let n: usize = tree.items.iter().map(|i| i.count(Status::Warning)).sum();
         assert_eq!(n, 1);
-        assert!(tree.open(&tree.items[1]), "filtered, every kept branch is open");
-        assert_eq!(tree.items.iter().map(|i| i.count(Status::Danger)).sum::<usize>(), 1);
+        assert!(
+            tree.open(&tree.items[1]),
+            "filtered, every kept branch is open"
+        );
+        assert_eq!(
+            tree.items
+                .iter()
+                .map(|i| i.count(Status::Danger))
+                .sum::<usize>(),
+            1
+        );
     }
 }

@@ -599,9 +599,12 @@ impl App {
             Event::ToolLayer(tool, layer) => {
                 d.tool_layers.retain(|t| t.tool != tool);
                 if let Some(layer) = layer {
-                    d.tool_layers.push(kentos_commands::ToolLayer { tool, layer });
+                    d.tool_layers
+                        .push(kentos_commands::ToolLayer { tool, layer });
                     d.tool_layers.sort_by_key(|t| {
-                        kentos_commands::AnnotationTool::ALL.iter().position(|a| *a == t.tool)
+                        kentos_commands::AnnotationTool::ALL
+                            .iter()
+                            .position(|a| *a == t.tool)
                     });
                 }
             }
@@ -672,15 +675,19 @@ impl App {
                 let kept = s.arch_zoning.structure.is_some_and(|x| x.traditional);
                 s.arch_zoning.structure = system.map(|system| kentos_commands::BuildingStructure {
                     system,
-                    traditional: kept && system == kentos_commands::StructuralSystem::CutStoneMasonry,
+                    traditional: kept
+                        && system == kentos_commands::StructuralSystem::CutStoneMasonry,
                 });
             }
             Event::ArchTraditional(on) => {
                 if let Some(x) = &mut s.arch_zoning.structure {
-                    x.traditional = on && x.system == kentos_commands::StructuralSystem::CutStoneMasonry;
+                    x.traditional =
+                        on && x.system == kentos_commands::StructuralSystem::CutStoneMasonry;
                 }
             }
-            Event::ArchPlanNote(i, edit) => super::plan_notes::edit(&mut s.arch_zoning.plan_notes, i, edit),
+            Event::ArchPlanNote(i, edit) => {
+                super::plan_notes::edit(&mut s.arch_zoning.plan_notes, i, edit)
+            }
             Event::TakePlanValues(take) => s.arch_zoning.take(&take),
             Event::AddPlanNote => {
                 let row = super::plan_notes::new_row(&s.arch_zoning.plan_notes);
@@ -892,11 +899,24 @@ impl App {
             .as_ref()
             .map_or_else(Vec::new, |a| a.opening_types.clone());
         // So is the building's program (docs/adr/0773): Bina programı writes it.
-        arch.program = s.initial.arch.as_ref().map(|a| a.program.clone()).unwrap_or_default();
+        arch.program = s
+            .initial
+            .arch
+            .as_ref()
+            .map(|a| a.program.clone())
+            .unwrap_or_default();
         // So are the room modules (docs/adr/0775).
-        arch.modules = s.initial.arch.as_ref().map_or_else(Vec::new, |a| a.modules.clone());
+        arch.modules = s
+            .initial
+            .arch
+            .as_ref()
+            .map_or_else(Vec::new, |a| a.modules.clone());
         // So are the building materials (docs/adr/0785): Malzemeler writes them.
-        arch.materials = s.initial.arch.as_ref().map_or_else(Vec::new, |a| a.materials.clone());
+        arch.materials = s
+            .initial
+            .arch
+            .as_ref()
+            .map_or_else(Vec::new, |a| a.materials.clone());
         // So are the level and view the drawing opens with (docs/adr/0720 §1), but not a level taken away here.
         if !arch.levels.is_empty() {
             let kept = |id: &String| arch.levels.iter().any(|l| l.id == *id);
@@ -1867,7 +1887,10 @@ fn tool_layers(s: &State) -> Element<'_, Message> {
             .chain(s.layers.iter().map(|(_, path)| Choice::new(path.as_str())));
         let ids: Vec<String> = s.layers.iter().map(|(id, _)| id.clone()).collect();
         let pick = Select::new(choices, Some(selected), move |i| {
-            event(Event::ToolLayer(tool, i.checked_sub(1).and_then(|i| ids.get(i).cloned())))
+            event(Event::ToolLayer(
+                tool,
+                i.checked_sub(1).and_then(|i| ids.get(i).cloned()),
+            ))
         });
         rows = rows.push(setting(tool.plural(), None, pick));
     }

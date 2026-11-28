@@ -19,14 +19,16 @@ pub struct Sun {
 /// The sun at latitude `lat` and longitude `lon` (degrees; north and east positive) on day `day` of the year (1–366)
 /// at clock time `hours` (0–24, local) of the time zone UTC+`zone` hours.
 pub fn at(lat: f64, lon: f64, zone: f64, day: u32, hours: f64) -> Sun {
-    let gamma = 2.0 * core::f64::consts::PI / 365.0 * (f64::from(day.max(1)) - 1.0 + (hours - zone - 12.0) / 24.0);
+    let gamma = 2.0 * core::f64::consts::PI / 365.0
+        * (f64::from(day.max(1)) - 1.0 + (hours - zone - 12.0) / 24.0);
     // Minutes.
     let eot = 229.18
         * (0.000075 + 0.001868 * cos(gamma)
             - 0.032077 * sin(gamma)
             - 0.014615 * cos(2.0 * gamma)
             - 0.040849 * sin(2.0 * gamma));
-    let decl = 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma) - 0.006758 * cos(2.0 * gamma)
+    let decl = 0.006918 - 0.399912 * cos(gamma) + 0.070257 * sin(gamma)
+        - 0.006758 * cos(2.0 * gamma)
         + 0.000907 * sin(2.0 * gamma)
         - 0.002697 * cos(3.0 * gamma)
         + 0.00148 * sin(3.0 * gamma);
@@ -38,7 +40,11 @@ pub fn at(lat: f64, lon: f64, zone: f64, day: u32, hours: f64) -> Sun {
     let north = sd * cp - cd * sp * cos(ha);
     let up = sp * sd + cp * cd * cos(ha);
     let azimuth = (atan2(east, north) / RAD).rem_euclid(360.0);
-    Sun { azimuth, elevation: asin(up.clamp(-1.0, 1.0)) / RAD, towards: [east, north, up] }
+    Sun {
+        azimuth,
+        elevation: asin(up.clamp(-1.0, 1.0)) / RAD,
+        towards: [east, north, up],
+    }
 }
 
 impl Sun {
@@ -59,7 +65,11 @@ pub fn day_of_year(day: u32, month: u32) -> Option<u32> {
     (day >= 1 && day <= DAYS[m]).then(|| {
         let before: u32 = DAYS[..m].iter().sum();
         // A year of 365 days: from March on, February's 29th is not one.
-        if m >= 2 { before + day - 1 } else { before + day }
+        if m >= 2 {
+            before + day - 1
+        } else {
+            before + day
+        }
     })
 }
 
@@ -76,23 +86,39 @@ mod tests {
         // Sivas (39.75 N, 37.02 E) on 21 December at its solar noon: Türkiye's clock (UTC+3) runs half an hour ahead
         // of its sun, 720 − 4 · 37.02 + 180 − EoT (≈ 2 min) = 12:30. 90 − (39.75 + 23.44).
         let s = at(39.75, 37.02, 3.0, 355, 12.5);
-        assert!((s.elevation - 26.81).abs() < 0.15 && (s.azimuth - 180.0).abs() < 0.5, "{s:?}");
+        assert!(
+            (s.elevation - 26.81).abs() < 0.15 && (s.azimuth - 180.0).abs() < 0.5,
+            "{s:?}"
+        );
     }
 
     #[test]
     fn the_sun_rises_east_and_sets_west_at_the_equinox_and_is_under_the_horizon_at_night() {
         let morning = at(0.0, 0.0, 0.0, 80, 6.2);
-        assert!(morning.elevation.abs() < 2.0 && (morning.azimuth - 90.0).abs() < 2.0, "{morning:?}");
+        assert!(
+            morning.elevation.abs() < 2.0 && (morning.azimuth - 90.0).abs() < 2.0,
+            "{morning:?}"
+        );
         let evening = at(0.0, 0.0, 0.0, 80, 18.1);
-        assert!(evening.elevation.abs() < 2.0 && (evening.azimuth - 270.0).abs() < 2.0, "{evening:?}");
+        assert!(
+            evening.elevation.abs() < 2.0 && (evening.azimuth - 270.0).abs() < 2.0,
+            "{evening:?}"
+        );
         assert!(at(39.75, 37.02, 3.0, 172, 1.0).elevation < 0.0, "night");
         let [e, n, up] = morning.towards;
-        assert!((e * e + n * n + up * up - 1.0).abs() < 1e-9, "a unit vector");
+        assert!(
+            (e * e + n * n + up * up - 1.0).abs() < 1e-9,
+            "a unit vector"
+        );
     }
 
     #[test]
     fn the_plan_s_turned_north_turns_the_sun_with_it() {
-        let s = Sun { azimuth: 180.0, elevation: 45.0, towards: [0.0, -0.5_f64.sqrt(), 0.5_f64.sqrt()] };
+        let s = Sun {
+            azimuth: 180.0,
+            elevation: 45.0,
+            towards: [0.0, -0.5_f64.sqrt(), 0.5_f64.sqrt()],
+        };
         let [x, y, _] = s.in_plan(0.0);
         assert!(x.abs() < 1e-12 && y < 0.0, "south is down");
         // True north 90° counter-clockwise from the plan's (to the plan's west): south is to the plan's east.

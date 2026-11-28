@@ -1659,7 +1659,11 @@ pub(crate) fn text_tables(
             let kinds: Vec<CellKind> = v
                 .get("kinds")
                 .and_then(Value::as_array)
-                .map(|k| k.iter().map(|w| CellKind::of(w.as_str().unwrap_or_default())).collect())
+                .map(|k| {
+                    k.iter()
+                        .map(|w| CellKind::of(w.as_str().unwrap_or_default()))
+                        .collect()
+                })
                 .unwrap_or_default();
             let values: Vec<Vec<Value>> = v
                 .get("values")

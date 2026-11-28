@@ -11,7 +11,11 @@ pub const MASS_STEP: &str = "Kütle";
 /// `cad.masses.create`'s check: each mass's numbers, its fields, its level.
 fn masses_check(doc: &Document, input: &kentos_commands::MassesCreate) -> Result<Checked, Stop> {
     if input.masses.is_empty() {
-        return Err(fail(codes::NO_OBJECTS, "Yazılacak kütle verilmedi. En az bir kütlenin oturumunu ve yüksekliğini verin.".into(), "masses"));
+        return Err(fail(
+            codes::NO_OBJECTS,
+            "Yazılacak kütle verilmedi. En az bir kütlenin oturumunu ve yüksekliğini verin.".into(),
+            "masses",
+        ));
     }
     too_many(input.masses.len(), codes::INVALID_SPACE, "kütle", "masses")?;
     let mut made: Vec<Made> = Vec::new();
@@ -23,7 +27,13 @@ fn masses_check(doc: &Document, input: &kentos_commands::MassesCreate) -> Result
                 points(&hole.pts, &format!("{at}.parts[{k}].holes[{h}]"))?;
             }
         }
-        finite_each(&[(Some(n.height), "height", "Yükseklik"), (n.offset, "offset", "Kot farkı")], &at)?;
+        finite_each(
+            &[
+                (Some(n.height), "height", "Yükseklik"),
+                (n.offset, "offset", "Kot farkı"),
+            ],
+            &at,
+        )?;
         let m = kentos_commands::MassFields {
             parts: n.parts.clone(),
             height: n.height,
@@ -35,9 +45,26 @@ fn masses_check(doc: &Document, input: &kentos_commands::MassesCreate) -> Result
             return Err(fail(codes::INVALID_SPACE, words, &format!("{at}.{field}")));
         }
         crate::walls::level_known(doc, &m.arch, &format!("{at}.arch.level"))?;
-        made.push((at, n.attrs.clone(), Box::new(move |base| Entity::Mass(kentos_commands::MassEntity { base, mass: Box::new(m) }))));
+        made.push((
+            at,
+            n.attrs.clone(),
+            Box::new(move |base| {
+                Entity::Mass(kentos_commands::MassEntity {
+                    base,
+                    mass: Box::new(m),
+                })
+            }),
+        ));
     }
-    finish(doc, &input.layer_id, input.line_weight, input.expected_revision.as_deref(), made, &input.color, Vec::new())
+    finish(
+        doc,
+        &input.layer_id,
+        input.line_weight,
+        input.expected_revision.as_deref(),
+        made,
+        &input.color,
+        Vec::new(),
+    )
 }
 
 create_command!(

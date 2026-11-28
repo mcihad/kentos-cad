@@ -99,7 +99,8 @@ async fn a_build_from_source_needs_a_reviewer_s_reason_in_the_public_catalog(ben
     assert!(
         numpy["message"]
             .as_str()
-            .is_some_and(|m| m.contains("macOS (aarch64), Python 3.12 için hazır kurulum dosyası (wheel) yok")),
+            .is_some_and(|m| m
+                .contains("macOS (aarch64), Python 3.12 için hazır kurulum dosyası (wheel) yok")),
         "{numpy}"
     );
     // The author sends it as it is with a note; a reviewer lifts the finding with a reason.

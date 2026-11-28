@@ -177,7 +177,9 @@ pub enum TableEdit {
     /// The first row the heading (bold, centred) or not.
     Header { on: bool },
     /// Which lines are drawn (null: all).
-    Grid { grid: Option<crate::table::TableGrid> },
+    Grid {
+        grid: Option<crate::table::TableGrid>,
+    },
     /// Kalın çerçeve's width, metres (null: a line as the others).
     Frame {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
@@ -185,16 +187,16 @@ pub enum TableEdit {
     },
     /// Tabloyu böl (docs/adr/1030 §7): the table drawn in parts at most `breaks.height` deep, the heading row again
     /// atop each (null: one part).
-    Breaks { breaks: Option<crate::table::TableBreaks> },
+    Breaks {
+        breaks: Option<crate::table::TableBreaks>,
+    },
     /// A linked file's unique, nonempty row-key column (null: position-based legacy refresh).
     SourceKey {
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
         column: Option<u32>,
     },
     /// What a linked file refresh does with hand-edited cells.
-    SourceRule {
-        rule: SourceOverrides,
-    },
+    SourceRule { rule: SourceOverrides },
     /// Kaynağı bırak: the table follows no source.
     Unlink,
 }

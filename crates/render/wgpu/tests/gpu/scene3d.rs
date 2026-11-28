@@ -15,8 +15,12 @@
 //!
 //! Also `scene3d_timing`: a 4 million triangle terrain at TM coordinates drawn through the selection, every frame.
 
-use kentos_render_wgpu::scene3d::{Budgets, DEPTH_CLEAR, DepthTarget, Frame, Quality, Scene3dRenderer, Stats, Style};
-use kentos_scene3d::{Camera, Content, Exaggeration, Limits, Projection, SourceMesh, Viewport, chunk};
+use kentos_render_wgpu::scene3d::{
+    Budgets, DEPTH_CLEAR, DepthTarget, Frame, Quality, Scene3dRenderer, Stats, Style,
+};
+use kentos_scene3d::{
+    Camera, Content, Exaggeration, Limits, Projection, SourceMesh, Viewport, chunk,
+};
 
 use super::{FORMAT, Gpu};
 
@@ -28,12 +32,22 @@ const N: f64 = 4_401_234.567;
 type Mesh = (Vec<[f64; 3]>, Vec<[u32; 3]>);
 
 fn square(x: f64, y: f64, s: f64, z: f64) -> Mesh {
-    (vec![[x, y, z], [x + s, y, z], [x + s, y + s, z], [x, y + s, z]], vec![[0, 1, 2], [0, 2, 3]])
+    (
+        vec![[x, y, z], [x + s, y, z], [x + s, y + s, z], [x, y + s, z]],
+        vec![[0, 1, 2], [0, 2, 3]],
+    )
 }
 
 fn contents(meshes: &[(u32, Mesh)], first: u64) -> Vec<Content> {
-    let src: Vec<SourceMesh> =
-        meshes.iter().map(|(part, (v, t))| SourceMesh { part: *part, vertices: v, triangles: t, smooth: false }).collect();
+    let src: Vec<SourceMesh> = meshes
+        .iter()
+        .map(|(part, (v, t))| SourceMesh {
+            part: *part,
+            vertices: v,
+            triangles: t,
+            smooth: false,
+        })
+        .collect();
     chunk(&src, Limits::default(), first).contents
 }
 
@@ -44,12 +58,34 @@ const STYLES: [Style; 3] = [
 ];
 
 /// Draws `draws` through `camera` into a width × height target cleared white, read back as RGBA.
-fn draw(gpu: &Gpu, r: &mut Scene3dRenderer, camera: &Camera, ex: Exaggeration, draws: &[&Content], size: (u32, u32)) -> (Vec<u8>, Stats) {
-    draw_lit(gpu, r, camera, ex, draws, size, (&STYLES, [0.0, 0.0, 1.0], 1.0))
+fn draw(
+    gpu: &Gpu,
+    r: &mut Scene3dRenderer,
+    camera: &Camera,
+    ex: Exaggeration,
+    draws: &[&Content],
+    size: (u32, u32),
+) -> (Vec<u8>, Stats) {
+    draw_lit(
+        gpu,
+        r,
+        camera,
+        ex,
+        draws,
+        size,
+        (&STYLES, [0.0, 0.0, 1.0], 1.0),
+    )
 }
 
 /// As `draw`, cut by the half-spaces `clip`.
-fn draw_cut(gpu: &Gpu, r: &mut Scene3dRenderer, camera: &Camera, draws: &[&Content], size: (u32, u32), clip: &[[f64; 4]]) -> Vec<u8> {
+fn draw_cut(
+    gpu: &Gpu,
+    r: &mut Scene3dRenderer,
+    camera: &Camera,
+    draws: &[&Content],
+    size: (u32, u32),
+    clip: &[[f64; 4]],
+) -> Vec<u8> {
     CLIP.with(|c| *c.borrow_mut() = clip.to_vec());
     let out = draw(gpu, r, camera, Exaggeration::NONE, draws, size).0;
     CLIP.with(|c| c.borrow_mut().clear());
@@ -76,7 +112,11 @@ fn draw_lit(
     let (width, height) = size;
     let texture = gpu.device.create_texture(&wgpu::TextureDescriptor {
         label: Some("scene3d target"),
-        size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        size: wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
         mip_level_count: 1,
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
@@ -91,7 +131,10 @@ fn draw_lit(
     let frame = Frame {
         camera,
         exaggeration: ex,
-        viewport: Viewport { width: f64::from(width), height: f64::from(height) },
+        viewport: Viewport {
+            width: f64::from(width),
+            height: f64::from(height),
+        },
         draws,
         styles: look.0,
         light: look.1,
@@ -102,7 +145,9 @@ fn draw_lit(
         shadows: SHADOWS.with(|s| *s.borrow()),
     };
     let stats = r.prepare(&gpu.device, &gpu.queue, &frame);
-    let mut encoder = gpu.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    let mut encoder = gpu
+        .device
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
     r.render_shadows(&mut encoder);
     {
         let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -111,11 +156,17 @@ fn draw_lit(
                 view: &view,
                 depth_slice: None,
                 resolve_target: None,
-                ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::WHITE), store: wgpu::StoreOp::Store },
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                    store: wgpu::StoreOp::Store,
+                },
             })],
             depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
                 view: depth,
-                depth_ops: Some(wgpu::Operations { load: wgpu::LoadOp::Clear(DEPTH_CLEAR), store: wgpu::StoreOp::Discard }),
+                depth_ops: Some(wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(DEPTH_CLEAR),
+                    store: wgpu::StoreOp::Discard,
+                }),
                 stencil_ops: None,
             }),
             timestamp_writes: None,
@@ -123,7 +174,8 @@ fn draw_lit(
         });
         r.render(&mut pass);
     }
-    let row = (width * 4).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+    let row = (width * 4).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT)
+        * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
     let buffer = gpu.device.create_buffer(&wgpu::BufferDescriptor {
         label: None,
         size: u64::from(row * height),
@@ -134,15 +186,26 @@ fn draw_lit(
         texture.as_image_copy(),
         wgpu::TexelCopyBufferInfo {
             buffer: &buffer,
-            layout: wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(row), rows_per_image: None },
+            layout: wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(row),
+                rows_per_image: None,
+            },
         },
-        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
     );
     let index = gpu.queue.submit([encoder.finish()]);
     let slice = buffer.slice(..);
     slice.map_async(wgpu::MapMode::Read, |_| {});
     gpu.device
-        .poll(wgpu::PollType::Wait { submission_index: Some(index), timeout: None })
+        .poll(wgpu::PollType::Wait {
+            submission_index: Some(index),
+            timeout: None,
+        })
         .expect("the frame finishes");
     let data = slice.get_mapped_range();
     let mut out = Vec::with_capacity((width * height * 4) as usize);
@@ -170,7 +233,15 @@ fn covered(px: &[u8], width: u32) -> Option<(u32, u32, u32, u32)> {
 
 /// The box the camera projects the shown corners to.
 fn projected(camera: &Camera, vp: &Viewport, corners: &[[f64; 3]]) -> (f64, f64, f64, f64) {
-    let ps: Vec<(f64, f64)> = corners.iter().map(|c| camera.project(*c, vp).map(|p| (p.0, p.1)).expect("in front")).collect();
+    let ps: Vec<(f64, f64)> = corners
+        .iter()
+        .map(|c| {
+            camera
+                .project(*c, vp)
+                .map(|p| (p.0, p.1))
+                .expect("in front")
+        })
+        .collect();
     let x0 = ps.iter().map(|p| p.0).fold(f64::INFINITY, f64::min);
     let x1 = ps.iter().map(|p| p.0).fold(f64::NEG_INFINITY, f64::max);
     let y0 = ps.iter().map(|p| p.1).fold(f64::INFINITY, f64::min);
@@ -182,14 +253,20 @@ fn within_a_pixel(got: (u32, u32, u32, u32), want: (f64, f64, f64, f64), what: &
     let g = [got.0, got.1, got.2, got.3].map(f64::from);
     let w = [want.0, want.1, want.2, want.3];
     for k in 0..4 {
-        assert!((g[k] - w[k]).abs() <= 1.0, "{what}: covered {got:?}, projected {want:?}");
+        assert!(
+            (g[k] - w[k]).abs() <= 1.0,
+            "{what}: covered {got:?}, projected {want:?}"
+        );
     }
 }
 
 pub(crate) fn the_3d_scene_draws_precisely(gpu: &mut Gpu) {
     let mut r = Scene3dRenderer::new(&gpu.device, FORMAT);
     let size = (256u32, 256u32);
-    let vp = Viewport { width: 256.0, height: 256.0 };
+    let vp = Viewport {
+        width: 256.0,
+        height: 256.0,
+    };
     // The northing alone as float32 is 6.7 cm off: nearly seven times the square.
     assert!(((N as f32) as f64 - N).abs() > 0.06);
     let sq = square(E, N, 0.01, 1234.5);
@@ -199,20 +276,49 @@ pub(crate) fn the_3d_scene_draws_precisely(gpu: &mut Gpu) {
         eye: [E + 0.005, N + 0.005, 1244.5],
         target: [E + 0.005, N + 0.005, 1234.5],
         up: [0.0, 0.0, 1.0],
-        projection: Projection::Orthographic { height: 0.04, depth: 100.0 },
+        projection: Projection::Orthographic {
+            height: 0.04,
+            depth: 100.0,
+        },
     };
     let (px, _) = draw(gpu, &mut r, &top, Exaggeration::NONE, &draws, size);
-    within_a_pixel(covered(&px, 256).expect("drawn"), projected(&top, &vp, &sq.0), "1 cm from above");
-    let slant = Camera::orbit([E + 0.005, N + 0.005, 1234.5], 30.0, 40.0, 0.06, Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.001 });
+    within_a_pixel(
+        covered(&px, 256).expect("drawn"),
+        projected(&top, &vp, &sq.0),
+        "1 cm from above",
+    );
+    let slant = Camera::orbit(
+        [E + 0.005, N + 0.005, 1234.5],
+        30.0,
+        40.0,
+        0.06,
+        Projection::Perspective {
+            fov_y: 40f64.to_radians(),
+            near: 0.001,
+        },
+    );
     let (px, _) = draw(gpu, &mut r, &slant, Exaggeration::NONE, &draws, size);
-    within_a_pixel(covered(&px, 256).expect("drawn"), projected(&slant, &vp, &sq.0), "1 cm in perspective");
+    within_a_pixel(
+        covered(&px, 256).expect("drawn"),
+        projected(&slant, &vp, &sq.0),
+        "1 cm in perspective",
+    );
 
     // Two squares 2 cm apart seen from 1.5 km: the upper (green) everywhere.
     let lower = square(E - 50.0, N - 50.0, 100.0, 1000.0);
     let upper = square(E - 50.0, N - 50.0, 100.0, 1000.02);
     let c = contents(&[(0, lower), (1, upper)], 10);
     let draws: Vec<&Content> = c.iter().collect();
-    let far = Camera::orbit([E, N, 1000.0], 60.0, 45.0, 1500.0, Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.5 });
+    let far = Camera::orbit(
+        [E, N, 1000.0],
+        60.0,
+        45.0,
+        1500.0,
+        Projection::Perspective {
+            fov_y: 40f64.to_radians(),
+            near: 0.5,
+        },
+    );
     let (px, _) = draw(gpu, &mut r, &far, Exaggeration::NONE, &draws, size);
     let (mut green, mut red) = (0, 0);
     for p in px.as_chunks::<4>().0.iter() {
@@ -225,25 +331,53 @@ pub(crate) fn the_3d_scene_draws_precisely(gpu: &mut Gpu) {
     assert!(green > 200 && red == 0, "green {green}, red {red}");
 
     // Exaggerated threefold about 1 200 m: a square at 1 240 m is shown at 1 320 m.
-    let ex = Exaggeration { factor: 3.0, datum: 1200.0 };
+    let ex = Exaggeration {
+        factor: 3.0,
+        datum: 1200.0,
+    };
     let sq = square(E, N, 2.0, 1240.0);
     let c = contents(&[(2, sq.clone())], 20);
     let draws: Vec<&Content> = c.iter().collect();
-    let cam = Camera::orbit([E + 1.0, N + 1.0, 1320.0], 200.0, 35.0, 12.0, Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.5 });
+    let cam = Camera::orbit(
+        [E + 1.0, N + 1.0, 1320.0],
+        200.0,
+        35.0,
+        12.0,
+        Projection::Perspective {
+            fov_y: 40f64.to_radians(),
+            near: 0.5,
+        },
+    );
     let (px, _) = draw(gpu, &mut r, &cam, ex, &draws, size);
     let shown: Vec<[f64; 3]> = sq.0.iter().map(|p| ex.shown(*p)).collect();
-    within_a_pixel(covered(&px, 256).expect("drawn"), projected(&cam, &vp, &shown), "exaggerated");
+    within_a_pixel(
+        covered(&px, 256).expect("drawn"),
+        projected(&cam, &vp, &shown),
+        "exaggerated",
+    );
 
     // One content a frame: the second waits a frame.
     let mut r = Scene3dRenderer::new(&gpu.device, FORMAT);
-    let c = contents(&[(0, square(E, N, 0.01, 1234.5)), (1, square(E + 5000.0, N, 0.01, 1234.5))], 30);
+    let c = contents(
+        &[
+            (0, square(E, N, 0.01, 1234.5)),
+            (1, square(E + 5000.0, N, 0.01, 1234.5)),
+        ],
+        30,
+    );
     let draws: Vec<&Content> = c.iter().collect();
     assert_eq!(c.len(), 2, "two tiles 5 km apart");
-    r.budgets = Budgets { resident: 1 << 20, upload: 1 };
+    r.budgets = Budgets {
+        resident: 1 << 20,
+        upload: 1,
+    };
     let (_, first) = draw(gpu, &mut r, &top, Exaggeration::NONE, &draws, size);
     assert_eq!((first.tiles, first.waiting), (1, 1));
     let (_, second) = draw(gpu, &mut r, &top, Exaggeration::NONE, &draws, size);
-    assert_eq!((second.tiles, second.waiting, second.resident_contents), (2, 0, 2));
+    assert_eq!(
+        (second.tiles, second.waiting, second.resident_contents),
+        (2, 0, 2)
+    );
 
     // A section: a 100 m square at TM coordinates seen from above, cut along the north–south line 20 m east of its
     // middle (the west side kept), then by a box about its south-west quarter.
@@ -255,11 +389,25 @@ pub(crate) fn the_3d_scene_draws_precisely(gpu: &mut Gpu) {
         eye: [E, N, 1334.5],
         target: [E, N, 1234.5],
         up: [0.0, 1.0, 0.0],
-        projection: Projection::Orthographic { height: 128.0, depth: 400.0 },
+        projection: Projection::Orthographic {
+            height: 128.0,
+            depth: 400.0,
+        },
     };
     let whole = covered(&draw_cut(gpu, &mut r, &above, &draws, size, &[]), 256).expect("drawn");
     within_a_pixel(whole, projected(&above, &vp, &sq.0), "nothing cut");
-    let west = covered(&draw_cut(gpu, &mut r, &above, &draws, size, &[[-1.0, 0.0, 0.0, E + 20.0]]), 256).expect("drawn");
+    let west = covered(
+        &draw_cut(
+            gpu,
+            &mut r,
+            &above,
+            &draws,
+            size,
+            &[[-1.0, 0.0, 0.0, E + 20.0]],
+        ),
+        256,
+    )
+    .expect("drawn");
     let kept = [[E - 50.0, N - 50.0, 1234.5], [E + 20.0, N + 50.0, 1234.5]];
     within_a_pixel(west, projected(&above, &vp, &kept), "west of the plane");
     let quarter = [
@@ -270,14 +418,26 @@ pub(crate) fn the_3d_scene_draws_precisely(gpu: &mut Gpu) {
         [0.0, 0.0, 1.0, -1234.0],
         [0.0, 0.0, -1.0, 1235.0],
     ];
-    let boxed = covered(&draw_cut(gpu, &mut r, &above, &draws, size, &quarter), 256).expect("drawn");
-    within_a_pixel(boxed, projected(&above, &vp, &[[E - 50.0, N - 50.0, 1234.5], [E, N, 1234.5]]), "inside the box");
+    let boxed =
+        covered(&draw_cut(gpu, &mut r, &above, &draws, size, &quarter), 256).expect("drawn");
+    within_a_pixel(
+        boxed,
+        projected(&above, &vp, &[[E - 50.0, N - 50.0, 1234.5], [E, N, 1234.5]]),
+        "inside the box",
+    );
 }
 
 /// A box of `side` from `at` (each face two triangles with vertices of its own, as a flat body's are).
 fn block(at: [f64; 3], side: [f64; 3]) -> Mesh {
     let c = |i: usize| [0, 1, 2].map(|k| at[k] + if (i >> k) & 1 == 0 { 0.0 } else { side[k] });
-    let faces = [[0, 1, 3, 2], [4, 6, 7, 5], [0, 4, 5, 1], [2, 3, 7, 6], [0, 2, 6, 4], [1, 5, 7, 3]];
+    let faces = [
+        [0, 1, 3, 2],
+        [4, 6, 7, 5],
+        [0, 4, 5, 1],
+        [2, 3, 7, 6],
+        [0, 2, 6, 4],
+        [1, 5, 7, 3],
+    ];
     let (mut v, mut t) = (Vec::new(), Vec::new());
     for f in faces {
         let k = v.len() as u32;
@@ -298,7 +458,16 @@ fn draw_offscreen(
     size: (u32, u32),
     clip: &[[f64; 4]],
 ) -> Vec<u8> {
-    draw_offscreen_lit(gpu, r, camera, draws, styles, size, clip, ([0.0, 0.0, 1.0], 1.0, None))
+    draw_offscreen_lit(
+        gpu,
+        r,
+        camera,
+        draws,
+        styles,
+        size,
+        clip,
+        ([0.0, 0.0, 1.0], 1.0, None),
+    )
 }
 
 /// As `draw_offscreen`, under a light (towards it), its ambient share and the box whose faces cast its shadows.
@@ -316,7 +485,11 @@ fn draw_offscreen_lit(
     let (width, height) = size;
     let texture = gpu.device.create_texture(&wgpu::TextureDescriptor {
         label: Some("scene3d output"),
-        size: wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        size: wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
         mip_level_count: 1,
         sample_count: 1,
         dimension: wgpu::TextureDimension::D2,
@@ -329,7 +502,10 @@ fn draw_offscreen_lit(
     let frame = Frame {
         camera,
         exaggeration: Exaggeration::NONE,
-        viewport: Viewport { width: f64::from(width), height: f64::from(height) },
+        viewport: Viewport {
+            width: f64::from(width),
+            height: f64::from(height),
+        },
         draws,
         styles,
         light: look.0,
@@ -341,7 +517,9 @@ fn draw_offscreen_lit(
     };
     r.prepare(&gpu.device, &gpu.queue, &frame);
     r.place(&gpu.queue, [0.0, 0.0, 1.0, 1.0]);
-    let mut encoder = gpu.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    let mut encoder = gpu
+        .device
+        .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
     {
         let _clear = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: None,
@@ -349,15 +527,24 @@ fn draw_offscreen_lit(
                 view: &view,
                 depth_slice: None,
                 resolve_target: None,
-                ops: wgpu::Operations { load: wgpu::LoadOp::Clear(wgpu::Color::WHITE), store: wgpu::StoreOp::Store },
+                ops: wgpu::Operations {
+                    load: wgpu::LoadOp::Clear(wgpu::Color::WHITE),
+                    store: wgpu::StoreOp::Store,
+                },
             })],
             depth_stencil_attachment: None,
             timestamp_writes: None,
             occlusion_query_set: None,
         });
     }
-    r.render_offscreen(&mut encoder, &view, [0.0, 0.0, width as f32, height as f32], [0, 0, width, height]);
-    let row = (width * 4).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+    r.render_offscreen(
+        &mut encoder,
+        &view,
+        [0.0, 0.0, width as f32, height as f32],
+        [0, 0, width, height],
+    );
+    let row = (width * 4).div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT)
+        * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
     let buffer = gpu.device.create_buffer(&wgpu::BufferDescriptor {
         label: None,
         size: u64::from(row * height),
@@ -368,14 +555,27 @@ fn draw_offscreen_lit(
         texture.as_image_copy(),
         wgpu::TexelCopyBufferInfo {
             buffer: &buffer,
-            layout: wgpu::TexelCopyBufferLayout { offset: 0, bytes_per_row: Some(row), rows_per_image: None },
+            layout: wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(row),
+                rows_per_image: None,
+            },
         },
-        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
     );
     let index = gpu.queue.submit([encoder.finish()]);
     let slice = buffer.slice(..);
     slice.map_async(wgpu::MapMode::Read, |_| {});
-    gpu.device.poll(wgpu::PollType::Wait { submission_index: Some(index), timeout: None }).expect("the frame finishes");
+    gpu.device
+        .poll(wgpu::PollType::Wait {
+            submission_index: Some(index),
+            timeout: None,
+        })
+        .expect("the frame finishes");
     let data = slice.get_mapped_range();
     let mut out = Vec::with_capacity((width * height * 4) as usize);
     for y in 0..height {
@@ -387,13 +587,18 @@ fn draw_offscreen_lit(
 
 /// A picture for the owner: `.run/gui-evidence/3b-kalite-8120/gpu-<name>.png`.
 fn keep(px: &[u8], size: (u32, u32), name: &str) {
-    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(format!("../../../.run/gui-evidence/3b-kalite-8120/gpu-{name}.png"));
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(format!(
+        "../../../.run/gui-evidence/3b-kalite-8120/gpu-{name}.png"
+    ));
     let _ = std::fs::create_dir_all(out.parent().expect("a folder"));
     let file = std::io::BufWriter::new(std::fs::File::create(&out).expect("a file"));
     let mut png = png::Encoder::new(file, size.0, size.1);
     png.set_color(png::ColorType::Rgba);
     png.set_depth(png::BitDepth::Eight);
-    png.write_header().expect("a header").write_image_data(px).expect("writes the picture");
+    png.write_header()
+        .expect("a header")
+        .write_image_data(px)
+        .expect("writes the picture");
 }
 
 /// The qualities (docs/adr/8120) on a 1 m box standing on a 4 m slab, seen from the north-east, every face its style's
@@ -402,17 +607,41 @@ fn keep(px: &[u8], size: (u32, u32), name: &str) {
 /// box's foot, not the slab away from it, by the ambient light's occlusion.
 pub(crate) fn the_qualities_draw_edges_smooth_outlines_and_occlusion(gpu: &mut Gpu) {
     let size = (256u32, 256u32);
-    let vp = Viewport { width: 256.0, height: 256.0 };
-    let styles = [Style::of([0.9, 0.9, 0.9, 1.0]), Style::of([0.7, 0.7, 0.7, 1.0])];
-    let c = contents(&[(0, block([0.0, 0.0, 0.0], [1.0, 1.0, 1.0])), (1, block([-1.5, -1.5, -0.1], [4.0, 4.0, 0.1]))], 60);
+    let vp = Viewport {
+        width: 256.0,
+        height: 256.0,
+    };
+    let styles = [
+        Style::of([0.9, 0.9, 0.9, 1.0]),
+        Style::of([0.7, 0.7, 0.7, 1.0]),
+    ];
+    let c = contents(
+        &[
+            (0, block([0.0, 0.0, 0.0], [1.0, 1.0, 1.0])),
+            (1, block([-1.5, -1.5, -0.1], [4.0, 4.0, 0.1])),
+        ],
+        60,
+    );
     let draws: Vec<&Content> = c.iter().collect();
-    let camera = Camera::orbit([0.5, 0.5, 0.3], 30.0, 32.0, 4.2, Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.05 });
+    let camera = Camera::orbit(
+        [0.5, 0.5, 0.3],
+        30.0,
+        32.0,
+        4.2,
+        Projection::Perspective {
+            fov_y: 40f64.to_radians(),
+            near: 0.05,
+        },
+    );
     let at = |p: [f64; 3]| {
         let (x, y, _) = camera.project(p, &vp).expect("in front");
         (x as usize, y as usize)
     };
     let value = |px: &[u8], (x, y): (usize, usize)| px[(y * 256 + x) * 4];
-    let (box_grey, slab_grey) = ((0.9f64 * 255.0).round() as u8, (0.7f64 * 255.0).round() as u8);
+    let (box_grey, slab_grey) = (
+        (0.9f64 * 255.0).round() as u8,
+        (0.7f64 * 255.0).round() as u8,
+    );
     // How many pixels are darker than either grey (an edge), and how many lie between the greys and the white.
     let count = |px: &[u8]| {
         let (mut dark, mut between) = (0, 0);
@@ -429,23 +658,41 @@ pub(crate) fn the_qualities_draw_edges_smooth_outlines_and_occlusion(gpu: &mut G
     let mut fast = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Fast);
     let px = draw_offscreen(gpu, &mut fast, &camera, &draws, &styles, size, &[]);
     keep(&px, size, "hizli");
-    assert_eq!(count(&px), (0, 0), "Hızlı: the faces alone, one sample a pixel");
+    assert_eq!(
+        count(&px),
+        (0, 0),
+        "Hızlı: the faces alone, one sample a pixel"
+    );
     let mut balanced = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Balanced);
     let px = draw_offscreen(gpu, &mut balanced, &camera, &draws, &styles, size, &[]);
     keep(&px, size, "dengeli");
     let (dark, between) = count(&px);
-    assert!(dark > 150, "Dengeli: the box's edges drawn ({dark} dark pixels)");
-    assert!(between > 100, "Dengeli: the outlines smooth ({between} pixels between)");
+    assert!(
+        dark > 150,
+        "Dengeli: the box's edges drawn ({dark} dark pixels)"
+    );
+    assert!(
+        between > 100,
+        "Dengeli: the outlines smooth ({between} pixels between)"
+    );
     // The slab beside the box's east foot and away from it.
     let (near, far) = (at([1.08, 0.5, 0.0]), at([2.2, -0.9, 0.0]));
     // The GPU writes 178.5 as either of its neighbours.
     let grey = |v: u8| v.abs_diff(slab_grey) <= 1;
-    assert!(grey(value(&px, near)) && grey(value(&px, far)), "Dengeli: no occlusion ({}, {})", value(&px, near), value(&px, far));
+    assert!(
+        grey(value(&px, near)) && grey(value(&px, far)),
+        "Dengeli: no occlusion ({}, {})",
+        value(&px, near),
+        value(&px, far)
+    );
     let mut high = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::High);
     let px = draw_offscreen(gpu, &mut high, &camera, &draws, &styles, size, &[]);
     keep(&px, size, "kaliteli");
     let (near, far) = (value(&px, near), value(&px, far));
-    assert!(grey(far) && near + 12 < far, "Kaliteli: the foot occluded ({near}), the slab away not ({far})");
+    assert!(
+        grey(far) && near + 12 < far,
+        "Kaliteli: the foot occluded ({near}), the slab away not ({far})"
+    );
 }
 
 /// A 4 million triangle terrain at TM coordinates through the selection: the frames' CPU and GPU time.
@@ -469,17 +716,47 @@ pub(crate) fn timing(gpu: &mut Gpu) {
             ts.push([a, a + w + 1, a + w]);
         }
     }
-    let c = chunk(&[SourceMesh { part: 0, vertices: &vs, triangles: &ts, smooth: true }], Limits::default(), 1);
+    let c = chunk(
+        &[SourceMesh {
+            part: 0,
+            vertices: &vs,
+            triangles: &ts,
+            smooth: true,
+        }],
+        Limits::default(),
+        1,
+    );
     let mut r = Scene3dRenderer::new(&gpu.device, FORMAT);
     let size = (1920u32, 1080u32);
-    let vp = Viewport { width: 1920.0, height: 1080.0 };
-    let by_id: std::collections::HashMap<u64, &Content> = c.contents.iter().map(|k| (k.id, k)).collect();
+    let vp = Viewport {
+        width: 1920.0,
+        height: 1080.0,
+    };
+    let by_id: std::collections::HashMap<u64, &Content> =
+        c.contents.iter().map(|k| (k.id, k)).collect();
     let mut frames = Vec::new();
     for k in 0..30 {
-        let cam = Camera::orbit([E + 200.0 + 50.0 * f64::from(k), N + 500.0, 1220.0], 200.0 + 3.0 * f64::from(k), 30.0, 900.0,
-            Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.5 });
+        let cam = Camera::orbit(
+            [E + 200.0 + 50.0 * f64::from(k), N + 500.0, 1220.0],
+            200.0 + 3.0 * f64::from(k),
+            30.0,
+            900.0,
+            Projection::Perspective {
+                fov_y: 40f64.to_radians(),
+                near: 0.5,
+            },
+        );
         let t = Instant::now();
-        let s = select(&c.hierarchy, &cam, &vp, &Exaggeration::NONE, Settings { max_screen_error: 16.0 }, |_| true);
+        let s = select(
+            &c.hierarchy,
+            &cam,
+            &vp,
+            &Exaggeration::NONE,
+            Settings {
+                max_screen_error: 16.0,
+            },
+            |_| true,
+        );
         let mut draws: Vec<&Content> = Vec::new();
         for i in s.draw {
             if let Some(cr) = c.hierarchy.tiles[i as usize].content {
@@ -489,21 +766,66 @@ pub(crate) fn timing(gpu: &mut Gpu) {
         let cpu = t.elapsed();
         let t = Instant::now();
         let (_, stats) = draw(gpu, &mut r, &cam, Exaggeration::NONE, &draws, size);
-        frames.push((cpu.as_secs_f64() * 1e3, t.elapsed().as_secs_f64() * 1e3, stats));
+        frames.push((
+            cpu.as_secs_f64() * 1e3,
+            t.elapsed().as_secs_f64() * 1e3,
+            stats,
+        ));
     }
     // The picture of the last view, lit, for the owner: .run/gui-evidence/yol-3b-cizici.png.
-    let cam = Camera::orbit([E + 1000.0, N + 380.0, 1225.0], 235.0, 24.0, 820.0, Projection::Perspective { fov_y: 40f64.to_radians(), near: 0.5 });
-    let s = select(&c.hierarchy, &cam, &vp, &Exaggeration { factor: 4.0, datum: 1200.0 }, Settings { max_screen_error: 16.0 }, |_| true);
-    let draws: Vec<&Content> = s.draw.iter().filter_map(|&i| c.hierarchy.tiles[i as usize].content).map(|cr| by_id[&cr.id]).collect();
+    let cam = Camera::orbit(
+        [E + 1000.0, N + 380.0, 1225.0],
+        235.0,
+        24.0,
+        820.0,
+        Projection::Perspective {
+            fov_y: 40f64.to_radians(),
+            near: 0.5,
+        },
+    );
+    let s = select(
+        &c.hierarchy,
+        &cam,
+        &vp,
+        &Exaggeration {
+            factor: 4.0,
+            datum: 1200.0,
+        },
+        Settings {
+            max_screen_error: 16.0,
+        },
+        |_| true,
+    );
+    let draws: Vec<&Content> = s
+        .draw
+        .iter()
+        .filter_map(|&i| c.hierarchy.tiles[i as usize].content)
+        .map(|cr| by_id[&cr.id])
+        .collect();
     let terrain = [Style::of([0.47, 0.55, 0.33, 1.0])];
-    let (px, _) = draw_lit(gpu, &mut r, &cam, Exaggeration { factor: 4.0, datum: 1200.0 }, &draws, size, (&terrain, [-0.45, -0.35, 0.82], 0.35));
-    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.run/gui-evidence/yol-3b-cizici.png");
+    let (px, _) = draw_lit(
+        gpu,
+        &mut r,
+        &cam,
+        Exaggeration {
+            factor: 4.0,
+            datum: 1200.0,
+        },
+        &draws,
+        size,
+        (&terrain, [-0.45, -0.35, 0.82], 0.35),
+    );
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../.run/gui-evidence/yol-3b-cizici.png");
     let _ = std::fs::create_dir_all(out.parent().expect("a folder"));
     let file = std::io::BufWriter::new(std::fs::File::create(&out).expect("a file"));
     let mut png = png::Encoder::new(file, size.0, size.1);
     png.set_color(png::ColorType::Rgba);
     png.set_depth(png::BitDepth::Eight);
-    png.write_header().expect("a header").write_image_data(&px).expect("writes the picture");
+    png.write_header()
+        .expect("a header")
+        .write_image_data(&px)
+        .expect("writes the picture");
     println!("{}", out.display());
     let first = frames[0];
     let rest: Vec<f64> = frames[1..].iter().map(|f| f.1).collect();
@@ -511,7 +833,11 @@ pub(crate) fn timing(gpu: &mut Gpu) {
     sorted.sort_by(f64::total_cmp);
     println!(
         "ilk kare: seçim {:.3} ms, yükleme ve çizim {:.1} ms ({} karo, {} üçgen, {:.1} MB yüklendi)",
-        first.0, first.1, first.2.tiles, first.2.triangles, first.2.uploaded as f64 / 1e6
+        first.0,
+        first.1,
+        first.2.tiles,
+        first.2.triangles,
+        first.2.uploaded as f64 / 1e6
     );
     println!(
         "sonraki 29 kare (1920×1080, geri okuma dahil): ortanca {:.1} ms, en kötü {:.1} ms, kare başına {} karo, {} üçgen",
@@ -532,14 +858,29 @@ pub(crate) fn a_cut_ends_at_its_samples_and_a_cap_is_not_cut(gpu: &mut Gpu) {
     let size = (256u32, 256u32);
     let pixel = 8.0 / 256.0;
     let (cut_at, cap_from) = (0.75 * pixel, 1.0);
-    let styles = [Style::of([0.5, 0.5, 0.5, 1.0]), Style { color: [0.2, 0.2, 0.2, 1.0], cut: false }];
-    let c = contents(&[(0, square(-2.0, -2.0, 4.0, 0.0)), (1, square(cap_from, -0.5, 0.5, 0.1))], 80);
+    let styles = [
+        Style::of([0.5, 0.5, 0.5, 1.0]),
+        Style {
+            color: [0.2, 0.2, 0.2, 1.0],
+            cut: false,
+        },
+    ];
+    let c = contents(
+        &[
+            (0, square(-2.0, -2.0, 4.0, 0.0)),
+            (1, square(cap_from, -0.5, 0.5, 0.1)),
+        ],
+        80,
+    );
     let draws: Vec<&Content> = c.iter().collect();
     let camera = Camera {
         eye: [0.0, 0.0, 10.0],
         target: [0.0, 0.0, 0.0],
         up: [0.0, 1.0, 0.0],
-        projection: Projection::Orthographic { height: 8.0, depth: 40.0 },
+        projection: Projection::Orthographic {
+            height: 8.0,
+            depth: 40.0,
+        },
     };
     let west = [[-1.0, 0.0, 0.0, cut_at]];
     let value = |px: &[u8], x: usize, y: usize| px[(y * 256 + x) * 4];
@@ -547,12 +888,19 @@ pub(crate) fn a_cut_ends_at_its_samples_and_a_cap_is_not_cut(gpu: &mut Gpu) {
     let near = |v: u8, want: u8| v.abs_diff(want) <= 2;
     let mut fast = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Fast);
     let px = draw_offscreen(gpu, &mut fast, &camera, &draws, &styles, size, &west);
-    assert!(near(value(&px, 127, 100), grey) && near(value(&px, 128, 100), grey), "Hızlı: the column whose middle is kept is kept whole");
+    assert!(
+        near(value(&px, 127, 100), grey) && near(value(&px, 128, 100), grey),
+        "Hızlı: the column whose middle is kept is kept whole"
+    );
     assert_eq!(value(&px, 129, 100), 255, "Hızlı: the next column cut");
     let mut balanced = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Balanced);
     let px = draw_offscreen(gpu, &mut balanced, &camera, &draws, &styles, size, &west);
     let three_quarters = (0.75 * 127.5f64 + 0.25 * 255.0).round() as u8;
-    assert!(near(value(&px, 127, 100), grey), "Dengeli: west of the plane kept ({})", value(&px, 127, 100));
+    assert!(
+        near(value(&px, 127, 100), grey),
+        "Dengeli: west of the plane kept ({})",
+        value(&px, 127, 100)
+    );
     assert!(
         near(value(&px, 128, 100), three_quarters),
         "Dengeli: three of the column's four samples kept ({}, want {three_quarters})",
@@ -561,7 +909,11 @@ pub(crate) fn a_cut_ends_at_its_samples_and_a_cap_is_not_cut(gpu: &mut Gpu) {
     assert_eq!(value(&px, 129, 100), 255, "Dengeli: the next column cut");
     // The cap's square, x 1 to 1.5 (pixels 160 to 176), y −0.5 to 0 (rows 128 to 144): east of the plane, drawn.
     let dark = (0.2f64 * 255.0).round() as u8;
-    assert!(near(value(&px, 168, 136), dark), "a cap's part is not cut ({})", value(&px, 168, 136));
+    assert!(
+        near(value(&px, 168, 136), dark),
+        "a cap's part is not cut ({})",
+        value(&px, 168, 136)
+    );
 }
 
 /// The sun's shadows (docs/adr/8177 §4): a 1 × 1 m column 3 m high on a 10 m square of ground, the sun in the south 45°
@@ -570,11 +922,32 @@ pub(crate) fn a_cut_ends_at_its_samples_and_a_cap_is_not_cut(gpu: &mut Gpu) {
 /// lowest metre shortens the shadow to a metre: what it takes away casts none. A sun 12° up leaves the lit ground even.
 pub(crate) fn the_sun_casts_shadows_and_a_section_takes_its_caster_away(gpu: &mut Gpu) {
     let size = (256u32, 256u32);
-    let vp = Viewport { width: 256.0, height: 256.0 };
-    let styles = [Style::of([0.6, 0.6, 0.6, 1.0]), Style::of([0.8, 0.8, 0.8, 1.0])];
-    let c = contents(&[(0, block([0.0, 0.0, 0.0], [1.0, 1.0, 3.0])), (1, block([-4.5, -4.5, -0.2], [10.0, 10.0, 0.2]))], 80);
+    let vp = Viewport {
+        width: 256.0,
+        height: 256.0,
+    };
+    let styles = [
+        Style::of([0.6, 0.6, 0.6, 1.0]),
+        Style::of([0.8, 0.8, 0.8, 1.0]),
+    ];
+    let c = contents(
+        &[
+            (0, block([0.0, 0.0, 0.0], [1.0, 1.0, 3.0])),
+            (1, block([-4.5, -4.5, -0.2], [10.0, 10.0, 0.2])),
+        ],
+        80,
+    );
     let draws: Vec<&Content> = c.iter().collect();
-    let camera = Camera::orbit([0.5, 0.5, 0.0], 270.0, 80.0, 16.0, Projection::Perspective { fov_y: 45f64.to_radians(), near: 0.05 });
+    let camera = Camera::orbit(
+        [0.5, 0.5, 0.0],
+        270.0,
+        80.0,
+        16.0,
+        Projection::Perspective {
+            fov_y: 45f64.to_radians(),
+            near: 0.05,
+        },
+    );
     let at = |p: [f64; 3]| {
         let (x, y, _) = camera.project(p, &vp).expect("in front");
         (x as usize, y as usize)
@@ -584,28 +957,90 @@ pub(crate) fn the_sun_casts_shadows_and_a_section_takes_its_caster_away(gpu: &mu
     let sun = [0.0, -s, s];
     let ground = Some([[-4.5, -4.5, -0.2], [5.5, 5.5, 3.0]]);
     let mut r = Scene3dRenderer::with_quality(&gpu.device, FORMAT, Quality::Balanced);
-    let lit = draw_offscreen_lit(gpu, &mut r, &camera, &draws, &styles, size, &[], (sun, 0.3, ground));
+    let lit = draw_offscreen_lit(
+        gpu,
+        &mut r,
+        &camera,
+        &draws,
+        &styles,
+        size,
+        &[],
+        (sun, 0.3, ground),
+    );
     keep(&lit, size, "gunes-golgesi");
-    let (north, south, north_east) = (at([0.5, 2.5, 0.0]), at([0.5, -2.5, 0.0]), at([3.5, 2.5, 0.0]));
-    let (n, so, ne) = (value(&lit, north), value(&lit, south), value(&lit, north_east));
+    let (north, south, north_east) = (
+        at([0.5, 2.5, 0.0]),
+        at([0.5, -2.5, 0.0]),
+        at([3.5, 2.5, 0.0]),
+    );
+    let (n, so, ne) = (
+        value(&lit, north),
+        value(&lit, south),
+        value(&lit, north_east),
+    );
     // Lit: 0.8 × (0.3 + 0.7 × 0.707) = 0.64; in shadow: 0.8 × 0.3 = 0.24.
-    assert!(so.abs_diff(163) <= 3 && ne.abs_diff(so) <= 2, "the sun on the ground: south {so}, north-east {ne}");
+    assert!(
+        so.abs_diff(163) <= 3 && ne.abs_diff(so) <= 2,
+        "the sun on the ground: south {so}, north-east {ne}"
+    );
     assert!(n.abs_diff(61) <= 3, "the column's shadow on the north: {n}");
-    let plain = draw_offscreen_lit(gpu, &mut r, &camera, &draws, &styles, size, &[], (sun, 0.3, None));
-    assert_eq!(value(&plain, north).abs_diff(value(&plain, south)) <= 1, true, "no shadows asked");
+    let plain = draw_offscreen_lit(
+        gpu,
+        &mut r,
+        &camera,
+        &draws,
+        &styles,
+        size,
+        &[],
+        (sun, 0.3, None),
+    );
+    assert_eq!(
+        value(&plain, north).abs_diff(value(&plain, south)) <= 1,
+        true,
+        "no shadows asked"
+    );
     // Kept: z ≤ 1. The shadow runs a metre north of the column: lit two metres north, shaded a half.
-    let cut = draw_offscreen_lit(gpu, &mut r, &camera, &draws, &styles, size, &[[0.0, 0.0, -1.0, 1.0]], (sun, 0.3, ground));
+    let cut = draw_offscreen_lit(
+        gpu,
+        &mut r,
+        &camera,
+        &draws,
+        &styles,
+        size,
+        &[[0.0, 0.0, -1.0, 1.0]],
+        (sun, 0.3, ground),
+    );
     keep(&cut, size, "gunes-golgesi-kesit");
     let (two, half) = (value(&cut, north), value(&cut, at([0.5, 1.5, 0.0])));
-    assert!(two.abs_diff(so) <= 3 && half.abs_diff(61) <= 3, "cut: two metres north {two}, a half metre {half}");
+    assert!(
+        two.abs_diff(so) <= 3 && half.abs_diff(61) <= 3,
+        "cut: two metres north {two}, a half metre {half}"
+    );
     // A low sun, 12° up: the lit ground south of the column is even, no grain of its own shadow at the grazing angle.
     let low = [0.0, -12f64.to_radians().cos(), 12f64.to_radians().sin()];
-    let grazed = draw_offscreen_lit(gpu, &mut r, &camera, &draws, &styles, size, &[], (low, 0.3, ground));
+    let grazed = draw_offscreen_lit(
+        gpu,
+        &mut r,
+        &camera,
+        &draws,
+        &styles,
+        size,
+        &[],
+        (low, 0.3, ground),
+    );
     keep(&grazed, size, "gunes-golgesi-alcak");
     let patch: Vec<u8> = (0..=12)
-        .flat_map(|i| (0..=6).map(move |j| [-3.0 + 0.5 * f64::from(i), -4.0 + 0.5 * f64::from(j), 0.0]))
+        .flat_map(|i| {
+            (0..=6).map(move |j| [-3.0 + 0.5 * f64::from(i), -4.0 + 0.5 * f64::from(j), 0.0])
+        })
         .map(|p| value(&grazed, at(p)))
         .collect();
-    let (lo, hi) = (patch.iter().min().copied().unwrap_or(0), patch.iter().max().copied().unwrap_or(0));
-    assert!(hi - lo <= 2, "the lit ground even under a low sun: {lo}…{hi}");
+    let (lo, hi) = (
+        patch.iter().min().copied().unwrap_or(0),
+        patch.iter().max().copied().unwrap_or(0),
+    );
+    assert!(
+        hi - lo <= 2,
+        "the lit ground even under a low sun: {lo}…{hi}"
+    );
 }

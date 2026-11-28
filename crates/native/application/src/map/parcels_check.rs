@@ -7,7 +7,8 @@
 use std::collections::BTreeMap;
 
 use kentos_commands::{
-    CommandResult, Entity, PARCEL_AREA_RULE, PARCEL_LAYER, ParcelAreaCheck, ParcelsCheck, ParcelsChecked,
+    CommandResult, Entity, PARCEL_AREA_RULE, PARCEL_LAYER, ParcelAreaCheck, ParcelsCheck,
+    ParcelsChecked,
 };
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::entity::entity_area;
@@ -35,7 +36,12 @@ const SLICES: [(f64, f64, f64, f64); 7] = [
 
 /// The tolerance (square metres, either way) of a parcel of `area` square metres.
 pub fn tolerance(area: f64) -> f64 {
-    let (_, start, base, rate) = SLICES.iter().rev().find(|s| area >= s.0).copied().unwrap_or(SLICES[0]);
+    let (_, start, base, rate) = SLICES
+        .iter()
+        .rev()
+        .find(|s| area >= s.0)
+        .copied()
+        .unwrap_or(SLICES[0]);
     base + (area - start) * rate
 }
 
@@ -59,22 +65,42 @@ fn count(n: usize) -> u32 {
 }
 
 fn run(doc: &Document, input: &ParcelsCheck) -> Result<ParcelsChecked, Stop> {
-    let field = input.field.as_deref().map(str::trim).filter(|f| !f.is_empty()).unwrap_or(RECORDED_FIELD).to_owned();
+    let field = input
+        .field
+        .as_deref()
+        .map(str::trim)
+        .filter(|f| !f.is_empty())
+        .unwrap_or(RECORDED_FIELD)
+        .to_owned();
     let parcels: Vec<&Entity> = match &input.uids {
         Some(uids) => {
             let mut out = Vec::new();
             for (i, uid) in uids.iter().enumerate() {
                 let path = format!("uids[{i}]");
                 if !checks::is_uid_text(uid) {
-                    return Err(fail(codes::INVALID_UID, format!("“{uid}” geçerli bir nesne kimliği değil."), path));
+                    return Err(fail(
+                        codes::INVALID_UID,
+                        format!("“{uid}” geçerli bir nesne kimliği değil."),
+                        path,
+                    ));
                 }
-                let Some(e) = Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u)).and_then(|s| doc.get(s)) else {
-                    return Err(fail(codes::ENTITY_NOT_FOUND, format!("“{uid}” kimlikli nesne çizimde yok."), path));
+                let Some(e) = Uuid::parse_str(uid)
+                    .ok()
+                    .and_then(|u| doc.slot_of(u))
+                    .and_then(|s| doc.get(s))
+                else {
+                    return Err(fail(
+                        codes::ENTITY_NOT_FOUND,
+                        format!("“{uid}” kimlikli nesne çizimde yok."),
+                        path,
+                    ));
                 };
                 if !matches!(e, Entity::Polygon(_)) {
                     return Err(fail(
                         codes::NOT_A_PARCEL,
-                        format!("“{uid}” bir alan değil; parsel alan denetimi yalnız alanları denetler."),
+                        format!(
+                            "“{uid}” bir alan değil; parsel alan denetimi yalnız alanları denetler."
+                        ),
                         path,
                     ));
                 }
@@ -82,13 +108,27 @@ fn run(doc: &Document, input: &ParcelsCheck) -> Result<ParcelsChecked, Stop> {
             }
             out
         }
-        None => doc.by_layer(PARCEL_LAYER).filter(|e| matches!(e, Entity::Polygon(_))).collect(),
+        None => doc
+            .by_layer(PARCEL_LAYER)
+            .filter(|e| matches!(e, Entity::Polygon(_)))
+            .collect(),
     };
     let mut checked = Vec::new();
     for e in parcels {
-        let attr = |k: &str| e.base().attrs.get(k).map(|v| v.trim().to_owned()).unwrap_or_default();
+        let attr = |k: &str| {
+            e.base()
+                .attrs
+                .get(k)
+                .map(|v| v.trim().to_owned())
+                .unwrap_or_default()
+        };
         let area = entity_area(&shape(e)).unwrap_or(0.0);
-        let text = e.base().attrs.get(&field).map(|v| v.trim().to_owned()).filter(|v| !v.is_empty());
+        let text = e
+            .base()
+            .attrs
+            .get(&field)
+            .map(|v| v.trim().to_owned())
+            .filter(|v| !v.is_empty());
         let recorded = text.as_deref().and_then(recorded_value);
         let difference = recorded.map(|r| area - r);
         let limit = tolerance(area);
@@ -100,7 +140,10 @@ fn run(doc: &Document, input: &ParcelsCheck) -> Result<ParcelsChecked, Stop> {
         };
         let (ada, parsel) = (attr("Ada"), attr("Parsel"));
         checked.push(ParcelAreaCheck {
-            uid: doc.uid(kentos_domain::Slot(e.base().id)).map(|u| u.to_string()).unwrap_or_default(),
+            uid: doc
+                .uid(kentos_domain::Slot(e.base().id))
+                .map(|u| u.to_string())
+                .unwrap_or_default(),
             il: attr("İl"),
             ilce: attr("İlçe"),
             mahalle: attr("Mahalle"),
@@ -117,7 +160,8 @@ fn run(doc: &Document, input: &ParcelsCheck) -> Result<ParcelsChecked, Stop> {
         });
     }
     // The identity is the place and the numbers together: Parsel 5 of Ada 101 and of Ada 102 are two parcels.
-    let key = |p: &ParcelAreaCheck| format!("{}/{}/{}/{}/{}", p.il, p.ilce, p.mahalle, p.ada, p.parsel);
+    let key =
+        |p: &ParcelAreaCheck| format!("{}/{}/{}/{}/{}", p.il, p.ilce, p.mahalle, p.ada, p.parsel);
     let mut held: BTreeMap<String, usize> = BTreeMap::new();
     for p in checked.iter().filter(|p| !p.no_identity) {
         *held.entry(key(p)).or_default() += 1;
@@ -148,7 +192,10 @@ fn run(doc: &Document, input: &ParcelsCheck) -> Result<ParcelsChecked, Stop> {
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ParcelsCheck) -> CommandResult<()> {
     match run(cx.doc, input) {
-        Ok(_) => CommandResult::Completed { output: (), warnings: Vec::new() },
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -156,13 +203,19 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ParcelsCheck) -> CommandResul
 /// The answer; reads only.
 pub fn plan(cx: &ExecutionContext<'_>, input: &ParcelsCheck) -> CommandResult<ParcelsChecked> {
     match run(cx.doc, input) {
-        Ok(output) => CommandResult::Completed { output, warnings: Vec::new() },
+        Ok(output) => CommandResult::Completed {
+            output,
+            warnings: Vec::new(),
+        },
         Err(stop) => stop.into(),
     }
 }
 
 /// The answer; reads only.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: ParcelsCheck) -> CommandResult<ParcelsChecked> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ParcelsCheck,
+) -> CommandResult<ParcelsChecked> {
     plan(cx, &input)
 }
 
@@ -173,7 +226,14 @@ mod tests {
     /// The slices meet: the table increases without a step, and the sources' worked examples come out.
     #[test]
     fn the_tolerance_follows_the_table() {
-        for (a, t) in [(10.0, 0.5), (100.0, 2.3), (500.0, 6.3), (1000.0, 8.8), (5000.0, 24.8), (25000.0, 84.8)] {
+        for (a, t) in [
+            (10.0, 0.5),
+            (100.0, 2.3),
+            (500.0, 6.3),
+            (1000.0, 8.8),
+            (5000.0, 24.8),
+            (25000.0, 84.8),
+        ] {
             assert!((tolerance(a) - t).abs() < 1e-9, "{a}");
         }
         assert!((tolerance(950.0) - 8.55).abs() < 1e-9);

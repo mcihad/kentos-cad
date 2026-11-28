@@ -108,7 +108,13 @@ impl SurveyBaselineMarksApp for App {
 }
 
 /// The baselines, each by [`draw_one`].
-pub(crate) fn draw(frame: &mut canvas::Frame, m: &BaselineMarks, camera: &Camera, colors: &MarkColors, t: &Tokens) {
+pub(crate) fn draw(
+    frame: &mut canvas::Frame,
+    m: &BaselineMarks,
+    camera: &Camera,
+    colors: &MarkColors,
+    t: &Tokens,
+) {
     for line in &m.lines {
         draw_one(frame, line, camera, colors, t);
     }
@@ -117,7 +123,13 @@ pub(crate) fn draw(frame: &mut canvas::Frame, m: &BaselineMarks, camera: &Camera
 /// A baseline: a dashed line from its start to its end in the accent (left out, docs/adr/3720: dotted in the danger
 /// colour), an arrowhead at the end, its words at the middle on a halo, set off the line to its left; a ring at each
 /// end, a triangle at a known point's own place with its mark's name beside it (docs/adr/4120).
-fn draw_one(frame: &mut canvas::Frame, m: &BaselineMark, camera: &Camera, colors: &MarkColors, t: &Tokens) {
+fn draw_one(
+    frame: &mut canvas::Frame,
+    m: &BaselineMark,
+    camera: &Camera,
+    colors: &MarkColors,
+    t: &Tokens,
+) {
     let screen = |p: [f64; 2]| {
         let s = camera.world_to_screen(kentos_interaction::Vec2::new(p[0], p[1]));
         Point::new(s[0] as f32, s[1] as f32)
@@ -126,9 +138,21 @@ fn draw_one(frame: &mut canvas::Frame, m: &BaselineMark, camera: &Camera, colors
     let color = if m.excluded { t.danger } else { t.accent };
     let segments: &[f32] = if m.excluded { &[3.0, 4.0] } else { &[8.0, 5.0] };
     let line = Path::line(a, b);
-    frame.stroke(&line, Stroke::default().with_color(colors.halo).with_width(5.0));
+    frame.stroke(
+        &line,
+        Stroke::default().with_color(colors.halo).with_width(5.0),
+    );
     let dashed = Stroke::default().with_color(color).with_width(2.0);
-    frame.stroke(&line, Stroke { line_dash: canvas::LineDash { segments, offset: 0 }, ..dashed });
+    frame.stroke(
+        &line,
+        Stroke {
+            line_dash: canvas::LineDash {
+                segments,
+                offset: 0,
+            },
+            ..dashed
+        },
+    );
     let (dx, dy) = (b.x - a.x, b.y - a.y);
     let length = (dx * dx + dy * dy).sqrt();
     if length < 1.0 {
@@ -157,7 +181,10 @@ fn draw_one(frame: &mut canvas::Frame, m: &BaselineMark, camera: &Camera, colors
             Path::circle(end, 5.0)
         };
         if let Some(name) = known {
-            frame.stroke(&mark, Stroke::default().with_color(colors.halo).with_width(4.0));
+            frame.stroke(
+                &mark,
+                Stroke::default().with_color(colors.halo).with_width(4.0),
+            );
             let label = Text {
                 content: name.clone(),
                 position: Point::new(end.x + 9.0, end.y + 9.0),
@@ -167,7 +194,10 @@ fn draw_one(frame: &mut canvas::Frame, m: &BaselineMark, camera: &Camera, colors
                 ..Text::default()
             };
             for (ox, oy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
-                frame.fill_text(Text { position: label.position + Vector::new(ox, oy), ..label.clone() });
+                frame.fill_text(Text {
+                    position: label.position + Vector::new(ox, oy),
+                    ..label.clone()
+                });
             }
             frame.fill_text(Text { color, ..label });
         }
@@ -184,7 +214,10 @@ fn draw_one(frame: &mut canvas::Frame, m: &BaselineMark, camera: &Camera, colors
         ..Text::default()
     };
     for (ox, oy) in [(-1.0, 0.0), (1.0, 0.0), (0.0, -1.0), (0.0, 1.0)] {
-        frame.fill_text(Text { position: text.position + Vector::new(ox, oy), ..text.clone() });
+        frame.fill_text(Text {
+            position: text.position + Vector::new(ox, oy),
+            ..text.clone()
+        });
     }
     frame.fill_text(Text { color, ..text });
 }

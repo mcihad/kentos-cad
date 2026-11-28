@@ -707,7 +707,9 @@ pub fn read(path: &std::path::Path, bytes: Vec<u8>, input: &ImportParquet) -> Re
                 .as_object()
                 .into_iter()
                 .flatten()
-                .filter_map(|(c, k)| Some((c.clone(), k.as_str().and_then(LayerFieldKind::from_name)?)))
+                .filter_map(|(c, k)| {
+                    Some((c.clone(), k.as_str().and_then(LayerFieldKind::from_name)?))
+                })
                 .collect()
         })
         .unwrap_or_default();

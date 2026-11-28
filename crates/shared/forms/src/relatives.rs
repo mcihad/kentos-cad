@@ -205,7 +205,13 @@ impl PartialEq for RelatedRecords {
 impl RelatedRecords {
     /// Call `c`'s value for the record `uid` with its values `attrs` (a new record, none: no related record; a
     /// relation by a parent key finds it by that key's value, docs/adr/9135).
-    pub(crate) fn value(&self, c: &WorldCall, attrs: &Attrs, uid: Option<&str>, out: &mut String) -> R<'static> {
+    pub(crate) fn value(
+        &self,
+        c: &WorldCall,
+        attrs: &Attrs,
+        uid: Option<&str>,
+        out: &mut String,
+    ) -> R<'static> {
         let set = c.layer.as_deref().and_then(|n| self.0.set(n));
         let empty: &[usize] = &[];
         let code = set.and_then(|s| crate::lookup::code_of(s.by.as_deref(), attrs, uid));

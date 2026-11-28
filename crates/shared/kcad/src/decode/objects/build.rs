@@ -163,28 +163,40 @@ pub(super) fn build(
             if let Some((_, problem)) = grid.problem() {
                 return Err(r.fail(Code::BadValue, &problem));
             }
-            Entity::Grid(kentos_contracts::GridEntity { base, grid: Box::new(grid) })
+            Entity::Grid(kentos_contracts::GridEntity {
+                base,
+                grid: Box::new(grid),
+            })
         }
         Kind::Column => {
             let column = required(r, f.column.take(), "column")?;
             if let Some((_, problem)) = column.problem() {
                 return Err(r.fail(Code::BadValue, &problem));
             }
-            Entity::Column(kentos_contracts::ColumnEntity { base, column: Box::new(column) })
+            Entity::Column(kentos_contracts::ColumnEntity {
+                base,
+                column: Box::new(column),
+            })
         }
         Kind::Stair => {
             let stair = required(r, f.stair.take(), "stair")?;
             if let Some((_, problem)) = stair.problem() {
                 return Err(r.fail(Code::BadValue, &problem));
             }
-            Entity::Stair(kentos_contracts::StairEntity { base, stair: Box::new(stair) })
+            Entity::Stair(kentos_contracts::StairEntity {
+                base,
+                stair: Box::new(stair),
+            })
         }
         Kind::Ramp => {
             let ramp = required(r, f.ramp.take(), "ramp")?;
             if let Some((_, problem)) = ramp.problem() {
                 return Err(r.fail(Code::BadValue, &problem));
             }
-            Entity::Ramp(kentos_contracts::RampEntity { base, ramp: Box::new(ramp) })
+            Entity::Ramp(kentos_contracts::RampEntity {
+                base,
+                ramp: Box::new(ramp),
+            })
         }
         Kind::Tag => {
             let tag = required(r, f.tag.take(), "tag")?;
@@ -198,42 +210,60 @@ pub(super) fn build(
             if let Some((_, problem)) = mark.problem() {
                 return Err(r.fail(Code::BadValue, &problem));
             }
-            Entity::ViewMark(kentos_contracts::ViewMarkEntity { base, mark: Box::new(mark) })
+            Entity::ViewMark(kentos_contracts::ViewMarkEntity {
+                base,
+                mark: Box::new(mark),
+            })
         }
         Kind::Slab => {
             let slab = required(r, f.slab.take(), "slab")?;
             if let Some((_, problem)) = slab.problem() {
                 return Err(r.fail(Code::BadValue, &problem));
             }
-            Entity::Slab(kentos_contracts::SlabEntity { base, slab: Box::new(slab) })
+            Entity::Slab(kentos_contracts::SlabEntity {
+                base,
+                slab: Box::new(slab),
+            })
         }
         Kind::Beam => {
             let beam = required(r, f.beam.take(), "beam")?;
             if let Some((_, problem)) = beam.problem() {
                 return Err(r.fail(Code::BadValue, &problem));
             }
-            Entity::Beam(kentos_contracts::BeamEntity { base, beam: Box::new(beam) })
+            Entity::Beam(kentos_contracts::BeamEntity {
+                base,
+                beam: Box::new(beam),
+            })
         }
         Kind::Roof => {
             let roof = required(r, f.roof.take(), "roof")?;
             if let Some((_, problem)) = roof.problem() {
                 return Err(r.fail(Code::BadValue, &problem));
             }
-            Entity::Roof(kentos_contracts::RoofEntity { base, roof: Box::new(roof) })
+            Entity::Roof(kentos_contracts::RoofEntity {
+                base,
+                roof: Box::new(roof),
+            })
         }
         Kind::Mass => {
             let mass = required(r, f.mass.take(), "mass")?;
             if let Some((_, problem)) = mass.problem() {
                 return Err(r.fail(Code::BadValue, &problem));
             }
-            Entity::Mass(kentos_contracts::MassEntity { base, mass: Box::new(mass) })
+            Entity::Mass(kentos_contracts::MassEntity {
+                base,
+                mass: Box::new(mass),
+            })
         }
         Kind::Railing => {
             let railing = required(r, f.railing.take(), "railing")?;
             if let Some((_, problem)) = railing.problem() {
                 return Err(r.fail(Code::BadValue, &problem));
             }
-            Entity::Railing(kentos_contracts::RailingEntity { base, railing: Box::new(railing) })
+            Entity::Railing(kentos_contracts::RailingEntity {
+                base,
+                railing: Box::new(railing),
+            })
         }
         Kind::Space => {
             let rest = required(r, f.space.take(), "space")?;
@@ -570,7 +600,10 @@ pub(super) fn build(
             if let Some(words) = raster.problem() {
                 return Err(r.fail(Code::BadValue, &words));
             }
-            Entity::Raster(RasterEntity { base, raster: Box::new(raster) })
+            Entity::Raster(RasterEntity {
+                base,
+                raster: Box::new(raster),
+            })
         }
         Kind::PointCloud => {
             let cloud = PointCloudFields {
@@ -585,7 +618,10 @@ pub(super) fn build(
             if let Some(words) = cloud.problem() {
                 return Err(r.fail(Code::BadValue, &words));
             }
-            Entity::PointCloud(PointCloudEntity { base, cloud: Box::new(cloud) })
+            Entity::PointCloud(PointCloudEntity {
+                base,
+                cloud: Box::new(cloud),
+            })
         }
         Kind::Record => Entity::Record(RecordEntity { base }),
     })
@@ -609,7 +645,11 @@ pub(super) fn pose16(r: &mut Reader<'_>) -> Result<[f64; 16], KcadError> {
     let at = r.position();
     let v = floats(r)?;
     v.as_slice().try_into().map_err(|_| {
-        r.fail_at(Code::BadValue, at, &format!("konum 16 sayı olmalı, {} var", v.len()))
+        r.fail_at(
+            Code::BadValue,
+            at,
+            &format!("konum 16 sayı olmalı, {} var", v.len()),
+        )
     })
 }
 

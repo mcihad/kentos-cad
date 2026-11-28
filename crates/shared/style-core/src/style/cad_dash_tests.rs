@@ -1,8 +1,8 @@
 //! ADR 1122: distances on the source curve, cuts at those distances, the seam,
 //! dots, the fallback and the opt-in (`View::cad_phase`). Expected values are the
 //! curves' own closed forms (r·θ, quarter symmetry), not this code's output.
-use super::{distances, ink};
 use super::super::cad_marks::Route;
+use super::{distances, ink};
 use kentos_geometry_core::{Vec2, entity::Shape};
 use std::f64::consts::{FRAC_1_SQRT_2, FRAC_PI_4, PI, TAU};
 
@@ -16,7 +16,10 @@ fn ring(c: Vec2, r: f64, n: usize) -> Vec<Vec2> {
     (0..n)
         .map(|k| {
             let a = TAU * k as f64 / n as f64;
-            p(c.x + r * kentos_geometry_core::jsmath::cos(a), c.y + r * kentos_geometry_core::jsmath::sin(a))
+            p(
+                c.x + r * kentos_geometry_core::jsmath::cos(a),
+                c.y + r * kentos_geometry_core::jsmath::sin(a),
+            )
         })
         .collect()
 }
@@ -36,25 +39,51 @@ fn a_circle_vertex_is_at_r_theta_not_at_the_chords_sum() {
 
 #[test]
 fn every_chord_carries_the_same_half_dash_and_the_seam_joins_ink() {
-    let shape = Shape::Circle { c: p(0., 0.), r: 1. };
+    let shape = Shape::Circle {
+        c: p(0., 0.),
+        r: 1.,
+    };
     let path = ring(p(0., 0.), 1., 8);
     let r = route(&shape);
     let d = distances(&r, &path).unwrap();
     // A dash of π/8 and a gap of π/8: from every vertex to the arc's own point halfway.
-    let got = ink(&path, &d, true, r.total, &[PI / 8., PI / 8.], 0., &|t| r.point_at(t)).unwrap();
+    let got = ink(&path, &d, true, r.total, &[PI / 8., PI / 8.], 0., &|t| {
+        r.point_at(t)
+    })
+    .unwrap();
     assert_eq!(got.pieces.len(), 8);
     for (k, piece) in got.pieces.iter().enumerate() {
         let (a, b) = (path[k], path[(k + 1) % 8]);
         assert_eq!(piece[0], a, "{k}");
         let _ = b;
         let half = PI / 8. * (2 * k + 1) as f64;
-        assert!((piece[1].x - kentos_geometry_core::jsmath::cos(half)).abs() < 1e-12 && (piece[1].y - kentos_geometry_core::jsmath::sin(half)).abs() < 1e-12);
+        assert!(
+            (piece[1].x - kentos_geometry_core::jsmath::cos(half)).abs() < 1e-12
+                && (piece[1].y - kentos_geometry_core::jsmath::sin(half)).abs() < 1e-12
+        );
     }
     // Phase π/16 puts ink across the seam: the last run joins the first.
-    let got = ink(&path, &d, true, r.total, &[PI / 8., PI / 8.], PI / 16., &|t| r.point_at(t)).unwrap();
-    assert_eq!(got.pieces.len(), 8, "eight runs, one of them through the seam");
+    let got = ink(
+        &path,
+        &d,
+        true,
+        r.total,
+        &[PI / 8., PI / 8.],
+        PI / 16.,
+        &|t| r.point_at(t),
+    )
+    .unwrap();
+    assert_eq!(
+        got.pieces.len(),
+        8,
+        "eight runs, one of them through the seam"
+    );
     let seam = got.pieces.iter().find(|q| q.contains(&path[0])).unwrap();
-    assert_eq!(seam.len(), 3, "half a chord before the seam, the seam, half after");
+    assert_eq!(
+        seam.len(),
+        3,
+        "half a chord before the seam, the seam, half after"
+    );
 }
 
 #[test]
@@ -74,7 +103,10 @@ fn a_bulge_path_keeps_its_phase_from_the_line_through_the_arc() {
     let mut path = vec![p(0., 0.), p(3., 0.)];
     for k in 1..=6 {
         let a = -PI / 2. + PI * k as f64 / 6.;
-        path.push(p(3. + kentos_geometry_core::jsmath::cos(a), 1. + kentos_geometry_core::jsmath::sin(a)));
+        path.push(p(
+            3. + kentos_geometry_core::jsmath::cos(a),
+            1. + kentos_geometry_core::jsmath::sin(a),
+        ));
     }
     path.push(p(1., 2.));
     let d = distances(&r, &path).unwrap();
@@ -83,10 +115,17 @@ fn a_bulge_path_keeps_its_phase_from_the_line_through_the_arc() {
     }
     assert!((d[8] - (5. + PI)).abs() < 1e-12);
     // A dash ending exactly where the arc ends: 3 + π long, then a gap of 1.
-    let got = ink(&path, &d, false, r.total, &[3. + PI, 1.], 0., &|t| r.point_at(t)).unwrap();
+    let got = ink(&path, &d, false, r.total, &[3. + PI, 1.], 0., &|t| {
+        r.point_at(t)
+    })
+    .unwrap();
     let near = |a: Vec2, b: Vec2| (a.x - b.x).abs() < 1e-12 && (a.y - b.y).abs() < 1e-12;
     assert_eq!(got.pieces.len(), 2);
-    assert!(near(*got.pieces[0].last().unwrap(), p(3., 2.)), "{:?}", got.pieces[0]);
+    assert!(
+        near(*got.pieces[0].last().unwrap(), p(3., 2.)),
+        "{:?}",
+        got.pieces[0]
+    );
     assert!(near(got.pieces[1][0], p(2., 2.)), "{:?}", got.pieces[1]);
     assert!(near(*got.pieces[1].last().unwrap(), p(1., 2.)));
 }
@@ -132,7 +171,15 @@ fn a_rational_nurbs_circle_is_measured_by_its_own_arc() {
     };
     let r = route(&shape);
     assert!((r.total - PI / 2.).abs() < 1e-12);
-    let path: Vec<Vec2> = [0., 0.3, 0.7, 1.2, PI / 2.].iter().map(|&a| p(kentos_geometry_core::jsmath::cos(a), kentos_geometry_core::jsmath::sin(a))).collect();
+    let path: Vec<Vec2> = [0., 0.3, 0.7, 1.2, PI / 2.]
+        .iter()
+        .map(|&a| {
+            p(
+                kentos_geometry_core::jsmath::cos(a),
+                kentos_geometry_core::jsmath::sin(a),
+            )
+        })
+        .collect();
     let d = distances(&r, &path).unwrap();
     for (k, a) in [0., 0.3, 0.7, 1.2, PI / 2.].iter().enumerate() {
         assert!((d[k] - a).abs() < 1e-9, "{k}: {} {a}", d[k]);
@@ -141,11 +188,17 @@ fn a_rational_nurbs_circle_is_measured_by_its_own_arc() {
 
 #[test]
 fn dots_sit_at_their_distances_and_other_carriers_fall_back() {
-    let shape = Shape::Circle { c: p(0., 0.), r: 1. };
+    let shape = Shape::Circle {
+        c: p(0., 0.),
+        r: 1.,
+    };
     let path = ring(p(0., 0.), 1., 8);
     let r = route(&shape);
     let d = distances(&r, &path).unwrap();
-    let got = ink(&path, &d, true, r.total, &[0., FRAC_PI_4], 0., &|t| r.point_at(t)).unwrap();
+    let got = ink(&path, &d, true, r.total, &[0., FRAC_PI_4], 0., &|t| {
+        r.point_at(t)
+    })
+    .unwrap();
     assert!(got.pieces.is_empty());
     assert_eq!(got.dots.len(), 8, "one at each vertex, one at the seam");
     for (k, (at, _)) in got.dots.iter().enumerate() {
@@ -155,7 +208,11 @@ fn dots_sit_at_their_distances_and_other_carriers_fall_back() {
     let off = ring(p(0., 0.), 1.5, 8);
     assert!(distances(&r, &off).is_none());
     // Past the budget: no analytic output (the caller keeps the earlier stroke).
-    assert!(ink(&path, &d, true, r.total, &[1e-6, 1e-6], 0., &|t| r.point_at(t)).is_none());
+    assert!(
+        ink(&path, &d, true, r.total, &[1e-6, 1e-6], 0., &|t| r
+            .point_at(t))
+        .is_none()
+    );
 }
 
 /// Only a build that asks for it (the drawing's CAD looks, `View::cad_phase`;
@@ -170,12 +227,18 @@ fn only_a_cad_phase_build_is_cut_on_the_curve() {
         let input = serde_json::json!({"symbol":{"type":"line","layers":[layer]},
             "entity":{"id":1,"layerId":"a","attrs":{},"kind":"arc","c":{"x":0.,"y":0.},"r":10.,"a0":0.,"a1":3.},
             "plotScale":1000.,"cadPhase":cad});
-        let out = super::super::build::compile_one(&Json::parse(&input.to_string()).unwrap()).unwrap();
+        let out =
+            super::super::build::compile_one(&Json::parse(&input.to_string()).unwrap()).unwrap();
         serde_json::from_str::<serde_json::Value>(&out).unwrap()
     };
     let plain = compile(false);
     assert_eq!(plain["strokes"].as_array().unwrap().len(), 1);
-    assert_eq!(plain["strokes"][0]["style"]["dash"].as_array().map(Vec::len), Some(2));
+    assert_eq!(
+        plain["strokes"][0]["style"]["dash"]
+            .as_array()
+            .map(Vec::len),
+        Some(2)
+    );
     let cad = compile(true);
     let strokes = cad["strokes"].as_array().unwrap();
     // 30 m of arc, 3 m period at 1:1000 (2 mm + 1 mm): ten dashes.
@@ -185,6 +248,10 @@ fn only_a_cad_phase_build_is_cut_on_the_curve() {
     let end = last.last().unwrap();
     // The cut is the arc's own point at 29 m: 2.9 rad, on the 10 m circle.
     let (x, y) = (end["x"].as_f64().unwrap(), end["y"].as_f64().unwrap());
-    assert!((kentos_geometry_core::jsmath::atan2(y, x) - 2.9).abs() < 1e-12, "{}", kentos_geometry_core::jsmath::atan2(y, x));
+    assert!(
+        (kentos_geometry_core::jsmath::atan2(y, x) - 2.9).abs() < 1e-12,
+        "{}",
+        kentos_geometry_core::jsmath::atan2(y, x)
+    );
     assert!((kentos_geometry_core::jsmath::js_hypot(x, y) - 10.).abs() < 1e-12);
 }
